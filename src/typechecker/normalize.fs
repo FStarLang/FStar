@@ -46,6 +46,7 @@ type step =
   | Beta            //remove? Always do beta
   | Simplify        //Simplifies some basic log cfg ical tautolog cfg ies: not part of definitional equality!
   | EraseUniverses
+  | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
   //remove the rest?
   | DeltaComp       
   | SNComp
@@ -156,7 +157,9 @@ let norm_universe cfg env u =
                 try match List.nth env x with 
                       | Univ u -> [u]
                       | _ -> failwith "Impossible: universe variable bound to a term"
-                with _ -> failwith "Universe variable not found"
+                with _ -> if cfg.steps |> List.contains AllowUnboundUniverses
+                          then [U_unknown]
+                          else failwith "Universe variable not found"
             end
           | U_zero
           | U_unif _ 
@@ -727,8 +730,8 @@ let normalize s e t = norm (config s e) [] [] t
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
 
-let term_to_string env t = Print.term_to_string (normalize [EraseUniverses] env t)
-let comp_to_string env c = Print.comp_to_string (norm_comp (config [EraseUniverses] env) [] c)
+let term_to_string env t = Print.term_to_string (normalize [AllowUnboundUniverses] env t)
+let comp_to_string env c = Print.comp_to_string (norm_comp (config [AllowUnboundUniverses] env) [] c)
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta; WHNF]) env t0 in

@@ -15,12 +15,15 @@ working:
 	$(UFSTAR) FStar.PredicateExtensionality.fst
 	$(UFSTAR) FStar.Int8.fst FStar.Int16.fst FStar.Int31.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst
 	$(UFSTAR) FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst
+	$(UFSTAR) $(STDLIB) FStar.MRef.fst
+	$(UFSTAR) FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.TwoLevelHeap.fst
+
+test:
 
 lax:
-	$(UFSTAR) --lax $(STDLIB) FStar.MRef.fst
-	$(UFSTAR) --lax FStar.List.Tot.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.Relational.fst
-	$(UFSTAR) --lax FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.TwoLevelHeap.fst
+	$(UFSTAR) --lax FStar.List.Tot.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.Relational.Relational.fst FStar.Relational.Comp.fst #FStar.Relational.State.fst
 	$(UFSTAR) --lax $(STDLIB) FStar.Constructive.fst FStar.Squash.fst FStar.SquashProperties.fst --__temp_no_proj FStar.SquashProperties
+
 # #	$(UFSTAR) FStar.OrdMapProps.fst -- problem filed as #359
 # #	$(UFSTAR) stboot.fsi stboot.fst   -- Name "FStar.All.ML" not found
 # #	$(UFSTAR) FStar.Util.fst    -- problem filed as #359

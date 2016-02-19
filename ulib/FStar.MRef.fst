@@ -72,6 +72,11 @@ assume val recall_token: #a:Type
 let stable_on_heap (#a:Type) (#b:reln a) (r:mref a b) (p:(heap -> Type)) = 
   forall h0 h1. p h0 /\ b (sel h0 r) (sel h1 r) ==> p h1
   
+assume val recall: p:(heap -> Type)
+                -> ST unit
+                      (requires (fun _ ->  witnessed p))
+                      (ensures (fun h0 _ h1 -> p h1))
+
 val witness: #a:Type
           -> #b:reln a
           -> m:mref a b
@@ -79,8 +84,4 @@ val witness: #a:Type
           -> ST unit
                 (requires (fun h0 -> p h0 /\ stable_on_heap m p))
                 (ensures (fun h0 _ h1 -> h0=h1 /\ witnessed p))
-let witness #a #b m (p: a -> Type) = ()
-assume val recall: p:(heap -> Type)
-                -> ST unit
-                      (requires (fun _ ->  witnessed p))
-                      (ensures (fun h0 _ h1 -> p h1))
+let witness #a #b m p = ()

@@ -28,6 +28,7 @@ type step =
   | Beta            //remove? Always do beta
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
+  | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
   //remove the rest?
   | DeltaComp       
   | SNComp
