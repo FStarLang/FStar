@@ -9,8 +9,9 @@ let join_squash #a s = bind_squash #(squash a) #a s (fun x -> x)
 
 val squash_arrow : #a:Type -> #p:(a -> Type) ->
   =f:(x:a -> Tot (squash (p x))) -> Tot (squash (x:a -> Tot (p x)))
-let squash_arrow #a #p f =
-  squash_double_arrow (return_squash (fun x -> f x))
+let squash_arrow #a #p f = squash_double_arrow (return_squash f)
+  (* squash_double_arrow (return_squash (fun x -> f x)) *) //TODO, eta expansion causes a mysterious universe error
+
 
 val forall_intro : #a:Type -> #p:(a -> Type) ->
   =f:(x:a -> Lemma (p x)) -> Lemma (x:a -> Tot (p x))(* (forall (x:a). p x) *)
@@ -35,15 +36,15 @@ let forall_intro #a #p f =
 (* The whole point of defining squash is to soundly allow define excluded_middle;
    here this follows from get_proof and give_proof *)
 
-val bool_of_or : #p:Type -> #q:Type -> (p \/ q) -> 
+val bool_of_or : #p:Type -> #q:Type -> (p \/ q) ->
   Tot (b:bool{(b ==> p) /\ (not(b) ==> q)})
-let bool_of_or #p #q (t:p \/ q) = 
+let bool_of_or #p #q (t:p \/ q) =
   match t with
   | Left  _ -> true
   | Right _ -> false
 
 val excluded_middle : p:Type -> Tot (squash (b:bool{b <==> p}))
-let excluded_middle (p:Type) = map_squash (get_proof (p \/ ~p)) bool_of_or 
+let excluded_middle (p:Type) = map_squash (get_proof (p \/ ~p)) bool_of_or
 
 val excluded_middle_squash : p:Type0 -> Tot (squash (cor p (cnot p)))
 let excluded_middle_squash p =
@@ -67,16 +68,16 @@ let ifProp #p b e1 e2 =
 type pow (p:Type) = p -> Tot bool
 
 type retract 'a 'b : Type =
-  | MkR: i:('a -> Tot 'b) -> 
+  | MkR: i:('a -> Tot 'b) ->
          j:('b -> Tot 'a) ->
-         inv:(x:'a -> Tot (ceq (j (i x)) x)) -> 
-         retract 'a 'b 
+         inv:(x:'a -> Tot (ceq (j (i x)) x)) ->
+         retract 'a 'b
 
 type retract_cond 'a 'b : Type =
-  | MkC: i2:('a -> Tot 'b) -> 
-         j2:('b -> Tot 'a) -> 
-         inv2:(retract 'a 'b -> x:'a -> Tot (ceq (j2 (i2 x)) x)) -> 
-         retract_cond 'a 'b 
+  | MkC: i2:('a -> Tot 'b) ->
+         j2:('b -> Tot 'a) ->
+         inv2:(retract 'a 'b -> x:'a -> Tot (ceq (j2 (i2 x)) x)) ->
+         retract_cond 'a 'b
 
 (* unused below *)
 val ac: r:retract_cond 'a 'b -> retract 'a 'b -> x:'a ->
@@ -85,7 +86,7 @@ let ac (MkC _ _ inv2) = inv2
 
 
 val l1: (a:Type0) -> (b:Type0) -> Tot (squash (retract_cond (pow a) (pow b)))
-let l1 (a:Type) (b:Type) = 
+let l1 (a:Type) (b:Type) =
    map_squash (excluded_middle_squash (retract (pow a) (pow b))) (fun x ->
    match x with
    | IntroL (MkR f0 g0 e) -> MkC f0 g0 (fun _ -> e)
