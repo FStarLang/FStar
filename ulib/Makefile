@@ -33,7 +33,7 @@ FStar.List.Tot.fst FStar.ListProperties.fst FStar.List.fst FStar.Seq.fst FStar.C
 FStar.Squash.fst \
 FStar.SquashProperties.fst \
 FStar.Int8.fst FStar.Int16.fst FStar.Int31.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst \
-FStar.HyperHeap.fst stHyperHeap.fst \
+FStar.HyperHeap.fst hyperheap/FStar.ST.fst \
 FStar.MRef.fst \
 FStar.OrdSet.fst FStar.OrdSetProps.fst FStar.OrdMap.fst \
 FStar.PredicateExtensionality.fst \
