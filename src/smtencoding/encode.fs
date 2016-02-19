@@ -597,28 +597,26 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
             let head_type = match head.n with 
                 | Tm_uinst({n=Tm_name x}, _)
-                | Tm_name x -> x.sort
+                | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar(fv, _)}, _)
-                | Tm_fvar (fv, _) -> Env.lookup_lid env.tcenv fv.v |> snd 
-                | Tm_ascribed(_, t, _) -> t
-                | _ -> failwith (Util.format3 "Unexpected head of application %s is: %s, %s" 
-                                 (Print.term_to_string t0)
-                                 (Print.tag_of_term head) (Print.term_to_string head)) in
+                | Tm_fvar (fv, _) -> Some (Env.lookup_lid env.tcenv fv.v |> snd)
+                | Tm_ascribed(_, t, _) -> Some t
+                | _ -> None in 
 
-            let head_type = Util.unrefine <| N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv head_type in
+            begin match head_type with 
+                | None -> encode_partial_app None
+                | Some head_type -> 
+                  let head_type = Util.unrefine <| N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv head_type in
+                  let formals, c = curried_arrow_formals_comp head_type in
+                  begin match head.n with
+                        | Tm_uinst({n=Tm_fvar(fv, _)}, _)
+                        | Tm_fvar (fv, _) when (List.length formals = List.length args) -> encode_full_app fv
+                        | _ ->
+                            if List.length formals > List.length args
+                            then encode_partial_app (Some (formals, c))
+                            else encode_partial_app None
 
-                    if Env.debug env.tcenv <| Options.Other "Encoding"
-                    then Util.print3 "Recomputed type of head %s (%s) to be %s\n" (Print.term_to_string head) (Print.tag_of_term head) (Print.term_to_string head_type);
-
-            let formals, c = curried_arrow_formals_comp head_type in
-            begin match head.n with
-                | Tm_uinst({n=Tm_fvar(fv, _)}, _)
-                | Tm_fvar (fv, _) when (List.length formals = List.length args) -> encode_full_app fv
-                | _ ->
-                    if List.length formals > List.length args
-                    then encode_partial_app (Some (formals, c))
-                    else encode_partial_app None
-
+                 end
             end
       end
 

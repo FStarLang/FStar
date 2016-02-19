@@ -1273,6 +1273,10 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
             | _ -> snd lbs |> List.collect
             (function | {lbname=Inl _} -> []
                       | {lbname=Inr l} -> Env.lookup_letbinding_quals env l) in
+          let quals = 
+            if lets |> Util.for_some (fun (_, t) -> t.level=Formula)
+            then S.Logic::quals
+            else quals in
           let s = Sig_let(lbs, d.drange, lids, quals) in
           let env = push_sigelt env s in
           env, [s]

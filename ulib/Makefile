@@ -15,9 +15,9 @@ working:
 	$(UFSTAR) FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.List.Tot.fst FStar.OrdSet.fst FStar.OrdSetProps.fst FStar.OrdMap.fst
 	$(UFSTAR) FStar.PredicateExtensionality.fst
 	$(UFSTAR) FStar.Int8.fst FStar.Int16.fst FStar.Int31.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst
+	$(UFSTAR) FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst
 
 all_univs:
-	$(UFSTAR) FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst
 	$(UFSTAR) $(STDLIB) FStar.MRef.fst
 	$(UFSTAR) FStar.List.Tot.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.Relational.fst
 	$(UFSTAR) FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.TwoLevelHeap.fst
