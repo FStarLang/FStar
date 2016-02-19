@@ -1416,8 +1416,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             else constructor_to_decl c in
 
         let inversion_axioms tapp vars =
-            if List.length datas = 0  
-            || datas |> Util.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone)
+            if datas |> Util.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
             then []
             else
                  let xxsym, xx = fresh_fvar "x" Term_sort in
