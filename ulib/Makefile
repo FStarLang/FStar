@@ -2,8 +2,7 @@ FSTAR = ../bin/fstar.exe $(OTHERFLAGS)
 UFSTAR=$(FSTAR) --universes
 STDLIB=FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst
 
-all: working
-	make all_univs OTHERFLAGS=--lax
+all: working lax
 
 working:
 	$(UFSTAR) FStar.List.Tot.fst FStar.ListProperties.fst $(STDLIB) FStar.List.fst
@@ -17,11 +16,11 @@ working:
 	$(UFSTAR) FStar.Int8.fst FStar.Int16.fst FStar.Int31.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst
 	$(UFSTAR) FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst
 
-all_univs:
-	$(UFSTAR) $(STDLIB) FStar.MRef.fst
-	$(UFSTAR) FStar.List.Tot.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.Relational.fst
-	$(UFSTAR) FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.TwoLevelHeap.fst
-	$(UFSTAR) $(STDLIB) FStar.Constructive.fst FStar.Squash.fst FStar.SquashProperties.fst --__temp_no_proj FStar.SquashProperties
+lax:
+	$(UFSTAR) --lax $(STDLIB) FStar.MRef.fst
+	$(UFSTAR) --lax FStar.List.Tot.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.Relational.fst
+	$(UFSTAR) --lax FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.TwoLevelHeap.fst
+	$(UFSTAR) --lax $(STDLIB) FStar.Constructive.fst FStar.Squash.fst FStar.SquashProperties.fst --__temp_no_proj FStar.SquashProperties
 # #	$(UFSTAR) FStar.OrdMapProps.fst -- problem filed as #359
 # #	$(UFSTAR) stboot.fsi stboot.fst   -- Name "FStar.All.ML" not found
 # #	$(UFSTAR) FStar.Util.fst    -- problem filed as #359
