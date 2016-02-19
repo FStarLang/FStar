@@ -174,7 +174,6 @@ val size_singleton: #a:Type -> #f:cmp a -> x:a
 private val eq_helper: #a:Type -> #f:cmp a -> x:a -> s:ordset a f
                -> Lemma (requires (is_Cons s /\ f x (Cons.hd s) /\ x =!= Cons.hd s))
                        (ensures (not (mem #a #f x s)))
-// let eq_helper (#a:Type) #f x (y::s) = set_props #a #f (y::s)  //TODO: This raises a verification error, unexpectedly
 let eq_helper (#a:Type) #f x s = set_props #a #f s
 
 let rec eq_lemma (#a:Type) #f s1 s2 = match s1, s2 with

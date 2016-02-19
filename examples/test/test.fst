@@ -1,5 +1,6 @@
 module Test
-type s : nat -> Type
 
-type t (i:nat) = 
-  | Mk : s i -> t i
+type T = 
+  | MkT : int -> T
+
+let g (MkT i) (MkT j) = i - j  

@@ -1800,7 +1800,8 @@ end
 | Pat_disj ([]) -> begin
 (FStar_All.failwith "impossible")
 end))
-in (aux [] p)))
+in (let _109_1252 = (aux [] p)
+in (FStar_All.pipe_left FStar_List.rev _109_1252))))
 
 # 469 "FStar.Syntax.Syntax.fst"
 let gen_reset : ((Prims.unit  ->  Prims.int) * (Prims.unit  ->  Prims.unit)) = (
@@ -1833,8 +1834,8 @@ let reset_gensym : Prims.unit  ->  Prims.unit = (Prims.snd gen_reset)
 let freshen_bv : bv  ->  bv = (fun bv -> (
 # 476 "FStar.Syntax.Syntax.fst"
 let _30_443 = bv
-in (let _109_1271 = (next_id ())
-in {ppname = _30_443.ppname; index = _109_1271; sort = _30_443.sort})))
+in (let _109_1272 = (next_id ())
+in {ppname = _30_443.ppname; index = _109_1272; sort = _30_443.sort})))
 
 # 477 "FStar.Syntax.Syntax.fst"
 let range_of_ropt : FStar_Range.range Prims.option  ->  FStar_Range.range = (fun _30_4 -> (match (_30_4) with
@@ -1849,8 +1850,8 @@ end))
 let gen_bv : Prims.string  ->  FStar_Range.range Prims.option  ->  typ  ->  bv = (fun s r t -> (
 # 481 "FStar.Syntax.Syntax.fst"
 let id = (FStar_Ident.mk_ident (s, (range_of_ropt r)))
-in (let _109_1280 = (next_id ())
-in {ppname = id; index = _109_1280; sort = t})))
+in (let _109_1281 = (next_id ())
+in {ppname = id; index = _109_1281; sort = t})))
 
 # 483 "FStar.Syntax.Syntax.fst"
 let new_bv : FStar_Range.range Prims.option  ->  typ  ->  bv = (fun ropt t -> (gen_bv "x" ropt t))
@@ -1859,9 +1860,9 @@ let new_bv : FStar_Range.range Prims.option  ->  typ  ->  bv = (fun ropt t -> (g
 let new_univ_name : FStar_Range.range Prims.option  ->  univ_name = (fun ropt -> (
 # 485 "FStar.Syntax.Syntax.fst"
 let id = (next_id ())
-in (let _109_1288 = (let _109_1287 = (FStar_Util.string_of_int id)
-in (_109_1287, (range_of_ropt ropt)))
-in (FStar_Ident.mk_ident _109_1288))))
+in (let _109_1289 = (let _109_1288 = (FStar_Util.string_of_int id)
+in (_109_1288, (range_of_ropt ropt)))
+in (FStar_Ident.mk_ident _109_1289))))
 
 # 487 "FStar.Syntax.Syntax.fst"
 let mkbv : FStar_Ident.ident  ->  Prims.int  ->  term  ->  bv = (fun x y t -> {ppname = x; index = y; sort = t})
@@ -1891,17 +1892,17 @@ let _30_484 = bv
 in {ppname = (FStar_Ident.mk_ident (bv.ppname.FStar_Ident.idText, r)); index = _30_484.index; sort = _30_484.sort}))
 
 # 494 "FStar.Syntax.Syntax.fst"
-let lid_as_fv : FStar_Ident.lident  ->  fv_qual Prims.option  ->  fv = (fun l dc -> (let _109_1311 = (withinfo l tun (FStar_Ident.range_of_lid l))
-in (_109_1311, dc)))
+let lid_as_fv : FStar_Ident.lident  ->  fv_qual Prims.option  ->  fv = (fun l dc -> (let _109_1312 = (withinfo l tun (FStar_Ident.range_of_lid l))
+in (_109_1312, dc)))
 
 # 495 "FStar.Syntax.Syntax.fst"
 let fv_to_tm : fv  ->  term = (fun fv -> (mk (Tm_fvar (fv)) None (FStar_Ident.range_of_lid (Prims.fst fv).v)))
 
 # 496 "FStar.Syntax.Syntax.fst"
-let fvar : fv_qual Prims.option  ->  FStar_Ident.lident  ->  FStar_Range.range  ->  term = (fun dc l r -> (let _109_1322 = (let _109_1321 = (let _109_1320 = (FStar_Ident.set_lid_range l r)
-in (lid_as_fv _109_1320 dc))
-in Tm_fvar (_109_1321))
-in (mk _109_1322 None r)))
+let fvar : fv_qual Prims.option  ->  FStar_Ident.lident  ->  FStar_Range.range  ->  term = (fun dc l r -> (let _109_1323 = (let _109_1322 = (let _109_1321 = (FStar_Ident.set_lid_range l r)
+in (lid_as_fv _109_1321 dc))
+in Tm_fvar (_109_1322))
+in (mk _109_1323 None r)))
 
 
 

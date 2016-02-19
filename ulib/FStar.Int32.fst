@@ -28,7 +28,7 @@ let within_int32 (i:int) =
     min_value_int <= i
     && i <= max_value_int
 
-abstract type int32 =
+private type int32 =
   | Int32 : i:int{within_int32 i} -> int32
 
 val min_value : int32

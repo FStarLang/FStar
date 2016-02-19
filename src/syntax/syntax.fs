@@ -409,7 +409,7 @@ let pat_bvs (p:pat) : list<bv> =
         | Pat_cons(_, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
         | Pat_disj(p::_) -> aux b p
         | Pat_disj [] -> failwith "impossible" in
-  aux [] p
+  List.rev <| aux [] p
          
 (* Gen sym *)
 let gen_reset = 

@@ -2195,18 +2195,18 @@ let rec tc_decl env se = match se with
 
 
 let for_export hidden se : list<sigelt> * list<lident> =
-   (* Exporting symbols based on whether they have been marked 'private' or 'abstract'
-      At this level, there is no distinction between 'private' and 'abstract'.
+   (* Exporting symbols based on whether they have been marked 'abstract'
 
-        -- Symbols marked 'private' are further restricted by the visibility rules enforced during desugaring.
+   
+        -- NB> Symbols marked 'private' are restricted by the visibility rules enforced during desugaring.
            i.e., if a module A marks symbol x as private, then a module B simply cannot refer to A.x
            OTOH, if A marks x as abstract, B can refer to A.x, but cannot see its definition.
 
-      Here, if a symbol is private or abstract, we only export its declaration, not its definition. 
+      Here, if a symbol is abstract, we only export its declaration, not its definition. 
       The reason we export the declaration of private symbols is to account for cases like this:
 
         module A 
-           private let x = 0
+           abstract let x = 0
            let y = x
 
         When encoding A to the SMT solver, we need to encode the definition of y.
@@ -2216,10 +2216,9 @@ let for_export hidden se : list<sigelt> * list<lident> =
         module A
             assume val x : int
             let y = x
-
-       The same behavior occurs is x were marked 'abstract'
-    *)
-   let private_or_abstract quals = quals |> Util.for_some (fun x -> x=Private || x=Abstract) in
+   
+   *)
+   let is_abstract quals = quals |> Util.for_some (function Abstract-> true | _ -> false) in
    let is_hidden_proj_or_disc q = match q with 
         | Projector(l, _) 
         | Discriminator l -> hidden |> Util.for_some (lid_equals l) 
@@ -2231,7 +2230,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
     | Sig_datacon _ -> failwith "Impossible"
 
     | Sig_bundle(ses, quals, _, _) ->
-      if private_or_abstract quals
+      if is_abstract quals
       then List.fold_right (fun se (out, hidden) -> match se with 
             | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) -> 
               let dec = Sig_declare_typ(l, us, mk (Tm_arrow(bs, S.mk_Total t)) None r, Assumption::quals, r) in
@@ -2244,7 +2243,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
       else [se], hidden
 
     | Sig_assume(_, _, quals, _) ->
-      if private_or_abstract quals
+      if is_abstract quals
       then [], hidden
       else [se], hidden
 
@@ -2274,7 +2273,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
            [dec], lid::hidden
   
     | Sig_let(lbs, r, l, quals) ->
-      if private_or_abstract quals
+      if is_abstract quals
       then snd lbs |> List.map (fun lb -> 
            Sig_declare_typ(right lb.lbname, lb.lbunivs, lb.lbtyp, Assumption::quals, r)), hidden
       else [se], hidden

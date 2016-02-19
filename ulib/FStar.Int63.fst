@@ -14,7 +14,7 @@ let within_int63 (i:int) =
     min_value_int <= i
     && i <= max_value_int
 
-abstract type int63 =
+private type int63 =
   | Int63 : i:int{within_int63 i} -> int63
 
 val min_value : int63
