@@ -39,4 +39,4 @@ notifications:
   slack: everestexpedition:NqWwcvMIxouVIbC5IhF0loqX
 
 git:
-    depth: 1
+    depth: 3
