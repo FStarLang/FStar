@@ -1,0 +1,17 @@
+before_install:
+  - sudo add-apt-repository ppa:avsm/ppa
+  - sudo apt-get -qq update
+  - sudo apt-get install fsharp libssl-dev opam libsqlite3-dev
+
+script:
+  - make -C src
+  - make -C src ocaml
+  - opam init --yes
+  - eval $(opam config env)
+  - opam install batteries sqlite3 fileutils stdint
+  - make -C src/ocaml-output
+  - export PATH=$(realpath bin):$PATH
+  - make -C contrib/CoreCrypto/ml
+  - make -C contrib/CoreCrypto/ml test
+  - make -C examples/unit-tests
+  - make -C src regressions OTHERFLAGS=--lax
