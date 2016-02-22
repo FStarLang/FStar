@@ -750,7 +750,7 @@ let normalize_refinement steps env t0 =
 
 let rec unfold_effect_abbrev env comp =
   let c = comp_to_comp_typ comp in
-  match Env.lookup_effect_abbrev env c.effect_name with
+  match Env.lookup_effect_abbrev env (env.universe_of env c.result_typ) c.effect_name with
     | None -> c
     | Some (binders, cdef) ->
       let binders, cdef = SS.open_comp binders cdef in 

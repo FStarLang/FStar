@@ -398,7 +398,7 @@ let norm_eff_name =
    let cache = Util.smap_create 20 in
    fun env (l:lident) ->
        let rec find l =
-           match Env.lookup_effect_abbrev env l with
+           match Env.lookup_effect_abbrev env U_unknown l with //universe doesn't matter here; we're just normalizing the name
             | None -> None
             | Some (_, c) ->
                 let l = (Util.comp_to_comp_typ c).effect_name in
@@ -461,15 +461,15 @@ let is_function t = match (compress t).n with
 
 let return_value env t v =
 //  if is_function t then failwith (Util.format1 "(%s): Returning a function!" (Range.string_of_range (Env.get_range env)));
-  let c = match Env.lookup_effect_abbrev env Const.effect_GTot_lid with 
-    | None -> mk_Total t //we're still in prims, not yet having fully defined the primitive effects
-    | _ -> 
-       let m = must (Env.effect_decl_opt env Const.effect_PURE_lid) in //if Tot isn't fully defined in prims yet, then just return (Total t)
-       let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
-       let k = SS.subst [NT(a, t)] kwp in
-       let wp = N.normalize [N.Beta] env (mk_Tm_app (inst_effect_fun env m m.ret) [S.as_arg t; S.as_arg v] (Some k.n) v.pos) in
-       let wlp = wp in
-       mk_comp m t wp wlp [RETURN] in
+  let c = 
+    if not <| Env.lid_exists env Const.effect_GTot_lid 
+    then mk_Total t //we're still in prims, not yet having fully defined the primitive effects
+    else let m = must (Env.effect_decl_opt env Const.effect_PURE_lid) in //if Tot isn't fully defined in prims yet, then just return (Total t)
+         let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
+         let k = SS.subst [NT(a, t)] kwp in
+         let wp = N.normalize [N.Beta] env (mk_Tm_app (inst_effect_fun_with [env.universe_of env t] env m m.ret) [S.as_arg t; S.as_arg v] (Some k.n) v.pos) in
+         let wlp = wp in
+         mk_comp m t wp wlp [RETURN] in
   if debug env <| Options.Other "Return"
   then Util.print3 "(%s) returning %s at comp type %s\n" 
                     (Range.string_of_range v.pos)  (P.term_to_string v) (N.comp_to_string env c);
@@ -532,8 +532,9 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           let wp_args = [S.as_arg t1; S.as_arg t2; S.as_arg wp1; S.as_arg wlp1; S.as_arg (mk_lam wp2); S.as_arg (mk_lam wlp2)] in
           let wlp_args = [S.as_arg t1; S.as_arg t2; S.as_arg wlp1; S.as_arg (mk_lam wlp2)] in
           let k = SS.subst [NT(a, t2)] kwp in
-          let wp = mk_Tm_app  (inst_effect_fun env md md.bind_wp)  wp_args None t2.pos in
-          let wlp = mk_Tm_app (inst_effect_fun env md md.bind_wlp) wlp_args None t2.pos in
+          let us = [env.universe_of env t1; env.universe_of env t2] in
+          let wp = mk_Tm_app  (inst_effect_fun_with us env md md.bind_wp)  wp_args None t2.pos in
+          let wlp = mk_Tm_app (inst_effect_fun_with us env md md.bind_wlp) wlp_args None t2.pos in
           let c = mk_comp md t2 wp wlp [] in
           c in
     {eff_name=join_lcomp env lc1 lc2;
@@ -580,8 +581,9 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
         else let c = Normalize.unfold_effect_abbrev env c in
              let res_t, wp, wlp = destruct_comp c in
              let md = Env.get_effect_decl env c.effect_name in
-             let wp = mk_Tm_app (inst_effect_fun env md md.assume_p)  [S.as_arg res_t; S.as_arg f; S.as_arg wp]  None wp.pos in
-             let wlp = mk_Tm_app (inst_effect_fun env md md.assume_p) [S.as_arg res_t; S.as_arg f; S.as_arg wlp] None wlp.pos in
+             let us = [env.universe_of env res_t] in
+             let wp = mk_Tm_app (inst_effect_fun_with us env md md.assume_p)  [S.as_arg res_t; S.as_arg f; S.as_arg wp]  None wp.pos in
+             let wlp = mk_Tm_app (inst_effect_fun_with us env md md.assume_p) [S.as_arg res_t; S.as_arg f; S.as_arg wlp] None wlp.pos in
              mk_comp md res_t wp wlp c.flags in
   {lc with comp=weaken}
 
@@ -619,8 +621,9 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                 let c = Normalize.unfold_effect_abbrev env c in
                 let res_t, wp, wlp = destruct_comp c in
                 let md = Env.get_effect_decl env c.effect_name in
-                let wp =  mk_Tm_app (inst_effect_fun env md md.assert_p) [S.as_arg res_t; S.as_arg <| label_opt env reason (Env.get_range env) f; S.as_arg wp] None wp.pos in
-                let wlp = mk_Tm_app (inst_effect_fun env md md.assume_p) [S.as_arg res_t; S.as_arg f; S.as_arg wlp] None wlp.pos in
+                let us = [env.universe_of env res_t] in
+                let wp =  mk_Tm_app (inst_effect_fun_with us env md md.assert_p) [S.as_arg res_t; S.as_arg <| label_opt env reason (Env.get_range env) f; S.as_arg wp] None wp.pos in
+                let wlp = mk_Tm_app (inst_effect_fun_with us env md md.assume_p) [S.as_arg res_t; S.as_arg f; S.as_arg wlp] None wlp.pos in
 
                 if Env.debug env <| Options.Extreme
                 then Util.print1 "-------------Strengthened pre-condition is %s\n"
@@ -646,7 +649,8 @@ let record_application_site env e lc =
              let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in
              let x = S.new_bv None res_t in
              let xexp = S.bv_to_name x in
-             let xret = mk_Tm_app (inst_effect_fun env md_pure md_pure.ret) [S.as_arg res_t; S.as_arg xexp] None res_t.pos in
+             let us = [env.universe_of env res_t] in
+             let xret = mk_Tm_app (inst_effect_fun_with us env md_pure md_pure.ret) [S.as_arg res_t; S.as_arg xexp] None res_t.pos in
              let xret_comp = Util.lcomp_of_comp <| mk_comp md_pure res_t xret xret [PARTIAL_RETURN] in
              let lc = bind env None c (Some x, fst <| strengthen_precondition (Some (fun () -> "pop")) env xexp xret_comp g) in
              lc.comp() in
@@ -657,9 +661,10 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let x = S.new_bv None res_t in
     let y = S.new_bv None res_t in
     let xexp, yexp = S.bv_to_name x, S.bv_to_name y in
-    let yret = mk_Tm_app (inst_effect_fun env md_pure md_pure.ret) [S.as_arg res_t; S.as_arg yexp] None res_t.pos in
-    let x_eq_y_yret = mk_Tm_app (inst_effect_fun env md_pure md_pure.assume_p) [S.as_arg res_t; S.as_arg <| Util.mk_eq res_t res_t xexp yexp; S.as_arg <| yret] None res_t.pos in
-    let forall_y_x_eq_y_yret = mk_Tm_app (inst_effect_fun env md_pure md_pure.close_wp) [S.as_arg res_t; S.as_arg res_t; S.as_arg <| U.abs [mk_binder y] x_eq_y_yret None] None res_t.pos in
+    let us = [env.universe_of env res_t] in
+    let yret = mk_Tm_app (inst_effect_fun_with us env md_pure md_pure.ret) [S.as_arg res_t; S.as_arg yexp] None res_t.pos in
+    let x_eq_y_yret = mk_Tm_app (inst_effect_fun_with us env md_pure md_pure.assume_p) [S.as_arg res_t; S.as_arg <| Util.mk_eq res_t res_t xexp yexp; S.as_arg <| yret] None res_t.pos in
+    let forall_y_x_eq_y_yret = mk_Tm_app (inst_effect_fun_with (us@us) env md_pure md_pure.close_wp) [S.as_arg res_t; S.as_arg res_t; S.as_arg <| U.abs [mk_binder y] x_eq_y_yret None] None res_t.pos in
     let lc2 = mk_comp md_pure res_t forall_y_x_eq_y_yret forall_y_x_eq_y_yret [PARTIAL_RETURN] in
     let lc = bind env None (Util.lcomp_of_comp comp) (Some x, Util.lcomp_of_comp lc2) in
     lc.comp()
@@ -667,14 +672,15 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
 let ite env (guard:formula) lcomp_then lcomp_else =
   let comp () =
       let (md, _, _), (res_t, wp_then, wlp_then), (_, wp_else, wlp_else) = lift_and_destruct env (lcomp_then.comp()) (lcomp_else.comp()) in
-      let ifthenelse md res_t g wp_t wp_e = mk_Tm_app (inst_effect_fun env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
+      let us = [env.universe_of env res_t] in
+      let ifthenelse md res_t g wp_t wp_e = mk_Tm_app (inst_effect_fun_with us env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
       let wp = ifthenelse md res_t guard wp_then wp_else in
       let wlp = ifthenelse md res_t guard wlp_then wlp_else in
       if !Options.split_cases > 0
       then let comp = mk_comp md res_t wp wlp [] in
            add_equality_to_post_condition env comp res_t
-      else let wp = mk_Tm_app  (inst_effect_fun env md md.ite_wp)  [S.as_arg res_t; S.as_arg wlp; S.as_arg wp] None wp.pos in
-           let wlp = mk_Tm_app (inst_effect_fun env md md.ite_wlp) [S.as_arg res_t; S.as_arg wlp] None wlp.pos in
+      else let wp = mk_Tm_app  (inst_effect_fun_with us env md md.ite_wp)  [S.as_arg res_t; S.as_arg wlp; S.as_arg wp] None wp.pos in
+           let wlp = mk_Tm_app (inst_effect_fun_with us env md md.ite_wlp) [S.as_arg res_t; S.as_arg wlp] None wlp.pos in
            mk_comp md res_t wp wlp [] in
     {eff_name=join_effects env lcomp_then.eff_name lcomp_else.eff_name;
      res_typ=lcomp_then.res_typ;
@@ -684,8 +690,9 @@ let ite env (guard:formula) lcomp_then lcomp_else =
 let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
     let eff = List.fold_left (fun eff (_, lc) -> join_effects env eff lc.eff_name) Const.effect_PURE_lid lcases in
     let bind_cases () =
+        let us = [env.universe_of env res_t] in
         let ifthenelse md res_t g wp_t wp_e = 
-            mk_Tm_app (inst_effect_fun env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
+            mk_Tm_app (inst_effect_fun_with us env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
         let default_case =
             let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
             let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
@@ -702,8 +709,8 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
         else let comp = U.comp_to_comp_typ comp in
              let md = Env.get_effect_decl env comp.effect_name in
              let _, wp, wlp = destruct_comp comp in
-             let wp = mk_Tm_app  (inst_effect_fun env md md.ite_wp)  [S.as_arg res_t; S.as_arg wlp; S.as_arg wp] None wp.pos in
-             let wlp = mk_Tm_app (inst_effect_fun env md md.ite_wlp) [S.as_arg res_t; S.as_arg wlp] None wlp.pos in
+             let wp = mk_Tm_app  (inst_effect_fun_with us env md md.ite_wp)  [S.as_arg res_t; S.as_arg wlp; S.as_arg wp] None wp.pos in
+             let wlp = mk_Tm_app (inst_effect_fun_with us env md md.ite_wlp) [S.as_arg res_t; S.as_arg wlp] None wlp.pos in
              mk_comp md res_t wp wlp [] in
     {eff_name=eff;
      res_typ=res_t;
@@ -715,17 +722,19 @@ let close_comp env bvs (lc:lcomp) =
       let c = lc.comp() in
       if Util.is_ml_comp c then c
       else
-        let close_wp md res_t bvs wp0 =
+        let close_wp u_res md res_t bvs wp0 =
           List.fold_right (fun x wp -> 
               let bs = [mk_binder x] in
+              let us = u_res::[env.universe_of env x.sort] in
               let wp = U.abs bs wp None in
-              mk_Tm_app (inst_effect_fun env md md.close_wp) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] None wp0.pos)
+              mk_Tm_app (inst_effect_fun_with us env md md.close_wp) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] None wp0.pos)
           bvs wp0 in 
         let c = Normalize.unfold_effect_abbrev env c in
         let t, wp, wlp = destruct_comp c in
         let md = Env.get_effect_decl env c.effect_name in
-        let wp = close_wp md c.result_typ bvs wp in
-        let wlp = close_wp md c.result_typ bvs wlp in
+        let u_res = env.universe_of env c.result_typ in
+        let wp = close_wp u_res md c.result_typ bvs wp in
+        let wlp = close_wp u_res md c.result_typ bvs wlp in
         mk_comp md c.result_typ wp wlp c.flags in
   {lc with comp=close}
 
@@ -735,7 +744,8 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
       if not (is_pure_or_ghost_effect env lc.eff_name)
       then c
       else if Util.is_partial_return c then c
-      else if Util.is_tot_or_gtot_comp c && Option.isNone <| Env.lookup_effect_abbrev env Const.effect_GTot_lid
+      else if Util.is_tot_or_gtot_comp c 
+           && not (Env.lid_exists env Const.effect_GTot_lid)
       then failwith (Util.format2 "%s: %s\n" (Range.string_of_range e.pos) (Print.term_to_string e))
       else
            let c = Normalize.unfold_effect_abbrev env c in
@@ -817,7 +827,8 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                         let md = Env.get_effect_decl env ct.effect_name in
                         let x = S.new_bv (Some t.pos) t in
                         let xexp = S.bv_to_name x in
-                        let wp = mk_Tm_app (inst_effect_fun env md md.ret) [S.as_arg t; S.as_arg xexp] (Some k.n) xexp.pos in
+                        let us = [env.universe_of env t] in
+                        let wp = mk_Tm_app (inst_effect_fun_with us env md md.ret) [S.as_arg t; S.as_arg xexp] (Some k.n) xexp.pos in
                         let cret = Util.lcomp_of_comp <| mk_comp md t wp wp [RETURN] in
                         let guard = if apply_guard then mk_Tm_app f [S.as_arg xexp] (Some U.ktype0.n) f.pos else f in
                         let eq_ret, _trivial_so_ok_to_discard =
@@ -967,7 +978,6 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
      let gen_univs = gen_univs env univs in
      if debug env Options.Medium then gen_univs |> List.iter (fun x -> Util.print1 "Generalizing uvar %s\n" x.idText);
 
-
      let ecs = uvars |> List.map (fun (uvs, e, c) ->
           let tvars = uvs |> List.map (fun (u, k) ->
             match Unionfind.find u with
@@ -1060,7 +1070,7 @@ let check_top_level env g lc : (bool * comp) =
        let c = Normalize.normalize_comp steps env c |> Util.comp_to_comp_typ in
        let md = Env.get_effect_decl env c.effect_name in
        let t, wp, _ = destruct_comp c in
-       let vc = mk_Tm_app (inst_effect_fun env md md.trivial) [S.as_arg t; S.as_arg wp] (Some U.ktype0.n) (Env.get_range env) in
+       let vc = mk_Tm_app (inst_effect_fun_with [env.universe_of env t] env md md.trivial) [S.as_arg t; S.as_arg wp] (Some U.ktype0.n) (Env.get_range env) in
        if Env.debug env <| Options.Other "Simplification"
        then Util.print1 "top-level VC: %s\n" (Print.term_to_string vc);
        let g = Rel.conj_guard g (Rel.guard_of_guard_formula <| NonTrivial vc) in

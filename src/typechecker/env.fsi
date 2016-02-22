@@ -68,6 +68,7 @@ type env = {
   admit          :bool;                         (* admit VCs in the current module *)
   default_effects:list<(lident*lident)>;        (* [(x,y)] ... y is the default effect of x *)
   type_of        :env -> term -> typ*guard_t;   (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
+  universe_of    :env -> term -> universe;      (* a callback to the type-checker; g |- e : Tot (Type u) *)       
   use_bv_sorts   :bool;                         (* use bv.sort for a bound-variable's type rather than consulting gamma *)
 }
 and solver_t = {
@@ -108,6 +109,7 @@ val set_range : env -> Range.range -> env
 val get_range : env -> Range.range
 
 (* Querying identifiers *)
+val lid_exists             : env -> lident -> bool
 val lookup_bv              : env -> bv -> typ
 val lookup_lid             : env -> lident -> (universes * typ)
 val lookup_univ            : env -> univ_name -> bool
@@ -121,14 +123,14 @@ val lookup_definition      : delta_level -> env -> lident -> option<(univ_names 
 
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
-val lookup_effect_abbrev   : env -> lident -> option<(binders * comp)>
+val lookup_effect_abbrev   : env -> universe -> lident -> option<(binders * comp)>
 val lookup_projector       : env -> lident -> int -> lident
 val current_module         : env -> lident
 val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool
 val inst_tscheme           : tscheme -> universes * term 
-val inst_effect_fun        : env -> eff_decl -> tscheme -> term
+val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env

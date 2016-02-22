@@ -1562,16 +1562,19 @@ let open_univ_vars uvs binders c =
             | Tm_arrow(binders, c) -> uvs, binders, c
             | _ -> failwith "Impossible"
 
-let open_effect_decl env ed = 
-   let fail t = raise (Error(Errors.unexpected_signature_for_monad env ed.mname t, range_of_lid ed.mname)) in
-   let a, wp = match (SS.compress ed.signature).n with
+let open_effect_signature env mname signature = 
+   let fail t = raise (Error(Errors.unexpected_signature_for_monad env mname t, range_of_lid mname)) in
+   match (SS.compress signature).n with
       | Tm_arrow(bs, c) -> 
         let bs = SS.open_binders bs in 
         begin match bs with 
             | [(a, _);(wp, _); (_wlp, _)] -> a, wp.sort
-            | _ -> fail ed.signature
+            | _ -> fail signature
         end
-      | _ -> fail ed.signature in
+      | _ -> fail signature 
+
+let open_effect_decl env ed = 
+   let a, wp = open_effect_signature env ed.mname ed.signature in
    let ed = 
     match ed.binders with 
       | [] -> ed
@@ -1600,14 +1603,17 @@ let open_effect_decl env ed =
 
 let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
-  let binders, signature = SS.open_term ed.binders ed.signature in
-  let binders, env, _ = tc_tparams env0 binders in
-  let signature, _    = tc_trivial_guard env signature in
+  let binders_un, signature_un = SS.open_term ed.binders ed.signature in
+  let binders, env, _ = tc_tparams env0 binders_un in
+  let signature, _    = tc_trivial_guard env signature_un in
   let ed = {ed with binders=binders; 
                     signature=signature} in
 
   let ed, a, wp_a = open_effect_decl env ed in 
-  
+  let get_effect_signature ()  = 
+    let signature, _ = tc_trivial_guard env signature_un in
+    open_effect_signature env ed.mname signature in 
+
   //put the signature in the environment to prevent generalizing its free universe variables until we're done 
   let env = Env.push_bv env (S.new_bv None ed.signature) in
 
@@ -1625,8 +1631,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
 
   let bind_wp =
     let wlp_a = wp_a in
-    let b = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
-    let wp_b = SS.subst [NT(a, S.bv_to_name b)] wp_a in
+    let b, wp_b = get_effect_signature () in
     let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
     let a_wlp_b = a_wp_b in
     let expected_k = Util.arrow [S.mk_binder a; S.mk_binder b; 
@@ -1637,8 +1642,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
 
   let bind_wlp =
     let wlp_a = wp_a in
-    let b = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
-    let wlp_b = SS.subst [NT(a, S.bv_to_name b)] wlp_a in
+    let b, wlp_b = get_effect_signature ()  in
     let a_wlp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wlp_b) in
     let expected_k = Util.arrow [S.mk_binder a; S.mk_binder b; 
                                  S.null_binder wlp_a;
@@ -2088,7 +2092,8 @@ let rec tc_decl env se = match se with
       let env = Env.set_range env r in
       let tps, c = SS.open_comp tps c in
       let tps, env, us = tc_tparams env tps in
-      let c, g, u = tc_comp env c in
+      let c, u, g = tc_comp env c in
+      Rel.force_trivial_guard env g;
       let tags = tags |> List.map (function
         | DefaultEffect None ->
           let c' = Normalize.unfold_effect_abbrev env c in

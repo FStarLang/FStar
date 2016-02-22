@@ -263,6 +263,14 @@ and  pat_to_string x = match x.v with
  
 
 and lbs_to_string quals lbs =
+    let lbs = 
+        if !Options.print_universes
+        then (fst lbs, snd lbs |> List.map (fun lb -> let us, td = Subst.open_univ_vars lb.lbunivs (Util.mk_conj lb.lbtyp lb.lbdef) in 
+                                        let t, d = match (Subst.compress td).n with 
+                                            | Tm_app(_, [(t, _); (d, _)]) -> t, d
+                                            | _ -> failwith "Impossibe" in
+                                        {lb with lbunivs=us; lbtyp=t; lbdef=d}))
+        else lbs in
     Util.format3 "%slet %s %s"
     (quals_to_string quals)
     (if fst lbs then "rec" else "")
@@ -426,7 +434,14 @@ let rec sigelt_to_string x = match x with
     Util.format4 "sub_effect %s ~> %s : <%s> %s" 
         (lid_to_string se.source) (lid_to_string se.target) 
         (univ_names_to_string us) (term_to_string t)
-  | Sig_effect_abbrev(l, _, tps, c, _, _) -> Util.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+  | Sig_effect_abbrev(l, univs, tps, c, _, _) -> 
+    if !Options.print_universes
+    then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) None Range.dummyRange) in
+         let tps, c = match (Subst.compress t).n with 
+            | Tm_arrow(bs, c) -> bs, c
+            | _ -> failwith "impossible" in
+         Util.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
+    else Util.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 

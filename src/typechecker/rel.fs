@@ -1832,14 +1832,16 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                        let g =
                                        if is_null_wp_2
                                        then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
-                                            mk (Tm_app(inst_effect_fun env c2_decl c2_decl.trivial, [as_arg c1.result_typ; as_arg <| edge.mlift c1.result_typ wpc1])) 
+                                            mk (Tm_app(inst_effect_fun_with [env.universe_of env c1.result_typ] env c2_decl c2_decl.trivial, 
+                                                       [as_arg c1.result_typ; as_arg <| edge.mlift c1.result_typ wpc1])) 
                                                (Some U.ktype0.n) r
-                                       else let wp2_imp_wp1 = mk (Tm_app(inst_effect_fun env c2_decl c2_decl.wp_binop,
+                                       else let wp2_imp_wp1 = mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.wp_binop,
                                                                             [as_arg c2.result_typ;
                                                                              as_arg wpc2;
                                                                              as_arg <| S.fvar None Const.imp_lid r;
                                                                              as_arg <| edge.mlift c1.result_typ wpc1])) None r in
-                                                mk (Tm_app(inst_effect_fun env c2_decl c2_decl.wp_as_type, [as_arg c2.result_typ; as_arg wp2_imp_wp1])) (Some U.ktype0.n) r  in
+                                                mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.wp_as_type, 
+                                                           [as_arg c2.result_typ; as_arg wp2_imp_wp1])) (Some U.ktype0.n) r  in
                                        let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
                                        let wl = solve_prob orig (Some <| Util.mk_conj (p_guard base_prob |> fst) g) [] wl in
                                        solve env (attempt [base_prob] wl)
@@ -2143,12 +2145,8 @@ let resolve_implicits g =
           else let env = Env.set_expected_typ env k in
                let tm = N.normalize [N.Beta] env tm in
                if Env.debug env <| Options.Other "RelCheck"
-               then begin
-               Util.print3 "Checking uvar %s resolved to %s at type %s\n" 
+               then Util.print3 "Checking uvar %s resolved to %s at type %s\n" 
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
-                let bs, c = Env.lookup_effect_abbrev env Const.effect_Tot_lid |> must in
-                Util.print1 "Definition of Tot is %s\n" (Print.comp_to_string c)                 
-               end;
                let _, g = env.type_of ({env with use_bv_sorts=true}) tm in 
                let g' = discharge_guard env g in
                until_fixpoint (g'.implicits@out, true) tl in
