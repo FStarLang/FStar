@@ -219,7 +219,9 @@ let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
         | [] -> 
           let univs = ed.univs@us in
           if List.length insts <> List.length univs
-          then failwith (Printf.sprintf "Expected %d instantiations; got %d; failed universe instantiation in effect %s\n\t%s\n" (List.length univs) (List.length insts) (Print.lid_to_string ed.mname) (Print.term_to_string t));
+          then failwith (Util.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n" 
+                            (string_of_int <| List.length univs) (string_of_int <| List.length insts) 
+                            (Print.lid_to_string ed.mname) (Print.term_to_string t));
           snd (inst_tscheme_with (ed.univs@us, t) insts)
         | _  -> failwith (Util.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
 

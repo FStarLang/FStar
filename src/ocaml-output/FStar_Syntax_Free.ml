@@ -37,11 +37,7 @@ end
 in (union out _112_24))) no_free_vars us)
 end
 | FStar_Syntax_Syntax.U_unif (u) -> begin
-if ((FStar_Unionfind.uvar_id u) = 11303) then begin
-(FStar_All.failwith "11303!")
-end else begin
 (singleton_univ u)
-end
 end))
 
 # 69 "FStar.Syntax.Free.fst"

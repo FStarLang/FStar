@@ -1558,7 +1558,8 @@ in (aux t))))
 let rec unfold_effect_abbrev : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp_typ = (fun env comp -> (
 # 760 "FStar.TypeChecker.Normalize.fst"
 let c = (FStar_Syntax_Util.comp_to_comp_typ comp)
-in (match ((FStar_TypeChecker_Env.lookup_effect_abbrev env c.FStar_Syntax_Syntax.effect_name)) with
+in (match ((let _146_497 = (env.FStar_TypeChecker_Env.universe_of env c.FStar_Syntax_Syntax.result_typ)
+in (FStar_TypeChecker_Env.lookup_effect_abbrev env _146_497 c.FStar_Syntax_Syntax.effect_name))) with
 | None -> begin
 c
 end
@@ -1570,12 +1571,12 @@ in (match (_67_1198) with
 | (binders, cdef) -> begin
 (
 # 765 "FStar.TypeChecker.Normalize.fst"
-let inst = (let _146_500 = (let _146_499 = (FStar_Syntax_Syntax.as_arg c.FStar_Syntax_Syntax.result_typ)
-in (_146_499)::c.FStar_Syntax_Syntax.effect_args)
+let inst = (let _146_501 = (let _146_500 = (FStar_Syntax_Syntax.as_arg c.FStar_Syntax_Syntax.result_typ)
+in (_146_500)::c.FStar_Syntax_Syntax.effect_args)
 in (FStar_List.map2 (fun _67_1202 _67_1206 -> (match ((_67_1202, _67_1206)) with
 | ((x, _67_1201), (t, _67_1205)) -> begin
 FStar_Syntax_Syntax.NT ((x, t))
-end)) binders _146_500))
+end)) binders _146_501))
 in (
 # 766 "FStar.TypeChecker.Normalize.fst"
 let c1 = (FStar_Syntax_Subst.subst_comp inst cdef)
@@ -1610,18 +1611,18 @@ end
 let _67_1231 = (FStar_All.pipe_right binders FStar_Syntax_Util.args_of_binders)
 in (match (_67_1231) with
 | (binders, args) -> begin
-(let _146_513 = (FStar_Syntax_Syntax.mk_Tm_app t args None t.FStar_Syntax_Syntax.pos)
-in (let _146_512 = (FStar_All.pipe_right (FStar_Syntax_Util.lcomp_of_comp c) (fun _146_511 -> Some (_146_511)))
-in (FStar_Syntax_Util.abs binders _146_513 _146_512)))
+(let _146_514 = (FStar_Syntax_Syntax.mk_Tm_app t args None t.FStar_Syntax_Syntax.pos)
+in (let _146_513 = (FStar_All.pipe_right (FStar_Syntax_Util.lcomp_of_comp c) (fun _146_512 -> Some (_146_512)))
+in (FStar_Syntax_Util.abs binders _146_514 _146_513)))
 end))
 end)
 end))
 end
 | _67_1233 -> begin
-(let _146_516 = (let _146_515 = (FStar_Syntax_Print.tag_of_term t)
-in (let _146_514 = (FStar_Syntax_Print.term_to_string t)
-in (FStar_Util.format2 "NYI: eta_expand(%s) %s" _146_515 _146_514)))
-in (FStar_All.failwith _146_516))
+(let _146_517 = (let _146_516 = (FStar_Syntax_Print.tag_of_term t)
+in (let _146_515 = (FStar_Syntax_Print.term_to_string t)
+in (FStar_Util.format2 "NYI: eta_expand(%s) %s" _146_516 _146_515)))
+in (FStar_All.failwith _146_517))
 end))
 
 
