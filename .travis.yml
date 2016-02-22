@@ -6,9 +6,9 @@ before_install:
   - sudo apt-get -qq update
 
 install:
-  - sudo apt-get install libssl-dev opam libsqlite3-dev g++-4.9 gcc-4.9
-  - export CC=gcc-4.9
-  - export CXX=g++-4.9
+  - sudo apt-get install libssl-dev opam libsqlite3-dev g++-5 gcc-5
+  - export CC=gcc-5
+  - export CXX=g++-5
   - export OPAMYES=true
   - opam init
   - eval $(opam config env)
