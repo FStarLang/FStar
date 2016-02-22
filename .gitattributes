@@ -2,3 +2,6 @@
 *.fsti linguist-language=FStar
 
 *.fs* eol=lf
+
+/src/tools/make_all_boot_fsts eol=lf
+/src/tools/mkfst eol=lf
