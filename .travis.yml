@@ -7,8 +7,8 @@ before_install:
 
 install:
   - sudo apt-get install libssl-dev opam libsqlite3-dev g++-5 gcc-5
-  - export CC=gcc-5
-  - export CXX=g++-5
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 200
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 200
   - export OPAMYES=true
   - opam init
   - eval $(opam config env)
