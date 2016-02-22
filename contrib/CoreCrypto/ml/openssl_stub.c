@@ -1448,6 +1448,8 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
     (void) BN_bn2bin(dh->priv_key, (uint8_t*) String_val(mlprv));
 
     DH_free(dh);
+    free(mlp_buf);
+    free(mlg_buf);
 
     CAMLlocal1(ret);
     ret = caml_alloc_tuple(2);
@@ -1521,6 +1523,12 @@ CAMLprim value ocaml_dh_set_key(value mldh, value mlkey) {
     dh->g = g;
     dh->pub_key = pub;
     dh->priv_key = prv;
+
+    free(mlp_buf);
+    free(mlg_buf);
+    free(mlpub_buf);
+    if (mlprv_buf != NULL)
+      free(mlprv_buf);
 
     CAMLreturn(Val_unit);
 
