@@ -2,24 +2,32 @@ language: csharp
 
 before_install:
   - sudo add-apt-repository --yes ppa:avsm/ppa
+  - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
   - sudo apt-get -qq update
-  - sudo apt-get install libssl-dev opam libsqlite3-dev
+
+install:
+  - sudo apt-get install libssl-dev opam libsqlite3-dev g++-4.9 gcc-4.9
+  - export CC=gcc-4.9
+  - export CXX=g++-4.9
+  - export OPAMYES=true
+  - opam init
+  - eval $(opam config env)
+  - opam switch 4.02.3
+  - eval $(opam config env)
+  - opam install batteries sqlite3 fileutils stdint
+  - export Z3=z3-4.4.1-x64-ubuntu-14.04
+  - wget https://github.com/Z3Prover/z3/releases/download/z3-4.4.1/$Z3.zip
+  - unzip $Z3.zip
+  - export PATH=/home/travis/build/FStarLang/FStar/$Z3/bin:/home/travis/build/FStarLang/FStar/bin:$PATH
 
 script:
   - make -C src
   - make -C src ocaml
-  - export OPAMYES=true
-  - opam init
-  - eval $(opam config env)
-  - opam install batteries sqlite3 fileutils stdint
   - make -C src/ocaml-output
-  - export PATH=$(realpath bin):$PATH
   - make -C contrib/CoreCrypto/ml
   - make -C contrib/CoreCrypto/ml test
   - make -C examples/unit-tests
   - make -C src regressions OTHERFLAGS=--lax
-
-install: true
 
 notifications:
   slack: everestexpedition:NqWwcvMIxouVIbC5IhF0loqX
