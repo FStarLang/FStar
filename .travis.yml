@@ -1,18 +1,12 @@
 language: csharp
 
-addons:
-  apt:
-    sources:
-      - avsm-ppa
-      - ubuntu-toolchain-r-test
-    packages:
-      - opam
-      - libsqlite3-dev
-      - g++-4.9
-      - gcc-4.9
-      - libssl-dev
+before_install:
+  - sudo add-apt-repository --yes ppa:avsm/ppa
+  - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
+  - sudo apt-get -qq update
 
 install:
+  - sudo apt-get install libssl-dev opam libsqlite3-dev g++-4.9 gcc-4.9
   - export CC=gcc-4.9
   - export CXX=g++-4.9
   - export OPAMYES=true
