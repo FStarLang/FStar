@@ -25,8 +25,6 @@ script:
   - make -C src
   - make -C src ocaml
   - make -C src/ocaml-output
-  - make -C contrib/CoreCrypto/ml
-  - make -C contrib/CoreCrypto/ml test
   - make -C examples/unit-tests
   - make -C src regressions OTHERFLAGS=--lax
 
