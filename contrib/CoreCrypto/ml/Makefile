@@ -82,3 +82,6 @@ depend:
 	$(OCAMLDEP) *.ml *.mli > .depend
 
 include .depend
+
+valgrind: Tests$(EXE)
+	valgrind --leak-check=yes --suppressions=suppressions ./Tests$(EXE)

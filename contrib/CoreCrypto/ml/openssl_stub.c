@@ -41,13 +41,11 @@ static value Val_some(value mlvalue) {
 
 // This function takes an ML value of type [Platform.Bytes.bytes]; if the value
 // is well-formed, then the function allocates and returns a C-style buffer
-// containing the sequence of bytes describes by [mlbytes], whose length is
+// containing the sequence of bytes described by [mlbytes], whose length is
 // written into [out_length]. If [mlbytes] is ill-formed, the function returns
 // [NULL] and [out_length] is unspecified.
 static uint8_t* buffer_of_platform_bytes(value mlbytes, size_t* out_length) {
-  CAMLparam1(mlbytes);
-  CAMLlocal1(mllist);
-  mllist = Field(mlbytes, 0);
+  value mllist = Field(mlbytes, 0);
 
   size_t i, j, start, length;
   // The index at which [Field(mllist, 0)] starts in the complete sequence.
@@ -60,8 +58,7 @@ static uint8_t* buffer_of_platform_bytes(value mlbytes, size_t* out_length) {
   uint8_t* buf = malloc(length+1);
 
   while (mllist != Val_emptylist) {
-    CAMLlocal1(head);
-    head = Field(mllist, 0);
+    value head = Field(mllist, 0);
     size_t head_len = caml_string_length(head);
 
     if (i <= start && start < i + head_len) {
@@ -749,6 +746,11 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
     rsa->e = pub;
     rsa->d = prv;
 
+    free(modbuf);
+    free(pubbuf);
+    if (prvbuf != NULL)
+      free(prvbuf);
+
     CAMLreturn(Val_unit);
 
 bailout:
@@ -1094,6 +1096,10 @@ CAMLprim value ocaml_dsa_gen_key(value mlparams) {
     Field(ret, 0) = mlpub;
     Field(ret, 1) = mlprv;
 
+    free(mlp_buf);
+    free(mlq_buf);
+    free(mlg_buf);
+
     CAMLreturn(ret);
 
 bailout:
@@ -1181,6 +1187,13 @@ CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
     dsa->g = g;
     dsa->pub_key = pub;
     dsa->priv_key = prv;
+
+    free(mlp_buf);
+    free(mlq_buf);
+    free(mlg_buf);
+    free(mlpub_buf);
+    if (mlprv_buf != NULL)
+      free(mlprv_buf);
 
     CAMLreturn(Val_unit);
 
