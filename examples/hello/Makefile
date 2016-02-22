@@ -16,7 +16,7 @@ endif
 
 FS_LIBS=$(BIN)/FSharp.PowerPack.dll
 
-MLLIB=../../../lib/ml
+MLLIB=$(LIB)/ml
 
 fs: out hello.fst
 	$(FSTAR)   --odir out --codegen FSharp hello.fst
@@ -27,13 +27,13 @@ fs: out hello.fst
 ocaml: out hello.fst
 	$(MAKE) -C $(MLLIB)
 	$(FSTAR)  --odir out --codegen OCaml hello.fst
-	(cd out; ocamlfind ocamlopt -o hello.exe -package num -I $(MLLIB) $(MLLIB)/fstarlib.cmxa Hello.ml)
+	(cd out; ocamlfind ocamlopt -o hello.exe -package num -I ../$(MLLIB) ../$(MLLIB)/fstarlib.cmxa Hello.ml)
 	./out/hello.exe
 
 testseq: out testseq.fst
 	$(MAKE) -C $(MLLIB) PRIMS_DIR=native_int
 	$(FSTAR) --use_native_int --odir out --codegen OCaml testseq.fst
-	(cd out; ocamlfind ocamlopt -o testseq.exe -I $(MLLIB) $(MLLIB)/fstarlib.cmxa FStar_All.ml FStar_Seq.ml TestSeq.ml)
+	(cd out; ocamlfind ocamlopt -o testseq.exe -I ../$(MLLIB) ../$(MLLIB)/fstarlib.cmxa FStar_All.ml FStar_Seq.ml TestSeq.ml)
 	./out/TestSeq.exe
 
 bat_testseq: out testseq.fst
