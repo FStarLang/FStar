@@ -394,14 +394,11 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_iv(value mlctx, value iv) {
     if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
         caml_failwith("CIPHER_CTX has been disposed");
 
-    if (EVP_CipherInit_ex(ctx, NULL, NULL, NULL, (uint8_t*) String_val(iv), 1) == 0)
-        caml_failwith("cannot set CIPHER_CTX_iv");
-
-    int ret;
-    if((ret = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, caml_string_length(iv), NULL)) != 1) {
-        fprintf(stderr, "couldn't set iv length=%zu, ret=%d\n", caml_string_length(iv), ret);
+    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, caml_string_length(iv), NULL) != 1)
         caml_failwith("cannot set CIPHER_CTX_iv_length");
-    }
+
+    if (EVP_CipherInit_ex(ctx, NULL, NULL, NULL, (uint8_t*) String_val(iv), -1) == 0)
+        caml_failwith("cannot set CIPHER_CTX_iv");
 
     CAMLreturn(Val_unit);
 }

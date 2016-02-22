@@ -66,7 +66,7 @@ CoreCrypto.cma: $(DLL_BYTE)
 	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $^
 
 TEST_CMX = Tests.cmx
-Tests$(EXE): $(TEST_CMX) CoreCrypto.cmxa
+Tests$(EXE): CoreCrypto.cmxa $(TEST_CMX)
 	$(OCAMLOPT) $(EXTRA_OPTS) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
 	CoreCrypto.cmxa $(TEST_CMX)
 
