@@ -8,7 +8,8 @@ before_install:
 script:
   - make -C src
   - make -C src ocaml
-  - opam init --yes
+  - export OPAMYES=true
+  - opam init
   - eval $(opam config env)
   - opam install batteries sqlite3 fileutils stdint
   - make -C src/ocaml-output
@@ -17,3 +18,11 @@ script:
   - make -C contrib/CoreCrypto/ml test
   - make -C examples/unit-tests
   - make -C src regressions OTHERFLAGS=--lax
+
+install: true
+
+notifications:
+  slack: everestexpedition:NqWwcvMIxouVIbC5IhF0loqX
+
+git:
+    depth: 1
