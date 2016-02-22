@@ -1,7 +1,9 @@
+language: csharp
+
 before_install:
   - sudo add-apt-repository --yes ppa:avsm/ppa
   - sudo apt-get -qq update
-  - sudo apt-get install fsharp libssl-dev opam libsqlite3-dev
+  - sudo apt-get install libssl-dev opam libsqlite3-dev
 
 script:
   - make -C src
