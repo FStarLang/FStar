@@ -29,7 +29,7 @@ script:
   - make -C src ocaml
   - make -C src/ocaml-output
   - make -C examples/unit-tests
-  - make -C src regressions
+  - make -C src regressions OTHERFLAGS=--lax
 
 notifications:
   slack: everestexpedition:NqWwcvMIxouVIbC5IhF0loqX
