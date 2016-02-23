@@ -22,9 +22,12 @@ install:
   - wget https://github.com/Z3Prover/z3/releases/download/z3-4.4.1/$Z3.zip
   - unzip $Z3.zip
   - export PATH=/home/travis/build/FStarLang/FStar/$Z3/bin:/home/travis/build/FStarLang/FStar/bin:$PATH
+  - echo -e "Default \e[31m=== Everything setup ===\e[0m"
   - ocamlfind ocamlopt -config
+  - df -h
 
 script:
+  - echo -e "Default \e[31m=== Now building and testing ===\e[0m"
   - make -C src
   - make -C src ocaml
   - make -C src/ocaml-output
