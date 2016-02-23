@@ -50,12 +50,12 @@ let rec mapT f n v = match v with
   | VNil -> VNil
   | VCons hd tl -> VCons (f hd) (mapT f tl)
 
-val fold_left: ('acc -> 'a -> Tot 'acc) -> 'acc -> #n:nat -> vector 'a n -> Tot 'acc (decreases n)
+val fold_left: ('b -> 'a -> Tot 'b) -> 'b -> #n:nat -> vector 'a n -> Tot 'b (decreases n)
 let rec fold_left f acc n v = match v with
   | VNil -> acc
   | VCons hd tl -> fold_left f (f acc hd) tl
 
-val fold_right: ('a -> 'acc -> Tot 'acc) -> #n:nat -> vector 'a n -> 'acc -> Tot 'acc
+val fold_right: ('a -> 'b -> Tot 'b) -> #n:nat -> vector 'a n -> 'b -> Tot 'b
 let rec fold_right f n v acc = match v with
   | VNil -> acc
   | VCons hd tl -> f hd (fold_right f tl acc)
@@ -74,7 +74,6 @@ let rec zip' n v1 v2 = match v1 with
   | VCons a tl1 ->
     let VCons b tl2 = v2 in
     VCons (a, b) (zip' tl1 tl2)
-
 
 (* val zip: #n:nat -> vector 'a n -> vector 'b n -> Tot (vector ('a * 'b) n) *)
 (* let rec zip n v1 v2 = match v1, v2 with *)

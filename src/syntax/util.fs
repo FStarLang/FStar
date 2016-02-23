@@ -303,40 +303,6 @@ let is_smt_lemma t = match (compress t).n with
       end
     | _ -> false
 
-    
-let smt_lemma_pats p = 
-  let rec list_elements (e:term) : list<term> = 
-    let head, args = head_and_args (unmeta e) in
-    match (un_uinst head).n, args with
-        | Tm_fvar(fv, _), _ when lid_equals fv.v Const.nil_lid -> []
-        | Tm_fvar(fv, _), [_; (hd, _); (tl, _)] when lid_equals fv.v Const.cons_lid -> 
-          hd::list_elements tl
-        | _ -> [] in 
-
-    let v_or_t_pat p = 
-        let head, args = unmeta p |> head_and_args in
-        match (un_uinst head).n, args with
-            | Tm_fvar(fv, _), [(_, _); (e, _)] when lid_equals fv.v Const.smtpat_lid -> e
-            | _ -> failwith "Unexpected pattern term"  in
-    
-    let elts = list_elements p in 
-    
-    let smt_pat_or t =
-        let head, args = unmeta t |> head_and_args in
-        match (un_uinst head).n, args with 
-            | Tm_fvar(fv, _), [(e, _)] when lid_equals fv.v Const.smtpatOr_lid -> 
-              Some e
-            | _ -> None in
-
-    match elts with 
-        | [t] -> 
-            begin match smt_pat_or t with 
-            | Some e -> 
-                list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map v_or_t_pat)
-            | _ -> [elts |> List.map v_or_t_pat]
-            end
-        | _ -> [elts |> List.map v_or_t_pat] 
-
 let is_ml_comp c = match c.n with
   | Comp c -> lid_equals c.effect_name Const.effect_ML_lid
               || c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
@@ -547,7 +513,7 @@ let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
         | Some lids -> 
           let universes = univ_vars |> List.map U_name in
           let inst = lids |> List.map (fun l -> l, universes) in
-          FStar.Syntax.InstFV.inst inst def in
+          FStar.Syntax.InstFV.instantiate inst def in
     let typ = Subst.close_univ_vars univ_vars typ in
     let def = Subst.close_univ_vars univ_vars def in
     mk_letbinding lbname univ_vars typ eff def

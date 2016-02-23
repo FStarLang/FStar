@@ -1955,7 +1955,7 @@ let tc_inductive env ses quals lids =
 
       | _ -> failwith "impossible" in
 
-    (* 3. Generalizing universes and 4. recheck datacons *)
+    (* 3. Generalizing universes and 4. instantiate inductives within the datacons *)
     let generalize_and_recheck env g tcs datas = 
         Rel.force_trivial_guard env g;
         let binders = tcs |> List.map (function 
@@ -1988,25 +1988,19 @@ let tc_inductive env ses quals lids =
             | _ -> failwith "Impossible") 
             tc_types tcs in
 
-        //4. Need to recheck each datacon after generalization, 
-        //so that it correctly instantiates all the universes of the inductives it mentions
-        //Note, so far, the datacons have only been checked w.r.t monomorphic variants of the inductives
-        let env_data = Env.push_univ_vars env uvs in
-        let uvs_universes = uvs |> List.map U_name in
-        let env_data = List.fold_left (fun env tc -> Env.push_sigelt_inst env tc uvs_universes) env_data tcs  in
-        let datas = List.map2 (fun (t, _) -> function
-            | Sig_datacon(l, _, _, tc, ntps, quals, mutuals, r) -> 
-              let ty = match uvs with 
-                | [] -> t.sort
-                | _ -> 
-                 if Env.debug env Options.Low 
-                 then Util.print2 "Rechecking datacon %s : %s\n" (Print.lid_to_string l) (Print.term_to_string t.sort);
-                 let ty, _, g = tc_tot_or_gtot_term env_data t.sort in
-                 let g = {g with guard_f=Trivial} in
-                 Rel.force_trivial_guard env g;
-                 SS.close_univ_vars uvs ty in
-              Sig_datacon(l, uvs, ty, tc, ntps, quals, mutuals, r)
-            | _ -> failwith "Impossible") data_types datas in
+        //4. Instantiate the inductives in each datacon with the generalized universes
+        let datas = match uvs with 
+            | [] -> datas
+            | _ -> 
+             let uvs_universes = uvs |> List.map U_name in
+             let tc_insts = tcs |> List.map (function Sig_inductive_typ(tc, _, _, _, _, _, _, _) -> (tc, uvs_universes) | _ -> failwith "Impossible") in
+             List.map2 (fun (t, _) d -> 
+                match d with 
+                    | Sig_datacon(l, _, _, tc, ntps, quals, mutuals, r) -> 
+                        let ty = InstFV.instantiate tc_insts t.sort |> SS.close_univ_vars uvs in
+                        Sig_datacon(l, uvs, ty, tc, ntps, quals, mutuals, r)
+                    | _ -> failwith "Impossible")
+             data_types datas in
         tcs, datas in
 
     let tys, datas = ses |> List.partition (function Sig_inductive_typ _ -> true | _ -> false) in

@@ -1784,7 +1784,7 @@ end)
 end)))
 in (
 # 794 "FStar.SMTEncoding.Encode.fst"
-let v_or_t_pat = (fun p -> (
+let one_pat = (fun p -> (
 # 795 "FStar.SMTEncoding.Encode.fst"
 let _77_1281 = (let _156_737 = (FStar_Syntax_Util.unmeta p)
 in (FStar_All.pipe_right _156_737 FStar_Syntax_Util.head_and_args))
@@ -1796,8 +1796,8 @@ in (_156_739, args))) with
 | (FStar_Syntax_Syntax.Tm_fvar (fv, _77_1284), (_77_1292, _77_1294)::(e, _77_1289)::[]) when (FStar_Ident.lid_equals fv.FStar_Syntax_Syntax.v FStar_Syntax_Const.smtpat_lid) -> begin
 (e, None)
 end
-| (FStar_Syntax_Syntax.Tm_fvar (fv, _77_1300), (t, _77_1305)::[]) when (FStar_Ident.lid_equals fv.FStar_Syntax_Syntax.v FStar_Syntax_Const.smtpatT_lid) -> begin
-(t, None)
+| (FStar_Syntax_Syntax.Tm_fvar (fv, _77_1300), (e, _77_1305)::[]) when (FStar_Ident.lid_equals fv.FStar_Syntax_Syntax.v FStar_Syntax_Const.smtpatT_lid) -> begin
+(e, None)
 end
 | _77_1310 -> begin
 (FStar_All.failwith "Unexpected pattern term")
@@ -1832,15 +1832,15 @@ in (match (elts) with
 | Some (e) -> begin
 (let _156_749 = (list_elements e)
 in (FStar_All.pipe_right _156_749 (FStar_List.map (fun branch -> (let _156_748 = (list_elements branch)
-in (FStar_All.pipe_right _156_748 (FStar_List.map v_or_t_pat)))))))
+in (FStar_All.pipe_right _156_748 (FStar_List.map one_pat)))))))
 end
 | _77_1338 -> begin
-(let _156_750 = (FStar_All.pipe_right elts (FStar_List.map v_or_t_pat))
+(let _156_750 = (FStar_All.pipe_right elts (FStar_List.map one_pat))
 in (_156_750)::[])
 end)
 end
 | _77_1340 -> begin
-(let _156_751 = (FStar_All.pipe_right elts (FStar_List.map v_or_t_pat))
+(let _156_751 = (FStar_All.pipe_right elts (FStar_List.map one_pat))
 in (_156_751)::[])
 end))))
 in (

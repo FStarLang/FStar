@@ -28,22 +28,22 @@ and seq (a:Type) =
           -> end_i:nat{end_i >= start_i}
           -> seq a
 
-val create: #a:Type -> n:nat -> init:a -> Tot (seq a)
+val create: n:nat -> init:'a -> Tot (seq 'a)
 let create n init = Seq (Const init) 0 n
 
-val length: #a:Type -> s:seq a -> Tot nat
+val length: s:seq 'a -> Tot nat
 let length s = Seq.end_i s - Seq.start_i s
 
-val __index__: #a:Type -> contents a -> int -> Tot a
-let rec __index__ (a:Type) c i = match c with
+val __index__: contents 'a -> int -> Tot 'a
+let rec __index__ c i = match c with
   | Const v -> v
   | Upd j v tl -> if i=j then v else __index__ tl i
   | Append s1 s2 -> if i < length s1 then __index__ (Seq.c s1) i else __index__ (Seq.c s2) (i - length s1)
 
-val index: #a:Type -> s:seq a -> i:nat{length s > i} -> Tot a
+val index: s:seq 'a -> i:nat{length s > i} -> Tot 'a
 let index (Seq c j k) i = __index__ c (i + j)
 
-val __update__: #a:Type -> contents a -> int -> a -> Tot (contents a)
+val __update__: contents 'a -> int -> 'a -> Tot (contents 'a)
 let rec __update__ c i v = match c with
   | Const _
   | Upd _ _ _ -> Upd i v c
@@ -52,24 +52,22 @@ let rec __update__ c i v = match c with
      then Append (Seq (__update__ (Seq.c s1) i v) (Seq.start_i s1) (Seq.end_i s1)) s2
      else Append s1 (Seq (__update__ (Seq.c s2) (i - length s1) v) (Seq.start_i s2) (Seq.end_i s2))
 
-val update: #a:Type -> s:seq a -> i:nat{length s > i} -> v:a -> Tot (seq a)
+val update: s:seq 'a -> i:nat{length s > i} -> v:'a -> Tot (seq 'a)
 let update (Seq c j k) i v = Seq (__update__ c (i + j) v) j k
 
-val slice: #a:Type -> s:seq a -> i:nat -> j:nat{(i <= j /\ j <= length s)} -> Tot (seq a)
+val slice: s:seq 'a -> i:nat -> j:nat{(i <= j /\ j <= length s)} -> Tot (seq 'a)
 let slice (Seq c start_i end_i) i j = Seq c (start_i + i) (start_i + j)
 
-val split: #a:Type -> s:seq a -> i:nat{(0 <= i /\ i < length s)} -> Tot (seq a * seq a)
+val split: s:seq 'a -> i:nat{(0 <= i /\ i < length s)} -> Tot (seq 'a * seq 'a)
 let split s i = slice s 0 i, slice s i (length s)
 
-val append: #a:Type -> seq a -> seq a -> Tot (seq a)
+val append: seq 'a -> seq 'a -> Tot (seq 'a)
 let append s1 s2 = Seq (Append s1 s2) 0 (length s1 + length s2)
 
-(* NS: TODO better notation for implicit parammeters ... requires two steps now *)
-opaque logic type Equals (a:Type) (s1:seq a) (s2:seq a) =
+type Equal (#a:Type) (s1:seq a) (s2:seq a) =
           (length s1 == length s2
            /\ (forall (i:int).
                  (0 <= i /\ i < length s1)
                ==> __index__ (Seq.c s1) i == __index__ (Seq.c s2) i))
 
-type Equal : #a:Type -> seq a -> seq a -> Type = fun (a:Type) (s1:seq a) (s2:seq a) -> Equals a s1 s2
 assume val eq: #a:Type -> s1:seq a -> s2:seq a -> Tot (b:bool{b ==> Equal s1 s2})

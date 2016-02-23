@@ -194,8 +194,8 @@ type list (a:Type) =
 
 type pattern =
   | SMTPat   : #a:Type -> a -> pattern
-  | SMTPatT  : a:Type -> pattern //TODO: This case should be removed
-//  | SMTPatOr : list (list pattern) -> pattern //TODO: rechecking this fails some universe checks
+  | SMTPatT  : a:Type -> pattern 
+  | SMTPatOr : list (list pattern) -> pattern 
 
 assume type decreases : #a:Type -> a -> Type0
 

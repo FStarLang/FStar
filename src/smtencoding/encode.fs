@@ -791,11 +791,11 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
           hd::list_elements tl
         | _ -> Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
 
-    let v_or_t_pat p = 
+    let one_pat p = 
         let head, args = Util.unmeta p |> Util.head_and_args in
         match (Util.un_uinst head).n, args with
         | Tm_fvar(fv, _), [(_, _); (e, _)] when lid_equals fv.v Const.smtpat_lid -> (e, None)
-        | Tm_fvar(fv, _), [(t, _)] when lid_equals fv.v Const.smtpatT_lid -> (t, None)
+        | Tm_fvar(fv, _), [(e, _)] when lid_equals fv.v Const.smtpatT_lid -> (e, None)
         | _ -> failwith "Unexpected pattern term"  in
     
     let lemma_pats p = 
@@ -810,10 +810,10 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
             | [t] -> 
              begin match smt_pat_or t with 
                 | Some e -> 
-                  list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map v_or_t_pat)
-                | _ -> [elts |> List.map v_or_t_pat]
+                  list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map one_pat)
+                | _ -> [elts |> List.map one_pat]
               end
-            | _ -> [elts |> List.map v_or_t_pat] in
+            | _ -> [elts |> List.map one_pat] in
 
     let binders, pre, post, patterns = match (SS.compress t).n with
         | Tm_arrow(binders, c) -> 
