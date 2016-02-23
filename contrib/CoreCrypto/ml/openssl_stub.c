@@ -383,16 +383,19 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_key(value mlctx, value key) {
 }
 
 /* -------------------------------------------------------------------- */
-CAMLprim value ocaml_EVP_CIPHER_CTX_set_iv(value mlctx, value iv) {
+CAMLprim value ocaml_EVP_CIPHER_CTX_set_iv(value mlctx, value iv, value variable_iv_length) {
     EVP_CIPHER_CTX *ctx = NULL;
 
-    CAMLparam2(mlctx, iv);
+    CAMLparam3(mlctx, iv, variable_iv_length);
 
     if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
         caml_failwith("CIPHER_CTX has been disposed");
 
-    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, caml_string_length(iv), NULL) != 1)
-        caml_failwith("cannot set CIPHER_CTX_iv_length");
+    if(Bool_val(variable_iv_length) && EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, caml_string_length(iv), NULL) != 1) {
+        unsigned long err = ERR_get_error();
+        char* err_string = ERR_error_string(err, NULL);
+        caml_failwith(err_string);
+    }
 
     if (EVP_CipherInit_ex(ctx, NULL, NULL, NULL, (uint8_t*) String_val(iv), -1) == 0)
         caml_failwith("cannot set CIPHER_CTX_iv");
