@@ -22,7 +22,7 @@ working:
 test:
 
 lax:
-	$(UFSTAR) --lax FStar.List.Tot.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.Relational.Relational.fst FStar.Relational.Comp.fst #FStar.Relational.State.fst
+	$(UFSTAR) --lax FStar.List.Tot.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.Relational.Relational.fst FStar.Relational.Comp.fst FStar.Relational.State.fst
 
 # #	$(UFSTAR) FStar.OrdMapProps.fst -- problem filed as #359
 # #	$(UFSTAR) stboot.fsi stboot.fst   -- Name "FStar.All.ML" not found

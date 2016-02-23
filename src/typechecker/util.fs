@@ -985,10 +985,12 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
               | Fixed ({n=Tm_abs(_, {n=Tm_name a}, _)}) -> a, Some Implicit
               | Fixed _ -> failwith "Unexpected instantiation of mutually recursive uvar"
               | _ ->
+                  let k = N.normalize [N.Beta] env k in
                   let bs, kres = Util.arrow_formals k in 
                   let a = S.new_bv (Some <| Env.get_range env) kres in 
                   let t = U.abs bs (S.bv_to_name a) (Some (Util.lcomp_of_comp (S.mk_Total kres))) in
-                  U.set_uvar u t;//t clearly has a free variable; this is the one place we break the invariant of a uvar always being resolved to a closed term ... need to be careful, see below
+                  U.set_uvar u t;//t clearly has a free variable; this is the one place we break the 
+                                 //invariant of a uvar always being resolved to a closed term ... need to be careful, see below
                   a, Some Implicit) in
 
           let e, c = match tvars with 
