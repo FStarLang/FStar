@@ -1226,8 +1226,8 @@ in (let _114_409 = (let _114_407 = (let _114_406 = (let _114_405 = (FStar_Syntax
 in (let _114_404 = (let _114_403 = (FStar_Syntax_Syntax.null_binder btyp)
 in (_114_403)::[])
 in (_114_405)::_114_404))
-in ((b, Some (FStar_Syntax_Syntax.Implicit)))::_114_406)
-in ((a, Some (FStar_Syntax_Syntax.Implicit)))::_114_407)
+in ((b, Some (FStar_Syntax_Syntax.imp_tag)))::_114_406)
+in ((a, Some (FStar_Syntax_Syntax.imp_tag)))::_114_407)
 in (let _114_408 = (FStar_Syntax_Syntax.mk_Total ktype0)
 in (arrow _114_409 _114_408)))))))
 
@@ -1279,7 +1279,7 @@ in (
 let atyp = (FStar_Syntax_Syntax.bv_to_tm a)
 in (let _114_435 = (let _114_433 = (let _114_432 = (FStar_Syntax_Syntax.null_binder atyp)
 in (_114_432)::[])
-in ((a, Some (FStar_Syntax_Syntax.Implicit)))::_114_433)
+in ((a, Some (FStar_Syntax_Syntax.imp_tag)))::_114_433)
 in (let _114_434 = (FStar_Syntax_Syntax.mk_Total ktype0)
 in (arrow _114_435 _114_434)))))
 

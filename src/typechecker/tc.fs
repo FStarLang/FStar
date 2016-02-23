@@ -594,8 +594,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
             | (hd, imp)::bs, (hd_expected, imp')::bs_expected -> 
                begin match imp, imp' with 
-                    | None, Some Implicit
-                    | Some Implicit, None -> 
+                    | None, Some (Implicit _)
+                    | Some (Implicit _), None -> 
                       raise (Error(Util.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd), 
                                                   S.range_of_bv hd))
                     | _ -> ()
@@ -828,7 +828,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             cres     (* function result comp *)
                             args     (* actual arguments  *) : (term * lcomp * guard_t) =
             match bs, args with
-            | (x, Some Implicit)::rest, (_, None)::_ -> (* instantiate an implicit arg *)
+            | (x, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit arg *)
                 let t = SS.subst subst x.sort in
                 fxv_check head env t fvs;
                 let varg, u, implicits = TcUtil.new_implicit_var env t in //new_uvar env t in
@@ -838,7 +838,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
             | (x, aqual)::rest, (e, aq)::rest' -> (* a concrete argument *)
                 let _ = match aqual, aq with 
-                | Some Implicit, Some Implicit 
+                | Some (Implicit _), Some (Implicit _)
                 | None, None 
                 | Some Equality, None -> ()
                 | _ -> raise (Error("Inconsistent implicit qualifier", e.pos)) in
@@ -1796,7 +1796,7 @@ let tc_lex_t env ses quals lids =
             let hd = S.new_bv (Some r2) (S.bv_to_name a) in
             let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar None Const.lex_t_lid r2, [U_name ucons2])) None r2) in
             let res = mk (Tm_uinst(S.fvar None Const.lex_t_lid r2, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
-            Util.arrow [(a, Some Implicit); (hd, None); (tl, None)] (S.mk_Total res) in
+            Util.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
         let dc_lexcons = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], [], r2) in
         Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids, Env.get_range env)
@@ -1909,7 +1909,7 @@ let tc_inductive env ses quals lids =
                 if lid_equals tc_lid (must (Util.lid_of_sigelt se))
                 then let tps = match se with 
                         | Sig_inductive_typ(_, _, tps, _, _, _, _, _) -> 
-                          tps |> List.map (fun (x, _) -> (x, Some Implicit))
+                          tps |> List.map (fun (x, _) -> (x, Some S.imp_tag))
                         | _ -> failwith "Impossible" in
                      Some (tps, u_tc)
                 else None) |> Util.must in 
@@ -1944,14 +1944,15 @@ let tc_inductive env ses quals lids =
             arguments
             us in
         
-(*close*)let t = Util.arrow (tps@arguments) (S.mk_Total result) in
+(*close*)let t = Util.arrow ((tps |> List.map (fun (x, _) -> (x, Some (Implicit true))))@arguments) (S.mk_Total result) in
+                        //NB: the tps are tagged as Implicit inaccessbile arguments of the data constructor
          Sig_datacon(c, [], t, tc_lid, ntps, quals, [], r),
          g
 
       | _ -> failwith "impossible" in
 
     (* 3. Generalizing universes and 4. instantiate inductives within the datacons *)
-    let generalize_and_recheck env g tcs datas = 
+    let generalize_and_inst_within env g tcs datas = 
         Rel.force_trivial_guard env g;
         let binders = tcs |> List.map (function 
             | Sig_inductive_typ(_, _, tps, k, _, _, _, _) -> S.null_binder (Util.arrow tps <| mk_Total k)
@@ -2019,7 +2020,7 @@ let tc_inductive env ses quals lids =
         datas 
         ([], g) in
 
-    let tcs, datas = generalize_and_recheck env0 g (List.map fst tcs) datas in 
+    let tcs, datas = generalize_and_inst_within env0 g (List.map fst tcs) datas in 
     Sig_bundle(tcs@datas, quals, lids, Env.get_range env0)
       
 let rec tc_decl env se = match se with

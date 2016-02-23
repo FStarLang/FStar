@@ -558,7 +558,7 @@ in (
 # 329 "FStar.Parser.Env.fst"
 let fields = (FStar_All.pipe_right formals (FStar_List.collect (fun _51_503 -> (match (_51_503) with
 | (x, q) -> begin
-if ((FStar_Syntax_Syntax.is_null_bv x) || (is_rec && (q = Some (FStar_Syntax_Syntax.Implicit)))) then begin
+if ((FStar_Syntax_Syntax.is_null_bv x) || (is_rec && (FStar_Syntax_Syntax.is_implicit q))) then begin
 []
 end else begin
 (let _130_348 = (let _130_347 = (let _130_346 = if is_rec then begin

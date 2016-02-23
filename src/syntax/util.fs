@@ -673,7 +673,7 @@ let eq_pred_t : term =
     let atyp = bv_to_tm a in
     let b = new_bv None ktype0 in
     let btyp = bv_to_tm b in
-    arrow [(a, Some Implicit); (b, Some Implicit); null_binder atyp; null_binder btyp]
+    arrow [(a, Some imp_tag); (b, Some imp_tag); null_binder atyp; null_binder btyp]
           (mk_Total ktype0)
 
 let teq = fvar None Const.eq2_lid dummyRange
@@ -691,7 +691,7 @@ let lex_pair : term = fvar (Some Data_ctor) Const.lexcons_lid dummyRange
 let forall_t : term = 
     let a = new_bv None ktype0 in
     let atyp = bv_to_tm a in
-    arrow [(a, Some Implicit); null_binder atyp] (mk_Total ktype0)
+    arrow [(a, Some imp_tag); null_binder atyp] (mk_Total ktype0)
 let tforall = fvar None Const.forall_lid dummyRange
 
 let lcomp_of_comp c0 =

@@ -478,6 +478,29 @@ let is_projector env (l:lident) : bool =
           Util.for_some (function Projector _ -> true | _ -> false) quals
         | _ -> false
 
+let interpreted_symbols = 
+       [Const.op_Eq; 
+        Const.op_notEq;
+        Const.op_LT;   
+        Const.op_LTE;  
+        Const.op_GT;   
+        Const.op_GTE;  
+        Const.op_Subtraction; 
+        Const.op_Minus;       
+        Const.op_Addition;    
+        Const.op_Multiply;    
+        Const.op_Division;    
+        Const.op_Modulus;     
+        Const.op_And;         
+        Const.op_Or;          
+        Const.op_Negation]  
+
+let is_interpreted (env:env) head : bool = 
+    match (Util.un_uinst head).n with 
+        | Tm_fvar(fv, _) -> 
+          Util.for_some (Ident.lid_equals fv.v) interpreted_symbols
+        | _ -> false
+
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
 ////////////////////////////////////////////////////////////

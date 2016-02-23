@@ -295,7 +295,7 @@ let extract_record (e:env) = function
                 let is_rec = is_rec tags in 
                 let fields = formals |> List.collect (fun (x,q) ->
                         if S.is_null_bv x
-                        || (is_rec && q = Some Implicit)
+                        || (is_rec && S.is_implicit q)
                         then []
                         else [(qual constrname (if is_rec then Util.unmangle_field_name x.ppname else x.ppname), x.sort)]) in
                 let record = {typename=typename;

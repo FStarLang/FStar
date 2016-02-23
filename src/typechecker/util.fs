@@ -141,14 +141,11 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
 (************************************************************************)
 (* Utilities on patterns  *)
 (************************************************************************)
-let is_implicit = function Some Implicit -> true | _ -> false
-let as_imp = function
-    | Some Implicit -> true
-    | _ -> false
 
 (*
+  pat_as_exps allow_implicits env p:
     Turns a (possibly disjunctive) pattern p into a triple:
- *)
+*)
 let pat_as_exps allow_implicits env p
                         : (list<bv>          (* pattern-bound variables (which may appear in the branch of match) *)
                          * list<term>        (* expressions corresponding to each arm of the disjunct *)
@@ -205,8 +202,8 @@ let pat_as_exps allow_implicits env p
            | Pat_disj _ -> failwith "impossible" in
 
     let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
-        let maybe_dot a r = 
-            if allow_implicits
+        let maybe_dot inaccessible a r = 
+            if allow_implicits && inaccessible
             then withinfo (Pat_dot_term(a, tun)) tun.n r
             else withinfo (Pat_var a) tun.n r in
         match p.v with
@@ -219,26 +216,26 @@ let pat_as_exps allow_implicits env p
                 | [], _::_ -> raise (Error("Too many pattern arguments", range_of_lid (fst fv).v))
                 | _::_, [] -> //fill the rest with dot patterns (if allowed), if all the remaining formals are implicit
                     formals |> List.map (fun (t, imp) -> match imp with 
-                        | Some Implicit ->
+                        | Some (Implicit inaccessible) ->
                           let a = Syntax.new_bv (Some (Syntax.range_of_bv t)) tun in
                           let r = range_of_lid (fst fv).v in
-                          maybe_dot a r, true
+                          maybe_dot inaccessible a r, true
 
                         | _ -> 
                           raise (Error(Util.format1 "Insufficient pattern arguments (%s)" (Print.pat_to_string p), range_of_lid (fst fv).v))) 
 
                 | f::formals', (p, p_imp)::pats' ->
                     begin match f with
-                        | (_, Some Implicit) when p_imp ->
+                        | (_, Some (Implicit _)) when p_imp ->
                             (p, true)::aux formals' pats'
 
-                        | (_, Some Implicit) ->
+                        | (_, Some (Implicit inaccessible)) ->
                             let a = Syntax.new_bv (Some p.p) tun in 
-                            let p = maybe_dot a (range_of_lid (fst fv).v) in
+                            let p = maybe_dot inaccessible a (range_of_lid (fst fv).v) in
                             (p, true)::aux formals' pats
 
                         | (_, imp) ->
-                            (p, as_imp imp)::aux formals' pats'
+                            (p, S.is_implicit imp)::aux formals' pats'
                     end in
                {p with v=Pat_cons(fv, aux f pats)}
 
@@ -323,13 +320,13 @@ let decorate_pattern env p exps =
                 | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats)) (force_sort' e)
                 | arg::args, (argpat, _)::argpats ->
                   begin match arg, argpat.v with
-                        | (e, Some Implicit), Pat_dot_term _ -> (* implicit value argument *)
+                        | (e, Some (Implicit true)), Pat_dot_term _ -> 
                           let x = Syntax.new_bv (Some p.p) (force_sort e) in
                           let q = withinfo (Pat_dot_term(x, e)) x.sort.n p.p in
                           match_args ((q, true)::matched_pats) args argpats
  
                         | (e, imp), _ ->
-                          let pat = aux argpat e, as_imp imp in
+                          let pat = aux argpat e, S.is_implicit imp in
                           match_args (pat::matched_pats) args argpats
                  end
 
@@ -872,8 +869,8 @@ let pure_or_ghost_pre_and_post env comp =
                               let r = ct.result_typ.pos in
                               let as_req = S.mk_Tm_uinst (S.fvar None Const.as_requires r) us_r in
                               let as_ens = S.mk_Tm_uinst (S.fvar None Const.as_ensures r) us_e in
-                              let req = mk_Tm_app as_req [(ct.result_typ, Some Implicit); S.as_arg wp] (Some U.ktype0.n) ct.result_typ.pos in
-                              let ens = mk_Tm_app as_ens [(ct.result_typ, Some Implicit); S.as_arg wlp] None ct.result_typ.pos in
+                              let req = mk_Tm_app as_req [(ct.result_typ, Some S.imp_tag); S.as_arg wp] (Some U.ktype0.n) ct.result_typ.pos in
+                              let ens = mk_Tm_app as_ens [(ct.result_typ, Some S.imp_tag); S.as_arg wlp] None ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
                             | _ -> failwith "Impossible"
                   end
@@ -891,12 +888,12 @@ let maybe_instantiate (env:Env.env) e t =
     | Tm_arrow(bs, c) ->
       let bs, c = SS.open_comp bs c in
       let rec aux subst = function
-        | (x, Some Implicit)::rest ->
+        | (x, Some (Implicit dot))::rest ->
           let t = SS.subst subst x.sort in
           let v, u, g = new_implicit_var env t in
           let subst = NT(x, v)::subst in
           let args, bs, subst, g' = aux subst rest in
-          (v, Some Implicit)::args, bs, subst, Rel.conj_guard g g'
+          (v, Some (Implicit dot))::args, bs, subst, Rel.conj_guard g g'
         | bs -> [], bs, subst, Rel.trivial_guard in
 
      let args, bs, subst, guard = aux [] bs in
@@ -982,7 +979,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
           let tvars = uvs |> List.map (fun (u, k) ->
             match Unionfind.find u with
               | Fixed ({n=Tm_name a})
-              | Fixed ({n=Tm_abs(_, {n=Tm_name a}, _)}) -> a, Some Implicit
+              | Fixed ({n=Tm_abs(_, {n=Tm_name a}, _)}) -> a, Some S.imp_tag
               | Fixed _ -> failwith "Unexpected instantiation of mutually recursive uvar"
               | _ ->
                   let k = N.normalize [N.Beta] env k in
@@ -991,7 +988,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
                   let t = U.abs bs (S.bv_to_name a) (Some (Util.lcomp_of_comp (S.mk_Total kres))) in
                   U.set_uvar u t;//t clearly has a free variable; this is the one place we break the 
                                  //invariant of a uvar always being resolved to a closed term ... need to be careful, see below
-                  a, Some Implicit) in
+                  a, Some S.imp_tag) in
 
           let e, c = match tvars with 
             | [] -> //nothing generalized
@@ -1141,14 +1138,14 @@ let maybe_add_implicit_binders (env:env) (bs:binders)  : binders =
         | (hd, _)::_ -> S.range_of_bv hd
         | _ -> Env.get_range env in
     match bs with 
-        | (_, Some Implicit)::_ -> bs //bs begins with an implicit binder; don't add any
+        | (_, Some (Implicit _))::_ -> bs //bs begins with an implicit binder; don't add any
         | _ -> 
           match Env.expected_typ env with 
             | None -> bs
             | Some t -> 
                 match (SS.compress t).n with 
                     | Tm_arrow(bs', _) -> 
-                      begin match Util.prefix_until (function (_, Some Implicit) -> false | _ -> true) bs' with 
+                      begin match Util.prefix_until (function (_, Some (Implicit _)) -> false | _ -> true) bs' with 
                         | None -> bs
                         | Some ([], _, _) -> bs //no implicits
                         | Some (imps, _,  _) -> 

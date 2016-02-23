@@ -330,7 +330,7 @@ let maybe_simplify steps tm =
                     || I.lid_equals fv.v Const.exists_lid
               then match args with
                      | [(t, _)]
-                     | [(_, Some Implicit); (t, _)] ->
+                     | [(_, Some (Implicit _)); (t, _)] ->
                        begin match (SS.compress t).n with
                                 | Tm_abs([_], body, _) ->
                                    (match simp_t body with
