@@ -3429,7 +3429,9 @@ in (let _156_1742 = (let _156_1741 = (FStar_Util.format1 "Equation for %s" flid.
 in Some (_156_1741))
 in (_156_1743, _156_1742)))
 in FStar_SMTEncoding_Term.Assume (_156_1744))
-in ((FStar_List.append (FStar_List.append (FStar_List.append decls binder_decls) decls2) ((eqn)::[])), env))
+in (let _156_1746 = (let _156_1745 = (primitive_type_axioms flid f app)
+in (FStar_List.append (FStar_List.append (FStar_List.append (FStar_List.append decls binder_decls) decls2) ((eqn)::[])) _156_1745))
+in (_156_1746, env)))
 end)))
 end))
 end)))
@@ -3439,157 +3441,157 @@ end
 end)
 end else begin
 (
-# 1345 "FStar.SMTEncoding.Encode.fst"
-let fuel = (let _156_1745 = (varops.fresh "fuel")
-in (_156_1745, FStar_SMTEncoding_Term.Fuel_sort))
-in (
-# 1346 "FStar.SMTEncoding.Encode.fst"
-let fuel_tm = (FStar_SMTEncoding_Term.mkFreeV fuel)
-in (
 # 1347 "FStar.SMTEncoding.Encode.fst"
-let env0 = env
+let fuel = (let _156_1747 = (varops.fresh "fuel")
+in (_156_1747, FStar_SMTEncoding_Term.Fuel_sort))
 in (
 # 1348 "FStar.SMTEncoding.Encode.fst"
+let fuel_tm = (FStar_SMTEncoding_Term.mkFreeV fuel)
+in (
+# 1349 "FStar.SMTEncoding.Encode.fst"
+let env0 = env
+in (
+# 1350 "FStar.SMTEncoding.Encode.fst"
 let _77_2261 = (FStar_All.pipe_right toks (FStar_List.fold_left (fun _77_2250 _77_2255 -> (match ((_77_2250, _77_2255)) with
 | ((gtoks, env), (flid, (f, ftok))) -> begin
 (
-# 1349 "FStar.SMTEncoding.Encode.fst"
+# 1351 "FStar.SMTEncoding.Encode.fst"
 let g = (varops.new_fvar flid)
 in (
-# 1350 "FStar.SMTEncoding.Encode.fst"
+# 1352 "FStar.SMTEncoding.Encode.fst"
 let gtok = (varops.new_fvar flid)
 in (
-# 1351 "FStar.SMTEncoding.Encode.fst"
-let env = (let _156_1750 = (let _156_1749 = (FStar_SMTEncoding_Term.mkApp (g, (fuel_tm)::[]))
-in (FStar_All.pipe_left (fun _156_1748 -> Some (_156_1748)) _156_1749))
-in (push_free_var env flid gtok _156_1750))
+# 1353 "FStar.SMTEncoding.Encode.fst"
+let env = (let _156_1752 = (let _156_1751 = (FStar_SMTEncoding_Term.mkApp (g, (fuel_tm)::[]))
+in (FStar_All.pipe_left (fun _156_1750 -> Some (_156_1750)) _156_1751))
+in (push_free_var env flid gtok _156_1752))
 in (((flid, f, ftok, g, gtok))::gtoks, env))))
 end)) ([], env)))
 in (match (_77_2261) with
 | (gtoks, env) -> begin
 (
-# 1353 "FStar.SMTEncoding.Encode.fst"
+# 1355 "FStar.SMTEncoding.Encode.fst"
 let gtoks = (FStar_List.rev gtoks)
 in (
-# 1354 "FStar.SMTEncoding.Encode.fst"
+# 1356 "FStar.SMTEncoding.Encode.fst"
 let encode_one_binding = (fun env0 _77_2270 t_norm _77_2281 -> (match ((_77_2270, _77_2281)) with
 | ((flid, f, ftok, g, gtok), {FStar_Syntax_Syntax.lbname = _77_2280; FStar_Syntax_Syntax.lbunivs = _77_2278; FStar_Syntax_Syntax.lbtyp = _77_2276; FStar_Syntax_Syntax.lbeff = _77_2274; FStar_Syntax_Syntax.lbdef = e}) -> begin
 (
-# 1355 "FStar.SMTEncoding.Encode.fst"
+# 1357 "FStar.SMTEncoding.Encode.fst"
 let _77_2286 = (destruct_bound_function flid t_norm e)
 in (match (_77_2286) with
 | (binders, body, formals, tres) -> begin
 (
-# 1356 "FStar.SMTEncoding.Encode.fst"
+# 1358 "FStar.SMTEncoding.Encode.fst"
 let _77_2293 = (encode_binders None binders env)
 in (match (_77_2293) with
 | (vars, guards, env', binder_decls, _77_2292) -> begin
 (
-# 1357 "FStar.SMTEncoding.Encode.fst"
-let decl_g = (let _156_1761 = (let _156_1760 = (let _156_1759 = (FStar_List.map Prims.snd vars)
-in (FStar_SMTEncoding_Term.Fuel_sort)::_156_1759)
-in (g, _156_1760, FStar_SMTEncoding_Term.Term_sort, Some ("Fuel-instrumented function name")))
-in FStar_SMTEncoding_Term.DeclFun (_156_1761))
-in (
-# 1358 "FStar.SMTEncoding.Encode.fst"
-let env0 = (push_zfuel_name env0 flid g)
-in (
 # 1359 "FStar.SMTEncoding.Encode.fst"
-let decl_g_tok = FStar_SMTEncoding_Term.DeclFun ((gtok, [], FStar_SMTEncoding_Term.Term_sort, Some ("Token for fuel-instrumented partial applications")))
+let decl_g = (let _156_1763 = (let _156_1762 = (let _156_1761 = (FStar_List.map Prims.snd vars)
+in (FStar_SMTEncoding_Term.Fuel_sort)::_156_1761)
+in (g, _156_1762, FStar_SMTEncoding_Term.Term_sort, Some ("Fuel-instrumented function name")))
+in FStar_SMTEncoding_Term.DeclFun (_156_1763))
 in (
 # 1360 "FStar.SMTEncoding.Encode.fst"
-let vars_tm = (FStar_List.map FStar_SMTEncoding_Term.mkFreeV vars)
+let env0 = (push_zfuel_name env0 flid g)
 in (
 # 1361 "FStar.SMTEncoding.Encode.fst"
-let app = (FStar_SMTEncoding_Term.mkApp (f, vars_tm))
+let decl_g_tok = FStar_SMTEncoding_Term.DeclFun ((gtok, [], FStar_SMTEncoding_Term.Term_sort, Some ("Token for fuel-instrumented partial applications")))
 in (
 # 1362 "FStar.SMTEncoding.Encode.fst"
-let gsapp = (let _156_1764 = (let _156_1763 = (let _156_1762 = (FStar_SMTEncoding_Term.mkApp ("SFuel", (fuel_tm)::[]))
-in (_156_1762)::vars_tm)
-in (g, _156_1763))
-in (FStar_SMTEncoding_Term.mkApp _156_1764))
+let vars_tm = (FStar_List.map FStar_SMTEncoding_Term.mkFreeV vars)
 in (
 # 1363 "FStar.SMTEncoding.Encode.fst"
-let gmax = (let _156_1767 = (let _156_1766 = (let _156_1765 = (FStar_SMTEncoding_Term.mkApp ("MaxFuel", []))
-in (_156_1765)::vars_tm)
-in (g, _156_1766))
-in (FStar_SMTEncoding_Term.mkApp _156_1767))
+let app = (FStar_SMTEncoding_Term.mkApp (f, vars_tm))
 in (
 # 1364 "FStar.SMTEncoding.Encode.fst"
+let gsapp = (let _156_1766 = (let _156_1765 = (let _156_1764 = (FStar_SMTEncoding_Term.mkApp ("SFuel", (fuel_tm)::[]))
+in (_156_1764)::vars_tm)
+in (g, _156_1765))
+in (FStar_SMTEncoding_Term.mkApp _156_1766))
+in (
+# 1365 "FStar.SMTEncoding.Encode.fst"
+let gmax = (let _156_1769 = (let _156_1768 = (let _156_1767 = (FStar_SMTEncoding_Term.mkApp ("MaxFuel", []))
+in (_156_1767)::vars_tm)
+in (g, _156_1768))
+in (FStar_SMTEncoding_Term.mkApp _156_1769))
+in (
+# 1366 "FStar.SMTEncoding.Encode.fst"
 let _77_2303 = (encode_term body env')
 in (match (_77_2303) with
 | (body_tm, decls2) -> begin
 (
-# 1365 "FStar.SMTEncoding.Encode.fst"
-let eqn_g = (let _156_1776 = (let _156_1775 = (let _156_1772 = (let _156_1771 = (let _156_1770 = (let _156_1769 = (FStar_SMTEncoding_Term.mk_and_l guards)
-in (let _156_1768 = (FStar_SMTEncoding_Term.mkEq (gsapp, body_tm))
-in (_156_1769, _156_1768)))
-in (FStar_SMTEncoding_Term.mkImp _156_1770))
-in (((gsapp)::[])::[], (fuel)::vars, _156_1771))
-in (FStar_SMTEncoding_Term.mkForall _156_1772))
-in (let _156_1774 = (let _156_1773 = (FStar_Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.FStar_Ident.str)
-in Some (_156_1773))
-in (_156_1775, _156_1774)))
-in FStar_SMTEncoding_Term.Assume (_156_1776))
-in (
 # 1367 "FStar.SMTEncoding.Encode.fst"
-let eqn_f = (let _156_1780 = (let _156_1779 = (let _156_1778 = (let _156_1777 = (FStar_SMTEncoding_Term.mkEq (app, gmax))
-in (((app)::[])::[], vars, _156_1777))
-in (FStar_SMTEncoding_Term.mkForall _156_1778))
-in (_156_1779, Some ("Correspondence of recursive function to instrumented version")))
-in FStar_SMTEncoding_Term.Assume (_156_1780))
+let eqn_g = (let _156_1778 = (let _156_1777 = (let _156_1774 = (let _156_1773 = (let _156_1772 = (let _156_1771 = (FStar_SMTEncoding_Term.mk_and_l guards)
+in (let _156_1770 = (FStar_SMTEncoding_Term.mkEq (gsapp, body_tm))
+in (_156_1771, _156_1770)))
+in (FStar_SMTEncoding_Term.mkImp _156_1772))
+in (((gsapp)::[])::[], (fuel)::vars, _156_1773))
+in (FStar_SMTEncoding_Term.mkForall _156_1774))
+in (let _156_1776 = (let _156_1775 = (FStar_Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.FStar_Ident.str)
+in Some (_156_1775))
+in (_156_1777, _156_1776)))
+in FStar_SMTEncoding_Term.Assume (_156_1778))
 in (
 # 1369 "FStar.SMTEncoding.Encode.fst"
-let eqn_g' = (let _156_1789 = (let _156_1788 = (let _156_1787 = (let _156_1786 = (let _156_1785 = (let _156_1784 = (let _156_1783 = (let _156_1782 = (let _156_1781 = (FStar_SMTEncoding_Term.n_fuel 0)
-in (_156_1781)::vars_tm)
-in (g, _156_1782))
-in (FStar_SMTEncoding_Term.mkApp _156_1783))
-in (gsapp, _156_1784))
-in (FStar_SMTEncoding_Term.mkEq _156_1785))
-in (((gsapp)::[])::[], (fuel)::vars, _156_1786))
-in (FStar_SMTEncoding_Term.mkForall _156_1787))
-in (_156_1788, Some ("Fuel irrelevance")))
-in FStar_SMTEncoding_Term.Assume (_156_1789))
+let eqn_f = (let _156_1782 = (let _156_1781 = (let _156_1780 = (let _156_1779 = (FStar_SMTEncoding_Term.mkEq (app, gmax))
+in (((app)::[])::[], vars, _156_1779))
+in (FStar_SMTEncoding_Term.mkForall _156_1780))
+in (_156_1781, Some ("Correspondence of recursive function to instrumented version")))
+in FStar_SMTEncoding_Term.Assume (_156_1782))
 in (
 # 1371 "FStar.SMTEncoding.Encode.fst"
+let eqn_g' = (let _156_1791 = (let _156_1790 = (let _156_1789 = (let _156_1788 = (let _156_1787 = (let _156_1786 = (let _156_1785 = (let _156_1784 = (let _156_1783 = (FStar_SMTEncoding_Term.n_fuel 0)
+in (_156_1783)::vars_tm)
+in (g, _156_1784))
+in (FStar_SMTEncoding_Term.mkApp _156_1785))
+in (gsapp, _156_1786))
+in (FStar_SMTEncoding_Term.mkEq _156_1787))
+in (((gsapp)::[])::[], (fuel)::vars, _156_1788))
+in (FStar_SMTEncoding_Term.mkForall _156_1789))
+in (_156_1790, Some ("Fuel irrelevance")))
+in FStar_SMTEncoding_Term.Assume (_156_1791))
+in (
+# 1373 "FStar.SMTEncoding.Encode.fst"
 let _77_2326 = (
-# 1372 "FStar.SMTEncoding.Encode.fst"
+# 1374 "FStar.SMTEncoding.Encode.fst"
 let _77_2313 = (encode_binders None formals env0)
 in (match (_77_2313) with
 | (vars, v_guards, env, binder_decls, _77_2312) -> begin
 (
-# 1373 "FStar.SMTEncoding.Encode.fst"
+# 1375 "FStar.SMTEncoding.Encode.fst"
 let vars_tm = (FStar_List.map FStar_SMTEncoding_Term.mkFreeV vars)
 in (
-# 1374 "FStar.SMTEncoding.Encode.fst"
+# 1376 "FStar.SMTEncoding.Encode.fst"
 let gapp = (FStar_SMTEncoding_Term.mkApp (g, (fuel_tm)::vars_tm))
 in (
-# 1375 "FStar.SMTEncoding.Encode.fst"
+# 1377 "FStar.SMTEncoding.Encode.fst"
 let tok_corr = (
-# 1376 "FStar.SMTEncoding.Encode.fst"
-let tok_app = (let _156_1790 = (FStar_SMTEncoding_Term.mkFreeV (gtok, FStar_SMTEncoding_Term.Term_sort))
-in (mk_Apply _156_1790 ((fuel)::vars)))
-in (let _156_1794 = (let _156_1793 = (let _156_1792 = (let _156_1791 = (FStar_SMTEncoding_Term.mkEq (tok_app, gapp))
-in (((tok_app)::[])::[], (fuel)::vars, _156_1791))
-in (FStar_SMTEncoding_Term.mkForall _156_1792))
-in (_156_1793, Some ("Fuel token correspondence")))
-in FStar_SMTEncoding_Term.Assume (_156_1794)))
+# 1378 "FStar.SMTEncoding.Encode.fst"
+let tok_app = (let _156_1792 = (FStar_SMTEncoding_Term.mkFreeV (gtok, FStar_SMTEncoding_Term.Term_sort))
+in (mk_Apply _156_1792 ((fuel)::vars)))
+in (let _156_1796 = (let _156_1795 = (let _156_1794 = (let _156_1793 = (FStar_SMTEncoding_Term.mkEq (tok_app, gapp))
+in (((tok_app)::[])::[], (fuel)::vars, _156_1793))
+in (FStar_SMTEncoding_Term.mkForall _156_1794))
+in (_156_1795, Some ("Fuel token correspondence")))
+in FStar_SMTEncoding_Term.Assume (_156_1796)))
 in (
-# 1379 "FStar.SMTEncoding.Encode.fst"
+# 1381 "FStar.SMTEncoding.Encode.fst"
 let _77_2323 = (
-# 1380 "FStar.SMTEncoding.Encode.fst"
+# 1382 "FStar.SMTEncoding.Encode.fst"
 let _77_2320 = (encode_term_pred None tres env gapp)
 in (match (_77_2320) with
 | (g_typing, d3) -> begin
-(let _156_1802 = (let _156_1801 = (let _156_1800 = (let _156_1799 = (let _156_1798 = (let _156_1797 = (let _156_1796 = (let _156_1795 = (FStar_SMTEncoding_Term.mk_and_l v_guards)
-in (_156_1795, g_typing))
-in (FStar_SMTEncoding_Term.mkImp _156_1796))
-in (((gapp)::[])::[], (fuel)::vars, _156_1797))
-in (FStar_SMTEncoding_Term.mkForall _156_1798))
-in (_156_1799, None))
-in FStar_SMTEncoding_Term.Assume (_156_1800))
-in (_156_1801)::[])
-in (d3, _156_1802))
+(let _156_1804 = (let _156_1803 = (let _156_1802 = (let _156_1801 = (let _156_1800 = (let _156_1799 = (let _156_1798 = (let _156_1797 = (FStar_SMTEncoding_Term.mk_and_l v_guards)
+in (_156_1797, g_typing))
+in (FStar_SMTEncoding_Term.mkImp _156_1798))
+in (((gapp)::[])::[], (fuel)::vars, _156_1799))
+in (FStar_SMTEncoding_Term.mkForall _156_1800))
+in (_156_1801, None))
+in FStar_SMTEncoding_Term.Assume (_156_1802))
+in (_156_1803)::[])
+in (d3, _156_1804))
 end))
 in (match (_77_2323) with
 | (aux_decls, typing_corr) -> begin
@@ -3605,24 +3607,24 @@ end))
 end))
 end))
 in (
-# 1384 "FStar.SMTEncoding.Encode.fst"
-let _77_2342 = (let _156_1805 = (FStar_List.zip3 gtoks typs bindings)
+# 1386 "FStar.SMTEncoding.Encode.fst"
+let _77_2342 = (let _156_1807 = (FStar_List.zip3 gtoks typs bindings)
 in (FStar_List.fold_left (fun _77_2330 _77_2334 -> (match ((_77_2330, _77_2334)) with
 | ((decls, eqns, env0), (gtok, ty, bs)) -> begin
 (
-# 1385 "FStar.SMTEncoding.Encode.fst"
+# 1387 "FStar.SMTEncoding.Encode.fst"
 let _77_2338 = (encode_one_binding env0 gtok ty bs)
 in (match (_77_2338) with
 | (decls', eqns', env0) -> begin
 ((decls')::decls, (FStar_List.append eqns' eqns), env0)
 end))
-end)) ((decls)::[], [], env0) _156_1805))
+end)) ((decls)::[], [], env0) _156_1807))
 in (match (_77_2342) with
 | (decls, eqns, env0) -> begin
 (
-# 1387 "FStar.SMTEncoding.Encode.fst"
-let _77_2351 = (let _156_1807 = (FStar_All.pipe_right decls FStar_List.flatten)
-in (FStar_All.pipe_right _156_1807 (FStar_List.partition (fun _77_16 -> (match (_77_16) with
+# 1389 "FStar.SMTEncoding.Encode.fst"
+let _77_2351 = (let _156_1809 = (FStar_All.pipe_right decls FStar_List.flatten)
+in (FStar_All.pipe_right _156_1809 (FStar_List.partition (fun _77_16 -> (match (_77_16) with
 | FStar_SMTEncoding_Term.DeclFun (_77_2345) -> begin
 true
 end
@@ -3632,7 +3634,7 @@ end)))))
 in (match (_77_2351) with
 | (prefix_decls, rest) -> begin
 (
-# 1390 "FStar.SMTEncoding.Encode.fst"
+# 1392 "FStar.SMTEncoding.Encode.fst"
 let eqns = (FStar_List.rev eqns)
 in ((FStar_List.append (FStar_List.append prefix_decls rest) eqns), env0))
 end))
@@ -3645,23 +3647,23 @@ end
 end)) (fun _77_2162 -> (match (_77_2162) with
 | Let_rec_unencodeable -> begin
 (
-# 1393 "FStar.SMTEncoding.Encode.fst"
-let msg = (let _156_1810 = (FStar_All.pipe_right bindings (FStar_List.map (fun lb -> (FStar_Syntax_Print.lbname_to_string lb.FStar_Syntax_Syntax.lbname))))
-in (FStar_All.pipe_right _156_1810 (FStar_String.concat " and ")))
+# 1395 "FStar.SMTEncoding.Encode.fst"
+let msg = (let _156_1812 = (FStar_All.pipe_right bindings (FStar_List.map (fun lb -> (FStar_Syntax_Print.lbname_to_string lb.FStar_Syntax_Syntax.lbname))))
+in (FStar_All.pipe_right _156_1812 (FStar_String.concat " and ")))
 in (
-# 1394 "FStar.SMTEncoding.Encode.fst"
+# 1396 "FStar.SMTEncoding.Encode.fst"
 let decl = FStar_SMTEncoding_Term.Caption ((Prims.strcat "let rec unencodeable: Skipping: " msg))
 in ((decl)::[], env)))
 end)))))
 end
 | FStar_Syntax_Syntax.Sig_bundle (ses, _77_2355, _77_2357, _77_2359) -> begin
 (
-# 1399 "FStar.SMTEncoding.Encode.fst"
+# 1401 "FStar.SMTEncoding.Encode.fst"
 let _77_2364 = (encode_signature env ses)
 in (match (_77_2364) with
 | (g, env) -> begin
 (
-# 1400 "FStar.SMTEncoding.Encode.fst"
+# 1402 "FStar.SMTEncoding.Encode.fst"
 let _77_2376 = (FStar_All.pipe_right g (FStar_List.partition (fun _77_17 -> (match (_77_17) with
 | FStar_SMTEncoding_Term.Assume (_77_2367, Some ("inversion axiom")) -> begin
 false
@@ -3672,7 +3674,7 @@ end))))
 in (match (_77_2376) with
 | (g', inversions) -> begin
 (
-# 1403 "FStar.SMTEncoding.Encode.fst"
+# 1405 "FStar.SMTEncoding.Encode.fst"
 let _77_2385 = (FStar_All.pipe_right g' (FStar_List.partition (fun _77_18 -> (match (_77_18) with
 | FStar_SMTEncoding_Term.DeclFun (_77_2379) -> begin
 true
@@ -3689,7 +3691,7 @@ end))
 end
 | FStar_Syntax_Syntax.Sig_inductive_typ (t, _77_2388, tps, k, _77_2392, datas, quals, _77_2396) -> begin
 (
-# 1409 "FStar.SMTEncoding.Encode.fst"
+# 1411 "FStar.SMTEncoding.Encode.fst"
 let is_logical = (FStar_All.pipe_right quals (FStar_Util.for_some (fun _77_19 -> (match (_77_19) with
 | (FStar_Syntax_Syntax.Logic) | (FStar_Syntax_Syntax.Assumption) -> begin
 true
@@ -3698,50 +3700,50 @@ end
 false
 end))))
 in (
-# 1410 "FStar.SMTEncoding.Encode.fst"
+# 1412 "FStar.SMTEncoding.Encode.fst"
 let constructor_or_logic_type_decl = (fun c -> if is_logical then begin
 (
-# 1412 "FStar.SMTEncoding.Encode.fst"
+# 1414 "FStar.SMTEncoding.Encode.fst"
 let _77_2413 = c
 in (match (_77_2413) with
 | (name, args, _77_2410, _77_2412) -> begin
-(let _156_1818 = (let _156_1817 = (let _156_1816 = (FStar_All.pipe_right args (FStar_List.map Prims.snd))
-in (name, _156_1816, FStar_SMTEncoding_Term.Term_sort, None))
-in FStar_SMTEncoding_Term.DeclFun (_156_1817))
-in (_156_1818)::[])
+(let _156_1820 = (let _156_1819 = (let _156_1818 = (FStar_All.pipe_right args (FStar_List.map Prims.snd))
+in (name, _156_1818, FStar_SMTEncoding_Term.Term_sort, None))
+in FStar_SMTEncoding_Term.DeclFun (_156_1819))
+in (_156_1820)::[])
 end))
 end else begin
 (FStar_SMTEncoding_Term.constructor_to_decl c)
 end)
 in (
-# 1416 "FStar.SMTEncoding.Encode.fst"
-let inversion_axioms = (fun tapp vars -> if (FStar_All.pipe_right datas (FStar_Util.for_some (fun l -> (let _156_1824 = (FStar_TypeChecker_Env.try_lookup_lid env.tcenv l)
-in (FStar_All.pipe_right _156_1824 FStar_Option.isNone))))) then begin
+# 1418 "FStar.SMTEncoding.Encode.fst"
+let inversion_axioms = (fun tapp vars -> if (FStar_All.pipe_right datas (FStar_Util.for_some (fun l -> (let _156_1826 = (FStar_TypeChecker_Env.try_lookup_lid env.tcenv l)
+in (FStar_All.pipe_right _156_1826 FStar_Option.isNone))))) then begin
 []
 end else begin
 (
-# 1420 "FStar.SMTEncoding.Encode.fst"
+# 1422 "FStar.SMTEncoding.Encode.fst"
 let _77_2420 = (fresh_fvar "x" FStar_SMTEncoding_Term.Term_sort)
 in (match (_77_2420) with
 | (xxsym, xx) -> begin
 (
-# 1421 "FStar.SMTEncoding.Encode.fst"
+# 1423 "FStar.SMTEncoding.Encode.fst"
 let _77_2456 = (FStar_All.pipe_right datas (FStar_List.fold_left (fun _77_2423 l -> (match (_77_2423) with
 | (out, decls) -> begin
 (
-# 1422 "FStar.SMTEncoding.Encode.fst"
+# 1424 "FStar.SMTEncoding.Encode.fst"
 let _77_2428 = (FStar_TypeChecker_Env.lookup_datacon env.tcenv l)
 in (match (_77_2428) with
 | (_77_2426, data_t) -> begin
 (
-# 1423 "FStar.SMTEncoding.Encode.fst"
+# 1425 "FStar.SMTEncoding.Encode.fst"
 let _77_2431 = (FStar_Syntax_Util.arrow_formals data_t)
 in (match (_77_2431) with
 | (args, res) -> begin
 (
-# 1424 "FStar.SMTEncoding.Encode.fst"
-let indices = (match ((let _156_1827 = (FStar_Syntax_Subst.compress res)
-in _156_1827.FStar_Syntax_Syntax.n)) with
+# 1426 "FStar.SMTEncoding.Encode.fst"
+let indices = (match ((let _156_1829 = (FStar_Syntax_Subst.compress res)
+in _156_1829.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_app (_77_2433, indices) -> begin
 indices
 end
@@ -3749,38 +3751,38 @@ end
 []
 end)
 in (
-# 1427 "FStar.SMTEncoding.Encode.fst"
+# 1429 "FStar.SMTEncoding.Encode.fst"
 let env = (FStar_All.pipe_right args (FStar_List.fold_left (fun env _77_2444 -> (match (_77_2444) with
 | (x, _77_2443) -> begin
-(let _156_1832 = (let _156_1831 = (let _156_1830 = (mk_term_projector_name l x)
-in (_156_1830, (xx)::[]))
-in (FStar_SMTEncoding_Term.mkApp _156_1831))
-in (push_term_var env x _156_1832))
+(let _156_1834 = (let _156_1833 = (let _156_1832 = (mk_term_projector_name l x)
+in (_156_1832, (xx)::[]))
+in (FStar_SMTEncoding_Term.mkApp _156_1833))
+in (push_term_var env x _156_1834))
 end)) env))
 in (
-# 1430 "FStar.SMTEncoding.Encode.fst"
+# 1432 "FStar.SMTEncoding.Encode.fst"
 let _77_2448 = (encode_args indices env)
 in (match (_77_2448) with
 | (indices, decls') -> begin
 (
-# 1431 "FStar.SMTEncoding.Encode.fst"
+# 1433 "FStar.SMTEncoding.Encode.fst"
 let _77_2449 = if ((FStar_List.length indices) <> (FStar_List.length vars)) then begin
 (FStar_All.failwith "Impossible")
 end else begin
 ()
 end
 in (
-# 1433 "FStar.SMTEncoding.Encode.fst"
-let eqs = (let _156_1837 = (FStar_List.map2 (fun v a -> (let _156_1836 = (let _156_1835 = (FStar_SMTEncoding_Term.mkFreeV v)
-in (_156_1835, a))
-in (FStar_SMTEncoding_Term.mkEq _156_1836))) vars indices)
-in (FStar_All.pipe_right _156_1837 FStar_SMTEncoding_Term.mk_and_l))
-in (let _156_1842 = (let _156_1841 = (let _156_1840 = (let _156_1839 = (let _156_1838 = (mk_data_tester env l xx)
-in (_156_1838, eqs))
-in (FStar_SMTEncoding_Term.mkAnd _156_1839))
-in (out, _156_1840))
-in (FStar_SMTEncoding_Term.mkOr _156_1841))
-in (_156_1842, (FStar_List.append decls decls')))))
+# 1435 "FStar.SMTEncoding.Encode.fst"
+let eqs = (let _156_1839 = (FStar_List.map2 (fun v a -> (let _156_1838 = (let _156_1837 = (FStar_SMTEncoding_Term.mkFreeV v)
+in (_156_1837, a))
+in (FStar_SMTEncoding_Term.mkEq _156_1838))) vars indices)
+in (FStar_All.pipe_right _156_1839 FStar_SMTEncoding_Term.mk_and_l))
+in (let _156_1844 = (let _156_1843 = (let _156_1842 = (let _156_1841 = (let _156_1840 = (mk_data_tester env l xx)
+in (_156_1840, eqs))
+in (FStar_SMTEncoding_Term.mkAnd _156_1841))
+in (out, _156_1842))
+in (FStar_SMTEncoding_Term.mkOr _156_1843))
+in (_156_1844, (FStar_List.append decls decls')))))
 end))))
 end))
 end))
@@ -3788,30 +3790,30 @@ end)) (FStar_SMTEncoding_Term.mkFalse, [])))
 in (match (_77_2456) with
 | (data_ax, decls) -> begin
 (
-# 1435 "FStar.SMTEncoding.Encode.fst"
+# 1437 "FStar.SMTEncoding.Encode.fst"
 let _77_2459 = (fresh_fvar "f" FStar_SMTEncoding_Term.Fuel_sort)
 in (match (_77_2459) with
 | (ffsym, ff) -> begin
 (
-# 1436 "FStar.SMTEncoding.Encode.fst"
-let xx_has_type = (let _156_1843 = (FStar_SMTEncoding_Term.mkApp ("SFuel", (ff)::[]))
-in (FStar_SMTEncoding_Term.mk_HasTypeFuel _156_1843 xx tapp))
-in (let _156_1850 = (let _156_1849 = (let _156_1848 = (let _156_1847 = (let _156_1846 = (let _156_1845 = (add_fuel (ffsym, FStar_SMTEncoding_Term.Fuel_sort) (((xxsym, FStar_SMTEncoding_Term.Term_sort))::vars))
-in (let _156_1844 = (FStar_SMTEncoding_Term.mkImp (xx_has_type, data_ax))
-in (((xx_has_type)::[])::[], _156_1845, _156_1844)))
-in (FStar_SMTEncoding_Term.mkForall _156_1846))
-in (_156_1847, Some ("inversion axiom")))
-in FStar_SMTEncoding_Term.Assume (_156_1848))
-in (_156_1849)::[])
-in (FStar_List.append decls _156_1850)))
+# 1438 "FStar.SMTEncoding.Encode.fst"
+let xx_has_type = (let _156_1845 = (FStar_SMTEncoding_Term.mkApp ("SFuel", (ff)::[]))
+in (FStar_SMTEncoding_Term.mk_HasTypeFuel _156_1845 xx tapp))
+in (let _156_1852 = (let _156_1851 = (let _156_1850 = (let _156_1849 = (let _156_1848 = (let _156_1847 = (add_fuel (ffsym, FStar_SMTEncoding_Term.Fuel_sort) (((xxsym, FStar_SMTEncoding_Term.Term_sort))::vars))
+in (let _156_1846 = (FStar_SMTEncoding_Term.mkImp (xx_has_type, data_ax))
+in (((xx_has_type)::[])::[], _156_1847, _156_1846)))
+in (FStar_SMTEncoding_Term.mkForall _156_1848))
+in (_156_1849, Some ("inversion axiom")))
+in FStar_SMTEncoding_Term.Assume (_156_1850))
+in (_156_1851)::[])
+in (FStar_List.append decls _156_1852)))
 end))
 end))
 end))
 end)
 in (
-# 1440 "FStar.SMTEncoding.Encode.fst"
-let _77_2469 = (match ((let _156_1851 = (FStar_Syntax_Subst.compress k)
-in _156_1851.FStar_Syntax_Syntax.n)) with
+# 1442 "FStar.SMTEncoding.Encode.fst"
+let _77_2469 = (match ((let _156_1853 = (FStar_Syntax_Subst.compress k)
+in _156_1853.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_arrow (formals, kres) -> begin
 ((FStar_List.append tps formals), (FStar_Syntax_Util.comp_result kres))
 end
@@ -3821,99 +3823,99 @@ end)
 in (match (_77_2469) with
 | (formals, res) -> begin
 (
-# 1446 "FStar.SMTEncoding.Encode.fst"
+# 1448 "FStar.SMTEncoding.Encode.fst"
 let _77_2472 = (FStar_Syntax_Subst.open_term formals res)
 in (match (_77_2472) with
 | (formals, res) -> begin
 (
-# 1447 "FStar.SMTEncoding.Encode.fst"
+# 1449 "FStar.SMTEncoding.Encode.fst"
 let _77_2479 = (encode_binders None formals env)
 in (match (_77_2479) with
 | (vars, guards, env', binder_decls, _77_2478) -> begin
 (
-# 1449 "FStar.SMTEncoding.Encode.fst"
+# 1451 "FStar.SMTEncoding.Encode.fst"
 let pretype_axioms = (fun tapp vars -> (
-# 1450 "FStar.SMTEncoding.Encode.fst"
+# 1452 "FStar.SMTEncoding.Encode.fst"
 let _77_2485 = (fresh_fvar "x" FStar_SMTEncoding_Term.Term_sort)
 in (match (_77_2485) with
 | (xxsym, xx) -> begin
 (
-# 1451 "FStar.SMTEncoding.Encode.fst"
+# 1453 "FStar.SMTEncoding.Encode.fst"
 let _77_2488 = (fresh_fvar "f" FStar_SMTEncoding_Term.Fuel_sort)
 in (match (_77_2488) with
 | (ffsym, ff) -> begin
 (
-# 1452 "FStar.SMTEncoding.Encode.fst"
+# 1454 "FStar.SMTEncoding.Encode.fst"
 let xx_has_type = (FStar_SMTEncoding_Term.mk_HasTypeFuel ff xx tapp)
-in (let _156_1864 = (let _156_1863 = (let _156_1862 = (let _156_1861 = (let _156_1860 = (let _156_1859 = (let _156_1858 = (let _156_1857 = (let _156_1856 = (FStar_SMTEncoding_Term.mkApp ("PreType", (xx)::[]))
-in (tapp, _156_1856))
-in (FStar_SMTEncoding_Term.mkEq _156_1857))
-in (xx_has_type, _156_1858))
-in (FStar_SMTEncoding_Term.mkImp _156_1859))
-in (((xx_has_type)::[])::[], ((xxsym, FStar_SMTEncoding_Term.Term_sort))::((ffsym, FStar_SMTEncoding_Term.Fuel_sort))::vars, _156_1860))
-in (FStar_SMTEncoding_Term.mkForall _156_1861))
-in (_156_1862, Some ("pretyping")))
-in FStar_SMTEncoding_Term.Assume (_156_1863))
-in (_156_1864)::[]))
+in (let _156_1866 = (let _156_1865 = (let _156_1864 = (let _156_1863 = (let _156_1862 = (let _156_1861 = (let _156_1860 = (let _156_1859 = (let _156_1858 = (FStar_SMTEncoding_Term.mkApp ("PreType", (xx)::[]))
+in (tapp, _156_1858))
+in (FStar_SMTEncoding_Term.mkEq _156_1859))
+in (xx_has_type, _156_1860))
+in (FStar_SMTEncoding_Term.mkImp _156_1861))
+in (((xx_has_type)::[])::[], ((xxsym, FStar_SMTEncoding_Term.Term_sort))::((ffsym, FStar_SMTEncoding_Term.Fuel_sort))::vars, _156_1862))
+in (FStar_SMTEncoding_Term.mkForall _156_1863))
+in (_156_1864, Some ("pretyping")))
+in FStar_SMTEncoding_Term.Assume (_156_1865))
+in (_156_1866)::[]))
 end))
 end)))
 in (
-# 1456 "FStar.SMTEncoding.Encode.fst"
+# 1458 "FStar.SMTEncoding.Encode.fst"
 let _77_2493 = (new_term_constant_and_tok_from_lid env t)
 in (match (_77_2493) with
 | (tname, ttok, env) -> begin
 (
-# 1457 "FStar.SMTEncoding.Encode.fst"
+# 1459 "FStar.SMTEncoding.Encode.fst"
 let ttok_tm = (FStar_SMTEncoding_Term.mkApp (ttok, []))
 in (
-# 1458 "FStar.SMTEncoding.Encode.fst"
+# 1460 "FStar.SMTEncoding.Encode.fst"
 let guard = (FStar_SMTEncoding_Term.mk_and_l guards)
 in (
-# 1459 "FStar.SMTEncoding.Encode.fst"
-let tapp = (let _156_1866 = (let _156_1865 = (FStar_List.map FStar_SMTEncoding_Term.mkFreeV vars)
-in (tname, _156_1865))
-in (FStar_SMTEncoding_Term.mkApp _156_1866))
-in (
-# 1460 "FStar.SMTEncoding.Encode.fst"
-let _77_2514 = (
 # 1461 "FStar.SMTEncoding.Encode.fst"
-let tname_decl = (let _156_1870 = (let _156_1869 = (FStar_All.pipe_right vars (FStar_List.map (fun _77_2499 -> (match (_77_2499) with
+let tapp = (let _156_1868 = (let _156_1867 = (FStar_List.map FStar_SMTEncoding_Term.mkFreeV vars)
+in (tname, _156_1867))
+in (FStar_SMTEncoding_Term.mkApp _156_1868))
+in (
+# 1462 "FStar.SMTEncoding.Encode.fst"
+let _77_2514 = (
+# 1463 "FStar.SMTEncoding.Encode.fst"
+let tname_decl = (let _156_1872 = (let _156_1871 = (FStar_All.pipe_right vars (FStar_List.map (fun _77_2499 -> (match (_77_2499) with
 | (n, s) -> begin
 ((Prims.strcat tname n), s)
 end))))
-in (let _156_1868 = (varops.next_id ())
-in (tname, _156_1869, FStar_SMTEncoding_Term.Term_sort, _156_1868)))
-in (constructor_or_logic_type_decl _156_1870))
+in (let _156_1870 = (varops.next_id ())
+in (tname, _156_1871, FStar_SMTEncoding_Term.Term_sort, _156_1870)))
+in (constructor_or_logic_type_decl _156_1872))
 in (
-# 1462 "FStar.SMTEncoding.Encode.fst"
+# 1464 "FStar.SMTEncoding.Encode.fst"
 let _77_2511 = (match (vars) with
 | [] -> begin
-(let _156_1874 = (let _156_1873 = (let _156_1872 = (FStar_SMTEncoding_Term.mkApp (tname, []))
-in (FStar_All.pipe_left (fun _156_1871 -> Some (_156_1871)) _156_1872))
-in (push_free_var env t tname _156_1873))
-in ([], _156_1874))
+(let _156_1876 = (let _156_1875 = (let _156_1874 = (FStar_SMTEncoding_Term.mkApp (tname, []))
+in (FStar_All.pipe_left (fun _156_1873 -> Some (_156_1873)) _156_1874))
+in (push_free_var env t tname _156_1875))
+in ([], _156_1876))
 end
 | _77_2503 -> begin
 (
-# 1465 "FStar.SMTEncoding.Encode.fst"
+# 1467 "FStar.SMTEncoding.Encode.fst"
 let ttok_decl = FStar_SMTEncoding_Term.DeclFun ((ttok, [], FStar_SMTEncoding_Term.Term_sort, Some ("token")))
 in (
-# 1466 "FStar.SMTEncoding.Encode.fst"
-let ttok_fresh = (let _156_1875 = (varops.next_id ())
-in (FStar_SMTEncoding_Term.fresh_token (ttok, FStar_SMTEncoding_Term.Term_sort) _156_1875))
+# 1468 "FStar.SMTEncoding.Encode.fst"
+let ttok_fresh = (let _156_1877 = (varops.next_id ())
+in (FStar_SMTEncoding_Term.fresh_token (ttok, FStar_SMTEncoding_Term.Term_sort) _156_1877))
 in (
-# 1467 "FStar.SMTEncoding.Encode.fst"
+# 1469 "FStar.SMTEncoding.Encode.fst"
 let ttok_app = (mk_Apply ttok_tm vars)
 in (
-# 1468 "FStar.SMTEncoding.Encode.fst"
+# 1470 "FStar.SMTEncoding.Encode.fst"
 let pats = ((ttok_app)::[])::((tapp)::[])::[]
 in (
-# 1471 "FStar.SMTEncoding.Encode.fst"
-let name_tok_corr = (let _156_1879 = (let _156_1878 = (let _156_1877 = (let _156_1876 = (FStar_SMTEncoding_Term.mkEq (ttok_app, tapp))
-in (pats, None, vars, _156_1876))
-in (FStar_SMTEncoding_Term.mkForall' _156_1877))
-in (_156_1878, Some ("name-token correspondence")))
-in FStar_SMTEncoding_Term.Assume (_156_1879))
+# 1473 "FStar.SMTEncoding.Encode.fst"
+let name_tok_corr = (let _156_1881 = (let _156_1880 = (let _156_1879 = (let _156_1878 = (FStar_SMTEncoding_Term.mkEq (ttok_app, tapp))
+in (pats, None, vars, _156_1878))
+in (FStar_SMTEncoding_Term.mkForall' _156_1879))
+in (_156_1880, Some ("name-token correspondence")))
+in FStar_SMTEncoding_Term.Assume (_156_1881))
 in ((ttok_decl)::(ttok_fresh)::(name_tok_corr)::[], env))))))
 end)
 in (match (_77_2511) with
@@ -3923,39 +3925,39 @@ end)))
 in (match (_77_2514) with
 | (decls, env) -> begin
 (
-# 1474 "FStar.SMTEncoding.Encode.fst"
+# 1476 "FStar.SMTEncoding.Encode.fst"
 let kindingAx = (
-# 1475 "FStar.SMTEncoding.Encode.fst"
+# 1477 "FStar.SMTEncoding.Encode.fst"
 let _77_2517 = (encode_term_pred None res env' tapp)
 in (match (_77_2517) with
 | (k, decls) -> begin
 (
-# 1476 "FStar.SMTEncoding.Encode.fst"
+# 1478 "FStar.SMTEncoding.Encode.fst"
 let karr = if ((FStar_List.length formals) > 0) then begin
-(let _156_1883 = (let _156_1882 = (let _156_1881 = (let _156_1880 = (FStar_SMTEncoding_Term.mk_PreType ttok_tm)
-in (FStar_SMTEncoding_Term.mk_tester "Tm_arrow" _156_1880))
-in (_156_1881, Some ("kinding")))
-in FStar_SMTEncoding_Term.Assume (_156_1882))
-in (_156_1883)::[])
+(let _156_1885 = (let _156_1884 = (let _156_1883 = (let _156_1882 = (FStar_SMTEncoding_Term.mk_PreType ttok_tm)
+in (FStar_SMTEncoding_Term.mk_tester "Tm_arrow" _156_1882))
+in (_156_1883, Some ("kinding")))
+in FStar_SMTEncoding_Term.Assume (_156_1884))
+in (_156_1885)::[])
 end else begin
 []
 end
-in (let _156_1889 = (let _156_1888 = (let _156_1887 = (let _156_1886 = (let _156_1885 = (let _156_1884 = (FStar_SMTEncoding_Term.mkImp (guard, k))
-in (((tapp)::[])::[], vars, _156_1884))
-in (FStar_SMTEncoding_Term.mkForall _156_1885))
-in (_156_1886, Some ("kinding")))
-in FStar_SMTEncoding_Term.Assume (_156_1887))
-in (_156_1888)::[])
-in (FStar_List.append (FStar_List.append decls karr) _156_1889)))
+in (let _156_1891 = (let _156_1890 = (let _156_1889 = (let _156_1888 = (let _156_1887 = (let _156_1886 = (FStar_SMTEncoding_Term.mkImp (guard, k))
+in (((tapp)::[])::[], vars, _156_1886))
+in (FStar_SMTEncoding_Term.mkForall _156_1887))
+in (_156_1888, Some ("kinding")))
+in FStar_SMTEncoding_Term.Assume (_156_1889))
+in (_156_1890)::[])
+in (FStar_List.append (FStar_List.append decls karr) _156_1891)))
 end))
 in (
-# 1481 "FStar.SMTEncoding.Encode.fst"
-let aux = (let _156_1892 = (let _156_1890 = (inversion_axioms tapp vars)
-in (FStar_List.append kindingAx _156_1890))
-in (let _156_1891 = (pretype_axioms tapp vars)
-in (FStar_List.append _156_1892 _156_1891)))
+# 1483 "FStar.SMTEncoding.Encode.fst"
+let aux = (let _156_1894 = (let _156_1892 = (inversion_axioms tapp vars)
+in (FStar_List.append kindingAx _156_1892))
+in (let _156_1893 = (pretype_axioms tapp vars)
+in (FStar_List.append _156_1894 _156_1893)))
 in (
-# 1486 "FStar.SMTEncoding.Encode.fst"
+# 1488 "FStar.SMTEncoding.Encode.fst"
 let g = (FStar_List.append (FStar_List.append decls binder_decls) aux)
 in (g, env))))
 end)))))
@@ -3969,196 +3971,196 @@ end
 end
 | FStar_Syntax_Syntax.Sig_datacon (d, _77_2541, t, _77_2544, n_tps, quals, _77_2548, drange) -> begin
 (
-# 1494 "FStar.SMTEncoding.Encode.fst"
+# 1496 "FStar.SMTEncoding.Encode.fst"
 let _77_2555 = (new_term_constant_and_tok_from_lid env d)
 in (match (_77_2555) with
 | (ddconstrsym, ddtok, env) -> begin
 (
-# 1495 "FStar.SMTEncoding.Encode.fst"
+# 1497 "FStar.SMTEncoding.Encode.fst"
 let ddtok_tm = (FStar_SMTEncoding_Term.mkApp (ddtok, []))
 in (
-# 1496 "FStar.SMTEncoding.Encode.fst"
+# 1498 "FStar.SMTEncoding.Encode.fst"
 let _77_2559 = (FStar_Syntax_Util.arrow_formals t)
 in (match (_77_2559) with
 | (formals, t_res) -> begin
 (
-# 1497 "FStar.SMTEncoding.Encode.fst"
+# 1499 "FStar.SMTEncoding.Encode.fst"
 let _77_2562 = (fresh_fvar "f" FStar_SMTEncoding_Term.Fuel_sort)
 in (match (_77_2562) with
 | (fuel_var, fuel_tm) -> begin
 (
-# 1498 "FStar.SMTEncoding.Encode.fst"
+# 1500 "FStar.SMTEncoding.Encode.fst"
 let s_fuel_tm = (FStar_SMTEncoding_Term.mkApp ("SFuel", (fuel_tm)::[]))
 in (
-# 1499 "FStar.SMTEncoding.Encode.fst"
+# 1501 "FStar.SMTEncoding.Encode.fst"
 let _77_2569 = (encode_binders (Some (fuel_tm)) formals env)
 in (match (_77_2569) with
 | (vars, guards, env', binder_decls, names) -> begin
 (
-# 1500 "FStar.SMTEncoding.Encode.fst"
-let projectors = (FStar_All.pipe_right names (FStar_List.map (fun x -> (let _156_1894 = (mk_term_projector_name d x)
-in (_156_1894, FStar_SMTEncoding_Term.Term_sort)))))
-in (
-# 1501 "FStar.SMTEncoding.Encode.fst"
-let datacons = (let _156_1896 = (let _156_1895 = (varops.next_id ())
-in (ddconstrsym, projectors, FStar_SMTEncoding_Term.Term_sort, _156_1895))
-in (FStar_All.pipe_right _156_1896 FStar_SMTEncoding_Term.constructor_to_decl))
-in (
 # 1502 "FStar.SMTEncoding.Encode.fst"
-let app = (mk_Apply ddtok_tm vars)
+let projectors = (FStar_All.pipe_right names (FStar_List.map (fun x -> (let _156_1896 = (mk_term_projector_name d x)
+in (_156_1896, FStar_SMTEncoding_Term.Term_sort)))))
 in (
 # 1503 "FStar.SMTEncoding.Encode.fst"
-let guard = (FStar_SMTEncoding_Term.mk_and_l guards)
+let datacons = (let _156_1898 = (let _156_1897 = (varops.next_id ())
+in (ddconstrsym, projectors, FStar_SMTEncoding_Term.Term_sort, _156_1897))
+in (FStar_All.pipe_right _156_1898 FStar_SMTEncoding_Term.constructor_to_decl))
 in (
 # 1504 "FStar.SMTEncoding.Encode.fst"
-let xvars = (FStar_List.map FStar_SMTEncoding_Term.mkFreeV vars)
+let app = (mk_Apply ddtok_tm vars)
 in (
 # 1505 "FStar.SMTEncoding.Encode.fst"
-let dapp = (FStar_SMTEncoding_Term.mkApp (ddconstrsym, xvars))
+let guard = (FStar_SMTEncoding_Term.mk_and_l guards)
+in (
+# 1506 "FStar.SMTEncoding.Encode.fst"
+let xvars = (FStar_List.map FStar_SMTEncoding_Term.mkFreeV vars)
 in (
 # 1507 "FStar.SMTEncoding.Encode.fst"
+let dapp = (FStar_SMTEncoding_Term.mkApp (ddconstrsym, xvars))
+in (
+# 1509 "FStar.SMTEncoding.Encode.fst"
 let _77_2579 = (encode_term_pred None t env ddtok_tm)
 in (match (_77_2579) with
 | (tok_typing, decls3) -> begin
 (
-# 1509 "FStar.SMTEncoding.Encode.fst"
+# 1511 "FStar.SMTEncoding.Encode.fst"
 let _77_2586 = (encode_binders (Some (fuel_tm)) formals env)
 in (match (_77_2586) with
 | (vars', guards', env'', decls_formals, _77_2585) -> begin
 (
-# 1510 "FStar.SMTEncoding.Encode.fst"
+# 1512 "FStar.SMTEncoding.Encode.fst"
 let _77_2591 = (
-# 1511 "FStar.SMTEncoding.Encode.fst"
+# 1513 "FStar.SMTEncoding.Encode.fst"
 let xvars = (FStar_List.map FStar_SMTEncoding_Term.mkFreeV vars')
 in (
-# 1512 "FStar.SMTEncoding.Encode.fst"
+# 1514 "FStar.SMTEncoding.Encode.fst"
 let dapp = (FStar_SMTEncoding_Term.mkApp (ddconstrsym, xvars))
 in (encode_term_pred (Some (fuel_tm)) t_res env'' dapp)))
 in (match (_77_2591) with
 | (ty_pred', decls_pred) -> begin
 (
-# 1514 "FStar.SMTEncoding.Encode.fst"
+# 1516 "FStar.SMTEncoding.Encode.fst"
 let guard' = (FStar_SMTEncoding_Term.mk_and_l guards')
 in (
-# 1515 "FStar.SMTEncoding.Encode.fst"
+# 1517 "FStar.SMTEncoding.Encode.fst"
 let proxy_fresh = (match (formals) with
 | [] -> begin
 []
 end
 | _77_2595 -> begin
-(let _156_1898 = (let _156_1897 = (varops.next_id ())
-in (FStar_SMTEncoding_Term.fresh_token (ddtok, FStar_SMTEncoding_Term.Term_sort) _156_1897))
-in (_156_1898)::[])
+(let _156_1900 = (let _156_1899 = (varops.next_id ())
+in (FStar_SMTEncoding_Term.fresh_token (ddtok, FStar_SMTEncoding_Term.Term_sort) _156_1899))
+in (_156_1900)::[])
 end)
 in (
-# 1519 "FStar.SMTEncoding.Encode.fst"
+# 1521 "FStar.SMTEncoding.Encode.fst"
 let encode_elim = (fun _77_2598 -> (match (()) with
 | () -> begin
 (
-# 1520 "FStar.SMTEncoding.Encode.fst"
+# 1522 "FStar.SMTEncoding.Encode.fst"
 let _77_2601 = (FStar_Syntax_Util.head_and_args t_res)
 in (match (_77_2601) with
 | (head, args) -> begin
-(match ((let _156_1901 = (FStar_Syntax_Subst.compress head)
-in _156_1901.FStar_Syntax_Syntax.n)) with
+(match ((let _156_1903 = (FStar_Syntax_Subst.compress head)
+in _156_1903.FStar_Syntax_Syntax.n)) with
 | (FStar_Syntax_Syntax.Tm_uinst ({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar (fv, _); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _}, _)) | (FStar_Syntax_Syntax.Tm_fvar (fv, _)) -> begin
 (
-# 1524 "FStar.SMTEncoding.Encode.fst"
+# 1526 "FStar.SMTEncoding.Encode.fst"
 let encoded_head = (lookup_free_var_name env' fv)
 in (
-# 1525 "FStar.SMTEncoding.Encode.fst"
+# 1527 "FStar.SMTEncoding.Encode.fst"
 let _77_2625 = (encode_args args env')
 in (match (_77_2625) with
 | (encoded_args, arg_decls) -> begin
 (
-# 1526 "FStar.SMTEncoding.Encode.fst"
+# 1528 "FStar.SMTEncoding.Encode.fst"
 let _77_2640 = (FStar_List.fold_left (fun _77_2629 arg -> (match (_77_2629) with
 | (env, arg_vars, eqns) -> begin
 (
-# 1527 "FStar.SMTEncoding.Encode.fst"
-let _77_2635 = (let _156_1904 = (FStar_Syntax_Syntax.new_bv None FStar_Syntax_Syntax.tun)
-in (gen_term_var env _156_1904))
+# 1529 "FStar.SMTEncoding.Encode.fst"
+let _77_2635 = (let _156_1906 = (FStar_Syntax_Syntax.new_bv None FStar_Syntax_Syntax.tun)
+in (gen_term_var env _156_1906))
 in (match (_77_2635) with
 | (_77_2632, xv, env) -> begin
-(let _156_1906 = (let _156_1905 = (FStar_SMTEncoding_Term.mkEq (arg, xv))
-in (_156_1905)::eqns)
-in (env, (xv)::arg_vars, _156_1906))
+(let _156_1908 = (let _156_1907 = (FStar_SMTEncoding_Term.mkEq (arg, xv))
+in (_156_1907)::eqns)
+in (env, (xv)::arg_vars, _156_1908))
 end))
 end)) (env', [], []) encoded_args)
 in (match (_77_2640) with
 | (_77_2637, arg_vars, eqns) -> begin
 (
-# 1529 "FStar.SMTEncoding.Encode.fst"
+# 1531 "FStar.SMTEncoding.Encode.fst"
 let arg_vars = (FStar_List.rev arg_vars)
 in (
-# 1530 "FStar.SMTEncoding.Encode.fst"
+# 1532 "FStar.SMTEncoding.Encode.fst"
 let ty = (FStar_SMTEncoding_Term.mkApp (encoded_head, arg_vars))
 in (
-# 1531 "FStar.SMTEncoding.Encode.fst"
+# 1533 "FStar.SMTEncoding.Encode.fst"
 let xvars = (FStar_List.map FStar_SMTEncoding_Term.mkFreeV vars)
 in (
-# 1532 "FStar.SMTEncoding.Encode.fst"
+# 1534 "FStar.SMTEncoding.Encode.fst"
 let dapp = (FStar_SMTEncoding_Term.mkApp (ddconstrsym, xvars))
 in (
-# 1533 "FStar.SMTEncoding.Encode.fst"
+# 1535 "FStar.SMTEncoding.Encode.fst"
 let ty_pred = (FStar_SMTEncoding_Term.mk_HasTypeWithFuel (Some (s_fuel_tm)) dapp ty)
 in (
-# 1534 "FStar.SMTEncoding.Encode.fst"
+# 1536 "FStar.SMTEncoding.Encode.fst"
 let arg_binders = (FStar_List.map FStar_SMTEncoding_Term.fv_of_term arg_vars)
 in (
-# 1535 "FStar.SMTEncoding.Encode.fst"
-let typing_inversion = (let _156_1913 = (let _156_1912 = (let _156_1911 = (let _156_1910 = (add_fuel (fuel_var, FStar_SMTEncoding_Term.Fuel_sort) (FStar_List.append vars arg_binders))
-in (let _156_1909 = (let _156_1908 = (let _156_1907 = (FStar_SMTEncoding_Term.mk_and_l (FStar_List.append eqns guards))
-in (ty_pred, _156_1907))
-in (FStar_SMTEncoding_Term.mkImp _156_1908))
-in (((ty_pred)::[])::[], _156_1910, _156_1909)))
-in (FStar_SMTEncoding_Term.mkForall _156_1911))
-in (_156_1912, Some ("data constructor typing elim")))
-in FStar_SMTEncoding_Term.Assume (_156_1913))
+# 1537 "FStar.SMTEncoding.Encode.fst"
+let typing_inversion = (let _156_1915 = (let _156_1914 = (let _156_1913 = (let _156_1912 = (add_fuel (fuel_var, FStar_SMTEncoding_Term.Fuel_sort) (FStar_List.append vars arg_binders))
+in (let _156_1911 = (let _156_1910 = (let _156_1909 = (FStar_SMTEncoding_Term.mk_and_l (FStar_List.append eqns guards))
+in (ty_pred, _156_1909))
+in (FStar_SMTEncoding_Term.mkImp _156_1910))
+in (((ty_pred)::[])::[], _156_1912, _156_1911)))
+in (FStar_SMTEncoding_Term.mkForall _156_1913))
+in (_156_1914, Some ("data constructor typing elim")))
+in FStar_SMTEncoding_Term.Assume (_156_1915))
 in (
-# 1540 "FStar.SMTEncoding.Encode.fst"
+# 1542 "FStar.SMTEncoding.Encode.fst"
 let subterm_ordering = if (FStar_Ident.lid_equals d FStar_Syntax_Const.lextop_lid) then begin
 (
-# 1542 "FStar.SMTEncoding.Encode.fst"
-let x = (let _156_1914 = (varops.fresh "x")
-in (_156_1914, FStar_SMTEncoding_Term.Term_sort))
+# 1544 "FStar.SMTEncoding.Encode.fst"
+let x = (let _156_1916 = (varops.fresh "x")
+in (_156_1916, FStar_SMTEncoding_Term.Term_sort))
 in (
-# 1543 "FStar.SMTEncoding.Encode.fst"
+# 1545 "FStar.SMTEncoding.Encode.fst"
 let xtm = (FStar_SMTEncoding_Term.mkFreeV x)
-in (let _156_1924 = (let _156_1923 = (let _156_1922 = (let _156_1921 = (let _156_1916 = (let _156_1915 = (FStar_SMTEncoding_Term.mk_Precedes xtm dapp)
-in (_156_1915)::[])
-in (_156_1916)::[])
-in (let _156_1920 = (let _156_1919 = (let _156_1918 = (FStar_SMTEncoding_Term.mk_tester "LexCons" xtm)
-in (let _156_1917 = (FStar_SMTEncoding_Term.mk_Precedes xtm dapp)
-in (_156_1918, _156_1917)))
-in (FStar_SMTEncoding_Term.mkImp _156_1919))
-in (_156_1921, (x)::[], _156_1920)))
-in (FStar_SMTEncoding_Term.mkForall _156_1922))
-in (_156_1923, Some ("lextop is top")))
-in FStar_SMTEncoding_Term.Assume (_156_1924))))
+in (let _156_1926 = (let _156_1925 = (let _156_1924 = (let _156_1923 = (let _156_1918 = (let _156_1917 = (FStar_SMTEncoding_Term.mk_Precedes xtm dapp)
+in (_156_1917)::[])
+in (_156_1918)::[])
+in (let _156_1922 = (let _156_1921 = (let _156_1920 = (FStar_SMTEncoding_Term.mk_tester "LexCons" xtm)
+in (let _156_1919 = (FStar_SMTEncoding_Term.mk_Precedes xtm dapp)
+in (_156_1920, _156_1919)))
+in (FStar_SMTEncoding_Term.mkImp _156_1921))
+in (_156_1923, (x)::[], _156_1922)))
+in (FStar_SMTEncoding_Term.mkForall _156_1924))
+in (_156_1925, Some ("lextop is top")))
+in FStar_SMTEncoding_Term.Assume (_156_1926))))
 end else begin
 (
-# 1546 "FStar.SMTEncoding.Encode.fst"
+# 1548 "FStar.SMTEncoding.Encode.fst"
 let prec = (FStar_All.pipe_right vars (FStar_List.collect (fun v -> (match ((Prims.snd v)) with
 | FStar_SMTEncoding_Term.Fuel_sort -> begin
 []
 end
 | FStar_SMTEncoding_Term.Term_sort -> begin
-(let _156_1927 = (let _156_1926 = (FStar_SMTEncoding_Term.mkFreeV v)
-in (FStar_SMTEncoding_Term.mk_Precedes _156_1926 dapp))
-in (_156_1927)::[])
+(let _156_1929 = (let _156_1928 = (FStar_SMTEncoding_Term.mkFreeV v)
+in (FStar_SMTEncoding_Term.mk_Precedes _156_1928 dapp))
+in (_156_1929)::[])
 end
 | _77_2654 -> begin
 (FStar_All.failwith "unexpected sort")
 end))))
-in (let _156_1934 = (let _156_1933 = (let _156_1932 = (let _156_1931 = (add_fuel (fuel_var, FStar_SMTEncoding_Term.Fuel_sort) (FStar_List.append vars arg_binders))
-in (let _156_1930 = (let _156_1929 = (let _156_1928 = (FStar_SMTEncoding_Term.mk_and_l prec)
-in (ty_pred, _156_1928))
-in (FStar_SMTEncoding_Term.mkImp _156_1929))
-in (((ty_pred)::[])::[], _156_1931, _156_1930)))
-in (FStar_SMTEncoding_Term.mkForall _156_1932))
-in (_156_1933, Some ("subterm ordering")))
-in FStar_SMTEncoding_Term.Assume (_156_1934)))
+in (let _156_1936 = (let _156_1935 = (let _156_1934 = (let _156_1933 = (add_fuel (fuel_var, FStar_SMTEncoding_Term.Fuel_sort) (FStar_List.append vars arg_binders))
+in (let _156_1932 = (let _156_1931 = (let _156_1930 = (FStar_SMTEncoding_Term.mk_and_l prec)
+in (ty_pred, _156_1930))
+in (FStar_SMTEncoding_Term.mkImp _156_1931))
+in (((ty_pred)::[])::[], _156_1933, _156_1932)))
+in (FStar_SMTEncoding_Term.mkForall _156_1934))
+in (_156_1935, Some ("subterm ordering")))
+in FStar_SMTEncoding_Term.Assume (_156_1936)))
 end
 in (arg_decls, (typing_inversion)::(subterm_ordering)::[])))))))))
 end))
@@ -4166,48 +4168,48 @@ end)))
 end
 | _77_2658 -> begin
 (
-# 1554 "FStar.SMTEncoding.Encode.fst"
-let _77_2659 = (let _156_1937 = (let _156_1936 = (FStar_Syntax_Print.lid_to_string d)
-in (let _156_1935 = (FStar_Syntax_Print.term_to_string head)
-in (FStar_Util.format2 "Constructor %s builds an unexpected type %s\n" _156_1936 _156_1935)))
-in (FStar_TypeChecker_Errors.warn drange _156_1937))
+# 1556 "FStar.SMTEncoding.Encode.fst"
+let _77_2659 = (let _156_1939 = (let _156_1938 = (FStar_Syntax_Print.lid_to_string d)
+in (let _156_1937 = (FStar_Syntax_Print.term_to_string head)
+in (FStar_Util.format2 "Constructor %s builds an unexpected type %s\n" _156_1938 _156_1937)))
+in (FStar_TypeChecker_Errors.warn drange _156_1939))
 in ([], []))
 end)
 end))
 end))
 in (
-# 1557 "FStar.SMTEncoding.Encode.fst"
+# 1559 "FStar.SMTEncoding.Encode.fst"
 let _77_2663 = (encode_elim ())
 in (match (_77_2663) with
 | (decls2, elim) -> begin
 (
-# 1558 "FStar.SMTEncoding.Encode.fst"
-let g = (let _156_1962 = (let _156_1961 = (let _156_1946 = (let _156_1945 = (let _156_1944 = (let _156_1943 = (let _156_1942 = (let _156_1941 = (let _156_1940 = (let _156_1939 = (let _156_1938 = (FStar_Syntax_Print.lid_to_string d)
-in (FStar_Util.format1 "data constructor proxy: %s" _156_1938))
-in Some (_156_1939))
-in (ddtok, [], FStar_SMTEncoding_Term.Term_sort, _156_1940))
-in FStar_SMTEncoding_Term.DeclFun (_156_1941))
-in (_156_1942)::[])
-in (FStar_List.append (FStar_List.append (FStar_List.append binder_decls decls2) decls3) _156_1943))
-in (FStar_List.append _156_1944 proxy_fresh))
-in (FStar_List.append _156_1945 decls_formals))
-in (FStar_List.append _156_1946 decls_pred))
-in (let _156_1960 = (let _156_1959 = (let _156_1958 = (let _156_1950 = (let _156_1949 = (let _156_1948 = (let _156_1947 = (FStar_SMTEncoding_Term.mkEq (app, dapp))
-in (((app)::[])::[], vars, _156_1947))
-in (FStar_SMTEncoding_Term.mkForall _156_1948))
-in (_156_1949, Some ("equality for proxy")))
-in FStar_SMTEncoding_Term.Assume (_156_1950))
-in (let _156_1957 = (let _156_1956 = (let _156_1955 = (let _156_1954 = (let _156_1953 = (let _156_1952 = (add_fuel (fuel_var, FStar_SMTEncoding_Term.Fuel_sort) vars')
-in (let _156_1951 = (FStar_SMTEncoding_Term.mkImp (guard', ty_pred'))
-in (((ty_pred')::[])::[], _156_1952, _156_1951)))
-in (FStar_SMTEncoding_Term.mkForall _156_1953))
-in (_156_1954, Some ("data constructor typing intro")))
-in FStar_SMTEncoding_Term.Assume (_156_1955))
-in (_156_1956)::[])
-in (_156_1958)::_156_1957))
-in (FStar_SMTEncoding_Term.Assume ((tok_typing, Some ("typing for data constructor proxy"))))::_156_1959)
-in (FStar_List.append _156_1961 _156_1960)))
-in (FStar_List.append _156_1962 elim))
+# 1560 "FStar.SMTEncoding.Encode.fst"
+let g = (let _156_1964 = (let _156_1963 = (let _156_1948 = (let _156_1947 = (let _156_1946 = (let _156_1945 = (let _156_1944 = (let _156_1943 = (let _156_1942 = (let _156_1941 = (let _156_1940 = (FStar_Syntax_Print.lid_to_string d)
+in (FStar_Util.format1 "data constructor proxy: %s" _156_1940))
+in Some (_156_1941))
+in (ddtok, [], FStar_SMTEncoding_Term.Term_sort, _156_1942))
+in FStar_SMTEncoding_Term.DeclFun (_156_1943))
+in (_156_1944)::[])
+in (FStar_List.append (FStar_List.append (FStar_List.append binder_decls decls2) decls3) _156_1945))
+in (FStar_List.append _156_1946 proxy_fresh))
+in (FStar_List.append _156_1947 decls_formals))
+in (FStar_List.append _156_1948 decls_pred))
+in (let _156_1962 = (let _156_1961 = (let _156_1960 = (let _156_1952 = (let _156_1951 = (let _156_1950 = (let _156_1949 = (FStar_SMTEncoding_Term.mkEq (app, dapp))
+in (((app)::[])::[], vars, _156_1949))
+in (FStar_SMTEncoding_Term.mkForall _156_1950))
+in (_156_1951, Some ("equality for proxy")))
+in FStar_SMTEncoding_Term.Assume (_156_1952))
+in (let _156_1959 = (let _156_1958 = (let _156_1957 = (let _156_1956 = (let _156_1955 = (let _156_1954 = (add_fuel (fuel_var, FStar_SMTEncoding_Term.Fuel_sort) vars')
+in (let _156_1953 = (FStar_SMTEncoding_Term.mkImp (guard', ty_pred'))
+in (((ty_pred')::[])::[], _156_1954, _156_1953)))
+in (FStar_SMTEncoding_Term.mkForall _156_1955))
+in (_156_1956, Some ("data constructor typing intro")))
+in FStar_SMTEncoding_Term.Assume (_156_1957))
+in (_156_1958)::[])
+in (_156_1960)::_156_1959))
+in (FStar_SMTEncoding_Term.Assume ((tok_typing, Some ("typing for data constructor proxy"))))::_156_1961)
+in (FStar_List.append _156_1963 _156_1962)))
+in (FStar_List.append _156_1964 elim))
 in ((FStar_List.append datacons g), env))
 end)))))
 end))
@@ -4221,12 +4223,12 @@ end)))))
 and declare_top_level_let : env_t  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.term  ->  ((Prims.string * FStar_SMTEncoding_Term.term Prims.option) * FStar_SMTEncoding_Term.decl Prims.list * env_t) = (fun env x t t_norm -> (match ((try_lookup_lid env x)) with
 | None -> begin
 (
-# 1576 "FStar.SMTEncoding.Encode.fst"
+# 1578 "FStar.SMTEncoding.Encode.fst"
 let _77_2672 = (encode_free_var env x t t_norm [])
 in (match (_77_2672) with
 | (decls, env) -> begin
 (
-# 1577 "FStar.SMTEncoding.Encode.fst"
+# 1579 "FStar.SMTEncoding.Encode.fst"
 let _77_2677 = (lookup_lid env x)
 in (match (_77_2677) with
 | (n, x', _77_2676) -> begin
@@ -4238,23 +4240,23 @@ end
 ((n, x), [], env)
 end))
 and encode_smt_lemma : env_t  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term  ->  FStar_SMTEncoding_Term.decl Prims.list = (fun env lid t -> (
-# 1583 "FStar.SMTEncoding.Encode.fst"
+# 1585 "FStar.SMTEncoding.Encode.fst"
 let _77_2689 = (encode_function_type_as_formula None None t env)
 in (match (_77_2689) with
 | (form, decls) -> begin
 (FStar_List.append decls ((FStar_SMTEncoding_Term.Assume ((form, Some ((Prims.strcat "Lemma: " lid.FStar_Ident.str)))))::[]))
 end)))
-and encode_free_var : env_t  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.qualifier Prims.list  ->  (FStar_SMTEncoding_Term.decl Prims.list * env_t) = (fun env lid tt t_norm quals -> if ((let _156_1975 = (FStar_Syntax_Util.is_pure_or_ghost_function t_norm)
-in (FStar_All.pipe_left Prims.op_Negation _156_1975)) || (FStar_Syntax_Util.is_lemma t_norm)) then begin
+and encode_free_var : env_t  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.qualifier Prims.list  ->  (FStar_SMTEncoding_Term.decl Prims.list * env_t) = (fun env lid tt t_norm quals -> if ((let _156_1977 = (FStar_Syntax_Util.is_pure_or_ghost_function t_norm)
+in (FStar_All.pipe_left Prims.op_Negation _156_1977)) || (FStar_Syntax_Util.is_lemma t_norm)) then begin
 (
-# 1589 "FStar.SMTEncoding.Encode.fst"
+# 1591 "FStar.SMTEncoding.Encode.fst"
 let _77_2698 = (new_term_constant_and_tok_from_lid env lid)
 in (match (_77_2698) with
 | (vname, vtok, env) -> begin
 (
-# 1590 "FStar.SMTEncoding.Encode.fst"
-let arg_sorts = (match ((let _156_1976 = (FStar_Syntax_Subst.compress t_norm)
-in _156_1976.FStar_Syntax_Syntax.n)) with
+# 1592 "FStar.SMTEncoding.Encode.fst"
+let arg_sorts = (match ((let _156_1978 = (FStar_Syntax_Subst.compress t_norm)
+in _156_1978.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_arrow (binders, _77_2701) -> begin
 (FStar_All.pipe_right binders (FStar_List.map (fun _77_2704 -> FStar_SMTEncoding_Term.Term_sort)))
 end
@@ -4262,39 +4264,39 @@ end
 []
 end)
 in (
-# 1593 "FStar.SMTEncoding.Encode.fst"
+# 1595 "FStar.SMTEncoding.Encode.fst"
 let d = FStar_SMTEncoding_Term.DeclFun ((vname, arg_sorts, FStar_SMTEncoding_Term.Term_sort, Some ("Uninterpreted function symbol for impure function")))
 in (
-# 1594 "FStar.SMTEncoding.Encode.fst"
+# 1596 "FStar.SMTEncoding.Encode.fst"
 let dd = FStar_SMTEncoding_Term.DeclFun ((vtok, [], FStar_SMTEncoding_Term.Term_sort, Some ("Uninterpreted name for impure function")))
 in ((d)::(dd)::[], env))))
 end))
 end else begin
 if (prims.is lid) then begin
 (
-# 1597 "FStar.SMTEncoding.Encode.fst"
+# 1599 "FStar.SMTEncoding.Encode.fst"
 let vname = (varops.new_fvar lid)
 in (
-# 1598 "FStar.SMTEncoding.Encode.fst"
+# 1600 "FStar.SMTEncoding.Encode.fst"
 let definition = (prims.mk lid vname)
 in (
-# 1599 "FStar.SMTEncoding.Encode.fst"
+# 1601 "FStar.SMTEncoding.Encode.fst"
 let env = (push_free_var env lid vname None)
 in (definition, env))))
 end else begin
 (
-# 1601 "FStar.SMTEncoding.Encode.fst"
+# 1603 "FStar.SMTEncoding.Encode.fst"
 let encode_non_total_function_typ = (lid.FStar_Ident.nsstr <> "Prims")
 in (
-# 1602 "FStar.SMTEncoding.Encode.fst"
+# 1604 "FStar.SMTEncoding.Encode.fst"
 let _77_2722 = (
-# 1603 "FStar.SMTEncoding.Encode.fst"
+# 1605 "FStar.SMTEncoding.Encode.fst"
 let _77_2717 = (curried_arrow_formals_comp t_norm)
 in (match (_77_2717) with
 | (args, comp) -> begin
 if encode_non_total_function_typ then begin
-(let _156_1978 = (FStar_TypeChecker_Util.pure_or_ghost_pre_and_post env.tcenv comp)
-in (args, _156_1978))
+(let _156_1980 = (FStar_TypeChecker_Util.pure_or_ghost_pre_and_post env.tcenv comp)
+in (args, _156_1980))
 end else begin
 (args, (None, (FStar_Syntax_Util.comp_result comp)))
 end
@@ -4302,12 +4304,12 @@ end))
 in (match (_77_2722) with
 | (formals, (pre_opt, res_t)) -> begin
 (
-# 1607 "FStar.SMTEncoding.Encode.fst"
+# 1609 "FStar.SMTEncoding.Encode.fst"
 let _77_2726 = (new_term_constant_and_tok_from_lid env lid)
 in (match (_77_2726) with
 | (vname, vtok, env) -> begin
 (
-# 1608 "FStar.SMTEncoding.Encode.fst"
+# 1610 "FStar.SMTEncoding.Encode.fst"
 let vtok_tm = (match (formals) with
 | [] -> begin
 (FStar_SMTEncoding_Term.mkFreeV (vname, FStar_SMTEncoding_Term.Term_sort))
@@ -4316,101 +4318,101 @@ end
 (FStar_SMTEncoding_Term.mkApp (vtok, []))
 end)
 in (
-# 1611 "FStar.SMTEncoding.Encode.fst"
+# 1613 "FStar.SMTEncoding.Encode.fst"
 let mk_disc_proj_axioms = (fun guard encoded_res_t vapp vars -> (FStar_All.pipe_right quals (FStar_List.collect (fun _77_20 -> (match (_77_20) with
 | FStar_Syntax_Syntax.Discriminator (d) -> begin
 (
-# 1613 "FStar.SMTEncoding.Encode.fst"
+# 1615 "FStar.SMTEncoding.Encode.fst"
 let _77_2745 = (FStar_Util.prefix vars)
 in (match (_77_2745) with
 | (_77_2740, (xxsym, _77_2743)) -> begin
 (
-# 1614 "FStar.SMTEncoding.Encode.fst"
+# 1616 "FStar.SMTEncoding.Encode.fst"
 let xx = (FStar_SMTEncoding_Term.mkFreeV (xxsym, FStar_SMTEncoding_Term.Term_sort))
-in (let _156_1995 = (let _156_1994 = (let _156_1993 = (let _156_1992 = (let _156_1991 = (let _156_1990 = (let _156_1989 = (let _156_1988 = (FStar_SMTEncoding_Term.mk_tester (escape d.FStar_Ident.str) xx)
-in (FStar_All.pipe_left FStar_SMTEncoding_Term.boxBool _156_1988))
-in (vapp, _156_1989))
-in (FStar_SMTEncoding_Term.mkEq _156_1990))
-in (((vapp)::[])::[], vars, _156_1991))
-in (FStar_SMTEncoding_Term.mkForall _156_1992))
-in (_156_1993, Some ("Discriminator equation")))
-in FStar_SMTEncoding_Term.Assume (_156_1994))
-in (_156_1995)::[]))
+in (let _156_1997 = (let _156_1996 = (let _156_1995 = (let _156_1994 = (let _156_1993 = (let _156_1992 = (let _156_1991 = (let _156_1990 = (FStar_SMTEncoding_Term.mk_tester (escape d.FStar_Ident.str) xx)
+in (FStar_All.pipe_left FStar_SMTEncoding_Term.boxBool _156_1990))
+in (vapp, _156_1991))
+in (FStar_SMTEncoding_Term.mkEq _156_1992))
+in (((vapp)::[])::[], vars, _156_1993))
+in (FStar_SMTEncoding_Term.mkForall _156_1994))
+in (_156_1995, Some ("Discriminator equation")))
+in FStar_SMTEncoding_Term.Assume (_156_1996))
+in (_156_1997)::[]))
 end))
 end
 | FStar_Syntax_Syntax.Projector (d, f) -> begin
 (
-# 1619 "FStar.SMTEncoding.Encode.fst"
+# 1621 "FStar.SMTEncoding.Encode.fst"
 let _77_2757 = (FStar_Util.prefix vars)
 in (match (_77_2757) with
 | (_77_2752, (xxsym, _77_2755)) -> begin
 (
-# 1620 "FStar.SMTEncoding.Encode.fst"
+# 1622 "FStar.SMTEncoding.Encode.fst"
 let xx = (FStar_SMTEncoding_Term.mkFreeV (xxsym, FStar_SMTEncoding_Term.Term_sort))
 in (
-# 1621 "FStar.SMTEncoding.Encode.fst"
+# 1623 "FStar.SMTEncoding.Encode.fst"
 let f = {FStar_Syntax_Syntax.ppname = f; FStar_Syntax_Syntax.index = 0; FStar_Syntax_Syntax.sort = FStar_Syntax_Syntax.tun}
 in (
-# 1622 "FStar.SMTEncoding.Encode.fst"
-let prim_app = (let _156_1997 = (let _156_1996 = (mk_term_projector_name d f)
-in (_156_1996, (xx)::[]))
-in (FStar_SMTEncoding_Term.mkApp _156_1997))
-in (let _156_2002 = (let _156_2001 = (let _156_2000 = (let _156_1999 = (let _156_1998 = (FStar_SMTEncoding_Term.mkEq (vapp, prim_app))
-in (((vapp)::[])::[], vars, _156_1998))
-in (FStar_SMTEncoding_Term.mkForall _156_1999))
-in (_156_2000, Some ("Projector equation")))
-in FStar_SMTEncoding_Term.Assume (_156_2001))
-in (_156_2002)::[]))))
+# 1624 "FStar.SMTEncoding.Encode.fst"
+let prim_app = (let _156_1999 = (let _156_1998 = (mk_term_projector_name d f)
+in (_156_1998, (xx)::[]))
+in (FStar_SMTEncoding_Term.mkApp _156_1999))
+in (let _156_2004 = (let _156_2003 = (let _156_2002 = (let _156_2001 = (let _156_2000 = (FStar_SMTEncoding_Term.mkEq (vapp, prim_app))
+in (((vapp)::[])::[], vars, _156_2000))
+in (FStar_SMTEncoding_Term.mkForall _156_2001))
+in (_156_2002, Some ("Projector equation")))
+in FStar_SMTEncoding_Term.Assume (_156_2003))
+in (_156_2004)::[]))))
 end))
 end
 | _77_2762 -> begin
 []
 end)))))
 in (
-# 1626 "FStar.SMTEncoding.Encode.fst"
+# 1628 "FStar.SMTEncoding.Encode.fst"
 let _77_2769 = (encode_binders None formals env)
 in (match (_77_2769) with
 | (vars, guards, env', decls1, _77_2768) -> begin
 (
-# 1627 "FStar.SMTEncoding.Encode.fst"
+# 1629 "FStar.SMTEncoding.Encode.fst"
 let _77_2778 = (match (pre_opt) with
 | None -> begin
-(let _156_2003 = (FStar_SMTEncoding_Term.mk_and_l guards)
-in (_156_2003, decls1))
+(let _156_2005 = (FStar_SMTEncoding_Term.mk_and_l guards)
+in (_156_2005, decls1))
 end
 | Some (p) -> begin
 (
-# 1629 "FStar.SMTEncoding.Encode.fst"
+# 1631 "FStar.SMTEncoding.Encode.fst"
 let _77_2775 = (encode_formula p env')
 in (match (_77_2775) with
 | (g, ds) -> begin
-(let _156_2004 = (FStar_SMTEncoding_Term.mk_and_l ((g)::guards))
-in (_156_2004, (FStar_List.append decls1 ds)))
+(let _156_2006 = (FStar_SMTEncoding_Term.mk_and_l ((g)::guards))
+in (_156_2006, (FStar_List.append decls1 ds)))
 end))
 end)
 in (match (_77_2778) with
 | (guard, decls1) -> begin
 (
-# 1630 "FStar.SMTEncoding.Encode.fst"
+# 1632 "FStar.SMTEncoding.Encode.fst"
 let vtok_app = (mk_Apply vtok_tm vars)
 in (
-# 1632 "FStar.SMTEncoding.Encode.fst"
-let vapp = (let _156_2006 = (let _156_2005 = (FStar_List.map FStar_SMTEncoding_Term.mkFreeV vars)
-in (vname, _156_2005))
-in (FStar_SMTEncoding_Term.mkApp _156_2006))
-in (
-# 1633 "FStar.SMTEncoding.Encode.fst"
-let _77_2802 = (
 # 1634 "FStar.SMTEncoding.Encode.fst"
-let vname_decl = (let _156_2009 = (let _156_2008 = (FStar_All.pipe_right formals (FStar_List.map (fun _77_2781 -> FStar_SMTEncoding_Term.Term_sort)))
-in (vname, _156_2008, FStar_SMTEncoding_Term.Term_sort, None))
-in FStar_SMTEncoding_Term.DeclFun (_156_2009))
+let vapp = (let _156_2008 = (let _156_2007 = (FStar_List.map FStar_SMTEncoding_Term.mkFreeV vars)
+in (vname, _156_2007))
+in (FStar_SMTEncoding_Term.mkApp _156_2008))
 in (
 # 1635 "FStar.SMTEncoding.Encode.fst"
+let _77_2802 = (
+# 1636 "FStar.SMTEncoding.Encode.fst"
+let vname_decl = (let _156_2011 = (let _156_2010 = (FStar_All.pipe_right formals (FStar_List.map (fun _77_2781 -> FStar_SMTEncoding_Term.Term_sort)))
+in (vname, _156_2010, FStar_SMTEncoding_Term.Term_sort, None))
+in FStar_SMTEncoding_Term.DeclFun (_156_2011))
+in (
+# 1637 "FStar.SMTEncoding.Encode.fst"
 let _77_2789 = (
-# 1636 "FStar.SMTEncoding.Encode.fst"
+# 1638 "FStar.SMTEncoding.Encode.fst"
 let env = (
-# 1636 "FStar.SMTEncoding.Encode.fst"
+# 1638 "FStar.SMTEncoding.Encode.fst"
 let _77_2784 = env
 in {bindings = _77_2784.bindings; depth = _77_2784.depth; tcenv = _77_2784.tcenv; warn = _77_2784.warn; cache = _77_2784.cache; nolabels = _77_2784.nolabels; use_zfuel_name = _77_2784.use_zfuel_name; encode_non_total_function_typ = encode_non_total_function_typ})
 in if (not ((head_normal env tt))) then begin
@@ -4421,32 +4423,32 @@ end)
 in (match (_77_2789) with
 | (tok_typing, decls2) -> begin
 (
-# 1640 "FStar.SMTEncoding.Encode.fst"
+# 1642 "FStar.SMTEncoding.Encode.fst"
 let tok_typing = FStar_SMTEncoding_Term.Assume ((tok_typing, Some ("function token typing")))
 in (
-# 1641 "FStar.SMTEncoding.Encode.fst"
+# 1643 "FStar.SMTEncoding.Encode.fst"
 let _77_2799 = (match (formals) with
 | [] -> begin
-(let _156_2013 = (let _156_2012 = (let _156_2011 = (FStar_SMTEncoding_Term.mkFreeV (vname, FStar_SMTEncoding_Term.Term_sort))
-in (FStar_All.pipe_left (fun _156_2010 -> Some (_156_2010)) _156_2011))
-in (push_free_var env lid vname _156_2012))
-in ((FStar_List.append decls2 ((tok_typing)::[])), _156_2013))
+(let _156_2015 = (let _156_2014 = (let _156_2013 = (FStar_SMTEncoding_Term.mkFreeV (vname, FStar_SMTEncoding_Term.Term_sort))
+in (FStar_All.pipe_left (fun _156_2012 -> Some (_156_2012)) _156_2013))
+in (push_free_var env lid vname _156_2014))
+in ((FStar_List.append decls2 ((tok_typing)::[])), _156_2015))
 end
 | _77_2793 -> begin
 (
-# 1644 "FStar.SMTEncoding.Encode.fst"
+# 1646 "FStar.SMTEncoding.Encode.fst"
 let vtok_decl = FStar_SMTEncoding_Term.DeclFun ((vtok, [], FStar_SMTEncoding_Term.Term_sort, None))
 in (
-# 1645 "FStar.SMTEncoding.Encode.fst"
-let vtok_fresh = (let _156_2014 = (varops.next_id ())
-in (FStar_SMTEncoding_Term.fresh_token (vtok, FStar_SMTEncoding_Term.Term_sort) _156_2014))
+# 1647 "FStar.SMTEncoding.Encode.fst"
+let vtok_fresh = (let _156_2016 = (varops.next_id ())
+in (FStar_SMTEncoding_Term.fresh_token (vtok, FStar_SMTEncoding_Term.Term_sort) _156_2016))
 in (
-# 1646 "FStar.SMTEncoding.Encode.fst"
-let name_tok_corr = (let _156_2018 = (let _156_2017 = (let _156_2016 = (let _156_2015 = (FStar_SMTEncoding_Term.mkEq (vtok_app, vapp))
-in (((vtok_app)::[])::[], vars, _156_2015))
-in (FStar_SMTEncoding_Term.mkForall _156_2016))
-in (_156_2017, None))
-in FStar_SMTEncoding_Term.Assume (_156_2018))
+# 1648 "FStar.SMTEncoding.Encode.fst"
+let name_tok_corr = (let _156_2020 = (let _156_2019 = (let _156_2018 = (let _156_2017 = (FStar_SMTEncoding_Term.mkEq (vtok_app, vapp))
+in (((vtok_app)::[])::[], vars, _156_2017))
+in (FStar_SMTEncoding_Term.mkForall _156_2018))
+in (_156_2019, None))
+in FStar_SMTEncoding_Term.Assume (_156_2020))
 in ((FStar_List.append decls2 ((vtok_decl)::(vtok_fresh)::(name_tok_corr)::(tok_typing)::[])), env))))
 end)
 in (match (_77_2799) with
@@ -4457,32 +4459,32 @@ end)))
 in (match (_77_2802) with
 | (decls2, env) -> begin
 (
-# 1649 "FStar.SMTEncoding.Encode.fst"
+# 1651 "FStar.SMTEncoding.Encode.fst"
 let _77_2810 = (
-# 1650 "FStar.SMTEncoding.Encode.fst"
+# 1652 "FStar.SMTEncoding.Encode.fst"
 let res_t = (FStar_Syntax_Subst.compress res_t)
 in (
-# 1651 "FStar.SMTEncoding.Encode.fst"
+# 1653 "FStar.SMTEncoding.Encode.fst"
 let _77_2806 = (encode_term res_t env')
 in (match (_77_2806) with
 | (encoded_res_t, decls) -> begin
-(let _156_2019 = (FStar_SMTEncoding_Term.mk_HasType vapp encoded_res_t)
-in (encoded_res_t, _156_2019, decls))
+(let _156_2021 = (FStar_SMTEncoding_Term.mk_HasType vapp encoded_res_t)
+in (encoded_res_t, _156_2021, decls))
 end)))
 in (match (_77_2810) with
 | (encoded_res_t, ty_pred, decls3) -> begin
 (
-# 1653 "FStar.SMTEncoding.Encode.fst"
-let typingAx = (let _156_2023 = (let _156_2022 = (let _156_2021 = (let _156_2020 = (FStar_SMTEncoding_Term.mkImp (guard, ty_pred))
-in (((vapp)::[])::[], vars, _156_2020))
-in (FStar_SMTEncoding_Term.mkForall _156_2021))
-in (_156_2022, Some ("free var typing")))
-in FStar_SMTEncoding_Term.Assume (_156_2023))
+# 1655 "FStar.SMTEncoding.Encode.fst"
+let typingAx = (let _156_2025 = (let _156_2024 = (let _156_2023 = (let _156_2022 = (FStar_SMTEncoding_Term.mkImp (guard, ty_pred))
+in (((vapp)::[])::[], vars, _156_2022))
+in (FStar_SMTEncoding_Term.mkForall _156_2023))
+in (_156_2024, Some ("free var typing")))
+in FStar_SMTEncoding_Term.Assume (_156_2025))
 in (
-# 1654 "FStar.SMTEncoding.Encode.fst"
-let g = (let _156_2025 = (let _156_2024 = (mk_disc_proj_axioms guard encoded_res_t vapp vars)
-in (typingAx)::_156_2024)
-in (FStar_List.append (FStar_List.append (FStar_List.append decls1 decls2) decls3) _156_2025))
+# 1656 "FStar.SMTEncoding.Encode.fst"
+let g = (let _156_2027 = (let _156_2026 = (mk_disc_proj_axioms guard encoded_res_t vapp vars)
+in (typingAx)::_156_2026)
+in (FStar_List.append (FStar_List.append (FStar_List.append decls1 decls2) decls3) _156_2027))
 in (g, env)))
 end))
 end))))
@@ -4495,7 +4497,7 @@ end)
 and encode_signature : env_t  ->  FStar_Syntax_Syntax.sigelt Prims.list  ->  (FStar_SMTEncoding_Term.decl Prims.list * env_t) = (fun env ses -> (FStar_All.pipe_right ses (FStar_List.fold_left (fun _77_2817 se -> (match (_77_2817) with
 | (g, env) -> begin
 (
-# 1660 "FStar.SMTEncoding.Encode.fst"
+# 1662 "FStar.SMTEncoding.Encode.fst"
 let _77_2821 = (encode_sigelt env se)
 in (match (_77_2821) with
 | (g', env) -> begin
@@ -4503,9 +4505,9 @@ in (match (_77_2821) with
 end))
 end)) ([], env))))
 
-# 1663 "FStar.SMTEncoding.Encode.fst"
+# 1665 "FStar.SMTEncoding.Encode.fst"
 let encode_env_bindings : env_t  ->  FStar_TypeChecker_Env.binding Prims.list  ->  (FStar_SMTEncoding_Term.decl Prims.list * env_t) = (fun env bindings -> (
-# 1688 "FStar.SMTEncoding.Encode.fst"
+# 1690 "FStar.SMTEncoding.Encode.fst"
 let encode_binding = (fun b _77_2828 -> (match (_77_2828) with
 | (decls, env) -> begin
 (match (b) with
@@ -4514,41 +4516,41 @@ let encode_binding = (fun b _77_2828 -> (match (_77_2828) with
 end
 | FStar_TypeChecker_Env.Binding_var (x) -> begin
 (
-# 1693 "FStar.SMTEncoding.Encode.fst"
+# 1695 "FStar.SMTEncoding.Encode.fst"
 let _77_2837 = (new_term_constant env x)
 in (match (_77_2837) with
 | (xxsym, xx, env') -> begin
 (
-# 1694 "FStar.SMTEncoding.Encode.fst"
+# 1696 "FStar.SMTEncoding.Encode.fst"
 let t1 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Inline)::(FStar_TypeChecker_Normalize.Simplify)::(FStar_TypeChecker_Normalize.EraseUniverses)::[]) env.tcenv x.FStar_Syntax_Syntax.sort)
 in (
-# 1695 "FStar.SMTEncoding.Encode.fst"
+# 1697 "FStar.SMTEncoding.Encode.fst"
 let _77_2839 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env.tcenv) (FStar_Options.Other ("Encoding"))) then begin
-(let _156_2040 = (FStar_Syntax_Print.bv_to_string x)
-in (let _156_2039 = (FStar_Syntax_Print.term_to_string x.FStar_Syntax_Syntax.sort)
-in (let _156_2038 = (FStar_Syntax_Print.term_to_string t1)
-in (FStar_Util.print3 "Normalized %s : %s to %s\n" _156_2040 _156_2039 _156_2038))))
+(let _156_2042 = (FStar_Syntax_Print.bv_to_string x)
+in (let _156_2041 = (FStar_Syntax_Print.term_to_string x.FStar_Syntax_Syntax.sort)
+in (let _156_2040 = (FStar_Syntax_Print.term_to_string t1)
+in (FStar_Util.print3 "Normalized %s : %s to %s\n" _156_2042 _156_2041 _156_2040))))
 end else begin
 ()
 end
 in (
-# 1697 "FStar.SMTEncoding.Encode.fst"
+# 1699 "FStar.SMTEncoding.Encode.fst"
 let _77_2843 = (encode_term_pred None t1 env xx)
 in (match (_77_2843) with
 | (t, decls') -> begin
 (
-# 1698 "FStar.SMTEncoding.Encode.fst"
+# 1700 "FStar.SMTEncoding.Encode.fst"
 let caption = if (FStar_ST.read FStar_Options.logQueries) then begin
-(let _156_2044 = (let _156_2043 = (FStar_Syntax_Print.bv_to_string x)
-in (let _156_2042 = (FStar_Syntax_Print.term_to_string x.FStar_Syntax_Syntax.sort)
-in (let _156_2041 = (FStar_Syntax_Print.term_to_string t1)
-in (FStar_Util.format3 "%s : %s (%s)" _156_2043 _156_2042 _156_2041))))
-in Some (_156_2044))
+(let _156_2046 = (let _156_2045 = (FStar_Syntax_Print.bv_to_string x)
+in (let _156_2044 = (FStar_Syntax_Print.term_to_string x.FStar_Syntax_Syntax.sort)
+in (let _156_2043 = (FStar_Syntax_Print.term_to_string t1)
+in (FStar_Util.format3 "%s : %s (%s)" _156_2045 _156_2044 _156_2043))))
+in Some (_156_2046))
 end else begin
 None
 end
 in (
-# 1702 "FStar.SMTEncoding.Encode.fst"
+# 1704 "FStar.SMTEncoding.Encode.fst"
 let g = (FStar_List.append (FStar_List.append ((FStar_SMTEncoding_Term.DeclFun ((xxsym, [], FStar_SMTEncoding_Term.Term_sort, caption)))::[]) decls') ((FStar_SMTEncoding_Term.Assume ((t, None)))::[]))
 in ((FStar_List.append decls g), env')))
 end))))
@@ -4556,10 +4558,10 @@ end))
 end
 | FStar_TypeChecker_Env.Binding_lid (x, (_77_2848, t)) -> begin
 (
-# 1708 "FStar.SMTEncoding.Encode.fst"
+# 1710 "FStar.SMTEncoding.Encode.fst"
 let t_norm = (whnf env t)
 in (
-# 1710 "FStar.SMTEncoding.Encode.fst"
+# 1712 "FStar.SMTEncoding.Encode.fst"
 let _77_2856 = (encode_free_var env x t t_norm [])
 in (match (_77_2856) with
 | (g, env') -> begin
@@ -4568,7 +4570,7 @@ end)))
 end
 | (FStar_TypeChecker_Env.Binding_sig_inst (_, se, _)) | (FStar_TypeChecker_Env.Binding_sig (_, se)) -> begin
 (
-# 1715 "FStar.SMTEncoding.Encode.fst"
+# 1717 "FStar.SMTEncoding.Encode.fst"
 let _77_2870 = (encode_sigelt env se)
 in (match (_77_2870) with
 | (g, env') -> begin
@@ -4578,47 +4580,47 @@ end)
 end))
 in (FStar_List.fold_right encode_binding bindings ([], env))))
 
-# 1720 "FStar.SMTEncoding.Encode.fst"
+# 1722 "FStar.SMTEncoding.Encode.fst"
 let encode_labels = (fun labs -> (
-# 1721 "FStar.SMTEncoding.Encode.fst"
+# 1723 "FStar.SMTEncoding.Encode.fst"
 let prefix = (FStar_All.pipe_right labs (FStar_List.map (fun _77_2877 -> (match (_77_2877) with
 | (l, _77_2874, _77_2876) -> begin
 FStar_SMTEncoding_Term.DeclFun (((Prims.fst l), [], FStar_SMTEncoding_Term.Bool_sort, None))
 end))))
 in (
-# 1722 "FStar.SMTEncoding.Encode.fst"
+# 1724 "FStar.SMTEncoding.Encode.fst"
 let suffix = (FStar_All.pipe_right labs (FStar_List.collect (fun _77_2884 -> (match (_77_2884) with
 | (l, _77_2881, _77_2883) -> begin
-(let _156_2052 = (FStar_All.pipe_left (fun _156_2048 -> FStar_SMTEncoding_Term.Echo (_156_2048)) (Prims.fst l))
-in (let _156_2051 = (let _156_2050 = (let _156_2049 = (FStar_SMTEncoding_Term.mkFreeV l)
-in FStar_SMTEncoding_Term.Eval (_156_2049))
-in (_156_2050)::[])
-in (_156_2052)::_156_2051))
+(let _156_2054 = (FStar_All.pipe_left (fun _156_2050 -> FStar_SMTEncoding_Term.Echo (_156_2050)) (Prims.fst l))
+in (let _156_2053 = (let _156_2052 = (let _156_2051 = (FStar_SMTEncoding_Term.mkFreeV l)
+in FStar_SMTEncoding_Term.Eval (_156_2051))
+in (_156_2052)::[])
+in (_156_2054)::_156_2053))
 end))))
 in (prefix, suffix))))
 
-# 1726 "FStar.SMTEncoding.Encode.fst"
+# 1728 "FStar.SMTEncoding.Encode.fst"
 let last_env : env_t Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 1727 "FStar.SMTEncoding.Encode.fst"
-let init_env : FStar_TypeChecker_Env.env  ->  Prims.unit = (fun tcenv -> (let _156_2057 = (let _156_2056 = (let _156_2055 = (FStar_Util.smap_create 100)
-in {bindings = []; depth = 0; tcenv = tcenv; warn = true; cache = _156_2055; nolabels = false; use_zfuel_name = false; encode_non_total_function_typ = true})
-in (_156_2056)::[])
-in (FStar_ST.op_Colon_Equals last_env _156_2057)))
+# 1729 "FStar.SMTEncoding.Encode.fst"
+let init_env : FStar_TypeChecker_Env.env  ->  Prims.unit = (fun tcenv -> (let _156_2059 = (let _156_2058 = (let _156_2057 = (FStar_Util.smap_create 100)
+in {bindings = []; depth = 0; tcenv = tcenv; warn = true; cache = _156_2057; nolabels = false; use_zfuel_name = false; encode_non_total_function_typ = true})
+in (_156_2058)::[])
+in (FStar_ST.op_Colon_Equals last_env _156_2059)))
 
-# 1730 "FStar.SMTEncoding.Encode.fst"
+# 1732 "FStar.SMTEncoding.Encode.fst"
 let get_env : FStar_TypeChecker_Env.env  ->  env_t = (fun tcenv -> (match ((FStar_ST.read last_env)) with
 | [] -> begin
 (FStar_All.failwith "No env; call init first!")
 end
 | e::_77_2890 -> begin
 (
-# 1732 "FStar.SMTEncoding.Encode.fst"
+# 1734 "FStar.SMTEncoding.Encode.fst"
 let _77_2893 = e
 in {bindings = _77_2893.bindings; depth = _77_2893.depth; tcenv = tcenv; warn = _77_2893.warn; cache = _77_2893.cache; nolabels = _77_2893.nolabels; use_zfuel_name = _77_2893.use_zfuel_name; encode_non_total_function_typ = _77_2893.encode_non_total_function_typ})
 end))
 
-# 1733 "FStar.SMTEncoding.Encode.fst"
+# 1735 "FStar.SMTEncoding.Encode.fst"
 let set_env : env_t  ->  Prims.unit = (fun env -> (match ((FStar_ST.read last_env)) with
 | [] -> begin
 (FStar_All.failwith "Empty env stack")
@@ -4627,7 +4629,7 @@ end
 (FStar_ST.op_Colon_Equals last_env ((env)::tl))
 end))
 
-# 1736 "FStar.SMTEncoding.Encode.fst"
+# 1738 "FStar.SMTEncoding.Encode.fst"
 let push_env : Prims.unit  ->  Prims.unit = (fun _77_2901 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read last_env)) with
@@ -4636,19 +4638,19 @@ let push_env : Prims.unit  ->  Prims.unit = (fun _77_2901 -> (match (()) with
 end
 | hd::tl -> begin
 (
-# 1739 "FStar.SMTEncoding.Encode.fst"
+# 1741 "FStar.SMTEncoding.Encode.fst"
 let refs = (FStar_Util.smap_copy hd.cache)
 in (
-# 1740 "FStar.SMTEncoding.Encode.fst"
+# 1742 "FStar.SMTEncoding.Encode.fst"
 let top = (
-# 1740 "FStar.SMTEncoding.Encode.fst"
+# 1742 "FStar.SMTEncoding.Encode.fst"
 let _77_2907 = hd
 in {bindings = _77_2907.bindings; depth = _77_2907.depth; tcenv = _77_2907.tcenv; warn = _77_2907.warn; cache = refs; nolabels = _77_2907.nolabels; use_zfuel_name = _77_2907.use_zfuel_name; encode_non_total_function_typ = _77_2907.encode_non_total_function_typ})
 in (FStar_ST.op_Colon_Equals last_env ((top)::(hd)::tl))))
 end)
 end))
 
-# 1742 "FStar.SMTEncoding.Encode.fst"
+# 1744 "FStar.SMTEncoding.Encode.fst"
 let pop_env : Prims.unit  ->  Prims.unit = (fun _77_2910 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read last_env)) with
@@ -4660,19 +4662,19 @@ end
 end)
 end))
 
-# 1745 "FStar.SMTEncoding.Encode.fst"
+# 1747 "FStar.SMTEncoding.Encode.fst"
 let mark_env : Prims.unit  ->  Prims.unit = (fun _77_2916 -> (match (()) with
 | () -> begin
 (push_env ())
 end))
 
-# 1746 "FStar.SMTEncoding.Encode.fst"
+# 1748 "FStar.SMTEncoding.Encode.fst"
 let reset_mark_env : Prims.unit  ->  Prims.unit = (fun _77_2917 -> (match (()) with
 | () -> begin
 (pop_env ())
 end))
 
-# 1747 "FStar.SMTEncoding.Encode.fst"
+# 1749 "FStar.SMTEncoding.Encode.fst"
 let commit_mark_env : Prims.unit  ->  Prims.unit = (fun _77_2918 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read last_env)) with
@@ -4684,249 +4686,249 @@ end
 end)
 end))
 
-# 1753 "FStar.SMTEncoding.Encode.fst"
+# 1755 "FStar.SMTEncoding.Encode.fst"
 let init : FStar_TypeChecker_Env.env  ->  Prims.unit = (fun tcenv -> (
-# 1754 "FStar.SMTEncoding.Encode.fst"
+# 1756 "FStar.SMTEncoding.Encode.fst"
 let _77_2928 = (init_env tcenv)
 in (
-# 1755 "FStar.SMTEncoding.Encode.fst"
+# 1757 "FStar.SMTEncoding.Encode.fst"
 let _77_2930 = (FStar_SMTEncoding_Z3.init ())
 in (FStar_SMTEncoding_Z3.giveZ3 ((FStar_SMTEncoding_Term.DefPrelude)::[])))))
 
-# 1757 "FStar.SMTEncoding.Encode.fst"
+# 1759 "FStar.SMTEncoding.Encode.fst"
 let push : Prims.string  ->  Prims.unit = (fun msg -> (
-# 1758 "FStar.SMTEncoding.Encode.fst"
+# 1760 "FStar.SMTEncoding.Encode.fst"
 let _77_2933 = (push_env ())
 in (
-# 1759 "FStar.SMTEncoding.Encode.fst"
+# 1761 "FStar.SMTEncoding.Encode.fst"
 let _77_2935 = (varops.push ())
 in (FStar_SMTEncoding_Z3.push msg))))
 
-# 1761 "FStar.SMTEncoding.Encode.fst"
-let pop : Prims.string  ->  Prims.unit = (fun msg -> (
-# 1762 "FStar.SMTEncoding.Encode.fst"
-let _77_2938 = (let _156_2078 = (pop_env ())
-in (FStar_All.pipe_left Prims.ignore _156_2078))
-in (
 # 1763 "FStar.SMTEncoding.Encode.fst"
+let pop : Prims.string  ->  Prims.unit = (fun msg -> (
+# 1764 "FStar.SMTEncoding.Encode.fst"
+let _77_2938 = (let _156_2080 = (pop_env ())
+in (FStar_All.pipe_left Prims.ignore _156_2080))
+in (
+# 1765 "FStar.SMTEncoding.Encode.fst"
 let _77_2940 = (varops.pop ())
 in (FStar_SMTEncoding_Z3.pop msg))))
 
-# 1765 "FStar.SMTEncoding.Encode.fst"
+# 1767 "FStar.SMTEncoding.Encode.fst"
 let mark : Prims.string  ->  Prims.unit = (fun msg -> (
-# 1766 "FStar.SMTEncoding.Encode.fst"
+# 1768 "FStar.SMTEncoding.Encode.fst"
 let _77_2943 = (mark_env ())
 in (
-# 1767 "FStar.SMTEncoding.Encode.fst"
+# 1769 "FStar.SMTEncoding.Encode.fst"
 let _77_2945 = (varops.mark ())
 in (FStar_SMTEncoding_Z3.mark msg))))
 
-# 1769 "FStar.SMTEncoding.Encode.fst"
+# 1771 "FStar.SMTEncoding.Encode.fst"
 let reset_mark : Prims.string  ->  Prims.unit = (fun msg -> (
-# 1770 "FStar.SMTEncoding.Encode.fst"
+# 1772 "FStar.SMTEncoding.Encode.fst"
 let _77_2948 = (reset_mark_env ())
 in (
-# 1771 "FStar.SMTEncoding.Encode.fst"
+# 1773 "FStar.SMTEncoding.Encode.fst"
 let _77_2950 = (varops.reset_mark ())
 in (FStar_SMTEncoding_Z3.reset_mark msg))))
 
-# 1773 "FStar.SMTEncoding.Encode.fst"
+# 1775 "FStar.SMTEncoding.Encode.fst"
 let commit_mark = (fun msg -> (
-# 1774 "FStar.SMTEncoding.Encode.fst"
+# 1776 "FStar.SMTEncoding.Encode.fst"
 let _77_2953 = (commit_mark_env ())
 in (
-# 1775 "FStar.SMTEncoding.Encode.fst"
+# 1777 "FStar.SMTEncoding.Encode.fst"
 let _77_2955 = (varops.commit_mark ())
 in (FStar_SMTEncoding_Z3.commit_mark msg))))
 
-# 1777 "FStar.SMTEncoding.Encode.fst"
+# 1779 "FStar.SMTEncoding.Encode.fst"
 let encode_sig : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.sigelt  ->  Prims.unit = (fun tcenv se -> (
-# 1778 "FStar.SMTEncoding.Encode.fst"
+# 1780 "FStar.SMTEncoding.Encode.fst"
 let caption = (fun decls -> if (FStar_ST.read FStar_Options.logQueries) then begin
-(let _156_2094 = (let _156_2093 = (let _156_2092 = (let _156_2091 = (let _156_2090 = (FStar_Syntax_Util.lids_of_sigelt se)
-in (FStar_All.pipe_right _156_2090 (FStar_List.map FStar_Syntax_Print.lid_to_string)))
-in (FStar_All.pipe_right _156_2091 (FStar_String.concat ", ")))
-in (Prims.strcat "encoding sigelt " _156_2092))
-in FStar_SMTEncoding_Term.Caption (_156_2093))
-in (_156_2094)::decls)
+(let _156_2096 = (let _156_2095 = (let _156_2094 = (let _156_2093 = (let _156_2092 = (FStar_Syntax_Util.lids_of_sigelt se)
+in (FStar_All.pipe_right _156_2092 (FStar_List.map FStar_Syntax_Print.lid_to_string)))
+in (FStar_All.pipe_right _156_2093 (FStar_String.concat ", ")))
+in (Prims.strcat "encoding sigelt " _156_2094))
+in FStar_SMTEncoding_Term.Caption (_156_2095))
+in (_156_2096)::decls)
 end else begin
 decls
 end)
 in (
-# 1782 "FStar.SMTEncoding.Encode.fst"
+# 1784 "FStar.SMTEncoding.Encode.fst"
 let env = (get_env tcenv)
 in (
-# 1783 "FStar.SMTEncoding.Encode.fst"
+# 1785 "FStar.SMTEncoding.Encode.fst"
 let _77_2964 = (encode_sigelt env se)
 in (match (_77_2964) with
 | (decls, env) -> begin
 (
-# 1784 "FStar.SMTEncoding.Encode.fst"
+# 1786 "FStar.SMTEncoding.Encode.fst"
 let _77_2965 = (set_env env)
-in (let _156_2095 = (caption decls)
-in (FStar_SMTEncoding_Z3.giveZ3 _156_2095)))
+in (let _156_2097 = (caption decls)
+in (FStar_SMTEncoding_Z3.giveZ3 _156_2097)))
 end)))))
 
-# 1787 "FStar.SMTEncoding.Encode.fst"
+# 1789 "FStar.SMTEncoding.Encode.fst"
 let encode_modul : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.modul  ->  Prims.unit = (fun tcenv modul -> (
-# 1788 "FStar.SMTEncoding.Encode.fst"
+# 1790 "FStar.SMTEncoding.Encode.fst"
 let name = (FStar_Util.format2 "%s %s" (if modul.FStar_Syntax_Syntax.is_interface then begin
 "interface"
 end else begin
 "module"
 end) modul.FStar_Syntax_Syntax.name.FStar_Ident.str)
 in (
-# 1789 "FStar.SMTEncoding.Encode.fst"
+# 1791 "FStar.SMTEncoding.Encode.fst"
 let _77_2970 = if (FStar_TypeChecker_Env.debug tcenv FStar_Options.Low) then begin
-(let _156_2100 = (FStar_All.pipe_right (FStar_List.length modul.FStar_Syntax_Syntax.exports) FStar_Util.string_of_int)
-in (FStar_Util.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name _156_2100))
+(let _156_2102 = (FStar_All.pipe_right (FStar_List.length modul.FStar_Syntax_Syntax.exports) FStar_Util.string_of_int)
+in (FStar_Util.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name _156_2102))
 end else begin
 ()
 end
 in (
-# 1791 "FStar.SMTEncoding.Encode.fst"
+# 1793 "FStar.SMTEncoding.Encode.fst"
 let env = (get_env tcenv)
 in (
-# 1792 "FStar.SMTEncoding.Encode.fst"
+# 1794 "FStar.SMTEncoding.Encode.fst"
 let _77_2977 = (encode_signature (
-# 1792 "FStar.SMTEncoding.Encode.fst"
+# 1794 "FStar.SMTEncoding.Encode.fst"
 let _77_2973 = env
 in {bindings = _77_2973.bindings; depth = _77_2973.depth; tcenv = _77_2973.tcenv; warn = false; cache = _77_2973.cache; nolabels = _77_2973.nolabels; use_zfuel_name = _77_2973.use_zfuel_name; encode_non_total_function_typ = _77_2973.encode_non_total_function_typ}) modul.FStar_Syntax_Syntax.exports)
 in (match (_77_2977) with
 | (decls, env) -> begin
 (
-# 1793 "FStar.SMTEncoding.Encode.fst"
+# 1795 "FStar.SMTEncoding.Encode.fst"
 let caption = (fun decls -> if (FStar_ST.read FStar_Options.logQueries) then begin
 (
-# 1795 "FStar.SMTEncoding.Encode.fst"
+# 1797 "FStar.SMTEncoding.Encode.fst"
 let msg = (Prims.strcat "Externals for " name)
 in (FStar_List.append ((FStar_SMTEncoding_Term.Caption (msg))::decls) ((FStar_SMTEncoding_Term.Caption ((Prims.strcat "End " msg)))::[])))
 end else begin
 decls
 end)
 in (
-# 1798 "FStar.SMTEncoding.Encode.fst"
+# 1800 "FStar.SMTEncoding.Encode.fst"
 let _77_2983 = (set_env (
-# 1798 "FStar.SMTEncoding.Encode.fst"
+# 1800 "FStar.SMTEncoding.Encode.fst"
 let _77_2981 = env
 in {bindings = _77_2981.bindings; depth = _77_2981.depth; tcenv = _77_2981.tcenv; warn = true; cache = _77_2981.cache; nolabels = _77_2981.nolabels; use_zfuel_name = _77_2981.use_zfuel_name; encode_non_total_function_typ = _77_2981.encode_non_total_function_typ}))
 in (
-# 1799 "FStar.SMTEncoding.Encode.fst"
+# 1801 "FStar.SMTEncoding.Encode.fst"
 let _77_2985 = if (FStar_TypeChecker_Env.debug tcenv FStar_Options.Low) then begin
 (FStar_Util.print1 "Done encoding externals for %s\n" name)
 end else begin
 ()
 end
 in (
-# 1800 "FStar.SMTEncoding.Encode.fst"
+# 1802 "FStar.SMTEncoding.Encode.fst"
 let decls = (caption decls)
 in (FStar_SMTEncoding_Z3.giveZ3 decls)))))
 end))))))
 
-# 1803 "FStar.SMTEncoding.Encode.fst"
-let solve : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  Prims.unit = (fun tcenv q -> (
-# 1804 "FStar.SMTEncoding.Encode.fst"
-let _77_2990 = (let _156_2109 = (let _156_2108 = (let _156_2107 = (FStar_TypeChecker_Env.get_range tcenv)
-in (FStar_All.pipe_left FStar_Range.string_of_range _156_2107))
-in (FStar_Util.format1 "Starting query at %s" _156_2108))
-in (push _156_2109))
-in (
 # 1805 "FStar.SMTEncoding.Encode.fst"
+let solve : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  Prims.unit = (fun tcenv q -> (
+# 1806 "FStar.SMTEncoding.Encode.fst"
+let _77_2990 = (let _156_2111 = (let _156_2110 = (let _156_2109 = (FStar_TypeChecker_Env.get_range tcenv)
+in (FStar_All.pipe_left FStar_Range.string_of_range _156_2109))
+in (FStar_Util.format1 "Starting query at %s" _156_2110))
+in (push _156_2111))
+in (
+# 1807 "FStar.SMTEncoding.Encode.fst"
 let pop = (fun _77_2993 -> (match (()) with
 | () -> begin
-(let _156_2114 = (let _156_2113 = (let _156_2112 = (FStar_TypeChecker_Env.get_range tcenv)
-in (FStar_All.pipe_left FStar_Range.string_of_range _156_2112))
-in (FStar_Util.format1 "Ending query at %s" _156_2113))
-in (pop _156_2114))
+(let _156_2116 = (let _156_2115 = (let _156_2114 = (FStar_TypeChecker_Env.get_range tcenv)
+in (FStar_All.pipe_left FStar_Range.string_of_range _156_2114))
+in (FStar_Util.format1 "Ending query at %s" _156_2115))
+in (pop _156_2116))
 end))
 in (
-# 1806 "FStar.SMTEncoding.Encode.fst"
+# 1808 "FStar.SMTEncoding.Encode.fst"
 let _77_3047 = (
-# 1807 "FStar.SMTEncoding.Encode.fst"
+# 1809 "FStar.SMTEncoding.Encode.fst"
 let env = (get_env tcenv)
 in (
-# 1808 "FStar.SMTEncoding.Encode.fst"
+# 1810 "FStar.SMTEncoding.Encode.fst"
 let bindings = (FStar_TypeChecker_Env.fold_env tcenv (fun bs b -> (b)::bs) [])
 in (
-# 1809 "FStar.SMTEncoding.Encode.fst"
+# 1811 "FStar.SMTEncoding.Encode.fst"
 let _77_3017 = (
-# 1810 "FStar.SMTEncoding.Encode.fst"
+# 1812 "FStar.SMTEncoding.Encode.fst"
 let rec aux = (fun bindings -> (match (bindings) with
 | FStar_TypeChecker_Env.Binding_var (x)::rest -> begin
 (
-# 1812 "FStar.SMTEncoding.Encode.fst"
+# 1814 "FStar.SMTEncoding.Encode.fst"
 let _77_3006 = (aux rest)
 in (match (_77_3006) with
 | (out, rest) -> begin
 (
-# 1813 "FStar.SMTEncoding.Encode.fst"
+# 1815 "FStar.SMTEncoding.Encode.fst"
 let t = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Inline)::(FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Simplify)::(FStar_TypeChecker_Normalize.EraseUniverses)::[]) env.tcenv x.FStar_Syntax_Syntax.sort)
-in (let _156_2120 = (let _156_2119 = (FStar_Syntax_Syntax.mk_binder (
-# 1814 "FStar.SMTEncoding.Encode.fst"
+in (let _156_2122 = (let _156_2121 = (FStar_Syntax_Syntax.mk_binder (
+# 1816 "FStar.SMTEncoding.Encode.fst"
 let _77_3008 = x
 in {FStar_Syntax_Syntax.ppname = _77_3008.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _77_3008.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = t}))
-in (_156_2119)::out)
-in (_156_2120, rest)))
+in (_156_2121)::out)
+in (_156_2122, rest)))
 end))
 end
 | _77_3011 -> begin
 ([], bindings)
 end))
 in (
-# 1816 "FStar.SMTEncoding.Encode.fst"
+# 1818 "FStar.SMTEncoding.Encode.fst"
 let _77_3014 = (aux bindings)
 in (match (_77_3014) with
 | (closing, bindings) -> begin
-(let _156_2121 = (FStar_Syntax_Util.close_forall (FStar_List.rev closing) q)
-in (_156_2121, bindings))
+(let _156_2123 = (FStar_Syntax_Util.close_forall (FStar_List.rev closing) q)
+in (_156_2123, bindings))
 end)))
 in (match (_77_3017) with
 | (q, bindings) -> begin
 (
-# 1818 "FStar.SMTEncoding.Encode.fst"
-let _77_3026 = (let _156_2123 = (FStar_List.filter (fun _77_21 -> (match (_77_21) with
+# 1820 "FStar.SMTEncoding.Encode.fst"
+let _77_3026 = (let _156_2125 = (FStar_List.filter (fun _77_21 -> (match (_77_21) with
 | FStar_TypeChecker_Env.Binding_sig (_77_3020) -> begin
 false
 end
 | _77_3023 -> begin
 true
 end)) bindings)
-in (encode_env_bindings env _156_2123))
+in (encode_env_bindings env _156_2125))
 in (match (_77_3026) with
 | (env_decls, env) -> begin
 (
-# 1819 "FStar.SMTEncoding.Encode.fst"
+# 1821 "FStar.SMTEncoding.Encode.fst"
 let _77_3027 = if (FStar_TypeChecker_Env.debug tcenv FStar_Options.Low) then begin
-(let _156_2124 = (FStar_Syntax_Print.term_to_string q)
-in (FStar_Util.print1 "Encoding query formula: %s\n" _156_2124))
+(let _156_2126 = (FStar_Syntax_Print.term_to_string q)
+in (FStar_Util.print1 "Encoding query formula: %s\n" _156_2126))
 end else begin
 ()
 end
 in (
-# 1820 "FStar.SMTEncoding.Encode.fst"
+# 1822 "FStar.SMTEncoding.Encode.fst"
 let _77_3031 = (encode_formula q env)
 in (match (_77_3031) with
 | (phi, qdecls) -> begin
 (
-# 1823 "FStar.SMTEncoding.Encode.fst"
+# 1825 "FStar.SMTEncoding.Encode.fst"
 let _77_3036 = (FStar_SMTEncoding_ErrorReporting.label_goals [] phi [])
 in (match (_77_3036) with
 | (phi, labels, _77_3035) -> begin
 (
-# 1824 "FStar.SMTEncoding.Encode.fst"
+# 1826 "FStar.SMTEncoding.Encode.fst"
 let _77_3039 = (encode_labels labels)
 in (match (_77_3039) with
 | (label_prefix, label_suffix) -> begin
 (
-# 1825 "FStar.SMTEncoding.Encode.fst"
+# 1827 "FStar.SMTEncoding.Encode.fst"
 let query_prelude = (FStar_List.append (FStar_List.append env_decls label_prefix) qdecls)
 in (
-# 1829 "FStar.SMTEncoding.Encode.fst"
-let qry = (let _156_2126 = (let _156_2125 = (FStar_SMTEncoding_Term.mkNot phi)
-in (_156_2125, Some ("query")))
-in FStar_SMTEncoding_Term.Assume (_156_2126))
+# 1831 "FStar.SMTEncoding.Encode.fst"
+let qry = (let _156_2128 = (let _156_2127 = (FStar_SMTEncoding_Term.mkNot phi)
+in (_156_2127, Some ("query")))
+in FStar_SMTEncoding_Term.Assume (_156_2128))
 in (
-# 1830 "FStar.SMTEncoding.Encode.fst"
+# 1832 "FStar.SMTEncoding.Encode.fst"
 let suffix = (FStar_List.append label_suffix ((FStar_SMTEncoding_Term.Echo ("Done!"))::[]))
 in (query_prelude, labels, qry, suffix))))
 end))
@@ -4939,97 +4941,97 @@ in (match (_77_3047) with
 (match (qry) with
 | FStar_SMTEncoding_Term.Assume ({FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.False, _77_3054); FStar_SMTEncoding_Term.hash = _77_3051; FStar_SMTEncoding_Term.freevars = _77_3049}, _77_3059) -> begin
 (
-# 1833 "FStar.SMTEncoding.Encode.fst"
+# 1835 "FStar.SMTEncoding.Encode.fst"
 let _77_3062 = (pop ())
 in ())
 end
 | _77_3065 when tcenv.FStar_TypeChecker_Env.admit -> begin
 (
-# 1834 "FStar.SMTEncoding.Encode.fst"
+# 1836 "FStar.SMTEncoding.Encode.fst"
 let _77_3066 = (pop ())
 in ())
 end
 | FStar_SMTEncoding_Term.Assume (q, _77_3070) -> begin
 (
-# 1836 "FStar.SMTEncoding.Encode.fst"
+# 1838 "FStar.SMTEncoding.Encode.fst"
 let fresh = ((FStar_String.length q.FStar_SMTEncoding_Term.hash) >= 2048)
 in (
-# 1837 "FStar.SMTEncoding.Encode.fst"
+# 1839 "FStar.SMTEncoding.Encode.fst"
 let _77_3074 = (FStar_SMTEncoding_Z3.giveZ3 prefix)
 in (
-# 1839 "FStar.SMTEncoding.Encode.fst"
+# 1841 "FStar.SMTEncoding.Encode.fst"
 let with_fuel = (fun p _77_3080 -> (match (_77_3080) with
 | (n, i) -> begin
-(let _156_2149 = (let _156_2148 = (let _156_2133 = (let _156_2132 = (FStar_Util.string_of_int n)
-in (let _156_2131 = (FStar_Util.string_of_int i)
-in (FStar_Util.format2 "<fuel=\'%s\' ifuel=\'%s\'>" _156_2132 _156_2131)))
-in FStar_SMTEncoding_Term.Caption (_156_2133))
-in (let _156_2147 = (let _156_2146 = (let _156_2138 = (let _156_2137 = (let _156_2136 = (let _156_2135 = (FStar_SMTEncoding_Term.mkApp ("MaxFuel", []))
-in (let _156_2134 = (FStar_SMTEncoding_Term.n_fuel n)
-in (_156_2135, _156_2134)))
-in (FStar_SMTEncoding_Term.mkEq _156_2136))
-in (_156_2137, None))
-in FStar_SMTEncoding_Term.Assume (_156_2138))
-in (let _156_2145 = (let _156_2144 = (let _156_2143 = (let _156_2142 = (let _156_2141 = (let _156_2140 = (FStar_SMTEncoding_Term.mkApp ("MaxIFuel", []))
-in (let _156_2139 = (FStar_SMTEncoding_Term.n_fuel i)
-in (_156_2140, _156_2139)))
-in (FStar_SMTEncoding_Term.mkEq _156_2141))
-in (_156_2142, None))
-in FStar_SMTEncoding_Term.Assume (_156_2143))
-in (_156_2144)::(p)::(FStar_SMTEncoding_Term.CheckSat)::[])
-in (_156_2146)::_156_2145))
+(let _156_2151 = (let _156_2150 = (let _156_2135 = (let _156_2134 = (FStar_Util.string_of_int n)
+in (let _156_2133 = (FStar_Util.string_of_int i)
+in (FStar_Util.format2 "<fuel=\'%s\' ifuel=\'%s\'>" _156_2134 _156_2133)))
+in FStar_SMTEncoding_Term.Caption (_156_2135))
+in (let _156_2149 = (let _156_2148 = (let _156_2140 = (let _156_2139 = (let _156_2138 = (let _156_2137 = (FStar_SMTEncoding_Term.mkApp ("MaxFuel", []))
+in (let _156_2136 = (FStar_SMTEncoding_Term.n_fuel n)
+in (_156_2137, _156_2136)))
+in (FStar_SMTEncoding_Term.mkEq _156_2138))
+in (_156_2139, None))
+in FStar_SMTEncoding_Term.Assume (_156_2140))
+in (let _156_2147 = (let _156_2146 = (let _156_2145 = (let _156_2144 = (let _156_2143 = (let _156_2142 = (FStar_SMTEncoding_Term.mkApp ("MaxIFuel", []))
+in (let _156_2141 = (FStar_SMTEncoding_Term.n_fuel i)
+in (_156_2142, _156_2141)))
+in (FStar_SMTEncoding_Term.mkEq _156_2143))
+in (_156_2144, None))
+in FStar_SMTEncoding_Term.Assume (_156_2145))
+in (_156_2146)::(p)::(FStar_SMTEncoding_Term.CheckSat)::[])
 in (_156_2148)::_156_2147))
-in (FStar_List.append _156_2149 suffix))
+in (_156_2150)::_156_2149))
+in (FStar_List.append _156_2151 suffix))
 end))
 in (
-# 1846 "FStar.SMTEncoding.Encode.fst"
-let check = (fun p -> (
-# 1847 "FStar.SMTEncoding.Encode.fst"
-let initial_config = (let _156_2153 = (FStar_ST.read FStar_Options.initial_fuel)
-in (let _156_2152 = (FStar_ST.read FStar_Options.initial_ifuel)
-in (_156_2153, _156_2152)))
-in (
 # 1848 "FStar.SMTEncoding.Encode.fst"
-let alt_configs = (let _156_2172 = (let _156_2171 = if ((FStar_ST.read FStar_Options.max_ifuel) > (FStar_ST.read FStar_Options.initial_ifuel)) then begin
-(let _156_2156 = (let _156_2155 = (FStar_ST.read FStar_Options.initial_fuel)
-in (let _156_2154 = (FStar_ST.read FStar_Options.max_ifuel)
+let check = (fun p -> (
+# 1849 "FStar.SMTEncoding.Encode.fst"
+let initial_config = (let _156_2155 = (FStar_ST.read FStar_Options.initial_fuel)
+in (let _156_2154 = (FStar_ST.read FStar_Options.initial_ifuel)
 in (_156_2155, _156_2154)))
-in (_156_2156)::[])
+in (
+# 1850 "FStar.SMTEncoding.Encode.fst"
+let alt_configs = (let _156_2174 = (let _156_2173 = if ((FStar_ST.read FStar_Options.max_ifuel) > (FStar_ST.read FStar_Options.initial_ifuel)) then begin
+(let _156_2158 = (let _156_2157 = (FStar_ST.read FStar_Options.initial_fuel)
+in (let _156_2156 = (FStar_ST.read FStar_Options.max_ifuel)
+in (_156_2157, _156_2156)))
+in (_156_2158)::[])
 end else begin
 []
 end
-in (let _156_2170 = (let _156_2169 = if (((FStar_ST.read FStar_Options.max_fuel) / 2) > (FStar_ST.read FStar_Options.initial_fuel)) then begin
-(let _156_2159 = (let _156_2158 = ((FStar_ST.read FStar_Options.max_fuel) / 2)
-in (let _156_2157 = (FStar_ST.read FStar_Options.max_ifuel)
-in (_156_2158, _156_2157)))
-in (_156_2159)::[])
+in (let _156_2172 = (let _156_2171 = if (((FStar_ST.read FStar_Options.max_fuel) / 2) > (FStar_ST.read FStar_Options.initial_fuel)) then begin
+(let _156_2161 = (let _156_2160 = ((FStar_ST.read FStar_Options.max_fuel) / 2)
+in (let _156_2159 = (FStar_ST.read FStar_Options.max_ifuel)
+in (_156_2160, _156_2159)))
+in (_156_2161)::[])
 end else begin
 []
 end
-in (let _156_2168 = (let _156_2167 = if (((FStar_ST.read FStar_Options.max_fuel) > (FStar_ST.read FStar_Options.initial_fuel)) && ((FStar_ST.read FStar_Options.max_ifuel) > (FStar_ST.read FStar_Options.initial_ifuel))) then begin
-(let _156_2162 = (let _156_2161 = (FStar_ST.read FStar_Options.max_fuel)
-in (let _156_2160 = (FStar_ST.read FStar_Options.max_ifuel)
-in (_156_2161, _156_2160)))
-in (_156_2162)::[])
-end else begin
-[]
-end
-in (let _156_2166 = (let _156_2165 = if ((FStar_ST.read FStar_Options.min_fuel) < (FStar_ST.read FStar_Options.initial_fuel)) then begin
-(let _156_2164 = (let _156_2163 = (FStar_ST.read FStar_Options.min_fuel)
-in (_156_2163, 1))
+in (let _156_2170 = (let _156_2169 = if (((FStar_ST.read FStar_Options.max_fuel) > (FStar_ST.read FStar_Options.initial_fuel)) && ((FStar_ST.read FStar_Options.max_ifuel) > (FStar_ST.read FStar_Options.initial_ifuel))) then begin
+(let _156_2164 = (let _156_2163 = (FStar_ST.read FStar_Options.max_fuel)
+in (let _156_2162 = (FStar_ST.read FStar_Options.max_ifuel)
+in (_156_2163, _156_2162)))
 in (_156_2164)::[])
 end else begin
 []
 end
-in (_156_2165)::[])
-in (_156_2167)::_156_2166))
+in (let _156_2168 = (let _156_2167 = if ((FStar_ST.read FStar_Options.min_fuel) < (FStar_ST.read FStar_Options.initial_fuel)) then begin
+(let _156_2166 = (let _156_2165 = (FStar_ST.read FStar_Options.min_fuel)
+in (_156_2165, 1))
+in (_156_2166)::[])
+end else begin
+[]
+end
+in (_156_2167)::[])
 in (_156_2169)::_156_2168))
 in (_156_2171)::_156_2170))
-in (FStar_List.flatten _156_2172))
+in (_156_2173)::_156_2172))
+in (FStar_List.flatten _156_2174))
 in (
-# 1853 "FStar.SMTEncoding.Encode.fst"
+# 1855 "FStar.SMTEncoding.Encode.fst"
 let report = (fun errs -> (
-# 1854 "FStar.SMTEncoding.Encode.fst"
+# 1856 "FStar.SMTEncoding.Encode.fst"
 let errs = (match (errs) with
 | [] -> begin
 (("Unknown assertion failed", FStar_Range.dummyRange))::[]
@@ -5038,21 +5040,21 @@ end
 errs
 end)
 in (
-# 1857 "FStar.SMTEncoding.Encode.fst"
+# 1859 "FStar.SMTEncoding.Encode.fst"
 let _77_3091 = if (FStar_ST.read FStar_Options.print_fuels) then begin
-(let _156_2180 = (let _156_2175 = (FStar_TypeChecker_Env.get_range tcenv)
-in (FStar_Range.string_of_range _156_2175))
-in (let _156_2179 = (let _156_2176 = (FStar_ST.read FStar_Options.max_fuel)
-in (FStar_All.pipe_right _156_2176 FStar_Util.string_of_int))
-in (let _156_2178 = (let _156_2177 = (FStar_ST.read FStar_Options.max_ifuel)
-in (FStar_All.pipe_right _156_2177 FStar_Util.string_of_int))
-in (FStar_Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _156_2180 _156_2179 _156_2178))))
+(let _156_2182 = (let _156_2177 = (FStar_TypeChecker_Env.get_range tcenv)
+in (FStar_Range.string_of_range _156_2177))
+in (let _156_2181 = (let _156_2178 = (FStar_ST.read FStar_Options.max_fuel)
+in (FStar_All.pipe_right _156_2178 FStar_Util.string_of_int))
+in (let _156_2180 = (let _156_2179 = (FStar_ST.read FStar_Options.max_ifuel)
+in (FStar_All.pipe_right _156_2179 FStar_Util.string_of_int))
+in (FStar_Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _156_2182 _156_2181 _156_2180))))
 end else begin
 ()
 end
 in (FStar_TypeChecker_Errors.add_errors tcenv errs))))
 in (
-# 1864 "FStar.SMTEncoding.Encode.fst"
+# 1866 "FStar.SMTEncoding.Encode.fst"
 let rec try_alt_configs = (fun p errs _77_22 -> (match (_77_22) with
 | [] -> begin
 (report errs)
@@ -5060,16 +5062,16 @@ end
 | mi::[] -> begin
 (match (errs) with
 | [] -> begin
-(let _156_2191 = (with_fuel p mi)
-in (FStar_SMTEncoding_Z3.ask fresh labels _156_2191 (cb mi p [])))
+(let _156_2193 = (with_fuel p mi)
+in (FStar_SMTEncoding_Z3.ask fresh labels _156_2193 (cb mi p [])))
 end
 | _77_3103 -> begin
 (report errs)
 end)
 end
 | mi::tl -> begin
-(let _156_2193 = (with_fuel p mi)
-in (FStar_SMTEncoding_Z3.ask fresh labels _156_2193 (fun _77_3109 -> (match (_77_3109) with
+(let _156_2195 = (with_fuel p mi)
+in (FStar_SMTEncoding_Z3.ask fresh labels _156_2195 (fun _77_3109 -> (match (_77_3109) with
 | (ok, errs') -> begin
 (match (errs) with
 | [] -> begin
@@ -5084,11 +5086,11 @@ and cb = (fun _77_3115 p alt _77_3120 -> (match ((_77_3115, _77_3120)) with
 | ((prev_fuel, prev_ifuel), (ok, errs)) -> begin
 if ok then begin
 if (FStar_ST.read FStar_Options.print_fuels) then begin
-(let _156_2201 = (let _156_2198 = (FStar_TypeChecker_Env.get_range tcenv)
-in (FStar_Range.string_of_range _156_2198))
-in (let _156_2200 = (FStar_Util.string_of_int prev_fuel)
-in (let _156_2199 = (FStar_Util.string_of_int prev_ifuel)
-in (FStar_Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n" _156_2201 _156_2200 _156_2199))))
+(let _156_2203 = (let _156_2200 = (FStar_TypeChecker_Env.get_range tcenv)
+in (FStar_Range.string_of_range _156_2200))
+in (let _156_2202 = (FStar_Util.string_of_int prev_fuel)
+in (let _156_2201 = (FStar_Util.string_of_int prev_ifuel)
+in (FStar_Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n" _156_2203 _156_2202 _156_2201))))
 end else begin
 ()
 end
@@ -5096,15 +5098,15 @@ end else begin
 (try_alt_configs p errs alt)
 end
 end))
-in (let _156_2202 = (with_fuel p initial_config)
-in (FStar_SMTEncoding_Z3.ask fresh labels _156_2202 (cb initial_config p alt_configs))))))))
+in (let _156_2204 = (with_fuel p initial_config)
+in (FStar_SMTEncoding_Z3.ask fresh labels _156_2204 (cb initial_config p alt_configs))))))))
 in (
-# 1889 "FStar.SMTEncoding.Encode.fst"
+# 1891 "FStar.SMTEncoding.Encode.fst"
 let process_query = (fun q -> if ((FStar_ST.read FStar_Options.split_cases) > 0) then begin
 (
-# 1891 "FStar.SMTEncoding.Encode.fst"
-let _77_3125 = (let _156_2208 = (FStar_ST.read FStar_Options.split_cases)
-in (FStar_SMTEncoding_SplitQueryCases.can_handle_query _156_2208 q))
+# 1893 "FStar.SMTEncoding.Encode.fst"
+let _77_3125 = (let _156_2210 = (FStar_ST.read FStar_Options.split_cases)
+in (FStar_SMTEncoding_SplitQueryCases.can_handle_query _156_2210 q))
 in (match (_77_3125) with
 | (b, cb) -> begin
 if b then begin
@@ -5117,7 +5119,7 @@ end else begin
 (check q)
 end)
 in (
-# 1896 "FStar.SMTEncoding.Encode.fst"
+# 1898 "FStar.SMTEncoding.Encode.fst"
 let _77_3126 = if (FStar_ST.read FStar_Options.admit_smt_queries) then begin
 ()
 end else begin
@@ -5130,20 +5132,20 @@ end
 end)
 end)))))
 
-# 1902 "FStar.SMTEncoding.Encode.fst"
+# 1904 "FStar.SMTEncoding.Encode.fst"
 let is_trivial : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  Prims.bool = (fun tcenv q -> (
-# 1903 "FStar.SMTEncoding.Encode.fst"
+# 1905 "FStar.SMTEncoding.Encode.fst"
 let env = (get_env tcenv)
 in (
-# 1904 "FStar.SMTEncoding.Encode.fst"
+# 1906 "FStar.SMTEncoding.Encode.fst"
 let _77_3133 = (push "query")
 in (
-# 1905 "FStar.SMTEncoding.Encode.fst"
+# 1907 "FStar.SMTEncoding.Encode.fst"
 let _77_3140 = (encode_formula_with_labels q env)
 in (match (_77_3140) with
 | (f, _77_3137, _77_3139) -> begin
 (
-# 1906 "FStar.SMTEncoding.Encode.fst"
+# 1908 "FStar.SMTEncoding.Encode.fst"
 let _77_3141 = (pop "query")
 in (match (f.FStar_SMTEncoding_Term.tm) with
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.True, _77_3145) -> begin
@@ -5154,10 +5156,10 @@ false
 end))
 end)))))
 
-# 1911 "FStar.SMTEncoding.Encode.fst"
+# 1913 "FStar.SMTEncoding.Encode.fst"
 let solver : FStar_TypeChecker_Env.solver_t = {FStar_TypeChecker_Env.init = init; FStar_TypeChecker_Env.push = push; FStar_TypeChecker_Env.pop = pop; FStar_TypeChecker_Env.mark = mark; FStar_TypeChecker_Env.reset_mark = reset_mark; FStar_TypeChecker_Env.commit_mark = commit_mark; FStar_TypeChecker_Env.encode_modul = encode_modul; FStar_TypeChecker_Env.encode_sig = encode_sig; FStar_TypeChecker_Env.solve = solve; FStar_TypeChecker_Env.is_trivial = is_trivial; FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish; FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh}
 
-# 1925 "FStar.SMTEncoding.Encode.fst"
+# 1927 "FStar.SMTEncoding.Encode.fst"
 let dummy : FStar_TypeChecker_Env.solver_t = {FStar_TypeChecker_Env.init = (fun _77_3150 -> ()); FStar_TypeChecker_Env.push = (fun _77_3152 -> ()); FStar_TypeChecker_Env.pop = (fun _77_3154 -> ()); FStar_TypeChecker_Env.mark = (fun _77_3156 -> ()); FStar_TypeChecker_Env.reset_mark = (fun _77_3158 -> ()); FStar_TypeChecker_Env.commit_mark = (fun _77_3160 -> ()); FStar_TypeChecker_Env.encode_modul = (fun _77_3162 _77_3164 -> ()); FStar_TypeChecker_Env.encode_sig = (fun _77_3166 _77_3168 -> ()); FStar_TypeChecker_Env.solve = (fun _77_3170 _77_3172 -> ()); FStar_TypeChecker_Env.is_trivial = (fun _77_3174 _77_3176 -> false); FStar_TypeChecker_Env.finish = (fun _77_3178 -> ()); FStar_TypeChecker_Env.refresh = (fun _77_3179 -> ())}
 
 

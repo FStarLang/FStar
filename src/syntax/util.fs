@@ -136,12 +136,13 @@ let constant_univ_as_nat u = snd (univ_kernel u)
 //e.g, [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2] 
 let rec compare_univs u1 u2 = match u1, u2 with 
     | U_bvar _, _
-    | _, U_bvar _ 
-    | U_unknown, _
-    | _, U_unknown -> failwith "Impossible: compare_univs"
+    | _, U_bvar _  -> failwith "Impossible: compare_univs"
+   
+    | U_unknown, U_unknown -> 0
+    | U_unknown, _ -> -1
+    | _, U_unknown -> 1
 
     | U_zero, U_zero -> 0
-        
     | U_zero, _ -> -1
     | _, U_zero -> 1
 

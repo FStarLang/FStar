@@ -1340,7 +1340,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                  else app, encode_term body env' in
                               let eqn = Term.Assume(mkForall([[app]], vars, mkImp(mk_and_l guards, mkEq(app, body))), 
                                             Some (Util.format1 "Equation for %s" flid.str)) in
-                              decls@binder_decls@decls2@[eqn], env
+                              decls@binder_decls@decls2@[eqn]@primitive_type_axioms flid f app,
+                              env
+
                             | _ -> failwith "Impossible"
                       else let fuel = varops.fresh "fuel", Fuel_sort in //encoding recursive definitions using fuel to throttle unfoldings
                            let fuel_tm = mkFreeV fuel in
