@@ -1815,7 +1815,7 @@ let tc_inductive env ses quals lids =
                 T :  a:Type(ua) -> b:Type(ub) -> Type(u)
               
          (2). In a context
-              G = a:Type(ua), T: (a':Type(ua){a=a'} -> b:Type(ub) -> Type(u))
+              G = a:Type(ua), T: (a:Type(ua) -> b:Type(ub) -> Type(u))
               we elaborate the type of 
                 
                 C1 to x:a -> y:Type(uy) -> T a y
@@ -1888,12 +1888,7 @@ let tc_inductive env ses quals lids =
          let t_type, u = U.type_u() in 
          Rel.force_trivial_guard env' (Rel.teq env' t t_type); 
          
-         let refined_tps = tps |> List.map (fun (x, imp) -> 
-            let y = S.freshen_bv x in
-            let refined = Util.refine y (Util.mk_eq x.sort x.sort (S.bv_to_name x) (S.bv_to_name y)) in
-            {x with sort=refined}, imp) in
-
-(*close*)let t_tc = Util.arrow (refined_tps@indices) (S.mk_Total t) in
+(*close*)let t_tc = Util.arrow (tps@indices) (S.mk_Total t) in
          let tps = SS.close_binders tps in
          let k = SS.close tps k in
          Env.push_let_binding env_tps (Inr tc) ([], t_tc), 
