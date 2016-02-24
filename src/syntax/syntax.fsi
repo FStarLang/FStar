@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,7 +48,7 @@ type pragma =
 type memo<'a> = ref<option<'a>>
 
 type arg_qualifier =
-  | Implicit
+  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor 
   | Equality
 type aqual = option<arg_qualifier>
 type universe = 
@@ -340,6 +340,7 @@ val null_bv:        term -> bv
 val mk_binder:      bv -> binder
 val null_binder:    term -> binder
 val as_arg:         term -> arg
+val imp_tag:        arg_qualifier
 val iarg:           term -> arg
 val is_null_bv:     bv -> bool
 val is_null_binder: binder -> bool

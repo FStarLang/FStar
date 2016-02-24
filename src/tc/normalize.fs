@@ -52,6 +52,8 @@ type step =
   | Unlabel
 and steps = list<step>
 
+// VALS_HACK_HERE
+
 type config<'a> = {code:'a;
                    environment:environment;
                    stack:stack;

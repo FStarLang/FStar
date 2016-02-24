@@ -23,6 +23,7 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Syntax.Util
+open FStar.TypeChecker
 open FStar.TypeChecker.Env
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -45,6 +46,7 @@ type step =
   | Beta            //remove? Always do beta
   | Simplify        //Simplifies some basic log cfg ical tautolog cfg ies: not part of definitional equality!
   | EraseUniverses
+  | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
   //remove the rest?
   | DeltaComp       
   | SNComp
@@ -82,9 +84,11 @@ type stack_elt =
  | Match    of env * branches * Range.range
  | Abs      of env * binders * env * option<lcomp> * Range.range
  | App      of term * aqual * Range.range
- | Label    of string * Range.range
+ | Meta     of S.metadata * Range.range
 
 type stack = list<stack_elt>
+
+// VALS_HACK_HERE
 
 let mk t r = mk t None r
 let set_memo r t =
@@ -153,7 +157,9 @@ let norm_universe cfg env u =
                 try match List.nth env x with 
                       | Univ u -> [u]
                       | _ -> failwith "Impossible: universe variable bound to a term"
-                with _ -> failwith "Universe variable not found"
+                with _ -> if cfg.steps |> List.contains AllowUnboundUniverses
+                          then [U_unknown]
+                          else failwith "Universe variable not found"
             end
           | U_zero
           | U_unif _ 
@@ -324,7 +330,7 @@ let maybe_simplify steps tm =
                     || I.lid_equals fv.v Const.exists_lid
               then match args with
                      | [(t, _)]
-                     | [(_, Some Implicit); (t, _)] ->
+                     | [(_, Some (Implicit _)); (t, _)] ->
                        begin match (SS.compress t).n with
                                 | Tm_abs([_], body, _) ->
                                    (match simp_t body with
@@ -407,7 +413,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             
           | Tm_abs(bs, body, lopt) -> 
             begin match stack with 
-                | Label _ :: _ -> 
+                | Meta _ :: _ -> 
                   failwith "Labeled abstraction"
 
                 | UnivArgs _::_ ->
@@ -520,7 +526,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | _::_ ->
                   begin match m with 
                     | Meta_labeled(l, r, _) -> 
-                      norm cfg env (Label(l, r)::stack) head //meta doesn't block reduction, but we need to put the label back
+                      norm cfg env (Meta(m,r)::stack) head //meta doesn't block reduction, but we need to put the label back
+
+                    | Meta_pattern args -> 
+                      let args = norm_pattern_args cfg env args in
+                      norm cfg env (Meta(Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+
                     | _ -> 
                       norm cfg env stack head //meta doesn't block reduction
                   end  
@@ -528,13 +539,15 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 let head = norm cfg env [] head in
                 let m = match m with 
                     | Meta_pattern args -> 
-                      let args = args |> List.map (List.map (fun (a, imp) -> norm cfg env [] a, imp)) in 
-                      Meta_pattern args 
+                      Meta_pattern (norm_pattern_args cfg env args)
                     | _ -> m in
                 let t = mk (Tm_meta(head, m)) t.pos in
                 rebuild cfg env stack t
             end
 
+and norm_pattern_args cfg env args = 
+    args |> List.map (List.map (fun (a, imp) -> norm cfg env [] a, imp)) 
+    
 and norm_comp : cfg -> env -> comp -> comp = 
     fun cfg env comp -> 
         match comp.n with 
@@ -568,9 +581,9 @@ and rebuild : cfg -> env -> stack -> term -> term =
         match stack with 
             | [] -> t
 
-            | Label(r, r')::stack -> 
-             let t = mk (Tm_meta(t, Meta_labeled(r, r', false))) r' in
-             rebuild cfg env stack t
+            | Meta(m, r)::stack -> 
+              let t = mk (Tm_meta(t, m)) r in
+              rebuild cfg env stack t
 
             | MemoLazy r::stack -> 
               set_memo r (env, t);
@@ -717,8 +730,8 @@ let normalize s e t = norm (config s e) [] [] t
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
 
-let term_to_string env t = Print.term_to_string (normalize [EraseUniverses] env t)
-let comp_to_string env c = Print.comp_to_string (norm_comp (config [EraseUniverses] env) [] c)
+let term_to_string env t = Print.term_to_string (normalize [AllowUnboundUniverses] env t)
+let comp_to_string env c = Print.comp_to_string (norm_comp (config [AllowUnboundUniverses] env) [] c)
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta; WHNF]) env t0 in
@@ -737,7 +750,7 @@ let normalize_refinement steps env t0 =
 
 let rec unfold_effect_abbrev env comp =
   let c = comp_to_comp_typ comp in
-  match Env.lookup_effect_abbrev env c.effect_name with
+  match Env.lookup_effect_abbrev env (env.universe_of env c.result_typ) c.effect_name with
     | None -> c
     | Some (binders, cdef) ->
       let binders, cdef = SS.open_comp binders cdef in 

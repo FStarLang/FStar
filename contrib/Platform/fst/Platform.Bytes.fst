@@ -2,7 +2,7 @@ module Platform.Bytes
 
 assume val repr_bytes : nat -> GTot nat
 (* Integer literals are currently extracted to int32, rather than bigint, so the definition below
-   breaks extraction: 
+   breaks extraction:
    Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.
    int_of_string
 
@@ -38,8 +38,12 @@ assume val lemma_repr_bytes_values: n:nat ->
 
 type byte = uint8
 type cbytes = string
-type bytes = Seq.seq byte
+opaque type bytes = Seq.seq byte
 
+val seq_of_bytes: b:bytes -> GTot (Seq.seq byte)
+let seq_of_bytes b = b
+
+val op_At_Bar: bytes -> bytes -> Tot bytes
 let op_At_Bar (b1:bytes) (b2:bytes) = Seq.append b1 b2
 
 (*@ function val B : (bytes -> byte array) @*)
@@ -92,8 +96,9 @@ assume val equalBytes : b1:bytes -> b2:bytes -> Tot (b:bool{b = (b1=b2)})
 
 assume val xor: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
 
-//val split: b:bytes -> n:nat{n <= Seq.length b} -> 
-//  Tot (x:(bytes * bytes) {Seq.length (fst (x))= n /\ Seq.length (snd (x)) == (Seq.length b) - n }) //(lbytes n * lbytes (length b - n))
+val split: b:bytes -> n:nat{n <= Seq.length b} ->
+  Tot (x:(bytes * bytes) {Seq.length (fst (x))= n /\ Seq.length (snd (x)) == (Seq.length b) - n }) //(lbytes n * lbytes (length b - n))
+//val split: bytes -> nat -> Tot (bytes * bytes)
 let split b (n:nat { n <= Seq.length b}) = SeqProperties.split b n
 
 val lemma_split : s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Lemma
@@ -128,12 +133,12 @@ assume val split2 : b:bytes -> n1:nat{n1 <= Seq.length b} -> n2:nat{n1 + n2 <= S
 (*@ function assume val IntBytes : ((int * int) -> bytes) @*)
 
 assume val bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Tot (lbytes l)
-assume val int_of_bytes : b:bytes -> 
-    Tot (n:nat{repr_bytes n <= Seq.length b /\ 
-             (Seq.length b = 1 ==> n < 256) /\ 
+assume val int_of_bytes : b:bytes ->
+    Tot (n:nat{repr_bytes n <= Seq.length b /\
+             (Seq.length b = 1 ==> n < 256) /\
              b=bytes_of_int (Seq.length b) n})
 
-assume val int_of_bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} -> 
+assume val int_of_bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} ->
     Lemma (n = int_of_bytes (bytes_of_int l n))
 
 (*@ assume val int_of_bytes : ((b:bytes){C_pr_LessThanOrEqual(Length (b), 8)} -> (i:nat){b = IntBytes (Length (b), i) /\ Length (b) = 1 => C_pr_LessThanOrEqual(0, i) /\ C_pr_LessThan(i, 256)}) @*)
@@ -155,7 +160,7 @@ assume val iutf8 : m:bytes -> s:string{utf8 s == m}
 assume val print_bytes: bytes -> Tot string
 
 val byte_of_int: n:nat{n < 256} -> Tot byte
-let byte_of_int n = 
+let byte_of_int n =
   lemma_repr_bytes_values n;
   Seq.index (bytes_of_int 1 n) 0
 

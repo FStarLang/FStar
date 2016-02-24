@@ -1,8 +1,8 @@
 module FStar.Tcp
 open FStar.Bytes
 
-type stream
-type listener
+assume new type stream
+assume new type listener
 
 
 (* Server side *)

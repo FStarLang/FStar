@@ -19,6 +19,8 @@ module FStar.Parser.ParseIt
 open FStar
 open FStar.Util
 
+// VALS_HACK_HERE
+
 let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
   lexbuf.EndPos <- {lexbuf.EndPos with
     pos_fname= Range.encode_file filename;
@@ -63,10 +65,10 @@ let parse fn =
     let fileOrFragment = Parse.inputFragment lexer lexbuf in
     let frags = match fileOrFragment with
         | Inl mods ->
-           if Util.ends_with filename ".fsi" || Util.ends_with filename ".fsti"
+           if Util.ends_with filename ".fsti"
            then Inl (mods |> List.map (function
                 | AST.Module(l,d) ->
-                  AST.Interface(l, d, Util.for_some (fun m -> m=l.str) !Options.admit_fsi)
+                  AST.Interface(l, d, true)
                 | _ -> failwith "Impossible"))
            else Inl mods
         | _ -> fileOrFragment in

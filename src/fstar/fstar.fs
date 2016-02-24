@@ -36,33 +36,33 @@ let cleanup () = Util.kill_all ()
 let has_prims_cache (l: list<string>) :bool = List.mem "Prims.cache" l
 
 open FStar.TypeChecker.Env
-let u_parse env fn = 
-    try 
+let u_parse env fn =
+    try
         match Parser.ParseIt.parse (Inl fn) with
             | Inl (Inl ast) ->
                 Parser.ToSyntax.desugar_file env ast
 
             | Inl (Inr _) ->
-                Util.print1 "%s: Expected a module\n" fn;
+                Util.print1_error "%s expected a module\n" fn;
                 exit 1
 
             | Inr (msg, r) ->
                 Util.print_string <| Print.format_error r msg;
                 exit 1
-    with e when (!Options.trace_error 
-                    && FStar.Syntax.Util.handleable e 
-                    && (FStar.Syntax.Util.handle_err false () e; false)) -> 
-                    failwith "Impossible" 
+    with e when (!Options.trace_error
+                    && FStar.Syntax.Util.handleable e
+                    && (FStar.Syntax.Util.handle_err false () e; false)) ->
+                    failwith "Impossible"
 
         | e when (not !Options.trace_error && FStar.Syntax.Util.handleable e) ->
-        FStar.Syntax.Util.handle_err false () e; 
-        exit 1 
+        FStar.Syntax.Util.handle_err false () e;
+        exit 1
 
 let u_tc_prims () =
     let solver = if !Options.verify then SMTEncoding.Encode.solver else SMTEncoding.Encode.dummy in
     let env = FStar.TypeChecker.Env.initial_env
-         FStar.TypeChecker.Tc.type_of 
-         solver 
+         FStar.TypeChecker.Tc.type_of
+         solver
          Const.prims_lid in
     env.solver.init env;
     let p = Options.prims () in
@@ -71,22 +71,22 @@ let u_tc_prims () =
     prims_mod, dsenv, env
 
 
-let test_universes filenames = 
+let test_universes filenames =
     try
         let prims_mod, dsenv, env = u_tc_prims() in
         let dsenv, mods, env = List.fold_left (fun (dsenv, fmods, env) fn ->
-           Util.print1 "Parsing file %s\n" fn; 
+           Util.print1 "Parsing file %s\n" fn;
            let dsenv, mods = u_parse dsenv fn in
            let _, env = TypeChecker.Tc.check_module env (List.hd mods) in
            dsenv, mods@fmods, env) (dsenv, [], env) filenames in
         env.solver.finish();
         dsenv, mods, env
-    with 
-        | Syntax.Syntax.Error(msg, r) when not (!Options.trace_error) -> 
-          Util.print_string (Util.format2 "Error : %s\n%s\n" (Range.string_of_range r) msg);
+    with
+        | Syntax.Syntax.Error(msg, r) when not (!Options.trace_error) ->
+          Util.print_error (Util.format2 "%s\n%s\n" (Range.string_of_range r) msg);
           exit 1
-       
-open FStar.Tc.Env 
+
+open FStar.Tc.Env
 let tc_prims () =
     let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
     let env = Tc.Env.initial_env solver Const.prims_lid in
@@ -103,7 +103,7 @@ let report_errors nopt =
         | Some n -> n in
     if errs>0
     then begin
-        print1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
+        Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs);
         exit 1
     end
 
@@ -113,7 +113,7 @@ let report_universes_errors nopt =
         | Some n -> n in
     if errs>0
     then begin
-        print1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
+        Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs);
         exit 1
     end
 
@@ -127,7 +127,7 @@ let tc_one_file dsenv env fn =
 let tc_one_fragment curmod dsenv env frag =
     try
         match Parser.Driver.parse_fragment curmod dsenv frag with
-            | Parser.Driver.Empty -> 
+            | Parser.Driver.Empty ->
               Some (curmod, dsenv, env)
 
             | Parser.Driver.Modul (dsenv, modul) ->
@@ -140,7 +140,7 @@ let tc_one_fragment curmod dsenv env frag =
 
             | Parser.Driver.Decls (dsenv, decls) ->
               begin match curmod with
-                | None -> failwith "Fragment without an enclosing module"
+                | None -> Util.print_error "fragment without an enclosing module"; exit 1
                 | Some modul ->
                   let modul, env  = Tc.Tc.tc_more_partial_modul env modul decls in
                   Some (Some modul, dsenv, env)
@@ -171,8 +171,6 @@ type stack = list<stack_elt>
 let batch_mode_tc_no_prims dsenv env filenames admit_fsi =
     let all_mods, dsenv, env = filenames |> List.fold_left (fun (all_mods, dsenv, env) f ->
         Util.reset_gensym();
-        // This is reset at after every call to [tc_one_file] terminates... so we're overriding it here.
-        Options.admit_fsi := admit_fsi @ !Options.admit_fsi;
         let dsenv, env, ms = tc_one_file dsenv env f in
         all_mods@ms, dsenv, env)
         ([], dsenv, env) in
@@ -191,8 +189,10 @@ let find_deps_if_needed files =
       let deps =
         if basename (List.hd deps) = "prims.fst" then
           List.tl deps
-        else
-          failwith "dependency analysis did not find prims.fst?!"
+        else begin
+          Util.print_error "dependency analysis did not find prims.fst?!";
+          exit 1
+        end
       in
       let admit_fsi = ref [] in
       List.iter (fun d ->
@@ -308,7 +308,7 @@ let fill_buffer () =
 
 let interactive_mode dsenv env =
     if Option.isSome !Options.codegen
-    then (Util.print_string "Warning: Code-generation is not supported in interactive mode, ignoring the codegen flag");
+    then (Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag");
 
     let rec go (stack:stack) (curmod:option<modul>) dsenv env =
         begin match shift_chunk () with
@@ -318,7 +318,7 @@ let interactive_mode dsenv env =
               env.solver.refresh();
               Options.reset_options() |> ignore;
               let (curmod, dsenv, env), stack = match stack with
-                | [] -> failwith "Too many pops"
+                | [] -> Util.print_error "too many pops"; exit 1
                 | hd::tl -> hd, tl in
               go stack curmod dsenv env
 
@@ -381,7 +381,7 @@ let codegen fmods env=
         let ext = if !Options.codegen = Some "FSharp" then ".fs" else ".ml" in
         let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
 //                           else List.collect Extraction.OCaml.Code.doc_of_mllib mllibs, ".ml" in
-        List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FSharp.Format.pretty 120 d)) newDocs
+        List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FStar.Format.pretty 120 d)) newDocs
     end
 
 exception Found of string
@@ -439,11 +439,11 @@ let go _ =
         let filenames =
           if !Options.explicit_deps then begin
             if List.length filenames = 0 then
-              print_endline "--explicit_deps was provided without a file list!";
+              Util.print_error "--explicit_deps was provided without a file list!\n";
             filenames
           end else begin
             if List.length filenames > 0 then
-              print_endline "ignoring the file list (no --explicit_deps)";
+              Util.print_warning "ignoring the file list (no --explicit_deps)\n";
             detect_dependencies_with_first_interactive_chunk ()
           end
         in
@@ -455,7 +455,7 @@ let go _ =
         codegen fmods env;
         finished_message fmods)
       else
-        Util.print_string "No file provided\n"
+        Util.print_error "no file provided\n"
 
 let main () =
     try
@@ -466,8 +466,8 @@ let main () =
     | e ->
         if Util.handleable e then Util.handle_err false () e;
         if !Options.trace_error
-        then Util.print2 "\nUnexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+        then Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
         else if not (Util.handleable e)
-        then Util.print1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
+        then Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
         cleanup ();
         exit 1

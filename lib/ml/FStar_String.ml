@@ -1,4 +1,4 @@
-let make len v : Prims.string = BatString.init len (fun x -> char_of_int v)
+let make = String.make
 let strcat s t = s^t
 let split seps s =
   let rec repeat_split acc = function

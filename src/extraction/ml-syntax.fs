@@ -1,4 +1,4 @@
-﻿(* -------------------------------------------------------------------- *)
+(* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.Syntax
 open FStar
 open FStar.Absyn.Syntax
@@ -33,6 +33,10 @@ type e_tag =
   | E_PURE
   | E_GHOST
   | E_IMPURE
+
+// Line number, file name; that's all we can emit in OCaml anyhwow
+type mlloc = int * string
+let dummy_loc: mlloc = 0, ""
 
 type mlty =
 | MLTY_Var   of mlident
@@ -87,13 +91,14 @@ type mlexpr' =
 and mlexpr = {
     expr:mlexpr';
     ty:mlty;
+    loc: mlloc;
 }
 
 and mlbranch = mlpattern * option<mlexpr> * mlexpr
 
 and mllb = {
     mllb_name:mlident;
-    mllb_tysc:mltyscheme;
+    mllb_tysc:option<mltyscheme>; // May be None for top-level bindings only
     mllb_add_unit:bool;
     mllb_def:mlexpr;
 }
@@ -115,7 +120,7 @@ type mlmodule1 =
 | MLM_Let of mlletbinding
 | MLM_Exn of mlsymbol * list<mlty>
 | MLM_Top of mlexpr
-| MLM_Loc of int * string // Location information; line number + file; only for the OCaml backend
+| MLM_Loc of mlloc // Location information; line number + file; only for the OCaml backend
 
 type mlmodule = list<mlmodule1>
 
@@ -129,7 +134,8 @@ type mlsig1 =
 
 and mlsig = list<mlsig1>
 
-let with_ty t e = {expr=e; ty=t}
+let with_ty_loc t e l = {expr=e; ty=t; loc = l }
+let with_ty t e = with_ty_loc t e dummy_loc
 
 (* -------------------------------------------------------------------- *)
 type mllib =
@@ -141,8 +147,8 @@ let ml_unit_ty = MLTY_Named ([], (["Prims"], "unit"))
 let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool"))
 let ml_int_ty  = MLTY_Named ([], (["Prims"], "int"))
 let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
-let ml_unit    = with_ty ml_unit_ty <| MLE_Const MLC_Unit
+let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit) 
 let mlp_lalloc = (["SST"], "lalloc")
 let apply_obj_repr x t = 
-    let obj_repr = with_ty  (MLTY_Fun(t, E_PURE, MLTY_Top)) <| MLE_Name(["Obj"], "repr") in
-    with_ty MLTY_Top <| MLE_App(obj_repr, [x])
+    let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name(["Obj"], "repr")) in
+    with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc

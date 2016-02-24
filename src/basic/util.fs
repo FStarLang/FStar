@@ -305,6 +305,26 @@ let print6 a b c d e f g = print_string <| format6 a b c d e f g
 
 let print s args = print_string <| format s args
 
+let stdout_isatty () = None:option<bool>
+
+// These functions have no effect in F#
+let colorize (s:string) (colors:(string * string)) = s
+let colorize_bold (s:string) = s
+let colorize_red (s:string) = s
+let colorize_cyan (s:string) = s
+// END
+
+let print_error s = pr "%s" (colorize_red ("Error: " ^ s))
+let print1_error a b = print_error <| format1 a b
+let print2_error a b c = print_error <| format2 a b c
+let print3_error a b c d = print_error <| format3 a b c d
+
+let print_warning s = pr "%s" (colorize_cyan ("Warning: " ^ s))
+let print1_warning a b = print_warning <| format1 a b
+let print2_warning a b c = print_warning <| format2 a b c
+let print3_warning a b c d = print_warning <| format3 a b c d
+
+
 type out_channel = TextWriter
 let stderr: out_channel = stderr
 let stdout: out_channel = stdout
@@ -624,10 +644,3 @@ let print_endline x =
 
 let map_option f opt = Option.map f opt
 
-let stdout_isatty () = None:option<bool>
-
-// These functions have no effect
-let colorize (s:string) (colors:(string * string)) = s
-let colorize_bold (s:string) = s
-let colorize_red (s:string) = s
-let colorize_cyan (s:string) = s

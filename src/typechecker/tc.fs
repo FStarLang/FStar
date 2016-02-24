@@ -34,6 +34,8 @@ module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module U  = FStar.Syntax.Util
 
+// VALS_HACK_HERE
+
 let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_module env))
 let rng env = Env.get_range env
 let instantiate_both env = {env with Env.instantiate_imp=true}
@@ -187,21 +189,11 @@ let add_implicit u g = {g with implicits=u::g.implicits}
 let check_smt_pat env t bs c = 
     if Util.is_smt_lemma t //check patterns cover the bound vars
     then match c.n with
-        | Comp ({effect_args=[(pre, _); (post, _); (pats, _)]}) ->
-            let rec extract_pats pats = match (SS.compress pats).n with 
-                | Tm_app({n=Tm_fvar (cons, _)}, [_; (hd, _); (tl, _)]) when lid_equals cons.v Const.cons_lid -> 
-                    let head, args = Util.head_and_args hd in
-                    let pat = match args with 
-                        | [_; arg]
-                        | [arg] -> [arg]
-                        | _ -> [] in
-                    pat@extract_pats tl 
-                | _ -> [] in
-            let pats = extract_pats (N.normalize [N.Beta] env pats) in
-            let fvs = List.fold_left (fun out (a, _) -> Util.set_union out (Free.names a)) (S.new_bv_set()) pats in
-            begin match bs |> Util.find_opt (fun (b, _) -> not(Util.set_mem b fvs)) with
-                    | None -> ()
-                    | Some (x,_) -> Errors.warn t.pos (Util.format1 "Pattern misses at least one bound variables: %s" (Print.bv_to_string x))
+        | Comp ({effect_args=[_pre; _post; (pats, _)]}) ->
+            let pat_vars = Free.names pats in
+            begin match bs |> Util.find_opt (fun (b, _) -> not(Util.set_mem b pat_vars)) with
+                | None -> ()
+                | Some (x,_) -> Errors.warn t.pos (Util.format1 "Pattern misses at least one bound variables: %s" (Print.bv_to_string x))
             end
         | _ -> failwith "Impossible"
     
@@ -602,8 +594,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
             | (hd, imp)::bs, (hd_expected, imp')::bs_expected -> 
                begin match imp, imp' with 
-                    | None, Some Implicit
-                    | Some Implicit, None -> 
+                    | None, Some (Implicit _)
+                    | Some (Implicit _), None -> 
                       raise (Error(Util.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd), 
                                                   S.range_of_bv hd))
                     | _ -> ()
@@ -614,7 +606,10 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                     | _ ->
                       if Env.debug env Options.High then Util.print1 "Checking binder %s\n" (Print.bv_to_string hd);
                       let t, _, g1 = tc_tot_or_gtot_term env hd.sort in
-                      let g2 = Rel.teq env t expected_t in
+                      let g2 = 
+                          TcUtil.label_guard (Env.get_range env) 
+                            "Type annotation on parameter incompatible with the expected type"
+                            (Rel.teq env t expected_t) in
                       let g = Rel.conj_guard g (Rel.conj_guard g1 g2) in
                       t, g in
                 let hd = {hd with sort=t} in 
@@ -728,9 +723,10 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let tfun_opt, bs, letrec_binders, c_opt, envbody, g = expected_function_typ env topt in
     let body, cbody, guard_body = tc_term ({envbody with top_level=false; use_eq=use_eq}) body in
     if Env.debug env Options.Low
-    then Util.print4 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\nAgain cbody=%s\n" 
-          (Print.term_to_string body) (Print.comp_to_string <| cbody.comp()) 
-          (guard_to_string env guard_body) (Print.comp_to_string <| cbody.comp());
+    then Util.print3 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\n" 
+          (Print.term_to_string body) 
+          (Print.comp_to_string <| cbody.comp()) 
+          (guard_to_string env guard_body);
     let guard_body =  //we don't abstract over subtyping constraints; so solve them now
         Rel.solve_deferred_constraints envbody guard_body in
     if Env.debug env <| Options.Other "Implicits"
@@ -832,7 +828,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             cres     (* function result comp *)
                             args     (* actual arguments  *) : (term * lcomp * guard_t) =
             match bs, args with
-            | (x, Some Implicit)::rest, (_, None)::_ -> (* instantiate an implicit arg *)
+            | (x, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit arg *)
                 let t = SS.subst subst x.sort in
                 fxv_check head env t fvs;
                 let varg, u, implicits = TcUtil.new_implicit_var env t in //new_uvar env t in
@@ -842,7 +838,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
             | (x, aqual)::rest, (e, aq)::rest' -> (* a concrete argument *)
                 let _ = match aqual, aq with 
-                | Some Implicit, Some Implicit 
+                | Some (Implicit _), Some (Implicit _)
                 | None, None 
                 | Some Equality, None -> ()
                 | _ -> raise (Error("Inconsistent implicit qualifier", e.pos)) in
@@ -998,7 +994,7 @@ and tc_eqn scrutinee env branch
   let tc_pat (allow_implicits:bool) (pat_t:typ) p0 : 
         pat                                (* the type-checked, fully decorated pattern                             *)
       * list<bv>                           (* all its bound variables, used for closing the type of the branch term *)
-      * Env.env                            (* the environment exteneded with all the binders                        *)
+      * Env.env                            (* the environment extended with all the binders                         *)
       * list<term>                         (* terms corresponding to each clause in the disjunctive pat             *)
       * list<term>                         (* the same terms in normal form                                         *)
       =
@@ -1086,38 +1082,39 @@ and tc_eqn scrutinee env branch
               match fopt with
                 | None -> Some clause
                 | Some f -> Some <| Util.mk_disj clause f) None in
+
+    let c, g_branch = Util.strengthen_precondition None env branch_exp c g_branch in 
+    //g_branch is trivial, its logical content is now incorporated within c
+
     (* (b) *)
-    let c_weak, g_when_weak, g_branch_weak = 
+    let c_weak, g_when_weak =
      match eqs, when_condition with
       | None, None -> 
-        c, g_when, g_branch
+        c, g_when
       
       | Some f, None -> 
         let gf = NonTrivial f in
         let g = Rel.guard_of_guard_formula gf in
         TcUtil.weaken_precondition env c gf,
-        Rel.imp_guard g g_when, 
-        Rel.imp_guard g g_branch 
+        Rel.imp_guard g g_when 
 
       | Some f, Some w ->
         let g_f = NonTrivial f in
         let g_fw = NonTrivial (Util.mk_conj f w) in
         TcUtil.weaken_precondition env c g_fw, 
-        Rel.imp_guard (Rel.guard_of_guard_formula g_f) g_when,
-        Rel.imp_guard (Rel.guard_of_guard_formula g_fw) g_branch
+        Rel.imp_guard (Rel.guard_of_guard_formula g_f) g_when
 
       | None, Some w -> 
         let g_w = NonTrivial w in
         let g = Rel.guard_of_guard_formula g_w in
         TcUtil.weaken_precondition env c g_w, 
-        g_when, 
-        Rel.imp_guard g g_branch in
+        g_when in
     
     (* (c) *)
     let binders = List.map S.mk_binder pat_bvs in
     TcUtil.close_comp env pat_bvs c_weak, 
     Rel.close_guard binders g_when_weak, 
-    Rel.close_guard binders g_branch_weak in
+    g_branch in
 
   (* 6. Building the guard for this branch;                                                             *)
   (*        the caller assembles the guards for each branch into an exhaustiveness check.               *)
@@ -1565,16 +1562,19 @@ let open_univ_vars uvs binders c =
             | Tm_arrow(binders, c) -> uvs, binders, c
             | _ -> failwith "Impossible"
 
-let open_effect_decl env ed = 
-   let fail t = raise (Error(Errors.unexpected_signature_for_monad env ed.mname t, range_of_lid ed.mname)) in
-   let a, wp = match (SS.compress ed.signature).n with
+let open_effect_signature env mname signature = 
+   let fail t = raise (Error(Errors.unexpected_signature_for_monad env mname t, range_of_lid mname)) in
+   match (SS.compress signature).n with
       | Tm_arrow(bs, c) -> 
         let bs = SS.open_binders bs in 
         begin match bs with 
             | [(a, _);(wp, _); (_wlp, _)] -> a, wp.sort
-            | _ -> fail ed.signature
+            | _ -> fail signature
         end
-      | _ -> fail ed.signature in
+      | _ -> fail signature 
+
+let open_effect_decl env ed = 
+   let a, wp = open_effect_signature env ed.mname ed.signature in
    let ed = 
     match ed.binders with 
       | [] -> ed
@@ -1603,14 +1603,17 @@ let open_effect_decl env ed =
 
 let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
-  let binders, signature = SS.open_term ed.binders ed.signature in
-  let binders, env, _ = tc_tparams env0 binders in
-  let signature, _    = tc_trivial_guard env signature in
+  let binders_un, signature_un = SS.open_term ed.binders ed.signature in
+  let binders, env, _ = tc_tparams env0 binders_un in
+  let signature, _    = tc_trivial_guard env signature_un in
   let ed = {ed with binders=binders; 
                     signature=signature} in
 
   let ed, a, wp_a = open_effect_decl env ed in 
-  
+  let get_effect_signature ()  = 
+    let signature, _ = tc_trivial_guard env signature_un in
+    open_effect_signature env ed.mname signature in 
+
   //put the signature in the environment to prevent generalizing its free universe variables until we're done 
   let env = Env.push_bv env (S.new_bv None ed.signature) in
 
@@ -1628,8 +1631,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
 
   let bind_wp =
     let wlp_a = wp_a in
-    let b = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
-    let wp_b = SS.subst [NT(a, S.bv_to_name b)] wp_a in
+    let b, wp_b = get_effect_signature () in
     let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
     let a_wlp_b = a_wp_b in
     let expected_k = Util.arrow [S.mk_binder a; S.mk_binder b; 
@@ -1640,8 +1642,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
 
   let bind_wlp =
     let wlp_a = wp_a in
-    let b = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
-    let wlp_b = SS.subst [NT(a, S.bv_to_name b)] wlp_a in
+    let b, wlp_b = get_effect_signature ()  in
     let a_wlp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wlp_b) in
     let expected_k = Util.arrow [S.mk_binder a; S.mk_binder b; 
                                  S.null_binder wlp_a;
@@ -1795,7 +1796,7 @@ let tc_lex_t env ses quals lids =
             let hd = S.new_bv (Some r2) (S.bv_to_name a) in
             let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar None Const.lex_t_lid r2, [U_name ucons2])) None r2) in
             let res = mk (Tm_uinst(S.fvar None Const.lex_t_lid r2, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
-            Util.arrow [(a, Some Implicit); (hd, None); (tl, None)] (S.mk_Total res) in
+            Util.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
         let dc_lexcons = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], [], r2) in
         Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids, Env.get_range env)
@@ -1814,7 +1815,7 @@ let tc_inductive env ses quals lids =
                 T :  a:Type(ua) -> b:Type(ub) -> Type(u)
               
          (2). In a context
-              G = a:Type(ua), T: (a':Type(ua){a=a'} -> b:Type(ub) -> Type(u))
+              G = a:Type(ua), T: (a:Type(ua) -> b:Type(ub) -> Type(u))
               we elaborate the type of 
                 
                 C1 to x:a -> y:Type(uy) -> T a y
@@ -1887,12 +1888,7 @@ let tc_inductive env ses quals lids =
          let t_type, u = U.type_u() in 
          Rel.force_trivial_guard env' (Rel.teq env' t t_type); 
          
-         let refined_tps = tps |> List.map (fun (x, imp) -> 
-            let y = S.freshen_bv x in
-            let refined = Util.refine y (Util.mk_eq x.sort x.sort (S.bv_to_name x) (S.bv_to_name y)) in
-            {x with sort=refined}, imp) in
-
-(*close*)let t_tc = Util.arrow (refined_tps@indices) (S.mk_Total t) in
+(*close*)let t_tc = Util.arrow (tps@indices) (S.mk_Total t) in
          let tps = SS.close_binders tps in
          let k = SS.close tps k in
          Env.push_let_binding env_tps (Inr tc) ([], t_tc), 
@@ -1913,7 +1909,7 @@ let tc_inductive env ses quals lids =
                 if lid_equals tc_lid (must (Util.lid_of_sigelt se))
                 then let tps = match se with 
                         | Sig_inductive_typ(_, _, tps, _, _, _, _, _) -> 
-                          tps |> List.map (fun (x, _) -> (x, Some Implicit))
+                          tps |> List.map (fun (x, _) -> (x, Some S.imp_tag))
                         | _ -> failwith "Impossible" in
                      Some (tps, u_tc)
                 else None) |> Util.must in 
@@ -1948,14 +1944,15 @@ let tc_inductive env ses quals lids =
             arguments
             us in
         
-(*close*)let t = Util.arrow (tps@arguments) (S.mk_Total result) in
+(*close*)let t = Util.arrow ((tps |> List.map (fun (x, _) -> (x, Some (Implicit true))))@arguments) (S.mk_Total result) in
+                        //NB: the tps are tagged as Implicit inaccessbile arguments of the data constructor
          Sig_datacon(c, [], t, tc_lid, ntps, quals, [], r),
          g
 
       | _ -> failwith "impossible" in
 
-    (* 3. Generalizing universes and 4. recheck datacons *)
-    let generalize_and_recheck env g tcs datas = 
+    (* 3. Generalizing universes and 4. instantiate inductives within the datacons *)
+    let generalize_and_inst_within env g tcs datas = 
         Rel.force_trivial_guard env g;
         let binders = tcs |> List.map (function 
             | Sig_inductive_typ(_, _, tps, k, _, _, _, _) -> S.null_binder (Util.arrow tps <| mk_Total k)
@@ -1987,25 +1984,19 @@ let tc_inductive env ses quals lids =
             | _ -> failwith "Impossible") 
             tc_types tcs in
 
-        //4. Need to recheck each datacon after generalization, 
-        //so that it correctly instantiates all the universes of the inductives it mentions
-        //Note, so far, the datacons have only been checked w.r.t monomorphic variants of the inductives
-        let env_data = Env.push_univ_vars env uvs in
-        let uvs_universes = uvs |> List.map U_name in
-        let env_data = List.fold_left (fun env tc -> Env.push_sigelt_inst env tc uvs_universes) env_data tcs  in
-        let datas = List.map2 (fun (t, _) -> function
-            | Sig_datacon(l, _, _, tc, ntps, quals, mutuals, r) -> 
-              let ty = match uvs with 
-                | [] -> t.sort
-                | _ -> 
-                 if Env.debug env Options.Low 
-                 then Util.print2 "Rechecking datacon %s : %s\n" (Print.lid_to_string l) (Print.term_to_string t.sort);
-                 let ty, _, g = tc_tot_or_gtot_term env_data t.sort in
-                 let g = {g with guard_f=Trivial} in
-                 Rel.force_trivial_guard env g;
-                 SS.close_univ_vars uvs ty in
-              Sig_datacon(l, uvs, ty, tc, ntps, quals, mutuals, r)
-            | _ -> failwith "Impossible") data_types datas in
+        //4. Instantiate the inductives in each datacon with the generalized universes
+        let datas = match uvs with 
+            | [] -> datas
+            | _ -> 
+             let uvs_universes = uvs |> List.map U_name in
+             let tc_insts = tcs |> List.map (function Sig_inductive_typ(tc, _, _, _, _, _, _, _) -> (tc, uvs_universes) | _ -> failwith "Impossible") in
+             List.map2 (fun (t, _) d -> 
+                match d with 
+                    | Sig_datacon(l, _, _, tc, ntps, quals, mutuals, r) -> 
+                        let ty = InstFV.instantiate tc_insts t.sort |> SS.close_univ_vars uvs in
+                        Sig_datacon(l, uvs, ty, tc, ntps, quals, mutuals, r)
+                    | _ -> failwith "Impossible")
+             data_types datas in
         tcs, datas in
 
     let tys, datas = ses |> List.partition (function Sig_inductive_typ _ -> true | _ -> false) in
@@ -2029,7 +2020,7 @@ let tc_inductive env ses quals lids =
         datas 
         ([], g) in
 
-    let tcs, datas = generalize_and_recheck env0 g (List.map fst tcs) datas in 
+    let tcs, datas = generalize_and_inst_within env0 g (List.map fst tcs) datas in 
     Sig_bundle(tcs@datas, quals, lids, Env.get_range env0)
       
 let rec tc_decl env se = match se with
@@ -2091,7 +2082,8 @@ let rec tc_decl env se = match se with
       let env = Env.set_range env r in
       let tps, c = SS.open_comp tps c in
       let tps, env, us = tc_tparams env tps in
-      let c, g, u = tc_comp env c in
+      let c, u, g = tc_comp env c in
+      Rel.force_trivial_guard env g;
       let tags = tags |> List.map (function
         | DefaultEffect None ->
           let c' = Normalize.unfold_effect_abbrev env c in
@@ -2202,18 +2194,18 @@ let rec tc_decl env se = match se with
 
 
 let for_export hidden se : list<sigelt> * list<lident> =
-   (* Exporting symbols based on whether they have been marked 'private' or 'abstract'
-      At this level, there is no distinction between 'private' and 'abstract'.
+   (* Exporting symbols based on whether they have been marked 'abstract'
 
-        -- Symbols marked 'private' are further restricted by the visibility rules enforced during desugaring.
+   
+        -- NB> Symbols marked 'private' are restricted by the visibility rules enforced during desugaring.
            i.e., if a module A marks symbol x as private, then a module B simply cannot refer to A.x
            OTOH, if A marks x as abstract, B can refer to A.x, but cannot see its definition.
 
-      Here, if a symbol is private or abstract, we only export its declaration, not its definition. 
+      Here, if a symbol is abstract, we only export its declaration, not its definition. 
       The reason we export the declaration of private symbols is to account for cases like this:
 
         module A 
-           private let x = 0
+           abstract let x = 0
            let y = x
 
         When encoding A to the SMT solver, we need to encode the definition of y.
@@ -2223,10 +2215,9 @@ let for_export hidden se : list<sigelt> * list<lident> =
         module A
             assume val x : int
             let y = x
-
-       The same behavior occurs is x were marked 'abstract'
-    *)
-   let private_or_abstract quals = quals |> Util.for_some (fun x -> x=Private || x=Abstract) in
+   
+   *)
+   let is_abstract quals = quals |> Util.for_some (function Abstract-> true | _ -> false) in
    let is_hidden_proj_or_disc q = match q with 
         | Projector(l, _) 
         | Discriminator l -> hidden |> Util.for_some (lid_equals l) 
@@ -2238,7 +2229,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
     | Sig_datacon _ -> failwith "Impossible"
 
     | Sig_bundle(ses, quals, _, _) ->
-      if private_or_abstract quals
+      if is_abstract quals
       then List.fold_right (fun se (out, hidden) -> match se with 
             | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) -> 
               let dec = Sig_declare_typ(l, us, mk (Tm_arrow(bs, S.mk_Total t)) None r, Assumption::quals, r) in
@@ -2251,7 +2242,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
       else [se], hidden
 
     | Sig_assume(_, _, quals, _) ->
-      if private_or_abstract quals
+      if is_abstract quals
       then [], hidden
       else [se], hidden
 
@@ -2281,7 +2272,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
            [dec], lid::hidden
   
     | Sig_let(lbs, r, l, quals) ->
-      if private_or_abstract quals
+      if is_abstract quals
       then snd lbs |> List.map (fun lb -> 
            Sig_declare_typ(right lb.lbname, lb.lbunivs, lb.lbtyp, Assumption::quals, r)), hidden
       else [se], hidden
@@ -2324,9 +2315,7 @@ let finish_partial_modul env modul exports =
   if not (lid_equals modul.name Const.prims_lid)
   then begin
     env.solver.pop ("Ending modul " ^ modul.name.str);
-    if  not modul.is_interface
-    ||  List.contains modul.name.str !Options.admit_fsi
-    then env.solver.encode_modul env modul;
+    env.solver.encode_modul env modul;
     env.solver.refresh();
     Options.reset_options() |> ignore
   end;

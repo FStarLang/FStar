@@ -49,7 +49,7 @@ type pragma =
 type memo<'a> = ref<option<'a>>
 
 type arg_qualifier =
-  | Implicit
+  | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor 
   | Equality
 type aqual = option<arg_qualifier>
 type universe = 
@@ -294,6 +294,8 @@ type subst_t = list<subst_elt>
 type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
 type mk_t = mk_t_a<term',term'>
 
+// VALS_HACK_HERE
+
 (*********************************************************************************)
 (* Identifiers to/from strings *)
 (*********************************************************************************)
@@ -385,7 +387,8 @@ let null_id  = mk_ident("_", dummyRange)
 let null_bv k = {ppname=null_id; index=0; sort=k}
 let mk_binder (a:bv) : binder = a, None
 let null_binder t : binder = null_bv t, None
-let iarg t : arg = t, Some Implicit
+let imp_tag = Implicit false
+let iarg t : arg = t, Some imp_tag
 let as_arg t : arg = t, None
 let is_null_bv (b:bv) = b.ppname.idText = null_id.idText
 let is_null_binder (b:binder) = is_null_bv (fst b)
@@ -395,8 +398,8 @@ let freenames_of_binders (bs:binders) : freenames =
 
 let binders_of_list fvs : binders = (fvs |> List.map (fun t -> t, None))
 let binders_of_freenames (fvs:freenames) = Util.set_elements fvs |> binders_of_list
-let is_implicit = function Some Implicit -> true | _ -> false
-let as_implicit = function true -> Some Implicit | _ -> None
+let is_implicit = function Some (Implicit _) -> true | _ -> false
+let as_implicit = function true -> Some imp_tag | _ -> None
 
 let pat_bvs (p:pat) : list<bv> = 
     let rec aux b p = match p.v with
@@ -407,7 +410,7 @@ let pat_bvs (p:pat) : list<bv> =
         | Pat_cons(_, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
         | Pat_disj(p::_) -> aux b p
         | Pat_disj [] -> failwith "impossible" in
-  aux [] p
+  List.rev <| aux [] p
          
 (* Gen sym *)
 let gen_reset = 

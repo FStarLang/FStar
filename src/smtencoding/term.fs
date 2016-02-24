@@ -88,6 +88,26 @@ and term = {tm:term'; hash:string; freevars:Syntax.memo<fvs>}
 and fv = string * sort
 and fvs = list<fv>
 
+type caption = option<string>
+type binders = list<(string * sort)>
+type projector = (string * sort)
+type constructor_t = (string * list<projector> * sort * int)
+type constructors  = list<constructor_t>
+type decl =
+  | DefPrelude
+  | DeclFun    of string * list<sort> * sort * caption        //uninterpreted function
+  | DefineFun  of string * list<sort> * sort * term * caption //defined function
+  | Assume     of term   * caption
+  | Caption    of string
+  | Eval       of term
+  | Echo       of string
+  | Push
+  | Pop
+  | CheckSat
+type decls_t = list<decl>
+
+// VALS_HACK_HERE
+
 let fv_eq (x:fv) (y:fv) = fst x = fst y
 let fv_sort x = snd x
 let freevar_eq x y = match x.tm, y.tm with
@@ -293,24 +313,6 @@ let mkForall' (pats, wopt, vars, body) = mkQuant' (Forall, pats, wopt, vars, bod
 let mkForall (pats, vars, body) = mkQuant' (Forall, pats, None, vars, body)
 let mkExists (pats, vars, body) = mkQuant' (Exists, pats, None, vars, body)
 
-
-type caption = option<string>
-type binders = list<(string * sort)>
-type projector = (string * sort)
-type constructor_t = (string * list<projector> * sort * int)
-type constructors  = list<constructor_t>
-type decl =
-  | DefPrelude
-  | DeclFun    of string * list<sort> * sort * caption        //uninterpreted function
-  | DefineFun  of string * list<sort> * sort * term * caption //defined function
-  | Assume     of term   * caption
-  | Caption    of string
-  | Eval       of term
-  | Echo       of string
-  | Push
-  | Pop
-  | CheckSat
-type decls_t = list<decl>
 
 let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, abstr vars tm, c)
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)

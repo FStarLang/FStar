@@ -8,7 +8,9 @@
    increasing mutable lists, possibly too advanced for a tutorial *)
 
 module CCA2.CCA2  (* intuitively, parameterized by both Plain and RSA *)
-open List
+
+open FStar.List
+open CCA2
 
 type cipher = RSA.cipher
 type entry =

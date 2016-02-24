@@ -4,6 +4,11 @@
 *)
 module FStar.Squash
 
+(* NS: This is really not the right model for squash.
+       It doesn't demote the universe back to 0.
+       We should use Prims.squash
+*)
+
 (* This file shows that there is a natural model for some of the squash things;
  *)
 

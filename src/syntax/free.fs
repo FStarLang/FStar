@@ -23,6 +23,8 @@ open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 
+// VALS_HACK_HERE
+
 (********************************************************************************)
 (************************* Free names and unif variables ************************)
 (********************************************************************************)
@@ -59,7 +61,7 @@ let rec free_univs u = match Subst.compress_univ u with
   | U_unknown -> no_free_vars
   | U_succ u -> free_univs u
   | U_max us -> List.fold_left (fun out x -> union out (free_univs x)) no_free_vars us
-  | U_unif u -> if Unionfind.uvar_id u = 11303 then failwith "11303!" else singleton_univ u
+  | U_unif u -> singleton_univ u
   
 let rec free_names_and_uvs' tm : free_vars =
     let aux_binders bs acc = 

@@ -136,12 +136,13 @@ let constant_univ_as_nat u = snd (univ_kernel u)
 //e.g, [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2] 
 let rec compare_univs u1 u2 = match u1, u2 with 
     | U_bvar _, _
-    | _, U_bvar _ 
-    | U_unknown, _
-    | _, U_unknown -> failwith "Impossible: compare_univs"
+    | _, U_bvar _  -> failwith "Impossible: compare_univs"
+   
+    | U_unknown, U_unknown -> 0
+    | U_unknown, _ -> -1
+    | _, U_unknown -> 1
 
     | U_zero, U_zero -> 0
-        
     | U_zero, _ -> -1
     | _, U_zero -> 1
 
@@ -273,14 +274,27 @@ let is_lemma t =  match (compress t).n with
       end
     | _ -> false
 
+
+let head_and_args t =
+    let t = compress t in
+    match t.n with
+        | Tm_app(head, args) -> head, args
+        | _ -> t, []
+        
+ let un_uinst t = match (Subst.compress t).n with 
+        | Tm_uinst(t, _) -> t
+        | _ -> t 
+   
 let is_smt_lemma t = match (compress t).n with
     | Tm_arrow(_, c) -> 
       begin match c.n with
         | Comp ct when (lid_equals ct.effect_name Const.effect_Lemma_lid) ->
             begin match ct.effect_args with
                 | _req::_ens::(pats, _)::_ ->
-                  begin match (unmeta pats).n with
-                    | Tm_app({n=Tm_fvar(fv, _)}, _) -> lid_equals fv.v Const.cons_lid
+                  let pats' = unmeta pats in
+                  let head, _ = head_and_args pats' in
+                  begin match (un_uinst head).n with
+                    |Tm_fvar(fv, _) -> lid_equals fv.v Const.cons_lid
                     | _ -> false
                   end
                 | _ -> false
@@ -499,7 +513,7 @@ let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
         | Some lids -> 
           let universes = univ_vars |> List.map U_name in
           let inst = lids |> List.map (fun l -> l, universes) in
-          FStar.Syntax.InstFV.inst inst def in
+          FStar.Syntax.InstFV.instantiate inst def in
     let typ = Subst.close_univ_vars univ_vars typ in
     let def = Subst.close_univ_vars univ_vars def in
     mk_letbinding lbname univ_vars typ eff def
@@ -659,12 +673,17 @@ let eq_pred_t : term =
     let atyp = bv_to_tm a in
     let b = new_bv None ktype0 in
     let btyp = bv_to_tm b in
-    arrow [(a, Some Implicit); (b, Some Implicit); null_binder atyp; null_binder btyp]
+    arrow [(a, Some imp_tag); (b, Some imp_tag); null_binder atyp; null_binder btyp]
           (mk_Total ktype0)
 
 let teq = fvar None Const.eq2_lid dummyRange
 
 let mk_eq t1 t2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
+
+let mk_has_type t x t' =
+    let t_has_type = fvar None (Const.has_type_lid) dummyRange in //TODO: Fix the U_zeroes below!
+    let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) None dummyRange in
+    mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) None dummyRange
 
 let lex_t :term = fvar None Const.lex_t_lid dummyRange
 let lex_top : term = fvar (Some Data_ctor) Const.lextop_lid dummyRange
@@ -672,7 +691,7 @@ let lex_pair : term = fvar (Some Data_ctor) Const.lexcons_lid dummyRange
 let forall_t : term = 
     let a = new_bv None ktype0 in
     let atyp = bv_to_tm a in
-    arrow [(a, Some Implicit); null_binder atyp] (mk_Total ktype0)
+    arrow [(a, Some imp_tag); null_binder atyp] (mk_Total ktype0)
 let tforall = fvar None Const.forall_lid dummyRange
 
 let lcomp_of_comp c0 =
@@ -693,12 +712,6 @@ let rec is_wild_pat p =
     | Pat_wild _ -> true
     | _ -> false
 
-let head_and_args t =
-    let t = compress t in
-    match t.n with
-        | Tm_app(head, args) -> head, args
-        | _ -> t, []
-        
 let if_then_else b t1 t2 =
     let then_branch = (withinfo (Pat_constant (Const_bool true)) tun.n t1.pos, None, t1) in
     let else_branch = (withinfo (Pat_constant (Const_bool false)) tun.n t2.pos, None, t2) in
@@ -714,9 +727,6 @@ type connective =
     | BaseConn of lident * args
 
 let destruct_typ_as_formula f : option<connective> =
-    let un_uinst t = match (Subst.compress t).n with 
-        | Tm_uinst(t, _) -> t
-        | _ -> t in 
     let destruct_base_conn f =
         let connectives = [ (Const.true_lid,  0);
                             (Const.false_lid, 0);

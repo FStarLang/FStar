@@ -1,5 +1,5 @@
 (* We give an implementation here using OCaml's BatList,
-   which privide tail-recursive versions of most functions *)
+   which provides tail-recursive versions of most functions *)
 let isEmpty l = l = []
 let mem = BatList.mem
 let memT = mem
@@ -40,6 +40,7 @@ let sortWith = BatList.sort
 let for_all = BatList.for_all
 let forall2 = BatList.for_all2
 let tryFind f l = try Some (BatList.find f l) with | Not_found -> None
+let tryFindT = tryFind
 let find = tryFind
 let tryPick f l = try f (BatList.find (fun x -> f x <> None) l) with | Not_found -> None
 let flatten = BatList.flatten

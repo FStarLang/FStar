@@ -1121,7 +1121,9 @@ and tc_exp env e : exp * lcomp * guard_t =
                  else (if !Options.warn_top_level_effects
                        then Tc.Errors.warn (Tc.Env.get_range env) Tc.Errors.top_level_effect;
                        mk_Exp_meta(Meta_desugared(e2, Masked_effect)), c1)
-            else (Tc.Util.discharge_guard env (Rel.conj_guard g1 guard_f);  //still need to solve remaining unification/subtyping constraints
+            else (let g = Rel.conj_guard g1 guard_f in
+                  Tc.Util.discharge_guard env g;  //still need to solve remaining unification/subtyping constraints
+                  Tc.Util.check_unresolved_implicits g;
                   e2, c1.comp()) in
           let _, e1, c1 = if env.generalize
                           then List.hd <| Tc.Util.generalize false env1 [x, e1, c1] (* only generalize top-level lets, when there is no val decl *)
@@ -1875,88 +1877,6 @@ let rec for_export env hidden se : list<sigelt> * list<lident> =
            Sig_val_decl(right lb.lbname, lb.lbtyp, Assumption::quals, r)), hidden
       else [se], hidden
 
-//let non_private env se : list<sigelt> =
-//   let is_private quals = List.contains Private quals in
-//   match se with
-//    | Sig_bundle(ses, quals, _, _) ->
-////      if is_private quals
-////      then let ses = ses |> List.filter (function
-////                | Sig_datacon _ -> false
-////                | _ -> true) in
-////           ses |> List.map (function
-////            | Sig_tycon(lid, bs, k, mutuals, datas, quals, r) -> Sig_tycon(lid, bs, k, [], [], Assumption::quals, r)
-////            | se -> se)
-////      else
-//      [se]
-//
-//   | Sig_tycon(_, _, _, _, _, quals, r) ->
-//     if is_private quals
-//     then []
-//     else [se]
-//
-//   | Sig_typ_abbrev(l, bs, k, t, quals, r) ->
-//     if is_private quals
-//     then [Sig_tycon(l, bs, k, [], [], Assumption::quals, r)]
-//     else [se]
-//
-//   | Sig_assume(_, _, quals, _) ->
-//     if is_private quals
-//     then []
-//     else [se]
-//
-//   | Sig_val_decl(_, _, quals, _) ->
-//     if is_private quals
-//     then []
-//     else [se]
-//
-//   | Sig_main  _ -> []
-//
-//   | Sig_new_effect     _
-//   | Sig_sub_effect     _
-//   | Sig_effect_abbrev  _
-//   | Sig_pragma         _
-//   | Sig_kind_abbrev    _ -> [se]
-//
-//   | Sig_datacon _ -> failwith "Impossible"
-//
-//   | Sig_let(lbs, r, l, _) ->
-//     let check_priv lbs =
-//        let is_priv = function
-//            | {lbname=Inr l} ->
-//            begin match Tc.Env.try_lookup_val_decl env l with
-//                    | Some (_, qs) -> List.contains Private qs
-//                    | _ -> false
-//            end
-//            | _ -> false in
-//        let some_priv = lbs |> Util.for_some is_priv in
-//        if some_priv
-//        then if lbs |> Util.for_some (fun x -> is_priv x |> not)
-//             then raise (Error("Some but not all functions in this mutually recursive nest are marked private", r))
-//             else true
-//        else false in
-//
-//
-//     let pure_funs, rest = snd lbs |> List.partition (fun lb -> Util.is_pure_or_ghost_function lb.lbtyp && not <| Util.is_lemma lb.lbtyp) in
-//     begin match pure_funs, rest with
-//        | _::_, _::_ ->
-//          raise (Error("Pure functions cannot be mutually recursive with impure functions", r))
-//
-//        | _::_, [] ->
-//          if check_priv pure_funs
-//          then []
-//          else [se]
-//
-//        | [], _::_ ->
-//          if check_priv rest
-//          then []
-//          else rest |> List.collect (fun lb -> match lb.lbname with
-//                | Inl _ -> failwith "impossible"
-//                | Inr l -> [Sig_val_decl(l, lb.lbtyp, [Assumption], range_of_lid l)])
-//
-//
-//        | [], [] -> failwith "Impossible"
-//     end
-
 let get_exports env modul =
     let exports, _ = modul.declarations |> List.fold_left (fun (exports, hidden) se -> 
             let exports', hidden = for_export env hidden se in
@@ -1984,9 +1904,7 @@ let finish_partial_modul env modul =
   if not (lid_equals modul.name Const.prims_lid)
   then begin
     env.solver.pop ("Ending modul " ^ modul.name.str);
-    if  not modul.is_interface
-    ||  List.contains modul.name.str !Options.admit_fsi
-    then env.solver.encode_modul env modul;
+    env.solver.encode_modul env modul;
     env.solver.refresh();
     Options.reset_options() |> ignore
   end;

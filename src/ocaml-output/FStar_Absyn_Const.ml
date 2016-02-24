@@ -1,432 +1,340 @@
 
 open Prims
-# 22 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 22 "FStar.Absyn.Const.fst"
+let p2l : FStar_Absyn_Syntax.path  ->  FStar_Absyn_Syntax.lident = (fun l -> (FStar_Absyn_Syntax.lid_of_path l FStar_Absyn_Syntax.dummyRange))
 
-let p2l : Prims.string Prims.list  ->  FStar_Ident.lident = (fun l -> (FStar_Absyn_Syntax.lid_of_path l FStar_Absyn_Syntax.dummyRange))
+# 23 "FStar.Absyn.Const.fst"
+let pconst : Prims.string  ->  FStar_Absyn_Syntax.lident = (fun s -> (p2l (("Prims")::(s)::[])))
 
-# 23 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 24 "FStar.Absyn.Const.fst"
+let prims_lid : FStar_Absyn_Syntax.lident = (p2l (("Prims")::[]))
 
-let pconst : Prims.string  ->  FStar_Ident.lident = (fun s -> (p2l (("Prims")::(s)::[])))
+# 25 "FStar.Absyn.Const.fst"
+let fstar_ns_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::[]))
 
-# 24 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 28 "FStar.Absyn.Const.fst"
+let bool_lid : FStar_Absyn_Syntax.lident = (pconst "bool")
 
-let prims_lid : FStar_Ident.lident = (p2l (("Prims")::[]))
+# 29 "FStar.Absyn.Const.fst"
+let unit_lid : FStar_Absyn_Syntax.lident = (pconst "unit")
 
-# 25 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 30 "FStar.Absyn.Const.fst"
+let string_lid : FStar_Absyn_Syntax.lident = (pconst "string")
 
-let fstar_ns_lid : FStar_Ident.lident = (p2l (("FStar")::[]))
+# 31 "FStar.Absyn.Const.fst"
+let bytes_lid : FStar_Absyn_Syntax.lident = (pconst "bytes")
 
-# 28 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 32 "FStar.Absyn.Const.fst"
+let char_lid : FStar_Absyn_Syntax.lident = (pconst "char")
 
-let bool_lid : FStar_Ident.lident = (pconst "bool")
+# 33 "FStar.Absyn.Const.fst"
+let int_lid : FStar_Absyn_Syntax.lident = (pconst "int")
 
-# 29 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 34 "FStar.Absyn.Const.fst"
+let uint8_lid : FStar_Absyn_Syntax.lident = (pconst "uint8")
 
-let unit_lid : FStar_Ident.lident = (pconst "unit")
+# 35 "FStar.Absyn.Const.fst"
+let int64_lid : FStar_Absyn_Syntax.lident = (pconst "int64")
 
-# 30 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 36 "FStar.Absyn.Const.fst"
+let float_lid : FStar_Absyn_Syntax.lident = (pconst "float")
 
-let string_lid : FStar_Ident.lident = (pconst "string")
+# 37 "FStar.Absyn.Const.fst"
+let exn_lid : FStar_Absyn_Syntax.lident = (pconst "exn")
 
-# 31 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 38 "FStar.Absyn.Const.fst"
+let list_lid : FStar_Absyn_Syntax.lident = (pconst "list")
 
-let bytes_lid : FStar_Ident.lident = (pconst "bytes")
+# 39 "FStar.Absyn.Const.fst"
+let pattern_lid : FStar_Absyn_Syntax.lident = (pconst "pattern")
 
-# 32 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 40 "FStar.Absyn.Const.fst"
+let precedes_lid : FStar_Absyn_Syntax.lident = (pconst "Precedes")
 
-let char_lid : FStar_Ident.lident = (pconst "char")
+# 41 "FStar.Absyn.Const.fst"
+let lex_t_lid : FStar_Absyn_Syntax.lident = (pconst "lex_t")
 
-# 33 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 42 "FStar.Absyn.Const.fst"
+let lexcons_lid : FStar_Absyn_Syntax.lident = (pconst "LexCons")
 
-let int_lid : FStar_Ident.lident = (pconst "int")
+# 43 "FStar.Absyn.Const.fst"
+let lextop_lid : FStar_Absyn_Syntax.lident = (pconst "LexTop")
 
-# 34 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 44 "FStar.Absyn.Const.fst"
+let smtpat_lid : FStar_Absyn_Syntax.lident = (pconst "SMTPat")
 
-let uint8_lid : FStar_Ident.lident = (pconst "uint8")
+# 45 "FStar.Absyn.Const.fst"
+let smtpatT_lid : FStar_Absyn_Syntax.lident = (pconst "SMTPatT")
 
-# 35 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 46 "FStar.Absyn.Const.fst"
+let smtpatOr_lid : FStar_Absyn_Syntax.lident = (pconst "SMTPatOr")
 
-let int64_lid : FStar_Ident.lident = (pconst "int64")
+# 48 "FStar.Absyn.Const.fst"
+let int32_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Int32")::("int32")::[]))
 
-# 36 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 49 "FStar.Absyn.Const.fst"
+let int31_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Int31")::("int31")::[]))
 
-let float_lid : FStar_Ident.lident = (pconst "float")
+# 50 "FStar.Absyn.Const.fst"
+let heap_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Heap")::("heap")::[]))
 
-# 37 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 53 "FStar.Absyn.Const.fst"
+let kunary : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k k' -> (let _104_11 = (let _104_10 = (let _104_9 = (FStar_Absyn_Syntax.null_t_binder k)
+in (_104_9)::[])
+in (_104_10, k'))
+in (FStar_Absyn_Syntax.mk_Kind_arrow _104_11 FStar_Absyn_Syntax.dummyRange)))
 
-let exn_lid : FStar_Ident.lident = (pconst "exn")
+# 54 "FStar.Absyn.Const.fst"
+let kbin : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k1 k2 k' -> (let _104_22 = (let _104_21 = (let _104_20 = (FStar_Absyn_Syntax.null_t_binder k1)
+in (let _104_19 = (let _104_18 = (FStar_Absyn_Syntax.null_t_binder k2)
+in (_104_18)::[])
+in (_104_20)::_104_19))
+in (_104_21, k'))
+in (FStar_Absyn_Syntax.mk_Kind_arrow _104_22 FStar_Absyn_Syntax.dummyRange)))
 
-# 38 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 55 "FStar.Absyn.Const.fst"
+let ktern : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k1 k2 k3 k' -> (let _104_37 = (let _104_36 = (let _104_35 = (FStar_Absyn_Syntax.null_t_binder k1)
+in (let _104_34 = (let _104_33 = (FStar_Absyn_Syntax.null_t_binder k2)
+in (let _104_32 = (let _104_31 = (FStar_Absyn_Syntax.null_t_binder k3)
+in (_104_31)::[])
+in (_104_33)::_104_32))
+in (_104_35)::_104_34))
+in (_104_36, k'))
+in (FStar_Absyn_Syntax.mk_Kind_arrow _104_37 FStar_Absyn_Syntax.dummyRange)))
 
-let list_lid : FStar_Ident.lident = (pconst "list")
+# 58 "FStar.Absyn.Const.fst"
+let true_lid : FStar_Absyn_Syntax.lident = (pconst "True")
 
-# 39 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 59 "FStar.Absyn.Const.fst"
+let false_lid : FStar_Absyn_Syntax.lident = (pconst "False")
 
-let pattern_lid : FStar_Ident.lident = (pconst "pattern")
+# 60 "FStar.Absyn.Const.fst"
+let and_lid : FStar_Absyn_Syntax.lident = (pconst "l_and")
 
-# 40 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 61 "FStar.Absyn.Const.fst"
+let or_lid : FStar_Absyn_Syntax.lident = (pconst "l_or")
 
-let precedes_lid : FStar_Ident.lident = (pconst "Precedes")
+# 62 "FStar.Absyn.Const.fst"
+let not_lid : FStar_Absyn_Syntax.lident = (pconst "l_not")
 
-# 41 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 63 "FStar.Absyn.Const.fst"
+let imp_lid : FStar_Absyn_Syntax.lident = (pconst "l_imp")
 
-let lex_t_lid : FStar_Ident.lident = (pconst "lex_t")
+# 64 "FStar.Absyn.Const.fst"
+let iff_lid : FStar_Absyn_Syntax.lident = (pconst "l_iff")
 
-# 42 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 65 "FStar.Absyn.Const.fst"
+let ite_lid : FStar_Absyn_Syntax.lident = (pconst "ITE")
 
-let lexcons_lid : FStar_Ident.lident = (pconst "LexCons")
+# 66 "FStar.Absyn.Const.fst"
+let exists_lid : FStar_Absyn_Syntax.lident = (pconst "Exists")
 
-# 43 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 67 "FStar.Absyn.Const.fst"
+let forall_lid : FStar_Absyn_Syntax.lident = (pconst "Forall")
 
-let lextop_lid : FStar_Ident.lident = (pconst "LexTop")
+# 68 "FStar.Absyn.Const.fst"
+let exTyp_lid : FStar_Absyn_Syntax.lident = (pconst "ExistsTyp")
 
-# 44 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 69 "FStar.Absyn.Const.fst"
+let allTyp_lid : FStar_Absyn_Syntax.lident = (pconst "ForallTyp")
 
-let smtpat_lid : FStar_Ident.lident = (pconst "SMTPat")
+# 70 "FStar.Absyn.Const.fst"
+let b2t_lid : FStar_Absyn_Syntax.lident = (pconst "b2t")
 
-# 45 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 71 "FStar.Absyn.Const.fst"
+let using_IH : FStar_Absyn_Syntax.lident = (pconst "InductionHyp")
 
-let smtpatT_lid : FStar_Ident.lident = (pconst "SMTPatT")
+# 72 "FStar.Absyn.Const.fst"
+let using_lem : FStar_Absyn_Syntax.lident = (pconst "Using")
 
-# 46 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 73 "FStar.Absyn.Const.fst"
+let admit_lid : FStar_Absyn_Syntax.lident = (pconst "admit")
 
-let smtpatOr_lid : FStar_Ident.lident = (pconst "SMTPatOr")
+# 74 "FStar.Absyn.Const.fst"
+let magic_lid : FStar_Absyn_Syntax.lident = (pconst "magic")
 
-# 48 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 77 "FStar.Absyn.Const.fst"
+let eq_lid : FStar_Absyn_Syntax.lident = (pconst "Eq")
 
-let int32_lid : FStar_Ident.lident = (p2l (("FStar")::("Int32")::("int32")::[]))
+# 78 "FStar.Absyn.Const.fst"
+let eq2_lid : FStar_Absyn_Syntax.lident = (pconst "Eq2")
 
-# 49 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 79 "FStar.Absyn.Const.fst"
+let eqA_lid : FStar_Absyn_Syntax.lident = (pconst "EqA")
 
-let int31_lid : FStar_Ident.lident = (p2l (("FStar")::("Int31")::("int31")::[]))
+# 80 "FStar.Absyn.Const.fst"
+let eqT_lid : FStar_Absyn_Syntax.lident = (pconst "EqTyp")
 
-# 50 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 81 "FStar.Absyn.Const.fst"
+let neq_lid : FStar_Absyn_Syntax.lident = (pconst "neq")
 
-let heap_lid : FStar_Ident.lident = (p2l (("FStar")::("Heap")::("heap")::[]))
+# 82 "FStar.Absyn.Const.fst"
+let neq2_lid : FStar_Absyn_Syntax.lident = (pconst "neq2")
 
-# 53 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 85 "FStar.Absyn.Const.fst"
+let exp_true_bool : FStar_Absyn_Syntax.exp = (FStar_Absyn_Syntax.mk_Exp_constant (FStar_Const.Const_bool (true)) None FStar_Absyn_Syntax.dummyRange)
 
-let kunary : (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k k' -> (FStar_Absyn_Syntax.mk_Kind_arrow (((FStar_Absyn_Syntax.null_t_binder k))::[], k') FStar_Absyn_Syntax.dummyRange))
+# 86 "FStar.Absyn.Const.fst"
+let exp_false_bool : FStar_Absyn_Syntax.exp = (FStar_Absyn_Syntax.mk_Exp_constant (FStar_Const.Const_bool (false)) None FStar_Absyn_Syntax.dummyRange)
 
-# 54 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 87 "FStar.Absyn.Const.fst"
+let exp_unit : FStar_Absyn_Syntax.exp = (FStar_Absyn_Syntax.mk_Exp_constant FStar_Const.Const_unit None FStar_Absyn_Syntax.dummyRange)
 
-let kbin : (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k1 k2 k' -> (FStar_Absyn_Syntax.mk_Kind_arrow (((FStar_Absyn_Syntax.null_t_binder k1))::((FStar_Absyn_Syntax.null_t_binder k2))::[], k') FStar_Absyn_Syntax.dummyRange))
+# 88 "FStar.Absyn.Const.fst"
+let cons_lid : FStar_Absyn_Syntax.lident = (pconst "Cons")
 
-# 55 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 89 "FStar.Absyn.Const.fst"
+let nil_lid : FStar_Absyn_Syntax.lident = (pconst "Nil")
 
-let ktern : (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k1 k2 k3 k' -> (FStar_Absyn_Syntax.mk_Kind_arrow (((FStar_Absyn_Syntax.null_t_binder k1))::((FStar_Absyn_Syntax.null_t_binder k2))::((FStar_Absyn_Syntax.null_t_binder k3))::[], k') FStar_Absyn_Syntax.dummyRange))
+# 90 "FStar.Absyn.Const.fst"
+let assume_lid : FStar_Absyn_Syntax.lident = (pconst "_assume")
 
-# 58 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 91 "FStar.Absyn.Const.fst"
+let assert_lid : FStar_Absyn_Syntax.lident = (pconst "_assert")
 
-let true_lid : FStar_Ident.lident = (pconst "True")
+# 92 "FStar.Absyn.Const.fst"
+let list_append_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("List")::("append")::[]))
 
-# 59 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 93 "FStar.Absyn.Const.fst"
+let strcat_lid : FStar_Absyn_Syntax.lident = (p2l (("Prims")::("strcat")::[]))
 
-let false_lid : FStar_Ident.lident = (pconst "False")
+# 94 "FStar.Absyn.Const.fst"
+let let_in_typ : FStar_Absyn_Syntax.lident = (p2l (("Prims")::("Let")::[]))
 
-# 60 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 97 "FStar.Absyn.Const.fst"
+let op_Eq : FStar_Absyn_Syntax.lident = (pconst "op_Equality")
 
-let and_lid : FStar_Ident.lident = (pconst "l_and")
+# 98 "FStar.Absyn.Const.fst"
+let op_notEq : FStar_Absyn_Syntax.lident = (pconst "op_disEquality")
 
-# 61 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 99 "FStar.Absyn.Const.fst"
+let op_LT : FStar_Absyn_Syntax.lident = (pconst "op_LessThan")
 
-let or_lid : FStar_Ident.lident = (pconst "l_or")
+# 100 "FStar.Absyn.Const.fst"
+let op_LTE : FStar_Absyn_Syntax.lident = (pconst "op_LessThanOrEqual")
 
-# 62 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 101 "FStar.Absyn.Const.fst"
+let op_GT : FStar_Absyn_Syntax.lident = (pconst "op_GreaterThan")
 
-let not_lid : FStar_Ident.lident = (pconst "l_not")
+# 102 "FStar.Absyn.Const.fst"
+let op_GTE : FStar_Absyn_Syntax.lident = (pconst "op_GreaterThanOrEqual")
 
-# 63 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 103 "FStar.Absyn.Const.fst"
+let op_Subtraction : FStar_Absyn_Syntax.lident = (pconst "op_Subtraction")
 
-let imp_lid : FStar_Ident.lident = (pconst "l_imp")
+# 104 "FStar.Absyn.Const.fst"
+let op_Minus : FStar_Absyn_Syntax.lident = (pconst "op_Minus")
 
-# 64 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 105 "FStar.Absyn.Const.fst"
+let op_Addition : FStar_Absyn_Syntax.lident = (pconst "op_Addition")
 
-let iff_lid : FStar_Ident.lident = (pconst "l_iff")
+# 106 "FStar.Absyn.Const.fst"
+let op_Multiply : FStar_Absyn_Syntax.lident = (pconst "op_Multiply")
 
-# 65 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 107 "FStar.Absyn.Const.fst"
+let op_Division : FStar_Absyn_Syntax.lident = (pconst "op_Division")
 
-let ite_lid : FStar_Ident.lident = (pconst "ITE")
+# 108 "FStar.Absyn.Const.fst"
+let op_Modulus : FStar_Absyn_Syntax.lident = (pconst "op_Modulus")
 
-# 66 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 109 "FStar.Absyn.Const.fst"
+let op_And : FStar_Absyn_Syntax.lident = (pconst "op_AmpAmp")
 
-let exists_lid : FStar_Ident.lident = (pconst "Exists")
+# 110 "FStar.Absyn.Const.fst"
+let op_Or : FStar_Absyn_Syntax.lident = (pconst "op_BarBar")
 
-# 67 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 111 "FStar.Absyn.Const.fst"
+let op_Negation : FStar_Absyn_Syntax.lident = (pconst "op_Negation")
 
-let forall_lid : FStar_Ident.lident = (pconst "Forall")
+# 114 "FStar.Absyn.Const.fst"
+let array_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Array")::("array")::[]))
 
-# 68 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 115 "FStar.Absyn.Const.fst"
+let array_mk_array_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Array")::("mk_array")::[]))
 
-let exTyp_lid : FStar_Ident.lident = (pconst "ExistsTyp")
+# 118 "FStar.Absyn.Const.fst"
+let st_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::[]))
 
-# 69 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 119 "FStar.Absyn.Const.fst"
+let write_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::("write")::[]))
 
-let allTyp_lid : FStar_Ident.lident = (pconst "ForallTyp")
+# 120 "FStar.Absyn.Const.fst"
+let read_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::("read")::[]))
 
-# 70 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 121 "FStar.Absyn.Const.fst"
+let alloc_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::("alloc")::[]))
 
-let b2t_lid : FStar_Ident.lident = (pconst "b2t")
+# 122 "FStar.Absyn.Const.fst"
+let op_ColonEq : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::("op_Colon_Equals")::[]))
 
-# 71 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 125 "FStar.Absyn.Const.fst"
+let ref_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Heap")::("ref")::[]))
 
-let using_IH : FStar_Ident.lident = (pconst "InductionHyp")
+# 126 "FStar.Absyn.Const.fst"
+let heap_ref : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Heap")::("Ref")::[]))
 
-# 72 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 127 "FStar.Absyn.Const.fst"
+let set_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::[]))
 
-let using_lem : FStar_Ident.lident = (pconst "Using")
+# 128 "FStar.Absyn.Const.fst"
+let set_empty : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::("empty")::[]))
 
-# 73 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 129 "FStar.Absyn.Const.fst"
+let set_singleton : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::("singleton")::[]))
 
-let admit_lid : FStar_Ident.lident = (pconst "admit")
+# 130 "FStar.Absyn.Const.fst"
+let set_union : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::("union")::[]))
 
-# 74 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 133 "FStar.Absyn.Const.fst"
+let effect_PURE_lid : FStar_Absyn_Syntax.lident = (pconst "PURE")
 
-let magic_lid : FStar_Ident.lident = (pconst "magic")
+# 134 "FStar.Absyn.Const.fst"
+let effect_Pure_lid : FStar_Absyn_Syntax.lident = (pconst "Pure")
 
-# 77 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 135 "FStar.Absyn.Const.fst"
+let effect_Tot_lid : FStar_Absyn_Syntax.lident = (pconst "Tot")
 
-let eq_lid : FStar_Ident.lident = (pconst "Eq")
+# 136 "FStar.Absyn.Const.fst"
+let effect_Lemma_lid : FStar_Absyn_Syntax.lident = (pconst "Lemma")
 
-# 78 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 137 "FStar.Absyn.Const.fst"
+let effect_GTot_lid : FStar_Absyn_Syntax.lident = (pconst "GTot")
 
-let eq2_lid : FStar_Ident.lident = (pconst "Eq2")
+# 138 "FStar.Absyn.Const.fst"
+let effect_GHOST_lid : FStar_Absyn_Syntax.lident = (pconst "GHOST")
 
-# 79 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 139 "FStar.Absyn.Const.fst"
+let effect_Ghost_lid : FStar_Absyn_Syntax.lident = (pconst "Ghost")
 
-let eqA_lid : FStar_Ident.lident = (pconst "EqA")
+# 142 "FStar.Absyn.Const.fst"
+let all_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::[]))
 
-# 80 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 143 "FStar.Absyn.Const.fst"
+let effect_ALL_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("ALL")::[]))
 
-let eqT_lid : FStar_Ident.lident = (pconst "EqTyp")
+# 144 "FStar.Absyn.Const.fst"
+let effect_ML_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("ML")::[]))
 
-# 81 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 145 "FStar.Absyn.Const.fst"
+let failwith_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("failwith")::[]))
 
-let neq_lid : FStar_Ident.lident = (pconst "neq")
+# 146 "FStar.Absyn.Const.fst"
+let pipe_right_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("pipe_right")::[]))
 
-# 82 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 147 "FStar.Absyn.Const.fst"
+let pipe_left_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("pipe_left")::[]))
 
-let neq2_lid : FStar_Ident.lident = (pconst "neq2")
+# 148 "FStar.Absyn.Const.fst"
+let try_with_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("try_with")::[]))
 
-# 85 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
+# 150 "FStar.Absyn.Const.fst"
+let as_requires : FStar_Absyn_Syntax.lident = (pconst "as_requires")
 
-let exp_true_bool : (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (FStar_Absyn_Syntax.mk_Exp_constant (FStar_Const.Const_bool (true)) None FStar_Absyn_Syntax.dummyRange)
+# 151 "FStar.Absyn.Const.fst"
+let as_ensures : FStar_Absyn_Syntax.lident = (pconst "as_ensures")
 
-# 86 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let exp_false_bool : (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (FStar_Absyn_Syntax.mk_Exp_constant (FStar_Const.Const_bool (false)) None FStar_Absyn_Syntax.dummyRange)
-
-# 87 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let exp_unit : (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (FStar_Absyn_Syntax.mk_Exp_constant FStar_Const.Const_unit None FStar_Absyn_Syntax.dummyRange)
-
-# 88 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let cons_lid : FStar_Ident.lident = (pconst "Cons")
-
-# 89 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let nil_lid : FStar_Ident.lident = (pconst "Nil")
-
-# 90 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let assume_lid : FStar_Ident.lident = (pconst "_assume")
-
-# 91 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let assert_lid : FStar_Ident.lident = (pconst "_assert")
-
-# 92 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let list_append_lid : FStar_Ident.lident = (p2l (("FStar")::("List")::("append")::[]))
-
-# 93 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let strcat_lid : FStar_Ident.lident = (p2l (("Prims")::("strcat")::[]))
-
-# 94 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let let_in_typ : FStar_Ident.lident = (p2l (("Prims")::("Let")::[]))
-
-# 97 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_Eq : FStar_Ident.lident = (pconst "op_Equality")
-
-# 98 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_notEq : FStar_Ident.lident = (pconst "op_disEquality")
-
-# 99 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_LT : FStar_Ident.lident = (pconst "op_LessThan")
-
-# 100 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_LTE : FStar_Ident.lident = (pconst "op_LessThanOrEqual")
-
-# 101 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_GT : FStar_Ident.lident = (pconst "op_GreaterThan")
-
-# 102 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_GTE : FStar_Ident.lident = (pconst "op_GreaterThanOrEqual")
-
-# 103 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_Subtraction : FStar_Ident.lident = (pconst "op_Subtraction")
-
-# 104 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_Minus : FStar_Ident.lident = (pconst "op_Minus")
-
-# 105 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_Addition : FStar_Ident.lident = (pconst "op_Addition")
-
-# 106 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_Multiply : FStar_Ident.lident = (pconst "op_Multiply")
-
-# 107 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_Division : FStar_Ident.lident = (pconst "op_Division")
-
-# 108 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_Modulus : FStar_Ident.lident = (pconst "op_Modulus")
-
-# 109 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_And : FStar_Ident.lident = (pconst "op_AmpAmp")
-
-# 110 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_Or : FStar_Ident.lident = (pconst "op_BarBar")
-
-# 111 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_Negation : FStar_Ident.lident = (pconst "op_Negation")
-
-# 114 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let array_lid : FStar_Ident.lident = (p2l (("FStar")::("Array")::("array")::[]))
-
-# 115 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let array_mk_array_lid : FStar_Ident.lident = (p2l (("FStar")::("Array")::("mk_array")::[]))
-
-# 118 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let st_lid : FStar_Ident.lident = (p2l (("FStar")::("ST")::[]))
-
-# 119 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let write_lid : FStar_Ident.lident = (p2l (("FStar")::("ST")::("write")::[]))
-
-# 120 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let read_lid : FStar_Ident.lident = (p2l (("FStar")::("ST")::("read")::[]))
-
-# 121 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let alloc_lid : FStar_Ident.lident = (p2l (("FStar")::("ST")::("alloc")::[]))
-
-# 122 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let op_ColonEq : FStar_Ident.lident = (p2l (("FStar")::("ST")::("op_Colon_Equals")::[]))
-
-# 125 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let ref_lid : FStar_Ident.lident = (p2l (("FStar")::("Heap")::("ref")::[]))
-
-# 126 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let heap_ref : FStar_Ident.lident = (p2l (("FStar")::("Heap")::("Ref")::[]))
-
-# 127 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let set_lid : FStar_Ident.lident = (p2l (("FStar")::("Set")::[]))
-
-# 128 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let set_empty : FStar_Ident.lident = (p2l (("FStar")::("Set")::("empty")::[]))
-
-# 129 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let set_singleton : FStar_Ident.lident = (p2l (("FStar")::("Set")::("singleton")::[]))
-
-# 130 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let set_union : FStar_Ident.lident = (p2l (("FStar")::("Set")::("union")::[]))
-
-# 133 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let effect_PURE_lid : FStar_Ident.lident = (pconst "PURE")
-
-# 134 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let effect_Pure_lid : FStar_Ident.lident = (pconst "Pure")
-
-# 135 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let effect_Tot_lid : FStar_Ident.lident = (pconst "Tot")
-
-# 136 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let effect_Lemma_lid : FStar_Ident.lident = (pconst "Lemma")
-
-# 137 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let effect_GTot_lid : FStar_Ident.lident = (pconst "GTot")
-
-# 138 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let effect_GHOST_lid : FStar_Ident.lident = (pconst "GHOST")
-
-# 139 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let effect_Ghost_lid : FStar_Ident.lident = (pconst "Ghost")
-
-# 142 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let all_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::[]))
-
-# 143 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let effect_ALL_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::("ALL")::[]))
-
-# 144 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let effect_ML_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::("ML")::[]))
-
-# 145 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let failwith_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::("failwith")::[]))
-
-# 146 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let pipe_right_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::("pipe_right")::[]))
-
-# 147 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let pipe_left_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::("pipe_left")::[]))
-
-# 148 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let try_with_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::("try_with")::[]))
-
-# 150 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let as_requires : FStar_Ident.lident = (pconst "as_requires")
-
-# 151 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let as_ensures : FStar_Ident.lident = (pconst "as_ensures")
-
-# 152 "D:\\workspace\\universes\\FStar\\src\\absyn\\const.fs"
-
-let decreases_lid : FStar_Ident.lident = (pconst "decreases")
+# 152 "FStar.Absyn.Const.fst"
+let decreases_lid : FStar_Absyn_Syntax.lident = (pconst "decreases")
 
 
 

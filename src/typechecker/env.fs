@@ -39,20 +39,6 @@ type delta_level =
   | OnlyInline
   | Unfold
 
-let visible_at d q = match d, q with 
-  | NoDelta,    _         
-  | OnlyInline, Inline 
-  | Unfold,     Inline 
-  | Unfold,     Unfoldable -> true
-  | _ -> false 
-
-let glb_delta d1 d2 = match d1, d2 with 
-    | NoDelta, _
-    | _, NoDelta -> NoDelta
-    | OnlyInline, _
-    | _, OnlyInline -> OnlyInline
-    | Unfold, Unfold -> Unfold
-
 type mlift = typ -> typ -> typ
 
 type edge = {
@@ -86,7 +72,8 @@ type env = {
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   default_effects:list<(lident*lident)>;        (* [(x,y)] ... y is the default effect of x *)
-  type_of        :env -> term -> typ*guard_t;   (* a callback to the type-checker; check_term g e t ==> g |- e : Tot t *)
+  type_of        :env -> term -> typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
+  universe_of    :env -> term -> universe;      (* a callback to the type-checker; g |- e : Tot (Type u) *)       
   use_bv_sorts   :bool;                         (* use bv.sort for a bound-variable's type rather than consulting gamma *)
 }
 and solver_t = {
@@ -113,6 +100,24 @@ type env_t = env
 type implicits = list<(env * uvar * term * typ * Range.range)>
 
 type sigtable = Util.smap<sigelt>
+
+// VALS_HACK_HERE
+
+let visible_at d q = match d, q with 
+  | NoDelta,    _         
+  | OnlyInline, Inline 
+  | Unfold,     Inline 
+  | Unfold,     Unfoldable -> true
+  | _ -> false 
+
+let glb_delta d1 d2 = match d1, d2 with 
+    | NoDelta, _
+    | _, NoDelta -> NoDelta
+    | OnlyInline, _
+    | _, OnlyInline -> OnlyInline
+    | Unfold, Unfold -> Unfold
+
+
 let default_table_size = 200
 let new_sigtab () = Util.smap_create default_table_size
 
@@ -137,6 +142,7 @@ let initial_env tc solver module_lid =
     admit=false;
     default_effects=[];
     type_of=tc;
+    universe_of=(fun g e -> U_zero); //TODO: FIXME!
     use_bv_sorts=false;
   }
 
@@ -208,9 +214,15 @@ let inst_tscheme : tscheme -> universes * term = function
       let us' = us |> List.map (fun _ -> new_u_univ()) in
       inst_tscheme_with (us, t) us'
 
-let inst_effect_fun (env:env) (ed:eff_decl) (us, t) = 
-    match ed.binders with 
-        | [] -> snd (inst_tscheme (ed.univs@us, t))
+let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
+    match ed.binders with
+        | [] -> 
+          let univs = ed.univs@us in
+          if List.length insts <> List.length univs
+          then failwith (Util.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n" 
+                            (string_of_int <| List.length univs) (string_of_int <| List.length insts) 
+                            (Print.lid_to_string ed.mname) (Print.term_to_string t));
+          snd (inst_tscheme_with (ed.univs@us, t) insts)
         | _  -> failwith (Util.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
 
 type tri = 
@@ -262,6 +274,10 @@ let lookup_qname env (lid:lident) : option<either<(universes * typ), (sigelt * o
         | Some se -> Some (Inr (se, None))
         | None -> None
   else None
+
+let lid_exists env l = match lookup_qname env l with 
+    | None -> false
+    | Some _ -> true
 
 let rec add_sigelt env se = match se with
     | Sig_bundle(ses, _, _, _) -> add_sigelts env ses
@@ -413,13 +429,26 @@ let try_lookup_val_decl env lid =
     | Some (Inr (Sig_declare_typ(_, uvs, t, q, _), None)) -> Some ((uvs,t),q)
     | _ -> None
 
-let lookup_effect_abbrev env lid =
+let lookup_effect_abbrev env (univ:universe) lid =
   match lookup_qname env lid with
     | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _), None)) ->
       if quals |> Util.for_some (function Irreducible -> true | _ -> false)
       then None
-      else let _, binders, c = Util.open_univ_vars_binders_and_comp univs binders c in 
-           Some (binders, c)
+      else let insts = if Ident.lid_equals lid Const.effect_Lemma_lid //TODO: Lemma is a hack! It is more universe polymorphic than expected, because of the SMTPats ... which should be irrelevant, but unfortunately are not 
+                       then univ::[U_zero; U_zero]
+                       else [univ] in
+           begin match binders, univs with
+             | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
+             | _, _::_::_ when not (Ident.lid_equals lid Const.effect_Lemma_lid) -> 
+                failwith (Util.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
+                           (Print.lid_to_string lid) (string_of_int <| List.length univs))
+             | _ -> let _, t = inst_tscheme_with (univs, Util.arrow binders c) insts in 
+                    begin match (Subst.compress t).n with 
+                        | Tm_arrow(binders, c) -> 
+                          Some (binders, c)
+                        | _ -> failwith "Impossible"
+                    end
+          end
     | _ -> None
 
 let datacons_of_typ env lid = 
@@ -447,6 +476,29 @@ let is_projector env (l:lident) : bool =
     match lookup_qname env l with
         | Some (Inr (Sig_declare_typ(_, _, _, quals, _), _)) ->
           Util.for_some (function Projector _ -> true | _ -> false) quals
+        | _ -> false
+
+let interpreted_symbols = 
+       [Const.op_Eq; 
+        Const.op_notEq;
+        Const.op_LT;   
+        Const.op_LTE;  
+        Const.op_GT;   
+        Const.op_GTE;  
+        Const.op_Subtraction; 
+        Const.op_Minus;       
+        Const.op_Addition;    
+        Const.op_Multiply;    
+        Const.op_Division;    
+        Const.op_Modulus;     
+        Const.op_And;         
+        Const.op_Or;          
+        Const.op_Negation]  
+
+let is_interpreted (env:env) head : bool = 
+    match (Util.un_uinst head).n with 
+        | Tm_fvar(fv, _) -> 
+          Util.for_some (Ident.lid_equals fv.v) interpreted_symbols
         | _ -> false
 
 ////////////////////////////////////////////////////////////

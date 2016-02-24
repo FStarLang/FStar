@@ -23,6 +23,8 @@ module SS = FStar.Syntax.Subst
 module U = FStar.Util
 type inst_t = list<(lident * universes)>
 
+// VALS_HACK_HERE
+
 let rec inst (s:inst_t) t = 
     let t = SS.compress t in
     let mk s = S.mk s !t.tk t.pos in
@@ -102,3 +104,7 @@ and inst_lcomp_opt s l = match l with
     | Some lc -> 
        Some ({lc with res_typ=inst s lc.res_typ;
                       comp=(fun () -> inst_comp s (lc.comp()))})
+
+let instantiate i t = match i with 
+    | [] -> t
+    | _ -> inst i t

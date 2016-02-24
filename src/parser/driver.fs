@@ -25,8 +25,6 @@ open FStar.Util
 open FStar.Absyn
 open FStar.Absyn.Syntax
 
-let print_error msg r =
-  Util.print_string (Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg)
 
 let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
 
@@ -60,7 +58,7 @@ let parse_file_raw fn =
     ast
 
   | Inl (Inr _) ->
-    Util.print1 "%s: Expected a module\n" fn;
+    Util.print1_error "%s: expected a module\n" fn;
     exit 1
 
   | Inr (msg, r) ->

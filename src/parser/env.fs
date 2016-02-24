@@ -45,6 +45,20 @@ type env = {
   expect_typ:           bool;                             (* syntatically, expect a type at this position in the term *)
 }
 
+type foundname =
+  | Term_name of typ
+  | Eff_name  of sigelt * lident
+
+type record_or_dc = {
+  typename: lident;
+  constrname: lident;
+  parms: binders;
+  fields: list<(fieldname * typ)>;
+  is_record:bool
+}
+
+// VALS_HACK_HERE
+
 let open_modules e = e.modules
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
@@ -104,10 +118,6 @@ let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a
                 let full_name = lid_of_ids (ids_of_lid ns @ ids) in
                 finder full_name) in
   aux (current_module env::env.open_namespaces)
-
-type foundname =
-  | Term_name of typ
-  | Eff_name  of sigelt * lident
 
 let fv_qual_of_se = function
     | Sig_datacon(_, _, _, l, _, quals, _, _) ->
@@ -238,14 +248,6 @@ let find_all_datacons env (lid:lident) =
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
-type record_or_dc = {
-  typename: lident;
-  constrname: lident;
-  parms: binders;
-  fields: list<(fieldname * typ)>;
-  is_record:bool
-}
-
 //no top-level pattern in F*, so need to do this ugliness
 let record_cache_aux = 
     let record_cache : ref<list<list<record_or_dc>>> = Util.mk_ref [[]] in
@@ -293,7 +295,7 @@ let extract_record (e:env) = function
                 let is_rec = is_rec tags in 
                 let fields = formals |> List.collect (fun (x,q) ->
                         if S.is_null_bv x
-                        || (is_rec && q = Some Implicit)
+                        || (is_rec && S.is_implicit q)
                         then []
                         else [(qual constrname (if is_rec then Util.unmangle_field_name x.ppname else x.ppname), x.sort)]) in
                 let record = {typename=typename;
@@ -397,13 +399,12 @@ let push_sigelt env s =
 let push_namespace env lid =
   {env with open_namespaces = lid::env.open_namespaces}
 
-let check_admits nm env =
-  let warn = not (!Options.admit_fsi |> Util.for_some (fun l -> nm.str = l)) in
+let check_admits env =
   env.sigaccum |> List.iter (fun se -> match se with
     | Sig_declare_typ(l, u, t, quals, r) ->
       begin match try_lookup_lid env l with
         | None ->
-          if warn then Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
+          Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
           Util.smap_add (sigmap env) l.str (Sig_declare_typ(l, u, t, Assumption::quals, r), false)
         | Some _ -> ()
       end
@@ -469,7 +470,7 @@ let export_interface (m:lident) env =
 
 let finish_module_or_interface env modul =
   if not modul.is_interface
-  then check_admits modul.name env;
+  then check_admits env;
   finish env modul
 
 let prepare_module_or_interface intf admitted env mname =

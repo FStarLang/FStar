@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi Set;
-    other-files: ext.fst FStar.Set.fsi seq.fsi
-  --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -121,8 +117,6 @@ abstract type Eq (#a:Type) (s1:seq a) (s2:seq a) =
   (length s1 = length s2
    /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i)))
 
-(*This should be provable now*)
-(* private assume Extensionality: forall (a:Type) (s1:seq a) (s2:seq a).{:pattern (Eq s1 s2)} Eq s1 s2 <==> (s1=s2) *)
 abstract val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (length s1 = length s2
                /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i))))
@@ -136,11 +130,11 @@ abstract val lemma_eq_refl: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      [SMTPatT (Eq s1 s2)]
 let lemma_eq_refl #a s1 s2  = ()
 
+(*Would be nice to to not have to assume this again and instead derive it from FEq.
+  But, it doesn't work because in order to use FEq, we need to show that s1.contents has type (efun e b) *)
+assume Extensionality: forall (a:Type) (s1:seq a) (s2:seq a).{:pattern (Eq s1 s2)} Eq s1 s2 <==> (s1=s2)
 abstract val lemma_eq_elim: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (Eq s1 s2))
      (ensures (s1=s2))
      [SMTPatT (Eq s1 s2)]
 let lemma_eq_elim #a s1 s2  = ()
-
-
-

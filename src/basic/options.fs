@@ -65,7 +65,7 @@ let z3timeout = Util.mk_ref 5
 let admit_smt_queries = Util.mk_ref false
 let pretype = Util.mk_ref true
 let codegen = Util.mk_ref None
-let admit_fsi = Util.mk_ref []
+let no_extract = Util.mk_ref []
 let codegen_libs = Util.mk_ref []
 let trace_error = Util.mk_ref false
 let verify = Util.mk_ref true
@@ -132,7 +132,7 @@ let init_options () =
     pretype  := true;
     codegen  := None;
     codegen_libs := [];
-    admit_fsi  := [];
+    no_extract  := [];
     trace_error  := false;
     verify  := true;
     full_context_dependency  := true;
@@ -180,6 +180,12 @@ let get_fstar_home () = match !fstar_home_opt with
     | None -> ignore <| set_fstar_home(); !_fstar_home
     | Some x -> x
 
+let include_path_base_dirs = 
+  ["/lib"; "/lib/fstar"; "/stdlib" ; "/stdlib/fstar"]
+
+let universe_include_path_base_dirs = 
+  ["/ulib"]
+
 let get_include_path () =
   (* Allows running fstar either from the source repository, or after
    * installation (into /usr/local for instance) *)
@@ -187,7 +193,8 @@ let get_include_path () =
     !_include_path
   else
   let h = get_fstar_home () in
-  !_include_path @ ["."; h ^ "/lib"; h ^ "/lib/fstar"; h ^ "/stdlib" ; h ^ "/stdlib/fstar"]
+  let defs = if !universes then universe_include_path_base_dirs else include_path_base_dirs in
+  !_include_path @ ("."::(defs |> List.map (fun x -> h ^ x)))
 
 let find_file filename =
     let search_path = get_include_path () in
@@ -246,8 +253,7 @@ let display_usage specs =
 
 let rec specs () : list<Getopt.opt> =
   let specs =
-    [( noshort, "admit_fsi", OneArg ((fun x -> admit_fsi := x::!admit_fsi), "module name"), "Treat .fsi as a .fst");
-     ( noshort, "admit_smt_queries", OneArg ((fun s -> admit_smt_queries := (if s="true" then true else if s="false" then false else failwith("Invalid argument to --admit_smt_queries"))), "true|false"), "Admit SMT queries (UNSAFE! But, useful during development); default: 'false'");
+    [( noshort, "admit_smt_queries", OneArg ((fun s -> admit_smt_queries := (if s="true" then true else if s="false" then false else failwith("Invalid argument to --admit_smt_queries"))), "true|false"), "Admit SMT queries (UNSAFE! But, useful during development); default: 'false'");
      ( noshort, "cardinality", OneArg ((fun x -> cardinality := validate_cardinality x), "off|warn|check"), "Check cardinality constraints on inductive data types (default 'off')");
      ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s), "OCaml|FSharp"), "Generate code for execution");
      ( noshort, "codegen-lib", OneArg ((fun s -> codegen_libs := (Util.split s ".")::!codegen_libs), "namespace"), "External runtime library library");
@@ -277,6 +283,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "MLish", ZeroArgs(fun () -> full_context_dependency := false), "Introduce unification variables that are only dependent on the type variables in the context");
      ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x), "positive integer"), "Maximum number of cores to use for the solver (default 1)");
      ( noshort, "no_default_includes", ZeroArgs (fun () -> no_default_includes := true), "Ignore the default module search paths");
+     ( noshort, "no_extract", OneArg ((fun x -> no_extract := x::!no_extract), "module name"), "Do not extract code from this module");
      ( noshort, "no_fs_typ_app", ZeroArgs (fun () -> fs_typ_app := false), "Do not allow the use of t<t1,...,tn> syntax for type applications");
      ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir");
      ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
@@ -333,7 +340,6 @@ let dont_gen_projectors m = List.contains m (!__temp_no_proj)
 
 let should_print_message m =
     should_verify m
-    && not (List.contains m !admit_fsi)
     && m <> "Prims"
 
 let set_options =

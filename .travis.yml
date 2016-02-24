@@ -1,0 +1,42 @@
+sudo: required
+dist: trusty
+language: csharp
+
+before_install:
+  - sudo add-apt-repository --yes ppa:avsm/ppa
+  - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
+  - sudo add-apt-repository --yes ppa:0k53d-karl-f830m/openssl
+  - sudo apt-get -qq update
+
+install:
+  - sudo apt-get install --yes libssl-dev opam libsqlite3-dev g++-5 gcc-5
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 200
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 200
+  - export OPAMYES=true
+  - opam init
+  - eval $(opam config env)
+  - opam switch 4.02.3
+  - eval $(opam config env)
+  - opam install batteries sqlite3 fileutils stdint
+  - export Z3=z3-4.4.1-x64-ubuntu-14.04
+  - wget https://github.com/Z3Prover/z3/releases/download/z3-4.4.1/$Z3.zip
+  - unzip $Z3.zip
+  - export PATH=/home/travis/build/FStarLang/FStar/$Z3/bin:/home/travis/build/FStarLang/FStar/bin:$PATH
+
+script:
+  - echo -e "\e[31m=== Some info about the environment ===\e[0m"
+  - ocamlfind ocamlopt -config
+  - free -h
+  - echo -e "\e[31m=== Bootstrap cycle ===\e[0m"
+  - make -C src
+  - make -C src ocaml
+  - make -C src/ocaml-output
+  - echo -e "\e[31m=== Running tests ===\e[0m"
+  - make -C examples/unit-tests
+  - make -C src regressions OTHERFLAGS=--lax
+
+notifications:
+  slack: everestexpedition:NqWwcvMIxouVIbC5IhF0loqX
+
+git:
+    depth: 3

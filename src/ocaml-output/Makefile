@@ -1,18 +1,21 @@
 .PHONY: all __force__
 
-OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g
-OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
-OCAMLDEP=ocamldep
-INCLUDES=                 # all relevant -I options here
-OCAMLFLAGS=$(INCLUDES)    -w -8 # add other options for ocamlc here
-OCAMLOPTFLAGS=$(INCLUDES) -w -8 # add other options for ocamlopt here
+FSTAR_HOME=../..
 
-FSTAR_STDLIB=FStar_ST.cmx FStar_All.cmx FStar_Option.cmx FStar_List.cmx FStar_Char.cmx FStar_String.cmx
+OPTIONS=-thread -package batteries -linkpkg -g -w "-28"
+
+OCAMLC=ocamlfind ocamlc $(OPTIONS)
+OCAMLOPT=ocamlfind ocamlopt $(OPTIONS)
+OCAMLDEP=ocamldep
+INCLUDES=-I $(FSTAR_HOME)/lib/ml/native_int -I $(FSTAR_HOME)/lib/ml/ # all relevant -I options here
+OCAMLFLAGS=$(INCLUDES)    -w -8  # add other options for ocamlc here
+OCAMLOPTFLAGS=$(INCLUDES) -w -8  # add other options for ocamlopt here
+
 COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
-FSTAR_OBJS=prims.cmx $(FSTAR_STDLIB) $(COMPILER_ML_LIB) $(PARSER_ML_LIB) FStar_Version.cmx FStar_Options.cmx FStar_Ident.cmx FStar_Const.cmx FStar_Absyn_Syntax.cmx FStar_Absyn_Const.cmx FStar_Absyn_Visit.cmx FStar_Absyn_Util.cmx FStar_Absyn_Print.cmx FStar_Absyn_SSyntax.cmx FStar_Syntax_Syntax.cmx FStar_Syntax_Const.cmx FStar_Syntax_Subst.cmx FStar_Syntax_Free.cmx FStar_Syntax_InstFV.cmx FStar_Syntax_Util.cmx FStar_Syntax_Print.cmx FStar_Tc_Env.cmx FStar_Tc_Recheck.cmx FStar_Tc_Normalize.cmx FStar_Tc_Errors.cmx FStar_Tc_Rel.cmx FStar_Tc_Util.cmx FStar_Tc_Tc.cmx FStar_Parser_AST.cmx FStar_Parser_DesugarEnv.cmx FStar_Parser_Desugar.cmx FStar_Parser_Env.cmx FStar_Parser_ToSyntax.cmx FStar_Parser_Parse.cmx FStar_Parser_Lexhelp.cmx FStar_Parser_LexFStar.cmx FStar_Parser_ParseIt.cmx FStar_Parser_Driver.cmx FStar_Parser_Dep.cmx FStar_ToSMT_Term.cmx FStar_ToSMT_Z3.cmx FStar_ToSMT_SplitQueryCases.cmx FStar_ToSMT_Encode.cmx FSharp_Format.cmx FStar_Extraction_ML_Syntax.cmx FStar_Extraction_ML_Env.cmx FStar_Extraction_ML_Util.cmx FStar_Extraction_ML_Code.cmx FStar_Extraction_ML_ExtractTyp.cmx FStar_Extraction_ML_ExtractExp.cmx FStar_Extraction_ML_ExtractMod.cmx FStar_TypeChecker_Common.cmx FStar_TypeChecker_Env.cmx FStar_TypeChecker_Normalize.cmx  FStar_TypeChecker_Recheck.cmx FStar_TypeChecker_Errors.cmx FStar_TypeChecker_Rel.cmx FStar_TypeChecker_Util.cmx FStar_TypeChecker_Tc.cmx FStar_SMTEncoding_Term.cmx FStar_SMTEncoding_ErrorReporting.cmx FStar_SMTEncoding_SplitQueryCases.cmx FStar_SMTEncoding_Z3.cmx FStar_SMTEncoding_Encode.cmx FStar_FStar.cmx
+FSTAR_OBJS=$(COMPILER_ML_LIB) $(PARSER_ML_LIB) FStar_Version.cmx FStar_Options.cmx FStar_Ident.cmx FStar_Const.cmx FStar_Absyn_Syntax.cmx FStar_Absyn_Const.cmx FStar_Absyn_Visit.cmx FStar_Absyn_Util.cmx FStar_Absyn_Print.cmx FStar_Absyn_SSyntax.cmx FStar_Syntax_Syntax.cmx FStar_Syntax_Const.cmx FStar_Syntax_Subst.cmx FStar_Syntax_Free.cmx FStar_Syntax_InstFV.cmx FStar_Syntax_Util.cmx FStar_Syntax_Print.cmx FStar_Tc_Env.cmx FStar_Tc_Recheck.cmx FStar_Tc_Normalize.cmx FStar_Tc_Errors.cmx FStar_Tc_Rel.cmx FStar_Tc_Util.cmx FStar_Tc_Tc.cmx FStar_Parser_AST.cmx FStar_Parser_DesugarEnv.cmx FStar_Parser_Desugar.cmx FStar_Parser_Env.cmx FStar_Parser_ToSyntax.cmx FStar_Parser_Parse.cmx FStar_Parser_Lexhelp.cmx FStar_Parser_LexFStar.cmx FStar_Parser_ParseIt.cmx FStar_Parser_Driver.cmx FStar_Parser_Dep.cmx FStar_ToSMT_Term.cmx FStar_ToSMT_Z3.cmx FStar_ToSMT_SplitQueryCases.cmx FStar_ToSMT_Encode.cmx FStar_Format.cmx FStar_Extraction_ML_Syntax.cmx FStar_Extraction_ML_Env.cmx FStar_Extraction_ML_Util.cmx FStar_Extraction_ML_Code.cmx FStar_Extraction_ML_ExtractTyp.cmx FStar_Extraction_ML_ExtractExp.cmx FStar_Extraction_ML_ExtractMod.cmx FStar_TypeChecker_Common.cmx FStar_TypeChecker_Env.cmx FStar_TypeChecker_Normalize.cmx  FStar_TypeChecker_Recheck.cmx FStar_TypeChecker_Errors.cmx FStar_TypeChecker_Rel.cmx FStar_TypeChecker_Util.cmx FStar_TypeChecker_Tc.cmx FStar_SMTEncoding_Term.cmx FStar_SMTEncoding_ErrorReporting.cmx FStar_SMTEncoding_SplitQueryCases.cmx FStar_SMTEncoding_Z3.cmx FStar_SMTEncoding_Encode.cmx FStar_FStar.cmx
 
-GENERATED_FILES=prims.cmx $(FSTAR_STDLIB:.cmx=.ml) $(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml FStar_Parser_Dep.ml
+GENERATED_FILES=$(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml 
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
@@ -38,8 +41,9 @@ endif
 # FIXME this target is always rebuilt, regardless of whether the sources have
 # changed or not
 all:
-	make prep
-	make fstar.exe
+	$(MAKE) -C $(FSTAR_HOME)/lib/ml PRIMS_DIR=native_int
+	$(MAKE) prep
+	$(MAKE) -j 8 fstar.exe
 
 prep: parser copy_lib_files depend
 
@@ -63,16 +67,16 @@ parser:
 	ocamllex ../parser/ml/lex.mll -o FStar_Parser_LexFStar.ml
 	cp ../parser/ml/parseit.ml FStar_Parser_ParseIt.ml
 
-copy_lib_files:../../lib/ml/native_int/prims.ml $(addprefix ../../lib/ml/, $(FSTAR_STDLIB:.cmx=.ml)) $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml
+copy_lib_files: $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml
 	cp $^ .
 
 # Dependencies
 depend:
-	$(OCAMLDEP) $(INCLUDES) *.ml > .depend
+	$(OCAMLDEP) *.ml > .depend
 
 
 fstar.exe: $(FSTAR_OBJS) main.ml
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o fstar.exe $^
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(FSTAR_HOME)/lib/ml/fstarlib.cmxa -o fstar.exe $^
 	cp fstar.exe ../../bin/fstar.exe
 
 # always bump version for a release
@@ -169,6 +173,7 @@ endif
 
 # Clean up all files generated by targets in _this_ Makefile
 clean:
+	$(MAKE) -C $(FSTAR_HOME)/lib/ml clean
 	rm -dfr fstar
 	rm -f .depend fstar.exe *.cmi *.cmx *.cmo *.o
 	rm -f $(GENERATED_FILES)
