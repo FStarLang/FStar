@@ -1339,8 +1339,10 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
                 | Inl _ -> (* no patterns on type arguments *) []
                 | Inr ei ->
                     let projector = Tc.Env.lookup_projector env f.v i in //NS: TODO ... should this be a marked as a record projector?
-                    let sub_term = mk_Exp_app(Util.fvar None projector f.p, [varg scrutinee]) None f.p in
-                    [mk_guard sub_term ei]) |> List.flatten in
+                    if not <| Tc.Env.is_projector env projector //the projector may not exist, if it is inaccessible
+                    then [] 
+                    else let sub_term = mk_Exp_app(Util.fvar None projector f.p, [varg scrutinee]) None f.p in
+                         [mk_guard sub_term ei]) |> List.flatten in
             Util.mk_conj_l (head::sub_term_guards)
         | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range pat_exp.pos) (Print.exp_to_string pat_exp)) in
   let mk_guard s tsc pat =
