@@ -1,10 +1,7 @@
-absyn/obj/
-basic/obj/
-parser/obj/
-tc/obj/
-obj
 ocaml.ml
 fstarml.cm[io]
 fsharp-output
-/bin/
 /backend/
+
+[Bb]in/
+[Oo]bj/
