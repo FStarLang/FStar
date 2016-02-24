@@ -1649,7 +1649,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             let wl = solve_prob orig (Some guard) [] wl in
             solve env (attempt [base_prob] wl) in
         if problem.relation = EQ
-        then let ref_prob = TProb <| mk_problem (p_scope orig) orig phi1 EQ phi2 None "refinement formula" in
+        then let ref_prob = TProb <| mk_problem (mk_binder x1 :: p_scope orig) orig phi1 EQ phi2 None "refinement formula" in
              begin match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
                     | Failed _ -> fallback()
                     | Success _ -> 
@@ -1740,12 +1740,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
              || Env.is_interpreted env head2)   //we have something like (+ x1 x2) =?= (- y1 y2)
          && wl.smt_ok
          && problem.relation = EQ
-         && false
          then let uv1 = Free.uvars t1 in
               let uv2 = Free.uvars t2 in
               if Util.set_is_empty uv1 && Util.set_is_empty uv2 //and we don't have any unification variables left to solve within the terms
-              then let guard = Util.mk_eq tun tun t1 t2 in
-                   solve env (solve_prob orig (Some guard) [] wl)
+              then let guard = if eq_tm t1 t2
+                               then None
+                               else Some <| Util.mk_eq tun tun t1 t2 in
+                   solve env (solve_prob orig guard [] wl)
               else rigid_rigid_delta env orig wl head1 head2 t1 t2
          else rigid_rigid_delta env orig wl head1 head2 t1 t2
 

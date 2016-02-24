@@ -1,6 +1,6 @@
 VERFILES=ArrayRealized.fst Vector.fst
 include ../Makefile.include
-all: .all.ver bst rbtree
+all: .all.ver bst rbtree uall
 
 uall:
 	$(FSTAR) --universes ArrayRealized.fst Vector.fst
