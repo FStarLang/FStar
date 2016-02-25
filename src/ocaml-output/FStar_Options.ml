@@ -669,7 +669,7 @@ in (FStar_ST.op_Colon_Equals debug_level _99_110))), "Low|Medium|High|Extreme"))
 end))), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality"))::((FStar_Getopt.noshort, "explicit_deps", FStar_Getopt.ZeroArgs ((fun _20_212 -> (match (()) with
 | () -> begin
 (FStar_ST.op_Colon_Equals explicit_deps true)
-end))), "tell FStar to not find dependencies automatically because the user provides them on the command-line, along with the right --admit-fsi options"))::((FStar_Getopt.noshort, "fs_typ_app", FStar_Getopt.ZeroArgs ((fun _20_213 -> (match (()) with
+end))), "tell FStar to not find dependencies automatically because the user provides them on the command-line"))::((FStar_Getopt.noshort, "fs_typ_app", FStar_Getopt.ZeroArgs ((fun _20_213 -> (match (()) with
 | () -> begin
 (FStar_ST.op_Colon_Equals fs_typ_app true)
 end))), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator"))::((FStar_Getopt.noshort, "fsi", FStar_Getopt.ZeroArgs ((fun _20_214 -> (match (()) with
