@@ -257,7 +257,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "dep", OneArg ((fun x -> dep := Some x), "make|nubuild"), "Output the transitive closure of the dependency graph in a format suitable for the given tool");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
      ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
-     ( noshort, "explicit_deps", ZeroArgs (fun () -> explicit_deps := true), "tell FStar to not find dependencies automatically because the user provides them on the command-line, along with the right --admit-fsi options");
+     ( noshort, "explicit_deps", ZeroArgs (fun () -> explicit_deps := true), "tell FStar to not find dependencies automatically because the user provides them on the command-line");
      ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator");
      ( noshort, "fsi", ZeroArgs (fun () -> set_interactive_fsi ()), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
