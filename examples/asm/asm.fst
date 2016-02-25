@@ -60,9 +60,6 @@ let add_4 =
   ^^ (Sub 2
   ^^  finished)))
 
-(* This is just a placeholder for the List.append that we'd really use*)
-assume val append: list 'a -> list 'a -> Tot (list 'a)
-
 (* Composing two basic blocks in sequence *)
 assume val op_Hat_Hat_Hat : 
           #wp1:ASM_WP prog
@@ -71,7 +68,7 @@ assume val op_Hat_Hat_Hat :
 	-> =g:ASMComp wp2
 	-> Tot (ASMComp (fun (post:ASM_Post prog) (r0:reg) -> 
 	       wp1 (fun p1 r1 -> 
-	       wp2 (fun p2 r2 -> post (append p1 p2) r2) r1) r0))
+	       wp2 (fun p2 r2 -> post (List.append p1 p2) r2) r1) r0))
 
 val add_4': AsmComp 
   (requires (fun r -> True))
