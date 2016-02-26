@@ -1,5 +1,5 @@
 FSTAR = ../bin/fstar.exe $(OTHERFLAGS)
-UFSTAR=$(FSTAR) --universes
+UFSTAR=$(FSTAR) --universes --explicit_deps
 STDLIB=FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst
 
 all:

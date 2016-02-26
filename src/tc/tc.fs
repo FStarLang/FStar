@@ -1929,21 +1929,7 @@ let check_module env m =
     if List.length !Options.debug <> 0
     then Util.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
 
-    let m, env =
-        if m.is_deserialized then
-          let env' = add_modul_to_tcenv env m in
-          m, env'
-        else begin
-           let m, env = tc_modul env m in
-           if !Options.serialize_mods
-           then begin
-                let c_file_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ (text_of_lid m.name) ^ ".cache" in
-                print_string ("Serializing module " ^ (text_of_lid m.name) ^ "\n");
-                SSyntax.serialize_modul (get_owriter c_file_name) m
-           end;
-           m, env
-      end
-    in
+    let m, env = tc_modul env m in
     if Options.should_dump m.name.str then Util.print1 "%s\n" (Print.modul_to_string m);
     [m], env
 

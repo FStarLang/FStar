@@ -1427,7 +1427,7 @@ let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul * bool 
     d in
   let env = match curmod with
     | None -> env
-    | Some(prev_mod, _) ->  Env.finish_module_or_interface env prev_mod in
+    | Some(prev_mod) ->  Env.finish_module_or_interface env prev_mod in
   let (env, pop_when_done), mname, decls, intf = match m with
     | Interface(mname, decls, admitted) ->
       Env.prepare_module_or_interface true admitted env mname, mname, open_ns mname decls, true
