@@ -392,7 +392,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
     collect_term t2
 
   in
-  let ast = Driver.parse_file_raw filename in
+  let ast = Driver.parse_file filename in
   collect_file ast;
   !deps
 

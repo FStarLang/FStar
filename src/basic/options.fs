@@ -227,8 +227,6 @@ let prependOutputDir fname = match !outputDir with
   | None -> fname
   | Some x -> x ^ "/" ^ fname
 
-let cache_dir = "cache"
-
 let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
                                   version platform compiler date commit)
