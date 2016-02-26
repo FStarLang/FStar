@@ -1,5 +1,5 @@
 module Asm
-
+open FStar.List.Tot
 type reg = int
 
 let asm_pre = st_pre_h reg
@@ -53,8 +53,6 @@ let add_2 =  //^^ associates the wrong way, unfortunately
        (Add 1
     ^^ (Add 1
     ^^ finished))
-
-assume val append : list 'a -> list 'a -> Tot (list 'a)
 
 //we could define an operator that sequences in the other direction, a snoc instead of a cons 
 assume val op_Hat_Bar : #wp:asm_wp prog
