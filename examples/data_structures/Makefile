@@ -3,7 +3,7 @@ include ../Makefile.include
 all: .all.ver bst rbtree uall
 
 uall:
-	$(FSTAR) --universes ArrayRealized.fst Vector.fst
+	$(FSTAR) --universes --explicit_deps ArrayRealized.fst Vector.fst
 
 bst: binary_search_tree.fulllib.ver
 

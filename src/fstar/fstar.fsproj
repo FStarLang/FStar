@@ -63,6 +63,10 @@
     </PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="dependences.fs" />
+    <Compile Include="interactive.fs" />
+    <Compile Include="stratified.fs" />
+    <Compile Include="universal.fs" />
     <Compile Include="fstar.fs" />
     <Compile Include="main.fs" />
     <None Include="app.config" />
