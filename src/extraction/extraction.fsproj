@@ -58,6 +58,8 @@
     <Compile Include="codegen.fs" />
     <Compile Include="extracttyp.fs" />
     <Compile Include="extractexp.fs" />
+    <Compile Include="term.fs" />
+    <Compile Include="inductive.fs" />
     <Compile Include="extractmod.fs" />
     <Content Include="app.config" />
   </ItemGroup>
@@ -84,6 +86,11 @@
     <ProjectReference Include="..\format\format.fsproj">
       <Name>format</Name>
       <Project>{54bc6905-03ee-4aeb-b726-742b6d4fa710}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\syntax\syntax.fsproj">
+      <Name>syntax</Name>
+      <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\tc\tc.fsproj">
