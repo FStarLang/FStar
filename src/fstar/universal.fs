@@ -162,7 +162,7 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
     let check_frag (dsenv, (env:TcEnv.env)) curmod text =  
         match tc_one_fragment curmod dsenv env text with 
             | Some (m, dsenv, env) -> 
-              Some (m, (dsenv, env), FStar.Tc.Errors.get_err_count())
+              Some (m, (dsenv, env), FStar.TypeChecker.Errors.get_err_count())
             | _ -> None in
 
     let report_fail () = 
