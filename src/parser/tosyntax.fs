@@ -118,7 +118,6 @@ let op_as_lid env arity rng s =
         | ">=" ->   r C.op_GTE
         | "&&" ->   r C.op_And
         | "||" ->   r C.op_Or
-        | "*" ->    r C.op_Multiply
         | "+" ->    r C.op_Addition
         | "-" when (arity=1) -> r C.op_Minus
         | "-" ->    r C.op_Subtraction
@@ -453,7 +452,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Op("=!=", args) ->
       desugar_term env (mk_term(Op("~", [mk_term (Op("==", args)) top.range top.level])) top.range top.level)
 
-    | Op("*", [_;_]) when env.expect_typ -> 
+    | Op("*", [_;_]) when (op_as_lid env 2 top.range "*" |> Option.isNone) -> //if op_Star has not been rebound, then it's reserved for tuples
       let rec flatten t = match t.tm with
             | Op("*", [t1;t2]) ->
               let rest = flatten t2 in

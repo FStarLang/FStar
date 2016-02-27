@@ -34,7 +34,7 @@ abstract val dom     : #key:Type -> #value:Type -> #f:cmp key -> m:ordmap key va
 abstract val remove  : #key:Type -> #value:Type -> #f:cmp key -> key
               -> ordmap key value f -> Tot (ordmap key value f)
 abstract val choose  : #key:Type -> #value:Type -> #f:cmp key -> ordmap key value f
-              -> Tot (option (Tuple2 key value))
+              -> Tot (option (key * value))
 
 abstract val size    : #key:Type -> #value:Type -> #f:cmp key -> ordmap key value f
               -> Tot nat

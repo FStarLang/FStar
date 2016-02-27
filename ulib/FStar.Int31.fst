@@ -1,9 +1,5 @@
-(*--build-config
-  options: --admit_fsi FStar.Set;
-  other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
-  --*)
-
 module FStar.Int31
+open FStar.Mul
 val min_value_int : int
 let min_value_int = -1073741824
 

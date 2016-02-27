@@ -168,7 +168,7 @@ let rec partition f = function
      else l1, hd::l2
 
 (** List of tuples **)
-val zip: list 'a -> list 'b -> list (Tuple2 'a 'b)
+val zip: list 'a -> list 'b -> list ('a * 'b)
 let rec zip l1 l2 = match l1,l2 with
     | [], [] -> []
     | hd1::tl1, hd2::tl2 -> (hd1,hd2)::(zip tl1 tl2)
