@@ -263,7 +263,7 @@ let check_frag = (fun _80_155 curmod text -> (match (_80_155) with
 | (dsenv, env) -> begin
 (match ((tc_one_fragment curmod dsenv env text)) with
 | Some (m, dsenv, env) -> begin
-(let _162_63 = (let _162_62 = (FStar_Tc_Errors.get_err_count ())
+(let _162_63 = (let _162_62 = (FStar_TypeChecker_Errors.get_err_count ())
 in (m, (dsenv, env), _162_62))
 in Some (_162_63))
 end
