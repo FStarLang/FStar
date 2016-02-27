@@ -25,6 +25,12 @@ let comp a b wp0 wp1 p h2 =
       (R.r h2))
     (R.l h2)
 
+//TODO: this should be conditional on the monotonicity of the wps
+assume Monotone_comp: forall a b wp1 wp2 p1 p2. (forall x h. p1 x h ==> p2 x h)
+			==> (forall h. comp a b wp1 wp2 p1 h
+			    ==> comp a b wp1 wp2 p2 h)
+
+
 assume val compose2: #a0:Type -> #b0:Type -> #wp0:(a0 -> Tot (st_wp b0)) -> #wlp0:(a0 -> Tot (st_wp b0))
                   -> #a1:Type -> #b1:Type -> #wp1:(a1 -> Tot (st_wp b1)) -> #wlp1:(a1 -> Tot (st_wp b1))
                   -> =c0:(x0:a0 -> STATE b0 (wp0 x0) (wlp0 x0))
@@ -40,21 +46,21 @@ val compose2_self : #a:Type -> #b:Type -> #wp:(a -> Tot (st_wp b)) -> #wlp:(a ->
                 -> STATE2 (double b)
                           (comp b b (wp (R.l x)) (wp (R.r x)))
                           (comp b b (wlp (R.l x)) (wlp (R.r x)))
-let compose2_self #a #b #wp #wlp f x = compose2 f f x
+let compose2_self #a #b #wp #wlp f x = compose2 #a #b #wp #wlp #a #b #wp #wlp f f x
 
-(* Combine two ST2 statements A and B to create a new ST2 statement C where 
-   the left side of C is equivalent to the left side of A and 
+(* Combine two ST2 statements A and B to create a new ST2 statement C where
+   the left side of C is equivalent to the left side of A and
    the right side of C is equivalent to the right side of B *)
 assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
                 -> #p:(heap2 -> Type)
                 -> #p':(heap2 -> Type)
                 -> #q:(heap2 -> rel a b -> heap2 -> Type)
                 -> #q':(heap2 -> rel c d -> heap2 -> Type)
-                -> =c1:(double unit -> ST2 (rel a b) 
-                                           (requires (fun h -> p h)) 
+                -> =c1:(double unit -> ST2 (rel a b)
+                                           (requires (fun h -> p h))
                                            (ensures (fun h1 r h2 -> q h1 r h2)))
-                -> =c2:(double unit -> ST2 (rel c d) 
-                                           (requires (fun h -> p' h)) 
+                -> =c2:(double unit -> ST2 (rel c d)
+                                           (requires (fun h -> p' h))
                                            (ensures (fun h1 r h2 -> q' h1 r h2)))
                 -> ST2 (rel a d) (requires (fun h -> (exists (hl:heap) (hr:heap).
                                                              p (R (R.l h) hr)
@@ -65,15 +71,15 @@ assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
 
 
 (* Create a ST statment from a ST2 statement by projection *)
-val decomp_l : (a0:Type) -> (a1:Type) -> (b0:Type) -> (b1:Type) -> (al:a0) -> (wp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1)))) 
+val decomp_l : (a0:Type) -> (a1:Type) -> (b0:Type) -> (b1:Type) -> (al:a0) -> (wp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1))))
 	     -> Tot (st_wp_h heap b0)
-let decomp_l a0 a1 b0 b1 al wp = 
+let decomp_l a0 a1 b0 b1 al wp =
   fun p hl ->
     (exists (ar:a1) (hr:heap).
       wp (R al ar) (fun y2 h2 -> p (R.l y2) (R.l h2))
          (R hl hr))
 
-val decomp_r : (a0:Type) -> (a1:Type) -> (b0:Type) -> (b1:Type) -> (ar:a1) -> (wp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1)))) 
+val decomp_r : (a0:Type) -> (a1:Type) -> (b0:Type) -> (b1:Type) -> (ar:a1) -> (wp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1))))
 	     -> Tot (st_wp_h heap b1)
 let decomp_r a0 a1 b0 b1 ar wp =
   fun p hr ->

@@ -791,11 +791,11 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
           hd::list_elements tl
         | _ -> Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
 
-    let v_or_t_pat p = 
+    let one_pat p = 
         let head, args = Util.unmeta p |> Util.head_and_args in
         match (Util.un_uinst head).n, args with
         | Tm_fvar(fv, _), [(_, _); (e, _)] when lid_equals fv.v Const.smtpat_lid -> (e, None)
-        | Tm_fvar(fv, _), [(t, _)] when lid_equals fv.v Const.smtpatT_lid -> (t, None)
+        | Tm_fvar(fv, _), [(e, _)] when lid_equals fv.v Const.smtpatT_lid -> (e, None)
         | _ -> failwith "Unexpected pattern term"  in
     
     let lemma_pats p = 
@@ -810,10 +810,10 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
             | [t] -> 
              begin match smt_pat_or t with 
                 | Some e -> 
-                  list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map v_or_t_pat)
-                | _ -> [elts |> List.map v_or_t_pat]
+                  list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map one_pat)
+                | _ -> [elts |> List.map one_pat]
               end
-            | _ -> [elts |> List.map v_or_t_pat] in
+            | _ -> [elts |> List.map one_pat] in
 
     let binders, pre, post, patterns = match (SS.compress t).n with
         | Tm_arrow(binders, c) -> 
@@ -1340,7 +1340,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                  else app, encode_term body env' in
                               let eqn = Term.Assume(mkForall([[app]], vars, mkImp(mk_and_l guards, mkEq(app, body))), 
                                             Some (Util.format1 "Equation for %s" flid.str)) in
-                              decls@binder_decls@decls2@[eqn], env
+                              decls@binder_decls@decls2@[eqn]@primitive_type_axioms flid f app,
+                              env
+
                             | _ -> failwith "Impossible"
                       else let fuel = varops.fresh "fuel", Fuel_sort in //encoding recursive definitions using fuel to throttle unfoldings
                            let fuel_tm = mkFreeV fuel in

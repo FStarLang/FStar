@@ -594,8 +594,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
             | (hd, imp)::bs, (hd_expected, imp')::bs_expected -> 
                begin match imp, imp' with 
-                    | None, Some Implicit
-                    | Some Implicit, None -> 
+                    | None, Some (Implicit _)
+                    | Some (Implicit _), None -> 
                       raise (Error(Util.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd), 
                                                   S.range_of_bv hd))
                     | _ -> ()
@@ -828,7 +828,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             cres     (* function result comp *)
                             args     (* actual arguments  *) : (term * lcomp * guard_t) =
             match bs, args with
-            | (x, Some Implicit)::rest, (_, None)::_ -> (* instantiate an implicit arg *)
+            | (x, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit arg *)
                 let t = SS.subst subst x.sort in
                 fxv_check head env t fvs;
                 let varg, u, implicits = TcUtil.new_implicit_var env t in //new_uvar env t in
@@ -838,7 +838,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
             | (x, aqual)::rest, (e, aq)::rest' -> (* a concrete argument *)
                 let _ = match aqual, aq with 
-                | Some Implicit, Some Implicit 
+                | Some (Implicit _), Some (Implicit _)
                 | None, None 
                 | Some Equality, None -> ()
                 | _ -> raise (Error("Inconsistent implicit qualifier", e.pos)) in
@@ -1562,16 +1562,19 @@ let open_univ_vars uvs binders c =
             | Tm_arrow(binders, c) -> uvs, binders, c
             | _ -> failwith "Impossible"
 
-let open_effect_decl env ed = 
-   let fail t = raise (Error(Errors.unexpected_signature_for_monad env ed.mname t, range_of_lid ed.mname)) in
-   let a, wp = match (SS.compress ed.signature).n with
+let open_effect_signature env mname signature = 
+   let fail t = raise (Error(Errors.unexpected_signature_for_monad env mname t, range_of_lid mname)) in
+   match (SS.compress signature).n with
       | Tm_arrow(bs, c) -> 
         let bs = SS.open_binders bs in 
         begin match bs with 
             | [(a, _);(wp, _); (_wlp, _)] -> a, wp.sort
-            | _ -> fail ed.signature
+            | _ -> fail signature
         end
-      | _ -> fail ed.signature in
+      | _ -> fail signature 
+
+let open_effect_decl env ed = 
+   let a, wp = open_effect_signature env ed.mname ed.signature in
    let ed = 
     match ed.binders with 
       | [] -> ed
@@ -1600,14 +1603,17 @@ let open_effect_decl env ed =
 
 let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
-  let binders, signature = SS.open_term ed.binders ed.signature in
-  let binders, env, _ = tc_tparams env0 binders in
-  let signature, _    = tc_trivial_guard env signature in
+  let binders_un, signature_un = SS.open_term ed.binders ed.signature in
+  let binders, env, _ = tc_tparams env0 binders_un in
+  let signature, _    = tc_trivial_guard env signature_un in
   let ed = {ed with binders=binders; 
                     signature=signature} in
 
   let ed, a, wp_a = open_effect_decl env ed in 
-  
+  let get_effect_signature ()  = 
+    let signature, _ = tc_trivial_guard env signature_un in
+    open_effect_signature env ed.mname signature in 
+
   //put the signature in the environment to prevent generalizing its free universe variables until we're done 
   let env = Env.push_bv env (S.new_bv None ed.signature) in
 
@@ -1625,8 +1631,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
 
   let bind_wp =
     let wlp_a = wp_a in
-    let b = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
-    let wp_b = SS.subst [NT(a, S.bv_to_name b)] wp_a in
+    let b, wp_b = get_effect_signature () in
     let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
     let a_wlp_b = a_wp_b in
     let expected_k = Util.arrow [S.mk_binder a; S.mk_binder b; 
@@ -1637,8 +1642,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
 
   let bind_wlp =
     let wlp_a = wp_a in
-    let b = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
-    let wlp_b = SS.subst [NT(a, S.bv_to_name b)] wlp_a in
+    let b, wlp_b = get_effect_signature ()  in
     let a_wlp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wlp_b) in
     let expected_k = Util.arrow [S.mk_binder a; S.mk_binder b; 
                                  S.null_binder wlp_a;
@@ -1792,7 +1796,7 @@ let tc_lex_t env ses quals lids =
             let hd = S.new_bv (Some r2) (S.bv_to_name a) in
             let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar None Const.lex_t_lid r2, [U_name ucons2])) None r2) in
             let res = mk (Tm_uinst(S.fvar None Const.lex_t_lid r2, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
-            Util.arrow [(a, Some Implicit); (hd, None); (tl, None)] (S.mk_Total res) in
+            Util.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
         let dc_lexcons = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], [], r2) in
         Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids, Env.get_range env)
@@ -1811,7 +1815,7 @@ let tc_inductive env ses quals lids =
                 T :  a:Type(ua) -> b:Type(ub) -> Type(u)
               
          (2). In a context
-              G = a:Type(ua), T: (a':Type(ua){a=a'} -> b:Type(ub) -> Type(u))
+              G = a:Type(ua), T: (a:Type(ua) -> b:Type(ub) -> Type(u))
               we elaborate the type of 
                 
                 C1 to x:a -> y:Type(uy) -> T a y
@@ -1884,12 +1888,7 @@ let tc_inductive env ses quals lids =
          let t_type, u = U.type_u() in 
          Rel.force_trivial_guard env' (Rel.teq env' t t_type); 
          
-         let refined_tps = tps |> List.map (fun (x, imp) -> 
-            let y = S.freshen_bv x in
-            let refined = Util.refine y (Util.mk_eq x.sort x.sort (S.bv_to_name x) (S.bv_to_name y)) in
-            {x with sort=refined}, imp) in
-
-(*close*)let t_tc = Util.arrow (refined_tps@indices) (S.mk_Total t) in
+(*close*)let t_tc = Util.arrow (tps@indices) (S.mk_Total t) in
          let tps = SS.close_binders tps in
          let k = SS.close tps k in
          Env.push_let_binding env_tps (Inr tc) ([], t_tc), 
@@ -1910,7 +1909,7 @@ let tc_inductive env ses quals lids =
                 if lid_equals tc_lid (must (Util.lid_of_sigelt se))
                 then let tps = match se with 
                         | Sig_inductive_typ(_, _, tps, _, _, _, _, _) -> 
-                          tps |> List.map (fun (x, _) -> (x, Some Implicit))
+                          tps |> List.map (fun (x, _) -> (x, Some S.imp_tag))
                         | _ -> failwith "Impossible" in
                      Some (tps, u_tc)
                 else None) |> Util.must in 
@@ -1945,14 +1944,15 @@ let tc_inductive env ses quals lids =
             arguments
             us in
         
-(*close*)let t = Util.arrow (tps@arguments) (S.mk_Total result) in
+(*close*)let t = Util.arrow ((tps |> List.map (fun (x, _) -> (x, Some (Implicit true))))@arguments) (S.mk_Total result) in
+                        //NB: the tps are tagged as Implicit inaccessbile arguments of the data constructor
          Sig_datacon(c, [], t, tc_lid, ntps, quals, [], r),
          g
 
       | _ -> failwith "impossible" in
 
-    (* 3. Generalizing universes and 4. recheck datacons *)
-    let generalize_and_recheck env g tcs datas = 
+    (* 3. Generalizing universes and 4. instantiate inductives within the datacons *)
+    let generalize_and_inst_within env g tcs datas = 
         Rel.force_trivial_guard env g;
         let binders = tcs |> List.map (function 
             | Sig_inductive_typ(_, _, tps, k, _, _, _, _) -> S.null_binder (Util.arrow tps <| mk_Total k)
@@ -1984,25 +1984,19 @@ let tc_inductive env ses quals lids =
             | _ -> failwith "Impossible") 
             tc_types tcs in
 
-        //4. Need to recheck each datacon after generalization, 
-        //so that it correctly instantiates all the universes of the inductives it mentions
-        //Note, so far, the datacons have only been checked w.r.t monomorphic variants of the inductives
-        let env_data = Env.push_univ_vars env uvs in
-        let uvs_universes = uvs |> List.map U_name in
-        let env_data = List.fold_left (fun env tc -> Env.push_sigelt_inst env tc uvs_universes) env_data tcs  in
-        let datas = List.map2 (fun (t, _) -> function
-            | Sig_datacon(l, _, _, tc, ntps, quals, mutuals, r) -> 
-              let ty = match uvs with 
-                | [] -> t.sort
-                | _ -> 
-                 if Env.debug env Options.Low 
-                 then Util.print2 "Rechecking datacon %s : %s\n" (Print.lid_to_string l) (Print.term_to_string t.sort);
-                 let ty, _, g = tc_tot_or_gtot_term env_data t.sort in
-                 let g = {g with guard_f=Trivial} in
-                 Rel.force_trivial_guard env g;
-                 SS.close_univ_vars uvs ty in
-              Sig_datacon(l, uvs, ty, tc, ntps, quals, mutuals, r)
-            | _ -> failwith "Impossible") data_types datas in
+        //4. Instantiate the inductives in each datacon with the generalized universes
+        let datas = match uvs with 
+            | [] -> datas
+            | _ -> 
+             let uvs_universes = uvs |> List.map U_name in
+             let tc_insts = tcs |> List.map (function Sig_inductive_typ(tc, _, _, _, _, _, _, _) -> (tc, uvs_universes) | _ -> failwith "Impossible") in
+             List.map2 (fun (t, _) d -> 
+                match d with 
+                    | Sig_datacon(l, _, _, tc, ntps, quals, mutuals, r) -> 
+                        let ty = InstFV.instantiate tc_insts t.sort |> SS.close_univ_vars uvs in
+                        Sig_datacon(l, uvs, ty, tc, ntps, quals, mutuals, r)
+                    | _ -> failwith "Impossible")
+             data_types datas in
         tcs, datas in
 
     let tys, datas = ses |> List.partition (function Sig_inductive_typ _ -> true | _ -> false) in
@@ -2026,7 +2020,7 @@ let tc_inductive env ses quals lids =
         datas 
         ([], g) in
 
-    let tcs, datas = generalize_and_recheck env0 g (List.map fst tcs) datas in 
+    let tcs, datas = generalize_and_inst_within env0 g (List.map fst tcs) datas in 
     Sig_bundle(tcs@datas, quals, lids, Env.get_range env0)
       
 let rec tc_decl env se = match se with
@@ -2088,7 +2082,8 @@ let rec tc_decl env se = match se with
       let env = Env.set_range env r in
       let tps, c = SS.open_comp tps c in
       let tps, env, us = tc_tparams env tps in
-      let c, g, u = tc_comp env c in
+      let c, u, g = tc_comp env c in
+      Rel.force_trivial_guard env g;
       let tags = tags |> List.map (function
         | DefaultEffect None ->
           let c' = Normalize.unfold_effect_abbrev env c in

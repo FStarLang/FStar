@@ -1339,8 +1339,10 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
                 | Inl _ -> (* no patterns on type arguments *) []
                 | Inr ei ->
                     let projector = Tc.Env.lookup_projector env f.v i in //NS: TODO ... should this be a marked as a record projector?
-                    let sub_term = mk_Exp_app(Util.fvar None projector f.p, [varg scrutinee]) None f.p in
-                    [mk_guard sub_term ei]) |> List.flatten in
+                    if not <| Tc.Env.is_projector env projector //the projector may not exist, if it is inaccessible
+                    then [] 
+                    else let sub_term = mk_Exp_app(Util.fvar None projector f.p, [varg scrutinee]) None f.p in
+                         [mk_guard sub_term ei]) |> List.flatten in
             Util.mk_conj_l (head::sub_term_guards)
         | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range pat_exp.pos) (Print.exp_to_string pat_exp)) in
   let mk_guard s tsc pat =
@@ -1927,21 +1929,7 @@ let check_module env m =
     if List.length !Options.debug <> 0
     then Util.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
 
-    let m, env =
-        if m.is_deserialized then
-          let env' = add_modul_to_tcenv env m in
-          m, env'
-        else begin
-           let m, env = tc_modul env m in
-           if !Options.serialize_mods
-           then begin
-                let c_file_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ (text_of_lid m.name) ^ ".cache" in
-                print_string ("Serializing module " ^ (text_of_lid m.name) ^ "\n");
-                SSyntax.serialize_modul (get_owriter c_file_name) m
-           end;
-           m, env
-      end
-    in
+    let m, env = tc_modul env m in
     if Options.should_dump m.name.str then Util.print1 "%s\n" (Print.modul_to_string m);
     [m], env
 

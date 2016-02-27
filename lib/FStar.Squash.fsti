@@ -20,6 +20,9 @@ val proof_irrelevance : p:Type -> x:squash p ->
 val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
   =f:(squash (x:a -> Tot (squash (p x)))) -> Tot (squash (x:a -> Tot (p x)))
 
+val squash_double_sum:  #a:Type -> #p:(a -> Type) ->
+  =f:(squash (x:a & squash (p x))) -> Tot (squash (x:a & p x))
+  
 (* This is a monad, but not an effect *)
 
 val return_squash : #a:Type -> a -> Tot (squash a)

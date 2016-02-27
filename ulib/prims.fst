@@ -194,8 +194,8 @@ type list (a:Type) =
 
 type pattern =
   | SMTPat   : #a:Type -> a -> pattern
-  | SMTPatT  : a:Type -> pattern
-//  | SMTPatOr : list (list pattern) -> pattern //TODO: rechecking this fails some universe checks
+  | SMTPatT  : a:Type -> pattern 
+  | SMTPatOr : list (list pattern) -> pattern 
 
 assume type decreases : #a:Type -> a -> Type0
 
@@ -371,8 +371,8 @@ inline let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (
 sub_effect DIV ~> EXN = lift_div_exn
 default effect Ex (a:Type) = Exn a True (fun v -> True)
 
-let all_pre_h  (h:Type)           = h -> GTot Type
-let all_post_h (h:Type) (a:Type)  = result a -> h -> GTot Type
+let all_pre_h  (h:Type)           = h -> GTot Type0
+let all_post_h (h:Type) (a:Type)  = result a -> h -> GTot Type0
 let all_wp_h   (h:Type) (a:Type)  = all_post_h h a -> Tot (all_pre_h h)
 
 inline let all_return  (heap:Type) (a:Type) (x:a) (p:all_post_h heap a) = p (V x)

@@ -19,4 +19,4 @@ module FStar.Syntax.InstFV
 open FStar.Syntax.Syntax
 open FStar.Ident
 type inst_t = list<(lident * universes)>
-val inst: inst_t -> term -> term
+val instantiate: inst_t -> term -> term

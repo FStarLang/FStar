@@ -36,7 +36,7 @@ let op_Hat_Slash = rel_map2T (fun x y -> x / y)
 (* Some convenient list functions *)
 val tl_rel: #a:Type -> l:double (list a){is_Cons (R.l l) /\ is_Cons (R.r l)}-> Tot (double (list a))
 let tl_rel #a (R (_::xs) (_::ys)) = R xs ys
-let cons_rel (R x y) (R xs ys) = R (x::xs) (y::ys) 
+let cons_rel (R x y) (R xs ys) = R (x::xs) (y::ys)
 (* Some convenient tuple functions *)
 let pair_rel (R a b) (R c d) = R (a,c) (b,d)
 let triple_rel (R a b) (R c d) (R e f) = R (a,c,e) (b,d,f)

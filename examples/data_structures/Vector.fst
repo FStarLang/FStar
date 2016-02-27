@@ -23,58 +23,56 @@ type vector 'a : nat -> Type =
          -> tl:vector 'a n
          -> vector 'a (n + 1)
 
-val head: #n:pos -> vector 'a n -> 'a
-let head n v = match v with
+val head: #a:Type -> #n:pos -> vector a n -> Tot a
+let head (#a:Type) #n v = match v with
   | VCons x xs -> x
 
 val nth : n:nat -> #m:nat{m > n} -> vector 'a m -> Tot 'a
-let rec nth n m v =
-  let VCons x xs = v in
+let rec nth n #m (VCons x #m' xs) =
   if n = 0
   then x
-  else nth (n-1) xs
+  else nth (n-1) #m' xs
 
-val append: #n1:nat -> #n2:nat -> l:vector 'a n1 -> vector 'a n2 ->  Tot (vector 'a (n1 + n2)) //implicit n1 decreases
-let rec append n1 n2 v1 v2 =
+val append: #a:Type -> #n1:nat -> #n2:nat -> l:vector a n1 -> vector a n2 ->  Tot (vector a (n1 + n2)) //implicit n1 decreases
+let rec append (#a:Type) #n1 #n2 v1 v2 =
   match v1 with
     | VNil -> v2
     | VCons hd tl -> VCons hd (append tl v2)
 
-val reverse: #n:nat -> vector 'a n -> Tot (vector 'a n) //the implicitly computed n decreases
-let rec reverse n v = match v with
+val reverse: #a:Type -> #n:nat -> vector a n -> Tot (vector a n) //the implicitly computed n decreases
+let rec reverse (#a:Type) #n v = match v with
   | VNil -> VNil
   | VCons hd tl -> append (reverse tl) (VCons hd VNil)
 
 val mapT: ('a -> Tot 'b) -> #n:nat -> vector 'a n -> Tot (vector 'b n)
-let rec mapT f n v = match v with
+let rec mapT f #n v = match v with
   | VNil -> VNil
   | VCons hd tl -> VCons (f hd) (mapT f tl)
 
-val fold_left: ('acc -> 'a -> Tot 'acc) -> 'acc -> #n:nat -> vector 'a n -> Tot 'acc (decreases n)
-let rec fold_left f acc n v = match v with
+val fold_left: ('b -> 'a -> Tot 'b) -> 'b -> #n:nat -> vector 'a n -> Tot 'b (decreases n)
+let rec fold_left f acc #n v = match v with
   | VNil -> acc
   | VCons hd tl -> fold_left f (f acc hd) tl
 
-val fold_right: ('a -> 'acc -> Tot 'acc) -> #n:nat -> vector 'a n -> 'acc -> Tot 'acc
-let rec fold_right f n v acc = match v with
+val fold_right: ('a -> 'b -> Tot 'b) -> #n:nat -> vector 'a n -> 'b -> Tot 'b
+let rec fold_right f #n v acc = match v with
   | VNil -> acc
   | VCons hd tl -> f hd (fold_right f tl acc)
 
 val find: f:('a -> Tot bool) -> #n:nat -> vector 'a n -> Tot (option (x:'a{f x}))
-let rec find f n v = match v with
+let rec find f #n v = match v with
   | VNil -> None
   | VCons hd tl ->
     if f hd
     then Some hd
     else find f tl
 
-val zip': #n:nat -> vector 'a n -> vector 'b n -> Tot (vector ('a * 'b) n)
-let rec zip' n v1 v2 = match v1 with
+val zip': #a:Type -> #b:Type -> #n:nat -> vector a n -> vector b n -> Tot (vector (Tuple2 a b) n)
+let rec zip' (#a:Type) (#b:Type) #n v1 v2 = match v1 with
   | VNil -> VNil
   | VCons a tl1 ->
     let VCons b tl2 = v2 in
     VCons (a, b) (zip' tl1 tl2)
-
 
 (* val zip: #n:nat -> vector 'a n -> vector 'b n -> Tot (vector ('a * 'b) n) *)
 (* let rec zip n v1 v2 = match v1, v2 with *)
