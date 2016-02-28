@@ -5,7 +5,7 @@ STDLIB=FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.
 all:
 	$(UFSTAR) FStar.List.Tot.fst FStar.ListProperties.fst $(STDLIB) FStar.List.fst
 	$(UFSTAR) $(STDLIB) FStar.Seq.fst FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst
-	$(UFSTAR) $(STDLIB) FStar.Axiomatic.Array.fst FStar.Char.fst FStar.Option.fst FStar.Bytes.fst FStar.Crypto.fst FStar.Tcp.fst
+	$(UFSTAR) $(STDLIB) FStar.Axiomatic.Array.fst FStar.Char.fsti FStar.Option.fst FStar.Bytes.fst FStar.Crypto.fst FStar.Tcp.fst
 	$(UFSTAR) FStar.Constructive.fst 
 	$(UFSTAR) FStar.Ghost.fst FStar.ErasedLogic.fst
 	$(UFSTAR) FStar.Squash.fst
@@ -28,7 +28,7 @@ test:
 
 
 ALL_FILES=prims.fst $(STDLIB)\
-FStar.List.Tot.fst FStar.ListProperties.fst FStar.List.fst FStar.Seq.fst FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst FStar.Axiomatic.Array.fst FStar.Char.fst FStar.Option.fst FStar.Bytes.fst FStar.Crypto.fst FStar.Tcp.fst FStar.Constructive.fst FStar.Ghost.fst FStar.ErasedLogic.fst \
+FStar.List.Tot.fst FStar.ListProperties.fst FStar.List.fst FStar.Seq.fst FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst FStar.Axiomatic.Array.fst FStar.Char.fsti FStar.Option.fst FStar.Bytes.fst FStar.Crypto.fst FStar.Tcp.fst FStar.Constructive.fst FStar.Ghost.fst FStar.ErasedLogic.fst \
 FStar.Squash.fst \
 FStar.SquashProperties.fst \
 FStar.Int8.fst FStar.Int16.fst FStar.Int31.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst \

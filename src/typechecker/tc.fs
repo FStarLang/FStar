@@ -1905,14 +1905,20 @@ let tc_inductive env ses quals lids =
          assert (_uvs = []);
 
          let (tps, u_tc) = //u_tc is the universe of the inductive that c constructs
-            Util.find_map tcs (fun (se, u_tc) -> 
+            let tps_u_opt = Util.find_map tcs (fun (se, u_tc) -> 
                 if lid_equals tc_lid (must (Util.lid_of_sigelt se))
                 then let tps = match se with 
                         | Sig_inductive_typ(_, _, tps, _, _, _, _, _) -> 
                           tps |> List.map (fun (x, _) -> (x, Some S.imp_tag))
                         | _ -> failwith "Impossible" in
                      Some (tps, u_tc)
-                else None) |> Util.must in 
+                else None) in
+           match tps_u_opt with 
+            | Some x -> x
+            | None -> 
+              if lid_equals tc_lid Const.exn_lid
+              then [], U_zero
+              else raise (Error("Unexpected data constructor", r)) in
 
          let arguments, result = 
             match (SS.compress t).n with 
