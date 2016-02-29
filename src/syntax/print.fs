@@ -455,7 +455,7 @@ let rec modul_to_string (m:modul) =
   Util.format2 "module %s\n%s" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
 
 let subst_elt_to_string = function
-   | DB(i, t) -> Util.format2 "DB (%s, %s)" (string_of_int i) (term_to_string t)
+   | DB(i, x) -> Util.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
    | NM(x, i) -> Util.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
    | NT(x, t) -> Util.format2 "DB (%s, %s)" (bv_to_string x) (term_to_string t) 
    | UN(i, u) -> Util.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)

@@ -65,7 +65,10 @@ let rec compress_univ u = match u with
 let subst_to_string s = s |> List.map (fun (b, _) -> b.ppname.idText) |> String.concat ", "
 
 //Lookup a bound var or a name in a parallel substitution
-let subst_bv a s = Util.find_map s (function DB (i, t) when (i=a.index) -> Some t | _ -> None)
+let subst_bv a s = Util.find_map s (function 
+    | DB (i, x) when (i=a.index) -> 
+      Some (bv_to_name (Syntax.set_range_of_bv x (Syntax.range_of_bv a)))
+    | _ -> None)
 let subst_nm a s = Util.find_map s (function  
     | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({x with index=i})) 
     | NT (x, t) when bv_eq a x -> Some t
@@ -308,7 +311,7 @@ let open_binders' bs =
         | [] -> [], o
         | (x, imp)::bs' -> 
           let x' = {freshen_bv x with sort=subst o x.sort} in
-          let o = DB(0, bv_to_name x')::shift_subst 1 o in 
+          let o = DB(0, x')::shift_subst 1 o in 
           let bs', o = aux bs' o in 
           (x',imp)::bs', o in
    aux bs [] 
@@ -371,12 +374,12 @@ let open_pat (p:pat) : pat * subst_t =
 
        | Pat_var x ->
          let x' = {freshen_bv x with sort=subst sub x.sort} in
-         let sub = DB(0, bv_to_name x')::shift_subst 1 sub in 
+         let sub = DB(0, x')::shift_subst 1 sub in 
          {p with v=Pat_var x'}, sub, (x,x')::renaming
 
        | Pat_wild x -> 
          let x' = {freshen_bv x with sort=subst sub x.sort} in
-         let sub = DB(0, bv_to_name x')::shift_subst 1 sub in 
+         let sub = DB(0, x')::shift_subst 1 sub in 
          {p with v=Pat_wild x'}, sub, (x,x')::renaming
 
        | Pat_dot_term(x, t0) -> 
@@ -490,15 +493,6 @@ let close_let_rec lbs (t:term) =
     if is_top_level lbs then lbs, t //top-level let recs do not have to be closed
     else failwith "NYI: close_let_rec"
 
-//requires: length bs = length args
-let mk_subst_binders args = 
-   let s, _ = List.fold_right (fun a (s, i) ->  DB(i, fst a)::s, i + 1) args ([], 0) in
-   s
-
-let subst_binders (bs:binders) (args:args) t = subst (mk_subst_binders args) t
-let subst_binders_comp (bs:binders) (args:args) t = subst_comp (mk_subst_binders args) t
- 
-
 let close_tscheme (binders:binders) ((us, t) : tscheme) = 
     let n = List.length binders - 1 in
     let k = List.length us in 
@@ -514,4 +508,4 @@ let close_univ_vars_tscheme (us:univ_names) ((us', t):tscheme) =
 
 let opening_of_binders (bs:binders) = 
   let n = List.length bs - 1 in
-  bs |> List.mapi (fun i (x, _) -> DB(n - i, bv_to_name x))
+  bs |> List.mapi (fun i (x, _) -> DB(n - i, x))

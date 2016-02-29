@@ -565,7 +565,7 @@ assume val qintro  : #a:Type -> #p:(a -> GTot Type) -> =f:(x:a -> Lemma (p x)) -
 assume val ghost_lemma: #a:Type -> #p:(a -> GTot Type) -> #q:(a -> unit -> GTot Type) -> =f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
 assume new type range_of : #a:Type -> a -> Type0
-irreducible type labeled (#a:Type0) (#x:a) (r:range_of x) (msg:string) (a:Type) = a
+irreducible type labeled (#a:Type0) (#x:a) (r:range_of x) (msg:string) (b:Type) = b
 
 val ignore: #a:Type -> a -> Tot unit
 let ignore #a x = ()

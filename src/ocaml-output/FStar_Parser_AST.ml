@@ -1,6 +1,6 @@
 
 open Prims
-# 34 "FStar.Parser.AST.fst"
+# 28 "FStar.Parser.AST.fst"
 type level =
 | Un
 | Expr
@@ -53,7 +53,7 @@ end
 false
 end))
 
-# 35 "FStar.Parser.AST.fst"
+# 34 "FStar.Parser.AST.fst"
 type imp =
 | FsTypApp
 | Hash
@@ -86,7 +86,7 @@ end
 false
 end))
 
-# 39 "FStar.Parser.AST.fst"
+# 38 "FStar.Parser.AST.fst"
 type arg_qualifier =
 | Implicit
 | Equality
@@ -109,11 +109,11 @@ end
 false
 end))
 
-# 42 "FStar.Parser.AST.fst"
+# 41 "FStar.Parser.AST.fst"
 type aqual =
 arg_qualifier Prims.option
 
-# 44 "FStar.Parser.AST.fst"
+# 42 "FStar.Parser.AST.fst"
 type term' =
 | Wild
 | Const of FStar_Const.sconst
@@ -811,19 +811,19 @@ let ___PatOr____0 : pattern'  ->  pattern Prims.list = (fun projectee -> (match 
 _47_135
 end))
 
-# 99 "FStar.Parser.AST.fst"
+# 97 "FStar.Parser.AST.fst"
 type knd =
 term
 
-# 100 "FStar.Parser.AST.fst"
+# 99 "FStar.Parser.AST.fst"
 type typ =
 term
 
-# 101 "FStar.Parser.AST.fst"
+# 100 "FStar.Parser.AST.fst"
 type expr =
 term
 
-# 103 "FStar.Parser.AST.fst"
+# 101 "FStar.Parser.AST.fst"
 type tycon =
 | TyconAbstract of (FStar_Ident.ident * binder Prims.list * knd Prims.option)
 | TyconAbbrev of (FStar_Ident.ident * binder Prims.list * knd Prims.option * term)
@@ -890,7 +890,7 @@ let ___TyconVariant____0 : tycon  ->  (FStar_Ident.ident * binder Prims.list * k
 _47_148
 end))
 
-# 109 "FStar.Parser.AST.fst"
+# 107 "FStar.Parser.AST.fst"
 type qualifier =
 | Private
 | Abstract
@@ -1013,18 +1013,18 @@ end
 false
 end))
 
-# 126 "FStar.Parser.AST.fst"
+# 122 "FStar.Parser.AST.fst"
 type qualifiers =
 qualifier Prims.list
 
-# 128 "FStar.Parser.AST.fst"
+# 126 "FStar.Parser.AST.fst"
 type lift =
 {msource : FStar_Ident.lid; mdest : FStar_Ident.lid; lift_op : term}
 
 # 128 "FStar.Parser.AST.fst"
 let is_Mklift : lift  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklift"))))
 
-# 134 "FStar.Parser.AST.fst"
+# 132 "FStar.Parser.AST.fst"
 type pragma =
 | SetOptions of Prims.string
 | ResetOptions
@@ -1053,7 +1053,7 @@ let ___SetOptions____0 : pragma  ->  Prims.string = (fun projectee -> (match (pr
 _47_155
 end))
 
-# 138 "FStar.Parser.AST.fst"
+# 136 "FStar.Parser.AST.fst"
 type decl' =
 | TopLevelModule of FStar_Ident.lid
 | Open of FStar_Ident.lid
@@ -1302,7 +1302,7 @@ let ___RedefineEffect____0 : effect_decl  ->  (FStar_Ident.ident * binder Prims.
 _47_203
 end))
 
-# 157 "FStar.Parser.AST.fst"
+# 155 "FStar.Parser.AST.fst"
 type modul =
 | Module of (FStar_Ident.lid * decl Prims.list)
 | Interface of (FStar_Ident.lid * decl Prims.list * Prims.bool)
@@ -1337,27 +1337,27 @@ let ___Interface____0 : modul  ->  (FStar_Ident.lid * decl Prims.list * Prims.bo
 _47_209
 end))
 
-# 160 "FStar.Parser.AST.fst"
+# 159 "FStar.Parser.AST.fst"
 type file =
 modul Prims.list
 
-# 161 "FStar.Parser.AST.fst"
+# 160 "FStar.Parser.AST.fst"
 type inputFragment =
 (file, decl Prims.list) FStar_Util.either
 
-# 164 "FStar.Parser.AST.fst"
+# 161 "FStar.Parser.AST.fst"
 let mk_decl : decl'  ->  FStar_Range.range  ->  decl = (fun d r -> {d = d; drange = r})
 
-# 165 "FStar.Parser.AST.fst"
+# 164 "FStar.Parser.AST.fst"
 let mk_binder : binder'  ->  FStar_Range.range  ->  level  ->  aqual  ->  binder = (fun b r l i -> {b = b; brange = r; blevel = l; aqual = i})
 
-# 166 "FStar.Parser.AST.fst"
+# 165 "FStar.Parser.AST.fst"
 let mk_term : term'  ->  FStar_Range.range  ->  level  ->  term = (fun t r l -> {tm = t; range = r; level = l})
 
-# 167 "FStar.Parser.AST.fst"
+# 166 "FStar.Parser.AST.fst"
 let mk_pattern : pattern'  ->  FStar_Range.range  ->  pattern = (fun p r -> {pat = p; prange = r})
 
-# 168 "FStar.Parser.AST.fst"
+# 167 "FStar.Parser.AST.fst"
 let un_curry_abs : pattern Prims.list  ->  term  ->  term' = (fun ps body -> (match (body.tm) with
 | Abs (p', body') -> begin
 Abs (((FStar_List.append ps p'), body'))
@@ -1366,7 +1366,7 @@ end
 Abs ((ps, body))
 end))
 
-# 171 "FStar.Parser.AST.fst"
+# 170 "FStar.Parser.AST.fst"
 let mk_function : branch Prims.list  ->  FStar_Range.range  ->  FStar_Range.range  ->  term = (fun branches r1 r2 -> (
 # 172 "FStar.Parser.AST.fst"
 let x = (FStar_Absyn_Util.genident (Some (r1)))
@@ -1380,7 +1380,7 @@ in (((mk_pattern (PatVar ((x, false))) r1))::[], _128_992))
 in Abs (_128_993))
 in (mk_term _128_994 r2 Expr))))
 
-# 176 "FStar.Parser.AST.fst"
+# 175 "FStar.Parser.AST.fst"
 let un_function : pattern  ->  term  ->  (pattern * term) Prims.option = (fun p tm -> (match ((p.pat, tm.tm)) with
 | (PatVar (_47_236), Abs (pats, body)) -> begin
 Some (((mk_pattern (PatApp ((p, pats))) p.prange), body))
@@ -1389,15 +1389,15 @@ end
 None
 end))
 
-# 180 "FStar.Parser.AST.fst"
+# 178 "FStar.Parser.AST.fst"
 let lid_with_range : FStar_Ident.lident  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun lid r -> (let _128_1003 = (FStar_Ident.path_of_lid lid)
 in (FStar_Ident.lid_of_path _128_1003 r)))
 
-# 182 "FStar.Parser.AST.fst"
+# 180 "FStar.Parser.AST.fst"
 let to_string_l = (fun sep f l -> (let _128_1010 = (FStar_List.map f l)
 in (FStar_String.concat sep _128_1010)))
 
-# 184 "FStar.Parser.AST.fst"
+# 183 "FStar.Parser.AST.fst"
 let imp_to_string : imp  ->  Prims.string = (fun _47_1 -> (match (_47_1) with
 | Hash -> begin
 "#"
@@ -1406,7 +1406,7 @@ end
 ""
 end))
 
-# 187 "FStar.Parser.AST.fst"
+# 186 "FStar.Parser.AST.fst"
 let rec term_to_string : term  ->  Prims.string = (fun x -> (match (x.tm) with
 | Wild -> begin
 "_"
@@ -1663,7 +1663,7 @@ in (let _128_1093 = (FStar_All.pipe_right t term_to_string)
 in (FStar_Util.format2 "(%s:%s)" _128_1094 _128_1093)))
 end))
 
-# 285 "FStar.Parser.AST.fst"
+# 283 "FStar.Parser.AST.fst"
 let error = (fun msg tm r -> (
 # 286 "FStar.Parser.AST.fst"
 let tm = (FStar_All.pipe_right tm term_to_string)
@@ -1677,28 +1677,28 @@ tm
 end
 in (Prims.raise (FStar_Absyn_Syntax.Error (((Prims.strcat (Prims.strcat msg "\n") tm), r)))))))
 
-# 290 "FStar.Parser.AST.fst"
+# 288 "FStar.Parser.AST.fst"
 let consPat : FStar_Range.range  ->  pattern  ->  pattern  ->  pattern' = (fun r hd tl -> PatApp (((mk_pattern (PatName (FStar_Absyn_Const.cons_lid)) r), (hd)::(tl)::[])))
 
-# 291 "FStar.Parser.AST.fst"
+# 290 "FStar.Parser.AST.fst"
 let consTerm : FStar_Range.range  ->  term  ->  term  ->  term = (fun r hd tl -> (mk_term (Construct ((FStar_Absyn_Const.cons_lid, ((hd, Nothing))::((tl, Nothing))::[]))) r Expr))
 
-# 292 "FStar.Parser.AST.fst"
+# 291 "FStar.Parser.AST.fst"
 let lexConsTerm : FStar_Range.range  ->  term  ->  term  ->  term = (fun r hd tl -> (mk_term (Construct ((FStar_Absyn_Const.lexcons_lid, ((hd, Nothing))::((tl, Nothing))::[]))) r Expr))
 
-# 294 "FStar.Parser.AST.fst"
+# 292 "FStar.Parser.AST.fst"
 let mkConsList : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (
 # 295 "FStar.Parser.AST.fst"
 let nil = (mk_term (Construct ((FStar_Absyn_Const.nil_lid, []))) r Expr)
 in (FStar_List.fold_right (fun e tl -> (consTerm r e tl)) elts nil)))
 
-# 298 "FStar.Parser.AST.fst"
+# 296 "FStar.Parser.AST.fst"
 let mkLexList : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (
 # 299 "FStar.Parser.AST.fst"
 let nil = (mk_term (Construct ((FStar_Absyn_Const.lextop_lid, []))) r Expr)
 in (FStar_List.fold_right (fun e tl -> (lexConsTerm r e tl)) elts nil)))
 
-# 302 "FStar.Parser.AST.fst"
+# 300 "FStar.Parser.AST.fst"
 let mkApp : term  ->  (term * imp) Prims.list  ->  FStar_Range.range  ->  term = (fun t args r -> (match (args) with
 | [] -> begin
 t
@@ -1716,7 +1716,7 @@ end)) t args)
 end)
 end))
 
-# 308 "FStar.Parser.AST.fst"
+# 306 "FStar.Parser.AST.fst"
 let mkRefSet : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (
 # 309 "FStar.Parser.AST.fst"
 let empty = (let _128_1142 = (let _128_1141 = (FStar_Ident.set_lid_range FStar_Absyn_Const.set_empty r)
@@ -1745,7 +1745,7 @@ in (
 let single_e = (mkApp singleton (((e, Nothing))::[]) r)
 in (mkApp union (((single_e, Nothing))::((tl, Nothing))::[]) r)))) elts empty))))))
 
-# 318 "FStar.Parser.AST.fst"
+# 316 "FStar.Parser.AST.fst"
 let mkExplicitApp : term  ->  term Prims.list  ->  FStar_Range.range  ->  term = (fun t args r -> (match (args) with
 | [] -> begin
 t
@@ -1763,7 +1763,7 @@ end
 end)
 end))
 
-# 324 "FStar.Parser.AST.fst"
+# 322 "FStar.Parser.AST.fst"
 let mkAdmitMagic : FStar_Range.range  ->  term = (fun r -> (
 # 325 "FStar.Parser.AST.fst"
 let unit_const = (mk_term (Const (FStar_Const.Const_unit)) r Expr)
@@ -1788,11 +1788,11 @@ in (
 let admit_magic = (mk_term (Seq ((admit, magic))) r Expr)
 in admit_magic)))))
 
-# 335 "FStar.Parser.AST.fst"
+# 333 "FStar.Parser.AST.fst"
 let mkWildAdmitMagic = (fun r -> (let _128_1170 = (mkAdmitMagic r)
 in ((mk_pattern PatWild r), None, _128_1170)))
 
-# 337 "FStar.Parser.AST.fst"
+# 335 "FStar.Parser.AST.fst"
 let focusBranches = (fun branches r -> (
 # 338 "FStar.Parser.AST.fst"
 let should_filter = (FStar_Util.for_some Prims.fst branches)
@@ -1811,7 +1811,7 @@ end else begin
 (FStar_All.pipe_right branches (FStar_List.map Prims.snd))
 end))
 
-# 345 "FStar.Parser.AST.fst"
+# 343 "FStar.Parser.AST.fst"
 let focusLetBindings = (fun lbs r -> (
 # 346 "FStar.Parser.AST.fst"
 let should_filter = (FStar_Util.for_some Prims.fst lbs)
@@ -1832,25 +1832,25 @@ end else begin
 (FStar_All.pipe_right lbs (FStar_List.map Prims.snd))
 end))
 
-# 354 "FStar.Parser.AST.fst"
+# 352 "FStar.Parser.AST.fst"
 let mkFsTypApp : term  ->  term Prims.list  ->  FStar_Range.range  ->  term = (fun t args r -> (let _128_1187 = (FStar_List.map (fun a -> (a, FsTypApp)) args)
 in (mkApp t _128_1187 r)))
 
-# 357 "FStar.Parser.AST.fst"
+# 355 "FStar.Parser.AST.fst"
 let mkTuple : term Prims.list  ->  FStar_Range.range  ->  term = (fun args r -> (
 # 358 "FStar.Parser.AST.fst"
 let cons = (FStar_Absyn_Util.mk_tuple_data_lid (FStar_List.length args) r)
 in (let _128_1193 = (FStar_List.map (fun x -> (x, Nothing)) args)
 in (mkApp (mk_term (Name (cons)) r Expr) _128_1193 r))))
 
-# 361 "FStar.Parser.AST.fst"
+# 359 "FStar.Parser.AST.fst"
 let mkDTuple : term Prims.list  ->  FStar_Range.range  ->  term = (fun args r -> (
 # 362 "FStar.Parser.AST.fst"
 let cons = (FStar_Absyn_Util.mk_dtuple_data_lid (FStar_List.length args) r)
 in (let _128_1199 = (FStar_List.map (fun x -> (x, Nothing)) args)
 in (mkApp (mk_term (Name (cons)) r Expr) _128_1199 r))))
 
-# 365 "FStar.Parser.AST.fst"
+# 363 "FStar.Parser.AST.fst"
 let mkRefinedBinder : FStar_Ident.ident  ->  term  ->  term Prims.option  ->  FStar_Range.range  ->  aqual  ->  binder = (fun id t refopt m implicit -> (
 # 366 "FStar.Parser.AST.fst"
 let b = (mk_binder (Annotated ((id, t))) m Type implicit)
@@ -1862,7 +1862,7 @@ end
 (mk_binder (Annotated ((id, (mk_term (Refine ((b, t))) m Type)))) m Type implicit)
 end)))
 
-# 371 "FStar.Parser.AST.fst"
+# 369 "FStar.Parser.AST.fst"
 let rec extract_named_refinement : term  ->  (FStar_Ident.ident * term * term Prims.option) Prims.option = (fun t1 -> (match (t1.tm) with
 | NamedTyp (x, t) -> begin
 Some ((x, t, None))

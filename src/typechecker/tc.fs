@@ -848,7 +848,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             | (x, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit arg *)
                 let t = SS.subst subst x.sort in
                 check_no_escape (Some head) env fvs t;
-                let varg, u, implicits = TcUtil.new_implicit_var env t in //new_uvar env t in
+                let varg, _, implicits = TcUtil.new_implicit_var env t in //new_uvar env t in
                 let subst = NT(x, varg)::subst in
                 let arg = varg, as_implicit true in
                 tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard implicits g, fvs) rest cres args
@@ -1634,13 +1634,14 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
   //put the signature in the environment to prevent generalizing its free universe variables until we're done 
   let env = Env.push_bv env (S.new_bv None ed.signature) in
 
-  if Env.debug env0 Options.Low
+  if Env.debug env0 <| Options.Other "ED"
   then Util.print3 "Checked effect signature: %s %s : %s\n" 
                         (Print.lid_to_string ed.mname)
                         (Print.binders_to_string " " ed.binders)
                         (Print.term_to_string ed.signature);
 
-  let check_and_gen' env (_,t) k = check_and_gen env t k in
+  let check_and_gen' env (_,t) k = 
+    check_and_gen env t k in
 
   let ret =
     let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
@@ -1944,7 +1945,7 @@ let tc_inductive env ses quals lids =
                   //need to map the prefix of bs corresponding to params to the tps of the inductive
                   let _, bs' = Util.first_N ntps bs in
                   let t = mk (Tm_arrow(bs', res)) None t.pos in
-                  let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), S.bv_to_name x)) in
+                  let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), x)) in
 (*open*)          Util.arrow_formals (SS.subst subst t)  
                 | _ -> [], t in 
         

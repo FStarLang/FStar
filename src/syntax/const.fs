@@ -149,3 +149,4 @@ let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
 let range_of_lid   = pconst "range_of"
+let labeled_lid    = pconst "labeled"

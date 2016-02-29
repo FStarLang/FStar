@@ -349,6 +349,8 @@ let encode_const = function
     | Const_int i  -> boxInt (mkInteger i)
     | Const_int32 i -> Term.mkApp("FStar.Int32.Int32", [boxInt (mkInteger32 i)])
     | Const_string(bytes, _) -> varops.string_const (Util.string_of_bytes <| bytes)
+    | Const_range r -> mk_Range_const
+    | Const_effect -> mk_Term_type
     | c -> failwith (Util.format1 "Unhandled constant: %s" (Print.const_to_string c))
 
 let as_function_typ env t0 =
@@ -916,7 +918,7 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
         (Const.false_lid, const_op mkFalse);
     ] in
 
-    let fallback phi =  match phi.n with
+    let rec fallback phi =  match phi.n with
         | Tm_meta(phi', Meta_labeled(msg, r, b)) ->
           let phi, labs, decls = encode_formula_with_labels phi' env in
           mk (Term.Labeled(phi, msg, r)), [], decls
@@ -929,13 +931,23 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
            let t, decls = encode_let x t1 e1 e2 env encode_formula in
            t, [], decls
 
-        | Tm_app(head, [_; (x, _); (t, _)]) -> 
+        | Tm_app(head, args) -> 
           let head = Util.un_uinst head in
-          begin match head.n with 
-            | Tm_fvar (fv, _) when lid_equals fv.v Const.has_type_lid -> //interpret Prims.has_type as HasType
+          begin match head.n, args with 
+            | Tm_fvar (fv, _), [_; (x, _); (t, _)] when lid_equals fv.v Const.has_type_lid -> //interpret Prims.has_type as HasType
               let x, decls = encode_term x env in 
               let t, decls' = encode_term t env in
               Term.mk_HasType x t, [], decls@decls'
+
+            | Tm_fvar (fv, _), [_; _; (r, _); (msg, _); (phi, _)] when lid_equals fv.v Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
+              begin match (SS.compress r).n, (SS.compress msg).n with 
+                | Tm_constant (Const_range r), Tm_constant (Const_string (s, _)) -> 
+                  let phi = S.mk (Tm_meta(phi,  Meta_labeled(Util.string_of_unicode s, r, false))) None r in
+                  fallback phi
+                | _ -> 
+                  fallback phi
+              end
+
             | _ -> 
               let tt, decls = encode_term phi env in
               Term.mk_Valid tt, [], decls
@@ -1140,17 +1152,24 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
         let valid = Term.mkApp("Valid", [Term.mkApp(for_all, [a;b])]) in
         let valid_b_x = Term.mkApp("Valid", [mk_ApplyTT b x]) in
         [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkForall([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)), Some "forall interpretation")] in
-    let mk_exists_interp : string -> term -> decls_t = fun for_all tt ->
+    let mk_exists_interp : string -> term -> decls_t = fun for_some tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
         let xx = ("x", Term_sort) in
         let a = mkFreeV aa in
         let b = mkFreeV bb in
         let x = mkFreeV xx in
-        let valid = Term.mkApp("Valid", [Term.mkApp(for_all, [a;b])]) in
+        let valid = Term.mkApp("Valid", [Term.mkApp(for_some, [a;b])]) in
         let valid_b_x = Term.mkApp("Valid", [mk_ApplyTT b x]) in
         [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkExists([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)), Some "exists interpretation")] in
-   
+   let mk_range_of_interp : string -> term -> decls_t = fun range_of tt ->
+        let aa = ("a", Term_sort) in
+        let bb = ("b", Term_sort) in
+        let a = mkFreeV aa in
+        let b = mkFreeV bb in
+        let range_of_ty = Term.mkApp(range_of, [a;b]) in
+        [Term.Assume(mkForall([[range_of_ty]], [aa;bb], mk_HasTypeZ Term.mk_Range_const range_of_ty), Some "Range_const typing")] in
+           
     let prims = [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
@@ -1166,6 +1185,7 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
                  (Const.iff_lid,    mk_iff_interp);
                  (Const.forall_lid, mk_forall_interp);
                  (Const.exists_lid, mk_exists_interp);
+                 (Const.range_of_lid, mk_range_of_interp);
                 ] in
     (fun (t:lident) (s:string) (tt:term) ->
         match Util.find_opt (fun (l, _) -> lid_equals l t) prims with

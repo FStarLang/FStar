@@ -1,6 +1,6 @@
 
 open Prims
-# 10 "FStar.ToSMT.SplitQueryCases.fst"
+# 7 "FStar.ToSMT.SplitQueryCases.fst"
 let rec get_next_n_ite : Prims.int  ->  FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term)  ->  (Prims.bool * FStar_ToSMT_Term.term * FStar_ToSMT_Term.term * FStar_ToSMT_Term.term) = (fun n t negs f -> if (n <= 0) then begin
 (let _126_14 = (f FStar_ToSMT_Term.mkTrue)
 in (true, _126_14, negs, t))
@@ -22,7 +22,7 @@ end
 end)
 end)
 
-# 22 "FStar.ToSMT.SplitQueryCases.fst"
+# 19 "FStar.ToSMT.SplitQueryCases.fst"
 let rec is_ite_all_the_way : Prims.int  ->  FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term Prims.list  ->  (Prims.bool * FStar_ToSMT_Term.term Prims.list * FStar_ToSMT_Term.term) = (fun n t negs l -> if (n <= 0) then begin
 (Prims.raise FStar_Util.Impos)
 end else begin
@@ -50,7 +50,7 @@ end))
 end)
 end)
 
-# 36 "FStar.ToSMT.SplitQueryCases.fst"
+# 33 "FStar.ToSMT.SplitQueryCases.fst"
 let rec parse_query_for_split_cases : Prims.int  ->  FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term)  ->  (Prims.bool * ((FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term) * FStar_ToSMT_Term.term Prims.list * FStar_ToSMT_Term.term)) = (fun n t f -> (match (t.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.Quant (FStar_ToSMT_Term.Forall, l, opt, l', t) -> begin
 (parse_query_for_split_cases n t (fun x -> (let _126_61 = (FStar_ToSMT_Term.mkForall'' (l, opt, l', x))
@@ -92,7 +92,7 @@ end
 (false, ((fun _45_95 -> FStar_ToSMT_Term.mkFalse), [], FStar_ToSMT_Term.mkFalse))
 end))
 
-# 60 "FStar.ToSMT.SplitQueryCases.fst"
+# 58 "FStar.ToSMT.SplitQueryCases.fst"
 let strip_not : FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term = (fun t -> (match (t.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.App (FStar_ToSMT_Term.Not, hd::_45_100) -> begin
 hd
@@ -101,14 +101,14 @@ end
 t
 end))
 
-# 64 "FStar.ToSMT.SplitQueryCases.fst"
+# 62 "FStar.ToSMT.SplitQueryCases.fst"
 let rec check_split_cases : (FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term)  ->  FStar_ToSMT_Term.term Prims.list  ->  (FStar_ToSMT_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun f l check -> (FStar_List.iter (fun t -> (let _126_117 = (let _126_116 = (let _126_115 = (let _126_114 = (f t)
 in (FStar_ToSMT_Term.mkNot _126_114))
 in (_126_115, None))
 in FStar_ToSMT_Term.Assume (_126_116))
 in (check _126_117))) (FStar_List.rev l)))
 
-# 67 "FStar.ToSMT.SplitQueryCases.fst"
+# 65 "FStar.ToSMT.SplitQueryCases.fst"
 let check_exhaustiveness : (FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term)  ->  FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun f negs check -> (let _126_138 = (let _126_137 = (let _126_136 = (let _126_135 = (let _126_134 = (FStar_ToSMT_Term.mkNot negs)
 in (f _126_134))
 in (FStar_ToSMT_Term.mkNot _126_135))
@@ -116,7 +116,7 @@ in (_126_136, None))
 in FStar_ToSMT_Term.Assume (_126_137))
 in (check _126_138)))
 
-# 70 "FStar.ToSMT.SplitQueryCases.fst"
+# 68 "FStar.ToSMT.SplitQueryCases.fst"
 let can_handle_query : Prims.int  ->  FStar_ToSMT_Term.decl  ->  (Prims.bool * ((FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term) * FStar_ToSMT_Term.term Prims.list * FStar_ToSMT_Term.term)) = (fun n q -> (match (q) with
 | FStar_ToSMT_Term.Assume (q', _45_118) -> begin
 (parse_query_for_split_cases n (strip_not q') (fun x -> x))
@@ -125,7 +125,7 @@ end
 (false, ((fun x -> x), [], FStar_ToSMT_Term.mkFalse))
 end))
 
-# 75 "FStar.ToSMT.SplitQueryCases.fst"
+# 73 "FStar.ToSMT.SplitQueryCases.fst"
 let handle_query : ((FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term) * FStar_ToSMT_Term.term Prims.list * FStar_ToSMT_Term.term)  ->  (FStar_ToSMT_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun _45_128 check -> (match (_45_128) with
 | (f, l, negs) -> begin
 (

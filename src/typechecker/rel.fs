@@ -1062,7 +1062,7 @@ and solve_flex_rigid_join env tp wl =
             | None -> None
             | Some m ->
               let x = freshen_bv x in 
-              let subst = [DB(0, S.bv_to_name x)] in
+              let subst = [DB(0, x)] in
               let phi1 = SS.subst subst phi1 in
               let phi2 = SS.subst subst phi2 in
               Some (U.refine x (Util.mk_conj phi1 phi2), m)
@@ -1162,7 +1162,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                let hd2 = {hd2 with sort=Subst.subst subst hd2.sort} in 
                let prob = TProb <| mk_problem scope orig hd1.sort (invert_rel <| p_rel orig) hd2.sort None "Formal parameter" in
                let hd1 = freshen_bv hd1 in
-               let subst = DB(0, S.bv_to_name hd1)::SS.shift_subst 1 subst in  //extend the substitution
+               let subst = DB(0, hd1)::SS.shift_subst 1 subst in  //extend the substitution
                let env = Env.push_bv env hd1 in
                begin match aux ((hd1,imp)::scope) env subst xs ys with
                  | Inl (sub_probs, phi) ->
@@ -1637,7 +1637,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let x2, phi2 = as_refinement env wl t2 in
         let base_prob = TProb <| mk_problem (p_scope orig) orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
         let x1 = freshen_bv x1 in
-        let subst = [DB(0, S.bv_to_name x1)] in
+        let subst = [DB(0, x1)] in
         let phi1 = Subst.subst subst phi1 in
         let phi2 = Subst.subst subst phi2 in
         let env = Env.push_bv env x1 in

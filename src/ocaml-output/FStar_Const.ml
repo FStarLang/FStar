@@ -1,6 +1,6 @@
 
 open Prims
-# 4 "FStar.Const.fst"
+# 2 "FStar.Const.fst"
 type sconst =
 | Const_effect
 | Const_unit

@@ -1333,8 +1333,10 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
           | _ -> raise (Error("Effect " ^AST.term_to_string head^ " not found", d.drange)) in
         ed, desugar_args env args in
     let binders = Subst.close_binders binders in
-    let subst = Util.subst_of_list ed.binders args in
-    let sub x = [], Subst.close binders (Subst.subst subst (snd x)) in
+    let sub (_, x) =
+        let edb, x = Subst.open_term ed.binders x in
+        let s = Util.subst_of_list edb args in
+        [], Subst.close binders (Subst.subst s x) in
     let ed = {
             mname=qualify env0 eff_name;
             qualifiers  =List.map trans_qual quals;

@@ -93,11 +93,9 @@ let binders_of_freevars fvs = Util.set_elements fvs |> List.map mk_binder
 
 let mk_subst s = [s]
 
-let subst_formal (f:binder) (a:arg) = DB(0, fst a)
 let subst_of_list (formals:binders) (actuals:args) : subst_t =
     if (List.length formals = List.length actuals)
-    then List.fold_right2 (fun f a (n, out) -> (n + 1, DB(n, fst a)::out)) formals actuals (0, [])
-         |> snd
+    then List.fold_right2 (fun f a out -> NT(fst f, fst a)::out) formals actuals []
     else failwith "Ill-formed substitution"
 
 open FStar.Syntax.Subst
