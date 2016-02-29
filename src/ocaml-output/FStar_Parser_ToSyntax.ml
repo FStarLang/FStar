@@ -48,7 +48,7 @@ end
 FStar_Syntax_Syntax.Abstract
 end
 | FStar_Parser_AST.Opaque -> begin
-(FStar_All.failwith "Impossible")
+FStar_Syntax_Syntax.Unfoldable
 end))
 
 # 59 "FStar.Parser.ToSyntax.fst"

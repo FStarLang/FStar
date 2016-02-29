@@ -300,7 +300,7 @@ let norm_univ wl u =
             | _ -> u in 
     N.normalize_universe wl.tcenv (aux u)
 
-let normalize_refinement steps env wl t0 = N.normalize_refinement steps env (whnf env t0)
+let normalize_refinement steps env wl t0 = N.normalize_refinement steps env t0
 
 let base_and_refinement env wl t1 =
    let rec aux norm t1 =
@@ -308,7 +308,7 @@ let base_and_refinement env wl t1 =
         | Tm_refine(x, phi) ->
             if norm
             then (x.sort, Some(x, phi))
-            else begin match normalize_refinement [] env wl t1 with
+            else begin match normalize_refinement [N.WHNF] env wl t1 with
                 | {n=Tm_refine(x, phi)} -> (x.sort, Some(x, phi))
                 | tt -> failwith (Util.format2 "impossible: Got %s ... %s\n" (Print.term_to_string tt) (Print.tag_of_term tt))
             end
@@ -318,7 +318,7 @@ let base_and_refinement env wl t1 =
         | Tm_app _ ->
             if norm
             then (t1, None)
-            else let t2', refinement = aux true (normalize_refinement [] env wl t1) in
+            else let t2', refinement = aux true (normalize_refinement [N.WHNF] env wl t1) in
                  begin match refinement with
                     | None -> t1, None (* no refinement found ... so revert to the original type, without expanding defs *)
                     | _ -> t2', refinement
@@ -613,14 +613,16 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let rec aux d t1 t2 =
         match head_matches t1 t2 with
             | MisMatch ->
-                if d=2 then fail() //already delta normal
-                else if d=1 then 
-                     let t1' = normalize_refinement [N.Unfold] env wl t1 in
-                     let t2' = normalize_refinement [N.Unfold] env wl t2 in
-                     aux 2 t1' t2'
-                else let t1 = normalize_refinement [N.Inline] env wl t1 in
-                     let t2 = normalize_refinement [N.Inline] env wl t2 in
-                     aux (d+1) t1 t2
+                if d=3 then fail() //already delta normal
+                else let steps = 
+                        if d=0 
+                        then [N.Inline; N.WHNF]
+                        else if d=1 
+                        then [N.Unfold; N.WHNF]
+                        else [N.Unfold] in
+                     let t1' = normalize_refinement steps env wl t1 in
+                     let t2' = normalize_refinement steps env wl t2 in
+                     aux (d+1) t1' t2'
             | r -> success d r t1 t2 in
     aux 0 t1 t2
 
@@ -1763,7 +1765,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | _, Tm_delayed _
       | _, Tm_let _ -> failwith (Util.format2 "Impossible: %s and %s" (Print.tag_of_term t1) (Print.tag_of_term t2))
 
-      | _ -> giveup env "head mismatch" orig
+      | _ -> giveup env "head tag mismatch" orig
 
 and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution =
     let c1 = problem.lhs in

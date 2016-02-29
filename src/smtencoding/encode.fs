@@ -508,7 +508,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              t, [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
       | Tm_refine _ ->
-        let x, f = match N.normalize_refinement [N.EraseUniverses] env.tcenv t0 with
+        let x, f = match N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv t0 with
             | {n=Tm_refine(x, f)} -> 
                let b, f = SS.open_term [x, None] f in
                fst (List.hd b), f
@@ -1818,7 +1818,9 @@ let solve tcenv q : unit =
             let closing, bindings = aux bindings in 
             Util.close_forall (List.rev closing) q, bindings in 
         let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
-        if debug tcenv Options.Low then Util.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
+        if debug tcenv Options.Low 
+        || debug tcenv <| Options.Other "SMTEncoding" 
+        then Util.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
         let phi, qdecls = encode_formula q env in
 //        if not (lid_equals (Env.current_module tcenv) Const.prims_lid)
 //        then Util.print1 "About to label goals in %s\n" (Term.print_smt_term phi);

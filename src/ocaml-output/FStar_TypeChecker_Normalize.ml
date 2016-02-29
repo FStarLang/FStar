@@ -1527,7 +1527,7 @@ in (FStar_Syntax_Print.comp_to_string _148_481)))
 # 744 "FStar.TypeChecker.Normalize.fst"
 let normalize_refinement : steps  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.typ = (fun steps env t0 -> (
 # 745 "FStar.TypeChecker.Normalize.fst"
-let t = (normalize (FStar_List.append steps ((Beta)::(WHNF)::[])) env t0)
+let t = (normalize (FStar_List.append steps ((Beta)::[])) env t0)
 in (
 # 746 "FStar.TypeChecker.Normalize.fst"
 let rec aux = (fun t -> (

@@ -50,8 +50,8 @@ let trans_qual = function
   | AST.Effect ->        S.Effect
   | AST.New  ->          S.New
   | AST.Abstract ->      S.Abstract
-  | AST.Opaque ->        failwith "Impossible"
-
+  | AST.Opaque ->        S.Unfoldable 
+  
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
   | AST.ResetOptions -> S.ResetOptions

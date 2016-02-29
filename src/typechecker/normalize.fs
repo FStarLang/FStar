@@ -734,7 +734,7 @@ let term_to_string env t = Print.term_to_string (normalize [AllowUnboundUniverse
 let comp_to_string env c = Print.comp_to_string (norm_comp (config [AllowUnboundUniverses] env) [] c)
 
 let normalize_refinement steps env t0 =
-   let t = normalize (steps@[Beta; WHNF]) env t0 in
+   let t = normalize (steps@[Beta]) env t0 in
    let rec aux t =
     let t = compress t in
     match t.n with
