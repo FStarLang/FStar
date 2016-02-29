@@ -564,6 +564,9 @@ assume val cut     : p:Type -> Pure unit (requires $"assertion failed" p) (fun x
 assume val qintro  : #a:Type -> #p:(a -> GTot Type) -> =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 assume val ghost_lemma: #a:Type -> #p:(a -> GTot Type) -> #q:(a -> unit -> GTot Type) -> =f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
+assume new type range_of : #a:Type -> a -> Type0
+irreducible type labeled (#a:Type0) (#x:a) (r:range_of x) (msg:string) (a:Type) = a
+
 val ignore: #a:Type -> a -> Tot unit
 let ignore #a x = ()
 

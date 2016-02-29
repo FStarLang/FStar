@@ -25,8 +25,8 @@ let string_of_mlpath : mlpath  ->  mlsymbol = (fun _57_7 -> (match (_57_7) with
 end))
 
 # 22 "FStar.Extraction.ML.Syntax.fst"
-let mlpath_of_lident : FStar_Ident.lident  ->  (Prims.string Prims.list * Prims.string) = (fun x -> (let _139_8 = (FStar_List.map (fun x -> x.FStar_Ident.idText) x.FStar_Ident.ns)
-in (_139_8, x.FStar_Ident.ident.FStar_Ident.idText)))
+let mlpath_of_lident : FStar_Ident.lident  ->  (Prims.string Prims.list * Prims.string) = (fun x -> (let _138_8 = (FStar_List.map (fun x -> x.FStar_Ident.idText) x.FStar_Ident.ns)
+in (_138_8, x.FStar_Ident.ident.FStar_Ident.idText)))
 
 # 25 "FStar.Extraction.ML.Syntax.fst"
 let as_mlident = (fun x -> (x.FStar_Absyn_Syntax.ppname.FStar_Ident.idText, 0))

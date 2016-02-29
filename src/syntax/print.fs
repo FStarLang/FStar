@@ -138,6 +138,7 @@ let const_to_string x = match x with
   | Const_int   x -> x
   | Const_int64 _ -> "<int64>"
   | Const_uint8 _ -> "<uint8>"
+  | Const_range r -> Range.string_of_range r
 
 let lbname_to_string = function
   | Inl l -> bv_to_string l

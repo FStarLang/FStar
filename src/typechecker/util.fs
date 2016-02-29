@@ -545,7 +545,7 @@ let lift_formula env t mk_wp mk_wlp f =
   let k = SS.subst [NT(a, t)] kwp in
   let wp = mk_Tm_app mk_wp   [S.as_arg t; S.as_arg f] (Some k.n) f.pos in
   let wlp = mk_Tm_app mk_wlp [S.as_arg t; S.as_arg f] (Some k.n) f.pos in
-  mk_comp md_pure Recheck.t_unit wp wlp [] 
+  mk_comp md_pure Common.t_unit wp wlp [] 
 
 let label reason r f : term =
     mk (Tm_meta(f, Meta_labeled(reason, r, false))) None f.pos
@@ -641,7 +641,7 @@ let record_application_site env e lc =
         || lid_equals (Env.current_module env) Const.prims_lid
         || S.is_teff res_t
         then c
-        else let g = Rel.guard_of_guard_formula (NonTrivial Recheck.t_unit) in
+        else let g = Rel.guard_of_guard_formula (NonTrivial Common.t_unit) in
              let c, _ = strengthen_precondition (Some (fun () -> "push")) env e (Util.lcomp_of_comp c) g in
              let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in
              let x = S.new_bv None res_t in

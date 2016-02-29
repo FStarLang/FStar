@@ -380,8 +380,13 @@ let rec pre_typ t =
 
 let destruct typ lid =
   let typ = compress typ in
-  match typ.n with
-    | Tm_app({n=Tm_fvar(tc, _)}, args) when lid_equals tc.v lid -> Some args
+  match (un_uinst typ).n with
+    | Tm_app(head, args) -> 
+      let head = un_uinst head in 
+      begin match head.n with 
+              | Tm_fvar(tc, _) when lid_equals tc.v lid -> Some args
+              | _ -> None
+      end
     | Tm_fvar (tc, _) when lid_equals tc.v lid -> Some []
     | _ -> None
 

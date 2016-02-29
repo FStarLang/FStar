@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -69,8 +69,6 @@
     <Compile Include="env.fs" />
     <Compile Include="normalize.fsi" />
     <Compile Include="normalize.fs" />
-    <Compile Include="recheck.fsi" />
-    <Compile Include="recheck.fs" />
     <Compile Include="errors.fs" />
     <Compile Include="rel.fsi" />
     <Compile Include="rel.fs" />

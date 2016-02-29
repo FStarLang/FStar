@@ -31,6 +31,7 @@ let pruneNones (l : list<option<'a>>) : list<'a> =
 
 let mlconst_of_const (sctt : sconst) =
   match sctt with
+  | Const_range _          
   | Const_effect       -> failwith "Unsupported constant"
   | Const_unit         -> MLC_Unit
   | Const_char   c     -> MLC_Char  c
