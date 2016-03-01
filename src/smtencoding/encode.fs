@@ -1212,14 +1212,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 //        || Util.starts_with l.str "Prims.all_" 
 
     let encode_top_level_val env lid t quals = 
-        let tt = whnf env t in
-//        Printf.printf "Encoding top-level val %s : %s\nWHNF is %s\n" 
+        let tt = norm env t in
+//        if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+//        then Printf.printf "Encoding top-level val %s : %s\Normalized to is %s\n" 
 //            (Print.lid_to_string lid) 
 //            (Print.term_to_string t)
 //            (Print.term_to_string tt);
         let decls, env = encode_free_var env lid t tt quals in
         if Util.is_smt_lemma t
-        then decls@encode_smt_lemma env lid t, env
+        then decls@encode_smt_lemma env lid tt, env
         else decls, env 
     in
 

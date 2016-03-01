@@ -389,6 +389,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                              | UnivArgs(us', _)::stack -> 
                                let env = us' |> List.fold_left (fun env u -> Univ u::env) env in 
                                norm cfg env stack t 
+                             | _ when (cfg.steps |> List.contains EraseUniverses) -> 
+                               norm cfg env stack t 
                              | _ -> failwith (Util.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.v))
                       else norm cfg env stack t             
                  end

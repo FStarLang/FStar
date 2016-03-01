@@ -273,6 +273,11 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_type _  
   | Tm_unknown -> tc_value env e
 
+  | Tm_meta(e, Meta_desugared Meta_smt_pat) -> 
+    let e, c, g = tc_tot_or_gtot_term env e in
+    let g = {g with guard_f=Trivial} in //VC's in SMT patterns are irrelevant
+    e, c, g //strip the Meta going up
+
   | Tm_meta(e, Meta_pattern pats) -> 
     let t, u = U.type_u () in
     let e, c, g = tc_check_tot_or_gtot_term env e t in
