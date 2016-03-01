@@ -9,6 +9,7 @@ let _ =
   print_endline "Tests started"
 ;;
 
+
 module TestAead = struct
 
   type test_vector = {
@@ -214,6 +215,128 @@ module TestAead = struct
 end
 
 
+module TestBlock = struct
+
+  type test_vector = {
+    cipher: block_cipher;
+    key: string;
+    iv : string;
+    plaintext: string;
+    ciphertext: string;
+  }
+
+  let print_test_vector v =
+    Printf.printf "key:\t\t%S\niv:\t\t%S\nplaintext:\t%S\nciphertext:\t%S\n"
+      v.key v.iv v.plaintext v.ciphertext
+
+  let test v =
+    let key = Bytes.bytes_of_hex v.key in
+    let iv  = Bytes.bytes_of_hex v.iv  in
+    let plaintext = Bytes.bytes_of_hex v.plaintext in
+    let c = block_encrypt v.cipher key iv plaintext in
+    if not(Bytes.hex_of_bytes c = v.ciphertext) then
+      false
+    else
+      let p = block_decrypt v.cipher key iv c in
+      p = plaintext
+
+  let test_vectors = [
+  {
+    cipher = AES_128_CBC;
+    key  = "00000000000000000000000000000000";
+    iv   = "00000000000000000000000000000000";
+    plaintext  = "00000000000000000000000000000000";
+    ciphertext = "66e94bd4ef8a2c3b884cfa59ca342b2e";
+  };
+
+  {
+    cipher = AES_128_CBC;
+    key = "e77f6871e1697b2286416f973aee9ff6";
+    iv  = "00000000000000000000000000000000";
+    plaintext = "474554202f20485454502f312e310d0a486f73743a20756e646566696e65640d0a0d0a431ad4d620ea0c63bf9afc8124afcae6729593f1080808080808080808";
+    ciphertext = "28cf3b38da8358b78aae63e5fcc334c1eac5278a283fa709cb274df85a2a7fa2885704eda72f1bc65a50c45164b1ccbbfff18032a540f39f20400a2fe1e68cd9";
+  };
+
+  (*
+   * These are AES-CBC vectors from NIST document SP800-38A, Appendix F.2
+   * http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf
+   * Skipping AES-192-CBC vectors, not used with TLS
+   * The individual block vectors appear also in OpenSSL's evptests.txt
+   *)
+  {
+    cipher = AES_128_CBC;
+    key = "2b7e151628aed2a6abf7158809cf4f3c";
+    iv  = "000102030405060708090a0b0c0d0e0f";
+    plaintext  = "6bc1bee22e409f96e93d7e117393172a";
+    ciphertext = "7649abac8119b246cee98e9b12e9197d";
+  };
+  {
+    cipher = AES_128_CBC;
+    key = "2b7e151628aed2a6abf7158809cf4f3c";
+    iv  = "7649abac8119b246cee98e9b12e9197d";
+    plaintext  = "ae2d8a571e03ac9c9eb76fac45af8e51";
+    ciphertext = "5086cb9b507219ee95db113a917678b2";
+  };
+  {
+    cipher = AES_128_CBC;
+    key = "2b7e151628aed2a6abf7158809cf4f3c";
+    iv  = "5086cb9b507219ee95db113a917678b2";
+    plaintext  = "30c81c46a35ce411e5fbc1191a0a52ef";
+    ciphertext = "73bed6b8e3c1743b7116e69e22229516";
+  };
+  {
+    cipher = AES_128_CBC;
+    key = "2b7e151628aed2a6abf7158809cf4f3c";
+    iv  = "73bed6b8e3c1743b7116e69e22229516";
+    plaintext  = "f69f2445df4f9b17ad2b417be66c3710";
+    ciphertext = "3ff1caa1681fac09120eca307586e1a7";
+  };
+  {
+    cipher = AES_128_CBC;
+    key = "2b7e151628aed2a6abf7158809cf4f3c";
+    iv  = "000102030405060708090a0b0c0d0e0f";
+    plaintext = "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710";
+   ciphertext = "7649abac8119b246cee98e9b12e9197d5086cb9b507219ee95db113a917678b273bed6b8e3c1743b7116e69e222295163ff1caa1681fac09120eca307586e1a7";
+  };
+  {
+    cipher = AES_256_CBC;
+    key = "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4";
+    iv  = "000102030405060708090a0b0c0d0e0f";
+    plaintext  = "6bc1bee22e409f96e93d7e117393172a";
+    ciphertext = "f58c4c04d6e5f1ba779eabfb5f7bfbd6";
+  };
+  {
+    cipher = AES_256_CBC;
+    key = "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4";
+    iv  = "f58c4c04d6e5f1ba779eabfb5f7bfbd6";
+    plaintext  = "ae2d8a571e03ac9c9eb76fac45af8e51";
+    ciphertext = "9cfc4e967edb808d679f777bc6702c7d";
+  };
+  {
+    cipher = AES_256_CBC;
+    key = "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4";
+    iv  = "9cfc4e967edb808d679f777bc6702c7d";
+    plaintext  = "30c81c46a35ce411e5fbc1191a0a52ef";
+    ciphertext = "39f23369a9d9bacfa530e26304231461";
+  };
+  {
+    cipher = AES_256_CBC;
+    key = "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4";
+    iv  = "39f23369a9d9bacfa530e26304231461";
+    plaintext  = "f69f2445df4f9b17ad2b417be66c3710";
+    ciphertext = "b2eb05e2c39be9fcda6c19078c6a9d1b";
+  };
+  {
+    cipher = AES_256_CBC;
+    key = "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4";
+    iv  = "000102030405060708090a0b0c0d0e0f";
+    plaintext = "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710";
+    ciphertext = "f58c4c04d6e5f1ba779eabfb5f7bfbd69cfc4e967edb808d679f777bc6702c7d39f23369a9d9bacfa530e26304231461b2eb05e2c39be9fcda6c19078c6a9d1b";
+  }
+  ]
+end
+
+
 module TestHmac = struct
 
   type test_case = {
@@ -387,6 +510,7 @@ module TestHmac = struct
 
 end
 
+
 module TestHash = struct
   type test = {
     (* The input is [input] repeated [repeat] times. *)
@@ -549,6 +673,7 @@ module TestHash = struct
     Bytes.equalBytes output (Bytes.bytes_of_hex t.output)
 end
 
+
 module TestEcc = struct
   type test = {
     params: ec_params;
@@ -603,6 +728,7 @@ let bytes1, bytes2, bytes3 =
   let chunk, _ = Platform.Bytes.split chunk (256 - 11) in
   chunk, bytes_of_string "012345678901234567890123456789012345", bytes_of_string "coucou"
 
+
 module TestRsa = struct
 
   let tests = [bytes1; bytes2; bytes3]
@@ -633,6 +759,7 @@ module TestRsa = struct
 
 end
 
+
 module TestDsa = struct
 
   let tests = TestRsa.tests
@@ -649,6 +776,7 @@ module TestDsa = struct
 
   let print_test = TestRsa.print_test
 end
+
 
 module TestEcdsa = struct
 
@@ -679,6 +807,7 @@ module TestDhke = struct
     string_of_bytes shared1 = string_of_bytes shared2
 end
 
+
 module TestEcdhke = struct
   let test () =
     let params = { curve = ECC_P521; point_compression = false } in
@@ -705,20 +834,16 @@ let run_test section test_vectors print_test_vector test_vector =
   List.iter doit test_vectors;
   Printf.printf "%s: %d/%d tests passed\n%!" section !passed !total
 
+
 let simple_test name f =
   if f () then
     Printf.printf "%s: OK\n%!" name
   else
     Printf.printf "%s: FAIL\n%!" name
 
+
 let _ =
-  simple_test "Block encryption" (fun () ->
-    let key = Bytes.bytes_of_hex "e77f6871e1697b2286416f973aee9ff6" in
-    let iv = Bytes.bytes_of_hex "00000000000000000000000000000000" in
-    let plain = Bytes.bytes_of_hex "474554202f20485454502f312e310d0a486f73743a20756e646566696e65640d0a0d0a431ad4d620ea0c63bf9afc8124afcae6729593f1080808080808080808" in
-    print_endline (Bytes.hex_of_bytes (block_encrypt AES_128_CBC key iv plain));
-    true
-  );
+  TestBlock.(run_test "Block ciphers" test_vectors print_test_vector test);
   TestAead.(run_test "AEAD" test_vectors print_test_vector test);
   TestHmac.(run_test "HMAC" test_cases print_test_case test);
   TestHash.(run_test "HASH" tests print_test test);
@@ -728,4 +853,3 @@ let _ =
   TestEcdsa.(run_test "ECDSA" tests print_test check);
   simple_test "DH key exchange" TestDhke.test;
   simple_test "ECDH key exchange" TestEcdhke.test
-
