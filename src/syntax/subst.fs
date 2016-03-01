@@ -70,7 +70,7 @@ let subst_bv a s = Util.find_map s (function
       Some (bv_to_name (Syntax.set_range_of_bv x (Syntax.range_of_bv a)))
     | _ -> None)
 let subst_nm a s = Util.find_map s (function  
-    | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({x with index=i})) 
+    | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({a with index=i})) 
     | NT (x, t) when bv_eq a x -> Some t
     | _ -> None)
 let subst_univ_bv x s = Util.find_map s (function 

@@ -88,7 +88,7 @@ let subst_nm : FStar_Syntax_Syntax.bv  ->  FStar_Syntax_Syntax.subst_elt Prims.l
 | FStar_Syntax_Syntax.NM (x, i) when (FStar_Syntax_Syntax.bv_eq a x) -> begin
 (let _112_29 = (FStar_Syntax_Syntax.bv_to_tm (
 # 96 "FStar.Syntax.Subst.fst"
-let _31_71 = x
+let _31_71 = a
 in {FStar_Syntax_Syntax.ppname = _31_71.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = i; FStar_Syntax_Syntax.sort = _31_71.FStar_Syntax_Syntax.sort}))
 in Some (_112_29))
 end
