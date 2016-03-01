@@ -1,22 +1,22 @@
 
 open Prims
-# 21 "FStar.SMTEncoding.ErrorReporting.fst"
+# 24 "FStar.SMTEncoding.ErrorReporting.fst"
 type label =
 (FStar_SMTEncoding_Term.fv * Prims.string * FStar_Range.range)
 
-# 24 "FStar.SMTEncoding.ErrorReporting.fst"
+# 25 "FStar.SMTEncoding.ErrorReporting.fst"
 type labels =
 label Prims.list
 
-# 25 "FStar.SMTEncoding.ErrorReporting.fst"
+# 27 "FStar.SMTEncoding.ErrorReporting.fst"
 type msg =
 (Prims.string * FStar_Range.range)
 
-# 27 "FStar.SMTEncoding.ErrorReporting.fst"
+# 28 "FStar.SMTEncoding.ErrorReporting.fst"
 type ranges =
 (Prims.string Prims.option * FStar_Range.range) Prims.list
 
-# 28 "FStar.SMTEncoding.ErrorReporting.fst"
+# 30 "FStar.SMTEncoding.ErrorReporting.fst"
 let fresh_label : ranges  ->  FStar_SMTEncoding_Term.term  ->  labels  ->  (FStar_SMTEncoding_Term.term * labels * ranges) = (
 # 31 "FStar.SMTEncoding.ErrorReporting.fst"
 let ctr = (FStar_ST.alloc 0)
@@ -57,7 +57,7 @@ let lt = (FStar_SMTEncoding_Term.mkOr (lterm, t))
 in (lt, (label)::labs, rs))))
 end))))))
 
-# 42 "FStar.SMTEncoding.ErrorReporting.fst"
+# 51 "FStar.SMTEncoding.ErrorReporting.fst"
 let rec label_goals : ranges  ->  FStar_SMTEncoding_Term.term  ->  labels  ->  (FStar_SMTEncoding_Term.term * labels * ranges) = (fun rs q labs -> (match (q.FStar_SMTEncoding_Term.tm) with
 | (FStar_SMTEncoding_Term.BoundV (_)) | (FStar_SMTEncoding_Term.Integer (_)) -> begin
 (q, labs, rs)

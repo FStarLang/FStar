@@ -1,6 +1,6 @@
 
 open Prims
-# 22 "FStar.FStar.fst"
+# 26 "FStar.FStar.fst"
 let process_args : Prims.unit  ->  (FStar_Getopt.parse_cmdline_res * Prims.string Prims.list) = (fun _80_1 -> (match (()) with
 | () -> begin
 (
@@ -26,13 +26,13 @@ in (let _161_8 = (FStar_ST.read file_list)
 in (res, _161_8)))))
 end))
 
-# 32 "FStar.FStar.fst"
+# 35 "FStar.FStar.fst"
 let cleanup : Prims.unit  ->  Prims.unit = (fun _80_10 -> (match (()) with
 | () -> begin
 (FStar_Util.kill_all ())
 end))
 
-# 35 "FStar.FStar.fst"
+# 38 "FStar.FStar.fst"
 let report_errors : Prims.int Prims.option  ->  Prims.unit = (fun nopt -> (
 # 39 "FStar.FStar.fst"
 let errs = (match (nopt) with
@@ -56,7 +56,7 @@ end else begin
 ()
 end))
 
-# 49 "FStar.FStar.fst"
+# 52 "FStar.FStar.fst"
 let finished_message : (Prims.bool * FStar_Ident.lident) Prims.list  ->  Prims.unit = (fun fmods -> if (not ((FStar_ST.read FStar_Options.silent))) then begin
 (
 # 54 "FStar.FStar.fst"
@@ -94,7 +94,7 @@ end else begin
 ()
 end)
 
-# 63 "FStar.FStar.fst"
+# 66 "FStar.FStar.fst"
 let codegen : FStar_Absyn_Syntax.modul Prims.list  ->  FStar_Tc_Env.env  ->  Prims.unit = (fun fmods env -> if (((FStar_ST.read FStar_Options.codegen) = Some ("OCaml")) || ((FStar_ST.read FStar_Options.codegen) = Some ("FSharp"))) then begin
 (
 # 70 "FStar.FStar.fst"
@@ -126,7 +126,7 @@ end else begin
 ()
 end)
 
-# 75 "FStar.FStar.fst"
+# 80 "FStar.FStar.fst"
 let go = (fun _80_37 -> (
 # 81 "FStar.FStar.fst"
 let _80_41 = (process_args ())
@@ -222,7 +222,7 @@ end
 end)
 end)))
 
-# 122 "FStar.FStar.fst"
+# 124 "FStar.FStar.fst"
 let main = (fun _80_73 -> (match (()) with
 | () -> begin
 (FStar_All.try_with (fun _80_75 -> (match (()) with
