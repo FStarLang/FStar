@@ -1255,25 +1255,19 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
         | _ -> ());
     let env1, _ = Tc.Env.clear_expected_typ pat_env in
     let env1 = {env1 with Env.is_pattern=true} in  //just a flag for a better error message
-    let expected_pat_t = Tc.Rel.unrefine env pat_t in
+    let expected_pat_t = Normalize.norm_typ [Normalize.Beta] env (Tc.Rel.unrefine env pat_t) in
     let exps = exps |> List.map (fun e ->
         if Tc.Env.debug env Options.High
         then Util.print2 "Checking pattern expression %s against expected type %s\n" (Print.exp_to_string e) (Print.typ_to_string pat_t);
-
         let e, lc, g =  tc_exp env1 e in //only keep the unification/subtyping constraints; discard the logical guard for patterns
-
         if Tc.Env.debug env Options.High
         then Util.print2 "Pre-checked pattern expression %s at type %s\n" (Normalize.exp_norm_to_string env e) (Normalize.typ_norm_to_string env lc.res_typ);
-
         let g' = Tc.Rel.teq env lc.res_typ expected_pat_t in
         let g = Rel.conj_guard g g' in
         ignore <| Tc.Rel.solve_deferred_constraints env g;
         let e' = Normalize.norm_exp [Normalize.Beta] env e in
         if not <| Util.uvars_included_in (Util.uvars_in_exp e') (Util.uvars_in_typ expected_pat_t)
         then raise (Error(Util.format2 "Implicit pattern variables in %s could not be resolved against expected type %s; please bind them explicitly" (Print.exp_to_string e') (Print.typ_to_string expected_pat_t), p.p));
-        if Tc.Env.debug env Options.High
-        then Util.print1 "Done checking pattern expression %s\n" (Normalize.exp_norm_to_string env e);
-
         //explicitly return e here, not its normal form, since pattern decoration relies on it
         e) in
     let p = Tc.Util.decorate_pattern env p exps in
