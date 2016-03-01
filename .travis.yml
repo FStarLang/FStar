@@ -42,7 +42,7 @@ install:
 script:
   - echo -e "\e[31m=== Some info about the environment ===\e[0m"
   - ocamlfind ocamlopt -config
-  - free -h
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then free -h; fi
   - echo -e "\e[31m=== Bootstrap cycle ===\e[0m"
   - make -C src
   - make -C src ocaml
