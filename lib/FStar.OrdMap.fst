@@ -9,7 +9,7 @@ opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
 
 type cmp (a:Type) = f:(a -> a -> Tot bool){total_order a f}
 
-type map_t (k:Type) (v:Type) (f:cmp k) (d:ordset k f) =
+private type map_t (k:Type) (v:Type) (f:cmp k) (d:ordset k f) =
   g:(k -> Tot (option v)){(forall x. (mem #k #f x d = is_Some (g x)))}
 
 abstract type ordmap: key:Type -> value:Type -> cmp key -> Type =

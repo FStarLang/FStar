@@ -13,7 +13,7 @@ let rec sorted (#a:Type) f l = match l with
   | x::[]    -> true
   | x::y::tl -> f x y && x <> y && sorted f (y::tl)
 
-type ordset (a:Type) (f:cmp a) = l:(list a){sorted f l}
+abstract type ordset (a:Type) (f:cmp a) = l:(list a){sorted f l}
 
 abstract val mem: #a:Type -> #f:cmp a -> a -> s:ordset a f -> Tot bool
 let mem (#a:Type) #f x s = FStar.List.Tot.mem x s
@@ -91,10 +91,10 @@ let rec subset (#a:Type) #f s1 s2 = match s1, s2 with
 abstract val singleton: #a:Type -> #f:cmp a -> a -> Tot (ordset a f)
 let singleton (#a:Type) #f x = [x]
 
-type Equal (#a:Type) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
+opaque type Equal (#a:Type) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
   (forall x. mem #_ #f x s1 = mem #_ #f x s2)
 
-private val eq_helper: #a:Type -> #f:cmp a -> x:a -> s:ordset a f
+private abstract val eq_helper: #a:Type -> #f:cmp a -> x:a -> s:ordset a f
                -> Lemma (requires (is_Cons s /\ f x (Cons.hd s) /\ x =!= Cons.hd s))
                        (ensures (not (mem #a #f x s)))
 let eq_helper (#a:Type) #f x (y::s) = set_props #a #f (y::s)
@@ -256,3 +256,10 @@ let rec subset_size (#a:Type) #f x y = match x, y with
   | hd::tl, hd'::tl' ->
     if f hd hd' && hd = hd' then subset_size #a #f tl tl'
     else subset_size #a #f x tl'
+
+//TODO: implement this one
+assume val size_union: #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
+                -> Lemma (requires True)
+                         (ensures ((size #a #f (union #a #f s1 s2) >= size #a #f s1) &&
+                                   (size #a #f (union #a #f s1 s2) >= size #a #f s2)))
+                         [SMTPat (size #a #f (union #a #f s1 s2))]
