@@ -2,7 +2,7 @@
 
 sha="$(git log --pretty=format:%h -n 1)"
 tell="nothing to commit, working directory clean"
-git status | grep $sha
+git status | grep -q "$tell"
 clean=$?
 
 if [ 0 -eq $clean ]; then
