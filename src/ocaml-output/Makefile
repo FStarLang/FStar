@@ -92,7 +92,7 @@ else
 endif
 COMPILER = OCaml $(shell ocamlc -version)
 DATE = $(shell $(DATE_EXEC) -Iseconds)
-COMMIT = $(shell git log --pretty=format:'%h' -n 1)
+COMMIT = $(shell ../tools/get_commit)
 FStar_Version.ml:__force__
 	echo 'let version = "$(VERSION)"' > FStar_Version.ml
 	echo 'let platform = "$(PLATFORM)"' >> FStar_Version.ml

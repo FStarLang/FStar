@@ -4,5 +4,6 @@
 *.fs* eol=lf
 *.ml* eol=lf
 
+/src/tools/git_commit eol=lf
 /src/tools/make_all_boot_fsts eol=lf
 /src/tools/mkfst eol=lf

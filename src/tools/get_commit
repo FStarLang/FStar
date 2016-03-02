@@ -1,0 +1,12 @@
+#!/bin/sh
+
+sha="$(git log --pretty=format:%h -n 1)"
+tell="nothing to commit, working directory clean"
+git status | grep $sha
+clean=$?
+
+if [ 0 -eq $clean ]; then
+   echo $sha
+else
+   echo "$sha (dirty)"
+fi
