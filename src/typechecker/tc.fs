@@ -658,7 +658,9 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
         =
        match t0 with
         | None -> (* no expected type; just build a function type from the binders in the term *)
-            let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible: Can't have a let rec annotation but no expected type" in
+            let _ = match env.letrecs with 
+                | [] -> () 
+                | _ -> failwith "Impossible: Can't have a let rec annotation but no expected type" in
             let bs, envbody, g, _ = tc_binders env bs in
             None, bs, [], None, envbody, g
 

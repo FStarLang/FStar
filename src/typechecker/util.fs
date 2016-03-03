@@ -104,6 +104,7 @@ let force_sort' s = match !s.tk with
 let force_sort s = mk (force_sort' s) None s.pos
 
 let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} = 
+  let t = SS.compress t in 
   match t.n with
    | Tm_unknown ->
      if univ_vars <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";
@@ -116,6 +117,7 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
         | _ -> a, true in
 
     let rec aux vars e : typ * bool =
+      let e = SS.compress e in
       match e.n with
       | Tm_meta(e, _) -> aux vars e
       | Tm_ascribed(e, t, _) -> t, true

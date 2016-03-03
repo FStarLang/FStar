@@ -157,6 +157,7 @@ let norm_universe cfg env u =
             begin 
                 try match List.nth env x with 
                       | Univ u -> [u]
+                      | Dummy -> [u]
                       | _ -> failwith "Impossible: universe variable bound to a term"
                 with _ -> if cfg.steps |> List.contains AllowUnboundUniverses
                           then [U_unknown]
@@ -220,7 +221,7 @@ let rec closure_as_term cfg env t =
 
            | Tm_app(head, args) -> 
              begin match head.n with 
-                | Tm_uvar _ when cfg.steps |> List.contains BetaUVars -> 
+                | Tm_uvar _ when (cfg.steps |> List.contains BetaUVars) -> 
                   let head = closure_as_term_delayed cfg env head in 
                   begin match head.n with 
                     | Tm_abs(binders, body, _) when (List.length binders = List.length args) -> 
@@ -254,12 +255,67 @@ let rec closure_as_term cfg env t =
            | Tm_meta(t', m) -> 
              mk (Tm_meta(closure_as_term_delayed cfg env t', m)) t.pos
        
-           | Tm_match  _ -> failwith "NYI"
-           | Tm_let _    -> failwith "NYI"
+           | Tm_let((false, [lb]), body) -> //non-recursive let 
+             let env0 = env in
+             let env = List.fold_left (fun env _ -> Dummy::env) env lb.lbunivs in
+             let typ = closure_as_term_delayed cfg env lb.lbtyp in
+             let def = closure_as_term cfg env lb.lbdef in
+             let body = match lb.lbname with 
+                | Inr _ -> body
+                | Inl _ -> closure_as_term cfg (Dummy::env0) body in 
+             let lb = {lb with lbtyp=typ; lbdef=def} in
+             mk (Tm_let((false, [lb]), body)) t.pos
+
+           | Tm_let((_,lbs), body) -> //recursive let
+             let norm_one_lb env lb = 
+                let env_univs = List.fold_right (fun _ env -> Dummy::env) lb.lbunivs env in
+                let env = if S.is_top_level lbs
+                          then env_univs
+                          else List.fold_right (fun _ env -> Dummy::env) lbs env_univs in
+                {lb with lbtyp=closure_as_term cfg env_univs lb.lbtyp;
+                         lbdef=closure_as_term cfg env lb.lbdef} in
+             let lbs = lbs |> List.map (norm_one_lb env) in
+             let body = 
+                let body_env = List.fold_right (fun _ env -> Dummy::env) lbs env in
+                closure_as_term cfg env body in
+             mk (Tm_let((true, lbs), body)) t.pos
+
+           | Tm_match(head, branches) -> 
+             let head = closure_as_term cfg env head in
+             let norm_one_branch env (pat, w_opt, tm) = 
+                let rec norm_pat env p = match p.v with 
+                    | Pat_constant _ -> p, env
+                    | Pat_disj [] -> failwith "Impossible"
+                    | Pat_disj (hd::tl) -> 
+                      let hd, env' = norm_pat env hd in 
+                      let tl = tl |> List.map (fun p -> fst (norm_pat env p)) in
+                      {p with v=Pat_disj(hd::tl)}, env'
+                    | Pat_cons(fv, pats) -> 
+                      let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) -> 
+                            let p, env = norm_pat env p in
+                            (p,b)::pats, env) ([], env) in
+                      {p with v=Pat_cons(fv, List.rev pats)}, env
+                    | Pat_var x -> 
+                      let x = {x with sort=closure_as_term cfg env x.sort} in
+                      {p with v=Pat_var x}, Dummy::env 
+                    | Pat_wild x -> 
+                      let x = {x with sort=closure_as_term cfg env x.sort} in
+                      {p with v=Pat_wild x}, Dummy::env 
+                    | Pat_dot_term(x, t) -> 
+                      let x = {x with sort=closure_as_term cfg env x.sort} in
+                      let t = closure_as_term cfg env t in
+                      {p with v=Pat_dot_term(x, t)}, env in
+               let pat, env = norm_pat env pat in
+               let w_opt = match w_opt with 
+                | None -> None
+                | Some w -> Some (closure_as_term cfg env w) in
+               let tm = closure_as_term cfg env tm in 
+               (pat, w_opt, tm) in
+            mk (Tm_match(head, branches |> List.map (norm_one_branch env))) t.pos
        
 and closure_as_term_delayed cfg env t = 
     match env with 
-        | _ when cfg.steps |> List.contains BetaUVars -> closure_as_term cfg env t
+        | _ when (cfg.steps |> List.contains BetaUVars) -> closure_as_term cfg env t
         | [] -> t
         | _ -> mk_Tm_delayed (Inr (fun () -> closure_as_term cfg env t)) t.pos  
  
@@ -277,7 +333,7 @@ and closures_as_binders_delayed cfg env bs =
 
 and close_comp cfg env c = 
     match env with
-        | [] when cfg.steps |> List.contains BetaUVars -> c
+        | [] when (cfg.steps |> List.contains BetaUVars) -> c
         | _ -> 
         match c.n with 
             | Total t -> mk_Total (closure_as_term_delayed cfg env t)

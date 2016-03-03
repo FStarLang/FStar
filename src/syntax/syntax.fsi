@@ -348,6 +348,7 @@ val argpos:         arg -> Range.range
 val pat_bvs:        pat -> list<bv>
 val is_implicit:    aqual -> bool
 val as_implicit:    bool -> aqual
+val is_top_level:   list<letbinding> -> bool
 
 (* gensym *)
 val next_id:        (unit -> int)

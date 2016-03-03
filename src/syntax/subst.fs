@@ -481,10 +481,6 @@ let close_univ_vars_comp (us:univ_names) (c:comp) : comp =
     let s = us |> List.mapi (fun i u -> UD(u, n - i)) in
     subst_comp s c
 
-let is_top_level = function 
-    | {lbname=Inr _}::_ -> true 
-    | _ -> false
-
 let open_let_rec lbs (t:term) =
     if is_top_level lbs then lbs, t //top-level let recs are not opened
     else (* Consider
@@ -496,41 +492,36 @@ let open_let_rec lbs (t:term) =
                 and g y = f@2 y@0 in
                 f@1 0, g@0 0
             i.e., the recursive environment for f is, in order:
-                        u, u', f, g, x 
+                        u, f, g, x 
                   for g is
-                        u, u', f, g, y 
+                        u, f, g, y 
                   and for the body is
                         f, g
          *)
-         let i, lbs, opening = 
+         let n_let_recs, lbs, let_rec_opening = 
              List.fold_right (fun lb (i, lbs, out) -> 
                 let x = Syntax.freshen_bv (left lb.lbname) in
                 i+1, {lb with lbname=Inl x}::lbs, DB(i, x)::out) lbs (0, [], []) in
-         let _, lbs, opening = 
-            List.fold_right (fun lb (i, lbs, out) -> 
-              let i, us, out = 
+
+         let lbs = lbs |> List.map (fun lb -> 
+              let _, us, u_let_rec_opening = 
                   List.fold_right (fun u (i, us, out) -> 
                     let u = Syntax.new_univ_name None in
                     i+1, u::us, UN(i, U_name u)::out)
-                  lb.lbunivs (i, [], out) in
-              (i, {lb with lbunivs=us}::lbs, out))
-            lbs (i, [], opening) in 
-         let lbs = lbs |> List.map (fun lb -> 
-            {lb with lbdef=subst opening lb.lbdef}) in
-         let t = subst opening t in 
+                  lb.lbunivs (n_let_recs, [], let_rec_opening) in
+             {lb with lbunivs=us; lbdef=subst u_let_rec_opening lb.lbdef}) in
+
+         let t = subst let_rec_opening t in 
          lbs, t
 
 let close_let_rec lbs (t:term) = 
     if is_top_level lbs then lbs, t //top-level let recs do not have to be closed
-    else let i, closing = 
+    else let n_let_recs, let_rec_closing = 
             List.fold_right (fun lb (i, out) -> i+1, NM(left lb.lbname, i)::out) lbs (0, []) in
-         let _, closing = 
-            List.fold_right (fun lb -> 
-              lb.lbunivs |> List.fold_right (fun u (i, out) -> i+1, UD(u, i)::out))
-            lbs (i, closing) in
-         let lbs = lbs |> List.map (fun lb -> 
-            {lb with lbdef=subst closing lb.lbdef}) in
-         let t = subst closing t in 
+         let lbs = lbs |> List.map (fun lb ->
+                let _, u_let_rec_closing = List.fold_right (fun u (i, out) -> i+1, UD(u, i)::out) lb.lbunivs (n_let_recs, let_rec_closing) in
+                {lb with lbdef=subst u_let_rec_closing lb.lbdef}) in
+         let t = subst let_rec_closing t in 
          lbs, t
 
 let close_tscheme (binders:binders) ((us, t) : tscheme) = 

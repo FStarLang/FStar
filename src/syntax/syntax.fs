@@ -393,6 +393,10 @@ let as_arg t : arg = t, None
 let is_null_bv (b:bv) = b.ppname.idText = null_id.idText
 let is_null_binder (b:binder) = is_null_bv (fst b)
 
+let is_top_level = function 
+    | {lbname=Inr _}::_ -> true 
+    | _ -> false
+
 let freenames_of_binders (bs:binders) : freenames =
     List.fold_right (fun (x, _) out -> Util.set_add x out) bs no_names
 
