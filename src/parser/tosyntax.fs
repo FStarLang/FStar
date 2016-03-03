@@ -641,15 +641,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         let fnames = List.rev fnames in
 
         let desugar_one_def env lbname ((_, args, result_t), def) =
-            let def = match result_t with
-                | None -> def
-                | Some t -> mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr in
+            let t = match result_t with
+                | None -> tun
+                | Some t -> desugar_term env t in 
             let def = match args with
                 | [] -> def
                 | _ -> mk_term (un_curry_abs args def) top.range top.level in
             let body = desugar_term env def in
             let body = if is_rec then Subst.close rec_bindings body else body in
-            mk_lb (lbname, tun, body) in
+            mk_lb (lbname, t, body) in
         let lbs = List.map2 (desugar_one_def (if is_rec then env' else env)) fnames funs in
         let body = desugar_term env' body in
         mk <| (Tm_let((is_rec, lbs), Subst.close rec_bindings body)) in

@@ -25,7 +25,8 @@ type step =
   | WHNF            //Only produce a weak head normal form
   | Inline
   | Unfold
-  | Beta            //remove? Always do beta
+  | Beta            //remove Always do beta
+  | BetaUVars       //only beta reduce applications of resolved uvars
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
   | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables

@@ -43,7 +43,8 @@ type step =
   | WHNF            //Only produce a weak head normal form
   | Inline
   | Unfold
-  | Beta            //remove? Always do beta
+  | Beta            
+  | BetaUVars
   | Simplify        //Simplifies some basic log cfg ical tautolog cfg ies: not part of definitional equality!
   | EraseUniverses
   | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
@@ -189,7 +190,7 @@ let norm_universe cfg env u =
 (*******************************************************************)
 let rec closure_as_term cfg env t =
     match env with
-        | [] -> t
+        | [] when not(cfg.steps |> List.contains BetaUVars)-> t
         | _ -> 
         let t = compress t in 
         match t.n with 
@@ -218,10 +219,20 @@ let rec closure_as_term cfg env t =
               end
 
            | Tm_app(head, args) -> 
-             let head = closure_as_term_delayed cfg env head in 
-             let args = closures_as_args_delayed cfg env args in
-             mk (Tm_app(head, args)) t.pos
-        
+             begin match head.n with 
+                | Tm_uvar _ when cfg.steps |> List.contains BetaUVars -> 
+                  let head = closure_as_term_delayed cfg env head in 
+                  begin match head.n with 
+                    | Tm_abs(binders, body, _) when (List.length binders = List.length args) -> 
+                      closure_as_term cfg (List.fold_left (fun env' (t, _) -> Clos(env, t, Util.mk_ref None)::env') env args) body
+                    | _ -> mk (Tm_app(head, args)) t.pos
+                  end
+                | _ -> 
+                 let head = closure_as_term_delayed cfg env head in 
+                 let args = closures_as_args_delayed cfg env args in
+                 mk (Tm_app(head, args)) t.pos
+            end
+                    
            | Tm_abs(bs, body, lopt) -> 
              let bs, env = closures_as_binders_delayed cfg env bs in 
              let body = closure_as_term_delayed cfg env body in
@@ -248,13 +259,14 @@ let rec closure_as_term cfg env t =
        
 and closure_as_term_delayed cfg env t = 
     match env with 
+        | _ when cfg.steps |> List.contains BetaUVars -> closure_as_term cfg env t
         | [] -> t
         | _ -> mk_Tm_delayed (Inr (fun () -> closure_as_term cfg env t)) t.pos  
  
 and closures_as_args_delayed cfg env args =
     match env with 
-        | [] -> args
-        | _ ->  List.map (fun (x, imp) -> closure_as_term_delayed cfg env x, imp) args 
+        | [] when not (cfg.steps |> List.contains BetaUVars) -> args
+        | _ -> List.map (fun (x, imp) -> closure_as_term_delayed cfg env x, imp) args 
 
 and closures_as_binders_delayed cfg env bs = 
     let env, bs = bs |> List.fold_left (fun (env, out) (b, imp) -> 
@@ -265,7 +277,7 @@ and closures_as_binders_delayed cfg env bs =
 
 and close_comp cfg env c = 
     match env with
-        | [] -> c
+        | [] when cfg.steps |> List.contains BetaUVars -> c
         | _ -> 
         match c.n with 
             | Total t -> mk_Total (closure_as_term_delayed cfg env t)
