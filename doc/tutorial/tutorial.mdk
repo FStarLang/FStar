@@ -1883,7 +1883,7 @@ pivot in the middle before returning.
       | [] -> []
       | pivot::tl ->
         let hi, lo  = partition (fun x -> pivot <= x) tl in
-        sort (append lo (pivot::sort hi))
+        append (sort lo) (pivot::sort hi)
 
 
 ~Exercise
