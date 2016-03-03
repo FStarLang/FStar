@@ -112,7 +112,7 @@ type ec_key = {
 }
 
 assume val ec_point_serialize: ec_point -> Tot bytes
-assume val ec_is_on_curve: ec_params -> ec_point -> bool
+assume val ec_is_on_curve: ec_params -> ec_point -> Tot bool
 assume val ecdh_agreement: ec_key -> ec_point -> bytes
 
 assume val ecdsa_sign: option hash_alg -> ec_key -> bytes -> bytes
