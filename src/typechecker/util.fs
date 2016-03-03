@@ -67,10 +67,16 @@ let as_uvar : typ -> uvar = function
     | _ -> failwith "Impossible"
 
 let new_implicit_var env k =
-    let t, u = new_uvar_aux env k in
-    let g = {Rel.trivial_guard with implicits=[(env, as_uvar u, t, k, u.pos)]} in
-    t, (as_uvar u, u.pos), g
+    match Util.destruct k Const.range_of_lid with
+     | Some [_; (tm, _)] -> 
+       let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) None tm.pos in
+       t, [], Rel.trivial_guard
 
+     | _ -> 
+       let t, u = new_uvar_aux env k in
+       let g = {Rel.trivial_guard with implicits=[(env, as_uvar u, t, k, u.pos)]} in
+       t, [(as_uvar u, u.pos)], g
+     
 let check_uvars r t =
   let uvs = Free.uvars t in
   if not (Util.set_is_empty uvs)
@@ -545,7 +551,7 @@ let lift_formula env t mk_wp mk_wlp f =
   let k = SS.subst [NT(a, t)] kwp in
   let wp = mk_Tm_app mk_wp   [S.as_arg t; S.as_arg f] (Some k.n) f.pos in
   let wlp = mk_Tm_app mk_wlp [S.as_arg t; S.as_arg f] (Some k.n) f.pos in
-  mk_comp md_pure Recheck.t_unit wp wlp [] 
+  mk_comp md_pure Common.t_unit wp wlp [] 
 
 let label reason r f : term =
     mk (Tm_meta(f, Meta_labeled(reason, r, false))) None f.pos
@@ -600,10 +606,8 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                 | Trivial -> c
                 | NonTrivial f ->
                 let c =
-                    if true 
-                    || (Util.is_pure_or_ghost_comp c
-                    && not (is_function (Util.comp_result c))
-                    && not (Util.is_partial_return c))
+                    if (Util.is_pure_or_ghost_comp c
+                       && not (Util.is_partial_return c))
                     then let x = S.gen_bv "strengthen_pre_x" None (Util.comp_result c) in
                          let xret = Util.comp_set_flags (return_value env x.sort (S.bv_to_name x)) [PARTIAL_RETURN] in
                          let lc = bind env (Some e) (Util.lcomp_of_comp c) (Some x, Util.lcomp_of_comp xret) in
@@ -641,7 +645,7 @@ let record_application_site env e lc =
         || lid_equals (Env.current_module env) Const.prims_lid
         || S.is_teff res_t
         then c
-        else let g = Rel.guard_of_guard_formula (NonTrivial Recheck.t_unit) in
+        else let g = Rel.guard_of_guard_formula (NonTrivial Common.t_unit) in
              let c, _ = strengthen_precondition (Some (fun () -> "push")) env e (Util.lcomp_of_comp c) g in
              let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in
              let x = S.new_bv None res_t in
@@ -890,7 +894,7 @@ let maybe_instantiate (env:Env.env) e t =
       let rec aux subst = function
         | (x, Some (Implicit dot))::rest ->
           let t = SS.subst subst x.sort in
-          let v, u, g = new_implicit_var env t in
+          let v, _, g = new_implicit_var env t in
           let subst = NT(x, v)::subst in
           let args, bs, subst, g' = aux subst rest in
           (v, Some (Implicit dot))::args, bs, subst, Rel.conj_guard g g'

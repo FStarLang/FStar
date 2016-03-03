@@ -1,7 +1,3 @@
-(*--build-config
-    options:;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.List.Tot.fst FStar.OrdSet.fst FStar.OrdSetProps.fst
- --*)
 module FStar.OrdMap
 
 open FStar.OrdSet
@@ -34,7 +30,7 @@ abstract val dom     : #key:Type -> #value:Type -> #f:cmp key -> m:ordmap key va
 abstract val remove  : #key:Type -> #value:Type -> #f:cmp key -> key
               -> ordmap key value f -> Tot (ordmap key value f)
 abstract val choose  : #key:Type -> #value:Type -> #f:cmp key -> ordmap key value f
-              -> Tot (option (Tuple2 key value))
+              -> Tot (option (key * value))
 
 abstract val size    : #key:Type -> #value:Type -> #f:cmp key -> ordmap key value f
               -> Tot nat
@@ -45,7 +41,7 @@ let empty (#k:Type) (#v:Type) #f =
   Mk_map d g
 
 let const_on (#k:Type) (#v:Type) #f d x =
-  let g = (fun y -> if mem y d then Some x else None) in
+  let g : k -> Tot (option v) = (fun y -> if mem y d then Some x else None) in
   Mk_map d g
 
 let select (#k:Type) (#v:Type) #f x m = (Mk_map.m m) x
@@ -54,7 +50,7 @@ let insert (#a:Type) (#f:cmp a) (x:a) (s:ordset a f) = union #a #f (singleton #a
 
 let update (#k:Type) (#v:Type) #f x y m =
   let s' = insert x (Mk_map.d m) in
-  let g' = fun x' -> if x' = x then Some y else (Mk_map.m m) x' in
+  let g' : k -> Tot (option v) = fun (x':k) -> if x' = x then Some y else (Mk_map.m m) x' in
   Mk_map s' g'
 
 let contains (#k:Type) (#v:Type) #f x m = mem x (Mk_map.d m)
@@ -63,7 +59,7 @@ let dom (#k:Type) (#v:Type) #f m = (Mk_map.d m)
 
 let remove (#k:Type) (#v:Type) #f x m =
   let s' = remove x (Mk_map.d m) in
-  let g' = fun x' -> if x' = x then None else (Mk_map.m m) x' in
+  let g' : k -> Tot (option v) = fun x' -> if x' = x then None else (Mk_map.m m) x' in
   Mk_map s' g'
 
 let choose (#k:Type) (#v:Type) #f m =
@@ -73,7 +69,7 @@ let choose (#k:Type) (#v:Type) #f m =
 
 let size (#k:Type) (#v:Type) #f m = OrdSet.size (Mk_map.d m)
 
-abstract type Equal (#k:Type) (#v:Type) (#f:cmp k) (m1:ordmap k v f) (m2:ordmap k v f) = 
+abstract type Equal (#k:Type) (#v:Type) (#f:cmp k) (m1:ordmap k v f) (m2:ordmap k v f) =
   (forall x. select #k #v #f x m1 = select #k #v #f x m2)
 
 
@@ -207,7 +203,7 @@ abstract val sel_rem2: #k:Type -> #v:Type -> #f:cmp k -> x:k -> x':k -> m:ordmap
 
 abstract val rem_upd: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k -> m:ordmap k v f
              -> Lemma (requires (True)) (ensures (x =!= x' ==>
-                                                  Equal (update #k #v #f x y (OrdMap.remove #k #v #f x' m)) 
+                                                  Equal (update #k #v #f x y (OrdMap.remove #k #v #f x' m))
                                                         (OrdMap.remove #k #v #f x' (update #k #v #f x y m))))
                 [SMTPat (update #k #v #f x y (OrdMap.remove #k #v #f x' m))]
 

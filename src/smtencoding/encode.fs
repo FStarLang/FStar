@@ -349,6 +349,8 @@ let encode_const = function
     | Const_int i  -> boxInt (mkInteger i)
     | Const_int32 i -> Term.mkApp("FStar.Int32.Int32", [boxInt (mkInteger32 i)])
     | Const_string(bytes, _) -> varops.string_const (Util.string_of_bytes <| bytes)
+    | Const_range r -> mk_Range_const
+    | Const_effect -> mk_Term_type
     | c -> failwith (Util.format1 "Unhandled constant: %s" (Print.const_to_string c))
 
 let as_function_typ env t0 =
@@ -508,7 +510,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              t, [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
       | Tm_refine _ ->
-        let x, f = match N.normalize_refinement [N.EraseUniverses] env.tcenv t0 with
+        let x, f = match N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv t0 with
             | {n=Tm_refine(x, f)} -> 
                let b, f = SS.open_term [x, None] f in
                fst (List.hd b), f
@@ -916,7 +918,7 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
         (Const.false_lid, const_op mkFalse);
     ] in
 
-    let fallback phi =  match phi.n with
+    let rec fallback phi =  match phi.n with
         | Tm_meta(phi', Meta_labeled(msg, r, b)) ->
           let phi, labs, decls = encode_formula_with_labels phi' env in
           mk (Term.Labeled(phi, msg, r)), [], decls
@@ -929,13 +931,23 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
            let t, decls = encode_let x t1 e1 e2 env encode_formula in
            t, [], decls
 
-        | Tm_app(head, [_; (x, _); (t, _)]) -> 
+        | Tm_app(head, args) -> 
           let head = Util.un_uinst head in
-          begin match head.n with 
-            | Tm_fvar (fv, _) when lid_equals fv.v Const.has_type_lid -> //interpret Prims.has_type as HasType
+          begin match head.n, args with 
+            | Tm_fvar (fv, _), [_; (x, _); (t, _)] when lid_equals fv.v Const.has_type_lid -> //interpret Prims.has_type as HasType
               let x, decls = encode_term x env in 
               let t, decls' = encode_term t env in
               Term.mk_HasType x t, [], decls@decls'
+
+            | Tm_fvar (fv, _), [_; _; (r, _); (msg, _); (phi, _)] when lid_equals fv.v Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
+              begin match (SS.compress r).n, (SS.compress msg).n with 
+                | Tm_constant (Const_range r), Tm_constant (Const_string (s, _)) -> 
+                  let phi = S.mk (Tm_meta(phi,  Meta_labeled(Util.string_of_unicode s, r, false))) None r in
+                  fallback phi
+                | _ -> 
+                  fallback phi
+              end
+
             | _ -> 
               let tt, decls = encode_term phi env in
               Term.mk_Valid tt, [], decls
@@ -1140,17 +1152,24 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
         let valid = Term.mkApp("Valid", [Term.mkApp(for_all, [a;b])]) in
         let valid_b_x = Term.mkApp("Valid", [mk_ApplyTT b x]) in
         [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkForall([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)), Some "forall interpretation")] in
-    let mk_exists_interp : string -> term -> decls_t = fun for_all tt ->
+    let mk_exists_interp : string -> term -> decls_t = fun for_some tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
         let xx = ("x", Term_sort) in
         let a = mkFreeV aa in
         let b = mkFreeV bb in
         let x = mkFreeV xx in
-        let valid = Term.mkApp("Valid", [Term.mkApp(for_all, [a;b])]) in
+        let valid = Term.mkApp("Valid", [Term.mkApp(for_some, [a;b])]) in
         let valid_b_x = Term.mkApp("Valid", [mk_ApplyTT b x]) in
         [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkExists([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)), Some "exists interpretation")] in
-   
+   let mk_range_of_interp : string -> term -> decls_t = fun range_of tt ->
+        let aa = ("a", Term_sort) in
+        let bb = ("b", Term_sort) in
+        let a = mkFreeV aa in
+        let b = mkFreeV bb in
+        let range_of_ty = Term.mkApp(range_of, [a;b]) in
+        [Term.Assume(mkForall([[range_of_ty]], [aa;bb], mk_HasTypeZ Term.mk_Range_const range_of_ty), Some "Range_const typing")] in
+           
     let prims = [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
@@ -1166,6 +1185,7 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
                  (Const.iff_lid,    mk_iff_interp);
                  (Const.forall_lid, mk_forall_interp);
                  (Const.exists_lid, mk_exists_interp);
+                 (Const.range_of_lid, mk_range_of_interp);
                 ] in
     (fun (t:lident) (s:string) (tt:term) ->
         match Util.find_opt (fun (l, _) -> lid_equals l t) prims with
@@ -1192,14 +1212,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 //        || Util.starts_with l.str "Prims.all_" 
 
     let encode_top_level_val env lid t quals = 
-        let tt = whnf env t in
-//        Printf.printf "Encoding top-level val %s : %s\nWHNF is %s\n" 
+        let tt = norm env t in
+//        if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+//        then Printf.printf "Encoding top-level val %s : %s\Normalized to is %s\n" 
 //            (Print.lid_to_string lid) 
 //            (Print.term_to_string t)
 //            (Print.term_to_string tt);
         let decls, env = encode_free_var env lid t tt quals in
         if Util.is_smt_lemma t
-        then decls@encode_smt_lemma env lid t, env
+        then decls@encode_smt_lemma env lid tt, env
         else decls, env 
     in
 
@@ -1818,7 +1839,9 @@ let solve tcenv q : unit =
             let closing, bindings = aux bindings in 
             Util.close_forall (List.rev closing) q, bindings in 
         let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
-        if debug tcenv Options.Low then Util.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
+        if debug tcenv Options.Low 
+        || debug tcenv <| Options.Other "SMTEncoding" 
+        then Util.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
         let phi, qdecls = encode_formula q env in
 //        if not (lid_equals (Env.current_module tcenv) Const.prims_lid)
 //        then Util.print1 "About to label goals in %s\n" (Term.print_smt_term phi);

@@ -50,8 +50,8 @@ let trans_qual = function
   | AST.Effect ->        S.Effect
   | AST.New  ->          S.New
   | AST.Abstract ->      S.Abstract
-  | AST.Opaque ->        failwith "Impossible"
-
+  | AST.Opaque ->        S.Unfoldable 
+  
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
   | AST.ResetOptions -> S.ResetOptions
@@ -118,7 +118,6 @@ let op_as_lid env arity rng s =
         | ">=" ->   r C.op_GTE
         | "&&" ->   r C.op_And
         | "||" ->   r C.op_Or
-        | "*" ->    r C.op_Multiply
         | "+" ->    r C.op_Addition
         | "-" when (arity=1) -> r C.op_Minus
         | "-" ->    r C.op_Subtraction
@@ -453,7 +452,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Op("=!=", args) ->
       desugar_term env (mk_term(Op("~", [mk_term (Op("==", args)) top.range top.level])) top.range top.level)
 
-    | Op("*", [_;_]) when env.expect_typ -> 
+    | Op("*", [_;_]) when (op_as_lid env 2 top.range "*" |> Option.isNone) -> //if op_Star has not been rebound, then it's reserved for tuples
       let rec flatten t = match t.tm with
             | Op("*", [t1;t2]) ->
               let rest = flatten t2 in
@@ -1334,8 +1333,10 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
           | _ -> raise (Error("Effect " ^AST.term_to_string head^ " not found", d.drange)) in
         ed, desugar_args env args in
     let binders = Subst.close_binders binders in
-    let subst = Util.subst_of_list ed.binders args in
-    let sub x = [], Subst.close binders (Subst.subst subst (snd x)) in
+    let sub (_, x) =
+        let edb, x = Subst.open_term ed.binders x in
+        let s = Util.subst_of_list edb args in
+        [], Subst.close binders (Subst.subst s x) in
     let ed = {
             mname=qualify env0 eff_name;
             qualifiers  =List.map trans_qual quals;

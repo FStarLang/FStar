@@ -31,7 +31,7 @@ val report: env -> list<string> -> unit
 //unification variables
 val new_uvar : env -> typ -> typ
 val as_uvar  : typ -> uvar
-val new_implicit_var : env -> typ -> (term * (uvar * Range.range) * guard_t)
+val new_implicit_var : env -> typ -> (term * list<(uvar * Range.range)> * guard_t)
 val check_uvars: Range.range -> typ -> unit
 
 //extracting annotations from a term

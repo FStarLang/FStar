@@ -93,11 +93,9 @@ let binders_of_freevars fvs = Util.set_elements fvs |> List.map mk_binder
 
 let mk_subst s = [s]
 
-let subst_formal (f:binder) (a:arg) = DB(0, fst a)
 let subst_of_list (formals:binders) (actuals:args) : subst_t =
     if (List.length formals = List.length actuals)
-    then List.fold_right2 (fun f a (n, out) -> (n + 1, DB(n, fst a)::out)) formals actuals (0, [])
-         |> snd
+    then List.fold_right2 (fun f a out -> NT(fst f, fst a)::out) formals actuals []
     else failwith "Ill-formed substitution"
 
 open FStar.Syntax.Subst
@@ -380,8 +378,13 @@ let rec pre_typ t =
 
 let destruct typ lid =
   let typ = compress typ in
-  match typ.n with
-    | Tm_app({n=Tm_fvar(tc, _)}, args) when lid_equals tc.v lid -> Some args
+  match (un_uinst typ).n with
+    | Tm_app(head, args) -> 
+      let head = un_uinst head in 
+      begin match head.n with 
+              | Tm_fvar(tc, _) when lid_equals tc.v lid -> Some args
+              | _ -> None
+      end
     | Tm_fvar (tc, _) when lid_equals tc.v lid -> Some []
     | _ -> None
 

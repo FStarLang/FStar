@@ -1,8 +1,3 @@
-(*--build-config
-    options:;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.List.Tot.fst FStar.ListProperties.fst 
- --*)
-
 module FStar.OrdSet
 
 type total_order (a:Type) (f: (a -> a -> Tot bool)) =

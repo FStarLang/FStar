@@ -65,9 +65,12 @@ let rec compress_univ u = match u with
 let subst_to_string s = s |> List.map (fun (b, _) -> b.ppname.idText) |> String.concat ", "
 
 //Lookup a bound var or a name in a parallel substitution
-let subst_bv a s = Util.find_map s (function DB (i, t) when (i=a.index) -> Some t | _ -> None)
+let subst_bv a s = Util.find_map s (function 
+    | DB (i, x) when (i=a.index) -> 
+      Some (bv_to_name (Syntax.set_range_of_bv x (Syntax.range_of_bv a)))
+    | _ -> None)
 let subst_nm a s = Util.find_map s (function  
-    | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({x with index=i})) 
+    | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({a with index=i})) 
     | NT (x, t) when bv_eq a x -> Some t
     | _ -> None)
 let subst_univ_bv x s = Util.find_map s (function 
@@ -308,7 +311,7 @@ let open_binders' bs =
         | [] -> [], o
         | (x, imp)::bs' -> 
           let x' = {freshen_bv x with sort=subst o x.sort} in
-          let o = DB(0, bv_to_name x')::shift_subst 1 o in 
+          let o = DB(0, x')::shift_subst 1 o in 
           let bs', o = aux bs' o in 
           (x',imp)::bs', o in
    aux bs [] 
@@ -322,39 +325,70 @@ let open_term (bs:binders) t =
 let open_comp (bs:binders) t = 
    let bs', opening = open_binders' bs in
    bs', subst_comp opening t
-let open_pat (p:pat) : pat * subst_t = 
-    let rec aux sub p = match p.v with 
+
+
+let open_pat (p:pat) : pat * subst_t =
+    let rec aux_disj sub renaming p = 
+        match p.v with 
+           | Pat_disj _ -> failwith "impossible"
+
+           | Pat_constant _ -> p
+
+           | Pat_cons(fv, pats) ->
+             {p with v=Pat_cons(fv, pats |> List.map (fun (p, b) -> 
+                       aux_disj sub renaming p, b))}
+
+           | Pat_var x ->
+             let yopt = Util.find_map renaming (function 
+                    | (x', y) when (x.ppname.idText=x'.ppname.idText) -> Some y
+                    | _ -> None) in
+             let y = match yopt with 
+                | None -> {freshen_bv x with sort=subst sub x.sort} 
+                | Some y -> y in
+             {p with v=Pat_var y}
+
+           | Pat_wild x -> 
+             let x' = {freshen_bv x with sort=subst sub x.sort} in
+             {p with v=Pat_wild x'}
+
+           | Pat_dot_term(x, t0) -> 
+             let x = {x with sort=subst sub x.sort} in
+             let t0 = subst sub t0 in
+             {p with v=Pat_dot_term(x, t0)} in 
+    
+    let rec aux sub renaming p = match p.v with 
        | Pat_disj [] -> failwith "Impossible: empty disjunction"
      
-       | Pat_constant _ -> p, sub
+       | Pat_constant _ -> p, sub, renaming
        
        | Pat_disj(p::ps) -> 
-         let p, sub = aux sub p in
-         let ps = List.map (fun p -> fst (aux sub p)) ps in
-         {p with v=Pat_disj(p::ps)}, sub
+         let p, sub, renaming = aux sub renaming p in
+         let ps = List.map (aux_disj sub renaming) ps in
+         {p with v=Pat_disj(p::ps)}, sub, renaming
 
        | Pat_cons(fv, pats) ->
-         let pats, sub = pats |> List.fold_left (fun (pats, sub) (p, imp) -> 
-             let p, sub = aux sub p in
-             ((p,imp)::pats, sub)) ([], sub) in
-         {p with v=Pat_cons(fv, List.rev pats)}, sub
+         let pats, sub, renaming = pats |> List.fold_left (fun (pats, sub, renaming) (p, imp) -> 
+             let p, sub, renaming = aux sub renaming p in
+             ((p,imp)::pats, sub, renaming)) ([], sub, renaming) in
+         {p with v=Pat_cons(fv, List.rev pats)}, sub, renaming
 
        | Pat_var x ->
          let x' = {freshen_bv x with sort=subst sub x.sort} in
-         let sub = DB(0, bv_to_name x')::shift_subst 1 sub in 
-         {p with v=Pat_var x'}, sub
+         let sub = DB(0, x')::shift_subst 1 sub in 
+         {p with v=Pat_var x'}, sub, (x,x')::renaming
 
        | Pat_wild x -> 
          let x' = {freshen_bv x with sort=subst sub x.sort} in
-         let sub = DB(0, bv_to_name x')::shift_subst 1 sub in 
-         {p with v=Pat_wild x'}, sub
+         let sub = DB(0, x')::shift_subst 1 sub in 
+         {p with v=Pat_wild x'}, sub, (x,x')::renaming
 
        | Pat_dot_term(x, t0) -> 
          let x = {x with sort=subst sub x.sort} in
          let t0 = subst sub t0 in
-         {p with v=Pat_dot_term(x, t0)}, sub in //these are not in scope, so don't shift the index
+         {p with v=Pat_dot_term(x, t0)}, sub, renaming in //these are not in scope, so don't shift the index
     
-    aux [] p
+    let p, sub, _ = aux [] [] p in
+    p, sub
 
 let open_branch (p, wopt, e) = 
     let p, opening = open_pat p in
@@ -459,15 +493,6 @@ let close_let_rec lbs (t:term) =
     if is_top_level lbs then lbs, t //top-level let recs do not have to be closed
     else failwith "NYI: close_let_rec"
 
-//requires: length bs = length args
-let mk_subst_binders args = 
-   let s, _ = List.fold_right (fun a (s, i) ->  DB(i, fst a)::s, i + 1) args ([], 0) in
-   s
-
-let subst_binders (bs:binders) (args:args) t = subst (mk_subst_binders args) t
-let subst_binders_comp (bs:binders) (args:args) t = subst_comp (mk_subst_binders args) t
- 
-
 let close_tscheme (binders:binders) ((us, t) : tscheme) = 
     let n = List.length binders - 1 in
     let k = List.length us in 
@@ -483,4 +508,4 @@ let close_univ_vars_tscheme (us:univ_names) ((us', t):tscheme) =
 
 let opening_of_binders (bs:binders) = 
   let n = List.length bs - 1 in
-  bs |> List.mapi (fun i (x, _) -> DB(n - i, bv_to_name x))
+  bs |> List.mapi (fun i (x, _) -> DB(n - i, x))

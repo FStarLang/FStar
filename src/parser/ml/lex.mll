@@ -58,6 +58,7 @@
     Hashtbl.add keywords "kind"          KIND        ;
     Hashtbl.add keywords "in"            IN          ;
     Hashtbl.add keywords "inline"        INLINE      ;
+    Hashtbl.add keywords "irreducible"   IRREDUCIBLE ;
     Hashtbl.add keywords "lazy"          LAZY        ;
     Hashtbl.add keywords "let"           (LET false) ;
     Hashtbl.add keywords "logic"         LOGIC       ;

@@ -179,7 +179,7 @@ abstract val lemma_disjoint_parents: pr:rid -> r:rid -> ps:rid -> s:rid -> Lemma
 let lemma_disjoint_parents pr r ps s = ()
 
 let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) =
-    Map.contains m i /\ Heap.contains (Map.sel m i) (as_ref r)
+    Map.contains m i && Heap.contains (Map.sel m i) (as_ref r)
 
 let fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
   not (Heap.contains (Map.sel m0 i) (as_ref r))

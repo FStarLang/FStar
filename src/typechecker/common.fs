@@ -20,6 +20,7 @@ open FStar
 open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
+open FStar.Ident
 
 (* relations on types, kinds, etc. *)
 type rel =
@@ -54,3 +55,15 @@ type deferred = list<(string * prob)>
 type univ_ineq = universe * universe
 
 
+module C = FStar.Syntax.Const
+
+let tconst l = mk (Tm_fvar(lid_as_fv (set_lid_range l Range.dummyRange) None)) (Some Util.ktype0.n) Range.dummyRange
+let t_unit   = tconst C.unit_lid
+let t_bool   = tconst C.bool_lid 
+let t_uint8  = tconst C.uint8_lid 
+let t_int    = tconst C.int_lid   
+let t_int32  = tconst C.int32_lid 
+let t_int64  = tconst C.int64_lid 
+let t_string = tconst C.string_lid
+let t_float  = tconst C.float_lid 
+let t_char   = tconst C.char_lid  

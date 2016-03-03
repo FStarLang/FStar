@@ -389,6 +389,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                              | UnivArgs(us', _)::stack -> 
                                let env = us' |> List.fold_left (fun env u -> Univ u::env) env in 
                                norm cfg env stack t 
+                             | _ when (cfg.steps |> List.contains EraseUniverses) -> 
+                               norm cfg env stack t 
                              | _ -> failwith (Util.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.v))
                       else norm cfg env stack t             
                  end
@@ -734,7 +736,7 @@ let term_to_string env t = Print.term_to_string (normalize [AllowUnboundUniverse
 let comp_to_string env c = Print.comp_to_string (norm_comp (config [AllowUnboundUniverses] env) [] c)
 
 let normalize_refinement steps env t0 =
-   let t = normalize (steps@[Beta; WHNF]) env t0 in
+   let t = normalize (steps@[Beta]) env t0 in
    let rec aux t =
     let t = compress t in
     match t.n with

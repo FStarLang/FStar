@@ -1,17 +1,15 @@
 module Test
 
-type rel (a:Type) (b:Type) : Type =
-  | R : l:a -> r:b -> rel a b
+(* assume val f : x:int -> Div int  *)
+(*   (requires (b2t (x >= 0))) *)
+(*   (ensures (fun y -> x == y)) *)
 
+(* val test : nat -> Dv nat *)
+(* let test x = f x *)
 
-//let pair_rel (R a b) = R b a
+assume val f : x:int -> #r:range_of x -> unit -> Pure int
+  (requires (labeled r "Pre-condition of f" (x >= 0)))
+  (ensures (fun y -> x = y))
 
-let pair_rel x y = match x, y with
-    | (R a b), (R c d) -> ()
-
-//R (a,c) (b,d)
-
-//let f x y = pair_rel x y
-
-
-
+val test : int -> Tot int
+let test x = f (x + 1) ()
