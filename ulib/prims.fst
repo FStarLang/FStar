@@ -558,6 +558,8 @@ assume val using: #a:Type -> #p:Type -> proving:p -> pat:a -> Lemma (ensures (Us
 assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
+val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
+let unsafe_coerce #a #b x = admit(); x
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
 assume val _assert : p:Type -> unit -> Pure unit (requires $"assertion failed" p) (ensures (fun x -> True))
 assume val cut     : p:Type -> Pure unit (requires $"assertion failed" p) (fun x -> p)
