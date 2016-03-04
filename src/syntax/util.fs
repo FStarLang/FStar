@@ -279,8 +279,10 @@ let head_and_args t =
         | Tm_app(head, args) -> head, args
         | _ -> t, []
         
- let un_uinst t = match (Subst.compress t).n with 
-        | Tm_uinst(t, _) -> t
+ let un_uinst t = 
+    let t = Subst.compress t in 
+    match t.n with 
+        | Tm_uinst(t, _) -> Subst.compress t
         | _ -> t 
    
 let is_smt_lemma t = match (compress t).n with

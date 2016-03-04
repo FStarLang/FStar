@@ -2803,7 +2803,7 @@ FStar_TypeChecker_Common.Trivial
 end))))))))))
 
 # 1157 "FStar.TypeChecker.Util.fst"
-let short_circuit_head : FStar_Syntax_Syntax.term  ->  Prims.bool = (fun l -> (match ((let _150_1025 = (FStar_Syntax_Subst.compress l)
+let short_circuit_head : FStar_Syntax_Syntax.term  ->  Prims.bool = (fun l -> (match ((let _150_1025 = (FStar_Syntax_Util.un_uinst l)
 in _150_1025.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_fvar (v, _69_1568) -> begin
 (FStar_Util.for_some (FStar_Ident.lid_equals v.FStar_Syntax_Syntax.v) ((FStar_Syntax_Const.op_And)::(FStar_Syntax_Const.op_Or)::(FStar_Syntax_Const.and_lid)::(FStar_Syntax_Const.or_lid)::(FStar_Syntax_Const.imp_lid)::(FStar_Syntax_Const.ite_lid)::[]))

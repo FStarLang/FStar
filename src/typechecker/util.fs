@@ -1120,7 +1120,7 @@ let short_circuit (head:term) (seen_args:args) : guard_formula =
         | _ -> Trivial
 
 let short_circuit_head l = 
-    match (SS.compress l).n with 
+    match (Util.un_uinst l).n with 
         | Tm_fvar (v, _) ->
            Util.for_some (lid_equals v.v)
                    [Const.op_And;
