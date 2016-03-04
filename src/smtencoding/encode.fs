@@ -1242,21 +1242,24 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         [], env
 
      | Sig_declare_typ(lid, _, t, quals, _) ->
-        if quals |> Util.for_some (function Assumption | Projector _ | Discriminator _ -> true | _ -> false) || env.tcenv.is_iface
-        then let decls, env = encode_top_level_val env lid t quals in
+        let will_encode_definition = not (quals |> Util.for_some (function 
+            | Assumption | Projector _ | Discriminator _ | Irreducible -> true
+            | _ -> false)) in
+        if will_encode_definition
+        then [], env //nothing to do at the declaration; wait to encode the definition
+        else let decls, env = encode_top_level_val env lid t quals in
              let tname = lid.str in
              let tsym = mkFreeV(tname, Term_sort) in
              decls
              @ primitive_type_axioms lid tname tsym,
              env
-        else [], env
 
      | Sig_assume(l, f, _, _) ->
         let f, decls = encode_formula f env in
         let g = [Term.Assume(f, Some (format1 "Assumption: %s" (Print.lid_to_string l)))] in
         decls@g, env
 
-     | Sig_let(lbs, r, _, _) when (snd lbs |> Util.for_some (fun lb -> should_skip (right lb.lbname))) -> 
+     | Sig_let(lbs, r, _, quals) when (quals |> List.contains S.Irreducible) ->
        [], env
 
      | Sig_let((_, [{lbname=Inr b2t}]), _, _, _) when lid_equals b2t Const.b2t_lid ->
