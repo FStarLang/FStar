@@ -1484,7 +1484,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let guard = mk_and_l guards in
         let tapp = Term.mkApp(tname, List.map mkFreeV vars) in
         let decls, env =
-            let tname_decl = constructor_or_logic_type_decl(tname, [], Term_sort, varops.next_id()) in
+            let tname_decl = constructor_or_logic_type_decl(tname, vars |> List.map (fun (n, s) -> (tname^n,s)), Term_sort, varops.next_id()) in
             let tok_decls, env = match vars with
                 | [] -> [], push_free_var env t tname (Some <| mkApp(tname, []))
                 | _ ->

@@ -13,20 +13,16 @@ open FStar.Constructive
 type I : (Type -> Type) -> Type =
 | Mk : f:(Type->Type) -> I f
 
-
-// GM: This now cannot be proved automatically since
-// the projectors for `I` are gone. However, see below.
-(*
 val injI : x:(Type->Type) -> y:(Type->Type) ->
            Lemma (requires (I x == I y)) (ensures (x == y))
 let injI (x:Type->Type) (y:Type->Type) = ()
-*)
 
 // Another way to prove injectivity, that doesn't rely on
 // projectors for I in the SMT encoding, but does rely
 // on inversion and "typing elimination" for Mk
 // Namely: that if x : I f then x = Mk e for some e
 //    and: that if Mk e : I f then e = f
+(*
 val injI_ : x:(Type->Type) -> y:(Type->Type) -> I x ->
            Lemma (requires (I x == I y)) (ensures (x == y))
 let injI_ (x:Type->Type) (y:Type->Type) ix = ()
@@ -34,6 +30,7 @@ let injI_ (x:Type->Type) (y:Type->Type) ix = ()
 val injI : x:(Type->Type) -> y:(Type->Type) ->
            Lemma (requires (I x == I y)) (ensures (x == y))
 let injI (x:Type->Type) (y:Type->Type) = injI_ x y (Mk x)
+*)
 
 // P in SMT logic -- accepted but hard to use for the rest of the proof
 //                   (the SMT solver doesn't prove false_of_Pp automatically)
