@@ -43,9 +43,9 @@ endif
 all:
 	$(MAKE) -C $(FSTAR_HOME)/lib/ml PRIMS_DIR=native_int
 	$(MAKE) prep
-	$(MAKE) fstar.exe
+	$(MAKE) -j 8 fstar.exe
 
-prep: parser copy_lib_files depend
+prep: parser copy_lib_files depend version
 
 parser:
 	cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
@@ -93,7 +93,7 @@ endif
 COMPILER = OCaml $(shell ocamlc -version)
 DATE = $(shell $(DATE_EXEC) -Iseconds)
 COMMIT = $(shell ../tools/get_commit)
-FStar_Version.ml:__force__
+version:
 	echo 'let version = "$(VERSION)"' > FStar_Version.ml
 	echo 'let platform = "$(PLATFORM)"' >> FStar_Version.ml
 	echo 'let compiler = "$(COMPILER)"' >> FStar_Version.ml
