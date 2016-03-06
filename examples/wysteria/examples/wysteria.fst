@@ -201,12 +201,12 @@ let w_contains (#a:Type) #eps p x = OrdMap.contains p x
 abstract val w_empty   : #a:Type -> GTot (w:Wire a (empty ()){forall p. not (w_contains #a #(empty()) p w)})
 let w_empty (#a:Type) = OrdMap.empty
 
-abstract val w_select  : #a:Type -> #eps:eprins -> p:prin -> w:Wire a eps{w_contains p w} -> GTot a
+abstract val w_select  : #a:Type -> #eps:eprins -> p:prin -> w:Wire a eps{w_contains #a #eps p w} -> GTot a
 let w_select (#a:Type) #eps p x = Some.v (OrdMap.select p x)
 
 abstract val w_const_on: #a:Type -> eps:eprins -> x:a
-                -> GTot (w:Wire a eps{forall p. (mem p eps <==> w_contains p w) /\
-                                                (w_contains p w ==> w_select p w = x)})
+                -> GTot (w:Wire a eps{forall p. (mem p eps <==> w_contains #a #eps p w) /\
+                                                (w_contains #a #eps p w ==> w_select #a #eps p w = x)})
 let w_const_on (#a:Type) eps x = OrdMap.const_on eps x
 
 
@@ -231,15 +231,15 @@ let rec w_concat_helper (#a:Type) #eps1 #eps2 w1 w2 eps =
 (* TODO: FIXME: Make this ghost, add a concat to the OrdMap lib and use that for computation *)
 abstract val w_concat  :
   #a:Type -> #eps1:eprins -> #eps2:eprins
-  -> w1:Wire a eps1 -> w2:Wire a eps2{forall p. w_contains p w1 ==> not (w_contains p w2)}
+  -> w1:Wire a eps1 -> w2:Wire a eps2{forall p. w_contains #a #eps1 p w1 ==> not (w_contains #a #eps2 p w2)}
   -> Tot (w:Wire a (union eps1 eps2)
-          {forall p. (w_contains p w1 ==> (w_contains p w /\ w_select p w = w_select p w1)) /\
-                     (w_contains p w2 ==> (w_contains p w /\ w_select p w = w_select p w2)) /\
-                     (w_contains p w  ==> (w_contains p w1 \/ w_contains p w2))})
+          {forall p. (w_contains #a #eps1 p w1 ==> (w_contains #a #(union eps1 eps2) p w /\ w_select #a #(union eps1 eps2) p w = w_select #a #eps1 p w1)) /\
+                     (w_contains #a #eps2 p w2 ==> (w_contains #a #(union eps1 eps2) p w /\ w_select #a #(union eps1 eps2) p w = w_select #a #eps2 p w2)) /\
+                     (w_contains #a #(union eps1 eps2) p w  ==> (w_contains #a #eps1 p w1 \/ w_contains #a #eps2 p w2))})
 let w_concat (#a:Type) #eps1 #eps2 w1 w2 = w_concat_helper #a #eps1 #eps2 w1 w2 (OrdMap.dom w1)
 
-abstract val w_dom: #a:Type -> #ps:prins -> w:Wire a ps -> GTot (ps:eprins{forall p. mem p ps <==> w_contains p w})
-let w_dom (#a:Type) #eps w = OrdMap.dom w
+abstract val w_dom: #a:Type -> #eps:eprins -> w:Wire a eps -> GTot (ps:eprins{forall p. mem p ps <==> w_contains #a #eps p w})
+let w_dom (#a:Type) #eps w = FStar.OrdMap.dom #prin #a #p_cmp w
 
 val w_contains_lemma: a:Type -> eps:prins -> w:Wire a eps -> p:prin
                       -> Lemma (requires (True)) (ensures (w_contains #a #eps p w =
@@ -394,18 +394,18 @@ let mkwire_s (#a:Type) eps x =
   OrdMap.const_on eps x
 
 (*****)
-val projwire_p: #a:Type -> #eps:eprins -> p:prin -> x:Wire a eps{w_contains p x}
-                -> Wys a (fun m0     -> CanProjWireP m0 x p)
-                         (fun m0 r t -> r = w_select p x /\ t = [])
+val projwire_p: #a:Type -> #eps:eprins -> p:prin -> x:Wire a eps{w_contains #a #eps p x}
+                -> Wys a (fun m0     -> CanProjWireP #a #eps m0 x p)
+                         (fun m0 r t -> r = w_select #a #eps p x /\ t = [])
 let projwire_p (#a:Type) #eps p x =
   let m0 = ST.read moderef in
   assert (CanProjWireP #a #eps m0 x p);
   Some.v (OrdMap.select p x)
 
 (*****)
-val projwire_s: #a:Type -> #eps:eprins -> p:prin -> x:Wire a eps{w_contains p x}
-                -> Wys a (fun m0     -> CanProjWireS m0 x p)
-                         (fun m0 r t -> r = w_select p x /\ t = [])
+val projwire_s: #a:Type -> #eps:eprins -> p:prin -> x:Wire a eps{w_contains #a #eps p x}
+                -> Wys a (fun m0     -> CanProjWireS #a #eps m0 x p)
+                         (fun m0 r t -> r = w_select #a #eps p x /\ t = [])
 let projwire_s (#a:Type) #eps p x =
   let m0 = ST.read moderef in
   assert (CanProjWireS #a #eps m0 x p);
@@ -413,20 +413,20 @@ let projwire_s (#a:Type) #eps p x =
 
 (*****)
 val concat_wire: #a:Type -> #eps_x:eprins -> #eps_y:eprins
-                 -> x:Wire a eps_x -> y:Wire a eps_y{CanConcatWire x y}
-                 -> Wys (Wire a (union eps_x eps_y)) (fun m0     -> CanConcatWire x y)
-                                                     (fun m0 r t -> r = w_concat x y /\ t = [])
+                 -> x:Wire a eps_x -> y:Wire a eps_y{CanConcatWire #a #eps_x #eps_y x y}
+                 -> Wys (Wire a (union eps_x eps_y)) (fun m0     -> CanConcatWire #a #eps_x #eps_y x y)
+                                                     (fun m0 r t -> r = w_concat #a #eps_x #eps_y x y /\ t = [])
 let concat_wire (#a:Type) #eps1 #eps2 x y = w_concat #a #eps1 #eps2 x y
 
 (*****)
 
 assume val mk_sh: #a:Type -> x:a
-           -> Wys (Sh a) (fun m0     -> m0.m = Sec /\ can_sh a)
-	                (fun m0 r t -> v_of_sh r = x /\ ps_of_sh r = m0.ps /\ t = [])
+           -> Wys (Sh a) (fun (m0:mode)     -> m0.m = Sec /\ can_sh a)
+	                (fun (m0:mode) r t -> v_of_sh #a r = x /\ ps_of_sh #a r = (Mode.ps m0) /\ t = [])
 
 assume val comb_sh: #a:Type -> x:Sh a
-             -> Wys a (fun m0     -> m0.m = Sec /\ ps_of_sh x = m0.ps)
-	             (fun m0 r t -> v_of_sh x = r /\ t = [])
+             -> Wys a (fun (m0:mode)     -> m0.m = Sec /\ ps_of_sh x = (Mode.ps m0))
+	             (fun (m0:mode) r t -> v_of_sh x = r /\ t = [])
 
 (*****)
 
