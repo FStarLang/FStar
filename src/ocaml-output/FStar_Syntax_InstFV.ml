@@ -22,7 +22,7 @@ end
 | FStar_Syntax_Syntax.Tm_fvar (fv) -> begin
 (match ((FStar_Util.find_opt (fun _33_37 -> (match (_33_37) with
 | (x, _33_36) -> begin
-(FStar_Ident.lid_equals x (Prims.fst fv).FStar_Syntax_Syntax.v)
+(FStar_Ident.lid_equals x fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
 end)) s)) with
 | None -> begin
 t

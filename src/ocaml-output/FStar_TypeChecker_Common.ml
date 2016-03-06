@@ -117,10 +117,9 @@ type univ_ineq =
 (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
 
 # 60 "FStar.TypeChecker.Common.fst"
-let tconst : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _145_84 = (let _145_83 = (let _145_82 = (FStar_Ident.set_lid_range l FStar_Range.dummyRange)
-in (FStar_Syntax_Syntax.lid_as_fv _145_82 None))
-in FStar_Syntax_Syntax.Tm_fvar (_145_83))
-in (FStar_Syntax_Syntax.mk _145_84 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
+let tconst : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _145_83 = (let _145_82 = (FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None)
+in FStar_Syntax_Syntax.Tm_fvar (_145_82))
+in (FStar_Syntax_Syntax.mk _145_83 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
 
 # 61 "FStar.TypeChecker.Common.fst"
 let t_unit : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.unit_lid)
