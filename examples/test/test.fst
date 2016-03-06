@@ -1,7 +1,6 @@
-module Test0
-abstract type t (x:int) = int
-
 module Test
-open Test0
-abstract type t (x:bool) = int
-abstract val foo : t true -> Lemma (requires True) (ensures True) [SMTPatT (t true)]
+assume new type t : int -> Type0
+assume val empty : t 0
+
+val f : x:int -> Tot (t (op_Multiply 2 x))
+let f x = empty

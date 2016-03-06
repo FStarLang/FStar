@@ -32,6 +32,7 @@ cache/
 /src/*/obj
 
 examples/*/*.ml
+examples/wysteria/ocaml-output/*
 
 _build/
 
