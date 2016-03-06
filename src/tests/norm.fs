@@ -40,8 +40,8 @@ let mk_let x e e' : term =
                            None dummyRange
 
 let lid x = lid_of_path [x] dummyRange                           
-let znat_l = S.lid_as_fv (lid "Z") (Some Data_ctor)
-let snat_l = S.lid_as_fv (lid "S") (Some Data_ctor)
+let znat_l = S.lid_as_fv (lid "Z") Delta_constant (Some Data_ctor)
+let snat_l = S.lid_as_fv (lid "S") Delta_constant (Some Data_ctor)
 let tm_fv fv = mk (Tm_fvar fv) None dummyRange
 let znat : term = tm_fv znat_l
 let snat s      = mk (Tm_app(tm_fv snat_l, [as_arg s])) None dummyRange

@@ -91,17 +91,17 @@ let set_bv_range bv r =
 
 let bv_to_name bv r = bv_to_name (set_bv_range bv r)
 
-let unmangleMap = [("op_ColonColon", "Cons");
-                   ("not", "op_Negation")]
+let unmangleMap = [("op_ColonColon", "Cons", Delta_constant, Some Data_ctor);
+                   ("not", "op_Negation", Delta_equational, None)]
 
-let unmangleOpName (id:ident) =
-  find_map unmangleMap (fun (x,y) ->
-    if (id.idText = x) then Some (lid_of_path ["Prims"; y] id.idRange)
+let unmangleOpName (id:ident) : option<term> =
+  find_map unmangleMap (fun (x,y,dd,dq) ->
+    if (id.idText = x) then Some (S.fvar (lid_of_path ["Prims"; y] id.idRange) dd dq)
     else None)
 
 let try_lookup_id env (id:ident) =
   match unmangleOpName id with
-    | Some l -> Some (S.fvar None l id.idRange)
+    | Some f -> Some f
     | _ ->
       find_map env.localbindings (function
         | id', x when (id'.idText=id.idText) -> 
@@ -132,6 +132,11 @@ let fv_qual_of_se = function
       None
     | _ -> None
 
+let lb_fv lbs lid = 
+     Util.find_map lbs  (fun lb -> 
+        let fv = right lb.lbname in
+        if S.fv_eq_lid fv lid then Some fv else None) |> must 
+
 let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> =
   (* Resolve using, in order,
      0. local bindings, if the lid is unqualified
@@ -144,13 +149,15 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
       | None -> None
       | Some (se, _) ->
         begin match se with
-          | Sig_inductive_typ _ ->           Some (Term_name(S.fvar None lid (range_of_lid lid)))
-          | Sig_datacon _ ->         Some (Term_name(S.fvar (fv_qual_of_se se) lid (range_of_lid lid)))
-          | Sig_let _ ->             Some (Term_name(S.fvar None lid (range_of_lid lid)))
+          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar lid Delta_constant None))
+          | Sig_datacon _ ->         Some (Term_name(S.fvar lid Delta_constant (fv_qual_of_se se)))
+          | Sig_let((_, lbs), _, _, _) ->
+            let fv = lb_fv lbs lid in
+            Some (Term_name(S.fvar lid fv.fv_delta fv.fv_qual))
           | Sig_declare_typ(_, _, _, quals, _) ->
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
             || quals |> Util.for_some (function Assumption -> true | _ -> false)
-            then Some (Term_name(fvar (fv_qual_of_se se) lid (range_of_lid lid)))
+            then Some (Term_name(fvar lid Delta_constant (fv_qual_of_se se)))
             else None
           | Sig_new_effect(ne, _) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid lid)))
           | Sig_effect_abbrev _ ->   Some (Eff_name(se, lid))
@@ -164,7 +171,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
         | None ->
           let recname = qualify env lid.ident in
           Util.find_map env.recbindings (fun (id, l) -> if id.idText=lid.ident.idText 
-                                                        then Some (Term_name(S.fvar None (set_lid_range l (range_of_lid lid)) (range_of_lid lid)))
+                                                        then Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) Delta_equational None))
                                                         else None)
       end
     | _ -> None in
@@ -207,7 +214,9 @@ let try_lookup_module env path =
 let try_lookup_let env (lid:lident) =
   let find_in_sig lid =
     match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_let _, _) -> Some (fvar None lid (range_of_lid lid))
+      | Some (Sig_let((_, lbs), _, _, _), _) -> 
+        let fv = lb_fv lbs lid in
+        Some (fvar lid fv.fv_delta fv.fv_qual)
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
@@ -217,7 +226,7 @@ let try_lookup_definition env (lid:lident) =
       | Some (Sig_let(lbs, _, _, _), _) ->
         Util.find_map (snd lbs) (fun lb -> 
             match lb.lbname with 
-                | Inr lid' when lid_equals lid lid' ->
+                | Inr fv when S.fv_eq_lid fv lid ->
                   Some (lb.lbdef)
                 | _ -> None)
       | _ -> None in
@@ -235,9 +244,9 @@ let try_lookup_datacon env (lid:lident) =
     match Util.smap_try_find (sigmap env) lid.str with
       | Some (Sig_declare_typ(_, _, _, quals, _), _) ->
         if quals |> Util.for_some (function Assumption -> true | _ -> false)
-        then Some (lid_as_fv lid None)
+        then Some (lid_as_fv lid Delta_constant None)
         else None
-      | Some (Sig_datacon _, _) -> Some (lid_as_fv lid (Some Data_ctor))
+      | Some (Sig_datacon _, _) -> Some (lid_as_fv lid Delta_constant (Some Data_ctor))
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 

@@ -78,6 +78,34 @@ let rec unparen t = match t.tm with
 
 let tm_type r = mk_term (Name (lid_of_path ["Type"] r)) r Kind
 
+let rec delta_qualifier t = 
+    let t = Subst.compress t in
+    match t.n with
+        | Tm_delayed _ -> failwith "Impossible"
+        | Tm_fvar fv -> fv.fv_delta 
+        | Tm_bvar _
+        | Tm_name _ 
+        | Tm_match _ 
+        | Tm_uvar _ 
+        | Tm_unknown -> Delta_equational
+        | Tm_type _
+        | Tm_constant _
+        | Tm_arrow _ -> Delta_constant
+        | Tm_uinst(t, _)
+        | Tm_refine({sort=t}, _)
+        | Tm_meta(t, _)
+        | Tm_ascribed(t, _, _)
+        | Tm_app(t, _) 
+        | Tm_abs(_, t, _) 
+        | Tm_let(_, t) -> delta_qualifier t
+
+let incr_delta_qualifier t = 
+    let d = delta_qualifier t in
+    match d with 
+        | Delta_equational -> d
+        | Delta_constant -> Delta_unfoldable 1
+        | Delta_unfoldable i -> Delta_unfoldable (i + 1)
+
 let compile_op arity s =
     let name_of_char = function
             |'&' -> "Amp"
@@ -106,40 +134,39 @@ let compile_op arity s =
 
 let compile_op_lid n s r = [mk_ident(compile_op n s, r)] |> lid_of_ids
 
-let op_as_lid env arity rng s =
-  let r l = Some (set_lid_range l rng) in
+let op_as_fv env arity rng s : option<fv> =
+  let r l dd = Some (S.lid_as_fv (set_lid_range l rng) dd None) in
   let fallback () =
       match s with
-        | "=" ->    r C.op_Eq
-        | ":=" ->   r C.op_ColonEq
-        | "<" ->    r C.op_LT
-        | "<=" ->   r C.op_LTE
-        | ">" ->    r C.op_GT
-        | ">=" ->   r C.op_GTE
-        | "&&" ->   r C.op_And
-        | "||" ->   r C.op_Or
-        | "+" ->    r C.op_Addition
-        | "-" when (arity=1) -> r C.op_Minus
-        | "-" ->    r C.op_Subtraction
-        | "/" ->    r C.op_Division
-        | "%" ->    r C.op_Modulus
-        | "!" ->    r C.read_lid
-        | "@" ->    r C.list_append_lid
-        | "^" ->    r C.strcat_lid
-        | "|>" ->   r C.pipe_right_lid
-        | "<|" ->   r C.pipe_left_lid
-        | "<>" ->   r C.op_notEq
-        | "~"   ->  r C.not_lid
-        | "=="  ->  r C.eq2_lid
-        | "=!=" ->  r C.neq2_lid
-        | "<<" ->   r C.precedes_lid
-        | "/\\" ->  r C.and_lid
-        | "\\/" ->  r C.or_lid
-        | "==>" ->  r C.imp_lid
-        | "<==>" -> r C.iff_lid
+        | "=" ->    r C.op_Eq Delta_equational
+        | ":=" ->   r C.op_ColonEq Delta_equational
+        | "<" ->    r C.op_LT Delta_equational
+        | "<=" ->   r C.op_LTE Delta_equational
+        | ">" ->    r C.op_GT Delta_equational
+        | ">=" ->   r C.op_GTE Delta_equational
+        | "&&" ->   r C.op_And Delta_equational
+        | "||" ->   r C.op_Or Delta_equational
+        | "+" ->    r C.op_Addition Delta_equational
+        | "-" when (arity=1) -> r C.op_Minus Delta_equational
+        | "-" ->    r C.op_Subtraction Delta_equational
+        | "/" ->    r C.op_Division Delta_equational
+        | "%" ->    r C.op_Modulus Delta_equational
+        | "!" ->    r C.read_lid Delta_equational
+        | "@" ->    r C.list_append_lid Delta_equational
+        | "^" ->    r C.strcat_lid Delta_equational
+        | "|>" ->   r C.pipe_right_lid Delta_equational
+        | "<|" ->   r C.pipe_left_lid Delta_equational
+        | "<>" ->   r C.op_notEq Delta_equational
+        | "~"   ->  r C.not_lid (Delta_unfoldable 2)
+        | "=="  ->  r C.eq2_lid Delta_constant
+        | "<<" ->   r C.precedes_lid Delta_constant
+        | "/\\" ->  r C.and_lid (Delta_unfoldable 1)
+        | "\\/" ->  r C.or_lid (Delta_unfoldable 1)
+        | "==>" ->  r C.imp_lid (Delta_unfoldable 1)
+        | "<==>" -> r C.iff_lid (Delta_unfoldable 2)
         | _ -> None in
    begin match Env.try_lookup_lid env (compile_op_lid arity s rng) with
-        | Some ({n=Tm_fvar(fv, _)}) -> Some fv.v
+        | Some ({n=Tm_fvar fv}) -> Some fv
         | _ -> fallback()
    end
 
@@ -360,8 +387,8 @@ let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
           loc, env, pat::pats) pats (loc, env, []) in
         let pat = List.fold_right (fun hd tl ->
             let r = Range.union_ranges hd.p tl.p in
-            pos_r r <| Pat_cons(S.lid_as_fv C.cons_lid (Some Data_ctor), [(hd, false);(tl, false)])) pats
-                        (pos_r (Range.end_range p.prange) <| Pat_cons(S.lid_as_fv C.nil_lid (Some Data_ctor), [])) in
+            pos_r r <| Pat_cons(S.lid_as_fv C.cons_lid Delta_constant (Some Data_ctor), [(hd, false);(tl, false)])) pats
+                        (pos_r (Range.end_range p.prange) <| Pat_cons(S.lid_as_fv C.nil_lid Delta_constant (Some Data_ctor), [])) in
         let x = S.new_bv (Some p.prange) tun in
         loc, env, LocalBinder(x, None), pat, false
 
@@ -394,7 +421,7 @@ let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
         let app = mk_pattern (PatApp(mk_pattern (PatName record.constrname) p.prange, args)) p.prange in
         let env, e, b, p, _ = aux loc env app in
         let p = match p.v with
-            | Pat_cons((fv, _), args) -> pos <| Pat_cons((fv, Some (Record_ctor (record.typename, record.fields |> List.map fst))), args)
+            | Pat_cons(fv, args) -> pos <| Pat_cons(({fv with fv_qual=Some (Record_ctor (record.typename, record.fields |> List.map fst))}), args)
             | _ -> p in
         env, e, b, p, false in
 
@@ -452,7 +479,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Op("=!=", args) ->
       desugar_term env (mk_term(Op("~", [mk_term (Op("==", args)) top.range top.level])) top.range top.level)
 
-    | Op("*", [_;_]) when (op_as_lid env 2 top.range "*" |> Option.isNone) -> //if op_Star has not been rebound, then it's reserved for tuples
+    | Op("*", [_;_]) when (op_as_fv env 2 top.range "*" |> Option.isNone) -> //if op_Star has not been rebound, then it's reserved for tuples
       let rec flatten t = match t.tm with
             | Op("*", [t1;t2]) ->
               let rest = flatten t2 in
@@ -466,10 +493,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       setpos <| fail_or2 (try_lookup_id env) a
 
     | Op(s, args) ->
-      begin match op_as_lid env (List.length args) top.range s with
+      begin match op_as_fv env (List.length args) top.range s with
         | None -> raise (Error("Unexpected operator: " ^ s, top.range))
-        | Some l ->
-          let op = fvar None l (range_of_lid l) in
+        | Some fv ->
+          let op = S.fv_to_tm fv in
           let args = args |> List.map (fun t -> desugar_term env t, None) in
           mk (Tm_app(op, args))
       end
@@ -571,12 +598,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                         | Some p, Some (sc, p') ->
                              begin match sc.n, p'.v with
                                 | Tm_name _, _ ->
-                                  let tup2 = S.lid_as_fv (Util.mk_tuple_data_lid 2 top.range) (Some Data_ctor) in
+                                  let tup2 = S.lid_as_fv (Util.mk_tuple_data_lid 2 top.range) Delta_constant (Some Data_ctor) in
                                   let sc = S.mk (Tm_app(mk (Tm_fvar tup2), [as_arg sc; as_arg <| S.bv_to_name x])) None top.range in
                                   let p = withinfo (Pat_cons(tup2, [(p', false);(p, false)])) tun.n (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | Tm_app(_, args), Pat_cons(_, pats) ->
-                                  let tupn = S.lid_as_fv (Util.mk_tuple_data_lid (1 + List.length args) top.range) (Some Data_ctor) in
+                                  let tupn = S.lid_as_fv (Util.mk_tuple_data_lid (1 + List.length args) top.range) Delta_constant (Some Data_ctor) in
                                   let sc = mk (Tm_app(mk (Tm_fvar tupn), args@[as_arg <| S.bv_to_name x])) in
                                   let p = withinfo (Pat_cons(tupn, pats@[(p, false)])) tun.n (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
@@ -590,7 +617,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | App({tm=Var a}, phi, _) when (lid_equals a C.assert_lid
                                    || lid_equals a C.assume_lid) ->
       let phi = desugar_formula env phi in
-      mk (Tm_app(fvar None a (range_of_lid a),
+      mk (Tm_app(fvar a Delta_equational None,
                  [as_arg phi;
                   as_arg <| mk (Tm_constant(Const_unit))]))
 
@@ -609,7 +636,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                   Meta_desugared Sequence))
 
     | Let(is_rec, ((pat, _snd)::_tl), body) ->
-      let ds_let_rec () =
+      let ds_let_rec_or_app () =
         let bindings = (pat, _snd)::_tl in
         let funs = bindings |> List.map (fun (p, def) ->
           if is_app_pattern p
@@ -648,11 +675,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                  | [] -> def 
                  | _ -> mk_term (un_curry_abs args def) top.range top.level in 
             let body = desugar_term env def in
+            let lbname = match lbname with
+                | Inl x -> Inl x
+                | Inr l -> Inr (S.lid_as_fv l (incr_delta_qualifier body) None) in
             let body = if is_rec then Subst.close rec_bindings body else body in
             mk_lb (lbname, tun, body) in
         let lbs = List.map2 (desugar_one_def (if is_rec then env' else env)) fnames funs in
         let body = desugar_term env' body in
         mk <| (Tm_let((is_rec, lbs), Subst.close rec_bindings body)) in
+      //end ds_let_rec_or_app
 
       let ds_non_rec pat t1 t2 =
         let t1 = desugar_term env t1 in
@@ -660,7 +691,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         begin match binder with
           | LetBinder(l, t) ->
             let body = desugar_term env t2 in
-            mk <| Tm_let((false, [({lbname=Inr l; lbunivs=[]; lbeff=C.effect_ALL_lid; lbtyp=t; lbdef=t1})]), body)
+            let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
+            mk <| Tm_let((false, [({lbname=Inr fv; lbunivs=[]; lbeff=C.effect_ALL_lid; lbtyp=t; lbdef=t1})]), body)
 
           | LocalBinder (x,_) ->
             let body = desugar_term env t2 in
@@ -674,7 +706,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
       if is_rec 
       || is_app_pattern pat
-      then ds_let_rec()
+      then ds_let_rec_or_app()
       else ds_non_rec pat _snd body
 
     | If(t1, t2, t3) ->
@@ -740,8 +772,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       let recterm = mk_term recterm top.range top.level in
       let e = desugar_term env recterm in
       begin match e.n with
-        | Tm_meta({n=Tm_app({n=Tm_fvar(fv, _)}, args)}, Meta_desugared Data_app) ->
-          let e = mk <| Tm_app(S.fvar (Some (Record_ctor(record.typename, record.fields |> List.map fst))) fv.v e.pos,
+        | Tm_meta({n=Tm_app({n=Tm_fvar fv}, args)}, Meta_desugared Data_app) ->
+          let e = mk <| Tm_app(S.fvar (Ident.set_lid_range fv.fv_name.v e.pos) Delta_constant (Some (Record_ctor(record.typename, record.fields |> List.map fst))),
                                args)  in
           mk <| Tm_meta(e, Meta_desugared Data_app)
 
@@ -755,7 +787,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         let ns, _ = Util.prefix fieldname.ns in
         lid_of_ids (ns@[f.ident]) in
       let qual = if is_rec then Some (Record_projector fn) else None in
-      mk <| Tm_app(S.fvar (Some (Record_projector fn)) fieldname (range_of_lid f), [as_arg e])
+      mk <| Tm_app(S.fvar (Ident.set_lid_range fieldname (range_of_lid f)) Delta_equational (Some (Record_projector fn)), [as_arg e])
 
     | NamedTyp(_, e)
     | Paren e ->
@@ -833,7 +865,7 @@ and desugar_comp r default_ok env t =
     let rest = desugar_args env rest in
     let dec, rest = rest |> List.partition (fun (t, _) -> 
             begin match t.n with
-                | Tm_app({n=Tm_fvar(fv, _)}, [_]) -> lid_equals fv.v C.decreases_lid
+                | Tm_app({n=Tm_fvar fv}, [_]) -> S.fv_eq_lid fv C.decreases_lid
                 | _ -> false
             end) in
 
@@ -856,9 +888,9 @@ and desugar_comp r default_ok env t =
             then match rest with 
                     | [req;ens;(pat, aq)] -> 
                       let pat = match pat.n with 
-                        | Tm_fvar (fv, _) when lid_equals fv.v Const.nil_lid -> //we really want the empty pattern to be in universe S 0 rather than generalizing it 
+                        | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid -> //we really want the empty pattern to be in universe S 0 rather than generalizing it 
                           let nil = S.mk_Tm_uinst pat [U_succ U_zero] in
-                          let pattern = S.mk_Tm_uinst (S.fvar None Const.pattern_lid pat.pos) [U_zero;U_zero] in 
+                          let pattern = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) Delta_constant None) [U_zero;U_zero] in 
                           S.mk_Tm_app nil [(pattern, Some S.imp_tag)] None pat.pos 
                         | _ -> pat in
                         [req; ens;
@@ -894,7 +926,7 @@ and desugar_formula env (f:term) : S.term =
           | [] -> body
           | _ -> mk (Tm_meta (body, Meta_pattern pats)) in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
-        mk <| Tm_app (S.fvar None (set_lid_range q b.brange) b.brange, [as_arg body])
+        mk <| Tm_app (S.fvar (set_lid_range q b.brange) (Delta_unfoldable 1) None, [as_arg body])
 
       | _ -> failwith "impossible" in
 
@@ -958,8 +990,8 @@ let mk_data_discriminators quals env t tps k datas =
     let p = range_of_lid t in
     let binders, args = Util.args_of_binders binders in
     let imp_binders = binders |> List.map (fun (x, _) -> x, Some S.imp_tag) in
-    let binders = imp_binders@[S.null_binder <| (S.mk_Tm_app(S.fv_to_tm (S.lid_as_fv t None)) args None p)] in
-    let disc_type = U.arrow binders (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid None))) in
+    let binders = imp_binders@[S.null_binder <| (S.mk_Tm_app(S.fv_to_tm (S.lid_as_fv t Delta_constant None)) args None p)] in
+    let disc_type = U.arrow binders (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
     datas |> List.map (fun d ->
         let disc_name = Util.mk_discriminator d in
         Sig_declare_typ(disc_name, [], disc_type, quals [S.Logic; S.Discriminator d], range_of_lid disc_name))
@@ -982,15 +1014,15 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
                 | (_, _)::tps', (_, _)::args' -> arguments tps' args' in
             arguments inductive_tps args0 in
         let indices = args |> List.map (fun _ -> S.new_bv (Some p) tun |> S.mk_binder) in
-        let arg_typ = S.mk_Tm_app (S.fv_to_tm (S.lid_as_fv tc None)) 
+        let arg_typ = S.mk_Tm_app (S.fv_to_tm (S.lid_as_fv tc Delta_constant None)) 
                                   (tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp)) None p in
         let arg_binder = 
             if not refine_domain
             then S.mk_binder (projectee arg_typ) //records have only one constructor; no point refining the domain
             else let disc_name = Util.mk_discriminator lid in
                  let x = S.new_bv (Some p) arg_typ in
-                 S.mk_binder ({projectee arg_typ with sort=refine x (Util.b2t(S.mk_Tm_app(S.fvar None disc_name p) 
-                                                                                 [as_arg <| S.bv_to_name x] None p))}) in
+                 S.mk_binder ({projectee arg_typ with sort=refine x (Util.b2t(S.mk_Tm_app (S.fvar (Ident.set_lid_range disc_name p) Delta_equational None)
+                                                                                          [as_arg <| S.bv_to_name x] None p))}) in
         arg_binder, indices in
 
     let arg_exp = S.bv_to_name (fst arg_binder) in
@@ -1001,7 +1033,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
 
     let subst = fields |> List.mapi (fun i (a, _) -> 
             let field_name, _ = Util.mk_field_projector_name lid a i in
-            let proj = mk_Tm_app (S.fv_to_tm (S.lid_as_fv field_name None)) [arg] None p in
+            let proj = mk_Tm_app (S.fv_to_tm (S.lid_as_fv field_name Delta_equational None)) [arg] None p in
             NT(a, proj)) in
 
     let ntps = List.length tps in
@@ -1028,15 +1060,15 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
                     else if b && j < ntps
                          then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b 
                          else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b) in
-            let pat = (S.Pat_cons(S.lid_as_fv lid (Some fvq), arg_pats) |> pos, None, S.bv_to_name projection) in
+            let pat = (S.Pat_cons(S.lid_as_fv lid Delta_constant (Some fvq), arg_pats) |> pos, None, S.bv_to_name projection) in
             let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
             let imp = no_annot_abs binders body in
-            let lb = {  lbname=Inr field_name;
+            let lb = {  lbname=Inr (S.lid_as_fv field_name Delta_equational None);
                         lbunivs=[];
                         lbtyp=tun;
                         lbeff=C.effect_Tot_lid;
                         lbdef=imp } in
-            let impl = Sig_let((false, [lb]), p, [lb.lbname |> right], quals) in
+            let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
 let mk_data_projectors env (inductive_tps, se) = match se with 
@@ -1063,7 +1095,7 @@ let mk_data_projectors env (inductive_tps, se) = match se with
 
 let mk_typ_abbrev lid uvs typars k t lids quals rng = 
     let lb = {    
-    lbname=Inr lid;
+    lbname=Inr (S.lid_as_fv lid (incr_delta_qualifier t) None);
     lbunivs=uvs;
     lbdef=no_annot_abs typars t;
     lbtyp=U.arrow typars (S.mk_Total k);
@@ -1260,17 +1292,17 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | ToplevelLet(quals, isrec, lets) ->
     begin match (Subst.compress <| desugar_term_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
         | Tm_let(lbs, _) ->
-          let lids = snd lbs |> List.map (fun lb -> right lb.lbname) in
+          let fvs = snd lbs |> List.map (fun lb -> right lb.lbname) in
           let quals = match quals with 
             | _::_ -> List.map trans_qual quals 
             | _ -> snd lbs |> List.collect
             (function | {lbname=Inl _} -> []
-                      | {lbname=Inr l} -> Env.lookup_letbinding_quals env l) in
+                      | {lbname=Inr fv} -> Env.lookup_letbinding_quals env fv.fv_name.v) in
           let quals = 
             if lets |> Util.for_some (fun (_, t) -> t.level=Formula)
             then S.Logic::quals
             else quals in
-          let s = Sig_let(lbs, d.drange, lids, quals) in
+          let s = Sig_let(lbs, d.drange, fvs |> List.map (fun fv -> fv.fv_name.v), quals) in
           let env = push_sigelt env s in
           env, [s]
         | _ -> failwith "Desugaring a let did not produce a let"

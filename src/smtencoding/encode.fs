@@ -262,8 +262,8 @@ let head_normal env t =
     | Tm_uvar _
     | Tm_abs _ 
     | Tm_constant _ -> true
-    | Tm_fvar (v, _) 
-    | Tm_app({n=Tm_fvar (v, _)}, _) -> Env.lookup_definition Env.OnlyInline env.tcenv v.v |> Option.isNone
+    | Tm_fvar fv 
+    | Tm_app({n=Tm_fvar fv}, _) -> Env.lookup_definition Env.OnlyInline env.tcenv fv.fv_name.v |> Option.isNone
     | _ -> false
 
 let whnf env t = 
@@ -273,7 +273,7 @@ let norm env t = N.normalize [N.Beta; N.Inline; N.EraseUniverses] env.tcenv t
 
 let trivial_post t : Syntax.term = 
     Util.abs [null_binder t]
-             (Syntax.fvar None Const.true_lid Range.dummyRange)
+             (Syntax.fvar Const.true_lid Delta_constant None)
              None
 
 let mk_Apply e vars =
@@ -431,8 +431,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let t = lookup_term_var env x in
         t, []
 
-      | Tm_fvar(v, _) ->
-        lookup_free_var env v, []
+      | Tm_fvar v ->
+        lookup_free_var env v.fv_name, []
 
       | Tm_type _ ->
         Term.mk_Term_type, [] 
@@ -565,8 +565,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         begin match (SS.compress head).n, args_e with 
             | Tm_abs _, _ -> encode_term (whnf env t) env
 
-            | Tm_uinst({n=Tm_fvar(l, _)}, _), [_; (v1, _); (v2, _)]
-            | Tm_fvar(l, _),  [_; (v1, _); (v2, _)] when lid_equals l.v Const.lexcons_lid ->
+            | Tm_uinst({n=Tm_fvar fv}, _), [_; (v1, _); (v2, _)]
+            | Tm_fvar fv,  [_; (v1, _); (v2, _)] when S.fv_eq_lid fv Const.lexcons_lid ->
               //lex tuples are primitive
               let v1, decls1 = encode_term v1 env in
               let v2, decls2 = encode_term v2 env in
@@ -600,8 +600,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let head_type = match head.n with 
                 | Tm_uinst({n=Tm_name x}, _)
                 | Tm_name x -> Some x.sort
-                | Tm_uinst({n=Tm_fvar(fv, _)}, _)
-                | Tm_fvar (fv, _) -> Some (Env.lookup_lid env.tcenv fv.v |> snd)
+                | Tm_uinst({n=Tm_fvar fv}, _)
+                | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> snd)
                 | Tm_ascribed(_, t, _) -> Some t
                 | _ -> None in 
 
@@ -611,8 +611,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   let head_type = Util.unrefine <| N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv head_type in
                   let formals, c = curried_arrow_formals_comp head_type in
                   begin match head.n with
-                        | Tm_uinst({n=Tm_fvar(fv, _)}, _)
-                        | Tm_fvar (fv, _) when (List.length formals = List.length args) -> encode_full_app fv
+                        | Tm_uinst({n=Tm_fvar fv}, _)
+                        | Tm_fvar fv when (List.length formals = List.length args) -> encode_full_app fv.fv_name
                         | _ ->
                             if List.length formals > List.length args
                             then encode_partial_app (Some (formals, c))
@@ -737,10 +737,10 @@ and encode_one_pat (env:env_t) pat : (env_t * pattern) =
             | Pat_dot_term _ -> Term.mkTrue
             | Pat_constant c ->
                Term.mkEq(scrutinee, encode_const c)
-            | Pat_cons((f,_), args) ->
-                let is_f = mk_data_tester env f.v scrutinee in
+            | Pat_cons(f, args) ->
+                let is_f = mk_data_tester env f.fv_name.v scrutinee in
                 let sub_term_guards = args |> List.mapi (fun i (arg, _) ->
-                    let proj = primitive_projector_by_pos env.tcenv f.v i in
+                    let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
                     mk_guard arg (Term.mkApp(proj, [scrutinee]))) in
                 Term.mk_and_l (is_f::sub_term_guards) in
 
@@ -753,10 +753,10 @@ and encode_one_pat (env:env_t) pat : (env_t * pattern) =
 
             | Pat_constant _ -> []
 
-            | Pat_cons((f, _), args) ->
+            | Pat_cons(f, args) ->
                 args
                 |> List.mapi (fun i (arg, _) ->
-                    let proj = primitive_projector_by_pos env.tcenv f.v i in
+                    let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
                     mk_projections arg (Term.mkApp(proj, [scrutinee])))
                 |> List.flatten in
 
@@ -788,16 +788,16 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
     let rec list_elements (e:S.term) : list<S.term> = 
         let head, args = Util.head_and_args (Util.unmeta e) in
         match (Util.un_uinst head).n, args with
-        | Tm_fvar(fv, _), _ when lid_equals fv.v Const.nil_lid -> []
-        | Tm_fvar(fv, _), [_; (hd, _); (tl, _)] when lid_equals fv.v Const.cons_lid -> 
+        | Tm_fvar fv, _ when S.fv_eq_lid fv Const.nil_lid -> []
+        | Tm_fvar fv, [_; (hd, _); (tl, _)] when S.fv_eq_lid fv Const.cons_lid -> 
           hd::list_elements tl
         | _ -> Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
 
     let one_pat p = 
         let head, args = Util.unmeta p |> Util.head_and_args in
         match (Util.un_uinst head).n, args with
-        | Tm_fvar(fv, _), [(_, _); (e, _)] when lid_equals fv.v Const.smtpat_lid -> (e, None)
-        | Tm_fvar(fv, _), [(e, _)] when lid_equals fv.v Const.smtpatT_lid -> (e, None)
+        | Tm_fvar fv, [(_, _); (e, _)] when S.fv_eq_lid fv Const.smtpat_lid -> (e, None)
+        | Tm_fvar fv, [(e, _)] when S.fv_eq_lid fv Const.smtpatT_lid -> (e, None)
         | _ -> failwith "Unexpected pattern term"  in
     
     let lemma_pats p = 
@@ -805,7 +805,7 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
         let smt_pat_or t =
             let head, args = Util.unmeta t |> Util.head_and_args in
             match (Util.un_uinst head).n, args with 
-                | Tm_fvar(fv, _), [(e, _)] when lid_equals fv.v Const.smtpatOr_lid -> 
+                | Tm_fvar fv, [(e, _)] when S.fv_eq_lid fv Const.smtpatOr_lid -> 
                   Some e
                 | _ -> None in
         match elts with 
@@ -934,12 +934,12 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
         | Tm_app(head, args) -> 
           let head = Util.un_uinst head in
           begin match head.n, args with 
-            | Tm_fvar (fv, _), [_; (x, _); (t, _)] when lid_equals fv.v Const.has_type_lid -> //interpret Prims.has_type as HasType
+            | Tm_fvar fv, [_; (x, _); (t, _)] when S.fv_eq_lid fv Const.has_type_lid -> //interpret Prims.has_type as HasType
               let x, decls = encode_term x env in 
               let t, decls' = encode_term t env in
               Term.mk_HasType x t, [], decls@decls'
 
-            | Tm_fvar (fv, _), [_; _; (r, _); (msg, _); (phi, _)] when lid_equals fv.v Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
+            | Tm_fvar fv, [_; _; (r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
               begin match (SS.compress r).n, (SS.compress msg).n with 
                 | Tm_constant (Const_range r), Tm_constant (Const_string (s, _)) -> 
                   let phi = S.mk (Tm_meta(phi,  Meta_labeled(Util.string_of_unicode s, r, false))) None r in
@@ -1247,7 +1247,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             | _ -> false)) in
         if will_encode_definition
         then [], env //nothing to do at the declaration; wait to encode the definition
-        else let decls, env = encode_top_level_val env lid t quals in
+        else let fv = S.lid_as_fv lid Delta_constant None in
+             let decls, env = encode_top_level_val env fv t quals in
              let tname = lid.str in
              let tsym = mkFreeV(tname, Term_sort) in
              decls
@@ -1262,8 +1263,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_let(lbs, r, _, quals) when (quals |> List.contains S.Irreducible) ->
        [], env
 
-     | Sig_let((_, [{lbname=Inr b2t}]), _, _, _) when lid_equals b2t Const.b2t_lid ->
-       let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t in
+     | Sig_let((_, [{lbname=Inr b2t}]), _, _, _) when S.fv_eq_lid b2t Const.b2t_lid ->
+       let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v in
        let xx = ("x", Term_sort) in
        let x = mkFreeV xx in
        let valid_b2t_x = Term.mkApp("Valid", [Term.mkApp("Prims.b2t", [x])]) in //NS: Explicitly avoid the Vaild(b2t t) inlining 
@@ -1281,7 +1282,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     | Sig_let((false, [lb]), _, _, quals) when (quals |> Util.for_some (function Projector _ -> true | _ -> false)) ->
      //Projectors are also are encoded directly via (our encoding of) theory of datatypes
      //Except in some cases where the front-end does not emit a declare_typ for some projector, because it doesn't know how to compute it
-     let l = right lb.lbname in
+     let fv = right lb.lbname in
+     let l = fv.fv_name.v in
      begin match try_lookup_free_var env l with
         | Some _ -> 
           [], env //already encoded
@@ -1353,8 +1355,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       then decls, env
                       else if not is_rec
                       then match bindings, typs, toks with //Encoding non-recursive definitions
-                            | [{lbdef=e}], [t_norm], [(flid, (f, ftok))] ->
+                            | [{lbdef=e}], [t_norm], [(flid_fv, (f, ftok))] ->
                               let e = SS.compress e in
+                              let flid = flid_fv.fv_name.v in
                               let binders, body, _, _ = destruct_bound_function flid t_norm e in
                               let vars, guards, env', binder_decls, _ = encode_binders None binders env in
                               let app = match vars with | [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkFreeV vars) in
@@ -1371,7 +1374,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       else let fuel = varops.fresh "fuel", Fuel_sort in //encoding recursive definitions using fuel to throttle unfoldings
                            let fuel_tm = mkFreeV fuel in
                            let env0 = env in
-                           let gtoks, env = toks |> List.fold_left (fun (gtoks, env) (flid, (f, ftok)) ->
+                           let gtoks, env = toks |> List.fold_left (fun (gtoks, env) (flid_fv, (f, ftok)) ->
+                             let flid = flid_fv.fv_name.v in
                              let g = varops.new_fvar flid in
                              let gtok = varops.new_fvar flid in
                              let env = push_free_var env flid gtok (Some <| Term.mkApp(g, [fuel_tm])) in
@@ -1545,9 +1549,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let encode_elim () =
             let head, args = Util.head_and_args t_res in
             match (SS.compress head).n with
-                | Tm_uinst({n=Tm_fvar(fv, _)}, _)
-                | Tm_fvar (fv, _) ->
-                  let encoded_head = lookup_free_var_name env' fv in
+                | Tm_uinst({n=Tm_fvar fv}, _)
+                | Tm_fvar fv ->
+                  let encoded_head = lookup_free_var_name env' fv.fv_name in
                   let encoded_args, arg_decls = encode_args args env' in
                   let _, arg_vars, eqns = List.fold_left (fun (env, arg_vars, eqns) arg ->
                           let _, xv, env = gen_term_var env (S.new_bv None tun) in
@@ -1597,19 +1601,21 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         datacons@g, env
 
 and declare_top_level_let env x t t_norm =
-    match try_lookup_lid env x with
+    match try_lookup_lid env x.fv_name.v with
         | None -> (* Need to introduce a new name decl *)
             let decls, env = encode_free_var env x t t_norm [] in
-            let n, x', _ = lookup_lid env x in
+            let n, x', _ = lookup_lid env x.fv_name.v in
             (n, x'), decls, env
         | Some (n, x, _) -> (* already declared, only need an equation *)
             (n, x), [], env
 
-and encode_smt_lemma env lid t =
+and encode_smt_lemma env fv t =
+    let lid = fv.fv_name.v in
     let form, decls = encode_function_type_as_formula None None t env in
     decls@[Term.Assume(form, Some ("Lemma: " ^ lid.str))]
 
-and encode_free_var env lid tt t_norm quals =
+and encode_free_var env fv tt t_norm quals =
+    let lid = fv.fv_name.v in
     if not <| Util.is_pure_or_ghost_function t_norm 
     || Util.is_lemma t_norm
     then let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in
@@ -1732,8 +1738,9 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
 
         | Env.Binding_lid(x, (_, t)) ->
             let t_norm = whnf env t in
+            let fv = S.lid_as_fv x Delta_constant None in
 //            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
-            let g, env' = encode_free_var env x t t_norm [] in
+            let g, env' = encode_free_var env fv t t_norm [] in
             decls@g, env'
         
         | Env.Binding_sig_inst(_, se, _)

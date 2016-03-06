@@ -96,7 +96,6 @@ val enter_monad_scope: env -> ident -> env
 val exit_monad_scope: env -> env -> env
 val export_interface: lident ->  env -> env
 
-(* private *) val unmangleOpName: ident -> option<lident>
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<term>
 (* private *) val extract_record: env -> sigelt -> unit
 (* private *) val unique:  bool -> bool -> env -> lident -> bool

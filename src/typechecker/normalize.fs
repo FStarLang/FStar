@@ -360,42 +360,42 @@ and close_lcomp_opt cfg env = function
 let maybe_simplify steps tm =
     let w t = {t with pos=tm.pos} in
     let simp_t t = match t.n with
-        | Tm_fvar (fv, _) when I.lid_equals fv.v Const.true_lid ->  Some true
-        | Tm_fvar (fv, _) when I.lid_equals fv.v Const.false_lid -> Some false
+        | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid ->  Some true
+        | Tm_fvar fv when S.fv_eq_lid fv Const.false_lid -> Some false
         | _ -> None in
     let simplify arg = (simp_t (fst arg), arg) in
     if not <| List.contains Simplify steps
     then tm
     else match tm.n with
-            | Tm_app({n=Tm_uinst({n=Tm_fvar(fv, _)}, _)}, args)
-            | Tm_app({n=Tm_fvar(fv, _)}, args) -> 
-              if I.lid_equals fv.v Const.and_lid
+            | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
+            | Tm_app({n=Tm_fvar fv}, args) -> 
+              if S.fv_eq_lid fv Const.and_lid
               then match args |> List.map simplify with
                      | [(Some true, _); (_, (arg, _))]
                      | [(_, (arg, _)); (Some true, _)] -> arg
                      | [(Some false, _); _]
                      | [_; (Some false, _)] -> w Util.t_false
                      | _ -> tm
-              else if I.lid_equals fv.v Const.or_lid
+              else if S.fv_eq_lid fv Const.or_lid
               then match args |> List.map simplify with
                      | [(Some true, _); _]
                      | [_; (Some true, _)] -> w Util.t_true
                      | [(Some false, _); (_, (arg, _))]
                      | [(_, (arg, _)); (Some false, _)] -> arg
                      | _ -> tm
-              else if I.lid_equals fv.v Const.imp_lid
+              else if S.fv_eq_lid fv Const.imp_lid
               then match args |> List.map simplify with
                      | [_; (Some true, _)]
                      | [(Some false, _); _] -> w Util.t_true
                      | [(Some true, _); (_, (arg, _))] -> arg
                      | _ -> tm
-              else if I.lid_equals fv.v Const.not_lid
+              else if S.fv_eq_lid fv Const.not_lid
               then match args |> List.map simplify with
                      | [(Some true, _)] ->  w Util.t_false
                      | [(Some false, _)] -> w Util.t_true
                      | _ -> tm
-              else if  I.lid_equals fv.v Const.forall_lid
-                    || I.lid_equals fv.v Const.exists_lid
+              else if  S.fv_eq_lid fv Const.forall_lid
+                    || S.fv_eq_lid fv Const.exists_lid
               then match args with
                      | [(t, _)]
                      | [(_, Some (Implicit _)); (t, _)] ->
@@ -427,8 +427,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_unknown
           | Tm_uvar _ 
           | Tm_constant _
-          | Tm_fvar(_, Some Data_ctor)
-          | Tm_fvar(_, Some (Record_ctor _)) -> //these last three are just constructors; no delta steps can apply
+          | Tm_fvar( {fv_delta=Delta_constant} ) 
+          | Tm_fvar( {fv_qual=Some Data_ctor } ) 
+          | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             rebuild cfg env stack t
      
           | Tm_type u -> 
@@ -445,10 +446,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_name x -> 
             rebuild cfg env stack t
            
-          | Tm_fvar (f, _) -> 
+          | Tm_fvar f -> 
             if cfg.delta_level = NoDelta
             then rebuild cfg env stack t
-            else begin match Env.lookup_definition cfg.delta_level cfg.tcenv f.v with 
+            else begin match Env.lookup_definition cfg.delta_level cfg.tcenv f.fv_name.v with 
                     | None -> rebuild cfg env stack t
                     | Some (us, t) -> 
                       let n = List.length us in 
@@ -459,7 +460,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                norm cfg env stack t 
                              | _ when (cfg.steps |> List.contains EraseUniverses) -> 
                                norm cfg env stack t 
-                             | _ -> failwith (Util.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.v))
+                             | _ -> failwith (Util.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
                       else norm cfg env stack t             
                  end
 
@@ -715,8 +716,8 @@ and rebuild : cfg -> env -> stack -> term -> term =
               let rec is_cons head = match head.n with 
                 | Tm_uinst(h, _) -> is_cons h
                 | Tm_constant _ 
-                | Tm_fvar(_, Some Data_ctor)
-                | Tm_fvar(_, Some (Record_ctor _)) -> true
+                | Tm_fvar( {fv_qual=Some Data_ctor} )
+                | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> true
                 | _ -> false in
 
               let guard_when_clause wopt b rest = 

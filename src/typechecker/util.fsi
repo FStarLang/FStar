@@ -78,3 +78,4 @@ val label_guard: Range.range -> string -> guard_t -> guard_t
 val short_circuit: term -> args -> guard_formula
 val short_circuit_head: term -> bool
 val maybe_add_implicit_binders: env -> binders -> binders
+val fvar_const: env -> lident -> term

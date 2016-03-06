@@ -294,7 +294,7 @@ let is_smt_lemma t = match (compress t).n with
                   let pats' = unmeta pats in
                   let head, _ = head_and_args pats' in
                   begin match (un_uinst head).n with
-                    |Tm_fvar(fv, _) -> lid_equals fv.v Const.cons_lid
+                    |Tm_fvar fv -> fv_eq_lid fv Const.cons_lid
                     | _ -> false
                   end
                 | _ -> false
@@ -343,7 +343,7 @@ let primops =
    Const.op_Negation;]
 
 let is_primop f = match f.n with
-  | Tm_fvar(fv,_) -> primops |> Util.for_some (lid_equals fv.v)
+  | Tm_fvar fv -> primops |> Util.for_some (fv_eq_lid fv)
   | _ -> false
 
 let rec unascribe e = 
@@ -384,10 +384,10 @@ let destruct typ lid =
     | Tm_app(head, args) -> 
       let head = un_uinst head in 
       begin match head.n with 
-              | Tm_fvar(tc, _) when lid_equals tc.v lid -> Some args
+              | Tm_fvar tc when fv_eq_lid tc lid -> Some args
               | _ -> None
       end
-    | Tm_fvar (tc, _) when lid_equals tc.v lid -> Some []
+    | Tm_fvar tc when fv_eq_lid tc lid -> Some []
     | _ -> None
 
 let rec lids_of_sigelt se = match se with
@@ -436,9 +436,9 @@ let mk_app f args =
 let mk_data l args =
   match args with
     | [] ->
-      mk (Tm_meta(fvar (Some Data_ctor) l (range_of_lid l), Meta_desugared Data_app)) None (range_of_lid l)
+      mk (Tm_meta(fvar l Delta_constant (Some Data_ctor), Meta_desugared Data_app)) None (range_of_lid l)
     | _ ->
-      let e = mk_app (fvar (Some Data_ctor) l (range_of_lid l)) args in
+      let e = mk_app (fvar l Delta_constant (Some Data_ctor)) args in
       mk (Tm_meta(e, Meta_desugared Data_app)) None e.pos
 
 let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange)
@@ -515,9 +515,9 @@ let mk_letbinding lbname univ_vars typ eff def =
 let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
     let def = match recs with 
         | None -> def
-        | Some lids -> 
+        | Some fvs -> 
           let universes = univ_vars |> List.map U_name in
-          let inst = lids |> List.map (fun l -> l, universes) in
+          let inst = fvs |> List.map (fun fv -> fv.fv_name.v, universes) in
           FStar.Syntax.InstFV.instantiate inst def in
     let typ = Subst.close_univ_vars univ_vars typ in
     let def = Subst.close_univ_vars univ_vars def in
@@ -539,7 +539,7 @@ let open_univ_vars_binders_and_comp uvs binders c =
 (*********************** Various tests on constants  ****************************)
 (********************************************************************************)
 let is_tuple_constructor (t:typ) = match t.n with
-  | Tm_fvar (l, _) -> Util.starts_with l.v.str "Prims.Tuple"
+  | Tm_fvar fv -> Util.starts_with fv.fv_name.v.str "Prims.Tuple"
   | _ -> false
 
 let mk_tuple_lid n r =
@@ -554,7 +554,7 @@ let is_tuple_data_lid f n =
   lid_equals f (mk_tuple_data_lid n dummyRange)
 
 let is_dtuple_constructor (t:typ) = match t.n with
-  | Tm_fvar (l, _) -> Util.starts_with l.v.str "Prims.DTuple"
+  | Tm_fvar fv -> Util.starts_with fv.fv_name.v.str "Prims.DTuple"
   | _ -> false
 
 let mk_dtuple_lid n r =
@@ -579,7 +579,7 @@ let lid_is_connective =
 
 let is_constructor t lid =
   match (pre_typ t).n with
-    | Tm_fvar (tc, _) -> lid_equals tc.v lid
+    | Tm_fvar tc -> lid_equals tc.fv_name.v lid
     | _ -> false
 
 let rec is_constructed_typ t lid = match (pre_typ t).n with
@@ -637,15 +637,16 @@ let type_u () : typ * universe =
 let kt_kt = Const.kunary ktype0 ktype0
 let kt_kt_kt = Const.kbin ktype0 ktype0 ktype0
 
-let tand    = fvar None Const.and_lid dummyRange
-let tor     = fvar None Const.or_lid dummyRange
-let timp    = fvar None Const.imp_lid dummyRange
-let tiff    = fvar None Const.iff_lid dummyRange
-let t_bool :term = fvar None Const.bool_lid dummyRange
-let t_false = fvar None Const.false_lid dummyRange
-let t_true  = fvar None Const.true_lid dummyRange
-let b2t_v   = fvar None Const.b2t_lid dummyRange
-let t_not   = fvar None Const.not_lid dummyRange
+let fvar_const l = fvar l Delta_constant None
+let tand    = fvar_const Const.and_lid 
+let tor     = fvar_const Const.or_lid  
+let timp    = fvar_const Const.imp_lid 
+let tiff    = fvar_const Const.iff_lid 
+let t_bool  = fvar_const Const.bool_lid
+let t_false = fvar_const Const.false_lid
+let t_true  = fvar_const Const.true_lid 
+let b2t_v   = fvar_const Const.b2t_lid  
+let t_not   = fvar_const Const.not_lid  
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
@@ -654,7 +655,7 @@ let mk_binop op_t phi1 phi2 = mk (Tm_app(op_t, [as_arg phi1; as_arg phi2])) None
 let mk_neg phi = mk (Tm_app(t_not, [as_arg phi])) None phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_conj_l phi = match phi with
-    | [] -> fvar None Const.true_lid dummyRange
+    | [] -> fvar Const.true_lid Delta_constant None
     | hd::tl -> List.fold_right mk_conj tl hd
 let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_disj_l phi = match phi with
@@ -662,12 +663,12 @@ let mk_disj_l phi = match phi with
     | hd::tl -> List.fold_right mk_disj tl hd
 let mk_imp phi1 phi2  =
     match (compress phi1).n with
-        | Tm_fvar (tc, _) when (lid_equals tc.v Const.false_lid) -> t_true
-        | Tm_fvar (tc, _) when (lid_equals tc.v Const.true_lid) -> phi2
+        | Tm_fvar tc when fv_eq_lid tc Const.false_lid -> t_true
+        | Tm_fvar tc when fv_eq_lid tc Const.true_lid  -> phi2
         | _ ->
             begin match (compress phi2).n with
-                | Tm_fvar(tc, _) when (lid_equals tc.v Const.true_lid
-                                    || lid_equals tc.v Const.false_lid) -> phi2
+                | Tm_fvar tc when (fv_eq_lid tc Const.true_lid
+                                || fv_eq_lid tc Const.false_lid) -> phi2
                 | _ -> mk_binop timp phi1 phi2
             end
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
@@ -681,23 +682,23 @@ let eq_pred_t : term =
     arrow [(a, Some imp_tag); (b, Some imp_tag); null_binder atyp; null_binder btyp]
           (mk_Total ktype0)
 
-let teq = fvar None Const.eq2_lid dummyRange
+let teq = fvar_const Const.eq2_lid 
 
 let mk_eq t1 t2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
 
 let mk_has_type t x t' =
-    let t_has_type = fvar None (Const.has_type_lid) dummyRange in //TODO: Fix the U_zeroes below!
+    let t_has_type = fvar_const Const.has_type_lid in //TODO: Fix the U_zeroes below!
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) None dummyRange in
     mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) None dummyRange
 
-let lex_t :term = fvar None Const.lex_t_lid dummyRange
-let lex_top : term = fvar (Some Data_ctor) Const.lextop_lid dummyRange
-let lex_pair : term = fvar (Some Data_ctor) Const.lexcons_lid dummyRange
+let lex_t    = fvar_const Const.lex_t_lid 
+let lex_top  = fvar Const.lextop_lid Delta_constant (Some Data_ctor) 
+let lex_pair = fvar Const.lexcons_lid Delta_constant (Some Data_ctor) 
 let forall_t : term = 
     let a = new_bv None ktype0 in
     let atyp = bv_to_tm a in
     arrow [(a, Some imp_tag); null_binder atyp] (mk_Total ktype0)
-let tforall = fvar None Const.forall_lid dummyRange
+let tforall  = fvar Const.forall_lid (Delta_unfoldable 1) None
 
 let lcomp_of_comp c0 =
     let c = comp_to_comp_typ c0 in
@@ -760,20 +761,20 @@ let destruct_typ_as_formula f : option<connective> =
             | _ -> [], compress t in
 
     let destruct_q_conn t =
-        let is_q : bool -> lident -> Tot<bool> = fun fa l -> if fa then is_forall l else is_exists l in
+        let is_q : bool -> fv -> Tot<bool> = fun fa fv -> if fa then is_forall fv.fv_name.v else is_exists fv.fv_name.v in
         let flat t =
             let t, args = head_and_args t in
             un_uinst t, args |> List.map (fun (t, imp) -> unascribe t, imp) in
         let rec aux qopt out t = match qopt, flat t with
-            | Some fa, ({n=Tm_fvar (tc, _)}, [({n=Tm_abs([b], t2, _)}, _)])
-            | Some fa, ({n=Tm_fvar (tc, _)}, [_; ({n=Tm_abs([b], t2, _)}, _)])
-                when (is_q fa tc.v) ->
+            | Some fa, ({n=Tm_fvar tc}, [({n=Tm_abs([b], t2, _)}, _)])
+            | Some fa, ({n=Tm_fvar tc}, [_; ({n=Tm_abs([b], t2, _)}, _)])
+                when (is_q fa tc) ->
               aux qopt (b::out) t2
 
-            | None, ({n=Tm_fvar(tc, _)}, [({n=Tm_abs([b], t2, _)}, _)])
-            | None, ({n=Tm_fvar(tc, _)}, [_; ({n=Tm_abs([b], t2, _)}, _)])
-                when (is_qlid tc.v) ->
-              aux (Some (is_forall tc.v)) (b::out) t2
+            | None, ({n=Tm_fvar tc}, [({n=Tm_abs([b], t2, _)}, _)])
+            | None, ({n=Tm_fvar tc}, [_; ({n=Tm_abs([b], t2, _)}, _)])
+                when (is_qlid tc.fv_name.v) ->
+              aux (Some (is_forall tc.fv_name.v)) (b::out) t2
 
             | Some b, _ ->
               let bs = List.rev out in 
