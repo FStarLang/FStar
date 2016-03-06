@@ -2225,7 +2225,7 @@ let may_relate = (fun head -> (match (head.FStar_Syntax_Syntax.n) with
 true
 end
 | FStar_Syntax_Syntax.Tm_fvar (tc) -> begin
-(FStar_TypeChecker_Env.is_projector env tc.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
+(tc.FStar_Syntax_Syntax.fv_delta = FStar_Syntax_Syntax.Delta_equational)
 end
 | _68_1623 -> begin
 false

@@ -1196,7 +1196,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | (MisMatch, _) -> //heads definitely do not match
                 let may_relate head = match head.n with
                 | Tm_name _  -> true
-                | Tm_fvar tc -> Env.is_projector env tc.fv_name.v
+                | Tm_fvar tc -> tc.fv_delta = Delta_equational
                 | _ -> false  in
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard = 

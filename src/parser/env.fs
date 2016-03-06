@@ -37,7 +37,7 @@ type env = {
   open_namespaces:      list<lident>;                     (* fully qualified names, in order of precedence *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
   localbindings:        list<(ident * bv)>;               (* local name bindings for name resolution, paired with an env-generated unique name *)
-  recbindings:          list<(ident * lident)>;           (* names bound by recursive type and top-level let-bindings definitions only *)
+  recbindings:          list<(ident* lid * delta_depth)>; (* names bound by recursive type and top-level let-bindings definitions only *)
   sigmap:               list<Util.smap<(sigelt * bool)>>; (* bool indicates that this was declared in an interface file *)
   default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
@@ -170,8 +170,8 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
         | Some e -> Some (Term_name e)
         | None ->
           let recname = qualify env lid.ident in
-          Util.find_map env.recbindings (fun (id, l) -> if id.idText=lid.ident.idText 
-                                                        then Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) Delta_equational None))
+          Util.find_map env.recbindings (fun (id, l, dd) -> if id.idText=lid.ident.idText 
+                                                        then Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None))
                                                         else None)
       end
     | _ -> None in
@@ -370,10 +370,10 @@ let push_bv env (x:ident) =
   let bv = S.gen_bv x.idText (Some x.idRange) tun in
   {env with localbindings=(x, bv)::env.localbindings}, bv
 
-let push_top_level_rec_binding env (x:ident) = 
+let push_top_level_rec_binding env (x:ident) dd = 
   let l = qualify env x in
   if unique false true env l
-  then {env with recbindings=(x,l)::env.recbindings}
+  then {env with recbindings=(x,l,dd)::env.recbindings}
   else raise (Error ("Duplicate top-level names " ^ l.str, range_of_lid l))
 
 let push_sigelt env s =
@@ -423,12 +423,27 @@ let finish env modul =
   modul.declarations |> List.iter (function
     | Sig_bundle(ses, quals, _, _) ->
       if List.contains Private quals
+      || List.contains Abstract quals
       then ses |> List.iter (function
                 | Sig_datacon(lid, _, _, _, _, _, _, _) -> Util.smap_remove (sigmap env) lid.str
                 | _ -> ())
+
     | Sig_declare_typ(lid, _, _, quals, _) ->
       if List.contains Private quals
       then Util.smap_remove (sigmap env) lid.str
+    
+    | Sig_let((_,lbs), r, _, quals) ->
+      if List.contains Private quals
+      || List.contains Abstract quals
+      then begin
+           lbs |> List.iter (fun lb -> Util.smap_remove (sigmap env) (right lb.lbname).fv_name.v.str)
+      end;
+      if List.contains Abstract quals
+      then lbs |> List.iter (fun lb -> 
+           let lid = (right lb.lbname).fv_name.v in
+           let decl = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, Assumption::quals, r) in
+           Util.smap_add (sigmap env) lid.str (decl, false))
+
     | _ -> ());
   {env with
     curmodule=None;

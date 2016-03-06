@@ -498,7 +498,8 @@ let interpreted_symbols =
 let is_interpreted (env:env) head : bool = 
     match (Util.un_uinst head).n with 
         | Tm_fvar fv -> 
-          Util.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
+          fv.fv_delta=Delta_equational
+          //Util.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
         | _ -> false
 
 ////////////////////////////////////////////////////////////

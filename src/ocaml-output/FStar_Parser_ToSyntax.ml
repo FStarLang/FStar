@@ -1498,7 +1498,7 @@ in (env, FStar_Util.Inl (xx), _132_411))
 end))
 end
 | FStar_Util.Inr (l) -> begin
-(let _132_412 = (FStar_Parser_Env.push_top_level_rec_binding env l.FStar_Ident.ident)
+(let _132_412 = (FStar_Parser_Env.push_top_level_rec_binding env l.FStar_Ident.ident FStar_Syntax_Syntax.Delta_equational)
 in (_132_412, FStar_Util.Inr (l), rec_bindings))
 end)
 in (match (_51_1196) with
@@ -2754,10 +2754,10 @@ in (
 let se = FStar_Syntax_Syntax.Sig_inductive_typ ((qlid, [], typars, k, mutuals, [], quals, rng))
 in (
 # 1150 "FStar.Parser.ToSyntax.fst"
-let _env = (FStar_Parser_Env.push_top_level_rec_binding _env id)
+let _env = (FStar_Parser_Env.push_top_level_rec_binding _env id FStar_Syntax_Syntax.Delta_constant)
 in (
 # 1151 "FStar.Parser.ToSyntax.fst"
-let _env2 = (FStar_Parser_Env.push_top_level_rec_binding _env' id)
+let _env2 = (FStar_Parser_Env.push_top_level_rec_binding _env' id FStar_Syntax_Syntax.Delta_constant)
 in (_env, _env2, se, tconstr)))))))))
 end))
 end

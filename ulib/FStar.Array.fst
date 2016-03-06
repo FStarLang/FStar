@@ -88,7 +88,7 @@ val copy_aux:
 			    /\ (forall (i:nat). i < ctr ==> Seq.index (sel h s) i = Seq.index (sel h cpy) i)))
 	(ensures (fun h0 u h1 -> (contains h1 s /\ contains h1 cpy /\ s <> cpy )
 			      /\ (modifies !{cpy} h0 h1)
-			      /\ (Seq.Eq (sel h1 cpy) (sel h1 s))))
+			      /\ (Seq.equal (sel h1 cpy) (sel h1 s))))
 let rec copy_aux #a s cpy ctr =
   match Array.length cpy - ctr with
   | 0 -> ()
@@ -103,7 +103,7 @@ val copy:
      (ensures (fun h0 r h1 -> (modifies !{} h0 h1)
 				     /\ not(contains h0 r)
 				     /\ (contains h1 r)
-				     /\ (Seq.Eq (sel h1 r) (sel h0 s))))
+				     /\ (Seq.equal (sel h1 r) (sel h0 s))))
 let copy #a s =
   let cpy = Array.create (Array.length s) (Array.index s 0) in
   copy_aux s cpy 0;
@@ -175,7 +175,7 @@ val sub :
       /\ (modifies !{} h0 h1)
       /\ (Seq.length (sel h0 s) > 0)
       /\ (idx + len <= Seq.length (sel h0 s))
-      /\ (Seq.Eq (Seq.slice (sel h0 s) idx (idx+len)) (sel h1 t))))
+      /\ (Seq.equal (Seq.slice (sel h0 s) idx (idx+len)) (sel h1 t))))
 let sub #a s idx len =
   let t = Array.create len (index s 0) in
   Array.blit s idx t 0 len;

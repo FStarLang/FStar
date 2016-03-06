@@ -504,6 +504,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Name {str="Type0"}  -> mk (Tm_type U_zero)
     | Name {str="Type"}   -> mk (Tm_type U_unknown)
     | Name {str="Effect"} -> mk (Tm_constant Const_effect)
+    | Name {str="True"}   -> S.fvar (Ident.set_lid_range Const.true_lid top.range) Delta_constant None
+    | Name {str="False"}   -> S.fvar (Ident.set_lid_range Const.false_lid top.range) Delta_constant None
    
     | Var l
     | Name l ->
@@ -662,7 +664,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 let env, xx = push_bv env x in
                 env, Inl xx, S.mk_binder xx::rec_bindings 
               | Inr l ->
-                push_top_level_rec_binding env l.ident, Inr l, rec_bindings in
+                push_top_level_rec_binding env l.ident S.Delta_equational, Inr l, rec_bindings in
             env, (lbname::fnames), rec_bindings) (env, [], []) funs in
 
         let fnames = List.rev fnames in
@@ -1143,8 +1145,8 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let typars = Subst.close_binders typars in
       let k = Subst.close typars k in
       let se = Sig_inductive_typ(qlid, [], typars, k, mutuals, [], quals, rng) in
-      let _env = Env.push_top_level_rec_binding _env id in
-      let _env2 = Env.push_top_level_rec_binding _env' id in
+      let _env = Env.push_top_level_rec_binding _env id S.Delta_constant in
+      let _env2 = Env.push_top_level_rec_binding _env' id S.Delta_constant in
       _env, _env2, se, tconstr
     | _ -> failwith "Unexpected tycon" in
   let push_tparams env bs = 

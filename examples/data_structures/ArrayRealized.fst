@@ -64,10 +64,10 @@ let split s i = slice s 0 i, slice s i (length s)
 val append: seq 'a -> seq 'a -> Tot (seq 'a)
 let append s1 s2 = Seq (Append s1 s2) 0 (length s1 + length s2)
 
-type Equal (#a:Type) (s1:seq a) (s2:seq a) =
+type equal (#a:Type) (s1:seq a) (s2:seq a) =
           (length s1 == length s2
            /\ (forall (i:int).
                  (0 <= i /\ i < length s1)
                ==> __index__ (Seq.c s1) i == __index__ (Seq.c s2) i))
 
-assume val eq: #a:Type -> s1:seq a -> s2:seq a -> Tot (b:bool{b ==> Equal s1 s2})
+assume val eq: #a:Type -> s1:seq a -> s2:seq a -> Tot (b:bool{b ==> equal s1 s2})

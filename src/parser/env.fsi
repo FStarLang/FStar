@@ -37,7 +37,7 @@ type env = {
   open_namespaces:      list<lident>;                     (* fully qualified names, in order of precedence *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
   localbindings:        list<(ident * bv)>;               (* local name bindings for name resolution, paired with an env-generated unique name *)
-  recbindings:          list<(ident * lident)>;           (* names bound by recursive type and top-level let-bindings definitions only *)
+  recbindings:          list<(ident*lid*delta_depth)>;    (* names bound by recursive type and top-level let-bindings definitions only *)
   sigmap:               list<Util.smap<(sigelt * bool)>>; (* bool indicates that this was declared in an interface file *)
   default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
@@ -81,7 +81,7 @@ val lookup_letbinding_quals: env -> lident -> list<qualifier>
 val qualify_field_to_record: env -> record_or_dc -> lident -> option<lident>
 
 val push_bv: env -> ident -> env * bv
-val push_top_level_rec_binding: env -> ident -> env
+val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env
 val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
 

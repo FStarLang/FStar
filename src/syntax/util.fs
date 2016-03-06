@@ -539,30 +539,30 @@ let open_univ_vars_binders_and_comp uvs binders c =
 (*********************** Various tests on constants  ****************************)
 (********************************************************************************)
 let is_tuple_constructor (t:typ) = match t.n with
-  | Tm_fvar fv -> Util.starts_with fv.fv_name.v.str "Prims.Tuple"
+  | Tm_fvar fv -> Util.starts_with fv.fv_name.v.str "Prims.tuple"
   | _ -> false
 
 let mk_tuple_lid n r =
-  let t = Util.format1 "Tuple%s" (Util.string_of_int n) in
+  let t = Util.format1 "tuple%s" (Util.string_of_int n) in
   set_lid_range (Const.pconst t) r
 
 let mk_tuple_data_lid n r =
-  let t = Util.format1 "MkTuple%s" (Util.string_of_int n) in
+  let t = Util.format1 "Mktuple%s" (Util.string_of_int n) in
   set_lid_range (Const.pconst t) r
 
 let is_tuple_data_lid f n =
   lid_equals f (mk_tuple_data_lid n dummyRange)
 
 let is_dtuple_constructor (t:typ) = match t.n with
-  | Tm_fvar fv -> Util.starts_with fv.fv_name.v.str "Prims.DTuple"
+  | Tm_fvar fv -> Util.starts_with fv.fv_name.v.str "Prims.dtuple"
   | _ -> false
 
 let mk_dtuple_lid n r =
-  let t = Util.format1 "DTuple%s" (Util.string_of_int n) in
+  let t = Util.format1 "dtuple%s" (Util.string_of_int n) in
   set_lid_range (Const.pconst t) r
 
 let mk_dtuple_data_lid n r =
-  let t = Util.format1 "MkDTuple%s" (Util.string_of_int n) in
+  let t = Util.format1 "Mkdtuple%s" (Util.string_of_int n) in
   set_lid_range (Const.pconst t) r
 
 let is_lid_equality x = lid_equals x Const.eq2_lid
