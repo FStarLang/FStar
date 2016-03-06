@@ -954,7 +954,7 @@ end))
 # 541 "FStar.Syntax.Util.fst"
 let is_tuple_constructor : FStar_Syntax_Syntax.typ  ->  Prims.bool = (fun t -> (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_fvar (fv) -> begin
-(FStar_Util.starts_with fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.str "Prims.Tuple")
+(FStar_Util.starts_with fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.str "Prims.tuple")
 end
 | _34_866 -> begin
 false
@@ -964,7 +964,7 @@ end))
 let mk_tuple_lid : Prims.int  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun n r -> (
 # 546 "FStar.Syntax.Util.fst"
 let t = (let _115_290 = (FStar_Util.string_of_int n)
-in (FStar_Util.format1 "Tuple%s" _115_290))
+in (FStar_Util.format1 "tuple%s" _115_290))
 in (let _115_291 = (FStar_Syntax_Const.pconst t)
 in (FStar_Ident.set_lid_range _115_291 r))))
 
@@ -972,7 +972,7 @@ in (FStar_Ident.set_lid_range _115_291 r))))
 let mk_tuple_data_lid : Prims.int  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun n r -> (
 # 550 "FStar.Syntax.Util.fst"
 let t = (let _115_296 = (FStar_Util.string_of_int n)
-in (FStar_Util.format1 "MkTuple%s" _115_296))
+in (FStar_Util.format1 "Mktuple%s" _115_296))
 in (let _115_297 = (FStar_Syntax_Const.pconst t)
 in (FStar_Ident.set_lid_range _115_297 r))))
 
@@ -983,7 +983,7 @@ in (FStar_Ident.lid_equals f _115_302)))
 # 556 "FStar.Syntax.Util.fst"
 let is_dtuple_constructor : FStar_Syntax_Syntax.typ  ->  Prims.bool = (fun t -> (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_fvar (fv) -> begin
-(FStar_Util.starts_with fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.str "Prims.DTuple")
+(FStar_Util.starts_with fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v.FStar_Ident.str "Prims.dtuple")
 end
 | _34_879 -> begin
 false
@@ -993,7 +993,7 @@ end))
 let mk_dtuple_lid : Prims.int  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun n r -> (
 # 561 "FStar.Syntax.Util.fst"
 let t = (let _115_309 = (FStar_Util.string_of_int n)
-in (FStar_Util.format1 "DTuple%s" _115_309))
+in (FStar_Util.format1 "dtuple%s" _115_309))
 in (let _115_310 = (FStar_Syntax_Const.pconst t)
 in (FStar_Ident.set_lid_range _115_310 r))))
 
@@ -1001,7 +1001,7 @@ in (FStar_Ident.set_lid_range _115_310 r))))
 let mk_dtuple_data_lid : Prims.int  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun n r -> (
 # 565 "FStar.Syntax.Util.fst"
 let t = (let _115_315 = (FStar_Util.string_of_int n)
-in (FStar_Util.format1 "MkDTuple%s" _115_315))
+in (FStar_Util.format1 "Mkdtuple%s" _115_315))
 in (let _115_316 = (FStar_Syntax_Const.pconst t)
 in (FStar_Ident.set_lid_range _115_316 r))))
 
