@@ -24,7 +24,7 @@ open FStar.Syntax.Syntax
 type step =
   | WHNF            //Only produce a weak head normal form
   | Inline
-  | Unfold
+  | UnfoldUntil of delta_depth
   | Beta            //remove Always do beta
   | BetaUVars       //only beta reduce applications of resolved uvars
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!

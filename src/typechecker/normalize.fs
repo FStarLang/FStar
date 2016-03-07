@@ -42,7 +42,7 @@ module I  = FStar.Ident
 type step =
   | WHNF            //Only produce a weak head normal form
   | Inline
-  | Unfold
+  | UnfoldUntil of S.delta_depth
   | Beta            
   | BetaUVars
   | Simplify        //Simplifies some basic log cfg ical tautolog cfg ies: not part of definitional equality!
@@ -71,7 +71,7 @@ let closure_to_string = function
 type cfg = {
     steps: steps;
     tcenv: Env.env;
-    delta_level: Env.delta_level;
+    delta_level: Env.delta_level
 }
 
 type branches = list<(pat * option<term> * term)> 
@@ -447,7 +447,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
            
           | Tm_fvar f -> 
-            if cfg.delta_level = NoDelta
+            let should_delta = match cfg.delta_level with 
+                | NoDelta -> false
+                | OnlyInline -> true
+                | Unfold l -> Common.delta_depth_greater_than f.fv_delta l in
+                           
+            if not should_delta
             then rebuild cfg env stack t
             else begin match Env.lookup_definition cfg.delta_level cfg.tcenv f.fv_name.v with 
                     | None -> rebuild cfg env stack t
@@ -790,11 +795,11 @@ and rebuild : cfg -> env -> stack -> term -> term =
               matches t branches
 
 let config s e = 
-    let d = if List.contains Unfold s 
-            then Env.Unfold
-            else if List.contains Inline s
-            then Env.OnlyInline
-            else Env.NoDelta in
+    let d = match Util.find_map s (function UnfoldUntil k -> Some k | _ -> None) with
+                | Some k -> Env.Unfold k
+                | None -> if List.contains Inline s
+                          then Env.OnlyInline
+                          else Env.NoDelta in
     {tcenv=e; steps=s; delta_level=d}
 
 let normalize s e t = norm (config s e) [] [] t

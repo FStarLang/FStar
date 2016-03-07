@@ -576,21 +576,21 @@ let destruct_flex_pattern env t =
 *)
 
 type match_result =
-  | MisMatch
+  | MisMatch of option<delta_depth> * option<delta_depth>
   | HeadMatch
   | FullMatch
 
 let head_match = function
-    | MisMatch -> MisMatch
+    | MisMatch(i, j) -> MisMatch(i, j)
     | _ -> HeadMatch
 
 let rec head_matches t1 t2 : match_result =
   match (Util.unmeta t1).n, (Util.unmeta t2).n with
-    | Tm_name x, Tm_name y -> if S.bv_eq x y then FullMatch else MisMatch
-    | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch
+    | Tm_name x, Tm_name y -> if S.bv_eq x y then FullMatch else MisMatch(None, None)
+    | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some f.fv_delta, Some f.fv_delta)
     | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches f g |> head_match
-    | Tm_constant c, Tm_constant d -> if c=d then FullMatch else MisMatch
-    | Tm_uvar (uv, _),  Tm_uvar (uv', _) -> if Unionfind.equivalent uv uv' then FullMatch else MisMatch
+    | Tm_constant c, Tm_constant d -> if c=d then FullMatch else MisMatch(None, None)
+    | Tm_uvar (uv, _),  Tm_uvar (uv', _) -> if Unionfind.equivalent uv uv' then FullMatch else MisMatch(None, None)
 
     | Tm_refine(x, _), Tm_refine(y, _) -> head_matches x.sort y.sort |> head_match
 
@@ -604,26 +604,42 @@ let rec head_matches t1 t2 : match_result =
     | Tm_app(head, _), _ -> head_matches head t2
     | _, Tm_app(head, _) -> head_matches t1 head
 
-    | _ -> MisMatch
+    | _ -> MisMatch(None, None)
 
 (* Does t1 match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let success d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
-    let fail () = (MisMatch, None) in
+    let fail r = (r, None) in
     let rec aux d t1 t2 =
-        match head_matches t1 t2 with
-            | MisMatch ->
-                if d=3 then fail() //already delta normal
-                else let steps = 
-                        if d=0 
+        let r = head_matches t1 t2 in
+        match r with
+          | MisMatch _ ->
+            if d=3 then fail r //already delta normal
+            else let steps =
+                      if d=0
                         then [N.Inline; N.WHNF]
-                        else if d=1 
-                        then [N.Unfold; N.WHNF]
-                        else [N.Unfold] in
+                        else if d=1
+                        then [N.UnfoldUntil Delta_constant; N.WHNF]
+                        else [N.UnfoldUntil Delta_constant] in
                      let t1' = normalize_refinement steps env wl t1 in
                      let t2' = normalize_refinement steps env wl t2 in
                      aux (d+1) t1' t2'
-            | r -> success d r t1 t2 in
+         | _ -> success d r t1 t2 in
+//        let r = head_matches t1 t2 in
+//        match r with
+//            | MisMatch(Some d1, Some d2) when d1=d2 -> //incompatible
+//              fail r
+//            
+//            | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
+//              let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
+//              let t1, t2 = if d1_greater_than_d2
+//                           then normalize_refinement [N.UnfoldUntil d2; N.WHNF] env wl t1, t2 
+//                           else t1, normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
+//              aux (d + 1) t1 t2
+//            
+//            | MisMatch _ -> fail r
+//
+//            | _ -> success d r t1 t2 in
     aux 0 t1 t2
 
 type tc =
@@ -633,7 +649,9 @@ type tcs = list<tc>
 
 let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<binder> * variance * tc)> =
     let t = Util.unmeta t in
-    let matches t' = head_matches t t' <> MisMatch in
+    let matches t' = match head_matches t t' with 
+        | MisMatch _ -> false
+        | _ -> true in
     match t.n with
         | Tm_app(hd, args) -> (* easy case: it's already in the form we want *)
             let rebuild args' =
@@ -1193,11 +1211,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let rigid_rigid_delta env orig wl head1 head2 t1 t2 = 
         let m, o = head_matches_delta env wl t1 t2 in
         match m, o  with
-            | (MisMatch, _) -> //heads definitely do not match
+            | (MisMatch _, _) -> //heads definitely do not match
                 let may_relate head = match head.n with
-                | Tm_name _  -> true
-                | Tm_fvar tc -> tc.fv_delta = Delta_equational
-                | _ -> false  in
+                    | Tm_name _  -> true
+                    | Tm_fvar tc -> tc.fv_delta = Delta_equational
+                    | _ -> false  in
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard = 
                         if problem.relation = EQ

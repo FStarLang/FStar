@@ -37,7 +37,7 @@ type binding =
 type delta_level = 
   | NoDelta
   | OnlyInline
-  | Unfold
+  | Unfold of delta_depth
 
 type mlift = typ -> typ -> typ
 
@@ -106,8 +106,8 @@ type sigtable = Util.smap<sigelt>
 let visible_at d q = match d, q with 
   | NoDelta,    _         
   | OnlyInline, Inline 
-  | Unfold,     Inline 
-  | Unfold,     Unfoldable -> true
+  | Unfold _,   Inline 
+  | Unfold _,   Unfoldable -> true
   | _ -> false 
 
 let glb_delta d1 d2 = match d1, d2 with 
@@ -115,8 +115,16 @@ let glb_delta d1 d2 = match d1, d2 with
     | _, NoDelta -> NoDelta
     | OnlyInline, _
     | _, OnlyInline -> OnlyInline
-    | Unfold, Unfold -> Unfold
-
+    | Unfold l1, Unfold l2 -> 
+        let l = match l1, l2 with 
+            | Delta_constant, _
+            | _, Delta_constant -> Delta_constant
+            | Delta_equational, l
+            | l, Delta_equational -> l
+            | Delta_unfoldable i, Delta_unfoldable j ->
+              let k = if i < j then i else j in
+              Delta_unfoldable k in
+        Unfold l
 
 let default_table_size = 200
 let new_sigtab () = Util.smap_create default_table_size

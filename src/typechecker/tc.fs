@@ -52,7 +52,7 @@ let steps env =
     if Options.should_verify env.curmodule.str 
     then [N.Beta; N.Inline; N.SNComp]
     else [N.Beta; N.Inline]
-let unfold_whnf env t = N.normalize [N.WHNF; N.Unfold; N.Beta] env t
+let unfold_whnf env t = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant; N.Beta] env t
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
 let check_no_escape head_opt env (fvs:list<bv>) kt = 

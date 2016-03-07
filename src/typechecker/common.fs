@@ -67,3 +67,10 @@ let t_int64  = tconst C.int64_lid
 let t_string = tconst C.string_lid
 let t_float  = tconst C.float_lid 
 let t_char   = tconst C.char_lid  
+
+let delta_depth_greater_than l m = match l, m with 
+    | Delta_constant, _ -> false
+    | Delta_equational, _ -> true
+    | _, Delta_equational -> false
+    | Delta_unfoldable i, Delta_unfoldable j -> i > j
+    | Delta_unfoldable _, Delta_constant -> true 
