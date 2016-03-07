@@ -226,6 +226,11 @@ let random i =
     else if (not (ocaml_rand_status())) then failwith "random number generator not ready"
     else bytes_of_string (ocaml_rand_bytes i)
 
+let random_string i =
+    if (i < 0) then invalid_arg "input to random must be non-negative"
+    else if (not (ocaml_rand_status())) then failwith "random number generator not ready"
+    else ocaml_rand_bytes i
+
 (* -------------------------------------------------------------------- *)
 type rsa
 
