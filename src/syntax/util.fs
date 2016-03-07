@@ -341,9 +341,10 @@ let primops =
    Const.op_And;
    Const.op_Or;
    Const.op_Negation;]
+let is_primop_lid l = primops |> Util.for_some (lid_equals l)
 
 let is_primop f = match f.n with
-  | Tm_fvar fv -> primops |> Util.for_some (fv_eq_lid fv)
+  | Tm_fvar fv -> is_primop_lid fv.fv_name.v
   | _ -> false
 
 let rec unascribe e = 

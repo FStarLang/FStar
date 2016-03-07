@@ -154,10 +154,13 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
           | Sig_let((_, lbs), _, _, _) ->
             let fv = lb_fv lbs lid in
             Some (Term_name(S.fvar lid fv.fv_delta fv.fv_qual))
-          | Sig_declare_typ(_, _, _, quals, _) ->
+          | Sig_declare_typ(lid, _, _, quals, _) ->
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
             || quals |> Util.for_some (function Assumption -> true | _ -> false)
-            then Some (Term_name(fvar lid Delta_constant (fv_qual_of_se se)))
+            then let dd = if Util.is_primop_lid lid
+                          then Delta_equational
+                          else Delta_constant in
+                    Some (Term_name(fvar lid dd (fv_qual_of_se se)))
             else None
           | Sig_new_effect(ne, _) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid lid)))
           | Sig_effect_abbrev _ ->   Some (Eff_name(se, lid))
