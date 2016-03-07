@@ -2224,10 +2224,10 @@ let may_relate = (fun head -> (match (head.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_name (_68_1618) -> begin
 true
 end
-| FStar_Syntax_Syntax.Tm_fvar (tc, _68_1622) -> begin
-(FStar_TypeChecker_Env.is_projector env tc.FStar_Syntax_Syntax.v)
+| FStar_Syntax_Syntax.Tm_fvar (tc) -> begin
+(tc.FStar_Syntax_Syntax.fv_delta = FStar_Syntax_Syntax.Delta_equational)
 end
-| _68_1626 -> begin
+| _68_1623 -> begin
 false
 end))
 in if (((may_relate head1) || (may_relate head2)) && wl.smt_ok) then begin
@@ -2262,16 +2262,16 @@ end else begin
 (giveup env "head mismatch" orig)
 end)
 end
-| (_68_1636, Some (t1, t2)) -> begin
+| (_68_1633, Some (t1, t2)) -> begin
 (solve_t env (
 # 1240 "FStar.TypeChecker.Rel.fst"
-let _68_1642 = problem
-in {FStar_TypeChecker_Common.pid = _68_1642.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = t1; FStar_TypeChecker_Common.relation = _68_1642.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = t2; FStar_TypeChecker_Common.element = _68_1642.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_1642.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_1642.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_1642.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_1642.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_1642.FStar_TypeChecker_Common.rank}) wl)
+let _68_1639 = problem
+in {FStar_TypeChecker_Common.pid = _68_1639.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = t1; FStar_TypeChecker_Common.relation = _68_1639.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = t2; FStar_TypeChecker_Common.element = _68_1639.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_1639.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_1639.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_1639.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_1639.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_1639.FStar_TypeChecker_Common.rank}) wl)
 end
-| (_68_1645, None) -> begin
+| (_68_1642, None) -> begin
 (
 # 1243 "FStar.TypeChecker.Rel.fst"
-let _68_1648 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+let _68_1645 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _149_919 = (FStar_Syntax_Print.term_to_string t1)
 in (let _149_918 = (FStar_Syntax_Print.tag_of_term t1)
 in (let _149_917 = (FStar_Syntax_Print.term_to_string t2)
@@ -2282,13 +2282,13 @@ end else begin
 end
 in (
 # 1247 "FStar.TypeChecker.Rel.fst"
-let _68_1652 = (FStar_Syntax_Util.head_and_args t1)
-in (match (_68_1652) with
+let _68_1649 = (FStar_Syntax_Util.head_and_args t1)
+in (match (_68_1649) with
 | (head, args) -> begin
 (
 # 1248 "FStar.TypeChecker.Rel.fst"
-let _68_1655 = (FStar_Syntax_Util.head_and_args t2)
-in (match (_68_1655) with
+let _68_1652 = (FStar_Syntax_Util.head_and_args t2)
+in (match (_68_1652) with
 | (head', args') -> begin
 (
 # 1249 "FStar.TypeChecker.Rel.fst"
@@ -2316,13 +2316,13 @@ end)
 end else begin
 (
 # 1270 "FStar.TypeChecker.Rel.fst"
-let _68_1665 = (base_and_refinement env wl t1)
-in (match (_68_1665) with
+let _68_1662 = (base_and_refinement env wl t1)
+in (match (_68_1662) with
 | (base1, refinement1) -> begin
 (
 # 1271 "FStar.TypeChecker.Rel.fst"
-let _68_1668 = (base_and_refinement env wl t2)
-in (match (_68_1668) with
+let _68_1665 = (base_and_refinement env wl t2)
+in (match (_68_1665) with
 | (base2, refinement2) -> begin
 (match ((refinement1, refinement2)) with
 | (None, None) -> begin
@@ -2336,8 +2336,8 @@ end
 | USolved (wl) -> begin
 (
 # 1278 "FStar.TypeChecker.Rel.fst"
-let subprobs = (FStar_List.map2 (fun _68_1681 _68_1685 -> (match ((_68_1681, _68_1685)) with
-| ((a, _68_1680), (a', _68_1684)) -> begin
+let subprobs = (FStar_List.map2 (fun _68_1678 _68_1682 -> (match ((_68_1678, _68_1682)) with
+| ((a, _68_1677), (a', _68_1681)) -> begin
 (let _149_929 = (mk_problem (p_scope orig) orig a FStar_TypeChecker_Common.EQ a' None "index")
 in (FStar_All.pipe_left (fun _149_928 -> FStar_TypeChecker_Common.TProb (_149_928)) _149_929))
 end)) args args')
@@ -2351,7 +2351,7 @@ let wl = (solve_prob orig (Some (formula)) [] wl)
 in (solve env (attempt subprobs wl)))))
 end)
 end
-| _68_1691 -> begin
+| _68_1688 -> begin
 (
 # 1285 "FStar.TypeChecker.Rel.fst"
 let lhs = (force_refinement (base1, refinement1))
@@ -2360,8 +2360,8 @@ in (
 let rhs = (force_refinement (base2, refinement2))
 in (solve_t env (
 # 1287 "FStar.TypeChecker.Rel.fst"
-let _68_1694 = problem
-in {FStar_TypeChecker_Common.pid = _68_1694.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = lhs; FStar_TypeChecker_Common.relation = _68_1694.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = rhs; FStar_TypeChecker_Common.element = _68_1694.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_1694.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_1694.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_1694.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_1694.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_1694.FStar_TypeChecker_Common.rank}) wl)))
+let _68_1691 = problem
+in {FStar_TypeChecker_Common.pid = _68_1691.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = lhs; FStar_TypeChecker_Common.relation = _68_1691.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = rhs; FStar_TypeChecker_Common.element = _68_1691.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_1691.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_1691.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_1691.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_1691.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_1691.FStar_TypeChecker_Common.rank}) wl)))
 end)
 end))
 end))
@@ -2375,9 +2375,9 @@ in (
 # 1293 "FStar.TypeChecker.Rel.fst"
 let imitate = (fun orig env wl p -> (
 # 1294 "FStar.TypeChecker.Rel.fst"
-let _68_1711 = p
-in (match (_68_1711) with
-| ((u, k), ps, xs, (h, _68_1708, qs)) -> begin
+let _68_1708 = p
+in (match (_68_1708) with
+| ((u, k), ps, xs, (h, _68_1705, qs)) -> begin
 (
 # 1295 "FStar.TypeChecker.Rel.fst"
 let xs = (sn_binders env xs)
@@ -2386,8 +2386,8 @@ in (
 let r = (FStar_TypeChecker_Env.get_range env)
 in (
 # 1301 "FStar.TypeChecker.Rel.fst"
-let _68_1717 = (imitation_sub_probs orig env xs ps qs)
-in (match (_68_1717) with
+let _68_1714 = (imitation_sub_probs orig env xs ps qs)
+in (match (_68_1714) with
 | (sub_probs, gs_xs, formula) -> begin
 (
 # 1302 "FStar.TypeChecker.Rel.fst"
@@ -2395,7 +2395,7 @@ let im = (let _149_942 = (h gs_xs)
 in (u_abs xs _149_942))
 in (
 # 1303 "FStar.TypeChecker.Rel.fst"
-let _68_1719 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+let _68_1716 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _149_947 = (FStar_Syntax_Print.term_to_string im)
 in (let _149_946 = (FStar_Syntax_Print.tag_of_term im)
 in (let _149_945 = (let _149_943 = (FStar_List.map (prob_to_string env) sub_probs)
@@ -2415,28 +2415,28 @@ in (
 # 1313 "FStar.TypeChecker.Rel.fst"
 let project = (fun orig env wl i p -> (
 # 1314 "FStar.TypeChecker.Rel.fst"
-let _68_1735 = p
-in (match (_68_1735) with
+let _68_1732 = p
+in (match (_68_1732) with
 | (u, ps, xs, (h, matches, qs)) -> begin
 (
 # 1318 "FStar.TypeChecker.Rel.fst"
 let r = (FStar_TypeChecker_Env.get_range env)
 in (
 # 1319 "FStar.TypeChecker.Rel.fst"
-let _68_1740 = (FStar_List.nth ps i)
-in (match (_68_1740) with
-| (pi, _68_1739) -> begin
+let _68_1737 = (FStar_List.nth ps i)
+in (match (_68_1737) with
+| (pi, _68_1736) -> begin
 (
 # 1320 "FStar.TypeChecker.Rel.fst"
-let _68_1744 = (FStar_List.nth xs i)
-in (match (_68_1744) with
-| (xi, _68_1743) -> begin
+let _68_1741 = (FStar_List.nth xs i)
+in (match (_68_1741) with
+| (xi, _68_1740) -> begin
 (
 # 1322 "FStar.TypeChecker.Rel.fst"
 let rec gs = (fun k -> (
 # 1323 "FStar.TypeChecker.Rel.fst"
-let _68_1749 = (FStar_Syntax_Util.arrow_formals k)
-in (match (_68_1749) with
+let _68_1746 = (FStar_Syntax_Util.arrow_formals k)
+in (match (_68_1746) with
 | (bs, k) -> begin
 (
 # 1324 "FStar.TypeChecker.Rel.fst"
@@ -2444,14 +2444,14 @@ let rec aux = (fun subst bs -> (match (bs) with
 | [] -> begin
 ([], [])
 end
-| (a, _68_1757)::tl -> begin
+| (a, _68_1754)::tl -> begin
 (
 # 1327 "FStar.TypeChecker.Rel.fst"
 let k_a = (FStar_Syntax_Subst.subst subst a.FStar_Syntax_Syntax.sort)
 in (
 # 1328 "FStar.TypeChecker.Rel.fst"
-let _68_1763 = (new_uvar r xs k_a)
-in (match (_68_1763) with
+let _68_1760 = (new_uvar r xs k_a)
+in (match (_68_1760) with
 | (gi_xs, gi) -> begin
 (
 # 1329 "FStar.TypeChecker.Rel.fst"
@@ -2468,8 +2468,8 @@ end else begin
 end
 in (
 # 1332 "FStar.TypeChecker.Rel.fst"
-let _68_1769 = (aux subst tl)
-in (match (_68_1769) with
+let _68_1766 = (aux subst tl)
+in (match (_68_1766) with
 | (gi_xs', gi_ps') -> begin
 (let _149_969 = (let _149_966 = (FStar_Syntax_Syntax.as_arg gi_xs)
 in (_149_966)::gi_xs')
@@ -2487,9 +2487,9 @@ None
 end else begin
 (
 # 1338 "FStar.TypeChecker.Rel.fst"
-let _68_1773 = (gs xi.FStar_Syntax_Syntax.sort)
-in (match (_68_1773) with
-| (g_xs, _68_1772) -> begin
+let _68_1770 = (gs xi.FStar_Syntax_Syntax.sort)
+in (match (_68_1770) with
+| (g_xs, _68_1769) -> begin
 (
 # 1339 "FStar.TypeChecker.Rel.fst"
 let xi = (FStar_Syntax_Syntax.bv_to_name xi)
@@ -2500,8 +2500,8 @@ in (u_abs xs _149_971))
 in (
 # 1341 "FStar.TypeChecker.Rel.fst"
 let sub = (let _149_977 = (let _149_976 = (FStar_Syntax_Syntax.mk_Tm_app proj ps None r)
-in (let _149_975 = (let _149_974 = (FStar_List.map (fun _68_1781 -> (match (_68_1781) with
-| (_68_1777, _68_1779, y) -> begin
+in (let _149_975 = (let _149_974 = (FStar_List.map (fun _68_1778 -> (match (_68_1778) with
+| (_68_1774, _68_1776, y) -> begin
 y
 end)) qs)
 in (FStar_All.pipe_left h _149_974))
@@ -2509,7 +2509,7 @@ in (mk_problem (p_scope orig) orig _149_976 (p_rel orig) _149_975 None "projecti
 in (FStar_All.pipe_left (fun _149_972 -> FStar_TypeChecker_Common.TProb (_149_972)) _149_977))
 in (
 # 1342 "FStar.TypeChecker.Rel.fst"
-let _68_1783 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+let _68_1780 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _149_979 = (FStar_Syntax_Print.term_to_string proj)
 in (let _149_978 = (prob_to_string env sub)
 in (FStar_Util.print2 "Projecting %s\n\tsubprob=%s\n" _149_979 _149_978)))
@@ -2532,8 +2532,8 @@ in (
 # 1348 "FStar.TypeChecker.Rel.fst"
 let solve_t_flex_rigid = (fun orig lhs t2 wl -> (
 # 1349 "FStar.TypeChecker.Rel.fst"
-let _68_1797 = lhs
-in (match (_68_1797) with
+let _68_1794 = lhs
+in (match (_68_1794) with
 | ((t1, uv, k, args_lhs), maybe_pat_vars) -> begin
 (
 # 1350 "FStar.TypeChecker.Rel.fst"
@@ -2553,10 +2553,10 @@ end else begin
 let tx = (FStar_Unionfind.new_transaction ())
 in if (i = (- (1))) then begin
 (match ((imitate orig env wl st)) with
-| Failed (_68_1807) -> begin
+| Failed (_68_1804) -> begin
 (
 # 1361 "FStar.TypeChecker.Rel.fst"
-let _68_1809 = (FStar_Unionfind.rollback tx)
+let _68_1806 = (FStar_Unionfind.rollback tx)
 in (imitate_or_project n st (i + 1)))
 end
 | sol -> begin
@@ -2567,7 +2567,7 @@ end else begin
 | (None) | (Some (Failed (_))) -> begin
 (
 # 1368 "FStar.TypeChecker.Rel.fst"
-let _68_1817 = (FStar_Unionfind.rollback tx)
+let _68_1814 = (FStar_Unionfind.rollback tx)
 in (imitate_or_project n st (i + 1)))
 end
 | Some (sol) -> begin
@@ -2579,14 +2579,14 @@ in (
 # 1372 "FStar.TypeChecker.Rel.fst"
 let check_head = (fun fvs1 t2 -> (
 # 1373 "FStar.TypeChecker.Rel.fst"
-let _68_1827 = (FStar_Syntax_Util.head_and_args t2)
-in (match (_68_1827) with
-| (hd, _68_1826) -> begin
+let _68_1824 = (FStar_Syntax_Util.head_and_args t2)
+in (match (_68_1824) with
+| (hd, _68_1823) -> begin
 (match (hd.FStar_Syntax_Syntax.n) with
 | (FStar_Syntax_Syntax.Tm_arrow (_)) | (FStar_Syntax_Syntax.Tm_constant (_)) | (FStar_Syntax_Syntax.Tm_abs (_)) -> begin
 true
 end
-| _68_1838 -> begin
+| _68_1835 -> begin
 (
 # 1379 "FStar.TypeChecker.Rel.fst"
 let fvs_hd = (FStar_Syntax_Free.names hd)
@@ -2595,7 +2595,7 @@ true
 end else begin
 (
 # 1382 "FStar.TypeChecker.Rel.fst"
-let _68_1840 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+let _68_1837 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _149_1026 = (names_to_string fvs_hd)
 in (FStar_Util.print1 "Free variables are %s" _149_1026))
 end else begin
@@ -2633,8 +2633,8 @@ in (
 let fvs2 = (FStar_Syntax_Free.names t2)
 in (
 # 1397 "FStar.TypeChecker.Rel.fst"
-let _68_1853 = (occurs_check env wl (uv, k) t2)
-in (match (_68_1853) with
+let _68_1850 = (occurs_check env wl (uv, k) t2)
+in (match (_68_1850) with
 | (occurs_ok, msg) -> begin
 if (not (occurs_ok)) then begin
 (let _149_1032 = (let _149_1031 = (FStar_Option.get msg)
@@ -2648,7 +2648,7 @@ in (imitate orig env wl _149_1033))
 end else begin
 (
 # 1404 "FStar.TypeChecker.Rel.fst"
-let _68_1854 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+let _68_1851 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _149_1036 = (FStar_Syntax_Print.term_to_string t1)
 in (let _149_1035 = (names_to_string fvs1)
 in (let _149_1034 = (names_to_string fvs2)
@@ -2662,7 +2662,7 @@ let sol = (match (vars) with
 | [] -> begin
 t2
 end
-| _68_1858 -> begin
+| _68_1855 -> begin
 (let _149_1037 = (sn_binders env vars)
 in (u_abs _149_1037 t2))
 end)
@@ -2678,7 +2678,7 @@ end else begin
 if (check_head fvs1 t2) then begin
 (
 # 1417 "FStar.TypeChecker.Rel.fst"
-let _68_1861 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+let _68_1858 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _149_1040 = (FStar_Syntax_Print.term_to_string t1)
 in (let _149_1039 = (names_to_string fvs1)
 in (let _149_1038 = (names_to_string fvs2)
@@ -2707,7 +2707,7 @@ in (check_head _149_1042 t2)) then begin
 let im_ok = (imitate_ok t2)
 in (
 # 1430 "FStar.TypeChecker.Rel.fst"
-let _68_1865 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+let _68_1862 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _149_1043 = (FStar_Syntax_Print.term_to_string t1)
 in (FStar_Util.print2 "Not a pattern (%s) ... %s\n" _149_1043 (if (im_ok < 0) then begin
 "imitating"
@@ -2732,23 +2732,23 @@ let flex_flex = (fun orig lhs rhs -> if (wl.defer_ok && ((p_rel orig) <> FStar_T
 end else begin
 (
 # 1458 "FStar.TypeChecker.Rel.fst"
-let force_quasi_pattern = (fun xs_opt _68_1877 -> (match (_68_1877) with
+let force_quasi_pattern = (fun xs_opt _68_1874 -> (match (_68_1874) with
 | (t, u, k, args) -> begin
 (
 # 1461 "FStar.TypeChecker.Rel.fst"
-let _68_1881 = (FStar_Syntax_Util.arrow_formals k)
-in (match (_68_1881) with
-| (all_formals, _68_1880) -> begin
+let _68_1878 = (FStar_Syntax_Util.arrow_formals k)
+in (match (_68_1878) with
+| (all_formals, _68_1877) -> begin
 (
 # 1462 "FStar.TypeChecker.Rel.fst"
-let _68_1882 = ()
+let _68_1879 = ()
 in (
 # 1464 "FStar.TypeChecker.Rel.fst"
 let rec aux = (fun pat_args pattern_vars pattern_var_set formals args -> (match ((formals, args)) with
 | ([], []) -> begin
 (
 # 1472 "FStar.TypeChecker.Rel.fst"
-let pat_args = (FStar_All.pipe_right (FStar_List.rev pat_args) (FStar_List.map (fun _68_1895 -> (match (_68_1895) with
+let pat_args = (FStar_All.pipe_right (FStar_List.rev pat_args) (FStar_List.map (fun _68_1892 -> (match (_68_1892) with
 | (x, imp) -> begin
 (let _149_1066 = (FStar_Syntax_Syntax.bv_to_name x)
 in (_149_1066, imp))
@@ -2760,22 +2760,22 @@ in (
 # 1474 "FStar.TypeChecker.Rel.fst"
 let kk = (
 # 1475 "FStar.TypeChecker.Rel.fst"
-let _68_1901 = (FStar_Syntax_Util.type_u ())
-in (match (_68_1901) with
-| (t, _68_1900) -> begin
+let _68_1898 = (FStar_Syntax_Util.type_u ())
+in (match (_68_1898) with
+| (t, _68_1897) -> begin
 (let _149_1067 = (new_uvar t.FStar_Syntax_Syntax.pos pattern_vars t)
 in (Prims.fst _149_1067))
 end))
 in (
 # 1477 "FStar.TypeChecker.Rel.fst"
-let _68_1905 = (new_uvar t.FStar_Syntax_Syntax.pos pattern_vars kk)
-in (match (_68_1905) with
+let _68_1902 = (new_uvar t.FStar_Syntax_Syntax.pos pattern_vars kk)
+in (match (_68_1902) with
 | (t', tm_u1) -> begin
 (
 # 1478 "FStar.TypeChecker.Rel.fst"
-let _68_1912 = (destruct_flex_t t')
-in (match (_68_1912) with
-| (_68_1907, u1, k1, _68_1911) -> begin
+let _68_1909 = (destruct_flex_t t')
+in (match (_68_1909) with
+| (_68_1904, u1, k1, _68_1908) -> begin
 (
 # 1479 "FStar.TypeChecker.Rel.fst"
 let sol = (let _149_1069 = (let _149_1068 = (u_abs all_formals t')
@@ -2801,8 +2801,8 @@ let maybe_pat = (match (xs_opt) with
 true
 end
 | Some (xs) -> begin
-(FStar_All.pipe_right xs (FStar_Util.for_some (fun _68_1931 -> (match (_68_1931) with
-| (x, _68_1930) -> begin
+(FStar_All.pipe_right xs (FStar_Util.for_some (fun _68_1928 -> (match (_68_1928) with
+| (x, _68_1927) -> begin
 (FStar_Syntax_Syntax.bv_eq x (Prims.fst y))
 end))))
 end)
@@ -2821,7 +2821,7 @@ end)
 end)
 end)
 end
-| _68_1935 -> begin
+| _68_1932 -> begin
 (FStar_All.failwith "Impossible")
 end))
 in (let _149_1072 = (FStar_Syntax_Syntax.new_bv_set ())
@@ -2830,7 +2830,7 @@ end))
 end))
 in (
 # 1508 "FStar.TypeChecker.Rel.fst"
-let solve_both_pats = (fun wl _68_1941 _68_1945 r -> (match ((_68_1941, _68_1945)) with
+let solve_both_pats = (fun wl _68_1938 _68_1942 r -> (match ((_68_1938, _68_1942)) with
 | ((u1, k1, xs), (u2, k2, ys)) -> begin
 if ((FStar_Unionfind.equivalent u1 u2) && (binders_eq xs ys)) then begin
 (let _149_1081 = (solve_prob orig None [] wl)
@@ -2847,7 +2847,7 @@ in (
 let zs = (intersect_vars xs ys)
 in (
 # 1519 "FStar.TypeChecker.Rel.fst"
-let _68_1950 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+let _68_1947 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _149_1084 = (FStar_Syntax_Print.binders_to_string ", " xs)
 in (let _149_1083 = (FStar_Syntax_Print.binders_to_string ", " ys)
 in (let _149_1082 = (FStar_Syntax_Print.binders_to_string ", " zs)
@@ -2857,28 +2857,28 @@ end else begin
 end
 in (
 # 1522 "FStar.TypeChecker.Rel.fst"
-let _68_1963 = (
+let _68_1960 = (
 # 1523 "FStar.TypeChecker.Rel.fst"
-let _68_1955 = (FStar_Syntax_Util.type_u ())
-in (match (_68_1955) with
-| (t, _68_1954) -> begin
+let _68_1952 = (FStar_Syntax_Util.type_u ())
+in (match (_68_1952) with
+| (t, _68_1951) -> begin
 (
 # 1524 "FStar.TypeChecker.Rel.fst"
-let _68_1959 = (new_uvar r zs t)
-in (match (_68_1959) with
-| (k, _68_1958) -> begin
+let _68_1956 = (new_uvar r zs t)
+in (match (_68_1956) with
+| (k, _68_1955) -> begin
 (new_uvar r zs k)
 end))
 end))
-in (match (_68_1963) with
-| (u_zs, _68_1962) -> begin
+in (match (_68_1960) with
+| (u_zs, _68_1959) -> begin
 (
 # 1526 "FStar.TypeChecker.Rel.fst"
 let sub1 = (u_abs xs u_zs)
 in (
 # 1527 "FStar.TypeChecker.Rel.fst"
-let _68_1967 = (occurs_check env wl (u1, k1) sub1)
-in (match (_68_1967) with
+let _68_1964 = (occurs_check env wl (u1, k1) sub1)
+in (match (_68_1964) with
 | (occurs_ok, msg) -> begin
 if (not (occurs_ok)) then begin
 (giveup_or_defer orig "flex-flex: failed occcurs check")
@@ -2897,8 +2897,8 @@ end else begin
 let sub2 = (u_abs ys u_zs)
 in (
 # 1535 "FStar.TypeChecker.Rel.fst"
-let _68_1973 = (occurs_check env wl (u2, k2) sub2)
-in (match (_68_1973) with
+let _68_1970 = (occurs_check env wl (u2, k2) sub2)
+in (match (_68_1970) with
 | (occurs_ok, msg) -> begin
 if (not (occurs_ok)) then begin
 (giveup_or_defer orig "flex-flex: failed occurs check")
@@ -2920,11 +2920,11 @@ end
 end))
 in (
 # 1542 "FStar.TypeChecker.Rel.fst"
-let solve_one_pat = (fun _68_1981 _68_1986 -> (match ((_68_1981, _68_1986)) with
+let solve_one_pat = (fun _68_1978 _68_1983 -> (match ((_68_1978, _68_1983)) with
 | ((t1, u1, k1, xs), (t2, u2, k2, args2)) -> begin
 (
 # 1544 "FStar.TypeChecker.Rel.fst"
-let _68_1987 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+let _68_1984 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _149_1090 = (FStar_Syntax_Print.term_to_string t1)
 in (let _149_1089 = (FStar_Syntax_Print.term_to_string t2)
 in (FStar_Util.print2 "Trying flex-flex one pattern (%s) with %s\n" _149_1090 _149_1089)))
@@ -2934,8 +2934,8 @@ end
 in if (FStar_Unionfind.equivalent u1 u2) then begin
 (
 # 1547 "FStar.TypeChecker.Rel.fst"
-let sub_probs = (FStar_List.map2 (fun _68_1992 _68_1996 -> (match ((_68_1992, _68_1996)) with
-| ((a, _68_1991), (t2, _68_1995)) -> begin
+let sub_probs = (FStar_List.map2 (fun _68_1989 _68_1993 -> (match ((_68_1989, _68_1993)) with
+| ((a, _68_1988), (t2, _68_1992)) -> begin
 (let _149_1095 = (let _149_1093 = (FStar_Syntax_Syntax.bv_to_name a)
 in (mk_problem (p_scope orig) orig _149_1093 FStar_TypeChecker_Common.EQ t2 None "flex-flex index"))
 in (FStar_All.pipe_right _149_1095 (fun _149_1094 -> FStar_TypeChecker_Common.TProb (_149_1094))))
@@ -2957,9 +2957,9 @@ in (
 let rhs_vars = (FStar_Syntax_Free.names t2)
 in (
 # 1556 "FStar.TypeChecker.Rel.fst"
-let _68_2006 = (occurs_check env wl (u1, k1) t2)
-in (match (_68_2006) with
-| (occurs_ok, _68_2005) -> begin
+let _68_2003 = (occurs_check env wl (u1, k1) t2)
+in (match (_68_2003) with
+| (occurs_ok, _68_2002) -> begin
 (
 # 1557 "FStar.TypeChecker.Rel.fst"
 let lhs_vars = (FStar_Syntax_Free.names_of_binders xs)
@@ -2977,15 +2977,15 @@ end else begin
 if (occurs_ok && (FStar_All.pipe_left Prims.op_Negation wl.defer_ok)) then begin
 (
 # 1564 "FStar.TypeChecker.Rel.fst"
-let _68_2017 = (force_quasi_pattern (Some (xs)) (t2, u2, k2, args2))
-in (match (_68_2017) with
-| (sol, (_68_2012, u2, k2, ys)) -> begin
+let _68_2014 = (force_quasi_pattern (Some (xs)) (t2, u2, k2, args2))
+in (match (_68_2014) with
+| (sol, (_68_2009, u2, k2, ys)) -> begin
 (
 # 1565 "FStar.TypeChecker.Rel.fst"
 let wl = (extend_solution (p_pid orig) ((sol)::[]) wl)
 in (
 # 1566 "FStar.TypeChecker.Rel.fst"
-let _68_2019 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("QuasiPattern"))) then begin
+let _68_2016 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("QuasiPattern"))) then begin
 (let _149_1100 = (uvi_to_string env sol)
 in (FStar_Util.print1 "flex-flex quasi pattern (2): %s\n" _149_1100))
 end else begin
@@ -2995,7 +2995,7 @@ in (match (orig) with
 | FStar_TypeChecker_Common.TProb (p) -> begin
 (solve_t env p wl)
 end
-| _68_2024 -> begin
+| _68_2021 -> begin
 (giveup env "impossible" orig)
 end)))
 end))
@@ -3008,13 +3008,13 @@ end)
 end))
 in (
 # 1574 "FStar.TypeChecker.Rel.fst"
-let _68_2029 = lhs
-in (match (_68_2029) with
+let _68_2026 = lhs
+in (match (_68_2026) with
 | (t1, u1, k1, args1) -> begin
 (
 # 1575 "FStar.TypeChecker.Rel.fst"
-let _68_2034 = rhs
-in (match (_68_2034) with
+let _68_2031 = rhs
+in (match (_68_2031) with
 | (t2, u2, k2, args2) -> begin
 (
 # 1576 "FStar.TypeChecker.Rel.fst"
@@ -3035,21 +3035,21 @@ end
 | (None, Some (ys)) -> begin
 (solve_one_pat (t2, u2, k2, ys) lhs)
 end
-| _68_2052 -> begin
+| _68_2049 -> begin
 if wl.defer_ok then begin
 (giveup_or_defer orig "flex-flex: neither side is a pattern")
 end else begin
 (
 # 1587 "FStar.TypeChecker.Rel.fst"
-let _68_2056 = (force_quasi_pattern None (t1, u1, k1, args1))
-in (match (_68_2056) with
-| (sol, _68_2055) -> begin
+let _68_2053 = (force_quasi_pattern None (t1, u1, k1, args1))
+in (match (_68_2053) with
+| (sol, _68_2052) -> begin
 (
 # 1588 "FStar.TypeChecker.Rel.fst"
 let wl = (extend_solution (p_pid orig) ((sol)::[]) wl)
 in (
 # 1589 "FStar.TypeChecker.Rel.fst"
-let _68_2058 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("QuasiPattern"))) then begin
+let _68_2055 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("QuasiPattern"))) then begin
 (let _149_1101 = (uvi_to_string env sol)
 in (FStar_Util.print1 "flex-flex quasi pattern (1): %s\n" _149_1101))
 end else begin
@@ -3059,7 +3059,7 @@ in (match (orig) with
 | FStar_TypeChecker_Common.TProb (p) -> begin
 (solve_t env p wl)
 end
-| _68_2063 -> begin
+| _68_2060 -> begin
 (giveup env "impossible" orig)
 end)))
 end))
@@ -3087,7 +3087,7 @@ in (solve env _149_1103))
 end else begin
 (
 # 1601 "FStar.TypeChecker.Rel.fst"
-let _68_2067 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("RelCheck"))) then begin
+let _68_2064 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("RelCheck"))) then begin
 (let _149_1104 = (FStar_Util.string_of_int problem.FStar_TypeChecker_Common.pid)
 in (FStar_Util.print1 "Attempting %s\n" _149_1104))
 end else begin
@@ -3098,14 +3098,14 @@ in (
 let r = (FStar_TypeChecker_Env.get_range env)
 in (
 # 1606 "FStar.TypeChecker.Rel.fst"
-let match_num_binders = (fun _68_2072 _68_2075 -> (match ((_68_2072, _68_2075)) with
+let match_num_binders = (fun _68_2069 _68_2072 -> (match ((_68_2069, _68_2072)) with
 | ((bs1, mk_cod1), (bs2, mk_cod2)) -> begin
 (
 # 1608 "FStar.TypeChecker.Rel.fst"
 let curry = (fun n bs mk_cod -> (
 # 1609 "FStar.TypeChecker.Rel.fst"
-let _68_2082 = (FStar_Util.first_N n bs)
-in (match (_68_2082) with
+let _68_2079 = (FStar_Util.first_N n bs)
+in (match (_68_2079) with
 | (bs, rest) -> begin
 (let _149_1134 = (mk_cod rest)
 in (bs, _149_1134))
@@ -3156,8 +3156,8 @@ in (FStar_Syntax_Syntax.mk_Total _149_1149))
 end))
 in (
 # 1635 "FStar.TypeChecker.Rel.fst"
-let _68_2125 = (match_num_binders (bs1, (mk_c c1)) (bs2, (mk_c c2)))
-in (match (_68_2125) with
+let _68_2122 = (match_num_binders (bs1, (mk_c c1)) (bs2, (mk_c c2)))
+in (match (_68_2122) with
 | ((bs1, c1), (bs2, c2)) -> begin
 (solve_binders env bs1 bs2 orig wl (fun scope env subst -> (
 # 1640 "FStar.TypeChecker.Rel.fst"
@@ -3176,7 +3176,7 @@ in (let _149_1156 = (mk_problem scope orig c1 rel c2 None "function co-domain")
 in (FStar_All.pipe_left (fun _149_1155 -> FStar_TypeChecker_Common.CProb (_149_1155)) _149_1156)))))))
 end)))
 end
-| (FStar_Syntax_Syntax.Tm_abs (bs1, tbody1, _68_2135), FStar_Syntax_Syntax.Tm_abs (bs2, tbody2, _68_2141)) -> begin
+| (FStar_Syntax_Syntax.Tm_abs (bs1, tbody1, _68_2132), FStar_Syntax_Syntax.Tm_abs (bs2, tbody2, _68_2138)) -> begin
 (
 # 1646 "FStar.TypeChecker.Rel.fst"
 let mk_t = (fun t _68_25 -> (match (_68_25) with
@@ -3188,8 +3188,8 @@ end
 end))
 in (
 # 1649 "FStar.TypeChecker.Rel.fst"
-let _68_2156 = (match_num_binders (bs1, (mk_t tbody1)) (bs2, (mk_t tbody2)))
-in (match (_68_2156) with
+let _68_2153 = (match_num_binders (bs1, (mk_t tbody1)) (bs2, (mk_t tbody2)))
+in (match (_68_2153) with
 | ((bs1, tbody1), (bs2, tbody2)) -> begin
 (solve_binders env bs1 bs2 orig wl (fun scope env subst -> (let _149_1169 = (let _149_1168 = (FStar_Syntax_Subst.subst subst tbody1)
 in (let _149_1167 = (FStar_Syntax_Subst.subst subst tbody2)
@@ -3197,16 +3197,16 @@ in (mk_problem scope orig _149_1168 problem.FStar_TypeChecker_Common.relation _1
 in (FStar_All.pipe_left (fun _149_1166 -> FStar_TypeChecker_Common.TProb (_149_1166)) _149_1169))))
 end)))
 end
-| (FStar_Syntax_Syntax.Tm_refine (_68_2161), FStar_Syntax_Syntax.Tm_refine (_68_2164)) -> begin
+| (FStar_Syntax_Syntax.Tm_refine (_68_2158), FStar_Syntax_Syntax.Tm_refine (_68_2161)) -> begin
 (
 # 1658 "FStar.TypeChecker.Rel.fst"
-let _68_2169 = (as_refinement env wl t1)
-in (match (_68_2169) with
+let _68_2166 = (as_refinement env wl t1)
+in (match (_68_2166) with
 | (x1, phi1) -> begin
 (
 # 1659 "FStar.TypeChecker.Rel.fst"
-let _68_2172 = (as_refinement env wl t2)
-in (match (_68_2172) with
+let _68_2169 = (as_refinement env wl t2)
+in (match (_68_2169) with
 | (x2, phi2) -> begin
 (
 # 1660 "FStar.TypeChecker.Rel.fst"
@@ -3233,7 +3233,7 @@ let mk_imp = (fun imp phi1 phi2 -> (let _149_1188 = (imp phi1 phi2)
 in (FStar_All.pipe_right _149_1188 (guard_on_element problem x1))))
 in (
 # 1667 "FStar.TypeChecker.Rel.fst"
-let fallback = (fun _68_2184 -> (match (()) with
+let fallback = (fun _68_2181 -> (match (()) with
 | () -> begin
 (
 # 1668 "FStar.TypeChecker.Rel.fst"
@@ -3260,12 +3260,12 @@ in (mk_problem _149_1194 orig phi1 FStar_TypeChecker_Common.EQ phi2 None "refine
 in (FStar_All.pipe_left (fun _149_1192 -> FStar_TypeChecker_Common.TProb (_149_1192)) _149_1195))
 in (match ((solve env (
 # 1677 "FStar.TypeChecker.Rel.fst"
-let _68_2189 = wl
-in {attempting = (ref_prob)::[]; wl_deferred = []; ctr = _68_2189.ctr; defer_ok = false; smt_ok = _68_2189.smt_ok; tcenv = _68_2189.tcenv}))) with
-| Failed (_68_2192) -> begin
+let _68_2186 = wl
+in {attempting = (ref_prob)::[]; wl_deferred = []; ctr = _68_2186.ctr; defer_ok = false; smt_ok = _68_2186.smt_ok; tcenv = _68_2186.tcenv}))) with
+| Failed (_68_2189) -> begin
 (fallback ())
 end
-| Success (_68_2195) -> begin
+| Success (_68_2192) -> begin
 (
 # 1680 "FStar.TypeChecker.Rel.fst"
 let guard = (let _149_1198 = (FStar_All.pipe_right (p_guard base_prob) Prims.fst)
@@ -3279,8 +3279,8 @@ in (
 # 1682 "FStar.TypeChecker.Rel.fst"
 let wl = (
 # 1682 "FStar.TypeChecker.Rel.fst"
-let _68_2199 = wl
-in {attempting = _68_2199.attempting; wl_deferred = _68_2199.wl_deferred; ctr = (wl.ctr + 1); defer_ok = _68_2199.defer_ok; smt_ok = _68_2199.smt_ok; tcenv = _68_2199.tcenv})
+let _68_2196 = wl
+in {attempting = _68_2196.attempting; wl_deferred = _68_2196.wl_deferred; ctr = (wl.ctr + 1); defer_ok = _68_2196.defer_ok; smt_ok = _68_2196.smt_ok; tcenv = _68_2196.tcenv})
 in (solve env (attempt ((base_prob)::[]) wl)))))
 end))
 end else begin
@@ -3316,22 +3316,22 @@ in if (let _149_1202 = (is_top_level_prob orig)
 in (FStar_All.pipe_left Prims.op_Negation _149_1202)) then begin
 (let _149_1205 = (FStar_All.pipe_left (fun _149_1203 -> FStar_TypeChecker_Common.TProb (_149_1203)) (
 # 1712 "FStar.TypeChecker.Rel.fst"
-let _68_2344 = problem
-in {FStar_TypeChecker_Common.pid = _68_2344.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _68_2344.FStar_TypeChecker_Common.lhs; FStar_TypeChecker_Common.relation = new_rel; FStar_TypeChecker_Common.rhs = _68_2344.FStar_TypeChecker_Common.rhs; FStar_TypeChecker_Common.element = _68_2344.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2344.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2344.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2344.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2344.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2344.FStar_TypeChecker_Common.rank}))
+let _68_2341 = problem
+in {FStar_TypeChecker_Common.pid = _68_2341.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _68_2341.FStar_TypeChecker_Common.lhs; FStar_TypeChecker_Common.relation = new_rel; FStar_TypeChecker_Common.rhs = _68_2341.FStar_TypeChecker_Common.rhs; FStar_TypeChecker_Common.element = _68_2341.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2341.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2341.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2341.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2341.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2341.FStar_TypeChecker_Common.rank}))
 in (let _149_1204 = (destruct_flex_pattern env t1)
 in (solve_t_flex_rigid _149_1205 _149_1204 t2 wl)))
 end else begin
 (
 # 1713 "FStar.TypeChecker.Rel.fst"
-let _68_2348 = (base_and_refinement env wl t2)
-in (match (_68_2348) with
+let _68_2345 = (base_and_refinement env wl t2)
+in (match (_68_2345) with
 | (t_base, ref_opt) -> begin
 (match (ref_opt) with
 | None -> begin
 (let _149_1208 = (FStar_All.pipe_left (fun _149_1206 -> FStar_TypeChecker_Common.TProb (_149_1206)) (
 # 1716 "FStar.TypeChecker.Rel.fst"
-let _68_2350 = problem
-in {FStar_TypeChecker_Common.pid = _68_2350.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _68_2350.FStar_TypeChecker_Common.lhs; FStar_TypeChecker_Common.relation = new_rel; FStar_TypeChecker_Common.rhs = _68_2350.FStar_TypeChecker_Common.rhs; FStar_TypeChecker_Common.element = _68_2350.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2350.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2350.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2350.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2350.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2350.FStar_TypeChecker_Common.rank}))
+let _68_2347 = problem
+in {FStar_TypeChecker_Common.pid = _68_2347.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _68_2347.FStar_TypeChecker_Common.lhs; FStar_TypeChecker_Common.relation = new_rel; FStar_TypeChecker_Common.rhs = _68_2347.FStar_TypeChecker_Common.rhs; FStar_TypeChecker_Common.element = _68_2347.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2347.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2347.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2347.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2347.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2347.FStar_TypeChecker_Common.rank}))
 in (let _149_1207 = (destruct_flex_pattern env t1)
 in (solve_t_flex_rigid _149_1208 _149_1207 t_base wl)))
 end
@@ -3340,8 +3340,8 @@ end
 # 1719 "FStar.TypeChecker.Rel.fst"
 let y' = (
 # 1719 "FStar.TypeChecker.Rel.fst"
-let _68_2356 = y
-in {FStar_Syntax_Syntax.ppname = _68_2356.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _68_2356.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = t1})
+let _68_2353 = y
+in {FStar_Syntax_Syntax.ppname = _68_2353.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _68_2353.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = t1})
 in (
 # 1720 "FStar.TypeChecker.Rel.fst"
 let impl = (guard_on_element problem y' phi)
@@ -3368,52 +3368,52 @@ if wl.defer_ok then begin
 end else begin
 (
 # 1733 "FStar.TypeChecker.Rel.fst"
-let _68_2389 = (base_and_refinement env wl t1)
-in (match (_68_2389) with
-| (t_base, _68_2388) -> begin
+let _68_2386 = (base_and_refinement env wl t1)
+in (match (_68_2386) with
+| (t_base, _68_2385) -> begin
 (solve_t env (
 # 1734 "FStar.TypeChecker.Rel.fst"
-let _68_2390 = problem
-in {FStar_TypeChecker_Common.pid = _68_2390.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = t_base; FStar_TypeChecker_Common.relation = FStar_TypeChecker_Common.EQ; FStar_TypeChecker_Common.rhs = _68_2390.FStar_TypeChecker_Common.rhs; FStar_TypeChecker_Common.element = _68_2390.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2390.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2390.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2390.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2390.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2390.FStar_TypeChecker_Common.rank}) wl)
+let _68_2387 = problem
+in {FStar_TypeChecker_Common.pid = _68_2387.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = t_base; FStar_TypeChecker_Common.relation = FStar_TypeChecker_Common.EQ; FStar_TypeChecker_Common.rhs = _68_2387.FStar_TypeChecker_Common.rhs; FStar_TypeChecker_Common.element = _68_2387.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2387.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2387.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2387.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2387.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2387.FStar_TypeChecker_Common.rank}) wl)
 end))
 end
 end
-| (FStar_Syntax_Syntax.Tm_refine (_68_2393), _68_2396) -> begin
+| (FStar_Syntax_Syntax.Tm_refine (_68_2390), _68_2393) -> begin
 (
 # 1737 "FStar.TypeChecker.Rel.fst"
 let t2 = (let _149_1212 = (base_and_refinement env wl t2)
 in (FStar_All.pipe_left force_refinement _149_1212))
 in (solve_t env (
 # 1738 "FStar.TypeChecker.Rel.fst"
-let _68_2399 = problem
-in {FStar_TypeChecker_Common.pid = _68_2399.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _68_2399.FStar_TypeChecker_Common.lhs; FStar_TypeChecker_Common.relation = _68_2399.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = t2; FStar_TypeChecker_Common.element = _68_2399.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2399.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2399.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2399.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2399.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2399.FStar_TypeChecker_Common.rank}) wl))
+let _68_2396 = problem
+in {FStar_TypeChecker_Common.pid = _68_2396.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _68_2396.FStar_TypeChecker_Common.lhs; FStar_TypeChecker_Common.relation = _68_2396.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = t2; FStar_TypeChecker_Common.element = _68_2396.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2396.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2396.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2396.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2396.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2396.FStar_TypeChecker_Common.rank}) wl))
 end
-| (_68_2402, FStar_Syntax_Syntax.Tm_refine (_68_2404)) -> begin
+| (_68_2399, FStar_Syntax_Syntax.Tm_refine (_68_2401)) -> begin
 (
 # 1741 "FStar.TypeChecker.Rel.fst"
 let t1 = (let _149_1213 = (base_and_refinement env wl t1)
 in (FStar_All.pipe_left force_refinement _149_1213))
 in (solve_t env (
 # 1742 "FStar.TypeChecker.Rel.fst"
-let _68_2408 = problem
-in {FStar_TypeChecker_Common.pid = _68_2408.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = t1; FStar_TypeChecker_Common.relation = _68_2408.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = _68_2408.FStar_TypeChecker_Common.rhs; FStar_TypeChecker_Common.element = _68_2408.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2408.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2408.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2408.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2408.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2408.FStar_TypeChecker_Common.rank}) wl))
+let _68_2405 = problem
+in {FStar_TypeChecker_Common.pid = _68_2405.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = t1; FStar_TypeChecker_Common.relation = _68_2405.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = _68_2405.FStar_TypeChecker_Common.rhs; FStar_TypeChecker_Common.element = _68_2405.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2405.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2405.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2405.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2405.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2405.FStar_TypeChecker_Common.rank}) wl))
 end
 | ((FStar_Syntax_Syntax.Tm_abs (_), _)) | ((_, FStar_Syntax_Syntax.Tm_abs (_))) -> begin
 (
 # 1746 "FStar.TypeChecker.Rel.fst"
 let maybe_eta = (fun t -> (match (t.FStar_Syntax_Syntax.n) with
-| FStar_Syntax_Syntax.Tm_abs (_68_2425) -> begin
+| FStar_Syntax_Syntax.Tm_abs (_68_2422) -> begin
 t
 end
-| _68_2428 -> begin
+| _68_2425 -> begin
 (FStar_TypeChecker_Normalize.eta_expand wl.tcenv t)
 end))
 in (let _149_1218 = (
 # 1749 "FStar.TypeChecker.Rel.fst"
-let _68_2429 = problem
+let _68_2426 = problem
 in (let _149_1217 = (maybe_eta t1)
 in (let _149_1216 = (maybe_eta t2)
-in {FStar_TypeChecker_Common.pid = _68_2429.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _149_1217; FStar_TypeChecker_Common.relation = _68_2429.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = _149_1216; FStar_TypeChecker_Common.element = _68_2429.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2429.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2429.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2429.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2429.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2429.FStar_TypeChecker_Common.rank})))
+in {FStar_TypeChecker_Common.pid = _68_2426.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _149_1217; FStar_TypeChecker_Common.relation = _68_2426.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = _149_1216; FStar_TypeChecker_Common.element = _68_2426.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2426.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2426.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2426.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2426.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2426.FStar_TypeChecker_Common.rank})))
 in (solve_t env _149_1218 wl)))
 end
 | ((FStar_Syntax_Syntax.Tm_uinst (_), _)) | ((FStar_Syntax_Syntax.Tm_name (_), _)) | ((FStar_Syntax_Syntax.Tm_constant (_), _)) | ((FStar_Syntax_Syntax.Tm_fvar (_), _)) | ((FStar_Syntax_Syntax.Tm_app (_), _)) | ((_, FStar_Syntax_Syntax.Tm_uinst (_))) | ((_, FStar_Syntax_Syntax.Tm_name (_))) | ((_, FStar_Syntax_Syntax.Tm_constant (_))) | ((_, FStar_Syntax_Syntax.Tm_fvar (_))) | ((_, FStar_Syntax_Syntax.Tm_app (_))) -> begin
@@ -3450,17 +3450,17 @@ end else begin
 (rigid_rigid_delta env orig wl head1 head2 t1 t2)
 end))
 end
-| (FStar_Syntax_Syntax.Tm_ascribed (t1, _68_2498, _68_2500), _68_2504) -> begin
+| (FStar_Syntax_Syntax.Tm_ascribed (t1, _68_2495, _68_2497), _68_2501) -> begin
 (solve_t' env (
 # 1778 "FStar.TypeChecker.Rel.fst"
-let _68_2506 = problem
-in {FStar_TypeChecker_Common.pid = _68_2506.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = t1; FStar_TypeChecker_Common.relation = _68_2506.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = _68_2506.FStar_TypeChecker_Common.rhs; FStar_TypeChecker_Common.element = _68_2506.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2506.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2506.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2506.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2506.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2506.FStar_TypeChecker_Common.rank}) wl)
+let _68_2503 = problem
+in {FStar_TypeChecker_Common.pid = _68_2503.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = t1; FStar_TypeChecker_Common.relation = _68_2503.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = _68_2503.FStar_TypeChecker_Common.rhs; FStar_TypeChecker_Common.element = _68_2503.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2503.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2503.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2503.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2503.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2503.FStar_TypeChecker_Common.rank}) wl)
 end
-| (_68_2509, FStar_Syntax_Syntax.Tm_ascribed (t2, _68_2512, _68_2514)) -> begin
+| (_68_2506, FStar_Syntax_Syntax.Tm_ascribed (t2, _68_2509, _68_2511)) -> begin
 (solve_t' env (
 # 1781 "FStar.TypeChecker.Rel.fst"
-let _68_2518 = problem
-in {FStar_TypeChecker_Common.pid = _68_2518.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _68_2518.FStar_TypeChecker_Common.lhs; FStar_TypeChecker_Common.relation = _68_2518.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = t2; FStar_TypeChecker_Common.element = _68_2518.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2518.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2518.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2518.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2518.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2518.FStar_TypeChecker_Common.rank}) wl)
+let _68_2515 = problem
+in {FStar_TypeChecker_Common.pid = _68_2515.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _68_2515.FStar_TypeChecker_Common.lhs; FStar_TypeChecker_Common.relation = _68_2515.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = t2; FStar_TypeChecker_Common.element = _68_2515.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2515.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2515.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2515.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2515.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2515.FStar_TypeChecker_Common.rank}) wl)
 end
 | ((FStar_Syntax_Syntax.Tm_let (_), _)) | ((FStar_Syntax_Syntax.Tm_meta (_), _)) | ((FStar_Syntax_Syntax.Tm_delayed (_), _)) | ((_, FStar_Syntax_Syntax.Tm_meta (_))) | ((_, FStar_Syntax_Syntax.Tm_delayed (_))) | ((_, FStar_Syntax_Syntax.Tm_let (_))) -> begin
 (let _149_1226 = (let _149_1225 = (FStar_Syntax_Print.tag_of_term t1)
@@ -3468,7 +3468,7 @@ in (let _149_1224 = (FStar_Syntax_Print.tag_of_term t2)
 in (FStar_Util.format2 "Impossible: %s and %s" _149_1225 _149_1224)))
 in (FStar_All.failwith _149_1226))
 end
-| _68_2557 -> begin
+| _68_2554 -> begin
 (giveup env "head tag mismatch" orig)
 end))))
 end))
@@ -3489,15 +3489,15 @@ in (
 # 1798 "FStar.TypeChecker.Rel.fst"
 let solve_eq = (fun c1_comp c2_comp -> (
 # 1799 "FStar.TypeChecker.Rel.fst"
-let _68_2574 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("EQ"))) then begin
+let _68_2571 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("EQ"))) then begin
 (FStar_Util.print_string "solve_c is using an equality constraint\n")
 end else begin
 ()
 end
 in (
 # 1801 "FStar.TypeChecker.Rel.fst"
-let sub_probs = (FStar_List.map2 (fun _68_2579 _68_2583 -> (match ((_68_2579, _68_2583)) with
-| ((a1, _68_2578), (a2, _68_2582)) -> begin
+let sub_probs = (FStar_List.map2 (fun _68_2576 _68_2580 -> (match ((_68_2576, _68_2580)) with
+| ((a1, _68_2575), (a2, _68_2579)) -> begin
 (let _149_1241 = (sub_prob a1 FStar_TypeChecker_Common.EQ a2 "effect arg")
 in (FStar_All.pipe_left (fun _149_1240 -> FStar_TypeChecker_Common.TProb (_149_1240)) _149_1241))
 end)) c1_comp.FStar_Syntax_Syntax.effect_args c2_comp.FStar_Syntax_Syntax.effect_args)
@@ -3515,7 +3515,7 @@ in (solve env _149_1244))
 end else begin
 (
 # 1809 "FStar.TypeChecker.Rel.fst"
-let _68_2588 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+let _68_2585 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _149_1246 = (FStar_Syntax_Print.comp_to_string c1)
 in (let _149_1245 = (FStar_Syntax_Print.comp_to_string c2)
 in (FStar_Util.print3 "solve_c %s %s %s\n" _149_1246 (rel_to_string problem.FStar_TypeChecker_Common.relation) _149_1245)))
@@ -3527,11 +3527,11 @@ in (
 let r = (FStar_TypeChecker_Env.get_range env)
 in (
 # 1815 "FStar.TypeChecker.Rel.fst"
-let _68_2593 = (c1, c2)
-in (match (_68_2593) with
+let _68_2590 = (c1, c2)
+in (match (_68_2590) with
 | (c1_0, c2_0) -> begin
 (match ((c1.FStar_Syntax_Syntax.n, c2.FStar_Syntax_Syntax.n)) with
-| (FStar_Syntax_Syntax.GTotal (_68_2595), FStar_Syntax_Syntax.Total (_68_2598)) -> begin
+| (FStar_Syntax_Syntax.GTotal (_68_2592), FStar_Syntax_Syntax.Total (_68_2595)) -> begin
 (giveup env "incompatible monad ordering: GTot </: Tot" orig)
 end
 | ((FStar_Syntax_Syntax.Total (t1), FStar_Syntax_Syntax.Total (t2))) | ((FStar_Syntax_Syntax.GTotal (t1), FStar_Syntax_Syntax.GTotal (t2))) | ((FStar_Syntax_Syntax.Total (t1), FStar_Syntax_Syntax.GTotal (t2))) -> begin
@@ -3541,20 +3541,20 @@ end
 | ((FStar_Syntax_Syntax.GTotal (_), FStar_Syntax_Syntax.Comp (_))) | ((FStar_Syntax_Syntax.Total (_), FStar_Syntax_Syntax.Comp (_))) -> begin
 (let _149_1249 = (
 # 1827 "FStar.TypeChecker.Rel.fst"
-let _68_2626 = problem
+let _68_2623 = problem
 in (let _149_1248 = (FStar_All.pipe_left FStar_Syntax_Syntax.mk_Comp (FStar_Syntax_Util.comp_to_comp_typ c1))
-in {FStar_TypeChecker_Common.pid = _68_2626.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _149_1248; FStar_TypeChecker_Common.relation = _68_2626.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = _68_2626.FStar_TypeChecker_Common.rhs; FStar_TypeChecker_Common.element = _68_2626.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2626.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2626.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2626.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2626.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2626.FStar_TypeChecker_Common.rank}))
+in {FStar_TypeChecker_Common.pid = _68_2623.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _149_1248; FStar_TypeChecker_Common.relation = _68_2623.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = _68_2623.FStar_TypeChecker_Common.rhs; FStar_TypeChecker_Common.element = _68_2623.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2623.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2623.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2623.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2623.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2623.FStar_TypeChecker_Common.rank}))
 in (solve_c env _149_1249 wl))
 end
 | ((FStar_Syntax_Syntax.Comp (_), FStar_Syntax_Syntax.GTotal (_))) | ((FStar_Syntax_Syntax.Comp (_), FStar_Syntax_Syntax.Total (_))) -> begin
 (let _149_1251 = (
 # 1831 "FStar.TypeChecker.Rel.fst"
-let _68_2642 = problem
+let _68_2639 = problem
 in (let _149_1250 = (FStar_All.pipe_left FStar_Syntax_Syntax.mk_Comp (FStar_Syntax_Util.comp_to_comp_typ c2))
-in {FStar_TypeChecker_Common.pid = _68_2642.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _68_2642.FStar_TypeChecker_Common.lhs; FStar_TypeChecker_Common.relation = _68_2642.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = _149_1250; FStar_TypeChecker_Common.element = _68_2642.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2642.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2642.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2642.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2642.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2642.FStar_TypeChecker_Common.rank}))
+in {FStar_TypeChecker_Common.pid = _68_2639.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _68_2639.FStar_TypeChecker_Common.lhs; FStar_TypeChecker_Common.relation = _68_2639.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = _149_1250; FStar_TypeChecker_Common.element = _68_2639.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _68_2639.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _68_2639.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _68_2639.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _68_2639.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _68_2639.FStar_TypeChecker_Common.rank}))
 in (solve_c env _149_1251 wl))
 end
-| (FStar_Syntax_Syntax.Comp (_68_2645), FStar_Syntax_Syntax.Comp (_68_2648)) -> begin
+| (FStar_Syntax_Syntax.Comp (_68_2642), FStar_Syntax_Syntax.Comp (_68_2645)) -> begin
 if (((FStar_Syntax_Util.is_ml_comp c1) && (FStar_Syntax_Util.is_ml_comp c2)) || ((FStar_Syntax_Util.is_total_comp c1) && ((FStar_Syntax_Util.is_total_comp c2) || (FStar_Syntax_Util.is_ml_comp c2)))) then begin
 (let _149_1252 = (problem_using_guard orig (FStar_Syntax_Util.comp_result c1) problem.FStar_TypeChecker_Common.relation (FStar_Syntax_Util.comp_result c2) None "result type")
 in (solve_t env _149_1252 wl))
@@ -3576,7 +3576,7 @@ in (
 let c2 = (FStar_TypeChecker_Normalize.unfold_effect_abbrev env c2)
 in (
 # 1844 "FStar.TypeChecker.Rel.fst"
-let _68_2655 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+let _68_2652 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (FStar_Util.print2 "solve_c for %s and %s\n" c1.FStar_Syntax_Syntax.effect_name.FStar_Ident.str c2.FStar_Syntax_Syntax.effect_name.FStar_Ident.str)
 end else begin
 ()
@@ -3592,16 +3592,16 @@ end
 if (problem.FStar_TypeChecker_Common.relation = FStar_TypeChecker_Common.EQ) then begin
 (
 # 1851 "FStar.TypeChecker.Rel.fst"
-let _68_2673 = (match (c1.FStar_Syntax_Syntax.effect_args) with
-| (wp1, _68_2666)::(wlp1, _68_2662)::[] -> begin
+let _68_2670 = (match (c1.FStar_Syntax_Syntax.effect_args) with
+| (wp1, _68_2663)::(wlp1, _68_2659)::[] -> begin
 (wp1, wlp1)
 end
-| _68_2670 -> begin
+| _68_2667 -> begin
 (let _149_1257 = (let _149_1256 = (FStar_Range.string_of_range (FStar_Ident.range_of_lid c1.FStar_Syntax_Syntax.effect_name))
 in (FStar_Util.format1 "Unexpected number of indices on a normalized effect (%s)" _149_1256))
 in (FStar_All.failwith _149_1257))
 end)
-in (match (_68_2673) with
+in (match (_68_2670) with
 | (wp, wlp) -> begin
 (
 # 1854 "FStar.TypeChecker.Rel.fst"
@@ -3621,22 +3621,22 @@ let is_null_wp_2 = (FStar_All.pipe_right c2.FStar_Syntax_Syntax.flags (FStar_Uti
 | (FStar_Syntax_Syntax.TOTAL) | (FStar_Syntax_Syntax.MLEFFECT) | (FStar_Syntax_Syntax.SOMETRIVIAL) -> begin
 true
 end
-| _68_2680 -> begin
+| _68_2677 -> begin
 false
 end))))
 in (
 # 1862 "FStar.TypeChecker.Rel.fst"
-let _68_2701 = (match ((c1.FStar_Syntax_Syntax.effect_args, c2.FStar_Syntax_Syntax.effect_args)) with
-| ((wp1, _68_2686)::_68_2683, (wp2, _68_2693)::_68_2690) -> begin
+let _68_2698 = (match ((c1.FStar_Syntax_Syntax.effect_args, c2.FStar_Syntax_Syntax.effect_args)) with
+| ((wp1, _68_2683)::_68_2680, (wp2, _68_2690)::_68_2687) -> begin
 (wp1, wp2)
 end
-| _68_2698 -> begin
+| _68_2695 -> begin
 (let _149_1267 = (let _149_1266 = (FStar_Syntax_Print.lid_to_string c1.FStar_Syntax_Syntax.effect_name)
 in (let _149_1265 = (FStar_Syntax_Print.lid_to_string c2.FStar_Syntax_Syntax.effect_name)
 in (FStar_Util.format2 "Got effects %s and %s, expected normalized effects" _149_1266 _149_1265)))
 in (FStar_All.failwith _149_1267))
 end)
-in (match (_68_2701) with
+in (match (_68_2698) with
 | (wpc1, wpc2) -> begin
 if (FStar_Util.physical_equality wpc1 wpc2) then begin
 (let _149_1268 = (problem_using_guard orig c1.FStar_Syntax_Syntax.result_typ problem.FStar_TypeChecker_Common.relation c2.FStar_Syntax_Syntax.result_typ None "result type")
@@ -3650,7 +3650,7 @@ in (
 let g = if is_null_wp_2 then begin
 (
 # 1872 "FStar.TypeChecker.Rel.fst"
-let _68_2703 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+let _68_2700 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (FStar_Util.print_string "Using trivial wp ... \n")
 end else begin
 ()
@@ -3669,43 +3669,44 @@ in (FStar_Syntax_Syntax.mk _149_1278 (Some (FStar_Syntax_Util.ktype0.FStar_Synta
 end else begin
 (
 # 1876 "FStar.TypeChecker.Rel.fst"
-let wp2_imp_wp1 = (let _149_1293 = (let _149_1292 = (let _149_1291 = (let _149_1280 = (let _149_1279 = (env.FStar_TypeChecker_Env.universe_of env c2.FStar_Syntax_Syntax.result_typ)
+let wp2_imp_wp1 = (let _149_1294 = (let _149_1293 = (let _149_1292 = (let _149_1280 = (let _149_1279 = (env.FStar_TypeChecker_Env.universe_of env c2.FStar_Syntax_Syntax.result_typ)
 in (_149_1279)::[])
 in (FStar_TypeChecker_Env.inst_effect_fun_with _149_1280 env c2_decl c2_decl.FStar_Syntax_Syntax.wp_binop))
-in (let _149_1290 = (let _149_1289 = (FStar_Syntax_Syntax.as_arg c2.FStar_Syntax_Syntax.result_typ)
-in (let _149_1288 = (let _149_1287 = (FStar_Syntax_Syntax.as_arg wpc2)
-in (let _149_1286 = (let _149_1285 = (let _149_1281 = (FStar_Syntax_Syntax.fvar None FStar_Syntax_Const.imp_lid r)
-in (FStar_All.pipe_left FStar_Syntax_Syntax.as_arg _149_1281))
-in (let _149_1284 = (let _149_1283 = (let _149_1282 = (edge.FStar_TypeChecker_Env.mlift c1.FStar_Syntax_Syntax.result_typ wpc1)
+in (let _149_1291 = (let _149_1290 = (FStar_Syntax_Syntax.as_arg c2.FStar_Syntax_Syntax.result_typ)
+in (let _149_1289 = (let _149_1288 = (FStar_Syntax_Syntax.as_arg wpc2)
+in (let _149_1287 = (let _149_1286 = (let _149_1282 = (let _149_1281 = (FStar_Ident.set_lid_range FStar_Syntax_Const.imp_lid r)
+in (FStar_Syntax_Syntax.fvar _149_1281 (FStar_Syntax_Syntax.Delta_unfoldable (1)) None))
 in (FStar_All.pipe_left FStar_Syntax_Syntax.as_arg _149_1282))
-in (_149_1283)::[])
-in (_149_1285)::_149_1284))
-in (_149_1287)::_149_1286))
-in (_149_1289)::_149_1288))
-in (_149_1291, _149_1290)))
-in FStar_Syntax_Syntax.Tm_app (_149_1292))
-in (FStar_Syntax_Syntax.mk _149_1293 None r))
-in (let _149_1302 = (let _149_1301 = (let _149_1300 = (let _149_1295 = (let _149_1294 = (env.FStar_TypeChecker_Env.universe_of env c2.FStar_Syntax_Syntax.result_typ)
-in (_149_1294)::[])
-in (FStar_TypeChecker_Env.inst_effect_fun_with _149_1295 env c2_decl c2_decl.FStar_Syntax_Syntax.wp_as_type))
-in (let _149_1299 = (let _149_1298 = (FStar_Syntax_Syntax.as_arg c2.FStar_Syntax_Syntax.result_typ)
-in (let _149_1297 = (let _149_1296 = (FStar_Syntax_Syntax.as_arg wp2_imp_wp1)
-in (_149_1296)::[])
-in (_149_1298)::_149_1297))
-in (_149_1300, _149_1299)))
-in FStar_Syntax_Syntax.Tm_app (_149_1301))
-in (FStar_Syntax_Syntax.mk _149_1302 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) r)))
+in (let _149_1285 = (let _149_1284 = (let _149_1283 = (edge.FStar_TypeChecker_Env.mlift c1.FStar_Syntax_Syntax.result_typ wpc1)
+in (FStar_All.pipe_left FStar_Syntax_Syntax.as_arg _149_1283))
+in (_149_1284)::[])
+in (_149_1286)::_149_1285))
+in (_149_1288)::_149_1287))
+in (_149_1290)::_149_1289))
+in (_149_1292, _149_1291)))
+in FStar_Syntax_Syntax.Tm_app (_149_1293))
+in (FStar_Syntax_Syntax.mk _149_1294 None r))
+in (let _149_1303 = (let _149_1302 = (let _149_1301 = (let _149_1296 = (let _149_1295 = (env.FStar_TypeChecker_Env.universe_of env c2.FStar_Syntax_Syntax.result_typ)
+in (_149_1295)::[])
+in (FStar_TypeChecker_Env.inst_effect_fun_with _149_1296 env c2_decl c2_decl.FStar_Syntax_Syntax.wp_as_type))
+in (let _149_1300 = (let _149_1299 = (FStar_Syntax_Syntax.as_arg c2.FStar_Syntax_Syntax.result_typ)
+in (let _149_1298 = (let _149_1297 = (FStar_Syntax_Syntax.as_arg wp2_imp_wp1)
+in (_149_1297)::[])
+in (_149_1299)::_149_1298))
+in (_149_1301, _149_1300)))
+in FStar_Syntax_Syntax.Tm_app (_149_1302))
+in (FStar_Syntax_Syntax.mk _149_1303 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) r)))
 end
 in (
 # 1883 "FStar.TypeChecker.Rel.fst"
-let base_prob = (let _149_1304 = (sub_prob c1.FStar_Syntax_Syntax.result_typ problem.FStar_TypeChecker_Common.relation c2.FStar_Syntax_Syntax.result_typ "result type")
-in (FStar_All.pipe_left (fun _149_1303 -> FStar_TypeChecker_Common.TProb (_149_1303)) _149_1304))
+let base_prob = (let _149_1305 = (sub_prob c1.FStar_Syntax_Syntax.result_typ problem.FStar_TypeChecker_Common.relation c2.FStar_Syntax_Syntax.result_typ "result type")
+in (FStar_All.pipe_left (fun _149_1304 -> FStar_TypeChecker_Common.TProb (_149_1304)) _149_1305))
 in (
 # 1884 "FStar.TypeChecker.Rel.fst"
-let wl = (let _149_1308 = (let _149_1307 = (let _149_1306 = (FStar_All.pipe_right (p_guard base_prob) Prims.fst)
-in (FStar_Syntax_Util.mk_conj _149_1306 g))
-in (FStar_All.pipe_left (fun _149_1305 -> Some (_149_1305)) _149_1307))
-in (solve_prob orig _149_1308 [] wl))
+let wl = (let _149_1309 = (let _149_1308 = (let _149_1307 = (FStar_All.pipe_right (p_guard base_prob) Prims.fst)
+in (FStar_Syntax_Util.mk_conj _149_1307 g))
+in (FStar_All.pipe_left (fun _149_1306 -> Some (_149_1306)) _149_1308))
+in (solve_prob orig _149_1309 [] wl))
 in (solve env (attempt ((base_prob)::[]) wl))))))
 end
 end)))
@@ -3718,18 +3719,18 @@ end))))
 end))))))
 
 # 1891 "FStar.TypeChecker.Rel.fst"
-let print_pending_implicits : FStar_TypeChecker_Env.guard_t  ->  Prims.string = (fun g -> (let _149_1312 = (FStar_All.pipe_right g.FStar_TypeChecker_Env.implicits (FStar_List.map (fun _68_2719 -> (match (_68_2719) with
-| (_68_2711, u, _68_2714, _68_2716, _68_2718) -> begin
+let print_pending_implicits : FStar_TypeChecker_Env.guard_t  ->  Prims.string = (fun g -> (let _149_1313 = (FStar_All.pipe_right g.FStar_TypeChecker_Env.implicits (FStar_List.map (fun _68_2716 -> (match (_68_2716) with
+| (_68_2708, u, _68_2711, _68_2713, _68_2715) -> begin
 (FStar_Syntax_Print.uvar_to_string u)
 end))))
-in (FStar_All.pipe_right _149_1312 (FStar_String.concat ", "))))
+in (FStar_All.pipe_right _149_1313 (FStar_String.concat ", "))))
 
 # 1893 "FStar.TypeChecker.Rel.fst"
 let guard_to_string : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Env.guard_t  ->  Prims.string = (fun env g -> (match ((g.FStar_TypeChecker_Env.guard_f, g.FStar_TypeChecker_Env.deferred)) with
 | (FStar_TypeChecker_Common.Trivial, []) -> begin
 "{}"
 end
-| _68_2726 -> begin
+| _68_2723 -> begin
 (
 # 1897 "FStar.TypeChecker.Rel.fst"
 let form = (match (g.FStar_TypeChecker_Env.guard_f) with
@@ -3745,11 +3746,11 @@ end
 end)
 in (
 # 1904 "FStar.TypeChecker.Rel.fst"
-let carry = (let _149_1318 = (FStar_List.map (fun _68_2734 -> (match (_68_2734) with
-| (_68_2732, x) -> begin
+let carry = (let _149_1319 = (FStar_List.map (fun _68_2731 -> (match (_68_2731) with
+| (_68_2729, x) -> begin
 (prob_to_string env x)
 end)) g.FStar_TypeChecker_Env.deferred)
-in (FStar_All.pipe_right _149_1318 (FStar_String.concat ",\n")))
+in (FStar_All.pipe_right _149_1319 (FStar_String.concat ",\n")))
 in (
 # 1905 "FStar.TypeChecker.Rel.fst"
 let imps = (print_pending_implicits g)
@@ -3764,10 +3765,10 @@ let guard_form : FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Common.gua
 
 # 1915 "FStar.TypeChecker.Rel.fst"
 let is_trivial : FStar_TypeChecker_Env.guard_t  ->  Prims.bool = (fun g -> (match (g) with
-| {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = []; FStar_TypeChecker_Env.univ_ineqs = _68_2743; FStar_TypeChecker_Env.implicits = _68_2741} -> begin
+| {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = []; FStar_TypeChecker_Env.univ_ineqs = _68_2740; FStar_TypeChecker_Env.implicits = _68_2738} -> begin
 true
 end
-| _68_2748 -> begin
+| _68_2745 -> begin
 false
 end))
 
@@ -3786,18 +3787,18 @@ let f = (match (g.FStar_TypeChecker_Env.guard_f) with
 | FStar_TypeChecker_Common.NonTrivial (f) -> begin
 f
 end
-| _68_2766 -> begin
+| _68_2763 -> begin
 (FStar_All.failwith "impossible")
 end)
-in (let _149_1334 = (
+in (let _149_1335 = (
 # 1928 "FStar.TypeChecker.Rel.fst"
-let _68_2768 = g
-in (let _149_1333 = (let _149_1332 = (let _149_1331 = (let _149_1330 = (FStar_Syntax_Syntax.mk_binder x)
-in (_149_1330)::[])
-in (u_abs _149_1331 f))
-in (FStar_All.pipe_left (fun _149_1329 -> FStar_TypeChecker_Common.NonTrivial (_149_1329)) _149_1332))
-in {FStar_TypeChecker_Env.guard_f = _149_1333; FStar_TypeChecker_Env.deferred = _68_2768.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_2768.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_2768.FStar_TypeChecker_Env.implicits}))
-in Some (_149_1334)))
+let _68_2765 = g
+in (let _149_1334 = (let _149_1333 = (let _149_1332 = (let _149_1331 = (FStar_Syntax_Syntax.mk_binder x)
+in (_149_1331)::[])
+in (u_abs _149_1332 f))
+in (FStar_All.pipe_left (fun _149_1330 -> FStar_TypeChecker_Common.NonTrivial (_149_1330)) _149_1333))
+in {FStar_TypeChecker_Env.guard_f = _149_1334; FStar_TypeChecker_Env.deferred = _68_2765.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_2765.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_2765.FStar_TypeChecker_Env.implicits}))
+in Some (_149_1335)))
 end))
 
 # 1930 "FStar.TypeChecker.Rel.fst"
@@ -3808,14 +3809,14 @@ end
 | FStar_TypeChecker_Common.NonTrivial (f) -> begin
 (
 # 1932 "FStar.TypeChecker.Rel.fst"
-let _68_2775 = g
-in (let _149_1345 = (let _149_1344 = (let _149_1343 = (let _149_1342 = (let _149_1341 = (let _149_1340 = (FStar_Syntax_Syntax.as_arg e)
-in (_149_1340)::[])
-in (f, _149_1341))
-in FStar_Syntax_Syntax.Tm_app (_149_1342))
-in (FStar_Syntax_Syntax.mk _149_1343 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) f.FStar_Syntax_Syntax.pos))
-in (FStar_All.pipe_left (fun _149_1339 -> FStar_TypeChecker_Common.NonTrivial (_149_1339)) _149_1344))
-in {FStar_TypeChecker_Env.guard_f = _149_1345; FStar_TypeChecker_Env.deferred = _68_2775.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_2775.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_2775.FStar_TypeChecker_Env.implicits}))
+let _68_2772 = g
+in (let _149_1346 = (let _149_1345 = (let _149_1344 = (let _149_1343 = (let _149_1342 = (let _149_1341 = (FStar_Syntax_Syntax.as_arg e)
+in (_149_1341)::[])
+in (f, _149_1342))
+in FStar_Syntax_Syntax.Tm_app (_149_1343))
+in (FStar_Syntax_Syntax.mk _149_1344 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) f.FStar_Syntax_Syntax.pos))
+in (FStar_All.pipe_left (fun _149_1340 -> FStar_TypeChecker_Common.NonTrivial (_149_1340)) _149_1345))
+in {FStar_TypeChecker_Env.guard_f = _149_1346; FStar_TypeChecker_Env.deferred = _68_2772.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_2772.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_2772.FStar_TypeChecker_Env.implicits}))
 end))
 
 # 1934 "FStar.TypeChecker.Rel.fst"
@@ -3823,7 +3824,7 @@ let trivial : FStar_TypeChecker_Common.guard_formula  ->  Prims.unit = (fun t ->
 | FStar_TypeChecker_Common.Trivial -> begin
 ()
 end
-| FStar_TypeChecker_Common.NonTrivial (_68_2780) -> begin
+| FStar_TypeChecker_Common.NonTrivial (_68_2777) -> begin
 (FStar_All.failwith "impossible")
 end))
 
@@ -3833,16 +3834,16 @@ let conj_guard_f : FStar_TypeChecker_Common.guard_formula  ->  FStar_TypeChecker
 g
 end
 | (FStar_TypeChecker_Common.NonTrivial (f1), FStar_TypeChecker_Common.NonTrivial (f2)) -> begin
-(let _149_1352 = (FStar_Syntax_Util.mk_conj f1 f2)
-in FStar_TypeChecker_Common.NonTrivial (_149_1352))
+(let _149_1353 = (FStar_Syntax_Util.mk_conj f1 f2)
+in FStar_TypeChecker_Common.NonTrivial (_149_1353))
 end))
 
 # 1943 "FStar.TypeChecker.Rel.fst"
 let check_trivial : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  FStar_TypeChecker_Common.guard_formula = (fun t -> (match (t.FStar_Syntax_Syntax.n) with
-| FStar_Syntax_Syntax.Tm_fvar (tc, _68_2797) when (FStar_Ident.lid_equals tc.FStar_Syntax_Syntax.v FStar_Syntax_Const.true_lid) -> begin
+| FStar_Syntax_Syntax.Tm_fvar (tc) when (FStar_Syntax_Syntax.fv_eq_lid tc FStar_Syntax_Const.true_lid) -> begin
 FStar_TypeChecker_Common.Trivial
 end
-| _68_2801 -> begin
+| _68_2795 -> begin
 FStar_TypeChecker_Common.NonTrivial (t)
 end))
 
@@ -3862,8 +3863,8 @@ in (check_trivial imp))
 end))
 
 # 1953 "FStar.TypeChecker.Rel.fst"
-let binop_guard : (FStar_TypeChecker_Common.guard_formula  ->  FStar_TypeChecker_Common.guard_formula  ->  FStar_TypeChecker_Common.guard_formula)  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun f g1 g2 -> (let _149_1375 = (f g1.FStar_TypeChecker_Env.guard_f g2.FStar_TypeChecker_Env.guard_f)
-in {FStar_TypeChecker_Env.guard_f = _149_1375; FStar_TypeChecker_Env.deferred = (FStar_List.append g1.FStar_TypeChecker_Env.deferred g2.FStar_TypeChecker_Env.deferred); FStar_TypeChecker_Env.univ_ineqs = (FStar_List.append g1.FStar_TypeChecker_Env.univ_ineqs g2.FStar_TypeChecker_Env.univ_ineqs); FStar_TypeChecker_Env.implicits = (FStar_List.append g1.FStar_TypeChecker_Env.implicits g2.FStar_TypeChecker_Env.implicits)}))
+let binop_guard : (FStar_TypeChecker_Common.guard_formula  ->  FStar_TypeChecker_Common.guard_formula  ->  FStar_TypeChecker_Common.guard_formula)  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun f g1 g2 -> (let _149_1376 = (f g1.FStar_TypeChecker_Env.guard_f g2.FStar_TypeChecker_Env.guard_f)
+in {FStar_TypeChecker_Env.guard_f = _149_1376; FStar_TypeChecker_Env.deferred = (FStar_List.append g1.FStar_TypeChecker_Env.deferred g2.FStar_TypeChecker_Env.deferred); FStar_TypeChecker_Env.univ_ineqs = (FStar_List.append g1.FStar_TypeChecker_Env.univ_ineqs g2.FStar_TypeChecker_Env.univ_ineqs); FStar_TypeChecker_Env.implicits = (FStar_List.append g1.FStar_TypeChecker_Env.implicits g2.FStar_TypeChecker_Env.implicits)}))
 
 # 1957 "FStar.TypeChecker.Rel.fst"
 let conj_guard : FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun g1 g2 -> (binop_guard conj_guard_f g1 g2))
@@ -3879,19 +3880,19 @@ end
 | FStar_TypeChecker_Common.NonTrivial (f) -> begin
 (
 # 1962 "FStar.TypeChecker.Rel.fst"
-let _68_2828 = g
-in (let _149_1390 = (let _149_1389 = (FStar_Syntax_Util.close_forall binders f)
-in (FStar_All.pipe_right _149_1389 (fun _149_1388 -> FStar_TypeChecker_Common.NonTrivial (_149_1388))))
-in {FStar_TypeChecker_Env.guard_f = _149_1390; FStar_TypeChecker_Env.deferred = _68_2828.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_2828.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_2828.FStar_TypeChecker_Env.implicits}))
+let _68_2822 = g
+in (let _149_1391 = (let _149_1390 = (FStar_Syntax_Util.close_forall binders f)
+in (FStar_All.pipe_right _149_1390 (fun _149_1389 -> FStar_TypeChecker_Common.NonTrivial (_149_1389))))
+in {FStar_TypeChecker_Env.guard_f = _149_1391; FStar_TypeChecker_Env.deferred = _68_2822.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_2822.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_2822.FStar_TypeChecker_Env.implicits}))
 end))
 
 # 1967 "FStar.TypeChecker.Rel.fst"
 let new_t_problem = (fun env lhs rel rhs elt loc -> (
 # 1968 "FStar.TypeChecker.Rel.fst"
 let reason = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("ExplainRel"))) then begin
-(let _149_1398 = (FStar_TypeChecker_Normalize.term_to_string env lhs)
-in (let _149_1397 = (FStar_TypeChecker_Normalize.term_to_string env rhs)
-in (FStar_Util.format3 "Top-level:\n%s\n\t%s\n%s" _149_1398 (rel_to_string rel) _149_1397)))
+(let _149_1399 = (FStar_TypeChecker_Normalize.term_to_string env lhs)
+in (let _149_1398 = (FStar_TypeChecker_Normalize.term_to_string env rhs)
+in (FStar_Util.format3 "Top-level:\n%s\n\t%s\n%s" _149_1399 (rel_to_string rel) _149_1398)))
 end else begin
 "TOP"
 end
@@ -3903,18 +3904,18 @@ in p)))
 # 1976 "FStar.TypeChecker.Rel.fst"
 let new_t_prob : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  FStar_TypeChecker_Common.rel  ->  FStar_Syntax_Syntax.term  ->  (FStar_TypeChecker_Common.prob * FStar_Syntax_Syntax.bv) = (fun env t1 rel t2 -> (
 # 1977 "FStar.TypeChecker.Rel.fst"
-let x = (let _149_1409 = (let _149_1408 = (FStar_TypeChecker_Env.get_range env)
-in (FStar_All.pipe_left (fun _149_1407 -> Some (_149_1407)) _149_1408))
-in (FStar_Syntax_Syntax.new_bv _149_1409 t1))
+let x = (let _149_1410 = (let _149_1409 = (FStar_TypeChecker_Env.get_range env)
+in (FStar_All.pipe_left (fun _149_1408 -> Some (_149_1408)) _149_1409))
+in (FStar_Syntax_Syntax.new_bv _149_1410 t1))
 in (
 # 1978 "FStar.TypeChecker.Rel.fst"
 let env = (FStar_TypeChecker_Env.push_bv env x)
 in (
 # 1979 "FStar.TypeChecker.Rel.fst"
-let p = (let _149_1413 = (let _149_1411 = (FStar_Syntax_Syntax.bv_to_name x)
-in (FStar_All.pipe_left (fun _149_1410 -> Some (_149_1410)) _149_1411))
-in (let _149_1412 = (FStar_TypeChecker_Env.get_range env)
-in (new_t_problem env t1 rel t2 _149_1413 _149_1412)))
+let p = (let _149_1414 = (let _149_1412 = (FStar_Syntax_Syntax.bv_to_name x)
+in (FStar_All.pipe_left (fun _149_1411 -> Some (_149_1411)) _149_1412))
+in (let _149_1413 = (FStar_TypeChecker_Env.get_range env)
+in (new_t_problem env t1 rel t2 _149_1414 _149_1413)))
 in (FStar_TypeChecker_Common.TProb (p), x)))))
 
 # 1982 "FStar.TypeChecker.Rel.fst"
@@ -3923,8 +3924,8 @@ let solve_and_commit : FStar_TypeChecker_Env.env  ->  worklist  ->  ((FStar_Type
 let probs = if (FStar_ST.read FStar_Options.eager_inference) then begin
 (
 # 1983 "FStar.TypeChecker.Rel.fst"
-let _68_2848 = probs
-in {attempting = _68_2848.attempting; wl_deferred = _68_2848.wl_deferred; ctr = _68_2848.ctr; defer_ok = false; smt_ok = _68_2848.smt_ok; tcenv = _68_2848.tcenv})
+let _68_2842 = probs
+in {attempting = _68_2842.attempting; wl_deferred = _68_2842.wl_deferred; ctr = _68_2842.ctr; defer_ok = false; smt_ok = _68_2842.smt_ok; tcenv = _68_2842.tcenv})
 end else begin
 probs
 end
@@ -3938,18 +3939,18 @@ in (match (sol) with
 | Success (deferred) -> begin
 (
 # 1988 "FStar.TypeChecker.Rel.fst"
-let _68_2855 = (FStar_Unionfind.commit tx)
+let _68_2849 = (FStar_Unionfind.commit tx)
 in Some (deferred))
 end
 | Failed (d, s) -> begin
 (
 # 1991 "FStar.TypeChecker.Rel.fst"
-let _68_2861 = (FStar_Unionfind.rollback tx)
+let _68_2855 = (FStar_Unionfind.rollback tx)
 in (
 # 1992 "FStar.TypeChecker.Rel.fst"
-let _68_2863 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("ExplainRel"))) then begin
-(let _149_1425 = (explain env d s)
-in (FStar_All.pipe_left FStar_Util.print_string _149_1425))
+let _68_2857 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("ExplainRel"))) then begin
+(let _149_1426 = (explain env d s)
+in (FStar_All.pipe_left FStar_Util.print_string _149_1426))
 end else begin
 ()
 end
@@ -3964,9 +3965,9 @@ end
 | FStar_TypeChecker_Common.NonTrivial (f) -> begin
 (
 # 1999 "FStar.TypeChecker.Rel.fst"
-let _68_2870 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Simplification"))) then begin
-(let _149_1430 = (FStar_Syntax_Print.term_to_string f)
-in (FStar_Util.print1 "Simplifying guard %s\n" _149_1430))
+let _68_2864 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Simplification"))) then begin
+(let _149_1431 = (FStar_Syntax_Print.term_to_string f)
+in (FStar_Util.print1 "Simplifying guard %s\n" _149_1431))
 end else begin
 ()
 end
@@ -3975,26 +3976,26 @@ in (
 let f = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Inline)::(FStar_TypeChecker_Normalize.Simplify)::[]) env f)
 in (
 # 2001 "FStar.TypeChecker.Rel.fst"
-let _68_2873 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Simplification"))) then begin
-(let _149_1431 = (FStar_Syntax_Print.term_to_string f)
-in (FStar_Util.print1 "Simplified guard to %s\n" _149_1431))
+let _68_2867 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Simplification"))) then begin
+(let _149_1432 = (FStar_Syntax_Print.term_to_string f)
+in (FStar_Util.print1 "Simplified guard to %s\n" _149_1432))
 end else begin
 ()
 end
 in (
 # 2002 "FStar.TypeChecker.Rel.fst"
-let f = (match ((let _149_1432 = (FStar_Syntax_Util.unmeta f)
-in _149_1432.FStar_Syntax_Syntax.n)) with
-| FStar_Syntax_Syntax.Tm_fvar (fv, _68_2877) when (FStar_Ident.lid_equals fv.FStar_Syntax_Syntax.v FStar_Syntax_Const.true_lid) -> begin
+let f = (match ((let _149_1433 = (FStar_Syntax_Util.unmeta f)
+in _149_1433.FStar_Syntax_Syntax.n)) with
+| FStar_Syntax_Syntax.Tm_fvar (fv) when (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.true_lid) -> begin
 FStar_TypeChecker_Common.Trivial
 end
-| _68_2881 -> begin
+| _68_2872 -> begin
 FStar_TypeChecker_Common.NonTrivial (f)
 end)
 in (
 # 2005 "FStar.TypeChecker.Rel.fst"
-let _68_2883 = g
-in {FStar_TypeChecker_Env.guard_f = f; FStar_TypeChecker_Env.deferred = _68_2883.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_2883.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_2883.FStar_TypeChecker_Env.implicits})))))
+let _68_2874 = g
+in {FStar_TypeChecker_Env.guard_f = f; FStar_TypeChecker_Env.deferred = _68_2874.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_2874.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_2874.FStar_TypeChecker_Env.implicits})))))
 end))
 
 # 2007 "FStar.TypeChecker.Rel.fst"
@@ -4003,51 +4004,51 @@ let with_guard : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Common.prob  -
 None
 end
 | Some (d) -> begin
-(let _149_1444 = (let _149_1443 = (let _149_1442 = (let _149_1441 = (FStar_All.pipe_right (p_guard prob) Prims.fst)
-in (FStar_All.pipe_right _149_1441 (fun _149_1440 -> FStar_TypeChecker_Common.NonTrivial (_149_1440))))
-in {FStar_TypeChecker_Env.guard_f = _149_1442; FStar_TypeChecker_Env.deferred = d; FStar_TypeChecker_Env.univ_ineqs = []; FStar_TypeChecker_Env.implicits = []})
-in (simplify_guard env _149_1443))
-in (FStar_All.pipe_left (fun _149_1439 -> Some (_149_1439)) _149_1444))
+(let _149_1445 = (let _149_1444 = (let _149_1443 = (let _149_1442 = (FStar_All.pipe_right (p_guard prob) Prims.fst)
+in (FStar_All.pipe_right _149_1442 (fun _149_1441 -> FStar_TypeChecker_Common.NonTrivial (_149_1441))))
+in {FStar_TypeChecker_Env.guard_f = _149_1443; FStar_TypeChecker_Env.deferred = d; FStar_TypeChecker_Env.univ_ineqs = []; FStar_TypeChecker_Env.implicits = []})
+in (simplify_guard env _149_1444))
+in (FStar_All.pipe_left (fun _149_1440 -> Some (_149_1440)) _149_1445))
 end))
 
 # 2012 "FStar.TypeChecker.Rel.fst"
 let try_teq : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.typ  ->  FStar_TypeChecker_Env.guard_t Prims.option = (fun env t1 t2 -> (
 # 2013 "FStar.TypeChecker.Rel.fst"
-let _68_2894 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
-(let _149_1452 = (FStar_Syntax_Print.term_to_string t1)
-in (let _149_1451 = (FStar_Syntax_Print.term_to_string t2)
-in (FStar_Util.print2 "try_teq of %s and %s\n" _149_1452 _149_1451)))
+let _68_2885 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+(let _149_1453 = (FStar_Syntax_Print.term_to_string t1)
+in (let _149_1452 = (FStar_Syntax_Print.term_to_string t2)
+in (FStar_Util.print2 "try_teq of %s and %s\n" _149_1453 _149_1452)))
 end else begin
 ()
 end
 in (
 # 2015 "FStar.TypeChecker.Rel.fst"
-let prob = (let _149_1455 = (let _149_1454 = (FStar_TypeChecker_Env.get_range env)
-in (new_t_problem env t1 FStar_TypeChecker_Common.EQ t2 None _149_1454))
-in (FStar_All.pipe_left (fun _149_1453 -> FStar_TypeChecker_Common.TProb (_149_1453)) _149_1455))
+let prob = (let _149_1456 = (let _149_1455 = (FStar_TypeChecker_Env.get_range env)
+in (new_t_problem env t1 FStar_TypeChecker_Common.EQ t2 None _149_1455))
+in (FStar_All.pipe_left (fun _149_1454 -> FStar_TypeChecker_Common.TProb (_149_1454)) _149_1456))
 in (
 # 2016 "FStar.TypeChecker.Rel.fst"
-let g = (let _149_1457 = (solve_and_commit env (singleton env prob) (fun _68_2897 -> None))
-in (FStar_All.pipe_left (with_guard env prob) _149_1457))
+let g = (let _149_1458 = (solve_and_commit env (singleton env prob) (fun _68_2888 -> None))
+in (FStar_All.pipe_left (with_guard env prob) _149_1458))
 in g))))
 
 # 2019 "FStar.TypeChecker.Rel.fst"
 let teq : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.typ  ->  FStar_TypeChecker_Env.guard_t = (fun env t1 t2 -> (match ((try_teq env t1 t2)) with
 | None -> begin
-(let _149_1467 = (let _149_1466 = (let _149_1465 = (FStar_TypeChecker_Errors.basic_type_error env None t2 t1)
-in (let _149_1464 = (FStar_TypeChecker_Env.get_range env)
-in (_149_1465, _149_1464)))
-in FStar_Syntax_Syntax.Error (_149_1466))
-in (Prims.raise _149_1467))
+(let _149_1468 = (let _149_1467 = (let _149_1466 = (FStar_TypeChecker_Errors.basic_type_error env None t2 t1)
+in (let _149_1465 = (FStar_TypeChecker_Env.get_range env)
+in (_149_1466, _149_1465)))
+in FStar_Syntax_Syntax.Error (_149_1467))
+in (Prims.raise _149_1468))
 end
 | Some (g) -> begin
 (
 # 2023 "FStar.TypeChecker.Rel.fst"
-let _68_2906 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
-(let _149_1470 = (FStar_Syntax_Print.term_to_string t1)
-in (let _149_1469 = (FStar_Syntax_Print.term_to_string t2)
-in (let _149_1468 = (guard_to_string env g)
-in (FStar_Util.print3 "teq of %s and %s succeeded with guard %s\n" _149_1470 _149_1469 _149_1468))))
+let _68_2897 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+(let _149_1471 = (FStar_Syntax_Print.term_to_string t1)
+in (let _149_1470 = (FStar_Syntax_Print.term_to_string t2)
+in (let _149_1469 = (guard_to_string env g)
+in (FStar_Util.print3 "teq of %s and %s succeeded with guard %s\n" _149_1471 _149_1470 _149_1469))))
 end else begin
 ()
 end
@@ -4057,30 +4058,30 @@ end))
 # 2030 "FStar.TypeChecker.Rel.fst"
 let try_subtype : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.typ  ->  FStar_TypeChecker_Env.guard_t Prims.option = (fun env t1 t2 -> (
 # 2031 "FStar.TypeChecker.Rel.fst"
-let _68_2911 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
-(let _149_1478 = (FStar_TypeChecker_Normalize.term_to_string env t1)
-in (let _149_1477 = (FStar_TypeChecker_Normalize.term_to_string env t2)
-in (FStar_Util.print2 "try_subtype of %s and %s\n" _149_1478 _149_1477)))
+let _68_2902 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+(let _149_1479 = (FStar_TypeChecker_Normalize.term_to_string env t1)
+in (let _149_1478 = (FStar_TypeChecker_Normalize.term_to_string env t2)
+in (FStar_Util.print2 "try_subtype of %s and %s\n" _149_1479 _149_1478)))
 end else begin
 ()
 end
 in (
 # 2033 "FStar.TypeChecker.Rel.fst"
-let _68_2915 = (new_t_prob env t1 FStar_TypeChecker_Common.SUB t2)
-in (match (_68_2915) with
+let _68_2906 = (new_t_prob env t1 FStar_TypeChecker_Common.SUB t2)
+in (match (_68_2906) with
 | (prob, x) -> begin
 (
 # 2034 "FStar.TypeChecker.Rel.fst"
-let g = (let _149_1480 = (solve_and_commit env (singleton env prob) (fun _68_2916 -> None))
-in (FStar_All.pipe_left (with_guard env prob) _149_1480))
+let g = (let _149_1481 = (solve_and_commit env (singleton env prob) (fun _68_2907 -> None))
+in (FStar_All.pipe_left (with_guard env prob) _149_1481))
 in (
 # 2035 "FStar.TypeChecker.Rel.fst"
-let _68_2919 = if ((FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) && (FStar_Util.is_some g)) then begin
-(let _149_1484 = (FStar_TypeChecker_Normalize.term_to_string env t1)
-in (let _149_1483 = (FStar_TypeChecker_Normalize.term_to_string env t2)
-in (let _149_1482 = (let _149_1481 = (FStar_Util.must g)
-in (guard_to_string env _149_1481))
-in (FStar_Util.print3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n" _149_1484 _149_1483 _149_1482))))
+let _68_2910 = if ((FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) && (FStar_Util.is_some g)) then begin
+(let _149_1485 = (FStar_TypeChecker_Normalize.term_to_string env t1)
+in (let _149_1484 = (FStar_TypeChecker_Normalize.term_to_string env t2)
+in (let _149_1483 = (let _149_1482 = (FStar_Util.must g)
+in (guard_to_string env _149_1482))
+in (FStar_Util.print3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n" _149_1485 _149_1484 _149_1483))))
 end else begin
 ()
 end
@@ -4088,19 +4089,19 @@ in (abstract_guard x g)))
 end))))
 
 # 2043 "FStar.TypeChecker.Rel.fst"
-let subtype_fail = (fun env t1 t2 -> (let _149_1491 = (let _149_1490 = (let _149_1489 = (FStar_TypeChecker_Errors.basic_type_error env None t2 t1)
-in (let _149_1488 = (FStar_TypeChecker_Env.get_range env)
-in (_149_1489, _149_1488)))
-in FStar_Syntax_Syntax.Error (_149_1490))
-in (Prims.raise _149_1491)))
+let subtype_fail = (fun env t1 t2 -> (let _149_1492 = (let _149_1491 = (let _149_1490 = (FStar_TypeChecker_Errors.basic_type_error env None t2 t1)
+in (let _149_1489 = (FStar_TypeChecker_Env.get_range env)
+in (_149_1490, _149_1489)))
+in FStar_Syntax_Syntax.Error (_149_1491))
+in (Prims.raise _149_1492)))
 
 # 2047 "FStar.TypeChecker.Rel.fst"
 let sub_comp : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp  ->  FStar_TypeChecker_Env.guard_t Prims.option = (fun env c1 c2 -> (
 # 2048 "FStar.TypeChecker.Rel.fst"
-let _68_2927 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
-(let _149_1499 = (FStar_Syntax_Print.comp_to_string c1)
-in (let _149_1498 = (FStar_Syntax_Print.comp_to_string c2)
-in (FStar_Util.print2 "sub_comp of %s and %s\n" _149_1499 _149_1498)))
+let _68_2918 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+(let _149_1500 = (FStar_Syntax_Print.comp_to_string c1)
+in (let _149_1499 = (FStar_Syntax_Print.comp_to_string c2)
+in (FStar_Util.print2 "sub_comp of %s and %s\n" _149_1500 _149_1499)))
 end else begin
 ()
 end
@@ -4113,18 +4114,18 @@ FStar_TypeChecker_Common.SUB
 end
 in (
 # 2051 "FStar.TypeChecker.Rel.fst"
-let prob = (let _149_1502 = (let _149_1501 = (FStar_TypeChecker_Env.get_range env)
-in (new_problem env c1 rel c2 None _149_1501 "sub_comp"))
-in (FStar_All.pipe_left (fun _149_1500 -> FStar_TypeChecker_Common.CProb (_149_1500)) _149_1502))
-in (let _149_1504 = (solve_and_commit env (singleton env prob) (fun _68_2931 -> None))
-in (FStar_All.pipe_left (with_guard env prob) _149_1504))))))
+let prob = (let _149_1503 = (let _149_1502 = (FStar_TypeChecker_Env.get_range env)
+in (new_problem env c1 rel c2 None _149_1502 "sub_comp"))
+in (FStar_All.pipe_left (fun _149_1501 -> FStar_TypeChecker_Common.CProb (_149_1501)) _149_1503))
+in (let _149_1505 = (solve_and_commit env (singleton env prob) (fun _68_2922 -> None))
+in (FStar_All.pipe_left (with_guard env prob) _149_1505))))))
 
 # 2055 "FStar.TypeChecker.Rel.fst"
 let solve_universe_inequalities' : FStar_Unionfind.tx  ->  FStar_TypeChecker_Env.env  ->  (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe) Prims.list  ->  Prims.unit = (fun tx env ineqs -> (
 # 2056 "FStar.TypeChecker.Rel.fst"
 let fail = (fun msg u1 u2 -> (
 # 2057 "FStar.TypeChecker.Rel.fst"
-let _68_2940 = (FStar_Unionfind.rollback tx)
+let _68_2931 = (FStar_Unionfind.rollback tx)
 in (
 # 2058 "FStar.TypeChecker.Rel.fst"
 let msg = (match (msg) with
@@ -4134,13 +4135,13 @@ end
 | Some (s) -> begin
 (Prims.strcat ": " s)
 end)
-in (let _149_1522 = (let _149_1521 = (let _149_1520 = (let _149_1518 = (FStar_Syntax_Print.univ_to_string u1)
-in (let _149_1517 = (FStar_Syntax_Print.univ_to_string u2)
-in (FStar_Util.format3 "Universe %s and %s are incompatible%s" _149_1518 _149_1517 msg)))
-in (let _149_1519 = (FStar_TypeChecker_Env.get_range env)
-in (_149_1520, _149_1519)))
-in FStar_Syntax_Syntax.Error (_149_1521))
-in (Prims.raise _149_1522)))))
+in (let _149_1523 = (let _149_1522 = (let _149_1521 = (let _149_1519 = (FStar_Syntax_Print.univ_to_string u1)
+in (let _149_1518 = (FStar_Syntax_Print.univ_to_string u2)
+in (FStar_Util.format3 "Universe %s and %s are incompatible%s" _149_1519 _149_1518 msg)))
+in (let _149_1520 = (FStar_TypeChecker_Env.get_range env)
+in (_149_1521, _149_1520)))
+in FStar_Syntax_Syntax.Error (_149_1522))
+in (Prims.raise _149_1523)))))
 in (
 # 2067 "FStar.TypeChecker.Rel.fst"
 let rec insert = (fun uv u1 groups -> (match (groups) with
@@ -4150,14 +4151,14 @@ end
 | hd::tl -> begin
 (
 # 2070 "FStar.TypeChecker.Rel.fst"
-let _68_2956 = hd
-in (match (_68_2956) with
+let _68_2947 = hd
+in (match (_68_2947) with
 | (uv', lower_bounds) -> begin
 if (FStar_Unionfind.equivalent uv uv') then begin
 ((uv', (u1)::lower_bounds))::tl
 end else begin
-(let _149_1529 = (insert uv u1 tl)
-in (hd)::_149_1529)
+(let _149_1530 = (insert uv u1 tl)
+in (hd)::_149_1530)
 end
 end))
 end))
@@ -4179,32 +4180,32 @@ let u1 = (FStar_TypeChecker_Normalize.normalize_universe env u1)
 in if (FStar_Syntax_Util.eq_univs u1 u2) then begin
 (group_by out rest)
 end else begin
-(let _149_1534 = (insert uv u1 out)
-in (group_by _149_1534 rest))
+(let _149_1535 = (insert uv u1 out)
+in (group_by _149_1535 rest))
 end)
 end
-| _68_2971 -> begin
+| _68_2962 -> begin
 None
 end))
 end))
 in (
 # 2088 "FStar.TypeChecker.Rel.fst"
-let ad_hoc_fallback = (fun _68_2973 -> (match (()) with
+let ad_hoc_fallback = (fun _68_2964 -> (match (()) with
 | () -> begin
 (match (ineqs) with
 | [] -> begin
 ()
 end
-| _68_2976 -> begin
+| _68_2967 -> begin
 (
 # 2093 "FStar.TypeChecker.Rel.fst"
 let wl = (
 # 2093 "FStar.TypeChecker.Rel.fst"
-let _68_2977 = (empty_worklist env)
-in {attempting = _68_2977.attempting; wl_deferred = _68_2977.wl_deferred; ctr = _68_2977.ctr; defer_ok = true; smt_ok = _68_2977.smt_ok; tcenv = _68_2977.tcenv})
+let _68_2968 = (empty_worklist env)
+in {attempting = _68_2968.attempting; wl_deferred = _68_2968.wl_deferred; ctr = _68_2968.ctr; defer_ok = true; smt_ok = _68_2968.smt_ok; tcenv = _68_2968.tcenv})
 in (
 # 2094 "FStar.TypeChecker.Rel.fst"
-let _68_3017 = (FStar_All.pipe_right ineqs (FStar_List.iter (fun _68_2982 -> (match (_68_2982) with
+let _68_3008 = (FStar_All.pipe_right ineqs (FStar_List.iter (fun _68_2973 -> (match (_68_2973) with
 | (u1, u2) -> begin
 (
 # 2095 "FStar.TypeChecker.Rel.fst"
@@ -4216,7 +4217,7 @@ in (match (u1) with
 | FStar_Syntax_Syntax.U_zero -> begin
 ()
 end
-| _68_2987 -> begin
+| _68_2978 -> begin
 (match ((solve_universe_eq (- (1)) wl u1 u2)) with
 | (UDeferred (_)) | (UFailed (_)) -> begin
 (
@@ -4225,7 +4226,7 @@ let us1 = (match (u1) with
 | FStar_Syntax_Syntax.U_max (us1) -> begin
 us1
 end
-| _68_2997 -> begin
+| _68_2988 -> begin
 (u1)::[]
 end)
 in (
@@ -4234,7 +4235,7 @@ let us2 = (match (u2) with
 | FStar_Syntax_Syntax.U_max (us2) -> begin
 us2
 end
-| _68_3002 -> begin
+| _68_2993 -> begin
 (u2)::[]
 end)
 in if (FStar_All.pipe_right us1 (FStar_Util.for_all (fun _68_27 -> (match (_68_27) with
@@ -4244,13 +4245,13 @@ end
 | u -> begin
 (
 # 2111 "FStar.TypeChecker.Rel.fst"
-let _68_3009 = (FStar_Syntax_Util.univ_kernel u)
-in (match (_68_3009) with
+let _68_3000 = (FStar_Syntax_Util.univ_kernel u)
+in (match (_68_3000) with
 | (k_u, n) -> begin
 (FStar_All.pipe_right us2 (FStar_Util.for_some (fun u' -> (
 # 2113 "FStar.TypeChecker.Rel.fst"
-let _68_3013 = (FStar_Syntax_Util.univ_kernel u')
-in (match (_68_3013) with
+let _68_3004 = (FStar_Syntax_Util.univ_kernel u')
+in (match (_68_3004) with
 | (k_u', n') -> begin
 ((FStar_Syntax_Util.eq_univs k_u k_u') && (n <= n'))
 end)))))
@@ -4261,7 +4262,7 @@ end else begin
 (fail None u1 u2)
 end))
 end
-| USolved (_68_3015) -> begin
+| USolved (_68_3006) -> begin
 ()
 end)
 end)))
@@ -4275,8 +4276,8 @@ in (match ((group_by [] ineqs)) with
 # 2124 "FStar.TypeChecker.Rel.fst"
 let wl = (
 # 2124 "FStar.TypeChecker.Rel.fst"
-let _68_3021 = (empty_worklist env)
-in {attempting = _68_3021.attempting; wl_deferred = _68_3021.wl_deferred; ctr = _68_3021.ctr; defer_ok = false; smt_ok = _68_3021.smt_ok; tcenv = _68_3021.tcenv})
+let _68_3012 = (empty_worklist env)
+in {attempting = _68_3012.attempting; wl_deferred = _68_3012.wl_deferred; ctr = _68_3012.ctr; defer_ok = false; smt_ok = _68_3012.smt_ok; tcenv = _68_3012.tcenv})
 in (
 # 2125 "FStar.TypeChecker.Rel.fst"
 let rec solve_all_groups = (fun wl groups -> (match (groups) with
@@ -4288,7 +4289,7 @@ end
 | USolved (wl) -> begin
 (solve_all_groups wl groups)
 end
-| _68_3036 -> begin
+| _68_3027 -> begin
 (ad_hoc_fallback ())
 end)
 end))
@@ -4304,13 +4305,13 @@ let solve_universe_inequalities : FStar_TypeChecker_Env.env  ->  (FStar_Syntax_S
 let tx = (FStar_Unionfind.new_transaction ())
 in (
 # 2139 "FStar.TypeChecker.Rel.fst"
-let _68_3041 = (solve_universe_inequalities' tx env ineqs)
+let _68_3032 = (solve_universe_inequalities' tx env ineqs)
 in (FStar_Unionfind.commit tx))))
 
 # 2142 "FStar.TypeChecker.Rel.fst"
 let rec solve_deferred_constraints : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun env g -> (
 # 2143 "FStar.TypeChecker.Rel.fst"
-let fail = (fun _68_3048 -> (match (_68_3048) with
+let fail = (fun _68_3039 -> (match (_68_3039) with
 | (d, s) -> begin
 (
 # 2144 "FStar.TypeChecker.Rel.fst"
@@ -4322,10 +4323,10 @@ in (
 let wl = (wl_of_guard env g.FStar_TypeChecker_Env.deferred)
 in (
 # 2147 "FStar.TypeChecker.Rel.fst"
-let _68_3051 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("RelCheck"))) then begin
-(let _149_1555 = (wl_to_string wl)
-in (let _149_1554 = (FStar_Util.string_of_int (FStar_List.length g.FStar_TypeChecker_Env.implicits))
-in (FStar_Util.print2 "Trying to solve carried problems: begin\n\t%s\nend\n and %s implicits\n" _149_1555 _149_1554)))
+let _68_3042 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("RelCheck"))) then begin
+(let _149_1556 = (wl_to_string wl)
+in (let _149_1555 = (FStar_Util.string_of_int (FStar_List.length g.FStar_TypeChecker_Env.implicits))
+in (FStar_Util.print2 "Trying to solve carried problems: begin\n\t%s\nend\n and %s implicits\n" _149_1556 _149_1555)))
 end else begin
 ()
 end
@@ -4335,19 +4336,19 @@ let g = (match ((solve_and_commit env wl fail)) with
 | Some ([]) -> begin
 (
 # 2150 "FStar.TypeChecker.Rel.fst"
-let _68_3055 = g
-in {FStar_TypeChecker_Env.guard_f = _68_3055.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = []; FStar_TypeChecker_Env.univ_ineqs = _68_3055.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_3055.FStar_TypeChecker_Env.implicits})
+let _68_3046 = g
+in {FStar_TypeChecker_Env.guard_f = _68_3046.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = []; FStar_TypeChecker_Env.univ_ineqs = _68_3046.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_3046.FStar_TypeChecker_Env.implicits})
 end
-| _68_3058 -> begin
+| _68_3049 -> begin
 (FStar_All.failwith "impossible: Unexpected deferred constraints remain")
 end)
 in (
 # 2152 "FStar.TypeChecker.Rel.fst"
-let _68_3060 = (solve_universe_inequalities env g.FStar_TypeChecker_Env.univ_ineqs)
+let _68_3051 = (solve_universe_inequalities env g.FStar_TypeChecker_Env.univ_ineqs)
 in (
 # 2153 "FStar.TypeChecker.Rel.fst"
-let _68_3062 = g
-in {FStar_TypeChecker_Env.guard_f = _68_3062.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = _68_3062.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = []; FStar_TypeChecker_Env.implicits = _68_3062.FStar_TypeChecker_Env.implicits})))))))
+let _68_3053 = g
+in {FStar_TypeChecker_Env.guard_f = _68_3053.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = _68_3053.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = []; FStar_TypeChecker_Env.implicits = _68_3053.FStar_TypeChecker_Env.implicits})))))))
 
 # 2155 "FStar.TypeChecker.Rel.fst"
 let discharge_guard : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun env g -> (
@@ -4355,7 +4356,7 @@ let discharge_guard : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Env.guard
 let g = (solve_deferred_constraints env g)
 in (
 # 2157 "FStar.TypeChecker.Rel.fst"
-let _68_3076 = if (not ((FStar_Options.should_verify env.FStar_TypeChecker_Env.curmodule.FStar_Ident.str))) then begin
+let _68_3067 = if (not ((FStar_Options.should_verify env.FStar_TypeChecker_Env.curmodule.FStar_Ident.str))) then begin
 ()
 end else begin
 (match (g.FStar_TypeChecker_Env.guard_f) with
@@ -4373,11 +4374,11 @@ end
 | FStar_TypeChecker_Common.NonTrivial (vc) -> begin
 (
 # 2165 "FStar.TypeChecker.Rel.fst"
-let _68_3074 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
-(let _149_1562 = (FStar_TypeChecker_Env.get_range env)
-in (let _149_1561 = (let _149_1560 = (FStar_Syntax_Print.term_to_string vc)
-in (FStar_Util.format1 "Checking VC=\n%s\n" _149_1560))
-in (FStar_TypeChecker_Errors.diag _149_1562 _149_1561)))
+let _68_3065 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
+(let _149_1563 = (FStar_TypeChecker_Env.get_range env)
+in (let _149_1562 = (let _149_1561 = (FStar_Syntax_Print.term_to_string vc)
+in (FStar_Util.format1 "Checking VC=\n%s\n" _149_1561))
+in (FStar_TypeChecker_Errors.diag _149_1563 _149_1562)))
 end else begin
 ()
 end
@@ -4387,8 +4388,8 @@ end)
 end
 in (
 # 2170 "FStar.TypeChecker.Rel.fst"
-let _68_3078 = g
-in {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = _68_3078.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_3078.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_3078.FStar_TypeChecker_Env.implicits}))))
+let _68_3069 = g
+in {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = _68_3069.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_3069.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_3069.FStar_TypeChecker_Env.implicits}))))
 
 # 2172 "FStar.TypeChecker.Rel.fst"
 let resolve_implicits : FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun g -> (
@@ -4397,12 +4398,12 @@ let unresolved = (fun u -> (match ((FStar_Unionfind.find u)) with
 | FStar_Syntax_Syntax.Uvar -> begin
 true
 end
-| _68_3085 -> begin
+| _68_3076 -> begin
 false
 end))
 in (
 # 2176 "FStar.TypeChecker.Rel.fst"
-let rec until_fixpoint = (fun _68_3089 implicits -> (match (_68_3089) with
+let rec until_fixpoint = (fun _68_3080 implicits -> (match (_68_3080) with
 | (out, changed) -> begin
 (match (implicits) with
 | [] -> begin
@@ -4415,8 +4416,8 @@ end
 | hd::tl -> begin
 (
 # 2180 "FStar.TypeChecker.Rel.fst"
-let _68_3100 = hd
-in (match (_68_3100) with
+let _68_3091 = hd
+in (match (_68_3091) with
 | (env, u, tm, k, r) -> begin
 if (unresolved u) then begin
 (until_fixpoint ((hd)::out, changed) tl)
@@ -4429,29 +4430,29 @@ in (
 let tm = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::[]) env tm)
 in (
 # 2185 "FStar.TypeChecker.Rel.fst"
-let _68_3103 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("RelCheck"))) then begin
-(let _149_1573 = (FStar_Syntax_Print.uvar_to_string u)
-in (let _149_1572 = (FStar_Syntax_Print.term_to_string tm)
-in (let _149_1571 = (FStar_Syntax_Print.term_to_string k)
-in (FStar_Util.print3 "Checking uvar %s resolved to %s at type %s\n" _149_1573 _149_1572 _149_1571))))
+let _68_3094 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("RelCheck"))) then begin
+(let _149_1574 = (FStar_Syntax_Print.uvar_to_string u)
+in (let _149_1573 = (FStar_Syntax_Print.term_to_string tm)
+in (let _149_1572 = (FStar_Syntax_Print.term_to_string k)
+in (FStar_Util.print3 "Checking uvar %s resolved to %s at type %s\n" _149_1574 _149_1573 _149_1572))))
 end else begin
 ()
 end
 in (
 # 2188 "FStar.TypeChecker.Rel.fst"
-let _68_3110 = (env.FStar_TypeChecker_Env.type_of (
+let _68_3101 = (env.FStar_TypeChecker_Env.type_of (
 # 2188 "FStar.TypeChecker.Rel.fst"
-let _68_3105 = env
-in {FStar_TypeChecker_Env.solver = _68_3105.FStar_TypeChecker_Env.solver; FStar_TypeChecker_Env.range = _68_3105.FStar_TypeChecker_Env.range; FStar_TypeChecker_Env.curmodule = _68_3105.FStar_TypeChecker_Env.curmodule; FStar_TypeChecker_Env.gamma = _68_3105.FStar_TypeChecker_Env.gamma; FStar_TypeChecker_Env.gamma_cache = _68_3105.FStar_TypeChecker_Env.gamma_cache; FStar_TypeChecker_Env.modules = _68_3105.FStar_TypeChecker_Env.modules; FStar_TypeChecker_Env.expected_typ = _68_3105.FStar_TypeChecker_Env.expected_typ; FStar_TypeChecker_Env.sigtab = _68_3105.FStar_TypeChecker_Env.sigtab; FStar_TypeChecker_Env.is_pattern = _68_3105.FStar_TypeChecker_Env.is_pattern; FStar_TypeChecker_Env.instantiate_imp = _68_3105.FStar_TypeChecker_Env.instantiate_imp; FStar_TypeChecker_Env.effects = _68_3105.FStar_TypeChecker_Env.effects; FStar_TypeChecker_Env.generalize = _68_3105.FStar_TypeChecker_Env.generalize; FStar_TypeChecker_Env.letrecs = _68_3105.FStar_TypeChecker_Env.letrecs; FStar_TypeChecker_Env.top_level = _68_3105.FStar_TypeChecker_Env.top_level; FStar_TypeChecker_Env.check_uvars = _68_3105.FStar_TypeChecker_Env.check_uvars; FStar_TypeChecker_Env.use_eq = _68_3105.FStar_TypeChecker_Env.use_eq; FStar_TypeChecker_Env.is_iface = _68_3105.FStar_TypeChecker_Env.is_iface; FStar_TypeChecker_Env.admit = _68_3105.FStar_TypeChecker_Env.admit; FStar_TypeChecker_Env.default_effects = _68_3105.FStar_TypeChecker_Env.default_effects; FStar_TypeChecker_Env.type_of = _68_3105.FStar_TypeChecker_Env.type_of; FStar_TypeChecker_Env.universe_of = _68_3105.FStar_TypeChecker_Env.universe_of; FStar_TypeChecker_Env.use_bv_sorts = true}) tm)
-in (match (_68_3110) with
-| (_68_3108, g) -> begin
+let _68_3096 = env
+in {FStar_TypeChecker_Env.solver = _68_3096.FStar_TypeChecker_Env.solver; FStar_TypeChecker_Env.range = _68_3096.FStar_TypeChecker_Env.range; FStar_TypeChecker_Env.curmodule = _68_3096.FStar_TypeChecker_Env.curmodule; FStar_TypeChecker_Env.gamma = _68_3096.FStar_TypeChecker_Env.gamma; FStar_TypeChecker_Env.gamma_cache = _68_3096.FStar_TypeChecker_Env.gamma_cache; FStar_TypeChecker_Env.modules = _68_3096.FStar_TypeChecker_Env.modules; FStar_TypeChecker_Env.expected_typ = _68_3096.FStar_TypeChecker_Env.expected_typ; FStar_TypeChecker_Env.sigtab = _68_3096.FStar_TypeChecker_Env.sigtab; FStar_TypeChecker_Env.is_pattern = _68_3096.FStar_TypeChecker_Env.is_pattern; FStar_TypeChecker_Env.instantiate_imp = _68_3096.FStar_TypeChecker_Env.instantiate_imp; FStar_TypeChecker_Env.effects = _68_3096.FStar_TypeChecker_Env.effects; FStar_TypeChecker_Env.generalize = _68_3096.FStar_TypeChecker_Env.generalize; FStar_TypeChecker_Env.letrecs = _68_3096.FStar_TypeChecker_Env.letrecs; FStar_TypeChecker_Env.top_level = _68_3096.FStar_TypeChecker_Env.top_level; FStar_TypeChecker_Env.check_uvars = _68_3096.FStar_TypeChecker_Env.check_uvars; FStar_TypeChecker_Env.use_eq = _68_3096.FStar_TypeChecker_Env.use_eq; FStar_TypeChecker_Env.is_iface = _68_3096.FStar_TypeChecker_Env.is_iface; FStar_TypeChecker_Env.admit = _68_3096.FStar_TypeChecker_Env.admit; FStar_TypeChecker_Env.default_effects = _68_3096.FStar_TypeChecker_Env.default_effects; FStar_TypeChecker_Env.type_of = _68_3096.FStar_TypeChecker_Env.type_of; FStar_TypeChecker_Env.universe_of = _68_3096.FStar_TypeChecker_Env.universe_of; FStar_TypeChecker_Env.use_bv_sorts = true}) tm)
+in (match (_68_3101) with
+| (_68_3099, g) -> begin
 (
 # 2189 "FStar.TypeChecker.Rel.fst"
 let g = if env.FStar_TypeChecker_Env.is_pattern then begin
 (
 # 2190 "FStar.TypeChecker.Rel.fst"
-let _68_3111 = g
-in {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = _68_3111.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_3111.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_3111.FStar_TypeChecker_Env.implicits})
+let _68_3102 = g
+in {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = _68_3102.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_3102.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _68_3102.FStar_TypeChecker_Env.implicits})
 end else begin
 g
 end
@@ -4466,29 +4467,29 @@ end)
 end))
 in (
 # 2194 "FStar.TypeChecker.Rel.fst"
-let _68_3115 = g
-in (let _149_1574 = (until_fixpoint ([], false) g.FStar_TypeChecker_Env.implicits)
-in {FStar_TypeChecker_Env.guard_f = _68_3115.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = _68_3115.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_3115.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _149_1574})))))
+let _68_3106 = g
+in (let _149_1575 = (until_fixpoint ([], false) g.FStar_TypeChecker_Env.implicits)
+in {FStar_TypeChecker_Env.guard_f = _68_3106.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = _68_3106.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _68_3106.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _149_1575})))))
 
 # 2196 "FStar.TypeChecker.Rel.fst"
 let force_trivial_guard : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Env.guard_t  ->  Prims.unit = (fun env g -> (
 # 2197 "FStar.TypeChecker.Rel.fst"
-let g = (let _149_1579 = (solve_deferred_constraints env g)
-in (FStar_All.pipe_right _149_1579 resolve_implicits))
+let g = (let _149_1580 = (solve_deferred_constraints env g)
+in (FStar_All.pipe_right _149_1580 resolve_implicits))
 in (match (g.FStar_TypeChecker_Env.implicits) with
 | [] -> begin
-(let _149_1580 = (discharge_guard env g)
-in (FStar_All.pipe_left Prims.ignore _149_1580))
+(let _149_1581 = (discharge_guard env g)
+in (FStar_All.pipe_left Prims.ignore _149_1581))
 end
-| (_68_3124, _68_3126, _68_3128, _68_3130, r)::_68_3122 -> begin
+| (_68_3115, _68_3117, _68_3119, _68_3121, r)::_68_3113 -> begin
 (Prims.raise (FStar_Syntax_Syntax.Error (("Failed to resolve implicit argument", r))))
 end)))
 
 # 2202 "FStar.TypeChecker.Rel.fst"
 let universe_inequality : FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe  ->  FStar_TypeChecker_Env.guard_t = (fun u1 u2 -> (
 # 2204 "FStar.TypeChecker.Rel.fst"
-let _68_3136 = trivial_guard
-in {FStar_TypeChecker_Env.guard_f = _68_3136.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = _68_3136.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = ((u1, u2))::[]; FStar_TypeChecker_Env.implicits = _68_3136.FStar_TypeChecker_Env.implicits}))
+let _68_3127 = trivial_guard
+in {FStar_TypeChecker_Env.guard_f = _68_3127.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = _68_3127.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = ((u1, u2))::[]; FStar_TypeChecker_Env.implicits = _68_3127.FStar_TypeChecker_Env.implicits}))
 
 
 

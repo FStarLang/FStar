@@ -113,28 +113,28 @@ abstract val lemma_index_slice: #a:Type -> s:seq a -> i:nat -> j:nat{i <= j /\ j
   [SMTPat (index (slice s i j) k)]
 let lemma_index_slice #a s i j k = ()
 
-abstract type Eq (#a:Type) (s1:seq a) (s2:seq a) =
+abstract type equal (#a:Type) (s1:seq a) (s2:seq a) =
   (length s1 = length s2
    /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i)))
 
 abstract val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (length s1 = length s2
                /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i))))
-     (ensures (Eq s1 s2))
-     [SMTPatT (Eq s1 s2)]
+     (ensures (equal s1 s2))
+     [SMTPatT (equal s1 s2)]
 let lemma_eq_intro #a s1 s2 = ()
 
 abstract val lemma_eq_refl: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (s1 = s2))
-     (ensures (Eq s1 s2))
-     [SMTPatT (Eq s1 s2)]
+     (ensures (equal s1 s2))
+     [SMTPatT (equal s1 s2)]
 let lemma_eq_refl #a s1 s2  = ()
 
-(*Would be nice to to not have to assume this again and instead derive it from FEq.
-  But, it doesn't work because in order to use FEq, we need to show that s1.contents has type (efun e b) *)
-assume Extensionality: forall (a:Type) (s1:seq a) (s2:seq a).{:pattern (Eq s1 s2)} Eq s1 s2 <==> (s1=s2)
+(*TODO: Would be nice to to not have to assume this again and instead derive it from feq
+  But, it doesn't work because in order to use feq, we need to show that s1.contents has type (efun e b) *)
+assume Extensionality: forall (a:Type) (s1:seq a) (s2:seq a).{:pattern (equal s1 s2)} equal s1 s2 <==> (s1=s2)
 abstract val lemma_eq_elim: #a:Type -> s1:seq a -> s2:seq a -> Lemma
-     (requires (Eq s1 s2))
+     (requires (equal s1 s2))
      (ensures (s1=s2))
-     [SMTPatT (Eq s1 s2)]
+     [SMTPatT (equal s1 s2)]
 let lemma_eq_elim #a s1 s2  = ()

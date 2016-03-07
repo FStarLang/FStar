@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi Set --admit_fsi Map;
-    other-files:FStar.Set.fsi FStar.Heap.fst map.fsi
- --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -78,7 +74,7 @@ assume val get: unit -> ST t
   (ensures (fun m0 x m1 -> m0=x /\ m1=m0))
 
 let modifies (s:Set.set rid) (m0:t) (m1:t) =
-    Map.Equal m1 (Map.concat m1 (Map.restrict (Set.complement s) m0))
+    Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement s) m0))
 
 let fresh_region (i:rid) (m0:t) (m1:t) =
   not (Map.contains m0 i)

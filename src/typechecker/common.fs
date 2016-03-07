@@ -57,7 +57,7 @@ type univ_ineq = universe * universe
 
 module C = FStar.Syntax.Const
 
-let tconst l = mk (Tm_fvar(lid_as_fv (set_lid_range l Range.dummyRange) None)) (Some Util.ktype0.n) Range.dummyRange
+let tconst l = mk (Tm_fvar(Syntax.lid_as_fv l Delta_constant None)) (Some Util.ktype0.n) Range.dummyRange
 let t_unit   = tconst C.unit_lid
 let t_bool   = tconst C.bool_lid 
 let t_uint8  = tconst C.uint8_lid 

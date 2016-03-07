@@ -49,6 +49,7 @@
     Hashtbl.add keywords "exception"     EXCEPTION   ;
     Hashtbl.add keywords "exists"        EXISTS      ;
     Hashtbl.add keywords "false"         FALSE       ;
+    Hashtbl.add keywords "False"         L_FALSE     ;
     Hashtbl.add keywords "finally"       FINALLY     ;
     Hashtbl.add keywords "for"           FOR         ;
     Hashtbl.add keywords "forall"        FORALL      ;
@@ -79,6 +80,7 @@
     Hashtbl.add keywords "to"            TO          ;
     Hashtbl.add keywords "total"         TOTAL       ;
     Hashtbl.add keywords "true"          TRUE        ;
+    Hashtbl.add keywords "True"          L_TRUE      ;
     Hashtbl.add keywords "try"           TRY         ;
     Hashtbl.add keywords "type"          TYPE        ;
     Hashtbl.add keywords "unfoldable"    UNFOLDABLE  ;

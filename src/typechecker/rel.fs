@@ -1196,7 +1196,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | (MisMatch, _) -> //heads definitely do not match
                 let may_relate head = match head.n with
                 | Tm_name _  -> true
-                | Tm_fvar (tc, _) -> Env.is_projector env tc.v
+                | Tm_fvar tc -> tc.fv_delta = Delta_equational
                 | _ -> false  in
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard = 
@@ -1854,7 +1854,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                        else let wp2_imp_wp1 = mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.wp_binop,
                                                                             [as_arg c2.result_typ;
                                                                              as_arg wpc2;
-                                                                             as_arg <| S.fvar None Const.imp_lid r;
+                                                                             as_arg <| S.fvar (Ident.set_lid_range Const.imp_lid r) (Delta_unfoldable 1) None;
                                                                              as_arg <| edge.mlift c1.result_typ wpc1])) None r in
                                                 mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.wp_as_type, 
                                                            [as_arg c2.result_typ; as_arg wp2_imp_wp1])) (Some U.ktype0.n) r  in
@@ -1919,7 +1919,7 @@ let conj_guard_f g1 g2 = match g1, g2 with
   | NonTrivial f1, NonTrivial f2 -> NonTrivial (Util.mk_conj f1 f2)
 
 let check_trivial t = match t.n with
-    | Tm_fvar (tc, _) when (lid_equals tc.v Const.true_lid) -> Trivial
+    | Tm_fvar tc when S.fv_eq_lid tc Const.true_lid -> Trivial
     | _ -> NonTrivial t
 
 let imp_guard_f g1 g2 = match g1, g2 with
@@ -1978,7 +1978,7 @@ let simplify_guard env g = match g.guard_f with
       let f = N.normalize [N.Beta; N.Inline; N.Simplify] env f in
       if Env.debug env <| Options.Other "Simplification" then Util.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match (Util.unmeta f).n with
-        | Tm_fvar (fv, _) when lid_equals fv.v Const.true_lid -> Trivial
+        | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
         | _ -> NonTrivial f in
       {g with guard_f=f}
 

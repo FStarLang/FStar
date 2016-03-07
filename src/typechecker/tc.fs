@@ -200,7 +200,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
     | letrecs ->
       let r = Env.get_range env in
       let env = {env with letrecs=[]} in
-      let precedes = S.fvar None Const.precedes_lid (Env.get_range env) in
+      let precedes = TcUtil.fvar_const env Const.precedes_lid in
 
       let decreases_clause bs c = 
           //exclude types and function-typed arguments from the decreases clause
@@ -214,7 +214,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
           let as_lex_list dec =
                 let head, _ = Util.head_and_args dec in
                 match head.n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
-                    | Tm_fvar (fv, _) when lid_equals fv.v Const.lexcons_lid -> dec
+                    | Tm_fvar fv when S.fv_eq_lid fv Const.lexcons_lid -> dec
                     | _ -> mk_lex_list [dec] in
           let ct = Util.comp_to_comp_typ c in
           match ct.flags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
@@ -444,21 +444,23 @@ and tc_value env (e:term) : term
     let tc = if Options.should_verify env.curmodule.str then Inl t else Inr (U.lcomp_of_comp <| mk_Total t) in
     value_check_expected_typ env e tc implicits
 
-  | Tm_uinst({n=Tm_fvar(v, dc)}, us) -> 
+  | Tm_uinst({n=Tm_fvar fv}, us) -> 
     let us = List.map (tc_universe env) us in
-    let us', t = Env.lookup_lid env v.v in
+    let us', t = Env.lookup_lid env fv.fv_name.v in
     if List.length us <> List.length us'
     then raise (Error("Unexpected number of universe instantiations", Env.get_range env))
     else List.iter2 (fun u' u -> match u' with 
             | U_unif u'' -> Unionfind.change u'' (Some u)
             | _ -> failwith "Impossible") us' us;
-    let e = S.mk_Tm_uinst (mk (Tm_fvar({v with ty=t}, dc)) (Some t.n) e.pos) us in
-    check_instantiated_fvar env v dc e t
+    let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
+    let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
+    check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
-  | Tm_fvar (v, dc) ->
-    let us, t = Env.lookup_lid env v.v in
-    let e = S.mk_Tm_uinst (mk (Tm_fvar({v with ty=t}, dc)) (Some t.n) e.pos) us in
-    check_instantiated_fvar env v dc e t 
+  | Tm_fvar fv ->
+    let us, t = Env.lookup_lid env fv.fv_name.v in
+    let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
+    let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
+    check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t 
 
   | Tm_constant c ->
     let t = tc_constant env top.pos c in 
@@ -553,7 +555,7 @@ and tc_comp env c : comp                                      (* checked version
       mk_GTotal t, u, g
 
     | Comp c ->
-      let head = S.fvar None c.effect_name (range_of_lid c.effect_name) in
+      let head = S.fvar c.effect_name Delta_constant None in 
       let tc = mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) None c.result_typ.pos in
       let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff in
       let _, args = Util.head_and_args tc in
@@ -1159,7 +1161,7 @@ and tc_eqn scrutinee env branch
         let discriminate scrutinee_tm f =
             if List.length (Env.datacons_of_typ env (Env.typ_of_datacon env f.v)) > 1
             then 
-                let disc = S.fvar None (Util.mk_discriminator f.v) (range_of_lid f.v) in
+                let disc = S.fvar (Util.mk_discriminator f.v) Delta_equational None in 
                 let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
                 [Util.mk_eq Util.t_bool Util.t_bool disc Const.exp_true_bool]
             else [] in
@@ -1171,7 +1173,7 @@ and tc_eqn scrutinee env branch
                                         (Print.tag_of_term pat_exp))  in
 
         let rec head_constructor t = match t.n with 
-            | Tm_fvar(f, _) -> f
+            | Tm_fvar fv -> fv.fv_name
             | Tm_uinst(t, _) -> head_constructor t
             | _ -> fail () in 
 
@@ -1194,7 +1196,7 @@ and tc_eqn scrutinee env branch
                 then [] 
                 else let sub_term_guards = args |> List.mapi (fun i (ei, _) -> 
                         let projector = Env.lookup_projector env f.v i in //NS: TODO ... should this be a marked as a record projector? But it doesn't matter for extraction
-                        let sub_term = mk_Tm_app (S.fvar None projector f.p) [as_arg scrutinee_tm] None f.p in
+                        let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) Delta_equational None) [as_arg scrutinee_tm] None f.p in
                         build_branch_guard sub_term ei) |> List.flatten in
                      discriminate scrutinee_tm f @ sub_term_guards
             | _ -> [] in //a non-pattern sub-term: must be from a dot pattern
@@ -1202,7 +1204,7 @@ and tc_eqn scrutinee env branch
       (* 6 (b) *)
       let build_and_check_branch_guard scrutinee_tm pat =
          if not (Options.should_verify env.curmodule.str)
-         then S.fvar None Const.true_lid scrutinee_tm.pos //if we're not verifying, then don't even bother building it
+         then TcUtil.fvar_const env Const.true_lid //if we're not verifying, then don't even bother building it
          else let t = Util.mk_conj_l <| build_branch_guard scrutinee_tm pat in
               let k, _ = U.type_u() in
               let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t k in
@@ -1810,7 +1812,7 @@ let tc_lex_t env ses quals lids =
         let tc = Sig_inductive_typ(lex_t, [u], [], t, [], [Const.lextop_lid; Const.lexcons_lid], [], r) in
 
         let utop = S.new_univ_name (Some r1) in 
-        let lex_top_t = mk (Tm_uinst(S.fvar None Const.lex_t_lid r1, [U_name utop])) None r1 in
+        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r1) Delta_constant None, [U_name utop])) None r1 in
         let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
         let dc_lextop = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, [], [], r1) in
        
@@ -1819,8 +1821,8 @@ let tc_lex_t env ses quals lids =
         let lex_cons_t = 
             let a = S.new_bv (Some r2) (mk (Tm_type(U_name ucons1)) None r2) in
             let hd = S.new_bv (Some r2) (S.bv_to_name a) in
-            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar None Const.lex_t_lid r2, [U_name ucons2])) None r2) in
-            let res = mk (Tm_uinst(S.fvar None Const.lex_t_lid r2, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
+            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r2) Delta_constant None, [U_name ucons2])) None r2) in
+            let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r2) Delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
             Util.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
         let dc_lexcons = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], [], r2) in
@@ -1916,7 +1918,8 @@ let tc_inductive env ses quals lids =
 (*close*)let t_tc = Util.arrow (tps@indices) (S.mk_Total t) in
          let tps = SS.close_binders tps in
          let k = SS.close tps k in
-         Env.push_let_binding env_tps (Inr tc) ([], t_tc), 
+         let fv_tc = S.lid_as_fv tc Delta_constant None in
+         Env.push_let_binding env_tps (Inr fv_tc) ([], t_tc), 
          Sig_inductive_typ(tc, [], tps, k, mutuals, data, quals, r), 
          u
 
@@ -1966,7 +1969,7 @@ let tc_inductive env ses quals lids =
          let result, _ = tc_trivial_guard env' result in 
          let head, _ = Util.head_and_args result in
          let _ = match (SS.compress head).n with 
-            | Tm_fvar (fv, _) when lid_equals fv.v tc_lid -> ()
+            | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> ()
             | _ -> raise (Error(Util.format1 "Expected a constructor of type %s" (Print.lid_to_string tc_lid), r)) in
          let g =List.fold_left2 (fun g (x, _) u_x -> 
                 positive_if_pure x.sort tc_lid;
@@ -2174,11 +2177,11 @@ let rec tc_decl env se = match se with
        *)
       let should_generalize, lbs', quals_opt = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
             let lbname = right lb.lbname in //this is definitely not a local let binding
-            let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname with
+            let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
               | None -> gen, lb, quals_opt //no annotation found; use whatever was in the let binding
 
               | Some ((uvs,tval), quals) ->
-                let quals_opt = check_quals_eq lbname quals_opt quals in
+                let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
                 let _ = match lb.lbtyp.n with
                   | Tm_unknown -> ()
                   | _ -> Errors.warn r "Annotation from val declaration overrides inline type annotation" in
@@ -2213,7 +2216,7 @@ let rec tc_decl env se = match se with
       (* 4. Print the type of top-level lets, if requested *)
       if log env
       then Util.print1 "%s\n" (snd lbs |> List.map (fun lb ->
-            let should_log = match Env.try_lookup_val_decl env (right lb.lbname) with
+            let should_log = match Env.try_lookup_val_decl env (right lb.lbname).fv_name.v with
                 | None -> true
                 | _ -> false in
             if should_log
@@ -2296,16 +2299,17 @@ let for_export hidden se : list<sigelt> * list<lident> =
     | Sig_effect_abbrev  _ -> [se], hidden
 
     | Sig_let((false, [lb]), _, _, quals) when (quals |> Util.for_some is_hidden_proj_or_disc) -> 
-      let lid = right lb.lbname in
-      if hidden |> Util.for_some (lid_equals lid)
+      let fv = right lb.lbname in
+      let lid = fv.fv_name.v in
+      if hidden |> Util.for_some (S.fv_eq_lid fv)
       then [], hidden //this projector definition already has a declare_typ
-      else let dec = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, [Assumption], Ident.range_of_lid lid) in
+      else let dec = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption], Ident.range_of_lid lid) in
            [dec], lid::hidden
   
     | Sig_let(lbs, r, l, quals) ->
       if is_abstract quals
       then snd lbs |> List.map (fun lb -> 
-           Sig_declare_typ(right lb.lbname, lb.lbunivs, lb.lbtyp, Assumption::quals, r)), hidden
+           Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp, Assumption::quals, r)), hidden
       else [se], hidden
 
 let tc_decls env ses =

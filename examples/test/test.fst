@@ -1,8 +1,6 @@
 module Test
+assume new type t : int -> Type0
+assume val empty : t 0
 
-(* let f (x:int) : int = 0 *)
-
-(* val f : int -> Tot int *)
-let f x =
-  let rec aux : int -> Tot int = fun x -> aux x in
-  aux 0
+val f : x:int -> Tot (t (op_Multiply 2 x))
+let f x = empty

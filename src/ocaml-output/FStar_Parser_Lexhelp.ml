@@ -192,15 +192,15 @@ end))
 
 # 134 "FStar.Parser.Lexhelp.fst"
 let keywords : (compatibilityMode * Prims.string * FStar_Parser_Parse.token) Prims.list = (let _134_84 = (FStar_List.map (fun s -> (FSHARP, s, FStar_Parser_Parse.RESERVED)) (("atomic")::("break")::("checked")::("component")::("constraint")::("constructor")::("continue")::("eager")::("fixed")::("functor")::("global")::("include")::("mixin")::("parallel")::("process")::("protected")::("pure")::("sealed")::("trait")::("tailcall")::("volatile")::[]))
-in (FStar_List.append (((ALWAYS, "abstract", FStar_Parser_Parse.ABSTRACT))::((ALWAYS, "and", FStar_Parser_Parse.AND))::((ALWAYS, "as", FStar_Parser_Parse.AS))::((ALWAYS, "assert", FStar_Parser_Parse.ASSERT))::((ALWAYS, "assume", FStar_Parser_Parse.ASSUME))::((ALWAYS, "begin", FStar_Parser_Parse.BEGIN))::((FSHARP, "default", FStar_Parser_Parse.DEFAULT))::((ALWAYS, "effect", FStar_Parser_Parse.EFFECT))::((ALWAYS, "else", FStar_Parser_Parse.ELSE))::((ALWAYS, "end", FStar_Parser_Parse.END))::((ALWAYS, "ensures", FStar_Parser_Parse.ENSURES))::((ALWAYS, "exception", FStar_Parser_Parse.EXCEPTION))::((ALWAYS, "exists", FStar_Parser_Parse.EXISTS))::((ALWAYS, "false", FStar_Parser_Parse.FALSE))::((ALWAYS, "finally", FStar_Parser_Parse.FINALLY))::((ALWAYS, "for", FStar_Parser_Parse.FOR))::((ALWAYS, "forall", FStar_Parser_Parse.FORALL))::((ALWAYS, "fun", FStar_Parser_Parse.FUN))::((ALWAYS, "function", FStar_Parser_Parse.FUNCTION))::((ALWAYS, "if", FStar_Parser_Parse.IF))::((ALWAYS, "kind", FStar_Parser_Parse.KIND))::((ALWAYS, "in", FStar_Parser_Parse.IN))::((ALWAYS, "inline", FStar_Parser_Parse.INLINE))::((ALWAYS, "irreducible", FStar_Parser_Parse.IRREDUCIBLE))::((ALWAYS, "lazy", FStar_Parser_Parse.LAZY))::((ALWAYS, "let", FStar_Parser_Parse.LET (false)))::((ALWAYS, "logic", FStar_Parser_Parse.LOGIC))::((ALWAYS, "match", FStar_Parser_Parse.MATCH))::((ALWAYS, "module", FStar_Parser_Parse.MODULE))::((ALWAYS, "new", FStar_Parser_Parse.NEW))::((ALWAYS, "new_effect", FStar_Parser_Parse.NEW_EFFECT))::((ALWAYS, "of", FStar_Parser_Parse.OF))::((ALWAYS, "open", FStar_Parser_Parse.OPEN))::((ALWAYS, "or", FStar_Parser_Parse.OR))::((ALWAYS, "opaque", FStar_Parser_Parse.OPAQUE))::((ALWAYS, "private", FStar_Parser_Parse.PRIVATE))::((FSHARP, "public", FStar_Parser_Parse.PUBLIC))::((ALWAYS, "rec", FStar_Parser_Parse.REC))::((ALWAYS, "requires", FStar_Parser_Parse.REQUIRES))::((ALWAYS, "sub_effect", FStar_Parser_Parse.SUB_EFFECT))::((ALWAYS, "then", FStar_Parser_Parse.THEN))::((ALWAYS, "to", FStar_Parser_Parse.TO))::((ALWAYS, "total", FStar_Parser_Parse.TOTAL))::((ALWAYS, "true", FStar_Parser_Parse.TRUE))::((ALWAYS, "try", FStar_Parser_Parse.TRY))::((ALWAYS, "type", FStar_Parser_Parse.TYPE))::((ALWAYS, "unfoldable", FStar_Parser_Parse.UNFOLDABLE))::((ALWAYS, "val", FStar_Parser_Parse.VAL))::((ALWAYS, "when", FStar_Parser_Parse.WHEN))::((ALWAYS, "with", FStar_Parser_Parse.WITH))::((ALWAYS, "_", FStar_Parser_Parse.UNDERSCORE))::[]) _134_84))
+in (FStar_List.append (((ALWAYS, "abstract", FStar_Parser_Parse.ABSTRACT))::((ALWAYS, "and", FStar_Parser_Parse.AND))::((ALWAYS, "as", FStar_Parser_Parse.AS))::((ALWAYS, "assert", FStar_Parser_Parse.ASSERT))::((ALWAYS, "assume", FStar_Parser_Parse.ASSUME))::((ALWAYS, "begin", FStar_Parser_Parse.BEGIN))::((FSHARP, "default", FStar_Parser_Parse.DEFAULT))::((ALWAYS, "effect", FStar_Parser_Parse.EFFECT))::((ALWAYS, "else", FStar_Parser_Parse.ELSE))::((ALWAYS, "end", FStar_Parser_Parse.END))::((ALWAYS, "ensures", FStar_Parser_Parse.ENSURES))::((ALWAYS, "exception", FStar_Parser_Parse.EXCEPTION))::((ALWAYS, "exists", FStar_Parser_Parse.EXISTS))::((ALWAYS, "false", FStar_Parser_Parse.FALSE))::((ALWAYS, "False", FStar_Parser_Parse.L_FALSE))::((ALWAYS, "finally", FStar_Parser_Parse.FINALLY))::((ALWAYS, "for", FStar_Parser_Parse.FOR))::((ALWAYS, "forall", FStar_Parser_Parse.FORALL))::((ALWAYS, "fun", FStar_Parser_Parse.FUN))::((ALWAYS, "function", FStar_Parser_Parse.FUNCTION))::((ALWAYS, "if", FStar_Parser_Parse.IF))::((ALWAYS, "kind", FStar_Parser_Parse.KIND))::((ALWAYS, "in", FStar_Parser_Parse.IN))::((ALWAYS, "inline", FStar_Parser_Parse.INLINE))::((ALWAYS, "irreducible", FStar_Parser_Parse.IRREDUCIBLE))::((ALWAYS, "lazy", FStar_Parser_Parse.LAZY))::((ALWAYS, "let", FStar_Parser_Parse.LET (false)))::((ALWAYS, "logic", FStar_Parser_Parse.LOGIC))::((ALWAYS, "match", FStar_Parser_Parse.MATCH))::((ALWAYS, "module", FStar_Parser_Parse.MODULE))::((ALWAYS, "new", FStar_Parser_Parse.NEW))::((ALWAYS, "new_effect", FStar_Parser_Parse.NEW_EFFECT))::((ALWAYS, "of", FStar_Parser_Parse.OF))::((ALWAYS, "open", FStar_Parser_Parse.OPEN))::((ALWAYS, "or", FStar_Parser_Parse.OR))::((ALWAYS, "opaque", FStar_Parser_Parse.OPAQUE))::((ALWAYS, "private", FStar_Parser_Parse.PRIVATE))::((FSHARP, "public", FStar_Parser_Parse.PUBLIC))::((ALWAYS, "rec", FStar_Parser_Parse.REC))::((ALWAYS, "requires", FStar_Parser_Parse.REQUIRES))::((ALWAYS, "sub_effect", FStar_Parser_Parse.SUB_EFFECT))::((ALWAYS, "then", FStar_Parser_Parse.THEN))::((ALWAYS, "to", FStar_Parser_Parse.TO))::((ALWAYS, "total", FStar_Parser_Parse.TOTAL))::((ALWAYS, "true", FStar_Parser_Parse.TRUE))::((ALWAYS, "True", FStar_Parser_Parse.L_TRUE))::((ALWAYS, "try", FStar_Parser_Parse.TRY))::((ALWAYS, "type", FStar_Parser_Parse.TYPE))::((ALWAYS, "unfoldable", FStar_Parser_Parse.UNFOLDABLE))::((ALWAYS, "val", FStar_Parser_Parse.VAL))::((ALWAYS, "when", FStar_Parser_Parse.WHEN))::((ALWAYS, "with", FStar_Parser_Parse.WITH))::((ALWAYS, "_", FStar_Parser_Parse.UNDERSCORE))::[]) _134_84))
 
-# 199 "FStar.Parser.Lexhelp.fst"
+# 201 "FStar.Parser.Lexhelp.fst"
 let stringKeywords : Prims.string Prims.list = (FStar_List.map (fun _53_62 -> (match (_53_62) with
 | (_53_58, w, _53_61) -> begin
 w
 end)) keywords)
 
-# 205 "FStar.Parser.Lexhelp.fst"
+# 207 "FStar.Parser.Lexhelp.fst"
 let unreserve_words : Prims.string Prims.list = (FStar_List.choose (fun _53_67 -> (match (_53_67) with
 | (mode, keyword, _53_66) -> begin
 if (mode = FSHARP) then begin
@@ -210,25 +210,25 @@ None
 end
 end)) keywords)
 
-# 208 "FStar.Parser.Lexhelp.fst"
+# 210 "FStar.Parser.Lexhelp.fst"
 let kwd_table : FStar_Parser_Parse.token FStar_Util.smap = (
-# 209 "FStar.Parser.Lexhelp.fst"
+# 211 "FStar.Parser.Lexhelp.fst"
 let tab = (FStar_Util.smap_create 1000)
 in (
-# 210 "FStar.Parser.Lexhelp.fst"
+# 212 "FStar.Parser.Lexhelp.fst"
 let _53_73 = (FStar_List.iter (fun _53_72 -> (match (_53_72) with
 | (mode, keyword, token) -> begin
 (FStar_Util.smap_add tab keyword token)
 end)) keywords)
 in tab))
 
-# 212 "FStar.Parser.Lexhelp.fst"
+# 214 "FStar.Parser.Lexhelp.fst"
 let kwd : Prims.string  ->  FStar_Parser_Parse.token Prims.option = (fun s -> (FStar_Util.smap_try_find kwd_table s))
 
-# 213 "FStar.Parser.Lexhelp.fst"
+# 215 "FStar.Parser.Lexhelp.fst"
 exception ReservedKeyword of ((Prims.string * FStar_Range.range))
 
-# 213 "FStar.Parser.Lexhelp.fst"
+# 215 "FStar.Parser.Lexhelp.fst"
 let is_ReservedKeyword = (fun _discr_ -> (match (_discr_) with
 | ReservedKeyword (_) -> begin
 true
@@ -237,16 +237,16 @@ end
 false
 end))
 
-# 213 "FStar.Parser.Lexhelp.fst"
+# 215 "FStar.Parser.Lexhelp.fst"
 let ___ReservedKeyword____0 : Prims.exn  ->  (Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | ReservedKeyword (_53_77) -> begin
 _53_77
 end))
 
-# 214 "FStar.Parser.Lexhelp.fst"
+# 216 "FStar.Parser.Lexhelp.fst"
 exception IndentationProblem of ((Prims.string * FStar_Range.range))
 
-# 214 "FStar.Parser.Lexhelp.fst"
+# 216 "FStar.Parser.Lexhelp.fst"
 let is_IndentationProblem = (fun _discr_ -> (match (_discr_) with
 | IndentationProblem (_) -> begin
 true
@@ -255,31 +255,31 @@ end
 false
 end))
 
-# 214 "FStar.Parser.Lexhelp.fst"
+# 216 "FStar.Parser.Lexhelp.fst"
 let ___IndentationProblem____0 : Prims.exn  ->  (Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | IndentationProblem (_53_79) -> begin
 _53_79
 end))
 
-# 216 "FStar.Parser.Lexhelp.fst"
+# 218 "FStar.Parser.Lexhelp.fst"
 type lexargs =
 {getSourceDirectory : Prims.unit  ->  Prims.string; contents : Prims.string}
 
-# 216 "FStar.Parser.Lexhelp.fst"
+# 218 "FStar.Parser.Lexhelp.fst"
 let is_Mklexargs : lexargs  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklexargs"))))
 
-# 221 "FStar.Parser.Lexhelp.fst"
+# 223 "FStar.Parser.Lexhelp.fst"
 let mkLexargs = (fun _53_86 -> (match (_53_86) with
 | (srcdir, filename, contents) -> begin
 {getSourceDirectory = srcdir; contents = contents}
 end))
 
-# 226 "FStar.Parser.Lexhelp.fst"
+# 228 "FStar.Parser.Lexhelp.fst"
 let kwd_or_id : lexargs  ->  FStar_Range.range  ->  Prims.string  ->  FStar_Parser_Parse.token = (fun args r s -> (match ((kwd s)) with
 | Some (v) -> begin
 if (v = FStar_Parser_Parse.RESERVED) then begin
 (
-# 231 "FStar.Parser.Lexhelp.fst"
+# 233 "FStar.Parser.Lexhelp.fst"
 let _53_92 = (let _134_127 = (let _134_126 = (FStar_Range.string_of_range r)
 in (FStar_Util.format2 "The keyword \'%s\' is reserved for future use by F#. (%s)" s _134_126))
 in (FStar_Util.print_string _134_127))

@@ -74,7 +74,8 @@ let parse fn =
         | _ -> fileOrFragment in
     Inl frags
   with
-    | Absyn.Syntax.Error(msg, r) ->
+    | Absyn.Syntax.Error(msg, r)
+    | Syntax.Syntax.Error(msg, r) ->
       Inr (msg, r)
     | e ->
       let pos = lexbuf.EndPos in
