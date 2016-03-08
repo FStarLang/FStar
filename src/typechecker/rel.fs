@@ -318,7 +318,7 @@ let base_and_refinement env wl t1 =
         | Tm_app _ ->
             if norm
             then (t1, None)
-            else let t2', refinement = aux true (normalize_refinement [N.WHNF] env wl t1) in
+            else let t2', refinement = aux true (normalize_refinement [N.WHNF;N.UnfoldUntil Delta_constant] env wl t1) in
                  begin match refinement with
                     | None -> t1, None (* no refinement found ... so revert to the original type, without expanding defs *)
                     | _ -> t2', refinement
