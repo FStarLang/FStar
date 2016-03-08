@@ -73,8 +73,8 @@ assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
 assume type has_type : #a:Type -> a -> Type -> Type0
 
 (* A coercion down to universe 0 *)
-type squash (p:Type) = u:unit{p}
-
+assume type squash : Type -> Type0
+  
 (* forall (x:a). p x : specialized to Type#0 *)
 type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
 
@@ -185,6 +185,9 @@ type double = float
 assume val strcat : string -> string -> Tot string
 assume new type uint8 : Type0
 type byte = uint8
+
+assume val reveal_squash : #p:Type -> squash p -> Tot (u:unit{p})
+//let reveal_squash #p x = x
 
 type list (a:Type) =
   | Nil  : list a
