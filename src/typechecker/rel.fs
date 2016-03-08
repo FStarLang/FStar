@@ -584,8 +584,32 @@ let head_match = function
     | MisMatch(i, j) -> MisMatch(i, j)
     | _ -> HeadMatch
 
+let rec delta_depth_of_term t = 
+    let t = Util.unmeta t in
+    match t.n with 
+    | Tm_meta _
+    | Tm_delayed _  -> failwith "Impossible"
+    | Tm_unknown
+    | Tm_bvar _
+    | Tm_name _
+    | Tm_uvar _ 
+    | Tm_let _
+    | Tm_match _ -> None
+    | Tm_uinst(t, _)
+    | Tm_ascribed(t, _, _)
+    | Tm_app(t, _)
+    | Tm_refine({sort=t}, _) -> delta_depth_of_term t
+    | Tm_constant _ 
+    | Tm_type _ 
+    | Tm_arrow _
+    | Tm_abs _ -> Some Delta_constant
+    | Tm_fvar fv -> Some fv.fv_delta
+
+
 let rec head_matches t1 t2 : match_result =
-  match (Util.unmeta t1).n, (Util.unmeta t2).n with
+  let t1 = Util.unmeta t1 in
+  let t2 = Util.unmeta t2 in
+  match t1.n, t2.n with
     | Tm_name x, Tm_name y -> if S.bv_eq x y then FullMatch else MisMatch(None, None)
     | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some f.fv_delta, Some f.fv_delta)
     | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches f g |> head_match
@@ -604,42 +628,42 @@ let rec head_matches t1 t2 : match_result =
     | Tm_app(head, _), _ -> head_matches head t2
     | _, Tm_app(head, _) -> head_matches t1 head
 
-    | _ -> MisMatch(None, None)
+    | _ -> MisMatch(delta_depth_of_term t1, delta_depth_of_term t2)
 
 (* Does t1 match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let success d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
     let fail r = (r, None) in
     let rec aux d t1 t2 =
-        let r = head_matches t1 t2 in
-        match r with
-          | MisMatch _ ->
-            if d=3 then fail r //already delta normal
-            else let steps =
-                      if d=0
-                        then [N.Inline; N.WHNF]
-                        else if d=1
-                        then [N.UnfoldUntil Delta_constant; N.WHNF]
-                        else [N.UnfoldUntil Delta_constant] in
-                     let t1' = normalize_refinement steps env wl t1 in
-                     let t2' = normalize_refinement steps env wl t2 in
-                     aux (d+1) t1' t2'
-         | _ -> success d r t1 t2 in
 //        let r = head_matches t1 t2 in
 //        match r with
-//            | MisMatch(Some d1, Some d2) when d1=d2 -> //incompatible
-//              fail r
-//            
-//            | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
-//              let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
-//              let t1, t2 = if d1_greater_than_d2
-//                           then normalize_refinement [N.UnfoldUntil d2; N.WHNF] env wl t1, t2 
-//                           else t1, normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
-//              aux (d + 1) t1 t2
-//            
-//            | MisMatch _ -> fail r
-//
-//            | _ -> success d r t1 t2 in
+//          | MisMatch _ ->
+//            if d=3 then fail r //already delta normal
+//            else let steps =
+//                      if d=0
+//                        then [N.Inline; N.WHNF]
+//                        else if d=1
+//                        then [N.UnfoldUntil Delta_constant; N.WHNF]
+//                        else [N.UnfoldUntil Delta_constant] in
+//                     let t1' = normalize_refinement steps env wl t1 in
+//                     let t2' = normalize_refinement steps env wl t2 in
+//                     aux (d+1) t1' t2'
+//         | _ -> success d r t1 t2 in
+        let r = head_matches t1 t2 in
+        match r with
+            | MisMatch(Some d1, Some d2) when d1=d2 -> //incompatible
+              fail r
+            
+            | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
+              let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
+              let t1, t2 = if d1_greater_than_d2
+                           then normalize_refinement [N.UnfoldUntil d2; N.WHNF] env wl t1, t2 
+                           else t1, normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
+              aux (d + 1) t1 t2
+            
+            | MisMatch _ -> fail r
+
+            | _ -> success d r t1 t2 in
     aux 0 t1 t2
 
 type tc =
