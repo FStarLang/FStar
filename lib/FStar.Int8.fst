@@ -1,9 +1,6 @@
-(*--build-config
-  options: --admit_fsi FStar.Set;
-  other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
-  --*)
-
 module FStar.Int8
+
+
 val min_value_int : int
 let min_value_int = -128
 

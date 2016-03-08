@@ -25,27 +25,32 @@ open FStar.Util
 open FStar.Absyn
 open FStar.Absyn.Syntax
 
-let print_error msg r =
-  Util.print_string (Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg)
 
 let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
 
 type fragment =
     | Empty
-    | Modul of (DesugarEnv.env * Syntax.modul)
-    | Decls of (DesugarEnv.env * Syntax.sigelts)
+    | Modul of AST.modul
+    | Decls of list<AST.decl>
 
-let parse_fragment curmod env frag : fragment =
+let parse_fragment frag : fragment =
     match ParseIt.parse (Inr frag) with
     | Inl (Inl []) ->
       Empty
 
     | Inl (Inl [modul]) -> //interactive mode: module
-      let env, modul = Desugar.desugar_partial_modul curmod env modul in
-      Modul (env, modul)
+      Modul modul
 
     | Inl (Inr decls) -> //interactive mode: more decls
-      Decls (Desugar.desugar_decls env decls)
+      Decls decls 
+      
+//      (Desugar.desugar_decls env decls)
+//
+//      let env, modul = Desugar.desugar_partial_modul curmod env modul in
+//      Modul (env, modul)
+//
+//    | Inl (Inr decls) -> //interactive mode: more decls
+//      Decls (Desugar.desugar_decls env decls)
 
     | Inl (Inl _) ->
       raise (Absyn.Syntax.Err("Refusing to check more than one module at a time incrementally"))
@@ -54,29 +59,15 @@ let parse_fragment curmod env frag : fragment =
       raise (Absyn.Syntax.Error(msg, r))
 
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
-let parse_file_raw fn =
+let parse_file fn =
   match ParseIt.parse (Inl fn) with
   | Inl (Inl ast) ->
     ast
 
   | Inl (Inr _) ->
-    Util.print1 "%s: Expected a module\n" fn;
+    Util.print1_error "%s: expected a module\n" fn;
     exit 1
 
   | Inr (msg, r) ->
     Util.print_string <| Print.format_error r msg;
     exit 1
-
-
-(* Returns a desugared AST; may read it as a (deprecated) binary file for
-   verified modules. *)
-let parse_file env fn =
-  if is_cache_file fn then
-    let full_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ fn in
-    let m = SSyntax.deserialize_modul (get_oreader full_name) in
-    Desugar.add_modul_to_env m env, [m]
-  else
-    Desugar.desugar_file env (parse_file_raw fn)
-
-let read_build_config file =
-  ParseIt.read_build_config file true

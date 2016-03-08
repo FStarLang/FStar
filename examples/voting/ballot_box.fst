@@ -19,11 +19,16 @@
 
 
 module Ballot_box
-open Bytes
+open FStar.Bytes
 open Crypto_interface
 open Assumptions
 
-(* -------------- Ballot Box Implementation -------------- *)
+val ballotBox: pub_id_t -> priv_id_t
+	 -> ca:cipher{(FromAboth (fst ca) (snd ca)) /\ (exists (mLa:bytes) (mRa:bytes).((Encryptedboth mLa mRa (fst ca) (snd ca)) /\ (Marshboth (fst v1) (snd v2) mLa mRa)))}
+	 -> cb:cipher{(FromBboth (fst cb) (snd cb)) /\ (exists (mLb:bytes) (mRb:bytes).((Encryptedboth mLb mRb (fst cb) (snd cb)) /\ (Marshboth (fst v2) (snd v1) mLb mRb)))}
+	 -> co:cipher
+	 -> error
+	 -> result
 let ballotBox pkBB skBB ca cb co e =
   if (check_val pkBB ca) && (check_val pkBB cb) && (check_val pkBB co) && (co <> ca) && (co <> cb) then
     (* Note: If the intruder send an homo encryption of ca and ca then, check_val pkBB co = false and protocol still typechecks *)

@@ -31,6 +31,7 @@ open FStar.Util
 
 open FStar.Absyn
 open FStar.Absyn.Syntax
+open FStar.Ident
 
 type map = smap<string>
 
@@ -59,11 +60,22 @@ let print_map (m: map): unit =
     Util.print2 "%s: %s\n" k (must (smap_try_find m k))
   ) (List.unique (smap_keys m))
 
+
+let lowercase_module_name f =
+  match check_and_strip_suffix (basename f) with
+  | Some longname ->
+      String.lowercase longname
+  | None ->
+      raise (Err (Util.format1 "not a valid FStar file: %s\n" f))
+
 (** List the contents of all include directories, then build a map from long
-    names (e.g. a.b) to absolute filenames (/path/to/A.B.fst). Long names are all
+    names (e.g. a.b) to filenames (/path/to/A.B.fst). Long names are all
     normalized to lowercase. *)
-let build_map (): map =
-  let include_directories = Options.get_include_path (getcwd ()) in
+let build_map (filenames: list<string>): map =
+  let include_directories = Options.get_include_path () in
+  let include_directories = List.map normalize_file_path include_directories in
+  let include_directories = List.unique include_directories in
+  let cwd = normalize_file_path (getcwd ()) in
   let map = smap_create 41 in
   List.iter (fun d ->
     if file_exists d then
@@ -73,22 +85,27 @@ let build_map (): map =
         match check_and_strip_suffix f with
         | Some longname ->
             let key = String.lowercase longname in
+            let full_path = if d = cwd then f else join_paths d f in
             begin match smap_try_find map key with
             | Some existing_file ->
                 if String.lowercase existing_file = String.lowercase f then
-                  raise (Err (Util.format1 "I'm case insensitive, and I found the same file twice (%s)" f));
+                  raise (Err (Util.format1 "I'm case insensitive, and I found the same file twice (%s)\n" f));
                 if is_interface existing_file = is_interface f then
-                  raise (Err (Util.format1 "Found both a .fs and a .fst (or both a .fsi and a .fsti) (%s)" f));
+                  raise (Err (Util.format1 "Found both a .fs and a .fst (or both a .fsi and a .fsti) (%s)\n" f));
                 (* Note: we always record a dependency against the interface, if found. *)
                 if not (is_interface existing_file) then
-                  smap_add map key (join_paths d f)
+                  smap_add map key full_path
             | None ->
-                smap_add map key (join_paths d f)
+                smap_add map key full_path
             end
         | None ->
             ()
     ) files
   ) include_directories;
+  (* All the files we've been given on the command-line must be valid FStar files. *)
+  List.iter (fun f ->
+    smap_add map (lowercase_module_name f) f
+  ) filenames;
   map
 
 
@@ -130,8 +147,8 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
 
 exception Exit
 
-(** Parse a file, walk its AST, return a list of FStar compilation units it
-    depends on. *)
+(** Parse a file, walk its AST, return a list of FStar lowercased module names
+    it depends on. *)
 let collect_one (original_map: smap<string>) (filename: string): list<string> =
   let deps = ref [] in
   let add_dep d =
@@ -144,12 +161,12 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
     let key = lowercase_join_longident lid true in
     begin match smap_try_find original_map key with
     | Some filename ->
-        add_dep filename
+        add_dep (lowercase_module_name filename)
     | None ->
         let r = enter_namespace original_map working_map key in
         if not r then
           Util.fprint stderr "Warning: no modules in namespace %s and no file with \
-          that name either\n" [string_of_lid lid true]
+            that name either\n" [string_of_lid lid true]
     end
   in
 
@@ -170,7 +187,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
         !found
     in
     (* All the dependencies of FStar.All.fst, in order. *)
-    let ordered = [ "fstar"; "prims"; "fstar.set"; "fstar.heap"; "fstar.st"; "fstar.all" ] in
+    let ordered = [ "fstar"; "prims"; "fstar.functionalextensionality"; "fstar.set"; "fstar.heap"; "fstar.st"; "fstar.all" ] in
     (* The [open] statements that we wish to prepend. *)
     let desired_opens = [ Const.fstar_ns_lid; Const.prims_lid; Const.st_lid; Const.all_lid ] in
     let me = String.lowercase (must (check_and_strip_suffix (basename filename))) in
@@ -192,8 +209,9 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
   and collect_file = function
     | [ modul ] ->
         collect_module modul
-    | _ ->
-        raise (Err (Util.format1 "File %s does not respect the one module per file convention" filename))
+    | modules ->
+        Util.fprint stderr "Warning: file %s does not respect the one module per file convention\n" [ filename ];
+        List.iter collect_module modules
 
   and collect_module = function
     | Module (lid, decls)
@@ -207,7 +225,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
   and collect_decl = function
     | Open lid ->
         record_open lid
-    | ToplevelLet (_, patterms) ->
+    | ToplevelLet (_, _, patterms) ->
         List.iter (fun (_, t) -> collect_term t) patterms
     | KindAbbrev (_, binders, t) ->
         collect_term t;
@@ -280,9 +298,9 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
         let key = lowercase_join_longident lid false in
         begin match smap_try_find working_map key with
         | Some filename ->
-            add_dep filename
+            add_dep (lowercase_module_name filename)
         | None ->
-            if List.length lid.ns > 0 then
+            if List.length lid.ns > 0 && !Options.debug <> [] then
               Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
         end
 
@@ -374,36 +392,32 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
     collect_term t2
 
   in
-  let ast = Driver.parse_file_raw filename in
+  let ast = Driver.parse_file filename in
   collect_file ast;
   !deps
-
-
-(** A list of filenames along with the direct dependencies for each file. *)
-type t = list<(string * list<string>)>
 
 type color = | White | Gray | Black
 
 (** Collect the dependencies for a list of given files. *)
-let collect (filenames: list<string>): t =
-  (* The dependency graph; keys are filenames, values = list of filenames this
-   * file depends on. *)
+let collect (filenames: list<string>): _ =
+  (* The dependency graph; keys are lowercased module names, values = list of
+   * lowercased module names this file depends on. *)
   let graph = smap_create 41 in
 
-  (* A map from lowercase paths (e.g. [a.b.c]) to the corresponding filenames
-   * (e.g. [A.B.C.fst]). Consider this map immutable from there on. *)
-  let m = build_map () in
+  (* A map from lowercase module names (e.g. [a.b.c]) to the corresponding
+   * filenames (e.g. [/where/to/find/A.B.C.fst]). Consider this map
+   * immutable from there on. *)
+  let m = build_map filenames in
 
-  (* This works because we check in [build_map] that there are no collisions
-   * (i.e. no two files have the same name) in the include path. *)
-  let rec discover_one f =
-    let short = basename f in
-    if smap_try_find graph short = None then
-      let deps = collect_one m f in
-      smap_add graph short (deps, White);
+  (* This function takes a lowercase module name. *)
+  let rec discover_one key =
+    if smap_try_find graph key = None then
+      let filename = must (smap_try_find m key) in
+      let deps = collect_one m filename in
+      smap_add graph key (deps, White);
       List.iter discover_one deps
   in
-  List.iter discover_one filenames;
+  List.iter discover_one (List.map lowercase_module_name filenames);
 
   (* At this point, we have the (immediate) dependency graph of all the files. *)
   let print_graph () =
@@ -412,13 +426,14 @@ let collect (filenames: list<string>): t =
     ) (List.unique (smap_keys graph))
   in
 
+  let topologically_sorted = ref [] in
+
   (* Compute the transitive closure. *)
-  let rec discover f =
-    let short = basename f in
-    let direct_deps, color = must (smap_try_find graph short) in
+  let rec discover key =
+    let direct_deps, color = must (smap_try_find graph key) in
     match color with
     | Gray ->
-        Util.print1 "Recursive dependency on file %s\n" f;
+        Util.print1 "Warning: recursive dependency on module %s\n" key;
         print_string "Here's the (non-transitive) dependency graph:\n";
         print_graph ();
         print_string "\n";
@@ -429,36 +444,48 @@ let collect (filenames: list<string>): t =
         direct_deps
     | White ->
         (* Unvisited. Compute. *)
-        smap_add graph short (direct_deps, Gray);
+        smap_add graph key (direct_deps, Gray);
         let all_deps = List.unique (List.flatten (List.map (fun dep ->
           dep :: discover dep
         ) direct_deps)) in
-        smap_add graph short (all_deps, Black);
+        (* Mutate the graph (it now remembers transitive dependencies). *)
+        smap_add graph key (all_deps, Black);
+        (* Also build the topological sort (Tarjan's algorithm). *)
+        topologically_sorted := key :: !topologically_sorted;
+        (* Returns transitive dependencies *)
         all_deps
   in
 
-  List.map (fun f -> f, List.rev (discover f)) filenames
+  let must_find k =
+    must (smap_try_find m k)
+  in
+  let by_target = List.map (fun k ->
+    let deps = List.rev (discover k) in
+    must_find k, List.map must_find deps
+  ) (smap_keys graph) in
+  let topologically_sorted = List.map must_find !topologically_sorted in
+
+  by_target, topologically_sorted
 
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
     format. *)
-let print_make (deps: t): unit =
+let print_make (deps: list<(string * list<string>)>): unit =
   List.iter (fun (f, deps) ->
-    let deps = List.map (fun s -> replace_string s " " "\\ " |> basename) deps in
+    let deps = List.map (fun s -> replace_string s " " "\\ ") deps in
     Util.print2 "%s: %s\n" f (String.concat " " deps)
   ) deps
 
-let print_nubuild (deps: t): unit =
-  let f, deps = List.hd (List.rev deps) in
-  List.iter print_endline deps
+let print_nubuild (l: list<string>): unit =
+  List.iter print_endline (List.rev l)
 
-let print (deps: t): unit =
+let print (deps: _): unit =
   match !Options.dep with
   | Some "nubuild" ->
-      print_nubuild deps
+      print_nubuild (snd deps)
   | Some "make" ->
-      print_make deps
+      print_make (fst deps)
   | Some _ ->
-      failwith "Unknown tool for --dep"
+      raise (Err "unknown tool for --dep\n")
   | None ->
       assert false

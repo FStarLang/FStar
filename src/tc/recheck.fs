@@ -24,7 +24,7 @@ open FStar.Absyn.Util
 open FStar.Absyn.Const
 open FStar.Util
 open FStar.Absyn.Util
-
+open FStar.Const
 
 let oktype = Some ktype
 let t_unit   = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.unit_lid   ktype)
@@ -54,12 +54,16 @@ let rec recompute_kind t =
     let recompute t = match t.n with
         | Typ_delayed _ -> recompute_kind (Util.compress_typ t)
         | Typ_btvar a -> a.sort
-        | Typ_const tc -> tc.sort
+        | Typ_const tc -> 
+          begin match tc.sort.n with 
+            | Kind_unknown -> failwith (Util.format1 "UNKNOWN KIND FOR %s" (Print.typ_to_string t))
+            | _ -> tc.sort
+          end
         | Typ_fun _
         | Typ_refine _ -> ktype
         | Typ_ascribed (_, k)
         | Typ_uvar(_, k) -> k
-        | Typ_meta(Meta_labeled _)
+        | Typ_meta(Meta_labeled _) 
         | Typ_meta(Meta_slack_formula _)
         | Typ_meta(Meta_pattern _) -> ktype
         | Typ_meta(Meta_named(t, _)) -> recompute_kind t
@@ -80,7 +84,9 @@ let rec recompute_kind t =
                 | b::bs, a::args ->
                     let subst = Util.subst_formal b a :: subst in
                     aux subst bs args
-                | _ -> failwith (Util.format4 "Head kind is %s\nToo many arguments in type %s; result kind is %s\nwith %s remaining args\n" (Print.kind_to_string k1) (Print.tag_of_typ t) (Print.kind_to_string k) (List.length args |> string_of_int)) in
+                | _ -> failwith (Util.format5 "(%s) HEAD KIND is %s\nToo many arguments in type %s; result kind is %s\nwith %s remaining args\n" 
+                    (Range.string_of_range t.pos)
+                    (Print.kind_to_string k1) (Print.tag_of_typ t) (Print.kind_to_string k) (List.length args |> string_of_int)) in
               aux [] bs args
            end
         | Typ_unknown -> kun in

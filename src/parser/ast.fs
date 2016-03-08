@@ -15,25 +15,35 @@
 *)
 #light "off"
 module FStar.Parser.AST
-open FStar.Absyn
-open FStar.Absyn.Syntax
+//open FStar.Absyn
+module C = FStar.Absyn.Const
+module U = FStar.Absyn.Util
+module P = FStar.Absyn.Print
+module S = FStar.Absyn.Syntax
+//open FStar.Absyn.Syntax
 open FStar.Range
+open FStar.Ident
 open FStar
 open FStar.Util
+open FStar.Const
 
 (* AST produced by the parser, before desugaring
    It is not stratified: a single type called "term" containing
    expressions, formulas, types, and so on
  *)
 type level = | Un | Expr | Type | Kind | Formula
-type lid = Syntax.LongIdent
 type imp =
     | FsTypApp
     | Hash
     | Nothing
+type arg_qualifier =
+    | Implicit
+    | Equality
+type aqual = option<arg_qualifier>
+
 type term' =
   | Wild
-  | Const     of Syntax.sconst
+  | Const     of sconst
   | Op        of string * list<term>
   | Tvar      of ident
   | Var       of lid
@@ -68,11 +78,11 @@ and binder' =
   | Annotated of ident * term
   | TAnnotated of ident * term
   | NoName of term
-and binder = {b:binder'; brange:range; blevel:level; aqual:Syntax.aqual}
+and binder = {b:binder'; brange:range; blevel:level; aqual:aqual}
 
 and pattern' =
   | PatWild
-  | PatConst    of Syntax.sconst
+  | PatConst    of sconst
   | PatApp      of pattern * list<pattern>
   | PatVar      of ident * bool         (* flag marks an implicit *)
   | PatName     of lid
@@ -96,7 +106,24 @@ type tycon =
   | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term)>
   | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * bool)> (* using 'of' notion *)
 
-type qualifiers = list<Syntax.qualifier>
+type qualifier =
+  | Private
+  | Abstract
+  | Assumption
+  | DefaultEffect
+  | TotalEffect
+  | Effect
+  | New
+  | Inline                                 //a definition that *should* always be unfolded by the normalizer
+  | Unfoldable                             //a definition that may be unfolded by the normalizer, but only if necessary (default)
+  | Irreducible                            //a definition that can never be unfolded by the normalizer
+  //old qualifiers
+  | Opaque
+  | Logic
+
+ 
+ 
+type qualifiers = list<qualifier>
 
 type lift = {
   msource: lid;
@@ -104,10 +131,16 @@ type lift = {
   lift_op: term
 }
 
+type pragma =
+  | SetOptions of string
+  | ResetOptions
+
 type decl' =
+  | TopLevelModule of lid
   | Open of lid
+  | ModuleAbbrev of ident * lid
   | KindAbbrev of ident * list<binder> * knd
-  | ToplevelLet of bool * list<(pattern * term)>
+  | ToplevelLet of qualifiers * bool * list<(pattern * term)>
   | Main of term
   | Assume of qualifiers * ident * term
   | Tycon of qualifiers * list<tycon>
@@ -122,12 +155,20 @@ and effect_decl =
   | RedefineEffect of ident * list<binder> * term
 
 type modul =
-  | Module of LongIdent * list<decl>
-  | Interface of LongIdent * list<decl> * bool (* flag to mark admitted interfaces *)
+  | Module of lid * list<decl>
+  | Interface of lid * list<decl> * bool (* flag to mark admitted interfaces *)
 type file = list<modul>
 type inputFragment = either<file,list<decl>>
 
 (********************************************************************************)
+let check_id id = 
+    if !FStar.Options.universes
+    then let first_char = String.substring id.idText 0 1 in
+         if String.lowercase first_char = first_char
+         then ()
+         else raise (FStar.Syntax.Syntax.Error(Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText, id.idRange))
+    else ()
+
 let mk_decl d r = {d=d; drange=r}
 let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
 let mk_term t r l = {tm=t; range=r; level=l}
@@ -136,7 +177,11 @@ let un_curry_abs ps body = match body.tm with
     | Abs(p', body') -> Abs(ps@p', body')
     | _ -> Abs(ps, body)
 let mk_function branches r1 r2 =
-  let x = Util.genident (Some r1) in
+  let x = 
+    if !FStar.Options.universes
+    then let i = FStar.Syntax.Syntax.next_id () in
+         Ident.gen r1 
+    else U.genident (Some r1) in
   mk_term (Abs([mk_pattern (PatVar(x,false)) r1],
                mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
     r2 Expr
@@ -156,13 +201,13 @@ let rec term_to_string (x:term) = match x.tm with
   | Requires (t, _) -> Util.format1 "(requires %s)" (term_to_string t)
   | Ensures (t, _) -> Util.format1 "(ensures %s)" (term_to_string t)
   | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
-  | Const c -> Print.const_to_string c
+  | Const c -> P.const_to_string c
   | Op(s, xs) -> Util.format2 "%s(%s)" s (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
   | Tvar id -> id.idText
   | Var l
-  | Name l -> Print.sli l
+  | Name l -> l.str
   | Construct(l, args) ->
-    Util.format2 "(%s %s)" (Print.sli l) (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
+    Util.format2 "(%s %s)" l.str (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
   | Abs(pats, t) when (x.level = Expr) ->
     Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | Abs(pats, t) when (x.level = Type) ->
@@ -186,11 +231,11 @@ let rec term_to_string (x:term) = match x.tm with
   | Ascribed(t1, t2) ->
     Util.format2 "(%s : %s)" (t1|> term_to_string) (t2|> term_to_string)
   | Record(Some e, fields) ->
-    Util.format2 "{%s with %s}" (e|> term_to_string) (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (Print.sli l) (e|> term_to_string)) fields)
+    Util.format2 "{%s with %s}" (e|> term_to_string) (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (l.str) (e|> term_to_string)) fields)
   | Record(None, fields) ->
-    Util.format1 "{%s}" (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (Print.sli l) (e|> term_to_string)) fields)
+    Util.format1 "{%s}" (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (l.str) (e|> term_to_string)) fields)
   | Project(e,l) ->
-    Util.format2 "%s.%s" (e|> term_to_string) (Print.sli l)
+    Util.format2 "%s.%s" (e|> term_to_string) (l.str)
   | Product([], t) ->
     term_to_string t
   | Product(b::hd::tl, t) ->
@@ -235,35 +280,37 @@ and binder_to_string x =
 
 and pat_to_string x = match x.pat with
   | PatWild -> "_"
-  | PatConst c -> Print.const_to_string c
+  | PatConst c -> P.const_to_string c
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
   | PatTvar (i, true)
   | PatVar (i, true) -> Util.format1 "#%s" i.idText
   | PatTvar(i, false)
   | PatVar (i, false) -> i.idText
-  | PatName l -> Print.sli l
+  | PatName l -> l.str
   | PatList l -> Util.format1 "[%s]" (to_string_l "; " pat_to_string l)
   | PatTuple (l, false) -> Util.format1 "(%s)" (to_string_l ", " pat_to_string l)
   | PatTuple (l, true) -> Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l)
-  | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" (Print.sli f) (e |> pat_to_string)) l)
+  | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" (f.str) (e |> pat_to_string)) l)
   | PatOr l ->  to_string_l "|\n " pat_to_string l
   | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
 
 let error msg tm r =
  let tm = tm |> term_to_string in
  let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in
- raise (Error(msg^"\n"^tm, r))
+ if !FStar.Options.universes
+ then raise (FStar.Syntax.Syntax.Error(msg^"\n"^tm, r))
+ else raise (S.Error(msg^"\n"^tm, r))
 
-let consPat r hd tl = PatApp(mk_pattern (PatName Const.cons_lid) r, [hd;tl])
-let consTerm r hd tl = mk_term (Construct(Const.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
-let lexConsTerm r hd tl = mk_term (Construct(Const.lexcons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
+let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
+let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
+let lexConsTerm r hd tl = mk_term (Construct(C.lexcons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
 
 let mkConsList r elts =
-  let nil = mk_term (Construct(Const.nil_lid, [])) r Expr in
+  let nil = mk_term (Construct(C.nil_lid, [])) r Expr in
     List.fold_right (fun e tl -> consTerm r e tl) elts nil
 
 let mkLexList r elts =
-  let nil = mk_term (Construct(Const.lextop_lid, [])) r Expr in
+  let nil = mk_term (Construct(C.lextop_lid, [])) r Expr in
   List.fold_right (fun e tl -> lexConsTerm r e tl) elts nil
 
 let mkApp t args r = match args with
@@ -273,10 +320,10 @@ let mkApp t args r = match args with
       | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
 
 let mkRefSet r elts =
-  let empty = mk_term (Var(Util.set_lid_range Const.set_empty r)) r Expr in
-  let ref_constr = mk_term (Var (Util.set_lid_range Const.heap_ref r)) r Expr in
-  let singleton = mk_term (Var (Util.set_lid_range Const.set_singleton r)) r Expr in
-  let union = mk_term (Var(Util.set_lid_range Const.set_union r)) r Expr in
+  let empty = mk_term (Var(set_lid_range C.set_empty r)) r Expr in
+  let ref_constr = mk_term (Var (set_lid_range C.heap_ref r)) r Expr in
+  let singleton = mk_term (Var (set_lid_range C.set_singleton r)) r Expr in
+  let union = mk_term (Var(set_lid_range C.set_union r)) r Expr in
   List.fold_right (fun e tl ->
     let e = mkApp ref_constr [(e, Nothing)] r in
     let single_e = mkApp singleton [(e, Nothing)] r in
@@ -291,10 +338,10 @@ let mkExplicitApp t args r = match args with
 let mkAdmitMagic r =
     let unit_const = mk_term(Const Const_unit) r Expr in
     let admit =
-        let admit_name = mk_term(Var(Util.set_lid_range Const.admit_lid r)) r Expr in
+        let admit_name = mk_term(Var(set_lid_range C.admit_lid r)) r Expr in
         mkExplicitApp admit_name [unit_const] r in
     let magic =
-        let magic_name = mk_term(Var(Util.set_lid_range Const.magic_lid r)) r Expr in
+        let magic_name = mk_term(Var(set_lid_range C.magic_lid r)) r Expr in
         mkExplicitApp magic_name [unit_const] r in
     let admit_magic = mk_term(Seq(admit, magic)) r Expr in
     admit_magic
@@ -322,11 +369,17 @@ let mkFsTypApp t args r =
   mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
 
 let mkTuple args r =
-  let cons = Util.mk_tuple_data_lid (List.length args) r in
+  let cons = 
+    if !FStar.Options.universes
+    then FStar.Syntax.Util.mk_tuple_data_lid (List.length args) r
+    else U.mk_tuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkDTuple args r =
-  let cons = Util.mk_dtuple_data_lid (List.length args) r in
+  let cons = 
+        if !FStar.Options.universes
+        then FStar.Syntax.Util.mk_dtuple_data_lid (List.length args) r
+        else U.mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkRefinedBinder id t refopt m implicit =

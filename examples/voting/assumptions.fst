@@ -19,7 +19,7 @@
 
 
 module Assumptions
-open Bytes
+open FStar.Bytes
 open Crypto_interface
 
 (* -------------- Global Types -------------- *)

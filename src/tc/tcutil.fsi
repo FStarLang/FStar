@@ -23,6 +23,7 @@ open FStar.Absyn
 open FStar.Tc.Env
 open FStar.Tc.Rel
 open FStar.Absyn.Syntax
+type lcomp_with_binder = option<Env.binding> * lcomp
 
 val report: env -> list<string> -> unit
 val new_kvar : env -> knd
@@ -47,7 +48,6 @@ val mk_basic_dtuple_type: env -> int -> typ
 val extract_lb_annotation: env -> typ -> exp -> (exp * typ * bool)
 
 (* most operations on computations are lazy *)
-type lcomp_with_binder = option<Env.binding> * lcomp
 val lcomp_of_comp: comp -> lcomp
 val subst_lcomp: subst -> lcomp -> lcomp
 val is_pure_effect: env -> lident -> bool
@@ -64,6 +64,7 @@ val maybe_assume_result_eq_pure_term: env -> exp -> lcomp -> lcomp
 val close_comp: env -> list<binding> -> lcomp -> lcomp
 val refresh_comp_label: env -> bool -> lcomp -> lcomp
 val check_top_level: env -> guard_t -> lcomp -> bool*comp
+val check_unresolved_implicits: guard_t -> unit
 
 (* Except these two, which require fully evaluated comp types *)
 val check_comp: env -> exp -> comp -> comp -> exp * comp * guard_t

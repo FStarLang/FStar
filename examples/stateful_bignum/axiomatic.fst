@@ -1,6 +1,3 @@
-(*--build-config 
-  --*)
-
 (* STATUS :
    Useful axioms to handle integer mathematical formulas.
    TODO : Merge together close axioms, and prove those that

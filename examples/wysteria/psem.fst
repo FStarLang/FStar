@@ -1,15 +1,9 @@
-(*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi Ffibridge --__temp_no_proj PSemantics --verify_module PSemantics;
-    other-files:FStar.Ghost.fst FStar.List.Tot.fst ordset.fsi ordmap.fsi FStar.Classical.fst prins.fsi ast.fst ffibridge.fsi sem.fst
- --*)
-
 module PSemantics
 
 open FStar.OrdMap
 open FStar.OrdSet
 
 open FStar.Ghost
-
 
 open Prins
 open AST

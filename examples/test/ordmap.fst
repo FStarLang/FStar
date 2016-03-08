@@ -1,6 +1,3 @@
-(*--build-config
-    options:--logQueries;
- --*)
 module OrdMap
 
 opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =

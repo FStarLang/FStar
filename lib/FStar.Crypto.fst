@@ -1,10 +1,6 @@
-(*--build-config
-options:--admit_fsi FStar.Set;
-other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Bytes.fst;
---*)
 module FStar.Crypto
-
 open FStar.Bytes
+
 
 type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
 type tag = nbytes 20

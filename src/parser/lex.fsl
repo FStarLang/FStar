@@ -1,4 +1,4 @@
-﻿{
+{
 // Adapted from sources of F#
 //----------------------------------------------------------------------------
 //
@@ -166,7 +166,7 @@ let formatting_char = '\Cf'
 let constructor_start_char = ['A'-'Z']
   
 let ident_start_char = 
-    ['a'-'z'] | '_'
+	'\Ll' | '_'
 
 let ident_char = 
     letter

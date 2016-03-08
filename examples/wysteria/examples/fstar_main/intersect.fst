@@ -1,13 +1,10 @@
-(*--build-config
-    options:--admit_fsi FStar.Seq --admit_fsi FStar.Matrix2 --admit_fsi Matrix --admit_fsi FStar.Set --z3timeout 10;
-    other-files:set.fsi seq.fsi FStar.Matrix2.fsti matrix.fsti traces.fst
-  --*)
 module Matrix
 open FStar
 open FStar.Matrix2
 open Traces
 type all_iters a b = iter a b (Seq.length a) (Seq.length b)
 open FStar.Set
+
 type seq 'a = Seq.seq 'a
  
 val seq_as_set: a:seq int -> i:bound a -> Tot (set int)

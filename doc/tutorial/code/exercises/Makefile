@@ -1,10 +1,10 @@
 include ../Makefile.include
 
 verify-ex8a-acls:  ex8a-acls.fst 
-	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fst partialmap.fst FStar.ST.fst FStar.List.fst ) $^
+	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fsti partialmap.fst FStar.ST.fst FStar.List.fst ) $^
 
 verify-ex9a-acls-cap: ../solutions/ex9a-mac.fst ../solutions/ex9a-acls2.fst ex9a-acls-cap.fst
-	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fst partialmap.fst FStar.ST.fst array-realized.fst ) ../../../examples/unit-tests/FStar.List.fst $^
+	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fsti partialmap.fst FStar.ST.fst array-realized.fst ) ../../../examples/unit-tests/FStar.List.fst $^
 
 verify-ex9b-format: ex9b-format.fst
 	$(FSTAR) $(SECLIB) $^
@@ -25,7 +25,7 @@ verify-ex9g-padding: ex9g-padding.fst
 	$(FSTAR) $(SECLIB) $^
 
 verify-ex10a-acls: ex10a-acls.fst
-	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst) --admit_fsi FStar.Set $^
+	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst)  $^
 
 verify-%: __force__
 	$(FSTAR) $*.fst
@@ -39,7 +39,7 @@ SUPPORT_FILES=prims.ml FStar_All.ml
 SUPPORT=$(addprefix $(FSTAR_HOME)/lib/ml/, $(SUPPORT_FILES))
 
 extract-acl:
-	fstar.exe --admit_fsi FileIO --codegen OCaml ex1a-safe-read-write.fst
+	fstar.exe  --codegen OCaml ex1a-safe-read-write.fst
 	cp $(SUPPORT) .    # copying these things just to make ocamlfind happy
 
 GEN_ML_FILES = FileName.ml ACLs.ml UntrustedClientCode.ml
@@ -91,7 +91,7 @@ GEN_FS_FILES = FileName.fs ACLs.fs UntrustedClientCode.fs
 FS_FILES=FileIO.fs $(GEN_FS_FILES)
 
 acls-fs.exe: demo ex1a-safe-read-write.fst
-	fstar.exe --codegen FSharp --admit_fsi FileIO ex1a-safe-read-write.fst
+	fstar.exe --codegen FSharp  ex1a-safe-read-write.fst
 	$(FSC) -o $@ $(SUPPORT_FS) $(FS_FILES) main.fs
 
 clean-acl:

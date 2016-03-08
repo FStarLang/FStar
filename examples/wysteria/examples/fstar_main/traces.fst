@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Seq --admit_fsi FStar.Matrix2 --z3timeout 10;
-    other-files:seq.fsi FStar.Matrix2.fsti
-  --*)
 module Traces
 open FStar
 open FStar.Matrix2

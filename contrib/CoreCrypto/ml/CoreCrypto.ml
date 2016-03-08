@@ -33,6 +33,11 @@ let string_of_hash_alg = function
   | SHA384 -> "SHA384"
   | SHA512 -> "SHA512"
 
+let string_of_block_cipher = function
+  | AES_128_CBC -> "AES_128_CBC"
+  | AES_256_CBC -> "AES_256_CBC"
+  | TDES_EDE_CBC -> "TDES_EDE_CBC"
+
 let blockSize = function
   | TDES_EDE_CBC -> 8
   | AES_128_CBC  -> 16
@@ -90,7 +95,9 @@ let hash (h:hash_alg) (b:bytes) =
   bytes_of_string h
 
 (* -------------------------------------------------------------------- *)
-(* HMAC *)
+
+(** HMAC *)
+
 external ocaml_EVP_HMAC : md -> key:string -> data:string -> string = "ocaml_EVP_HMAC"
 
 let hmac (h:hash_alg) (k:bytes) (d:bytes) =
@@ -99,6 +106,9 @@ let hmac (h:hash_alg) (k:bytes) (d:bytes) =
   bytes_of_string h
 
 (* -------------------------------------------------------------------- *)
+
+(** Stream ciphers and AEAD *)
+
 type cipher
 type cipher_ctx
 type cipher_stream = cipher_ctx
@@ -124,7 +134,7 @@ external ocaml_EVP_CIPHER_CTX_key_length : cipher_ctx -> int = "ocaml_EVP_CIPHER
 external ocaml_EVP_CIPHER_CTX_iv_length  : cipher_ctx -> int = "ocaml_EVP_CIPHER_CTX_iv_length"
 
 external ocaml_EVP_CIPHER_CTX_set_key : cipher_ctx -> string -> unit = "ocaml_EVP_CIPHER_CTX_set_key"
-external ocaml_EVP_CIPHER_CTX_set_iv  : cipher_ctx -> string -> unit = "ocaml_EVP_CIPHER_CTX_set_iv"
+external ocaml_EVP_CIPHER_CTX_set_iv  : cipher_ctx -> string -> bool -> unit = "ocaml_EVP_CIPHER_CTX_set_iv"
 external ocaml_EVP_CIPHER_CTX_set_additional_data : cipher_ctx -> string -> unit = "ocaml_EVP_CIPHER_CTX_set_additional_data"
 external ocaml_EVP_CIPHER_CTX_process : cipher_ctx -> string -> string = "ocaml_EVP_CIPHER_CTX_process"
 
@@ -146,19 +156,21 @@ let cipher_of_aead_cipher (c:aead_cipher) = match c with
       ocaml_EVP_CIPHER_aes_256_gcm()
 
 let block_encrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
+  assert (iv.length = blockSize c);
   let c = cipher_of_block_cipher c in
   let ctx = ocaml_EVP_CIPHER_CTX_create c true in
   ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
-  ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv);
+  ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv) false;
   let e = ocaml_EVP_CIPHER_CTX_process ctx (string_of_bytes d) in
   ocaml_EVP_CIPHER_CTX_fini ctx;
   bytes_of_string e
 
 let block_decrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
+  assert (iv.length = blockSize c);
   let c = cipher_of_block_cipher c in
   let ctx = ocaml_EVP_CIPHER_CTX_create c false in
   ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
-  ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv);
+  ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv) false;
   let e = ocaml_EVP_CIPHER_CTX_process ctx (string_of_bytes d) in
   ocaml_EVP_CIPHER_CTX_fini ctx;
   bytes_of_string e
@@ -167,7 +179,7 @@ let aead_encrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
   let c = cipher_of_aead_cipher c in
   let ctx = ocaml_EVP_CIPHER_CTX_create c true in
   ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
-  ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv);
+  ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv) true;
   ocaml_EVP_CIPHER_CTX_set_additional_data ctx (string_of_bytes ad);
   let e = ocaml_EVP_CIPHER_CTX_process ctx (string_of_bytes d) in
   let t = ocaml_EVP_CIPHER_CTX_get_tag ctx in
@@ -179,7 +191,7 @@ let aead_decrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
   let ctx = ocaml_EVP_CIPHER_CTX_create c false in
   let d,t = Platform.Bytes.split d ((Platform.Bytes.length d) - 16) in
   ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
-  ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv);
+  ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv) true;
   ocaml_EVP_CIPHER_CTX_set_additional_data ctx (string_of_bytes ad);
   let e = ocaml_EVP_CIPHER_CTX_process ctx (string_of_bytes d) in
   ocaml_EVP_CIPHER_CTX_set_tag ctx (string_of_bytes t);
@@ -213,6 +225,11 @@ let random i =
     if (i < 0) then invalid_arg "input to random must be non-negative"
     else if (not (ocaml_rand_status())) then failwith "random number generator not ready"
     else bytes_of_string (ocaml_rand_bytes i)
+
+let random_string i =
+    if (i < 0) then invalid_arg "input to random must be non-negative"
+    else if (not (ocaml_rand_status())) then failwith "random number generator not ready"
+    else ocaml_rand_bytes i
 
 (* -------------------------------------------------------------------- *)
 type rsa
@@ -400,7 +417,7 @@ type ec_key = {
  * and EC_GROUP is done by binding various EC_KEY_set* functions.
  *
  * Note: these bindings seem very inefficient, because we're re-creating the
- * EC_*$ data structures every time. We would be better off having them stashed
+ * EC_* data structures every time. We would be better off having them stashed
  * somewhere inside the record (and export the record as private in the
  * interface so that clients can't misuse it). *)
 

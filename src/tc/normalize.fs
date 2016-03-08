@@ -25,7 +25,8 @@ open FStar.Absyn.Syntax
 open FStar.Absyn.Util
 open FStar.Util
 open FStar.Tc.Env
-
+open FStar.Const
+open FStar.Ident
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -50,6 +51,8 @@ type step =
   | Unmeta
   | Unlabel
 and steps = list<step>
+
+// VALS_HACK_HERE
 
 type config<'a> = {code:'a;
                    environment:environment;
@@ -435,7 +438,7 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                   if unmeta config then
                     sn tcenv ({config with code=t})
                   else
-                   let sfx = match b with Some false -> r | _ -> dummyRange in
+                   let sfx = match b with | Some false -> r | _ -> dummyRange in
                    let config = {config with code=t; environment={config.environment with label_suffix=(b, sfx)::config.environment.label_suffix}} in
                    sn tcenv config
 
@@ -721,7 +724,7 @@ let norm_exp steps tcenv e =
 
 let norm_sigelt tcenv = function
     | Sig_let(lbs, r, l, b) ->
-      let e = mk_Exp_let(lbs, mk_Exp_constant(Syntax.Const_unit) None r) None r in
+      let e = mk_Exp_let(lbs, mk_Exp_constant(Const_unit) None r) None r in
       let e = norm_exp [Beta] tcenv e in
       begin match e.n with
         | Exp_let(lbs, _) -> Sig_let(lbs, r, l, b)

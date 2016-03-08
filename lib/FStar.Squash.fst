@@ -1,8 +1,5 @@
-(*--build-config
-    options:--warn_top_level_effects;
-    other-files:FStar.Squash.fsti;
---*)
 module FStar.Squash
+
 
 (* This file shows that there is a natural model for some of the squash things;
    DO NOT IMPORT THIS FILE; USE FStar.Squash.fsti and --admit_fsi FStar.Squash INSTEAD
