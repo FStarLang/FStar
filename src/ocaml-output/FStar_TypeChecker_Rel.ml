@@ -545,17 +545,14 @@ if norm then begin
 end else begin
 (
 # 343 "FStar.TypeChecker.Rel.fst"
-let _68_309 = (let _149_291 = (normalize_refinement ((FStar_TypeChecker_Normalize.WHNF)::(FStar_TypeChecker_Normalize.UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::[]) env wl t1)
-in (aux true _149_291))
-in (match (_68_309) with
-| (t2', refinement) -> begin
-(match (refinement) with
-| None -> begin
-(t1, None)
+let t1' = (normalize_refinement ((FStar_TypeChecker_Normalize.WHNF)::[]) env wl t1)
+in (match ((let _149_291 = (FStar_Syntax_Subst.compress t1')
+in _149_291.FStar_Syntax_Syntax.n)) with
+| FStar_Syntax_Syntax.Tm_refine (_68_309) -> begin
+(aux true t1')
 end
 | _68_312 -> begin
-(t2', refinement)
-end)
+(t1, None)
 end))
 end
 end

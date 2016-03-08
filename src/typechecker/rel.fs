@@ -318,11 +318,11 @@ let base_and_refinement env wl t1 =
         | Tm_app _ ->
             if norm
             then (t1, None)
-            else let t1' = normalize_refinement [N.WHNF;N.UnfoldUntil Delta_constant] env wl t1 in
+            else let t1' = normalize_refinement [N.WHNF] env wl t1 in
                  begin match (SS.compress t1').n with 
                             | Tm_refine _ -> aux true t1'
                             | _ -> t1, None
-                   end
+                 end
 
         | Tm_type _
         | Tm_constant _

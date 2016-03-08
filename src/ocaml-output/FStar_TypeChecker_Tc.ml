@@ -5109,7 +5109,7 @@ let dec = (let _151_1211 = (let _151_1210 = (let _151_1209 = (let _151_1208 = (l
 in (bs, _151_1207))
 in FStar_Syntax_Syntax.Tm_arrow (_151_1208))
 in (FStar_Syntax_Syntax.mk _151_1209 None r))
-in (l, us, _151_1210, (FStar_Syntax_Syntax.Assumption)::quals, r))
+in (l, us, _151_1210, (FStar_Syntax_Syntax.Assumption)::(FStar_Syntax_Syntax.New)::quals, r))
 in FStar_Syntax_Syntax.Sig_declare_typ (_151_1211))
 in ((dec)::out, hidden))
 end

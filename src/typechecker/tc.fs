@@ -2266,7 +2266,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
       if is_abstract quals
       then List.fold_right (fun se (out, hidden) -> match se with 
             | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) -> 
-              let dec = Sig_declare_typ(l, us, mk (Tm_arrow(bs, S.mk_Total t)) None r, Assumption::quals, r) in
+              let dec = Sig_declare_typ(l, us, mk (Tm_arrow(bs, S.mk_Total t)) None r, Assumption::New::quals, r) in
               dec::out, hidden
             | Sig_datacon(l, us, t, _, _, _, _, r) -> //logically, each constructor just becomes an uninterpreted function
               let dec = Sig_declare_typ(l, us, t, [Assumption], r) in

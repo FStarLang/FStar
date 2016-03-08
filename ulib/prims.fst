@@ -176,14 +176,14 @@ assume val op_LessThan           : int -> int -> Tot bool
    This still allows functions ... TODO: disallow functions *)
 assume val op_Equality :    'a -> 'a -> Tot bool
 assume val op_disEquality : 'a -> 'a -> Tot bool
-assume new type char   : Type0
+assume type char   : Type0
 assume new type float  : Type0
 assume new type string : Type0
 assume new type exn : Type0
 type double = float
 
 assume val strcat : string -> string -> Tot string
-assume new type uint8 : Type0
+assume type uint8 : Type0
 type byte = uint8
 
 assume val reveal_squash : #p:Type -> squash p -> Tot (u:unit{p})
