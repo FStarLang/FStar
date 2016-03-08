@@ -40,5 +40,5 @@ FStar.PredicateExtensionality.fst \
 FStar.Map.fst \
 FStar.TwoLevelHeap.fst
 
-wc:
+wc:	
 	wc -l $(ALL_FILES)

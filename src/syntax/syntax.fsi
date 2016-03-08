@@ -65,9 +65,10 @@ type universe_uvar = Unionfind.uvar<option<universe>>
 type univ_names    = list<univ_name>
 type universes     = list<universe>
 type delta_depth = 
-  | Delta_constant             //A defined constant, e.g., int, list, etc. 
-  | Delta_unfoldable of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
-  | Delta_equational           //A symbol that may be equated to another by extensional reasoning
+  | Delta_constant                  //A defined constant, e.g., int, list, etc. 
+  | Delta_unfoldable of int         //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
+  | Delta_equational                //A symbol that may be equated to another by extensional reasoning
+  | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index

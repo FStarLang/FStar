@@ -584,7 +584,14 @@ let head_match = function
     | MisMatch(i, j) -> MisMatch(i, j)
     | _ -> HeadMatch
 
-let rec delta_depth_of_term t = 
+let fv_delta_depth env fv = match fv.fv_delta with
+    | Delta_abstract d -> 
+      if env.curmodule.str = fv.fv_name.v.nsstr 
+      then d //we're in the defining module
+      else Delta_constant
+    | d -> d
+
+let rec delta_depth_of_term env t = 
     let t = Util.unmeta t in
     match t.n with 
     | Tm_meta _
@@ -598,72 +605,72 @@ let rec delta_depth_of_term t =
     | Tm_uinst(t, _)
     | Tm_ascribed(t, _, _)
     | Tm_app(t, _)
-    | Tm_refine({sort=t}, _) -> delta_depth_of_term t
+    | Tm_refine({sort=t}, _) -> delta_depth_of_term env t
     | Tm_constant _ 
     | Tm_type _ 
     | Tm_arrow _
     | Tm_abs _ -> Some Delta_constant
-    | Tm_fvar fv -> Some fv.fv_delta
+    | Tm_fvar fv -> Some (fv_delta_depth env fv)
 
 
-let rec head_matches t1 t2 : match_result =
+let rec head_matches env t1 t2 : match_result =
   let t1 = Util.unmeta t1 in
   let t2 = Util.unmeta t2 in
   match t1.n, t2.n with
     | Tm_name x, Tm_name y -> if S.bv_eq x y then FullMatch else MisMatch(None, None)
-    | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some f.fv_delta, Some f.fv_delta)
-    | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches f g |> head_match
+    | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some (fv_delta_depth env f), Some (fv_delta_depth env g))
+    | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches env f g |> head_match
     | Tm_constant c, Tm_constant d -> if c=d then FullMatch else MisMatch(None, None)
     | Tm_uvar (uv, _),  Tm_uvar (uv', _) -> if Unionfind.equivalent uv uv' then FullMatch else MisMatch(None, None)
 
-    | Tm_refine(x, _), Tm_refine(y, _) -> head_matches x.sort y.sort |> head_match
+    | Tm_refine(x, _), Tm_refine(y, _) -> head_matches env x.sort y.sort |> head_match
 
-    | Tm_refine(x, _), _  -> head_matches x.sort t2 |> head_match
-    | _, Tm_refine(x, _)  -> head_matches t1 x.sort |> head_match
+    | Tm_refine(x, _), _  -> head_matches env x.sort t2 |> head_match
+    | _, Tm_refine(x, _)  -> head_matches env t1 x.sort |> head_match
 
     | Tm_type _, Tm_type _ 
     | Tm_arrow _, Tm_arrow _ -> HeadMatch
 
-    | Tm_app(head, _), Tm_app(head', _) -> head_matches head head'
-    | Tm_app(head, _), _ -> head_matches head t2
-    | _, Tm_app(head, _) -> head_matches t1 head
+    | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head'
+    | Tm_app(head, _), _ -> head_matches env head t2
+    | _, Tm_app(head, _) -> head_matches env t1 head
 
-    | _ -> MisMatch(delta_depth_of_term t1, delta_depth_of_term t2)
+    | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
 (* Does t1 match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let success d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
     let fail r = (r, None) in
-    let rec aux d t1 t2 =
-//        let r = head_matches t1 t2 in
-//        match r with
-//          | MisMatch _ ->
-//            if d=3 then fail r //already delta normal
-//            else let steps =
-//                      if d=0
-//                        then [N.Inline; N.WHNF]
-//                        else if d=1
-//                        then [N.UnfoldUntil Delta_constant; N.WHNF]
-//                        else [N.UnfoldUntil Delta_constant] in
-//                     let t1' = normalize_refinement steps env wl t1 in
-//                     let t2' = normalize_refinement steps env wl t2 in
-//                     aux (d+1) t1' t2'
-//         | _ -> success d r t1 t2 in
-        let r = head_matches t1 t2 in
+    let rec aux n_delta t1 t2 =
+        let r = head_matches env t1 t2 in
         match r with
-            | MisMatch(Some d1, Some d2) when d1=d2 -> //incompatible
+            | MisMatch(Some d1, Some d2) when (d1=d2) -> //incompatible
+              begin match Common.decr_delta_depth d1 with 
+                | None -> 
+                  fail r
+
+                | Some d -> 
+                  let t1 = normalize_refinement [N.UnfoldUntil d; N.WHNF] env wl t1 in
+                  let t2 = normalize_refinement [N.UnfoldUntil d; N.WHNF] env wl t2 in
+                  aux (n_delta + 1) t1 t2
+              end
+
+            | MisMatch(Some Delta_equational, _) 
+            | MisMatch(_, Some Delta_equational) -> 
               fail r
-            
+
             | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
               let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
               let t1, t2 = if d1_greater_than_d2
-                           then normalize_refinement [N.UnfoldUntil d2; N.WHNF] env wl t1, t2 
-                           else t1, normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
-              aux (d + 1) t1 t2
+                           then let t1' = normalize_refinement [N.UnfoldUntil d2; N.WHNF] env wl t1 in
+                                t1', t2 
+                           else let t2' = normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
+                                t1, normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
+              aux (n_delta + 1) t1 t2
             
             | MisMatch _ -> fail r
 
-            | _ -> success d r t1 t2 in
+            | _ -> success n_delta r t1 t2 in
     aux 0 t1 t2
 
 type tc =
@@ -673,7 +680,7 @@ type tcs = list<tc>
 
 let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<binder> * variance * tc)> =
     let t = Util.unmeta t in
-    let matches t' = match head_matches t t' with 
+    let matches t' = match head_matches env t t' with 
         | MisMatch _ -> false
         | _ -> true in
     match t.n with

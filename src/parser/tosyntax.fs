@@ -101,11 +101,13 @@ let rec delta_qualifier t =
 
 let incr_delta_qualifier t = 
     let d = delta_qualifier t in
-    match d with 
+    let rec aux d = match d with
         | Delta_equational -> d
         | Delta_constant -> Delta_unfoldable 1
         | Delta_unfoldable i -> Delta_unfoldable (i + 1)
-
+        | Delta_abstract d -> aux d in
+    aux d
+ 
 let compile_op arity s =
     let name_of_char = function
             |'&' -> "Amp"
@@ -1065,7 +1067,10 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
             let pat = (S.Pat_cons(S.lid_as_fv lid Delta_constant (Some fvq), arg_pats) |> pos, None, S.bv_to_name projection) in
             let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
             let imp = no_annot_abs binders body in
-            let lb = {  lbname=Inr (S.lid_as_fv field_name Delta_equational None);
+            let dd = if quals |> List.contains S.Abstract 
+                     then Delta_abstract Delta_equational
+                     else Delta_equational in
+            let lb = {  lbname=Inr (S.lid_as_fv field_name dd None);
                         lbunivs=[];
                         lbtyp=tun;
                         lbeff=C.effect_Tot_lid;
@@ -1096,12 +1101,15 @@ let mk_data_projectors env (inductive_tps, se) = match se with
   | _ -> []
 
 let mk_typ_abbrev lid uvs typars k t lids quals rng = 
+    let dd = if quals |> List.contains S.Abstract
+             then Delta_abstract (incr_delta_qualifier t)
+             else incr_delta_qualifier t in
     let lb = {    
-    lbname=Inr (S.lid_as_fv lid (incr_delta_qualifier t) None);
-    lbunivs=uvs;
-    lbdef=no_annot_abs typars t;
-    lbtyp=U.arrow typars (S.mk_Total k);
-    lbeff=C.effect_Tot_lid;
+        lbname=Inr (S.lid_as_fv lid dd None);
+        lbunivs=uvs;
+        lbdef=no_annot_abs typars t;
+        lbtyp=U.arrow typars (S.mk_Total k);
+        lbeff=C.effect_Tot_lid;
     } in
     Sig_let((false, [lb]), rng, lids, quals) 
 
@@ -1304,6 +1312,11 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
             if lets |> Util.for_some (fun (_, t) -> t.level=Formula)
             then S.Logic::quals
             else quals in
+          let lbs = if quals |> List.contains S.Abstract
+                    then fst lbs, snd lbs |> List.map (fun lb -> 
+                            let fv = right lb.lbname in
+                            {lb with lbname=Inr ({fv with fv_delta=Delta_abstract fv.fv_delta})}) 
+                    else lbs in
           let s = Sig_let(lbs, d.drange, fvs |> List.map (fun fv -> fv.fv_name.v), quals) in
           let env = push_sigelt env s in
           env, [s]

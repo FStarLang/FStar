@@ -65,14 +65,14 @@ end))
 
 # 45 "FStar.TypeChecker.Common.fst"
 let ___TProb____0 : prob  ->  (FStar_Syntax_Syntax.typ, FStar_Syntax_Syntax.term) problem = (fun projectee -> (match (projectee) with
-| TProb (_64_16) -> begin
-_64_16
+| TProb (_64_17) -> begin
+_64_17
 end))
 
 # 46 "FStar.TypeChecker.Common.fst"
 let ___CProb____0 : prob  ->  (FStar_Syntax_Syntax.comp, Prims.unit) problem = (fun projectee -> (match (projectee) with
-| CProb (_64_19) -> begin
-_64_19
+| CProb (_64_20) -> begin
+_64_20
 end))
 
 # 48 "FStar.TypeChecker.Common.fst"
@@ -104,8 +104,8 @@ end))
 
 # 52 "FStar.TypeChecker.Common.fst"
 let ___NonTrivial____0 : guard_formula  ->  FStar_Syntax_Syntax.formula = (fun projectee -> (match (projectee) with
-| NonTrivial (_64_22) -> begin
-_64_22
+| NonTrivial (_64_23) -> begin
+_64_23
 end))
 
 # 54 "FStar.TypeChecker.Common.fst"
@@ -149,21 +149,42 @@ let t_float : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Synta
 let t_char : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.char_lid)
 
 # 71 "FStar.TypeChecker.Common.fst"
-let delta_depth_greater_than : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth  ->  Prims.bool = (fun l m -> (match ((l, m)) with
-| (FStar_Syntax_Syntax.Delta_constant, _64_28) -> begin
+let rec delta_depth_greater_than : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth  ->  Prims.bool = (fun l m -> (match ((l, m)) with
+| (FStar_Syntax_Syntax.Delta_constant, _64_29) -> begin
 false
 end
-| (FStar_Syntax_Syntax.Delta_equational, _64_32) -> begin
+| (FStar_Syntax_Syntax.Delta_equational, _64_33) -> begin
 true
 end
-| (_64_35, FStar_Syntax_Syntax.Delta_equational) -> begin
+| (_64_36, FStar_Syntax_Syntax.Delta_equational) -> begin
 false
 end
 | (FStar_Syntax_Syntax.Delta_unfoldable (i), FStar_Syntax_Syntax.Delta_unfoldable (j)) -> begin
 (i > j)
 end
-| (FStar_Syntax_Syntax.Delta_unfoldable (_64_44), FStar_Syntax_Syntax.Delta_constant) -> begin
+| (FStar_Syntax_Syntax.Delta_unfoldable (_64_45), FStar_Syntax_Syntax.Delta_constant) -> begin
 true
+end
+| (FStar_Syntax_Syntax.Delta_abstract (d), _64_52) -> begin
+(delta_depth_greater_than d m)
+end
+| (_64_55, FStar_Syntax_Syntax.Delta_abstract (d)) -> begin
+(delta_depth_greater_than l d)
+end))
+
+# 80 "FStar.TypeChecker.Common.fst"
+let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun _64_1 -> (match (_64_1) with
+| (FStar_Syntax_Syntax.Delta_constant) | (FStar_Syntax_Syntax.Delta_equational) -> begin
+None
+end
+| FStar_Syntax_Syntax.Delta_unfoldable (1) -> begin
+Some (FStar_Syntax_Syntax.Delta_constant)
+end
+| FStar_Syntax_Syntax.Delta_unfoldable (i) -> begin
+Some (FStar_Syntax_Syntax.Delta_unfoldable ((i - 1)))
+end
+| FStar_Syntax_Syntax.Delta_abstract (d) -> begin
+(decr_delta_depth d)
 end))
 
 

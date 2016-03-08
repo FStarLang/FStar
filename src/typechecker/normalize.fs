@@ -317,7 +317,8 @@ and closure_as_term_delayed cfg env t =
     match env with 
         | _ when (cfg.steps |> List.contains BetaUVars) -> closure_as_term cfg env t
         | [] -> t
-        | _ -> mk_Tm_delayed (Inr (fun () -> closure_as_term cfg env t)) t.pos  
+        | _ -> closure_as_term cfg env t
+//            mk_Tm_delayed (Inr (fun () -> closure_as_term cfg env t)) t.pos  
  
 and closures_as_args_delayed cfg env args =
     match env with 
@@ -535,7 +536,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                             
           | Tm_refine(x, f) -> //non tail-recursive; the alternative is to keep marks on the stack to rebuild the term ... but that's very heavy
             if List.contains WHNF cfg.steps
-            then rebuild cfg env stack (closure_as_term cfg env t)
+            then match env, stack with 
+                    | [], [] -> //TODO: Make this work in general!
+                      let t_x = norm cfg env [] x.sort in 
+                      let t = mk (Tm_refine({x with sort=t_x}, f)) t.pos in 
+                      rebuild cfg env stack t
+                    | _ -> rebuild cfg env stack (closure_as_term cfg env t)
             else let t_x = norm cfg env [] x.sort in 
                  let closing, f = open_term [(x, None)] f in
                  let f = norm cfg (Dummy::env) [] f in 
