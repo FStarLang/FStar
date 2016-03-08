@@ -95,10 +95,11 @@ let is_ite (t:typ)   = is_prim_op [Const.ite_lid] t
 let is_lex_cons (f:exp) = is_prim_op [Const.lexcons_lid] f
 let is_lex_top (f:exp) = is_prim_op [Const.lextop_lid] f
 let is_inr = function Inl _ -> false | Inr _ -> true
+let filter_imp a = a |> List.filter (function (_, Some (Implicit _)) -> false | _ -> true)
 let rec reconstruct_lex (e:exp) =
   match (compress e).n with
   | Tm_app (f, args) ->
-      let args = List.filter (fun (a:arg) ->  snd a <> Some Implicit) args in
+       let args = filter_imp args in
       let exps = List.map fst args in
       if is_lex_cons f && List.length exps = 2 then
         match reconstruct_lex (List.nth exps 1) with
@@ -125,7 +126,6 @@ let rec sli (l:lident) : string =
    else l.ident.idText
 
 
-let filter_imp a = a |> List.filter (function (_, Some Implicit) -> false | _ -> true)
 let const_to_string x = match x with
   | Const_effect -> "Effect"
   | Const_unit -> "()"
@@ -215,6 +215,10 @@ let rec term_to_string x =
   | Tm_delayed _ ->   failwith "impossible"
   | Tm_app(_, []) ->  failwith "Empty args!"
 
+  | Tm_meta(t, Meta_pattern ps) -> 
+    let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
+    Util.format2 "{:pattern %s} %s" pats (term_to_string t)
+
   | Tm_meta(t, _) ->    term_to_string t
   | Tm_bvar x ->        db_to_string x  
   | Tm_name x ->        nm_to_string x
@@ -259,6 +263,14 @@ and  pat_to_string x = match x.v with
  
 
 and lbs_to_string quals lbs =
+    let lbs = 
+        if !Options.print_universes
+        then (fst lbs, snd lbs |> List.map (fun lb -> let us, td = Subst.open_univ_vars lb.lbunivs (Util.mk_conj lb.lbtyp lb.lbdef) in 
+                                        let t, d = match (Subst.compress td).n with 
+                                            | Tm_app(_, [(t, _); (d, _)]) -> t, d
+                                            | _ -> failwith "Impossibe" in
+                                        {lb with lbunivs=us; lbtyp=t; lbdef=d}))
+        else lbs in
     Util.format3 "%slet %s %s"
     (quals_to_string quals)
     (if fst lbs then "rec" else "")
@@ -283,7 +295,8 @@ and lcomp_to_string lc =
 //   else Util.format1 "U%s"  (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
 
 and imp_to_string s = function
-  | Some Implicit -> "#" ^ s
+  | Some (Implicit false) -> "#" ^ s
+  | Some (Implicit true) -> "#." ^ s
   | Some Equality -> "=" ^ s
   | _ -> s
 
@@ -422,7 +435,14 @@ let rec sigelt_to_string x = match x with
     Util.format4 "sub_effect %s ~> %s : <%s> %s" 
         (lid_to_string se.source) (lid_to_string se.target) 
         (univ_names_to_string us) (term_to_string t)
-  | Sig_effect_abbrev(l, _, tps, c, _, _) -> Util.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+  | Sig_effect_abbrev(l, univs, tps, c, _, _) -> 
+    if !Options.print_universes
+    then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) None Range.dummyRange) in
+         let tps, c = match (Subst.compress t).n with 
+            | Tm_arrow(bs, c) -> bs, c
+            | _ -> failwith "impossible" in
+         Util.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
+    else Util.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 

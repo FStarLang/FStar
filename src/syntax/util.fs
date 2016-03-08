@@ -136,12 +136,13 @@ let constant_univ_as_nat u = snd (univ_kernel u)
 //e.g, [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2] 
 let rec compare_univs u1 u2 = match u1, u2 with 
     | U_bvar _, _
-    | _, U_bvar _ 
-    | U_unknown, _
-    | _, U_unknown -> failwith "Impossible: compare_univs"
+    | _, U_bvar _  -> failwith "Impossible: compare_univs"
+   
+    | U_unknown, U_unknown -> 0
+    | U_unknown, _ -> -1
+    | _, U_unknown -> 1
 
     | U_zero, U_zero -> 0
-        
     | U_zero, _ -> -1
     | _, U_zero -> 1
 
@@ -301,40 +302,6 @@ let is_smt_lemma t = match (compress t).n with
         | _ -> false
       end
     | _ -> false
-
-    
-let smt_lemma_pats p = 
-  let rec list_elements (e:term) : list<term> = 
-    let head, args = head_and_args (unmeta e) in
-    match (un_uinst head).n, args with
-        | Tm_fvar(fv, _), _ when lid_equals fv.v Const.nil_lid -> []
-        | Tm_fvar(fv, _), [_; (hd, _); (tl, _)] when lid_equals fv.v Const.cons_lid -> 
-          hd::list_elements tl
-        | _ -> [] in 
-
-    let v_or_t_pat p = 
-        let head, args = unmeta p |> head_and_args in
-        match (un_uinst head).n, args with
-            | Tm_fvar(fv, _), [(_, _); (e, _)] when lid_equals fv.v Const.smtpat_lid -> e
-            | _ -> failwith "Unexpected pattern term"  in
-    
-    let elts = list_elements p in 
-    
-    let smt_pat_or t =
-        let head, args = unmeta t |> head_and_args in
-        match (un_uinst head).n, args with 
-            | Tm_fvar(fv, _), [(e, _)] when lid_equals fv.v Const.smtpatOr_lid -> 
-              Some e
-            | _ -> None in
-
-    match elts with 
-        | [t] -> 
-            begin match smt_pat_or t with 
-            | Some e -> 
-                list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map v_or_t_pat)
-            | _ -> [elts |> List.map v_or_t_pat]
-            end
-        | _ -> [elts |> List.map v_or_t_pat] 
 
 let is_ml_comp c = match c.n with
   | Comp c -> lid_equals c.effect_name Const.effect_ML_lid
@@ -546,7 +513,7 @@ let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
         | Some lids -> 
           let universes = univ_vars |> List.map U_name in
           let inst = lids |> List.map (fun l -> l, universes) in
-          FStar.Syntax.InstFV.inst inst def in
+          FStar.Syntax.InstFV.instantiate inst def in
     let typ = Subst.close_univ_vars univ_vars typ in
     let def = Subst.close_univ_vars univ_vars def in
     mk_letbinding lbname univ_vars typ eff def
@@ -706,12 +673,17 @@ let eq_pred_t : term =
     let atyp = bv_to_tm a in
     let b = new_bv None ktype0 in
     let btyp = bv_to_tm b in
-    arrow [(a, Some Implicit); (b, Some Implicit); null_binder atyp; null_binder btyp]
+    arrow [(a, Some imp_tag); (b, Some imp_tag); null_binder atyp; null_binder btyp]
           (mk_Total ktype0)
 
 let teq = fvar None Const.eq2_lid dummyRange
 
 let mk_eq t1 t2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
+
+let mk_has_type t x t' =
+    let t_has_type = fvar None (Const.has_type_lid) dummyRange in //TODO: Fix the U_zeroes below!
+    let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) None dummyRange in
+    mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) None dummyRange
 
 let lex_t :term = fvar None Const.lex_t_lid dummyRange
 let lex_top : term = fvar (Some Data_ctor) Const.lextop_lid dummyRange
@@ -719,7 +691,7 @@ let lex_pair : term = fvar (Some Data_ctor) Const.lexcons_lid dummyRange
 let forall_t : term = 
     let a = new_bv None ktype0 in
     let atyp = bv_to_tm a in
-    arrow [(a, Some Implicit); null_binder atyp] (mk_Total ktype0)
+    arrow [(a, Some imp_tag); null_binder atyp] (mk_Total ktype0)
 let tforall = fvar None Const.forall_lid dummyRange
 
 let lcomp_of_comp c0 =

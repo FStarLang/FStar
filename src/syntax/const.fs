@@ -72,6 +72,7 @@ let b2t_lid    = pconst "b2t" (* coercion from boolean to type *)
 let using_IH   = pconst "InductionHyp"
 let admit_lid  = pconst "admit"
 let magic_lid  = pconst "magic"
+let has_type_lid = pconst "has_type"
 
 (* Various equality predicates *)
 let eq2_lid    = pconst  "Eq2"

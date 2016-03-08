@@ -199,6 +199,15 @@ end))}))
 in Some (_113_74))
 end))
 
+# 108 "FStar.Syntax.InstFV.fst"
+let instantiate : inst_t  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun i t -> (match (i) with
+| [] -> begin
+t
+end
+| _34_147 -> begin
+(inst i t)
+end))
+
 
 
 

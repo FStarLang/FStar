@@ -17,7 +17,6 @@ ifeq ($(OS),Windows_NT)
     # always uses to search for DLLs.
     EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
     EXE = .exe
-    CC =
     ARCH = win32
 else
     # On Unix-like systems, the library search path is LD_LIBRARY_PATH, which is
@@ -27,12 +26,10 @@ else
     EXE =
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
-        CC = -cc gcc-5
         EXTRA_OPTS = -ccopt -L. -I /usr/local/opt/openssl/include -I /opt/local/include/openssl
         EXTRA_LIBS = -L /usr/local/opt/openssl/lib -L /opt/local/lib
         ARCH = osx
     else
-        CC = -cc gcc
         EXTRA_OPTS = -ccopt -fPIC -ccopt -L.
         ARCH = x86_64
     endif
@@ -43,7 +40,7 @@ endif
 all: CoreCrypto.cmxa
 
 %.o: %.c
-	$(OCAMLOPT) $(CC) $(CCOPTS) $(EXTRA_OPTS) -c $<
+	$(OCAMLOPT) $(CCOPTS) $(EXTRA_OPTS) -c $<
 
 %.cmi: %.mli
 	$(OCAMLC) -c $<
@@ -69,7 +66,7 @@ CoreCrypto.cma: $(DLL_BYTE)
 	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $^
 
 TEST_CMX = Tests.cmx
-Tests$(EXE): $(TEST_CMX) CoreCrypto.cmxa
+Tests$(EXE): CoreCrypto.cmxa $(TEST_CMX)
 	$(OCAMLOPT) $(EXTRA_OPTS) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
 	CoreCrypto.cmxa $(TEST_CMX)
 
@@ -85,3 +82,6 @@ depend:
 	$(OCAMLDEP) *.ml *.mli > .depend
 
 include .depend
+
+valgrind: Tests$(EXE)
+	valgrind --leak-check=yes --suppressions=suppressions ./Tests$(EXE)

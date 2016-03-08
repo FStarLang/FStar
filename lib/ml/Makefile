@@ -1,8 +1,8 @@
-# The two variables below can be configured from the outside. For instance:
-# $(MAKE) -C $(FSTAR_HOME)/lib/ml hyperheap PRIMS=native_int/prims.ml INCLUDES="-I native_int/"
-PRIMS=prims.ml
-INCLUDES=
+# The variable below can be configured from the outside. For instance:
+# $(MAKE) -C $(FSTAR_HOME)/lib/ml hyperheap PRIMS_DIR=native_int
+PRIMS_DIR=.
 
+PRIMS=MkPrims.ml $(PRIMS_DIR)/prims.ml
 COMMON=FStar_All.ml FStar_IO.ml FStar_Heap.ml FStar_List.ml FStar_Option.ml FStar_Char.ml FStar_String.ml FStar_Set.ml
 FILES=$(PRIMS) FStar_ST.ml $(COMMON)
 HYPERHEAP=$(PRIMS) ./hyperheap/FStar_ST.ml $(COMMON) ./hyperheap/FStar_HyperHeap.ml
@@ -31,11 +31,11 @@ hyperheap: $(HH_OBJS)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
 
 depend:
-	$(OCAMLDEP) $(INCLUDES) $(FILES) > .depend
+	$(OCAMLDEP) -I native_int -I hyperheap $(FILES) $(HYPERHEAP) > .depend
 
-CLEAN=*.cmi *.cmo *.cmx *.exe *.o *.cmxa *~
+CLEAN=*.cmi *.cmo *.cmx *.exe *.o *.a *.cmxa *~
 
 clean:
-	rm -f $(CLEAN) $(addprefix hyperheap/,$(CLEAN))
+	rm -f $(CLEAN) $(addprefix hyperheap/,$(CLEAN)) $(addprefix native_int/,$(CLEAN))
 
 -include .depend

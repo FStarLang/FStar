@@ -34,7 +34,7 @@ module U = FStar.Syntax.Util
 // VALS_HACK_HERE
 
 let trans_aqual = function
-  | Some AST.Implicit -> Some S.Implicit
+  | Some AST.Implicit -> Some S.imp_tag
   | Some AST.Equality -> Some S.Equality
   | _ -> None
 
@@ -58,13 +58,13 @@ let trans_pragma = function
 
 let as_imp = function
     | Hash
-    | FsTypApp -> Some S.Implicit
+    | FsTypApp -> Some S.imp_tag
     | _ -> None
 let arg_withimp_e imp t =
     t, as_imp imp
 let arg_withimp_t imp t =
     match imp with
-        | Hash -> t, Some S.Implicit
+        | Hash -> t, Some S.imp_tag
         | _ -> t, None
 
 let contains_binder binders =
@@ -336,7 +336,7 @@ let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
 
       | PatTvar(x, imp)
       | PatVar (x, imp) ->
-        let aq = if imp then Some S.Implicit else None in
+        let aq = if imp then Some S.imp_tag else None in
         let loc, env, xbv = resolvex loc env x in
         loc, env, LocalBinder(xbv, aq), pos <| Pat_var xbv, imp
 
@@ -679,9 +679,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       else ds_non_rec pat _snd body
 
     | If(t1, t2, t3) ->
+      let x = Syntax.new_bv (Some t3.range) S.tun in
       mk (Tm_match(desugar_term env t1,
                     [(withinfo (Pat_constant (Const_bool true)) tun.n t2.range, None, desugar_term env t2);
-                     (withinfo (Pat_constant (Const_bool false)) tun.n t3.range, None, desugar_term env t3)]))
+                     (withinfo (Pat_wild x) tun.n t3.range, None, desugar_term env t3)]))
 
     | TryWith(e, branches) ->
       let r = top.range in
@@ -859,7 +860,7 @@ and desugar_comp r default_ok env t =
                         | Tm_fvar (fv, _) when lid_equals fv.v Const.nil_lid -> //we really want the empty pattern to be in universe S 0 rather than generalizing it 
                           let nil = S.mk_Tm_uinst pat [U_succ U_zero] in
                           let pattern = S.mk_Tm_uinst (S.fvar None Const.pattern_lid pat.pos) [U_zero;U_zero] in 
-                          S.mk_Tm_app nil [(pattern, Some S.Implicit)] None pat.pos 
+                          S.mk_Tm_app nil [(pattern, Some S.imp_tag)] None pat.pos 
                         | _ -> pat in
                         [req; ens;
                         (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) None pat.pos, aq)]
@@ -951,16 +952,17 @@ and desugar_binder env b : option<ident> * S.term = match b.b with
   | Variable x      -> Some x, tun
 
 let mk_data_discriminators quals env t tps k datas =
-//    if env.iface && not env.admitted_iface then [] else
-    let quals q = if not <| env.iface || env.admitted_iface then S.Assumption::q@quals else q@quals in
+    let quals q = if not <| env.iface || env.admitted_iface 
+                  then S.Assumption::q@quals 
+                  else q@quals in
     let binders = tps @ fst (U.arrow_formals k) in
     let p = range_of_lid t in
-    let imp_binders = binders |> List.map (fun (x, _) -> x, Some S.Implicit) in
-    let binders = imp_binders@[S.null_binder <| (S.mk_Tm_app(S.fv_to_tm (S.lid_as_fv t None)) (Util.args_of_non_null_binders binders) None p)] in
+    let binders, args = Util.args_of_binders binders in
+    let imp_binders = binders |> List.map (fun (x, _) -> x, Some S.imp_tag) in
+    let binders = imp_binders@[S.null_binder <| (S.mk_Tm_app(S.fv_to_tm (S.lid_as_fv t None)) args None p)] in
     let disc_type = U.arrow binders (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid None))) in
     datas |> List.map (fun d ->
         let disc_name = Util.mk_discriminator d in
-        //Util.print1 "Making discriminator %s\n" disc_name.str;
         Sig_declare_typ(disc_name, [], disc_type, quals [S.Logic; S.Discriminator d], range_of_lid disc_name))
 
 let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) imp_tps (fields:list<S.binder>) t =
@@ -974,16 +976,12 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
             let rec arguments tps args = match tps, args with 
                 | [], _ -> args
                 | _, [] -> raise (Error("Not enough arguments to type", Ident.range_of_lid lid))
-                | (_, Some S.Implicit)::tps', (_, Some S.Implicit)::args' -> arguments tps' args'
-                | (_, Some S.Implicit)::tps', (_, _)::_ -> arguments tps' args
-                | (_, _)::_, (a, Some S.Implicit)::_ ->
+                | (_, Some (S.Implicit _))::tps', (_, Some (S.Implicit _))::args' -> arguments tps' args'
+                | (_, Some (S.Implicit _))::tps', (_, _)::_ -> arguments tps' args
+                | (_, _)::_, (a, Some (S.Implicit _))::_ ->
                   raise (Error("Unexpected implicit annotation on argument", a.pos))
                 | (_, _)::tps', (_, _)::args' -> arguments tps' args' in
             arguments inductive_tps args0 in
-//        let expected = Util.first_N (List.length tps) args0 |> snd in
-//        if List.length args <> List.length expected 
-//        then failwith (Printf.sprintf "For %s, Expected %d parameters got %d\n" 
-//                (Print.lid_to_string lid) (List.length expected) (List.length args));
         let indices = args |> List.map (fun _ -> S.new_bv (Some p) tun |> S.mk_binder) in
         let arg_typ = S.mk_Tm_app (S.fv_to_tm (S.lid_as_fv tc None)) 
                                   (tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp)) None p in
@@ -997,7 +995,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
         arg_binder, indices in
 
     let arg_exp = S.bv_to_name (fst arg_binder) in
-    let imp_binders = imp_tps @ (indices |> List.map (fun (x, _) -> x, Some S.Implicit)) in
+    let imp_binders = imp_tps @ (indices |> List.map (fun (x, _) -> x, Some S.imp_tag)) in
     let binders = imp_binders@[arg_binder] in
 
     let arg = Util.arg_of_non_null_binder arg_binder in
@@ -1024,14 +1022,11 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
         if only_decl
         then [decl] //only the signature
         else let projection = S.gen_bv x.ppname.idText None tun in
-                let as_imp = function
-                | Some S.Implicit -> true
-                | _ -> false in
                 let arg_pats = all_params |> List.mapi (fun j (x,imp) -> 
+                    let b = S.is_implicit imp in
                     if i+ntps=j  //this is the one to project
-                    then pos (Pat_var projection), as_imp imp
-                    else let b = as_imp imp in 
-                         if b && j < ntps
+                    then pos (Pat_var projection), b
+                    else if b && j < ntps
                          then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b 
                          else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b) in
             let pat = (S.Pat_cons(S.lid_as_fv lid (Some fvq), arg_pats) |> pos, None, S.bv_to_name projection) in
@@ -1202,11 +1197,11 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
           let env_tps, _ = push_tparams env tpars in
           let t = desugar_term env_tps t in
           [[], mk_typ_abbrev id uvs tpars k t [id] quals rng]
-
+          
         | Inl (Sig_inductive_typ(tname, univs, tpars, k, mutuals, _, tags, _), constrs, tconstr, quals) ->
           let tycon = (tname, tpars, k) in
           let env_tps, tps = push_tparams env tpars in
-          let data_tpars = List.map (fun (x, _) -> (x, Some S.Implicit)) tps in
+          let data_tpars = List.map (fun (x, _) -> (x, Some (S.Implicit true))) tps in
           let constrNames, constrs = List.split <|
               (constrs |> List.map (fun (id, topt, of_notation) ->
                 let t =
@@ -1272,6 +1267,10 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
             | _ -> snd lbs |> List.collect
             (function | {lbname=Inl _} -> []
                       | {lbname=Inr l} -> Env.lookup_letbinding_quals env l) in
+          let quals = 
+            if lets |> Util.for_some (fun (_, t) -> t.level=Formula)
+            then S.Logic::quals
+            else quals in
           let s = Sig_let(lbs, d.drange, lids, quals) in
           let env = push_sigelt env s in
           env, [s]

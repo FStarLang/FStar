@@ -712,6 +712,13 @@ let simple_test name f =
     Printf.printf "%s: FAIL\n%!" name
 
 let _ =
+  simple_test "Block encryption" (fun () ->
+    let key = Bytes.bytes_of_hex "e77f6871e1697b2286416f973aee9ff6" in
+    let iv = Bytes.bytes_of_hex "00000000000000000000000000000000" in
+    let plain = Bytes.bytes_of_hex "474554202f20485454502f312e310d0a486f73743a20756e646566696e65640d0a0d0a431ad4d620ea0c63bf9afc8124afcae6729593f1080808080808080808" in
+    print_endline (Bytes.hex_of_bytes (block_encrypt AES_128_CBC key iv plain));
+    true
+  );
   TestAead.(run_test "AEAD" test_vectors print_test_vector test);
   TestHmac.(run_test "HMAC" test_cases print_test_case test);
   TestHash.(run_test "HASH" tests print_test test);
@@ -721,3 +728,4 @@ let _ =
   TestEcdsa.(run_test "ECDSA" tests print_test check);
   simple_test "DH key exchange" TestDhke.test;
   simple_test "ECDH key exchange" TestEcdhke.test
+

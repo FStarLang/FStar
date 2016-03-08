@@ -16,6 +16,8 @@ endif
 
 FS_LIBS=$(BIN)/FSharp.PowerPack.dll
 
+MLLIB=$(LIB)/ml
+
 fs: out hello.fst
 	$(FSTAR)   --odir out --codegen FSharp hello.fst
 	cp $(FS_LIBS) out
@@ -23,16 +25,15 @@ fs: out hello.fst
 	$(FSRUNTIME) ./out/hello.exe
 
 ocaml: out hello.fst
+	$(MAKE) -C $(MLLIB)
 	$(FSTAR)  --odir out --codegen OCaml hello.fst
-	cp $(LIB)/ml/prims.ml $(LIB)/ml/FStar_IO.ml out
-	(cd out; ocamlc -o hello.exe nums.cma prims.ml FStar_IO.ml Hello.ml)
+	(cd out; ocamlfind ocamlopt -o hello.exe -package num -I ../$(MLLIB) ../$(MLLIB)/fstarlib.cmxa Hello.ml)
 	./out/hello.exe
 
 testseq: out testseq.fst
+	$(MAKE) -C $(MLLIB) PRIMS_DIR=native_int
 	$(FSTAR) --use_native_int --odir out --codegen OCaml testseq.fst
-	$(FSTAR) --use_native_int --odir out --codegen OCaml $(LIB)/FStar.Seq.fst
-	cp $(LIB)/ml/native_int/prims.ml $(LIB)/ml/FStar_IO.ml out
-	(cd out; ocamlc -o testseq.exe nums.cma prims.ml FStar_IO.ml FStar_Seq.ml TestSeq.ml)
+	(cd out; ocamlfind ocamlopt -o testseq.exe -I ../$(MLLIB) ../$(MLLIB)/fstarlib.cmxa FStar_All.ml FStar_Seq.ml TestSeq.ml)
 	./out/TestSeq.exe
 
 bat_testseq: out testseq.fst

@@ -597,28 +597,26 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
             let head_type = match head.n with 
                 | Tm_uinst({n=Tm_name x}, _)
-                | Tm_name x -> x.sort
+                | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar(fv, _)}, _)
-                | Tm_fvar (fv, _) -> Env.lookup_lid env.tcenv fv.v |> snd 
-                | Tm_ascribed(_, t, _) -> t
-                | _ -> failwith (Util.format3 "Unexpected head of application %s is: %s, %s" 
-                                 (Print.term_to_string t0)
-                                 (Print.tag_of_term head) (Print.term_to_string head)) in
+                | Tm_fvar (fv, _) -> Some (Env.lookup_lid env.tcenv fv.v |> snd)
+                | Tm_ascribed(_, t, _) -> Some t
+                | _ -> None in 
 
-            let head_type = Util.unrefine <| N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv head_type in
+            begin match head_type with 
+                | None -> encode_partial_app None
+                | Some head_type -> 
+                  let head_type = Util.unrefine <| N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv head_type in
+                  let formals, c = curried_arrow_formals_comp head_type in
+                  begin match head.n with
+                        | Tm_uinst({n=Tm_fvar(fv, _)}, _)
+                        | Tm_fvar (fv, _) when (List.length formals = List.length args) -> encode_full_app fv
+                        | _ ->
+                            if List.length formals > List.length args
+                            then encode_partial_app (Some (formals, c))
+                            else encode_partial_app None
 
-                    if Env.debug env.tcenv <| Options.Other "Encoding"
-                    then Util.print3 "Recomputed type of head %s (%s) to be %s\n" (Print.term_to_string head) (Print.tag_of_term head) (Print.term_to_string head_type);
-
-            let formals, c = curried_arrow_formals_comp head_type in
-            begin match head.n with
-                | Tm_uinst({n=Tm_fvar(fv, _)}, _)
-                | Tm_fvar (fv, _) when (List.length formals = List.length args) -> encode_full_app fv
-                | _ ->
-                    if List.length formals > List.length args
-                    then encode_partial_app (Some (formals, c))
-                    else encode_partial_app None
-
+                 end
             end
       end
 
@@ -793,11 +791,11 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
           hd::list_elements tl
         | _ -> Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
 
-    let v_or_t_pat p = 
+    let one_pat p = 
         let head, args = Util.unmeta p |> Util.head_and_args in
         match (Util.un_uinst head).n, args with
         | Tm_fvar(fv, _), [(_, _); (e, _)] when lid_equals fv.v Const.smtpat_lid -> (e, None)
-        | Tm_fvar(fv, _), [(t, _)] when lid_equals fv.v Const.smtpatT_lid -> (t, None)
+        | Tm_fvar(fv, _), [(e, _)] when lid_equals fv.v Const.smtpatT_lid -> (e, None)
         | _ -> failwith "Unexpected pattern term"  in
     
     let lemma_pats p = 
@@ -812,10 +810,10 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
             | [t] -> 
              begin match smt_pat_or t with 
                 | Some e -> 
-                  list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map v_or_t_pat)
-                | _ -> [elts |> List.map v_or_t_pat]
+                  list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map one_pat)
+                | _ -> [elts |> List.map one_pat]
               end
-            | _ -> [elts |> List.map v_or_t_pat] in
+            | _ -> [elts |> List.map one_pat] in
 
     let binders, pre, post, patterns = match (SS.compress t).n with
         | Tm_arrow(binders, c) -> 
@@ -931,6 +929,18 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
            let t, decls = encode_let x t1 e1 e2 env encode_formula in
            t, [], decls
 
+        | Tm_app(head, [_; (x, _); (t, _)]) -> 
+          let head = Util.un_uinst head in
+          begin match head.n with 
+            | Tm_fvar (fv, _) when lid_equals fv.v Const.has_type_lid -> //interpret Prims.has_type as HasType
+              let x, decls = encode_term x env in 
+              let t, decls' = encode_term t env in
+              Term.mk_HasType x t, [], decls@decls'
+            | _ -> 
+              let tt, decls = encode_term phi env in
+              Term.mk_Valid tt, [], decls
+          end
+
         | _ ->
             let tt, decls = encode_term phi env in
             Term.mk_Valid tt, [], decls in
@@ -945,7 +955,7 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
 
     if Env.debug env.tcenv Options.Low
     then Util.print1 ">>>> Destructing as formula ... %s\n" (Print.term_to_string phi);
-    let phi = SS.compress phi in
+    let phi = Util.unascribe phi in
     match Util.destruct_typ_as_formula phi with
         | None -> fallback phi
 
@@ -1330,7 +1340,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                  else app, encode_term body env' in
                               let eqn = Term.Assume(mkForall([[app]], vars, mkImp(mk_and_l guards, mkEq(app, body))), 
                                             Some (Util.format1 "Equation for %s" flid.str)) in
-                              decls@binder_decls@decls2@[eqn], env
+                              decls@binder_decls@decls2@[eqn]@primitive_type_axioms flid f app,
+                              env
+
                             | _ -> failwith "Impossible"
                       else let fuel = varops.fresh "fuel", Fuel_sort in //encoding recursive definitions using fuel to throttle unfoldings
                            let fuel_tm = mkFreeV fuel in
@@ -1404,8 +1416,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             else constructor_to_decl c in
 
         let inversion_axioms tapp vars =
-            if List.length datas = 0  
-            || datas |> Util.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone)
+            if datas |> Util.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
             then []
             else
                  let xxsym, xx = fresh_fvar "x" Term_sort in

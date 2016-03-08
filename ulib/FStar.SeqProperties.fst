@@ -143,7 +143,8 @@ val lemma_mem_count: #a:Type -> s:seq a -> f:(a -> Tot bool) -> Lemma
 let rec lemma_mem_count #a s f =
   if length s = 0
   then ()
-  else (cut (Forall #(i:nat{i<length (tail s)}) (fun (i:nat{i<length (tail s)}) -> index (tail s) i = index s (i + 1)));
+  else (let t = i:nat{i<length (tail s)} in
+        cut (forall (i:t). index (tail s) i = index s (i + 1));
         lemma_mem_count (tail s) f)
 
 val lemma_count_slice: #a:Type -> s:seq a -> i:nat{i<=length s} -> Lemma
