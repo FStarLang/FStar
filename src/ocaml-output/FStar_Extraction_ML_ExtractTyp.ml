@@ -4,29 +4,29 @@ open Prims
 let binderIsExp : FStar_Absyn_Syntax.binder  ->  Prims.bool = (fun bn -> (FStar_Absyn_Print.is_inr (Prims.fst bn)))
 
 # 32 "FStar.Extraction.ML.ExtractTyp.fst"
-let rec argIsExp : FStar_Absyn_Syntax.knd  ->  Prims.string  ->  Prims.bool Prims.list = (fun k typeName -> (match ((let _141_7 = (FStar_Absyn_Util.compress_kind k)
-in _141_7.FStar_Absyn_Syntax.n)) with
+let rec argIsExp : FStar_Absyn_Syntax.knd  ->  Prims.string  ->  Prims.bool Prims.list = (fun k typeName -> (match ((let _142_7 = (FStar_Absyn_Util.compress_kind k)
+in _142_7.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Kind_type -> begin
 []
 end
 | FStar_Absyn_Syntax.Kind_arrow (bs, r) -> begin
-(let _141_9 = (FStar_List.map binderIsExp bs)
-in (let _141_8 = (argIsExp r typeName)
-in (FStar_List.append _141_9 _141_8)))
+(let _142_9 = (FStar_List.map binderIsExp bs)
+in (let _142_8 = (argIsExp r typeName)
+in (FStar_List.append _142_9 _142_8)))
 end
-| FStar_Absyn_Syntax.Kind_delayed (k, _62_14, _62_16) -> begin
+| FStar_Absyn_Syntax.Kind_delayed (k, _61_14, _61_16) -> begin
 (FStar_All.failwith "extraction.numIndices : expected a compressed argument")
 end
-| FStar_Absyn_Syntax.Kind_abbrev (_62_20, k) -> begin
+| FStar_Absyn_Syntax.Kind_abbrev (_61_20, k) -> begin
 (argIsExp k typeName)
 end
-| _62_25 -> begin
+| _61_25 -> begin
 (FStar_All.failwith (Prims.strcat "unexpected signature of inductive type" typeName))
 end))
 
 # 40 "FStar.Extraction.ML.ExtractTyp.fst"
-let numIndices : FStar_Absyn_Syntax.knd  ->  Prims.string  ->  Prims.nat = (fun k typeName -> (let _141_14 = (argIsExp k typeName)
-in (FStar_List.length _141_14)))
+let numIndices : FStar_Absyn_Syntax.knd  ->  Prims.string  ->  Prims.nat = (fun k typeName -> (let _142_14 = (argIsExp k typeName)
+in (FStar_List.length _142_14)))
 
 # 44 "FStar.Extraction.ML.ExtractTyp.fst"
 let mlty_of_isExp : Prims.bool  ->  FStar_Extraction_ML_Syntax.mlty = (fun b -> if b then begin
@@ -52,12 +52,12 @@ let res = (match ((FStar_Tc_Env.lookup_effect_abbrev g.FStar_Extraction_ML_Env.t
 | None -> begin
 l
 end
-| Some (_62_38, c) -> begin
+| Some (_61_38, c) -> begin
 (delta_norm_eff g (FStar_Absyn_Util.comp_effect_name c))
 end)
 in (
 # 57 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_43 = (FStar_Util.smap_add cache l.FStar_Ident.str res)
+let _61_43 = (FStar_Util.smap_add cache l.FStar_Ident.str res)
 in res))
 end))
 in delta_norm_eff))
@@ -85,9 +85,9 @@ end
 FStar_Extraction_ML_Syntax.MLTY_Fun ((h, f, out))
 end
 | h1::h2::tl -> begin
-(let _141_34 = (let _141_33 = (curry ((h2)::tl) f out)
-in (h1, FStar_Extraction_ML_Syntax.E_PURE, _141_33))
-in FStar_Extraction_ML_Syntax.MLTY_Fun (_141_34))
+(let _142_34 = (let _142_33 = (curry ((h2)::tl) f out)
+in (h1, FStar_Extraction_ML_Syntax.E_PURE, _142_33))
+in FStar_Extraction_ML_Syntax.MLTY_Fun (_142_34))
 end))
 
 # 86 "FStar.Extraction.ML.ExtractTyp.fst"
@@ -99,10 +99,10 @@ let extendContextWithRepAsTyVar : ((FStar_Absyn_Syntax.btvar, FStar_Absyn_Syntax
 | (FStar_Util.Inl (bt), FStar_Util.Inl (btr)) -> begin
 (FStar_Extraction_ML_Env.extend_ty c btr (Some (FStar_Extraction_ML_Syntax.MLTY_Var ((FStar_Extraction_ML_Env.btvar_as_mltyvar bt)))))
 end
-| (FStar_Util.Inr (bv), FStar_Util.Inr (_62_69)) -> begin
+| (FStar_Util.Inr (bv), FStar_Util.Inr (_61_69)) -> begin
 (FStar_Extraction_ML_Env.extend_bv c bv ([], FStar_Extraction_ML_Env.erasedContent) false false false)
 end
-| _62_73 -> begin
+| _61_73 -> begin
 (FStar_All.failwith "Impossible case")
 end))
 
@@ -151,19 +151,19 @@ end
 | FStar_Absyn_Syntax.Typ_fun (bs, codomain) -> begin
 (
 # 145 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_105 = (extractBindersTypes c bs)
-in (match (_62_105) with
+let _61_105 = (extractBindersTypes c bs)
+in (match (_61_105) with
 | (bts, newC) -> begin
 (
 # 146 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_108 = (extractComp newC codomain)
-in (match (_62_108) with
+let _61_108 = (extractComp newC codomain)
+in (match (_61_108) with
 | (codomainML, erase) -> begin
 (curry bts erase codomainML)
 end))
 end))
 end
-| FStar_Absyn_Syntax.Typ_refine (bv, _62_111) -> begin
+| FStar_Absyn_Syntax.Typ_refine (bv, _61_111) -> begin
 (extractTyp c bv.FStar_Absyn_Syntax.sort)
 end
 | FStar_Absyn_Syntax.Typ_app (ty, arrgs) -> begin
@@ -180,10 +180,10 @@ end
 (extractTyConstApp c ftv arrgs)
 end
 | FStar_Absyn_Syntax.Typ_app (tyin, argsin) -> begin
-(let _141_86 = (FStar_Extraction_ML_Util.mkTypApp tyin (FStar_List.append argsin arrgs) ty)
-in (extractTyp c _141_86))
+(let _142_86 = (FStar_Extraction_ML_Util.mkTypApp tyin (FStar_List.append argsin arrgs) ty)
+in (extractTyp c _142_86))
 end
-| _62_128 -> begin
+| _61_128 -> begin
 FStar_Extraction_ML_Env.unknownType
 end)
 in res))
@@ -191,32 +191,32 @@ end
 | FStar_Absyn_Syntax.Typ_lam (bs, ty) -> begin
 (
 # 164 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_136 = (extractBindersTypes c bs)
-in (match (_62_136) with
+let _61_136 = (extractBindersTypes c bs)
+in (match (_61_136) with
 | (bts, c) -> begin
 (extractTyp c ty)
 end))
 end
-| FStar_Absyn_Syntax.Typ_ascribed (ty, _62_139) -> begin
+| FStar_Absyn_Syntax.Typ_ascribed (ty, _61_139) -> begin
 (extractTyp c ty)
 end
 | FStar_Absyn_Syntax.Typ_meta (mt) -> begin
 (extractMeta c mt)
 end
-| FStar_Absyn_Syntax.Typ_uvar (_62_145) -> begin
+| FStar_Absyn_Syntax.Typ_uvar (_61_145) -> begin
 FStar_Extraction_ML_Env.unknownType
 end
-| FStar_Absyn_Syntax.Typ_delayed (_62_148) -> begin
+| FStar_Absyn_Syntax.Typ_delayed (_61_148) -> begin
 (FStar_All.failwith "expected the argument to be compressed")
 end
-| _62_151 -> begin
+| _61_151 -> begin
 (FStar_All.failwith "NYI. replace this with unknownType if you know the consequences")
 end)))
 and getTypeFromArg : context  ->  FStar_Absyn_Syntax.arg  ->  FStar_Extraction_ML_Syntax.mlty = (fun c a -> (match ((Prims.fst a)) with
 | FStar_Util.Inl (ty) -> begin
 (extractTyp c ty)
 end
-| FStar_Util.Inr (_62_157) -> begin
+| FStar_Util.Inr (_61_157) -> begin
 FStar_Extraction_ML_Env.erasedContent
 end))
 and extractMeta : context  ->  FStar_Absyn_Syntax.meta_t  ->  FStar_Extraction_ML_Syntax.mlty = (fun c mt -> (match (mt) with
@@ -235,72 +235,72 @@ in (
 let ar = (argIsExp k ftv.FStar_Absyn_Syntax.v.FStar_Ident.str)
 in (
 # 196 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_199 = (FStar_Util.first_N (FStar_List.length mlargs) ar)
-in (match (_62_199) with
-| (_62_197, missingArgs) -> begin
+let _61_199 = (FStar_Util.first_N (FStar_List.length mlargs) ar)
+in (match (_61_199) with
+| (_61_197, missingArgs) -> begin
 (
 # 197 "FStar.Extraction.ML.ExtractTyp.fst"
 let argCompletion = (FStar_List.map mlty_of_isExp missingArgs)
-in (let _141_98 = (let _141_97 = (FStar_Extraction_ML_Syntax.mlpath_of_lident ftv.FStar_Absyn_Syntax.v)
-in ((FStar_List.append mlargs argCompletion), _141_97))
-in FStar_Extraction_ML_Syntax.MLTY_Named (_141_98)))
+in (let _142_98 = (let _142_97 = (FStar_Extraction_ML_Syntax.mlpath_of_lident ftv.FStar_Absyn_Syntax.v)
+in ((FStar_List.append mlargs argCompletion), _142_97))
+in FStar_Extraction_ML_Syntax.MLTY_Named (_142_98)))
 end)))))
 end else begin
 (FStar_All.failwith "this case was not anticipated")
 end)
 and extractBinderType : context  ->  FStar_Absyn_Syntax.binder  ->  (FStar_Extraction_ML_Syntax.mlty * context) = (fun c bn -> (match (bn) with
-| (FStar_Util.Inl (btv), _62_206) -> begin
-(let _141_102 = (extractKind c btv.FStar_Absyn_Syntax.sort)
-in (let _141_101 = (extendContextAsTyvar false (FStar_Util.Inl (btv)) c)
-in (_141_102, _141_101)))
+| (FStar_Util.Inl (btv), _61_206) -> begin
+(let _142_102 = (extractKind c btv.FStar_Absyn_Syntax.sort)
+in (let _142_101 = (extendContextAsTyvar false (FStar_Util.Inl (btv)) c)
+in (_142_102, _142_101)))
 end
-| (FStar_Util.Inr (bvv), _62_211) -> begin
-(let _141_104 = (extractTyp c bvv.FStar_Absyn_Syntax.sort)
-in (let _141_103 = (extendContextAsTyvar false (FStar_Util.Inr (bvv)) c)
-in (_141_104, _141_103)))
+| (FStar_Util.Inr (bvv), _61_211) -> begin
+(let _142_104 = (extractTyp c bvv.FStar_Absyn_Syntax.sort)
+in (let _142_103 = (extendContextAsTyvar false (FStar_Util.Inr (bvv)) c)
+in (_142_104, _142_103)))
 end))
-and extractBindersTypes : context  ->  FStar_Absyn_Syntax.binder Prims.list  ->  (FStar_Extraction_ML_Syntax.mlty Prims.list * context) = (fun c bs -> (let _141_110 = (FStar_List.fold_left (fun _62_217 b -> (match (_62_217) with
+and extractBindersTypes : context  ->  FStar_Absyn_Syntax.binder Prims.list  ->  (FStar_Extraction_ML_Syntax.mlty Prims.list * context) = (fun c bs -> (let _142_110 = (FStar_List.fold_left (fun _61_217 b -> (match (_61_217) with
 | (lt, cp) -> begin
 (
 # 212 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_221 = (extractBinderType cp b)
-in (match (_62_221) with
+let _61_221 = (extractBinderType cp b)
+in (match (_61_221) with
 | (nt, nc) -> begin
 ((nt)::lt, nc)
 end))
 end)) ([], c) bs)
-in ((fun _62_224 -> (match (_62_224) with
+in ((fun _61_224 -> (match (_61_224) with
 | (x, c) -> begin
 ((FStar_List.rev x), c)
-end)) _141_110)))
+end)) _142_110)))
 and extractKind : context  ->  FStar_Absyn_Syntax.knd  ->  FStar_Extraction_ML_Syntax.mlty = (fun c ft -> FStar_Extraction_ML_Env.erasedContent)
 and extractComp : context  ->  FStar_Absyn_Syntax.comp  ->  (FStar_Extraction_ML_Syntax.mlty * FStar_Extraction_ML_Syntax.e_tag) = (fun c ft -> (extractComp' c ft.FStar_Absyn_Syntax.n))
 and extractComp' : context  ->  FStar_Absyn_Syntax.comp'  ->  (FStar_Extraction_ML_Syntax.mlty * FStar_Extraction_ML_Syntax.e_tag) = (fun c ft -> (match (ft) with
 | FStar_Absyn_Syntax.Total (ty) -> begin
-(let _141_117 = (extractTyp c ty)
-in (_141_117, FStar_Extraction_ML_Syntax.E_PURE))
+(let _142_117 = (extractTyp c ty)
+in (_142_117, FStar_Extraction_ML_Syntax.E_PURE))
 end
 | FStar_Absyn_Syntax.Comp (cm) -> begin
-(let _141_119 = (extractTyp c cm.FStar_Absyn_Syntax.result_typ)
-in (let _141_118 = (translate_eff c cm.FStar_Absyn_Syntax.effect_name)
-in (_141_119, _141_118)))
+(let _142_119 = (extractTyp c cm.FStar_Absyn_Syntax.result_typ)
+in (let _142_118 = (translate_eff c cm.FStar_Absyn_Syntax.effect_name)
+in (_142_119, _142_118)))
 end))
 
 # 222 "FStar.Extraction.ML.ExtractTyp.fst"
 let binderPPnames : FStar_Absyn_Syntax.binder  ->  FStar_Ident.ident = (fun bn -> (match (bn) with
-| (FStar_Util.Inl (btv), _62_239) -> begin
+| (FStar_Util.Inl (btv), _61_239) -> begin
 btv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.ppname
 end
-| (FStar_Util.Inr (bvv), _62_244) -> begin
+| (FStar_Util.Inr (bvv), _61_244) -> begin
 bvv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.ppname
 end))
 
 # 227 "FStar.Extraction.ML.ExtractTyp.fst"
 let binderRealnames : FStar_Absyn_Syntax.binder  ->  FStar_Ident.ident = (fun bn -> (match (bn) with
-| (FStar_Util.Inl (btv), _62_250) -> begin
+| (FStar_Util.Inl (btv), _61_250) -> begin
 btv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.realname
 end
-| (FStar_Util.Inr (bvv), _62_255) -> begin
+| (FStar_Util.Inr (bvv), _61_255) -> begin
 bvv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.realname
 end))
 
@@ -332,82 +332,82 @@ let is_MktypeAbbrev : typeAbbrev  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_
 let lookupDataConType : context  ->  FStar_Absyn_Syntax.sigelts  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun c sigb l -> (
 # 257 "FStar.Extraction.ML.ExtractTyp.fst"
 let tr = (FStar_Util.find_map sigb (fun s -> (match (s) with
-| FStar_Absyn_Syntax.Sig_datacon (l', t, (_62_278, tps, _62_281), quals, lids, _62_286) -> begin
+| FStar_Absyn_Syntax.Sig_datacon (l', t, (_61_278, tps, _61_281), quals, lids, _61_286) -> begin
 if (l = l') then begin
 (
 # 262 "FStar.Extraction.ML.ExtractTyp.fst"
-let t = (let _141_169 = (FStar_List.map (fun _62_292 -> (match (_62_292) with
-| (x, _62_291) -> begin
-(let _141_168 = (FStar_All.pipe_left (fun _141_167 -> Some (_141_167)) (FStar_Absyn_Syntax.Implicit (true)))
-in (x, _141_168))
+let t = (let _142_169 = (FStar_List.map (fun _61_292 -> (match (_61_292) with
+| (x, _61_291) -> begin
+(let _142_168 = (FStar_All.pipe_left (fun _142_167 -> Some (_142_167)) (FStar_Absyn_Syntax.Implicit (true)))
+in (x, _142_168))
 end)) tps)
-in (FStar_Absyn_Util.close_typ _141_169 t))
+in (FStar_Absyn_Util.close_typ _142_169 t))
 in Some (t))
 end else begin
 None
 end
 end
-| _62_295 -> begin
+| _61_295 -> begin
 None
 end)))
 in (FStar_Util.must tr)))
 
 # 268 "FStar.Extraction.ML.ExtractTyp.fst"
-let parseInductiveConstructors : context  ->  FStar_Ident.lident Prims.list  ->  FStar_Absyn_Syntax.sigelts  ->  inductiveConstructor Prims.list = (fun c cnames sigb -> (FStar_List.map (fun h -> (let _141_177 = (lookupDataConType c sigb h)
-in {cname = h; ctype = _141_177})) cnames))
+let parseInductiveConstructors : context  ->  FStar_Ident.lident Prims.list  ->  FStar_Absyn_Syntax.sigelts  ->  inductiveConstructor Prims.list = (fun c cnames sigb -> (FStar_List.map (fun h -> (let _142_177 = (lookupDataConType c sigb h)
+in {cname = h; ctype = _142_177})) cnames))
 
 # 273 "FStar.Extraction.ML.ExtractTyp.fst"
 let rec parseInductiveTypesFromSigBundle : context  ->  FStar_Absyn_Syntax.sigelts  ->  (inductiveTypeFam Prims.list * typeAbbrev Prims.list * inductiveConstructor Prims.list) = (fun c sigs -> (match (sigs) with
 | [] -> begin
 ([], [], [])
 end
-| FStar_Absyn_Syntax.Sig_tycon (l, bs, kk, _62_309, constrs, qs, _62_313)::tlsig -> begin
+| FStar_Absyn_Syntax.Sig_tycon (l, bs, kk, _61_309, constrs, qs, _61_313)::tlsig -> begin
 (
 # 281 "FStar.Extraction.ML.ExtractTyp.fst"
 let indConstrs = (parseInductiveConstructors c constrs tlsig)
 in (
 # 282 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_321 = (parseInductiveTypesFromSigBundle c tlsig)
-in (match (_62_321) with
+let _61_321 = (parseInductiveTypesFromSigBundle c tlsig)
+in (match (_61_321) with
 | (inds, abbs, exns) -> begin
 (({tyName = l; k = kk; tyBinders = bs; constructors = indConstrs; qualifiers = qs})::inds, abbs, exns)
 end)))
 end
-| FStar_Absyn_Syntax.Sig_datacon (l, _62_325, tc, quals, lids, _62_330)::tlsig -> begin
+| FStar_Absyn_Syntax.Sig_datacon (l, _61_325, tc, quals, lids, _61_330)::tlsig -> begin
 if (FStar_List.contains FStar_Absyn_Syntax.ExceptionConstructor quals) then begin
 (
 # 287 "FStar.Extraction.ML.ExtractTyp.fst"
 let t = (FStar_Tc_Env.lookup_datacon c.FStar_Extraction_ML_Env.tcenv l)
 in (
 # 288 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_335 = ()
+let _61_335 = ()
 in ([], [], ({cname = l; ctype = t})::[])))
 end else begin
 ([], [], [])
 end
 end
-| FStar_Absyn_Syntax.Sig_typ_abbrev (l, bs, _62_341, t, _62_344, _62_346)::tlsig -> begin
+| FStar_Absyn_Syntax.Sig_typ_abbrev (l, bs, _61_341, t, _61_344, _61_346)::tlsig -> begin
 (
 # 293 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_353 = (parseInductiveTypesFromSigBundle c tlsig)
-in (match (_62_353) with
+let _61_353 = (parseInductiveTypesFromSigBundle c tlsig)
+in (match (_61_353) with
 | (inds, abbs, exns) -> begin
 (inds, ({abTyName = l; abTyBinders = bs; abBody = t})::abbs, exns)
 end))
 end
 | se::tlsig -> begin
-(let _141_183 = (let _141_182 = (FStar_Absyn_Print.sigelt_to_string se)
-in (FStar_Util.format1 "unexpected content in a  sig bundle : %s\n" _141_182))
-in (FStar_All.failwith _141_183))
+(let _142_183 = (let _142_182 = (FStar_Absyn_Print.sigelt_to_string se)
+in (FStar_Util.format1 "unexpected content in a  sig bundle : %s\n" _142_182))
+in (FStar_All.failwith _142_183))
 end))
 
 # 301 "FStar.Extraction.ML.ExtractTyp.fst"
 let rec argTypes : FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlty Prims.list = (fun t -> (match (t) with
-| FStar_Extraction_ML_Syntax.MLTY_Fun (a, _62_360, b) -> begin
-(let _141_186 = (argTypes b)
-in (a)::_141_186)
+| FStar_Extraction_ML_Syntax.MLTY_Fun (a, _61_360, b) -> begin
+(let _142_186 = (argTypes b)
+in (a)::_142_186)
 end
-| _62_365 -> begin
+| _61_365 -> begin
 []
 end))
 
@@ -419,7 +419,7 @@ let totalType_of_comp : FStar_Absyn_Syntax.comp  ->  FStar_Absyn_Syntax.typ = (f
 | FStar_Absyn_Syntax.Total (ty) -> begin
 ty
 end
-| _62_371 -> begin
+| _61_371 -> begin
 (FStar_All.failwith "expected a total type. constructors of inductive types were assumed to be total")
 end))
 
@@ -431,7 +431,7 @@ in (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_fun (lb, cp) -> begin
 lb
 end
-| _62_380 -> begin
+| _61_380 -> begin
 []
 end)))
 
@@ -443,32 +443,32 @@ in (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_fun (lb, cp) -> begin
 (
 # 326 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_391 = (FStar_Util.first_N n lb)
-in (match (_62_391) with
+let _61_391 = (FStar_Util.first_N n lb)
+in (match (_61_391) with
 | (ll, lr) -> begin
 if (FStar_List.isEmpty lr) then begin
-(let _141_201 = (totalType_of_comp cp)
-in (ll, _141_201))
+(let _142_201 = (totalType_of_comp cp)
+in (ll, _142_201))
 end else begin
-(let _141_202 = (FStar_Extraction_ML_Util.mkTypFun lr cp t)
-in (ll, _141_202))
+(let _142_202 = (FStar_Extraction_ML_Util.mkTypFun lr cp t)
+in (ll, _142_202))
 end
 end))
 end
-| _62_393 -> begin
+| _61_393 -> begin
 (
 # 333 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_394 = ()
+let _61_394 = ()
 in ([], t))
 end)))
 
 # 337 "FStar.Extraction.ML.ExtractTyp.fst"
 let rec zipUnequal = (fun la lb -> (match ((la, lb)) with
 | (ha::ta, hb::tb) -> begin
-(let _141_207 = (zipUnequal ta tb)
-in ((ha, hb))::_141_207)
+(let _142_207 = (zipUnequal ta tb)
+in ((ha, hb))::_142_207)
 end
-| _62_408 -> begin
+| _61_408 -> begin
 []
 end))
 
@@ -478,55 +478,55 @@ let mlTyIdentOfBinder : FStar_Absyn_Syntax.binder  ->  (Prims.string * Prims.int
 # 344 "FStar.Extraction.ML.ExtractTyp.fst"
 let extractCtor : FStar_Absyn_Syntax.binder Prims.list  ->  context  ->  inductiveConstructor  ->  (context * (FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_ML_Syntax.mlty Prims.list)) = (fun tyBinders c ctor -> (
 # 345 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_415 = (bindersOfFuntype c (FStar_List.length tyBinders) ctor.ctype)
-in (match (_62_415) with
+let _61_415 = (bindersOfFuntype c (FStar_List.length tyBinders) ctor.ctype)
+in (match (_61_415) with
 | (lb, tr) -> begin
 (
 # 346 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_416 = ()
+let _61_416 = ()
 in (
 # 347 "FStar.Extraction.ML.ExtractTyp.fst"
 let lp = (FStar_List.zip tyBinders lb)
 in (
 # 349 "FStar.Extraction.ML.ExtractTyp.fst"
-let newC = (let _141_217 = (FStar_List.map (fun _62_421 -> (match (_62_421) with
+let newC = (let _142_217 = (FStar_List.map (fun _61_421 -> (match (_61_421) with
 | (x, y) -> begin
 ((Prims.fst x), (Prims.fst y))
 end)) lp)
-in (extendContextWithRepAsTyVars _141_217 c))
+in (extendContextWithRepAsTyVars _142_217 c))
 in (
 # 350 "FStar.Extraction.ML.ExtractTyp.fst"
-let mlt = (let _141_218 = (extractTyp newC tr)
-in (FStar_Extraction_ML_Util.eraseTypeDeep c _141_218))
+let mlt = (let _142_218 = (extractTyp newC tr)
+in (FStar_Extraction_ML_Util.eraseTypeDeep c _142_218))
 in (
 # 351 "FStar.Extraction.ML.ExtractTyp.fst"
-let tys = (let _141_219 = (FStar_List.map mlTyIdentOfBinder tyBinders)
-in (_141_219, mlt))
+let tys = (let _142_219 = (FStar_List.map mlTyIdentOfBinder tyBinders)
+in (_142_219, mlt))
 in (
 # 352 "FStar.Extraction.ML.ExtractTyp.fst"
 let fvv = (FStar_Extraction_ML_Env.mkFvvar ctor.cname ctor.ctype)
-in (let _141_222 = (FStar_Extraction_ML_Env.extend_fv c fvv tys false false)
-in (let _141_221 = (let _141_220 = (argTypes mlt)
-in ((lident2mlsymbol ctor.cname), _141_220))
-in (_141_222, _141_221)))))))))
+in (let _142_222 = (FStar_Extraction_ML_Env.extend_fv c fvv tys false false)
+in (let _142_221 = (let _142_220 = (argTypes mlt)
+in ((lident2mlsymbol ctor.cname), _142_220))
+in (_142_222, _142_221)))))))))
 end)))
 
 # 366 "FStar.Extraction.ML.ExtractTyp.fst"
 let rec firstNNats : Prims.int  ->  Prims.int Prims.list = (fun n -> if (0 < n) then begin
-(let _141_225 = (firstNNats (n - 1))
-in (n)::_141_225)
+(let _142_225 = (firstNNats (n - 1))
+in (n)::_142_225)
 end else begin
 []
 end)
 
 # 371 "FStar.Extraction.ML.ExtractTyp.fst"
-let dummyIdent : Prims.int  ->  (Prims.string * Prims.int) = (fun n -> (let _141_229 = (let _141_228 = (FStar_Util.string_of_int n)
-in (Prims.strcat "\'dummyV" _141_228))
-in (_141_229, 0)))
+let dummyIdent : Prims.int  ->  (Prims.string * Prims.int) = (fun n -> (let _142_229 = (let _142_228 = (FStar_Util.string_of_int n)
+in (Prims.strcat "\'dummyV" _142_228))
+in (_142_229, 0)))
 
 # 372 "FStar.Extraction.ML.ExtractTyp.fst"
-let dummyIndexIdents : Prims.int  ->  (Prims.string * Prims.int) Prims.list = (fun n -> (let _141_232 = (firstNNats n)
-in (FStar_List.map dummyIdent _141_232)))
+let dummyIndexIdents : Prims.int  ->  (Prims.string * Prims.int) Prims.list = (fun n -> (let _142_232 = (firstNNats n)
+in (FStar_List.map dummyIdent _142_232)))
 
 # 374 "FStar.Extraction.ML.ExtractTyp.fst"
 let extractInductive : context  ->  inductiveTypeFam  ->  (context * (FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_ML_Syntax.mlidents * FStar_Extraction_ML_Syntax.mltybody Prims.option)) = (fun c ind -> (
@@ -537,42 +537,42 @@ in (
 let nIndices = (numIndices ind.k ind.tyName.FStar_Ident.ident.FStar_Ident.idText)
 in (
 # 377 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_435 = (FStar_Util.fold_map (extractCtor ind.tyBinders) newContext ind.constructors)
-in (match (_62_435) with
+let _61_435 = (FStar_Util.fold_map (extractCtor ind.tyBinders) newContext ind.constructors)
+in (match (_61_435) with
 | (nc, tyb) -> begin
 (
 # 378 "FStar.Extraction.ML.ExtractTyp.fst"
-let mlbs = (let _141_238 = (FStar_List.map mlTyIdentOfBinder ind.tyBinders)
-in (let _141_237 = (dummyIndexIdents nIndices)
-in (FStar_List.append _141_238 _141_237)))
+let mlbs = (let _142_238 = (FStar_List.map mlTyIdentOfBinder ind.tyBinders)
+in (let _142_237 = (dummyIndexIdents nIndices)
+in (FStar_List.append _142_238 _142_237)))
 in (
 # 379 "FStar.Extraction.ML.ExtractTyp.fst"
-let tbody = (match ((FStar_Util.find_opt (fun _62_1 -> (match (_62_1) with
-| FStar_Absyn_Syntax.RecordType (_62_439) -> begin
+let tbody = (match ((FStar_Util.find_opt (fun _61_1 -> (match (_61_1) with
+| FStar_Absyn_Syntax.RecordType (_61_439) -> begin
 true
 end
-| _62_442 -> begin
+| _61_442 -> begin
 false
 end)) ind.qualifiers)) with
 | Some (FStar_Absyn_Syntax.RecordType (ids)) -> begin
 (
 # 381 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_446 = ()
+let _61_446 = ()
 in (
 # 382 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_451 = (FStar_List.hd tyb)
-in (match (_62_451) with
-| (_62_449, c_ty) -> begin
+let _61_451 = (FStar_List.hd tyb)
+in (match (_61_451) with
+| (_61_449, c_ty) -> begin
 (
 # 383 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_452 = ()
+let _61_452 = ()
 in (
 # 384 "FStar.Extraction.ML.ExtractTyp.fst"
 let fields = (FStar_List.map2 (fun lid ty -> (lid.FStar_Ident.ident.FStar_Ident.idText, ty)) ids c_ty)
 in FStar_Extraction_ML_Syntax.MLTD_Record (fields)))
 end)))
 end
-| _62_458 -> begin
+| _61_458 -> begin
 FStar_Extraction_ML_Syntax.MLTD_DType (tyb)
 end)
 in (nc, ((lident2mlsymbol ind.tyName), mlbs, Some (tbody)))))
@@ -589,15 +589,15 @@ in (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_lam (bs, t) -> begin
 (
 # 398 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_471 = (let _141_248 = (let _141_247 = (mfst bs)
-in (extendContext c _141_247))
-in (headBinders _141_248 t))
-in (match (_62_471) with
+let _61_471 = (let _142_248 = (let _142_247 = (mfst bs)
+in (extendContext c _142_247))
+in (headBinders _142_248 t))
+in (match (_61_471) with
 | (c, rb, rresidualType) -> begin
 (c, (FStar_List.append bs rb), rresidualType)
 end))
 end
-| _62_473 -> begin
+| _61_473 -> begin
 (c, [], t)
 end)))
 
@@ -613,12 +613,12 @@ in (
 let l = tyab.abTyName
 in (
 # 407 "FStar.Extraction.ML.ExtractTyp.fst"
-let c = (let _141_255 = (mfst bs)
-in (extendContext c _141_255))
+let c = (let _142_255 = (mfst bs)
+in (extendContext c _142_255))
 in (
 # 413 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_484 = (headBinders c t)
-in (match (_62_484) with
+let _61_484 = (headBinders c t)
+in (match (_61_484) with
 | (c, headBinders, residualType) -> begin
 (
 # 414 "FStar.Extraction.ML.ExtractTyp.fst"
@@ -637,15 +637,15 @@ in (
 let tyDecBody = FStar_Extraction_ML_Syntax.MLTD_Abbrev (mlt)
 in (
 # 420 "FStar.Extraction.ML.ExtractTyp.fst"
-let td = (let _141_256 = (FStar_List.map mlTyIdentOfBinder bs)
-in ((mlsymbolOfLident l), _141_256, Some (tyDecBody)))
+let td = (let _142_256 = (FStar_List.map mlTyIdentOfBinder bs)
+in ((mlsymbolOfLident l), _142_256, Some (tyDecBody)))
 in (
 # 421 "FStar.Extraction.ML.ExtractTyp.fst"
-let c = if (FStar_All.pipe_right quals (FStar_Util.for_some (fun _62_2 -> (match (_62_2) with
+let c = if (FStar_All.pipe_right quals (FStar_Util.for_some (fun _61_2 -> (match (_61_2) with
 | (FStar_Absyn_Syntax.Assumption) | (FStar_Absyn_Syntax.New) -> begin
 true
 end
-| _62_495 -> begin
+| _61_495 -> begin
 false
 end)))) then begin
 c
@@ -670,11 +670,11 @@ in (
 let fvv = (FStar_Extraction_ML_Env.mkFvvar exnConstr.cname exnConstr.ctype)
 in (
 # 431 "FStar.Extraction.ML.ExtractTyp.fst"
-let ex_decl = (let _141_263 = (let _141_262 = (argTypes mlt)
-in ((lident2mlsymbol exnConstr.cname), _141_262))
-in FStar_Extraction_ML_Syntax.MLM_Exn (_141_263))
-in (let _141_264 = (FStar_Extraction_ML_Env.extend_fv c fvv tys false false)
-in (_141_264, ex_decl))))))))
+let ex_decl = (let _142_263 = (let _142_262 = (argTypes mlt)
+in ((lident2mlsymbol exnConstr.cname), _142_262))
+in FStar_Extraction_ML_Syntax.MLM_Exn (_142_263))
+in (let _142_264 = (FStar_Extraction_ML_Env.extend_fv c fvv tys false false)
+in (_142_264, ex_decl))))))))
 
 # 434 "FStar.Extraction.ML.ExtractTyp.fst"
 let mlloc_of_range : FStar_Range.range  ->  (Prims.int * Prims.string) = (fun r -> (
@@ -683,86 +683,86 @@ let pos = (FStar_Range.start_of_range r)
 in (
 # 436 "FStar.Extraction.ML.ExtractTyp.fst"
 let line = (FStar_Range.line_of_pos pos)
-in (let _141_267 = (FStar_Range.file_of_range r)
-in (line, _141_267)))))
+in (let _142_267 = (FStar_Range.file_of_range r)
+in (line, _142_267)))))
 
 # 441 "FStar.Extraction.ML.ExtractTyp.fst"
 let rec extractSigElt : context  ->  FStar_Absyn_Syntax.sigelt  ->  (context * FStar_Extraction_ML_Syntax.mlmodule1 Prims.list) = (fun c s -> (match (s) with
-| FStar_Absyn_Syntax.Sig_typ_abbrev (l, bs, _62_512, t, quals, range) -> begin
+| FStar_Absyn_Syntax.Sig_typ_abbrev (l, bs, _61_512, t, quals, range) -> begin
 (
 # 444 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_520 = (extractTypeAbbrev quals c {abTyName = l; abTyBinders = bs; abBody = t})
-in (match (_62_520) with
+let _61_520 = (extractTypeAbbrev quals c {abTyName = l; abTyBinders = bs; abBody = t})
+in (match (_61_520) with
 | (c, tds) -> begin
-(let _141_274 = if (FStar_All.pipe_right quals (FStar_List.contains FStar_Absyn_Syntax.Logic)) then begin
+(let _142_274 = if (FStar_All.pipe_right quals (FStar_List.contains FStar_Absyn_Syntax.Logic)) then begin
 []
 end else begin
-(let _141_273 = (let _141_272 = (mlloc_of_range range)
-in FStar_Extraction_ML_Syntax.MLM_Loc (_141_272))
-in (_141_273)::(FStar_Extraction_ML_Syntax.MLM_Ty ((tds)::[]))::[])
+(let _142_273 = (let _142_272 = (mlloc_of_range range)
+in FStar_Extraction_ML_Syntax.MLM_Loc (_142_272))
+in (_142_273)::(FStar_Extraction_ML_Syntax.MLM_Ty ((tds)::[]))::[])
 end
-in (c, _141_274))
+in (c, _142_274))
 end))
 end
-| FStar_Absyn_Syntax.Sig_bundle (sigs, FStar_Absyn_Syntax.ExceptionConstructor::[], _62_525, range) -> begin
+| FStar_Absyn_Syntax.Sig_bundle (sigs, FStar_Absyn_Syntax.ExceptionConstructor::[], _61_525, range) -> begin
 (
 # 448 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_534 = (parseInductiveTypesFromSigBundle c sigs)
-in (match (_62_534) with
-| (_62_530, _62_532, exConstrs) -> begin
+let _61_534 = (parseInductiveTypesFromSigBundle c sigs)
+in (match (_61_534) with
+| (_61_530, _61_532, exConstrs) -> begin
 (
 # 449 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_535 = ()
+let _61_535 = ()
 in (
 # 450 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_539 = (let _141_275 = (FStar_List.hd exConstrs)
-in (extractExn c _141_275))
-in (match (_62_539) with
+let _61_539 = (let _142_275 = (FStar_List.hd exConstrs)
+in (extractExn c _142_275))
+in (match (_61_539) with
 | (c, exDecl) -> begin
-(let _141_278 = (let _141_277 = (let _141_276 = (mlloc_of_range range)
-in FStar_Extraction_ML_Syntax.MLM_Loc (_141_276))
-in (_141_277)::(exDecl)::[])
-in (c, _141_278))
+(let _142_278 = (let _142_277 = (let _142_276 = (mlloc_of_range range)
+in FStar_Extraction_ML_Syntax.MLM_Loc (_142_276))
+in (_142_277)::(exDecl)::[])
+in (c, _142_278))
 end)))
 end))
 end
-| FStar_Absyn_Syntax.Sig_bundle (sigs, _62_542, _62_544, range) -> begin
+| FStar_Absyn_Syntax.Sig_bundle (sigs, _61_542, _61_544, range) -> begin
 (
 # 455 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_552 = (parseInductiveTypesFromSigBundle c sigs)
-in (match (_62_552) with
-| (inds, abbs, _62_551) -> begin
+let _61_552 = (parseInductiveTypesFromSigBundle c sigs)
+in (match (_61_552) with
+| (inds, abbs, _61_551) -> begin
 (
 # 456 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_555 = (FStar_Util.fold_map extractInductive c inds)
-in (match (_62_555) with
+let _61_555 = (FStar_Util.fold_map extractInductive c inds)
+in (match (_61_555) with
 | (c, indDecls) -> begin
 (
 # 457 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_558 = (FStar_Util.fold_map (extractTypeAbbrev []) c abbs)
-in (match (_62_558) with
+let _61_558 = (FStar_Util.fold_map (extractTypeAbbrev []) c abbs)
+in (match (_61_558) with
 | (c, tyAbDecls) -> begin
-(let _141_281 = (let _141_280 = (let _141_279 = (mlloc_of_range range)
-in FStar_Extraction_ML_Syntax.MLM_Loc (_141_279))
-in (_141_280)::(FStar_Extraction_ML_Syntax.MLM_Ty ((FStar_List.append indDecls tyAbDecls)))::[])
-in (c, _141_281))
+(let _142_281 = (let _142_280 = (let _142_279 = (mlloc_of_range range)
+in FStar_Extraction_ML_Syntax.MLM_Loc (_142_279))
+in (_142_280)::(FStar_Extraction_ML_Syntax.MLM_Ty ((FStar_List.append indDecls tyAbDecls)))::[])
+in (c, _142_281))
 end))
 end))
 end))
 end
-| FStar_Absyn_Syntax.Sig_tycon (l, bs, k, _62_563, _62_565, quals, r) -> begin
-if (((FStar_All.pipe_right quals (FStar_List.contains FStar_Absyn_Syntax.Assumption)) || (FStar_All.pipe_right quals (FStar_List.contains FStar_Absyn_Syntax.New))) && (not ((FStar_All.pipe_right quals (FStar_Util.for_some (fun _62_3 -> (match (_62_3) with
+| FStar_Absyn_Syntax.Sig_tycon (l, bs, k, _61_563, _61_565, quals, r) -> begin
+if (((FStar_All.pipe_right quals (FStar_List.contains FStar_Absyn_Syntax.Assumption)) || (FStar_All.pipe_right quals (FStar_List.contains FStar_Absyn_Syntax.New))) && (not ((FStar_All.pipe_right quals (FStar_Util.for_some (fun _61_3 -> (match (_61_3) with
 | (FStar_Absyn_Syntax.Projector (_)) | (FStar_Absyn_Syntax.Discriminator (_)) -> begin
 true
 end
-| _62_578 -> begin
+| _61_578 -> begin
 false
 end))))))) then begin
 (
 # 465 "FStar.Extraction.ML.ExtractTyp.fst"
-let _62_582 = (FStar_Absyn_Util.kind_formals k)
-in (match (_62_582) with
-| (kbs, _62_581) -> begin
+let _61_582 = (FStar_Absyn_Util.kind_formals k)
+in (match (_61_582) with
+| (kbs, _61_581) -> begin
 (
 # 466 "FStar.Extraction.ML.ExtractTyp.fst"
 let se = FStar_Absyn_Syntax.Sig_typ_abbrev ((l, (FStar_List.append bs kbs), FStar_Absyn_Syntax.mk_Kind_type, FStar_Tc_Recheck.t_unit, quals, r))
@@ -772,7 +772,7 @@ end else begin
 (c, [])
 end
 end
-| _62_585 -> begin
+| _61_585 -> begin
 (c, [])
 end))
 

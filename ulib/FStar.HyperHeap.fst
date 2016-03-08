@@ -133,11 +133,11 @@ assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set
                     Set.mem x (mod_set s) <==> (exists (y:rid). Set.mem y s /\ includes y x)
 
 let modifies (s:Set.set rid) (m0:t) (m1:t) =
-  Map.Equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
+  Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
 
 let equal_on (s:Set.set rid) (m0:t) (m1:t) =
  (forall (r:rid). {:pattern (Map.contains m0 r)} (Set.mem r (mod_set s) /\ Map.contains m0 r) ==> Map.contains m1 r)
- /\ Map.Equal m1 (Map.concat m1 (Map.restrict (mod_set s) m0))
+ /\ Map.equal m1 (Map.concat m1 (Map.restrict (mod_set s) m0))
 
 abstract val lemma_modifies_trans: m1:t -> m2:t -> m3:t
                        -> s1:Set.set rid -> s2:Set.set rid
@@ -179,7 +179,7 @@ abstract val lemma_disjoint_parents: pr:rid -> r:rid -> ps:rid -> s:rid -> Lemma
 let lemma_disjoint_parents pr r ps s = ()
 
 let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) =
-    Map.contains m i /\ Heap.contains (Map.sel m i) (as_ref r)
+    Map.contains m i && Heap.contains (Map.sel m i) (as_ref r)
 
 let fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
   not (Heap.contains (Map.sel m0 i) (as_ref r))

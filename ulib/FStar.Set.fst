@@ -19,7 +19,7 @@ module FStar.Set
 open FStar.FunctionalExtensionality
 
 abstract type set a = a -> Tot bool
-abstract type Equal (#a:Type) (s1:set a) (s2:set a) = FEq s1 s2
+abstract type equal (#a:Type) (s1:set a) (s2:set a) = feq s1 s2
 
 (* destructors *)
 
@@ -86,24 +86,24 @@ let mem_union      #a x s1 s2 = ()
 let mem_intersect  #a x s1 s2 = ()
 let mem_complement #a x s     = ()
 let subset_mem     #a s1 s2   = ()
-let mem_subset     #a s1 s2   = cut (Equal (intersect s1 s2) s1)
+let mem_subset     #a s1 s2   = cut (equal (intersect s1 s2) s1)
 
 (* extensionality *)
 
 abstract val lemma_equal_intro: #a:Type -> s1:set a -> s2:set a -> Lemma
     (requires  (forall x. mem x s1 = mem x s2))
-    (ensures (Equal s1 s2))
-    [SMTPatT (Equal s1 s2)]
+    (ensures (equal s1 s2))
+    [SMTPatT (equal s1 s2)]
 
 abstract val lemma_equal_elim: #a:Type -> s1:set a -> s2:set a -> Lemma
-    (requires (Equal s1 s2))
+    (requires (equal s1 s2))
     (ensures  (s1 = s2))
-    [SMTPatT (Equal s1 s2)]
+    [SMTPatT (equal s1 s2)]
 
 abstract val lemma_equal_refl: #a:Type -> s1:set a -> s2:set a -> Lemma 
     (requires (s1 = s2))
-    (ensures  (Equal s1 s2))
-    [SMTPatT (Equal s1 s2)]
+    (ensures  (equal s1 s2))
+    [SMTPatT (equal s1 s2)]
 
 let lemma_equal_intro #a s1 s2 = ()
 let lemma_equal_elim  #a s1 s2 = ()

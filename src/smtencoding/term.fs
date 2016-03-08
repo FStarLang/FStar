@@ -466,7 +466,8 @@ and mkPrelude z3options =
                              (< (Rank t1) (Rank t2)))\n\
                         :pattern ((Precedes t1 t2)))))\n\
                 (define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n\
-                         (Precedes t1 t2))\n" in
+                         (Precedes t1 t2))\n\
+                (declare-fun Range_const () Term)\n" in
    let constrs : constructors = [("String_const", ["String_const_proj_0", Int_sort], String_sort, 0);
                                  ("Tm_type",  [], Term_sort, 0);
                                  ("Tm_arrow", [("Tm_arrow_id", Int_sort)],  Term_sort, 1);
@@ -490,6 +491,7 @@ and mkPrelude z3options =
                                                   (Valid (Precedes x2 y2)))))))\n" in
    basic ^ bcons ^ lex_ordering
 
+let mk_Range_const      = mkApp("Range_const", [])
 let mk_Term_type        = mkApp("Tm_type", [])
 let mk_Term_app t1 t2   = mkApp("Tm_app", [t1;t2])
 let mk_Term_uvar i      = mkApp("Tm_uvar", [mkInteger' i])

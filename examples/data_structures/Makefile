@@ -1,11 +1,8 @@
-VERFILES=ArrayRealized.fst Vector.fst
 include ../Makefile.include
-all: .all.ver bst rbtree uall
+all: bst uall
 
 uall:
-	$(FSTAR) --universes ArrayRealized.fst Vector.fst
+	$(FSTAR) --universes --explicit_deps ArrayRealized.fst Vector.fst
+	$(FSTAR) --universes rbtree.fst
 
 bst: binary_search_tree.fulllib.ver
-
-rbtree: rbtree.fst
-	$(FSTAR) $^

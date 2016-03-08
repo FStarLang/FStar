@@ -52,38 +52,31 @@ let steps env =
     if Options.should_verify env.curmodule.str 
     then [N.Beta; N.Inline; N.SNComp]
     else [N.Beta; N.Inline]
-let unfold_whnf env t = N.normalize [N.WHNF; N.Unfold; N.Beta] env t
+let unfold_whnf env t = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant; N.Beta] env t
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
-let fxv_check head env kt fvs = //NS: nearly a duplicate of check_no_escape
-    let rec aux try_norm t =
-        if Util.set_is_empty fvs then ()
-        else let fvs' = Free.names (if try_norm then norm env t else t) in
-             let a = Util.set_intersect fvs fvs' in
-             if Util.set_is_empty a then ()
-             else if not try_norm
-             then aux true t
-             else let fail () =
-                    let escaping = Util.set_elements a |> List.map Print.bv_to_string  |> String.concat ", " in
-                    let msg = if Util.set_count a > 1
-                              then Util.format2 "Bound variables '{%s}' in the type of '%s' escape because of impure applications; add explicit let-bindings" 
-                                    escaping (N.term_to_string env head)
-                              else Util.format2 "Bound variable '%s' in the type of '%s' escapes because of impure applications; add explicit let-bindings" 
-                                    escaping (N.term_to_string env head) in
-                    raise (Error(msg, Env.get_range env)) in
-                  let s = TcUtil.new_uvar env (Recheck.check t) in
-                  begin match Rel.try_teq env t s with
+let check_no_escape head_opt env (fvs:list<bv>) kt = 
+    let rec aux try_norm t = match fvs with 
+        | [] -> ()
+        | _ -> 
+          let fvs' = Free.names (if try_norm then norm env t else t) in
+          begin match List.tryFind (fun x -> Util.set_mem x fvs') fvs with 
+            | None -> ()
+            | Some x -> 
+              if not try_norm
+              then aux true t
+              else let fail () =
+                       let msg = match head_opt with 
+                        | None -> Util.format1 "Bound variables '%s' escapes; add a type annotation" (Print.bv_to_string x)
+                        | Some head -> Util.format2 "Bound variables '%s' in the type of '%s' escape because of impure applications; add explicit let-bindings" 
+                                        (Print.bv_to_string x) (N.term_to_string env head) in
+                       raise (Error(msg, Env.get_range env)) in
+                   let s = TcUtil.new_uvar env (fst <| U.type_u()) in
+                   match Rel.try_teq env t s with
                     | Some g -> Rel.force_trivial_guard env g
                     | _ -> fail ()
-                  end in 
+         end in 
     aux false kt
-
-let check_no_escape env bs t = 
-    let fvs = Free.names t in
-    if Util.for_some (fun x -> Util.set_mem x fvs) bs
-    then let k, _ = U.type_u() in
-         let tnarrow = TcUtil.new_uvar env k in
-         Rel.force_trivial_guard env <| Rel.teq env t tnarrow
 
 let maybe_push_binding env b =
   if is_null_binder b then env
@@ -207,7 +200,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
     | letrecs ->
       let r = Env.get_range env in
       let env = {env with letrecs=[]} in
-      let precedes = S.fvar None Const.precedes_lid (Env.get_range env) in
+      let precedes = TcUtil.fvar_const env Const.precedes_lid in
 
       let decreases_clause bs c = 
           //exclude types and function-typed arguments from the decreases clause
@@ -221,7 +214,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
           let as_lex_list dec =
                 let head, _ = Util.head_and_args dec in
                 match head.n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
-                    | Tm_fvar (fv, _) when lid_equals fv.v Const.lexcons_lid -> dec
+                    | Tm_fvar fv when S.fv_eq_lid fv Const.lexcons_lid -> dec
                     | _ -> mk_lex_list [dec] in
           let ct = Util.comp_to_comp_typ c in
           match ct.flags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
@@ -280,6 +273,11 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_type _  
   | Tm_unknown -> tc_value env e
 
+  | Tm_meta(e, Meta_desugared Meta_smt_pat) -> 
+    let e, c, g = tc_tot_or_gtot_term env e in
+    let g = {g with guard_f=Trivial} in //VC's in SMT patterns are irrelevant
+    e, c, g //strip the Meta going up
+
   | Tm_meta(e, Meta_pattern pats) -> 
     let t, u = U.type_u () in
     let e, c, g = tc_check_tot_or_gtot_term env e t in
@@ -294,10 +292,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_meta(e, Meta_desugared Sequence) -> 
     begin match (SS.compress e).n with
         | Tm_let((_,[{lbname=x; lbdef=e1}]), e2) -> //NS: Why not handle this specially in the deugaring phase, adding a unit annotation on x?
-          let e1, c1, g1 = tc_term (Env.set_expected_typ env Recheck.t_unit) e1 in
+          let e1, c1, g1 = tc_term (Env.set_expected_typ env Common.t_unit) e1 in
           let e2, c2, g2 = tc_term env e2 in
           let c = TcUtil.bind env (Some e1) c1 (None, c2) in
-          let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, Recheck.t_unit, e1)]), e2)) (Some c.res_typ.n) e.pos in
+          let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, Common.t_unit, e1)]), e2)) (Some c.res_typ.n) e.pos in
           let e = mk (Tm_meta(e, Meta_desugared Sequence)) (Some c.res_typ.n) top.pos in
           e, c, Rel.conj_guard g1 g2
         | _ ->
@@ -446,24 +444,26 @@ and tc_value env (e:term) : term
     let tc = if Options.should_verify env.curmodule.str then Inl t else Inr (U.lcomp_of_comp <| mk_Total t) in
     value_check_expected_typ env e tc implicits
 
-  | Tm_uinst({n=Tm_fvar(v, dc)}, us) -> 
+  | Tm_uinst({n=Tm_fvar fv}, us) -> 
     let us = List.map (tc_universe env) us in
-    let us', t = Env.lookup_lid env v.v in
+    let us', t = Env.lookup_lid env fv.fv_name.v in
     if List.length us <> List.length us'
     then raise (Error("Unexpected number of universe instantiations", Env.get_range env))
     else List.iter2 (fun u' u -> match u' with 
             | U_unif u'' -> Unionfind.change u'' (Some u)
             | _ -> failwith "Impossible") us' us;
-    let e = S.mk_Tm_uinst (mk (Tm_fvar({v with ty=t}, dc)) (Some t.n) e.pos) us in
-    check_instantiated_fvar env v dc e t
+    let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
+    let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
+    check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
-  | Tm_fvar (v, dc) ->
-    let us, t = Env.lookup_lid env v.v in
-    let e = S.mk_Tm_uinst (mk (Tm_fvar({v with ty=t}, dc)) (Some t.n) e.pos) us in
-    check_instantiated_fvar env v dc e t 
+  | Tm_fvar fv ->
+    let us, t = Env.lookup_lid env fv.fv_name.v in
+    let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
+    let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
+    check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t 
 
   | Tm_constant c ->
-    let t = Recheck.check e in //Recheck can always check constants
+    let t = tc_constant env top.pos c in 
     let e = mk (Tm_constant c) (Some t.n) e.pos in
     value_check_expected_typ env e (Inl t) Rel.trivial_guard
 
@@ -511,6 +511,32 @@ and tc_value env (e:term) : term
   | _ ->
     failwith (Util.format1 "Unexpected value: %s" (Print.term_to_string top))
 
+and tc_constant env r (c:sconst) : typ = 
+     match c with
+      | Const_unit -> t_unit
+      | Const_bool _ -> t_bool
+      | Const_int _ -> t_int
+      | Const_int32 _ -> t_int32
+      | Const_int64 _ -> t_int64
+      | Const_string _ -> t_string
+      | Const_float _ -> t_float
+      | Const_char _ -> t_char
+      | Const_uint8 _ -> t_uint8
+      | Const_effect -> Util.ktype0 //NS: really?
+      | Const_range _ -> 
+        let fail () = 
+            raise (Error("Range constant cannot be checked in this context; expected an instance of 'range_of'", r)) in
+        begin match Env.expected_typ env with 
+            | None -> fail ()
+            | Some t -> 
+              if Option.isSome (U.destruct t Const.range_of_lid)
+              then t
+              else fail()
+        end
+        
+      | _ -> raise (Error("Unsupported constant", r))
+
+
 (************************************************************************************************************)
 (* Type-checking computation types                                                                          *)
 (************************************************************************************************************)
@@ -529,9 +555,7 @@ and tc_comp env c : comp                                      (* checked version
       mk_GTotal t, u, g
 
     | Comp c ->
-      let kc =  Env.lookup_effect_lid env c.effect_name in
-      if Env.debug env Options.Low then Util.print2 "Type of effect %s is %s\n" (Print.lid_to_string c.effect_name) (Print.term_to_string kc);
-      let head = S.fvar None c.effect_name (range_of_lid c.effect_name) in
+      let head = S.fvar c.effect_name Delta_constant None in 
       let tc = mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) None c.result_typ.pos in
       let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff in
       let _, args = Util.head_and_args tc in
@@ -542,8 +566,8 @@ and tc_comp env c : comp                                      (* checked version
             let e, _, g = tc_tot_or_gtot_term env e in
             DECREASES e, g
         | f -> f, Rel.trivial_guard) |> List.unzip in
-      let u = match Recheck.check (fst res) with  //TODO: UGLY!
-        | {n=Tm_type u} -> u
+      let u = match !(fst res).tk with //TODO:ugly
+        | Some (Tm_type u) -> u
         | _ -> failwith "Impossible" in
       mk_Comp ({c with
           result_typ=fst res;
@@ -636,7 +660,9 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
         =
        match t0 with
         | None -> (* no expected type; just build a function type from the binders in the term *)
-            let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible: Can't have a let rec annotation but no expected type" in
+            let _ = match env.letrecs with 
+                | [] -> () 
+                | _ -> failwith "Impossible: Can't have a let rec annotation but no expected type" in
             let bs, envbody, g, _ = tc_binders env bs in
             None, bs, [], None, envbody, g
 
@@ -830,8 +856,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             match bs, args with
             | (x, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit arg *)
                 let t = SS.subst subst x.sort in
-                fxv_check head env t fvs;
-                let varg, u, implicits = TcUtil.new_implicit_var env t in //new_uvar env t in
+                check_no_escape (Some head) env fvs t;
+                let varg, _, implicits = TcUtil.new_implicit_var env t in //new_uvar env t in
                 let subst = NT(x, varg)::subst in
                 let arg = varg, as_implicit true in
                 tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard implicits g, fvs) rest cres args
@@ -845,7 +871,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 let targ = SS.subst subst x.sort in
                 let x = {x with sort=targ} in
                 if debug env Options.Extreme then  Util.print1 "\tType of arg (after subst) = %s\n" (Print.term_to_string targ);
-                fxv_check head env targ fvs;
+                check_no_escape (Some head) env fvs targ;
                 let env = Env.set_expected_typ env targ in
                 let env = {env with use_eq=is_eq aqual} in
                 if debug env Options.High then  Util.print3 "Checking arg (%s) %s at type %s\n" (Print.tag_of_term e) (Print.term_to_string e) (Print.term_to_string targ);
@@ -869,10 +895,10 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                      //need to check that the variable does not occur free in the rest of the function type
                      //by adding x to fvs
                      tc_args (subst, arg::outargs, S.as_arg (S.bv_to_name x)::arg_rets, 
-                             (Some x, c)::comps, g, Util.set_add x fvs) rest cres rest'
+                             (Some x, c)::comps, g, x::fvs) rest cres rest'
 
             | _, [] -> (* no more args; full or partial application *)
-                fxv_check head env cres.res_typ fvs;
+                check_no_escape (Some head) env fvs cres.res_typ;
                 let cres, g = 
                   match bs with
                     | [] -> (* full app *)
@@ -935,7 +961,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                                             (N.term_to_string env tf) (Util.string_of_int n_args), argpos arg)) in
                 aux false cres.res_typ in
 
-            tc_args ([], [], [], [], Rel.trivial_guard, S.new_bv_set()) bs (U.lcomp_of_comp c) args
+            tc_args ([], [], [], [], Rel.trivial_guard, []) bs (U.lcomp_of_comp c) args
 
         | _ ->
             if not norm
@@ -1053,7 +1079,7 @@ and tc_eqn scrutinee env branch
         then raise (Error("When clauses are not yet supported in --verify mode; they will be some day", e.pos))
         //             let e, c, g = no_logical_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env TcUtil.t_bool) e in
         //             Some e, g
-        else let e, c, g = tc_term (Env.set_expected_typ pat_env Recheck.t_bool) e in
+        else let e, c, g = tc_term (Env.set_expected_typ pat_env Common.t_bool) e in
              Some e, g in
 
   (* 3. Check the branch *)
@@ -1135,7 +1161,7 @@ and tc_eqn scrutinee env branch
         let discriminate scrutinee_tm f =
             if List.length (Env.datacons_of_typ env (Env.typ_of_datacon env f.v)) > 1
             then 
-                let disc = S.fvar None (Util.mk_discriminator f.v) (range_of_lid f.v) in
+                let disc = S.fvar (Util.mk_discriminator f.v) Delta_equational None in 
                 let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
                 [Util.mk_eq Util.t_bool Util.t_bool disc Const.exp_true_bool]
             else [] in
@@ -1147,7 +1173,7 @@ and tc_eqn scrutinee env branch
                                         (Print.tag_of_term pat_exp))  in
 
         let rec head_constructor t = match t.n with 
-            | Tm_fvar(f, _) -> f
+            | Tm_fvar fv -> fv.fv_name
             | Tm_uinst(t, _) -> head_constructor t
             | _ -> fail () in 
 
@@ -1170,7 +1196,7 @@ and tc_eqn scrutinee env branch
                 then [] 
                 else let sub_term_guards = args |> List.mapi (fun i (ei, _) -> 
                         let projector = Env.lookup_projector env f.v i in //NS: TODO ... should this be a marked as a record projector? But it doesn't matter for extraction
-                        let sub_term = mk_Tm_app (S.fvar None projector f.p) [as_arg scrutinee_tm] None f.p in
+                        let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) Delta_equational None) [as_arg scrutinee_tm] None f.p in
                         build_branch_guard sub_term ei) |> List.flatten in
                      discriminate scrutinee_tm f @ sub_term_guards
             | _ -> [] in //a non-pattern sub-term: must be from a dot pattern
@@ -1178,7 +1204,7 @@ and tc_eqn scrutinee env branch
       (* 6 (b) *)
       let build_and_check_branch_guard scrutinee_tm pat =
          if not (Options.should_verify env.curmodule.str)
-         then S.fvar None Const.true_lid scrutinee_tm.pos //if we're not verifying, then don't even bother building it
+         then TcUtil.fvar_const env Const.true_lid //if we're not verifying, then don't even bother building it
          else let t = Util.mk_conj_l <| build_branch_guard scrutinee_tm pat in
               let k, _ = U.type_u() in
               let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t k in
@@ -1238,12 +1264,12 @@ and check_top_level_let env e =
 
 
          (* the result always has type ML unit *)
-         let cres = U.lcomp_of_comp <| Util.ml_comp Recheck.t_unit e.pos in
-         e2.tk := Some (Recheck.t_unit.n);
+         let cres = U.lcomp_of_comp <| Util.ml_comp Common.t_unit e.pos in
+         e2.tk := Some (Common.t_unit.n);
 
 (*close*)let lb = Util.close_univs_and_mk_letbinding None lb.lbname univ_vars (Util.comp_result c1) (Util.comp_effect_name c1) e1 in
          mk (Tm_let((false, [lb]), e2)) 
-           (Some (Recheck.t_unit.n))
+           (Some (Common.t_unit.n))
            e.pos,
          cres,
          Rel.trivial_guard
@@ -1278,7 +1304,7 @@ and check_inner_let env e =
        if annotated
        then e, cres, guard
        else (* no expected type; check that x doesn't escape it's scope *)
-            (check_no_escape env [x] cres.res_typ;
+            (check_no_escape None env [x] cres.res_typ;
              e, cres, guard)
 
     | _ -> failwith "Impossible"
@@ -1312,11 +1338,11 @@ and check_top_level_let_rec env top =
                    ecs |> List.map (fun (x, uvs, e, c) -> 
                       Util.close_univs_and_mk_letbinding all_lb_names x uvs (Util.comp_result c) (Util.comp_effect_name c) e) in
 
-          let cres = U.lcomp_of_comp <| S.mk_Total Recheck.t_unit in
-          let _ = e2.tk := Some Recheck.t_unit.n in
+          let cres = U.lcomp_of_comp <| S.mk_Total Common.t_unit in
+          let _ = e2.tk := Some Common.t_unit.n in
          
 (*close*) let lbs, e2 = SS.close_let_rec lbs e2 in
-          mk (Tm_let((true, lbs), e2)) (Some Recheck.t_unit.n) top.pos, 
+          mk (Tm_let((true, lbs), e2)) (Some Common.t_unit.n) top.pos, 
           cres, 
           Rel.discharge_guard env g_lbs
 
@@ -1351,7 +1377,7 @@ and check_inner_let_rec env top =
 
           begin match topt with
               | Some _ -> e, cres, guard //we have an annotation
-              | None -> check_no_escape env bvs tres;
+              | None -> check_no_escape None env bvs tres;
                         e, cres, guard
           end
          
@@ -1617,13 +1643,14 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
   //put the signature in the environment to prevent generalizing its free universe variables until we're done 
   let env = Env.push_bv env (S.new_bv None ed.signature) in
 
-  if Env.debug env0 Options.Low
+  if Env.debug env0 <| Options.Other "ED"
   then Util.print3 "Checked effect signature: %s %s : %s\n" 
                         (Print.lid_to_string ed.mname)
                         (Print.binders_to_string " " ed.binders)
                         (Print.term_to_string ed.signature);
 
-  let check_and_gen' env (_,t) k = check_and_gen env t k in
+  let check_and_gen' env (_,t) k = 
+    check_and_gen env t k in
 
   let ret =
     let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
@@ -1785,7 +1812,7 @@ let tc_lex_t env ses quals lids =
         let tc = Sig_inductive_typ(lex_t, [u], [], t, [], [Const.lextop_lid; Const.lexcons_lid], [], r) in
 
         let utop = S.new_univ_name (Some r1) in 
-        let lex_top_t = mk (Tm_uinst(S.fvar None Const.lex_t_lid r1, [U_name utop])) None r1 in
+        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r1) Delta_constant None, [U_name utop])) None r1 in
         let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
         let dc_lextop = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, [], [], r1) in
        
@@ -1794,8 +1821,8 @@ let tc_lex_t env ses quals lids =
         let lex_cons_t = 
             let a = S.new_bv (Some r2) (mk (Tm_type(U_name ucons1)) None r2) in
             let hd = S.new_bv (Some r2) (S.bv_to_name a) in
-            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar None Const.lex_t_lid r2, [U_name ucons2])) None r2) in
-            let res = mk (Tm_uinst(S.fvar None Const.lex_t_lid r2, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
+            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r2) Delta_constant None, [U_name ucons2])) None r2) in
+            let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r2) Delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
             Util.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
         let dc_lexcons = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], [], r2) in
@@ -1891,7 +1918,8 @@ let tc_inductive env ses quals lids =
 (*close*)let t_tc = Util.arrow (tps@indices) (S.mk_Total t) in
          let tps = SS.close_binders tps in
          let k = SS.close tps k in
-         Env.push_let_binding env_tps (Inr tc) ([], t_tc), 
+         let fv_tc = S.lid_as_fv tc Delta_constant None in
+         Env.push_let_binding env_tps (Inr fv_tc) ([], t_tc), 
          Sig_inductive_typ(tc, [], tps, k, mutuals, data, quals, r), 
          u
 
@@ -1905,14 +1933,20 @@ let tc_inductive env ses quals lids =
          assert (_uvs = []);
 
          let (tps, u_tc) = //u_tc is the universe of the inductive that c constructs
-            Util.find_map tcs (fun (se, u_tc) -> 
+            let tps_u_opt = Util.find_map tcs (fun (se, u_tc) -> 
                 if lid_equals tc_lid (must (Util.lid_of_sigelt se))
                 then let tps = match se with 
                         | Sig_inductive_typ(_, _, tps, _, _, _, _, _) -> 
                           tps |> List.map (fun (x, _) -> (x, Some S.imp_tag))
                         | _ -> failwith "Impossible" in
                      Some (tps, u_tc)
-                else None) |> Util.must in 
+                else None) in
+           match tps_u_opt with 
+            | Some x -> x
+            | None -> 
+              if lid_equals tc_lid Const.exn_lid
+              then [], U_zero
+              else raise (Error("Unexpected data constructor", r)) in
 
          let arguments, result = 
             match (SS.compress t).n with 
@@ -1921,7 +1955,7 @@ let tc_inductive env ses quals lids =
                   //need to map the prefix of bs corresponding to params to the tps of the inductive
                   let _, bs' = Util.first_N ntps bs in
                   let t = mk (Tm_arrow(bs', res)) None t.pos in
-                  let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), S.bv_to_name x)) in
+                  let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), x)) in
 (*open*)          Util.arrow_formals (SS.subst subst t)  
                 | _ -> [], t in 
         
@@ -1935,7 +1969,7 @@ let tc_inductive env ses quals lids =
          let result, _ = tc_trivial_guard env' result in 
          let head, _ = Util.head_and_args result in
          let _ = match (SS.compress head).n with 
-            | Tm_fvar (fv, _) when lid_equals fv.v tc_lid -> ()
+            | Tm_fvar fv when S.fv_eq_lid fv tc_lid -> ()
             | _ -> raise (Error(Util.format1 "Expected a constructor of type %s" (Print.lid_to_string tc_lid), r)) in
          let g =List.fold_left2 (fun g (x, _) u_x -> 
                 positive_if_pure x.sort tc_lid;
@@ -1960,7 +1994,7 @@ let tc_inductive env ses quals lids =
         let binders' = datas |> List.map (function 
             | Sig_datacon(_, _, t, _, _, _, _, _) -> S.null_binder t 
             | _ -> failwith "Impossible") in
-        let t = Util.arrow (binders@binders') (S.mk_Total Recheck.t_unit) in
+        let t = Util.arrow (binders@binders') (S.mk_Total Common.t_unit) in
         if Env.debug env Options.Low then Util.print1 "@@@@@@Trying to generalize universes in %s\n" (N.term_to_string env t);
         let (uvs, t) = TcUtil.generalize_universes env t in
         if Env.debug env Options.Low then Util.print2 "@@@@@@Generalized to (%s, %s)\n" 
@@ -2120,9 +2154,9 @@ let rec tc_decl env se = match se with
 
     | Sig_main(e, r) ->
       let env = Env.set_range env r in
-      let env = Env.set_expected_typ env Recheck.t_unit in
+      let env = Env.set_expected_typ env Common.t_unit in
       let e, c, g1 = tc_term env e in
-      let e, _, g = check_expected_effect env (Some (Util.ml_comp Recheck.t_unit r)) (e, c.comp()) in
+      let e, _, g = check_expected_effect env (Some (Util.ml_comp Common.t_unit r)) (e, c.comp()) in
       Rel.force_trivial_guard env (Rel.conj_guard g1 g);
       let se = Sig_main(e, r) in
       let env = Env.push_sigelt env se in
@@ -2143,11 +2177,11 @@ let rec tc_decl env se = match se with
        *)
       let should_generalize, lbs', quals_opt = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
             let lbname = right lb.lbname in //this is definitely not a local let binding
-            let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname with
+            let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
               | None -> gen, lb, quals_opt //no annotation found; use whatever was in the let binding
 
               | Some ((uvs,tval), quals) ->
-                let quals_opt = check_quals_eq lbname quals_opt quals in
+                let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
                 let _ = match lb.lbtyp.n with
                   | Tm_unknown -> ()
                   | _ -> Errors.warn r "Annotation from val declaration overrides inline type annotation" in
@@ -2182,7 +2216,7 @@ let rec tc_decl env se = match se with
       (* 4. Print the type of top-level lets, if requested *)
       if log env
       then Util.print1 "%s\n" (snd lbs |> List.map (fun lb ->
-            let should_log = match Env.try_lookup_val_decl env (right lb.lbname) with
+            let should_log = match Env.try_lookup_val_decl env (right lb.lbname).fv_name.v with
                 | None -> true
                 | _ -> false in
             if should_log
@@ -2265,16 +2299,17 @@ let for_export hidden se : list<sigelt> * list<lident> =
     | Sig_effect_abbrev  _ -> [se], hidden
 
     | Sig_let((false, [lb]), _, _, quals) when (quals |> Util.for_some is_hidden_proj_or_disc) -> 
-      let lid = right lb.lbname in
-      if hidden |> Util.for_some (lid_equals lid)
+      let fv = right lb.lbname in
+      let lid = fv.fv_name.v in
+      if hidden |> Util.for_some (S.fv_eq_lid fv)
       then [], hidden //this projector definition already has a declare_typ
-      else let dec = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, [Assumption], Ident.range_of_lid lid) in
+      else let dec = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption], Ident.range_of_lid lid) in
            [dec], lid::hidden
   
     | Sig_let(lbs, r, l, quals) ->
       if is_abstract quals
       then snd lbs |> List.map (fun lb -> 
-           Sig_declare_typ(right lb.lbname, lb.lbunivs, lb.lbtyp, Assumption::quals, r)), hidden
+           Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp, Assumption::quals, r)), hidden
       else [se], hidden
 
 let tc_decls env ses =

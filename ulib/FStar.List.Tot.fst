@@ -1,7 +1,3 @@
-(*--build-config
-    options:;
-    other-files:
-  --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -189,12 +185,12 @@ let rec noRepeats la =
   | h :: tl -> not(mem h tl) && noRepeats tl
 
 (** List of tuples **)
-val assoc: 'a -> list (Tuple2 'a 'b) -> Tot (option 'b)
+val assoc: 'a -> list ('a * 'b) -> Tot (option 'b)
 let rec assoc x = function
   | [] -> None
   | (x', y)::tl -> if x=x' then Some y else assoc x tl
 
-val split: list (Tuple2 'a 'b) -> Tot (list 'a * list 'b)
+val split: list ('a * 'b) -> Tot (list 'a * list 'b)
 let rec split l = match l with
     | [] -> ([],[])
     | (hd1,hd2)::tl ->
@@ -202,7 +198,7 @@ let rec split l = match l with
        (hd1::tl1,hd2::tl2)
 let unzip = split
 
-val unzip3: list (Tuple3 'a 'b 'c) -> Tot (list 'a * list 'b * list 'c)
+val unzip3: list ('a * 'b * 'c) -> Tot (list 'a * list 'b * list 'c)
 let rec unzip3 l = match l with
     | [] -> ([],[],[])
     | (hd1,hd2,hd3)::tl ->

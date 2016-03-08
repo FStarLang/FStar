@@ -58,26 +58,23 @@ let kbin k1 k2 k'            = mk (Tm_arrow([null_binder k1; null_binder k2], mk
 let ktern k1 k2 k3 k'        = mk (Tm_arrow([null_binder k1;
                                              null_binder k2;
                                              null_binder k3], mk_Total k'))
-let true_lid   = pconst "True"
-let false_lid  = pconst "False"
+let true_lid   = pconst "l_True"
+let false_lid  = pconst "l_False"
 let and_lid    = pconst "l_and"
 let or_lid     = pconst "l_or"
 let not_lid    = pconst "l_not"
 let imp_lid    = pconst "l_imp"
 let iff_lid    = pconst "l_iff"
-let ite_lid    = pconst "ITE"
-let exists_lid = pconst "Exists"
-let forall_lid = pconst "Forall"
+let ite_lid    = pconst "l_ITE"
+let exists_lid = pconst "l_Exists"
+let forall_lid = pconst "l_Forall"
 let b2t_lid    = pconst "b2t" (* coercion from boolean to type *)
-let using_IH   = pconst "InductionHyp"
 let admit_lid  = pconst "admit"
 let magic_lid  = pconst "magic"
 let has_type_lid = pconst "has_type"
 
 (* Various equality predicates *)
-let eq2_lid    = pconst  "Eq2"
-let neq_lid    = pconst  "neq"
-let neq2_lid   = pconst  "neq2"
+let eq2_lid    = pconst  "eq2"
 
 (* Some common term constructors *)
 let exp_true_bool   = mk (Tm_constant (Const_bool true))
@@ -148,3 +145,5 @@ let as_requires    = pconst "as_requires"
 let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
+let range_of_lid   = pconst "range_of"
+let labeled_lid    = pconst "labeled"

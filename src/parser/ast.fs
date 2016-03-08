@@ -161,6 +161,14 @@ type file = list<modul>
 type inputFragment = either<file,list<decl>>
 
 (********************************************************************************)
+let check_id id = 
+    if !FStar.Options.universes
+    then let first_char = String.substring id.idText 0 1 in
+         if String.lowercase first_char = first_char
+         then ()
+         else raise (FStar.Syntax.Syntax.Error(Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText, id.idRange))
+    else ()
+
 let mk_decl d r = {d=d; drange=r}
 let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
 let mk_term t r l = {tm=t; range=r; level=l}
@@ -169,7 +177,11 @@ let un_curry_abs ps body = match body.tm with
     | Abs(p', body') -> Abs(ps@p', body')
     | _ -> Abs(ps, body)
 let mk_function branches r1 r2 =
-  let x = U.genident (Some r1) in
+  let x = 
+    if !FStar.Options.universes
+    then let i = FStar.Syntax.Syntax.next_id () in
+         Ident.gen r1 
+    else U.genident (Some r1) in
   mk_term (Abs([mk_pattern (PatVar(x,false)) r1],
                mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
     r2 Expr
@@ -285,7 +297,9 @@ and pat_to_string x = match x.pat with
 let error msg tm r =
  let tm = tm |> term_to_string in
  let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in
- raise (S.Error(msg^"\n"^tm, r))
+ if !FStar.Options.universes
+ then raise (FStar.Syntax.Syntax.Error(msg^"\n"^tm, r))
+ else raise (S.Error(msg^"\n"^tm, r))
 
 let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
@@ -355,11 +369,17 @@ let mkFsTypApp t args r =
   mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
 
 let mkTuple args r =
-  let cons = U.mk_tuple_data_lid (List.length args) r in
+  let cons = 
+    if !FStar.Options.universes
+    then FStar.Syntax.Util.mk_tuple_data_lid (List.length args) r
+    else U.mk_tuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkDTuple args r =
-  let cons = U.mk_dtuple_data_lid (List.length args) r in
+  let cons = 
+        if !FStar.Options.universes
+        then FStar.Syntax.Util.mk_dtuple_data_lid (List.length args) r
+        else U.mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkRefinedBinder id t refopt m implicit =

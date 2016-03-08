@@ -18,7 +18,7 @@ let main argv =
     let uvar2 = Unionfind.fresh S.Uvar in
     let uv1 = S.mk (S.Tm_uvar(uvar1, S.tun)) None r in
     let uv2 = S.mk (S.Tm_uvar(uvar2, S.tun)) None r in
-    let list_uv1 = S.mk_Tm_app (S.fvar None (Ident.lid_of_path ["Prims"; "list"] r) r) [uv1, None] None r in
+    let list_uv1 = S.mk_Tm_app (S.fvar (Ident.lid_of_path ["Prims"; "list"] r) S.Delta_constant None) [uv1, None] None r in
     let x = S.new_bv None uv2 in
     let abs = U.abs [x, None] S.tun None in
     Printf.printf "Abstraction is %s\n" (Print.term_to_string abs);

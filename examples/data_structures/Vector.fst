@@ -24,7 +24,7 @@ type vector 'a : nat -> Type =
          -> vector 'a (n + 1)
 
 val head: #a:Type -> #n:pos -> vector a n -> Tot a
-let head (#a:Type) #n v = match v with
+let head #a #n v = match v with
   | VCons x xs -> x
 
 val nth : n:nat -> #m:nat{m > n} -> vector 'a m -> Tot 'a
@@ -34,13 +34,13 @@ let rec nth n #m (VCons x #m' xs) =
   else nth (n-1) #m' xs
 
 val append: #a:Type -> #n1:nat -> #n2:nat -> l:vector a n1 -> vector a n2 ->  Tot (vector a (n1 + n2)) //implicit n1 decreases
-let rec append (#a:Type) #n1 #n2 v1 v2 =
+let rec append #a #n1 #n2 v1 v2 =
   match v1 with
     | VNil -> v2
     | VCons hd tl -> VCons hd (append tl v2)
 
 val reverse: #a:Type -> #n:nat -> vector a n -> Tot (vector a n) //the implicitly computed n decreases
-let rec reverse (#a:Type) #n v = match v with
+let rec reverse #a #n v = match v with
   | VNil -> VNil
   | VCons hd tl -> append (reverse tl) (VCons hd VNil)
 
@@ -67,8 +67,8 @@ let rec find f #n v = match v with
     then Some hd
     else find f tl
 
-val zip': #a:Type -> #b:Type -> #n:nat -> vector a n -> vector b n -> Tot (vector (Tuple2 a b) n)
-let rec zip' (#a:Type) (#b:Type) #n v1 v2 = match v1 with
+val zip': #a:Type -> #b:Type -> #n:nat -> vector a n -> vector b n -> Tot (vector (a * b) n)
+let rec zip' #a #b #n v1 v2 = match v1 with
   | VNil -> VNil
   | VCons a tl1 ->
     let VCons b tl2 = v2 in

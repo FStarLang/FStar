@@ -63,9 +63,13 @@ type universe =
 and univ_name = ident
 
 type universe_uvar = Unionfind.uvar<option<universe>>
-type univ_names     = list<univ_name>
+type univ_names    = list<univ_name>
 type universes     = list<universe>
-
+type delta_depth = 
+  | Delta_constant                  //A defined constant, e.g., int, list, etc. 
+  | Delta_unfoldable of int         //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
+  | Delta_equational                //A symbol that may be equated to another by extensional reasoning
+  | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
@@ -145,11 +149,11 @@ and fv_qual =
   | Data_ctor
   | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
   | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
-and lbname = either<bv, lident>
+and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>
 and subst_elt = 
-   | DB of int * term                          (* DB i t: replace a bound variable with index i with term t                  *)
+   | DB of int * bv                            (* DB i t: replace a bound variable with index i with name bv                 *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
    | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
@@ -167,7 +171,11 @@ and bv = {
     index:int;     //de Bruijn index 0-based, counting up from the binder
     sort:term
 }
-and fv = var<term> * option<fv_qual>
+and fv = {
+    fv_name :var<term>;
+    fv_delta:delta_depth;
+    fv_qual :option<fv_qual>
+}
 and free_vars = {
     free_names:set<bv>;
     free_uvars:uvars;
@@ -311,7 +319,7 @@ let order_bv x y =
 
 let range_of_lbname (l:lbname) = match l with
     | Inl x -> x.ppname.idRange
-    | Inr l -> range_of_lid l
+    | Inr fv -> range_of_lid fv.fv_name.v
 let range_of_bv x = x.ppname.idRange
 let set_range_of_bv x r = {x with ppname=Ident.mk_ident(x.ppname.idText, r)}
 
@@ -393,6 +401,10 @@ let as_arg t : arg = t, None
 let is_null_bv (b:bv) = b.ppname.idText = null_id.idText
 let is_null_binder (b:binder) = is_null_bv (fst b)
 
+let is_top_level = function 
+    | {lbname=Inr _}::_ -> true 
+    | _ -> false
+
 let freenames_of_binders (bs:binders) : freenames =
     List.fold_right (fun (x, _) out -> Util.set_add x out) bs no_names
 
@@ -436,8 +448,13 @@ let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bv_eq x y
   | Inr l, Inr m -> lid_equals l m
   | _ -> false
-let fv_eq ((fv1, _):fv) ((fv2, _):fv)  = lid_equals fv1.v fv2.v
+let fv_eq fv1 fv2 = lid_equals fv1.fv_name.v fv2.fv_name.v
+let fv_eq_lid fv lid = lid_equals fv.fv_name.v lid
 let set_bv_range bv r = {bv with ppname=mk_ident(bv.ppname.idText, r)}
-let lid_as_fv l dc : fv = withinfo l tun (range_of_lid l), dc
-let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) None (range_of_lid (fst fv).v)
-let fvar dc l r : term = mk (Tm_fvar(lid_as_fv (set_lid_range l r) dc)) None r
+let lid_as_fv l dd dq : fv = {
+    fv_name=withinfo l tun (range_of_lid l);
+    fv_delta=dd;
+    fv_qual =dq;
+}
+let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) None (range_of_lid fv.fv_name.v)
+let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq) 

@@ -31,6 +31,7 @@ end) -> struct
   type nonrec 'a option = 'a option
 
   type nat       = int
+  type pos       = int
   type 'd b2t    = unit
 
   type (' p, ' q) l_or =

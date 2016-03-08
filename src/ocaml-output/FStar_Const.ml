@@ -13,6 +13,7 @@ type sconst =
 | Const_float of Prims.double
 | Const_bytearray of (Prims.byte Prims.array * FStar_Range.range)
 | Const_string of (Prims.byte Prims.array * FStar_Range.range)
+| Const_range of FStar_Range.range
 
 # 5 "FStar.Const.fst"
 let is_Const_effect = (fun _discr_ -> (match (_discr_) with
@@ -113,6 +114,15 @@ end
 false
 end))
 
+# 16 "FStar.Const.fst"
+let is_Const_range = (fun _discr_ -> (match (_discr_) with
+| Const_range (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
 # 7 "FStar.Const.fst"
 let ___Const_uint8____0 : sconst  ->  Prims.byte = (fun projectee -> (match (projectee) with
 | Const_uint8 (_22_3) -> begin
@@ -165,6 +175,12 @@ end))
 let ___Const_string____0 : sconst  ->  (Prims.byte Prims.array * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Const_string (_22_27) -> begin
 _22_27
+end))
+
+# 16 "FStar.Const.fst"
+let ___Const_range____0 : sconst  ->  FStar_Range.range = (fun projectee -> (match (projectee) with
+| Const_range (_22_30) -> begin
+_22_30
 end))
 
 

@@ -45,26 +45,26 @@ end))
 
 # 32 "FStar.Parser.DesugarEnv.fst"
 let ___Binding_typ_var____0 : binding  ->  FStar_Ident.ident = (fun projectee -> (match (projectee) with
-| Binding_typ_var (_49_18) -> begin
-_49_18
+| Binding_typ_var (_48_18) -> begin
+_48_18
 end))
 
 # 33 "FStar.Parser.DesugarEnv.fst"
 let ___Binding_var____0 : binding  ->  FStar_Ident.ident = (fun projectee -> (match (projectee) with
-| Binding_var (_49_21) -> begin
-_49_21
+| Binding_var (_48_21) -> begin
+_48_21
 end))
 
 # 34 "FStar.Parser.DesugarEnv.fst"
 let ___Binding_let____0 : binding  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
-| Binding_let (_49_24) -> begin
-_49_24
+| Binding_let (_48_24) -> begin
+_48_24
 end))
 
 # 35 "FStar.Parser.DesugarEnv.fst"
 let ___Binding_tycon____0 : binding  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
-| Binding_tycon (_49_27) -> begin
-_49_27
+| Binding_tycon (_48_27) -> begin
+_48_27
 end))
 
 # 37 "FStar.Parser.DesugarEnv.fst"
@@ -113,24 +113,24 @@ end))
 
 # 54 "FStar.Parser.DesugarEnv.fst"
 let ___OSig____0 : occurrence  ->  FStar_Absyn_Syntax.sigelt = (fun projectee -> (match (projectee) with
-| OSig (_49_43) -> begin
-_49_43
+| OSig (_48_43) -> begin
+_48_43
 end))
 
 # 55 "FStar.Parser.DesugarEnv.fst"
 let ___OLet____0 : occurrence  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
-| OLet (_49_46) -> begin
-_49_46
+| OLet (_48_46) -> begin
+_48_46
 end))
 
 # 56 "FStar.Parser.DesugarEnv.fst"
 let ___ORec____0 : occurrence  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
-| ORec (_49_49) -> begin
-_49_49
+| ORec (_48_49) -> begin
+_48_49
 end))
 
 # 57 "FStar.Parser.DesugarEnv.fst"
-let range_of_occurrence : occurrence  ->  FStar_Range.range = (fun _49_1 -> (match (_49_1) with
+let range_of_occurrence : occurrence  ->  FStar_Range.range = (fun _48_1 -> (match (_48_1) with
 | (OLet (l)) | (ORec (l)) -> begin
 (FStar_Ident.range_of_lid l)
 end
@@ -183,26 +183,26 @@ end))
 
 # 63 "FStar.Parser.DesugarEnv.fst"
 let ___Exp_name____0 : foundname  ->  (occurrence * FStar_Absyn_Syntax.exp) = (fun projectee -> (match (projectee) with
-| Exp_name (_49_58) -> begin
-_49_58
+| Exp_name (_48_58) -> begin
+_48_58
 end))
 
 # 64 "FStar.Parser.DesugarEnv.fst"
 let ___Typ_name____0 : foundname  ->  (occurrence * FStar_Absyn_Syntax.typ) = (fun projectee -> (match (projectee) with
-| Typ_name (_49_61) -> begin
-_49_61
+| Typ_name (_48_61) -> begin
+_48_61
 end))
 
 # 65 "FStar.Parser.DesugarEnv.fst"
 let ___Eff_name____0 : foundname  ->  (occurrence * FStar_Ident.lident) = (fun projectee -> (match (projectee) with
-| Eff_name (_49_64) -> begin
-_49_64
+| Eff_name (_48_64) -> begin
+_48_64
 end))
 
 # 66 "FStar.Parser.DesugarEnv.fst"
 let ___Knd_name____0 : foundname  ->  (occurrence * FStar_Ident.lident) = (fun projectee -> (match (projectee) with
-| Knd_name (_49_67) -> begin
-_49_67
+| Knd_name (_48_67) -> begin
+_48_67
 end))
 
 # 68 "FStar.Parser.DesugarEnv.fst"
@@ -225,32 +225,32 @@ m
 end))
 
 # 127 "FStar.Parser.DesugarEnv.fst"
-let qual : FStar_Ident.lident  ->  FStar_Ident.ident  ->  FStar_Ident.lident = (fun lid id -> (let _128_230 = (FStar_Ident.lid_of_ids (FStar_List.append lid.FStar_Ident.ns ((lid.FStar_Ident.ident)::(id)::[])))
-in (FStar_Ident.set_lid_range _128_230 id.FStar_Ident.idRange)))
+let qual : FStar_Ident.lident  ->  FStar_Ident.ident  ->  FStar_Ident.lident = (fun lid id -> (let _129_230 = (FStar_Ident.lid_of_ids (FStar_List.append lid.FStar_Ident.ns ((lid.FStar_Ident.ident)::(id)::[])))
+in (FStar_Ident.set_lid_range _129_230 id.FStar_Ident.idRange)))
 
 # 128 "FStar.Parser.DesugarEnv.fst"
-let qualify : env  ->  FStar_Ident.ident  ->  FStar_Ident.lident = (fun env id -> (let _128_235 = (current_module env)
-in (qual _128_235 id)))
+let qualify : env  ->  FStar_Ident.ident  ->  FStar_Ident.lident = (fun env id -> (let _129_235 = (current_module env)
+in (qual _129_235 id)))
 
 # 129 "FStar.Parser.DesugarEnv.fst"
 let qualify_lid : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident = (fun env lid -> (
 # 130 "FStar.Parser.DesugarEnv.fst"
 let cur = (current_module env)
-in (let _128_240 = (FStar_Ident.lid_of_ids (FStar_List.append (FStar_List.append (FStar_List.append cur.FStar_Ident.ns ((cur.FStar_Ident.ident)::[])) lid.FStar_Ident.ns) ((lid.FStar_Ident.ident)::[])))
-in (FStar_Ident.set_lid_range _128_240 (FStar_Ident.range_of_lid lid)))))
+in (let _129_240 = (FStar_Ident.lid_of_ids (FStar_List.append (FStar_List.append (FStar_List.append cur.FStar_Ident.ns ((cur.FStar_Ident.ident)::[])) lid.FStar_Ident.ns) ((lid.FStar_Ident.ident)::[])))
+in (FStar_Ident.set_lid_range _129_240 (FStar_Ident.range_of_lid lid)))))
 
 # 132 "FStar.Parser.DesugarEnv.fst"
-let new_sigmap = (fun _49_89 -> (match (()) with
+let new_sigmap = (fun _48_89 -> (match (()) with
 | () -> begin
 (FStar_Util.smap_create 100)
 end))
 
 # 133 "FStar.Parser.DesugarEnv.fst"
-let empty_env : Prims.unit  ->  env = (fun _49_90 -> (match (()) with
+let empty_env : Prims.unit  ->  env = (fun _48_90 -> (match (()) with
 | () -> begin
-(let _128_245 = (let _128_244 = (new_sigmap ())
-in (_128_244)::[])
-in {curmodule = None; modules = []; open_namespaces = []; modul_abbrevs = []; sigaccum = []; localbindings = []; recbindings = []; phase = FStar_Parser_AST.Un; sigmap = _128_245; default_result_effect = FStar_Absyn_Util.ml_comp; iface = false; admitted_iface = false})
+(let _129_245 = (let _129_244 = (new_sigmap ())
+in (_129_244)::[])
+in {curmodule = None; modules = []; open_namespaces = []; modul_abbrevs = []; sigaccum = []; localbindings = []; recbindings = []; phase = FStar_Parser_AST.Un; sigmap = _129_245; default_result_effect = FStar_Absyn_Util.ml_comp; iface = false; admitted_iface = false})
 end))
 
 # 145 "FStar.Parser.DesugarEnv.fst"
@@ -259,17 +259,17 @@ let sigmap : env  ->  (FStar_Absyn_Syntax.sigelt * Prims.bool) FStar_Util.smap =
 # 146 "FStar.Parser.DesugarEnv.fst"
 let default_total : env  ->  env = (fun env -> (
 # 146 "FStar.Parser.DesugarEnv.fst"
-let _49_93 = env
-in {curmodule = _49_93.curmodule; modules = _49_93.modules; open_namespaces = _49_93.open_namespaces; modul_abbrevs = _49_93.modul_abbrevs; sigaccum = _49_93.sigaccum; localbindings = _49_93.localbindings; recbindings = _49_93.recbindings; phase = _49_93.phase; sigmap = _49_93.sigmap; default_result_effect = (fun t _49_96 -> (FStar_Absyn_Syntax.mk_Total t)); iface = _49_93.iface; admitted_iface = _49_93.admitted_iface}))
+let _48_93 = env
+in {curmodule = _48_93.curmodule; modules = _48_93.modules; open_namespaces = _48_93.open_namespaces; modul_abbrevs = _48_93.modul_abbrevs; sigaccum = _48_93.sigaccum; localbindings = _48_93.localbindings; recbindings = _48_93.recbindings; phase = _48_93.phase; sigmap = _48_93.sigmap; default_result_effect = (fun t _48_96 -> (FStar_Absyn_Syntax.mk_Total t)); iface = _48_93.iface; admitted_iface = _48_93.admitted_iface}))
 
 # 147 "FStar.Parser.DesugarEnv.fst"
 let default_ml : env  ->  env = (fun env -> (
 # 147 "FStar.Parser.DesugarEnv.fst"
-let _49_99 = env
-in {curmodule = _49_99.curmodule; modules = _49_99.modules; open_namespaces = _49_99.open_namespaces; modul_abbrevs = _49_99.modul_abbrevs; sigaccum = _49_99.sigaccum; localbindings = _49_99.localbindings; recbindings = _49_99.recbindings; phase = _49_99.phase; sigmap = _49_99.sigmap; default_result_effect = FStar_Absyn_Util.ml_comp; iface = _49_99.iface; admitted_iface = _49_99.admitted_iface}))
+let _48_99 = env
+in {curmodule = _48_99.curmodule; modules = _48_99.modules; open_namespaces = _48_99.open_namespaces; modul_abbrevs = _48_99.modul_abbrevs; sigaccum = _48_99.sigaccum; localbindings = _48_99.localbindings; recbindings = _48_99.recbindings; phase = _48_99.phase; sigmap = _48_99.sigmap; default_result_effect = FStar_Absyn_Util.ml_comp; iface = _48_99.iface; admitted_iface = _48_99.admitted_iface}))
 
 # 149 "FStar.Parser.DesugarEnv.fst"
-let range_of_binding : binding  ->  FStar_Range.range = (fun _49_2 -> (match (_49_2) with
+let range_of_binding : binding  ->  FStar_Range.range = (fun _48_2 -> (match (_48_2) with
 | (Binding_typ_var (id)) | (Binding_var (id)) -> begin
 id.FStar_Ident.idRange
 end
@@ -280,22 +280,22 @@ end))
 # 155 "FStar.Parser.DesugarEnv.fst"
 let try_lookup_typ_var : env  ->  FStar_Ident.ident  ->  FStar_Absyn_Syntax.typ Prims.option = (fun env id -> (
 # 156 "FStar.Parser.DesugarEnv.fst"
-let fopt = (FStar_List.tryFind (fun _49_113 -> (match (_49_113) with
-| (_49_111, b) -> begin
+let fopt = (FStar_List.tryFind (fun _48_113 -> (match (_48_113) with
+| (_48_111, b) -> begin
 (match (b) with
 | (Binding_typ_var (id')) | (Binding_var (id')) -> begin
 (id.FStar_Ident.idText = id'.FStar_Ident.idText)
 end
-| _49_118 -> begin
+| _48_118 -> begin
 false
 end)
 end)) env.localbindings)
 in (match (fopt) with
-| Some (FStar_Util.Inl (bvd), Binding_typ_var (_49_123)) -> begin
-(let _128_261 = (FStar_Absyn_Util.bvd_to_typ (FStar_Absyn_Util.set_bvd_range bvd id.FStar_Ident.idRange) FStar_Absyn_Syntax.kun)
-in Some (_128_261))
+| Some (FStar_Util.Inl (bvd), Binding_typ_var (_48_123)) -> begin
+(let _129_261 = (FStar_Absyn_Util.bvd_to_typ (FStar_Absyn_Util.set_bvd_range bvd id.FStar_Ident.idRange) FStar_Absyn_Syntax.kun)
+in Some (_129_261))
 end
-| _49_128 -> begin
+| _48_128 -> begin
 None
 end)))
 
@@ -306,7 +306,7 @@ let aux = (fun namespaces -> (match ((finder lid)) with
 | Some (r) -> begin
 Some (r)
 end
-| _49_138 -> begin
+| _48_138 -> begin
 (
 # 170 "FStar.Parser.DesugarEnv.fst"
 let ids = (FStar_Ident.ids_of_lid lid)
@@ -315,41 +315,41 @@ in (FStar_Util.find_map namespaces (fun ns -> (
 let full_name = (FStar_Ident.lid_of_ids (FStar_List.append (FStar_Ident.ids_of_lid ns) ids))
 in (finder full_name)))))
 end))
-in (let _128_272 = (let _128_271 = (current_module env)
-in (_128_271)::env.open_namespaces)
-in (aux _128_272))))
+in (let _129_272 = (let _129_271 = (current_module env)
+in (_129_271)::env.open_namespaces)
+in (aux _129_272))))
 
 # 176 "FStar.Parser.DesugarEnv.fst"
 let expand_module_abbrevs : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident = (fun env lid -> (match (lid.FStar_Ident.ns) with
 | id::[] -> begin
-(match ((FStar_All.pipe_right env.modul_abbrevs (FStar_List.tryFind (fun _49_149 -> (match (_49_149) with
-| (id', _49_148) -> begin
+(match ((FStar_All.pipe_right env.modul_abbrevs (FStar_List.tryFind (fun _48_149 -> (match (_48_149) with
+| (id', _48_148) -> begin
 (id.FStar_Ident.idText = id'.FStar_Ident.idText)
 end))))) with
 | None -> begin
 lid
 end
-| Some (_49_152, lid') -> begin
+| Some (_48_152, lid') -> begin
 (FStar_Ident.lid_of_ids (FStar_List.append (FStar_Ident.ids_of_lid lid') ((lid.FStar_Ident.ident)::[])))
 end)
 end
-| _49_157 -> begin
+| _48_157 -> begin
 lid
 end))
 
 # 186 "FStar.Parser.DesugarEnv.fst"
-let resolve_in_open_namespaces = (fun env lid finder -> (let _128_288 = (expand_module_abbrevs env lid)
-in (resolve_in_open_namespaces' env _128_288 finder)))
+let resolve_in_open_namespaces = (fun env lid finder -> (let _129_288 = (expand_module_abbrevs env lid)
+in (resolve_in_open_namespaces' env _129_288 finder)))
 
 # 189 "FStar.Parser.DesugarEnv.fst"
 let unmangleMap : (Prims.string * Prims.string) Prims.list = (("op_ColonColon", "Cons"))::(("not", "op_Negation"))::[]
 
 # 192 "FStar.Parser.DesugarEnv.fst"
-let unmangleOpName : FStar_Ident.ident  ->  FStar_Ident.lident Prims.option = (fun id -> (FStar_Util.find_map unmangleMap (fun _49_165 -> (match (_49_165) with
+let unmangleOpName : FStar_Ident.ident  ->  FStar_Ident.lident Prims.option = (fun id -> (FStar_Util.find_map unmangleMap (fun _48_165 -> (match (_48_165) with
 | (x, y) -> begin
 if (id.FStar_Ident.idText = x) then begin
-(let _128_292 = (FStar_Ident.lid_of_path (("Prims")::(y)::[]) id.FStar_Ident.idRange)
-in Some (_128_292))
+(let _129_292 = (FStar_Ident.lid_of_path (("Prims")::(y)::[]) id.FStar_Ident.idRange)
+in Some (_129_292))
 end else begin
 None
 end
@@ -358,39 +358,39 @@ end))))
 # 197 "FStar.Parser.DesugarEnv.fst"
 let try_lookup_id' : env  ->  FStar_Ident.ident  ->  (FStar_Ident.lident * FStar_Absyn_Syntax.exp) Prims.option = (fun env id -> (match ((unmangleOpName id)) with
 | Some (l) -> begin
-(let _128_298 = (let _128_297 = (FStar_Absyn_Syntax.mk_Exp_fvar ((FStar_Absyn_Util.fv l), None) None id.FStar_Ident.idRange)
-in (l, _128_297))
-in Some (_128_298))
+(let _129_298 = (let _129_297 = (FStar_Absyn_Syntax.mk_Exp_fvar ((FStar_Absyn_Util.fv l), None) None id.FStar_Ident.idRange)
+in (l, _129_297))
+in Some (_129_298))
 end
-| _49_171 -> begin
+| _48_171 -> begin
 (
 # 201 "FStar.Parser.DesugarEnv.fst"
-let found = (FStar_Util.find_map env.localbindings (fun _49_3 -> (match (_49_3) with
-| (FStar_Util.Inl (_49_174), Binding_typ_var (id')) when (id'.FStar_Ident.idText = id.FStar_Ident.idText) -> begin
+let found = (FStar_Util.find_map env.localbindings (fun _48_3 -> (match (_48_3) with
+| (FStar_Util.Inl (_48_174), Binding_typ_var (id')) when (id'.FStar_Ident.idText = id.FStar_Ident.idText) -> begin
 Some (FStar_Util.Inl (()))
 end
 | (FStar_Util.Inr (bvd), Binding_var (id')) when (id'.FStar_Ident.idText = id.FStar_Ident.idText) -> begin
-(let _128_303 = (let _128_302 = (let _128_301 = (FStar_Ident.lid_of_ids ((id')::[]))
-in (let _128_300 = (FStar_Absyn_Util.bvd_to_exp (FStar_Absyn_Util.set_bvd_range bvd id.FStar_Ident.idRange) FStar_Absyn_Syntax.tun)
-in (_128_301, _128_300)))
-in FStar_Util.Inr (_128_302))
-in Some (_128_303))
+(let _129_303 = (let _129_302 = (let _129_301 = (FStar_Ident.lid_of_ids ((id')::[]))
+in (let _129_300 = (FStar_Absyn_Util.bvd_to_exp (FStar_Absyn_Util.set_bvd_range bvd id.FStar_Ident.idRange) FStar_Absyn_Syntax.tun)
+in (_129_301, _129_300)))
+in FStar_Util.Inr (_129_302))
+in Some (_129_303))
 end
-| _49_185 -> begin
+| _48_185 -> begin
 None
 end)))
 in (match (found) with
 | Some (FStar_Util.Inr (x)) -> begin
 Some (x)
 end
-| _49_191 -> begin
+| _48_191 -> begin
 None
 end))
 end))
 
 # 209 "FStar.Parser.DesugarEnv.fst"
 let try_lookup_id : env  ->  FStar_Ident.ident  ->  FStar_Absyn_Syntax.exp Prims.option = (fun env id -> (match ((try_lookup_id' env id)) with
-| Some (_49_195, e) -> begin
+| Some (_48_195, e) -> begin
 Some (e)
 end
 | None -> begin
@@ -398,15 +398,15 @@ None
 end))
 
 # 215 "FStar.Parser.DesugarEnv.fst"
-let fv_qual_of_se : FStar_Absyn_Syntax.sigelt  ->  FStar_Absyn_Syntax.fv_qual Prims.option = (fun _49_5 -> (match (_49_5) with
-| FStar_Absyn_Syntax.Sig_datacon (_49_202, _49_204, (l, _49_207, _49_209), quals, _49_213, _49_215) -> begin
+let fv_qual_of_se : FStar_Absyn_Syntax.sigelt  ->  FStar_Absyn_Syntax.fv_qual Prims.option = (fun _48_5 -> (match (_48_5) with
+| FStar_Absyn_Syntax.Sig_datacon (_48_202, _48_204, (l, _48_207, _48_209), quals, _48_213, _48_215) -> begin
 (
 # 217 "FStar.Parser.DesugarEnv.fst"
-let qopt = (FStar_Util.find_map quals (fun _49_4 -> (match (_49_4) with
+let qopt = (FStar_Util.find_map quals (fun _48_4 -> (match (_48_4) with
 | FStar_Absyn_Syntax.RecordConstructor (fs) -> begin
 Some (FStar_Absyn_Syntax.Record_ctor ((l, fs)))
 end
-| _49_222 -> begin
+| _48_222 -> begin
 None
 end)))
 in (match (qopt) with
@@ -417,75 +417,75 @@ end
 x
 end))
 end
-| FStar_Absyn_Syntax.Sig_val_decl (_49_227, _49_229, quals, _49_232) -> begin
+| FStar_Absyn_Syntax.Sig_val_decl (_48_227, _48_229, quals, _48_232) -> begin
 None
 end
-| _49_236 -> begin
+| _48_236 -> begin
 None
 end))
 
 # 228 "FStar.Parser.DesugarEnv.fst"
 let try_lookup_name : Prims.bool  ->  Prims.bool  ->  env  ->  FStar_Ident.lident  ->  foundname Prims.option = (fun any_val exclude_interf env lid -> (
 # 236 "FStar.Parser.DesugarEnv.fst"
-let find_in_sig = (fun lid -> (match ((let _128_321 = (sigmap env)
-in (FStar_Util.smap_try_find _128_321 lid.FStar_Ident.str))) with
-| Some (_49_244, true) when exclude_interf -> begin
+let find_in_sig = (fun lid -> (match ((let _129_321 = (sigmap env)
+in (FStar_Util.smap_try_find _129_321 lid.FStar_Ident.str))) with
+| Some (_48_244, true) when exclude_interf -> begin
 None
 end
 | None -> begin
 None
 end
-| Some (se, _49_251) -> begin
+| Some (se, _48_251) -> begin
 (match (se) with
 | (FStar_Absyn_Syntax.Sig_typ_abbrev (_)) | (FStar_Absyn_Syntax.Sig_tycon (_)) -> begin
-(let _128_324 = (let _128_323 = (let _128_322 = (FStar_Absyn_Util.ftv lid FStar_Absyn_Syntax.kun)
-in (OSig (se), _128_322))
-in Typ_name (_128_323))
-in Some (_128_324))
+(let _129_324 = (let _129_323 = (let _129_322 = (FStar_Absyn_Util.ftv lid FStar_Absyn_Syntax.kun)
+in (OSig (se), _129_322))
+in Typ_name (_129_323))
+in Some (_129_324))
 end
-| FStar_Absyn_Syntax.Sig_kind_abbrev (_49_261) -> begin
+| FStar_Absyn_Syntax.Sig_kind_abbrev (_48_261) -> begin
 Some (Knd_name ((OSig (se), lid)))
 end
-| FStar_Absyn_Syntax.Sig_new_effect (ne, _49_265) -> begin
-(let _128_327 = (let _128_326 = (let _128_325 = (FStar_Ident.set_lid_range ne.FStar_Absyn_Syntax.mname (FStar_Ident.range_of_lid lid))
-in (OSig (se), _128_325))
-in Eff_name (_128_326))
-in Some (_128_327))
+| FStar_Absyn_Syntax.Sig_new_effect (ne, _48_265) -> begin
+(let _129_327 = (let _129_326 = (let _129_325 = (FStar_Ident.set_lid_range ne.FStar_Absyn_Syntax.mname (FStar_Ident.range_of_lid lid))
+in (OSig (se), _129_325))
+in Eff_name (_129_326))
+in Some (_129_327))
 end
-| FStar_Absyn_Syntax.Sig_effect_abbrev (_49_269) -> begin
+| FStar_Absyn_Syntax.Sig_effect_abbrev (_48_269) -> begin
 Some (Eff_name ((OSig (se), lid)))
 end
-| FStar_Absyn_Syntax.Sig_datacon (_49_272) -> begin
-(let _128_331 = (let _128_330 = (let _128_329 = (let _128_328 = (fv_qual_of_se se)
-in (FStar_Absyn_Util.fvar _128_328 lid (FStar_Ident.range_of_lid lid)))
-in (OSig (se), _128_329))
-in Exp_name (_128_330))
-in Some (_128_331))
+| FStar_Absyn_Syntax.Sig_datacon (_48_272) -> begin
+(let _129_331 = (let _129_330 = (let _129_329 = (let _129_328 = (fv_qual_of_se se)
+in (FStar_Absyn_Util.fvar _129_328 lid (FStar_Ident.range_of_lid lid)))
+in (OSig (se), _129_329))
+in Exp_name (_129_330))
+in Some (_129_331))
 end
-| FStar_Absyn_Syntax.Sig_let (_49_275) -> begin
-(let _128_334 = (let _128_333 = (let _128_332 = (FStar_Absyn_Util.fvar None lid (FStar_Ident.range_of_lid lid))
-in (OSig (se), _128_332))
-in Exp_name (_128_333))
-in Some (_128_334))
+| FStar_Absyn_Syntax.Sig_let (_48_275) -> begin
+(let _129_334 = (let _129_333 = (let _129_332 = (FStar_Absyn_Util.fvar None lid (FStar_Ident.range_of_lid lid))
+in (OSig (se), _129_332))
+in Exp_name (_129_333))
+in Some (_129_334))
 end
-| FStar_Absyn_Syntax.Sig_val_decl (_49_278, _49_280, quals, _49_283) -> begin
-if (any_val || (FStar_All.pipe_right quals (FStar_Util.for_some (fun _49_6 -> (match (_49_6) with
+| FStar_Absyn_Syntax.Sig_val_decl (_48_278, _48_280, quals, _48_283) -> begin
+if (any_val || (FStar_All.pipe_right quals (FStar_Util.for_some (fun _48_6 -> (match (_48_6) with
 | FStar_Absyn_Syntax.Assumption -> begin
 true
 end
-| _49_289 -> begin
+| _48_289 -> begin
 false
 end))))) then begin
-(let _128_339 = (let _128_338 = (let _128_337 = (let _128_336 = (fv_qual_of_se se)
-in (FStar_Absyn_Util.fvar _128_336 lid (FStar_Ident.range_of_lid lid)))
-in (OSig (se), _128_337))
-in Exp_name (_128_338))
-in Some (_128_339))
+(let _129_339 = (let _129_338 = (let _129_337 = (let _129_336 = (fv_qual_of_se se)
+in (FStar_Absyn_Util.fvar _129_336 lid (FStar_Ident.range_of_lid lid)))
+in (OSig (se), _129_337))
+in Exp_name (_129_338))
+in Some (_129_339))
 end else begin
 None
 end
 end
-| _49_291 -> begin
+| _48_291 -> begin
 None
 end)
 end))
@@ -501,45 +501,45 @@ end
 (
 # 261 "FStar.Parser.DesugarEnv.fst"
 let recname = (qualify env lid.FStar_Ident.ident)
-in (FStar_Util.find_map env.recbindings (fun _49_7 -> (match (_49_7) with
+in (FStar_Util.find_map env.recbindings (fun _48_7 -> (match (_48_7) with
 | Binding_let (l) when (FStar_Ident.lid_equals l recname) -> begin
-(let _128_343 = (let _128_342 = (let _128_341 = (FStar_Absyn_Util.fvar None recname (FStar_Ident.range_of_lid recname))
-in (ORec (l), _128_341))
-in Exp_name (_128_342))
-in Some (_128_343))
+(let _129_343 = (let _129_342 = (let _129_341 = (FStar_Absyn_Util.fvar None recname (FStar_Ident.range_of_lid recname))
+in (ORec (l), _129_341))
+in Exp_name (_129_342))
+in Some (_129_343))
 end
 | Binding_tycon (l) when (FStar_Ident.lid_equals l recname) -> begin
-(let _128_346 = (let _128_345 = (let _128_344 = (FStar_Absyn_Util.ftv recname FStar_Absyn_Syntax.kun)
-in (ORec (l), _128_344))
-in Typ_name (_128_345))
-in Some (_128_346))
+(let _129_346 = (let _129_345 = (let _129_344 = (FStar_Absyn_Util.ftv recname FStar_Absyn_Syntax.kun)
+in (ORec (l), _129_344))
+in Typ_name (_129_345))
+in Some (_129_346))
 end
-| _49_305 -> begin
+| _48_305 -> begin
 None
 end))))
 end)
 end
-| _49_307 -> begin
+| _48_307 -> begin
 None
 end)
 in (match (found_id) with
-| Some (_49_310) -> begin
+| Some (_48_310) -> begin
 found_id
 end
-| _49_313 -> begin
+| _48_313 -> begin
 (resolve_in_open_namespaces env lid find_in_sig)
 end))))
 
 # 274 "FStar.Parser.DesugarEnv.fst"
 let try_lookup_typ_name' : Prims.bool  ->  env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ Prims.option = (fun exclude_interf env lid -> (match ((try_lookup_name true exclude_interf env lid)) with
-| Some (Typ_name (_49_318, t)) -> begin
+| Some (Typ_name (_48_318, t)) -> begin
 Some (t)
 end
-| Some (Eff_name (_49_324, l)) -> begin
-(let _128_353 = (FStar_Absyn_Util.ftv l FStar_Absyn_Syntax.mk_Kind_unknown)
-in Some (_128_353))
+| Some (Eff_name (_48_324, l)) -> begin
+(let _129_353 = (FStar_Absyn_Util.ftv l FStar_Absyn_Syntax.mk_Kind_unknown)
+in Some (_129_353))
 end
-| _49_330 -> begin
+| _48_330 -> begin
 None
 end))
 
@@ -551,7 +551,7 @@ let try_lookup_effect_name' : Prims.bool  ->  env  ->  FStar_Ident.lident  ->  (
 | Some (Eff_name (o, l)) -> begin
 Some ((o, l))
 end
-| _49_342 -> begin
+| _48_342 -> begin
 None
 end))
 
@@ -560,16 +560,16 @@ let try_lookup_effect_name : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident
 | Some (o, l) -> begin
 Some (l)
 end
-| _49_350 -> begin
+| _48_350 -> begin
 None
 end))
 
 # 289 "FStar.Parser.DesugarEnv.fst"
 let try_lookup_effect_defn : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.eff_decl Prims.option = (fun env l -> (match ((try_lookup_effect_name' (not (env.iface)) env l)) with
-| Some (OSig (FStar_Absyn_Syntax.Sig_new_effect (ne, _49_355)), _49_360) -> begin
+| Some (OSig (FStar_Absyn_Syntax.Sig_new_effect (ne, _48_355)), _48_360) -> begin
 Some (ne)
 end
-| _49_364 -> begin
+| _48_364 -> begin
 None
 end))
 
@@ -578,25 +578,25 @@ let is_effect_name : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env lid 
 | None -> begin
 false
 end
-| Some (_49_369) -> begin
+| Some (_48_369) -> begin
 true
 end))
 
 # 298 "FStar.Parser.DesugarEnv.fst"
 let try_resolve_typ_abbrev : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ Prims.option = (fun env lid -> (
 # 299 "FStar.Parser.DesugarEnv.fst"
-let find_in_sig = (fun lid -> (match ((let _128_382 = (sigmap env)
-in (FStar_Util.smap_try_find _128_382 lid.FStar_Ident.str))) with
-| Some (FStar_Absyn_Syntax.Sig_typ_abbrev (lid, tps, k, def, _49_380, _49_382), _49_386) -> begin
+let find_in_sig = (fun lid -> (match ((let _129_382 = (sigmap env)
+in (FStar_Util.smap_try_find _129_382 lid.FStar_Ident.str))) with
+| Some (FStar_Absyn_Syntax.Sig_typ_abbrev (lid, tps, k, def, _48_380, _48_382), _48_386) -> begin
 (
 # 302 "FStar.Parser.DesugarEnv.fst"
-let t = (let _128_385 = (let _128_384 = (let _128_383 = (FStar_Absyn_Util.close_with_lam tps def)
-in (_128_383, lid))
-in FStar_Absyn_Syntax.Meta_named (_128_384))
-in (FStar_Absyn_Syntax.mk_Typ_meta _128_385))
+let t = (let _129_385 = (let _129_384 = (let _129_383 = (FStar_Absyn_Util.close_with_lam tps def)
+in (_129_383, lid))
+in FStar_Absyn_Syntax.Meta_named (_129_384))
+in (FStar_Absyn_Syntax.mk_Typ_meta _129_385))
 in Some (t))
 end
-| _49_391 -> begin
+| _48_391 -> begin
 None
 end))
 in (resolve_in_open_namespaces env lid find_in_sig)))
@@ -604,28 +604,28 @@ in (resolve_in_open_namespaces env lid find_in_sig)))
 # 307 "FStar.Parser.DesugarEnv.fst"
 let lookup_letbinding_quals : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.qualifier Prims.list = (fun env lid -> (
 # 308 "FStar.Parser.DesugarEnv.fst"
-let find_in_sig = (fun lid -> (match ((let _128_392 = (sigmap env)
-in (FStar_Util.smap_try_find _128_392 lid.FStar_Ident.str))) with
-| Some (FStar_Absyn_Syntax.Sig_val_decl (lid, _49_398, quals, _49_401), _49_405) -> begin
+let find_in_sig = (fun lid -> (match ((let _129_392 = (sigmap env)
+in (FStar_Util.smap_try_find _129_392 lid.FStar_Ident.str))) with
+| Some (FStar_Absyn_Syntax.Sig_val_decl (lid, _48_398, quals, _48_401), _48_405) -> begin
 Some (quals)
 end
-| _49_409 -> begin
+| _48_409 -> begin
 None
 end))
 in (match ((resolve_in_open_namespaces env lid find_in_sig)) with
 | Some (quals) -> begin
 quals
 end
-| _49_413 -> begin
+| _48_413 -> begin
 []
 end)))
 
 # 316 "FStar.Parser.DesugarEnv.fst"
-let try_lookup_module : env  ->  Prims.string Prims.list  ->  FStar_Absyn_Syntax.modul Prims.option = (fun env path -> (match ((FStar_List.tryFind (fun _49_418 -> (match (_49_418) with
+let try_lookup_module : env  ->  Prims.string Prims.list  ->  FStar_Absyn_Syntax.modul Prims.option = (fun env path -> (match ((FStar_List.tryFind (fun _48_418 -> (match (_48_418) with
 | (mlid, modul) -> begin
 ((FStar_Ident.path_of_lid mlid) = path)
 end)) env.modules)) with
-| Some (_49_420, modul) -> begin
+| Some (_48_420, modul) -> begin
 Some (modul)
 end
 | None -> begin
@@ -635,23 +635,23 @@ end))
 # 321 "FStar.Parser.DesugarEnv.fst"
 let try_lookup_let : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.exp Prims.option = (fun env lid -> (
 # 322 "FStar.Parser.DesugarEnv.fst"
-let find_in_sig = (fun lid -> (match ((let _128_404 = (sigmap env)
-in (FStar_Util.smap_try_find _128_404 lid.FStar_Ident.str))) with
-| Some (FStar_Absyn_Syntax.Sig_let (_49_430), _49_433) -> begin
-(let _128_405 = (FStar_Absyn_Util.fvar None lid (FStar_Ident.range_of_lid lid))
-in Some (_128_405))
+let find_in_sig = (fun lid -> (match ((let _129_404 = (sigmap env)
+in (FStar_Util.smap_try_find _129_404 lid.FStar_Ident.str))) with
+| Some (FStar_Absyn_Syntax.Sig_let (_48_430), _48_433) -> begin
+(let _129_405 = (FStar_Absyn_Util.fvar None lid (FStar_Ident.range_of_lid lid))
+in Some (_129_405))
 end
-| _49_437 -> begin
+| _48_437 -> begin
 None
 end))
 in (resolve_in_open_namespaces env lid find_in_sig)))
 
 # 328 "FStar.Parser.DesugarEnv.fst"
 let try_lookup_lid' : Prims.bool  ->  Prims.bool  ->  env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.exp Prims.option = (fun any_val exclude_interf env lid -> (match ((try_lookup_name any_val exclude_interf env lid)) with
-| Some (Exp_name (_49_443, e)) -> begin
+| Some (Exp_name (_48_443, e)) -> begin
 Some (e)
 end
-| _49_449 -> begin
+| _48_449 -> begin
 None
 end))
 
@@ -661,14 +661,14 @@ let try_lookup_lid : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.exp Pri
 # 334 "FStar.Parser.DesugarEnv.fst"
 let try_lookup_datacon : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ FStar_Absyn_Syntax.var Prims.option = (fun env lid -> (
 # 335 "FStar.Parser.DesugarEnv.fst"
-let find_in_sig = (fun lid -> (match ((let _128_424 = (sigmap env)
-in (FStar_Util.smap_try_find _128_424 lid.FStar_Ident.str))) with
-| Some (FStar_Absyn_Syntax.Sig_val_decl (_49_457, _49_459, quals, _49_462), _49_466) -> begin
-if (FStar_All.pipe_right quals (FStar_Util.for_some (fun _49_8 -> (match (_49_8) with
+let find_in_sig = (fun lid -> (match ((let _129_424 = (sigmap env)
+in (FStar_Util.smap_try_find _129_424 lid.FStar_Ident.str))) with
+| Some (FStar_Absyn_Syntax.Sig_val_decl (_48_457, _48_459, quals, _48_462), _48_466) -> begin
+if (FStar_All.pipe_right quals (FStar_Util.for_some (fun _48_8 -> (match (_48_8) with
 | FStar_Absyn_Syntax.Assumption -> begin
 true
 end
-| _49_472 -> begin
+| _48_472 -> begin
 false
 end)))) then begin
 Some ((FStar_Absyn_Util.fv lid))
@@ -676,10 +676,10 @@ end else begin
 None
 end
 end
-| Some (FStar_Absyn_Syntax.Sig_datacon (_49_474), _49_477) -> begin
+| Some (FStar_Absyn_Syntax.Sig_datacon (_48_474), _48_477) -> begin
 Some ((FStar_Absyn_Util.fv lid))
 end
-| _49_481 -> begin
+| _48_481 -> begin
 None
 end))
 in (resolve_in_open_namespaces env lid find_in_sig)))
@@ -687,12 +687,12 @@ in (resolve_in_open_namespaces env lid find_in_sig)))
 # 345 "FStar.Parser.DesugarEnv.fst"
 let find_all_datacons : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident Prims.list Prims.option = (fun env lid -> (
 # 346 "FStar.Parser.DesugarEnv.fst"
-let find_in_sig = (fun lid -> (match ((let _128_432 = (sigmap env)
-in (FStar_Util.smap_try_find _128_432 lid.FStar_Ident.str))) with
-| Some (FStar_Absyn_Syntax.Sig_tycon (_49_487, _49_489, _49_491, _49_493, datas, _49_496, _49_498), _49_502) -> begin
+let find_in_sig = (fun lid -> (match ((let _129_432 = (sigmap env)
+in (FStar_Util.smap_try_find _129_432 lid.FStar_Ident.str))) with
+| Some (FStar_Absyn_Syntax.Sig_tycon (_48_487, _48_489, _48_491, _48_493, datas, _48_496, _48_498), _48_502) -> begin
 Some (datas)
 end
-| _49_506 -> begin
+| _48_506 -> begin
 None
 end))
 in (resolve_in_open_namespaces env lid find_in_sig)))
@@ -703,108 +703,108 @@ let record_cache_aux : ((Prims.unit  ->  Prims.unit) * (Prims.unit  ->  Prims.un
 let record_cache = (FStar_Util.mk_ref (([])::[]))
 in (
 # 355 "FStar.Parser.DesugarEnv.fst"
-let push = (fun _49_509 -> (match (()) with
+let push = (fun _48_509 -> (match (()) with
 | () -> begin
-(let _128_446 = (let _128_445 = (let _128_443 = (FStar_ST.read record_cache)
-in (FStar_List.hd _128_443))
-in (let _128_444 = (FStar_ST.read record_cache)
-in (_128_445)::_128_444))
-in (FStar_ST.op_Colon_Equals record_cache _128_446))
+(let _129_446 = (let _129_445 = (let _129_443 = (FStar_ST.read record_cache)
+in (FStar_List.hd _129_443))
+in (let _129_444 = (FStar_ST.read record_cache)
+in (_129_445)::_129_444))
+in (FStar_ST.op_Colon_Equals record_cache _129_446))
 end))
 in (
 # 357 "FStar.Parser.DesugarEnv.fst"
-let pop = (fun _49_511 -> (match (()) with
+let pop = (fun _48_511 -> (match (()) with
 | () -> begin
-(let _128_450 = (let _128_449 = (FStar_ST.read record_cache)
-in (FStar_List.tl _128_449))
-in (FStar_ST.op_Colon_Equals record_cache _128_450))
+(let _129_450 = (let _129_449 = (FStar_ST.read record_cache)
+in (FStar_List.tl _129_449))
+in (FStar_ST.op_Colon_Equals record_cache _129_450))
 end))
 in (
 # 359 "FStar.Parser.DesugarEnv.fst"
-let peek = (fun _49_513 -> (match (()) with
+let peek = (fun _48_513 -> (match (()) with
 | () -> begin
-(let _128_453 = (FStar_ST.read record_cache)
-in (FStar_List.hd _128_453))
+(let _129_453 = (FStar_ST.read record_cache)
+in (FStar_List.hd _129_453))
 end))
 in (
 # 360 "FStar.Parser.DesugarEnv.fst"
-let insert = (fun r -> (let _128_460 = (let _128_459 = (let _128_456 = (peek ())
-in (r)::_128_456)
-in (let _128_458 = (let _128_457 = (FStar_ST.read record_cache)
-in (FStar_List.tl _128_457))
-in (_128_459)::_128_458))
-in (FStar_ST.op_Colon_Equals record_cache _128_460)))
+let insert = (fun r -> (let _129_460 = (let _129_459 = (let _129_456 = (peek ())
+in (r)::_129_456)
+in (let _129_458 = (let _129_457 = (FStar_ST.read record_cache)
+in (FStar_List.tl _129_457))
+in (_129_459)::_129_458))
+in (FStar_ST.op_Colon_Equals record_cache _129_460)))
 in (push, pop, peek, insert))))))
 
 # 363 "FStar.Parser.DesugarEnv.fst"
 let push_record_cache : Prims.unit  ->  Prims.unit = (
 # 364 "FStar.Parser.DesugarEnv.fst"
-let _49_523 = record_cache_aux
-in (match (_49_523) with
-| (push, _49_518, _49_520, _49_522) -> begin
+let _48_523 = record_cache_aux
+in (match (_48_523) with
+| (push, _48_518, _48_520, _48_522) -> begin
 push
 end))
 
 # 367 "FStar.Parser.DesugarEnv.fst"
 let pop_record_cache : Prims.unit  ->  Prims.unit = (
 # 368 "FStar.Parser.DesugarEnv.fst"
-let _49_531 = record_cache_aux
-in (match (_49_531) with
-| (_49_525, pop, _49_528, _49_530) -> begin
+let _48_531 = record_cache_aux
+in (match (_48_531) with
+| (_48_525, pop, _48_528, _48_530) -> begin
 pop
 end))
 
 # 371 "FStar.Parser.DesugarEnv.fst"
 let peek_record_cache : Prims.unit  ->  record_or_dc Prims.list = (
 # 372 "FStar.Parser.DesugarEnv.fst"
-let _49_539 = record_cache_aux
-in (match (_49_539) with
-| (_49_533, _49_535, peek, _49_538) -> begin
+let _48_539 = record_cache_aux
+in (match (_48_539) with
+| (_48_533, _48_535, peek, _48_538) -> begin
 peek
 end))
 
 # 375 "FStar.Parser.DesugarEnv.fst"
 let insert_record_cache : record_or_dc  ->  Prims.unit = (
 # 376 "FStar.Parser.DesugarEnv.fst"
-let _49_547 = record_cache_aux
-in (match (_49_547) with
-| (_49_541, _49_543, _49_545, insert) -> begin
+let _48_547 = record_cache_aux
+in (match (_48_547) with
+| (_48_541, _48_543, _48_545, insert) -> begin
 insert
 end))
 
 # 379 "FStar.Parser.DesugarEnv.fst"
-let extract_record : env  ->  FStar_Absyn_Syntax.sigelt  ->  Prims.unit = (fun e _49_12 -> (match (_49_12) with
-| FStar_Absyn_Syntax.Sig_bundle (sigs, _49_552, _49_554, _49_556) -> begin
+let extract_record : env  ->  FStar_Absyn_Syntax.sigelt  ->  Prims.unit = (fun e _48_12 -> (match (_48_12) with
+| FStar_Absyn_Syntax.Sig_bundle (sigs, _48_552, _48_554, _48_556) -> begin
 (
 # 381 "FStar.Parser.DesugarEnv.fst"
-let is_rec = (FStar_Util.for_some (fun _49_9 -> (match (_49_9) with
+let is_rec = (FStar_Util.for_some (fun _48_9 -> (match (_48_9) with
 | (FStar_Absyn_Syntax.RecordType (_)) | (FStar_Absyn_Syntax.RecordConstructor (_)) -> begin
 true
 end
-| _49_567 -> begin
+| _48_567 -> begin
 false
 end)))
 in (
 # 386 "FStar.Parser.DesugarEnv.fst"
-let find_dc = (fun dc -> (FStar_All.pipe_right sigs (FStar_Util.find_opt (fun _49_10 -> (match (_49_10) with
-| FStar_Absyn_Syntax.Sig_datacon (lid, _49_574, _49_576, _49_578, _49_580, _49_582) -> begin
+let find_dc = (fun dc -> (FStar_All.pipe_right sigs (FStar_Util.find_opt (fun _48_10 -> (match (_48_10) with
+| FStar_Absyn_Syntax.Sig_datacon (lid, _48_574, _48_576, _48_578, _48_580, _48_582) -> begin
 (FStar_Ident.lid_equals dc lid)
 end
-| _49_586 -> begin
+| _48_586 -> begin
 false
 end)))))
-in (FStar_All.pipe_right sigs (FStar_List.iter (fun _49_11 -> (match (_49_11) with
-| FStar_Absyn_Syntax.Sig_tycon (typename, parms, _49_591, _49_593, dc::[], tags, _49_598) -> begin
-(match ((let _128_531 = (find_dc dc)
-in (FStar_All.pipe_left FStar_Util.must _128_531))) with
-| FStar_Absyn_Syntax.Sig_datacon (constrname, t, _49_604, _49_606, _49_608, _49_610) -> begin
+in (FStar_All.pipe_right sigs (FStar_List.iter (fun _48_11 -> (match (_48_11) with
+| FStar_Absyn_Syntax.Sig_tycon (typename, parms, _48_591, _48_593, dc::[], tags, _48_598) -> begin
+(match ((let _129_531 = (find_dc dc)
+in (FStar_All.pipe_left FStar_Util.must _129_531))) with
+| FStar_Absyn_Syntax.Sig_datacon (constrname, t, _48_604, _48_606, _48_608, _48_610) -> begin
 (
 # 395 "FStar.Parser.DesugarEnv.fst"
 let formals = (match ((FStar_Absyn_Util.function_formals t)) with
-| Some (x, _49_615) -> begin
+| Some (x, _48_615) -> begin
 x
 end
-| _49_619 -> begin
+| _48_619 -> begin
 []
 end)
 in (
@@ -815,25 +815,25 @@ in (
 let fields = (FStar_All.pipe_right formals (FStar_List.collect (fun b -> (match (b) with
 | (FStar_Util.Inr (x), q) -> begin
 if ((FStar_Absyn_Syntax.is_null_binder b) || (is_rec && (match (q) with
-| Some (FStar_Absyn_Syntax.Implicit (_49_628)) -> begin
+| Some (FStar_Absyn_Syntax.Implicit (_48_628)) -> begin
 true
 end
-| _49_632 -> begin
+| _48_632 -> begin
 false
 end))) then begin
 []
 end else begin
-(let _128_535 = (let _128_534 = (let _128_533 = if is_rec then begin
+(let _129_535 = (let _129_534 = (let _129_533 = if is_rec then begin
 (FStar_Absyn_Util.unmangle_field_name x.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.ppname)
 end else begin
 x.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.ppname
 end
-in (qual constrname _128_533))
-in (_128_534, x.FStar_Absyn_Syntax.sort))
-in (_128_535)::[])
+in (qual constrname _129_533))
+in (_129_534, x.FStar_Absyn_Syntax.sort))
+in (_129_535)::[])
 end
 end
-| _49_634 -> begin
+| _48_634 -> begin
 []
 end))))
 in (
@@ -841,15 +841,15 @@ in (
 let record = {typename = typename; constrname = constrname; parms = parms; fields = fields; is_record = is_rec}
 in (insert_record_cache record)))))
 end
-| _49_638 -> begin
+| _48_638 -> begin
 ()
 end)
 end
-| _49_640 -> begin
+| _48_640 -> begin
 ()
 end))))))
 end
-| _49_642 -> begin
+| _48_642 -> begin
 ()
 end))
 
@@ -870,19 +870,19 @@ end else begin
 end
 end
 | hd::tl -> begin
-(let _128_546 = (aux tl)
-in (hd)::_128_546)
+(let _129_546 = (aux tl)
+in (hd)::_129_546)
 end))
 in (aux ns)))
 in (
 # 425 "FStar.Parser.DesugarEnv.fst"
 let find_in_cache = (fun fieldname -> (
 # 427 "FStar.Parser.DesugarEnv.fst"
-let _49_660 = (fieldname.FStar_Ident.ns, fieldname.FStar_Ident.ident)
-in (match (_49_660) with
+let _48_660 = (fieldname.FStar_Ident.ns, fieldname.FStar_Ident.ident)
+in (match (_48_660) with
 | (ns, fieldname) -> begin
-(let _128_551 = (peek_record_cache ())
-in (FStar_Util.find_map _128_551 (fun record -> (
+(let _129_551 = (peek_record_cache ())
+in (FStar_Util.find_map _129_551 (fun record -> (
 # 429 "FStar.Parser.DesugarEnv.fst"
 let constrname = record.constrname.FStar_Ident.ident
 in (
@@ -891,8 +891,8 @@ let ns = (maybe_add_constrname ns constrname)
 in (
 # 431 "FStar.Parser.DesugarEnv.fst"
 let fname = (FStar_Ident.lid_of_ids (FStar_List.append ns ((fieldname)::[])))
-in (FStar_Util.find_map record.fields (fun _49_668 -> (match (_49_668) with
-| (f, _49_667) -> begin
+in (FStar_Util.find_map record.fields (fun _48_668 -> (match (_48_668) with
+| (f, _48_667) -> begin
 if (FStar_Ident.lid_equals fname f) then begin
 Some ((record, fname))
 end else begin
@@ -907,7 +907,7 @@ let try_lookup_record_by_field_name : env  ->  FStar_Ident.lident  ->  (record_o
 | Some (r, f) when r.is_record -> begin
 Some ((r, f))
 end
-| _49_676 -> begin
+| _48_676 -> begin
 None
 end))
 
@@ -916,7 +916,7 @@ let try_lookup_projector_by_field_name : env  ->  FStar_Ident.lident  ->  (FStar
 | Some (r, f) -> begin
 Some ((f, r.is_record))
 end
-| _49_684 -> begin
+| _48_684 -> begin
 None
 end))
 
@@ -925,8 +925,8 @@ let qualify_field_to_record : env  ->  record_or_dc  ->  FStar_Ident.lident  -> 
 # 449 "FStar.Parser.DesugarEnv.fst"
 let qualify = (fun fieldname -> (
 # 450 "FStar.Parser.DesugarEnv.fst"
-let _49_692 = (fieldname.FStar_Ident.ns, fieldname.FStar_Ident.ident)
-in (match (_49_692) with
+let _48_692 = (fieldname.FStar_Ident.ns, fieldname.FStar_Ident.ident)
+in (match (_48_692) with
 | (ns, fieldname) -> begin
 (
 # 451 "FStar.Parser.DesugarEnv.fst"
@@ -934,8 +934,8 @@ let constrname = recd.constrname.FStar_Ident.ident
 in (
 # 452 "FStar.Parser.DesugarEnv.fst"
 let fname = (FStar_Ident.lid_of_ids (FStar_List.append (FStar_List.append ns ((constrname)::[])) ((fieldname)::[])))
-in (FStar_Util.find_map recd.fields (fun _49_698 -> (match (_49_698) with
-| (f, _49_697) -> begin
+in (FStar_Util.find_map recd.fields (fun _48_698 -> (match (_48_698) with
+| (f, _48_697) -> begin
 if (FStar_Ident.lid_equals fname f) then begin
 Some (fname)
 end else begin
@@ -947,10 +947,10 @@ in (resolve_in_open_namespaces env f qualify)))
 
 # 459 "FStar.Parser.DesugarEnv.fst"
 let find_kind_abbrev : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident Prims.option = (fun env l -> (match ((try_lookup_name true (not (env.iface)) env l)) with
-| Some (Knd_name (_49_702, l)) -> begin
+| Some (Knd_name (_48_702, l)) -> begin
 Some (l)
 end
-| _49_708 -> begin
+| _48_708 -> begin
 None
 end))
 
@@ -959,7 +959,7 @@ let is_kind_abbrev : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env l ->
 | None -> begin
 false
 end
-| Some (_49_713) -> begin
+| Some (_48_713) -> begin
 true
 end))
 
@@ -970,11 +970,11 @@ let unique_name : Prims.bool  ->  Prims.bool  ->  env  ->  FStar_Ident.lident  -
 | None -> begin
 true
 end
-| Some (_49_722) -> begin
+| Some (_48_722) -> begin
 false
 end)
 end
-| Some (_49_725) -> begin
+| Some (_48_725) -> begin
 false
 end))
 
@@ -992,25 +992,25 @@ let unique : Prims.bool  ->  Prims.bool  ->  env  ->  FStar_Ident.lident  ->  Pr
 # 484 "FStar.Parser.DesugarEnv.fst"
 let this_env = (
 # 484 "FStar.Parser.DesugarEnv.fst"
-let _49_736 = env
-in {curmodule = _49_736.curmodule; modules = _49_736.modules; open_namespaces = []; modul_abbrevs = _49_736.modul_abbrevs; sigaccum = _49_736.sigaccum; localbindings = _49_736.localbindings; recbindings = _49_736.recbindings; phase = _49_736.phase; sigmap = _49_736.sigmap; default_result_effect = _49_736.default_result_effect; iface = _49_736.iface; admitted_iface = _49_736.admitted_iface})
+let _48_736 = env
+in {curmodule = _48_736.curmodule; modules = _48_736.modules; open_namespaces = []; modul_abbrevs = _48_736.modul_abbrevs; sigaccum = _48_736.sigaccum; localbindings = _48_736.localbindings; recbindings = _48_736.recbindings; phase = _48_736.phase; sigmap = _48_736.sigmap; default_result_effect = _48_736.default_result_effect; iface = _48_736.iface; admitted_iface = _48_736.admitted_iface})
 in ((unique_name any_val exclude_if this_env lid) && (unique_typ_name this_env lid))))
 
 # 487 "FStar.Parser.DesugarEnv.fst"
-let gen_bvd = (fun _49_13 -> (match (_49_13) with
+let gen_bvd = (fun _48_13 -> (match (_48_13) with
 | Binding_typ_var (id) -> begin
-(let _128_600 = (let _128_599 = (let _128_598 = (FStar_Absyn_Util.genident (Some (id.FStar_Ident.idRange)))
-in (id, _128_598))
-in (FStar_Absyn_Util.mkbvd _128_599))
-in FStar_Util.Inl (_128_600))
+(let _129_600 = (let _129_599 = (let _129_598 = (FStar_Absyn_Util.genident (Some (id.FStar_Ident.idRange)))
+in (id, _129_598))
+in (FStar_Absyn_Util.mkbvd _129_599))
+in FStar_Util.Inl (_129_600))
 end
 | Binding_var (id) -> begin
-(let _128_603 = (let _128_602 = (let _128_601 = (FStar_Absyn_Util.genident (Some (id.FStar_Ident.idRange)))
-in (id, _128_601))
-in (FStar_Absyn_Util.mkbvd _128_602))
-in FStar_Util.Inr (_128_603))
+(let _129_603 = (let _129_602 = (let _129_601 = (FStar_Absyn_Util.genident (Some (id.FStar_Ident.idRange)))
+in (id, _129_601))
+in (FStar_Absyn_Util.mkbvd _129_602))
+in FStar_Util.Inr (_129_603))
 end
-| _49_745 -> begin
+| _48_745 -> begin
 (FStar_All.failwith "Tried to generate a bound variable for a type constructor")
 end))
 
@@ -1020,8 +1020,8 @@ let push_bvvdef : env  ->  FStar_Absyn_Syntax.bvvdef  ->  env = (fun env x -> (
 let b = Binding_var (x.FStar_Absyn_Syntax.ppname)
 in (
 # 494 "FStar.Parser.DesugarEnv.fst"
-let _49_749 = env
-in {curmodule = _49_749.curmodule; modules = _49_749.modules; open_namespaces = _49_749.open_namespaces; modul_abbrevs = _49_749.modul_abbrevs; sigaccum = _49_749.sigaccum; localbindings = ((FStar_Util.Inr (x), b))::env.localbindings; recbindings = _49_749.recbindings; phase = _49_749.phase; sigmap = _49_749.sigmap; default_result_effect = _49_749.default_result_effect; iface = _49_749.iface; admitted_iface = _49_749.admitted_iface})))
+let _48_749 = env
+in {curmodule = _48_749.curmodule; modules = _48_749.modules; open_namespaces = _48_749.open_namespaces; modul_abbrevs = _48_749.modul_abbrevs; sigaccum = _48_749.sigaccum; localbindings = ((FStar_Util.Inr (x), b))::env.localbindings; recbindings = _48_749.recbindings; phase = _48_749.phase; sigmap = _48_749.sigmap; default_result_effect = _48_749.default_result_effect; iface = _48_749.iface; admitted_iface = _48_749.admitted_iface})))
 
 # 496 "FStar.Parser.DesugarEnv.fst"
 let push_btvdef : env  ->  FStar_Absyn_Syntax.btvdef  ->  env = (fun env x -> (
@@ -1029,8 +1029,8 @@ let push_btvdef : env  ->  FStar_Absyn_Syntax.btvdef  ->  env = (fun env x -> (
 let b = Binding_typ_var (x.FStar_Absyn_Syntax.ppname)
 in (
 # 498 "FStar.Parser.DesugarEnv.fst"
-let _49_754 = env
-in {curmodule = _49_754.curmodule; modules = _49_754.modules; open_namespaces = _49_754.open_namespaces; modul_abbrevs = _49_754.modul_abbrevs; sigaccum = _49_754.sigaccum; localbindings = ((FStar_Util.Inl (x), b))::env.localbindings; recbindings = _49_754.recbindings; phase = _49_754.phase; sigmap = _49_754.sigmap; default_result_effect = _49_754.default_result_effect; iface = _49_754.iface; admitted_iface = _49_754.admitted_iface})))
+let _48_754 = env
+in {curmodule = _48_754.curmodule; modules = _48_754.modules; open_namespaces = _48_754.open_namespaces; modul_abbrevs = _48_754.modul_abbrevs; sigaccum = _48_754.sigaccum; localbindings = ((FStar_Util.Inl (x), b))::env.localbindings; recbindings = _48_754.recbindings; phase = _48_754.phase; sigmap = _48_754.sigmap; default_result_effect = _48_754.default_result_effect; iface = _48_754.iface; admitted_iface = _48_754.admitted_iface})))
 
 # 500 "FStar.Parser.DesugarEnv.fst"
 let push_local_binding : env  ->  binding  ->  (env * (FStar_Absyn_Syntax.btvdef, FStar_Absyn_Syntax.bvvdef) FStar_Util.either) = (fun env b -> (
@@ -1038,15 +1038,15 @@ let push_local_binding : env  ->  binding  ->  (env * (FStar_Absyn_Syntax.btvdef
 let bvd = (gen_bvd b)
 in ((
 # 502 "FStar.Parser.DesugarEnv.fst"
-let _49_759 = env
-in {curmodule = _49_759.curmodule; modules = _49_759.modules; open_namespaces = _49_759.open_namespaces; modul_abbrevs = _49_759.modul_abbrevs; sigaccum = _49_759.sigaccum; localbindings = ((bvd, b))::env.localbindings; recbindings = _49_759.recbindings; phase = _49_759.phase; sigmap = _49_759.sigmap; default_result_effect = _49_759.default_result_effect; iface = _49_759.iface; admitted_iface = _49_759.admitted_iface}), bvd)))
+let _48_759 = env
+in {curmodule = _48_759.curmodule; modules = _48_759.modules; open_namespaces = _48_759.open_namespaces; modul_abbrevs = _48_759.modul_abbrevs; sigaccum = _48_759.sigaccum; localbindings = ((bvd, b))::env.localbindings; recbindings = _48_759.recbindings; phase = _48_759.phase; sigmap = _48_759.sigmap; default_result_effect = _48_759.default_result_effect; iface = _48_759.iface; admitted_iface = _48_759.admitted_iface}), bvd)))
 
 # 504 "FStar.Parser.DesugarEnv.fst"
 let push_local_tbinding : env  ->  FStar_Ident.ident  ->  (env * FStar_Absyn_Syntax.btvdef) = (fun env a -> (match ((push_local_binding env (Binding_typ_var (a)))) with
 | (env, FStar_Util.Inl (x)) -> begin
 (env, x)
 end
-| _49_768 -> begin
+| _48_768 -> begin
 (FStar_All.failwith "impossible")
 end))
 
@@ -1055,7 +1055,7 @@ let push_local_vbinding : env  ->  FStar_Ident.ident  ->  (env * FStar_Absyn_Syn
 | (env, FStar_Util.Inr (x)) -> begin
 (env, x)
 end
-| _49_776 -> begin
+| _48_776 -> begin
 (FStar_All.failwith "impossible")
 end))
 
@@ -1065,13 +1065,13 @@ let push_rec_binding : env  ->  binding  ->  env = (fun env b -> (match (b) with
 if (unique false true env lid) then begin
 (
 # 519 "FStar.Parser.DesugarEnv.fst"
-let _49_782 = env
-in {curmodule = _49_782.curmodule; modules = _49_782.modules; open_namespaces = _49_782.open_namespaces; modul_abbrevs = _49_782.modul_abbrevs; sigaccum = _49_782.sigaccum; localbindings = _49_782.localbindings; recbindings = (b)::env.recbindings; phase = _49_782.phase; sigmap = _49_782.sigmap; default_result_effect = _49_782.default_result_effect; iface = _49_782.iface; admitted_iface = _49_782.admitted_iface})
+let _48_782 = env
+in {curmodule = _48_782.curmodule; modules = _48_782.modules; open_namespaces = _48_782.open_namespaces; modul_abbrevs = _48_782.modul_abbrevs; sigaccum = _48_782.sigaccum; localbindings = _48_782.localbindings; recbindings = (b)::env.recbindings; phase = _48_782.phase; sigmap = _48_782.sigmap; default_result_effect = _48_782.default_result_effect; iface = _48_782.iface; admitted_iface = _48_782.admitted_iface})
 end else begin
 (Prims.raise (FStar_Absyn_Syntax.Error (((Prims.strcat "Duplicate top-level names " lid.FStar_Ident.str), (FStar_Ident.range_of_lid lid)))))
 end
 end
-| _49_785 -> begin
+| _48_785 -> begin
 (FStar_All.failwith "Unexpected rec_binding")
 end))
 
@@ -1080,14 +1080,14 @@ let push_sigelt : env  ->  FStar_Absyn_Syntax.sigelt  ->  env = (fun env s -> (
 # 524 "FStar.Parser.DesugarEnv.fst"
 let err = (fun l -> (
 # 525 "FStar.Parser.DesugarEnv.fst"
-let sopt = (let _128_634 = (sigmap env)
-in (FStar_Util.smap_try_find _128_634 l.FStar_Ident.str))
+let sopt = (let _129_634 = (sigmap env)
+in (FStar_Util.smap_try_find _129_634 l.FStar_Ident.str))
 in (
 # 526 "FStar.Parser.DesugarEnv.fst"
 let r = (match (sopt) with
-| Some (se, _49_793) -> begin
-(match ((let _128_635 = (FStar_Absyn_Util.lids_of_sigelt se)
-in (FStar_Util.find_opt (FStar_Ident.lid_equals l) _128_635))) with
+| Some (se, _48_793) -> begin
+(match ((let _129_635 = (FStar_Absyn_Util.lids_of_sigelt se)
+in (FStar_Util.find_opt (FStar_Ident.lid_equals l) _129_635))) with
 | Some (l) -> begin
 (FStar_All.pipe_left FStar_Range.string_of_range (FStar_Ident.range_of_lid l))
 end
@@ -1098,25 +1098,25 @@ end
 | None -> begin
 "<unknown>"
 end)
-in (let _128_638 = (let _128_637 = (let _128_636 = (FStar_Util.format2 "Duplicate top-level names [%s]; previously declared at %s" (FStar_Ident.text_of_lid l) r)
-in (_128_636, (FStar_Ident.range_of_lid l)))
-in FStar_Absyn_Syntax.Error (_128_637))
-in (Prims.raise _128_638)))))
+in (let _129_638 = (let _129_637 = (let _129_636 = (FStar_Util.format2 "Duplicate top-level names [%s]; previously declared at %s" (FStar_Ident.text_of_lid l) r)
+in (_129_636, (FStar_Ident.range_of_lid l)))
+in FStar_Absyn_Syntax.Error (_129_637))
+in (Prims.raise _129_638)))))
 in (
 # 534 "FStar.Parser.DesugarEnv.fst"
 let env = (
 # 535 "FStar.Parser.DesugarEnv.fst"
-let _49_811 = (match (s) with
-| FStar_Absyn_Syntax.Sig_let (_49_802) -> begin
+let _48_811 = (match (s) with
+| FStar_Absyn_Syntax.Sig_let (_48_802) -> begin
 (false, true)
 end
-| FStar_Absyn_Syntax.Sig_bundle (_49_805) -> begin
+| FStar_Absyn_Syntax.Sig_bundle (_48_805) -> begin
 (true, true)
 end
-| _49_808 -> begin
+| _48_808 -> begin
 (false, false)
 end)
-in (match (_49_811) with
+in (match (_48_811) with
 | (any_val, exclude_if) -> begin
 (
 # 539 "FStar.Parser.DesugarEnv.fst"
@@ -1129,11 +1129,11 @@ end))) with
 | None -> begin
 (
 # 541 "FStar.Parser.DesugarEnv.fst"
-let _49_815 = (extract_record env s)
+let _48_815 = (extract_record env s)
 in (
 # 541 "FStar.Parser.DesugarEnv.fst"
-let _49_817 = env
-in {curmodule = _49_817.curmodule; modules = _49_817.modules; open_namespaces = _49_817.open_namespaces; modul_abbrevs = _49_817.modul_abbrevs; sigaccum = (s)::env.sigaccum; localbindings = _49_817.localbindings; recbindings = _49_817.recbindings; phase = _49_817.phase; sigmap = _49_817.sigmap; default_result_effect = _49_817.default_result_effect; iface = _49_817.iface; admitted_iface = _49_817.admitted_iface}))
+let _48_817 = env
+in {curmodule = _48_817.curmodule; modules = _48_817.modules; open_namespaces = _48_817.open_namespaces; modul_abbrevs = _48_817.modul_abbrevs; sigaccum = (s)::env.sigaccum; localbindings = _48_817.localbindings; recbindings = _48_817.recbindings; phase = _48_817.phase; sigmap = _48_817.sigmap; default_result_effect = _48_817.default_result_effect; iface = _48_817.iface; admitted_iface = _48_817.admitted_iface}))
 end
 | Some (l) -> begin
 (err l)
@@ -1141,26 +1141,26 @@ end))
 end))
 in (
 # 544 "FStar.Parser.DesugarEnv.fst"
-let _49_836 = (match (s) with
-| FStar_Absyn_Syntax.Sig_bundle (ses, _49_824, _49_826, _49_828) -> begin
-(let _128_642 = (FStar_List.map (fun se -> (let _128_641 = (FStar_Absyn_Util.lids_of_sigelt se)
-in (_128_641, se))) ses)
-in (env, _128_642))
+let _48_836 = (match (s) with
+| FStar_Absyn_Syntax.Sig_bundle (ses, _48_824, _48_826, _48_828) -> begin
+(let _129_642 = (FStar_List.map (fun se -> (let _129_641 = (FStar_Absyn_Util.lids_of_sigelt se)
+in (_129_641, se))) ses)
+in (env, _129_642))
 end
-| _49_833 -> begin
-(let _128_645 = (let _128_644 = (let _128_643 = (FStar_Absyn_Util.lids_of_sigelt s)
-in (_128_643, s))
-in (_128_644)::[])
-in (env, _128_645))
+| _48_833 -> begin
+(let _129_645 = (let _129_644 = (let _129_643 = (FStar_Absyn_Util.lids_of_sigelt s)
+in (_129_643, s))
+in (_129_644)::[])
+in (env, _129_645))
 end)
-in (match (_49_836) with
+in (match (_48_836) with
 | (env, lss) -> begin
 (
 # 547 "FStar.Parser.DesugarEnv.fst"
-let _49_841 = (FStar_All.pipe_right lss (FStar_List.iter (fun _49_839 -> (match (_49_839) with
+let _48_841 = (FStar_All.pipe_right lss (FStar_List.iter (fun _48_839 -> (match (_48_839) with
 | (lids, se) -> begin
-(FStar_All.pipe_right lids (FStar_List.iter (fun lid -> (let _128_648 = (sigmap env)
-in (FStar_Util.smap_add _128_648 lid.FStar_Ident.str (se, (env.iface && (not (env.admitted_iface)))))))))
+(FStar_All.pipe_right lids (FStar_List.iter (fun lid -> (let _129_648 = (sigmap env)
+in (FStar_Util.smap_add _129_648 lid.FStar_Ident.str (se, (env.iface && (not (env.admitted_iface)))))))))
 end))))
 in env)
 end)))))
@@ -1168,44 +1168,44 @@ end)))))
 # 552 "FStar.Parser.DesugarEnv.fst"
 let push_namespace : env  ->  FStar_Ident.lident  ->  env = (fun env lid -> (
 # 553 "FStar.Parser.DesugarEnv.fst"
-let _49_845 = env
-in {curmodule = _49_845.curmodule; modules = _49_845.modules; open_namespaces = (lid)::env.open_namespaces; modul_abbrevs = _49_845.modul_abbrevs; sigaccum = _49_845.sigaccum; localbindings = _49_845.localbindings; recbindings = _49_845.recbindings; phase = _49_845.phase; sigmap = _49_845.sigmap; default_result_effect = _49_845.default_result_effect; iface = _49_845.iface; admitted_iface = _49_845.admitted_iface}))
+let _48_845 = env
+in {curmodule = _48_845.curmodule; modules = _48_845.modules; open_namespaces = (lid)::env.open_namespaces; modul_abbrevs = _48_845.modul_abbrevs; sigaccum = _48_845.sigaccum; localbindings = _48_845.localbindings; recbindings = _48_845.recbindings; phase = _48_845.phase; sigmap = _48_845.sigmap; default_result_effect = _48_845.default_result_effect; iface = _48_845.iface; admitted_iface = _48_845.admitted_iface}))
 
 # 555 "FStar.Parser.DesugarEnv.fst"
-let push_module_abbrev : env  ->  FStar_Ident.ident  ->  FStar_Ident.lident  ->  env = (fun env x l -> if (FStar_All.pipe_right env.modul_abbrevs (FStar_Util.for_some (fun _49_853 -> (match (_49_853) with
-| (y, _49_852) -> begin
+let push_module_abbrev : env  ->  FStar_Ident.ident  ->  FStar_Ident.lident  ->  env = (fun env x l -> if (FStar_All.pipe_right env.modul_abbrevs (FStar_Util.for_some (fun _48_853 -> (match (_48_853) with
+| (y, _48_852) -> begin
 (x.FStar_Ident.idText = y.FStar_Ident.idText)
 end)))) then begin
-(let _128_662 = (let _128_661 = (let _128_660 = (FStar_Util.format1 "Module %s is already defined" x.FStar_Ident.idText)
-in (_128_660, x.FStar_Ident.idRange))
-in FStar_Absyn_Syntax.Error (_128_661))
-in (Prims.raise _128_662))
+(let _129_662 = (let _129_661 = (let _129_660 = (FStar_Util.format1 "Module %s is already defined" x.FStar_Ident.idText)
+in (_129_660, x.FStar_Ident.idRange))
+in FStar_Absyn_Syntax.Error (_129_661))
+in (Prims.raise _129_662))
 end else begin
 (
 # 558 "FStar.Parser.DesugarEnv.fst"
-let _49_854 = env
-in {curmodule = _49_854.curmodule; modules = _49_854.modules; open_namespaces = _49_854.open_namespaces; modul_abbrevs = ((x, l))::env.modul_abbrevs; sigaccum = _49_854.sigaccum; localbindings = _49_854.localbindings; recbindings = _49_854.recbindings; phase = _49_854.phase; sigmap = _49_854.sigmap; default_result_effect = _49_854.default_result_effect; iface = _49_854.iface; admitted_iface = _49_854.admitted_iface})
+let _48_854 = env
+in {curmodule = _48_854.curmodule; modules = _48_854.modules; open_namespaces = _48_854.open_namespaces; modul_abbrevs = ((x, l))::env.modul_abbrevs; sigaccum = _48_854.sigaccum; localbindings = _48_854.localbindings; recbindings = _48_854.recbindings; phase = _48_854.phase; sigmap = _48_854.sigmap; default_result_effect = _48_854.default_result_effect; iface = _48_854.iface; admitted_iface = _48_854.admitted_iface})
 end)
 
 # 560 "FStar.Parser.DesugarEnv.fst"
 let is_type_lid : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env lid -> (
 # 561 "FStar.Parser.DesugarEnv.fst"
-let aux = (fun _49_859 -> (match (()) with
+let aux = (fun _48_859 -> (match (()) with
 | () -> begin
 (match ((try_lookup_typ_name' false env lid)) with
-| Some (_49_861) -> begin
+| Some (_48_861) -> begin
 true
 end
-| _49_864 -> begin
+| _48_864 -> begin
 false
 end)
 end))
 in if (lid.FStar_Ident.ns = []) then begin
 (match ((try_lookup_id env lid.FStar_Ident.ident)) with
-| Some (_49_866) -> begin
+| Some (_48_866) -> begin
 false
 end
-| _49_869 -> begin
+| _48_869 -> begin
 (aux ())
 end)
 end else begin
@@ -1219,66 +1219,66 @@ let check_admits : FStar_Ident.lident  ->  env  ->  Prims.unit = (fun nm env -> 
 | None -> begin
 (
 # 576 "FStar.Parser.DesugarEnv.fst"
-let _49_880 = (let _128_676 = (let _128_675 = (FStar_Range.string_of_range (FStar_Ident.range_of_lid l))
-in (let _128_674 = (FStar_Absyn_Print.sli l)
-in (FStar_Util.format2 "%s: Warning: Admitting %s without a definition\n" _128_675 _128_674)))
-in (FStar_Util.print_string _128_676))
-in (let _128_677 = (sigmap env)
-in (FStar_Util.smap_add _128_677 l.FStar_Ident.str (FStar_Absyn_Syntax.Sig_val_decl ((l, t, (FStar_Absyn_Syntax.Assumption)::quals, r)), false))))
+let _48_880 = (let _129_676 = (let _129_675 = (FStar_Range.string_of_range (FStar_Ident.range_of_lid l))
+in (let _129_674 = (FStar_Absyn_Print.sli l)
+in (FStar_Util.format2 "%s: Warning: Admitting %s without a definition\n" _129_675 _129_674)))
+in (FStar_Util.print_string _129_676))
+in (let _129_677 = (sigmap env)
+in (FStar_Util.smap_add _129_677 l.FStar_Ident.str (FStar_Absyn_Syntax.Sig_val_decl ((l, t, (FStar_Absyn_Syntax.Assumption)::quals, r)), false))))
 end
-| Some (_49_883) -> begin
+| Some (_48_883) -> begin
 ()
 end)
 end
-| _49_886 -> begin
+| _48_886 -> begin
 ()
 end)))))
 
 # 582 "FStar.Parser.DesugarEnv.fst"
 let finish : env  ->  FStar_Absyn_Syntax.modul  ->  env = (fun env modul -> (
 # 583 "FStar.Parser.DesugarEnv.fst"
-let _49_924 = (FStar_All.pipe_right modul.FStar_Absyn_Syntax.declarations (FStar_List.iter (fun _49_15 -> (match (_49_15) with
-| FStar_Absyn_Syntax.Sig_bundle (ses, quals, _49_893, _49_895) -> begin
+let _48_924 = (FStar_All.pipe_right modul.FStar_Absyn_Syntax.declarations (FStar_List.iter (fun _48_15 -> (match (_48_15) with
+| FStar_Absyn_Syntax.Sig_bundle (ses, quals, _48_893, _48_895) -> begin
 if (FStar_List.contains FStar_Absyn_Syntax.Private quals) then begin
-(FStar_All.pipe_right ses (FStar_List.iter (fun _49_14 -> (match (_49_14) with
-| FStar_Absyn_Syntax.Sig_datacon (lid, _49_901, _49_903, _49_905, _49_907, _49_909) -> begin
-(let _128_684 = (sigmap env)
-in (FStar_Util.smap_remove _128_684 lid.FStar_Ident.str))
+(FStar_All.pipe_right ses (FStar_List.iter (fun _48_14 -> (match (_48_14) with
+| FStar_Absyn_Syntax.Sig_datacon (lid, _48_901, _48_903, _48_905, _48_907, _48_909) -> begin
+(let _129_684 = (sigmap env)
+in (FStar_Util.smap_remove _129_684 lid.FStar_Ident.str))
 end
-| _49_913 -> begin
+| _48_913 -> begin
 ()
 end))))
 end else begin
 ()
 end
 end
-| FStar_Absyn_Syntax.Sig_val_decl (lid, _49_916, quals, _49_919) -> begin
+| FStar_Absyn_Syntax.Sig_val_decl (lid, _48_916, quals, _48_919) -> begin
 if (FStar_List.contains FStar_Absyn_Syntax.Private quals) then begin
-(let _128_685 = (sigmap env)
-in (FStar_Util.smap_remove _128_685 lid.FStar_Ident.str))
+(let _129_685 = (sigmap env)
+in (FStar_Util.smap_remove _129_685 lid.FStar_Ident.str))
 end else begin
 ()
 end
 end
-| _49_923 -> begin
+| _48_923 -> begin
 ()
 end))))
 in (
 # 593 "FStar.Parser.DesugarEnv.fst"
-let _49_926 = env
-in {curmodule = None; modules = ((modul.FStar_Absyn_Syntax.name, modul))::env.modules; open_namespaces = []; modul_abbrevs = []; sigaccum = []; localbindings = []; recbindings = []; phase = FStar_Parser_AST.Un; sigmap = _49_926.sigmap; default_result_effect = _49_926.default_result_effect; iface = _49_926.iface; admitted_iface = _49_926.admitted_iface})))
+let _48_926 = env
+in {curmodule = None; modules = ((modul.FStar_Absyn_Syntax.name, modul))::env.modules; open_namespaces = []; modul_abbrevs = []; sigaccum = []; localbindings = []; recbindings = []; phase = FStar_Parser_AST.Un; sigmap = _48_926.sigmap; default_result_effect = _48_926.default_result_effect; iface = _48_926.iface; admitted_iface = _48_926.admitted_iface})))
 
 # 603 "FStar.Parser.DesugarEnv.fst"
 let push : env  ->  env = (fun env -> (
 # 604 "FStar.Parser.DesugarEnv.fst"
-let _49_929 = (push_record_cache ())
+let _48_929 = (push_record_cache ())
 in (
 # 605 "FStar.Parser.DesugarEnv.fst"
-let _49_931 = env
-in (let _128_690 = (let _128_689 = (let _128_688 = (sigmap env)
-in (FStar_Util.smap_copy _128_688))
-in (_128_689)::env.sigmap)
-in {curmodule = _49_931.curmodule; modules = _49_931.modules; open_namespaces = _49_931.open_namespaces; modul_abbrevs = _49_931.modul_abbrevs; sigaccum = _49_931.sigaccum; localbindings = _49_931.localbindings; recbindings = _49_931.recbindings; phase = _49_931.phase; sigmap = _128_690; default_result_effect = _49_931.default_result_effect; iface = _49_931.iface; admitted_iface = _49_931.admitted_iface}))))
+let _48_931 = env
+in (let _129_690 = (let _129_689 = (let _129_688 = (sigmap env)
+in (FStar_Util.smap_copy _129_688))
+in (_129_689)::env.sigmap)
+in {curmodule = _48_931.curmodule; modules = _48_931.modules; open_namespaces = _48_931.open_namespaces; modul_abbrevs = _48_931.modul_abbrevs; sigaccum = _48_931.sigaccum; localbindings = _48_931.localbindings; recbindings = _48_931.recbindings; phase = _48_931.phase; sigmap = _129_690; default_result_effect = _48_931.default_result_effect; iface = _48_931.iface; admitted_iface = _48_931.admitted_iface}))))
 
 # 608 "FStar.Parser.DesugarEnv.fst"
 let mark : env  ->  env = (fun env -> (push env))
@@ -1286,34 +1286,34 @@ let mark : env  ->  env = (fun env -> (push env))
 # 609 "FStar.Parser.DesugarEnv.fst"
 let reset_mark : env  ->  env = (fun env -> (
 # 609 "FStar.Parser.DesugarEnv.fst"
-let _49_935 = env
-in (let _128_695 = (FStar_List.tl env.sigmap)
-in {curmodule = _49_935.curmodule; modules = _49_935.modules; open_namespaces = _49_935.open_namespaces; modul_abbrevs = _49_935.modul_abbrevs; sigaccum = _49_935.sigaccum; localbindings = _49_935.localbindings; recbindings = _49_935.recbindings; phase = _49_935.phase; sigmap = _128_695; default_result_effect = _49_935.default_result_effect; iface = _49_935.iface; admitted_iface = _49_935.admitted_iface})))
+let _48_935 = env
+in (let _129_695 = (FStar_List.tl env.sigmap)
+in {curmodule = _48_935.curmodule; modules = _48_935.modules; open_namespaces = _48_935.open_namespaces; modul_abbrevs = _48_935.modul_abbrevs; sigaccum = _48_935.sigaccum; localbindings = _48_935.localbindings; recbindings = _48_935.recbindings; phase = _48_935.phase; sigmap = _129_695; default_result_effect = _48_935.default_result_effect; iface = _48_935.iface; admitted_iface = _48_935.admitted_iface})))
 
 # 610 "FStar.Parser.DesugarEnv.fst"
 let commit_mark : env  ->  env = (fun env -> (match (env.sigmap) with
-| hd::_49_940::tl -> begin
+| hd::_48_940::tl -> begin
 (
 # 611 "FStar.Parser.DesugarEnv.fst"
-let _49_944 = env
-in {curmodule = _49_944.curmodule; modules = _49_944.modules; open_namespaces = _49_944.open_namespaces; modul_abbrevs = _49_944.modul_abbrevs; sigaccum = _49_944.sigaccum; localbindings = _49_944.localbindings; recbindings = _49_944.recbindings; phase = _49_944.phase; sigmap = (hd)::tl; default_result_effect = _49_944.default_result_effect; iface = _49_944.iface; admitted_iface = _49_944.admitted_iface})
+let _48_944 = env
+in {curmodule = _48_944.curmodule; modules = _48_944.modules; open_namespaces = _48_944.open_namespaces; modul_abbrevs = _48_944.modul_abbrevs; sigaccum = _48_944.sigaccum; localbindings = _48_944.localbindings; recbindings = _48_944.recbindings; phase = _48_944.phase; sigmap = (hd)::tl; default_result_effect = _48_944.default_result_effect; iface = _48_944.iface; admitted_iface = _48_944.admitted_iface})
 end
-| _49_947 -> begin
+| _48_947 -> begin
 (FStar_All.failwith "Impossible")
 end))
 
 # 613 "FStar.Parser.DesugarEnv.fst"
 let pop : env  ->  env = (fun env -> (match (env.sigmap) with
-| _49_951::maps -> begin
+| _48_951::maps -> begin
 (
 # 615 "FStar.Parser.DesugarEnv.fst"
-let _49_953 = (pop_record_cache ())
+let _48_953 = (pop_record_cache ())
 in (
 # 616 "FStar.Parser.DesugarEnv.fst"
-let _49_955 = env
-in {curmodule = _49_955.curmodule; modules = _49_955.modules; open_namespaces = _49_955.open_namespaces; modul_abbrevs = _49_955.modul_abbrevs; sigaccum = _49_955.sigaccum; localbindings = _49_955.localbindings; recbindings = _49_955.recbindings; phase = _49_955.phase; sigmap = maps; default_result_effect = _49_955.default_result_effect; iface = _49_955.iface; admitted_iface = _49_955.admitted_iface}))
+let _48_955 = env
+in {curmodule = _48_955.curmodule; modules = _48_955.modules; open_namespaces = _48_955.open_namespaces; modul_abbrevs = _48_955.modul_abbrevs; sigaccum = _48_955.sigaccum; localbindings = _48_955.localbindings; recbindings = _48_955.recbindings; phase = _48_955.phase; sigmap = maps; default_result_effect = _48_955.default_result_effect; iface = _48_955.iface; admitted_iface = _48_955.admitted_iface}))
 end
-| _49_958 -> begin
+| _48_958 -> begin
 (FStar_All.failwith "No more modules to pop")
 end))
 
@@ -1321,10 +1321,10 @@ end))
 let export_interface : FStar_Ident.lident  ->  env  ->  env = (fun m env -> (
 # 622 "FStar.Parser.DesugarEnv.fst"
 let sigelt_in_m = (fun se -> (match ((FStar_Absyn_Util.lids_of_sigelt se)) with
-| l::_49_964 -> begin
+| l::_48_964 -> begin
 (l.FStar_Ident.nsstr = m.FStar_Ident.str)
 end
-| _49_968 -> begin
+| _48_968 -> begin
 false
 end))
 in (
@@ -1341,23 +1341,23 @@ in (
 let sm' = (sigmap env)
 in (
 # 630 "FStar.Parser.DesugarEnv.fst"
-let _49_991 = (FStar_All.pipe_right keys (FStar_List.iter (fun k -> (match ((FStar_Util.smap_try_find sm' k)) with
+let _48_991 = (FStar_All.pipe_right keys (FStar_List.iter (fun k -> (match ((FStar_Util.smap_try_find sm' k)) with
 | Some (se, true) when (sigelt_in_m se) -> begin
 (
 # 633 "FStar.Parser.DesugarEnv.fst"
-let _49_978 = (FStar_Util.smap_remove sm' k)
+let _48_978 = (FStar_Util.smap_remove sm' k)
 in (
 # 635 "FStar.Parser.DesugarEnv.fst"
 let se = (match (se) with
 | FStar_Absyn_Syntax.Sig_val_decl (l, t, q, r) -> begin
 FStar_Absyn_Syntax.Sig_val_decl ((l, t, (FStar_Absyn_Syntax.Assumption)::q, r))
 end
-| _49_987 -> begin
+| _48_987 -> begin
 se
 end)
 in (FStar_Util.smap_add sm' k (se, false))))
 end
-| _49_990 -> begin
+| _48_990 -> begin
 ()
 end))))
 in env)))))))
@@ -1365,7 +1365,7 @@ in env)))))))
 # 642 "FStar.Parser.DesugarEnv.fst"
 let finish_module_or_interface : env  ->  FStar_Absyn_Syntax.modul  ->  env = (fun env modul -> (
 # 643 "FStar.Parser.DesugarEnv.fst"
-let _49_995 = if (not (modul.FStar_Absyn_Syntax.is_interface)) then begin
+let _48_995 = if (not (modul.FStar_Absyn_Syntax.is_interface)) then begin
 (check_admits modul.FStar_Absyn_Syntax.name env)
 end else begin
 ()
@@ -1392,20 +1392,20 @@ end
 end
 in (
 # 654 "FStar.Parser.DesugarEnv.fst"
-let _49_1004 = env
-in {curmodule = Some (mname); modules = _49_1004.modules; open_namespaces = open_ns; modul_abbrevs = _49_1004.modul_abbrevs; sigaccum = _49_1004.sigaccum; localbindings = _49_1004.localbindings; recbindings = _49_1004.recbindings; phase = _49_1004.phase; sigmap = env.sigmap; default_result_effect = _49_1004.default_result_effect; iface = intf; admitted_iface = admitted})))
-in (match ((FStar_All.pipe_right env.modules (FStar_Util.find_opt (fun _49_1009 -> (match (_49_1009) with
-| (l, _49_1008) -> begin
+let _48_1004 = env
+in {curmodule = Some (mname); modules = _48_1004.modules; open_namespaces = open_ns; modul_abbrevs = _48_1004.modul_abbrevs; sigaccum = _48_1004.sigaccum; localbindings = _48_1004.localbindings; recbindings = _48_1004.recbindings; phase = _48_1004.phase; sigmap = env.sigmap; default_result_effect = _48_1004.default_result_effect; iface = intf; admitted_iface = admitted})))
+in (match ((FStar_All.pipe_right env.modules (FStar_Util.find_opt (fun _48_1009 -> (match (_48_1009) with
+| (l, _48_1008) -> begin
 (FStar_Ident.lid_equals l mname)
 end))))) with
 | None -> begin
 ((prep env), false)
 end
-| Some (_49_1012, m) -> begin
-(let _128_724 = (let _128_723 = (let _128_722 = (FStar_Util.format1 "Duplicate module or interface name: %s" mname.FStar_Ident.str)
-in (_128_722, (FStar_Ident.range_of_lid mname)))
-in FStar_Absyn_Syntax.Error (_128_723))
-in (Prims.raise _128_724))
+| Some (_48_1012, m) -> begin
+(let _129_724 = (let _129_723 = (let _129_722 = (FStar_Util.format1 "Duplicate module or interface name: %s" mname.FStar_Ident.str)
+in (_129_722, (FStar_Ident.range_of_lid mname)))
+in FStar_Absyn_Syntax.Error (_129_723))
+in (Prims.raise _129_724))
 end)))
 
 # 660 "FStar.Parser.DesugarEnv.fst"
@@ -1417,14 +1417,14 @@ in (
 let mscope = (FStar_Ident.lid_of_ids (FStar_List.append curmod.FStar_Ident.ns ((curmod.FStar_Ident.ident)::(mname)::[])))
 in (
 # 663 "FStar.Parser.DesugarEnv.fst"
-let _49_1020 = env
-in {curmodule = Some (mscope); modules = _49_1020.modules; open_namespaces = (curmod)::env.open_namespaces; modul_abbrevs = _49_1020.modul_abbrevs; sigaccum = _49_1020.sigaccum; localbindings = _49_1020.localbindings; recbindings = _49_1020.recbindings; phase = _49_1020.phase; sigmap = _49_1020.sigmap; default_result_effect = _49_1020.default_result_effect; iface = _49_1020.iface; admitted_iface = _49_1020.admitted_iface}))))
+let _48_1020 = env
+in {curmodule = Some (mscope); modules = _48_1020.modules; open_namespaces = (curmod)::env.open_namespaces; modul_abbrevs = _48_1020.modul_abbrevs; sigaccum = _48_1020.sigaccum; localbindings = _48_1020.localbindings; recbindings = _48_1020.recbindings; phase = _48_1020.phase; sigmap = _48_1020.sigmap; default_result_effect = _48_1020.default_result_effect; iface = _48_1020.iface; admitted_iface = _48_1020.admitted_iface}))))
 
 # 667 "FStar.Parser.DesugarEnv.fst"
 let exit_monad_scope : env  ->  env  ->  env = (fun env0 env -> (
 # 668 "FStar.Parser.DesugarEnv.fst"
-let _49_1024 = env
-in {curmodule = env0.curmodule; modules = _49_1024.modules; open_namespaces = env0.open_namespaces; modul_abbrevs = _49_1024.modul_abbrevs; sigaccum = _49_1024.sigaccum; localbindings = _49_1024.localbindings; recbindings = _49_1024.recbindings; phase = _49_1024.phase; sigmap = _49_1024.sigmap; default_result_effect = _49_1024.default_result_effect; iface = _49_1024.iface; admitted_iface = _49_1024.admitted_iface}))
+let _48_1024 = env
+in {curmodule = env0.curmodule; modules = _48_1024.modules; open_namespaces = env0.open_namespaces; modul_abbrevs = _48_1024.modul_abbrevs; sigaccum = _48_1024.sigaccum; localbindings = _48_1024.localbindings; recbindings = _48_1024.recbindings; phase = _48_1024.phase; sigmap = _48_1024.sigmap; default_result_effect = _48_1024.default_result_effect; iface = _48_1024.iface; admitted_iface = _48_1024.admitted_iface}))
 
 # 672 "FStar.Parser.DesugarEnv.fst"
 let fail_or = (fun env lookup lid -> (match ((lookup lid)) with
@@ -1445,13 +1445,13 @@ let msg = (match (r) with
 ""
 end
 | Some (r) -> begin
-(let _128_739 = (FStar_Range.string_of_range r)
-in (FStar_Util.format1 "(Possible clash with related name at %s)" _128_739))
+(let _129_739 = (FStar_Range.string_of_range r)
+in (FStar_Util.format1 "(Possible clash with related name at %s)" _129_739))
 end)
-in (let _128_742 = (let _128_741 = (let _128_740 = (FStar_Util.format2 "Identifier not found: [%s] %s" (FStar_Ident.text_of_lid lid) msg)
-in (_128_740, (FStar_Ident.range_of_lid lid)))
-in FStar_Absyn_Syntax.Error (_128_741))
-in (Prims.raise _128_742))))
+in (let _129_742 = (let _129_741 = (let _129_740 = (FStar_Util.format2 "Identifier not found: [%s] %s" (FStar_Ident.text_of_lid lid) msg)
+in (_129_740, (FStar_Ident.range_of_lid lid)))
+in FStar_Absyn_Syntax.Error (_129_741))
+in (Prims.raise _129_742))))
 end
 | Some (r) -> begin
 r

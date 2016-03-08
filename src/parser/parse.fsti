@@ -140,6 +140,8 @@ type token =
   | BAR_BAR
   | LEQ
   | GEQ
+  | L_FALSE
+  | L_TRUE
   | LESSLESS
   | LESS
   | GREATER

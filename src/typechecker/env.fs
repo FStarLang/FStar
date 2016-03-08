@@ -37,7 +37,7 @@ type binding =
 type delta_level = 
   | NoDelta
   | OnlyInline
-  | Unfold
+  | Unfold of delta_depth
 
 type mlift = typ -> typ -> typ
 
@@ -106,8 +106,8 @@ type sigtable = Util.smap<sigelt>
 let visible_at d q = match d, q with 
   | NoDelta,    _         
   | OnlyInline, Inline 
-  | Unfold,     Inline 
-  | Unfold,     Unfoldable -> true
+  | Unfold _,   Inline 
+  | Unfold _,   Unfoldable -> true
   | _ -> false 
 
 let glb_delta d1 d2 = match d1, d2 with 
@@ -115,8 +115,16 @@ let glb_delta d1 d2 = match d1, d2 with
     | _, NoDelta -> NoDelta
     | OnlyInline, _
     | _, OnlyInline -> OnlyInline
-    | Unfold, Unfold -> Unfold
-
+    | Unfold l1, Unfold l2 -> 
+        let l = match l1, l2 with 
+            | Delta_constant, _
+            | _, Delta_constant -> Delta_constant
+            | Delta_equational, l
+            | l, Delta_equational -> l
+            | Delta_unfoldable i, Delta_unfoldable j ->
+              let k = if i < j then i else j in
+              Delta_unfoldable k in
+        Unfold l
 
 let default_table_size = 200
 let new_sigtab () = Util.smap_create default_table_size
@@ -310,8 +318,8 @@ let lookup_type_of_let se lid = match se with
     | Sig_let((_, lbs), _, _, _) ->
         Util.find_map lbs (fun lb -> match lb.lbname with
           | Inl _ -> failwith "impossible"
-          | Inr lid' ->
-            if lid_equals lid lid'
+          | Inr fv ->
+            if fv_eq_lid fv lid
             then Some (inst_tscheme (lb.lbunivs, lb.lbtyp))
             else None)
 
@@ -379,7 +387,7 @@ let try_lookup_lid env lid =
       | Some (us, t) -> Some (us, {t with pos=range_of_lid lid})
       | None -> None
       
-let lookup_lid env l = 
+let lookup_lid env l =  
     match try_lookup_lid env l with 
         | None -> raise (Error(name_not_found l, range_of_lid l))
         | Some x -> x
@@ -400,8 +408,8 @@ let lookup_definition delta_level env lid =
       begin match se with 
         | Sig_let((_, lbs), _, _, quals) when Util.for_some (visible_at delta_level) quals ->
             Util.find_map lbs (fun lb -> 
-                let lid' = right lb.lbname in
-                if lid_equals lid lid'
+                let fv = right lb.lbname in
+                if fv_eq_lid fv lid 
                 then Some (lb.lbunivs, Util.unascribe lb.lbdef)
                 else None)
         | _ -> None
@@ -497,8 +505,9 @@ let interpreted_symbols =
 
 let is_interpreted (env:env) head : bool = 
     match (Util.un_uinst head).n with 
-        | Tm_fvar(fv, _) -> 
-          Util.for_some (Ident.lid_equals fv.v) interpreted_symbols
+        | Tm_fvar fv -> 
+          fv.fv_delta=Delta_equational
+          //Util.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols
         | _ -> false
 
 ////////////////////////////////////////////////////////////
@@ -572,8 +581,8 @@ let build_lattice env se = match se with
        mlift=(fun t wp -> wp)
     } in
     let print_mlift l =
-        let arg = lid_as_fv (lid_of_path ["ARG"] dummyRange) None in
-        let wp = lid_as_fv (lid_of_path  ["WP"]  dummyRange) None in
+        let arg = lid_as_fv (lid_of_path ["ARG"] dummyRange) Delta_constant None in
+        let wp = lid_as_fv (lid_of_path  ["WP"]  dummyRange) Delta_constant None in //A couple of bogus constants, just for printing
         Print.term_to_string (l arg wp) in
     let order = edge::env.effects.order in
 
@@ -647,8 +656,8 @@ let binding_of_lb (x:lbname) t = match x with
     assert (fst t = []);
     let x = {x with sort=snd t} in
     Binding_var x
-  | Inr lid -> 
-    Binding_lid(lid, t)
+  | Inr fv -> 
+    Binding_lid(fv.fv_name.v, t)
 
 let push_let_binding env lb ts = 
     push_local_binding env (binding_of_lb lb ts)

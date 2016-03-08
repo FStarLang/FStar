@@ -31,7 +31,7 @@ val report: env -> list<string> -> unit
 //unification variables
 val new_uvar : env -> typ -> typ
 val as_uvar  : typ -> uvar
-val new_implicit_var : env -> typ -> (term * (uvar * Range.range) * guard_t)
+val new_implicit_var : env -> typ -> (term * list<(uvar * Range.range)> * guard_t)
 val check_uvars: Range.range -> typ -> unit
 
 //extracting annotations from a term
@@ -78,3 +78,4 @@ val label_guard: Range.range -> string -> guard_t -> guard_t
 val short_circuit: term -> args -> guard_formula
 val short_circuit_head: term -> bool
 val maybe_add_implicit_binders: env -> binders -> binders
+val fvar_const: env -> lident -> term

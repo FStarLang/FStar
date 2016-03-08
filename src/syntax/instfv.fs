@@ -41,7 +41,7 @@ let rec inst (s:inst_t) t =
       | Tm_uinst _ -> t
 
       | Tm_fvar fv -> 
-        begin match U.find_opt (fun (x, _) -> lid_equals x (fst fv).v) s with 
+        begin match U.find_opt (fun (x, _) -> lid_equals x fv.fv_name.v) s with 
             | None -> t
             | Some (_, us) -> mk (Tm_uinst(t, us))
         end

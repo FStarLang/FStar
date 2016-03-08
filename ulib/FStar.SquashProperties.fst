@@ -94,7 +94,7 @@ let l1 (a:Type) (b:Type) =
      MkC f0 g0 (fun r -> cfalse_elim (nr r)))
 
 (* The paradoxical set *)
-type U = p:Type -> Tot (squash (pow p))
+type u = p:Type -> Tot (squash (pow p))
 
 (* NS: FAILS TO CHECK BEYOND HERE ... TODO, revisit *)
 

@@ -113,7 +113,7 @@ let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 
-val mapT: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
+val mapT: ('a -> Tot 'b) -> l1:list 'a -> Tot (l2:list 'b{length l1 = length l2})
 let rec mapT f x = match x with
   | [] -> []
   | a::tl -> f a::mapT f tl

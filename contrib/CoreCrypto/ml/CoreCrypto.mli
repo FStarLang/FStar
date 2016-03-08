@@ -58,6 +58,7 @@ val stream_process : cipher_stream -> bytes -> bytes
 val stream_fini : cipher_stream -> unit
 
 val random : int -> bytes
+val random_string : int -> string
 
 val rsa_gen_key : int -> rsa_key
 val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> bytes

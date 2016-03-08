@@ -1,8 +1,3 @@
-(*--build-config
-    options:;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.List.Tot.fst FStar.ListProperties.fst 
- --*)
-
 module FStar.OrdSet
 
 type total_order (a:Type) (f: (a -> a -> Tot bool)) =
@@ -100,13 +95,13 @@ let rec subset (#a:Type) #f s1 s2 = match s1, s2 with
 
 let singleton (#a:Type) #f x = [x]
 
-type Equal (#a:Type) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
+type equal (#a:Type) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
   (forall x. mem #_ #f x s1 = mem #_ #f x s2)
 
 val eq_lemma: #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
-              -> Lemma (requires (Equal s1 s2))
+              -> Lemma (requires (equal s1 s2))
                        (ensures (s1 = s2))
-                 [SMTPatT (Equal s1 s2)]
+                 [SMTPatT (equal s1 s2)]
 
 val mem_empty: #a:Type -> #f:cmp a -> x:a
                -> Lemma (requires True) (ensures (not (mem #a #f x (empty #a #f))))
@@ -252,7 +247,7 @@ let choose_empty (#a:Type) #f = ()
 
 let choose_s (#a:Type) #f s =
   let Some e = choose #_ #f s in
-  cut (Equal #a #f s (insert' #a #f e (remove #a #f e s)))
+  cut (equal #a #f s (insert' #a #f e (remove #a #f e s)))
 
 let rec mem_remove (#a:Type) #f x y s = match s with
   | []     -> ()

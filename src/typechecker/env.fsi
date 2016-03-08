@@ -29,7 +29,7 @@ type binding =
 type delta_level = 
   | NoDelta
   | OnlyInline
-  | Unfold
+  | Unfold of delta_depth
 
 (* greatest lower bound of two delta_levels *)
 val glb_delta : delta_level -> delta_level -> delta_level

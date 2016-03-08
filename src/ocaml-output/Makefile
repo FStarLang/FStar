@@ -13,7 +13,7 @@ OCAMLOPTFLAGS=$(INCLUDES) -w -8  # add other options for ocamlopt here
 
 COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
-FSTAR_OBJS=$(COMPILER_ML_LIB) $(PARSER_ML_LIB) FStar_Version.cmx FStar_Options.cmx FStar_Ident.cmx FStar_Const.cmx FStar_Absyn_Syntax.cmx FStar_Absyn_Const.cmx FStar_Absyn_Visit.cmx FStar_Absyn_Util.cmx FStar_Absyn_Print.cmx FStar_Absyn_SSyntax.cmx FStar_Syntax_Syntax.cmx FStar_Syntax_Const.cmx FStar_Syntax_Subst.cmx FStar_Syntax_Free.cmx FStar_Syntax_InstFV.cmx FStar_Syntax_Util.cmx FStar_Syntax_Print.cmx FStar_Tc_Env.cmx FStar_Tc_Recheck.cmx FStar_Tc_Normalize.cmx FStar_Tc_Errors.cmx FStar_Tc_Rel.cmx FStar_Tc_Util.cmx FStar_Tc_Tc.cmx FStar_Parser_AST.cmx FStar_Parser_DesugarEnv.cmx FStar_Parser_Desugar.cmx FStar_Parser_Env.cmx FStar_Parser_ToSyntax.cmx FStar_Parser_Parse.cmx FStar_Parser_Lexhelp.cmx FStar_Parser_LexFStar.cmx FStar_Parser_ParseIt.cmx FStar_Parser_Driver.cmx FStar_Parser_Dep.cmx FStar_ToSMT_Term.cmx FStar_ToSMT_Z3.cmx FStar_ToSMT_SplitQueryCases.cmx FStar_ToSMT_Encode.cmx FStar_Format.cmx FStar_Extraction_ML_Syntax.cmx FStar_Extraction_ML_Env.cmx FStar_Extraction_ML_Util.cmx FStar_Extraction_ML_Code.cmx FStar_Extraction_ML_ExtractTyp.cmx FStar_Extraction_ML_ExtractExp.cmx FStar_Extraction_ML_ExtractMod.cmx FStar_TypeChecker_Common.cmx FStar_TypeChecker_Env.cmx FStar_TypeChecker_Normalize.cmx  FStar_TypeChecker_Recheck.cmx FStar_TypeChecker_Errors.cmx FStar_TypeChecker_Rel.cmx FStar_TypeChecker_Util.cmx FStar_TypeChecker_Tc.cmx FStar_SMTEncoding_Term.cmx FStar_SMTEncoding_ErrorReporting.cmx FStar_SMTEncoding_SplitQueryCases.cmx FStar_SMTEncoding_Z3.cmx FStar_SMTEncoding_Encode.cmx FStar_FStar.cmx
+FSTAR_OBJS=$(COMPILER_ML_LIB) $(PARSER_ML_LIB) FStar_Version.cmx FStar_Options.cmx FStar_Ident.cmx FStar_Const.cmx FStar_Absyn_Syntax.cmx FStar_Absyn_Const.cmx FStar_Absyn_Visit.cmx FStar_Absyn_Util.cmx FStar_Absyn_Print.cmx FStar_Syntax_Syntax.cmx FStar_Syntax_Const.cmx FStar_Syntax_Subst.cmx FStar_Syntax_Free.cmx FStar_Syntax_InstFV.cmx FStar_Syntax_Util.cmx FStar_Syntax_Print.cmx FStar_Tc_Env.cmx FStar_Tc_Recheck.cmx FStar_Tc_Normalize.cmx FStar_Tc_Errors.cmx FStar_Tc_Rel.cmx FStar_Tc_Util.cmx FStar_Tc_Tc.cmx FStar_Parser_AST.cmx FStar_Parser_DesugarEnv.cmx FStar_Parser_Desugar.cmx FStar_Parser_Env.cmx FStar_Parser_ToSyntax.cmx FStar_Parser_Parse.cmx FStar_Parser_Lexhelp.cmx FStar_Parser_LexFStar.cmx FStar_Parser_ParseIt.cmx FStar_Parser_Driver.cmx FStar_Parser_Dep.cmx FStar_ToSMT_Term.cmx FStar_ToSMT_Z3.cmx FStar_ToSMT_SplitQueryCases.cmx FStar_ToSMT_Encode.cmx FStar_Format.cmx FStar_Extraction_ML_Syntax.cmx FStar_Extraction_ML_Env.cmx FStar_Extraction_ML_Util.cmx FStar_Extraction_ML_Code.cmx FStar_Extraction_ML_ExtractTyp.cmx FStar_Extraction_ML_ExtractExp.cmx FStar_Extraction_ML_ExtractMod.cmx FStar_TypeChecker_Common.cmx FStar_TypeChecker_Env.cmx FStar_TypeChecker_Normalize.cmx FStar_TypeChecker_Errors.cmx FStar_TypeChecker_Rel.cmx FStar_TypeChecker_Util.cmx FStar_TypeChecker_Tc.cmx FStar_SMTEncoding_Term.cmx FStar_SMTEncoding_ErrorReporting.cmx FStar_SMTEncoding_SplitQueryCases.cmx FStar_SMTEncoding_Z3.cmx FStar_SMTEncoding_Encode.cmx FStar_Dependences.cmx FStar_Interactive.cmx FStar_Stratified.cmx FStar_Universal.cmx FStar_FStar.cmx
 
 GENERATED_FILES=$(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml 
 
@@ -45,7 +45,7 @@ all:
 	$(MAKE) prep
 	$(MAKE) -j 8 fstar.exe
 
-prep: parser copy_lib_files depend
+prep: parser copy_lib_files depend version
 
 parser:
 	cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
@@ -92,8 +92,8 @@ else
 endif
 COMPILER = OCaml $(shell ocamlc -version)
 DATE = $(shell $(DATE_EXEC) -Iseconds)
-COMMIT = $(shell git log --pretty=format:'%h' -n 1)
-FStar_Version.ml:__force__
+COMMIT = $(shell ../tools/get_commit)
+version:
 	echo 'let version = "$(VERSION)"' > FStar_Version.ml
 	echo 'let platform = "$(PLATFORM)"' >> FStar_Version.ml
 	echo 'let compiler = "$(COMPILER)"' >> FStar_Version.ml

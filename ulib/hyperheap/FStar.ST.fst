@@ -19,6 +19,7 @@
 *)
 module FStar.ST
 open FStar.HyperHeap
+let modifies = HyperHeap.modifies
 let ref (t:Type) = rref root t
 let st_pre = st_pre_h t
 let st_post (a:Type) = st_post_h t a
@@ -34,6 +35,8 @@ effect St (a:Type) =
        ST a (fun h -> True) (fun h0 r h1 -> True)
 sub_effect
   DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:t) -> wp (fun a -> p a h)
+
+
 
 assume val new_region: r0:rid -> ST rid
       (requires (fun m -> True))

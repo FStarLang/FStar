@@ -152,6 +152,27 @@ module Bytes = struct
       done;
       !x
 
+  let string_of_int nb i =
+    let rec put_bytes bb lb n =
+      if lb = 0 then failwith "not enough bytes"
+      else
+        begin
+          String.set bb (lb-1) (char_of_int (n mod 256));
+          if n/256 > 0 then
+            put_bytes bb (lb-1) (n/256)
+          else bb
+        end
+    in
+    let b = String.make nb (char_of_int 0) in
+    put_bytes b nb i
+
+  let int_of_string (s:string) : int =
+      let x = ref 0 in
+      for y = 0 to String.length s -1 do
+          x := 256 * !x + (int_of_char (String.get s y))
+      done;
+      !x
+
   let equalBytes (b1:bytes) (b2:bytes) =
       if length b1 = length b2 then
          let cb1 = get_cbytes b1 in

@@ -50,6 +50,7 @@ let parse fn =
           | _ -> fileOrFragment in
       Inl frags
   with
+    | FStar_Syntax_Syntax.Error(msg, r)
     | FStar_Absyn_Syntax.Error(msg, r) ->
       Inr (msg, r)
 
