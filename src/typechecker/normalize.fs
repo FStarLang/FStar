@@ -811,10 +811,7 @@ let config s e =
                           else Env.NoDelta in
     {tcenv=e; steps=s; delta_level=d}
 
-let normalize s e t = 
-    if Env.debug e <| Options.Other "Norm"
-    then Printf.printf "With steps %A, CALLING norm for %s\n" s (Print.term_to_string t);
-    norm (config s e) [] [] t
+let normalize s e t = norm (config s e) [] [] t
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
 
