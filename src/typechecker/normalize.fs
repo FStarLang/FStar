@@ -120,7 +120,7 @@ let is_empty = function
 
 let lookup_bvar env x = 
     try List.nth env x.index
-    with _ -> failwith (Util.format1 "Failed to find %s\n" (Print.bv_to_string x))
+    with _ -> failwith (Util.format1 "Failed to find %s\n" (Print.db_to_string x))
 
 (********************************************************************************************************************)
 (* Normal form of a universe u is                                                                                   *)
@@ -190,6 +190,7 @@ let norm_universe cfg env u =
 (* This is used when computing WHNFs                               *)
 (*******************************************************************)
 let rec closure_as_term cfg env t =
+    log cfg  (fun () -> Util.print2 ">>> %s Closure_as_term %s\n" (Print.tag_of_term t) (Print.term_to_string t));
     match env with
         | [] when not(cfg.steps |> List.contains BetaUVars)-> t
         | _ -> 
@@ -237,7 +238,7 @@ let rec closure_as_term cfg env t =
            | Tm_abs(bs, body, lopt) -> 
              let bs, env = closures_as_binders_delayed cfg env bs in 
              let body = closure_as_term_delayed cfg env body in
-             mk (Tm_abs(List.rev bs, body, close_lcomp_opt cfg env lopt)) t.pos
+             mk (Tm_abs(bs, body, close_lcomp_opt cfg env lopt)) t.pos
 
            | Tm_arrow(bs, c) -> 
              let bs, env = closures_as_binders_delayed cfg env bs in 
@@ -712,7 +713,9 @@ and rebuild : cfg -> env -> stack -> term -> term =
                     if whnf
                     then closure_as_term cfg env t
                     else norm cfg env [] t in
-                let branches = branches |> List.map (fun branch -> 
+                let branches = match env with 
+                    | [] when whnf -> branches //nothing to close over
+                    | _ -> branches |> List.map (fun branch -> 
                      //Q: What about normalizing the sorts of each of bound variables in p?
                      let p, wopt, e = SS.open_branch branch in
                      let env = S.pat_bvs p |> List.fold_left (fun env x -> 
@@ -808,7 +811,10 @@ let config s e =
                           else Env.NoDelta in
     {tcenv=e; steps=s; delta_level=d}
 
-let normalize s e t = norm (config s e) [] [] t
+let normalize s e t = 
+    if Env.debug e <| Options.Other "Norm"
+    then Printf.printf "With steps %A, CALLING norm for %s\n" s (Print.term_to_string t);
+    norm (config s e) [] [] t
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
 
