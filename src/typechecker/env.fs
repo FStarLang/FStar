@@ -85,7 +85,7 @@ and solver_t = {
     commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
-    solve        :env -> typ -> unit;
+    solve        :option<(unit -> string)> -> env -> typ -> unit;
     is_trivial   :env -> typ -> bool;
     finish       :unit -> unit;
     refresh      :unit -> unit;
@@ -116,15 +116,17 @@ let glb_delta d1 d2 = match d1, d2 with
     | OnlyInline, _
     | _, OnlyInline -> OnlyInline
     | Unfold l1, Unfold l2 -> 
-        let l = match l1, l2 with 
+        let rec aux l1 l2 = match l1, l2 with
             | Delta_constant, _
             | _, Delta_constant -> Delta_constant
             | Delta_equational, l
             | l, Delta_equational -> l
             | Delta_unfoldable i, Delta_unfoldable j ->
               let k = if i < j then i else j in
-              Delta_unfoldable k in
-        Unfold l
+              Delta_unfoldable k
+            | Delta_abstract l1, _ -> aux l1 l2
+            | _, Delta_abstract l2 -> aux l1 l2 in
+        Unfold (aux l1 l2)
 
 let default_table_size = 200
 let new_sigtab () = Util.smap_create default_table_size
@@ -757,7 +759,7 @@ let dummy_solver = {
     commit_mark=(fun _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
-    solve=(fun _ _ -> ());
+    solve=(fun _ _ _ -> ());
     is_trivial=(fun _ _ -> false);
     finish=(fun () -> ());
     refresh=(fun () -> ());

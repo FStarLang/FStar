@@ -692,7 +692,7 @@ and encode_let x t1 e1 e2 env (encode_body:S.term -> env_t -> (term * decls_t)) 
     let xs, e2 = SS.open_term [(x, None)] e2 in
     let x, _ = List.hd xs in
     let env' = push_term_var env x ee1 in
-    let ee2, decls2 = encode_term e2 env' in
+    let ee2, decls2 = encode_body e2 env' in
     ee2, decls1@decls2
 
 and encode_match e pats default_case env (encode_br:S.term -> env_t -> (term * decls_t)) : term * decls_t = 
@@ -1837,7 +1837,7 @@ let encode_modul tcenv modul =
     let decls = caption decls in
     Z3.giveZ3 decls
 
-let solve tcenv q : unit =
+let solve use_env_msg tcenv q : unit =
     push (Util.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
     let pop () = pop (Util.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     let prefix, labels, qry, suffix =
@@ -1859,7 +1859,7 @@ let solve tcenv q : unit =
         let phi, qdecls = encode_formula q env in
 //        if not (lid_equals (Env.current_module tcenv) Const.prims_lid)
 //        then Util.print1 "About to label goals in %s\n" (Term.print_smt_term phi);
-        let phi, labels, _ = ErrorReporting.label_goals [] phi [] in
+        let phi, labels, _ = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
         let label_prefix, label_suffix = encode_labels labels in
         let query_prelude =
             env_decls
@@ -1970,7 +1970,7 @@ let dummy = {
     commit_mark=(fun _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
-    solve=(fun _ _ -> ());
+    solve=(fun _ _ _ -> ());
     is_trivial=(fun _ _ -> false);
     finish=(fun () -> ());
     refresh=(fun () -> ());

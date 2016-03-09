@@ -2179,7 +2179,7 @@ let rec solve_deferred_constraints env (g:guard_t) =
    solve_universe_inequalities env g.univ_ineqs;
    {g with univ_ineqs=[]}
 
-let discharge_guard env (g:guard_t) : guard_t =
+let discharge_guard' use_env_range_msg env (g:guard_t) : guard_t =
    let g = solve_deferred_constraints env g in
    (if not (Options.should_verify env.curmodule.str) then ()
     else match g.guard_f with
@@ -2192,9 +2192,11 @@ let discharge_guard env (g:guard_t) : guard_t =
                 if Env.debug env <| Options.Other "Rel" 
                 then Errors.diag (Env.get_range env) 
                                  (Util.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
-                env.solver.solve env vc
+                env.solver.solve use_env_range_msg env vc
         end);
   {g with guard_f=Trivial}
+
+let discharge_guard env g = discharge_guard' None env g
 
 let resolve_implicits g = 
   let unresolved u = match Unionfind.find u with
@@ -2216,7 +2218,7 @@ let resolve_implicits g =
                let g = if env.is_pattern
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
                        else g in
-               let g' = discharge_guard env g in
+               let g' = discharge_guard' (Some (fun () -> Print.term_to_string tm)) env g in
                until_fixpoint (g'.implicits@out, true) tl in
   {g with implicits=until_fixpoint ([], false) g.implicits}
 
