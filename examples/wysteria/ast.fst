@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins;
-    other-files:ghost.fst ordset.fsi ordmap.fsi prins.fsi
- --*)
-
 module AST
 
 open FStar.Ghost
@@ -11,6 +6,8 @@ open FStar.OrdMap
 open FStar.OrdSet
 
 open Prins
+
+open Platform.Bytes
 
 type other_info = nat
 
@@ -24,6 +21,7 @@ type typ =
   | T_wire: c:typ -> typ
   | T_fun: typ -> typ -> typ  //not emitting it for now
   | T_unknown
+  | T_sh  // for now shares only for nats
 
 type varname =
   | Var: name:string -> ty:typ -> varname
@@ -45,6 +43,8 @@ type exp =
   | E_mkwire    : e1:exp -> e2:exp -> exp
   | E_projwire  : e1:exp -> e2:exp -> exp
   | E_concatwire: e1:exp -> e2:exp -> exp
+  | E_mksh      : e:exp -> exp
+  | E_combsh    : e:exp -> exp
 
   | E_const     : c:const -> exp
   | E_var       : x:varname -> exp
@@ -99,6 +99,9 @@ type value: v_meta -> Type =
 
   | V_emp_clos: x:varname -> e:exp -> value (Meta empty Can_b empty Can_w)
 
+  | V_sh      : ps:prins -> v:value (Meta empty Can_b empty Can_w)
+                -> b:bytes -> value (Meta empty Can_b empty Cannot_w)
+
   (* bomb value, comes up in target only *)
   | V_emp     : value (Meta empty Can_b empty Can_w)
 
@@ -135,6 +138,8 @@ type redex =
   | R_mkwire    : #mv:v_meta -> ps:prins -> v:value mv -> redex
   | R_projwire  : #meta:v_meta -> p:prin -> v:value meta -> redex
   | R_concatwire: #meta1:v_meta -> #meta2:v_meta -> v1:value meta1 -> v2:value meta2 -> redex
+  | R_mksh      : #meta:v_meta -> v:value meta -> redex
+  | R_combsh    : #meta:v_meta -> v:value meta -> redex
   | R_let       : #meta:v_meta -> x:varname -> v:value meta -> e:exp -> redex
   | R_app       : #meta1:v_meta -> #meta2:v_meta -> v1:value meta1 -> v2:value meta2
                   -> redex
@@ -173,6 +178,8 @@ type frame' =
   | F_projwire_e   : p:prin -> frame'
   | F_concatwire_e1: e:exp -> frame'
   | F_concatwire_e2: #meta:v_meta -> v:value meta -> frame'
+  | F_mksh         : frame'
+  | F_combsh       : frame'
   | F_let          : x:varname -> e2:exp -> frame'
   | F_app_e1       : e2:exp -> frame'
   | F_app_e2       : #meta:v_meta -> v:value meta -> frame'
@@ -207,6 +214,9 @@ val is_sec_frame: f':frame' -> Tot bool
 let is_sec_frame f' =
   not (is_F_aspar_ps f' || is_F_aspar_e f' || is_F_aspar_ret f')
 
+val is_par_frame: f':frame' -> Tot bool
+let is_par_frame f' = not (is_F_mksh f' || is_F_combsh f')
+
 (* TODO: FIXME: workaround for projectors *)
 val ps_of_aspar_ret_frame: f':frame'{is_F_aspar_ret f'} -> Tot prins
 let ps_of_aspar_ret_frame (F_aspar_ret ps) = ps
@@ -223,6 +233,7 @@ let rec stack_source_inv s (Mode as_m ps) = match s with
     (not (as_m' = Sec) || (vals_trace tr))                         &&
     (not (is_F_aspar_ret f') || (ps = ps_of_aspar_ret_frame f'))   &&
     (ps = ps' || (subset ps ps' && is_F_aspar_ret f'))             &&
+    (not (as_m = Par) || is_par_frame f')                          &&
     stack_source_inv tl m'
 
 val stack_target_inv: stack -> mode -> GTot bool
@@ -231,6 +242,7 @@ let rec stack_target_inv s m = match s with
   | (Frame m' _ f' tr)::tl ->
     m = m'                                         &&
     (not (m_of_mode m' = Sec) || is_sec_frame f')  &&
+    (not (m_of_mode m' = Par) || is_par_frame f')  &&
     (not (m_of_mode m' = Sec) || vals_trace tr)    &&
     stack_target_inv tl m
 
@@ -241,6 +253,9 @@ let rec stack_inv s m l =
 val is_sec_redex: redex -> Tot bool
 let is_sec_redex r = not (is_R_aspar r) //|| is_R_box r)
 
+val is_par_redex: redex -> Tot bool
+let is_par_redex r = not (is_R_mksh r || is_R_combsh r) //|| is_R_box r)
+
 (* TODO: FIXME: workaround for projectors *)
 val r_of_t_red: t:term{is_T_red t} -> Tot redex
 let r_of_t_red (T_red r) = r
@@ -248,7 +263,8 @@ let r_of_t_red (T_red r) = r
 val term_inv: term -> mode -> level -> Tot bool
 let term_inv t m l =
   (not (is_Source l) || not (t = T_sec_wait)) &&
-  (not (is_T_red t && m_of_mode m = Sec) || is_sec_redex (r_of_t_red t))
+  (not (is_T_red t && m_of_mode m = Sec) || is_sec_redex (r_of_t_red t)) &&
+  (not (is_T_red t && m_of_mode m = Par) || is_par_redex (r_of_t_red t))
 
 val trace_inv: erased trace -> mode -> GTot bool
 let trace_inv tr m = not (m_of_mode m = Sec) || (vals_trace tr)
@@ -353,6 +369,12 @@ let mk_projwire e1 e2 = E_projwire e1 e2
 
 opaque val mk_concatwire: exp -> exp -> Tot exp
 let mk_concatwire e1 e2 = E_concatwire e1 e2
+
+opaque val mk_mksh: exp -> Tot exp
+let mk_mksh e = E_mksh e
+
+opaque val mk_combsh: exp -> Tot exp
+let mk_combsh e = E_combsh e
 
 opaque val mk_const: const -> Tot exp
 let mk_const c = E_const c

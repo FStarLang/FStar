@@ -1,4 +1,4 @@
-﻿(*
+(*
   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@ open FStar.Util
 
 val desugar_file: env -> file -> env * list<modul>
 val desugar_decls: env -> list<AST.decl> -> env * sigelts
-val desugar_partial_modul: option<(modul * 'a)> -> env -> AST.modul -> env * Syntax.modul
+val desugar_partial_modul: option<modul> -> env -> AST.modul -> env * Syntax.modul
 
 (* private *) val desugar_modul : env -> AST.modul -> env * Syntax.modul
 (* private *) val mk_data_projectors : env -> sigelt -> list<sigelt>

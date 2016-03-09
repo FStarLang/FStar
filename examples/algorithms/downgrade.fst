@@ -1,9 +1,3 @@
-(*--build-config
-  options:--z3timeout 20;
-  other-files:classical.fst ext.fst set.fsi set.fst heap.fst
-              stperm.fst seq.fsi seq.fst seqproperties.fst arr.fst
-              qs_seq.fst qsort_arr.fst
---*)
 module Downgrade
 #set-options "--initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 0"
 open FStar.Array

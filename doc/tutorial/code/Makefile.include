@@ -4,7 +4,7 @@
 FSTAR_HOME = ../../../..
 
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
-SECLIB = $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst list.fst st.fst array-realized.fst )
+SECLIB = $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fst partialmap.fst FStar.List.fst FStar.ST.fst array-realized.fst )
 FSTAR  = $(FSTAR_HOME)/bin/fstar.exe $(STDLIB) $(OTHERFLAGS)
 
 # FSTAR = $(FSTAR_HOME)/src/ocaml-output/fstarml $(STDLIB)

@@ -27,6 +27,11 @@ open FStar.Tc.Env
 open FStar.Tc.Normalize
 open FStar.Tc.Rel
 open FStar.Absyn.Syntax
+open FStar.Ident
+type lcomp_with_binder = option<Env.binding> * lcomp
+
+
+// VALS_HACK_HERE
 
 (**************************************************************************************)
 (* Calling the solver *)
@@ -68,7 +73,7 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
           raise (Error(Tc.Errors.expected_expression_of_type env t2 e t1, Tc.Env.get_range env))
         | Some g ->
            if debug env <| Options.Other "Rel"
-           then Util.fprint1 "Applied guard is %s\n" <| guard_to_string env g;
+           then Util.print1 "Applied guard is %s\n" <| guard_to_string env g;
            let e = Util.compress_exp e in
            let e = match e.n with
                | Exp_bvar x -> mk_Exp_bvar (Util.bvd_to_bvar_s x.v t2) (Some t2) e.pos
@@ -103,7 +108,7 @@ let tks_of_args (args:args) =
         | Inl t, imp -> Inl (force_tk t), imp
         | Inr v, imp -> Inr (force_tk v), imp)
 
-let is_implicit = function Some Implicit -> true | _ -> false
+let is_implicit = function Some (Implicit _) -> true | _ -> false
 let destruct_arrow_kind env tt k (args:args) : (Syntax.args * binders * knd) =
     let ktop = compress_kind k |> Normalize.norm_kind [WHNF; Beta; Eta] env in
     let r = Env.get_range env in
@@ -144,7 +149,7 @@ let destruct_arrow_kind env tt k (args:args) : (Syntax.args * binders * knd) =
     aux ktop
 
 let as_imp = function
-    | Some Implicit -> true
+    | Some (Implicit _) -> true
     | _ -> false
 (*
     Turns a disjunctive pattern p into a quadruple:
@@ -175,7 +180,7 @@ let pat_as_exps allow_implicits env p
         match p.v with
            | Pat_dot_term(x, _) ->
              let t = new_tvar env ktype in
-             let e, u = Rel.new_evar p.p [] t in //TODO: why empty vars?
+             let e, u = Rel.new_evar p.p (Env.binders env) t in
              let p = {p with v=Pat_dot_term(x, e)} in
              ([], [], [], env, Inr e, p)
 
@@ -253,9 +258,11 @@ let pat_as_exps allow_implicits env p
                               then withinfo (Pat_dot_typ (a, tun)) None  (Syntax.range_of_lid fv.v), as_imp imp
                               else withinfo (Pat_tvar a) None (Syntax.range_of_lid fv.v), as_imp imp
 
-                            | Inr _, Some Implicit ->
+                            | Inr _, Some (Implicit dot) ->
                               let a = Util.gen_bvar tun in
-                              withinfo (Pat_var a) None (*Inr tun*) (Syntax.range_of_lid fv.v), true
+                              if allow_implicits && dot
+                              then withinfo (Pat_dot_term (a, Util.bvar_to_exp a)) None  (Syntax.range_of_lid fv.v), true
+                              else withinfo (Pat_var a) None (*Inr tun*) (Syntax.range_of_lid fv.v), true
 
                             | _ -> raise (Error(Util.format1 "Insufficient pattern arguments (%s)" (Print.pat_to_string p), range_of_lid fv.v)))
 
@@ -274,11 +281,14 @@ let pat_as_exps allow_implicits env p
                                         | Pat_dot_typ _ -> pats'
                                         | _ -> pats in
                                     (p1, as_imp imp)::aux formals' pats'
-                                | (Inr _, Some Implicit), _ when p_imp ->
+                                | (Inr _, Some (Implicit false)), _ when p_imp ->
                                     (p, true)::aux formals' pats'
-                                | (Inr _, Some Implicit), _ ->
+                                | (Inr _, Some (Implicit dot)), _ ->
                                     let a = Util.gen_bvar tun in
-                                    let p = withinfo (Pat_var a) None (Syntax.range_of_lid fv.v) in
+                                    let p = 
+                                       if allow_implicits && dot
+                                       then withinfo (Pat_dot_term (a, Util.bvar_to_exp a)) None  (Syntax.range_of_lid fv.v)
+                                       else withinfo (Pat_var a) None (Syntax.range_of_lid fv.v) in
                                     (p, true)::aux formals' pats
                                 | (Inr _, imp), _ ->
                                   (p, as_imp imp)::aux formals' pats'
@@ -343,7 +353,7 @@ let decorate_pattern env p exps =
               if Util.bvar_eq x y |> not
               then failwith (Util.format2 "Expected pattern variable %s; got %s" (Print.strBvd x.v) (Print.strBvd y.v));
               if Env.debug env <| Options.Other "Pat"
-              then Util.fprint2 "Pattern variable %s introduced at type %s\n" (Print.strBvd x.v) (Normalize.typ_norm_to_string env y.sort);
+              then Util.print2 "Pattern variable %s introduced at type %s\n" (Print.strBvd x.v) (Normalize.typ_norm_to_string env y.sort);
               let s = Normalize.norm_typ [Normalize.Beta] env y.sort in
               let x = {x with sort=s} in
               pkg (Pat_var x) (force_tk e)
@@ -372,12 +382,12 @@ let decorate_pattern env p exps =
                 | [], [] -> pkg (Pat_cons(fv, q, List.rev matched_pats)) (force_tk e)
                 | arg::args, (argpat, _)::argpats ->
                   begin match arg, argpat.v with
-                        | (Inl t, Some Implicit), Pat_dot_typ _ -> (* implicit type argument *)
+                        | (Inl t, Some (Implicit _)), Pat_dot_typ _ -> (* implicit type argument *)
                           let x = Util.gen_bvar_p p.p (force_tk t) in
                           let q = withinfo (Pat_dot_typ(x, t)) (Some<| Inl x.sort) p.p in
                           match_args ((q, true)::matched_pats) args argpats
 
-                        | (Inr e, Some Implicit), Pat_dot_term _ -> (* implicit value argument *)
+                        | (Inr e, Some (Implicit _)), Pat_dot_term _ -> (* implicit value argument *)
                           let x = Util.gen_bvar_p p.p (force_tk e) in
                           let q = withinfo (Pat_dot_term(x, e)) (Some <| Inr x.sort) p.p in
                           match_args ((q, true)::matched_pats) args argpats
@@ -556,7 +566,7 @@ let extract_lb_annotation env t e = match t.n with
         let body, res, check_res = aux scope body in
         let c = Util.ml_comp res r in
         let t = mk_Typ_fun(bs, c) (Some ktype) e.pos in
-        if debug env Options.High then Util.fprint2 "(%s) Using type %s\n" (Range.string_of_range r) (Print.typ_to_string t);
+        if debug env Options.High then Util.print2 "(%s) Using type %s\n" (Range.string_of_range r) (Print.typ_to_string t);
         let e = mk_Exp_abs(bs, body) None e.pos in
         e, t, check_res || check
 
@@ -569,8 +579,6 @@ let extract_lb_annotation env t e = match t.n with
 (*********************************************************************************************)
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
-type lcomp_with_binder = option<Env.binding> * lcomp
-
 let destruct_comp c : (typ * typ * typ) =
   let wp, wlp = match c.effect_args with
     | [(Inl wp, _); (Inl wlp, _)] -> wp, wlp
@@ -667,7 +675,7 @@ let return_value env t v =
        let wlp = wp in
        mk_comp m t wp wlp [RETURN] in
   if debug env Options.High
-  then Util.fprint3 "(%s) returning %s at comp type %s\n" (Range.string_of_range v.pos)  (Print.exp_to_string v) (Normalize.comp_typ_norm_to_string env c);
+  then Util.print3 "(%s) returning %s at comp type %s\n" (Range.string_of_range v.pos)  (Print.exp_to_string v) (Normalize.comp_typ_norm_to_string env c);
   c
 
 let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
@@ -677,7 +685,7 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       | None -> "none"
       | Some (Env.Binding_var(x, _)) -> Print.strBvd x
       | _ -> "??" in
-    Util.fprint3 "Before lift: Making bind c1=%s\nb=%s\t\tc2=%s\n" (Print.lcomp_typ_to_string lc1) bstr (Print.lcomp_typ_to_string lc2));
+    Util.print3 "Before lift: Making bind c1=%s\nb=%s\t\tc2=%s\n" (Print.lcomp_typ_to_string lc1) bstr (Print.lcomp_typ_to_string lc2));
   let bind_it () =
       let c1 = lc1.comp () in
       let c2 = lc2.comp () in
@@ -704,7 +712,7 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       match try_simplify () with
         | Some c ->
           if Tc.Env.debug env <| Options.Other "bind"
-          then Util.fprint4 "bind (%s) %s and %s simplified to %s\n"
+          then Util.print4 "bind (%s) %s and %s simplified to %s\n"
               (match b with
                  | None -> "None"
                  | Some (Env.Binding_var(x, _)) -> Print.strBvd x
@@ -750,10 +758,10 @@ let refresh_comp_label env (b:bool) lc =
         | Total _ -> c
         | Comp ct ->
           if Tc.Env.debug env Options.Low
-          then (Util.fprint1 "Refreshing label at %s\n" (Range.string_of_range <| Env.get_range env));
+          then (Util.print1 "Refreshing label at %s\n" (Range.string_of_range <| Env.get_range env));
           let c' = Tc.Normalize.weak_norm_comp env c in
           if not <| lid_equals ct.effect_name c'.effect_name && Tc.Env.debug env Options.Low
-          then Util.fprint2 "To refresh, normalized\n\t%s\nto\n\t%s\n" (Print.comp_typ_to_string c) (Print.comp_typ_to_string <| mk_Comp c');
+          then Util.print2 "To refresh, normalized\n\t%s\nto\n\t%s\n" (Print.comp_typ_to_string c) (Print.comp_typ_to_string <| mk_Comp c');
           let t, wp, wlp = destruct_comp c' in
           let wp = mk_Typ_meta(Meta_refresh_label(wp, Some b, Env.get_range env)) in
           let wlp = mk_Typ_meta(Meta_refresh_label(wlp, Some b, Env.get_range env)) in
@@ -951,19 +959,19 @@ let maybe_instantiate_typ env t k =
   match k.n with
     | Kind_arrow(bs, k) ->
       let rec aux subst = function
-        | (Inl a, Some Implicit)::rest ->
+        | (Inl a, Some (Implicit _))::rest ->
           let k = Util.subst_kind subst a.sort in
           let t, u = new_implicit_tvar env k in
           let subst = (Inl(a.v, t))::subst in
           let args, bs, subst, us = aux subst rest in
-          (Inl t, Some Implicit)::args, bs, subst, Inl u::us
+          (Inl t, Some <| Implicit false)::args, bs, subst, Inl u::us
 
-        | (Inr x, Some Implicit)::rest ->
+        | (Inr x, Some (Implicit _))::rest ->
           let t = Util.subst_typ subst x.sort in
           let v, u = new_implicit_evar env t in
           let subst = (Inr(x.v, v))::subst in
           let args, bs, subst, us = aux subst rest in
-          (Inr v, Some Implicit)::args, bs, subst, Inr u::us
+          (Inr v, Some <| Implicit false)::args, bs, subst, Inr u::us
 
         | bs -> [], bs, subst, [] in
      let args, bs, subst, implicits = aux [] bs in
@@ -984,14 +992,14 @@ let maybe_instantiate env e t =
           let t, u = new_implicit_tvar env k in
           let subst = (Inl(a.v, t))::subst in
           let args, bs, subst, us = aux subst rest in
-          (Inl t, Some Implicit)::args, bs, subst, Inl u::us
+          (Inl t, Some <| Implicit false)::args, bs, subst, Inl u::us
 
-        | (Inr x, Some Implicit)::rest ->
+        | (Inr x, Some (Implicit _))::rest ->
           let t = Util.subst_typ subst x.sort in
           let v, u = new_implicit_evar env t in
           let subst = (Inr(x.v, v))::subst in
           let args, bs, subst, us = aux subst rest in
-          (Inr v, Some Implicit)::args, bs, subst, Inr u::us
+          (Inr v, Some <| Implicit false)::args, bs, subst, Inr u::us
 
         | bs -> [], bs, subst, [] in
      let args, bs, subst, implicits = aux [] bs in
@@ -1030,7 +1038,7 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
             let c = lc.comp() in
 
             if Tc.Env.debug env <| Options.Extreme
-            then Util.fprint2 "Strengthening %s with guard %s\n" (Normalize.comp_typ_norm_to_string env c) (Normalize.typ_norm_to_string env f);
+            then Util.print2 "Strengthening %s with guard %s\n" (Normalize.comp_typ_norm_to_string env c) (Normalize.typ_norm_to_string env f);
 
             let ct = Tc.Normalize.weak_norm_comp env c in
             let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
@@ -1051,7 +1059,7 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
             let c = bind env (Some e) (lcomp_of_comp <| mk_Comp ct) (Some(Env.Binding_var(x, lc.res_typ)), eq_ret) in
             let c = c.comp () in
             if Tc.Env.debug env <| Options.Extreme
-            then Util.fprint1 "Strengthened to %s\n" (Normalize.comp_typ_norm_to_string env c);
+            then Util.print1 "Strengthened to %s\n" (Normalize.comp_typ_norm_to_string env c);
             c in
           let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
           let lc = {lc with res_typ=t; comp=strengthen; cflags=flags; eff_name=norm_eff_name env lc.eff_name} in
@@ -1087,13 +1095,13 @@ let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
   then None
   else
      let norm c =
-        if debug env Options.Medium then Util.fprint1 "Normalizing before generalizing:\n\t %s" (Print.comp_typ_to_string c);
+        if debug env Options.Medium then Util.print1 "Normalizing before generalizing:\n\t %s" (Print.comp_typ_to_string c);
          let steps = [Eta;Delta;Beta;SNComp] in
          let c = if Options.should_verify env.curmodule.str
                  then Normalize.norm_comp steps env c
                  else Normalize.norm_comp [Beta; Delta] env c
          in
-        if debug env Options.Medium then Util.fprint1 "Normalized to:\n\t %s" (Print.comp_typ_to_string c);
+        if debug env Options.Medium then Util.print1 "Normalized to:\n\t %s" (Print.comp_typ_to_string c);
         c in
      let env_uvars = Env.uvars_in_env env in
      let gen_uvars uvs = Util.set_difference uvs env_uvars.uvars_t |> Util.set_elements in
@@ -1137,11 +1145,11 @@ let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
                   //let t = Util.bvd_to_typ a k in
                   unchecked_unify u t;
                   Util.bvd_to_bvar_s a ktype in
-            Inl a, Some Implicit) in
+            Inl a, Some <| Implicit false) in
 
           let t = match Util.comp_result c |> Util.function_formals with
             | Some (bs, cod) -> mk_Typ_fun(tvars@bs, cod) (Some ktype) c.pos
-            | None -> match tvars with [] -> Util.comp_result c | _ -> mk_Typ_fun(tvars, c) (Some ktype) c.pos in
+            | None -> match tvars with | [] -> Util.comp_result c | _ -> mk_Typ_fun(tvars, c) (Some ktype) c.pos in
 
           let e = match tvars with
             | [] -> e
@@ -1150,25 +1158,26 @@ let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
      Some ecs
 
 let generalize verify env (lecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
-  if debug env Options.Low then Util.fprint1 "Generalizing: %s" (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
+  if debug env Options.Low then Util.print1 "Generalizing: %s" (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
   match gen verify env (lecs |> List.map (fun (_, e, c) -> (e, c))) with
     | None -> lecs
     | Some ecs ->
       List.map2 (fun (l, _, _) (e, c) ->
-         if debug env Options.Medium then Util.fprint3 "(%s) Generalized %s to %s" (Range.string_of_range e.pos) (Print.lbname_to_string l) (Print.typ_to_string (Util.comp_result c));
+         if debug env Options.Medium then Util.print3 "(%s) Generalized %s to %s" (Range.string_of_range e.pos) (Print.lbname_to_string l) (Print.typ_to_string (Util.comp_result c));
       (l, e, c)) lecs ecs
 
-let unresolved u = match Unionfind.find u with
-    | Uvar -> true
-    | _ -> false
+let check_unresolved_implicits g = 
+    let unresolved u = match Unionfind.find u with
+        | Uvar -> true
+        | _ -> false in
+    match g.implicits |> List.tryFind (function Inl u -> false | Inr (u, _) -> unresolved u) with
+        | Some (Inr(_, r)) -> raise (Error("Unresolved implicit argument", r))
+        | _ -> ()
 
 let check_top_level env g lc : (bool * comp) =
   let discharge g =
     try_discharge_guard env g;
-    begin match g.implicits |> List.tryFind (function Inl u -> false | Inr (u, _) -> unresolved u) with
-        | Some (Inr(_, r)) -> raise (Error("Unresolved implicit argument", r))
-        | _ -> ()
-    end;
+    check_unresolved_implicits g;
     Util.is_pure_lcomp lc in
   let g = Rel.solve_deferred_constraints env g in
   if Util.is_total_lcomp lc
@@ -1270,8 +1279,8 @@ let pure_or_ghost_pre_and_post env comp =
                               let as_req, as_ens = match Tc.Env.lookup_typ_abbrev env Const.as_requires, Tc.Env.lookup_typ_abbrev env Const.as_ensures with
                                 | Some x, Some y -> x, y
                                 | _ -> failwith "Impossible" in
-                              let req = mk_Typ_app(as_req, [(Inl ct.result_typ, Some Implicit); targ wp]) (Some mk_Kind_type) ct.result_typ.pos in
-                              let ens = mk_Typ_app(as_ens, [(Inl ct.result_typ, Some Implicit); targ wlp]) None ct.result_typ.pos in
+                              let req = mk_Typ_app(as_req, [(Inl ct.result_typ, Some <| Implicit false); targ wp]) (Some mk_Kind_type) ct.result_typ.pos in
+                              let ens = mk_Typ_app(as_ens, [(Inl ct.result_typ, Some <| Implicit false); targ wlp]) None ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
                             | _ -> failwith "Impossible"
                         end

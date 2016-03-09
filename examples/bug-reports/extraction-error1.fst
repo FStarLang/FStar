@@ -1,13 +1,3 @@
-(*--build-config
-    options:--z3timeout 10 --verify_module Bug --codegen OCaml --admit_fsi FStar.IO;
-    other-files:
-            ext.fst classical.fst
-            set.fsi set.fst
-            heap.fst st.fst all.fst
-            string.fst list.fst
-            io.fsti
-  --*)
-
 module Bug
 
 open FStar.All

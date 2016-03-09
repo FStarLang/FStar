@@ -1,9 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi FStar.Seq  --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj PSemantics --verify_module Crypto;
-    variables:CONTRIB=../../contrib;
-    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst $CONTRIB/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst
- --*)
-
 module Crypto
 
 open FStar.OrdMap

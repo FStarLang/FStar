@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --verify_module Bug;
-    other-files:classical.fst ext.fst set.fsi heap.fst
-  --*)
-
 module Bug
 open FStar.Heap
 

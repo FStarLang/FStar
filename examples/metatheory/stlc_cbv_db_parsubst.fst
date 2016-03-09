@@ -1,6 +1,3 @@
-(*--build-config
-    other-files: constr.fst classical.fst ext.fst stlc_strong_db_parsubst.fst
-  --*)
 (*
    Copyright 2008-2014 Catalin Hritcu, Nikhil Swamy, Microsoft Research and Inria
 

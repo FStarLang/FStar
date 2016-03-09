@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi Prins --admit_fsi FStar.String --admit_fsi FStar.IO;
-    other-files:set.fsi heap.fst st.fst all.fst list.fst listTot.fst string.fsi ordset.fsi ../prins.fsi io.fsti;
- --*)
-
 module FFI
 
 open OrdSet

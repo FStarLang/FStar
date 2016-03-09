@@ -7,3 +7,5 @@ let alloc = (fun x -> ref x)
 let new_region = (fun r0 -> ())
 let ralloc = (fun i x -> ref x)
 let recall = (fun i r -> ())
+let recall_region i = ()
+let get () = failwith "Extraction should not generate calls to get"

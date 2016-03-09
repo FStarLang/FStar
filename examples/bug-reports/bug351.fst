@@ -1,6 +1,3 @@
-(*--build-config
-  other-files: constr.fst
-  --*)
 module Bug351
 
 // Failed attempts to reproduce #351

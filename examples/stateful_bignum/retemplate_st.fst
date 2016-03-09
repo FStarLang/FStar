@@ -1,9 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Retemplate --z3timeout 3000 --max_fuel 15 --max_ifuel 15 --initial_fuel 5 --initial_ifuel 5;
-    variables:LIB=../../lib;
-    other-files:$LIB/classical.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/seq.fsi $LIB/seqproperties.fst $LIB/arr.fst $LIB/ghost.fst axiomatic.fst intlib.fst limb.fst bigint_st.fst eval_st.fst
-  --*)
-
 module Retemplate 
 
 open IntLib

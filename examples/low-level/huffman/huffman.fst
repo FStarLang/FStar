@@ -1,9 +1,3 @@
-(*--build-config
-    other-files:ext.fst set.fsi set.fst heap.fst st.fst all.fst list.fst ../stack.fst ../listset.fst
-    ghost.fst ../located.fst ../lref.fst ../stackAndHeap.fst ../sst.fst ../rstWhile.fst constr.fst ../word.fst seq.fsi seq.fst ../array.fsi
-     ../array.fst ../arrayAlgos.fst
-  --*)
-
 module Huffman
 
 open FStar.Regions.RST

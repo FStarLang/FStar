@@ -25,6 +25,11 @@ open System.IO.Compression
 
 let return_all x = x
 
+type time = System.DateTime
+let now () = System.DateTime.Now
+let time_diff (t1:time) (t2:time) : float =
+    let ts = t2 - t1 in ts.TotalSeconds
+
 exception Impos
 exception NYI of string
 exception Failure of string
@@ -147,7 +152,7 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   let stderr = proc.StandardError.ReadToEnd() in
   result, stdout, stderr
 
-let get_file_extension (fn: string) :string = Path.GetExtension fn
+let get_file_extension (fn: string) :string = (Path.GetExtension fn).[1..]
 let is_path_absolute p = System.IO.Path.IsPathRooted(p)
 let join_paths p0 p1 = System.IO.Path.Combine(p0, p1)
 let normalize_file_path (path:string) = System.IO.Path.GetFullPath(path)
@@ -209,8 +214,8 @@ let smap_of_list<'value> (l:list<string*'value>) =
     List.iter (fun (x,y) -> smap_add s x y) l;
     s
 let smap_try_find (m:smap<'value>) k = m.TryFind(k)
-let smap_fold (m:smap<'value>) f a = 
-    let out = ref a in 
+let smap_fold (m:smap<'value>) f a =
+    let out = ref a in
     for entry in m do
         out := f entry.Key entry.Value !out;
     !out
@@ -291,17 +296,51 @@ let format5 f a b c d e = format f [a;b;c;d;e]
 let format6 f a b c d e g = format f [a;b;c;d;e;g]
 
 
-let fprint1 a b = print_string <| format1 a b
-let fprint2 a b c = print_string <| format2 a b c
-let fprint3 a b c d = print_string <| format3 a b c d
-let fprint4 a b c d e = print_string <| format4 a b c d e
-let fprint5 a b c d e f = print_string <| format5 a b c d e f
-let fprint6 a b c d e f g = print_string <| format6 a b c d e f g
+let print1 a b = print_string <| format1 a b
+let print2 a b c = print_string <| format2 a b c
+let print3 a b c d = print_string <| format3 a b c d
+let print4 a b c d e = print_string <| format4 a b c d e
+let print5 a b c d e f = print_string <| format5 a b c d e f
+let print6 a b c d e f g = print_string <| format6 a b c d e f g
+
+let print s args = print_string <| format s args
+
+let stdout_isatty () = None:option<bool>
+
+// These functions have no effect in F#
+let colorize (s:string) (colors:(string * string)) = s
+let colorize_bold (s:string) = s
+let colorize_red (s:string) = s
+let colorize_cyan (s:string) = s
+// END
+
+let print_error s = pr "%s" (colorize_red ("Error: " ^ s))
+let print1_error a b = print_error <| format1 a b
+let print2_error a b c = print_error <| format2 a b c
+let print3_error a b c d = print_error <| format3 a b c d
+
+let print_warning s = pr "%s" (colorize_cyan ("Warning: " ^ s))
+let print1_warning a b = print_warning <| format1 a b
+let print2_warning a b c = print_warning <| format2 a b c
+let print3_warning a b c d = print_warning <| format3 a b c d
+
+
+type out_channel = TextWriter
+let stderr: out_channel = stderr
+let stdout: out_channel = stdout
+
+let fprint f s args = Printf.fprintf f "%s" (format s args)
 
 type either<'a,'b> =
   | Inl of 'a
   | Inr of 'b
 
+let is_left = function 
+  | Inl _ -> true
+  | _ -> false
+let is_right = function
+  | Inr _ -> true
+  | _ -> false
 let left = function
   | Inl x -> x
   | _ -> failwith "Not in left"
@@ -369,6 +408,11 @@ let map_opt opt f =
     match opt with
       | None -> None
       | Some x -> Some (f x)
+
+let iter_opt opt f =
+  match opt with
+  | None -> ()
+  | Some x -> f x
 
 let try_find_i f l =
     let rec aux i = function
@@ -516,7 +560,7 @@ let expand_environment_variable s =
   System.Environment.ExpandEnvironmentVariables ("%"^s^"%")
 
 let physical_equality (x:'a) (y:'a) = LanguagePrimitives.PhysicalEquality (box x) (box y)
-let check_sharing a b msg = if physical_equality a b then fprint1 "Sharing OK: %s\n" msg else fprint1 "Sharing broken in %s\n" msg
+let check_sharing a b msg = if physical_equality a b then print1 "Sharing OK: %s\n" msg else print1 "Sharing broken in %s\n" msg
 
 let is_letter_or_digit = Char.IsLetterOrDigit
 let is_punctuation = Char.IsPunctuation
@@ -581,4 +625,22 @@ let get_oreader (file:string) : oReader =
 
         close = r.Close
     }
+
+
+let getcwd () =
+  System.Environment.CurrentDirectory
+
+let readdir d =
+  List.ofArray (System.IO.Directory.GetFiles d)
+
+let file_exists f =
+  System.IO.File.Exists f || System.IO.Directory.Exists f
+
+let basename f =
+  System.IO.Path.GetFileName f
+
+let print_endline x =
+  print_endline x
+
+let map_option f opt = Option.map f opt
 

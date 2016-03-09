@@ -25,7 +25,8 @@ open FStar.Absyn.Syntax
 open FStar.Absyn.Util
 open FStar.Util
 open FStar.Tc.Env
-
+open FStar.Const
+open FStar.Ident
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -42,6 +43,7 @@ type step =
   | EtaArgs
   | Delta
   | DeltaHard
+  | UnfoldOpaque
   | Beta
   | DeltaComp
   | Simplify
@@ -49,6 +51,8 @@ type step =
   | Unmeta
   | Unlabel
 and steps = list<step>
+
+// VALS_HACK_HERE
 
 type config<'a> = {code:'a;
                    environment:environment;
@@ -316,13 +320,17 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
       rebuild config
 
     | Typ_const fv ->
-      if config.steps |> List.contains DeltaHard
-        || (config.steps |> List.contains Delta && not <| is_stack_empty config) //delta only if reduction is blocked
-      then match Tc.Env.lookup_typ_abbrev tcenv fv.v with
+      let topt = if config.steps |> List.contains UnfoldOpaque
+                 then Tc.Env.lookup_opaque_typ_abbrev tcenv fv.v 
+                 else if config.steps |> List.contains DeltaHard
+                      || (config.steps |> List.contains Delta && not <| is_stack_empty config) //delta only if reduction is blocked
+                 then Tc.Env.lookup_typ_abbrev tcenv fv.v 
+                 else None in 
+      begin match topt with 
           | None -> rebuild config
           | Some t -> (* delta(); *)
             sn tcenv ({config with code=t})
-      else rebuild config
+      end
 
     | Typ_btvar a ->
       begin match lookup_env config.environment a.v.realname.idText with
@@ -387,7 +395,7 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                 | Typ_fun(bs, comp) ->
                   let binders, environment = sn_binders tcenv bs config.environment config.steps in
                   let c2 = sncomp tcenv (c_config comp environment config.steps) in
-                  {config with code=wk <| mk_Typ_fun(binders, c2.code)}
+                  rebuild ({config with code=wk <| mk_Typ_fun(binders, c2.code)})
 
                 | Typ_refine(x, t) ->
                   begin match sn_binders tcenv [v_binder x] config.environment config.steps with
@@ -397,7 +405,7 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                                  code=t;
                                  environment=env;
                                  stack=empty_stack;
-                                 steps=config.steps})
+                                 steps=config.steps |> List.filter (function UnfoldOpaque -> false | _ -> true)})
                     | _ -> failwith "Impossible"
                   end
 
@@ -420,8 +428,8 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                           match config.environment.label_suffix with
                               | (b', sfx)::_ ->
                                   if b'=None || Some b=b'
-                                  then (if Tc.Env.debug tcenv Options.Low then Util.fprint2 "Stripping label %s because of enclosing refresh %s\n" l (Range.string_of_range sfx); t)
-                                  else (if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Normalizer refreshing label: %s\n" (Range.string_of_range sfx);
+                                  then (if Tc.Env.debug tcenv Options.Low then Util.print2 "Stripping label %s because of enclosing refresh %s\n" l (Range.string_of_range sfx); t)
+                                  else (if Tc.Env.debug tcenv Options.Low then Util.print1 "Normalizer refreshing label: %s\n" (Range.string_of_range sfx);
                                         wk <| mk_Typ_meta'(Meta_labeled(t, l, sfx, b)))
                               | _ -> wk <| mk_Typ_meta'(Meta_labeled(t, l, r, b))  in
                     sn tcenv ({config with code=t; close=close_with_config config lab})
@@ -430,7 +438,7 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                   if unmeta config then
                     sn tcenv ({config with code=t})
                   else
-                   let sfx = match b with Some false -> r | _ -> dummyRange in
+                   let sfx = match b with | Some false -> r | _ -> dummyRange in
                    let config = {config with code=t; environment={config.environment with label_suffix=(b, sfx)::config.environment.label_suffix}} in
                    sn tcenv config
 
@@ -716,7 +724,7 @@ let norm_exp steps tcenv e =
 
 let norm_sigelt tcenv = function
     | Sig_let(lbs, r, l, b) ->
-      let e = mk_Exp_let(lbs, mk_Exp_constant(Syntax.Const_unit) None r) None r in
+      let e = mk_Exp_let(lbs, mk_Exp_constant(Const_unit) None r) None r in
       let e = norm_exp [Beta] tcenv e in
       begin match e.n with
         | Exp_let(lbs, _) -> Sig_let(lbs, r, l, b)
@@ -767,8 +775,8 @@ let formula_norm_to_string tcenv f =
 let comp_typ_norm_to_string tcenv c =
   Print.comp_typ_to_string (norm_comp [Beta;SNComp;Unmeta] tcenv c)
 
-let normalize_refinement env t0 =
-   let t = norm_typ [Beta; WHNF; DeltaHard] env t0 in
+let normalize_refinement steps env t0 =
+   let t = norm_typ ([Beta; WHNF; DeltaHard]@steps) env t0 in
    let rec aux t =
     let t = Util.compress_typ t in
     match t.n with

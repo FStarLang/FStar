@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.Map --admit_fsi FStar.HyperHeap --max_fuel 0 --initial_ifuel 0 --logQueries --z3timeout 20;
-    other-files:ext.fst set.fsi heap.fst map.fsi listTot.fst hyperHeap.fsi stHyperHeap.fst allHyperHeap.fst util.fst list.fst
---*)
 module Robot
 #set-options "--initial_ifuel 1 --max_ifuel 1"
 open FStar.Heap

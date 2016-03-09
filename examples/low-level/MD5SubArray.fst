@@ -1,9 +1,3 @@
-(*--build-config
-    options:--admit_fsi Set --z3timeout 50;
-    other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst  stack.fst listset.fst
-    ghost.fst seq.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst constr.fst word.fst mvector.fsi mvector.fst MD5Common.fst
-  --*)
-
 (*this file is not being maintained anymore*)
 module MD5SubArray
 open FStar.Regions.RSTWhile

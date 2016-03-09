@@ -10,6 +10,7 @@
     <RootNamespace>parser</RootNamespace>
     <AssemblyName>parser</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>parser</Name>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\VS\</SolutionDir>
@@ -19,24 +20,23 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin</OutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <WarningLevel>1</WarningLevel>
+    <WarningLevel>5</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <NoWarn>
-    </NoWarn>
+    <NoWarn>1178</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
+    <WarningLevel>4</WarningLevel>
     <OtherFlags>--mlcompatibility</OtherFlags>
     <DocumentationFile>bin\Release\parser.XML</DocumentationFile>
   </PropertyGroup>
@@ -85,12 +85,22 @@
     <Compile Include="dsenv.fs" />
     <Compile Include="desugar.fsi" />
     <Compile Include="desugar.fs" />
+    <Compile Include="env.fsi" />
+    <Compile Include="env.fs" />
+    <Compile Include="tosyntax.fsi" />
+    <Compile Include="tosyntax.fs" />
     <Compile Include="parseit.fsi" />
     <Compile Include="parseit.fs" />
     <Compile Include="driver.fs" />
     <Content Include="packages.config" />
+    <Compile Include="dep.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\syntax\syntax.fsproj">
+      <Name>syntax</Name>
+      <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\tc\tc.fsproj">
       <Name>tc</Name>
       <Project>{5bf4af3f-bec2-4cfd-94b7-11a38a031f4b}</Project>
@@ -110,6 +120,9 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
     <ProjectReference Include="..\absyn\absyn.fsproj">
       <Name>absyn</Name>
       <Project>{13e8984e-188d-447b-b7b7-9f7441050565}</Project>

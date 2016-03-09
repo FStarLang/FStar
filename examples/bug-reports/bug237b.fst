@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst
-  --*)
 module Bug237b
 
 (* Can only reproduce one of the problems with k_foralle.

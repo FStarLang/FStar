@@ -1,5 +1,4 @@
 include ../Makefile.include
 
 all:
-	$(FSTAR) set.fsi heap.fst st.fst all.fst list.fst --admit_fsi FStar.Set \
-        2015/01.fst
+	$(FSTAR) FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst 2015/01.fst

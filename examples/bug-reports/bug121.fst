@@ -1,6 +1,3 @@
-(*--build-config
-    other-files:ext.fst
-  --*)
 module Bug121FunctionNotEqualToItsDefinition
 
 open FunctionalExtensionality

@@ -1,7 +1,3 @@
-(*--build-config
-    other-files:list.fst
---*)
-
 module Bug254
 open List
 

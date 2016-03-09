@@ -1,9 +1,3 @@
-(*--build-config
-    other-files:ext.fst set.fsi set.fst heap.fst st.fst all.fst list.fst  stack.fst listset.fst
-    ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst constr.fst word.fst seq.fsi seq.fst array.fsi
-     array.fst MD5Common.fst arrayAlgos.fst
-  --*)
-
 (*Why is MD5 so? Why did its designer(s) think
   it was a good way to convolute bits?
   Is there a principle behind its design? or just random convolutery?

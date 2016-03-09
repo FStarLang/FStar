@@ -1,7 +1,3 @@
-(*--build-config
-    options:--warn_top_level_effects;
-    other-files:squash.fsti;
---*)
 module FStar.Squash
 
 (* This file shows that there is another natural model for some of the

@@ -1,9 +1,3 @@
-(*--build-config
-    options:--admit_fsi Set --z3timeout 10;
-    other-files:ext.fst set.fsi heap.fst st.fst list.fst  stack.fst listset.fst
-    ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst seq.fsi seq.fst word.fst
-  --*)
-
 (*Why is MD5 so? Why did its designer(s) think
   it was a good way to convolute bits?
   Is there a principle behind its design? or just random convolutery?

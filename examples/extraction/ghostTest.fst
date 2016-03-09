@@ -1,8 +1,3 @@
-(*--build-config
- other-files: ext.fst set.fsi set.fst heap.fst st.fst all.fst ghost.fst list.fst
-  --*)
-
-
 module GhostTest
 
 open Ghost

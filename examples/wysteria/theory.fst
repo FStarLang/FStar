@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi Ffibridge --z3timeout 10 --__temp_no_proj PSemantics --__temp_no_proj Metatheory;
-    other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi constr.fst ext.fst classical.fst prins.fsi ast.fst ffibridge.fsi sem.fst psem.fst
- --*)
-
 module Metatheory
 
 open FStar.Ghost
@@ -44,6 +39,8 @@ let slice_r_sps ps r = match r with
   | R_mkwire ps' v         -> R_mkwire ps' (D_v.v (slice_v_sps ps v))
   | R_projwire p v         -> R_projwire p (D_v.v (slice_v_sps ps v))
   | R_concatwire v1 v2     -> R_concatwire (D_v.v (slice_v_sps ps v1)) (D_v.v (slice_v_sps ps v2))
+  | R_mksh v               -> R_mksh (D_v.v (slice_v_sps ps v))
+  | R_combsh v             -> R_combsh (D_v.v (slice_v_sps ps v))  
   | R_let x v1 e2          -> R_let x (D_v.v (slice_v_sps ps v1)) e2
   | R_app v1 v2            -> R_app (D_v.v (slice_v_sps ps v1)) (D_v.v (slice_v_sps ps v2))
   | R_ffi 'a 'b n fn vs inj  -> R_ffi n fn (slice_vs_sps ps vs) inj
@@ -63,6 +60,8 @@ let slice_f'_sps ps f = match f with
   | F_projwire_e _           -> f
   | F_concatwire_e1 _        -> f
   | F_concatwire_e2 v        -> F_concatwire_e2 (D_v.v (slice_v_sps ps v))
+  | F_mksh                   -> f
+  | F_combsh                 -> f
   | F_let      _ _           -> f
   | F_app_e1     _           -> f
   | F_app_e2     v           -> F_app_e2  (D_v.v (slice_v_sps ps v))
@@ -320,6 +319,14 @@ let sstep_sec_slice_lemma c c' h = match h with
     Conj () (C_assec_beta (slice_c_sps c) (slice_c_sps c'))
   | C_assec_ret c c'       -> Conj () (C_assec_ret (slice_c_sps c) (slice_c_sps c'))
 
+  | C_mksh c c'            -> Conj () (C_mksh (slice_c_sps c) (slice_c_sps c'))
+  | C_mksh_red c c'        -> Conj () (C_mksh_red (slice_c_sps c) (slice_c_sps c'))
+  | C_mksh_beta c c'       -> Conj () (C_mksh_beta (slice_c_sps c) (slice_c_sps c'))
+
+  | C_combsh c c'          -> Conj () (C_combsh (slice_c_sps c) (slice_c_sps c'))
+  | C_combsh_red c c'      -> Conj () (C_combsh_red (slice_c_sps c) (slice_c_sps c'))
+  | C_combsh_beta c c'     -> Conj () (C_combsh_beta (slice_c_sps c) (slice_c_sps c'))
+
 #reset-options
 (**********)
 
@@ -354,6 +361,8 @@ let slice_r p r = match r with
   | R_mkwire ps v          -> R_mkwire ps (D_v.v (slice_v p v))
   | R_projwire p' v        -> R_projwire p' (D_v.v (slice_v p v))
   | R_concatwire v1 v2     -> R_concatwire (D_v.v (slice_v p v1)) (D_v.v (slice_v p v2))
+  | R_mksh v               -> R_mksh (D_v.v (slice_v p v))
+  | R_combsh v             -> R_combsh (D_v.v (slice_v p v))
   | R_let x v1 e2          -> R_let x (D_v.v (slice_v p v1)) e2
   | R_app v1 v2            -> R_app (D_v.v (slice_v p v1)) (D_v.v (slice_v p v2))
   | R_ffi 'a 'b n fn vs inj  -> R_ffi n fn (slice_vs p vs) inj
@@ -376,6 +385,8 @@ let slice_f' p f = match f with
   | F_projwire_e _           -> f
   | F_concatwire_e1 _        -> f
   | F_concatwire_e2 v        -> F_concatwire_e2 (D_v.v (slice_v p v))
+  | F_mksh                   -> f
+  | F_combsh                 -> f
   | F_let _ _                -> f
   | F_app_e1 _               -> f
   | F_app_e2 v               -> F_app_e2 (D_v.v (slice_v p v))
@@ -399,17 +410,18 @@ val slice_f: p:prin -> f:frame{Mode.m (Frame.m f) = Par    /\
 let slice_f p (Frame _ en f tr) = Frame (Mode Par (singleton p)) (slice_en p en)
                                         (slice_f' p f) (slice_tr p tr)
 
-val slice_s: p:prin -> s:stack
+val slice_s: p:prin -> m:mode -> s:stack{stack_source_inv s m}
              -> Tot (r:stack{stack_target_inv r (Mode Par (singleton p))})
-let rec slice_s p s = match s with
+	       (decreases s)
+let rec slice_s p m s = match s with
   | []     -> []
   | hd::tl ->
     if Mode.m (Frame.m hd) = Par    &&
        mem p (Mode.ps (Frame.m hd))
      then
-      (slice_f p hd)::(slice_s p tl)
+      (slice_f p hd)::(slice_s p (Frame.m hd) tl)
     else
-      slice_s p tl
+      slice_s p (Frame.m hd) tl
 
 val slice_t: p:prin -> t:term{not (t = T_sec_wait)} -> Tot term
 let slice_t p t = match t with
@@ -430,7 +442,7 @@ let rec slice_c p (Conf Source (Mode as_m ps) s en t tr) =
       if as_m = Par then slice_en p en, slice_t p t, slice_tr p tr
       else slice_en p (get_sec_ret_env (Mode as_m ps) s), T_sec_wait, hide []
   in
-  Conf Target (Mode Par (singleton p)) (slice_s p s) en' t' tr'
+  Conf Target (Mode Par (singleton p)) (slice_s p (Mode as_m ps) s) en' t' tr'
 
 (**********)
 
@@ -475,6 +487,7 @@ let rec slice_lem_singl_v #m v p = match v with
   | V_clos en _ _        -> slice_lem_singl_en en p
   | V_fix_clos en _ _ _  -> slice_lem_singl_en en p
   | V_emp_clos _ _       -> ()
+  | V_sh _ v _           -> slice_lem_singl_v v p
   | V_emp                -> ()
 
 and slice_lem_singl_en_x en p x =
@@ -548,6 +561,7 @@ let rec box_slice_lem #m v ps1 ps2 =
       let _ = cut (b2t (subset eps ps2)) in
       boxed_wire_value_slice_lem ps1 ps2 eps w all
     | V_emp_clos _ _       -> ()
+    | V_sh _ v _           -> box_slice_lem v ps1 ps2
     | V_emp                -> ()
 
 val de_morgan_union_over_intersect:
@@ -635,6 +649,7 @@ let rec slc_v_lem_ps #m v p ps = match v with
   | V_clos en _ _       -> slc_en_lem_ps en p ps
   | V_fix_clos en _ _ _ -> slc_en_lem_ps en p ps
   | V_emp_clos _ _      -> ()
+  | V_sh _ v _          -> slc_v_lem_ps v p ps
   | V_emp               -> ()
 
 and slc_en_x_lem_ps en p ps x =
@@ -1058,6 +1073,14 @@ let sstep_par_slice_lemma c c' h p =
     | C_assec_beta _ _ -> IntroL ()
     | C_assec_ret _ _ -> IntroL ()
 
+    | C_mksh _ _ -> IntroL ()
+    | C_mksh_red _ _ -> IntroL ()
+    | C_mksh_beta _ _ -> IntroL ()
+
+    | C_combsh _ _ -> IntroL ()
+    | C_combsh_red _ _ -> IntroL ()
+    | C_combsh_beta _ _ -> IntroL ()
+
 #reset-options
 (**********)
 
@@ -1322,6 +1345,7 @@ let rec slice_v_lem_singl_of_ps #m v ps p = match v with
   | V_clos en _ _       -> slice_en_lem_singl_of_ps en ps p
   | V_fix_clos en _ _ _ -> slice_en_lem_singl_of_ps en ps p
   | V_emp_clos _ _      -> ()
+  | V_sh _ v _          -> slice_v_lem_singl_of_ps v ps p
   | V_emp               -> ()
 
 and slice_en_x_lem_singl_of_ps en ps p x =
@@ -2599,6 +2623,10 @@ let rec composable_vals dv1 dv2 = match dv1, dv2 with
   | D_v _ (V_fix_clos en1 f1 x1 e1), D_v _ (V_fix_clos en2 f2 x2 e2) ->
     f1 = f2 && x1 = x2 && e1 = e2 && composable_envs en1 en2
   | D_v _ (V_emp_clos x1 e1), D_v _ (V_emp_clos x2 e2) -> x1 = x2 && e1 = e2
+  | D_v _ (V_sh ps1 v1 b1), D_v _ (V_sh ps2 v2 b2) ->
+    ps1 = ps2 && b1 = b2 &&
+    composable_vals (D_v (Meta empty Can_b empty Can_w) v1)
+                    (D_v (Meta empty Can_b empty Can_w) v2)
   | D_v _ V_emp, _ -> true
   | _, D_v _ V_emp -> true
   | _, _ -> false

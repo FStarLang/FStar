@@ -1,8 +1,3 @@
-(*--build-config
-  options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Limb;
-  other-files:classical.fst seq.fsi seqproperties.fst set.fsi heap.fst st.fst all.fst ghost.fst axiomatic.fst intlib.fst;
-  --*)
-
 (* 
   This file contains functions and lemmas related to memory safety when 
   manipulating "concrete" integers which may overflow.

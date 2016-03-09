@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi Set;
-    variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst
-  --*)
 module While
 open Heap
 open ST

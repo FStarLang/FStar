@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Ffibridge --admit_fsi FStar.Squash --__temp_no_proj PSemantics --verify_module RuntimeTheory;
-    other-files:classical.fst ghost.fst squash.fsti listTot.fst ordset.fsi ordmap.fsi prins.fst ast.fst ffibridge.fsi sem.fst psem.fst
- --*)
-
 module RuntimeTheory
 
 open FStar.Ghost

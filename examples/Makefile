@@ -12,8 +12,8 @@ all:
 	make -C software_foundations
 	make -C ../doc/tutorial/code/solutions
 	make -C relational
+	make -C voting
 	make -C low-level
-#	make -C low-star
 	make -C maths
 	make -C paradoxes
 	make -C printf
@@ -35,7 +35,7 @@ all:
 
 test: all
 
-stdlib: $(addprefix ../lib/, list.fst string.fst partialmap.fst st.fst listproperties.fst)
+stdlib: $(addprefix ../lib/, FStar.List.fst FStar.String.fsti partialmap.fst FStar.ST.fst FStar.ListProperties.fst)
 	mkdir -p ../cache
 	../bin/fstar.exe $(OTHERFLAGS) $^ --serialize_mods
 

@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 15;
-    other-files:set.fsi heap.fst st.fst all.fst st2.fst
---*)
-
 module Monotonicity
 open FStar.Relational
 open FStar.RelationalState

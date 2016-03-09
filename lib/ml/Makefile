@@ -1,9 +1,28 @@
-FILES=prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_Option.ml FStar_Char.ml FStar_String.ml FStar_Util.ml FStar_Unionfind.ml FStar_Platform.ml FStar_Getopt.ml FStar_Range.ml FStar_Bytes.ml FStar_Parser_Util.ml FStar_Set.ml FStar_Set.ml FStar_Set.ml
-OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
-OCAMLDEP=ocamldep
-OBJS=$(FILES:.ml=.o)
+# The variable below can be configured from the outside. For instance:
+# $(MAKE) -C $(FSTAR_HOME)/lib/ml hyperheap PRIMS_DIR=native_int
+PRIMS_DIR=.
 
-all_objs: $(OBJS)
+PRIMS=MkPrims.ml $(PRIMS_DIR)/prims.ml
+COMMON=FStar_All.ml FStar_IO.ml FStar_Heap.ml FStar_List.ml FStar_Option.ml FStar_Char.ml FStar_String.ml FStar_Set.ml
+FILES=$(PRIMS) FStar_ST.ml $(COMMON)
+HYPERHEAP=$(PRIMS) ./hyperheap/FStar_ST.ml $(COMMON) ./hyperheap/FStar_HyperHeap.ml
+
+OCAMLOPT=ocamlfind opt -thread -package batteries -linkpkg -g $(INCLUDES)
+OCAMLDEP=ocamlfind dep
+OCAMLMKLIB=ocamlfind mklib
+
+OBJS=$(FILES:.ml=.o)
+CMX=$(FILES:.ml=.cmx)
+HH_OBJS=$(HYPERHEAP:.ml=.o)
+HH_CMX=$(HYPERHEAP:.ml=.cmx)
+
+# Note: because of the way we either prepend the regular ST or the hyperheap ST,
+# you must always clean before running either "make" or "make hyperheap".
+all: $(OBJS)
+	ocamlopt -a $(CMX) -o fstarlib.cmxa
+
+hyperheap: $(HH_OBJS)
+	ocamlopt -a $(HH_CMX) -o fstarlib-hyperheap.cmxa
 
 # Common rules
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
@@ -12,9 +31,11 @@ all_objs: $(OBJS)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
 
 depend:
-	$(OCAMLDEP) $(INCLUDES) $(FILES) > .depend
+	$(OCAMLDEP) -I native_int -I hyperheap $(FILES) $(HYPERHEAP) > .depend
+
+CLEAN=*.cmi *.cmo *.cmx *.exe *.o *.a *.cmxa *~
 
 clean:
-	rm -f *.cmi *.cmo *.cmx *.exe *.o *~
+	rm -f $(CLEAN) $(addprefix hyperheap/,$(CLEAN)) $(addprefix native_int/,$(CLEAN))
 
 -include .depend

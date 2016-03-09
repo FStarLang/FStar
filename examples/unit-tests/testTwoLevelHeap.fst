@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.Map --logQueries;
-    other-files:../../lib/set.fsi ../../lib/heap.fst ../../lib/st.fst ../../lib/all.fst ../../lib/map.fsi ../../lib/twoLevelHeap.fst
- --*)
-
 module TestTwoLevelHeap
 open FStar.TwoLevelHeap
 

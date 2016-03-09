@@ -1,7 +1,3 @@
-(*--build-config
-    other-files:../../lib/int64.fst
- --*)
-
 module TestInt64
 open Int64
 let f0 (x:nat64) : int64 = x - 1L

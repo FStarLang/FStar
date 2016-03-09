@@ -1,6 +1,3 @@
-(*--build-config
-    other-files:ext.fst set.fsi
-  --*)
 module MachineWord
 
 (*copied fro examples/maths/bijection.fst, because that file doesn't compile*)

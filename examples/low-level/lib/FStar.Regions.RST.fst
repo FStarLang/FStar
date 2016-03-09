@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files:ext.fst set.fsi ghost.fst listTot.fst FStar.Stack.fst FStar.Regions.Located.fst FStar.Regions.Heap.fst FStar.Regions.Regions.fst
-  --*)
-
 module FStar.Regions.RST
 
 (** This module defines the [FStar.Regions.RST] effect of computations that occur within our

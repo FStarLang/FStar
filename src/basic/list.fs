@@ -86,6 +86,11 @@ end
 in (iter f tl))
 end))
 
+let rec iter2 f l m = match l, m with 
+    | [], [] -> ()
+    | x::l, y::m -> f x y; iter2 f l m
+    | _ -> failwith "iter2: unequal list lengths"
+
 let map = (fun ( f  :  'a  ->  'b ) ( x  :  'a Prims.list ) -> List.map f x)
 
 let rec mapi_init = (fun ( f  :  Prims.int  ->  'a  ->  'b ) ( l  :  'a Prims.list ) ( i  :  Prims.int ) -> (match (l) with
@@ -270,4 +275,8 @@ let rec unique l =
     else 
       h::(unique t)
 
+let rec iteri_aux i f x = match x with
+  | [] -> ()
+  | a::tl -> f i a; iteri_aux (i+1) f tl
+let iteri f x = iteri_aux 0 f x
 

@@ -14,7 +14,10 @@ cache/
 /src/parser/parse.ml
 /src/parser/parse.mli
 /src/parser/parse.mly
-
+/src/boot_fstis
+/src/boot_fsts
+/src/format/formatml.fsi
+/lib/FStar.Util.fsti
 
 /bin/*.dll
 /bin/*.pdb
@@ -29,11 +32,12 @@ cache/
 /src/*/obj
 
 examples/*/*.ml
+examples/wysteria/ocaml-output/*
 
 _build/
 
-*.native*
-*.byte*
+*.native
+*.byte
 
 queries*.smt2
 transcript
@@ -48,4 +52,16 @@ dump
 *.a
 *.cmxa
 *.so
+*.annot
 /VS/
+
+tags
+
+*~
+*.swp
+
+/.nubuild
+/nucache/
+/nuobj/
+nubuild.log
+nubuild.progress

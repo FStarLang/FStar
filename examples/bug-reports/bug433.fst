@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --verify_module M;
-    other-files:set.fsi heap.fst st.fst all.fst
---*)
 module M
 
 // Substituting `pos` for a non-refined type makes `f` below typecheck

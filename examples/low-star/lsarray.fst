@@ -1,9 +1,3 @@
-(*--build-config
-  options:--verify_module LSarray;
-  variables:SST=../low-level;
-  other-files:classical.fst ext.fst set.fsi set.fst seq.fsi seq.fst heap.fst st.fst all.fst seqproperties.fst list.fst listTot.fst listproperties.fst $SST/stack.fst $SST/listset.fst ghost.fst $SST/located.fst $SST/lref.fst $SST/regions.fst $SST/rst.fst
-  --*)
-
 (* Infix representation of arrays for the SST monad *)
 
 module LSarray

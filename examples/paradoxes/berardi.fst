@@ -1,6 +1,3 @@
-(*--build-config
-    other-files:constr.fst classical.fst
-  --*)
 module Berardi
 
 open FStar.Constructive

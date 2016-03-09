@@ -1,14 +1,3 @@
-(*--build-config
-    options:--z3timeout 10 --verify_module Formatting --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    variables:MITLS=../../../mitls-fstar/libs/fst/;
-    other-files:
-            ext.fst classical.fst
-            set.fsi set.fst
-            heap.fst st.fst all.fst string.fst list.fst
-            seq.fsi seqproperties.fst
-            ../../contrib/Platform/fst/Bytes.fst
-  --*)
-
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -26,7 +15,7 @@
 *)
 
 module Formatting
-open Prims.PURE
+
 open FStar.String
 open FStar.Seq
 open FStar.SeqProperties

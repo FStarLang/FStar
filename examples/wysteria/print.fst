@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.IO --admit_fsi FStar.String;
-    other-files:set.fsi heap.fst st.fst all.fst io.fsti string.fsi ghost.fst ordset.fsi ordmap.fsi prins.fst ast.fst
- --*)
-
 module Print
 
 open FStar.String
@@ -68,7 +63,9 @@ let rec exp_to_string = function
     tagged_binary_to_string "E_projwire" (exp_to_string e1) (exp_to_string e2)
   | E_concatwire e1 e2 ->
     tagged_binary_to_string "E_concatwire" (exp_to_string e1) (exp_to_string e2)
-
+  | E_mksh e           -> tagged_unary_to_string "E_mksh" (exp_to_string e)
+  | E_combsh e         -> tagged_unary_to_string "E_combsh" (exp_to_string e)
+  
   | E_const c          -> 
     tagged_unary_to_string "E_const" (const_to_string c)
   | E_var x            ->
@@ -129,6 +126,7 @@ let rec value_to_string #meta v =
 	tagged_binary_to_string "V_fix_clos" (name_of_var f) (name_of_var x)
       | V_emp_clos x _       ->
         tagged_unary_to_string "V_emp_clos" (name_of_var x)
+      | V_sh ps v _          -> tagged_unary_to_string "V_sh" (value_to_string v)
       | V_emp                -> "V_emp"
   in
   strcat (strcat (strcat s " (") (v_meta_to_string meta)) ")"
@@ -154,6 +152,8 @@ let redex_to_string = function
   | R_mkwire _ _       -> "R_mkwire"
   | R_projwire _ _     -> "R_projwire"
   | R_concatwire _ _   -> "R_concatwire"
+  | R_mksh _           -> "R_mksh"
+  | R_combsh _         -> "R_combsh"
   | R_let _ _ _        -> "R_let"
   | R_app _ _          -> "R_app"
   | R_ffi 'a 'b _ _ _ _  -> "R_ffi"
@@ -185,6 +185,8 @@ let frame'_to_string = function
   | F_projwire_e _      -> "F_projwire_e"
   | F_concatwire_e1 _   -> "F_concatwire_e1"
   | F_concatwire_e2 _   -> "F_concatwire_e2"
+  | F_mksh              -> "F_mksh"
+  | F_combsh            -> "F_combsh"
   | F_let _ _           -> "F_let"
   | F_app_e1 _          -> "F_app_e1"
   | F_app_e2 _          -> "F_app_e2"

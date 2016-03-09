@@ -1,7 +1,3 @@
-(*--build-config
-    other-files:int8.fst
- --*)
-
 module TestInt8
 open FStar.Int8
 let f0 (x:nat8) : int8 = x - 1y

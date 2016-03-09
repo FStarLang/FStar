@@ -1,6 +1,3 @@
-(*--build-config
-    other-files: constr.fst classical.fst ext.fst
-  --*)
 (*
    Copyright 2014-2015
      Simon Forest - Inria and ENS Paris

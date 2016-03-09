@@ -1,8 +1,3 @@
-(*--build-config
-  options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Bigint;
-  other-files:classical.fst ext.fst set.fsi seq.fsi seqproperties.fst heap.fst st.fst all.fst arr.fst ghost.fst axiomatic.fst intlib.fst limb.fst;
-  --*)
-
 module Bigint
 
 open IntLib

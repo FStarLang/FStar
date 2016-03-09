@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Carry --z3timeout 120 --max_fuel 15 --max_ifuel 15 --initial_fuel 5 --initial_ifuel 5;
-    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst arr.fst ghost.fst axiomatic.fst intlib.fst limb.fst bigint_st.fst eval_st.fst
-  --*)
 (* STATUS : lax type checks but not verified, work in progress *)
 
 module Carry

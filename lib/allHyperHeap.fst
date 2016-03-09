@@ -1,8 +1,4 @@
-(*--build-config
-    options:--admit_fsi Set --admit_fsi Map --admit_fsi HyperHeap;
-    other-files:set.fsi heap.fst map.fsi listTot.fst hyperHeap.fsi stHyperHeap.fst
- --*)
- (*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");

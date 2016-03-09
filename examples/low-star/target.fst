@@ -1,9 +1,3 @@
-(*--build-config
-    options:--admit_fsi Set --admit_fsi Seq --verify_module Target;
-  other-files:classical.fst ext.fst set.fsi seq.fsi heap.fst st.fst all.fst seqproperties.fst
-  --*)
-
-
 module Target
 
 open Seq

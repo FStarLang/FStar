@@ -1,7 +1,3 @@
-(*--build-config
-    other-files:../../lib/int31.fst
- --*)
-
 module TestInt31
 open Int31
 let f0 (x:nat31) : int31 = x - 1l

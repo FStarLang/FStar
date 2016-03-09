@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 15 --print_effect_args;
-    other-files:set.fsi heap.fst st.fst all.fst st2.fst
-  --*)
-
 module Test
 
 open FStar.Comp

@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files:set.fsi heap.fst st.fst all.fst bytes.fst sample.fst
-  --*)
-
 module Xor
 open FStar.Bytes
 open FStar.Bijection

@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.Map --z3timeout 25;
-    other-files:ext.fst set.fsi heap.fst map.fsi listTot.fst hyperHeap.fst stHyperHeap.fst
---*)
 module Robot
 
 open FStar.List

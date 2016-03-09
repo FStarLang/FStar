@@ -19,12 +19,12 @@
 
 
 module Bob
-open Bytes
+open FStar.Bytes
 open Crypto_interface
 open Assumptions
 
-(* -------------- Bob Implementation -------------- *)
-
+val bob : pub_id_t ->
+         cb:cipher{(FromBboth (fst cb) (snd cb)) /\ (exists (mLb:bytes) (mRb:bytes).((Encryptedboth mLb mRb (fst cb) (snd cb)) /\ (Marshboth (fst v2) (snd v1) mLb mRb)))}
 let bob pkBB =
   let v1Byt = i2b v1 in
   let v2Byt = i2b v2 in

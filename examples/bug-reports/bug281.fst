@@ -1,7 +1,3 @@
-(*--build-config
-    options:--z3timeout 20 --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2  --log_types --logQueries;
-    other-files:../../lib/classical.fst
-  --*)
 module Test
 
 (* Test of substitution on big terms *)

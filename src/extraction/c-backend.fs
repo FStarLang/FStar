@@ -24,7 +24,7 @@ open FStar
 open FStar.Util
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
-open FSharp.Format
+open FStar.Format
 
 (* String formatting functions *)
 let new_line = "\n"
@@ -171,10 +171,39 @@ let prim_constructors = [
 let is_prims_ns (ns : list<mlsymbol>) =
     ns = ["Prims"]
 
+let infix_low_ops = [
+    ("op_Hat_Plus"       , e_bin_prio_op1   , "+" );
+    ("op_Hat_Subtraction"    , e_bin_prio_op1   , "-" );
+    ("op_Hat_Star"       , e_bin_prio_op1   , "*" );
+    ("op_Hat_Slash"       , e_bin_prio_op1   , "/" );
+    ("op_Hat_Amp"         , e_bin_prio_op1   , "&");
+    ("op_Hat_Bar"         , e_bin_prio_op1   , "|");
+    ("op_Hat_Hat"        , e_bin_prio_op1    , "^");
+    ("op_Hat_Modulus"           , e_bin_prio_order , "%" );
+]
+
+(* -------------------------------------------------------------------- *)
+let low_uni_ops = [
+    ("op_Hat_Subtraction_Subtraction", "-")
+    ]
+
+(* -------------------------------------------------------------------- *)
+let low_types = []
+
+let low_ns = [["FStar"; "UInt8"]; ["FStar"; "UInt32"]; ["FStar";"UInt63"]; ["FStar";"UInt64"]]
+(* -------------------------------------------------------------------- *)
+let low_constructors = []
+
+(* -------------------------------------------------------------------- *)
+let is_low_ns (ns : list<mlsymbol>) =
+    List.contains ns low_ns
+
 (* -------------------------------------------------------------------- *)
 let as_bin_op ((ns, x) : mlpath) =
     if is_prims_ns ns then
         List.tryFind (fun (y, _, _) -> x = y) infix_prim_ops
+    else if is_low_ns ns then
+        List.tryFind (fun (y, _, _) -> x = y) infix_low_ops
     else
         None
 
@@ -309,6 +338,7 @@ let tag_of_expr e =
 type flag = | Yes | No | Unknown
 
 let return_flag = ref Unknown // true if return statement is to be printed
+let statement_printed_flag = ref Unknown // If statement has already been printed (e.g. with SBuffer.create)
 let end_of_block_flag = ref Unknown // true if the last statement of a block e.g. 'if' or 'switch' block is reached
 let application_flag = ref Unknown  // true if the next var to be printed is a function (and thus the module name has to 
                                     // be prepended to it
@@ -324,15 +354,24 @@ let unions : List<string> ref = ref (List.empty)
 
 (* -------------------------------------------------------------------- *)
 // Regular expressions 
-let parse_int_regex = new System.Text.RegularExpressions.Regex "\(Prims\.parse_int \"([0-9a-fA-FxX]+)\"\)"
+let parse_int_regex  = new System.Text.RegularExpressions.Regex "\(Prims\.parse_int \"([0-9a-fA-FxX]+)\"\)"
+let parse_int_regex2 = new System.Text.RegularExpressions.Regex "\([\w\s_]+->[\s]+\(Prims\.parse_int \"([0-9a-fA-FxX]+)\"\)\)"
+let implicit_regex   = new System.Text.RegularExpressions.Regex "\([\w\s_]+->[\s]+([0-9a-fA-FxX]+)\)"
 let projector_regex1 = new System.Text.RegularExpressions.Regex "___([\w_]+)____([0-9]+)"
 let projector_regex2 = new System.Text.RegularExpressions.Regex "([\w_\.]+)____([\w_]+)____([0-9]+)[\s]+(\([\w\s_]+\)|[\w]+)"
 let projector_regex3 = new System.Text.RegularExpressions.Regex "____([\w_]+)____([0-9]+)[\s]+(\([\w\s_]+\))"
 
 (* -------------------------------------------------------------------- *)
 // Printing functions
+let is_lib_fun e =
+    List.contains e ["Prims_parse_int"; 
+                     "SBuffer_create"; "SBuffer_index"; "SBuffer_upd"; "SBuffer_offset"; "SBuffer_blit"; "SBuffer_sub"; 
+                     "FStar_UInt32_of_string"; "FStar_UInt32_of_int";
+                     "FStar_SBytes_uint32_of_sbytes"]
+
 let string_of_mlident (ident:mlident) : string =
     let sym, _ = ident in
+    let sym = sym.Replace("'", "_prime") in
     sym
 
 let rec string_of_ml_type (t:mlty) : string =
@@ -350,11 +389,25 @@ let rec string_of_ml_type (t:mlty) : string =
                 | "Prims.string" -> "char*"
                 | "Prims.Tuple2" -> "_tuple2"
                 | "FStar.ST.ref" -> "*"
-                | "UInt.uint_std" -> "limb"
-                | "UInt.uint_wide" -> "wide"
+                | "UInt.uint_std" -> "limb"  // TODO: remove
+                | "UInt.uint_wide" -> "wide" // TODO: remove
+                | "FStar.UInt8.uint8" -> "char"
+                | "FStar.SBytes.uint32" -> "uint32"
+                | "FStar.SBytes.sbytes" -> "uint8*"
+                | "FStar.UInt32.uint32" -> "uint32"
+                | "FStar.UInt63.uint63" -> "uint64"
+                | "FStar.UInt64.uint64" -> "uint64"
+                | "FStar.UInt64.uint128" -> "uint128"
+                | "SBuffer.buffer" -> "*" // Should not appears, only the type bellow should appear in non library code
+                | "SBuffer.uint8s" -> "uint8*"
+                | "SBuffer.uint32s" -> "uint32*"
+                | "SBuffer.uint63s" -> "uint64*"
+                | "SBuffer.uint64s" -> "uint64*"
+                | "SBuffer.uint128s" -> "uint128*"
                 | _ -> typ.Replace('.', '_') in
         let other_types = List.map string_of_ml_type typs in
-        List.fold (fun s x -> s ^ x) "" (other_types@[typ])
+        let s = List.fold (fun s x -> s ^ x) "" (other_types@[typ]) in
+        if s = "voidSint_usint" then "uint" else s
         end
     | MLTY_Fun (t1, tag, t2) -> 
         string_of_ml_type t2 // prints the returned type only
@@ -389,6 +442,7 @@ let string_of_string (x:string) : string =
     let s = parse_int_regex.Replace(s, "$1") in
     // Replace ocaml namespaces with flag names
     let s = s.Replace(".", "_") in
+    let s = s.Replace("'", "_prime") in
     let s = s.Replace("FStar_ST_read", "*") in
     s
 
@@ -400,6 +454,9 @@ let replace_projectors s =
         projector_regex3.Replace(s, !current_module ^ "_$1_get_field_$2($3)")
         //projector_regex3.Replace(s, "($3).content.$1.field_$2" )
     else s
+
+let replace_constant s =
+    if parse_int_regex2.IsMatch(s) then parse_int_regex2.Replace(s, "$1") else s
 
 let strip_from_paren (s:string) =
     let len = s.Length in
@@ -414,6 +471,11 @@ let strip_from_paren (s:string) =
 
 (* -------------------------------------------------------------------- *)
 // Utility functions, not optimized
+let is_unit (t:mlty) : bool = 
+    match t with
+    | MLTY_Named (_, (["Prims"],"unit")) -> true
+    | _ -> false
+
 let is_deepest_let (e:mlexpr) =
     match e.expr with
     | MLE_Const _ 
@@ -433,7 +495,7 @@ let is_deepest_let (e:mlexpr) =
     | MLE_If _
     | MLE_Match _
     | MLE_Fun _
-    | MLE_Let _ -> Unknown
+    | MLE_Let _ -> if !return_flag = No then No else Unknown
 
 let is_last_in_block (e:mlexpr) =
     match e.expr with
@@ -537,8 +599,23 @@ and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) =
 (* -------------------------------------------------------------------- *)
 let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : string =
     let mk_last_statement (d:string) = 
-        if !return_flag = Yes then concat1 ["return "; d; ";"] else
-        if !end_of_block_flag = Yes then concat1 [!last_bound; "="; d; ";"] else d in
+        //Console.WriteLine(d ^ " -> " ^ !last_bound ^ " | " ^ (if !end_of_block_flag = Unknown then "Unknown" else if !end_of_block_flag = Yes then "Yes" else "No"));
+        if !return_flag = Yes then (
+            //print_string (tag_of_expr e ^ "\n");
+            concat1 ["return "; d; ";"] )
+        else if !statement_printed_flag = Yes then
+            begin
+                statement_printed_flag := No;
+                d
+            end
+        else if !end_of_block_flag = Yes then 
+            begin
+                let s = if !last_bound = "" then concat1 [d; ";"] else concat1 [!last_bound; "="; d; ";"] in
+                last_bound := "";
+                end_of_block_flag := Unknown;
+                s
+            end
+        else d in
     match e.expr with
     | MLE_Coerce (e, t, t') ->
         "\nBackend error in doc_of_expr : MLE_Coerce not handled \n"
@@ -620,6 +697,7 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
         let return_flag_init = !return_flag in
         return_flag := No;
         let end_of_block_flag_init = !end_of_block_flag in
+        end_of_block_flag := Unknown;
 
         // Different ways to handle it depending on the nature of the enclosed expression
         let doc  = string_of_lets currentModule (rec_, false, lets) in
@@ -638,31 +716,72 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
 
     | MLE_App (e, args) -> begin
         let return_flag_init = !return_flag in
-        return_flag := Unknown;
+        return_flag := No;
+        let end_of_block_flag_init = !end_of_block_flag in
+        end_of_block_flag := No;
+//        return_flag := Unknown;
         let doc = 
 //            Console.WriteLine (" " ^ tag_of_expr e);
 
             match e.expr, args with
-            | (MLE_Name p, [e1; e2]) when is_bin_op p -> 
-                string_of_binop currentModule p e1 e2
-
-            | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1; e2]) when (is_bin_op p && unitVal=ml_unit) ->
-                string_of_binop currentModule p e1 e2
-
-            | (MLE_Name p, [e1]) when is_uni_op p -> 
-                string_of_uniop currentModule p e1
-
-            | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1]) when (is_uni_op p  && unitVal=ml_unit) -> 
-                string_of_uniop currentModule p e1
-
+            | (MLE_Name p, [e1; e2]) when is_bin_op p -> (
+                let return_flag_init = !return_flag in
+                let end_of_block_init = !end_of_block_flag in
+                return_flag := No;
+                end_of_block_flag := No;
+                let s = string_of_binop currentModule p e1 e2 in
+                return_flag := return_flag_init;
+                end_of_block_flag := end_of_block_init;
+                s)
+            | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1; e2]) when (is_bin_op p && unitVal=ml_unit) -> (
+                let return_flag_init = !return_flag in
+                let end_of_block_init = !end_of_block_flag in
+                return_flag := No;
+                end_of_block_flag := No;
+                let s = string_of_binop currentModule p e1 e2 in
+                return_flag := return_flag_init;
+                end_of_block_flag := end_of_block_init;
+                s )
+            | (MLE_Name p, [e1]) when is_uni_op p -> (
+                let return_flag_init = !return_flag in
+                let end_of_block_init = !end_of_block_flag in
+                return_flag := No;
+                end_of_block_flag := No;
+                let s = string_of_uniop currentModule p e1 in
+                return_flag := return_flag_init;
+                end_of_block_flag := end_of_block_init;
+                s )
+            | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1]) when (is_uni_op p  && unitVal=ml_unit) -> (
+                let return_flag_init = !return_flag in
+                let end_of_block_init = !end_of_block_flag in
+                return_flag := No;
+                end_of_block_flag := No;
+                let s = string_of_uniop currentModule p e1 in
+                return_flag := return_flag_init;
+                end_of_block_flag := end_of_block_init;
+                s )
             | _ ->
+                // Handle library functions 
                 application_flag := Yes;
+                let return_flag_init = !return_flag in
+                let end_of_block_init = !end_of_block_flag in
+                return_flag := No;
+                end_of_block_flag := No;
+                let e' = e in
                 let e    = string_of_expr  currentModule (e_app_prio, ILeft) e in
+                return_flag := return_flag_init;
+                end_of_block_flag := end_of_block_init;
+                //Console.WriteLine e;
+                //Console.WriteLine (tag_of_expr e');
                 application_flag := No;
-                let args = List.map (string_of_expr currentModule  (e_app_prio, IRight)) args in
-                let args = paren (concat2 (", ") args) in
-                concat1 [e; args] in
+                if is_lib_fun e then string_of_lib_functions currentModule e args
+                else                     
+                    let args = List.map (string_of_expr currentModule  (e_app_prio, IRight)) args in
+                    let args = paren (concat2 (", ") args) in
+                    concat1 [e; args] 
+                in
         let doc = replace_projectors doc in
+        end_of_block_flag := end_of_block_flag_init;
         return_flag := return_flag_init;
         mk_last_statement doc
     end
@@ -676,6 +795,7 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
        doc
 
     | MLE_Fun (ids, body) ->
+        //Console.WriteLine (concat1 (List.map (fun (x,y) -> string_of_mlident x) ids));
         let bvar_annot x xt =
             match xt with 
             | Some xxt when (string_of_ml_type xxt = "void") -> None
@@ -687,7 +807,7 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
 //                          (match xt with | Some xxt -> concat1 [" : "; doc_of_mltype currentModule outer xxt] | _ -> "");
 //                          ")"]
 //            else x in
-        let ids  = List.fold (fun l ((x, _),xt) -> match bvar_annot x (Some xt) with | Some v -> l@[v] | _ -> l) [] ids in
+        let ids  = List.fold (fun l ((x, _),xt) -> match bvar_annot (string_of_string x) (Some xt) with | Some v -> l@[v] | _ -> l) [] ids in
         let vars = paren (concat2 (", ") ids) in
 
         // Handle returns
@@ -781,6 +901,110 @@ and  string_of_uniop currentModule p e1  : string =
         let e1  = string_of_expr  currentModule  (min_op_prec, NonAssoc ) e1 in
         let doc = concat1 [txt; paren e1] in
         paren doc
+
+and  string_of_lib_functions currentModule f args : string =
+    
+    // Returns a string corresponding to the size of the integer (either variable or constant). In non-library code 
+    // should always be a constant
+    let get_int_size v =
+        let size = match v with
+            | {expr = MLE_App ({expr = MLE_Fun(_, e')},_)} -> (
+                string_of_expr currentModule (e_app_prio, IRight) e' )
+            | {expr = MLE_Const _} -> (
+                string_of_expr currentModule (e_app_prio, IRight) v )
+            | _ -> (
+                let s = string_of_expr currentModule (e_app_prio, IRight) v in            
+                Console.WriteLine ("Warning: took default branch, size should be constant for non-lib files: " ^ s);
+                s ) in
+        size in
+
+    match f with        
+    // Remove the "Prims.parse_int" introduced calls
+    | "Prims_parse_int" 
+    // Current ways to introduce constants
+    | "FStar_UInt32_of_string" ->
+        let x = List.hd args in
+        let (s:string) = string_of_expr currentModule (min_op_prec, NonAssoc) x in
+        String.sub s 1 (String.length s - 2)
+    | "FStar_UInt32_of_int" -> 
+        let x = List.hd args in
+        string_of_expr currentModule (min_op_prec, NonAssoc) x 
+    // Should use casts between buffers instead
+    | "FStar_SBytes_uint32_of_sbytes" ->
+        begin
+            let x = List.hd args in
+            let s = string_of_expr currentModule (min_op_prec, NonAssoc) x in
+            concat ["*(uint32*)"; s; ""]
+        end
+    | "SBuffer_create" -> 
+        begin
+            // TODO: FIXME, for now I will assume that the semantics of create always initializes with 0s
+            let size = List.hd args in
+            let size = get_int_size size in
+            let args = List.map (string_of_expr currentModule  (e_app_prio, IRight)) (List.tl args) in
+            match args with
+            | [init; len] ->             
+                begin
+                    let s = concat ["uint"; size; " "; !last_bound; "["; len; "] = { 0 };"] in
+                    statement_printed_flag := Yes;
+                    s
+                end
+            | _ -> "Error with SBuffer.create"
+        end
+    | "SBuffer_index" -> 
+        begin
+        let args = List.map (string_of_expr currentModule (e_app_prio, IRight)) (List.tl args) in
+        match args with
+        | [b; idx] ->
+            let idx = replace_constant idx in
+            concat [b; "["; idx; "]"]
+        | _ -> "Error with SBuffer.index"
+        end
+    | "SBuffer_upd" -> 
+        begin
+            let args = List.map (string_of_expr currentModule (e_app_prio, IRight)) (List.tl args) in
+            match args with
+            | [b; idx; v] ->
+                let idx = replace_constant idx in
+                concat1 [b; "["; idx; "] = "; v]
+            | _ -> "Error with SBuffer.upd"
+        end   
+    | "SBuffer_offset"
+    | "SBuffer_sub" -> 
+        begin
+            let size = List.hd args in
+            let size = get_int_size size in
+            let args = List.map (string_of_expr currentModule (e_app_prio, IRight)) (List.tl args) in
+            let s = match args with
+                | [b; idx] -> concat ["uint"; size; "* "; !last_bound; "=  ("; b; " + "; idx; ");"]
+                | [b; idx; len] -> concat ["uint"; size; "* "; !last_bound; "=  ("; b; " + "; idx; ");"]
+                | _ -> "Error with SBuffer.sub" in
+            statement_printed_flag := Yes;
+            s
+        end
+    | "SBuffer_split" -> "split(TODO)" // TODO: remove from the library functions
+    | "SBuffer_blit" -> 
+        begin
+            let size = List.hd args in
+            let args = List.map (string_of_expr currentModule (e_app_prio, IRight)) (List.tl args) in
+            let end_of_block_flag_init = !end_of_block_flag in
+            let return_flag_init = !return_flag in
+            let size = get_int_size size in
+            let size = concat ["(("; size; "+1)/8)"] in
+            match args with
+            | [src; src_idx; dest; dest_idx; len] -> (
+                concat1 ["memcpy(("; dest; "+"; dest_idx; "), ("; src; "+"; src_idx; "), "; size;  "*"; len; ")"] )
+            | _ -> "Error with blit" 
+        end
+//    | "FStar_SBytes_sbytes_of_uint32s" -> 
+//        begin
+//            let args = List.map (string_of_expr currentModule (e_app_prio, IRight)) args in
+//            match args with
+//            | 
+//            ""
+//        end 
+    | _ -> "Error: unhandled lib function"
+
 (* -------------------------------------------------------------------- *)
 and string_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : string =
     match pattern with
@@ -857,25 +1081,46 @@ and string_of_branch (currentModule : mlsymbol) (ty:string) ((p, cond, e) : mlbr
 (* -------------------------------------------------------------------- *)
 and string_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
 
-    let print_decl (lb:mllb) = 
-        match lb.mllb_tysc with
-        | _, MLTY_Fun (ty, tag, ty2) -> "" //((string_of_ml_type ty) ^ " | " ^ (string_of_ml_type ty2)
-                                        //^ " | " ^ (string_of_mlident lb.mllb_name))
-        | _ -> 
-            if not(top_level) then ((string_of_ml_type (snd lb.mllb_tysc)) ^ " " ^ (string_of_mlident lb.mllb_name) ^ ";") 
-            else "" in
+    let ignored_types = ["FStar_Heap_heap"] in
+    let custom_statement_types = [(["SBuffer"], "create");
+                                  (["SBuffer"], "sub");
+                                  (["SBuffer"], "offset")] in
 
+    let print_decl (lb:mllb) = 
+        match lb.mllb_def with
+        | {expr=MLE_App({expr=MLE_Name p},_)} when List.contains p custom_statement_types-> ""
+        | _ -> 
+            begin
+                match lb.mllb_tysc with
+                | Some(_, MLTY_Fun (ty, tag, ty2)) -> "" //((string_of_ml_type ty) ^ " | " ^ (string_of_ml_type ty2)
+                                                //^ " | " ^ (string_of_mlident lb.mllb_name))
+                | Some(_,ty) when List.contains (string_of_ml_type ty) (ignored_types@[""]) -> ""
+                | Some (ids, ty) -> 
+                    if not(top_level) && not(is_unit ty) then ((string_of_ml_type (ty)) ^ " " ^ (string_of_mlident lb.mllb_name) ^ ";") 
+                    else "" 
+                | _ -> ""   // TODO: FIXME
+            end in
+
+    // Print declarations
     let decls = concat2 new_line (List.map print_decl lets) in
+
     let print_expr (lb:mllb) = 
         match lb.mllb_tysc with
         // Case of top level functions
-        | _, MLTY_Fun (ty, tag, ty2) -> concat [(string_of_ml_type ty2); " ";
+        | Some(_, MLTY_Fun (ty, tag, ty2)) -> concat [(string_of_ml_type ty2); " ";
                                                 currentModule; "_"; (string_of_mlident lb.mllb_name);
                                                 string_of_expr currentModule (min_op_prec, NonAssoc) lb.mllb_def] 
-        | _ -> 
+        | Some(_,ty) when List.contains (string_of_ml_type ty) ignored_types -> ""
+        | Some (tysc) -> 
+            // Variable to bind to
+            let last_bound_init = !last_bound in
+            last_bound := if is_unit (snd tysc) then "" else string_of_mlident lb.mllb_name;
+
+            let s =
             // Top level constants
-            if top_level then concat1 ["const"; string_of_ml_type (snd lb.mllb_tysc); string_of_mlident lb.mllb_name;  "="; 
+            if top_level then concat1 ["const"; string_of_ml_type (snd tysc); string_of_mlident lb.mllb_name;  "="; 
                                         string_of_expr currentModule (min_op_prec, NonAssoc) lb.mllb_def; ";"]
+
             // If the expression is a 'match' of a 'if'
             else if is_if_or_match lb.mllb_def then
                 // Name of the identifier to which to bind the result of the if of the match
@@ -883,7 +1128,7 @@ and string_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
                 last_bound := string_of_mlident lb.mllb_name;
                 // Type of the expression being printed 
                 let current_type_init = !current_type in
-                current_type := snd lb.mllb_tysc;
+                current_type := snd tysc;
                 // Print body
                 let body = concat [string_of_expr currentModule (min_op_prec, NonAssoc) lb.mllb_def] in
                 let body = strip_from_paren body in
@@ -891,15 +1136,25 @@ and string_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
                 last_bound := last_bound_init;
                 current_type := current_type_init;
                 body
+
             else
             
                 let current_type_init = !current_type in
-                current_type := snd lb.mllb_tysc;
-                let body = concat   [(string_of_mlident lb.mllb_name ^ " = "); 
-                                            string_of_expr currentModule (min_op_prec, NonAssoc) lb.mllb_def;
-                                            ";"] in
+                current_type := snd tysc;
+                let end_of_block_init = !end_of_block_flag in
+                end_of_block_flag := is_last_in_block lb.mllb_def;
+                let body = string_of_expr currentModule (min_op_prec, NonAssoc) lb.mllb_def in
+//                    if is_unit (snd tysc) then  concat [string_of_expr currentModule (min_op_prec, NonAssoc) lb.mllb_def;";"]
+//                    else concat   [(string_of_mlident lb.mllb_name ^ " = "); 
+//                                  string_of_expr currentModule (min_op_prec, NonAssoc) lb.mllb_def; ";"] in
                 current_type := current_type_init;
+                end_of_block_flag := end_of_block_init;
                 body 
+
+            in
+            last_bound := last_bound_init;
+            s
+        | _ -> "Error, unhandled pattern in string_of_lets" // TODO: FIXME
             in
     let exprs = concat2 new_line (List.map print_expr lets) in
     concat2 new_line (decls::exprs::[])
@@ -1015,7 +1270,7 @@ let rec doc_of_sig1 currentModule s =
         doc_of_mltydecl currentModule decls
 
 (* -------------------------------------------------------------------- *)
-and doc_of_sig (currentModule : mlsymbol) (s : mlsig) =
+and doc_of_sig (currentModule : mlsymbol) (s : mlsig)  =
     let docs = List.map (doc_of_sig1 currentModule) s in
     let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
     reduce docs
@@ -1023,6 +1278,7 @@ and doc_of_sig (currentModule : mlsymbol) (s : mlsig) =
 (* -------------------------------------------------------------------- *)
 let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
     match m with
+    | MLM_Loc(_) -> text ""
     | MLM_Exn (x, []) ->
         text "Backend error : exceptions are not handled"
         //reduce1 [text "exception"; text x]
@@ -1205,8 +1461,13 @@ let rec doc_of_mllib_r (MLLib mllib) =
         reduce <| (prefix @ [
             head;
             hardline;
-            text "#include \"fstarlib.h\"";
+            text "#include <stdint.h>";
             hardline;
+            text "#include <string.h>";
+            hardline;
+            text "#include <stdio.h>";
+            hardline;
+            text "#include \"fstarlib.h\"";
             (match doc with
              | None   -> empty
              | Some s -> cat s hardline);
@@ -1227,9 +1488,9 @@ open FStar.Extraction.ML.Env
 let string_of_mlexpr (env:env) (e:mlexpr) =
     current_module := Util.flatten_mlpath env.currentModule;
     let doc = text (string_of_expr (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e) in
-    FSharp.Format.pretty 0 doc
+    pretty 0 doc
 
 let string_of_mlty (env:env) (e:mlty) =
     current_module := Util.flatten_mlpath env.currentModule;
     let doc = doc_of_mltype (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
-    FSharp.Format.pretty 0 doc
+    pretty 0 doc

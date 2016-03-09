@@ -17,16 +17,16 @@ module Prims
 
 kind Unop  = Type -> Type
 kind Binop = Type -> Type -> Type
-type bool
-logic type EqTyp : Type -> Type -> Type          (* infix binary '==' *)
-type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
+new type bool
+assume logic type EqTyp : Type -> Type -> Type          (* infix binary '==' *)
+new type Eq2 : #a:Type -> #b:Type -> a -> b -> Type    (* infix binary '==' *)
 opaque logic type b2t (b:bool) = (b == true)
 
 //We assume the Tot effect here; its definition appears a few lines below
 (* Primitive logical connectives *)
 type True =
   | T
-logic type False
+new logic type False
 opaque type l_imp (p:Type) (q:Type) = p -> Tot q                (* infix binary '==>' *)
 type l_and  (p:Type) (q:Type) =
   | And : p -> q -> (p /\ q)                                      (* infix binary '/\' *)
@@ -47,9 +47,9 @@ type DTuple2: a:Type
 opaque type Exists (#a:Type) (p:a -> Type) = x:a & p x          (* exists (x:a). p x *)
 logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
 opaque type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r) (* if/then/else in concrete syntax *)
-logic type ForallTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
-logic type ExistsTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
-logic type Precedes : #a:Type -> #b:Type -> a -> b -> Type  (* a built-in well-founded partial order over all terms *)
+assume logic type ForallTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
+assume logic type ExistsTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
+assume logic type Precedes : #a:Type -> #b:Type -> a -> b -> Type  (* a built-in well-founded partial order over all terms *)
 
 (* PURE effect *)
 kind PurePre = Type
@@ -117,8 +117,8 @@ effect Ghost (a:Type) (pre:Type) (post:PurePost a) =
            (fun (p:PurePost a) -> pre /\ (forall (x:a). post x ==> p x))
            (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
 
-type unit
-type int
+new type unit
+new type int
 assume logic val op_AmpAmp             : bool -> bool -> Tot bool
 assume logic val op_BarBar             : bool -> bool -> Tot bool
 assume logic val op_Negation           : bool -> Tot bool
@@ -137,19 +137,19 @@ assume val op_disEquality : #a:Type -> a -> a -> Tot bool
 
 type int16 = i:int{i > -32769  /\ 32768 > i}
 type int32 = int
-type int64
-type uint8
-type uint16
-type uint32
-type uint64
-type char
-type float
-type string
-type array : Type -> Type
+new type int64
+new type uint8
+new type uint16
+new type uint32
+new type uint64
+new type char
+new type float
+new type string
+new type array : Type -> Type
 assume val strcat : string -> string -> Tot string
 assume logic type LBL : string -> Type -> Type
-type exn
-type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
+new type exn
+new type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
 type byte = uint8
 type double = float
 
@@ -525,13 +525,14 @@ val dsnd : #a:Type -> #b:(a -> Type) -> t:(DTuple2 a b) -> Tot (b (MkDTuple2._1 
 let dsnd t = MkDTuple2._2 t
 
 type Let (#a:Type) (x:a) (body:(a -> Type)) = body x
-logic type InductionHyp : #a:Type -> a -> Type -> Type
+assume logic type InductionHyp : #a:Type -> a -> Type -> Type
 assume val by_induction_on: #a:Type -> #p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
-logic type Using : #a:Type -> Type -> a -> Type
+assume logic type Using : #a:Type -> Type -> a -> Type
 assume val using: #a:Type -> #p:Type -> proving:p -> pat:a -> Lemma (ensures (Using p pat))
 assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
+assume val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
 assume val _assert : p:Type -> unit -> Pure unit (requires $"assertion failed" p) (ensures (fun x -> True))
 assume val cut     : p:Type -> Pure unit (requires $"assertion failed" p) (fun x -> p)

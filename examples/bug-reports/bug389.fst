@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --log_types;
-    other-files:set.fsi heap.fst st.fst all.fst
-  --*)
-
 module Bug389OutOfMem
 
 let a = alloc 0

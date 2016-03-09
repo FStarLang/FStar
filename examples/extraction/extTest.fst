@@ -1,9 +1,3 @@
-(*--build-config
-  other-files: ext.fst set.fsi set.fst heap.fst st.fst all.fst list.fst
-  --*)
-
-
-
 (*
 fstar extTest.fst --codegen OCaml > Test.ml ; sed -i '$d;/kdhvljkdshalfkhclklkdnfsnydufnysdkyfnklsnykweyacklnyrecynrncrewanyu/d' Test.ml ; ocamlc Test.ml
 *)

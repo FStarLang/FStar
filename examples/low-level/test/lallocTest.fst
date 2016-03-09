@@ -1,8 +1,3 @@
-(*--build-config
-    variables:MATHS=../maths;
-    other-files:ext.fst set.fsi set.fst heap.fst st.fst all.fst list.fst stack.fst listset.fst ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst
-  --*)
-
 (*perhaps this should be an interface file?*)
 
 module LallocTest

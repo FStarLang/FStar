@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files:ext.fst set.fsi heap.fst st.fst all.fst st2.fst while.fst
---*)
-
 module IFC
 
 open FStar.Comp

@@ -17,6 +17,7 @@
 module FStar.Absyn.Const
 open FStar.Absyn.Syntax
 open FStar.Util
+open FStar.Const
 
 let p2l l = lid_of_path l dummyRange
 let pconst s     = p2l ["Prims";s]
@@ -123,6 +124,7 @@ let op_ColonEq   = p2l ["FStar"; "ST"; "op_Colon_Equals"]
 (* Constants for sets and ref sets *)
 let ref_lid       = p2l ["FStar"; "Heap"; "ref"]
 let heap_ref      = p2l ["FStar"; "Heap"; "Ref"]
+let set_lid       = p2l ["FStar"; "Set"]
 let set_empty     = p2l ["FStar"; "Set"; "empty"]
 let set_singleton = p2l ["FStar"; "Set"; "singleton"]
 let set_union     = p2l ["FStar"; "Set"; "union"]

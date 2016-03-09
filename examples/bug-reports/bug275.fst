@@ -1,4 +1,3 @@
-
 module Bug275
 
 val fix_F : #aa:Type -> Tot unit

@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files:set.fsi heap.fst st.fst all.fst constr.fst classical.fst ext.fst ../metatheory/stlc_strong_db_parsubst.fst ../metatheory/stlc_cbv_db_parsubst.fst
- --*)
 module Bug194
 
 open FStar.Constructive

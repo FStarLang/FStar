@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi Prins --admit_fsi FStar.IO;
-    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst listTot.fst st2.fst ordset.fsi ../prins.fsi ffi.fst
- --*)
-
 module Wysteria
 
 open FStar.List
@@ -196,6 +191,18 @@ val w_contains_lemma: a:Type -> eps:prins -> w:Wire a eps -> p:prin
 
 (**********)
 
+type Sh: Type -> Type
+
+type can_sh: Type -> Type
+
+assume Cansh_nat : can_sh nat
+assume Cansh_int : can_sh int
+
+val v_of_sh: #a:Type -> sh:Sh a -> GTot a
+val ps_of_sh: #a:Type -> sh:Sh a -> GTot prins
+
+(**********)
+
 type DelPar (m:mode) (ps:prins) = Mode.m m = Par /\ subset ps (Mode.ps m)
 
 val as_par: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Type)
@@ -297,6 +304,16 @@ val concat_wire: #a:Type -> #eps_x:eprins -> #eps_y:eprins
                  -> x:Wire a eps_x -> y:Wire a eps_y{CanConcatWire x y}
                  -> Wys (Wire a (union eps_x eps_y)) (fun m0     -> CanConcatWire x y)
                                                      (fun m0 r t -> r = w_concat x y /\ t = [])
+
+(*****)
+
+val mk_sh: #a:Type -> x:a
+           -> Wys (Sh a) (fun m0     -> m0.m = Sec /\ can_sh a)
+	                (fun m0 r t -> v_of_sh r = x /\ ps_of_sh r = m0.ps /\ t = [])
+
+val comb_sh: #a:Type -> x:Sh a
+             -> Wys a (fun m0     -> m0.m = Sec /\ ps_of_sh x = m0.ps)
+	             (fun m0 r t -> v_of_sh x = r /\ t = [])
 
 (*****)
 

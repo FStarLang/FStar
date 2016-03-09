@@ -1,2 +1,0 @@
-module System
-type Object

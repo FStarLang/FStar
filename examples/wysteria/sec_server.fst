@@ -1,9 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Seq --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --admit_fsi FStar.Squash --__temp_no_proj  PSemantics --__temp_no_proj SecServer --verify_module SecServer;
-    variables:CONTRIB=../../contrib;
-    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst squash.fsti listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst psem.fst rtheory.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst ckt.fst $CONTRIB/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst crypto.fst interpreter.fst
- --*)
-
 module SecServer
 
 open FStar.Ghost
@@ -168,6 +162,13 @@ val build_pstep_star_lemma':
           (ensures (server_prop p r ps x e dv))
 let build_pstep_star_lemma' p r ps x e dv = cut (eq_pi_pi' ps ps)
 
+(* AR: this is temporary, it's actually defined in interpreter.fst *)
+let server_key:server_key =
+  let k = Platform.Bytes.createBytes SHA1.keysize 0uy in
+  assume (server_key_prop k == server_prop_t);
+  k
+
+
 val send_output:
   ps':prins
   -> ps:prins{subset ps' ps} -> x:varname -> e:exp
@@ -193,7 +194,7 @@ let rec send_output ps' ps x e en_m red_m out_m c_sec =
   (* This is the server property *)
   let _ = assert (server_prop p r ps x e dv) in
 
-  let (m, t) = mac_server_msg p r ps x e dv Interpreter.server_key in
+  let (m, t) = mac_server_msg p r ps x e dv server_key in
   send out m;
   send out t;
 
@@ -241,12 +242,18 @@ val build_initial_pi_lemma:
 				  (update #prin #redex #p_cmp p r (OrdMap.empty #prin #redex #p_cmp))))
 let build_initial_pi_lemma ps p x e r = ()
 
+(* AR: this is temporary, it's actually defined in interpreter *)
+let client_key:client_key =
+  let k = Platform.Bytes.createBytes SHA1.keysize 0uy in
+  assume (client_key_prop k == client_prop_t);
+  k
+
 val handle_connection: chan_in -> chan_out -> ML unit
 let handle_connection c_in c_out =
   let c_m = recv c_in in
   let c_t = recv c_in in
 
-  let c_opt = verify_client_msg Interpreter.client_key c_m c_t in
+  let c_opt = verify_client_msg client_key c_m c_t in
   if c_opt = None then failwith "Failed to verify client's mac"
   else
     let Some (p, r) = c_opt in

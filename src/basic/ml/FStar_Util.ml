@@ -32,6 +32,10 @@ let is_punctuation c = (
 
 let return_all x = x
 
+type time = float
+let now () = Unix.gettimeofday ()
+let time_diff (t1:time) (t2:time) : float = t2 -. t1
+
 exception Impos
 exception NYI of string
 exception Failure of string
@@ -103,12 +107,12 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   (true, res, "")
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
-let is_path_absolute path_str = 
+let is_path_absolute path_str =
   let open Batteries.Incubator in
   let open BatPathGen.OfString in
   let path_str' = of_string path_str in
   is_absolute path_str'
-let join_paths path_str0 path_str1 = 
+let join_paths path_str0 path_str1 =
   let open Batteries.Incubator in
   let open BatPathGen.OfString in
   let open BatPathGen.OfString.Operators in
@@ -118,7 +122,7 @@ let normalize_file_path (path_str:string) =
   let open Batteries.Incubator in
   let open BatPathGen.OfString in
   let open BatPathGen.OfString.Operators in
-  to_string 
+  to_string
     (normalize_in_tree
        (let path = of_string path_str in
          if is_absolute path then
@@ -267,16 +271,65 @@ let format4 f a b c d = format f [a;b;c;d]
 let format5 f a b c d e = format f [a;b;c;d;e]
 let format6 f a b c d e g = format f [a;b;c;d;e;g]
 
-let fprint1 a b = print_string (format1 a b)
-let fprint2 a b c = print_string (format2 a b c)
-let fprint3 a b c d = print_string (format3 a b c d)
-let fprint4 a b c d e = print_string (format4 a b c d e)
-let fprint5 a b c d e f = print_string (format5 a b c d e f)
-let fprint6 a b c d e f g = print_string (format6 a b c d e f g)
+let print1 a b = print_string (format1 a b)
+let print2 a b c = print_string (format2 a b c)
+let print3 a b c d = print_string (format3 a b c d)
+let print4 a b c d e = print_string (format4 a b c d e)
+let print5 a b c d e f = print_string (format5 a b c d e f)
+let print6 a b c d e f g = print_string (format6 a b c d e f g)
+let printn fmt args = print_string (format fmt args)
+
+let stdout_isatty () = Some (Unix.isatty Unix.stdout)
+
+let colorize s colors =
+  match colors with
+  | (c1,c2) ->
+     match stdout_isatty () with
+     | Some true -> format3 "%s%s%s" c1 s c2
+     | _ -> s
+
+let colorize_bold s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[39;1m" s "\x1b[0m"
+  | _ -> s
+
+let colorize_red s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[31;1m" s "\x1b[0m"
+  | _ -> s
+
+let colorize_cyan s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
+  | _ -> s
+
+let print_error s = pr "%s" (colorize_red ("Error: " ^ s)); flush stdout
+let print1_error a b = print_error (format1 a b)
+let print2_error a b c = print_error (format2 a b c)
+let print3_error a b c d = print_error (format3 a b c d)
+
+let print_warning s = pr "%s" (colorize_cyan ("Warning: " ^ s)); flush stdout
+let print1_warning a b = print_warning (format1 a b)
+let print2_warning a b c = print_warning (format2 a b c)
+let print3_warning a b c d = print_warning (format3 a b c d)
+
+
+let stderr = stderr
+let stdout = stdout
+
+let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
 
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
+
+let is_left = function
+  | Inl _ -> true
+  | _ -> false
+
+let is_right = function
+  | Inr _ -> true
+  | _ -> false
 
 let left = function
   | Inl x -> x
@@ -339,6 +392,9 @@ let map_opt opt f =
   match opt with
   | None -> None
   | Some x -> Some (f x)
+
+let iter_opt opt f =
+  ignore (map_opt opt f)
 
 let rec find_map l f =
   match l with
@@ -461,7 +517,7 @@ let rec stfold (init:'b) (l:'a list) (f: 'b -> 'a -> ('s,'b) state) : ('s,'b) st
   | hd::tl -> (f init hd) >> (fun next -> stfold next tl f)
 
 type file_handle = out_channel
-let open_file_for_writing (fn:string) : file_handle = open_out fn
+let open_file_for_writing (fn:string) : file_handle = open_out_bin fn
 let append_to_file (fh:file_handle) s = fpr fh "%s\n" s; flush fh
 let close_file (fh:file_handle) = close_out fh
 let write_file (fn:string) s =
@@ -482,7 +538,7 @@ let get_exec_dir () = Filename.dirname (Sys.executable_name)
 let expand_environment_variable x = try Sys.getenv x with Not_found -> ""
 
 let physical_equality (x:'a) (y:'a) = x == y
-let check_sharing a b msg = if physical_equality a b then fprint1 "Sharing OK: %s\n" msg else fprint1 "Sharing broken in %s\n" msg
+let check_sharing a b msg = if physical_equality a b then print1 "Sharing OK: %s\n" msg else print1 "Sharing broken in %s\n" msg
 
 type oWriter = {
   write_byte: char -> unit;
@@ -571,3 +627,21 @@ let get_oreader (filename:string) : oReader = {
   close = (fun _ -> ());
 }
 
+let getcwd = Unix.getcwd
+
+let readdir dir =
+  let handle = Unix.opendir dir in
+  let files = ref [] in
+  try
+    while true do
+      files := Unix.readdir handle :: !files
+    done;
+    assert false
+  with End_of_file ->
+    !files
+
+let file_exists = Sys.file_exists
+let basename = Filename.basename
+let print_endline = print_endline
+
+let map_option f opt = BatOption.map f opt
