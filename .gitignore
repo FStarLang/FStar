@@ -32,6 +32,7 @@ cache/
 /src/*/obj
 
 examples/*/*.ml
+examples/crypto/CntProtocol.exe
 examples/wysteria/ocaml-output/*
 
 _build/
