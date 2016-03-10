@@ -75,7 +75,7 @@ and fvs = list<fv>
 type caption = option<string>
 type binders = list<(string * sort)>
 type projector = (string * sort)
-type constructor_t = (string * list<projector> * sort * int)
+type constructor_t = (string * list<projector> * sort * int * bool)
 type constructors  = list<constructor_t>
 type decl =
   | DefPrelude
@@ -128,6 +128,7 @@ val mkForall'': (list<list<pat>> * option<int> * list<sort> * term) -> term
 val mkExists: (list<list<pat>> * fvs * term) -> term
 
 val fresh_token: (string * sort) -> int -> decl
+val fresh_constructor : (string * list<sort> * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: constructor_t -> decls_t
 val termToSmt: term -> string
