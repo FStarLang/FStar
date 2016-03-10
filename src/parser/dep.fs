@@ -88,12 +88,13 @@ let build_map (filenames: list<string>): map =
             let full_path = if d = cwd then f else join_paths d f in
             begin match smap_try_find map key with
             | Some existing_file ->
-                if String.lowercase existing_file = String.lowercase f then
-                  raise (Err (Util.format1 "I'm case insensitive, and I found the same file twice (%s)\n" f));
-                if is_interface existing_file = is_interface f then
-                  raise (Err (Util.format1 "Found both a .fs and a .fst (or both a .fsi and a .fsti) (%s)\n" f));
-                (* Note: we always record a dependency against the interface, if found. *)
-                if not (is_interface existing_file) then
+                (* The precedence is determined by the order of the --include
+                 * arguments passed on the command-line. If at least an
+                 * interface exists, we generate a dependency on the interface
+                 * with the highest precedence. If no interface exists, we
+                 * generate a dependency on the implementation with the highest
+                 * precedence. *)
+                if not (is_interface existing_file) || is_interface f then
                   smap_add map key full_path
             | None ->
                 smap_add map key full_path
