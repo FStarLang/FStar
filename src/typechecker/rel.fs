@@ -1244,7 +1244,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         match m, o  with
             | (MisMatch _, _) -> //heads definitely do not match
                 let may_relate head = match head.n with
-                    | Tm_name _  -> true
+                    | Tm_name _
+                    | Tm_match _ -> true
                     | Tm_fvar tc -> tc.fv_delta = Delta_equational
                     | _ -> false  in
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
@@ -1775,11 +1776,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | _ -> N.eta_expand wl.tcenv t in
         solve_t env ({problem with lhs=maybe_eta t1; rhs=maybe_eta t2}) wl
 
+      | Tm_match _, _
       | Tm_uinst _, _
       | Tm_name _, _
       | Tm_constant _, _
       | Tm_fvar _, _
       | Tm_app _, _
+      | _, Tm_match _
       | _, Tm_uinst _
       | _, Tm_name _
       | _, Tm_constant _

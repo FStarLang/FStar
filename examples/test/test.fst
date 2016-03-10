@@ -1,9 +1,11 @@
 module Test
-let f (x:int) = 
-  x >= 0
-  /\ (let y = x + 1 in 
-     y >= 0)
 
-let g x = assert (x=0)
+assume type t : int -> Type0
 
-(* let f (x:nat) (y:int) = x = y *)
+type state (i:bool) = 
+  | Mk : t (if i then 0 else 1) -> state i
+
+module Test2
+open Test
+val f : i:bool -> state i -> Tot (t (if i then 0 else 1))
+let f i (Mk x) = x
