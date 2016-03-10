@@ -45,8 +45,8 @@ script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then free -h; fi
   - echo -e "\e[31m=== Bootstrap cycle ===\e[0m"
   - make -C src
-  - make -C src ocaml
-  - make -C src/ocaml-output
+#  - make -C src ocaml
+#  - make -C src/ocaml-output
   - echo -e "\e[31m=== Running tests ===\e[0m"
   - make -C examples/unit-tests
   - make -C src regressions OTHERFLAGS=--lax
