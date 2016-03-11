@@ -269,7 +269,8 @@ let maybe_lalloc_eta_data (g:env) (qual : option<fv_qual>) (residualType : mlty)
           let proj = MLE_Proj(mle, fn) in
           let e = match args with
             | [] -> proj
-            | _ -> MLE_App(with_ty MLTY_Top <| proj, args) in //TODO: Fix imprecise with_ty on the projector 
+            | _ -> 
+              MLE_App(with_ty MLTY_Top <| proj, args) in //TODO: Fix imprecise with_ty on the projector 
           with_ty mlAppExpr.ty e 
 
         | MLE_App ({expr=MLE_Name mlp}, mlargs), Some Data_ctor
@@ -340,7 +341,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
         | Exp_app(head, args) ->
           let rec synth_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
-//            Printf.printf "synth_app restArgs=%d, t=%A\n" (List.length restArgs) t;
+          //            Printf.printf "synth_app restArgs=%d, t=%A\n" (List.length restArgs) t;
             match restArgs, t with
                 | [], _ ->
                     //1. If partially applied and head is a datacon, it needs to be eta-expanded
@@ -369,6 +370,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                   then synth_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join f f', t) rest
                   else failwith "Impossible: ill-typed application" //ill-typed; should be impossible
 
+
                 | (Inr e0, _)::rest, MLTY_Fun(tExpected, f', t) ->
                   let e0, f0, tInferred = synth_exp g e0 in
                   let e0 = maybe_coerce g e0 tInferred tExpected in // coerce the arguments of application, if they dont match up
@@ -379,6 +381,19 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                     | Some t -> synth_app is_data (mlhead, mlargs_f) (f, t) restArgs
                     | None -> err_ill_typed_application e restArgs t
                   end in
+          
+          let synth_app_maybe_projector is_data mlhead (f, t) args = 
+                match is_data with 
+                    | Some (Record_projector _) -> 
+                      let rec remove_implicits args f t = match args, t with 
+                        | (Inr _, Some (Implicit _))::args, MLTY_Fun(_, f', t) -> 
+                          remove_implicits args (join f f') t
+
+                        | _ -> args, f, t in
+                      let args, f, t = remove_implicits args f t in
+                      synth_app is_data (mlhead, []) (f, t) args 
+
+                    | _ -> synth_app is_data (mlhead, []) (f, t) args in
 
           let head = Util.compress_exp head in
           begin match head.n with
@@ -414,12 +429,12 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                 //debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
                begin match args with
                     | [] -> maybe_lalloc_eta_data g qual head_t head_ml, E_PURE, head_t
-                    | _  -> synth_app qual (head_ml, []) (E_PURE, head_t) args
+                    | _  -> synth_app_maybe_projector qual head_ml (E_PURE, head_t) args
                end
 
             | _ ->
               let head, f, t = synth_exp g head in // t is the type inferred for head, the head of the app
-              synth_app None (head, []) (f, t) args
+              synth_app_maybe_projector None head (f, t) args
           end
 
         | Exp_abs(bs, body) ->
