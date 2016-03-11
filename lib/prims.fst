@@ -53,7 +53,7 @@ assume logic type Precedes : #a:Type -> #b:Type -> a -> b -> Type  (* a built-in
 
 (* PURE effect *)
 kind PurePre = Type
-kind PurePost (a:Type) = a -> GTot Type
+kind PurePost (a:Type) = a -> Type
 kind PureWP   (a:Type) = PurePost a -> PurePre
 type pure_return (a:Type) (x:a) (p:PurePost a) =
      p x
