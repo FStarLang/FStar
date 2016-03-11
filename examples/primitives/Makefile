@@ -19,8 +19,11 @@ COMPILE=gcc -O2 fstarlib.c
 
 all: chacha-test poly-test
 
+low-star-ver:
+	$(FSTAR) $(OPTIONS_VER) sbuffer.fst FStar.UInt8.fst FStar.UInt32.fst FStar.UInt63.fst FStar.SBytes.fst
+
 chacha-ver: chacha.fst
-	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 50 $(addprefix --verify_module , $(LOW_STAR_MODULES) Chacha)
+	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 50 $(addprefix --verify_module , Chacha)
 
 chacha-test: chacha.fst
 	@echo ""
@@ -34,7 +37,7 @@ chacha-test: chacha.fst
 	./$(CHACHA_ODIR)/$(CHACHA)
 
 poly-ver: poly.fst
-	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 120 $(addprefix --verify_module , $(LOW_STAR_MODULES) Parameters Bigint Bignum Poly)
+	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 250 $(addprefix --verify_module , Parameters Bigint Bignum Poly)
 
 poly-test: poly.fst
 	@echo ""

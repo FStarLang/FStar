@@ -1,0 +1,206 @@
+	Low*			<--->			C
+
+Coding restrictions:
+- code is first order
+- No variable shadowing, hence if a var name is reused it must be of the same type
+  and overwritten in the following code
+
+Library functions for buffer manipulation:
+
+let x = SBuffer.create #size init len in		~>	uint{size} x[len] = {0};
+SBuffer.index #size b idx    	      	 		~>	b[idx]
+SBuffer.upd #size b idx v;		 		~> 	b[idx] = v;
+SBuffer.sub #size b idx len		 		~> 	(b+idx)
+SBuffer.offset #size b idx				~>	(b+idx)
+SBuffer.blit #size src src_idx dest dest_idx len	~>	memcpy (dest+dest_idx) (src+src_idx) ((((size+1) / 8) * len)
+
+
+
+(*** OLD NOTES ***)
+Low*
+
+The Low* variant of low-level memory management for F* aims at ellaborating
+a subset of F* programs into an RST program where no memory management is left
+to a garbage collector.
+The user can chose to allocate on the heap for long-lived references, or on the
+top of the stack. All implicit allocations are put in the topmost region of the
+stack.
+
+Our goal is to isolate a subset of F* such that it is safe to do so.
+
+For now we consider that we are in the fragment which is:
+- first order (need of defunctionalization / closure conversion)
+- monomorphic after specialization (whole program compilation with no polymorphism
+  left after erasure)
+
+Eventually Low* would use:
+- erasure
+- inlining
+- defunctionalization
+- monomorphization
+- clever choice of type representation
+
+1 -  Variant of RST which opts in for stack allocation.
+
+The current RST monad uses is an "opt-out" version of low-level manual
+memory management:
+- a single region as the global, manually managed heap
+- a stack of regions as the manually managed stack:
+  -> regions are push and pop manually
+  -> references are manually allocated in the topmost region of this stack
+- the OCaml runtime handles all implicit allocations in its garbage collected
+  heap
+
+Low* intends to remove entirely the garbage collection, hence making memory
+management entirely manual. It is an "opt-in" version of the low-level memory
+management:
+- a single region as the global, manually managed heap
+- a stack of regions as the manually managed stack
+  -> regions are automatically pushed and popped for non-inlined functions
+  -> references can be manually allocated in the topmost region of this
+     stack
+- all implicits allocations are made in the topmost region of the stack
+
+Everything is  allocated on the stack unless specified otherwise: opt-in
+stack allocation strategy, no garbage collection.
+Fresh value are considered as locals.
+
+It implies restrictions on the types allowed in this subset: recursive types
+must have a reference seperating two recursion steps.
+Ie: type list 'a = | Nil | Cons: 'a -> list 'a -> list 'a is forbidden
+    type list 'a = | Nil | Cons: 'a -> ref (list 'a) -> list 'a is allowed
+
+
+Systematic push/pop of stack frames in functions - abstract indexes for regions
+
+The back-end requires that for each function that is not inlined,
+a new stack frame be pushed, and popped before returning the result.
+E.g.:
+     f x -> e
+     
+     goes to
+
+     f' x = PushStackFrame(); let r = e in PopStackFrame(); r
+
+All the allocations in the new frame are no longer dereferencable when the frame
+is popped.
+
+Region indexes are kept abstract to prevent comparison between arbitraty region indexes,
+as well as two prevent that two seperately created regions (frames) share the same index:
+once the region in which a reference has been allocated is popped, that reference must
+never be dereferencable again.
+
+Located references (from RST)
+
+"located" is the term currently used in RST (formerly SST).
+A reference can only be allocated:
+- on the heap
+- on the top frame of the stack
+
+Before dereferencing, the user has to show that the reference is live.
+Hence it is only possible to deference references allocated at the same level or below the
+current stack frame.
+
+Calling conventions
+
+Low* implies specialization either up to fully instantiated types or type classes.
+This specialization must allow the compiler to optimize the type reprensentation for
+each object and each function.
+
+In Low*:
+
+  - the arguments can be passed:
+    - by value
+    - by reference if the value is big OR the value is mutable
+
+  - The results are passed by values
+    -> an additional transformation makes it return by reference:
+    let f x: t = e ~> let f' x (p:ref t) = 
+		       	   let r = e in
+		       	   p := r
+
+
+
+    In RST: let (v:'a) = f () ~> return_by_ref f = 
+       	     	       	     	      let ret_addr = salloc (instanceOf 'a) in
+				      pushStackFrame();
+				      let v = f () in
+				      memwrite ret_addr v;
+				      popStackFrame();
+				      memread ret_addr
+
+This should be safe provided that there is no aliasing issue with the new reference that is introduced, and
+that the function 'f' is still typechecking in the environment of the new stack.
+
+// TODO: write the combinator, make sure it is safe
+
+  - Assignment to locally allocated values is
+    - by value
+    - by reference is fine as long as dereferencement is forbidden if the reference is not
+      live
+
+The calling convention is decided AFTER monomorphization on a function signature by function
+signature basis:
+-> Different specializations of the same function can have different calling conventions.
+
+For "small" values, the C compiler is expected to make the appropriate choices to reduce
+the concrete number of copies.
+-> Concrete experimental results are needed // TODO
+
+The programmer should have a way to specify that she wants to have a certain convention
+and prevent the back-end from modifying it.
+
+Inlining
+
+Pure functions should be inlined (all potential allocations are local and should not influence
+the rest of the computation in any way).
+
+
+Functions not pushing/popping stack frames are to be inlined.
+-> After the F* to F* phase all remaining functions should have the push/pop discipline,
+   intuitively corresponding to the C discipline.
+
+
+Arrays
+
+New Low* (F*?) library to represent arrays with pointer arithmetic :
+
+val Array.length: #a:Type -> array a -> GTot nat
+val Array.create: r:region_id{ r is top frame on the stack } -> length:nat -> init_value:a -> StaticSST array a 
+val Array.read: #a:Type -> t:array{ is_live t } -> idx:nat{ is_within_range idx t } -> StaticSST a
+val Array.write: #a:Type -> t:array a{ is_live t } -> idx:nat{ is_within_range idx t } -> v:a -> StaticSST unit
+val Array.inner: #a:Type -> t:array a -> idx:nat -> length:nat{ is_within_range (idx+length) a } -> StaticSST (t':array a{  (is_live t ==> is_live t') /\ Array.length t' = length })
+
+This should allow us to efficiently implement programs such as crypto or asynchronous I/O.
+
+Recursive data types
+
+The programmer is responsible for making sure that all defined recursive datatypes are embedded
+in references, ie between two recursive occurences of the type there must be a reference somewhere.
+E.g.:
+   type list 'a = option(ref (_list 'a))
+   and _list 'a = 'a * list 'a
+
+Compilation will fail if some recursive data types do not satisfy this condition after the
+monomorphisation phase.
+
+
+Remarks:
+- References are isomorphic to arrays of size 1:
+  ref (r_id) 'a ~ array (r_id) 'a 1
+
+
+Future work
+- formalization of Low*
+
+- build consistent library for low-level programming, e.g.
+  - system calls
+  - infix pointers
+  - interop with other libraries (openSSL...)
+
+- Work on type / semantic preservation for the different phases
+
+- Benchmarking
+  - performance of different type representations
+  - miTLS IO
+  - crypto

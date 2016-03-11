@@ -166,7 +166,8 @@ let rec gscalar_multiplication_lemma h0 h1 a b s len =
     cut (True /\ eval h1 b len = pow2 (bitweight templ (len-1)) * v (get h1 b (len-1)) + eval h1 b (len-1)); 
     cut (True /\ eval h1 b len = pow2 (bitweight templ (len-1)) * v (get h0 a (len-1)) * v s + eval h0 a (len-1) * v s); 
     cut (True /\ eval h0 a len = pow2 (bitweight templ (len-1)) * v (get h0 a (len-1)) + eval h0 a (len-1)); 
-    distributivity_add_left (pow2 (bitweight templ (len-1)) * v (get h0 a (len-1))) (eval h0 a (len-1)) (v s)
+    distributivity_add_left (pow2 (bitweight templ (len-1)) * v (get h0 a (len-1))) (eval h0 a (len-1)) (v s); 
+    paren_mul_left (pow2 (bitweight templ (len-1))) (v (get h0 a (len-1))) (v s)
 
 val scalar_multiplication_lemma: h0:heap -> h1:heap -> a:bigint{Live h0 a} -> 
   b:bigint{Live h1 b} -> s:uint63 -> len:nat{len <= length a /\ len <= length b} ->

@@ -167,9 +167,9 @@ let le_bytes_to_num b s =
   cut (v mask_26 = v one * pow2 26 - v one /\ v one = 1); 
   assert(v mask_26 = pow2 26 - 1); 
   let s0 = sub s 0  4 in
-  let s1 = sub s 4  8 in
-  let s2 = sub s 8  12 in
-  let s3 = sub s 12 16 in
+  let s1 = sub s 4  4 in
+  let s2 = sub s 8  4 in
+  let s3 = sub s 12 4 in
   let n0 = of_uint32 (FStar.SBytes.uint32_of_sbytes s0) in 
   let n1 = of_uint32 (FStar.SBytes.uint32_of_sbytes s1) in
   let n2 = of_uint32 (FStar.SBytes.uint32_of_sbytes s2) in
@@ -242,13 +242,13 @@ val clamp: r:sbytes{length r = 16} -> ST unit
 let clamp r =
   let mask_15 = FStar.UInt8.of_int 15 in
   let mask_252 = FStar.UInt8.of_int 252 in
-  upd r 3 (index r 3 ^&  mask_15);
-  upd r 7 (index r 7 ^& mask_15);
-  upd r 11 (index r 11 ^& mask_15);
-  upd r 15 (index r 15 ^& mask_15);
-  upd r 4 (index r 4 ^& mask_252);
-  upd r 8 (index r 8 ^& mask_252);
-  upd r 12 (index r 12 ^& mask_252);
+  upd r 3  (FStar.UInt8.op_Hat_Amp (index r 3 ) mask_15);
+  upd r 7  (FStar.UInt8.op_Hat_Amp (index r 7 ) mask_15);
+  upd r 11 (FStar.UInt8.op_Hat_Amp (index r 11) mask_15);
+  upd r 15 (FStar.UInt8.op_Hat_Amp (index r 15) mask_15);
+  upd r 4  (FStar.UInt8.op_Hat_Amp (index r 4 ) mask_252);
+  upd r 8  (FStar.UInt8.op_Hat_Amp (index r 8 ) mask_252);
+  upd r 12 (FStar.UInt8.op_Hat_Amp (index r 12) mask_252);
   ()
 
 #reset-options
@@ -338,7 +338,7 @@ let poly1305_mac hash msg len key =
   //admit();
   let h0 = ST.get() in
   let r' = sub key 0 16 in
-  let s = sub key 16 32 in
+  let s = sub key 16 16 in
   //  let r',s = FStar.SBytes.split key 16 in 
   let r = create FStar.UInt8.zero 16 in
   blit r' 0 r 0 16;
