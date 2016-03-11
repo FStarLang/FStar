@@ -12,7 +12,7 @@
 void print_array(uint64* array, int len){
   unsigned char i;
   for (i=0; i < len; i++){
-    printf("%x ", array[i]);
+    printf("%lx ", array[i]);
   }
   printf("\n");
 }
