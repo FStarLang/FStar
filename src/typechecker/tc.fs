@@ -1196,8 +1196,11 @@ and tc_eqn scrutinee env branch
                 then [] 
                 else let sub_term_guards = args |> List.mapi (fun i (ei, _) -> 
                         let projector = Env.lookup_projector env f.v i in //NS: TODO ... should this be a marked as a record projector? But it doesn't matter for extraction
-                        let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) Delta_equational None) [as_arg scrutinee_tm] None f.p in
-                        build_branch_guard sub_term ei) |> List.flatten in
+                        match Env.try_lookup_lid env projector with 
+                         | None -> []
+                         | _ -> 
+                            let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) Delta_equational None) [as_arg scrutinee_tm] None f.p in
+                            build_branch_guard sub_term ei) |> List.flatten in
                      discriminate scrutinee_tm f @ sub_term_guards
             | _ -> [] in //a non-pattern sub-term: must be from a dot pattern
 
@@ -2266,7 +2269,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
       if is_abstract quals
       then List.fold_right (fun se (out, hidden) -> match se with 
             | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) -> 
-              let dec = Sig_declare_typ(l, us, mk (Tm_arrow(bs, S.mk_Total t)) None r, Assumption::quals, r) in
+              let dec = Sig_declare_typ(l, us, mk (Tm_arrow(bs, S.mk_Total t)) None r, Assumption::New::quals, r) in
               dec::out, hidden
             | Sig_datacon(l, us, t, _, _, _, _, r) -> //logically, each constructor just becomes an uninterpreted function
               let dec = Sig_declare_typ(l, us, t, [Assumption], r) in

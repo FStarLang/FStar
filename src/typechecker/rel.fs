@@ -318,10 +318,10 @@ let base_and_refinement env wl t1 =
         | Tm_app _ ->
             if norm
             then (t1, None)
-            else let t2', refinement = aux true (normalize_refinement [N.WHNF;N.UnfoldUntil Delta_constant] env wl t1) in
-                 begin match refinement with
-                    | None -> t1, None (* no refinement found ... so revert to the original type, without expanding defs *)
-                    | _ -> t2', refinement
+            else let t1' = normalize_refinement [N.WHNF] env wl t1 in
+                 begin match (SS.compress t1').n with 
+                            | Tm_refine _ -> aux true t1'
+                            | _ -> t1, None
                  end
 
         | Tm_type _
@@ -1244,7 +1244,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         match m, o  with
             | (MisMatch _, _) -> //heads definitely do not match
                 let may_relate head = match head.n with
-                    | Tm_name _  -> true
+                    | Tm_name _
+                    | Tm_match _ -> true
                     | Tm_fvar tc -> tc.fv_delta = Delta_equational
                     | _ -> false  in
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
@@ -1775,11 +1776,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | _ -> N.eta_expand wl.tcenv t in
         solve_t env ({problem with lhs=maybe_eta t1; rhs=maybe_eta t2}) wl
 
+      | Tm_match _, _
       | Tm_uinst _, _
       | Tm_name _, _
       | Tm_constant _, _
       | Tm_fvar _, _
       | Tm_app _, _
+      | _, Tm_match _
       | _, Tm_uinst _
       | _, Tm_name _
       | _, Tm_constant _
@@ -2179,7 +2182,7 @@ let rec solve_deferred_constraints env (g:guard_t) =
    solve_universe_inequalities env g.univ_ineqs;
    {g with univ_ineqs=[]}
 
-let discharge_guard env (g:guard_t) : guard_t =
+let discharge_guard' use_env_range_msg env (g:guard_t) : guard_t =
    let g = solve_deferred_constraints env g in
    (if not (Options.should_verify env.curmodule.str) then ()
     else match g.guard_f with
@@ -2192,9 +2195,11 @@ let discharge_guard env (g:guard_t) : guard_t =
                 if Env.debug env <| Options.Other "Rel" 
                 then Errors.diag (Env.get_range env) 
                                  (Util.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
-                env.solver.solve env vc
+                env.solver.solve use_env_range_msg env vc
         end);
   {g with guard_f=Trivial}
+
+let discharge_guard env g = discharge_guard' None env g
 
 let resolve_implicits g = 
   let unresolved u = match Unionfind.find u with
@@ -2216,7 +2221,7 @@ let resolve_implicits g =
                let g = if env.is_pattern
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
                        else g in
-               let g' = discharge_guard env g in
+               let g' = discharge_guard' (Some (fun () -> Print.term_to_string tm)) env g in
                until_fixpoint (g'.implicits@out, true) tl in
   {g with implicits=until_fixpoint ([], false) g.implicits}
 

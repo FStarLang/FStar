@@ -27,7 +27,7 @@ type labels = list<label>
 type msg = string * Range.range
 type ranges = list<(option<string> * Range.range)>
 
-let fresh_label : ranges -> term -> labels -> term * labels * ranges = 
+let fresh_label : ranges -> term -> labels -> term * labels =
     let ctr = ref 0 in 
     fun rs t labs -> 
         let l = incr ctr; format1 "label_%s" (string_of_int !ctr) in
@@ -39,7 +39,7 @@ let fresh_label : ranges -> term -> labels -> term * labels * ranges =
         let label = (lvar, message, range) in
         let lterm = Term.mkFreeV lvar in
         let lt = Term.mkOr(lterm, t) in
-        lt, label::labs, rs
+        lt, label::labs
 
 (*
    label_goals query : term * labels
@@ -48,8 +48,19 @@ let fresh_label : ranges -> term -> labels -> term * labels * ranges =
 
       Returns the labeled query and the label terms that were added
 *)
-let rec label_goals rs (q:term) labs : term * labels * ranges = 
-    match q.tm with
+let label_goals use_env_msg r q : term * labels * ranges = 
+    let flag, msg_prefix = match use_env_msg with 
+        | None -> false, ""
+        | Some f -> true, f() in
+    let fresh_label rs t labs = 
+        let rs' = if not flag
+                 then rs
+                 else match rs with 
+                        | (Some reason, _)::_ -> [Some ("Failed to verify implicit argument: " ^reason), r]
+                        | _ -> [Some "Failed to verify implicit argument", r] in
+        let lt, labs = fresh_label rs' t labs in
+        lt, labs, rs in
+    let rec aux rs q labs = match q.tm with
         | BoundV _ 
         | Integer _ -> 
           q, labs, rs
@@ -64,25 +75,25 @@ let rec label_goals rs (q:term) labs : term * labels * ranges =
 
         | Labeled(arg, reason, r) -> 
 //          Printf.printf "Pushing %s\n" (Range.string_of_range r);
-          let tm, labs, rs = label_goals ((Some reason, r)::rs) arg labs in
+          let tm, labs, rs = aux ((Some reason, r)::rs) arg labs in
 //          Printf.printf "Popping %s\n" (Range.string_of_range r);
           tm, labs, List.tl rs
 
         | App(Imp, [lhs;rhs]) -> 
-          let rhs, labs, rs = label_goals rs rhs labs in
+          let rhs, labs, rs = aux rs rhs labs in
           mk (App(Imp, [lhs; rhs])), labs, rs
 
         | App(And, conjuncts) -> 
           let rs, conjuncts, labs = List.fold_left (fun (rs, cs, labs) c -> 
-            let c, labs, rs = label_goals rs c labs in
+            let c, labs, rs = aux rs c labs in
             rs, c::cs, labs) 
             (rs, [], labs)
             conjuncts in
           mk (App(And, List.rev conjuncts)), labs, rs
        
         | App(ITE, [hd; q1; q2]) -> 
-          let q1, labs, _ = label_goals rs q1 labs in
-          let q2, labs, _ = label_goals rs q2 labs in
+          let q1, labs, _ = aux rs q1 labs in
+          let q2, labs, _ = aux rs q2 labs in
           mk (App(ITE, [hd; q1; q2])), labs, rs
 
         | Quant(Exists, _, _, _, _)
@@ -115,8 +126,9 @@ let rec label_goals rs (q:term) labs : term * labels * ranges =
           failwith "Impossible: arity mismatch"
        
         | Quant(Forall, pats, iopt, sorts, body) -> 
-          let body, labs, rs = label_goals rs body labs in 
-          mk (Quant(Forall, pats, iopt, sorts, body)), labs, rs
+          let body, labs, rs = aux rs body labs in 
+          mk (Quant(Forall, pats, iopt, sorts, body)), labs, rs in
+    aux [] q []
 
 
 

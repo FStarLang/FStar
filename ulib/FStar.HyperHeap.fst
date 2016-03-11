@@ -135,6 +135,9 @@ assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set
 let modifies (s:Set.set rid) (m0:t) (m1:t) =
   Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
 
+let modifies_one (r:rid) (m0:t) (m1:t) =
+  Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement (Set.singleton r)) m0))
+
 let equal_on (s:Set.set rid) (m0:t) (m1:t) =
  (forall (r:rid). {:pattern (Map.contains m0 r)} (Set.mem r (mod_set s) /\ Map.contains m0 r) ==> Map.contains m1 r)
  /\ Map.equal m1 (Map.concat m1 (Map.restrict (mod_set s) m0))

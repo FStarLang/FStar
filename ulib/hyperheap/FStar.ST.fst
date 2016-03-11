@@ -45,7 +45,7 @@ assume val new_region: r0:rid -> ST rid
                         /\ fresh_region r1 m0 m1
                         /\ m1=Map.upd m0 r1 Heap.emp))
  
-let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) = 
+inline let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) = 
      (let region_i = Map.sel m0 i in
        not (Heap.contains region_i (as_ref x))
            /\ m1=Map.upd m0 i (Heap.upd region_i (as_ref x) init))
@@ -54,7 +54,7 @@ assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
     (requires (fun m -> True))
     (ensures (ralloc_post i init))
 
-let alloc_post (#a:Type) (init:a) m0 (x:ref a) m1 = 
+inline let alloc_post (#a:Type) (init:a) m0 (x:ref a) m1 = 
   (let region_i = Map.sel m0 root in
     not (Heap.contains region_i (as_ref x))
    /\ m1=Map.upd m0 root (Heap.upd region_i (as_ref x) init))
@@ -63,14 +63,14 @@ assume val alloc: #a:Type -> init:a -> ST (ref a)
     (requires (fun m -> True))
     (ensures (alloc_post init))
 
-let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 (_u:unit) m1 : Type = 
+inline let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 (_u:unit) m1 : Type = 
   m1=Map.upd m0 i (Heap.upd (Map.sel m0 i) (as_ref r) v)
 
 assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
   (requires (fun m -> True))
   (ensures (assign_post r v))
 
-let deref_post (#a:Type) (#i:rid) (r:rref i a) m0 x m1 =
+inline let deref_post (#a:Type) (#i:rid) (r:rref i a) m0 x m1 =
   m1=m0 /\ x=Heap.sel (Map.sel m0 i) (as_ref r)
 
 assume val op_Bang: #a:Type -> #i:rid -> r:rref i a -> ST a

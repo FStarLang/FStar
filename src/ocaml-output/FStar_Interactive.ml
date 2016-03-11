@@ -301,92 +301,95 @@ end
 | Some (filename) -> begin
 (
 # 163 "FStar.Interactive.fst"
-let _77_130 = (FStar_Parser_Dep.collect ((filename)::[]))
-in (match (_77_130) with
-| (_77_128, all_filenames) -> begin
+let _77_127 = (FStar_ST.op_Colon_Equals FStar_Options.verify_module ((module_name)::[]))
+in (
+# 164 "FStar.Interactive.fst"
+let _77_132 = (FStar_Parser_Dep.collect ((filename)::[]))
+in (match (_77_132) with
+| (_77_130, all_filenames) -> begin
 (let _158_180 = (FStar_List.tl all_filenames)
 in (FStar_List.rev _158_180))
-end))
+end)))
 end)))
 end))
 end))
 
-# 170 "FStar.Interactive.fst"
-let interactive_mode = (fun env initial_mod tc -> (
 # 171 "FStar.Interactive.fst"
-let _77_136 = if (let _158_184 = (FStar_ST.read FStar_Options.codegen)
+let interactive_mode = (fun env initial_mod tc -> (
+# 172 "FStar.Interactive.fst"
+let _77_138 = if (let _158_184 = (FStar_ST.read FStar_Options.codegen)
 in (FStar_Option.isSome _158_184)) then begin
 (FStar_Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag")
 end else begin
 ()
 end
 in (
-# 173 "FStar.Interactive.fst"
+# 174 "FStar.Interactive.fst"
 let rec go = (fun stack curmod env -> (match ((shift_chunk ())) with
 | Pop (msg) -> begin
 (
-# 176 "FStar.Interactive.fst"
-let _77_144 = (tc.pop env msg)
-in (
 # 177 "FStar.Interactive.fst"
-let _77_156 = (match (stack) with
+let _77_146 = (tc.pop env msg)
+in (
+# 178 "FStar.Interactive.fst"
+let _77_158 = (match (stack) with
 | [] -> begin
 (
-# 179 "FStar.Interactive.fst"
-let _77_147 = (FStar_Util.print_error "too many pops")
+# 180 "FStar.Interactive.fst"
+let _77_149 = (FStar_Util.print_error "too many pops")
 in (FStar_All.exit 1))
 end
 | hd::tl -> begin
 (hd, tl)
 end)
-in (match (_77_156) with
+in (match (_77_158) with
 | ((env, curmod), stack) -> begin
 (go stack curmod env)
 end)))
 end
 | Push (msg) -> begin
 (
-# 184 "FStar.Interactive.fst"
+# 185 "FStar.Interactive.fst"
 let stack = ((env, curmod))::stack
 in (
-# 185 "FStar.Interactive.fst"
+# 186 "FStar.Interactive.fst"
 let env = (tc.push env msg)
 in (go stack curmod env)))
 end
 | Code (text, (ok, fail)) -> begin
 (
-# 189 "FStar.Interactive.fst"
-let fail = (fun curmod env_mark -> (
 # 190 "FStar.Interactive.fst"
-let _77_170 = (tc.report_fail ())
-in (
+let fail = (fun curmod env_mark -> (
 # 191 "FStar.Interactive.fst"
-let _77_172 = (FStar_Util.print1 "%s\n" fail)
+let _77_172 = (tc.report_fail ())
 in (
 # 192 "FStar.Interactive.fst"
+let _77_174 = (FStar_Util.print1 "%s\n" fail)
+in (
+# 193 "FStar.Interactive.fst"
 let env = (tc.reset_mark env_mark)
 in (go stack curmod env)))))
 in (
-# 195 "FStar.Interactive.fst"
+# 196 "FStar.Interactive.fst"
 let env_mark = (tc.mark env)
 in (
-# 196 "FStar.Interactive.fst"
+# 197 "FStar.Interactive.fst"
 let res = (tc.check_frag env_mark curmod text)
 in (match (res) with
 | Some (curmod, env, n_errs) -> begin
 if (n_errs = 0) then begin
 (
-# 200 "FStar.Interactive.fst"
-let _77_182 = (FStar_Util.print1 "\n%s\n" ok)
-in (
 # 201 "FStar.Interactive.fst"
+let _77_184 = (FStar_Util.print1 "\n%s\n" ok)
+in (
+# 202 "FStar.Interactive.fst"
 let env = (tc.commit_mark env)
 in (go stack curmod env)))
 end else begin
 (fail curmod env_mark)
 end
 end
-| _77_186 -> begin
+| _77_188 -> begin
 (fail curmod env_mark)
 end))))
 end))
