@@ -1196,8 +1196,11 @@ and tc_eqn scrutinee env branch
                 then [] 
                 else let sub_term_guards = args |> List.mapi (fun i (ei, _) -> 
                         let projector = Env.lookup_projector env f.v i in //NS: TODO ... should this be a marked as a record projector? But it doesn't matter for extraction
-                        let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) Delta_equational None) [as_arg scrutinee_tm] None f.p in
-                        build_branch_guard sub_term ei) |> List.flatten in
+                        match Env.try_lookup_lid env projector with 
+                         | None -> []
+                         | _ -> 
+                            let sub_term = mk_Tm_app (S.fvar (Ident.set_lid_range projector f.p) Delta_equational None) [as_arg scrutinee_tm] None f.p in
+                            build_branch_guard sub_term ei) |> List.flatten in
                      discriminate scrutinee_tm f @ sub_term_guards
             | _ -> [] in //a non-pattern sub-term: must be from a dot pattern
 
@@ -2266,7 +2269,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
       if is_abstract quals
       then List.fold_right (fun se (out, hidden) -> match se with 
             | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) -> 
-              let dec = Sig_declare_typ(l, us, mk (Tm_arrow(bs, S.mk_Total t)) None r, Assumption::quals, r) in
+              let dec = Sig_declare_typ(l, us, mk (Tm_arrow(bs, S.mk_Total t)) None r, Assumption::New::quals, r) in
               dec::out, hidden
             | Sig_datacon(l, us, t, _, _, _, _, r) -> //logically, each constructor just becomes an uninterpreted function
               let dec = Sig_declare_typ(l, us, t, [Assumption], r) in
@@ -2373,10 +2376,12 @@ let type_of env e =
     if Env.debug env <| Options.Other "RelCheck" then Util.print1 "Checking term %s\n" (Print.term_to_string e);
     //let env, _ = Env.clear_expected_typ env in
     let env = {env with top_level=false} in
-    let t, c, g = tc_tot_or_gtot_term env e in
+    let t, c, g = 
+        try tc_tot_or_gtot_term env e
+        with Error(msg, _) -> raise (Error("Implicit argument: " ^ msg, Env.get_range env)) in
     if Util.is_total_lcomp c
     then c.res_typ, g
-    else raise (Error("Expected a total term; got a ghost term", e.pos))
+    else raise (Error(Util.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e), Env.get_range env))
 
 let check_module env m =
     if List.length !Options.debug <> 0
