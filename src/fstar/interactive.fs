@@ -160,6 +160,7 @@ let detect_dependencies_with_first_interactive_chunk () =
          fail (Util.format2 "I found a \"module %s\" directive, but there \
             is no %s.fst\n" module_name module_name)
       | Some filename ->
+          Options.verify_module := [ module_name ];
           let _, all_filenames = Parser.Dep.collect [ filename ] in
           List.rev (List.tl all_filenames)
           
