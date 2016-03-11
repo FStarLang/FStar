@@ -122,6 +122,8 @@ let heap_ref      = p2l ["FStar"; "Heap"; "Ref"]
 let set_empty     = p2l ["FStar"; "Set"; "empty"]
 let set_singleton = p2l ["FStar"; "Set"; "singleton"]
 let set_union     = p2l ["FStar"; "Set"; "union"]
+let fstar_hyperheap_lid = p2l ["FStar"; "HyperHeap"]
+let rref_lid      = p2l ["FStar"; "HyperHeap"; "rref"]
 
 (* monad constants *)
 let effect_PURE_lid  = pconst "PURE"

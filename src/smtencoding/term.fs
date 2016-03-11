@@ -327,33 +327,41 @@ let fresh_constructor (name, arg_sorts, sort, id) =
     let cid_app = mkApp(constr_id_of_sort sort, [capp]) in
     Assume(mkForall([[capp]], bvar_names, mkEq(mkInteger id, cid_app)), Some "Constructor distinct") 
 
-let constructor_to_decl (name, projectors, sort, id, injective) =
-    let cdecl = DeclFun(name, projectors |> List.map snd, sort, Some "Constructor") in
+let injective_constructor (name, projectors, sort) = 
     let n_bvars = List.length projectors in
     let bvar_name i = "x_" ^ string_of_int i in
     let bvar_index i = n_bvars - (i + 1) in
     let bvar i s = mkFreeV(bvar_name i, s) in
     let bvars = projectors |> List.mapi (fun i (_, s) -> bvar i s) in
     let bvar_names = List.map fv_of_term bvars in
-    let capp = mkApp(name, bvars) in
+    let capp = mkApp(name, bvars) in  
+    projectors 
+    |> List.mapi (fun i (name, s) ->
+            let cproj_app = mkApp(name, [capp]) in
+            let proj_name = DeclFun(name, [sort], s, Some "Projector") in
+            [proj_name;
+                Assume(mkForall([[capp]], bvar_names, mkEq(cproj_app, bvar i s)), Some "Projection inverse")])
+    |> List.flatten
+
+let constructor_to_decl (name, projectors, sort, id, injective) =
+    let injective = injective || true in
+    let cdecl = DeclFun(name, projectors |> List.map snd, sort, Some "Constructor") in
     let cid = fresh_constructor (name, projectors |> List.map snd, sort, id) in
-    let disc_name = "is-"^name in
-    let xfv = ("x", sort) in
-    let xx = mkFreeV xfv in
-    let disc_eq = mkEq(mkApp(constr_id_of_sort sort, [xx]), mkInteger (string_of_int id)) in
-    let proj_terms = projectors |> List.map (fun (proj, s) -> mkApp(proj, [xx])) in
-    let disc_inv_body = mkEq(xx, mkApp(name, proj_terms)) in
-    let disc_ax = mkAnd(disc_eq, disc_inv_body)  in
-    let disc = mkDefineFun(disc_name, [xfv], Bool_sort,
+    let disc = 
+        let disc_name = "is-"^name in
+        let xfv = ("x", sort) in
+        let xx = mkFreeV xfv in
+        let disc_eq = mkEq(mkApp(constr_id_of_sort sort, [xx]), mkInteger (string_of_int id)) in
+        let proj_terms = projectors |> List.map (fun (proj, s) -> mkApp(proj, [xx])) in
+        let disc_inv_body = mkEq(xx, mkApp(name, proj_terms)) in
+        let disc_ax = mkAnd(disc_eq, disc_inv_body)  in
+        mkDefineFun(disc_name, [xfv], Bool_sort,
                            disc_ax,
                            Some "Discriminator definition") in
-    let projs = projectors |> List.mapi (fun i (name, s) ->
-        let cproj_app = mkApp(name, [capp]) in
-        let proj_name = DeclFun(name, [sort], s, Some "Projector") in
-        if injective 
-        then [proj_name;
-              Assume(mkForall([[capp]], bvar_names, mkEq(cproj_app, bvar i s)), Some "Projection inverse")]
-        else [proj_name]) |> List.flatten in
+    let projs = 
+        if injective
+        then injective_constructor (name, projectors, sort)
+        else [] in
     Caption (format1 "<start constructor %s>" name)::cdecl::cid::projs@[disc]@[Caption (format1 "</end constructor %s>" name)]
 
 
