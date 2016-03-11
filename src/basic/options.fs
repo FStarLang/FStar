@@ -343,7 +343,9 @@ let set_options =
 
 let reset_options_string : ref<option<string>> = ref None
 let reset_options () =
+    let verify_module_init = !verify_module in
     init_options();
+    verify_module := verify_module_init;
     let res = Getopt.parse_cmdline (specs()) (fun x -> ()) in
     match !reset_options_string with
         | Some x -> set_options x
