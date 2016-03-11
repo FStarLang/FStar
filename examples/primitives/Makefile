@@ -4,6 +4,8 @@ FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 OPTIONS_VER= 
 OPTIONS_COMPILE=--lax --codegen C
 
+LOW_STAR_MODULES=Axioms IntLib IntLibLemmas Sint FStar.UInt8 FStar.UInt32 FStar.UInt63 SBuffer FStar.SBytes
+
 CHACHA=chacha
 POLY=poly
 CHACHA_ODIR=chacha20
@@ -18,7 +20,7 @@ COMPILE=gcc -O2 fstarlib.c
 all: chacha-test poly-test
 
 chacha-ver: chacha.fst
-	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 20
+	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 50 $(addprefix --verify_module , $(LOW_STAR_MODULES) Chacha)
 
 chacha-test: chacha.fst
 	@echo ""
@@ -32,7 +34,7 @@ chacha-test: chacha.fst
 	./$(CHACHA_ODIR)/$(CHACHA)
 
 poly-ver: poly.fst
-	$(FSTAR) $(OPTIONS_VER) $^
+	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 120 $(addprefix --verify_module , $(LOW_STAR_MODULES) Parameters Bigint Bignum Poly)
 
 poly-test: poly.fst
 	@echo ""

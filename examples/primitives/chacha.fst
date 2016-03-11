@@ -96,17 +96,17 @@ let initialize_state state key counter nonce =
   upd state 3 (of_string "0x6b206574");  
   (* Key part *)
   let k0 = sub key 0  4  in
-  let k1 = sub key 4  8  in
-  let k2 = sub key 8  12 in
-  let k3 = sub key 12 16 in
-  let k4 = sub key 16 20 in
-  let k5 = sub key 20 24 in
-  let k6 = sub key 24 28 in
-  let k7 = sub key 28 32 in
+  let k1 = sub key 4  4  in
+  let k2 = sub key 8  4 in
+  let k3 = sub key 12 4 in 
+  let k4 = sub key 16 4 in 
+  let k5 = sub key 20 4 in
+  let k6 = sub key 24 4 in
+  let k7 = sub key 28 4 in
   (* Nonce part *)
   let n0 = sub nonce 0 4  in 
-  let n1 = sub nonce 4 8  in 
-  let n2 = sub nonce 8 12 in 
+  let n1 = sub nonce 4 4  in 
+  let n2 = sub nonce 8 4 in 
   (* Update with key *)
   upd state 4 (uint32_of_sbytes k0); 
   upd state 5 (uint32_of_sbytes k1); 
