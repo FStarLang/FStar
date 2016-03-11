@@ -16,7 +16,22 @@ let idsym ((s, _) : mlident) : mlsymbol =
 let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
 
+type gensym_t = {
+    gensym: unit -> mlident;
+    reset:unit -> unit;
+}
 
+let gs =
+  let ctr = Util.mk_ref 0 in
+  let n_resets = Util.mk_ref 0 in
+  {gensym =(fun () -> "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (incr ctr; !ctr)), 0);
+   reset = (fun () -> ctr := 0; incr n_resets)}
+
+let gensym () = gs.gensym()
+let reset_gensym() = gs.reset()
+let rec gensyms x = match x with
+  | 0 -> []
+  | n -> gensym ()::gensyms (n-1)
 
 (* -------------------------------------------------------------------- *)
 let mlpath_of_lident (x : lident) : mlpath =

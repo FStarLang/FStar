@@ -20,15 +20,19 @@ open FStar
 open FStar.Ident
 open FStar.Util
 open FStar.Extraction.ML.Syntax
-open FStar.Extraction.ML.Env
+open FStar.Extraction.ML.UEnv
 
-open FStar.Absyn
+open FStar.Syntax
 open FStar.Tc.Env
-open FStar.Absyn.Syntax
+open FStar.Syntax.Syntax
 open FStar.Tc.Normalize
-open FStar.Absyn.Print
+open FStar.Syntax.Print
 
-let binderIsExp (bn:binder): bool = is_inr (fst bn)
+module S = FStar.Syntax.Syntax
+module SS = FStar.Syntax.Subst
+module U = FStar.Syntax.Util
+
+let binderIsExp (bn:binder): bool = match (fst bn).sort.n with Tm_type _ -> true | _ -> false
 
 let rec argIsExp (k:knd) (typeName : string) : list<bool> =
     match (Util.compress_kind k).n with
@@ -45,14 +49,13 @@ let  numIndices (k:knd) (typeName : string (*this argument is just for debugging
 let mlty_of_isExp (b:bool) : mlty =
     if b then erasedContent else unknownType
 
-
 let delta_norm_eff =
     let cache = Util.smap_create 20 in
     let rec delta_norm_eff g (l:lident) =
         match Util.smap_try_find cache l.str with
             | Some l -> l
             | None ->
-              let res = match Tc.Env.lookup_effect_abbrev g.tcenv l with
+              let res = match TypeChecker.Env.lookup_effect_abbrev g.tcenv U_ with
                 | None -> l
                 | Some (_, c) -> delta_norm_eff g (Util.comp_effect_name c) in
               Util.smap_add cache l.str res;
@@ -84,8 +87,7 @@ let rec curry (inp: (list<mlty>)) (f : e_tag) (out: mlty) =
   The actual definiton is a bit complicated, because we need for any x, \box x to be convertible to \box.
 *)
 
-type context = env
-
+type context = UEnv.env
 
 let extendContextWithRepAsTyVar (b : either<btvar,bvvar> * either<btvar,bvvar>) (c:context): context =
     match b with
