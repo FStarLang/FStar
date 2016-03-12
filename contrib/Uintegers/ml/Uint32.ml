@@ -25,3 +25,10 @@ let to_int n = Stdint.Uint32.to_int n
 let of_string s = Stdint.Uint32.of_string s
 let to_string x = Stdint.Uint32.to_string x
 let compare x y = Stdint.Uint32.compare x y
+
+let rotate_left x n =
+  logor (shift_left x n)
+        (shift_right_logical x (32 - n))
+let rotate_right x n =
+  logor (shift_right_logical x n)
+        (shift_left x (32 - n))

@@ -101,3 +101,9 @@ assume val to_string : uint32 -> Tot string
 
 assume val compare : uint32 -> uint32 -> Tot int
 (** The comparison function for integers of type uint32. **)
+
+
+// New functions
+assume val rotate_left: uint32 -> nat -> Tot uint32
+
+assume val rotate_right: uint32 -> nat -> Tot uint32
