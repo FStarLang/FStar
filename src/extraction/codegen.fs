@@ -750,11 +750,10 @@ let rec doc_of_mllib_r (MLLib mllib) =
 let doc_of_mllib mllib =
     doc_of_mllib_r mllib
 
-open FStar.Extraction.ML.Env
-let string_of_mlexpr (env:env) (e:mlexpr) =
-    let doc = doc_of_expr (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
+let string_of_mlexpr cmod (e:mlexpr) =
+    let doc = doc_of_expr (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
     FStar.Format.pretty 0 doc
 
-let string_of_mlty (env:env) (e:mlty) =
-    let doc = doc_of_mltype (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
+let string_of_mlty (cmod) (e:mlty) =
+    let doc = doc_of_mltype (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
     FStar.Format.pretty 0 doc

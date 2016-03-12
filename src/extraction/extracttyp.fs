@@ -347,7 +347,7 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
         let lp = List.zip tyBinders lb in
         //assert (List.length tyBinders = List.length lp);
         let newC = extendContextWithRepAsTyVars (List.map (fun (x,y) -> (fst x, fst y)) lp) c in
-        let mlt = Util.eraseTypeDeep c (extractTyp newC tr) in
+        let mlt = Util.eraseTypeDeep (Util.delta_unfold c) (extractTyp newC tr) in
         let tys = (List.map mlTyIdentOfBinder tyBinders, mlt) in //MayErase, because constructors are always pure
         let fvv = mkFvvar ctor.cname ctor.ctype in
              //fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
@@ -414,7 +414,7 @@ let extractTypeAbbrev quals (c:context) (tyab:typeAbbrev) : context * (mlsymbol 
     let bs=List.append bs headBinders in
     let t=residualType in
     let mlt = (extractTyp c t) in
-    let mlt = Util.eraseTypeDeep c mlt in
+    let mlt = Util.eraseTypeDeep (Util.delta_unfold c) mlt in
     let tyDecBody = MLTD_Abbrev mlt in
             //printfn "type is %A\n" (t);
     let td = (mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody) in
@@ -425,7 +425,7 @@ let extractTypeAbbrev quals (c:context) (tyab:typeAbbrev) : context * (mlsymbol 
 
 let extractExn (c:context) (exnConstr : inductiveConstructor) : (context * mlmodule1) =
     let mlt = extractTyp c exnConstr.ctype in
-    let mlt = Util.eraseTypeDeep c mlt in
+    let mlt = Util.eraseTypeDeep (Util.delta_unfold c) mlt in
     let tys = [], mlt in //NS: Why are the arguments always empty?
     let fvv = mkFvvar exnConstr.cname exnConstr.ctype in
     let ex_decl  : mlmodule1 = MLM_Exn (lident2mlsymbol exnConstr.cname, argTypes mlt) in

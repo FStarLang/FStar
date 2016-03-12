@@ -75,6 +75,15 @@ let delta_unfold g = function
       end
     | _ -> None
 
+let udelta_unfold (g:UEnv.env) = function
+    | MLTY_Named(args, n) ->
+      begin match UEnv.lookup_ty_const g n with
+        | Some ts -> Some (subst ts args)
+        | _ -> None
+      end
+    | _ -> None
+
+
 let eff_leq f f' = match f, f' with
     | E_PURE, _          -> true
     | E_GHOST, E_GHOST   -> true
@@ -100,13 +109,15 @@ let join_l fs = List.fold_left join E_PURE fs
 
 let mk_ty_fun = List.fold_right (fun (_, t0) t -> MLTY_Fun(t0, E_PURE, t))
 
+type unfold_t = mlty -> option<mlty>
+
 (* type_leq is essentially the lifting of the sub-effect relation, eff_leq, into function types.
    type_leq_c is a coercive variant of type_leq, which implements an optimization to erase the bodies of ghost functions. 
    Specifically, a function (f : t -> Pure t') can be subsumed to (t -> Ghost t')   
    In the case where f is a function literal, \x. e, subsuming it to (t -> Ghost t') means that we can simply 
    erase e to unit right away. 
 *)
-let rec type_leq_c (g:Env.env) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bool * option<mlexpr>) = 
+let rec type_leq_c (unfold:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bool * option<mlexpr>) = 
     match t, t' with
         | MLTY_Var x, MLTY_Var y ->
           if fst x = fst y
@@ -123,17 +134,17 @@ let rec type_leq_c (g:Env.env) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bool * o
               with_ty (mk_ty_fun xs body.ty) e in
           begin match e with 
             | Some ({expr=MLE_Fun(x::xs, body)}) ->
-              if type_leq g t1' t1
+              if type_leq unfold t1' t1
               && eff_leq f f'
               then if f=E_PURE 
                    && f'=E_GHOST 
-                   then if type_leq g t2 t2'
-                        then let body = if type_leq g t2 ml_unit_ty 
+                   then if type_leq unfold t2 t2'
+                        then let body = if type_leq unfold t2 ml_unit_ty 
                                         then ml_unit
                                         else with_ty t2' <| MLE_Coerce(ml_unit, ml_unit_ty, t2') in
                              true, Some (with_ty (mk_ty_fun [x] body.ty) <| MLE_Fun([x], body))
                         else false, None
-                   else let ok, body = type_leq_c g (Some <| mk_fun xs body) t2 t2' in
+                   else let ok, body = type_leq_c unfold (Some <| mk_fun xs body) t2 t2' in
                         let res = match body with
                             | Some body -> Some (mk_fun [x] body) 
                             | _ ->  None in 
@@ -141,41 +152,41 @@ let rec type_leq_c (g:Env.env) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bool * o
               else false, None 
 
             | _ -> 
-              if type_leq g t1' t1
+              if type_leq unfold t1' t1
               && eff_leq f f'
-              && type_leq g t2 t2'
+              && type_leq unfold t2 t2'
               then true, e
               else false, None
           end
    
         | MLTY_Named(args, path), MLTY_Named(args', path') ->
           if path=path'
-          then if List.forall2 (type_leq g) args args'
+          then if List.forall2 (type_leq unfold) args args'
                then true, e
                else false, None
-          else begin match delta_unfold g t with
-                        | Some t -> type_leq_c g e t t'
-                        | None -> (match delta_unfold g t' with
+          else begin match unfold t with
+                        | Some t -> type_leq_c unfold e t t'
+                        | None -> (match unfold t' with
                                      | None -> false, None
-                                     | Some t' -> type_leq_c g e t t')
+                                     | Some t' -> type_leq_c unfold e t t')
                end
 
         | MLTY_Tuple ts, MLTY_Tuple ts' ->
-          if List.forall2 (type_leq g) ts ts'
+          if List.forall2 (type_leq unfold) ts ts'
           then true, e
           else false, None
 
         | MLTY_Top, MLTY_Top -> true, e
 
         | MLTY_Named _, _ ->
-          begin match delta_unfold g t with
-            | Some t -> type_leq_c g e t t'
+          begin match unfold t with
+            | Some t -> type_leq_c unfold e t t'
             | _ ->  false, None
           end
 
         | _, MLTY_Named _ ->
-          begin match delta_unfold g t' with
-            | Some t' -> type_leq_c g e t t'
+          begin match unfold t' with
+            | Some t' -> type_leq_c unfold e t t'
             | _ -> false, None
           end
 
@@ -284,19 +295,19 @@ let flatten_mlpath (ns, n) =
     else String.concat "_" (ns@[n])
 let mlpath_of_lid (l:lident) = (l.ns |> List.map (fun i -> i.idText),  l.ident.idText)
 
-let rec erasableType (g:Env.env) (t:mlty) :bool =
+let rec erasableType (unfold:unfold_t) (t:mlty) :bool =
     //printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
    if Env.erasableTypeNoDelta t
    then true
-   else match delta_unfold g t with
-     | Some t -> (erasableType g t)
+   else match unfold t with
+     | Some t -> (erasableType unfold t)
      | None  -> false
    
-let rec eraseTypeDeep (g:Env.env) (t:mlty) : mlty =
+let rec eraseTypeDeep unfold (t:mlty) : mlty =
     match t with
-    | MLTY_Fun (tyd, etag, tycd) -> if (etag=E_PURE) then (MLTY_Fun (eraseTypeDeep g tyd, etag, eraseTypeDeep g tycd)) else t
-    | MLTY_Named (lty, mlp) -> if (erasableType g t) then Env.erasedContent else (MLTY_Named (List.map (eraseTypeDeep g) lty, mlp))  // only some named constants are erased to unit.
-    | MLTY_Tuple lty ->  MLTY_Tuple (List.map (eraseTypeDeep g) lty)
+    | MLTY_Fun (tyd, etag, tycd) -> if (etag=E_PURE) then (MLTY_Fun (eraseTypeDeep unfold tyd, etag, eraseTypeDeep unfold tycd)) else t
+    | MLTY_Named (lty, mlp) -> if (erasableType unfold t) then Env.erasedContent else (MLTY_Named (List.map (eraseTypeDeep unfold) lty, mlp))  // only some named constants are erased to unit.
+    | MLTY_Tuple lty ->  MLTY_Tuple (List.map (eraseTypeDeep unfold) lty)
     | _ ->  t
 
 let prims_op_equality = with_ty MLTY_Top <| MLE_Name (["Prims"], "op_Equality")

@@ -26,6 +26,11 @@ open FStar.Extraction.ML.Env
 open FStar.Extraction.ML.Util
 open FStar.Ident
 
+let type_leq g t1 t2 = Util.type_leq (Util.delta_unfold g) t1 t2
+let type_leq_c g t1 t2 = Util.type_leq_c (Util.delta_unfold g) t1 t2
+let erasableType g t = Util.erasableType (Util.delta_unfold g) t
+let eraseTypeDeep g t = Util.eraseTypeDeep (Util.delta_unfold g) t
+
 let fail r msg =
     Util.print_string <| Print.format_error r msg;
     failwith msg
@@ -34,7 +39,7 @@ let err_uninst env e (vars, t) =
     fail e.pos (Util.format3 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated" 
                     (Print.exp_to_string e) 
                     (vars |> List.map fst |> String.concat ", ")
-                    (ML.Code.string_of_mlty env t))
+                    (ML.Code.string_of_mlty env.currentModule t))
 
 let err_ill_typed_application (e : exp) args (t : mlty) =
     fail e.pos (Util.format2 "Ill-typed application: application is %s \n remaining args are %s\n"
@@ -99,7 +104,7 @@ let erasable (g:env)  (f:e_tag) (t:mlty) =
 
 let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty =
     if erasable g f t
-    then (debug g (fun () -> Util.print2 "Erasing %s at type %s\n" (ML.Code.string_of_mlexpr g e) (ML.Code.string_of_mlty g t));
+    then (debug g (fun () -> Util.print2 "Erasing %s at type %s\n" (ML.Code.string_of_mlexpr g.currentModule e) (ML.Code.string_of_mlty g.currentModule t));
           let e_val = if type_leq g t ml_unit_ty then ml_unit else with_ty t <| MLE_Coerce(ml_unit, ml_unit_ty, t) in
           e_val, f, t) 
     else e, f, t

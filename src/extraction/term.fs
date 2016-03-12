@@ -24,15 +24,23 @@ open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
 open FStar.Extraction.ML.Util
-//open FStar.Syntax
 open FStar.Syntax.Syntax
 
-module S = FStar.Syntax.Syntax
+module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module U = FStar.Syntax.Util
+module U  = FStar.Syntax.Util
+module TC = FStar.TypeChecker.Tc
+
+let type_leq g t1 t2 = Util.type_leq (Util.udelta_unfold g) t1 t2
+let type_leq_c g t1 t2 = Util.type_leq_c (Util.udelta_unfold g) t1 t2
+let erasableType g t = Util.erasableType (Util.udelta_unfold g) t
+let eraseTypeDeep g t = Util.eraseTypeDeep (Util.udelta_unfold g) t
 
 module Print = FStar.Syntax.Print   
 
+(********************************************************************************************)
+(* Some basic error reporting; all are fatal errors at this stage                           *)
+(********************************************************************************************)
 let fail r msg =
     Util.print_string <| format2 "%s: %s\n" (Range.string_of_range r) msg;
     failwith msg
@@ -41,13 +49,12 @@ let err_uninst env (t:term) (vars, ty) =
     fail t.pos (Util.format3 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated" 
                     (Print.term_to_string t) 
                     (vars |> List.map fst |> String.concat ", ")
-                    (ML.Code.string_of_mlty env ty))
+                    (ML.Code.string_of_mlty env.currentModule ty))
 
 let err_ill_typed_application (t : term) args (ty : mlty) =
     fail t.pos (Util.format2 "Ill-typed application: application is %s \n remaining args are %s\n"
                 (Print.term_to_string t)
-                 // t
-                "") // TODO (Print.args_to_string args))
+                (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " "))
 
 
 let err_value_restriction t =
@@ -56,13 +63,18 @@ let err_value_restriction t =
 let err_unexpected_eff t f0 f1 =
     fail t.pos (Util.format3 "for expression %s, Expected effect %s; got effect %s" (Print.term_to_string t) (eff_to_string f0) (eff_to_string f1))
 
+(********************************************************************************************)
+(* Basic syntactic tests on a term                                                          *)
+(********************************************************************************************)
 let is_constructor t = match (SS.compress t).n with
-    | Tm_fvar(_, Some Data_ctor)
-    | Tm_fvar(_, Some (Record_ctor _)) -> true
+    | Tm_fvar ({fv_qual=Some Data_ctor})
+    | Tm_fvar ({fv_qual=Some (Record_ctor _)}) -> true
     | _ -> false
 
-(* something is a value iff it qualifies for the OCaml's "value restriction", which determines when a definition can be generalized *)
-let rec is_value_or_type_app (t:term) = match (SS.compress t).n with
+(* something is a value iff it qualifies for the OCaml's "value restriction", 
+   which determines when a definition can be generalized *)
+let rec is_value_or_type_app (t:term) =    //TODO: rename this to is_value?
+    match (SS.compress t).n with
     | Tm_constant _
     | Tm_bvar _
     | Tm_fvar _
@@ -70,15 +82,24 @@ let rec is_value_or_type_app (t:term) = match (SS.compress t).n with
     | Tm_app(head, args) ->
         if is_constructor head
         then args |> List.for_all (fun (te, _) -> is_value_or_type_app te)
-        else (match (SS.compress head).n with
-                 | Tm_bvar _
-                 | Tm_fvar _ -> args |> List.for_all (function (*TODO XXX*) _ -> false)
-                 | _ -> false)
+        else false
+        (* Consider:
+               let f (a:Type) (x:a) : Tot a = x
+               let g = f int
+
+           In principle, after erasure, g can be generalized.
+           But, we don't distinguish type- from term applications right now
+           and consider (f int) to be non-generalizable non-value.
+
+           This may cause extraction to eta-expand g, which isn't terrible, 
+           but we should improve it.
+        *)
     | Tm_meta(t, _)
     | Tm_ascribed(t, _, _) -> is_value_or_type_app t
     | _ -> false
 
-let rec is_ml_value e = match e.expr with
+let rec is_ml_value e = 
+    match e.expr with
     | MLE_Const _
     | MLE_Var   _
     | MLE_Name  _
@@ -88,39 +109,50 @@ let rec is_ml_value e = match e.expr with
     | MLE_Record (_, fields) -> Util.for_all (fun (_, e) -> is_ml_value e) fields
     | _ -> false
 
+
 (*INVARIANT: we MUST always perform deep erasure after extraction of types, even when done indirectly e.g. translate_typ_of_arg below.
   Otherwise, there will be Ob.magic because the types get erased at some places and not at other places *)
 //let translate_typ (g:env) (t:typ) : mlty = eraseTypeDeep g (TypeExtraction.ext g t)
 //let translate_typ_of_arg (g:env) (a:arg) : mlty = eraseTypeDeep g (TypeExtraction.getTypeFromArg g a)
-
 // erasing here is better because if we need to generate OCaml types for binders and return values, they will be accurate. By the time we reach maybe_coerce, we cant change those
 
-let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args (*only handles fully applied types*)
 
+(********************************************************************************************)
+(* Operations on ml terms, types, and effect tags                                           *)
+(*     1. Instantiation of type schemes                                                     *)
+(*     2. Erasure of terms                                                                  *)
+(*     3. Coercion (Obj.magic)                                                              *) 
+(********************************************************************************************)
+let translate_typ (g:env) (t:term) : mlty = failwith ""
+
+(* instantiate s args:
+        only handles fully applied types, 
+        pre-condition: List.length (fst s) = List.length args
+*)
+let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args 
+
+(* erasable g f t:
+       Ghost terms are erasable
+       As are pure terms that return uninformative types, e.g., unit
+*)
 let erasable (g:env) (f:e_tag) (t:mlty) =
     f = E_GHOST || (f = E_PURE && erasableType g t)
 
-// TODO only erase mlexpr? keeping general for now
-let erase (g:env) (t:either<mlty, (mlexpr * mlty)>) (f:e_tag) : either<mlty, (mlexpr * mlty)> * e_tag =
-    let ty = match t with Inl ty -> ty | Inr (e,ty) -> ty in
-    if erasable g f ty
-    then (
-        //debug g (fun () -> Util.print2 "Erasing %s at type %s\n" (ML.Code.string_of_mlexpr g e) (ML.Code.string_of_mlty g t));
-          let e_val = if type_leq g ty ml_unit_ty then ml_unit
-                      else with_ty ty <| MLE_Coerce(ml_unit, ml_unit_ty, ty) in
-          match t with Inr (e,ty) -> Inr (e_val, ty), f | _ -> t, f) 
-    else t, f
+(* erase g t f:
+        if t is an expression, replaces t with () if it is erasable
+ *)
+let erase (g:env) (e, ty) (f:e_tag) : (mlexpr * e_tag * mlty) =
+    let e = if erasable g f ty
+            then if type_leq g ty ml_unit_ty then ml_unit
+                else with_ty ty <| MLE_Coerce(ml_unit, ml_unit_ty, ty)
+            else e in
+    (e, f, ty)
 
-let maybe_coerce (g:env) (infr:either<mlty, (mlexpr * mlty)>) (expect:mlty) : either<mlty, (mlexpr * mlty)> =
-    let (t,eo) = match infr with | Inl ty -> ty, None | Inr (e,ty) -> ty, Some e in
-    let t' = eraseTypeDeep g t in
-    match type_leq_c g eo t' expect with 
-        | true, Some e' -> Inr (e', t')
-        | true, None -> Inl t' // TODO unsure I understand this case
-        | false, _ -> 
-            match infr with
-            | Inr (e,t) -> Inr (with_ty expect <| MLE_Coerce (e, t, expect), t)
-            | _ -> Inl t'
+let maybe_coerce (g:env) (e, ty) (expect:mlty) : (mlexpr * mlty) =
+    let ty = eraseTypeDeep g ty in
+    match type_leq_c g (Some e) ty expect with 
+        | true, Some e' -> (e', expect)
+        | _ -> (with_ty expect <| MLE_Coerce (e, ty, expect), expect)
 //         debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e tInferred tExpected);
                 
 let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
@@ -160,7 +192,7 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
 
           | Pat_wild x -> (*how is this different from Pat_var? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
             let mlty = translate_typ g x.sort in
-            let g = Env.extend_bv g x ([], mlty) false false imp in
+            let g = UEnv.extend_bv g x ([], mlty) false false imp in
             g, (if imp then None else Some (MLP_Var (x.ppname.idText, 0), []))
 
           | Pat_dot_term _ ->
@@ -201,10 +233,10 @@ let normalize_abs (t0:term) =
         match t.n with
             | Tm_abs(bs', body, _) -> aux (bs@bs') body
             | _ ->
-              let e' = Util.unascribe t in
-              if Util.is_fun e'
+              let e' = U.unascribe t in
+              if U.is_fun e'
               then aux bs e'
-              else mk_Exp_abs(bs, e) None e0.pos in
+              else U.abs bs e' in
    aux [] t0
 
 let ffi_mltuple_mlp (n:int) : mlpath =
@@ -224,18 +256,24 @@ let fix_lalloc (arg (*the argument of lalloc (type arg is erased) *):mlexpr) : m
         | _ -> failwith "for efficiency, the argument to lalloc should be a head normal form of the type. Extraction will then avoid creating this value on the heap."
 
 
+(*
+  maybe_lalloc_eta_data:
+  
+      Preconditions:
+       1) residualType is the type of mlAppExpr
+       2) mlAppExpr is an MLE_Name or an MLE_App with its head a named fvar, 
+          and isDataCons is true iff it names a data constructor of a data type.
 
-(*Preconditions :
-   1) residualType is the type of mlAppExpr
-   2) mlAppExpr is an MLE_Name or an MLE_App with its head a named fvar, and isDataCons is true iff it names a data constructor of a data type.
-  Postconditions
-   1) the return value (say r) also has type residualType and it's extraction-preimage is definitionally equal (in Fstar ) to that of mlAppExpr
-   2) meets the ML requirements that the args to datacons be tupled and that the datacons be fullly applied
+      Postconditions:
+       1) the return value (say r) also has type residualType and its 
+          extraction-preimage is definitionally equal in F* to that of mlAppExpr
+       2) meets the ML requirements that the args to datacons be tupled 
+          and that the datacons be fully applied
 *)
 let maybe_lalloc_eta_data (g:env) (qual : option<fv_qual>) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
     let rec eta_args more_args t = match t with
         | MLTY_Fun (t0, _, t1) ->
-          let x = gensym (), -1 in
+          let x = gensym () in
           eta_args (((x, t0), with_ty t0 <| MLE_Var x)::more_args) t1
         | MLTY_Named (_, _) -> List.rev more_args, t
         | _ -> failwith "Impossible" in
@@ -296,38 +334,112 @@ let check_pats_for_ite (l:list<(pat * option<term> * term)>) :(bool * option<ter
             | (None, None, Pat_constant (Const_bool false), Pat_constant (Const_bool true)) -> true, Some e2, Some e1
             | _ -> def
 
+type univ = 
+    | Term
+    | UZero
+    | UPlus
 
-let rec check_term (g:env) (t:term) (f:e_tag) (ty:mlty) : either<mlty, (mlexpr * mlty)> =
+let predecessor = function
+    | Term -> failwith "Impossible"
+    | UZero -> Term
+    | UPlus -> UZero
+     
+let rec univ t = 
+    match (SS.compress t).n with 
+        | Tm_delayed _
+        | Tm_unknown -> 
+          failwith "Impossible"
+
+        | Tm_constant _ -> 
+          Term
+
+        | Tm_bvar x 
+        | Tm_name x ->
+          predecessor <| univ x.sort 
+
+        | Tm_fvar fv -> 
+          predecessor <| univ fv.fv_name.ty
+
+        | Tm_ascribed(_, t, _) -> 
+          predecessor <| univ t
+
+        | Tm_type _ -> 
+          UPlus
+
+        | Tm_uvar (_, t) -> 
+          predecessor <| univ t
+           
+        | Tm_uinst(t, _) -> 
+          univ t
+
+        | Tm_refine(x, _) -> 
+          predecessor <| univ t
+
+        | Tm_arrow(bs, c) -> 
+          univ (U.comp_result c)
+
+        | Tm_abs(_, _, Some c) -> 
+          predecessor <| univ c.res_typ
+       
+        | Tm_abs(bs, body, None) -> 
+          univ body
+
+        | Tm_let(_, body) -> 
+          univ body
+
+        | Tm_match(_, branches) -> 
+          begin match branches with 
+            | (_, _, e)::_ -> univ e
+            | _ -> failwith "Empty branches"
+          end
+
+        | Tm_meta(t, _) -> 
+          univ t
+
+        | Tm_app(head, _) -> 
+          univ head
+
+let is_type t = match univ t with 
+    | Term -> false
+    | _ -> true
+
+let rec check_term (g:env) (t:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
     // debug g (fun () -> printfn "Checking %s at type %A\n" (Print.exp_to_string e) t);
-    let r, _ = erase g (check_term' g t f ty) f in 
-    r
+    let r, _, t = erase g (check_term' g t f ty) f in 
+    r, t
 
-and check_term' (g:env) (t:term) (f:e_tag) (ty:mlty) : either<mlty, (mlexpr * mlty)> =
-    let t0, tag = synth_term g t in
+and check_term' (g:env) (e0:term) (f:e_tag) (ty:mlty) : (mlexpr * mlty) =
+    let e, tag, t = synth_term g e0 in
     if eff_leq tag f
-    then maybe_coerce g t0 ty
-    else err_unexpected_eff t f tag
+    then maybe_coerce g (e, t) ty
+    else err_unexpected_eff e0 f tag
 
-and synth_term (g:env) (t:term) : either<mlty, (mlexpr * mlty)> * e_tag =
-    let r, tag = synth_term' g t in
-    erase g r tag
+and synth_term (g:env) (t:term) : (mlexpr * e_tag * mlty) =
+    let e, tag, ty = synth_term' g t in
+    erase g (e,ty) tag
 
-and synth_term' (g:env) (t:term) : either<mlty, (mlexpr * mlty)> * e_tag =
+and synth_term' (g:env) (t:term) : (mlexpr * e_tag * mlty) =
     (debug g (fun u -> Util.print_string (Util.format2 "now synthesizing term (%s) :  %s \n" (Print.tag_of_term t) (Print.term_to_string t))));
-    match (SS.compress t).n with //always compress before matching
+    let t = SS.compress t in
+    match t.n with 
         | Tm_constant c ->
-          let ty = TypeChecker.Recheck.check t in
-          let ml_ty : mlty = translate_typ g ty in
-          Inr (with_ty ml_ty (MLE_Const <| mlconst_of_const' e.pos c), ml_ty), E_PURE
+          let ty, _ = TC.type_of g.tcenv t in
+          let ml_ty = translate_typ g ty in
+          with_ty ml_ty (MLE_Const <| mlconst_of_const' t.pos c), E_PURE, ml_ty
 
         | Tm_name n -> //lookup in g; decide if its in left or right; tag is Pure because it's just a variable
-          let (x, mltys, _), qual = match lookup_bv g n with | Inr u -> u, false | _ -> failwith "impossible" in
-          //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
-          begin match mltys with
-            | ([], t) -> maybe_lalloc_eta_data g qual t x, E_PURE, t
-            | _ -> err_uninst g e mltys
-          end
-          failwith ""
+          if is_type t
+          then ml_unit, E_PURE, ml_unit_ty //Erase type argument
+          else begin match lookup_bv g n with 
+                | Inl _ -> failwith "Impossible"
+
+                | Inr (x, mltys, _) ->
+                  //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
+                  begin match mltys with
+                    | ([], t) -> maybe_lalloc_eta_data g None t x, E_PURE, t
+                    | _ -> err_uninst g e mltys
+                  end
+               end
 
         | Tm_abs(deBruijn, body, copt(* the annotated computation type of the body ... probably don't need it *)) -> 
           let named_binders, open_body = SS.open_term deBruijn body in 
