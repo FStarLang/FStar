@@ -19,14 +19,13 @@ FULL_LIB=$(LIB_FILES) FStar.ListProperties.fst
 STDLIB_CACHE = Prims.cache List.cache Set.cache Map.cache Heap.cache Array.cache String.cache ST.cache
 FULL_LIB_CACHE = $(STDLIB_CACHE) ListProperties.cache
 PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)
-FSTAR = ../../bin/fstar.exe $(OTHERFLAGS)
 STDCACHE=Prims.cache List.cache String.cache ST.cache Set.cache Map.cache Heap.cache Array.cache
 FSTARC=../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
 
 ifdef USE_NUBUILD
-FSTAR_OR_NUBUILD=$(NUBUILD) --quiet FStarVerify 
+FSTAR=$(NUBUILD) --quiet FStarVerify 
 else
-FSTAR_OR_NUBUILD=$(FSTAR)
+FSTAR=../../bin/fstar.exe $(OTHERFLAGS)
 endif
 
 %.ver: %.fst
