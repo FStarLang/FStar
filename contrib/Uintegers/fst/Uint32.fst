@@ -1,4 +1,4 @@
-module Uintegers.Uint32
+module Uint32
 
 
 assume val zero : uint32

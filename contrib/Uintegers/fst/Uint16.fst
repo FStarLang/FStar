@@ -1,4 +1,4 @@
-module Uintegers.Uint16
+module Uint16
 
 
 assume val zero : uint16

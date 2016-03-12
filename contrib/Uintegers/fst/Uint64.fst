@@ -1,4 +1,4 @@
-module Uintegers.Uint64
+module Uint64
 
 
 assume val zero : uint64
