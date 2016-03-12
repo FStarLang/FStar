@@ -136,7 +136,12 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
             let nTyVars = List.length (fst tys) in
             let tysVarPats, restPats =  Util.first_N nTyVars pats in
             let g, tyMLPats = Util.fold_map (fun g (p, imp) -> extract_one_pat disj true g p) g tysVarPats in (*not all of these were type vars in ML*)
-            let g, restMLPats = Util.fold_map (fun g (p, imp) -> extract_one_pat disj false g p) g restPats in
+            let g, restMLPats = Util.fold_map (fun g (p, imp) -> 
+                let env, popt = extract_one_pat disj false g p in
+                let popt = match popt with 
+                    | None -> Some (MLP_Wild, [])
+                    | _ -> popt in
+                env, popt) g restPats in
             let mlPats, when_clauses = List.append tyMLPats restMLPats |> List.collect (function (Some x) -> [x] | _ -> []) |> List.split in
             g, Some (Util.resugar_pat q <| MLP_CTor (d, mlPats), when_clauses |> List.flatten)
 
