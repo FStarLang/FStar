@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.Map --admit_fsi FStar.HyperHeap;
-    other-files:FStar.Set.fsi FStar.Heap.fst map.fsi FStar.List.Tot.fst hyperHeap.fsi
- --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -19,6 +15,7 @@
 *)
 module FStar.ST
 open FStar.HyperHeap
+let modifies = HyperHeap.modifies
 let ref (t:Type) = rref root t
 let st_pre = st_pre_h t
 let st_post (a:Type) = st_post_h t a
@@ -35,6 +32,8 @@ effect St (a:Type) =
 sub_effect
   DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:t) -> wp (fun a -> p a h)
 
+
+
 assume val new_region: r0:rid -> ST rid
       (requires (fun m -> True))
       (ensures (fun (m0:t) (r1:rid) (m1:t) ->
@@ -42,33 +41,33 @@ assume val new_region: r0:rid -> ST rid
                         /\ fresh_region r1 m0 m1
                         /\ m1=Map.upd m0 r1 Heap.emp))
  
-let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) = 
+inline let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) = 
      (let region_i = Map.sel m0 i in
        not (Heap.contains region_i (as_ref x))
-           /\ m1=Map.upd m0 i (Heap.upd region_i (as_ref x) init))
+           /\ m1=HyperHeap.upd m0 x init)
 
 assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
     (requires (fun m -> True))
     (ensures (ralloc_post i init))
 
-let alloc_post (#a:Type) (init:a) m0 (x:ref a) m1 = 
+inline let alloc_post (#a:Type) (init:a) m0 (x:ref a) m1 = 
   (let region_i = Map.sel m0 root in
     not (Heap.contains region_i (as_ref x))
-   /\ m1=Map.upd m0 root (Heap.upd region_i (as_ref x) init))
+   /\ m1=HyperHeap.upd m0 x init)
 
 assume val alloc: #a:Type -> init:a -> ST (ref a)
     (requires (fun m -> True))
     (ensures (alloc_post init))
 
-let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 (_u:unit) m1 : Type = 
-  m1=Map.upd m0 i (Heap.upd (Map.sel m0 i) (as_ref r) v)
+inline let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 (_u:unit) m1 : Type = 
+  m1=HyperHeap.upd m0 r v
 
 assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
   (requires (fun m -> True))
   (ensures (assign_post r v))
 
-let deref_post (#a:Type) (#i:rid) (r:rref i a) m0 x m1 =
-  m1=m0 /\ x=Heap.sel (Map.sel m0 i) (as_ref r)
+inline let deref_post (#a:Type) (#i:rid) (r:rref i a) m0 x m1 =
+  m1=m0 /\ x=HyperHeap.sel m0 r
 
 assume val op_Bang: #a:Type -> #i:rid -> r:rref i a -> ST a
   (requires (fun m -> True))

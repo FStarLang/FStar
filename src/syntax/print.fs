@@ -30,7 +30,7 @@ open FStar.Const
 
 let lid_to_string (l:lid) = l.str
 
-let fv_to_string fv = lid_to_string (fst fv).v
+let fv_to_string fv = lid_to_string fv.fv_name.v
 
 let bv_to_string bv = bv.ppname.idText ^ "#" ^ string_of_int bv.index
    
@@ -72,11 +72,11 @@ let unary_prim_ops = [
 ]
 
 let is_prim_op ps f = match f.n with
-  | Tm_fvar (fv,_) -> ps |> Util.for_some (lid_equals fv.v)
+  | Tm_fvar fv -> ps |> Util.for_some (fv_eq_lid fv)
   | _ -> false
 
 let get_lid f = match f.n with
-  | Tm_fvar (fv,_) -> fv.v
+  | Tm_fvar fv -> fv.fv_name.v
   | _ -> failwith "get_lid"
 
 let is_infix_prim_op (e:term) = is_prim_op (fst (List.split infix_prim_ops)) e
@@ -138,15 +138,16 @@ let const_to_string x = match x with
   | Const_int   x -> x
   | Const_int64 _ -> "<int64>"
   | Const_uint8 _ -> "<uint8>"
+  | Const_range r -> Range.string_of_range r
 
 let lbname_to_string = function
   | Inl l -> bv_to_string l
-  | Inr l -> lid_to_string l
+  | Inr l -> lid_to_string l.fv_name.v
 
 let tag_of_term (t:term) = match t.n with
   | Tm_bvar x -> "Tm_bvar: "   ^ db_to_string x
   | Tm_name x -> "Tm_name: " ^ nm_to_string x
-  | Tm_fvar x -> "Tm_fvar: "   ^ lid_to_string (fst x).v
+  | Tm_fvar x -> "Tm_fvar: "   ^ lid_to_string x.fv_name.v
   | Tm_uinst _ -> "Tm_uinst"
   | Tm_constant _ -> "Tm_constant"
   | Tm_type _ -> "Tm_type"
@@ -447,14 +448,14 @@ let rec sigelt_to_string x = match x with
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
 let rec sigelt_to_string_short x = match x with
-  | Sig_let((_, [{lbname=Inr l; lbtyp=t}]), _, _, _) -> Util.format2 "let %s : %s" l.str (term_to_string t)
+  | Sig_let((_, [{lbname=lb; lbtyp=t}]), _, _, _) -> Util.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) =
   Util.format2 "module %s\n%s" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
 
 let subst_elt_to_string = function
-   | DB(i, t) -> Util.format2 "DB (%s, %s)" (string_of_int i) (term_to_string t)
+   | DB(i, x) -> Util.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
    | NM(x, i) -> Util.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
    | NT(x, t) -> Util.format2 "DB (%s, %s)" (bv_to_string x) (term_to_string t) 
    | UN(i, u) -> Util.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)

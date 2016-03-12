@@ -517,7 +517,7 @@ let rec stfold (init:'b) (l:'a list) (f: 'b -> 'a -> ('s,'b) state) : ('s,'b) st
   | hd::tl -> (f init hd) >> (fun next -> stfold next tl f)
 
 type file_handle = out_channel
-let open_file_for_writing (fn:string) : file_handle = open_out fn
+let open_file_for_writing (fn:string) : file_handle = open_out_bin fn
 let append_to_file (fh:file_handle) s = fpr fh "%s\n" s; flush fh
 let close_file (fh:file_handle) = close_out fh
 let write_file (fn:string) s =

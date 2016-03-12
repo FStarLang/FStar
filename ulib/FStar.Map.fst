@@ -1,5 +1,4 @@
 module FStar.Map
-open Prims.PURE
 open FStar.Set
 open FStar.FunctionalExtensionality
 
@@ -91,23 +90,23 @@ let lemma_InDomConstMap v k    = ()
 let lemma_InDomConcat m1 m2 k  = ()
 let lemma_InDomRestrict m ks k = ()
 
-abstract type Equal (#key:Type) (#value:Type) (m1:t key value) (m2:t key value) =
-    FEq m1.mappings m2.mappings /\ FEq m1.domain m2.domain
+abstract type equal (#key:Type) (#value:Type) (m1:t key value) (m2:t key value) =
+    feq m1.mappings m2.mappings /\ feq m1.domain m2.domain
 
 
 abstract val lemma_equal_intro: m1:t 'key 'value -> m2:t 'key 'value ->
                        Lemma (requires (forall k. sel m1 k = sel m2 k /\
                                                   contains m1 k = contains m2 k))
-                       (ensures (Equal m1 m2))
-                       [SMTPatT (Equal m1 m2)]
+                       (ensures (equal m1 m2))
+                       [SMTPatT (equal m1 m2)]
 
 abstract val lemma_equal_elim: m1:t 'key 'value -> m2:t 'key 'value ->
-                      Lemma (requires (Equal m1 m2)) (ensures  (m1 = m2))
-                      [SMTPatT (Equal m1 m2)]
+                      Lemma (requires (equal m1 m2)) (ensures  (m1 = m2))
+                      [SMTPatT (equal m1 m2)]
 
 abstract val lemma_equal_refl: m1:t 'key 'value -> m2:t 'key 'value ->
-                      Lemma  (requires (m1 = m2)) (ensures  (Equal m1 m2))
-		      [SMTPatT (Equal m1 m2)]
+                      Lemma  (requires (m1 = m2)) (ensures  (equal m1 m2))
+		      [SMTPatT (equal m1 m2)]
 
 
 let lemma_equal_intro m1 m2 = ()
@@ -116,8 +115,8 @@ let lemma_equal_refl m1 m2  = ()
 
 let const_on (#key:Type) (#value:Type) (dom:set key) (v:value) = restrict dom (const v)
 
-type DisjointDom (#key:Type) (#value:Type) (m1:t key value) (m2:t key value) =
+type disjoint_dom (#key:Type) (#value:Type) (m1:t key value) (m2:t key value) =
     (forall x.{:pattern (contains m1 x)(* ; (contains m2 x) *)} contains m1 x ==> not (contains m2 x))
 
-type HasDom (#key:Type) (#value:Type) (m:t key value) (dom:set key) =
+type has_dom (#key:Type) (#value:Type) (m:t key value) (dom:set key) =
   (forall x. contains m x <==> mem x dom)

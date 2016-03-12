@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi Set --admit_fsi Map --admit_fsi HyperHeap;
-    other-files:FStar.Set.fsi FStar.Heap.fst map.fsi FStar.List.Tot.fst hyperHeap.fsi stHyperHeap.fst
- --*)
  (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -20,20 +16,23 @@
 module FStar.All
 open FStar.ST
 
-kind AllPre = AllPre_h HyperHeap.t
-kind AllPost (a:Type) = AllPost_h HyperHeap.t a
-kind AllWP (a:Type) = AllWP_h HyperHeap.t a
+let all_pre = all_pre_h HyperHeap.t
+let all_post (a:Type) = all_post_h HyperHeap.t a
+let all_wp (a:Type) = all_wp_h HyperHeap.t a
 new_effect ALL = ALL_h HyperHeap.t
-effect All (a:Type) (pre:AllPre) (post: (HyperHeap.t -> AllPost a)) =
+
+inline let lift_state_all (a:Type) (wp:st_wp a) (p:all_post a) =  wp (fun a -> p (V a))
+sub_effect STATE ~> ALL = lift_state_all
+
+inline let lift_exn_all (a:Type) (wp:ex_wp a)   (p:all_post a) (h:HyperHeap.t) = wp (fun ra -> p ra h)
+sub_effect EXN   ~> ALL = lift_exn_all
+
+effect All (a:Type) (pre:all_pre) (post: (HyperHeap.t -> Tot (all_post a))) =
        ALL a
-           (fun (p:AllPost a) (h:HyperHeap.t) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1)) (* AllWP *)
-           (fun (p:AllPost a) (h:HyperHeap.t) -> forall ra h1. (pre h /\ post h ra h1) ==> p ra h1) (* WLP *)
+           (fun (p:all_post a) (h:HyperHeap.t) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1)) (* WP  *)
+           (fun (p:all_post a) (h:HyperHeap.t) -> forall ra h1. (pre h /\ post h ra h1) ==> p ra h1) (* WLP *)
 default effect ML (a:Type) =
   ALL a (all_null_wp HyperHeap.t a) (all_null_wp HyperHeap.t a)
-sub_effect
-  STATE ~> ALL = fun (a:Type) (wp:STWP a)   (p:AllPost a) -> wp (fun a -> p (V a))
-sub_effect
-  EXN   ~> ALL = fun (a:Type) (wp:ExWP a)   (p:AllPost a) (h:HyperHeap.t) -> wp (fun ra -> p ra h)
 
 assume val pipe_right: 'a -> ('a -> 'b) -> 'b
 assume val pipe_left: ('a -> 'b) -> 'a -> 'b

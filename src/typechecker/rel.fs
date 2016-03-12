@@ -300,7 +300,7 @@ let norm_univ wl u =
             | _ -> u in 
     N.normalize_universe wl.tcenv (aux u)
 
-let normalize_refinement steps env wl t0 = N.normalize_refinement steps env (whnf env t0)
+let normalize_refinement steps env wl t0 = N.normalize_refinement steps env t0
 
 let base_and_refinement env wl t1 =
    let rec aux norm t1 =
@@ -308,7 +308,7 @@ let base_and_refinement env wl t1 =
         | Tm_refine(x, phi) ->
             if norm
             then (x.sort, Some(x, phi))
-            else begin match normalize_refinement [] env wl t1 with
+            else begin match normalize_refinement [N.WHNF] env wl t1 with
                 | {n=Tm_refine(x, phi)} -> (x.sort, Some(x, phi))
                 | tt -> failwith (Util.format2 "impossible: Got %s ... %s\n" (Print.term_to_string tt) (Print.tag_of_term tt))
             end
@@ -318,10 +318,10 @@ let base_and_refinement env wl t1 =
         | Tm_app _ ->
             if norm
             then (t1, None)
-            else let t2', refinement = aux true (normalize_refinement [] env wl t1) in
-                 begin match refinement with
-                    | None -> t1, None (* no refinement found ... so revert to the original type, without expanding defs *)
-                    | _ -> t2', refinement
+            else let t1' = normalize_refinement [N.WHNF] env wl t1 in
+                 begin match (SS.compress t1').n with 
+                            | Tm_refine _ -> aux true t1'
+                            | _ -> t1, None
                  end
 
         | Tm_type _
@@ -576,52 +576,101 @@ let destruct_flex_pattern env t =
 *)
 
 type match_result =
-  | MisMatch
+  | MisMatch of option<delta_depth> * option<delta_depth>
   | HeadMatch
   | FullMatch
 
 let head_match = function
-    | MisMatch -> MisMatch
+    | MisMatch(i, j) -> MisMatch(i, j)
     | _ -> HeadMatch
 
-let rec head_matches t1 t2 : match_result =
-  match (Util.unmeta t1).n, (Util.unmeta t2).n with
-    | Tm_name x, Tm_name y -> if S.bv_eq x y then FullMatch else MisMatch
-    | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch
-    | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches f g |> head_match
-    | Tm_constant c, Tm_constant d -> if c=d then FullMatch else MisMatch
-    | Tm_uvar (uv, _),  Tm_uvar (uv', _) -> if Unionfind.equivalent uv uv' then FullMatch else MisMatch
+let fv_delta_depth env fv = match fv.fv_delta with
+    | Delta_abstract d -> 
+      if env.curmodule.str = fv.fv_name.v.nsstr 
+      then d //we're in the defining module
+      else Delta_constant
+    | d -> d
 
-    | Tm_refine(x, _), Tm_refine(y, _) -> head_matches x.sort y.sort |> head_match
+let rec delta_depth_of_term env t = 
+    let t = Util.unmeta t in
+    match t.n with 
+    | Tm_meta _
+    | Tm_delayed _  -> failwith "Impossible"
+    | Tm_unknown
+    | Tm_bvar _
+    | Tm_name _
+    | Tm_uvar _ 
+    | Tm_let _
+    | Tm_match _ -> None
+    | Tm_uinst(t, _)
+    | Tm_ascribed(t, _, _)
+    | Tm_app(t, _)
+    | Tm_refine({sort=t}, _) -> delta_depth_of_term env t
+    | Tm_constant _ 
+    | Tm_type _ 
+    | Tm_arrow _
+    | Tm_abs _ -> Some Delta_constant
+    | Tm_fvar fv -> Some (fv_delta_depth env fv)
 
-    | Tm_refine(x, _), _  -> head_matches x.sort t2 |> head_match
-    | _, Tm_refine(x, _)  -> head_matches t1 x.sort |> head_match
+
+let rec head_matches env t1 t2 : match_result =
+  let t1 = Util.unmeta t1 in
+  let t2 = Util.unmeta t2 in
+  match t1.n, t2.n with
+    | Tm_name x, Tm_name y -> if S.bv_eq x y then FullMatch else MisMatch(None, None)
+    | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some (fv_delta_depth env f), Some (fv_delta_depth env g))
+    | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches env f g |> head_match
+    | Tm_constant c, Tm_constant d -> if c=d then FullMatch else MisMatch(None, None)
+    | Tm_uvar (uv, _),  Tm_uvar (uv', _) -> if Unionfind.equivalent uv uv' then FullMatch else MisMatch(None, None)
+
+    | Tm_refine(x, _), Tm_refine(y, _) -> head_matches env x.sort y.sort |> head_match
+
+    | Tm_refine(x, _), _  -> head_matches env x.sort t2 |> head_match
+    | _, Tm_refine(x, _)  -> head_matches env t1 x.sort |> head_match
 
     | Tm_type _, Tm_type _ 
     | Tm_arrow _, Tm_arrow _ -> HeadMatch
 
-    | Tm_app(head, _), Tm_app(head', _) -> head_matches head head'
-    | Tm_app(head, _), _ -> head_matches head t2
-    | _, Tm_app(head, _) -> head_matches t1 head
+    | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head'
+    | Tm_app(head, _), _ -> head_matches env head t2
+    | _, Tm_app(head, _) -> head_matches env t1 head
 
-    | _ -> MisMatch
+    | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
 (* Does t1 match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let success d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
-    let fail () = (MisMatch, None) in
-    let rec aux d t1 t2 =
-        match head_matches t1 t2 with
-            | MisMatch ->
-                if d=2 then fail() //already delta normal
-                else if d=1 then 
-                     let t1' = normalize_refinement [N.Unfold] env wl t1 in
-                     let t2' = normalize_refinement [N.Unfold] env wl t2 in
-                     aux 2 t1' t2'
-                else let t1 = normalize_refinement [N.Inline] env wl t1 in
-                     let t2 = normalize_refinement [N.Inline] env wl t2 in
-                     aux (d+1) t1 t2
-            | r -> success d r t1 t2 in
+    let fail r = (r, None) in
+    let rec aux n_delta t1 t2 =
+        let r = head_matches env t1 t2 in
+        match r with
+            | MisMatch(Some d1, Some d2) when (d1=d2) -> //incompatible
+              begin match Common.decr_delta_depth d1 with 
+                | None -> 
+                  fail r
+
+                | Some d -> 
+                  let t1 = normalize_refinement [N.UnfoldUntil d; N.WHNF] env wl t1 in
+                  let t2 = normalize_refinement [N.UnfoldUntil d; N.WHNF] env wl t2 in
+                  aux (n_delta + 1) t1 t2
+              end
+
+            | MisMatch(Some Delta_equational, _) 
+            | MisMatch(_, Some Delta_equational) -> 
+              fail r
+
+            | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
+              let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
+              let t1, t2 = if d1_greater_than_d2
+                           then let t1' = normalize_refinement [N.UnfoldUntil d2; N.WHNF] env wl t1 in
+                                t1', t2 
+                           else let t2' = normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
+                                t1, normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
+              aux (n_delta + 1) t1 t2
+            
+            | MisMatch _ -> fail r
+
+            | _ -> success n_delta r t1 t2 in
     aux 0 t1 t2
 
 type tc =
@@ -631,7 +680,9 @@ type tcs = list<tc>
 
 let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<binder> * variance * tc)> =
     let t = Util.unmeta t in
-    let matches t' = head_matches t t' <> MisMatch in
+    let matches t' = match head_matches env t t' with 
+        | MisMatch _ -> false
+        | _ -> true in
     match t.n with
         | Tm_app(hd, args) -> (* easy case: it's already in the form we want *)
             let rebuild args' =
@@ -1060,7 +1111,7 @@ and solve_flex_rigid_join env tp wl =
             | None -> None
             | Some m ->
               let x = freshen_bv x in 
-              let subst = [DB(0, S.bv_to_name x)] in
+              let subst = [DB(0, x)] in
               let phi1 = SS.subst subst phi1 in
               let phi2 = SS.subst subst phi2 in
               Some (U.refine x (Util.mk_conj phi1 phi2), m)
@@ -1160,7 +1211,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                let hd2 = {hd2 with sort=Subst.subst subst hd2.sort} in 
                let prob = TProb <| mk_problem scope orig hd1.sort (invert_rel <| p_rel orig) hd2.sort None "Formal parameter" in
                let hd1 = freshen_bv hd1 in
-               let subst = DB(0, S.bv_to_name hd1)::SS.shift_subst 1 subst in  //extend the substitution
+               let subst = DB(0, hd1)::SS.shift_subst 1 subst in  //extend the substitution
                let env = Env.push_bv env hd1 in
                begin match aux ((hd1,imp)::scope) env subst xs ys with
                  | Inl (sub_probs, phi) ->
@@ -1191,11 +1242,12 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let rigid_rigid_delta env orig wl head1 head2 t1 t2 = 
         let m, o = head_matches_delta env wl t1 t2 in
         match m, o  with
-            | (MisMatch, _) -> //heads definitely do not match
+            | (MisMatch _, _) -> //heads definitely do not match
                 let may_relate head = match head.n with
-                | Tm_name _  -> true
-                | Tm_fvar (tc, _) -> Env.is_projector env tc.v
-                | _ -> false  in
+                    | Tm_name _
+                    | Tm_match _ -> true
+                    | Tm_fvar tc -> tc.fv_delta = Delta_equational
+                    | _ -> false  in
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard = 
                         if problem.relation = EQ
@@ -1635,7 +1687,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let x2, phi2 = as_refinement env wl t2 in
         let base_prob = TProb <| mk_problem (p_scope orig) orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
         let x1 = freshen_bv x1 in
-        let subst = [DB(0, S.bv_to_name x1)] in
+        let subst = [DB(0, x1)] in
         let phi1 = Subst.subst subst phi1 in
         let phi2 = Subst.subst subst phi2 in
         let env = Env.push_bv env x1 in
@@ -1724,11 +1776,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | _ -> N.eta_expand wl.tcenv t in
         solve_t env ({problem with lhs=maybe_eta t1; rhs=maybe_eta t2}) wl
 
+      | Tm_match _, _
       | Tm_uinst _, _
       | Tm_name _, _
       | Tm_constant _, _
       | Tm_fvar _, _
       | Tm_app _, _
+      | _, Tm_match _
       | _, Tm_uinst _
       | _, Tm_name _
       | _, Tm_constant _
@@ -1763,7 +1817,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | _, Tm_delayed _
       | _, Tm_let _ -> failwith (Util.format2 "Impossible: %s and %s" (Print.tag_of_term t1) (Print.tag_of_term t2))
 
-      | _ -> giveup env "head mismatch" orig
+      | _ -> giveup env "head tag mismatch" orig
 
 and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution =
     let c1 = problem.lhs in
@@ -1852,7 +1906,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                        else let wp2_imp_wp1 = mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.wp_binop,
                                                                             [as_arg c2.result_typ;
                                                                              as_arg wpc2;
-                                                                             as_arg <| S.fvar None Const.imp_lid r;
+                                                                             as_arg <| S.fvar (Ident.set_lid_range Const.imp_lid r) (Delta_unfoldable 1) None;
                                                                              as_arg <| edge.mlift c1.result_typ wpc1])) None r in
                                                 mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.wp_as_type, 
                                                            [as_arg c2.result_typ; as_arg wp2_imp_wp1])) (Some U.ktype0.n) r  in
@@ -1917,7 +1971,7 @@ let conj_guard_f g1 g2 = match g1, g2 with
   | NonTrivial f1, NonTrivial f2 -> NonTrivial (Util.mk_conj f1 f2)
 
 let check_trivial t = match t.n with
-    | Tm_fvar (tc, _) when (lid_equals tc.v Const.true_lid) -> Trivial
+    | Tm_fvar tc when S.fv_eq_lid tc Const.true_lid -> Trivial
     | _ -> NonTrivial t
 
 let imp_guard_f g1 g2 = match g1, g2 with
@@ -1976,7 +2030,7 @@ let simplify_guard env g = match g.guard_f with
       let f = N.normalize [N.Beta; N.Inline; N.Simplify] env f in
       if Env.debug env <| Options.Other "Simplification" then Util.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match (Util.unmeta f).n with
-        | Tm_fvar (fv, _) when lid_equals fv.v Const.true_lid -> Trivial
+        | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
         | _ -> NonTrivial f in
       {g with guard_f=f}
 
@@ -2128,7 +2182,7 @@ let rec solve_deferred_constraints env (g:guard_t) =
    solve_universe_inequalities env g.univ_ineqs;
    {g with univ_ineqs=[]}
 
-let discharge_guard env (g:guard_t) : guard_t =
+let discharge_guard' use_env_range_msg env (g:guard_t) : guard_t =
    let g = solve_deferred_constraints env g in
    (if not (Options.should_verify env.curmodule.str) then ()
     else match g.guard_f with
@@ -2141,9 +2195,11 @@ let discharge_guard env (g:guard_t) : guard_t =
                 if Env.debug env <| Options.Other "Rel" 
                 then Errors.diag (Env.get_range env) 
                                  (Util.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
-                env.solver.solve env vc
+                env.solver.solve use_env_range_msg env vc
         end);
   {g with guard_f=Trivial}
+
+let discharge_guard env g = discharge_guard' None env g
 
 let resolve_implicits g = 
   let unresolved u = match Unionfind.find u with
@@ -2162,7 +2218,10 @@ let resolve_implicits g =
                then Util.print3 "Checking uvar %s resolved to %s at type %s\n" 
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
                let _, g = env.type_of ({env with use_bv_sorts=true}) tm in 
-               let g' = discharge_guard env g in
+               let g = if env.is_pattern
+                       then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
+                       else g in
+               let g' = discharge_guard' (Some (fun () -> Print.term_to_string tm)) env g in
                until_fixpoint (g'.implicits@out, true) tl in
   {g with implicits=until_fixpoint ([], false) g.implicits}
 

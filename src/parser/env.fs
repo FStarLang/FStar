@@ -37,7 +37,7 @@ type env = {
   open_namespaces:      list<lident>;                     (* fully qualified names, in order of precedence *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
   localbindings:        list<(ident * bv)>;               (* local name bindings for name resolution, paired with an env-generated unique name *)
-  recbindings:          list<(ident * lident)>;           (* names bound by recursive type and top-level let-bindings definitions only *)
+  recbindings:          list<(ident* lid * delta_depth)>; (* names bound by recursive type and top-level let-bindings definitions only *)
   sigmap:               list<Util.smap<(sigelt * bool)>>; (* bool indicates that this was declared in an interface file *)
   default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
@@ -91,17 +91,17 @@ let set_bv_range bv r =
 
 let bv_to_name bv r = bv_to_name (set_bv_range bv r)
 
-let unmangleMap = [("op_ColonColon", "Cons");
-                   ("not", "op_Negation")]
+let unmangleMap = [("op_ColonColon", "Cons", Delta_constant, Some Data_ctor);
+                   ("not", "op_Negation", Delta_equational, None)]
 
-let unmangleOpName (id:ident) =
-  find_map unmangleMap (fun (x,y) ->
-    if (id.idText = x) then Some (lid_of_path ["Prims"; y] id.idRange)
+let unmangleOpName (id:ident) : option<term> =
+  find_map unmangleMap (fun (x,y,dd,dq) ->
+    if (id.idText = x) then Some (S.fvar (lid_of_path ["Prims"; y] id.idRange) dd dq)
     else None)
 
 let try_lookup_id env (id:ident) =
   match unmangleOpName id with
-    | Some l -> Some (S.fvar None l id.idRange)
+    | Some f -> Some f
     | _ ->
       find_map env.localbindings (function
         | id', x when (id'.idText=id.idText) -> 
@@ -132,6 +132,11 @@ let fv_qual_of_se = function
       None
     | _ -> None
 
+let lb_fv lbs lid = 
+     Util.find_map lbs  (fun lb -> 
+        let fv = right lb.lbname in
+        if S.fv_eq_lid fv lid then Some fv else None) |> must 
+
 let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> =
   (* Resolve using, in order,
      0. local bindings, if the lid is unqualified
@@ -144,13 +149,18 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
       | None -> None
       | Some (se, _) ->
         begin match se with
-          | Sig_inductive_typ _ ->           Some (Term_name(S.fvar None lid (range_of_lid lid)))
-          | Sig_datacon _ ->         Some (Term_name(S.fvar (fv_qual_of_se se) lid (range_of_lid lid)))
-          | Sig_let _ ->             Some (Term_name(S.fvar None lid (range_of_lid lid)))
-          | Sig_declare_typ(_, _, _, quals, _) ->
+          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar lid Delta_constant None))
+          | Sig_datacon _ ->         Some (Term_name(S.fvar lid Delta_constant (fv_qual_of_se se)))
+          | Sig_let((_, lbs), _, _, _) ->
+            let fv = lb_fv lbs lid in
+            Some (Term_name(S.fvar lid fv.fv_delta fv.fv_qual))
+          | Sig_declare_typ(lid, _, _, quals, _) ->
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
             || quals |> Util.for_some (function Assumption -> true | _ -> false)
-            then Some (Term_name(fvar (fv_qual_of_se se) lid (range_of_lid lid)))
+            then let dd = if Util.is_primop_lid lid
+                          then Delta_equational
+                          else Delta_constant in
+                    Some (Term_name(fvar lid dd (fv_qual_of_se se)))
             else None
           | Sig_new_effect(ne, _) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid lid)))
           | Sig_effect_abbrev _ ->   Some (Eff_name(se, lid))
@@ -163,8 +173,8 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
         | Some e -> Some (Term_name e)
         | None ->
           let recname = qualify env lid.ident in
-          Util.find_map env.recbindings (fun (id, l) -> if id.idText=lid.ident.idText 
-                                                        then Some (Term_name(S.fvar None (set_lid_range l (range_of_lid lid)) (range_of_lid lid)))
+          Util.find_map env.recbindings (fun (id, l, dd) -> if id.idText=lid.ident.idText 
+                                                        then Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None))
                                                         else None)
       end
     | _ -> None in
@@ -207,7 +217,9 @@ let try_lookup_module env path =
 let try_lookup_let env (lid:lident) =
   let find_in_sig lid =
     match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_let _, _) -> Some (fvar None lid (range_of_lid lid))
+      | Some (Sig_let((_, lbs), _, _, _), _) -> 
+        let fv = lb_fv lbs lid in
+        Some (fvar lid fv.fv_delta fv.fv_qual)
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
@@ -217,7 +229,7 @@ let try_lookup_definition env (lid:lident) =
       | Some (Sig_let(lbs, _, _, _), _) ->
         Util.find_map (snd lbs) (fun lb -> 
             match lb.lbname with 
-                | Inr lid' when lid_equals lid lid' ->
+                | Inr fv when S.fv_eq_lid fv lid ->
                   Some (lb.lbdef)
                 | _ -> None)
       | _ -> None in
@@ -235,9 +247,9 @@ let try_lookup_datacon env (lid:lident) =
     match Util.smap_try_find (sigmap env) lid.str with
       | Some (Sig_declare_typ(_, _, _, quals, _), _) ->
         if quals |> Util.for_some (function Assumption -> true | _ -> false)
-        then Some (lid_as_fv lid None)
+        then Some (lid_as_fv lid Delta_constant None)
         else None
-      | Some (Sig_datacon _, _) -> Some (lid_as_fv lid (Some Data_ctor))
+      | Some (Sig_datacon _, _) -> Some (lid_as_fv lid Delta_constant (Some Data_ctor))
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
@@ -361,10 +373,10 @@ let push_bv env (x:ident) =
   let bv = S.gen_bv x.idText (Some x.idRange) tun in
   {env with localbindings=(x, bv)::env.localbindings}, bv
 
-let push_top_level_rec_binding env (x:ident) = 
+let push_top_level_rec_binding env (x:ident) dd = 
   let l = qualify env x in
   if unique false true env l
-  then {env with recbindings=(x,l)::env.recbindings}
+  then {env with recbindings=(x,l,dd)::env.recbindings}
   else raise (Error ("Duplicate top-level names " ^ l.str, range_of_lid l))
 
 let push_sigelt env s =
@@ -414,12 +426,27 @@ let finish env modul =
   modul.declarations |> List.iter (function
     | Sig_bundle(ses, quals, _, _) ->
       if List.contains Private quals
+      || List.contains Abstract quals
       then ses |> List.iter (function
                 | Sig_datacon(lid, _, _, _, _, _, _, _) -> Util.smap_remove (sigmap env) lid.str
                 | _ -> ())
+
     | Sig_declare_typ(lid, _, _, quals, _) ->
       if List.contains Private quals
       then Util.smap_remove (sigmap env) lid.str
+    
+    | Sig_let((_,lbs), r, _, quals) ->
+      if List.contains Private quals
+      || List.contains Abstract quals
+      then begin
+           lbs |> List.iter (fun lb -> Util.smap_remove (sigmap env) (right lb.lbname).fv_name.v.str)
+      end;
+      if List.contains Abstract quals
+      then lbs |> List.iter (fun lb -> 
+           let lid = (right lb.lbname).fv_name.v in
+           let decl = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, Assumption::quals, r) in
+           Util.smap_add (sigmap env) lid.str (decl, false))
+
     | _ -> ());
   {env with
     curmodule=None;

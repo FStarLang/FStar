@@ -20,6 +20,7 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Const
 
+val db_to_string     : bv -> string
 val bv_to_string     : bv -> string
 val lid_to_string    : lid -> string
 val term_to_string   : term -> string

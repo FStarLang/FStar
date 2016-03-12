@@ -17,7 +17,7 @@ assume val hmac_sha1: hmac_key -> bytes -> Tot tag
 assume val hmac_sha1_verify: hmac_key -> bytes -> tag -> Tot bool
 
 type block  = nbytes 32
-type cipher = nbytes (2 * 32)
+type cipher = nbytes (op_Multiply 2 32)
 type aes_key = nbytes 16
 type aes_iv = nbytes 16
 

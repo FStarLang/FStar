@@ -15,10 +15,10 @@
 *)
 module Prims
 (* False is the empty inductive type *)
-type False =
+type l_False =
 
 (* True is the singleton inductive type *)
-type True =
+type l_True =
   | T
 
 (* another singleton type, with its only inhabitant written '()'
@@ -30,7 +30,7 @@ assume new type unit : Type0
    proof irrelevant, heterogeneous equality in Type#0;
    primitive (TODO: make it an inductive?)
 *)
-assume type Eq2 : #a:Type -> #b:Type -> a -> b -> Type0
+assume type eq2 : #a:Type -> #b:Type -> a -> b -> Type0
 
 (* bool is a two element type with elements {'true', 'false'}
    we assume it is primitive, for convenient interop with other languages *)
@@ -64,9 +64,7 @@ type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)
 (* prefix unary '~' *)
 type l_not (p:Type) = p ==> False
 
-type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
-
-type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
+type l_ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
 
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)
 assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
@@ -75,20 +73,20 @@ assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
 assume type has_type : #a:Type -> a -> Type -> Type0
 
 (* A coercion down to universe 0 *)
-type squash (p:Type) = u:unit{p}
-
+assume type squash : Type -> Type0
+  
 (* forall (x:a). p x : specialized to Type#0 *)
-type Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
+type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
 
 (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
-type DTuple2 (a:Type)
+type dtuple2 (a:Type)
              (b:(a -> GTot Type)) =
-  | MkDTuple2: _1:a
+  | Mkdtuple2: _1:a
             -> _2:b _1
-            -> DTuple2 a b
+            -> dtuple2 a b
 
 (* exists (x:a). p x : specialized to Type#0 *)
-type Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
+type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 
 (* PURE effect *)
 let pure_pre = Type0
@@ -106,9 +104,9 @@ inline let pure_bind_wp  (a:Type) (b:Type)
                    (wp2: (a -> GTot (pure_wp b))) (wlp2: (a -> GTot (pure_wp b))) =
      pure_bind_wlp a b wp1 wp2
 inline let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
-     ITE p (wp_then post) (wp_else post)
+     l_ITE p (wp_then post) (wp_else post)
 inline let pure_ite_wlp (a:Type) (wlp_cases:pure_wp a) (post:pure_post a) =
-     (forall (x:a). wlp_cases (fun (x':a) -> ~(Eq2 #a #a x x')) \/ post x)
+     (forall (x:a). wlp_cases (fun (x':a) -> ~(eq2 #a #a x x')) \/ post x)
 inline let pure_ite_wp (a:Type) (wlp_cases:pure_wp a) (wp_cases:pure_wp a) (post:pure_post a) =
      pure_ite_wlp a wlp_cases post
     /\ wp_cases (fun (x:a) -> True)
@@ -178,15 +176,18 @@ assume val op_LessThan           : int -> int -> Tot bool
    This still allows functions ... TODO: disallow functions *)
 assume val op_Equality :    'a -> 'a -> Tot bool
 assume val op_disEquality : 'a -> 'a -> Tot bool
-assume new type char   : Type0
+assume type char   : Type0
 assume new type float  : Type0
 assume new type string : Type0
 assume new type exn : Type0
 type double = float
 
 assume val strcat : string -> string -> Tot string
-assume new type uint8 : Type0
+assume type uint8 : Type0
 type byte = uint8
+
+assume val reveal_squash : #p:Type -> squash p -> Tot (u:unit{p})
+//let reveal_squash #p x = x
 
 type list (a:Type) =
   | Nil  : list a
@@ -254,7 +255,7 @@ inline let st_bind_wlp      (heap:Type) (a:Type) (b:Type)
 inline let st_if_then_else  (heap:Type) (a:Type) (p:Type)
                              (wp_then:st_wp_h heap a) (wp_else:st_wp_h heap a)
                              (post:st_post_h heap a) (h0:heap) =
-     ITE p
+     l_ITE p
         (wp_then post h0)
 	(wp_else post h0)
 inline let st_ite_wlp       (heap:Type) (a:Type)
@@ -329,7 +330,7 @@ inline let ex_bind_wp (a:Type) (b:Type)
                    then wp2 (V.v ra1) (fun rb2 -> True)
                    else True)
 inline let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a) (post:ex_post a) =
-   ITE p
+   l_ITE p
        (wp_then post)
        (wp_else post)
 inline let ex_ite_wlp  (a:Type) (wlp_cases:ex_wp a) (post:ex_post a) =
@@ -391,7 +392,7 @@ inline let all_bind_wlp (heap:Type) (a:Type) (b:Type)
 inline let all_if_then_else (heap:Type) (a:Type) (p:Type)
                              (wp_then:all_wp_h heap a) (wp_else:all_wp_h heap a)
                              (post:all_post_h heap a) (h0:heap) =
-   ITE p
+   l_ITE p
        (wp_then post h0)
        (wp_else post h0)
 inline let all_ite_wlp  (heap:Type) (a:Type)
@@ -452,60 +453,60 @@ type lex_t =
   | LexCons : #a:Type -> a -> lex_t -> lex_t
 
 (* 'a * 'b *)
-type Tuple2 'a 'b =
-  | MkTuple2: _1:'a
+type tuple2 'a 'b =
+  | Mktuple2: _1:'a
            -> _2:'b
-           -> Tuple2 'a 'b
+           -> tuple2 'a 'b
 
 (* 'a * 'b * 'c *)
-type Tuple3 'a 'b 'c =
-  | MkTuple3: _1:'a
+type tuple3 'a 'b 'c =
+  | Mktuple3: _1:'a
            -> _2:'b
            -> _3:'c
-          -> Tuple3 'a 'b 'c
+          -> tuple3 'a 'b 'c
 
 (* 'a * 'b * 'c * 'd *)
-type Tuple4 'a 'b 'c 'd =
-  | MkTuple4: _1:'a
+type tuple4 'a 'b 'c 'd =
+  | Mktuple4: _1:'a
            -> _2:'b
            -> _3:'c
            -> _4:'d
-           -> Tuple4 'a 'b 'c 'd
+           -> tuple4 'a 'b 'c 'd
 
 (* 'a * 'b * 'c * 'd * 'e *)
-type Tuple5 'a 'b 'c 'd 'e =
-  | MkTuple5: _1:'a
+type tuple5 'a 'b 'c 'd 'e =
+  | Mktuple5: _1:'a
            -> _2:'b
            -> _3:'c
            -> _4:'d
            -> _5:'e
-           -> Tuple5 'a 'b 'c 'd 'e
+           -> tuple5 'a 'b 'c 'd 'e
 
 (* 'a * 'b * 'c * 'd * 'e * 'f *)
-type Tuple6 'a 'b 'c 'd 'e 'f =
-  | MkTuple6: _1:'a
+type tuple6 'a 'b 'c 'd 'e 'f =
+  | Mktuple6: _1:'a
            -> _2:'b
            -> _3:'c
            -> _4:'d
            -> _5:'e
            -> _6:'f
-           -> Tuple6 'a 'b 'c 'd 'e 'f
+           -> tuple6 'a 'b 'c 'd 'e 'f
 
 
 (* 'a * 'b * 'c * 'd * 'e * 'f * 'g *)
-type Tuple7 'a 'b 'c 'd 'e 'f 'g =
-  | MkTuple7: _1:'a
+type tuple7 'a 'b 'c 'd 'e 'f 'g =
+  | Mktuple7: _1:'a
            -> _2:'b
            -> _3:'c
            -> _4:'d
            -> _5:'e
            -> _6:'f
            -> _7:'g
-           -> Tuple7 'a 'b 'c 'd 'e 'f 'g
+           -> tuple7 'a 'b 'c 'd 'e 'f 'g
 
 (* 'a * 'b * 'c * 'd * 'e * 'f * 'g * 'h *)
-type Tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
-  | MkTuple8: _1:'a
+type tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
+  | Mktuple8: _1:'a
            -> _2:'b
            -> _3:'c
            -> _4:'d
@@ -513,57 +514,57 @@ type Tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
            -> _6:'f
            -> _7:'g
            -> _8:'h
-           -> Tuple8 'a 'b 'c 'd 'e 'f 'g 'h
+           -> tuple8 'a 'b 'c 'd 'e 'f 'g 'h
 
 (* Concrete syntax (x:a & y:b x & c x y) *)
-type DTuple3 (a:Type)
+type dtuple3 (a:Type)
              (b:(a -> GTot Type))
              (c:(x:a -> b x -> GTot Type)) =
-   | MkDTuple3:_1:a
+   | Mkdtuple3:_1:a
              -> _2:b _1
              -> _3:c _1 _2
-             -> DTuple3 a b c
+             -> dtuple3 a b c
 
 (* Concrete syntax (x:a & y:b x & z:c x y & d x y z) *)
-type DTuple4 (a:Type)
+type dtuple4 (a:Type)
              (b:(x:a -> GTot Type))
              (c:(x:a -> b x -> GTot Type))
              (d:(x:a -> y:b x -> z:c x y -> GTot Type)) =
- | MkDTuple4:_1:a
+ | Mkdtuple4:_1:a
            -> _2:b _1
            -> _3:c _1 _2
            -> _4:d _1 _2 _3
-           -> DTuple4 a b c d
+           -> dtuple4 a b c d
 
 let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
 let as_ensures  (#a:Type) (wlp:pure_wp a) (x:a) = ~ (wlp (fun y -> (y=!=x)))
 
 val fst : ('a * 'b) -> Tot 'a
-let fst x = MkTuple2._1 x
+let fst x = Mktuple2._1 x
 
 val snd : ('a * 'b) -> Tot 'b
-let snd x = MkTuple2._2 x
+let snd x = Mktuple2._2 x
 
-val dfst : #a:Type -> #b:(a -> GTot Type) -> DTuple2 a b -> Tot a
-let dfst #a #b t = MkDTuple2._1 t
+val dfst : #a:Type -> #b:(a -> GTot Type) -> dtuple2 a b -> Tot a
+let dfst #a #b t = Mkdtuple2._1 t
 
-val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:DTuple2 a b -> Tot (b (MkDTuple2._1 t))
-let dsnd #a #b t = MkDTuple2._2 t
+val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2._1 t))
+let dsnd #a #b t = Mkdtuple2._2 t
 
-type Let (#a:Type) (x:a) (body:(a -> Type)) = body x
-assume type InductionHyp : #a:Type -> a -> Type -> Type
-assume val by_induction_on: #a:Type -> #p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
-assume type Using : #a:Type -> Type -> a -> Type
-assume val using: #a:Type -> #p:Type -> proving:p -> pat:a -> Lemma (ensures (Using p pat))
 assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
+irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
+let unsafe_coerce #a #b x = admit(); x
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
 assume val _assert : p:Type -> unit -> Pure unit (requires $"assertion failed" p) (ensures (fun x -> True))
 assume val cut     : p:Type -> Pure unit (requires $"assertion failed" p) (fun x -> p)
 assume val qintro  : #a:Type -> #p:(a -> GTot Type) -> =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 assume val ghost_lemma: #a:Type -> #p:(a -> GTot Type) -> #q:(a -> unit -> GTot Type) -> =f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
+assume new type range_of : #a:Type -> a -> Type0
+irreducible type labeled (#a:Type0) (#x:a) (r:range_of x) (msg:string) (b:Type) = b
+
 val ignore: #a:Type -> a -> Tot unit
 let ignore #a x = ()
 

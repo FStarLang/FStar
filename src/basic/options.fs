@@ -96,6 +96,7 @@ let interactive = Util.mk_ref false
 let interactive_context = Util.mk_ref None
 let split_cases = Util.mk_ref 0
 let _include_path = Util.mk_ref []
+let no_default_includes = Util.mk_ref false
 let interactive_fsi = Util.mk_ref false
 let print_fuels = Util.mk_ref false
 let cardinality = Util.mk_ref "off"
@@ -157,6 +158,7 @@ let init_options () =
     verify_module := [];
     __temp_no_proj := [];
     _include_path := [];
+    no_default_includes := false;
     print_fuels := false;
     use_native_int := false;
     explicit_deps := false;
@@ -187,6 +189,9 @@ let universe_include_path_base_dirs =
 let get_include_path () =
   (* Allows running fstar either from the source repository, or after
    * installation (into /usr/local for instance) *)
+  if !no_default_includes then
+    !_include_path
+  else
   let h = get_fstar_home () in
   let defs = if !universes then universe_include_path_base_dirs else include_path_base_dirs in
   !_include_path @ ("."::(defs |> List.map (fun x -> h ^ x)))
@@ -275,6 +280,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
      ( noshort, "MLish", ZeroArgs(fun () -> full_context_dependency := false), "Introduce unification variables that are only dependent on the type variables in the context");
      ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x), "positive integer"), "Maximum number of cores to use for the solver (default 1)");
+     ( noshort, "no_default_includes", ZeroArgs (fun () -> no_default_includes := true), "Ignore the default module search paths");
      ( noshort, "no_extract", OneArg ((fun x -> no_extract := x::!no_extract), "module name"), "Do not extract code from this module");
      ( noshort, "no_fs_typ_app", ZeroArgs (fun () -> fs_typ_app := false), "Do not allow the use of t<t1,...,tn> syntax for type applications");
      ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir");

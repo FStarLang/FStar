@@ -29,7 +29,7 @@ type binding =
 type delta_level = 
   | NoDelta
   | OnlyInline
-  | Unfold
+  | Unfold of delta_depth
 
 (* greatest lower bound of two delta_levels *)
 val glb_delta : delta_level -> delta_level -> delta_level
@@ -80,7 +80,7 @@ and solver_t = {
     commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
-    solve        :env -> typ -> unit;
+    solve        :option<(unit -> string)> -> env -> typ -> unit;
     is_trivial   :env -> typ -> bool;
     finish       :unit -> unit;
     refresh      :unit -> unit;

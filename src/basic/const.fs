@@ -13,3 +13,4 @@ type sconst =
   | Const_float       of double
   | Const_bytearray   of array<byte> * Range.range
   | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
+  | Const_range       of Range.range                         (* not denotable by the programmer *)

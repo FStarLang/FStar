@@ -67,10 +67,16 @@ let as_uvar : typ -> uvar = function
     | _ -> failwith "Impossible"
 
 let new_implicit_var env k =
-    let t, u = new_uvar_aux env k in
-    let g = {Rel.trivial_guard with implicits=[(env, as_uvar u, t, k, u.pos)]} in
-    t, (as_uvar u, u.pos), g
+    match Util.destruct k Const.range_of_lid with
+     | Some [_; (tm, _)] -> 
+       let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) None tm.pos in
+       t, [], Rel.trivial_guard
 
+     | _ -> 
+       let t, u = new_uvar_aux env k in
+       let g = {Rel.trivial_guard with implicits=[(env, as_uvar u, t, k, u.pos)]} in
+       t, [(as_uvar u, u.pos)], g
+     
 let check_uvars r t =
   let uvs = Free.uvars t in
   if not (Util.set_is_empty uvs)
@@ -98,6 +104,7 @@ let force_sort' s = match !s.tk with
 let force_sort s = mk (force_sort' s) None s.pos
 
 let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} = 
+  let t = SS.compress t in 
   match t.n with
    | Tm_unknown ->
      if univ_vars <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";
@@ -110,6 +117,7 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
         | _ -> a, true in
 
     let rec aux vars e : typ * bool =
+      let e = SS.compress e in
       match e.n with
       | Tm_meta(e, _) -> aux vars e
       | Tm_ascribed(e, t, _) -> t, true
@@ -209,20 +217,20 @@ let pat_as_exps allow_implicits env p
         match p.v with
            | Pat_cons(fv, pats) ->
                let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
-               let _, t = Env.lookup_datacon env (fst fv).v in
+               let _, t = Env.lookup_datacon env fv.fv_name.v in
                let f, _ = Util.arrow_formals t in
                let rec aux formals pats = match formals, pats with
                 | [], [] -> []
-                | [], _::_ -> raise (Error("Too many pattern arguments", range_of_lid (fst fv).v))
+                | [], _::_ -> raise (Error("Too many pattern arguments", range_of_lid fv.fv_name.v))
                 | _::_, [] -> //fill the rest with dot patterns (if allowed), if all the remaining formals are implicit
                     formals |> List.map (fun (t, imp) -> match imp with 
                         | Some (Implicit inaccessible) ->
                           let a = Syntax.new_bv (Some (Syntax.range_of_bv t)) tun in
-                          let r = range_of_lid (fst fv).v in
+                          let r = range_of_lid fv.fv_name.v in
                           maybe_dot inaccessible a r, true
 
                         | _ -> 
-                          raise (Error(Util.format1 "Insufficient pattern arguments (%s)" (Print.pat_to_string p), range_of_lid (fst fv).v))) 
+                          raise (Error(Util.format1 "Insufficient pattern arguments (%s)" (Print.pat_to_string p), range_of_lid fv.fv_name.v))) 
 
                 | f::formals', (p, p_imp)::pats' ->
                     begin match f with
@@ -231,7 +239,7 @@ let pat_as_exps allow_implicits env p
 
                         | (_, Some (Implicit inaccessible)) ->
                             let a = Syntax.new_bv (Some p.p) tun in 
-                            let p = maybe_dot inaccessible a (range_of_lid (fst fv).v) in
+                            let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
                             (p, true)::aux formals' pats
 
                         | (_, imp) ->
@@ -306,14 +314,14 @@ let decorate_pattern env p exps =
 
             | Pat_cons(fv, []), Tm_fvar fv' ->
               if not (Syntax.fv_eq fv fv')
-              then failwith (Util.format2 "Expected pattern constructor %s; got %s" (fst fv).v.str (fst fv').v.str);
+              then failwith (Util.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
               pkg (Pat_cons(fv', [])) (force_sort' e)
 
             | Pat_cons(fv, argpats), Tm_app({n=Tm_fvar(fv')}, args) 
             | Pat_cons(fv, argpats), Tm_app({n=Tm_uinst({n=Tm_fvar(fv')}, _)}, args) ->
 
               if fv_eq fv fv' |> not
-              then failwith (Util.format2 "Expected pattern constructor %s; got %s" (fst fv).v.str (fst fv').v.str);
+              then failwith (Util.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
 
               let fv = fv' in
               let rec match_args matched_pats args argpats = match args, argpats with
@@ -545,7 +553,7 @@ let lift_formula env t mk_wp mk_wlp f =
   let k = SS.subst [NT(a, t)] kwp in
   let wp = mk_Tm_app mk_wp   [S.as_arg t; S.as_arg f] (Some k.n) f.pos in
   let wlp = mk_Tm_app mk_wlp [S.as_arg t; S.as_arg f] (Some k.n) f.pos in
-  mk_comp md_pure Recheck.t_unit wp wlp [] 
+  mk_comp md_pure Common.t_unit wp wlp [] 
 
 let label reason r f : term =
     mk (Tm_meta(f, Meta_labeled(reason, r, false))) None f.pos
@@ -600,10 +608,8 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                 | Trivial -> c
                 | NonTrivial f ->
                 let c =
-                    if true 
-                    || (Util.is_pure_or_ghost_comp c
-                    && not (is_function (Util.comp_result c))
-                    && not (Util.is_partial_return c))
+                    if (Util.is_pure_or_ghost_comp c
+                       && not (Util.is_partial_return c))
                     then let x = S.gen_bv "strengthen_pre_x" None (Util.comp_result c) in
                          let xret = Util.comp_set_flags (return_value env x.sort (S.bv_to_name x)) [PARTIAL_RETURN] in
                          let lc = bind env (Some e) (Util.lcomp_of_comp c) (Some x, Util.lcomp_of_comp xret) in
@@ -641,7 +647,7 @@ let record_application_site env e lc =
         || lid_equals (Env.current_module env) Const.prims_lid
         || S.is_teff res_t
         then c
-        else let g = Rel.guard_of_guard_formula (NonTrivial Recheck.t_unit) in
+        else let g = Rel.guard_of_guard_formula (NonTrivial Common.t_unit) in
              let c, _ = strengthen_precondition (Some (fun () -> "push")) env e (Util.lcomp_of_comp c) g in
              let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in
              let x = S.new_bv None res_t in
@@ -684,6 +690,8 @@ let ite env (guard:formula) lcomp_then lcomp_else =
      cflags=[];
      comp=comp}
 
+let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) Delta_constant None
+
 let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
     let eff = List.fold_left (fun eff (_, lc) -> join_effects env eff lc.eff_name) Const.effect_PURE_lid lcases in
     let bind_cases () =
@@ -694,8 +702,8 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
             let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
             let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
             let post   = S.new_bv None post_k in
-            let wp     = U.abs [mk_binder post] (label Errors.exhaustiveness_check (Env.get_range env) <| S.fvar None Const.false_lid (Env.get_range env)) None in 
-            let wlp    = U.abs [mk_binder post] (S.fvar None Const.true_lid (Env.get_range env)) None in
+            let wp     = U.abs [mk_binder post] (label Errors.exhaustiveness_check (Env.get_range env) <| fvar_const env Const.false_lid) None in 
+            let wlp    = U.abs [mk_binder post] (fvar_const env Const.true_lid) None in
             let md     = Env.get_effect_decl env Const.effect_PURE_lid in
             mk_comp md res_t wp wlp [] in
         let comp = List.fold_right (fun (g, cthen) celse ->
@@ -775,9 +783,9 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
     match (SS.compress t).n with 
         | Tm_type _ -> 
           begin match (SS.compress lc.res_typ).n with 
-            | Tm_fvar(fv, _) when lid_equals fv.v Const.bool_lid -> 
+            | Tm_fvar fv when S.fv_eq_lid fv Const.bool_lid -> 
               let _ = Env.lookup_lid env Const.b2t_lid in  //check that we have Prims.b2t in the context
-              let b2t = S.fvar None Const.b2t_lid e.pos in
+              let b2t = S.fvar (Ident.set_lid_range Const.b2t_lid e.pos) (Delta_unfoldable 1) None in
               let lc = bind env (Some e) lc (None, Util.lcomp_of_comp <| S.mk_Total (Util.ktype0)) in
               let e = mk_Tm_app b2t [S.as_arg e] (Some Util.ktype0.n) e.pos in
               e, lc
@@ -804,7 +812,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                 //try to normalize one more time, since more unification variables may be resolved now
                 let f = N.normalize [N.Beta; N.Inline; N.Simplify] env f in
                 match (SS.compress f).n with 
-                    | Tm_abs(_, {n=Tm_fvar (fv, _)}, _) when lid_equals fv.v Const.true_lid -> 
+                    | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv Const.true_lid -> 
                       //it's trivial
                       let lc = {lc with res_typ=t} in
                       lc.comp()
@@ -867,8 +875,8 @@ let pure_or_ghost_pre_and_post env comp =
                               let us_r, _ = Env.lookup_lid env Const.as_requires in
                               let us_e, _ = Env.lookup_lid env Const.as_ensures in
                               let r = ct.result_typ.pos in
-                              let as_req = S.mk_Tm_uinst (S.fvar None Const.as_requires r) us_r in
-                              let as_ens = S.mk_Tm_uinst (S.fvar None Const.as_ensures r) us_e in
+                              let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.as_requires r) Delta_equational None) us_r in
+                              let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.as_ensures r) Delta_equational None) us_e in
                               let req = mk_Tm_app as_req [(ct.result_typ, Some S.imp_tag); S.as_arg wp] (Some U.ktype0.n) ct.result_typ.pos in
                               let ens = mk_Tm_app as_ens [(ct.result_typ, Some S.imp_tag); S.as_arg wlp] None ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
@@ -890,7 +898,7 @@ let maybe_instantiate (env:Env.env) e t =
       let rec aux subst = function
         | (x, Some (Implicit dot))::rest ->
           let t = SS.subst subst x.sort in
-          let v, u, g = new_implicit_var env t in
+          let v, _, g = new_implicit_var env t in
           let subst = NT(x, v)::subst in
           let args, bs, subst, g' = aux subst rest in
           (v, Some (Implicit dot))::args, bs, subst, Rel.conj_guard g g'
@@ -996,8 +1004,9 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
 
             | _ -> 
               //before we manipulate the term further, we must normalize it to get rid of the invariant-broken uvars
-              let c = N.normalize_comp [N.Beta; N.Inline] env c in
-              let e = N.normalize [N.Beta; N.Inline] env e in
+              let e0, c0 = e, c in 
+              let c = N.normalize_comp [N.BetaUVars; N.WHNF; N.Inline] env c in
+              let e = N.normalize [N.BetaUVars; N.WHNF; N.Inline] env e in
               //now, with the uvars gone, we can close over the newly introduced type names
               let t = match (SS.compress (U.comp_result c)).n with 
                     | Tm_arrow(bs, cod) -> 
@@ -1104,8 +1113,8 @@ let short_circuit (head:term) (seen_args:args) : guard_formula =
          (Const.ite_lid, short_op_ite);] in
 
      match head.n with
-        | Tm_fvar (fv, _) ->
-          let lid = fv.v in
+        | Tm_fvar fv ->
+          let lid = fv.fv_name.v in
           begin match Util.find_map table (fun (x, mk) -> if lid_equals x lid then Some (mk seen_args) else None) with
             | None ->   Trivial
             | Some g -> g
@@ -1113,9 +1122,9 @@ let short_circuit (head:term) (seen_args:args) : guard_formula =
         | _ -> Trivial
 
 let short_circuit_head l = 
-    match (SS.compress l).n with 
-        | Tm_fvar (v, _) ->
-           Util.for_some (lid_equals v.v)
+    match (Util.un_uinst l).n with 
+        | Tm_fvar fv ->
+           Util.for_some (S.fv_eq_lid fv)
                    [Const.op_And;
                     Const.op_Or;
                     Const.and_lid;
