@@ -1,3 +1,7 @@
+(*--build-config
+    options:;
+    other-files:
+  --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -14,6 +18,7 @@
    limitations under the License.
 *)
 module FStar.List.Tot
+
 
 (** Base operations **)
 

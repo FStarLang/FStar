@@ -1,9 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst stack.fst
-      listset.fst FStar.Ghost.fst located.fst lref.fst regions.fst rst.fst
-  --*)
-
 module FStar.Regions.RSTWhile
 
 open FStar.Regions.RST

@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2015 Abhishek Anand, Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,7 @@ open FStar.Extraction.ML.Syntax
 open FStar.Util
 open FStar.Tc.Env
 open FStar.Absyn.Syntax
+open FStar.Ident
 open FStar
 open FStar.Tc.Normalize
 open FStar.Absyn.Print
@@ -91,7 +92,7 @@ let extendContextWithRepAsTyVar (b : either<btvar,bvvar> * either<btvar,bvvar>) 
                    //printfn "mapping from %A\n" btr.v.realname;
                    //printfn "to %A\n" bt.v.realname;
            extend_ty c btr (Some ((MLTY_Var (btvar_as_mltyvar bt))))
-        | (Inr bv, Inr _ ) -> extend_bv c bv ([], erasedContent) false false
+        | (Inr bv, Inr _ ) -> extend_bv c bv ([], erasedContent) false false false
         | _ -> failwith "Impossible case"
 
 
@@ -102,7 +103,7 @@ let extendContextAsTyvar (availableInML : bool) (b : either<btvar,bvvar>) (c:con
     match b with
         | (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar_as_mltyvar bt)) else unknownType))
         //if availableInML then (extend_ty c bt (Some ( (MLTY_Var (btvar2mlident bt))))) else (extend_hidden_ty c bt unknownType)
-        | (Inr bv) -> extend_bv c bv ([], erasedContent) false false
+        | (Inr bv) -> extend_bv c bv ([], erasedContent) false false false
 
 let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context =
    List.fold_right (extendContextAsTyvar true) (tyVars) c (*TODO: is the fold in the right direction? check *)
@@ -258,7 +259,7 @@ let lookupDataConType (c:context) (sigb : sigelts) (l:lident)(*this sigbundle co
                     match s with
                     | Sig_datacon (l',t,(_, tps, _),quals,lids,_) -> 
                        if l=l' 
-                       then let t = Absyn.Util.close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t in
+                       then let t = Absyn.Util.close_typ (List.map (fun (x, _) -> (x, Some <| Implicit true)) tps) t in
                             Some t 
                        else None
                     | _ -> None
@@ -352,7 +353,7 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
              //fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
             // fprint1 "%s\n" (typ_to_string ctor.ctype);
              // printfn "%A *)\n" (tys);
-        (extend_fv c fvv tys false, (lident2mlsymbol ctor.cname, argTypes mlt)))
+        (extend_fv c fvv tys false false, (lident2mlsymbol ctor.cname, argTypes mlt)))
 
 (*indices get collapsed to unit, so all we need is the number of index arguments.
   We will use dummy type variables for these in the dectaration of the inductive type.
@@ -399,7 +400,7 @@ let rec headBinders (c:context) (t:typ) : (context * binders * typ (*residual ty
         | _ -> (c,[],t)
 
 
-let extractTypeAbbrev (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mlidents * option<mltybody>) =
+let extractTypeAbbrev quals (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mlidents * option<mltybody>) =
     let bs = tyab.abTyBinders in
     let t = tyab.abBody in
     let l = tyab.abTyName in
@@ -417,7 +418,9 @@ let extractTypeAbbrev (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mli
     let tyDecBody = MLTD_Abbrev mlt in
             //printfn "type is %A\n" (t);
     let td = (mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody) in
-    let c = Env.extend_tydef c [td] in
+    let c = if quals |> Util.for_some (function Assumption | New -> true | _ -> false)
+            then c
+            else Env.extend_tydef c [td] in
     c, td
 
 let extractExn (c:context) (exnConstr : inductiveConstructor) : (context * mlmodule1) =
@@ -426,33 +429,39 @@ let extractExn (c:context) (exnConstr : inductiveConstructor) : (context * mlmod
     let tys = [], mlt in //NS: Why are the arguments always empty?
     let fvv = mkFvvar exnConstr.cname exnConstr.ctype in
     let ex_decl  : mlmodule1 = MLM_Exn (lident2mlsymbol exnConstr.cname, argTypes mlt) in
-    extend_fv c fvv tys false, ex_decl //this might need to be translated to OCaml exceptions
+    extend_fv c fvv tys false false, ex_decl //this might need to be translated to OCaml exceptions
+
+let mlloc_of_range (r: Range.range) =
+    let pos = Range.start_of_range r in
+    let line = Range.line_of_pos pos in
+    line, Range.file_of_range r
 
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 (* \pi_1 of returned value is the exported constant*)
 let rec extractSigElt (c:context) (s:sigelt) : context * list<mlmodule1> =
     match s with
-    | Sig_typ_abbrev (l,bs,_,t,quals,_) ->
-        let c, tds = extractTypeAbbrev c ({abTyName=l; abTyBinders=bs; abBody=t}) in
-        (c, (if quals |> List.contains Logic then [] else [MLM_Ty [tds]]))
+    | Sig_typ_abbrev (l,bs,_,t,quals, range) ->
+        let c, tds = extractTypeAbbrev quals c ({abTyName=l; abTyBinders=bs; abBody=t}) in
+        (c, (if quals |> List.contains Logic then [] else [MLM_Loc (mlloc_of_range range); MLM_Ty [tds]]))
 
-    | Sig_bundle(sigs, [ExceptionConstructor], _, _) ->
+    | Sig_bundle(sigs, [ExceptionConstructor], _, range) ->
         let _, _, exConstrs = parseInductiveTypesFromSigBundle c sigs in
         assert (List.length exConstrs = 1);
         let c, exDecl = extractExn c (List.hd exConstrs) in
-        (c, [exDecl])
+        (c, [MLM_Loc (mlloc_of_range range); exDecl])
 
-    | Sig_bundle (sigs, _, _ ,_) ->
+    | Sig_bundle (sigs, _, _ , range) ->
         //let xxxx = List.map (fun se -> fprint1 "%s\n" (Util.format1 "sig bundle: : %s\n" (Print.sigelt_to_string se))) sigs in
         let inds, abbs, _ = parseInductiveTypesFromSigBundle c sigs in
         let c, indDecls = Util.fold_map extractInductive c inds in
-        let c, tyAbDecls = Util.fold_map extractTypeAbbrev c abbs in
-        (c, [MLM_Ty (indDecls@tyAbDecls)])
+        let c, tyAbDecls = Util.fold_map (extractTypeAbbrev []) c abbs in
+        (c, [MLM_Loc (mlloc_of_range range); MLM_Ty (indDecls@tyAbDecls)])
 
     | Sig_tycon (l, bs, k, _, _, quals, r) ->
         //Util.print_string ((Print.sigelt_to_string s)^"\n");
-         if quals |> List.contains Assumption  &&
-         not (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+         if (quals |> List.contains Assumption
+            || quals |> List.contains New)
+         && not (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
          then let kbs, _ = Util.kind_formals k in 
               let se = Sig_typ_abbrev(l, bs@kbs, mk_Kind_type, Tc.Recheck.t_unit, quals, r) in
               extractSigElt c se 

@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi Set;
-    variables:LIB=../../lib;
-    other-files:$LIB/FStar.FunctionalExtensionality.fst $LIB/FStar.Set.fsi $LIB/FStar.Heap.fst $LIB/FStar.ST.fst
-  --*)
 module While
 open Heap
 open ST

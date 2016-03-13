@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -20,24 +20,23 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin</OutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <WarningLevel>1</WarningLevel>
+    <WarningLevel>5</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <NoWarn>
-    </NoWarn>
+    <NoWarn>1178</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
+    <WarningLevel>4</WarningLevel>
     <OtherFlags>--mlcompatibility</OtherFlags>
     <DocumentationFile>bin\Release\parser.XML</DocumentationFile>
   </PropertyGroup>
@@ -86,6 +85,10 @@
     <Compile Include="dsenv.fs" />
     <Compile Include="desugar.fsi" />
     <Compile Include="desugar.fs" />
+    <Compile Include="env.fsi" />
+    <Compile Include="env.fs" />
+    <Compile Include="tosyntax.fsi" />
+    <Compile Include="tosyntax.fs" />
     <Compile Include="parseit.fsi" />
     <Compile Include="parseit.fs" />
     <Compile Include="driver.fs" />
@@ -93,6 +96,11 @@
     <Compile Include="dep.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\syntax\syntax.fsproj">
+      <Name>syntax</Name>
+      <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\tc\tc.fsproj">
       <Name>tc</Name>
       <Project>{5bf4af3f-bec2-4cfd-94b7-11a38a031f4b}</Project>

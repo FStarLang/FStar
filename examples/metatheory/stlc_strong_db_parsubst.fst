@@ -1,6 +1,3 @@
-(*--build-config
-    other-files: FStar.Constructive.fst FStar.Classical.fst FStar.FunctionalExtensionality.fst
-  --*)
 (*
    Copyright 2014-2015
      Simon Forest - Inria and ENS Paris

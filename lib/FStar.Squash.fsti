@@ -1,5 +1,6 @@
 module FStar.Squash
 
+
 (* Interface for squash types; somehow inspired by:
 Quotient Types: A Modular Approach. Aleksey Nogin, TPHOLs 2002.
 http://www.nuprl.org/documents/Nogin/QuotientTypes_02.pdf
@@ -19,6 +20,9 @@ val proof_irrelevance : p:Type -> x:squash p ->
 val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
   =f:(squash (x:a -> Tot (squash (p x)))) -> Tot (squash (x:a -> Tot (p x)))
 
+val squash_double_sum:  #a:Type -> #p:(a -> Type) ->
+  =f:(squash (x:a & squash (p x))) -> Tot (squash (x:a & p x))
+  
 (* This is a monad, but not an effect *)
 
 val return_squash : #a:Type -> a -> Tot (squash a)
@@ -28,4 +32,3 @@ val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> Tot (squash b)) ->
 
 val map_squash : #a:Type -> #b:Type -> squash a -> (a -> Tot b) ->
   Tot (squash b)
-

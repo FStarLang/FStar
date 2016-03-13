@@ -21,6 +21,7 @@ open FStar
 open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Util
+open FStar.Ident
 
 open FStar.Tc
 open FStar.Tc.Env

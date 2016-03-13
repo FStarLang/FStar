@@ -66,6 +66,7 @@ type file_idx = int32
 type pos = int32
 type range = int64
 
+let dummyRange = 0L
 let col_nbits  = 9
 let line_nbits  = 16
 

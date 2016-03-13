@@ -1,5 +1,6 @@
-module Quicksort
-open List
+module QS
+
+open FStar.List
 
 (* Specification of sortedness according to some comparison function f *)
 val sorted: ('a -> 'a -> Tot bool) -> list 'a -> Tot bool
@@ -30,7 +31,7 @@ opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
 
-val sorted_concat_lemma:  a:Type
+val sorted_concat_lemma:  #a:Type
                ->  f:(a -> a -> Tot bool)
                ->  l1:list a{sorted f l1}
                ->  l2:list a{sorted f l2}
@@ -55,4 +56,4 @@ let rec sort f = function
   | pivot::tl -> 
     let hi, lo  = partitionT (f pivot) tl in 
     partition_lemma (f pivot) tl;
-    sort f lo@(pivot::sort f hi)
+    (sort f lo)@(pivot::sort f hi)

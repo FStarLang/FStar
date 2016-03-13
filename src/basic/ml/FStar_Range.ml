@@ -3,6 +3,8 @@ let b1 n =  ((n lsr 8)  land 0xFF)
 let b2 n =  ((n lsr 16) land 0xFF)
 let b3 n =  ((n lsr 24) land 0xFF)
 
+let dummyRange = 0L
+
 let lor64 = BatInt64.logor
 let land64 = BatInt64.logand
 let lsl64 = BatInt64.shift_left

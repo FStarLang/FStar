@@ -1,6 +1,3 @@
-(*--build-config
-    other-files:FStar.FunctionalExtensionality.fst
-  --*)
 module Bug121FunctionNotEqualToItsDefinition
 
 open FunctionalExtensionality

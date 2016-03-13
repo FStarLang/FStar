@@ -35,6 +35,7 @@
   let keywords = Hashtbl.create 0
 
   let () =
+    Hashtbl.add keywords "abstract"      ABSTRACT    ;
     Hashtbl.add keywords "and"           AND         ;
     Hashtbl.add keywords "as"            AS          ;
     Hashtbl.add keywords "assert"        ASSERT      ;
@@ -48,6 +49,7 @@
     Hashtbl.add keywords "exception"     EXCEPTION   ;
     Hashtbl.add keywords "exists"        EXISTS      ;
     Hashtbl.add keywords "false"         FALSE       ;
+    Hashtbl.add keywords "False"         L_FALSE     ;
     Hashtbl.add keywords "finally"       FINALLY     ;
     Hashtbl.add keywords "for"           FOR         ;
     Hashtbl.add keywords "forall"        FORALL      ;
@@ -56,11 +58,14 @@
     Hashtbl.add keywords "if"            IF          ;
     Hashtbl.add keywords "kind"          KIND        ;
     Hashtbl.add keywords "in"            IN          ;
+    Hashtbl.add keywords "inline"        INLINE      ;
+    Hashtbl.add keywords "irreducible"   IRREDUCIBLE ;
     Hashtbl.add keywords "lazy"          LAZY        ;
     Hashtbl.add keywords "let"           (LET false) ;
     Hashtbl.add keywords "logic"         LOGIC       ;
     Hashtbl.add keywords "match"         MATCH       ;
     Hashtbl.add keywords "module"        MODULE      ;
+    Hashtbl.add keywords "new"           NEW         ;
     Hashtbl.add keywords "new_effect"    NEW_EFFECT  ;
     Hashtbl.add keywords "of"            OF          ;
     Hashtbl.add keywords "open"          OPEN        ;
@@ -75,8 +80,10 @@
     Hashtbl.add keywords "to"            TO          ;
     Hashtbl.add keywords "total"         TOTAL       ;
     Hashtbl.add keywords "true"          TRUE        ;
+    Hashtbl.add keywords "True"          L_TRUE      ;
     Hashtbl.add keywords "try"           TRY         ;
     Hashtbl.add keywords "type"          TYPE        ;
+    Hashtbl.add keywords "unfoldable"    UNFOLDABLE  ;
     Hashtbl.add keywords "val"           VAL         ;
     Hashtbl.add keywords "when"          WHEN        ;
     Hashtbl.add keywords "with"          WITH        ;

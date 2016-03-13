@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set --admit_fsi Wysteria;
-    other-files:FStar.Ghost.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst ordset.fsi ordmap.fsi FStar.List.fst wysteria.fsi lib.fst
- --*)
-
 module Examples
 
 (*open Set
@@ -18,15 +13,12 @@ type post (#a:Type) = fun (m:mode) (x:a) -> True
 type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t
 
 let to_s1 p1       = singleton #prin #p_cmp p1
-let to_s2 p1 p2    = union #prin #p_cmp (to_s1 p1) (to_s1 p2)
-let to_s3 p1 p2 p3 = union #prin #p_cmp (to_s2 p1 p2) (to_s1 p3)
+let to_s2 p1 p2    = union (to_s1 p1) (to_s1 p2)
+let to_s3 p1 p2 p3 = union (to_s2 p1 p2) (to_s1 p3)
 
 (**********)
 
 
-let t = as_par ab mill2 in ()
-(**********)
-(*
 (* millionaire's secure block for any two parties *)
 (* only unification, so p1 and p2 can only be inferred if type indices *)
 (**********)
@@ -50,8 +42,6 @@ let mill7 _ =
   as_sec ab g
 
 (**********)
-
-(*
 
 (* generic in number of parties *)
 
@@ -248,4 +238,4 @@ let two_round_bidding p1 p2 =
 
   as_sec (to_s2 p1 p2) r2*)
 
-(**********)*)*)
+(**********)

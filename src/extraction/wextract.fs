@@ -1,4 +1,20 @@
-﻿module FStar.Extraction.Wysteria.Extract
+﻿(*
+   Copyright 2008-2015 Abhishek Anand, Nikhil Swamy and Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+#light "off"
+module FStar.Extraction.Wysteria.Extract
 
 open FStar
 open FStar.Util
@@ -361,9 +377,10 @@ let extract_mlmodule (m:mlmodule) :(list<tlet> * option<wexp>) =
             | MLM_Exn _  -> failwith "Cannot extract an exception"
             | MLM_Let lb -> (l @ [ extract_mllb lb ], top_opt)
             | MLM_Top e  ->
-                match top_opt with
+                (match top_opt with
                     | None   ->  (l, Some (extract_mlexp e))
-                    | Some _ -> failwith "Impossible: more than one top expressions"
+                    | Some _ -> failwith "Impossible: more than one top expressions")
+            | MLM_Loc _  -> (l, top_opt)
     ) ([], None) m
 
 let rec find_smc_module (mllibs:list<mllib>) :option<mlmodule> =
@@ -403,28 +420,31 @@ let rec get_iface_arg_ret_typ (t:mlty) :(mlty * mlty) =
                 | _ -> (arg, ret))
         | _ -> failwith "Get wys arg ret type has a non-arrow type" 
 
-let extract_smc_exports (g:env) :string =
-    List.fold_left (fun s b ->
-        match b with
-            | Fv (fvv, _, t) ->
-                if Util.starts_with fvv.v.str "Smciface" then
-                    let fn_name = fvv.v.ident.idText in
-                    let (arg, ret) = get_iface_arg_ret_typ (snd t) in
-                    let arg_inj = get_constant_injection arg "x" in
+let extract_smc_exports (g:env) :string = ""
+    // TODO: Aseem: Strange error when bootstrapping in rhs of tmp2
+    // List.fold_left (fun s b ->
+    //     match b with
+    //         | Fv (fvv, _, t, _) ->
+    //             let tmp1:lident = fvv.v in
+    //             let tmp2 = tmp1.str in
+    //             if Util.starts_with tmp2 "Smciface" then
+    //                 let fn_name = fvv.v.ident.idText in
+    //                 let (arg, ret) = get_iface_arg_ret_typ (snd t) in
+    //                 let arg_inj = get_constant_injection arg "x" in
 
-                    let s0 = "let " ^ fn_name ^ " ps p x = \n" in
-                    let s1 = "let e1 = mk_const (C_eprins ps) in\n" in
-                    let s2 = "let e2 = mk_mkwire (mk_const (C_eprins (singleton p))) (mk_box (mk_const (C_eprins (singleton p))) (mk_const (" ^ arg_inj ^ "))) in\n" in
-                    let s3 = "let dv = Interpreteriface.run p \"" ^ fn_name ^ "\" " ^ (mlty_to_typ (snd t)) ^ " [e1; e2] true in\n" in
-                    let s4 = "Obj.magic (Interpreteriface.project_value_content dv)\n" in
-                    s ^ (s0 ^ s1 ^ s2 ^ s3 ^ s4) ^ "\n\n"
-                    // let wire_arg = "mk_mkwire (mk_const (C_prin p)) (mk_box (mk_const (C_prins (singleton p))) ((" ^ arg_inj ^ ") x))" in
-                    // let s' = "let " ^ fn_name ^ " ps p x = project_value_content (Interpreter.run p \"" ^ fn_name ^ "\" " ^
-                    //          "[mk_const (C_eprins ps); (" ^ wire_arg ^ ")])" in
-                    // s ^ s' ^ "\n\n"
-                else s
-            | _ -> s
-    ) "" g.gamma
+    //                 let s0 = "let " ^ fn_name ^ " ps p x = \n" in
+    //                 let s1 = "let e1 = mk_const (C_eprins ps) in\n" in
+    //                 let s2 = "let e2 = mk_mkwire (mk_const (C_eprins (singleton p))) (mk_box (mk_const (C_eprins (singleton p))) (mk_const (" ^ arg_inj ^ "))) in\n" in
+    //                 let s3 = "let dv = Interpreteriface.run p \"" ^ fn_name ^ "\" " ^ (mlty_to_typ (snd t)) ^ " [e1; e2] true in\n" in
+    //                 let s4 = "Obj.magic (Interpreteriface.project_value_content dv)\n" in
+    //                 s ^ (s0 ^ s1 ^ s2 ^ s3 ^ s4) ^ "\n\n"
+    //                 // let wire_arg = "mk_mkwire (mk_const (C_prin p)) (mk_box (mk_const (C_prins (singleton p))) ((" ^ arg_inj ^ ") x))" in
+    //                 // let s' = "let " ^ fn_name ^ " ps p x = project_value_content (Interpreter.run p \"" ^ fn_name ^ "\" " ^
+    //                 //          "[mk_const (C_eprins ps); (" ^ wire_arg ^ ")])" in
+    //                 // s ^ s' ^ "\n\n"
+    //             else s
+    //         | _ -> s
+    // ) "" g.gamma
                     
 let extract (l:list<modul>) (en:FStar.Tc.Env.env) :unit =
     initialize ();

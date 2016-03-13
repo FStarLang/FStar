@@ -1,7 +1,3 @@
-(*--build-config
-options:--admit_fsi FStar.Set;
-other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst;
---*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -20,6 +16,7 @@ other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst;
 module FStar.All
 open FStar.Heap
 open FStar.ST
+
 
 kind AllPre = AllPre_h heap
 kind AllPost (a:Type) = AllPost_h heap a

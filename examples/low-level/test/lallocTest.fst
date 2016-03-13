@@ -1,8 +1,3 @@
-(*--build-config
-    variables:MATHS=../maths;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst stack.fst listset.fst FStar.Ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst
-  --*)
-
 (*perhaps this should be an interface file?*)
 
 module LallocTest

@@ -1,6 +1,3 @@
-(*--build-config
- options: --codegen OCaml
---*)
 module M
 
 type t (n:nat) = unit

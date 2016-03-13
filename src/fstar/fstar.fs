@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+   Copyright 2008-2016 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 #light "off"
 module FStar.FStar
 open FStar
-open FStar.Absyn
-open FStar.Absyn.Syntax
 open FStar.Util
 open FStar.Getopt
-open FStar.Tc.Util
-open FStar.Tc.Env
+open FStar.Ident
+open FStar.Interactive
 
-let process_args () =
+(* process_args:  parses command line arguments, setting FStar.Options *)
+(*                returns an error status and list of filenames        *)
+let process_args () : parse_cmdline_res * list<string> =
   let file_list = Util.mk_ref [] in
   let res = Getopt.parse_cmdline (Options.specs()) (fun i -> file_list := !file_list @ [i]) in
     (match res with
@@ -31,245 +31,47 @@ let process_args () =
        | _ -> ());
     (res, !file_list)
 
+(* cleanup: kills background Z3 processes; relevant when --n_cores > 1 *)
 let cleanup () = Util.kill_all ()
 
-let has_prims_cache (l: list<string>) :bool = List.mem "Prims.cache" l
-
-let tc_prims () =
-    let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
-    let env = Tc.Env.initial_env solver Const.prims_lid in
-    env.solver.init env;
-
-    let p = Options.prims () in
-    let dsenv, prims_mod = Parser.Driver.parse_file (Parser.DesugarEnv.empty_env()) p in
-    let prims_mod, env = Tc.Tc.check_module env (List.hd prims_mod) in
-    prims_mod, dsenv, env
-
+(* printing total error count *)
 let report_errors nopt =
-    let errs = match nopt with
-        | None -> Tc.Errors.get_err_count ()
-        | Some n -> n in
-    if errs>0
-    then begin
-        print1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
-        exit 1
-    end
+  let errs =
+    match nopt with
+    | None -> 
+      if !Options.universes
+      then FStar.TypeChecker.Errors.get_err_count()
+      else FStar.Tc.Errors.get_err_count ()
+    | Some n -> n in
+  if errs > 0 then begin
+    Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs);
+    exit 1
+  end
 
-let tc_one_file dsenv env fn =
-    let dsenv, fmods = Parser.Driver.parse_file dsenv fn in
-    let env, all_mods = fmods |> List.fold_left (fun (env, all_mods) m ->
-        let ms, env = Tc.Tc.check_module env m in
-        env, ms@all_mods) (env, []) in
-    dsenv, env, List.rev all_mods
-
-let tc_one_fragment curmod dsenv env frag =
-    try
-        match Parser.Driver.parse_fragment curmod dsenv frag with
-            | Parser.Driver.Empty -> 
-              Some (curmod, dsenv, env)
-
-            | Parser.Driver.Modul (dsenv, modul) ->
-              let env = match curmod with
-                | None -> env
-                | Some _ ->
-                  raise (Absyn.Syntax.Err("Interactive mode only supports a single module at the top-level")) in
-              let modul, npds, env = Tc.Tc.tc_partial_modul env modul in
-              Some (Some (modul, npds), dsenv, env)
-
-            | Parser.Driver.Decls (dsenv, decls) ->
-              begin match curmod with
-                | None -> failwith "Fragment without an enclosing module"
-                | Some (modul,npds) ->
-                  let modul, npds', env  = Tc.Tc.tc_more_partial_modul env modul decls in
-                  Some (Some (modul, npds@npds'), dsenv, env)
-              end
-    with
-        | Absyn.Syntax.Error(msg, r) ->
-          Tc.Errors.add_errors env [(msg,r)];
-          None
-
-        | Absyn.Syntax.Err msg ->
-          Tc.Errors.add_errors env [(msg,Absyn.Syntax.dummyRange)];
-          None
-
-        | e -> raise e
-
-type input_chunks =
-    | Push of string
-    | Pop  of string
-    | Code of string * (string * string)
-
-type stack_elt =
-    (option<(modul * list<sigelt>)>
-     * Parser.DesugarEnv.env
-     * Tc.Env.env)
-type stack = list<stack_elt>
-
-
-let batch_mode_tc_no_prims dsenv env filenames =
-    let all_mods, dsenv, env = filenames |> List.fold_left (fun (all_mods, dsenv, env) f ->
-        Util.reset_gensym();
-        let dsenv, env, ms = tc_one_file dsenv env f in
-        all_mods@ms, dsenv, env)
-        ([], dsenv, env) in
-
-    if !Options.interactive && Tc.Errors.get_err_count () = 0
-    then env.solver.refresh()
-    else env.solver.finish();
-    all_mods, dsenv, env
-
-let batch_mode_tc filenames =
-    let prims_mod, dsenv, env = tc_prims () in
-
-    let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
-    prims_mod@all_mods, dsenv, env
-
+(* printing a finished message *)
 let finished_message fmods =
-    if not !Options.silent
-    then begin
-        let msg =
-            if !Options.verify then "Verifying"
-            else if !Options.pretype then "Lax type-checked"
-            else "Parsed and desugared" in
-         fmods |> List.iter (fun m ->
-            let tag = if m.is_interface then "i'face" else "module" in
-            if Options.should_print_message m.name.str
-            then Util.print_string (Util.format3 "%s %s: %s\n" msg tag (Syntax.text_of_lid m.name)));
-         print_string "All verification conditions discharged successfully\n"
+  if not !Options.silent then begin
+    let msg =
+      if !Options.verify then "Verifying"
+      else if !Options.pretype then "Lax type-checked"
+      else "Parsed and desugared" in
+        fmods |> List.iter (fun (iface, name) ->
+                 let tag = if iface then "i'face" else "module" in
+                 if Options.should_print_message name.str
+                 then Util.print_string (Util.format3 "%s %s: %s\n" msg tag (Ident.text_of_lid name)));
+        print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
     end
 
-let interactive_mode dsenv env =
-    let should_read_build_config = ref true in
-    let should_log = !Options.debug <> [] in
-    let log =
-        if should_log
-        then let transcript = Util.open_file_for_writing "transcript" in
-             (fun line -> Util.append_to_file transcript line;
-                          Util.flush_file transcript)
-        else (fun line -> ()) in
-    if Option.isSome !Options.codegen
-    then (Util.print_string "Warning: Code-generation is not supported in interactive mode, ignoring the codegen flag");
-    let chunk = Util.new_string_builder () in
-    let stdin = Util.open_stdin () in
-    let rec fill_chunk ()=
-        let line = match Util.read_line stdin with
-            | None -> exit 0
-            | Some l -> l in
-        log line;
-//        Printf.printf "Read line <%s>\n" line;
-        let l = Util.trim_string line in
-        if Util.starts_with l "#end"
-        then begin
-            let responses = match Util.split l " " with
-                | [_; ok; fail] -> (ok, fail)
-                | _ -> ("ok", "fail") in
-            let str = Util.string_of_string_builder chunk in
-            Util.clear_string_builder chunk; Code (str, responses)
-        end
-        else if Util.starts_with l "#pop"
-        then (Util.clear_string_builder chunk; Pop l)
-        else if Util.starts_with l "#push"
-        then (Util.clear_string_builder chunk; Push l)
-        else if l = "#finish"
-        then exit 0
-        else (Util.string_builder_append chunk line;
-              Util.string_builder_append chunk "\n";
-              fill_chunk()) in
-
-
-    let rec go (stack:stack) curmod dsenv env =
-        begin match fill_chunk () with
-            | Pop msg ->
-              Parser.DesugarEnv.pop dsenv |> ignore;
-              Tc.Env.pop env msg |> ignore;
-              env.solver.refresh();
-              Options.reset_options() |> ignore;
-              let (curmod, dsenv, env), stack = match stack with
-                | [] -> failwith "Too many pops"
-                | hd::tl -> hd, tl in
-              go stack curmod dsenv env
-
-            | Push msg ->
-              let stack = (curmod, dsenv, env)::stack in
-              let dsenv = Parser.DesugarEnv.push dsenv in
-              let env = Tc.Env.push env msg in
-              go stack curmod dsenv env
-
-            | Code (text, (ok, fail)) ->
-                let mark dsenv env =
-                    let dsenv = Parser.DesugarEnv.mark dsenv in
-                    let env = Tc.Env.mark env in
-                    dsenv, env in
-
-                let reset_mark dsenv env =
-                    let dsenv = Parser.DesugarEnv.reset_mark dsenv in
-                    let env = Tc.Env.reset_mark env in
-                    dsenv, env in
-
-                let commit_mark dsenv env =
-                    let dsenv = Parser.DesugarEnv.commit_mark dsenv in
-                    let env = Tc.Env.commit_mark env in
-                    dsenv, env in
-
-                let fail curmod dsenv_mark env_mark =
-                    Tc.Errors.report_all() |> ignore;
-                    Tc.Errors.num_errs := 0;
-                    Util.print1 "%s\n" fail;
-                    let dsenv, env = reset_mark dsenv_mark env_mark in
-                    go stack curmod dsenv env in
-              
-                let dsenv, env =
-                if !should_read_build_config then
-                  if Util.starts_with text (Parser.ParseIt.get_bc_start_string ()) then
-                    begin
-                      let filenames = 
-                        match !Options.interactive_context with
-                          | Some s ->
-                            Parser.ParseIt.read_build_config_from_string s false text true
-                          | None ->
-                            Parser.ParseIt.read_build_config_from_string "" false text true in
-                      let _, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
-                      should_read_build_config := false;
-                      dsenv, env
-                    end
-                  else begin
-                    should_read_build_config := false;
-                    dsenv, env
-                  end
-                else
-                  dsenv, env in
-
-              let dsenv_mark, env_mark = mark dsenv env in
-              let res = tc_one_fragment curmod dsenv_mark env_mark text in
-
-              begin match res with
-                | Some (curmod, dsenv, env) ->
-                  if !Tc.Errors.num_errs=0
-                  then begin
-                     Util.print1 "\n%s\n" ok;
-                     let dsenv, env = commit_mark dsenv env in
-                     go stack curmod dsenv env
-                  end
-                  else fail curmod dsenv_mark env_mark
-
-                | _ ->
-                  fail curmod dsenv_mark env_mark
-              end
-        end in
-
-    go [] None dsenv env
-
-
-let codegen fmods env=
-    if !Options.codegen = Some "OCaml"
-    || !Options.codegen = Some "FSharp"
-    then begin
-        let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods in
-        let mllibs = List.flatten mllibs in
-        let ext = if !Options.codegen = Some "FSharp" then ".fs" else ".ml" in
-        let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
-//                           else List.collect Extraction.OCaml.Code.doc_of_mllib mllibs, ".ml" in
-        List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FSharp.Format.pretty 120 d)) newDocs
+(* Extraction to OCaml or FSharp: only for the stratified type-checker currently *)
+let codegen fmods env =
+  if !Options.codegen = Some "OCaml" ||
+     !Options.codegen = Some "FSharp"
+  then begin
+    let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods in
+    let mllibs = List.flatten mllibs in
+    let ext = if !Options.codegen = Some "FSharp" then ".fs" else ".ml" in
+    let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
+    List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FStar.Format.pretty 120 d)) newDocs
     end
     else if !Options.codegen = Some "Wysteria" then begin
         Extraction.Wysteria.Extract.extract fmods env
@@ -278,53 +80,64 @@ let codegen fmods env=
 //        Util.close_file fh
     end
 
-(* Main function *)
+(****************************************************************************)
+(* Main function                                                            *)
+(****************************************************************************)
 let go _ =
   let res, filenames = process_args () in
   match res with
     | Help ->
-      Options.display_usage (Options.specs())
+        Options.display_usage (Options.specs())
     | Die msg ->
-      Util.print_string msg
+        Util.print_string msg
     | GoOn ->
-      let filenames = if !Options.use_build_config  //if the user explicitly requested it
-                      || (not !Options.interactive && List.length filenames = 1)  //or, if there is only a single file on the command line
-                      then match filenames with
-                             | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
-                             | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
-                      else filenames in
-      if !Options.find_deps then
-        (* Dump the filenames found in the build-config special comment.
-           `filenames` won't be normalized in cases that
-           `Parser.Driver.read_build_config` is never invoked, so we must do it
-           here to ensure output can be relied upon to produce normalized path
-           names. *)
-        Util.print_string (Util.format1 "%s\n" (Util.concat_l "\n" (List.map Util.normalize_file_path filenames)))
-      else if !Options.dep <> None then
-        (* This is the fstardep tool *)
-        Parser.Dep.print (Parser.Dep.collect filenames)
-      else
-        (* Normal mode of operations *)
-        (let fmods, dsenv, env = batch_mode_tc filenames in
-        report_errors None;
-        if !Options.interactive
-        then interactive_mode dsenv env
-        else begin
-         codegen fmods env;
-         finished_message fmods
-        end)
+        if !Options.dep <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
+        then Parser.Dep.print (Parser.Dep.collect filenames)
+        else if !Options.interactive then //--in
+          let filenames =
+            if !Options.explicit_deps then begin
+              if List.length filenames = 0 then
+                Util.print_error "--explicit_deps was provided without a file list!\n";
+                filenames
+              end
+            else begin
+              if List.length filenames > 0 then
+                Util.print_warning "ignoring the file list (no --explicit_deps)\n";
+                detect_dependencies_with_first_interactive_chunk ()
+              end
+          in
+          if !Options.universes
+          then let fmods, dsenv, env = Universal.batch_mode_tc filenames in //check all the dependences in batch mode
+               interactive_mode (dsenv, env) None Universal.interactive_tc //and then start checking chunks from the current buffer
+          else let fmods, dsenv, env = Stratified.batch_mode_tc filenames in //check all the dependences in batch mode
+               interactive_mode (dsenv, env) None Stratified.interactive_tc //and then start checking chunks from the current buffer
+
+        else if List.length filenames >= 1 then //normal batch mode
+          if !Options.universes
+          then let fmods, dsenv, env = Universal.batch_mode_tc filenames in
+               report_errors None;
+               finished_message (fmods |> List.map Universal.module_or_interface_name)               
+          else let fmods, dsenv, env = Stratified.batch_mode_tc filenames in
+               report_errors None;
+               codegen fmods env;
+               finished_message (fmods |> List.map Stratified.module_or_interface_name)
+        else
+          Util.print_error "no file provided\n"
+
+module F_Util = FStar.Absyn.Util
+module U_Util = FStar.Syntax.Util
 
 let main () =
-    try
-      go ();
+  try
+    go ();
+    cleanup ();
+    exit 0
+  with | e ->
+    if F_Util.handleable e then F_Util.handle_err false () e;
+    if U_Util.handleable e then U_Util.handle_err false () e;
+    if !Options.trace_error then
+      Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+    else if not (F_Util.handleable e || U_Util.handleable e) then
+      Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
       cleanup ();
-      exit 0
-    with
-    | e ->
-        if Util.handleable e then Util.handle_err false () e;
-        if !Options.trace_error
-        then Util.print2 "\nUnexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
-        else if not (Util.handleable e)
-        then Util.print1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
-        cleanup ();
-        exit 1
+      exit 1

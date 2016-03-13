@@ -1,7 +1,3 @@
-(*--build-config
-  options: --admit_fsi FStar.Set;
-  other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
-  --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -18,6 +14,8 @@
    limitations under the License.
 *)
 module FStar.Int32
+
+
 val min_value_int : int
 let min_value_int = -2147483648
 

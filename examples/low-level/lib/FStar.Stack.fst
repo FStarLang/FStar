@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.List --admit_fsi FStar.Set;
-    other-files:FStar.Set.fsi FStar.FunctionalExtensionality.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst list.fsi
-  --*)
-
 (** An implementation of a stack using the list module. *)
 
 module FStar.Stack

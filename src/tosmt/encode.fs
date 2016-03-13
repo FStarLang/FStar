@@ -24,7 +24,8 @@ open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Tc
 open FStar.ToSMT.Term
-
+open FStar.Ident
+open FStar.Const
 open FStar.ToSMT.SplitQueryCases
 
 let add_fuel x tl = if !Options.unthrottle_inductives then tl else x::tl
@@ -800,7 +801,7 @@ and encode_exp (e:exp) (env:env_t) : (term
                                 | Some s -> Util.subst_typ s (Util.comp_result c)
                                 | _ -> failwith "Impossible" in
                              let e = mk_Exp_abs(bs0, mk_Exp_abs(rest, body) (Some res_t) body.pos) (Some tfun) e0.pos in
-                             //Util.fprint1 "Explicitly currying %s\n" (Print.exp_to_string e);
+                             //Util.print1 "Explicitly currying %s\n" (Print.exp_to_string e);
                              encode_exp e env
 
                         else //much like the encoding of Typ_lam
@@ -1229,31 +1230,36 @@ let prims =
     let asym, a = fresh_fvar "a" Type_sort in
     let xsym, x = fresh_fvar "x" Term_sort in
     let ysym, y = fresh_fvar "y" Term_sort in
-    let deffun vars body x = [Term.DefineFun(x, vars, Term_sort, body, None)] in
+    let deffun vars body x = 
+        [Term.DefineFun(x, vars |> List.map snd, Term_sort, Term.abstr vars body, None)] in
     let quant vars body : string -> list<decl> = fun x ->
         let t1 = Term.mkApp(x, List.map Term.mkFreeV vars) in
         let vname_decl = Term.DeclFun(x, vars |> List.map snd, Term_sort, None) in
         [vname_decl;
          Term.Assume(mkForall([[t1]], vars, mkEq(t1, body)), None)] in
+    let def_or_quant vars body x = 
+        if !Options.inline_arith
+        then deffun vars body x
+        else quant vars body x in
     let axy = [(asym, Type_sort); (xsym, Term_sort); (ysym, Term_sort)] in
     let xy = [(xsym, Term_sort); (ysym, Term_sort)] in
     let qx = [(xsym, Term_sort)] in
     let prims = [
-        (Const.op_Eq,          (quant axy (boxBool <| mkEq(x,y))));
-        (Const.op_notEq,       (quant axy (boxBool <| mkNot(mkEq(x,y)))));
-        (Const.op_LT,          (quant xy  (boxBool <| mkLT(unboxInt x, unboxInt y))));
-        (Const.op_LTE,         (quant xy  (boxBool <| mkLTE(unboxInt x, unboxInt y))));
-        (Const.op_GT,          (quant xy  (boxBool <| mkGT(unboxInt x, unboxInt y))));
-        (Const.op_GTE,         (quant xy  (boxBool <| mkGTE(unboxInt x, unboxInt y))));
-        (Const.op_Subtraction, (quant xy  (boxInt  <| mkSub(unboxInt x, unboxInt y))));
-        (Const.op_Minus,       (quant qx   (boxInt  <| mkMinus(unboxInt x))));
-        (Const.op_Addition,    (quant xy  (boxInt  <| mkAdd(unboxInt x, unboxInt y))));
-        (Const.op_Multiply,    (quant xy  (boxInt  <| mkMul(unboxInt x, unboxInt y))));
-        (Const.op_Division,    (quant xy  (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
-        (Const.op_Modulus,     (quant xy  (boxInt  <| mkMod(unboxInt x, unboxInt y))));
-        (Const.op_And,         (quant xy (boxBool <| mkAnd(unboxBool x, unboxBool y))));
-        (Const.op_Or,          (quant xy (boxBool <| mkOr(unboxBool x, unboxBool y))));
-        (Const.op_Negation,    (quant qx  (boxBool <| mkNot(unboxBool x))));
+        (Const.op_Eq,          (def_or_quant axy (boxBool <| mkEq(x,y))));
+        (Const.op_notEq,       (def_or_quant axy (boxBool <| mkNot(mkEq(x,y)))));
+        (Const.op_LT,          (def_or_quant xy  (boxBool <| mkLT(unboxInt x, unboxInt y))));
+        (Const.op_LTE,         (def_or_quant xy  (boxBool <| mkLTE(unboxInt x, unboxInt y))));
+        (Const.op_GT,          (def_or_quant xy  (boxBool <| mkGT(unboxInt x, unboxInt y))));
+        (Const.op_GTE,         (def_or_quant xy  (boxBool <| mkGTE(unboxInt x, unboxInt y))));
+        (Const.op_Subtraction, (def_or_quant xy  (boxInt  <| mkSub(unboxInt x, unboxInt y))));
+        (Const.op_Minus,       (def_or_quant qx   (boxInt  <| mkMinus(unboxInt x))));
+        (Const.op_Addition,    (def_or_quant xy  (boxInt  <| mkAdd(unboxInt x, unboxInt y))));
+        (Const.op_Multiply,    (def_or_quant xy  (boxInt  <| mkMul(unboxInt x, unboxInt y))));
+        (Const.op_Division,    (def_or_quant xy  (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
+        (Const.op_Modulus,     (def_or_quant xy  (boxInt  <| mkMod(unboxInt x, unboxInt y))));
+        (Const.op_And,         (def_or_quant xy (boxBool <| mkAnd(unboxBool x, unboxBool y))));
+        (Const.op_Or,          (def_or_quant xy (boxBool <| mkOr(unboxBool x, unboxBool y))));
+        (Const.op_Negation,    (def_or_quant qx  (boxBool <| mkNot(unboxBool x))));
         ] in
     let mk : lident -> string -> list<decl> =
         fun l v -> prims |> List.filter (fun (l', _) -> lid_equals l l') |> List.collect (fun (_, b) -> b v) in
@@ -1646,7 +1652,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env
 
     | Sig_datacon(d, t, (_, tps, _), quals, _, drange) ->
-        let t = Util.close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t  in
+        let t = Util.close_typ (List.map (fun (x, _) -> (x, Some (Implicit true))) tps) t  in
         let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d in
         let ddtok_tm = mkApp(ddtok, []) in
         let formals, t_res = match Util.function_formals t with
@@ -1814,7 +1820,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                             | [{lbdef=e}], [t_norm], [(flid, (f, ftok))] ->
                               let binders, body, formals, tres = destruct_bound_function flid t_norm e in
                               let vars, guards, env', binder_decls, _ = encode_binders None binders env in
-                              let app = match vars with [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkFreeV vars) in
+                              let app = match vars with | [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkFreeV vars) in
                               let body, decls2 = encode_exp body env' in
                               let eqn = Term.Assume(mkForall([[app]], vars, mkImp(mk_and_l guards, mkEq(app, body))), Some (Util.format1 "Equation for %s" flid.str)) in
                               decls@binder_decls@decls2@[eqn], env

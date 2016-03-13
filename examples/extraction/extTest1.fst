@@ -1,6 +1,3 @@
-(*--build-config
-  --*)
-
 module Test1
 
 let idlist (x:list int) = x//Cons 0 x

@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.Map --admit_fsi FStar.HyperHeap;
-    other-files:FStar.Set.fsi FStar.Heap.fst map.fsi FStar.List.Tot.fst hyperHeap.fsi
- --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -19,6 +15,7 @@
 *)
 module FStar.ST
 open FStar.HyperHeap
+type modifies = HyperHeap.modifies
 type ref (t:Type) = rref root t
 kind STPre = STPre_h t
 kind STPost (a:Type) = STPost_h t a
