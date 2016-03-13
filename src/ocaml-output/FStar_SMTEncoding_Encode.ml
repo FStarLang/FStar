@@ -293,13 +293,13 @@ false
 end))
 
 # 127 "FStar.SMTEncoding.Encode.fst"
-let ___Binding_var____0 : binding  ->  (FStar_Syntax_Syntax.bv * FStar_SMTEncoding_Term.term) = (fun projectee -> (match (projectee) with
+let ___Binding_var____0 = (fun projectee -> (match (projectee) with
 | Binding_var (_75_173) -> begin
 _75_173
 end))
 
 # 128 "FStar.SMTEncoding.Encode.fst"
-let ___Binding_fvar____0 : binding  ->  (FStar_Ident.lident * Prims.string * FStar_SMTEncoding_Term.term Prims.option * FStar_SMTEncoding_Term.term Prims.option) = (fun projectee -> (match (projectee) with
+let ___Binding_fvar____0 = (fun projectee -> (match (projectee) with
 | Binding_fvar (_75_176) -> begin
 _75_176
 end))

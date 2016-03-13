@@ -25,7 +25,7 @@ false
 end))
 
 # 29 "FStar.Absyn.Syntax.fst"
-let ___Err____0 : Prims.exn  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Err____0 = (fun projectee -> (match (projectee) with
 | Err (_24_7) -> begin
 _24_7
 end))
@@ -43,7 +43,7 @@ false
 end))
 
 # 30 "FStar.Absyn.Syntax.fst"
-let ___Error____0 : Prims.exn  ->  (Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Error____0 = (fun projectee -> (match (projectee) with
 | Error (_24_9) -> begin
 _24_9
 end))
@@ -61,7 +61,7 @@ false
 end))
 
 # 31 "FStar.Absyn.Syntax.fst"
-let ___Warning____0 : Prims.exn  ->  (Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Warning____0 = (fun projectee -> (match (projectee) with
 | Warning (_24_11) -> begin
 _24_11
 end))
@@ -120,7 +120,7 @@ false
 end))
 
 # 49 "FStar.Absyn.Syntax.fst"
-let ___SetOptions____0 : pragma  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___SetOptions____0 = (fun projectee -> (match (projectee) with
 | SetOptions (_24_27) -> begin
 _24_27
 end))
@@ -153,7 +153,7 @@ false
 end))
 
 # 53 "FStar.Absyn.Syntax.fst"
-let ___Implicit____0 : arg_qualifier  ->  Prims.bool = (fun projectee -> (match (projectee) with
+let ___Implicit____0 = (fun projectee -> (match (projectee) with
 | Implicit (_24_31) -> begin
 _24_31
 end))
@@ -893,109 +893,109 @@ let is_Mkuvars : uvars  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwi
 let is_Mksyntax = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksyntax"))))
 
 # 57 "FStar.Absyn.Syntax.fst"
-let ___Typ_btvar____0 : typ'  ->  btvar = (fun projectee -> (match (projectee) with
+let ___Typ_btvar____0 = (fun projectee -> (match (projectee) with
 | Typ_btvar (_24_55) -> begin
 _24_55
 end))
 
 # 58 "FStar.Absyn.Syntax.fst"
-let ___Typ_const____0 : typ'  ->  ftvar = (fun projectee -> (match (projectee) with
+let ___Typ_const____0 = (fun projectee -> (match (projectee) with
 | Typ_const (_24_58) -> begin
 _24_58
 end))
 
 # 59 "FStar.Absyn.Syntax.fst"
-let ___Typ_fun____0 : typ'  ->  (binders * comp) = (fun projectee -> (match (projectee) with
+let ___Typ_fun____0 = (fun projectee -> (match (projectee) with
 | Typ_fun (_24_61) -> begin
 _24_61
 end))
 
 # 60 "FStar.Absyn.Syntax.fst"
-let ___Typ_refine____0 : typ'  ->  (bvvar * typ) = (fun projectee -> (match (projectee) with
+let ___Typ_refine____0 = (fun projectee -> (match (projectee) with
 | Typ_refine (_24_64) -> begin
 _24_64
 end))
 
 # 61 "FStar.Absyn.Syntax.fst"
-let ___Typ_app____0 : typ'  ->  (typ * args) = (fun projectee -> (match (projectee) with
+let ___Typ_app____0 = (fun projectee -> (match (projectee) with
 | Typ_app (_24_67) -> begin
 _24_67
 end))
 
 # 62 "FStar.Absyn.Syntax.fst"
-let ___Typ_lam____0 : typ'  ->  (binders * typ) = (fun projectee -> (match (projectee) with
+let ___Typ_lam____0 = (fun projectee -> (match (projectee) with
 | Typ_lam (_24_70) -> begin
 _24_70
 end))
 
 # 63 "FStar.Absyn.Syntax.fst"
-let ___Typ_ascribed____0 : typ'  ->  (typ * knd) = (fun projectee -> (match (projectee) with
+let ___Typ_ascribed____0 = (fun projectee -> (match (projectee) with
 | Typ_ascribed (_24_73) -> begin
 _24_73
 end))
 
 # 64 "FStar.Absyn.Syntax.fst"
-let ___Typ_meta____0 : typ'  ->  meta_t = (fun projectee -> (match (projectee) with
+let ___Typ_meta____0 = (fun projectee -> (match (projectee) with
 | Typ_meta (_24_76) -> begin
 _24_76
 end))
 
 # 65 "FStar.Absyn.Syntax.fst"
-let ___Typ_uvar____0 : typ'  ->  (uvar_t * knd) = (fun projectee -> (match (projectee) with
+let ___Typ_uvar____0 = (fun projectee -> (match (projectee) with
 | Typ_uvar (_24_79) -> begin
 _24_79
 end))
 
 # 66 "FStar.Absyn.Syntax.fst"
-let ___Typ_delayed____0 : typ'  ->  (((typ * subst_t), Prims.unit  ->  typ) FStar_Util.either * typ memo) = (fun projectee -> (match (projectee) with
+let ___Typ_delayed____0 = (fun projectee -> (match (projectee) with
 | Typ_delayed (_24_82) -> begin
 _24_82
 end))
 
 # 80 "FStar.Absyn.Syntax.fst"
-let ___Total____0 : comp'  ->  typ = (fun projectee -> (match (projectee) with
+let ___Total____0 = (fun projectee -> (match (projectee) with
 | Total (_24_86) -> begin
 _24_86
 end))
 
 # 81 "FStar.Absyn.Syntax.fst"
-let ___Comp____0 : comp'  ->  comp_typ = (fun projectee -> (match (projectee) with
+let ___Comp____0 = (fun projectee -> (match (projectee) with
 | Comp (_24_89) -> begin
 _24_89
 end))
 
 # 90 "FStar.Absyn.Syntax.fst"
-let ___DECREASES____0 : cflags  ->  exp = (fun projectee -> (match (projectee) with
+let ___DECREASES____0 = (fun projectee -> (match (projectee) with
 | DECREASES (_24_92) -> begin
 _24_92
 end))
 
 # 93 "FStar.Absyn.Syntax.fst"
-let ___Meta_pattern____0 : meta_t  ->  (typ * arg Prims.list Prims.list) = (fun projectee -> (match (projectee) with
+let ___Meta_pattern____0 = (fun projectee -> (match (projectee) with
 | Meta_pattern (_24_95) -> begin
 _24_95
 end))
 
 # 94 "FStar.Absyn.Syntax.fst"
-let ___Meta_named____0 : meta_t  ->  (typ * lident) = (fun projectee -> (match (projectee) with
+let ___Meta_named____0 = (fun projectee -> (match (projectee) with
 | Meta_named (_24_98) -> begin
 _24_98
 end))
 
 # 95 "FStar.Absyn.Syntax.fst"
-let ___Meta_labeled____0 : meta_t  ->  (typ * Prims.string * FStar_Range.range * Prims.bool) = (fun projectee -> (match (projectee) with
+let ___Meta_labeled____0 = (fun projectee -> (match (projectee) with
 | Meta_labeled (_24_101) -> begin
 _24_101
 end))
 
 # 96 "FStar.Absyn.Syntax.fst"
-let ___Meta_refresh_label____0 : meta_t  ->  (typ * Prims.bool Prims.option * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Meta_refresh_label____0 = (fun projectee -> (match (projectee) with
 | Meta_refresh_label (_24_104) -> begin
 _24_104
 end))
 
 # 97 "FStar.Absyn.Syntax.fst"
-let ___Meta_slack_formula____0 : meta_t  ->  (typ * typ * Prims.bool FStar_ST.ref) = (fun projectee -> (match (projectee) with
+let ___Meta_slack_formula____0 = (fun projectee -> (match (projectee) with
 | Meta_slack_formula (_24_107) -> begin
 _24_107
 end))
@@ -1007,169 +1007,169 @@ _24_110
 end))
 
 # 102 "FStar.Absyn.Syntax.fst"
-let ___Exp_bvar____0 : exp'  ->  bvvar = (fun projectee -> (match (projectee) with
+let ___Exp_bvar____0 = (fun projectee -> (match (projectee) with
 | Exp_bvar (_24_113) -> begin
 _24_113
 end))
 
 # 103 "FStar.Absyn.Syntax.fst"
-let ___Exp_fvar____0 : exp'  ->  (fvvar * fv_qual Prims.option) = (fun projectee -> (match (projectee) with
+let ___Exp_fvar____0 = (fun projectee -> (match (projectee) with
 | Exp_fvar (_24_116) -> begin
 _24_116
 end))
 
 # 104 "FStar.Absyn.Syntax.fst"
-let ___Exp_constant____0 : exp'  ->  sconst = (fun projectee -> (match (projectee) with
+let ___Exp_constant____0 = (fun projectee -> (match (projectee) with
 | Exp_constant (_24_119) -> begin
 _24_119
 end))
 
 # 105 "FStar.Absyn.Syntax.fst"
-let ___Exp_abs____0 : exp'  ->  (binders * exp) = (fun projectee -> (match (projectee) with
+let ___Exp_abs____0 = (fun projectee -> (match (projectee) with
 | Exp_abs (_24_122) -> begin
 _24_122
 end))
 
 # 106 "FStar.Absyn.Syntax.fst"
-let ___Exp_app____0 : exp'  ->  (exp * args) = (fun projectee -> (match (projectee) with
+let ___Exp_app____0 = (fun projectee -> (match (projectee) with
 | Exp_app (_24_125) -> begin
 _24_125
 end))
 
 # 107 "FStar.Absyn.Syntax.fst"
-let ___Exp_match____0 : exp'  ->  (exp * (pat * exp Prims.option * exp) Prims.list) = (fun projectee -> (match (projectee) with
+let ___Exp_match____0 = (fun projectee -> (match (projectee) with
 | Exp_match (_24_128) -> begin
 _24_128
 end))
 
 # 108 "FStar.Absyn.Syntax.fst"
-let ___Exp_ascribed____0 : exp'  ->  (exp * typ * lident Prims.option) = (fun projectee -> (match (projectee) with
+let ___Exp_ascribed____0 = (fun projectee -> (match (projectee) with
 | Exp_ascribed (_24_131) -> begin
 _24_131
 end))
 
 # 109 "FStar.Absyn.Syntax.fst"
-let ___Exp_let____0 : exp'  ->  (letbindings * exp) = (fun projectee -> (match (projectee) with
+let ___Exp_let____0 = (fun projectee -> (match (projectee) with
 | Exp_let (_24_134) -> begin
 _24_134
 end))
 
 # 110 "FStar.Absyn.Syntax.fst"
-let ___Exp_uvar____0 : exp'  ->  (uvar_e * typ) = (fun projectee -> (match (projectee) with
+let ___Exp_uvar____0 = (fun projectee -> (match (projectee) with
 | Exp_uvar (_24_137) -> begin
 _24_137
 end))
 
 # 111 "FStar.Absyn.Syntax.fst"
-let ___Exp_delayed____0 : exp'  ->  (exp * subst_t * exp memo) = (fun projectee -> (match (projectee) with
+let ___Exp_delayed____0 = (fun projectee -> (match (projectee) with
 | Exp_delayed (_24_140) -> begin
 _24_140
 end))
 
 # 112 "FStar.Absyn.Syntax.fst"
-let ___Exp_meta____0 : exp'  ->  meta_e = (fun projectee -> (match (projectee) with
+let ___Exp_meta____0 = (fun projectee -> (match (projectee) with
 | Exp_meta (_24_143) -> begin
 _24_143
 end))
 
 # 115 "FStar.Absyn.Syntax.fst"
-let ___Meta_desugared____0 : meta_e  ->  (exp * meta_source_info) = (fun projectee -> (match (projectee) with
+let ___Meta_desugared____0 = (fun projectee -> (match (projectee) with
 | Meta_desugared (_24_145) -> begin
 _24_145
 end))
 
 # 124 "FStar.Absyn.Syntax.fst"
-let ___Record_projector____0 : fv_qual  ->  lident = (fun projectee -> (match (projectee) with
+let ___Record_projector____0 = (fun projectee -> (match (projectee) with
 | Record_projector (_24_148) -> begin
 _24_148
 end))
 
 # 125 "FStar.Absyn.Syntax.fst"
-let ___Record_ctor____0 : fv_qual  ->  (lident * fieldname Prims.list) = (fun projectee -> (match (projectee) with
+let ___Record_ctor____0 = (fun projectee -> (match (projectee) with
 | Record_ctor (_24_151) -> begin
 _24_151
 end))
 
 # 130 "FStar.Absyn.Syntax.fst"
-let ___Pat_disj____0 : pat'  ->  pat Prims.list = (fun projectee -> (match (projectee) with
+let ___Pat_disj____0 = (fun projectee -> (match (projectee) with
 | Pat_disj (_24_154) -> begin
 _24_154
 end))
 
 # 131 "FStar.Absyn.Syntax.fst"
-let ___Pat_constant____0 : pat'  ->  sconst = (fun projectee -> (match (projectee) with
+let ___Pat_constant____0 = (fun projectee -> (match (projectee) with
 | Pat_constant (_24_157) -> begin
 _24_157
 end))
 
 # 132 "FStar.Absyn.Syntax.fst"
-let ___Pat_cons____0 : pat'  ->  (fvvar * fv_qual Prims.option * (pat * Prims.bool) Prims.list) = (fun projectee -> (match (projectee) with
+let ___Pat_cons____0 = (fun projectee -> (match (projectee) with
 | Pat_cons (_24_160) -> begin
 _24_160
 end))
 
 # 133 "FStar.Absyn.Syntax.fst"
-let ___Pat_var____0 : pat'  ->  bvvar = (fun projectee -> (match (projectee) with
+let ___Pat_var____0 = (fun projectee -> (match (projectee) with
 | Pat_var (_24_163) -> begin
 _24_163
 end))
 
 # 134 "FStar.Absyn.Syntax.fst"
-let ___Pat_tvar____0 : pat'  ->  btvar = (fun projectee -> (match (projectee) with
+let ___Pat_tvar____0 = (fun projectee -> (match (projectee) with
 | Pat_tvar (_24_166) -> begin
 _24_166
 end))
 
 # 135 "FStar.Absyn.Syntax.fst"
-let ___Pat_wild____0 : pat'  ->  bvvar = (fun projectee -> (match (projectee) with
+let ___Pat_wild____0 = (fun projectee -> (match (projectee) with
 | Pat_wild (_24_169) -> begin
 _24_169
 end))
 
 # 136 "FStar.Absyn.Syntax.fst"
-let ___Pat_twild____0 : pat'  ->  btvar = (fun projectee -> (match (projectee) with
+let ___Pat_twild____0 = (fun projectee -> (match (projectee) with
 | Pat_twild (_24_172) -> begin
 _24_172
 end))
 
 # 137 "FStar.Absyn.Syntax.fst"
-let ___Pat_dot_term____0 : pat'  ->  (bvvar * exp) = (fun projectee -> (match (projectee) with
+let ___Pat_dot_term____0 = (fun projectee -> (match (projectee) with
 | Pat_dot_term (_24_175) -> begin
 _24_175
 end))
 
 # 138 "FStar.Absyn.Syntax.fst"
-let ___Pat_dot_typ____0 : pat'  ->  (btvar * typ) = (fun projectee -> (match (projectee) with
+let ___Pat_dot_typ____0 = (fun projectee -> (match (projectee) with
 | Pat_dot_typ (_24_178) -> begin
 _24_178
 end))
 
 # 143 "FStar.Absyn.Syntax.fst"
-let ___Kind_abbrev____0 : knd'  ->  (kabbrev * knd) = (fun projectee -> (match (projectee) with
+let ___Kind_abbrev____0 = (fun projectee -> (match (projectee) with
 | Kind_abbrev (_24_181) -> begin
 _24_181
 end))
 
 # 144 "FStar.Absyn.Syntax.fst"
-let ___Kind_arrow____0 : knd'  ->  (binders * knd) = (fun projectee -> (match (projectee) with
+let ___Kind_arrow____0 = (fun projectee -> (match (projectee) with
 | Kind_arrow (_24_184) -> begin
 _24_184
 end))
 
 # 145 "FStar.Absyn.Syntax.fst"
-let ___Kind_uvar____0 : knd'  ->  uvar_k_app = (fun projectee -> (match (projectee) with
+let ___Kind_uvar____0 = (fun projectee -> (match (projectee) with
 | Kind_uvar (_24_187) -> begin
 _24_187
 end))
 
 # 146 "FStar.Absyn.Syntax.fst"
-let ___Kind_lam____0 : knd'  ->  (binders * knd) = (fun projectee -> (match (projectee) with
+let ___Kind_lam____0 = (fun projectee -> (match (projectee) with
 | Kind_lam (_24_190) -> begin
 _24_190
 end))
 
 # 147 "FStar.Absyn.Syntax.fst"
-let ___Kind_delayed____0 : knd'  ->  (knd * subst_t * knd memo) = (fun projectee -> (match (projectee) with
+let ___Kind_delayed____0 = (fun projectee -> (match (projectee) with
 | Kind_delayed (_24_193) -> begin
 _24_193
 end))
@@ -1348,31 +1348,31 @@ false
 end))
 
 # 198 "FStar.Absyn.Syntax.fst"
-let ___Discriminator____0 : qualifier  ->  lident = (fun projectee -> (match (projectee) with
+let ___Discriminator____0 = (fun projectee -> (match (projectee) with
 | Discriminator (_24_200) -> begin
 _24_200
 end))
 
 # 199 "FStar.Absyn.Syntax.fst"
-let ___Projector____0 : qualifier  ->  (lident * (btvdef, bvvdef) FStar_Util.either) = (fun projectee -> (match (projectee) with
+let ___Projector____0 = (fun projectee -> (match (projectee) with
 | Projector (_24_203) -> begin
 _24_203
 end))
 
 # 200 "FStar.Absyn.Syntax.fst"
-let ___RecordType____0 : qualifier  ->  fieldname Prims.list = (fun projectee -> (match (projectee) with
+let ___RecordType____0 = (fun projectee -> (match (projectee) with
 | RecordType (_24_206) -> begin
 _24_206
 end))
 
 # 201 "FStar.Absyn.Syntax.fst"
-let ___RecordConstructor____0 : qualifier  ->  fieldname Prims.list = (fun projectee -> (match (projectee) with
+let ___RecordConstructor____0 = (fun projectee -> (match (projectee) with
 | RecordConstructor (_24_209) -> begin
 _24_209
 end))
 
 # 203 "FStar.Absyn.Syntax.fst"
-let ___DefaultEffect____0 : qualifier  ->  lident Prims.option = (fun projectee -> (match (projectee) with
+let ___DefaultEffect____0 = (fun projectee -> (match (projectee) with
 | DefaultEffect (_24_212) -> begin
 _24_212
 end))
@@ -1534,79 +1534,79 @@ false
 end))
 
 # 240 "FStar.Absyn.Syntax.fst"
-let ___Sig_tycon____0 : sigelt  ->  (lident * binders * knd * lident Prims.list * lident Prims.list * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Sig_tycon____0 = (fun projectee -> (match (projectee) with
 | Sig_tycon (_24_242) -> begin
 _24_242
 end))
 
 # 241 "FStar.Absyn.Syntax.fst"
-let ___Sig_kind_abbrev____0 : sigelt  ->  (lident * binders * knd * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Sig_kind_abbrev____0 = (fun projectee -> (match (projectee) with
 | Sig_kind_abbrev (_24_245) -> begin
 _24_245
 end))
 
 # 242 "FStar.Absyn.Syntax.fst"
-let ___Sig_typ_abbrev____0 : sigelt  ->  (lident * binders * knd * typ * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Sig_typ_abbrev____0 = (fun projectee -> (match (projectee) with
 | Sig_typ_abbrev (_24_248) -> begin
 _24_248
 end))
 
 # 243 "FStar.Absyn.Syntax.fst"
-let ___Sig_datacon____0 : sigelt  ->  (lident * typ * tycon * qualifier Prims.list * lident Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Sig_datacon____0 = (fun projectee -> (match (projectee) with
 | Sig_datacon (_24_251) -> begin
 _24_251
 end))
 
 # 244 "FStar.Absyn.Syntax.fst"
-let ___Sig_val_decl____0 : sigelt  ->  (lident * typ * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Sig_val_decl____0 = (fun projectee -> (match (projectee) with
 | Sig_val_decl (_24_254) -> begin
 _24_254
 end))
 
 # 245 "FStar.Absyn.Syntax.fst"
-let ___Sig_assume____0 : sigelt  ->  (lident * formula * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Sig_assume____0 = (fun projectee -> (match (projectee) with
 | Sig_assume (_24_257) -> begin
 _24_257
 end))
 
 # 246 "FStar.Absyn.Syntax.fst"
-let ___Sig_let____0 : sigelt  ->  (letbindings * FStar_Range.range * lident Prims.list * qualifier Prims.list) = (fun projectee -> (match (projectee) with
+let ___Sig_let____0 = (fun projectee -> (match (projectee) with
 | Sig_let (_24_260) -> begin
 _24_260
 end))
 
 # 247 "FStar.Absyn.Syntax.fst"
-let ___Sig_main____0 : sigelt  ->  (exp * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Sig_main____0 = (fun projectee -> (match (projectee) with
 | Sig_main (_24_263) -> begin
 _24_263
 end))
 
 # 248 "FStar.Absyn.Syntax.fst"
-let ___Sig_bundle____0 : sigelt  ->  (sigelt Prims.list * qualifier Prims.list * lident Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Sig_bundle____0 = (fun projectee -> (match (projectee) with
 | Sig_bundle (_24_266) -> begin
 _24_266
 end))
 
 # 249 "FStar.Absyn.Syntax.fst"
-let ___Sig_new_effect____0 : sigelt  ->  (eff_decl * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Sig_new_effect____0 = (fun projectee -> (match (projectee) with
 | Sig_new_effect (_24_269) -> begin
 _24_269
 end))
 
 # 250 "FStar.Absyn.Syntax.fst"
-let ___Sig_sub_effect____0 : sigelt  ->  (sub_eff * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Sig_sub_effect____0 = (fun projectee -> (match (projectee) with
 | Sig_sub_effect (_24_272) -> begin
 _24_272
 end))
 
 # 251 "FStar.Absyn.Syntax.fst"
-let ___Sig_effect_abbrev____0 : sigelt  ->  (lident * binders * comp * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Sig_effect_abbrev____0 = (fun projectee -> (match (projectee) with
 | Sig_effect_abbrev (_24_275) -> begin
 _24_275
 end))
 
 # 252 "FStar.Absyn.Syntax.fst"
-let ___Sig_pragma____0 : sigelt  ->  (pragma * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Sig_pragma____0 = (fun projectee -> (match (projectee) with
 | Sig_pragma (_24_278) -> begin
 _24_278
 end))
@@ -1666,25 +1666,25 @@ false
 end))
 
 # 264 "FStar.Absyn.Syntax.fst"
-let ___K____0 : ktec  ->  knd = (fun projectee -> (match (projectee) with
+let ___K____0 = (fun projectee -> (match (projectee) with
 | K (_24_287) -> begin
 _24_287
 end))
 
 # 265 "FStar.Absyn.Syntax.fst"
-let ___T____0 : ktec  ->  (typ * knd Prims.option) = (fun projectee -> (match (projectee) with
+let ___T____0 = (fun projectee -> (match (projectee) with
 | T (_24_290) -> begin
 _24_290
 end))
 
 # 266 "FStar.Absyn.Syntax.fst"
-let ___E____0 : ktec  ->  exp = (fun projectee -> (match (projectee) with
+let ___E____0 = (fun projectee -> (match (projectee) with
 | E (_24_293) -> begin
 _24_293
 end))
 
 # 267 "FStar.Absyn.Syntax.fst"
-let ___C____0 : ktec  ->  comp = (fun projectee -> (match (projectee) with
+let ___C____0 = (fun projectee -> (match (projectee) with
 | C (_24_296) -> begin
 _24_296
 end))

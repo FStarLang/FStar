@@ -44,25 +44,25 @@ false
 end))
 
 # 32 "FStar.Parser.DesugarEnv.fst"
-let ___Binding_typ_var____0 : binding  ->  FStar_Ident.ident = (fun projectee -> (match (projectee) with
+let ___Binding_typ_var____0 = (fun projectee -> (match (projectee) with
 | Binding_typ_var (_48_18) -> begin
 _48_18
 end))
 
 # 33 "FStar.Parser.DesugarEnv.fst"
-let ___Binding_var____0 : binding  ->  FStar_Ident.ident = (fun projectee -> (match (projectee) with
+let ___Binding_var____0 = (fun projectee -> (match (projectee) with
 | Binding_var (_48_21) -> begin
 _48_21
 end))
 
 # 34 "FStar.Parser.DesugarEnv.fst"
-let ___Binding_let____0 : binding  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
+let ___Binding_let____0 = (fun projectee -> (match (projectee) with
 | Binding_let (_48_24) -> begin
 _48_24
 end))
 
 # 35 "FStar.Parser.DesugarEnv.fst"
-let ___Binding_tycon____0 : binding  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
+let ___Binding_tycon____0 = (fun projectee -> (match (projectee) with
 | Binding_tycon (_48_27) -> begin
 _48_27
 end))
@@ -112,19 +112,19 @@ false
 end))
 
 # 54 "FStar.Parser.DesugarEnv.fst"
-let ___OSig____0 : occurrence  ->  FStar_Absyn_Syntax.sigelt = (fun projectee -> (match (projectee) with
+let ___OSig____0 = (fun projectee -> (match (projectee) with
 | OSig (_48_43) -> begin
 _48_43
 end))
 
 # 55 "FStar.Parser.DesugarEnv.fst"
-let ___OLet____0 : occurrence  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
+let ___OLet____0 = (fun projectee -> (match (projectee) with
 | OLet (_48_46) -> begin
 _48_46
 end))
 
 # 56 "FStar.Parser.DesugarEnv.fst"
-let ___ORec____0 : occurrence  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
+let ___ORec____0 = (fun projectee -> (match (projectee) with
 | ORec (_48_49) -> begin
 _48_49
 end))
@@ -182,25 +182,25 @@ false
 end))
 
 # 63 "FStar.Parser.DesugarEnv.fst"
-let ___Exp_name____0 : foundname  ->  (occurrence * FStar_Absyn_Syntax.exp) = (fun projectee -> (match (projectee) with
+let ___Exp_name____0 = (fun projectee -> (match (projectee) with
 | Exp_name (_48_58) -> begin
 _48_58
 end))
 
 # 64 "FStar.Parser.DesugarEnv.fst"
-let ___Typ_name____0 : foundname  ->  (occurrence * FStar_Absyn_Syntax.typ) = (fun projectee -> (match (projectee) with
+let ___Typ_name____0 = (fun projectee -> (match (projectee) with
 | Typ_name (_48_61) -> begin
 _48_61
 end))
 
 # 65 "FStar.Parser.DesugarEnv.fst"
-let ___Eff_name____0 : foundname  ->  (occurrence * FStar_Ident.lident) = (fun projectee -> (match (projectee) with
+let ___Eff_name____0 = (fun projectee -> (match (projectee) with
 | Eff_name (_48_64) -> begin
 _48_64
 end))
 
 # 66 "FStar.Parser.DesugarEnv.fst"
-let ___Knd_name____0 : foundname  ->  (occurrence * FStar_Ident.lident) = (fun projectee -> (match (projectee) with
+let ___Knd_name____0 = (fun projectee -> (match (projectee) with
 | Knd_name (_48_67) -> begin
 _48_67
 end))

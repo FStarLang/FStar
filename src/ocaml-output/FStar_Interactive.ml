@@ -41,19 +41,19 @@ false
 end))
 
 # 42 "FStar.Interactive.fst"
-let ___Push____0 : input_chunks  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Push____0 = (fun projectee -> (match (projectee) with
 | Push (_77_13) -> begin
 _77_13
 end))
 
 # 43 "FStar.Interactive.fst"
-let ___Pop____0 : input_chunks  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Pop____0 = (fun projectee -> (match (projectee) with
 | Pop (_77_16) -> begin
 _77_16
 end))
 
 # 44 "FStar.Interactive.fst"
-let ___Code____0 : input_chunks  ->  (Prims.string * (Prims.string * Prims.string)) = (fun projectee -> (match (projectee) with
+let ___Code____0 = (fun projectee -> (match (projectee) with
 | Code (_77_19) -> begin
 _77_19
 end))
@@ -227,7 +227,7 @@ false
 end))
 
 # 128 "FStar.Interactive.fst"
-let ___Found____0 : Prims.exn  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Found____0 = (fun projectee -> (match (projectee) with
 | Found (_77_86) -> begin
 _77_86
 end))

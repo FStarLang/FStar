@@ -54,13 +54,13 @@ false
 end))
 
 # 83 "FStar.TypeChecker.Rel.fst"
-let ___TERM____0 : uvi  ->  ((FStar_Syntax_Syntax.uvar * FStar_Syntax_Syntax.typ) * FStar_Syntax_Syntax.term) = (fun projectee -> (match (projectee) with
+let ___TERM____0 = (fun projectee -> (match (projectee) with
 | TERM (_68_44) -> begin
 _68_44
 end))
 
 # 84 "FStar.TypeChecker.Rel.fst"
-let ___UNIV____0 : uvi  ->  (FStar_Syntax_Syntax.universe_uvar * FStar_Syntax_Syntax.universe) = (fun projectee -> (match (projectee) with
+let ___UNIV____0 = (fun projectee -> (match (projectee) with
 | UNIV (_68_47) -> begin
 _68_47
 end))
@@ -96,13 +96,13 @@ false
 end))
 
 # 98 "FStar.TypeChecker.Rel.fst"
-let ___Success____0 : solution  ->  FStar_TypeChecker_Common.deferred = (fun projectee -> (match (projectee) with
+let ___Success____0 = (fun projectee -> (match (projectee) with
 | Success (_68_57) -> begin
 _68_57
 end))
 
 # 99 "FStar.TypeChecker.Rel.fst"
-let ___Failed____0 : solution  ->  (FStar_TypeChecker_Common.prob * Prims.string) = (fun projectee -> (match (projectee) with
+let ___Failed____0 = (fun projectee -> (match (projectee) with
 | Failed (_68_60) -> begin
 _68_60
 end))
@@ -921,7 +921,7 @@ false
 end))
 
 # 601 "FStar.TypeChecker.Rel.fst"
-let ___MisMatch____0 : match_result  ->  (FStar_Syntax_Syntax.delta_depth Prims.option * FStar_Syntax_Syntax.delta_depth Prims.option) = (fun projectee -> (match (projectee) with
+let ___MisMatch____0 = (fun projectee -> (match (projectee) with
 | MisMatch (_68_561) -> begin
 _68_561
 end))
@@ -1130,13 +1130,13 @@ false
 end))
 
 # 699 "FStar.TypeChecker.Rel.fst"
-let ___T____0 : tc  ->  FStar_Syntax_Syntax.term = (fun projectee -> (match (projectee) with
+let ___T____0 = (fun projectee -> (match (projectee) with
 | T (_68_807) -> begin
 _68_807
 end))
 
 # 700 "FStar.TypeChecker.Rel.fst"
-let ___C____0 : tc  ->  FStar_Syntax_Syntax.comp = (fun projectee -> (match (projectee) with
+let ___C____0 = (fun projectee -> (match (projectee) with
 | C (_68_810) -> begin
 _68_810
 end))
@@ -1664,19 +1664,19 @@ false
 end))
 
 # 931 "FStar.TypeChecker.Rel.fst"
-let ___UDeferred____0 : univ_eq_sol  ->  worklist = (fun projectee -> (match (projectee) with
+let ___UDeferred____0 = (fun projectee -> (match (projectee) with
 | UDeferred (_68_1200) -> begin
 _68_1200
 end))
 
 # 932 "FStar.TypeChecker.Rel.fst"
-let ___USolved____0 : univ_eq_sol  ->  worklist = (fun projectee -> (match (projectee) with
+let ___USolved____0 = (fun projectee -> (match (projectee) with
 | USolved (_68_1203) -> begin
 _68_1203
 end))
 
 # 933 "FStar.TypeChecker.Rel.fst"
-let ___UFailed____0 : univ_eq_sol  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___UFailed____0 = (fun projectee -> (match (projectee) with
 | UFailed (_68_1206) -> begin
 _68_1206
 end))

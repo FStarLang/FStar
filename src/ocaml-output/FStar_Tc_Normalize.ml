@@ -170,13 +170,13 @@ false
 end))
 
 # 87 "FStar.Tc.Normalize.fst"
-let ___T____0 : env_entry  ->  (FStar_Absyn_Syntax.btvdef * tclos) = (fun projectee -> (match (projectee) with
+let ___T____0 = (fun projectee -> (match (projectee) with
 | T (_38_26) -> begin
 _38_26
 end))
 
 # 88 "FStar.Tc.Normalize.fst"
-let ___V____0 : env_entry  ->  (FStar_Absyn_Syntax.bvvdef * vclos) = (fun projectee -> (match (projectee) with
+let ___V____0 = (fun projectee -> (match (projectee) with
 | V (_38_29) -> begin
 _38_29
 end))

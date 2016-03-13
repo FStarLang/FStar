@@ -24,7 +24,7 @@ false
 end))
 
 # 28 "FStar.SMTEncoding.Z3.fst"
-let ___Z3V____0 : z3version  ->  (Prims.int * Prims.int * Prims.int) = (fun projectee -> (match (projectee) with
+let ___Z3V____0 = (fun projectee -> (match (projectee) with
 | Z3V (_74_4) -> begin
 _74_4
 end))

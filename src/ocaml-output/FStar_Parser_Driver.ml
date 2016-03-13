@@ -37,13 +37,13 @@ false
 end))
 
 # 33 "FStar.Parser.Driver.fst"
-let ___Modul____0 : fragment  ->  FStar_Parser_AST.modul = (fun projectee -> (match (projectee) with
+let ___Modul____0 = (fun projectee -> (match (projectee) with
 | Modul (_55_4) -> begin
 _55_4
 end))
 
 # 34 "FStar.Parser.Driver.fst"
-let ___Decls____0 : fragment  ->  FStar_Parser_AST.decl Prims.list = (fun projectee -> (match (projectee) with
+let ___Decls____0 = (fun projectee -> (match (projectee) with
 | Decls (_55_7) -> begin
 _55_7
 end))

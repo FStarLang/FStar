@@ -114,19 +114,19 @@ false
 end))
 
 # 35 "FStar.ToSMT.Term.fst"
-let ___Array____0 : sort  ->  (sort * sort) = (fun projectee -> (match (projectee) with
+let ___Array____0 = (fun projectee -> (match (projectee) with
 | Array (_43_10) -> begin
 _43_10
 end))
 
 # 36 "FStar.ToSMT.Term.fst"
-let ___Arrow____0 : sort  ->  (sort * sort) = (fun projectee -> (match (projectee) with
+let ___Arrow____0 = (fun projectee -> (match (projectee) with
 | Arrow (_43_13) -> begin
 _43_13
 end))
 
 # 37 "FStar.ToSMT.Term.fst"
-let ___Sort____0 : sort  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Sort____0 = (fun projectee -> (match (projectee) with
 | Sort (_43_16) -> begin
 _43_16
 end))
@@ -375,7 +375,7 @@ false
 end))
 
 # 72 "FStar.ToSMT.Term.fst"
-let ___Var____0 : op  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Var____0 = (fun projectee -> (match (projectee) with
 | Var (_43_38) -> begin
 _43_38
 end))
@@ -468,31 +468,31 @@ end))
 let is_Mkterm : term  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkterm"))))
 
 # 80 "FStar.ToSMT.Term.fst"
-let ___Integer____0 : term'  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Integer____0 = (fun projectee -> (match (projectee) with
 | Integer (_43_44) -> begin
 _43_44
 end))
 
 # 81 "FStar.ToSMT.Term.fst"
-let ___BoundV____0 : term'  ->  Prims.int = (fun projectee -> (match (projectee) with
+let ___BoundV____0 = (fun projectee -> (match (projectee) with
 | BoundV (_43_47) -> begin
 _43_47
 end))
 
 # 82 "FStar.ToSMT.Term.fst"
-let ___FreeV____0 : term'  ->  fv = (fun projectee -> (match (projectee) with
+let ___FreeV____0 = (fun projectee -> (match (projectee) with
 | FreeV (_43_50) -> begin
 _43_50
 end))
 
 # 83 "FStar.ToSMT.Term.fst"
-let ___App____0 : term'  ->  (op * term Prims.list) = (fun projectee -> (match (projectee) with
+let ___App____0 = (fun projectee -> (match (projectee) with
 | App (_43_53) -> begin
 _43_53
 end))
 
 # 84 "FStar.ToSMT.Term.fst"
-let ___Quant____0 : term'  ->  (qop * pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term) = (fun projectee -> (match (projectee) with
+let ___Quant____0 = (fun projectee -> (match (projectee) with
 | Quant (_43_56) -> begin
 _43_56
 end))
@@ -621,37 +621,37 @@ false
 end))
 
 # 102 "FStar.ToSMT.Term.fst"
-let ___DeclFun____0 : decl  ->  (Prims.string * sort Prims.list * sort * caption) = (fun projectee -> (match (projectee) with
+let ___DeclFun____0 = (fun projectee -> (match (projectee) with
 | DeclFun (_43_60) -> begin
 _43_60
 end))
 
 # 103 "FStar.ToSMT.Term.fst"
-let ___DefineFun____0 : decl  ->  (Prims.string * sort Prims.list * sort * term * caption) = (fun projectee -> (match (projectee) with
+let ___DefineFun____0 = (fun projectee -> (match (projectee) with
 | DefineFun (_43_63) -> begin
 _43_63
 end))
 
 # 104 "FStar.ToSMT.Term.fst"
-let ___Assume____0 : decl  ->  (term * caption) = (fun projectee -> (match (projectee) with
+let ___Assume____0 = (fun projectee -> (match (projectee) with
 | Assume (_43_66) -> begin
 _43_66
 end))
 
 # 105 "FStar.ToSMT.Term.fst"
-let ___Caption____0 : decl  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Caption____0 = (fun projectee -> (match (projectee) with
 | Caption (_43_69) -> begin
 _43_69
 end))
 
 # 106 "FStar.ToSMT.Term.fst"
-let ___Eval____0 : decl  ->  term = (fun projectee -> (match (projectee) with
+let ___Eval____0 = (fun projectee -> (match (projectee) with
 | Eval (_43_72) -> begin
 _43_72
 end))
 
 # 107 "FStar.ToSMT.Term.fst"
-let ___Echo____0 : decl  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Echo____0 = (fun projectee -> (match (projectee) with
 | Echo (_43_75) -> begin
 _43_75
 end))
