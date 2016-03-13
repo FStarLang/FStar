@@ -135,10 +135,10 @@ let lookup_bv (g:env) (bv:bv) : ty_or_exp_b =
         | Some y -> y
 
 
-let lookup  (g:env) (x:either<bv,fv>) : ty_or_exp_b =
+let lookup  (g:env) (x:either<bv,fv>) : ty_or_exp_b * option<fv_qual> =
     match x with
-        | Inl x -> lookup_bv g x
-        | Inr x -> lookup_fv g x
+        | Inl x -> lookup_bv g x, None
+        | Inr x -> lookup_fv g x, x.fv_qual
 
 let lookup_term g (t:term) = match t.n with
     | Tm_bvar x -> lookup g (Inl x)
