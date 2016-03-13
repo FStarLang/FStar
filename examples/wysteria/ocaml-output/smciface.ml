@@ -2,6 +2,7 @@ open Ffibridge
 open FFI
 open AST
 
+type sh = Obj.t
 
 let deal ps p shares rands deal_to = 
   let e1 = mk_const (C_eprins ps) in
