@@ -17,7 +17,6 @@
 module FStar.Extraction.ML.Code
 
 open FStar.Extraction.ML.Syntax
-open FStar.Extraction.ML.Env
 open FStar.Format
 
 val doc_of_mllib :    mllib -> list<(string * doc)>

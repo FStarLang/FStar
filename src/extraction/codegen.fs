@@ -24,7 +24,6 @@ open FStar
 open FStar.Util
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
-open FStar.Extraction.ML.Env
 open FStar.Format
 
 // VALS_HACK_HERE

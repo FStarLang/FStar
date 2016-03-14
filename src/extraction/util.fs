@@ -318,3 +318,13 @@ let conjoin_opt e1 e2 = match e1, e2 with
     | Some x, None 
     | None, Some x -> Some x
     | Some x, Some y -> Some (conjoin x y)
+
+let mlloc_of_range (r: Range.range) =
+    let pos = Range.start_of_range r in
+    let line = Range.line_of_pos pos in
+    line, Range.file_of_range r
+
+let rec argTypes  (t: mlty) : list<mlty> =
+    match t with
+      | MLTY_Fun (a,_,b) -> a::(argTypes b)
+      | _ -> []

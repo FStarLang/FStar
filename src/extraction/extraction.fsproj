@@ -52,15 +52,15 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="ml-syntax.fs" />
-    <Compile Include="env.fs" />
     <Compile Include="uenv.fs" />
+    <Compile Include="env.fs" />
     <Compile Include="util.fs" />
     <Compile Include="codegen.fsi" />
     <Compile Include="codegen.fs" />
+    <Compile Include="term.fs" />
+    <Compile Include="modul.fs" />
     <Compile Include="extracttyp.fs" />
     <Compile Include="extractexp.fs" />
-    <Compile Include="inductive.fs" />
-    <Compile Include="term.fs" />
     <Compile Include="extractmod.fs" />
     <Content Include="app.config" />
   </ItemGroup>

@@ -715,14 +715,14 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let t = term_as_mlty g t in
           let f = match f with
             | None -> failwith "Ascription node with an empty effect label"
-            | Some l -> TypeExtraction.translate_eff g l in
+            | Some l -> effect_as_etag g l in
           let e, t = check_term_as_mlexpr g e0 f t in
           e, f, t
 
         | Tm_let((is_rec, lbs), e') ->
             //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
           let maybe_generalize {lbname=lbname; lbeff=lbeff; lbtyp=t; lbdef=e} =
-              let f_e = TypeExtraction.translate_eff g lbeff in
+              let f_e = effect_as_etag g lbeff in
               let t = SS.compress t in
             //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (Print.lbname_to_string lbname) (Print.typ_to_string t) f_e);
               match t.n with
@@ -815,7 +815,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
           let f = join_l (f'::List.map fst lbs) in
 
-          with_ty_loc t' (MLE_Let((is_rec, List.map snd lbs), e')) (TypeExtraction.mlloc_of_range t.pos), f, t'
+          with_ty_loc t' (MLE_Let((is_rec, List.map snd lbs), e')) (Util.mlloc_of_range t.pos), f, t'
 
       | Tm_match(scrutinee, pats) ->
         let e, f_e, t_e = term_as_mlexpr g scrutinee in
