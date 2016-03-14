@@ -1,12 +1,11 @@
-module Primitives.Sha256
+module Sha256
 
-open FStar.Array
-open Primitives.Word
-open Primitives.ByteArray
-open Primitives.Uint32
-open Primitives.Uint64
-
-
+open FStar.SBytes
+open SBuffer
+open FStar.Heap
+open FStar.UInt8
+open FStar.UInt64
+open FStar.UInt32
 
 (* Define a type for registers *)
 type registers = {
@@ -22,53 +21,57 @@ type registers = {
 
 (* Definition of the circular shifts of N bits of a binary word *)
 // [Coq] Definition Rotl x n := Int.ror n (Int.repr x).
-val rotl: (x:ref uint32) -> (n:nat) -> St unit
+val rotl: (x:ref uint32) -> (n:nat{n <= 32}) -> ST unit
+  (requires (fun h -> contains h x))
+  (ensures (fun h0 _ h1 -> contains h1 x
+    /\ sel h1 x = UInt32.rotate_left (sel h0 x) n))
 let rotl x n =
-  x := Word.rotate_left !x n
+  x := UInt32.rotate_left !x n
 
 // [Coq] Definition Rotr x n := Int.ror n (Int.repr x).
-val rotr: (x:ref uint32) -> (n:nat) -> St unit
+val rotr: (x:ref uint32) -> (n:nat{n <= 32}) -> ST unit
+  (requires (fun h -> contains h x))
+  (ensures (fun h0 _ h1 -> contains h1 x
+    /\ sel h1 x = UInt32.rotate_right (sel h0 x) n))
 let rotr x n =
-  x := Word.rotate_right !x n
-
+  x := UInt32.rotate_right !x n
 
 (* [FIPS 180-4] section 4.1.2 *)
 // [Coq] Definition Ch (x y z : int) : int :=
 //          Int.xor (Int.and x y) (Int.and (Int.not x) z).
 val _Ch: uint32 -> uint32 -> uint32 -> Tot uint32
 let _Ch x y z =
-  Word.logxor (Word.logand x y) (Word.logand (Word.complement x) z)
+  logxor (logand x y) (logand (lognot x) z)
 
 // [Coq] Definition Maj (x y z : int) : int :=
 //          Int.xor (Int.xor (Int.and x z) (Int.and y z) ) (Int.and x y).
 val _Maj: uint32 -> uint32 -> uint32 -> Tot uint32
 let _Maj x y z =
-  Word.logxor (Word.logand x y) (Word.logxor (Word.logand x z) (Word.logand y z))
+  logxor (logand x y) (logxor (logand x z) (logand y z))
 
 // [Coq] Definition Sigma_0 (x : int) : int :=
 //          Int.xor (Int.xor (Rotr 2 x) (Rotr 13 x)) (Rotr 22 x).
 val _Sigma0: uint32 -> Tot uint32
 let _Sigma0 x =
-  Word.logxor (Word.rotate_right x 2) (Word.logxor (Word.rotate_right x 13) (Word.rotate_right x 22))
+  logxor (rotate_right x 2) (logxor (rotate_right x 13) (rotate_right x 22))
 
 // [Coq] Definition Sigma_1 (x : int) : int :=
 //          Int.xor (Int.xor (Rotr 6 x) (Rotr 11 x)) (Rotr 25 x).
 val _Sigma1: uint32 -> Tot uint32
 let _Sigma1 x =
-  Word.logxor (Word.rotate_right x 6) (Word.logxor (Word.rotate_right x 11) (Word.rotate_right x 25))
+  logxor (rotate_right x 6) (logxor (rotate_right x 11) (rotate_right x 25))
 
 // [Coq] Definition sigma_0 (x : int) : int :=
 //          Int.xor (Int.xor (Rotr 7 x) (Rotr 18 x)) (Shr 3 x).
 val _sigma0: uint32 -> Tot uint32
 let _sigma0 x =
-  Word.logxor (Word.rotate_right x 7) (Word.logxor (Word.rotate_right x 18) (Word.shift_right_logical x 3))
+  logxor (rotate_right x 7) (logxor (rotate_right x 18) (shift_right x 3))
 
 // [Coq] Definition sigma_1 (x : int) : int :=
 //          Int.xor (Int.xor (Rotr 17 x) (Rotr 19 x)) (Shr 10 x).
 val _sigma1: uint32 -> Tot uint32
 let _sigma1 x =
-  Word.logxor (Word.rotate_right x 17) (Word.logxor (Word.rotate_right x 19) (Word.shift_right_logical x 10))
-
+  logxor (rotate_right x 17) (logxor (rotate_right x 19) (shift_right x 10))
 
 (* [FIPS 180-4] section 4.2.2 *)
 
@@ -90,74 +93,76 @@ let _sigma1 x =
 //        1955562222 ; 2024104815 ; 2227730452 ; 2361852424;
 //        2428436474 ; 2756734187 ; 3204031479 ; 3329325298].
 
-val k_init: unit -> St (array uint32)
+val k_init: unit -> St (buffer 32)
 let k_init () =
-  let k = FStar.Array.create 64 (Uint32.of_string "0x00000000") in
-  upd k 0  (Uint32.of_string "0x428a2f98");
-  upd k 1  (Uint32.of_string "0x71374491");
-  upd k 2  (Uint32.of_string "0xb5c0fbcf");
-  upd k 3  (Uint32.of_string "0xe9b5dba5");
-  upd k 4  (Uint32.of_string "0x3956c25b");
-  upd k 5  (Uint32.of_string "0x59f111f1");
-  upd k 6  (Uint32.of_string "0x923f82a4");
-  upd k 7  (Uint32.of_string "0xab1c5ed5");
-  upd k 8  (Uint32.of_string "0xd807aa98");
-  upd k 9  (Uint32.of_string "0x12835b01");
-  upd k 10 (Uint32.of_string "0x243185be");
-  upd k 11 (Uint32.of_string "0x550c7dc3");
-  upd k 12 (Uint32.of_string "0x72be5d74");
-  upd k 13 (Uint32.of_string "0x80deb1fe");
-  upd k 14 (Uint32.of_string "0x9bdc06a7");
-  upd k 15 (Uint32.of_string "0xc19bf174");
-  upd k 16 (Uint32.of_string "0xe49b69c1");
-  upd k 17 (Uint32.of_string "0xefbe4786");
-  upd k 18 (Uint32.of_string "0x0fc19dc6");
-  upd k 19 (Uint32.of_string "0x240ca1cc");
-  upd k 20 (Uint32.of_string "0x2de92c6f");
-  upd k 21 (Uint32.of_string "0x4a7484aa");
-  upd k 22 (Uint32.of_string "0x5cb0a9dc");
-  upd k 23 (Uint32.of_string "0x76f988da");
-  upd k 24 (Uint32.of_string "0x983e5152");
-  upd k 25 (Uint32.of_string "0xa831c66d");
-  upd k 26 (Uint32.of_string "0xb00327c8");
-  upd k 27 (Uint32.of_string "0xbf597fc7");
-  upd k 28 (Uint32.of_string "0xc6e00bf3");
-  upd k 29 (Uint32.of_string "0xd5a79147");
-  upd k 30 (Uint32.of_string "0x06ca6351");
-  upd k 31 (Uint32.of_string "0x14292967");
-  upd k 32 (Uint32.of_string "0x27b70a85");
-  upd k 33 (Uint32.of_string "0x2e1b2138");
-  upd k 34 (Uint32.of_string "0x4d2c6dfc");
-  upd k 35 (Uint32.of_string "0x53380d13");
-  upd k 36 (Uint32.of_string "0x650a7354");
-  upd k 37 (Uint32.of_string "0x766a0abb");
-  upd k 38 (Uint32.of_string "0x81c2c92e");
-  upd k 39 (Uint32.of_string "0x92722c85");
-  upd k 40 (Uint32.of_string "0xa2bfe8a1");
-  upd k 41 (Uint32.of_string "0xa81a664b");
-  upd k 42 (Uint32.of_string "0xc24b8b70");
-  upd k 43 (Uint32.of_string "0xc76c51a3");
-  upd k 44 (Uint32.of_string "0xd192e819");
-  upd k 45 (Uint32.of_string "0xd6990624");
-  upd k 46 (Uint32.of_string "0xf40e3585");
-  upd k 47 (Uint32.of_string "0x106aa070");
-  upd k 48 (Uint32.of_string "0x19a4c116");
-  upd k 49 (Uint32.of_string "0x1e376c08");
-  upd k 50 (Uint32.of_string "0x2748774c");
-  upd k 51 (Uint32.of_string "0x34b0bcb5");
-  upd k 52 (Uint32.of_string "0x391c0cb3");
-  upd k 53 (Uint32.of_string "0x4ed8aa4a");
-  upd k 54 (Uint32.of_string "0x5b9cca4f");
-  upd k 55 (Uint32.of_string "0x682e6ff3");
-  upd k 56 (Uint32.of_string "0x748f82ee");
-  upd k 57 (Uint32.of_string "0x78a5636f");
-  upd k 58 (Uint32.of_string "0x84c87814");
-  upd k 59 (Uint32.of_string "0x8cc70208");
-  upd k 60 (Uint32.of_string "0x90befffa");
-  upd k 61 (Uint32.of_string "0xa4506ceb");
-  upd k 62 (Uint32.of_string "0xbef9a3f7");
-  upd k 63 (Uint32.of_string "0xc67178f2");
+  admit();
+  let k = SBuffer.create #32 FStar.UInt32.zero (* (of_string "0x00000000") *) 64  in 
+  SBuffer.upd k 0  (of_string "0x428a2f98");
+  SBuffer.upd k 1  (of_string "0x71374491");
+  SBuffer.upd k 2  (of_string "0xb5c0fbcf");
+  SBuffer.upd k 3  (of_string "0xe9b5dba5");
+  SBuffer.upd k 4  (of_string "0x3956c25b"); 
+  SBuffer.upd k 5  (of_string "0x59f111f1");
+  SBuffer.upd k 6  (of_string "0x923f82a4");
+  SBuffer.upd k 7  (of_string "0xab1c5ed5");
+  SBuffer.upd k 8  (of_string "0xd807aa98");
+  SBuffer.upd k 9  (of_string "0x12835b01");
+  SBuffer.upd k 10 (of_string "0x243185be");
+  SBuffer.upd k 11 (of_string "0x550c7dc3");
+  SBuffer.upd k 12 (of_string "0x72be5d74");
+  SBuffer.upd k 13 (of_string "0x80deb1fe");
+  SBuffer.upd k 14 (of_string "0x9bdc06a7");
+  SBuffer.upd k 15 (of_string "0xc19bf174");
+  SBuffer.upd k 16 (of_string "0xe49b69c1");
+  SBuffer.upd k 17 (of_string "0xefbe4786");
+  SBuffer.upd k 18 (of_string "0x0fc19dc6");
+  SBuffer.upd k 19 (of_string "0x240ca1cc");
+  SBuffer.upd k 20 (of_string "0x2de92c6f");
+  SBuffer.upd k 21 (of_string "0x4a7484aa"); 
+  SBuffer.upd k 22 (of_string "0x5cb0a9dc");
+  SBuffer.upd k 23 (of_string "0x76f988da");
+  SBuffer.upd k 24 (of_string "0x983e5152");
+  SBuffer.upd k 25 (of_string "0xa831c66d");
+  SBuffer.upd k 26 (of_string "0xb00327c8");
+  SBuffer.upd k 27 (of_string "0xbf597fc7");
+  SBuffer.upd k 28 (of_string "0xc6e00bf3");
+  SBuffer.upd k 29 (of_string "0xd5a79147");
+  SBuffer.upd k 30 (of_string "0x06ca6351");
+  SBuffer.upd k 31 (of_string "0x14292967");
+  SBuffer.upd k 32 (of_string "0x27b70a85");
+  SBuffer.upd k 33 (of_string "0x2e1b2138");
+  SBuffer.upd k 34 (of_string "0x4d2c6dfc");
+  SBuffer.upd k 35 (of_string "0x53380d13");
+  SBuffer.upd k 36 (of_string "0x650a7354");
+  SBuffer.upd k 37 (of_string "0x766a0abb");
+  SBuffer.upd k 38 (of_string "0x81c2c92e");
+  SBuffer.upd k 39 (of_string "0x92722c85");
+  SBuffer.upd k 40 (of_string "0xa2bfe8a1");
+  SBuffer.upd k 41 (of_string "0xa81a664b"); 
+  SBuffer.upd k 42 (of_string "0xc24b8b70");
+  SBuffer.upd k 43 (of_string "0xc76c51a3");
+  SBuffer.upd k 44 (of_string "0xd192e819");
+  SBuffer.upd k 45 (of_string "0xd6990624");
+  SBuffer.upd k 46 (of_string "0xf40e3585");
+  SBuffer.upd k 47 (of_string "0x106aa070");
+  SBuffer.upd k 48 (of_string "0x19a4c116");
+  SBuffer.upd k 49 (of_string "0x1e376c08");
+  SBuffer.upd k 50 (of_string "0x2748774c");
+  SBuffer.upd k 51 (of_string "0x34b0bcb5");
+  SBuffer.upd k 52 (of_string "0x391c0cb3");
+  SBuffer.upd k 53 (of_string "0x4ed8aa4a");
+  SBuffer.upd k 54 (of_string "0x5b9cca4f");
+  SBuffer.upd k 55 (of_string "0x682e6ff3");
+  SBuffer.upd k 56 (of_string "0x748f82ee");
+  SBuffer.upd k 57 (of_string "0x78a5636f");
+  SBuffer.upd k 58 (of_string "0x84c87814");
+  SBuffer.upd k 59 (of_string "0x8cc70208");
+  SBuffer.upd k 60 (of_string "0x90befffa");
+  SBuffer.upd k 61 (of_string "0xa4506ceb");
+  SBuffer.upd k 62 (of_string "0xbef9a3f7");
+  SBuffer.upd k 63 (of_string "0xc67178f2");
   k
+
 
 (* [FIPS 180-4] section 5.1.1 *)
 (* l + 1 + k ≡ 448 mod 512 *)
@@ -174,64 +179,73 @@ val nblocks: nat -> Tot (n:nat{ n >= 1})
 let nblocks x = ((x + 8) - ((x + 8) % 64))/64 + 1
 
 (* Create the padding and set it to the specified value *)
-val pad_create: (b:bytes) -> St (pb:bytes{length pb >= 1 /\ length pb <= 64})
-let pad_create raw =
+val pad_create: (b:buffer 8) -> len:nat -> St (pb:buffer 8{length pb >= 1 /\ length pb <= 64})
+let pad_create raw len =
   (* Compute the padding length *)
   let plen =
-    let len = ByteArray.length raw in
-    let len_uint64 = Uint64.of_int (len * 8) in
+//    let len = ByteArray.length raw in
+    let len_uint64 = UInt64.of_int (len * 8) in
     if (len % 64) < 56 then 56 - (len % 64)
     else 64 + 56 - (len % 64)
   in
-  let pad = ByteArray.zero_create plen in
-  ByteArray.set pad 0 (ByteArray.of_string_byte "0x80");
+  let pad = create #8 zero plen in
+  SBuffer.upd pad 0 (FStar.UInt8.of_string "0x80");
   pad
 
 (* Function taking bytes and storing them in a (array uint32) *)
-val store_word: (fbytes:bytes) ->
-                (wi:bytes{length wi = 4}) ->
-                (wdata:array uint32(*{FStar.Heap.Ref wdata <> FStar.Heap.Ref wi}*)) ->
+val store_word: (fbytes:buffer 8) ->
+                (wi:buffer 8{length wi = 4 /\ Disjoint wi fbytes}) ->
+                (wdata:buffer 32{Disjoint wi wdata /\ Disjoint wdata fbytes(*{FStar.Heap.Ref wdata <> FStar.Heap.Ref wi}*)}) ->
                 (wmax:nat) ->
-                (idxw:ref int) ->
-                (idxb:ref int) -> ST unit
-                               (requires (fun h -> FStar.Seq.length (FStar.Heap.sel h wdata) = wmax))
-                               (ensures (fun h0 _ h1 -> True))
+                (idxw:ref nat) ->
+                (idxb:ref nat) -> ST unit
+                               (requires (fun h -> length wdata = wmax
+				 /\ Live h fbytes /\ Live h wi /\ Live h wdata
+				 /\ FStar.Heap.contains h idxw /\ FStar.Heap.contains h idxb
+				 /\ FStar.Heap.sel h idxb < length fbytes - 4)) // TODO : change with constraint on wmax
+                               (ensures (fun h0 _ h1 -> Modifies (SBuffer.only wi) h0 h1
+				 /\ Live h1 wi))
 
 let rec store_word fbytes wi wdata wmax idxw idxb =
+  admit(); //  TODO: proof
   if !idxw < wmax then begin
     (* Store four bytes into a temporary word (uint32) *)
-    ByteArray.set wi 0 (ByteArray.get fbytes !idxb);
-    ByteArray.set wi 1 (ByteArray.get fbytes (!idxb + 1));
-    ByteArray.set wi 2 (ByteArray.get fbytes (!idxb + 2));
-    ByteArray.set wi 3 (ByteArray.get fbytes (!idxb + 3));
+    SBuffer.upd wi 0 (SBuffer.index fbytes !idxb);
+    SBuffer.upd wi 1 (SBuffer.index fbytes (!idxb + 1));
+    SBuffer.upd wi 2 (SBuffer.index fbytes (!idxb + 2));
+    SBuffer.upd wi 3 (SBuffer.index fbytes (!idxb + 3));
     (* Store the temporary word to the final data array *)
-
     let h = FStar.ST.get () in
     admitP(True /\ ((FStar.Heap.sel h idxw) < wmax));
 //    admit();
-
-    FStar.Array.upd wdata !idxw (Uint32.of_bytes (wi));
+    SBuffer.upd wdata !idxw (uint32_of_sbytes (wi));
     idxb := !idxb + 4;
     idxw := !idxw + 1;
-
     let h = FStar.ST.get () in
-    admitP (True /\ (FStar.Seq.length (FStar.Heap.sel h wdata) = wmax));
+//    admitP (True /\ (FStar.Seq.length (FStar.Heap.sel h wdata) = wmax));
     store_word fbytes wi wdata wmax idxw idxb end
   else ()
 
-
-val pad: (data:bytes) -> (array uint32)
-let pad raw =
+val pad: (data:buffer 8) -> len:nat -> St (buffer 32)
+let pad raw len =
+  admit();
   let idxw = ref 0 in
   let idxb = ref 0 in
-  let wi = ByteArray.zero_create 4 in
-  let wmax = nblocks (ByteArray.length raw) in
-  let wdata = FStar.Array.create wmax (Uint32.of_string "0x00000000") in
+  let wi = SBuffer.create #8 FStar.UInt8.zero 4 in
+  let wmax = nblocks len in
+  let wdata = SBuffer.create #32 FStar.UInt32.zero wmax in
   (* Encode the length of the raw data in 8 bytes (uint64) *)
-  let lenbytes = ByteArray.length_bytes 8 raw in
+  let lenbytes = SBuffer.create #8 FStar.UInt8.zero 8 in // TODO from: ByteArray.length_bytes 8 raw i 
   (* Generate bytes required for the padding and create the final bytes *)
-  let padbytes = pad_create raw in
-  let fbytes = (Primitives.ByteArray.append (Primitives.ByteArray.append lenbytes padbytes) raw) in
+  let pad_len = 16 in // TODO: fake
+  let padbytes = pad_create raw pad_len in
+  let lenbytes_len = 8 in // TODO: fake
+  let raw_len = len in // TODO: fake
+  let fbytes = create #8 FStar.UInt8.zero (lenbytes_len + len + wmax) in (* TODO: fake numbers, see below *)
+  blit raw 0 fbytes 0 raw_len;
+  blit padbytes 0 fbytes raw_len pad_len;
+  blit lenbytes 0 fbytes (raw_len+pad_len) lenbytes_len;
+//  let fbytes = (Primitives.ByteArray.append (Primitives.ByteArray.append lenbytes padbytes) raw) in
   (* Store the final bytes in a (array uint32) *)
   store_word fbytes wi wdata wmax idxw idxb;
   wdata
@@ -259,9 +273,9 @@ let rec wsched data t =
   if t >= 0 && t < 16 then
     FStar.Array.index data t
   else if t < 64 then
-    Uint32.add (_sigma1 (wsched data (t-2)))
-               (Uint32.add (wsched data (t-7))
-                           (Uint32.add (_sigma0 (wsched data (t-15)))
+    FStar.UInt32.add (_sigma1 (wsched data (t-2)))
+               (FStar.UInt32.add (wsched data (t-7))
+                           (FStar.UInt32.add (_sigma0 (wsched data (t-15)))
                                        (wsched data (t-16))))
   else
     failwith "Error: scheduling function only handle values from 0 to 63 included"
@@ -276,16 +290,16 @@ let rec wsched data t =
 val init : unit -> array uint32
 let init () =
   let m =
-    FStar.Array.create 8 (Uint32.of_string "0x00000000")
+    FStar.Array.create 8 (FStar.UInt32.of_string "0x00000000")
   in
-  upd m 0 (Uint32.of_string "0x6a09e667");
-  upd m 1 (Uint32.of_string "0xbb67ae85");
-  upd m 2 (Uint32.of_string "0x3c6ef372");
-  upd m 3 (Uint32.of_string "0xa54ff53a");
-  upd m 4 (Uint32.of_string "0x510e527f");
-  upd m 5 (Uint32.of_string "0x9b05688c");
-  upd m 6 (Uint32.of_string "0x1f83d9ab");
-  upd m 7 (Uint32.of_string "0x5be0cd19");
+  upd m 0 (FStar.UInt32.of_string "0x6a09e667");
+  upd m 1 (FStar.UInt32.of_string "0xbb67ae85");
+  upd m 2 (FStar.UInt32.of_string "0x3c6ef372");
+  upd m 3 (FStar.UInt32.of_string "0xa54ff53a");
+  upd m 4 (FStar.UInt32.of_string "0x510e527f");
+  upd m 5 (FStar.UInt32.of_string "0x9b05688c");
+  upd m 6 (FStar.UInt32.of_string "0x1f83d9ab");
+  upd m 7 (FStar.UInt32.of_string "0x5be0cd19");
   m
 
 (* [FIPS 180-4] section 6.2.2 *)
@@ -310,8 +324,8 @@ val update : (hash:array uint32) -> (data:array uint32) -> array uint32
 let update hash data =
   let i = ref 0 in
   let max = FStar.Array.length data in
-  let t1 = ref Uint32.zero in
-  let t2 = ref Uint32.zero in
+  let t1 = ref FStar.UInt32.zero in
+  let t2 = ref FStar.UInt32.zero in
   let k = k_init () in
   let rec process_chunk (i:ref int) =
     if !i < max then begin
@@ -331,32 +345,32 @@ let update hash data =
     let t = ref 0 in
     let rec inner_loop (t:ref int) =
       if !t < 63 then begin
-        t1 := Uint32.add !(wh.h)
-                         (Uint32.add (_Sigma1 !(wh.e))
-                                     (Uint32.add (_Ch !(wh.e) !(wh.f) !(wh.g))
-                                                 (Uint32.add (FStar.Array.index k !t) (wsched data_block !t))));
-        t2 := Uint32.add (_Sigma0 !(wh.a)) (_Maj !(wh.a) !(wh.b) !(wh.c));
+        t1 := FStar.UInt32.add !(wh.h)
+                         (FStar.UInt32.add (_Sigma1 !(wh.e))
+                                     (FStar.UInt32.add (_Ch !(wh.e) !(wh.f) !(wh.g))
+                                                 (FStar.UInt32.add (FStar.Array.index k !t) (wsched data_block !t))));
+        t2 := FStar.UInt32.add (_Sigma0 !(wh.a)) (_Maj !(wh.a) !(wh.b) !(wh.c));
         wh.h := !(wh.g);
         wh.g := !(wh.f);
         wh.f := !(wh.e);
-        wh.e := Uint32.add !(wh.d) !t1;
+        wh.e := FStar.UInt32.add !(wh.d) !t1;
         wh.d := !(wh.c);
         wh.c := !(wh.b);
         wh.b := !(wh.a);
-        wh.a := Uint32.add !t1 !t2;
+        wh.a := FStar.UInt32.add !t1 !t2;
         t := (!t + 1);
         inner_loop t end
       else ()
     in inner_loop t;
     (* Step 4 : Compute the ith intermediate hash value *)
-    upd hash 0 (Uint32.add !(wh.a) (FStar.Array.index hash 0));
-    upd hash 1 (Uint32.add !(wh.b) (FStar.Array.index hash 1));
-    upd hash 2 (Uint32.add !(wh.c) (FStar.Array.index hash 2));
-    upd hash 3 (Uint32.add !(wh.d) (FStar.Array.index hash 3));
-    upd hash 4 (Uint32.add !(wh.e) (FStar.Array.index hash 4));
-    upd hash 5 (Uint32.add !(wh.f) (FStar.Array.index hash 5));
-    upd hash 6 (Uint32.add !(wh.g) (FStar.Array.index hash 6));
-    upd hash 7 (Uint32.add !(wh.h) (FStar.Array.index hash 7));
+    upd hash 0 (FStar.UInt32.add !(wh.a) (FStar.Array.index hash 0));
+    upd hash 1 (FStar.UInt32.add !(wh.b) (FStar.Array.index hash 1));
+    upd hash 2 (FStar.UInt32.add !(wh.c) (FStar.Array.index hash 2));
+    upd hash 3 (FStar.UInt32.add !(wh.d) (FStar.Array.index hash 3));
+    upd hash 4 (FStar.UInt32.add !(wh.e) (FStar.Array.index hash 4));
+    upd hash 5 (FStar.UInt32.add !(wh.f) (FStar.Array.index hash 5));
+    upd hash 6 (FStar.UInt32.add !(wh.g) (FStar.Array.index hash 6));
+    upd hash 7 (FStar.UInt32.add !(wh.h) (FStar.Array.index hash 7));
     i := !i + 1;
     process_chunk i end
   else ()
@@ -380,7 +394,7 @@ let finish hash =
 
 // [Coq] Definition SHA_256 (str : list Z) : list Z :=
 //     intlist_to_Zlist (hash_blocks init_registers (generate_and_pad str)).
-val sha265: (data:bytes) -> St bytes
+val sha265: (data:buffer 8) -> St (buffer 8)
 let sha256 data =
   let pdata = pad data in
   let hash = init () in

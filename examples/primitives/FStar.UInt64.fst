@@ -65,3 +65,6 @@ let to_uint64 s = to_usint n s
 
 let op_Less_Less = shift_left
 let op_Greater_Greater = shift_right
+
+assume val of_string: string -> Tot uint64
+assume val of_int: int -> Tot uint64
