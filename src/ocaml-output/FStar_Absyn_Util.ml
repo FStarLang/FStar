@@ -2151,25 +2151,25 @@ false
 end))
 
 # 1050 "FStar.Absyn.Util.fst"
-let ___SynSumKind____0 : syntax_sum  ->  FStar_Absyn_Syntax.knd = (fun projectee -> (match (projectee) with
+let ___SynSumKind____0 = (fun projectee -> (match (projectee) with
 | SynSumKind (_27_1899) -> begin
 _27_1899
 end))
 
 # 1051 "FStar.Absyn.Util.fst"
-let ___SynSumType____0 : syntax_sum  ->  FStar_Absyn_Syntax.typ = (fun projectee -> (match (projectee) with
+let ___SynSumType____0 = (fun projectee -> (match (projectee) with
 | SynSumType (_27_1902) -> begin
 _27_1902
 end))
 
 # 1052 "FStar.Absyn.Util.fst"
-let ___SynSumExp____0 : syntax_sum  ->  FStar_Absyn_Syntax.exp = (fun projectee -> (match (projectee) with
+let ___SynSumExp____0 = (fun projectee -> (match (projectee) with
 | SynSumExp (_27_1905) -> begin
 _27_1905
 end))
 
 # 1053 "FStar.Absyn.Util.fst"
-let ___SynSumComp____0 : syntax_sum  ->  (FStar_Absyn_Syntax.comp', Prims.unit) FStar_Absyn_Syntax.syntax = (fun projectee -> (match (projectee) with
+let ___SynSumComp____0 = (fun projectee -> (match (projectee) with
 | SynSumComp (_27_1908) -> begin
 _27_1908
 end))
@@ -2891,19 +2891,19 @@ false
 end))
 
 # 1372 "FStar.Absyn.Util.fst"
-let ___QAll____0 : connective  ->  (FStar_Absyn_Syntax.binders * qpats * FStar_Absyn_Syntax.typ) = (fun projectee -> (match (projectee) with
+let ___QAll____0 = (fun projectee -> (match (projectee) with
 | QAll (_27_2276) -> begin
 _27_2276
 end))
 
 # 1373 "FStar.Absyn.Util.fst"
-let ___QEx____0 : connective  ->  (FStar_Absyn_Syntax.binders * qpats * FStar_Absyn_Syntax.typ) = (fun projectee -> (match (projectee) with
+let ___QEx____0 = (fun projectee -> (match (projectee) with
 | QEx (_27_2279) -> begin
 _27_2279
 end))
 
 # 1374 "FStar.Absyn.Util.fst"
-let ___BaseConn____0 : connective  ->  (FStar_Ident.lident * FStar_Absyn_Syntax.args) = (fun projectee -> (match (projectee) with
+let ___BaseConn____0 = (fun projectee -> (match (projectee) with
 | BaseConn (_27_2282) -> begin
 _27_2282
 end))

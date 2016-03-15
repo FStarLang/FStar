@@ -146,7 +146,7 @@ false
 end))
 
 # 45 "FStar.TypeChecker.Normalize.fst"
-let ___UnfoldUntil____0 : step  ->  FStar_Syntax_Syntax.delta_depth = (fun projectee -> (match (projectee) with
+let ___UnfoldUntil____0 = (fun projectee -> (match (projectee) with
 | UnfoldUntil (_66_9) -> begin
 _66_9
 end))
@@ -187,13 +187,13 @@ false
 end))
 
 # 62 "FStar.TypeChecker.Normalize.fst"
-let ___Clos____0 : closure  ->  (env * FStar_Syntax_Syntax.term * (env * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo) = (fun projectee -> (match (projectee) with
+let ___Clos____0 = (fun projectee -> (match (projectee) with
 | Clos (_66_12) -> begin
 _66_12
 end))
 
 # 63 "FStar.TypeChecker.Normalize.fst"
-let ___Univ____0 : closure  ->  FStar_Syntax_Syntax.universe = (fun projectee -> (match (projectee) with
+let ___Univ____0 = (fun projectee -> (match (projectee) with
 | Univ (_66_15) -> begin
 _66_15
 end))
@@ -296,43 +296,43 @@ false
 end))
 
 # 82 "FStar.TypeChecker.Normalize.fst"
-let ___Arg____0 : stack_elt  ->  (closure * FStar_Syntax_Syntax.aqual * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Arg____0 = (fun projectee -> (match (projectee) with
 | Arg (_66_32) -> begin
 _66_32
 end))
 
 # 83 "FStar.TypeChecker.Normalize.fst"
-let ___UnivArgs____0 : stack_elt  ->  (FStar_Syntax_Syntax.universe Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___UnivArgs____0 = (fun projectee -> (match (projectee) with
 | UnivArgs (_66_35) -> begin
 _66_35
 end))
 
 # 84 "FStar.TypeChecker.Normalize.fst"
-let ___MemoLazy____0 : stack_elt  ->  (env * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo = (fun projectee -> (match (projectee) with
+let ___MemoLazy____0 = (fun projectee -> (match (projectee) with
 | MemoLazy (_66_38) -> begin
 _66_38
 end))
 
 # 85 "FStar.TypeChecker.Normalize.fst"
-let ___Match____0 : stack_elt  ->  (env * branches * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Match____0 = (fun projectee -> (match (projectee) with
 | Match (_66_41) -> begin
 _66_41
 end))
 
 # 86 "FStar.TypeChecker.Normalize.fst"
-let ___Abs____0 : stack_elt  ->  (env * FStar_Syntax_Syntax.binders * env * FStar_Syntax_Syntax.lcomp Prims.option * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Abs____0 = (fun projectee -> (match (projectee) with
 | Abs (_66_44) -> begin
 _66_44
 end))
 
 # 87 "FStar.TypeChecker.Normalize.fst"
-let ___App____0 : stack_elt  ->  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___App____0 = (fun projectee -> (match (projectee) with
 | App (_66_47) -> begin
 _66_47
 end))
 
 # 88 "FStar.TypeChecker.Normalize.fst"
-let ___Meta____0 : stack_elt  ->  (FStar_Syntax_Syntax.metadata * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Meta____0 = (fun projectee -> (match (projectee) with
 | Meta (_66_50) -> begin
 _66_50
 end))

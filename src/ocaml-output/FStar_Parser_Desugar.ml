@@ -672,19 +672,19 @@ false
 end))
 
 # 341 "FStar.Parser.Desugar.fst"
-let ___TBinder____0 : bnd  ->  (FStar_Absyn_Syntax.btvdef * FStar_Absyn_Syntax.knd * FStar_Absyn_Syntax.aqual) = (fun projectee -> (match (projectee) with
+let ___TBinder____0 = (fun projectee -> (match (projectee) with
 | TBinder (_49_703) -> begin
 _49_703
 end))
 
 # 342 "FStar.Parser.Desugar.fst"
-let ___VBinder____0 : bnd  ->  (FStar_Absyn_Syntax.bvvdef * FStar_Absyn_Syntax.typ * FStar_Absyn_Syntax.aqual) = (fun projectee -> (match (projectee) with
+let ___VBinder____0 = (fun projectee -> (match (projectee) with
 | VBinder (_49_706) -> begin
 _49_706
 end))
 
 # 343 "FStar.Parser.Desugar.fst"
-let ___LetBinder____0 : bnd  ->  (FStar_Ident.lident * FStar_Absyn_Syntax.typ) = (fun projectee -> (match (projectee) with
+let ___LetBinder____0 = (fun projectee -> (match (projectee) with
 | LetBinder (_49_709) -> begin
 _49_709
 end))

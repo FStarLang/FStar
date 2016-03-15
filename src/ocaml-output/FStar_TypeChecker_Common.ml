@@ -64,13 +64,13 @@ false
 end))
 
 # 45 "FStar.TypeChecker.Common.fst"
-let ___TProb____0 : prob  ->  (FStar_Syntax_Syntax.typ, FStar_Syntax_Syntax.term) problem = (fun projectee -> (match (projectee) with
+let ___TProb____0 = (fun projectee -> (match (projectee) with
 | TProb (_64_17) -> begin
 _64_17
 end))
 
 # 46 "FStar.TypeChecker.Common.fst"
-let ___CProb____0 : prob  ->  (FStar_Syntax_Syntax.comp, Prims.unit) problem = (fun projectee -> (match (projectee) with
+let ___CProb____0 = (fun projectee -> (match (projectee) with
 | CProb (_64_20) -> begin
 _64_20
 end))
@@ -103,7 +103,7 @@ false
 end))
 
 # 52 "FStar.TypeChecker.Common.fst"
-let ___NonTrivial____0 : guard_formula  ->  FStar_Syntax_Syntax.formula = (fun projectee -> (match (projectee) with
+let ___NonTrivial____0 = (fun projectee -> (match (projectee) with
 | NonTrivial (_64_23) -> begin
 _64_23
 end))

@@ -2376,10 +2376,12 @@ let type_of env e =
     if Env.debug env <| Options.Other "RelCheck" then Util.print1 "Checking term %s\n" (Print.term_to_string e);
     //let env, _ = Env.clear_expected_typ env in
     let env = {env with top_level=false} in
-    let t, c, g = tc_tot_or_gtot_term env e in
+    let t, c, g = 
+        try tc_tot_or_gtot_term env e
+        with Error(msg, _) -> raise (Error("Implicit argument: " ^ msg, Env.get_range env)) in
     if Util.is_total_lcomp c
     then c.res_typ, g
-    else raise (Error("Expected a total term; got a ghost term", e.pos))
+    else raise (Error(Util.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e), Env.get_range env))
 
 let check_module env m =
     if List.length !Options.debug <> 0

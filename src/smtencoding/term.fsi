@@ -128,6 +128,7 @@ val mkForall'': (list<list<pat>> * option<int> * list<sort> * term) -> term
 val mkExists: (list<list<pat>> * fvs * term) -> term
 
 val fresh_token: (string * sort) -> int -> decl
+val injective_constructor : (string * list<(string * sort)> * sort) -> decls_t
 val fresh_constructor : (string * list<sort> * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: constructor_t -> decls_t

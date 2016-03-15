@@ -1,7 +1,3 @@
-(*--build-config
-    options:;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst
- --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -28,7 +24,7 @@ abstract let root : rid = []
 
 abstract let rref (id:rid) (a:Type) = Heap.ref a
 
-abstract val as_ref : #a:Type -> #id:rid -> r:rref id a -> GTot (ref a)
+abstract val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
 let as_ref #a #id r = r
 
 abstract val ref_as_rref : i:rid -> r:ref 'a -> GTot (rref i 'a)

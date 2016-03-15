@@ -121,25 +121,25 @@ false
 end))
 
 # 63 "FStar.Tc.Rel.fst"
-let ___KProb____0 : prob  ->  (FStar_Absyn_Syntax.knd, Prims.unit) problem = (fun projectee -> (match (projectee) with
+let ___KProb____0 = (fun projectee -> (match (projectee) with
 | KProb (_40_52) -> begin
 _40_52
 end))
 
 # 64 "FStar.Tc.Rel.fst"
-let ___TProb____0 : prob  ->  (FStar_Absyn_Syntax.typ, FStar_Absyn_Syntax.exp) problem = (fun projectee -> (match (projectee) with
+let ___TProb____0 = (fun projectee -> (match (projectee) with
 | TProb (_40_55) -> begin
 _40_55
 end))
 
 # 65 "FStar.Tc.Rel.fst"
-let ___EProb____0 : prob  ->  (FStar_Absyn_Syntax.exp, Prims.unit) problem = (fun projectee -> (match (projectee) with
+let ___EProb____0 = (fun projectee -> (match (projectee) with
 | EProb (_40_58) -> begin
 _40_58
 end))
 
 # 66 "FStar.Tc.Rel.fst"
-let ___CProb____0 : prob  ->  (FStar_Absyn_Syntax.comp, Prims.unit) problem = (fun projectee -> (match (projectee) with
+let ___CProb____0 = (fun projectee -> (match (projectee) with
 | CProb (_40_61) -> begin
 _40_61
 end))
@@ -182,19 +182,19 @@ false
 end))
 
 # 72 "FStar.Tc.Rel.fst"
-let ___UK____0 : uvi  ->  (FStar_Absyn_Syntax.uvar_k * FStar_Absyn_Syntax.knd) = (fun projectee -> (match (projectee) with
+let ___UK____0 = (fun projectee -> (match (projectee) with
 | UK (_40_64) -> begin
 _40_64
 end))
 
 # 73 "FStar.Tc.Rel.fst"
-let ___UT____0 : uvi  ->  ((FStar_Absyn_Syntax.uvar_t * FStar_Absyn_Syntax.knd) * FStar_Absyn_Syntax.typ) = (fun projectee -> (match (projectee) with
+let ___UT____0 = (fun projectee -> (match (projectee) with
 | UT (_40_67) -> begin
 _40_67
 end))
 
 # 74 "FStar.Tc.Rel.fst"
-let ___UE____0 : uvi  ->  ((FStar_Absyn_Syntax.uvar_e * FStar_Absyn_Syntax.typ) * FStar_Absyn_Syntax.exp) = (fun projectee -> (match (projectee) with
+let ___UE____0 = (fun projectee -> (match (projectee) with
 | UE (_40_70) -> begin
 _40_70
 end))
@@ -240,13 +240,13 @@ false
 end))
 
 # 98 "FStar.Tc.Rel.fst"
-let ___Success____0 : solution  ->  (uvi Prims.list * deferred) = (fun projectee -> (match (projectee) with
+let ___Success____0 = (fun projectee -> (match (projectee) with
 | Success (_40_85) -> begin
 _40_85
 end))
 
 # 99 "FStar.Tc.Rel.fst"
-let ___Failed____0 : solution  ->  (prob * Prims.string) = (fun projectee -> (match (projectee) with
+let ___Failed____0 = (fun projectee -> (match (projectee) with
 | Failed (_40_88) -> begin
 _40_88
 end))
@@ -275,7 +275,7 @@ false
 end))
 
 # 103 "FStar.Tc.Rel.fst"
-let ___NonTrivial____0 : guard_formula  ->  FStar_Absyn_Syntax.formula = (fun projectee -> (match (projectee) with
+let ___NonTrivial____0 = (fun projectee -> (match (projectee) with
 | NonTrivial (_40_91) -> begin
 _40_91
 end))

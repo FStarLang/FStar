@@ -14,7 +14,7 @@ false
 end))
 
 # 8 "FStar.Format.fst"
-let ___Doc____0 : doc  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Doc____0 = (fun projectee -> (match (projectee) with
 | Doc (_23_2) -> begin
 _23_2
 end))

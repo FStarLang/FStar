@@ -1,4 +1,4 @@
-module Uintegers.Uint8
+module Uint8
 
 
 assume val zero : uint8
@@ -101,3 +101,8 @@ assume val to_string : uint8 -> Tot string
 
 assume val compare : uint8 -> uint8 -> Tot int
 (** The comparison function for integers of type uint8. **)
+
+// New functions
+assume val rotate_left: uint8 -> nat -> Tot uint8
+
+assume val rotate_right: uint8 -> nat -> Tot uint8

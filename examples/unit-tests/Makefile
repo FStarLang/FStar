@@ -23,22 +23,22 @@ endif
 all: all-pos all-neg
 
 all-pos: 
-	$(FSTAR_OR_NUBUILD) $(VERFILES)
+	$(FSTAR) $(VERFILES)
 
 basictests: $(VERFILES)
-	$(FSTAR_OR_NUBUILD) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^
+	$(FSTAR) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^
 
 all-neg: $(NEGFILES)
-	-$(FSTAR_OR_NUBUILD) --explicit_deps $(STDLIB) --split_cases 1 $^ | tee fstar_log
+	-$(FSTAR) --explicit_deps $(STDLIB) --split_cases 1 $^ | tee fstar_log
 	@FAILC=`egrep "^Error: [0-9]* errors" -o fstar_log | egrep -o "[0-9]+"`; if [ "$$FAILC" != "$(NEGTESTS)" ]; then echo "Wrong failure count: $$FAILC (expected $(NEGTESTS))" && false; else echo "Success: $$FAILC failures were expected"; fi
 
 mac2: mac2.fst
-	$(FSTAR_OR_NUBUILD) --explicit_deps $(STDLIB) FStar.Seq.fst mac2.fst
+	$(FSTAR) --explicit_deps $(STDLIB) FStar.Seq.fst mac2.fst
 
 inverse:
-	$(FSTAR_OR_NUBUILD) --explicit_deps --max_fuel 0 --max_ifuel 3 --initial_ifuel 3 --initial_fuel 0 $(call add_stdlib_prefix, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Seq.fst) inverse.fst
+	$(FSTAR) --explicit_deps --max_fuel 0 --max_ifuel 3 --initial_ifuel 3 --initial_fuel 0 $(call add_stdlib_prefix, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Seq.fst) inverse.fst
 
 testghost:
-	$(FSTAR_OR_NUBUILD) testghost.fst
+	$(FSTAR) testghost.fst
 
 
