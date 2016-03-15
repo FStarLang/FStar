@@ -62,12 +62,14 @@ let finished_message fmods =
         print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
     end
 
-(* Extraction to OCaml or FSharp: only for the stratified type-checker currently *)
-let codegen fmods env =
+(* Extraction to OCaml or F# *)
+let codegen uf_mods_env =
   if !Options.codegen = Some "OCaml" ||
      !Options.codegen = Some "FSharp"
   then begin
-    let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods in
+    let mllibs = match uf_mods_env with 
+        | Inl (fmods, env) -> snd <| Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods
+        | Inr (umods, env) -> snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
     let ext = if !Options.codegen = Some "FSharp" then ".fs" else ".ml" in
     let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
@@ -110,10 +112,11 @@ let go _ =
           if !Options.universes
           then let fmods, dsenv, env = Universal.batch_mode_tc filenames in
                report_errors None;
+               codegen (Inr (fmods, env));
                finished_message (fmods |> List.map Universal.module_or_interface_name)               
           else let fmods, dsenv, env = Stratified.batch_mode_tc filenames in
                report_errors None;
-               codegen fmods env;
+               codegen (Inl (fmods, env));
                finished_message (fmods |> List.map Stratified.module_or_interface_name)
         else
           Util.print_error "no file provided\n"
