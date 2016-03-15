@@ -1,0 +1,48 @@
+open Char
+
+type sbytes = {
+    content:bytes;
+    idx:int;
+    length:int;
+  }
+                
+type uint32 = int
+
+let create init len = {content = Bytes.make len init; idx = 0; length = len}
+let index b n = Bytes.get b.content (n+b.idx)
+let upd b n v = Bytes.set b.content (n+b.idx) v
+let sub b i len = {content = b.content; idx = b.idx+i; length = len}
+let blit a idx_a b idx_b len = Bytes.blit a.content (idx_a+a.idx) b.content (idx_b+b.idx) len
+let split a i = (sub a 0 i, sub a i (a.length - i))
+let of_seq s l = ()
+let copy b l = {content = Bytes.sub b.content b.idx l; idx = 0; length = l} 
+                
+let uint32_of_sbytes b =
+  code (index b 0) + (code (index b 1) lsl 8) +
+    (code (index b 2) lsl 16) + (code (index b 3) lsl 24)
+
+let sbytes_of_uint32s res b l =
+  for i = 0 to l-1 do
+    let v = SBuffer.index 0 b i in
+    upd res (4*i) (chr (v land 255));
+    upd res (4*i+1) (chr ((v lsr 8) land 255));
+    upd res (4*i+2) (chr ((v lsr 16) land 255));
+    upd res (4*i+3) (chr ((v lsr 24) land 255))
+  done
+
+let xor_bytes c a b l =
+  for i = 0 to l-1 do
+    upd c i (chr (code (index a i) lxor code (index b i)))
+  done
+    
+let print b =
+  let s = ref "" in
+  for i = 0 to b.length - 1 do
+    let s' = Printf.sprintf "%X" (code (index b i))  in
+    let s' = if String.length s' = 1 then "0" ^ s' else s' in 
+    s := !s ^ s';
+  done;
+  !s
+
+let print_bytes b =
+  print_string (print b); print_string "\n"

@@ -1,11 +1,15 @@
+# FStar variables
 FSTAR_HOME=~/dev/FStar
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 
 OPTIONS_VER= 
 OPTIONS_COMPILE=--lax --codegen C
+OPTIONS_OCAML=--lax --codegen OCaml
 
+# Low* variables
 LOW_STAR_MODULES=Axioms IntLib IntLibLemmas Sint FStar.UInt8 FStar.UInt32 FStar.UInt63 SBuffer FStar.SBytes
 
+# C variables
 CHACHA=chacha
 POLY=poly
 CHACHA_ODIR=chacha20
@@ -15,7 +19,14 @@ POLY_C=Parameters.c Bignum.c Poly.c test_poly.c
 
 COMPILE=gcc -O2 fstarlib.c 
 
-.PHONY: chacha-ver chacha-test poly-ver poly-test
+# OCaml variables
+OCAML=ocamlfind ocamlopt -package batteries -linkpkg -g -thread
+DEBUG=ocamlfind ocamlc -package batteries -linkpkg -g -thread
+OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
+OCAML_LIB=$(addprefix $(FSTAR_HOME)/lib/ml/, MkPrims.ml native_int/prims.ml FStar_Set.ml FStar_ST.ml FStar_All.ml) FStar_FunctionalExtensionality.ml FStar_Seq.ml 
+CHACHA_OCAML=FStar_UInt8.ml FStar_UInt32.ml SBuffer.ml FStar_SBytes.ml Chacha.ml
+
+.PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test
 
 all: chacha-test poly-test
 
@@ -36,6 +47,13 @@ chacha-test: chacha.fst
 	cd $(CHACHA_ODIR) && $(COMPILE) $(CHACHA_C) -o $(CHACHA)
 	./$(CHACHA_ODIR)/$(CHACHA)
 
+chacha-ml:
+	mkdir -p $(CHACHA_ODIR)_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) chacha.fst --odir $(CHACHA_ODIR)_ml
+	cp ./ml/*.ml $(CHACHA_ODIR)_ml
+	cd $(CHACHA_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(CHACHA_OCAML) test_chacha20.ml #2>/dev/null
+	$(CHACHA_ODIR)_ml/a.out
+
 poly-ver: poly.fst
 	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 250 $(addprefix --verify_module , Parameters Bigint Bignum Poly)
 
@@ -50,5 +68,12 @@ poly-test: poly.fst
 	cd $(POLY_ODIR) && $(COMPILE) $(POLY_C) -o $(POLY)
 	./$(POLY_ODIR)/$(POLY)
 
+poly1305-ml:
+	mkdir -p $(POLY_ODIR)_ml
+	$(FSTAR) $(OPTIONS_COMPILE) $(FSTAR_LIB) $(POLY1305) --odir $(POLY_ODIR)_ml
+	cp ./ml/*.ml $(POLY_ODIR)
+	cd $(POLY_ODIR) && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(POLY_OCAML)_ml test_poly1305.ml #2> /dev/null
+	$(POLY_ODIR)/a.out
+
 clean:
-	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) *~
+	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(CHACHA_ODIR)_ml $(POLY_ODIR)_ml *~
