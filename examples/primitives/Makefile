@@ -25,6 +25,8 @@ DEBUG=ocamlfind ocamlc -package batteries -linkpkg -g -thread
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
 OCAML_LIB=$(addprefix $(FSTAR_HOME)/lib/ml/, MkPrims.ml native_int/prims.ml FStar_Set.ml FStar_ST.ml FStar_All.ml) FStar_FunctionalExtensionality.ml FStar_Seq.ml 
 CHACHA_OCAML=FStar_UInt8.ml FStar_UInt32.ml SBuffer.ml FStar_SBytes.ml Chacha.ml
+POLY_OCAML=FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt63.ml SBuffer.ml FStar_SBytes.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
+
 
 .PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test
 
@@ -68,12 +70,12 @@ poly-test: poly.fst
 	cd $(POLY_ODIR) && $(COMPILE) $(POLY_C) -o $(POLY)
 	./$(POLY_ODIR)/$(POLY)
 
-poly1305-ml:
+poly-ml:
 	mkdir -p $(POLY_ODIR)_ml
-	$(FSTAR) $(OPTIONS_COMPILE) $(FSTAR_LIB) $(POLY1305) --odir $(POLY_ODIR)_ml
-	cp ./ml/*.ml $(POLY_ODIR)
-	cd $(POLY_ODIR) && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(POLY_OCAML)_ml test_poly1305.ml #2> /dev/null
-	$(POLY_ODIR)/a.out
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) poly.fst --odir $(POLY_ODIR)_ml
+	cp ./ml/*.ml $(POLY_ODIR)_ml
+	cd $(POLY_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(POLY_OCAML) test_poly1305.ml #2> /dev/null
+	$(POLY_ODIR)_ml/a.out
 
 clean:
-	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(CHACHA_ODIR)_ml $(POLY_ODIR)_ml *~
+	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(CHACHA_ODIR)_ml $(POLY_ODIR)_ml *~ *.exe

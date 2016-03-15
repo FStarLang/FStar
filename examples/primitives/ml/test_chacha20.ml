@@ -1,20 +1,28 @@
 open Chacha
 open Char
+open SBuffer
 open FStar_SBytes
        
-let key = {content = Bytes.init 32 (fun x -> chr x); idx = 0; length = 32 }
+let key = {content = Array.init 32 (fun x -> x); idx = 0; length = 32 }
 
 let nonce =
-  let n = create (chr 0) 12 in
-  upd n 7 (chr 0x4a);
+  let n = create 0 12 in
+  upd n 7 0x4a;
   n
 
 let counter = 1
 
+let from_string s =
+  let b = create 0 (String.length s) in
+  for i = 0 to (String.length s - 1) do
+    upd b i (code (String.get s i))
+  done;
+  b
+                
 let print b =
   let s = ref "" in
   for i = 0 to b.length - 1 do
-    let s' = Printf.sprintf "%X" (code (index b i))  in
+    let s' = Printf.sprintf "%X" (index b i)  in
     let s' = if String.length s' = 1 then "0" ^ s' else s' in 
     s := !s ^ s';
   done;
@@ -36,9 +44,8 @@ let print_array (a:int SBuffer.buffer) =
 let print_bytes b =
   print_string (print b); print_string "\n"
 
-let plaintext =
-  {content = Bytes.of_string "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it."; idx = 0; length = 114}
-
+let plaintext = from_string "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it."
+                            
 let expected = "  000  6e 2e 35 9a 25 68 f9 80 41 ba 07 28 dd 0d 69 81  n.5.%h..A..(..i.
   016  e9 7e 7a ec 1d 43 60 c2 0a 27 af cc fd 9f ae 0b  .~z..C`..'......
   032  f9 1b 65 c5 52 47 33 ab 8f 59 3d ab cd 62 b3 57  ..e.RG3..Y=..b.W
@@ -49,7 +56,7 @@ let expected = "  000  6e 2e 35 9a 25 68 f9 80 41 ba 07 28 dd 0d 69 81  n.5.%h..
   112  87 4d\n"
 
 let _ =
-  let ciphertext = create (chr 0) 114 in
+  let ciphertext = create 0 114 in
   (*  let state = SBuffer.create 0 0 16 in *)
   chacha20_encrypt ciphertext key counter nonce plaintext 114;
   print_string "Test key:\n";
