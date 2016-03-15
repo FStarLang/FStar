@@ -15,6 +15,7 @@ else
     endif
 endif
 
+FSTAR_HOME=../..
 include ../Makefile.include
 
 all: .all.crypto.ver merkle_tree mac mac3 rpc CntProtocol padding acls-cap statefulEnc

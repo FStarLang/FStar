@@ -3,6 +3,7 @@ ALLFILES=CPS.Double.fst       CPS.DoubleLambdaLifting.fst   CPS.Simple.fst\
 	 CPS.DoubleDefun.fst  CPS.Expr.fst                  CPS.SimpleLambdaLifting.fst\
 	 Eval.DB.fst	      Eval.DBCC.fst	            wf.fst\
 	 termination.fst
+FSTAR_HOME=../..
 include ../Makefile.include
 all:$(ALLFILES)
 	$(FSTAR) $^

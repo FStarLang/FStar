@@ -1,16 +1,17 @@
 # --------------------------------------------------------------------
+ifndef FSTAR_HOME
+   $(error "Please define the `FSTAR_HOME` variable before including this makefile.")
+endif
+
+include $(FSTAR_HOME)/src/gmake/fstar.mk
+include $(FSTAR_HOME)/src/gmake/nubuild.mk
+
 ifeq ($(OS),Windows_NT)
 MSBUILD = msbuild
-# note: paths appear to be specified related to a subdirectory of the directory in 
-# which this makefile resides. see definition of $FSTAR_HOME as evidence supporting
-# this assumption.
-NUBUILD_DIR=../../.nubuild
-NUBUILD=$(NUBUILD_DIR)/bin/NuBuild.exe
 else
 MSBUILD = xbuild
 endif
 
-FSTAR_HOME = ../..
 LIB_FILES=FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.String.fsti
 STDLIB=$(LIB_FILES)
 OLDLIB=FStar.List.fst FStar.String.fsti partialmap.fst FStar.ST.fst
@@ -20,13 +21,7 @@ STDLIB_CACHE = Prims.cache List.cache Set.cache Map.cache Heap.cache Array.cache
 FULL_LIB_CACHE = $(STDLIB_CACHE) ListProperties.cache
 PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)
 STDCACHE=Prims.cache List.cache String.cache ST.cache Set.cache Map.cache Heap.cache Array.cache
-FSTARC=../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
-
-ifdef USE_NUBUILD
-FSTAR=$(NUBUILD) --quiet FStarVerify 
-else
-FSTAR=../../bin/fstar.exe $(OTHERFLAGS)
-endif
+FSTARC=$(FSTAR) $(STDCACHE) 
 
 %.ver: %.fst
 	$(FSTAR) $(STDLIB) $^

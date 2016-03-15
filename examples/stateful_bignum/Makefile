@@ -2,7 +2,8 @@
 CPP=cpp -ffreestanding
 
 FSTAR_HOME=../..
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe
+include $(FSTAR_HOME)/src/gmake/fstar.mk
+include $(FSTAR_HOME)/src/gmake/nubuild.mk
 FSTAR_OPTIONS=--z3timeout 50 --prims prims.fst --max_fuel 10 --max_ifuel 10 --initial_ifuel 2 --initial_fuel 2
 
 OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g

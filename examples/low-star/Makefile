@@ -1,5 +1,7 @@
 FSTAR_HOME=../..
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe
+include $(FSTAR_HOME)/src/gmake/fstar.mk
+include $(FSTAR_HOME)/src/gmake/nubuild.mk
+
 ALLOCATOR_DIR = ../../runtime/allocator
 ALLOCATOR_FILES = $(ALLOCATOR_DIR)/camlstack.o $(ALLOCATOR_DIR)/stack.o \
 	$(ALLOCATOR_DIR)/bitmask.o $(ALLOCATOR_DIR)/camlstack.mli

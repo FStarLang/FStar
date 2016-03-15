@@ -6,6 +6,7 @@ VERFILES=Unit1.Basic.fst        Unit1.Projectors2.fst          Unit1.WPsAndTripl
 	 testTwoLevelHeap.fst   mac2.fst 		       testghost.fst \
 	 inverse.fst
 
+FSTAR_HOME=../..
 include ../Makefile.include
 
 NEGFILES=NegativeTests.BST.fst     NegativeTests.Heap.fst  NegativeTests.ShortCircuiting.fst \

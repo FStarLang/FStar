@@ -1,8 +1,9 @@
+FSTAR_HOME=../..
 include ../Makefile.include
 
 all:
 	make api
-ifneq ($(shell fstar.exe --version | grep platform= | cut -c10-),Windows_x86)
+ifneq ($(shell $(FSTAR_HOME)/bin/fstar.exe --version | grep platform= | cut -c10-),Windows_x86)
 # This runs out of memory with 32bit Windows binaries
 	make theory
 endif
@@ -15,7 +16,7 @@ endif
 EXAMPLES_DIR=./examples
 
 api:
-	make -C examples api FSTAR='../$(FSTAR)'
+	make -C examples api 
 
 theory:
 	export CONTRIB=../../contrib

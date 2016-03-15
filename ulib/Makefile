@@ -1,16 +1,6 @@
-ifeq ($(OS),Windows_NT)
-# note: paths appear to be specified related to a subdirectory of the directory in 
-# which this makefile resides. see definition of $FSTAR_HOME as evidence supporting
-# this assumption.
-NUBUILD_DIR=../.nubuild
-NUBUILD=$(NUBUILD_DIR)/bin/NuBuild.exe
-endif
-
-ifdef USE_NUBUILD
-FSTAR=$(NUBUILD) --quiet FStarVerify 
-else
-FSTAR=../bin/fstar.exe $(OTHERFLAGS)
-endif
+FSTAR_HOME=..
+include $(FSTAR_HOME)/src/gmake/fstar.mk
+include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
 UFSTAR=$(FSTAR) --universes --explicit_deps
 STDLIB=FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst

@@ -1,8 +1,11 @@
+
 FLAGS=--explicit_deps
 LIB=FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst\
     FStar.Relational.fst FStar.Comp.fst FStar.RelationalState.fst FStar.Bytes.fst FStar.List.fst
-
-FSTAR = ../../bin/fstar.exe $(FLAGS) $(OTHERFLAGS) $(LIB)
+OTHERFLAGS+=$(FLAGS) $(LIB)
+FSTAR_HOME=../..
+include $(FSTAR_HOME)/src/gmake/fstar.mk
+include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
 all: noninterference\
 		 sample_examples\

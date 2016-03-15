@@ -1,4 +1,5 @@
 VERFILES=gcd.fst #bijection.fst
+FSTAR_HOME=../..
 include ../Makefile.include
 all:
 	$(FSTAR) gcd.fst

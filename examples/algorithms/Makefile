@@ -1,6 +1,9 @@
 VERFILES=counters.fst intsort.fst insertionsort.fst mergesort.fst 
 OTHERFLAGS=
+
+FSTAR_HOME=../..
 include ../Makefile.include
+
 all: .all.ver downgrade binary_search qsc gc unification
 
 ARR_LIB=$(addprefix $(FSTAR_HOME)/lib/, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst stperm.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Array.fst)
