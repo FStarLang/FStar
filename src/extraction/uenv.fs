@@ -38,9 +38,9 @@ type env = {
 }
 
 let debug g f =
-    if !Options.debug <> []
-    && (List.contains "Prims" (!Options.debug) ||
-        g.currentModule <> ([], "Prims"))
+    let c = string_of_mlpath g.currentModule in
+    if !Options.debug |> Util.for_some (fun x -> c=x)
+    && Options.debug_level_geq (Options.Other "Extraction")
     then f ()
 
 // TODO delete
@@ -139,9 +139,9 @@ let lookup  (g:env) (x:either<bv,fv>) : ty_or_exp_b * option<fv_qual> =
         | Inr x -> lookup_fv g x, x.fv_qual
 
 let lookup_term g (t:term) = match t.n with
-    | Tm_bvar x -> lookup g (Inl x)
+    | Tm_name x -> lookup g (Inl x)
     | Tm_fvar x -> lookup g (Inr x)
-    | _ -> failwith "impossible"
+    | _ -> failwith "Impossible: lookup_term for a non-name"
 
 (* do we really need to keep gamma uptodate with hidden binders? For using F* utils, we just need to keep tcenv update.
  An alternative solution is to remove these binders from the type of the inductive constructors

@@ -55,13 +55,14 @@ let lident_as_mlsymbol (id : lident) : mlsymbol = id.ident.idText
 (*****************************************************************************)
 let bv_as_ml_tyvar x = prependTick (convIdent x.ppname)
 
-let binders_as_mlty_binders g bs = 
-    let g, bs = List.fold_left (fun (env, bs) (bv, _) ->
-        if Term.is_type bv.sort
-        then UEnv.extend_ty g bv (Some (MLTY_Var (bv_as_ml_tyvar bv))), bv_as_ml_tyvar bv::bs
-        else UEnv.extend_bv g bv ([], erasedContent) false false false, bv_as_ml_tyvar bv::bs) 
-    (g, []) bs in
-    List.rev bs, g
+let binders_as_mlty_binders (env:UEnv.env) bs = 
+    Util.fold_map (fun env (bv, _) -> 
+//        if Term.is_type env.tcenv bv.sort || true
+//        then 
+        UEnv.extend_ty env bv (Some (MLTY_Var (bv_as_ml_tyvar bv))), bv_as_ml_tyvar bv
+//        else UEnv.extend_bv env bv ([], erasedContent) false false false, bv_as_ml_tyvar bv
+    ) 
+    env bs
 
 //Type abbreviations
 let extract_typ_abbrev env lid quals def = 
@@ -69,11 +70,13 @@ let extract_typ_abbrev env lid quals def =
     let bs, body = match def.n with 
         | Tm_abs(bs, body, _) -> SS.open_term bs body
         | _ -> [], def in
-    let ml_bs, env = binders_as_mlty_binders env bs in
+    let env, ml_bs = binders_as_mlty_binders env bs in
     let body = Term.term_as_mlty env body |> Util.eraseTypeDeep (Util.udelta_unfold env) in
     let td = [(lident_as_mlsymbol lid, ml_bs, Some (MLTD_Abbrev body))] in 
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty td] in
-    let env = UEnv.extend_tydef env td in
+    let env = if quals |> Util.for_some (function Assumption | New -> true | _ -> false)
+              then env
+              else UEnv.extend_tydef env td in
     env, def
 
 
@@ -93,6 +96,12 @@ type inductive_family = {
   iquals : list<S.qualifier>
 }
 
+let print_ifamily i = 
+    Printf.printf "\n\t%s %s : %s { %s }\n"
+        (Print.lid_to_string i.iname)
+        (Print.binders_to_string " " i.iparams)
+        (Print.term_to_string i.ityp)
+        (i.idatas |> List.map (fun d -> Print.lid_to_string d.dname ^ " : " ^ Print.term_to_string d.dtyp) |> String.concat "\n\t\t") 
 
 let bundle_as_inductive_families env ses quals : list<inductive_family> = 
     ses |> List.collect 
@@ -103,8 +112,8 @@ let bundle_as_inductive_families env ses quals : list<inductive_family> =
                     | Sig_datacon(d, _, t, l', nparams, _, _, _) when Ident.lid_equals l l' -> 
                         let bs', body = U.arrow_formals t in
                         let bs_params, rest = Util.first_N (List.length bs) bs' in
-                        let subst = List.map2 (fun (b', _) (b, _) -> S.NT(b', S.bv_to_tm b)) bs_params bs in
-                        let t = U.abs rest body None |> SS.subst subst in
+                        let subst = List.map2 (fun (b', _) (b, _) -> S.NT(b', S.bv_to_name b)) bs_params bs in
+                        let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
                 [{  iname=l
@@ -118,18 +127,18 @@ let bundle_as_inductive_families env ses quals : list<inductive_family> =
 type env_t = UEnv.env
             
 let extract_bundle env se = 
-    let extract_ctor (ml_tyvars:list<(mlsymbol*int)>) (c:env_t) (ctor: data_constructor):  env_t * (mlsymbol * list<mlty>) =
-        let mlt = Util.eraseTypeDeep (Util.udelta_unfold c) (Term.term_as_mlty c ctor.dtyp) in
+    let extract_ctor (ml_tyvars:list<(mlsymbol*int)>) (env:env_t) (ctor: data_constructor):  env_t * (mlsymbol * list<mlty>) =
+        let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
         let tys = (ml_tyvars, mlt) in 
         let fvv = mkFvvar ctor.dname ctor.dtyp in
                 //printfn "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
                 //printfn "%s\n" (typ_to_string ctor.ctype);
                 //printfn "%A *)\n" (tys);
-        extend_fv c fvv tys false false, 
+        extend_fv env fvv tys false false, 
         (lident_as_mlsymbol ctor.dname, argTypes mlt) in
 
     let extract_one_family env ind = 
-       let vars, env = binders_as_mlty_binders env ind.iparams in
+       let env, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> Util.fold_map (extract_ctor vars) env in
        let indices, _ = U.arrow_formals ind.ityp in
        let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ Util.string_of_int i, 0)) in
@@ -151,6 +160,7 @@ let extract_bundle env se =
 
         | Sig_bundle(ses, quals, _, r) -> 
           let ifams = bundle_as_inductive_families env ses quals in
+//          ifams |> List.iter print_ifamily;
           let env, td = Util.fold_map extract_one_family env ifams in
           env, [MLM_Ty td]
 
@@ -160,21 +170,42 @@ let extract_bundle env se =
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
+let level_of_sigelt g se = 
+    match se with 
+        | Sig_bundle _
+        | Sig_inductive_typ _  
+        | Sig_datacon _ -> printfn "\t\tInductive bundle" 
+        
+        | Sig_declare_typ(lid, _, t, quals, _) ->
+          printfn "\t\t%s @ %A" (Print.lid_to_string lid) (Term.predecessor t <| Term.level g t)
+
+        | Sig_let((_, lb::_), _, _, _) ->
+          printfn "\t\t%s (%A) : %s @ %A" ((right lb.lbname).fv_name.v |> Print.lid_to_string)
+                                     ((right lb.lbname).fv_delta)
+                                     (Print.term_to_string lb.lbtyp)
+                                     (Term.predecessor lb.lbtyp <| Term.level g lb.lbtyp)
+
+
+        | _ -> printfn "other\n"
+          
+         
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
-   (debug g (fun u -> Util.print_string (Util.format1 "now extracting :  %s \n" (Print.sigelt_to_string se))));
+    debug g (fun u ->
+        Util.print_string (Util.format1 ">>>> extract_sig :  %s \n" (Print.sigelt_to_string se));
+        level_of_sigelt g se);
      match se with
         | Sig_bundle _
         | Sig_inductive_typ _
         | Sig_datacon _ -> 
           extract_bundle g se
 
-        | Sig_declare_typ(lid, _, t, quals, _)  when (Term.level t = Term.Kind_level) -> //lid is a type
+        | Sig_declare_typ(lid, _, t, quals, _)  when (Term.level g t = Term.Kind_level) -> //lid is a type
           if quals |> Util.for_some (function Assumption -> true | _ -> false) |> not
           then g, []
           else let bs, _ = Util.arrow_formals t in
                extract_typ_abbrev g lid quals (U.abs bs TypeChecker.Common.t_unit None)
 
-        | Sig_let((false, [lb]), _, quals, _) when Term.is_type lb.lbtyp ->
+        | Sig_let((false, [lb]), _, _, quals) when (Term.level g lb.lbtyp = Term.Kind_level) ->
           extract_typ_abbrev g (right lb.lbname).fv_name.v quals lb.lbdef
 
         | Sig_let (lbs, r, _, quals) ->
@@ -196,30 +227,33 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (fst ml_lbs, List.rev ml_lbs')]
 
             | _ -> //printfn "%A\n" ml_let;
-                failwith "impossible"
+                failwith (Util.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
           end
 
        | Sig_declare_typ(lid, _, t, quals, r) ->
-         if quals |> List.contains Assumption
-         //&& not (quals |> Util.for_some (function Projector _ -> true | _ -> false))
-         then let bs, t = U.arrow_formals t in
-              let imp = match bs with 
-                | [] -> fail_exp lid t
-                | _ -> U.abs bs (fail_exp lid t) None in
-              let se = Sig_let((false, [{lbname=Inr (S.lid_as_fv lid Delta_constant None); 
-                                         lbunivs=[];
-                                         lbtyp=t; 
-                                         lbeff=Const.effect_ML_lid; 
-                                         lbdef=imp}]), r, [], quals) in
-              let g, mlm = extract_sig g se in
+         if quals |> List.contains Assumption 
+         then let always_fail = 
+                  let imp = match U.arrow_formals t with 
+                    | [], t -> fail_exp lid t
+                    | bs, t -> U.abs bs (fail_exp lid t) None in
+                  Sig_let((false, [{lbname=Inr (S.lid_as_fv lid Delta_constant None); 
+                                    lbunivs=[];
+                                    lbtyp=t; 
+                                    lbeff=Const.effect_ML_lid; 
+                                    lbdef=imp}]), r, [], quals) in
+              let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match Util.find_map quals (function Discriminator l -> Some l |  _ -> None) with
-                  | Some l -> g, [MLM_Loc (Util.mlloc_of_range r); Term.ind_discriminator_body g lid l] //records are single constructor types; there should be no discriminators for them
+                  | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
+                    g, [MLM_Loc (Util.mlloc_of_range r); Term.ind_discriminator_body g lid l] 
+
                   | _ ->
                     begin match Util.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
-                        | Some _ -> g, [] //records are extracted as ML records; no projectors for them
-                        | _ -> g, mlm
+                        | Some _ -> //it must be a record projector, since other projectors are not assumed
+                          g, [] //records are extracted as ML records; no projectors for them
+                        | _ ->
+                          g, mlm //in all other cases, generate mlm, a stub that always fails
                     end
-         else g, []
+         else g, [] //it's not assumed, so wait for the corresponding Sig_let to generate code
 
        | Sig_main(e, r) ->
          let ml_main, _, _ = Term.term_as_mlexpr g e in

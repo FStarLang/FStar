@@ -78,7 +78,8 @@ let delta_unfold g = function
 let udelta_unfold (g:UEnv.env) = function
     | MLTY_Named(args, n) ->
       begin match UEnv.lookup_ty_const g n with
-        | Some ts -> Some (subst ts args)
+        | Some ts -> 
+          Some (subst ts args)
         | _ -> None
       end
     | _ -> None
@@ -305,8 +306,8 @@ let rec erasableType (unfold:unfold_t) (t:mlty) :bool =
    
 let rec eraseTypeDeep unfold (t:mlty) : mlty =
     match t with
-    | MLTY_Fun (tyd, etag, tycd) -> if (etag=E_PURE) then (MLTY_Fun (eraseTypeDeep unfold tyd, etag, eraseTypeDeep unfold tycd)) else t
-    | MLTY_Named (lty, mlp) -> if (erasableType unfold t) then Env.erasedContent else (MLTY_Named (List.map (eraseTypeDeep unfold) lty, mlp))  // only some named constants are erased to unit.
+    | MLTY_Fun (tyd, etag, tycd) -> if etag=E_PURE then MLTY_Fun (eraseTypeDeep unfold tyd, etag, eraseTypeDeep unfold tycd) else t
+    | MLTY_Named (lty, mlp) -> if erasableType unfold t then Env.erasedContent else MLTY_Named (List.map (eraseTypeDeep unfold) lty, mlp)  // only some named constants are erased to unit.
     | MLTY_Tuple lty ->  MLTY_Tuple (List.map (eraseTypeDeep unfold) lty)
     | _ ->  t
 

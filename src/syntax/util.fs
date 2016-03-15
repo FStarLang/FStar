@@ -675,14 +675,6 @@ let mk_imp phi1 phi2  =
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
 
-let eq_pred_t : term =
-    let a = new_bv None ktype0 in
-    let atyp = bv_to_tm a in
-    let b = new_bv None ktype0 in
-    let btyp = bv_to_tm b in
-    arrow [(a, Some imp_tag); (b, Some imp_tag); null_binder atyp; null_binder btyp]
-          (mk_Total ktype0)
-
 let teq = fvar_const Const.eq2_lid 
 
 let mk_eq t1 t2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
@@ -695,10 +687,6 @@ let mk_has_type t x t' =
 let lex_t    = fvar_const Const.lex_t_lid 
 let lex_top  = fvar Const.lextop_lid Delta_constant (Some Data_ctor) 
 let lex_pair = fvar Const.lexcons_lid Delta_constant (Some Data_ctor) 
-let forall_t : term = 
-    let a = new_bv None ktype0 in
-    let atyp = bv_to_tm a in
-    arrow [(a, Some imp_tag); null_binder atyp] (mk_Total ktype0)
 let tforall  = fvar Const.forall_lid (Delta_unfoldable 1) None
 
 let lcomp_of_comp c0 =

@@ -130,6 +130,7 @@ val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool
 val is_interpreted         : env -> term -> bool
+val is_type_constructor    : env -> lident -> bool
 
 (* Universe instantiation *)
 val inst_tscheme           : tscheme -> universes * term 

@@ -1292,8 +1292,8 @@ and check_inner_let env e =
      | Tm_let((false, [lb]), e2) ->
        let env = {env with top_level=false} in
        let e1, _, c1, g1, annotated = check_let_bound_def false (Env.clear_expected_typ env |> fst) lb in
-       let lb = Util.mk_letbinding lb.lbname [] c1.res_typ c1.eff_name e1 in
        let x = {Util.left lb.lbname with sort=c1.res_typ} in
+       let lb = Util.mk_letbinding (Inl x) [] c1.res_typ c1.eff_name e1 in
        let xb, e2 = SS.open_term [S.mk_binder x] e2 in
        let xbinder = List.hd xb in
        let x = fst xbinder in

@@ -388,6 +388,22 @@ let try_lookup_lid env lid =
     match Util.bind_opt (lookup_qname env lid) mapper with
       | Some (us, t) -> Some (us, {t with pos=range_of_lid lid})
       | None -> None
+
+let is_type_constructor env lid = 
+    let mapper = function
+        | Inl _ -> Some false
+        | Inr (se, _) -> 
+           begin match se with 
+            | Sig_declare_typ (_, _, _, qs, _) -> 
+              Some (List.contains New qs)
+            | Sig_inductive_typ _ ->
+              Some true
+            | _ -> Some false
+           end in
+    match Util.bind_opt (lookup_qname env lid) mapper with
+      | Some b -> b
+      | None -> false
+
       
 let lookup_lid env l =  
     match try_lookup_lid env l with 
