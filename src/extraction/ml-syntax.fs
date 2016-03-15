@@ -1,8 +1,27 @@
+(*
+   Copyright 2008-2016 Abhishek Anand, Nikhil Swamy,
+   	     	           Antoine Delignat-Lavaud, Pierre-Yves Strub
+		               and Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+#light "off"
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.Syntax
 open FStar
 open FStar.Absyn.Syntax
 open FStar.Ident
+open FStar.Util
 
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
@@ -105,7 +124,7 @@ type mlexpr' =
 
 and mlexpr = {
     expr:mlexpr';
-    ty:mlty;
+    mlty:mlty;
     loc: mlloc;
 }
 
@@ -149,7 +168,7 @@ type mlsig1 =
 
 and mlsig = list<mlsig1>
 
-let with_ty_loc t e l = {expr=e; ty=t; loc = l }
+let with_ty_loc t e l = {expr=e; mlty=t; loc = l }
 let with_ty t e = with_ty_loc t e dummy_loc
 
 (* -------------------------------------------------------------------- *)

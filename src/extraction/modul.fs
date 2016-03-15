@@ -114,9 +114,11 @@ let bundle_as_inductive_families env ses quals : list<inductive_family> =
                   ; iquals=quals  }]
     
             | _ -> [])
+
+type env_t = UEnv.env
             
 let extract_bundle env se = 
-    let extract_ctor (ml_tyvars:list<(mlsymbol*int)>) (c:env) (ctor: data_constructor):  env * (mlsymbol * list<mlty>) =
+    let extract_ctor (ml_tyvars:list<(mlsymbol*int)>) (c:env_t) (ctor: data_constructor):  env_t * (mlsymbol * list<mlty>) =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold c) (Term.term_as_mlty c ctor.dtyp) in
         let tys = (ml_tyvars, mlt) in 
         let fvv = mkFvvar ctor.dname ctor.dtyp in
@@ -158,7 +160,7 @@ let extract_bundle env se =
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
-let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
+let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
    (debug g (fun u -> Util.print_string (Util.format1 "now extracting :  %s \n" (Print.sigelt_to_string se))));
      match se with
         | Sig_bundle _
@@ -166,7 +168,7 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
         | Sig_datacon _ -> 
           extract_bundle g se
 
-        | Sig_declare_typ(lid, _, t, quals, _)  when Term.univ t = Term.UPlus -> //lid is a type
+        | Sig_declare_typ(lid, _, t, quals, _)  when (Term.level t = Term.Kind_level) -> //lid is a type
           if quals |> Util.for_some (function Assumption -> true | _ -> false) |> not
           then g, []
           else let bs, _ = Util.arrow_formals t in

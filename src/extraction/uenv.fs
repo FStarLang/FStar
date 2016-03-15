@@ -17,12 +17,10 @@
 module FStar.Extraction.ML.UEnv
 open FStar
 open FStar.Util
+open FStar.Ident
+open FStar.Extraction.ML.Syntax
 open FStar.Syntax
 open FStar.Syntax.Syntax
-open FStar.Extraction.ML.Syntax
-open FStar.Extraction.ML
-open FStar.Tc
-open FStar.Ident
 
 type ty_or_exp_b = either<(mlident * mlty), (mlexpr * mltyscheme * bool)>
 

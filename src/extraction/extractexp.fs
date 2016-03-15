@@ -247,7 +247,7 @@ let maybe_lalloc_eta_data (g:env) (qual : option<fv_qual>) (residualType : mlty)
             | MLE_CTor(_, args), Some (Record_ctor(_, fields)) ->
                let path = Util.record_field_path fields in
                let fields = Util.record_fields fields args in
-               with_ty e.ty <| MLE_Record(path, fields)
+               with_ty e.mlty <| MLE_Record(path, fields)
             | _ -> e in
 
     let resugar_and_maybe_eta qual e =
@@ -259,7 +259,7 @@ let maybe_lalloc_eta_data (g:env) (qual : option<fv_qual>) (residualType : mlty)
                 match e.expr with
                     | MLE_CTor(head, args) ->
                       let body = Util.resugar_exp <| (as_record qual <| (with_ty tres <| MLE_CTor(head, args@eargs))) in
-                      with_ty e.ty <| MLE_Fun(binders, body)
+                      with_ty e.mlty <| MLE_Fun(binders, body)
                     | _ -> failwith "Impossible" in
 
     match mlAppExpr.expr, qual with
@@ -276,15 +276,15 @@ let maybe_lalloc_eta_data (g:env) (qual : option<fv_qual>) (residualType : mlty)
             | [] -> proj
             | _ -> 
               MLE_App(with_ty MLTY_Top <| proj, args) in //TODO: Fix imprecise with_ty on the projector 
-          with_ty mlAppExpr.ty e 
+          with_ty mlAppExpr.mlty e 
 
         | MLE_App ({expr=MLE_Name mlp}, mlargs), Some Data_ctor
         | MLE_App ({expr=MLE_Name mlp}, mlargs), Some (Record_ctor _) -> 
-          resugar_and_maybe_eta qual <| (with_ty mlAppExpr.ty <| MLE_CTor (mlp,mlargs))
+          resugar_and_maybe_eta qual <| (with_ty mlAppExpr.mlty <| MLE_CTor (mlp,mlargs))
 
         | MLE_Name mlp, Some Data_ctor
         | MLE_Name mlp, Some (Record_ctor _) -> 
-          resugar_and_maybe_eta qual <| (with_ty mlAppExpr.ty <| MLE_CTor (mlp, []))
+          resugar_and_maybe_eta qual <| (with_ty mlAppExpr.mlty <| MLE_CTor (mlp, []))
 
         | _ -> mlAppExpr
 
@@ -360,12 +360,12 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                                 if f=E_PURE || f=E_GHOST
                                 then (lbs, arg::out_args)
                                 else let x = Util.gensym (), -1 in
-                                     (x, arg)::lbs, (with_ty arg.ty <| MLE_Var x)::out_args)
+                                     (x, arg)::lbs, (with_ty arg.mlty <| MLE_Var x)::out_args)
                         ([], []) mlargs_f in
                     let app = maybe_lalloc_eta_data g is_data t <| (with_ty t <| MLE_App(mlhead, mlargs)) in
                     let l_app = List.fold_right 
                         (fun (x, arg) out -> 
-                            with_ty out.ty <| MLE_Let((false, [{mllb_name=x; mllb_tysc=Some ([], arg.ty); mllb_add_unit=false; mllb_def=arg}]), 
+                            with_ty out.mlty <| MLE_Let((false, [{mllb_name=x; mllb_tysc=Some ([], arg.mlty); mllb_add_unit=false; mllb_def=arg}]), 
                                                       out)) 
                         lbs app in // lets are to ensure L to R eval ordering of arguments
                     l_app, f, t
@@ -426,8 +426,8 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                        let t = instantiate (vars, t) prefixAsMLTypes in
                        let head = match head_ml.expr with
                          | MLE_Name _ 
-                         | MLE_Var _ -> {head_ml with ty=t} 
-                         | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) -> MLE_App({head with ty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
+                         | MLE_Var _ -> {head_ml with mlty=t} 
+                         | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) -> MLE_App({head with mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
                          | _ -> failwith "Impossible" in
                        head, t, rest
                   else err_uninst g head (vars, t) in

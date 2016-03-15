@@ -24,26 +24,26 @@ in (fun rs t labs -> (
 # 33 "FStar.SMTEncoding.ErrorReporting.fst"
 let l = (
 # 33 "FStar.SMTEncoding.ErrorReporting.fst"
-let _73_5 = (FStar_Util.incr ctr)
-in (let _154_8 = (let _154_7 = (FStar_ST.read ctr)
-in (FStar_Util.string_of_int _154_7))
-in (FStar_Util.format1 "label_%s" _154_8)))
+let _76_5 = (FStar_Util.incr ctr)
+in (let _160_8 = (let _160_7 = (FStar_ST.read ctr)
+in (FStar_Util.string_of_int _160_7))
+in (FStar_Util.format1 "label_%s" _160_8)))
 in (
 # 34 "FStar.SMTEncoding.ErrorReporting.fst"
 let lvar = (l, FStar_SMTEncoding_Term.Bool_sort)
 in (
 # 35 "FStar.SMTEncoding.ErrorReporting.fst"
-let _73_25 = (match (rs) with
+let _76_25 = (match (rs) with
 | [] -> begin
 (t.FStar_SMTEncoding_Term.hash, FStar_Range.dummyRange)
 end
-| (Some (reason), r)::_73_11 -> begin
+| (Some (reason), r)::_76_11 -> begin
 (reason, r)
 end
-| (None, r)::_73_18 -> begin
+| (None, r)::_76_18 -> begin
 ("failed to prove a pre-condition", r)
 end)
-in (match (_73_25) with
+in (match (_76_25) with
 | (message, range) -> begin
 (
 # 39 "FStar.SMTEncoding.ErrorReporting.fst"
@@ -60,15 +60,15 @@ end))))))
 # 51 "FStar.SMTEncoding.ErrorReporting.fst"
 let label_goals : (Prims.unit  ->  Prims.string) Prims.option  ->  Prims.int64  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.term * labels * ranges) = (fun use_env_msg r q -> (
 # 52 "FStar.SMTEncoding.ErrorReporting.fst"
-let _73_37 = (match (use_env_msg) with
+let _76_37 = (match (use_env_msg) with
 | None -> begin
 (false, "")
 end
 | Some (f) -> begin
-(let _154_24 = (f ())
-in (true, _154_24))
+(let _160_24 = (f ())
+in (true, _160_24))
 end)
-in (match (_73_37) with
+in (match (_76_37) with
 | (flag, msg_prefix) -> begin
 (
 # 55 "FStar.SMTEncoding.ErrorReporting.fst"
@@ -78,17 +78,17 @@ let rs' = if (not (flag)) then begin
 rs
 end else begin
 (match (rs) with
-| (Some (reason), _73_47)::_73_43 -> begin
+| (Some (reason), _76_47)::_76_43 -> begin
 ((Some ((Prims.strcat "Failed to verify implicit argument: " reason)), r))::[]
 end
-| _73_51 -> begin
+| _76_51 -> begin
 ((Some ("Failed to verify implicit argument"), r))::[]
 end)
 end
 in (
 # 61 "FStar.SMTEncoding.ErrorReporting.fst"
-let _73_55 = (fresh_label rs' t labs)
-in (match (_73_55) with
+let _76_55 = (fresh_label rs' t labs)
+in (match (_76_55) with
 | (lt, labs) -> begin
 (lt, labs, rs)
 end))))
@@ -98,65 +98,65 @@ let rec aux = (fun rs q labs -> (match (q.FStar_SMTEncoding_Term.tm) with
 | (FStar_SMTEncoding_Term.BoundV (_)) | (FStar_SMTEncoding_Term.Integer (_)) -> begin
 (q, labs, rs)
 end
-| FStar_SMTEncoding_Term.Labeled (_73_67, "push", r) -> begin
+| FStar_SMTEncoding_Term.Labeled (_76_67, "push", r) -> begin
 (FStar_SMTEncoding_Term.mkTrue, labs, ((None, r))::rs)
 end
-| FStar_SMTEncoding_Term.Labeled (_73_73, "pop", r) -> begin
-(let _154_37 = (FStar_List.tl rs)
-in (FStar_SMTEncoding_Term.mkTrue, labs, _154_37))
+| FStar_SMTEncoding_Term.Labeled (_76_73, "pop", r) -> begin
+(let _160_37 = (FStar_List.tl rs)
+in (FStar_SMTEncoding_Term.mkTrue, labs, _160_37))
 end
 | FStar_SMTEncoding_Term.Labeled (arg, reason, r) -> begin
 (
 # 78 "FStar.SMTEncoding.ErrorReporting.fst"
-let _73_86 = (aux (((Some (reason), r))::rs) arg labs)
-in (match (_73_86) with
+let _76_86 = (aux (((Some (reason), r))::rs) arg labs)
+in (match (_76_86) with
 | (tm, labs, rs) -> begin
-(let _154_38 = (FStar_List.tl rs)
-in (tm, labs, _154_38))
+(let _160_38 = (FStar_List.tl rs)
+in (tm, labs, _160_38))
 end))
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Imp, lhs::rhs::[]) -> begin
 (
 # 83 "FStar.SMTEncoding.ErrorReporting.fst"
-let _73_96 = (aux rs rhs labs)
-in (match (_73_96) with
+let _76_96 = (aux rs rhs labs)
+in (match (_76_96) with
 | (rhs, labs, rs) -> begin
-(let _154_39 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.Imp, (lhs)::(rhs)::[]))))
-in (_154_39, labs, rs))
+(let _160_39 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.Imp, (lhs)::(rhs)::[]))))
+in (_160_39, labs, rs))
 end))
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.And, conjuncts) -> begin
 (
 # 87 "FStar.SMTEncoding.ErrorReporting.fst"
-let _73_113 = (FStar_List.fold_left (fun _73_104 c -> (match (_73_104) with
+let _76_113 = (FStar_List.fold_left (fun _76_104 c -> (match (_76_104) with
 | (rs, cs, labs) -> begin
 (
 # 88 "FStar.SMTEncoding.ErrorReporting.fst"
-let _73_109 = (aux rs c labs)
-in (match (_73_109) with
+let _76_109 = (aux rs c labs)
+in (match (_76_109) with
 | (c, labs, rs) -> begin
 (rs, (c)::cs, labs)
 end))
 end)) (rs, [], labs) conjuncts)
-in (match (_73_113) with
+in (match (_76_113) with
 | (rs, conjuncts, labs) -> begin
-(let _154_42 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.And, (FStar_List.rev conjuncts)))))
-in (_154_42, labs, rs))
+(let _160_42 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.And, (FStar_List.rev conjuncts)))))
+in (_160_42, labs, rs))
 end))
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.ITE, hd::q1::q2::[]) -> begin
 (
 # 95 "FStar.SMTEncoding.ErrorReporting.fst"
-let _73_125 = (aux rs q1 labs)
-in (match (_73_125) with
-| (q1, labs, _73_124) -> begin
+let _76_125 = (aux rs q1 labs)
+in (match (_76_125) with
+| (q1, labs, _76_124) -> begin
 (
 # 96 "FStar.SMTEncoding.ErrorReporting.fst"
-let _73_130 = (aux rs q2 labs)
-in (match (_73_130) with
-| (q2, labs, _73_129) -> begin
-(let _154_43 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.ITE, (hd)::(q1)::(q2)::[]))))
-in (_154_43, labs, rs))
+let _76_130 = (aux rs q2 labs)
+in (match (_76_130) with
+| (q2, labs, _76_129) -> begin
+(let _160_43 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.ITE, (hd)::(q1)::(q2)::[]))))
+in (_160_43, labs, rs))
 end))
 end))
 end
@@ -175,11 +175,11 @@ end
 | FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, pats, iopt, sorts, body) -> begin
 (
 # 129 "FStar.SMTEncoding.ErrorReporting.fst"
-let _73_252 = (aux rs body labs)
-in (match (_73_252) with
+let _76_252 = (aux rs body labs)
+in (match (_76_252) with
 | (body, labs, rs) -> begin
-(let _154_44 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.Quant ((FStar_SMTEncoding_Term.Forall, pats, iopt, sorts, body))))
-in (_154_44, labs, rs))
+(let _160_44 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.Quant ((FStar_SMTEncoding_Term.Forall, pats, iopt, sorts, body))))
+in (_160_44, labs, rs))
 end))
 end))
 in (aux [] q [])))

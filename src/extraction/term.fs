@@ -19,12 +19,12 @@ open FStar
 open FStar.Util
 open FStar.Const
 open FStar.Ident
-open FStar.Syntax.Syntax
 open FStar.Extraction
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
 open FStar.Extraction.ML.Util
+open FStar.Syntax.Syntax
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -103,84 +103,84 @@ let effect_as_etag =
 (********************************************************************************************)
 
 (* Deciding which stratum a term belongs to, i.e., is it to be an ML expression or type? *)
-type univ = 
-    | Term
-    | UZero
-    | UPlus
+type level_t = 
+    | Term_level
+    | Type_level
+    | Kind_level
 
 let predecessor = function
-    | Term -> failwith "Impossible"
-    | UZero -> Term
-    | UPlus -> UZero
+    | Term_level -> failwith "Impossible"
+    | Type_level -> Term_level
+    | Kind_level -> Type_level
 
-//univ t:
+//level t:
 //     Determines the level of a term from its
 //     syntactic structure and type annotations   
-let rec univ t = match (SS.compress t).n with 
+let rec level t = match (SS.compress t).n with 
     | Tm_delayed _
     | Tm_unknown -> 
         failwith "Impossible"
 
     | Tm_constant _ -> 
-        Term
+        Term_level
 
     | Tm_bvar x 
     | Tm_name x ->
-        predecessor <| univ x.sort 
+        predecessor <| level x.sort 
 
     | Tm_fvar fv -> 
-        predecessor <| univ fv.fv_name.ty
+        predecessor <| level fv.fv_name.ty
 
     | Tm_ascribed(_, t, _) -> 
-        predecessor <| univ t
+        predecessor <| level t
 
     | Tm_type _ -> 
-        UPlus
+        Kind_level
 
     | Tm_uvar (_, t) -> 
-        predecessor <| univ t
+        predecessor <| level t
            
     | Tm_uinst(t, _) -> 
-        univ t
+        level t
 
     | Tm_refine(x, _) -> 
-        predecessor <| univ t
+        predecessor <| level t
 
     | Tm_arrow(bs, c) -> 
-        univ (U.comp_result c)
+        level (U.comp_result c)
 
     | Tm_abs(_, _, Some c) -> 
-        predecessor <| univ c.res_typ
+        predecessor <| level c.res_typ
        
     | Tm_abs(bs, body, None) -> 
-        univ body
+        level body
 
     | Tm_let(_, body) -> 
-        univ body
+        level body
 
     | Tm_match(_, branches) -> 
         begin match branches with 
-        | (_, _, e)::_ -> univ e
+        | (_, _, e)::_ -> level e
         | _ -> failwith "Empty branches"
         end
 
     | Tm_meta(t, _) -> 
-        univ t
+        level t
 
     | Tm_app(head, _) -> 
-        univ head
+        level head
 
 //is_type t:
 //   The main predicate to determine the stratum
-let is_type t = match univ t with 
-    | Term -> false
+let is_type t = match level t with 
+    | Term_level -> false
     | _ -> true
 
 let is_type_binder x = 
-    match univ (fst x).sort with 
-    | Term -> failwith "Impossible"
-    | UZero -> false
-    | UPlus -> true
+    match level (fst x).sort with 
+    | Term_level -> failwith "Impossible"
+    | Type_level -> false
+    | Kind_level -> true
 
 let is_constructor t = match (SS.compress t).n with
     | Tm_fvar ({fv_qual=Some Data_ctor})
@@ -522,7 +522,7 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
             | MLE_CTor(_, args), Some (Record_ctor(_, fields)) ->
                let path = Util.record_field_path fields in
                let fields = Util.record_fields fields args in
-               with_ty e.ty <| MLE_Record(path, fields)
+               with_ty e.mlty <| MLE_Record(path, fields)
             | _ -> e in
 
     let resugar_and_maybe_eta qual e =
@@ -534,7 +534,7 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
                 match e.expr with
                     | MLE_CTor(head, args) ->
                       let body = Util.resugar_exp <| (as_record qual <| (with_ty tres <| MLE_CTor(head, args@eargs))) in
-                      with_ty e.ty <| MLE_Fun(binders, body)
+                      with_ty e.mlty <| MLE_Fun(binders, body)
                     | _ -> failwith "Impossible" in
 
     match mlAppExpr.expr, qual with
@@ -546,15 +546,15 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
           let e = match args with
             | [] -> proj
             | _ -> MLE_App(with_ty MLTY_Top <| proj, args) in //TODO: Fix imprecise with_ty on the projector 
-          with_ty mlAppExpr.ty e 
+          with_ty mlAppExpr.mlty e 
 
         | MLE_App ({expr=MLE_Name mlp}, mlargs), Some Data_ctor
         | MLE_App ({expr=MLE_Name mlp}, mlargs), Some (Record_ctor _) -> 
-          resugar_and_maybe_eta qual <| (with_ty mlAppExpr.ty <| MLE_CTor (mlp,mlargs))
+          resugar_and_maybe_eta qual <| (with_ty mlAppExpr.mlty <| MLE_CTor (mlp,mlargs))
 
         | MLE_Name mlp, Some Data_ctor
         | MLE_Name mlp, Some (Record_ctor _) -> 
-          resugar_and_maybe_eta qual <| (with_ty mlAppExpr.ty <| MLE_CTor (mlp, []))
+          resugar_and_maybe_eta qual <| (with_ty mlAppExpr.mlty <| MLE_CTor (mlp, []))
 
         | _ -> mlAppExpr
 
@@ -641,12 +641,12 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                                 if f=E_PURE || f=E_GHOST
                                 then (lbs, arg::out_args)
                                 else let x = gensym () in
-                                     (x, arg)::lbs, (with_ty arg.ty <| MLE_Var x)::out_args)
+                                     (x, arg)::lbs, (with_ty arg.mlty <| MLE_Var x)::out_args)
                         ([], []) mlargs_f in
                     let app = maybe_eta_data_and_project_record g is_data t <| (with_ty t <| MLE_App(mlhead, mlargs)) in
                     let l_app = List.fold_right 
                         (fun (x, arg) out -> 
-                            with_ty out.ty <| MLE_Let((false, [{mllb_name=x; mllb_tysc=Some ([], arg.ty); mllb_add_unit=false; mllb_def=arg}]), 
+                            with_ty out.mlty <| MLE_Let((false, [{mllb_name=x; mllb_tysc=Some ([], arg.mlty); mllb_add_unit=false; mllb_def=arg}]), 
                                                       out)) 
                         lbs app in // lets are to ensure L to R eval ordering of arguments
                     l_app, f, t
@@ -674,7 +674,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                 | Tm_bvar _
                 | Tm_fvar _ ->
                    //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
-                  let (head_ml, (vars, t), inst_ok), qual = match lookup_term g head with Inr (u), q -> u, q | _ -> failwith "FIXME Ty" in
+                  let (head_ml, (vars, t), inst_ok), qual = match lookup_term g head with | Inr (u), q -> u, q | _ -> failwith "FIXME Ty" in
                   let has_typ_apps = match args with 
                     | (a, _)::_ -> is_type a
                     | _ -> false in
@@ -695,8 +695,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                            let t = instantiate (vars, t) prefixAsMLTypes in
                            let head = match head_ml.expr with
                              | MLE_Name _ 
-                             | MLE_Var _ -> {head_ml with ty=t} 
-                             | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) -> MLE_App({head with ty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
+                             | MLE_Var _ -> {head_ml with mlty=t} 
+                             | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) -> MLE_App({head with mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
                              | _ -> failwith "Impossible" in
                            head, t, rest
                       else err_uninst g head (vars, t) in
@@ -735,7 +735,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                   //TODO: ERASE ONLY THOSE THAT ABSTRACT OVER PURE FUNCTIONS in Type(i), 
                   //      NOT, e.g., (x:int -> St Type)
                    let tbinders, tbody =
-                        match Util.prefix_until (not << is_type_binder) bs with
+                        match Util.prefix_until (fun x -> not (is_type_binder x)) bs with
                             | None -> bs, U.comp_result c
                             | Some (bs, b, rest) -> bs, U.arrow (b::rest) c in
 
@@ -754,7 +754,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 //                             printfn "After subst: expected_t is %s\n" (Print.typ_to_string expected_t);
                              let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g targs in
                              let expected_t = term_as_mlty env expected_t in
-                             let polytype = targs |> List.map (btvar_as_mltyvar << fst), expected_t in
+                             let polytype = targs |> List.map (fun (x, _) -> btvar_as_mltyvar x), expected_t in
                              let add_unit = match rest_args with
                                 | [] -> not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
                                 | _ -> false in

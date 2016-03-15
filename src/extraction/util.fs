@@ -131,7 +131,7 @@ let rec type_leq_c (unfold:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bo
               let e = match body.expr with 
                 | MLE_Fun(ys, body) -> MLE_Fun(xs@ys, body)
                 | _ -> MLE_Fun(xs, body) in
-              with_ty (mk_ty_fun xs body.ty) e in
+              with_ty (mk_ty_fun xs body.mlty) e in
           begin match e with 
             | Some ({expr=MLE_Fun(x::xs, body)}) ->
               if type_leq unfold t1' t1
@@ -142,7 +142,7 @@ let rec type_leq_c (unfold:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bo
                         then let body = if type_leq unfold t2 ml_unit_ty 
                                         then ml_unit
                                         else with_ty t2' <| MLE_Coerce(ml_unit, ml_unit_ty, t2') in
-                             true, Some (with_ty (mk_ty_fun [x] body.ty) <| MLE_Fun([x], body))
+                             true, Some (with_ty (mk_ty_fun [x] body.mlty) <| MLE_Fun([x], body))
                         else false, None
                    else let ok, body = type_leq_c unfold (Some <| mk_fun xs body) t2 t2' in
                         let res = match body with
@@ -236,7 +236,7 @@ let is_xtuple (ns, n) =
 let resugar_exp e = match e.expr with
     | MLE_CTor(mlp, args) ->
         (match is_xtuple mlp with
-        | Some n -> with_ty e.ty <| MLE_Tuple args
+        | Some n -> with_ty e.mlty <| MLE_Tuple args
         | _ -> e)
     | _ -> e
 

@@ -38,3 +38,5 @@ assume val pipe_left: ('a -> 'b) -> 'a -> 'b
 assume val failwith: string -> All 'a (fun h -> True) (fun h a h' -> is_Err a /\ h==h')
 assume val exit: int -> 'a
 assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
+assume val op_Less_Less : ('b -> 'c) -> ('a -> 'b) -> 'a -> 'c
+assume val op_Greater_Greater : ('a -> 'b) -> ('b -> 'c) -> 'a -> 'c

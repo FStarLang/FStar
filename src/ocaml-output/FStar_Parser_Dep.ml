@@ -17,8 +17,8 @@ in (
 # 42 "FStar.Parser.Dep.fst"
 let l = (FStar_String.length f)
 in if ((l > lext) && ((FStar_String.substring f (l - lext) lext) = ext)) then begin
-(let _137_4 = (FStar_String.substring f 0 (l - lext))
-in Some (_137_4))
+(let _140_4 = (FStar_String.substring f 0 (l - lext))
+in Some (_140_4))
 end else begin
 None
 end))) suffixes)
@@ -34,22 +34,22 @@ end))))
 let is_interface : Prims.string  ->  Prims.bool = (fun f -> ((FStar_String.get f ((FStar_String.length f) - 1)) = 'i'))
 
 # 58 "FStar.Parser.Dep.fst"
-let print_map : map  ->  Prims.unit = (fun m -> (let _137_13 = (let _137_12 = (FStar_Util.smap_keys m)
-in (FStar_List.unique _137_12))
-in (FStar_List.iter (fun k -> (let _137_11 = (let _137_10 = (FStar_Util.smap_try_find m k)
-in (FStar_Util.must _137_10))
-in (FStar_Util.print2 "%s: %s\n" k _137_11))) _137_13)))
+let print_map : map  ->  Prims.unit = (fun m -> (let _140_13 = (let _140_12 = (FStar_Util.smap_keys m)
+in (FStar_List.unique _140_12))
+in (FStar_List.iter (fun k -> (let _140_11 = (let _140_10 = (FStar_Util.smap_try_find m k)
+in (FStar_Util.must _140_10))
+in (FStar_Util.print2 "%s: %s\n" k _140_11))) _140_13)))
 
 # 64 "FStar.Parser.Dep.fst"
-let lowercase_module_name : Prims.string  ->  Prims.string = (fun f -> (match ((let _137_16 = (FStar_Util.basename f)
-in (check_and_strip_suffix _137_16))) with
+let lowercase_module_name : Prims.string  ->  Prims.string = (fun f -> (match ((let _140_16 = (FStar_Util.basename f)
+in (check_and_strip_suffix _140_16))) with
 | Some (longname) -> begin
 (FStar_String.lowercase longname)
 end
 | None -> begin
-(let _137_18 = (let _137_17 = (FStar_Util.format1 "not a valid FStar file: %s\n" f)
-in FStar_Absyn_Syntax.Err (_137_17))
-in (Prims.raise _137_18))
+(let _140_18 = (let _140_17 = (FStar_Util.format1 "not a valid FStar file: %s\n" f)
+in FStar_Absyn_Syntax.Err (_140_17))
+in (Prims.raise _140_18))
 end))
 
 # 74 "FStar.Parser.Dep.fst"
@@ -64,8 +64,8 @@ in (
 let include_directories = (FStar_List.unique include_directories)
 in (
 # 78 "FStar.Parser.Dep.fst"
-let cwd = (let _137_21 = (FStar_Util.getcwd ())
-in (FStar_Util.normalize_file_path _137_21))
+let cwd = (let _140_21 = (FStar_Util.getcwd ())
+in (FStar_Util.normalize_file_path _140_21))
 in (
 # 79 "FStar.Parser.Dep.fst"
 let map = (FStar_Util.smap_create 41)
@@ -110,8 +110,8 @@ end else begin
 end) include_directories)
 in (
 # 107 "FStar.Parser.Dep.fst"
-let _56_51 = (FStar_List.iter (fun f -> (let _137_25 = (lowercase_module_name f)
-in (FStar_Util.smap_add map _137_25 f))) filenames)
+let _56_51 = (FStar_List.iter (fun f -> (let _140_25 = (lowercase_module_name f)
+in (FStar_Util.smap_add map _140_25 f))) filenames)
 in map))))))))
 
 # 116 "FStar.Parser.Dep.fst"
@@ -123,23 +123,23 @@ in (
 let prefix = (Prims.strcat prefix ".")
 in (
 # 119 "FStar.Parser.Dep.fst"
-let _56_63 = (let _137_35 = (let _137_34 = (FStar_Util.smap_keys original_map)
-in (FStar_List.unique _137_34))
+let _56_63 = (let _140_35 = (let _140_34 = (FStar_Util.smap_keys original_map)
+in (FStar_List.unique _140_34))
 in (FStar_List.iter (fun k -> if (FStar_Util.starts_with k prefix) then begin
 (
 # 121 "FStar.Parser.Dep.fst"
 let suffix = (FStar_String.substring k (FStar_String.length prefix) ((FStar_String.length k) - (FStar_String.length prefix)))
 in (
 # 124 "FStar.Parser.Dep.fst"
-let filename = (let _137_33 = (FStar_Util.smap_try_find original_map k)
-in (FStar_Util.must _137_33))
+let filename = (let _140_33 = (FStar_Util.smap_try_find original_map k)
+in (FStar_Util.must _140_33))
 in (
 # 125 "FStar.Parser.Dep.fst"
 let _56_61 = (FStar_Util.smap_add working_map suffix filename)
 in (FStar_ST.op_Colon_Equals found true))))
 end else begin
 ()
-end) _137_35))
+end) _140_35))
 in (FStar_ST.read found)))))
 
 # 131 "FStar.Parser.Dep.fst"
@@ -152,25 +152,25 @@ end else begin
 end
 in (
 # 133 "FStar.Parser.Dep.fst"
-let names = (let _137_41 = (FStar_List.map (fun x -> x.FStar_Ident.idText) l.FStar_Ident.ns)
-in (FStar_List.append _137_41 suffix))
+let names = (let _140_41 = (FStar_List.map (fun x -> x.FStar_Ident.idText) l.FStar_Ident.ns)
+in (FStar_List.append _140_41 suffix))
 in (FStar_String.concat "." names))))
 
 # 138 "FStar.Parser.Dep.fst"
-let lowercase_join_longident : FStar_Ident.lident  ->  Prims.bool  ->  Prims.string = (fun l last -> (let _137_46 = (string_of_lid l last)
-in (FStar_String.lowercase _137_46)))
+let lowercase_join_longident : FStar_Ident.lident  ->  Prims.bool  ->  Prims.string = (fun l last -> (let _140_46 = (string_of_lid l last)
+in (FStar_String.lowercase _140_46)))
 
 # 142 "FStar.Parser.Dep.fst"
 let check_module_declaration_against_filename : FStar_Ident.lident  ->  Prims.string  ->  Prims.unit = (fun lid filename -> (
 # 143 "FStar.Parser.Dep.fst"
 let k' = (lowercase_join_longident lid true)
-in if ((let _137_53 = (let _137_52 = (let _137_51 = (FStar_Util.basename filename)
-in (check_and_strip_suffix _137_51))
-in (FStar_Util.must _137_52))
-in (FStar_String.lowercase _137_53)) <> k') then begin
-(let _137_55 = (let _137_54 = (string_of_lid lid true)
-in (_137_54)::(filename)::[])
-in (FStar_Util.fprint FStar_Util.stderr "Warning: the module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect.\n" _137_55))
+in if ((let _140_53 = (let _140_52 = (let _140_51 = (FStar_Util.basename filename)
+in (check_and_strip_suffix _140_51))
+in (FStar_Util.must _140_52))
+in (FStar_String.lowercase _140_53)) <> k') then begin
+(let _140_55 = (let _140_54 = (string_of_lid lid true)
+in (_140_54)::(filename)::[])
+in (FStar_Util.fprint FStar_Util.stderr "Warning: the module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect.\n" _140_55))
 end else begin
 ()
 end))
@@ -193,11 +193,11 @@ let collect_one : Prims.string FStar_Util.smap  ->  Prims.string  ->  Prims.stri
 let deps = (FStar_ST.alloc [])
 in (
 # 155 "FStar.Parser.Dep.fst"
-let add_dep = (fun d -> if (not ((let _137_64 = (FStar_ST.read deps)
-in (FStar_List.existsb (fun d' -> (d' = d)) _137_64)))) then begin
-(let _137_66 = (let _137_65 = (FStar_ST.read deps)
-in (d)::_137_65)
-in (FStar_ST.op_Colon_Equals deps _137_66))
+let add_dep = (fun d -> if (not ((let _140_64 = (FStar_ST.read deps)
+in (FStar_List.existsb (fun d' -> (d' = d)) _140_64)))) then begin
+(let _140_66 = (let _140_65 = (FStar_ST.read deps)
+in (d)::_140_65)
+in (FStar_ST.op_Colon_Equals deps _140_66))
 end else begin
 ()
 end)
@@ -211,17 +211,17 @@ let record_open = (fun lid -> (
 let key = (lowercase_join_longident lid true)
 in (match ((FStar_Util.smap_try_find original_map key)) with
 | Some (filename) -> begin
-(let _137_69 = (lowercase_module_name filename)
-in (add_dep _137_69))
+(let _140_69 = (lowercase_module_name filename)
+in (add_dep _140_69))
 end
 | None -> begin
 (
 # 167 "FStar.Parser.Dep.fst"
 let r = (enter_namespace original_map working_map key)
 in if (not (r)) then begin
-(let _137_71 = (let _137_70 = (string_of_lid lid true)
-in (_137_70)::[])
-in (FStar_Util.fprint FStar_Util.stderr "Warning: no modules in namespace %s and no file with that name either\n" _137_71))
+(let _140_71 = (let _140_70 = (string_of_lid lid true)
+in (_140_70)::[])
+in (FStar_Util.fprint FStar_Util.stderr "Warning: no modules in namespace %s and no file with that name either\n" _140_71))
 end else begin
 ()
 end)
@@ -258,10 +258,10 @@ in (
 let desired_opens = (FStar_Absyn_Const.fstar_ns_lid)::(FStar_Absyn_Const.prims_lid)::(FStar_Absyn_Const.st_lid)::(FStar_Absyn_Const.all_lid)::[]
 in (
 # 194 "FStar.Parser.Dep.fst"
-let me = (let _137_82 = (let _137_81 = (let _137_80 = (FStar_Util.basename filename)
-in (check_and_strip_suffix _137_80))
-in (FStar_Util.must _137_81))
-in (FStar_String.lowercase _137_82))
+let me = (let _140_82 = (let _140_81 = (let _140_80 = (FStar_Util.basename filename)
+in (check_and_strip_suffix _140_80))
+in (FStar_Util.must _140_81))
+in (FStar_String.lowercase _140_82))
 in (
 # 195 "FStar.Parser.Dep.fst"
 let index_or_length = (fun s l -> (
@@ -275,8 +275,8 @@ end))
 in (
 # 199 "FStar.Parser.Dep.fst"
 let my_index = (index_or_length me ordered)
-in (FStar_List.filter (fun lid -> ((let _137_88 = (lowercase_join_longident lid true)
-in (index_or_length _137_88 ordered)) < my_index)) desired_opens)))))))
+in (FStar_List.filter (fun lid -> ((let _140_88 = (lowercase_join_longident lid true)
+in (index_or_length _140_88 ordered)) < my_index)) desired_opens)))))))
 in (
 # 202 "FStar.Parser.Dep.fst"
 let _56_115 = (FStar_List.iter record_open auto_open)
@@ -422,14 +422,14 @@ end
 let key = (lowercase_join_longident lid false)
 in (match ((FStar_Util.smap_try_find working_map key)) with
 | Some (filename) -> begin
-(let _137_120 = (lowercase_module_name filename)
-in (add_dep _137_120))
+(let _140_120 = (lowercase_module_name filename)
+in (add_dep _140_120))
 end
 | None -> begin
 if (((FStar_List.length lid.FStar_Ident.ns) > 0) && ((FStar_ST.read FStar_Options.debug) <> [])) then begin
-(let _137_122 = (let _137_121 = (string_of_lid lid false)
-in (_137_121)::[])
-in (FStar_Util.fprint FStar_Util.stderr "Warning: unbound module reference %s\n" _137_122))
+(let _140_122 = (let _140_121 = (string_of_lid lid false)
+in (_140_121)::[])
+in (FStar_Util.fprint FStar_Util.stderr "Warning: unbound module reference %s\n" _140_122))
 end else begin
 ()
 end
@@ -622,8 +622,8 @@ in (
 let rec discover_one = (fun key -> if ((FStar_Util.smap_try_find graph key) = None) then begin
 (
 # 416 "FStar.Parser.Dep.fst"
-let filename = (let _137_138 = (FStar_Util.smap_try_find m key)
-in (FStar_Util.must _137_138))
+let filename = (let _140_138 = (FStar_Util.smap_try_find m key)
+in (FStar_Util.must _140_138))
 in (
 # 417 "FStar.Parser.Dep.fst"
 let deps = (collect_one m filename)
@@ -636,19 +636,19 @@ end else begin
 end)
 in (
 # 421 "FStar.Parser.Dep.fst"
-let _56_519 = (let _137_139 = (FStar_List.map lowercase_module_name filenames)
-in (FStar_List.iter discover_one _137_139))
+let _56_519 = (let _140_139 = (FStar_List.map lowercase_module_name filenames)
+in (FStar_List.iter discover_one _140_139))
 in (
 # 424 "FStar.Parser.Dep.fst"
 let print_graph = (fun _56_522 -> (match (()) with
 | () -> begin
-(let _137_148 = (let _137_147 = (FStar_Util.smap_keys graph)
-in (FStar_List.unique _137_147))
-in (FStar_List.iter (fun k -> (let _137_146 = (let _137_145 = (let _137_144 = (let _137_143 = (FStar_Util.smap_try_find graph k)
-in (FStar_Util.must _137_143))
-in (Prims.fst _137_144))
-in (FStar_String.concat " " _137_145))
-in (FStar_Util.print2 "%s: %s\n" k _137_146))) _137_148))
+(let _140_148 = (let _140_147 = (FStar_Util.smap_keys graph)
+in (FStar_List.unique _140_147))
+in (FStar_List.iter (fun k -> (let _140_146 = (let _140_145 = (let _140_144 = (let _140_143 = (FStar_Util.smap_try_find graph k)
+in (FStar_Util.must _140_143))
+in (Prims.fst _140_144))
+in (FStar_String.concat " " _140_145))
+in (FStar_Util.print2 "%s: %s\n" k _140_146))) _140_148))
 end))
 in (
 # 430 "FStar.Parser.Dep.fst"
@@ -657,8 +657,8 @@ in (
 # 433 "FStar.Parser.Dep.fst"
 let rec discover = (fun key -> (
 # 434 "FStar.Parser.Dep.fst"
-let _56_529 = (let _137_151 = (FStar_Util.smap_try_find graph key)
-in (FStar_Util.must _137_151))
+let _56_529 = (let _140_151 = (FStar_Util.smap_try_find graph key)
+in (FStar_Util.must _140_151))
 in (match (_56_529) with
 | (direct_deps, color) -> begin
 (match (color) with
@@ -686,39 +686,39 @@ end
 let _56_541 = (FStar_Util.smap_add graph key (direct_deps, Gray))
 in (
 # 449 "FStar.Parser.Dep.fst"
-let all_deps = (let _137_155 = (let _137_154 = (FStar_List.map (fun dep -> (let _137_153 = (discover dep)
-in (dep)::_137_153)) direct_deps)
-in (FStar_List.flatten _137_154))
-in (FStar_List.unique _137_155))
+let all_deps = (let _140_155 = (let _140_154 = (FStar_List.map (fun dep -> (let _140_153 = (discover dep)
+in (dep)::_140_153)) direct_deps)
+in (FStar_List.flatten _140_154))
+in (FStar_List.unique _140_155))
 in (
 # 453 "FStar.Parser.Dep.fst"
 let _56_545 = (FStar_Util.smap_add graph key (all_deps, Black))
 in (
 # 455 "FStar.Parser.Dep.fst"
-let _56_547 = (let _137_157 = (let _137_156 = (FStar_ST.read topologically_sorted)
-in (key)::_137_156)
-in (FStar_ST.op_Colon_Equals topologically_sorted _137_157))
+let _56_547 = (let _140_157 = (let _140_156 = (FStar_ST.read topologically_sorted)
+in (key)::_140_156)
+in (FStar_ST.op_Colon_Equals topologically_sorted _140_157))
 in all_deps))))
 end)
 end)))
 in (
 # 460 "FStar.Parser.Dep.fst"
-let must_find = (fun k -> (let _137_160 = (FStar_Util.smap_try_find m k)
-in (FStar_Util.must _137_160)))
+let must_find = (fun k -> (let _140_160 = (FStar_Util.smap_try_find m k)
+in (FStar_Util.must _140_160)))
 in (
 # 463 "FStar.Parser.Dep.fst"
-let by_target = (let _137_165 = (FStar_Util.smap_keys graph)
+let by_target = (let _140_165 = (FStar_Util.smap_keys graph)
 in (FStar_List.map (fun k -> (
 # 464 "FStar.Parser.Dep.fst"
-let deps = (let _137_162 = (discover k)
-in (FStar_List.rev _137_162))
-in (let _137_164 = (must_find k)
-in (let _137_163 = (FStar_List.map must_find deps)
-in (_137_164, _137_163))))) _137_165))
+let deps = (let _140_162 = (discover k)
+in (FStar_List.rev _140_162))
+in (let _140_164 = (must_find k)
+in (let _140_163 = (FStar_List.map must_find deps)
+in (_140_164, _140_163))))) _140_165))
 in (
 # 467 "FStar.Parser.Dep.fst"
-let topologically_sorted = (let _137_166 = (FStar_ST.read topologically_sorted)
-in (FStar_List.map must_find _137_166))
+let topologically_sorted = (let _140_166 = (FStar_ST.read topologically_sorted)
+in (FStar_List.map must_find _140_166))
 in (by_target, topologically_sorted))))))))))))
 
 # 474 "FStar.Parser.Dep.fst"
