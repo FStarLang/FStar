@@ -54,31 +54,31 @@ false
 end))
 
 # 31 "FStar.TypeChecker.Env.fst"
-let ___Binding_var____0 : binding  ->  FStar_Syntax_Syntax.bv = (fun projectee -> (match (projectee) with
+let ___Binding_var____0 = (fun projectee -> (match (projectee) with
 | Binding_var (_58_15) -> begin
 _58_15
 end))
 
 # 32 "FStar.TypeChecker.Env.fst"
-let ___Binding_lid____0 : binding  ->  (FStar_Ident.lident * FStar_Syntax_Syntax.tscheme) = (fun projectee -> (match (projectee) with
+let ___Binding_lid____0 = (fun projectee -> (match (projectee) with
 | Binding_lid (_58_18) -> begin
 _58_18
 end))
 
 # 33 "FStar.TypeChecker.Env.fst"
-let ___Binding_sig____0 : binding  ->  (FStar_Ident.lident Prims.list * FStar_Syntax_Syntax.sigelt) = (fun projectee -> (match (projectee) with
+let ___Binding_sig____0 = (fun projectee -> (match (projectee) with
 | Binding_sig (_58_21) -> begin
 _58_21
 end))
 
 # 34 "FStar.TypeChecker.Env.fst"
-let ___Binding_univ____0 : binding  ->  FStar_Syntax_Syntax.univ_name = (fun projectee -> (match (projectee) with
+let ___Binding_univ____0 = (fun projectee -> (match (projectee) with
 | Binding_univ (_58_24) -> begin
 _58_24
 end))
 
 # 35 "FStar.TypeChecker.Env.fst"
-let ___Binding_sig_inst____0 : binding  ->  (FStar_Ident.lident Prims.list * FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.universes) = (fun projectee -> (match (projectee) with
+let ___Binding_sig_inst____0 = (fun projectee -> (match (projectee) with
 | Binding_sig_inst (_58_27) -> begin
 _58_27
 end))
@@ -117,7 +117,7 @@ false
 end))
 
 # 40 "FStar.TypeChecker.Env.fst"
-let ___Unfold____0 : delta_level  ->  FStar_Syntax_Syntax.delta_depth = (fun projectee -> (match (projectee) with
+let ___Unfold____0 = (fun projectee -> (match (projectee) with
 | Unfold (_58_30) -> begin
 _58_30
 end))

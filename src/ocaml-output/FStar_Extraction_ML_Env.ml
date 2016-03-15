@@ -34,19 +34,19 @@ false
 end))
 
 # 28 "FStar.Extraction.ML.Env.fst"
-let ___Ty____0 : binding  ->  (FStar_Absyn_Syntax.btvar * FStar_Extraction_ML_Syntax.mlident * FStar_Extraction_ML_Syntax.mlty) = (fun projectee -> (match (projectee) with
+let ___Ty____0 = (fun projectee -> (match (projectee) with
 | Ty (_65_6) -> begin
 _65_6
 end))
 
 # 29 "FStar.Extraction.ML.Env.fst"
-let ___Bv____0 : binding  ->  (FStar_Absyn_Syntax.bvvar * FStar_Extraction_ML_Syntax.mlexpr * FStar_Extraction_ML_Syntax.mltyscheme * Prims.bool) = (fun projectee -> (match (projectee) with
+let ___Bv____0 = (fun projectee -> (match (projectee) with
 | Bv (_65_9) -> begin
 _65_9
 end))
 
 # 30 "FStar.Extraction.ML.Env.fst"
-let ___Fv____0 : binding  ->  (FStar_Absyn_Syntax.fvvar * FStar_Extraction_ML_Syntax.mlexpr * FStar_Extraction_ML_Syntax.mltyscheme * Prims.bool) = (fun projectee -> (match (projectee) with
+let ___Fv____0 = (fun projectee -> (match (projectee) with
 | Fv (_65_12) -> begin
 _65_12
 end))

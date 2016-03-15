@@ -28,13 +28,13 @@ false
 end))
 
 # 28 "FStar.Extraction.ML.UEnv.fst"
-let ___Bv____0 : binding  ->  (FStar_Syntax_Syntax.bv * ty_or_exp_b) = (fun projectee -> (match (projectee) with
+let ___Bv____0 = (fun projectee -> (match (projectee) with
 | Bv (_66_6) -> begin
 _66_6
 end))
 
 # 29 "FStar.Extraction.ML.UEnv.fst"
-let ___Fv____0 : binding  ->  (FStar_Syntax_Syntax.fv * ty_or_exp_b) = (fun projectee -> (match (projectee) with
+let ___Fv____0 = (fun projectee -> (match (projectee) with
 | Fv (_66_9) -> begin
 _66_9
 end))

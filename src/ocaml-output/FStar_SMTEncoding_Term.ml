@@ -94,19 +94,19 @@ false
 end))
 
 # 33 "FStar.SMTEncoding.Term.fst"
-let ___Array____0 : sort  ->  (sort * sort) = (fun projectee -> (match (projectee) with
+let ___Array____0 = (fun projectee -> (match (projectee) with
 | Array (_74_10) -> begin
 _74_10
 end))
 
 # 34 "FStar.SMTEncoding.Term.fst"
-let ___Arrow____0 : sort  ->  (sort * sort) = (fun projectee -> (match (projectee) with
+let ___Arrow____0 = (fun projectee -> (match (projectee) with
 | Arrow (_74_13) -> begin
 _74_13
 end))
 
 # 35 "FStar.SMTEncoding.Term.fst"
-let ___Sort____0 : sort  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Sort____0 = (fun projectee -> (match (projectee) with
 | Sort (_74_16) -> begin
 _74_16
 end))
@@ -349,7 +349,7 @@ false
 end))
 
 # 68 "FStar.SMTEncoding.Term.fst"
-let ___Var____0 : op  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Var____0 = (fun projectee -> (match (projectee) with
 | Var (_74_36) -> begin
 _74_36
 end))
@@ -452,37 +452,37 @@ end))
 let is_Mkterm : term  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkterm"))))
 
 # 76 "FStar.SMTEncoding.Term.fst"
-let ___Integer____0 : term'  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Integer____0 = (fun projectee -> (match (projectee) with
 | Integer (_74_42) -> begin
 _74_42
 end))
 
 # 77 "FStar.SMTEncoding.Term.fst"
-let ___BoundV____0 : term'  ->  Prims.int = (fun projectee -> (match (projectee) with
+let ___BoundV____0 = (fun projectee -> (match (projectee) with
 | BoundV (_74_45) -> begin
 _74_45
 end))
 
 # 78 "FStar.SMTEncoding.Term.fst"
-let ___FreeV____0 : term'  ->  fv = (fun projectee -> (match (projectee) with
+let ___FreeV____0 = (fun projectee -> (match (projectee) with
 | FreeV (_74_48) -> begin
 _74_48
 end))
 
 # 79 "FStar.SMTEncoding.Term.fst"
-let ___App____0 : term'  ->  (op * term Prims.list) = (fun projectee -> (match (projectee) with
+let ___App____0 = (fun projectee -> (match (projectee) with
 | App (_74_51) -> begin
 _74_51
 end))
 
 # 80 "FStar.SMTEncoding.Term.fst"
-let ___Quant____0 : term'  ->  (qop * pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term) = (fun projectee -> (match (projectee) with
+let ___Quant____0 = (fun projectee -> (match (projectee) with
 | Quant (_74_54) -> begin
 _74_54
 end))
 
 # 85 "FStar.SMTEncoding.Term.fst"
-let ___Labeled____0 : term'  ->  (term * Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___Labeled____0 = (fun projectee -> (match (projectee) with
 | Labeled (_74_57) -> begin
 _74_57
 end))
@@ -611,37 +611,37 @@ false
 end))
 
 # 98 "FStar.SMTEncoding.Term.fst"
-let ___DeclFun____0 : decl  ->  (Prims.string * sort Prims.list * sort * caption) = (fun projectee -> (match (projectee) with
+let ___DeclFun____0 = (fun projectee -> (match (projectee) with
 | DeclFun (_74_61) -> begin
 _74_61
 end))
 
 # 99 "FStar.SMTEncoding.Term.fst"
-let ___DefineFun____0 : decl  ->  (Prims.string * sort Prims.list * sort * term * caption) = (fun projectee -> (match (projectee) with
+let ___DefineFun____0 = (fun projectee -> (match (projectee) with
 | DefineFun (_74_64) -> begin
 _74_64
 end))
 
 # 100 "FStar.SMTEncoding.Term.fst"
-let ___Assume____0 : decl  ->  (term * caption) = (fun projectee -> (match (projectee) with
+let ___Assume____0 = (fun projectee -> (match (projectee) with
 | Assume (_74_67) -> begin
 _74_67
 end))
 
 # 101 "FStar.SMTEncoding.Term.fst"
-let ___Caption____0 : decl  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Caption____0 = (fun projectee -> (match (projectee) with
 | Caption (_74_70) -> begin
 _74_70
 end))
 
 # 102 "FStar.SMTEncoding.Term.fst"
-let ___Eval____0 : decl  ->  term = (fun projectee -> (match (projectee) with
+let ___Eval____0 = (fun projectee -> (match (projectee) with
 | Eval (_74_73) -> begin
 _74_73
 end))
 
 # 103 "FStar.SMTEncoding.Term.fst"
-let ___Echo____0 : decl  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Echo____0 = (fun projectee -> (match (projectee) with
 | Echo (_74_76) -> begin
 _74_76
 end))

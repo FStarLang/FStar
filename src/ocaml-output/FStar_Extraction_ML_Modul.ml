@@ -338,7 +338,7 @@ in (FStar_Extraction_ML_UEnv.extend_fv' env _157_118 mname _157_117 ml_lb.FStar_
 in (env, (
 # 192 "FStar.Extraction.ML.Modul.fst"
 let _73_286 = ml_lb
-in {FStar_Extraction_ML_Syntax.mllb_name = ((Prims.snd mname), 0); FStar_Extraction_ML_Syntax.mllb_tysc = _73_286.FStar_Extraction_ML_Syntax.mllb_tysc; FStar_Extraction_ML_Syntax.mllb_add_unit = _73_286.FStar_Extraction_ML_Syntax.mllb_add_unit; FStar_Extraction_ML_Syntax.mllb_def = _73_286.FStar_Extraction_ML_Syntax.mllb_def}))))
+in {FStar_Extraction_ML_Syntax.mllb_name = ((Prims.snd mname), 0); FStar_Extraction_ML_Syntax.mllb_tysc = _73_286.FStar_Extraction_ML_Syntax.mllb_tysc; FStar_Extraction_ML_Syntax.mllb_add_unit = _73_286.FStar_Extraction_ML_Syntax.mllb_add_unit; FStar_Extraction_ML_Syntax.mllb_def = _73_286.FStar_Extraction_ML_Syntax.mllb_def; FStar_Extraction_ML_Syntax.print_typ = _73_286.FStar_Extraction_ML_Syntax.print_typ}))))
 end else begin
 (let _157_121 = (let _157_120 = (let _157_119 = (FStar_Util.must ml_lb.FStar_Extraction_ML_Syntax.mllb_tysc)
 in (FStar_Extraction_ML_UEnv.extend_lb env lbname t _157_119 ml_lb.FStar_Extraction_ML_Syntax.mllb_add_unit false))
