@@ -17,6 +17,7 @@ open SBuffer
 
 type sbytes = buffer 8
 type uint32 = usint 32
+type uint64 = usint 64
 
 (**)
 let create = create #8
@@ -35,11 +36,23 @@ opaque type Equals (ha:heap) (a:buffer 32) (hb:heap) (b:sbytes) (l:nat) =
        i < l ==> v (get ha a i) = v (get hb b (4*i+0)) + pow2 8 * v (get hb b (4*i+1)) +
 		         pow2 16 * v (get hb b (4*i+2)) + pow2 24 * v (get hb b (4*i+3)))
 
+assume val sbytes_of_int: s:nat -> v:int -> res:sbytes{length res = s} -> ST unit
+  (requires (fun h -> Live h res))
+  (ensures  (fun h0 r h1 -> Live h1 res /\ Modifies (only res) h0 h1))
+
 assume val uint32_of_sbytes: b:sbytes{length b >= 4} -> ST uint32
   (requires (fun h -> Live h b))
   (ensures (fun h0 r h1 -> Live h0 b /\ h0 == h1
 			 /\ v r = v (get h0 b 0) + pow2 8 * v (get h0 b 1) +
 			         pow2 16 * v (get h0 b 2) + pow2 24 * v (get h0 b 3)))
+
+assume val uint64_of_sbytes: b:sbytes{length b >= 8} -> ST uint64
+  (requires (fun h -> Live h b))
+  (ensures (fun h0 r h1 -> Live h0 b /\ h0 == h1
+			 /\ v r = v (get h0 b 0) + pow2 8 * v (get h0 b 1)
+                  + pow2 16 * v (get h0 b 2) + pow2 24 * v (get h0 b 3)
+                  + pow2 32 * v (get h0 b 4) + pow2 40 * v (get h0 b 5)
+                  + pow2 48 * v (get h0 b 6) + pow2 56 * v (get h0 b 7)))
 
 assume val uint32s_of_sbytes: res:buffer 32 -> b:sbytes{Disjoint res b} -> l:nat{4*l<=length b /\ length res < l} -> ST unit
   (requires (fun h -> Live h res /\ Live h b))
