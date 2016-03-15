@@ -54,7 +54,7 @@ false
 end))
 
 # 30 "FStar.Options.fst"
-let ___Other____0 : debug_level_t  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___Other____0 = (fun projectee -> (match (projectee) with
 | Other (_20_4) -> begin
 _20_4
 end))

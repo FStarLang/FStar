@@ -569,13 +569,13 @@ false
 end))
 
 # 291 "FStar.Parser.ToSyntax.fst"
-let ___LocalBinder____0 : bnd  ->  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.aqual) = (fun projectee -> (match (projectee) with
+let ___LocalBinder____0 = (fun projectee -> (match (projectee) with
 | LocalBinder (_51_467) -> begin
 _51_467
 end))
 
 # 292 "FStar.Parser.ToSyntax.fst"
-let ___LetBinder____0 : bnd  ->  (FStar_Ident.lident * FStar_Syntax_Syntax.term) = (fun projectee -> (match (projectee) with
+let ___LetBinder____0 = (fun projectee -> (match (projectee) with
 | LetBinder (_51_470) -> begin
 _51_470
 end))

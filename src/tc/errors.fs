@@ -36,10 +36,10 @@ let ill_kinded_type = "Ill-kinded type"
 let totality_check  = "This term may not terminate"
 
 let diag r msg =
-  Util.print_string (format2 "%s (Diagnostic): %s\n" (Range.string_of_range r) msg)
+  Util.fprint stderr "%s" [format2 "%s (Diagnostic): %s\n" (Range.string_of_range r) msg]
 
 let warn r msg =
-  Util.print_string (format2 "%s (Warning): %s\n" (Range.string_of_range r) msg)
+  Util.fprint stderr "%s" [format2 "%s (Warning): %s\n" (Range.string_of_range r) msg]
 
 let num_errs = Util.mk_ref 0
 let verification_errs : ref<list<(Range.range * string)>> = Util.mk_ref []
@@ -58,7 +58,7 @@ let report_all () =
 
 let report r msg =
   incr num_errs;
-  Util.print_string (format2 "%s: %s\n" (Range.string_of_range r) msg)
+  Util.fprint stderr "%s" [format2 "%s: %s\n" (Range.string_of_range r) msg]
 let get_err_count () = !num_errs
 
 let unexpected_signature_for_monad env m k =

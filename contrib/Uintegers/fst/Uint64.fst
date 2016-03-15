@@ -1,4 +1,4 @@
-module Uintegers.Uint64
+module Uint64
 
 
 assume val zero : uint64
@@ -101,3 +101,8 @@ assume val to_string : uint64 -> Tot string
 
 assume val compare : uint64 -> uint64 -> Tot int
 (** The comparison function for integers of type uint64. **)
+
+// New functions
+assume val rotate_left: uint64 -> nat -> Tot uint64
+
+assume val rotate_right: uint64 -> nat -> Tot uint64

@@ -23,6 +23,7 @@ OCAMLC=ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -package b
 
 a.out:
 	make -C $(FSTAR_HOME)/contrib/
+	cp $(FSTAR_HOME)/lib/ml/MkPrims.ml .
 	cp $(FSTAR_HOME)/lib/ml/native_int/prims.ml .
 	cp $(FSTAR_HOME)/lib/ml/FStar_ST.ml .
 	cp $(FSTAR_HOME)/lib/ml/FStar_All.ml .
@@ -33,7 +34,7 @@ a.out:
 	cp ../ml/runtime.ml .
 	cp ../ml/interpreteriface.ml .
 	cp ../ml/hashtable.ml .
-	$(OCAMLC) $(OCAML_INCLUDE_PATHS) $(FSTAR_HOME)/contrib/CoreCrypto/ml/CoreCrypto.cmxa prims.ml FStar_Ghost.ml FStar_List_Tot.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_OrdSet.ml FStar_OrdMap.ml FStar_IO.ml FStar_String.ml  \
+	$(OCAMLC) $(OCAML_INCLUDE_PATHS) $(FSTAR_HOME)/contrib/CoreCrypto/ml/CoreCrypto.cmxa MkPrims.ml prims.ml FStar_Ghost.ml FStar_List_Tot.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_OrdSet.ml FStar_OrdMap.ml FStar_IO.ml FStar_String.ml  \
 	            Prins.ml AST.ml ffibridge.ml Semantics.ml PSemantics.ml RuntimeTheory.ml runtime.ml Print.ml hashtable.ml Circuit.ml Interpreter.ml FFI.ml prog.ml interpreteriface.ml smciface.ml SMCMain.ml -o a.out
 # see ../Makefile ... removed some files
 	# $(OCAMLC) $(OCAML_INCLUDE_PATHS) $(FSTAR_HOME)/contrib/CoreCrypto/ml/CoreCrypto.cmxa prims.ml FStar_Ghost.ml FStar_List_Tot.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_OrdSet.ml FStar_OrdMap.ml FStar_IO.ml FStar_String.ml  \

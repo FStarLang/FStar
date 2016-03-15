@@ -1386,19 +1386,19 @@ false
 end))
 
 # 732 "FStar.Syntax.Util.fst"
-let ___QAll____0 : connective  ->  (FStar_Syntax_Syntax.binders * qpats * FStar_Syntax_Syntax.typ) = (fun projectee -> (match (projectee) with
+let ___QAll____0 = (fun projectee -> (match (projectee) with
 | QAll (_34_1020) -> begin
 _34_1020
 end))
 
 # 733 "FStar.Syntax.Util.fst"
-let ___QEx____0 : connective  ->  (FStar_Syntax_Syntax.binders * qpats * FStar_Syntax_Syntax.typ) = (fun projectee -> (match (projectee) with
+let ___QEx____0 = (fun projectee -> (match (projectee) with
 | QEx (_34_1023) -> begin
 _34_1023
 end))
 
 # 734 "FStar.Syntax.Util.fst"
-let ___BaseConn____0 : connective  ->  (FStar_Ident.lident * FStar_Syntax_Syntax.args) = (fun projectee -> (match (projectee) with
+let ___BaseConn____0 = (fun projectee -> (match (projectee) with
 | BaseConn (_34_1026) -> begin
 _34_1026
 end))

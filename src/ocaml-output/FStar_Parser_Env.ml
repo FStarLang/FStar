@@ -31,13 +31,13 @@ false
 end))
 
 # 49 "FStar.Parser.Env.fst"
-let ___Term_name____0 : foundname  ->  FStar_Syntax_Syntax.typ = (fun projectee -> (match (projectee) with
+let ___Term_name____0 = (fun projectee -> (match (projectee) with
 | Term_name (_50_26) -> begin
 _50_26
 end))
 
 # 50 "FStar.Parser.Env.fst"
-let ___Eff_name____0 : foundname  ->  (FStar_Syntax_Syntax.sigelt * FStar_Ident.lident) = (fun projectee -> (match (projectee) with
+let ___Eff_name____0 = (fun projectee -> (match (projectee) with
 | Eff_name (_50_29) -> begin
 _50_29
 end))

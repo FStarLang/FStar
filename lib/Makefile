@@ -1,5 +1,16 @@
+ifeq ($(OS),Windows_NT)
+# note: paths appear to be specified related to a subdirectory of the directory in 
+# which this makefile resides. see definition of $FSTAR_HOME as evidence supporting
+# this assumption.
+NUBUILD_DIR=../.nubuild
+NUBUILD=$(NUBUILD_DIR)/bin/NuBuild.exe
+endif
 
-FSTAR = ../bin/fstar.exe $(OTHERFLAGS)
+ifdef USE_NUBUILD
+FSTAR=$(NUBUILD) --quiet FStarVerify 
+else
+FSTAR=../bin/fstar.exe $(OTHERFLAGS)
+endif
 
 all:
 	$(FSTAR) FStar.SeqProperties.fst FStar.Array.fst

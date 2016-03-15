@@ -1,4 +1,4 @@
-module Uintegers.Uint16
+module Uint16
 
 
 assume val zero : uint16
@@ -101,3 +101,8 @@ assume val to_string : uint16 -> Tot string
 
 assume val compare : uint16 -> uint16 -> Tot int
 (** The comparison function for integers of type uint16. **)
+
+// New functions
+assume val rotate_left: uint16 -> nat -> Tot uint16
+
+assume val rotate_right: uint16 -> nat -> Tot uint16

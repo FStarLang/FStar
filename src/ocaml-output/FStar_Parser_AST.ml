@@ -566,247 +566,247 @@ end))
 let is_Mkpattern : pattern  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkpattern"))))
 
 # 46 "FStar.Parser.AST.fst"
-let ___Const____0 : term'  ->  FStar_Const.sconst = (fun projectee -> (match (projectee) with
+let ___Const____0 = (fun projectee -> (match (projectee) with
 | Const (_47_13) -> begin
 _47_13
 end))
 
 # 47 "FStar.Parser.AST.fst"
-let ___Op____0 : term'  ->  (Prims.string * term Prims.list) = (fun projectee -> (match (projectee) with
+let ___Op____0 = (fun projectee -> (match (projectee) with
 | Op (_47_16) -> begin
 _47_16
 end))
 
 # 48 "FStar.Parser.AST.fst"
-let ___Tvar____0 : term'  ->  FStar_Ident.ident = (fun projectee -> (match (projectee) with
+let ___Tvar____0 = (fun projectee -> (match (projectee) with
 | Tvar (_47_19) -> begin
 _47_19
 end))
 
 # 49 "FStar.Parser.AST.fst"
-let ___Var____0 : term'  ->  FStar_Ident.lid = (fun projectee -> (match (projectee) with
+let ___Var____0 = (fun projectee -> (match (projectee) with
 | Var (_47_22) -> begin
 _47_22
 end))
 
 # 50 "FStar.Parser.AST.fst"
-let ___Name____0 : term'  ->  FStar_Ident.lid = (fun projectee -> (match (projectee) with
+let ___Name____0 = (fun projectee -> (match (projectee) with
 | Name (_47_25) -> begin
 _47_25
 end))
 
 # 51 "FStar.Parser.AST.fst"
-let ___Construct____0 : term'  ->  (FStar_Ident.lid * (term * imp) Prims.list) = (fun projectee -> (match (projectee) with
+let ___Construct____0 = (fun projectee -> (match (projectee) with
 | Construct (_47_28) -> begin
 _47_28
 end))
 
 # 52 "FStar.Parser.AST.fst"
-let ___Abs____0 : term'  ->  (pattern Prims.list * term) = (fun projectee -> (match (projectee) with
+let ___Abs____0 = (fun projectee -> (match (projectee) with
 | Abs (_47_31) -> begin
 _47_31
 end))
 
 # 53 "FStar.Parser.AST.fst"
-let ___App____0 : term'  ->  (term * term * imp) = (fun projectee -> (match (projectee) with
+let ___App____0 = (fun projectee -> (match (projectee) with
 | App (_47_34) -> begin
 _47_34
 end))
 
 # 54 "FStar.Parser.AST.fst"
-let ___Let____0 : term'  ->  (Prims.bool * (pattern * term) Prims.list * term) = (fun projectee -> (match (projectee) with
+let ___Let____0 = (fun projectee -> (match (projectee) with
 | Let (_47_37) -> begin
 _47_37
 end))
 
 # 55 "FStar.Parser.AST.fst"
-let ___Seq____0 : term'  ->  (term * term) = (fun projectee -> (match (projectee) with
+let ___Seq____0 = (fun projectee -> (match (projectee) with
 | Seq (_47_40) -> begin
 _47_40
 end))
 
 # 56 "FStar.Parser.AST.fst"
-let ___If____0 : term'  ->  (term * term * term) = (fun projectee -> (match (projectee) with
+let ___If____0 = (fun projectee -> (match (projectee) with
 | If (_47_43) -> begin
 _47_43
 end))
 
 # 57 "FStar.Parser.AST.fst"
-let ___Match____0 : term'  ->  (term * branch Prims.list) = (fun projectee -> (match (projectee) with
+let ___Match____0 = (fun projectee -> (match (projectee) with
 | Match (_47_46) -> begin
 _47_46
 end))
 
 # 58 "FStar.Parser.AST.fst"
-let ___TryWith____0 : term'  ->  (term * branch Prims.list) = (fun projectee -> (match (projectee) with
+let ___TryWith____0 = (fun projectee -> (match (projectee) with
 | TryWith (_47_49) -> begin
 _47_49
 end))
 
 # 59 "FStar.Parser.AST.fst"
-let ___Ascribed____0 : term'  ->  (term * term) = (fun projectee -> (match (projectee) with
+let ___Ascribed____0 = (fun projectee -> (match (projectee) with
 | Ascribed (_47_52) -> begin
 _47_52
 end))
 
 # 60 "FStar.Parser.AST.fst"
-let ___Record____0 : term'  ->  (term Prims.option * (FStar_Ident.lid * term) Prims.list) = (fun projectee -> (match (projectee) with
+let ___Record____0 = (fun projectee -> (match (projectee) with
 | Record (_47_55) -> begin
 _47_55
 end))
 
 # 61 "FStar.Parser.AST.fst"
-let ___Project____0 : term'  ->  (term * FStar_Ident.lid) = (fun projectee -> (match (projectee) with
+let ___Project____0 = (fun projectee -> (match (projectee) with
 | Project (_47_58) -> begin
 _47_58
 end))
 
 # 62 "FStar.Parser.AST.fst"
-let ___Product____0 : term'  ->  (binder Prims.list * term) = (fun projectee -> (match (projectee) with
+let ___Product____0 = (fun projectee -> (match (projectee) with
 | Product (_47_61) -> begin
 _47_61
 end))
 
 # 63 "FStar.Parser.AST.fst"
-let ___Sum____0 : term'  ->  (binder Prims.list * term) = (fun projectee -> (match (projectee) with
+let ___Sum____0 = (fun projectee -> (match (projectee) with
 | Sum (_47_64) -> begin
 _47_64
 end))
 
 # 64 "FStar.Parser.AST.fst"
-let ___QForall____0 : term'  ->  (binder Prims.list * term Prims.list Prims.list * term) = (fun projectee -> (match (projectee) with
+let ___QForall____0 = (fun projectee -> (match (projectee) with
 | QForall (_47_67) -> begin
 _47_67
 end))
 
 # 65 "FStar.Parser.AST.fst"
-let ___QExists____0 : term'  ->  (binder Prims.list * term Prims.list Prims.list * term) = (fun projectee -> (match (projectee) with
+let ___QExists____0 = (fun projectee -> (match (projectee) with
 | QExists (_47_70) -> begin
 _47_70
 end))
 
 # 66 "FStar.Parser.AST.fst"
-let ___Refine____0 : term'  ->  (binder * term) = (fun projectee -> (match (projectee) with
+let ___Refine____0 = (fun projectee -> (match (projectee) with
 | Refine (_47_73) -> begin
 _47_73
 end))
 
 # 67 "FStar.Parser.AST.fst"
-let ___NamedTyp____0 : term'  ->  (FStar_Ident.ident * term) = (fun projectee -> (match (projectee) with
+let ___NamedTyp____0 = (fun projectee -> (match (projectee) with
 | NamedTyp (_47_76) -> begin
 _47_76
 end))
 
 # 68 "FStar.Parser.AST.fst"
-let ___Paren____0 : term'  ->  term = (fun projectee -> (match (projectee) with
+let ___Paren____0 = (fun projectee -> (match (projectee) with
 | Paren (_47_79) -> begin
 _47_79
 end))
 
 # 69 "FStar.Parser.AST.fst"
-let ___Requires____0 : term'  ->  (term * Prims.string Prims.option) = (fun projectee -> (match (projectee) with
+let ___Requires____0 = (fun projectee -> (match (projectee) with
 | Requires (_47_82) -> begin
 _47_82
 end))
 
 # 70 "FStar.Parser.AST.fst"
-let ___Ensures____0 : term'  ->  (term * Prims.string Prims.option) = (fun projectee -> (match (projectee) with
+let ___Ensures____0 = (fun projectee -> (match (projectee) with
 | Ensures (_47_85) -> begin
 _47_85
 end))
 
 # 71 "FStar.Parser.AST.fst"
-let ___Labeled____0 : term'  ->  (term * Prims.string * Prims.bool) = (fun projectee -> (match (projectee) with
+let ___Labeled____0 = (fun projectee -> (match (projectee) with
 | Labeled (_47_88) -> begin
 _47_88
 end))
 
 # 76 "FStar.Parser.AST.fst"
-let ___Variable____0 : binder'  ->  FStar_Ident.ident = (fun projectee -> (match (projectee) with
+let ___Variable____0 = (fun projectee -> (match (projectee) with
 | Variable (_47_92) -> begin
 _47_92
 end))
 
 # 77 "FStar.Parser.AST.fst"
-let ___TVariable____0 : binder'  ->  FStar_Ident.ident = (fun projectee -> (match (projectee) with
+let ___TVariable____0 = (fun projectee -> (match (projectee) with
 | TVariable (_47_95) -> begin
 _47_95
 end))
 
 # 78 "FStar.Parser.AST.fst"
-let ___Annotated____0 : binder'  ->  (FStar_Ident.ident * term) = (fun projectee -> (match (projectee) with
+let ___Annotated____0 = (fun projectee -> (match (projectee) with
 | Annotated (_47_98) -> begin
 _47_98
 end))
 
 # 79 "FStar.Parser.AST.fst"
-let ___TAnnotated____0 : binder'  ->  (FStar_Ident.ident * term) = (fun projectee -> (match (projectee) with
+let ___TAnnotated____0 = (fun projectee -> (match (projectee) with
 | TAnnotated (_47_101) -> begin
 _47_101
 end))
 
 # 80 "FStar.Parser.AST.fst"
-let ___NoName____0 : binder'  ->  term = (fun projectee -> (match (projectee) with
+let ___NoName____0 = (fun projectee -> (match (projectee) with
 | NoName (_47_104) -> begin
 _47_104
 end))
 
 # 85 "FStar.Parser.AST.fst"
-let ___PatConst____0 : pattern'  ->  FStar_Const.sconst = (fun projectee -> (match (projectee) with
+let ___PatConst____0 = (fun projectee -> (match (projectee) with
 | PatConst (_47_108) -> begin
 _47_108
 end))
 
 # 86 "FStar.Parser.AST.fst"
-let ___PatApp____0 : pattern'  ->  (pattern * pattern Prims.list) = (fun projectee -> (match (projectee) with
+let ___PatApp____0 = (fun projectee -> (match (projectee) with
 | PatApp (_47_111) -> begin
 _47_111
 end))
 
 # 87 "FStar.Parser.AST.fst"
-let ___PatVar____0 : pattern'  ->  (FStar_Ident.ident * Prims.bool) = (fun projectee -> (match (projectee) with
+let ___PatVar____0 = (fun projectee -> (match (projectee) with
 | PatVar (_47_114) -> begin
 _47_114
 end))
 
 # 88 "FStar.Parser.AST.fst"
-let ___PatName____0 : pattern'  ->  FStar_Ident.lid = (fun projectee -> (match (projectee) with
+let ___PatName____0 = (fun projectee -> (match (projectee) with
 | PatName (_47_117) -> begin
 _47_117
 end))
 
 # 89 "FStar.Parser.AST.fst"
-let ___PatTvar____0 : pattern'  ->  (FStar_Ident.ident * Prims.bool) = (fun projectee -> (match (projectee) with
+let ___PatTvar____0 = (fun projectee -> (match (projectee) with
 | PatTvar (_47_120) -> begin
 _47_120
 end))
 
 # 90 "FStar.Parser.AST.fst"
-let ___PatList____0 : pattern'  ->  pattern Prims.list = (fun projectee -> (match (projectee) with
+let ___PatList____0 = (fun projectee -> (match (projectee) with
 | PatList (_47_123) -> begin
 _47_123
 end))
 
 # 91 "FStar.Parser.AST.fst"
-let ___PatTuple____0 : pattern'  ->  (pattern Prims.list * Prims.bool) = (fun projectee -> (match (projectee) with
+let ___PatTuple____0 = (fun projectee -> (match (projectee) with
 | PatTuple (_47_126) -> begin
 _47_126
 end))
 
 # 92 "FStar.Parser.AST.fst"
-let ___PatRecord____0 : pattern'  ->  (FStar_Ident.lid * pattern) Prims.list = (fun projectee -> (match (projectee) with
+let ___PatRecord____0 = (fun projectee -> (match (projectee) with
 | PatRecord (_47_129) -> begin
 _47_129
 end))
 
 # 93 "FStar.Parser.AST.fst"
-let ___PatAscribed____0 : pattern'  ->  (pattern * term) = (fun projectee -> (match (projectee) with
+let ___PatAscribed____0 = (fun projectee -> (match (projectee) with
 | PatAscribed (_47_132) -> begin
 _47_132
 end))
 
 # 94 "FStar.Parser.AST.fst"
-let ___PatOr____0 : pattern'  ->  pattern Prims.list = (fun projectee -> (match (projectee) with
+let ___PatOr____0 = (fun projectee -> (match (projectee) with
 | PatOr (_47_135) -> begin
 _47_135
 end))
@@ -867,25 +867,25 @@ false
 end))
 
 # 104 "FStar.Parser.AST.fst"
-let ___TyconAbstract____0 : tycon  ->  (FStar_Ident.ident * binder Prims.list * knd Prims.option) = (fun projectee -> (match (projectee) with
+let ___TyconAbstract____0 = (fun projectee -> (match (projectee) with
 | TyconAbstract (_47_139) -> begin
 _47_139
 end))
 
 # 105 "FStar.Parser.AST.fst"
-let ___TyconAbbrev____0 : tycon  ->  (FStar_Ident.ident * binder Prims.list * knd Prims.option * term) = (fun projectee -> (match (projectee) with
+let ___TyconAbbrev____0 = (fun projectee -> (match (projectee) with
 | TyconAbbrev (_47_142) -> begin
 _47_142
 end))
 
 # 106 "FStar.Parser.AST.fst"
-let ___TyconRecord____0 : tycon  ->  (FStar_Ident.ident * binder Prims.list * knd Prims.option * (FStar_Ident.ident * term) Prims.list) = (fun projectee -> (match (projectee) with
+let ___TyconRecord____0 = (fun projectee -> (match (projectee) with
 | TyconRecord (_47_145) -> begin
 _47_145
 end))
 
 # 107 "FStar.Parser.AST.fst"
-let ___TyconVariant____0 : tycon  ->  (FStar_Ident.ident * binder Prims.list * knd Prims.option * (FStar_Ident.ident * term Prims.option * Prims.bool) Prims.list) = (fun projectee -> (match (projectee) with
+let ___TyconVariant____0 = (fun projectee -> (match (projectee) with
 | TyconVariant (_47_148) -> begin
 _47_148
 end))
@@ -1048,7 +1048,7 @@ false
 end))
 
 # 135 "FStar.Parser.AST.fst"
-let ___SetOptions____0 : pragma  ->  Prims.string = (fun projectee -> (match (projectee) with
+let ___SetOptions____0 = (fun projectee -> (match (projectee) with
 | SetOptions (_47_155) -> begin
 _47_155
 end))
@@ -1213,91 +1213,91 @@ false
 end))
 
 # 139 "FStar.Parser.AST.fst"
-let ___TopLevelModule____0 : decl'  ->  FStar_Ident.lid = (fun projectee -> (match (projectee) with
+let ___TopLevelModule____0 = (fun projectee -> (match (projectee) with
 | TopLevelModule (_47_160) -> begin
 _47_160
 end))
 
 # 140 "FStar.Parser.AST.fst"
-let ___Open____0 : decl'  ->  FStar_Ident.lid = (fun projectee -> (match (projectee) with
+let ___Open____0 = (fun projectee -> (match (projectee) with
 | Open (_47_163) -> begin
 _47_163
 end))
 
 # 141 "FStar.Parser.AST.fst"
-let ___ModuleAbbrev____0 : decl'  ->  (FStar_Ident.ident * FStar_Ident.lid) = (fun projectee -> (match (projectee) with
+let ___ModuleAbbrev____0 = (fun projectee -> (match (projectee) with
 | ModuleAbbrev (_47_166) -> begin
 _47_166
 end))
 
 # 142 "FStar.Parser.AST.fst"
-let ___KindAbbrev____0 : decl'  ->  (FStar_Ident.ident * binder Prims.list * knd) = (fun projectee -> (match (projectee) with
+let ___KindAbbrev____0 = (fun projectee -> (match (projectee) with
 | KindAbbrev (_47_169) -> begin
 _47_169
 end))
 
 # 143 "FStar.Parser.AST.fst"
-let ___ToplevelLet____0 : decl'  ->  (qualifiers * Prims.bool * (pattern * term) Prims.list) = (fun projectee -> (match (projectee) with
+let ___ToplevelLet____0 = (fun projectee -> (match (projectee) with
 | ToplevelLet (_47_172) -> begin
 _47_172
 end))
 
 # 144 "FStar.Parser.AST.fst"
-let ___Main____0 : decl'  ->  term = (fun projectee -> (match (projectee) with
+let ___Main____0 = (fun projectee -> (match (projectee) with
 | Main (_47_175) -> begin
 _47_175
 end))
 
 # 145 "FStar.Parser.AST.fst"
-let ___Assume____0 : decl'  ->  (qualifiers * FStar_Ident.ident * term) = (fun projectee -> (match (projectee) with
+let ___Assume____0 = (fun projectee -> (match (projectee) with
 | Assume (_47_178) -> begin
 _47_178
 end))
 
 # 146 "FStar.Parser.AST.fst"
-let ___Tycon____0 : decl'  ->  (qualifiers * tycon Prims.list) = (fun projectee -> (match (projectee) with
+let ___Tycon____0 = (fun projectee -> (match (projectee) with
 | Tycon (_47_181) -> begin
 _47_181
 end))
 
 # 147 "FStar.Parser.AST.fst"
-let ___Val____0 : decl'  ->  (qualifiers * FStar_Ident.ident * term) = (fun projectee -> (match (projectee) with
+let ___Val____0 = (fun projectee -> (match (projectee) with
 | Val (_47_184) -> begin
 _47_184
 end))
 
 # 148 "FStar.Parser.AST.fst"
-let ___Exception____0 : decl'  ->  (FStar_Ident.ident * term Prims.option) = (fun projectee -> (match (projectee) with
+let ___Exception____0 = (fun projectee -> (match (projectee) with
 | Exception (_47_187) -> begin
 _47_187
 end))
 
 # 149 "FStar.Parser.AST.fst"
-let ___NewEffect____0 : decl'  ->  (qualifiers * effect_decl) = (fun projectee -> (match (projectee) with
+let ___NewEffect____0 = (fun projectee -> (match (projectee) with
 | NewEffect (_47_190) -> begin
 _47_190
 end))
 
 # 150 "FStar.Parser.AST.fst"
-let ___SubEffect____0 : decl'  ->  lift = (fun projectee -> (match (projectee) with
+let ___SubEffect____0 = (fun projectee -> (match (projectee) with
 | SubEffect (_47_193) -> begin
 _47_193
 end))
 
 # 151 "FStar.Parser.AST.fst"
-let ___Pragma____0 : decl'  ->  pragma = (fun projectee -> (match (projectee) with
+let ___Pragma____0 = (fun projectee -> (match (projectee) with
 | Pragma (_47_196) -> begin
 _47_196
 end))
 
 # 154 "FStar.Parser.AST.fst"
-let ___DefineEffect____0 : effect_decl  ->  (FStar_Ident.ident * binder Prims.list * term * decl Prims.list) = (fun projectee -> (match (projectee) with
+let ___DefineEffect____0 = (fun projectee -> (match (projectee) with
 | DefineEffect (_47_200) -> begin
 _47_200
 end))
 
 # 155 "FStar.Parser.AST.fst"
-let ___RedefineEffect____0 : effect_decl  ->  (FStar_Ident.ident * binder Prims.list * term) = (fun projectee -> (match (projectee) with
+let ___RedefineEffect____0 = (fun projectee -> (match (projectee) with
 | RedefineEffect (_47_203) -> begin
 _47_203
 end))
@@ -1326,13 +1326,13 @@ false
 end))
 
 # 158 "FStar.Parser.AST.fst"
-let ___Module____0 : modul  ->  (FStar_Ident.lid * decl Prims.list) = (fun projectee -> (match (projectee) with
+let ___Module____0 = (fun projectee -> (match (projectee) with
 | Module (_47_206) -> begin
 _47_206
 end))
 
 # 159 "FStar.Parser.AST.fst"
-let ___Interface____0 : modul  ->  (FStar_Ident.lid * decl Prims.list * Prims.bool) = (fun projectee -> (match (projectee) with
+let ___Interface____0 = (fun projectee -> (match (projectee) with
 | Interface (_47_209) -> begin
 _47_209
 end))

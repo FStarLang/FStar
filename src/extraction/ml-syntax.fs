@@ -135,6 +135,7 @@ and mllb = {
     mllb_tysc:option<mltyscheme>; // May be None for top-level bindings only
     mllb_add_unit:bool;
     mllb_def:mlexpr;
+    print_typ:bool;
 }
 
 and mlletbinding = bool * list<mllb>

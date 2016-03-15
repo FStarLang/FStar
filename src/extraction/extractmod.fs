@@ -57,6 +57,7 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
                     if quals |> Util.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
                     then let mname = mangle_projector_lid (right lbname) |> mlpath_of_lident in
                          let env = Env.extend_fv' env (Util.fv <| right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
+                         let ml_lb = {ml_lb with print_typ = false} in
                          env, {ml_lb with mllb_name=(snd mname, 0)}
                     else fst <| Env.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                  g, ml_lb::ml_lbs)

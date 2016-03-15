@@ -309,25 +309,25 @@ false
 end))
 
 # 133 "FStar.ToSMT.Encode.fst"
-let ___Binding_var____0 : binding  ->  (FStar_Absyn_Syntax.bvvdef * FStar_ToSMT_Term.term) = (fun projectee -> (match (projectee) with
+let ___Binding_var____0 = (fun projectee -> (match (projectee) with
 | Binding_var (_46_179) -> begin
 _46_179
 end))
 
 # 134 "FStar.ToSMT.Encode.fst"
-let ___Binding_tvar____0 : binding  ->  (FStar_Absyn_Syntax.btvdef * FStar_ToSMT_Term.term) = (fun projectee -> (match (projectee) with
+let ___Binding_tvar____0 = (fun projectee -> (match (projectee) with
 | Binding_tvar (_46_182) -> begin
 _46_182
 end))
 
 # 135 "FStar.ToSMT.Encode.fst"
-let ___Binding_fvar____0 : binding  ->  (FStar_Ident.lident * Prims.string * FStar_ToSMT_Term.term Prims.option * FStar_ToSMT_Term.term Prims.option) = (fun projectee -> (match (projectee) with
+let ___Binding_fvar____0 = (fun projectee -> (match (projectee) with
 | Binding_fvar (_46_185) -> begin
 _46_185
 end))
 
 # 136 "FStar.ToSMT.Encode.fst"
-let ___Binding_ftvar____0 : binding  ->  (FStar_Ident.lident * Prims.string * FStar_ToSMT_Term.term Prims.option) = (fun projectee -> (match (projectee) with
+let ___Binding_ftvar____0 = (fun projectee -> (match (projectee) with
 | Binding_ftvar (_46_188) -> begin
 _46_188
 end))

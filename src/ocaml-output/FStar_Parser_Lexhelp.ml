@@ -238,7 +238,7 @@ false
 end))
 
 # 215 "FStar.Parser.Lexhelp.fst"
-let ___ReservedKeyword____0 : Prims.exn  ->  (Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___ReservedKeyword____0 = (fun projectee -> (match (projectee) with
 | ReservedKeyword (_53_77) -> begin
 _53_77
 end))
@@ -256,7 +256,7 @@ false
 end))
 
 # 216 "FStar.Parser.Lexhelp.fst"
-let ___IndentationProblem____0 : Prims.exn  ->  (Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
+let ___IndentationProblem____0 = (fun projectee -> (match (projectee) with
 | IndentationProblem (_53_79) -> begin
 _53_79
 end))

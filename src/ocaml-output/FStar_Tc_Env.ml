@@ -44,25 +44,25 @@ false
 end))
 
 # 29 "FStar.Tc.Env.fst"
-let ___Binding_var____0 : binding  ->  (FStar_Absyn_Syntax.bvvdef * FStar_Absyn_Syntax.typ) = (fun projectee -> (match (projectee) with
+let ___Binding_var____0 = (fun projectee -> (match (projectee) with
 | Binding_var (_36_16) -> begin
 _36_16
 end))
 
 # 30 "FStar.Tc.Env.fst"
-let ___Binding_typ____0 : binding  ->  (FStar_Absyn_Syntax.btvdef * FStar_Absyn_Syntax.knd) = (fun projectee -> (match (projectee) with
+let ___Binding_typ____0 = (fun projectee -> (match (projectee) with
 | Binding_typ (_36_19) -> begin
 _36_19
 end))
 
 # 31 "FStar.Tc.Env.fst"
-let ___Binding_lid____0 : binding  ->  (FStar_Ident.lident * FStar_Absyn_Syntax.typ) = (fun projectee -> (match (projectee) with
+let ___Binding_lid____0 = (fun projectee -> (match (projectee) with
 | Binding_lid (_36_22) -> begin
 _36_22
 end))
 
 # 32 "FStar.Tc.Env.fst"
-let ___Binding_sig____0 : binding  ->  FStar_Absyn_Syntax.sigelt = (fun projectee -> (match (projectee) with
+let ___Binding_sig____0 = (fun projectee -> (match (projectee) with
 | Binding_sig (_36_25) -> begin
 _36_25
 end))

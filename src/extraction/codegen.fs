@@ -531,7 +531,7 @@ and doc_of_branch (currentModule : mlsymbol) ((p, cond, e) : mlbranch) : doc =
 
 (* -------------------------------------------------------------------- *)
 and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
-    let for1 {mllb_name=name; mllb_tysc=tys; mllb_def=e} =
+    let for1 {mllb_name=name; mllb_tysc=tys; mllb_def=e; print_typ=pt} =
         let e   = doc_of_expr currentModule  (min_op_prec, NonAssoc) e in
         let ids = [] in //TODO: maybe extract the top-level binders from e and print it alongside name
         //let f x = x
@@ -539,6 +539,8 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
         //i.e., print the latter as the former
         let ids = List.map (fun (x, _) -> text x) ids in
         let ty_annot =
+            if (not pt) then text ""
+            else
             if Util.codegen_fsharp () && (rec_ || top_level) //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
             then match tys with
                     | Some (_::_, _) | None -> //except, emitting binders for type variables in F# sometimes also requires emitting type constraints; which is not yet supported
