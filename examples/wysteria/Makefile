@@ -16,7 +16,7 @@ endif
 EXAMPLES_DIR=./examples
 
 api:
-	make -C examples api 
+	make -C examples api FSTAR="$(FSTAR)"
 
 theory:
 	export CONTRIB=../../contrib
