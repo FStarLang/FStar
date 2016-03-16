@@ -36,6 +36,9 @@ let max_length h #size b = FStar.Seq.length (sel h b)
 val length: #size:pos -> buffer size -> GTot nat
 let length #size b = b.length
 
+val elength: #size:pos -> buffer size -> Tot (erased nat)
+let elength #size b = hide b.length
+
 val idx: #size:pos -> buffer size -> GTot nat
 let idx #size b = b.idx
 
@@ -76,6 +79,8 @@ let empty = FStar.Set.empty #abuffer
 let only #t b = FStar.Set.singleton (Buff #t b)
 val op_Plus_Plus: s:FStar.Set.set abuffer -> #t:pos -> b:buffer t -> Tot (s':FStar.Set.set abuffer{FStar.Set.subset s s' /\ FStar.Set.subset (only b) s'})
 let op_Plus_Plus set #t b = FStar.Set.union set (only b)
+
+let op_Plus_Plus_Plus set1 set2 = FStar.Set.union set1 set2
 
 (* Maps a set of buffer to the set of their references *)
 assume logic val arefs: FStar.Set.set abuffer -> Tot (FStar.Set.set aref)

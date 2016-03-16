@@ -12,10 +12,18 @@ LOW_STAR_MODULES=Axioms IntLib IntLibLemmas Sint FStar.UInt8 FStar.UInt32 FStar.
 # C variables
 CHACHA=chacha
 POLY=poly
+BIGNUM=bignum
+CURVE=curve25519
+
 CHACHA_ODIR=chacha20
 POLY_ODIR=poly1305
+BIGNUM_ODIR=bignum_library
+CURVE_ODIR=curve25519
+
 CHACHA_C=Chacha.c test_chacha.c
 POLY_C=Parameters.c Bignum.c Poly.c test_poly.c
+BIGNUM_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c Bignum_Fscalar.c Bignum_Fproduct.c Bignum_Modulo.c Bignum_Core.c test_bignum.c
+CURVE_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c Bignum_Fscalar.c Bignum_Fproduct.c Bignum_Modulo.c Bignum_Core.c Curve_Point.c Curve_AddAndDouble.c Curve_Ladder.c test_curve.c
 
 COMPILE=gcc -O2 fstarlib.c 
 
@@ -77,5 +85,51 @@ poly-ml:
 	cd $(POLY_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(POLY_OCAML) test_poly1305.ml #2> /dev/null
 	$(POLY_ODIR)_ml/a.out
 
+bignum-ver:
+	$(FSTAR) $(OPTIONS_VER) Bignum.Core.fst --lax 
+
+bignum-test: Bignum.Core.fst
+	@echo ""
+	@echo " Extracting BIGNUM library "
+	@mkdir -p $(BIGNUM_ODIR)
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(BIGNUM_ODIR) $^
+	@cp ./c/*.c ./c/*.h $(BIGNUM_ODIR)
+	@echo ""
+	@echo " Compiling BIGNUM"
+	cd $(BIGNUM_ODIR) && $(COMPILE) $(BIGNUM_C) -o $(BIGNUM)
+	./$(BIGNUM_ODIR)/$(BIGNUM)
+
+bignum-debug: Bignum.Core.fst
+	@cp ./c/*.c ./c/*.h $(BIGNUM_ODIR)
+	@echo ""
+	@echo " Compiling BIGNUM"
+	cd $(BIGNUM_ODIR) && $(COMPILE) $(BIGNUM_C) -o $(BIGNUM)
+	./$(BIGNUM_ODIR)/$(BIGNUM)
+
+
+# Curve targets
+curve-ver:
+	$(FSTAR) $(OPTIONS_VER) Curve.Ladder.fst --lax 
+
+curve-test: Curve.Ladder.fst
+	@echo ""
+	@echo " Extracting CURVE library "
+	@mkdir -p $(CURVE_ODIR)
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(CURVE_ODIR) $^
+	@cp ./c/*.c ./c/*.h $(CURVE_ODIR)
+	@echo ""
+	@echo " Compiling CURVE"
+	cd $(CURVE_ODIR) && $(COMPILE) $(CURVE_C) -o $(CURVE)
+	./$(CURVE_ODIR)/$(CURVE)
+
+curve-debug: Curve.Ladder.fst
+	@cp ./c/*.c ./c/*.h $(CURVE_ODIR)
+	@echo ""
+	@echo " Compiling CURVE"
+	cd $(CURVE_ODIR) && $(COMPILE) $(CURVE_C) -o $(CURVE)
+	./$(CURVE_ODIR)/$(CURVE)
+
+# Cleaning
 clean:
-	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(CHACHA_ODIR)_ml $(POLY_ODIR)_ml *~ *.exe
+	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(CHACHA_ODIR)_ml $(POLY_ODIR)_ml \
+		$(BIGNUM_ODIR) $(CURVE_ODIR) *~ *.exe

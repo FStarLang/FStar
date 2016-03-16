@@ -71,7 +71,7 @@ uint32 FStar_UInt32_gte(uint32 a, uint32 b) {
 
 uint64 FStar_UInt63_eq(uint64 a, uint64 b) {
   a = ~(a ^ b); 
-  a &= a << 31;
+  a &= a << 32;
   a &= a << 16;
   a &= a << 8;
   a &= a << 4;
@@ -81,6 +81,22 @@ uint64 FStar_UInt63_eq(uint64 a, uint64 b) {
 }
 
 uint64 FStar_UInt63_gte(uint64 a, uint64 b) {
+  a -= - b; // Works because a and b are never negative
+  return ~(a >> 63);
+}
+
+uint64 FStar_UInt64_eq(uint64 a, uint64 b) {
+  a = ~(a ^ b); 
+  a &= a << 32;
+  a &= a << 16;
+  a &= a << 8;
+  a &= a << 4;
+  a &= a << 2;
+  a &= a << 1;
+  return ((int64_t)a) >> 63;
+}
+
+uint64 FStar_UInt64_gte(uint64 a, uint64 b) {
   a -= - b; // Works because a and b are never negative
   return ~(a >> 63);
 }

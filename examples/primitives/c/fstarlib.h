@@ -4,6 +4,8 @@
 #include <stdio.h>
 
 // Integer constants
+#define FStar_UInt64_one_wide ((uint128)1)
+#define FStar_UInt64_zero_wide ((uint128)0)
 #define FStar_UInt64_one ((uint64)1)
 #define FStar_UInt64_zero ((uint64)0)
 #define FStar_UInt63_one ((uint64)1)
@@ -21,7 +23,11 @@ typedef uint64_t uint64;
 typedef uint64_t uint63;
 typedef uint32_t uint32;
 typedef uint8_t uint8;
+
+// Bignum types
 typedef uint64_t* Bigint_bigint;
+typedef uint64_t* Bignum_Bigint_bigint;
+typedef uint128* Bignum_Bigint_bigint_wide;
 
 // Rotate left and right for different sizes of integers
 uint8 FStar_UInt8_op_Less_Less_Less(uint8 x, int y);
@@ -41,3 +47,5 @@ uint32 FStar_UInt32_eq(uint32 a, uint32 b);
 uint32 FStar_UInt32_gte(uint32 a, uint32 b);
 uint64 FStar_UInt63_eq(uint64 a, uint64 b);
 uint64 FStar_UInt63_gte(uint64 a, uint64 b);
+uint64 FStar_UInt64_eq(uint64 a, uint64 b);
+uint64 FStar_UInt64_gte(uint64 a, uint64 b);

@@ -195,6 +195,17 @@ let infix_low_ops = [
     ("op_Hat_Modulus"           , e_bin_prio_order , "%" );
     ("op_Hat_Less_Less"           , e_bin_prio_order , "<<" );
     ("op_Hat_Greater_Greater"           , e_bin_prio_order , ">>" );
+    ("op_Hat_Hat_Plus"       , e_bin_prio_op1   , "+" );
+    ("op_Hat_Hat_Subtraction"    , e_bin_prio_op1   , "-" );
+    ("op_Hat_Hat_Star"       , e_bin_prio_op1   , "*" );
+    ("op_Hat_Hat_Star_Percent"       , e_bin_prio_op1   , "*" );
+    ("op_Hat_Hat_Slash"       , e_bin_prio_op1   , "/" );
+    ("op_Hat_Hat_Amp"         , e_bin_prio_op1   , "&");
+    ("op_Hat_Hat_Bar"         , e_bin_prio_op1   , "|");
+    ("op_Hat_Hat_Hat"        , e_bin_prio_op1    , "^");
+    ("op_Hat_Hat_Modulus"           , e_bin_prio_order , "%" );
+    ("op_Hat_Hat_Less_Less"           , e_bin_prio_order , "<<" );
+    ("op_Hat_Hat_Greater_Greater"           , e_bin_prio_order , ">>" );
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -386,6 +397,8 @@ let is_lib_fun e =
     List.contains e ["Prims_parse_int"; 
                      "SBuffer_create"; "SBuffer_index"; "SBuffer_upd"; "SBuffer_offset"; "SBuffer_blit"; "SBuffer_sub"; 
                      "FStar_UInt32_of_string"; "FStar_UInt32_of_int";
+                     "FStar_UInt64_of_string"; "FStar_UInt64_wide_to_limb"; "FStar_UInt64_limb_to_wide";
+                     "FStar_UInt64_op_Hat_Star_Hat"; "FStar_UInt64_mul_wide";
                      "FStar_UInt8_of_int"; "FStar_UInt8_of_native_int";
                      "FStar_UInt63_of_uint32";
                      "FStar_SBytes_uint32_of_sbytes"]
@@ -403,6 +416,9 @@ let rec string_of_ml_type (t:mlty) : string =
         begin
         let typ = match typ with
                 | "Prims.unit" -> "void"
+                | "Prims.bool" -> "char"
+                | "Prims.True" -> "char"
+                | "Prims.False" -> "char"
                 | "Prims.int" -> "int"
                 | "Prims.nat" -> "int"
                 | "Prims.pos" -> "int"
@@ -412,6 +428,8 @@ let rec string_of_ml_type (t:mlty) : string =
                 | "FStar.ST.ref" -> "*"
                 | "UInt.uint_std" -> "limb"  // TODO: remove
                 | "UInt.uint_wide" -> "wide" // TODO: remove
+                | "FStar.Set.set" -> "@ignore"
+//                | "FStar.Heap.heap" -> "@ignore"
                 | "FStar.UInt8.uint8" -> "char"
                 | "FStar.SBytes.uint32" -> "uint32"
                 | "FStar.SBytes.sbytes" -> "uint8*"
@@ -419,6 +437,8 @@ let rec string_of_ml_type (t:mlty) : string =
                 | "FStar.UInt63.uint63" -> "uint64"
                 | "FStar.UInt64.uint64" -> "uint64"
                 | "FStar.UInt64.uint128" -> "uint128"
+                | "FStar.UInt64.limb" -> "uint64"
+                | "FStar.UInt64.wide" -> "uint128"
                 | "SBuffer.buffer" -> "*" // Should not appears, only the type bellow should appear in non library code
                 | "SBuffer.uint8s" -> "uint8*"
                 | "SBuffer.uint32s" -> "uint32*"
@@ -428,6 +448,7 @@ let rec string_of_ml_type (t:mlty) : string =
                 | _ -> typ.Replace('.', '_') in
         let other_types = List.map string_of_ml_type typs in
         let s = List.fold (fun s x -> s ^ x) "" (other_types@[typ]) in
+        let s = if String.contains s '@' then "void*" else s in
         if s = "voidSint_usint" then "uint64" else s
         end
     | MLTY_Fun (t1, tag, t2) -> 
@@ -569,6 +590,7 @@ let rec is_if_or_match (m:mlexpr) =
     | MLE_Seq(li) -> is_if_or_match (List.hd (List.rev li))
     | _ -> false
 
+
 (* -------------------------------------------------------------------- *)
 let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     match ty with
@@ -640,7 +662,7 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
         else d in
     match e.expr with
     | MLE_Coerce (e, t, t') ->
-        "\nBackend error in doc_of_expr : MLE_Coerce not handled \n"
+        "; //Backend warning in doc_of_expr : MLE_Coerce not handled \n"
 //      let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
 //      if Util.codegen_fsharp()
 //      then parens (reduce [text "Prims.checked_cast"; doc])
@@ -672,12 +694,19 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
         mk_last_statement (name)
 
     | MLE_Record (path, fields) ->
+        let return_flag_init = !return_flag in
+        return_flag := No;
+        let end_of_block_flag_init = !end_of_block_flag in
+        end_of_block_flag := No;
+
         let for1 (name, e) =
             let doc = string_of_expr currentModule (min_op_prec, NonAssoc) e in
 //            reduce1 [text (ptsym currentModule (path, name)); text "="; doc] in
             concat1 [doc] in
         let record = cbracket (concat2 (", ") (List.map for1 fields)) in
         let cast = concat1 [paren ((string_of_ml_type !current_type)); record] in
+        return_flag := return_flag_init;
+        end_of_block_flag := end_of_block_flag_init;
         mk_last_statement (cast)
 
     | MLE_CTor (ctor, []) ->
@@ -815,12 +844,18 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
     end
 
     | MLE_Proj (e, f) ->
+       let return_flag_init = !return_flag in
+       return_flag := No;
+       let end_of_block_flag_init = !end_of_block_flag in
+       end_of_block_flag := No;
        let e = string_of_expr  currentModule  (min_op_prec, NonAssoc) e in
        let doc =
-        if Util.codegen_fsharp() //field names are not qualified in F#
-        then concat [e; "."; (snd f)]
-        else concat [e; "."; (ptsym currentModule f)] in
-       doc
+           if Util.codegen_fsharp() //field names are not qualified in F#
+           then concat [e; "."; (snd f)]
+           else concat [e; "."; (ptsym currentModule f)] in
+        end_of_block_flag := end_of_block_flag_init;
+        return_flag := return_flag_init;       
+       mk_last_statement doc
 
     | MLE_Fun (ids, body) ->
         // Add new vars to scope
@@ -956,16 +991,31 @@ and  string_of_lib_functions currentModule f args : string =
     // Remove the "Prims.parse_int" introduced calls
     | "Prims_parse_int" 
     // Current ways to introduce constants
-    | "FStar_UInt32_of_string" ->
+    | "FStar_UInt32_of_string"
+    | "FStar_UInt64_of_string" ->        
         let x = List.hd args in
         let (s:string) = string_of_expr currentModule (min_op_prec, NonAssoc) x in
         String.sub s 1 (String.length s - 2)
     | "FStar_UInt32_of_int"  
     | "FStar_UInt63_of_uint32"
+    | "FStar_UInt64_wide_to_limb"
+    | "FStar_UInt64_limb_to_wide"
     | "FStar_UInt8_of_native_int" 
     | "FStar_UInt8_of_int" ->
         let x = List.hd args in
-        string_of_expr currentModule (min_op_prec, NonAssoc) x 
+        string_of_expr currentModule (min_op_prec, NonAssoc) x
+    // Wide multiplication
+    | "FStar_UInt64_op_Hat_Star_Hat"
+    | "FStar_UInt64_mul_wide" ->
+        begin
+            match args with
+            | [e1; e2] ->
+                let e1  = string_of_expr  currentModule (min_op_prec, Left ) e1 in
+                let e2  = string_of_expr  currentModule (min_op_prec, Right) e2 in
+                let doc = concat1 ["((uint128)"; e1; ") * " ; e2] in
+                paren doc
+            | _ -> "Backend error: too many arguments in mul_wide"
+        end
     // Should use casts between buffers instead
     | "FStar_SBytes_uint32_of_sbytes" ->
         begin
@@ -1355,7 +1405,7 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
             let name, ids, body = decl in
             let dtype_name = currentModule ^ "_" ^ ptsym_of_symbol name in
             let s = match body with
-            | Some (MLTD_Abbrev ty) -> "typedef " ^ (string_of_ml_type ty) ^ " " ^ (dtype_name)
+            | Some (MLTD_Abbrev ty) -> "typedef " ^ (string_of_ml_type ty) ^ " " ^ (dtype_name) ^ ";"
             | Some (MLTD_Record r) -> 
                 let declaration = "typedef struct " ^ (dtype_name) ^ " " ^ (dtype_name) in
                 let body = "struct " ^ (dtype_name) ^ (string_of_record r) in

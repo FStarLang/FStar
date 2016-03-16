@@ -1,8 +1,3 @@
-(*--build-config
-  options:--verify_module IntLibLemmas;
-  other-files:axioms.fst intlib.fst;
-  --*)
-
 module IntLibLemmas
 
 open Axioms
