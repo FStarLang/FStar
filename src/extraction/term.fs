@@ -267,6 +267,11 @@ let check_pats_for_ite (l:list<(pat * option<term> * term)>) : (bool   //if l is
         match (w1, w2, p1.v, p2.v) with
             | (None, None, Pat_constant (Const_bool true), Pat_constant (Const_bool false)) -> true, Some e1, Some e2
             | (None, None, Pat_constant (Const_bool false), Pat_constant (Const_bool true)) -> true, Some e2, Some e1
+//            | (None, None, Pat_constant (Const_bool false), Pat_wild _) 
+//            | (None, None, Pat_constant (Const_bool false), Pat_var _) 
+//            | (None, None, Pat_constant (Const_bool true), Pat_wild _) 
+//            | (None, None, Pat_constant (Const_bool true), Pat_var _) 
+
             | _ -> def
 
 
@@ -422,13 +427,13 @@ and binders_as_ml_binders (g:env) (bs:binders) : list<(mlident * mlty)> * env =
             then //no first-class polymorphism; so type-binders get wiped out
                     let b = fst b in
                     let env = extend_ty env b (Some MLTY_Top) in
-                    let ml_b = (btvar_as_mlTermVar b (*name of the binder*),
+                    let ml_b = (bv_as_ml_termvar b (*name of the binder*),
                                 ml_unit_ty (*type of the binder. correspondingly, this argument gets converted to the unit value in application *)) in
                     ml_b::ml_bs, env
             else let b = fst b in
                     let t = term_as_mlty env b.sort in
                     let env = extend_bv env b ([], t) false false false in
-                    let ml_b = ((b.ppname.idText,0), t) in
+                    let ml_b = (bv_as_ml_termvar b, t) in
                     ml_b::ml_bs, env) 
     ([], g) in
     List.rev ml_bs, 
@@ -473,7 +478,7 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
           | Pat_var x ->
             let mlty = term_as_mlty g x.sort in
             let g = extend_bv g x ([], mlty) false false imp in
-            g, (if imp then None else Some (MLP_Var (x.ppname.idText,0), []))
+            g, (if imp then None else Some (MLP_Var (bv_as_mlident x), []))
 
           | Pat_wild x when disjunctive_pat ->
             g, Some (MLP_Wild, [])
@@ -481,7 +486,7 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
           | Pat_wild x -> (*how is this different from Pat_var? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
             let mlty = term_as_mlty g x.sort in
             let g = UEnv.extend_bv g x ([], mlty) false false imp in
-            g, (if imp then None else Some (MLP_Var (x.ppname.idText, 0), []))
+            g, (if imp then None else Some (MLP_Var (bv_as_mlident x), []))
 
           | Pat_dot_term _ ->
             g, None in
@@ -789,7 +794,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 //                             printfn "After subst: expected_t is %s\n" (Print.typ_to_string expected_t);
                              let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g targs in
                              let expected_t = term_as_mlty env expected_t in
-                             let polytype = targs |> List.map (fun (x, _) -> btvar_as_mltyvar x), expected_t in
+                             let polytype = targs |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
                              let add_unit = match rest_args with
                                 | [] -> not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
                                 | _ -> false in

@@ -574,7 +574,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
     
 
 and doc_of_loc (lineno, file) =
-    if Util.codegen_fsharp () then
+    if !Options.no_location_info || Util.codegen_fsharp () then
         empty
     else
         let file = Util.basename file in

@@ -2363,15 +2363,6 @@ let tc_modul env modul =
   let modul, non_private_decls, env = tc_partial_modul env modul in
   finish_partial_modul env modul non_private_decls
 
-let add_modul_to_tcenv (en: env) (m: modul) :env =
-  let do_sigelt (en: env) (elt: sigelt) :env =
-    let env = Env.push_sigelt en elt in
-    env.solver.encode_sig env elt;
-    env
-  in
-  let en = Env.set_current_module en m.name in
-  Env.finish_module (List.fold_left do_sigelt en m.exports) m
-  
 let type_of env e = 
     if Env.debug env <| Options.Other "RelCheck" then Util.print1 "Checking term %s\n" (Print.term_to_string e);
     //let env, _ = Env.clear_expected_typ env in

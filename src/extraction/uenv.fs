@@ -64,7 +64,7 @@ let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("'A"^x,n) ///
 let removeTick (x,n) = if Util.starts_with x "'" then (Util.substring_from x 1,n) else (x,n)
 
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
-let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
+let convIdent (id:ident) : mlident = id.idText, 0
 
 (* TODO : need to make sure that the result of this name change does not collide with a variable already in the context. That might cause a change in semantics.
    E.g. , consider the following in F*
@@ -79,9 +79,8 @@ let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
    Coq seems to add a space after the tick in such cases. Always adding a space for now
   *)
 
-let btvar_as_mltyvar (btv: bv) : mlident =  (prependTick (convIdent btv.ppname))
-
-let btvar_as_mlTermVar (btv: bv) : mlident =  (removeTick (convIdent btv.ppname))
+let bv_as_ml_tyvar x = prependTick (bv_as_mlident x)
+let bv_as_ml_termvar x =  removeTick (bv_as_mlident x)
 
 let rec lookup_ty_local (gamma:list<binding>) (b:bv) : mlty =
     match gamma with
@@ -153,7 +152,7 @@ let extend_hidden_ty (g:env) (a:btvar) (mapped_to:mlty) : env =
 *)
 
 let extend_ty (g:env) (a:bv) (mapped_to:option<mlty>) : env =
-    let ml_a =  btvar_as_mltyvar a in
+    let ml_a =  bv_as_ml_tyvar a in
     let mapped_to = match mapped_to with
         | None -> MLTY_Var ml_a
         | Some t -> t in
@@ -165,7 +164,7 @@ let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) (mk_
     let ml_ty = match t_x with 
         | ([], t) -> t
         | _ -> MLTY_Top in
-    let mlx = MLE_Var (x.ppname.idText, 0) in
+    let mlx = MLE_Var (bv_as_mlident x) in
     let mlx = if mk_unit 
               then ml_unit 
               else if add_unit 
@@ -216,7 +215,7 @@ let extend_fv (g:env) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : en
 let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : (env * mlident) =
     match l with
         | Inl x ->
-          extend_bv g x t_x add_unit is_rec false, (x.ppname.idText, 0) // FIXME missing in lib
+          extend_bv g x t_x add_unit is_rec false, bv_as_ml_termvar x // FIXME missing in lib; NS: what does ths mean??
         | Inr f ->
           let p, y = mlpath_of_lident f.fv_name.v in
           extend_fv' g f (p, y) t_x add_unit is_rec, (y,0)

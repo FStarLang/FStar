@@ -187,3 +187,9 @@ let mlp_lalloc = (["SST"], "lalloc")
 let apply_obj_repr x t = 
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name(["Obj"], "repr")) in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
+
+open FStar.Syntax.Syntax
+let bv_as_mlident (x:bv) = 
+    if Util.starts_with x.ppname.idText Ident.reserved_prefix
+    then x.ppname.idText ^ "_" ^ (string_of_int x.index), 0
+    else x.ppname.idText, 0

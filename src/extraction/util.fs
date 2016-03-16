@@ -223,15 +223,25 @@ let tbinder_prefix t = match (Util.compress_typ t).n with
 
 let is_xtuple (ns, n) =
     if ns = ["Prims"]
-    then match n with
-        | "MkTuple2" -> Some 2
-        | "MkTuple3" -> Some 3
-        | "MkTuple4" -> Some 4
-        | "MkTuple5" -> Some 5
-        | "MkTuple6" -> Some 6
-        | "MkTuple7" -> Some 7
-        | "MkTuple8" -> Some 8
-        | _ -> None
+    then if !Options.universes
+         then match n with
+            | "Mktuple2" -> Some 2
+            | "Mktuple3" -> Some 3
+            | "Mktuple4" -> Some 4
+            | "Mktuple5" -> Some 5
+            | "Mktuple6" -> Some 6
+            | "Mktuple7" -> Some 7
+            | "Mktuple8" -> Some 8
+            | _ -> None
+         else match n with
+            | "MkTuple2" -> Some 2
+            | "MkTuple3" -> Some 3
+            | "MkTuple4" -> Some 4
+            | "MkTuple5" -> Some 5
+            | "MkTuple6" -> Some 6
+            | "MkTuple7" -> Some 7
+            | "MkTuple8" -> Some 8
+            | _ -> None
     else None
 
 let resugar_exp e = match e.expr with
@@ -266,15 +276,25 @@ let resugar_pat q p = match p with
 
 let is_xtuple_ty (ns, n) =
     if ns = ["Prims"]
-    then match n with
-        | "Tuple2" -> Some 2
-        | "Tuple3" -> Some 3
-        | "Tuple4" -> Some 4
-        | "Tuple5" -> Some 5
-        | "Tuple6" -> Some 6
-        | "Tuple7" -> Some 7
-        | "Tuple8" -> Some 8
-        | _ -> None
+    then if !Options.universes
+         then match n with
+            | "tuple2" -> Some 2
+            | "tuple3" -> Some 3
+            | "tuple4" -> Some 4
+            | "tuple5" -> Some 5
+            | "tuple6" -> Some 6
+            | "tuple7" -> Some 7
+            | "tuple8" -> Some 8
+            | _ -> None
+         else match n with
+            | "Tuple2" -> Some 2
+            | "Tuple3" -> Some 3
+            | "Tuple4" -> Some 4
+            | "Tuple5" -> Some 5
+            | "Tuple6" -> Some 6
+            | "Tuple7" -> Some 7
+            | "Tuple8" -> Some 8
+            | _ -> None
     else None
 
 let resugar_mlty t = match t with

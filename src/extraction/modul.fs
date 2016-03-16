@@ -53,8 +53,6 @@ let lident_as_mlsymbol (id : lident) : mlsymbol = id.ident.idText
 (*****************************************************************************)
 (* Extracting type definitions from the signature                            *)
 (*****************************************************************************)
-let bv_as_ml_tyvar x = prependTick (convIdent x.ppname)
-
 let binders_as_mlty_binders (env:UEnv.env) bs = 
     Util.fold_map (fun env (bv, _) -> 
 //        if Term.is_type env.tcenv bv.sort || true
