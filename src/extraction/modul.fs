@@ -97,7 +97,7 @@ type inductive_family = {
 }
 
 let print_ifamily i = 
-    Printf.printf "\n\t%s %s : %s { %s }\n"
+    Util.print4 "\n\t%s %s : %s { %s }\n"
         (Print.lid_to_string i.iname)
         (Print.binders_to_string " " i.iparams)
         (Print.term_to_string i.ityp)
@@ -131,9 +131,6 @@ let extract_bundle env se =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
         let tys = (ml_tyvars, mlt) in 
         let fvv = mkFvvar ctor.dname ctor.dtyp in
-                //printfn "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
-                //printfn "%s\n" (typ_to_string ctor.ctype);
-                //printfn "%A *)\n" (tys);
         extend_fv env fvv tys false false, 
         (lident_as_mlsymbol ctor.dname, argTypes mlt) in
 
@@ -171,22 +168,25 @@ let extract_bundle env se =
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
 let level_of_sigelt g se = 
+    let l = function
+        | Term.Term_level -> "Term_level"
+        | Term.Type_level -> "Type_level"
+        | Term.Kind_level -> "Kind_level" in
     match se with 
         | Sig_bundle _
         | Sig_inductive_typ _  
-        | Sig_datacon _ -> printfn "\t\tInductive bundle" 
+        | Sig_datacon _ -> Util.print_string "\t\tInductive bundle" 
         
         | Sig_declare_typ(lid, _, t, quals, _) ->
-          printfn "\t\t%s @ %A" (Print.lid_to_string lid) (Term.predecessor t <| Term.level g t)
+          Util.print2 "\t\t%s @ %s" (Print.lid_to_string lid) (l (Term.predecessor t <| Term.level g t))
 
         | Sig_let((_, lb::_), _, _, _) ->
-          printfn "\t\t%s (%A) : %s @ %A" ((right lb.lbname).fv_name.v |> Print.lid_to_string)
-                                     ((right lb.lbname).fv_delta)
-                                     (Print.term_to_string lb.lbtyp)
-                                     (Term.predecessor lb.lbtyp <| Term.level g lb.lbtyp)
+          Util.print3 "\t\t%s : %s @ %s" ((right lb.lbname).fv_name.v |> Print.lid_to_string)
+                                         (Print.term_to_string lb.lbtyp)
+                                         (l (Term.predecessor lb.lbtyp <| Term.level g lb.lbtyp))
 
 
-        | _ -> printfn "other\n"
+        | _ -> Util.print_string "other\n"
           
          
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
@@ -226,8 +226,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               (g, []) (snd ml_lbs) (snd lbs) in
               g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (fst ml_lbs, List.rev ml_lbs')]
 
-            | _ -> //printfn "%A\n" ml_let;
-                failwith (Util.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
+            | _ -> 
+              failwith (Util.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
           end
 
        | Sig_declare_typ(lid, _, t, quals, r) ->

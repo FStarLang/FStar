@@ -2967,13 +2967,13 @@ in (match (_63_1805) with
 | (e1, _63_1801, c1, g1, annotated) -> begin
 (
 # 1298 "FStar.TypeChecker.Tc.fst"
-let lb = (FStar_Syntax_Util.mk_letbinding lb.FStar_Syntax_Syntax.lbname [] c1.FStar_Syntax_Syntax.res_typ c1.FStar_Syntax_Syntax.eff_name e1)
+let x = (
+# 1298 "FStar.TypeChecker.Tc.fst"
+let _63_1806 = (FStar_Util.left lb.FStar_Syntax_Syntax.lbname)
+in {FStar_Syntax_Syntax.ppname = _63_1806.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _63_1806.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = c1.FStar_Syntax_Syntax.res_typ})
 in (
 # 1299 "FStar.TypeChecker.Tc.fst"
-let x = (
-# 1299 "FStar.TypeChecker.Tc.fst"
-let _63_1807 = (FStar_Util.left lb.FStar_Syntax_Syntax.lbname)
-in {FStar_Syntax_Syntax.ppname = _63_1807.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _63_1807.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = c1.FStar_Syntax_Syntax.res_typ})
+let lb = (FStar_Syntax_Util.mk_letbinding (FStar_Util.Inl (x)) [] c1.FStar_Syntax_Syntax.res_typ c1.FStar_Syntax_Syntax.eff_name e1)
 in (
 # 1300 "FStar.TypeChecker.Tc.fst"
 let _63_1812 = (let _147_695 = (let _147_694 = (FStar_Syntax_Syntax.mk_binder x)

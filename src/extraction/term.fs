@@ -310,7 +310,7 @@ let maybe_coerce (g:env) e ty (expect:mlty) : mlexpr  =
     match type_leq_c g (Some e) ty expect with 
         | true, Some e' -> e'
         | _ -> 
-          debug g (fun () -> printfn "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
+          debug g (fun () -> Util.print3 "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
                              (Code.string_of_mlexpr g.currentModule e)
                              (Code.string_of_mlty g.currentModule ty)
                              (Code.string_of_mlty g.currentModule expect));
@@ -623,7 +623,6 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           then ml_unit, E_PURE, ml_unit_ty //Erase type argument
           else begin match lookup_term g t with 
                 | Inl _, _ -> 
-                  printfn "%s is a type ...erasing it\n" (Print.term_to_string t);
                   ml_unit, E_PURE, ml_unit_ty
 
                 | Inr (x, mltys, _), qual ->
