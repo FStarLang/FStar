@@ -3,7 +3,7 @@ ifndef FSTAR_HOME
 endif
 
 ifeq ($(OS),Windows_NT)
-   NUBUILD_DIR=$(shell readlink -e $(FSTAR_HOME)/.nubuild)
+   NUBUILD_DIR=$(shell cd $(FSTAR_HOME) && pwd)/.nubuild
    NUBUILD=$(NUBUILD_DIR)/bin/NuBuild.exe
 else
    ifdef USE_NUBUILD
