@@ -32,7 +32,7 @@ all:
 	$(UFSTAR) FStar.List.Tot.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.Relational.Relational.fst FStar.Relational.Comp.fst FStar.Relational.State.fst
 
 test:
-
+	$(UFSTAR) --lax --trace_error $(STDLIB) --codegen OCaml --__temp_no_proj FStar.Heap FStar.Seq.fst FStar.Classical.fst FStar.SeqProperties.fst --codegen OCaml
 
 # #	$(UFSTAR) FStar.OrdMapProps.fst -- problem filed as #359
 # #	$(UFSTAR) stboot.fsi stboot.fst   -- Name "FStar.All.ML" not found
