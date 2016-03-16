@@ -309,8 +309,12 @@ let maybe_coerce (g:env) e ty (expect:mlty) : mlexpr  =
     let ty = eraseTypeDeep g ty in
     match type_leq_c g (Some e) ty expect with 
         | true, Some e' -> e'
-        | _ -> with_ty expect <| MLE_Coerce (e, ty, expect)
-//         debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e tInferred tExpected);
+        | _ -> 
+          debug g (fun () -> printfn "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
+                             (Code.string_of_mlexpr g.currentModule e)
+                             (Code.string_of_mlty g.currentModule ty)
+                             (Code.string_of_mlty g.currentModule expect));
+          with_ty expect <| MLE_Coerce (e, ty, expect)
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)
@@ -633,13 +637,10 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_abs(bs, body, copt(* the annotated computation type of the body ... probably don't need it *)) -> 
           let bs, body = SS.open_term bs body in 
           let ml_bs, env = binders_as_ml_binders g bs in
-          let ml_bs = List.rev ml_bs in
           let ml_body, f, t = term_as_mlexpr env body in
-        //            printfn "Computed type of function body %s to be %A\n" (Print.exp_to_string body) t;
           let f, tfun = List.fold_right
             (fun (_, targ) (f, t) -> E_PURE, MLTY_Fun (targ, f, t))
             ml_bs (f, t) in
-        //            printfn "Computed type of abstraction %s to be %A\n" (Print.exp_to_string e) t;
           with_ty tfun <| MLE_Fun(ml_bs, ml_body), f, tfun
 
         | Tm_app(head, args) ->
