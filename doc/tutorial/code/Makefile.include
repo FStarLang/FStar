@@ -1,13 +1,15 @@
 .PHONY: all verify-% __force__
 
-# This will be called from subdirs
-FSTAR_HOME = ../../../..
+ifndef FSTAR_HOME
+   $(error "Please define the `FSTAR_HOME` variable before including this makefile.")
+endif
+
+include $(FSTAR_HOME)/src/gmake/fstar.mk
+include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
 SECLIB = $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fst partialmap.fst FStar.List.fst FStar.ST.fst array-realized.fst )
-FSTAR  = $(FSTAR_HOME)/bin/fstar.exe $(STDLIB) $(OTHERFLAGS)
-
-# FSTAR = $(FSTAR_HOME)/src/ocaml-output/fstarml $(STDLIB)
+OTHERFLAGS+=$(STDLIB)
 
 EXERCISES =\
   ex1a-safe-read-write\

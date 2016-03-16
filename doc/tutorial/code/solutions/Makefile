@@ -1,3 +1,4 @@
+FSTAR_HOME=../../../..
 include ../Makefile.include
 
 verify-ex8a-acls:  ex8a-acls.fst
