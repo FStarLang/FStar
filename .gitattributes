@@ -1,3 +1,88 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 *.fst linguist-language=FStar
 *.fsti linguist-language=FStar
 
@@ -7,3 +92,4 @@
 /src/tools/get_commit eol=lf
 /src/tools/make_all_boot_fsts eol=lf
 /src/tools/mkfst eol=lf
+/src/tools/update-nubuild eol=lf
