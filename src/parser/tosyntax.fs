@@ -791,7 +791,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         let ns, _ = Util.prefix fieldname.ns in
         lid_of_ids (ns@[f.ident]) in
       let qual = if is_rec then Some (Record_projector fn) else None in
-      mk <| Tm_app(S.fvar (Ident.set_lid_range fieldname (range_of_lid f)) Delta_equational (Some (Record_projector fn)), [as_arg e])
+      mk <| Tm_app(S.fvar (Ident.set_lid_range fieldname (range_of_lid f)) Delta_equational qual, [as_arg e])
 
     | NamedTyp(_, e)
     | Paren e ->

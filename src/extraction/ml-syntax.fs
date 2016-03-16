@@ -191,5 +191,6 @@ let apply_obj_repr x t =
 open FStar.Syntax.Syntax
 let bv_as_mlident (x:bv) = 
     if Util.starts_with x.ppname.idText Ident.reserved_prefix
+    || is_null_bv x
     then x.ppname.idText ^ "_" ^ (string_of_int x.index), 0
     else x.ppname.idText, 0

@@ -444,7 +444,21 @@ and binders_as_ml_binders (g:env) (bs:binders) : list<(mlident * mlty)> * env =
 (* The main extraction of terms to ML expressions                                           *)
 (********************************************************************************************)
 //////////////////////////////////////////////////////////////////////////////////////////////
-      
+
+let resugar_pat q p = match p with
+    | MLP_CTor(d, pats) ->
+      begin match is_xtuple d with
+        | Some n -> MLP_Tuple(pats)
+        | _ ->
+          match q with
+            | Some (Record_ctor (_, fns)) ->
+              let p = record_field_path fns in
+              let fs = record_fields fns pats in
+              MLP_Record(p, fs)
+            | _ -> p
+      end
+    | _ -> p
+
 //extract_pat g p
 //     Translates an F* pattern to an ML pattern
 //     The main work is erasing inaccessible (dot) patterns
@@ -473,7 +487,7 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
             let g, tyMLPats = Util.fold_map (fun g (p, imp) -> extract_one_pat disjunctive_pat true g p) g tysVarPats in (*not all of these were type vars in ML*)
             let g, restMLPats = Util.fold_map (fun g (p, imp) -> extract_one_pat disjunctive_pat false g p) g restPats in
             let mlPats, when_clauses = List.append tyMLPats restMLPats |> List.collect (function (Some x) -> [x] | _ -> []) |> List.split in
-            g, Some (Util.resugar_pat None (MLP_CTor (d, mlPats)), when_clauses |> List.flatten)
+            g, Some (resugar_pat f.fv_qual (MLP_CTor (d, mlPats)), when_clauses |> List.flatten)
 
           | Pat_var x ->
             let mlty = term_as_mlty g x.sort in

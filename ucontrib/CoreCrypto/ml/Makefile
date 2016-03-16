@@ -1,5 +1,6 @@
 FSTAR_HOME = ../../..
-PLATFORM = $(FSTAR_HOME)/contrib/Platform/ml
+CONTRIB=ucontrib
+PLATFORM = $(FSTAR_HOME)/$(CONTRIB)/Platform/ml
 DB=db
 INCLUDE=-I $(PLATFORM) -I $(DB)
 

@@ -38,7 +38,7 @@ assume val lemma_repr_bytes_values: n:nat ->
 
 type byte = uint8
 type cbytes = string
-opaque type bytes = Seq.seq byte
+(* abstract *) type bytes = Seq.seq byte
 
 val seq_of_bytes: b:bytes -> GTot (Seq.seq byte)
 let seq_of_bytes b = b

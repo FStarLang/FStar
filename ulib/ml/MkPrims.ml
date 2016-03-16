@@ -71,7 +71,7 @@ end) -> struct
   type (' a, ' p) l_Exists = unit
 
 
-  type (' p, ' q, 'dummyP, 'dummyQ) l_eq2 =  unit
+  type (' p, ' q, 'dummyP, 'dummyQ) eq2 =  unit
   let ignore _ = ()
   let cut = ()
   let fst = fst
@@ -83,6 +83,15 @@ end) -> struct
   let unsafe_coerce x = Obj.magic x
   let op_Negation x = not x
 
+  (* for partially variants of the operators *)
+  let op_Multiply x y = x * y
+  let op_Subtraction x y = x - y
+  let op_Addition x y = x + y
+  let op_LessThanOrEqual x y = x <= y
+  let op_LessThan x y = x < y
+  let op_GreaterThanOrEqual x y = x >= y
+  let op_GreaterThan x y = x > y    
+  
   let op_Equality x y = x = y
   let op_disEquality x y = x<>y
   let op_AmpAmp x y = x && y
