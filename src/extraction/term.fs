@@ -119,7 +119,7 @@ let predecessor t = function
 let rec level env t =
     let predecessor l = predecessor t l in
     let t = SS.compress t in 
-    debug env (fun _ -> Util.print1 "level %s\n" (Print.term_to_string t));
+    debug env (fun _ -> Util.print2 "level %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
 //    printfn "%s\n" (Print.term_to_string t);
     match t.n with 
     | Tm_delayed _ ->
@@ -319,7 +319,10 @@ let maybe_coerce (g:env) e ty (expect:mlty) : mlexpr  =
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)
 (********************************************************************************************)
-let bv_as_mlty (g:env) (bv:bv) = UEnv.lookup_bv g bv |> left |> snd
+let bv_as_mlty (g:env) (bv:bv) = 
+    match UEnv.lookup_bv g bv with
+        | Inl (_, t) -> t
+        | _ -> MLTY_Top
 
 (* term_as_mlty g t:
            Inspired by the \hat\epsilon function in the thesis (Sec. 3.3.5) 

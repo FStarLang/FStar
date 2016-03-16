@@ -706,7 +706,7 @@ let finish_module =
         if lid_equals m.name Const.prims_lid
         then env.gamma |> List.collect (function
                 | Binding_sig (_, se) -> [se]
-                | _ -> [])
+                | _ -> []) |> List.rev
         else m.exports  in
       add_sigelts env sigs;
       Util.smap_clear env.gamma_cache;

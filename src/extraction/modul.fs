@@ -271,6 +271,7 @@ let extract_iface (g:env) (m:modul) =  Util.fold_map extract_sig g m.declaration
 
 let rec extract (g:env) (m:modul) : env * list<mllib> =
     S.reset_gensym();
+    Util.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
     let name = MLS.mlpath_of_lident m.name in
     let g = {g with currentModule = name}  in
     if m.name.str = "Prims" 
