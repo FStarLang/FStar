@@ -904,7 +904,11 @@ let next_prob wl : option<prob>  //the first problem that is at most a flex_rigi
    aux (flex_flex + 1, None, []) wl.attempting
 
 let is_flex_rigid rank = flex_refine_inner <= rank && rank <= flex_rigid
+let is_rigid_flex rank = rigid_flex <= rank && rank <= refine_flex
 
+(* ----------------------------------------------------- *)
+(* Solving universe equalities                           *)
+(* ----------------------------------------------------- *)
 type univ_eq_sol = 
   | UDeferred of worklist
   | USolved   of worklist
@@ -1008,9 +1012,15 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
               if not probs.defer_ok 
               && flex_refine_inner <= rank 
               && rank <= flex_rigid 
-              then 
-                match solve_flex_rigid_join env tp probs with
+              then match solve_flex_rigid_join env tp probs with
                     | None -> solve_t' env (maybe_invert tp) probs //giveup env "join doesn't exist" hd
+                    | Some wl -> solve env wl
+              else if not probs.defer_ok
+                   && rigid_flex <= rank
+                   && rank <= refine_flex
+                   && false
+              then match solve_rigid_flex_meet env tp probs with
+                    | None -> solve_t' env (maybe_invert tp) probs //giveup env "meet doesn't exist" hd
                     | Some wl -> solve env wl
               else solve_t' env (maybe_invert tp) probs
          end
@@ -1075,6 +1085,116 @@ and giveup_or_defer env orig wl msg =
         solve env (defer msg orig wl)
     end
     else giveup env msg orig 
+
+(******************************************************************************************************)
+(* The case where t1 < u, ..., tn < u: we solve this by taking u=t1\/...\/tn                          *)
+(******************************************************************************************************)
+and solve_rigid_flex_meet env tp wl =
+    if Env.debug env <| Options.Other "RelCheck"
+    then Util.print1 "Trying to solve by meeting refinements:%s\n" (string_of_int tp.pid);
+    let u, args = Util.head_and_args tp.rhs in
+    let ok, head_match, partial_match, fallback, failed_match = 0,1,2,3,4 in
+    let max i j = if i < j then j else i in
+
+    let base_types_match t1 t2 : option<list<prob>> =
+        let h1, args1 = Util.head_and_args t1 in
+        let h2, _ = Util.head_and_args t2 in
+        match h1.n, h2.n with
+        | Tm_fvar tc1, Tm_fvar tc2 ->
+          if S.fv_eq tc1 tc2
+          then (if List.length args1 = 0
+                then Some []
+                else Some [TProb <| new_problem env t1 EQ t2 None t1.pos "meeting refinements"])
+          else None
+
+        | Tm_name a, Tm_name b ->
+          if S.bv_eq a b
+          then Some []
+          else None
+
+        | _ -> None in
+
+    let disjoin t1 t2 = match t1.n, t2.n with
+        | Tm_refine(x, phi1), Tm_refine(y, phi2) ->
+          let m = base_types_match x.sort y.sort in
+          begin match m with
+            | None -> None
+            | Some m ->
+              let x = freshen_bv x in 
+              let subst = [DB(0, x)] in
+              let phi1 = SS.subst subst phi1 in
+              let phi2 = SS.subst subst phi2 in
+              Some (U.refine x (Util.mk_disj phi1 phi2), m)
+          end
+
+        | _, Tm_refine(y, _) ->
+          let m = base_types_match t1 y.sort in
+          begin match m with
+            | None -> None
+            | Some m -> Some (t1, m)
+          end
+
+        | Tm_refine(x, _), _ ->
+          let m = base_types_match x.sort t2 in
+          begin match m with
+            | None -> None
+            | Some m -> Some (t2, m)
+          end
+
+        | _ ->
+          let m = base_types_match t1 t2 in
+          begin match m with
+            | None -> None
+            | Some m -> Some (t1, m)
+          end in
+
+   let tt = u in//compress env wl u in
+    match tt.n with
+        | Tm_uvar(uv, _) ->
+          //find all other constraints of the form t <: u
+          let lower_bounds, rest = wl.attempting |> List.partition (function
+            | TProb tp ->
+                begin match tp.rank with
+                    | Some rank when is_rigid_flex rank ->
+                      let u', _ = Util.head_and_args tp.rhs in
+                      begin match (whnf env u').n with
+                        | Tm_uvar(uv', _) -> Unionfind.equivalent uv uv'
+                        | _ -> false
+                      end
+                    | _ -> false 
+                end
+           | _ -> false) in
+
+          let rec make_lower_bound (bound, sub_probs) tps = match tps with
+            | [] -> Some (bound, sub_probs)
+            | (TProb hd)::tl ->
+              begin match disjoin bound (whnf env hd.rhs) with
+                    | Some(bound, sub) -> make_lower_bound (bound, sub@sub_probs) tl
+                    | None -> None
+              end
+            | _ -> None in
+
+          begin match make_lower_bound (whnf env tp.rhs, []) lower_bounds with
+            | None ->
+              if Env.debug env <| Options.Other "RelCheck"
+              then Util.print_string "No upper bounds\n";
+              None
+
+            | Some (lhs_bound, sub_probs) ->
+              let eq_prob = new_problem env lhs_bound EQ tp.rhs None tp.loc "meeting refinements" in
+              let _ = if Env.debug env <| Options.Other "RelCheck"
+                      then let wl' = {wl with attempting=TProb eq_prob::sub_probs} in
+                           Util.print1 "After meeting refinements: %s\n" (wl_to_string wl') in
+              match solve_t env eq_prob ({wl with attempting=sub_probs}) with
+                | Success _ ->
+                  let wl = {wl with attempting=rest} in
+                  let wl = solve_prob' false (TProb tp) None [] wl in
+                  let _ = List.fold_left (fun wl p -> solve_prob' true p None [] wl) wl lower_bounds in
+                  Some wl
+                | _ -> None
+          end
+
+      | _ -> failwith "Impossible: Not a rigid-flex"
 
 (******************************************************************************************************)
 (* The case where u < t1, .... u < tn: we solve this by taking u=t1/\.../\tn                          *)
