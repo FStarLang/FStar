@@ -1017,6 +1017,15 @@ let apply_obj_repr : mlexpr  ->  mlty  ->  mlexpr = (fun x t -> (
 let obj_repr = (with_ty (MLTY_Fun ((t, E_PURE, MLTY_Top))) (MLE_Name ((("Obj")::[], "repr"))))
 in (with_ty_loc MLTY_Top (MLE_App ((obj_repr, (x)::[]))) x.loc)))
 
+# 192 "FStar.Extraction.ML.Syntax.fst"
+let bv_as_mlident : FStar_Syntax_Syntax.bv  ->  (Prims.string * Prims.int) = (fun x -> if ((FStar_Util.starts_with x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText FStar_Ident.reserved_prefix) || (FStar_Syntax_Syntax.is_null_bv x)) then begin
+(let _148_759 = (let _148_758 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
+in (Prims.strcat (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText "_") _148_758))
+in (_148_759, 0))
+end else begin
+(x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText, 0)
+end)
+
 
 
 

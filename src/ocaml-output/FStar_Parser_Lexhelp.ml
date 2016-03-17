@@ -309,8 +309,12 @@ in (_137_135, false))
 in FStar_Parser_Parse.INT (_137_136))
 end
 | _53_99 -> begin
+if (FStar_Util.starts_with s FStar_Ident.reserved_prefix) then begin
+(Prims.raise (FStar_Syntax_Syntax.Error (((Prims.strcat FStar_Ident.reserved_prefix " is a reserved prefix for an identifier"), r))))
+end else begin
 (let _137_137 = (intern_string s)
 in FStar_Parser_Parse.IDENT (_137_137))
+end
 end)
 end))
 

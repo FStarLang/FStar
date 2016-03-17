@@ -1930,7 +1930,7 @@ in (let _113_1335 = (next_id ())
 in {ppname = id; index = _113_1335; sort = t})))
 
 # 499 "FStar.Syntax.Syntax.fst"
-let new_bv : FStar_Range.range Prims.option  ->  typ  ->  bv = (fun ropt t -> (gen_bv "x" ropt t))
+let new_bv : FStar_Range.range Prims.option  ->  typ  ->  bv = (fun ropt t -> (gen_bv FStar_Ident.reserved_prefix ropt t))
 
 # 500 "FStar.Syntax.Syntax.fst"
 let new_univ_name : FStar_Range.range Prims.option  ->  univ_name = (fun ropt -> (

@@ -1356,13 +1356,14 @@ let empty_lid = (FStar_Ident.lid_of_ids (((FStar_Ident.id_of_text ""))::[]))
 in (fun env m -> (
 # 764 "FStar.TypeChecker.Env.fst"
 let sigs = if (FStar_Ident.lid_equals m.FStar_Syntax_Syntax.name FStar_Syntax_Const.prims_lid) then begin
-(FStar_All.pipe_right env.gamma (FStar_List.collect (fun _58_11 -> (match (_58_11) with
+(let _142_1077 = (FStar_All.pipe_right env.gamma (FStar_List.collect (fun _58_11 -> (match (_58_11) with
 | Binding_sig (_58_1151, se) -> begin
 (se)::[]
 end
 | _58_1156 -> begin
 []
 end))))
+in (FStar_All.pipe_right _142_1077 FStar_List.rev))
 end else begin
 m.FStar_Syntax_Syntax.exports
 end
@@ -1394,9 +1395,9 @@ end
 (aux out tl)
 end
 | (Binding_lid (_, (_, t))::tl) | (Binding_var ({FStar_Syntax_Syntax.ppname = _; FStar_Syntax_Syntax.index = _; FStar_Syntax_Syntax.sort = t})::tl) -> begin
-(let _142_1088 = (let _142_1087 = (FStar_Syntax_Free.uvars t)
-in (ext out _142_1087))
-in (aux _142_1088 tl))
+(let _142_1089 = (let _142_1088 = (FStar_Syntax_Free.uvars t)
+in (ext out _142_1088))
+in (aux _142_1089 tl))
 end
 | (Binding_sig (_)::_) | (Binding_sig_inst (_)::_) -> begin
 out
@@ -1420,9 +1421,9 @@ end
 (aux out tl)
 end
 | (Binding_lid (_, (_, t))::tl) | (Binding_var ({FStar_Syntax_Syntax.ppname = _; FStar_Syntax_Syntax.index = _; FStar_Syntax_Syntax.sort = t})::tl) -> begin
-(let _142_1100 = (let _142_1099 = (FStar_Syntax_Free.univs t)
-in (ext out _142_1099))
-in (aux _142_1100 tl))
+(let _142_1101 = (let _142_1100 = (FStar_Syntax_Free.univs t)
+in (ext out _142_1100))
+in (aux _142_1101 tl))
 end
 | Binding_sig (_58_1245)::_58_1243 -> begin
 out
@@ -1439,9 +1440,9 @@ end
 end)))))
 
 # 812 "FStar.TypeChecker.Env.fst"
-let binders_of_bindings : binding Prims.list  ->  FStar_Syntax_Syntax.binders = (fun bs -> (let _142_1107 = (let _142_1106 = (bound_vars_of_bindings bs)
-in (FStar_All.pipe_right _142_1106 (FStar_List.map FStar_Syntax_Syntax.mk_binder)))
-in (FStar_All.pipe_right _142_1107 FStar_List.rev)))
+let binders_of_bindings : binding Prims.list  ->  FStar_Syntax_Syntax.binders = (fun bs -> (let _142_1108 = (let _142_1107 = (bound_vars_of_bindings bs)
+in (FStar_All.pipe_right _142_1107 (FStar_List.map FStar_Syntax_Syntax.mk_binder)))
+in (FStar_All.pipe_right _142_1108 FStar_List.rev)))
 
 # 814 "FStar.TypeChecker.Env.fst"
 let bound_vars : env  ->  FStar_Syntax_Syntax.bv Prims.list = (fun env -> (bound_vars_of_bindings env.gamma))
@@ -1462,16 +1463,16 @@ end
 | _58_1281 -> begin
 keys
 end)) [] env.gamma)
-in (let _142_1131 = (sigtab env)
-in (FStar_Util.smap_fold _142_1131 (fun _58_1283 v keys -> (let _142_1130 = (FStar_Syntax_Util.lids_of_sigelt v)
-in (FStar_List.append _142_1130 keys))) keys))))
+in (let _142_1132 = (sigtab env)
+in (FStar_Util.smap_fold _142_1132 (fun _58_1283 v keys -> (let _142_1131 = (FStar_Syntax_Util.lids_of_sigelt v)
+in (FStar_List.append _142_1131 keys))) keys))))
 
 # 828 "FStar.TypeChecker.Env.fst"
 let dummy_solver : solver_t = {init = (fun _58_1287 -> ()); push = (fun _58_1289 -> ()); pop = (fun _58_1291 -> ()); mark = (fun _58_1293 -> ()); reset_mark = (fun _58_1295 -> ()); commit_mark = (fun _58_1297 -> ()); encode_modul = (fun _58_1299 _58_1301 -> ()); encode_sig = (fun _58_1303 _58_1305 -> ()); solve = (fun _58_1307 _58_1309 _58_1311 -> ()); is_trivial = (fun _58_1313 _58_1315 -> false); finish = (fun _58_1317 -> ()); refresh = (fun _58_1318 -> ())}
 
 # 843 "FStar.TypeChecker.Env.fst"
-let no_solver_env : (env  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.typ * guard_t))  ->  env = (fun tc -> (let _142_1167 = (FStar_Ident.lid_of_path (("dummy")::[]) FStar_Range.dummyRange)
-in (initial_env tc dummy_solver _142_1167)))
+let no_solver_env : (env  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.typ * guard_t))  ->  env = (fun tc -> (let _142_1168 = (FStar_Ident.lid_of_path (("dummy")::[]) FStar_Range.dummyRange)
+in (initial_env tc dummy_solver _142_1168)))
 
 
 

@@ -1848,7 +1848,7 @@ end else begin
 None
 end
 in (let _135_503 = (let _135_502 = (let _135_501 = (let _135_498 = (FStar_Ident.set_lid_range fieldname (FStar_Ident.range_of_lid f))
-in (FStar_Syntax_Syntax.fvar _135_498 FStar_Syntax_Syntax.Delta_equational (Some (FStar_Syntax_Syntax.Record_projector (fn)))))
+in (FStar_Syntax_Syntax.fvar _135_498 FStar_Syntax_Syntax.Delta_equational qual))
 in (let _135_500 = (let _135_499 = (FStar_Syntax_Syntax.as_arg e)
 in (_135_499)::[])
 in (_135_501, _135_500)))
