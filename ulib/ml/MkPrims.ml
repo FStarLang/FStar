@@ -131,11 +131,11 @@ end) -> struct
   let string_of_int = string_of_int
 
   type ('a, 'b) dtuple2 =
-    | Mkdtuple2 of unit * unit * 'a * 'b
+    | Mkdtuple2 of 'a * 'b
 
   type ('a, 'b, 'c) dtuple3 =
-    | Mkdtuple3 of unit * unit * unit * 'a * 'b * 'c
+    | Mkdtuple3 of 'a * 'b * 'c
 
   type ('a, 'b, 'c, 'd) dtuple4 =
-    | Mkdtuple4 of unit * unit * unit * unit * 'a * 'b * 'c * 'd
+    | Mkdtuple4 of 'a * 'b * 'c * 'd
 end

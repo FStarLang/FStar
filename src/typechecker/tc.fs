@@ -1364,10 +1364,13 @@ and check_inner_let_rec env top =
           let lbs, rec_env = build_let_rec_env false env0 lbs in
           let lbs, g_lbs = check_let_recs rec_env lbs in 
          
-          let bvs, env = lbs |> List.fold_left (fun (bvs, env) ({lbname=x; lbtyp=t}) ->
-             let env = Env.push_let_binding env x ([], t) in //local let recs are not universe polymorphic
-             {left x with sort=t}::bvs, env) ([], env) in
-          let bvs = List.rev bvs in 
+          let env, lbs = lbs |> Util.fold_map (fun env lb -> 
+            let x = {left lb.lbname with sort=lb.lbtyp} in
+            let lb = {lb with lbname=Inl x} in
+            let env = Env.push_let_binding env lb.lbname ([], lb.lbtyp) in //local let recs are not universe polymorphic
+            env, lb) env in
+     
+          let bvs = lbs |> List.map (fun lb -> left (lb.lbname)) in
 
           let e2, cres, g2 = tc_term env e2 in
           let guard = Rel.conj_guard g_lbs g2 in

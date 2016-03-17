@@ -104,7 +104,7 @@ let print_ifamily i =
 let bundle_as_inductive_families env ses quals : list<inductive_family> = 
     ses |> List.collect 
         (function 
-            | Sig_inductive_typ(l, _us, bs, t, _mut_i, datas, _, r) -> 
+            | Sig_inductive_typ(l, _us, bs, t, _mut_i, datas, quals, r) ->
                 let bs, t = SS.open_term bs t in
                 let datas = ses |> List.collect (function
                     | Sig_datacon(d, _, t, l', nparams, _, _, _) when Ident.lid_equals l l' -> 
