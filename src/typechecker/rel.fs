@@ -1018,7 +1018,6 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
               else if not probs.defer_ok
                    && rigid_flex <= rank
                    && rank <= refine_flex
-                   && false
               then match solve_rigid_flex_meet env tp probs with
                     | None -> solve_t' env (maybe_invert tp) probs //giveup env "meet doesn't exist" hd
                     | Some wl -> solve env wl
@@ -1114,39 +1113,36 @@ and solve_rigid_flex_meet env tp wl =
 
         | _ -> None in
 
-    let disjoin t1 t2 = match t1.n, t2.n with
-        | Tm_refine(x, phi1), Tm_refine(y, phi2) ->
-          let m = base_types_match x.sort y.sort in
-          begin match m with
-            | None -> None
-            | Some m ->
-              let x = freshen_bv x in 
-              let subst = [DB(0, x)] in
-              let phi1 = SS.subst subst phi1 in
-              let phi2 = SS.subst subst phi2 in
-              Some (U.refine x (Util.mk_disj phi1 phi2), m)
-          end
+    let disjoin t1 t2 : option<(term * list<prob>)> = 
+        let mr, ts = head_matches_delta env () t1 t2 in 
+        match mr with 
+            | MisMatch _ -> 
+              None
 
-        | _, Tm_refine(y, _) ->
-          let m = base_types_match t1 y.sort in
-          begin match m with
-            | None -> None
-            | Some m -> Some (t1, m)
-          end
+            | FullMatch -> 
+              begin match ts with 
+                | None -> Some (t1, [])
+                | Some (t1, t2) -> 
+                  Some (t1, [])
+              end
 
-        | Tm_refine(x, _), _ ->
-          let m = base_types_match x.sort t2 in
-          begin match m with
-            | None -> None
-            | Some m -> Some (t2, m)
-          end
+            | HeadMatch -> 
+              let t1, t2 = match ts with 
+                | Some (t1, t2) -> SS.compress t1, SS.compress t2
+                | None -> SS.compress t1, SS.compress t2 in
+              begin match t1.n, t2.n with 
+                | Tm_refine(x, phi1), Tm_refine(y, phi2) ->
+                  Some (mk (Tm_refine(x, Util.mk_disj phi1 phi2)) None t1.pos, [])
 
-        | _ ->
-          let m = base_types_match t1 t2 in
-          begin match m with
-            | None -> None
-            | Some m -> Some (t1, m)
-          end in
+                | _, Tm_refine _ ->
+                  Some (t1, [])
+
+                | Tm_refine _, _ ->
+                  Some (t2, [])
+
+                | _ -> //head matches but no way to take the meet; TODO, generalize to handle function types, constructed types, etc.
+                  None
+               end in
 
    let tt = u in//compress env wl u in
     match tt.n with
@@ -1168,13 +1164,13 @@ and solve_rigid_flex_meet env tp wl =
           let rec make_lower_bound (bound, sub_probs) tps = match tps with
             | [] -> Some (bound, sub_probs)
             | (TProb hd)::tl ->
-              begin match disjoin bound (whnf env hd.rhs) with
+              begin match disjoin bound (whnf env hd.lhs) with
                     | Some(bound, sub) -> make_lower_bound (bound, sub@sub_probs) tl
                     | None -> None
               end
             | _ -> None in
 
-          begin match make_lower_bound (whnf env tp.rhs, []) lower_bounds with
+          begin match make_lower_bound (whnf env tp.lhs, []) lower_bounds with
             | None ->
               if Env.debug env <| Options.Other "RelCheck"
               then Util.print_string "No upper bounds\n";
