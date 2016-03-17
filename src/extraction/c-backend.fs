@@ -186,8 +186,11 @@ let infix_low_ops = [
     ("shift_left"           , e_bin_prio_order , "<<" );
     ("shift_right"           , e_bin_prio_order , ">>" );
     ("op_Hat_Plus"       , e_bin_prio_op1   , "+" );
+    ("op_Hat_Plus_Percent"       , e_bin_prio_op1   , "+" );
     ("op_Hat_Subtraction"    , e_bin_prio_op1   , "-" );
+    ("op_Hat_Subtraction_Percent"    , e_bin_prio_op1   , "-" );
     ("op_Hat_Star"       , e_bin_prio_op1   , "*" );
+    ("op_Hat_Star_Percent"       , e_bin_prio_op1   , "*" );
     ("op_Hat_Slash"       , e_bin_prio_op1   , "/" );
     ("op_Hat_Amp"         , e_bin_prio_op1   , "&");
     ("op_Hat_Bar"         , e_bin_prio_op1   , "|");
@@ -196,7 +199,9 @@ let infix_low_ops = [
     ("op_Hat_Less_Less"           , e_bin_prio_order , "<<" );
     ("op_Hat_Greater_Greater"           , e_bin_prio_order , ">>" );
     ("op_Hat_Hat_Plus"       , e_bin_prio_op1   , "+" );
+    ("op_Hat_Hat_Plus_Percent"       , e_bin_prio_op1   , "+" );
     ("op_Hat_Hat_Subtraction"    , e_bin_prio_op1   , "-" );
+    ("op_Hat_Hat_Subtraction_Percent"    , e_bin_prio_op1   , "-" );
     ("op_Hat_Hat_Star"       , e_bin_prio_op1   , "*" );
     ("op_Hat_Hat_Star_Percent"       , e_bin_prio_op1   , "*" );
     ("op_Hat_Hat_Slash"       , e_bin_prio_op1   , "/" );
@@ -381,7 +386,7 @@ let map_datacon_to_field_num : Map<string, int> ref = ref (Map.empty)
 let unions : List<string> ref = ref (List.empty)
 
 let extern_constants : List<string> ref = ref (List.empty)
-
+let extern_typedefs : List<string> ref = ref (List.empty)
 (* -------------------------------------------------------------------- *)
 // Regular expressions 
 let parse_int_regex  = new System.Text.RegularExpressions.Regex "\(Prims\.parse_int \"([0-9a-fA-FxX]+)\"\)"
@@ -397,7 +402,7 @@ let is_lib_fun e =
     List.contains e ["Prims_parse_int"; 
                      "SBuffer_create"; "SBuffer_index"; "SBuffer_upd"; "SBuffer_offset"; "SBuffer_blit"; "SBuffer_sub"; 
                      "FStar_UInt32_of_string"; "FStar_UInt32_of_int";
-                     "FStar_UInt64_of_string"; "FStar_UInt64_wide_to_limb"; "FStar_UInt64_limb_to_wide";
+                     "FStar_UInt64_to_uint64"; "FStar_UInt64_of_int"; "FStar_UInt64_of_string"; "FStar_UInt64_wide_to_limb"; "FStar_UInt64_limb_to_wide";
                      "FStar_UInt64_op_Hat_Star_Hat"; "FStar_UInt64_mul_wide";
                      "FStar_UInt8_of_int"; "FStar_UInt8_of_native_int";
                      "FStar_UInt63_of_uint32";
@@ -417,8 +422,9 @@ let rec string_of_ml_type (t:mlty) : string =
         let typ = match typ with
                 | "Prims.unit" -> "void"
                 | "Prims.bool" -> "char"
-                | "Prims.True" -> "char"
-                | "Prims.False" -> "char"
+                | "Prims.True" -> "@ignore"
+                | "Prims.False" -> "@ignore"
+                | "Prims.b2t" -> "@ignore"
                 | "Prims.int" -> "int"
                 | "Prims.nat" -> "int"
                 | "Prims.pos" -> "int"
@@ -436,20 +442,20 @@ let rec string_of_ml_type (t:mlty) : string =
                 | "FStar.UInt32.uint32" -> "uint32"
                 | "FStar.UInt63.uint63" -> "uint64"
                 | "FStar.UInt64.uint64" -> "uint64"
-                | "FStar.UInt64.uint128" -> "uint128"
+                | "FStar.UInt64.uint128" -> "uint128_t"
                 | "FStar.UInt64.limb" -> "uint64"
-                | "FStar.UInt64.wide" -> "uint128"
+                | "FStar.UInt64.wide" -> "uint128_t"
                 | "SBuffer.buffer" -> "*" // Should not appears, only the type bellow should appear in non library code
                 | "SBuffer.uint8s" -> "uint8*"
                 | "SBuffer.uint32s" -> "uint32*"
                 | "SBuffer.uint63s" -> "uint64*"
                 | "SBuffer.uint64s" -> "uint64*"
-                | "SBuffer.uint128s" -> "uint128*"
+                | "SBuffer.uint128s" -> "uint128_t*"
                 | _ -> typ.Replace('.', '_') in
         let other_types = List.map string_of_ml_type typs in
         let s = List.fold (fun s x -> s ^ x) "" (other_types@[typ]) in
         let s = if String.contains s '@' then "void*" else s in
-        if s = "voidSint_usint" then "uint64" else s
+        if s = "voidSint_usint" then "uint128_t" else s
         end
     | MLTY_Fun (t1, tag, t2) -> 
         string_of_ml_type t2 // prints the returned type only
@@ -582,6 +588,14 @@ let is_mk_record (m:mlmodule1) : bool =
         | _ -> false )
     | _ -> false
 
+let is_ghost (m:mlmodule1) : bool =
+    match m with
+    | MLM_Let(_, [lb]) -> (
+        match lb.mllb_def.expr with
+        | MLE_Coerce _ -> true
+        | _ -> false )
+    | _ -> false
+
 let rec is_if_or_match (m:mlexpr) =
     match m.expr with
     | MLE_If _ 
@@ -662,7 +676,9 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
         else d in
     match e.expr with
     | MLE_Coerce (e, t, t') ->
-        "; //Backend warning in doc_of_expr : MLE_Coerce not handled \n"
+        string_of_expr currentModule (min_op_prec, NonAssoc) e // TODO: sort it out
+//        mk_last_statement ("0 /* Warning : MLE_Coerce not handled */ ")
+
 //      let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
 //      if Util.codegen_fsharp()
 //      then parens (reduce [text "Prims.checked_cast"; doc])
@@ -834,6 +850,8 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
                 if is_lib_fun e then string_of_lib_functions currentModule e args
                 else                     
                     let args = List.map (string_of_expr currentModule  (e_app_prio, IRight)) args in
+                    // Hack to introduce 0s where arguments have been erased
+                    let args = List.map (fun x -> if x = "" then "0" else x) args in
                     let args = paren (concat2 (", ") args) in
                     concat1 [e; args] 
                 in
@@ -849,10 +867,10 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
        let end_of_block_flag_init = !end_of_block_flag in
        end_of_block_flag := No;
        let e = string_of_expr  currentModule  (min_op_prec, NonAssoc) e in
-       let doc =
-           if Util.codegen_fsharp() //field names are not qualified in F#
-           then concat [e; "."; (snd f)]
-           else concat [e; "."; (ptsym currentModule f)] in
+       let doc = concat [e; "."; (snd f)] in
+//           if Util.codegen_fsharp() //field names are not qualified in F#
+//           then concat [e; "."; (snd f)]
+//           else concat [e; "."; (ptsym currentModule f)] in
         end_of_block_flag := end_of_block_flag_init;
         return_flag := return_flag_init;       
        mk_last_statement doc
@@ -865,7 +883,7 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
         //Console.WriteLine (concat1 (List.map (fun (x,y) -> string_of_mlident x) ids));
         let bvar_annot x xt =
             match xt with 
-            | Some xxt when (string_of_ml_type xxt = "void") -> None
+            | Some xxt when (string_of_ml_type xxt = "void") -> Some (concat1 ["int"; x]) // TODO: hack for erased types
             | Some xxt -> Some (concat1 [string_of_ml_type xxt; x])
             | _ -> Some "void*" in
                 
@@ -1001,7 +1019,9 @@ and  string_of_lib_functions currentModule f args : string =
     | "FStar_UInt64_wide_to_limb"
     | "FStar_UInt64_limb_to_wide"
     | "FStar_UInt8_of_native_int" 
-    | "FStar_UInt8_of_int" ->
+    | "FStar_UInt8_of_int"
+    | "FStar_UInt64_to_uint64"
+    | "FStar_UInt64_of_int" ->
         let x = List.hd args in
         string_of_expr currentModule (min_op_prec, NonAssoc) x
     // Wide multiplication
@@ -1012,7 +1032,7 @@ and  string_of_lib_functions currentModule f args : string =
             | [e1; e2] ->
                 let e1  = string_of_expr  currentModule (min_op_prec, Left ) e1 in
                 let e2  = string_of_expr  currentModule (min_op_prec, Right) e2 in
-                let doc = concat1 ["((uint128)"; e1; ") * " ; e2] in
+                let doc = concat1 ["((uint128_t)"; e1; ") * " ; e2] in
                 paren doc
             | _ -> "Backend error: too many arguments in mul_wide"
         end
@@ -1405,16 +1425,22 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
             let name, ids, body = decl in
             let dtype_name = currentModule ^ "_" ^ ptsym_of_symbol name in
             let s = match body with
-            | Some (MLTD_Abbrev ty) -> "typedef " ^ (string_of_ml_type ty) ^ " " ^ (dtype_name) ^ ";"
-            | Some (MLTD_Record r) -> 
+            | Some (MLTD_Abbrev ty) -> (
+//                let declaration = "typedef " ^ (string_of_ml_type ty) ^ " " ^ (dtype_name) ^ ";" in
+                let declaration = "#define " ^ (dtype_name) ^ " " ^ (string_of_ml_type ty) in
+                extern_typedefs := !extern_typedefs@[declaration];
+                declaration )
+            | Some (MLTD_Record r) -> (
                 let declaration = "typedef struct " ^ (dtype_name) ^ " " ^ (dtype_name) in
                 let body = "struct " ^ (dtype_name) ^ (string_of_record r) in
-                declaration ^ ";\n" ^ body ^ ";\n"
+                let s = declaration ^ ";\n" ^ body ^ ";\n" in
+                extern_typedefs := !extern_typedefs@[s];
+                s )
             | Some (MLTD_DType dt) ->
                 begin
                     match dt with
                     | [] -> failwith "Backend error : emtpy dataconstructor\n"
-                    | [(ctor_id, ctor_typ)] -> 
+                    | [(ctor_id, ctor_typ)] -> (
 
                         // Add the datacon to map :
                         map_datacon_to_field_num := Map.add (dtype_name ^ "_" ^ ctor_id) 0 !map_datacon_to_field_num;
@@ -1423,7 +1449,9 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
                         let declaration = "typedef struct " ^ (dtype_name) ^ " " ^ (currentModule) ^ "_" ^ ctor_id in
                         let declaration2 = "typedef struct " ^ (dtype_name) ^ " " ^ (dtype_name)  in
                         let body = "struct " ^ (dtype_name) ^ (string_of_datacon (ctor_id, ctor_typ)) in
-                        declaration ^ ";\n" ^ declaration2 ^ ";\n" ^ body ^ ";\n"
+                        let s = declaration ^ ";\n" ^ declaration2 ^ ";\n" ^ body ^ ";\n" in
+                        extern_typedefs := !extern_typedefs@[s];
+                        s )
                     | _ ->
                         let ctr = ref 0 in
                         let full_name ctor_name = (dtype_name) ^ "_" ^ ctor_name in
@@ -1435,14 +1463,17 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
                             ctr := !ctr+1;
                             map_datacon_to_field_num := Map.add (full_name (fst d)) !ctr !map_datacon_to_field_num;
 
-                            "typedef struct " ^  full_name (fst d) ^ " " ^ short_name (fst d) ^ ";\n" in
+                            let declaration = "typedef struct " ^  full_name (fst d) ^ " " ^ short_name (fst d) ^ ";\n" in
+                            declaration in
                         let print_body = fun d ->
                             "struct " ^ full_name (fst d) ^ (string_of_datacon d) ^ ";\n" in
 
                         let declarations = List.fold (fun s x -> s ^ (print_declaration x)) "" dt in
                         let bodies = List.fold (fun s x -> s ^ (print_body x)) "" dt in
                         let union = "struct " ^ dtype_name ^ string_of_union currentModule dt ^ ";\n" in
-                        (declarations ^ bodies ^ union)
+                        let s = (declarations ^ bodies ^ union) in
+                        extern_typedefs := !extern_typedefs@[s];
+                        s
                 end
                             
             | None -> "" in
@@ -1457,6 +1488,7 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
             match body with 
             | Some (MLTD_DType (e1::e2::tl)) -> 
                 let s = "typedef struct " ^ dtype_name ^ " " ^ dtype_name ^";" in
+                extern_typedefs := !extern_typedefs@[s];
                 text s
             | _ -> text "" in
 
@@ -1516,7 +1548,7 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
         //doc_of_mltydecl currentModule decls
 
     | MLM_Let (rec_, lets) ->
-        if (is_projector m || is_instance_of m || is_mk_record m) then text ""
+        if (is_projector m || is_instance_of m || is_mk_record m (* || is_ghost m *)) then text ""
         else 
             begin
                 vars_in_scope := List.empty;
@@ -1576,6 +1608,7 @@ let rec doc_of_mllib_r (MLLib mllib) =
                    then reduce1 [text "end"]
                    else reduce1 [] in
                    *)
+        let typedefs = text (concat2 "\n" !extern_typedefs) in
         let head = text "" in let tail = reduce1 [] in
         let doc  = Option.map (fun (_, m) -> doc_of_mod x m) sigmod in
         let sub  = List.map (for1_mod false)  sub in
@@ -1588,6 +1621,8 @@ let rec doc_of_mllib_r (MLLib mllib) =
             text "#include \"fstarlib.h\"";
             hardline;
             text (concat2 "\n" !extern_constants);
+            hardline;
+            typedefs;
             (match doc with
              | None   -> empty
              | Some s -> cat s hardline);

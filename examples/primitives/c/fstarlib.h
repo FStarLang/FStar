@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 // Integer constants
-#define FStar_UInt64_one_wide ((uint128)1)
-#define FStar_UInt64_zero_wide ((uint128)0)
+#define FStar_UInt64_one_wide ((uint128_t)1)
+#define FStar_UInt64_zero_wide ((uint128_t)0)
 #define FStar_UInt64_one ((uint64)1)
 #define FStar_UInt64_zero ((uint64)0)
 #define FStar_UInt63_one ((uint64)1)
@@ -17,8 +17,12 @@
 
 // Native FStar types (necessary while lemmas are not erased)
 typedef int FStar_Heap_heap;
+typedef unsigned uint128_t __attribute__((mode(TI)));
 
-typedef __uint128_t uint128;
+#undef force_inline
+#define force_inline __attribute__((always_inline))
+
+typedef uint128_t uint128;
 typedef uint64_t uint64;
 typedef uint64_t uint63;
 typedef uint32_t uint32;
@@ -26,8 +30,9 @@ typedef uint8_t uint8;
 
 // Bignum types
 typedef uint64_t* Bigint_bigint;
+typedef uint8* Bignum_Bigint_bytes;
 typedef uint64_t* Bignum_Bigint_bigint;
-typedef uint128* Bignum_Bigint_bigint_wide;
+typedef uint128_t* Bignum_Bigint_bigint_wide;
 
 // Rotate left and right for different sizes of integers
 uint8 FStar_UInt8_op_Less_Less_Less(uint8 x, int y);

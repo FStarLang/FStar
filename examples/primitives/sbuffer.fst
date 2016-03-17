@@ -18,6 +18,8 @@ private type buffer (t:pos) = {
   length:nat; // idx + length <= max_length
 }
 
+// Required hardcoded library types because the parameter value is erased 
+// at extraction
 type uint32s = buffer 32
 type uint8s = buffer 8
 type uint64s = buffer 64
