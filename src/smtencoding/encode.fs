@@ -266,6 +266,11 @@ let head_normal env t =
     | Tm_app({n=Tm_fvar fv}, _) -> Env.lookup_definition Env.OnlyInline env.tcenv fv.fv_name.v |> Option.isNone
     | _ -> false
 
+let head_redex env t = match (FStar.Syntax.Util.un_uinst t).n with
+    | Tm_abs _ -> true
+    | Tm_fvar fv -> Env.lookup_definition Env.OnlyInline env.tcenv fv.fv_name.v |> Option.isSome
+    | _ -> false
+
 let whnf env t = 
     if head_normal env t then t
     else N.normalize [N.Beta; N.WHNF; N.Inline; N.EraseUniverses] env.tcenv t
@@ -563,7 +568,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_app _ ->
         let head, args_e = Util.head_and_args t0 in
         begin match (SS.compress head).n, args_e with 
-            | Tm_abs _, _ -> encode_term (whnf env t) env
+            | _, _ when head_redex env head -> encode_term (whnf env t) env
 
             | Tm_uinst({n=Tm_fvar fv}, _), [_; (v1, _); (v2, _)]
             | Tm_fvar fv,  [_; (v1, _); (v2, _)] when S.fv_eq_lid fv Const.lexcons_lid ->
