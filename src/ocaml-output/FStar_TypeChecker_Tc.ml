@@ -4217,7 +4217,7 @@ let tc_inductive : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.sigelt Pri
 # 1906 "FStar.TypeChecker.Tc.fst"
 let warn_positivity = (fun l r -> (let _147_1058 = (let _147_1057 = (FStar_Syntax_Print.lid_to_string l)
 in (FStar_Util.format1 "Positivity check is not yet implemented (%s)" _147_1057))
-in (FStar_TypeChecker_Errors.warn r _147_1058)))
+in (FStar_TypeChecker_Errors.diag r _147_1058)))
 in (
 # 1908 "FStar.TypeChecker.Tc.fst"
 let env0 = env
