@@ -247,20 +247,22 @@ end)) (fun _83_81 -> (match (_83_81) with
 | e -> begin
 (
 # 133 "FStar.FStar.fst"
+let _83_91 = (
+# 134 "FStar.FStar.fst"
 let _83_85 = if (FStar_Absyn_Util.handleable e) then begin
 (FStar_Absyn_Util.handle_err false () e)
 end else begin
 ()
 end
 in (
-# 134 "FStar.FStar.fst"
+# 135 "FStar.FStar.fst"
 let _83_87 = if (FStar_Syntax_Util.handleable e) then begin
 (FStar_Syntax_Util.handle_err false () e)
 end else begin
 ()
 end
 in (
-# 135 "FStar.FStar.fst"
+# 136 "FStar.FStar.fst"
 let _83_89 = if (FStar_ST.read FStar_Options.trace_error) then begin
 (let _167_38 = (FStar_Util.message_of_exn e)
 in (let _167_37 = (FStar_Util.trace_of_exn e)
@@ -273,10 +275,8 @@ end else begin
 ()
 end
 end
-in (
-# 139 "FStar.FStar.fst"
-let _83_91 = (cleanup ())
-in (FStar_All.exit 1)))))
+in (cleanup ()))))
+in (FStar_All.exit 1))
 end)))
 end))
 
