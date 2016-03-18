@@ -1092,26 +1092,6 @@ and solve_rigid_flex_meet env tp wl =
     if Env.debug env <| Options.Other "RelCheck"
     then Util.print1 "Trying to solve by meeting refinements:%s\n" (string_of_int tp.pid);
     let u, args = Util.head_and_args tp.rhs in
-    let ok, head_match, partial_match, fallback, failed_match = 0,1,2,3,4 in
-    let max i j = if i < j then j else i in
-
-    let base_types_match t1 t2 : option<list<prob>> =
-        let h1, args1 = Util.head_and_args t1 in
-        let h2, _ = Util.head_and_args t2 in
-        match h1.n, h2.n with
-        | Tm_fvar tc1, Tm_fvar tc2 ->
-          if S.fv_eq tc1 tc2
-          then (if List.length args1 = 0
-                then Some []
-                else Some [TProb <| new_problem env t1 EQ t2 None t1.pos "meeting refinements"])
-          else None
-
-        | Tm_name a, Tm_name b ->
-          if S.bv_eq a b
-          then Some []
-          else None
-
-        | _ -> None in
 
     let disjoin t1 t2 : option<(term * list<prob>)> = 
         let mr, ts = head_matches_delta env () t1 t2 in 
@@ -1173,7 +1153,7 @@ and solve_rigid_flex_meet env tp wl =
           begin match make_lower_bound (whnf env tp.lhs, []) lower_bounds with
             | None ->
               if Env.debug env <| Options.Other "RelCheck"
-              then Util.print_string "No upper bounds\n";
+              then Util.print_string "No lower bounds\n";
               None
 
             | Some (lhs_bound, sub_probs) ->
