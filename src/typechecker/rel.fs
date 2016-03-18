@@ -1110,15 +1110,17 @@ and solve_rigid_flex_meet env tp wl =
               let t1, t2 = match ts with 
                 | Some (t1, t2) -> SS.compress t1, SS.compress t2
                 | None -> SS.compress t1, SS.compress t2 in
+              let eq_prob t1 t2 = 
+                  TProb <| new_problem env t1 EQ t2 None t1.pos "meeting refinements" in
               begin match t1.n, t2.n with 
                 | Tm_refine(x, phi1), Tm_refine(y, phi2) ->
-                  Some (mk (Tm_refine(x, Util.mk_disj phi1 phi2)) None t1.pos, [])
+                  Some (mk (Tm_refine(x, Util.mk_disj phi1 phi2)) None t1.pos, [eq_prob x.sort y.sort])
 
-                | _, Tm_refine _ ->
-                  Some (t1, [])
+                | _, Tm_refine(x, _) ->
+                  Some (t1, [eq_prob x.sort t1])
 
-                | Tm_refine _, _ ->
-                  Some (t2, [])
+                | Tm_refine (x, _), _ ->
+                  Some (t2, [eq_prob x.sort t2])
 
                 | _ -> //head matches but no way to take the meet; TODO, generalize to handle function types, constructed types, etc.
                   None

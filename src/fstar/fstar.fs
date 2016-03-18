@@ -130,11 +130,12 @@ let main () =
     cleanup ();
     exit 0
   with | e ->
-    if F_Util.handleable e then F_Util.handle_err false () e;
-    if U_Util.handleable e then U_Util.handle_err false () e;
-    if !Options.trace_error then
-      Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
-    else if not (F_Util.handleable e || U_Util.handleable e) then
-      Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
-      cleanup ();
-      exit 1
+    (begin 
+        if F_Util.handleable e then F_Util.handle_err false () e;
+        if U_Util.handleable e then U_Util.handle_err false () e;
+        if !Options.trace_error then
+          Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+        else if not (F_Util.handleable e || U_Util.handleable e) then
+          Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
+          cleanup ()
+     end; exit 1)
