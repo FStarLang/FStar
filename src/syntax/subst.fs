@@ -282,7 +282,10 @@ let push_subst s t =
             let lbd = if is_rec && Util.is_left (lb.lbname) //if it is a recursive local let, then all the let bound names are in scope for the body
                       then subst' sn lb.lbdef 
                       else subst' s lb.lbdef in
-            {lb with lbtyp=lbt; lbdef=lbd}) in
+            let lbname = match lb.lbname with 
+                | Inl x -> Inl ({x with sort=lbt})
+                | Inr fv -> Inr ({fv with fv_name={fv.fv_name with ty=lbt}}) in
+            {lb with lbname=lbname; lbtyp=lbt; lbdef=lbd}) in
           mk (Tm_let((is_rec, lbs), body)) None t.pos  
          
         | Tm_meta(t0, Meta_pattern ps) -> 
