@@ -196,16 +196,26 @@ Steps 2 and 3 below require a working OCaml (4.02.x) setup.
    - Can be installed using either your package manager or using OPAM
      (see below).
 
+#### Instructions for all OSes ####
+
 1. Install OPAM (version 1.2.x).
    - Installation instructions are available at various places
      (e.g., https://github.com/realworldocaml/book/wiki/Installation-Instructions#getting-opam
      or http://opam.ocaml.org/doc/Install.html).
-     You need to initialize it by running `opam init` and update the `PATH`
+
+   - If you're on windows, the OCaml installer should have also installed opam for you.
+
+2. Initialize and configure OPAM
+   
+   - You need to initialize it by running `opam init` and update the `PATH`
      variable to the `ocamlfind` and the OCaml libraries. If you allow
      `opam init` to edit your `~/.bashrc` or `~/.profile`, it is done
      automatically; otherwise, use: `eval $(opam config env)`.
 
-2. Install `ocamlfind` and `batteries` using OPAM:
+  - If you're on Windows see https://github.com/FStarLang/FStar/blob/master/contrib/CoreCrypto/INSTALL.md
+   for instructions on how to configure your environment for use with OPAM
+
+3. Install `ocamlfind` and `batteries` using OPAM:
 
         $ opam install ocamlfind batteries
 
