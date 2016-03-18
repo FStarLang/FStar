@@ -65,15 +65,20 @@ let of_native_int s = to_usint n s
 assume val of_string: string -> Tot uint8
 assume val of_int: int -> Tot uint8
 
-let op_Less_Less = shift_left
-let op_Greater_Greater = shift_right
-
 let op_Hat_Plus = add
+let op_Hat_Plus_Percent = add_mod
 let op_Hat_Star = mul
+let op_Hat_Star_Percent = mul_mod
 let op_Hat_Slash = div
 let op_Hat_Subtraction = sub 
+let op_Hat_Subtraction_Percent = sub_mod
 let op_Hat_Less_Less  = shift_left 
 let op_Hat_Greater_Greater  = shift_right 
 let op_Hat_Amp = logand
 let op_Hat_Hat = logxor
 let op_Hat_Bar = logor
+
+assume val eq: x:uint8 -> y:uint8 -> Tot (z:uint8{(v x = v y <==> v z = pow2 8 - 1)
+								  /\ (v x <> v y <==> v z = 0)})
+assume val gte: x:uint8 -> y:uint8 -> Tot (z:uint8{(v x >= v y <==> v z = pow2 8 - 1)
+								  /\ (v x < v y <==> v z = 0)})

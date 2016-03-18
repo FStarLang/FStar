@@ -52,6 +52,19 @@ void FStar_SBytes_xor_bytes(uint8* output, uint8* a, uint8* b, int l){
   }
 }
 
+inline uint8 FStar_UInt8_gte(uint8 x, uint8 y){
+  return (uint8)~(((int16_t)x) - y >> 15);
+}
+
+inline uint8 FStar_UInt8_eq(uint8 a, uint8 b){
+  a = ~(a ^ b); 
+  a &= a << 4;
+  a &= a << 2;
+  a &= a << 1;
+  return ((char)a) >> 7;
+}
+
+
 // Constant time comparisons
 uint32 FStar_UInt32_eq(uint32 a, uint32 b) {
   a = ~(a ^ b);
@@ -97,7 +110,6 @@ uint64 FStar_UInt64_eq(uint64 a, uint64 b) {
 }
 
 uint64 FStar_UInt64_gte(uint64 a, uint64 b) {
-  a -= - b; // Works because a and b are never negative
-  return ~(a >> 63);
+  return (uint64)~(((__int128_t)a) - b >> 127);
 }
 

@@ -10,6 +10,34 @@
 #define Bignum_Bigint_bigint_wide uint128_t*
 #define Bignum_Bigint_bytes uint8*
 
+inline void force_inline multiply(uint128_t t[9], const uint64 in2[5], const uint64 in[5]) {
+  uint64 r0,r1,r2,r3,r4,s0,s1,s2,s3,s4,c;
+
+  r0 = in[0];
+  r1 = in[1];
+  r2 = in[2];
+  r3 = in[3];
+  r4 = in[4];
+
+  s0 = in2[0];
+  s1 = in2[1];
+  s2 = in2[2];
+  s3 = in2[3];
+  s4 = in2[4];
+
+  t[0]  =  ((uint128_t) r0) * s0;
+  t[1]  =  ((uint128_t) r0) * s1 + ((uint128_t) r1) * s0;
+  t[2]  =  ((uint128_t) r0) * s2 + ((uint128_t) r2) * s0 + ((uint128_t) r1) * s1;
+  t[3]  =  ((uint128_t) r0) * s3 + ((uint128_t) r3) * s0 + ((uint128_t) r1) * s2 + ((uint128_t) r2) * s1;
+  t[4]  =  ((uint128_t) r0) * s4 + ((uint128_t) r4) * s0 + ((uint128_t) r3) * s1 + ((uint128_t) r1) * s3 + ((uint128_t) r2) * s2;
+  t[5] += ((uint128_t) r4) * s1 + ((uint128_t) r1) * s4 + ((uint128_t) r2) * s3 + ((uint128_t) r3) * s2;
+  t[6] += ((uint128_t) r4) * s2 + ((uint128_t) r2) * s4 + ((uint128_t) r3) * s3;
+  t[7] += ((uint128_t) r4) * s3 + ((uint128_t) r3) * s4;
+  t[8] += ((uint128_t) r4) * s4;
+}
+
+
+
 typedef struct Curve_Point_point Curve_Point_point;
 struct Curve_Point_point{
 Bignum_Bigint_bigint x;

@@ -25,7 +25,7 @@ POLY_C=Parameters.c Bignum.c Poly.c test_poly.c
 BIGNUM_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c Bignum_Fscalar.c Bignum_Fproduct.c Bignum_Modulo.c Bignum_Core.c test_bignum.c
 CURVE_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c Bignum_Fscalar.c Bignum_Fproduct.c Bignum_Modulo.c Bignum_Core.c Curve_Point.c Curve_AddAndDouble.c Curve_Ladder.c test_curve.c
 
-COMPILE=gcc -O2 fstarlib.c 
+COMPILE=gcc -O4 fstarlib.c 
 
 # OCaml variables
 OCAML=ocamlfind ocamlopt -package batteries -linkpkg -g -thread

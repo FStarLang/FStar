@@ -19,8 +19,8 @@ type template_const = t:template{ forall (n:nat). t n = t 0 }
 val byte_templ: template
 let byte_templ = fun x -> 8
 
-type bigint = buffer 63
-type bytes = buffer 8
+type bigint = uint63s
+type bytes = uint8s
 
 (* Normalized big integer type *)
 opaque type Norm (h:heap) (b:bigint)  =

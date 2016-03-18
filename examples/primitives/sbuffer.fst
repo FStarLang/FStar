@@ -22,6 +22,7 @@ private type buffer (t:pos) = {
 // at extraction
 type uint32s = buffer 32
 type uint8s = buffer 8
+type uint63s = buffer 63
 type uint64s = buffer 64
 type uint128s = buffer 128
 
