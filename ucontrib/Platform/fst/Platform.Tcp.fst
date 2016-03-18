@@ -6,8 +6,8 @@ open FStar.HyperHeap
 open Platform.Bytes
 open Platform.Error
 
-type networkStream 
-type tcpListener 
+assume new type networkStream: Type0
+assume new type tcpListener: Type0
 
 (* This library is used by miTLS; for now we model external calls as
    stateful but with no effect on the heap; we could be more precise,

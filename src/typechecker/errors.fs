@@ -37,7 +37,8 @@ let ill_kinded_type = "Ill-kinded type"
 let totality_check  = "This term may not terminate"
 
 let diag r msg =
-  Util.print_string (format2 "%s (Diagnostic): %s\n" (Range.string_of_range r) msg)
+  if !Options.debug <> [] then
+    Util.print_string (format2 "%s (Diagnostic): %s\n" (Range.string_of_range r) msg)
 
 let warn r msg =
   Util.print_string (format2 "%s (Warning): %s\n" (Range.string_of_range r) msg)

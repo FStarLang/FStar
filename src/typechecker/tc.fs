@@ -1901,7 +1901,7 @@ let tc_inductive env ses quals lids =
                 | C2 : (ua, ub, uw) => a:Type(ua) -> z:Type(ub) -> w:Type(uw) -> T<ua,ub,uw> a z
     *)
     let warn_positivity l r = 
-        Errors.warn r (Util.format1 "Positivity check is not yet implemented (%s)" (Print.lid_to_string l)) in
+        Errors.diag r (Util.format1 "Positivity check is not yet implemented (%s)" (Print.lid_to_string l)) in
     let env0 = env in
 
     (* 1. Checking each tycon *)

@@ -2243,8 +2243,7 @@ let solve_universe_inequalities' tx env ineqs =
                               then ()
                               else fail None u1 u2
                         
-                            | USolved _ -> ());
-              Errors.warn Range.dummyRange "Universe inequality check not fully implemented" in
+                            | USolved _ -> ()) in
 
 
     begin match group_by [] ineqs with 
