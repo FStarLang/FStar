@@ -3,8 +3,8 @@ module Platform.Date
 open FStar.Heap
 open FStar.HyperHeap
 
-type dateTime
-type timeSpan
+assume new type dateTime : Type0
+assume new type timeSpan : Type0
 
 (* This library is used by miTLS; for now we model external calls as
    stateful but with no effect on the heap; we could be more

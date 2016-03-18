@@ -665,94 +665,114 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           with_ty tfun <| MLE_Fun(ml_bs, ml_body), f, tfun
 
         | Tm_app(head, args) ->
-          let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
-//            Printf.printf "synth_app restArgs=%d, t=%A\n" (List.length restArgs) t;
-            match restArgs, t with
-                | [], _ ->
-                    //1. If partially applied and head is a datacon, it needs to be eta-expanded
-                    //2. If we're generating OCaml, and any of the arguments are impure, 
-                    //   and the head is not a primitive short-circuiting op, 
-                    //   then evaluation order must be enforced to be L-to-R (by hoisting)
-                    let lbs, mlargs =
-                        if U.is_primop head || Util.codegen_fsharp()
-                        then [], List.rev mlargs_f |> List.map fst
-                        else List.fold_left (fun (lbs, out_args) (arg, f) ->
-                                if f=E_PURE || f=E_GHOST
-                                then (lbs, arg::out_args)
-                                else let x = gensym () in
-                                     (x, arg)::lbs, (with_ty arg.mlty <| MLE_Var x)::out_args)
-                        ([], []) mlargs_f in
-                    let app = maybe_eta_data_and_project_record g is_data t <| (with_ty t <| MLE_App(mlhead, mlargs)) in
-                    let l_app = List.fold_right 
-                        (fun (x, arg) out -> 
-                            with_ty out.mlty <| MLE_Let((false, [{mllb_name=x; mllb_tysc=Some ([], arg.mlty); mllb_add_unit=false; mllb_def=arg; print_typ=true}]), 
-                                                      out)) 
-                        lbs app in // lets are to ensure L to R eval ordering of arguments
-                    l_app, f, t
+          begin match head.n with
+            | Tm_uvar _ -> 
+              let t = N.normalize [N.Beta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
+              term_as_mlexpr' g t
+            | _ -> 
+              let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
+    //            Printf.printf "synth_app restArgs=%d, t=%A\n" (List.length restArgs) t;
+                match restArgs, t with
+                    | [], _ ->
+                        //1. If partially applied and head is a datacon, it needs to be eta-expanded
+                        //2. If we're generating OCaml, and any of the arguments are impure, 
+                        //   and the head is not a primitive short-circuiting op, 
+                        //   then evaluation order must be enforced to be L-to-R (by hoisting)
+                        let lbs, mlargs =
+                            if U.is_primop head || Util.codegen_fsharp()
+                            then [], List.rev mlargs_f |> List.map fst
+                            else List.fold_left (fun (lbs, out_args) (arg, f) ->
+                                    if f=E_PURE || f=E_GHOST
+                                    then (lbs, arg::out_args)
+                                    else let x = gensym () in
+                                         (x, arg)::lbs, (with_ty arg.mlty <| MLE_Var x)::out_args)
+                            ([], []) mlargs_f in
+                        let app = maybe_eta_data_and_project_record g is_data t <| (with_ty t <| MLE_App(mlhead, mlargs)) in
+                        let l_app = List.fold_right 
+                            (fun (x, arg) out -> 
+                                with_ty out.mlty <| MLE_Let((false, [{mllb_name=x; mllb_tysc=Some ([], arg.mlty); mllb_add_unit=false; mllb_def=arg; print_typ=true}]), 
+                                                          out)) 
+                            lbs app in // lets are to ensure L to R eval ordering of arguments
+                        l_app, f, t
 
-                | (arg, _)::rest, MLTY_Fun (formal_t, f', t) when is_type g arg -> //non-prefix type app; this type argument gets erased to unit
-                  if type_leq g formal_t ml_unit_ty
-                  then extract_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join f f', t) rest
-                  else failwith (Util.format4 "Impossible: ill-typed application:\n\thead=%s, arg=%s, tag=%s\n\texpected type unit, got %s" //ill-typed; should be impossible
-                                        (Code.string_of_mlexpr g.currentModule mlhead)
-                                        (Print.term_to_string arg)
-                                        (Print.tag_of_term arg)
-                                        (Code.string_of_mlty g.currentModule formal_t))
+                    | (arg, _)::rest, MLTY_Fun (formal_t, f', t) when is_type g arg -> //non-prefix type app; this type argument gets erased to unit
+                      if type_leq g formal_t ml_unit_ty
+                      then extract_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join f f', t) rest
+                      else failwith (Util.format4 "Impossible: ill-typed application:\n\thead=%s, arg=%s, tag=%s\n\texpected type unit, got %s" //ill-typed; should be impossible
+                                            (Code.string_of_mlexpr g.currentModule mlhead)
+                                            (Print.term_to_string arg)
+                                            (Print.tag_of_term arg)
+                                            (Code.string_of_mlty g.currentModule formal_t))
 
-                | (e0, _)::rest, MLTY_Fun(tExpected, f', t) ->
-                  let e0, f0, tInferred = term_as_mlexpr g e0 in
-                  let e0 = maybe_coerce g e0 tInferred tExpected in // coerce the arguments of application, if they dont match up
-                  extract_app is_data (mlhead, (e0, f0)::mlargs_f) (join_l [f;f';f0], t) rest
+                    | (e0, _)::rest, MLTY_Fun(tExpected, f', t) ->
+                      let e0, f0, tInferred = term_as_mlexpr g e0 in
+                      let e0 = maybe_coerce g e0 tInferred tExpected in // coerce the arguments of application, if they dont match up
+                      extract_app is_data (mlhead, (e0, f0)::mlargs_f) (join_l [f;f';f0], t) rest
 
-                | _ ->
-                  begin match Util.udelta_unfold g t with
-                    | Some t -> extract_app is_data (mlhead, mlargs_f) (f, t) restArgs
-                    | None -> err_ill_typed_application top restArgs t
-                  end in
+                    | _ ->
+                      begin match Util.udelta_unfold g t with
+                        | Some t -> extract_app is_data (mlhead, mlargs_f) (f, t) restArgs
+                        | None -> err_ill_typed_application top restArgs t
+                      end in
+            
+              let extract_app_maybe_projector is_data mlhead (f, t) args = 
+                match is_data with 
+                    | Some (Record_projector _) -> 
+                      let rec remove_implicits args f t = match args, t with 
+                        | (_, Some (Implicit _))::args, MLTY_Fun(_, f', t) -> 
+                          remove_implicits args (join f f') t
 
-          if is_type g t
-          then ml_unit, E_PURE, ml_unit_ty //Erase type argument: TODO: FIXME, this could be effectful
-          else let head = U.un_uinst head in
-               begin match head.n with
-                | Tm_bvar _
-                | Tm_fvar _ ->
-                   //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
-                  let (head_ml, (vars, t), inst_ok), qual = match lookup_term g head with | Inr (u), q -> u, q | _ -> failwith "FIXME Ty" in
-                  let has_typ_apps = match args with 
-                    | (a, _)::_ -> is_type g a
-                    | _ -> false in
-                  //              debug g (fun () -> printfn "\n (*looked up tyscheme \n %A *) \n" (vars,t));
-                  let head_ml, head_t, args = match vars with 
-                    | _::_ when ((not has_typ_apps) && inst_ok) -> 
-                      (* no explicit type applications although some were expected; but instantiation is permissible *)
-                      //              debug g (fun () -> printfn "Taking the type of %A to be %A\n" head_ml t);
-                      head_ml, t, args
+                        | _ -> args, f, t in
+                      let args, f, t = remove_implicits args f t in
+                      extract_app is_data (mlhead, []) (f, t) args 
 
-                    | _ -> 
-                      let n = List.length vars in 
-                      if n <= List.length args
-                      then let prefix, rest = Util.first_N n args in
-    //                       let _ = (if n=1 then printfn "\n (*prefix was  \n %A \n  *) \n" prefix) in
-                           let prefixAsMLTypes = List.map (fun (x, _) -> term_as_mlty g x) prefix in
-    //                        let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
-                           let t = instantiate (vars, t) prefixAsMLTypes in
-                           let head = match head_ml.expr with
-                             | MLE_Name _ 
-                             | MLE_Var _ -> {head_ml with mlty=t} 
-                             | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) -> MLE_App({head with mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
-                             | _ -> failwith "Impossible: Unexpected head term" in
-                           head, t, rest
-                      else err_uninst g head (vars, t) in
-                    //debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
-                   begin match args with
-                        | [] -> maybe_eta_data_and_project_record g qual head_t head_ml, E_PURE, head_t
-                        | _  -> extract_app qual (head_ml, []) (E_PURE, head_t) args
-                   end
+                    | _ -> extract_app is_data (mlhead, []) (f, t) args in
 
-                | _ ->
-                  let head, f, t = term_as_mlexpr g head in // t is the type inferred for head, the head of the app
-                  extract_app None (head, []) (f, t) args
-               end
+
+              if is_type g t
+              then ml_unit, E_PURE, ml_unit_ty //Erase type argument: TODO: FIXME, this could be effectful
+              else let head = U.un_uinst head in
+                   begin match head.n with
+                    | Tm_bvar _
+                    | Tm_fvar _ ->
+                       //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
+                      let (head_ml, (vars, t), inst_ok), qual = match lookup_term g head with | Inr (u), q -> u, q | _ -> failwith "FIXME Ty" in
+                      let has_typ_apps = match args with 
+                        | (a, _)::_ -> is_type g a
+                        | _ -> false in
+                      //              debug g (fun () -> printfn "\n (*looked up tyscheme \n %A *) \n" (vars,t));
+                      let head_ml, head_t, args = match vars with 
+                        | _::_ when ((not has_typ_apps) && inst_ok) -> 
+                          (* no explicit type applications although some were expected; but instantiation is permissible *)
+                          //              debug g (fun () -> printfn "Taking the type of %A to be %A\n" head_ml t);
+                          head_ml, t, args
+
+                        | _ -> 
+                          let n = List.length vars in 
+                          if n <= List.length args
+                          then let prefix, rest = Util.first_N n args in
+        //                       let _ = (if n=1 then printfn "\n (*prefix was  \n %A \n  *) \n" prefix) in
+                               let prefixAsMLTypes = List.map (fun (x, _) -> term_as_mlty g x) prefix in
+        //                        let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
+                               let t = instantiate (vars, t) prefixAsMLTypes in
+                               let head = match head_ml.expr with
+                                 | MLE_Name _ 
+                                 | MLE_Var _ -> {head_ml with mlty=t} 
+                                 | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) -> MLE_App({head with mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
+                                 | _ -> failwith "Impossible: Unexpected head term" in
+                               head, t, rest
+                          else err_uninst g head (vars, t) in
+                        //debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
+                       begin match args with
+                            | [] -> maybe_eta_data_and_project_record g qual head_t head_ml, E_PURE, head_t
+                            | _  -> extract_app_maybe_projector qual head_ml (E_PURE, head_t) args
+                       end
+
+                    | _ ->
+                      let head, f, t = term_as_mlexpr g head in // t is the type inferred for head, the head of the app
+                      extract_app_maybe_projector None head (f, t) args
+                 end
+            end
 
         | Tm_ascribed(e0, t, f) ->
           let t = term_as_mlty g t in

@@ -71,6 +71,12 @@ type qop =
   | Forall
   | Exists
 
+(*
+    forall (x:Term). {:pattern HasType x Int}
+            HasType x int ==> P
+
+
+*)
 //de Bruijn representation of terms in locally nameless style
 type term' =
   | Integer    of string //unbounded mathematical integers

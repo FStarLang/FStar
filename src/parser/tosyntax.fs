@@ -136,8 +136,8 @@ let compile_op arity s =
 
 let compile_op_lid n s r = [mk_ident(compile_op n s, r)] |> lid_of_ids
 
-let op_as_fv env arity rng s : option<fv> =
-  let r l dd = Some (S.lid_as_fv (set_lid_range l rng) dd None) in
+let op_as_term env arity rng s : option<S.term> =
+  let r l dd = Some (S.lid_as_fv (set_lid_range l rng) dd None |> S.fv_to_tm) in
   let fallback () =
       match s with
         | "=" ->    r C.op_Eq Delta_equational
@@ -168,7 +168,7 @@ let op_as_fv env arity rng s : option<fv> =
         | "<==>" -> r C.iff_lid (Delta_unfoldable 2)
         | _ -> None in
    begin match Env.try_lookup_lid env (compile_op_lid arity s rng) with
-        | Some ({n=Tm_fvar fv}) -> Some fv
+        | Some t -> Some t
         | _ -> fallback()
    end
 
@@ -481,7 +481,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Op("=!=", args) ->
       desugar_term env (mk_term(Op("~", [mk_term (Op("==", args)) top.range top.level])) top.range top.level)
 
-    | Op("*", [_;_]) when (op_as_fv env 2 top.range "*" |> Option.isNone) -> //if op_Star has not been rebound, then it's reserved for tuples
+    | Op("*", [_;_]) when (op_as_term env 2 top.range "*" |> Option.isNone) -> //if op_Star has not been rebound, then it's reserved for tuples
       let rec flatten t = match t.tm with
             | Op("*", [t1;t2]) ->
               let rest = flatten t2 in
@@ -495,10 +495,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       setpos <| fail_or2 (try_lookup_id env) a
 
     | Op(s, args) ->
-      begin match op_as_fv env (List.length args) top.range s with
+      begin match op_as_term env (List.length args) top.range s with
         | None -> raise (Error("Unexpected operator: " ^ s, top.range))
-        | Some fv ->
-          let op = S.fv_to_tm fv in
+        | Some op ->
           let args = args |> List.map (fun t -> desugar_term env t, None) in
           mk (Tm_app(op, args))
       end
