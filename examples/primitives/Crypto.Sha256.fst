@@ -1,4 +1,4 @@
-module Sha256
+module Crypto.Sha256
 
 open FStar.SBytes
 open SBuffer
