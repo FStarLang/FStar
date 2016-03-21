@@ -1003,7 +1003,7 @@ let mk_data_discriminators quals env t tps k datas =
         let disc_name = Util.mk_discriminator d in
         Sig_declare_typ(disc_name, [], disc_type, quals [S.Logic; S.Discriminator d], range_of_lid disc_name))
 
-let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) imp_tps (fields:list<S.binder>) t =
+let mk_indexed_projectors iquals fvq refine_domain env tc lid (inductive_tps:binders) imp_tps (fields:list<S.binder>) t =
     let p = range_of_lid lid in
     let pos q = Syntax.withinfo q tun.n p in
     let projectee ptyp = S.gen_bv "projectee" (Some p) ptyp in
@@ -1055,7 +1055,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
             || Options.dont_gen_projectors (Env.current_module env).str in
         let no_decl = Syntax.is_type x.sort in
         let quals q = if only_decl then S.Assumption::q else q in
-        let quals = quals [S.Projector(lid, x.ppname)] in
+        let quals = quals (S.Projector(lid, x.ppname)::iquals) in
         let decl = Sig_declare_typ(field_name, [], t, quals, range_of_lid field_name) in
         if only_decl
         then [decl] //only the signature
@@ -1081,7 +1081,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
             let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
-let mk_data_projectors env (inductive_tps, se) = match se with 
+let mk_data_projectors iquals env (inductive_tps, se) = match se with 
   | Sig_datacon(lid, _, t, l, n, quals, _, _) when (//(not env.iface || env.admitted_iface) &&
                                                 not (lid_equals lid C.lexcons_lid)) ->
     let refine_domain =
@@ -1094,11 +1094,14 @@ let mk_data_projectors env (inductive_tps, se) = match se with
         begin match formals with 
             | [] -> [] //no fields to project
             | _ ->
-              let qual = match Util.find_map quals (function RecordConstructor fns -> Some (Record_ctor(lid, fns)) | _ -> None) with
+              let fv_qual = match Util.find_map quals (function RecordConstructor fns -> Some (Record_ctor(lid, fns)) | _ -> None) with
                 | None -> Data_ctor
                 | Some q -> q in
+              let iquals = if List.contains S.Abstract iquals
+                           then S.Private::iquals
+                           else iquals in
               let tps, rest = Util.first_N n formals in
-              mk_indexed_projectors qual refine_domain env l lid inductive_tps tps rest cod
+              mk_indexed_projectors iquals fv_qual refine_domain env l lid inductive_tps tps rest cod
         end
 
   | _ -> []
@@ -1269,9 +1272,12 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let sigelts = tps_sigelts |> List.map snd in
       let bundle = Sig_bundle(sigelts, quals, List.collect Util.lids_of_sigelt sigelts, rng) in
       let env = push_sigelt env0 bundle in
-      let data_ops = tps_sigelts |> List.collect (mk_data_projectors env) in
+      let data_ops = tps_sigelts |> List.collect (mk_data_projectors quals env) in
       let discs = sigelts |> List.collect (function
         | Sig_inductive_typ(tname, _, tps, k, _, constrs, quals, _) when (List.length constrs > 1)->
+          let quals = if List.contains S.Abstract quals
+                      then S.Private::quals
+                      else quals in
           mk_data_discriminators quals env tname tps k constrs
         | _ -> []) in
       let ops = discs@data_ops in
@@ -1348,7 +1354,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
     let env = push_sigelt env se' in
-    let data_ops = mk_data_projectors env ([], se) in
+    let data_ops = mk_data_projectors [] env ([], se) in
     let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops
@@ -1360,7 +1366,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
     let env = push_sigelt env se' in
-    let data_ops = mk_data_projectors env ([], se) in
+    let data_ops = mk_data_projectors [] env ([], se) in
     let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops

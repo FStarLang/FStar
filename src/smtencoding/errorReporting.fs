@@ -67,17 +67,13 @@ let label_goals use_env_msg r q : term * labels * ranges =
           q, labs, rs
 
         | Labeled(_, "push", r) -> 
-//          Printf.printf "Pushing %s\n" (Range.string_of_range r);
           Term.mkTrue, labs, (None, r)::rs
 
         | Labeled(_, "pop", r) ->
-//          Printf.printf "Popping %s\n" (Range.string_of_range r);
           Term.mkTrue, labs, List.tl rs
 
         | Labeled(arg, reason, r) -> 
-//          Printf.printf "Pushing %s\n" (Range.string_of_range r);
           let tm, labs, rs = aux ((Some reason, r)::rs) arg labs in
-//          Printf.printf "Popping %s\n" (Range.string_of_range r);
           tm, labs, List.tl rs
 
         | App(Imp, [lhs;rhs]) -> 

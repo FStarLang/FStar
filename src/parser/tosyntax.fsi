@@ -36,7 +36,7 @@ val desugar_partial_modul: option<S.modul> -> env -> AST.modul -> env * Syntax.m
 val desugar_term: env -> term -> S.term
 
 (* private *) val desugar_modul : env -> AST.modul -> env * Syntax.modul
-(* private *) val mk_data_projectors : env -> (Syntax.binders * sigelt) -> list<sigelt>
+(* private *) val mk_data_projectors : list<S.qualifier> -> env -> (Syntax.binders * sigelt) -> list<sigelt>
 (* private *) val close : env -> term -> term
 
 val add_modul_to_env: Syntax.modul -> env -> env
