@@ -1873,8 +1873,6 @@ let solve use_env_msg tcenv q : unit =
         || debug tcenv <| Options.Other "SMTEncoding" 
         then Util.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
         let phi, qdecls = encode_formula q env in
-//        if not (lid_equals (Env.current_module tcenv) Const.prims_lid)
-//        then Util.print1 "About to label goals in %s\n" (Term.print_smt_term phi);
         let phi, labels, _ = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
         let label_prefix, label_suffix = encode_labels labels in
         let query_prelude =
@@ -1889,66 +1887,7 @@ let solve use_env_msg tcenv q : unit =
         | _ when tcenv.admit -> pop(); ()
         | Assume(q, _) ->
             let fresh = String.length q.hash >= 2048 in
-            Z3.giveZ3 prefix;
-
-            let with_fuel p (n, i) =
-                [Term.Caption (Util.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
-                    Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None);
-                    Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None);
-                    p;
-                    Term.CheckSat]@suffix in
-
-            let check (p:decl) =
-                let initial_config = (!Options.initial_fuel, !Options.initial_ifuel) in
-                let alt_configs = List.flatten [(if !Options.max_ifuel > !Options.initial_ifuel then [(!Options.initial_fuel, !Options.max_ifuel)] else []);
-                                                (if !Options.max_fuel / 2 > !Options.initial_fuel then [(!Options.max_fuel / 2, !Options.max_ifuel)] else []);
-                                                (if !Options.max_fuel > !Options.initial_fuel && !Options.max_ifuel > !Options.initial_ifuel then [(!Options.max_fuel, !Options.max_ifuel)] else []);
-                                                (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])] in
-
-                let report errs =
-                    let errs = match errs with
-                            | [] -> [("Unknown assertion failed", Range.dummyRange)]
-                            | _ -> errs in
-                    if !Options.print_fuels
-                    then (Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
-                            (Range.string_of_range (Env.get_range tcenv))
-                            (!Options.max_fuel |> Util.string_of_int)
-                            (!Options.max_ifuel |> Util.string_of_int));
-                    Errors.add_errors tcenv errs in
-
-                let rec try_alt_configs (p:decl) errs = function
-                    | [] -> report errs
-                    | [mi] ->
-                        begin match errs with
-                        | [] -> Z3.ask fresh labels (with_fuel p mi) (cb mi p [])
-                        | _ -> report errs
-                        end
-
-                    | mi::tl ->
-                        Z3.ask fresh labels (with_fuel p mi) (fun (ok, errs') ->
-                        match errs with
-                            | [] -> cb mi p tl (ok, errs')
-                            | _ -> cb mi p tl (ok, errs))
-
-                and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) =
-                    if ok
-                    then if !Options.print_fuels
-                         then (Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n"
-                                (Range.string_of_range (Env.get_range tcenv))
-                                (Util.string_of_int prev_fuel)
-                                (Util.string_of_int prev_ifuel))
-                         else ()
-                    else try_alt_configs p errs alt in
-                Z3.ask fresh labels (with_fuel p initial_config) (cb initial_config p alt_configs)  in
-
-            let process_query (q:decl) :unit =
-                if !Options.split_cases > 0 then
-                    let (b, cb) = SplitQueryCases.can_handle_query !Options.split_cases q in
-                    if b then SplitQueryCases.handle_query cb check else check q
-                else check q
-            in
-
-            if !Options.admit_smt_queries then () else process_query qry;
+            ErrorReporting.askZ3_and_report_errors tcenv fresh labels prefix qry suffix;
             pop ()
 
         | _ -> failwith "Impossible"

@@ -90,6 +90,8 @@ type decl =
   | CheckSat
 type decls_t = list<decl>
 
+type error_label = (fv * string * Range.range)
+type error_labels = list<error_label>
 
 val mk: term' -> term
 val fv_eq : fv -> fv -> bool

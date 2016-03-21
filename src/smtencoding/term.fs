@@ -112,6 +112,9 @@ type decl =
   | CheckSat
 type decls_t = list<decl>
 
+type error_label = (fv * string * Range.range)
+type error_labels = list<error_label>
+
 // VALS_HACK_HERE
 
 let fv_eq (x:fv) (y:fv) = fst x = fst y

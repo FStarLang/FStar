@@ -24,7 +24,7 @@ FSTAR_OBJS=$(COMPILER_ML_LIB) \
 	   FStar_Format.cmx \
 	   FStar_TypeChecker_Common.cmx FStar_TypeChecker_Env.cmx FStar_TypeChecker_Normalize.cmx FStar_TypeChecker_Errors.cmx FStar_TypeChecker_Rel.cmx FStar_TypeChecker_Util.cmx FStar_TypeChecker_Tc.cmx \
 	   FStar_Extraction_ML_Syntax.cmx FStar_Extraction_ML_Env.cmx FStar_Extraction_ML_UEnv.cmx FStar_Extraction_ML_Util.cmx FStar_Extraction_ML_Code.cmx FStar_Extraction_ML_ExtractTyp.cmx FStar_Extraction_ML_ExtractExp.cmx FStar_Extraction_ML_ExtractMod.cmx FStar_Extraction_ML_Term.cmx FStar_Extraction_ML_Modul.cmx \
-	   FStar_SMTEncoding_Term.cmx FStar_SMTEncoding_ErrorReporting.cmx FStar_SMTEncoding_SplitQueryCases.cmx FStar_SMTEncoding_Z3.cmx FStar_SMTEncoding_Encode.cmx \
+	   FStar_SMTEncoding_Term.cmx FStar_SMTEncoding_Z3.cmx FStar_SMTEncoding_SplitQueryCases.cmx FStar_SMTEncoding_ErrorReporting.cmx FStar_SMTEncoding_Encode.cmx \
 	   FStar_Dependences.cmx FStar_Interactive.cmx FStar_Stratified.cmx FStar_Universal.cmx FStar_FStar.cmx
 
 GENERATED_FILES=$(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml 

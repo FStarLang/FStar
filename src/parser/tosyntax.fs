@@ -876,9 +876,13 @@ and desugar_comp r default_ok env t =
                 match t.n with
                 | Tm_app(_, [(arg, _)]) -> DECREASES arg
                 | _ -> failwith "impos") in
-    if lid_equals eff C.effect_Tot_lid && List.length decreases_clause=0
+    let no_additional_args = List.length decreases_clause = 0
+                             && List.length rest = 0 in
+    if no_additional_args 
+    && lid_equals eff C.effect_Tot_lid 
     then mk_Total result_typ
-    else if lid_equals eff C.effect_GTot_lid && List.length decreases_clause=0
+    else if no_additional_args 
+         && lid_equals eff C.effect_GTot_lid 
     then mk_GTotal result_typ
     else let flags =
             if      lid_equals eff C.effect_Lemma_lid then [LEMMA]

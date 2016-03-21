@@ -26,14 +26,12 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Const
 
-let handle_err warning ret e =
+let handle_err warning e =
   match e with
     | Error(msg, r) ->
-        Util.print_string (Util.format3 "%s : %s\n%s\n" (Range.string_of_range r) (if warning then "Warning" else "Error") msg);
-        ret
+        Util.print_string (Util.format3 "%s : %s\n%s\n" (Range.string_of_range r) (if warning then "Warning" else "Error") msg)
     | NYI s ->
-        Util.print_string (Util.format1 "Feature not yet implemented: %s" s);
-        ret
+        Util.print_string (Util.format1 "Feature not yet implemented: %s" s)
     | Err s ->
         Util.print_string (Util.format1 "Error: %s" s)
     | _ -> raise e

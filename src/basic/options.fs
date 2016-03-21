@@ -51,6 +51,7 @@ let debug_level_geq l2 = !debug_level |> Util.for_some (fun l1 -> one_debug_leve
 let log_types = Util.mk_ref false
 let print_effect_args=Util.mk_ref false
 let print_real_names = Util.mk_ref false
+let detail_errors = Util.mk_ref false
 let dump_module : ref<option<string>> = Util.mk_ref None
 let should_dump l = match !dump_module with
     | None -> false
@@ -259,6 +260,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "debug", OneArg ((fun x -> debug := x::!debug), "module name"), "Print LOTS of debugging information while checking module [arg]");
      ( noshort, "debug_level", OneArg ((fun x -> debug_level := dlevel x::!debug_level), "Low|Medium|High|Extreme"), "Control the verbosity of debugging info");
      ( noshort, "dep", OneArg ((fun x -> dep := Some x), "make|nubuild"), "Output the transitive closure of the dependency graph in a format suitable for the given tool");
+     ( noshort, "detail_errors", ZeroArgs (fun () -> detail_errors := true; n_cores := 1),  "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; requires --universes");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
      ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
      ( noshort, "explicit_deps", ZeroArgs (fun () -> explicit_deps := true), "tell FStar to not find dependencies automatically because the user provides them on the command-line");
@@ -280,7 +282,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "max_ifuel", OneArg((fun x -> max_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at most (default 2)");
      ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
      ( noshort, "MLish", ZeroArgs(fun () -> full_context_dependency := false), "Introduce unification variables that are only dependent on the type variables in the context");
-     ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x), "positive integer"), "Maximum number of cores to use for the solver (default 1)");
+     ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x; detail_errors := false), "positive integer"), "Maximum number of cores to use for the solver (default 1); implied detail_errors = false");
      ( noshort, "no_default_includes", ZeroArgs (fun () -> no_default_includes := true), "Ignore the default module search paths");
      ( noshort, "no_extract", OneArg ((fun x -> no_extract := x::!no_extract), "module name"), "Do not extract code from this module");
      ( noshort, "no_fs_typ_app", ZeroArgs (fun () -> fs_typ_app := false), "Do not allow the use of t<t1,...,tn> syntax for type applications");

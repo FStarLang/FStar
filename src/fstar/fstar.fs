@@ -35,14 +35,11 @@ let process_args () : parse_cmdline_res * list<string> =
 let cleanup () = Util.kill_all ()
 
 (* printing total error count *)
-let report_errors nopt =
+let report_errors () =
   let errs =
-    match nopt with
-    | None -> 
       if !Options.universes
       then FStar.TypeChecker.Errors.get_err_count()
-      else FStar.Tc.Errors.get_err_count ()
-    | Some n -> n in
+      else FStar.Tc.Errors.get_err_count () in
   if errs > 0 then begin
     Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs);
     exit 1
@@ -111,11 +108,11 @@ let go _ =
         else if List.length filenames >= 1 then //normal batch mode
           if !Options.universes
           then let fmods, dsenv, env = Universal.batch_mode_tc filenames in
-               report_errors None;
+               report_errors ();
                codegen (Inr (fmods, env));
                finished_message (fmods |> List.map Universal.module_or_interface_name)               
           else let fmods, dsenv, env = Stratified.batch_mode_tc filenames in
-               report_errors None;
+               report_errors ();
                codegen (Inl (fmods, env));
                finished_message (fmods |> List.map Stratified.module_or_interface_name)
         else
@@ -132,10 +129,13 @@ let main () =
   with | e ->
     (begin 
         if F_Util.handleable e then F_Util.handle_err false () e;
-        if U_Util.handleable e then U_Util.handle_err false () e;
+        if U_Util.handleable e then U_Util.handle_err false e;
         if !Options.trace_error then
           Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
         else if not (F_Util.handleable e || U_Util.handleable e) then
-          Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
-          cleanup ()
-     end; exit 1)
+          Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
+     end; 
+     cleanup();
+     FStar.TypeChecker.Errors.report_all () |> ignore;
+     report_errors ();
+     exit 1)

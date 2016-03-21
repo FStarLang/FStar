@@ -26,7 +26,7 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--universes --explicit_deps test.fst --debug Test --debug_level Extreme --debug_level Rel --debug_level RelCheck</StartArguments>
+    <StartArguments>--universes --explicit_deps --detail_errors test.fst</StartArguments>
     <StartAction>Project</StartAction>
     <StartWorkingDirectory>d:\workspace\FStar\examples\testbed</StartWorkingDirectory>
   </PropertyGroup>
