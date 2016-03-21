@@ -22,7 +22,7 @@
     <Tailcalls>false</Tailcalls>
     <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
+    <WarningLevel>4</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>
     <OtherFlags>--mlcompatibility</OtherFlags>

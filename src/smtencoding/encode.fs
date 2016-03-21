@@ -1318,42 +1318,48 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let body = Syntax.extend_app_n (SS.compress body) (snd <| Util.args_of_binders extra_formals) (Some <| (SS.subst subst t).n) body.pos in
             binders@extra_formals, body in 
 
-        let rec destruct_bound_function flid t_norm e = 
-           match (Util.unascribe e).n with
-            | Tm_abs(binders, body, lopt) ->
-                let binders, body, opening = SS.open_term' binders body in
-                begin match (SS.compress t_norm).n with
-                 | Tm_arrow(formals, c) ->
-                    let formals, c = SS.open_comp formals c in
-                    let nformals = List.length formals in
-                    let nbinders = List.length binders in
-                    let tres = Util.comp_result c in
-                    if nformals < nbinders && Util.is_total_comp c (* explicit currying *)
-                    then let lopt = subst_lcomp_opt opening lopt in
-                         let bs0, rest = Util.first_N nformals binders in
-                         let c =
-                            let subst = List.map2 (fun (b, _) (x, _) -> NT(b, S.bv_to_name x)) bs0 formals in
-                            SS.subst_comp subst c in
-                         let body = Util.abs rest body lopt in
-                         bs0, body, bs0, Util.comp_result c
-                    else if nformals > nbinders (* eta-expand before translating it *)
-                    then let binders, body = eta_expand binders formals body tres in
-                         binders, body, formals, tres
-                    else binders, body, formals, tres
-                 | _ ->
-                     failwith (Util.format3 "Impossible! let-bound lambda %s = %s has a type that's not a function: %s\n"
-                              flid.str (Print.term_to_string e) (Print.term_to_string t_norm))
-                end
-            | _ ->
-                begin match (SS.compress t_norm).n with
-                    | Tm_arrow(formals, c) ->
+        let destruct_bound_function flid t_norm e = 
+           let rec aux norm t_norm = 
+               match (Util.unascribe e).n with
+                | Tm_abs(binders, body, lopt) ->
+                    let binders, body, opening = SS.open_term' binders body in
+                    begin match (SS.compress t_norm).n with
+                     | Tm_arrow(formals, c) ->
                         let formals, c = SS.open_comp formals c in
+                        let nformals = List.length formals in
+                        let nbinders = List.length binders in
                         let tres = Util.comp_result c in
-                        let binders, body = eta_expand [] formals e tres in
-                        binders, body, formals, tres
-                    | _ -> [], e, [], t_norm
-                end in
+                        if nformals < nbinders && Util.is_total_comp c (* explicit currying *)
+                        then let lopt = subst_lcomp_opt opening lopt in
+                             let bs0, rest = Util.first_N nformals binders in
+                             let c =
+                                let subst = List.map2 (fun (b, _) (x, _) -> NT(b, S.bv_to_name x)) bs0 formals in
+                                SS.subst_comp subst c in
+                             let body = Util.abs rest body lopt in
+                             bs0, body, bs0, Util.comp_result c
+                        else if nformals > nbinders (* eta-expand before translating it *)
+                        then let binders, body = eta_expand binders formals body tres in
+                             binders, body, formals, tres
+                        else binders, body, formals, tres
+                     
+                     | _ when not norm -> //have another go, after unfolding all definitions
+                      let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.UnfoldUntil Delta_constant; N.EraseUniverses] env.tcenv t_norm in
+                      aux true t_norm
 
+                     | _ ->
+                         failwith (Util.format3 "Impossible! let-bound lambda %s = %s has a type that's not a function: %s\n"
+                                  flid.str (Print.term_to_string e) (Print.term_to_string t_norm))
+                    end
+                | _ ->
+                    begin match (SS.compress t_norm).n with
+                        | Tm_arrow(formals, c) ->
+                            let formals, c = SS.open_comp formals c in
+                            let tres = Util.comp_result c in
+                            let binders, body = eta_expand [] formals e tres in
+                            binders, body, formals, tres
+                        | _ -> [], e, [], t_norm
+                    end in
+          aux false t_norm in
         begin try
                  if bindings |> Util.for_all (fun lb -> Util.is_lemma lb.lbtyp)
                  then encode_top_level_vals env bindings quals 
