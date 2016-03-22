@@ -63,6 +63,8 @@ type dh_key = {
   dh_private : option bytes;
 }
 
+(* TODO: revisit the Tot annotations, switch to EXT when appropriate *)
+
 assume val hash : alg:hash_alg -> bytes -> Tot (h:bytes{length h = hashSize alg})
 assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hashSize alg})
 
