@@ -540,7 +540,7 @@ let ecdsa_verify hash_alg key input signature =
 
 (* -------------------------------------------------------------------------- *)
 
-external ocaml_chain_verify: string list -> bool -> string -> string -> bool = "ocaml_chain_verify"
+external ocaml_chain_verify: string list -> bool -> string option -> string -> bool = "ocaml_chain_verify"
 
 let chain_verify cert_list for_signing hostname cafile =
   let csl = List.map string_of_bytes cert_list in

@@ -1943,7 +1943,7 @@ X509_NAME_oneline(X509_get_issuer_name(ctx->current_issuer),buf,256);
 }
 
 CAMLprim value ocaml_chain_verify(value chain, value for_signing, value hostname, value cafile) {
-    CAMLparam3(chain, for_signing, hostname);
+    CAMLparam4(chain, for_signing, hostname, cafile);
 
     static int first = 0;
     if(!first++){
@@ -1955,8 +1955,11 @@ CAMLprim value ocaml_chain_verify(value chain, value for_signing, value hostname
     STACK_OF(X509) *sk;
     sk = sk_X509_new_null();
     X509* top_cert = NULL;
+    char *host;
 
     if(chain == Val_emptylist) CAMLreturn(Val_false);
+    if(hostname == Val_none) host = NULL;
+    else host = String_val(Some_val(hostname));
 
     do {
       value head = Field(chain, 0);
@@ -1987,7 +1990,7 @@ CAMLprim value ocaml_chain_verify(value chain, value for_signing, value hostname
     // Validation parameters
     X509_VERIFY_PARAM_set_flags(param, X509_V_FLAG_USE_CHECK_TIME | X509_V_FLAG_CRL_CHECK_ALL);
     X509_VERIFY_PARAM_set_time(param, current_time);
-    X509_VERIFY_PARAM_set1_host(param, String_val(hostname), caml_string_length(hostname));
+    X509_VERIFY_PARAM_set1_host(param, host, 0);
     X509_STORE_set1_param(store, param);
 
     X509_STORE_CTX_init(ctx, store, top_cert, sk);
