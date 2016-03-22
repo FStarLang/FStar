@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
+#include <time.h>
 
 #include <caml/alloc.h>
 #include <caml/callback.h>
@@ -1909,3 +1910,96 @@ CAMLprim value ocaml_ecdsa_verify(value mlkey, value data, value sig) {
 
     CAMLreturn((rr > 0) ? Val_true : Val_false);
 }
+
+/* -------------------------------------------------------------------- */
+
+static int cb(int ok, X509_STORE_CTX *ctx)
+{
+        char buf[256];
+        static int      cb_index = 0;
+
+        printf("Starting cb #%d (ok = %d)\n", ++cb_index, ok);
+        printf("ctx: error = %d. error_depth = %d. current_method = %d. "
+                   "valid = %d. last_untrusted = %d. "
+                   "error string = '%s'\n", ctx->error,
+                        ctx->error_depth, ctx->current_method,
+                        ctx->valid, ctx->last_untrusted,
+                        X509_verify_cert_error_string(ctx->error));
+
+                X509_NAME_oneline(X509_get_subject_name(ctx->current_cert),buf,256);
+                printf("current_cert subject:   %s\n",buf);
+                X509_NAME_oneline(X509_get_issuer_name(ctx->current_cert),buf,256);
+                printf("current_cert issuer:    %s\n",buf);
+
+                if (ctx->current_issuer)
+                        {
+X509_NAME_oneline(X509_get_subject_name(ctx->current_issuer),buf,256);
+                        printf("current_issuer subject: %s\n",buf);
+                        
+X509_NAME_oneline(X509_get_issuer_name(ctx->current_issuer),buf,256);
+                        printf("current_issuer issuer:  %s\n",buf);
+                        }
+        return(ok);
+}
+
+CAMLprim value ocaml_chain_verify(value chain, value for_signing, value hostname, value cafile) {
+    CAMLparam3(chain, for_signing, hostname);
+
+    static int first = 0;
+    if(!first++){
+      OpenSSL_add_all_algorithms ();
+      ERR_load_crypto_strings(); 
+    }
+
+    time_t current_time;
+    STACK_OF(X509) *sk;
+    sk = sk_X509_new_null();
+    X509* top_cert = NULL;
+
+    if(chain == Val_emptylist) CAMLreturn(Val_false);
+
+    do {
+      value head = Field(chain, 0);
+      size_t len = caml_string_length(head);
+      X509* x509;
+      unsigned char *cert = (unsigned char*)String_val(head);
+      x509 = d2i_X509(NULL, (const unsigned char**) &cert, len);
+//      printf("ADDING CERT[%d]\n", (int)len);
+      if(!top_cert) top_cert = x509; else sk_X509_push(sk, x509);
+      chain = Field(chain, 1);
+    }
+    while(chain != Val_emptylist);
+
+    X509_STORE_CTX *ctx = NULL;
+    X509_STORE *store = NULL;
+    X509_VERIFY_PARAM *param = NULL;
+
+    current_time = time(NULL);
+    store = X509_STORE_new(); 
+    ctx = X509_STORE_CTX_new();
+    param = X509_VERIFY_PARAM_new();
+    if(!ctx || !store || !param) CAMLreturn(Val_false);
+
+    X509_STORE_set_default_paths(store);
+    X509_STORE_load_locations(store, String_val(cafile), NULL);
+    X509_STORE_set_verify_cb_func(store, cb);
+
+    // Validation parameters
+    X509_VERIFY_PARAM_set_flags(param, X509_V_FLAG_USE_CHECK_TIME | X509_V_FLAG_CRL_CHECK_ALL);
+    X509_VERIFY_PARAM_set_time(param, current_time);
+    X509_VERIFY_PARAM_set1_host(param, String_val(hostname), caml_string_length(hostname));
+    X509_STORE_set1_param(store, param);
+
+    X509_STORE_CTX_init(ctx, store, top_cert, sk);
+
+    int r = X509_verify_cert(ctx);
+    printf("X509_verify_cert() == %d [%s]\n", r, X509_verify_cert_error_string(ctx->error));
+
+    X509_STORE_free(store);
+    X509_STORE_CTX_free(ctx);  
+    sk_X509_free(sk);
+    X509_VERIFY_PARAM_free(param);
+
+    CAMLreturn(r==1 ? Val_true : Val_false);
+}
+

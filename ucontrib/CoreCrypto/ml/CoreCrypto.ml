@@ -540,6 +540,19 @@ let ecdsa_verify hash_alg key input signature =
 
 (* -------------------------------------------------------------------------- *)
 
+external ocaml_chain_verify: string list -> bool -> string -> string -> bool = "ocaml_chain_verify"
+
+let chain_verify cert_list for_signing hostname cafile =
+  let csl = List.map string_of_bytes cert_list in
+  ocaml_chain_verify csl for_signing hostname cafile
+
+(*
+ * assume val cert_sign: bytes -> sig_alg -> hash_alg -> bytes -> bytes
+ * assume val cert_verify: bytes -> sig_alg -> hash_alg -> bytes -> bool
+ *)
+
+(* -------------------------------------------------------------------------- *)
+
 external ocaml_err_load_crypto_strings: unit -> unit = "ocaml_err_load_crypto_strings"
 external ocaml_rand_poll: unit -> unit = "ocaml_rand_poll"
 

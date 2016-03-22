@@ -44,7 +44,12 @@ type rsa_key = {
   rsa_prv_exp : option bytes;
 }
 
-type dsa_params = { dsa_p : bytes; dsa_q : bytes; dsa_g : bytes; }
+type dsa_params = {
+  dsa_p : bytes;
+  dsa_q : bytes;
+  dsa_g : bytes;
+}
+
 type dsa_key = {
   dsa_params : dsa_params;
   dsa_public : bytes;
@@ -52,11 +57,12 @@ type dsa_key = {
 }
 
 type dh_params = {
-     dh_p : bytes;
-     dh_g : bytes;
-     dh_q : option bytes;
-     safe_prime : bool;
+  dh_p : bytes;
+  dh_g : bytes;
+  dh_q : option bytes;
+  safe_prime : bool;
 }
+
 type dh_key = {
   dh_params : dh_params;
   dh_public : bytes;
@@ -99,16 +105,24 @@ assume val dh_agreement : dh_key -> bytes -> bytes
 (* type ec_prime = { ecp_prime : string; ecp_order : string; ecp_a : string; ecp_b : string; ecp_gx : string; ecp_gy : string; ecp_bytelen : int; ecp_id : bytes; } *)
 
 type ec_curve =
-     | ECC_P256
-     | ECC_P384
-     | ECC_P521
-type ec_params = { curve: ec_curve; point_compression: bool; }
-type ec_point = { ecx : bytes; ecy : bytes; }
+  | ECC_P256
+  | ECC_P384
+  | ECC_P521
+
+type ec_params = {
+  curve: ec_curve;
+  point_compression: bool;
+}
+
+type ec_point = {
+  ecx : bytes;
+  ecy : bytes;
+}
 
 type ec_key = {
-     ec_params : ec_params;
-     ec_point : ec_point;
-     ec_priv : option bytes;
+  ec_params : ec_params;
+  ec_point : ec_point;
+  ec_priv : option bytes;
 }
 
 assume val ec_point_serialize: ec_point -> Tot bytes
@@ -118,3 +132,8 @@ assume val ecdh_agreement: ec_key -> ec_point -> bytes
 assume val ecdsa_sign: option hash_alg -> ec_key -> bytes -> bytes
 assume val ecdsa_verify: option hash_alg -> ec_key -> bytes -> bytes -> bool
 assume val ec_gen_key: ec_params -> ec_key
+
+assume val chain_verify: der_list:list bytes -> for_signing:bool -> hostname:string -> ca_file:string -> bool
+assume val cert_sign: bytes -> sig_alg -> hash_alg -> bytes -> bytes
+assume val cert_verify: bytes -> sig_alg -> hash_alg -> bytes -> bool
+
