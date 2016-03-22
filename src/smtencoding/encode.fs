@@ -782,12 +782,6 @@ and encode_args l env : (list<term> * decls_t)  =
         ([], []) in
     List.rev l, decls
 
-and encode_formula (phi:typ) (env:env_t) : term * decls_t =
-    let t, vars, decls = encode_formula_with_labels phi env in
-    match vars with
-        | [] -> t, decls
-        | _ -> failwith "Unexpected labels in formula"
-
 (* this assumes t is a Lemma *)
 and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option<S.term>) (t:typ) (env:env_t) : term * decls_t =
     let rec list_elements (e:S.term) : list<S.term> = 
@@ -866,47 +860,47 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
     let decls = decls@(List.flatten decls')@decls''@decls''' in
     mkForall(pats, vars, mkImp(mk_and_l (pre::guards), post)), decls
 
-and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)  = (* expects phi to be normalized; the existential variables are all labels *)
-    let enc (f:list<term> -> term) : args -> (term * labels * decls_t) = fun l ->
+and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to be normalized; the existential variables are all labels *)
+    let enc (f:list<term> -> term) : args -> (term * decls_t) = fun l ->
         let decls, args = Util.fold_map (fun decls x -> let t, decls' = encode_term (fst x) env in decls@decls', t) [] l in
-        (f args, [], decls) in
+        (f args, decls) in
 
-    let const_op f _ = (f, [], []) in
+    let const_op f _ = (f, []) in
     let un_op f l = f <| List.hd l in
     let bin_op : ((term * term) -> term) -> list<term> -> term = fun f -> function
         | [t1;t2] -> f(t1,t2)
         | _ -> failwith "Impossible" in
 
-    let enc_prop_c f : args -> (term * labels * decls_t) = fun l ->
-        let phis, labs, decls =
-            List.fold_right (fun (t, _) (phis, labs, decls) ->
-                let phi, labs', decls' = encode_formula_with_labels t env in
-                (phi::phis, labs'@labs, decls'@decls))
-            l ([], [], []) in
-        (f phis, labs, decls) in
+    let enc_prop_c f : args -> (term * decls_t) = fun l ->
+        let phis, decls =
+            List.fold_right (fun (t, _) (phis, decls) ->
+                let phi, decls' = encode_formula t env in
+                (phi::phis, decls'@decls))
+            l ([], []) in
+        (f phis, decls) in
 
-    let eq_op : args -> (term * labels * decls_t) = function
+    let eq_op : args -> (term * decls_t) = function
         | [_;_;e1;e2] -> enc (bin_op mkEq) [e1;e2]
         | l ->  enc (bin_op mkEq) l in
 
-    let mk_imp : args -> (term * labels * decls_t) = function
+    let mk_imp : args -> (term * decls_t) = function
         | [(lhs, _); (rhs, _)] ->
-          let l1, labs1, decls1 = encode_formula_with_labels rhs env in
+          let l1, decls1 = encode_formula rhs env in
           begin match l1.tm with
-            | App(True, _) -> (l1, labs1, decls1) (* Optimization: don't bother encoding the LHS of a trivial implication *)
+            | App(True, _) -> (l1, decls1) (* Optimization: don't bother encoding the LHS of a trivial implication *)
             | _ ->
-             let l2, labs2, decls2 = encode_formula_with_labels lhs env in
-             (Term.mkImp(l2, l1), labs1@labs2, decls1@decls2)
+             let l2, decls2 = encode_formula lhs env in
+             (Term.mkImp(l2, l1), decls1@decls2)
           end
          | _ -> failwith "impossible" in
 
-    let mk_ite : args -> (term * labels * decls_t) = function
+    let mk_ite : args -> (term * decls_t) = function
         | [(guard, _); (_then, _); (_else, _)] ->
-          let (g, labs1, decls1) = encode_formula_with_labels guard env in
-          let (t, labs2, decls2) = encode_formula_with_labels _then env in
-          let (e, labs3, decls3) = encode_formula_with_labels _else env in
+          let (g, decls1) = encode_formula guard env in
+          let (t, decls2) = encode_formula _then env in
+          let (e, decls3) = encode_formula _else env in
           let res = Term.mkITE(g, t, e) in
-          res, labs1@labs2@labs3, decls1@decls2@decls3
+          res, decls1@decls2@decls3
         | _ -> failwith "impossible" in
 
 
@@ -925,16 +919,16 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
 
     let rec fallback phi =  match phi.n with
         | Tm_meta(phi', Meta_labeled(msg, r, b)) ->
-          let phi, labs, decls = encode_formula_with_labels phi' env in
-          mk (Term.Labeled(phi, msg, r)), [], decls
+          let phi, decls = encode_formula phi' env in
+          mk (Term.Labeled(phi, msg, r)), decls
 
         | Tm_match(e, pats) -> 
            let t, decls = encode_match e pats Term.mkFalse env encode_formula in
-           t, [], decls
+           t, decls
 
         | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) -> 
            let t, decls = encode_let x t1 e1 e2 env encode_formula in
-           t, [], decls
+           t, decls
 
         | Tm_app(head, args) -> 
           let head = Util.un_uinst head in
@@ -942,7 +936,7 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
             | Tm_fvar fv, [_; (x, _); (t, _)] when S.fv_eq_lid fv Const.has_type_lid -> //interpret Prims.has_type as HasType
               let x, decls = encode_term x env in 
               let t, decls' = encode_term t env in
-              Term.mk_HasType x t, [], decls@decls'
+              Term.mk_HasType x t, decls@decls'
 
             | Tm_fvar fv, [_; _; (r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
               begin match (SS.compress r).n, (SS.compress msg).n with 
@@ -954,24 +948,24 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
               end
 
             | _ when head_redex env head -> 
-              encode_formula_with_labels (whnf env phi) env
+              encode_formula (whnf env phi) env
 
             | _ -> 
               let tt, decls = encode_term phi env in
-              Term.mk_Valid tt, [], decls
+              Term.mk_Valid tt, decls
           end
 
         | _ ->
             let tt, decls = encode_term phi env in
-            Term.mk_Valid tt, [], decls in
+            Term.mk_Valid tt, decls in
 
     let encode_q_body env (bs:Syntax.binders) (ps:list<args>) body =
         let vars, guards, env, decls, _ = encode_binders None bs env in
         let pats, decls' = ps |> List.map (fun p -> 
           let p, decls = p |> List.map (fun (t, _) -> encode_term t ({env with use_zfuel_name=true})) |> List.unzip in
            p, List.flatten decls) |> List.unzip in
-        let body, labs, decls'' = encode_formula_with_labels body env in
-        vars, pats, mk_and_l guards, body, labs, decls@List.flatten decls'@decls'' in
+        let body, decls'' = encode_formula body env in
+        vars, pats, mk_and_l guards, body, decls@List.flatten decls'@decls'' in
 
     if Env.debug env.tcenv Options.Low
     then Util.print1 ">>>> Destructing as formula ... %s\n" (Print.term_to_string phi);
@@ -988,12 +982,12 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
           if Env.debug env.tcenv Options.Low
           then Util.print1 ">>>> Got QALL [%s]\n" (vars |> Print.binders_to_string "; ");
 
-          let vars, pats, guard, body, labs, decls = encode_q_body env vars pats body in
-          (mkForall(pats, vars, mkImp(guard, body)), labs, decls)
+          let vars, pats, guard, body, decls = encode_q_body env vars pats body in
+          (mkForall(pats, vars, mkImp(guard, body)), decls)
 
         | Some (Util.QEx(vars, pats, body)) ->
-          let vars, pats, guard, body, labs, decls = encode_q_body env vars pats body in
-          (mkExists(pats, vars, mkAnd(guard, body)), labs, decls)
+          let vars, pats, guard, body, decls = encode_q_body env vars pats body in
+          (mkExists(pats, vars, mkAnd(guard, body)), decls)
 
 (***************************************************************************************************)
 (* end main encoding of kinds/types/exps/formulae *)
@@ -1902,7 +1896,7 @@ let solve use_env_msg tcenv q : unit =
 let is_trivial (tcenv:Env.env) (q:typ) : bool =
    let env = get_env tcenv in
    push "query";
-   let f, _, _ = encode_formula_with_labels q env in
+   let f, _ = encode_formula q env in
    pop "query";
    match f.tm with
     | App(True, _) -> true
