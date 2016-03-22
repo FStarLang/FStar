@@ -80,7 +80,7 @@ assume val aead_decrypt : (a:aead_cipher) -> (k:bytes)
   -> (iv:bytes) -> (ad:bytes) -> (c:bytes{length c >= aeadTagSize a}) 
   -> EXT (option (lbytes (length c - aeadTagSize a)))
 
-type cipher_stream
+assume new type cipher_stream : Type0
 assume val stream_encryptor : stream_cipher -> bytes -> EXT cipher_stream
 assume val stream_decryptor : stream_cipher -> bytes -> EXT cipher_stream
 assume val stream_process : cipher_stream -> bytes -> EXT bytes

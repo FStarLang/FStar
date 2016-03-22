@@ -504,7 +504,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         else let tsym = varops.fresh "Non_total_Tm_arrow" in
              let tdecl = Term.DeclFun(tsym, [], Term_sort, None) in
              let t = Term.mkApp(tsym, []) in
-             let t_kinding = Term.Assume(mk_HasType t Term.mk_Term_type, None) in
+             let t_kinding = Term.Assume(mk_HasType t Term.mk_Term_type, Some "Typing for non-total arrows") in
              let fsym = "f", Term_sort in
              let f = mkFreeV fsym in
              let f_has_t = mk_HasType f t in
@@ -539,7 +539,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               Term.mkApp(t, cvars |> List.map mkFreeV), []
 
             | None ->
-              let tsym = varops.fresh "Typ_refine" in
+              let tsym = varops.fresh "Tm_refine" in
               let cvar_sorts = List.map snd cvars in
               let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, None) in
               let t = Term.mkApp(tsym, List.map mkFreeV cvars) in
@@ -553,7 +553,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               let t_decls = decls
                             @decls'
                             @[tdecl;
-                              Term.Assume(t_kinding, None);
+                              Term.Assume(t_kinding, Some "refinement kinding");
                               Term.Assume(assumption, Some (Print.term_to_string t0))] in
               Util.smap_add env.cache tkey.hash (tsym, cvar_sorts, t_decls);
               t, t_decls
@@ -562,7 +562,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_uvar (uv, k) ->
         let ttm = Term.mk_Term_uvar (Unionfind.uvar_id uv) in
         let t_has_k, decls = encode_term_pred None k env ttm in //TODO: skip encoding this if it has already been encoded before
-        let d = Term.Assume(t_has_k, None) in
+        let d = Term.Assume(t_has_k, Some "Uvar typing") in
         ttm, d::decls
 
       | Tm_app _ ->
@@ -591,7 +591,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                         let ty = Util.arrow rest c |> SS.subst subst in
                         let has_type, decls'' = encode_term_pred None ty env app_tm in
                         let cvars = Term.free_variables has_type in
-                        let e_typing = Term.Assume(Term.mkForall([[has_type]], cvars, has_type), None) in
+                        let e_typing = Term.Assume(Term.mkForall([[has_type]], cvars, has_type), Some "Partial app typing") in
                         app_tm, decls@decls'@decls''@[e_typing]
                 end in
 
@@ -631,7 +631,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           let bs, body, opening = SS.open_term' bs body in 
           let fallback () =
             let f = varops.fresh "Tm_abs" in
-            let decl = Term.DeclFun(f, [], Term_sort, None) in
+            let decl = Term.DeclFun(f, [], Term_sort, Some "Imprecise function encoding") in
             Term.mkFreeV(f, Term_sort), [decl] in
              
           begin match lopt with
@@ -647,34 +647,34 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 //                    Printf.printf "Printf.printf body comp type is %s\n\topened to %s\n\topening is %s\n\tbody=%s\n" 
 //                            (Print.comp_to_string c0) (Print.comp_to_string c) (opening |> Print.subst_to_string) (Print.term_to_string body);
                     let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                        let body, decls' = encode_term body envbody in
-                        let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
-                        let cvars = Term.free_variables key_body in
-                        let tkey = mkForall([], cvars, key_body) in
+                    let body, decls' = encode_term body envbody in
+                    let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
+                    let cvars = Term.free_variables key_body in
+                    let tkey = mkForall([], cvars, key_body) in
 
-                        begin match Util.smap_try_find env.cache tkey.hash with
-                            | Some (t, _, _) -> Term.mkApp(t, List.map mkFreeV cvars), []
-                            | None ->
-                                begin match is_eta env vars body with
-                                    | Some t ->
-                                        t, []
-                                    | None ->
-                                        let cvar_sorts = List.map snd cvars in
-                                        let fsym = varops.fresh "Exp_abs" in
-                                        let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
-                                        let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
-                                        let app = mk_Apply f vars in
-                                        let tfun = Util.arrow bs c in
-                                        let f_has_t, decls'' = encode_term_pred None tfun env f in
-                                        let typing_f = Term.Assume(Term.mkForall([[f]], cvars, f_has_t),
-                                                                Some (fsym ^ " typing")) in
-                                        let interp_f = Term.Assume(Term.mkForall([[app]], vars@cvars, mkImp(Term.mk_IsTyped app, mkEq(app, body))),
-                                                                Some (fsym ^ " interpretation")) in
-                                        let f_decls = decls@decls'@(fdecl::decls'')@[typing_f;interp_f] in
-                                        Util.smap_add env.cache tkey.hash (fsym, cvar_sorts, f_decls);
-                                        f, f_decls
-                                end
-                        end
+                    begin match Util.smap_try_find env.cache tkey.hash with
+                        | Some (t, _, _) -> Term.mkApp(t, List.map mkFreeV cvars), []
+                        | None ->
+                            begin match is_eta env vars body with
+                                | Some t ->
+                                    t, []
+                                | None ->
+                                    let cvar_sorts = List.map snd cvars in
+                                    let fsym = varops.fresh "Exp_abs" in
+                                    let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
+                                    let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
+                                    let app = mk_Apply f vars in
+                                    let tfun = Util.arrow bs c in
+                                    let f_has_t, decls'' = encode_term_pred None tfun env f in
+                                    let typing_f = Term.Assume(Term.mkForall([[f]], cvars, f_has_t),
+                                                            Some (fsym ^ " typing")) in
+                                    let interp_f = Term.Assume(Term.mkForall([[app]], vars@cvars, mkImp(Term.mk_IsTyped app, mkEq(app, body))),
+                                                            Some (fsym ^ " interpretation")) in
+                                    let f_decls = decls@decls'@(fdecl::decls'')@[typing_f;interp_f] in
+                                    Util.smap_add env.cache tkey.hash (fsym, cvar_sorts, f_decls);
+                                    f, f_decls
+                            end
+                    end
          end
 
       | Tm_let((_, {lbname=Inr _}::_), _) -> 
@@ -1435,7 +1435,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                         Some "Fuel token correspondence") in
                                 let aux_decls, typing_corr =
                                     let g_typing, d3 = encode_term_pred None tres env gapp in
-                                    d3, [Term.Assume(mkForall([[gapp]], fuel::vars, mkImp(Term.mk_and_l v_guards, g_typing)), None)] in
+                                    d3, [Term.Assume(mkForall([[gapp]], fuel::vars, mkImp(Term.mk_and_l v_guards, g_typing)), Some "Typing correspondence of token to term")] in
                                 binder_decls@aux_decls, typing_corr@[tok_corr] in
                              binder_decls@decls2@aux_decls@[decl_g;decl_g_tok], [eqn_g;eqn_g';eqn_f]@g_typing, env0 in
                            let decls, eqns, env0 = List.fold_left (fun (decls, eqns, env0) (gtok, ty, bs) ->
@@ -1695,7 +1695,7 @@ and encode_free_var env fv tt t_norm quals =
                         | _ ->  (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                                 let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
                                 let vtok_fresh = Term.fresh_token (vtok, Term_sort) (varops.next_id()) in
-                                let name_tok_corr = Term.Assume(mkForall([[vtok_app]], vars, mkEq(vtok_app, vapp)), None) in
+                                let name_tok_corr = Term.Assume(mkForall([[vtok_app]], vars, mkEq(vtok_app, vapp)), Some "Name-token correspondence") in
                                 decls2@[vtok_decl;vtok_fresh;name_tok_corr;tok_typing], env in
                 vname_decl::tok_decl, env in
               let encoded_res_t, ty_pred, decls3 =
@@ -1758,7 +1758,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
                 else None in
             let g = [Term.DeclFun(xxsym, [], Term_sort, caption)]
                     @decls'
-                    @[Term.Assume(t, None)] in
+                    @[Term.Assume(t, Some <| "Encoding " ^ xxsym)] in
             decls@g, env'
 
         | Env.Binding_lid(x, (_, t)) ->

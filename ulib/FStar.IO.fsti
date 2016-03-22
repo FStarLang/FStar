@@ -1,8 +1,8 @@
 module FStar.IO
 
 exception EOF
-type fd_read
-type fd_write
+assume new type fd_read : Type0
+assume new type fd_write : Type0
 
 val print_newline : unit -> unit
 val print_string : string -> unit
