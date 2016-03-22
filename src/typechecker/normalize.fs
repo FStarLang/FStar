@@ -513,7 +513,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       let body = match bs with 
                         | [] -> failwith "Impossible"
                         | [_] -> body
-                        | _::tl -> mk (Tm_abs(tl, body, None)) t.pos in
+                        | _::tl -> mk (Tm_abs(tl, body, lopt)) t.pos in
                       log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
                       norm cfg (c :: env) stack body 
                   end
@@ -528,7 +528,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | [] -> 
                   if List.contains WHNF cfg.steps //don't descend beneath a lambda if we're just doing WHNF   
                   then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
-                  else let bs, body = open_term bs body in 
+                  else let bs, body, opening = open_term' bs body in 
+                       let lopt = match lopt with 
+                        | None -> None
+                        | Some l -> SS.subst_comp opening (l.comp()) |> Util.lcomp_of_comp |> Some in
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                        log cfg  (fun () -> Util.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
@@ -647,7 +650,7 @@ and norm_comp : cfg -> env -> comp -> comp =
             | Comp ct -> 
               let norm_args args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
               {comp with n=Comp ({ct with result_typ=norm cfg env [] ct.result_typ;
-                                         effect_args=norm_args ct.effect_args})}
+                                          effect_args=norm_args ct.effect_args})}
     
 and norm_binder : cfg -> env -> binder -> binder = 
     fun cfg env (x, imp) -> {x with sort=norm cfg env [] x.sort}, imp
