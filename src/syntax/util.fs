@@ -96,6 +96,11 @@ let subst_of_list (formals:binders) (actuals:args) : subst_t =
     then List.fold_right2 (fun f a out -> NT(fst f, fst a)::out) formals actuals []
     else failwith "Ill-formed substitution"
 
+let rename_binders (replace_xs:binders) (with_ys:binders) : subst_t =
+    if List.length replace_xs = List.length with_ys
+    then List.map2 (fun (x, _) (y, _) -> NT(x, bv_to_name y)) replace_xs with_ys
+    else failwith "Ill-formed substitution"
+
 open FStar.Syntax.Subst
 
 let rec unmeta e =
@@ -484,6 +489,12 @@ let rec arrow_formals_comp k =
 let rec arrow_formals k =
     let bs, c = arrow_formals_comp k in 
     bs, comp_result c
+
+let rec abs_formals t = match (Subst.compress t).n with 
+    | Tm_abs(bs, t, _) -> 
+      let bs', t = abs_formals t in
+      Subst.open_term (bs@bs') t
+    | _ -> [], t 
 
 let abs bs t lopt = match bs with 
     | [] -> t
