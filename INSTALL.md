@@ -224,7 +224,8 @@ Steps 2 and 3 below require a working OCaml (4.02.x) setup.
 ### Step 2. Extracting the sources of F* itself to OCaml ###
 
 0. Get an F* binary, either using the F#/.NET build process (step 1
-   above), or the OCaml build process (step 3 above).
+   above; remember to build a Release version, else you'll get a StackOverflowException in 2 below), 
+   or the OCaml build process (step 3 above).
 
 1. Make sure you follow the instructions above to get a working OCaml setup.
 
