@@ -133,7 +133,7 @@ assume val ecdsa_sign: option hash_alg -> ec_key -> bytes -> bytes
 assume val ecdsa_verify: option hash_alg -> ec_key -> bytes -> bytes -> bool
 assume val ec_gen_key: ec_params -> ec_key
 
-assume val chain_verify: der_list:list bytes -> for_signing:bool -> hostname:option string -> ca_file:string -> bool
-assume val cert_sign: bytes -> sig_alg -> hash_alg -> bytes -> bytes
-assume val cert_verify: bytes -> sig_alg -> hash_alg -> bytes -> bool
+assume val chain_verify: der_list:list bytes -> for_signing:bool -> hostname:option string -> ca_file:string -> Tot bool
+assume val cert_sign: bytes -> sig_alg -> hash_alg -> bytes -> Tot bytes
+assume val cert_verify: bytes -> sig_alg -> hash_alg -> bytes -> Tot bool
 
