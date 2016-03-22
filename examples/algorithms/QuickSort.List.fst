@@ -1,6 +1,6 @@
-module QSC
+module QuickSort.List
 
-open FStar.List
+open FStar.List.Tot
 #set-options "--initial_ifuel 2 --initial_fuel 1 --max_ifuel 2 --max_fuel 1"
 
 (* Specification of sortedness according to some comparison function f *)
@@ -51,7 +51,7 @@ let rec partition p = function
      else l1, hd::l2
 
 (* this is used only to speed things up *)
-opaque logic type trigger (#a:Type) (x:a) = True
+type trigger (#a:Type) (x:a) = True
 
 val partition_lemma: f:('a -> Tot bool) -> l:list 'a -> Lemma (requires True)
       (ensures (forall hi lo. (hi, lo) = partition f l
@@ -77,7 +77,7 @@ val sorted_app_lemma: #a:Type
                                                       /\ (mem y l2 ==> f pivot y)))))
                                (ensures (sorted f (append l1 (pivot::l2))))
                                [SMTPat (sorted f (append l1 (pivot::l2)))]
-let rec sorted_app_lemma f l1 l2 pivot = match l1 with
+let rec sorted_app_lemma #a f l1 l2 pivot = match l1 with
     | [] -> if is_Cons l2 then cut (trigger (Cons.hd l2)) else ()
     | hd::tl -> cut (trigger hd); sorted_app_lemma f tl l2 pivot
 

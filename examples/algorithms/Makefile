@@ -1,30 +1,17 @@
-VERFILES=counters.fst intsort.fst insertionsort.fst mergesort.fst 
+VERFILES=counters.fst 
 OTHERFLAGS=
 
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all: .all.ver downgrade binary_search qsc gc unification
+all: uall strat_all
 
-ARR_LIB=$(addprefix $(FSTAR_HOME)/lib/, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst stperm.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Array.fst)
+strat_all:.all.ver 
 
-qs_seq: $(ARR_LIB) qs_seq.fst
-	$(FSTAR) --explicit_deps --z3timeout 20 $^
+uall: BinarySearch.uver IntSort.uver InsertionSort.uver MergeSort.uver QuickSort.List.uver QuickSort.Seq.uver QuickSort.Array.uver GC.uver Unification.uver #downgrade //TODO
 
-qsort_arr: $(ARR_LIB) qsort_arr.fst
-	$(FSTAR) --explicit_deps --z3timeout 20 $^
+%.uver: %.fst
+	$(FSTAR) --universes --verify_module $* $^
 
-downgrade: $(ARR_LIB) qs_seq.fst qsort_arr.fst downgrade.fst
-	$(FSTAR) --explicit_deps --z3timeout 20 $^
-
-binary_search: $(FSTAR_HOME)/lib/FStar.Seq.fst binary_search.fst
-	$(FSTAR) --explicit_deps $^
-
-qsc:
-	$(FSTAR) qsc.fst
-
-gc: gc.fst
-	$(FSTAR) $^
-
-unification: unification.fst
-	$(FSTAR) --explicit_deps $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.Tot.fst FStar.OrdSet.fst FStar.OrdSetProps.fst) $^
+downgrade: QuickSort.Array.fst downgrade.fst
+	$(FSTAR) --universes --include $(FSTAR_HOME)/ulib/reclaimable downgrade.fst --verify_module Downgrade

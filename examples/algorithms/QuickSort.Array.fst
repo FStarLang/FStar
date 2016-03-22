@@ -22,12 +22,11 @@ open FStar.Heap
 open FStar.ST
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
 
-opaque type partition_inv (a:Type) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) =
+type partition_inv (a:Type) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) =
            ((length hi) >= 0)
            /\ (forall y. (mem y hi ==> f pv y) /\ (mem y lo ==> f y pv))
 
-opaque logic type partition_pre
-                    (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
+type partition_pre  (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
                     (pivot:nat{start <= pivot /\ pivot < len})
                     (back:nat{pivot <= back /\ back < len})
                     (x:array a) (h:heap) =
@@ -38,8 +37,7 @@ opaque logic type partition_pre
                                                        (slice s (back + 1) len)))
            (sel h x)))
 
-opaque logic type partition_post
-                    (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
+type partition_post (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
                     (pivot:nat{start <= pivot /\ pivot < len})
                     (back:nat{pivot <= back /\ back < len})
                     (x:array a) (h0:heap) (i:nat) (h1:heap) =
@@ -64,7 +62,7 @@ val partition: #a:Type -> f:tot_ord a
                -> x:array a -> ST nat
   (requires (partition_pre a f start len pivot back x))
   (ensures (fun h0 n h1 -> partition_post a f start len pivot back x h0 n h1 /\ modifies !{x} h0 h1))
-let rec partition (a:Type) f start len pivot back x =
+let rec partition #a f start len pivot back x =
   let h0 = get() in
   let s = sel h0 x in
   if pivot = back
@@ -121,10 +119,10 @@ val lemma_slice_cons_pv: #a:Type -> s:seq a -> i:nat -> pivot:nat{i <= pivot} ->
   -> Lemma
   (requires (pv == index s pivot))
   (ensures (slice s i j == append (slice s i pivot) (cons pv (slice s (pivot + 1) j))))
-let lemma_slice_cons_pv s i pivot j pv =
+let lemma_slice_cons_pv #a s i pivot j pv =
   let lo = slice s i pivot in
   let hi = slice s (pivot + 1) j in
-  cut (Eq (slice s i j) (append lo (cons pv hi)))
+  cut (Seq.equal (slice s i j) (append lo (cons pv hi)))
 
 #reset-options
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
@@ -138,7 +136,7 @@ val sort: #a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
                             /\ sorted f (slice (sel h1 x) i j)                          (* it is sorted between [i, j) *)
                             /\ (sel h1 x == splice (sel h0 x) i (sel h1 x) j)           (* the rest of it is unchanged *)
                             /\ permutation a (slice (sel h0 x) i j) (slice (sel h1 x) i j)))) (* the [i,j) sub-array is a permutation of the original one *)
-let rec sort (a:Type) f i j x =
+let rec sort #a f i j x =
   let h0 = ST.get () in
   if i=j
   then splice_refl (sel h0 x) i j
@@ -177,12 +175,12 @@ val qsort: #a:Type -> f:tot_ord a -> x:array a -> ST unit
   (requires (fun h -> contains h x))
   (ensures (fun h0 u h1 -> modifies !{x} h0 h1
                         /\ contains h1 x /\ sorted f (sel h1 x) /\ permutation a (sel h0 x) (sel h1 x)))
-let qsort f x =
+let qsort #a f x =
   let h0 = get() in
 
   let len = Array.length x in
   sort f 0 len x;
 
   let h1 = get() in
-  cut (Eq (sel h0 x) (slice (sel h0 x) 0 len));
-  cut (Eq (sel h1 x) (slice (sel h1 x) 0 len))
+  cut (Seq.equal (sel h0 x) (slice (sel h0 x) 0 len));
+  cut (Seq.equal (sel h1 x) (slice (sel h1 x) 0 len))

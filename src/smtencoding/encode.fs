@@ -1342,9 +1342,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                              binders, body, formals, tres
                         else binders, body, formals, tres
                      
+                     | Tm_refine(x, _) -> 
+                       aux true x.sort
+
                      | _ when not norm -> //have another go, after unfolding all definitions
-                      let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.UnfoldUntil Delta_constant; N.EraseUniverses] env.tcenv t_norm in
-                      aux true t_norm
+                       let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.WHNF; N.UnfoldUntil Delta_constant; N.EraseUniverses] env.tcenv t_norm in
+                       aux true t_norm
 
                      | _ ->
                          failwith (Util.format3 "Impossible! let-bound lambda %s = %s has a type that's not a function: %s\n"

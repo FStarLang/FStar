@@ -16,7 +16,7 @@
 
 
 module InsertionSort
-open FStar.List
+open FStar.List.Tot
 open IntSort
 
 (* Explicitly calling sorted_smaller lemma

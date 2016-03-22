@@ -25,7 +25,7 @@ type field =
   | F1
   | F2
 
-assume type abs_node
+assume type abs_node : Type0
 assume val no_abs : abs_node
 let valid a = a <> no_abs
 type valid_node = a:abs_node{valid a}
@@ -37,9 +37,9 @@ type abs_map   = mem_addr -> Tot abs_node
 type field_map     = mem_addr * field -> Tot mem_addr
 type abs_field_map = abs_node * field -> Tot abs_node
 
-opaque logic type trigger (i:int) = True
+type trigger (i:int) = True
 
-opaque logic type to_abs_inj (to_abs:abs_map) =
+type to_abs_inj (to_abs:abs_map) =
   forall (i1:mem_addr) (i2:mem_addr).{:pattern (trigger i1); (trigger i2)}
     trigger i1 /\
     trigger i2 /\
@@ -48,21 +48,21 @@ opaque logic type to_abs_inj (to_abs:abs_map) =
     /\ i1 <> i2
     ==> to_abs i1 <> to_abs i2
 
-type gc_state = {
+type gc_state = { 
   to_abs: abs_map;
   color: color_map;
   abs_fields: abs_field_map;
   fields: field_map
 }
 
-opaque type ptr_lifts gc_state (ptr:mem_addr) : Type =
+type ptr_lifts gc_state (ptr:mem_addr) : Type =
   b2t (valid (gc_state.to_abs ptr))
 
-opaque type ptr_lifts_to gc_state (ptr:mem_addr) (abs:abs_node) : Type =
+type ptr_lifts_to gc_state (ptr:mem_addr) (abs:abs_node) : Type =
   valid abs
   /\ gc_state.to_abs ptr = abs
 
-opaque type obj_inv gc_state (i:mem_addr) =
+type obj_inv gc_state (i:mem_addr) =
   valid (gc_state.to_abs i)
   ==> (forall f. ptr_lifts_to gc_state (gc_state.fields (i, f)) (gc_state.abs_fields (gc_state.to_abs i, f)))
 
@@ -74,30 +74,30 @@ type inv gc_state (color_invariant:mem_addr -> Type) =
           color_invariant i /\
           (not (valid (gc_state.to_abs i)) <==> gc_state.color i = Unalloc))
 
-opaque logic type gc_inv gc_state =
+type gc_inv gc_state =
   inv gc_state (fun i ->
       (gc_state.color i = Black
         ==> (forall f. gc_state.color (gc_state.fields (i, f)) <> White)))
 
-opaque logic type mutator_inv gc_state =
+type mutator_inv gc_state =
   inv gc_state (fun i -> gc_state.color i = Unalloc \/ gc_state.color i = White)
 
 new_effect GC_STATE = STATE_h gc_state
-kind GCPost (a:Type) = a -> gc_state -> Type
+let gc_post (a:Type) = a -> gc_state -> Type0
 sub_effect
-  DIV   ~> GC_STATE = fun (a:Type) (wp:PureWP a) (p:GCPost a) (gc:gc_state) -> wp (fun a -> p a gc)
+  DIV   ~> GC_STATE = fun (a:Type) (wp:pure_wp a) (p:gc_post a) (gc:gc_state) -> wp (fun a -> p a gc)
 
-effect GC (a:Type) (pre:gc_state -> Type) (post: gc_state -> GCPost a) =
+effect GC (a:Type) (pre:gc_state -> Type0) (post: gc_state -> Tot (gc_post a)) =
        GC_STATE a
-             (fun (p:GCPost a) (gc:gc_state) ->
+             (fun (p:gc_post a) (gc:gc_state) ->
                   pre gc /\ (forall a gc'. (pre gc /\ post gc a gc') ==> p a gc')) (* WP *)
-             (fun (p:GCPost a) (gc:gc_state) ->
+             (fun (p:gc_post a) (gc:gc_state) ->
                   (forall a gc'. (pre gc /\ post gc a gc') ==> p a gc'))           (* WLP *)
 
-effect GCMut (res:Type) (req:gc_state -> Type) (ens:gc_state -> GCPost res) =
+effect GCMut (res:Type) (req:gc_state -> Type0) (ens:gc_state -> Tot (gc_post res)) =
        GC res (fun gc -> req gc /\ mutator_inv gc)
               (fun gc res gc' -> ens gc res gc' /\ mutator_inv gc')
-
+	      
 assume val get : unit -> GC gc_state (fun gc -> True) (fun gc res gc' -> gc=gc' /\ res=gc')
 assume val set : g:gc_state -> GC unit (fun gc -> True) (fun _ _ gc' -> b2t(g=gc'))
 
@@ -107,10 +107,10 @@ type init_invariant (ptr:mem_addr) (gc:gc_state) =
          /\ gc.color i = Unalloc
 
 val upd_map: #a:Type -> #b:Type -> (a -> Tot b) -> a -> b -> a -> Tot b
-let upd_map f i v = fun j -> if i=j then v else f j
+let upd_map #a #b f i v = fun j -> if i=j then v else f j
 
 val upd_map2: #a:Type -> #b:Type -> #c:Type -> (a -> b -> Tot c) -> a -> b -> c -> a -> b -> Tot c
-let upd_map2 m i f v = fun j g -> if (i,f)=(j,g) then v else m j g
+let upd_map2 #a #b #c m i f v = fun j g -> if (i,f)=(j,g) then v else m j g
 
 val initialize: unit -> GC unit
     (requires (fun g -> True))
@@ -145,17 +145,16 @@ let write_field ptr f v =
   cut (trigger ptr /\ trigger v);
   let gc = get () in
   let gc' = {gc with
-    fields=upd_map #(mem_addr * field) #mem_addr gc.fields (ptr, f) v;//refinement types in covariant postition lose precision ... fix
+    fields=upd_map gc.fields (ptr, f) v;
     abs_fields=upd_map gc.abs_fields (gc.to_abs ptr, f) (gc.to_abs v);
     } in
   set gc'
 
-
 val mark : ptr:mem_addr -> GC unit
   (requires (fun gc -> gc_inv gc /\ trigger ptr /\ ptr_lifts gc ptr))
   (ensures (fun gc _ gc' -> gc_inv gc'
-                        /\  (forall (i:mem_addr).//{:pattern (trigger i)}
-                                   trigger i /\
+                        /\  (forall (i:mem_addr).{:pattern (trigger i)}
+                                   trigger i ==>
                                    (gc'.color i <> Black
                                  ==> gc.color i = gc'.color i))
                         /\ gc'.color ptr <> White
@@ -169,10 +168,13 @@ let rec mark ptr =
     mark (st'.fields (ptr, F1));
     mark (st'.fields (ptr, F2));
     let st'' = get () in
-    set ({st'' with color = upd_map st''.color ptr Black})
+    let st3 = {st'' with color = upd_map st''.color ptr Black} in //TODO: needed to eta expand st3, otherwise hit a bug
+    set st3; 
+    admit() //TODO: investigate! and remove
   end
 
- opaque logic type sweep_aux_inv (old:gc_state) (ptr:int) (st:gc_state) =
+
+ type sweep_aux_inv (old:gc_state) (ptr:int) (st:gc_state) =
   gc_inv old
   /\ (st.fields = old.fields /\ st.abs_fields = old.abs_fields)
   /\ to_abs_inj st.to_abs
@@ -240,8 +242,7 @@ val gc: root:mem_addr -> GCMut unit
   (ensures (fun gc _ gc' -> (exists c a. gc' = {gc with color=c; to_abs=a})
                     /\ (root<>0 ==> ptr_lifts gc' root)
                     /\ (forall (i:mem_addr). {:pattern (trigger i)}
-                                 trigger i
-                              /\ (ptr_lifts gc' i ==> gc.to_abs i = gc'.to_abs i))
+                                trigger i ==> (ptr_lifts gc' i ==> gc.to_abs i = gc'.to_abs i))
                     /\ (root <> 0 ==> gc.to_abs root = gc'.to_abs root)))
 let gc root =
   cut (trigger root);
@@ -249,7 +250,7 @@ let gc root =
   then mark root;
   sweep ()
 
-opaque logic type try_alloc_invariant (root:mem_addr) (abs:abs_node) (gc:gc_state) (gc':gc_state) =
+type try_alloc_invariant (root:mem_addr) (abs:abs_node) (gc:gc_state) (gc':gc_state) =
      (root <> 0 ==> ptr_lifts_to gc' root (gc.to_abs root))
   /\ gc'.abs_fields (abs, F1) = abs
   /\ gc'.abs_fields (abs, F2) = abs

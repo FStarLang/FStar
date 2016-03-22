@@ -1,7 +1,3 @@
-(*--build-config
-  options: --admit_fsi FStar.Set;
-  other-files: FStar.Set.fsi FStar.Heap.fst;
-  --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -21,25 +17,27 @@ module FStar.ST
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.Set
 open FStar.Heap
+type ref (a:Type) = Heap.ref a
 
 // this intentionally does not preclude h' extending h with fresh refs
-opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
+type modifies (mods:set aref) (h:heap) (h':heap) =
     b2t (Heap.equal h' (concat h' (restrict h (complement mods))))
 
-kind STPre = STPre_h heap
-kind STPost (a:Type) = STPost_h heap a
-kind STWP (a:Type) = STWP_h heap a
+let st_pre = st_pre_h heap
+let st_post a = st_post_h heap a
+let st_wp a = st_wp_h heap a
 new_effect STATE = STATE_h heap
-effect State (a:Type) (wp:STWP a) =
+inline let lift_div_state (a:Type) (wp:pure_wp a) (p:st_post a) (h:heap) = wp (fun a -> p a h)
+sub_effect DIV ~> STATE = lift_div_state
+
+effect State (a:Type) (wp:st_wp a) =
        STATE a wp wp
-effect ST (a:Type) (pre:STPre) (post: (heap -> STPost a)) =
+effect ST (a:Type) (pre:st_pre) (post: (heap -> Tot (st_post a))) =
        STATE a
-             (fun (p:STPost a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
-             (fun (p:STPost a) (h:heap) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
+             (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
+             (fun (p:st_post a) (h:heap) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 effect St (a:Type) =
        ST a (fun h -> True) (fun h0 r h1 -> True)
-sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:heap) -> wp (fun a -> p a h)
 
 (* signatures WITH permissions *)
 assume val alloc: #a:Type -> init:a -> ST (ref a)
