@@ -17,25 +17,25 @@ module Counters
 open FStar.Heap
 open FStar.Set
 open FStar.ST
-let even (x:int) = x%2=0
+type even (x:int) = x%2=0
 
-type fresh (refs:set aref) (h0:heap) =
+opaque type fresh (refs:set aref) (h0:heap) =
   (forall (a:Type) (a:ref a).{:pattern (contains h0 a)} mem (Ref a) refs ==> not(contains h0 a))
 
-effect InvST (t:Type) (inv:(heap -> Type0)) (fp:set aref) (post:(heap -> t -> heap -> Type0)) =
-             ST t (fun h -> on fp inv h)
-                  (fun h i h' -> modifies fp h h' /\ post h i h' /\ on fp inv h')
+effect InvST (t:Type) (inv:(heap -> Type)) (fp:set aref) (post:(heap -> t -> heap -> Type)) =
+             ST t (fun h -> On fp inv h)
+                  (fun h i h' -> modifies fp h h' /\ post h i h' /\ On fp inv h')
 
-type even_post (h:heap) (i:int) (h':heap) = b2t(even i)
+type even_post (h:heap) (i:int) (h':heap) = even i
 
 
 type t =
-  | Evens : inv:(heap -> Type0)
+  | Evens : inv:(heap -> Type)
           -> fp:set aref
           -> (unit -> InvST int inv fp even_post)
           -> t
 
-type inv1 (r1:ref int) (r2:ref int) (h:heap) =
+opaque type inv1 (r1:ref int) (r2:ref int) (h:heap) =
            Heap.sel h r1 = Heap.sel h r2
            /\ contains h r1
            /\ contains h r2
@@ -44,7 +44,7 @@ val mk_counter: unit
              -> ST t (requires (fun h -> True))
                      (ensures  (fun h v h' ->
                              modifies !{} h h'
-                             /\ on  (Evens.fp v) (Evens.inv v) h'
+                             /\ On  (Evens.fp v) (Evens.inv v) h'
                              /\ fresh (Evens.fp v) h))
 let mk_counter _ =
   let x = ST.alloc 0 in
@@ -57,12 +57,12 @@ let mk_counter _ =
     rx + ry in
   Evens (inv1 x y) (Set.union (Set.singleton (Ref x)) (Set.singleton (Ref y))) evens
 
-let inv2 (r:ref int) (h:heap) = b2t (contains h r)
+opaque logic type inv2 (r:ref int) (h:heap) = contains h r=true
 val mk_counter_2: unit
                -> ST t (requires (fun h -> True))
                        (ensures  (fun h v h' ->
                          modifies !{} h h'
-                         /\ on  (Evens.fp v) (Evens.inv v) h'
+                         /\ On  (Evens.fp v) (Evens.inv v) h'
                          /\ fresh (Evens.fp v) h))
 let mk_counter_2 _ =
   let x = ST.alloc 0 in
