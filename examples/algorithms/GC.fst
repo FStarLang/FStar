@@ -66,20 +66,20 @@ type obj_inv gc_state (i:mem_addr) =
   valid (gc_state.to_abs i)
   ==> (forall f. ptr_lifts_to gc_state (gc_state.fields (i, f)) (gc_state.abs_fields (gc_state.to_abs i, f)))
 
-type inv gc_state (color_invariant:mem_addr -> Type) =
+inline type inv gc_state (color_invariant:mem_addr -> Type) =
     to_abs_inj gc_state.to_abs
     /\ (forall (i:mem_addr).{:pattern (trigger i)}
-          trigger i ==>
+	trigger i ==>
           obj_inv gc_state i /\
           color_invariant i /\
           (not (valid (gc_state.to_abs i)) <==> gc_state.color i = Unalloc))
 
-type gc_inv gc_state =
+logic type gc_inv gc_state =
   inv gc_state (fun i ->
       (gc_state.color i = Black
         ==> (forall f. gc_state.color (gc_state.fields (i, f)) <> White)))
 
-type mutator_inv gc_state =
+logic type mutator_inv gc_state =
   inv gc_state (fun i -> gc_state.color i = Unalloc \/ gc_state.color i = White)
 
 new_effect GC_STATE = STATE_h gc_state
@@ -169,8 +169,7 @@ let rec mark ptr =
     mark (st'.fields (ptr, F2));
     let st'' = get () in
     let st3 = {st'' with color = upd_map st''.color ptr Black} in //TODO: needed to eta expand st3, otherwise hit a bug
-    set st3; 
-    admit() //TODO: investigate! and remove
+    set st3
   end
 
 

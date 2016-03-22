@@ -953,6 +953,9 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
                   fallback phi
               end
 
+            | _ when head_redex env head -> 
+              encode_formula_with_labels (whnf env phi) env
+
             | _ -> 
               let tt, decls = encode_term phi env in
               Term.mk_Valid tt, [], decls
