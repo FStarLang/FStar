@@ -125,7 +125,9 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
         All packages listed in packages.config are already installed.
 
   - Using Visual Studio, open `src/VS/FStar.sln` and build the solution
-    (in the menus: Build > Build Solution).
+    (in the menus: Build > Build Solution). **Make sure to chose the 'Release' configuration**. 
+    Note: the 'Debug' configuration may be the default, although it has no optimizations enabled
+    and is not capable of bootstrapping.
 
 **Note:** on Windows if you want to build F\* using F# you need use
   Visual Studio (building using `fsc.exe` in Cygwin is not supported
