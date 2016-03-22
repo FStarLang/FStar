@@ -253,7 +253,11 @@ let rec closure_as_term cfg env t =
            | Tm_ascribed(t1, t2, lopt) -> 
              mk (Tm_ascribed(closure_as_term_delayed cfg env t1, closure_as_term_delayed cfg env t2, lopt)) t.pos
 
-           | Tm_meta(t', m) -> 
+           | Tm_meta(t', Meta_pattern args) ->
+             mk (Tm_meta(closure_as_term_delayed cfg env t',
+                         Meta_pattern (args |> List.map (closures_as_args_delayed cfg env)))) t.pos
+
+           | Tm_meta(t', m) -> //other metadata's do not have any embedded closures
              mk (Tm_meta(closure_as_term_delayed cfg env t', m)) t.pos
        
            | Tm_let((false, [lb]), body) -> //non-recursive let 

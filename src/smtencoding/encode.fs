@@ -861,6 +861,11 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
     mkForall(pats, vars, mkImp(mk_and_l (pre::guards), post)), decls
 
 and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to be normalized; the existential variables are all labels *)
+    let debug phi = 
+       if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+       then Util.print2 "Formula (%s)  %s\n" 
+                     (Print.tag_of_term phi) 
+                     (Print.term_to_string phi) in
     let enc (f:list<term> -> term) : args -> (term * decls_t) = fun l ->
         let decls, args = Util.fold_map (fun decls x -> let t, decls' = encode_term (fst x) env in decls@decls', t) [] l in
         (f args, decls) in
@@ -967,8 +972,8 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         let body, decls'' = encode_formula body env in
         vars, pats, mk_and_l guards, body, decls@List.flatten decls'@decls'' in
 
-    if Env.debug env.tcenv Options.Low
-    then Util.print1 ">>>> Destructing as formula ... %s\n" (Print.term_to_string phi);
+    debug phi;
+
     let phi = Util.unascribe phi in
     match Util.destruct_typ_as_formula phi with
         | None -> fallback phi
