@@ -1942,7 +1942,7 @@ X509_NAME_oneline(X509_get_issuer_name(ctx->current_issuer),buf,256);
         return(ok);
 }
 
-CAMLprim value ocaml_chain_verify(value chain, value for_signing, value hostname, value cafile) {
+CAMLprim value ocaml_validate_chain(value chain, value for_signing, value hostname, value cafile) {
     CAMLparam4(chain, for_signing, hostname, cafile);
 
     static int first = 0;
@@ -2004,5 +2004,30 @@ CAMLprim value ocaml_chain_verify(value chain, value for_signing, value hostname
     X509_VERIFY_PARAM_free(param);
 
     CAMLreturn(r==1 ? Val_true : Val_false);
+}
+
+
+CAMLprim value ocaml_get_rsa_from_cert(value c) {
+    CAMLparam1(c);
+    CAMLlocal1(mlrsa);
+
+    RSA* rsa;
+    X509* x509;
+    EVP_PKEY* ek;
+
+    mlrsa = caml_alloc_custom(&evp_rsa_ops, sizeof(RSA*), 0, 1);
+    unsigned char *cert = (unsigned char*)String_val(c);
+    x509 = d2i_X509(NULL, (const unsigned char**) &cert, caml_string_length(c));
+    if(!x509) CAMLreturn(Val_none);
+
+    ek = X509_get_pubkey(x509);
+    if(!ek) CAMLreturn(Val_none);
+
+    rsa = EVP_PKEY_get1_RSA(ek);
+    if(!rsa) CAMLreturn(Val_none);
+
+    (void) RSA_set_method(rsa, RSA_PKCS1_SSLeay());
+    RSA_val(mlrsa) = rsa;
+    CAMLreturn(mlrsa);
 }
 
