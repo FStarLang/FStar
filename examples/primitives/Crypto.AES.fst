@@ -7,7 +7,9 @@ open FStar.UInt8
 open FStar.SBytes
 open SBuffer
 
-// Parameters for AES-256
+(* TODO: implement the equivalent inverse cipher after testing *)
+
+// Parameters for AES-256 
 let nk = 8
 let nb = 4
 let nr = 14
@@ -18,14 +20,14 @@ let xtime b =
 
 val multiply: a:uint8 -> b:uint8 -> Tot uint8
 let multiply a b =
-  b ^^ (a ^& one)
-  ^^ (xtime b ^*% ((a ^>> 1) ^& one))
-  ^^ (xtime (xtime b) ^*% ((a ^>> 2) ^& one))
-  ^^ (xtime (xtime (xtime b)) ^*% ((a ^>> 3) ^& one))
-  ^^ (xtime (xtime (xtime (xtime b))) ^*% ((a ^>> 4) ^& one))
-  ^^ (xtime (xtime (xtime (xtime (xtime b)))) ^*% ((a ^>> 5) ^& one))
-  ^^ (xtime (xtime (xtime (xtime (xtime (xtime b))))) ^*% ((a ^>> 6) ^& one))
-  ^^ (xtime (xtime (xtime (xtime (xtime (xtime (xtime (xtime b))))))) ^*% ((a ^>> 7) ^& one))
+  ((a ^*% (b ^& one))
+  ^^ (xtime a ^*% ((b ^>> 1) ^& one))
+  ^^ (xtime (xtime a) ^*% ((b ^>> 2) ^& one))
+  ^^ (xtime (xtime (xtime a)) ^*% ((b ^>> 3) ^& one))
+  ^^ (xtime (xtime (xtime (xtime a))) ^*% ((b ^>> 4) ^& one))
+  ^^ (xtime (xtime (xtime (xtime (xtime a)))) ^*% ((b ^>> 5) ^& one))
+  ^^ (xtime (xtime (xtime (xtime (xtime (xtime a))))) ^*% ((b ^>> 6) ^& one))
+  ^^ (xtime (xtime (xtime (xtime (xtime (xtime (xtime a)))))) ^*% ((b ^>> 7) ^& one)))
 
 // Code taken from http://www.literatecode.com/get/aes256.c
 // and made constant time
@@ -68,18 +70,17 @@ val subBytes_: uint8 -> St uint8
 let subBytes_ x =
   admit();
   let b = inverse x in
-  let b4 = rotate_left b 4 in
-  let b5 = rotate_left b 5 in
-  let b6 = rotate_left b 6 in
-  let b7 = rotate_left b 7 in
+  let b4 = rotate_right b 4 in
+  let b5 = rotate_right b 5 in
+  let b6 = rotate_right b 6 in
+  let b7 = rotate_right b 7 in
   b ^^ b4 ^^ b5 ^^ b6 ^^ b7 ^^ of_int 0x63
 
 val subBytes_aux: state:uint8s -> ctr:nat -> St unit
 let rec subBytes_aux state ctr =
   admit();
-  let n = 4 * nb in
   match ctr with
-  | n -> ()
+  | 16 -> ()
   | _ ->
     let si = index state ctr in
     let si' = subBytes_ si in
@@ -104,15 +105,16 @@ let shiftRows state =
   let i = 2 in
   let tmp = index state i in
   upd state i      (index state (i+8)); 
-  upd state (i+4)  (index state (i+12)); 
   upd state (i+8)  tmp; 
-  upd state (i+12) (index state (i+4));
+  let tmp = index state (i+4) in
+  upd state (i+4)  (index state (i+12)); 
+  upd state (i+12) tmp;
   let i = 3 in
   let tmp = index state i in
   upd state i      (index state (i+12)); 
-  upd state (i+4)  tmp; 
-  upd state (i+8)  (index state (i+4)); 
   upd state (i+12) (index state (i+8));
+  upd state (i+8)  (index state (i+4)); 
+  upd state (i+4)  tmp; 
   ()
 
 val multiply_2: uint8 -> uint8 -> Tot uint8 
@@ -130,101 +132,101 @@ let mixColumns state =
   let s1 = index state (1+4*c) in
   let s2 = index state (2+4*c) in
   let s3 = index state (3+4*c) in
-  upd state 0 (multiply_2 (of_int 0x2) s0 ^^ multiply_2 (of_int 0x3) s1 ^^ s2 ^^ s3);
-  upd state 0 (multiply_2 (of_int 0x2) s1 ^^ multiply_2 (of_int 0x3) s2 ^^ s3 ^^ s0);
-  upd state 0 (multiply_2 (of_int 0x2) s2 ^^ multiply_2 (of_int 0x3) s3 ^^ s0 ^^ s1);
-  upd state 0 (multiply_2 (of_int 0x2) s3 ^^ multiply_2 (of_int 0x3) s0 ^^ s1 ^^ s2);
+  upd state (4*c+0) (multiply (of_int 0x2) s0 ^^ multiply (of_int 0x3) s1 ^^ s2 ^^ s3);
+  upd state (4*c+1) (multiply (of_int 0x2) s1 ^^ multiply (of_int 0x3) s2 ^^ s3 ^^ s0);
+  upd state (4*c+2) (multiply (of_int 0x2) s2 ^^ multiply (of_int 0x3) s3 ^^ s0 ^^ s1);
+  upd state (4*c+3) (multiply (of_int 0x2) s3 ^^ multiply (of_int 0x3) s0 ^^ s1 ^^ s2);
   let c = 1 in
   let s0 = index state (0+4*c) in
   let s1 = index state (1+4*c) in
   let s2 = index state (2+4*c) in
   let s3 = index state (3+4*c) in
-  upd state 0 (multiply_2 (of_int 0x2) s0 ^^ multiply_2 (of_int 0x3) s1 ^^ s2 ^^ s3);
-  upd state 0 (multiply_2 (of_int 0x2) s1 ^^ multiply_2 (of_int 0x3) s2 ^^ s3 ^^ s0);
-  upd state 0 (multiply_2 (of_int 0x2) s2 ^^ multiply_2 (of_int 0x3) s3 ^^ s0 ^^ s1);
-  upd state 0 (multiply_2 (of_int 0x2) s3 ^^ multiply_2 (of_int 0x3) s0 ^^ s1 ^^ s2);
+  upd state (4*c+0) (multiply (of_int 0x2) s0 ^^ multiply (of_int 0x3) s1 ^^ s2 ^^ s3);
+  upd state (4*c+1) (multiply (of_int 0x2) s1 ^^ multiply (of_int 0x3) s2 ^^ s3 ^^ s0);
+  upd state (4*c+2) (multiply (of_int 0x2) s2 ^^ multiply (of_int 0x3) s3 ^^ s0 ^^ s1);
+  upd state (4*c+3) (multiply (of_int 0x2) s3 ^^ multiply (of_int 0x3) s0 ^^ s1 ^^ s2);
   let c = 2 in
   let s0 = index state (0+4*c) in
   let s1 = index state (1+4*c) in
   let s2 = index state (2+4*c) in
   let s3 = index state (3+4*c) in
-  upd state 0 (multiply_2 (of_int 0x2) s0 ^^ multiply_2 (of_int 0x3) s1 ^^ s2 ^^ s3);
-  upd state 0 (multiply_2 (of_int 0x2) s1 ^^ multiply_2 (of_int 0x3) s2 ^^ s3 ^^ s0);
-  upd state 0 (multiply_2 (of_int 0x2) s2 ^^ multiply_2 (of_int 0x3) s3 ^^ s0 ^^ s1);
-  upd state 0 (multiply_2 (of_int 0x2) s3 ^^ multiply_2 (of_int 0x3) s0 ^^ s1 ^^ s2);
+  upd state (4*c+0) (multiply (of_int 0x2) s0 ^^ multiply (of_int 0x3) s1 ^^ s2 ^^ s3);
+  upd state (4*c+1) (multiply (of_int 0x2) s1 ^^ multiply (of_int 0x3) s2 ^^ s3 ^^ s0);
+  upd state (4*c+2) (multiply (of_int 0x2) s2 ^^ multiply (of_int 0x3) s3 ^^ s0 ^^ s1);
+  upd state (4*c+3) (multiply (of_int 0x2) s3 ^^ multiply (of_int 0x3) s0 ^^ s1 ^^ s2);
   let c = 3 in
   let s0 = index state (0+4*c) in
   let s1 = index state (1+4*c) in
   let s2 = index state (2+4*c) in
   let s3 = index state (3+4*c) in
-  upd state 0 (multiply_2 (of_int 0x2) s0 ^^ multiply_2 (of_int 0x3) s1 ^^ s2 ^^ s3);
-  upd state 0 (multiply_2 (of_int 0x2) s1 ^^ multiply_2 (of_int 0x3) s2 ^^ s3 ^^ s0);
-  upd state 0 (multiply_2 (of_int 0x2) s2 ^^ multiply_2 (of_int 0x3) s3 ^^ s0 ^^ s1);
-  upd state 0 (multiply_2 (of_int 0x2) s3 ^^ multiply_2 (of_int 0x3) s0 ^^ s1 ^^ s2);
+  upd state (4*c+0) (multiply (of_int 0x2) s0 ^^ multiply (of_int 0x3) s1 ^^ s2 ^^ s3);
+  upd state (4*c+1) (multiply (of_int 0x2) s1 ^^ multiply (of_int 0x3) s2 ^^ s3 ^^ s0);
+  upd state (4*c+2) (multiply (of_int 0x2) s2 ^^ multiply (of_int 0x3) s3 ^^ s0 ^^ s1);
+  upd state (4*c+3) (multiply (of_int 0x2) s3 ^^ multiply (of_int 0x3) s0 ^^ s1 ^^ s2);
   ()
 
 val addRoundKey: uint8s -> uint8s -> nat -> St unit
 let addRoundKey state w round =
   admit();
   let c = 0 in
-  let s0 = index state (c+0) in
-  let s1 = index state (c+4) in
-  let s2 = index state (c+8) in
-  let s3 = index state (c+12) in
-  let w0 = index w (round*nb+4*c+0) in
-  let w1 = index w (round*nb+4*c+1) in
-  let w2 = index w (round*nb+4*c+2) in
-  let w3 = index w (round*nb+4*c+3) in
-  upd state (c+0) (s0 ^^ w0);
-  upd state (c+1) (s1 ^^ w1);
-  upd state (c+2) (s2 ^^ w2);
-  upd state (c+3) (s3 ^^ w3);
+  let s0 = index state (4*c+0) in
+  let s1 = index state (4*c+1) in
+  let s2 = index state (4*c+2) in
+  let s3 = index state (4*c+3) in
+  let w0 = index w (4*round*nb+4*c+0) in
+  let w1 = index w (4*round*nb+4*c+1) in
+  let w2 = index w (4*round*nb+4*c+2) in
+  let w3 = index w (4*round*nb+4*c+3) in
+  upd state (4*c+0) (s0 ^^ w0);
+  upd state (4*c+1) (s1 ^^ w1);
+  upd state (4*c+2) (s2 ^^ w2);
+  upd state (4*c+3) (s3 ^^ w3);
   let c = 1 in
-  let s0 = index state (c+0) in
-  let s1 = index state (c+4) in
-  let s2 = index state (c+8) in
-  let s3 = index state (c+12) in
-  let w0 = index w (round*nb+4*c+0) in
-  let w1 = index w (round*nb+4*c+1) in
-  let w2 = index w (round*nb+4*c+2) in
-  let w3 = index w (round*nb+4*c+3) in
-  upd state (c+0) (s0 ^^ w0);
-  upd state (c+1) (s1 ^^ w1);
-  upd state (c+2) (s2 ^^ w2);
-  upd state (c+3) (s3 ^^ w3);
+  let s0 = index state (4*c+0) in
+  let s1 = index state (4*c+1) in
+  let s2 = index state (4*c+2) in
+  let s3 = index state (4*c+3) in
+  let w0 = index w (4*round*nb+4*c+0) in
+  let w1 = index w (4*round*nb+4*c+1) in
+  let w2 = index w (4*round*nb+4*c+2) in
+  let w3 = index w (4*round*nb+4*c+3) in
+  upd state (4*c+0) (s0 ^^ w0);
+  upd state (4*c+1) (s1 ^^ w1);
+  upd state (4*c+2) (s2 ^^ w2);
+  upd state (4*c+3) (s3 ^^ w3);
   let c = 2 in
-  let s0 = index state (c+0) in
-  let s1 = index state (c+4) in
-  let s2 = index state (c+8) in
-  let s3 = index state (c+12) in
-  let w0 = index w (round*nb+4*c+0) in
-  let w1 = index w (round*nb+4*c+1) in
-  let w2 = index w (round*nb+4*c+2) in
-  let w3 = index w (round*nb+4*c+3) in
-  upd state (c+0) (s0 ^^ w0);
-  upd state (c+1) (s1 ^^ w1);
-  upd state (c+2) (s2 ^^ w2);
-  upd state (c+3) (s3 ^^ w3);
+  let s0 = index state (4*c+0) in
+  let s1 = index state (4*c+1) in
+  let s2 = index state (4*c+2) in
+  let s3 = index state (4*c+3) in
+  let w0 = index w (4*round*nb+4*c+0) in
+  let w1 = index w (4*round*nb+4*c+1) in
+  let w2 = index w (4*round*nb+4*c+2) in
+  let w3 = index w (4*round*nb+4*c+3) in
+  upd state (4*c+0) (s0 ^^ w0);
+  upd state (4*c+1) (s1 ^^ w1);
+  upd state (4*c+2) (s2 ^^ w2);
+  upd state (4*c+3) (s3 ^^ w3);
   let c = 3 in
-  let s0 = index state (c+0) in
-  let s1 = index state (c+4) in
-  let s2 = index state (c+8) in
-  let s3 = index state (c+12) in
-  let w0 = index w (round*nb+4*c+0) in
-  let w1 = index w (round*nb+4*c+1) in
-  let w2 = index w (round*nb+4*c+2) in
-  let w3 = index w (round*nb+4*c+3) in
-  upd state (c+0) (s0 ^^ w0);
-  upd state (c+1) (s1 ^^ w1);
-  upd state (c+2) (s2 ^^ w2);
-  upd state (c+3) (s3 ^^ w3);
+  let s0 = index state (4*c+0) in
+  let s1 = index state (4*c+1) in
+  let s2 = index state (4*c+2) in
+  let s3 = index state (4*c+3) in
+  let w0 = index w (4*round*nb+4*c+0) in
+  let w1 = index w (4*round*nb+4*c+1) in
+  let w2 = index w (4*round*nb+4*c+2) in
+  let w3 = index w (4*round*nb+4*c+3) in
+  upd state (4*c+0) (s0 ^^ w0);
+  upd state (4*c+1) (s1 ^^ w1);
+  upd state (4*c+2) (s2 ^^ w2);
+  upd state (4*c+3) (s3 ^^ w3);
   ()
 
 val cipher_loop: state:uint8s -> w:uint8s -> round:nat -> St unit
 let rec cipher_loop state w round = 
   admit();
   match round with
-  | nr -> ()
+  | 14 -> ()
   | _ -> 
     subBytes state;
     shiftRows state;
@@ -276,7 +278,7 @@ val rcon: nat -> uint8 -> Tot uint8
 let rec rcon i tmp =
   admit();
   match i with
-  | 0 -> tmp
+  | 1 -> tmp
   | _ ->
     let tmp = multiply (of_int 0x2) tmp in
     rcon (i-1) tmp
@@ -284,11 +286,10 @@ let rec rcon i tmp =
 val keyExpansion_aux: uint8s -> uint8s -> uint8s -> nat -> St unit
 let rec keyExpansion_aux key w temp i =
   admit();
-  let max = 4 * nb * (nr+1) in
   match i with
-  | max -> ()
+  | 240 -> ()
   | _ ->
-    blit temp 0 w (i-4) 4;
+    blit w (i-4) temp 0 4;
     if (i/4) % nk = 0 then (
       rotWord temp;
       subWord temp;
@@ -320,12 +321,137 @@ let keyExpansion key w =
   keyExpansion_aux key w temp i;
   ()
 
-(*
-val invMixColumns: unit -> St unit
+val invShiftRows: state:uint8s{length state = 16} -> St unit
+let invShiftRows state =
+  admit();
+  let i = 3 in
+  let tmp = index state i in
+  upd state i      (index state (i+4)); 
+  upd state (i+4)  (index state (i+8)); 
+  upd state (i+8)  (index state (i+12)); 
+  upd state (i+12) tmp;
+  let i = 2 in
+  let tmp = index state i in
+  upd state i      (index state (i+8)); 
+  upd state (i+8)  tmp; 
+  let tmp = index state (i+4) in
+  upd state (i+4)  (index state (i+12)); 
+  upd state (i+12) tmp;
+  let i = 1 in
+  let tmp = index state i in
+  upd state i      (index state (i+12)); 
+  upd state (i+12) (index state (i+8));
+  upd state (i+8)  (index state (i+4)); 
+  upd state (i+4)  tmp; 
+  ()
 
-val invShiftRows: unit -> St unit
+val invSubBytes_: uint8 -> St uint8
+let invSubBytes_ x =
+  admit();
+  let b = x ^^ of_int 0x63 in
+  let b1 = rotate_left b 1 in
+  let b3 = rotate_left b 3 in
+  let b6 = rotate_left b 6 in
+  let b = b1 ^^ b3 ^^ b6 in
+  inverse b
 
-val invSubBytes: unit -> St unit
+val invSubBytes_aux: state:uint8s -> ctr:nat -> St unit
+let rec invSubBytes_aux state ctr =
+  admit();
+  match ctr with
+  | 16 -> ()
+  | _ ->
+    let si = index state ctr in
+    let si' = invSubBytes_ si in
+    upd state ctr si';
+    invSubBytes_aux state (ctr+1);
+    ()
 
+val invSubBytes: state:uint8s -> St unit
+let invSubBytes state = 
+  admit();
+  invSubBytes_aux state 0
+       
+val invMixColumns: uint8s -> St unit
+let invMixColumns state =
+  admit();
+  let c = 0 in
+  let s0 = index state (0+4*c) in
+  let s1 = index state (1+4*c) in
+  let s2 = index state (2+4*c) in
+  let s3 = index state (3+4*c) in
+  upd state (4*c+0) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1 
+	       ^^ multiply (of_int 0xd) s2 ^^ multiply (of_int 0x9) s3);
+  upd state (4*c+1) (multiply (of_int 0xe) s1 ^^ multiply (of_int 0xb) s2 
+	       ^^ multiply (of_int 0xd) s3 ^^ multiply (of_int 0x9) s0);
+  upd state (4*c+2) (multiply (of_int 0xe) s2 ^^ multiply (of_int 0xb) s3 
+	       ^^ multiply (of_int 0xd) s0 ^^ multiply (of_int 0x9) s1);
+  upd state (4*c+3) (multiply (of_int 0xe) s3 ^^ multiply (of_int 0xb) s0 
+	       ^^ multiply (of_int 0xd) s1 ^^ multiply (of_int 0x9) s2);
+  let c = 1 in
+  let s0 = index state (0+4*c) in
+  let s1 = index state (1+4*c) in
+  let s2 = index state (2+4*c) in
+  let s3 = index state (3+4*c) in
+  upd state (4*c+0) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1 
+	       ^^ multiply (of_int 0xd) s2 ^^ multiply (of_int 0x9) s3);
+  upd state (4*c+1) (multiply (of_int 0xe) s1 ^^ multiply (of_int 0xb) s2 
+	       ^^ multiply (of_int 0xd) s3 ^^ multiply (of_int 0x9) s0);
+  upd state (4*c+2) (multiply (of_int 0xe) s2 ^^ multiply (of_int 0xb) s3 
+	       ^^ multiply (of_int 0xd) s0 ^^ multiply (of_int 0x9) s1);
+  upd state (4*c+3) (multiply (of_int 0xe) s3 ^^ multiply (of_int 0xb) s0 
+	       ^^ multiply (of_int 0xd) s1 ^^ multiply (of_int 0x9) s2);
+  let c = 2 in
+  let s0 = index state (0+4*c) in
+  let s1 = index state (1+4*c) in
+  let s2 = index state (2+4*c) in
+  let s3 = index state (3+4*c) in
+  upd state (4*c+0) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1 
+	       ^^ multiply (of_int 0xd) s2 ^^ multiply (of_int 0x9) s3);
+  upd state (4*c+1) (multiply (of_int 0xe) s1 ^^ multiply (of_int 0xb) s2 
+	       ^^ multiply (of_int 0xd) s3 ^^ multiply (of_int 0x9) s0);
+  upd state (4*c+2) (multiply (of_int 0xe) s2 ^^ multiply (of_int 0xb) s3 
+	       ^^ multiply (of_int 0xd) s0 ^^ multiply (of_int 0x9) s1);
+  upd state (4*c+3) (multiply (of_int 0xe) s3 ^^ multiply (of_int 0xb) s0 
+	       ^^ multiply (of_int 0xd) s1 ^^ multiply (of_int 0x9) s2);
+  let c = 3 in
+  let s0 = index state (0+4*c) in
+  let s1 = index state (1+4*c) in
+  let s2 = index state (2+4*c) in
+  let s3 = index state (3+4*c) in
+  upd state (4*c+0) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1 
+	       ^^ multiply (of_int 0xd) s2 ^^ multiply (of_int 0x9) s3);
+  upd state (4*c+1) (multiply (of_int 0xe) s1 ^^ multiply (of_int 0xb) s2 
+	       ^^ multiply (of_int 0xd) s3 ^^ multiply (of_int 0x9) s0);
+  upd state (4*c+2) (multiply (of_int 0xe) s2 ^^ multiply (of_int 0xb) s3 
+	       ^^ multiply (of_int 0xd) s0 ^^ multiply (of_int 0x9) s1);
+  upd state (4*c+3) (multiply (of_int 0xe) s3 ^^ multiply (of_int 0xb) s0 
+	       ^^ multiply (of_int 0xd) s1 ^^ multiply (of_int 0x9) s2);
+  ()
 
-  
+val inv_cipher_loop: state:uint8s -> w:uint8s -> round:nat -> St unit
+let rec inv_cipher_loop state w round = 
+  admit();
+  match round with
+  | 0 -> ()
+  | _ -> 
+    invShiftRows state;
+    invSubBytes state;
+    addRoundKey state w round; 
+    invMixColumns state;
+    inv_cipher_loop state w (round-1);
+    ()
+
+val inv_cipher: out:uint8s{length out = 4 * nb} -> input:uint8s{length input = 4*nb} -> w:uint8s{length w = 4 * (nr+1)} -> St unit
+let inv_cipher out input w =
+  admit();
+  let state = create #8 FStar.UInt8.zero (4*nb) in
+  blit input 0 state 0 (4*nb);
+  addRoundKey state w nr;
+  inv_cipher_loop state w 13;
+  invShiftRows state;
+  invSubBytes state;
+  addRoundKey state w 0;
+  blit state 0 out 0 (4*nb);
+  ()
+

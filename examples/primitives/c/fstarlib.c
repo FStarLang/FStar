@@ -11,11 +11,19 @@ uint8 FStar_UInt8_op_Greater_Greater_Greater(uint8 x, int y){
   return (x >> y) + ((uint8)(x << (8 - y))); 
 }
 
-uint32 FStar_UInt32_op_Less_Less_Less(uint32 x, int y){
+uint8 FStar_UInt8_rotate_left(uint8 x, int y){
+  return ((uint8)(x << y)) + (x >> (8 - y)); 
+}
+
+uint8 FStar_UInt8_rotate_right(uint8 x, int y){
+  return (x >> y) + ((uint8)(x << (8 - y))); 
+}
+
+inline uint32 FStar_UInt32_op_Less_Less_Less(uint32 x, int y){
   return ((uint32)(x << y)) + (x >> (32 - y)); 
 }
 
-uint32 FStar_UInt32_op_Greater_Greater_Greater(uint32 x, int y){
+inline uint32 FStar_UInt32_op_Greater_Greater_Greater(uint32 x, int y){
   return (x >> y) + ((uint32)(x << (32 - y))); 
 }
 
@@ -113,3 +121,11 @@ uint64 FStar_UInt64_gte(uint64 a, uint64 b) {
   return (uint64)~(((__int128_t)a) - b >> 127);
 }
 
+void print_bytes(uint8* b, int len){
+  int i;
+  for (i = 0; i < len; i++){
+    if (b[i] < 0x10) {printf("0%x", 0xff & b[i]);}
+    else {printf("%x", 0xff & b[i]);}
+  }
+  printf("\n");
+}

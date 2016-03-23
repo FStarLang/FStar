@@ -215,7 +215,8 @@ let infix_low_ops = [
 
 (* -------------------------------------------------------------------- *)
 let low_uni_ops = [
-    ("op_Hat_Subtraction_Subtraction", "-")
+    ("op_Hat_Subtraction_Subtraction", "-");
+    ("lognot", "~")    
     ]
 
 (* -------------------------------------------------------------------- *)
@@ -246,6 +247,8 @@ let is_bin_op (p : mlpath) =
 let as_uni_op ((ns, x) : mlpath) =
     if is_prims_ns ns then
         List.tryFind (fun (y, _) -> x = y) prim_uni_ops
+    else if is_low_ns ns then
+        List.tryFind (fun (y, _) -> x = y) low_uni_ops
     else
         None
 
@@ -401,6 +404,7 @@ let projector_regex3 = new System.Text.RegularExpressions.Regex "____([\w_]+)___
 let is_lib_fun e =
     List.contains e ["Prims_parse_int"; 
                      "SBuffer_create"; "SBuffer_index"; "SBuffer_upd"; "SBuffer_offset"; "SBuffer_blit"; "SBuffer_sub"; 
+                     "FStar_UInt8_of_string"; "FStar_UInt8_of_int";
                      "FStar_UInt32_of_string"; "FStar_UInt32_of_int";
                      "FStar_UInt64_to_uint64"; "FStar_UInt64_of_int"; "FStar_UInt64_of_string"; "FStar_UInt64_wide_to_limb"; "FStar_UInt64_limb_to_wide";
                      "FStar_UInt64_op_Hat_Star_Hat"; "FStar_UInt64_mul_wide";
@@ -421,7 +425,7 @@ let rec string_of_ml_type (t:mlty) : string =
         begin
         let typ = match typ with
                 | "Prims.unit" -> "void"
-                | "Prims.bool" -> "char"
+                | "Prims.bool" -> "uint8"
                 | "Prims.True" -> "@ignore"
                 | "Prims.False" -> "@ignore"
                 | "Prims.b2t" -> "@ignore"
@@ -436,7 +440,7 @@ let rec string_of_ml_type (t:mlty) : string =
                 | "UInt.uint_wide" -> "wide" // TODO: remove
                 | "FStar.Set.set" -> "@ignore"
 //                | "FStar.Heap.heap" -> "@ignore"
-                | "FStar.UInt8.uint8" -> "char"
+                | "FStar.UInt8.uint8" -> "uint8"
                 | "FStar.SBytes.uint32" -> "uint32"
                 | "FStar.SBytes.sbytes" -> "uint8*"
                 | "FStar.UInt32.uint32" -> "uint32"
@@ -657,7 +661,7 @@ and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) =
 let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : string =
     let mk_last_statement (d:string) = 
         //Console.WriteLine(d ^ " -> " ^ !last_bound ^ " | " ^ (if !end_of_block_flag = Unknown then "Unknown" else if !end_of_block_flag = Yes then "Yes" else "No"));
-        if !return_flag = Yes then (
+        if !return_flag = Yes || !return_flag = Unknown then (
             //print_string (tag_of_expr e ^ "\n");
             if !returns_unit_flag = Yes then concat [d; ";\n"; "return;"]
             else concat1 ["return "; d; ";"] )
@@ -775,6 +779,7 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
        // Check nature of the body
         return_flag := return_flag_init;
         return_flag := is_deepest_let body;
+        end_of_block_flag := end_of_block_flag_init;
         end_of_block_flag := is_last_in_block body;
         
         let body' = string_of_expr  currentModule (min_op_prec, NonAssoc) body in
@@ -897,7 +902,7 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
 
         // Handle returns
         let return_flag_init = !return_flag in
-        return_flag := is_deepest_let body;
+        return_flag := Yes; //is_deepest_let body;
 
         let body' = string_of_expr currentModule (min_op_prec, NonAssoc) body in
         return_flag := return_flag_init;
@@ -909,7 +914,10 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
         doc
 
     | MLE_If (cond, e1, None) ->
+        let return_flag_init = !return_flag in
+        return_flag := No;
         let cond = string_of_expr currentModule  (min_op_prec, NonAssoc) cond in
+        return_flag := return_flag_init;
         let doc  =
             concat2 new_line [
                 concat1 ["if("; cond; ")"; "{"];
@@ -920,16 +928,21 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
         in doc
 
     | MLE_If (cond, e1, Some e2) ->
+        let return_flag_init = !return_flag in
+        return_flag := No;
         let cond = string_of_expr currentModule  (min_op_prec, NonAssoc) cond in
+        return_flag := return_flag_init;
 
         // Set the 'end_of_block' flag and print the blocks
+        let last_bound_init = !last_bound in
+        last_bound := "";
         let end_of_block_init = !end_of_block_flag in
         end_of_block_flag := is_last_in_block e1;
         let e1_block = string_of_expr currentModule (min_op_prec, NonAssoc) e1 in
         end_of_block_flag := is_last_in_block e2;
         let e2_block = string_of_expr currentModule (min_op_prec, NonAssoc) e2 in
         end_of_block_flag := end_of_block_init;
-
+        last_bound := last_bound_init;
         let if_statement  =
             concat2 new_line [
                 concat1 ["if("; cond; ")"; "{"];
@@ -941,7 +954,10 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
         if_statement
 
     | MLE_Match (cond, pats) ->
+        let return_flag_init = !return_flag in
+        return_flag := No;
         let cond' = string_of_expr currentModule  (min_op_prec, NonAssoc) cond in
+        return_flag := return_flag_init;
         let cond_type = string_of_ml_type (cond.ty) in
         let cond' = if List.contains cond_type !unions then (paren cond' ^ ".tag") else cond' in
 
@@ -1009,8 +1025,10 @@ and  string_of_lib_functions currentModule f args : string =
     // Remove the "Prims.parse_int" introduced calls
     | "Prims_parse_int" 
     // Current ways to introduce constants
+    | "FStar_UInt8_of_string"
     | "FStar_UInt32_of_string"
-    | "FStar_UInt64_of_string" ->        
+    | "FStar_UInt64_of_string" 
+    | "FStar_UInt128_of_string" ->        
         let x = List.hd args in
         let (s:string) = string_of_expr currentModule (min_op_prec, NonAssoc) x in
         String.sub s 1 (String.length s - 2)
@@ -1157,6 +1175,8 @@ and string_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : string 
 
 (* -------------------------------------------------------------------- *)
 and string_of_branch (currentModule : mlsymbol) (ty:string) ((p, cond, e) : mlbranch) : string =
+    let return_flag_init = !return_flag in
+    return_flag := No;
     let case =
         match cond with
         | None   -> string_of_pattern currentModule p
@@ -1173,6 +1193,8 @@ and string_of_branch (currentModule : mlsymbol) (ty:string) ((p, cond, e) : mlbr
                 | _ -> "Backend error : 'when' clause expected app eq but got " ^ (string_of_expr currentModule (min_op_prec, NonAssoc) c) ^" " ^ tag_of_expr c end
         in
 
+    return_flag := return_flag_init;
+    
     // Entering a new block so trying out the end of block flag
     let end_of_block_init = !end_of_block_flag in
     end_of_block_flag := is_last_in_block e;
@@ -1235,16 +1257,17 @@ and string_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
             // Variable to bind to
             let last_bound_init = !last_bound in
             last_bound := if is_unit (snd tysc) then "" else string_of_mlident lb.mllb_name;
-
             let s =
             // Top level constants
             if top_level then 
-                begin
+                begin                    
                     if not (is_unit(snd tysc)) then 
                         let id = concat [currentModule; "_"; string_of_mlident lb.mllb_name] in
+                        return_flag := No;
                         let expr = string_of_expr currentModule (min_op_prec, NonAssoc) lb.mllb_def in
+                        return_flag := Yes;
                         extern_constants := !extern_constants@[concat1 ["#define"; id; expr]];
-                        concat1 ["#define"; id; expr]
+                        concat1 ["#define"; string_of_mlident lb.mllb_name; expr]
 //                        extern_constants := !extern_constants@[concat1 ["extern const"; string_of_ml_type (snd tysc); 
 //                                                                        id; ";"]];
 //                        concat1 ["const"; string_of_ml_type (snd tysc); id;  "="; 

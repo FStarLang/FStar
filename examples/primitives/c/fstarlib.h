@@ -37,6 +37,8 @@ typedef uint128_t* Bignum_Bigint_bigint_wide;
 // Rotate left and right for different sizes of integers
 uint8 FStar_UInt8_op_Less_Less_Less(uint8 x, int y);
 uint8 FStar_UInt8_op_Greater_Greater_Greater(uint8 x, int y);
+uint8 FStar_UInt8_rotate_left(uint8 x, int y);
+uint8 FStar_UInt8_rotate_right(uint8 x, int y);
 uint32 FStar_UInt32_op_Less_Less_Less(uint32 x, int y);
 uint32 FStar_UInt32_op_Greater_Greater_Greater(uint32 x, int y);
 uint64 FStar_UInt63_op_Less_Less_Less(uint64 x, int y);
@@ -54,3 +56,7 @@ uint64 FStar_UInt63_eq(uint64 a, uint64 b);
 uint64 FStar_UInt63_gte(uint64 a, uint64 b);
 uint64 FStar_UInt64_eq(uint64 a, uint64 b);
 uint64 FStar_UInt64_gte(uint64 a, uint64 b);
+
+// Debugging functions
+void print_bytes(uint8* b, int len);
+

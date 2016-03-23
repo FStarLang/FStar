@@ -11,6 +11,11 @@ open FStar.Heap
 open FStar.Array
 open FStar.Ghost
 
+(*
+  TODO: distinction entre 'ST' et 'STF', le second poussant une 'frame'
+  Le premier étant un rafinement disant que la frame n'a pas changé.
+  *)
+
 (* Buffer general type *)
 private type buffer (t:pos) = {
   content:array (usint t); // length "max_length"
@@ -104,7 +109,9 @@ opaque type DisjointSet (#t:pos) (b:buffer t) (buffs:FStar.Set.set abuffer) =
   (forall (#t':pos) (b':buffer t'). {:pattern (FStar.Set.mem (Buff b') buffs) \/ (Disjoint b b')} FStar.Set.mem (Buff b') buffs ==> Disjoint b b')
 
 (* Buffer specific modifies clause *)
+// TODO: too restrictive when changing also references to other types
 opaque type Modifies (buffs:FStar.Set.set abuffer) (h:heap) (h':heap) =
+//  modifies buffs h h'
   FStar.Heap.equal h' (FStar.Heap.concat h' (FStar.Heap.restrict h (FStar.Set.complement (arefs buffs))))
   /\ (forall (#t:pos) (b:buffer t). {:pattern (DisjointSet b buffs)}
 				  (Live h b /\ DisjointSet b buffs) ==> Eq h b h' b)
@@ -182,6 +189,9 @@ opaque type CopyOf (#t:pos) (h:heap) (a:buffer t) (idx_a:nat) (b:buffer t) (idx_
 
 (** Concrete getters and setters **)
 
+// TODO: how to allocate without initializing while still preventing
+// reads to the buffer (which may contain secrets) before a write ?
+// TODO: see what happens if len is just 'nat'
 val create: #a:pos -> init:usint a -> len:pos -> ST (buffer a)
   (requires (fun h -> True))
   (ensures (fun h0 b h1 ->
@@ -275,6 +285,8 @@ let of_seq #size s l =
   of_seq_aux s l l b; 
   b
 
+
+// TODO: Change to clone
 val copy: #a:pos ->  b:buffer a -> l:pos{length b >= l} -> ST (buffer a)
   (requires (fun h -> Live h b))
   (ensures (fun h0 b' h1 -> not(contains h0 b') /\ contains h1 b' /\ idx b' = 0 

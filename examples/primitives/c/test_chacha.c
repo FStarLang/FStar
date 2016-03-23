@@ -17,7 +17,7 @@ void print_array(uint32* array, int len){
   printf("\n");
 }
 
-void print_bytes(char* bytes, int len){
+void print_bytes2(char* bytes, int len){
   unsigned char i;
   for (i=0; i < len; i++){
     printf("%x ", bytes[i] & 0xff);
@@ -55,6 +55,6 @@ int main(int argc, char** argv){
     Chacha_chacha20_encrypt(ciphertext, key, counter, nonce, plaintext, 114);
   }
   printf("Expected:\n%s\nGot:\n", expected);
-  print_bytes(ciphertext, 114);
+  print_bytes2(ciphertext, 114);
   return 0;
 }

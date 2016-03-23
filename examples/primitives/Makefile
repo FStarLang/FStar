@@ -14,16 +14,19 @@ CHACHA=chacha
 POLY=poly
 BIGNUM=bignum
 CURVE=curve25519
+AES=aes
 
 CHACHA_ODIR=chacha20
 POLY_ODIR=poly1305
 BIGNUM_ODIR=bignum_library
 CURVE_ODIR=curve25519
+AES_ODIR=aes
 
 CHACHA_C=Chacha.c test_chacha.c
 POLY_C=Parameters.c Bignum.c Poly.c test_poly.c
 BIGNUM_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c Bignum_Fscalar.c Bignum_Fproduct.c Bignum_Modulo.c Bignum_Core.c test_bignum.c
 CURVE_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c Bignum_Fscalar.c Bignum_Fproduct.c Bignum_Modulo.c Bignum_Core.c Curve_Point.c Curve_AddAndDouble.c Curve_Ladder.c test_curve.c
+AES_C=Crypto_AES.c test_aes.c
 
 COMPILE=gcc -O4 fstarlib.c 
 
@@ -129,7 +132,30 @@ curve-debug: Curve.Ladder.fst
 	cd $(CURVE_ODIR) && $(COMPILE) $(CURVE_C) -o $(CURVE)
 	./$(CURVE_ODIR)/$(CURVE)
 
+# AES targets
+aes-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.AES.fst --lax
+
+aes-test: Crypto.AES.fst
+	@echo ""
+	@echo " Extracting AES library "
+	@mkdir -p $(AES_ODIR)
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(AES_ODIR) $^
+	@cp ./c/*.c ./c/*.h $(AES_ODIR)
+	@echo ""
+	@echo " Compiling AES"
+	cd $(AES_ODIR) && $(COMPILE) $(AES_C) -o $(AES)
+	./$(AES_ODIR)/$(AES)
+
+aes-debug: Crypto.AES.fst
+	@cp ./c/*.c ./c/*.h $(AES_ODIR)
+	@echo ""
+	@echo " Compiling AES"
+	cd $(AES_ODIR) && $(COMPILE) $(AES_C) -o $(AES)
+	./$(AES_ODIR)/$(AES)
+
+
 # Cleaning
 clean:
 	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(CHACHA_ODIR)_ml $(POLY_ODIR)_ml \
-		$(BIGNUM_ODIR) $(CURVE_ODIR) *~ *.exe
+		$(BIGNUM_ODIR) $(CURVE_ODIR) $(AES_ODIR) *~ *.exe
