@@ -336,7 +336,7 @@ let base_and_refinement env wl t1 =
         | Tm_match _ -> failwith "Unhandled cases!"
 
         | Tm_meta _
-        | Tm_ascribed _  //NS: Why are the two previous cases excluded?
+        | Tm_ascribed _  //NS: Why are the two previous cases excluded? Because of the whnf/unmeta
         | Tm_delayed _
         | Tm_unknown -> failwith (Util.format2 "impossible (outer): Got %s ... %s\n" (Print.term_to_string t1) (Print.tag_of_term t1)) in
 

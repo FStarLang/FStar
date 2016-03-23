@@ -96,6 +96,7 @@ let verify_module = Util.mk_ref []
 let __temp_no_proj = Util.mk_ref []
 let interactive = Util.mk_ref false
 let interactive_context = Util.mk_ref None
+let interleave = Util.mk_ref false
 let split_cases = Util.mk_ref 0
 let _include_path = Util.mk_ref []
 let no_default_includes = Util.mk_ref false
@@ -275,6 +276,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
      ( noshort, "initial_ifuel", OneArg((fun x -> initial_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at first (default 1)");
      ( noshort, "inline_arith", ZeroArgs(fun () -> inline_arith := true), "Inline definitions of arithmetic functions in the SMT encoding");
+     ( noshort, "interleave", ZeroArgs(fun () -> interleave := true), "Interleave 'val' declarations with the definitions in the module before type-checking");
      ( noshort, "lax", ZeroArgs (fun () -> pretype := true; verify := false), "Run the lax-type checker only (admit all verification conditions)");
      ( noshort, "log_types", ZeroArgs (fun () -> log_types := true), "Print types computed for data/val/let-bindings");
      ( noshort, "log_queries", ZeroArgs (fun () -> logQueries := true), "Log the Z3 queries in queries.smt2");

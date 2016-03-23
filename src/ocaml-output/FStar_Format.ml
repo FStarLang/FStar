@@ -49,25 +49,25 @@ end))
 # 51 "FStar.Format.fst"
 let brackets : doc  ->  doc = (fun _23_13 -> (match (_23_13) with
 | Doc (d) -> begin
-(let _107_22 = (text "[")
-in (let _107_21 = (text "]")
-in (enclose _107_22 _107_21 (Doc (d)))))
+(let _108_22 = (text "[")
+in (let _108_21 = (text "]")
+in (enclose _108_22 _108_21 (Doc (d)))))
 end))
 
 # 52 "FStar.Format.fst"
 let cbrackets : doc  ->  doc = (fun _23_15 -> (match (_23_15) with
 | Doc (d) -> begin
-(let _107_26 = (text "{")
-in (let _107_25 = (text "}")
-in (enclose _107_26 _107_25 (Doc (d)))))
+(let _108_26 = (text "{")
+in (let _108_25 = (text "}")
+in (enclose _108_26 _108_25 (Doc (d)))))
 end))
 
 # 53 "FStar.Format.fst"
 let parens : doc  ->  doc = (fun _23_17 -> (match (_23_17) with
 | Doc (d) -> begin
-(let _107_30 = (text "(")
-in (let _107_29 = (text ")")
-in (enclose _107_30 _107_29 (Doc (d)))))
+(let _108_30 = (text "(")
+in (let _108_29 = (text ")")
+in (enclose _108_30 _108_29 (Doc (d)))))
 end))
 
 # 56 "FStar.Format.fst"
@@ -86,8 +86,8 @@ Doc (d)
 end))
 
 # 66 "FStar.Format.fst"
-let groups : doc Prims.list  ->  doc = (fun docs -> (let _107_41 = (reduce docs)
-in (group _107_41)))
+let groups : doc Prims.list  ->  doc = (fun docs -> (let _108_41 = (reduce docs)
+in (group _108_41)))
 
 # 70 "FStar.Format.fst"
 let combine : doc  ->  doc Prims.list  ->  doc = (fun _23_27 docs -> (match (_23_27) with

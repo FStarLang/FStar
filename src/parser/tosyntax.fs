@@ -1519,6 +1519,7 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
 
 let desugar_file (env:env_t) (f:file) =
   let env, mods = List.fold_left (fun (env, mods) m ->
+    let m = FStar.Parser.Interleave.interleave_modul m in
     let env, m = desugar_modul env m in
     env, m::mods) (env, []) f in
   env, List.rev mods 

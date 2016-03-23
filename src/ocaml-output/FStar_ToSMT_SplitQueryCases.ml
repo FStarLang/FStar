@@ -2,20 +2,20 @@
 open Prims
 # 10 "FStar.ToSMT.SplitQueryCases.fst"
 let rec get_next_n_ite : Prims.int  ->  FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term)  ->  (Prims.bool * FStar_ToSMT_Term.term * FStar_ToSMT_Term.term * FStar_ToSMT_Term.term) = (fun n t negs f -> if (n <= 0) then begin
-(let _129_14 = (f FStar_ToSMT_Term.mkTrue)
-in (true, _129_14, negs, t))
+(let _130_14 = (f FStar_ToSMT_Term.mkTrue)
+in (true, _130_14, negs, t))
 end else begin
 (match (t.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.App (FStar_ToSMT_Term.ITE, g::t::e::_45_7) -> begin
-(let _129_19 = (let _129_16 = (let _129_15 = (FStar_ToSMT_Term.mkNot g)
-in (negs, _129_15))
-in (FStar_ToSMT_Term.mkAnd _129_16))
-in (get_next_n_ite (n - 1) e _129_19 (fun x -> (let _129_18 = (FStar_ToSMT_Term.mkITE (g, t, x))
-in (f _129_18)))))
+(let _130_19 = (let _130_16 = (let _130_15 = (FStar_ToSMT_Term.mkNot g)
+in (negs, _130_15))
+in (FStar_ToSMT_Term.mkAnd _130_16))
+in (get_next_n_ite (n - 1) e _130_19 (fun x -> (let _130_18 = (FStar_ToSMT_Term.mkITE (g, t, x))
+in (f _130_18)))))
 end
 | FStar_ToSMT_Term.FreeV (_45_18) -> begin
-(let _129_20 = (f FStar_ToSMT_Term.mkTrue)
-in (true, _129_20, negs, t))
+(let _130_20 = (f FStar_ToSMT_Term.mkTrue)
+in (true, _130_20, negs, t))
 end
 | _45_21 -> begin
 (false, FStar_ToSMT_Term.mkFalse, FStar_ToSMT_Term.mkFalse, FStar_ToSMT_Term.mkFalse)
@@ -28,10 +28,10 @@ let rec is_ite_all_the_way : Prims.int  ->  FStar_ToSMT_Term.term  ->  FStar_ToS
 end else begin
 (match (t.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.FreeV (_45_27) -> begin
-(let _129_31 = (let _129_30 = (let _129_29 = (FStar_ToSMT_Term.mkNot t)
-in (negs, _129_29))
-in (FStar_ToSMT_Term.mkAnd _129_30))
-in (true, l, _129_31))
+(let _130_31 = (let _130_30 = (let _130_29 = (FStar_ToSMT_Term.mkNot t)
+in (negs, _130_29))
+in (FStar_ToSMT_Term.mkAnd _130_30))
+in (true, l, _130_31))
 end
 | _45_30 -> begin
 (
@@ -40,9 +40,9 @@ let _45_36 = (get_next_n_ite n t negs (fun x -> x))
 in (match (_45_36) with
 | (b, t, negs', rest) -> begin
 if b then begin
-(let _129_34 = (let _129_33 = (FStar_ToSMT_Term.mkImp (negs, t))
-in (_129_33)::l)
-in (is_ite_all_the_way n rest negs' _129_34))
+(let _130_34 = (let _130_33 = (FStar_ToSMT_Term.mkImp (negs, t))
+in (_130_33)::l)
+in (is_ite_all_the_way n rest negs' _130_34))
 end else begin
 (false, [], FStar_ToSMT_Term.mkFalse)
 end
@@ -53,16 +53,16 @@ end)
 # 36 "FStar.ToSMT.SplitQueryCases.fst"
 let rec parse_query_for_split_cases : Prims.int  ->  FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term)  ->  (Prims.bool * ((FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term) * FStar_ToSMT_Term.term Prims.list * FStar_ToSMT_Term.term)) = (fun n t f -> (match (t.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.Quant (FStar_ToSMT_Term.Forall, l, opt, l', t) -> begin
-(parse_query_for_split_cases n t (fun x -> (let _129_61 = (FStar_ToSMT_Term.mkForall'' (l, opt, l', x))
-in (f _129_61))))
+(parse_query_for_split_cases n t (fun x -> (let _130_61 = (FStar_ToSMT_Term.mkForall'' (l, opt, l', x))
+in (f _130_61))))
 end
 | FStar_ToSMT_Term.App (FStar_ToSMT_Term.Imp, t1::t2::_45_50) -> begin
 (
 # 41 "FStar.ToSMT.SplitQueryCases.fst"
 let r = (match (t2.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.Quant (FStar_ToSMT_Term.Forall, _45_59, _45_61, _45_63, _45_65) -> begin
-(parse_query_for_split_cases n t2 (fun x -> (let _129_69 = (FStar_ToSMT_Term.mkImp (t1, x))
-in (f _129_69))))
+(parse_query_for_split_cases n t2 (fun x -> (let _130_69 = (FStar_ToSMT_Term.mkImp (t1, x))
+in (f _130_69))))
 end
 | FStar_ToSMT_Term.App (FStar_ToSMT_Term.ITE, _45_71) -> begin
 (
@@ -70,8 +70,8 @@ end
 let _45_77 = (is_ite_all_the_way n t2 FStar_ToSMT_Term.mkTrue [])
 in (match (_45_77) with
 | (b, l, negs) -> begin
-(b, ((fun x -> (let _129_78 = (FStar_ToSMT_Term.mkImp (t1, x))
-in (f _129_78))), l, negs))
+(b, ((fun x -> (let _130_78 = (FStar_ToSMT_Term.mkImp (t1, x))
+in (f _130_78))), l, negs))
 end))
 end
 | _45_80 -> begin
@@ -102,19 +102,19 @@ t
 end))
 
 # 64 "FStar.ToSMT.SplitQueryCases.fst"
-let rec check_split_cases : (FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term)  ->  FStar_ToSMT_Term.term Prims.list  ->  (FStar_ToSMT_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun f l check -> (FStar_List.iter (fun t -> (let _129_117 = (let _129_116 = (let _129_115 = (let _129_114 = (f t)
-in (FStar_ToSMT_Term.mkNot _129_114))
-in (_129_115, None))
-in FStar_ToSMT_Term.Assume (_129_116))
-in (check _129_117))) (FStar_List.rev l)))
+let rec check_split_cases : (FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term)  ->  FStar_ToSMT_Term.term Prims.list  ->  (FStar_ToSMT_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun f l check -> (FStar_List.iter (fun t -> (let _130_117 = (let _130_116 = (let _130_115 = (let _130_114 = (f t)
+in (FStar_ToSMT_Term.mkNot _130_114))
+in (_130_115, None))
+in FStar_ToSMT_Term.Assume (_130_116))
+in (check _130_117))) (FStar_List.rev l)))
 
 # 67 "FStar.ToSMT.SplitQueryCases.fst"
-let check_exhaustiveness : (FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term)  ->  FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun f negs check -> (let _129_138 = (let _129_137 = (let _129_136 = (let _129_135 = (let _129_134 = (FStar_ToSMT_Term.mkNot negs)
-in (f _129_134))
-in (FStar_ToSMT_Term.mkNot _129_135))
-in (_129_136, None))
-in FStar_ToSMT_Term.Assume (_129_137))
-in (check _129_138)))
+let check_exhaustiveness : (FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term)  ->  FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun f negs check -> (let _130_138 = (let _130_137 = (let _130_136 = (let _130_135 = (let _130_134 = (FStar_ToSMT_Term.mkNot negs)
+in (f _130_134))
+in (FStar_ToSMT_Term.mkNot _130_135))
+in (_130_136, None))
+in FStar_ToSMT_Term.Assume (_130_137))
+in (check _130_138)))
 
 # 70 "FStar.ToSMT.SplitQueryCases.fst"
 let can_handle_query : Prims.int  ->  FStar_ToSMT_Term.decl  ->  (Prims.bool * ((FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term) * FStar_ToSMT_Term.term Prims.list * FStar_ToSMT_Term.term)) = (fun n q -> (match (q) with
