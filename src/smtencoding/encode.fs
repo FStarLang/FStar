@@ -1758,7 +1758,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
                 else None in
             let g = [Term.DeclFun(xxsym, [], Term_sort, caption)]
                     @decls'
-                    @[Term.Assume(t, Some <| "Encoding " ^ xxsym)] in
+                    @[Term.Assume(t, Some <| ("Encoding " ^ xxsym))] in
             decls@g, env'
 
         | Env.Binding_lid(x, (_, t)) ->
