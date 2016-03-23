@@ -227,15 +227,15 @@ and free_type_vars env t = match (unparen t).tm with
   | Project(t, _) -> free_type_vars env t
 
 
-  | Abs _  (* not closing implicitly over free vars in type-level functions *)
+  | Abs _  (* not closing implicitly over free vars in all these forms: TODO: Fixme! *)
   | Let _
   | If _
   | QForall _
-  | QExists _ -> [] (* not closing implicitly over free vars in formulas *)
-  | Record _
+  | QExists _  
+  | Record _ 
   | Match _
   | TryWith _
-  | Seq _ -> error "Unexpected type in free_type_vars computation" t t.range
+  | Seq _ -> []
 
 let head_and_args t =
     let rec aux args t = match (unparen t).tm with

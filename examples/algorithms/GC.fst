@@ -168,8 +168,7 @@ let rec mark ptr =
     mark (st'.fields (ptr, F1));
     mark (st'.fields (ptr, F2));
     let st'' = get () in
-    let st3 = {st'' with color = upd_map st''.color ptr Black} in //TODO: needed to eta expand st3, otherwise hit a bug
-    set st3
+    set ({st'' with color = upd_map st''.color ptr Black})
   end
 
 

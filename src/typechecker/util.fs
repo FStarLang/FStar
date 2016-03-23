@@ -513,16 +513,21 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             else if Util.is_ml_comp c1 && Util.is_ml_comp c2
             then Some (c2, "both ml")
             else None in
+        let subst_c2 reason = 
+            match e1opt, b with 
+                | Some e, Some x -> 
+                  Some (SS.subst_comp [NT(x,e)] c2, reason)
+                | _ -> aux() in 
         if Util.is_total_comp c1
         && Util.is_total_comp c2
-        then Some (c2, "both total")
+        then subst_c2 "both total"
         else if Util.is_tot_or_gtot_comp c1
              && Util.is_tot_or_gtot_comp c2
         then Some (S.mk_GTotal (Util.comp_result c2), "both gtot")
         else match e1opt, b with
             | Some e, Some x ->
                 if Util.is_total_comp c1 && not (Syntax.is_null_bv x)
-                then Some (SS.subst_comp [NT(x, e)] c2, "substituted e")
+                then subst_c2 "substituted e"
                 else aux ()
             | _ -> aux () in
       match try_simplify () with
