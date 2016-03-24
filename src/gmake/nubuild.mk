@@ -12,5 +12,5 @@ else
 endif
 
 ifdef USE_NUBUILD
-   FSTAR=$(NUBUILD) --quiet FStarVerify $(OTHERFLAGS)
+   FSTAR=$(NUBUILD) FStarVerify $(OTHERFLAGS)
 endif
