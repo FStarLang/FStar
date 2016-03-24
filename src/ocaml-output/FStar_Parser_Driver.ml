@@ -60,29 +60,44 @@ end
 Decls (decls)
 end
 | FStar_Util.Inl (FStar_Util.Inl (_56_20)) -> begin
+if (FStar_ST.read FStar_Options.universes) then begin
+(Prims.raise (FStar_Syntax_Syntax.Err ("Refusing to check more than one module at a time incrementally")))
+end else begin
 (Prims.raise (FStar_Absyn_Syntax.Err ("Refusing to check more than one module at a time incrementally")))
 end
+end
 | FStar_Util.Inr (msg, r) -> begin
+if (FStar_ST.read FStar_Options.universes) then begin
+(Prims.raise (FStar_Syntax_Syntax.Error ((msg, r))))
+end else begin
 (Prims.raise (FStar_Absyn_Syntax.Error ((msg, r))))
+end
 end))
 
-# 62 "FStar.Parser.Driver.fst"
+# 66 "FStar.Parser.Driver.fst"
 let parse_file : Prims.string  ->  FStar_Parser_AST.modul Prims.list = (fun fn -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.Inl (fn)))) with
 | FStar_Util.Inl (FStar_Util.Inl (ast)) -> begin
 ast
 end
 | FStar_Util.Inl (FStar_Util.Inr (_56_32)) -> begin
 (
-# 68 "FStar.Parser.Driver.fst"
-let _56_35 = (FStar_Util.print1_error "%s: expected a module\n" fn)
-in (FStar_All.exit 1))
+# 72 "FStar.Parser.Driver.fst"
+let msg = (FStar_Util.format1 "%s: expected a module\n" fn)
+in (
+# 73 "FStar.Parser.Driver.fst"
+let r = FStar_Range.dummyRange
+in if (FStar_ST.read FStar_Options.universes) then begin
+(Prims.raise (FStar_Syntax_Syntax.Error ((msg, r))))
+end else begin
+(Prims.raise (FStar_Absyn_Syntax.Error ((msg, r))))
+end))
 end
 | FStar_Util.Inr (msg, r) -> begin
-(
-# 72 "FStar.Parser.Driver.fst"
-let _56_41 = (let _141_36 = (FStar_Absyn_Print.format_error r msg)
-in (FStar_All.pipe_left FStar_Util.print_string _141_36))
-in (FStar_All.exit 1))
+if (FStar_ST.read FStar_Options.universes) then begin
+(Prims.raise (FStar_Syntax_Syntax.Error ((msg, r))))
+end else begin
+(Prims.raise (FStar_Absyn_Syntax.Error ((msg, r))))
+end
 end))
 
 

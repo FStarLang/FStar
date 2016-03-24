@@ -138,7 +138,7 @@ let env = (match (curmod) with
 env
 end
 | Some (_83_93) -> begin
-(Prims.raise (FStar_Absyn_Syntax.Err ("Interactive mode only supports a single module at the top-level")))
+(Prims.raise (FStar_Syntax_Syntax.Err ("Interactive mode only supports a single module at the top-level")))
 end)
 in (
 # 112 "FStar.Universal.fst"
