@@ -206,7 +206,7 @@ in (FStar_All.pipe_right _168_44 Prims.ignore))
 in (
 # 139 "FStar.Universal.fst"
 let _83_125 = (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ())
-in (let _168_45 = (FStar_Options.reset_options ())
+in (let _168_45 = (FStar_Options.restore_cmd_line_options ())
 in (FStar_All.pipe_right _168_45 Prims.ignore)))))
 end))
 in (

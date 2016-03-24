@@ -206,7 +206,7 @@ in (FStar_All.pipe_right _167_44 Prims.ignore))
 in (
 # 139 "FStar.Stratified.fst"
 let _82_121 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.refresh ())
-in (let _167_45 = (FStar_Options.reset_options ())
+in (let _167_45 = (FStar_Options.restore_cmd_line_options ())
 in (FStar_All.pipe_right _167_45 Prims.ignore)))))
 end))
 in (
