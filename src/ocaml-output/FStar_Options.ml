@@ -550,10 +550,10 @@ universe_include_path_base_dirs
 end else begin
 include_path_base_dirs
 end
-in (let _105_49 = (FStar_ST.read _include_path)
-in (let _105_48 = (let _105_47 = (FStar_All.pipe_right defs (FStar_List.map (fun x -> (Prims.strcat h x))))
-in (".")::_105_47)
-in (FStar_List.append _105_49 _105_48)))))
+in (let _105_49 = (let _105_48 = (FStar_All.pipe_right defs (FStar_List.map (fun x -> (Prims.strcat h x))))
+in (let _105_47 = (FStar_ST.read _include_path)
+in (FStar_List.append _105_48 _105_47)))
+in (FStar_List.append _105_49 ((".")::[])))))
 end
 end))
 

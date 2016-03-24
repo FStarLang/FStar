@@ -126,7 +126,7 @@ end
 # 159 "FStar.Parser.Interleave.fst"
 let def_lids = (lids_of_let defs)
 in if (FStar_All.pipe_right val_ids (FStar_Util.for_some (fun x -> (FStar_All.pipe_right def_lids (FStar_Util.for_some (id_eq_lid x)))))) then begin
-(Prims.raise (FStar_Syntax_Syntax.Error (("The definition at %s is out of order", let_x.FStar_Parser_AST.drange))))
+(Prims.raise (FStar_Syntax_Syntax.Error (("The definition is out of order", let_x.FStar_Parser_AST.drange))))
 end else begin
 (hoist_rest ((hd)::hoisted, remaining) val_ids tl)
 end)
