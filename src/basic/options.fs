@@ -197,7 +197,7 @@ let get_include_path () =
   else
   let h = get_fstar_home () in
   let defs = if !universes then universe_include_path_base_dirs else include_path_base_dirs in
-  (defs |> List.map (fun x -> h ^ x)) @ !_include_path @ [ "." ]
+  (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ !_include_path @ [ "." ]
 
 let find_file filename =
     let search_path = get_include_path () in

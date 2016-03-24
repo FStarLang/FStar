@@ -101,7 +101,9 @@ let build_map (filenames: list<string>): map =
             end
         | None ->
             ()
-    ) files
+      ) files
+    else
+      raise (Err (Util.format1 "not a valid include directory: %s\n" d))
   ) include_directories;
   (* All the files we've been given on the command-line must be valid FStar files. *)
   List.iter (fun f ->
