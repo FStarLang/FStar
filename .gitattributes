@@ -5,3 +5,6 @@
 *.ml* eol=lf
 
 /src/tools/* eol=lf
+
+# Don't show diffs for generated ocaml-output files
+/src/ocaml-output/*.ml -diff
