@@ -910,11 +910,11 @@ in (FStar_Util.format3 "effect %s %s = %s" _120_288 _120_287 _120_286))))
 end
 end))
 
-# 466 "FStar.Syntax.Print.fst"
+# 464 "FStar.Syntax.Print.fst"
 let format_error : FStar_Range.range  ->  Prims.string  ->  Prims.string = (fun r msg -> (let _120_293 = (FStar_Range.string_of_range r)
 in (FStar_Util.format2 "%s: %s\n" _120_293 msg)))
 
-# 468 "FStar.Syntax.Print.fst"
+# 466 "FStar.Syntax.Print.fst"
 let rec sigelt_to_string_short : FStar_Syntax_Syntax.sigelt  ->  Prims.string = (fun x -> (match (x) with
 | FStar_Syntax_Syntax.Sig_let ((_35_550, {FStar_Syntax_Syntax.lbname = lb; FStar_Syntax_Syntax.lbunivs = _35_557; FStar_Syntax_Syntax.lbtyp = t; FStar_Syntax_Syntax.lbeff = _35_554; FStar_Syntax_Syntax.lbdef = _35_552}::[]), _35_563, _35_565, _35_567) -> begin
 (let _120_297 = (lbname_to_string lb)
@@ -927,13 +927,13 @@ in (FStar_All.pipe_right _120_299 (FStar_List.map (fun l -> l.FStar_Ident.str)))
 in (FStar_All.pipe_right _120_300 (FStar_String.concat ", ")))
 end))
 
-# 472 "FStar.Syntax.Print.fst"
+# 470 "FStar.Syntax.Print.fst"
 let rec modul_to_string : FStar_Syntax_Syntax.modul  ->  Prims.string = (fun m -> (let _120_305 = (sli m.FStar_Syntax_Syntax.name)
 in (let _120_304 = (let _120_303 = (FStar_List.map sigelt_to_string m.FStar_Syntax_Syntax.declarations)
 in (FStar_All.pipe_right _120_303 (FStar_String.concat "\n")))
 in (FStar_Util.format2 "module %s\n%s" _120_305 _120_304))))
 
-# 475 "FStar.Syntax.Print.fst"
+# 473 "FStar.Syntax.Print.fst"
 let subst_elt_to_string : FStar_Syntax_Syntax.subst_elt  ->  Prims.string = (fun _35_10 -> (match (_35_10) with
 | FStar_Syntax_Syntax.DB (i, x) -> begin
 (let _120_309 = (FStar_Util.string_of_int i)
@@ -960,7 +960,7 @@ end
 in (FStar_Util.format2 "UD (%s, %s)" u.FStar_Ident.idText _120_316))
 end))
 
-# 482 "FStar.Syntax.Print.fst"
+# 480 "FStar.Syntax.Print.fst"
 let subst_to_string : FStar_Syntax_Syntax.subst_t  ->  Prims.string = (fun s -> (let _120_319 = (FStar_All.pipe_right s (FStar_List.map subst_elt_to_string))
 in (FStar_All.pipe_right _120_319 (FStar_String.concat "; "))))
 

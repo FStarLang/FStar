@@ -3974,7 +3974,7 @@ let se = FStar_Absyn_Syntax.Sig_sub_effect (({FStar_Absyn_Syntax.source = src; F
 in (env, (se)::[]))))))
 end)))
 
-# 1668 "FStar.Parser.Desugar.fst"
+# 1666 "FStar.Parser.Desugar.fst"
 let desugar_decls : FStar_Parser_DesugarEnv.env  ->  FStar_Parser_AST.decl Prims.list  ->  (FStar_Parser_DesugarEnv.env * FStar_Absyn_Syntax.sigelts) = (fun env decls -> (FStar_List.fold_left (fun _49_3011 d -> (match (_49_3011) with
 | (env, sigelts) -> begin
 (

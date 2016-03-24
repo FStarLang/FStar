@@ -1059,7 +1059,7 @@ let ___ResetOptions____0 = (fun projectee -> (match (projectee) with
 _47_158
 end))
 
-# 138 "FStar.Parser.AST.fst"
+# 136 "FStar.Parser.AST.fst"
 type decl' =
 | TopLevelModule of FStar_Ident.lid
 | Open of FStar_Ident.lid
@@ -1419,11 +1419,11 @@ end
 None
 end))
 
-# 192 "FStar.Parser.AST.fst"
+# 190 "FStar.Parser.AST.fst"
 let lid_with_range : FStar_Ident.lident  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun lid r -> (let _132_1021 = (FStar_Ident.path_of_lid lid)
 in (FStar_Ident.lid_of_path _132_1021 r)))
 
-# 194 "FStar.Parser.AST.fst"
+# 192 "FStar.Parser.AST.fst"
 let to_string_l = (fun sep f l -> (let _132_1028 = (FStar_List.map f l)
 in (FStar_String.concat sep _132_1028)))
 
@@ -1822,7 +1822,7 @@ in (
 let admit_magic = (mk_term (Seq ((admit, magic))) r Expr)
 in admit_magic)))))
 
-# 349 "FStar.Parser.AST.fst"
+# 347 "FStar.Parser.AST.fst"
 let mkWildAdmitMagic = (fun r -> (let _132_1188 = (mkAdmitMagic r)
 in ((mk_pattern PatWild r), None, _132_1188)))
 
@@ -1866,7 +1866,7 @@ end else begin
 (FStar_All.pipe_right lbs (FStar_List.map Prims.snd))
 end))
 
-# 368 "FStar.Parser.AST.fst"
+# 366 "FStar.Parser.AST.fst"
 let mkFsTypApp : term  ->  term Prims.list  ->  FStar_Range.range  ->  term = (fun t args r -> (let _132_1205 = (FStar_List.map (fun a -> (a, FsTypApp)) args)
 in (mkApp t _132_1205 r)))
 

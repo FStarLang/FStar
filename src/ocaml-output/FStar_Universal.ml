@@ -255,10 +255,10 @@ in (
 let _83_166 = (let _168_60 = (FStar_TypeChecker_Env.pop env msg)
 in (FStar_All.pipe_right _168_60 Prims.ignore))
 in (
-# 139 "FStar.Universal.fst"
-let _83_125 = (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ())
-in (let _168_45 = (FStar_Options.restore_cmd_line_options ())
-in (FStar_All.pipe_right _168_45 Prims.ignore)))))
+# 172 "FStar.Universal.fst"
+let _83_168 = (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ())
+in (let _168_61 = (FStar_Options.restore_cmd_line_options ())
+in (FStar_All.pipe_right _168_61 Prims.ignore)))))
 end))
 in (
 # 175 "FStar.Universal.fst"

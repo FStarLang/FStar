@@ -1145,11 +1145,11 @@ in (let _113_425 = (comp_typ_to_string c)
 in (FStar_Util.format3 "effect %s %s = %s" _113_427 _113_426 _113_425))))
 end))
 
-# 497 "FStar.Absyn.Print.fst"
+# 495 "FStar.Absyn.Print.fst"
 let format_error : FStar_Range.range  ->  Prims.string  ->  Prims.string = (fun r msg -> (let _113_432 = (FStar_Range.string_of_range r)
 in (FStar_Util.format2 "%s: %s\n" _113_432 msg)))
 
-# 499 "FStar.Absyn.Print.fst"
+# 497 "FStar.Absyn.Print.fst"
 let rec sigelt_to_string_short : FStar_Absyn_Syntax.sigelt  ->  Prims.string = (fun x -> (match (x) with
 | FStar_Absyn_Syntax.Sig_let ((_28_881, {FStar_Absyn_Syntax.lbname = FStar_Util.Inr (l); FStar_Absyn_Syntax.lbtyp = t; FStar_Absyn_Syntax.lbeff = _28_885; FStar_Absyn_Syntax.lbdef = _28_883}::[]), _28_893, _28_895, _28_897) -> begin
 (let _113_435 = (typ_to_string t)
@@ -1161,7 +1161,7 @@ in (FStar_All.pipe_right _113_437 (FStar_List.map (fun l -> l.FStar_Ident.str)))
 in (FStar_All.pipe_right _113_438 (FStar_String.concat ", ")))
 end))
 
-# 503 "FStar.Absyn.Print.fst"
+# 501 "FStar.Absyn.Print.fst"
 let rec modul_to_string : FStar_Absyn_Syntax.modul  ->  Prims.string = (fun m -> (let _113_443 = (sli m.FStar_Absyn_Syntax.name)
 in (let _113_442 = (let _113_441 = (FStar_List.map sigelt_to_string m.FStar_Absyn_Syntax.declarations)
 in (FStar_All.pipe_right _113_441 (FStar_String.concat "\n")))
