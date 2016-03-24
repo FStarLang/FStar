@@ -922,13 +922,13 @@ in (
 # 393 "FStar.Options.fst"
 let settable_specs = (FStar_All.pipe_right all_specs (FStar_List.filter (fun _20_356 -> (match (_20_356) with
 | (_20_350, x, _20_353, _20_355) -> begin
-(not ((settable x)))
+(((settable x)))
 end))))
 in (
 # 394 "FStar.Options.fst"
 let resettable_specs = (FStar_All.pipe_right all_specs (FStar_List.filter (fun _20_365 -> (match (_20_365) with
 | (_20_359, x, _20_362, _20_364) -> begin
-(not ((resettable x)))
+(((resettable x)))
 end))))
 in (fun o s -> (
 # 396 "FStar.Options.fst"

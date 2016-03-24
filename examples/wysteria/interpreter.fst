@@ -166,7 +166,7 @@ let step_correctness c =
 val step_completeness: c:config -> c':config -> h:sstep c c' -> Lemma (requires (True)) (ensures (is_Some (step c)))
 let step_completeness c c' h = ()
 
-#set-options "--z3timeout 10"
+#reset-options "--z3timeout 10"
 
 val target_step_lemma:
   p:prin -> c:config{Conf.l c = Target /\ Conf.m c = Mode Par (singleton p) /\

@@ -390,8 +390,8 @@ let set_options =
       | _ -> false in
     let resettable s = settable s || s="z3timeout" in
     let all_specs = specs () in
-    let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> not (settable x)) in
-    let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> not (resettable x)) in
+    let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x) in
+    let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x) in
     fun o s -> 
         let specs = match o with 
             | Set -> settable_specs
