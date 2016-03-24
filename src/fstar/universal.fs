@@ -41,33 +41,45 @@ let module_or_interface_name m = m.is_interface, m.name
 (***********************************************************************)
 (* Parse and desugar a file                                            *)
 (***********************************************************************)
-let parse (env:DsEnv.env) (fn:string) : DsEnv.env  
+let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string) : DsEnv.env
                                           * list<Syntax.modul> =
   let ast = Parser.Driver.parse_file fn in
-  Desugar.desugar_file env ast
+  let ast, needs_interleaving = match pre_fn with
+    | None ->
+        ast, false
+    | Some pre_fn ->
+        let pre_ast = Parser.Driver.parse_file pre_fn in
+        match pre_ast, ast with
+        | [ Parser.AST.Interface (lid1, decls1, _) ], [ Parser.AST.Module (lid2, decls2) ]
+          when Ident.lid_equals lid1 lid2 ->
+            [ Parser.AST.Module (lid1, decls1 @ decls2) ], true
+        | _ ->
+            raise (Err ("mismatch between pre-module and module\n"))
+  in
+  Desugar.desugar_file env ast needs_interleaving
 
 
 (***********************************************************************)
 (* Checking Prims.fst                                                  *)
 (***********************************************************************)
 let tc_prims () : Syntax.modul
-                  * DsEnv.env  
+                  * DsEnv.env
                   * TcEnv.env =
   let solver = if !Options.verify then SMT.solver else SMT.dummy in
   let env = TcEnv.initial_env Tc.type_of solver Const.prims_lid in
   env.solver.init env;
   let p = Options.prims () in
-  let dsenv, prims_mod = parse (DsEnv.empty_env()) p in
+  let dsenv, prims_mod = parse (DsEnv.empty_env ()) None p in
   let prims_mod, env = Tc.check_module env (List.hd prims_mod) in
   prims_mod, dsenv, env
 
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
 (***********************************************************************)
-let tc_one_file dsenv env fn : list<Syntax.modul>
-                               * DsEnv.env  
+let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
+                               * DsEnv.env
                                * TcEnv.env  =
-  let dsenv, fmods = parse dsenv fn in
+  let dsenv, fmods = parse dsenv pre_fn fn in
   let env, all_mods =
     fmods |> List.fold_left (fun (env, all_mods) m ->
                             let m, env = Tc.check_module env m in
@@ -75,15 +87,36 @@ let tc_one_file dsenv env fn : list<Syntax.modul>
   List.rev all_mods, dsenv, env
 
 (***********************************************************************)
+(* Batch mode: composing many files in the presence of pre-modules     *)
+(***********************************************************************)
+let needs_interleaving intf impl =
+  let m1 = Parser.Dep.lowercase_module_name intf in
+  let m2 = Parser.Dep.lowercase_module_name impl in
+  m1 = m2 &&
+  FStar.Util.get_file_extension intf = "fsti" && FStar.Util.get_file_extension impl = "fst"
+
+let rec tc_fold_interleave acc remaining =
+  let move intf impl remaining =
+    let all_mods, dsenv, env = acc in
+    Syntax.reset_gensym ();
+    let ms, dsenv, env = tc_one_file dsenv env intf impl in
+    let acc = all_mods @ ms, dsenv, env in
+    tc_fold_interleave acc remaining
+  in
+
+  match remaining with
+  | intf :: impl :: remaining when needs_interleaving intf impl ->
+      move (Some intf) impl remaining
+  | intf_or_impl :: remaining ->
+      move None intf_or_impl remaining
+  | [] ->
+      acc
+
+(***********************************************************************)
 (* Batch mode: checking many files                                     *)
 (***********************************************************************)
 let batch_mode_tc_no_prims dsenv env filenames =
-  let all_mods, dsenv, env =
-    filenames |> List.fold_left (fun (all_mods, dsenv, env) f ->
-                                Syntax.reset_gensym();
-                                let ms, dsenv, env= tc_one_file dsenv env f in
-                                all_mods@ms, dsenv, env)
-                                ([], dsenv, env) in
+  let all_mods, dsenv, env = tc_fold_interleave ([], dsenv, env) filenames in
   if !Options.interactive && FStar.TypeChecker.Errors.get_err_count () = 0
   then env.solver.refresh()
   else env.solver.finish();

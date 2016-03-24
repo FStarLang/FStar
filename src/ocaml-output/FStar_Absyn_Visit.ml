@@ -1,9 +1,9 @@
 
 open Prims
-# 26 "FStar.Absyn.Visit.fst"
+# 24 "FStar.Absyn.Visit.fst"
 let log = (fun s -> ())
 
-# 30 "FStar.Absyn.Visit.fst"
+# 26 "FStar.Absyn.Visit.fst"
 let rec compress_typ_aux : Prims.bool  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun pos typ -> (match (typ.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_uvar (uv, k) -> begin
 (match ((FStar_Unionfind.find uv)) with
@@ -46,13 +46,13 @@ end
 typ
 end))
 
-# 50 "FStar.Absyn.Visit.fst"
+# 49 "FStar.Absyn.Visit.fst"
 let compress_typ : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun typ -> (compress_typ_aux true typ))
 
-# 51 "FStar.Absyn.Visit.fst"
+# 50 "FStar.Absyn.Visit.fst"
 let compress_typ_uvars : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun typ -> (compress_typ_aux false typ))
 
-# 53 "FStar.Absyn.Visit.fst"
+# 51 "FStar.Absyn.Visit.fst"
 let rec compress_exp_aux : Prims.bool  ->  (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun meta exp -> (match (exp.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Exp_uvar (uv, _26_64) -> begin
 (match ((FStar_Unionfind.find uv)) with
@@ -94,13 +94,13 @@ end
 exp
 end))
 
-# 72 "FStar.Absyn.Visit.fst"
+# 71 "FStar.Absyn.Visit.fst"
 let compress_exp : (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun e -> (compress_exp_aux true e))
 
-# 73 "FStar.Absyn.Visit.fst"
+# 72 "FStar.Absyn.Visit.fst"
 let compress_exp_uvars : (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun e -> (compress_exp_aux false e))
 
-# 75 "FStar.Absyn.Visit.fst"
+# 73 "FStar.Absyn.Visit.fst"
 let rec compress_kind : (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax = (fun knd -> (match (knd.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Kind_delayed (_26_117, _26_119, m) -> begin
 (match ((FStar_ST.read m)) with
@@ -121,7 +121,7 @@ end
 knd
 end))
 
-# 82 "FStar.Absyn.Visit.fst"
+# 80 "FStar.Absyn.Visit.fst"
 let left = (fun ext benv btv -> (match ((ext benv (FStar_Util.Inl (btv)))) with
 | (benv, FStar_Util.Inl (bvd)) -> begin
 (benv, bvd)
@@ -130,7 +130,7 @@ end
 (FStar_All.failwith "impossible")
 end))
 
-# 85 "FStar.Absyn.Visit.fst"
+# 84 "FStar.Absyn.Visit.fst"
 let right = (fun ext benv bvv -> (match ((ext benv (FStar_Util.Inr (bvv)))) with
 | (benv, FStar_Util.Inr (bvd)) -> begin
 (benv, bvd)
@@ -139,23 +139,23 @@ end
 (FStar_All.failwith "impossible")
 end))
 
-# 92 "FStar.Absyn.Visit.fst"
+# 87 "FStar.Absyn.Visit.fst"
 type boundvar =
 (FStar_Absyn_Syntax.btvdef, FStar_Absyn_Syntax.bvvdef) FStar_Util.either
 
-# 93 "FStar.Absyn.Visit.fst"
+# 92 "FStar.Absyn.Visit.fst"
 type boundvars =
 boundvar Prims.list
 
-# 94 "FStar.Absyn.Visit.fst"
+# 93 "FStar.Absyn.Visit.fst"
 type ('env, 'm) imap =
 'env  ->  boundvars  ->  'm  ->  ('m * 'env)
 
-# 95 "FStar.Absyn.Visit.fst"
+# 94 "FStar.Absyn.Visit.fst"
 type ('env, 'm, 'n) mapper =
 ('env, FStar_Absyn_Syntax.knd) imap  ->  ('env, FStar_Absyn_Syntax.typ) imap  ->  ('env, FStar_Absyn_Syntax.exp) imap  ->  'env  ->  boundvars  ->  'm  ->  ('n * 'env)
 
-# 101 "FStar.Absyn.Visit.fst"
+# 99 "FStar.Absyn.Visit.fst"
 let push_tbinder = (fun binders _26_1 -> (match (_26_1) with
 | None -> begin
 binders
@@ -164,7 +164,7 @@ end
 (FStar_Util.Inl (a))::binders
 end))
 
-# 104 "FStar.Absyn.Visit.fst"
+# 103 "FStar.Absyn.Visit.fst"
 let push_vbinder = (fun binders _26_2 -> (match (_26_2) with
 | None -> begin
 binders
@@ -173,10 +173,10 @@ end
 (FStar_Util.Inr (a))::binders
 end))
 
-# 107 "FStar.Absyn.Visit.fst"
+# 106 "FStar.Absyn.Visit.fst"
 let bvd_to_bvar_s = (fun bvd sort -> {FStar_Absyn_Syntax.v = bvd; FStar_Absyn_Syntax.sort = sort; FStar_Absyn_Syntax.p = bvd.FStar_Absyn_Syntax.ppname.FStar_Ident.idRange})
 
-# 108 "FStar.Absyn.Visit.fst"
+# 107 "FStar.Absyn.Visit.fst"
 let tbinder_opt = (fun aopt k -> (match (aopt) with
 | None -> begin
 []
@@ -185,7 +185,7 @@ end
 (FStar_Util.Inl ((bvd_to_bvar_s a k)))::[]
 end))
 
-# 111 "FStar.Absyn.Visit.fst"
+# 110 "FStar.Absyn.Visit.fst"
 let vbinder_opt = (fun aopt t -> (match (aopt) with
 | None -> begin
 []
@@ -194,31 +194,31 @@ end
 (FStar_Util.Inr ((bvd_to_bvar_s a t)))::[]
 end))
 
-# 116 "FStar.Absyn.Visit.fst"
+# 113 "FStar.Absyn.Visit.fst"
 type knd_components =
 (FStar_Absyn_Syntax.binders * FStar_Absyn_Syntax.knd Prims.list * FStar_Absyn_Syntax.typ Prims.list * FStar_Absyn_Syntax.arg Prims.list)
 
-# 117 "FStar.Absyn.Visit.fst"
+# 116 "FStar.Absyn.Visit.fst"
 type typ_components =
 (FStar_Absyn_Syntax.binders * FStar_Absyn_Syntax.knd Prims.list * FStar_Absyn_Syntax.typ Prims.list * FStar_Absyn_Syntax.comp Prims.list * FStar_Absyn_Syntax.arg Prims.list Prims.list)
 
-# 118 "FStar.Absyn.Visit.fst"
+# 117 "FStar.Absyn.Visit.fst"
 type exp_components =
 (FStar_Absyn_Syntax.binders * FStar_Absyn_Syntax.knd Prims.list * FStar_Absyn_Syntax.typ Prims.list * FStar_Absyn_Syntax.exp Prims.list * FStar_Absyn_Syntax.arg Prims.list)
 
-# 119 "FStar.Absyn.Visit.fst"
+# 118 "FStar.Absyn.Visit.fst"
 let leaf_k = (fun _26_176 -> (match (()) with
 | () -> begin
 ([], [], [], [])
 end))
 
-# 120 "FStar.Absyn.Visit.fst"
+# 119 "FStar.Absyn.Visit.fst"
 let leaf_te = (fun _26_177 -> (match (()) with
 | () -> begin
 ([], [], [], [], [])
 end))
 
-# 122 "FStar.Absyn.Visit.fst"
+# 120 "FStar.Absyn.Visit.fst"
 let rec reduce_kind = (fun map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders k -> (
 # 130 "FStar.Absyn.Visit.fst"
 let rec visit_kind = (fun env binders k -> (
@@ -813,7 +813,7 @@ in (match (_26_746) with
 end))))
 in (map_exp env binders e)))
 
-# 372 "FStar.Absyn.Visit.fst"
+# 370 "FStar.Absyn.Visit.fst"
 let combine_kind = (fun k kc env -> (
 # 373 "FStar.Absyn.Visit.fst"
 let k' = (match ((k.FStar_Absyn_Syntax.n, kc)) with
@@ -835,7 +835,7 @@ end)
 in (let _111_388 = (k' k.FStar_Absyn_Syntax.pos)
 in (_111_388, env))))
 
-# 384 "FStar.Absyn.Visit.fst"
+# 382 "FStar.Absyn.Visit.fst"
 let combine_typ = (fun t tc env -> (
 # 385 "FStar.Absyn.Visit.fst"
 let t = (compress_typ t)
@@ -890,7 +890,7 @@ end
 end)
 in (t', env)))))
 
-# 405 "FStar.Absyn.Visit.fst"
+# 403 "FStar.Absyn.Visit.fst"
 let combine_exp = (fun e ec env -> (
 # 406 "FStar.Absyn.Visit.fst"
 let e = (compress_exp e)
@@ -961,7 +961,7 @@ end
 end)
 in (e', env)))))
 
-# 435 "FStar.Absyn.Visit.fst"
+# 433 "FStar.Absyn.Visit.fst"
 let collect_from_typ = (fun f env t -> (let _111_589 = (reduce_typ (fun _26_1260 _26_1262 _26_1264 env _26_1267 k -> (k, env)) (fun _26_1242 vt _26_1245 env bvs t -> (
 # 438 "FStar.Absyn.Visit.fst"
 let env = (f env t)

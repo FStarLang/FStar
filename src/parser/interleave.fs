@@ -190,8 +190,6 @@ let interleave (ds:list<decl>) : list<decl> =
     aux [] ds
 
 let interleave_modul m = 
-    if !Options.interleave
-    then match m with 
-            | Module(l, ds) -> Module(l, interleave ds)
-            | _ -> m
-    else m
+  match m with 
+  | Module(l, ds) -> Module(l, interleave ds)
+  | _ -> m
