@@ -188,7 +188,10 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
         !found
     in
     (* All the dependencies of FStar.All.fst, in order. *)
-    let ordered = [ "fstar"; "prims"; "fstar.functionalextensionality"; "fstar.set"; "fstar.heap"; "fstar.st"; "fstar.all" ] in
+    let ordered = [
+      "fstar"; "prims"; "fstar.list.tot"; "fstar.functionalextensionality";
+      "fstar.set"; "fstar.heap"; "fstar.map"; "fstar.hyperheap"; "fstar.st"; "fstar.all"
+    ] in
     (* The [open] statements that we wish to prepend. *)
     let desired_opens = [ Const.fstar_ns_lid; Const.prims_lid; Const.st_lid; Const.all_lid ] in
     let me = String.lowercase (must (check_and_strip_suffix (basename filename))) in
