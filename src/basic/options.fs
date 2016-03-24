@@ -287,7 +287,6 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x; detail_errors := false), "positive integer"), "Maximum number of cores to use for the solver (default 1); implied detail_errors = false");
      ( noshort, "no_default_includes", ZeroArgs (fun () -> no_default_includes := true), "Ignore the default module search paths");
      ( noshort, "no_extract", OneArg ((fun x -> no_extract := x::!no_extract), "module name"), "Do not extract code from this module");
-     ( noshort, "no_fs_typ_app", ZeroArgs (fun () -> fs_typ_app := false), "Do not allow the use of t<t1,...,tn> syntax for type applications");
      ( noshort, "no_location_info", ZeroArgs (fun () -> no_location_info := true), "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
      ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir");
      ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
@@ -346,16 +345,60 @@ let should_print_message m =
     should_verify m
     && m <> "Prims"
 
-let set_options =
-    //The smt option is a security concern
-    //only allow it to be set from the command line, not from the build-config
-    let no_smt_specs = specs() |> List.filter (fun (_, name, _, _) -> name <> "smt") in
-    fun s -> Getopt.parse_string no_smt_specs (fun _ -> ()) s
+type options = 
+    | Set
+    | Reset
+    | Restore
 
-let reset_options_string : ref<option<string>> = ref None
-let reset_options () =
+let set_options =
+    //Several options can only be set at the time the process is created, and not controlled interactively via pragmas
+    //Additionaly, the --smt option is a security concern
+    let settable = function
+      | "admit_smt_queries"
+      | "cardinality"
+      | "debug"
+      | "debug_level"
+      | "detail_errors"
+      | "eager_inference"
+      | "hide_genident_nums"
+      | "hide_uvar_nums"
+      | "initial_fuel"
+      | "initial_ifuel"
+      | "inline_arith"
+      | "lax"
+      | "log_types"
+      | "log_queries"
+      | "max_fuel"
+      | "max_ifuel"
+      | "min_fuel"
+      | "print_before_norm"
+      | "print_bound_var_types"
+      | "print_effect_args"
+      | "print_fuels"
+      | "print_implicits"
+      | "print_universes"
+      | "prn"
+      | "show_signatures"
+      | "silent"
+      | "split_cases"
+      | "timing"
+      | "trace_error"
+      | "unthrottle_inductives"
+      | "use_eq_at_higher_order"
+      | "__temp_no_proj"
+      | "warn_top_level_effects" -> true
+      | _ -> false in
+    let resettable s = settable s || s="z3timeout" in
+    let all_specs = specs () in
+    let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> not (settable x)) in
+    let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> not (resettable x)) in
+    fun o s -> 
+        let specs = match o with 
+            | Set -> settable_specs
+            | Reset -> resettable_specs
+            | Restore -> all_specs in
+        Getopt.parse_string specs (fun _ -> ()) s
+
+let restore_cmd_line_options () =
     init_options();
-    let res = Getopt.parse_cmdline (specs()) (fun x -> ()) in
-    match !reset_options_string with
-        | Some x -> set_options x
-        | _ -> res
+    Getopt.parse_cmdline (specs()) (fun x -> ()) 

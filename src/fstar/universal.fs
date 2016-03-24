@@ -137,7 +137,7 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
           DsEnv.pop dsenv |> ignore;
           TcEnv.pop env msg |> ignore;
           env.solver.refresh();
-          Options.reset_options() |> ignore in
+          Options.restore_cmd_line_options() |> ignore in
 
     let push (dsenv, env) msg = 
           let dsenv = DsEnv.push dsenv in

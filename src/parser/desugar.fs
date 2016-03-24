@@ -1489,7 +1489,7 @@ let trans_qual r = function
 
 let trans_pragma = function
   | AST.SetOptions s -> SetOptions s
-  | AST.ResetOptions -> ResetOptions
+  | AST.ResetOptions s -> ResetOptions s
 
 let trans_quals r = List.map (trans_qual r)
 

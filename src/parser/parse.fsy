@@ -142,13 +142,15 @@ pragma:
   | PRAGMA_SET_OPTIONS STRING
 	{ 
 	   let s = string_of_bytes $2 in
-	   if s = "--no_fs_typ_app"
-	   then fs_typ_app := false;
 	   SetOptions s
 	}
 
-  | PRAGMA_RESET_OPTIONS
-	{ ResetOptions }
+  | PRAGMA_RESET_OPTIONS maybeOptions
+	{ ResetOptions $2 }
+
+maybeOptions:
+  |			{ None    }
+  | STRING  { Some (string_of_bytes $1) }
 
 decls:
   |   { [] }

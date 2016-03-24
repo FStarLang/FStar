@@ -133,7 +133,7 @@ type lift = {
 
 type pragma =
   | SetOptions of string
-  | ResetOptions
+  | ResetOptions of option<string>
 
 type decl' =
   | TopLevelModule of lid

@@ -19,7 +19,7 @@
    limitations under the License.
 *)
 module FStar.Matrix2
-#set-options "--no_fs_typ_app"
+
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 "
 
 type matrix2 : nat -> nat -> Type -> Type
