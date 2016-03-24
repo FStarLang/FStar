@@ -407,7 +407,8 @@ let eff_decl_to_string ed =
          tscheme_to_string ed.trivial]
 
 let rec sigelt_to_string x = match x with
-  | Sig_pragma(ResetOptions, _) -> "#reset-options"
+  | Sig_pragma(ResetOptions None, _) -> "#reset-options"
+  | Sig_pragma(ResetOptions (Some s), _) -> Util.format1 "#reset-options \"%s\"" s
   | Sig_pragma(SetOptions s, _) -> Util.format1 "#set-options \"%s\"" s
   | Sig_inductive_typ(lid, univs, tps, k, _, _, quals, _) -> 
     Util.format4 "%s type %s %s : %s" 

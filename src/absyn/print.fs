@@ -478,7 +478,8 @@ let qual_to_string = function
     | _ -> "other"
 let quals_to_string quals = quals |> List.map qual_to_string |> String.concat " "
 let rec sigelt_to_string x = match x with
-  | Sig_pragma(ResetOptions, _) -> "#reset-options"
+  | Sig_pragma(ResetOptions None, _) -> "#reset-options"
+  | Sig_pragma(ResetOptions (Some s), _) -> Util.format1 "#reset-options \"%s\"" s
   | Sig_pragma(SetOptions s, _) -> Util.format1 "#set-options \"%s\"" s
   | Sig_tycon(lid, tps, k, _, _, quals, _) -> Util.format4 "%s type %s %s : %s" (quals_to_string quals) lid.str (binders_to_string " " tps) (kind_to_string k)
   | Sig_typ_abbrev(lid, tps, k, t, _, _) ->  Util.format4 "type %s %s : %s = %s" lid.str (binders_to_string " " tps) (kind_to_string k) (typ_to_string t)

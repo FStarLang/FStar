@@ -32,7 +32,7 @@ let rec mem_begin x n l =
     let y = nth n l in
     if x = y then true else mem_begin x (n + 1) l
 
-#set-options "--z3timeout 15"
+
 
 val mem: x:Box int alice_s -> l:Box (list int) bob_s
          -> len:nat{len = length (v_of_box l)}

@@ -54,7 +54,7 @@ let trans_qual = function
   
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
-  | AST.ResetOptions -> S.ResetOptions
+  | AST.ResetOptions sopt -> S.ResetOptions sopt
 
 let as_imp = function
     | Hash

@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Seq;
-    other-files:seq.fsi
- --*)
- 
 (*
    Copyright 2008-2015 Nikhil Swamy and Microsoft Research
 
@@ -19,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.Matrix2
-#set-options "--no_fs_typ_app"
+
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 "
 
 type matrix2 : nat -> nat -> Type -> Type

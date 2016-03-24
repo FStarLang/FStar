@@ -27,8 +27,7 @@ assume val add_with_different_bit_domains :
     (requires (signed_modulo a (pow2 m) = 0))
     (ensures (Bitsize (a + b) n))
 
-#reset-options
-#set-options "--z3timeout 5"
+#reset-options "--z3timeout 5"
 
 (* TODO : not verified *)
 (* Takes a value, a size and a bitweight and fill the array with that value *)

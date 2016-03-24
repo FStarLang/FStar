@@ -2086,16 +2086,20 @@ let rec tc_decl env se = match se with
       se, Env.push_sigelt env se
 
     | Sig_pragma(p, r) ->
+       let set_options t s = match Options.set_options t s with
+            | Getopt.GoOn -> ()
+            | Getopt.Help  -> raise (Error ("Failed to process pragma: use 'fstar --help' to see which options are available", r))
+            | Getopt.Die s -> raise (Error ("Failed to process pragma: " ^s, r)) in
         begin match p with
             | SetOptions o ->
-                begin match Options.set_options o with
-                    | Getopt.GoOn -> se, env
-                    | Getopt.Help  -> raise (Error ("Failed to process pragma: use 'fstar --help' to see which options are available", r))
-                    | Getopt.Die s -> raise (Error ("Failed to process pragma: " ^s, r))
-                end
-            | ResetOptions ->
+                set_options Options.Set o;
+                se, env
+            | ResetOptions sopt ->
+                Options.restore_cmd_line_options() |> ignore;
+                let _ = match sopt with 
+                    | None -> ()
+                    | Some s -> set_options Options.Reset s in
                 env.solver.refresh();
-                Options.reset_options() |> ignore;
                 se, env
         end
 
@@ -2358,7 +2362,7 @@ let finish_partial_modul env modul exports =
     env.solver.pop ("Ending modul " ^ modul.name.str);
     env.solver.encode_modul env modul;
     env.solver.refresh();
-    Options.reset_options() |> ignore
+    Options.restore_cmd_line_options() |> ignore
   end;
   modul, env
 
