@@ -261,24 +261,42 @@ in (
 # 162 "FStar.Universal.fst"
 let check_frag = (fun _83_155 curmod text -> (match (_83_155) with
 | (dsenv, env) -> begin
+(FStar_All.try_with (fun _83_159 -> (match (()) with
+| () -> begin
 (match ((tc_one_fragment curmod dsenv env text)) with
 | Some (m, dsenv, env) -> begin
-(let _168_63 = (let _168_62 = (FStar_TypeChecker_Errors.get_err_count ())
-in (m, (dsenv, env), _168_62))
-in Some (_168_63))
+(let _168_64 = (let _168_63 = (FStar_TypeChecker_Errors.get_err_count ())
+in (m, (dsenv, env), _168_63))
+in Some (_168_64))
 end
-| _83_164 -> begin
+| _83_179 -> begin
 None
 end)
+end)) (fun _83_158 -> (match (_83_158) with
+| FStar_Syntax_Syntax.Error (msg, r) -> begin
+(
+# 170 "FStar.Universal.fst"
+let _83_165 = (FStar_TypeChecker_Errors.add_errors env (((msg, r))::[]))
+in None)
+end
+| FStar_Syntax_Syntax.Err (msg) -> begin
+(
+# 174 "FStar.Universal.fst"
+let _83_169 = (let _168_68 = (let _168_67 = (let _168_66 = (FStar_TypeChecker_Env.get_range env)
+in (msg, _168_66))
+in (_168_67)::[])
+in (FStar_TypeChecker_Errors.add_errors env _168_68))
+in None)
+end)))
 end))
 in (
-# 168 "FStar.Universal.fst"
-let report_fail = (fun _83_166 -> (match (()) with
+# 177 "FStar.Universal.fst"
+let report_fail = (fun _83_181 -> (match (()) with
 | () -> begin
 (
-# 169 "FStar.Universal.fst"
-let _83_167 = (let _168_66 = (FStar_TypeChecker_Errors.report_all ())
-in (FStar_All.pipe_right _168_66 Prims.ignore))
+# 178 "FStar.Universal.fst"
+let _83_182 = (let _168_71 = (FStar_TypeChecker_Errors.report_all ())
+in (FStar_All.pipe_right _168_71 Prims.ignore))
 in (FStar_ST.op_Colon_Equals FStar_TypeChecker_Errors.num_errs 0))
 end))
 in {FStar_Interactive.pop = pop; FStar_Interactive.push = push; FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail})))))))

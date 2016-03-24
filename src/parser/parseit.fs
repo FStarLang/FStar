@@ -78,7 +78,11 @@ let parse fn =
     | Syntax.Syntax.Error(msg, r) ->
       Inr (msg, r)
     | e ->
-      let pos = lexbuf.EndPos in
-      let p = Range.mk_pos pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) in
-      let r = Range.mk_range filename p p in
+      let p0 = 
+        let p = lexbuf.StartPos in
+        Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol + 1) in
+      let p1 = 
+        let p = lexbuf.EndPos in
+        Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol + 1) in
+      let r = Range.mk_range filename p0 p1 in
       Inr ("Syntax error", r)

@@ -108,7 +108,7 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
       let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
       let env = match curmod with
           | None -> env
-          | Some _ -> raise (Absyn.Syntax.Err("Interactive mode only supports a single module at the top-level")) in
+          | Some _ -> raise (Syntax.Err("Interactive mode only supports a single module at the top-level")) in
       let modul, _, env = Tc.tc_partial_modul env modul in
       Some (Some modul, dsenv, env)
 
@@ -160,10 +160,19 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
         dsenv, env in
 
     let check_frag (dsenv, (env:TcEnv.env)) curmod text =  
-        match tc_one_fragment curmod dsenv env text with 
-            | Some (m, dsenv, env) -> 
-              Some (m, (dsenv, env), FStar.TypeChecker.Errors.get_err_count())
-            | _ -> None in
+        try 
+            match tc_one_fragment curmod dsenv env text with 
+                | Some (m, dsenv, env) -> 
+                  Some (m, (dsenv, env), FStar.TypeChecker.Errors.get_err_count())
+                | _ -> None
+        with 
+            | FStar.Syntax.Syntax.Error(msg, r) ->
+              FStar.TypeChecker.Errors.add_errors env [(msg, r)];
+              None
+              
+            | FStar.Syntax.Syntax.Err msg ->
+              FStar.TypeChecker.Errors.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
+              None in
 
     let report_fail () = 
         TypeChecker.Errors.report_all() |> ignore;

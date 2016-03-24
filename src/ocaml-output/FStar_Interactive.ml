@@ -275,8 +275,10 @@ end))
 # 147 "FStar.Interactive.fst"
 let detect_dependencies_with_first_interactive_chunk : Prims.unit  ->  Prims.string Prims.list = (fun _81_116 -> (match (()) with
 | () -> begin
+(FStar_All.try_with (fun _81_118 -> (match (()) with
+| () -> begin
 (
-# 148 "FStar.Interactive.fst"
+# 149 "FStar.Interactive.fst"
 let fail = (fun msg -> if (FStar_ST.read FStar_Options.universes) then begin
 (Prims.raise (FStar_Syntax_Syntax.Err (msg)))
 end else begin
@@ -288,108 +290,127 @@ in (match ((find_initial_module_name ())) with
 end
 | Some (module_name) -> begin
 (
-# 156 "FStar.Interactive.fst"
+# 157 "FStar.Interactive.fst"
 let file_of_module_name = (FStar_Parser_Dep.build_map [])
 in (
-# 157 "FStar.Interactive.fst"
+# 158 "FStar.Interactive.fst"
 let filename = (FStar_Util.smap_try_find file_of_module_name (FStar_String.lowercase module_name))
 in (match (filename) with
 | None -> begin
-(let _166_179 = (FStar_Util.format2 "I found a \"module %s\" directive, but there is no %s.fst\n" module_name module_name)
-in (fail _166_179))
+(let _166_180 = (FStar_Util.format2 "I found a \"module %s\" directive, but there is no %s.fst\n" module_name module_name)
+in (fail _166_180))
 end
 | Some (filename) -> begin
 (
-# 163 "FStar.Interactive.fst"
-let _81_127 = (FStar_ST.op_Colon_Equals FStar_Options.verify_module ((module_name)::[]))
-in (
 # 164 "FStar.Interactive.fst"
-let _81_132 = (FStar_Parser_Dep.collect ((filename)::[]))
-in (match (_81_132) with
-| (_81_130, all_filenames) -> begin
-(let _166_180 = (FStar_List.tl all_filenames)
-in (FStar_List.rev _166_180))
+let _81_148 = (FStar_ST.op_Colon_Equals FStar_Options.verify_module ((module_name)::[]))
+in (
+# 165 "FStar.Interactive.fst"
+let _81_153 = (FStar_Parser_Dep.collect ((filename)::[]))
+in (match (_81_153) with
+| (_81_151, all_filenames) -> begin
+(let _166_181 = (FStar_List.tl all_filenames)
+in (FStar_List.rev _166_181))
 end)))
 end)))
 end))
+end)) (fun _81_117 -> (match (_81_117) with
+| FStar_Syntax_Syntax.Error (msg, r) -> begin
+(
+# 169 "FStar.Interactive.fst"
+let _81_124 = (FStar_TypeChecker_Errors.warn r msg)
+in (
+# 170 "FStar.Interactive.fst"
+let _81_126 = (FStar_TypeChecker_Errors.warn r (Prims.strcat "Dependency analysis may not be correct because the file failed to parse: " msg))
+in []))
+end
+| FStar_Absyn_Syntax.Error (msg, r) -> begin
+(
+# 173 "FStar.Interactive.fst"
+let _81_132 = (FStar_Tc_Errors.warn r msg)
+in (
+# 174 "FStar.Interactive.fst"
+let _81_134 = (FStar_Tc_Errors.warn r (Prims.strcat "Dependency analysis may not be correct because the file failed to parse: " msg))
+in []))
+end)))
 end))
 
-# 171 "FStar.Interactive.fst"
+# 181 "FStar.Interactive.fst"
 let interactive_mode = (fun env initial_mod tc -> (
-# 172 "FStar.Interactive.fst"
-let _81_138 = if (let _166_184 = (FStar_ST.read FStar_Options.codegen)
-in (FStar_Option.isSome _166_184)) then begin
+# 182 "FStar.Interactive.fst"
+let _81_159 = if (let _166_186 = (FStar_ST.read FStar_Options.codegen)
+in (FStar_Option.isSome _166_186)) then begin
 (FStar_Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag")
 end else begin
 ()
 end
 in (
-# 174 "FStar.Interactive.fst"
+# 184 "FStar.Interactive.fst"
 let rec go = (fun stack curmod env -> (match ((shift_chunk ())) with
 | Pop (msg) -> begin
 (
-# 177 "FStar.Interactive.fst"
-let _81_146 = (tc.pop env msg)
+# 187 "FStar.Interactive.fst"
+let _81_167 = (tc.pop env msg)
 in (
-# 178 "FStar.Interactive.fst"
-let _81_158 = (match (stack) with
+# 188 "FStar.Interactive.fst"
+let _81_179 = (match (stack) with
 | [] -> begin
 (
-# 180 "FStar.Interactive.fst"
-let _81_149 = (FStar_Util.print_error "too many pops")
+# 190 "FStar.Interactive.fst"
+let _81_170 = (FStar_Util.print_error "too many pops")
 in (FStar_All.exit 1))
 end
 | hd::tl -> begin
 (hd, tl)
 end)
-in (match (_81_158) with
+in (match (_81_179) with
 | ((env, curmod), stack) -> begin
 (go stack curmod env)
 end)))
 end
 | Push (msg) -> begin
 (
-# 185 "FStar.Interactive.fst"
+# 195 "FStar.Interactive.fst"
 let stack = ((env, curmod))::stack
 in (
-# 186 "FStar.Interactive.fst"
+# 196 "FStar.Interactive.fst"
 let env = (tc.push env msg)
 in (go stack curmod env)))
 end
 | Code (text, (ok, fail)) -> begin
 (
-# 190 "FStar.Interactive.fst"
+# 200 "FStar.Interactive.fst"
 let fail = (fun curmod env_mark -> (
-# 191 "FStar.Interactive.fst"
-let _81_172 = (tc.report_fail ())
+# 201 "FStar.Interactive.fst"
+let _81_193 = (tc.report_fail ())
 in (
-# 192 "FStar.Interactive.fst"
-let _81_174 = (FStar_Util.print1 "%s\n" fail)
+# 202 "FStar.Interactive.fst"
+let _81_195 = (FStar_Util.print1 "%s\n" fail)
 in (
-# 193 "FStar.Interactive.fst"
+# 203 "FStar.Interactive.fst"
 let env = (tc.reset_mark env_mark)
 in (go stack curmod env)))))
 in (
-# 196 "FStar.Interactive.fst"
+# 206 "FStar.Interactive.fst"
 let env_mark = (tc.mark env)
 in (
-# 197 "FStar.Interactive.fst"
+# 207 "FStar.Interactive.fst"
 let res = (tc.check_frag env_mark curmod text)
 in (match (res) with
 | Some (curmod, env, n_errs) -> begin
 if (n_errs = 0) then begin
 (
-# 201 "FStar.Interactive.fst"
-let _81_184 = (FStar_Util.print1 "\n%s\n" ok)
+# 211 "FStar.Interactive.fst"
+let _81_205 = (FStar_Util.print1 "\n%s\n" ok)
 in (
-# 202 "FStar.Interactive.fst"
+# 212 "FStar.Interactive.fst"
 let env = (tc.commit_mark env)
 in (go stack curmod env)))
 end else begin
 (fail curmod env_mark)
 end
 end
-| _81_188 -> begin
+| _81_209 -> begin
 (fail curmod env_mark)
 end))))
 end))

@@ -14,9 +14,6 @@ abstract type m_rref (r:rid) (a:Type) (b:reln a) = rref r a
 val as_rref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (rref r a)
 let as_rref #r #a #b x = x
 
-val as_ref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (Heap.ref a)
-let as_ref #r #a #b m = HyperHeap.as_ref m
-
 val contains : #r:rid -> #a:Type -> #b:reln a -> r:m_rref r a b -> m:t -> GTot bool
 let contains #r #a #b r m = HyperHeap.contains_ref (as_rref r) m 
 
@@ -54,7 +51,7 @@ val write:#r:rid
               (ensures (assign_post (as_rref x) v))
 let write #r #a #b x v = x := v
 
-type stable_on_t (#r:rid) (#a:Type) (#b:reln a) (r:m_rref r a b) (p:(t -> Type)) = 
+type stable_on_t (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:(t -> Type)) = 
   forall h0 h1. p h0 /\ b (sel h0 r) (sel h1 r) ==> p h1
 abstract type witnessed (p:(t -> Type)) = True
 
@@ -68,7 +65,8 @@ val witness: #r:rid
                 (ensures (fun h0 _ h1 -> h0=h1 /\ witnessed p))
 let witness #r #a #b m p = ()
 
-assume val recall: p:(t -> Type)
+val recall: p:(t -> Type)
                 -> ST unit
                       (requires (fun _ ->  witnessed p))
                       (ensures (fun h0 _ h1 -> p h1))
+let recall p = admit() //intentionally admitted

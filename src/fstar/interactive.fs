@@ -145,24 +145,37 @@ let find_initial_module_name () =
 module U_Syntax = FStar.Syntax.Syntax
 module F_Syntax = FStar.Absyn.Syntax
 let detect_dependencies_with_first_interactive_chunk () =
- let fail msg = 
-    if !Options.universes
-    then raise (U_Syntax.Err msg)
-    else raise (F_Syntax.Err msg) in
-  match find_initial_module_name () with
-  | None ->
-    fail "No initial module directive found\n"
-  | Some module_name ->
-      let file_of_module_name = Parser.Dep.build_map [] in
-      let filename = smap_try_find file_of_module_name (String.lowercase module_name) in
-      match filename with
+ try
+     let fail msg = 
+        if !Options.universes
+        then raise (U_Syntax.Err msg)
+        else raise (F_Syntax.Err msg) in
+      match find_initial_module_name () with
       | None ->
-         fail (Util.format2 "I found a \"module %s\" directive, but there \
-            is no %s.fst\n" module_name module_name)
-      | Some filename ->
-          Options.verify_module := [ module_name ];
-          let _, all_filenames = Parser.Dep.collect [ filename ] in
-          List.rev (List.tl all_filenames)
+        fail "No initial module directive found\n"
+      | Some module_name ->
+          let file_of_module_name = Parser.Dep.build_map [] in
+          let filename = smap_try_find file_of_module_name (String.lowercase module_name) in
+          match filename with
+          | None ->
+             fail (Util.format2 "I found a \"module %s\" directive, but there \
+                is no %s.fst\n" module_name module_name)
+          | Some filename ->
+              Options.verify_module := [ module_name ];
+              let _, all_filenames = Parser.Dep.collect [ filename ] in
+              List.rev (List.tl all_filenames)
+ with 
+    | U_Syntax.Error(msg, r) -> 
+      FStar.TypeChecker.Errors.warn r msg;
+      FStar.TypeChecker.Errors.warn r ("Dependency analysis may not be correct because the file failed to parse: "^msg);
+      [] 
+    | F_Syntax.Error(msg, r) -> 
+      FStar.Tc.Errors.warn r msg;
+      FStar.Tc.Errors.warn r ("Dependency analysis may not be correct because the file failed to parse: "^msg);
+      [] 
+    | _ -> 
+      FStar.Tc.Errors.warn Range.dummyRange ("Dependency analysis may not be correct because the file failed to parse: ");
+      []
           
 
 (******************************************************************************************)
