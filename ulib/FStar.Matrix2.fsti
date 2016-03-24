@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Seq;
-    other-files:seq.fsi
- --*)
- 
 (*
    Copyright 2008-2015 Nikhil Swamy and Microsoft Research
 
