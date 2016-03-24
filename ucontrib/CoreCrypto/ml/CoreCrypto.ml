@@ -393,9 +393,15 @@ let dh_agreement (mypriv:dh_key) (opub:bytes) =
 (* -------------------------------------------------------------------- *)
 
 type ec_curve =
-     | ECC_P256
-     | ECC_P384
-     | ECC_P521
+  | ECC_P256
+  | ECC_P384
+  | ECC_P521
+
+let ec_bytelen = function
+  | ECC_P256 -> 32
+  | ECC_P384 -> 48
+  | ECC_P521 -> 66 (* ceil(521/8) *)
+
 type ec_params = { curve: ec_curve; point_compression: bool; }
 type ec_point = { ecx : bytes; ecy : bytes; }
 
@@ -466,9 +472,6 @@ let ec_is_on_curve params point =
   let g = ssl_group_of_params params in
   let p = ssl_point_of_point params point in
   ocaml_ec_point_is_on_curve g p
-
-let ec_point_serialize ecp =
-  ecp.ecx @| ecp.ecy
 
 
 type ssl_ec_key

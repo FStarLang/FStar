@@ -77,6 +77,9 @@ type ec_curve =
      | ECC_P256
      | ECC_P384
      | ECC_P521
+
+val ec_bytelen: ec_curve -> int
+
 type ec_params = { curve: ec_curve; point_compression: bool; }
 type ec_point = { ecx : bytes; ecy : bytes; }
 
@@ -86,7 +89,6 @@ type ec_key = {
      ec_priv : bytes option;
 }
 
-val ec_point_serialize: ec_point -> bytes
 val ec_is_on_curve: ec_params -> ec_point -> bool
 val ecdh_agreement: ec_key -> ec_point -> bytes
 
