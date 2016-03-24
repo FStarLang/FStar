@@ -9,7 +9,7 @@ type bytes = Platform.Bytes.bytes
  * also called [cbytes] in [Platform.Bytes]. *)
 let string_of_bytes b = Platform.Bytes.get_cbytes b
 let bytes_of_string s = Platform.Bytes.abytes s
-
+let (@|) = Platform.Bytes.(@|)
 
 (* -------------------------------------------------------------------- *)
 
@@ -468,7 +468,7 @@ let ec_is_on_curve params point =
   ocaml_ec_point_is_on_curve g p
 
 let ec_point_serialize ecp =
-  failwith "Not implemented"
+  ecp.ecx @| ecp.ecy
 
 
 type ssl_ec_key
