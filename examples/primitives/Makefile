@@ -1,8 +1,8 @@
 # FStar variables
-FSTAR_HOME=~/dev/FStar
+FSTAR_HOME?=~/dev/FStar
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 
-OPTIONS_VER= 
+OPTIONS_VER=
 OPTIONS_COMPILE=--lax --codegen C
 OPTIONS_OCAML=--lax --codegen OCaml
 
@@ -15,12 +15,14 @@ POLY=poly
 BIGNUM=bignum
 CURVE=curve25519
 AES=aes
+SHA=sha256
 
 CHACHA_ODIR=chacha20
 POLY_ODIR=poly1305
 BIGNUM_ODIR=bignum_library
 CURVE_ODIR=curve25519
 AES_ODIR=aes
+SHA_ODIR=sha256
 
 CHACHA_C=Chacha.c test_chacha.c
 POLY_C=Parameters.c Bignum.c Poly.c test_poly.c
@@ -28,18 +30,18 @@ BIGNUM_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.
 CURVE_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c Bignum_Fscalar.c Bignum_Fproduct.c Bignum_Modulo.c Bignum_Core.c Curve_Point.c Curve_AddAndDouble.c Curve_Ladder.c test_curve.c
 AES_C=Crypto_AES.c test_aes.c
 
-COMPILE=gcc -O4 fstarlib.c 
+COMPILE=gcc -O4 fstarlib.c
 
 # OCaml variables
 OCAML=ocamlfind ocamlopt -package batteries -linkpkg -g -thread
 DEBUG=ocamlfind ocamlc -package batteries -linkpkg -g -thread
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
-OCAML_LIB=$(addprefix $(FSTAR_HOME)/lib/ml/, MkPrims.ml native_int/prims.ml FStar_Set.ml FStar_ST.ml FStar_All.ml) FStar_FunctionalExtensionality.ml FStar_Seq.ml 
+OCAML_LIB=$(addprefix $(FSTAR_HOME)/lib/ml/, MkPrims.ml native_int/prims.ml FStar_Set.ml FStar_ST.ml FStar_All.ml) FStar_FunctionalExtensionality.ml FStar_Seq.ml
 CHACHA_OCAML=FStar_UInt8.ml FStar_UInt32.ml SBuffer.ml FStar_SBytes.ml Chacha.ml
 POLY_OCAML=FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt63.ml SBuffer.ml FStar_SBytes.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
+POLY_OCAML=FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt63.ml SBuffer.ml FStar_SBytes.ml Crypto_Sha256.ml
 
-
-.PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test
+.PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test sha-ver sha-ml
 
 all: chacha-test poly-test
 
@@ -89,7 +91,7 @@ poly-ml:
 	$(POLY_ODIR)_ml/a.out
 
 bignum-ver:
-	$(FSTAR) $(OPTIONS_VER) Bignum.Core.fst --lax 
+	$(FSTAR) $(OPTIONS_VER) Bignum.Core.fst --lax
 
 bignum-test: Bignum.Core.fst
 	@echo ""
@@ -112,7 +114,7 @@ bignum-debug: Bignum.Core.fst
 
 # Curve targets
 curve-ver:
-	$(FSTAR) $(OPTIONS_VER) Curve.Ladder.fst --lax 
+	$(FSTAR) $(OPTIONS_VER) Curve.Ladder.fst --lax
 
 curve-test: Curve.Ladder.fst
 	@echo ""
@@ -154,8 +156,16 @@ aes-debug: Crypto.AES.fst
 	cd $(AES_ODIR) && $(COMPILE) $(AES_C) -o $(AES)
 	./$(AES_ODIR)/$(AES)
 
+# SHA targets
+sha-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.Sha256.fst
+
+sha-ml:
+	mkdir -p $(SHA_ODIR)_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha256.fst --odir $(SHA_ODIR)_ml
+	cp ./ml/*.ml $(SHA_ODIR)_ml
 
 # Cleaning
 clean:
-	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(CHACHA_ODIR)_ml $(POLY_ODIR)_ml \
-		$(BIGNUM_ODIR) $(CURVE_ODIR) $(AES_ODIR) *~ *.exe
+	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(CHACHA_ODIR)_ml $(POLY_ODIR)_ml $(SHA_ODIR)_ml \
+		$(BIGNUM_ODIR) $(CURVE_ODIR) $(AES_ODIR) $(SHA_ODIR) *~ *.exe
