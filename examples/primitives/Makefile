@@ -39,7 +39,7 @@ OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOM
 OCAML_LIB=$(addprefix $(FSTAR_HOME)/lib/ml/, MkPrims.ml native_int/prims.ml FStar_Set.ml FStar_ST.ml FStar_All.ml) FStar_FunctionalExtensionality.ml FStar_Seq.ml
 CHACHA_OCAML=FStar_UInt8.ml FStar_UInt32.ml SBuffer.ml FStar_SBytes.ml Chacha.ml
 POLY_OCAML=FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt63.ml SBuffer.ml FStar_SBytes.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
-POLY_OCAML=FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt63.ml SBuffer.ml FStar_SBytes.ml Crypto_Sha256.ml
+SHA_OCAML=FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt63.ml SBuffer.ml FStar_SBytes.ml Crypto_Sha256.ml
 
 .PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test sha-ver sha-ml
 
@@ -164,6 +164,10 @@ sha-ml:
 	mkdir -p $(SHA_ODIR)_ml
 	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha256.fst --odir $(SHA_ODIR)_ml
 	cp ./ml/*.ml $(SHA_ODIR)_ml
+
+sha-test: sha-ml
+	cd $(SHA_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_OCAML) test_sha256.ml #2> /dev/null
+	$(SHA_ODIR)_ml/a.out
 
 # Cleaning
 clean:
