@@ -106,7 +106,7 @@ inline let pure_bind_wp  (a:Type) (b:Type)
 inline let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
      l_ITE p (wp_then post) (wp_else post)
 inline let pure_ite_wlp (a:Type) (wlp_cases:pure_wp a) (post:pure_post a) =
-     (forall (x:a). wlp_cases (fun (x':a) -> ~(eq2 #a #a x x')) \/ post x)
+     (forall (x:a). ~(wlp_cases (fun (x':a) -> ~(eq2 #a #a x x'))) ==> post x)
 inline let pure_ite_wp (a:Type) (wlp_cases:pure_wp a) (wp_cases:pure_wp a) (post:pure_post a) =
      pure_ite_wlp a wlp_cases post
     /\ wp_cases (fun (x:a) -> True)
@@ -259,8 +259,8 @@ inline let st_ite_wlp       (heap:Type) (a:Type)
                              (wlp_cases:st_wp_h heap a)
                              (post:st_post_h heap a) (h0:heap) =
      (forall (a:a) (h:heap).
-           wlp_cases (fun a1 h1 -> a=!=a1 \/ h=!=h1) h0
-        \/ post a h)
+           ~ (wlp_cases (fun a1 h1 -> a=!=a1 \/ h=!=h1) h0)
+	   ==> post a h)
 inline let st_ite_wp        (heap:Type) (a:Type)
                              (wlp_cases:st_wp_h heap a) (wp_cases:st_wp_h heap a)
                              (post:st_post_h heap a) (h0:heap) =
@@ -331,7 +331,7 @@ inline let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a)
        (wp_then post)
        (wp_else post)
 inline let ex_ite_wlp  (a:Type) (wlp_cases:ex_wp a) (post:ex_post a) =
-    (forall (a:result a). wlp_cases (fun a1 -> a=!=a1) \/ post a)
+    (forall (a:result a). ~ (wlp_cases (fun a1 -> a=!=a1)) ==> post a)
 inline let ex_ite_wp (a:Type) (wlp_cases:ex_wp a) (wp_cases:ex_wp a) (post:ex_post a) =
     ex_ite_wlp a wlp_cases post
     /\ wp_cases (fun ra2 -> True)
@@ -395,7 +395,7 @@ inline let all_if_then_else (heap:Type) (a:Type) (p:Type)
 inline let all_ite_wlp  (heap:Type) (a:Type)
                          (wlp_cases:all_wp_h heap a)
                          (post:all_post_h heap a) (h0:heap) =
-     (forall (ra:result a) (h:heap). wlp_cases (fun ra2 h2 -> ra=!=ra2 \/ h=!=h2) h0 \/ post ra h)
+     (forall (ra:result a) (h:heap). ~ (wlp_cases (fun ra2 h2 -> ra=!=ra2 \/ h=!=h2) h0) ==> post ra h)
 inline let all_ite_wp (heap:Type) (a:Type)
                        (wlp_cases:all_wp_h heap a) (wp_cases:all_wp_h heap a)
                        (post:all_post_h heap a) (h0:heap) =

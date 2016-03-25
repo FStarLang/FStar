@@ -166,7 +166,8 @@ let init_options () =
     explicit_deps := false;
     dep := None;
     timing := false;
-    inline_arith := false
+    inline_arith := false;
+    detail_errors := false
 
 let set_fstar_home () =
   let fh = match !fstar_home_opt with

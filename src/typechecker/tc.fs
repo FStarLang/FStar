@@ -2180,7 +2180,10 @@ let rec tc_decl env se = match se with
           if List.length q = List.length q' 
           && List.forall2 Util.qualifier_equal q q'
           then Some q
-          else raise (Error(Util.format1 "Inconsistent qualifier annotations on %s" (Print.lid_to_string l), r)) in
+          else raise (Error(Util.format3 "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}" 
+                                (Print.lid_to_string l)
+                                (Print.quals_to_string q)
+                                (Print.quals_to_string q'), r)) in
 
       (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
             (b) Generalize the type of lb only if none of the lbs have val decls

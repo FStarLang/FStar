@@ -37,3 +37,5 @@ val binders_to_string: string -> binders ->string
 val eff_decl_to_string: eff_decl -> string
 val subst_to_string  : subst_t -> string
 val const_to_string  : sconst -> string
+val qual_to_string   : qualifier -> string
+val quals_to_string  : list<qualifier> -> string
