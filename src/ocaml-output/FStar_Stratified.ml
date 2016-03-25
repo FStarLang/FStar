@@ -1,15 +1,15 @@
 
 open Prims
-# 37 "FStar.Stratified.fst"
+# 39 "FStar.Stratified.fst"
 let module_or_interface_name : FStar_Absyn_Syntax.modul  ->  (Prims.bool * FStar_Absyn_Syntax.lident) = (fun m -> (m.FStar_Absyn_Syntax.is_interface, m.FStar_Absyn_Syntax.name))
 
-# 39 "FStar.Stratified.fst"
+# 44 "FStar.Stratified.fst"
 let parse : FStar_Parser_DesugarEnv.env  ->  Prims.string  ->  (FStar_Parser_DesugarEnv.env * FStar_Absyn_Syntax.modul Prims.list) = (fun env fn -> (
 # 46 "FStar.Stratified.fst"
 let ast = (FStar_Parser_Driver.parse_file fn)
 in (FStar_Parser_Desugar.desugar_file env ast)))
 
-# 47 "FStar.Stratified.fst"
+# 52 "FStar.Stratified.fst"
 let tc_prims : Prims.unit  ->  (FStar_Absyn_Syntax.modul Prims.list * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) = (fun _82_5 -> (match (()) with
 | () -> begin
 (
@@ -45,7 +45,7 @@ end))
 end))))))
 end))
 
-# 61 "FStar.Stratified.fst"
+# 66 "FStar.Stratified.fst"
 let tc_one_file : FStar_Parser_DesugarEnv.env  ->  FStar_Tc_Env.env  ->  Prims.string  ->  (FStar_Absyn_Syntax.modul Prims.list * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) = (fun dsenv env fn -> (
 # 69 "FStar.Stratified.fst"
 let _82_22 = (parse dsenv fn)
@@ -69,7 +69,7 @@ in (match (_82_32) with
 end))
 end)))
 
-# 74 "FStar.Stratified.fst"
+# 79 "FStar.Stratified.fst"
 let batch_mode_tc_no_prims : FStar_Parser_DesugarEnv.env  ->  FStar_Tc_Env.env  ->  Prims.string Prims.list  ->  (FStar_Absyn_Syntax.modul Prims.list * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) = (fun dsenv env filenames -> (
 # 80 "FStar.Stratified.fst"
 let _82_50 = (FStar_All.pipe_right filenames (FStar_List.fold_left (fun _82_39 f -> (match (_82_39) with
@@ -97,7 +97,7 @@ end
 in (all_mods, dsenv, env))
 end)))
 
-# 89 "FStar.Stratified.fst"
+# 91 "FStar.Stratified.fst"
 let batch_mode_tc : Prims.string Prims.list  ->  (FStar_Absyn_Syntax.modul Prims.list * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) = (fun filenames -> (
 # 92 "FStar.Stratified.fst"
 let _82_57 = (tc_prims ())
@@ -118,7 +118,7 @@ end))
 end))
 end)))
 
-# 95 "FStar.Stratified.fst"
+# 100 "FStar.Stratified.fst"
 let tc_one_fragment : FStar_Absyn_Syntax.modul Prims.option  ->  FStar_Parser_DesugarEnv.env  ->  FStar_Tc_Env.env  ->  Prims.string  ->  (FStar_Absyn_Syntax.modul Prims.option * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) Prims.option = (fun curmod dsenv env frag -> (FStar_All.try_with (fun _82_70 -> (match (()) with
 | () -> begin
 (match ((FStar_Parser_Driver.parse_fragment frag)) with
@@ -190,7 +190,7 @@ end
 (Prims.raise e)
 end))))
 
-# 129 "FStar.Stratified.fst"
+# 135 "FStar.Stratified.fst"
 let interactive_tc : ((FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env), FStar_Absyn_Syntax.modul Prims.option) FStar_Interactive.interactive_tc = (
 # 136 "FStar.Stratified.fst"
 let pop = (fun _82_115 msg -> (match (_82_115) with

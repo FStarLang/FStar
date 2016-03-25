@@ -1,6 +1,6 @@
 
 open Prims
-# 26 "FStar.Extraction.ML.ExtractMod.fst"
+# 29 "FStar.Extraction.ML.ExtractMod.fst"
 let fail_exp : FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.exp = (fun lid t -> (let _157_16 = (let _157_15 = (FStar_Absyn_Util.fvar None FStar_Absyn_Const.failwith_lid FStar_Absyn_Syntax.dummyRange)
 in (let _157_14 = (let _157_13 = (FStar_Absyn_Syntax.targ t)
 in (let _157_12 = (let _157_11 = (let _157_10 = (let _157_9 = (let _157_8 = (let _157_7 = (let _157_6 = (let _157_5 = (FStar_Absyn_Print.sli lid)
@@ -15,7 +15,7 @@ in (_157_13)::_157_12))
 in (_157_15, _157_14)))
 in (FStar_Absyn_Syntax.mk_Exp_app _157_16 None FStar_Absyn_Syntax.dummyRange)))
 
-# 31 "FStar.Extraction.ML.ExtractMod.fst"
+# 33 "FStar.Extraction.ML.ExtractMod.fst"
 let mangle_projector_lid : FStar_Ident.lident  ->  FStar_Ident.lident = (fun x -> (
 # 34 "FStar.Extraction.ML.ExtractMod.fst"
 let projecteeName = x.FStar_Ident.ident
@@ -30,7 +30,7 @@ let mangledName = (FStar_Absyn_Syntax.id_of_text (Prims.strcat (Prims.strcat (Pr
 in (FStar_Ident.lid_of_ids (FStar_List.append prefix ((mangledName)::[]))))
 end))))
 
-# 37 "FStar.Extraction.ML.ExtractMod.fst"
+# 39 "FStar.Extraction.ML.ExtractMod.fst"
 let rec extract_sig : FStar_Extraction_ML_Env.env  ->  FStar_Absyn_Syntax.sigelt  ->  (FStar_Extraction_ML_Env.env * FStar_Extraction_ML_Syntax.mlmodule1 Prims.list) = (fun g se -> (
 # 40 "FStar.Extraction.ML.ExtractMod.fst"
 let _72_16 = (FStar_Extraction_ML_Env.debug g (fun u -> (let _157_25 = (let _157_24 = (FStar_Absyn_Print.sigelt_to_string se)
@@ -196,11 +196,11 @@ end
 (g, [])
 end)))
 
-# 101 "FStar.Extraction.ML.ExtractMod.fst"
+# 103 "FStar.Extraction.ML.ExtractMod.fst"
 let extract_iface : FStar_Extraction_ML_Env.env  ->  FStar_Absyn_Syntax.modul  ->  FStar_Extraction_ML_Env.env = (fun g m -> (let _157_58 = (FStar_Util.fold_map extract_sig g m.FStar_Absyn_Syntax.declarations)
 in (FStar_All.pipe_right _157_58 Prims.fst)))
 
-# 103 "FStar.Extraction.ML.ExtractMod.fst"
+# 105 "FStar.Extraction.ML.ExtractMod.fst"
 let rec extract : FStar_Extraction_ML_Env.env  ->  FStar_Absyn_Syntax.modul  ->  (FStar_Extraction_ML_Env.env * FStar_Extraction_ML_Syntax.mllib Prims.list) = (fun g m -> (
 # 106 "FStar.Extraction.ML.ExtractMod.fst"
 let _72_162 = (FStar_Absyn_Util.reset_gensym ())
