@@ -51,22 +51,22 @@ val write:#r:rid
               (ensures (assign_post (as_rref x) v))
 let write #r #a #b x v = x := v
 
-type stable_on_t (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:(t -> Type)) = 
+inline type stable_on_t (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:(t -> GTot Type0)) =
   forall h0 h1. p h0 /\ b (sel h0 r) (sel h1 r) ==> p h1
-abstract type witnessed (p:(t -> Type)) = True
+abstract type witnessed (p:(t -> GTot Type0)) = True
 
 val witness: #r:rid
           -> #a:Type
           -> #b:reln a
           -> m:m_rref r a b
-          -> p:(t -> Type)
+          -> p:(t -> GTot Type0)
           -> ST unit
                 (requires (fun h0 -> p h0 /\ stable_on_t m p))
                 (ensures (fun h0 _ h1 -> h0=h1 /\ witnessed p))
 let witness #r #a #b m p = ()
 
-val recall: p:(t -> Type)
-                -> ST unit
-                      (requires (fun _ ->  witnessed p))
-                      (ensures (fun h0 _ h1 -> p h1))
+val recall: p:(t -> GTot Type0)
+          -> ST unit
+               (requires (fun _ ->  witnessed p))
+               (ensures (fun h0 _ h1 -> p h1))
 let recall p = admit() //intentionally admitted
