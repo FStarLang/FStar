@@ -111,8 +111,11 @@ let rec free_names_and_uvs' tm : free_vars =
             pat_bvs p |> List.fold_left (fun n x -> union n (free_names_and_uvars x.sort)) n)
             (free_names_and_uvars t)
       
-      | Tm_ascribed(t1, t2, _) -> 
+      | Tm_ascribed(t1, Inl t2, _) -> 
         union (free_names_and_uvars t1) (free_names_and_uvars t2)
+
+      | Tm_ascribed(t1, Inr c, _) -> 
+        union (free_names_and_uvars t1) (free_names_and_uvars_comp c)
 
       | Tm_let(lbs, t) -> 
         snd lbs |> List.fold_left (fun n lb -> 

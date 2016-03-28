@@ -104,6 +104,7 @@ let force_sort' s = match !s.tk with
 let force_sort s = mk (force_sort' s) None s.pos
 
 let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} = 
+  let rng = t.pos in
   let t = SS.compress t in 
   match t.n with
    | Tm_unknown ->
@@ -116,7 +117,7 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
           {a with sort=t}, false
         | _ -> a, true in
 
-    let rec aux vars e : typ * bool =
+    let rec aux vars e : either<typ,comp> * bool =
       let e = SS.compress e in
       match e.n with
       | Tm_meta(e, _) -> aux vars e
@@ -132,14 +133,22 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
            (vars,[],false) in
 
         let res, check_res = aux scope body in
-        let c = Util.ml_comp res r in //let rec without annotations default to being in the ML monad; TODO: revisit this
+        let c = match res with 
+            | Inl t -> Util.ml_comp t r //let rec without annotations default to being in the ML monad; TODO: revisit this
+            | Inr c -> c in
         let t = Util.arrow bs c in 
         if debug env Options.High then Util.print2 "(%s) Using type %s\n" (Range.string_of_range r) (Print.term_to_string t);
-        t, check_res || check
+        Inl t, check_res || check
 
-      | _ ->Rel.new_uvar r vars Util.ktype0 |> fst, false in
+      | _ -> Inl (Rel.new_uvar r vars Util.ktype0 |> fst), false in
 
-     let t, b = aux (t_binders env)  e in 
+     let t, b = aux (t_binders env) e in 
+     let t = match t with 
+        | Inr c -> 
+          raise (Error(Util.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
+                        (Print.comp_to_string c), 
+                       rng))
+        | Inl t -> t in
      [], t, b
 
   | _ -> 

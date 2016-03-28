@@ -776,8 +776,10 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                  end
             end
 
-        | Tm_ascribed(e0, t, f) ->
-          let t = term_as_mlty g t in
+        | Tm_ascribed(e0, tc, f) ->
+          let t = match tc with 
+            | Inl t -> term_as_mlty g t
+            | Inr c -> term_as_mlty g (U.comp_result c) in
           let f = match f with
             | None -> failwith "Ascription node with an empty effect label"
             | Some l -> effect_as_etag g l in

@@ -244,9 +244,10 @@ let push_subst s t =
           mk_Tm_uinst t' us
 
         | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args)) None t.pos
-        | Tm_ascribed(t0, t1, lopt) -> mk (Tm_ascribed(subst' s t0, subst' s t1, lopt)) None t.pos
-         
 
+        | Tm_ascribed(t0, Inl t1, lopt) -> mk (Tm_ascribed(subst' s t0, Inl (subst' s t1), lopt)) None t.pos
+        | Tm_ascribed(t0, Inr c, lopt) -> mk (Tm_ascribed(subst' s t0, Inr (subst_comp' s c), lopt)) None t.pos
+       
         | Tm_abs(bs, body, lopt) -> 
           let n = List.length bs in 
           let s' = shift_subst' n s in

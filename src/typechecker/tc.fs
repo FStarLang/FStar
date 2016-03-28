@@ -309,12 +309,21 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e = mk (Tm_meta(e, m)) (Some c.res_typ.n) top.pos in
     e, c, g
 
-  | Tm_ascribed (e, t, _) -> 
+  | Tm_ascribed (e, Inr expected_c, _) -> 
+    let expected_c, _, g = tc_comp env expected_c in
+    let e, c', g' = tc_term env e in
+    let e, expected_c, g'' = check_expected_effect env (Some expected_c) (e, c'.comp()) in
+    let t_res = Util.comp_result expected_c in
+    mk (Tm_ascribed(e, Inl t_res, Some (Util.comp_effect_name expected_c))) (Some t_res.n) top.pos, 
+    Util.lcomp_of_comp expected_c, 
+    Rel.conj_guard g (Rel.conj_guard g' g'')
+
+  | Tm_ascribed (e, Inl t, _) -> 
     let k, u = U.type_u () in
     let t, _, f = tc_check_tot_or_gtot_term env t k in
     let e, c, g = tc_term (Env.set_expected_typ env t) e in
     let c, f = TcUtil.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t.pos) e c f in
-    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, t, Some c.eff_name)) (Some t.n) top.pos) c in
+    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, Inl t, Some c.eff_name)) (Some t.n) top.pos) c in
     e, c, Rel.conj_guard f (Rel.conj_guard g f2)
 
   | Tm_app(head, args) -> 
@@ -376,7 +385,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
    
     let cres = TcUtil.bind env (Some e1) c1 (Some guard_x, c_branches) in
     let e = mk (Tm_match(e1, List.map (fun (f, _, _, _) -> f) t_eqns)) (Some cres.res_typ.n) top.pos in
-    let e = mk (Tm_ascribed(e, cres.res_typ, Some cres.eff_name)) None e.pos in  //important to ascribe, for recomputing types
+    //NS: TODO remove ascription below? used to be important to ascribe, for recomputing types
+    let e = mk (Tm_ascribed(e, Inl cres.res_typ, Some cres.eff_name)) None e.pos in  
     if debug env Options.Extreme
     then Util.print2 "(%s) comp type = %s\n"
                       (Range.string_of_range top.pos) (Print.comp_to_string <| cres.comp());
@@ -718,6 +728,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                      let letrecs = guard_letrecs envbody bs c in
                      let envbody = {envbody with letrecs=[]} in
                      letrecs |> List.fold_left (fun (env, letrec_binders) (l,t) -> 
+//                        let t = N.normalize [N.EraseUniverses; N.Beta] env t in
+//                        printfn "Checking let rec annot: %s\n" (Print.term_to_string t);
                         let t, _, _ = tc_term (Env.clear_expected_typ env |> fst) t in
                         let env = Env.push_let_binding env l ([], t) in
                         let lb = match l with 

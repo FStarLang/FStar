@@ -50,7 +50,7 @@ let rec term_eq' t1 t2 =
       | Tm_match(t, pats), Tm_match(t', pats') -> 
         List.forall2 (fun (_, _, e) (_, _, e') -> term_eq e e') pats pats'
         && term_eq t t'
-      | Tm_ascribed(t1, t2, _), Tm_ascribed(s1, s2, _) -> 
+      | Tm_ascribed(t1, Inl t2, _), Tm_ascribed(s1, Inl s2, _) -> 
         term_eq t1 s1 && term_eq t2 s2
       | Tm_let((is_rec, lbs), t), Tm_let((is_rec',lbs'), s) when is_rec=is_rec' -> 
         lbs |> (lbs' |> List.forall2 (fun lb1 lb2 -> term_eq lb1.lbtyp lb2.lbtyp && term_eq lb1.lbdef lb2.lbdef)) 

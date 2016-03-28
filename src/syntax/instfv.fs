@@ -18,6 +18,7 @@
 module FStar.Syntax.InstFV
 open FStar.Syntax.Syntax
 open FStar.Ident
+open FStar.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module U = FStar.Util
@@ -73,8 +74,11 @@ let rec inst (s:inst_t) t =
             (p, wopt, t)) in
         mk (Tm_match(inst s t, pats))
 
-      | Tm_ascribed(t1, t2, f) -> 
-        mk (Tm_ascribed(inst s t1, inst s t2, f))
+      | Tm_ascribed(t1, Inl t2, f) -> 
+        mk (Tm_ascribed(inst s t1, Inl (inst s t2), f))
+
+      | Tm_ascribed(t1, Inr c, f) -> 
+        mk (Tm_ascribed(inst s t1, Inr (inst_comp s c), f))
 
       | Tm_let(lbs, t) -> 
         let lbs = fst lbs, snd lbs |> List.map (fun lb -> {lb with lbtyp=inst s lb.lbtyp; lbdef=inst s lb.lbdef}) in

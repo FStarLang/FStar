@@ -607,7 +607,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> snd)
-                | Tm_ascribed(_, t, _) -> Some t
+                | Tm_ascribed(_, Inl t, _) -> Some t
+                | Tm_ascribed(_, Inr c, _) -> Some (Util.comp_result c)
                 | _ -> None in 
 
             begin match head_type with 

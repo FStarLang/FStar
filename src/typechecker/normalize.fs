@@ -136,7 +136,7 @@ let norm_universe cfg env u =
         (* us is in sorted order;                                                               *)
         (* so, for each sub-sequence in us with a common kernel, just retain the largest one    *)
         (* e.g., normalize [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2]         *)
-        (*            to  [        S S Z;     S u1;           S S u2;      S ?v1; ?v2]          *)
+        (*            to   [        S S Z;     S u1;           S S u2;      S ?v1; ?v2]          *)
         let _, u, out = 
             List.fold_left (fun (cur_kernel, cur_max, out) u -> 
                 let k_u, n = U.univ_kernel u in 
@@ -250,8 +250,11 @@ let rec closure_as_term cfg env t =
              let phi = closure_as_term_delayed cfg env phi in 
              mk (Tm_refine(List.hd x |> fst, phi)) t.pos
 
-           | Tm_ascribed(t1, t2, lopt) -> 
-             mk (Tm_ascribed(closure_as_term_delayed cfg env t1, closure_as_term_delayed cfg env t2, lopt)) t.pos
+           | Tm_ascribed(t1, Inl t2, lopt) -> 
+             mk (Tm_ascribed(closure_as_term_delayed cfg env t1, Inl <| closure_as_term_delayed cfg env t2, lopt)) t.pos
+
+           | Tm_ascribed(t1, Inr c, lopt) -> 
+             mk (Tm_ascribed(closure_as_term_delayed cfg env t1, Inr <| close_comp cfg env c, lopt)) t.pos
 
            | Tm_meta(t', Meta_pattern args) ->
              mk (Tm_meta(closure_as_term_delayed cfg env t',
@@ -564,7 +567,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let t = arrow (norm_binders cfg env bs) c in
                  rebuild cfg env stack t
           
-          | Tm_ascribed(t1, t2, l) -> 
+          | Tm_ascribed(t1, tc, l) -> 
             begin match stack with 
                 | Match _ :: _
                 | Arg _ :: _ 
@@ -572,10 +575,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | _ -> 
                 let t1 = norm cfg env [] t1 in 
                 log cfg  (fun () -> Util.print_string "+++ Normalizing ascription \n");
-                let t2 = norm cfg env [] t2 in
-                rebuild cfg env stack (mk (Tm_ascribed(t1, t2, l)) t.pos)
-
-                
+                let tc = match tc with 
+                    | Inl t -> Inl (norm cfg env [] t) 
+                    | Inr c -> Inr (norm_comp cfg env c) in
+                rebuild cfg env stack (mk (Tm_ascribed(t1, tc, l)) t.pos)
             end
 
           | Tm_match(head, branches) -> 

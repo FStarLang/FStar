@@ -239,8 +239,10 @@ let rec term_to_string x =
   | Tm_refine(xt, f) -> Util.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(t, args) ->  Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
   | Tm_let(lbs, e) ->   Util.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
-  | Tm_ascribed(e,t,_) ->
+  | Tm_ascribed(e,Inl t,_) ->
                         Util.format2 "(%s : %s)" (term_to_string e) (term_to_string t)
+  | Tm_ascribed(e,Inr c,_) ->
+                        Util.format2 "(%s : %s)" (term_to_string e) (comp_to_string c)
   | Tm_match(head, branches) ->
     Util.format2 "(match %s with\n\t| %s)"
       (term_to_string head)

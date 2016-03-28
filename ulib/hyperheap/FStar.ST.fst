@@ -60,7 +60,7 @@ assume val alloc: #a:Type -> init:a -> ST (ref a)
     (ensures (alloc_post init))
 
 inline let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 (_u:unit) m1 : Type = 
-  m1=HyperHeap.upd m0 r v
+  m1==HyperHeap.upd m0 r v
 
 assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
   (requires (fun m -> True))

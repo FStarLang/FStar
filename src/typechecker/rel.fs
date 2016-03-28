@@ -939,8 +939,18 @@ let rec solve_universe_eq orig wl u1 u2 =
 
     let try_umax_components u1 u2 msg = 
         match u1, u2 with 
-            | U_max _, U_max _ -> 
-              UFailed (Util.format2 "Unable to unify universes: %s and %s" (Print.univ_to_string u1) (Print.univ_to_string u2))
+            | U_max us1, U_max us2 -> 
+              if List.length us1 = List.length us2 //go for a structural match
+              then let rec aux wl us1 us2 = match us1, us2 with 
+                        | u1::us1, u2::us2 -> 
+                          begin match solve_universe_eq orig wl u1 u2 with 
+                            | USolved wl -> 
+                                aux wl us1 us2
+                            | failed -> failed
+                          end
+                        | _ -> USolved wl in
+                    aux wl us1 us2
+              else UFailed (Util.format2 "Unable to unify universes: %s and %s" (Print.univ_to_string u1) (Print.univ_to_string u2))
  
             | U_max us, u'
             | u', U_max us -> 
@@ -962,6 +972,17 @@ let rec solve_universe_eq orig wl u1 u2 =
         | _, U_bvar _ 
         | _, U_unknown -> failwith "Impossible: locally nameless"
 
+        | U_name x, U_name y ->
+          if x.idText = y.idText
+          then USolved wl
+          else UFailed "Incompatible universes" 
+
+        | U_zero, U_zero -> 
+          USolved wl
+
+        | U_succ u1, U_succ u2 -> 
+          solve_universe_eq orig wl u1 u2
+
         | U_unif v1, U_unif v2 -> 
           if Unionfind.equivalent v1 v2 
           then USolved wl
@@ -975,21 +996,6 @@ let rec solve_universe_eq orig wl u1 u2 =
           then try_umax_components u1 u2 
                 (Util.format2 "Failed occurs check: %s occurs in %s" (Print.univ_to_string (U_unif v1)) (Print.univ_to_string u))
           else USolved (extend_solution orig [UNIV(v1, u)] wl)
-
-        | U_zero, U_zero -> 
-          USolved wl
-
-        | U_succ u1, U_succ u2 -> 
-          solve_universe_eq orig wl u1 u2
-
-        | U_succ _, _
-        | U_zero, _
-        | _, U_succ _ 
-        | _, U_zero -> 
-          UFailed "Incompatible universes" 
-        
-        | U_name x, U_name y when (x.idText=y.idText) ->
-          USolved wl
        
         | U_max _, _
         | _, U_max _ -> 
@@ -1001,8 +1007,12 @@ let rec solve_universe_eq orig wl u1 u2 =
                then USolved wl
                else try_umax_components u1 u2 ""
 
-        | U_name _, _
-        | _, U_name _ -> 
+        | U_succ _, U_zero
+        | U_succ _, U_name _
+        | U_zero,   U_succ _
+        | U_zero,   U_name _
+        | U_name _, U_succ _
+        | U_name _, U_zero -> 
           UFailed "Incompatible universes" 
 
 (******************************************************************************************************)
@@ -1074,7 +1084,9 @@ and solve_maybe_uinsts env orig t1 t2 (wl:worklist) =
 
         | _ -> UFailed "Unequal number of universes" in 
 
-    match (whnf env t1).n, (whnf env t2).n with 
+    let t1 = whnf env t1 in
+    let t2 = whnf env t2 in
+    match t1.n, t2.n with 
         | Tm_uinst({n=Tm_fvar f}, us1), Tm_uinst({n=Tm_fvar g}, us2) -> 
             let b = S.fv_eq f g in
             assert b;
@@ -1381,18 +1393,18 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 then Util.print4 "Head matches: %s (%s) and %s (%s)\n" 
                     (Print.term_to_string t1) (Print.tag_of_term t1)
                     (Print.term_to_string t2) (Print.tag_of_term t2);
-                let head, args = Util.head_and_args t1 in
-                let head', args' = Util.head_and_args t2 in
-                let nargs = List.length args in
-                if nargs <> List.length args'
+                let head1, args1 = Util.head_and_args t1 in
+                let head2, args2 = Util.head_and_args t2 in
+                let nargs = List.length args1 in
+                if nargs <> List.length args2
                 then giveup env (Util.format4 "unequal number of arguments: %s[%s] and %s[%s]"
-                            (Print.term_to_string head)
-                            (args_to_string args)
-                            (Print.term_to_string head')
-                            (args_to_string args'))
+                            (Print.term_to_string head1)
+                            (args_to_string args1)
+                            (Print.term_to_string head2)
+                            (args_to_string args2))
                             orig
-                else if nargs=0 || eq_args args args' //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
-                then match solve_maybe_uinsts env orig head head' wl with 
+                else if nargs=0 || eq_args args1 args2 //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
+                then match solve_maybe_uinsts env orig head1 head2 wl with 
                         | USolved wl -> solve env (solve_prob orig None [] wl)
                         | UFailed msg -> giveup env msg orig
                         | UDeferred wl -> solve env (defer "universe constraints" orig wl)
@@ -1408,20 +1420,20 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     let base2, refinement2 = base_and_refinement env wl t2 in
                     begin match refinement1, refinement2 with
                             | None, None ->  //neither side is a refinement; reason extensionally
-                            begin match solve_maybe_uinsts env orig base1 base2 wl with 
+                              begin match solve_maybe_uinsts env orig head1 head2 wl with 
                                 | UFailed msg -> giveup env msg orig
                                 | UDeferred wl -> solve env (defer "universe constraints" orig wl)
                                 | USolved wl ->
-                                    let subprobs = List.map2 (fun (a, _) (a', _) -> TProb <| mk_problem (p_scope orig) orig a EQ a' None "index") args args' in
+                                    let subprobs = List.map2 (fun (a, _) (a', _) -> TProb <| mk_problem (p_scope orig) orig a EQ a' None "index") args1 args2 in
                                     let formula = Util.mk_conj_l (List.map (fun p -> fst (p_guard p)) subprobs) in
                                     let wl = solve_prob orig (Some formula) [] wl in
                                     solve env (attempt subprobs wl)
-                            end
+                              end
 
                             | _ ->
-                            let lhs = force_refinement (base1, refinement1) in
-                            let rhs = force_refinement (base2, refinement2) in
-                            solve_t env ({problem with lhs=lhs; rhs=rhs}) wl
+                                let lhs = force_refinement (base1, refinement1) in
+                                let rhs = force_refinement (base2, refinement2) in
+                                solve_t env ({problem with lhs=lhs; rhs=rhs}) wl
                     end in
     (* <rigid_rigid_delta> *)
    

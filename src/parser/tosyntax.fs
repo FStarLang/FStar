@@ -737,7 +737,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       mk <| Tm_match(desugar_term env e, List.map desugar_branch branches)
 
     | Ascribed(e, t) ->
-      mk <| Tm_ascribed(desugar_term env e, desugar_typ env t, None)
+      let env = Env.default_ml env in
+      let c = desugar_comp t.range true env t in
+      let annot = if Util.is_ml_comp c
+                  then Inl (Util.comp_result c)
+                  else Inr c in
+      mk <| Tm_ascribed(desugar_term env e, annot, None)
 
     | Record(_, []) ->
       raise (Error("Unexpected empty record", top.range))
@@ -897,7 +902,7 @@ and desugar_comp r default_ok env t =
                       let pat = match pat.n with 
                         | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid -> //we really want the empty pattern to be in universe S 0 rather than generalizing it 
                           let nil = S.mk_Tm_uinst pat [U_succ U_zero] in
-                          let pattern = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) Delta_constant None) [U_zero;U_zero] in 
+                          let pattern = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) Delta_constant None) [U_zero] in //;U_zero] in 
                           S.mk_Tm_app nil [(pattern, Some S.imp_tag)] None pat.pos 
                         | _ -> pat in
                         [req; ens;
