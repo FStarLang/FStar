@@ -1,6 +1,6 @@
 
 open Prims
-# 37 "FStar.Parser.Lexhelp.fst"
+# 39 "FStar.Parser.Lexhelp.fst"
 let intern_string : Prims.string  ->  Prims.string = (
 # 40 "FStar.Parser.Lexhelp.fst"
 let strings = (FStar_Util.smap_create 100)
@@ -15,37 +15,37 @@ let _54_6 = (FStar_Util.smap_add strings s s)
 in s)
 end)))
 
-# 44 "FStar.Parser.Lexhelp.fst"
+# 46 "FStar.Parser.Lexhelp.fst"
 let default_string_finish = (fun endm b s -> FStar_Parser_Parse.STRING (s))
 
-# 46 "FStar.Parser.Lexhelp.fst"
+# 48 "FStar.Parser.Lexhelp.fst"
 let call_string_finish = (fun fin buf endm b -> (let _139_19 = (FStar_Bytes.close buf)
 in (fin endm b _139_19)))
 
-# 48 "FStar.Parser.Lexhelp.fst"
+# 50 "FStar.Parser.Lexhelp.fst"
 let add_string : FStar_Bytes.bytebuf  ->  Prims.string  ->  Prims.unit = (fun buf x -> (let _139_24 = (FStar_Bytes.string_as_unicode_bytes x)
 in (FStar_Bytes.emit_bytes buf _139_24)))
 
-# 50 "FStar.Parser.Lexhelp.fst"
+# 52 "FStar.Parser.Lexhelp.fst"
 let add_int_char : FStar_Bytes.bytebuf  ->  Prims.int  ->  Prims.unit = (fun buf c -> (
 # 53 "FStar.Parser.Lexhelp.fst"
 let _54_19 = (FStar_Bytes.emit_int_as_byte buf (c % 256))
 in (FStar_Bytes.emit_int_as_byte buf (c / 256))))
 
-# 54 "FStar.Parser.Lexhelp.fst"
+# 56 "FStar.Parser.Lexhelp.fst"
 let add_unichar : FStar_Bytes.bytebuf  ->  Prims.int  ->  Prims.unit = (fun buf c -> (add_int_char buf c))
 
-# 56 "FStar.Parser.Lexhelp.fst"
+# 57 "FStar.Parser.Lexhelp.fst"
 let add_byte_char : FStar_Bytes.bytebuf  ->  Prims.char  ->  Prims.unit = (fun buf c -> (add_int_char buf ((FStar_Util.int_of_char c) % 256)))
 
-# 57 "FStar.Parser.Lexhelp.fst"
+# 64 "FStar.Parser.Lexhelp.fst"
 let stringbuf_as_bytes : FStar_Bytes.bytebuf  ->  FStar_Bytes.bytes = (fun buf -> (
 # 65 "FStar.Parser.Lexhelp.fst"
 let bytes = (FStar_Bytes.close buf)
 in (let _139_40 = ((FStar_Bytes.length bytes) / 2)
 in (FStar_Bytes.make (fun i -> (FStar_Bytes.get bytes (i * 2))) _139_40))))
 
-# 66 "FStar.Parser.Lexhelp.fst"
+# 69 "FStar.Parser.Lexhelp.fst"
 let stringbuf_is_bytes : FStar_Bytes.bytebuf  ->  Prims.bool = (fun buf -> (
 # 70 "FStar.Parser.Lexhelp.fst"
 let bytes = (FStar_Bytes.close buf)
@@ -62,13 +62,13 @@ end else begin
 end)))
 in (FStar_ST.read ok)))))
 
-# 76 "FStar.Parser.Lexhelp.fst"
+# 78 "FStar.Parser.Lexhelp.fst"
 let trigraph : Prims.char  ->  Prims.char  ->  Prims.char  ->  Prims.char = (fun c1 c2 c3 -> (
 # 79 "FStar.Parser.Lexhelp.fst"
 let digit = (fun c -> ((FStar_Util.int_of_char c) - (FStar_Util.int_of_char '0')))
 in (FStar_Util.char_of_int (((digit c1) * 100) + (((digit c2) * 10) + (digit c3))))))
 
-# 80 "FStar.Parser.Lexhelp.fst"
+# 82 "FStar.Parser.Lexhelp.fst"
 let digit : Prims.char  ->  Prims.int = (fun d -> (
 # 83 "FStar.Parser.Lexhelp.fst"
 let dd = (FStar_Util.int_of_char d)
@@ -78,7 +78,7 @@ end else begin
 (FStar_All.failwith "digit")
 end))
 
-# 85 "FStar.Parser.Lexhelp.fst"
+# 87 "FStar.Parser.Lexhelp.fst"
 let hexdigit : Prims.char  ->  Prims.int = (fun d -> (
 # 88 "FStar.Parser.Lexhelp.fst"
 let dd = (FStar_Util.int_of_char d)
@@ -96,7 +96,7 @@ end
 end
 end))
 
-# 92 "FStar.Parser.Lexhelp.fst"
+# 94 "FStar.Parser.Lexhelp.fst"
 let unicodegraph_short : Prims.string  ->  Prims.uint16 = (fun s -> if ((FStar_String.length s) <> 4) then begin
 (FStar_All.failwith "unicodegraph")
 end else begin
@@ -108,7 +108,7 @@ in (hexdigit _139_62)))))
 in (FStar_Util.uint16_of_int _139_63))
 end)
 
-# 97 "FStar.Parser.Lexhelp.fst"
+# 99 "FStar.Parser.Lexhelp.fst"
 let hexgraph_short : Prims.string  ->  Prims.uint16 = (fun s -> if ((FStar_String.length s) <> 2) then begin
 (FStar_All.failwith "hexgraph")
 end else begin
@@ -118,7 +118,7 @@ in (hexdigit _139_67)))
 in (FStar_Util.uint16_of_int _139_68))
 end)
 
-# 102 "FStar.Parser.Lexhelp.fst"
+# 104 "FStar.Parser.Lexhelp.fst"
 let unicodegraph_long : Prims.string  ->  (Prims.uint16 Prims.option * Prims.uint16) = (fun s -> if ((FStar_String.length s) <> 8) then begin
 (FStar_All.failwith "unicodegraph_long")
 end else begin
@@ -143,7 +143,7 @@ end else begin
 end))
 end)
 
-# 114 "FStar.Parser.Lexhelp.fst"
+# 116 "FStar.Parser.Lexhelp.fst"
 let escape : Prims.char  ->  Prims.char = (fun c -> (match (c) with
 | '\\' -> begin
 '\\'
@@ -167,7 +167,7 @@ end
 c
 end))
 
-# 124 "FStar.Parser.Lexhelp.fst"
+# 130 "FStar.Parser.Lexhelp.fst"
 type compatibilityMode =
 | ALWAYS
 | FSHARP
@@ -190,17 +190,17 @@ end
 false
 end))
 
-# 132 "FStar.Parser.Lexhelp.fst"
+# 134 "FStar.Parser.Lexhelp.fst"
 let keywords : (compatibilityMode * Prims.string * FStar_Parser_Parse.token) Prims.list = (let _139_84 = (FStar_List.map (fun s -> (FSHARP, s, FStar_Parser_Parse.RESERVED)) (("atomic")::("break")::("checked")::("component")::("constraint")::("constructor")::("continue")::("eager")::("fixed")::("functor")::("global")::("include")::("mixin")::("parallel")::("process")::("protected")::("pure")::("sealed")::("trait")::("tailcall")::("volatile")::[]))
 in (FStar_List.append (((ALWAYS, "abstract", FStar_Parser_Parse.ABSTRACT))::((ALWAYS, "and", FStar_Parser_Parse.AND))::((ALWAYS, "as", FStar_Parser_Parse.AS))::((ALWAYS, "assert", FStar_Parser_Parse.ASSERT))::((ALWAYS, "assume", FStar_Parser_Parse.ASSUME))::((ALWAYS, "begin", FStar_Parser_Parse.BEGIN))::((FSHARP, "default", FStar_Parser_Parse.DEFAULT))::((ALWAYS, "effect", FStar_Parser_Parse.EFFECT))::((ALWAYS, "else", FStar_Parser_Parse.ELSE))::((ALWAYS, "end", FStar_Parser_Parse.END))::((ALWAYS, "ensures", FStar_Parser_Parse.ENSURES))::((ALWAYS, "exception", FStar_Parser_Parse.EXCEPTION))::((ALWAYS, "exists", FStar_Parser_Parse.EXISTS))::((ALWAYS, "false", FStar_Parser_Parse.FALSE))::((ALWAYS, "False", FStar_Parser_Parse.L_FALSE))::((ALWAYS, "finally", FStar_Parser_Parse.FINALLY))::((ALWAYS, "for", FStar_Parser_Parse.FOR))::((ALWAYS, "forall", FStar_Parser_Parse.FORALL))::((ALWAYS, "fun", FStar_Parser_Parse.FUN))::((ALWAYS, "function", FStar_Parser_Parse.FUNCTION))::((ALWAYS, "if", FStar_Parser_Parse.IF))::((ALWAYS, "kind", FStar_Parser_Parse.KIND))::((ALWAYS, "in", FStar_Parser_Parse.IN))::((ALWAYS, "inline", FStar_Parser_Parse.INLINE))::((ALWAYS, "irreducible", FStar_Parser_Parse.IRREDUCIBLE))::((ALWAYS, "lazy", FStar_Parser_Parse.LAZY))::((ALWAYS, "let", FStar_Parser_Parse.LET (false)))::((ALWAYS, "logic", FStar_Parser_Parse.LOGIC))::((ALWAYS, "match", FStar_Parser_Parse.MATCH))::((ALWAYS, "module", FStar_Parser_Parse.MODULE))::((ALWAYS, "new", FStar_Parser_Parse.NEW))::((ALWAYS, "new_effect", FStar_Parser_Parse.NEW_EFFECT))::((ALWAYS, "of", FStar_Parser_Parse.OF))::((ALWAYS, "open", FStar_Parser_Parse.OPEN))::((ALWAYS, "or", FStar_Parser_Parse.OR))::((ALWAYS, "opaque", FStar_Parser_Parse.OPAQUE))::((ALWAYS, "private", FStar_Parser_Parse.PRIVATE))::((FSHARP, "public", FStar_Parser_Parse.PUBLIC))::((ALWAYS, "rec", FStar_Parser_Parse.REC))::((ALWAYS, "requires", FStar_Parser_Parse.REQUIRES))::((ALWAYS, "sub_effect", FStar_Parser_Parse.SUB_EFFECT))::((ALWAYS, "then", FStar_Parser_Parse.THEN))::((ALWAYS, "to", FStar_Parser_Parse.TO))::((ALWAYS, "total", FStar_Parser_Parse.TOTAL))::((ALWAYS, "true", FStar_Parser_Parse.TRUE))::((ALWAYS, "True", FStar_Parser_Parse.L_TRUE))::((ALWAYS, "try", FStar_Parser_Parse.TRY))::((ALWAYS, "type", FStar_Parser_Parse.TYPE))::((ALWAYS, "unfoldable", FStar_Parser_Parse.UNFOLDABLE))::((ALWAYS, "val", FStar_Parser_Parse.VAL))::((ALWAYS, "when", FStar_Parser_Parse.WHEN))::((ALWAYS, "with", FStar_Parser_Parse.WITH))::((ALWAYS, "_", FStar_Parser_Parse.UNDERSCORE))::[]) _139_84))
 
-# 200 "FStar.Parser.Lexhelp.fst"
+# 201 "FStar.Parser.Lexhelp.fst"
 let stringKeywords : Prims.string Prims.list = (FStar_List.map (fun _54_62 -> (match (_54_62) with
 | (_54_58, w, _54_61) -> begin
 w
 end)) keywords)
 
-# 201 "FStar.Parser.Lexhelp.fst"
+# 207 "FStar.Parser.Lexhelp.fst"
 let unreserve_words : Prims.string Prims.list = (FStar_List.choose (fun _54_67 -> (match (_54_67) with
 | (mode, keyword, _54_66) -> begin
 if (mode = FSHARP) then begin
@@ -210,7 +210,7 @@ None
 end
 end)) keywords)
 
-# 208 "FStar.Parser.Lexhelp.fst"
+# 210 "FStar.Parser.Lexhelp.fst"
 let kwd_table : FStar_Parser_Parse.token FStar_Util.smap = (
 # 211 "FStar.Parser.Lexhelp.fst"
 let tab = (FStar_Util.smap_create 1000)
@@ -222,7 +222,7 @@ let _54_73 = (FStar_List.iter (fun _54_72 -> (match (_54_72) with
 end)) keywords)
 in tab))
 
-# 213 "FStar.Parser.Lexhelp.fst"
+# 214 "FStar.Parser.Lexhelp.fst"
 let kwd : Prims.string  ->  FStar_Parser_Parse.token Prims.option = (fun s -> (FStar_Util.smap_try_find kwd_table s))
 
 # 215 "FStar.Parser.Lexhelp.fst"
@@ -261,20 +261,20 @@ let ___IndentationProblem____0 = (fun projectee -> (match (projectee) with
 _54_79
 end))
 
-# 216 "FStar.Parser.Lexhelp.fst"
+# 218 "FStar.Parser.Lexhelp.fst"
 type lexargs =
 {getSourceDirectory : Prims.unit  ->  Prims.string; contents : Prims.string}
 
 # 218 "FStar.Parser.Lexhelp.fst"
 let is_Mklexargs : lexargs  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklexargs"))))
 
-# 221 "FStar.Parser.Lexhelp.fst"
+# 223 "FStar.Parser.Lexhelp.fst"
 let mkLexargs = (fun _54_86 -> (match (_54_86) with
 | (srcdir, filename, contents) -> begin
 {getSourceDirectory = srcdir; contents = contents}
 end))
 
-# 226 "FStar.Parser.Lexhelp.fst"
+# 228 "FStar.Parser.Lexhelp.fst"
 let kwd_or_id : lexargs  ->  FStar_Range.range  ->  Prims.string  ->  FStar_Parser_Parse.token = (fun args r s -> (match ((kwd s)) with
 | Some (v) -> begin
 if (v = FStar_Parser_Parse.RESERVED) then begin

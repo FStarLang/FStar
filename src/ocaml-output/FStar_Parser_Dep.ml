@@ -1,10 +1,10 @@
 
 open Prims
-# 34 "FStar.Parser.Dep.fst"
+# 36 "FStar.Parser.Dep.fst"
 type map =
 Prims.string FStar_Util.smap
 
-# 36 "FStar.Parser.Dep.fst"
+# 38 "FStar.Parser.Dep.fst"
 let check_and_strip_suffix : Prims.string  ->  Prims.string Prims.option = (fun f -> (
 # 39 "FStar.Parser.Dep.fst"
 let suffixes = (".fsti")::(".fst")::(".fsi")::(".fs")::[]
@@ -30,17 +30,17 @@ end
 None
 end))))
 
-# 52 "FStar.Parser.Dep.fst"
+# 55 "FStar.Parser.Dep.fst"
 let is_interface : Prims.string  ->  Prims.bool = (fun f -> ((FStar_String.get f ((FStar_String.length f) - 1)) = 'i'))
 
-# 56 "FStar.Parser.Dep.fst"
+# 58 "FStar.Parser.Dep.fst"
 let print_map : map  ->  Prims.unit = (fun m -> (let _142_13 = (let _142_12 = (FStar_Util.smap_keys m)
 in (FStar_List.unique _142_12))
 in (FStar_List.iter (fun k -> (let _142_11 = (let _142_10 = (FStar_Util.smap_try_find m k)
 in (FStar_Util.must _142_10))
 in (FStar_Util.print2 "%s: %s\n" k _142_11))) _142_13)))
 
-# 61 "FStar.Parser.Dep.fst"
+# 64 "FStar.Parser.Dep.fst"
 let lowercase_module_name : Prims.string  ->  Prims.string = (fun f -> (match ((let _142_16 = (FStar_Util.basename f)
 in (check_and_strip_suffix _142_16))) with
 | Some (longname) -> begin
@@ -52,7 +52,7 @@ in FStar_Absyn_Syntax.Err (_142_17))
 in (Prims.raise _142_18))
 end))
 
-# 69 "FStar.Parser.Dep.fst"
+# 74 "FStar.Parser.Dep.fst"
 let build_map : Prims.string Prims.list  ->  map = (fun filenames -> (
 # 75 "FStar.Parser.Dep.fst"
 let include_directories = (FStar_Options.get_include_path ())
@@ -116,7 +116,7 @@ let _57_51 = (FStar_List.iter (fun f -> (let _142_27 = (lowercase_module_name f)
 in (FStar_Util.smap_add map _142_27 f))) filenames)
 in map))))))))
 
-# 112 "FStar.Parser.Dep.fst"
+# 118 "FStar.Parser.Dep.fst"
 let enter_namespace : map  ->  map  ->  Prims.string  ->  Prims.bool = (fun original_map working_map prefix -> (
 # 119 "FStar.Parser.Dep.fst"
 let found = (FStar_ST.alloc false)
@@ -144,7 +144,7 @@ end else begin
 end) _142_37))
 in (FStar_ST.read found)))))
 
-# 130 "FStar.Parser.Dep.fst"
+# 133 "FStar.Parser.Dep.fst"
 let string_of_lid : FStar_Ident.lident  ->  Prims.bool  ->  Prims.string = (fun l last -> (
 # 134 "FStar.Parser.Dep.fst"
 let suffix = if last then begin
@@ -158,11 +158,11 @@ let names = (let _142_43 = (FStar_List.map (fun x -> x.FStar_Ident.idText) l.FSt
 in (FStar_List.append _142_43 suffix))
 in (FStar_String.concat "." names))))
 
-# 136 "FStar.Parser.Dep.fst"
+# 140 "FStar.Parser.Dep.fst"
 let lowercase_join_longident : FStar_Ident.lident  ->  Prims.bool  ->  Prims.string = (fun l last -> (let _142_48 = (string_of_lid l last)
 in (FStar_String.lowercase _142_48)))
 
-# 141 "FStar.Parser.Dep.fst"
+# 144 "FStar.Parser.Dep.fst"
 let check_module_declaration_against_filename : FStar_Ident.lident  ->  Prims.string  ->  Prims.unit = (fun lid filename -> (
 # 145 "FStar.Parser.Dep.fst"
 let k' = (lowercase_join_longident lid true)
@@ -189,7 +189,7 @@ end
 false
 end))
 
-# 151 "FStar.Parser.Dep.fst"
+# 155 "FStar.Parser.Dep.fst"
 let collect_one : Prims.string FStar_Util.smap  ->  Prims.string  ->  Prims.string Prims.list = (fun original_map filename -> (
 # 156 "FStar.Parser.Dep.fst"
 let deps = (FStar_ST.alloc [])
@@ -581,7 +581,7 @@ in (
 let _57_508 = (collect_file ast)
 in (FStar_ST.read deps)))))))))))
 
-# 403 "FStar.Parser.Dep.fst"
+# 405 "FStar.Parser.Dep.fst"
 type color =
 | White
 | Gray
@@ -614,7 +614,7 @@ end
 false
 end))
 
-# 405 "FStar.Parser.Dep.fst"
+# 408 "FStar.Parser.Dep.fst"
 let collect : Prims.string Prims.list  ->  ((Prims.string * Prims.string Prims.list) Prims.list * Prims.string Prims.list) = (fun filenames -> (
 # 411 "FStar.Parser.Dep.fst"
 let graph = (FStar_Util.smap_create 41)
@@ -725,7 +725,7 @@ let topologically_sorted = (let _142_168 = (FStar_ST.read topologically_sorted)
 in (FStar_List.map must_find _142_168))
 in (by_target, topologically_sorted))))))))))))
 
-# 474 "FStar.Parser.Dep.fst"
+# 479 "FStar.Parser.Dep.fst"
 let print_make : (Prims.string * Prims.string Prims.list) Prims.list  ->  Prims.unit = (fun deps -> (FStar_List.iter (fun _57_558 -> (match (_57_558) with
 | (f, deps) -> begin
 (
@@ -734,10 +734,10 @@ let deps = (FStar_List.map (fun s -> (FStar_Util.replace_string s " " "\\ ")) de
 in (FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps)))
 end)) deps))
 
-# 483 "FStar.Parser.Dep.fst"
+# 485 "FStar.Parser.Dep.fst"
 let print_nubuild : Prims.string Prims.list  ->  Prims.unit = (fun l -> (FStar_List.iter FStar_Util.print_endline (FStar_List.rev l)))
 
-# 486 "FStar.Parser.Dep.fst"
+# 488 "FStar.Parser.Dep.fst"
 let print : ((Prims.string * Prims.string Prims.list) Prims.list * Prims.string Prims.list)  ->  Prims.unit = (fun deps -> (match ((FStar_ST.read FStar_Options.dep)) with
 | Some ("nubuild") -> begin
 (print_nubuild (Prims.snd deps))
