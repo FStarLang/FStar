@@ -4723,7 +4723,8 @@ end
 ([], e, [], t_norm)
 end)
 end))
-in (FStar_All.try_with (fun _46_2936 -> (match (()) with
+in try
+(match (()) with
 | () -> begin
 if ((FStar_All.pipe_right quals (FStar_Util.for_some (fun _46_26 -> (match (_46_26) with
 | FStar_Absyn_Syntax.Opaque -> begin
@@ -5036,7 +5037,8 @@ end
 end)))
 end))
 end
-end)) (fun _46_2935 -> (match (_46_2935) with
+end)
+with
 | Let_rec_unencodeable -> begin
 (
 # 1872 "FStar.ToSMT.Encode.fst"
@@ -5046,7 +5048,7 @@ in (
 # 1873 "FStar.ToSMT.Encode.fst"
 let decl = FStar_ToSMT_Term.Caption ((Prims.strcat "let rec unencodeable: Skipping: " msg))
 in ((decl)::[], env)))
-end)))))
+end))
 end
 | (FStar_Absyn_Syntax.Sig_pragma (_)) | (FStar_Absyn_Syntax.Sig_main (_)) | (FStar_Absyn_Syntax.Sig_new_effect (_)) | (FStar_Absyn_Syntax.Sig_effect_abbrev (_)) | (FStar_Absyn_Syntax.Sig_kind_abbrev (_)) | (FStar_Absyn_Syntax.Sig_sub_effect (_)) -> begin
 ([], env)

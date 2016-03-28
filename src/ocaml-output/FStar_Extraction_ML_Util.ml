@@ -46,16 +46,18 @@ FStar_Extraction_ML_Syntax.MLC_String ((FStar_Util.string_of_unicode bytes))
 end))
 
 # 49 "FStar.Extraction.ML.Util.fst"
-let mlconst_of_const' : FStar_Range.range  ->  FStar_Const.sconst  ->  FStar_Extraction_ML_Syntax.mlconstant = (fun p c -> (FStar_All.try_with (fun _68_47 -> (match (()) with
+let mlconst_of_const' : FStar_Range.range  ->  FStar_Const.sconst  ->  FStar_Extraction_ML_Syntax.mlconstant = (fun p c -> try
+(match (()) with
 | () -> begin
 (mlconst_of_const c)
-end)) (fun _68_46 -> (match (_68_46) with
+end)
+with
 | _68_50 -> begin
 (let _153_14 = (let _153_13 = (FStar_Range.string_of_range p)
 in (let _153_12 = (FStar_Absyn_Print.const_to_string c)
 in (FStar_Util.format2 "(%s) Failed to translate constant %s " _153_13 _153_12)))
 in (FStar_All.failwith _153_14))
-end))))
+end)
 
 # 53 "FStar.Extraction.ML.Util.fst"
 let rec subst_aux : (FStar_Extraction_ML_Syntax.mlident * FStar_Extraction_ML_Syntax.mlty) Prims.list  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlty = (fun subst t -> (match (t) with

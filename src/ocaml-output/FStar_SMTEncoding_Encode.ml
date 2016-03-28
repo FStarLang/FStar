@@ -3426,7 +3426,8 @@ end
 end)
 end))
 in (aux false t_norm)))
-in (FStar_All.try_with (fun _79_2180 -> (match (()) with
+in try
+(match (()) with
 | () -> begin
 if (FStar_All.pipe_right bindings (FStar_Util.for_all (fun lb -> (FStar_Syntax_Util.is_lemma lb.FStar_Syntax_Syntax.lbtyp)))) then begin
 (encode_top_level_vals env bindings quals)
@@ -3750,7 +3751,8 @@ end
 end)))
 end))
 end
-end)) (fun _79_2179 -> (match (_79_2179) with
+end)
+with
 | Let_rec_unencodeable -> begin
 (
 # 1450 "FStar.SMTEncoding.Encode.fst"
@@ -3760,7 +3762,7 @@ in (
 # 1451 "FStar.SMTEncoding.Encode.fst"
 let decl = FStar_SMTEncoding_Term.Caption ((Prims.strcat "let rec unencodeable: Skipping: " msg))
 in ((decl)::[], env)))
-end)))))
+end))
 end
 | FStar_Syntax_Syntax.Sig_bundle (ses, _79_2374, _79_2376, _79_2378) -> begin
 (

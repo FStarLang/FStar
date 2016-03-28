@@ -181,17 +181,19 @@ let strBvd = (fun bvd -> if (FStar_ST.read FStar_Options.print_real_names) then 
 (Prims.strcat bvd.FStar_Absyn_Syntax.ppname.FStar_Ident.idText bvd.FStar_Absyn_Syntax.realname.FStar_Ident.idText)
 end else begin
 if ((FStar_ST.read FStar_Options.hide_genident_nums) && (FStar_Util.starts_with bvd.FStar_Absyn_Syntax.ppname.FStar_Ident.idText "_")) then begin
-(FStar_All.try_with (fun _28_121 -> (match (()) with
+try
+(match (()) with
 | () -> begin
 (
 # 141 "FStar.Absyn.Print.fst"
 let _28_127 = (let _113_62 = (FStar_Util.substring_from bvd.FStar_Absyn_Syntax.ppname.FStar_Ident.idText 1)
 in (FStar_Util.int_of_string _113_62))
 in "_?")
-end)) (fun _28_120 -> (match (_28_120) with
+end)
+with
 | _28_124 -> begin
 bvd.FStar_Absyn_Syntax.ppname.FStar_Ident.idText
-end)))
+end
 end else begin
 bvd.FStar_Absyn_Syntax.ppname.FStar_Ident.idText
 end

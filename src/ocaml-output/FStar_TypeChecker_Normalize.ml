@@ -394,15 +394,17 @@ false
 end))
 
 # 127 "FStar.TypeChecker.Normalize.fst"
-let lookup_bvar = (fun env x -> (FStar_All.try_with (fun _60_94 -> (match (()) with
+let lookup_bvar = (fun env x -> try
+(match (()) with
 | () -> begin
 (FStar_List.nth env x.FStar_Syntax_Syntax.index)
-end)) (fun _60_93 -> (match (_60_93) with
+end)
+with
 | _60_97 -> begin
 (let _145_195 = (let _145_194 = (FStar_Syntax_Print.db_to_string x)
 in (FStar_Util.format1 "Failed to find %s\n" _145_194))
 in (FStar_All.failwith _145_195))
-end))))
+end)
 
 # 131 "FStar.TypeChecker.Normalize.fst"
 let norm_universe : cfg  ->  closure Prims.list  ->  FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe = (fun cfg env u -> (
@@ -437,7 +439,8 @@ let rec aux = (fun u -> (
 let u = (FStar_Syntax_Subst.compress_univ u)
 in (match (u) with
 | FStar_Syntax_Syntax.U_bvar (x) -> begin
-(FStar_All.try_with (fun _60_125 -> (match (()) with
+try
+(match (()) with
 | () -> begin
 (match ((FStar_List.nth env x)) with
 | Univ (u) -> begin
@@ -449,14 +452,15 @@ end
 | _60_135 -> begin
 (FStar_All.failwith "Impossible: universe variable bound to a term")
 end)
-end)) (fun _60_124 -> (match (_60_124) with
+end)
+with
 | _60_128 -> begin
 if (FStar_All.pipe_right cfg.steps (FStar_List.contains AllowUnboundUniverses)) then begin
 (FStar_Syntax_Syntax.U_unknown)::[]
 end else begin
 (FStar_All.failwith "Universe variable not found")
 end
-end)))
+end
 end
 | (FStar_Syntax_Syntax.U_zero) | (FStar_Syntax_Syntax.U_unif (_)) | (FStar_Syntax_Syntax.U_name (_)) | (FStar_Syntax_Syntax.U_unknown) -> begin
 (u)::[]

@@ -379,6 +379,23 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
 
     | MLE_App (e, args) -> begin
         match e.expr, args with
+        | MLE_Name p, [
+            ({ expr = MLE_Fun ([ _ ], scrutinee) });
+            ({ expr = MLE_Fun ([ (arg, _) ], possible_match)})
+          ] when (string_of_mlpath p = "FStar.All.try_with") ->
+            let branches =
+              match possible_match with
+              | ({ expr = MLE_Match ({ expr = MLE_Var arg' }, branches) }) when (idsym arg = idsym arg') ->
+                  branches
+              | e ->
+                  (* F* may reduce [match ... with ... -> e | ... -> e] into [e]. *)
+                  [ (MLP_Wild, None, e) ]
+            in
+            doc_of_expr currentModule outer ({
+              expr = MLE_Try (scrutinee, branches);
+              mlty = possible_match.mlty;
+              loc = possible_match.loc
+            })
         | (MLE_Name p, [e1; e2]) when is_bin_op p -> doc_of_binop currentModule p e1 e2
 
         | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1; e2]) when (is_bin_op p && unitVal=ml_unit) ->
@@ -455,10 +472,10 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
 
     | MLE_Try (e, pats) ->
         combine hardline [
-            reduce1 [text "try"; text "begin"];
-            doc_of_expr currentModule  (min_op_prec, NonAssoc) e;
-            reduce1 [text "end"; text "with"];
-            (combine hardline (List.map (doc_of_branch currentModule) pats))
+            text "try";
+            doc_of_expr currentModule (min_op_prec, NonAssoc) e;
+            text "with";
+            combine hardline (List.map (doc_of_branch currentModule) pats)
         ]
 and  doc_of_binop currentModule p e1 e2 : doc =
         let (_, prio, txt) = Option.get (as_bin_op p) in

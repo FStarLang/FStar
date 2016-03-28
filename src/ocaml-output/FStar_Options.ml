@@ -562,7 +562,8 @@ end))
 let find_file : Prims.string  ->  Prims.string Prims.option = (fun filename -> (
 # 203 "FStar.Options.fst"
 let search_path = (get_include_path ())
-in (FStar_All.try_with (fun _20_170 -> (match (()) with
+in try
+(match (()) with
 | () -> begin
 (let _105_55 = if (FStar_Util.is_path_absolute filename) then begin
 if (FStar_Util.file_exists filename) then begin
@@ -581,10 +582,11 @@ None
 end)))
 end
 in (FStar_Util.map_option FStar_Util.normalize_file_path _105_55))
-end)) (fun _20_169 -> (match (_20_169) with
+end)
+with
 | _20_173 -> begin
 None
-end)))))
+end))
 
 # 222 "FStar.Options.fst"
 let prims : Prims.unit  ->  Prims.string = (fun _20_178 -> (match (()) with

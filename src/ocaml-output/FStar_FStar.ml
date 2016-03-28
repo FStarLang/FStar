@@ -231,7 +231,8 @@ end)))
 # 122 "FStar.FStar.fst"
 let main = (fun _84_77 -> (match (()) with
 | () -> begin
-(FStar_All.try_with (fun _84_79 -> (match (()) with
+try
+(match (()) with
 | () -> begin
 (
 # 126 "FStar.FStar.fst"
@@ -240,7 +241,8 @@ in (
 # 127 "FStar.FStar.fst"
 let _84_98 = (cleanup ())
 in (FStar_All.exit 0)))
-end)) (fun _84_78 -> (match (_84_78) with
+end)
+with
 | e -> begin
 (
 # 130 "FStar.FStar.fst"
@@ -281,7 +283,7 @@ in (
 # 140 "FStar.FStar.fst"
 let _84_92 = (report_errors ())
 in (FStar_All.exit 1)))))
-end)))
+end
 end))
 
 

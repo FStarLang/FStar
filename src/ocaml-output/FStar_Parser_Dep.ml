@@ -235,7 +235,8 @@ let auto_open = (
 let index_of = (fun s l -> (
 # 180 "FStar.Parser.Dep.fst"
 let found = (FStar_ST.alloc (- (1)))
-in (FStar_All.try_with (fun _57_94 -> (match (()) with
+in try
+(match (()) with
 | () -> begin
 (
 # 182 "FStar.Parser.Dep.fst"
@@ -248,10 +249,11 @@ end else begin
 ()
 end) l)
 in (- (1)))
-end)) (fun _57_93 -> (match (_57_93) with
+end)
+with
 | Exit -> begin
 (FStar_ST.read found)
-end)))))
+end))
 in (
 # 193 "FStar.Parser.Dep.fst"
 let ordered = ("fstar")::("prims")::("fstar.list.tot")::("fstar.functionalextensionality")::("fstar.set")::("fstar.heap")::("fstar.map")::("fstar.hyperheap")::("fstar.st")::("fstar.all")::[]

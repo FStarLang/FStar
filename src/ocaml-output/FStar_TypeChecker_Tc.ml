@@ -5366,16 +5366,18 @@ let _64_3258 = env
 in {FStar_TypeChecker_Env.solver = _64_3258.FStar_TypeChecker_Env.solver; FStar_TypeChecker_Env.range = _64_3258.FStar_TypeChecker_Env.range; FStar_TypeChecker_Env.curmodule = _64_3258.FStar_TypeChecker_Env.curmodule; FStar_TypeChecker_Env.gamma = _64_3258.FStar_TypeChecker_Env.gamma; FStar_TypeChecker_Env.gamma_cache = _64_3258.FStar_TypeChecker_Env.gamma_cache; FStar_TypeChecker_Env.modules = _64_3258.FStar_TypeChecker_Env.modules; FStar_TypeChecker_Env.expected_typ = _64_3258.FStar_TypeChecker_Env.expected_typ; FStar_TypeChecker_Env.sigtab = _64_3258.FStar_TypeChecker_Env.sigtab; FStar_TypeChecker_Env.is_pattern = _64_3258.FStar_TypeChecker_Env.is_pattern; FStar_TypeChecker_Env.instantiate_imp = _64_3258.FStar_TypeChecker_Env.instantiate_imp; FStar_TypeChecker_Env.effects = _64_3258.FStar_TypeChecker_Env.effects; FStar_TypeChecker_Env.generalize = _64_3258.FStar_TypeChecker_Env.generalize; FStar_TypeChecker_Env.letrecs = _64_3258.FStar_TypeChecker_Env.letrecs; FStar_TypeChecker_Env.top_level = false; FStar_TypeChecker_Env.check_uvars = _64_3258.FStar_TypeChecker_Env.check_uvars; FStar_TypeChecker_Env.use_eq = _64_3258.FStar_TypeChecker_Env.use_eq; FStar_TypeChecker_Env.is_iface = _64_3258.FStar_TypeChecker_Env.is_iface; FStar_TypeChecker_Env.admit = _64_3258.FStar_TypeChecker_Env.admit; FStar_TypeChecker_Env.default_effects = _64_3258.FStar_TypeChecker_Env.default_effects; FStar_TypeChecker_Env.type_of = _64_3258.FStar_TypeChecker_Env.type_of; FStar_TypeChecker_Env.universe_of = _64_3258.FStar_TypeChecker_Env.universe_of; FStar_TypeChecker_Env.use_bv_sorts = _64_3258.FStar_TypeChecker_Env.use_bv_sorts})
 in (
 # 2383 "FStar.TypeChecker.Tc.fst"
-let _64_3274 = (FStar_All.try_with (fun _64_3262 -> (match (()) with
+let _64_3274 = try
+(match (()) with
 | () -> begin
 (tc_tot_or_gtot_term env e)
-end)) (fun _64_3261 -> (match (_64_3261) with
+end)
+with
 | FStar_Syntax_Syntax.Error (msg, _64_3266) -> begin
 (let _149_1264 = (let _149_1263 = (let _149_1262 = (FStar_TypeChecker_Env.get_range env)
 in ((Prims.strcat "Implicit argument: " msg), _149_1262))
 in FStar_Syntax_Syntax.Error (_149_1263))
 in (Prims.raise _149_1264))
-end)))
+end
 in (match (_64_3274) with
 | (t, c, g) -> begin
 if (FStar_Syntax_Util.is_total_lcomp c) then begin

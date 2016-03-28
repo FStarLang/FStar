@@ -36,8 +36,8 @@ let fail r msg =
     failwith msg
 
 let err_uninst env e (vars, t) =
-    fail e.pos (Util.format3 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated" 
-                    (Print.exp_to_string e) 
+    fail e.pos (Util.format3 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated"
+                    (Print.exp_to_string e)
                     (vars |> List.map fst |> String.concat ", ")
                     (ML.Code.string_of_mlty env.currentModule t))
 
@@ -106,31 +106,31 @@ let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty =
     if erasable g f t
     then (debug g (fun () -> Util.print2 "Erasing %s at type %s\n" (ML.Code.string_of_mlexpr g.currentModule e) (ML.Code.string_of_mlty g.currentModule t));
           let e_val = if type_leq g t ml_unit_ty then ml_unit else with_ty t <| MLE_Coerce(ml_unit, ml_unit_ty, t) in
-          e_val, f, t) 
+          e_val, f, t)
     else e, f, t
 
 let maybe_coerce (g:env) (e:mlexpr) (tInferred:mlty) (tExpected:mlty) : mlexpr =
-    // let tExpected = eraseTypeDeep g tExpected in 
+    // let tExpected = eraseTypeDeep g tExpected in
     // is this needed? see translate_typ. Even if we coerce here, there is no way to change the type of the generate expression
-    match type_leq_c g (Some e) tInferred tExpected with 
+    match type_leq_c g (Some e) tInferred tExpected with
         | true, Some e' -> e'
-        | _ -> 
+        | _ ->
 //         debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e tInferred tExpected);
-         with_ty tExpected <| MLE_Coerce (e, tInferred, tExpected) 
-           
+         with_ty tExpected <| MLE_Coerce (e, tInferred, tExpected)
+
 let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
 (*what does disj stand for? NS: disjunctive *)
-    let rec extract_one_pat (disj : bool) (imp : bool) g p : env * option<(mlpattern * list<mlexpr>)> = 
+    let rec extract_one_pat (disj : bool) (imp : bool) g p : env * option<(mlpattern * list<mlexpr>)> =
         match p.v with
           | Pat_disj _ -> failwith "Impossible"
- 
-          | Pat_constant (Const_int c) when (not !Options.use_native_int) -> 
+
+          | Pat_constant (Const_int c) when (not !Options.use_native_int) ->
             //these may be extracted to bigint, in which case, we need to emit a when clause
             let x = as_mlident (Util.new_bvd None) in
-            let when_clause = with_ty ml_bool_ty <| MLE_App(prims_op_equality, [with_ty ml_int_ty <| MLE_Var x; 
+            let when_clause = with_ty ml_bool_ty <| MLE_App(prims_op_equality, [with_ty ml_int_ty <| MLE_Var x;
                                                             with_ty ml_int_ty <| (MLE_Const <| mlconst_of_const' p.p (Const_int c))]) in
             g, Some (MLP_Var x, [when_clause])
-            
+
           | Pat_constant s     ->
             g, Some (MLP_Const (mlconst_of_const' p.p s), [])
 
@@ -141,9 +141,9 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
             let nTyVars = List.length (fst tys) in
             let tysVarPats, restPats =  Util.first_N nTyVars pats in
             let g, tyMLPats = Util.fold_map (fun g (p, imp) -> extract_one_pat disj true g p) g tysVarPats in (*not all of these were type vars in ML*)
-            let g, restMLPats = Util.fold_map (fun g (p, imp) -> 
+            let g, restMLPats = Util.fold_map (fun g (p, imp) ->
                 let env, popt = extract_one_pat disj false g p in
-                let popt = match popt with 
+                let popt = match popt with
                     | None -> Some (MLP_Wild, [])
                     | _ -> popt in
                 env, popt) g restPats in
@@ -173,16 +173,16 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
           | Pat_twild _ ->
             g, None in
 
-    let extract_one_pat disj g p = 
-        match extract_one_pat disj false g p with 
+    let extract_one_pat disj g p =
+        match extract_one_pat disj false g p with
             | g, Some (x, v) -> g, (x, v)
-            | _ -> failwith "Impossible" in 
-    
-    let mk_when_clause whens = 
-        match whens with 
+            | _ -> failwith "Impossible" in
+
+    let mk_when_clause whens =
+        match whens with
             | [] -> None
             | hd::tl -> Some (List.fold_left conjoin hd tl) in
-    
+
     match p.v with
       | Pat_disj [] -> failwith "Impossible"
 
@@ -192,15 +192,15 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
         let ps_when, rest = ps |> List.partition (function (_, _::_) -> true | _ -> false) in
         let ps = ps_when |> List.map (fun (x, whens) -> (x, mk_when_clause whens)) in
         //branches that contains a new when clause need to be split out
-        let res = match rest with 
+        let res = match rest with
             | [] -> g, ps
             | rest -> g,  (MLP_Branch(List.map fst rest), None) :: ps in
         res
 
-      | _ -> 
+      | _ ->
         let g, (p, whens) = extract_one_pat false g p in
         let when_clause = mk_when_clause whens in
-        g, [(p, when_clause)] 
+        g, [(p, when_clause)]
 
 let normalize_abs e0 =
     let rec aux bs e =
@@ -268,8 +268,8 @@ let maybe_lalloc_eta_data (g:env) (qual : option<fv_qual>) (residualType : mlty)
                     | _ -> failwith "Impossible" in
 
     match mlAppExpr.expr, qual with
-        | MLE_App ({expr=MLE_Name mlp}, [mlarg]), _ when (mlp=mlp_lalloc) -> 
-          debug g (fun () -> Util.print_string "need to do lalloc surgery here\n"); 
+        | MLE_App ({expr=MLE_Name mlp}, [mlarg]), _ when (mlp=mlp_lalloc) ->
+          debug g (fun () -> Util.print_string "need to do lalloc surgery here\n");
           fix_lalloc mlarg
 
         | _, None -> mlAppExpr
@@ -279,16 +279,16 @@ let maybe_lalloc_eta_data (g:env) (qual : option<fv_qual>) (residualType : mlty)
           let proj = MLE_Proj(mle, fn) in
           let e = match args with
             | [] -> proj
-            | _ -> 
-              MLE_App(with_ty MLTY_Top <| proj, args) in //TODO: Fix imprecise with_ty on the projector 
-          with_ty mlAppExpr.mlty e 
+            | _ ->
+              MLE_App(with_ty MLTY_Top <| proj, args) in //TODO: Fix imprecise with_ty on the projector
+          with_ty mlAppExpr.mlty e
 
         | MLE_App ({expr=MLE_Name mlp}, mlargs), Some Data_ctor
-        | MLE_App ({expr=MLE_Name mlp}, mlargs), Some (Record_ctor _) -> 
+        | MLE_App ({expr=MLE_Name mlp}, mlargs), Some (Record_ctor _) ->
           resugar_and_maybe_eta qual <| (with_ty mlAppExpr.mlty <| MLE_CTor (mlp,mlargs))
 
         | MLE_Name mlp, Some Data_ctor
-        | MLE_Name mlp, Some (Record_ctor _) -> 
+        | MLE_Name mlp, Some (Record_ctor _) ->
           resugar_and_maybe_eta qual <| (with_ty mlAppExpr.mlty <| MLE_CTor (mlp, []))
 
         | _ -> mlAppExpr
@@ -307,7 +307,7 @@ let check_pats_for_ite (l:list<(pat * option<exp> * exp)>) :(bool * option<exp> 
 
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
     // debug g (fun () -> printfn "Checking %s at type %A\n" (Print.exp_to_string e) t);
-    let e, _, _ = erase g (check_exp' g e f t) f t in 
+    let e, _, _ = erase g (check_exp' g e f t) f t in
     e
 
 and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
@@ -325,7 +325,7 @@ and synth_exp (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
  to avoid the need to infer them later, when less info is available*)
 and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
    (debug g (fun u -> Util.print_string (Util.format2 "now synthesizing expression (%s) :  %s \n" (Print.tag_of_exp e) (Print.exp_to_string e))));
-   
+
     match (Util.compress_exp e).n with
         | Exp_constant c ->
           let t = Tc.Recheck.typing_const e.pos c in
@@ -355,8 +355,8 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             match restArgs, t with
                 | [], _ ->
                     //1. If partially applied and head is a datacon, it needs to be eta-expanded
-                    //2. If we're generating OCaml, and any of the arguments are impure, 
-                    //   and the head is not a primitive short-circuiting op, 
+                    //2. If we're generating OCaml, and any of the arguments are impure,
+                    //   and the head is not a primitive short-circuiting op,
                     //   then evaluation order must be enforced to be L-to-R (by hoisting)
                     let lbs, mlargs =
                         if Util.is_primop head || Util.codegen_fsharp()
@@ -368,10 +368,10 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                                      (x, arg)::lbs, (with_ty arg.mlty <| MLE_Var x)::out_args)
                         ([], []) mlargs_f in
                     let app = maybe_lalloc_eta_data g is_data t <| (with_ty t <| MLE_App(mlhead, mlargs)) in
-                    let l_app = List.fold_right 
-                        (fun (x, arg) out -> 
-                            with_ty out.mlty <| MLE_Let((false, [{mllb_name=x; mllb_tysc=Some ([], arg.mlty); mllb_add_unit=false; mllb_def=arg; print_typ=true}]), 
-                                                      out)) 
+                    let l_app = List.fold_right
+                        (fun (x, arg) out ->
+                            with_ty out.mlty <| MLE_Let((false, [{mllb_name=x; mllb_tysc=Some ([], arg.mlty); mllb_add_unit=false; mllb_def=arg; print_typ=true}]),
+                                                      out))
                         lbs app in // lets are to ensure L to R eval ordering of arguments
                     l_app, f, t
 
@@ -391,17 +391,17 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                     | Some t -> synth_app is_data (mlhead, mlargs_f) (f, t) restArgs
                     | None -> err_ill_typed_application e restArgs t
                   end in
-          
-          let synth_app_maybe_projector is_data mlhead (f, t) args = 
-                match is_data with 
-                    | Some (Record_projector _) -> 
-                      let rec remove_implicits args f t = match args, t with 
-                        | (Inr _, Some (Implicit _))::args, MLTY_Fun(_, f', t) -> 
+
+          let synth_app_maybe_projector is_data mlhead (f, t) args =
+                match is_data with
+                    | Some (Record_projector _) ->
+                      let rec remove_implicits args f t = match args, t with
+                        | (Inr _, Some (Implicit _))::args, MLTY_Fun(_, f', t) ->
                           remove_implicits args (join f f') t
 
                         | _ -> args, f, t in
                       let args, f, t = remove_implicits args f t in
-                      synth_app is_data (mlhead, []) (f, t) args 
+                      synth_app is_data (mlhead, []) (f, t) args
 
                     | _ -> synth_app is_data (mlhead, []) (f, t) args in
 
@@ -411,18 +411,18 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             | Exp_fvar _ ->
 //              debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
               let (head_ml, (vars, t), inst_ok), qual = lookup_var g head in
-              let has_typ_apps = match args with 
+              let has_typ_apps = match args with
                 | (Inl _, _)::_ -> true
                 | _ -> false in
 //              debug g (fun () -> printfn "\n (*looked up tyscheme \n %A *) \n" (vars,t));
-              let head_ml, head_t, args = match vars with 
-                | _::_ when ((not has_typ_apps) && inst_ok) -> 
+              let head_ml, head_t, args = match vars with
+                | _::_ when ((not has_typ_apps) && inst_ok) ->
                   (* no explicit type applications although some were expected; but instantiation is permissible *)
 //                  Printf.printf "Taking the type of %A to be %A\n" head_ml t;
                   head_ml, t, args
 
-                | _ -> 
-                  let n = List.length vars in 
+                | _ ->
+                  let n = List.length vars in
                   if n <= List.length args
                   then let prefix, rest = Util.first_N n args in
 //                       let _ = (if n=1 then printfn "\n (*prefix was  \n %A \n  *) \n" prefix) in
@@ -430,8 +430,8 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 //                        let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
                        let t = instantiate (vars, t) prefixAsMLTypes in
                        let head = match head_ml.expr with
-                         | MLE_Name _ 
-                         | MLE_Var _ -> {head_ml with mlty=t} 
+                         | MLE_Name _
+                         | MLE_Var _ -> {head_ml with mlty=t}
                          | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) -> MLE_App({head with mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
                          | _ -> failwith "Impossible" in
                        head, t, rest
@@ -570,13 +570,13 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                 | Some then_e, Some else_e ->
                     let then_mle, f_then, t_then = synth_exp g then_e in
                     let else_mle, f_else, t_else = synth_exp g else_e in
-                    let t_branch, maybe_lift = 
+                    let t_branch, maybe_lift =
                         if type_leq g t_then t_else  //the types agree except for effect labels
-                        then t_else, no_lift 
-                        else if type_leq g t_else t_then 
+                        then t_else, no_lift
+                        else if type_leq g t_else t_then
                         then t_then, no_lift
                         else MLTY_Top, apply_obj_repr in
-                    with_ty t_branch <| MLE_If (e, maybe_lift then_mle t_then, Some (maybe_lift else_mle t_else)), 
+                    with_ty t_branch <| MLE_If (e, maybe_lift then_mle t_then, Some (maybe_lift else_mle t_else)),
                     join f_then f_else,
                     t_branch
                 | _ -> failwith "ITE pats matched but then and else expressions not found?"
@@ -585,37 +585,37 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                 let env, p = extract_pat g pat in
                 let when_opt, f_when = match when_opt with
                     | None -> None, E_PURE
-                    | Some w -> 
+                    | Some w ->
                         let w, f_w, t_w = synth_exp env w in
                         let w = maybe_coerce env w t_w ml_bool_ty in
                         Some w, f_w in
                 let mlbranch, f_branch, t_branch = synth_exp env branch in
                 //Printf.printf "Extracted %s to %A\n" (Print.exp_to_string branch) mlbranch;
-                p |> List.map (fun (p, wopt) -> 
+                p |> List.map (fun (p, wopt) ->
                     let when_clause = conjoin_opt wopt when_opt in
                     p, (when_clause, f_when), (mlbranch, f_branch, t_branch)))
             in
             begin match mlbranches with
-                | [] -> 
+                | [] ->
                     let fw, _, _ = lookup_fv g (Util.fv Const.failwith_lid) in
-                    with_ty ml_unit_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]), 
+                    with_ty ml_unit_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
                     ml_unit_ty
 
-               
-                | (_, _, (_, f_first, t_first))::rest -> 
-                   let topt, f_match = List.fold_left (fun (topt, f) (_, _, (_, f_branch, t_branch)) -> 
+
+                | (_, _, (_, f_first, t_first))::rest ->
+                   let topt, f_match = List.fold_left (fun (topt, f) (_, _, (_, f_branch, t_branch)) ->
                         //WARNING WARNING WARNING
                         //We're explicitly excluding the effect of the when clause in the net effect computation
                         //TODO: fix this when we handle when clauses fully!
-                        let f = join f f_branch in 
-                        let topt = match topt with 
+                        let f = join f f_branch in
+                        let topt = match topt with
                             | None -> None
-                            | Some t -> 
+                            | Some t ->
                               //we just use the environment g here, since it is only needed for delta unfolding
                               //which is invariant across the branches
-                              if type_leq g t t_branch 
-                              then Some t_branch 
+                              if type_leq g t t_branch
+                              then Some t_branch
                               else if type_leq g t_branch t
                               then Some t
                               else None in
@@ -623,17 +623,17 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                      (Some t_first, f_first)
                      rest in
                    let mlbranches = mlbranches |> List.map (fun (p, (wopt, _), (b, _, t)) ->
-                        let b = match topt with 
-                            | None -> 
+                        let b = match topt with
+                            | None ->
 //                              Printf.printf "Apply obj repr to %A and %A\n" b t;
                               apply_obj_repr b t
                             | Some _ -> b in
                         (p, wopt, b)) in
-                   let t_match = match topt with 
+                   let t_match = match topt with
                         | None -> MLTY_Top
                         | Some t -> t in
                    with_ty t_match <| MLE_Match(e, mlbranches),
-                   f_match, 
+                   f_match,
                    t_match
             end
 
@@ -651,7 +651,7 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
     let fstar_disc_type: typ = Tc.Env.lookup_lid env.tcenv discName in
     let wildcards = match fstar_disc_type.n with
         | Typ_fun (binders, _) ->
-            binders 
+            binders
             |> List.filter (function (_, (Some (Implicit _))) -> true | _ -> false)
             |> List.map (fun _ -> fresh "_", MLTY_Top)
         | _ ->
@@ -659,7 +659,7 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
     in
     // Unfortunately, looking up the constructor name in the environment would give us a _curried_ type.
     // So, we don't bother popping arrows until we find the return type of the constructor.
-    // We just use Top. 
+    // We just use Top.
     let mlid = fresh "_discr_" in
     let targ = MLTY_Top in
     // Ugly hack: we don't know what to put in there, so we just write a dummy
@@ -668,8 +668,8 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
     let discrBody =
         with_ty disc_ty <|
             MLE_Fun(wildcards @ [(mlid, targ)],
-                    with_ty ml_bool_ty <| 
-                        (MLE_Match(with_ty targ <| MLE_Name([], idsym mlid), 
+                    with_ty ml_bool_ty <|
+                        (MLE_Match(with_ty targ <| MLE_Name([], idsym mlid),
                                     // Note: it is legal in OCaml to write [Foo _] for a constructor with zero arguments, so don't bother.
                                    [MLP_CTor(mlpath_of_lident constrName, [MLP_Wild]), None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool true);
                                     MLP_Wild, None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool false)]))) in

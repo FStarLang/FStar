@@ -88,13 +88,15 @@ let x = (let _161_27 = (FStar_Util.substring_from x (FStar_String.length prefix)
 in (FStar_Util.trim_string _161_27))
 in (
 # 57 "FStar.SMTEncoding.Z3.fst"
-let x = (FStar_All.try_with (fun _76_38 -> (match (()) with
+let x = try
+(match (()) with
 | () -> begin
 (FStar_List.map FStar_Util.int_of_string (FStar_Util.split x "."))
-end)) (fun _76_37 -> (match (_76_37) with
+end)
+with
 | _76_41 -> begin
 []
-end)))
+end
 in (match (x) with
 | i1::i2::i3::[] -> begin
 Z3V ((i1, i2, i3))

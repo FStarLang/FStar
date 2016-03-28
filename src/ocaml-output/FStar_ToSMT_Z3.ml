@@ -74,17 +74,19 @@ end
 | None -> begin
 (
 # 51 "FStar.ToSMT.Z3.fst"
-let _44_40 = (FStar_All.try_with (fun _44_27 -> (match (()) with
+let _44_40 = try
+(match (()) with
 | () -> begin
 (let _129_27 = (FStar_ST.read FStar_Options.z3_exe)
 in (FStar_Util.run_proc _129_27 "-version" ""))
-end)) (fun _44_26 -> (match (_44_26) with
+end)
+with
 | _44_30 -> begin
 (
 # 52 "FStar.ToSMT.Z3.fst"
 let _44_31 = (FStar_Util.print_string "Error: No z3 executable was found\n")
 in (FStar_All.exit 1))
-end)))
+end
 in (match (_44_40) with
 | (_44_36, out, _44_39) -> begin
 (
@@ -97,13 +99,15 @@ let x = (let _129_29 = (FStar_Util.substring_from x (FStar_String.length prefix)
 in (FStar_Util.trim_string _129_29))
 in (
 # 58 "FStar.ToSMT.Z3.fst"
-let x = (FStar_All.try_with (fun _44_47 -> (match (()) with
+let x = try
+(match (()) with
 | () -> begin
 (FStar_List.map FStar_Util.int_of_string (FStar_Util.split x "."))
-end)) (fun _44_46 -> (match (_44_46) with
+end)
+with
 | _44_50 -> begin
 []
-end)))
+end
 in (match (x) with
 | i1::i2::i3::[] -> begin
 Z3V ((i1, i2, i3))

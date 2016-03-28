@@ -170,7 +170,8 @@ end))
 end)))
 
 # 129 "FStar.Universal.fst"
-let tc_one_fragment : FStar_Syntax_Syntax.modul Prims.option  ->  FStar_Parser_Env.env  ->  FStar_TypeChecker_Env.env  ->  Prims.string  ->  (FStar_Syntax_Syntax.modul Prims.option * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) Prims.option = (fun curmod dsenv env frag -> (FStar_All.try_with (fun _83_113 -> (match (()) with
+let tc_one_fragment : FStar_Syntax_Syntax.modul Prims.option  ->  FStar_Parser_Env.env  ->  FStar_TypeChecker_Env.env  ->  Prims.string  ->  (FStar_Syntax_Syntax.modul Prims.option * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) Prims.option = (fun curmod dsenv env frag -> try
+(match (()) with
 | () -> begin
 (match ((FStar_Parser_Driver.parse_fragment frag)) with
 | FStar_Parser_Driver.Empty -> begin
@@ -224,7 +225,8 @@ end))
 end)
 end))
 end)
-end)) (fun _83_112 -> (match (_83_112) with
+end)
+with
 | FStar_Syntax_Syntax.Error (msg, r) -> begin
 (
 # 158 "FStar.Universal.fst"
@@ -239,7 +241,7 @@ in None)
 end
 | e -> begin
 (Prims.raise e)
-end))))
+end)
 
 # 163 "FStar.Universal.fst"
 let interactive_tc : ((FStar_Parser_Env.env * FStar_TypeChecker_Env.env), FStar_Syntax_Syntax.modul Prims.option) FStar_Interactive.interactive_tc = (
@@ -312,7 +314,8 @@ in (
 # 195 "FStar.Universal.fst"
 let check_frag = (fun _83_198 curmod text -> (match (_83_198) with
 | (dsenv, env) -> begin
-(FStar_All.try_with (fun _83_202 -> (match (()) with
+try
+(match (()) with
 | () -> begin
 (match ((tc_one_fragment curmod dsenv env text)) with
 | Some (m, dsenv, env) -> begin
@@ -323,7 +326,8 @@ end
 | _83_222 -> begin
 None
 end)
-end)) (fun _83_201 -> (match (_83_201) with
+end)
+with
 | FStar_Syntax_Syntax.Error (msg, r) -> begin
 (
 # 203 "FStar.Universal.fst"
@@ -338,7 +342,7 @@ in (msg, _168_82))
 in (_168_83)::[])
 in (FStar_TypeChecker_Errors.add_errors env _168_84))
 in None)
-end)))
+end
 end))
 in (
 # 210 "FStar.Universal.fst"

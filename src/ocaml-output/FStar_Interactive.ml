@@ -241,7 +241,8 @@ let _81_88 = (fill_buffer ())
 in (
 # 130 "FStar.Interactive.fst"
 let _81_90 = (fill_buffer ())
-in (FStar_All.try_with (fun _81_93 -> (match (()) with
+in try
+(match (()) with
 | () -> begin
 (
 # 131 "FStar.Interactive.fst"
@@ -266,16 +267,18 @@ end
 ()
 end)
 in None)
-end)) (fun _81_92 -> (match (_81_92) with
+end)
+with
 | Found (n) -> begin
 Some (n)
-end)))))
+end))
 end))
 
 # 146 "FStar.Interactive.fst"
 let detect_dependencies_with_first_interactive_chunk : Prims.unit  ->  Prims.string Prims.list = (fun _81_116 -> (match (()) with
 | () -> begin
-(FStar_All.try_with (fun _81_118 -> (match (()) with
+try
+(match (()) with
 | () -> begin
 (
 # 149 "FStar.Interactive.fst"
@@ -314,7 +317,8 @@ in (FStar_List.rev _166_181))
 end)))
 end)))
 end))
-end)) (fun _81_117 -> (match (_81_117) with
+end)
+with
 | FStar_Syntax_Syntax.Error (msg, r) -> begin
 (
 # 169 "FStar.Interactive.fst"
@@ -338,7 +342,7 @@ end
 # 177 "FStar.Interactive.fst"
 let _81_138 = (FStar_Tc_Errors.warn FStar_Range.dummyRange "Dependency analysis may not be correct because the file failed to parse: ")
 in [])
-end)))
+end
 end))
 
 # 178 "FStar.Interactive.fst"
