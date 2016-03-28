@@ -471,7 +471,7 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
           | Pat_constant (Const_int c) when (not !Options.use_native_int) -> 
             //these may be extracted to bigint, in which case, we need to emit a when clause
             let x = gensym() in // as_mlident (S.new_bv None Tm_bvar) in
-            let when_clause = with_ty ml_bool_ty <| MLE_App(prims_op_equality, [with_ty ml_int_ty <| MLE_Var x; 
+            let when_clause = with_ty ml_bool_ty <| MLE_App(bigint_equality, [with_ty ml_int_ty <| MLE_Var x; 
                                                             with_ty ml_int_ty <| (MLE_Const <| mlconst_of_const' p.p (Const_int c))]) in
             g, Some (MLP_Var x, [when_clause])
             

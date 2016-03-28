@@ -332,6 +332,7 @@ let rec eraseTypeDeep unfold (t:mlty) : mlty =
     | _ ->  t
 
 let prims_op_equality = with_ty MLTY_Top <| MLE_Name (["Prims"], "op_Equality")
+let bigint_equality = with_ty MLTY_Top <| MLE_Name (["Big_int"], "eq_big_int")
 let prims_op_amp_amp  = with_ty (mk_ty_fun [(("x",0), ml_bool_ty); (("y",0), ml_bool_ty)] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
 let conjoin e1 e2 = with_ty ml_bool_ty <| MLE_App(prims_op_amp_amp, [e1;e2])
 let conjoin_opt e1 e2 = match e1, e2 with 
