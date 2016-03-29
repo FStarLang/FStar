@@ -55,14 +55,6 @@ val smap_remove: smap<'value> -> string -> unit
 val smap_keys: smap<'value> -> list<string>
 val smap_copy: smap<'value> -> smap<'value>
 
-//type weakmap<'a> = (* not relying on representation *)
-//    | Dummy of 'a
-//    | Map of System.Collections.Generic.Dictionary<int, list<System.WeakReference>>
-//
-//val new_weakmap: unit -> weakmap<'a>
-//val weakmap_insert: weakmap<'a> -> int -> 'a -> unit
-//val weakmap_lookup: weakmap<'a> -> int -> option<list<'a>>
-
 val format: string -> list<string> -> string
 val format1: string -> string -> string
 val format2: string -> string -> string -> string

@@ -181,9 +181,17 @@ assume new type float  : Type0
 assume new type string : Type0
 assume new type exn : Type0
 type double = float
-
+new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
-assume type uint8 : Type0
+
+type int16 = i:int{i > -32769  /\ 32768 > i}
+type int32 = int
+assume new type int64  : Type0
+assume new type uint8  : Type0
+assume new type uint16 : Type0
+assume new type uint32 : Type0
+assume new type uint64 : Type0
+
 type byte = uint8
 
 type list (a:Type) =

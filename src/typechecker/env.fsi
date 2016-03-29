@@ -89,7 +89,7 @@ and guard_t = {
   guard_f:    guard_formula;
   deferred:   deferred;
   univ_ineqs: list<univ_ineq>;
-  implicits:  list<(env * uvar * term * typ * Range.range)>;
+  implicits:  list<(string * env * uvar * term * typ * Range.range)>;
 }
 
 type implicits = list<(env * uvar * term * typ * Range.range)>

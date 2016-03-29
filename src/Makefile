@@ -210,7 +210,7 @@ ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse 
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 
-FSTAROPTS=
+FSTAROPTS=--MLish
 
 all_boot_fsts:
 	cp format/format.fsi format/formatml.fsi
@@ -226,7 +226,7 @@ boot_fsts/FStar.Parser.ParseIt.fsti: parser/parseit.fsi
 	cp $^ $@
 
 $(LIB)/FStar.Util.fsti: basic/util.fsi
-	cat $^ | sed 's/open System.IO//g' | sed 's/type time.*/new type time/g' | sed 's/type smap.*/new type smap : Type -> Type/g' | sed 's/type out_channel.*/new type out_channel/g' | sed 's/type file_handle.*/new type file_handle/g' | sed 's/type stream_reader.*/new type stream_reader/g' | sed 's/type string_builder.*/new type string_builder/g' | sed 's/type proc.*/new type proc/g' > $@
+	cat $^ | sed 's/open System.IO//g' | sed 's/type time.*/new type time/g' | sed 's/type smap.*/new type smap : Type -> Type/g' | sed 's/type out_channel.*/new type out_channel/g' | sed 's/type file_handle.*/new type file_handle/g' | sed 's/type stream_reader.*/new type stream_reader/g' | sed 's/type string_builder.*/new type string_builder/g' | sed 's/type proc.*/new type proc/g' | sed 's/type set.*/new type set:Type -> Type/g' > $@
 
 $(LIB)/FStar.GetOpt.fsti: basic/getoptsimple.fsi
 	cp $^ $@
@@ -242,7 +242,7 @@ clean_ocaml_prep:
 extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
-	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^ --MLish #--universes #--MLish 
+	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^ 
 
 ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml
 

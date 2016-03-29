@@ -173,9 +173,6 @@ let print_expected_ty env = match Env.expected_typ env with
     | None -> Util.print_string "Expected type is None"
     | Some t -> Util.print1 "Expected type is %s" (Print.term_to_string t)
 
-let with_implicits imps (e, l, g) = e, l, {g with implicits=imps@g.implicits}
-let add_implicit u g = {g with implicits=u::g.implicits}
-
 (************************************************************************************************************)
 (* check the patterns in an SMT lemma to make sure all bound vars are mentiond *)
 (************************************************************************************************************)
@@ -357,7 +354,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let gimp = 
         match (SS.compress head).n with 
             | Tm_uvar(u, _) ->
-              let imp = (env0, u, e, c.res_typ, e.pos) in
+              let imp = ("head of application is a uvar", env0, u, e, c.res_typ, head.pos) in
               {Rel.trivial_guard with implicits=[imp]} 
             | _ -> Rel.trivial_guard in
     let gres = Rel.conj_guard g (Rel.conj_guard g' gimp) in
@@ -437,7 +434,7 @@ and tc_value env (e:term) : term
   | Tm_uvar(u, t1) -> //the type of a uvar is given directly with it; we do not recheck the type
     let g = match (SS.compress t1).n with 
         | Tm_arrow _ -> Rel.trivial_guard
-        | _ -> let imp = (env, u, top, t1, top.pos) in
+        | _ -> let imp = ("uvar in term", env, u, top, t1, top.pos) in
                {Rel.trivial_guard with implicits=[imp]} in
 //    let g = Rel.trivial_guard in
     value_check_expected_typ env e (Inl t1) g
@@ -878,7 +875,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             | (x, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit arg *)
                 let t = SS.subst subst x.sort in
                 check_no_escape (Some head) env fvs t;
-                let varg, _, implicits = TcUtil.new_implicit_var env t in //new_uvar env t in
+                let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" head.pos env t in //new_uvar env t in
                 let subst = NT(x, varg)::subst in
                 let arg = varg, as_implicit true in
                 tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard implicits g, fvs) rest cres args

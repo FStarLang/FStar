@@ -60,13 +60,13 @@ val tryPick : ('a -> (option 'b)) -> (list 'a) -> (option 'b)
 val tryPickT : ('a -> Tot (option 'b)) -> (list 'a) -> Tot (option 'b)
 val choose : ('a -> (option 'b)) -> (list 'a) -> (list 'b)
 val chooseT : ('a -> Tot (option 'b)) -> (list 'a) -> Tot (list 'b)
-val partition : ('a -> bool) -> (list 'a) -> (Tuple2 (list 'a) (list 'a))
-val partitionT : f:('a -> Tot bool) -> (list 'a) -> Tot (Tuple2 (list 'a) (list 'a))
-val assoc : 'a -> (list (Tuple2 'a 'b)) -> Tot (option 'b)
-val split : (list (Tuple2 'a 'b)) -> Tot (Tuple2 (list 'a) (list 'b))
-val unzip3 : (list (Tuple3 'a 'b 'c)) -> Tot (Tuple3 (list 'a) (list 'b) (list 'c))
-val zip : (list 'a) -> (list 'b) -> (list (Tuple2 'a 'b))
-val zip3 : (list 'a) -> (list 'b) -> (list 'c) -> (list (Tuple3 'a 'b 'c))
+val partition : ('a -> bool) -> (list 'a) -> (list 'a * list 'a)
+val partitionT : f:('a -> Tot bool) -> (list 'a) -> Tot (list 'a * list 'a)
+val assoc : 'a -> (list ('a * 'b)) -> Tot (option 'b)
+val split : (list ('a * 'b)) -> Tot (list 'a * list 'b)
+val unzip3 : (list ('a * 'b * 'c)) -> Tot (list 'a * list 'b * list 'c)
+val zip : list 'a -> list 'b -> list ('a * 'b)
+val zip3 : (list 'a) -> (list 'b) -> (list 'c) -> list ('a * 'b * 'c)
 val sortWith : ('a -> 'a -> int) -> (list 'a) -> (list 'a)
 val partition_length : f:('a -> Tot bool) -> l:(list 'a) -> Lemma (unit)
 val bool_of_compare : ('a -> 'a -> Tot int) -> 'a -> 'a -> Tot bool
@@ -88,11 +88,11 @@ val memT : '_17768 -> (list '_17768) -> Tot bool
 val contains : '_17778 -> (list '_17778) -> Tot bool
 val containsT : '_17788 -> (list '_17788) -> Tot bool
 val findT : f:('_19377 -> Tot bool) -> (list '_19377) -> Tot (option (x:'_19377{(f x)}))
-val assocT : '_35042 -> (list (Tuple2 '_35042 '_35041)) -> Tot (option '_35041)
-val splitT : (list (Tuple2 '_36940 '_36939)) -> Tot (Tuple2 (list '_36940) (list '_36939))
-val unzip : (list (Tuple2 '_36948 '_36947)) -> Tot (Tuple2 (list '_36948) (list '_36947))
-val unzipT : (list (Tuple2 '_36956 '_36955)) -> Tot (Tuple2 (list '_36956) (list '_36955))
-val unzip3T : (list (Tuple3 '_40328 '_40327 '_40326)) -> Tot (Tuple3 (list '_40328) (list '_40327) (list '_40326))
+val assocT : '_35042 -> (list ('_35042 * '_35041)) -> Tot (option '_35041)
+val splitT : list ('_36940 * '_36939) -> Tot (list '_36940 * list '_36939)
+val unzip : list ('_36948 * '_36947) -> Tot (list '_36948 * list '_36947)
+val unzipT : list ('_36956 * '_36955) -> Tot (list '_36956 * list '_36955)
+val unzip3T : list ('_40328 * '_40327 * '_40326) -> Tot (list '_40328 * list '_40327 * list '_40326)
 (* This signature (just like [contains] and others) does not require that 'a be
    comparable for F#, which means that after extraction, your code may not
    compile with F#. OCaml does not have this problem, as it features a
