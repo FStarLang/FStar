@@ -15,8 +15,8 @@ end))
 
 # 8 "FStar.Format.fst"
 let ___Doc____0 = (fun projectee -> (match (projectee) with
-| Doc (_23_2) -> begin
-_23_2
+| Doc (_17_2) -> begin
+_17_2
 end))
 
 # 34 "FStar.Format.fst"
@@ -41,37 +41,37 @@ let break0 : doc = (break_ 0)
 let break1 : doc = (text " ")
 
 # 48 "FStar.Format.fst"
-let enclose : doc  ->  doc  ->  doc  ->  doc = (fun _23_7 _23_9 _23_11 -> (match ((_23_7, _23_9, _23_11)) with
+let enclose : doc  ->  doc  ->  doc  ->  doc = (fun _17_7 _17_9 _17_11 -> (match ((_17_7, _17_9, _17_11)) with
 | (Doc (l), Doc (r), Doc (x)) -> begin
 Doc ((Prims.strcat (Prims.strcat l x) r))
 end))
 
 # 51 "FStar.Format.fst"
-let brackets : doc  ->  doc = (fun _23_13 -> (match (_23_13) with
+let brackets : doc  ->  doc = (fun _17_13 -> (match (_17_13) with
 | Doc (d) -> begin
-(let _108_22 = (text "[")
-in (let _108_21 = (text "]")
-in (enclose _108_22 _108_21 (Doc (d)))))
+(let _96_22 = (text "[")
+in (let _96_21 = (text "]")
+in (enclose _96_22 _96_21 (Doc (d)))))
 end))
 
 # 52 "FStar.Format.fst"
-let cbrackets : doc  ->  doc = (fun _23_15 -> (match (_23_15) with
+let cbrackets : doc  ->  doc = (fun _17_15 -> (match (_17_15) with
 | Doc (d) -> begin
-(let _108_26 = (text "{")
-in (let _108_25 = (text "}")
-in (enclose _108_26 _108_25 (Doc (d)))))
+(let _96_26 = (text "{")
+in (let _96_25 = (text "}")
+in (enclose _96_26 _96_25 (Doc (d)))))
 end))
 
 # 53 "FStar.Format.fst"
-let parens : doc  ->  doc = (fun _23_17 -> (match (_23_17) with
+let parens : doc  ->  doc = (fun _17_17 -> (match (_17_17) with
 | Doc (d) -> begin
-(let _108_30 = (text "(")
-in (let _108_29 = (text ")")
-in (enclose _108_30 _108_29 (Doc (d)))))
+(let _96_30 = (text "(")
+in (let _96_29 = (text ")")
+in (enclose _96_30 _96_29 (Doc (d)))))
 end))
 
 # 56 "FStar.Format.fst"
-let cat : doc  ->  doc  ->  doc = (fun _23_19 _23_21 -> (match ((_23_19, _23_21)) with
+let cat : doc  ->  doc  ->  doc = (fun _17_19 _17_21 -> (match ((_17_19, _17_21)) with
 | (Doc (d1), Doc (d2)) -> begin
 Doc ((Prims.strcat d1 d2))
 end))
@@ -80,21 +80,21 @@ end))
 let reduce : doc Prims.list  ->  doc = (fun docs -> (FStar_List.fold_left cat empty docs))
 
 # 63 "FStar.Format.fst"
-let group : doc  ->  doc = (fun _23_24 -> (match (_23_24) with
+let group : doc  ->  doc = (fun _17_24 -> (match (_17_24) with
 | Doc (d) -> begin
 Doc (d)
 end))
 
 # 66 "FStar.Format.fst"
-let groups : doc Prims.list  ->  doc = (fun docs -> (let _108_41 = (reduce docs)
-in (group _108_41)))
+let groups : doc Prims.list  ->  doc = (fun docs -> (let _96_41 = (reduce docs)
+in (group _96_41)))
 
 # 70 "FStar.Format.fst"
-let combine : doc  ->  doc Prims.list  ->  doc = (fun _23_27 docs -> (match (_23_27) with
+let combine : doc  ->  doc Prims.list  ->  doc = (fun _17_27 docs -> (match (_17_27) with
 | Doc (sep) -> begin
 (
 # 71 "FStar.Format.fst"
-let select = (fun _23_31 -> (match (_23_31) with
+let select = (fun _17_31 -> (match (_17_31) with
 | Doc (d) -> begin
 if (d = "") then begin
 None
@@ -115,7 +115,7 @@ let cat1 : doc  ->  doc  ->  doc = (fun d1 d2 -> (reduce ((d1)::(break1)::(d2)::
 let reduce1 : doc Prims.list  ->  doc = (fun docs -> (combine break1 docs))
 
 # 84 "FStar.Format.fst"
-let nest : Prims.int  ->  doc  ->  doc = (fun i _23_38 -> (match (_23_38) with
+let nest : Prims.int  ->  doc  ->  doc = (fun i _17_38 -> (match (_17_38) with
 | Doc (d) -> begin
 Doc (d)
 end))
@@ -123,8 +123,8 @@ end))
 # 88 "FStar.Format.fst"
 let align : doc Prims.list  ->  doc = (fun docs -> (
 # 89 "FStar.Format.fst"
-let _23_41 = (combine hardline docs)
-in (match (_23_41) with
+let _17_41 = (combine hardline docs)
+in (match (_17_41) with
 | Doc (doc) -> begin
 Doc (doc)
 end)))
@@ -133,7 +133,7 @@ end)))
 let hbox : doc  ->  doc = (fun d -> d)
 
 # 96 "FStar.Format.fst"
-let pretty : Prims.int  ->  doc  ->  Prims.string = (fun sz _23_45 -> (match (_23_45) with
+let pretty : Prims.int  ->  doc  ->  Prims.string = (fun sz _17_45 -> (match (_17_45) with
 | Doc (doc) -> begin
 doc
 end))
