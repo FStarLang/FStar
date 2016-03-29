@@ -11,7 +11,7 @@ assume val excluded_middle : p:Type -> GTot (b:bool{b = true <==> p})
 
 (* TODO: remove *)
 assume val forall_intro : #a:Type -> #p:(a -> Type) ->
-  =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
+  $f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 
 (* TODO: remove *)
 assume val give_proof: #a:Type -> a -> Lemma (ensures a)

@@ -362,9 +362,10 @@ let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
         let x = S.new_bv (Some p.prange) tun in
         loc, env, LocalBinder(x, None), pos <| Pat_constant c, false
 
-      | PatTvar(x, imp)
-      | PatVar (x, imp) ->
-        let aq = if imp then Some S.imp_tag else None in
+      | PatTvar(x, aq)
+      | PatVar (x, aq) ->
+        let imp = (aq=Some Implicit) in
+        let aq = trans_aqual aq in
         let loc, env, xbv = resolvex loc env x in
         loc, env, LocalBinder(xbv, aq), pos <| Pat_var xbv, imp
 
@@ -571,7 +572,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
           | PatAscribed(_, t) -> env, free_type_vars env t@ftvs
           | _ -> env, ftvs) (env, []) binders in
       let ftv = sort_ftv ftv in
-      let binders = (ftv |> List.map (fun a -> mk_pattern (PatTvar(a, true)) top.range))@binders in //close over the free type variables
+      let binders = (ftv |> List.map (fun a -> mk_pattern (PatTvar(a, Some AST.Implicit)) top.range))@binders in //close over the free type variables
       (*
          fun (P1 x1) (P2 x2) (P3 x3) -> e
            
@@ -775,7 +776,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
           let x = FStar.Ident.gen e.range in
           let xterm = mk_term (Var (lid_of_ids [x])) x.idRange Expr in
           let record = Record(None, record.fields |> List.map (fun (f, _) -> get_field (Some xterm) f)) in
-          Let(false, [(mk_pattern (PatVar (x, false)) x.idRange, e)], mk_term record top.range top.level) in
+          Let(false, [(mk_pattern (PatVar (x, None)) x.idRange, e)], mk_term record top.range top.level) in
 
       let recterm = mk_term recterm top.range top.level in
       let e = desugar_term env recterm in

@@ -84,9 +84,9 @@ and pattern' =
   | PatWild
   | PatConst    of sconst
   | PatApp      of pattern * list<pattern>
-  | PatVar      of ident * bool         (* flag marks an implicit *)
+  | PatVar      of ident * option<arg_qualifier>   
   | PatName     of lid
-  | PatTvar     of ident * bool         (* flag marks an implicit *)
+  | PatTvar     of ident * option<arg_qualifier>
   | PatList     of list<pattern>
   | PatTuple    of list<pattern> * bool (* dependent if flag is set *)
   | PatRecord   of list<(lid * pattern)>
@@ -182,7 +182,7 @@ let mk_function branches r1 r2 =
     then let i = FStar.Syntax.Syntax.next_id () in
          Ident.gen r1 
     else U.genident (Some r1) in
-  mk_term (Abs([mk_pattern (PatVar(x,false)) r1],
+  mk_term (Abs([mk_pattern (PatVar(x,None)) r1],
                mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
     r2 Expr
 let un_function p tm = match p.pat, tm.tm with
@@ -273,19 +273,19 @@ and binder_to_string x =
   | TAnnotated(i,t)
   | Annotated(i,t) -> Util.format2 "%s:%s" (i.idText) (t |> term_to_string)
   | NoName t -> t |> term_to_string in
-  match x.aqual with
-    | Some Implicit -> Util.format1 "#%s" s
-    | Some Equality -> Util.format1 "=%s" s
-    | _ -> s
+  Util.format2 "%s%s" (aqual_to_string x.aqual) s
+
+and aqual_to_string = function 
+   | Some Equality -> "~"
+   | Some Implicit -> "#"
+   | _ -> ""
 
 and pat_to_string x = match x.pat with
   | PatWild -> "_"
   | PatConst c -> P.const_to_string c
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
-  | PatTvar (i, true)
-  | PatVar (i, true) -> Util.format1 "#%s" i.idText
-  | PatTvar(i, false)
-  | PatVar (i, false) -> i.idText
+  | PatTvar (i, aq)
+  | PatVar (i,  aq) -> Util.format2 "%s%s" (aqual_to_string aq) i.idText
   | PatName l -> l.str
   | PatList l -> Util.format1 "[%s]" (to_string_l "; " pat_to_string l)
   | PatTuple (l, false) -> Util.format1 "(%s)" (to_string_l ", " pat_to_string l)
