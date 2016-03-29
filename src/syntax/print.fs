@@ -301,7 +301,7 @@ and lcomp_to_string lc =
 and imp_to_string s = function
   | Some (Implicit false) -> "#" ^ s
   | Some (Implicit true) -> "#." ^ s
-  | Some Equality -> "=" ^ s
+  | Some Equality -> "$" ^ s
   | _ -> s
 
 and binder_to_string' is_arrow b = 

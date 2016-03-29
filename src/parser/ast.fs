@@ -276,7 +276,7 @@ and binder_to_string x =
   Util.format2 "%s%s" (aqual_to_string x.aqual) s
 
 and aqual_to_string = function 
-   | Some Equality -> "~"
+   | Some Equality -> "$"
    | Some Implicit -> "#"
    | _ -> ""
 
