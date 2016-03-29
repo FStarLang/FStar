@@ -18,8 +18,6 @@
 
 module FStar.Extraction.ML.Code
 
-open System
-open System.Text
 open FStar
 open FStar.Util
 open FStar.Extraction.ML
