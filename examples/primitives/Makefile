@@ -29,6 +29,7 @@ POLY_C=Parameters.c Bignum.c Poly.c test_poly.c
 BIGNUM_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c Bignum_Fscalar.c Bignum_Fproduct.c Bignum_Modulo.c Bignum_Core.c test_bignum.c
 CURVE_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c Bignum_Fscalar.c Bignum_Fproduct.c Bignum_Modulo.c Bignum_Core.c Curve_Point.c Curve_AddAndDouble.c Curve_Ladder.c test_curve.c
 AES_C=Crypto_AES.c test_aes.c
+SHA_C=Crypto_Sha256.c
 
 COMPILE=gcc -O4 fstarlib.c
 
@@ -164,6 +165,13 @@ sha-ml:
 	mkdir -p $(SHA_ODIR)_ml
 	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha256.fst --odir $(SHA_ODIR)_ml
 	cp ./ml/*.ml $(SHA_ODIR)_ml
+
+sha-c: Crypto.Sha256.fst
+	@echo ""
+	@echo " Extracting SHA library "
+	@mkdir -p $(SHA_ODIR)
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(SHA_ODIR) $^
+	@cp ./c/*.c ./c/*.h $(SHA_ODIR)
 
 sha-test: sha-ml
 	cd $(SHA_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_OCAML) test_sha256.ml #2> /dev/null
