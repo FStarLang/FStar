@@ -2009,7 +2009,7 @@ CAMLprim value ocaml_validate_chain(value chain, value for_signing, value hostna
 
 CAMLprim value ocaml_get_rsa_from_cert(value c) {
     CAMLparam1(c);
-    CAMLlocal1(mlrsa);
+    CAMLlocal2(mlrsa, mlret);
 
     RSA* rsa;
     X509* x509;
@@ -2028,6 +2028,34 @@ CAMLprim value ocaml_get_rsa_from_cert(value c) {
 
     (void) RSA_set_method(rsa, RSA_PKCS1_SSLeay());
     RSA_val(mlrsa) = rsa;
-    CAMLreturn(mlrsa);
+
+    mlret = caml_alloc_tuple(1);
+    Field(mlret, 0) = mlrsa;
+    CAMLreturn(mlret);
+}
+
+CAMLprim value ocaml_get_ecdsa_from_cert(value c) {
+    CAMLparam1(c);
+    CAMLlocal2(mlec, mlret);
+
+    EC_KEY* ec;
+    X509* x509;
+    EVP_PKEY* ek;
+	    
+    mlec = caml_alloc_custom(&key_ops, sizeof(EC_KEY*), 0, 1);
+    unsigned char *cert = (unsigned char*)String_val(c);
+    x509 = d2i_X509(NULL, (const unsigned char**) &cert, caml_string_length(c));
+    if(!x509) CAMLreturn(Val_none);
+
+    ek = X509_get_pubkey(x509);
+    if(!ek) CAMLreturn(Val_none);
+
+    ec = EVP_PKEY_get1_EC_KEY(ek);
+    if(!ec) CAMLreturn(Val_none);
+
+    EC_KEY_val(mlec) = ec;
+    mlret = caml_alloc_tuple(1);
+    Field(mlret, 0) = mlec;
+    CAMLreturn(mlret);
 }
 

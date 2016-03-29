@@ -98,4 +98,5 @@ val ec_gen_key: ec_params -> ec_key
 
 val validate_chain: bytes list -> bool -> string option -> string -> bool
 val cert_verify_sig: bytes -> sig_alg -> hash_alg -> bytes -> bytes -> bool
+val cert_sign: bytes -> sig_alg -> hash_alg -> bytes -> bytes option
 
