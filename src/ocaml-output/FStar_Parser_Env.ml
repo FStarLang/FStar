@@ -1,13 +1,13 @@
 
 open Prims
-# 34 "FStar.Parser.Env.fst"
+# 32 "FStar.Parser.Env.fst"
 type env =
 {curmodule : FStar_Ident.lident Prims.option; modules : (FStar_Ident.lident * FStar_Syntax_Syntax.modul) Prims.list; open_namespaces : FStar_Ident.lident Prims.list; sigaccum : FStar_Syntax_Syntax.sigelts; localbindings : (FStar_Ident.ident * FStar_Syntax_Syntax.bv) Prims.list; recbindings : (FStar_Ident.ident * FStar_Ident.lid * FStar_Syntax_Syntax.delta_depth) Prims.list; sigmap : (FStar_Syntax_Syntax.sigelt * Prims.bool) FStar_Util.smap Prims.list; default_result_effect : FStar_Ident.lident; iface : Prims.bool; admitted_iface : Prims.bool; expect_typ : Prims.bool}
 
 # 34 "FStar.Parser.Env.fst"
 let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv"))))
 
-# 48 "FStar.Parser.Env.fst"
+# 46 "FStar.Parser.Env.fst"
 type foundname =
 | Term_name of FStar_Syntax_Syntax.typ
 | Eff_name of (FStar_Syntax_Syntax.sigelt * FStar_Ident.lident)
@@ -42,17 +42,17 @@ let ___Eff_name____0 = (fun projectee -> (match (projectee) with
 _44_29
 end))
 
-# 52 "FStar.Parser.Env.fst"
+# 50 "FStar.Parser.Env.fst"
 type record_or_dc =
 {typename : FStar_Ident.lident; constrname : FStar_Ident.lident; parms : FStar_Syntax_Syntax.binders; fields : (FStar_Syntax_Syntax.fieldname * FStar_Syntax_Syntax.typ) Prims.list; is_record : Prims.bool}
 
 # 52 "FStar.Parser.Env.fst"
 let is_Mkrecord_or_dc : record_or_dc  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkrecord_or_dc"))))
 
-# 95 "FStar.Parser.Env.fst"
+# 93 "FStar.Parser.Env.fst"
 let open_modules : env  ->  (FStar_Ident.lident * FStar_Syntax_Syntax.modul) Prims.list = (fun e -> e.modules)
 
-# 96 "FStar.Parser.Env.fst"
+# 95 "FStar.Parser.Env.fst"
 let current_module : env  ->  FStar_Ident.lident = (fun env -> (match (env.curmodule) with
 | None -> begin
 (FStar_All.failwith "Unset current module")
@@ -61,28 +61,28 @@ end
 m
 end))
 
-# 99 "FStar.Parser.Env.fst"
+# 98 "FStar.Parser.Env.fst"
 let qual : FStar_Ident.lident  ->  FStar_Ident.ident  ->  FStar_Ident.lident = (fun lid id -> (let _123_87 = (FStar_Ident.lid_of_ids (FStar_List.append lid.FStar_Ident.ns ((lid.FStar_Ident.ident)::(id)::[])))
 in (FStar_Ident.set_lid_range _123_87 id.FStar_Ident.idRange)))
 
-# 100 "FStar.Parser.Env.fst"
+# 99 "FStar.Parser.Env.fst"
 let qualify : env  ->  FStar_Ident.ident  ->  FStar_Ident.lident = (fun env id -> (let _123_92 = (current_module env)
 in (qual _123_92 id)))
 
-# 101 "FStar.Parser.Env.fst"
+# 100 "FStar.Parser.Env.fst"
 let qualify_lid : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident = (fun env lid -> (
 # 102 "FStar.Parser.Env.fst"
 let cur = (current_module env)
 in (let _123_97 = (FStar_Ident.lid_of_ids (FStar_List.append (FStar_List.append (FStar_List.append cur.FStar_Ident.ns ((cur.FStar_Ident.ident)::[])) lid.FStar_Ident.ns) ((lid.FStar_Ident.ident)::[])))
 in (FStar_Ident.set_lid_range _123_97 (FStar_Ident.range_of_lid lid)))))
 
-# 104 "FStar.Parser.Env.fst"
+# 103 "FStar.Parser.Env.fst"
 let new_sigmap = (fun _44_50 -> (match (()) with
 | () -> begin
 (FStar_Util.smap_create 100)
 end))
 
-# 105 "FStar.Parser.Env.fst"
+# 104 "FStar.Parser.Env.fst"
 let empty_env : Prims.unit  ->  env = (fun _44_51 -> (match (()) with
 | () -> begin
 (let _123_102 = (let _123_101 = (new_sigmap ())
@@ -90,22 +90,22 @@ in (_123_101)::[])
 in {curmodule = None; modules = []; open_namespaces = []; sigaccum = []; localbindings = []; recbindings = []; sigmap = _123_102; default_result_effect = FStar_Syntax_Const.effect_ML_lid; iface = false; admitted_iface = false; expect_typ = false})
 end))
 
-# 116 "FStar.Parser.Env.fst"
+# 115 "FStar.Parser.Env.fst"
 let sigmap : env  ->  (FStar_Syntax_Syntax.sigelt * Prims.bool) FStar_Util.smap = (fun env -> (FStar_List.hd env.sigmap))
 
-# 117 "FStar.Parser.Env.fst"
+# 116 "FStar.Parser.Env.fst"
 let default_total : env  ->  env = (fun env -> (
 # 117 "FStar.Parser.Env.fst"
 let _44_54 = env
 in {curmodule = _44_54.curmodule; modules = _44_54.modules; open_namespaces = _44_54.open_namespaces; sigaccum = _44_54.sigaccum; localbindings = _44_54.localbindings; recbindings = _44_54.recbindings; sigmap = _44_54.sigmap; default_result_effect = FStar_Syntax_Const.effect_Tot_lid; iface = _44_54.iface; admitted_iface = _44_54.admitted_iface; expect_typ = _44_54.expect_typ}))
 
-# 118 "FStar.Parser.Env.fst"
+# 117 "FStar.Parser.Env.fst"
 let default_ml : env  ->  env = (fun env -> (
 # 118 "FStar.Parser.Env.fst"
 let _44_57 = env
 in {curmodule = _44_57.curmodule; modules = _44_57.modules; open_namespaces = _44_57.open_namespaces; sigaccum = _44_57.sigaccum; localbindings = _44_57.localbindings; recbindings = _44_57.recbindings; sigmap = _44_57.sigmap; default_result_effect = FStar_Syntax_Const.effect_ML_lid; iface = _44_57.iface; admitted_iface = _44_57.admitted_iface; expect_typ = _44_57.expect_typ}))
 
-# 121 "FStar.Parser.Env.fst"
+# 118 "FStar.Parser.Env.fst"
 let set_bv_range : FStar_Syntax_Syntax.bv  ->  FStar_Range.range  ->  FStar_Syntax_Syntax.bv = (fun bv r -> (
 # 122 "FStar.Parser.Env.fst"
 let id = (
@@ -117,13 +117,13 @@ in (
 let _44_64 = bv
 in {FStar_Syntax_Syntax.ppname = id; FStar_Syntax_Syntax.index = _44_64.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _44_64.FStar_Syntax_Syntax.sort})))
 
-# 125 "FStar.Parser.Env.fst"
+# 123 "FStar.Parser.Env.fst"
 let bv_to_name : FStar_Syntax_Syntax.bv  ->  FStar_Range.range  ->  FStar_Syntax_Syntax.term = (fun bv r -> (FStar_Syntax_Syntax.bv_to_name (set_bv_range bv r)))
 
-# 127 "FStar.Parser.Env.fst"
+# 125 "FStar.Parser.Env.fst"
 let unmangleMap : (Prims.string * Prims.string * FStar_Syntax_Syntax.delta_depth * FStar_Syntax_Syntax.fv_qual Prims.option) Prims.list = (("op_ColonColon", "Cons", FStar_Syntax_Syntax.Delta_constant, Some (FStar_Syntax_Syntax.Data_ctor)))::(("not", "op_Negation", FStar_Syntax_Syntax.Delta_equational, None))::[]
 
-# 130 "FStar.Parser.Env.fst"
+# 128 "FStar.Parser.Env.fst"
 let unmangleOpName : FStar_Ident.ident  ->  FStar_Syntax_Syntax.term Prims.option = (fun id -> (FStar_Util.find_map unmangleMap (fun _44_73 -> (match (_44_73) with
 | (x, y, dd, dq) -> begin
 if (id.FStar_Ident.idText = x) then begin
@@ -135,7 +135,7 @@ None
 end
 end))))
 
-# 135 "FStar.Parser.Env.fst"
+# 133 "FStar.Parser.Env.fst"
 let try_lookup_id : env  ->  FStar_Ident.ident  ->  FStar_Syntax_Syntax.term Prims.option = (fun env id -> (match ((unmangleOpName id)) with
 | Some (f) -> begin
 Some (f)
@@ -151,7 +151,7 @@ None
 end)))
 end))
 
-# 144 "FStar.Parser.Env.fst"
+# 142 "FStar.Parser.Env.fst"
 let resolve_in_open_namespaces = (fun env lid finder -> (
 # 145 "FStar.Parser.Env.fst"
 let aux = (fun namespaces -> (match ((finder lid)) with
@@ -171,7 +171,7 @@ in (let _123_138 = (let _123_137 = (current_module env)
 in (_123_137)::env.open_namespaces)
 in (aux _123_138))))
 
-# 155 "FStar.Parser.Env.fst"
+# 153 "FStar.Parser.Env.fst"
 let fv_qual_of_se : FStar_Syntax_Syntax.sigelt  ->  FStar_Syntax_Syntax.fv_qual Prims.option = (fun _44_3 -> (match (_44_3) with
 | FStar_Syntax_Syntax.Sig_datacon (_44_101, _44_103, _44_105, l, _44_108, quals, _44_111, _44_113) -> begin
 (
@@ -198,7 +198,7 @@ end
 None
 end))
 
-# 168 "FStar.Parser.Env.fst"
+# 166 "FStar.Parser.Env.fst"
 let lb_fv : FStar_Syntax_Syntax.letbinding Prims.list  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.fv = (fun lbs lid -> (let _123_147 = (FStar_Util.find_map lbs (fun lb -> (
 # 170 "FStar.Parser.Env.fst"
 let fv = (FStar_Util.right lb.FStar_Syntax_Syntax.lbname)
@@ -209,7 +209,7 @@ None
 end)))
 in (FStar_All.pipe_right _123_147 FStar_Util.must)))
 
-# 173 "FStar.Parser.Env.fst"
+# 171 "FStar.Parser.Env.fst"
 let try_lookup_name : Prims.bool  ->  Prims.bool  ->  env  ->  FStar_Ident.lident  ->  foundname Prims.option = (fun any_val exclude_interf env lid -> (
 # 179 "FStar.Parser.Env.fst"
 let find_in_sig = (fun lid -> (match ((let _123_158 = (sigmap env)
@@ -313,7 +313,7 @@ end
 (resolve_in_open_namespaces env lid find_in_sig)
 end))))
 
-# 219 "FStar.Parser.Env.fst"
+# 217 "FStar.Parser.Env.fst"
 let try_lookup_effect_name' : Prims.bool  ->  env  ->  FStar_Ident.lident  ->  (FStar_Syntax_Syntax.sigelt * FStar_Ident.lident) Prims.option = (fun exclude_interf env lid -> (match ((try_lookup_name true exclude_interf env lid)) with
 | Some (Eff_name (o, l)) -> begin
 Some ((o, l))
@@ -322,7 +322,7 @@ end
 None
 end))
 
-# 223 "FStar.Parser.Env.fst"
+# 222 "FStar.Parser.Env.fst"
 let try_lookup_effect_name : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident Prims.option = (fun env l -> (match ((try_lookup_effect_name' (not (env.iface)) env l)) with
 | Some (o, l) -> begin
 Some (l)
@@ -331,7 +331,7 @@ end
 None
 end))
 
-# 227 "FStar.Parser.Env.fst"
+# 226 "FStar.Parser.Env.fst"
 let try_lookup_effect_defn : env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.eff_decl Prims.option = (fun env l -> (match ((try_lookup_effect_name' (not (env.iface)) env l)) with
 | Some (FStar_Syntax_Syntax.Sig_new_effect (ne, _44_241), _44_245) -> begin
 Some (ne)
@@ -340,7 +340,7 @@ end
 None
 end))
 
-# 231 "FStar.Parser.Env.fst"
+# 230 "FStar.Parser.Env.fst"
 let is_effect_name : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env lid -> (match ((try_lookup_effect_name env lid)) with
 | None -> begin
 false
@@ -349,7 +349,7 @@ end
 true
 end))
 
-# 236 "FStar.Parser.Env.fst"
+# 234 "FStar.Parser.Env.fst"
 let lookup_letbinding_quals : env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.qualifier Prims.list = (fun env lid -> (
 # 237 "FStar.Parser.Env.fst"
 let find_in_sig = (fun lid -> (match ((let _123_201 = (sigmap env)
@@ -368,7 +368,7 @@ end
 []
 end)))
 
-# 245 "FStar.Parser.Env.fst"
+# 243 "FStar.Parser.Env.fst"
 let try_lookup_module : env  ->  Prims.string Prims.list  ->  FStar_Syntax_Syntax.modul Prims.option = (fun env path -> (match ((FStar_List.tryFind (fun _44_284 -> (match (_44_284) with
 | (mlid, modul) -> begin
 ((FStar_Ident.path_of_lid mlid) = path)
@@ -380,7 +380,7 @@ end
 None
 end))
 
-# 250 "FStar.Parser.Env.fst"
+# 248 "FStar.Parser.Env.fst"
 let try_lookup_let : env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term Prims.option = (fun env lid -> (
 # 251 "FStar.Parser.Env.fst"
 let find_in_sig = (fun lid -> (match ((let _123_213 = (sigmap env)
@@ -397,7 +397,7 @@ None
 end))
 in (resolve_in_open_namespaces env lid find_in_sig)))
 
-# 259 "FStar.Parser.Env.fst"
+# 257 "FStar.Parser.Env.fst"
 let try_lookup_definition : env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term Prims.option = (fun env lid -> (
 # 260 "FStar.Parser.Env.fst"
 let find_in_sig = (fun lid -> (match ((let _123_221 = (sigmap env)
@@ -416,7 +416,7 @@ None
 end))
 in (resolve_in_open_namespaces env lid find_in_sig)))
 
-# 272 "FStar.Parser.Env.fst"
+# 269 "FStar.Parser.Env.fst"
 let try_lookup_lid' : Prims.bool  ->  Prims.bool  ->  env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term Prims.option = (fun any_val exclude_interf env lid -> (match ((try_lookup_name any_val exclude_interf env lid)) with
 | Some (Term_name (e)) -> begin
 Some (e)
@@ -425,10 +425,10 @@ end
 None
 end))
 
-# 276 "FStar.Parser.Env.fst"
+# 275 "FStar.Parser.Env.fst"
 let try_lookup_lid : env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term Prims.option = (fun env l -> (try_lookup_lid' env.iface false env l))
 
-# 278 "FStar.Parser.Env.fst"
+# 276 "FStar.Parser.Env.fst"
 let try_lookup_datacon : env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.fv Prims.option = (fun env lid -> (
 # 279 "FStar.Parser.Env.fst"
 let find_in_sig = (fun lid -> (match ((let _123_241 = (sigmap env)
@@ -456,7 +456,7 @@ None
 end))
 in (resolve_in_open_namespaces env lid find_in_sig)))
 
-# 289 "FStar.Parser.Env.fst"
+# 287 "FStar.Parser.Env.fst"
 let find_all_datacons : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident Prims.list Prims.option = (fun env lid -> (
 # 290 "FStar.Parser.Env.fst"
 let find_in_sig = (fun lid -> (match ((let _123_251 = (sigmap env)
@@ -469,7 +469,7 @@ None
 end))
 in (resolve_in_open_namespaces env lid find_in_sig)))
 
-# 297 "FStar.Parser.Env.fst"
+# 294 "FStar.Parser.Env.fst"
 let record_cache_aux : ((Prims.unit  ->  Prims.unit) * (Prims.unit  ->  Prims.unit) * (Prims.unit  ->  record_or_dc Prims.list) * (record_or_dc  ->  Prims.unit)) = (
 # 298 "FStar.Parser.Env.fst"
 let record_cache = (FStar_Util.mk_ref (([])::[]))
@@ -508,7 +508,7 @@ in (_123_278)::_123_277))
 in (FStar_ST.op_Colon_Equals record_cache _123_279)))
 in (push, pop, peek, insert))))))
 
-# 307 "FStar.Parser.Env.fst"
+# 305 "FStar.Parser.Env.fst"
 let push_record_cache : Prims.unit  ->  Prims.unit = (
 # 308 "FStar.Parser.Env.fst"
 let _44_424 = record_cache_aux
@@ -517,7 +517,7 @@ in (match (_44_424) with
 push
 end))
 
-# 311 "FStar.Parser.Env.fst"
+# 309 "FStar.Parser.Env.fst"
 let pop_record_cache : Prims.unit  ->  Prims.unit = (
 # 312 "FStar.Parser.Env.fst"
 let _44_432 = record_cache_aux
@@ -526,7 +526,7 @@ in (match (_44_432) with
 pop
 end))
 
-# 315 "FStar.Parser.Env.fst"
+# 313 "FStar.Parser.Env.fst"
 let peek_record_cache : Prims.unit  ->  record_or_dc Prims.list = (
 # 316 "FStar.Parser.Env.fst"
 let _44_440 = record_cache_aux
@@ -535,7 +535,7 @@ in (match (_44_440) with
 peek
 end))
 
-# 319 "FStar.Parser.Env.fst"
+# 317 "FStar.Parser.Env.fst"
 let insert_record_cache : record_or_dc  ->  Prims.unit = (
 # 320 "FStar.Parser.Env.fst"
 let _44_448 = record_cache_aux
@@ -544,7 +544,7 @@ in (match (_44_448) with
 insert
 end))
 
-# 323 "FStar.Parser.Env.fst"
+# 321 "FStar.Parser.Env.fst"
 let extract_record : env  ->  FStar_Syntax_Syntax.sigelt  ->  Prims.unit = (fun e _44_9 -> (match (_44_9) with
 | FStar_Syntax_Syntax.Sig_bundle (sigs, _44_453, _44_455, _44_457) -> begin
 (
@@ -613,7 +613,7 @@ end
 ()
 end))
 
-# 358 "FStar.Parser.Env.fst"
+# 356 "FStar.Parser.Env.fst"
 let try_lookup_record_or_dc_by_field_name : env  ->  FStar_Ident.lident  ->  (record_or_dc * FStar_Ident.lident) Prims.option = (fun env fieldname -> (
 # 359 "FStar.Parser.Env.fst"
 let maybe_add_constrname = (fun ns c -> (
@@ -662,7 +662,7 @@ end)))))))))
 end)))
 in (resolve_in_open_namespaces env fieldname find_in_cache))))
 
-# 378 "FStar.Parser.Env.fst"
+# 376 "FStar.Parser.Env.fst"
 let try_lookup_record_by_field_name : env  ->  FStar_Ident.lident  ->  (record_or_dc * FStar_Ident.lident) Prims.option = (fun env fieldname -> (match ((try_lookup_record_or_dc_by_field_name env fieldname)) with
 | Some (r, f) when r.is_record -> begin
 Some ((r, f))
@@ -671,7 +671,7 @@ end
 None
 end))
 
-# 383 "FStar.Parser.Env.fst"
+# 381 "FStar.Parser.Env.fst"
 let try_lookup_projector_by_field_name : env  ->  FStar_Ident.lident  ->  (FStar_Ident.lident * Prims.bool) Prims.option = (fun env fieldname -> (match ((try_lookup_record_or_dc_by_field_name env fieldname)) with
 | Some (r, f) -> begin
 Some ((f, r.is_record))
@@ -680,7 +680,7 @@ end
 None
 end))
 
-# 388 "FStar.Parser.Env.fst"
+# 386 "FStar.Parser.Env.fst"
 let qualify_field_to_record : env  ->  record_or_dc  ->  FStar_Ident.lident  ->  FStar_Ident.lident Prims.option = (fun env recd f -> (
 # 389 "FStar.Parser.Env.fst"
 let qualify = (fun fieldname -> (
@@ -705,7 +705,7 @@ end)))))
 end)))
 in (resolve_in_open_namespaces env f qualify)))
 
-# 399 "FStar.Parser.Env.fst"
+# 397 "FStar.Parser.Env.fst"
 let unique : Prims.bool  ->  Prims.bool  ->  env  ->  FStar_Ident.lident  ->  Prims.bool = (fun any_val exclude_if env lid -> (
 # 400 "FStar.Parser.Env.fst"
 let this_env = (
@@ -720,7 +720,7 @@ end
 false
 end)))
 
-# 405 "FStar.Parser.Env.fst"
+# 403 "FStar.Parser.Env.fst"
 let push_bv : env  ->  FStar_Ident.ident  ->  (env * FStar_Syntax_Syntax.bv) = (fun env x -> (
 # 406 "FStar.Parser.Env.fst"
 let bv = (FStar_Syntax_Syntax.gen_bv x.FStar_Ident.idText (Some (x.FStar_Ident.idRange)) FStar_Syntax_Syntax.tun)
@@ -729,7 +729,7 @@ in ((
 let _44_609 = env
 in {curmodule = _44_609.curmodule; modules = _44_609.modules; open_namespaces = _44_609.open_namespaces; sigaccum = _44_609.sigaccum; localbindings = ((x, bv))::env.localbindings; recbindings = _44_609.recbindings; sigmap = _44_609.sigmap; default_result_effect = _44_609.default_result_effect; iface = _44_609.iface; admitted_iface = _44_609.admitted_iface; expect_typ = _44_609.expect_typ}), bv)))
 
-# 409 "FStar.Parser.Env.fst"
+# 407 "FStar.Parser.Env.fst"
 let push_top_level_rec_binding : env  ->  FStar_Ident.ident  ->  FStar_Syntax_Syntax.delta_depth  ->  env = (fun env x dd -> (
 # 410 "FStar.Parser.Env.fst"
 let l = (qualify env x)
@@ -742,7 +742,7 @@ end else begin
 (Prims.raise (FStar_Syntax_Syntax.Error (((Prims.strcat "Duplicate top-level names " l.FStar_Ident.str), (FStar_Ident.range_of_lid l)))))
 end))
 
-# 415 "FStar.Parser.Env.fst"
+# 413 "FStar.Parser.Env.fst"
 let push_sigelt : env  ->  FStar_Syntax_Syntax.sigelt  ->  env = (fun env s -> (
 # 416 "FStar.Parser.Env.fst"
 let err = (fun l -> (
@@ -832,13 +832,13 @@ end))))
 in env)
 end)))))
 
-# 444 "FStar.Parser.Env.fst"
+# 442 "FStar.Parser.Env.fst"
 let push_namespace : env  ->  FStar_Ident.lident  ->  env = (fun env lid -> (
 # 445 "FStar.Parser.Env.fst"
 let _44_676 = env
 in {curmodule = _44_676.curmodule; modules = _44_676.modules; open_namespaces = (lid)::env.open_namespaces; sigaccum = _44_676.sigaccum; localbindings = _44_676.localbindings; recbindings = _44_676.recbindings; sigmap = _44_676.sigmap; default_result_effect = _44_676.default_result_effect; iface = _44_676.iface; admitted_iface = _44_676.admitted_iface; expect_typ = _44_676.expect_typ}))
 
-# 447 "FStar.Parser.Env.fst"
+# 445 "FStar.Parser.Env.fst"
 let check_admits : env  ->  Prims.unit = (fun env -> (FStar_All.pipe_right env.sigaccum (FStar_List.iter (fun se -> (match (se) with
 | FStar_Syntax_Syntax.Sig_declare_typ (l, u, t, quals, r) -> begin
 (match ((try_lookup_lid env l)) with
@@ -860,7 +860,7 @@ end
 ()
 end)))))
 
-# 458 "FStar.Parser.Env.fst"
+# 456 "FStar.Parser.Env.fst"
 let finish : env  ->  FStar_Syntax_Syntax.modul  ->  env = (fun env modul -> (
 # 459 "FStar.Parser.Env.fst"
 let _44_754 = (FStar_All.pipe_right modul.FStar_Syntax_Syntax.declarations (FStar_List.iter (fun _44_11 -> (match (_44_11) with
@@ -922,7 +922,7 @@ in (
 let _44_756 = env
 in {curmodule = None; modules = ((modul.FStar_Syntax_Syntax.name, modul))::env.modules; open_namespaces = []; sigaccum = []; localbindings = []; recbindings = []; sigmap = _44_756.sigmap; default_result_effect = _44_756.default_result_effect; iface = _44_756.iface; admitted_iface = _44_756.admitted_iface; expect_typ = _44_756.expect_typ})))
 
-# 493 "FStar.Parser.Env.fst"
+# 491 "FStar.Parser.Env.fst"
 let push : env  ->  env = (fun env -> (
 # 494 "FStar.Parser.Env.fst"
 let _44_759 = (push_record_cache ())
@@ -934,17 +934,17 @@ in (FStar_Util.smap_copy _123_458))
 in (_123_459)::env.sigmap)
 in {curmodule = _44_761.curmodule; modules = _44_761.modules; open_namespaces = _44_761.open_namespaces; sigaccum = _44_761.sigaccum; localbindings = _44_761.localbindings; recbindings = _44_761.recbindings; sigmap = _123_460; default_result_effect = _44_761.default_result_effect; iface = _44_761.iface; admitted_iface = _44_761.admitted_iface; expect_typ = _44_761.expect_typ}))))
 
-# 498 "FStar.Parser.Env.fst"
+# 496 "FStar.Parser.Env.fst"
 let mark : env  ->  env = (fun env -> (push env))
 
-# 499 "FStar.Parser.Env.fst"
+# 498 "FStar.Parser.Env.fst"
 let reset_mark : env  ->  env = (fun env -> (
 # 499 "FStar.Parser.Env.fst"
 let _44_765 = env
 in (let _123_465 = (FStar_List.tl env.sigmap)
 in {curmodule = _44_765.curmodule; modules = _44_765.modules; open_namespaces = _44_765.open_namespaces; sigaccum = _44_765.sigaccum; localbindings = _44_765.localbindings; recbindings = _44_765.recbindings; sigmap = _123_465; default_result_effect = _44_765.default_result_effect; iface = _44_765.iface; admitted_iface = _44_765.admitted_iface; expect_typ = _44_765.expect_typ})))
 
-# 500 "FStar.Parser.Env.fst"
+# 499 "FStar.Parser.Env.fst"
 let commit_mark : env  ->  env = (fun env -> (match (env.sigmap) with
 | hd::_44_770::tl -> begin
 (
@@ -956,7 +956,7 @@ end
 (FStar_All.failwith "Impossible")
 end))
 
-# 503 "FStar.Parser.Env.fst"
+# 502 "FStar.Parser.Env.fst"
 let pop : env  ->  env = (fun env -> (match (env.sigmap) with
 | _44_781::maps -> begin
 (
@@ -971,7 +971,7 @@ end
 (FStar_All.failwith "No more modules to pop")
 end))
 
-# 510 "FStar.Parser.Env.fst"
+# 508 "FStar.Parser.Env.fst"
 let export_interface : FStar_Ident.lident  ->  env  ->  env = (fun m env -> (
 # 512 "FStar.Parser.Env.fst"
 let sigelt_in_m = (fun se -> (match ((FStar_Syntax_Util.lids_of_sigelt se)) with
@@ -1016,7 +1016,7 @@ end
 end))))
 in env)))))))
 
-# 532 "FStar.Parser.Env.fst"
+# 530 "FStar.Parser.Env.fst"
 let finish_module_or_interface : env  ->  FStar_Syntax_Syntax.modul  ->  env = (fun env modul -> (
 # 533 "FStar.Parser.Env.fst"
 let _44_826 = if (not (modul.FStar_Syntax_Syntax.is_interface)) then begin
@@ -1026,7 +1026,7 @@ end else begin
 end
 in (finish env modul)))
 
-# 537 "FStar.Parser.Env.fst"
+# 535 "FStar.Parser.Env.fst"
 let prepare_module_or_interface : Prims.bool  ->  Prims.bool  ->  env  ->  FStar_Ident.lident  ->  (env * Prims.bool) = (fun intf admitted env mname -> (
 # 538 "FStar.Parser.Env.fst"
 let prep = (fun env -> (
@@ -1071,7 +1071,7 @@ in (prep _123_495))
 in (_123_496, true)))
 end)))
 
-# 553 "FStar.Parser.Env.fst"
+# 551 "FStar.Parser.Env.fst"
 let enter_monad_scope : env  ->  FStar_Ident.ident  ->  env = (fun env mname -> (
 # 554 "FStar.Parser.Env.fst"
 let curmod = (current_module env)
@@ -1083,13 +1083,13 @@ in (
 let _44_853 = env
 in {curmodule = Some (mscope); modules = _44_853.modules; open_namespaces = (curmod)::env.open_namespaces; sigaccum = _44_853.sigaccum; localbindings = _44_853.localbindings; recbindings = _44_853.recbindings; sigmap = _44_853.sigmap; default_result_effect = _44_853.default_result_effect; iface = _44_853.iface; admitted_iface = _44_853.admitted_iface; expect_typ = _44_853.expect_typ}))))
 
-# 560 "FStar.Parser.Env.fst"
+# 558 "FStar.Parser.Env.fst"
 let exit_monad_scope : env  ->  env  ->  env = (fun env0 env -> (
 # 561 "FStar.Parser.Env.fst"
 let _44_857 = env
 in {curmodule = env0.curmodule; modules = _44_857.modules; open_namespaces = env0.open_namespaces; sigaccum = _44_857.sigaccum; localbindings = _44_857.localbindings; recbindings = _44_857.recbindings; sigmap = _44_857.sigmap; default_result_effect = _44_857.default_result_effect; iface = _44_857.iface; admitted_iface = _44_857.admitted_iface; expect_typ = _44_857.expect_typ}))
 
-# 565 "FStar.Parser.Env.fst"
+# 563 "FStar.Parser.Env.fst"
 let fail_or = (fun lookup lid -> (match ((lookup lid)) with
 | None -> begin
 (let _123_512 = (let _123_511 = (let _123_510 = (FStar_Util.format1 "Identifier not found: [%s]" (FStar_Ident.text_of_lid lid))
@@ -1101,7 +1101,7 @@ end
 r
 end))
 
-# 570 "FStar.Parser.Env.fst"
+# 568 "FStar.Parser.Env.fst"
 let fail_or2 = (fun lookup id -> (match ((lookup id)) with
 | None -> begin
 (Prims.raise (FStar_Syntax_Syntax.Error (((Prims.strcat (Prims.strcat "Identifier not found [" id.FStar_Ident.idText) "]"), id.FStar_Ident.idRange))))

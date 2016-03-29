@@ -25,6 +25,7 @@ val rev : (list 'a) -> Tot (list 'a)
 val append : (list 'a) -> (list 'a) -> Tot (list 'a)
 val flatten : (list (list 'a)) -> Tot (list 'a)
 val iter : ('a -> unit) -> (list 'a) -> unit
+val iter2 : ('a -> 'b -> unit) -> (list 'a) -> list 'b -> unit
 val iteri : (int -> 'a -> unit) -> (list 'a) -> unit
 val iterT : ('a -> Tot unit) -> (list 'a) -> Tot unit
 val map : ('a -> 'b) -> (list 'a) -> (list 'b)
@@ -41,6 +42,7 @@ val fold_left : ('a -> 'b -> 'a) -> 'a -> (list 'b) -> 'a
 val fold_leftT : ('a -> 'b -> Tot 'a) -> 'a -> l:(list 'b) -> Tot 'a (decreases l)
 val fold_left2 : ('s -> 'a -> 'b -> 's) -> 's -> (list 'a) -> (list 'b) -> 's
 val fold_right : ('a -> 'b -> 'b) -> (list 'a) -> 'b -> 'b
+val fold_right2 : ('a -> 'b -> 'c -> 'c) -> (list 'a) -> list 'b -> 'c -> 'c
 val fold_rightT : ('a -> 'b -> Tot 'b) -> (list 'a) -> 'b -> Tot 'b
 val mem : 'a -> (list 'a) -> Tot bool
 val existsb : f:('a -> Tot bool) -> (list 'a) -> Tot bool

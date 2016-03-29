@@ -187,7 +187,7 @@ clean:
 # Bootstrapping in OCaml
 # --------------------------------------------------------------------
 
-STDLIB=$(addprefix ../lib/, allboot.fsti stboot.fsti list.fsti option.fsti FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
+STDLIB=$(addprefix $(LIB)/, allboot.fsti stboot.fsti list.fsti option.fsti FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
 BOOT_BASIC_FSTI=$(addprefix boot_fstis/, char.fsti string.fsti bytes.fsti platform.fsti version.fsti range.fsti)
 BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
 BOOT_PARSER=$(addprefix parser/, ast.fs dsenv.fs desugar.fs env.fs interleave.fs tosyntax.fs parse.fsti lexhelp.fs parseit.fsi driver.fs dep.fs)
@@ -225,8 +225,14 @@ boot_fsts/FStar.Parser.Parse.fsti: parser/parse.fsti
 boot_fsts/FStar.Parser.ParseIt.fsti: parser/parseit.fsi
 	cp $^ $@
 
-../lib/FStar.Util.fsti: basic/util.fsi
-	cat basic/util.fsi | sed 's/open System.IO//g' | sed 's/type time.*/new type time/g' | sed 's/type smap.*/new type smap : Type -> Type/g' | sed 's/type out_channel.*/new type out_channel/g' | sed 's/type file_handle.*/new type file_handle/g' | sed 's/type stream_reader.*/new type stream_reader/g' | sed 's/type string_builder.*/new type string_builder/g' | sed 's/type proc.*/new type proc/g' > $@
+$(LIB)/FStar.Util.fsti: basic/util.fsi
+	cat $^ | sed 's/open System.IO//g' | sed 's/type time.*/new type time/g' | sed 's/type smap.*/new type smap : Type -> Type/g' | sed 's/type out_channel.*/new type out_channel/g' | sed 's/type file_handle.*/new type file_handle/g' | sed 's/type stream_reader.*/new type stream_reader/g' | sed 's/type string_builder.*/new type string_builder/g' | sed 's/type proc.*/new type proc/g' > $@
+
+$(LIB)/FStar.GetOpt.fsti: basic/getoptsimple.fsi
+	cp $^ $@
+
+$(LIB)/FStar.Unionfind.fsti: basic/unionfind.fsi
+	cat $^ | sed 's/type cell.*//g' | sed 's/and contents.*//g' | sed 's/.*| Data.*//g' | sed 's/.*| Fwd.*//g' | sed 's/type uvar.*/new type uvar : Type -> Type/g' > $@
 
 clean_ocaml_prep:
 	rm -rf boot_fsts boot_fstis
@@ -236,7 +242,7 @@ clean_ocaml_prep:
 extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
-	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --MLish --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^
+	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^ --MLish #--universes #--MLish 
 
 ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml
 

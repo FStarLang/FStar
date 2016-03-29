@@ -1,33 +1,33 @@
 
 open Prims
-# 5 "FStar.Ident.fst"
+# 3 "FStar.Ident.fst"
 type ident =
 {idText : Prims.string; idRange : FStar_Range.range}
 
 # 5 "FStar.Ident.fst"
 let is_Mkident : ident  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkident"))))
 
-# 8 "FStar.Ident.fst"
+# 6 "FStar.Ident.fst"
 type lident =
 {ns : ident Prims.list; ident : ident; nsstr : Prims.string; str : Prims.string}
 
 # 8 "FStar.Ident.fst"
 let is_Mklident : lident  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklident"))))
 
-# 13 "FStar.Ident.fst"
+# 11 "FStar.Ident.fst"
 type lid =
 lident
 
-# 15 "FStar.Ident.fst"
+# 13 "FStar.Ident.fst"
 let mk_ident : (Prims.string * FStar_Range.range)  ->  ident = (fun _15_11 -> (match (_15_11) with
 | (text, range) -> begin
 {idText = text; idRange = range}
 end))
 
-# 16 "FStar.Ident.fst"
+# 15 "FStar.Ident.fst"
 let reserved_prefix : Prims.string = "uu___"
 
-# 17 "FStar.Ident.fst"
+# 16 "FStar.Ident.fst"
 let gen : FStar_Range.range  ->  ident = (
 # 18 "FStar.Ident.fst"
 let x = (FStar_ST.alloc 0)
@@ -41,28 +41,28 @@ in (Prims.strcat reserved_prefix _94_27))
 in (_94_28, r))
 in (mk_ident _94_29)))))
 
-# 20 "FStar.Ident.fst"
+# 19 "FStar.Ident.fst"
 let id_of_text : Prims.string  ->  ident = (fun str -> (mk_ident (str, FStar_Range.dummyRange)))
 
-# 21 "FStar.Ident.fst"
+# 20 "FStar.Ident.fst"
 let text_of_id : ident  ->  Prims.string = (fun id -> id.idText)
 
-# 22 "FStar.Ident.fst"
+# 21 "FStar.Ident.fst"
 let text_of_path : Prims.string Prims.list  ->  Prims.string = (fun path -> (FStar_Util.concat_l "." path))
 
-# 23 "FStar.Ident.fst"
+# 22 "FStar.Ident.fst"
 let path_of_text : Prims.string  ->  Prims.string Prims.list = (fun text -> (FStar_String.split (('.')::[]) text))
 
-# 24 "FStar.Ident.fst"
+# 23 "FStar.Ident.fst"
 let path_of_ns : ident Prims.list  ->  Prims.string Prims.list = (fun ns -> (FStar_List.map text_of_id ns))
 
-# 25 "FStar.Ident.fst"
+# 24 "FStar.Ident.fst"
 let path_of_lid : lident  ->  Prims.string Prims.list = (fun lid -> (FStar_List.map text_of_id (FStar_List.append lid.ns ((lid.ident)::[]))))
 
-# 26 "FStar.Ident.fst"
+# 25 "FStar.Ident.fst"
 let ids_of_lid : lident  ->  ident Prims.list = (fun lid -> (FStar_List.append lid.ns ((lid.ident)::[])))
 
-# 27 "FStar.Ident.fst"
+# 26 "FStar.Ident.fst"
 let lid_of_ids : ident Prims.list  ->  lident = (fun ids -> (
 # 28 "FStar.Ident.fst"
 let _15_26 = (FStar_Util.prefix ids)
@@ -79,19 +79,19 @@ end else begin
 end})
 end)))
 
-# 34 "FStar.Ident.fst"
+# 33 "FStar.Ident.fst"
 let lid_of_path : Prims.string Prims.list  ->  FStar_Range.range  ->  lident = (fun path pos -> (
 # 35 "FStar.Ident.fst"
 let ids = (FStar_List.map (fun s -> (mk_ident (s, pos))) path)
 in (lid_of_ids ids)))
 
-# 37 "FStar.Ident.fst"
+# 36 "FStar.Ident.fst"
 let text_of_lid : lident  ->  Prims.string = (fun lid -> lid.str)
 
-# 38 "FStar.Ident.fst"
+# 37 "FStar.Ident.fst"
 let lid_equals : lident  ->  lident  ->  Prims.bool = (fun l1 l2 -> (l1.str = l2.str))
 
-# 39 "FStar.Ident.fst"
+# 38 "FStar.Ident.fst"
 let lid_with_range : lid  ->  FStar_Range.range  ->  lident = (fun lid r -> (
 # 40 "FStar.Ident.fst"
 let id = (
@@ -103,10 +103,10 @@ in (
 let _15_40 = lid
 in {ns = _15_40.ns; ident = id; nsstr = _15_40.nsstr; str = _15_40.str})))
 
-# 42 "FStar.Ident.fst"
+# 41 "FStar.Ident.fst"
 let range_of_lid : lid  ->  FStar_Range.range = (fun lid -> lid.ident.idRange)
 
-# 43 "FStar.Ident.fst"
+# 42 "FStar.Ident.fst"
 let set_lid_range : lident  ->  FStar_Range.range  ->  lident = (fun l r -> (
 # 44 "FStar.Ident.fst"
 let ids = (FStar_All.pipe_right (FStar_List.append l.ns ((l.ident)::[])) (FStar_List.map (fun i -> (mk_ident (i.idText, r)))))
