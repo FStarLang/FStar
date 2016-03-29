@@ -1,6 +1,6 @@
 
 open Prims
-# 24 "FStar.Parser.Interleave.fst"
+# 94 "FStar.Parser.Interleave.fst"
 let interleave : FStar_Parser_AST.decl Prims.list  ->  FStar_Parser_AST.decl Prims.list = (fun ds -> (
 # 95 "FStar.Parser.Interleave.fst"
 let rec head_id_of_pat = (fun p -> (match (p.FStar_Parser_AST.pat) with
@@ -186,7 +186,7 @@ end)
 end))
 in (aux [] ds)))))))
 
-# 190 "FStar.Parser.Interleave.fst"
+# 192 "FStar.Parser.Interleave.fst"
 let interleave_modul : FStar_Parser_AST.modul  ->  FStar_Parser_AST.modul = (fun m -> (match (m) with
 | FStar_Parser_AST.Module (l, ds) -> begin
 (let _124_48 = (let _124_47 = (interleave ds)

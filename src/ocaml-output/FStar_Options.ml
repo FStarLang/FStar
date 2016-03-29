@@ -1,6 +1,6 @@
 
 open Prims
-# 23 "FStar.Options.fst"
+# 25 "FStar.Options.fst"
 type debug_level_t =
 | Low
 | Medium
@@ -59,26 +59,26 @@ let ___Other____0 = (fun projectee -> (match (projectee) with
 _14_5
 end))
 
-# 30 "FStar.Options.fst"
+# 32 "FStar.Options.fst"
 let show_signatures : Prims.string Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 32 "FStar.Options.fst"
+# 33 "FStar.Options.fst"
 let norm_then_print : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref true)
 
-# 33 "FStar.Options.fst"
+# 34 "FStar.Options.fst"
 let z3_exe : Prims.string FStar_ST.ref = (let _93_19 = (FStar_Platform.exe "z3")
 in (FStar_Util.mk_ref _93_19))
 
-# 34 "FStar.Options.fst"
+# 35 "FStar.Options.fst"
 let silent : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 35 "FStar.Options.fst"
+# 36 "FStar.Options.fst"
 let debug : Prims.string Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 36 "FStar.Options.fst"
+# 37 "FStar.Options.fst"
 let debug_level : debug_level_t Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 37 "FStar.Options.fst"
+# 38 "FStar.Options.fst"
 let dlevel : Prims.string  ->  debug_level_t = (fun _14_1 -> (match (_14_1) with
 | "Low" -> begin
 Low
@@ -96,7 +96,7 @@ end
 Other (s)
 end))
 
-# 43 "FStar.Options.fst"
+# 44 "FStar.Options.fst"
 let one_debug_level_geq : debug_level_t  ->  debug_level_t  ->  Prims.bool = (fun l1 l2 -> (match (l1) with
 | (Other (_)) | (Low) -> begin
 (l1 = l2)
@@ -111,26 +111,26 @@ end
 ((((l2 = Low) || (l2 = Medium)) || (l2 = High)) || (l2 = Extreme))
 end))
 
-# 49 "FStar.Options.fst"
+# 50 "FStar.Options.fst"
 let debug_level_geq : debug_level_t  ->  Prims.bool = (fun l2 -> (let _93_29 = (FStar_ST.read debug_level)
 in (FStar_All.pipe_right _93_29 (FStar_Util.for_some (fun l1 -> (one_debug_level_geq l1 l2))))))
 
-# 50 "FStar.Options.fst"
+# 51 "FStar.Options.fst"
 let log_types : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 51 "FStar.Options.fst"
+# 52 "FStar.Options.fst"
 let print_effect_args : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 52 "FStar.Options.fst"
+# 53 "FStar.Options.fst"
 let print_real_names : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 53 "FStar.Options.fst"
+# 54 "FStar.Options.fst"
 let detail_errors : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 54 "FStar.Options.fst"
+# 55 "FStar.Options.fst"
 let dump_module : Prims.string Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 55 "FStar.Options.fst"
+# 56 "FStar.Options.fst"
 let should_dump : Prims.string  ->  Prims.bool = (fun l -> (match ((FStar_ST.read dump_module)) with
 | None -> begin
 false
@@ -139,151 +139,151 @@ end
 (m = l)
 end))
 
-# 58 "FStar.Options.fst"
+# 59 "FStar.Options.fst"
 let logQueries : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 59 "FStar.Options.fst"
+# 60 "FStar.Options.fst"
 let z3exe : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref true)
 
-# 60 "FStar.Options.fst"
+# 61 "FStar.Options.fst"
 let outputDir : Prims.string Prims.option FStar_ST.ref = (FStar_Util.mk_ref (Some (".")))
 
-# 61 "FStar.Options.fst"
+# 62 "FStar.Options.fst"
 let fstar_home_opt : Prims.string Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 62 "FStar.Options.fst"
+# 63 "FStar.Options.fst"
 let _fstar_home : Prims.string FStar_ST.ref = (FStar_Util.mk_ref "")
 
-# 63 "FStar.Options.fst"
+# 64 "FStar.Options.fst"
 let prims_ref : Prims.string Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 64 "FStar.Options.fst"
+# 65 "FStar.Options.fst"
 let z3timeout : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 5)
 
-# 65 "FStar.Options.fst"
+# 66 "FStar.Options.fst"
 let admit_smt_queries : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 66 "FStar.Options.fst"
+# 67 "FStar.Options.fst"
 let pretype : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref true)
 
-# 67 "FStar.Options.fst"
+# 68 "FStar.Options.fst"
 let codegen : Prims.string Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 68 "FStar.Options.fst"
+# 69 "FStar.Options.fst"
 let no_extract : Prims.string Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 69 "FStar.Options.fst"
+# 70 "FStar.Options.fst"
 let no_location_info : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 70 "FStar.Options.fst"
+# 71 "FStar.Options.fst"
 let codegen_libs : Prims.string Prims.list Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 71 "FStar.Options.fst"
+# 72 "FStar.Options.fst"
 let trace_error : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 72 "FStar.Options.fst"
+# 73 "FStar.Options.fst"
 let verify : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref true)
 
-# 73 "FStar.Options.fst"
+# 74 "FStar.Options.fst"
 let full_context_dependency : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref true)
 
-# 74 "FStar.Options.fst"
+# 75 "FStar.Options.fst"
 let print_implicits : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 75 "FStar.Options.fst"
+# 76 "FStar.Options.fst"
 let print_bound_var_types : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 76 "FStar.Options.fst"
+# 77 "FStar.Options.fst"
 let print_universes : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 77 "FStar.Options.fst"
+# 78 "FStar.Options.fst"
 let hide_uvar_nums : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 78 "FStar.Options.fst"
+# 79 "FStar.Options.fst"
 let hide_genident_nums : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 79 "FStar.Options.fst"
+# 80 "FStar.Options.fst"
 let serialize_mods : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 80 "FStar.Options.fst"
+# 81 "FStar.Options.fst"
 let initial_fuel : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 2)
 
-# 81 "FStar.Options.fst"
+# 82 "FStar.Options.fst"
 let initial_ifuel : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 1)
 
-# 82 "FStar.Options.fst"
+# 83 "FStar.Options.fst"
 let max_fuel : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 8)
 
-# 83 "FStar.Options.fst"
+# 84 "FStar.Options.fst"
 let min_fuel : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 1)
 
-# 84 "FStar.Options.fst"
+# 85 "FStar.Options.fst"
 let max_ifuel : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 2)
 
-# 85 "FStar.Options.fst"
+# 86 "FStar.Options.fst"
 let warn_top_level_effects : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 86 "FStar.Options.fst"
+# 87 "FStar.Options.fst"
 let no_slack : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 87 "FStar.Options.fst"
+# 88 "FStar.Options.fst"
 let eager_inference : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 88 "FStar.Options.fst"
+# 89 "FStar.Options.fst"
 let universes : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 89 "FStar.Options.fst"
+# 90 "FStar.Options.fst"
 let unthrottle_inductives : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 90 "FStar.Options.fst"
+# 91 "FStar.Options.fst"
 let use_eq_at_higher_order : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 91 "FStar.Options.fst"
+# 92 "FStar.Options.fst"
 let use_native_int : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 92 "FStar.Options.fst"
+# 93 "FStar.Options.fst"
 let fs_typ_app : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 93 "FStar.Options.fst"
+# 94 "FStar.Options.fst"
 let n_cores : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 1)
 
-# 94 "FStar.Options.fst"
+# 95 "FStar.Options.fst"
 let verify_module : Prims.string Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 95 "FStar.Options.fst"
+# 96 "FStar.Options.fst"
 let __temp_no_proj : Prims.string Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 96 "FStar.Options.fst"
+# 97 "FStar.Options.fst"
 let interactive : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 97 "FStar.Options.fst"
+# 98 "FStar.Options.fst"
 let interactive_context : Prims.string Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 98 "FStar.Options.fst"
+# 99 "FStar.Options.fst"
 let split_cases : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 0)
 
-# 99 "FStar.Options.fst"
+# 100 "FStar.Options.fst"
 let _include_path : Prims.string Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 100 "FStar.Options.fst"
+# 101 "FStar.Options.fst"
 let no_default_includes : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 101 "FStar.Options.fst"
+# 102 "FStar.Options.fst"
 let interactive_fsi : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 102 "FStar.Options.fst"
+# 103 "FStar.Options.fst"
 let print_fuels : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 103 "FStar.Options.fst"
+# 104 "FStar.Options.fst"
 let cardinality : Prims.string FStar_ST.ref = (FStar_Util.mk_ref "off")
 
-# 104 "FStar.Options.fst"
+# 105 "FStar.Options.fst"
 let timing : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 105 "FStar.Options.fst"
+# 106 "FStar.Options.fst"
 let inline_arith : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 106 "FStar.Options.fst"
+# 107 "FStar.Options.fst"
 let warn_cardinality : Prims.unit  ->  Prims.bool = (fun _14_27 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read cardinality)) with
@@ -295,7 +295,7 @@ false
 end)
 end))
 
-# 109 "FStar.Options.fst"
+# 110 "FStar.Options.fst"
 let check_cardinality : Prims.unit  ->  Prims.bool = (fun _14_31 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read cardinality)) with
@@ -307,13 +307,13 @@ false
 end)
 end))
 
-# 112 "FStar.Options.fst"
-let dep : Prims.string Prims.option FStar_ST.ref = (FStar_ST.alloc None)
-
 # 113 "FStar.Options.fst"
-let explicit_deps : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
+let dep : Prims.string Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
 # 114 "FStar.Options.fst"
+let explicit_deps : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
+
+# 115 "FStar.Options.fst"
 let init_options : Prims.unit  ->  Prims.unit = (fun _14_35 -> (match (()) with
 | () -> begin
 (
@@ -482,7 +482,7 @@ let _14_142 = (FStar_ST.op_Colon_Equals inline_arith false)
 in (FStar_ST.op_Colon_Equals detail_errors false)))))))))))))))))))))))))))))))))))))))))))))))))))))))
 end))
 
-# 170 "FStar.Options.fst"
+# 172 "FStar.Options.fst"
 let set_fstar_home : Prims.unit  ->  Prims.string = (fun _14_144 -> (match (()) with
 | () -> begin
 (
@@ -512,7 +512,7 @@ end)
 in fh)
 end))
 
-# 181 "FStar.Options.fst"
+# 182 "FStar.Options.fst"
 let get_fstar_home : Prims.unit  ->  Prims.string = (fun _14_157 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read fstar_home_opt)) with
@@ -528,13 +528,13 @@ x
 end)
 end))
 
-# 184 "FStar.Options.fst"
+# 186 "FStar.Options.fst"
 let include_path_base_dirs : Prims.string Prims.list = ("/lib")::("/lib/fstar")::("/stdlib")::("/stdlib/fstar")::[]
 
-# 187 "FStar.Options.fst"
+# 189 "FStar.Options.fst"
 let universe_include_path_base_dirs : Prims.string Prims.list = ("/ulib")::[]
 
-# 190 "FStar.Options.fst"
+# 192 "FStar.Options.fst"
 let get_include_path : Prims.unit  ->  Prims.string Prims.list = (fun _14_163 -> (match (()) with
 | () -> begin
 if (FStar_ST.read no_default_includes) then begin
@@ -558,7 +558,7 @@ in (FStar_List.append _93_50 ((".")::[])))))
 end
 end))
 
-# 200 "FStar.Options.fst"
+# 202 "FStar.Options.fst"
 let find_file : Prims.string  ->  Prims.string Prims.option = (fun filename -> (
 # 203 "FStar.Options.fst"
 let search_path = (get_include_path ())
@@ -588,7 +588,7 @@ with
 None
 end))
 
-# 222 "FStar.Options.fst"
+# 224 "FStar.Options.fst"
 let prims : Prims.unit  ->  Prims.string = (fun _14_178 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read prims_ref)) with
@@ -611,7 +611,7 @@ x
 end)
 end))
 
-# 232 "FStar.Options.fst"
+# 234 "FStar.Options.fst"
 let prependOutputDir : Prims.string  ->  Prims.string = (fun fname -> (match ((FStar_ST.read outputDir)) with
 | None -> begin
 fname
@@ -620,14 +620,14 @@ end
 (Prims.strcat (Prims.strcat x "/") fname)
 end))
 
-# 236 "FStar.Options.fst"
+# 238 "FStar.Options.fst"
 let display_version : Prims.unit  ->  Prims.unit = (fun _14_190 -> (match (()) with
 | () -> begin
 (let _93_65 = (FStar_Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n" FStar_Version.version FStar_Version.platform FStar_Version.compiler FStar_Version.date FStar_Version.commit)
 in (FStar_Util.print_string _93_65))
 end))
 
-# 240 "FStar.Options.fst"
+# 242 "FStar.Options.fst"
 let display_usage = (fun specs -> (
 # 243 "FStar.Options.fst"
 let _14_192 = (FStar_Util.print_string "fstar [option] file...\n")
@@ -660,7 +660,7 @@ end
 end)
 end)) specs)))
 
-# 253 "FStar.Options.fst"
+# 255 "FStar.Options.fst"
 let rec specs : Prims.unit  ->  FStar_Getopt.opt Prims.list = (fun _14_207 -> (match (()) with
 | () -> begin
 (
@@ -831,10 +831,10 @@ x
 end
 | _14_294 -> begin
 (
-# 327 "FStar.Options.fst"
+# 328 "FStar.Options.fst"
 let _14_295 = (FStar_Util.print_string "Wrong argument to cardinality flag\n")
 in (
-# 328 "FStar.Options.fst"
+# 329 "FStar.Options.fst"
 let _14_297 = (let _93_225 = (specs ())
 in (display_usage _93_225))
 in (FStar_All.exit 1)))
@@ -843,38 +843,46 @@ and set_interactive_fsi : Prims.unit  ->  Prims.unit = (fun _14_299 -> if (FStar
 (FStar_ST.op_Colon_Equals interactive_fsi true)
 end else begin
 (
-# 332 "FStar.Options.fst"
+# 333 "FStar.Options.fst"
 let _14_301 = (FStar_Util.print_string "Set interactive flag first before setting interactive fsi flag\n")
 in (
-# 333 "FStar.Options.fst"
+# 334 "FStar.Options.fst"
 let _14_303 = (let _93_227 = (specs ())
 in (display_usage _93_227))
 in (FStar_All.exit 1)))
 end)
 
-# 333 "FStar.Options.fst"
-let should_verify : Prims.string  ->  Prims.bool = (fun m -> ((FStar_ST.read verify) && (match ((FStar_ST.read verify_module)) with
+# 336 "FStar.Options.fst"
+let should_verify : Prims.string  ->  Prims.bool = (fun m -> if (FStar_ST.read verify) then begin
+(match ((FStar_ST.read verify_module)) with
 | [] -> begin
 true
 end
 | l -> begin
 (FStar_List.contains m l)
-end)))
+end)
+end else begin
+false
+end)
 
-# 339 "FStar.Options.fst"
+# 343 "FStar.Options.fst"
 let dont_gen_projectors : Prims.string  ->  Prims.bool = (fun m -> (let _93_232 = (FStar_ST.read __temp_no_proj)
 in (FStar_List.contains m _93_232)))
 
-# 341 "FStar.Options.fst"
-let should_print_message : Prims.string  ->  Prims.bool = (fun m -> ((should_verify m) && (m <> "Prims")))
-
 # 345 "FStar.Options.fst"
+let should_print_message : Prims.string  ->  Prims.bool = (fun m -> if (should_verify m) then begin
+(m <> "Prims")
+end else begin
+false
+end)
+
+# 350 "FStar.Options.fst"
 type options =
 | Set
 | Reset
 | Restore
 
-# 348 "FStar.Options.fst"
+# 351 "FStar.Options.fst"
 let is_Set = (fun _discr_ -> (match (_discr_) with
 | Set (_) -> begin
 true
@@ -883,7 +891,7 @@ end
 false
 end))
 
-# 349 "FStar.Options.fst"
+# 352 "FStar.Options.fst"
 let is_Reset = (fun _discr_ -> (match (_discr_) with
 | Reset (_) -> begin
 true
@@ -892,7 +900,7 @@ end
 false
 end))
 
-# 350 "FStar.Options.fst"
+# 353 "FStar.Options.fst"
 let is_Restore = (fun _discr_ -> (match (_discr_) with
 | Restore (_) -> begin
 true
@@ -901,9 +909,9 @@ end
 false
 end))
 
-# 350 "FStar.Options.fst"
-let set_options : options  ->  Prims.string  ->  FStar_Getopt.parse_cmdline_res = (
 # 355 "FStar.Options.fst"
+let set_options : options  ->  Prims.string  ->  FStar_Getopt.parse_cmdline_res = (
+# 358 "FStar.Options.fst"
 let settable = (fun _14_2 -> (match (_14_2) with
 | ("admit_smt_queries") | ("cardinality") | ("debug") | ("debug_level") | ("detail_errors") | ("eager_inference") | ("hide_genident_nums") | ("hide_uvar_nums") | ("initial_fuel") | ("initial_ifuel") | ("inline_arith") | ("lax") | ("log_types") | ("log_queries") | ("max_fuel") | ("max_ifuel") | ("min_fuel") | ("print_before_norm") | ("print_bound_var_types") | ("print_effect_args") | ("print_fuels") | ("print_implicits") | ("print_universes") | ("prn") | ("show_signatures") | ("silent") | ("split_cases") | ("timing") | ("trace_error") | ("unthrottle_inductives") | ("use_eq_at_higher_order") | ("__temp_no_proj") | ("warn_top_level_effects") -> begin
 true
@@ -912,25 +920,25 @@ end
 false
 end))
 in (
-# 390 "FStar.Options.fst"
+# 393 "FStar.Options.fst"
 let resettable = (fun s -> ((settable s) || (s = "z3timeout")))
 in (
-# 391 "FStar.Options.fst"
+# 394 "FStar.Options.fst"
 let all_specs = (specs ())
 in (
-# 392 "FStar.Options.fst"
+# 395 "FStar.Options.fst"
 let settable_specs = (FStar_All.pipe_right all_specs (FStar_List.filter (fun _14_357 -> (match (_14_357) with
 | (_14_351, x, _14_354, _14_356) -> begin
 (settable x)
 end))))
 in (
-# 393 "FStar.Options.fst"
+# 396 "FStar.Options.fst"
 let resettable_specs = (FStar_All.pipe_right all_specs (FStar_List.filter (fun _14_366 -> (match (_14_366) with
 | (_14_360, x, _14_363, _14_365) -> begin
 (resettable x)
 end))))
 in (fun o s -> (
-# 395 "FStar.Options.fst"
+# 398 "FStar.Options.fst"
 let specs = (match (o) with
 | Set -> begin
 settable_specs
@@ -943,11 +951,11 @@ all_specs
 end)
 in (FStar_Getopt.parse_string specs (fun _14_374 -> ()) s))))))))
 
-# 399 "FStar.Options.fst"
+# 404 "FStar.Options.fst"
 let restore_cmd_line_options : Prims.unit  ->  FStar_Getopt.parse_cmdline_res = (fun _14_376 -> (match (()) with
 | () -> begin
 (
-# 402 "FStar.Options.fst"
+# 405 "FStar.Options.fst"
 let _14_377 = (init_options ())
 in (let _93_252 = (specs ())
 in (FStar_Getopt.parse_cmdline _93_252 (fun x -> ()))))

@@ -184,6 +184,9 @@ type double = float
 new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
 
+(* THESE BOUNDED INT TYPES ARE A HACK! 
+   CURRENTLY NEEDED FOR BOOTSTRAPPING. 
+   TODO: REMOVE THEM *)
 type int16 = i:int{i > -32769  /\ 32768 > i}
 type int32 = int
 assume new type int64  : Type0

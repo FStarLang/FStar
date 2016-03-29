@@ -1,6 +1,6 @@
 
 open Prims
-# 34 "FStar.Extraction.ML.Modul.fst"
+# 37 "FStar.Extraction.ML.Modul.fst"
 let fail_exp = (fun lid t -> (let _147_16 = (let _147_15 = (let _147_14 = (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.failwith_lid FStar_Syntax_Syntax.Delta_constant None)
 in (let _147_13 = (let _147_12 = (FStar_Syntax_Syntax.iarg t)
 in (let _147_11 = (let _147_10 = (let _147_9 = (let _147_8 = (let _147_7 = (let _147_6 = (let _147_5 = (let _147_4 = (let _147_3 = (FStar_Syntax_Print.lid_to_string lid)
@@ -17,7 +17,7 @@ in (_147_14, _147_13)))
 in FStar_Syntax_Syntax.Tm_app (_147_15))
 in (FStar_Syntax_Syntax.mk _147_16 None FStar_Range.dummyRange)))
 
-# 42 "FStar.Extraction.ML.Modul.fst"
+# 44 "FStar.Extraction.ML.Modul.fst"
 let mangle_projector_lid : FStar_Ident.lident  ->  FStar_Ident.lident = (fun x -> (
 # 45 "FStar.Extraction.ML.Modul.fst"
 let projecteeName = x.FStar_Ident.ident
@@ -32,10 +32,10 @@ let mangledName = (FStar_Ident.id_of_text (Prims.strcat (Prims.strcat (Prims.str
 in (FStar_Ident.lid_of_ids (FStar_List.append prefix ((mangledName)::[]))))
 end))))
 
-# 48 "FStar.Extraction.ML.Modul.fst"
+# 50 "FStar.Extraction.ML.Modul.fst"
 let lident_as_mlsymbol : FStar_Ident.lident  ->  Prims.string = (fun id -> id.FStar_Ident.ident.FStar_Ident.idText)
 
-# 50 "FStar.Extraction.ML.Modul.fst"
+# 56 "FStar.Extraction.ML.Modul.fst"
 let binders_as_mlty_binders = (fun env bs -> (FStar_Util.fold_map (fun env _68_25 -> (match (_68_25) with
 | (bv, _68_24) -> begin
 (let _147_29 = (let _147_27 = (let _147_26 = (let _147_25 = (FStar_Extraction_ML_UEnv.bv_as_ml_tyvar bv)
@@ -46,7 +46,7 @@ in (let _147_28 = (FStar_Extraction_ML_UEnv.bv_as_ml_tyvar bv)
 in (_147_29, _147_28)))
 end)) env bs))
 
-# 63 "FStar.Extraction.ML.Modul.fst"
+# 66 "FStar.Extraction.ML.Modul.fst"
 let extract_typ_abbrev : FStar_Extraction_ML_UEnv.env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.qualifier Prims.list  ->  FStar_Syntax_Syntax.term  ->  (FStar_Extraction_ML_UEnv.env * FStar_Extraction_ML_Syntax.mlmodule1 Prims.list) = (fun env lid quals def -> (
 # 67 "FStar.Extraction.ML.Modul.fst"
 let def = (let _147_39 = (let _147_38 = (FStar_Syntax_Subst.compress def)
@@ -97,21 +97,21 @@ in (env, def)))))
 end))
 end))))
 
-# 78 "FStar.Extraction.ML.Modul.fst"
+# 84 "FStar.Extraction.ML.Modul.fst"
 type data_constructor =
 {dname : FStar_Ident.lident; dtyp : FStar_Syntax_Syntax.typ}
 
 # 84 "FStar.Extraction.ML.Modul.fst"
 let is_Mkdata_constructor : data_constructor  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkdata_constructor"))))
 
-# 87 "FStar.Extraction.ML.Modul.fst"
+# 89 "FStar.Extraction.ML.Modul.fst"
 type inductive_family =
 {iname : FStar_Ident.lident; iparams : FStar_Syntax_Syntax.binders; ityp : FStar_Syntax_Syntax.term; idatas : data_constructor Prims.list; iquals : FStar_Syntax_Syntax.qualifier Prims.list}
 
 # 89 "FStar.Extraction.ML.Modul.fst"
 let is_Mkinductive_family : inductive_family  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkinductive_family"))))
 
-# 95 "FStar.Extraction.ML.Modul.fst"
+# 97 "FStar.Extraction.ML.Modul.fst"
 let print_ifamily : inductive_family  ->  Prims.unit = (fun i -> (let _147_77 = (FStar_Syntax_Print.lid_to_string i.iname)
 in (let _147_76 = (FStar_Syntax_Print.binders_to_string " " i.iparams)
 in (let _147_75 = (FStar_Syntax_Print.term_to_string i.ityp)
@@ -122,7 +122,7 @@ in (Prims.strcat _147_72 _147_71))))))
 in (FStar_All.pipe_right _147_73 (FStar_String.concat "\n\t\t")))
 in (FStar_Util.print4 "\n\t%s %s : %s { %s }\n" _147_77 _147_76 _147_75 _147_74))))))
 
-# 102 "FStar.Extraction.ML.Modul.fst"
+# 104 "FStar.Extraction.ML.Modul.fst"
 let bundle_as_inductive_families = (fun env ses quals -> (FStar_All.pipe_right ses (FStar_List.collect (fun _68_3 -> (match (_68_3) with
 | FStar_Syntax_Syntax.Sig_inductive_typ (l, _us, bs, t, _mut_i, datas, quals, r) -> begin
 (
@@ -171,11 +171,11 @@ end
 []
 end)))))
 
-# 123 "FStar.Extraction.ML.Modul.fst"
+# 125 "FStar.Extraction.ML.Modul.fst"
 type env_t =
 FStar_Extraction_ML_UEnv.env
 
-# 125 "FStar.Extraction.ML.Modul.fst"
+# 127 "FStar.Extraction.ML.Modul.fst"
 let extract_bundle : env_t  ->  FStar_Syntax_Syntax.sigelt  ->  (FStar_Extraction_ML_UEnv.env * FStar_Extraction_ML_Syntax.mlmodule1 Prims.list) = (fun env se -> (
 # 128 "FStar.Extraction.ML.Modul.fst"
 let extract_ctor = (fun ml_tyvars env ctor -> (
@@ -272,7 +272,7 @@ end
 (FStar_All.failwith "Unexpected signature element")
 end))))
 
-# 162 "FStar.Extraction.ML.Modul.fst"
+# 168 "FStar.Extraction.ML.Modul.fst"
 let level_of_sigelt : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.sigelt  ->  Prims.unit = (fun g se -> (
 # 169 "FStar.Extraction.ML.Modul.fst"
 let l = (fun _68_5 -> (match (_68_5) with
@@ -311,7 +311,7 @@ end
 (FStar_Util.print_string "other\n")
 end)))
 
-# 187 "FStar.Extraction.ML.Modul.fst"
+# 190 "FStar.Extraction.ML.Modul.fst"
 let rec extract_sig : env_t  ->  FStar_Syntax_Syntax.sigelt  ->  (env_t * FStar_Extraction_ML_Syntax.mlmodule1 Prims.list) = (fun g se -> (
 # 191 "FStar.Extraction.ML.Modul.fst"
 let _68_252 = (FStar_Extraction_ML_UEnv.debug g (fun u -> (
@@ -496,11 +496,11 @@ end
 (g, [])
 end)))
 
-# 266 "FStar.Extraction.ML.Modul.fst"
+# 268 "FStar.Extraction.ML.Modul.fst"
 let extract_iface : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.modul  ->  env_t = (fun g m -> (let _147_184 = (FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations)
 in (FStar_All.pipe_right _147_184 Prims.fst)))
 
-# 268 "FStar.Extraction.ML.Modul.fst"
+# 270 "FStar.Extraction.ML.Modul.fst"
 let rec extract : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.modul  ->  (FStar_Extraction_ML_UEnv.env * FStar_Extraction_ML_Syntax.mllib Prims.list) = (fun g m -> (
 # 271 "FStar.Extraction.ML.Modul.fst"
 let _68_412 = (FStar_Syntax_Syntax.reset_gensym ())
