@@ -1264,7 +1264,6 @@ and check_top_level_let env e =
    match e.n with
       | Tm_let((false, [lb]), e2) ->
 (*open*) let e1, univ_vars, c1, g1, annotated = check_let_bound_def true env lb in
-         if Env.debug env Options.High then printfn "Type is %s\n" (Print.lcomp_to_string c1);
          (* Maybe generalize its type *)
          let g1, e1, univ_vars, c1 = 
             if annotated && not env.generalize 
