@@ -98,7 +98,6 @@ val free_variables: term -> fvs
 val mkTrue : term
 val mkFalse : term
 val mkInteger : string -> term
-val mkInteger32 : int32 -> term
 val mkInteger': int -> term
 val mkBoundV : int -> term
 val mkFreeV  : (string * sort) -> term

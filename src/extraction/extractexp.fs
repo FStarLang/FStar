@@ -124,11 +124,12 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
         match p.v with
           | Pat_disj _ -> failwith "Impossible"
 
-          | Pat_constant (Const_int c) when (not !Options.use_native_int) ->
+          | Pat_constant ((Const_int (c, None)) as i) when (not !Options.use_native_int) ->
             //these may be extracted to bigint, in which case, we need to emit a when clause
             let x = as_mlident (Util.new_bvd None) in
-            let when_clause = with_ty ml_bool_ty <| MLE_App(prims_op_equality, [with_ty ml_int_ty <| MLE_Var x;
-                                                            with_ty ml_int_ty <| (MLE_Const <| mlconst_of_const' p.p (Const_int c))]) in
+            let when_clause = with_ty ml_bool_ty <|
+              MLE_App(prims_op_equality, [with_ty ml_int_ty <| MLE_Var x;
+                                          with_ty ml_int_ty <| (MLE_Const <| mlconst_of_const' p.p i)]) in
             g, Some (MLP_Var x, [when_clause])
 
           | Pat_constant s     ->

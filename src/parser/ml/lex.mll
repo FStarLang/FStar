@@ -159,24 +159,18 @@ let xinteger =
   (  '0' ('x'| 'X')  hex +
    | '0' ('o'| 'O')  (['0'-'7']) +
    | '0' ('b'| 'B')  (['0'-'1']) + )
+let integer = digit+
+let any_integer = xinteger | integer
+let unsigned = 'u' | 'U'
+let int8 = any_integer 'y'
+let uint8 = any_integer unsigned 'y'
+let int16 = any_integer 's'
+let uint16 = any_integer unsigned 's'
+let int32 = any_integer 'l'
+let uint32 = any_integer unsigned 'l'
+let int64 = any_integer 'L'
+let uint64 = any_integer unsigned 'L'
 
-let integer    = digit+
-let int8       = integer 'y'
-let uint8      = (xinteger | integer) 'u' 'y'
-let int16      = integer 's'
-let uint16     = (xinteger | integer) 'u' 's'
-let int        = integer
-let int32      = integer 'l'
-let uint32     = (xinteger | integer) 'u'
-let uint32l    = (xinteger | integer) 'u' 'l'
-let nativeint  = (xinteger | integer) 'n'
-let unativeint = (xinteger | integer) 'u' 'n'
-let int64      = (xinteger | integer) 'L'
-let uint64     = (xinteger | integer) ('u' | 'U') 'L'
-let xint8      = xinteger 'y'
-let xint16     = xinteger 's'
-let xint       = xinteger
-let xint32     = xinteger 'l'
 let floatp     = digit+ '.' digit*
 let floate     = digit+ ('.' digit* )? ('e'| 'E') ['+' '-']? digit+
 let float      = floatp | floate
@@ -234,17 +228,23 @@ rule token = parse
      { NAME id }
  | tvar as id
      { TVAR id }
+ | integer as x
+     { INT (clean_number x, false)  }
  | uint8 as x
      { UINT8 (char_of_int (int_of_string (clean_number x))) }
- | (int8 | xint8) as x
+ | int8 as x
      { INT8 (char_of_int (int_of_string (clean_number x)), false) }
- | (uint16 | int16 | xint16) as x
+ | uint16 as x
+     { UINT16 (int_of_string (clean_number x), false) }
+ | int16 as x
      { INT16 (int_of_string (clean_number x), false) }
- | (xint | int) as x
-     { INT (clean_number x, false)  }
- | (uint32l | uint32 | xint32 | int32) as x (* TODO: separate these out and check bounds *)
+ | uint32 as x
+     { failwith "TODO: uint32" }
+ | int32 as x (* TODO: check bounds *)
      { INT32 (Int32.of_string (clean_number x), false) }
- | (uint64 | int64) as x
+ | uint64 as x
+     { failwith "TODO: uint64" }
+ | int64 as x
      { INT64 (Int64.of_string (clean_number x), false) }
  | (ieee64 | xieee64) as x
      { IEEE64 (float_of_string x) }

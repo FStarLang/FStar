@@ -135,23 +135,25 @@ assume logic val op_LessThan           : int -> int -> Tot bool
 assume val op_Equality :    #a:Type -> a -> a -> Tot bool
 assume val op_disEquality : #a:Type -> a -> a -> Tot bool
 
-type int16 = i:int{i > -32769  /\ 32768 > i}
-type int32 = int
-new type int64
 new type uint8
+new type int8
 new type uint16
+type int16 = i:int{i > -32769  /\ 32768 > i}
 new type uint32
+type int32 = int
 new type uint64
+new type int64
 new type char
+type byte = uint8
 new type float
+type double = float
+
 new type string
 new type array : Type -> Type
 assume val strcat : string -> string -> Tot string
 assume logic type LBL : string -> Type -> Type
 new type exn
 new type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
-type byte = uint8
-type double = float
 
 type list (a:Type) =
   | Nil  : list a
