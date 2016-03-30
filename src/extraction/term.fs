@@ -119,7 +119,7 @@ let predecessor t = function
 let rec level env t =
     let predecessor l = predecessor t l in
     let t = SS.compress t in
-    debug env (fun _ -> Util.print2 "level %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
+//    debug env (fun _ -> Util.print2 "level %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
 //    printfn "%s\n" (Print.term_to_string t);
     match t.n with
     | Tm_delayed _ ->
@@ -132,7 +132,8 @@ let rec level env t =
         Term_level
 
     | Tm_fvar ({fv_delta=Delta_unfoldable _}) ->
-        level env (N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv t)
+      let t' = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv t in
+      level env t'
 
     | Tm_fvar fv ->
       if TypeChecker.Env.is_type_constructor env.tcenv fv.fv_name.v
