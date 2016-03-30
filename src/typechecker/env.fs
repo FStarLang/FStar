@@ -461,7 +461,7 @@ let lookup_effect_abbrev env (univ:universe) lid =
       if quals |> Util.for_some (function Irreducible -> true | _ -> false)
       then None
       else let insts = if Ident.lid_equals lid Const.effect_Lemma_lid //TODO: Lemma is a hack! It is more universe polymorphic than expected, because of the SMTPats ... which should be irrelevant, but unfortunately are not 
-                       then univ::[U_zero; U_zero]
+                       then univ::[U_zero]
                        else [univ] in
            begin match binders, univs with
              | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
