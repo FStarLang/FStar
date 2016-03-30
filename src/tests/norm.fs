@@ -96,7 +96,7 @@ let run_all debug =
 //                                           match x with \
 //                                            | [] -> []  \
 //                                            | hd::tl -> hd::copy tl" in
-    let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = match x with | [] -> [] | hd::tl -> hd::copy tl" in
+    let _ = Pars.pars_and_tc_fragment "let copy (x:list int) : Tot (list int) = x" in
     run 0 (app apply [one; id; nm n]) (nm n);
     run 1 (app apply [tt; nm n; nm m]) (nm n);
     run 2 (app apply [ff; nm n; nm m]) (nm m);
