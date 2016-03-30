@@ -96,6 +96,7 @@ let interleave (ds:list<decl>) : list<decl> =
         | PatName l -> [l]
         | PatVar (i, _) -> [FStar.Ident.lid_of_ids [i]]
         | PatApp(p, _) -> head_id_of_pat p
+        | PatAscribed(p, _) -> head_id_of_pat p
         | _ -> [] 
     in
     
@@ -156,11 +157,14 @@ let interleave (ds:list<decl>) : list<decl> =
                                           match hd.d with 
                                             | Val(_, x, _) -> hoist_rest (hoisted, hd::remaining) (x::val_ids) tl
                                             | ToplevelLet(_, _, defs) -> 
-                                              let def_lids = lids_of_let defs in 
+                                              let def_lids' = lids_of_let defs in 
                                               if val_ids |> Util.for_some (fun x -> 
-                                                 def_lids |> Util.for_some (id_eq_lid x))
+                                                 def_lids' |> Util.for_some (id_eq_lid x))
                                               then //out of order vals and lets
-                                                   raise (Error("The definition is out of order", let_x.drange))
+                                                   raise (Error(Util.format2 "The definition for '%s' is out of order with '%s'"
+                                                                 (def_lids |> List.hd |> FStar.Syntax.Print.lid_to_string)
+                                                                 (def_lids' |> List.hd |> FStar.Syntax.Print.lid_to_string),
+                                                                let_x.drange))
                                               else hoist_rest (hd::hoisted, remaining) val_ids tl
                                             | _ -> hoist_rest (hd::hoisted, remaining) val_ids tl 
                                       in
