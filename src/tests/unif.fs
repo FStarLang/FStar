@@ -85,7 +85,7 @@ let run_all debug =
        unify 0 x x Trivial;
 
        //different names, equal with a guard
-       unify 1 x y (NonTrivial (app (pars "Eq2") [x;y]));
+       unify 1 x y (NonTrivial (app (pars "eq2") [x;y]));
        
        //equal after some reduction
        unify 2 x (app id [x]) Trivial;
@@ -111,23 +111,23 @@ let run_all debug =
        //logical equality of distinct lambdas (questionable ... would only work for unit, or inconsistent context)
        unify 7 (pars "fun x y -> y")
                (pars "fun x y -> x")
-               (NonTrivial (pars "(forall x. (forall y. Eq2 y x))"));
-//             (NonTrivial (pars "True /\ (forall x. True /\ (forall y. Eq2 y x))"));
+               (NonTrivial (pars "(forall x. (forall y. eq2 y x))"));
+//             (NonTrivial (pars "True /\ (forall x. True /\ (forall y. eq2 y x))"));
 
        //logical equality of distinct lambdas (questionable ... would only work for unit, or inconsistent context)
        unify 8 (pars "fun x y z -> y")
                (pars "fun x y z -> z")
-               (NonTrivial (pars "(forall x. (forall y. (forall z. Eq2 y z)))")); 
-//             (NonTrivial (pars "True /\ (forall x. True /\ (forall y. True /\ (forall z. Eq2 y z)))")); 
+               (NonTrivial (pars "(forall x. (forall y. (forall z. eq2 y z)))")); 
+//             (NonTrivial (pars "True /\ (forall x. True /\ (forall y. True /\ (forall z. eq2 y z)))")); 
 
        //imitation: unifies u to a constant
        let tm, us = inst 1 (pars "fun u x -> u x") in
        unify 9 tm 
-               (pars "fun x -> Tuple2 x x") 
+               (pars "fun x -> tuple2 x x") 
                Trivial;
 //             (NonTrivial (pars "True /\ (forall x. True)"));
        assert (term_eq (norm (List.hd us))
-                       (norm (pars "fun x -> Tuple2 x x")));
+                       (norm (pars "fun x -> tuple2 x x")));
 
        //imitation: unifies u to a lambda
        let tm, us = inst 1 (pars "fun u x -> u x") in
@@ -139,10 +139,10 @@ let run_all debug =
                        (norm (pars "fun x y -> x + y")));
 
       
-       let tm1 = pars ("x:int -> y:int{Eq2 y x} -> bool") in
+       let tm1 = pars ("x:int -> y:int{eq2 y x} -> bool") in
        let tm2 = pars ("x:int -> y:int -> bool") in
        unify 11 tm1 tm2
-                (NonTrivial (pars "forall (x:int). (forall (y:int). Eq2 y x <==> True)"));
+                (NonTrivial (pars "forall (x:int). (forall (y:int). eq2 y x <==> True)"));
 
        let tm1 = pars ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in
        let tm2 = pars ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in

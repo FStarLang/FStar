@@ -176,10 +176,10 @@ let level_of_sigelt g se =
         | Sig_datacon _ -> Util.print_string "\t\tInductive bundle" 
         
         | Sig_declare_typ(lid, _, t, quals, _) ->
-          Util.print2 "\t\t%s @ %s" (Print.lid_to_string lid) (l (Term.predecessor t <| Term.level g t))
+          Util.print2 "\t\t%s @ %s\n" (Print.lid_to_string lid) (l (Term.predecessor t <| Term.level g t))
 
         | Sig_let((_, lb::_), _, _, _) ->
-          Util.print3 "\t\t%s : %s @ %s" ((right lb.lbname).fv_name.v |> Print.lid_to_string)
+          Util.print3 "\t\t%s : %s @ %s\n" ((right lb.lbname).fv_name.v |> Print.lid_to_string)
                                          (Print.term_to_string lb.lbtyp)
                                          (l (Term.predecessor lb.lbtyp <| Term.level g lb.lbtyp))
 
