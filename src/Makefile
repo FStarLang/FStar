@@ -45,7 +45,7 @@ BIN=../bin
 PLATFORM       =
 RELEASE       ?= Debug
 BUILD_VERSION  =
-OTHERFLAGS    := --optimize- --debug:full --nologo --crossoptimize- 
+OTHERFLAGS    := --optimize+ --debug:full --nologo --crossoptimize+
 OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 
 ALL_DLLS    = basic.dll format.dll absyn.dll extraction.dll parser.dll tc.dll tosmt.dll syntax.dll smtencoding.dll typechecker.dll
