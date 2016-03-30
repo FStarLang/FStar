@@ -13,20 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-// (c) Microsoft Corporation. All rights reserved
-
-module FStar.Unionfind
-
-new type uvar 'a
-val uvar_id: uvar 'a -> int
-val fresh : 'a -> uvar 'a
-val find : uvar 'a -> 'a
-val change : uvar 'a -> 'a -> unit
-val equivalent : uvar 'a -> uvar 'a -> bool
-val union : uvar 'a -> uvar 'a -> unit
-
-new type tx
-val new_transaction: (unit -> tx)
-val rollback: tx -> unit
-val commit: tx -> unit
-val update_in_tx: ref<'a> -> 'a -> unit
+module FStar.ST
+assume new type ref : Type -> Type0
+val alloc: 'a -> ref 'a
+val read:  ref 'a -> 'a
+val op_Colon_Equals: ref 'a -> 'a -> unit

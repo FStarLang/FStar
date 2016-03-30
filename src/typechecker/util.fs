@@ -66,7 +66,7 @@ let as_uvar : typ -> uvar = function
     | {n=Tm_uvar(uv, _)} -> uv
     | _ -> failwith "Impossible"
 
-let new_implicit_var env k =
+let new_implicit_var reason r env k =
     match Util.destruct k Const.range_of_lid with
      | Some [_; (tm, _)] -> 
        let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) None tm.pos in
@@ -74,8 +74,8 @@ let new_implicit_var env k =
 
      | _ -> 
        let t, u = new_uvar_aux env k in
-       let g = {Rel.trivial_guard with implicits=[(env, as_uvar u, t, k, u.pos)]} in
-       t, [(as_uvar u, u.pos)], g
+       let g = {Rel.trivial_guard with implicits=[(reason, env, as_uvar u, t, k, r)]} in
+       t, [(as_uvar u, r)], g
      
 let check_uvars r t =
   let uvs = Free.uvars t in
@@ -912,7 +912,7 @@ let maybe_instantiate (env:Env.env) e t =
       let rec aux subst = function
         | (x, Some (Implicit dot))::rest ->
           let t = SS.subst subst x.sort in
-          let v, _, g = new_implicit_var env t in
+          let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
           let subst = NT(x, v)::subst in
           let args, bs, subst, g' = aux subst rest in
           (v, Some (Implicit dot))::args, bs, subst, Rel.conj_guard g g'

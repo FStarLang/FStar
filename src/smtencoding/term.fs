@@ -17,7 +17,6 @@
 
 module FStar.SMTEncoding.Term
 
-open System.Diagnostics
 open FStar
 open FStar.Syntax.Syntax
 open FStar.Syntax

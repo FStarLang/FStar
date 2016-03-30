@@ -17,7 +17,6 @@
 
 module FStar.ToSMT.Term
 
-open System.Diagnostics
 open FStar
 open FStar.Absyn.Syntax
 open FStar.Absyn

@@ -29,12 +29,12 @@ type debug_level_t =
     | Extreme
     | Other of string
 
-let show_signatures = Util.mk_ref []
+let show_signatures : ref<list<string>> = Util.mk_ref []
 let norm_then_print = Util.mk_ref true
 let z3_exe = Util.mk_ref (Platform.exe "z3")
 let silent=Util.mk_ref false
-let debug=Util.mk_ref []
-let debug_level = Util.mk_ref []
+let debug : ref<list<string>> = Util.mk_ref []
+let debug_level : ref<list<debug_level_t>> = Util.mk_ref []
 let dlevel = function
     | "Low" -> Low
     | "Medium" -> Medium
@@ -59,16 +59,16 @@ let should_dump l = match !dump_module with
 let logQueries = Util.mk_ref false
 let z3exe = Util.mk_ref true
 let outputDir = Util.mk_ref (Some ".")
-let fstar_home_opt = Util.mk_ref None
+let fstar_home_opt : ref<option<string>> = Util.mk_ref None
 let _fstar_home = Util.mk_ref ""
-let prims_ref = Util.mk_ref None
+let prims_ref : ref<option<string>> = Util.mk_ref None
 let z3timeout = Util.mk_ref 5
 let admit_smt_queries = Util.mk_ref false
 let pretype = Util.mk_ref true
-let codegen = Util.mk_ref None
-let no_extract = Util.mk_ref []
+let codegen : ref<option<string>> = Util.mk_ref None
+let no_extract : ref<list<string>> = Util.mk_ref []
 let no_location_info = Util.mk_ref false
-let codegen_libs = Util.mk_ref []
+let codegen_libs : ref<list<list<string>>> = Util.mk_ref []
 let trace_error = Util.mk_ref false
 let verify = Util.mk_ref true
 let full_context_dependency = Util.mk_ref true
@@ -92,12 +92,12 @@ let use_eq_at_higher_order = Util.mk_ref false
 let use_native_int = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
 let n_cores = Util.mk_ref 1
-let verify_module = Util.mk_ref []
-let __temp_no_proj = Util.mk_ref []
+let verify_module : ref<list<string>> = Util.mk_ref []
+let __temp_no_proj : ref<list<string>> = Util.mk_ref []
 let interactive = Util.mk_ref false
-let interactive_context = Util.mk_ref None
+let interactive_context : ref<option<string>> = Util.mk_ref None
 let split_cases = Util.mk_ref 0
-let _include_path = Util.mk_ref []
+let _include_path : ref<list<string>> = Util.mk_ref []
 let no_default_includes = Util.mk_ref false
 let interactive_fsi = Util.mk_ref false
 let print_fuels = Util.mk_ref false
@@ -110,7 +110,7 @@ let warn_cardinality () = match !cardinality with
 let check_cardinality () = match !cardinality with
     | "check" -> true
     | _ -> false
-let dep = ref None
+let dep : ref<option<string>> = Util.mk_ref None
 let explicit_deps = Util.mk_ref false
 let init_options () =
     show_signatures := [];
@@ -320,6 +320,7 @@ and parse_codegen s =
   | _ ->
      (Util.print_string "Wrong argument to codegen flag\n";
       display_usage (specs ()); exit 1)
+
 and validate_cardinality x = match x with
     | "warn"
     | "check"
@@ -327,22 +328,24 @@ and validate_cardinality x = match x with
     | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
               display_usage (specs ()); exit 1)
 
-and set_interactive_fsi (_:unit) =
+and set_interactive_fsi _ =
     if !interactive then interactive_fsi := true
     else (Util.print_string "Set interactive flag first before setting interactive fsi flag\n";
           display_usage (specs ()); exit 1)
 
 let should_verify m =
-    !verify &&
-    (match !verify_module with
+  if !verify
+  then match !verify_module with
         | [] -> true //the verify_module flag was not set, so verify everything
-        | l -> List.contains m l) //otherwise, look in the list to see if it is explicitly mentioned
+        | l -> List.contains m l //otherwise, look in the list to see if it is explicitly mentioned
+  else false
 
 let dont_gen_projectors m = List.contains m (!__temp_no_proj)
 
 let should_print_message m =
-    should_verify m
-    && m <> "Prims"
+    if should_verify m
+    then m <> "Prims"
+    else false
 
 type options = 
     | Set

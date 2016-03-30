@@ -2039,7 +2039,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
 (* -------------------------------------------------------- *)
 (* top-level interface                                      *)
 (* -------------------------------------------------------- *)
-let print_pending_implicits g = g.implicits |> List.map (fun (_, u, _, _, _) -> Print.uvar_to_string u) |> String.concat ", "
+let print_pending_implicits g = g.implicits |> List.map (fun (_, _, u, _, _, _) -> Print.uvar_to_string u) |> String.concat ", "
 
 let guard_to_string (env:env) g =
   match g.guard_f, g.deferred with
@@ -2329,7 +2329,7 @@ let resolve_implicits g =
     match implicits with 
         | [] -> if not changed then out else until_fixpoint ([], false) out
         | hd::tl -> 
-          let (env, u, tm, k, r) = hd in 
+          let (_, env, u, tm, k, r) = hd in 
           if unresolved u
           then until_fixpoint (hd::out, changed) tl
           else let env = Env.set_expected_typ env k in
@@ -2349,7 +2349,13 @@ let force_trivial_guard env g =
     let g = solve_deferred_constraints env g |> resolve_implicits in
     match g.implicits with 
         | [] -> ignore <| discharge_guard env g
-        | (_,_,_,_,r)::_ -> raise (Error("Failed to resolve implicit argument", r))
+        | (reason,_,_,e,t,r)::_ -> 
+           raise (Error(Util.format3
+                           "Failed to resolve implicit argument of type '%s' introduced in %s because %s" 
+                           (Print.term_to_string t) 
+                           (Print.term_to_string e)
+                           reason, 
+                        r))
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);

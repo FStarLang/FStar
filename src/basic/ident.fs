@@ -15,7 +15,7 @@ type lid = lident
 let mk_ident (text,range) = {idText=text; idRange=range}
 let reserved_prefix = "uu___"
 let gen = 
-    let x = ref 0 in 
+    let x = Util.mk_ref 0 in 
     fun r -> x := !x + 1; mk_ident (reserved_prefix ^ string_of_int !x, r)
 let id_of_text str = mk_ident(str, dummyRange)
 let text_of_id (id:ident) = id.idText

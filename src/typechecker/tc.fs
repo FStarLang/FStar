@@ -173,9 +173,6 @@ let print_expected_ty env = match Env.expected_typ env with
     | None -> Util.print_string "Expected type is None"
     | Some t -> Util.print1 "Expected type is %s" (Print.term_to_string t)
 
-let with_implicits imps (e, l, g) = e, l, {g with implicits=imps@g.implicits}
-let add_implicit u g = {g with implicits=u::g.implicits}
-
 (************************************************************************************************************)
 (* check the patterns in an SMT lemma to make sure all bound vars are mentiond *)
 (************************************************************************************************************)
@@ -357,7 +354,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let gimp = 
         match (SS.compress head).n with 
             | Tm_uvar(u, _) ->
-              let imp = (env0, u, e, c.res_typ, e.pos) in
+              let imp = ("head of application is a uvar", env0, u, e, c.res_typ, head.pos) in
               {Rel.trivial_guard with implicits=[imp]} 
             | _ -> Rel.trivial_guard in
     let gres = Rel.conj_guard g (Rel.conj_guard g' gimp) in
@@ -437,7 +434,7 @@ and tc_value env (e:term) : term
   | Tm_uvar(u, t1) -> //the type of a uvar is given directly with it; we do not recheck the type
     let g = match (SS.compress t1).n with 
         | Tm_arrow _ -> Rel.trivial_guard
-        | _ -> let imp = (env, u, top, t1, top.pos) in
+        | _ -> let imp = ("uvar in term", env, u, top, t1, top.pos) in
                {Rel.trivial_guard with implicits=[imp]} in
 //    let g = Rel.trivial_guard in
     value_check_expected_typ env e (Inl t1) g
@@ -878,7 +875,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             | (x, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit arg *)
                 let t = SS.subst subst x.sort in
                 check_no_escape (Some head) env fvs t;
-                let varg, _, implicits = TcUtil.new_implicit_var env t in //new_uvar env t in
+                let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" head.pos env t in //new_uvar env t in
                 let subst = NT(x, varg)::subst in
                 let arg = varg, as_implicit true in
                 tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard implicits g, fvs) rest cres args
@@ -1779,35 +1776,35 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
                                 (S.mk_GTotal t) in
     check_and_gen' env ed.trivial expected_k in
 
-   //generalize and close
-    let t = U.arrow ed.binders (S.mk_Total ed.signature) in
-    let (univs, t) = TcUtil.generalize_universes env0 t in
-    let binders, signature = match binders, (SS.compress t).n with 
-        | [], _ -> [], t
-        | _, Tm_arrow(binders, c) -> binders, Util.comp_result c
-        | _ -> failwith "Impossible" in
-    let close ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
-    let ed = { ed with
-        univs       = univs
-      ; binders     = binders
-      ; signature   = signature
-      ; ret         = close ret
-      ; bind_wp     = close bind_wp
-      ; bind_wlp    = close bind_wlp
-      ; if_then_else= close if_then_else
-      ; ite_wp      = close ite_wp
-      ; ite_wlp     = close ite_wlp
-      ; wp_binop    = close wp_binop
-      ; wp_as_type  = close wp_as_type
-      ; close_wp    = close close_wp
-      ; assert_p    = close assert_p
-      ; assume_p    = close assume_p
-      ; null_wp     = close null_wp
-      ; trivial     = close trivial_wp } in
+  //generalize and close
+  let t = U.arrow ed.binders (S.mk_Total ed.signature) in
+  let (univs, t) = TcUtil.generalize_universes env0 t in
+  let binders, signature = match binders, (SS.compress t).n with 
+    | [], _ -> [], t
+    | _, Tm_arrow(binders, c) -> binders, Util.comp_result c
+    | _ -> failwith "Impossible" in
+  let close ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
+  let ed = { ed with
+      univs       = univs
+    ; binders     = binders
+    ; signature   = signature
+    ; ret         = close ret
+    ; bind_wp     = close bind_wp
+    ; bind_wlp    = close bind_wlp
+    ; if_then_else= close if_then_else
+    ; ite_wp      = close ite_wp
+    ; ite_wlp     = close ite_wlp
+    ; wp_binop    = close wp_binop
+    ; wp_as_type  = close wp_as_type
+    ; close_wp    = close close_wp
+    ; assert_p    = close assert_p
+    ; assume_p    = close assume_p
+    ; null_wp     = close null_wp
+    ; trivial     = close trivial_wp } in
 
-    if Env.debug env Options.Low 
-    then Util.print_string (Print.eff_decl_to_string ed);
-    ed
+if Env.debug env Options.Low 
+then Util.print_string (Print.eff_decl_to_string ed);
+ed
 
 let tc_lex_t env ses quals lids = 
     (* We specifically type lex_t as:

@@ -57,8 +57,7 @@ let trans_pragma = function
   | AST.ResetOptions sopt -> S.ResetOptions sopt
 
 let as_imp = function
-    | Hash
-    | FsTypApp -> Some S.imp_tag
+    | Hash -> Some S.imp_tag 
     | _ -> None
 let arg_withimp_e imp t =
     t, as_imp imp

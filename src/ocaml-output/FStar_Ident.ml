@@ -19,7 +19,7 @@ type lid =
 lident
 
 # 15 "FStar.Ident.fst"
-let mk_ident : (Prims.string * FStar_Range.range)  ->  ident = (fun _21_11 -> (match (_21_11) with
+let mk_ident : (Prims.string * FStar_Range.range)  ->  ident = (fun _15_11 -> (match (_15_11) with
 | (text, range) -> begin
 {idText = text; idRange = range}
 end))
@@ -30,16 +30,16 @@ let reserved_prefix : Prims.string = "uu___"
 # 17 "FStar.Ident.fst"
 let gen : FStar_Range.range  ->  ident = (
 # 18 "FStar.Ident.fst"
-let x = (FStar_ST.alloc 0)
+let x = (FStar_Util.mk_ref 0)
 in (fun r -> (
 # 19 "FStar.Ident.fst"
-let _21_14 = (let _106_25 = ((FStar_ST.read x) + 1)
-in (FStar_ST.op_Colon_Equals x _106_25))
-in (let _106_29 = (let _106_28 = (let _106_27 = (let _106_26 = (FStar_ST.read x)
-in (Prims.string_of_int _106_26))
-in (Prims.strcat reserved_prefix _106_27))
-in (_106_28, r))
-in (mk_ident _106_29)))))
+let _15_14 = (let _94_25 = ((FStar_ST.read x) + 1)
+in (FStar_ST.op_Colon_Equals x _94_25))
+in (let _94_29 = (let _94_28 = (let _94_27 = (let _94_26 = (FStar_ST.read x)
+in (Prims.string_of_int _94_26))
+in (Prims.strcat reserved_prefix _94_27))
+in (_94_28, r))
+in (mk_ident _94_29)))))
 
 # 20 "FStar.Ident.fst"
 let id_of_text : Prims.string  ->  ident = (fun str -> (mk_ident (str, FStar_Range.dummyRange)))
@@ -65,13 +65,13 @@ let ids_of_lid : lident  ->  ident Prims.list = (fun lid -> (FStar_List.append l
 # 27 "FStar.Ident.fst"
 let lid_of_ids : ident Prims.list  ->  lident = (fun ids -> (
 # 28 "FStar.Ident.fst"
-let _21_26 = (FStar_Util.prefix ids)
-in (match (_21_26) with
+let _15_26 = (FStar_Util.prefix ids)
+in (match (_15_26) with
 | (ns, id) -> begin
 (
 # 29 "FStar.Ident.fst"
-let nsstr = (let _106_46 = (FStar_List.map text_of_id ns)
-in (FStar_All.pipe_right _106_46 text_of_path))
+let nsstr = (let _94_46 = (FStar_List.map text_of_id ns)
+in (FStar_All.pipe_right _94_46 text_of_path))
 in {ns = ns; ident = id; nsstr = nsstr; str = if (nsstr = "") then begin
 id.idText
 end else begin
@@ -96,12 +96,12 @@ let lid_with_range : lid  ->  FStar_Range.range  ->  lident = (fun lid r -> (
 # 40 "FStar.Ident.fst"
 let id = (
 # 40 "FStar.Ident.fst"
-let _21_37 = lid.ident
-in {idText = _21_37.idText; idRange = r})
+let _15_37 = lid.ident
+in {idText = _15_37.idText; idRange = r})
 in (
 # 41 "FStar.Ident.fst"
-let _21_40 = lid
-in {ns = _21_40.ns; ident = id; nsstr = _21_40.nsstr; str = _21_40.str})))
+let _15_40 = lid
+in {ns = _15_40.ns; ident = id; nsstr = _15_40.nsstr; str = _15_40.str})))
 
 # 42 "FStar.Ident.fst"
 let range_of_lid : lid  ->  FStar_Range.range = (fun lid -> lid.ident.idRange)

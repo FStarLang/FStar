@@ -187,7 +187,7 @@ clean:
 # Bootstrapping in OCaml
 # --------------------------------------------------------------------
 
-STDLIB=$(addprefix ../lib/, system.fsti system.io.fsti system.text.fsti system.diagnostics.fsti system.collections.generic.fsti collections.fsti allboot.fsti stboot.fsti list.fsti option.fsti FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
+STDLIB=$(addprefix $(LIB)/, allboot.fsti stboot.fsti list.fsti option.fsti FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
 BOOT_BASIC_FSTI=$(addprefix boot_fstis/, char.fsti string.fsti bytes.fsti platform.fsti version.fsti range.fsti)
 BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
 BOOT_PARSER=$(addprefix parser/, ast.fs dsenv.fs desugar.fs env.fs interleave.fs tosyntax.fs parse.fsti lexhelp.fs parseit.fsi driver.fs dep.fs)
@@ -210,7 +210,7 @@ ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse 
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 
-FSTAROPTS=--explicit_deps
+FSTAROPTS=--MLish
 
 all_boot_fsts:
 	cp format/format.fsi format/formatml.fsi
@@ -225,8 +225,14 @@ boot_fsts/FStar.Parser.Parse.fsti: parser/parse.fsti
 boot_fsts/FStar.Parser.ParseIt.fsti: parser/parseit.fsi
 	cp $^ $@
 
-../lib/FStar.Util.fsti: basic/util.fsi
-	cat basic/util.fsi | sed 's/type smap/opaque type smap/g' | sed 's/type out_channel/opaque type out_channel/g' | sed 's/type file_handle/opaque type file_handle/g' | sed 's/type string_builder/opaque type string_builder/g' | sed 's/type proc/opaque type proc/g' > $@
+$(LIB)/FStar.Util.fsti: basic/util.fsi
+	cat $^ | sed 's/open System.IO//g' | sed 's/type time.*/new type time/g' | sed 's/type smap.*/new type smap : Type -> Type/g' | sed 's/type out_channel.*/new type out_channel/g' | sed 's/type file_handle.*/new type file_handle/g' | sed 's/type stream_reader.*/new type stream_reader/g' | sed 's/type string_builder.*/new type string_builder/g' | sed 's/type proc.*/new type proc/g' | sed 's/type set.*/new type set:Type -> Type/g' > $@
+
+$(LIB)/FStar.GetOpt.fsti: basic/getoptsimple.fsi
+	cp $^ $@
+
+$(LIB)/FStar.Unionfind.fsti: basic/unionfind.fsi
+	cat $^ | sed 's/type cell.*//g' | sed 's/and contents.*//g' | sed 's/.*| Data.*//g' | sed 's/.*| Fwd.*//g' | sed 's/type uvar.*/new type uvar : Type -> Type/g' > $@
 
 clean_ocaml_prep:
 	rm -rf boot_fsts boot_fstis
@@ -236,7 +242,7 @@ clean_ocaml_prep:
 extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
-	../bin/fstar.exe --use_native_int --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^
+	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^ 
 
 ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml
 
@@ -265,7 +271,7 @@ fsharp-output/fstar.exe: $(addprefix ../lib/fs/, $(FS_SUPPORT_LIBS)) $(addprefix
 	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(OTHERFLAGS) $^
 
 fs: $(BOOT_ALL) 
-	../bin/fstar.exe --use_native_int --eager_inference --MLish --lax --fs_typ_app --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
+	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --MLish --lax --fs_typ_app --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
 
 fsharp-output: 
 	mkdir -p fsharp-output
@@ -299,7 +305,6 @@ regressions:
 
 test_universes: 
 	../bin/tests #all the unit tests
-	(cd ../lib; ../bin/fstar --universes $(FSTAROPTS) FStar.List.Tot.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.Seq.fst FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst)
 
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples

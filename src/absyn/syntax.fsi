@@ -27,7 +27,6 @@ open FStar.Const
 
 type ident = FStar.Ident.ident
 type lident = FStar.Ident.lid
-type LongIdent = lident
 
 exception Err of string
 exception Error of string * Range.range
