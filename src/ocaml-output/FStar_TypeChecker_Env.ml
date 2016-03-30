@@ -906,7 +906,7 @@ end else begin
 (
 # 522 "FStar.TypeChecker.Env.fst"
 let insts = if (FStar_Ident.lid_equals lid FStar_Syntax_Const.effect_Lemma_lid) then begin
-(univ)::(FStar_Syntax_Syntax.U_zero)::(FStar_Syntax_Syntax.U_zero)::[]
+(univ)::(FStar_Syntax_Syntax.U_zero)::[]
 end else begin
 (univ)::[]
 end

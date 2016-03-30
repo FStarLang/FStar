@@ -1776,35 +1776,35 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
                                 (S.mk_GTotal t) in
     check_and_gen' env ed.trivial expected_k in
 
-   //generalize and close
-    let t = U.arrow ed.binders (S.mk_Total ed.signature) in
-    let (univs, t) = TcUtil.generalize_universes env0 t in
-    let binders, signature = match binders, (SS.compress t).n with 
-        | [], _ -> [], t
-        | _, Tm_arrow(binders, c) -> binders, Util.comp_result c
-        | _ -> failwith "Impossible" in
-    let close ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
-    let ed = { ed with
-        univs       = univs
-      ; binders     = binders
-      ; signature   = signature
-      ; ret         = close ret
-      ; bind_wp     = close bind_wp
-      ; bind_wlp    = close bind_wlp
-      ; if_then_else= close if_then_else
-      ; ite_wp      = close ite_wp
-      ; ite_wlp     = close ite_wlp
-      ; wp_binop    = close wp_binop
-      ; wp_as_type  = close wp_as_type
-      ; close_wp    = close close_wp
-      ; assert_p    = close assert_p
-      ; assume_p    = close assume_p
-      ; null_wp     = close null_wp
-      ; trivial     = close trivial_wp } in
+  //generalize and close
+  let t = U.arrow ed.binders (S.mk_Total ed.signature) in
+  let (univs, t) = TcUtil.generalize_universes env0 t in
+  let binders, signature = match binders, (SS.compress t).n with 
+    | [], _ -> [], t
+    | _, Tm_arrow(binders, c) -> binders, Util.comp_result c
+    | _ -> failwith "Impossible" in
+  let close ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
+  let ed = { ed with
+      univs       = univs
+    ; binders     = binders
+    ; signature   = signature
+    ; ret         = close ret
+    ; bind_wp     = close bind_wp
+    ; bind_wlp    = close bind_wlp
+    ; if_then_else= close if_then_else
+    ; ite_wp      = close ite_wp
+    ; ite_wlp     = close ite_wlp
+    ; wp_binop    = close wp_binop
+    ; wp_as_type  = close wp_as_type
+    ; close_wp    = close close_wp
+    ; assert_p    = close assert_p
+    ; assume_p    = close assume_p
+    ; null_wp     = close null_wp
+    ; trivial     = close trivial_wp } in
 
-    if Env.debug env Options.Low 
-    then Util.print_string (Print.eff_decl_to_string ed);
-    ed
+if Env.debug env Options.Low 
+then Util.print_string (Print.eff_decl_to_string ed);
+ed
 
 let tc_lex_t env ses quals lids = 
     (* We specifically type lex_t as:

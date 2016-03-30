@@ -190,7 +190,7 @@ assume val strcat : string -> string -> Tot string
 type int16 = i:int{i > -32769  /\ 32768 > i}
 type int32 = int
 assume new type int64  : Type0
-assume new type uint8  : Type0
+assume type uint8  : Type0
 assume new type uint16 : Type0
 assume new type uint32 : Type0
 assume new type uint64 : Type0
