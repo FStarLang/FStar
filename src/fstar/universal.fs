@@ -154,13 +154,13 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
             Some (Some modul, dsenv, env) 
 
     with
-      | Syntax.Error(msg, r) ->
+      | Syntax.Error(msg, r) when not (!Options.trace_error) ->
           TypeChecker.Errors.add_errors env [(msg,r)];
           None
-      | Syntax.Err msg ->
+      | Syntax.Err msg when not (!Options.trace_error) ->
           TypeChecker.Errors.add_errors env [(msg,Range.dummyRange)];
           None
-      | e -> raise e
+      | e when not (!Options.trace_error) -> raise e
 
 (******************************************************************************)
 (* Building an instance of the type-checker to be run in the interactive loop *)
@@ -199,11 +199,11 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
                   Some (m, (dsenv, env), FStar.TypeChecker.Errors.get_err_count())
                 | _ -> None
         with 
-            | FStar.Syntax.Syntax.Error(msg, r) ->
+            | FStar.Syntax.Syntax.Error(msg, r) when not (!Options.trace_error) ->
               FStar.TypeChecker.Errors.add_errors env [(msg, r)];
               None
               
-            | FStar.Syntax.Syntax.Err msg ->
+            | FStar.Syntax.Syntax.Err msg when not (!Options.trace_error) ->
               FStar.TypeChecker.Errors.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
               None in
 

@@ -92,6 +92,11 @@ let run_all debug =
           Options.print_implicits := true;
           Options.print_real_names := true);
     Printf.printf "Testing the normalizer\n";
+//    let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
+//                                           match x with \
+//                                            | [] -> []  \
+//                                            | hd::tl -> hd::copy tl" in
+    let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = match x with | [] -> [] | hd::tl -> hd::copy tl" in
     run 0 (app apply [one; id; nm n]) (nm n);
     run 1 (app apply [tt; nm n; nm m]) (nm n);
     run 2 (app apply [ff; nm n; nm m]) (nm m);
