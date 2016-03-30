@@ -96,7 +96,7 @@ let _sigma1 x =
 val k_init: unit -> St (buffer 32)
 let k_init () =
   admit();
-  let k = SBuffer.create #32 FStar.UInt32.zero (* (of_string "0x00000000") *) 64  in
+  let k = SBuffer.create #32 FStar.UInt32.zero 64  in
   SBuffer.upd k 0  (of_string "0x428a2f98");
   SBuffer.upd k 1  (of_string "0x71374491");
   SBuffer.upd k 2  (of_string "0xb5c0fbcf");
@@ -180,8 +180,8 @@ let nblocks x = ((x + 8) - ((x + 8) % 64))/64 + 1
 
 (* Pad the data and return a buffer of uint32 for subsequent treatment *)
 val pad: (rdata:buffer 8) -> rlen:nat{length rdata = rlen} -> ST (data:buffer 8)
-                                     (requires (fun h -> Live h rdata))
-                                     (ensures  (fun h0 r h1 -> Live h1 rdata))
+                                                             (requires (fun h -> Live h rdata))
+                                                             (ensures  (fun h0 r h1 -> Live h1 rdata))
 // TODO: Refinement on the value of the pad -> length raw + rplen = 64
 let pad rdata rlen =
   admit();
@@ -231,11 +231,11 @@ let pad rdata rlen =
 (* [FIPS 180-4] section 6.2.2 *)
 (* Step 1 : Scheduling function for sixty-four 32bit words *)
 val wsched: ws:buffer 32{length ws = 64} ->
-            wdata:buffer 32 ->
+            wdata:buffer 32{Disjoint ws wdata} ->
             len:nat{length wdata = len} ->
             t:ref nat -> ST unit
-                              (requires (fun h -> Live h wdata /\ Live h ws /\ Disjoint wdata ws))
-                              (ensures  (fun h0 r h1 -> Live h1 wdata))
+                         (requires (fun h -> Live h wdata /\ Live h ws))
+                         (ensures  (fun h0 r h1 -> Live h1 wdata))
 
 let rec wsched ws wdata len t =
   admit();
@@ -273,16 +273,13 @@ let init () =
 
 (* Step 3 : Perform logical operations on the working variables *)
 val update_inner_loop : ws:buffer 32{length ws = 64} ->
-                        k:buffer 32 ->
+                        k:buffer 32{length k = 64 /\ Disjoint k ws} ->
                         klen:nat{length k = klen} ->
                         wh:registers ->
                         block:uint32 ->
                         t:ref int -> t1:ref uint32 -> t2:ref uint32 -> ST unit
-                                                                  (requires (fun h -> Live h ws
-                                                                                 /\ Live h k
-                                                                                 /\ Disjoint k ws))
-                                                                  (ensures  (fun h0 r h1 -> Live h1 ws
-                                                                                       /\ Live h1 k))
+                                                                  (requires (fun h -> Live h ws /\ Live h k))
+                                                                  (ensures  (fun h0 r h1 -> Live h1 ws /\ Live h1 k))
 
 let rec update_inner_loop ws k klen wh block t t1 t2 =
   admit();
@@ -315,27 +312,24 @@ let rec update_inner_loop ws k klen wh block t t1 t2 =
     update_inner_loop ws k klen wh block t t1 t2 end
   else ()
 
-val update_process_chunk : hash:buffer 32 ->
-                           data:buffer 8 ->
-                           ws:buffer 32 ->
+val update_step : hash:buffer 32{length hash = 8} ->
+                           data:buffer 8{Disjoint hash data} ->
+                           ws:buffer 32{length ws = 64 /\ Disjoint ws hash /\ Disjoint ws data} ->
                            len:nat{length data = len} ->
-                           k:buffer 32 ->
+                           k:buffer 32{length k = 64 /\ Disjoint k hash /\ Disjoint k data /\ Disjoint k ws} ->
                            i:ref int ->
-                           t1:ref uint32 -> t2:ref uint32 -> ST unit
-                                                           (requires (fun h -> Live h hash
-                                                                          /\ Live h data
-                                                                          /\ Live h ws
-                                                                          /\ Live h k
-                                                                          /\ Disjoint hash data
-                                                                          /\ Disjoint hash ws
-                                                                          /\ Disjoint data ws
-                                                                          /\ Disjoint hash k))
-                                                           (ensures  (fun h0 r h1 -> Live h1 hash
-                                                                                /\ Live h1 data
-                                                                                /\ Live h1 ws
-                                                                                /\ Live h1 k))
+                           t1:ref uint32 ->
+                           t2:ref uint32 -> ST unit
+                                              (requires (fun h -> Live h hash
+                                                             /\ Live h data
+                                                             /\ Live h ws
+                                                             /\ Live h k))
+                                              (ensures  (fun h0 r h1 -> Live h1 hash
+                                                                   /\ Live h1 data
+                                                                   /\ Live h1 ws
+                                                                   /\ Live h1 k))
 
-let rec update_process_chunk hash data ws len k i t1 t2 =
+let rec update_step hash data ws len k i t1 t2 =
   admit();
   if !i < len then begin
     let a =  (!i * 16) in
@@ -384,7 +378,7 @@ let rec update_process_chunk hash data ws len k i t1 t2 =
     SBuffer.upd hash 6 (FStar.UInt32.add x61 x62);
     SBuffer.upd hash 7 (FStar.UInt32.add x71 x72);
     i := !i + 1;
-    update_process_chunk hash data ws len k i t1 t2 end
+    update_step hash data ws len k i t1 t2 end
   else ()
 
 (* [FIPS 180-4] section 6.2.2 *)
@@ -405,15 +399,11 @@ let rec update_process_chunk hash data ws len k i t1 t2 =
 //  rewrite <- teq; auto.
 //  rewrite skipn_length. simpl; omega.
 // Qed.
-val update : (hash:buffer 32) ->
-             (data:buffer 8) ->
+val update : (hash:buffer 32{length hash = 8}) ->
+             (data:buffer 8{Disjoint hash data}) ->
              (datalen:nat{length data = datalen}) -> ST unit
-                                                  (requires (fun h -> Live h hash
-                                                                 /\ Live h data
-                                                                 /\ Disjoint hash data))
-                                                  (ensures  (fun h0 r h1 -> Live h1 hash
-                                                                       /\ Live h1 data))
-
+                                                  (requires (fun h -> Live h hash /\ Live h data))
+                                                  (ensures  (fun h0 r h1 -> Live h1 hash /\ Live h1 data))
 let update hash data len =
   admit();
   let i = ref 0 in
@@ -421,7 +411,7 @@ let update hash data len =
   let t2 = ref FStar.UInt32.zero in
   let k = k_init () in
   let ws = create #32 FStar.UInt32.zero 64 in
-  update_process_chunk hash data ws len k i t1 t2
+  update_step hash data ws len k i t1 t2
 
 (* Compute the final value of the hash from the last hash value *)
 val finish: (hash:buffer 32) -> ST (buffer 8)
@@ -440,7 +430,6 @@ val sha265: (data:buffer 8) ->
             (len:nat{length data = len}) -> ST (buffer 8)
                                          (requires (fun h -> Live h data))
                                          (ensures  (fun h0 r h1 -> Live h1 data /\ h0 = h1))
-
 let sha256 data len =
   let pdata = pad data len in
   let hash = init () in
