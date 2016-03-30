@@ -76,12 +76,11 @@ let encode_nat n =
         else aux (snat out) (n - 1) in 
     aux znat n
 
-let dummy = TypeChecker.Env.no_solver_env TypeChecker.Tc.type_of
-
 let run i r expected = 
 //    force_term r;
     Printf.printf "%d: ... \n" i;
-    let x = FStar.TypeChecker.Normalize.normalize [] dummy r in
+    let _, tcenv = Pars.init() in
+    let x = FStar.TypeChecker.Normalize.normalize [] tcenv r in
 //    Printf.printf "result = %s\n" (P.term_to_string x);
 //    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
     assert (Util.term_eq x expected)

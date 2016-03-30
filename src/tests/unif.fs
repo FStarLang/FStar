@@ -21,19 +21,19 @@ open FStar.Tests.Util
 let x = S.gen_bv "x" None S.tun |> S.bv_to_name
 let y = S.gen_bv "y" None S.tun |> S.bv_to_name
 
-let dummy = TypeChecker.Env.no_solver_env TypeChecker.Tc.type_of
+let tcenv () = Pars.init() |> snd
 
 let guard_to_string g = match g with
     | Trivial -> "trivial"
     | NonTrivial f ->
-      N.term_to_string dummy f
+      N.term_to_string (tcenv()) f
 
 let guard_eq i g g' = 
     let b = match g, g' with 
         | Trivial, Trivial -> true
         | NonTrivial f, NonTrivial f' ->
-          let f = N.normalize [] dummy f in
-          let f' = N.normalize [] dummy f' in
+          let f = N.normalize [] (tcenv()) f in
+          let f' = N.normalize [] (tcenv()) f' in
           term_eq f f'
         | _ -> false in
     if not b 
@@ -43,12 +43,12 @@ let guard_eq i g g' =
 
 
 let unify i x y g' = 
-    let g = Rel.teq dummy x y |> Rel.solve_deferred_constraints dummy in
+    let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
     guard_eq i g.guard_f g'
 
 let should_fail x y =
     try 
-        let g = Rel.teq dummy x y |> Rel.solve_deferred_constraints dummy in
+        let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
         match g.guard_f with  
             | Trivial -> failwith (Printf.sprintf "%s and %s should not be unifiable\n" (P.term_to_string x) (P.term_to_string y))
             | NonTrivial f -> Printf.printf "%s and %s are unifiable if %s\n"  (P.term_to_string x) (P.term_to_string y) (P.term_to_string f)
@@ -57,10 +57,10 @@ let should_fail x y =
 let unify' x y = 
     let x = pars x in
     let y = pars y in
-    let g = Rel.teq dummy x y |> Rel.solve_deferred_constraints dummy in
+    let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
     Printf.printf "%s and %s are unifiable with guard %s\n"  (P.term_to_string x) (P.term_to_string y) (guard_to_string g.guard_f)
 
-let norm t = N.normalize [] dummy t
+let norm t = N.normalize [] (tcenv()) t
 
 let inst n tm = 
    let rec aux out n = 
@@ -74,7 +74,7 @@ let run_all debug =
    try
        Printf.printf "Testing the unifier\n";
        if debug 
-       then (Options.debug := ["dummy"];
+       then (Options.debug := ["(tcenv())"];
              Options.debug_level := [Options.Other "Rel"; Options.Other "RelCheck"];
              Options.print_implicits := true;
              Options.print_real_names := true);
