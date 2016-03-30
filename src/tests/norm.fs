@@ -76,12 +76,11 @@ let encode_nat n =
         else aux (snat out) (n - 1) in 
     aux znat n
 
-let dummy = TypeChecker.Env.no_solver_env TypeChecker.Tc.type_of
-
 let run i r expected = 
 //    force_term r;
     Printf.printf "%d: ... \n" i;
-    let x = FStar.TypeChecker.Normalize.normalize [] dummy r in
+    let _, tcenv = Pars.init() in
+    let x = FStar.TypeChecker.Normalize.normalize [] tcenv r in
 //    Printf.printf "result = %s\n" (P.term_to_string x);
 //    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
     assert (Util.term_eq x expected)
@@ -93,6 +92,11 @@ let run_all debug =
           Options.print_implicits := true;
           Options.print_real_names := true);
     Printf.printf "Testing the normalizer\n";
+//    let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
+//                                           match x with \
+//                                            | [] -> []  \
+//                                            | hd::tl -> hd::copy tl" in
+    let _ = Pars.pars_and_tc_fragment "let copy (x:list int) : Tot (list int) = x" in
     run 0 (app apply [one; id; nm n]) (nm n);
     run 1 (app apply [tt; nm n; nm m]) (nm n);
     run 2 (app apply [ff; nm n; nm m]) (nm m);
