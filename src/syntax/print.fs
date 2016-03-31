@@ -131,14 +131,10 @@ let const_to_string x = match x with
   | Const_effect -> "Effect"
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
-  | Const_int32 x ->      Util.string_of_int32 x
   | Const_float x ->      Util.string_of_float x
-  | Const_char x ->       "'" ^ (Util.string_of_char x) ^ "'"
   | Const_string(bytes, _) -> Util.format1 "\"%s\"" (Util.string_of_bytes bytes)
   | Const_bytearray _  ->  "<bytearray>"
-  | Const_int   x -> x
-  | Const_int64 _ -> "<int64>"
-  | Const_uint8 _ -> "<uint8>"
+  | Const_int (x, _) -> x
   | Const_range r -> Range.string_of_range r
 
 let lbname_to_string = function

@@ -205,7 +205,6 @@ let mk t =
 let mkTrue       = mk (App(True, []))
 let mkFalse      = mk (App(False, []))
 let mkInteger i  = mk (Integer i)
-let mkInteger32 i = mkInteger (string_of_int32 i)
 let mkInteger' i  = mkInteger (string_of_int i)
 let mkBoundV i   = mk (BoundV i)
 let mkFreeV x    = mk (FreeV x)

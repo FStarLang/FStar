@@ -1,5 +1,7 @@
 module Unit1.Basic
 
+open FStar.BaseTypes
+
 type t =
   | A
   | B

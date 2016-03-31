@@ -59,14 +59,19 @@ module C = FStar.Syntax.Const
 
 let tconst l = mk (Tm_fvar(Syntax.lid_as_fv l Delta_constant None)) (Some Util.ktype0.n) Range.dummyRange
 let t_unit   = tconst C.unit_lid
-let t_bool   = tconst C.bool_lid 
-let t_uint8  = tconst C.uint8_lid 
-let t_int    = tconst C.int_lid   
-let t_int32  = tconst C.int32_lid 
-let t_int64  = tconst C.int64_lid 
+let t_bool   = tconst C.bool_lid
+let t_int8   = tconst C.int8_lid
+let t_uint8  = tconst C.uint8_lid
+let t_int16  = tconst C.int16_lid
+let t_uint16 = tconst C.uint16_lid
+let t_int32  = tconst C.int32_lid
+let t_uint32 = tconst C.uint32_lid
+let t_int64  = tconst C.int64_lid
+let t_uint64  = tconst C.uint64_lid
+let t_int    = tconst C.int_lid
 let t_string = tconst C.string_lid
-let t_float  = tconst C.float_lid 
-let t_char   = tconst C.char_lid  
+let t_float = tconst C.float_lid
+let t_char = tconst C.char_lid
 
 let rec delta_depth_greater_than l m = match l, m with 
     | Delta_constant, _ -> false

@@ -176,26 +176,10 @@ assume val op_LessThan           : int -> int -> Tot bool
    This still allows functions ... TODO: disallow functions *)
 assume val op_Equality :    'a -> 'a -> Tot bool
 assume val op_disEquality : 'a -> 'a -> Tot bool
-assume type char   : Type0
-assume new type float  : Type0
 assume new type string : Type0
 assume new type exn : Type0
-type double = float
 assume new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
-
-(* THESE BOUNDED INT TYPES ARE A HACK! 
-   CURRENTLY NEEDED FOR BOOTSTRAPPING. 
-   TODO: REMOVE THEM *)
-type int16 = i:int{i > -32769  /\ 32768 > i}
-type int32 = int
-assume new type int64  : Type0
-assume type uint8  : Type0
-assume new type uint16 : Type0
-assume new type uint32 : Type0
-assume new type uint64 : Type0
-
-type byte = uint8
 
 type list (a:Type) =
   | Nil  : list a

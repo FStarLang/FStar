@@ -29,24 +29,34 @@ open FStar.Const
 let oktype = Some ktype
 let t_unit   = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.unit_lid   ktype)
 let t_bool   = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.bool_lid   ktype)
-let t_uint8  = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.uint8_lid  ktype)
 let t_int    = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.int_lid    ktype)
+let t_int8   = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.int8_lid  ktype)
+let t_uint8  = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.uint8_lid  ktype)
+let t_int16  = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.int16_lid  ktype)
+let t_uint16 = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.uint16_lid  ktype)
 let t_int32  = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.int32_lid  ktype)
+let t_uint32 = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.uint32_lid  ktype)
 let t_int64  = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.int64_lid  ktype)
+let t_uint64 = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.uint64_lid  ktype)
 let t_string = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.string_lid ktype)
-let t_float  = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.float_lid  ktype)
-let t_char   = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.char_lid   ktype)
+let t_float = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.float_lid ktype)
+let t_char = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.char_lid ktype)
 
 let typing_const r (s:sconst) = match s with
   | Const_unit -> t_unit
   | Const_bool _ -> t_bool
-  | Const_int _ -> t_int
-  | Const_int32 _ -> t_int32
-  | Const_int64 _ -> t_int64
+  | Const_int (_, None) -> t_int
+  | Const_int (_, Some (Unsigned, Int8)) -> t_uint8
+  | Const_int (_, Some (Signed, Int8)) -> t_int8
+  | Const_int (_, Some (Unsigned, Int16)) -> t_uint16
+  | Const_int (_, Some (Signed, Int16)) -> t_int16
+  | Const_int (_, Some (Unsigned, Int32)) -> t_uint32
+  | Const_int (_, Some (Signed, Int32)) -> t_int32
+  | Const_int (_, Some (Unsigned, Int64)) -> t_uint64
+  | Const_int (_, Some (Signed, Int64)) -> t_int64
   | Const_string _ -> t_string
   | Const_float _ -> t_float
   | Const_char _ -> t_char
-  | Const_uint8 _ -> t_uint8
   | _ -> raise (Error("Unsupported constant", r))
 
 

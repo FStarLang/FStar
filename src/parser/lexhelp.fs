@@ -35,6 +35,7 @@ open FStar.Util
 open FStar.Range
 open FStar.Parser
 open FStar.Parser.Parse
+open FStar.BaseTypes
 
 let intern_string : string -> string =
   let strings = Util.smap_create 100 in 

@@ -17,6 +17,8 @@ module FStar.Util
 
 open System.IO
 
+open FStar.BaseTypes
+
 exception Impos
 exception NYI of string
 exception Failure of string

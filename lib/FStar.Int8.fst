@@ -1,6 +1,5 @@
 module FStar.Int8
 
-
 val min_value_int : int
 let min_value_int = -128
 
@@ -11,8 +10,10 @@ let within_int8 (i:int) =
     min_value_int <= i
     && i <= max_value_int
 
-private type int8 =
-  | Int8 : i:int{within_int8 i} -> int8
+private type int8' =
+  | Int8 : i:int{within_int8 i} -> int8'
+
+opaque type int8 = int8'
 
 val min_value : int8
 let min_value = Int8 min_value_int
@@ -22,8 +23,6 @@ let max_value = Int8 max_value_int
 
 val as_int: i:int8 -> GTot int
 let as_int (Int8 i) = i
-
-type nat8 = x:int8{Prims.op_GreaterThanOrEqual (as_int x) 0}
 
 //a ?+ b may overflow
 //must be marked opaque because the body has an intentional admit
@@ -129,7 +128,7 @@ let op_Less_Equals (Int8 i) (Int8 j) = i <= j
 val op_Less: i:int8
           -> j:int8
           -> Tot bool
-let op_Less (Int8 i) (Int8 j) = i < j
+let op_Less (Int8 i) (Int8 j) = (i < j)
 
 val op_Greater_Equals: i:int8
                     -> j:int8

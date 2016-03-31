@@ -2,6 +2,7 @@ module Padding.Pad
 
 open FStar.Seq
 open FStar.SeqProperties
+open FStar.BaseTypes
 
 (* a coercion; avoid it? *)
 assume val n2b: n:nat {( n < 256 )} -> Tot (b:uint8{b==n})

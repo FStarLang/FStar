@@ -522,13 +522,18 @@ and tc_constant env r (c:sconst) : typ =
      match c with
       | Const_unit -> t_unit
       | Const_bool _ -> t_bool
-      | Const_int _ -> t_int
-      | Const_int32 _ -> t_int32
-      | Const_int64 _ -> t_int64
+      | Const_int (_, None) -> t_int
+      | Const_int (_, Some (Unsigned, Int8)) -> t_uint8
+      | Const_int (_, Some (Signed, Int8)) -> t_int8
+      | Const_int (_, Some (Unsigned, Int16)) -> t_uint16
+      | Const_int (_, Some (Signed, Int16)) -> t_int16
+      | Const_int (_, Some (Unsigned, Int32)) -> t_uint32
+      | Const_int (_, Some (Signed, Int32)) -> t_int32
+      | Const_int (_, Some (Unsigned, Int64)) -> t_uint64
+      | Const_int (_, Some (Signed, Int64)) -> t_int64
       | Const_string _ -> t_string
       | Const_float _ -> t_float
       | Const_char _ -> t_char
-      | Const_uint8 _ -> t_uint8
       | Const_effect -> Util.ktype0 //NS: really?
       | Const_range _ -> 
         let fail () = 

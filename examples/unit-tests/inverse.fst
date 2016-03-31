@@ -1,6 +1,6 @@
 module Inverse
 open FStar.Seq
-type bytes = seq byte
+type bytes = seq FStar.UInt8.byte
 type lbytes (l:int) = b:bytes{length b = l}
 
 type pinverse : #a:Type -> #b:Type -> r:(b -> b -> Type) -> =f:(a -> Tot b) -> Type = 

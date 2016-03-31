@@ -1,7 +1,10 @@
 # -*- Makefile -*-
 
 # --------------------------------------------------------------------
-BASIC=prims-fake.fs profiling.fs char.fsi char.fs string.fsi string.fs list.fsi list.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs platform.fsi platform.fs version.fsi version.fs options.fs unionfind.fsi unionfind.fs ident.fs const.fs
+BASIC=prims-fake.fs basetypes-fake.fs profiling.fs char.fsi char.fs string.fsi string.fs list.fsi \
+  list.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi \
+  getoptsimple.fs platform.fsi platform.fs version.fsi version.fs options.fs \
+  unionfind.fsi unionfind.fs ident.fs const.fs
 BASIC_SRC=$(addprefix basic/, $(BASIC))
 
 ABSYN=syntax.fs const.fs visit.fs util.fs print.fs
@@ -187,12 +190,20 @@ clean:
 # Bootstrapping in OCaml
 # --------------------------------------------------------------------
 
-STDLIB=$(addprefix $(LIB)/, allboot.fsti stboot.fsti list.fsti option.fsti FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
-BOOT_BASIC_FSTI=$(addprefix boot_fstis/, char.fsti string.fsti bytes.fsti platform.fsti version.fsti range.fsti)
+# JP: these modules are meant to be fsti's (realized in ML); but, the compiler
+# currently works in non-universes mode so this is not possible. These files are
+# in ulib/ as fstis, though, so the --no_extract argument will go away once the
+# F* compiler bootstraps in universes.
+NUM=FStar.Int8 FStar.UInt8 FStar.Int16 FStar.UInt16 FStar.Int32 FStar.UInt32 FStar.Int64 FStar.UInt64
+STDLIB=$(addprefix $(LIB)/, allboot.fsti stboot.fsti list.fsti option.fsti \
+  FStar.Float.fsti FStar.Char.fsti $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti \
+  FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
+BOOT_BASIC_FSTI=$(addprefix boot_fstis/, string.fsti bytes.fsti platform.fsti version.fsti range.fsti)
 BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
 BOOT_PARSER=$(addprefix parser/, ast.fs dsenv.fs desugar.fs env.fs interleave.fs tosyntax.fs parse.fsti lexhelp.fs parseit.fsi driver.fs dep.fs)
 BOOT_FORMAT=$(addprefix format/, formatml.fs)
-BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) $(TOSMT_SRC) $(BOOT_PARSER) $(TYPECHECKER_SRC) $(EXTRACTION_SRC) $(SMTENCODING_SRC) $(TOPLEVEL_SRC)
+BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) \
+  $(TOSMT_SRC) $(BOOT_PARSER) $(TYPECHECKER_SRC) $(EXTRACTION_SRC) $(SMTENCODING_SRC) $(TOPLEVEL_SRC)
 
 ALL_INTERFACES=$(STDLIB) $(BOOT_BASIC_FSTI)
 ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
@@ -242,7 +253,9 @@ clean_ocaml_prep:
 extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
-	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^ 
+	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app \
+	  --no_location_info \
+	  $(addprefix --no_extract ,$(NUM)) --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^
 
 ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml
 
@@ -271,7 +284,8 @@ fsharp-output/fstar.exe: $(addprefix ../lib/fs/, $(FS_SUPPORT_LIBS)) $(addprefix
 	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(OTHERFLAGS) $^
 
 fs: $(BOOT_ALL) 
-	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --MLish --lax --fs_typ_app --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
+	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --MLish --lax --fs_typ_app \
+	  --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
 
 fsharp-output: 
 	mkdir -p fsharp-output

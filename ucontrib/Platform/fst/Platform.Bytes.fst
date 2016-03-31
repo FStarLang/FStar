@@ -36,7 +36,7 @@ assume val lemma_repr_bytes_values: n:nat ->
          /\ ( (n >= 281474976710656 /\ n < 72057594037927936) <==> repr_bytes n = 7 )
          /\ ( (n >= 72057594037927936 /\ n < 18446744073709551616) <==> repr_bytes n = 8 ) )
 
-type byte = uint8
+type byte = FStar.UInt8.byte
 type cbytes = string
 (* abstract *) type bytes = Seq.seq byte
 

@@ -124,8 +124,8 @@ module Bytes = struct
 
 
   let empty_bytes = abytes ""
-  let createBytes len (value:char) : bytes =
-      try abytes (String.make len value)
+  let createBytes len (value:int) : bytes =
+      try abytes (String.make len (Char.chr value))
       with _ -> failwith "Default integer for createBytes was greater than max_value"
 
   type 'a lbytes = bytes
@@ -218,7 +218,7 @@ module Bytes = struct
   *)
 
   let byte_of_int i =
-    char_of_int i
+    i
 
   (* Some helpers to deal with the conversation from hex literals to bytes and
    * conversely. Mostly for tests. *)

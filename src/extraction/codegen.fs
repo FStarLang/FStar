@@ -23,6 +23,8 @@ open FStar.Util
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Format
+open FStar.Const
+open FStar.BaseTypes
 
 // VALS_HACK_HERE
 
@@ -239,17 +241,18 @@ let encode_char c =
 (* -------------------------------------------------------------------- *)
 let string_of_mlconstant (sctt : mlconstant) =
   match sctt with
-  | MLC_Unit           -> "()"
-  | MLC_Bool     true  -> "true"
-  | MLC_Bool     false -> "false"
-  | MLC_Char     c     -> "'"^(encode_char c)^"'"
-  | MLC_Byte     c     -> "'"^(ocaml_u8_codepoint c)^"'"
-  | MLC_Int32    i     -> string_of_int32  i
-  | MLC_Int64    i     -> (string_of_int64 i)^"L"
-  | MLC_Int      s     -> if !Options.use_native_int  
-                          then s
-                          else "(Prims.parse_int \"" ^s^ "\")"
-  | MLC_Float    d     -> string_of_float d
+  | MLC_Unit -> "()"
+  | MLC_Bool true  -> "true"
+  | MLC_Bool false -> "false"
+  | MLC_Char c -> "'"^(encode_char c)^"'"
+  | MLC_Int (s, Some (Signed, Int32)) -> s ^"l"
+  | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
+  | MLC_Int (s, Some (_, Int8))
+  | MLC_Int (s, Some (_, Int16)) -> s
+  | MLC_Int (s, None) -> if !Options.use_native_int  
+                         then s
+                         else "(Prims.parse_int \"" ^s^ "\")"
+  | MLC_Float d -> string_of_float d
 
   | MLC_Bytes bytes ->
       let bytes = FStar.Bytes.f_encode ocaml_u8_codepoint bytes in
@@ -258,6 +261,8 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_String chars ->
       let chars = String.collect encode_char chars in
       "\""^chars^"\""
+
+  | _ -> failwith "TODO: extract integer constants properly into OCaml"
 
 
 (* -------------------------------------------------------------------- *)
