@@ -72,9 +72,9 @@ type env = {
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   default_effects:list<(lident*lident)>;        (* [(x,y)] ... y is the default effect of x *)
-  type_of        :env -> term -> typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
-  universe_of    :env -> term -> universe;      (* a callback to the type-checker; g |- e : Tot (Type u) *)       
-  use_bv_sorts   :bool;                         (* use bv.sort for a bound-variable's type rather than consulting gamma *)
+  type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
+  universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
+  use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
 }
 and solver_t = {
     init         :env -> unit;

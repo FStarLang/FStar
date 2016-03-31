@@ -716,6 +716,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
               rebuild cfg env stack (maybe_simplify cfg.steps t)
 
             | Match(env, branches, r) :: stack -> 
+              log cfg  (fun () -> Util.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
               let norm_and_rebuild_match () =
                 let whnf = List.contains WHNF cfg.steps in
                 let cfg = {cfg with delta_level=glb_delta cfg.delta_level OnlyInline} in
@@ -780,7 +781,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
                             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
                           end
                         | Pat_cons(fv, arg_pats) -> 
-                          begin match head.n with 
+                          begin match (Util.un_uinst head).n with 
                             | Tm_fvar fv' when fv_eq fv fv' -> 
                               matches_args [] args arg_pats
                             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
@@ -806,9 +807,12 @@ and rebuild : cfg -> env -> stack -> term -> term =
                       norm_and_rebuild_match ()
 
                     | Inl s ->
+                      log cfg (fun () -> Util.print2 "Matches pattern %s with subst = %s\n" 
+                                    (Print.pat_to_string p)
+                                    (List.map Print.term_to_string s |> String.concat "; "));
                       //the elements of s are sub-terms of t 
                       //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
-                      let env = List.fold_right (fun t env -> Clos([], t, Util.mk_ref (Some ([], t)))::env) s env in
+                      let env = List.fold_left (fun env t -> Clos([], t, Util.mk_ref (Some ([], t)))::env) env s in
                       norm cfg env stack (guard_when_clause wopt b rest) in
               
               matches t branches

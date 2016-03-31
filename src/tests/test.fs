@@ -8,13 +8,15 @@ module U = FStar.Syntax.Util
 let r = Range.dummyRange
 [<EntryPoint>] 
 let main argv =
-    let debug = argv.Length >= 1 && argv.[0] = "debug" in
-    Norm.run_all debug; 
-    Unif.run_all debug;
+    printfn "Initializing ...";
+    Pars.init() |> ignore;
+    Norm.run_all (); 
+    Unif.run_all ();
     0
-//    FStar.Options.print_implicits := true;
-//    FStar.Options.print_real_names := true;
-//    FStar.Options.print_bound_var_types := true;
+
+
+
+
 //    let uvar1 = Unionfind.fresh S.Uvar in
 //    let uvar2 = Unionfind.fresh S.Uvar in
 //    let uv1 = S.mk (S.Tm_uvar(uvar1, S.tun)) None r in

@@ -19,7 +19,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 
-val type_of: env -> term -> typ * guard_t
+val type_of: env -> term -> term * typ * guard_t
 val check_module: env -> modul -> modul * env
 val tc_partial_modul: env -> modul -> modul * list<sigelt> * env
 val tc_more_partial_modul: env -> modul -> list<sigelt> -> modul * list<sigelt> * env

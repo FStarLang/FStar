@@ -133,6 +133,7 @@ let rec level env t =
 
     | Tm_fvar ({fv_delta=Delta_unfoldable _}) ->
       let t' = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv t in
+      debug env (fun () -> Util.print2 "Normalized %s to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
       level env t'
 
     | Tm_fvar fv ->
@@ -640,7 +641,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           term_as_mlexpr' g t
 
         | Tm_constant c ->
-          let ty, _ = TC.type_of g.tcenv t in
+          let _, ty, _ = TC.type_of g.tcenv t in
           let ml_ty = term_as_mlty g ty in
           with_ty ml_ty (MLE_Const <| mlconst_of_const' t.pos c), E_PURE, ml_ty
 

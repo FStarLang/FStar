@@ -523,9 +523,10 @@ let mk_letbinding lbname univ_vars typ eff def =
      lbdef=def}
 
 let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
-    let def = match recs with 
-        | None -> def
-        | Some fvs -> 
+    let def = match recs, univ_vars with 
+        | None, _
+        | _, [] -> def
+        | Some fvs, _ ->
           let universes = univ_vars |> List.map U_name in
           let inst = fvs |> List.map (fun fv -> fv.fv_name.v, universes) in
           FStar.Syntax.InstFV.instantiate inst def in

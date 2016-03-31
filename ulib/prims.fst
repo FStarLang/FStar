@@ -178,7 +178,7 @@ assume val op_Equality :    'a -> 'a -> Tot bool
 assume val op_disEquality : 'a -> 'a -> Tot bool
 assume new type string : Type0
 assume new type exn : Type0
-new type array : Type -> Type0
+assume new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
 
 type list (a:Type) =
