@@ -13,7 +13,7 @@ let within_uint32 (i:int) =
 private type uint32' =
   | UInt32 : i:int{within_uint32 i} -> uint32'
 
-(* abstract *) type uint32 = uint32'
+opaque type uint32 = uint32'
 
 val min_value : uint32
 let min_value = UInt32 min_value_int

@@ -14,7 +14,7 @@ let within_int64 (i:int) =
 private type int64' =
   | Int64 : i:int{within_int64 i} -> int64'
 
-(* abstract *) type int64 = int64'
+opaque type int64 = int64'
 
 val min_value : int64
 let min_value = Int64 min_value_int

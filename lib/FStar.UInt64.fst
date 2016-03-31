@@ -13,7 +13,7 @@ let within_uint64 (i:int) =
 private type uint64' =
   | UInt64 : i:int{within_uint64 i} -> uint64'
 
-(* abstract *) type uint64 = uint64'
+opaque type uint64 = uint64'
 
 val min_value : uint64
 let min_value = UInt64 min_value_int
