@@ -14,6 +14,7 @@ private type uint8' =
   | UInt8 : i:int{within_uint8 i} -> uint8'
 
 abstract type uint8 = uint8'
+type byte = uint8
 
 val min_value : uint8
 let min_value = UInt8 min_value_int
