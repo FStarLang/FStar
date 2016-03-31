@@ -5384,7 +5384,7 @@ in (match (_58_3286) with
 end)))
 
 # 2396 "FStar.TypeChecker.Tc.fst"
-let type_of : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.typ * FStar_TypeChecker_Env.guard_t) = (fun env e -> (
+let type_of : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ * FStar_TypeChecker_Env.guard_t) = (fun env e -> (
 # 2397 "FStar.TypeChecker.Tc.fst"
 let _58_3289 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("RelCheck"))) then begin
 (let _137_1262 = (FStar_Syntax_Print.term_to_string e)
@@ -5415,7 +5415,7 @@ end
 in (match (_58_3307) with
 | (t, c, g) -> begin
 if (FStar_Syntax_Util.is_total_lcomp c) then begin
-(c.FStar_Syntax_Syntax.res_typ, g)
+(t, c.FStar_Syntax_Syntax.res_typ, g)
 end else begin
 (let _137_1272 = (let _137_1271 = (let _137_1270 = (let _137_1268 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format1 "Implicit argument: Expected a total term; got a ghost term: %s" _137_1268))

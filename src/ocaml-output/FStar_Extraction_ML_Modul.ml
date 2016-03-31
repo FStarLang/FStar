@@ -294,7 +294,7 @@ end
 in (let _147_123 = (let _147_122 = (let _147_121 = (FStar_Extraction_ML_Term.level g t)
 in (FStar_All.pipe_left (FStar_Extraction_ML_Term.predecessor t) _147_121))
 in (l _147_122))
-in (FStar_Util.print2 "\t\t%s @ %s" _147_124 _147_123)))
+in (FStar_Util.print2 "\t\t%s @ %s\n" _147_124 _147_123)))
 end
 | FStar_Syntax_Syntax.Sig_let ((_68_231, lb::_68_233), _68_238, _68_240, _68_242) -> begin
 (let _147_132 = (let _147_127 = (let _147_126 = (let _147_125 = (FStar_Util.right lb.FStar_Syntax_Syntax.lbname)
@@ -305,7 +305,7 @@ in (let _147_131 = (FStar_Syntax_Print.term_to_string lb.FStar_Syntax_Syntax.lbt
 in (let _147_130 = (let _147_129 = (let _147_128 = (FStar_Extraction_ML_Term.level g lb.FStar_Syntax_Syntax.lbtyp)
 in (FStar_All.pipe_left (FStar_Extraction_ML_Term.predecessor lb.FStar_Syntax_Syntax.lbtyp) _147_128))
 in (l _147_129))
-in (FStar_Util.print3 "\t\t%s : %s @ %s" _147_132 _147_131 _147_130))))
+in (FStar_Util.print3 "\t\t%s : %s @ %s\n" _147_132 _147_131 _147_130))))
 end
 | _68_246 -> begin
 (FStar_Util.print_string "other\n")

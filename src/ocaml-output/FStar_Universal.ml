@@ -227,19 +227,19 @@ end))
 end)
 end)
 with
-| FStar_Syntax_Syntax.Error (msg, r) -> begin
+| FStar_Syntax_Syntax.Error (msg, r) when (not ((FStar_ST.read FStar_Options.trace_error))) -> begin
 (
 # 158 "FStar.Universal.fst"
 let _77_119 = (FStar_TypeChecker_Errors.add_errors env (((msg, r))::[]))
 in None)
 end
-| FStar_Syntax_Syntax.Err (msg) -> begin
+| FStar_Syntax_Syntax.Err (msg) when (not ((FStar_ST.read FStar_Options.trace_error))) -> begin
 (
 # 161 "FStar.Universal.fst"
 let _77_123 = (FStar_TypeChecker_Errors.add_errors env (((msg, FStar_Range.dummyRange))::[]))
 in None)
 end
-| e -> begin
+| e when (not ((FStar_ST.read FStar_Options.trace_error))) -> begin
 (Prims.raise e)
 end)
 
@@ -328,13 +328,13 @@ None
 end)
 end)
 with
-| FStar_Syntax_Syntax.Error (msg, r) -> begin
+| FStar_Syntax_Syntax.Error (msg, r) when (not ((FStar_ST.read FStar_Options.trace_error))) -> begin
 (
 # 203 "FStar.Universal.fst"
 let _77_208 = (FStar_TypeChecker_Errors.add_errors env (((msg, r))::[]))
 in None)
 end
-| FStar_Syntax_Syntax.Err (msg) -> begin
+| FStar_Syntax_Syntax.Err (msg) when (not ((FStar_ST.read FStar_Options.trace_error))) -> begin
 (
 # 207 "FStar.Universal.fst"
 let _77_212 = (let _156_84 = (let _156_83 = (let _156_82 = (FStar_TypeChecker_Env.get_range env)
