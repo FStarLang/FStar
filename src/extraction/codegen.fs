@@ -247,6 +247,8 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Char c -> "'"^(encode_char c)^"'"
   | MLC_Int (s, Some (Signed, Int32)) -> s ^"l"
   | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
+  | MLC_Int (s, Some (_, Int8))
+  | MLC_Int (s, Some (_, Int16)) -> s
   | MLC_Int (s, None) -> if !Options.use_native_int  
                          then s
                          else "(Prims.parse_int \"" ^s^ "\")"

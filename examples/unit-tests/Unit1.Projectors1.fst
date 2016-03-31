@@ -1,4 +1,6 @@
 module Unit1.Projectors1
+open FStar.BaseTypes
+
 type t = 
   | T : x:int -> y:nat -> t
 
