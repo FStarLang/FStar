@@ -11,12 +11,13 @@ module TcEnv = FStar.TypeChecker.Env
 module SMT = FStar.SMTEncoding.Encode
 module Tc = FStar.TypeChecker.Tc
 
+let test_lid = Ident.lid_of_path ["Test"] Range.dummyRange
 let dsenv_ref = ref None
 let tcenv_ref = ref None
-let test_mod_ref = ref (Some ({name=Ident.lid_of_path ["Test"] Range.dummyRange; 
-                            declarations=[]; 
-                            exports=[]; 
-                            is_interface=false}))
+let test_mod_ref = ref (Some ({name=test_lid;
+                                declarations=[]; 
+                                exports=[]; 
+                                is_interface=false}))
 
 let parse_prims () =
     Options.universes := true;
@@ -35,6 +36,7 @@ let init_once () : unit =
   env.solver.init env;
   let dsenv, prims_mod = parse_prims () in
   let prims_mod, env = Tc.check_module env prims_mod in
+  let env = TcEnv.set_current_module env test_lid in
   tcenv_ref := Some env
 
 let rec init () = 
