@@ -187,7 +187,7 @@ clean:
 # Bootstrapping in OCaml
 # --------------------------------------------------------------------
 
-# JP: these modules are meant to fsti's (realized in ML); but, the compiler
+# JP: these modules are meant to be fsti's (realized in ML); but, the compiler
 # currently works in non-universes mode so this is not possible. These files are
 # in ulib/ as fstis, though, so the --no_extract argument will go away once the
 # F* compiler bootstraps in universes.
