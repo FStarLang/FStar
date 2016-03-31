@@ -69,8 +69,8 @@ val response: string16 -> string -> Tot message
 
 (* -------- implementation *)
 
-let tag0 = createBytes 1 0uy
-let tag1 = createBytes 1 1uy
+let tag0 = createBytes 1 (Char.char_of_int 0)
+let tag1 = createBytes 1 (Char.char_of_int 1)
 
 let request s = tag0 @| (utf8 s)
 

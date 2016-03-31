@@ -15,6 +15,7 @@
 *)
 module FStar.String
 
+type char = FStar.Char.char
 
 (* The name of this file is misleading: most string functions are to be found in
    util.fsi *)

@@ -12,6 +12,7 @@ open FStar.BaseTypes
 (*let testme () =
    assert False*)
 
+type byte = Platform.Bytes.byte
 
 assume val utf8: s:string  -> Tot (seq byte)
 

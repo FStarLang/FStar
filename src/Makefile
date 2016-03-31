@@ -254,7 +254,6 @@ extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
 	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app \
-	  --no_location_info \
 	  $(addprefix --no_extract ,$(NUM)) --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^
 
 ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml

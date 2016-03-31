@@ -59,16 +59,16 @@ let op_Subtraction (UInt64 i) (UInt64 j) = UInt64 (i - j)
 abstract val op_Question_Star:
                  i:uint64
               -> j:uint64
-              -> Tot (k:uint64{within_uint64 (as_int i * as_int j) ==> as_int k = as_int i * as_int j})
+              -> Tot (k:uint64{within_uint64 (op_Multiply (as_int i) (as_int j)) ==> as_int k = op_Multiply (as_int i) (as_int j)})
 let op_Question_Star (UInt64 i) (UInt64 j) =
-  if within_uint64 (i * j)
-  then UInt64 (i * j)
+  if within_uint64 (op_Multiply i j)
+  then UInt64 (op_Multiply i j)
   else magic()//mark as admit, because we do not specify the overflow semantics
 
 val op_Star: i:uint64
-          -> j:uint64{within_uint64 (as_int i * as_int j)}
+          -> j:uint64{within_uint64 (op_Multiply (as_int i) (as_int j))}
           -> Tot uint64
-let op_Star (UInt64 i) (UInt64 j) = UInt64 (i * j)
+let op_Star (UInt64 i) (UInt64 j) = UInt64 (op_Multiply i j)
 
 // division cannot overflow with unsigned integers
 val op_Slash: i:uint64

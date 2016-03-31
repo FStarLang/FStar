@@ -135,6 +135,7 @@ let const_to_string x = match x with
   | Const_string(bytes, _) -> Util.format1 "\"%s\"" (Util.string_of_bytes bytes)
   | Const_bytearray _  ->  "<bytearray>"
   | Const_int (x, _) -> x
+  | Const_char c -> Util.string_of_char c
   | Const_range r -> Range.string_of_range r
 
 let lbname_to_string = function
