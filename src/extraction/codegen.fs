@@ -214,29 +214,27 @@ let maybe_paren (outer, side) inner doc =
   if noparens inner outer side then doc else parens doc
 
 (* -------------------------------------------------------------------- *)
-let ocaml_u8_codepoint (i : byte) =
-  if (int_of_byte i) = 0 then "\\x00" else "\\x"^(hex_string_of_byte i)
+let escape_byte_hex (x: byte) =
+  "\\x" ^ hex_string_of_byte x
+
+let escape_char_hex (x: char) =
+  escape_byte_hex (byte_of_char x)
 
 (* -------------------------------------------------------------------- *)
-let encode_char c =
-  if (int_of_char c) > 127 then // Use UTF-8 encoding
-    let bytes = string_of_char c in
-    let bytes = unicode_of_string bytes in
-    FStar.Bytes.f_encode ocaml_u8_codepoint bytes
-  else
-   (match c with
-    | c when (c = '\\')              -> "\\\\"
-    | c when (c = ' ')               -> " "
-    | c when (c = '\b')              -> "\\b"
-    | c when (c = '\t')              -> "\\t"
-    | c when (c = '\r')              -> "\\r"
-    | c when (c = '\n')              -> "\\n"
-    | c when (c = '\'')              -> "\\'"
-    | c when (c = '\"')              -> "\\\""
-    | c when is_letter_or_digit(c) -> string_of_char c
-    | c when is_punctuation(c)   -> string_of_char c
-    | c when is_symbol(c)        -> string_of_char c
-    | _                          -> ocaml_u8_codepoint (byte_of_char c))
+let escape_or fallback = function
+  | c when (c = '\\')            -> "\\\\"
+  | c when (c = ' ' )            -> " "
+  | c when (c = '\b')            -> "\\b"
+  | c when (c = '\t')            -> "\\t"
+  | c when (c = '\r')            -> "\\r"
+  | c when (c = '\n')            -> "\\n"
+  | c when (c = '\'')            -> "\\'"
+  | c when (c = '\"')            -> "\\\""
+  | c when (is_letter_or_digit c)-> string_of_char c
+  | c when (is_punctuation c)    -> string_of_char c
+  | c when (is_symbol c)         -> string_of_char c
+  | c                            -> fallback c
+
 
 (* -------------------------------------------------------------------- *)
 let string_of_mlconstant (sctt : mlconstant) =
@@ -244,23 +242,29 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Unit -> "()"
   | MLC_Bool true  -> "true"
   | MLC_Bool false -> "false"
-  | MLC_Char c -> "'"^(encode_char c)^"'"
+  | MLC_Char c -> "'"^ escape_or escape_char_hex c ^"'"
   | MLC_Int (s, Some (Signed, Int32)) -> s ^"l"
   | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
   | MLC_Int (s, Some (_, Int8))
   | MLC_Int (s, Some (_, Int16)) -> s
-  | MLC_Int (s, None) -> if !Options.use_native_int  
+  | MLC_Int (s, None) -> if !Options.use_native_int
                          then s
                          else "(Prims.parse_int \"" ^s^ "\")"
   | MLC_Float d -> string_of_float d
 
   | MLC_Bytes bytes ->
-      let bytes = FStar.Bytes.f_encode ocaml_u8_codepoint bytes in
-      "\""^bytes^"\""
+      (* A byte buffer. Not meant to be readable. *)
+      "\"" ^ FStar.Bytes.f_encode escape_byte_hex bytes ^ "\""
 
   | MLC_String chars ->
-      let chars = String.collect encode_char chars in
-      "\""^chars^"\""
+      (* It was a string literal. Escape what was (likely) escaped originally.
+         Leave everything else as is. That way, we get the OCaml semantics,
+         which is that strings are series of bytes, and that if you happen to
+         provide some well-formed UTF-8 sequence (e.g. "héhé", which has length
+         6), then you get the same well-formed UTF-8 sequence on exit. It is up
+         to userland to provide some UTF-8 compatible functions (e.g.
+         utf8_length). *)
+      "\"" ^ String.collect (escape_or string_of_char) chars ^ "\""
 
   | _ -> failwith "TODO: extract integer constants properly into OCaml"
 

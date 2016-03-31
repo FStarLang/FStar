@@ -1,13 +1,13 @@
 
 open Prims
-# 23 "FStar.Interactive.fst"
+# 28 "FStar.Interactive.fst"
 type ('env, 'modul) interactive_tc =
 {pop : 'env  ->  Prims.string  ->  Prims.unit; push : 'env  ->  Prims.string  ->  'env; mark : 'env  ->  'env; reset_mark : 'env  ->  'env; commit_mark : 'env  ->  'env; check_frag : 'env  ->  'modul  ->  Prims.string  ->  ('modul * 'env * Prims.int) Prims.option; report_fail : Prims.unit  ->  Prims.unit}
 
 # 28 "FStar.Interactive.fst"
 let is_Mkinteractive_tc = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkinteractive_tc"))))
 
-# 36 "FStar.Interactive.fst"
+# 41 "FStar.Interactive.fst"
 type input_chunks =
 | Push of Prims.string
 | Pop of Prims.string
@@ -58,25 +58,25 @@ let ___Code____0 = (fun projectee -> (match (projectee) with
 _85_19
 end))
 
-# 44 "FStar.Interactive.fst"
+# 46 "FStar.Interactive.fst"
 type ('env, 'modul) stack =
 ('env * 'modul) Prims.list
 
-# 46 "FStar.Interactive.fst"
+# 48 "FStar.Interactive.fst"
 type interactive_state =
 {chunk : FStar_Util.string_builder; stdin : FStar_Util.stream_reader Prims.option FStar_ST.ref; buffer : input_chunks Prims.list FStar_ST.ref; log : FStar_Util.file_handle Prims.option FStar_ST.ref}
 
 # 48 "FStar.Interactive.fst"
 let is_Mkinteractive_state : interactive_state  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkinteractive_state"))))
 
-# 53 "FStar.Interactive.fst"
+# 56 "FStar.Interactive.fst"
 let the_interactive_state : interactive_state = (let _174_149 = (FStar_Util.new_string_builder ())
 in (let _174_148 = (FStar_ST.alloc None)
 in (let _174_147 = (FStar_ST.alloc [])
 in (let _174_146 = (FStar_ST.alloc None)
 in {chunk = _174_149; stdin = _174_148; buffer = _174_147; log = _174_146}))))
 
-# 61 "FStar.Interactive.fst"
+# 66 "FStar.Interactive.fst"
 let rec read_chunk : Prims.unit  ->  input_chunks = (fun _85_27 -> (match (()) with
 | () -> begin
 (
@@ -183,7 +183,7 @@ end
 end))))))
 end))
 
-# 114 "FStar.Interactive.fst"
+# 116 "FStar.Interactive.fst"
 let shift_chunk : Prims.unit  ->  input_chunks = (fun _85_75 -> (match (()) with
 | () -> begin
 (
@@ -201,7 +201,7 @@ in chunk)
 end))
 end))
 
-# 122 "FStar.Interactive.fst"
+# 124 "FStar.Interactive.fst"
 let fill_buffer : Prims.unit  ->  Prims.unit = (fun _85_83 -> (match (()) with
 | () -> begin
 (
@@ -232,7 +232,7 @@ let ___Found____0 = (fun projectee -> (match (projectee) with
 _85_86
 end))
 
-# 128 "FStar.Interactive.fst"
+# 129 "FStar.Interactive.fst"
 let find_initial_module_name : Prims.unit  ->  Prims.string Prims.option = (fun _85_87 -> (match (()) with
 | () -> begin
 (
@@ -274,7 +274,7 @@ Some (n)
 end))
 end))
 
-# 146 "FStar.Interactive.fst"
+# 147 "FStar.Interactive.fst"
 let detect_dependencies_with_first_interactive_chunk : Prims.unit  ->  Prims.string Prims.list = (fun _85_116 -> (match (()) with
 | () -> begin
 try
@@ -345,7 +345,7 @@ in [])
 end
 end))
 
-# 178 "FStar.Interactive.fst"
+# 184 "FStar.Interactive.fst"
 let interactive_mode = (fun env initial_mod tc -> (
 # 185 "FStar.Interactive.fst"
 let _85_163 = if (let _174_186 = (FStar_ST.read FStar_Options.codegen)
