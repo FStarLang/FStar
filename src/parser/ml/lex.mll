@@ -134,7 +134,7 @@
   let rec mknewline n lexbuf =
     if n > 0 then (L.new_line lexbuf; FStar_Util.incr lc; mknewline (n-1) lexbuf)
 
- let clean_number x = String.strip ~chars:"uyslLUnIN" x
+ let clean_number x = String.strip ~chars:"ucyslLUnIN" x
 }
 
 (* -------------------------------------------------------------------- *)
@@ -170,6 +170,7 @@ let int32 = any_integer 'l'
 let uint32 = any_integer unsigned 'l'
 let int64 = any_integer 'L'
 let uint64 = any_integer unsigned 'L'
+let char8 = any_integer 'c'
 
 let floatp     = digit+ '.' digit*
 let floate     = digit+ ('.' digit* )? ('e'| 'E') ['+' '-']? digit+
@@ -232,6 +233,13 @@ rule token = parse
      { INT (clean_number x, false)  }
  | uint8 as x
      { UINT8 (clean_number x) }
+ | char8 as x
+     { CHAR (Char.chr (
+       let x = int_of_string (clean_number x) in
+       if x < 0 || x > 255 then
+         failwith "Out-of-range character literal";
+       x
+       )) }
  | int8 as x
      { INT8 (clean_number x, false) }
  | uint16 as x
