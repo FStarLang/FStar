@@ -1,16 +1,13 @@
 open FStar_Range
 open Lexing
 
-type byte = char
-type sbyte = char
-type bytes = char array
-type decimal = float
+(* This brings into scope enough the translation of F# type names into the
+ * corresponding OCaml type names; the reason for that is that we massage
+ * parse.fsy (using sed) into parse.mly; but, we don't rename types. *)
+include FStar_BaseTypes
 type single = float
-type double = float
-(* FIXME! *)
-type int16 = Prims.int
-type uint32 = Prims.int
-type uint64 = Prims.int64
+type decimal = int
+type bytes = int array
 
 let parseState = ()
 

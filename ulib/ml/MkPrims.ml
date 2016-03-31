@@ -16,16 +16,8 @@ end) -> struct
 
   type nonrec unit = unit
   type nonrec bool = bool
-  type nonrec char = char
   type nonrec string = string
-  type nonrec int64 = int64
   type nonrec 'a array = 'a array
-  type nonrec float = float
-  type double = float
-  type uint8 = int
-  type uint16 = int
-  type nonrec int32 = int32
-  type byte = char
   type nonrec exn = exn
   type nonrec 'a list = 'a list
   type nonrec 'a option = 'a option

@@ -1,35 +1,35 @@
 
 open Prims
-# 28 "FStar.Dependences.fst"
+
 let find_deps_if_needed : Prims.string Prims.list  ->  (Prims.string Prims.list * Prims.string Prims.list) = (fun files -> if (FStar_ST.read FStar_Options.explicit_deps) then begin
 (files, [])
 end else begin
 (
-# 32 "FStar.Dependences.fst"
+
 let _84_5 = (FStar_Parser_Dep.collect files)
 in (match (_84_5) with
 | (_84_3, deps) -> begin
 (
-# 33 "FStar.Dependences.fst"
+
 let deps = (FStar_List.rev deps)
 in (
-# 34 "FStar.Dependences.fst"
+
 let deps = if ((let _173_3 = (FStar_List.hd deps)
 in (FStar_Util.basename _173_3)) = "prims.fst") then begin
 (FStar_List.tl deps)
 end else begin
 (
-# 38 "FStar.Dependences.fst"
+
 let _84_7 = (FStar_Util.print_error "dependency analysis did not find prims.fst?!")
 in (FStar_All.exit 1))
 end
 in (
-# 42 "FStar.Dependences.fst"
+
 let admit_fsi = (FStar_ST.alloc [])
 in (
-# 43 "FStar.Dependences.fst"
+
 let _84_13 = (FStar_List.iter (fun d -> (
-# 44 "FStar.Dependences.fst"
+
 let d = (FStar_Util.basename d)
 in if ((FStar_Util.get_file_extension d) = "fsti") then begin
 (let _173_7 = (let _173_6 = (FStar_Util.substring d 0 ((FStar_String.length d) - 5))

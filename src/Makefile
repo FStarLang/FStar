@@ -187,9 +187,13 @@ clean:
 # Bootstrapping in OCaml
 # --------------------------------------------------------------------
 
+# JP: these modules are meant to fsti's (realized in ML); but, the compiler
+# currently works in non-universes mode so this is not possible. These files are
+# in ulib/ as fstis, though, so the --no_extract argument will go away once the
+# F* compiler bootstraps in universes.
+NUM=FStar.Int8 FStar.UInt8 FStar.Int16 FStar.UInt16 FStar.Int32 FStar.UInt32 FStar.Int64 FStar.UInt64
 STDLIB=$(addprefix $(LIB)/, allboot.fsti stboot.fsti list.fsti option.fsti \
-  FStar.Float.fsti FStar.Char.fsti FStar.Int8.fst FStar.UInt8.fst FStar.Int16.fst FStar.UInt16.fst \
-  FStar.Int32.fst FStar.UInt32.fst FStar.Int64.fst FStar.UInt64.fst FStar.BaseTypes.fsti \
+  FStar.Float.fsti FStar.Char.fsti $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti \
   FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
 BOOT_BASIC_FSTI=$(addprefix boot_fstis/, string.fsti bytes.fsti platform.fsti version.fsti range.fsti)
 BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
@@ -247,7 +251,8 @@ extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
 	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app \
-	  --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^
+	  --no_location_info \
+	  $(addprefix --no_extract ,$(NUM)) --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^
 
 ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml
 

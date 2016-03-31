@@ -203,22 +203,22 @@ let print_any s = output_value stdout s; flush stdout
 let strcat s1 s2 = s1 ^ s2
 let concat_l sep (l:string list) = BatString.concat sep l
 
-let string_of_unicode (bytes:char array) =
-  BatArray.fold_left (fun acc b -> acc^(BatUTF8.init 1 (fun _ -> BatUChar.of_char b))) "" bytes
+let string_of_unicode (bytes:int array) =
+  BatArray.fold_left (fun acc b -> acc^(BatUTF8.init 1 (fun _ -> BatUChar.of_int b))) "" bytes
 let unicode_of_string (string:string) =
   let n = BatUTF8.length string in
-  let t = Array.make n 'x' in
+  let t = Array.make n 0 in
   let i = ref 0 in
-  BatUTF8.iter (fun c -> t.(!i) <- BatUChar.char_of c; incr i) string;
+  BatUTF8.iter (fun c -> t.(!i) <- BatUChar.code c; incr i) string;
   t
 
 let char_of_int = char_of_int
 let int_of_string = int_of_string
 let int_of_char = int_of_char
-let int_of_byte = int_of_char
+let int_of_byte x = x
 let int_of_uint8 = int_of_char
 let uint16_of_int (i:int) = i
-let byte_of_char (c:char) = c
+let byte_of_char (c:char) = Char.code c
 
 let float_of_byte b = float_of_int (int_of_char b)
 let float_of_int32 = float_of_int
@@ -232,8 +232,8 @@ let string_of_int32 = BatInt32.to_string
 let string_of_int64 = BatInt64.to_string
 let string_of_float = string_of_float
 let string_of_char  (i:char) = spr "%c" i
-let hex_string_of_byte (i:char) =
-  let hs = spr "%x" (int_of_char i) in
+let hex_string_of_byte (i:int) =
+  let hs = spr "%x" i in
   if (String.length hs = 1) then "0" ^ hs
   else hs
 let string_of_bytes = string_of_unicode

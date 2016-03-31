@@ -17,7 +17,7 @@ let mask64 m n = lsl64 (pown64 n) m
 
 let string_ord (a:string) (b:string) = compare a b
 let int_ord (a:int) (b:int) = compare a b
-let int32_ord (a:Prims.int32) (b:Prims.int32) = compare a b
+let int32_ord (a:FStar_BaseTypes.int32) (b:FStar_BaseTypes.int32) = compare a b
 
 let pair_ord (compare1,compare2) (a1,a2) (aa1,aa2) =
   let res1 = compare1 a1 aa1 in
@@ -25,9 +25,9 @@ let pair_ord (compare1,compare2) (a1,a2) (aa1,aa2) =
 
 let proj_ord f a1 a2 = compare (f a1)  (f a2)
 
-type file_idx = Prims.int32
-type pos = Prims.int32
-type range = BatInt64.t
+type file_idx = FStar_BaseTypes.int32
+type pos = FStar_BaseTypes.int32
+type range = FStar_BaseTypes.int64
 
 let col_nbits  = 9
 let line_nbits  = 16
@@ -45,8 +45,8 @@ let mk_pos l c =
 let line_of_pos p =  (p lsr col_nbits)
 let col_of_pos p =  (p land pos_col_mask)
 
-let bits_of_pos (x:pos) : Prims.int32 = x
-let pos_of_bits (x:Prims.int32) : pos = x
+let bits_of_pos (x:pos) : FStar_BaseTypes.int32 = x
+let pos_of_bits (x:FStar_BaseTypes.int32) : pos = x
 
 let file_idx_nbits = 14
 let start_line_nbits = line_nbits
@@ -172,7 +172,7 @@ let rangeStartup = rangeN "startup" 1
 (* // Store a file_idx in the pos_fname field, so we don't have to look up the  *)
 (* // file_idx hash table to map back from pos_fname to a file_idx during lexing  *)
 let encode_file_idx idx =
-  FStar_Util.string_of_unicode [|char_of_int (idx land 0x7F); char_of_int ((idx lsr 7) land 0x7F)|]
+  FStar_Util.string_of_unicode [|idx land 0x7F; (idx lsr 7) land 0x7F|]
 
 let encode_file file = encode_file_idx (file_idx_of_file file)
 
