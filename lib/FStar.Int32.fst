@@ -29,7 +29,7 @@ let within_int32 (i:int) =
 private type int32' =
   | Int32 : i:int{within_int32 i} -> int32'
 
-abstract type int32 = int32'
+(* abstract *) type int32 = int32'
 
 val min_value : int32
 let min_value = Int32 min_value_int

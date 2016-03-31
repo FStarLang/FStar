@@ -14,7 +14,7 @@ let within_int16 (i:int) =
 private type int16' =
   | Int16 : i:int{within_int16 i} -> int16'
 
-abstract type int16 = int16'
+(* abstract *) type int16 = int16'
 
 val min_value : int16
 let min_value = Int16 min_value_int
