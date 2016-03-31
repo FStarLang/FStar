@@ -2398,7 +2398,7 @@ let type_of env e =
         try tc_tot_or_gtot_term env e
         with Error(msg, _) -> raise (Error("Implicit argument: " ^ msg, Env.get_range env)) in
     if Util.is_total_lcomp c
-    then c.res_typ, g
+    then t, c.res_typ, g
     else raise (Error(Util.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e), Env.get_range env))
 
 let check_module env m =

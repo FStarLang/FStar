@@ -104,6 +104,12 @@ let pars s =
      with 
         | e when not (!Options.trace_error) -> failed_to_parse s e
 
+let tc s = 
+    let tm = pars s in
+    let _, tcenv = init() in
+    let tm, _, _ = Tc.type_of tcenv tm in 
+    tm
+
 let pars_and_tc_fragment s = 
     Options.trace_error := true;
     let report () = FStar.TypeChecker.Errors.report_all () |> ignore in

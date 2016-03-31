@@ -67,9 +67,9 @@ type env = {
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   default_effects:list<(lident*lident)>;        (* [(x,y)] ... y is the default effect of x *)
-  type_of        :env -> term -> typ*guard_t;   (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
-  universe_of    :env -> term -> universe;      (* a callback to the type-checker; g |- e : Tot (Type u) *)       
-  use_bv_sorts   :bool;                         (* use bv.sort for a bound-variable's type rather than consulting gamma *)
+  type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
+  universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
+  use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -94,7 +94,7 @@ and guard_t = {
 
 type implicits = list<(env * uvar * term * typ * Range.range)>
 type env_t = env
-val initial_env : (env -> term -> typ*guard_t) -> solver_t -> lident -> env
+val initial_env : (env -> term -> term*typ*guard_t) -> solver_t -> lident -> env
 
 (* Marking and resetting the environment, for the interactive mode *)
 val push        : env -> string -> env
@@ -171,4 +171,4 @@ val wp_signature    : env -> lident -> (bv * term)
 val binders_of_bindings : list<binding> -> binders
 
 (* TODO: REMOVE *)
-val no_solver_env: (env -> term -> typ*guard_t) -> env
+val no_solver_env: (env -> term -> term*typ*guard_t) -> env

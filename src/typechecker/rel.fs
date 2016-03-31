@@ -2337,7 +2337,7 @@ let resolve_implicits g =
                if Env.debug env <| Options.Other "RelCheck"
                then Util.print3 "Checking uvar %s resolved to %s at type %s\n" 
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
-               let _, g = env.type_of ({env with use_bv_sorts=true}) tm in 
+               let _, _, g = env.type_of ({env with use_bv_sorts=true}) tm in 
                let g = if env.is_pattern
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
                        else g in

@@ -181,7 +181,7 @@ assume new type float  : Type0
 assume new type string : Type0
 assume new type exn : Type0
 type double = float
-new type array : Type -> Type0
+assume new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
 
 (* THESE BOUNDED INT TYPES ARE A HACK! 

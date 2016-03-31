@@ -43,7 +43,9 @@ let guard_eq i g g' =
 
 
 let unify i x y g' = 
+    FStar.process_args () |> ignore; //set options
     let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
+    FStar.Options.init_options();    //reset them
     guard_eq i g.guard_f g'
 
 let should_fail x y =
@@ -70,14 +72,9 @@ let inst n tm =
    let us = aux [] n in 
    norm (app tm us), us
 
-let run_all debug = 
+let run_all () = 
    try
        Printf.printf "Testing the unifier\n";
-       if debug 
-       then (Options.debug := ["(tcenv())"];
-             Options.debug_level := [Options.Other "Rel"; Options.Other "RelCheck"];
-             Options.print_implicits := true;
-             Options.print_real_names := true);
        let id  = pars "fun x -> x" in
        let id' = pars "fun y -> y" in
 
