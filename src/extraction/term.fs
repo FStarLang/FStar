@@ -473,7 +473,9 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
           | Pat_disj _ -> failwith "Impossible: Nested disjunctive pattern"
 
           | Pat_constant (Const_int (c, None)) when (not !Options.use_native_int) ->
-            let Pat_constant i = p.v in
+            // note: as-patterns are not valid F* and "let Pat_constant i = p.v"
+            // is not valid F# ?!!
+            let i = Const_int (c, None) in
             //these may be extracted to bigint, in which case, we need to emit a when clause
             let x = gensym() in // as_mlident (S.new_bv None Tm_bvar) in
             let when_clause = with_ty ml_bool_ty <|

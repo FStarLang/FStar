@@ -15,8 +15,7 @@
 *)
 module FStar.Range
 
-open FStar.Int64
-open FStar.Int32
+open FStar.BaseTypes
 
 type range = int64
 type file_idx = int32
