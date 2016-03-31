@@ -228,7 +228,7 @@ rule token = parse
      { NAME id }
  | tvar as id
      { TVAR id }
- | integer as x
+ | (integer | xinteger) as x
      { INT (clean_number x, false)  }
  | uint8 as x
      { UINT8 (clean_number x) }
