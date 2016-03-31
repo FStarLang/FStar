@@ -134,7 +134,7 @@
   let rec mknewline n lexbuf =
     if n > 0 then (L.new_line lexbuf; FStar_Util.incr lc; mknewline (n-1) lexbuf)
 
- let clean_number x = String.strip ~chars:"ucyslLUnIN" x
+ let clean_number x = String.strip ~chars:"uzyslLUnIN" x
 }
 
 (* -------------------------------------------------------------------- *)
@@ -170,7 +170,7 @@ let int32 = any_integer 'l'
 let uint32 = any_integer unsigned 'l'
 let int64 = any_integer 'L'
 let uint64 = any_integer unsigned 'L'
-let char8 = any_integer 'c'
+let char8 = any_integer 'z'
 
 let floatp     = digit+ '.' digit*
 let floate     = digit+ ('.' digit* )? ('e'| 'E') ['+' '-']? digit+
