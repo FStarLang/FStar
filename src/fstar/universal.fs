@@ -44,19 +44,19 @@ let module_or_interface_name m = m.is_interface, m.name
 let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string) : DsEnv.env
                                           * list<Syntax.modul> =
   let ast = Parser.Driver.parse_file fn in
-  let ast, needs_interleaving = match pre_fn with
+  let ast = match pre_fn with
     | None ->
-        ast, false
+        ast
     | Some pre_fn ->
         let pre_ast = Parser.Driver.parse_file pre_fn in
         match pre_ast, ast with
         | [ Parser.AST.Interface (lid1, decls1, _) ], [ Parser.AST.Module (lid2, decls2) ]
           when Ident.lid_equals lid1 lid2 ->
-            [ Parser.AST.Module (lid1, decls1 @ decls2) ], true
+            [ Parser.AST.Module (lid1, FStar.Parser.Interleave.interleave decls1 decls2) ]
         | _ ->
             raise (Err ("mismatch between pre-module and module\n"))
   in
-  Desugar.desugar_file env ast needs_interleaving
+  Desugar.desugar_file env ast
 
 
 (***********************************************************************)

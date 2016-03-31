@@ -1522,9 +1522,8 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
   then Util.print1 "%s\n" (Print.modul_to_string modul);
   (if pop_when_done then export_interface modul.name env else env), modul
 
-let desugar_file (env:env_t) (f:file) (needs_interleaving: bool) =
+let desugar_file (env:env_t) (f:file) =
   let env, mods = List.fold_left (fun (env, mods) m ->
-    let m = if needs_interleaving then FStar.Parser.Interleave.interleave_modul m else m in
     let env, m = desugar_modul env m in
     env, m::mods) (env, []) f in
   env, List.rev mods 

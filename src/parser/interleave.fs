@@ -91,109 +91,93 @@ open FStar.Parser.AST
     Note, the order decls 
  *)
 
-let interleave (ds:list<decl>) : list<decl> = 
-    let rec head_id_of_pat p = match p.pat with 
-        | PatName l -> [l]
-        | PatVar (i, _) -> [FStar.Ident.lid_of_ids [i]]
-        | PatApp(p, _) -> head_id_of_pat p
-        | PatAscribed(p, _) -> head_id_of_pat p
-        | _ -> [] 
-    in
-    
+let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> = 
     let id_eq_lid i (l:lident) = i.idText = l.ident.idText in
 
-    let lids_of_let defs =  defs |> List.collect (fun (p, _) -> head_id_of_pat p) in
+    let is_val x d = match d.d with 
+        | Val(_, y, _) -> x.idText = y.idText
+        | _ -> false in
 
-    let prefix_until_let_with_id ds id = 
-        FStar.Util.prefix_until (fun d -> match d.d with 
-            | ToplevelLet(_, _, ps) -> 
-              lids_of_let ps |> Util.for_some (id_eq_lid id)
-            | Tycon(_, tys) ->
-              if tys |> Util.for_some (function 
-                    | TyconAbbrev(id', _, _, _) -> id.idText = id'.idText
-                    | _ -> false)
-              then raise (Error(Util.format1 "'type' abbreviation cannot be given a corresponding 'val' declaration (%s)" (Range.string_of_range id.idRange), d.drange))
-              else false
-            | _ -> false) ds in
+    let is_type x d = match d.d with 
+        | Tycon(_, tys) -> 
+          tys |> Util.for_some (fun t -> id_of_tycon t = x.idText)
+        | _ -> false in
 
-    let rec aux (out:list<list<decl>>) (ds:list<decl>) = 
-        match ds with 
-            | [] -> List.rev out |> List.flatten
+    //is d of of the form 'let x = ...' or 'type x = ...'
+    let is_let x d = match d.d with 
+        | ToplevelLet(_, _, defs) -> 
+          lids_of_let defs |> Util.for_some (id_eq_lid x)
+        | Tycon(_, tys) ->
+          tys |> Util.for_some (function 
+            | TyconAbbrev(id', _, _, _) -> x.idText = id'.idText
+            | _ -> false) 
+        | _ -> false in
+         
+          
+    let prefix_until_let x ds = ds |> FStar.Util.prefix_until (is_let x) in
+
+    let rec aux (out:list<list<decl>>) iface impl =
+        match iface with 
+            | [] -> (List.rev out |> List.flatten) @ impl
             | d::ds -> 
               match d.d with
-                | Val(qs, x, t) -> 
-                  let lopt = prefix_until_let_with_id ds x in
-                  begin match lopt with 
-                    | None -> 
-                      if qs |> List.contains Assumption
-                      then aux ([d]::out) ds
-                      else raise (Error("No definition found for " ^x.idText, d.drange))
+                | Tycon(_, tys) when (tys |> Util.for_some (function TyconAbstract _  -> true | _ -> false)) -> 
+                  raise (Error("Interface contains an abstract 'type' declaration; use 'val' instead", d.drange))
 
-                    | Some (prefix, let_x, suffix) ->
-                      if qs |> List.contains Assumption
-                      then raise (Error(Util.format2 "Assumed declaration %s is defined at %s" 
-                                                     x.idText (Range.string_of_range let_x.drange), 
-                                        d.drange))
-                      else begin match let_x.d with 
-                             | ToplevelLet(_, _, defs) ->
-                               let prefix = d::prefix in //take all the val declarations for the defs from the prefix
-                               let def_lids = lids_of_let defs in
-                               let popt = prefix |> FStar.Util.prefix_until (fun d -> 
-                                match d.d with 
-                                    | Val(_, y, _) -> 
-                                      not (def_lids |> Util.for_some (id_eq_lid y))
+                | Val(qs, x, t) ->  //we have a 'val x' in the interface
+                  let _ = match impl |> List.tryFind (fun d -> is_val x d || is_type x d) with 
+                    | None -> ()
+                    | Some ({d=Val _; drange=r}) -> raise (Error(Util.format1 "%s is repeated in the implementation" (decl_to_string d), r))
+                    | Some i -> raise (Error(Util.format1 "%s in the interface is implemented with a 'type'" (decl_to_string d), i.drange)) in
+                  begin match prefix_until_let x iface with
+                    | Some _ -> raise (Error(Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" x.idText x.idText, d.drange))
+                    | None ->
+                      let lopt = prefix_until_let x impl in
+                      begin match lopt with 
+                        | None -> 
+                          if qs |> List.contains Assumption
+                          then aux ([d]::out) ds impl
+                          else raise (Error("No definition found for " ^x.idText, d.drange))
 
-                                    | _ -> true) in
-                               //popt takes all the val declarations for the defs from the prefix
-                               let hoist, suffix = match popt with 
-                                    | None -> //prefix only contains vals_for_defs 
-                                      prefix@[let_x], suffix
+                        | Some (prefix, let_x, rest_impl) ->
+                          if qs |> List.contains Assumption
+                          then raise (Error(Util.format2 "Assumed declaration %s is defined at %s" 
+                                                         x.idText (Range.string_of_range let_x.drange), 
+                                            d.drange))
+                          else let remaining_iface_vals = 
+                                    ds |> List.collect (fun d -> match d.d with
+                                       | Val(_, x, _) -> [x]
+                                       | _ -> []) in
+                                begin match prefix |> List.tryFind (fun d -> remaining_iface_vals |> Util.for_some (fun x -> is_let x d)) with 
+                                    | Some d -> raise (Error (Util.format2 "%s is out of order with %s" (decl_to_string d) (decl_to_string let_x), d.drange))
+                                    | _ ->
+                                      begin match let_x.d with 
+                                         | ToplevelLet(_, _, defs) ->
+                                           let def_lids = lids_of_let defs in //let rec x and y, etc.
+                                           let iface_prefix_opt = iface |> FStar.Util.prefix_until (fun d -> 
+                                            match d.d with 
+                                                | Val(_, y, _) -> 
+                                                  not (def_lids |> Util.for_some (id_eq_lid y))
 
-                                    | Some (vals_for_defs, first_non_val_or_unrelated_val, rest) -> 
-                                      let rest = first_non_val_or_unrelated_val::rest in
-                                      let rec hoist_rest (hoisted, remaining) val_ids rest = match rest with 
-                                        | [] -> List.rev hoisted, List.rev remaining
-                                        | hd::tl -> 
-                                          match hd.d with 
-                                            | Val(_, x, _) -> hoist_rest (hoisted, hd::remaining) (x::val_ids) tl
-                                            | ToplevelLet(_, _, defs) -> 
-                                              let def_lids' = lids_of_let defs in 
-                                              if val_ids |> Util.for_some (fun x -> 
-                                                 def_lids' |> Util.for_some (id_eq_lid x))
-                                              then //out of order vals and lets
-                                                   raise (Error(Util.format2 "The definition for '%s' is out of order with '%s'"
-                                                                 (def_lids |> List.hd |> FStar.Syntax.Print.lid_to_string)
-                                                                 (def_lids' |> List.hd |> FStar.Syntax.Print.lid_to_string),
-                                                                let_x.drange))
-                                              else hoist_rest (hd::hoisted, remaining) val_ids tl
-                                            | _ -> hoist_rest (hd::hoisted, remaining) val_ids tl 
-                                      in
-                                      let hoisted, remaining = hoist_rest ([], []) [] rest in
-                                      vals_for_defs@hoisted@[let_x], remaining@suffix in
+                                                | _ -> true) in
+                                           let all_vals_for_defs, rest_iface = 
+                                                  match iface_prefix_opt with 
+                                                    | None -> //only val x, val y left in the interface
+                                                      iface, [] 
 
-                               aux (hoist::out) suffix
+                                                    | Some (all_vals_for_defs, first_non_val, rest_iface) -> 
+                                                      all_vals_for_defs, first_non_val::rest_iface in
+                                           let hoist = prefix@all_vals_for_defs@[let_x] in
+                                           aux (hoist::out) rest_iface rest_impl
 
-                             | _ -> failwith "Impossible"
-                      end
-                   end
+                                         | _ -> failwith "Impossible"
+                                      end
+                                end
+                       end
+                    end
 
-                | ToplevelLet(_, _, defs) -> 
-                  let def_lids = lids_of_let defs in
-                  let val_for_defs = FStar.Util.find_map ds (fun d -> match d.d with 
-                        | Val(_, x, _) when (def_lids |> Util.for_some (id_eq_lid x)) -> Some (x, d.drange)
-                        | _ -> None) in
-                  begin match val_for_defs with 
-                    | Some (x, r) ->  //we have a 'let x' followed later in the file by a 'val x'; forbid
-                      raise (Error(Util.format2 "Definition of %s precedes its declaration at %s" x.idText (Range.string_of_range r), d.drange))
-
-                    | None -> aux ([d]::out) ds
-                  end
-
-                | _ -> aux ([d]::out) ds in
-
-    aux [] ds
-
-let interleave_modul m = 
-  match m with 
-  | Module(l, ds) -> Module(l, interleave ds)
-  | _ -> m
+                | _ -> aux ([d]::out) ds impl in
+        let decls = aux [] iface impl in
+        if !Options.debug_level |> List.contains (Options.Other "Interleaving")
+        then Util.print_string (List.map decl_to_string decls |> String.concat "\n");
+        decls

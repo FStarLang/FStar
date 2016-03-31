@@ -151,7 +151,7 @@ type decl' =
   | Pragma of pragma
 and decl = {d:decl'; drange:range}
 and effect_decl =
-  | DefineEffect      of ident * list<binder> * term * list<decl>
+  | DefineEffect   of ident * list<binder> * term * list<decl>
   | RedefineEffect of ident * list<binder> * term
 
 type modul =
@@ -191,6 +191,103 @@ let un_function p tm = match p.pat, tm.tm with
 
 let lid_with_range lid r = lid_of_path (path_of_lid lid) r
 
+let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
+let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
+let lexConsTerm r hd tl = mk_term (Construct(C.lexcons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
+
+let mkConsList r elts =
+  let nil = mk_term (Construct(C.nil_lid, [])) r Expr in
+    List.fold_right (fun e tl -> consTerm r e tl) elts nil
+
+let mkLexList r elts =
+  let nil = mk_term (Construct(C.lextop_lid, [])) r Expr in
+  List.fold_right (fun e tl -> lexConsTerm r e tl) elts nil
+
+let mkApp t args r = match args with
+  | [] -> t
+  | _ -> match t.tm with
+      | Name s -> mk_term (Construct(s, args)) r Un
+      | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
+
+let mkRefSet r elts =
+  let empty = mk_term (Var(set_lid_range C.set_empty r)) r Expr in
+  let ref_constr = mk_term (Var (set_lid_range C.heap_ref r)) r Expr in
+  let singleton = mk_term (Var (set_lid_range C.set_singleton r)) r Expr in
+  let union = mk_term (Var(set_lid_range C.set_union r)) r Expr in
+  List.fold_right (fun e tl ->
+    let e = mkApp ref_constr [(e, Nothing)] r in
+    let single_e = mkApp singleton [(e, Nothing)] r in
+    mkApp union [(single_e, Nothing); (tl, Nothing)] r) elts empty
+
+let mkExplicitApp t args r = match args with
+  | [] -> t
+  | _ -> match t.tm with
+      | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r Un
+      | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r Un) t args
+
+let mkAdmitMagic r =
+    let unit_const = mk_term(Const Const_unit) r Expr in
+    let admit =
+        let admit_name = mk_term(Var(set_lid_range C.admit_lid r)) r Expr in
+        mkExplicitApp admit_name [unit_const] r in
+    let magic =
+        let magic_name = mk_term(Var(set_lid_range C.magic_lid r)) r Expr in
+        mkExplicitApp magic_name [unit_const] r in
+    let admit_magic = mk_term(Seq(admit, magic)) r Expr in
+    admit_magic
+
+let mkWildAdmitMagic r = (mk_pattern PatWild r, None, mkAdmitMagic r)
+
+let focusBranches branches r =
+    let should_filter = Util.for_some fst branches in
+	if should_filter
+	then let _ = Tc.Errors.warn r "Focusing on only some cases" in
+         let focussed = List.filter fst branches |> List.map snd in
+		 focussed@[mkWildAdmitMagic r]
+	else branches |> List.map snd
+
+let focusLetBindings lbs r =
+    let should_filter = Util.for_some fst lbs in
+	if should_filter
+	then let _ = Tc.Errors.warn r "Focusing on only some cases in this (mutually) recursive definition" in
+         List.map (fun (f, lb) ->
+              if f then lb
+              else (fst lb, mkAdmitMagic r)) lbs
+	else lbs |> List.map snd
+
+let mkFsTypApp t args r =
+  mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
+
+let mkTuple args r =
+  let cons = 
+    if !FStar.Options.universes
+    then FStar.Syntax.Util.mk_tuple_data_lid (List.length args) r
+    else U.mk_tuple_data_lid (List.length args) r in
+  mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
+
+let mkDTuple args r =
+  let cons = 
+        if !FStar.Options.universes
+        then FStar.Syntax.Util.mk_dtuple_data_lid (List.length args) r
+        else U.mk_dtuple_data_lid (List.length args) r in
+  mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
+
+let mkRefinedBinder id t refopt m implicit =
+  let b = mk_binder (Annotated(id, t)) m Type implicit in
+  match refopt with
+    | None -> b
+    | Some t -> mk_binder (Annotated(id, mk_term (Refine(b, t)) m Type)) m Type implicit
+
+let rec extract_named_refinement t1  =
+    match t1.tm with
+	| NamedTyp(x, t) -> Some (x, t, None)
+	| Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
+    | Paren t -> extract_named_refinement t
+	| _ -> None
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Printing ASTs, mostly for debugging
+//////////////////////////////////////////////////////////////////////////////////////////////
 let to_string_l sep f l =
   String.concat sep (List.map f l)
 let imp_to_string = function
@@ -294,103 +391,51 @@ and pat_to_string x = match x.pat with
   | PatOr l ->  to_string_l "|\n " pat_to_string l
   | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
 
+let rec head_id_of_pat p = match p.pat with 
+        | PatName l -> [l]
+        | PatVar (i, _) -> [FStar.Ident.lid_of_ids [i]]
+        | PatApp(p, _) -> head_id_of_pat p
+        | PatAscribed(p, _) -> head_id_of_pat p
+        | _ -> [] 
+
+let lids_of_let defs =  defs |> List.collect (fun (p, _) -> head_id_of_pat p) 
+
+let id_of_tycon = function
+  | TyconAbstract(i, _, _)
+  | TyconAbbrev(i, _, _, _)
+  | TyconRecord(i, _, _, _) 
+  | TyconVariant(i, _, _, _) -> i.idText
+
+let decl_to_string (d:decl) = match d.d with 
+  | TopLevelModule l -> "module " ^ l.str
+  | Open l -> "open " ^ l.str
+  | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" i.idText l.str
+  | KindAbbrev(i, _, _) -> "kind " ^ i.idText
+  | ToplevelLet(_, _, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
+  | Main _ -> "main ..."
+  | Assume(_, i, _) -> "assume " ^ i.idText
+  | Tycon(_, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
+  | Val(_, i, _) -> "val " ^ i.idText
+  | Exception(i, _) -> "exception " ^ i.idText
+  | NewEffect(_, DefineEffect(i, _, _, _)) 
+  | NewEffect(_, RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
+  | SubEffect _ -> "sub_effect"
+  | Pragma _ -> "pragma"
+
+
+let modul_to_string (m:modul) = match m with 
+    | Module (_, decls)
+    | Interface (_, decls, _) -> 
+      decls |> List.map decl_to_string |> String.concat "\n"
+      
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Error reporting
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 let error msg tm r =
  let tm = tm |> term_to_string in
  let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in
  if !FStar.Options.universes
  then raise (FStar.Syntax.Syntax.Error(msg^"\n"^tm, r))
  else raise (S.Error(msg^"\n"^tm, r))
-
-let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
-let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
-let lexConsTerm r hd tl = mk_term (Construct(C.lexcons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
-
-let mkConsList r elts =
-  let nil = mk_term (Construct(C.nil_lid, [])) r Expr in
-    List.fold_right (fun e tl -> consTerm r e tl) elts nil
-
-let mkLexList r elts =
-  let nil = mk_term (Construct(C.lextop_lid, [])) r Expr in
-  List.fold_right (fun e tl -> lexConsTerm r e tl) elts nil
-
-let mkApp t args r = match args with
-  | [] -> t
-  | _ -> match t.tm with
-      | Name s -> mk_term (Construct(s, args)) r Un
-      | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
-
-let mkRefSet r elts =
-  let empty = mk_term (Var(set_lid_range C.set_empty r)) r Expr in
-  let ref_constr = mk_term (Var (set_lid_range C.heap_ref r)) r Expr in
-  let singleton = mk_term (Var (set_lid_range C.set_singleton r)) r Expr in
-  let union = mk_term (Var(set_lid_range C.set_union r)) r Expr in
-  List.fold_right (fun e tl ->
-    let e = mkApp ref_constr [(e, Nothing)] r in
-    let single_e = mkApp singleton [(e, Nothing)] r in
-    mkApp union [(single_e, Nothing); (tl, Nothing)] r) elts empty
-
-let mkExplicitApp t args r = match args with
-  | [] -> t
-  | _ -> match t.tm with
-      | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r Un
-      | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r Un) t args
-
-let mkAdmitMagic r =
-    let unit_const = mk_term(Const Const_unit) r Expr in
-    let admit =
-        let admit_name = mk_term(Var(set_lid_range C.admit_lid r)) r Expr in
-        mkExplicitApp admit_name [unit_const] r in
-    let magic =
-        let magic_name = mk_term(Var(set_lid_range C.magic_lid r)) r Expr in
-        mkExplicitApp magic_name [unit_const] r in
-    let admit_magic = mk_term(Seq(admit, magic)) r Expr in
-    admit_magic
-
-let mkWildAdmitMagic r = (mk_pattern PatWild r, None, mkAdmitMagic r)
-
-let focusBranches branches r =
-    let should_filter = Util.for_some fst branches in
-	if should_filter
-	then let _ = Tc.Errors.warn r "Focusing on only some cases" in
-         let focussed = List.filter fst branches |> List.map snd in
-		 focussed@[mkWildAdmitMagic r]
-	else branches |> List.map snd
-
-let focusLetBindings lbs r =
-    let should_filter = Util.for_some fst lbs in
-	if should_filter
-	then let _ = Tc.Errors.warn r "Focusing on only some cases in this (mutually) recursive definition" in
-         List.map (fun (f, lb) ->
-              if f then lb
-              else (fst lb, mkAdmitMagic r)) lbs
-	else lbs |> List.map snd
-
-let mkFsTypApp t args r =
-  mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
-
-let mkTuple args r =
-  let cons = 
-    if !FStar.Options.universes
-    then FStar.Syntax.Util.mk_tuple_data_lid (List.length args) r
-    else U.mk_tuple_data_lid (List.length args) r in
-  mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
-
-let mkDTuple args r =
-  let cons = 
-        if !FStar.Options.universes
-        then FStar.Syntax.Util.mk_dtuple_data_lid (List.length args) r
-        else U.mk_dtuple_data_lid (List.length args) r in
-  mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
-
-let mkRefinedBinder id t refopt m implicit =
-  let b = mk_binder (Annotated(id, t)) m Type implicit in
-  match refopt with
-    | None -> b
-    | Some t -> mk_binder (Annotated(id, mk_term (Refine(b, t)) m Type)) m Type implicit
-
-let rec extract_named_refinement t1  =
-    match t1.tm with
-	| NamedTyp(x, t) -> Some (x, t, None)
-	| Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
-    | Paren t -> extract_named_refinement t
-	| _ -> None
