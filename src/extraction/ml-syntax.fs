@@ -23,6 +23,7 @@ open FStar.Absyn.Syntax
 open FStar.Ident
 open FStar.Util
 open FStar.Const
+open FStar.BaseTypes
 
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
@@ -85,7 +86,7 @@ type mltyscheme = mlidents * mlty   //forall a1..an. t  (the list of binders can
 type mlconstant =
 | MLC_Unit
 | MLC_Bool   of bool
-| MLC_Int    of string * (signedness * width) option
+| MLC_Int    of string * option<(signedness * width)>
 | MLC_Float  of float
 | MLC_Char   of char
 | MLC_String of string

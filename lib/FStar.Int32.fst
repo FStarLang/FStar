@@ -26,8 +26,10 @@ let within_int32 (i:int) =
     min_value_int <= i
     && i <= max_value_int
 
-private type int32 =
-  | Int32 : i:int{within_int32 i} -> int32
+private type int32' =
+  | Int32 : i:int{within_int32 i} -> int32'
+
+abstract type int32 = int32'
 
 val min_value : int32
 let min_value = Int32 min_value_int
@@ -37,8 +39,6 @@ let max_value = Int32 max_value_int
 
 val as_int: i:int32 -> GTot int
 let as_int (Int32 i) = i
-
-type nat32 = x:int32{Prims.op_GreaterThanOrEqual (as_int x) 0}
 
 //a ?+ b may overflow
 //must be marked opaque because the body has an intentional admit
@@ -144,7 +144,7 @@ let op_Less_Equals (Int32 i) (Int32 j) = i <= j
 val op_Less: i:int32
           -> j:int32
           -> Tot bool
-let op_Less (Int32 i) (Int32 j) = i < j
+let op_Less (Int32 i) (Int32 j) = (i < j)
 
 val op_Greater_Equals: i:int32
                     -> j:int32

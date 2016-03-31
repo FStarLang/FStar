@@ -24,6 +24,7 @@ open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Format
 open FStar.Const
+open FStar.BaseTypes
 
 // VALS_HACK_HERE
 

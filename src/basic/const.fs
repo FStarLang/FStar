@@ -1,6 +1,8 @@
 ﻿
 module FStar.Const
 
+open FStar.BaseTypes
+
 type signedness = | Unsigned | Signed
 type width = | Int8 | Int16 | Int32 | Int64
 
@@ -18,7 +20,7 @@ type sconst =
   | Const_effect
   | Const_unit
   | Const_bool        of bool
-  | Const_int         of string * (signedness * width) option (* When None, means "mathematical integer", i.e. Prims.int. *)
+  | Const_int         of string * option<(signedness * width)> (* When None, means "mathematical integer", i.e. Prims.int. *)
   | Const_char        of char
   | Const_float       of double
   | Const_bytearray   of array<byte> * Range.range

@@ -15,6 +15,7 @@
 *)
 module FStar.String
 open Prims
+open FStar.Char
 (* The name of this file is misleading: most string functions are to be found in
    util.fsi *)
 val split:   list<char> -> string -> Tot<list<string>>
