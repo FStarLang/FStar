@@ -1,6 +1,6 @@
 
 open Prims
-# 4 "FStar.Const.fst"
+# 6 "FStar.Const.fst"
 type signedness =
 | Unsigned
 | Signed
@@ -23,7 +23,7 @@ end
 false
 end))
 
-# 6 "FStar.Const.fst"
+# 7 "FStar.Const.fst"
 type width =
 | Int8
 | Int16
@@ -66,7 +66,7 @@ end
 false
 end))
 
-# 7 "FStar.Const.fst"
+# 9 "FStar.Const.fst"
 let string_of_int_qualifier : (signedness * width)  ->  Prims.string = (fun _26_1 -> (match (_26_1) with
 | (Unsigned, Int8) -> begin
 "FStar.UInt8.uint8"
@@ -93,7 +93,7 @@ end
 "FStar.Int64.int64"
 end))
 
-# 17 "FStar.Const.fst"
+# 19 "FStar.Const.fst"
 type sconst =
 | Const_effect
 | Const_unit

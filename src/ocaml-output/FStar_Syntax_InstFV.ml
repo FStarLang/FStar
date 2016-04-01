@@ -1,10 +1,10 @@
 
 open Prims
-# 24 "FStar.Syntax.InstFV.fst"
+# 25 "FStar.Syntax.InstFV.fst"
 type inst_t =
 (FStar_Ident.lident * FStar_Syntax_Syntax.universes) Prims.list
 
-# 27 "FStar.Syntax.InstFV.fst"
+# 29 "FStar.Syntax.InstFV.fst"
 let rec inst : inst_t  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun s t -> (
 # 30 "FStar.Syntax.InstFV.fst"
 let t = (FStar_Syntax_Subst.compress t)
@@ -208,7 +208,7 @@ end))}))
 in Some (_126_80))
 end))
 
-# 110 "FStar.Syntax.InstFV.fst"
+# 112 "FStar.Syntax.InstFV.fst"
 let instantiate : inst_t  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun i t -> (match (i) with
 | [] -> begin
 t
