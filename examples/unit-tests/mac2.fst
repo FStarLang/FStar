@@ -20,7 +20,7 @@
 
 module MAC
 open FStar.Seq
-type bytes = seq byte (* concrete byte arrays *)
+type bytes = seq FStar.UInt8.byte (* concrete byte arrays *)
 type text  = bytes    (* a type abbreviation, for clarity *)
 
 type nbytes (n:nat) = b:bytes{length b = n} (* fixed-length bytes *)

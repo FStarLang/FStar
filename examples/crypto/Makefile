@@ -15,6 +15,7 @@ else
     endif
 endif
 
+FSTAR_HOME=../..
 include ../Makefile.include
 
 all: .all.crypto.ver merkle_tree mac mac3 rpc CntProtocol padding acls-cap statefulEnc
@@ -81,7 +82,7 @@ RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
 
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
 OCAMLC=ocamlfind ocamlopt $(CC) -ccopt -L$(LIB) -package batteries -linkpkg -g -thread
-SUPPORT_LIBS=$(addprefix $(FSTAR_HOME)/lib/ml/, MkPrims.ml native_int/prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_String.ml FStar_IO.ml)
+SUPPORT_LIBS=$(addprefix $(FSTAR_HOME)/lib/ml/, MkPrims.ml native_int/prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_Char.ml FStar_String.ml FStar_IO.ml)
 CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, CoreCrypto/ml/CoreCrypto.cmxa)
 
 $(CONTRIB_LIBS):

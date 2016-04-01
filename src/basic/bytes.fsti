@@ -1,5 +1,7 @@
 module FStar.Bytes
 
+open FStar.UInt8
+
 type bytes = array byte
 val length : bytes -> int
 val get: bytes -> int -> int

@@ -27,7 +27,6 @@ open FStar.Const
 
 type ident = FStar.Ident.ident
 type lident = FStar.Ident.lid
-type LongIdent = lident
 
 exception Err of string
 exception Error of string * Range.range
@@ -55,7 +54,7 @@ type bvar<'a,'t> = withinfo_t<bvdef<'a>,'t>
 type sconst = FStar.Const.sconst
 type pragma =
   | SetOptions of string
-  | ResetOptions
+  | ResetOptions of option<string>
 type memo<'a> = ref<option<'a>>
 type arg_qualifier =
     | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor 

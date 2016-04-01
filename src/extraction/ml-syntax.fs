@@ -1,8 +1,29 @@
+(*
+   Copyright 2008-2016 Abhishek Anand, Nikhil Swamy,
+   	     	           Antoine Delignat-Lavaud, Pierre-Yves Strub
+		               and Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+#light "off"
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.Syntax
 open FStar
 open FStar.Absyn.Syntax
 open FStar.Ident
+open FStar.Util
+open FStar.Const
+open FStar.BaseTypes
 
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
@@ -16,7 +37,22 @@ let idsym ((s, _) : mlident) : mlsymbol =
 let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
 
+type gensym_t = {
+    gensym: unit -> mlident;
+    reset:unit -> unit;
+}
 
+let gs =
+  let ctr = Util.mk_ref 0 in
+  let n_resets = Util.mk_ref 0 in
+  {gensym =(fun () -> "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (incr ctr; !ctr)), 0);
+   reset = (fun () -> ctr := 0; incr n_resets)}
+
+let gensym () = gs.gensym()
+let reset_gensym() = gs.reset()
+let rec gensyms x = match x with
+  | 0 -> []
+  | n -> gensym ()::gensyms (n-1)
 
 (* -------------------------------------------------------------------- *)
 let mlpath_of_lident (x : lident) : mlpath =
@@ -50,10 +86,7 @@ type mltyscheme = mlidents * mlty   //forall a1..an. t  (the list of binders can
 type mlconstant =
 | MLC_Unit
 | MLC_Bool   of bool
-| MLC_Byte   of byte
-| MLC_Int32  of int32
-| MLC_Int64  of int64
-| MLC_Int    of string
+| MLC_Int    of string * option<(signedness * width)>
 | MLC_Float  of float
 | MLC_Char   of char
 | MLC_String of string
@@ -90,7 +123,7 @@ type mlexpr' =
 
 and mlexpr = {
     expr:mlexpr';
-    ty:mlty;
+    mlty:mlty;
     loc: mlloc;
 }
 
@@ -135,7 +168,7 @@ type mlsig1 =
 
 and mlsig = list<mlsig1>
 
-let with_ty_loc t e l = {expr=e; ty=t; loc = l }
+let with_ty_loc t e l = {expr=e; mlty=t; loc = l }
 let with_ty t e = with_ty_loc t e dummy_loc
 
 (* -------------------------------------------------------------------- *)
@@ -153,3 +186,10 @@ let mlp_lalloc = (["SST"], "lalloc")
 let apply_obj_repr x t = 
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name(["Obj"], "repr")) in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
+
+open FStar.Syntax.Syntax
+let bv_as_mlident (x:bv) = 
+    if Util.starts_with x.ppname.idText Ident.reserved_prefix
+    || is_null_bv x
+    then x.ppname.idText ^ "_" ^ (string_of_int x.index), 0
+    else x.ppname.idText, 0

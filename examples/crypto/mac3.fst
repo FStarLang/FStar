@@ -37,6 +37,7 @@ module MAC3
 
 open FStar.Seq
 open FStar.SeqProperties
+open FStar.BaseTypes
 
 type bytes = seq byte (* concrete byte arrays *)
 type text  = bytes    (* a type abbreviation, for clarity *)

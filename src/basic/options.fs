@@ -29,12 +29,12 @@ type debug_level_t =
     | Extreme
     | Other of string
 
-let show_signatures = Util.mk_ref []
+let show_signatures : ref<list<string>> = Util.mk_ref []
 let norm_then_print = Util.mk_ref true
 let z3_exe = Util.mk_ref (Platform.exe "z3")
 let silent=Util.mk_ref false
-let debug=Util.mk_ref []
-let debug_level = Util.mk_ref []
+let debug : ref<list<string>> = Util.mk_ref []
+let debug_level : ref<list<debug_level_t>> = Util.mk_ref []
 let dlevel = function
     | "Low" -> Low
     | "Medium" -> Medium
@@ -51,6 +51,7 @@ let debug_level_geq l2 = !debug_level |> Util.for_some (fun l1 -> one_debug_leve
 let log_types = Util.mk_ref false
 let print_effect_args=Util.mk_ref false
 let print_real_names = Util.mk_ref false
+let detail_errors = Util.mk_ref false
 let dump_module : ref<option<string>> = Util.mk_ref None
 let should_dump l = match !dump_module with
     | None -> false
@@ -58,15 +59,16 @@ let should_dump l = match !dump_module with
 let logQueries = Util.mk_ref false
 let z3exe = Util.mk_ref true
 let outputDir = Util.mk_ref (Some ".")
-let fstar_home_opt = Util.mk_ref None
+let fstar_home_opt : ref<option<string>> = Util.mk_ref None
 let _fstar_home = Util.mk_ref ""
-let prims_ref = Util.mk_ref None
+let prims_ref : ref<option<string>> = Util.mk_ref None
 let z3timeout = Util.mk_ref 5
 let admit_smt_queries = Util.mk_ref false
 let pretype = Util.mk_ref true
-let codegen = Util.mk_ref None
-let no_extract = Util.mk_ref []
-let codegen_libs = Util.mk_ref []
+let codegen : ref<option<string>> = Util.mk_ref None
+let no_extract : ref<list<string>> = Util.mk_ref []
+let no_location_info = Util.mk_ref false
+let codegen_libs : ref<list<list<string>>> = Util.mk_ref []
 let trace_error = Util.mk_ref false
 let verify = Util.mk_ref true
 let full_context_dependency = Util.mk_ref true
@@ -90,12 +92,12 @@ let use_eq_at_higher_order = Util.mk_ref false
 let use_native_int = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
 let n_cores = Util.mk_ref 1
-let verify_module = Util.mk_ref []
-let __temp_no_proj = Util.mk_ref []
+let verify_module : ref<list<string>> = Util.mk_ref []
+let __temp_no_proj : ref<list<string>> = Util.mk_ref []
 let interactive = Util.mk_ref false
-let interactive_context = Util.mk_ref None
+let interactive_context : ref<option<string>> = Util.mk_ref None
 let split_cases = Util.mk_ref 0
-let _include_path = Util.mk_ref []
+let _include_path : ref<list<string>> = Util.mk_ref []
 let no_default_includes = Util.mk_ref false
 let interactive_fsi = Util.mk_ref false
 let print_fuels = Util.mk_ref false
@@ -108,7 +110,7 @@ let warn_cardinality () = match !cardinality with
 let check_cardinality () = match !cardinality with
     | "check" -> true
     | _ -> false
-let dep = ref None
+let dep : ref<option<string>> = Util.mk_ref None
 let explicit_deps = Util.mk_ref false
 let init_options () =
     show_signatures := [];
@@ -164,7 +166,8 @@ let init_options () =
     explicit_deps := false;
     dep := None;
     timing := false;
-    inline_arith := false
+    inline_arith := false;
+    detail_errors := false
 
 let set_fstar_home () =
   let fh = match !fstar_home_opt with
@@ -194,7 +197,7 @@ let get_include_path () =
   else
   let h = get_fstar_home () in
   let defs = if !universes then universe_include_path_base_dirs else include_path_base_dirs in
-  !_include_path @ ("."::(defs |> List.map (fun x -> h ^ x)))
+  (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ !_include_path @ [ "." ]
 
 let find_file filename =
     let search_path = get_include_path () in
@@ -202,7 +205,7 @@ let find_file filename =
       Util.map_option
         Util.normalize_file_path
         (if Util.is_path_absolute filename then
-          if Util.file_exists(filename) then
+          if Util.file_exists filename then
             Some filename
           else
             None
@@ -258,6 +261,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "debug", OneArg ((fun x -> debug := x::!debug), "module name"), "Print LOTS of debugging information while checking module [arg]");
      ( noshort, "debug_level", OneArg ((fun x -> debug_level := dlevel x::!debug_level), "Low|Medium|High|Extreme"), "Control the verbosity of debugging info");
      ( noshort, "dep", OneArg ((fun x -> dep := Some x), "make|nubuild"), "Output the transitive closure of the dependency graph in a format suitable for the given tool");
+     ( noshort, "detail_errors", ZeroArgs (fun () -> detail_errors := true; n_cores := 1),  "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; requires --universes");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
      ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
      ( noshort, "explicit_deps", ZeroArgs (fun () -> explicit_deps := true), "tell FStar to not find dependencies automatically because the user provides them on the command-line");
@@ -279,10 +283,10 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "max_ifuel", OneArg((fun x -> max_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at most (default 2)");
      ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
      ( noshort, "MLish", ZeroArgs(fun () -> full_context_dependency := false), "Introduce unification variables that are only dependent on the type variables in the context");
-     ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x), "positive integer"), "Maximum number of cores to use for the solver (default 1)");
+     ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x; detail_errors := false), "positive integer"), "Maximum number of cores to use for the solver (default 1); implied detail_errors = false");
      ( noshort, "no_default_includes", ZeroArgs (fun () -> no_default_includes := true), "Ignore the default module search paths");
      ( noshort, "no_extract", OneArg ((fun x -> no_extract := x::!no_extract), "module name"), "Do not extract code from this module");
-     ( noshort, "no_fs_typ_app", ZeroArgs (fun () -> fs_typ_app := false), "Do not allow the use of t<t1,...,tn> syntax for type applications");
+     ( noshort, "no_location_info", ZeroArgs (fun () -> no_location_info := true), "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
      ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir");
      ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
      ( noshort, "print_before_norm", ZeroArgs(fun () -> norm_then_print := false), "Do not normalize types before printing (for debugging)");
@@ -317,6 +321,7 @@ and parse_codegen s =
   | _ ->
      (Util.print_string "Wrong argument to codegen flag\n";
       display_usage (specs ()); exit 1)
+
 and validate_cardinality x = match x with
     | "warn"
     | "check"
@@ -324,35 +329,81 @@ and validate_cardinality x = match x with
     | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
               display_usage (specs ()); exit 1)
 
-and set_interactive_fsi (_:unit) =
+and set_interactive_fsi _ =
     if !interactive then interactive_fsi := true
     else (Util.print_string "Set interactive flag first before setting interactive fsi flag\n";
           display_usage (specs ()); exit 1)
 
 let should_verify m =
-    !verify &&
-    (match !verify_module with
+  if !verify
+  then match !verify_module with
         | [] -> true //the verify_module flag was not set, so verify everything
-        | l -> List.contains m l) //otherwise, look in the list to see if it is explicitly mentioned
+        | l -> List.contains m l //otherwise, look in the list to see if it is explicitly mentioned
+  else false
 
 let dont_gen_projectors m = List.contains m (!__temp_no_proj)
 
 let should_print_message m =
-    should_verify m
-    && m <> "Prims"
+    if should_verify m
+    then m <> "Prims"
+    else false
+
+type options = 
+    | Set
+    | Reset
+    | Restore
 
 let set_options =
-    //The smt option is a security concern
-    //only allow it to be set from the command line, not from the build-config
-    let no_smt_specs = specs() |> List.filter (fun (_, name, _, _) -> name <> "smt") in
-    fun s -> Getopt.parse_string no_smt_specs (fun _ -> ()) s
+    //Several options can only be set at the time the process is created, and not controlled interactively via pragmas
+    //Additionaly, the --smt option is a security concern
+    let settable = function
+      | "admit_smt_queries"
+      | "cardinality"
+      | "debug"
+      | "debug_level"
+      | "detail_errors"
+      | "eager_inference"
+      | "hide_genident_nums"
+      | "hide_uvar_nums"
+      | "initial_fuel"
+      | "initial_ifuel"
+      | "inline_arith"
+      | "lax"
+      | "log_types"
+      | "log_queries"
+      | "max_fuel"
+      | "max_ifuel"
+      | "min_fuel"
+      | "print_before_norm"
+      | "print_bound_var_types"
+      | "print_effect_args"
+      | "print_fuels"
+      | "print_implicits"
+      | "print_universes"
+      | "prn"
+      | "show_signatures"
+      | "silent"
+      | "split_cases"
+      | "timing"
+      | "trace_error"
+      | "unthrottle_inductives"
+      | "use_eq_at_higher_order"
+      | "__temp_no_proj"
+      | "warn_top_level_effects" -> true
+      | _ -> false in
+    let resettable s = settable s || s="z3timeout" in
+    let all_specs = specs () in
+    let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x) in
+    let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x) in
+    fun o s -> 
+        let specs = match o with 
+            | Set -> settable_specs
+            | Reset -> resettable_specs
+            | Restore -> all_specs in
+        Getopt.parse_string specs (fun _ -> ()) s
 
-let reset_options_string : ref<option<string>> = ref None
-let reset_options () =
+let restore_cmd_line_options () =
     let verify_module_init = !verify_module in
     init_options();
     verify_module := verify_module_init;
-    let res = Getopt.parse_cmdline (specs()) (fun x -> ()) in
-    match !reset_options_string with
-        | Some x -> set_options x
-        | _ -> res
+    Getopt.parse_cmdline (specs()) (fun x -> ()) 

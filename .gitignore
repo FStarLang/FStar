@@ -18,6 +18,8 @@ cache/
 /src/boot_fsts
 /src/format/formatml.fsi
 /lib/FStar.Util.fsti
+/lib/FStar.GetOpt.fsti
+/lib/FStar.Unionfind.fsti
 
 /bin/*.dll
 /bin/*.pdb

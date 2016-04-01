@@ -17,6 +17,8 @@ module FStar.Util
 
 open System.IO
 
+open FStar.BaseTypes
+
 exception Impos
 exception NYI of string
 exception Failure of string
@@ -54,14 +56,6 @@ val smap_remove: smap<'value> -> string -> unit
 (* The list may contain duplicates. *)
 val smap_keys: smap<'value> -> list<string>
 val smap_copy: smap<'value> -> smap<'value>
-
-//type weakmap<'a> = (* not relying on representation *)
-//    | Dummy of 'a
-//    | Map of System.Collections.Generic.Dictionary<int, list<System.WeakReference>>
-//
-//val new_weakmap: unit -> weakmap<'a>
-//val weakmap_insert: weakmap<'a> -> int -> 'a -> unit
-//val weakmap_lookup: weakmap<'a> -> int -> option<list<'a>>
 
 val format: string -> list<string> -> string
 val format1: string -> string -> string
@@ -128,11 +122,7 @@ val string_builder_append: string_builder -> string -> unit
 val message_of_exn: exn -> string
 val trace_of_exn: exn -> string
 
-type proc = {m:System.Object;
-             outbuf:System.Text.StringBuilder;
-             proc:System.Diagnostics.Process;
-             killed:ref<bool>;
-             id:string}  (* not relying on representation *)
+type proc = {m:System.Object; outbuf:System.Text.StringBuilder; proc:System.Diagnostics.Process; killed:ref<bool>; id:string}  (* not relying on representation; this needs to be defined on one line for a sed script *)
 val start_process: string -> string -> string -> (string -> string -> bool) -> proc
 val ask_process: proc -> string -> string
 val kill_process: proc -> unit

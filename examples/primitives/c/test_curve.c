@@ -86,10 +86,10 @@ void print_bigint(uint64 z[5]){
   x[3] = (z[3] >> 39) + (z[4] << 12);
   for (i=0; i < 4; i++){
     for (j=0; j < 8; j++){
-      printf("%lx ", 0xff & (x[i] >> (8*j)));
+      printf("%02lx", 0xff & (x[i] >> (8*j)));
     }
-    printf("\n");
   }
+  printf("\n");
 }
 
 void test(){
@@ -119,7 +119,7 @@ void test(){
   Bignum_Core_crecip_prime(zrecip, res.z);
   Bignum_Core_fmul(output, res.x, zrecip);
   
-  printf("Expected:\n %s\nGot:\n", expected);
+  printf("Expected:\n %s\nGot:\n ", expected);
   print_bigint(output);
 }
 

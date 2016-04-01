@@ -18,14 +18,13 @@
 
 module FStar.Extraction.ML.Code
 
-open System
-open System.Text
 open FStar
 open FStar.Util
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
-open FStar.Extraction.ML.Env
 open FStar.Format
+open FStar.Const
+open FStar.BaseTypes
 
 // VALS_HACK_HERE
 
@@ -215,52 +214,59 @@ let maybe_paren (outer, side) inner doc =
   if noparens inner outer side then doc else parens doc
 
 (* -------------------------------------------------------------------- *)
-let ocaml_u8_codepoint (i : byte) =
-  if (int_of_byte i) = 0 then "\\x00" else "\\x"^(hex_string_of_byte i)
+let escape_byte_hex (x: byte) =
+  "\\x" ^ hex_string_of_byte x
+
+let escape_char_hex (x: char) =
+  escape_byte_hex (byte_of_char x)
 
 (* -------------------------------------------------------------------- *)
-let encode_char c =
-  if (int_of_char c) > 127 then // Use UTF-8 encoding
-    let bytes = string_of_char c in
-    let bytes = unicode_of_string bytes in
-    FStar.Bytes.f_encode ocaml_u8_codepoint bytes
-  else
-   (match c with
-    | c when (c = '\\')              -> "\\\\"
-    | c when (c = ' ')               -> " "
-    | c when (c = '\b')              -> "\\b"
-    | c when (c = '\t')              -> "\\t"
-    | c when (c = '\r')              -> "\\r"
-    | c when (c = '\n')              -> "\\n"
-    | c when (c = '\'')              -> "\\'"
-    | c when (c = '\"')              -> "\\\""
-    | c when is_letter_or_digit(c) -> string_of_char c
-    | c when is_punctuation(c)   -> string_of_char c
-    | c when is_symbol(c)        -> string_of_char c
-    | _                          -> ocaml_u8_codepoint (byte_of_char c))
+let escape_or fallback = function
+  | c when (c = '\\')            -> "\\\\"
+  | c when (c = ' ' )            -> " "
+  | c when (c = '\b')            -> "\\b"
+  | c when (c = '\t')            -> "\\t"
+  | c when (c = '\r')            -> "\\r"
+  | c when (c = '\n')            -> "\\n"
+  | c when (c = '\'')            -> "\\'"
+  | c when (c = '\"')            -> "\\\""
+  | c when (is_letter_or_digit c)-> string_of_char c
+  | c when (is_punctuation c)    -> string_of_char c
+  | c when (is_symbol c)         -> string_of_char c
+  | c                            -> fallback c
+
 
 (* -------------------------------------------------------------------- *)
 let string_of_mlconstant (sctt : mlconstant) =
   match sctt with
-  | MLC_Unit           -> "()"
-  | MLC_Bool     true  -> "true"
-  | MLC_Bool     false -> "false"
-  | MLC_Char     c     -> "'"^(encode_char c)^"'"
-  | MLC_Byte     c     -> "'"^(ocaml_u8_codepoint c)^"'"
-  | MLC_Int32    i     -> string_of_int32  i
-  | MLC_Int64    i     -> (string_of_int64 i)^"L"
-  | MLC_Int      s     -> if !Options.use_native_int  
-                          then s
-                          else "(Prims.parse_int \"" ^s^ "\")"
-  | MLC_Float    d     -> string_of_float d
+  | MLC_Unit -> "()"
+  | MLC_Bool true  -> "true"
+  | MLC_Bool false -> "false"
+  | MLC_Char c -> "'"^ escape_or escape_char_hex c ^"'"
+  | MLC_Int (s, Some (Signed, Int32)) -> s ^"l"
+  | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
+  | MLC_Int (s, Some (_, Int8))
+  | MLC_Int (s, Some (_, Int16)) -> s
+  | MLC_Int (s, None) -> if !Options.use_native_int
+                         then s
+                         else "(Prims.parse_int \"" ^s^ "\")"
+  | MLC_Float d -> string_of_float d
 
   | MLC_Bytes bytes ->
-      let bytes = FStar.Bytes.f_encode ocaml_u8_codepoint bytes in
-      "\""^bytes^"\""
+      (* A byte buffer. Not meant to be readable. *)
+      "\"" ^ FStar.Bytes.f_encode escape_byte_hex bytes ^ "\""
 
   | MLC_String chars ->
-      let chars = String.collect encode_char chars in
-      "\""^chars^"\""
+      (* It was a string literal. Escape what was (likely) escaped originally.
+         Leave everything else as is. That way, we get the OCaml semantics,
+         which is that strings are series of bytes, and that if you happen to
+         provide some well-formed UTF-8 sequence (e.g. "héhé", which has length
+         6), then you get the same well-formed UTF-8 sequence on exit. It is up
+         to userland to provide some UTF-8 compatible functions (e.g.
+         utf8_length). *)
+      "\"" ^ String.collect (escape_or string_of_char) chars ^ "\""
+
+  | _ -> failwith "TODO: extract integer constants properly into OCaml"
 
 
 (* -------------------------------------------------------------------- *)
@@ -380,6 +386,23 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
 
     | MLE_App (e, args) -> begin
         match e.expr, args with
+        | MLE_Name p, [
+            ({ expr = MLE_Fun ([ _ ], scrutinee) });
+            ({ expr = MLE_Fun ([ (arg, _) ], possible_match)})
+          ] when (string_of_mlpath p = "FStar.All.try_with") ->
+            let branches =
+              match possible_match with
+              | ({ expr = MLE_Match ({ expr = MLE_Var arg' }, branches) }) when (idsym arg = idsym arg') ->
+                  branches
+              | e ->
+                  (* F* may reduce [match ... with ... -> e | ... -> e] into [e]. *)
+                  [ (MLP_Wild, None, e) ]
+            in
+            doc_of_expr currentModule outer ({
+              expr = MLE_Try (scrutinee, branches);
+              mlty = possible_match.mlty;
+              loc = possible_match.loc
+            })
         | (MLE_Name p, [e1; e2]) when is_bin_op p -> doc_of_binop currentModule p e1 e2
 
         | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1; e2]) when (is_bin_op p && unitVal=ml_unit) ->
@@ -456,10 +479,10 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
 
     | MLE_Try (e, pats) ->
         combine hardline [
-            reduce1 [text "try"; text "begin"];
-            doc_of_expr currentModule  (min_op_prec, NonAssoc) e;
-            reduce1 [text "end"; text "with"];
-            (combine hardline (List.map (doc_of_branch currentModule) pats))
+            text "try";
+            doc_of_expr currentModule (min_op_prec, NonAssoc) e;
+            text "with";
+            combine hardline (List.map (doc_of_branch currentModule) pats)
         ]
 and  doc_of_binop currentModule p e1 e2 : doc =
         let (_, prio, txt) = Option.get (as_bin_op p) in
@@ -575,7 +598,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
     
 
 and doc_of_loc (lineno, file) =
-    if Util.codegen_fsharp () then
+    if !Options.no_location_info || Util.codegen_fsharp () then
         empty
     else
         let file = Util.basename file in
@@ -752,11 +775,10 @@ let rec doc_of_mllib_r (MLLib mllib) =
 let doc_of_mllib mllib =
     doc_of_mllib_r mllib
 
-open FStar.Extraction.ML.Env
-let string_of_mlexpr (env:env) (e:mlexpr) =
-    let doc = doc_of_expr (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
+let string_of_mlexpr cmod (e:mlexpr) =
+    let doc = doc_of_expr (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
     FStar.Format.pretty 0 doc
 
-let string_of_mlty (env:env) (e:mlty) =
-    let doc = doc_of_mltype (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
+let string_of_mlty (cmod) (e:mlty) =
+    let doc = doc_of_mltype (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
     FStar.Format.pretty 0 doc

@@ -20,7 +20,8 @@ void print_array(uint64* array, int len){
 void print_bytes2(char* bytes, int len){
   unsigned char i;
   for (i=0; i < len; i++){
-    printf("%x ", bytes[i] & 0xff);
+    if (i < len - 1) printf("%02x:", bytes[i] & 0xff);
+      else printf("%02x", bytes[i] & 0xff);
   }
   printf("\n");
 }
@@ -71,7 +72,7 @@ int main(int argc, char** argv){
   }
 
   Poly_poly1305_mac(hash, msg, 34, key);
-  printf("%s\nGot; ", expected);
+  printf("%s\nGot: ", expected);
   print_bytes2(hash, 16);
   return 0;
 }

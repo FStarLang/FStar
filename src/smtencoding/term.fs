@@ -17,7 +17,6 @@
 
 module FStar.SMTEncoding.Term
 
-open System.Diagnostics
 open FStar
 open FStar.Syntax.Syntax
 open FStar.Syntax
@@ -71,6 +70,12 @@ type qop =
   | Forall
   | Exists
 
+(*
+    forall (x:Term). {:pattern HasType x Int}
+            HasType x int ==> P
+
+
+*)
 //de Bruijn representation of terms in locally nameless style
 type term' =
   | Integer    of string //unbounded mathematical integers
@@ -105,6 +110,9 @@ type decl =
   | Pop
   | CheckSat
 type decls_t = list<decl>
+
+type error_label = (fv * string * Range.range)
+type error_labels = list<error_label>
 
 // VALS_HACK_HERE
 
@@ -197,7 +205,6 @@ let mk t =
 let mkTrue       = mk (App(True, []))
 let mkFalse      = mk (App(False, []))
 let mkInteger i  = mk (Integer i)
-let mkInteger32 i = mkInteger (string_of_int32 i)
 let mkInteger' i  = mkInteger (string_of_int i)
 let mkBoundV i   = mk (BoundV i)
 let mkFreeV x    = mk (FreeV x)

@@ -18,6 +18,7 @@ module FStar.Extraction.ML.ExtractTyp
 open Prims
 open FStar.Absyn
 open FStar.Extraction.ML.Syntax
+open FStar.Extraction.ML.Util
 open FStar.Util
 open FStar.Tc.Env
 open FStar.Absyn.Syntax
@@ -297,12 +298,6 @@ let rec parseInductiveTypesFromSigBundle
 
 //failwith (Util.format1 "unexpected content in a  sig bundle : %s\n" (Print.sigelt_to_string se))
 
-
-let rec argTypes  (t: mlty) : list<mlty> =
-    match t with
-      | MLTY_Fun (a,_,b) -> a::(argTypes b)
-      | _ -> []
-
 let lident2mlsymbol (l:lident) : mlsymbol = l.ident.idText
 
 let totalType_of_comp (ft:comp) : typ =
@@ -347,7 +342,7 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
         let lp = List.zip tyBinders lb in
         //assert (List.length tyBinders = List.length lp);
         let newC = extendContextWithRepAsTyVars (List.map (fun (x,y) -> (fst x, fst y)) lp) c in
-        let mlt = Util.eraseTypeDeep c (extractTyp newC tr) in
+        let mlt = Util.eraseTypeDeep (Util.delta_unfold c) (extractTyp newC tr) in
         let tys = (List.map mlTyIdentOfBinder tyBinders, mlt) in //MayErase, because constructors are always pure
         let fvv = mkFvvar ctor.cname ctor.ctype in
              //fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
@@ -414,7 +409,7 @@ let extractTypeAbbrev quals (c:context) (tyab:typeAbbrev) : context * (mlsymbol 
     let bs=List.append bs headBinders in
     let t=residualType in
     let mlt = (extractTyp c t) in
-    let mlt = Util.eraseTypeDeep c mlt in
+    let mlt = Util.eraseTypeDeep (Util.delta_unfold c) mlt in
     let tyDecBody = MLTD_Abbrev mlt in
             //printfn "type is %A\n" (t);
     let td = (mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody) in
@@ -425,16 +420,11 @@ let extractTypeAbbrev quals (c:context) (tyab:typeAbbrev) : context * (mlsymbol 
 
 let extractExn (c:context) (exnConstr : inductiveConstructor) : (context * mlmodule1) =
     let mlt = extractTyp c exnConstr.ctype in
-    let mlt = Util.eraseTypeDeep c mlt in
+    let mlt = Util.eraseTypeDeep (Util.delta_unfold c) mlt in
     let tys = [], mlt in //NS: Why are the arguments always empty?
     let fvv = mkFvvar exnConstr.cname exnConstr.ctype in
     let ex_decl  : mlmodule1 = MLM_Exn (lident2mlsymbol exnConstr.cname, argTypes mlt) in
     extend_fv c fvv tys false false, ex_decl //this might need to be translated to OCaml exceptions
-
-let mlloc_of_range (r: Range.range) =
-    let pos = Range.start_of_range r in
-    let line = Range.line_of_pos pos in
-    line, Range.file_of_range r
 
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 (* \pi_1 of returned value is the exported constant*)
@@ -442,20 +432,20 @@ let rec extractSigElt (c:context) (s:sigelt) : context * list<mlmodule1> =
     match s with
     | Sig_typ_abbrev (l,bs,_,t,quals, range) ->
         let c, tds = extractTypeAbbrev quals c ({abTyName=l; abTyBinders=bs; abBody=t}) in
-        (c, (if quals |> List.contains Logic then [] else [MLM_Loc (mlloc_of_range range); MLM_Ty [tds]]))
+        (c, (if quals |> List.contains Logic then [] else [MLM_Loc (Util.mlloc_of_range range); MLM_Ty [tds]]))
 
     | Sig_bundle(sigs, [ExceptionConstructor], _, range) ->
         let _, _, exConstrs = parseInductiveTypesFromSigBundle c sigs in
         assert (List.length exConstrs = 1);
         let c, exDecl = extractExn c (List.hd exConstrs) in
-        (c, [MLM_Loc (mlloc_of_range range); exDecl])
+        (c, [MLM_Loc (Util.mlloc_of_range range); exDecl])
 
     | Sig_bundle (sigs, _, _ , range) ->
         //let xxxx = List.map (fun se -> fprint1 "%s\n" (Util.format1 "sig bundle: : %s\n" (Print.sigelt_to_string se))) sigs in
         let inds, abbs, _ = parseInductiveTypesFromSigBundle c sigs in
         let c, indDecls = Util.fold_map extractInductive c inds in
         let c, tyAbDecls = Util.fold_map (extractTypeAbbrev []) c abbs in
-        (c, [MLM_Loc (mlloc_of_range range); MLM_Ty (indDecls@tyAbDecls)])
+        (c, [MLM_Loc (Util.mlloc_of_range range); MLM_Ty (indDecls@tyAbDecls)])
 
     | Sig_tycon (l, bs, k, _, _, quals, r) ->
         //Util.print_string ((Print.sigelt_to_string s)^"\n");

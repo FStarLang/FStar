@@ -2,10 +2,12 @@ module Padding.Pad
 
 open FStar.Seq
 open FStar.SeqProperties
+open FStar.BaseTypes
+open Platform.Bytes
 
 (* a coercion; avoid it? *)
-assume val n2b: n:nat {( n < 256 )} -> Tot (b:uint8{b==n})
-assume val b2n: b:uint8 -> Tot (n:nat { (n < 256) /\ b == n})
+assume val n2b: n:nat {( n < 256 )} -> Tot (b:byte{b==n})
+assume val b2n: b:byte -> Tot (n:nat { (n < 256) /\ b == n})
 
 type bytes = seq byte (* concrete byte arrays *)
 type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
@@ -15,7 +17,7 @@ type block = nbytes blocksize
 type text = b:bytes {(length b < blocksize)}
 
 val pad: n:nat { 1 <= n /\ n <= blocksize } -> Tot (nbytes n)
-let pad n = Seq.create #uint8 n (n2b (n-1))
+let pad n = createBytes n (n2b (n-1))
 
 (* pad 1 = [| 0 |]; pad 2 = [| 1; 1 |]; ... *)
 

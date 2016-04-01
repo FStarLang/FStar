@@ -5,7 +5,7 @@ open CoreCrypto
 type key   = bytes * bytes // p, g
 type value = bytes * bool  // q, safe_prime?
 
-type dhdb
+assume new type dhdb : Type0
 
 assume val defaultFileName: string
 assume val defaultDHPrimeConfidence: int

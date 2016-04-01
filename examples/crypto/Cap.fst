@@ -6,11 +6,13 @@ open FStar.Seq
 open FStar.SeqProperties
 open ACLs2
 open MAC
+open FStar.BaseTypes
 
 //does it verify for trivial reasons, like a bug in the build-config?
 (*let testme () =
    assert False*)
 
+type byte = Platform.Bytes.byte
 
 assume val utf8: s:string  -> Tot (seq byte)
 

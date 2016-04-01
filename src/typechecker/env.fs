@@ -72,9 +72,9 @@ type env = {
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   default_effects:list<(lident*lident)>;        (* [(x,y)] ... y is the default effect of x *)
-  type_of        :env -> term -> typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
-  universe_of    :env -> term -> universe;      (* a callback to the type-checker; g |- e : Tot (Type u) *)       
-  use_bv_sorts   :bool;                         (* use bv.sort for a bound-variable's type rather than consulting gamma *)
+  type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
+  universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
+  use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -94,7 +94,7 @@ and guard_t = {
   guard_f:    guard_formula;
   deferred:   deferred;
   univ_ineqs: list<univ_ineq>;
-  implicits:  list<(env * uvar * term * typ * Range.range)>;
+  implicits:  list<(string * env * uvar * term * typ * Range.range)>;
 }
 type env_t = env
 type implicits = list<(env * uvar * term * typ * Range.range)>
@@ -388,6 +388,22 @@ let try_lookup_lid env lid =
     match Util.bind_opt (lookup_qname env lid) mapper with
       | Some (us, t) -> Some (us, {t with pos=range_of_lid lid})
       | None -> None
+
+let is_type_constructor env lid = 
+    let mapper = function
+        | Inl _ -> Some false
+        | Inr (se, _) -> 
+           begin match se with 
+            | Sig_declare_typ (_, _, _, qs, _) -> 
+              Some (List.contains New qs)
+            | Sig_inductive_typ _ ->
+              Some true
+            | _ -> Some false
+           end in
+    match Util.bind_opt (lookup_qname env lid) mapper with
+      | Some b -> b
+      | None -> false
+
       
 let lookup_lid env l =  
     match try_lookup_lid env l with 
@@ -445,7 +461,7 @@ let lookup_effect_abbrev env (univ:universe) lid =
       if quals |> Util.for_some (function Irreducible -> true | _ -> false)
       then None
       else let insts = if Ident.lid_equals lid Const.effect_Lemma_lid //TODO: Lemma is a hack! It is more universe polymorphic than expected, because of the SMTPats ... which should be irrelevant, but unfortunately are not 
-                       then univ::[U_zero; U_zero]
+                       then univ::[U_zero]
                        else [univ] in
            begin match binders, univs with
              | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
@@ -690,7 +706,7 @@ let finish_module =
         if lid_equals m.name Const.prims_lid
         then env.gamma |> List.collect (function
                 | Binding_sig (_, se) -> [se]
-                | _ -> [])
+                | _ -> []) |> List.rev
         else m.exports  in
       add_sigelts env sigs;
       Util.smap_clear env.gamma_cache;

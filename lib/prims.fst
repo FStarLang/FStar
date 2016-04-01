@@ -135,23 +135,12 @@ assume logic val op_LessThan           : int -> int -> Tot bool
 assume val op_Equality :    #a:Type -> a -> a -> Tot bool
 assume val op_disEquality : #a:Type -> a -> a -> Tot bool
 
-type int16 = i:int{i > -32769  /\ 32768 > i}
-type int32 = int
-new type int64
-new type uint8
-new type uint16
-new type uint32
-new type uint64
-new type char
-new type float
 new type string
 new type array : Type -> Type
 assume val strcat : string -> string -> Tot string
 assume logic type LBL : string -> Type -> Type
 new type exn
 new type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
-type byte = uint8
-type double = float
 
 type list (a:Type) =
   | Nil  : list a
@@ -534,8 +523,8 @@ assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
 assume val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
-assume val _assert : p:Type -> unit -> Pure unit (requires $"assertion failed" p) (ensures (fun x -> True))
-assume val cut     : p:Type -> Pure unit (requires $"assertion failed" p) (fun x -> p)
+assume val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> True))
+assume val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
 assume val qintro  : #a:Type -> #p:(a -> Type) -> =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 assume val ghost_lemma: #a:Type -> #p:(a -> Type) -> #q:(a -> unit -> Type) -> =f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)

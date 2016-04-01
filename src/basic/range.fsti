@@ -14,6 +14,10 @@
    limitations under the License.
 *)
 module FStar.Range
+
+open FStar.Int64
+open FStar.Int32
+
 type range = int64
 type file_idx = int32
 type pos = int32

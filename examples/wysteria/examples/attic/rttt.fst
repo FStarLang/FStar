@@ -15,7 +15,7 @@ val tstep_assec_lemma:
 		    update ps (Conf Target (Mode Sec ps) [] (update_env (compose_envs_m ps (get_env_m pi ps)) x V_unit) (T_exp e) (hide [])) (snd pi)))
 let tstep_assec_lemma ps' pi ps x e pi' = admit ()
 
-#set-options "--z3timeout 15"
+
 
 val sec_enter_is_parametric:
   ps:prins -> pi:protocol ps -> pi':protocol ps
@@ -88,7 +88,7 @@ val value_lemma:
 	            conf_with_value c (slice_v p (D_v.v (c_value c_sec)))))
 let value_lemma p c c_sec = ()
 
-#set-options "--z3timeout 10"
+
 
 val sec_comp_is_parametric:
   ps:prins

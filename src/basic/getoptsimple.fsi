@@ -15,6 +15,8 @@
 *)
 module FStar.Getopt
 
+open FStar.BaseTypes
+
 val noshort : char
 val nolong : string
 type opt_variant =

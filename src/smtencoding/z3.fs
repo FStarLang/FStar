@@ -192,12 +192,11 @@ type job<'a> = {
     job:unit -> 'a;
     callback: 'a -> unit
 }
-type z3job = job<(bool * list<(string * Range.range)>)>
+type z3job = job<(bool * list<error_label>)>
 
-(* The pseudo-annotation is required because the ref<list<z3job>> annotation is erased in OCaml*)
-let job_queue : ref<list<z3job>> =
-    let x = Util.mk_ref [{job=(fun () -> (false, [("",Range.mk_range "" 0 0)])); callback=(fun a -> ())}] in
-    x:=[]; x
+let job_queue : ref<list<z3job>> = Util.mk_ref []
+//    let x = Util.mk_ref [{job=(fun () -> (false, [(("", Term_sort), "", Range.mk_range "" 0 0)])); callback=(fun a -> ())}] in
+//    x:=[]; x
 
 let pending_jobs = Util.mk_ref 0
 let with_monitor m f =
@@ -215,7 +214,7 @@ let z3_job fresh label_messages input () =
         let failing_assertions = lblnegs |> List.collect (fun l ->
         match label_messages |> List.tryFind (fun (m, _, _) -> fst m = l) with
             | None -> []
-            | Some (_, msg, r) -> [(msg, r)]) in
+            | Some (lbl, msg, r) -> [(lbl, msg, r)]) in
         false, failing_assertions in
     result
 
@@ -307,7 +306,7 @@ let commit_mark msg =
         | hd::s::tl -> fresh_scope := (hd@s)::tl
         | _ -> failwith "Impossible"
     end
-let ask fresh label_messages qry cb =
+let ask fresh label_messages qry (cb: (bool * error_labels) -> unit) =
   let fresh = fresh && !Options.n_cores > 1 in
   let theory = bgtheory fresh in
   let theory =

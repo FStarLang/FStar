@@ -442,6 +442,7 @@ let finish env modul =
            lbs |> List.iter (fun lb -> Util.smap_remove (sigmap env) (right lb.lbname).fv_name.v.str)
       end;
       if List.contains Abstract quals
+      && not (List.contains Private quals)
       then lbs |> List.iter (fun lb -> 
            let lid = (right lb.lbname).fv_name.v in
            let decl = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, Assumption::quals, r) in

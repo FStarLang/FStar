@@ -1235,8 +1235,6 @@ let if_par_then_exit_sec_to_sec #c #c' h = match h with
   | _               -> ()
 
 (* CH: this sometimes timed out on my laptop *)
-#set-options "--z3timeout 20"
-
 opaque val forward_simulation_par: #c:sconfig -> #c':sconfig
                                    -> h:sstep c c'{is_par c /\
                                                    if_enter_sec_then_from_sec h}
@@ -2081,7 +2079,6 @@ val pstep_psec_enter_psec_enter_empty_intersection:
   -> Lemma (requires (True)) (ensures (Equal (intersect (P_sec_enter.ps h1) (P_sec_enter.ps h2)) empty))
 let pstep_psec_enter_psec_enter_empty_intersection #ps pi pi1 pi2 h1 h2 = ()
 
-#set-options "--z3timeout 20"
 
 opaque val pstep_psec_enter_psec_enter_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps

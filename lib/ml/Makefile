@@ -3,7 +3,10 @@
 PRIMS_DIR=.
 
 PRIMS=MkPrims.ml $(PRIMS_DIR)/prims.ml
-COMMON=FStar_All.ml FStar_IO.ml FStar_Heap.ml FStar_List.ml FStar_Option.ml FStar_Char.ml FStar_String.ml FStar_Set.ml
+COMMON=FStar_Float.ml FStar_Char.ml FStar_Int8.ml FStar_UInt8.ml FStar_Int16.ml FStar_UInt16.ml \
+	FStar_Int32.ml FStar_Int64.ml FStar_BaseTypes.ml \
+	FStar_All.ml FStar_IO.ml FStar_Heap.ml FStar_List.ml \
+	FStar_Option.ml FStar_String.ml FStar_Set.ml
 FILES=$(PRIMS) FStar_ST.ml $(COMMON)
 HYPERHEAP=$(PRIMS) ./hyperheap/FStar_ST.ml $(COMMON) ./hyperheap/FStar_HyperHeap.ml
 

@@ -1,7 +1,8 @@
 FSTAR_HOME = ../../..
-PLATFORM = $(FSTAR_HOME)/contrib/Platform/ml
+CONTRIB=ucontrib
+PLATFORM = $(FSTAR_HOME)/$(CONTRIB)/Platform/ml
 DB=db
-INCLUDE=-I $(PLATFORM) -I $(DB)
+INCLUDE=-package batteries -I $(PLATFORM) -I $(DB)
 
 OCAMLC = ocamlfind c $(INCLUDE) -g -annot
 OCAMLOPT = ocamlfind opt $(INCLUDE) -g -annot

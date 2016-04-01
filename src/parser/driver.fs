@@ -53,10 +53,14 @@ let parse_fragment frag : fragment =
 //      Decls (Desugar.desugar_decls env decls)
 
     | Inl (Inl _) ->
-      raise (Absyn.Syntax.Err("Refusing to check more than one module at a time incrementally"))
+      if !Options.universes
+      then raise (Syntax.Syntax.Err("Refusing to check more than one module at a time incrementally"))
+      else raise (Absyn.Syntax.Err("Refusing to check more than one module at a time incrementally"))
 
     | Inr (msg,r) ->
-      raise (Absyn.Syntax.Error(msg, r))
+      if !Options.universes
+      then raise (Syntax.Syntax.Error(msg, r))
+      else raise (Absyn.Syntax.Error(msg, r))
 
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 let parse_file fn =
@@ -65,9 +69,13 @@ let parse_file fn =
     ast
 
   | Inl (Inr _) ->
-    Util.print1_error "%s: expected a module\n" fn;
-    exit 1
+    let msg = Util.format1 "%s: expected a module\n" fn in
+    let r = Range.dummyRange in
+    if !Options.universes
+    then raise (FStar.Syntax.Syntax.Error(msg, r))
+    else raise (FStar.Absyn.Syntax.Error(msg, r))
 
   | Inr (msg, r) ->
-    Util.print_string <| Print.format_error r msg;
-    exit 1
+    if !Options.universes
+    then raise (FStar.Syntax.Syntax.Error(msg, r))
+    else raise (FStar.Absyn.Syntax.Error(msg, r))

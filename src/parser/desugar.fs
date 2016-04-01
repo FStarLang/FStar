@@ -430,8 +430,9 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
                 VBinder(x, desugar_typ env t, aq) in
         loc, env', binder, p, imp
 
-      | PatTvar (a, imp) ->
-        let aq = if imp then Some imp_tag else None in
+      | PatTvar (a, aq) ->
+        let imp = (aq=Some AST.Implicit) in
+        let aq = trans_aqual aq in
         if a.idText = "'_"
         then let a = new_bvd <| Some p.prange in
              loc, env, TBinder(a, kun, aq), pos <| Pat_twild (bvd_to_bvar_s a kun), imp
@@ -447,8 +448,9 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         let x = new_bvd (Some p.prange) in
         loc, env, VBinder(x, tun, None), pos <| Pat_constant c, false
 
-      | PatVar (x, imp) ->
-        let aq = if imp then Some imp_tag else None in
+      | PatVar (x, aq) ->
+        let imp = (aq=Some AST.Implicit) in
+        let aq = trans_aqual aq in
         let loc, env, xbvd = resolvex loc env x in
         loc, env, VBinder(xbvd, tun, aq), pos <| Pat_var (bvd_to_bvar_s xbvd tun), imp
 
@@ -591,7 +593,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
           | PatAscribed(_, t) -> env, free_type_vars env t@ftvs
           | _ -> env, ftvs) (env, []) binders in
       let ftv = sort_ftv ftv in
-      let binders = (ftv |> List.map (fun a -> mk_pattern (PatTvar(a, true)) top.range))@binders in //close over the free type variables
+      let binders = (ftv |> List.map (fun a -> mk_pattern (PatTvar(a, Some AST.Implicit)) top.range))@binders in //close over the free type variables
 
       let rec aux env bs sc_pat_opt = function
             | [] ->
@@ -770,7 +772,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
           let x = genident (Some e.range) in
           let xterm = mk_term (Var (lid_of_ids [x])) x.idRange Expr in
           let record = Record(None, record.fields |> List.map (fun (f, _) -> get_field (Some xterm) f)) in
-          Let(false, [(mk_pattern (PatVar (x, false)) x.idRange, e)], mk_term record top.range top.level) in
+          Let(false, [(mk_pattern (PatVar (x, None)) x.idRange, e)], mk_term record top.range top.level) in
 
       let recterm = mk_term recterm top.range top.level in
       let e = desugar_exp env recterm in
@@ -1489,7 +1491,7 @@ let trans_qual r = function
 
 let trans_pragma = function
   | AST.SetOptions s -> SetOptions s
-  | AST.ResetOptions -> ResetOptions
+  | AST.ResetOptions s -> ResetOptions s
 
 let trans_quals r = List.map (trans_qual r)
 

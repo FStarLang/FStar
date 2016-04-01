@@ -2,10 +2,11 @@ VERFILES=Unit1.Basic.fst        Unit1.Projectors2.fst          Unit1.WPsAndTripl
 	 Unit1.Parser.fst       Unit1.RefinementInference.fst  Unit1.WPsAndTriples_ST.fst \
 	 Unit1.Projectors1.fst  Unit1.UnificationTests.fst     unit2.fst \
 	 testset.fst 		testheap.fst 		       short-circuit.fst \
-	 first-proofs.fst 	testint32.fst 		       testmref.fst \
+	 first-proofs.fst 	              	 	       testmref.fst \
 	 testTwoLevelHeap.fst   mac2.fst 		       testghost.fst \
 	 inverse.fst
 
+FSTAR_HOME=../..
 include ../Makefile.include
 
 NEGFILES=NegativeTests.BST.fst     NegativeTests.Heap.fst  NegativeTests.ShortCircuiting.fst \

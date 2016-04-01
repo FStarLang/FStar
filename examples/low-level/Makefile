@@ -3,6 +3,7 @@ EXE=.exe
 else
 EXE=
 endif
+FSTAR_HOME=../..
 include ../Makefile.include
 
 ALLOCATOR_DIR = ../../runtime/allocator

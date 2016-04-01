@@ -6,88 +6,28 @@ let b3 n =  ((n lsr 24) land 0xFF)
 let dWw1 n = BatInt64.to_int (BatInt64.logand (BatInt64.shift_right n 32) 0xFFFFFFFFL)
 let dWw0 n = BatInt64.to_int (BatInt64.logand n 0xFFFFFFFFL)
 
-type bytes = char array
+type bytes = int array
 
-let f_encode f (b:bytes) = Array.fold_left (fun x y -> x ^ y) "" (Array.map f b)
+let f_encode f (b:bytes) = String.concat "" (Array.to_list (Array.map f b))
 let length (b:bytes) = BatArray.length b
-let get (b:bytes) n = int_of_char (BatArray.get b n)
-let make (f : _ -> int) n = BatArray.init n (fun i -> char_of_int (f i))
-let zero_create n : bytes = BatArray.create n (char_of_int 0)
-
-let really_input (is:in_channel) n =
-  let buff = BatString.init n (fun _ -> char_of_int 0) in
-  really_input is buff 0 n;
-  buff
-
-let maybe_input (is:in_channel) n =
-  let buff = BatString.init n (fun _ -> char_of_int 0) in
-  let x = input is buff 0 n in
-  BatString.sub buff 0 x
-
-let output (os:out_channel) b =
-  Pervasives.output os b 0 (BatString.length b)
+let get (b:bytes) n = BatArray.get b n
+let make (f : _ -> int) n = BatArray.init n f
+let zero_create n : bytes = BatArray.create n 0
 
 let sub ( b:bytes) s l = BatArray.sub b s l
-let set bb n (b:Prims.int) = BatArray.set bb n (char_of_int b)
+let set = BatArray.set
 let blit (a:bytes) b c d e = BatArray.blit a b c d e
 let string_as_unicode_bytes (s:string) = FStar_Util.unicode_of_string s
 let utf8_bytes_as_string (b:bytes) = FStar_Util.string_of_unicode b
 let unicode_bytes_as_string (b:bytes) = FStar_Util.string_of_unicode b
 let compare (b1:bytes) (b2:bytes) = compare b1 b2
 
-let to_intarray (b:bytes) =  BatArray.map int_of_char b
-let of_intarray (arr:int array) = BatArray.map char_of_int arr
+let to_intarray (b:bytes) = b
+let of_intarray (arr:int array) = arr
 
 let string_as_utf8_bytes (s:string) = FStar_Util.unicode_of_string s
 
 let append (b1: bytes) (b2:bytes) = BatArray.append b1 b2
-
-let string_as_utf8_bytes_null_terminated (s:string) =
-  append (string_as_utf8_bytes s) (of_intarray [| 0x0 |])
-
-let string_as_unicode_bytes_null_terminated (s:string) =
-  append (string_as_unicode_bytes s) (of_intarray [| 0x0 |])
-
-
-module Bytestream = struct
-  type t = { bytes: bytes; mutable pos: int; max: int }
-
-  let of_bytes b n len =
-    if n < 0 || (n+len) > length b then failwith "Bytestream.of_bytes";
-    { bytes = b; pos = n; max = n+len }
-
-  let read_byte b  =
-    if b.pos >= b.max then failwith "Bytestream.of_bytes.read_byte: end of stream";
-    let res = get b.bytes b.pos in
-    b.pos <- b.pos + 1;
-    res
-
-  let read_bytes b n  =
-    if b.pos + n > b.max then failwith "Bytestream.read_bytes: end of stream";
-    let res = sub b.bytes b.pos n in
-    b.pos <- b.pos + n;
-    res
-
-  let position b = b.pos
-  let clone_and_seek b pos = { bytes=b.bytes; pos=pos; max=b.max }
-  let skip b n = b.pos <- b.pos + n
-
-  let read_unicode_bytes_as_string (b:t) n =
-    let res = ref "" in
-    for i = 0 to (n-1) do
-      res := !res^(BatUTF8.init 1 (fun _ -> BatUChar.of_char (b.bytes.(b.pos + i))))
-    done;
-    b.pos <- b.pos + n;
-    !res
-
-  let read_utf8_bytes_as_string (b:t) n =
-    let res = ref "" in
-    for i = 0 to (n-1) do
-      res := !res^(BatUTF8.init 1 (fun _ -> BatUChar.of_char (b.bytes.(b.pos + i))))
-    done;
-    b.pos <- b.pos + n;
-    !res
-end
 
 type bytebuf =
     { mutable bbArray: bytes;

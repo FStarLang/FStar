@@ -66,7 +66,7 @@ let as_uvar : typ -> uvar = function
     | {n=Tm_uvar(uv, _)} -> uv
     | _ -> failwith "Impossible"
 
-let new_implicit_var env k =
+let new_implicit_var reason r env k =
     match Util.destruct k Const.range_of_lid with
      | Some [_; (tm, _)] -> 
        let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) None tm.pos in
@@ -74,8 +74,8 @@ let new_implicit_var env k =
 
      | _ -> 
        let t, u = new_uvar_aux env k in
-       let g = {Rel.trivial_guard with implicits=[(env, as_uvar u, t, k, u.pos)]} in
-       t, [(as_uvar u, u.pos)], g
+       let g = {Rel.trivial_guard with implicits=[(reason, env, as_uvar u, t, k, r)]} in
+       t, [(as_uvar u, r)], g
      
 let check_uvars r t =
   let uvs = Free.uvars t in
@@ -104,6 +104,7 @@ let force_sort' s = match !s.tk with
 let force_sort s = mk (force_sort' s) None s.pos
 
 let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} = 
+  let rng = t.pos in
   let t = SS.compress t in 
   match t.n with
    | Tm_unknown ->
@@ -116,7 +117,7 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
           {a with sort=t}, false
         | _ -> a, true in
 
-    let rec aux vars e : typ * bool =
+    let rec aux vars e : either<typ,comp> * bool =
       let e = SS.compress e in
       match e.n with
       | Tm_meta(e, _) -> aux vars e
@@ -132,14 +133,22 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
            (vars,[],false) in
 
         let res, check_res = aux scope body in
-        let c = Util.ml_comp res r in //let rec without annotations default to being in the ML monad; TODO: revisit this
+        let c = match res with 
+            | Inl t -> Util.ml_comp t r //let rec without annotations default to being in the ML monad; TODO: revisit this
+            | Inr c -> c in
         let t = Util.arrow bs c in 
         if debug env Options.High then Util.print2 "(%s) Using type %s\n" (Range.string_of_range r) (Print.term_to_string t);
-        t, check_res || check
+        Inl t, check_res || check
 
-      | _ ->Rel.new_uvar r vars Util.ktype0 |> fst, false in
+      | _ -> Inl (Rel.new_uvar r vars Util.ktype0 |> fst), false in
 
-     let t, b = aux (t_binders env)  e in 
+     let t, b = aux (t_binders env) e in 
+     let t = match t with 
+        | Inr c -> 
+          raise (Error(Util.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
+                        (Print.comp_to_string c), 
+                       rng))
+        | Inl t -> t in
      [], t, b
 
   | _ -> 
@@ -513,16 +522,21 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             else if Util.is_ml_comp c1 && Util.is_ml_comp c2
             then Some (c2, "both ml")
             else None in
+        let subst_c2 reason = 
+            match e1opt, b with 
+                | Some e, Some x -> 
+                  Some (SS.subst_comp [NT(x,e)] c2, reason)
+                | _ -> aux() in 
         if Util.is_total_comp c1
         && Util.is_total_comp c2
-        then Some (c2, "both total")
+        then subst_c2 "both total"
         else if Util.is_tot_or_gtot_comp c1
              && Util.is_tot_or_gtot_comp c2
         then Some (S.mk_GTotal (Util.comp_result c2), "both gtot")
         else match e1opt, b with
             | Some e, Some x ->
                 if Util.is_total_comp c1 && not (Syntax.is_null_bv x)
-                then Some (SS.subst_comp [NT(x, e)] c2, "substituted e")
+                then subst_c2 "substituted e"
                 else aux ()
             | _ -> aux () in
       match try_simplify () with
@@ -898,7 +912,7 @@ let maybe_instantiate (env:Env.env) e t =
       let rec aux subst = function
         | (x, Some (Implicit dot))::rest ->
           let t = SS.subst subst x.sort in
-          let v, _, g = new_implicit_var env t in
+          let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
           let subst = NT(x, v)::subst in
           let args, bs, subst, g' = aux subst rest in
           (v, Some (Implicit dot))::args, bs, subst, Rel.conj_guard g g'

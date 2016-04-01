@@ -1,3 +1,4 @@
+FSTAR_HOME=../..
 include ../Makefile.include
 all: russell berardi 
 #value-restriction

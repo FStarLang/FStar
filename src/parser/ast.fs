@@ -84,9 +84,9 @@ and pattern' =
   | PatWild
   | PatConst    of sconst
   | PatApp      of pattern * list<pattern>
-  | PatVar      of ident * bool         (* flag marks an implicit *)
+  | PatVar      of ident * option<arg_qualifier>   
   | PatName     of lid
-  | PatTvar     of ident * bool         (* flag marks an implicit *)
+  | PatTvar     of ident * option<arg_qualifier>
   | PatList     of list<pattern>
   | PatTuple    of list<pattern> * bool (* dependent if flag is set *)
   | PatRecord   of list<(lid * pattern)>
@@ -133,7 +133,7 @@ type lift = {
 
 type pragma =
   | SetOptions of string
-  | ResetOptions
+  | ResetOptions of option<string>
 
 type decl' =
   | TopLevelModule of lid
@@ -151,7 +151,7 @@ type decl' =
   | Pragma of pragma
 and decl = {d:decl'; drange:range}
 and effect_decl =
-  | DefineEffect      of ident * list<binder> * term * list<decl>
+  | DefineEffect   of ident * list<binder> * term * list<decl>
   | RedefineEffect of ident * list<binder> * term
 
 type modul =
@@ -182,7 +182,7 @@ let mk_function branches r1 r2 =
     then let i = FStar.Syntax.Syntax.next_id () in
          Ident.gen r1 
     else U.genident (Some r1) in
-  mk_term (Abs([mk_pattern (PatVar(x,false)) r1],
+  mk_term (Abs([mk_pattern (PatVar(x,None)) r1],
                mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
     r2 Expr
 let un_function p tm = match p.pat, tm.tm with
@@ -190,116 +190,6 @@ let un_function p tm = match p.pat, tm.tm with
     | _ -> None
 
 let lid_with_range lid r = lid_of_path (path_of_lid lid) r
-
-let to_string_l sep f l =
-  String.concat sep (List.map f l)
-let imp_to_string = function
-    | Hash -> "#"
-    | _ -> ""
-let rec term_to_string (x:term) = match x.tm with
-  | Wild -> "_"
-  | Requires (t, _) -> Util.format1 "(requires %s)" (term_to_string t)
-  | Ensures (t, _) -> Util.format1 "(ensures %s)" (term_to_string t)
-  | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
-  | Const c -> P.const_to_string c
-  | Op(s, xs) -> Util.format2 "%s(%s)" s (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
-  | Tvar id -> id.idText
-  | Var l
-  | Name l -> l.str
-  | Construct(l, args) ->
-    Util.format2 "(%s %s)" l.str (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
-  | Abs(pats, t) when (x.level = Expr) ->
-    Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
-  | Abs(pats, t) when (x.level = Type) ->
-    Util.format2 "(fun %s => %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
-  | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
-  | Let(false, [(pat,tm)], body) ->
-    Util.format3 "let %s = %s in %s" (pat|> pat_to_string) (tm|> term_to_string) (body|> term_to_string)
-  | Let(_, lbs, body) ->
-    Util.format2 "let rec %s in %s" (to_string_l " and " (fun (p,b) -> Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string)) lbs) (body|> term_to_string)
-  | Seq(t1, t2) ->
-    Util.format2 "%s; %s" (t1|> term_to_string) (t2|> term_to_string)
-  | If(t1, t2, t3) ->
-    Util.format3 "if %s then %s else %s" (t1|> term_to_string) (t2|> term_to_string) (t3|> term_to_string)
-  | Match(t, branches) ->
-    Util.format2 "match %s with %s"
-      (t|> term_to_string)
-      (to_string_l " | " (fun (p,w,e) -> Util.format3 "%s %s -> %s"
-        (p |> pat_to_string)
-        (match w with | None -> "" | Some e -> Util.format1 "when %s" (term_to_string e))
-        (e |> term_to_string)) branches)
-  | Ascribed(t1, t2) ->
-    Util.format2 "(%s : %s)" (t1|> term_to_string) (t2|> term_to_string)
-  | Record(Some e, fields) ->
-    Util.format2 "{%s with %s}" (e|> term_to_string) (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (l.str) (e|> term_to_string)) fields)
-  | Record(None, fields) ->
-    Util.format1 "{%s}" (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (l.str) (e|> term_to_string)) fields)
-  | Project(e,l) ->
-    Util.format2 "%s.%s" (e|> term_to_string) (l.str)
-  | Product([], t) ->
-    term_to_string t
-  | Product(b::hd::tl, t) ->
-    term_to_string (mk_term (Product([b], mk_term (Product(hd::tl, t)) x.range x.level)) x.range x.level)
-  | Product([b], t) when (x.level = Type) ->
-    Util.format2 "%s -> %s" (b|> binder_to_string) (t|> term_to_string)
-  | Product([b], t) when (x.level = Kind) ->
-    Util.format2 "%s => %s" (b|> binder_to_string) (t|> term_to_string)
-  | Sum(binders, t) ->
-    Util.format2 "%s * %s" (binders |> (List.map binder_to_string) |> String.concat " * " ) (t|> term_to_string)
-  | QForall(bs, pats, t) ->
-    Util.format3 "forall %s.{:pattern %s} %s"
-      (to_string_l " " binder_to_string bs)
-      (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
-      (t|> term_to_string)
-  | QExists(bs, pats, t) ->
-    Util.format3 "exists %s.{:pattern %s} %s"
-      (to_string_l " " binder_to_string bs)
-      (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
-      (t|> term_to_string)
-  | Refine(b, t) ->
-    Util.format2 "%s:{%s}" (b|> binder_to_string) (t|> term_to_string)
-  | NamedTyp(x, t) ->
-    Util.format2 "%s:%s" x.idText  (t|> term_to_string)
-  | Paren t -> Util.format1 "(%s)" (t|> term_to_string)
-  | Product(bs, t) ->
-        Util.format2 "Unidentified product: [%s] %s"
-          (bs |> List.map binder_to_string |> String.concat ",") (t|> term_to_string)
-  | t -> failwith "Missing case in term_to_string"
-
-and binder_to_string x =
-  let s = match x.b with
-  | Variable i -> i.idText
-  | TVariable i -> Util.format1 "%s:_" (i.idText)
-  | TAnnotated(i,t)
-  | Annotated(i,t) -> Util.format2 "%s:%s" (i.idText) (t |> term_to_string)
-  | NoName t -> t |> term_to_string in
-  match x.aqual with
-    | Some Implicit -> Util.format1 "#%s" s
-    | Some Equality -> Util.format1 "=%s" s
-    | _ -> s
-
-and pat_to_string x = match x.pat with
-  | PatWild -> "_"
-  | PatConst c -> P.const_to_string c
-  | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
-  | PatTvar (i, true)
-  | PatVar (i, true) -> Util.format1 "#%s" i.idText
-  | PatTvar(i, false)
-  | PatVar (i, false) -> i.idText
-  | PatName l -> l.str
-  | PatList l -> Util.format1 "[%s]" (to_string_l "; " pat_to_string l)
-  | PatTuple (l, false) -> Util.format1 "(%s)" (to_string_l ", " pat_to_string l)
-  | PatTuple (l, true) -> Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l)
-  | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" (f.str) (e |> pat_to_string)) l)
-  | PatOr l ->  to_string_l "|\n " pat_to_string l
-  | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
-
-let error msg tm r =
- let tm = tm |> term_to_string in
- let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in
- if !FStar.Options.universes
- then raise (FStar.Syntax.Syntax.Error(msg^"\n"^tm, r))
- else raise (S.Error(msg^"\n"^tm, r))
 
 let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
@@ -394,3 +284,158 @@ let rec extract_named_refinement t1  =
 	| Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
     | Paren t -> extract_named_refinement t
 	| _ -> None
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Printing ASTs, mostly for debugging
+//////////////////////////////////////////////////////////////////////////////////////////////
+let to_string_l sep f l =
+  String.concat sep (List.map f l)
+let imp_to_string = function
+    | Hash -> "#"
+    | _ -> ""
+let rec term_to_string (x:term) = match x.tm with
+  | Wild -> "_"
+  | Requires (t, _) -> Util.format1 "(requires %s)" (term_to_string t)
+  | Ensures (t, _) -> Util.format1 "(ensures %s)" (term_to_string t)
+  | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
+  | Const c -> P.const_to_string c
+  | Op(s, xs) -> Util.format2 "%s(%s)" s (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
+  | Tvar id -> id.idText
+  | Var l
+  | Name l -> l.str
+  | Construct(l, args) ->
+    Util.format2 "(%s %s)" l.str (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
+  | Abs(pats, t) when (x.level = Expr) ->
+    Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
+  | Abs(pats, t) when (x.level = Type) ->
+    Util.format2 "(fun %s => %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
+  | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
+  | Let(false, [(pat,tm)], body) ->
+    Util.format3 "let %s = %s in %s" (pat|> pat_to_string) (tm|> term_to_string) (body|> term_to_string)
+  | Let(_, lbs, body) ->
+    Util.format2 "let rec %s in %s" (to_string_l " and " (fun (p,b) -> Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string)) lbs) (body|> term_to_string)
+  | Seq(t1, t2) ->
+    Util.format2 "%s; %s" (t1|> term_to_string) (t2|> term_to_string)
+  | If(t1, t2, t3) ->
+    Util.format3 "if %s then %s else %s" (t1|> term_to_string) (t2|> term_to_string) (t3|> term_to_string)
+  | Match(t, branches) ->
+    Util.format2 "match %s with %s"
+      (t|> term_to_string)
+      (to_string_l " | " (fun (p,w,e) -> Util.format3 "%s %s -> %s"
+        (p |> pat_to_string)
+        (match w with | None -> "" | Some e -> Util.format1 "when %s" (term_to_string e))
+        (e |> term_to_string)) branches)
+  | Ascribed(t1, t2) ->
+    Util.format2 "(%s : %s)" (t1|> term_to_string) (t2|> term_to_string)
+  | Record(Some e, fields) ->
+    Util.format2 "{%s with %s}" (e|> term_to_string) (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (l.str) (e|> term_to_string)) fields)
+  | Record(None, fields) ->
+    Util.format1 "{%s}" (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (l.str) (e|> term_to_string)) fields)
+  | Project(e,l) ->
+    Util.format2 "%s.%s" (e|> term_to_string) (l.str)
+  | Product([], t) ->
+    term_to_string t
+  | Product(b::hd::tl, t) ->
+    term_to_string (mk_term (Product([b], mk_term (Product(hd::tl, t)) x.range x.level)) x.range x.level)
+  | Product([b], t) when (x.level = Type) ->
+    Util.format2 "%s -> %s" (b|> binder_to_string) (t|> term_to_string)
+  | Product([b], t) when (x.level = Kind) ->
+    Util.format2 "%s => %s" (b|> binder_to_string) (t|> term_to_string)
+  | Sum(binders, t) ->
+    Util.format2 "%s * %s" (binders |> (List.map binder_to_string) |> String.concat " * " ) (t|> term_to_string)
+  | QForall(bs, pats, t) ->
+    Util.format3 "forall %s.{:pattern %s} %s"
+      (to_string_l " " binder_to_string bs)
+      (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
+      (t|> term_to_string)
+  | QExists(bs, pats, t) ->
+    Util.format3 "exists %s.{:pattern %s} %s"
+      (to_string_l " " binder_to_string bs)
+      (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
+      (t|> term_to_string)
+  | Refine(b, t) ->
+    Util.format2 "%s:{%s}" (b|> binder_to_string) (t|> term_to_string)
+  | NamedTyp(x, t) ->
+    Util.format2 "%s:%s" x.idText  (t|> term_to_string)
+  | Paren t -> Util.format1 "(%s)" (t|> term_to_string)
+  | Product(bs, t) ->
+        Util.format2 "Unidentified product: [%s] %s"
+          (bs |> List.map binder_to_string |> String.concat ",") (t|> term_to_string)
+  | t -> failwith "Missing case in term_to_string"
+
+and binder_to_string x =
+  let s = match x.b with
+  | Variable i -> i.idText
+  | TVariable i -> Util.format1 "%s:_" (i.idText)
+  | TAnnotated(i,t)
+  | Annotated(i,t) -> Util.format2 "%s:%s" (i.idText) (t |> term_to_string)
+  | NoName t -> t |> term_to_string in
+  Util.format2 "%s%s" (aqual_to_string x.aqual) s
+
+and aqual_to_string = function 
+   | Some Equality -> "$"
+   | Some Implicit -> "#"
+   | _ -> ""
+
+and pat_to_string x = match x.pat with
+  | PatWild -> "_"
+  | PatConst c -> P.const_to_string c
+  | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
+  | PatTvar (i, aq)
+  | PatVar (i,  aq) -> Util.format2 "%s%s" (aqual_to_string aq) i.idText
+  | PatName l -> l.str
+  | PatList l -> Util.format1 "[%s]" (to_string_l "; " pat_to_string l)
+  | PatTuple (l, false) -> Util.format1 "(%s)" (to_string_l ", " pat_to_string l)
+  | PatTuple (l, true) -> Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l)
+  | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" (f.str) (e |> pat_to_string)) l)
+  | PatOr l ->  to_string_l "|\n " pat_to_string l
+  | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
+
+let rec head_id_of_pat p = match p.pat with 
+        | PatName l -> [l]
+        | PatVar (i, _) -> [FStar.Ident.lid_of_ids [i]]
+        | PatApp(p, _) -> head_id_of_pat p
+        | PatAscribed(p, _) -> head_id_of_pat p
+        | _ -> [] 
+
+let lids_of_let defs =  defs |> List.collect (fun (p, _) -> head_id_of_pat p) 
+
+let id_of_tycon = function
+  | TyconAbstract(i, _, _)
+  | TyconAbbrev(i, _, _, _)
+  | TyconRecord(i, _, _, _) 
+  | TyconVariant(i, _, _, _) -> i.idText
+
+let decl_to_string (d:decl) = match d.d with 
+  | TopLevelModule l -> "module " ^ l.str
+  | Open l -> "open " ^ l.str
+  | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" i.idText l.str
+  | KindAbbrev(i, _, _) -> "kind " ^ i.idText
+  | ToplevelLet(_, _, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
+  | Main _ -> "main ..."
+  | Assume(_, i, _) -> "assume " ^ i.idText
+  | Tycon(_, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
+  | Val(_, i, _) -> "val " ^ i.idText
+  | Exception(i, _) -> "exception " ^ i.idText
+  | NewEffect(_, DefineEffect(i, _, _, _)) 
+  | NewEffect(_, RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
+  | SubEffect _ -> "sub_effect"
+  | Pragma _ -> "pragma"
+
+
+let modul_to_string (m:modul) = match m with 
+    | Module (_, decls)
+    | Interface (_, decls, _) -> 
+      decls |> List.map decl_to_string |> String.concat "\n"
+      
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Error reporting
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+let error msg tm r =
+ let tm = tm |> term_to_string in
+ let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in
+ if !FStar.Options.universes
+ then raise (FStar.Syntax.Syntax.Error(msg^"\n"^tm, r))
+ else raise (S.Error(msg^"\n"^tm, r))

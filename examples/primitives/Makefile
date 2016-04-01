@@ -44,7 +44,7 @@ SHA_OCAML=Sint.ml FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt63.ml S
 
 .PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test sha-ver sha-ml
 
-all: chacha-test poly-test
+all: chacha-test poly-test curve-test aes-test
 
 low-star-ver:
 	$(FSTAR) $(OPTIONS_VER) sbuffer.fst FStar.UInt8.fst FStar.UInt32.fst FStar.UInt63.fst FStar.SBytes.fst

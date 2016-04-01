@@ -244,9 +244,10 @@ let push_subst s t =
           mk_Tm_uinst t' us
 
         | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args)) None t.pos
-        | Tm_ascribed(t0, t1, lopt) -> mk (Tm_ascribed(subst' s t0, subst' s t1, lopt)) None t.pos
-         
 
+        | Tm_ascribed(t0, Inl t1, lopt) -> mk (Tm_ascribed(subst' s t0, Inl (subst' s t1), lopt)) None t.pos
+        | Tm_ascribed(t0, Inr c, lopt) -> mk (Tm_ascribed(subst' s t0, Inr (subst_comp' s c), lopt)) None t.pos
+       
         | Tm_abs(bs, body, lopt) -> 
           let n = List.length bs in 
           let s' = shift_subst' n s in
@@ -282,7 +283,10 @@ let push_subst s t =
             let lbd = if is_rec && Util.is_left (lb.lbname) //if it is a recursive local let, then all the let bound names are in scope for the body
                       then subst' sn lb.lbdef 
                       else subst' s lb.lbdef in
-            {lb with lbtyp=lbt; lbdef=lbd}) in
+            let lbname = match lb.lbname with 
+                | Inl x -> Inl ({x with sort=lbt})
+                | Inr fv -> Inr ({fv with fv_name={fv.fv_name with ty=lbt}}) in
+            {lb with lbname=lbname; lbtyp=lbt; lbdef=lbd}) in
           mk (Tm_let((is_rec, lbs), body)) None t.pos  
          
         | Tm_meta(t0, Meta_pattern ps) -> 

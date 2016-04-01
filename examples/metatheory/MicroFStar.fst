@@ -1,6 +1,5 @@
 module MicroFStar
 
-#set-options "--z3timeout 10"
 
 (* Formalization of micro-fstar proofs of progress and preservation
    for the PURE effect. The definitions cover most of micro-fstar, the
@@ -3273,7 +3272,6 @@ let is_kvar g t k hk = if is_KVar hk then 0 else 1
 #set-options "--split_cases 1" *)
 
 (* CH: seems not needed on my machine, but needed on Markulf's Surface *)
-#set-options "--z3timeout 20"
 
 opaque val typing_substitution : #g1:env -> #e:exp -> #c:cmp -> s:sub -> #g2:env ->
     h1:typing g1 e c ->

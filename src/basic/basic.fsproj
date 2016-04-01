@@ -62,6 +62,7 @@
     <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
   </Target>
   <ItemGroup>
+    <Compile Include="basetypes-fake.fs" />
     <Compile Include="prims-fake.fs" />
     <Compile Include="char.fsi" />
     <Compile Include="char.fs" />

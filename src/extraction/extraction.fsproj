@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -53,11 +53,14 @@
   <ItemGroup>
     <Compile Include="Copy of c-backend.fs" />
     <Compile Include="ml-syntax.fs" />
+    <Compile Include="uenv.fs" />
     <Compile Include="env.fs" />
     <Compile Include="util.fs" />
     <Compile Include="codegen.fsi" />
     <Compile Include="codegen.fs" />
     <Compile Include="c-backend.fsi" />
+    <Compile Include="term.fs" />
+    <Compile Include="modul.fs" />
     <Compile Include="extracttyp.fs" />
     <Compile Include="extractexp.fs" />
     <Compile Include="extractmod.fs" />
@@ -65,8 +68,17 @@
     <Compile Include="c-backend.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FSharp.PowerPack, Version=4.0.0.1, Culture=neutral, PublicKeyToken=f536804aa0eb945b" />
-    <Reference Include="FSharp.PowerPack.Compatibility, Version=4.0.0.1, Culture=neutral, PublicKeyToken=f536804aa0eb945b" />
+    <ProjectReference Include="..\typechecker\typechecker.fsproj">
+      <Name>typechecker</Name>
+      <Project>{21685793-ac84-4ec1-9eab-39f9c0252f3f}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <Reference Include="FSharp.PowerPack">
+      <HintPath>..\..\bin\FSharp.PowerPack.dll</HintPath>
+    </Reference>
+    <Reference Include="FSharp.PowerPack.Compatibility">
+      <HintPath>..\..\bin\FSharp.PowerPack.Compatibility.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
@@ -87,6 +99,11 @@
     <ProjectReference Include="..\format\format.fsproj">
       <Name>format</Name>
       <Project>{54bc6905-03ee-4aeb-b726-742b6d4fa710}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\syntax\syntax.fsproj">
+      <Name>syntax</Name>
+      <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\tc\tc.fsproj">

@@ -35,14 +35,11 @@ let process_args () : parse_cmdline_res * list<string> =
 let cleanup () = Util.kill_all ()
 
 (* printing total error count *)
-let report_errors nopt =
+let report_errors () =
   let errs =
-    match nopt with
-    | None -> 
       if !Options.universes
       then FStar.TypeChecker.Errors.get_err_count()
-      else FStar.Tc.Errors.get_err_count ()
-    | Some n -> n in
+      else FStar.Tc.Errors.get_err_count () in
   if errs > 0 then begin
     Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs);
     exit 1
@@ -62,12 +59,14 @@ let finished_message fmods =
         print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
     end
 
-(* Extraction to OCaml or FSharp: only for the stratified type-checker currently *)
-let codegen fmods env =
+(* Extraction to OCaml or F# *)
+let codegen uf_mods_env =
   if !Options.codegen = Some "OCaml" ||
      !Options.codegen = Some "FSharp"
   then begin
-    let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods in
+    let mllibs = match uf_mods_env with 
+        | Inl (fmods, env) -> snd <| Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods
+        | Inr (umods, env) -> snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
     let ext = if !Options.codegen = Some "FSharp" then ".fs" else ".ml" in
     let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
@@ -75,7 +74,9 @@ let codegen fmods env =
     end
     else if !Options.codegen = Some "C"
     then begin
-        let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods in
+      let mllibs = match uf_mods_env with
+          | Inl (fmods, env) -> snd <|Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods 
+          | Inr (umods, env) -> failwith "The C backend does not support universes" in
         let mllibs = List.flatten mllibs in
         let ext = ".c" in
         let newDocs = List.collect Extraction.ML.CBackend.doc_of_mllib mllibs in
@@ -118,11 +119,12 @@ let go _ =
         else if List.length filenames >= 1 then //normal batch mode
           if !Options.universes
           then let fmods, dsenv, env = Universal.batch_mode_tc filenames in
-               report_errors None;
+               report_errors ();
+               codegen (Inr (fmods, env));
                finished_message (fmods |> List.map Universal.module_or_interface_name)               
           else let fmods, dsenv, env = Stratified.batch_mode_tc filenames in
-               report_errors None;
-               codegen fmods env;
+               report_errors ();
+               codegen (Inl (fmods, env));
                finished_message (fmods |> List.map Stratified.module_or_interface_name)
         else
           Util.print_error "no file provided\n"
@@ -136,11 +138,15 @@ let main () =
     cleanup ();
     exit 0
   with | e ->
-    if F_Util.handleable e then F_Util.handle_err false () e;
-    if U_Util.handleable e then U_Util.handle_err false () e;
-    if !Options.trace_error then
-      Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
-    else if not (F_Util.handleable e || U_Util.handleable e) then
-      Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
-      cleanup ();
-      exit 1
+    (begin 
+        if F_Util.handleable e then F_Util.handle_err false () e;
+        if U_Util.handleable e then U_Util.handle_err false e;
+        if !Options.trace_error then
+          Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+        else if not (F_Util.handleable e || U_Util.handleable e) then
+          Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
+     end; 
+     cleanup();
+     FStar.TypeChecker.Errors.report_all () |> ignore;
+     report_errors ();
+     exit 1)

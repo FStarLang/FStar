@@ -17,10 +17,9 @@
 module FStar.Extraction.ML.Code
 
 open FStar.Extraction.ML.Syntax
-open FStar.Extraction.ML.Env
 open FStar.Format
 
-val doc_of_mllib : mllib -> list<(string * doc)>
-val doc_of_sig : mlsymbol -> mlsig -> doc
-val string_of_mlexpr: env -> mlexpr -> string
-val string_of_mlty: env -> mlty -> string
+val doc_of_mllib :    mllib -> list<(string * doc)>
+val doc_of_sig :      mlsymbol -> mlsig -> doc
+val string_of_mlexpr: mlpath -> mlexpr -> string
+val string_of_mlty:   mlpath -> mlty -> string

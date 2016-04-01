@@ -60,16 +60,16 @@ let op_Subtraction (Int16 i) (Int16 j) = Int16 (i - j)
 abstract val op_Question_Star:
                  i:int16
               -> j:int16
-              -> Tot (k:int16{within_int16 (as_int i * as_int j) ==> as_int k = as_int i * as_int j})
+              -> Tot (k:int16{within_int16 (op_Multiply (as_int i) (as_int j)) ==> as_int k = op_Multiply (as_int i) (as_int j)})
 let op_Question_Star (Int16 i) (Int16 j) =
-  if within_int16 (i * j)
-  then Int16 (i * j)
+  if within_int16 (op_Multiply i j)
+  then Int16 (op_Multiply i j)
   else magic()//mark as admit, because we do not specify the overflow semantics
 
 val op_Star: i:int16
-          -> j:int16{within_int16 (as_int i * as_int j)}
+          -> j:int16{within_int16 (op_Multiply (as_int i) (as_int j))}
           -> Tot int16
-let op_Star (Int16 i) (Int16 j) = Int16 (i * j)
+let op_Star (Int16 i) (Int16 j) = Int16 (op_Multiply i j)
 
 //When the dividend is negative, the semantics is platform dependent
 //must be marked abstract because the body has an intentional admit

@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq;
-    other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi seq.fsi
-  --*)
-
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -20,7 +15,7 @@
 *)
 
 module FStar.SeqProperties
-#set-options "--no_fs_typ_app"
+
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.Seq
 
@@ -178,7 +173,7 @@ let rec sorted_concat_lemma #a f lo pivot hi =
         lemma_append_cons lo (cons pivot hi);
         lemma_tl (head lo) (append (tail lo) (cons pivot hi)))
 
-#set-options "--max_fuel 1 --initial_fuel 1 --z3timeout 20"
+#set-options "--max_fuel 1 --initial_fuel 1"
 val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
   (requires True)
   (ensures (fun x ->
@@ -244,7 +239,7 @@ let lemma_swap_permutes_aux #a s i j x =
       lemma_append_count_aux x frag_i frag_hi
   end
 
-#set-options "--max_fuel 0 --initial_fuel 0 --z3timeout 5"
+#set-options "--max_fuel 0 --initial_fuel 0"
 type permutation (a:Type) (s1:seq a) (s2:seq a) =
        (forall i. count i s1 = count i s2)
 val lemma_swap_permutes: #a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> Lemma

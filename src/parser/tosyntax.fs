@@ -54,11 +54,10 @@ let trans_qual = function
   
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
-  | AST.ResetOptions -> S.ResetOptions
+  | AST.ResetOptions sopt -> S.ResetOptions sopt
 
 let as_imp = function
-    | Hash
-    | FsTypApp -> Some S.imp_tag
+    | Hash -> Some S.imp_tag 
     | _ -> None
 let arg_withimp_e imp t =
     t, as_imp imp
@@ -136,8 +135,8 @@ let compile_op arity s =
 
 let compile_op_lid n s r = [mk_ident(compile_op n s, r)] |> lid_of_ids
 
-let op_as_fv env arity rng s : option<fv> =
-  let r l dd = Some (S.lid_as_fv (set_lid_range l rng) dd None) in
+let op_as_term env arity rng s : option<S.term> =
+  let r l dd = Some (S.lid_as_fv (set_lid_range l rng) dd None |> S.fv_to_tm) in
   let fallback () =
       match s with
         | "=" ->    r C.op_Eq Delta_equational
@@ -168,7 +167,7 @@ let op_as_fv env arity rng s : option<fv> =
         | "<==>" -> r C.iff_lid (Delta_unfoldable 2)
         | _ -> None in
    begin match Env.try_lookup_lid env (compile_op_lid arity s rng) with
-        | Some ({n=Tm_fvar fv}) -> Some fv
+        | Some t -> Some t
         | _ -> fallback()
    end
 
@@ -227,15 +226,15 @@ and free_type_vars env t = match (unparen t).tm with
   | Project(t, _) -> free_type_vars env t
 
 
-  | Abs _  (* not closing implicitly over free vars in type-level functions *)
+  | Abs _  (* not closing implicitly over free vars in all these forms: TODO: Fixme! *)
   | Let _
   | If _
   | QForall _
-  | QExists _ -> [] (* not closing implicitly over free vars in formulas *)
-  | Record _
+  | QExists _  
+  | Record _ 
   | Match _
   | TryWith _
-  | Seq _ -> error "Unexpected type in free_type_vars computation" t t.range
+  | Seq _ -> []
 
 let head_and_args t =
     let rec aux args t = match (unparen t).tm with
@@ -362,9 +361,10 @@ let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
         let x = S.new_bv (Some p.prange) tun in
         loc, env, LocalBinder(x, None), pos <| Pat_constant c, false
 
-      | PatTvar(x, imp)
-      | PatVar (x, imp) ->
-        let aq = if imp then Some S.imp_tag else None in
+      | PatTvar(x, aq)
+      | PatVar (x, aq) ->
+        let imp = (aq=Some Implicit) in
+        let aq = trans_aqual aq in
         let loc, env, xbv = resolvex loc env x in
         loc, env, LocalBinder(xbv, aq), pos <| Pat_var xbv, imp
 
@@ -481,7 +481,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Op("=!=", args) ->
       desugar_term env (mk_term(Op("~", [mk_term (Op("==", args)) top.range top.level])) top.range top.level)
 
-    | Op("*", [_;_]) when (op_as_fv env 2 top.range "*" |> Option.isNone) -> //if op_Star has not been rebound, then it's reserved for tuples
+    | Op("*", [_;_]) when (op_as_term env 2 top.range "*" |> Option.isNone) -> //if op_Star has not been rebound, then it's reserved for tuples
       let rec flatten t = match t.tm with
             | Op("*", [t1;t2]) ->
               let rest = flatten t2 in
@@ -495,10 +495,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       setpos <| fail_or2 (try_lookup_id env) a
 
     | Op(s, args) ->
-      begin match op_as_fv env (List.length args) top.range s with
+      begin match op_as_term env (List.length args) top.range s with
         | None -> raise (Error("Unexpected operator: " ^ s, top.range))
-        | Some fv ->
-          let op = S.fv_to_tm fv in
+        | Some op ->
           let args = args |> List.map (fun t -> desugar_term env t, None) in
           mk (Tm_app(op, args))
       end
@@ -572,7 +571,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
           | PatAscribed(_, t) -> env, free_type_vars env t@ftvs
           | _ -> env, ftvs) (env, []) binders in
       let ftv = sort_ftv ftv in
-      let binders = (ftv |> List.map (fun a -> mk_pattern (PatTvar(a, true)) top.range))@binders in //close over the free type variables
+      let binders = (ftv |> List.map (fun a -> mk_pattern (PatTvar(a, Some AST.Implicit)) top.range))@binders in //close over the free type variables
       (*
          fun (P1 x1) (P2 x2) (P3 x3) -> e
            
@@ -738,7 +737,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       mk <| Tm_match(desugar_term env e, List.map desugar_branch branches)
 
     | Ascribed(e, t) ->
-      mk <| Tm_ascribed(desugar_term env e, desugar_typ env t, None)
+      let env = Env.default_ml env in
+      let c = desugar_comp t.range true env t in
+      let annot = if Util.is_ml_comp c
+                  then Inl (Util.comp_result c)
+                  else Inr c in
+      mk <| Tm_ascribed(desugar_term env e, annot, None)
 
     | Record(_, []) ->
       raise (Error("Unexpected empty record", top.range))
@@ -771,7 +775,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
           let x = FStar.Ident.gen e.range in
           let xterm = mk_term (Var (lid_of_ids [x])) x.idRange Expr in
           let record = Record(None, record.fields |> List.map (fun (f, _) -> get_field (Some xterm) f)) in
-          Let(false, [(mk_pattern (PatVar (x, false)) x.idRange, e)], mk_term record top.range top.level) in
+          Let(false, [(mk_pattern (PatVar (x, None)) x.idRange, e)], mk_term record top.range top.level) in
 
       let recterm = mk_term recterm top.range top.level in
       let e = desugar_term env recterm in
@@ -791,7 +795,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         let ns, _ = Util.prefix fieldname.ns in
         lid_of_ids (ns@[f.ident]) in
       let qual = if is_rec then Some (Record_projector fn) else None in
-      mk <| Tm_app(S.fvar (Ident.set_lid_range fieldname (range_of_lid f)) Delta_equational (Some (Record_projector fn)), [as_arg e])
+      mk <| Tm_app(S.fvar (Ident.set_lid_range fieldname (range_of_lid f)) Delta_equational qual, [as_arg e])
 
     | NamedTyp(_, e)
     | Paren e ->
@@ -877,9 +881,13 @@ and desugar_comp r default_ok env t =
                 match t.n with
                 | Tm_app(_, [(arg, _)]) -> DECREASES arg
                 | _ -> failwith "impos") in
-    if lid_equals eff C.effect_Tot_lid && List.length decreases_clause=0
+    let no_additional_args = List.length decreases_clause = 0
+                             && List.length rest = 0 in
+    if no_additional_args 
+    && lid_equals eff C.effect_Tot_lid 
     then mk_Total result_typ
-    else if lid_equals eff C.effect_GTot_lid && List.length decreases_clause=0
+    else if no_additional_args 
+         && lid_equals eff C.effect_GTot_lid 
     then mk_GTotal result_typ
     else let flags =
             if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
@@ -894,7 +902,7 @@ and desugar_comp r default_ok env t =
                       let pat = match pat.n with 
                         | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid -> //we really want the empty pattern to be in universe S 0 rather than generalizing it 
                           let nil = S.mk_Tm_uinst pat [U_succ U_zero] in
-                          let pattern = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) Delta_constant None) [U_zero;U_zero] in 
+                          let pattern = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) Delta_constant None) [U_zero] in //;U_zero] in 
                           S.mk_Tm_app nil [(pattern, Some S.imp_tag)] None pat.pos 
                         | _ -> pat in
                         [req; ens;
@@ -1000,7 +1008,7 @@ let mk_data_discriminators quals env t tps k datas =
         let disc_name = Util.mk_discriminator d in
         Sig_declare_typ(disc_name, [], disc_type, quals [S.Logic; S.Discriminator d], range_of_lid disc_name))
 
-let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) imp_tps (fields:list<S.binder>) t =
+let mk_indexed_projectors iquals fvq refine_domain env tc lid (inductive_tps:binders) imp_tps (fields:list<S.binder>) t =
     let p = range_of_lid lid in
     let pos q = Syntax.withinfo q tun.n p in
     let projectee ptyp = S.gen_bv "projectee" (Some p) ptyp in
@@ -1052,7 +1060,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
             || Options.dont_gen_projectors (Env.current_module env).str in
         let no_decl = Syntax.is_type x.sort in
         let quals q = if only_decl then S.Assumption::q else q in
-        let quals = quals [S.Projector(lid, x.ppname)] in
+        let quals = quals (S.Projector(lid, x.ppname)::iquals) in
         let decl = Sig_declare_typ(field_name, [], t, quals, range_of_lid field_name) in
         if only_decl
         then [decl] //only the signature
@@ -1078,7 +1086,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
             let impl = Sig_let((false, [lb]), p, [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals) in
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
-let mk_data_projectors env (inductive_tps, se) = match se with 
+let mk_data_projectors iquals env (inductive_tps, se) = match se with 
   | Sig_datacon(lid, _, t, l, n, quals, _, _) when (//(not env.iface || env.admitted_iface) &&
                                                 not (lid_equals lid C.lexcons_lid)) ->
     let refine_domain =
@@ -1091,11 +1099,14 @@ let mk_data_projectors env (inductive_tps, se) = match se with
         begin match formals with 
             | [] -> [] //no fields to project
             | _ ->
-              let qual = match Util.find_map quals (function RecordConstructor fns -> Some (Record_ctor(lid, fns)) | _ -> None) with
+              let fv_qual = match Util.find_map quals (function RecordConstructor fns -> Some (Record_ctor(lid, fns)) | _ -> None) with
                 | None -> Data_ctor
                 | Some q -> q in
+              let iquals = if List.contains S.Abstract iquals
+                           then S.Private::iquals
+                           else iquals in
               let tps, rest = Util.first_N n formals in
-              mk_indexed_projectors qual refine_domain env l lid inductive_tps tps rest cod
+              mk_indexed_projectors iquals fv_qual refine_domain env l lid inductive_tps tps rest cod
         end
 
   | _ -> []
@@ -1266,9 +1277,12 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let sigelts = tps_sigelts |> List.map snd in
       let bundle = Sig_bundle(sigelts, quals, List.collect Util.lids_of_sigelt sigelts, rng) in
       let env = push_sigelt env0 bundle in
-      let data_ops = tps_sigelts |> List.collect (mk_data_projectors env) in
+      let data_ops = tps_sigelts |> List.collect (mk_data_projectors quals env) in
       let discs = sigelts |> List.collect (function
         | Sig_inductive_typ(tname, _, tps, k, _, constrs, quals, _) when (List.length constrs > 1)->
+          let quals = if List.contains S.Abstract quals
+                      then S.Private::quals
+                      else quals in
           mk_data_discriminators quals env tname tps k constrs
         | _ -> []) in
       let ops = discs@data_ops in
@@ -1345,7 +1359,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
     let env = push_sigelt env se' in
-    let data_ops = mk_data_projectors env ([], se) in
+    let data_ops = mk_data_projectors [] env ([], se) in
     let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops
@@ -1357,7 +1371,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
     let env = push_sigelt env se' in
-    let data_ops = mk_data_projectors env ([], se) in
+    let data_ops = mk_data_projectors [] env ([], se) in
     let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops

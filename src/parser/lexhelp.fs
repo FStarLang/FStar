@@ -35,9 +35,10 @@ open FStar.Util
 open FStar.Range
 open FStar.Parser
 open FStar.Parser.Parse
+open FStar.BaseTypes
 
 let intern_string : string -> string =
-  let strings = Util.smap_create 100 in (* new System.Collections.Generic.Dictionary<string,string>(100) in  *)
+  let strings = Util.smap_create 100 in 
   fun s ->
     match Util.smap_try_find strings s with
       | Some res -> res
@@ -244,4 +245,6 @@ let kwd_or_id args (r:Range.range) s =
         | "__LINE__" ->
           INT (Util.string_of_int <| Range.line_of_pos (Range.start_of_range r), false)
         | _ ->
-          IDENT (intern_string(s))
+          if Util.starts_with s Ident.reserved_prefix
+          then raise (FStar.Syntax.Syntax.Error(Ident.reserved_prefix  ^ " is a reserved prefix for an identifier", r))
+          else IDENT (intern_string(s))

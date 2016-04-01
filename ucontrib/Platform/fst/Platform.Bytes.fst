@@ -36,9 +36,9 @@ assume val lemma_repr_bytes_values: n:nat ->
          /\ ( (n >= 281474976710656 /\ n < 72057594037927936) <==> repr_bytes n = 7 )
          /\ ( (n >= 72057594037927936 /\ n < 18446744073709551616) <==> repr_bytes n = 8 ) )
 
-type byte = uint8
+type byte = FStar.Char.char
 type cbytes = string
-opaque type bytes = Seq.seq byte
+(* abstract *) type bytes = Seq.seq byte
 
 val seq_of_bytes: b:bytes -> GTot (Seq.seq byte)
 let seq_of_bytes b = b
@@ -57,7 +57,7 @@ type lbytes (l:nat) = b:bytes{length b = l}
 
 (*@ val empty_bytes : (b:bytes){B (b) = C_array_of_list C_op_Nil ()} @*)
 val empty_bytes : lbytes 0
-let empty_bytes = Seq.create 0 0uy
+let empty_bytes = Seq.create 0 (Char.char_of_int 0)
 
 (*@ assume val abytes : (b:cbytes -> (a:bytes){B (a) = b}) @*)
 assume val abytes : (cbytes -> Tot bytes)

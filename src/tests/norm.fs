@@ -76,23 +76,35 @@ let encode_nat n =
         else aux (snat out) (n - 1) in 
     aux znat n
 
-let dummy = TypeChecker.Env.no_solver_env TypeChecker.Tc.type_of
+module N = TypeChecker.Normalize
 
 let run i r expected = 
 //    force_term r;
     Printf.printf "%d: ... \n" i;
-    let x = FStar.TypeChecker.Normalize.normalize [] dummy r in
+    let _, tcenv = Pars.init() in
+    FStar.process_args() |> ignore; //set the command line args for debugging
+    let x = N.normalize [N.Beta; N.UnfoldUntil Delta_constant] tcenv r in
+    FStar.Options.init_options(); //reset them
 //    Printf.printf "result = %s\n" (P.term_to_string x);
 //    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
-    assert (Util.term_eq x expected)
+    assert (Util.term_eq (U.unascribe x) expected)
     
-let run_all debug = 
-    if debug 
-    then (Options.debug := ["dummy"];
-          Options.debug_level := [Options.Other "Norm"];
-          Options.print_implicits := true;
-          Options.print_real_names := true);
+let run_all () = 
     Printf.printf "Testing the normalizer\n";
+    let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
+                                           match x with \
+                                            | [] -> []  \
+                                            | hd::tl -> hd::copy tl" in
+    let _ = Pars.pars_and_tc_fragment "let recons (x:list int) : Tot (list int) = \
+                                           match x with \
+                                            | [] -> []  \
+                                            | hd::tl -> hd::tl" in
+    let _ = Pars.pars_and_tc_fragment "let rev (x:list int) : Tot (list int) = \
+                                            let rec aux (x:list int) (out:list int) : Tot (list int) = \
+                                                match x with \
+                                                | [] -> out \
+                                                | hd::tl -> aux tl (hd::out) in \
+                                            aux x []" in
     run 0 (app apply [one; id; nm n]) (nm n);
     run 1 (app apply [tt; nm n; nm m]) (nm n);
     run 2 (app apply [ff; nm n; nm m]) (nm m);
@@ -106,7 +118,7 @@ let run_all debug =
     run 10 (app mul [app succ [one]; one]) two;
     run 11 (minus (encode 10) (encode 10)) z;
     run 12 (minus (encode 100) (encode 100)) z;
-    run 13 (let_ x (encode 1000) (minus (nm x) (nm x))) z;
+    run 13 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes 
     run 14 (let_ x (app succ [one])
             (let_ y (app mul [nm x; nm x])
                 (let_ h (app mul [nm y; nm y]) 
@@ -121,6 +133,9 @@ let run_all debug =
     run 19 (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;
     run 20 (minus_nat (encode_nat 10) (encode_nat 10)) znat;
 //    run 21 (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat; //this one takes about 30 sec and ~3.5GB of memory
+    run 21 (tc "recons [0;1]") (tc "[0;1]");
+    run 22 (tc "copy [0;1]") (tc "[0;1]");
+    run 23 (tc "rev [0;1;2;3;4;5;6;7;8;9;10]") (tc "[10;9;8;7;6;5;4;3;2;1;0]");
     Printf.printf "Normalizer ok\n"
  
     

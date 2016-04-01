@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -87,6 +87,7 @@
     <Compile Include="desugar.fs" />
     <Compile Include="env.fsi" />
     <Compile Include="env.fs" />
+    <Compile Include="interleave.fs" />
     <Compile Include="tosyntax.fsi" />
     <Compile Include="tosyntax.fs" />
     <Compile Include="parseit.fsi" />

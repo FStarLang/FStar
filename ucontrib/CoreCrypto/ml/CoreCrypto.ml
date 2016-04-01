@@ -9,7 +9,7 @@ type bytes = Platform.Bytes.bytes
  * also called [cbytes] in [Platform.Bytes]. *)
 let string_of_bytes b = Platform.Bytes.get_cbytes b
 let bytes_of_string s = Platform.Bytes.abytes s
-
+let (@|) = Platform.Bytes.(@|)
 
 (* -------------------------------------------------------------------- *)
 
@@ -393,9 +393,15 @@ let dh_agreement (mypriv:dh_key) (opub:bytes) =
 (* -------------------------------------------------------------------- *)
 
 type ec_curve =
-     | ECC_P256
-     | ECC_P384
-     | ECC_P521
+  | ECC_P256
+  | ECC_P384
+  | ECC_P521
+
+let ec_bytelen = function
+  | ECC_P256 -> 32
+  | ECC_P384 -> 48
+  | ECC_P521 -> 66 (* ceil(521/8) *)
+
 type ec_params = { curve: ec_curve; point_compression: bool; }
 type ec_point = { ecx : bytes; ecy : bytes; }
 
@@ -467,9 +473,6 @@ let ec_is_on_curve params point =
   let p = ssl_point_of_point params point in
   ocaml_ec_point_is_on_curve g p
 
-let ec_point_serialize ecp =
-  failwith "Not implemented"
-
 
 type ssl_ec_key
 
@@ -537,6 +540,56 @@ let ecdsa_verify hash_alg key input signature =
   let key = ssl_key_of_key key in
   ocaml_ecdsa_verify key (string_of_bytes input) (string_of_bytes signature)
 
+
+(* -------------------------------------------------------------------------- *)
+
+external ocaml_validate_chain: string list -> bool -> string option -> string -> bool = "ocaml_validate_chain"
+external ocaml_get_rsa_from_cert: string -> rsa option = "ocaml_get_rsa_from_cert" 
+external ocaml_get_ecdsa_from_cert: string -> ssl_ec_key option = "ocaml_get_ecdsa_from_cert"
+
+let validate_chain cert_list for_signing hostname cafile =
+  let csl = List.map string_of_bytes cert_list in
+  ocaml_validate_chain csl for_signing hostname cafile
+
+let cert_verify_sig cert sa ha tbs sigv =
+  match sa with
+  | RSASIG ->
+      (match ocaml_get_rsa_from_cert (string_of_bytes cert) with
+      | None -> false
+      | Some rsa ->
+          let tbs = string_of_bytes (hash ha tbs) in
+          let ret = ocaml_rsa_verify rsa (Some ha) tbs (string_of_bytes sigv) in  
+          ocaml_rsa_fini rsa; ret)
+  | ECDSA ->
+      (match ocaml_get_ecdsa_from_cert (string_of_bytes cert) with
+      | None -> false
+      | Some ec ->
+          let tbs = string_of_bytes (hash ha tbs) in
+          let ret = ocaml_ecdsa_verify ec tbs (string_of_bytes sigv) in
+          ret)
+  | _ -> false
+
+let cert_sign cert sa ha tbs =
+  match sa with
+  | RSASIG ->
+    (match ocaml_get_rsa_from_cert (string_of_bytes cert) with
+      | None -> None
+      | Some rsa ->
+          let ret = ocaml_rsa_sign rsa (Some ha) (string_of_bytes tbs) in
+          ocaml_rsa_fini rsa;
+          Some (bytes_of_string ret))
+  | ECDSA ->
+      (match ocaml_get_ecdsa_from_cert (string_of_bytes cert) with
+      | None -> None
+      | Some ec ->
+          let ret = ocaml_ecdsa_sign ec (string_of_bytes tbs) in
+          Some (bytes_of_string ret))
+  | _ -> None
+
+(*
+ * assume val cert_sign: bytes -> sig_alg -> hash_alg -> bytes -> bytes
+ * assume val cert_verify: bytes -> sig_alg -> hash_alg -> bytes -> bool
+ *)
 
 (* -------------------------------------------------------------------------- *)
 

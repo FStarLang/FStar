@@ -1,5 +1,6 @@
 FSLIBFILES=FStar.ST.fst FStar.String.fsti js.fst list.fsi
 FSLIB=$(addprefix ../../lib/, $(FSLIBFILES))
+FSTAR_HOME=../..
 include ../Makefile.include
 
 TESTS=constants.js strings.js fun.js tuples.js record.js

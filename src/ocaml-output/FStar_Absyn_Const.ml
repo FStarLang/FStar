@@ -25,315 +25,327 @@ let string_lid : FStar_Absyn_Syntax.lident = (pconst "string")
 let bytes_lid : FStar_Absyn_Syntax.lident = (pconst "bytes")
 
 # 32 "FStar.Absyn.Const.fst"
-let char_lid : FStar_Absyn_Syntax.lident = (pconst "char")
-
-# 33 "FStar.Absyn.Const.fst"
 let int_lid : FStar_Absyn_Syntax.lident = (pconst "int")
 
-# 34 "FStar.Absyn.Const.fst"
-let uint8_lid : FStar_Absyn_Syntax.lident = (pconst "uint8")
-
-# 35 "FStar.Absyn.Const.fst"
-let int64_lid : FStar_Absyn_Syntax.lident = (pconst "int64")
-
-# 36 "FStar.Absyn.Const.fst"
-let float_lid : FStar_Absyn_Syntax.lident = (pconst "float")
-
-# 37 "FStar.Absyn.Const.fst"
+# 33 "FStar.Absyn.Const.fst"
 let exn_lid : FStar_Absyn_Syntax.lident = (pconst "exn")
 
-# 38 "FStar.Absyn.Const.fst"
+# 34 "FStar.Absyn.Const.fst"
 let list_lid : FStar_Absyn_Syntax.lident = (pconst "list")
 
-# 39 "FStar.Absyn.Const.fst"
+# 35 "FStar.Absyn.Const.fst"
 let pattern_lid : FStar_Absyn_Syntax.lident = (pconst "pattern")
 
-# 40 "FStar.Absyn.Const.fst"
+# 36 "FStar.Absyn.Const.fst"
 let precedes_lid : FStar_Absyn_Syntax.lident = (pconst "Precedes")
 
-# 41 "FStar.Absyn.Const.fst"
+# 37 "FStar.Absyn.Const.fst"
 let lex_t_lid : FStar_Absyn_Syntax.lident = (pconst "lex_t")
 
-# 42 "FStar.Absyn.Const.fst"
+# 38 "FStar.Absyn.Const.fst"
 let lexcons_lid : FStar_Absyn_Syntax.lident = (pconst "LexCons")
 
-# 43 "FStar.Absyn.Const.fst"
+# 39 "FStar.Absyn.Const.fst"
 let lextop_lid : FStar_Absyn_Syntax.lident = (pconst "LexTop")
 
-# 44 "FStar.Absyn.Const.fst"
+# 40 "FStar.Absyn.Const.fst"
 let smtpat_lid : FStar_Absyn_Syntax.lident = (pconst "SMTPat")
 
-# 45 "FStar.Absyn.Const.fst"
+# 41 "FStar.Absyn.Const.fst"
 let smtpatT_lid : FStar_Absyn_Syntax.lident = (pconst "SMTPatT")
 
-# 46 "FStar.Absyn.Const.fst"
+# 42 "FStar.Absyn.Const.fst"
 let smtpatOr_lid : FStar_Absyn_Syntax.lident = (pconst "SMTPatOr")
+
+# 44 "FStar.Absyn.Const.fst"
+let int8_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Int8")::("int8")::[]))
+
+# 45 "FStar.Absyn.Const.fst"
+let uint8_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("UInt8")::("uint8")::[]))
+
+# 46 "FStar.Absyn.Const.fst"
+let int16_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Int16")::("int16")::[]))
+
+# 47 "FStar.Absyn.Const.fst"
+let uint16_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("UInt16")::("uint16")::[]))
 
 # 48 "FStar.Absyn.Const.fst"
 let int32_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Int32")::("int32")::[]))
 
 # 49 "FStar.Absyn.Const.fst"
-let int31_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Int31")::("int31")::[]))
+let uint32_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("UInt32")::("uint32")::[]))
 
 # 50 "FStar.Absyn.Const.fst"
-let heap_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Heap")::("heap")::[]))
+let int64_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Int64")::("int64")::[]))
+
+# 51 "FStar.Absyn.Const.fst"
+let uint64_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("UInt64")::("uint64")::[]))
 
 # 53 "FStar.Absyn.Const.fst"
-let kunary : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k k' -> (let _106_11 = (let _106_10 = (let _106_9 = (FStar_Absyn_Syntax.null_t_binder k)
-in (_106_9)::[])
-in (_106_10, k'))
-in (FStar_Absyn_Syntax.mk_Kind_arrow _106_11 FStar_Absyn_Syntax.dummyRange)))
-
-# 54 "FStar.Absyn.Const.fst"
-let kbin : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k1 k2 k' -> (let _106_22 = (let _106_21 = (let _106_20 = (FStar_Absyn_Syntax.null_t_binder k1)
-in (let _106_19 = (let _106_18 = (FStar_Absyn_Syntax.null_t_binder k2)
-in (_106_18)::[])
-in (_106_20)::_106_19))
-in (_106_21, k'))
-in (FStar_Absyn_Syntax.mk_Kind_arrow _106_22 FStar_Absyn_Syntax.dummyRange)))
+let float_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Float")::("float")::[]))
 
 # 55 "FStar.Absyn.Const.fst"
-let ktern : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k1 k2 k3 k' -> (let _106_37 = (let _106_36 = (let _106_35 = (FStar_Absyn_Syntax.null_t_binder k1)
-in (let _106_34 = (let _106_33 = (FStar_Absyn_Syntax.null_t_binder k2)
-in (let _106_32 = (let _106_31 = (FStar_Absyn_Syntax.null_t_binder k3)
-in (_106_31)::[])
-in (_106_33)::_106_32))
-in (_106_35)::_106_34))
-in (_106_36, k'))
-in (FStar_Absyn_Syntax.mk_Kind_arrow _106_37 FStar_Absyn_Syntax.dummyRange)))
+let char_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Char")::("char")::[]))
 
-# 58 "FStar.Absyn.Const.fst"
-let true_lid : FStar_Absyn_Syntax.lident = (pconst "True")
-
-# 59 "FStar.Absyn.Const.fst"
-let false_lid : FStar_Absyn_Syntax.lident = (pconst "False")
+# 57 "FStar.Absyn.Const.fst"
+let heap_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Heap")::("heap")::[]))
 
 # 60 "FStar.Absyn.Const.fst"
-let and_lid : FStar_Absyn_Syntax.lident = (pconst "l_and")
+let kunary : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k k' -> (let _118_11 = (let _118_10 = (let _118_9 = (FStar_Absyn_Syntax.null_t_binder k)
+in (_118_9)::[])
+in (_118_10, k'))
+in (FStar_Absyn_Syntax.mk_Kind_arrow _118_11 FStar_Absyn_Syntax.dummyRange)))
 
 # 61 "FStar.Absyn.Const.fst"
-let or_lid : FStar_Absyn_Syntax.lident = (pconst "l_or")
+let kbin : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k1 k2 k' -> (let _118_22 = (let _118_21 = (let _118_20 = (FStar_Absyn_Syntax.null_t_binder k1)
+in (let _118_19 = (let _118_18 = (FStar_Absyn_Syntax.null_t_binder k2)
+in (_118_18)::[])
+in (_118_20)::_118_19))
+in (_118_21, k'))
+in (FStar_Absyn_Syntax.mk_Kind_arrow _118_22 FStar_Absyn_Syntax.dummyRange)))
 
 # 62 "FStar.Absyn.Const.fst"
-let not_lid : FStar_Absyn_Syntax.lident = (pconst "l_not")
-
-# 63 "FStar.Absyn.Const.fst"
-let imp_lid : FStar_Absyn_Syntax.lident = (pconst "l_imp")
-
-# 64 "FStar.Absyn.Const.fst"
-let iff_lid : FStar_Absyn_Syntax.lident = (pconst "l_iff")
+let ktern : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k1 k2 k3 k' -> (let _118_37 = (let _118_36 = (let _118_35 = (FStar_Absyn_Syntax.null_t_binder k1)
+in (let _118_34 = (let _118_33 = (FStar_Absyn_Syntax.null_t_binder k2)
+in (let _118_32 = (let _118_31 = (FStar_Absyn_Syntax.null_t_binder k3)
+in (_118_31)::[])
+in (_118_33)::_118_32))
+in (_118_35)::_118_34))
+in (_118_36, k'))
+in (FStar_Absyn_Syntax.mk_Kind_arrow _118_37 FStar_Absyn_Syntax.dummyRange)))
 
 # 65 "FStar.Absyn.Const.fst"
-let ite_lid : FStar_Absyn_Syntax.lident = (pconst "ITE")
+let true_lid : FStar_Absyn_Syntax.lident = (pconst "True")
 
 # 66 "FStar.Absyn.Const.fst"
-let exists_lid : FStar_Absyn_Syntax.lident = (pconst "Exists")
+let false_lid : FStar_Absyn_Syntax.lident = (pconst "False")
 
 # 67 "FStar.Absyn.Const.fst"
-let forall_lid : FStar_Absyn_Syntax.lident = (pconst "Forall")
+let and_lid : FStar_Absyn_Syntax.lident = (pconst "l_and")
 
 # 68 "FStar.Absyn.Const.fst"
-let exTyp_lid : FStar_Absyn_Syntax.lident = (pconst "ExistsTyp")
+let or_lid : FStar_Absyn_Syntax.lident = (pconst "l_or")
 
 # 69 "FStar.Absyn.Const.fst"
-let allTyp_lid : FStar_Absyn_Syntax.lident = (pconst "ForallTyp")
+let not_lid : FStar_Absyn_Syntax.lident = (pconst "l_not")
 
 # 70 "FStar.Absyn.Const.fst"
-let b2t_lid : FStar_Absyn_Syntax.lident = (pconst "b2t")
+let imp_lid : FStar_Absyn_Syntax.lident = (pconst "l_imp")
 
 # 71 "FStar.Absyn.Const.fst"
-let using_IH : FStar_Absyn_Syntax.lident = (pconst "InductionHyp")
+let iff_lid : FStar_Absyn_Syntax.lident = (pconst "l_iff")
 
 # 72 "FStar.Absyn.Const.fst"
-let using_lem : FStar_Absyn_Syntax.lident = (pconst "Using")
+let ite_lid : FStar_Absyn_Syntax.lident = (pconst "ITE")
 
 # 73 "FStar.Absyn.Const.fst"
-let admit_lid : FStar_Absyn_Syntax.lident = (pconst "admit")
+let exists_lid : FStar_Absyn_Syntax.lident = (pconst "Exists")
 
 # 74 "FStar.Absyn.Const.fst"
-let magic_lid : FStar_Absyn_Syntax.lident = (pconst "magic")
+let forall_lid : FStar_Absyn_Syntax.lident = (pconst "Forall")
+
+# 75 "FStar.Absyn.Const.fst"
+let exTyp_lid : FStar_Absyn_Syntax.lident = (pconst "ExistsTyp")
+
+# 76 "FStar.Absyn.Const.fst"
+let allTyp_lid : FStar_Absyn_Syntax.lident = (pconst "ForallTyp")
 
 # 77 "FStar.Absyn.Const.fst"
-let eq_lid : FStar_Absyn_Syntax.lident = (pconst "Eq")
+let b2t_lid : FStar_Absyn_Syntax.lident = (pconst "b2t")
 
 # 78 "FStar.Absyn.Const.fst"
-let eq2_lid : FStar_Absyn_Syntax.lident = (pconst "Eq2")
+let using_IH : FStar_Absyn_Syntax.lident = (pconst "InductionHyp")
 
 # 79 "FStar.Absyn.Const.fst"
-let eqA_lid : FStar_Absyn_Syntax.lident = (pconst "EqA")
+let using_lem : FStar_Absyn_Syntax.lident = (pconst "Using")
 
 # 80 "FStar.Absyn.Const.fst"
-let eqT_lid : FStar_Absyn_Syntax.lident = (pconst "EqTyp")
+let admit_lid : FStar_Absyn_Syntax.lident = (pconst "admit")
 
 # 81 "FStar.Absyn.Const.fst"
-let neq_lid : FStar_Absyn_Syntax.lident = (pconst "neq")
+let magic_lid : FStar_Absyn_Syntax.lident = (pconst "magic")
 
-# 82 "FStar.Absyn.Const.fst"
-let neq2_lid : FStar_Absyn_Syntax.lident = (pconst "neq2")
+# 84 "FStar.Absyn.Const.fst"
+let eq_lid : FStar_Absyn_Syntax.lident = (pconst "Eq")
 
 # 85 "FStar.Absyn.Const.fst"
-let exp_true_bool : FStar_Absyn_Syntax.exp = (FStar_Absyn_Syntax.mk_Exp_constant (FStar_Const.Const_bool (true)) None FStar_Absyn_Syntax.dummyRange)
+let eq2_lid : FStar_Absyn_Syntax.lident = (pconst "Eq2")
 
 # 86 "FStar.Absyn.Const.fst"
-let exp_false_bool : FStar_Absyn_Syntax.exp = (FStar_Absyn_Syntax.mk_Exp_constant (FStar_Const.Const_bool (false)) None FStar_Absyn_Syntax.dummyRange)
+let eqA_lid : FStar_Absyn_Syntax.lident = (pconst "EqA")
 
 # 87 "FStar.Absyn.Const.fst"
-let exp_unit : FStar_Absyn_Syntax.exp = (FStar_Absyn_Syntax.mk_Exp_constant FStar_Const.Const_unit None FStar_Absyn_Syntax.dummyRange)
+let eqT_lid : FStar_Absyn_Syntax.lident = (pconst "EqTyp")
 
 # 88 "FStar.Absyn.Const.fst"
-let cons_lid : FStar_Absyn_Syntax.lident = (pconst "Cons")
+let neq_lid : FStar_Absyn_Syntax.lident = (pconst "neq")
 
 # 89 "FStar.Absyn.Const.fst"
-let nil_lid : FStar_Absyn_Syntax.lident = (pconst "Nil")
-
-# 90 "FStar.Absyn.Const.fst"
-let assume_lid : FStar_Absyn_Syntax.lident = (pconst "_assume")
-
-# 91 "FStar.Absyn.Const.fst"
-let assert_lid : FStar_Absyn_Syntax.lident = (pconst "_assert")
+let neq2_lid : FStar_Absyn_Syntax.lident = (pconst "neq2")
 
 # 92 "FStar.Absyn.Const.fst"
-let list_append_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("List")::("append")::[]))
+let exp_true_bool : FStar_Absyn_Syntax.exp = (FStar_Absyn_Syntax.mk_Exp_constant (FStar_Const.Const_bool (true)) None FStar_Absyn_Syntax.dummyRange)
 
 # 93 "FStar.Absyn.Const.fst"
-let strcat_lid : FStar_Absyn_Syntax.lident = (p2l (("Prims")::("strcat")::[]))
+let exp_false_bool : FStar_Absyn_Syntax.exp = (FStar_Absyn_Syntax.mk_Exp_constant (FStar_Const.Const_bool (false)) None FStar_Absyn_Syntax.dummyRange)
 
 # 94 "FStar.Absyn.Const.fst"
-let let_in_typ : FStar_Absyn_Syntax.lident = (p2l (("Prims")::("Let")::[]))
+let exp_unit : FStar_Absyn_Syntax.exp = (FStar_Absyn_Syntax.mk_Exp_constant FStar_Const.Const_unit None FStar_Absyn_Syntax.dummyRange)
+
+# 95 "FStar.Absyn.Const.fst"
+let cons_lid : FStar_Absyn_Syntax.lident = (pconst "Cons")
+
+# 96 "FStar.Absyn.Const.fst"
+let nil_lid : FStar_Absyn_Syntax.lident = (pconst "Nil")
 
 # 97 "FStar.Absyn.Const.fst"
-let op_Eq : FStar_Absyn_Syntax.lident = (pconst "op_Equality")
+let assume_lid : FStar_Absyn_Syntax.lident = (pconst "_assume")
 
 # 98 "FStar.Absyn.Const.fst"
-let op_notEq : FStar_Absyn_Syntax.lident = (pconst "op_disEquality")
+let assert_lid : FStar_Absyn_Syntax.lident = (pconst "_assert")
 
 # 99 "FStar.Absyn.Const.fst"
-let op_LT : FStar_Absyn_Syntax.lident = (pconst "op_LessThan")
+let list_append_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("List")::("append")::[]))
 
 # 100 "FStar.Absyn.Const.fst"
-let op_LTE : FStar_Absyn_Syntax.lident = (pconst "op_LessThanOrEqual")
+let strcat_lid : FStar_Absyn_Syntax.lident = (p2l (("Prims")::("strcat")::[]))
 
 # 101 "FStar.Absyn.Const.fst"
-let op_GT : FStar_Absyn_Syntax.lident = (pconst "op_GreaterThan")
-
-# 102 "FStar.Absyn.Const.fst"
-let op_GTE : FStar_Absyn_Syntax.lident = (pconst "op_GreaterThanOrEqual")
-
-# 103 "FStar.Absyn.Const.fst"
-let op_Subtraction : FStar_Absyn_Syntax.lident = (pconst "op_Subtraction")
+let let_in_typ : FStar_Absyn_Syntax.lident = (p2l (("Prims")::("Let")::[]))
 
 # 104 "FStar.Absyn.Const.fst"
-let op_Minus : FStar_Absyn_Syntax.lident = (pconst "op_Minus")
+let op_Eq : FStar_Absyn_Syntax.lident = (pconst "op_Equality")
 
 # 105 "FStar.Absyn.Const.fst"
-let op_Addition : FStar_Absyn_Syntax.lident = (pconst "op_Addition")
+let op_notEq : FStar_Absyn_Syntax.lident = (pconst "op_disEquality")
 
 # 106 "FStar.Absyn.Const.fst"
-let op_Multiply : FStar_Absyn_Syntax.lident = (pconst "op_Multiply")
+let op_LT : FStar_Absyn_Syntax.lident = (pconst "op_LessThan")
 
 # 107 "FStar.Absyn.Const.fst"
-let op_Division : FStar_Absyn_Syntax.lident = (pconst "op_Division")
+let op_LTE : FStar_Absyn_Syntax.lident = (pconst "op_LessThanOrEqual")
 
 # 108 "FStar.Absyn.Const.fst"
-let op_Modulus : FStar_Absyn_Syntax.lident = (pconst "op_Modulus")
+let op_GT : FStar_Absyn_Syntax.lident = (pconst "op_GreaterThan")
 
 # 109 "FStar.Absyn.Const.fst"
-let op_And : FStar_Absyn_Syntax.lident = (pconst "op_AmpAmp")
+let op_GTE : FStar_Absyn_Syntax.lident = (pconst "op_GreaterThanOrEqual")
 
 # 110 "FStar.Absyn.Const.fst"
-let op_Or : FStar_Absyn_Syntax.lident = (pconst "op_BarBar")
+let op_Subtraction : FStar_Absyn_Syntax.lident = (pconst "op_Subtraction")
 
 # 111 "FStar.Absyn.Const.fst"
-let op_Negation : FStar_Absyn_Syntax.lident = (pconst "op_Negation")
+let op_Minus : FStar_Absyn_Syntax.lident = (pconst "op_Minus")
+
+# 112 "FStar.Absyn.Const.fst"
+let op_Addition : FStar_Absyn_Syntax.lident = (pconst "op_Addition")
+
+# 113 "FStar.Absyn.Const.fst"
+let op_Multiply : FStar_Absyn_Syntax.lident = (pconst "op_Multiply")
 
 # 114 "FStar.Absyn.Const.fst"
-let array_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Array")::("array")::[]))
+let op_Division : FStar_Absyn_Syntax.lident = (pconst "op_Division")
 
 # 115 "FStar.Absyn.Const.fst"
-let array_mk_array_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Array")::("mk_array")::[]))
+let op_Modulus : FStar_Absyn_Syntax.lident = (pconst "op_Modulus")
+
+# 116 "FStar.Absyn.Const.fst"
+let op_And : FStar_Absyn_Syntax.lident = (pconst "op_AmpAmp")
+
+# 117 "FStar.Absyn.Const.fst"
+let op_Or : FStar_Absyn_Syntax.lident = (pconst "op_BarBar")
 
 # 118 "FStar.Absyn.Const.fst"
-let st_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::[]))
-
-# 119 "FStar.Absyn.Const.fst"
-let write_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::("write")::[]))
-
-# 120 "FStar.Absyn.Const.fst"
-let read_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::("read")::[]))
+let op_Negation : FStar_Absyn_Syntax.lident = (pconst "op_Negation")
 
 # 121 "FStar.Absyn.Const.fst"
-let alloc_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::("alloc")::[]))
+let array_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Array")::("array")::[]))
 
 # 122 "FStar.Absyn.Const.fst"
-let op_ColonEq : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::("op_Colon_Equals")::[]))
+let array_mk_array_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Array")::("mk_array")::[]))
 
 # 125 "FStar.Absyn.Const.fst"
-let ref_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Heap")::("ref")::[]))
+let st_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::[]))
 
 # 126 "FStar.Absyn.Const.fst"
-let heap_ref : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Heap")::("Ref")::[]))
+let write_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::("write")::[]))
 
 # 127 "FStar.Absyn.Const.fst"
-let set_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::[]))
+let read_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::("read")::[]))
 
 # 128 "FStar.Absyn.Const.fst"
-let set_empty : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::("empty")::[]))
+let alloc_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::("alloc")::[]))
 
 # 129 "FStar.Absyn.Const.fst"
-let set_singleton : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::("singleton")::[]))
+let op_ColonEq : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("ST")::("op_Colon_Equals")::[]))
 
-# 130 "FStar.Absyn.Const.fst"
-let set_union : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::("union")::[]))
+# 132 "FStar.Absyn.Const.fst"
+let ref_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Heap")::("ref")::[]))
 
 # 133 "FStar.Absyn.Const.fst"
-let effect_PURE_lid : FStar_Absyn_Syntax.lident = (pconst "PURE")
+let heap_ref : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Heap")::("Ref")::[]))
 
 # 134 "FStar.Absyn.Const.fst"
-let effect_Pure_lid : FStar_Absyn_Syntax.lident = (pconst "Pure")
+let set_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::[]))
 
 # 135 "FStar.Absyn.Const.fst"
-let effect_Tot_lid : FStar_Absyn_Syntax.lident = (pconst "Tot")
+let set_empty : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::("empty")::[]))
 
 # 136 "FStar.Absyn.Const.fst"
-let effect_Lemma_lid : FStar_Absyn_Syntax.lident = (pconst "Lemma")
+let set_singleton : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::("singleton")::[]))
 
 # 137 "FStar.Absyn.Const.fst"
-let effect_GTot_lid : FStar_Absyn_Syntax.lident = (pconst "GTot")
+let set_union : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::("union")::[]))
 
-# 138 "FStar.Absyn.Const.fst"
-let effect_GHOST_lid : FStar_Absyn_Syntax.lident = (pconst "GHOST")
+# 140 "FStar.Absyn.Const.fst"
+let effect_PURE_lid : FStar_Absyn_Syntax.lident = (pconst "PURE")
 
-# 139 "FStar.Absyn.Const.fst"
-let effect_Ghost_lid : FStar_Absyn_Syntax.lident = (pconst "Ghost")
+# 141 "FStar.Absyn.Const.fst"
+let effect_Pure_lid : FStar_Absyn_Syntax.lident = (pconst "Pure")
 
 # 142 "FStar.Absyn.Const.fst"
-let all_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::[]))
+let effect_Tot_lid : FStar_Absyn_Syntax.lident = (pconst "Tot")
 
 # 143 "FStar.Absyn.Const.fst"
-let effect_ALL_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("ALL")::[]))
+let effect_Lemma_lid : FStar_Absyn_Syntax.lident = (pconst "Lemma")
 
 # 144 "FStar.Absyn.Const.fst"
-let effect_ML_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("ML")::[]))
+let effect_GTot_lid : FStar_Absyn_Syntax.lident = (pconst "GTot")
 
 # 145 "FStar.Absyn.Const.fst"
-let failwith_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("failwith")::[]))
+let effect_GHOST_lid : FStar_Absyn_Syntax.lident = (pconst "GHOST")
 
 # 146 "FStar.Absyn.Const.fst"
-let pipe_right_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("pipe_right")::[]))
+let effect_Ghost_lid : FStar_Absyn_Syntax.lident = (pconst "Ghost")
 
-# 147 "FStar.Absyn.Const.fst"
-let pipe_left_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("pipe_left")::[]))
-
-# 148 "FStar.Absyn.Const.fst"
-let try_with_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("try_with")::[]))
+# 149 "FStar.Absyn.Const.fst"
+let all_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::[]))
 
 # 150 "FStar.Absyn.Const.fst"
-let as_requires : FStar_Absyn_Syntax.lident = (pconst "as_requires")
+let effect_ALL_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("ALL")::[]))
 
 # 151 "FStar.Absyn.Const.fst"
-let as_ensures : FStar_Absyn_Syntax.lident = (pconst "as_ensures")
+let effect_ML_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("ML")::[]))
 
 # 152 "FStar.Absyn.Const.fst"
+let failwith_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("failwith")::[]))
+
+# 153 "FStar.Absyn.Const.fst"
+let pipe_right_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("pipe_right")::[]))
+
+# 154 "FStar.Absyn.Const.fst"
+let pipe_left_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("pipe_left")::[]))
+
+# 155 "FStar.Absyn.Const.fst"
+let try_with_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("All")::("try_with")::[]))
+
+# 157 "FStar.Absyn.Const.fst"
+let as_requires : FStar_Absyn_Syntax.lident = (pconst "as_requires")
+
+# 158 "FStar.Absyn.Const.fst"
+let as_ensures : FStar_Absyn_Syntax.lident = (pconst "as_ensures")
+
+# 159 "FStar.Absyn.Const.fst"
 let decreases_lid : FStar_Absyn_Syntax.lident = (pconst "decreases")
 
 

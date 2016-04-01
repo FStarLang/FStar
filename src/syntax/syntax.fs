@@ -44,7 +44,7 @@ type sconst = FStar.Const.sconst
 
 type pragma =
   | SetOptions of string
-  | ResetOptions
+  | ResetOptions of option<string>
 
 type memo<'a> = ref<option<'a>>
 
@@ -82,7 +82,7 @@ type term' =
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
-  | Tm_ascribed   of term * term * option<lident>                (* an effect label is the third arg, filled in by the type-checker *)
+  | Tm_ascribed   of term * either<term,comp> * option<lident>   (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
   | Tm_delayed    of either<(term * subst_ts), (unit -> term)> 
@@ -439,7 +439,7 @@ let range_of_ropt = function
 let gen_bv : string -> option<Range.range> -> typ -> bv = fun s r t ->
   let id = mk_ident(s, range_of_ropt r) in
   {ppname=id; index=next_id(); sort=t}
-let new_bv ropt t = gen_bv "x" ropt t
+let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
 let new_univ_name ropt = 
     let id = next_id() in 
     mk_ident (Util.string_of_int id, range_of_ropt ropt)

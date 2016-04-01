@@ -30,6 +30,7 @@ open FStar.Const
 
 let lid_to_string (l:lid) = l.str
 
+//let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
 let fv_to_string fv = lid_to_string fv.fv_name.v
 
 let bv_to_string bv = bv.ppname.idText ^ "#" ^ string_of_int bv.index
@@ -130,14 +131,11 @@ let const_to_string x = match x with
   | Const_effect -> "Effect"
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
-  | Const_int32 x ->      Util.string_of_int32 x
   | Const_float x ->      Util.string_of_float x
-  | Const_char x ->       "'" ^ (Util.string_of_char x) ^ "'"
   | Const_string(bytes, _) -> Util.format1 "\"%s\"" (Util.string_of_bytes bytes)
   | Const_bytearray _  ->  "<bytearray>"
-  | Const_int   x -> x
-  | Const_int64 _ -> "<int64>"
-  | Const_uint8 _ -> "<uint8>"
+  | Const_int (x, _) -> x
+  | Const_char c -> Util.string_of_char c
   | Const_range r -> Range.string_of_range r
 
 let lbname_to_string = function
@@ -238,8 +236,10 @@ let rec term_to_string x =
   | Tm_refine(xt, f) -> Util.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(t, args) ->  Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
   | Tm_let(lbs, e) ->   Util.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
-  | Tm_ascribed(e,t,_) ->
+  | Tm_ascribed(e,Inl t,_) ->
                         Util.format2 "(%s : %s)" (term_to_string e) (term_to_string t)
+  | Tm_ascribed(e,Inr c,_) ->
+                        Util.format2 "(%s : %s)" (term_to_string e) (comp_to_string c)
   | Tm_match(head, branches) ->
     Util.format2 "(match %s with\n\t| %s)"
       (term_to_string head)
@@ -298,7 +298,7 @@ and lcomp_to_string lc =
 and imp_to_string s = function
   | Some (Implicit false) -> "#" ^ s
   | Some (Implicit true) -> "#." ^ s
-  | Some Equality -> "=" ^ s
+  | Some Equality -> "$" ^ s
   | _ -> s
 
 and binder_to_string' is_arrow b = 
@@ -406,7 +406,8 @@ let eff_decl_to_string ed =
          tscheme_to_string ed.trivial]
 
 let rec sigelt_to_string x = match x with
-  | Sig_pragma(ResetOptions, _) -> "#reset-options"
+  | Sig_pragma(ResetOptions None, _) -> "#reset-options"
+  | Sig_pragma(ResetOptions (Some s), _) -> Util.format1 "#reset-options \"%s\"" s
   | Sig_pragma(SetOptions s, _) -> Util.format1 "#set-options \"%s\"" s
   | Sig_inductive_typ(lid, univs, tps, k, _, _, quals, _) -> 
     Util.format4 "%s type %s %s : %s" 

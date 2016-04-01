@@ -1,3 +1,4 @@
+FSTAR_HOME=..
 include Makefile.include
 
 # WARNING: this target shouldn't depend on anything other than the F*
@@ -37,7 +38,7 @@ test: all
 
 stdlib: $(addprefix ../lib/, FStar.List.fst FStar.String.fsti partialmap.fst FStar.ST.fst FStar.ListProperties.fst)
 	mkdir -p ../cache
-	../bin/fstar.exe $(OTHERFLAGS) $^ --serialize_mods
+	$(FSTAR) $^ --serialize_mods
 
 
 clean:

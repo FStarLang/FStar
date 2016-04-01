@@ -26,14 +26,12 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Const
 
-let handle_err warning ret e =
+let handle_err warning e =
   match e with
     | Error(msg, r) ->
-        Util.print_string (Util.format3 "%s : %s\n%s\n" (Range.string_of_range r) (if warning then "Warning" else "Error") msg);
-        ret
+        Util.print_string (Util.format3 "%s : %s\n%s\n" (Range.string_of_range r) (if warning then "Warning" else "Error") msg)
     | NYI s ->
-        Util.print_string (Util.format1 "Feature not yet implemented: %s" s);
-        ret
+        Util.print_string (Util.format1 "Feature not yet implemented: %s" s)
     | Err s ->
         Util.print_string (Util.format1 "Error: %s" s)
     | _ -> raise e
@@ -96,6 +94,11 @@ let mk_subst s = [s]
 let subst_of_list (formals:binders) (actuals:args) : subst_t =
     if (List.length formals = List.length actuals)
     then List.fold_right2 (fun f a out -> NT(fst f, fst a)::out) formals actuals []
+    else failwith "Ill-formed substitution"
+
+let rename_binders (replace_xs:binders) (with_ys:binders) : subst_t =
+    if List.length replace_xs = List.length with_ys
+    then List.map2 (fun (x, _) (y, _) -> NT(x, bv_to_name y)) replace_xs with_ys
     else failwith "Ill-formed substitution"
 
 open FStar.Syntax.Subst
@@ -487,6 +490,12 @@ let rec arrow_formals k =
     let bs, c = arrow_formals_comp k in 
     bs, comp_result c
 
+let rec abs_formals t = match (Subst.compress t).n with 
+    | Tm_abs(bs, t, _) -> 
+      let bs', t = abs_formals t in
+      Subst.open_term (bs@bs') t
+    | _ -> [], t 
+
 let abs bs t lopt = match bs with 
     | [] -> t
     | _ -> 
@@ -514,9 +523,10 @@ let mk_letbinding lbname univ_vars typ eff def =
      lbdef=def}
 
 let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
-    let def = match recs with 
-        | None -> def
-        | Some fvs -> 
+    let def = match recs, univ_vars with 
+        | None, _
+        | _, [] -> def
+        | Some fvs, _ ->
           let universes = univ_vars |> List.map U_name in
           let inst = fvs |> List.map (fun fv -> fv.fv_name.v, universes) in
           FStar.Syntax.InstFV.instantiate inst def in
@@ -675,14 +685,6 @@ let mk_imp phi1 phi2  =
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
 
-let eq_pred_t : term =
-    let a = new_bv None ktype0 in
-    let atyp = bv_to_tm a in
-    let b = new_bv None ktype0 in
-    let btyp = bv_to_tm b in
-    arrow [(a, Some imp_tag); (b, Some imp_tag); null_binder atyp; null_binder btyp]
-          (mk_Total ktype0)
-
 let teq = fvar_const Const.eq2_lid 
 
 let mk_eq t1 t2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
@@ -695,10 +697,6 @@ let mk_has_type t x t' =
 let lex_t    = fvar_const Const.lex_t_lid 
 let lex_top  = fvar Const.lextop_lid Delta_constant (Some Data_ctor) 
 let lex_pair = fvar Const.lexcons_lid Delta_constant (Some Data_ctor) 
-let forall_t : term = 
-    let a = new_bv None ktype0 in
-    let atyp = bv_to_tm a in
-    arrow [(a, Some imp_tag); null_binder atyp] (mk_Total ktype0)
 let tforall  = fvar Const.forall_lid (Delta_unfoldable 1) None
 
 let lcomp_of_comp c0 =

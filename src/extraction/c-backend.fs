@@ -329,12 +329,16 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Bool     true  -> "1"
   | MLC_Bool     false -> "0"
   | MLC_Char     c     -> "'"^(encode_char c)^"'"
-  | MLC_Byte     c     -> "'"^(ocaml_u8_codepoint c)^"'"
-  | MLC_Int32    i     -> string_of_int32  i
-  | MLC_Int64    i     -> (string_of_int64 i)^"L"
-  | MLC_Int      s     -> if !Options.use_native_int  
-                          then s
-                          else "(Prims.parse_int \"" ^s^ "\")"
+//  | MLC_Int32    i     -> string_of_int32  i
+//  | MLC_Int64    i     -> (string_of_int64 i)^"L"
+  | MLC_Int      (s, None)     ->
+      if !Options.use_native_int  
+      then s
+      else "(Prims.parse_int \"" ^s^ "\")"
+  | MLC_Int      (s, Some(sign, width))     ->
+      if !Options.use_native_int  
+      then s
+      else "(Prims.parse_int \"" ^s^ "\")"
   | MLC_Float    d     -> string_of_float d
 
   | MLC_Bytes bytes ->
@@ -958,7 +962,7 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
         return_flag := No;
         let cond' = string_of_expr currentModule  (min_op_prec, NonAssoc) cond in
         return_flag := return_flag_init;
-        let cond_type = string_of_ml_type (cond.ty) in
+        let cond_type = string_of_ml_type (cond.mlty) in
         let cond' = if List.contains cond_type !unions then (paren cond' ^ ".tag") else cond' in
 
         // Current type being matched on
@@ -989,7 +993,7 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
             concat1 ["try"; "begin"];
             string_of_expr currentModule  (min_op_prec, NonAssoc) e;
             concat1 ["end"; "with"];
-            (concat2 new_line (List.map (string_of_branch currentModule (string_of_ml_type e.ty)) pats))
+            (concat2 new_line (List.map (string_of_branch currentModule (string_of_ml_type e.mlty)) pats))
         ]
 and  string_of_binop currentModule p e1 e2 : string =
         let (_, prio, txt) = Option.get (as_bin_op p) in

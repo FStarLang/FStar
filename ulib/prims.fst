@@ -73,7 +73,7 @@ assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
 assume type has_type : #a:Type -> a -> Type -> Type0
 
 (* A coercion down to universe 0 *)
-assume type squash : Type -> Type0
+type squash (p:Type) = x:unit{p}
   
 (* forall (x:a). p x : specialized to Type#0 *)
 type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
@@ -106,7 +106,7 @@ inline let pure_bind_wp  (a:Type) (b:Type)
 inline let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
      l_ITE p (wp_then post) (wp_else post)
 inline let pure_ite_wlp (a:Type) (wlp_cases:pure_wp a) (post:pure_post a) =
-     (forall (x:a). wlp_cases (fun (x':a) -> ~(eq2 #a #a x x')) \/ post x)
+     (forall (x:a). ~(wlp_cases (fun (x':a) -> ~(eq2 #a #a x x'))) ==> post x)
 inline let pure_ite_wp (a:Type) (wlp_cases:pure_wp a) (wp_cases:pure_wp a) (post:pure_post a) =
      pure_ite_wlp a wlp_cases post
     /\ wp_cases (fun (x:a) -> True)
@@ -176,18 +176,10 @@ assume val op_LessThan           : int -> int -> Tot bool
    This still allows functions ... TODO: disallow functions *)
 assume val op_Equality :    'a -> 'a -> Tot bool
 assume val op_disEquality : 'a -> 'a -> Tot bool
-assume type char   : Type0
-assume new type float  : Type0
 assume new type string : Type0
 assume new type exn : Type0
-type double = float
-
+assume new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
-assume type uint8 : Type0
-type byte = uint8
-
-assume val reveal_squash : #p:Type -> squash p -> Tot (u:unit{p})
-//let reveal_squash #p x = x
 
 type list (a:Type) =
   | Nil  : list a
@@ -195,7 +187,7 @@ type list (a:Type) =
 
 type pattern =
   | SMTPat   : #a:Type -> a -> pattern
-  | SMTPatT  : a:Type -> pattern 
+  | SMTPatT  : a:Type0 -> pattern 
   | SMTPatOr : list (list pattern) -> pattern 
 
 assume type decreases : #a:Type -> a -> Type0
@@ -262,8 +254,8 @@ inline let st_ite_wlp       (heap:Type) (a:Type)
                              (wlp_cases:st_wp_h heap a)
                              (post:st_post_h heap a) (h0:heap) =
      (forall (a:a) (h:heap).
-           wlp_cases (fun a1 h1 -> a=!=a1 \/ h=!=h1) h0
-        \/ post a h)
+           ~ (wlp_cases (fun a1 h1 -> a=!=a1 \/ h=!=h1) h0)
+	   ==> post a h)
 inline let st_ite_wp        (heap:Type) (a:Type)
                              (wlp_cases:st_wp_h heap a) (wp_cases:st_wp_h heap a)
                              (post:st_post_h heap a) (h0:heap) =
@@ -334,7 +326,7 @@ inline let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a)
        (wp_then post)
        (wp_else post)
 inline let ex_ite_wlp  (a:Type) (wlp_cases:ex_wp a) (post:ex_post a) =
-    (forall (a:result a). wlp_cases (fun a1 -> a=!=a1) \/ post a)
+    (forall (a:result a). ~ (wlp_cases (fun a1 -> a=!=a1)) ==> post a)
 inline let ex_ite_wp (a:Type) (wlp_cases:ex_wp a) (wp_cases:ex_wp a) (post:ex_post a) =
     ex_ite_wlp a wlp_cases post
     /\ wp_cases (fun ra2 -> True)
@@ -398,7 +390,7 @@ inline let all_if_then_else (heap:Type) (a:Type) (p:Type)
 inline let all_ite_wlp  (heap:Type) (a:Type)
                          (wlp_cases:all_wp_h heap a)
                          (post:all_post_h heap a) (h0:heap) =
-     (forall (ra:result a) (h:heap). wlp_cases (fun ra2 h2 -> ra=!=ra2 \/ h=!=h2) h0 \/ post ra h)
+     (forall (ra:result a) (h:heap). ~ (wlp_cases (fun ra2 h2 -> ra=!=ra2 \/ h=!=h2) h0) ==> post ra h)
 inline let all_ite_wp (heap:Type) (a:Type)
                        (wlp_cases:all_wp_h heap a) (wp_cases:all_wp_h heap a)
                        (post:all_post_h heap a) (h0:heap) =
@@ -557,10 +549,10 @@ assume val magic   : #a:Type -> unit -> Tot a
 irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
 let unsafe_coerce #a #b x = admit(); x
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
-assume val _assert : p:Type -> unit -> Pure unit (requires $"assertion failed" p) (ensures (fun x -> True))
-assume val cut     : p:Type -> Pure unit (requires $"assertion failed" p) (fun x -> p)
-assume val qintro  : #a:Type -> #p:(a -> GTot Type) -> =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
-assume val ghost_lemma: #a:Type -> #p:(a -> GTot Type) -> #q:(a -> unit -> GTot Type) -> =f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
+assume val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> True))
+assume val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
+assume val qintro  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
+assume val ghost_lemma: #a:Type -> #p:(a -> GTot Type) -> #q:(a -> unit -> GTot Type) -> $f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
 assume new type range_of : #a:Type -> a -> Type0
 irreducible type labeled (#a:Type0) (#x:a) (r:range_of x) (msg:string) (b:Type) = b

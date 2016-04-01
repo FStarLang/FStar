@@ -2,8 +2,9 @@
 CPP=cpp -ffreestanding
 
 FSTAR_HOME=../..
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe --explicit_deps
-FSTAR_OPTIONS=--z3timeout 30
+include $(FSTAR_HOME)/src/gmake/fstar.mk
+include $(FSTAR_HOME)/src/gmake/nubuild.mk
+FSTAR_OPTIONS=--explicit_deps --z3timeout 30
 
 OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g

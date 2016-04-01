@@ -1,15 +1,15 @@
 module FStar.IO
 
 exception EOF
-type fd_read
-type fd_write
+assume new type fd_read : Type0
+assume new type fd_write : Type0
 
 val print_newline : unit -> unit
 val print_string : string -> unit
 val print_any : 'a -> unit
 val input_line : unit -> string
 val input_int : unit -> int
-val input_float : unit -> float
+val input_float : unit -> FStar.Float.float
 val open_read_file : string -> fd_read
 val open_write_file : string -> fd_write
 val close_read_file : fd_read -> unit

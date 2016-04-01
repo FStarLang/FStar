@@ -136,7 +136,7 @@ let norm_universe cfg env u =
         (* us is in sorted order;                                                               *)
         (* so, for each sub-sequence in us with a common kernel, just retain the largest one    *)
         (* e.g., normalize [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2]         *)
-        (*            to  [        S S Z;     S u1;           S S u2;      S ?v1; ?v2]          *)
+        (*            to   [        S S Z;     S u1;           S S u2;      S ?v1; ?v2]          *)
         let _, u, out = 
             List.fold_left (fun (cur_kernel, cur_max, out) u -> 
                 let k_u, n = U.univ_kernel u in 
@@ -250,10 +250,17 @@ let rec closure_as_term cfg env t =
              let phi = closure_as_term_delayed cfg env phi in 
              mk (Tm_refine(List.hd x |> fst, phi)) t.pos
 
-           | Tm_ascribed(t1, t2, lopt) -> 
-             mk (Tm_ascribed(closure_as_term_delayed cfg env t1, closure_as_term_delayed cfg env t2, lopt)) t.pos
+           | Tm_ascribed(t1, Inl t2, lopt) -> 
+             mk (Tm_ascribed(closure_as_term_delayed cfg env t1, Inl <| closure_as_term_delayed cfg env t2, lopt)) t.pos
 
-           | Tm_meta(t', m) -> 
+           | Tm_ascribed(t1, Inr c, lopt) -> 
+             mk (Tm_ascribed(closure_as_term_delayed cfg env t1, Inr <| close_comp cfg env c, lopt)) t.pos
+
+           | Tm_meta(t', Meta_pattern args) ->
+             mk (Tm_meta(closure_as_term_delayed cfg env t',
+                         Meta_pattern (args |> List.map (closures_as_args_delayed cfg env)))) t.pos
+
+           | Tm_meta(t', m) -> //other metadata's do not have any embedded closures
              mk (Tm_meta(closure_as_term_delayed cfg env t', m)) t.pos
        
            | Tm_let((false, [lb]), body) -> //non-recursive let 
@@ -509,7 +516,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       let body = match bs with 
                         | [] -> failwith "Impossible"
                         | [_] -> body
-                        | _::tl -> mk (Tm_abs(tl, body, None)) t.pos in
+                        | _::tl -> mk (Tm_abs(tl, body, lopt)) t.pos in
                       log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
                       norm cfg (c :: env) stack body 
                   end
@@ -524,7 +531,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | [] -> 
                   if List.contains WHNF cfg.steps //don't descend beneath a lambda if we're just doing WHNF   
                   then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
-                  else let bs, body = open_term bs body in 
+                  else let bs, body, opening = open_term' bs body in 
+                       let lopt = match lopt with 
+                        | None -> None
+                        | Some l -> SS.subst_comp opening (l.comp()) |> Util.lcomp_of_comp |> Some in
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                        log cfg  (fun () -> Util.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
@@ -557,7 +567,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let t = arrow (norm_binders cfg env bs) c in
                  rebuild cfg env stack t
           
-          | Tm_ascribed(t1, t2, l) -> 
+          | Tm_ascribed(t1, tc, l) -> 
             begin match stack with 
                 | Match _ :: _
                 | Arg _ :: _ 
@@ -565,10 +575,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | _ -> 
                 let t1 = norm cfg env [] t1 in 
                 log cfg  (fun () -> Util.print_string "+++ Normalizing ascription \n");
-                let t2 = norm cfg env [] t2 in
-                rebuild cfg env stack (mk (Tm_ascribed(t1, t2, l)) t.pos)
-
-                
+                let tc = match tc with 
+                    | Inl t -> Inl (norm cfg env [] t) 
+                    | Inr c -> Inr (norm_comp cfg env c) in
+                rebuild cfg env stack (mk (Tm_ascribed(t1, tc, l)) t.pos)
             end
 
           | Tm_match(head, branches) -> 
@@ -643,7 +653,7 @@ and norm_comp : cfg -> env -> comp -> comp =
             | Comp ct -> 
               let norm_args args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
               {comp with n=Comp ({ct with result_typ=norm cfg env [] ct.result_typ;
-                                         effect_args=norm_args ct.effect_args})}
+                                          effect_args=norm_args ct.effect_args})}
     
 and norm_binder : cfg -> env -> binder -> binder = 
     fun cfg env (x, imp) -> {x with sort=norm cfg env [] x.sort}, imp
@@ -706,6 +716,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
               rebuild cfg env stack (maybe_simplify cfg.steps t)
 
             | Match(env, branches, r) :: stack -> 
+              log cfg  (fun () -> Util.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
               let norm_and_rebuild_match () =
                 let whnf = List.contains WHNF cfg.steps in
                 let cfg = {cfg with delta_level=glb_delta cfg.delta_level OnlyInline} in
@@ -770,7 +781,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
                             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
                           end
                         | Pat_cons(fv, arg_pats) -> 
-                          begin match head.n with 
+                          begin match (Util.un_uinst head).n with 
                             | Tm_fvar fv' when fv_eq fv fv' -> 
                               matches_args [] args arg_pats
                             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
@@ -796,9 +807,12 @@ and rebuild : cfg -> env -> stack -> term -> term =
                       norm_and_rebuild_match ()
 
                     | Inl s ->
+                      log cfg (fun () -> Util.print2 "Matches pattern %s with subst = %s\n" 
+                                    (Print.pat_to_string p)
+                                    (List.map Print.term_to_string s |> String.concat "; "));
                       //the elements of s are sub-terms of t 
                       //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
-                      let env = List.fold_right (fun t env -> Clos([], t, Util.mk_ref (Some ([], t)))::env) s env in
+                      let env = List.fold_left (fun env t -> Clos([], t, Util.mk_ref (Some ([], t)))::env) env s in
                       norm cfg env stack (guard_when_clause wopt b rest) in
               
               matches t branches

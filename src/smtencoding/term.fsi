@@ -90,6 +90,8 @@ type decl =
   | CheckSat
 type decls_t = list<decl>
 
+type error_label = (fv * string * Range.range)
+type error_labels = list<error_label>
 
 val mk: term' -> term
 val fv_eq : fv -> fv -> bool
@@ -98,7 +100,6 @@ val free_variables: term -> fvs
 val mkTrue : term
 val mkFalse : term
 val mkInteger : string -> term
-val mkInteger32 : int32 -> term
 val mkInteger': int -> term
 val mkBoundV : int -> term
 val mkFreeV  : (string * sort) -> term

@@ -147,14 +147,11 @@ let const_to_string x = match x with
   | Const_effect -> "eff"
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
-  | Const_int32 x ->      Util.string_of_int32 x
   | Const_float x ->      Util.string_of_float x
   | Const_char x ->       "'" ^ (Util.string_of_char x) ^ "'"
   | Const_string(bytes, _) -> Util.format1 "\"%s\"" (Util.string_of_bytes bytes)
   | Const_bytearray _  ->  "<bytearray>"
-  | Const_int   x -> x
-  | Const_int64 _ -> "<int64>"
-  | Const_uint8 _ -> "<uint8>"
+  | Const_int (x, _) -> x
   | Const_range r -> Range.string_of_range r
 
 let rec tag_of_typ t = match t.n with
@@ -478,7 +475,8 @@ let qual_to_string = function
     | _ -> "other"
 let quals_to_string quals = quals |> List.map qual_to_string |> String.concat " "
 let rec sigelt_to_string x = match x with
-  | Sig_pragma(ResetOptions, _) -> "#reset-options"
+  | Sig_pragma(ResetOptions None, _) -> "#reset-options"
+  | Sig_pragma(ResetOptions (Some s), _) -> Util.format1 "#reset-options \"%s\"" s
   | Sig_pragma(SetOptions s, _) -> Util.format1 "#set-options \"%s\"" s
   | Sig_tycon(lid, tps, k, _, _, quals, _) -> Util.format4 "%s type %s %s : %s" (quals_to_string quals) lid.str (binders_to_string " " tps) (kind_to_string k)
   | Sig_typ_abbrev(lid, tps, k, t, _, _) ->  Util.format4 "type %s %s : %s = %s" lid.str (binders_to_string " " tps) (kind_to_string k) (typ_to_string t)

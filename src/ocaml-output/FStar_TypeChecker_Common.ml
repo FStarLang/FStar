@@ -65,14 +65,14 @@ end))
 
 # 45 "FStar.TypeChecker.Common.fst"
 let ___TProb____0 = (fun projectee -> (match (projectee) with
-| TProb (_64_17) -> begin
-_64_17
+| TProb (_62_17) -> begin
+_62_17
 end))
 
 # 46 "FStar.TypeChecker.Common.fst"
 let ___CProb____0 = (fun projectee -> (match (projectee) with
-| CProb (_64_20) -> begin
-_64_20
+| CProb (_62_20) -> begin
+_62_20
 end))
 
 # 48 "FStar.TypeChecker.Common.fst"
@@ -104,8 +104,8 @@ end))
 
 # 52 "FStar.TypeChecker.Common.fst"
 let ___NonTrivial____0 = (fun projectee -> (match (projectee) with
-| NonTrivial (_64_23) -> begin
-_64_23
+| NonTrivial (_62_23) -> begin
+_62_23
 end))
 
 # 54 "FStar.TypeChecker.Common.fst"
@@ -117,9 +117,9 @@ type univ_ineq =
 (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
 
 # 60 "FStar.TypeChecker.Common.fst"
-let tconst : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _145_83 = (let _145_82 = (FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None)
-in FStar_Syntax_Syntax.Tm_fvar (_145_82))
-in (FStar_Syntax_Syntax.mk _145_83 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
+let tconst : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _151_83 = (let _151_82 = (FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None)
+in FStar_Syntax_Syntax.Tm_fvar (_151_82))
+in (FStar_Syntax_Syntax.mk _151_83 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
 
 # 61 "FStar.TypeChecker.Common.fst"
 let t_unit : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.unit_lid)
@@ -128,52 +128,67 @@ let t_unit : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax
 let t_bool : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.bool_lid)
 
 # 63 "FStar.TypeChecker.Common.fst"
-let t_uint8 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.uint8_lid)
+let t_int8 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int8_lid)
 
 # 64 "FStar.TypeChecker.Common.fst"
-let t_int : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int_lid)
+let t_uint8 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.uint8_lid)
 
 # 65 "FStar.TypeChecker.Common.fst"
-let t_int32 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int32_lid)
+let t_int16 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int16_lid)
 
 # 66 "FStar.TypeChecker.Common.fst"
-let t_int64 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int64_lid)
+let t_uint16 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.uint16_lid)
 
 # 67 "FStar.TypeChecker.Common.fst"
-let t_string : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.string_lid)
+let t_int32 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int32_lid)
 
 # 68 "FStar.TypeChecker.Common.fst"
-let t_float : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.float_lid)
+let t_uint32 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.uint32_lid)
 
 # 69 "FStar.TypeChecker.Common.fst"
-let t_char : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.char_lid)
+let t_int64 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int64_lid)
+
+# 70 "FStar.TypeChecker.Common.fst"
+let t_uint64 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.uint64_lid)
 
 # 71 "FStar.TypeChecker.Common.fst"
+let t_int : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int_lid)
+
+# 72 "FStar.TypeChecker.Common.fst"
+let t_string : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.string_lid)
+
+# 73 "FStar.TypeChecker.Common.fst"
+let t_float : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.float_lid)
+
+# 74 "FStar.TypeChecker.Common.fst"
+let t_char : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.char_lid)
+
+# 76 "FStar.TypeChecker.Common.fst"
 let rec delta_depth_greater_than : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth  ->  Prims.bool = (fun l m -> (match ((l, m)) with
-| (FStar_Syntax_Syntax.Delta_constant, _64_29) -> begin
+| (FStar_Syntax_Syntax.Delta_constant, _62_29) -> begin
 false
 end
-| (FStar_Syntax_Syntax.Delta_equational, _64_33) -> begin
+| (FStar_Syntax_Syntax.Delta_equational, _62_33) -> begin
 true
 end
-| (_64_36, FStar_Syntax_Syntax.Delta_equational) -> begin
+| (_62_36, FStar_Syntax_Syntax.Delta_equational) -> begin
 false
 end
 | (FStar_Syntax_Syntax.Delta_unfoldable (i), FStar_Syntax_Syntax.Delta_unfoldable (j)) -> begin
 (i > j)
 end
-| (FStar_Syntax_Syntax.Delta_unfoldable (_64_45), FStar_Syntax_Syntax.Delta_constant) -> begin
+| (FStar_Syntax_Syntax.Delta_unfoldable (_62_45), FStar_Syntax_Syntax.Delta_constant) -> begin
 true
 end
-| (FStar_Syntax_Syntax.Delta_abstract (d), _64_52) -> begin
+| (FStar_Syntax_Syntax.Delta_abstract (d), _62_52) -> begin
 (delta_depth_greater_than d m)
 end
-| (_64_55, FStar_Syntax_Syntax.Delta_abstract (d)) -> begin
+| (_62_55, FStar_Syntax_Syntax.Delta_abstract (d)) -> begin
 (delta_depth_greater_than l d)
 end))
 
-# 80 "FStar.TypeChecker.Common.fst"
-let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun _64_1 -> (match (_64_1) with
+# 85 "FStar.TypeChecker.Common.fst"
+let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun _62_1 -> (match (_62_1) with
 | (FStar_Syntax_Syntax.Delta_constant) | (FStar_Syntax_Syntax.Delta_equational) -> begin
 None
 end

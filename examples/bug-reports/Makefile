@@ -10,34 +10,36 @@ VERFILES=bug015.fst bug019.fst\
   bug203.fst bug212.fst bug213.fst bug-295.fst bug316.fst\
   bug331.fst bug331Iso.fst bug331Index.fst bugWildcardTelescopes.fst
 
+FSTAR_HOME=../..
 include ../Makefile.include
+
 all: .all.ver
 
 bug194: bug194.fst
-	../../bin/fstar.exe --explicit_deps ../../lib/FStar.Classical.fst ../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Constructive.fst ../metatheory/stlc_strong_db_parsubst.fst bug194.fst
+	$(FSTAR) --explicit_deps ../../lib/FStar.Classical.fst ../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Constructive.fst ../metatheory/stlc_strong_db_parsubst.fst bug194.fst
 
 bug244: bug244.fst
-	../../bin/fstar.exe  --explicit_deps ../../lib/FStar.String.fsti bug244.fst
+	$(FSTAR)  --explicit_deps ../../lib/FStar.String.fsti bug244.fst
 
 insertionsortcmp: insertionsortcmp.fst
-	../../bin/fstar.exe insertionsortcmp.fst
+	$(FSTAR) insertionsortcmp.fst
 
 insertionsortcmpfails: insertionsortcmpfails.fst
-	../../bin/fstar.exe insertionsortcmpfails.fst
+	$(FSTAR) insertionsortcmpfails.fst
 
 insertionsortcmpfails2: insertionsortcmpfails2.fst
-	../../bin/fstar.exe insertionsortcmpfails2.fst
+	$(FSTAR) insertionsortcmpfails2.fst
 
 
 extraction-error1:
-	fstar extraction-error1.fst
+	$(FSTAR) extraction-error1.fst
 	ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -o Bug.exe -package batteries -linkpkg -g -thread -I \
 	        $(FSTAR_HOME)/src/ocaml-output/ \
 					$(FSTAR_HOME)/src/ocaml-output/support.ml \
 			    Bug.ml
 
 ExtractionBug.ver:
-	../../bin/fstar $(OTHERFLAGS) --explicit_deps  FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fsi stHyperHeap.fst ExtractionBug.fst --dump_module ExtractionBug --print_implicits --codegen OCaml
+	$(FSTAR) $(OTHERFLAGS) --explicit_deps  FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fsi stHyperHeap.fst ExtractionBug.fst --dump_module ExtractionBug --print_implicits --codegen OCaml
 
 ExtractionBug.out:
 	cp ../../lib/ml/native_int/prims.ml .

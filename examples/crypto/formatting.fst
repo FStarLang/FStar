@@ -69,8 +69,8 @@ val response: string16 -> string -> Tot message
 
 (* -------- implementation *)
 
-let tag0 = createBytes 1 0uy
-let tag1 = createBytes 1 1uy
+let tag0 = createBytes 1 (Char.char_of_int 0)
+let tag1 = createBytes 1 (Char.char_of_int 1)
 
 let request s = tag0 @| (utf8 s)
 
@@ -99,7 +99,8 @@ let req_resp_distinct s s' t' =
   lemma_repr_bytes_values (length (utf8 s));
   lemma_repr_bytes_values (length (utf8 s'));
   (*lemma_repr_bytes_values (length (utf8 t'));*)
-  cut (Seq.index tag0 0 == 0uy)
+  assert (Seq.index tag0 0 == Char.char_of_int 0);
+  assert (Seq.index tag1 0 == Char.char_of_int 1)
 
 val req_components_corr:
   s0:string -> s1:string ->
