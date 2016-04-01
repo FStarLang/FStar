@@ -276,7 +276,7 @@ if ((FStar_ST.read FStar_Options.ml_ish) && (FStar_Ident.lid_equals FStar_Syntax
 (let _157_111 = (FStar_Syntax_Util.ml_comp (FStar_Syntax_Util.comp_result c) e.FStar_Syntax_Syntax.pos)
 in Some (_157_111))
 end else begin
-if (env.FStar_TypeChecker_Env.top_level || (FStar_Syntax_Util.is_tot_or_gtot_comp c)) then begin
+if ( (FStar_Syntax_Util.is_tot_or_gtot_comp c)) then begin
 None
 end else begin
 if (FStar_Syntax_Util.is_pure_comp c) then begin
