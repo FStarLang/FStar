@@ -57,10 +57,10 @@ let finalize b =
   let mask = FStar.UInt63.eq b1 mask_26 ^& mask in 
   let mask = FStar.UInt63.gte b0 mask2_26m5 ^& mask in 
   upd b 0 (b0 ^- (mask ^& mask2_26m5));
-  upd b 1 (b1 ^& mask);
-  upd b 2 (b2 ^& mask);
-  upd b 3 (b3 ^& mask);
-  upd b 4 (b4 ^& mask);
+  upd b 1 (b1 ^- (b1 ^& mask));
+  upd b 2 (b2 ^- (b2 ^& mask));
+  upd b 3 (b3 ^- (b3 ^& mask));
+  upd b 4 (b4 ^- (b4 ^& mask));
   ()
 
 (*** Addition ***)

@@ -320,6 +320,7 @@ let poly1305_last msg acc r len =
     let h3 = ST.get() in
     eq_lemma h0 h3 r (empty); 
     eq_lemma h0 h3 acc empty;     
+    finalize acc;
     add_and_multiply acc block r;
     let h4 = ST.get() in 
     disjoint_only_lemma msg acc; 

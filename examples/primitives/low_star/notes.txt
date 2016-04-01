@@ -1,22 +1,154 @@
-	Low*			<--->			C
-
-Coding restrictions:
-- code is first order
-- No variable shadowing, hence if a var name is reused it must be of the same type
-  and overwritten in the following code
-
-Library functions for buffer manipulation:
-
-let x = SBuffer.create #size init len in		~>	uint{size} x[len] = {0};
-SBuffer.index #size b idx    	      	 		~>	b[idx]
-SBuffer.upd #size b idx v;		 		~> 	b[idx] = v;
-SBuffer.sub #size b idx len		 		~> 	(b+idx)
-SBuffer.offset #size b idx				~>	(b+idx)
-SBuffer.blit #size src src_idx dest dest_idx len	~>	memcpy (dest+dest_idx) (src+src_idx) ((((size+1) / 8) * len)
+		(*** LOW* / LOW-F* / C* ... NOTES ***)
 
 
+(*** 21/03/2016 ***)
 
-(*** OLD NOTES ***)
+Goals: Identifying and formalizing a subset of F* for efficient,
+garbage collection free low-level code.
+
+------------------------------------------------------------------
+Summary:
+1 - has manual memory management
+  -> No garbage collection
+  -> Stack-based discipline
+  -> Two stateful effect variants: ST & ST-F
+  -> Inlining and specific calling conventions
+
+2 - is easily compilable to efficient low-level code
+  -> first order (after erasure, and possibly defunctionalization or
+     closure conversion)
+  -> monomorphic after erasure and specialization
+
+3 - offers a clever choice of type representation
+  -> records, sum types
+  -> references must be made explicit 
+
+4 - libraries
+------------------------------------------------------------------
+
+1 - Manual Memory Management
+
+LOW* aims at removing garbage collection.
+Allocation is stack-based. Hence the caller allocates on its local frame
+and passes the reference to the callee.
+
+The frame stack enforce an specific liveness discipline:
+- frames are indexed. Those indexes are partially ordered.
+- When entering a function with the ST-F effect a new frame is pushed on
+  the stack
+- Functions written in the simple 'ST' effect are assumed inlined and in the
+  same frame as their caller
+- TODO: discipline on recursive functions to allows them to be tail-call optimized ?
+- a reference is 'live' only if it belong to a frame which index is lower-or-equal
+  to the current frame index: one can only deference references allocated by its
+  callers or itself.
+- it is safe to return any reference as long as it can only be dereferenced
+  under the conditions previously stated
+
+Calling convention:
+- arguments can be passed by values or by reference
+- functions in 'ST' can return by value of by reference
+- functions in 'ST-F' can return by value only
+
+Usability:
+- Allocation on the stack should be implicit
+- Pushing and popping frames from ST-F should be implicit in code, not in
+  specifications
+
+
+2 - Efficiently compilable code
+
+Programs written in this subset should be self-contained (libraries aside) and
+thus allow for whole-program compilation.
+Hence after erasure, code should be first-order and monomorphic.
+
+TODO: Usable closures in C++ for closure conversion ?
+TODO: Use of C++ templates to provide a form of polymorphism ?
+
+The language should support a form of 'representation-polymorphism' depending on
+data structures' sizes, but not general polymorphism ?
+
+3 - Clever type representation
+
+Since memory management is explicit, recursive types must make the implicit
+reference explicit:
+
+    type list 'a = | Nil | Cons: 'a -> list 'a -> list 'a is forbidden
+    type list 'a = | Nil | Cons: 'a -> ref (list 'a) -> list 'a is allowed
+
+Based on the computed size of data representations, arguments could be passed either
+by value (for small things) or by reference (big structures).
+
+Correspondance between F* and C types is:
+- F* nat, pos, int, bool, char, byte		~> C uintN
+     nat, pos, int  	  -> uint64_t
+     bool, char, byte 	  -> unsigned char
+- Low* usint {8|32|63|64|128}			~> uint{N}_t
+- Low* buffer {8|32|63|64|128}			~> uint{N}_t*
+- Low* buffer 'a				~> ('a)* (size_of('a) must be known)
+- Records and sum types with a single member 	~> C structures
+- Sum types with a least two members  		~> C tagged unions
+- custom type for tuples, options ?
+
+4 - Low* Libraries
+
+- Buffers of 'sint':
+  -> pointer arithmetic
+  -> side channel mitigation
+
+  -> current supported functions:
+     let x = SBuffer.create #size init len in		~>	uint{size} x[len] = {0};
+     SBuffer.index #size b idx    	      	 	~>	b[idx]
+     SBuffer.upd #size b idx v;		 		~> 	b[idx] = v;
+     SBuffer.sub #size b idx len		 	~> 	(b+idx)
+     SBuffer.offset #size b idx				~>	(b+idx)
+     SBuffer.blit #size src src_idx dest dest_idx len	~>	memcpy (dest+dest_idx) (src+src_idx) ((((size+1) / 8) * len)
+
+- Buffer of 'a:
+  -> Side channel mitigation only
+  -> Size of 'a need to be statically computable
+
+- ref 'a is a special case of buffer 'a ?
+
+
+Language formalization:
+
+// Values
+v ::=	r:l
+      | x 
+      | D v
+      
+// Declarations
+d ::=   let inline f x1 ... xn = e	// top level functions to inline (same frame as the caller)
+      | let rec f r x1 ... xn = e      	// top level functions pushing a new frame
+      | let x = v
+      | type T 'a~ = | Di ti~
+      | assume val f			// external (library) functions
+
+// Expressions
+e ::=   v
+      | let x = e1 in e2
+      | if b then e else e
+      | match v with | Di xi~ -> e1 | _ -> en
+      | let x = rref r v in e
+      | !v
+      | v1 := v2
+      | f e1 ... en
+
+// Types
+t ::=   'a
+      | int
+      | T
+      | ref t
+
+ft ::= t~ -> t
+
+
+(*************************************************************************)
+(*************************************************************************)
+
+(*** OLD NOTES (Cambridge) ***)
+
 Low*
 
 The Low* variant of low-level memory management for F* aims at ellaborating
