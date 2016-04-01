@@ -181,7 +181,7 @@ let nblocks x = ((x + 8) - ((x + 8) % 64))/64 + 1
 (* Pad the data and return a buffer of uint32 for subsequent treatment *)
 val pad: (rdata:buffer 8) -> rlen:nat{length rdata = rlen} -> ST (data:buffer 8)
                                                              (requires (fun h -> Live h rdata))
-                                                             (ensures  (fun h0 r h1 -> Live h1 rdata))
+                                                             (ensures  (fun h0 r h1 -> Live h1 rdata /\ h0 = h1))
 // TODO: Refinement on the value of the pad -> length raw + rplen = 64
 let pad rdata rlen =
   admit();
@@ -394,39 +394,43 @@ let rec update_step hash data ws len k i t1 t2 =
 //  rewrite <- teq; auto.
 //  rewrite skipn_length. simpl; omega.
 // Qed.
-val update : (hash:buffer 32{length hash = 8}) ->
-             (data:buffer 8{Disjoint hash data}) ->
+// TODO: ensures Modifies (only hash) h0 h1
+val update : (whash:buffer 32{length whash = 8}) ->
+             (data:buffer 8{Disjoint whash data}) ->
              (datalen:nat{length data = datalen}) -> ST unit
-                                                  (requires (fun h -> Live h hash /\ Live h data))
-                                                  (ensures  (fun h0 r h1 -> Live h1 hash /\ Live h1 data))
-let update hash data len =
+                                                  (requires (fun h -> Live h whash /\ Live h data))
+                                                  (ensures  (fun h0 r h1 -> Live h1 whash /\ Live h1 data))
+let update whash data len =
   admit();
   let i = ref 0 in
   let t1 = ref FStar.UInt32.zero in
   let t2 = ref FStar.UInt32.zero in
   let k = k_init () in
   let ws = create #32 FStar.UInt32.zero 64 in
-  update_step hash data ws len k i t1 t2
+  update_step whash data ws len k i t1 t2
 
 (* Compute the final value of the hash from the last hash value *)
-val finish: (hash:buffer 32) -> ST (buffer 8)
-                               (requires (fun h -> Live h hash))
-                               (ensures  (fun h0 r h1 -> Live h1 hash))
-let finish hash =
+// TODO: ensures Modifies (only hash) h0 h1
+val finish: (hash:sbytes{length hash = 32}) ->
+            (whash:buffer 32{Disjoint whash hash}) -> ST unit
+                                                        (requires (fun h -> Live h hash /\ Live h whash))
+                                                        (ensures  (fun h0 r h1 -> Live h1 hash /\ Live h1 whash))
+let finish hash whash =
   admit();
-  let sb = create #8 FStar.UInt8.zero 32 in
-  sbytes_of_uint32s sb hash 8;
-  sb
+  sbytes_of_uint32s hash whash 8
 
 (* Compute the sha256 hash of some bytes *)
 // [Coq] Definition SHA_256 (str : list Z) : list Z :=
 //     intlist_to_Zlist (hash_blocks init_registers (generate_and_pad str)).
-val sha265: (data:buffer 8) ->
-            (len:nat{length data = len}) -> ST (buffer 8)
-                                         (requires (fun h -> Live h data))
-                                         (ensures  (fun h0 r h1 -> Live h1 data /\ h0 = h1))
-let sha256 data len =
+
+// TODO: ensures Modifies (only hash) h0 h1
+val sha265: (hash:sbytes{length hash = 32}) ->
+            (data:sbytes{Disjoint hash data}) ->
+            (len:nat{length data = len}) -> ST unit
+                                         (requires (fun h -> Live h hash /\ Live h data))
+                                         (ensures  (fun h0 r h1 -> Live h1 data /\ Live h1 hash))
+let sha256 hash data len =
   let pdata = pad data len in
-  let hash = init () in
-  update hash pdata len;
-  finish hash
+  let whash = init () in
+  update whash pdata len;
+  finish hash whash
