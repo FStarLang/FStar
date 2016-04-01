@@ -34,8 +34,8 @@ SHA_C=Crypto_Sha256.c
 COMPILE=gcc -O4 fstarlib.c
 
 # OCaml variables
-OCAML=ocamlfind ocamlopt -package batteries -linkpkg -g -thread
-DEBUG=ocamlfind ocamlc -package batteries -linkpkg -g -thread
+OCAML=ocamlfind ocamlopt -package batteries,stdint -linkpkg -g -thread
+DEBUG=ocamlfind ocamlc -package batteries,stdint -linkpkg -g -thread
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
 OCAML_LIB=$(addprefix $(FSTAR_HOME)/lib/ml/, MkPrims.ml native_int/prims.ml FStar_Set.ml FStar_ST.ml FStar_All.ml) FStar_FunctionalExtensionality.ml FStar_Seq.ml
 CHACHA_OCAML=FStar_UInt8.ml FStar_UInt32.ml SBuffer.ml FStar_SBytes.ml Chacha.ml
