@@ -402,5 +402,10 @@ let set_options =
         Getopt.parse_string specs (fun _ -> ()) s
 
 let restore_cmd_line_options () =
+    (* Some options must be preserved because they can't be reset via #pragrams.
+     * Add them here as needed. *)
+    let old_verify_module = !verify_module in
     init_options();
-    Getopt.parse_cmdline (specs()) (fun x -> ()) 
+    let r = Getopt.parse_cmdline (specs()) (fun x -> ()) in
+    verify_module := old_verify_module;
+    r

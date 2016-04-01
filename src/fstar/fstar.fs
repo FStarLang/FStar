@@ -105,7 +105,12 @@ let go _ =
           else let fmods, dsenv, env = Stratified.batch_mode_tc filenames in //check all the dependences in batch mode
                interactive_mode (dsenv, env) None Stratified.interactive_tc //and then start checking chunks from the current buffer
 
-        else if List.length filenames >= 1 then //normal batch mode
+        else if List.length filenames >= 1 then begin //normal batch mode
+          (* Unless dependencies are explicit, we take the filenames passed on
+           * the command-line to be those we want to verify. *)
+          if not (!Options.explicit_deps) then
+            Options.verify_module := !Options.verify_module @
+              List.map (fun f -> must (Parser.Dep.check_and_strip_suffix f)) filenames;
           if !Options.universes
           then let fmods, dsenv, env = Universal.batch_mode_tc filenames in
                report_errors ();
@@ -115,7 +120,7 @@ let go _ =
                report_errors ();
                codegen (Inl (fmods, env));
                finished_message (fmods |> List.map Stratified.module_or_interface_name)
-        else
+        end else
           Util.print_error "no file provided\n"
 
 module F_Util = FStar.Absyn.Util
