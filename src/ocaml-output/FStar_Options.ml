@@ -964,10 +964,19 @@ in (FStar_Getopt.parse_string specs (fun _24_378 -> ()) s))))))))
 let restore_cmd_line_options : Prims.unit  ->  FStar_Getopt.parse_cmdline_res = (fun _24_380 -> (match (()) with
 | () -> begin
 (
-# 407 "FStar.Options.fst"
-let _24_381 = (init_options ())
-in (let _113_252 = (specs ())
-in (FStar_Getopt.parse_cmdline _113_252 (fun x -> ()))))
+# 409 "FStar.Options.fst"
+let old_verify_module = (FStar_ST.read verify_module)
+in (
+# 410 "FStar.Options.fst"
+let _24_382 = (init_options ())
+in (
+# 411 "FStar.Options.fst"
+let r = (let _113_252 = (specs ())
+in (FStar_Getopt.parse_cmdline _113_252 (fun x -> ())))
+in (
+# 412 "FStar.Options.fst"
+let _24_386 = (FStar_ST.op_Colon_Equals verify_module old_verify_module)
+in r))))
 end))
 
 
