@@ -901,7 +901,7 @@ end
 (let _139_564 = (let _139_563 = (let _139_562 = (let _139_561 = (FStar_ToSMT_Term.mkInteger' (FStar_Util.int_of_char c))
 in (FStar_ToSMT_Term.boxInt _139_561))
 in (_139_562)::[])
-in ("FStar.Char.char", _139_563))
+in ("FStar.Char.Char", _139_563))
 in (FStar_ToSMT_Term.mkApp _139_564))
 end
 | FStar_Const.Const_int (i, None) -> begin
@@ -912,7 +912,7 @@ end
 (let _139_569 = (let _139_568 = (let _139_567 = (let _139_566 = (FStar_ToSMT_Term.mkInteger i)
 in (FStar_ToSMT_Term.boxInt _139_566))
 in (_139_567)::[])
-in ((FStar_Const.string_of_int_qualifier q), _139_568))
+in ((FStar_Const.constructor_string_of_int_qualifier q), _139_568))
 in (FStar_ToSMT_Term.mkApp _139_569))
 end
 | FStar_Const.Const_string (bytes, _50_629) -> begin

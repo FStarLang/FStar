@@ -752,7 +752,7 @@ end
 (let _172_465 = (let _172_464 = (let _172_463 = (let _172_462 = (FStar_SMTEncoding_Term.mkInteger' (FStar_Util.int_of_char c))
 in (FStar_SMTEncoding_Term.boxInt _172_462))
 in (_172_463)::[])
-in ("FStar.Char.char", _172_464))
+in ("FStar.Char.Char", _172_464))
 in (FStar_SMTEncoding_Term.mkApp _172_465))
 end
 | FStar_Const.Const_int (i, None) -> begin
@@ -763,7 +763,7 @@ end
 (let _172_470 = (let _172_469 = (let _172_468 = (let _172_467 = (FStar_SMTEncoding_Term.mkInteger i)
 in (FStar_SMTEncoding_Term.boxInt _172_467))
 in (_172_468)::[])
-in ((FStar_Const.string_of_int_qualifier q), _172_469))
+in ((FStar_Const.constructor_string_of_int_qualifier q), _172_469))
 in (FStar_SMTEncoding_Term.mkApp _172_470))
 end
 | FStar_Const.Const_string (bytes, _83_531) -> begin
