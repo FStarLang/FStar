@@ -99,7 +99,8 @@ let req_resp_distinct s s' t' =
   lemma_repr_bytes_values (length (utf8 s));
   lemma_repr_bytes_values (length (utf8 s'));
   (*lemma_repr_bytes_values (length (utf8 t'));*)
-  cut (Seq.index tag0 0 == 0uy)
+  assert (Seq.index tag0 0 == Char.char_of_int 0);
+  assert (Seq.index tag1 0 == Char.char_of_int 1)
 
 val req_components_corr:
   s0:string -> s1:string ->
