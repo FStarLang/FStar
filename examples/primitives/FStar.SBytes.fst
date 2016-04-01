@@ -50,7 +50,7 @@ assume val uint64_of_sbytes: b:sbytes{length b >= 8} -> ST uint64
                   + pow2 32 * v (get h0 b 4) + pow2 40 * v (get h0 b 5)
                   + pow2 48 * v (get h0 b 6) + pow2 56 * v (get h0 b 7)))
 
-assume val sbytes_of_uint64: v:uint64 -> res:sbytes{length res >= 8} -> ST unit
+assume val sbytes_of_uint64: res:sbytes{length res >= 8} -> v:uint64 -> ST unit
   (requires (fun h -> Live h res))
   (ensures  (fun h0 r h1 -> Live h1 res /\ Modifies (only res) h0 h1))
 

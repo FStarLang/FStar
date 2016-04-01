@@ -3,7 +3,7 @@ open SBuffer
 
 type sbytes = unit buffer
 type uint32 = int
-       
+
 let create init len = create 8 init len
 let index b n = index 8 b n
 let upd b n v = upd 8 b n v
@@ -26,16 +26,27 @@ let sbytes_of_uint32s res b l =
     upd res (4*i+3) ( ((v lsr 24) land 255))
   done
 
+let sbytes_of_uint64 res v =
+  let i = 0 in
+  upd res (i) ((v land 255));
+  upd res (i+1) ( ((v lsr 8) land 255));
+  upd res (i+2) ( ((v lsr 16) land 255));
+  upd res (i+3) ( ((v lsr 24) land 255));
+  upd res (i+4) ( ((v lsr 32) land 255));
+  upd res (i+5) ( ((v lsr 40) land 255));
+  upd res (i+6) ( ((v lsr 48) land 255));
+  upd res (i+7) ( ((v lsr 56) land 255))
+
 let xor_bytes c a b l =
   for i = 0 to l-1 do
     upd c i ( (index a i) lxor  (index b i))
   done
-    
+
 let print b =
   let s = ref "" in
   for i = 0 to b.length - 1 do
     let s' = Printf.sprintf "%X" ( (index b i))  in
-    let s' = if String.length s' = 1 then "0" ^ s' else s' in 
+    let s' = if String.length s' = 1 then "0" ^ s' else s' in
     s := !s ^ s';
   done;
   !s
@@ -43,14 +54,14 @@ let print b =
 let print_bytes b =
   print_string (print b); print_string "\n"
 
-       
+
        (*
 type sbytes = {
     content:bytes;
     idx:int;
     length:int;
   }
-                
+
 type uint32 = int
 
 let create init len = {content = Bytes.make len init; idx = 0; length = len}
@@ -60,8 +71,8 @@ let sub b i len = {content = b.content; idx = b.idx+i; length = len}
 let blit a idx_a b idx_b len = Bytes.blit a.content (idx_a+a.idx) b.content (idx_b+b.idx) len
 let split a i = (sub a 0 i, sub a i (a.length - i))
 let of_seq s l = ()
-let copy b l = {content = Bytes.sub b.content b.idx l; idx = 0; length = l} 
-       
+let copy b l = {content = Bytes.sub b.content b.idx l; idx = 0; length = l}
+
 let uint32_of_sbytes b =
   code (index b 0) + (code (index b 1) lsl 8) +
     (code (index b 2) lsl 16) + (code (index b 3) lsl 24)
@@ -79,12 +90,12 @@ let xor_bytes c a b l =
   for i = 0 to l-1 do
     upd c i (chr (code (index a i) lxor code (index b i)))
   done
-    
+
 let print b =
   let s = ref "" in
   for i = 0 to b.length - 1 do
     let s' = Printf.sprintf "%X" (code (index b i))  in
-    let s' = if String.length s' = 1 then "0" ^ s' else s' in 
+    let s' = if String.length s' = 1 then "0" ^ s' else s' in
     s := !s ^ s';
   done;
   !s
