@@ -3,7 +3,7 @@ module FStar.Char
 private type char' = 
   | Char : int -> char'
 
-irreducible type char = char'
+type char = char'
 
 val lowercase: char -> char
 val uppercase: char -> char
