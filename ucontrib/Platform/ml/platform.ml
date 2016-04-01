@@ -13,6 +13,7 @@ module Error = struct
   let unreachable info = failwith info
 end
 
+module StdBytes = Bytes
 
 module Bytes = struct
 
@@ -81,7 +82,7 @@ module Bytes = struct
   let abytes_max (ba:cbytes) (max:int) =
       let arr = String.make max (char_of_int 0) in
       let len = String.length ba in
-      (for i = 0 to len-1 do String.set arr i ba.[0] done);
+      (for i = 0 to len-1 do Bytes.set arr i ba.[0] done);
       {bl = [arr]; length = len; index = 0; max = len}
 
   let abyte (ba:byte) =
@@ -89,7 +90,7 @@ module Bytes = struct
 
   let abyte2 (ba1,ba2) =
       let s = String.make 2 ba1 in
-      String.set s 1 ba2;
+      Bytes.set s 1 ba2;
       {bl = [s]; length = 2; index = 0; max = 2}
 
   (* JP: this makes the operator right-associative; is that desired? *)
@@ -135,7 +136,7 @@ module Bytes = struct
       if lb = 0 then failwith "not enough bytes"
       else
         begin
-          String.set bb (lb-1) (char_of_int (n mod 256));
+          Bytes.set bb (lb-1) (char_of_int (n mod 256));
           if n/256 > 0 then
             put_bytes bb (lb-1) (n/256)
           else bb
@@ -168,7 +169,7 @@ module Bytes = struct
       let s2 = get_cbytes s2 in
       let res = String.make len (char_of_int 0) in
       for i=0 to len-1 do
-        String.set res i (char_of_int ((int_of_char s1.[i]) lxor (int_of_char s2.[i])))
+        Bytes.set res i (char_of_int ((int_of_char s1.[i]) lxor (int_of_char s2.[i])))
       done;
       abytes res
 
@@ -288,7 +289,7 @@ module Tcp = struct
       send sock str 0 len []
 
   let sock_recv sock maxlen =
-      let str = String.create maxlen in
+      let str = StdBytes.create maxlen in
       let recvlen = recv sock str 0 maxlen [] in
       let str = String.sub str 0 recvlen in
       abytes str

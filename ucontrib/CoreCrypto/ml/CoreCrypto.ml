@@ -156,7 +156,7 @@ let cipher_of_aead_cipher (c:aead_cipher) = match c with
       ocaml_EVP_CIPHER_aes_256_gcm()
 
 let block_encrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
-  assert (iv.length = blockSize c);
+  assert (Platform.Bytes.length iv = blockSize c);
   let c = cipher_of_block_cipher c in
   let ctx = ocaml_EVP_CIPHER_CTX_create c true in
   ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
@@ -166,7 +166,7 @@ let block_encrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
   bytes_of_string e
 
 let block_decrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
-  assert (iv.length = blockSize c);
+  assert (Platform.Bytes.length iv = blockSize c);
   let c = cipher_of_block_cipher c in
   let ctx = ocaml_EVP_CIPHER_CTX_create c false in
   ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
