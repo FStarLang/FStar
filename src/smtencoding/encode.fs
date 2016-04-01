@@ -1087,6 +1087,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                                                    Term.mkLT (Term.unboxInt y, Term.unboxInt x)],
                                          precedes_y_x)),
                                   Some "well-founded ordering on nat (alt)")] in
+    let mk_int_alias : env -> string -> term -> decls_t = fun env nm tt ->
+        [Term.Assume(mkEq(tt, mkApp(Const.int_lid.str, [])), Some "mapping to int; for now")] in
     let mk_str : env -> string -> term -> decls_t  = fun env nm tt ->
         let typing_pred = Term.mk_HasType x tt in
         let bb = ("b", String_sort) in
@@ -1190,6 +1192,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.int_lid,    mk_int);
                  (Const.string_lid, mk_str);
                  (Const.ref_lid,    mk_ref);
+//                 (Const.char_lid,   mk_int_alias);
+//                 (Const.uint8_lid,  mk_int_alias);
                  (Const.false_lid,  mk_false_interp);
                  (Const.and_lid,    mk_and_interp);
                  (Const.or_lid,     mk_or_interp);
