@@ -187,8 +187,9 @@ let pad rdata rlen =
   admit();
   // Value of the raw data length in bits represented as UInt64
   let rlen_64 =
-    let v = create #8 zero 8 in
-    sbytes_of_int 8 (rlen * 8) v;
+    let v = create #8 FStar.UInt8.zero 8 in
+    let v64 = FStar.UInt64.of_int (rlen * 8) in
+    FStar.SBytes.sbytes_of_uint64 v64 v;
     v
   in
   // Compute the padding length
@@ -204,12 +205,6 @@ let pad rdata rlen =
   blit rdata 0 data 0 rlen;
   blit rpad 0 data rlen rplen;
   blit rlen_64 0 data (rlen + rplen) 8;
-  // Number of words for the buffered data
-  //let wmax = nblocks rlen in
-  // Create the buffer of words
-  //let wdata = SBuffer.create #32 FStar.UInt32.zero wmax in
-  // Store the final bytes in a (array uint32)
-  //uint32s_of_sbytes wdata data wmax;
   data
 
 (* [FIPS 180-4] section 6.2.2 *)
