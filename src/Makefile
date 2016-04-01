@@ -308,7 +308,7 @@ test:   clean $(BIN)/fstar.exe ocaml-test regressions
 
 regressions:
 	make -C ../lib
-	make -C ../ulib | grep -vi positivity
+	make -C ../ulib
 	make -C ../examples
 	make -C ../examples/hello ocaml
 	make -C ../contrib/Platform/ml/
