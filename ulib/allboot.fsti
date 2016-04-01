@@ -8,7 +8,7 @@ effect All (a:Type) (pre:all_pre) (post: (heap -> Tot (all_post a))) =
        ALL a
            (fun (p:all_post a) (h:heap) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1)) (* WP  *)
            (fun (p:all_post a) (h:heap) -> forall ra h1. (pre h /\ post h ra h1) ==> p ra h1) (* WLP *)
-default effect ML (a:Type) =
+effect ML (a:Type) =
   ALL a (all_null_wp heap a) (all_null_wp heap a)
 
 inline let lift_exn_all (a:Type) (wp:ex_wp a)   (p:all_post a) (h:heap) = wp (fun ra -> p ra h)

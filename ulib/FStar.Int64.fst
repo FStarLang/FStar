@@ -128,7 +128,7 @@ let op_Less_Equals (Int64 i) (Int64 j) = i <= j
 val op_Less: i:int64
           -> j:int64
           -> Tot bool
-let op_Less (Int64 i) (Int64 j) = i < j
+let op_Less (Int64 i) (Int64 j) = (i < j)
 
 val op_Greater_Equals: i:int64
                     -> j:int64

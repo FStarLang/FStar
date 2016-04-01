@@ -221,7 +221,7 @@ ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse 
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 
-FSTAROPTS=--MLish
+FSTAROPTS=
 
 all_boot_fsts:
 	cp format/format.fsi format/formatml.fsi
@@ -254,7 +254,7 @@ extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
 	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app \
-	  $(addprefix --no_extract ,$(NUM)) --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^
+	  $(addprefix --no_extract ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
 
 ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml
 

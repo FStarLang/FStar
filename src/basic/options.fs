@@ -72,6 +72,7 @@ let codegen_libs : ref<list<list<string>>> = Util.mk_ref []
 let trace_error = Util.mk_ref false
 let verify = Util.mk_ref true
 let full_context_dependency = Util.mk_ref true
+let ml_ish = Util.mk_ref false
 let print_implicits = Util.mk_ref false
 let print_bound_var_types = Util.mk_ref false
 let print_universes = Util.mk_ref false
@@ -167,7 +168,8 @@ let init_options () =
     dep := None;
     timing := false;
     inline_arith := false;
-    detail_errors := false
+    detail_errors := false;
+    ml_ish := false
 
 let set_fstar_home () =
   let fh = match !fstar_home_opt with
@@ -282,7 +284,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "max_fuel", OneArg((fun x -> max_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try at most (default 8)");
      ( noshort, "max_ifuel", OneArg((fun x -> max_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at most (default 2)");
      ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
-     ( noshort, "MLish", ZeroArgs(fun () -> full_context_dependency := false), "Introduce unification variables that are only dependent on the type variables in the context");
+     ( noshort, "MLish", ZeroArgs(fun () -> ml_ish := true; full_context_dependency := false), "Introduce unification variables that are only dependent on the type variables in the context");
      ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x; detail_errors := false), "positive integer"), "Maximum number of cores to use for the solver (default 1); implied detail_errors = false");
      ( noshort, "no_default_includes", ZeroArgs (fun () -> no_default_includes := true), "Ignore the default module search paths");
      ( noshort, "no_extract", OneArg ((fun x -> no_extract := x::!no_extract), "module name"), "Do not extract code from this module");

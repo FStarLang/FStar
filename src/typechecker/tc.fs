@@ -130,7 +130,10 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
   let expected_c_opt = match copt with
     | Some _ -> copt
     | None  -> 
-        if env.top_level || Util.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
+        if !Options.ml_ish && Ident.lid_equals Const.effect_ALL_lid (Util.comp_effect_name c)
+        then Some (Util.ml_comp (Util.comp_result c) e.pos)
+        else if env.top_level 
+             || Util.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
         then None
         else if Util.is_pure_comp c
              then Some (mk_Total (Util.comp_result c))
