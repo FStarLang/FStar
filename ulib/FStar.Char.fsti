@@ -1,6 +1,9 @@
 module FStar.Char
 
-assume new type char: Type0
+private type char' = 
+  | Char : int -> char'
+
+irreducible type char = char'
 
 val lowercase: char -> char
 val uppercase: char -> char

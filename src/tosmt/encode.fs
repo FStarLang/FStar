@@ -394,9 +394,9 @@ let encode_const = function
     | Const_unit -> mk_Term_unit
     | Const_bool true -> boxBool mkTrue
     | Const_bool false -> boxBool mkFalse
-    | Const_char c -> Term.mkApp("FStar.Char.char", [boxInt (mkInteger' (Util.int_of_char c))])
+    | Const_char c -> Term.mkApp("FStar.Char.Char", [boxInt (mkInteger' (Util.int_of_char c))])
     | Const_int (i, None)  -> boxInt (mkInteger i)
-    | Const_int (i, Some q) -> Term.mkApp(string_of_int_qualifier q, [boxInt (mkInteger i)])
+    | Const_int (i, Some q) -> Term.mkApp(constructor_string_of_int_qualifier q, [boxInt (mkInteger i)])
     | Const_string(bytes, _) -> varops.string_const (Util.string_of_bytes <| bytes)
     | c -> failwith (Util.format1 "Unhandled constant: %s\n" (Print.const_to_string c))
 

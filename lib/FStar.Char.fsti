@@ -1,6 +1,8 @@
 module FStar.Char
 
-new type char
+private type char' = 
+  | Char : int -> char'
+opaque type char = char'
 val lowercase: char -> Tot char
 val uppercase: char -> Tot char
 val int_of_char: char -> Tot int
