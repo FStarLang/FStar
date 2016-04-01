@@ -4,7 +4,7 @@ val min_value_int : int
 let min_value_int = 0
 
 val max_value_int : int
-let max_value_int = 1048575
+let max_value_int = 4294967295
 
 let within_uint32 (i:int) =
     min_value_int <= i
