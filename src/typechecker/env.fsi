@@ -66,7 +66,6 @@ type env = {
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
-  default_effects:list<(lident*lident)>;        (* [(x,y)] ... y is the default effect of x *)
   type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
@@ -160,7 +159,6 @@ val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 
 (* operations on monads *)
-val default_effect  : env -> lident -> option<lident>
 val join            : env -> lident -> lident -> lident * mlift * mlift
 val monad_leq       : env -> lident -> lident -> option<edge>
 val effect_decl_opt : env -> lident -> option<eff_decl>

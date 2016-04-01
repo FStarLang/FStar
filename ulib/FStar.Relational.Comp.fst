@@ -33,15 +33,15 @@ assume Monotone_comp: forall a b wp1 wp2 p1 p2. (forall x h. p1 x h ==> p2 x h)
 
 assume val compose2: #a0:Type -> #b0:Type -> #wp0:(a0 -> Tot (st_wp b0)) -> #wlp0:(a0 -> Tot (st_wp b0))
                   -> #a1:Type -> #b1:Type -> #wp1:(a1 -> Tot (st_wp b1)) -> #wlp1:(a1 -> Tot (st_wp b1))
-                  -> =c0:(x0:a0 -> STATE b0 (wp0 x0) (wlp0 x0))
-                  -> =c1:(x1:a1 -> STATE b1 (wp1 x1) (wlp1 x1))
+                  -> $c0:(x0:a0 -> STATE b0 (wp0 x0) (wlp0 x0))
+                  -> $c1:(x1:a1 -> STATE b1 (wp1 x1) (wlp1 x1))
                   -> x: rel a0 a1
                   -> STATE2 (rel b0 b1)
                             (comp b0 b1 (wp0 (R.l x)) (wp1 (R.r x)))
                             (comp b0 b1 (wlp0 (R.l x)) (wlp1 (R.r x)))
 
 val compose2_self : #a:Type -> #b:Type -> #wp:(a -> Tot (st_wp b)) -> #wlp:(a -> Tot (st_wp b))
-                -> =c:(x:a -> STATE b (wp x) (wlp x))
+                -> $c:(x:a -> STATE b (wp x) (wlp x))
                 -> x: double a
                 -> STATE2 (double b)
                           (comp b b (wp (R.l x)) (wp (R.r x)))
@@ -56,10 +56,10 @@ assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
                 -> #p':(heap2 -> Type)
                 -> #q:(heap2 -> rel a b -> heap2 -> Type)
                 -> #q':(heap2 -> rel c d -> heap2 -> Type)
-                -> =c1:(double unit -> ST2 (rel a b)
+                -> $c1:(double unit -> ST2 (rel a b)
                                            (requires (fun h -> p h))
                                            (ensures (fun h1 r h2 -> q h1 r h2)))
-                -> =c2:(double unit -> ST2 (rel c d)
+                -> $c2:(double unit -> ST2 (rel c d)
                                            (requires (fun h -> p' h))
                                            (ensures (fun h1 r h2 -> q' h1 r h2)))
                 -> ST2 (rel a d) (requires (fun h -> (exists (hl:heap) (hr:heap).
@@ -90,7 +90,7 @@ let decomp_r a0 a1 b0 b1 ar wp =
 assume val project_l : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type
                     -> #wp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1)))
                     -> #wlp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1)))
-                    -> =c:(x:rel a0 a1 -> STATE2 (rel b0 b1) (wp x) (wlp x))
+                    -> $c:(x:rel a0 a1 -> STATE2 (rel b0 b1) (wp x) (wlp x))
                     -> x:a0
                     -> STATE b0 (decomp_l a0 a1 b0 b1 x wp)
                                 (decomp_l a0 a1 b0 b1 x wlp)
@@ -98,7 +98,7 @@ assume val project_l : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type
 assume val project_r : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type
                     -> #wp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1)))
                     -> #wlp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1)))
-                    -> =c:(x:rel a0 a1 -> STATE2 (rel b0 b1) (wp x) (wlp x))
+                    -> $c:(x:rel a0 a1 -> STATE2 (rel b0 b1) (wp x) (wlp x))
                     -> x:a1
                     -> STATE b1 (decomp_r a0 a1 b0 b1 x wp)
                                 (decomp_r a0 a1 b0 b1 x wlp)

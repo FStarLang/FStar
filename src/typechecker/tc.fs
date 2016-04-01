@@ -129,24 +129,14 @@ let comp_check_expected_typ env e lc : term * lcomp * guard_t =
 let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t =
   let expected_c_opt = match copt with
     | Some _ -> copt
-    | None ->
-        if Util.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
+    | None  -> 
+        if env.top_level || Util.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
         then None
-        else let c1 = N.unfold_effect_abbrev env c in
-             let md = Env.get_effect_decl env c1.effect_name in
-             match Env.default_effect env md.mname with
-                | None -> None
-                | Some l ->
-                    let flags =
-                        if lid_equals l Const.effect_Tot_lid then [TOTAL]
-                        else if lid_equals l Const.effect_ML_lid then [MLEFFECT]
-                        else [] in
-                    let def = mk_Comp ({effect_name=l;
-                                        result_typ=c1.result_typ;
-                                        effect_args=[];
-                                        flags=flags})  in
-                    Some def in
-
+        else if Util.is_pure_comp c
+             then Some (mk_Total (Util.comp_result c))
+             else if Util.is_pure_or_ghost_comp c
+             then Some (mk_GTotal (Util.comp_result c))
+             else None in
   match expected_c_opt with
     | None -> e, norm_c env c, Rel.trivial_guard
     | Some expected_c -> //expected effects should already be normalized
@@ -1788,24 +1778,27 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
     | [], _ -> [], t
     | _, Tm_arrow(binders, c) -> binders, Util.comp_result c
     | _ -> failwith "Impossible" in
-  let close ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
+  let close n ts = 
+    let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
+    assert (List.length (fst ts) = n);
+    ts in
   let ed = { ed with
       univs       = univs
     ; binders     = binders
     ; signature   = signature
-    ; ret         = close ret
-    ; bind_wp     = close bind_wp
-    ; bind_wlp    = close bind_wlp
-    ; if_then_else= close if_then_else
-    ; ite_wp      = close ite_wp
-    ; ite_wlp     = close ite_wlp
-    ; wp_binop    = close wp_binop
-    ; wp_as_type  = close wp_as_type
-    ; close_wp    = close close_wp
-    ; assert_p    = close assert_p
-    ; assume_p    = close assume_p
-    ; null_wp     = close null_wp
-    ; trivial     = close trivial_wp } in
+    ; ret         = close 0 ret
+    ; bind_wp     = close 1 bind_wp
+    ; bind_wlp    = close 1 bind_wlp
+    ; if_then_else= close 0 if_then_else
+    ; ite_wp      = close 0 ite_wp
+    ; ite_wlp     = close 0 ite_wlp
+    ; wp_binop    = close 0 wp_binop
+    ; wp_as_type  = close 0 wp_as_type
+    ; close_wp    = close 1 close_wp
+    ; assert_p    = close 0 assert_p
+    ; assume_p    = close 0 assume_p
+    ; null_wp     = close 0 null_wp
+    ; trivial     = close 0 trivial_wp } in
 
 if Env.debug env Options.Low 
 then Util.print_string (Print.eff_decl_to_string ed);
@@ -2150,11 +2143,6 @@ let rec tc_decl env se = match se with
       let tps, env, us = tc_tparams env tps in
       let c, u, g = tc_comp env c in
       Rel.force_trivial_guard env g;
-      let tags = tags |> List.map (function
-        | DefaultEffect None ->
-          let c' = Normalize.unfold_effect_abbrev env c in
-          DefaultEffect (c'.effect_name |> Some)
-        | t -> t) in
       let tps = SS.close_binders tps in
       let c = SS.close_comp tps c in
       let uvs, t = Util.generalize_universes env0 (mk (Tm_arrow(tps, c)) None r) in

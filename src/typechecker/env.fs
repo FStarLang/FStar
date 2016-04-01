@@ -71,7 +71,6 @@ type env = {
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
-  default_effects:list<(lident*lident)>;        (* [(x,y)] ... y is the default effect of x *)
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
@@ -150,7 +149,6 @@ let initial_env tc solver module_lid =
     use_eq=false;
     is_iface=false;
     admit=false;
-    default_effects=[];
     type_of=tc;
     universe_of=(fun g e -> U_zero); //TODO: FIXME!
     use_bv_sorts=false;
@@ -567,14 +565,7 @@ let wp_sig_aux decls m =
 
 let wp_signature env m = wp_sig_aux env.effects.decls m
 
-let default_effect env l = Util.find_map env.default_effects (fun (l', m) -> if lid_equals l l' then Some m else None)
-
 let build_lattice env se = match se with
-  | Sig_effect_abbrev(l, _, _, c, quals, r) ->
-    begin match Util.find_map quals (function DefaultEffect n -> n | _ -> None) with
-        | None -> env
-        | Some e -> {env with default_effects=(e, l)::env.default_effects}
-    end
   | Sig_new_effect(ne, _) ->
     let effects = {env.effects with decls=ne::env.effects.decls} in
     {env with effects=effects}

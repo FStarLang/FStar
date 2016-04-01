@@ -38,7 +38,7 @@ let trans_aqual = function
   | Some AST.Equality -> Some S.Equality
   | _ -> None
 
-let trans_qual = function
+let trans_qual r = function
   | AST.Private ->       S.Private
   | AST.Assumption ->    S.Assumption
   | AST.Inline ->        S.Inline
@@ -46,11 +46,11 @@ let trans_qual = function
   | AST.Irreducible ->   S.Irreducible
   | AST.Logic ->         S.Logic
   | AST.TotalEffect ->   S.TotalEffect
-  | AST.DefaultEffect -> S.DefaultEffect None
   | AST.Effect ->        S.Effect
   | AST.New  ->          S.New
   | AST.Abstract ->      S.Abstract
   | AST.Opaque ->        S.Unfoldable 
+  | AST.DefaultEffect -> raise (Error("The 'default' qualifier on effects is no longer supported", r))
   
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
@@ -1301,7 +1301,9 @@ let desugar_binders env binders =
       | _ -> raise (Error("Missing name in binder", b.brange))) (env, []) binders in
     env, List.rev binders
 
-let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
+let rec desugar_decl env (d:decl) : (env_t * sigelts) = 
+  let trans_qual = trans_qual d.drange in
+  match d.d with
   | Pragma p ->
     let se = Sig_pragma(trans_pragma p, d.drange) in
     env, [se]

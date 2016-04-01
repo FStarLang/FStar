@@ -1,5 +1,4 @@
 module FStar.Bytes
-
 type byte = FStar.UInt8.byte
 
 assume type bytes

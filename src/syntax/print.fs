@@ -190,8 +190,6 @@ let qual_to_string = function
   | Abstract              -> "abstract"
   | Logic                 -> "logic"
   | TotalEffect           -> "total"
-  | DefaultEffect None    -> "no default"
-  | DefaultEffect(Some l) -> Util.format1 "default %s" (lid_to_string l)
   | Discriminator l       -> Util.format1 "(Discriminator %s)" (lid_to_string l) 
   | Projector (l, x)      -> Util.format2 "(Projector %s %s)" (lid_to_string l) x.idText
   | RecordType        fns -> Util.format1 "(RecordType %s)" (fns |> List.map lid_to_string |> String.concat ", ")
