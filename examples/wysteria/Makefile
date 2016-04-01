@@ -1,3 +1,9 @@
+# Problems with this makefile:
+# - make a.out only works after a call to "make"
+# - make a.out copies files around (discouraged! buid a cmxa for the ml/
+#   directory instead and a recursive call to make)
+# - the Makefile does not use auto-deps and breaks all the time; switch to
+#   auto-deps!
 FSTAR_HOME=../..
 include ../Makefile.include
 
@@ -55,9 +61,9 @@ OUTPUT_DIR=./ocaml-output
 
 CONTRIB=$(FSTAR_HOME)/contrib
 
-CODEGEN_FLAGS=      \
+CODEGEN_FLAGS=   --no_location_info --use_native_int \
                  --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --odir $(OUTPUT_DIR)\
-              --use_native_int --__temp_no_proj PSemantics --__temp_no_proj SecServer
+                 --__temp_no_proj PSemantics --__temp_no_proj SecServer
 
 FSTAR_LIB_FILES=FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Ghost.fst FStar.Squash.fsti\
                 FStar.List.Tot.fst FStar.List.fst FStar.ListProperties.fst FStar.OrdSet.fst FStar.OrdMap.fst FStar.Float.fsti FStar.IO.fsti FStar.Char.fsti FStar.String.fsti hashtable.fsi\

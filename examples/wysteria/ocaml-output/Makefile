@@ -1,46 +1,31 @@
 FSTAR_HOME=../../..
 
-ifeq ($(OS),Windows_NT)
-    # internally flexlink uses i686-w64-mingw32-gcc.exe
-    CC = flexlink -chain mingw -v -v -exe -lgdi32
-    # flexlink is needed to link in	/cygdrive/c/OCaml/bin/flexdll_initer_mingw.o /cygdrive/c/OCaml/bin/flexdll_mingw.o
-    LIB = $(FSTAR_HOME)/3rdparty/win32 #place to look for libcrypto.a
-else
-    UNAME_S := $(shell uname -s)
-    ifeq ($(UNAME_S),Darwin)
-        CC = gcc
-        LIB = $(FSTAR_HOME)/3rdparty/osx #place to look for libcrypto.a
-    else
-        CC = gcc
-        LIB = $(FSTAR_HOME)/3rdparty/x86_64 #place to look for libcrypto.a
-    endif
-endif
-
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
 
-OCAMLC=ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -package batteries -linkpkg -g -thread
-
+OCAMLC=ocamlfind ocamlopt -package batteries -linkpkg -g -thread
 
 a.out:
-	make -C $(FSTAR_HOME)/contrib/
-	cp $(FSTAR_HOME)/lib/ml/MkPrims.ml .
-	cp $(FSTAR_HOME)/lib/ml/native_int/prims.ml .
-	cp $(FSTAR_HOME)/lib/ml/FStar_ST.ml .
-	cp $(FSTAR_HOME)/lib/ml/FStar_All.ml .
-	cp $(FSTAR_HOME)/lib/ml/FStar_IO.ml .
-	cp $(FSTAR_HOME)/lib/ml/FStar_List.ml .
-	cp $(FSTAR_HOME)/lib/ml/FStar_String.ml .
+	$(MAKE) -C $(FSTAR_HOME)/lib/ml PRIMS_DIR=native_int
+	$(MAKE) -C $(FSTAR_HOME)/contrib/
 	cp ../ml/ffibridge.ml .
 	cp ../ml/runtime.ml .
 	cp ../ml/interpreteriface.ml .
 	cp ../ml/hashtable.ml .
-	$(OCAMLC) $(OCAML_INCLUDE_PATHS) $(FSTAR_HOME)/contrib/CoreCrypto/ml/CoreCrypto.cmxa MkPrims.ml prims.ml FStar_Ghost.ml FStar_List_Tot.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_OrdSet.ml FStar_OrdMap.ml FStar_IO.ml FStar_String.ml  \
-	            Prins.ml AST.ml ffibridge.ml Semantics.ml PSemantics.ml RuntimeTheory.ml runtime.ml Print.ml hashtable.ml Circuit.ml Interpreter.ml FFI.ml prog.ml interpreteriface.ml smciface.ml SMCMain.ml -o a.out
+	$(OCAMLC) $(OCAML_INCLUDE_PATHS) $(FSTAR_HOME)/lib/ml/fstarlib.cmxa \
+	  $(FSTAR_HOME)/contrib/CoreCrypto/ml/CoreCrypto.cmxa \
+	  FStar_List_Tot.ml FStar_OrdSet.ml FStar_OrdMap.ml FStar_Ghost.ml \
+	  Prins.ml AST.ml ffibridge.ml Semantics.ml PSemantics.ml \
+	  RuntimeTheory.ml runtime.ml Print.ml hashtable.ml Circuit.ml \
+	  Interpreter.ml FFI.ml prog.ml interpreteriface.ml smciface.ml \
+	  SMCMain.ml \
+	  -o a.out
 # see ../Makefile ... removed some files
 	# $(OCAMLC) $(OCAML_INCLUDE_PATHS) $(FSTAR_HOME)/contrib/CoreCrypto/ml/CoreCrypto.cmxa prims.ml FStar_Ghost.ml FStar_List_Tot.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_OrdSet.ml FStar_OrdMap.ml FStar_IO.ml FStar_String.ml  \
 	#             Prins.ml AST.ml ffibridge.ml Semantics.ml PSemantics.ml RuntimeTheory.ml runtime.ml Print.ml hashtable.ml Circuit.ml SHA1.ml Crypto.ml Interpreter.ml SecServer.ml FFI.ml prog.ml interpreteriface.ml smciface.ml SMCMain.ml -o a.out
 
 clean:
+	$(MAKE) -C $(FSTAR_HOME)/lib/ml clean
+	$(MAKE) -C $(FSTAR_HOME)/contrib/ clean
 	rm -f *.cmi *.cmx *.o a.out circuit_* input_* output_* config* bar.txt
 
 distclean: clean
