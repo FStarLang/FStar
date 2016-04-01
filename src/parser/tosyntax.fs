@@ -1308,9 +1308,15 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     let se = Sig_pragma(trans_pragma p, d.drange) in
     env, [se]
 
+  | TopLevelModule _ -> 
+    raise (Error("Multiple modules in a file are no longer supported", d.drange)) //the parser desugars this away with a warning
+
   | Open lid ->
     let env = Env.push_namespace env lid in
     env, []
+
+  | ModuleAbbrev(x, l) ->
+    Env.push_module_abbrev env x l, []
 
   | Tycon(qual, tcs) ->
     desugar_tycon env d.drange (List.map trans_qual qual) tcs
