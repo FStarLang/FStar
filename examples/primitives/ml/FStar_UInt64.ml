@@ -7,12 +7,12 @@ let (one:uint64) = Stdint.Uint64.one
 let bits = 64
 
 (* Standard operators *)
-let add_mod a b = Stdint.Uint64.add a b
-(* let add a b = a + b *)
-let sub_mod a b = Stdint.Uint64.sub a b
-(* let sub a b = a - b *)
-let mul_mod a b = Stdint.Uint64.mul a b
-(* let mul a b = a * b *)
+let add a b = Stdint.Uint64.add a b
+let add_mod a b = add a b
+let sub a b = Stdint.Uint64.sub a b
+let sub_mod a b = sub a b
+let mul a b = Stdint.Uint64.mul a b
+let mul_mod a b = mul a b
 let div a b = Stdint.Uint64.div a b
 let rem a b = Stdint.Uint64.rem a b
 
@@ -45,10 +45,10 @@ let op_Hat_Greater_Greater = shift_right
 let op_Hat_Amp = logand
 let op_Hat_Bar = logor
 let op_Hat_Hat = logxor
-let (ones:uint64) = lognot zero
 
-
-let of_uint32 s = s
+let of_int s = Stdint.Uint64.of_int s
+let of_uint32 s = of_int s
+let to_uint8 s = Stdint.Uint64.to_int s land 255
 
 (* TODO *)
 let eq x y = if x = y then -1 else 0

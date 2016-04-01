@@ -29,11 +29,12 @@ let shift_right a s = a lsr s
 
 let rotate_left a s =  ((( a lsl s) + ( a lsr (8-s))) land 255)
 let rotate_right a s =  ((( a lsl (8-s)) + ( a lsr s)) land 255)
-                                          
+
 let of_uint32 s =  (s land 255)
 let of_int s =  (s land 255)
-let of_native_int s =  (s land 255)                 
-                    
+let of_native_int s =  (s land 255)
+let of_string s = int_of_string s
+
 (* TODO *)
 let eq x y = if x = y then -1 else 0
 let gte x y = if x >= y then -1 else 0
@@ -41,9 +42,9 @@ let gte x y = if x >= y then -1 else 0
 let op_Hat_Plus = add
 let op_Hat_Star = mul
 let op_Hat_Slash = div
-let op_Hat_Subtraction = sub 
-let op_Hat_Less_Less  = shift_left 
-let op_Hat_Greater_Greater  = shift_right 
+let op_Hat_Subtraction = sub
+let op_Hat_Less_Less  = shift_left
+let op_Hat_Greater_Greater  = shift_right
 let op_Hat_Amp = logand
 let op_Hat_Hat = logxor
 let op_Hat_Bar = logor

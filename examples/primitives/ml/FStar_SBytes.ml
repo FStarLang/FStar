@@ -28,14 +28,15 @@ let sbytes_of_uint32s res b l =
 
 let sbytes_of_uint64 res v =
   let i = 0 in
-  upd res (i) ((v land 255));
-  upd res (i+1) ( ((v lsr 8) land 255));
-  upd res (i+2) ( ((v lsr 16) land 255));
-  upd res (i+3) ( ((v lsr 24) land 255));
-  upd res (i+4) ( ((v lsr 32) land 255));
-  upd res (i+5) ( ((v lsr 40) land 255));
-  upd res (i+6) ( ((v lsr 48) land 255));
-  upd res (i+7) ( ((v lsr 56) land 255))
+  let mask = FStar_UInt64.of_int 255 in
+  upd res (i) (FStar_UInt64.to_uint8 (FStar_UInt64.logand v mask));
+  upd res (i+1) (FStar_UInt64.to_uint8 (FStar_UInt64.logand (FStar_UInt64.shift_right_logical v 8) mask));
+  upd res (i+2) (FStar_UInt64.to_uint8 (FStar_UInt64.logand (FStar_UInt64.shift_right_logical v 16) mask));
+  upd res (i+3) (FStar_UInt64.to_uint8 (FStar_UInt64.logand (FStar_UInt64.shift_right_logical v 24) mask));
+  upd res (i+4) (FStar_UInt64.to_uint8 (FStar_UInt64.logand (FStar_UInt64.shift_right_logical v 32) mask));
+  upd res (i+5) (FStar_UInt64.to_uint8 (FStar_UInt64.logand (FStar_UInt64.shift_right_logical v 40) mask));
+  upd res (i+6) (FStar_UInt64.to_uint8 (FStar_UInt64.logand (FStar_UInt64.shift_right_logical v 48) mask));
+  upd res (i+7) (FStar_UInt64.to_uint8 (FStar_UInt64.logand (FStar_UInt64.shift_right_logical v 56) mask))
 
 let xor_bytes c a b l =
   for i = 0 to l-1 do
