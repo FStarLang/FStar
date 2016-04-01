@@ -24,7 +24,7 @@ theory:
 	      --z3timeout 10 --__temp_no_proj PSemantics --__temp_no_proj Metatheory \
 	  FStar.FunctionalExtensionality.fst FStar.Classical.fst FStar.Ghost.fst FStar.List.Tot.fst FStar.Set.fst \
 	  FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.OrdSet.fst FStar.OrdMap.fst \
-	  FStar.Constructive.fst prins.fsi FStar.UInt8.fst $(CONTRIB)/Platform/fst/Platform.Bytes.fst ast.fst ffibridge.fsi sem.fst psem.fst \
+	  FStar.Constructive.fst prins.fsi FStar.UInt8.fst FStar.Char.fsti $(CONTRIB)/Platform/fst/Platform.Bytes.fst ast.fst ffibridge.fsi sem.fst psem.fst \
 	  theory.fst
 
 traces:
