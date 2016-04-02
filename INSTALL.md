@@ -68,7 +68,7 @@ This will install F\* and all required dependencies (including Z3):
 For building and installing the latest F\* sources from GitHub (the master branch)
 instead of the latest release you can do:
 
-        $ brew --HEAD install fstar
+        $ brew install --HEAD fstar
 
 ## Building F* from sources ##
 
