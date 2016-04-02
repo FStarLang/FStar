@@ -6,6 +6,7 @@ type fd_write
 
 val print_newline : unit -> unit
 val print_string : string -> unit
+val print_int : int -> unit
 val print_any : 'a -> unit
 val input_line : unit -> string
 val input_int : unit -> int
