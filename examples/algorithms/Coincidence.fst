@@ -1,3 +1,9 @@
+(*
+Benchmark problem from Dagstuhl Seminar 16131
+http://www.dagstuhl.de/en/program/calendar/semhp/?semnr=16131
+
+(we also solved this in Dafny, Liquid Haskell, Why3, and Synquid)
+*)
 
 module Coincidence
 
@@ -16,12 +22,13 @@ let rec sorted l =
 
 
 val lemma1 : y:int -> xs:list int ->
-  Pure unit (requires (sorted xs && (xs = [] || y < Cons.hd xs)))
-            (ensures (fun _ -> not (mem y xs)))
+  Lemma (requires (sorted xs && (xs = [] || y < Cons.hd xs)))
+        (ensures (not (mem y xs)))
 let rec lemma1 y xs =
   match xs with
   | []     -> ()
   | x::xs' -> lemma1 y xs'
+
 
 val coincidence : xs:(list int){sorted xs} -> ys : (list int){sorted ys} ->
         Tot (zs:(list int){forall z. mem z zs <==> (mem z xs && mem z ys)})
