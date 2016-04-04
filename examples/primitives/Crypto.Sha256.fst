@@ -167,9 +167,6 @@ let pad pdata rdata rlen =
   in
   // Compute the padding length
   let rplen = pad_length rlen in
-  //FStar.IO.print_string "Padding blen: ";
-  //FStar.IO.print_int rplen;
-  //FStar.IO.print_newline ();
   // Generate the padding
   let rpad = create #8 zero rplen in
   SBuffer.upd rpad 0 (FStar.UInt8.of_string "0x80");
@@ -185,7 +182,7 @@ val store : (wdata :buffer 32) ->
                  (requires (fun h -> Live h wdata /\ Live h pdata))
                  (ensures  (fun h0 r h1 -> Live h1 wdata /\ Live h1 pdata))
 
-let store wdata pdata plen = uint32s_of_sbytes wdata pdata plen
+let store wdata pdata plen = be_uint32s_of_sbytes wdata pdata plen
 
 (* [FIPS 180-4] section 6.2.2 *)
 (* Block processing functions *)
@@ -387,9 +384,9 @@ let rec update_step ihash wdata ws rounds i t1 t2 k =
 //  rewrite skipn_length. simpl; omega.
 // Qed.
 // TODO: ensures Modifies (only hash) h0 h1
-val update : (whash    :buffer 32 { length whash = 8 }) ->
-             (pdata    :buffer 32 { Disjoint whash pdata }) ->
-             (rounds   :nat )
+val update : (whash  :buffer 32 { length whash = 8 }) ->
+             (pdata  :buffer 32 { Disjoint whash pdata }) ->
+             (rounds :nat )
              -> ST unit
                   (requires (fun h -> Live h whash /\ Live h pdata))
                   (ensures  (fun h0 r h1 -> Live h1 whash /\ Live h1 pdata))
@@ -414,7 +411,7 @@ val finish: (hash  :sbytes    { length hash = 32 }) ->
                  (requires (fun h -> Live h hash /\ Live h whash))
                  (ensures  (fun h0 r h1 -> Live h1 hash /\ Live h1 whash))
 
-let finish hash whash = sbytes_of_uint32s hash whash 8
+let finish hash whash = be_sbytes_of_uint32s hash whash 8
 
 (* Compute the sha256 hash of some bytes *)
 // [Coq] Definition SHA_256 (str : list Z) : list Z :=
@@ -440,3 +437,39 @@ let sha256 hash data len =
   store wdata pdata plen;
   update whash wdata rounds;
   finish hash whash
+
+(*
+(* Testing functions *)
+let test_pad data len =
+  let whash = create #32 FStar.UInt32.zero 8 in
+  let plen = len + (pad_length len) + 8 in
+  let rounds = nblocks plen - 1 in
+  let pdata = create #8 FStar.UInt8.zero plen in
+  let wlen = plen/4 in
+  let wdata = create #32 FStar.UInt32.zero wlen in
+  init whash;
+  pad pdata data len;
+  pdata
+
+let test_init_whash () =
+  let whash = create #32 FStar.UInt32.zero 8 in
+  init whash;
+  let x = create #8 FStar.UInt8.zero 4 in
+  be_sbytes_of_uint32s x whash 1;
+  x
+
+let test_whash data len =
+  let whash = create #32 FStar.UInt32.zero 8 in
+  let plen = len + (pad_length len) + 8 in
+  let rounds = nblocks plen - 1 in
+  let pdata = create #8 FStar.UInt8.zero plen in
+  let wlen = plen/4 in
+  let wdata = create #32 FStar.UInt32.zero wlen in
+  init whash;
+  pad pdata data len;
+  store wdata pdata plen;
+  update whash wdata rounds;
+  let x = create #8 FStar.UInt8.zero 4 in
+  sbytes_of_uint32s x whash 1;
+  x
+*)
