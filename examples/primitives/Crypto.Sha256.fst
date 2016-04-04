@@ -188,7 +188,7 @@ let pad rdata rlen =
   let rlen_64 =
     let v = create #8 FStar.UInt8.zero 8 in
     let v64 = FStar.UInt64.of_int (rlen * 8) in
-    FStar.SBytes.sbytes_of_uint64 v v64;
+    FStar.SBytes.be_sbytes_of_uint64 v v64;
     v
   in
   // Compute the padding length
