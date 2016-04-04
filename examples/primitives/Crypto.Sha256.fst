@@ -143,14 +143,21 @@ let k_init () =
 val nblocks: nat -> Tot (n:nat{n >= 1})
 let nblocks x = ((x + 8) - ((x + 8) % 64))/64 + 1
 
+(* Compute the pad length *)
+val pad_length: nat -> Tot (n:nat{n <= 64})
+let pad_length rlen =
+  if (rlen % 64) < 56 then 56 - (rlen % 64)
+  else 64 + 56 - (rlen % 64)
+
 (* Pad the data and return a buffer of uint32 for subsequent treatment *)
-val pad: (rdata :buffer 8 ) ->
+val pad: (pdata :buffer 8 ) ->
+         (rdata :buffer 8 ) ->
          (rlen  :nat { length rdata = rlen })
-         -> ST (data:buffer 8)
+         -> ST unit
               (requires (fun h -> Live h rdata))
-              (ensures  (fun h0 r h1 -> Live h1 rdata /\ h0 = h1))
+              (ensures  (fun h0 r h1 -> Live h1 rdata))
 // TODO: Refinement on the value of the pad -> length raw + rplen = 64
-let pad rdata rlen =
+let pad pdata rdata rlen =
   // Value of the raw data length in bits represented as UInt64
   let rlen_64 =
     let v = create #8 FStar.UInt8.zero 8 in
@@ -159,19 +166,26 @@ let pad rdata rlen =
     v
   in
   // Compute the padding length
-  let rplen =
-    if (rlen % 64) < 56 then 56 - (rlen % 64)
-    else 64 + 56 - (rlen % 64)
-  in
+  let rplen = pad_length rlen in
+  //FStar.IO.print_string "Padding blen: ";
+  //FStar.IO.print_int rplen;
+  //FStar.IO.print_newline ();
   // Generate the padding
   let rpad = create #8 zero rplen in
   SBuffer.upd rpad 0 (FStar.UInt8.of_string "0x80");
-  // Create the final data as a buffer of bytes
-  let data = SBuffer.create #8 FStar.UInt8.zero (rlen + rplen + 8) in
-  blit rdata 0 data 0 rlen;
-  blit rpad 0 data rlen rplen;
-  blit rlen_64 0 data (rlen + rplen) 8;
-  data
+  blit rdata 0 pdata 0 rlen;
+  blit rpad 0 pdata rlen rplen;
+  blit rlen_64 0 pdata (rlen + rplen) 8
+
+(* Store function to handle pdata as a sequence of words *)
+val store : (wdata :buffer 32) ->
+            (pdata :buffer 8 { length pdata = 4 * (length wdata) /\ Disjoint wdata pdata }) ->
+            (plen  :nat        { length pdata = plen /\ plen = 4 * (length wdata) })
+            -> ST unit
+                 (requires (fun h -> Live h wdata /\ Live h pdata))
+                 (ensures  (fun h0 r h1 -> Live h1 wdata /\ Live h1 pdata))
+
+let store wdata pdata plen = uint32s_of_sbytes wdata pdata plen
 
 (* [FIPS 180-4] section 6.2.2 *)
 (* Block processing functions *)
@@ -192,15 +206,15 @@ let pad rdata rlen =
 (* [FIPS 180-4] section 6.2.2 *)
 (* Step 1 : Scheduling function for sixty-four 32bit words *)
 val wsched_define: (ws     :buffer 32 { length ws = 64 }) ->
-                   (wblock :uint32) ->
+                   (wblock :buffer 32 { length wblock = 16 /\ Disjoint ws wblock }) ->
                    (t      :ref nat)
                    -> ST unit
-                        (requires (fun h -> Live h ws))
-                        (ensures  (fun h0 r h1 -> Live h1 ws))
+                        (requires (fun h -> Live h ws /\ Live h wblock))
+                        (ensures  (fun h0 r h1 -> Live h1 ws /\ Live h1 wblock))
 
 let rec wsched_define ws wblock t =
   if !t < 16 then begin
-    SBuffer.upd ws !t wblock;
+    SBuffer.upd ws !t (index wblock !t);
     t := !t + 1;
     wsched_define ws wblock t end
   else if !t < 64 then
@@ -226,18 +240,20 @@ let rec wsched_define ws wblock t =
 // [Coq] Definition init_registers : registers :=
 //   map Int.repr  [1779033703; 3144134277; 1013904242; 2773480762;
 //                  1359893119; 2600822924; 528734635; 1541459225].
-val init : unit -> St (buffer 32)
-let init () =
-  let m = SBuffer.create #32 FStar.UInt32.zero 8  in
-  SBuffer.upd m 0 (of_string "0x6a09e667");
-  SBuffer.upd m 1 (of_string "0xbb67ae85");
-  SBuffer.upd m 2 (of_string "0x3c6ef372");
-  SBuffer.upd m 3 (of_string "0xa54ff53a");
-  SBuffer.upd m 4 (of_string "0x510e527f");
-  SBuffer.upd m 5 (of_string "0x9b05688c");
-  SBuffer.upd m 6 (of_string "0x1f83d9ab");
-  SBuffer.upd m 7 (of_string "0x5be0cd19");
-  m
+val init : (whash :buffer 32 { length whash = 8 })
+           -> ST unit
+                (requires (fun h -> Live h whash))
+                (ensures  (fun h0 r h1 -> Live h1 whash))
+
+let init whash =
+  SBuffer.upd whash 0 (of_string "0x6a09e667");
+  SBuffer.upd whash 1 (of_string "0xbb67ae85");
+  SBuffer.upd whash 2 (of_string "0x3c6ef372");
+  SBuffer.upd whash 3 (of_string "0xa54ff53a");
+  SBuffer.upd whash 4 (of_string "0x510e527f");
+  SBuffer.upd whash 5 (of_string "0x9b05688c");
+  SBuffer.upd whash 6 (of_string "0x1f83d9ab");
+  SBuffer.upd whash 7 (of_string "0x5be0cd19")
 
 (* Step 3 : Perform logical operations on the working variables *)
 val update_inner_loop : (ws    :buffer 32 { length ws = 64 }) ->
@@ -277,74 +293,75 @@ let rec update_inner_loop ws whash t t1 t2 k =
     update_inner_loop ws whash t t1 t2 k end
   else ()
 
-val update_step : (hash  :buffer 32 { length hash = 8 }) ->
-                  (pdata :buffer 8  { Disjoint hash pdata }) ->
-                  (ws    :buffer 32 { length ws = 64 /\ Disjoint ws hash /\ Disjoint ws pdata }) ->
+val update_step : (whash :buffer 32 { length whash = 8 }) ->
+                  (wdata :buffer 32 { Disjoint whash wdata }) ->
+                  (ws    :buffer 32 { length ws = 64 /\ Disjoint ws whash /\ Disjoint ws wdata }) ->
                   (round :nat) ->
                   (i     :ref int) ->
                   (t1    :buffer 32 { length t1 = 1 }) ->
                   (t2    :buffer 32 { length t2 = 1 }) ->
-                  (k     :buffer 32 { length k = 64 /\ Disjoint k hash /\ Disjoint k pdata /\ Disjoint k ws })
+                  (k     :buffer 32 { length k = 64 /\ Disjoint k whash /\ Disjoint k wdata /\ Disjoint k ws })
                   -> ST unit
-                       (requires (fun h -> Live h hash
-                                      /\ Live h pdata
+                       (requires (fun h -> Live h whash
+                                      /\ Live h wdata
                                       /\ Live h ws
                                       /\ Live h k))
-                       (ensures  (fun h0 r h1 -> Live h1 hash
-                                            /\ Live h1 pdata
+                       (ensures  (fun h0 r h1 -> Live h1 whash
+                                            /\ Live h1 wdata
                                             /\ Live h1 ws
                                             /\ Live h1 k))
 
-let rec update_step hash pdata ws round i t1 t2 k =
+let rec update_step ihash wdata ws round i t1 t2 k =
   if !i < round then begin
     let pos = !i * 16 in
-    let block = SBuffer.sub pdata pos 16 in
-    let wblock = uint32_of_sbytes block in
-    (* Step 1 : Scheduling function for sixty-four 32bit words *)
+    let wblock = SBuffer.sub wdata pos 16 in
+
+    (* Step 1 : Scheduling function for sixty-four 32 bit words *)
     let ia = ref 0 in
     wsched_define ws wblock ia;
+
     (* Step 2 : Initialize the eight working variables *)
     let whash = create #32 FStar.UInt32.zero 8 in
-    SBuffer.upd whash 0 (index hash 0);
-    SBuffer.upd whash 1 (index hash 1);
-    SBuffer.upd whash 2 (index hash 2);
-    SBuffer.upd whash 3 (index hash 3);
-    SBuffer.upd whash 4 (index hash 4);
-    SBuffer.upd whash 5 (index hash 5);
-    SBuffer.upd whash 6 (index hash 6);
-    SBuffer.upd whash 7 (index hash 7);
+    SBuffer.upd whash 0 (index ihash 0);
+    SBuffer.upd whash 1 (index ihash 1);
+    SBuffer.upd whash 2 (index ihash 2);
+    SBuffer.upd whash 3 (index ihash 3);
+    SBuffer.upd whash 4 (index ihash 4);
+    SBuffer.upd whash 5 (index ihash 5);
+    SBuffer.upd whash 6 (index ihash 6);
+    SBuffer.upd whash 7 (index ihash 7);
 
     (* Step 3 : Perform logical operations on the working variables *)
     let ib = ref 0 in
     update_inner_loop ws whash ib t1 t2 k;
 
     (* Step 4 : Compute the ith intermediate hash value *)
-    let x01 = (index whash 0) in
-    let x02 = index hash 0 in
-    let x11 = (index whash 1) in
-    let x12 = index hash 1 in
-    let x21 = (index whash 2) in
-    let x22 = index hash 2 in
-    let x31 = (index whash 3) in
-    let x32 = index hash 3 in
-    let x41 = (index whash 4) in
-    let x42 = index hash 4 in
-    let x51 = (index whash 5) in
-    let x52 = index hash 5 in
-    let x61 = (index whash 6) in
-    let x62 = index hash 6 in
-    let x71 = (index whash 7) in
-    let x72 = index hash 7 in
-    SBuffer.upd hash 0 (FStar.UInt32.add x01 x02);
-    SBuffer.upd hash 1 (FStar.UInt32.add x11 x12);
-    SBuffer.upd hash 2 (FStar.UInt32.add x21 x22);
-    SBuffer.upd hash 3 (FStar.UInt32.add x31 x32);
-    SBuffer.upd hash 4 (FStar.UInt32.add x41 x42);
-    SBuffer.upd hash 5 (FStar.UInt32.add x51 x52);
-    SBuffer.upd hash 6 (FStar.UInt32.add x61 x62);
-    SBuffer.upd hash 7 (FStar.UInt32.add x71 x72);
+    let x01 = index whash 0 in
+    let x02 = index ihash 0 in
+    let x11 = index whash 1 in
+    let x12 = index ihash 1 in
+    let x21 = index whash 2 in
+    let x22 = index ihash 2 in
+    let x31 = index whash 3 in
+    let x32 = index ihash 3 in
+    let x41 = index whash 4 in
+    let x42 = index ihash 4 in
+    let x51 = index whash 5 in
+    let x52 = index ihash 5 in
+    let x61 = index whash 6 in
+    let x62 = index ihash 6 in
+    let x71 = index whash 7 in
+    let x72 = index ihash 7 in
+    SBuffer.upd ihash 0 (FStar.UInt32.add x01 x02);
+    SBuffer.upd ihash 1 (FStar.UInt32.add x11 x12);
+    SBuffer.upd ihash 2 (FStar.UInt32.add x21 x22);
+    SBuffer.upd ihash 3 (FStar.UInt32.add x31 x32);
+    SBuffer.upd ihash 4 (FStar.UInt32.add x41 x42);
+    SBuffer.upd ihash 5 (FStar.UInt32.add x51 x52);
+    SBuffer.upd ihash 6 (FStar.UInt32.add x61 x62);
+    SBuffer.upd ihash 7 (FStar.UInt32.add x71 x72);
     i := !i + 1;
-    update_step hash pdata ws round i t1 t2 k end
+    update_step ihash wdata ws round i t1 t2 k end
   else ()
 
 (* [FIPS 180-4] section 6.2.2 *)
@@ -366,25 +383,24 @@ let rec update_step hash pdata ws round i t1 t2 k =
 //  rewrite skipn_length. simpl; omega.
 // Qed.
 // TODO: ensures Modifies (only hash) h0 h1
-val update : (hash     :buffer 32 { length hash = 8 }) ->
-             (pdata    :buffer 8  { Disjoint hash pdata }) ->
-             (pdatalen :nat         { length pdata = pdatalen })
+val update : (whash    :buffer 32 { length whash = 8 }) ->
+             (pdata    :buffer 32 { Disjoint whash pdata }) ->
+             (rounds   :nat )
              -> ST unit
-                  (requires (fun h -> Live h hash /\ Live h pdata))
-                  (ensures  (fun h0 r h1 -> Live h1 hash /\ Live h1 pdata))
+                  (requires (fun h -> Live h whash /\ Live h pdata))
+                  (ensures  (fun h0 r h1 -> Live h1 whash /\ Live h1 pdata))
 
-let update hash pdata pdatalen =
+let update whash wdata rounds =
   (* Define working variables *)
   let i = ref 0 in
   let t1 = create #32 FStar.UInt32.zero 1 in
   let t2 = create #32 FStar.UInt32.zero 1 in
-  let round = nblocks pdatalen in
   (* Scheduling function *)
   let ws = create #32 FStar.UInt32.zero 64 in
   (* Initialize constant *)
   let k = k_init () in
   (* Perform function *)
-  update_step hash pdata ws round i t1 t2 k
+  update_step whash wdata ws rounds i t1 t2 k
 
 (* Compute the final value of the hash from the last hash value *)
 // TODO: ensures Modifies (only hash) h0 h1
@@ -408,7 +424,15 @@ val sha265: (hash:sbytes { length hash = 32 }) ->
                  (ensures  (fun h0 r h1 -> Live h1 data /\ Live h1 hash))
 
 let sha256 hash data len =
-  let pdata = pad data len in
-  let whash = init () in
-  update whash pdata len;
+  let whash = create #32 FStar.UInt32.zero 8 in
+  let plen = len + (pad_length len) + 8 in
+  let rounds = nblocks plen in
+  let pdata = create #8 FStar.UInt8.zero plen in
+  let wlen = plen/4 in
+  let wdata = create #32 FStar.UInt32.zero wlen in
+
+  init whash;
+  pad pdata data len;
+  store wdata pdata plen;
+  update whash wdata rounds;
   finish hash whash
