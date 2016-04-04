@@ -307,7 +307,7 @@ let rec update_inner_loop ws whash t t1 t2 k =
     whash.c := !(whash.b);
     whash.b := !(whash.a);
     whash.a := FStar.UInt32.add _t1 _t2;
-    t := (!t + 1);
+    t := !t + 1;
     update_inner_loop ws whash t t1 t2 k end
   else ()
 
