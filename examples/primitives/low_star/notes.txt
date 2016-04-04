@@ -74,6 +74,7 @@ Since memory management is explicit, recursive types must make the implicit
 reference explicit:
 
     type list 'a = | Nil | Cons: 'a -> list 'a -> list 'a is forbidden
+
     type list 'a = | Nil | Cons: 'a -> ref (list 'a) -> list 'a is allowed
 
 Based on the computed size of data representations, arguments could be passed either
@@ -83,6 +84,7 @@ Correspondance between F* and C types is:
 - F* nat, pos, int, bool, char, byte		~> C uintN
      nat, pos, int  	  -> uint64_t
      bool, char, byte 	  -> unsigned char
+- F* ref 'a					~> *('a)
 - Low* usint {8|32|63|64|128}			~> uint{N}_t
 - Low* buffer {8|32|63|64|128}			~> uint{N}_t*
 - Low* buffer 'a				~> ('a)* (size_of('a) must be known)
@@ -97,7 +99,7 @@ Correspondance between F* and C types is:
   -> side channel mitigation
 
   -> current supported functions:
-     let x = SBuffer.create #size init len in		~>	uint{size} x[len] = {0};
+     let x = SBuffer.create #size (*init*) len in		~>	uint{size} x[len] = {0};
      SBuffer.index #size b idx    	      	 	~>	b[idx]
      SBuffer.upd #size b idx v;		 		~> 	b[idx] = v;
      SBuffer.sub #size b idx len		 	~> 	(b+idx)
@@ -108,7 +110,7 @@ Correspondance between F* and C types is:
   -> Side channel mitigation only
   -> Size of 'a need to be statically computable
 
-- ref 'a is a special case of buffer 'a ?
+- rref 'a is a special case of buffer 'a ?
 
 
 Language formalization:
