@@ -54,6 +54,10 @@ assume val sbytes_of_uint64: res:sbytes{length res >= 8} -> v:uint64 -> ST unit
   (requires (fun h -> Live h res))
   (ensures  (fun h0 r h1 -> Live h1 res /\ Modifies (only res) h0 h1))
 
+assume val be_sbytes_of_uint64: res:sbytes{length res >= 8} -> v:uint64 -> ST unit
+  (requires (fun h -> Live h res))
+  (ensures  (fun h0 r h1 -> Live h1 res /\ Modifies (only res) h0 h1))
+
 assume val uint32s_of_sbytes: res:buffer 32 -> b:sbytes{Disjoint res b} -> l:nat{4*l<=length b /\ length res < l} -> ST unit
   (requires (fun h -> Live h res /\ Live h b))
   (ensures (fun h0 _ h1 -> Equals h1 res h0 b l /\ Modifies (only res) h0 h1))
