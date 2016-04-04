@@ -20,7 +20,7 @@ val min_int: uint64
 let min_int = min_int n
 
 (* Standard operators *)
-val add: a:uint64 -> b:uint64{a + b < max_int} -> Tot uint64
+//val add: a:uint64 -> b:uint64{a + b < max_int} -> Tot uint64
 let add a b = add #n a b
 val add_mod: uint64 -> uint64 -> Tot uint64
 let add_mod a b = add_mod #n a b
@@ -56,7 +56,6 @@ let rotate_right a s = rotate_right #n a s
 
 let to_uint64 s = to_uint n s
 
-(*
 (* Infix operators *)
 let op_Hat_Less_Less = shift_left
 let op_Hat_Greater_Greater = shift_right
@@ -66,12 +65,10 @@ let op_Hat_Subtraction = sub
 let op_Hat_Subtraction_Percent = sub_mod
 let op_Hat_Star = mul
 let op_Hat_Star_Percent = mul_mod
-let op_Hat_Star_Hat = mul_wide
 let op_Hat_Hat = logxor  
 let op_Hat_Amp = logand
 let op_Hat_Bar = logor
 let op_Less_Less_Less = rotate_left 
 let op_Greater_Greater_Greater = rotate_right
 
-assume val of_string: string -> Tot uint64
-*)
+assume val of_string: string -> Tot (option uint64)
