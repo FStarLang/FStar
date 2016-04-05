@@ -1,8 +1,3 @@
-(*--build-config
-  options:--verify_module Sint;
-  other-files:FStar.Ghost.fst axioms.fst intlib.fst;
-  --*)
-
 module Sint
 
 open FStar.Ghost

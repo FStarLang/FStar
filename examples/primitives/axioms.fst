@@ -1,7 +1,3 @@
-(*--build-config
-  options:--verify_module Axioms;
-  --*)
-
 module Axioms
 
 (** Axioms **)

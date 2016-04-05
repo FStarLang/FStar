@@ -129,7 +129,7 @@ let op_Less_Equals (Int16 i) (Int16 j) = i <= j
 val op_Less: i:int16
           -> j:int16
           -> Tot bool
-let op_Less (Int16 i) (Int16 j) = i < j
+let op_Less (Int16 i) (Int16 j) = (i < j)
 
 val op_Greater_Equals: i:int16
                     -> j:int16

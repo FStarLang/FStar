@@ -349,9 +349,9 @@ let encode_const = function
     | Const_unit -> mk_Term_unit
     | Const_bool true -> boxBool mkTrue
     | Const_bool false -> boxBool mkFalse
-    | Const_char c -> Term.mkApp("FStar.Char.char", [boxInt (mkInteger' (Util.int_of_char c))])
+    | Const_char c -> Term.mkApp("FStar.Char.Char", [boxInt (mkInteger' (Util.int_of_char c))])
     | Const_int (i, None)  -> boxInt (mkInteger i)
-    | Const_int (i, Some q) -> Term.mkApp(string_of_int_qualifier q, [boxInt (mkInteger i)])
+    | Const_int (i, Some q) -> Term.mkApp(constructor_string_of_int_qualifier q, [boxInt (mkInteger i)])
     | Const_string(bytes, _) -> varops.string_const (Util.string_of_bytes <| bytes)
     | Const_range r -> mk_Range_const
     | Const_effect -> mk_Term_type
@@ -1192,8 +1192,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.int_lid,    mk_int);
                  (Const.string_lid, mk_str);
                  (Const.ref_lid,    mk_ref);
-                 (Const.char_lid,   mk_int_alias);
-                 (Const.uint8_lid,  mk_int_alias);
+//                 (Const.char_lid,   mk_int_alias);
+//                 (Const.uint8_lid,  mk_int_alias);
                  (Const.false_lid,  mk_false_interp);
                  (Const.and_lid,    mk_and_interp);
                  (Const.or_lid,     mk_or_interp);

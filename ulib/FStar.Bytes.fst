@@ -1,5 +1,5 @@
 module FStar.Bytes
-
+type byte = FStar.UInt8.byte
 
 assume type bytes
 assume val length : bytes -> Tot int

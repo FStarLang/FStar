@@ -48,7 +48,7 @@ BIN=../bin
 PLATFORM       =
 RELEASE       ?= Debug
 BUILD_VERSION  =
-OTHERFLAGS    := --optimize+ --debug:full --nologo --crossoptimize+
+OTHERFLAGS    := --optimize+ --debug:full --nologo --crossoptimize+ --define:DEBUG
 OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 
 ALL_DLLS    = basic.dll format.dll absyn.dll extraction.dll parser.dll tc.dll tosmt.dll syntax.dll smtencoding.dll typechecker.dll
@@ -221,7 +221,7 @@ ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse 
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 
-FSTAROPTS=--MLish
+FSTAROPTS=
 
 all_boot_fsts:
 	cp format/format.fsi format/formatml.fsi
@@ -254,7 +254,7 @@ extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
 	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app \
-	  $(addprefix --no_extract ,$(NUM)) --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^
+	  $(addprefix --no_extract ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
 
 ocaml: #clean_ocaml_prep extract_ocaml_prep extract_ocaml
 	@echo "Skipping OCaml bootstrapping for now"
@@ -309,13 +309,14 @@ clean-boot-fs:
 test:   clean $(BIN)/fstar.exe ocaml-test regressions
 
 regressions:
-	make -C ../lib
-	make -C ../ulib | grep -vi positivity
-	make -C ../examples
-	make -C ../examples/hello ocaml
-	make -C ../contrib/Platform/ml/
-	make -C ../contrib/CoreCrypto/ml/ all test
-	make -C ../examples/crypto clean rpc-test cnt-test
+#	make -C ../lib
+#	make -C ../ulib
+	make -C ../examples/primitives
+#	make -C ../examples
+#	make -C ../examples/hello ocaml
+#	make -C ../contrib/Platform/ml/
+#	make -C ../contrib/CoreCrypto/ml/ all test
+#	make -C ../examples/crypto clean rpc-test cnt-test
 #	make -C ../examples/wysteria a.out distclean
 
 test_universes: 

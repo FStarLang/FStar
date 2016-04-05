@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStar.List
+open FStar.All
 open FStar.List.Tot
 
 (** Base operations **)

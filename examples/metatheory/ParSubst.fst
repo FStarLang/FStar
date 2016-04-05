@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module ParallelSubstitution
+module ParSubst
 
 open FStar.FunctionalExtensionality
 

@@ -15,7 +15,7 @@
 *)
 
 
-module HereditarySubstitutions
+module HereditarySubst
 
 (* Simple types *)
 

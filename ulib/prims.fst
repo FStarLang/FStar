@@ -143,7 +143,7 @@ effect Pure (a:Type) (pre:pure_pre) (post:pure_post a) =
 effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True) (fun (p:pure_post a) -> True)
 
 (* The primitive effect Tot is definitionally equal to an instance of PURE *)
-default effect Tot (a:Type) = PURE a (pure_null_wp a) (pure_null_wp a)
+effect Tot (a:Type) = PURE a (pure_null_wp a) (pure_null_wp a)
 
 total new_effect GHOST = PURE
 
@@ -153,7 +153,7 @@ sub_effect
   PURE ~> GHOST = purewp_id
 
 (* The primitive effect GTot is definitionally equal to an instance of GHOST *)
-default effect GTot (a:Type) = GHOST a (pure_null_wp a) (pure_null_wp a)
+effect GTot (a:Type) = GHOST a (pure_null_wp a) (pure_null_wp a)
 
 effect Ghost (a:Type) (pre:Type) (post:pure_post a) =
        GHOST a
@@ -223,7 +223,7 @@ effect Div (a:Type) (pre:pure_pre) (post:pure_post a) =
            (fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
            (fun (p:pure_post a) -> forall a. pre /\ post a ==> p a)   (* WLP *)
 
-default effect Dv (a:Type) =
+effect Dv (a:Type) =
      DIV a (fun (p:pure_post a) -> (forall (x:a). p x))
            (fun (p:pure_post a) -> (forall (x:a). p x))
 
@@ -309,14 +309,16 @@ new_effect {
 let ex_pre  = Type0
 let ex_post (a:Type) = result a -> GTot Type0
 let ex_wp   (a:Type) = ex_post a -> GTot ex_pre
-inline let ex_return   (a:Type) (x:a) (p:ex_post a) = p (V x)
-inline let ex_bind_wlp (a:Type) (b:Type) (wlp1:ex_wp a) (wlp2:(a -> GTot (ex_wp b))) (p:ex_post b) =
+inline let ex_return   (a:Type) (x:a) (p:ex_post a) : GTot Type0 = p (V x)
+inline let ex_bind_wlp (a:Type) (b:Type) (wlp1:ex_wp a) (wlp2:(a -> GTot (ex_wp b))) (p:ex_post b) 
+         : GTot Type0 =
    (forall (rb:result b). p rb \/ wlp1 (fun ra1 -> if is_V ra1
                                           then wlp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
                                           else ra1 =!= rb))
 inline let ex_bind_wp (a:Type) (b:Type)
 		       (wp1:ex_wp a) (wlp1:ex_wp a)
-		       (wp2:(a -> GTot (ex_wp b))) (wlp2:(a -> GTot (ex_wp b))) (p:ex_post b) =
+		       (wp2:(a -> GTot (ex_wp b))) (wlp2:(a -> GTot (ex_wp b))) (p:ex_post b) 
+         : GTot Type0 =
    ex_bind_wlp a b wlp1 wlp2 p
    /\ wp1 (fun ra1 -> if is_V ra1
                    then wp2 (V.v ra1) (fun rb2 -> True)
@@ -362,7 +364,7 @@ effect Exn (a:Type) (pre:ex_pre) (post:ex_post a) =
          (fun (p:ex_post a) -> (forall (r:result a). (pre /\ post r) ==> p r))       (* WLP *)
 inline let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (V a))
 sub_effect DIV ~> EXN = lift_div_exn
-default effect Ex (a:Type) = Exn a True (fun v -> True)
+effect Ex (a:Type) = Exn a True (fun v -> True)
 
 let all_pre_h  (h:Type)           = h -> GTot Type0
 let all_post_h (h:Type) (a:Type)  = result a -> h -> GTot Type0
@@ -372,12 +374,13 @@ inline let all_return  (heap:Type) (a:Type) (x:a) (p:all_post_h heap a) = p (V x
 inline let all_bind_wp (heap:Type) (a:Type) (b:Type)
                         (wp1:all_wp_h heap a) (wlp1:all_wp_h heap a)
                         (wp2:(a -> GTot (all_wp_h heap b))) (wlp2:(a -> GTot (all_wp_h heap b)))
-                        (p:all_post_h heap b) (h0:heap) =
+                        (p:all_post_h heap b) (h0:heap) : GTot Type0 =
    (wp1 (fun ra h1 -> is_V ra ==> wp2 (V.v ra) p h1) h0)
 inline let all_bind_wlp (heap:Type) (a:Type) (b:Type)
                          (wlp1:all_wp_h heap a) (wlp2:(a -> GTot (all_wp_h heap b)))
-                         (p:all_post_h heap b) (h0:heap) =
-   (forall rb h. wlp1 (fun ra h1 ->
+                         (p:all_post_h heap b) (h0:heap) 
+         : GTot Type0 =
+   (forall (rb:result b) (h:heap). wlp1 (fun ra h1 ->
        if is_V ra
        then wlp2 (V.v ra) (fun rb2 h2 -> rb=!=rb2 \/ h=!=h2) h1
        else rb=!=ra \/ h=!=h1) h0 \/ p rb h)
@@ -552,7 +555,8 @@ assume val admitP  : p:Type -> Pure unit True (fun x -> p)
 assume val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> True))
 assume val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
 assume val qintro  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
-assume val ghost_lemma: #a:Type -> #p:(a -> GTot Type) -> #q:(a -> unit -> GTot Type) -> $f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
+assume val ghost_lemma: #a:Type -> #p:(a -> GTot Type) -> #q:(a -> unit -> GTot Type) ->
+  $f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
 assume new type range_of : #a:Type -> a -> Type0
 irreducible type labeled (#a:Type0) (#x:a) (r:range_of x) (msg:string) (b:Type) = b

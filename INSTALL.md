@@ -68,7 +68,7 @@ This will install F\* and all required dependencies (including Z3):
 For building and installing the latest F\* sources from GitHub (the master branch)
 instead of the latest release you can do:
 
-        $ brew --HEAD install fstar
+        $ brew install --HEAD fstar
 
 ## Building F* from sources ##
 
@@ -183,7 +183,7 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
 
 ### Prerequisite for steps 2 and 3: Working OCaml setup  ###
 
-Steps 2 and 3 below require a working OCaml (4.02.x) setup.
+Steps 2 and 3 below require a working OCaml (4.02.2 or later) setup.
 
 #### Instructions for Windows ####
 
@@ -194,7 +194,7 @@ Steps 2 and 3 below require a working OCaml (4.02.x) setup.
 
 #### Instructions for Linux and Mac OS X ####
 
-0. Install OCaml (version 4.02.x)
+0. Install OCaml (version 4.02.2 or later)
    - Can be installed using either your package manager or using OPAM
      (see below).
 

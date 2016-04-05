@@ -1,4 +1,4 @@
-module BinarySearchTree
+module BinarySearchTree0
 
 type tree =
   | Leaf : tree

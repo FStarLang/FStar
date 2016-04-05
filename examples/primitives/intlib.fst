@@ -1,8 +1,3 @@
-(*--build-config
-  options:--verify_module IntLib;
-  other-files:axioms.fst;
-  --*)
-
 module IntLib
 
 open Axioms

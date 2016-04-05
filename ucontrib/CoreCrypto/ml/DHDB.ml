@@ -44,7 +44,7 @@ let insert db k v =
   db
 
 let remove db k =
-  DB.remove db (ser_key k);
+  ignore(DB.remove db (ser_key k));
   db
 
 let keys db = List.map unser_key (DB.keys db)

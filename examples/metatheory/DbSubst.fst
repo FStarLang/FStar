@@ -1,4 +1,4 @@
-module DeBruijnSubst
+module DbSubst
 
 (* TAPL Chapter 6 *)
 

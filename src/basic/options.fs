@@ -72,6 +72,7 @@ let codegen_libs : ref<list<list<string>>> = Util.mk_ref []
 let trace_error = Util.mk_ref false
 let verify = Util.mk_ref true
 let full_context_dependency = Util.mk_ref true
+let ml_ish = Util.mk_ref false
 let print_implicits = Util.mk_ref false
 let print_bound_var_types = Util.mk_ref false
 let print_universes = Util.mk_ref false
@@ -92,7 +93,7 @@ let use_eq_at_higher_order = Util.mk_ref false
 let use_native_int = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
 let n_cores = Util.mk_ref 1
-let verify_module : ref<list<string>> = Util.mk_ref []
+let verify_module : ref<list<string>> = Util.mk_ref [] // all normalized to lowercase
 let __temp_no_proj : ref<list<string>> = Util.mk_ref []
 let interactive = Util.mk_ref false
 let interactive_context : ref<option<string>> = Util.mk_ref None
@@ -167,7 +168,8 @@ let init_options () =
     dep := None;
     timing := false;
     inline_arith := false;
-    detail_errors := false
+    detail_errors := false;
+    ml_ish := false
 
 let set_fstar_home () =
   let fh = match !fstar_home_opt with
@@ -282,7 +284,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "max_fuel", OneArg((fun x -> max_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try at most (default 8)");
      ( noshort, "max_ifuel", OneArg((fun x -> max_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at most (default 2)");
      ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
-     ( noshort, "MLish", ZeroArgs(fun () -> full_context_dependency := false), "Introduce unification variables that are only dependent on the type variables in the context");
+     ( noshort, "MLish", ZeroArgs(fun () -> ml_ish := true; full_context_dependency := false), "Introduce unification variables that are only dependent on the type variables in the context");
      ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x; detail_errors := false), "positive integer"), "Maximum number of cores to use for the solver (default 1); implied detail_errors = false");
      ( noshort, "no_default_includes", ZeroArgs (fun () -> no_default_includes := true), "Ignore the default module search paths");
      ( noshort, "no_extract", OneArg ((fun x -> no_extract := x::!no_extract), "module name"), "Do not extract code from this module");
@@ -306,7 +308,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "unthrottle_inductives", ZeroArgs (fun () -> unthrottle_inductives := true), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
      ( noshort, "use_eq_at_higher_order", ZeroArgs (fun () -> use_eq_at_higher_order := true), "Use equality constraints when comparing higher-order types; temporary");
      ( noshort, "use_native_int", ZeroArgs (fun () -> use_native_int := true), "Extract the 'int' type to platform-specific native int; you will need to link the generated code with the appropriate version of the prims library");
-     ( noshort, "verify_module", OneArg ((fun x -> verify_module := x::!verify_module), "string"), "Name of the module to verify");
+     ( noshort, "verify_module", OneArg ((fun x -> verify_module := (String.lowercase x)::!verify_module), "string"), "Name of the module to verify");
      ( noshort, "__temp_no_proj", OneArg ((fun x -> __temp_no_proj := x::!__temp_no_proj), "string"), "Don't generate projectors for this module");
      ( 'v',     "version", ZeroArgs (fun _ -> display_version(); exit 0), "Display version number");
      ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
@@ -337,8 +339,8 @@ and set_interactive_fsi _ =
 let should_verify m =
   if !verify
   then match !verify_module with
-        | [] -> true //the verify_module flag was not set, so verify everything
-        | l -> List.contains m l //otherwise, look in the list to see if it is explicitly mentioned
+    | [] -> true //the verify_module flag was not set, so verify everything
+    | l -> List.contains (String.lowercase m) l //otherwise, look in the list to see if it is explicitly mentioned
   else false
 
 let dont_gen_projectors m = List.contains m (!__temp_no_proj)
@@ -403,7 +405,10 @@ let set_options =
         Getopt.parse_string specs (fun _ -> ()) s
 
 let restore_cmd_line_options () =
-    let verify_module_init = !verify_module in
+    (* Some options must be preserved because they can't be reset via #pragrams.
+     * Add them here as needed. *)
+    let old_verify_module = !verify_module in
     init_options();
-    verify_module := verify_module_init;
-    Getopt.parse_cmdline (specs()) (fun x -> ()) 
+    let r = Getopt.parse_cmdline (specs()) (fun x -> ()) in
+    verify_module := old_verify_module;
+    r

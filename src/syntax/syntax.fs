@@ -201,7 +201,6 @@ type qualifier =
   | Unfoldable                             //a definition that may be unfolded by the normalizer, but only if necessary (default)
   | Irreducible                            //a definition that can never be unfolded by the normalizer
   | Abstract                               //a symbol whose definition is only visible within the defining module
-  | DefaultEffect of option<lident>        //an effect M may have a default Some N
   | TotalEffect                            //an effect that forbis non-termination
   //the remaining qualifiers are internal: the programmer cannot write them
   | Logic                                  //a symbol whose intended usage is in the refinement logic

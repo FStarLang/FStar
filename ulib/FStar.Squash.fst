@@ -21,7 +21,7 @@ abstract val proof_irrelevance : p:Type -> x:squash p ->
                                  y:squash p -> Tot (squash (x = y))
 
 abstract val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
-  =f:(squash (x:a -> Tot (squash (p x)))) -> Tot (squash (x:a -> Tot (p x)))
+  $f:(squash (x:a -> Tot (squash (p x)))) -> Tot (squash (x:a -> Tot (p x)))
 
 (* This is a monad, but not an effect *)
 

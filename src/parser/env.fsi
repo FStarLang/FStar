@@ -35,6 +35,7 @@ type env = {
   curmodule:            option<lident>;                   (* name of the module being desugared *)
   modules:              list<(lident * modul)>;           (* previously desugared modules *)
   open_namespaces:      list<lident>;                     (* fully qualified names, in order of precedence *)
+  modul_abbrevs:        list<(ident * lident)>;           (* module X = A.B.C *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
   localbindings:        list<(ident * bv)>;               (* local name bindings for name resolution, paired with an env-generated unique name *)
   recbindings:          list<(ident*lid*delta_depth)>;    (* names bound by recursive type and top-level let-bindings definitions only *)
@@ -84,6 +85,7 @@ val push_bv: env -> ident -> env * bv
 val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env
 val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
+val push_module_abbrev : env -> ident -> lident -> env
 
 val pop: env -> env
 val push: env -> env

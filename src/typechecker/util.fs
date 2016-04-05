@@ -56,6 +56,7 @@ let t_binders env =
 //new unification variable
 let new_uvar_aux env k = 
     let bs = if !Options.full_context_dependency
+             || Ident.lid_equals Const.prims_lid (Env.current_module env)
              then Env.all_binders env 
              else t_binders env in
     Rel.new_uvar (Env.get_range env) bs k

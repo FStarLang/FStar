@@ -22,6 +22,12 @@ let read_file (filename:string) =
     BatFile.with_file_in filename BatIO.read_all
   with e -> raise (Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
 
+
+let check_extension fn =
+    if not (FStar_Util.ends_with fn ".fst")
+    && not (FStar_Util.ends_with fn ".fsti")
+    then raise (FStar_Syntax_Syntax.Err("Unrecognized file extension: " ^fn))
+
 let parse fn =
   FStar_Parser_Util.warningHandler := (function
     | FStar_Parser_Lexhelp.ReservedKeyword(m,s) -> Printf.printf "%s:%s" (FStar_Range.string_of_range s) m
@@ -29,19 +35,21 @@ let parse fn =
 
   let filename,lexbuf = match fn with
     | Inl(f) ->
-       let f' = find_file f in
-       (try f', Lexing.from_channel (open_in f')
-        with _ -> raise (Err(FStar_Util.format1 "Unable to open file: %s\n" f')))
+        check_extension f;
+	let f' = find_file f in
+        (try f', Lexing.from_channel (open_in f')
+         with _ -> raise (Err(FStar_Util.format1 "Unable to open file: %s\n" f')))
     | Inr(s) ->
       "<input>", Lexing.from_string s in
 
   resetLexbufPos filename lexbuf;
   let lexer = FStar_Parser_LexFStar.token in
+
   try
       let fileOrFragment = FStar_Parser_Parse.inputFragment lexer lexbuf in
       let frags = match fileOrFragment with
           | Inl mods ->
-             if FStar_Util.ends_with filename ".fsi" || FStar_Util.ends_with filename ".fsti"
+             if FStar_Util.ends_with filename ".fsti"
              then Inl (mods |> FStar_List.map (function
                   | FStar_Parser_AST.Module(l,d) ->
                     FStar_Parser_AST.Interface(l, d, true)

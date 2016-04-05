@@ -30,7 +30,7 @@ let rec is_bst t =
   | Node n t1 t2 -> all (gt n) t1 && all (lt n) t2 && is_bst t1 && is_bst t2
 
 val search : x:int -> t:tree{is_bst t} ->
-  Tot (r:bool{r <==> in_tree x t}) (decreases x)
+  Tot (r:bool{r <==> in_tree x t})
 let rec search x t =
   match t with
   | Leaf -> false

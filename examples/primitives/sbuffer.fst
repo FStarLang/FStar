@@ -1,8 +1,3 @@
-(*--build-config
-  options:--admit_fsi FStar.Set --verify_module SBuffer --z3timeout 10;
-  other-files:FStar.Classical.fst FStar.PredicateExtensionality.fst FStar.Set.fsi seq.fsi FStar.Seq.fst FStar.SeqProperties.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Array.fst FStar.Ghost.fst axioms.fst intlib.fst sint.fst;
-  --*)
-
 module SBuffer
 
 open Sint

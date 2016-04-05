@@ -8,11 +8,11 @@ val join_squash : #a:Type -> squash (squash a) -> Tot (squash a)
 let join_squash #a s = bind_squash #(squash a) #a s (fun x -> x)
 
 val squash_arrow : #a:Type -> #p:(a -> Type) ->
-  =f:(x:a -> Tot (squash (p x))) -> Tot (squash (x:a -> Tot (p x)))
+  $f:(x:a -> Tot (squash (p x))) -> Tot (squash (x:a -> Tot (p x)))
 let squash_arrow #a #p f = squash_double_arrow (return_squash f)
 
 val forall_intro : #a:Type -> #p:(a -> Type) ->
-  =f:(x:a -> Lemma (p x)) -> Lemma (x:a -> Tot (p x))(* (forall (x:a). p x) *)
+  $f:(x:a -> Lemma (p x)) -> Lemma (x:a -> Tot (p x))(* (forall (x:a). p x) *)
 let forall_intro #a #p f =
   let ff : (x:a -> Tot (squash (p x))) = (fun x -> f x; get_proof (p x)) in
   give_proof #(x:a -> Tot (p x)) (squash_arrow #a #p ff)
