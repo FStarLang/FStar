@@ -159,7 +159,19 @@ aes-debug: Crypto.AES.fst
 
 # SHA targets
 sha-ver:
-	$(FSTAR) $(OPTIONS_VER) Crypto.Sha224.fst Crypto.Sha256.fst
+	$(FSTAR) $(OPTIONS_VER) Crypto.Sha1.fst Crypto.Sha224.fst Crypto.Sha256.fst
+
+sha1-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.Sha1.fst
+
+sha1-ml:
+	mkdir -p $(SHA_X_ODIR)1_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha1.fst --odir $(SHA_X_ODIR)1_ml
+	cp ./ml/*.ml $(SHA_X_ODIR)1_ml
+
+sha1-test: sha1-ml
+	cd $(SHA_X_ODIR)1_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_X_OCAML) Crypto_Sha1.ml test_sha1.ml -o test_sha1.out #2> /dev/null
+	$(SHA_X_ODIR)1_ml/test_sha1.out
 
 sha224-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.Sha224.fst
@@ -169,9 +181,9 @@ sha224-ml:
 	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha224.fst --odir $(SHA_X_ODIR)224_ml
 	cp ./ml/*.ml $(SHA_X_ODIR)224_ml
 
-sha224-test: sha-ml
-	cd $(SHA_X_ODIR)224_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_X_OCAML) Crypto_Sha224.ml test_sha224.ml #2> /dev/null
-	$(SHA_X_ODIR)224_ml/a.out
+sha224-test: sha224-ml
+	cd $(SHA_X_ODIR)224_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_X_OCAML) Crypto_Sha224.ml test_sha224.ml -o test_sha224.out #2> /dev/null
+	$(SHA_X_ODIR)224_ml/test_sha224.out
 
 sha256-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.Sha256.fst
@@ -188,9 +200,9 @@ sha256-c: Crypto.Sha256.fst
 	$(FSTAR) $(OPTIONS_COMPILE) --odir $(SHA_X_ODIR)256 $^
 	@cp ./c/*.c ./c/*.h $(SHA_X_ODIR)256
 
-sha256-test: sha-ml
-	cd $(SHA_X_ODIR)256_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_X_OCAML) Crypto_Sha256.ml test_sha256.ml #2> /dev/null
-	$(SHA_X_ODIR)256_ml/a.out
+sha256-test: sha256-ml
+	cd $(SHA_X_ODIR)256_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_X_OCAML) Crypto_Sha256.ml test_sha256.ml -o test_sha256.out #2> /dev/null
+	$(SHA_X_ODIR)256_ml/test_sha256.out
 
 # Cleaning
 clean:
