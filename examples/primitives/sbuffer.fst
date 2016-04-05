@@ -56,6 +56,7 @@ let live (h:heap) (#size:pos) (b:buffer size) : GTot Type0 = (contains h b /\ ma
 let disjoint (#t:pos) (#t':pos) (b:buffer t) (b':buffer t') : GTot Type0 =
   (b.content =!= b'.content
   \/ (b.content == b'.content
+     /\ t=t'
      /\ (idx b + length b <= idx b' \/ idx b' + length b' <= idx b)))
 
 (* Defines that sb is a subbuffer of b *)
@@ -206,93 +207,13 @@ val index: #a:pos -> b:buffer a -> n:nat{n < length b} -> ST (usint a)
   (ensures (fun h0 z h1 -> live h0 b /\ (h1 == h0) /\ (v z == v (get h0 b n))))
 let index #a b n = Array.index b.content (b.idx+n)
 
-let atomicUpdate' (#a:pos) (h0:heap) (h1:heap) (b:buffer a) (n:nat) (z:usint a) : GTot Type0 =
-  live h0 b /\ live h1 b /\ n < length b /\ v (get h1 b n) = v z /\ max_length h1 b = max_length h0 b 
-  /\ (forall (i:nat). {:pattern (get h1 b i)} (i < length b /\ i <> n) ==> v (get h1 b i) = v (get h0 b i))
-  /\ modifies_buf (only b) h0 h1
-
-assume USInt_inj: forall (a:pos) (a':pos) (b:buffer a) (b':buffer a'). b.content == b'.content ==> a=a'
-
-
-(* assume val test : #a:pos -> #t:pos -> h:heap -> b:buffer a -> b':buffer t -> h':heap{live h b' /\ b.content =!= b'.content ==> equal h b' h' b'} -> Tot unit *)
-
-val test2 : #a:pos -> #t:pos -> h:heap -> b:buffer a{live h b}  -> b':buffer t{live h b'} -> n:nat{n < length b} -> v:usint a
-		 -> h':heap{h'=FStar.Heap.upd h b.content (Seq.upd (FStar.Heap.sel h b.content) (idx b + n) v)}
-		 -> Ghost unit
-		   (requires True)
-		   (ensures (fun _ -> True))
-let test2 #a #t h b b' n v h' =
-  (* (\* assert (Seq.length (FStar.Heap.sel h b.content) = Seq.length (FStar.Heap.sel h b.content)); *\) *)
-  (* assume (b.content == b'.content ==> a=t); *)
-  assume (disjoint b b');
-  assert (equal h b' h' b')
-  
-
-  assert (live h b');
-  assert (live h' b');
-  assert (max_length h b' = max_length h' b');
-  let i:nat = magic () in
-  assume (i < length b');
-  assume (b.content == b'.content);
-  assert (idx b + length b <= idx b' \/ idx b' + length b' <= idx b);
-  assert (get h b' i = get h' b' i)
-  
-  Seq.index (sel h b') (idx b' + i))
-  
-  assert (b.content == b'.content ==> equal h b' h' b')
-  
-  assert (live h' b)
-  
-  
-  ()
-  
-(*   assert (FStar.Heap.contains #(seq (usint t)) h b'.content); *)
-(*   assert (FStar.Heap.contains #(seq (usint t)) h' b'.content); *)
-(*   () *)
-  
-(*   (\* assume (live h' b'); *\) *)
-(*   (\* assert (equal h b' h' b') *\) *)
-
-
-		   
-(*   (\* 		 (live h b' /\  *\) *)
-(*   (\* 		   /\ (b.content == b'.content *\) *)
-(*   (\* 		     /\ (idx b + length b <= idx b' \/ idx b' + length b' <= idx b)))} *\) *)
-(*   (\* 		 -> Tot  *\) *)
-		     
-(*   (\* 		 b.content =!= b'.content ==> equal h b' h' b'} -> Tot unit *\) *)
-
-  
-
-
-(* (\* assume val test2 : #a:pos -> h:heap -> b:buffer a -> b':buffer a -> h':heap{disjoint b b' ==> disjointSet b' (only b)} -> Tot unit *\) *)
-
-(* (\* assume val test3 : #a:pos -> h:heap -> b:buffer a -> b':buffer a -> h':heap{(live h b' /\ disjointSet b' (only b)) ==> equal h b' h' b'} -> Tot unit *\) *)
-
-(* (\* assume val test4 : #a:pos -> h:heap -> b:buffer a -> h':heap{modifies_buf (only b) h h'} -> Tot unit *\) *)
-
-
-(* (\* assume val test5 : #a:pos -> h:heap -> b:buffer a -> h':heap{forall (t:pos) (b':buffer t).(live h b' /\ disjointSet b' (only b)) ==> equal h b' h' b'} -> Tot unit *\) *)
-
-  
-
-  (* assert (disjoint b b'); *)
-  test h b b' h'
-
-
 val upd: #a:pos -> #t:pos -> b:buffer a -> n:nat{n < length b} -> v:usint a -> ST unit
   (requires (fun h -> live h b))
   (ensures (fun h0 _ h1 -> atomicUpdate h0 h1 b n v))
-let upd #a #t b n z  = FStar.Array.upd b.content (b.idx+n) z
+let upd #a #t b n z  = 
+  FStar.Array.upd b.content (b.idx+n) z;
+  cut (b2t (FStar.Set.mem (Buff b) (only b)))
   
-  (* (\* cut (b2t (FStar.Set.mem (Buff b) (only b)));  *\) *)
-  (* let h' = ST.get () in  *)
-  (* assert (FStar.Heap.equal h' (FStar.Heap.concat h' (FStar.Heap.restrict h (FStar.Set.complement (arefs (only b)))))); *)
-  (* test h b b' h'; *)
-  (* (\* test5 h b h'; *\) *)
-  (* admit() *)
-
-
 val sub: #a:pos -> b:buffer a -> i:nat -> len:nat{len <= length b /\ i + len <= length b} -> 
   ST (buffer a)
     (requires (fun h -> live h b))
