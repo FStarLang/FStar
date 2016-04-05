@@ -66,10 +66,10 @@ assume val uint128_of_sbytes: b:sbytes{length b >= 16} -> ST uint128
                   + pow2 16 * v (get h0 b 2) + pow2 24 * v (get h0 b 3)
                   + pow2 32 * v (get h0 b 4) + pow2 40 * v (get h0 b 5)
                   + pow2 48 * v (get h0 b 6) + pow2 56 * v (get h0 b 7)
-                  + pow2 64 x v (get h0 b 8) + pow2 72 * v (get h0 b 9)
-                  + pow2 80 * v (get h0 b 10 + pow2 88 * v (get h0 b 11)
+                  + pow2 64 * v (get h0 b 8) + pow2 72 * v (get h0 b 9)
+                  + pow2 80 * v (get h0 b 10) + pow2 88 * v (get h0 b 11)
                   + pow2 96 * v (get h0 b 12) + pow2 104 * v (get h0 b 13)
-                  + pow2 112 * v (get h0 b 14) + pow2 120 * v (get h0 b 15))))
+                  + pow2 112 * v (get h0 b 14) + pow2 120 * v (get h0 b 15)))
 
 assume val sbytes_of_uint128: res:sbytes{length res >= 16} -> v:uint128 -> ST unit
   (requires (fun h -> Live h res))
