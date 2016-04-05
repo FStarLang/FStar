@@ -18,6 +18,7 @@ open SBuffer
 type sbytes = buffer 8
 type uint32 = usint 32
 type uint64 = usint 64
+type uint128 = usint 128
 
 (**)
 let create = create #8
@@ -54,11 +55,43 @@ assume val sbytes_of_uint64: res:sbytes{length res >= 8} -> v:uint64 -> ST unit
   (requires (fun h -> Live h res))
   (ensures  (fun h0 r h1 -> Live h1 res /\ Modifies (only res) h0 h1))
 
+assume val be_sbytes_of_uint64: res:sbytes{length res >= 8} -> v:uint64 -> ST unit
+  (requires (fun h -> Live h res))
+  (ensures  (fun h0 r h1 -> Live h1 res /\ Modifies (only res) h0 h1))
+
+assume val uint128_of_sbytes: b:sbytes{length b >= 16} -> ST uint128
+  (requires (fun h -> Live h b))
+  (ensures (fun h0 r h1 -> Live h0 b /\ h0 == h1
+			 /\ v r = v (get h0 b 0) + pow2 8 * v (get h0 b 1)
+                  + pow2 16 * v (get h0 b 2) + pow2 24 * v (get h0 b 3)
+                  + pow2 32 * v (get h0 b 4) + pow2 40 * v (get h0 b 5)
+                  + pow2 48 * v (get h0 b 6) + pow2 56 * v (get h0 b 7)
+                  + pow2 64 * v (get h0 b 8) + pow2 72 * v (get h0 b 9)
+                  + pow2 80 * v (get h0 b 10) + pow2 88 * v (get h0 b 11)
+                  + pow2 96 * v (get h0 b 12) + pow2 104 * v (get h0 b 13)
+                  + pow2 112 * v (get h0 b 14) + pow2 120 * v (get h0 b 15)))
+
+assume val sbytes_of_uint128: res:sbytes{length res >= 16} -> v:uint128 -> ST unit
+  (requires (fun h -> Live h res))
+  (ensures  (fun h0 r h1 -> Live h1 res /\ Modifies (only res) h0 h1))
+
+assume val be_sbytes_of_uint128: res:sbytes{length res >= 16} -> v:uint128 -> ST unit
+  (requires (fun h -> Live h res))
+  (ensures  (fun h0 r h1 -> Live h1 res /\ Modifies (only res) h0 h1))
+
 assume val uint32s_of_sbytes: res:buffer 32 -> b:sbytes{Disjoint res b} -> l:nat{4*l<=length b /\ length res < l} -> ST unit
   (requires (fun h -> Live h res /\ Live h b))
   (ensures (fun h0 _ h1 -> Equals h1 res h0 b l /\ Modifies (only res) h0 h1))
 
+assume val be_uint32s_of_sbytes: res:buffer 32 -> b:sbytes{Disjoint res b} -> l:nat{4*l<=length b /\ length res < l} -> ST unit
+  (requires (fun h -> Live h res /\ Live h b))
+  (ensures (fun h0 _ h1 -> Equals h1 res h0 b l /\ Modifies (only res) h0 h1))
+
 assume val sbytes_of_uint32s: res:sbytes -> b:buffer 32{Disjoint res b} -> l:nat{l<=length b /\ 4*l <= length res} -> ST unit
+  (requires (fun h -> Live h res /\ Live h b))
+  (ensures (fun h0 _ h1 -> Equals h0 b h1 res l /\ Modifies (only res) h0 h1))
+
+assume val be_sbytes_of_uint32s: res:sbytes -> b:buffer 32{Disjoint res b} -> l:nat{l<=length b /\ 4*l <= length res} -> ST unit
   (requires (fun h -> Live h res /\ Live h b))
   (ensures (fun h0 _ h1 -> Equals h0 b h1 res l /\ Modifies (only res) h0 h1))
 
