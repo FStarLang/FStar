@@ -93,7 +93,7 @@ let use_eq_at_higher_order = Util.mk_ref false
 let use_native_int = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
 let n_cores = Util.mk_ref 1
-let verify_module : ref<list<string>> = Util.mk_ref []
+let verify_module : ref<list<string>> = Util.mk_ref [] // all normalized to lowercase
 let __temp_no_proj : ref<list<string>> = Util.mk_ref []
 let interactive = Util.mk_ref false
 let interactive_context : ref<option<string>> = Util.mk_ref None
@@ -308,7 +308,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "unthrottle_inductives", ZeroArgs (fun () -> unthrottle_inductives := true), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
      ( noshort, "use_eq_at_higher_order", ZeroArgs (fun () -> use_eq_at_higher_order := true), "Use equality constraints when comparing higher-order types; temporary");
      ( noshort, "use_native_int", ZeroArgs (fun () -> use_native_int := true), "Extract the 'int' type to platform-specific native int; you will need to link the generated code with the appropriate version of the prims library");
-     ( noshort, "verify_module", OneArg ((fun x -> verify_module := x::!verify_module), "string"), "Name of the module to verify");
+     ( noshort, "verify_module", OneArg ((fun x -> verify_module := (String.lowercase x)::!verify_module), "string"), "Name of the module to verify");
      ( noshort, "__temp_no_proj", OneArg ((fun x -> __temp_no_proj := x::!__temp_no_proj), "string"), "Don't generate projectors for this module");
      ( 'v',     "version", ZeroArgs (fun _ -> display_version(); exit 0), "Display version number");
      ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
@@ -338,8 +338,8 @@ and set_interactive_fsi _ =
 let should_verify m =
   if !verify
   then match !verify_module with
-        | [] -> true //the verify_module flag was not set, so verify everything
-        | l -> List.contains m l //otherwise, look in the list to see if it is explicitly mentioned
+    | [] -> true //the verify_module flag was not set, so verify everything
+    | l -> List.contains (String.lowercase m) l //otherwise, look in the list to see if it is explicitly mentioned
   else false
 
 let dont_gen_projectors m = List.contains m (!__temp_no_proj)

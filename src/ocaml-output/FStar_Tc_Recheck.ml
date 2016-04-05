@@ -1,51 +1,51 @@
 
 open Prims
-# 29 "FStar.Tc.Recheck.fst"
+# 27 "FStar.Tc.Recheck.fst"
 let oktype : FStar_Absyn_Syntax.knd Prims.option = Some (FStar_Absyn_Syntax.ktype)
 
-# 30 "FStar.Tc.Recheck.fst"
+# 29 "FStar.Tc.Recheck.fst"
 let t_unit : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.unit_lid FStar_Absyn_Syntax.ktype)))
 
-# 31 "FStar.Tc.Recheck.fst"
+# 30 "FStar.Tc.Recheck.fst"
 let t_bool : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.bool_lid FStar_Absyn_Syntax.ktype)))
 
-# 32 "FStar.Tc.Recheck.fst"
+# 31 "FStar.Tc.Recheck.fst"
 let t_int : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.int_lid FStar_Absyn_Syntax.ktype)))
 
-# 33 "FStar.Tc.Recheck.fst"
+# 32 "FStar.Tc.Recheck.fst"
 let t_int8 : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.int8_lid FStar_Absyn_Syntax.ktype)))
 
-# 34 "FStar.Tc.Recheck.fst"
+# 33 "FStar.Tc.Recheck.fst"
 let t_uint8 : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.uint8_lid FStar_Absyn_Syntax.ktype)))
 
-# 35 "FStar.Tc.Recheck.fst"
+# 34 "FStar.Tc.Recheck.fst"
 let t_int16 : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.int16_lid FStar_Absyn_Syntax.ktype)))
 
-# 36 "FStar.Tc.Recheck.fst"
+# 35 "FStar.Tc.Recheck.fst"
 let t_uint16 : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.uint16_lid FStar_Absyn_Syntax.ktype)))
 
-# 37 "FStar.Tc.Recheck.fst"
+# 36 "FStar.Tc.Recheck.fst"
 let t_int32 : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.int32_lid FStar_Absyn_Syntax.ktype)))
 
-# 38 "FStar.Tc.Recheck.fst"
+# 37 "FStar.Tc.Recheck.fst"
 let t_uint32 : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.uint32_lid FStar_Absyn_Syntax.ktype)))
 
-# 39 "FStar.Tc.Recheck.fst"
+# 38 "FStar.Tc.Recheck.fst"
 let t_int64 : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.int64_lid FStar_Absyn_Syntax.ktype)))
 
-# 40 "FStar.Tc.Recheck.fst"
+# 39 "FStar.Tc.Recheck.fst"
 let t_uint64 : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.uint64_lid FStar_Absyn_Syntax.ktype)))
 
-# 41 "FStar.Tc.Recheck.fst"
+# 40 "FStar.Tc.Recheck.fst"
 let t_string : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.string_lid FStar_Absyn_Syntax.ktype)))
 
-# 42 "FStar.Tc.Recheck.fst"
+# 41 "FStar.Tc.Recheck.fst"
 let t_float : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.float_lid FStar_Absyn_Syntax.ktype)))
 
-# 43 "FStar.Tc.Recheck.fst"
+# 42 "FStar.Tc.Recheck.fst"
 let t_char : FStar_Absyn_Syntax.typ = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.char_lid FStar_Absyn_Syntax.ktype)))
 
-# 45 "FStar.Tc.Recheck.fst"
+# 43 "FStar.Tc.Recheck.fst"
 let typing_const : FStar_Range.range  ->  FStar_Const.sconst  ->  FStar_Absyn_Syntax.typ = (fun r s -> (match (s) with
 | FStar_Const.Const_unit -> begin
 t_unit
@@ -93,7 +93,7 @@ end
 (Prims.raise (FStar_Absyn_Syntax.Error (("Unsupported constant", r))))
 end))
 
-# 63 "FStar.Tc.Recheck.fst"
+# 60 "FStar.Tc.Recheck.fst"
 let rec recompute_kind : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax = (fun t -> (
 # 64 "FStar.Tc.Recheck.fst"
 let recompute = (fun t -> (match (t.FStar_Absyn_Syntax.n) with
@@ -196,7 +196,7 @@ let _41_183 = (FStar_ST.op_Colon_Equals t.FStar_Absyn_Syntax.tk (Some (k)))
 in k))
 end)))
 
-# 107 "FStar.Tc.Recheck.fst"
+# 105 "FStar.Tc.Recheck.fst"
 let rec recompute_typ : FStar_Absyn_Syntax.exp  ->  FStar_Absyn_Syntax.typ = (fun e -> (
 # 108 "FStar.Tc.Recheck.fst"
 let recompute = (fun e -> (match (e.FStar_Absyn_Syntax.n) with

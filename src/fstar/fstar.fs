@@ -110,7 +110,7 @@ let go _ =
            * the command-line to be those we want to verify. *)
           if not (!Options.explicit_deps) then
             Options.verify_module := !Options.verify_module @
-              List.map (fun f -> must (Parser.Dep.check_and_strip_suffix f)) filenames;
+              List.map (fun f -> must (Parser.Dep.check_and_strip_suffix (basename f)) |> String.lowercase) filenames;
           if !Options.universes
           then let fmods, dsenv, env = Universal.batch_mode_tc filenames in
                report_errors ();

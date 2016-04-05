@@ -1,6 +1,6 @@
 
 open Prims
-# 26 "FStar.FStar.fst"
+# 22 "FStar.FStar.fst"
 let process_args : Prims.unit  ->  (FStar_Getopt.parse_cmdline_res * Prims.string Prims.list) = (fun _88_1 -> (match (()) with
 | () -> begin
 (
@@ -26,13 +26,13 @@ in (let _177_8 = (FStar_ST.read file_list)
 in (res, _177_8)))))
 end))
 
-# 35 "FStar.FStar.fst"
+# 32 "FStar.FStar.fst"
 let cleanup : Prims.unit  ->  Prims.unit = (fun _88_10 -> (match (()) with
 | () -> begin
 (FStar_Util.kill_all ())
 end))
 
-# 38 "FStar.FStar.fst"
+# 35 "FStar.FStar.fst"
 let report_errors : Prims.unit  ->  Prims.unit = (fun _88_11 -> (match (()) with
 | () -> begin
 (
@@ -53,7 +53,7 @@ end else begin
 end)
 end))
 
-# 49 "FStar.FStar.fst"
+# 46 "FStar.FStar.fst"
 let finished_message : (Prims.bool * FStar_Ident.lident) Prims.list  ->  Prims.unit = (fun fmods -> if (not ((FStar_ST.read FStar_Options.silent))) then begin
 (
 # 51 "FStar.FStar.fst"
@@ -91,7 +91,7 @@ end else begin
 ()
 end)
 
-# 63 "FStar.FStar.fst"
+# 60 "FStar.FStar.fst"
 let codegen : ((FStar_Absyn_Syntax.modul Prims.list * FStar_Tc_Env.env), (FStar_Syntax_Syntax.modul Prims.list * FStar_TypeChecker_Env.env)) FStar_Util.either  ->  Prims.unit = (fun uf_mods_env -> if (((FStar_ST.read FStar_Options.codegen) = Some ("OCaml")) || ((FStar_ST.read FStar_Options.codegen) = Some ("FSharp"))) then begin
 (
 # 67 "FStar.FStar.fst"
@@ -129,7 +129,7 @@ end else begin
 ()
 end)
 
-# 79 "FStar.FStar.fst"
+# 74 "FStar.FStar.fst"
 let go = (fun _88_39 -> (
 # 80 "FStar.FStar.fst"
 let _88_43 = (process_args ())
@@ -192,11 +192,13 @@ if ((FStar_List.length filenames) >= 1) then begin
 (
 # 111 "FStar.FStar.fst"
 let _88_62 = if (not ((FStar_ST.read FStar_Options.explicit_deps))) then begin
-(let _177_36 = (let _177_35 = (FStar_ST.read FStar_Options.verify_module)
-in (let _177_34 = (FStar_List.map (fun f -> (let _177_33 = (FStar_Parser_Dep.check_and_strip_suffix f)
-in (FStar_Util.must _177_33))) filenames)
-in (FStar_List.append _177_35 _177_34)))
-in (FStar_ST.op_Colon_Equals FStar_Options.verify_module _177_36))
+(let _177_38 = (let _177_37 = (FStar_ST.read FStar_Options.verify_module)
+in (let _177_36 = (FStar_List.map (fun f -> (let _177_35 = (let _177_34 = (let _177_33 = (FStar_Util.basename f)
+in (FStar_Parser_Dep.check_and_strip_suffix _177_33))
+in (FStar_Util.must _177_34))
+in (FStar_All.pipe_right _177_35 FStar_String.lowercase))) filenames)
+in (FStar_List.append _177_37 _177_36)))
+in (FStar_ST.op_Colon_Equals FStar_Options.verify_module _177_38))
 end else begin
 ()
 end
@@ -212,8 +214,8 @@ let _88_68 = (report_errors ())
 in (
 # 117 "FStar.FStar.fst"
 let _88_70 = (codegen (FStar_Util.Inr ((fmods, env))))
-in (let _177_37 = (FStar_All.pipe_right fmods (FStar_List.map FStar_Universal.module_or_interface_name))
-in (finished_message _177_37))))
+in (let _177_39 = (FStar_All.pipe_right fmods (FStar_List.map FStar_Universal.module_or_interface_name))
+in (finished_message _177_39))))
 end))
 end else begin
 (
@@ -227,8 +229,8 @@ let _88_76 = (report_errors ())
 in (
 # 121 "FStar.FStar.fst"
 let _88_78 = (codegen (FStar_Util.Inl ((fmods, env))))
-in (let _177_38 = (FStar_All.pipe_right fmods (FStar_List.map FStar_Stratified.module_or_interface_name))
-in (finished_message _177_38))))
+in (let _177_40 = (FStar_All.pipe_right fmods (FStar_List.map FStar_Stratified.module_or_interface_name))
+in (finished_message _177_40))))
 end))
 end)
 end else begin
@@ -239,7 +241,7 @@ end
 end)
 end)))
 
-# 129 "FStar.FStar.fst"
+# 127 "FStar.FStar.fst"
 let main = (fun _88_80 -> (match (()) with
 | () -> begin
 try
@@ -272,13 +274,13 @@ end else begin
 ()
 end
 in if (FStar_ST.read FStar_Options.trace_error) then begin
-(let _177_43 = (FStar_Util.message_of_exn e)
-in (let _177_42 = (FStar_Util.trace_of_exn e)
-in (FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _177_43 _177_42)))
+(let _177_45 = (FStar_Util.message_of_exn e)
+in (let _177_44 = (FStar_Util.trace_of_exn e)
+in (FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _177_45 _177_44)))
 end else begin
 if (not (((FStar_Absyn_Util.handleable e) || (FStar_Syntax_Util.handleable e)))) then begin
-(let _177_44 = (FStar_Util.message_of_exn e)
-in (FStar_Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _177_44))
+(let _177_46 = (FStar_Util.message_of_exn e)
+in (FStar_Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _177_46))
 end else begin
 ()
 end
@@ -288,8 +290,8 @@ in (
 let _88_91 = (cleanup ())
 in (
 # 144 "FStar.FStar.fst"
-let _88_93 = (let _177_45 = (FStar_TypeChecker_Errors.report_all ())
-in (FStar_All.pipe_right _177_45 Prims.ignore))
+let _88_93 = (let _177_47 = (FStar_TypeChecker_Errors.report_all ())
+in (FStar_All.pipe_right _177_47 Prims.ignore))
 in (
 # 145 "FStar.FStar.fst"
 let _88_95 = (report_errors ())
