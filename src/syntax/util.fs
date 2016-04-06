@@ -29,11 +29,11 @@ open FStar.Const
 let handle_err warning e =
   match e with
     | Error(msg, r) ->
-        Util.print_string (Util.format3 "%s : %s\n%s\n" (Range.string_of_range r) (if warning then "Warning" else "Error") msg)
+        fprint stderr "%s : %s\n%s\n" [Range.string_of_range r; (if warning then "Warning" else "Error"); msg]
     | NYI s ->
-        Util.print_string (Util.format1 "Feature not yet implemented: %s" s)
+        fprint stderr "Feature not yet implemented: %s" [s]
     | Err s ->
-        Util.print_string (Util.format1 "Error: %s" s)
+        fprint stderr "Error: %s" [s]
     | _ -> raise e
 
 let handleable = function
