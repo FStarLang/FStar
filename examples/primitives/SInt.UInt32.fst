@@ -1,15 +1,11 @@
-(*--build-config
-  options:--verify_module FStar.UInt32;
-  other-files:FStar.Ghost.fst axioms.fst intlib.fst sint.fst;
-  --*)
-
-module FStar.UInt32
+module SInt.UInt32
 
 open FStar.Ghost
+open Axioms
 open IntLib
-open Sint
+open SInt
 
-assume val n: x:pos{x = 32}
+let n = 32
 
 type uint32 = usint n
 type uint64 = usint (2*n)

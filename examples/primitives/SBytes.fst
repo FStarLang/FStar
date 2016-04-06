@@ -1,12 +1,12 @@
-module FStar.SBytes
+module SBytes
 
 open FStar.Ghost
 open FStar.Heap
 open Axioms
 open IntLib
-open Sint
-open FStar.UInt8
-open FStar.UInt32
+open SInt
+open SInt.UInt8
+open SInt.UInt32
 open SBuffer
 
 (* Contains coercion functions between integers and bytes that can be optimized in low-level code *)
@@ -96,7 +96,7 @@ assume val xor_bytes: output:sbytes -> a:sbytes -> b:sbytes{disjoint a b} -> l:n
   (requires (fun h -> live h output /\ live h a /\ live h b))
   (ensures (fun h0 _ h1 -> live h0 a /\ live h0 b /\ live h1 output /\ modifies_buf (only output) h0 h1
     /\ (forall (i:nat). {:pattern (get h1 output i)} i < l ==>
-      v (get h1 output i) = v (FStar.UInt8.logxor (get h0 a i) (get h0 b i))) ))
+      v (get h1 output i) = v (SInt.UInt8.logxor (get h0 a i) (get h0 b i))) ))
 
 assume val print: sbytes -> Tot unit
 assume val print_bytes: sbytes -> Tot unit

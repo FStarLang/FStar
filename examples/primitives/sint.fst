@@ -1,4 +1,4 @@
-module Sint
+module SInt
 open Axioms
 open FStar.Ghost
 open IntLib

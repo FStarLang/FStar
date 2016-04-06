@@ -1,9 +1,9 @@
-module FStar.UInt63
+module SInt.UInt63
 
 open FStar.Ghost
 open Axioms
 open IntLib
-open Sint
+open SInt
 
 let n : pos = 63
 

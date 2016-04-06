@@ -1,17 +1,13 @@
-(*--build-config
-  options:--verify_module FStar.UInt8;
-  other-files:FStar.Ghost.fst axioms.fst intlib.fst sint.fst;
-  --*)
-
-module FStar.UInt8
+module SInt.UInt8
 
 (* Defines secret bytes *)
 
 open FStar.Ghost
+open Axioms
 open IntLib
-open Sint
+open SInt
 
-assume val n: x:pos{x = 8}
+let n = 8 
 
 type uint8 = usint n
 type sbyte = uint8

@@ -1,6 +1,6 @@
 module SBuffer
 
-open Sint
+open SInt
 open FStar.Seq
 open FStar.Heap
 open FStar.Array

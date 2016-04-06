@@ -6,7 +6,7 @@ open FStar.Ghost
 open Axioms
 open IntLib
 open Parameters
-open Sint
+open SInt
 open SBuffer
 
 type template = nat -> Tot pos

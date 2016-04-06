@@ -1,19 +1,20 @@
-module FStar.UInt64
+module SInt.UInt128
 
 open FStar.Ghost
+open Axioms
 open IntLib
-open Sint
+open SInt
 
-assume val n: x:pos{x = 64}
+let n = 128
 
-type uint64 = usint n
-type uint128 = usint (2*n)
-type limb = uint64
-type wide = uint128
+type uint128 = usint n
+type uint256 = usint (2*n)
+type limb = uint128
+type wide = uint256
 
-let (zero:uint64) = uzero n
-let (one:uint64) = uone n
-let (ones:uint64) = uones n
+let (zero:uint128) = uzero n
+let (one:uint128) = uone n
+let (ones:uint128) = uones n
 
 let (zero_wide:wide) = uzero (2*n)
 let (one_wide:wide) = uone (2*n)
@@ -25,37 +26,37 @@ let (min_int:erased nat) = eumin_int #n
 let (bits:pos) = n
 
 (* Standard operators *)
-val add: a:uint64 -> b:uint64{v a + v b < reveal max_int} -> Tot uint64
+val add: a:uint128 -> b:uint128{v a + v b < reveal max_int} -> Tot uint128
 let add a b = uadd #n a b
-val add_mod: uint64 -> uint64 -> Tot uint64
+val add_mod: uint128 -> uint128 -> Tot uint128
 let add_mod a b = uadd_mod #n a b
-val sub: a:uint64 -> b:uint64{v a - v b >= reveal min_int} -> Tot uint64
+val sub: a:uint128 -> b:uint128{v a - v b >= reveal min_int} -> Tot uint128
 let sub a b = usub #n a b
-val sub_mod: uint64 -> uint64 -> Tot uint64
+val sub_mod: uint128 -> uint128 -> Tot uint128
 let sub_mod a b = usub_mod #n a b
-val mul: a:uint64 -> b:uint64{v a * v b < reveal max_int} -> Tot uint64
+val mul: a:uint128 -> b:uint128{v a * v b < reveal max_int} -> Tot uint128
 let mul a b = umul #n a b
-val mul_mod: a:uint64 -> b:uint64 -> Tot uint64
+val mul_mod: a:uint128 -> b:uint128 -> Tot uint128
 let mul_mod a b = umul_mod #n a b
-val mul_wide: uint64 -> uint64 -> Tot uint128
+val mul_wide: uint128 -> uint128 -> Tot uint256
 let mul_wide a b = umul_large #n a b
-val div: uint64 -> b:uint64{v b <> 0} -> Tot uint64
+val div: uint128 -> b:uint128{v b <> 0} -> Tot uint128
 let div a b = udiv #n a b
-val rem: uint64 -> b:uint64{v b <> 0} -> Tot uint64
+val rem: uint128 -> b:uint128{v b <> 0} -> Tot uint128
 let rem a b = umod #n a b
 
-val logand: uint64 -> uint64 -> Tot uint64
+val logand: uint128 -> uint128 -> Tot uint128
 let logand a b = ulogand #n a b
-val logxor: uint64 -> uint64 -> Tot uint64
+val logxor: uint128 -> uint128 -> Tot uint128
 let logxor a b = ulogxor #n a b
-val logor: uint64 -> uint64 -> Tot uint64
+val logor: uint128 -> uint128 -> Tot uint128
 let logor a b = ulogor #n a b
-val lognot: uint64 -> Tot uint64
+val lognot: uint128 -> Tot uint128
 let lognot a = ulognot #n a
 
-val shift_left: uint64 -> nat -> Tot uint64
+val shift_left: uint128 -> nat -> Tot uint128
 let shift_left a s = ushift_left #n a s
-val shift_right: uint64 -> nat -> Tot uint64
+val shift_right: uint128 -> nat -> Tot uint128
 let shift_right a s = ushift_right #n a s
 
 let rotate_left a s = urotate_left #n a s
@@ -96,8 +97,8 @@ let shift_right_wide a s = ushift_right #(2*n) a s
 let rotate_left_wide a s = urotate_left #(2*n) a s
 let rotate_right_wide a s = urotate_right #(2*n) a s
 
-val to_uint64: sint -> Tot uint64
-let to_uint64 s = to_usint n s
+val to_uint128: sint -> Tot uint128
+let to_uint128 s = to_usint n s
 
 (* Infix operators *)
 let op_Hat_Less_Less = shift_left
@@ -109,10 +110,10 @@ let op_Hat_Subtraction_Percent = sub_mod
 let op_Hat_Star = mul
 let op_Hat_Star_Percent = mul_mod
 let op_Hat_Star_Hat = mul_wide
-let op_Hat_Hat = logxor  
+let op_Hat_Hat = logxor
 let op_Hat_Amp = logand
 let op_Hat_Bar = logor
-let op_Less_Less_Less = rotate_left 
+let op_Less_Less_Less = rotate_left
 let op_Greater_Greater_Greater = rotate_right
 
 (* Wide infix operators *)
@@ -130,13 +131,13 @@ let op_Hat_Hat_Bar = logor_wide
 let op_Hat_Less_Less_Less = rotate_left_wide
 let op_Hat_Greater_Greater_Greater = rotate_right_wide
 
-assume val of_string: string -> Tot uint64
-assume val of_int: int -> Tot uint64
+assume val of_string: string -> Tot uint128
+assume val of_int: int -> Tot uint128
 
 // Constant time comparison masking functions
-assume val eq: x:limb -> y:limb -> Tot (z:limb{(v x = v y <==> v z = pow2 64 - 1)
+assume val eq: x:limb -> y:limb -> Tot (z:limb{(v x = v y <==> v z = pow2 128 - 1)
 								  /\ (v x <> v y <==> v z = 0)})
-assume val gte: x:limb -> y:limb -> Tot (z:limb{(v x >= v y <==> v z = pow2 64 - 1)
+assume val gte: x:limb -> y:limb -> Tot (z:limb{(v x >= v y <==> v z = pow2 128 - 1)
 								  /\ (v x < v y <==> v z = 0)})
 
 assume val wide_to_limb: wide -> Tot limb
