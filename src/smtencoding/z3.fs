@@ -125,17 +125,27 @@ let get_qfile =
     Util.append_to_file fh i;
     if fresh then Util.close_file fh
 
+let the_z3proc =
+  ref None
+
+let ctr = Util.mk_ref (-1)
+
+let new_proc () =
+  new_z3proc (Util.format1 "bg-%s" (incr ctr; !ctr |> string_of_int))
+
+let z3proc () =
+  if !the_z3proc = None then
+    the_z3proc := Some (new_proc ());
+  must (!the_z3proc)
+
 let bg_z3_proc =
-    let ctr = Util.mk_ref (-1) in
-    let new_proc () = new_z3proc (Util.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) in
-    let z3proc = Util.mk_ref (new_proc()) in
     let x = [] in
-    let grab () = Util.monitor_enter x; !z3proc in
+    let grab () = Util.monitor_enter x; z3proc () in
     let release () = Util.monitor_exit(x) in
     let refresh () =
         let proc = grab() in
         Util.kill_process proc;
-        z3proc := new_proc ();
+        the_z3proc := Some (new_proc ());
         begin match !queries_dot_smt2 with
             | None -> ()
             | Some fh ->

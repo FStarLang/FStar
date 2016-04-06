@@ -735,17 +735,11 @@ in (FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps)))
 end)) deps))
 
 # 483 "FStar.Parser.Dep.fst"
-let print_nubuild : Prims.string Prims.list  ->  Prims.unit = (fun l -> (FStar_List.iter FStar_Util.print_endline (FStar_List.rev l)))
-
-# 486 "FStar.Parser.Dep.fst"
-let print : ((Prims.string * Prims.string Prims.list) Prims.list * Prims.string Prims.list)  ->  Prims.unit = (fun deps -> (match ((FStar_ST.read FStar_Options.dep)) with
-| Some ("nubuild") -> begin
-(print_nubuild (Prims.snd deps))
-end
+let print = (fun deps -> (match ((FStar_ST.read FStar_Options.dep)) with
 | Some ("make") -> begin
 (print_make (Prims.fst deps))
 end
-| Some (_61_568) -> begin
+| Some (_61_565) -> begin
 (Prims.raise (FStar_Absyn_Syntax.Err ("unknown tool for --dep\n")))
 end
 | None -> begin
