@@ -40,7 +40,7 @@ DEBUG=ocamlfind ocamlc -package batteries,stdint -linkpkg -g -thread
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
 OCAML_LIB=$(addprefix $(FSTAR_HOME)/lib/ml/, MkPrims.ml native_int/prims.ml FStar_Set.ml FStar_ST.ml FStar_All.ml) FStar_FunctionalExtensionality.ml FStar_Seq.ml
 CHACHA_OCAML=FStar_UInt8.ml FStar_UInt32.ml SBuffer.ml FStar_SBytes.ml Chacha.ml
-POLY_OCAML=FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt63.ml SBuffer.ml FStar_SBytes.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
+POLY_OCAML=FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt63.ml FStar_UInt64.ml SBuffer.ml FStar_SBytes.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
 SHA_X_OCAML=Sint.ml FStar_IO.ml FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt64.ml SBuffer.ml FStar_SBytes.ml
 HMAC_SHA_X_OCAML= $(SHA_X_OCAML)
 
