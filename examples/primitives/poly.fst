@@ -1,19 +1,9 @@
-(*--build-config
-  options:--admit_fsi FStar.Set --verify_module Poly1305 --z3timeout 10;
-  other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi seq.fsi FStar.Seq.fst FStar.SeqProperties.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Array.fst FStar.Ghost.fst axioms.fst intlib.fst lemmas.fst sint.fst FStar.UInt8.fst FStar.UInt63.fst sbuffer.fst parameters1305.fst bigint.fst bignum1305.fst FStar.SBytes.fst;
-  --*)
-
 (* Implementation of Chacha20 based on the rfc7539 *)
-(* Current issues:
-   - inplace modification of bytes ?
-   - automatization of the coercion between mathematical integers 'int' and concrete machine 
-   integers 'uint32', not only at compile time, but also in verification
-*)
-
 module Poly
 
 open FStar.Heap
 open FStar.Ghost
+open Axioms
 open IntLib
 open Sint
 open FStar.UInt63
@@ -23,6 +13,8 @@ open Bigint
 open Parameters
 open Bignum
 
+
+(*
 (* Auxiliary lemmas and functions *)
 
 val max_value_increases: h:heap -> b:bigint{Live h b} -> n:pos -> m:pos{m>=n /\ m <= length b} -> Lemma

@@ -1,6 +1,3 @@
-(*--build-config
-  --*)
-
 module Parameters
 
 (* Standard platform integer size *)

@@ -1,15 +1,11 @@
-(*--build-config
-  options:--verify_module FStar.UInt63;
-  other-files:FStar.Ghost.fst axioms.fst intlib.fst sint.fst;
-  --*)
-
 module FStar.UInt63
 
 open FStar.Ghost
+open Axioms
 open IntLib
 open Sint
 
-assume val n: x:pos{x = 63}
+let n : pos = 63
 
 type uint63 = usint n
 type native_int = uint63
