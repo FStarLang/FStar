@@ -798,8 +798,119 @@ end
 
 
 module TestDhke = struct
-  let test () =
-    let params = dh_gen_params 2048 in
+
+  type test_vector = {
+    params: dh_params;
+    dh_x: string;
+    dh_X: string;
+    dh_y: string;
+    dh_Y: string;
+    secret: string
+    }
+
+  let print_dh_params dhp =
+    Printf.printf "p:\t%S\ng:\t%S\nq:\t%S\nsafe?\t%b\n"
+      (Bytes.hex_of_bytes dhp.dh_p) (Bytes.hex_of_bytes dhp.dh_g)
+      (match dhp.dh_q with | None -> "-" | Some q -> Bytes.hex_of_bytes q)
+      dhp.safe_prime
+
+  let print_test_vector v =
+    print_dh_params v.params;
+    Printf.printf "x:\t%S\nX:\t%S\ny:\t%S\nY:\t%S\nsecret:\t%S\n" v.dh_x v.dh_X v.dh_y v.dh_Y v.secret
+
+  (* Note that only dh_p is currently used *)
+  let apache =
+    {
+      dh_p = Bytes.bytes_of_hex "d67de440cbbbdc1936d693d34afd0ad50c84d239a45f520bb88174cb98bce951849f912e639c72fb13b4b4d7177e16d55ac179ba420b2a29fe324a467a635e81ff5901377beddcfd33168a461aad3b72dae8860078045b07a7dbca7874087d1510ea9fcc9ddd330507dd62db88aeaa747de0f4d6e2bd68b0e7393e0f24218eb3";
+      dh_g = Bytes.bytes_of_hex "02";
+      dh_q = Some (Bytes.bytes_of_hex "d67de440cbbbdc1936d693d34afd0ad50c84d239a45f520bb88174cb98bce951849f912e639c72fb13b4b4d7177e16d55ac179ba420b2a29fe324a467a635e81ff5901377beddcfd33168a461aad3b72dae8860078045b07a7dbca7874087d1510ea9fcc9ddd330507dd62db88aeaa747de0f4d6e2bd68b0e7393e0f24218eb2");
+      safe_prime = true;
+    }
+
+  let ikegroup14 =
+    {
+      dh_p = Bytes.bytes_of_hex "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca18217c32905e462e36ce3be39e772c180e86039b2783a2ec07a28fb5c55df06f4c52c9de2bcbf6955817183995497cea956ae515d2261898fa051015728e5a8aacaa68ffffffffffffffff";
+      dh_g = Bytes.bytes_of_hex "02";
+      dh_q = Some (Bytes.bytes_of_hex "7fffffffffffffffe487ed5110b4611a62633145c06e0e68948127044533e63a0105df531d89cd9128a5043cc71a026ef7ca8cd9e69d218d98158536f92f8a1ba7f09ab6b6a8e122f242dabb312f3f637a262174d31bf6b585ffae5b7a035bf6f71c35fdad44cfd2d74f9208be258ff324943328f6722d9ee1003e5c50b1df82cc6d241b0e2ae9cd348b1fd47e9267afc1b2ae91ee51d6cb0e3179ab1042a95dcf6a9483b84b4b36b3861aa7255e4c0278ba3604650c10be19482f23171b671df1cf3b960c074301cd93c1d17603d147dae2aef837a62964ef15e5fb4aac0b8c1ccaa4be754ab5728ae9130c4c7d02880ab9472d455655347fffffffffffffff");
+      safe_prime = true;
+    }
+
+  let amazon =
+    {
+      dh_p = Bytes.bytes_of_hex "d6c094ad57f5374f68d58c7b096872d945cee1f82664e0594421e1d5e3c8e98bc3f0a6af8f92f19e3fef9337b99b9c93a055d55a96e425734005a68ed47040fdf00a55936eba4b93f64cba1a004e4513611c9b217438a703a2060c2038d0cfaaffbba48fb9dac4b2450dc58cb0320a0317e2a31b44a02787c657fb0c0cbec11d";
+      dh_g = Bytes.bytes_of_hex "27e1ab131b6c22d259d199e9df8acbb1fe2fd4461afb7cb321d6946b02c66a9a45c062d5ffd01e47075cf7b082845e87e49529a66a8405354d1148184933078341c9fa627fde3c2a9a195e2cae33145c47bd86bbcd49b012f235bbc58486ce1d75522175fc7c9efd3aeaac06855b003e65a2208d16e7d89d9359dfd5e7002de1";
+      dh_q = Some (Bytes.bytes_of_hex "9414a18a7b575e8f42f6cb2dbc22eb1fc21d4929");
+      safe_prime = false;
+    }
+
+  let test_vectors = [
+    (* Amazon 1024-bit DSA group, 160-bit exponents *)
+    {
+      params = amazon;
+      dh_x = "f1c27c1bb6db3b52924fc731f5b0364d7e8bb357";
+      dh_X = "0e3bfc5827ae3962f7e07323382805a0e9bf6f65276a63fddbd083eb00183812d83a1ff11f570e91b4589e4a3372cb5dd439cb3cf1252a947184e5ebadacd1b3e60b58832cd10138029b73e07e93a8ad152fbcfa2dc139d6c780e3a8f3db210791e6b95b37e2036c0478875007b44b9f86680368610fd0d491ddce39942a4a90";
+      dh_y = "f59f06875d0bff7c42ce658a8b0d19b714ccd00b";
+      dh_Y = "b11b1669e09067b92931fc2246513fdcdb4a4bb81127f611fed23071896f5ff3ed8a9b6be3344b129872c82b56e0329a9f8d36c28e34b6e522013f4553ec09a67bf81198d8c852427faaf0d33bf03b1a28c2bdea6aab5daf94abdd2365b9fc7803f79f3cb69d0cecc88e283760870ffd2a78a1622d371bd11adb1b7d517140b3";
+      secret = "29d79c06e9bd43f0a2cccb69d68ca170633979d8985a28f34268b6f5e5264ad44a6ea6fa49b298054d7b90944d4f4ff113e88ee416070b05f05de9c67511b5cb70f78211b12744e77718cec12468cfc60cf91e582bb96b46e5f0670f0a8262382fca9834b5be0d5a737bbe8c8a57073facf64af818532309cbd1435065113fab";
+    };
+    (* Apache 2.2 group, 160-bit exponents *)
+    {
+      params = apache;
+      dh_x = "d4fc3dbe6d0ef9324fd002ebbd5b898d11352cbc";
+      dh_X = "c496c19df7632a44a817105c7c5bef97251fcb18f8a4cd28fd937738e6cad20a9fbe009bfe2757f54844b56b4ef098c6712fd501844771b29b9c68494ca8b6e226e961795a4d65e08ec7673da6a113718ac84f67f2cd7f37880e9bcfa53f6301c4cda6212129454831a762755f44755ed0246087345a25a9a770dbfe29799577";
+      dh_y = "5adba88d5e3147c8a901fcee5e6118ec13137daf";
+      dh_Y = "4e507a03aada862f3367d274a6e02462b56c02a7a68785ef7cfcc2d3b3a3d3ccfa2a40a26dc7916a78fea1293bd8dd8b2018e4969dba84cef6903468a337288cd9f63d3332d2c1e24f15eef075a128d8ed2be7a1b53723ef7f3f2d7b260c2bf9d9991f786c13b6b6d8df474bbeb51df40cb912e10dd8af789fb92340f02004b4";
+      secret = "64ef68c9cb77279b3f8de6f4417cb61846e74c01e8d2409c53a92982886dc20bf34838a89d78be34aca8998423d41c6b7bc1104408fb751dbe17390221b032b249858574f1669e49c3394f2b5cfec2292776ceb2849fafd5689c436005ed47405ca578ef4e6c8cab2d6f542f912de887bbe258370c3108b3894f0d467415ec43";
+    };
+    (* Apache 2.2 group, 1024-bit exponents *)
+    {
+      params = apache;
+      dh_x = "31d970551b056f8fc067e478e60b314d0fb2f278fc8b627a14a97bf5a7b8af1cc15e3d8c659064010a3f383153d2c4f3e65ba3b00c54ffdfe74ce3361312d5b5a21e2ca67745658fb89355acad604834649d2c38f2895f9e9115be913e302ebc56780e2d24fa227fc22de1586c81bc0f53ae6050662be1343a8ab74244e815cd";
+      dh_X = "afa384f7c10bc06d6db2c503fa133a416aa9d546b46016392475f4785f2ece4b26d0d8a90892662f0066d11841bc88c434f24769fb4e1094fe1e7505b63ac9b1ad7f8dca9cc28be8d1eb32bd93b3111f144207f5ebe2894f8846aae2af26af7c2e6c9e774afc390222efbee8f250eb69672d983c86c943301b2bdddcf4ed7ed8";
+      dh_y = "c989f2e956327f7c3e69ee43164e6d2853182704847cde14370fadad5cfe66924f613fdfb08613f2200646a375cf88e183bb6eacfc6d45e561ba9f33a95259a3fa53487a02765abb2b7ed4749d1482912d50ce4951249fc40c333c4caf05248a5ad30de61ff116523b3163c9c584e9d0b86fc7e96403543b66d1c2a593262199";
+      dh_Y = "46707a6c3d14bc5dc72c9151cfcaddcfcb86a58feb5917e72f64fd009324660a55debf5840478db15973df82227f4648ed1fcb13d69444401f4c85ab7d832cbbae51bb15bed4aa0ddb7e26d5470291fd1b8c8894fa5afc536bc7772a67288fe55850a20c0c41fd594757732a0be6c71f30828598e6a1d507facfca1c2efe7eb2";
+      secret = "159c55d697d1cc982638914d6659500b3dd1969ec065e41fc56a7ffe22d84520bfcb08b4fa195dfe53722c659438857c8931fe22af0072de85a79c656a52a385016380e0c01085db9eaf62cf5047b57ec5344f59355f799641c2550071256fe9644bbe628e169ee1d0fd451942c7c18f2f994188281b505213d8bd7b838794c8";
+    };
+    (* IKE Group 14, 224-bit exponents *)
+    {
+      params = ikegroup14;
+      dh_x = "5fe7e6fb40ed9ab5c7d30b062ffe63bd454159330393f287bfa8a0d4";
+      dh_X = "e4d042e2a7b1d7a411aa3fc29affb6c3c5d7f049fdc6cdd8755dbdd83ba91f33de90b40e9ab9ab820bf054a8224d9b5382801e852818aefe645ff31c93f6e1a1fd82d95070d075477b6fdfc6a18d8a87988e9eaefc54b6b3c625dfe1cbcd278499c4b47e3b23dadd85824c768b170a1a7789c2f29f5ab2090105cfbd5c7f3e8b353442dc4cb3214a1126aec1428a85aab9a743be96920712c604261236df0a09d7ff6baac5517da38c05d7f2e7cf787dbdc08d5e5b07f32fe41aab1f644b177d6726f7a478943d7308f72d317f24dd0979849d9789172584ca29aad64d61dc94e31f2ce09765a7bac8406f9ff8c961762931c5093fa0ef28fcf3ccb59176c512";
+      dh_y = "e540441ab02b7ac8059f97fc5a725972bb5ca391b2b879c9f05470cf";
+      dh_Y = "5f554d0be1b92abd6b815222ae3af87baad66481653f504a2492227fdb2900c266312d9caf8dbb2fceebfda9080ea17306e813e44d24389e8576f23ef39611e865cdd064ee0eb815fac38051fdfc0ac17efffd661eaefef24626a6a8a00c61d32c028ee183b55dd677edac677f0fed73e9be37aa7d4fd0ef5bd4a6843b1639c05416651b4ad23f4fb6b77fea949e2fba6f6e9aa320297a33872a6f3e8d9f89e7b6b34b439474e25470a58b3b2abf390b862fcf2fda79a7191277ce0981772c0d669ff60515de0ea57d22c72703b825eedd61c5fda26fc0260f320c0c93a2a3e91109128b19d98de996015d67ce5b12dce1c859ae33564e11534e96559b8f52c1";
+      secret = "10ca7728af50fd03baad3307b9245f5d51813ca8aadc8a15b25eb2a17a4f3593a9778fd5ffffb5736fcbfcc508de4a8f190d8534db92d1c124c28f9dc91705e26306194d349daa455f638497715b2112174cb24e4f5904b2c56c51081d17eb9e86f83cc0f66b0c07195962766066e13e94c1c5a6339872d04fb231a19117d10380ec99ef2a14ba9151d70635b26fac5d0339b577bb63db2ae259ca27001abd1108a67d7d85353a2fa0f93e74a08db71923e62bf490f04746529f92d181cc7ee654ee99f143190909db89af7d8089fdc6c39fe7b4e18fc584fe59967957f9c5bc24d802ad3a8911bfee074311319ce2f00b2f34326a3be17b8a69c7131d2b1b4f";
+    };
+    (* IKE Group 14, 2048-bit exponents *)
+    {
+      params = ikegroup14;
+      dh_x = "e18ee9f415a28cb36670181d4dc37ecb1ee3769aa3b38134c3bf291c83a21a3a411f471f90663281924301972cb6de6bf05efc048c14077e990546ae32605eb9b349ef68c835b9829e1058b7bd187cf4a99ba373c6ab70319e1b05e7a26ab232e9ef7213c7079629c66af15c5021a296ee19bb6f38b08a7c6913c7315241fd32d0e8e84f8dc5c6b445ecdd66a94131c472ebc93dbdea7114741b822482178c9cae5af3cdd2a544ce9d89f7c6feacae0b3f428488bfb62a8c5563e40cda461a9f56850a98ce1d573f406d6c3ca5e2010132502466eb67f0f743d65b60bfbb5d8a6a1373c4006c18451282febc9aea069f80e9f60798ba7e39c0155eb83b1036f1";
+      dh_X = "c20dddd6ca7868bf616b1110c914cbccd73bbdbdd135e8eb7b9ffc520540f9c9f53ffc25da96ccb07ca507d42eb9541eb2058bab594ae0baaed3167c138bfe9c7c3ab6fc5a9d38255dd1fc1c586975943e51f62d8c9f57a6ac9a714a949ff022ad8ca2d1ebfbaa1f9a9420bcd1ad09c9dc9bc4a9457fd6c353c97edfc0bd7dc36f52f5c9027144ecc2a8bced9006ffa0407b663511dd00536cb17c510694487d6483e125e4b6259129aa874aa2fcda4b39a92028bb70605a6f35473740ee340756168d81a1a0f91cfdecd5a36d04b772271c96d71ab9e89a8d66bc1042425da3ef221554d4b13b2b017fe894f05c7c8bb86e423f1af8c61d834a9c87f00fe206";
+      dh_y = "3e71a6830efe80d9e81147f8d9637685d9d0ddbf6ff164eaffd4d249ccc0dea4f26e5952a6e148075d51a2979c86ce1bafc7087864cb2639d2af2c89ac4d7c11ab996e10bc88097075a7bb07160e539d8020bc2c2126697bfb8c07e813520e5a917b9541854a976cb93294c65bd3a851438c50a642235eefefb884507e28f1139b427f6e7ecb054113c73003acbaad258a6674b321617061eb74d79e0d5603d9d82ef5ecba243b42a817c4ba6938c4ab50f860d89351fa2ebb17e09f26132a05c0fc54efe8cbaf96fe614901ca9c0722bee655fb614621fc3823a2548102a425f9c4f7a54b6987ac7c18788c37638e8b7add36d8638a9a4b544faf35c39a7b3f";
+      dh_Y = "4dbd94438cf2ae324532fe4df45a10bad7197ac54d3295bd4a9f8b0d9b8022a93ab8d078662e71b77aaeac29194af196ea0add0359e80500f6c048367f6439c5db16bcfb7f6997fd80f16aa95a31dc85d2350ce6b7e3d10d679bf69e6310ce6df40b3ca312ad39c61f7f26b6b452dd8984750dc1907931469715597cfcd04a1847e61af80cb592a9d1e44aab7719c94e7307305b306fc6110c35b72fc28d49f8a785c04944c8c0b35bf35427ee3759223646b2ba3f86edd53e68eaf2a0d273f858212d69a5933729863045bb5cb5848f7098e8d528d164c49be44486f91e1bce5c572680dfe5addaef58608783b629f42fa6aeaa7f9104efb74d296882685bbb";
+      secret = "e71d601d89865ea0e4bdc24f02a515807f66979329447ef36a7884b595aba78206d320c08cf56232c7e5b95813c5e24fc2d82087ef261f1d1eb3fdb5936746adf0dc744aca258a7294929a3441ce63842d4a4d7c43e93407413b6b736adaea7f61da476ee5cd961957844705792966966e9b7b8f77414b868264d33c1d1ceb47a62bd1382143c075a23319bf50718017fb7fd624c048ae0eb4a4487c3de8d0fd56fb3343fef41952f1904c11c5227e764297e0766f9479d28230720bde572daabe9f63fd432071a22ee826388977f7214eb00ee3eef42c04c983c7c80a6e7d91377941241c6eb1eba24f968a634c283553fdd5c8eff684976e50de92a37c6f08";
+}
+  ]
+
+  let test v =
+    let alice =
+      {
+        dh_params  = v.params;
+        dh_public  = Bytes.bytes_of_hex v.dh_X;
+        dh_private = Some (Bytes.bytes_of_hex v.dh_x)
+      } in
+    let bob =
+      {
+        dh_params  = v.params;
+        dh_public  = Bytes.bytes_of_hex v.dh_Y;
+        dh_private = Some (Bytes.bytes_of_hex v.dh_y)
+      } in
+    let secret1 = dh_agreement alice bob.dh_public in
+    let secret2 = dh_agreement bob alice.dh_public in
+    Bytes.hex_of_bytes secret1 = v.secret &&
+    string_of_bytes secret1 = string_of_bytes secret2
+
+  let simple_test () =
+    let params = dh_gen_params 1024 in
     let alice = dh_gen_key params in
     let bob = dh_gen_key params in
     let shared1 = dh_agreement alice bob.dh_public in
@@ -809,7 +920,156 @@ end
 
 
 module TestEcdhke = struct
-  let test () =
+
+  type test_vector = {
+    params: ec_params;
+    ecdh_d1: string;
+    ecdh_x1: string;
+    ecdh_y1: string;
+    ecdh_d2: string;
+    ecdh_x2: string;
+    ecdh_y2: string;
+    secret: string;
+    }
+
+  let print_curve = function
+    | ECC_P256 -> "P256"
+    | ECC_P384 -> "P384"
+    | ECC_P521 -> "P521"
+
+  let print_dh_params ecp =
+    Printf.printf "curve:\t%S\npoint compression?:\t%b\n"
+      (print_curve ecp.curve) ecp.point_compression
+
+  let print_test_vector v =
+    print_dh_params v.params;
+    Printf.printf "d1:\t%S\nx1:\t%S\ny1:\t%S\nd2:\t%S\nx2:\t%S\ny2:\t%S\nsecret:\t%S\n"
+      v.ecdh_d1 v.ecdh_x1 v.ecdh_y1 v.ecdh_d2 v.ecdh_x2 v.ecdh_y2 v.secret
+
+  let test_vectors = [
+    (* From OpenSSL evptests.txt *)
+    {
+      params = { curve = ECC_P256; point_compression = false };
+      ecdh_d1 = "8a872fb62893c4d1ffc5b9f0f91758069f8352e08fa05a49f8db926cb5728725";
+      ecdh_x1 = "2c150f429ce70f216c252cf5e062ce1f639cd5d165c7f89424072c27197d78b3";
+      ecdh_y1 = "3b920e95cdb664e990dcf0cfea0d94e2a8e6af9d0e58056e653104925b9fe6c9";
+      ecdh_d2 = "fd4473bb54c3370505599de274b212019a44634bdf276a4b07b7fe5e78f29763";
+      ecdh_x2 = "2006e5e14a078aa73fb8a625e561254bbf2d0d4fec0ab995942372ea514095d3";
+      ecdh_y2 = "bc20f912cb318f3234af648ea720643b3f701f9b7adeb89d0abe74d9efb69c46";
+      secret  = "e3cc07dfbdde76a1139811db9ff5faf9d17ef39944f1e77d1f6a208524bf7b1b"
+    };
+    (* Random test vectors *)
+    {
+      params = { curve = ECC_P256; point_compression = false };
+      ecdh_d1 = "c945c799c65d06b604be3dd8e3994efc733877014aa407e5edf336650429b9ca";
+      ecdh_x1 = "7fa7034cf81e6e6224509b7e61466e3d0724a6caceadf8e5273acf2bf743608c";
+      ecdh_y1 = "f9edc8b1d743c96440f57212f082dcdfccd422d2d4b67620bd6770f1a002c7e2";
+      ecdh_d2 = "8c198d42a0a2f3a2455ad5f690c87cc2aedc00967d3f973f19e0aba73198ee36";
+      ecdh_x2 = "b3100291722534d0057f768359795cb6e140012789996df4382a8a301a5e0da0";
+      ecdh_y2 = "7babe994735fd16985c1771a2aa5ba7875a949a3730181eb33ad15104a9e2e48";
+      secret  = "7ab2cac9a74da380b5dd32359e5abea8ba9b055faf91213fbc4ae687444b6c4c";
+    };
+    {
+      params = { curve = ECC_P256; point_compression = false };
+      ecdh_d1 = "0f242a058a337714c17b94bafb24fcc2c0a376b479105140df5df3b09b954eaa";
+      ecdh_x1 = "4dba00dfb4b0d6b9f902c0a6e8e360362a5a0d05e81e43197b6b5fdcaae33f4f";
+      ecdh_y1 = "4d835d7df671d184056745dc57bc0d5719a22db4ad2970ce07ba87b8435e79c1";
+      ecdh_d2 = "7c08811670bee64dc66a0fcfd5b8531353acb11aea83d8b857bf05dd3e7b5443";
+      ecdh_x2 = "dc6826c4fe5bc7aea47956c595d82dfd16f3fa890b53eb98756b135f81bb20f8";
+      ecdh_y2 = "0e43d8a7746bdbe42d01704e52beedb9fed12cf018dab48bb0476a97788a5600";
+      secret  = "cb1dd9c96a266a93e94b3e2dbc1c3e772263c49c35c735316c1b573aef344013";
+    };
+    {
+      params = { curve = ECC_P384; point_compression = false };
+      ecdh_d1 = "afebb080940b45951bfa5751f9e0ff76ef5634d7ea0b15b2376539f4cc02d2ebe4891f6e36d6a56c8e5f784fdcb35b81";
+      ecdh_x1 = "28b314bfe8651ad2a9cd76922b43373923811fb12a74a32bc59ac8c4f4d5a1ca593de410dfa148b3ea70247e6be8c33f";
+      ecdh_y1 = "616eebdc4a848782627d73b64a5c35072bf77c1324c11c36434e8362e8306a5ba70b5d1717658d331a1870024649e50b";
+      ecdh_d2 = "5a8421fa5ce0e383cbfe0f5299749a2ffb59c40f31d618c80ce6e5f988833fe4d12ba45781d7918057c4391d25ef7d34";
+      ecdh_x2 = "790603650350d39904619866d6a1a50709cab24eda82719dd24ea49caf13e06f5b7583639f5e640577f74025feaa0770";
+      ecdh_y2 = "126b1f347ab4eb8cd2dbf0119932c1cd981825c45c5a9c8d62a50c51042d743ee242cfeabd973a0170a9309e1a88c4c6";
+      secret  = "7b0ee48cdd81c0e6165b35535c6c3e20058cce001e074020b3ca92a8279a9c0d1879a2f7221f04a1860f3c3ab4305253";
+    };
+    {
+      params = { curve = ECC_P384; point_compression = false };
+      ecdh_d1 = "afebb080940b45951bfa5751f9e0ff76ef5634d7ea0b15b2376539f4cc02d2ebe4891f6e36d6a56c8e5f784fdcb35b81";
+      ecdh_x1 = "28b314bfe8651ad2a9cd76922b43373923811fb12a74a32bc59ac8c4f4d5a1ca593de410dfa148b3ea70247e6be8c33f";
+      ecdh_y1 = "616eebdc4a848782627d73b64a5c35072bf77c1324c11c36434e8362e8306a5ba70b5d1717658d331a1870024649e50b";
+      ecdh_d2 = "5a8421fa5ce0e383cbfe0f5299749a2ffb59c40f31d618c80ce6e5f988833fe4d12ba45781d7918057c4391d25ef7d34";
+      ecdh_x2 = "790603650350d39904619866d6a1a50709cab24eda82719dd24ea49caf13e06f5b7583639f5e640577f74025feaa0770";
+      ecdh_y2 = "126b1f347ab4eb8cd2dbf0119932c1cd981825c45c5a9c8d62a50c51042d743ee242cfeabd973a0170a9309e1a88c4c6";
+      secret  = "7b0ee48cdd81c0e6165b35535c6c3e20058cce001e074020b3ca92a8279a9c0d1879a2f7221f04a1860f3c3ab4305253";
+    };
+    {
+      params = { curve = ECC_P384; point_compression = false };
+      ecdh_d1 = "01f6";
+      ecdh_x1 = "bbb2aa7033419e9de067ad3a14dcb555517a82e850e732b67ec45812e37e8a5a268d5f959f690fc387e008ba3f085615";
+      ecdh_y1 = "6d926f4477bd7c488c48815f5bf6fc21fe1f4b23c9ec191c59765e36c36f168d617fb0f9417a9d3d2df9348917126076";
+      ecdh_d2 = "119424f7ec6eb41524fd67a0f9c7ea9a73a473e04907e1eff84fc62d661e6f467d7d5daa861bfdd9a1e35283fbfd0c8b";
+      ecdh_x2 = "fe3acf39944e2b387c24a35e9e8dcf2268e1a1c6d334a34d288cecf7c0bbc7c9c9f25832465737a7b277c7370112752d";
+      ecdh_y2 = "e6fbc9eb1beb4cb96b5114f81bc1083540fbf398aa96dc74b21fa7e9f9884f5ed6680a7c1eb900663b92683b4a4e2769";
+      secret  = "792084929baaa4e82701797d98bb388aeddefb377f6641ddfeb8b1bec3594997b5da246e99249e0f200402060fa328b1";
+    };
+    {
+      params = { curve = ECC_P521; point_compression = false };
+      ecdh_d1 = "01fac6086741d6458290707921a025b6b9676a0d593b3c5ef2f9552b077bcfd563770de2599c9d417fdabde737a71685ba6235801a1c6841fe107a7d275238552262";
+      ecdh_x1 = "015353d2772fa47a519f69f5ec9c0b01e05279bec3c85233158e3e197585327b56dcb01da40b8542a0aca3e4d1dd4aebd6d0598a092356366942358da86d753f14b7";
+      ecdh_y1 = "595391d4d4aeeefbffa8de76fac2a8ee3cf8b72984572c3e543807775a2fb1f769fdd582cc9769ee2a419694e4d3518cf0f67e936835d2099c527d33c4ec4b100b";
+      ecdh_d2 = "b9ea0c80398809305e5719665c9c126a6085ac7728abbb709e74578dd2ba87b0fbd8a42fce004c0ba6399fd9cb675703a20bb2f8765ef0111ff9c596f5b96f49ba";
+      ecdh_x2 = "67dc5b1088b4dad61bc92a89f8f6a791b9be04e48da41813de31da7f260b7084094665622462eae5ea60be63e02574d1a7b42ae4ad02cd68627cbfde3d44748f65";
+      ecdh_y2 = "fec3d94be661eff265d082fb30f20d95ac06cf28e41f39dcbb3c6f19732de5b4cadafd77af4c7308e0bfe3c1d1878f2bf80e2ba0b9ff3b72a1306c6025fd32c3d1";
+      secret  = "01a22359ced3a7eb4f54d16605228ef1911773bc28bb1f4c86f0c2aa0b34ba7f040b010b1ca0a67938f24d135d10d451d1782f2a4997973da3c4ef38100a861878b9";
+    };
+    {
+      params = { curve = ECC_P521; point_compression = false };
+      ecdh_d1 = "02";
+      ecdh_x1 = "433c219024277e7e682fcb288148c282747403279b1ccc06352c6e5505d769be97b3b204da6ef55507aa104a3a35c5af41cf2fa364d60fd967f43e3933ba6d783d";
+      ecdh_y1 = "f4bb8cc7f86db26700a7f3eceeeed3f0b5c6b5107c4da97740ab21a29906c42dbbb3e377de9f251f6b93937fa99a3248f4eafcbe95edc0f4f71be356d661f41b02";
+      ecdh_d2 = "0d";
+      ecdh_x2 = "7e3e98f984c396ad9cd7865d2b4924861a93f736cde1b4c2384eedd2beaf5b866132c45908e03c996a3550a5e79ab88ee94bec3b00ab38eff81887848d32fbcda7";
+      ecdh_y2 = "0108ee58eb6d781feda91a1926daa3ed5a08ced50a386d5421c69c7a67ae5c1e212ac1bd5d5838bc763f26dfdd351cbfbbc36199eaaf9117e9f7291a01fb022a71c9";
+      secret  = "017b61bd55cc8b533222d9857bb0c04dcd1331a02407e9a8576609bc2cbefa11d6aef686bfc27593b717007102d5dd038ed768dd29c10c73e41060d9e9a7e8c685c6";
+    };
+    {
+      params = { curve = ECC_P521; point_compression = false };
+      ecdh_d1 = "01e0309972ba5bfcef9359bd57b9f81fdc42b68f542840b6ba86777cc88a5f0212ebbe9dbd127b6d002dc04693a08244c19a70731684c8ae2f69d55aa31e0f033694";
+      ecdh_x1 = "7bc64851ef5f5479ec693d013bc4dd49eed41f83e1c541bab31b36d2a718936d2679911f12fd0ad791aefed4fe90ace3c701064c3b13a8fe549481bf6bbcd50f34";
+      ecdh_y1 = "74ae39f8a6365647bb60a0fc6d604e03b3f825c628e7bd2b1624b65f7c1efb5475856f25db987d5050dfa3e3add57219e4dbc313d5ddd31a0bebc2329b5dcdbe13";
+      ecdh_d2 = "0129aaa6e62ffeb1607fac1a89d89e30c6cea1cd5950713e61fdea5a020dbb378eb237ed4deba74db459a14bd30c1a59ff6f34ae81a2c9d267b6eae28e5250790298";
+      ecdh_x2 = "a5bf1a56bd4ba362f4c993d0be3e730279fe6adcf9b1eec0d80bd90c42d704fb682ddec394e5da9282d065c5b2c765d1db3dd059d4c786d1c0af39cb0fd81885c2";
+      ecdh_y2 = "01203e82a4ca77298dcd49830413b4b415736ab4db03a61d23b711cda53193b1066704242c0c8061bf2444c3ed400476b831c8d298f2ac171b807a863953635f3c1b";
+      secret  = "011b919b14eaeea1b8881cede6bd16ff04e4ec45a943f1b5e3852fce2e83e997398af3b233b796cff023a0430d69bb2eda1d475c806e9b7f716cf08e8daefb31a6b2";
+    }
+  ]
+
+  let test v =
+    let alice =
+      {
+        ec_params = v.params;
+        ec_point  =
+          {
+            ecx = Bytes.bytes_of_hex v.ecdh_x1;
+            ecy = Bytes.bytes_of_hex v.ecdh_y1
+          };
+        ec_priv   = Some (Bytes.bytes_of_hex v.ecdh_d1)
+      } in
+    let bob =
+     {
+        ec_params = v.params;
+        ec_point  =
+          {
+            ecx = Bytes.bytes_of_hex v.ecdh_x2;
+            ecy = Bytes.bytes_of_hex v.ecdh_y2
+          };
+        ec_priv   = Some (Bytes.bytes_of_hex v.ecdh_d2)
+      } in
+    let secret1 = ecdh_agreement alice bob.ec_point in
+    let secret2 = ecdh_agreement bob alice.ec_point in
+    ec_is_on_curve alice.ec_params alice.ec_point &&
+    ec_is_on_curve bob.ec_params bob.ec_point &&  
+    Bytes.hex_of_bytes secret1 = v.secret &&
+    string_of_bytes secret1 = string_of_bytes secret2
+
+  let simple_test () =
     let params = { curve = ECC_P521; point_compression = false } in
     let alice = ec_gen_key params in
     let bob = ec_gen_key params in
@@ -879,12 +1139,11 @@ let _ =
   TestRsa.(run_test "RSA" tests print_test roundtrip);
   TestDsa.(run_test "DSA" tests print_test check);
   TestEcdsa.(run_test "ECDSA" tests print_test check);
-(*
-  simple_test "DH key exchange" TestDhke.test;
-  simple_test "ECDH key exchange" TestEcdhke.test;
-*)
+  TestDhke.(run_test "DHE" test_vectors print_test_vector test);
+  simple_test "DHE key exchange" TestDhke.simple_test;
+  TestEcdhke.(run_test "ECDHE" test_vectors print_test_vector test);
+  simple_test "ECDH key exchange" TestEcdhke.simple_test;
   simple_test "Certificate chain verify" TestCert.test;
   simple_test "Certificate signature verify (ECDSA)" TestECDSACert.test;
   simple_test "Certificate signature verify (RSA)" TestRSACert.test;
   ()
-
