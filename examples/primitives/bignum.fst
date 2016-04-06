@@ -1360,7 +1360,7 @@ let rec carry b i =
     eval_carry_lemma h0 b h2 b i; 
     carry b (i+1)
 
-assume val carry_top_to_0: b:bigint -> ST unit
+val carry_top_to_0: b:bigint -> ST unit
     (requires (fun h -> carried h b norm_length /\ length b >= 2*norm_length-1
       /\ v (get h b 0) + 5 * v (get h b norm_length) < pow2 62))
     (ensures (fun h0 _ h1 -> carried h0 b norm_length /\ carried' h1 b 1
@@ -1369,7 +1369,7 @@ assume val carry_top_to_0: b:bigint -> ST unit
       /\ (forall (i:nat). {:pattern (v (get h1 b i))} (i > 0 /\ i < length b) ==> 
 	  v (get h1 b i) = v (get h0 b i))
       /\ modifies_buf (only b) h0 h1))
-(* let carry_top_to_0 b =
+let carry_top_to_0 b =
   let h0 = ST.get() in
   let b0 = index b 0 in
   let btop = index b norm_length in 
@@ -1377,7 +1377,6 @@ assume val carry_top_to_0: b:bigint -> ST unit
   upd b 0 (b0 ^+ btop_5); 
   let h1 = ST.get() in
   freduce_degree_lemma h0 h1 b 0
-*)
 
 let carriable2 (h:heap) (b:bigint) (ctr:pos{ctr<=norm_length}) : GTot Type0 =
   live h b /\ length b >= norm_length + 1
