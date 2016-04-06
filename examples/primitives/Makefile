@@ -23,6 +23,7 @@ BIGNUM_ODIR=bignum_library
 CURVE_ODIR=curve25519
 AES_ODIR=aes
 SHA_X_ODIR=sha
+HMAC_SHA_X_ODIR=hmac_sha
 
 CHACHA_C=Chacha.c test_chacha.c
 POLY_C=Parameters.c Bignum.c Poly.c test_poly.c
@@ -41,6 +42,7 @@ OCAML_LIB=$(addprefix $(FSTAR_HOME)/lib/ml/, MkPrims.ml native_int/prims.ml FSta
 CHACHA_OCAML=FStar_UInt8.ml FStar_UInt32.ml SBuffer.ml FStar_SBytes.ml Chacha.ml
 POLY_OCAML=FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt63.ml SBuffer.ml FStar_SBytes.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
 SHA_X_OCAML=Sint.ml FStar_IO.ml FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt64.ml SBuffer.ml FStar_SBytes.ml
+HMAC_SHA_X_OCAML= $(SHA_X_OCAML)
 
 .PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test sha-ver sha-ml
 
@@ -203,6 +205,22 @@ sha256-c: Crypto.Sha256.fst
 sha256-test: sha256-ml
 	cd $(SHA_X_ODIR)256_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_X_OCAML) Crypto_Sha256.ml test_sha256.ml -o test_sha256.out #2> /dev/null
 	$(SHA_X_ODIR)256_ml/test_sha256.out
+
+
+# HMAC targets
+
+hmac-sha256-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha256.fst
+
+hmac-sha256-ml:
+	mkdir -p $(HMAC_SHA_X_ODIR)256_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HMAC.Sha256.fst --odir $(HMAC_SHA_X_ODIR)256_ml
+	cp ./ml/*.ml $(HMAC_SHA_X_ODIR)256_ml
+
+hmac-sha256-test: hmac-sha256-ml
+	cd $(HMAC_SHA_X_ODIR)256_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(HMAC_SHA_X_OCAML) Crypto_Sha256.ml Crypto_HMAC_Sha256.ml test_hmac_sha256.ml -o test_hmac_sha256.out #2> /dev/null
+	$(HMAC_SHA_X_ODIR)256_ml/test_hmac_sha256.out
+
 
 # Cleaning
 clean:
