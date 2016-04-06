@@ -191,9 +191,9 @@ let rec wsched_define ws wblock t =
     let v0 = _sigma1 _t2 in
     let v1 = _sigma0 _t15 in
 
-    let v = (FStar.UInt32.add v0
-                              (FStar.UInt32.add _t7
-                                                (FStar.UInt32.add v1 _t16)))
+    let v = (FStar.UInt64.add v0
+                              (FStar.UInt64.add _t7
+                                                (FStar.UInt64.add v1 _t16)))
     in SBuffer.upd ws !t v;
     t := !t + 1;
     wsched_define ws wblock t end
@@ -236,26 +236,26 @@ let rec update_inner_loop ws whash t t1 t2 k =
     let _wt = index ws !t in
     let v0 = _Sigma1 (index whash 4) in
     let v1 = _Ch (index whash 4) (index whash 5) (index whash 6) in
-    let _t1 = FStar.UInt32.add _h
-                               (FStar.UInt32.add v0
-                                                 (FStar.UInt32.add v1
-                                                                   (FStar.UInt32.add _kt _wt))) in
+    let _t1 = FStar.UInt64.add _h
+                               (FStar.UInt64.add v0
+                                                 (FStar.UInt64.add v1
+                                                                   (FStar.UInt64.add _kt _wt))) in
     SBuffer.upd t1 0 _t1;
     let z0 = _Sigma0 (index whash 0) in
     let z1 = _Maj (index whash 0) (index whash 1) (index whash 2) in
 
-    let _t2 = FStar.UInt32.add z0 z1 in
+    let _t2 = FStar.UInt64.add z0 z1 in
     SBuffer.upd t2 0 _t2;
 
     let _d = (index whash 3) in
     SBuffer.upd whash 7 (index whash 6);
     SBuffer.upd whash 6 (index whash 5);
     SBuffer.upd whash 5 (index whash 4);
-    SBuffer.upd whash 4 (FStar.UInt32.add _d _t1);
+    SBuffer.upd whash 4 (FStar.UInt64.add _d _t1);
     SBuffer.upd whash 3 (index whash 2);
     SBuffer.upd whash 2 (index whash 1);
     SBuffer.upd whash 1 (index whash 0);
-    SBuffer.upd whash 0 (FStar.UInt32.add _t1 _t2);
+    SBuffer.upd whash 0 (FStar.UInt64.add _t1 _t2);
     t := !t + 1;
     update_inner_loop ws whash t t1 t2 k end
   else ()
@@ -289,7 +289,7 @@ let rec update_step ihash wdata ws rounds i t1 t2 k =
     wsched_define ws wblock ia;
 
     (* Step 2 : Initialize the eight working variables *)
-    let whash = create #64 FStar.UInt32.zero 8 in
+    let whash = create #64 FStar.UInt64.zero 8 in
     SBuffer.upd whash 0 (index ihash 0);
     SBuffer.upd whash 1 (index ihash 1);
     SBuffer.upd whash 2 (index ihash 2);
@@ -320,14 +320,14 @@ let rec update_step ihash wdata ws rounds i t1 t2 k =
     let x62 = index ihash 6 in
     let x71 = index whash 7 in
     let x72 = index ihash 7 in
-    SBuffer.upd ihash 0 (FStar.UInt32.add x01 x02);
-    SBuffer.upd ihash 1 (FStar.UInt32.add x11 x12);
-    SBuffer.upd ihash 2 (FStar.UInt32.add x21 x22);
-    SBuffer.upd ihash 3 (FStar.UInt32.add x31 x32);
-    SBuffer.upd ihash 4 (FStar.UInt32.add x41 x42);
-    SBuffer.upd ihash 5 (FStar.UInt32.add x51 x52);
-    SBuffer.upd ihash 6 (FStar.UInt32.add x61 x62);
-    SBuffer.upd ihash 7 (FStar.UInt32.add x71 x72);
+    SBuffer.upd ihash 0 (FStar.UInt64.add x01 x02);
+    SBuffer.upd ihash 1 (FStar.UInt64.add x11 x12);
+    SBuffer.upd ihash 2 (FStar.UInt64.add x21 x22);
+    SBuffer.upd ihash 3 (FStar.UInt64.add x31 x32);
+    SBuffer.upd ihash 4 (FStar.UInt64.add x41 x42);
+    SBuffer.upd ihash 5 (FStar.UInt64.add x51 x52);
+    SBuffer.upd ihash 6 (FStar.UInt64.add x61 x62);
+    SBuffer.upd ihash 7 (FStar.UInt64.add x71 x72);
     i := !i + 1;
     update_step ihash wdata ws rounds i t1 t2 k end
   else ()
@@ -345,10 +345,10 @@ val update : (whash  :buffer 64 { length whash = 8 }) ->
 let update whash wdata rounds =
   (* Define working variables *)
   let i = ref 0 in
-  let t1 = create #64 FStar.UInt32.zero 1 in
-  let t2 = create #64 FStar.UInt32.zero 1 in
+  let t1 = create #64 FStar.UInt64.zero 1 in
+  let t2 = create #64 FStar.UInt64.zero 1 in
   (* Scheduling function *)
-  let ws = create #64 FStar.UInt32.zero 80 in
+  let ws = create #64 FStar.UInt64.zero 80 in
   (* Initialize constant *)
   let k = k_init () in
   (* Perform function *)
@@ -374,12 +374,12 @@ val sha384: (hash:sbytes { length hash = 64 }) ->
                  (ensures  (fun h0 r h1 -> Live h1 data /\ Live h1 hash))
 
 let sha384 hash data len =
-  let whash = create #64 FStar.UInt32.zero 8 in
+  let whash = create #64 FStar.UInt64.zero 8 in
   let plen = len + (pad_length len) + 16 in
   let rounds = nblocks plen - 1 in
   let pdata = create #8 FStar.UInt8.zero plen in
   let wlen = plen/8 in
-  let wdata = create #64 FStar.UInt32.zero wlen in
+  let wdata = create #64 FStar.UInt64.zero wlen in
 
   init whash;
   pad pdata data len;
