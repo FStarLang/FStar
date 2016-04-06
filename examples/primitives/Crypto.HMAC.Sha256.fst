@@ -15,7 +15,7 @@ val wrap_key : (key    :sbytes) ->
 
 let wrap_key key keylen =
   if keylen > 64 then
-    let nkey = create #8 FStar.UInt8.zero 64 in
+    let nkey = create #8 FStar.UInt8.zero 32 in
     sha256 nkey key keylen;
     nkey,64
   else
