@@ -22,7 +22,7 @@ let wrap_key key keylen =
     key,keylen
 
 (* Define the main function *)
-val hmac_sha256: (mac     :sbytes) ->
+val hmac_sha256: (mac     :sbytes { length mac = 32 }) ->
                  (data    :sbytes { Disjoint mac data }) ->
                  (datalen :nat { length data = datalen }) ->
                  (key     :sbytes { Disjoint key mac /\ Disjoint key data }) ->
