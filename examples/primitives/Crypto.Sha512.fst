@@ -32,7 +32,6 @@ let _sigma1 x = logxor (rotate_right x 19) (logxor (rotate_right x 61) (shift_ri
 (* [FIPS 180-4] section 4.2.3 *)
 val k_init: unit -> St (buffer 64)
 let k_init () =
-  admit(); //timeout is at the limit
   let k = SBuffer.create #64 FStar.UInt64.zero 80  in
   SBuffer.upd k 0 (FStar.UInt64.of_string "0x428a2f98d728ae22");
   SBuffer.upd k 1  (FStar.UInt64.of_string "0x7137449123ef65cd");
@@ -363,7 +362,7 @@ val finish: (hash  :sbytes    { length hash = 64 }) ->
                  (requires (fun h -> Live h hash /\ Live h whash))
                  (ensures  (fun h0 r h1 -> Live h1 hash /\ Live h1 whash))
 
-let finish hash whash = be_sbytes_of_uint64s hash whash 7
+let finish hash whash = be_sbytes_of_uint64s hash whash 8
 
 
 (* Compute the sha512 hash of some bytes *)
