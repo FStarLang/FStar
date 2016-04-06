@@ -207,10 +207,10 @@ val index: #a:pos -> b:buffer a -> n:nat{n < length b} -> ST (usint a)
   (ensures (fun h0 z h1 -> live h0 b /\ (h1 == h0) /\ (v z == v (get h0 b n))))
 let index #a b n = Array.index b.content (b.idx+n)
 
-val upd: #a:pos -> #t:pos -> b:buffer a -> n:nat{n < length b} -> v:usint a -> ST unit
+val upd: #a:pos -> b:buffer a -> n:nat{n < length b} -> v:usint a -> ST unit
   (requires (fun h -> live h b))
   (ensures (fun h0 _ h1 -> atomicUpdate h0 h1 b n v))
-let upd #a #t b n z  = 
+let upd #a b n z =
   FStar.Array.upd b.content (b.idx+n) z;
   cut (b2t (FStar.Set.mem (Buff b) (only b)))
   

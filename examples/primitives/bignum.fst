@@ -39,7 +39,7 @@ val finalize: b:bigint -> ST unit
   (requires (fun h -> norm h b))
   (ensures (fun h0 _ h1 -> norm h0 b /\ norm h1 b
     /\ eval h1 b norm_length = eval h0 b norm_length % reveal prime))
-(* 
+
 let finalize b =
   admit();
   let mask_26 = (FStar.UInt63.one ^<< 26) ^- FStar.UInt63.one in
@@ -60,7 +60,6 @@ let finalize b =
   upd b 3 (b3 ^- (b3 ^& mask));
   upd b 4 (b4 ^- (b4 ^& mask));
   ()
-*)
 
 (*** Addition ***)
 
@@ -109,26 +108,21 @@ let rec fsum_index a a_idx b b_idx len ctr =
 opaque val gaddition_lemma: h0:heap -> h1:heap -> a:bigint{live h0 a /\ live h1 a} -> b:bigint{live h0 b} ->
   len:nat{len <= length a /\ len <= length b /\ 
 	 (forall (i:nat). {:pattern (v (get h1 a i))} i < len ==> 
-	    v (get h1 a i) = v (get h0 a i) + v (get h0 b i)) } ->
-  GLemma unit (requires (True)) (ensures (eval h0 a len + eval h0 b len = eval h1 a len))
-let rec gaddition_lemma h0 h1 a b len =
+	    v (get h1 a i) = v (get h0 a i) + v (get h0 b i)) } -> unit -> //NS, TODO: Remove the unit argument
+  Ghost unit (requires (True)) (ensures (fun _ -> eval h0 a len + eval h0 b len = eval h1 a len))
+let rec gaddition_lemma h0 h1 a b len u =
   match len with
   | 0 -> ()
-  | _ -> gaddition_lemma h0 h1 a b (len-1); 
+  | _ -> gaddition_lemma h0 h1 a b (len-1) (); 
     distributivity_add_right (pow2 (bitweight templ (len-1))) (v (get h0 a (len-1)))  (v (get h0 b (len-1)))
 
-assume val addition_lemma: h0:heap -> h1:heap -> a:bigint{live h0 a /\ live h1 a} -> b:bigint{live h0 b} ->
+assume val coerce: #pre:Type0 -> #post:pure_post unit -> $g:(unit -> Ghost unit pre post) -> Pure unit pre post
+val addition_lemma: h0:heap -> h1:heap -> a:bigint{live h0 a /\ live h1 a} -> b:bigint{live h0 b} ->
   len:nat{len <= length a /\ len <= length b /\ 
 	 (forall (i:nat). {:pattern (v (get h1 a i))} i < len ==> 
 	    v (get h1 a i) = v (get h0 a i) + v (get h0 b i)) } ->
   Lemma (requires (True)) (ensures (eval h0 a len + eval h0 b len = eval h1 a len))
-//let addition_lemma h0 h1 a b len = 
-//  ghost_lemma (gaddition_lemma)
-
-(* let addition_lemma h0 h1 a b len =
-  coerce (requires (True)) (ensures (eval h0 a len + eval h0 b len = eval h1 a len))
-	 (fun _ -> gaddition_lemma h0 h1 a b len)
-*)
+let addition_lemma h0 h1 a b len = coerce (gaddition_lemma h0 h1 a b len)
 
 val fsum': a:bigint -> b:bigint{disjoint a b} -> ST unit
     (requires (fun h -> norm h a /\ norm h b))
@@ -136,8 +130,13 @@ val fsum': a:bigint -> b:bigint{disjoint a b} -> ST unit
       /\ eval h1 a norm_length = eval h0 a norm_length + eval h0 b norm_length
       /\ isNotModified h0 h1 0 norm_length 0 a
       /\ isSum h0 h1 0 0 norm_length 0 a b))
+
+
+val gcut: f:(unit -> GTot Type) -> Pure unit (requires (f ())) (ensures f)
+let gcut f = ()
+
 let fsum' a b =
-//  cut (True /\ pow2 26 + pow2 26 <= pow2 27); 
+  gcut (fun _ -> pow2 26 + pow2 26 <= pow2 27);
   IntLibLemmas.pow2_increases 63 27;
   let h0 = ST.get() in
   fsum_index a 0 b 0 norm_length 0; 
