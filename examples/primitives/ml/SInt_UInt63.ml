@@ -1,3 +1,4 @@
+let n = 63
 type uint63 = int
 type native_int = uint63
 

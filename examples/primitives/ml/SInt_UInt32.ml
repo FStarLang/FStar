@@ -1,3 +1,4 @@
+let n = 32
 type uint32 = int
 type native_int = uint32
 

@@ -6,6 +6,8 @@ let modifies_subset_lemma mods submods h0 h1 = ()
 let modifies_empty_lemma h = ()
 let modifies_fresh_lemma h0 h1 mods size b = ()
 
+type ('a, 'b, 'c) live = unit
+                                               
 type 'a buffer = {
     content:int array;
     idx:int;

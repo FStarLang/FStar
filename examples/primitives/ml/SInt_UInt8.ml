@@ -1,5 +1,7 @@
 open Char
 
+let n = 8
+          
 type uint8 = int
 type native_int = uint8
 

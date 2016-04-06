@@ -3,11 +3,11 @@ FSTAR_HOME?=~/dev/FStar
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 
 OPTIONS_VER=
-OPTIONS_COMPILE=--lax --codegen C
-OPTIONS_OCAML=--lax --codegen OCaml
+OPTIONS_COMPILE=--lax --codegen C 
+OPTIONS_OCAML=--lax --codegen OCaml --universes --no_location_info --use_native_int
 
 # Low* variables
-LOW_STAR_MODULES=Axioms IntLib IntLibLemmas Sint FStar.UInt8 FStar.UInt32 FStar.UInt63 SBuffer FStar.SBytes
+LOW_STAR_MODULES=Axioms IntLib IntLibLemmas SInt SInt.UInt8 SInt.UInt32 SInt.UInt63 SBuffer SBytes
 
 # C variables
 CHACHA=chacha
@@ -36,18 +36,19 @@ COMPILE=gcc -O4 fstarlib.c
 # OCaml variables
 OCAML=ocamlfind ocamlopt -package batteries,stdint -linkpkg -g -thread
 DEBUG=ocamlfind ocamlc -package batteries,stdint -linkpkg -g -thread
-OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
-OCAML_LIB=$(addprefix $(FSTAR_HOME)/lib/ml/, MkPrims.ml native_int/prims.ml FStar_Set.ml FStar_ST.ml FStar_All.ml) FStar_FunctionalExtensionality.ml FStar_Seq.ml
-CHACHA_OCAML=FStar_UInt8.ml FStar_UInt32.ml SBuffer.ml FStar_SBytes.ml Chacha.ml
-POLY_OCAML=FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt63.ml SBuffer.ml FStar_SBytes.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
-SHA_X_OCAML=Sint.ml FStar_IO.ml FStar_Heap.ml FStar_UInt8.ml FStar_UInt32.ml FStar_UInt64.ml SBuffer.ml FStar_SBytes.ml
+OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/ulib/ml $(FSTAR_HOME)/ulib/ml/native_int)
+#OCAML_LIB=$(addprefix $(FSTAR_HOME)/ulib/ml/, MkPrims.ml native_int/prims.ml FStar_Set.ml FStar_ST.ml FStar_All.ml) FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml
+OCAML_LIB=$(addprefix $(FSTAR_HOME)/ulib/ml/, fstarlib.cmxa) FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml
+CHACHA_OCAML=SInt_UInt8.ml SInt_UInt32.ml SBuffer.ml SBytes.ml Chacha.ml
+POLY_OCAML=FStar_Heap.ml Axioms.ml SInt_UInt8.ml SInt_UInt32.ml SInt_UInt63.ml SInt_UInt64.ml SBuffer.ml SBytes.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
+SHA_X_OCAML=SInt.ml FStar_IO.ml FStar_Heap.ml SInt_UInt8.ml SInt_UInt32.ml SInt_UInt64.ml SBuffer.ml SBytes.ml
 
 .PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test sha-ver sha-ml
 
 all: chacha-test poly-test curve-test aes-test
 
 low-star-ver:
-	$(FSTAR) $(OPTIONS_VER) sbuffer.fst FStar.UInt8.fst FStar.UInt32.fst FStar.UInt63.fst FStar.SBytes.fst
+	$(FSTAR) $(OPTIONS_VER) sbuffer.fst SInt.UInt8.fst SInt.UInt32.fst SInt.UInt63.fst SBytes.fst
 
 chacha-ver: chacha.fst
 	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 50 $(addprefix --verify_module , Chacha)
@@ -90,6 +91,10 @@ poly-ml:
 	cp ./ml/*.ml $(POLY_ODIR)_ml
 	cd $(POLY_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(POLY_OCAML) test_poly1305.ml #2> /dev/null
 	$(POLY_ODIR)_ml/a.out
+
+poly-ml-compile:
+	cp ./ml/*.ml $(POLY_ODIR)_ml
+	cd $(POLY_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(POLY_OCAML) test_poly1305.ml 
 
 bignum-ver:
 	$(FSTAR) $(OPTIONS_VER) Bignum.Core.fst --lax

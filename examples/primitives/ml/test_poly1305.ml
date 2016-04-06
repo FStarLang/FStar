@@ -1,7 +1,7 @@
 open Poly
 open Char
 open SBuffer
-open FStar_SBytes
+open SBytes
 
 let from_string s =
   let b = create 0 (String.length s) in
