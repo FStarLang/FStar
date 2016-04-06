@@ -482,13 +482,8 @@ let print_make (deps: list<(string * list<string>)>): unit =
     Util.print2 "%s: %s\n" f (String.concat " " deps)
   ) deps
 
-let print_nubuild (l: list<string>): unit =
-  List.iter print_endline (List.rev l)
-
 let print (deps: _): unit =
   match !Options.dep with
-  | Some "nubuild" ->
-      print_nubuild (snd deps)
   | Some "make" ->
       print_make (fst deps)
   | Some _ ->

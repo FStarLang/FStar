@@ -96,7 +96,6 @@ let n_cores = Util.mk_ref 1
 let verify_module : ref<list<string>> = Util.mk_ref [] // all normalized to lowercase
 let __temp_no_proj : ref<list<string>> = Util.mk_ref []
 let interactive = Util.mk_ref false
-let interactive_context : ref<option<string>> = Util.mk_ref None
 let split_cases = Util.mk_ref 0
 let _include_path : ref<list<string>> = Util.mk_ref []
 let no_default_includes = Util.mk_ref false
@@ -262,7 +261,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "codegen-lib", OneArg ((fun s -> codegen_libs := (Util.split s ".")::!codegen_libs), "namespace"), "External runtime library library");
      ( noshort, "debug", OneArg ((fun x -> debug := x::!debug), "module name"), "Print LOTS of debugging information while checking module [arg]");
      ( noshort, "debug_level", OneArg ((fun x -> debug_level := dlevel x::!debug_level), "Low|Medium|High|Extreme"), "Control the verbosity of debugging info");
-     ( noshort, "dep", OneArg ((fun x -> dep := Some x), "make|nubuild"), "Output the transitive closure of the dependency graph in a format suitable for the given tool");
+     ( noshort, "dep", OneArg ((fun x -> dep := Some x), "make"), "Output the transitive closure of the dependency graph in a format suitable for the given tool");
      ( noshort, "detail_errors", ZeroArgs (fun () -> detail_errors := true; n_cores := 1),  "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; requires --universes");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
      ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
@@ -273,7 +272,6 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "hide_genident_nums", ZeroArgs(fun () -> hide_genident_nums := true), "Don't print generated identifier numbers");
      ( noshort, "hide_uvar_nums", ZeroArgs(fun () -> hide_uvar_nums := true), "Don't print unification variable numbers");
      ( noshort, "in", ZeroArgs (fun () -> interactive := true), "Interactive mode; reads input from stdin");
-     ( noshort, "in_context", OneArg ((fun s -> interactive := true; interactive_context := Some s), "name"), "Specify the context of an interactive session; needed for --auto_deps to work with interactive mode.");
      ( noshort, "include", OneArg ((fun s -> _include_path := !_include_path @ [s]), "path"), "A directory in which to search for files included on the command line");
      ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
      ( noshort, "initial_ifuel", OneArg((fun x -> initial_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at first (default 1)");
