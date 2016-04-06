@@ -3,6 +3,7 @@
 
 *.fs* eol=lf
 *.ml* eol=lf
+Makefile eol=lf
 
 /src/tools/* eol=lf
 
