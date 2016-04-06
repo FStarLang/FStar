@@ -32,7 +32,7 @@ CURVE_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c
 AES_C=Crypto_AES.c test_aes.c
 SHA_C=Crypto_Sha256.c
 
-COMPILE=gcc -O4 fstarlib.c
+COMPILE=gcc -O3 fstarlib.c
 
 # OCaml variables
 OCAML=ocamlfind ocamlopt -package batteries,stdint -linkpkg -g -thread
