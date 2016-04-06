@@ -28,15 +28,15 @@ open FStar.Ident
 let handle_err warning ret e =
   match e with
     | Failure s ->
-        Util.print_string (Util.format1 "Fatal: %s" s)
+        fprint stderr "Fatal: %s" [s]
     | Error(msg, r) ->
-        Util.print_string (Util.format3 "%s : %s\n%s\n" (Range.string_of_range r) (if warning then "Warning" else "Error") msg);
+        fprint stderr "%s : %s\n%s\n" [Range.string_of_range r; (if warning then "Warning" else "Error"); msg];
         ret
     | NYI s ->
-        Util.print_string (Util.format1 "Feature not yet implemented: %s" s);
+        fprint stderr "Feature not yet implemented: %s" [s];
         ret
     | Err s ->
-        Util.print_string (Util.format1 "Error: %s" s)
+        fprint stderr "Error: %s" [s]
     | _ -> raise e
 
 let handleable = function

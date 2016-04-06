@@ -1,13 +1,11 @@
 # FStar variables
-FSTAR_HOME?=~/dev/FStar
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe
+FSTAR_HOME=../..
+include $(FSTAR_HOME)/ulib/ml/Makefile.include
+FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_DEFAULT_ARGS) # from the included Makefile
 
 OPTIONS_VER=
-OPTIONS_COMPILE=--lax --codegen C 
+OPTIONS_COMPILE=--lax --codegen C
 OPTIONS_OCAML=--lax --codegen OCaml --universes --no_location_info --use_native_int
-
-# Low* variables
-LOW_STAR_MODULES=Axioms IntLib IntLibLemmas SInt SInt.UInt8 SInt.UInt32 SInt.UInt63 SBuffer SBytes
 
 # C variables
 CHACHA=chacha
@@ -31,18 +29,18 @@ CURVE_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c
 AES_C=Crypto_AES.c test_aes.c
 SHA_C=Crypto_Sha256.c
 
-COMPILE=gcc -O4 fstarlib.c
+COMPILE=ocamlopt -ccopt -O3 fstarlib.c
 
 # OCaml variables
-OCAML=ocamlfind ocamlopt -package batteries,stdint -linkpkg -g -thread
-DEBUG=ocamlfind ocamlc -package batteries,stdint -linkpkg -g -thread
-OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/ulib/ml $(FSTAR_HOME)/ulib/ml/native_int)
-#OCAML_LIB=$(addprefix $(FSTAR_HOME)/ulib/ml/, MkPrims.ml native_int/prims.ml FStar_Set.ml FStar_ST.ml FStar_All.ml) FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml
-OCAML_LIB=$(addprefix $(FSTAR_HOME)/ulib/ml/, fstarlib.cmxa) FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml
+OCAMLOPT := $(OCAMLOPT) -I $(ULIB_ML)/native_int
+REALIZED=SInt_UInt8 SInt_UInt32 SInt_UInt63 SInt_UInt64 SBuffer SBytes
+REALIZED_ML=$(addsuffix .ml,$(REALIZED))
+NO_CODEGEN=$(addprefix --no_extract , SInt $(REALIZED))
+
+POLY_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
 CHACHA_OCAML=SInt_UInt8.ml SInt_UInt32.ml SBuffer.ml SBytes.ml Chacha.ml
-POLY_OCAML=FStar_Heap.ml Axioms.ml SInt_UInt8.ml SInt_UInt32.ml SInt_UInt63.ml SInt_UInt64.ml SBuffer.ml SBytes.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
 SHA_X_OCAML=SInt.ml FStar_IO.ml FStar_Heap.ml SInt_UInt8.ml SInt_UInt32.ml SInt_UInt64.ml SBuffer.ml SBytes.ml
-NO_CODEGEN=$(addprefix --no_extract , SInt SBytes Buffer SBuffer SInt_UInt32 SInt_UInt63 SInt_UInt64 SInt_UInt8)
+
 .PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test sha-ver sha-ml
 
 all: chacha-test poly-test curve-test aes-test
@@ -68,7 +66,7 @@ chacha-ml:
 	mkdir -p $(CHACHA_ODIR)_ml
 	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) chacha.fst --odir $(CHACHA_ODIR)_ml
 	cp ./ml/*.ml $(CHACHA_ODIR)_ml
-	cd $(CHACHA_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(CHACHA_OCAML) test_chacha20.ml 
+	cd $(CHACHA_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(CHACHA_OCAML) test_chacha20.ml
 	$(CHACHA_ODIR)_ml/a.out
 
 poly-ver: poly.fst
@@ -86,15 +84,16 @@ poly-test: poly.fst
 	./$(POLY_ODIR)/$(POLY)
 
 poly-ml:
-	mkdir -p $(POLY_ODIR)_ml
-	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) poly.fst --odir $(POLY_ODIR)_ml #2> /dev/null
-	cp ./ml/*.ml $(POLY_ODIR)_ml
-	cd $(POLY_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(POLY_OCAML) test_poly1305.ml -o test_poly1305.exe
-	$(POLY_ODIR)_ml/test_poly1305.exe
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml PRIMS_DIR=native_int
+	mkdir -p $(POLY_ODIR)
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) poly.fst --odir $(POLY_ODIR) #2> /dev/null
+	$(OCAMLOPT) -I ml -I $(POLY_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
+	  $(addprefix $(POLY_ODIR)/,$(POLY_EXTRACTED)) ml/test_poly1305.ml -o test_poly1305.exe
+	./test_poly1305.exe
 
 poly-ml-compile:
 	cp ./ml/*.ml $(POLY_ODIR)_ml
-	cd $(POLY_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(POLY_OCAML) test_poly1305.ml 
+	cd $(POLY_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(POLY_OCAML) test_poly1305.ml
 
 bignum-ver:
 	$(FSTAR) $(OPTIONS_VER) Bignum.Core.fst --lax
@@ -211,5 +210,6 @@ sha256-test: sha256-ml
 
 # Cleaning
 clean:
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
 	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(CHACHA_ODIR)_ml $(POLY_ODIR)_ml \
 		$(BIGNUM_ODIR) $(CURVE_ODIR) $(AES_ODIR) $(SHA_X_ODIR)* *~ *.exe

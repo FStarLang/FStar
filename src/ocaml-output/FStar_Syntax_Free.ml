@@ -1,30 +1,30 @@
 
 open Prims
-# 29 "FStar.Syntax.Free.fst"
+# 34 "FStar.Syntax.Free.fst"
 let no_free_vars : FStar_Syntax_Syntax.free_vars = {FStar_Syntax_Syntax.free_names = FStar_Syntax_Syntax.no_names; FStar_Syntax_Syntax.free_uvars = FStar_Syntax_Syntax.no_uvs; FStar_Syntax_Syntax.free_univs = FStar_Syntax_Syntax.no_universe_uvars}
 
-# 38 "FStar.Syntax.Free.fst"
+# 39 "FStar.Syntax.Free.fst"
 let singleton_bv : FStar_Syntax_Syntax.bv  ->  FStar_Syntax_Syntax.free_vars = (fun x -> (let _125_4 = (let _125_3 = (FStar_Syntax_Syntax.new_bv_set ())
 in (FStar_Util.set_add x _125_3))
 in {FStar_Syntax_Syntax.free_names = _125_4; FStar_Syntax_Syntax.free_uvars = FStar_Syntax_Syntax.no_uvs; FStar_Syntax_Syntax.free_univs = FStar_Syntax_Syntax.no_universe_uvars}))
 
-# 43 "FStar.Syntax.Free.fst"
+# 44 "FStar.Syntax.Free.fst"
 let singleton_uv : ((FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax FStar_Syntax_Syntax.uvar_basis FStar_Unionfind.uvar * (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax)  ->  FStar_Syntax_Syntax.free_vars = (fun x -> (let _125_8 = (let _125_7 = (FStar_Syntax_Syntax.new_uv_set ())
 in (FStar_Util.set_add x _125_7))
 in {FStar_Syntax_Syntax.free_names = FStar_Syntax_Syntax.no_names; FStar_Syntax_Syntax.free_uvars = _125_8; FStar_Syntax_Syntax.free_univs = FStar_Syntax_Syntax.no_universe_uvars}))
 
-# 48 "FStar.Syntax.Free.fst"
+# 49 "FStar.Syntax.Free.fst"
 let singleton_univ : FStar_Syntax_Syntax.universe_uvar  ->  FStar_Syntax_Syntax.free_vars = (fun x -> (let _125_12 = (let _125_11 = (FStar_Syntax_Syntax.new_universe_uvar_set ())
 in (FStar_Util.set_add x _125_11))
 in {FStar_Syntax_Syntax.free_names = FStar_Syntax_Syntax.no_names; FStar_Syntax_Syntax.free_uvars = FStar_Syntax_Syntax.no_uvs; FStar_Syntax_Syntax.free_univs = _125_12}))
 
-# 53 "FStar.Syntax.Free.fst"
+# 54 "FStar.Syntax.Free.fst"
 let union : FStar_Syntax_Syntax.free_vars  ->  FStar_Syntax_Syntax.free_vars  ->  FStar_Syntax_Syntax.free_vars = (fun f1 f2 -> (let _125_19 = (FStar_Util.set_union f1.FStar_Syntax_Syntax.free_names f2.FStar_Syntax_Syntax.free_names)
 in (let _125_18 = (FStar_Util.set_union f1.FStar_Syntax_Syntax.free_uvars f2.FStar_Syntax_Syntax.free_uvars)
 in (let _125_17 = (FStar_Util.set_union f1.FStar_Syntax_Syntax.free_univs f2.FStar_Syntax_Syntax.free_univs)
 in {FStar_Syntax_Syntax.free_names = _125_19; FStar_Syntax_Syntax.free_uvars = _125_18; FStar_Syntax_Syntax.free_univs = _125_17}))))
 
-# 58 "FStar.Syntax.Free.fst"
+# 60 "FStar.Syntax.Free.fst"
 let rec free_univs : FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.free_vars = (fun u -> (match ((FStar_Syntax_Subst.compress_univ u)) with
 | (FStar_Syntax_Syntax.U_zero) | (FStar_Syntax_Syntax.U_bvar (_)) | (FStar_Syntax_Syntax.U_name (_)) | (FStar_Syntax_Syntax.U_unknown) -> begin
 no_free_vars
@@ -40,7 +40,7 @@ end
 (singleton_univ u)
 end))
 
-# 67 "FStar.Syntax.Free.fst"
+# 69 "FStar.Syntax.Free.fst"
 let rec free_names_and_uvs' : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.free_vars = (fun tm -> (
 # 70 "FStar.Syntax.Free.fst"
 let aux_binders = (fun bs acc -> (FStar_All.pipe_right bs (FStar_List.fold_left (fun n _36_31 -> (match (_36_31) with
@@ -220,19 +220,19 @@ end
 false
 end)))))))
 
-# 175 "FStar.Syntax.Free.fst"
+# 177 "FStar.Syntax.Free.fst"
 let names : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.bv FStar_Util.set = (fun t -> (let _125_90 = (free_names_and_uvars t)
 in _125_90.FStar_Syntax_Syntax.free_names))
 
-# 177 "FStar.Syntax.Free.fst"
+# 178 "FStar.Syntax.Free.fst"
 let uvars : FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.uvar * FStar_Syntax_Syntax.typ) FStar_Util.set = (fun t -> (let _125_93 = (free_names_and_uvars t)
 in _125_93.FStar_Syntax_Syntax.free_uvars))
 
-# 178 "FStar.Syntax.Free.fst"
+# 179 "FStar.Syntax.Free.fst"
 let univs : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.universe_uvar FStar_Util.set = (fun t -> (let _125_96 = (free_names_and_uvars t)
 in _125_96.FStar_Syntax_Syntax.free_univs))
 
-# 179 "FStar.Syntax.Free.fst"
+# 180 "FStar.Syntax.Free.fst"
 let names_of_binders : FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.bv FStar_Util.set = (fun bs -> (let _125_99 = (free_names_and_uvars_binders bs no_free_vars)
 in _125_99.FStar_Syntax_Syntax.free_names))
 
