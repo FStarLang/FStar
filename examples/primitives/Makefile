@@ -42,7 +42,7 @@ OCAML_LIB=$(addprefix $(FSTAR_HOME)/ulib/ml/, fstarlib.cmxa) FStar_FunctionalExt
 CHACHA_OCAML=SInt_UInt8.ml SInt_UInt32.ml SBuffer.ml SBytes.ml Chacha.ml
 POLY_OCAML=FStar_Heap.ml Axioms.ml SInt_UInt8.ml SInt_UInt32.ml SInt_UInt63.ml SInt_UInt64.ml SBuffer.ml SBytes.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
 SHA_X_OCAML=SInt.ml FStar_IO.ml FStar_Heap.ml SInt_UInt8.ml SInt_UInt32.ml SInt_UInt64.ml SBuffer.ml SBytes.ml
-NO_CODEGEN=$(addprefix --no_codegen , SInt SBytes Bigint Buffer SBuffer SInt_UInt32 SInt_UInt63 SInt_UInt64 SInt_UInt8)
+NO_CODEGEN=$(addprefix --no_extract , SInt SBytes Buffer SBuffer SInt_UInt32 SInt_UInt63 SInt_UInt64 SInt_UInt8)
 .PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test sha-ver sha-ml
 
 all: chacha-test poly-test curve-test aes-test
@@ -89,8 +89,8 @@ poly-ml:
 	mkdir -p $(POLY_ODIR)_ml
 	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) poly.fst --odir $(POLY_ODIR)_ml #2> /dev/null
 	cp ./ml/*.ml $(POLY_ODIR)_ml
-	cd $(POLY_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(POLY_OCAML) test_poly1305.ml 
-	$(POLY_ODIR)_ml/a.out
+	cd $(POLY_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(POLY_OCAML) test_poly1305.ml -o test_poly1305.exe
+	$(POLY_ODIR)_ml/test_poly1305.exe
 
 poly-ml-compile:
 	cp ./ml/*.ml $(POLY_ODIR)_ml

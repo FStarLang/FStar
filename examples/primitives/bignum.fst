@@ -100,8 +100,7 @@ let rec fsum_index a a_idx b b_idx len ctr =
       upd a (a_idx+i) z; 
       let h1 = ST.get() in
       eq_lemma h0 h1 b (only a); 
-      fsum_index a a_idx b b_idx len (ctr+1);
-      ()
+      fsum_index a a_idx b b_idx len (ctr+1)
       
 #reset-options
 

@@ -269,7 +269,6 @@ let extract_iface (g:env) (m:modul) =  Util.fold_map extract_sig g m.declaration
 
 let rec extract (g:env) (m:modul) : env * list<mllib> =
     S.reset_gensym();
-    Util.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
     let name = MLS.mlpath_of_lident m.name in
     let g = {g with currentModule = name}  in
     if m.name.str = "Prims" 
@@ -277,7 +276,8 @@ let rec extract (g:env) (m:modul) : env * list<mllib> =
     || List.contains m.name.str !Options.no_extract
     then let g = extract_iface g m in
          g, [] //MLLib([Util.flatten_mlpath name, None, MLLib []])
-    else let g, sigs = Util.fold_map extract_sig g m.declarations in
+    else (Util.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
+         let g, sigs = Util.fold_map extract_sig g m.declarations in
          let mlm : mlmodule = List.flatten sigs in
-         g, [MLLib ([Util.flatten_mlpath name, Some ([], mlm), (MLLib [])])]
+         g, [MLLib ([Util.flatten_mlpath name, Some ([], mlm), (MLLib [])])])
 

@@ -1,0 +1,50 @@
+ -- Tailcalls disabled via tail ghost code (which gets erased to unit, rather than being erased altogether)
+
+-- assume val f: t -> ST unit ...
+ 
+    is extracted to let f _ = ()
+    rather than     let f _ = failwith ""
+
+    Leads to unexpected non-failing but incorrect output
+
+ -- Translate (x:unit) to ()
+
+ -- Optimize (let x = () in e) to e
+
+ -- Optimize (let x = e in x) to e
+
+ -- Optimize (let x : unit = e in ()) to e
+
+ -- Optimize (let x : unit = e in e') to e;e'
+
+ -- Remove unused top-level definitions private to a module
+
+ -- Ghost unit <: Pure unit
+
+ -- Precedence-aware pretty printing and indentation
+
+ -- Make: FStar.ST.get : unit -> Tot (erased heap)
+
+ -- Removing redundant units
+
+================================================================================
+
+
+
+    and  let x = e in ()
+
+
+    let rec f x : t =
+        let y = f x' in
+	lemma ();
+	y
+
+
+    let rec f x : t =
+        f x'
+
+
+    let rec f x : unit =
+        let _ = f x' in
+	lemma ()
+
