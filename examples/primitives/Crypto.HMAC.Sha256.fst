@@ -23,15 +23,15 @@ let wrap_key key keylen =
 
 (* Define the main function *)
 val hmac_sha256: (mac     :sbytes { length mac = 32 }) ->
-                 (data    :sbytes { Disjoint mac data }) ->
-                 (datalen :nat { length data = datalen }) ->
-                 (key     :sbytes { Disjoint key mac /\ Disjoint key data }) ->
-                 (keylen  :nat { length key = keylen })
+                 (key     :sbytes { Disjoint key mac }) ->
+                 (keylen  :nat { length key = keylen }) ->
+                 (data    :sbytes { Disjoint mac data /\ Disjoint key data }) ->
+                 (datalen :nat { length data = datalen })
                  -> ST unit
                       (requires (fun h -> Live h mac /\ Live h data /\ Live h key))
                       (ensures  (fun h0 r h1 -> Live h1 mac /\ Live h1 data /\ Live h1 key))
 
-let hmac_sha256 mac data datalen key keylen =
+let hmac_sha256 mac key keylen data datalen =
   (* Define ipad and opad *)
   let ipad = SBuffer.create #8 (FStar.UInt8.of_string "0x36") 64 in
   let opad = SBuffer.create #8 (FStar.UInt8.of_string "0x5c") 64 in

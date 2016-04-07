@@ -35,7 +35,7 @@ let _ =
 
   let expected = "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7" in
 
-  hmac_sha256 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha256 mac (from_string key) keylen (from_string data) datalen;
   Printf.printf "Result   :";
   print_bytes mac;
   Printf.printf "Expected :%s\n\n" expected;
@@ -49,7 +49,7 @@ let _ =
 
   let expected = "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843" in
 
-  hmac_sha256 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha256 mac (from_string key) keylen (from_string data) datalen;
   Printf.printf "Result   :";
   print_bytes mac;
   Printf.printf "Expected :%s\n\n" expected;
@@ -63,7 +63,7 @@ let _ =
 
   let expected = "773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe" in
 
-  hmac_sha256 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha256 mac (from_string key) keylen (from_string data) datalen;
   Printf.printf "Result   :";
   print_bytes mac;
   Printf.printf "Expected :%s\n\n" expected;
@@ -102,7 +102,7 @@ let _ =
 
   let expected = "82558a389a443c0ea4cc819899f2083a85f0faa3e578f8077a2e3ff46729665b" in
 
-  hmac_sha256 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha256 mac (from_string key) keylen (from_string data) datalen;
   Printf.printf "Result   :";
   print_bytes mac;
   Printf.printf "Expected :%s\n\n" expected;
@@ -116,7 +116,7 @@ let _ =
 
   let expected = "a3b6167473100ee06e0c796c2955552b" in
 
-  hmac_sha256 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha256 mac (from_string key) keylen (from_string data) datalen;
   let res = SBuffer.sub 32 mac 0 16 in
   Printf.printf "Result (truncation at 128) :";
   print_bytes res;
@@ -132,7 +132,7 @@ let _ =
 
   let expected = "60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54" in
 
-  hmac_sha256 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha256 mac (from_string key) keylen (from_string data) datalen;
   Printf.printf "Result   :";
   print_bytes mac;
   Printf.printf "Expected :%s\n\n" expected;
@@ -146,7 +146,7 @@ let _ =
 
   let expected = "9b09ffa71b942fcb27635fbcd5b0e944bfdc63644f0713938a7f51535c3a35e2" in
 
-  hmac_sha256 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha256 mac (from_string key) keylen (from_string data) datalen;
   Printf.printf "Result   :";
   print_bytes mac;
   Printf.printf "Expected :%s\n\n" expected

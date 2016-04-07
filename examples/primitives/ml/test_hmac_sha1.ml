@@ -35,7 +35,7 @@ let _ =
 
   let expected = "b617318655057264e28bc0b6fb378c8ef146be00" in
 
-  hmac_sha1 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha1 mac (from_string key) keylen (from_string data) datalen;
   Printf.printf "Result   :";
   print_bytes mac;
   Printf.printf "Expected :%s\n\n" expected;
@@ -49,7 +49,7 @@ let _ =
 
   let expected = "effcdf6ae5eb2fa2d27416d5f184df9c259a7c79" in
 
-  hmac_sha1 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha1 mac (from_string key) keylen (from_string data) datalen;
   Printf.printf "Result   :";
   print_bytes mac;
   Printf.printf "Expected :%s\n\n" expected;
@@ -63,7 +63,7 @@ let _ =
 
   let expected = "125d7342b9ac11cd91a39af48aa17b4f63f175d3" in
 
-  hmac_sha1 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha1 mac (from_string key) keylen (from_string data) datalen;
   Printf.printf "Result   :";
   print_bytes mac;
   Printf.printf "Expected :%s\n\n" expected;
@@ -102,7 +102,7 @@ let _ =
 
   let expected = "4c9007f4026250c6bc8414f9bf50c86c2d7235da" in
 
-  hmac_sha1 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha1 mac (from_string key) keylen (from_string data) datalen;
   Printf.printf "Result   :";
   print_bytes mac;
   Printf.printf "Expected :%s\n\n" expected;
@@ -116,7 +116,7 @@ let _ =
 
   let expected = "4c1a03424b55e07fe7f27be1d58bb9324a9a5a04" in
 
-  hmac_sha1 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha1 mac (from_string key) keylen (from_string data) datalen;
   Printf.printf "Result   :";
   print_bytes mac;
   Printf.printf "Expected :%s\n\n" expected;
@@ -131,7 +131,7 @@ let _ =
 
   let expected = "aa4ae5e15272d00e95705637ce8a3b55ed402112" in
 
-  hmac_sha1 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha1 mac (from_string key) keylen (from_string data) datalen;
   Printf.printf "Result   :";
   print_bytes mac;
   Printf.printf "Expected :%s\n\n" expected;
@@ -145,7 +145,7 @@ let _ =
 
   let expected = "e8e99d0f45237d786d6bbaa7965c7808bbff1a91" in
 
-  hmac_sha1 mac (from_string data) datalen (from_string key) keylen;
+  hmac_sha1 mac (from_string key) keylen (from_string data) datalen;
   Printf.printf "Result   :";
   print_bytes mac;
   Printf.printf "Expected :%s\n\n" expected
