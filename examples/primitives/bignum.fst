@@ -38,8 +38,8 @@ let paren_add_right a b c = ()
 val finalize: b:bigint -> ST unit
   (requires (fun h -> norm h b))
   (ensures (fun h0 _ h1 -> norm h0 b /\ norm h1 b
+    /\ modifies_buf (only b) h0 h1
     /\ eval h1 b norm_length = eval h0 b norm_length % reveal prime))
-
 let finalize b =
   admit();
   let mask_26 = (SInt.UInt63.one ^<< 26) ^- SInt.UInt63.one in
@@ -454,15 +454,17 @@ let bound27_lemma h0 h1 a tmp = eq_lemma h0 h1 a (only tmp)
 val aux_lemma_4: unit -> Lemma (pow2 3 = 8)
 let aux_lemma_4 () = ()
 
+#reset-options "--z3timeout 15"
+
 val aux_lemma_41: b:uint63{v b < pow2 26} -> Lemma (forall (a:uint63). (v a < pow2 27 /\ v b < pow2 26) ==> (v a * v b < pow2 53))
 let aux_lemma_41 b = 
-  admit();
   cut (forall (a:uint63). v a < pow2 27 ==> v a * v b < pow2 27 * pow2 26); 
   IntLibLemmas.pow2_exp 27 26
 
+#reset-options
+
 val aux_lemma_42: h:heap -> a:bigint{bound27 h a} -> z:uint63{v z < pow2 26} -> Lemma (forall (i:nat). i < norm_length ==> v (get h a i) * v z < pow2 53)
 let aux_lemma_42 h a z = 
-  admit(); // TODO
   cut (forall (i:nat). {:pattern (get h a i)} i < norm_length ==> (v (get h a i) < pow2 27)); 
   aux_lemma_41 z; 
   IntLibLemmas.pow2_exp 27 26;
@@ -475,6 +477,8 @@ val aux_lemma_43: h1:heap -> c:bigint{live h1 c /\ length c >= 2*norm_length-1} 
 	(ensures (forall (i:nat). {:pattern (v (get h1 c (i+ctr)) + v (get h1 tmp i))} i < norm_length ==> v (get h1 c (i+ctr)) + v (get h1 tmp i) <= (ctr+1) * pow2 53))
 let aux_lemma_43 h1 c tmp ctr = 
   ()
+
+#reset-options "--z3timeout 120"
 
 abstract val gmultiplication_step_lemma_001: h0:heap -> h1:heap -> a:bigint -> b:bigint -> 
   ctr:nat{ctr<norm_length} -> c:bigint{disjoint a c /\ disjoint b c} -> 
@@ -507,6 +511,8 @@ let gmultiplication_step_lemma_001 h0 h1 a b ctr c tmp =
   IntLibLemmas.pow2_increases 63 56;
   cut(True /\ (ctr+1) * pow2 53 < pow2 platform_wide); 
   cut (forall (i:nat). i < norm_length ==> v (get h1 c (i+ctr)) + v (get h1 tmp i) < pow2 63)
+
+#reset-options
 
 assume val multiplication_step_lemma_001: h0:heap -> h1:heap -> a:bigint -> b:bigint -> 
   ctr:nat{ctr<norm_length} -> c:bigint{disjoint a c /\ disjoint b c} -> 
@@ -593,6 +599,8 @@ assume val max_value_lemma_1: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b:big
     (fun _ -> gmax_value_lemma_1 h0 h1 h2 a b ctr c tmp)
 *)
 
+#reset-options "--z3timeout 10"
+
 val max_value_lemma: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b:bigint -> 
   ctr:nat{ctr < norm_length} -> c:bigint{disjoint a c /\ disjoint b c} -> 
   tmp:bigint{disjoint a tmp /\ disjoint b tmp /\ disjoint c tmp} ->  Lemma
@@ -621,6 +629,8 @@ let max_value_lemma h0 h1 h2 a b ctr c tmp =
   cut (forall (i:nat). {:pattern (v (get h2 c i))} (i >=norm_length + ctr /\ i < length c) ==> v (get h2 c i) = v (get h0 c i)); 
   cut (forall (i:nat). {:pattern (v (get h2 c i))} i < ctr ==> v (get h2 c i) = v (get h0 c i));   
   max_value_lemma_1 h0 h1 h2 a b ctr c tmp
+
+#reset-options
 
 val standardized_lemma: h0:heap -> h1:heap -> h2:heap -> a:bigint -> c:bigint{disjoint a c} -> 
   tmp:bigint{disjoint a tmp /\ disjoint c tmp} -> Lemma
@@ -709,7 +719,7 @@ let multiplication_step_p1 a b ctr c tmp =
   multiplication_step_lemma_02 h0 h1 h2 a b ctr c tmp;
   ()
 
-#reset-options
+#reset-options "--z3timeout 20"
 
 val helper_lemma_6: h0:heap -> h1:heap -> a:bigint -> b:bigint -> ctr:nat{ctr < norm_length} -> 
   c:bigint{disjoint a c /\ disjoint b c /\ length c >= 2 * norm_length - 1} -> 
@@ -1011,6 +1021,8 @@ let untouched (h0:heap) (h1:heap) (b:bigint) (ctr:nat) : GTot Type0 =
   /\ (forall (i:nat). {:pattern (get h1 b i)} (i > ctr /\ i < 2*norm_length-1) ==> 
       v (get h0 b i) = v (get h1 b i))
 
+#reset-options "--z3timeout 30"
+
 val pow2_bitweight_lemma_1: ctr:pos -> GLemma unit (requires (True))
     (pow2 (bitweight templ (ctr+norm_length-1)) = pow2 (bitweight templ (ctr-1)) * pow2 (bitweight templ norm_length)) 
 let rec pow2_bitweight_lemma_1 ctr =
@@ -1030,6 +1042,8 @@ let rec pow2_bitweight_lemma_1 ctr =
     IntLibLemmas.pow2_exp 26 (bitweight templ (ctr-2));
     cut (True /\ pow2 (bitweight templ (ctr+norm_length-1)) = pow2 (26 + bitweight templ (ctr-2)) * pow2 (bitweight templ norm_length)) 
 
+#reset-options
+
 val bitweight_norm_length_lemma: unit -> Lemma 
   (requires (True)) 
   (ensures (bitweight templ norm_length = 130))
@@ -1048,13 +1062,15 @@ assume val helper_lemma_5: a:nat -> b:nat -> c:nat -> p:pos ->
 val lemma_aux_0: a:int -> b:int -> c:int -> d:int -> Lemma (a * b + c - (a * (b + 5 * d) + c) = - 5 * a * d)
 let lemma_aux_0 a b c d = ()
 
+#reset-options "--z3timeout 30"
+
 abstract val freduce_degree_lemma_2: h0:heap -> h1:heap -> b:bigint{live h1 b /\ live h0 b /\ length b >= 2 * norm_length - 1} -> ctr:pos{ctr < norm_length-1} -> GLemma unit
     (requires ((forall (i:nat). {:pattern (v (get h1 b i))}
 	(i < length b /\ i <> ctr) ==> v (get h1 b i) = v (get h0 b i)) 
 	/\ v (get h1 b ctr) = v (get h0 b ctr) + 5 * v (get h0 b (ctr+norm_length)) ))
     (ensures (eval h0 b (norm_length+1+ctr) % (reveal prime) = eval h1 b (norm_length+ctr) % (reveal prime)))
 let freduce_degree_lemma_2 h0 h1 b ctr =
-  admit();
+//  admit();
   let prime = reveal prime in 
   cut (ctr+norm_length = norm_length+ctr /\ (norm_length+1+ctr)-1 = norm_length + ctr /\ norm_length+ctr = (ctr+1)+norm_length-1); 
   cut (True /\ eval h0 b (norm_length+1+ctr) = pow2 (bitweight templ (norm_length+ctr)) * v (get h0 b (norm_length+ctr)) + eval h0 b (ctr+norm_length)); 
@@ -1078,6 +1094,8 @@ let freduce_degree_lemma_2 h0 h1 b ctr =
   cut ( eval h0 b (norm_length+1+ctr) % prime = (5 * pow2 (bitweight templ ctr) * v (get h0 b (norm_length+ctr)) + eval h1 b (norm_length+ctr) + eval h0 b (ctr+1) - eval h1 b (ctr+1)) % prime /\ True); 
   cut ( eval h0 b (norm_length+1+ctr) % prime = (5 * pow2 (bitweight templ ctr) * v (get h0 b (norm_length+ctr)) + eval h1 b (norm_length+ctr) - 5 * pow2 (bitweight templ ctr) * v (get h0 b (norm_length+ctr))) % prime /\ True); 
   cut ( eval h0 b (norm_length+1+ctr) % prime = (eval h1 b (norm_length+ctr) ) % prime /\ True)
+
+#reset-options
 
 abstract val gfreduce_degree_lemma:
   h0:heap -> h1:heap -> b:bigint{live h1 b /\ live h0 b /\ length b >= 2 * norm_length - 1} -> 
@@ -1406,7 +1424,6 @@ val carry2_aux: b:bigint -> ctr:pos{ctr <= norm_length} -> ST unit
     /\ eval h1 b (norm_length+1) = eval h0 b (norm_length+1)
     /\ modifies_buf (only b) h0 h1 ))
 let rec carry2_aux b i = 
-  admit();
   let h0 = ST.get() in
   match norm_length - i with
   | 0 -> ()
@@ -1414,25 +1431,25 @@ let rec carry2_aux b i =
     let bi = index b i in 
     let ri = mod2_26 bi in
     lemma_aux_2 bi;
-//    assert(v ri < pow2 (templ i)); 
+    gcut (fun _ -> v ri < pow2 (templ i)); 
     upd b i ri; 
     let h1 = ST.get() in
     let c = (bi ^>> 26) in
     // In the spec of >>, TODO
-//    admitP(True /\ v c < 2); 
+    gassume(fun _ -> v c < 2); 
     let bip1 = index b (i+1) in
     auxiliary_lemma_2 bip1 c; 
     IntLibLemmas.pow2_increases 63 27;
     IntLibLemmas.pow2_doubles 26;
     IntLibLemmas.pow2_increases 26 15;
     let z = bip1 ^+ c in 
-//    cut (v z = v bip1 + v c /\ v c < 2 /\ v bip1 < pow2 26); 
-//    cut (True /\ v z >= pow2 26 ==> v c = 1); 
-//    cut (v c > 0 ==> IntLib.div (v (get h0 b i)) (pow2 26) > 0 ==> v (get h0 b i) >= pow2 26); 
-//    cut (v z >= pow2 26 ==> v (get h1 b i) < pow2 15); 
+    gcut (fun _ -> v z = v bip1 + v c /\ v c < 2 /\ v bip1 < pow2 26); 
+    gcut (fun _ -> v z >= pow2 26 ==> v c = 1); 
+    gcut (fun _ -> v c > 0 ==> IntLib.div (v (get h0 b i)) (pow2 26) > 0 ==> v (get h0 b i) >= pow2 26); 
+    gcut (fun _ -> v z >= pow2 26 ==> v (get h1 b i) < pow2 15); 
     upd b (i+1) z;
     let h2 = ST.get() in 
-//    cut (v z >= pow2 26 ==> v c = 1 /\ True); 
+    gcut (fun _ -> v z >= pow2 26 ==> v c = 1 /\ True); 
     eval_carry_lemma h0 b h2 b i; 
     carry2_aux b (i+1)
 
@@ -1461,7 +1478,7 @@ let rec carry2 b =
   gcut (fun _ ->  eval h2 b (norm_length+1) = eval h1 b (norm_length)); 
   let bi = index b 0 in 
   let ri = mod2_26 bi in
-//  assert(v ri < pow2 26); 
+  gcut (fun _ -> v ri < pow2 26); 
   upd b 0 ri; 
   let h3 = ST.get() in
   let c = (bi ^>> 26) in
@@ -1534,7 +1551,6 @@ val modulo: b:bigint -> ST unit
     /\ eval h1 b norm_length % reveal prime = eval h0 b (2*norm_length-1) % reveal prime 
     /\ modifies_buf (only b) h0 h1))
 let modulo b =
-  admit();
   let h0 = ST.get() in
   freduce_degree b; 
   let h1 = ST.get() in
@@ -1547,6 +1563,8 @@ let modulo b =
   carry2 b; 
   let h4 = ST.get() in
   last_carry b
+
+#reset-options
 
 val freduce_coefficients: b:bigint -> ST unit
   (requires (fun h -> live h b  

@@ -13,8 +13,6 @@ open Bigint
 open Parameters
 open Bignum
 
-#set-options "--lax"
-
 (* Auxiliary lemmas and functions *)
 
 val max_value_increases: h:heap -> b:bigint{live h b} -> n:pos -> m:pos{m>=n /\ m <= length b} -> Lemma
@@ -25,12 +23,9 @@ let rec max_value_increases h b n m =
 
 val pow2_5_lemma: unit -> Lemma (requires (True)) (ensures (pow2 5 = 32))
 let pow2_5_lemma () = 
-  //admit();
   ()
 
-#reset-options "--lax"
-
-opaque val gsatisfies_constraints_after_multiplication: h:heap -> b:bigint{live h b /\ length b >= 2*norm_length-1 /\ maxValue h b (length b) <= norm_length * pow2 53} -> GLemma unit (requires (True))
+abstract val gsatisfies_constraints_after_multiplication: h:heap -> b:bigint{live h b /\ length b >= 2*norm_length-1 /\ maxValue h b (length b) <= norm_length * pow2 53} -> GLemma unit (requires (True))
   (ensures (satisfiesModuloConstraints h b)) 
 let gsatisfies_constraints_after_multiplication h b =
   max_value_increases h b (2*norm_length-1) (length b);
@@ -48,9 +43,9 @@ assume val satisfies_constraints_after_multiplication: h:heap -> b:bigint{live h
 *)
 
 (* TODO *)
-opaque val aux_lemma': a:nat -> n:nat{n <= 32} -> GLemma unit (requires True) (ensures ((((a * pow2 (32 - n)) % pow2 63) % pow2 26) % pow2 (32 - n) = 0 ))
+abstract val aux_lemma': a:nat -> n:nat{n <= 32} -> GLemma unit (requires True) (ensures ((((a * pow2 (32 - n)) % pow2 63) % pow2 26) % pow2 (32 - n) = 0 ))
 let aux_lemma' a n = 
-  admit();
+  admit(); // TODO
   if 32-n > 26 then (
     IntLibLemmas.pow2_exp (32-n-26) 26;
     IntLibLemmas.modulo_lemma (a * pow2 (32-n-26)) (pow2 26) )
@@ -58,11 +53,10 @@ let aux_lemma' a n =
     IntLibLemmas.modulo_lemma a (pow2 26)
   else ()
 
-opaque val gaux_lemma: x:uint63{v x < pow2 32} -> y:uint63{v y < pow2 32} -> n:nat{n >= 7 /\ n < 32} -> GLemma unit
+abstract val gaux_lemma: x:uint63{v x < pow2 32} -> y:uint63{v y < pow2 32} -> n:nat{n >= 7 /\ n < 32} -> GLemma unit
   (requires (True))
   (ensures (IntLib.div (v x) (pow2 n) + (((v y * pow2 (32 - n)) % pow2 63) % pow2 26) < pow2 26)) 
 let gaux_lemma x y n =
-  //admit();
   IntLibLemmas.div_pow2_inequality (v x) 32;
   IntLibLemmas.pow2_increases 26 (32-n);
   aux_lemma' (v y) n;
@@ -84,9 +78,8 @@ let aux_lemma x y n =
     (fun _ -> gaux_lemma x y n)
 *)
 
-opaque val gaux_lemma_1: x:uint63{v x < pow2 32} -> GLemma unit (requires (True)) (ensures (v (x ^>> 8) < pow2 24)) 
+abstract val gaux_lemma_1: x:uint63{v x < pow2 32} -> GLemma unit (requires (True)) (ensures (v (x ^>> 8) < pow2 24)) 
 let gaux_lemma_1 x = 
-  //admit();
   IntLibLemmas.div_pow2_inequality (v x) 32  
 
 assume val aux_lemma_1: x:uint63{v x < pow2 32} -> Lemma (ensures (v (x ^>> 8) < pow2 24))
@@ -95,10 +88,10 @@ assume val aux_lemma_1: x:uint63{v x < pow2 32} -> Lemma (ensures (v (x ^>> 8) <
     (fun _ -> gaux_lemma_1 x)
     *)
     
-#reset-options "--lax"
 
-opaque val gaux_lemma_2: b:bigint -> GLemma unit (requires (True)) (ensures ((arefs (only b)) = !{content b})) 
-let gaux_lemma_2 b = FStar.Set.lemma_equal_intro (arefs (only b)) !{content b};
+abstract val gaux_lemma_2: b:bigint -> GLemma unit (requires (True)) (ensures ((arefs (only b)) = !{content b})) 
+let gaux_lemma_2 b = 
+  FStar.Set.lemma_equal_intro (arefs (only b)) !{content b};
   cut (True /\ arefs (only b) = !{content b})
 
 assume val aux_lemma_2: b:bigint -> Lemma (requires (True)) (ensures ((arefs (only b)) = !{content b})) 
@@ -111,16 +104,13 @@ val aux_lemma_3: h0:heap -> h1:heap -> b:bigint -> Lemma (requires (modifies (ar
 let aux_lemma_3 h0 h1 b = 
   aux_lemma_2 b; ()
 
-#reset-options "--lax" 
-
-(* Poly1305 code *)
+(*** Poly1305 code ***)
 
 (* Bigint to bytes serializing function *)
 val num_to_le_bytes: s:sbytes{length s >= 16} -> b:bigint{disjoint b s} -> ST unit
   (requires (fun h -> norm h b /\ SBuffer.live h s))
   (ensures (fun h0 _ h1 -> SBuffer.live h1 s /\ modifies_buf (only s) h0 h1))
 let num_to_le_bytes s b =
-  //admit();
   let h0 = ST.get() in
   let b0 = index b 0 in
   let b1 = index b 1 in
@@ -150,20 +140,19 @@ let num_to_le_bytes s b =
   upd s 15 (SInt.UInt8.of_native_int (b4 ^>> 16)); // 120 
   ()
 
-#reset-options "--lax"
 
 (* Bytes to bigint deserializing functions *)
 val le_bytes_to_num: b:bigint -> s:sbytes{length s = 16 /\ disjoint b s} -> ST unit
   (requires (fun h -> live h b /\ SBuffer.live h s))
   (ensures (fun h0 _ h1 -> norm h1 b /\ modifies_buf (only b) h0 h1  /\ v (get h1 b 4) < pow2 24))
 let le_bytes_to_num b s =
-  //admit();
+  admit(); // TODO
   IntLibLemmas.pow2_increases 63 26;
   IntLibLemmas.pow2_increases 63 32;
   IntLibLemmas.pow2_increases 26 24;
   let mask_26 = SInt.UInt63.sub (SInt.UInt63.one ^<< 26) SInt.UInt63.one in 
   gcut (fun _ -> v mask_26 = v one * pow2 26 - v one /\ v one = 1); 
-//  assert(v mask_26 = pow2 26 - 1); 
+  gcut (fun _ -> v mask_26 = pow2 26 - 1); 
   let s0 = sub s 0  4 in
   let s1 = sub s 4  4 in
   let s2 = sub s 8  4 in
@@ -192,8 +181,6 @@ let le_bytes_to_num b s =
   upd b 4 n4';
   ()
 
-#reset-options "--lax"
-
 (* Runs "Acc = ((Acc+block)*r) % p." *)
 val add_and_multiply: acc:bigint -> block:bigint{disjoint acc block} -> r:bigint{disjoint acc r /\ disjoint block r} -> ST unit
   (requires (fun h -> norm h acc /\ norm h block /\ norm h r))
@@ -202,7 +189,6 @@ val add_and_multiply: acc:bigint -> block:bigint{disjoint acc block} -> r:bigint
     /\ eval h1 acc norm_length % reveal prime = 
     ((eval h0 acc norm_length + eval h0 block norm_length) * eval h0 r norm_length) % reveal prime))
 let add_and_multiply acc block r =
-  //admit();
   let h0 = ST.get() in
   fsum' acc block; 
   let h1 = ST.get() in
@@ -232,8 +218,6 @@ let add_and_multiply acc block r =
   eval_eq_lemma h0 h2 r r norm_length;
   ()
 
-#reset-options "--lax"
-
 val clamp: r:sbytes{length r = 16} -> ST unit
   (requires (fun h -> SBuffer.live h r))
   (ensures (fun h0 _ h1 -> SBuffer.live h1 r /\ modifies_buf (only r) h0 h1))
@@ -249,7 +233,7 @@ let clamp r =
   upd r 12 (SInt.UInt8.op_Hat_Amp (index r 12) mask_252);
   ()
 
-#reset-options "--lax"
+#reset-options "--z3timeout 20"
 
 val poly1305_step: msg:sbytes -> acc:bigint{disjoint msg acc} -> 
   bigint_r:bigint{disjoint msg bigint_r /\ disjoint acc bigint_r} -> ctr:nat{length msg >= 16 * ctr} ->
@@ -291,7 +275,7 @@ let rec poly1305_step msg acc r ctr =
     poly1305_step msg acc r (ctr-1);
     ()
 
-#reset-options "--lax"
+#reset-options "--z3timeout 20"
 
 val poly1305_last: msg:sbytes -> acc:bigint{disjoint msg acc} -> 
   bigint_r:bigint{disjoint msg bigint_r /\ disjoint acc bigint_r} -> len:nat{len <= length msg} ->
@@ -300,7 +284,6 @@ val poly1305_last: msg:sbytes -> acc:bigint{disjoint msg acc} ->
     (ensures (fun h0 _ h1 -> SBuffer.live h1 msg /\ norm h1 acc /\ norm h1 bigint_r
       /\ modifies_buf (only acc) h0 h1))
 let poly1305_last msg acc r len =
-  //admit();
   let h0 = ST.get() in
   let l = len % 16 in
   if l = 0 then ()
@@ -318,7 +301,6 @@ let poly1305_last msg acc r len =
     let h3 = ST.get() in
     eq_lemma h0 h3 r (empty); 
     eq_lemma h0 h3 acc empty;     
-    finalize acc;
     add_and_multiply acc block r;
     let h4 = ST.get() in 
     disjoint_only_lemma msg acc; 
@@ -328,19 +310,15 @@ let poly1305_last msg acc r len =
     aux_lemma_3 h0 h4 acc;
     () )
 
-#set-options "--lax"
-
 val poly1305_mac: hash:sbytes{length hash >= 16} -> msg:sbytes{disjoint hash msg} -> 
   len:nat{len <= length msg} -> key:sbytes{length key = 32 /\ disjoint msg key /\ disjoint hash key} -> 
   ST unit
     (requires (fun h -> SBuffer.live h msg /\ SBuffer.live h key /\ SBuffer.live h hash))
     (ensures (fun h0 _ h1 -> SBuffer.live h1 hash /\ modifies_buf (only hash) h0 h1))
 let poly1305_mac hash msg len key =
-  //admit();
   let h0 = ST.get() in
   let r' = sub key 0 16 in
   let s = sub key 16 16 in
-  //  let r',s = SBytes.split key 16 in 
   let r = create SInt.UInt8.zero 16 in
   blit r' 0 r 0 16;
   let h0' = ST.get() in
@@ -380,6 +358,7 @@ let poly1305_mac hash msg len key =
   cut (forall (i:nat). {:pattern (v (get h4 acc i))} i < norm_length ==> v (get h4 acc i) < pow2 27);
   cut (forall (i:nat). {:pattern (v (get h4 acc i))} i < norm_length ==> v (get h4 acc i) < pow2 63);
   freduce_coefficients acc; 
+  finalize acc;
   disjoint_only_lemma hash r;  
   let h5 = ST.get() in
   disjoint_only_lemma hash bigint_r;  
