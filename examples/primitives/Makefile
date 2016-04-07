@@ -212,7 +212,7 @@ sha256-test: sha256-ml
 # HMAC targets
 
 hmac-ver:
-	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha1.fst	Crypto.HMAC.Sha256.fst
+	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha1.fst	Crypto.HMAC.Sha224.fst Crypto.HMAC.Sha256.fst
 
 
 hmac-sha1-ver:
@@ -226,6 +226,18 @@ hmac-sha1-ml:
 hmac-sha1-test: hmac-sha1-ml
 	cd $(HMAC_SHA_X_ODIR)1_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(HMAC_SHA_X_OCAML) Crypto_Sha1.ml Crypto_HMAC_Sha1.ml test_hmac_sha1.ml -o test_hmac_sha1.out #2> /dev/null
 	$(HMAC_SHA_X_ODIR)1_ml/test_hmac_sha1.out
+
+hmac-sha224-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha224.fst
+
+hmac-sha224-ml:
+	mkdir -p $(HMAC_SHA_X_ODIR)224_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HMAC.Sha224.fst --odir $(HMAC_SHA_X_ODIR)224_ml
+	cp ./ml/*.ml $(HMAC_SHA_X_ODIR)224_ml
+
+hmac-sha224-test: hmac-sha224-ml
+	cd $(HMAC_SHA_X_ODIR)224_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(HMAC_SHA_X_OCAML) Crypto_Sha224.ml Crypto_HMAC_Sha224.ml test_hmac_sha224.ml -o test_hmac_sha224.out #2> /dev/null
+	$(HMAC_SHA_X_ODIR)224_ml/test_hmac_sha224.out
 
 hmac-sha256-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha256.fst
