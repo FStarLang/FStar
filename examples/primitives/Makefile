@@ -160,8 +160,10 @@ aes-debug: Crypto.AES.fst
 	./$(AES_ODIR)/$(AES)
 
 # SHA targets
+
 sha-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.Sha1.fst Crypto.Sha224.fst Crypto.Sha256.fst
+
 
 sha1-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.Sha1.fst
@@ -209,6 +211,22 @@ sha256-test: sha256-ml
 
 # HMAC targets
 
+hmac-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha1.fst	Crypto.HMAC.Sha256.fst
+
+
+hmac-sha1-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha1.fst
+
+hmac-sha1-ml:
+	mkdir -p $(HMAC_SHA_X_ODIR)1_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HMAC.Sha1.fst --odir $(HMAC_SHA_X_ODIR)1_ml
+	cp ./ml/*.ml $(HMAC_SHA_X_ODIR)1_ml
+
+hmac-sha1-test: hmac-sha1-ml
+	cd $(HMAC_SHA_X_ODIR)1_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(HMAC_SHA_X_OCAML) Crypto_Sha1.ml Crypto_HMAC_Sha1.ml test_hmac_sha1.ml -o test_hmac_sha1.out #2> /dev/null
+	$(HMAC_SHA_X_ODIR)1_ml/test_hmac_sha1.out
+
 hmac-sha256-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha256.fst
 
@@ -225,4 +243,4 @@ hmac-sha256-test: hmac-sha256-ml
 # Cleaning
 clean:
 	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(CHACHA_ODIR)_ml $(POLY_ODIR)_ml \
-		$(BIGNUM_ODIR) $(CURVE_ODIR) $(AES_ODIR) $(SHA_X_ODIR)* *~ *.exe
+		$(BIGNUM_ODIR) $(CURVE_ODIR) $(AES_ODIR) $(SHA_X_ODIR)*  $(HMAC_SHA_X_ODIR)* *~ *.exe
