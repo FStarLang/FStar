@@ -162,7 +162,7 @@ aes-debug: Crypto.AES.fst
 # SHA targets
 
 sha-ver:
-	$(FSTAR) $(OPTIONS_VER) Crypto.Sha1.fst Crypto.Sha224.fst Crypto.Sha256.fst
+	$(FSTAR) $(OPTIONS_VER) Crypto.Sha1.fst Crypto.Sha224.fst Crypto.Sha256.fst Crypto.Sha384.fst Crypto.Sha512.fst --z3timeout 5
 
 
 sha1-ver:
@@ -212,7 +212,7 @@ sha256-test: sha256-ml
 # HMAC targets
 
 hmac-ver:
-	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha1.fst	Crypto.HMAC.Sha224.fst Crypto.HMAC.Sha256.fst
+	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha1.fst	Crypto.HMAC.Sha224.fst Crypto.HMAC.Sha256.fst Crypto.HMAC.Sha384.fst Crypto.HMAC.Sha512.fst --z3timeout 5
 
 
 hmac-sha1-ver:
