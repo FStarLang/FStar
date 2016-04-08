@@ -1603,6 +1603,8 @@ In its standard prelude, F\* defines the following inductive type:
       | LexTop  : lex_t
       | LexCons : #a:Type -> a -> lex_t -> lex_t
 
+(The `#` sign marks the first argument as implicit, see [#sec-implicit-arguments].)
+
 **The lexicographic ordering on `lex_t`** is the following:
 
 * `LexCons v1 v2 << LexCons v1' v2'`, if and only if, either
