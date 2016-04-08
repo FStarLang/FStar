@@ -57,7 +57,7 @@ let as_frag d ds =
 	    begin match ms with
 	      | _::Module(n, _)::_ ->
 	      	let msg = "Support for more than one module in a file is deprecated" in
-	        print2 "%s (Warning): %s\n" (string_of_range (range_of_lid n)) msg
+	        print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid n)) msg
 	      | _ -> ()
 	    end;
 	    Inl ms
