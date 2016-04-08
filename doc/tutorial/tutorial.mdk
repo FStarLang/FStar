@@ -589,8 +589,8 @@ computation. For example, here is a function that makes a new counter,
 initializing it to `init`.
 
     let new_counter init =
-      let c = Util.mk_ref init in
-      fun () -> c := c + 1; !c
+      let c = ref init in
+      fun () -> c := !c + 1; !c
 
 F\* infers that `new_counter` has type `:int -> ST (unit -> ST int)`,
 the type of a function that given an integer, may read, write or
@@ -660,7 +660,7 @@ code that we can directly load in the editor.
 
 One way to prove properties about your code in F\* is to write assertions.
 
-    assert (max 0 1 = 1)
+    let a = assert (max 0 1 = 1)
 
 Our first assertion is an obvious property about `max`. You may have seen
 a construct called `assert` in other languages---typically, it is used to
@@ -681,7 +681,7 @@ automatically.
 
 We can assert and automatically check a more general property about `max`. For example:
 
-    assert (forall x y. max x y >= x
+    let a = assert (forall x y. max x y >= x
                      && max x y >= y
                      && (max x y = x || max x y = y))
 
