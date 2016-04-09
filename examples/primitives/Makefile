@@ -161,19 +161,33 @@ aes-debug: Crypto.AES.fst
 	cd $(AES_ODIR) && $(COMPILE) $(AES_C) -o $(AES)
 	./$(AES_ODIR)/$(AES)
 
+
+
 # SHA targets
 
 sha-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.Sha1.fst Crypto.Sha224.fst Crypto.Sha256.fst Crypto.Sha384.fst Crypto.Sha512.fst --z3timeout 5
 
+sha-ml: sha1-ml sha224-ml sha256-ml sha384-ml sha512-ml
+
+sha-c: sha1-c sha224-c sha256-c sha384-c sha512-c
+
+#####
 
 sha1-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.Sha1.fst
 
 sha1-ml:
+	@echo " - Extracting SHA 1 to ML"
 	mkdir -p $(SHA_X_ODIR)1_ml
 	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha1.fst --odir $(SHA_X_ODIR)1_ml
 	cp ./ml/*.ml $(SHA_X_ODIR)1_ml
+
+sha1-c: Crypto.Sha1.fst
+	@echo " - Extracting SHA 1 to C"
+	@mkdir -p $(SHA_X_ODIR)1
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(SHA_X_ODIR)1 $^
+	@cp ./c/*.c ./c/*.h $(SHA_X_ODIR)1
 
 sha1-test: sha1-ml
 	cd $(SHA_X_ODIR)1_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_X_OCAML) Crypto_Sha1.ml test_sha1.ml -o test_sha1.out #2> /dev/null
@@ -183,9 +197,16 @@ sha224-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.Sha224.fst
 
 sha224-ml:
+	@echo " - Extracting SHA 224 to ML"
 	mkdir -p $(SHA_X_ODIR)224_ml
 	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha224.fst --odir $(SHA_X_ODIR)224_ml
 	cp ./ml/*.ml $(SHA_X_ODIR)224_ml
+
+sha224-c: Crypto.Sha224.fst
+	@echo " - Extracting SHA 224 to C"
+	@mkdir -p $(SHA_X_ODIR)224
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(SHA_X_ODIR)224 $^
+	@cp ./c/*.c ./c/*.h $(SHA_X_ODIR)224
 
 sha224-test: sha224-ml
 	cd $(SHA_X_ODIR)224_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_X_OCAML) Crypto_Sha224.ml test_sha224.ml -o test_sha224.out #2> /dev/null
@@ -195,13 +216,13 @@ sha256-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.Sha256.fst
 
 sha256-ml:
+	@echo " - Extracting SHA 256 to ML"
 	mkdir -p $(SHA_X_ODIR)256_ml
 	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha256.fst --odir $(SHA_X_ODIR)256_ml
 	cp ./ml/*.ml $(SHA_X_ODIR)256_ml
 
 sha256-c: Crypto.Sha256.fst
-	@echo ""
-	@echo " Extracting SHA library "
+	@echo " - Extracting SHA 256 to C"
 	@mkdir -p $(SHA_X_ODIR)256
 	$(FSTAR) $(OPTIONS_COMPILE) --odir $(SHA_X_ODIR)256 $^
 	@cp ./c/*.c ./c/*.h $(SHA_X_ODIR)256
@@ -210,12 +231,48 @@ sha256-test: sha256-ml
 	cd $(SHA_X_ODIR)256_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_X_OCAML) Crypto_Sha256.ml test_sha256.ml -o test_sha256.out #2> /dev/null
 	$(SHA_X_ODIR)256_ml/test_sha256.out
 
+sha384-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.Sha384.fst
+
+sha384-ml:
+	@echo " - Extracting SHA 384 to ML"
+	mkdir -p $(SHA_X_ODIR)384_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha384.fst --odir $(SHA_X_ODIR)384_ml
+	cp ./ml/*.ml $(SHA_X_ODIR)384_ml
+
+sha384-c: Crypto.Sha384.fst
+	@echo " - Extracting SHA 384 to C"
+	@mkdir -p $(SHA_X_ODIR)384
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(SHA_X_ODIR)384 $^
+	@cp ./c/*.c ./c/*.h $(SHA_X_ODIR)384
+
+sha512-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.Sha512.fst
+
+sha512-ml:
+	@echo " - Extracting SHA 512 to ML"
+	mkdir -p $(SHA_X_ODIR)512_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha512.fst --odir $(SHA_X_ODIR)512_ml
+	cp ./ml/*.ml $(SHA_X_ODIR)512_ml
+
+sha512-c: Crypto.Sha512.fst
+	@echo " - Extracting SHA 512 to C"
+	@mkdir -p $(SHA_X_ODIR)512
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(SHA_X_ODIR)512 $^
+	@cp ./c/*.c ./c/*.h $(SHA_X_ODIR)512
+
+
 
 # HMAC targets
 
 hmac-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha1.fst	Crypto.HMAC.Sha224.fst Crypto.HMAC.Sha256.fst Crypto.HMAC.Sha384.fst Crypto.HMAC.Sha512.fst --z3timeout 5
 
+hmac-ml: hmac-sha1-ml hmac-sha224-ml hmac-sha256-ml hmac-sha384-ml hmac-sha512-ml
+
+hmac-c: hmac-sha1-c hmac-sha224-c hmac-sha256-c hmac-sha384-c hmac-sha512-c
+
+#####
 
 hmac-sha1-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha1.fst
@@ -224,6 +281,12 @@ hmac-sha1-ml:
 	mkdir -p $(HMAC_SHA_X_ODIR)1_ml
 	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HMAC.Sha1.fst --odir $(HMAC_SHA_X_ODIR)1_ml
 	cp ./ml/*.ml $(HMAC_SHA_X_ODIR)1_ml
+
+hmac-sha1-c: Crypto.HMAC.Sha1.fst
+	@echo " - Extracting HMAC SHA 1 to C"
+	@mkdir -p $(HMAC_SHA_X_ODIR)1
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(HMAC_SHA_X_ODIR)1 $^
+	@cp ./c/*.c ./c/*.h $(HMAC_SHA_X_ODIR)1
 
 hmac-sha1-test: hmac-sha1-ml
 	cd $(HMAC_SHA_X_ODIR)1_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(HMAC_SHA_X_OCAML) Crypto_Sha1.ml Crypto_HMAC_Sha1.ml test_hmac_sha1.ml -o test_hmac_sha1.out #2> /dev/null
@@ -237,6 +300,12 @@ hmac-sha224-ml:
 	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HMAC.Sha224.fst --odir $(HMAC_SHA_X_ODIR)224_ml
 	cp ./ml/*.ml $(HMAC_SHA_X_ODIR)224_ml
 
+hmac-sha224-c: Crypto.HMAC.Sha224.fst
+	@echo " - Extracting HMAC SHA 224 to C"
+	@mkdir -p $(HMAC_SHA_X_ODIR)224
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(HMAC_SHA_X_ODIR)224 $^
+	@cp ./c/*.c ./c/*.h $(HMAC_SHA_X_ODIR)224
+
 hmac-sha224-test: hmac-sha224-ml
 	cd $(HMAC_SHA_X_ODIR)224_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(HMAC_SHA_X_OCAML) Crypto_Sha224.ml Crypto_HMAC_Sha224.ml test_hmac_sha224.ml -o test_hmac_sha224.out #2> /dev/null
 	$(HMAC_SHA_X_ODIR)224_ml/test_hmac_sha224.out
@@ -249,43 +318,142 @@ hmac-sha256-ml:
 	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HMAC.Sha256.fst --odir $(HMAC_SHA_X_ODIR)256_ml
 	cp ./ml/*.ml $(HMAC_SHA_X_ODIR)256_ml
 
+hmac-sha256-c: Crypto.HMAC.Sha256.fst
+	@echo " - Extracting HMAC SHA 256 to C"
+	@mkdir -p $(HMAC_SHA_X_ODIR)256
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(HMAC_SHA_X_ODIR)256 $^
+	@cp ./c/*.c ./c/*.h $(HMAC_SHA_X_ODIR)256
+
 hmac-sha256-test: hmac-sha256-ml
 	cd $(HMAC_SHA_X_ODIR)256_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(HMAC_SHA_X_OCAML) Crypto_Sha256.ml Crypto_HMAC_Sha256.ml test_hmac_sha256.ml -o test_hmac_sha256.out #2> /dev/null
 	$(HMAC_SHA_X_ODIR)256_ml/test_hmac_sha256.out
+
+hmac-sha384-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha384.fst
+
+hmac-sha384-ml:
+	mkdir -p $(HMAC_SHA_X_ODIR)384_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HMAC.Sha384.fst --odir $(HMAC_SHA_X_ODIR)384_ml
+	cp ./ml/*.ml $(HMAC_SHA_X_ODIR)384_ml
+
+hmac-sha384-c: Crypto.HMAC.Sha384.fst
+	@echo " - Extracting HMAC SHA 384 to C"
+	@mkdir -p $(HMAC_SHA_X_ODIR)384
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(HMAC_SHA_X_ODIR)384 $^
+	@cp ./c/*.c ./c/*.h $(HMAC_SHA_X_ODIR)384
+
+hmac-sha512-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.HMAC.Sha512.fst
+
+hmac-sha512-ml:
+	mkdir -p $(HMAC_SHA_X_ODIR)512_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HMAC.Sha512.fst --odir $(HMAC_SHA_X_ODIR)512_ml
+	cp ./ml/*.ml $(HMAC_SHA_X_ODIR)512_ml
+
+hmac-sha512-c: Crypto.HMAC.Sha512.fst
+	@echo " - Extracting HMAC SHA 512 to C"
+	@mkdir -p $(HMAC_SHA_X_ODIR)512
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(HMAC_SHA_X_ODIR)512 $^
+	@cp ./c/*.c ./c/*.h $(HMAC_SHA_X_ODIR)512
+
 
 
 # HKDF targets
 
 hkdf-ver:
-	$(FSTAR) $(OPTIONS_VER) Crypto.HKDF.HMAC.Sha1.fst Crypto.HKDF.HMAC.Sha256.fst
+	$(FSTAR) $(OPTIONS_VER) Crypto.HKDF.HMAC.Sha1.fst Crypto.HKDF.HMAC.Sha224.fst Crypto.HKDF.HMAC.Sha256.fst Crypto.HKDF.HMAC.Sha384.fst Crypto.HKDF.HMAC.Sha512.fst
 
+hkdf-ml: hkdf-hmac-sha1-ml hkdf-hmac-sha224-ml hkdf-hmac-sha256-ml hkdf-hmac-sha384-ml hkdf-hmac-sha512-ml
+
+hkdf-c: hkdf-hmac-sha1-c hkdf-hmac-sha224-c hkdf-hmac-sha256-c hkdf-hmac-sha384-c hkdf-hmac-sha512-c
+
+#####
 
 hkdf-hmac-sha1-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.HKDF.HMAC.Sha1.fst
 
 hkdf-hmac-sha1-ml:
+	@echo " - Extracting HKDF with HMAC SHA 1 to ML"
 	mkdir -p $(HKDF_HMAC_SHA_X_ODIR)1_ml
 	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HKDF.HMAC.Sha1.fst --odir $(HKDF_HMAC_SHA_X_ODIR)1_ml
 	cp ./ml/*.ml $(HKDF_HMAC_SHA_X_ODIR)1_ml
+
+hkdf-hmac-sha1-c: Crypto.HKDF.HMAC.Sha1.fst
+	@echo " - Extracting HKDF with HMAC SHA 1 to C"
+	@mkdir -p $(HKDF_HMAC_SHA_X_ODIR)1
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(HKDF_HMAC_SHA_X_ODIR)1 $^
+	@cp ./c/*.c ./c/*.h $(HKDF_HMAC_SHA_X_ODIR)1
 
 hkdf-hmac-sha1-test: hkdf-hmac-sha1-ml
 	cd $(HKDF_HMAC_SHA_X_ODIR)1_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(HKDF_HMAC_SHA_X_OCAML) Crypto_Sha1.ml Crypto_HMAC_Sha1.ml Crypto_HKDF_HMAC_Sha1.ml test_hkdf_hmac_sha1.ml -o test_hkdf_hmac_sha1.out #2> /dev/null
 	$(HKDF_HMAC_SHA_X_ODIR)1_ml/test_hkdf_hmac_sha1.out
 
+hkdf-hmac-sha224-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.HKDF.HMAC.Sha224.fst
+
+hkdf-hmac-sha224-ml:
+	@echo " - Extracting HKDF with HMAC SHA 224 to ML"
+	mkdir -p $(HKDF_HMAC_SHA_X_ODIR)224_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HKDF.HMAC.Sha224.fst --odir $(HKDF_HMAC_SHA_X_ODIR)224_ml
+	cp ./ml/*.ml $(HKDF_HMAC_SHA_X_ODIR)224_ml
+
+hkdf-hmac-sha224-c: Crypto.HKDF.HMAC.Sha224.fst
+	@echo " - Extracting HKDF with HMAC SHA 224 to C"
+	@mkdir -p $(HKDF_HMAC_SHA_X_ODIR)224
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(HKDF_HMAC_SHA_X_ODIR)224 $^
+	@cp ./c/*.c ./c/*.h $(HKDF_HMAC_SHA_X_ODIR)224
+
 hkdf-hmac-sha256-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.HKDF.HMAC.Sha256.fst
 
 hkdf-hmac-sha256-ml:
+	@echo " - Extracting HKDF with HMAC SHA 256 to ML"
 	mkdir -p $(HKDF_HMAC_SHA_X_ODIR)256_ml
 	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HKDF.HMAC.Sha256.fst --odir $(HKDF_HMAC_SHA_X_ODIR)256_ml
 	cp ./ml/*.ml $(HKDF_HMAC_SHA_X_ODIR)256_ml
+
+hkdf-hmac-sha256-c: Crypto.HKDF.HMAC.Sha256.fst
+	@echo " - Extracting HKDF with HMAC SHA 256 to C"
+	@mkdir -p $(HKDF_HMAC_SHA_X_ODIR)256
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(HKDF_HMAC_SHA_X_ODIR)256 $^
+	@cp ./c/*.c ./c/*.h $(HKDF_HMAC_SHA_X_ODIR)256
 
 hkdf-hmac-sha256-test: hkdf-hmac-sha256-ml
 	cd $(HKDF_HMAC_SHA_X_ODIR)256_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(HKDF_HMAC_SHA_X_OCAML) Crypto_Sha256.ml Crypto_HMAC_Sha256.ml Crypto_HKDF_HMAC_Sha256.ml test_hkdf_hmac_sha256.ml -o test_hkdf_hmac_sha256.out #2> /dev/null
 	$(HKDF_HMAC_SHA_X_ODIR)256_ml/test_hkdf_hmac_sha256.out
 
+hkdf-hmac-sha384-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.HKDF.HMAC.Sha384.fst
+
+hkdf-hmac-sha384-ml:
+	@echo " - Extracting HKDF with HMAC SHA 384 to ML"
+	mkdir -p $(HKDF_HMAC_SHA_X_ODIR)384_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HKDF.HMAC.Sha384.fst --odir $(HKDF_HMAC_SHA_X_ODIR)384_ml
+	cp ./ml/*.ml $(HKDF_HMAC_SHA_X_ODIR)384_ml
+
+hkdf-hmac-sha384-c: Crypto.HKDF.HMAC.Sha384.fst
+	@echo " - Extracting HKDF with HMAC SHA 384 to C"
+	@mkdir -p $(HKDF_HMAC_SHA_X_ODIR)384
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(HKDF_HMAC_SHA_X_ODIR)384 $^
+	@cp ./c/*.c ./c/*.h $(HKDF_HMAC_SHA_X_ODIR)384
+
+hkdf-hmac-sha512-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.HKDF.HMAC.Sha512.fst
+
+hkdf-hmac-sha512-ml:
+	@echo " - Extracting HKDF with HMAC SHA 512 to ML"
+	mkdir -p $(HKDF_HMAC_SHA_X_ODIR)512_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HKDF.HMAC.Sha512.fst --odir $(HKDF_HMAC_SHA_X_ODIR)512_ml
+	cp ./ml/*.ml $(HKDF_HMAC_SHA_X_ODIR)512_ml
+
+hkdf-hmac-sha512-c: Crypto.HKDF.HMAC.Sha512.fst
+	@echo " - Extracting HKDF with HMAC SHA 512 to C"
+	@mkdir -p $(HKDF_HMAC_SHA_X_ODIR)512
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(HKDF_HMAC_SHA_X_ODIR)512 $^
+	@cp ./c/*.c ./c/*.h $(HKDF_HMAC_SHA_X_ODIR)512
 
 # Cleaning
 clean:
 	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(CHACHA_ODIR)_ml $(POLY_ODIR)_ml \
-		$(BIGNUM_ODIR) $(CURVE_ODIR) $(AES_ODIR) $(SHA_X_ODIR)*  $(HMAC_SHA_X_ODIR)* *~ *.exe
+		$(BIGNUM_ODIR) $(CURVE_ODIR) $(AES_ODIR) \
+		$(SHA_X_ODIR)*  $(HMAC_SHA_X_ODIR)* $(HKDF_HMAC_SHA_X_ODIR)* *~ *.exe
