@@ -257,8 +257,20 @@ hmac-sha256-test: hmac-sha256-ml
 # HKDF targets
 
 hkdf-ver:
-	$(FSTAR) $(OPTIONS_VER) Crypto.HKDF.HMAC.Sha256.fst
+	$(FSTAR) $(OPTIONS_VER) Crypto.HKDF.HMAC.Sha1.fst Crypto.HKDF.HMAC.Sha256.fst
 
+
+hkdf-hmac-sha1-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.HKDF.HMAC.Sha1.fst
+
+hkdf-hmac-sha1-ml:
+	mkdir -p $(HKDF_HMAC_SHA_X_ODIR)1_ml
+	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.HKDF.HMAC.Sha1.fst --odir $(HKDF_HMAC_SHA_X_ODIR)1_ml
+	cp ./ml/*.ml $(HKDF_HMAC_SHA_X_ODIR)1_ml
+
+hkdf-hmac-sha1-test: hkdf-hmac-sha1-ml
+	cd $(HKDF_HMAC_SHA_X_ODIR)1_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(HKDF_HMAC_SHA_X_OCAML) Crypto_Sha1.ml Crypto_HMAC_Sha1.ml Crypto_HKDF_HMAC_Sha1.ml test_hkdf_hmac_sha1.ml -o test_hkdf_hmac_sha1.out #2> /dev/null
+	$(HKDF_HMAC_SHA_X_ODIR)1_ml/test_hkdf_hmac_sha1.out
 
 hkdf-hmac-sha256-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.HKDF.HMAC.Sha256.fst
