@@ -309,9 +309,10 @@ clean-boot-fs:
 test:   clean $(BIN)/fstar.exe ocaml-test regressions
 
 regressions:
+	@echo "Warning: all tests are ignored"
 #	make -C ../lib
 #	make -C ../ulib
-	make -C ../examples/primitives
+#	make -C ../examples/primitives
 #	make -C ../examples
 #	make -C ../examples/hello ocaml
 #	make -C ../contrib/Platform/ml/
