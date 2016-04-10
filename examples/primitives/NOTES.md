@@ -1,5 +1,13 @@
 # Notes on primitives
 
+   ## Overall status
+
+   This work is an experiment and should not be used as it is.
+   It is probably incorrect and has anyway a weak specification
+   for now. At some point, when we are happy with it, it will be
+   relased in the master branch.
+
+
    ## Reusing code instead of copying
 
    For now each modules for SHA and HMAC functions are separated and
@@ -25,6 +33,14 @@
    For some reason, after updating FStar, verification fails for
    some primitives... I do not understand why this is happening.
    =(   <-- This is my not so happy face...
+
+   Extraction and execution still works though, I expect that
+   mostly, the specs are incorrect.
+
+   Update: It seems that the commit I compiled F* in, introduced
+   inconcistencies, so basically my verification was broken and
+   I was able to prove things I should not have been able to...
+   This doesn't change my schedule for the future work.
 
 
    ## Future work
