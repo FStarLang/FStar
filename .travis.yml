@@ -47,9 +47,9 @@ script:
   - make -C src
 #  - make -C src ocaml
 #  - make -C src/ocaml-output
-  - echo -e "\e[31m=== Running tests ===\e[0m"
-  - make -C examples/unit-tests
-  - make -C src regressions OTHERFLAGS=--lax
+#  - echo -e "\e[31m=== Running tests ===\e[0m"
+#  - make -C examples/unit-tests
+#  - make -C src regressions OTHERFLAGS=--lax
 
 notifications:
   slack: everestexpedition:NqWwcvMIxouVIbC5IhF0loqX
