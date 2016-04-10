@@ -7,58 +7,31 @@ open FStar.UInt8
 open FStar.UInt64
 open FStar.UInt32
 
+#set-options "--lax"
+
 
 
 (* [FIPS 180-4] section 4.1.2 *)
-// [Coq] Definition Ch (x y z : int) : int :=
-//          Int.xor (Int.and x y) (Int.and (Int.not x) z).
 val _Ch: x:uint32 -> y:uint32 -> z:uint32 -> Tot uint32
 let _Ch x y z = logxor (logand x y) (logand (lognot x) z)
 
-// [Coq] Definition Maj (x y z : int) : int :=
-//          Int.xor (Int.xor (Int.and x z) (Int.and y z) ) (Int.and x y).
 val _Maj: x:uint32 -> y:uint32 -> z:uint32 -> Tot uint32
 let _Maj x y z = logxor (logand x y) (logxor (logand x z) (logand y z))
 
-// [Coq] Definition Sigma_0 (x : int) : int :=
-//          Int.xor (Int.xor (Rotr 2 x) (Rotr 13 x)) (Rotr 22 x).
 val _Sigma0: x:uint32 -> Tot uint32
 let _Sigma0 x = logxor (rotate_right x 2) (logxor (rotate_right x 13) (rotate_right x 22))
 
-// [Coq] Definition Sigma_1 (x : int) : int :=
-//          Int.xor (Int.xor (Rotr 6 x) (Rotr 11 x)) (Rotr 25 x).
 val _Sigma1: x:uint32 -> Tot uint32
 let _Sigma1 x = logxor (rotate_right x 6) (logxor (rotate_right x 11) (rotate_right x 25))
 
-// [Coq] Definition sigma_0 (x : int) : int :=
-//          Int.xor (Int.xor (Rotr 7 x) (Rotr 18 x)) (Shr 3 x).
 val _sigma0: x:uint32 -> Tot uint32
 let _sigma0 x = logxor (rotate_right x 7) (logxor (rotate_right x 18) (shift_right x 3))
 
-// [Coq] Definition sigma_1 (x : int) : int :=
-//          Int.xor (Int.xor (Rotr 17 x) (Rotr 19 x)) (Shr 10 x).
 val _sigma1: x:uint32 -> Tot uint32
 let _sigma1 x = logxor (rotate_right x 17) (logxor (rotate_right x 19) (shift_right x 10))
 
-(* [FIPS 180-4] section 4.2.2 *)
 
-// [Coq] Definition K256 := map Int.repr
-//       [1116352408 ; 1899447441 ; 3049323471 ; 3921009573;
-//        961987163  ; 1508970993 ; 2453635748 ; 2870763221;
-//        3624381080 ; 310598401  ; 607225278  ; 1426881987;
-//        1925078388 ; 2162078206 ; 2614888103 ; 3248222580;
-//        3835390401 ; 4022224774 ; 264347078  ; 604807628;
-//        770255983  ; 1249150122 ; 1555081692 ; 1996064986;
-//        2554220882 ; 2821834349 ; 2952996808 ; 3210313671;
-//        3336571891 ; 3584528711 ; 113926993  ; 338241895;
-//        666307205  ; 773529912  ; 1294757372 ; 1396182291;
-//        1695183700 ; 1986661051 ; 2177026350 ; 2456956037;
-//        2730485921 ; 2820302411 ; 3259730800 ; 3345764771;
-//        3516065817 ; 3600352804 ; 4094571909 ; 275423344;
-//        430227734  ; 506948616  ; 659060556  ; 883997877;
-//        958139571  ; 1322822218 ; 1537002063 ; 1747873779;
-//        1955562222 ; 2024104815 ; 2227730452 ; 2361852424;
-//        2428436474 ; 2756734187 ; 3204031479 ; 3329325298].
+(* [FIPS 180-4] section 4.2.2 *)
 
 val k_init: unit -> St (buffer 32)
 let k_init () =
@@ -129,19 +102,14 @@ let k_init () =
   SBuffer.upd k 63 (of_string "0xc67178f2");
   k
 
-(* [FIPS 180-4] section 5.1.1 *)
-(* l + 1 + k ≡ 448 mod 512 *)
 
-// [Coq]
-//  Definition generate_and_pad msg :=
-//    let n := Zlength msg in
-//     Zlist_to_intlist (msg ++ [128%Z]
-//     ++ list_repeat (Z.to_nat (-(n + 9) mod 64)) 0)
-//     ++ [Int.repr (n * 8 / Int.modulus); Int.repr (n * 8)].
+(* [FIPS 180-4] section 5.1.1 *)
 
 (* Compute the number of 512 bit blocks to store data (56 bytes) and padding (8 bytes) *)
+(* l + 1 + k ≡ 448 mod 512 *)
 val nblocks: nat -> Tot (n:nat{n >= 1})
 let nblocks x = ((x + 8) - ((x + 8) % 64))/64 + 1
+
 
 (* Compute the pad length *)
 val pad_length: nat -> Tot (n:nat{n <= 64})
@@ -149,14 +117,15 @@ let pad_length rlen =
   if (rlen % 64) < 56 then 56 - (rlen % 64)
   else 64 + 56 - (rlen % 64)
 
+
 (* Pad the data and return a buffer of uint32 for subsequent treatment *)
-val pad: (pdata :buffer 8 ) ->
-         (rdata :buffer 8 ) ->
+// TODO: Refinement on the value of the pad -> length raw + rplen = 64
+val pad: (pdata :sbytes ) ->
+         (rdata :sbytes ) ->
          (rlen  :nat { length rdata = rlen })
          -> ST unit
               (requires (fun h -> Live h rdata))
               (ensures  (fun h0 r h1 -> Live h1 rdata))
-// TODO: Refinement on the value of the pad -> length raw + rplen = 64
 let pad pdata rdata rlen =
   // Value of the raw data length in bits represented as UInt64
   let rlen_64 =
@@ -174,33 +143,20 @@ let pad pdata rdata rlen =
   blit rpad 0 pdata rlen rplen;
   blit rlen_64 0 pdata (rlen + rplen) 8
 
+
 (* Store function to handle pdata as a sequence of words *)
 val store : (wdata :buffer 32) ->
-            (pdata :buffer 8 { length pdata = 4 * (length wdata) /\ Disjoint wdata pdata }) ->
-            (plen  :nat        { length pdata = plen /\ plen = 4 * (length wdata) })
+            (pdata :sbytes { length pdata = 4 * (length wdata) /\ Disjoint wdata pdata }) ->
+            (plen  :nat      { length pdata = plen /\ plen = 4 * (length wdata) })
             -> ST unit
                  (requires (fun h -> Live h wdata /\ Live h pdata))
                  (ensures  (fun h0 r h1 -> Live h1 wdata /\ Live h1 pdata))
 
 let store wdata pdata plen = be_uint32s_of_sbytes wdata pdata plen
 
-(* [FIPS 180-4] section 6.2.2 *)
-(* Block processing functions *)
-
-// [Coq]
-// Function W (M: Z -> int) (t: Z) {measure Z.to_nat t} : int :=
-//   if zlt t 16
-//   then M t
-//   else  (Int.add (Int.add (sigma_1 (W M (t-2))) (W M (t-7)))
-//                (Int.add (sigma_0 (W M (t-15))) (W M (t-16)))).
-// Proof.
-// intros; apply Z2Nat.inj_lt; omega.
-// intros; apply Z2Nat.inj_lt; omega.
-// intros; apply Z2Nat.inj_lt; omega.
-// intros; apply Z2Nat.inj_lt; omega.
-// Qed.
 
 (* [FIPS 180-4] section 6.2.2 *)
+
 (* Step 1 : Scheduling function for sixty-four 32bit words *)
 val wsched_define: (ws     :buffer 32 { length ws = 64 }) ->
                    (wblock :buffer 32 { length wblock = 16 /\ Disjoint ws wblock }) ->
@@ -231,12 +187,10 @@ let rec wsched_define ws wblock t =
     wsched_define ws wblock t end
   else ()
 
-(* [FIPS 180-4] section 5.3.3 *)
-(* Define the initial hash value *)
 
-// [Coq] Definition init_registers : registers :=
-//   map Int.repr  [1779033703; 3144134277; 1013904242; 2773480762;
-//                  1359893119; 2600822924; 528734635; 1541459225].
+(* [FIPS 180-4] section 5.3.3 *)
+
+(* Define the initial hash value *)
 val init : (whash :buffer 32 { length whash = 8 })
            -> ST unit
                 (requires (fun h -> Live h whash))
@@ -251,6 +205,7 @@ let init whash =
   SBuffer.upd whash 5 (of_string "0x9b05688c");
   SBuffer.upd whash 6 (of_string "0x1f83d9ab");
   SBuffer.upd whash 7 (of_string "0x5be0cd19")
+
 
 (* Step 3 : Perform logical operations on the working variables *)
 val update_inner_loop : (ws    :buffer 32 { length ws = 64 }) ->
@@ -293,6 +248,7 @@ let rec update_inner_loop ws whash t t1 t2 k =
     t := !t + 1;
     update_inner_loop ws whash t t1 t2 k end
   else ()
+
 
 val update_step : (whash :buffer 32 { length whash = 8 }) ->
                   (wdata :buffer 32 { Disjoint whash wdata }) ->
@@ -365,25 +321,10 @@ let rec update_step ihash wdata ws rounds i t1 t2 k =
     update_step ihash wdata ws rounds i t1 t2 k end
   else ()
 
+
 (* [FIPS 180-4] section 6.2.2 *)
+
 (* Update running hash function *)
-//
-// [Coq]
-// Definition hash_block (r: registers) (block: list int) : registers :=
-//      map2 Int.add r (Round r (nthi block) 63).
-//
-// Function hash_blocks (r: registers) (msg: list int) {measure length msg} : registers :=
-//   match msg with
-//   | nil => r
-//   | _ => hash_blocks (hash_block r (firstn 16 msg)) (skipn 16 msg)
-//   end.
-// Proof. intros.
-//  destruct (lt_dec (length msg) 16).
-//  rewrite skipn_length_short. simpl; omega. subst; simpl in *; omega.
-//  rewrite <- teq; auto.
-//  rewrite skipn_length. simpl; omega.
-// Qed.
-// TODO: ensures Modifies (only hash) h0 h1
 val update : (whash  :buffer 32 { length whash = 8 }) ->
              (pdata  :buffer 32 { Disjoint whash pdata }) ->
              (rounds :nat )
@@ -403,8 +344,8 @@ let update whash wdata rounds =
   (* Perform function *)
   update_step whash wdata ws rounds i t1 t2 k
 
+
 (* Compute the final value of the hash from the last hash value *)
-// TODO: ensures Modifies (only hash) h0 h1
 val finish: (hash  :sbytes    { length hash = 32 }) ->
             (whash :buffer 32 { Disjoint whash hash })
             -> ST unit
@@ -413,10 +354,8 @@ val finish: (hash  :sbytes    { length hash = 32 }) ->
 
 let finish hash whash = be_sbytes_of_uint32s hash whash 8
 
+
 (* Compute the sha256 hash of some bytes *)
-// [Coq] Definition SHA_256 (str : list Z) : list Z :=
-//     intlist_to_Zlist (hash_blocks init_registers (generate_and_pad str)).
-// TODO: ensures Modifies (only hash) h0 h1
 val sha265: (hash:sbytes { length hash = 32 }) ->
             (data:sbytes { Disjoint hash data }) ->
             (len:nat       { length data = len })
@@ -431,45 +370,8 @@ let sha256 hash data len =
   let pdata = create #8 FStar.UInt8.zero plen in
   let wlen = plen/4 in
   let wdata = create #32 FStar.UInt32.zero wlen in
-
   init whash;
   pad pdata data len;
   store wdata pdata plen;
   update whash wdata rounds;
   finish hash whash
-
-(*
-(* Testing functions *)
-let test_pad data len =
-  let whash = create #32 FStar.UInt32.zero 8 in
-  let plen = len + (pad_length len) + 8 in
-  let rounds = nblocks plen - 1 in
-  let pdata = create #8 FStar.UInt8.zero plen in
-  let wlen = plen/4 in
-  let wdata = create #32 FStar.UInt32.zero wlen in
-  init whash;
-  pad pdata data len;
-  pdata
-
-let test_init_whash () =
-  let whash = create #32 FStar.UInt32.zero 8 in
-  init whash;
-  let x = create #8 FStar.UInt8.zero 4 in
-  be_sbytes_of_uint32s x whash 1;
-  x
-
-let test_whash data len =
-  let whash = create #32 FStar.UInt32.zero 8 in
-  let plen = len + (pad_length len) + 8 in
-  let rounds = nblocks plen - 1 in
-  let pdata = create #8 FStar.UInt8.zero plen in
-  let wlen = plen/4 in
-  let wdata = create #32 FStar.UInt32.zero wlen in
-  init whash;
-  pad pdata data len;
-  store wdata pdata plen;
-  update whash wdata rounds;
-  let x = create #8 FStar.UInt8.zero 4 in
-  sbytes_of_uint32s x whash 1;
-  x
-*)
