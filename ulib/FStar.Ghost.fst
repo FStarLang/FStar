@@ -61,6 +61,12 @@ val elift2_p : #a:Type  -> #c:Type -> #p:(a->c->Type) -> #b:Type -> f:(xa:a-> xc
   -> ra:(erased a) -> rc:(erased c){p (reveal ra) (reveal rc)}  -> Pure (erased b) (requires True) (ensures (fun x -> reveal x = f ra rc))
 let elift2_p #a #c #p #b f ga gc = f ga gc
 
+// Allows for writing a cut when the body has a Ghost effect:
+// instead of writing 'cut (P(x));', write 'gcut (fun _ -> P(x))'
+val gcut: f:(unit -> GTot Type) -> Pure unit (requires (f ())) (ensures f)
+let gcut f = ()
+
+
 (*
 val elift2_wp : #a:Type  -> #c:Type  -> #b:Type -> #pre:(a->c->Type) -> #post:(a->c->b->Type)
 -> f:(ra:a -> rc:c ->Pure b (requires (pre ra rc)) (ensures (fun rb -> post ra rc rb)))
