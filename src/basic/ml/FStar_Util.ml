@@ -303,12 +303,12 @@ let colorize_cyan s =
   | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
   | _ -> s
 
-let print_error s = pr "%s" (colorize_red ("Error: " ^ s)); flush stdout
+let print_error s = fpr stderr "%s" (colorize_red ("Error: " ^ s)); flush stdout
 let print1_error a b = print_error (format1 a b)
 let print2_error a b c = print_error (format2 a b c)
 let print3_error a b c d = print_error (format3 a b c d)
 
-let print_warning s = pr "%s" (colorize_cyan ("Warning: " ^ s)); flush stdout
+let print_warning s = fpr stderr "%s" (colorize_cyan ("Warning: " ^ s)); flush stdout
 let print1_warning a b = print_warning (format1 a b)
 let print2_warning a b c = print_warning (format2 a b c)
 let print3_warning a b c d = print_warning (format3 a b c d)

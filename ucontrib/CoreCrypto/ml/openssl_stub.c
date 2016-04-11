@@ -659,7 +659,7 @@ CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
     if (RSA_generate_key_ex(rsa, Int_val(mlsz), bn_mlexp, NULL) != 1) {
       RSA_free(rsa);
       BN_free(bn_mlexp);
-      caml_failwith("RSA:genkey failed");
+      caml_failwith("RSA:genkey failed");CAMLlocal1(mlrsa);
     }
 
     CAMLlocal3(e, n, d);
@@ -1915,31 +1915,32 @@ CAMLprim value ocaml_ecdsa_verify(value mlkey, value data, value sig) {
 
 static int cb(int ok, X509_STORE_CTX *ctx)
 {
-        char buf[256];
-        static int      cb_index = 0;
+    char buf[256];
+    static int      cb_index = 0;
 
-        printf("Starting cb #%d (ok = %d)\n", ++cb_index, ok);
-        printf("ctx: error = %d. error_depth = %d. current_method = %d. "
-                   "valid = %d. last_untrusted = %d. "
-                   "error string = '%s'\n", ctx->error,
-                        ctx->error_depth, ctx->current_method,
-                        ctx->valid, ctx->last_untrusted,
-                        X509_verify_cert_error_string(ctx->error));
+#ifdef DEBUG
+    printf("Starting cb #%d (ok = %d)\n", ++cb_index, ok);
+    printf("ctx: error = %d. error_depth = %d. current_method = %d. "
+           "valid = %d. last_untrusted = %d. "
+           "error string = '%s'\n", ctx->error,
+           ctx->error_depth, ctx->current_method,
+           ctx->valid, ctx->last_untrusted,
+           X509_verify_cert_error_string(ctx->error));
 
-                X509_NAME_oneline(X509_get_subject_name(ctx->current_cert),buf,256);
-                printf("current_cert subject:   %s\n",buf);
-                X509_NAME_oneline(X509_get_issuer_name(ctx->current_cert),buf,256);
-                printf("current_cert issuer:    %s\n",buf);
+    X509_NAME_oneline(X509_get_subject_name(ctx->current_cert),buf,256);
+    printf("current_cert subject:   %s\n",buf);
+    X509_NAME_oneline(X509_get_issuer_name(ctx->current_cert),buf,256);
+    printf("current_cert issuer:    %s\n",buf);
 
-                if (ctx->current_issuer)
-                        {
-X509_NAME_oneline(X509_get_subject_name(ctx->current_issuer),buf,256);
-                        printf("current_issuer subject: %s\n",buf);
-                        
-X509_NAME_oneline(X509_get_issuer_name(ctx->current_issuer),buf,256);
-                        printf("current_issuer issuer:  %s\n",buf);
-                        }
-        return(ok);
+    if (ctx->current_issuer) {
+      X509_NAME_oneline(X509_get_subject_name(ctx->current_issuer),buf,256);
+      printf("current_issuer subject: %s\n",buf);
+      X509_NAME_oneline(X509_get_issuer_name(ctx->current_issuer),buf,256);
+      printf("current_issuer issuer:  %s\n",buf);
+    }
+#endif
+
+    return(ok);
 }
 
 CAMLprim value ocaml_validate_chain(value chain, value for_signing, value hostname, value cafile) {
@@ -2057,5 +2058,98 @@ CAMLprim value ocaml_get_ecdsa_from_cert(value c) {
     mlret = caml_alloc_tuple(1);
     Field(mlret, 0) = mlec;
     CAMLreturn(mlret);
+}
+
+CAMLprim value ocaml_load_chain_from_file(value pem, value key) {
+    CAMLparam2(pem, key);
+    CAMLlocal2(mlc, mlret);
+    mlret = Val_emptylist;
+
+    char *pemfile = (char*)String_val(pem);
+    char *keyfile = (char*)String_val(key);
+
+    BIO *bio = BIO_new_file(pemfile, "r");
+    if(!bio) CAMLreturn(Val_none);
+
+    int c = 0; unsigned long n = 0;
+    X509 *x509, *first;
+
+    // Try to read all x509 structs in the file
+    do {
+      x509 = PEM_read_bio_X509_AUX(bio, NULL, NULL, NULL);
+      if(!c) first = x509;
+
+      if(!x509)
+      {
+        n = ERR_get_error();
+	if(!c ||
+           !(ERR_GET_LIB(n) == ERR_LIB_PEM
+            && ERR_GET_REASON(n) == PEM_R_NO_START_LINE))
+          CAMLreturn(Val_none);
+        else break;
+      }
+
+      int len;
+      unsigned char *buf = NULL;
+      len = i2d_X509(x509, &buf);
+      if (len < 0) CAMLreturn(Val_none); // Yes there is a leak there
+
+      CAMLlocal1(der_cert);
+      der_cert = caml_alloc_string(len);
+      memcpy(String_val(der_cert), buf, len);
+
+      mlc = caml_alloc(2, 0);
+      Store_field(mlc, 0, der_cert);
+      Store_field(mlc, 1, mlret);
+      mlret = mlc;
+    }
+    while(++c);
+
+    EVP_PKEY* pk;
+    pk = X509_get_pubkey(first);
+    if(!pk) CAMLreturn(Val_none);
+
+    bio = BIO_new_file(keyfile, "r");
+    if(!bio) CAMLreturn(Val_none);
+
+    EVP_PKEY* sk;
+    sk = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
+    if(!sk) CAMLreturn(Val_none);
+    CAMLlocal3(mlkey, mlrsa, mlec);
+    
+    switch(EVP_PKEY_type(pk->type))
+    {
+      case EVP_PKEY_RSA:
+        mlrsa = caml_alloc_custom(&evp_rsa_ops, sizeof(RSA*), 0, 1);
+        RSA* rsa = EVP_PKEY_get1_RSA(sk);
+        if(!rsa) CAMLreturn(Val_none);
+	RSA_val(mlrsa) = rsa;
+
+	mlkey = caml_alloc(1, 0); // CertRSA
+	Store_field(mlkey, 0, mlrsa);
+        break;
+
+      case EVP_PKEY_EC:
+        mlec = caml_alloc_custom(&key_ops, sizeof(EC_KEY*), 0, 1);
+        EC_KEY* eck = EVP_PKEY_get1_EC_KEY(sk);
+        if(!eck) CAMLreturn(Val_none);
+        EC_KEY_val(mlec) = eck;
+
+        mlkey = caml_alloc(1, 1); // CertECDSA
+        Store_field(mlkey, 0, mlec);
+        break;
+
+      default:
+        CAMLreturn(Val_none);
+    }
+
+    mlc = caml_alloc_tuple(2);
+    Store_field(mlc, 0, mlkey);
+    Store_field(mlc, 1, mlret);
+    mlret = mlc;            // (certkey * string list)
+
+    mlc = caml_alloc_tuple(1);
+    Store_field(mlc, 0, mlret);
+    CAMLreturn(mlc);        // (certkey * string list) option
 }
 

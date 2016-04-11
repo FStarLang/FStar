@@ -145,6 +145,7 @@ assume val ec_gen_key: p:ec_params
                   length k.ec_point.ecx = ec_bytelen k.ec_params.curve /\
                   length k.ec_point.ecy = ec_bytelen k.ec_params.curve})
 
+abstract type certkey
 assume val validate_chain: der_list:list bytes -> for_signing:bool -> hostname:option string -> ca_file:string -> Tot bool
-assume val cert_verify_sig: bytes -> sig_alg -> hash_alg -> bytes -> bytes -> Tot bool
-assume val vert_sign: bytes -> sig_alg -> hash_alg -> bytes -> Tot (option bytes)
+assume val cert_sign: certkey -> sig_alg -> hash_alg -> bytes -> Tot (option bytes)
+assume val cert_load_chain: string -> string -> option (certkey * list bytes)
