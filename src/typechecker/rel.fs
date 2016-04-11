@@ -1526,7 +1526,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                                   (fst (new_uvar k.pos scope (Util.type_u () |> fst)))) in
                              let c = S.mk_Total (fst (new_uvar k.pos scope (Util.type_u () |> fst))) in
                              let k' = Util.arrow xs c in
-                             let uv_sol = Util.abs xs k' (Some (Util.lcomp_of_comp <| S.mk_Total (Util.type_u () |> fst))) in
+                             let uv_sol = Util.abs scope k' (Some (Util.lcomp_of_comp <| S.mk_Total (Util.type_u () |> fst))) in
                              Unionfind.change uvar (Fixed uv_sol);
                              Some (xs, c))
                         | _ -> None
@@ -1546,7 +1546,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             let xs, rest = Util.first_N n_args xs in 
                             let t = mk (Tm_arrow(rest, c)) None k.pos in
                             SS.open_comp xs (S.mk_Total t) |> Some
-                     | _ -> failwith "Impossible: ill-typed application"  in
+                     | _ -> failwith (Util.format3 "Impossible: ill-typed application %s : %s\n\t%s"
+                                        (Print.uvar_to_string uv)
+                                        (Print.term_to_string k)
+                                        (Print.term_to_string k_uv)) in
                 Util.bind_opt 
                     (elim k_uv ps)
                     (fun (xs, c) -> Some (((uv, k_uv), xs, c), ps, decompose env t2)) in
@@ -1714,56 +1717,33 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                  //zs = xs intersect ys, U fresh
                  //U1 = \x1 x2. U zs
                  //U2 = \y1 y2 y3. U zs
-                let apply_k k args = 
-                    let formals, body = Util.arrow_formals k in
-                    let n_formals = List.length formals in 
-                    let n_args = List.length args in 
-                        if n_formals = n_args 
-                        then Subst.subst (Util.subst_of_list formals args) body |> Some
-                        else if n_args > n_formals
-                        then None
-                        else let formals, rest = Util.first_N n_args formals in
-                             let subst = Util.subst_of_list formals args in
-                             let body = Util.arrow rest (S.mk_Total body) in
-                             Subst.subst subst body |> Some in
-                let eq_k_sol = 
-                    match apply_k k1 args1, apply_k k2 args2 with 
-                        | None, _
-                        | _, None -> giveup_or_defer orig "flex-flex: failed to unify types"
-                        | Some k1, Some k2 -> 
-                          let prob = new_problem env k1 EQ k2 None k1.pos "flex-flex type" in
-                          printfn "flex-flex pattern types:\n%s" (prob_to_string env (TProb prob));
-                          solve_t env prob ({wl with attempting=[]; defer_ok=false; wl_deferred=[]}) in
-                begin match eq_k_sol with
-                    | Failed _ -> eq_k_sol
-                    | _ -> 
-                        let xs = sn_binders env xs in
-                        let ys = sn_binders env ys in
-                        let zs = intersect_vars xs ys in
-                        if Env.debug env <| Options.Other "Rel"
-                        then Util.print5 "Flex-flex patterns: intersected %s and %s; got %s\n\tk1=%s\n\tk2=%s\n"
-                                (Print.binders_to_string ", " xs) (Print.binders_to_string ", " ys) (Print.binders_to_string ", " zs)
-                                (Print.term_to_string k1) (Print.term_to_string k2);
-                        let (u_zs, _) = 
-                            let _, t = Util.arrow_formals k1 in
-                            let t = N.normalize [N.Beta] env t in
-                            new_uvar r zs t in
-                        let sub1 = u_abs k1 xs u_zs in
-                        let occurs_ok, msg = occurs_check env wl (u1,k1) sub1 in
-                        if not occurs_ok
-                        then giveup_or_defer orig "flex-flex: failed occcurs check"
-                        else let sol1 = TERM((u1, k1), sub1) in
-                             if Unionfind.equivalent u1 u2
-                             then let wl = solve_prob orig None  [sol1] wl in
-                                  solve env wl
-                             else let sub2 = u_abs k2 ys u_zs in
-                                  let occurs_ok, msg = occurs_check env wl (u2,k2) sub2 in
-                                  if not occurs_ok
-                                  then giveup_or_defer orig "flex-flex: failed occurs check"
-                                  else let sol2 = TERM((u2,k2), sub2) in
-                                       let wl = solve_prob orig None [sol1;sol2] wl in
-                                       solve env wl
-                  end in
+                let xs = sn_binders env xs in
+                let ys = sn_binders env ys in
+                let zs = intersect_vars xs ys in
+                if Env.debug env <| Options.Other "Rel"
+                then Util.print5 "Flex-flex patterns: intersected %s and %s; got %s\n\tk1=%s\n\tk2=%s\n"
+                        (Print.binders_to_string ", " xs) (Print.binders_to_string ", " ys) (Print.binders_to_string ", " zs)
+                        (Print.term_to_string k1) (Print.term_to_string k2);
+                let u_zs, _ =
+                    let t, _ = Util.type_u() in
+                    let k, _ = new_uvar r zs t in
+                    new_uvar r zs k in
+                let sub1 = u_abs k1 xs u_zs in
+                let occurs_ok, msg = occurs_check env wl (u1,k1) sub1 in
+                if not occurs_ok
+                then giveup_or_defer orig "flex-flex: failed occcurs check"
+                else let sol1 = TERM((u1, k1), sub1) in
+                     if Unionfind.equivalent u1 u2
+                     then let wl = solve_prob orig None [sol1] wl in
+                          solve env wl
+                     else let sub2 = u_abs k2 ys u_zs in
+                          let occurs_ok, msg = occurs_check env wl (u2,k2) sub2 in
+                          if not occurs_ok
+                          then giveup_or_defer orig "flex-flex: failed occurs check"
+                          else let sol2 = TERM((u2,k2), sub2) in
+                               let wl = solve_prob orig None [sol1;sol2] wl in
+                               solve env wl
+        in
 
         let solve_one_pat (t1, u1, k1, xs) (t2, u2, k2, args2) =
             begin
