@@ -96,13 +96,7 @@ val ecdsa_sign: hash_alg option -> ec_key -> bytes -> bytes
 val ecdsa_verify: hash_alg option -> ec_key -> bytes -> bytes -> bool
 val ec_gen_key: ec_params -> ec_key
 
-type rsa
-type ssl_ec_key
-
-type certkey =
-| CertRSA of rsa
-| CertECDSA of ssl_ec_key
-
+type certkey
 val validate_chain: bytes list -> bool -> string option -> string -> bool
 val cert_verify_sig: bytes -> sig_alg -> hash_alg -> bytes -> bytes -> bool
 val cert_sign: certkey -> sig_alg -> hash_alg -> bytes -> bytes option
