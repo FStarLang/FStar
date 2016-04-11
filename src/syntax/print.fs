@@ -302,7 +302,7 @@ and imp_to_string s = function
 and binder_to_string' is_arrow b = 
     let (a, imp) = b in
     if is_null_binder b 
-    then term_to_string a.sort
+    then ("_:" ^ term_to_string a.sort)
     else if not is_arrow && not (!Options.print_bound_var_types) then imp_to_string (nm_to_string a) imp
     else imp_to_string (nm_to_string a ^ ":" ^ term_to_string a.sort) imp
     
