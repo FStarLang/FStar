@@ -75,7 +75,7 @@ mllibs:
 	$(MAKE) -C $(FSTAR_HOME)/contrib/CoreCrypto/ml clean all test
 
 RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
-	$(FSTAR) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
+	$(FSTAR_ALWAYS) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst rpc.fst \
 		--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --use_native_int
@@ -101,7 +101,7 @@ CntProtocol: CntFormat.fst mac.fst sha1.fst CntProtocol.fst
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst CntProtocol.fst
 
 CntProtocol.ml: CntFormat.fst mac.fst sha1.fst CntProtocol.fst
-	$(FSTAR) --z3timeout 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
+	$(FSTAR_ALWAYS) --z3timeout 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst CntProtocol.fst \

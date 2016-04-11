@@ -80,7 +80,7 @@ INTERPRETER_FILES=prins.fst FStar.UInt8.fst $(CONTRIB)/Platform/fst/Platform.Byt
 codegen:
 	cp $(SMCIF) smciface.fsti
 	cp $(SMCMAIN) smc_main.fst
-	$(FSTAR) --explicit_deps $(CODEGEN_FLAGS) $(EXTERNAL_FLAGS) $(FSTAR_LIB_FILES) $(INTERPRETER_FILES) smciface.fsti smc_main.fst
+	$(FSTAR_ALWAYS) --explicit_deps $(CODEGEN_FLAGS) $(EXTERNAL_FLAGS) $(FSTAR_LIB_FILES) $(INTERPRETER_FILES) smciface.fsti smc_main.fst
 
 # codegen:
 # 	$(FSTAR)       \
