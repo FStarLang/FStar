@@ -543,7 +543,12 @@ let ecdsa_verify hash_alg key input signature =
 
 (* -------------------------------------------------------------------------- *)
 
+type certkey =
+  | CertRSA of rsa
+  | CertECDSA of ssl_ec_key
+
 external ocaml_validate_chain: string list -> bool -> string option -> string -> bool = "ocaml_validate_chain"
+external ocaml_load_chain_from_file: string -> string -> (certkey * string list) option = "ocaml_load_chain_from_file"
 external ocaml_get_rsa_from_cert: string -> rsa option = "ocaml_get_rsa_from_cert" 
 external ocaml_get_ecdsa_from_cert: string -> ssl_ec_key option = "ocaml_get_ecdsa_from_cert"
 
@@ -569,21 +574,20 @@ let cert_verify_sig cert sa ha tbs sigv =
           ret)
   | _ -> false
 
-let cert_sign cert sa ha tbs =
-  match sa with
-  | RSASIG ->
-    (match ocaml_get_rsa_from_cert (string_of_bytes cert) with
-      | None -> None
-      | Some rsa ->
-          let ret = ocaml_rsa_sign rsa (Some ha) (string_of_bytes tbs) in
-          ocaml_rsa_fini rsa;
-          Some (bytes_of_string ret))
-  | ECDSA ->
-      (match ocaml_get_ecdsa_from_cert (string_of_bytes cert) with
-      | None -> None
-      | Some ec ->
-          let ret = ocaml_ecdsa_sign ec (string_of_bytes tbs) in
-          Some (bytes_of_string ret))
+let cert_load_chain pemfile keyfile =
+  match ocaml_load_chain_from_file pemfile keyfile with
+  | Some (sk, chain) -> Some (sk, List.rev_map bytes_of_string chain)
+  | None -> None
+
+let cert_sign key sa ha tbs =
+  let tbs = hash ha tbs in
+  match sa, key with
+  | RSASIG, CertRSA rsa ->
+     let ret = ocaml_rsa_sign rsa (Some ha) (string_of_bytes tbs) in
+     Some (bytes_of_string ret)
+  | ECDSA, CertECDSA ec ->
+     let ret = ocaml_ecdsa_sign ec (string_of_bytes tbs) in
+     Some (bytes_of_string ret)
   | _ -> None
 
 (*
