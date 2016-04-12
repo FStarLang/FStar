@@ -17,7 +17,7 @@ OPAM requires the environment to be set up properly in order to function. Manual
 ```
 export CAML_LD_LIBRARY_PATH=$HOME/.opam/system/lib/stublibs:/cygdrive/c/OCaml/lib/stublibs
 export MANPATH=$HOME/.opam/system/man:$MANPATH
-export PATH=$HOME/.opam/system/bin:$PATH
+export PATH=$HOME/.opam/system/bin:/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$PATH
 ```
 OPAM may attempt to address this itself by appending the following to your `$HOME/.bash_profile`:
 ```
