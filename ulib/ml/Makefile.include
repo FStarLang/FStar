@@ -8,5 +8,5 @@ FSTAR_REALIZED_MODULES=All BaseTypes Char Float Heap Int8 Int16 Int32 Int64 \
 FSTAR_DEFAULT_ARGS=$(addprefix --no_extract ,$(FSTAR_REALIZED_MODULES))
 ULIB_ML=$(FSTAR_HOME)/ulib/ml
 OCAML_DEFAULT_FLAGS=$(ULIB_ML)/fstarlib.cmxa -I $(ULIB_ML)
-OCAMLOPT=ocamlfind opt -package batteries,stdint -linkpkg -g $(OCAML_DEFAULT_FLAGS)
-OCAMLC=ocamlfind c -package batteries,stdint -linkpkg -g $(OCAML_DEFAULT_FLAGS)
+OCAMLOPT=ocamlfind opt -package batteries,stdint,zarith -linkpkg -g $(OCAML_DEFAULT_FLAGS)
+OCAMLC=ocamlfind c -package batteries,stdint,zarith -linkpkg -g $(OCAML_DEFAULT_FLAGS)
