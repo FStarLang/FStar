@@ -262,9 +262,9 @@ module Tcp = struct
   let listen s i =
       let server_sock = socket PF_INET SOCK_STREAM 0 in
       (setsockopt server_sock SO_REUSEADDR true ;
-       let address = (gethostbyname(gethostname())).h_addr_list.(0) in
+       let address = inet_addr_of_string s in
        bind server_sock (ADDR_INET (address, i)) ;
-       listen server_sock 10 ;
+       listen server_sock 10;
        server_sock)
 
   let accept s =
