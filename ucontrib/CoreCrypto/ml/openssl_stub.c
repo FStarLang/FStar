@@ -659,7 +659,7 @@ CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
     if (RSA_generate_key_ex(rsa, Int_val(mlsz), bn_mlexp, NULL) != 1) {
       RSA_free(rsa);
       BN_free(bn_mlexp);
-      caml_failwith("RSA:genkey failed");CAMLlocal1(mlrsa);
+      caml_failwith("RSA:genkey failed");
     }
 
     CAMLlocal3(e, n, d);

@@ -18,7 +18,7 @@ endif
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all: .all.crypto.ver merkle_tree mac mac3 rpc CntProtocol padding acls-cap statefulEnc
+all: .all.crypto.ver merkle_tree mac mac3 rpc CntProtocol padding acls-cap statefulEnc sig
 
 .all.crypto.ver: $(VERFILES)
 	$(FSTAR) --z3timeout 20 $^
@@ -32,7 +32,10 @@ mac: sha1.fst mac.fst
 		$^
 
 sig: sig.fst
-	$(FSTAR) $^
+	$(FSTAR) \
+		--include $(FSTAR_HOME)/contrib/Platform/fst \
+		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
+		$^
 
 padding: Padding.Pad.fst Padding.BMAC.fst Padding.MAC2.fst Padding.TMAC.fst
 	$(FSTAR) --z3timeout 20 --verify_module Padding.Pad --verify_module Padding.BMAC --verify_module Padding.MAC2 --verify_module Padding.TMAC --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \

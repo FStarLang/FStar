@@ -14,25 +14,24 @@
    limitations under the License.
 *)
 
-module SigIdeal
+module Sig
 
 open FStar.Array
 open FStar.List
 open FStar.ST
+open Platform.Bytes
 
-type bytes    = list byte
 type text     = bytes
-type nbytes (n:nat) = b:bytes{List.length b == n}
 let sigsize = 256
 let sksize = 256
 let pksize = 256
-type sig_t = nbytes sigsize
-type pk   = nbytes pksize
-type sk   = nbytes sksize
+type sig_t = lbytes sigsize
+type pk   = lbytes pksize
+type sk   = lbytes sksize
 
 assume val fdh_rsa: sk -> text -> Tot sig_t
 
-type key_prop : pk -> text -> Type
+new type key_prop : pk -> text -> Type
 type prop_pk (p:(text -> Type)) = k:pk{key_prop k == p}
 
 assume val sk_to_pk : sk -> Tot pk
