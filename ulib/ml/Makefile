@@ -10,7 +10,7 @@ COMMON=FStar_Float.ml FStar_Char.ml FStar_Int8.ml FStar_UInt8.ml FStar_Int16.ml 
 FILES=$(PRIMS) FStar_ST.ml $(COMMON)
 HYPERHEAP=$(PRIMS) ./hyperheap/FStar_ST.ml $(COMMON) ./hyperheap/FStar_HyperHeap.ml
 
-OCAMLOPT=ocamlfind opt -thread -package batteries -linkpkg -g $(INCLUDES)
+OCAMLOPT=ocamlfind opt -thread -package batteries,zarith -linkpkg -g $(INCLUDES)
 OCAMLDEP=ocamlfind dep
 OCAMLMKLIB=ocamlfind mklib
 

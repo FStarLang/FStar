@@ -1,16 +1,16 @@
 include MkPrims.Make(struct
 
-  type int = Big_int.big_int
-  let ( + )     = Big_int.add_big_int
-  let ( - )     = Big_int.sub_big_int
-  let ( * )     = Big_int.mult_big_int
-  let ( / )     = Big_int.div_big_int
-  let ( <= )    = Big_int.le_big_int
-  let ( >= )    = Big_int.ge_big_int
-  let ( < )     = Big_int.lt_big_int
-  let ( > )     = Big_int.gt_big_int
-  let ( % )     = Big_int.mod_big_int
-  let op_Minus  = Big_int.minus_big_int
-  let parse_int = Big_int.big_int_of_string
+  type int      = Big_int_Z.big_int
+  let ( + )     = Big_int_Z.add_big_int
+  let ( - )     = Big_int_Z.sub_big_int
+  let ( * )     = Big_int_Z.mult_big_int
+  let ( / )     = Big_int_Z.div_big_int
+  let ( <= )    = Big_int_Z.le_big_int
+  let ( >= )    = Big_int_Z.ge_big_int
+  let ( < )     = Big_int_Z.lt_big_int
+  let ( > )     = Big_int_Z.gt_big_int
+  let ( % )     = Big_int_Z.mod_big_int
+  let op_Minus  = Big_int_Z.minus_big_int
+  let parse_int = Big_int_Z.big_int_of_string
 
 end)
