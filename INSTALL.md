@@ -192,10 +192,7 @@ Steps 2 and 3 below require a working OCaml (4.02.2 or later) setup.
    install Cygwin -- it will just launch Cygwin's setup.exe with the right set
    of packages pre-checked, to make sure you have everything you need.
 
-1. Install `gmp`:
-
-  - Open the Cygwin installer and install the `gmp` package.
-  - Open the Cygwin terminal and fake the installation of OPAM package `conf-gmp`:
+1. Open the Cygwin terminal and fake the installation of OPAM package `conf-gmp`:
 
   ```sh
   $ opam install --fake conf-gmp
