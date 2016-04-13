@@ -136,7 +136,8 @@ let string_of_lid (l: lident) (last: bool) =
   String.concat "." names
 
 
-(** All the components of a [lident] joined by ".".  *)
+(** All the components of a [lident] joined by "." (the last component of the
+ * lident is included iff [last = true]).  *)
 let lowercase_join_longident (l: lident) (last: bool) =
   String.lowercase (string_of_lid l last)
 
@@ -171,6 +172,12 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
           Util.fprint stderr "Warning: no modules in namespace %s and no file with \
             that name either\n" [string_of_lid lid true]
     end
+  in
+  let record_module_alias ident lid =
+    let key = String.lowercase (text_of_id ident) in
+    let alias = lowercase_join_longident lid true in
+    let deps_of_aliased_module = must (smap_try_find working_map alias) in
+    smap_add working_map key deps_of_aliased_module
   in
 
   (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
@@ -231,6 +238,8 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
   and collect_decl = function
     | Open lid ->
         record_open lid
+    | ModuleAbbrev (ident, lid) ->
+        record_module_alias ident lid
     | ToplevelLet (_, _, patterms) ->
         List.iter (fun (_, t) -> collect_term t) patterms
     | KindAbbrev (_, binders, t) ->

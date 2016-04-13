@@ -23,8 +23,8 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -qq update; fi
 
 install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gcc ocaml opam z3; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install --yes libssl-dev opam libsqlite3-dev g++-5 gcc-5; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gcc ocaml opam z3 gmp; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install --yes libssl-dev opam libgmp-dev libsqlite3-dev g++-5 gcc-5; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 200; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 200; fi
   - export OPAMYES=true
@@ -32,7 +32,7 @@ install:
   - eval $(opam config env)
   - opam switch 4.02.3
   - eval $(opam config env)
-  - opam install batteries sqlite3 fileutils stdint
+  - opam install batteries sqlite3 fileutils stdint zarith
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export Z3=z3-4.4.1-x64-ubuntu-14.04; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then wget https://github.com/Z3Prover/z3/releases/download/z3-4.4.1/$Z3.zip; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then unzip $Z3.zip; fi

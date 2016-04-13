@@ -1,6 +1,6 @@
 
 open Prims
-# 26 "FStar.SMTEncoding.Z3.fst"
+# 21 "FStar.SMTEncoding.Z3.fst"
 type z3version =
 | Z3V_Unknown
 | Z3V of (Prims.int * Prims.int * Prims.int)
@@ -29,7 +29,7 @@ let ___Z3V____0 = (fun projectee -> (match (projectee) with
 _80_4
 end))
 
-# 30 "FStar.SMTEncoding.Z3.fst"
+# 28 "FStar.SMTEncoding.Z3.fst"
 let z3v_compare : z3version  ->  (Prims.int * Prims.int * Prims.int)  ->  Prims.int Prims.option = (fun known _80_9 -> (match (_80_9) with
 | (w1, w2, w3) -> begin
 (match (known) with
@@ -49,7 +49,7 @@ end)
 end)
 end))
 
-# 39 "FStar.SMTEncoding.Z3.fst"
+# 37 "FStar.SMTEncoding.Z3.fst"
 let z3v_le : z3version  ->  (Prims.int * Prims.int * Prims.int)  ->  Prims.bool = (fun known wanted -> (match ((z3v_compare known wanted)) with
 | None -> begin
 false
@@ -58,10 +58,10 @@ end
 (i >= 0)
 end))
 
-# 44 "FStar.SMTEncoding.Z3.fst"
+# 42 "FStar.SMTEncoding.Z3.fst"
 let _z3version : z3version Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 46 "FStar.SMTEncoding.Z3.fst"
+# 44 "FStar.SMTEncoding.Z3.fst"
 let get_z3version : Prims.unit  ->  z3version = (fun _80_21 -> (match (()) with
 | () -> begin
 (
@@ -116,7 +116,7 @@ end))
 end))
 end))
 
-# 66 "FStar.SMTEncoding.Z3.fst"
+# 64 "FStar.SMTEncoding.Z3.fst"
 let ini_params : Prims.unit  ->  Prims.string = (fun _80_56 -> (match (()) with
 | () -> begin
 (
@@ -142,7 +142,7 @@ end
 in (FStar_Util.format2 "-smt2 -in %s AUTO_CONFIG=false MODEL=true %s=2" timeout relevancy))))
 end))
 
-# 84 "FStar.SMTEncoding.Z3.fst"
+# 82 "FStar.SMTEncoding.Z3.fst"
 type z3status =
 | SAT
 | UNSAT
@@ -185,7 +185,7 @@ end
 false
 end))
 
-# 90 "FStar.SMTEncoding.Z3.fst"
+# 88 "FStar.SMTEncoding.Z3.fst"
 let status_to_string : z3status  ->  Prims.string = (fun _80_1 -> (match (_80_1) with
 | SAT -> begin
 "sat"
@@ -200,14 +200,14 @@ end
 "timeout"
 end))
 
-# 96 "FStar.SMTEncoding.Z3.fst"
+# 94 "FStar.SMTEncoding.Z3.fst"
 let tid : Prims.unit  ->  Prims.string = (fun _80_65 -> (match (()) with
 | () -> begin
 (let _169_43 = (FStar_Util.current_tid ())
 in (FStar_All.pipe_right _169_43 FStar_Util.string_of_int))
 end))
 
-# 97 "FStar.SMTEncoding.Z3.fst"
+# 96 "FStar.SMTEncoding.Z3.fst"
 let new_z3proc : Prims.string  ->  FStar_Util.proc = (fun id -> (
 # 98 "FStar.SMTEncoding.Z3.fst"
 let cond = (fun pid s -> (
@@ -218,17 +218,17 @@ in (let _169_51 = (FStar_ST.read FStar_Options.z3_exe)
 in (let _169_50 = (ini_params ())
 in (FStar_Util.start_process id _169_51 _169_50 cond)))))
 
-# 104 "FStar.SMTEncoding.Z3.fst"
+# 102 "FStar.SMTEncoding.Z3.fst"
 type bgproc =
 {grab : Prims.unit  ->  FStar_Util.proc; release : Prims.unit  ->  Prims.unit; refresh : Prims.unit  ->  Prims.unit}
 
 # 104 "FStar.SMTEncoding.Z3.fst"
 let is_Mkbgproc : bgproc  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbgproc"))))
 
-# 111 "FStar.SMTEncoding.Z3.fst"
+# 108 "FStar.SMTEncoding.Z3.fst"
 let queries_dot_smt2 : FStar_Util.file_handle Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 113 "FStar.SMTEncoding.Z3.fst"
+# 111 "FStar.SMTEncoding.Z3.fst"
 let get_qfile : Prims.bool  ->  FStar_Util.file_handle = (
 # 114 "FStar.SMTEncoding.Z3.fst"
 let ctr = (FStar_Util.mk_ref 0)
@@ -256,7 +256,7 @@ fh
 end)
 end))
 
-# 123 "FStar.SMTEncoding.Z3.fst"
+# 121 "FStar.SMTEncoding.Z3.fst"
 let log_query : Prims.bool  ->  Prims.string  ->  Prims.unit = (fun fresh i -> (
 # 124 "FStar.SMTEncoding.Z3.fst"
 let fh = (get_qfile fresh)
@@ -269,13 +269,13 @@ end else begin
 ()
 end)))
 
-# 128 "FStar.SMTEncoding.Z3.fst"
+# 126 "FStar.SMTEncoding.Z3.fst"
 let the_z3proc : FStar_Util.proc Prims.option FStar_ST.ref = (FStar_ST.alloc None)
 
-# 131 "FStar.SMTEncoding.Z3.fst"
+# 129 "FStar.SMTEncoding.Z3.fst"
 let ctr : Prims.int FStar_ST.ref = (FStar_Util.mk_ref (- (1)))
 
-# 133 "FStar.SMTEncoding.Z3.fst"
+# 131 "FStar.SMTEncoding.Z3.fst"
 let new_proc : Prims.unit  ->  FStar_Util.proc = (fun _80_90 -> (match (()) with
 | () -> begin
 (let _169_93 = (let _169_92 = (
@@ -287,7 +287,7 @@ in (FStar_Util.format1 "bg-%s" _169_92))
 in (new_z3proc _169_93))
 end))
 
-# 136 "FStar.SMTEncoding.Z3.fst"
+# 134 "FStar.SMTEncoding.Z3.fst"
 let z3proc : Prims.unit  ->  FStar_Util.proc = (fun _80_93 -> (match (()) with
 | () -> begin
 (
@@ -303,7 +303,7 @@ in (let _169_98 = (FStar_ST.read the_z3proc)
 in (FStar_Util.must _169_98)))
 end))
 
-# 141 "FStar.SMTEncoding.Z3.fst"
+# 139 "FStar.SMTEncoding.Z3.fst"
 let bg_z3_proc : bgproc = (
 # 142 "FStar.SMTEncoding.Z3.fst"
 let x = []
@@ -359,7 +359,7 @@ in (release ())))))
 end))
 in {grab = grab; release = release; refresh = refresh}))))
 
-# 161 "FStar.SMTEncoding.Z3.fst"
+# 159 "FStar.SMTEncoding.Z3.fst"
 let doZ3Exe' : Prims.string  ->  FStar_Util.proc  ->  (z3status * Prims.string Prims.list) = (fun input z3proc -> (
 # 162 "FStar.SMTEncoding.Z3.fst"
 let parse = (fun z3out -> (
@@ -410,7 +410,7 @@ in (
 let stdout = (FStar_Util.ask_process z3proc input)
 in (parse (FStar_Util.trim_string stdout)))))
 
-# 179 "FStar.SMTEncoding.Z3.fst"
+# 177 "FStar.SMTEncoding.Z3.fst"
 let doZ3Exe : Prims.bool  ->  Prims.string  ->  (z3status * Prims.string Prims.list) = (
 # 180 "FStar.SMTEncoding.Z3.fst"
 let ctr = (FStar_Util.mk_ref 0)
@@ -438,7 +438,7 @@ end else begin
 end
 in res)))))
 
-# 188 "FStar.SMTEncoding.Z3.fst"
+# 186 "FStar.SMTEncoding.Z3.fst"
 let z3_options : Prims.unit  ->  Prims.string = (fun _80_169 -> (match (()) with
 | () -> begin
 (
@@ -460,24 +460,24 @@ end
 in (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "(set-option :global-decls false)\n" "(set-option :") mbqi) " false)\n") model_on_timeout)))
 end))
 
-# 201 "FStar.SMTEncoding.Z3.fst"
+# 199 "FStar.SMTEncoding.Z3.fst"
 type 'a job =
 {job : Prims.unit  ->  'a; callback : 'a  ->  Prims.unit}
 
 # 201 "FStar.SMTEncoding.Z3.fst"
 let is_Mkjob = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkjob"))))
 
-# 205 "FStar.SMTEncoding.Z3.fst"
+# 204 "FStar.SMTEncoding.Z3.fst"
 type z3job =
 (Prims.bool * FStar_SMTEncoding_Term.error_label Prims.list) job
 
-# 207 "FStar.SMTEncoding.Z3.fst"
+# 205 "FStar.SMTEncoding.Z3.fst"
 let job_queue : z3job Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 211 "FStar.SMTEncoding.Z3.fst"
+# 207 "FStar.SMTEncoding.Z3.fst"
 let pending_jobs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 0)
 
-# 212 "FStar.SMTEncoding.Z3.fst"
+# 211 "FStar.SMTEncoding.Z3.fst"
 let with_monitor = (fun m f -> (
 # 213 "FStar.SMTEncoding.Z3.fst"
 let _80_178 = (FStar_Util.monitor_enter m)
@@ -489,7 +489,7 @@ in (
 let _80_181 = (FStar_Util.monitor_exit m)
 in res))))
 
-# 218 "FStar.SMTEncoding.Z3.fst"
+# 216 "FStar.SMTEncoding.Z3.fst"
 let z3_job = (fun fresh label_messages input _80_186 -> (match (()) with
 | () -> begin
 (
@@ -530,7 +530,7 @@ in result)
 end))
 end))
 
-# 231 "FStar.SMTEncoding.Z3.fst"
+# 229 "FStar.SMTEncoding.Z3.fst"
 let rec dequeue' : Prims.unit  ->  Prims.unit = (fun _80_210 -> (match (()) with
 | () -> begin
 (
@@ -590,7 +590,7 @@ end))
 and run_job : z3job  ->  Prims.unit = (fun j -> (let _169_178 = (j.job ())
 in (FStar_All.pipe_left j.callback _169_178)))
 
-# 254 "FStar.SMTEncoding.Z3.fst"
+# 252 "FStar.SMTEncoding.Z3.fst"
 let init : Prims.unit  ->  Prims.unit = (fun _80_240 -> (match (()) with
 | () -> begin
 (
@@ -609,7 +609,7 @@ end)
 in (aux n_runners)))
 end))
 
-# 261 "FStar.SMTEncoding.Z3.fst"
+# 259 "FStar.SMTEncoding.Z3.fst"
 let enqueue : Prims.bool  ->  z3job  ->  Prims.unit = (fun fresh j -> if (not (fresh)) then begin
 (run_job j)
 end else begin
@@ -627,7 +627,7 @@ let _80_252 = (FStar_Util.monitor_pulse job_queue)
 in (FStar_Util.monitor_exit job_queue))))
 end)
 
-# 272 "FStar.SMTEncoding.Z3.fst"
+# 270 "FStar.SMTEncoding.Z3.fst"
 let finish : Prims.unit  ->  Prims.unit = (fun _80_254 -> (match (()) with
 | () -> begin
 (
@@ -668,17 +668,17 @@ end))
 in (aux ())))))
 end))
 
-# 285 "FStar.SMTEncoding.Z3.fst"
+# 283 "FStar.SMTEncoding.Z3.fst"
 type scope_t =
 FStar_SMTEncoding_Term.decl Prims.list Prims.list
 
-# 286 "FStar.SMTEncoding.Z3.fst"
+# 285 "FStar.SMTEncoding.Z3.fst"
 let fresh_scope : FStar_SMTEncoding_Term.decl Prims.list Prims.list FStar_ST.ref = (FStar_Util.mk_ref (([])::[]))
 
-# 287 "FStar.SMTEncoding.Z3.fst"
+# 286 "FStar.SMTEncoding.Z3.fst"
 let bg_scope : FStar_SMTEncoding_Term.decl Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 288 "FStar.SMTEncoding.Z3.fst"
+# 287 "FStar.SMTEncoding.Z3.fst"
 let push : Prims.string  ->  Prims.unit = (fun msg -> (
 # 289 "FStar.SMTEncoding.Z3.fst"
 let _80_269 = (let _169_201 = (let _169_200 = (FStar_ST.read fresh_scope)
@@ -688,7 +688,7 @@ in (let _169_203 = (let _169_202 = (FStar_ST.read bg_scope)
 in (FStar_List.append ((FStar_SMTEncoding_Term.Caption (msg))::(FStar_SMTEncoding_Term.Push)::[]) _169_202))
 in (FStar_ST.op_Colon_Equals bg_scope _169_203))))
 
-# 291 "FStar.SMTEncoding.Z3.fst"
+# 290 "FStar.SMTEncoding.Z3.fst"
 let pop : Prims.string  ->  Prims.unit = (fun msg -> (
 # 292 "FStar.SMTEncoding.Z3.fst"
 let _80_272 = (let _169_207 = (let _169_206 = (FStar_ST.read fresh_scope)
@@ -698,7 +698,7 @@ in (let _169_209 = (let _169_208 = (FStar_ST.read bg_scope)
 in (FStar_List.append ((FStar_SMTEncoding_Term.Caption (msg))::(FStar_SMTEncoding_Term.Pop)::[]) _169_208))
 in (FStar_ST.op_Colon_Equals bg_scope _169_209))))
 
-# 294 "FStar.SMTEncoding.Z3.fst"
+# 293 "FStar.SMTEncoding.Z3.fst"
 let giveZ3 : FStar_SMTEncoding_Term.decl Prims.list  ->  Prims.unit = (fun decls -> (
 # 295 "FStar.SMTEncoding.Z3.fst"
 let _80_280 = (match ((FStar_ST.read fresh_scope)) with
@@ -712,7 +712,7 @@ in (let _169_213 = (let _169_212 = (FStar_ST.read bg_scope)
 in (FStar_List.append (FStar_List.rev decls) _169_212))
 in (FStar_ST.op_Colon_Equals bg_scope _169_213))))
 
-# 299 "FStar.SMTEncoding.Z3.fst"
+# 298 "FStar.SMTEncoding.Z3.fst"
 let bgtheory : Prims.bool  ->  FStar_SMTEncoding_Term.decl Prims.list = (fun fresh -> if fresh then begin
 (let _169_217 = (let _169_216 = (FStar_ST.read fresh_scope)
 in (FStar_List.rev _169_216))
@@ -727,7 +727,7 @@ let _80_284 = (FStar_ST.op_Colon_Equals bg_scope [])
 in (FStar_List.rev bg)))
 end)
 
-# 305 "FStar.SMTEncoding.Z3.fst"
+# 304 "FStar.SMTEncoding.Z3.fst"
 let refresh : Prims.unit  ->  Prims.unit = (fun _80_286 -> (match (()) with
 | () -> begin
 (
@@ -739,16 +739,16 @@ let theory = (bgtheory true)
 in (FStar_ST.op_Colon_Equals bg_scope (FStar_List.rev theory))))
 end))
 
-# 309 "FStar.SMTEncoding.Z3.fst"
+# 308 "FStar.SMTEncoding.Z3.fst"
 let mark : Prims.string  ->  Prims.unit = (fun msg -> (push msg))
 
-# 311 "FStar.SMTEncoding.Z3.fst"
+# 310 "FStar.SMTEncoding.Z3.fst"
 let reset_mark : Prims.string  ->  Prims.unit = (fun msg -> (
 # 312 "FStar.SMTEncoding.Z3.fst"
 let _80_292 = (pop msg)
 in (refresh ())))
 
-# 314 "FStar.SMTEncoding.Z3.fst"
+# 313 "FStar.SMTEncoding.Z3.fst"
 let commit_mark = (fun msg -> (match ((FStar_ST.read fresh_scope)) with
 | hd::s::tl -> begin
 (FStar_ST.op_Colon_Equals fresh_scope (((FStar_List.append hd s))::tl))
@@ -757,7 +757,7 @@ end
 (FStar_All.failwith "Impossible")
 end))
 
-# 319 "FStar.SMTEncoding.Z3.fst"
+# 318 "FStar.SMTEncoding.Z3.fst"
 let ask : Prims.bool  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Int64.int64) Prims.list  ->  FStar_SMTEncoding_Term.decl Prims.list  ->  ((Prims.bool * FStar_SMTEncoding_Term.error_labels)  ->  Prims.unit)  ->  Prims.unit = (fun fresh label_messages qry cb -> (
 # 320 "FStar.SMTEncoding.Z3.fst"
 let fresh = (fresh && ((FStar_ST.read FStar_Options.n_cores) > 1))

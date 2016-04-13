@@ -10,7 +10,7 @@ COMMON=FStar_Float.ml FStar_Char.ml FStar_Int8.ml FStar_UInt8.ml FStar_Int16.ml 
 FILES=$(PRIMS) FStar_ST.ml $(COMMON)
 HYPERHEAP=$(PRIMS) ./hyperheap/FStar_ST.ml $(COMMON) ./hyperheap/FStar_HyperHeap.ml
 
-OCAMLOPT=ocamlfind opt -thread -package batteries -linkpkg -g $(INCLUDES)
+OCAMLOPT=ocamlfind opt -thread -package zarith,batteries -linkpkg -g $(INCLUDES)
 OCAMLDEP=ocamlfind dep
 OCAMLMKLIB=ocamlfind mklib
 
@@ -22,10 +22,10 @@ HH_CMX=$(HYPERHEAP:.ml=.cmx)
 # Note: because of the way we either prepend the regular ST or the hyperheap ST,
 # you must always clean before running either "make" or "make hyperheap".
 all: $(OBJS)
-	ocamlopt -a $(CMX) -o fstarlib.cmxa
+	ocamlfind ocamlopt -a $(CMX) -o fstarlib.cmxa
 
 hyperheap: $(HH_OBJS)
-	ocamlopt -a $(HH_CMX) -o fstarlib-hyperheap.cmxa
+	ocamlfind ocamlopt -a $(HH_CMX) -o fstarlib-hyperheap.cmxa
 
 # Common rules
 .SUFFIXES: .ml .mli .cmo .cmi .cmx

@@ -17,7 +17,7 @@ OPAM requires the environment to be set up properly in order to function. Manual
 ```
 export CAML_LD_LIBRARY_PATH=$HOME/.opam/system/lib/stublibs:/cygdrive/c/OCaml/lib/stublibs
 export MANPATH=$HOME/.opam/system/man:$MANPATH
-export PATH=$HOME/.opam/system/bin:$PATH
+export PATH=$HOME/.opam/system/bin:/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$PATH
 ```
 OPAM may attempt to address this itself by appending the following to your `$HOME/.bash_profile`:
 ```
@@ -54,8 +54,9 @@ opam install sqlite3
 ## On Linux
 
 * On recent Ubuntus and Debians, installing `openssl-dev` should be enough and work out of the box. (JP: OpenSSL 1.0.2d 9 Jul 2015 worked for me).
+* On older Ubuntus, we've had success with some PPA that offers a recent OpenSSL. See the `.travis.yml` file in the repo.
 
-If you get errors about missing `EVP_AES_GCM`, then you need to obtain the OpenSSL sourcecode, e.g. using
+Otherwise, if you get errors about missing `EVP_AES_GCM`, then you need to obtain the OpenSSL sourcecode, e.g. using
 
     git clone https://github.com/openssl/openssl.git
 
