@@ -2160,8 +2160,7 @@ let rec tc_decl env se = match se with
     | Sig_declare_typ(lid, uvs, t, quals, r) -> //NS: No checks on the qualifiers? 
       let env = Env.set_range env r in
       assert (uvs = []);
-      let k = fst (U.type_u()) in
-      let uvs, t = check_and_gen env t k in
+      let uvs, t = check_and_gen env t (fst (U.type_u())) in
       let se = Sig_declare_typ(lid, uvs, t, quals, r) in
       let env = Env.push_sigelt env se in
       se, env

@@ -75,7 +75,8 @@ let rec unparen t = match t.tm with
   | Paren t -> unparen t
   | _ -> t
 
-let tm_type r = mk_term (Name (lid_of_path ["Type"] r)) r Kind
+let tm_type_z r = mk_term (Name (lid_of_path ["Type0"] r)) r Kind
+let tm_type r = mk_term (Name (lid_of_path   [ "Type"] r)) r Kind
 
 let rec delta_qualifier t = 
     let t = Subst.compress t in
@@ -1174,8 +1175,11 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         env, (y, imp)::tps) (env, []) bs in 
     env, List.rev bs in
   match tcs with
-    | [TyconAbstract _] ->
-        let tc = List.hd tcs in
+    | [TyconAbstract(id, bs, kopt)] ->
+        let kopt = match kopt with 
+            | None -> Some (tm_type_z id.idRange)
+            | _ -> kopt in
+        let tc = TyconAbstract(id, bs, kopt) in
         let _, _, se, _ = desugar_abstract_tc quals env [] tc in
         let se = match se with 
            | Sig_inductive_typ(l, _, typars, k, [], [], quals, rng) -> 
