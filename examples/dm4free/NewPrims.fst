@@ -107,6 +107,11 @@ let pure2_push #a #t1 #t2 f = fun p -> fun e1 -> f e1 p
 (* WP is a particular *ghost* context *)
 type pure2_wp (a:Type) = pure2_gctx a Type0
 
+// Under the assumption that wp1 and wp2 are monotonic (in fact, only
+// the monotonicity of one is needed) this is equivalent to the old
+// notion of pointwise implication. If the SMT has trouble with this new
+// definition, we could use the other one either asking the user for a
+// proof or trusting it at his own risk.
 type pure2_stronger (a:Type) (wp1:pure2_wp a) (wp2:pure2_wp a) =
   forall p1 p2. (
     (forall (x:a). p1 x ==> p2 x) ==> (wp1 p1 ==> wp2 p2)
