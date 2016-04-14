@@ -65,14 +65,14 @@ end))
 
 # 45 "FStar.TypeChecker.Common.fst"
 let ___TProb____0 = (fun projectee -> (match (projectee) with
-| TProb (_62_17) -> begin
-_62_17
+| TProb (_51_17) -> begin
+_51_17
 end))
 
 # 46 "FStar.TypeChecker.Common.fst"
 let ___CProb____0 = (fun projectee -> (match (projectee) with
-| CProb (_62_20) -> begin
-_62_20
+| CProb (_51_20) -> begin
+_51_20
 end))
 
 # 48 "FStar.TypeChecker.Common.fst"
@@ -104,8 +104,8 @@ end))
 
 # 52 "FStar.TypeChecker.Common.fst"
 let ___NonTrivial____0 = (fun projectee -> (match (projectee) with
-| NonTrivial (_62_23) -> begin
-_62_23
+| NonTrivial (_51_23) -> begin
+_51_23
 end))
 
 # 54 "FStar.TypeChecker.Common.fst"
@@ -117,14 +117,14 @@ type univ_ineq =
 (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
 
 # 60 "FStar.TypeChecker.Common.fst"
-let tconst : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _151_83 = (let _151_82 = (FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None)
-in FStar_Syntax_Syntax.Tm_fvar (_151_82))
-in (FStar_Syntax_Syntax.mk _151_83 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
+let tconst : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _140_83 = (let _140_82 = (FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None)
+in FStar_Syntax_Syntax.Tm_fvar (_140_82))
+in (FStar_Syntax_Syntax.mk _140_83 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
 
 # 61 "FStar.TypeChecker.Common.fst"
-let tabbrev : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _151_87 = (let _151_86 = (FStar_Syntax_Syntax.lid_as_fv l (FStar_Syntax_Syntax.Delta_unfoldable (1)) None)
-in FStar_Syntax_Syntax.Tm_fvar (_151_86))
-in (FStar_Syntax_Syntax.mk _151_87 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
+let tabbrev : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _140_87 = (let _140_86 = (FStar_Syntax_Syntax.lid_as_fv l (FStar_Syntax_Syntax.Delta_unfoldable (1)) None)
+in FStar_Syntax_Syntax.Tm_fvar (_140_86))
+in (FStar_Syntax_Syntax.mk _140_87 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
 
 # 62 "FStar.TypeChecker.Common.fst"
 let t_unit : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.unit_lid)
@@ -170,30 +170,30 @@ let t_char : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax
 
 # 77 "FStar.TypeChecker.Common.fst"
 let rec delta_depth_greater_than : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth  ->  Prims.bool = (fun l m -> (match ((l, m)) with
-| (FStar_Syntax_Syntax.Delta_constant, _62_30) -> begin
+| (FStar_Syntax_Syntax.Delta_constant, _51_30) -> begin
 false
 end
-| (FStar_Syntax_Syntax.Delta_equational, _62_34) -> begin
+| (FStar_Syntax_Syntax.Delta_equational, _51_34) -> begin
 true
 end
-| (_62_37, FStar_Syntax_Syntax.Delta_equational) -> begin
+| (_51_37, FStar_Syntax_Syntax.Delta_equational) -> begin
 false
 end
 | (FStar_Syntax_Syntax.Delta_unfoldable (i), FStar_Syntax_Syntax.Delta_unfoldable (j)) -> begin
 (i > j)
 end
-| (FStar_Syntax_Syntax.Delta_unfoldable (_62_46), FStar_Syntax_Syntax.Delta_constant) -> begin
+| (FStar_Syntax_Syntax.Delta_unfoldable (_51_46), FStar_Syntax_Syntax.Delta_constant) -> begin
 true
 end
-| (FStar_Syntax_Syntax.Delta_abstract (d), _62_53) -> begin
+| (FStar_Syntax_Syntax.Delta_abstract (d), _51_53) -> begin
 (delta_depth_greater_than d m)
 end
-| (_62_56, FStar_Syntax_Syntax.Delta_abstract (d)) -> begin
+| (_51_56, FStar_Syntax_Syntax.Delta_abstract (d)) -> begin
 (delta_depth_greater_than l d)
 end))
 
 # 86 "FStar.TypeChecker.Common.fst"
-let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun _62_1 -> (match (_62_1) with
+let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun _51_1 -> (match (_51_1) with
 | (FStar_Syntax_Syntax.Delta_constant) | (FStar_Syntax_Syntax.Delta_equational) -> begin
 None
 end
