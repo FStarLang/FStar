@@ -45,7 +45,7 @@ type step =
   | UnfoldUntil of S.delta_depth
   | Beta            
   | BetaUVars
-  | Simplify        //Simplifies some basic log cfg ical tautolog cfg ies: not part of definitional equality!
+  | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
   | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
   //remove the rest?
@@ -71,7 +71,7 @@ let closure_to_string = function
 type cfg = {
     steps: steps;
     tcenv: Env.env;
-    delta_level: Env.delta_level
+    delta_level: Env.delta_level  //?
 }
 
 type branches = list<(pat * option<term> * term)> 
@@ -83,7 +83,7 @@ type stack_elt =
  | UnivArgs of list<universe> * Range.range
  | MemoLazy of memo<(env * term)>
  | Match    of env * branches * Range.range
- | Abs      of env * binders * env * option<lcomp> * Range.range
+ | Abs      of env * binders * env * option<lcomp> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of term * aqual * Range.range
  | Meta     of S.metadata * Range.range
 
@@ -436,6 +436,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_unknown
           | Tm_uvar _ 
           | Tm_constant _
+          | Tm_name _
           | Tm_fvar( {fv_delta=Delta_constant} ) 
           | Tm_fvar( {fv_qual=Some Data_ctor } ) 
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
@@ -452,9 +453,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let stack = us::stack in
                  norm cfg env stack t'
      
-          | Tm_name x -> 
-            rebuild cfg env stack t
-           
           | Tm_fvar f -> 
             let should_delta = match cfg.delta_level with 
                 | NoDelta -> false
@@ -504,7 +502,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | UnivArgs _::_ ->
                   failwith "Ill-typed term: universes cannot be applied to term abstraction"
 
-               | Match _::_ -> 
+                | Match _::_ -> 
                   failwith "Ill-typed term: cannot pattern match an abstraction"
 
                 | Arg(c, _, _)::stack -> 
@@ -513,6 +511,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       norm cfg (c::env) stack t
 
                     | _ -> 
+                     (* Note: we peel off on application at a time. 
+                              An optimization to attempt would be to push n-args are once, 
+                              and try to pop all of them at once, in the common case of a full application. 
+                      *)
                       let body = match bs with 
                         | [] -> failwith "Impossible"
                         | [_] -> body
@@ -715,7 +717,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
               let t = S.extend_app head (t,aq) None r in
               rebuild cfg env stack (maybe_simplify cfg.steps t)
 
-            | Match(env, branches, r) :: stack -> 
+            | Match(env, branches, r) :: stack ->
               log cfg  (fun () -> Util.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
               let norm_and_rebuild_match () =
                 let whnf = List.contains WHNF cfg.steps in
