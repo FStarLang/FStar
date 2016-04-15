@@ -78,6 +78,9 @@ let cbyte b = Seq.index b 0
 val cbyte2 : b:bytes{Seq.length b >= 2} -> Tot (byte * byte)
 let cbyte2 b = (Seq.index b 0, Seq.index b 1)
 
+val index : b:bytes -> i:nat{Seq.length b >= i} -> Tot byte
+let index b i = Seq.index b i
+
 (*@ function assume val BLength : (cbytes -> int) @*)
 
 (*@ function assume val Length : (bytes -> int) @*)
