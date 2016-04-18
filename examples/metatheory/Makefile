@@ -6,7 +6,7 @@ all: .all.ver ParSubst StlcCbvDbParSubst LambdaOmega FOmega.fst MicroFStar Hoare
 _STDLIB_=FStar.Constructive.fst FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst 
 
 ParSubst:
-	$(FSTAR) $(_STDLIB_) ParSubst.fst --max_fuel 1 --max_ifuel 1
+	$(FSTAR) --universes ParSubst.fst
 
 StlcStrongDbParSubst:
 	$(FSTAR) --explicit_deps FStar.Constructive.fst FStar.Classical.fst FStar.FunctionalExtensionality.fst StlcStrongDbParSubst.fst --max_fuel 1 --max_ifuel 1

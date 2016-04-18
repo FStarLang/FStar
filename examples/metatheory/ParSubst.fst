@@ -101,7 +101,7 @@ let subst_eabs s y =
   if y = 0 then EVar y
   else subst (s (y-1)) sub_inc
 
-val subst_extensional: e:exp -> s1:sub -> s2:sub{FEq s1 s2} ->
+val subst_extensional: e:exp -> s1:sub -> s2:sub{feq s1 s2} ->
                Lemma (requires True) (ensures (subst e s1 = subst e s2))
                      [SMTPat (subst e s1);  SMTPat (subst e s2)]
 let subst_extensional e s1 s2 = ()
