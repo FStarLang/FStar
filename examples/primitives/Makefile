@@ -20,14 +20,12 @@ POLY_ODIR=poly1305
 BIGNUM_ODIR=bignum_library
 CURVE_ODIR=curve25519
 AES_ODIR=aes
-SHA_X_ODIR=sha
 
 CHACHA_C=Chacha.c test_chacha.c
 POLY_C=Parameters.c Bignum.c Poly.c test_poly.c
 BIGNUM_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c Bignum_Fscalar.c Bignum_Fproduct.c Bignum_Modulo.c Bignum_Core.c test_bignum.c
 CURVE_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c Bignum_Fscalar.c Bignum_Fproduct.c Bignum_Modulo.c Bignum_Core.c Curve_Point.c Curve_AddAndDouble.c Curve_Ladder.c test_curve.c
 AES_C=Crypto_AES.c test_aes.c
-SHA_C=Crypto_Sha256.c
 
 COMPILE=ocamlopt -ccopt -O3 fstarlib.c
 
@@ -39,7 +37,8 @@ NO_CODEGEN=$(addprefix --no_extract , SInt $(REALIZED))
 
 POLY_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
 CHACHA_OCAML=SInt_UInt8.ml SInt_UInt32.ml SBuffer.ml SBytes.ml Chacha.ml
-SHA_X_OCAML=SInt.ml FStar_IO.ml FStar_Heap.ml SInt_UInt8.ml SInt_UInt32.ml SInt_UInt64.ml SBuffer.ml SBytes.ml
+
+
 
 .PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test sha-ver sha-ml
 
@@ -161,55 +160,10 @@ aes-debug: Crypto.AES.fst
 	cd $(AES_ODIR) && $(COMPILE) $(AES_C) -o $(AES)
 	./$(AES_ODIR)/$(AES)
 
-# SHA targets
-sha-ver:
-	$(FSTAR) $(OPTIONS_VER) Crypto.Sha1.fst Crypto.Sha224.fst Crypto.Sha256.fst
 
-sha1-ver:
-	$(FSTAR) $(OPTIONS_VER) Crypto.Sha1.fst
-
-sha1-ml:
-	mkdir -p $(SHA_X_ODIR)1_ml
-	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha1.fst --odir $(SHA_X_ODIR)1_ml
-	cp ./ml/*.ml $(SHA_X_ODIR)1_ml
-
-sha1-test: sha1-ml
-	cd $(SHA_X_ODIR)1_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_X_OCAML) Crypto_Sha1.ml test_sha1.ml -o test_sha1.out #2> /dev/null
-	$(SHA_X_ODIR)1_ml/test_sha1.out
-
-sha224-ver:
-	$(FSTAR) $(OPTIONS_VER) Crypto.Sha224.fst
-
-sha224-ml:
-	mkdir -p $(SHA_X_ODIR)224_ml
-	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha224.fst --odir $(SHA_X_ODIR)224_ml
-	cp ./ml/*.ml $(SHA_X_ODIR)224_ml
-
-sha224-test: sha224-ml
-	cd $(SHA_X_ODIR)224_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_X_OCAML) Crypto_Sha224.ml test_sha224.ml -o test_sha224.out #2> /dev/null
-	$(SHA_X_ODIR)224_ml/test_sha224.out
-
-sha256-ver:
-	$(FSTAR) $(OPTIONS_VER) Crypto.Sha256.fst
-
-sha256-ml:
-	mkdir -p $(SHA_X_ODIR)256_ml
-	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha256.fst --odir $(SHA_X_ODIR)256_ml
-	cp ./ml/*.ml $(SHA_X_ODIR)256_ml
-
-sha256-c: Crypto.Sha256.fst
-	@echo ""
-	@echo " Extracting SHA library "
-	@mkdir -p $(SHA_X_ODIR)256
-	$(FSTAR) $(OPTIONS_COMPILE) --odir $(SHA_X_ODIR)256 $^
-	@cp ./c/*.c ./c/*.h $(SHA_X_ODIR)256
-
-sha256-test: sha256-ml
-	cd $(SHA_X_ODIR)256_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(SHA_X_OCAML) Crypto_Sha256.ml test_sha256.ml -o test_sha256.out #2> /dev/null
-	$(SHA_X_ODIR)256_ml/test_sha256.out
 
 # Cleaning
 clean:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
 	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(CHACHA_ODIR)_ml $(POLY_ODIR)_ml \
-		$(BIGNUM_ODIR) $(CURVE_ODIR) $(AES_ODIR) $(SHA_X_ODIR)* *~ *.exe
+		$(BIGNUM_ODIR) $(CURVE_ODIR) $(AES_ODIR) *~ *.exe
