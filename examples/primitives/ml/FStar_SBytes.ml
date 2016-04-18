@@ -17,6 +17,22 @@ let uint32_of_sbytes (b) =
    (index b 0) + ( (index b 1) lsl 8) +
     ( (index b 2) lsl 16) + ( (index b 3) lsl 24)
 
+let sbytes_of_uint32 res v =
+  let i = 0 in
+  let mask = FStar_UInt32.of_int 0xff in
+  upd res (i) (FStar_UInt32.to_uint8 (v land mask));
+  upd res (i+1) (FStar_UInt32.to_uint8 ((v lsr 8) land mask));
+  upd res (i+2) (FStar_UInt32.to_uint8 ((v lsr 16) land mask));
+  upd res (i+3) (FStar_UInt32.to_uint8 ((v lsr 24) land mask))
+
+let be_sbytes_of_uint32 res v =
+  let i = 0 in
+  let mask = FStar_UInt32.of_int 0xff in
+  upd res (i+3) (FStar_UInt32.to_uint8 (v land mask));
+  upd res (i+2) (FStar_UInt32.to_uint8 ((v lsr 8) land mask));
+  upd res (i+1) (FStar_UInt32.to_uint8 ((v lsr 16) land mask));
+  upd res (i) (FStar_UInt32.to_uint8 ((v lsr 24) land mask))
+
 let uint32s_of_sbytes res b l =
   for i = 0 to l/4-1 do
     upd res i ((index b (4*i)) + ( (index b (4*i+1)) lsl 8) + ( (index b (4*i+2)) lsl 16) + ( (index b (4*i+3)) lsl 24))
