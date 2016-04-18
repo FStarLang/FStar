@@ -37,7 +37,8 @@ NO_CODEGEN=$(addprefix --no_extract , SInt $(REALIZED))
 
 POLY_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
 CHACHA_OCAML=SInt_UInt8.ml SInt_UInt32.ml SBuffer.ml SBytes.ml Chacha.ml
-SHA_X_OCAML=SInt.ml FStar_IO.ml FStar_Heap.ml SInt_UInt8.ml SInt_UInt32.ml SInt_UInt64.ml SBuffer.ml SBytes.ml
+
+
 
 .PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test sha-ver sha-ml
 
