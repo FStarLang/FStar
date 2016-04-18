@@ -239,12 +239,16 @@ let is_tot_or_gtot_comp c =
     is_total_comp c
     || lid_equals Const.effect_GTot_lid (comp_effect_name c)
 
+let is_pure_effect l = 
+     lid_equals l Const.effect_Tot_lid
+     || lid_equals l Const.effect_PURE_lid
+     || lid_equals l Const.effect_Pure_lid
+
 let is_pure_comp c = match c.n with
     | Total _ -> true
     | GTotal _ -> false
     | Comp ct -> is_total_comp c
-                 || lid_equals ct.effect_name Const.effect_PURE_lid
-                 || lid_equals ct.effect_name Const.effect_Pure_lid
+                 || is_pure_effect ct.effect_name
                  || ct.flags |> Util.for_some (function LEMMA -> true | _ -> false)
 
 let is_ghost_effect l =
@@ -256,8 +260,7 @@ let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_nam
 
 let is_pure_lcomp lc =
     is_total_lcomp lc
-    || lid_equals lc.eff_name Const.effect_PURE_lid
-    || lid_equals lc.eff_name Const.effect_Pure_lid
+    || is_pure_effect lc.eff_name
     || lc.cflags |> Util.for_some (function LEMMA -> true | _ -> false)
 
 let is_pure_or_ghost_lcomp lc =
@@ -504,8 +507,9 @@ let abs bs t lopt = match bs with
           mk (Tm_abs(close_binders bs@bs', t, lopt)) None t.pos
         | _ -> 
           let lopt = match lopt with 
-            | None -> None
-            | Some lc -> Some (close_lcomp bs lc) in
+            | None
+            | Some (Inr _)  -> lopt
+            | Some (Inl lc) -> Some (Inl (close_lcomp bs lc)) in
           mk (Tm_abs(close_binders bs, body, lopt)) None t.pos 
 
 let arrow bs c = match bs with 
@@ -706,7 +710,7 @@ let lcomp_of_comp c0 =
      comp = fun() -> c0}
 
 let mk_forall (x:bv) (body:typ) : typ =
-  mk (Tm_app(tforall, [as_arg (abs [mk_binder x] body (Some (lcomp_of_comp <| mk_Total ktype0)))])) None dummyRange
+  mk (Tm_app(tforall, [as_arg (abs [mk_binder x] body (Some (Inl (lcomp_of_comp <| mk_Total ktype0))))])) None dummyRange
 
 let rec close_forall bs f =
   List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall (fst b) f) bs f

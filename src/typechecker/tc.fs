@@ -786,7 +786,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                      Rel.conj_guard g guard in
 
     let tfun_computed = Util.arrow bs cbody in 
-    let e = Util.abs bs body (Some (Util.lcomp_of_comp cbody)) in
+    let e = Util.abs bs body (Some (Util.lcomp_of_comp cbody |> Inl)) in
     let e, tfun, guard = match tfun_opt with
         | Some (t, use_teq) ->
            let t = SS.compress t in

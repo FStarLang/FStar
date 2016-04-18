@@ -83,7 +83,7 @@ type stack_elt =
  | UnivArgs of list<universe> * Range.range
  | MemoLazy of memo<(env * term)>
  | Match    of env * branches * Range.range
- | Abs      of env * binders * env * option<lcomp> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
+ | Abs      of env * binders * env * option<either<lcomp,Ident.lident>> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of term * aqual * Range.range
  | Meta     of S.metadata * Range.range
 
@@ -357,10 +357,10 @@ and close_comp cfg env c =
                                effect_args=args;
                                flags=flags})  
 
-and close_lcomp_opt cfg env = function 
-    | None -> None
-    | Some lc -> Some ({lc with res_typ=closure_as_term_delayed cfg env lc.res_typ;
-                                comp=(fun () -> close_comp cfg env (lc.comp()))})
+and close_lcomp_opt cfg env lopt = match lopt with
+    | Some (Inl lc) -> Some (Inl ({lc with res_typ=closure_as_term_delayed cfg env lc.res_typ;
+                                   comp=(fun () -> close_comp cfg env (lc.comp()))}))
+    | _ -> lopt
 
 (*******************************************************************)
 (* Simplification steps are not part of definitional equality      *)
@@ -511,20 +511,38 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       norm cfg (c::env) stack t
 
                     | _ -> 
-                     (* Note: we peel off on application at a time. 
+                     (* Note: we peel off one application at a time. 
                               An optimization to attempt would be to push n-args are once, 
                               and try to pop all of them at once, in the common case of a full application. 
                       *)
-                      let body = match bs with 
+                      begin match bs with 
                         | [] -> failwith "Impossible"
-                        | [_] -> body
-                        | _::tl -> mk (Tm_abs(tl, body, lopt)) t.pos in
-                      log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
-                      norm cfg (c :: env) stack body 
+                        | [_] -> 
+                          begin match lopt with 
+                            | Some (Inr l) 
+                                when (Ident.lid_equals l Const.effect_Tot_lid
+                                      || Ident.lid_equals l Const.effect_GTot_lid) ->
+                              log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
+                              norm cfg (c :: env) stack body 
+
+                            | Some (Inl lc) when (Util.is_tot_or_gtot_lcomp lc) ->
+                              log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
+                              norm cfg (c :: env) stack body 
+
+                            | _ -> //can't reduce, as it may not terminate
+                              //printfn "REFUSING TO NORMALIZE APPLICATION BECAUSE IT MAY BE IMPURE: %s" (Print.term_to_string t);
+                              let cfg = {cfg with steps=WHNF::cfg.steps} in
+                              rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
+                          end
+                        | _::tl -> 
+                          log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
+                          let body = mk (Tm_abs(tl, body, lopt)) t.pos in
+                          norm cfg (c :: env) stack body 
+                      end
                   end
 
                 | MemoLazy r :: stack -> 
-                  set_memo r (env, t); //We intentionally do not memoize the strng normal form; only the WHNF
+                  set_memo r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
                   log cfg  (fun () -> Util.print_string "\tSet memo\n");
                   norm cfg env stack t
 
@@ -535,8 +553,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
                   else let bs, body, opening = open_term' bs body in 
                        let lopt = match lopt with 
-                        | None -> None
-                        | Some l -> SS.subst_comp opening (l.comp()) |> Util.lcomp_of_comp |> Some in
+                        | Some (Inl l) -> SS.subst_comp opening (l.comp()) |> Util.lcomp_of_comp |> Inl |> Some
+                        | _ -> lopt in
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                        log cfg  (fun () -> Util.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
@@ -869,7 +887,7 @@ let eta_expand (_:Env.env) (t:typ) : typ =
             | [] -> t
             | _ -> 
               let binders, args = binders |> Util.args_of_binders in
-              Util.abs binders (mk_Tm_app t args None t.pos) (Util.lcomp_of_comp c |> Some)
+              Util.abs binders (mk_Tm_app t args None t.pos) (Util.lcomp_of_comp c |> Inl |> Some)
           end
         | _ -> 
           failwith (Util.format2 "NYI: eta_expand(%s) %s" (Print.tag_of_term t) (Print.term_to_string t))

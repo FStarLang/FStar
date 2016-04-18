@@ -219,10 +219,11 @@ let subst_pat' s p : (pat * int) =
   in aux 0 p
 
 let push_subst_lcomp s lopt = match lopt with 
-    | None -> None
-    | Some l -> 
-      Some ({l with res_typ=subst' s l.res_typ;
-                    comp=(fun () -> subst_comp' s (l.comp()))})
+    | None 
+    | Some (Inr _) -> lopt
+    | Some (Inl l) -> 
+      Some (Inl ({l with res_typ=subst' s l.res_typ;
+                         comp=(fun () -> subst_comp' s (l.comp()))}))
 
 let push_subst s t = 
     match t.n with 

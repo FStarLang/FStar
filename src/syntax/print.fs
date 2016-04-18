@@ -226,7 +226,7 @@ let rec term_to_string x =
   | Tm_arrow(bs, c) ->  Util.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
   | Tm_abs(bs, t2, lc) ->  
     begin match lc with 
-        | Some l when !Options.print_implicits -> 
+        | Some (Inl l) when !Options.print_implicits -> 
           Util.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| l.comp())
         | _ -> 
          Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
