@@ -123,18 +123,17 @@ val addition_lemma: h0:heap -> h1:heap -> a:bigint{live h0 a /\ live h1 a} -> b:
   Lemma (requires (True)) (ensures (eval h0 a len + eval h0 b len = eval h1 a len))
 let addition_lemma h0 h1 a b len = coerce (gaddition_lemma h0 h1 a b len)
 
+val gcut: f:(unit -> GTot Type) -> Pure unit (requires (f ())) (ensures f)
+let gcut f = ()
+
+assume val gassume: f:(unit -> GTot Type) -> Pure unit (requires (True)) (ensures f)
+
 val fsum': a:bigint -> b:bigint{disjoint a b} -> ST unit
     (requires (fun h -> norm h a /\ norm h b))
     (ensures (fun h0 u h1 -> norm h0 a /\ norm h0 b /\ live h1 a /\ modifies_buf (only a) h0 h1
       /\ eval h1 a norm_length = eval h0 a norm_length + eval h0 b norm_length
       /\ isNotModified h0 h1 0 norm_length 0 a
       /\ isSum h0 h1 0 0 norm_length 0 a b))
-
-
-val gcut: f:(unit -> GTot Type) -> Pure unit (requires (f ())) (ensures f)
-let gcut f = ()
-
-assume val gassume: f:(unit -> GTot Type) -> Pure unit (requires (True)) (ensures f)
 
 let fsum' a b =
   gcut (fun _ -> pow2 26 + pow2 26 <= pow2 27);

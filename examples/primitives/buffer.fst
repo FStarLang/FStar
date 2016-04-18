@@ -180,7 +180,7 @@ let sub #a (b:buffer a) (i:nat) (len:nat{len <= length b /\ i + len <= length b}
      (ensures (fun h0 b' h1 -> content b = content b' /\ idx b' = idx b + i /\ length b' = len /\ (h0 == h1)))
   = {content = b.content; idx = i+b.idx; length = len}
 
-#reset-options "--z3timeout 20"
+#reset-options //"--z3timeout 20"
 
 private let rec blit_aux #a (b:buffer a) (idx_b:nat{idx_b<=length b}) (b':buffer a{disjoint b b'}) (idx_b':nat{idx_b'<=length b'}) (len:nat{idx_b+len <= length b /\ idx_b'+len <= length b'}) (ctr:nat{ctr<=len}) :
   ST unit
@@ -191,13 +191,19 @@ private let rec blit_aux #a (b:buffer a) (idx_b:nat{idx_b<=length b}) (b':buffer
       /\ equalSub h0 b' (idx_b'+len) h1 b' (idx_b'+len) (length b' - idx_b' - len)))
   = let h0 = ST.get() in
     match ctr with
-    | 0 -> ()
+    | 0 -> admit()
     | _  -> let i = ctr-1 in
       let bi = index b (idx_b+i) in
       upd b' (idx_b'+i) bi; 
       let h1 = ST.get() in 
       equal_lemma h0 h1 b (only b');
       gcut (fun _ -> get h1 b (idx_b+i) == get h1 b' (idx_b'+i)); 
+//      cut (forall (i:nat). i < len - ctr ==> get h1 b' (idx_b'+i) == get h0 b' (idx_b'+i));
+//      admit()
+      admitP (forall (i:nat). {:pattern (get h1 b (idx_b+ctr+i)) \/ (get h1 b' (idx_b'+ctr+i))} 
+	i < len - ctr ==> get h1 b (idx_b+ctr+i) == get h1 b' (idx_b'+ctr+i));
+      cut (forall (j:nat). j < len - i ==> get h1 b (idx_b+i+j) == get h1 b' (idx_b'+i+j));
+      admit()
       blit_aux b idx_b b' idx_b' len i
     
 
