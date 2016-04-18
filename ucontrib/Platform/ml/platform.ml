@@ -71,6 +71,12 @@ module Bytes = struct
         let (b1,b2) = getByte2 b.bl b.index in b1,b2
       else failwith "cbyte2: expected an array of length 2"
 
+  let index (b:bytes) i =
+    if b.length >= i then
+      let s = getBytes b.bl b.index b.length in
+      String.get s i
+    else failwith "index: index out of range"
+
   let get_cbytes (b:bytes) =
       if b.length = b.max && b.index = 0 then
         let bl' = String.concat "" b.bl in  bl'

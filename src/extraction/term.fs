@@ -449,6 +449,34 @@ and binders_as_ml_binders (g:env) (bs:binders) : list<(mlident * mlty)> * env =
 (********************************************************************************************)
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+//A peephole optimizer for sequences
+let mk_MLE_Seq e1 e2 = match e1.expr, e2.expr with 
+    | MLE_Seq es1, MLE_Seq es2 -> MLE_Seq (es1@es2)
+    | MLE_Seq es1, _ -> MLE_Seq (es1@[e2])
+    | _, MLE_Seq es2 -> MLE_Seq (e1::es2)
+    | _ -> MLE_Seq [e1; e2]
+
+//A peephole optimizer for let
+(*
+ 1. Optimize (let x : unit = e in ()) to e
+ 2. Optimize (let x : unit = e in x) to e
+ 3. Optimize (let x : unit = () in e) to e
+ 4. Optimize (let x : unit = e in e') to e;e
+*)
+let mk_MLE_Let top_level (lbs:mlletbinding) (body:mlexpr) = 
+    match lbs with 
+       | (false, [lb]) when not top_level -> 
+         (match lb.mllb_tysc with
+          | Some ([], t) when (t=ml_unit_ty) -> 
+            if body.expr=ml_unit.expr 
+            then lb.mllb_def.expr //case 1 
+            else (match body.expr with 
+                  | MLE_Var x when (x=lb.mllb_name) -> lb.mllb_def.expr //case 2
+                  | _ when (lb.mllb_def.expr=ml_unit.expr) -> body.expr //case 3
+                  | _ -> mk_MLE_Seq lb.mllb_def body) //case 4
+          | _ -> MLE_Let(lbs, body))
+       | _ -> MLE_Let(lbs, body)
+
 let resugar_pat q p = match p with
     | MLP_CTor(d, pats) ->
       begin match is_xtuple d with
@@ -658,6 +686,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                 | Inr (x, mltys, _), qual ->
                   //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
                   begin match mltys with
+                    | ([], t) when (t=ml_unit_ty) -> ml_unit, E_PURE, t //optimize (x:unit) to ()
                     | ([], t) -> maybe_eta_data_and_project_record g qual t x, E_PURE, t
                     | _ -> err_uninst g t mltys
                   end
@@ -698,8 +727,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         let app = maybe_eta_data_and_project_record g is_data t <| (with_ty t <| MLE_App(mlhead, mlargs)) in
                         let l_app = List.fold_right
                             (fun (x, arg) out ->
-                                with_ty out.mlty <| MLE_Let((false, [{mllb_name=x; mllb_tysc=Some ([], arg.mlty); mllb_add_unit=false; mllb_def=arg; print_typ=true}]),
-                                                          out))
+                                with_ty out.mlty <| mk_MLE_Let false (false, [{mllb_name=x; mllb_tysc=Some ([], arg.mlty); mllb_add_unit=false; mllb_def=arg; print_typ=true}]) out)
                             lbs app in // lets are to ensure L to R eval ordering of arguments
                         l_app, f, t
 
@@ -793,16 +821,17 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           e, f, t
 
         | Tm_let((is_rec, lbs), e') ->
+          let top_level = is_top_level lbs in
           let lbs, e' =
             if is_rec
             then SS.open_let_rec lbs e'
             else if is_top_level lbs
-                    then lbs, e'
-                    else let lb = List.hd lbs in
-                        let x = S.freshen_bv (left lb.lbname) in
-                        let lb = {lb with lbname=Inl x} in
-                        let e' = SS.subst [DB(0, x)] e' in
-                        [lb], e' in
+                 then lbs, e'
+                 else let lb = List.hd lbs in
+                    let x = S.freshen_bv (left lb.lbname) in
+                    let lb = {lb with lbname=Inl x} in
+                    let e' = SS.subst [DB(0, x)] e' in
+                    [lb], e' in
             //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
           let maybe_generalize {lbname=lbname; lbeff=lbeff; lbtyp=t; lbdef=e} =
               let f_e = effect_as_etag g lbeff in
@@ -899,7 +928,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
           let f = join_l (f'::List.map fst lbs) in
 
-          with_ty_loc t' (MLE_Let((is_rec, List.map snd lbs), e')) (Util.mlloc_of_range t.pos), f, t'
+          with_ty_loc t' (mk_MLE_Let top_level (is_rec, List.map snd lbs) e') (Util.mlloc_of_range t.pos), f, t'
 
       | Tm_match(scrutinee, pats) ->
         let e, f_e, t_e = term_as_mlexpr g scrutinee in
