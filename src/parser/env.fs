@@ -173,6 +173,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
             || quals |> Util.for_some (function Assumption -> true | _ -> false)
             then let dd = if Util.is_primop_lid lid
+                          || (Util.starts_with lid.nsstr "Prims." && quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
                     Some (Term_name(fvar lid dd (fv_qual_of_se se)))

@@ -433,7 +433,8 @@ and tc_value env (e:term) : term
     value_check_expected_typ env e (Inl t1) g
 
   | Tm_unknown -> //only occurs where type annotations are missing in source programs
-    let t, u = U.type_u () in
+    let k, u = U.type_u () in
+    let t = TcUtil.new_uvar env k in
     let e = TcUtil.new_uvar env t in
     value_check_expected_typ env e (Inl t) Rel.trivial_guard
 
