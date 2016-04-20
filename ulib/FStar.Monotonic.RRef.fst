@@ -17,19 +17,22 @@ let as_rref #r #a #b x = x
 val m_contains : #r:rid -> #a:Type -> #b:reln a -> r:m_rref r a b -> m:t -> GTot bool
 let m_contains #r #a #b r m = HyperHeap.contains_ref (as_rref r) m 
 
+let m_fresh (#r:rid) (#a:Type) (#b:reln a) (r:m_rref r a b) (m0:t) (m1:t) : GTot Type0 =
+  FStar.HyperHeap.fresh_rref (as_rref r) m0 m1
+
 val m_sel: #r:rid -> #a:Type -> #b:reln a -> h:t -> m_rref r a b -> GTot a
-let m_sel #r #a #b h m = HyperHeap.sel h m
+let m_sel #r #a #b h m = HyperHeap.sel h (as_rref m)
 
 val m_upd: #r:rid -> #a:Type -> #b:reln a -> h:t -> m_rref r a b -> a -> GTot t
-let m_upd #r #a #b h m v = HyperHeap.upd h m v
+let m_upd #r #a #b h m v = HyperHeap.upd h (as_rref m) v
 
 val m_alloc: #a:Type
           -> #b:reln a
-	  -> r:rid
-          -> init:a
-          -> ST (m_rref r a b)
-               (requires (fun _ -> monotonic a b))
-	       (ensures (fun h0 (m:m_rref r a b) h1 -> ralloc_post r init h0 (as_rref m) h1))
+	    -> r:rid
+            -> init:a
+            -> ST (m_rref r a b)
+		(requires (fun _ -> monotonic a b))
+		(ensures (fun h0 (m:m_rref r a b) h1 -> ralloc_post r init h0 (as_rref m) h1))
 let m_alloc #a #b r init = ST.ralloc r init
 
 val m_read:#r:rid 
