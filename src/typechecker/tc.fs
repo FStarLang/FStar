@@ -1679,6 +1679,8 @@ let gen_wps_for_free env binders =
   let mk_gctx (a: S.term) (e: S.term): S.term =
     Util.arrow ([ S.null_binder (mk_post a) ] @ binders) (S.mk_GTotal e) in
 
+  let binders_of_list = List.map (fun (t, b) -> t, S.as_implicit b) in
+
   (* val st2_pure : #heap:Type -> #a:Type -> #t:Type -> x:t ->
        Tot (st2_ctx heap a t)
      let st2_pure #heap #a #t x = fun _post _h -> x *)
@@ -1692,7 +1694,7 @@ let gen_wps_for_free env binders =
       let inner_body = S.bv_to_name x in
       Util.abs inner_binders inner_body ret
     in
-    Util.abs (S.binders_of_list [ a; t; x ]) outer_body ret in
+    Util.abs (binders_of_list [ a, true; t, true; x, false ]) outer_body ret in
 
   (* val st2_app : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                   l:st2_gctx heap a (t1 -> GTot t2) ->
@@ -1719,7 +1721,7 @@ let gen_wps_for_free env binders =
       in
       Util.abs inner_binders inner_body ret
     in
-    Util.abs (S.binders_of_list [ a; t1; t2; l; r ]) outer_body ret in
+    Util.abs (binders_of_list [ a, true; t1, true; t2, true; l, false; r, false ]) outer_body ret in
 
   (* val st2_liftGA1 : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                        f : (t1 -> GTot t2) ->
@@ -1739,13 +1741,9 @@ let gen_wps_for_free env binders =
     let f = S.new_bv None t_f in
     let a1 = S.new_bv None (mk_gctx (S.bv_to_name a) (S.bv_to_name t1)) in
     let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name a) (S.bv_to_name t2))))) in
-    Util.abs (S.binders_of_list [ a; t1; t2; f; a1 ]) (
-      Util.mk_app c_app (List.map S.as_arg [
-        S.bv_to_name a;
-        S.bv_to_name t1;
-        S.bv_to_name t2;
-        Util.mk_app c_pure (List.map S.as_arg [ S.bv_to_name a; t_f; S.bv_to_name f]);
-        S.bv_to_name a1 ])
+    Util.abs (binders_of_list [ a, true; t1, true; t2, true; f, false; a1, false ]) (
+      Util.mk_app c_app [S.as_arg (
+        Util.mk_app c_pure [ S.as_arg (S.bv_to_name f) ])]
     ) ret in
 
 
@@ -1768,16 +1766,10 @@ let gen_wps_for_free env binders =
     let a1 = S.new_bv None (mk_gctx (S.bv_to_name a) (S.bv_to_name t1)) in
     let a2 = S.new_bv None (mk_gctx (S.bv_to_name a) (S.bv_to_name t2)) in
     let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name a) (S.bv_to_name t3))))) in
-    Util.abs (S.binders_of_list [ a; t1; t2; t3; f; a1; a2 ]) (
+    Util.abs (binders_of_list [ a, true; t1, true; t2, true; t3, true; f, false; a1, false; a2, false ]) (
       Util.mk_app c_app (List.map S.as_arg [
-        S.bv_to_name a;
-        S.bv_to_name t2;
-        S.bv_to_name t3;
         Util.mk_app c_app (List.map S.as_arg [
-          S.bv_to_name a;
-          S.bv_to_name t1;
-          t_f';
-          Util.mk_app c_pure (List.map S.as_arg [ S.bv_to_name a; t_f; S.bv_to_name f]);
+          Util.mk_app c_pure [ S.as_arg (S.bv_to_name f) ];
           S.bv_to_name a1 ]);
         S.bv_to_name a2 ])
     ) ret in
@@ -1799,13 +1791,8 @@ let gen_wps_for_free env binders =
     let unknown = mk Tm_unknown None Range.dummyRange in
     Util.abs (S.binders_of_list [ a; c; the_a; the_c ]) (
       let l_ite = S.lid_as_fv Const.ite_lid (S.Delta_unfoldable 1) None in
-      (* FIXME: this is using [Tm_unknown] because the arguments would be
-       * painful to write. *)
       Util.mk_app c_lift2 (List.map S.as_arg [
-        unknown; unknown; unknown; unknown;
-        Util.mk_app (S.fv_to_tm l_ite) (List.map S.as_arg [
-          S.bv_to_name c
-        ])
+        Util.mk_app (S.fv_to_tm l_ite) [S.as_arg (S.bv_to_name c)]
       ])
     ) ret in
 
