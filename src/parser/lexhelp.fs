@@ -165,6 +165,7 @@ let keywords =
     ALWAYS, "module"     ,MODULE;
     ALWAYS, "new"        ,NEW;
     ALWAYS, "new_effect" ,NEW_EFFECT;
+    ALWAYS, "new_effect_for_free", NEW_EFFECT_FOR_FREE;
     ALWAYS, "of"         ,OF;
     ALWAYS, "open"       ,OPEN;
     ALWAYS, "or"         ,OR;

@@ -338,6 +338,22 @@ new_effect {
      ; trivial      = st2_trivial heap
 }
 
+new_effect_for_free {
+  STATE2_h_for_free (heap:Type) : result:Type -> wp:st2_wp heap result -> wlp:st2_wp heap result -> Effect
+  with return       = st2_return heap
+     ; bind_wp      = st2_bind_wp heap
+     ; bind_wlp     = st2_bind_wlp heap
+     ; ite_wlp      = st2_ite_wlp heap
+     ; ite_wp       = st2_ite_wp heap
+     ; wp_binop     = st2_wp_binop heap
+     ; wp_as_type   = st2_wp_as_type heap
+     ; close_wp     = st2_close_wp heap
+     ; assert_p     = st2_assert_p heap
+     ; assume_p     = st2_assume_p heap
+     ; null_wp      = st2_null_wp heap
+     ; trivial      = st2_trivial heap
+}
+
 (* Ex *)
 type result (a:Type) =
   | V   : v:a -> result a

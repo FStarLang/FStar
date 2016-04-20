@@ -1257,6 +1257,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     in
 
     match se with
+     | Sig_new_effect_for_free _ ->
+         failwith "impossible -- removed by tc.fs"
      | Sig_pragma _
      | Sig_main _
      | Sig_new_effect _

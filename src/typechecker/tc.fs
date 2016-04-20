@@ -36,6 +36,8 @@ module U  = FStar.Syntax.Util
 
 // VALS_HACK_HERE
 
+type effect_cost = ForFree | NotForFree
+
 let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_module env))
 let rng env = Env.get_range env
 let instantiate_both env = {env with Env.instantiate_imp=true}
@@ -1649,30 +1651,7 @@ let open_effect_decl env ed =
              ; trivial     =op ed.trivial } in
    ed, a, wp
 
-let jonathan_temp_hack = ref 0
-
-let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
-  assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
-  let binders_un, signature_un = SS.open_term ed.binders ed.signature in
-  let binders, env, _ = tc_tparams env0 binders_un in
-  let signature, _    = tc_trivial_guard env signature_un in
-  let ed = {ed with binders=binders;
-                    signature=signature} in
-
-  let ed, a, wp_a = open_effect_decl env ed in
-  let get_effect_signature ()  =
-    let signature, _ = tc_trivial_guard env signature_un in
-    open_effect_signature env ed.mname signature in
-
-  //put the signature in the environment to prevent generalizing its free universe variables until we're done
-  let env = Env.push_bv env (S.new_bv None ed.signature) in
-
-  if Env.debug env0 <| Options.Other "ED"
-  then Util.print3 "Checking effect signature: %s %s : %s\n"
-                        (Print.lid_to_string ed.mname)
-                        (Print.binders_to_string " " ed.binders)
-                        (Print.term_to_string ed.signature);
-
+let gen_wps_for_free env binders =
   (* A series of "macros" to automatically build WP's using combinators. All
    * these definitions are parameterized over the [binders] variable, which
    * contains the effect-specific binders. [binders] has been opened, so it's
@@ -1830,21 +1809,51 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
       ])
     ) ret in
 
-  if !jonathan_temp_hack < 2 then
-    (* Skip the first two effect definitions until Tot is properly defined and
-     * can be composed with GTot. *)
-    jonathan_temp_hack := !jonathan_temp_hack + 1
-  else begin
-    (* Sanity check. *)
-    ignore (tc_term env c_pure);
-    ignore (tc_term env c_app);
-    ignore (tc_term env c_lift1);
-    ignore (tc_term env c_lift2);
-    ignore (tc_term env wp_if_then_else)
-  end;
+  (* Sanity check. *)
+  ignore (tc_term env c_pure);
+  ignore (tc_term env c_app);
+  ignore (tc_term env c_lift1);
+  ignore (tc_term env c_lift2);
+  ignore (tc_term env wp_if_then_else);
+
+  [], wp_if_then_else
+
+let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
+  assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
+  let binders_un, signature_un = SS.open_term ed.binders ed.signature in
+  let binders, env, _ = tc_tparams env0 binders_un in
+  let signature, _    = tc_trivial_guard env signature_un in
+  let ed = {ed with binders=binders;
+                    signature=signature} in
+
+  let ed, a, wp_a = open_effect_decl env ed in
+  let get_effect_signature ()  =
+    let signature, _ = tc_trivial_guard env signature_un in
+    open_effect_signature env ed.mname signature in
+
+  //put the signature in the environment to prevent generalizing its free universe variables until we're done
+  let env = Env.push_bv env (S.new_bv None ed.signature) in
+
+  if Env.debug env0 <| Options.Other "ED"
+  then Util.print3 "Checking effect signature: %s %s : %s\n"
+                        (Print.lid_to_string ed.mname)
+                        (Print.binders_to_string " " ed.binders)
+                        (Print.term_to_string ed.signature);
 
   let check_and_gen' env (_,t) k =
     check_and_gen env t k in
+
+  (* Override dummy fields with automatically-generated combinators, if needed. *)
+  let ed =
+    match is_for_free with
+    | NotForFree ->
+        ed
+    | ForFree ->
+        let wp_if_then_else = gen_wps_for_free env binders in {
+          ed with
+          if_then_else = wp_if_then_else
+        }
+  in
 
   let ret =
     let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
@@ -2294,8 +2303,15 @@ let rec tc_decl env se = match se with
                 se, env
         end
 
+    | Sig_new_effect_for_free(ne, r) ->
+      let ne = tc_eff_decl env ne ForFree in
+      (* Fields have been synthesized by [tc_eff_decl] *)
+      let se = Sig_new_effect(ne, r) in
+      let env = Env.push_sigelt env se in
+      se, env
+
     | Sig_new_effect(ne, r) ->
-      let ne = tc_eff_decl env ne in
+      let ne = tc_eff_decl env ne NotForFree in
       let se = Sig_new_effect(ne, r) in
       let env = Env.push_sigelt env se in
       se, env
@@ -2493,6 +2509,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
     | Sig_main  _ -> [], hidden
 
     | Sig_new_effect     _
+    | Sig_new_effect_for_free _
     | Sig_sub_effect     _
     | Sig_effect_abbrev  _ -> [se], hidden
 

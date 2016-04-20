@@ -405,6 +405,7 @@ let rec lids_of_sigelt se = match se with
   | Sig_datacon (lid, _, _, _, _, _, _, _)
   | Sig_declare_typ (lid, _, _, _, _)
   | Sig_assume (lid, _, _, _) -> [lid]
+  | Sig_new_effect_for_free(n, _)
   | Sig_new_effect(n, _) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
@@ -425,6 +426,7 @@ let range_of_sigelt x = match x with
   | Sig_main(_, r)
   | Sig_pragma(_, r)
   | Sig_new_effect(_, r)
+  | Sig_new_effect_for_free(_, r)
   | Sig_sub_effect(_, r) -> r
 
 let range_of_lb = function
