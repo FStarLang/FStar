@@ -1704,8 +1704,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
        Tot (st2_ctx heap a t)
      let st2_pure #heap #a #t x = fun _post _h -> x *)
   let c_pure =
-    let a = S.new_bv None Util.ktype0 in
-    let t = S.new_bv None Util.ktype0 in
+    let a = S.new_bv None Util.ktype in
+    let t = S.new_bv None Util.ktype in
     let x = S.new_bv None (S.bv_to_name t) in
     let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_ctx (S.bv_to_name a) (S.bv_to_name t))))) in
     let outer_body =
@@ -1721,9 +1721,9 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
                   Tot (st2_gctx heap a t2)
     let st2_app #heap #a #t1 #t2 l r = fun p h -> l p h (r p h) *)
   let c_app =
-    let a = S.new_bv None Util.ktype0 in
-    let t1 = S.new_bv None Util.ktype0 in
-    let t2 = S.new_bv None Util.ktype0 in
+    let a = S.new_bv None Util.ktype in
+    let t1 = S.new_bv None Util.ktype in
+    let t2 = S.new_bv None Util.ktype in
     let l = S.new_bv None (mk_gctx (S.bv_to_name a)
       (Util.arrow [ S.mk_binder (S.new_bv None (S.bv_to_name t1)) ] (S.mk_GTotal (S.bv_to_name t2))))
     in
@@ -1750,9 +1750,9 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
                     st2_app (st2_pure f) a1
   *)
   let c_lift1 =
-    let a = S.new_bv None Util.ktype0 in
-    let t1 = S.new_bv None Util.ktype0 in
-    let t2 = S.new_bv None Util.ktype0 in
+    let a = S.new_bv None Util.ktype in
+    let t1 = S.new_bv None Util.ktype in
+    let t2 = S.new_bv None Util.ktype in
     let t_f = Util.arrow [
         S.null_binder (S.bv_to_name t1)
       ] (S.mk_GTotal (S.bv_to_name t2))
@@ -1779,10 +1779,10 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
       st2_app (st2_app (st2_pure f) a1) a2
   *)
   let c_lift2 =
-    let a = S.new_bv None Util.ktype0 in
-    let t1 = S.new_bv None Util.ktype0 in
-    let t2 = S.new_bv None Util.ktype0 in
-    let t3 = S.new_bv None Util.ktype0 in
+    let a = S.new_bv None Util.ktype in
+    let t1 = S.new_bv None Util.ktype in
+    let t2 = S.new_bv None Util.ktype in
+    let t3 = S.new_bv None Util.ktype in
     let t_f' = Util.arrow [ S.null_binder (S.bv_to_name t2) ] (S.mk_GTotal (S.bv_to_name t3)) in
     let t_f = Util.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal t_f') in
     let f = S.new_bv None t_f in
@@ -1803,6 +1803,33 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
         S.bv_to_name a2 ])
     ) ret in
 
+  (* type st2_wp (heap:Type) (a:Type) = st2_gctx heap a Type0 *)
+  let mk_wp (a: S.term) =
+    mk_gctx a Util.ktype0 in
+
+  (* val st2_if_then_else : heap:Type -> a:Type -> c:Type0 ->
+                            st2_wp heap a -> st2_wp heap a ->
+                            Tot (st2_wp heap a)
+    let st2_if_then_else heap a c = st2_liftGA2 (l_ITE c) *)
+  let wp_if_then_else =
+    let a = S.new_bv None Util.ktype in
+    let c = S.new_bv None Util.ktype in
+    let the_a = S.new_bv None (mk_wp (S.bv_to_name a)) in
+    let the_c = S.new_bv None (mk_wp (S.bv_to_name c)) in
+    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_wp (S.bv_to_name a))))) in
+    let unknown = mk Tm_unknown None Range.dummyRange in
+    Util.abs (S.binders_of_list [ a; c; the_a; the_c ]) (
+      let l_ite = S.lid_as_fv Const.ite_lid (S.Delta_unfoldable 1) None in
+      (* FIXME: this is using [Tm_unknown] because the arguments would be
+       * painful to write. *)
+      Util.mk_app c_lift2 (List.map S.as_arg [
+        unknown; unknown; unknown; unknown;
+        Util.mk_app (S.fv_to_tm l_ite) (List.map S.as_arg [
+          S.bv_to_name c
+        ])
+      ])
+    ) ret in
+
   if !jonathan_temp_hack < 2 then
     (* Skip the first two effect definitions until Tot is properly defined and
      * can be composed with GTot. *)
@@ -1812,7 +1839,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
     ignore (tc_term env c_pure);
     ignore (tc_term env c_app);
     ignore (tc_term env c_lift1);
-    ignore (tc_term env c_lift2)
+    ignore (tc_term env c_lift2);
+    ignore (tc_term env wp_if_then_else)
   end;
 
   let check_and_gen' env (_,t) k =
