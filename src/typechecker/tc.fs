@@ -1649,6 +1649,8 @@ let open_effect_decl env ed =
              ; trivial     =op ed.trivial } in
    ed, a, wp
 
+let jonathan_temp_hack = ref 0
+
 let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
   let binders_un, signature_un = SS.open_term ed.binders ed.signature in
@@ -1666,13 +1668,10 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
   let env = Env.push_bv env (S.new_bv None ed.signature) in
 
   if Env.debug env0 <| Options.Other "ED"
-  then Util.print3 "Checked effect signature: %s %s : %s\n"
+  then Util.print3 "Checking effect signature: %s %s : %s\n"
                         (Print.lid_to_string ed.mname)
                         (Print.binders_to_string " " ed.binders)
                         (Print.term_to_string ed.signature);
-
-  let check_and_gen' env (_,t) k =
-    check_and_gen env t k in
 
   (* A series of "macros" to automatically build WP's using combinators. All
    * these definitions are parameterized over the [binders] variable, which
@@ -1682,7 +1681,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
 
   (* If [binders] is [heap: Type], then this is [_: heap] *)
   let argument_bvs () =
-    List.map (fun (bv, _) -> S.null_bv (S.bv_to_name bv)) binders in
+    List.map (fun (bv, _) -> S.new_bv None (S.bv_to_name bv)) binders in
 
   let argument_binders () =
     List.map S.mk_binder (argument_bvs ()) in
@@ -1708,9 +1707,9 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
     let a = S.new_bv None Util.ktype0 in
     let t = S.new_bv None Util.ktype0 in
     let x = S.new_bv None (S.bv_to_name t) in
-    let ret = Some (Util.lcomp_of_comp (mk_Total (mk_ctx (S.bv_to_name a) (S.bv_to_name t)))) in
+    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_ctx (S.bv_to_name a) (S.bv_to_name t))))) in
     let outer_body =
-      let inner_binders = S.null_binder (mk_post (S.bv_to_name a)) :: argument_binders () in
+      let inner_binders = S.mk_binder (S.new_bv None (mk_post (S.bv_to_name a))) :: argument_binders () in
       let inner_body = S.bv_to_name x in
       Util.abs inner_binders inner_body ret
     in
@@ -1729,11 +1728,11 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
       (Util.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2))))
     in
     let r = S.new_bv None (mk_gctx (S.bv_to_name a) (S.bv_to_name t1)) in
-    let ret = Some (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name a) (S.bv_to_name t2)))) in
+    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name a) (S.bv_to_name t2))))) in
     let outer_body =
-      let p = S.null_bv (mk_post (S.bv_to_name a)) in
+      let p = S.new_bv None (mk_post (S.bv_to_name a)) in
       let effect_args = argument_bvs () in
-      let inner_binders = S.mk_binder p :: List.map S.mk_binder effect_args in
+      let inner_binders = List.map S.mk_binder (p :: effect_args) in
       let bv_arg x = S.as_arg (S.bv_to_name x) in
       let inner_body =
         Util.mk_app (S.bv_to_name l) (List.map bv_arg (p :: effect_args) @ [
@@ -1743,9 +1742,18 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
     in
     Util.abs (S.binders_of_list [ a; t1; t2; l; r ]) outer_body ret in
 
-  (* Sanity check. *)
-  ignore (tc_term env c_pure);
-  ignore (tc_term env c_app);
+  if !jonathan_temp_hack < 2 then
+    (* Skip the first two effect definitions until Tot is properly defined and
+     * can be composed with GTot. *)
+    jonathan_temp_hack := !jonathan_temp_hack + 1
+  else begin
+    (* Sanity check. *)
+    ignore (tc_term env c_pure);
+    ignore (tc_term env c_app)
+  end;
+
+  let check_and_gen' env (_,t) k =
+    check_and_gen env t k in
 
   let ret =
     let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
