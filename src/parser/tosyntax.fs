@@ -822,18 +822,19 @@ and desugar_comp r default_ok env t =
     let is_app head (t, _) = match (unparen t).tm with 
        | App({tm=Var d}, _, _) -> d.ident.idText = head
        | _ -> false in
+    let is_decreases = is_app "decreases" in
     let pre_process_comp_typ (t:AST.term) =
         let head, args = head_and_args t in
         match head.tm with
             | Name lemma when (lemma.ident.idText = "Lemma") -> //need to add the unit result type and the empty SMTPat list, if n
               let unit_tm = mk_term (Name C.unit_lid) t.range Type, Nothing in
               let nil_pat = mk_term (Name C.nil_lid) t.range Expr, Nothing in
+              let req_true = mk_term (Requires (mk_term (Name C.true_lid) t.range Formula, None)) t.range Type, Nothing in
               let args = match args with
                     | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
-                    | [ens] -> (* a single ensures clause *)
-                      let req_true = mk_term (Requires (mk_term (Name C.true_lid) t.range Formula, None)) t.range Type, Nothing in
-                      [unit_tm;req_true;ens;nil_pat]
+                    | [ens] -> [unit_tm;req_true;ens;nil_pat] //a single ensures clause
                     | [req;ens] when (is_requires req && is_ensures ens) -> [unit_tm;req;ens;nil_pat]
+                    | [ens;dec] when (is_ensures ens && is_decreases dec) -> [unit_tm;req_true;ens;nil_pat;dec]
                     | [req;ens;dec] when (is_requires req && is_ensures ens && is_app "decreases" dec) -> [unit_tm;req;ens;nil_pat;dec]
                     | more -> unit_tm::more in      
               let head = fail_or (Env.try_lookup_effect_name env) lemma in

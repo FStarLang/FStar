@@ -548,7 +548,7 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           let bs = match b with
             | None -> [null_binder t1]
             | Some x -> [S.mk_binder x] in
-          let mk_lam wp = U.abs bs wp None in
+          let mk_lam wp = U.abs bs wp (Some (Inr Const.effect_Tot_lid)) in //we know it's total; let the normalizer reduce it
           let wp_args = [S.as_arg t1; S.as_arg t2; S.as_arg wp1; S.as_arg wlp1; S.as_arg (mk_lam wp2); S.as_arg (mk_lam wlp2)] in
           let wlp_args = [S.as_arg t1; S.as_arg t2; S.as_arg wlp1; S.as_arg (mk_lam wlp2)] in
           let k = SS.subst [NT(a, t2)] kwp in
@@ -682,7 +682,12 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let us = [env.universe_of env res_t] in
     let yret = mk_Tm_app (inst_effect_fun_with us env md_pure md_pure.ret) [S.as_arg res_t; S.as_arg yexp] None res_t.pos in
     let x_eq_y_yret = mk_Tm_app (inst_effect_fun_with us env md_pure md_pure.assume_p) [S.as_arg res_t; S.as_arg <| Util.mk_eq res_t res_t xexp yexp; S.as_arg <| yret] None res_t.pos in
-    let forall_y_x_eq_y_yret = mk_Tm_app (inst_effect_fun_with (us@us) env md_pure md_pure.close_wp) [S.as_arg res_t; S.as_arg res_t; S.as_arg <| U.abs [mk_binder y] x_eq_y_yret None] None res_t.pos in
+    let forall_y_x_eq_y_yret = 
+        mk_Tm_app (inst_effect_fun_with (us@us) env md_pure md_pure.close_wp) 
+                  [S.as_arg res_t; 
+                   S.as_arg res_t; 
+                   S.as_arg <| U.abs [mk_binder y] x_eq_y_yret (Some (Inr Const.effect_Tot_lid))] //mark it as Tot for the normalizer 
+                   None res_t.pos in
     let lc2 = mk_comp md_pure res_t forall_y_x_eq_y_yret forall_y_x_eq_y_yret [PARTIAL_RETURN] in
     let lc = bind env None (Util.lcomp_of_comp comp) (Some x, Util.lcomp_of_comp lc2) in
     lc.comp()
@@ -717,8 +722,11 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
             let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
             let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
             let post   = S.new_bv None post_k in
-            let wp     = U.abs [mk_binder post] (label Errors.exhaustiveness_check (Env.get_range env) <| fvar_const env Const.false_lid) None in 
-            let wlp    = U.abs [mk_binder post] (fvar_const env Const.true_lid) None in
+            let wp     = U.abs [mk_binder post] 
+                               (label Errors.exhaustiveness_check (Env.get_range env) <| fvar_const env Const.false_lid) 
+                               (Some (Inr Const.effect_Tot_lid)) in
+            let wlp    = U.abs [mk_binder post] (fvar_const env Const.true_lid) 
+                           (Some (Inr Const.effect_Tot_lid)) in
             let md     = Env.get_effect_decl env Const.effect_PURE_lid in
             mk_comp md res_t wp wlp [] in
         let comp = List.fold_right (fun (g, cthen) celse ->
@@ -746,7 +754,7 @@ let close_comp env bvs (lc:lcomp) =
           List.fold_right (fun x wp -> 
               let bs = [mk_binder x] in
               let us = u_res::[env.universe_of env x.sort] in
-              let wp = U.abs bs wp None in
+              let wp = U.abs bs wp (Some (Inr Const.effect_Tot_lid)) in
               mk_Tm_app (inst_effect_fun_with us env md md.close_wp) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] None wp0.pos)
           bvs wp0 in 
         let c = Normalize.unfold_effect_abbrev env c in
@@ -1008,7 +1016,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
                   let k = N.normalize [N.Beta] env k in
                   let bs, kres = Util.arrow_formals k in 
                   let a = S.new_bv (Some <| Env.get_range env) kres in 
-                  let t = U.abs bs (S.bv_to_name a) (Some (Util.lcomp_of_comp (S.mk_Total kres))) in
+                  let t = U.abs bs (S.bv_to_name a) (Some (Inl (Util.lcomp_of_comp (S.mk_Total kres)))) in
                   U.set_uvar u t;//t clearly has a free variable; this is the one place we break the 
                                  //invariant of a uvar always being resolved to a closed term ... need to be careful, see below
                   a, Some S.imp_tag) in
@@ -1030,7 +1038,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
 
                     | _ -> 
                       U.arrow tvars c in
-              let e' = U.abs tvars e None in
+              let e' = U.abs tvars e (Some (Inl (Util.lcomp_of_comp c))) in
               e', S.mk_Total t in
           (gen_univs, e, c)) in
      Some ecs

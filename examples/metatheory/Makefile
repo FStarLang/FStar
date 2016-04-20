@@ -1,18 +1,12 @@
-VERFILES=StlcCbvDbPntSubstNoLists.fst StlcCbvNamed.fst DbSubst.fst HereditarySubst.fst
+VERFILES=StlcCbvNamed.fst DbSubst.fst HereditarySubst.fst
 FSTAR_HOME=../..
 include ../Makefile.include
-all: .all.ver ParSubst StlcCbvDbParSubst LambdaOmega FOmega.fst MicroFStar HoareWeakestPrecondition
+all: .all.ver ParSubst.univ.ver StlcCbvDbPntSubstNoLists.univ.ver StlcStrongDbParSubst.univ.ver StlcCbvDbParSubst.univ.ver LambdaOmega FOmega.fst MicroFStar HoareWeakestPrecondition
 
 _STDLIB_=FStar.Constructive.fst FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst 
 
-ParSubst:
-	$(FSTAR) $(_STDLIB_) ParSubst.fst --max_fuel 1 --max_ifuel 1
-
-StlcStrongDbParSubst:
-	$(FSTAR) --explicit_deps FStar.Constructive.fst FStar.Classical.fst FStar.FunctionalExtensionality.fst StlcStrongDbParSubst.fst --max_fuel 1 --max_ifuel 1
-
-StlcCbvDbParSubst:
-	$(FSTAR) --explicit_deps FStar.Constructive.fst FStar.Classical.fst FStar.FunctionalExtensionality.fst StlcStrongDbParSubst.fst StlcCbvDbParSubst.fst --max_fuel 1 --max_ifuel 1
+%.univ.ver: %.fst
+	$(FSTAR) --universes $^
 
 LambdaOmega:
 	$(FSTAR) $(_STDLIB_) LambdaOmega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1

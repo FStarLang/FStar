@@ -325,7 +325,7 @@ type term' =
 | Tm_uinst of (term * universes)
 | Tm_constant of sconst
 | Tm_type of universe
-| Tm_abs of (binders * term * lcomp Prims.option)
+| Tm_abs of (binders * term * (lcomp, FStar_Ident.lident) FStar_Util.either Prims.option)
 | Tm_arrow of (binders * comp)
 | Tm_refine of (bv * term)
 | Tm_app of (term * args)

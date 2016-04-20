@@ -35,8 +35,8 @@ let add_fuel x tl = if !Options.unthrottle_inductives then tl else x::tl
 let withenv c (a, b) = (a,b,c)
 let vargs args = List.filter (function (Inl _, _) -> false | _ -> true) args
 let subst_lcomp_opt s l = match l with 
-    | None -> None
-    | Some l -> Some (Util.lcomp_of_comp <| SS.subst_comp s (l.comp()))
+    | Some (Inl l) -> Some (Inl (Util.lcomp_of_comp <| SS.subst_comp s (l.comp())))
+    | _ -> l
 (* ------------------------------------ *)
 (* Some operations on constants *)
 let escape (s:string) = Util.replace_char s '\'' '_'
@@ -633,17 +633,25 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let f = varops.fresh "Tm_abs" in
             let decl = Term.DeclFun(f, [], Term_sort, Some "Imprecise function encoding") in
             Term.mkFreeV(f, Term_sort), [decl] in
+
+          let is_pure_or_ghost lc_eff = match lc_eff with 
+            | Inl lc -> Util.is_pure_or_ghost_lcomp lc
+            | Inr eff -> Ident.lid_equals eff Const.effect_Tot_lid 
+                         || Ident.lid_equals eff Const.effect_GTot_lid in
              
+          let codomain_eff lc = match lc with 
+            | Inl lc -> SS.subst_comp opening (lc.comp()) 
+            | Inr ef -> S.mk_Total (FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (Util.ktype0) |> fst) in
+
           begin match lopt with
             | None ->
               Errors.warn t0.pos (Util.format1 "Losing precision when encoding a function literal: %s" (Print.term_to_string t0));
               fallback ()
 
             | Some lc ->
-              if not <| Util.is_pure_or_ghost_lcomp lc 
+              if not <| is_pure_or_ghost lc 
               then fallback ()
-              else  let c0 = lc.comp() in
-                    let c = SS.subst_comp opening c0 in
+              else  let c = codomain_eff lc in
 //                    Printf.printf "Printf.printf body comp type is %s\n\topened to %s\n\topening is %s\n\tbody=%s\n" 
 //                            (Print.comp_to_string c0) (Print.comp_to_string c) (opening |> Print.subst_to_string) (Print.term_to_string body);
                     let vars, guards, envbody, decls, _ = encode_binders None bs env in
