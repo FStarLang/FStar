@@ -1719,13 +1719,13 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
                   l:st2_gctx heap a (t1 -> GTot t2) ->
                   r:st2_gctx heap a t1 ->
                   Tot (st2_gctx heap a t2)
-  let st2_app #heap #a #t1 #t2 l r = fun p h -> l p h (r p h) *)
+    let st2_app #heap #a #t1 #t2 l r = fun p h -> l p h (r p h) *)
   let c_app =
     let a = S.new_bv None Util.ktype0 in
     let t1 = S.new_bv None Util.ktype0 in
     let t2 = S.new_bv None Util.ktype0 in
     let l = S.new_bv None (mk_gctx (S.bv_to_name a)
-      (Util.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2))))
+      (Util.arrow [ S.mk_binder (S.new_bv None (S.bv_to_name t1)) ] (S.mk_GTotal (S.bv_to_name t2))))
     in
     let r = S.new_bv None (mk_gctx (S.bv_to_name a) (S.bv_to_name t1)) in
     let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name a) (S.bv_to_name t2))))) in
@@ -1742,6 +1742,67 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
     in
     Util.abs (S.binders_of_list [ a; t1; t2; l; r ]) outer_body ret in
 
+  (* val st2_liftGA1 : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
+                       f : (t1 -> GTot t2) ->
+                       st2_gctx heap a t1 ->
+                       Tot (st2_gctx heap a t2)
+    let st2_liftGA1 #heap #a #t1 #t2 f a1 =
+                    st2_app (st2_pure f) a1
+  *)
+  let c_lift1 =
+    let a = S.new_bv None Util.ktype0 in
+    let t1 = S.new_bv None Util.ktype0 in
+    let t2 = S.new_bv None Util.ktype0 in
+    let t_f = Util.arrow [
+        S.null_binder (S.bv_to_name t1)
+      ] (S.mk_GTotal (S.bv_to_name t2))
+    in
+    let f = S.new_bv None t_f in
+    let a1 = S.new_bv None (mk_gctx (S.bv_to_name a) (S.bv_to_name t1)) in
+    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name a) (S.bv_to_name t2))))) in
+    Util.abs (S.binders_of_list [ a; t1; t2; f; a1 ]) (
+      Util.mk_app c_app (List.map S.as_arg [
+        S.bv_to_name a;
+        S.bv_to_name t1;
+        S.bv_to_name t2;
+        Util.mk_app c_pure (List.map S.as_arg [ S.bv_to_name a; t_f; S.bv_to_name f]);
+        S.bv_to_name a1 ])
+    ) ret in
+
+
+  (* val st2_liftGA2 : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type -> #t3:Type ->
+                       f : (t1 -> t2 -> GTot t3) ->
+                       a1: st2_gctx heap a t1 ->
+                       a2: st2_gctx heap a t2 ->
+                       Tot (st2_gctx heap a t3)
+    let st2_liftGA2 #heap #a #t1 #t2 #t3 f a1 a2 =
+      st2_app (st2_app (st2_pure f) a1) a2
+  *)
+  let c_lift2 =
+    let a = S.new_bv None Util.ktype0 in
+    let t1 = S.new_bv None Util.ktype0 in
+    let t2 = S.new_bv None Util.ktype0 in
+    let t3 = S.new_bv None Util.ktype0 in
+    let t_f' = Util.arrow [ S.null_binder (S.bv_to_name t2) ] (S.mk_GTotal (S.bv_to_name t3)) in
+    let t_f = Util.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal t_f') in
+    let f = S.new_bv None t_f in
+    let a1 = S.new_bv None (mk_gctx (S.bv_to_name a) (S.bv_to_name t1)) in
+    let a2 = S.new_bv None (mk_gctx (S.bv_to_name a) (S.bv_to_name t2)) in
+    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name a) (S.bv_to_name t3))))) in
+    Util.abs (S.binders_of_list [ a; t1; t2; t3; f; a1; a2 ]) (
+      Util.mk_app c_app (List.map S.as_arg [
+        S.bv_to_name a;
+        S.bv_to_name t2;
+        S.bv_to_name t3;
+        Util.mk_app c_app (List.map S.as_arg [
+          S.bv_to_name a;
+          S.bv_to_name t1;
+          t_f';
+          Util.mk_app c_pure (List.map S.as_arg [ S.bv_to_name a; t_f; S.bv_to_name f]);
+          S.bv_to_name a1 ]);
+        S.bv_to_name a2 ])
+    ) ret in
+
   if !jonathan_temp_hack < 2 then
     (* Skip the first two effect definitions until Tot is properly defined and
      * can be composed with GTot. *)
@@ -1749,7 +1810,9 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
   else begin
     (* Sanity check. *)
     ignore (tc_term env c_pure);
-    ignore (tc_term env c_app)
+    ignore (tc_term env c_app);
+    ignore (tc_term env c_lift1);
+    ignore (tc_term env c_lift2)
   end;
 
   let check_and_gen' env (_,t) k =
