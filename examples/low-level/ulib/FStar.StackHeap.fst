@@ -48,7 +48,7 @@ abstract val is_parent: t -> t -> Tot bool
 let is_parent s0 s1 = includes (stack s0) (stack s1)
 
 (* Current frame id *)
-abstract val top_frame_id: s:t -> Tot rid
+val top_frame_id: s:t -> Tot rid
 let top_frame_id s = Cons.hd (stack s)
 
 (* Current allocatable heap *)
@@ -125,18 +125,18 @@ open FStar.Set
 let disjoint_regions (s1:set rid) (s2:set rid) = 
      forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> x <> y
 
-val test3: #a:Type -> r:stacked a -> x:a -> y:a -> s0:t -> s1:t -> s2:t -> 
-  Lemma (requires (contains s0 r /\ contains s1 r /\ s1 == upd s0 r x /\ s2 == upd s1 r y))
-	(ensures (contains s2 r /\ s2 == upd s0 r y))
-let test3 #a r x y s0 s1 s2 =
-  cut (heaps s1 = Map.upd (heaps s0) (frameOf r) (Heap.upd (Map.sel (heaps s0) (frameOf r)) (as_ref (refOf r)) x));
-  cut (heaps s2 = Map.upd (heaps s1) (frameOf r) (Heap.upd (Map.sel (heaps s1) (frameOf r)) (as_ref (refOf r)) y));
-  admit()
-
-#reset-options "--z3timeout 50"
-
 val heapOf: #a:Type -> stacked a -> t -> Tot heap
 let heapOf #a r s = Map.sel (heaps s) (frameOf r)
 
 val asRef: #a:Type -> stacked a -> Tot (ref a)
 let asRef #a r = as_ref (refOf r)
+
+assume val stacked_to_ref_lemma_1: #a:Type -> x:stacked a -> y:stacked a -> Lemma
+  (requires (x <> y))
+  (ensures (asRef x <> asRef y))
+  [SMTPat (x <> y)]
+
+assume val stacked_to_ref_lemma_2: #a:Type -> x:stacked a -> y:stacked a -> Lemma
+  (requires (x <> y))
+  (ensures (refOf x =!= refOf y))
+  

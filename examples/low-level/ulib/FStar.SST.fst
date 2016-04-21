@@ -3,7 +3,7 @@ module FStar.SST
 open FStar.StackHeap
 let modifies = StackHeap.modifies
 
-let ref (t:Type) = stacked t // JK: old located references
+let ref (t:Type) : Type0 = stacked t // JK: old located references
 
 let st_pre = st_pre_h t
 let st_post (a:Type) = st_post_h t a
