@@ -21,6 +21,29 @@ open FStar.Util
 open FStar.SMTEncoding.Term
 open FStar.SMTEncoding
 
+let fuel_trace : ref<option<list<(int * int)>>> = Util.mk_ref <| Some []
+
+let reset_fuel_trace () =
+    fuel_trace := Some []
+
+let format_fuel_trace_file_name src_fn =
+    Util.format_value_file_name <| Util.format1 "%s.fuel" src_fn
+
+let save_fuel_trace src_fn : unit =
+    begin match !fuel_trace with
+    (* failure to verify *)
+    | None 
+    (* verification not performed *)
+    | Some [] ->
+      ()
+    (* verification successful *)
+    | Some l ->
+      (* todo: need source file digest and z3 executable digest *)
+      let val_fn = format_fuel_trace_file_name src_fn in
+      Util.save_value_to_file val_fn l
+    end;
+    reset_fuel_trace ()
+
 type label = error_label
 type labels = error_labels
 let sort_labels (l:labels) = List.sortWith (fun (_, _, r1) (_, _, r2) -> Range.compare r1 r2) l
@@ -235,6 +258,7 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
             let errs = match errs with
                     | [] -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)]
                     | _ -> errs in
+            fuel_trace := None;
             if !Options.print_fuels
             then (Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
                     (Range.string_of_range (Env.get_range env))
@@ -263,12 +287,19 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
 
         and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) =
             if ok
-            then if !Options.print_fuels
-                    then (Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n"
-                        (Range.string_of_range (Env.get_range env))
-                        (Util.string_of_int prev_fuel)
-                        (Util.string_of_int prev_ifuel))
-                    else ()
+            then begin 
+                begin match !fuel_trace with
+                | None -> ()
+                | Some l ->
+                    fuel_trace := Some (l @ [(prev_fuel, prev_ifuel)])
+                end;
+                if !Options.print_fuels
+                then (Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n"
+                    (Range.string_of_range (Env.get_range env))
+                    (Util.string_of_int prev_fuel)
+                    (Util.string_of_int prev_ifuel))
+                else ()
+                end
             else try_alt_configs (prev_fuel, prev_ifuel) p errs alt in
     
         Z3.ask use_fresh_z3_context  //only relevant if we're running with n_cores > 1

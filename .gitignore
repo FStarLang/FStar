@@ -5,6 +5,7 @@
 *.suo
 *.smt2
 *.sav
+*.fuel.fsval
 cache/
 /VS/packages
 

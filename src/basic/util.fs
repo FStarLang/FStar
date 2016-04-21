@@ -644,3 +644,19 @@ let print_endline x =
 
 let map_option f opt = Option.map f opt
 
+let format_value_file_name (prefix:string) =
+  // todo: need OCaml implementation (`.mlval`)
+  // we use different suffixes for F# and OCaml because they're incompatible encodings of values.
+  String.Format("{0}.fsval", prefix)
+
+let save_value_to_file (fname:string) value =
+  // todo: need OCaml implementation.
+  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextWriter` to be passed to `output_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
+  use writer = new System.IO.StreamWriter(fname) in
+  output_value writer value
+
+let load_value_from_file (fname:string) =
+  // todo: need OCaml implementation.
+  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
+  use reader = new System.IO.StreamReader(fname) in
+  input_value reader

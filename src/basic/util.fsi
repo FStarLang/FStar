@@ -288,3 +288,6 @@ val print_endline: string -> unit
 
 val map_option: ('a -> 'b) -> option<'a> -> option<'b>
 
+val save_value_to_file: string -> 'a -> unit
+val load_value_from_file: string -> 'a
+val format_value_file_name: string -> string

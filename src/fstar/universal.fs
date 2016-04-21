@@ -172,10 +172,12 @@ let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
                                * DsEnv.env
                                * TcEnv.env  =
   let dsenv, fmods = parse dsenv pre_fn fn in
+  FStar.SMTEncoding.ErrorReporting.reset_fuel_trace ();
   let env, all_mods =
     fmods |> List.fold_left (fun (env, all_mods) m ->
                             let m, env = Tc.check_module env m in
                             env, m::all_mods) (env, []) in
+  FStar.SMTEncoding.ErrorReporting.save_fuel_trace fn;
   List.rev all_mods, dsenv, env
 
 (***********************************************************************)
