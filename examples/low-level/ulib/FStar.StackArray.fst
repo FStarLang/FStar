@@ -6,22 +6,27 @@ open FStar.Seq
 open FStar.StackHeap
 open FStar.SST
 
-(* abstract *) type array (t:Type) = ref (seq t)
+type array (t:Type) = ref (seq t)
 
-assume val op_At_Bar: #a:Type -> array a -> array a -> St (array a)
+(* Commented for as long as not specified *)
+// assume val op_At_Bar: #a:Type -> array a -> array a -> St (array a)
 
-assume val of_seq: #a:Type -> s:seq a -> ST (array a)
+val of_seq: #a:Type -> s:seq a -> ST (array a)
   (requires (fun h -> True))
   (ensures  (fun s0 x s1 -> (not(contains s0 x)
 		             /\ frameOf x = top_frame_id s1
                              /\ contains s1 x
-                             /\ modifies !{} s0 s1
+			     /\ stack s1 = stack s0
+			     /\ modifies_one (top_frame_id s1) s0 s1
+			     /\ modifies_ref (top_frame_id s1) !{asRef x} s0 s1	                    
                              /\ sel s1 x =s)))
+let of_seq #a s = salloc s
 
-assume val to_seq: #a:Type -> s:array a -> ST (seq a)
+val to_seq: #a:Type -> s:array a -> ST (seq a)
   (requires (fun h -> contains h s))
   (ensures  (fun h0 x h1 -> (sel h0 s=x /\ h0==h1)))
-
+let to_seq #a s = !s
+  
 val create : #a:Type -> n:nat -> init:a -> ST (array a)
   (requires (fun h -> True))
   (ensures  (fun h0 x h1 -> (not(contains h0 x)
@@ -34,27 +39,36 @@ val create : #a:Type -> n:nat -> init:a -> ST (array a)
 			     )))
 let create #a n init = salloc (Seq.create n init)
 
-assume val index : #a:Type -> x:array a -> n:nat -> ST a
+val index : #a:Type -> x:array a -> n:nat -> ST a
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
   (ensures  (fun h0 v h1 -> (n < Seq.length (sel h0 x)
                              /\ h0==h1
                              /\ v=Seq.index (sel h0 x) n)))
+let index #a x n = 
+  let s = to_seq x in Seq.index s n
 
-assume val upd : #a:Type -> x:array a -> n:nat -> v:a -> ST unit
+val upd : #a:Type -> x:array a -> n:nat -> v:a -> ST unit
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
   (ensures  (fun h0 u h1 -> (n < Seq.length (sel h0 x)
                             /\ contains h1 x
 			    /\ modifies (Set.singleton (frameOf x)) h0 h1
 			    /\ modifies_ref (frameOf x) !{as_ref (refOf x)} h0 h1
                             /\ h1==StackHeap.upd h0 x (Seq.upd (sel h0 x) n v))))
+let upd #a x n v = 
+  let s = to_seq x in 
+  let s = Seq.upd s n v in
+  x := s
 
-assume val length: #a:Type -> x:array a -> ST nat
+val length: #a:Type -> x:array a -> ST nat
   (requires (fun h -> contains h x))
   (ensures  (fun h0 y h1 -> y=length (sel h0 x) /\ h0==h1))
+let length #a x = Seq.length (to_seq x)
 
+(*
 assume val op: #a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
   (requires (fun h -> contains h x))
   (ensures  (fun h0 u h1 -> modifies_ref (frameOf x) !{as_ref (refOf x)} h0 h1 /\ sel h1 x=f (sel h0 x)))
+*)
 
 val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j} -> ST unit 
   (requires (fun s -> contains s x /\ j < Seq.length (sel s x)))
