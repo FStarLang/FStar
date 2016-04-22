@@ -15,6 +15,8 @@ let rec includes l0 l1 =
 
 let t = (id:list rid{includes [root] id} & m:Map.t rid heap{forall i. List.Tot.contains i id ==> Map.contains m i})
 
+let mem = t
+
 (* Type of region references *)
 abstract let rref (id:rid) (a:Type) = Heap.ref a
 
@@ -52,7 +54,7 @@ val top_frame_id: s:t -> Tot rid
 let top_frame_id s = Cons.hd (stack s)
 
 (* Current allocatable heap *)
-abstract val top_frame: s:t{stack s <> []} -> Tot heap
+val top_frame: s:t{stack s <> []} -> Tot heap
 let top_frame s = Map.sel (heaps s) (top_frame_id s)
 
 (* Valid heap (the root frame is an ancestor *)

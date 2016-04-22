@@ -17,6 +17,12 @@ effect ST (a:Type) (pre:st_pre) (post: (t -> Tot (st_post a))) =
              (fun (p:st_post a) (h:t) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 effect St (a:Type) =
        ST a (fun h -> True) (fun h0 r h1 -> True)
+(* Effect requiring a new frame pushed *)       
+effect STF (a:Type) (pre:st_pre) (post: (t -> Tot (st_post a))) =
+       STATE a
+             (fun (p:st_post a) (h:t) -> pre h /\ (forall a h1. post h a h1 ==> p a h1) 
+	      /\ top_frame h = Heap.emp) (* WP *)
+             (fun (p:st_post a) (h:t) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 sub_effect
   DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:t) -> wp (fun a -> p a h)
 
@@ -29,6 +35,10 @@ assume val push_frame: unit -> ST unit
 assume val pop_frame: unit -> ST rid
   (requires (fun m -> poppable m))
   (ensures (fun (m0:t) _ (m1:t) -> popped_stack m0 m1))
+
+(* val call: #a:Type -> #b:Type -> #pre:st_pre -> #post:(t -> Tot (st_post t)) -> $(f:a -> STF b (requires (fun h -> pre h)) (fun h0 x h1 -> post h0 b h1)) -> ST b *)
+(*   (requires (fun h -> (forall h'. fresh_frame h h' ==> pre h'))) *)
+(*   (ensures (fun h0 x h1 -> stack h1 = stack h0)) *)
 
 // JK: allocates on the stack, only allowed in the topmost frame
 assume val salloc: #a:Type -> init:a -> ST (ref a)
