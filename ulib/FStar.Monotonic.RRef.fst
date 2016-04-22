@@ -71,7 +71,7 @@ let witness #r #a #b m p = ()
 val testify: p:(t -> GTot Type0)
           -> ST unit
                (requires (fun _ ->  witnessed p))
-               (ensures (fun h0 _ h1 -> p h1))
+               (ensures (fun h0 _ h1 -> h0=h1 /\ p h1))
 let testify p = admit() //intentionally admitted
 
 val m_recall: #r:rid -> #a:Type -> #b:reln a 
