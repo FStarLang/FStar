@@ -3,37 +3,37 @@ module Bignum.Fsum
 open FStar.Heap
 open FStar.Ghost
 open IntLib
-open Sint
+open SInt
 open SBuffer
-open FStar.UInt64
+open SInt.UInt64
 open Bignum.Parameters
 open Bignum.Bigint
 
-opaque type WillNotOverflow (h:heap) (a_idx:nat) (b_idx:nat) (len:nat) (ctr:nat) (a:bigint) (b:bigint) =
-  Live h a /\ length a >= a_idx+len /\ Live h b /\ length b >= b_idx+len
+abstract let willNotOverflow (h:heap) (a_idx:nat) (b_idx:nat) (len:nat) (ctr:nat) (a:bigint) (b:bigint) =
+  live h a /\ length a >= a_idx+len /\ live h b /\ length b >= b_idx+len
   /\ (forall (i:nat). {:pattern (v (get h a (i+a_idx)))} (i >= ctr /\ i < len) ==>
 	(v (get h a (i+a_idx)) + v (get h b (i+b_idx)) < pow2 platform_size))
 
-opaque type IsNotModified (h0:heap) (h1:heap) (a_idx:nat) (len:nat) (ctr:nat) (a:bigint) = 
-  Live h0 a /\ Live h1 a /\ a_idx+len <= length a 
+abstract let isNotModified (h0:heap) (h1:heap) (a_idx:nat) (len:nat) (ctr:nat) (a:bigint) = 
+  live h0 a /\ live h1 a /\ a_idx+len <= length a 
   /\  (forall (i:nat). {:pattern (v (get h1 a i))} ((i<ctr+a_idx \/ i >= len+a_idx) /\ i < length a) ==>
 	       v (get h1 a i) == v (get h0 a i))
 
-opaque type IsSum (h0:heap) (h1:heap) (a_idx:nat) (b_idx:nat) (len:nat) (ctr:nat) (a:bigint) (b:bigint) =
-  Live h0 a /\ Live h1 a /\ a_idx+len <= length a /\ Live h0 b /\ b_idx+len <= length b
+abstract let isSum (h0:heap) (h1:heap) (a_idx:nat) (b_idx:nat) (len:nat) (ctr:nat) (a:bigint) (b:bigint) =
+  live h0 a /\ live h1 a /\ a_idx+len <= length a /\ live h0 b /\ b_idx+len <= length b
   /\ (forall (i:nat). {:pattern (v (get h1 a (i+a_idx)))} (i>= ctr /\ i<len) ==> 
 	v (get h1 a (i+a_idx)) = v (get h0 a (i+a_idx)) + v (get h0 b (i+b_idx)))
 
 #reset-options
 
-val fsum_index: a:bigint -> a_idx:nat -> b:bigint{Disjoint a b} -> b_idx:nat -> len:nat -> 
+val fsum_index: a:bigint -> a_idx:nat -> b:bigint{disjoint a b} -> b_idx:nat -> len:nat -> 
   ctr:nat{ctr<=len} -> ST unit
-    (requires (fun h -> Live h a /\ Live h b /\ a_idx+len <= length a /\ b_idx+len <= length b
-	/\ WillNotOverflow h a_idx b_idx len ctr a b))
-    (ensures (fun h0 _ h1 -> Live h0 a /\ Live h0 b /\ Live h1 a /\ Live h1 b
-      /\ a_idx+len <= length a /\ b_idx+len <= length b /\ Modifies (only a) h0 h1
-      /\ IsNotModified h0 h1 a_idx len ctr a
-      /\ IsSum h0 h1 a_idx b_idx len ctr a b))
+    (requires (fun h -> live h a /\ live h b /\ a_idx+len <= length a /\ b_idx+len <= length b
+	/\ willNotOverflow h a_idx b_idx len ctr a b))
+    (ensures (fun h0 _ h1 -> live h0 a /\ live h0 b /\ live h1 a /\ live h1 b
+      /\ a_idx+len <= length a /\ b_idx+len <= length b /\ modifies_buf (only a) h0 h1
+      /\ isNotModified h0 h1 a_idx len ctr a
+      /\ isSum h0 h1 a_idx b_idx len ctr a b))
 let rec fsum_index a a_idx b b_idx len ctr =
 //  admit();
   let h0 = ST.get() in
@@ -43,7 +43,7 @@ let rec fsum_index a a_idx b b_idx len ctr =
       let i = ctr in
       let ai = index a (i+a_idx) in 
       let bi = index b (i+b_idx) in 
-      cut(b2t(v (get h0 a (i+a_idx)) + v (get h0 b (i+b_idx)) < pow2 platform_size));
+      gcut(fun _ -> (v (get h0 a (i+a_idx)) + v (get h0 b (i+b_idx)) < pow2 platform_size));
       let z = ai ^+ bi in 
       upd a (a_idx+i) z; 
       let h1 = ST.get() in
@@ -52,11 +52,11 @@ let rec fsum_index a a_idx b b_idx len ctr =
       
 #reset-options
 
-opaque val gaddition_lemma: h0:heap -> h1:heap -> a:bigint{Live h0 a /\ Live h1 a} -> b:bigint{Live h0 b} ->
+abstract val gaddition_lemma: h0:heap -> h1:heap -> a:bigint{live h0 a /\ live h1 a} -> b:bigint{live h0 b} ->
   len:nat{len <= length a /\ len <= length b /\ 
 	 (forall (i:nat). {:pattern (v (get h1 a i))} i < len ==> 
 	    v (get h1 a i) = v (get h0 a i) + v (get h0 b i)) } ->
-  GLemma unit (requires (True)) (ensures (eval h0 a len + eval h0 b len = eval h1 a len)) []
+  GLemma unit (requires (True)) (ensures (eval h0 a len + eval h0 b len = eval h1 a len))
 let rec gaddition_lemma h0 h1 a b len =
 //  admit();
   match len with
@@ -64,24 +64,24 @@ let rec gaddition_lemma h0 h1 a b len =
   | _ -> gaddition_lemma h0 h1 a b (len-1); 
     distributivity_add_right (pow2 (bitweight templ (len-1))) (v (get h0 a (len-1)))  (v (get h0 b (len-1)))
 
-val addition_lemma: h0:heap -> h1:heap -> a:bigint{Live h0 a /\ Live h1 a} -> b:bigint{Live h0 b} ->
+assume val addition_lemma: h0:heap -> h1:heap -> a:bigint{live h0 a /\ live h1 a} -> b:bigint{live h0 b} ->
   len:nat{len <= length a /\ len <= length b /\ 
 	 (forall (i:nat). {:pattern (v (get h1 a i))} i < len ==> 
 	    v (get h1 a i) = v (get h0 a i) + v (get h0 b i)) } ->
   Lemma (requires (True)) (ensures (eval h0 a len + eval h0 b len = eval h1 a len))
-let addition_lemma h0 h1 a b len =
-  coerce (requires (True)) (ensures (eval h0 a len + eval h0 b len = eval h1 a len))
-	 (fun _ -> gaddition_lemma h0 h1 a b len)
+(* let addition_lemma h0 h1 a b len = *)
+(*   coerce (requires (True)) (ensures (eval h0 a len + eval h0 b len = eval h1 a len)) *)
+(* 	 (fun _ -> gaddition_lemma h0 h1 a b len) *)
 
 let vmax = templ 0
 
 // TODO
-val fsum': a:bigint -> b:bigint{Disjoint a b} -> ST unit
-    (requires (fun h -> Norm h a /\ Norm h b))
-    (ensures (fun h0 u h1 -> Norm h0 a /\ Norm h0 b /\ Live h1 a /\ Modifies (only a) h0 h1
+val fsum': a:bigint -> b:bigint{disjoint a b} -> ST unit
+    (requires (fun h -> norm h a /\ norm h b))
+    (ensures (fun h0 u h1 -> norm h0 a /\ norm h0 b /\ live h1 a /\ modifies_buf (only a) h0 h1
       /\ eval h1 a norm_length = eval h0 a norm_length + eval h0 b norm_length
-      /\ IsNotModified h0 h1 0 norm_length 0 a
-      /\ IsSum h0 h1 0 0 norm_length 0 a b))
+      /\ isNotModified h0 h1 0 norm_length 0 a
+      /\ isSum h0 h1 0 0 norm_length 0 a b))
 let fsum' a b =
   admit();
   let h0 = ST.get() in 

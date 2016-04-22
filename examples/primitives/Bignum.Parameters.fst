@@ -3,6 +3,8 @@ module Bignum.Parameters
 open FStar.Ghost
 open IntLib
 
+let op_Star = Prims.op_Multiply
+
 val prime: erased pos
 let prime = admit()
 val platform_size: pos // Maybe should be removed

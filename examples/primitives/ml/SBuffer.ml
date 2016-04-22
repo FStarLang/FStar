@@ -6,19 +6,25 @@ let modifies_subset_lemma mods submods h0 h1 = ()
 let modifies_empty_lemma h = ()
 let modifies_fresh_lemma h0 h1 mods size b = ()
 
+type ('a, 'b, 'c, 'd) disjoint = unit
 type ('a, 'b, 'c) live = unit
-                                               
+
+type abuffer = unit
+                           
 type 'a buffer = {
-    content:int array;
+    content:'a array;
     idx:int;
     length:int;
   }
-                
+
+                   
 type uint32 = int
 
-type uint32s = unit buffer 
-type uint8s = unit buffer
-type uint63s = unit buffer 
+type uint8s = int buffer
+type uint32s = int buffer 
+type uint63s = int buffer 
+type uint64s = Stdint.uint64 buffer 
+type uint128s = Stdint.uint128 buffer 
                 
 let create t init len = {content = Array.make len init; idx = 0; length = len}
 let index t b n = Array.get b.content (n+b.idx)

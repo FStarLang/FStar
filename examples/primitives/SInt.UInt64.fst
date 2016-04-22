@@ -100,6 +100,9 @@ let rotate_right_wide a s = urotate_right #(2*n) a s
 val to_uint64: sint -> Tot uint64
 let to_uint64 s = to_usint n s
 
+val of_uint8: usint 8 -> Tot uint64
+let of_uint8 x = to_uint64 x
+
 (* Infix operators *)
 let op_Hat_Less_Less = shift_left
 let op_Hat_Greater_Greater = shift_right

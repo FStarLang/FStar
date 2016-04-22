@@ -32,13 +32,13 @@ COMPILE=ocamlopt -ccopt -O3 fstarlib.c
 # OCaml variables
 OCAMLOPT := $(OCAMLOPT) -I $(ULIB_ML)/native_int
 REALIZED=SInt_UInt8 SInt_UInt32 SInt_UInt63 SInt_UInt64 SBuffer SBytes
+REALIZED_MODULE=$(subst _,., $(REALIZED))
 REALIZED_ML=$(addsuffix .ml,$(REALIZED))
-NO_CODEGEN=$(addprefix --no_extract , SInt $(REALIZED))
+NO_CODEGEN=$(addprefix --no_extract , SInt $(REALIZED_MODULE))
 
 POLY_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
 CHACHA_OCAML=SInt_UInt8.ml SInt_UInt32.ml SBuffer.ml SBytes.ml Chacha.ml
-
-
+CURVE_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Bignum_Parameters.ml Bignum_Bigint.ml Bignum_Fsum.ml Bignum_FsumWide.ml Bignum_Fdifference.ml Bignum_Fscalar.ml Bignum_Fproduct.ml Bignum_Modulo.ml Bignum_Core.ml Curve_Point.ml Curve_AddAndDouble.ml Curve_Ladder.ml
 
 .PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test sha-ver sha-ml
 
@@ -137,6 +137,15 @@ curve-debug: Curve.Ladder.fst
 	@echo " Compiling CURVE"
 	cd $(CURVE_ODIR) && $(COMPILE) $(CURVE_C) -o $(CURVE)
 	./$(CURVE_ODIR)/$(CURVE)
+
+curve-ml:
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml PRIMS_DIR=native_int
+	mkdir -p $(CURVE_ODIR)
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) Curve.Ladder.fst --odir $(CURVE_ODIR) #2> /dev/null
+	@sed -i 's/(Obj.magic ((fun pp ppq p pq q n ctr b scalar/(((fun pp ppq p pq q n ctr b scalar/g' $(CURVE_ODIR)/Curve_Ladder.ml
+	$(OCAMLOPT) -I ml -I $(CURVE_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
+	  $(addprefix $(CURVE_ODIR)/,$(CURVE_EXTRACTED)) ml/test_curve25519.ml -o test_curve25519.exe
+	./test_curve25519.exe
 
 # AES targets
 aes-ver:
