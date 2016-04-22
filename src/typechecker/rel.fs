@@ -330,10 +330,9 @@ let base_and_refinement env wl t1 =
         | Tm_bvar _
         | Tm_arrow _
         | Tm_abs _
-        | Tm_uvar _ -> (t1, None)
-
+        | Tm_uvar _ 
         | Tm_let _
-        | Tm_match _ -> failwith "Unhandled cases!"
+        | Tm_match _ -> (t1, None)
 
         | Tm_meta _
         | Tm_ascribed _  //NS: Why are the two previous cases excluded? Because of the whnf/unmeta
