@@ -1675,6 +1675,11 @@ let gen_wps_for_free env binders a wp_a =
         (fun t -> Util.arrow wp_binders { comp with n = Total t }),
         (fun t -> Util.arrow wp_binders { comp with n = GTotal t }),
         (fun () -> List.map (fun (bv, _) ->
+          (* Note: just returning [wp_binders] here would be wrong, because the
+           * identity of binders relies on the _physical equality_ of the [bv]
+           * data structure. So, arguments passed to [mk_ctx] should never refer
+           * to [wp_binders]; one way to enforce that is to generate fresh
+           * binders whenever the client asks for it. *)
           i := !i + 1;
           S.gen_bv ("g" ^ string_of_int !i) None bv.sort
         ) wp_binders)
@@ -1684,16 +1689,18 @@ let gen_wps_for_free env binders a wp_a =
 
   (* A variation where we can specify implicit parameters. *)
   let binders_of_list = List.map (fun (t, b) -> t, S.as_implicit b) in
+
   let implicit_binders_of_list = List.map (fun t -> t, S.as_implicit true) in
 
   (* A debug / sanity check. *)
   let check str t =
     Util.print2 "Generated term for %s: %s\n" str (Print.term_to_string t);
-    let t = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env t in
+    let n = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env in
+    let t = n t in
     let t = SS.compress t in
     let e, { res_typ = res_typ }, _ = tc_term env t in
-    Util.print2 "Inferred type for %s: %s\n" str (Print.term_to_string res_typ);
-    Util.print2 "Elaborated term for %s: %s\n" str (Print.term_to_string e)
+    Util.print2 "Inferred type for %s: %s\n" str (Print.term_to_string (n res_typ));
+    Util.print2 "Elaborated term for %s: %s\n" str (Print.term_to_string (n e))
   in
 
   (* val st2_pure : #heap:Type -> #a:Type -> #t:Type -> x:t ->
@@ -1743,16 +1750,19 @@ let gen_wps_for_free env binders a wp_a =
     let st2_liftGA1 #heap #a #t1 #t2 f a1 =
                     st2_app (st2_pure f) a1
   *)
+  let unknown = mk Tm_unknown None Range.dummyRange in
   let c_lift1 =
     let t1 = S.gen_bv "t1" None Util.ktype in
-    let t2 = S.gen_bv "t1" None Util.ktype in
+    let t2 = S.gen_bv "t2" None Util.ktype in
     let t_f = Util.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2)) in
     let f = S.gen_bv "f" None t_f in
     let a1 = S.gen_bv "a1" None (mk_gctx (S.bv_to_name t1)) in
     let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t2))))) in
     Util.abs (binders_of_list [ t1, true; t2, true; f, false; a1, false ]) (
-      Util.mk_app c_app [S.as_arg (
-        Util.mk_app c_pure [ S.as_arg (S.bv_to_name f) ])]
+      Util.mk_app c_app (List.map S.as_arg [
+        unknown; unknown;
+        Util.mk_app c_pure (List.map S.as_arg [ unknown; S.bv_to_name f ]);
+        S.bv_to_name a1 ])
     ) ret
   in
   check "lift1" (Util.abs (binders @ [ S.mk_binder a ]) c_lift1 None);
@@ -1780,8 +1790,10 @@ let gen_wps_for_free env binders a wp_a =
     let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t3))))) in
     Util.abs (binders_of_list [ t1, true; t2, true; t3, true; f, false; a1, false; a2, false ]) (
       Util.mk_app c_app (List.map S.as_arg [
+        unknown; unknown;
         Util.mk_app c_app (List.map S.as_arg [
-          Util.mk_app c_pure [ S.as_arg (S.bv_to_name f) ];
+          unknown; unknown;
+          Util.mk_app c_pure (List.map S.as_arg [ unknown; S.bv_to_name f ]);
           S.bv_to_name a1 ]);
         S.bv_to_name a2 ])
     ) ret
@@ -1800,6 +1812,7 @@ let gen_wps_for_free env binders a wp_a =
     Util.abs (S.binders_of_list [ a; c; the_a; the_c ]) (
       let l_ite = fvar Const.ite_lid (S.Delta_unfoldable 2) None in
       Util.mk_app c_lift2 (List.map S.as_arg [
+        unknown; unknown; unknown;
         Util.mk_app l_ite [S.as_arg (S.bv_to_name c)]
       ])
     ) ret
