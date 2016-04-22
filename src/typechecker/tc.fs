@@ -1656,6 +1656,7 @@ let gen_wps_for_free env binders a wp_a =
    * definitions, both [binders] and [a] are opened. This means that macros
    * close over [binders] and [a], and this means that combinators do not expect
    * [binders] and [a] when applied. *)
+  let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env in
 
   (* Consider the predicate transformer st_wp:
    *   let st_pre_h  (heap:Type)          = heap -> GTot Type0
@@ -1670,7 +1671,7 @@ let gen_wps_for_free env binders a wp_a =
    * the context. *)
   let mk_ctx, mk_gctx, mk_gamma =
     let i = ref 0 in
-    match (N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env wp_a).n with
+    match (normalize wp_a).n with
     | Tm_arrow (wp_binders, comp) ->
         (fun t -> Util.arrow wp_binders { comp with n = Total t }),
         (fun t -> Util.arrow wp_binders { comp with n = GTotal t }),
@@ -1695,12 +1696,11 @@ let gen_wps_for_free env binders a wp_a =
   (* A debug / sanity check. *)
   let check str t =
     Util.print2 "Generated term for %s: %s\n" str (Print.term_to_string t);
-    let n = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env in
-    let t = n t in
+    let t = normalize t in
     let t = SS.compress t in
     let e, { res_typ = res_typ }, _ = tc_term env t in
-    Util.print2 "Inferred type for %s: %s\n" str (Print.term_to_string (n res_typ));
-    Util.print2 "Elaborated term for %s: %s\n" str (Print.term_to_string (n e))
+    Util.print2 "Inferred type for %s: %s\n" str (Print.term_to_string (normalize res_typ));
+    Util.print2 "Elaborated term for %s: %s\n" str (Print.term_to_string (normalize e))
   in
 
   (* val st2_pure : #heap:Type -> #a:Type -> #t:Type -> x:t ->
@@ -1817,7 +1817,7 @@ let gen_wps_for_free env binders a wp_a =
   in
   check "wp_if_then_else" (Util.abs binders wp_if_then_else None);
 
-  [], wp_if_then_else
+  [], normalize wp_if_then_else
 
 let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
