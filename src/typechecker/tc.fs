@@ -1806,10 +1806,8 @@ let gen_wps_for_free env binders a wp_a =
     let st2_if_then_else heap a c = st2_liftGA2 (l_ITE c) *)
   let wp_if_then_else =
     let c = S.gen_bv "c" None Util.ktype in
-    let the_a = S.gen_bv "the_a" None wp_a in
-    let the_c = S.gen_bv "the_c" None wp_a in
     let ret = Some (Inl (Util.lcomp_of_comp (mk_Total wp_a))) in
-    Util.abs (S.binders_of_list [ a; c; the_a; the_c ]) (
+    Util.abs (S.binders_of_list [ a; c ]) (
       let l_ite = fvar Const.ite_lid (S.Delta_unfoldable 2) None in
       Util.mk_app c_lift2 (List.map S.as_arg [
         unknown; unknown; unknown;
