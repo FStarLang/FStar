@@ -1651,50 +1651,63 @@ let open_effect_decl env ed =
              ; trivial     =op ed.trivial } in
    ed, a, wp
 
-let gen_wps_for_free env binders =
-  (* A series of "macros" to automatically build WP's using combinators. All
-   * these definitions are parameterized over the [binders] variable, which
-   * contains the effect-specific binders. [binders] has been opened, so it's
-   * safe to sprinkle it under binders pretty much everywhere. The combinators
-   * are illustrated using [ST2], for which the only binder is [heap: Type]. *)
+let gen_wps_for_free env binders a wp_a =
+  (* A series of macros and combinators to automatically build WP's. In these
+   * definitions, both [binders] and [a] are opened. This means that macros
+   * close over [binders] and [a], and this means that combinators do not expect
+   * [binders] and [a] when applied. *)
 
-  (* If [binders] is [heap: Type], then this is [_: heap] *)
-  let argument_bvs () =
-    List.map (fun (bv, _) -> S.new_bv None (S.bv_to_name bv)) binders in
+  (* Consider the predicate transformer st_wp:
+   *   let st_pre_h  (heap:Type)          = heap -> GTot Type0
+   *   let st_post_h (heap:Type) (a:Type) = a -> heap -> GTot Type0
+   *   let st_wp_h   (heap:Type) (a:Type) = st_post_h heap a -> Tot (st_pre_h heap)
+   * after reduction we get:
+   *   let st_wp_h (heap: Type) (a: Type) = (a -> heap -> GTot Type0) -> heap -> GTot Type0
+   * we want:
+   *   type st2_gctx (heap: Type) (a:Type) (t:Type) = (a -> heap -> GTot Type0) -> heap -> GTot t
+   * we thus generate macros parameterized over [e] that build the right
+   * context. [gamma] is the series of binders the precede the return type of
+   * the context. *)
+  let mk_ctx, mk_gctx, mk_gamma =
+    let i = ref 0 in
+    match (N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env wp_a).n with
+    | Tm_arrow (wp_binders, comp) ->
+        (fun t -> Util.arrow wp_binders { comp with n = Total t }),
+        (fun t -> Util.arrow wp_binders { comp with n = GTotal t }),
+        (fun () -> List.map (fun (bv, _) ->
+          i := !i + 1;
+          S.gen_bv ("g" ^ string_of_int !i) None bv.sort
+        ) wp_binders)
+    | _ ->
+        failwith "wp_a doesn't have the right shape"
+  in
 
-  let argument_binders () =
-    List.map S.mk_binder (argument_bvs ()) in
-
-  (* type post a = a -> heap -> GTot Type0 *)
-  let mk_post (a: S.term): S.term =
-    Util.arrow ([ S.null_binder a ] @ binders) (S.mk_GTotal Util.ktype0) in
-
-  (* type st2_ctx (a:Type) (e:Type) =
-       (a -> heap -> GTot Type0) -> heap -> Tot e *)
-  let mk_ctx (a: S.term) (e: S.term): S.term =
-    Util.arrow ([ S.null_binder (mk_post a) ] @ binders) (S.mk_Total e) in
-
-  (* type st2_gctx (a:Type) (e:Type) =
-        (a -> heap -> GTot Type0) -> heap -> GTot e *)
-  let mk_gctx (a: S.term) (e: S.term): S.term =
-    Util.arrow ([ S.null_binder (mk_post a) ] @ binders) (S.mk_GTotal e) in
-
+  (* A variation where we can specify implicit parameters. *)
   let binders_of_list = List.map (fun (t, b) -> t, S.as_implicit b) in
+  let implicit_binders_of_list = List.map (fun t -> t, S.as_implicit true) in
+
+  (* A debug / sanity check. *)
+  let check str t =
+    Util.print2 "Generated term for %s: %s\n" str (Print.term_to_string t);
+    let t = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env t in
+    let t = SS.compress t in
+    let e, { res_typ = res_typ }, _ = tc_term env t in
+    Util.print2 "Inferred type for %s: %s\n" str (Print.term_to_string res_typ);
+    Util.print2 "Elaborated term for %s: %s\n" str (Print.term_to_string e)
+  in
 
   (* val st2_pure : #heap:Type -> #a:Type -> #t:Type -> x:t ->
        Tot (st2_ctx heap a t)
      let st2_pure #heap #a #t x = fun _post _h -> x *)
   let c_pure =
-    let a = S.new_bv None Util.ktype in
-    let t = S.new_bv None Util.ktype in
-    let x = S.new_bv None (S.bv_to_name t) in
-    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_ctx (S.bv_to_name a) (S.bv_to_name t))))) in
-    let outer_body =
-      let inner_binders = S.mk_binder (S.new_bv None (mk_post (S.bv_to_name a))) :: argument_binders () in
-      let inner_body = S.bv_to_name x in
-      Util.abs inner_binders inner_body ret
-    in
-    Util.abs (binders_of_list [ a, true; t, true; x, false ]) outer_body ret in
+    let t = S.gen_bv "t" None Util.ktype in
+    let x = S.gen_bv "x" None (S.bv_to_name t) in
+    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_ctx (S.bv_to_name t))))) in
+    let gamma = mk_gamma () in
+    let body = Util.abs (implicit_binders_of_list gamma) (S.bv_to_name x) ret in
+    Util.abs (binders_of_list [ t, true; x, false ]) body ret
+  in
+  check "pure" (Util.abs (binders @ [ S.mk_binder a ]) c_pure None);
 
   (* val st2_app : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                   l:st2_gctx heap a (t1 -> GTot t2) ->
@@ -1702,26 +1715,26 @@ let gen_wps_for_free env binders =
                   Tot (st2_gctx heap a t2)
     let st2_app #heap #a #t1 #t2 l r = fun p h -> l p h (r p h) *)
   let c_app =
-    let a = S.new_bv None Util.ktype in
-    let t1 = S.new_bv None Util.ktype in
-    let t2 = S.new_bv None Util.ktype in
-    let l = S.new_bv None (mk_gctx (S.bv_to_name a)
+    let t1 = S.gen_bv "t1" None Util.ktype in
+    let t2 = S.gen_bv "t2" None Util.ktype in
+    let l = S.gen_bv "l" None (mk_gctx
       (Util.arrow [ S.mk_binder (S.new_bv None (S.bv_to_name t1)) ] (S.mk_GTotal (S.bv_to_name t2))))
     in
-    let r = S.new_bv None (mk_gctx (S.bv_to_name a) (S.bv_to_name t1)) in
-    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name a) (S.bv_to_name t2))))) in
+    let r = S.gen_bv "r" None (mk_gctx (S.bv_to_name t1)) in
+    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t2))))) in
     let outer_body =
-      let p = S.new_bv None (mk_post (S.bv_to_name a)) in
-      let effect_args = argument_bvs () in
-      let inner_binders = List.map S.mk_binder (p :: effect_args) in
-      let bv_arg x = S.as_arg (S.bv_to_name x) in
+      let gamma = mk_gamma () in
+      let gamma_as_args = List.map (fun bv -> S.as_arg (S.bv_to_name bv)) gamma in
       let inner_body =
-        Util.mk_app (S.bv_to_name l) (List.map bv_arg (p :: effect_args) @ [
-          S.as_arg (Util.mk_app (S.bv_to_name r) (List.map bv_arg (p :: effect_args)))])
+        Util.mk_app
+          (S.bv_to_name l)
+          (gamma_as_args @ [ S.as_arg (Util.mk_app (S.bv_to_name r) gamma_as_args)])
       in
-      Util.abs inner_binders inner_body ret
+      Util.abs (implicit_binders_of_list gamma) inner_body ret
     in
-    Util.abs (binders_of_list [ a, true; t1, true; t2, true; l, false; r, false ]) outer_body ret in
+    Util.abs (binders_of_list [ t1, true; t2, true; l, false; r, false ]) outer_body ret
+  in
+  check "app" (Util.abs (binders @ [ S.mk_binder a ]) c_app None);
 
   (* val st2_liftGA1 : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                        f : (t1 -> GTot t2) ->
@@ -1731,20 +1744,18 @@ let gen_wps_for_free env binders =
                     st2_app (st2_pure f) a1
   *)
   let c_lift1 =
-    let a = S.new_bv None Util.ktype in
-    let t1 = S.new_bv None Util.ktype in
-    let t2 = S.new_bv None Util.ktype in
-    let t_f = Util.arrow [
-        S.null_binder (S.bv_to_name t1)
-      ] (S.mk_GTotal (S.bv_to_name t2))
-    in
-    let f = S.new_bv None t_f in
-    let a1 = S.new_bv None (mk_gctx (S.bv_to_name a) (S.bv_to_name t1)) in
-    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name a) (S.bv_to_name t2))))) in
-    Util.abs (binders_of_list [ a, true; t1, true; t2, true; f, false; a1, false ]) (
+    let t1 = S.gen_bv "t1" None Util.ktype in
+    let t2 = S.gen_bv "t1" None Util.ktype in
+    let t_f = Util.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2)) in
+    let f = S.gen_bv "f" None t_f in
+    let a1 = S.gen_bv "a1" None (mk_gctx (S.bv_to_name t1)) in
+    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t2))))) in
+    Util.abs (binders_of_list [ t1, true; t2, true; f, false; a1, false ]) (
       Util.mk_app c_app [S.as_arg (
         Util.mk_app c_pure [ S.as_arg (S.bv_to_name f) ])]
-    ) ret in
+    ) ret
+  in
+  check "lift1" (Util.abs (binders @ [ S.mk_binder a ]) c_lift1 None);
 
 
   (* val st2_liftGA2 : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type -> #t3:Type ->
@@ -1756,52 +1767,44 @@ let gen_wps_for_free env binders =
       st2_app (st2_app (st2_pure f) a1) a2
   *)
   let c_lift2 =
-    let a = S.new_bv None Util.ktype in
-    let t1 = S.new_bv None Util.ktype in
-    let t2 = S.new_bv None Util.ktype in
-    let t3 = S.new_bv None Util.ktype in
-    let t_f' = Util.arrow [ S.null_binder (S.bv_to_name t2) ] (S.mk_GTotal (S.bv_to_name t3)) in
-    let t_f = Util.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal t_f') in
-    let f = S.new_bv None t_f in
-    let a1 = S.new_bv None (mk_gctx (S.bv_to_name a) (S.bv_to_name t1)) in
-    let a2 = S.new_bv None (mk_gctx (S.bv_to_name a) (S.bv_to_name t2)) in
-    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name a) (S.bv_to_name t3))))) in
-    Util.abs (binders_of_list [ a, true; t1, true; t2, true; t3, true; f, false; a1, false; a2, false ]) (
+    let t1 = S.gen_bv "t1" None Util.ktype in
+    let t2 = S.gen_bv "t2" None Util.ktype in
+    let t3 = S.gen_bv "t3" None Util.ktype in
+    let t_f = Util.arrow
+      [ S.null_binder (S.bv_to_name t1); S.null_binder (S.bv_to_name t2) ]
+      (S.mk_GTotal (S.bv_to_name t3))
+    in
+    let f = S.gen_bv "f" None t_f in
+    let a1 = S.gen_bv "a1" None (mk_gctx (S.bv_to_name t1)) in
+    let a2 = S.gen_bv "a2" None (mk_gctx (S.bv_to_name t2)) in
+    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t3))))) in
+    Util.abs (binders_of_list [ t1, true; t2, true; t3, true; f, false; a1, false; a2, false ]) (
       Util.mk_app c_app (List.map S.as_arg [
         Util.mk_app c_app (List.map S.as_arg [
           Util.mk_app c_pure [ S.as_arg (S.bv_to_name f) ];
           S.bv_to_name a1 ]);
         S.bv_to_name a2 ])
-    ) ret in
-
-  (* type st2_wp (heap:Type) (a:Type) = st2_gctx heap a Type0 *)
-  let mk_wp (a: S.term) =
-    mk_gctx a Util.ktype0 in
+    ) ret
+  in
+  check "lift2" (Util.abs (binders @ [ S.mk_binder a ]) c_lift2 None);
 
   (* val st2_if_then_else : heap:Type -> a:Type -> c:Type0 ->
                             st2_wp heap a -> st2_wp heap a ->
                             Tot (st2_wp heap a)
     let st2_if_then_else heap a c = st2_liftGA2 (l_ITE c) *)
   let wp_if_then_else =
-    let a = S.new_bv None Util.ktype in
-    let c = S.new_bv None Util.ktype in
-    let the_a = S.new_bv None (mk_wp (S.bv_to_name a)) in
-    let the_c = S.new_bv None (mk_wp (S.bv_to_name c)) in
-    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_wp (S.bv_to_name a))))) in
-    let unknown = mk Tm_unknown None Range.dummyRange in
+    let c = S.gen_bv "c" None Util.ktype in
+    let the_a = S.gen_bv "the_a" None wp_a in
+    let the_c = S.gen_bv "the_c" None wp_a in
+    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total wp_a))) in
     Util.abs (S.binders_of_list [ a; c; the_a; the_c ]) (
-      let l_ite = S.lid_as_fv Const.ite_lid (S.Delta_unfoldable 1) None in
+      let l_ite = fvar Const.ite_lid (S.Delta_unfoldable 2) None in
       Util.mk_app c_lift2 (List.map S.as_arg [
-        Util.mk_app (S.fv_to_tm l_ite) [S.as_arg (S.bv_to_name c)]
+        Util.mk_app l_ite [S.as_arg (S.bv_to_name c)]
       ])
-    ) ret in
-
-  (* Sanity check. *)
-  ignore (tc_term env c_pure);
-  ignore (tc_term env c_app);
-  ignore (tc_term env c_lift1);
-  ignore (tc_term env c_lift2);
-  ignore (tc_term env wp_if_then_else);
+    ) ret
+  in
+  check "wp_if_then_else" (Util.abs binders wp_if_then_else None);
 
   [], wp_if_then_else
 
@@ -1836,7 +1839,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     | NotForFree ->
         ed
     | ForFree ->
-        let wp_if_then_else = gen_wps_for_free env binders in {
+        let wp_if_then_else = gen_wps_for_free env binders a wp_a in {
           ed with
           if_then_else = wp_if_then_else
         }

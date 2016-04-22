@@ -223,7 +223,7 @@ type st2_gctx (heap:Type) (a:Type) (e:Type) =
 
 val st2_pure : #heap:Type -> #a:Type -> #t:Type -> x:t ->
                         Tot (st2_ctx heap a t)
-let st2_pure #heap #a #t x = fun _ -> fun _ -> x
+let st2_pure #heap #a #t x = fun p h -> x
 
 val st2_app : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                 l:st2_gctx heap a (t1 -> GTot t2) ->
