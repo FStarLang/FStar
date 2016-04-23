@@ -560,7 +560,7 @@ end
 (t1, None)
 end
 | (FStar_Syntax_Syntax.Tm_let (_)) | (FStar_Syntax_Syntax.Tm_match (_)) -> begin
-(FStar_All.failwith "Unhandled cases!")
+(t1, None)
 end
 | (FStar_Syntax_Syntax.Tm_meta (_)) | (FStar_Syntax_Syntax.Tm_ascribed (_)) | (FStar_Syntax_Syntax.Tm_delayed (_)) | (FStar_Syntax_Syntax.Tm_unknown) -> begin
 (let _144_288 = (let _144_287 = (FStar_Syntax_Print.term_to_string t1)

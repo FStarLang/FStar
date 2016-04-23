@@ -2,9 +2,9 @@ module Curve.AddAndDouble
 
 open FStar.Ghost
 open FStar.Heap
-open FStar.UInt64
+open SInt.UInt64
 open Bignum.Parameters
-open Sint
+open SInt
 open SBuffer
 open Bignum.Bigint
 open Bignum.Core
@@ -25,20 +25,20 @@ let equation_4 x2 z2 x3 z3 x1 = (x1 ^* (((x3 ^- z3) ^* (x2^+z2)) ^- ((x3 ^+ z3) 
 val double_and_add': two_p:point -> two_p_plus_q:point -> p:point -> p_plus_q:point -> q:point ->
   ST unit
     (requires (fun h ->
-      (Live h two_p) /\ (Live h two_p_plus_q)
-      /\ (OnCurve h p) /\ (OnCurve h p_plus_q) /\ (OnCurve h q)
+      (live h two_p) /\ (live h two_p_plus_q)
+      /\ (onCurve h p) /\ (onCurve h p_plus_q) /\ (onCurve h q)
     ))
     (ensures (fun h0 _ h1 ->
-      (Live h0 two_p) /\ (Live h0 two_p_plus_q)
-      /\ (OnCurve h0 p) /\ (OnCurve h0 p_plus_q) /\ (OnCurve h0 q)
-      /\ (OnCurve h1 two_p) /\ (OnCurve h1 two_p_plus_q)
-      /\ (Live h1 p) /\ (Live h1 p_plus_q) /\ (OnCurve h1 q)
-       /\ (Modifies (refs two_p +++ refs two_p_plus_q +++ refs p +++ refs p_plus_q) h0 h1)
-       /\ (Bignum.Bigint.Live h1 (get_x q) /\ Bignum.Bigint.Live h1 (get_x p) /\ Bignum.Bigint.Live h1 (get_z p) 
-	 /\ Bignum.Bigint.Live h1 (get_x p_plus_q) 
-	 /\ Bignum.Bigint.Live h1 (get_z p_plus_q) /\ Bignum.Bigint.Live h1 (get_x two_p) 
-	 /\ Bignum.Bigint.Live h1 (get_z two_p) /\ Bignum.Bigint.Live h1 (get_x two_p_plus_q) 
-	 /\ Bignum.Bigint.Live h1 (get_z two_p_plus_q))
+      (live h0 two_p) /\ (live h0 two_p_plus_q)
+      /\ (onCurve h0 p) /\ (onCurve h0 p_plus_q) /\ (onCurve h0 q)
+      /\ (onCurve h1 two_p) /\ (onCurve h1 two_p_plus_q)
+      /\ (live h1 p) /\ (live h1 p_plus_q) /\ (onCurve h1 q)
+       /\ (modifies_buf (refs two_p +++ refs two_p_plus_q +++ refs p +++ refs p_plus_q) h0 h1)
+       /\ (Bignum.Bigint.live h1 (get_x q) /\ Bignum.Bigint.live h1 (get_x p) /\ Bignum.Bigint.live h1 (get_z p) 
+	 /\ Bignum.Bigint.live h1 (get_x p_plus_q) 
+	 /\ Bignum.Bigint.live h1 (get_z p_plus_q) /\ Bignum.Bigint.live h1 (get_x two_p) 
+	 /\ Bignum.Bigint.live h1 (get_z two_p) /\ Bignum.Bigint.live h1 (get_x two_p_plus_q) 
+	 /\ Bignum.Bigint.live h1 (get_z two_p_plus_q))
 (*
       /\ (
 	  let x1 = valueOf h1 (get_x q) in 
@@ -109,15 +109,15 @@ val double_and_add:
   two_p:point -> two_p_plus_q:point -> p:point -> p_plus_q:point -> q:point -> 
   ST unit
     (requires (fun h -> 
-      (Live h two_p) /\ (Live h two_p_plus_q)
-      /\ (OnCurve h p) /\ (OnCurve h p_plus_q) /\ (OnCurve h q)
+      (live h two_p) /\ (live h two_p_plus_q)
+      /\ (onCurve h p) /\ (onCurve h p_plus_q) /\ (onCurve h q)
       ))
     (ensures (fun h0 _ h1 -> 
-      (Live h0 two_p) /\ (Live h0 two_p_plus_q)
-      /\ (OnCurve h0 p) /\ (OnCurve h0 p_plus_q) /\ (OnCurve h0 q)
-      /\ (OnCurve h1 two_p) /\ (OnCurve h1 two_p_plus_q)
-      /\ (Live h1 p) /\ (Live h1 p_plus_q) /\ (OnCurve h1 q)
-      /\ (Modifies (refs two_p +++ refs two_p_plus_q +++ refs p +++ refs p_plus_q) h0 h1)
+      (live h0 two_p) /\ (live h0 two_p_plus_q)
+      /\ (onCurve h0 p) /\ (onCurve h0 p_plus_q) /\ (onCurve h0 q)
+      /\ (onCurve h1 two_p) /\ (onCurve h1 two_p_plus_q)
+      /\ (live h1 p) /\ (live h1 p_plus_q) /\ (onCurve h1 q)
+      /\ (modifies_buf (refs two_p +++ refs two_p_plus_q +++ refs p +++ refs p_plus_q) h0 h1)
 //      /\ ((pointOf h1 two_p) == (Curve.add (pointOf h0 p) (pointOf h0 p)))
 //      /\ ((pointOf h1 two_p_plus_q) == (Curve.add (pointOf h0 p) (pointOf h0 p_plus_q)))
     ))
