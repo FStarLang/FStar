@@ -1800,6 +1800,48 @@ let gen_wps_for_free env binders a wp_a =
   in
   check "lift2" (Util.abs (binders @ [ S.mk_binder a ]) c_lift2 None);
 
+  let d s = Util.print1 "\x1b[01;36m%s\x1b[00m\n" s in
+  let normalize_and_make_binders_explicit tm =
+    let tm = normalize tm in
+    let rec visit_term tm =
+      let n = match (SS.compress tm).n with
+        | Tm_arrow (binders, comp) ->
+            let comp = visit_comp comp in
+            let binders = List.map visit_binder binders in
+            Tm_arrow (binders, comp)
+        | Tm_abs (binders, term, comp) ->
+            let comp = visit_maybe_lcomp comp in
+            let term = visit_term term in
+            let binders = List.map visit_binder binders in
+            Tm_abs (binders, term, comp)
+        | _ ->
+            tm.n
+      in
+      { tm with n = n }
+    and visit_binder (bv, a) =
+      { bv with sort = visit_term bv.sort }, S.as_implicit false
+    and visit_maybe_lcomp lcomp =
+      match lcomp with
+      | Some (Inl lcomp) ->
+          Some (Inl (Util.lcomp_of_comp (visit_comp (lcomp.comp ()))))
+      | comp ->
+          comp
+    and visit_comp comp =
+      let n = match comp.n with
+        | Total tm ->
+            Total (visit_term tm)
+        | GTotal tm ->
+            GTotal (visit_term tm)
+        | comp ->
+            comp
+      in
+      { comp with comp.n = n }
+    and visit_args args =
+      List.map (fun (tm, q) -> visit_term tm, q) args
+    in
+    visit_term tm
+  in
+
   (* val st2_if_then_else : heap:Type -> a:Type -> c:Type0 ->
                             st2_wp heap a -> st2_wp heap a ->
                             Tot (st2_wp heap a)
@@ -1815,9 +1857,11 @@ let gen_wps_for_free env binders a wp_a =
       ])
     ) ret
   in
+  let wp_if_then_else = normalize_and_make_binders_explicit wp_if_then_else in
   check "wp_if_then_else" (Util.abs binders wp_if_then_else None);
 
-  [], normalize wp_if_then_else
+
+  [], wp_if_then_else
 
 let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
