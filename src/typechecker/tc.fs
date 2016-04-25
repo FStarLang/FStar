@@ -1749,6 +1749,8 @@ let gen_wps_for_free env binders a wp_a =
 
   let implicit_binders_of_list = List.map (fun t -> t, S.as_implicit true) in
 
+  let args_of_bv = List.map (fun bv -> S.as_arg (S.bv_to_name bv)) in
+
   (* val st2_pure : #heap:Type -> #a:Type -> #t:Type -> x:t ->
        Tot (st2_ctx heap a t)
      let st2_pure #heap #a #t x = fun _post _h -> x *)
@@ -1777,7 +1779,7 @@ let gen_wps_for_free env binders a wp_a =
     let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t2))))) in
     let outer_body =
       let gamma = mk_gamma () in
-      let gamma_as_args = List.map (fun bv -> S.as_arg (S.bv_to_name bv)) gamma in
+      let gamma_as_args = args_of_bv gamma in
       let inner_body =
         Util.mk_app
           (S.bv_to_name l)
@@ -1845,6 +1847,30 @@ let gen_wps_for_free env binders a wp_a =
     ) ret
   in
   check "lift2" (Util.abs (binders @ [ S.mk_binder a ]) c_lift2 None);
+
+  (* val st2_push : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
+                    f:(t1 -> Tot (st2_gctx heap a t2)) ->
+                    Tot (st2_ctx heap a (t1->GTot t2))
+    let st2_push #heap #a #t1 #t2 f = fun p h e1 -> f e1 p h *)
+  let c_push =
+    let t1 = S.gen_bv "t1" None Util.ktype in
+    let t2 = S.gen_bv "t2" None Util.ktype in
+    let t_f = Util.arrow
+      [ S.null_binder (S.bv_to_name t1) ]
+      (S.mk_Total (mk_gctx (S.bv_to_name t2)))
+    in
+    let f = S.gen_bv "f" None t_f in
+    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_ctx (
+      Util.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2)))))))
+    in
+    let e1 = S.gen_bv "e1" None (S.bv_to_name t1) in
+    let gamma = mk_gamma () in
+    let body = Util.abs (S.binders_of_list gamma @ [ S.mk_binder e1 ]) (
+      Util.mk_app (S.bv_to_name f) (S.as_arg (S.bv_to_name e1) :: args_of_bv gamma)
+    ) ret in
+    Util.abs (binders_of_list [ t1, true; t2, true; f, false ]) body ret
+  in
+  check "push" (Util.abs (binders @ [ S.mk_binder a ]) c_push None);
 
   let ret_tot_wp_a = Some (Inl (Util.lcomp_of_comp (mk_Total wp_a))) in
 
@@ -1923,7 +1949,7 @@ let gen_wps_for_free env binders a wp_a =
   let wp_assume =
     let q = S.gen_bv "q" None Util.ktype0 in
     let wp = S.gen_bv "wp" None wp_a in
-    let l_imp = fvar Const.and_lid (S.Delta_unfoldable 1) None in
+    let l_imp = fvar Const.imp_lid (S.Delta_unfoldable 1) None in
     let body =
       Util.mk_app c_app (List.map S.as_arg [
         unknown; unknown;
@@ -1937,11 +1963,34 @@ let gen_wps_for_free env binders a wp_a =
   let wp_assume = normalize_and_make_binders_explicit wp_assume in
   check "wp_assume" (Util.abs binders wp_assume None);
 
+  (* val st2_close_wp : heap:Type -> a:Type -> b:Type ->
+                        f:(b->Tot (st2_wp heap a)) ->
+                        Tot (st2_wp heap a)
+    let st2_close_wp heap a b f = st2_app (st2_pure l_Forall) (st2_push f) *)
+  let wp_close =
+    let b = S.gen_bv "b" None Util.ktype in
+    let t_f = Util.arrow [ S.null_binder (S.bv_to_name b) ] (S.mk_Total wp_a) in
+    let f = S.gen_bv "f" None t_f in
+    let body =
+      Util.mk_app c_app (List.map S.as_arg [
+        unknown; unknown;
+        Util.mk_app c_pure (List.map S.as_arg [
+          unknown;
+          Util.mk_app (S.mk_Tm_uinst Util.tforall [ U_unknown ]) [ S.as_arg unknown ]]);
+        Util.mk_app c_push (List.map S.as_arg [
+          unknown; unknown;
+          S.bv_to_name f])])
+    in
+    Util.abs (S.binders_of_list [ a; b; f ]) body ret_tot_wp_a
+  in
+  let wp_close = normalize_and_make_binders_explicit wp_close in
+  check "wp_close" (Util.abs binders wp_close None);
 
   ([], wp_if_then_else),
   ([], wp_binop),
   ([], wp_assert),
-  ([], wp_assume)
+  ([], wp_assume),
+  ([], wp_close)
 
 let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
@@ -1974,12 +2023,19 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     | NotForFree ->
         ed
     | ForFree ->
-        let wp_if_then_else, wp_binop, wp_assert, wp_assume = gen_wps_for_free env binders a wp_a in {
-          ed with
+        let
+          wp_if_then_else,
+          wp_binop,
+          wp_assert,
+          wp_assume,
+          wp_close
+        = gen_wps_for_free env binders a wp_a in
+        { ed with
           if_then_else = wp_if_then_else;
           wp_binop = wp_binop;
           assert_p = wp_assert;
-          assume_p = wp_assume
+          assume_p = wp_assume;
+          close_wp = wp_close
         }
   in
 
