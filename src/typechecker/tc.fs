@@ -1846,13 +1846,14 @@ let gen_wps_for_free env binders a wp_a =
   in
   check "lift2" (Util.abs (binders @ [ S.mk_binder a ]) c_lift2 None);
 
+  let ret_tot_wp_a = Some (Inl (Util.lcomp_of_comp (mk_Total wp_a))) in
+
   (* val st2_if_then_else : heap:Type -> a:Type -> c:Type0 ->
                             st2_wp heap a -> st2_wp heap a ->
                             Tot (st2_wp heap a)
     let st2_if_then_else heap a c = st2_liftGA2 (l_ITE c) *)
   let wp_if_then_else =
     let c = S.gen_bv "c" None Util.ktype in
-    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total wp_a))) in
     (* Note that this one *does* abstract over [a]. This is in line with the
      * expected shape of the combinator in the effect declaration. (But it does
      * not abstract over [binders]; [tc_eff_decl] will take care of closing
@@ -1863,7 +1864,7 @@ let gen_wps_for_free env binders a wp_a =
         unknown; unknown; unknown;
         Util.mk_app l_ite [S.as_arg (S.bv_to_name c)]
       ])
-    ) ret
+    ) ret_tot_wp_a
   in
   let wp_if_then_else = normalize_and_make_binders_explicit wp_if_then_else in
   check "wp_if_then_else" (Util.abs binders wp_if_then_else None);
@@ -1886,19 +1887,61 @@ let gen_wps_for_free env binders a wp_a =
       [ S.null_binder Util.ktype0; S.null_binder Util.ktype0 ]
       (S.mk_Total Util.ktype0)) in
     let r = S.gen_bv "r" None wp_a in
-    let ret = Some (Inl (Util.lcomp_of_comp (S.mk_Total wp_a))) in
     Util.abs
       (S.binders_of_list [ a; l; op; r ])
       (Util.mk_app c_lift2 (List.map S.as_arg [
         unknown; unknown; unknown;
         S.bv_to_name op; S.bv_to_name l; S.bv_to_name r ]))
-      ret
+      ret_tot_wp_a
   in
   let wp_binop = normalize_and_make_binders_explicit wp_binop in
   check "wp_binop" (Util.abs binders wp_binop None);
 
+  (* val st2_assert_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
+                       Tot (st2_wp heap a)
+    let st2_assert_p heap a q wp = st2_app (st2_pure (l_and q)) wp *)
+  let wp_assert =
+    let q = S.gen_bv "q" None Util.ktype0 in
+    let wp = S.gen_bv "wp" None wp_a in
+    let l_and = fvar Const.and_lid (S.Delta_unfoldable 1) None in
+    let body =
+      Util.mk_app c_app (List.map S.as_arg [
+        unknown; unknown;
+        Util.mk_app c_pure (List.map S.as_arg [
+          unknown;
+          Util.mk_app l_and [S.as_arg (S.bv_to_name q)]]);
+        S.bv_to_name wp])
+    in
+    Util.abs (S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
+  in
+  let wp_assert = normalize_and_make_binders_explicit wp_assert in
+  check "wp_assert" (Util.abs binders wp_assert None);
+
+  (* val st2_assume_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
+                       Tot (st2_wp heap a)
+    let st2_assume_p heap a q wp = st2_app (st2_pure (l_imp q)) wp *)
+  let wp_assume =
+    let q = S.gen_bv "q" None Util.ktype0 in
+    let wp = S.gen_bv "wp" None wp_a in
+    let l_imp = fvar Const.and_lid (S.Delta_unfoldable 1) None in
+    let body =
+      Util.mk_app c_app (List.map S.as_arg [
+        unknown; unknown;
+        Util.mk_app c_pure (List.map S.as_arg [
+          unknown;
+          Util.mk_app l_imp [S.as_arg (S.bv_to_name q)]]);
+        S.bv_to_name wp])
+    in
+    Util.abs (S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
+  in
+  let wp_assume = normalize_and_make_binders_explicit wp_assume in
+  check "wp_assume" (Util.abs binders wp_assume None);
+
+
   ([], wp_if_then_else),
-  ([], wp_binop)
+  ([], wp_binop),
+  ([], wp_assert),
+  ([], wp_assume)
 
 let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
@@ -1931,10 +1974,12 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     | NotForFree ->
         ed
     | ForFree ->
-        let wp_if_then_else, wp_binop = gen_wps_for_free env binders a wp_a in {
+        let wp_if_then_else, wp_binop, wp_assert, wp_assume = gen_wps_for_free env binders a wp_a in {
           ed with
           if_then_else = wp_if_then_else;
-          wp_binop = wp_binop
+          wp_binop = wp_binop;
+          assert_p = wp_assert;
+          assume_p = wp_assume
         }
   in
 

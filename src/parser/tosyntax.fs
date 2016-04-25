@@ -1477,8 +1477,8 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           wp_binop    = dummy_tscheme;
           wp_as_type  = lookup "wp_as_type";
           close_wp    = lookup "close_wp";
-          assert_p    = lookup "assert_p";
-          assume_p    = lookup "assume_p";
+          assert_p    = dummy_tscheme;
+          assume_p    = dummy_tscheme;
           null_wp     = lookup "null_wp";
           trivial     = lookup "trivial"
       }, d.drange))
