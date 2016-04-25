@@ -1577,6 +1577,8 @@ let tc_check_trivial_guard env t k =
   t
 
 let check_and_gen env t k =
+    (* Util.print1 "Checking against expected type %s\n" (Print.term_to_string *)
+    (*   (N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env k)); *)
     TcUtil.generalize_universes env (tc_check_trivial_guard env t k)
 
 let check_nogen env t k =
@@ -1658,6 +1660,60 @@ let gen_wps_for_free env binders a wp_a =
    * [binders] and [a] when applied. *)
   let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env in
 
+  let d s = Util.print1 "\x1b[01;36m%s\x1b[00m\n" s in
+  let normalize_and_make_binders_explicit tm =
+    let tm = normalize tm in
+    let rec visit_term tm =
+      let n = match (SS.compress tm).n with
+        | Tm_arrow (binders, comp) ->
+            let comp = visit_comp comp in
+            let binders = List.map visit_binder binders in
+            Tm_arrow (binders, comp)
+        | Tm_abs (binders, term, comp) ->
+            let comp = visit_maybe_lcomp comp in
+            let term = visit_term term in
+            let binders = List.map visit_binder binders in
+            Tm_abs (binders, term, comp)
+        | _ ->
+            tm.n
+      in
+      { tm with n = n }
+    and visit_binder (bv, a) =
+      { bv with sort = visit_term bv.sort }, S.as_implicit false
+    and visit_maybe_lcomp lcomp =
+      match lcomp with
+      | Some (Inl lcomp) ->
+          Some (Inl (Util.lcomp_of_comp (visit_comp (lcomp.comp ()))))
+      | comp ->
+          comp
+    and visit_comp comp =
+      let n = match comp.n with
+        | Total tm ->
+            Total (visit_term tm)
+        | GTotal tm ->
+            GTotal (visit_term tm)
+        | comp ->
+            comp
+      in
+      { comp with comp.n = n }
+    and visit_args args =
+      List.map (fun (tm, q) -> visit_term tm, q) args
+    in
+    visit_term tm
+  in
+
+  (* A debug / sanity check. *)
+  let check str t =
+    if Env.debug env (Options.Other "ED") then begin
+      Util.print2 "Generated term for %s: %s\n" str (Print.term_to_string t);
+      let t = normalize t in
+      let t = SS.compress t in
+      let e, { res_typ = res_typ }, _ = tc_term env t in
+      Util.print2 "Inferred type for %s: %s\n" str (Print.term_to_string (normalize res_typ));
+      Util.print2 "Elaborated term for %s: %s\n" str (Print.term_to_string (normalize e))
+    end
+  in
+
   (* Consider the predicate transformer st_wp:
    *   let st_pre_h  (heap:Type)          = heap -> GTot Type0
    *   let st_post_h (heap:Type) (a:Type) = a -> heap -> GTot Type0
@@ -1692,16 +1748,6 @@ let gen_wps_for_free env binders a wp_a =
   let binders_of_list = List.map (fun (t, b) -> t, S.as_implicit b) in
 
   let implicit_binders_of_list = List.map (fun t -> t, S.as_implicit true) in
-
-  (* A debug / sanity check. *)
-  let check str t =
-    Util.print2 "Generated term for %s: %s\n" str (Print.term_to_string t);
-    let t = normalize t in
-    let t = SS.compress t in
-    let e, { res_typ = res_typ }, _ = tc_term env t in
-    Util.print2 "Inferred type for %s: %s\n" str (Print.term_to_string (normalize res_typ));
-    Util.print2 "Elaborated term for %s: %s\n" str (Print.term_to_string (normalize e))
-  in
 
   (* val st2_pure : #heap:Type -> #a:Type -> #t:Type -> x:t ->
        Tot (st2_ctx heap a t)
@@ -1800,48 +1846,6 @@ let gen_wps_for_free env binders a wp_a =
   in
   check "lift2" (Util.abs (binders @ [ S.mk_binder a ]) c_lift2 None);
 
-  let d s = Util.print1 "\x1b[01;36m%s\x1b[00m\n" s in
-  let normalize_and_make_binders_explicit tm =
-    let tm = normalize tm in
-    let rec visit_term tm =
-      let n = match (SS.compress tm).n with
-        | Tm_arrow (binders, comp) ->
-            let comp = visit_comp comp in
-            let binders = List.map visit_binder binders in
-            Tm_arrow (binders, comp)
-        | Tm_abs (binders, term, comp) ->
-            let comp = visit_maybe_lcomp comp in
-            let term = visit_term term in
-            let binders = List.map visit_binder binders in
-            Tm_abs (binders, term, comp)
-        | _ ->
-            tm.n
-      in
-      { tm with n = n }
-    and visit_binder (bv, a) =
-      { bv with sort = visit_term bv.sort }, S.as_implicit false
-    and visit_maybe_lcomp lcomp =
-      match lcomp with
-      | Some (Inl lcomp) ->
-          Some (Inl (Util.lcomp_of_comp (visit_comp (lcomp.comp ()))))
-      | comp ->
-          comp
-    and visit_comp comp =
-      let n = match comp.n with
-        | Total tm ->
-            Total (visit_term tm)
-        | GTotal tm ->
-            GTotal (visit_term tm)
-        | comp ->
-            comp
-      in
-      { comp with comp.n = n }
-    and visit_args args =
-      List.map (fun (tm, q) -> visit_term tm, q) args
-    in
-    visit_term tm
-  in
-
   (* val st2_if_then_else : heap:Type -> a:Type -> c:Type0 ->
                             st2_wp heap a -> st2_wp heap a ->
                             Tot (st2_wp heap a)
@@ -1849,6 +1853,10 @@ let gen_wps_for_free env binders a wp_a =
   let wp_if_then_else =
     let c = S.gen_bv "c" None Util.ktype in
     let ret = Some (Inl (Util.lcomp_of_comp (mk_Total wp_a))) in
+    (* Note that this one *does* abstract over [a]. This is in line with the
+     * expected shape of the combinator in the effect declaration. (But it does
+     * not abstract over [binders]; [tc_eff_decl] will take care of closing
+     * [binders]. *)
     Util.abs (S.binders_of_list [ a; c ]) (
       let l_ite = fvar Const.ite_lid (S.Delta_unfoldable 2) None in
       Util.mk_app c_lift2 (List.map S.as_arg [
@@ -1860,8 +1868,37 @@ let gen_wps_for_free env binders a wp_a =
   let wp_if_then_else = normalize_and_make_binders_explicit wp_if_then_else in
   check "wp_if_then_else" (Util.abs binders wp_if_then_else None);
 
+  (* val st2_wp_binop : heap:Type -> a:Type -> st2_wp heap a -> op:(Type0->Type0->GTot Type0) ->
+                          st2_wp heap a ->
+                          Tot (st2_wp heap a)
+     let st2_wp_binop heap a l op r = st2_liftGA2 op l r *)
+  let wp_binop =
+    let l = S.gen_bv "l" None wp_a in
+    (* JP: I had to change the return effect of op to be [Tot] instead of
+     * [GTot]. The code in [tc_eff_decl] wants [Tot], and is happy with the
+     * definition below. In Guido's [NewPrims.fst], the [wp_binop] combinator
+     * takes an [op] in [GTot], and [tc_eff_decl] is still happy with it.
+     * However, if I change [op] here to be in [GTot], then [tc_eff_decl] is
+     * unhappy. This is puzzling, because the return type of [op] is in negative
+     * position, meaning that we should be able to subtype the [wp_binop]
+     * defined here into the type that [tc_eff_decl] wants. *)
+    let op = S.gen_bv "op" None (Util.arrow
+      [ S.null_binder Util.ktype0; S.null_binder Util.ktype0 ]
+      (S.mk_Total Util.ktype0)) in
+    let r = S.gen_bv "r" None wp_a in
+    let ret = Some (Inl (Util.lcomp_of_comp (S.mk_Total wp_a))) in
+    Util.abs
+      (S.binders_of_list [ a; l; op; r ])
+      (Util.mk_app c_lift2 (List.map S.as_arg [
+        unknown; unknown; unknown;
+        S.bv_to_name op; S.bv_to_name l; S.bv_to_name r ]))
+      ret
+  in
+  let wp_binop = normalize_and_make_binders_explicit wp_binop in
+  check "wp_binop" (Util.abs binders wp_binop None);
 
-  [], wp_if_then_else
+  ([], wp_if_then_else),
+  ([], wp_binop)
 
 let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
@@ -1894,9 +1931,10 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     | NotForFree ->
         ed
     | ForFree ->
-        let wp_if_then_else = gen_wps_for_free env binders a wp_a in {
+        let wp_if_then_else, wp_binop = gen_wps_for_free env binders a wp_a in {
           ed with
-          if_then_else = wp_if_then_else
+          if_then_else = wp_if_then_else;
+          wp_binop = wp_binop
         }
   in
 

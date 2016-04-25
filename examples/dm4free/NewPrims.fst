@@ -345,7 +345,6 @@ new_effect_for_free {
      ; bind_wlp     = st2_bind_wlp heap
      ; ite_wlp      = st2_ite_wlp heap
      ; ite_wp       = st2_ite_wp heap
-     ; wp_binop     = st2_wp_binop heap
      ; wp_as_type   = st2_wp_as_type heap
      ; close_wp     = st2_close_wp heap
      ; assert_p     = st2_assert_p heap
