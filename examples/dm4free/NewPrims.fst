@@ -346,7 +346,6 @@ new_effect_for_free {
      ; ite_wlp      = st2_ite_wlp heap
      ; ite_wp       = st2_ite_wp heap
      ; wp_as_type   = st2_wp_as_type heap
-     ; close_wp     = st2_close_wp heap
      ; null_wp      = st2_null_wp heap
      ; trivial      = st2_trivial heap
 }
