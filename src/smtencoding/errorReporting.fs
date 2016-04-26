@@ -248,12 +248,29 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
         @suffix in
 
     let check (p:decl) =
-        let initial_config = (!Options.initial_fuel, !Options.initial_ifuel) in
-        let alt_configs = List.flatten [(if !Options.max_ifuel > !Options.initial_ifuel then [(!Options.initial_fuel, !Options.max_ifuel)] else []);
+        let cached_config =
+            match !fuel_trace with 
+            | ReplayFuelTrace (hd::tl) ->
+                let fuel, ifuel = hd in
+                fuel_trace := ReplayFuelTrace tl;
+                Some (fuel, ifuel)
+            | _ ->
+                None
+        in
+        let initial_config = 
+            match cached_config with 
+            | Some x -> x
+            | None -> (!Options.initial_fuel, !Options.initial_ifuel) 
+        in
+        let alt_configs = 
+            match cached_config with 
+            | Some _ -> []
+            | None -> 
+                List.flatten [(if !Options.max_ifuel > !Options.initial_ifuel then [(!Options.initial_fuel, !Options.max_ifuel)] else []);
                                         (if !Options.max_fuel / 2 > !Options.initial_fuel then [(!Options.max_fuel / 2, !Options.max_ifuel)] else []);
                                         (if !Options.max_fuel > !Options.initial_fuel && !Options.max_ifuel > !Options.initial_ifuel then [(!Options.max_fuel, !Options.max_ifuel)] else []);
-                                        (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])] in
-
+                                        (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])]
+        in
         let report p (errs:labels) : unit =
             let errs = if !Options.detail_errors && !Options.n_cores = 1
                        then let min_fuel, potential_errors = match !minimum_workable_fuel with 
@@ -312,10 +329,13 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
                     fuel_trace := RecordFuelTrace (l @ [(prev_fuel, prev_ifuel)])
                 end;
                 if !Options.print_fuels
-                then (Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n"
+                then (Util.print4 "(%s) Query succeeded with fuel %s and ifuel %s%s\n"
                     (Range.string_of_range (Env.get_range env))
                     (Util.string_of_int prev_fuel)
-                    (Util.string_of_int prev_ifuel))
+                    (Util.string_of_int prev_ifuel)
+                    (match cached_config with 
+                     | Some _ -> " (cached)"
+                     | None -> ""))
                 else ()
                 end
             else try_alt_configs (prev_fuel, prev_ifuel) p errs alt in
