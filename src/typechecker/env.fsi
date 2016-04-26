@@ -123,6 +123,7 @@ val lookup_definition      : delta_level -> env -> lident -> option<(univ_names 
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universe -> lident -> option<(binders * comp)>
+val norm_eff_name          : (env -> lident -> lident)
 val lookup_projector       : env -> lident -> int -> lident
 val current_module         : env -> lident
 val is_projector           : env -> lident -> bool

@@ -409,28 +409,6 @@ let lift_comp c m lift =
    effect_args=[as_arg (lift c.result_typ wp); as_arg (lift c.result_typ wlp)];
    flags=[]}
 
-let norm_eff_name =
-   let cache = Util.smap_create 20 in
-   fun env (l:lident) ->
-       let rec find l =
-           match Env.lookup_effect_abbrev env U_unknown l with //universe doesn't matter here; we're just normalizing the name
-            | None -> None
-            | Some (_, c) ->
-                let l = (Util.comp_to_comp_typ c).effect_name in
-                match find l with
-                    | None -> Some l
-                    | Some l' -> Some l' in
-       let res = match Util.smap_try_find cache l.str with
-            | Some l -> l
-            | None ->
-              begin match find l with
-                        | None -> l
-                        | Some m -> Util.smap_add cache l.str m;
-                                    m
-              end in
-       res
-
-
 let join_effects env l1 l2 =
   let m, _, _ = Env.join env (norm_eff_name env l1) (norm_eff_name env l2) in
   m

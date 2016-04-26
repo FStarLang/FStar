@@ -328,6 +328,14 @@ let set_result_typ c t = match c.n with
 let is_trivial_wp c =
   comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
+let rec non_informative t =
+    match (Subst.compress t).n with
+    | Tm_type _ -> true
+    | Tm_fvar fv -> fv_eq_lid fv Const.unit_lid
+    | Tm_arrow(_, c) ->
+        is_tot_or_gtot_comp c
+        && non_informative (comp_result c)
+    | _ -> false
 (********************************************************************************)
 (****************Simple utils on the local structure of a term ******************)
 (********************************************************************************)
