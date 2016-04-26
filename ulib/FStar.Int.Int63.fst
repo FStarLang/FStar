@@ -4,35 +4,35 @@ open FStar.Int
 
 let n = 63
 
-abstract type int63 = | MkInt63: v:int_t 63 -> int63
+abstract type int63 = | MkInt63: v:int_t n -> int63
 
 let v (x:int63) : Tot (x':int{size x' n}) = x.v
 
-val add: a:int63 -> b:int63{size (v a + v b) n} -> Tot int63
+val add: a:int63 -> b:int63{size (v a + v b) n} -> Tot (c:int63{v c = v a + v b})
 let add a b = MkInt63 (add (v a) (v b))
-val add_underspec: a:int63 -> b:int63 -> Tot int63
+val add_underspec: a:int63 -> b:int63 -> Tot (c:int63{size (v a + v b) n ==> v c = v a + v b})
 let add_underspec a b = MkInt63 (add_underspec #n a.v b.v)
-val add_mod: int63 -> int63 -> Tot int63
+val add_mod: a:int63 -> b:int63 -> Tot (c:int63{v c = ((v a + v b) @% pow2 n)})
 let add_mod a b = MkInt63 (add_mod #n (v a) (v b))
-val sub: a:int63 -> b:int63{size (v a - v b) n} -> Tot int63
+val sub: a:int63 -> b:int63{size (v a - v b) n} -> Tot (c:int63{v c = v a - v b})
 let sub a b = MkInt63 (sub (v a) (v b))
-val sub_underspec: a:int63 -> b:int63 -> Tot int63
+val sub_underspec: a:int63 -> b:int63 -> Tot (c:int63{size (v a - v b) n ==> v c = v a - v b})
 let sub_underspec a b = MkInt63 (sub_underspec (v a) (v b))
-val sub_mod: a:int63 -> b:int63 -> Tot int63
+val sub_mod: a:int63 -> b:int63 -> Tot (c:int63{v c = ((v a - v b) @% pow2 n)})
 let sub_mod a b = MkInt63 (sub_mod (v a) (v b))
-val mul: a:int63 -> b:int63{size (v a * v b) n} -> Tot int63
+val mul: a:int63 -> b:int63{size (v a * v b) n} -> Tot (c:int63{v c = v a * v b})
 let mul a b = MkInt63(mul (v a) (v b))
-val mul_underspec: a:int63 -> b:int63 -> Tot int63
+val mul_underspec: a:int63 -> b:int63 -> Tot (c:int63{size (v a * v b) n ==> v c = v a * v b})
 let mul_underspec a b = MkInt63(mul_underspec (v a) (v b))
-val mul_mod: a:int63 -> b:int63 -> Tot int63
+val mul_mod: a:int63 -> b:int63 -> Tot (c:int63{v c = ((v a * v b) @% pow2 n)})
 let mul_mod a b = MkInt63 (mul_mod (v a) (v b))
 
 (* Division primitives *)
-val div: a:int63 -> b:int63{v b <> 0} -> Tot int63
+val div: a:int63 -> b:int63{v b <> 0} -> Tot (c:int63{v c = v a / v b})
 let div a b = MkInt63(div (v a) (v b))
 
 (* Modulo primitives *)
-val mod: a:int63 -> b:int63{v b <> 0} -> Tot int63
+val mod: a:int63 -> b:int63{v b <> 0} -> Tot (c:int63{v c = v a - ((v a / v b) * v b)})
 let mod a b = MkInt63 (mod (v a) (v b))
 
 (* Bitwise operators *)
@@ -49,10 +49,10 @@ val int_to_int63: x:int -> Tot int63
 let int_to_int63 x = MkInt63 (to_int_t 63 x)
 
 (* Shift operators *)
-val shift_right: a:int63 -> s:nat -> Tot int63
+val shift_right: a:int63 -> s:nat -> Tot (c:int63{v c = (v a /% (pow2 s))})
 let shift_right a s = MkInt63 (shift_right (v a) s)
 
-val shift_left: a:int63 -> s:nat -> Tot int63
+val shift_left: a:int63 -> s:nat -> Tot (c:int63{v c = ((v a * pow2 s) @% pow2 n)})
 let shift_left a s = MkInt63 (shift_left (v a) s)
 
 (* Comparison operators *)

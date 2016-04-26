@@ -5,6 +5,10 @@ let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
 let v (x:uint8) : Prims.int = Prims.parse_int (string_of_int x)
 
+let zero = 0
+let one = 1
+let ones = 255
+                                              
 let add (a:uint8) (b:uint8) : uint8 = a + b
 let add_underspec a b = add a b
 let add_mod a b = (add a b) land 255
@@ -60,3 +64,5 @@ let op_Hat_Greater = gt
 let op_Hat_Greater_Equal = gte
 let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
+
+let to_string s = string_of_int s

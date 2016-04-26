@@ -8,31 +8,35 @@ abstract type uint63 = | MkUInt63: v:uint 63 -> uint63
 
 let v (x:uint63) : Tot (x':int{uSize x' n}) = x.v
 
-val add: a:uint63 -> b:uint63{v a + v b < max_int n} -> Tot uint63
+let zero: z:uint63{v z = 0} = MkUInt63 (zero n)
+let one: z:uint63{v z = 1} = MkUInt63 (one n)
+let ones: z:uint63{v z = pow2 n - 1} = MkUInt63 (ones n)
+
+val add: a:uint63 -> b:uint63{v a + v b <= max_int n} -> Tot (c:uint63{v c = v a + v b})
 let add a b = MkUInt63 (add (v a) (v b))
-val add_underspec: a:uint63 -> b:uint63 -> Tot uint63
+val add_underspec: a:uint63 -> b:uint63 -> Tot (c:uint63{v a + v b <= max_int n ==> v c = v a + v b})
 let add_underspec a b = MkUInt63 (add_underspec #n a.v b.v)
-val add_mod: uint63 -> uint63 -> Tot uint63
+val add_mod: a:uint63 -> b:uint63 -> Tot (c:uint63{v c = (v a + v b) % pow2 n})
 let add_mod a b = MkUInt63 (add_mod #n (v a) (v b))
-val sub: a:uint63 -> b:uint63{v a - v b >= 0} -> Tot uint63
+val sub: a:uint63 -> b:uint63{v a - v b >= min_int n} -> Tot (c:uint63{v c = v a - v b})
 let sub a b = MkUInt63 (sub (v a) (v b))
-val sub_underspec: a:uint63 -> b:uint63 -> Tot uint63
+val sub_underspec: a:uint63 -> b:uint63 -> Tot (c:uint63{v a - v b >= min_int n ==> v c = v a - v b})
 let sub_underspec a b = MkUInt63 (sub_underspec (v a) (v b))
-val sub_mod: a:uint63 -> b:uint63 -> Tot uint63
+val sub_mod: a:uint63 -> b:uint63 -> Tot (c:uint63{v c = (v a - v b) % pow2 n})
 let sub_mod a b = MkUInt63 (sub_mod (v a) (v b))
-val mul: a:uint63 -> b:uint63{v a * v b < pow2 n} -> Tot uint63
+val mul: a:uint63 -> b:uint63{v a * v b <= max_int n} -> Tot (c:uint63{v c = v a * v b})
 let mul a b = MkUInt63(mul (v a) (v b))
-val mul_underspec: a:uint63 -> b:uint63 -> Tot uint63
+val mul_underspec: a:uint63 -> b:uint63 -> Tot (c:uint63{v a * v b <= max_int n ==> v c = v a * v b})
 let mul_underspec a b = MkUInt63(mul_underspec (v a) (v b))
-val mul_mod: a:uint63 -> b:uint63 -> Tot uint63
+val mul_mod: a:uint63 -> b:uint63 -> Tot (c:uint63{v c = (v a * v b) % pow2 n})
 let mul_mod a b = MkUInt63 (mul_mod (v a) (v b))
 
 (* Division primitives *)
-val div: a:uint63 -> b:uint63{v b <> 0} -> Tot uint63
+val div: a:uint63 -> b:uint63{v b <> 0} -> Tot (c:uint63{v c = v a / v b})
 let div a b = MkUInt63(div (v a) (v b))
 
 (* Modulo primitives *)
-val mod: a:uint63 -> b:uint63{v b <> 0} -> Tot uint63
+val mod: a:uint63 -> b:uint63{v b <> 0} -> Tot (c:uint63{v c = v a % v b})
 let mod a b = MkUInt63 (mod (v a) (v b))
 
 (* Bitwise operators *)
@@ -45,14 +49,14 @@ let logor a b = MkUInt63 (logor (v a) (v b))
 val lognot: uint63 -> Tot uint63
 let lognot a = MkUInt63 (lognot (v a))
 
-val int_to_uint63: x:int -> Tot uint63
+val int_to_uint63: x:int{x >= min_int n /\ x <= max_int n} -> Tot (y:uint63{v y = x})
 let int_to_uint63 x = MkUInt63 (to_uint 63 x)
 
 (* Shift operators *)
-val shift_right: a:uint63 -> s:nat -> Tot uint63
+val shift_right: a:uint63 -> s:nat -> Tot (b:uint63{v b = v a / pow2 s})
 let shift_right a s = MkUInt63 (shift_right (v a) s)
 
-val shift_left: a:uint63 -> s:nat -> Tot uint63
+val shift_left: a:uint63 -> s:nat -> Tot (b:uint63{v b = (v a * pow2 s) % pow2 n})
 let shift_left a s = MkUInt63 (shift_left (v a) s)
 
 (* Comparison operators *)
@@ -79,8 +83,8 @@ let op_Hat_Amp = logand
 let op_Hat_Bar = logor
 let op_Hat_Less_Less = shift_left
 let op_Hat_Greater_Greater = shift_right
-let op_Hat_Equal = eq
+let op_Hat_Equals = eq
 let op_Hat_Greater = gt
-let op_Hat_Greater_Equal = gte
+let op_Hat_Greater_Equals = gte
 let op_Hat_Less = gt
-let op_Hat_Less_Equal = gte
+let op_Hat_Less_Equals = gte
