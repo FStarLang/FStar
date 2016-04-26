@@ -21,28 +21,39 @@ open FStar.Util
 open FStar.SMTEncoding.Term
 open FStar.SMTEncoding
 
-let fuel_trace : ref<option<list<(int * int)>>> = Util.mk_ref <| Some []
+type fuel_trace_state =
+      FuelTraceUnavailable
+    | RecordFuelTrace of list<(int * int)>
+    | ReplayFuelTrace of list<(int * int)>
 
-let reset_fuel_trace () =
-    fuel_trace := Some []
+let fuel_trace : ref<fuel_trace_state> = Util.mk_ref <| FuelTraceUnavailable
 
 let format_fuel_trace_file_name src_fn =
     Util.format_value_file_name <| Util.format1 "%s.fuel" src_fn
 
-let save_fuel_trace src_fn : unit =
+let initialize_fuel_trace src_fn =
+    let val_fn = format_fuel_trace_file_name src_fn in
+    if Util.file_exists val_fn then
+        let ft = Util.load_value_from_file val_fn in
+        fuel_trace := ReplayFuelTrace ft
+    else
+        fuel_trace := RecordFuelTrace []
+
+let finalize_fuel_trace src_fn : unit =
     begin match !fuel_trace with
+    | ReplayFuelTrace _ 
     (* failure to verify *)
-    | None 
+    | FuelTraceUnavailable 
     (* verification not performed *)
-    | Some [] ->
+    | RecordFuelTrace [] ->
       ()
     (* verification successful *)
-    | Some l ->
+    | RecordFuelTrace l ->
       (* todo: need source file digest and z3 executable digest *)
       let val_fn = format_fuel_trace_file_name src_fn in
       Util.save_value_to_file val_fn l
     end;
-    reset_fuel_trace ()
+    fuel_trace := FuelTraceUnavailable
 
 type label = error_label
 type labels = error_labels
@@ -258,7 +269,12 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
             let errs = match errs with
                     | [] -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)]
                     | _ -> errs in
-            fuel_trace := None;
+            begin match !fuel_trace with
+            | ReplayFuelTrace _ ->
+                raise <| Util.Failure "Query should not fail when replaying fuel trace."
+            | _ ->
+                fuel_trace := FuelTraceUnavailable
+            end;
             if !Options.print_fuels
             then (Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
                     (Range.string_of_range (Env.get_range env))
@@ -289,9 +305,11 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
             if ok
             then begin 
                 begin match !fuel_trace with
-                | None -> ()
-                | Some l ->
-                    fuel_trace := Some (l @ [(prev_fuel, prev_ifuel)])
+                | ReplayFuelTrace _ 
+                | FuelTraceUnavailable -> 
+                    ()
+                | RecordFuelTrace l ->
+                    fuel_trace := RecordFuelTrace (l @ [(prev_fuel, prev_ifuel)])
                 end;
                 if !Options.print_fuels
                 then (Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n"
