@@ -1911,7 +1911,7 @@ let gen_wps_for_free env binders a wp_a =
      * defined here into the type that [tc_eff_decl] wants. *)
     let op = S.gen_bv "op" None (Util.arrow
       [ S.null_binder Util.ktype0; S.null_binder Util.ktype0 ]
-      (S.mk_Total Util.ktype0)) in
+      (S.mk_GTotal Util.ktype0)) in
     let r = S.gen_bv "r" None wp_a in
     Util.abs
       (S.binders_of_list [ a; l; op; r ])
@@ -2092,7 +2092,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
         let t1, u1 = U.type_u() in
         let t2, u2 = U.type_u() in
         let t = mk (Tm_type(S.U_max [u1; u2])) None (Env.get_range env) in
-        Util.arrow [S.null_binder t1; S.null_binder t2] (S.mk_Total t) in
+        Util.arrow [S.null_binder t1; S.null_binder t2] (S.mk_GTotal t) in
     let expected_k = Util.arrow [S.mk_binder a;
                                  S.null_binder wp_a;
                                  S.null_binder bin_op;
