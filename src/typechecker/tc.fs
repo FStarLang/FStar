@@ -2076,14 +2076,12 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     check_and_gen' env ed.ret expected_k in
 
   let bind_wp =
-    let wlp_a = wp_a in
     let b, wp_b = get_effect_signature () in
     let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
-    let a_wlp_b = a_wp_b in
     let expected_k = Util.arrow [S.null_binder t_range; 
                                  S.mk_binder a; S.mk_binder b;
-                                 S.null_binder wp_a;   S.null_binder wlp_a;
-                                 S.null_binder a_wp_b; S.null_binder a_wlp_b]
+                                 S.null_binder wp_a;
+                                 S.null_binder a_wp_b]
                                  (S.mk_Total wp_b) in
     check_and_gen' env ed.bind_wp expected_k in
 
@@ -2107,9 +2105,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     check_and_gen' env ed.if_then_else expected_k in
 
   let ite_wp =
-    let wlp_a = wp_a in
     let expected_k = Util.arrow [S.mk_binder a;
-                                 S.null_binder wlp_a;
                                  S.null_binder wp_a]
                                  (S.mk_Total wp_a) in
     check_and_gen' env ed.ite_wp expected_k in

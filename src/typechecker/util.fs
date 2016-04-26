@@ -530,7 +530,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             | Some x -> [S.mk_binder x] in
           let mk_lam wp = U.abs bs wp (Some (Inr Const.effect_Tot_lid)) in //we know it's total; let the normalizer reduce it
           let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) None r1 in
-          let wp_args = [S.as_arg r1; S.as_arg t1; S.as_arg t2; S.as_arg wp1; S.as_arg wlp1; S.as_arg (mk_lam wp2); S.as_arg (mk_lam wlp2)] in
+          let wp_args = [S.as_arg r1; S.as_arg t1; S.as_arg t2; S.as_arg wp1; S.as_arg (mk_lam wp2)] in
           let wlp_args = [S.as_arg r1; S.as_arg t1; S.as_arg t2; S.as_arg wlp1; S.as_arg (mk_lam wlp2)] in
           let k = SS.subst [NT(a, t2)] kwp in
           let us = [env.universe_of env t1; env.universe_of env t2] in
@@ -663,7 +663,7 @@ let ite env (guard:formula) lcomp_then lcomp_else =
       if (Options.split_cases()) > 0
       then let comp = mk_comp md res_t wp wlp [] in
            add_equality_to_post_condition env comp res_t
-      else let wp = mk_Tm_app  (inst_effect_fun_with us env md md.ite_wp)  [S.as_arg res_t; S.as_arg wlp; S.as_arg wp] None wp.pos in
+      else let wp = mk_Tm_app  (inst_effect_fun_with us env md md.ite_wp)  [S.as_arg res_t; S.as_arg wp] None wp.pos in
            let wlp = mk_Tm_app (inst_effect_fun_with us env md md.ite_wlp) [S.as_arg res_t; S.as_arg wlp] None wlp.pos in
            mk_comp md res_t wp wlp [] in
     {eff_name=join_effects env lcomp_then.eff_name lcomp_else.eff_name;
@@ -698,7 +698,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
         else let comp = U.comp_to_comp_typ comp in
              let md = Env.get_effect_decl env comp.effect_name in
              let _, wp, wlp = destruct_comp comp in
-             let wp = mk_Tm_app  (inst_effect_fun_with us env md md.ite_wp)  [S.as_arg res_t; S.as_arg wlp; S.as_arg wp] None wp.pos in
+             let wp = mk_Tm_app  (inst_effect_fun_with us env md md.ite_wp)  [S.as_arg res_t; S.as_arg wp] None wp.pos in
              let wlp = mk_Tm_app (inst_effect_fun_with us env md md.ite_wlp) [S.as_arg res_t; S.as_arg wlp] None wlp.pos in
              mk_comp md res_t wp wlp [] in
     {eff_name=eff;
@@ -862,7 +862,7 @@ let pure_or_ghost_pre_and_post env comp =
                               let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.as_requires r) Delta_equational None) us_r in
                               let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.as_ensures r) Delta_equational None) us_e in
                               let req = mk_Tm_app as_req [(ct.result_typ, Some S.imp_tag); S.as_arg wp] (Some U.ktype0.n) ct.result_typ.pos in
-                              let ens = mk_Tm_app as_ens [(ct.result_typ, Some S.imp_tag); S.as_arg wlp] None ct.result_typ.pos in
+                              let ens = mk_Tm_app as_ens [(ct.result_typ, Some S.imp_tag); S.as_arg wp] None ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
                             | _ -> failwith "Impossible"
                   end

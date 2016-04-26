@@ -109,21 +109,24 @@ inline let pure_return (a:Type) (x:a) (p:pure_post a) =
 inline let pure_bind_wlp (r1:range) (a:Type) (b:Type)
                    (wlp1:pure_wp a) (wlp2:(a -> GTot (pure_wp b)))
                    (p:pure_post b) =
-     labeled r1 "push" unit 
-     /\ wlp1 (fun (x:a) -> 
-             labeled r1 "pop" unit 
-	     /\ wlp2 x p)
+        False
+
 inline let pure_bind_wp (r1:range) (a:Type) (b:Type)
-                   (wp1:pure_wp a) (wlp1:pure_wp a)
-                   (wp2: (a -> GTot (pure_wp b))) (wlp2: (a -> GTot (pure_wp b))) =
-     pure_bind_wlp r1 a b wp1 wp2
+                   (wp1:pure_wp a) (wp2: (a -> GTot (pure_wp b)))
+                   (p : pure_post b) =
+     labeled r1 "push" unit 
+     /\ wp1 (fun (x:a) -> 
+             labeled r1 "pop" unit 
+	     /\ wp2 x p)
 inline let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
      l_ITE p (wp_then post) (wp_else post)
 inline let pure_ite_wlp (a:Type) (wlp_cases:pure_wp a) (post:pure_post a) =
-     (forall (x:a). ~(wlp_cases (fun (x':a) -> ~(eq2 #a #a x x'))) ==> post x)
-inline let pure_ite_wp (a:Type) (wlp_cases:pure_wp a) (wp_cases:pure_wp a) (post:pure_post a) =
-     pure_ite_wlp a wlp_cases post
-    /\ wp_cases (fun (x:a) -> True)
+     False
+
+inline let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) =
+     (forall (x:a). ~(wp (fun (x':a) -> ~(eq2 #a #a x x'))) ==> post x)
+     /\ wp (fun _ -> True)
+
 inline let pure_wp_binop (a:Type) (wp1:pure_wp a) (op:(Type -> Type -> GTot Type)) (wp2:pure_wp a) (p:pure_post a) =
      op (wp1 p) (wp2 p)
 inline let pure_wp_as_type (a:Type) (wp:pure_wp a) = forall (p:pure_post a). wp p
@@ -251,12 +254,13 @@ inline let st_return        (heap:Type) (a:Type)
 inline let st_bind_wlp       (heap:Type) (r1:range) (a:Type) (b:Type)
                              (wlp1:st_wp_h heap a) (wlp2:(a -> GTot (st_wp_h heap b)))
                              (p:st_post_h heap b) (h0:heap) =
-     wlp1 (fun a h1 -> wlp2 a p h1) h0
+     False
+
 inline let st_bind_wp       (heap:Type) 
 			    (r1:range) 
 			    (a:Type) (b:Type)
-                            (wp1:st_wp_h heap a) (wlp1:st_wp_h heap a)
-                            (wp2:(a -> GTot (st_wp_h heap b))) (wlp2:(a -> GTot (st_wp_h heap b)))
+                            (wp1:st_wp_h heap a)
+                            (wp2:(a -> GTot (st_wp_h heap b)))
                             (p:st_post_h heap b) (h0:heap) =
      labeled r1 "push" unit
      /\ wp1 (fun a h1 ->
@@ -268,17 +272,17 @@ inline let st_if_then_else  (heap:Type) (a:Type) (p:Type)
      l_ITE p
         (wp_then post h0)
 	(wp_else post h0)
-inline let st_ite_wlp        (heap:Type) (a:Type)
-                             (wlp_cases:st_wp_h heap a)
-                             (post:st_post_h heap a) (h0:heap) =
-     (forall (a:a) (h:heap).
-           ~ (wlp_cases (fun a1 h1 -> a=!=a1 \/ h=!=h1) h0)
-	   ==> post a h)
+inline let st_ite_wlp       (heap:Type) (a:Type)
+                            (wlp_cases:st_wp_h heap a)
+                            (post:st_post_h heap a) (h0:heap) =
+     False
 inline let st_ite_wp        (heap:Type) (a:Type)
-                             (wlp_cases:st_wp_h heap a) (wp_cases:st_wp_h heap a)
-                             (post:st_post_h heap a) (h0:heap) =
-     st_ite_wlp heap a wlp_cases post h0
-     /\ wp_cases (fun a h_ -> True) h0
+                            (wp:st_wp_h heap a)
+                            (post:st_post_h heap a) (h0:heap) =
+     (forall (a:a) (h:heap).
+           ~ (wp (fun a' h' -> a=!=a' \/ h=!=h') h0) ==> post a h)
+     /\ wp (fun _ _ -> True) h0
+
 inline let st_wp_binop      (heap:Type) (a:Type)
                              (wp1:st_wp_h heap a)
                              (op:(Type -> Type -> GTot Type))
@@ -330,28 +334,30 @@ let ex_wp   (a:Type) = ex_post a -> GTot ex_pre
 inline let ex_return   (a:Type) (x:a) (p:ex_post a) : GTot Type0 = p (V x)
 inline let ex_bind_wlp (r1:range) (a:Type) (b:Type) (wlp1:ex_wp a) (wlp2:(a -> GTot (ex_wp b))) (p:ex_post b) 
          : GTot Type0 =
-   (forall (rb:result b). p rb \/ wlp1 (fun ra1 -> l_ITE (is_V ra1)
-						(wlp2 (V.v ra1) (fun rb2 -> rb2=!=rb))
-						(ra1 =!= rb)))
+        False
+
 inline let ex_bind_wp (r1:range) (a:Type) (b:Type)
-		       (wp1:ex_wp a) (wlp1:ex_wp a)
-		       (wp2:(a -> GTot (ex_wp b))) (wlp2:(a -> GTot (ex_wp b))) (p:ex_post b) 
+		       (wp1:ex_wp a)
+		       (wp2:(a -> GTot (ex_wp b))) (p:ex_post b)
          : GTot Type0 =
-   ex_bind_wlp r1 a b wlp1 wlp2 p
+   (forall (rb:result b). p rb \/ wp1 (fun ra1 -> l_ITE (is_V ra1)
+						(wp2 (V.v ra1) (fun rb2 -> rb2=!=rb))
+						(ra1 =!= rb)))
    /\ labeled r1 "push" unit
    /\ wp1 (fun ra1 ->  
      labeled r1 "pop" unit
      /\ (is_V ra1 ==> wp2 (V.v ra1) (fun rb2 -> True)))
+
+inline let ex_ite_wp (a:Type) (wp:ex_wp a) (post:ex_post a) =
+    (forall (x:result a). post x \/ wp (fun x' -> x=!=x'))
+    /\ wp (fun _ -> True)
 
 inline let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a) (post:ex_post a) =
    l_ITE p
        (wp_then post)
        (wp_else post)
 inline let ex_ite_wlp  (a:Type) (wlp_cases:ex_wp a) (post:ex_post a) =
-    (forall (a:result a). ~ (wlp_cases (fun a1 -> a=!=a1)) ==> post a)
-inline let ex_ite_wp (a:Type) (wlp_cases:ex_wp a) (wp_cases:ex_wp a) (post:ex_post a) =
-    ex_ite_wlp a wlp_cases post
-    /\ wp_cases (fun ra2 -> True)
+    False
 inline let ex_wp_binop (a:Type) (wp1:ex_wp a) (op:(Type -> Type -> GTot Type)) (wp2:ex_wp a) (p:ex_post a) =
    op (wp1 p) (wp2 p)
 inline let ex_wp_as_type (a:Type) (wp:ex_wp a) = (forall (p:ex_post a). wp p)
@@ -390,23 +396,28 @@ let all_pre_h  (h:Type)           = h -> GTot Type0
 let all_post_h (h:Type) (a:Type)  = result a -> h -> GTot Type0
 let all_wp_h   (h:Type) (a:Type)  = all_post_h h a -> Tot (all_pre_h h)
 
+inline let all_ite_wp (heap:Type) (a:Type)
+                      (wp:all_wp_h heap a)
+                      (post:all_post_h heap a) (h0:heap) =
+     wp (fun _ _ -> True) h0 /\
+     (forall (r:result a) (h:heap). wp (fun r' h' -> r=!=r' \/ h=!=h') h0 \/ post r h)
+
 inline let all_return  (heap:Type) (a:Type) (x:a) (p:all_post_h heap a) = p (V x)
 inline let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
-                       (wp1:all_wp_h heap a) (wlp1:all_wp_h heap a)
-                       (wp2:(a -> GTot (all_wp_h heap b))) (wlp2:(a -> GTot (all_wp_h heap b)))
+                       (wp1:all_wp_h heap a)
+                       (wp2:(a -> GTot (all_wp_h heap b)))
                        (p:all_post_h heap b) (h0:heap) : GTot Type0 =
    labeled r1 "push" unit
    /\ wp1 (fun ra h1 -> 
        labeled r1 "pop" unit
        /\ (is_V ra ==> wp2 (V.v ra) p h1)) h0
+
 inline let all_bind_wlp (heap:Type) (r1:range) (a:Type) (b:Type)
                         (wlp1:all_wp_h heap a) (wlp2:(a -> GTot (all_wp_h heap b)))
                         (p:all_post_h heap b) (h0:heap) 
          : GTot Type0 =
-   (forall (rb:result b) (h:heap). wlp1 (fun ra h1 ->
-       if is_V ra
-       then wlp2 (V.v ra) (fun rb2 h2 -> rb=!=rb2 \/ h=!=h2) h1
-       else rb=!=ra \/ h=!=h1) h0 \/ p rb h)
+   False
+
 inline let all_if_then_else (heap:Type) (a:Type) (p:Type)
                              (wp_then:all_wp_h heap a) (wp_else:all_wp_h heap a)
                              (post:all_post_h heap a) (h0:heap) =
@@ -416,12 +427,7 @@ inline let all_if_then_else (heap:Type) (a:Type) (p:Type)
 inline let all_ite_wlp  (heap:Type) (a:Type)
                          (wlp_cases:all_wp_h heap a)
                          (post:all_post_h heap a) (h0:heap) =
-     (forall (ra:result a) (h:heap). ~ (wlp_cases (fun ra2 h2 -> ra=!=ra2 \/ h=!=h2) h0) ==> post ra h)
-inline let all_ite_wp (heap:Type) (a:Type)
-                       (wlp_cases:all_wp_h heap a) (wp_cases:all_wp_h heap a)
-                       (post:all_post_h heap a) (h0:heap) =
-     (forall (ra:result a) (h:heap). wlp_cases (fun ra2 h2 -> ra=!=ra2 \/ h=!=h2) h0 \/ post ra h)
-      /\ wp_cases (fun _a _b -> True) h0
+     False
 inline let all_wp_binop (heap:Type) (a:Type)
                          (wp1:all_wp_h heap a) (op:(Type -> Type -> GTot Type))
                          (wp2:all_wp_h heap a) (p:all_post_h heap a) (h:heap) =
@@ -555,7 +561,7 @@ type dtuple4 (a:Type)
            -> dtuple4 a b c d
 
 let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
-let as_ensures  (#a:Type) (wlp:pure_wp a) (x:a) = ~ (wlp (fun y -> (y=!=x)))
+let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
 
 val fst : ('a * 'b) -> Tot 'a
 let fst x = Mktuple2._1 x
