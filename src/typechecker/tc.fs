@@ -36,7 +36,7 @@ module U  = FStar.Syntax.Util
 
 // VALS_HACK_HERE
 
-type effect_cost = ForFree | NotForFree
+type effect_cost = | ForFree | NotForFree
 
 let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_module env))
 let rng env = Env.get_range env
@@ -1695,7 +1695,7 @@ let gen_wps_for_free env binders a wp_a =
         | comp ->
             comp
       in
-      { comp with comp.n = n }
+      { comp with n = n }
     and visit_args args =
       List.map (fun (tm, q) -> visit_term tm, q) args
     in
@@ -1729,8 +1729,8 @@ let gen_wps_for_free env binders a wp_a =
     let i = ref 0 in
     match (normalize wp_a).n with
     | Tm_arrow (wp_binders, comp) ->
-        (fun t -> Util.arrow wp_binders { comp with n = Total t }),
-        (fun t -> Util.arrow wp_binders { comp with n = GTotal t }),
+        (fun t -> Util.arrow wp_binders ({ comp with n = Total t })),
+        (fun t -> Util.arrow wp_binders ({ comp with n = GTotal t })),
         (fun () -> List.map (fun (bv, _) ->
           (* Note: just returning [wp_binders] here would be wrong, because the
            * identity of binders relies on the _physical equality_ of the [bv]
