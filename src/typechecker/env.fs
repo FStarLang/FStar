@@ -475,6 +475,27 @@ let lookup_effect_abbrev env (univ:universe) lid =
           end
     | _ -> None
 
+let norm_eff_name =
+   let cache = Util.smap_create 20 in
+   fun env (l:lident) ->
+       let rec find l =
+           match lookup_effect_abbrev env U_unknown l with //universe doesn't matter here; we're just normalizing the name
+            | None -> None
+            | Some (_, c) ->
+                let l = (Util.comp_to_comp_typ c).effect_name in
+                match find l with
+                    | None -> Some l
+                    | Some l' -> Some l' in
+       let res = match Util.smap_try_find cache l.str with
+            | Some l -> l
+            | None ->
+              begin match find l with
+                        | None -> l
+                        | Some m -> Util.smap_add cache l.str m;
+                                    m
+              end in
+       res
+
 let datacons_of_typ env lid = 
   match lookup_qname env lid with
     | Some (Inr(Sig_inductive_typ(_, _, _, _, _, dcs, _, _), _)) -> dcs

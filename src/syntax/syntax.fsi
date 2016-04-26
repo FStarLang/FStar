@@ -294,6 +294,7 @@ and sigelt =
                        * list<qualifier> 
                        * Range.range
   | Sig_new_effect     of eff_decl * Range.range
+  | Sig_new_effect_for_free of eff_decl * Range.range
   | Sig_sub_effect     of sub_eff  * Range.range
   | Sig_effect_abbrev  of lident   * univ_names * binders * comp * list<qualifier> * Range.range
   | Sig_pragma         of pragma   * Range.range

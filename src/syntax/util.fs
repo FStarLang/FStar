@@ -328,6 +328,14 @@ let set_result_typ c t = match c.n with
 let is_trivial_wp c =
   comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
+let rec non_informative t =
+    match (Subst.compress t).n with
+    | Tm_type _ -> true
+    | Tm_fvar fv -> fv_eq_lid fv Const.unit_lid
+    | Tm_arrow(_, c) ->
+        is_tot_or_gtot_comp c
+        && non_informative (comp_result c)
+    | _ -> false
 (********************************************************************************)
 (****************Simple utils on the local structure of a term ******************)
 (********************************************************************************)
@@ -405,6 +413,7 @@ let rec lids_of_sigelt se = match se with
   | Sig_datacon (lid, _, _, _, _, _, _, _)
   | Sig_declare_typ (lid, _, _, _, _)
   | Sig_assume (lid, _, _, _) -> [lid]
+  | Sig_new_effect_for_free(n, _)
   | Sig_new_effect(n, _) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
@@ -425,6 +434,7 @@ let range_of_sigelt x = match x with
   | Sig_main(_, r)
   | Sig_pragma(_, r)
   | Sig_new_effect(_, r)
+  | Sig_new_effect_for_free(_, r)
   | Sig_sub_effect(_, r) -> r
 
 let range_of_lb = function

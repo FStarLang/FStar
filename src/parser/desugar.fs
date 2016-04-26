@@ -1579,6 +1579,9 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     let env = push_sigelt env se in
     env, [se]
 
+  | NewEffectForFree _ ->
+      failwith "effects for free only supported in conjunction with --universes"
+
   | NewEffect (quals, RedefineEffect(eff_name, eff_binders, defn)) ->
     let env0 = env in
     let env, binders = desugar_binders env eff_binders in

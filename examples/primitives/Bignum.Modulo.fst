@@ -3,16 +3,16 @@ module Bignum.Modulo
 open FStar.Heap
 open FStar.Ghost
 open IntLib
-open Sint
+open SInt
 open SBuffer
-open FStar.UInt64
+open SInt.UInt64
 open Bignum.Parameters
 open Bignum.Bigint
 
 (** TODO: proof **)
 val finalize: b:bigint -> ST unit
-  (requires (fun h -> Norm h b))
-  (ensures (fun h0 _ h1 -> Norm h0 b /\ Norm h1 b
+  (requires (fun h -> norm h b))
+  (ensures (fun h0 _ h1 -> norm h0 b /\ norm h1 b
     /\ eval h1 b norm_length = eval h0 b norm_length % reveal prime))
 let finalize b =
   admit();
@@ -38,8 +38,9 @@ let finalize b =
 // Specific to 25519
 val prime_modulo_lemma: unit -> Lemma (pow2 255 % (reveal prime) = 19)
 let prime_modulo_lemma () = 
-  admitP(b2t(pow2 255 % (reveal prime) = 19));
-  ()
+  admit()
+  (* admitP(b2t(pow2 255 % (reveal prime) = 19)); *)
+  (* () *)
 
 val modulo_lemma: a:nat -> b:pos -> Lemma (requires (a < b)) (ensures (a % b = a)) 
   [SMTPat (a % b)]
@@ -47,8 +48,8 @@ let modulo_lemma a b =
   admit();
   ()
 
-type SatisfiesModuloConstraints (h:heap) (#size:pos) (b:buffer size) = 
-  Live h b /\ length b >= 2*norm_length-1 /\ maxValue h b (2*norm_length-1) * 6 < pow2 (platform_size-1)
+let satisfiesModuloConstraints (h:heap) (#size:pos) (b:buffer size) = 
+  live h b /\ length b >= 2*norm_length-1 /\ maxValue h b (2*norm_length-1) * 6 < pow2 (platform_size-1)
 
 val times_19_wide: x:wide{19 * v x < pow2 platform_wide} -> Tot (y:wide{v y = 19 * v x})
 let times_19_wide x = 
@@ -60,25 +61,25 @@ let times_19 x =
   admit();
   (x ^<< 4) ^+ (x ^<< 1) ^+ x
   
-opaque type Reducible (h:heap) (#size:pos) (b:buffer size) (ctr:nat{ctr < norm_length-1}) =
-  Live h b /\ length b >= 2*norm_length-1 
+abstract let reducible (h:heap) (#size:pos) (b:buffer size) (ctr:nat{ctr < norm_length-1}) =
+  live h b /\ length b >= 2*norm_length-1 
   /\ (forall (i:nat). {:pattern (get h b (i+norm_length))}
       i <= ctr ==> v (get h b i) + 19 * v (get h b (i+norm_length)) < pow2 platform_size)
 
-opaque type Times19 (h0:heap) (h1:heap) (#size:pos) (b:buffer size) (ctr:nat{ctr < norm_length - 1}) =
-  Live h0 b /\ Live h1 b /\ length b >= 2*norm_length-1
+abstract let times19 (h0:heap) (h1:heap) (#size:pos) (b:buffer size) (ctr:nat{ctr < norm_length - 1}) =
+  live h0 b /\ live h1 b /\ length b >= 2*norm_length-1
   /\ (forall (i:nat). {:pattern (get h1 b i)}
        i <= ctr ==> v (get h1 b i) = v (get h0 b i) + 19 * (v (get h0 b (i+norm_length))))
 
-opaque type Untouched (h0:heap) (h1:heap) (#size:pos) (b:buffer size) (ctr:nat) = 
-  Live h0 b /\ Live h1 b /\ length b >= 2*norm_length-1
+abstract let untouched (h0:heap) (h1:heap) (#size:pos) (b:buffer size) (ctr:nat) = 
+  live h0 b /\ live h1 b /\ length b >= 2*norm_length-1
   /\ (forall (i:nat). {:pattern (get h1 b i)} (i > ctr /\ i < 2*norm_length-1) ==>  
       v (get h0 b i) = v (get h1 b i))
 
 #reset-options
 
 val pow2_bitweight_lemma_1: ctr:pos -> GLemma unit (requires (True))
-    (pow2 (bitweight templ (ctr+norm_length-1)) = pow2 (bitweight templ (ctr-1)) * pow2 (bitweight templ norm_length)) []
+    (pow2 (bitweight templ (ctr+norm_length-1)) = pow2 (bitweight templ (ctr-1)) * pow2 (bitweight templ norm_length))
 let rec pow2_bitweight_lemma_1 ctr =
   admit();
   match ctr with
@@ -118,11 +119,11 @@ let helper_lemma_5 a b c p =
 val lemma_aux_0: a:int -> b:int -> c:int -> d:int -> Lemma (a * b + c - (a * (b + 19 * d) + c) = - 19 * a * d)
 let lemma_aux_0 a b c d = ()
 
-opaque val freduce_degree_lemma_2: h0:heap -> h1:heap -> #size:pos -> b:buffer size{Live h1 b /\ Live h0 b /\ length b >= 2 * norm_length - 1} -> ctr:pos{ctr < norm_length-1} -> GLemma unit
+abstract val freduce_degree_lemma_2: h0:heap -> h1:heap -> #size:pos -> b:buffer size{live h1 b /\ live h0 b /\ length b >= 2 * norm_length - 1} -> ctr:pos{ctr < norm_length-1} -> GLemma unit
     (requires ((forall (i:nat). {:pattern (v (get h1 b i))}
 	(i < length b /\ i <> ctr) ==> v (get h1 b i) = v (get h0 b i)) 
 	/\ v (get h1 b ctr) = v (get h0 b ctr) + 5 * v (get h0 b (ctr+norm_length)) ))
-    (ensures (eval h0 b (norm_length+1+ctr) % (reveal prime) = eval h1 b (norm_length+ctr) % (reveal prime))) []
+    (ensures (eval h0 b (norm_length+1+ctr) % (reveal prime) = eval h1 b (norm_length+ctr) % (reveal prime)))
 let freduce_degree_lemma_2 h0 h1 #size b ctr =
   admit();
   let prime = reveal prime in 
@@ -151,12 +152,12 @@ let freduce_degree_lemma_2 h0 h1 #size b ctr =
 
 #reset-options
 
-opaque val gfreduce_degree_lemma:
-  h0:heap -> h1:heap -> #size:pos -> b:buffer size{Live h1 b /\ Live h0 b /\ length b >= 2 * norm_length - 1} -> ctr:nat{ctr < norm_length-1} -> GLemma unit
+abstract val gfreduce_degree_lemma:
+  h0:heap -> h1:heap -> #size:pos -> b:buffer size{live h1 b /\ live h0 b /\ length b >= 2 * norm_length - 1} -> ctr:nat{ctr < norm_length-1} -> GLemma unit
     (requires ((forall (i:nat). {:pattern (v (get h1 b i))}
 	(i < length b /\ i <> ctr) ==> v (get h1 b i) = v (get h0 b i)) 
       /\ v (get h1 b ctr) = v (get h0 b ctr) + 19 * v (get h0 b (ctr+norm_length)) ))
-    (ensures (eval h0 b (norm_length+1+ctr) % (reveal prime) = eval h1 b (norm_length+ctr) % (reveal prime)))  []
+    (ensures (eval h0 b (norm_length+1+ctr) % (reveal prime) = eval h1 b (norm_length+ctr) % (reveal prime))) 
 let gfreduce_degree_lemma h0 h1 #size b ctr =
   admit();
   let prime = reveal prime in
@@ -171,28 +172,29 @@ let gfreduce_degree_lemma h0 h1 #size b ctr =
   )
 
 val freduce_degree_lemma:
-  h0:heap -> h1:heap -> #size:pos -> b:buffer size{Live h1 b /\ Live h0 b /\ length b >= 2 * norm_length - 1} -> 
+  h0:heap -> h1:heap -> #size:pos -> b:buffer size{live h1 b /\ live h0 b /\ length b >= 2 * norm_length - 1} -> 
   ctr:nat{ctr < norm_length-1} -> Lemma
     (requires ((forall (i:nat). {:pattern (v (get h1 b i))}
 	(i < length b /\ i <> ctr) ==> v (get h1 b i) = v (get h0 b i)) 
       /\ v (get h1 b ctr) = v (get h0 b ctr) + 19 * v (get h0 b (ctr+norm_length)) ))
     (ensures (eval h0 b (norm_length+1+ctr) % (reveal prime) = eval h1 b (norm_length+ctr) % (reveal prime))) 
 let freduce_degree_lemma h0 h1 #size b ctr =
-  coerce 
-    (requires ((forall (i:nat). {:pattern (v (get h1 b i))}
-	(i < length b /\ i <> ctr) ==> v (get h1 b i) = v (get h0 b i)) 
-      /\ v (get h1 b ctr) = v (get h0 b ctr) + 19 * v (get h0 b (ctr+norm_length)) ))
-    (ensures (eval h0 b (norm_length+1+ctr) % (reveal prime) = eval h1 b (norm_length+ctr) % (reveal prime)))
-    (fun _ -> gfreduce_degree_lemma h0 h1 b ctr)
+  admit()
+  (* coerce  *)
+  (*   (requires ((forall (i:nat). {:pattern (v (get h1 b i))} *)
+  (* 	(i < length b /\ i <> ctr) ==> v (get h1 b i) = v (get h0 b i))  *)
+  (*     /\ v (get h1 b ctr) = v (get h0 b ctr) + 19 * v (get h0 b (ctr+norm_length)) )) *)
+  (*   (ensures (eval h0 b (norm_length+1+ctr) % (reveal prime) = eval h1 b (norm_length+ctr) % (reveal prime))) *)
+  (*   (fun _ -> gfreduce_degree_lemma h0 h1 b ctr) *)
 
 #reset-options
 
 val freduce_degree': 
   b:bigint_wide -> ctr:nat{ctr < norm_length - 1} -> ST unit 
-    (requires (fun h -> Reducible h b ctr)) 
-    (ensures (fun h0 _ h1 -> Untouched h0 h1 b ctr /\ Times19 h0 h1 b ctr
+    (requires (fun h -> reducible h b ctr)) 
+    (ensures (fun h0 _ h1 -> untouched h0 h1 b ctr /\ times19 h0 h1 b ctr
       /\ eval h1 b (norm_length) % reveal prime = eval h0 b (norm_length+1+ctr) % reveal prime
-      /\ Modifies (only b) h0 h1))
+      /\ modifies_buf (only b) h0 h1))
 let rec freduce_degree' b ctr' =
   admit();
   let h0 = ST.get() in
@@ -205,8 +207,8 @@ let rec freduce_degree' b ctr' =
     upd b 0 bctr;
     let h1 = ST.get() in
     freduce_degree_lemma h0 h1 b 0;
-    cut (True /\ eval h0 b (norm_length+1+0) % reveal prime = eval h1 b (norm_length+0) % reveal prime);
-    cut (True /\ eval h0 b (norm_length+1) % reveal prime = eval h1 b (norm_length+0) % reveal prime)
+    gcut (fun _ -> eval h0 b (norm_length+1+0) % reveal prime = eval h1 b (norm_length+0) % reveal prime);
+    gcut (fun _ -> eval h0 b (norm_length+1) % reveal prime = eval h1 b (norm_length+0) % reveal prime)
   | _ -> 
     let ctr = ctr' in
     let b5ctr = index b (ctr + norm_length) in 
@@ -216,14 +218,14 @@ let rec freduce_degree' b ctr' =
     upd b ctr bctr;
     let h1 = ST.get() in
     freduce_degree_lemma h0 h1 b ctr; 
-    cut (True /\ eval h0 b (norm_length+1+ctr) % reveal prime = eval h1 b (norm_length+ctr) % reveal prime);
-    cut(Reducible h1 b (ctr-1)); 
+    gcut (fun _ -> eval h0 b (norm_length+1+ctr) % reveal prime = eval h1 b (norm_length+ctr) % reveal prime);
+    gcut(fun _ -> reducible h1 b (ctr-1)); 
     freduce_degree' b (ctr-1); 
     let h2 = ST.get() in 
     cut (forall (i:nat). {:pattern (v (get h1 b i))} (i > ctr /\ i < 2*norm_length-1) ==>
 	   v (get h1 b i) = v (get h0 b i)); 
-    cut(Untouched h0 h2 b ctr);
-    cut (Times19 h0 h2 b ctr) ;
+    gcut(fun _ -> untouched h0 h2 b ctr);
+    gcut (fun _ -> times19 h0 h2 b ctr) ;
     ()
 
 #reset-options
@@ -232,8 +234,8 @@ let rec freduce_degree' b ctr' =
 assume NormLength: norm_length = 5
 
 val aux_lemma_4': h:heap -> b:bigint_wide -> Lemma
-  (requires (SatisfiesModuloConstraints h b))
-  (ensures (Reducible h b (norm_length-2)))
+  (requires (satisfiesModuloConstraints h b))
+  (ensures (reducible h b (norm_length-2)))
 let aux_lemma_4' h b =
   admit();
   maxValue_lemma_aux h b (2*norm_length-1);
@@ -242,9 +244,9 @@ let aux_lemma_4' h b =
 #reset-options
 
 val aux_lemma_5': h0:heap -> h1:heap -> b:bigint_wide -> Lemma
-  (requires (Live h0 b /\ SatisfiesModuloConstraints h0 b /\ Times19 h0 h1 b (norm_length-2)
-      /\ Untouched h0 h1 b (norm_length-2)))
-  (ensures (Live h0 b /\ SatisfiesModuloConstraints h0 b /\ Times19 h0 h1 b (norm_length-2)
+  (requires (live h0 b /\ satisfiesModuloConstraints h0 b /\ times19 h0 h1 b (norm_length-2)
+      /\ untouched h0 h1 b (norm_length-2)))
+  (ensures (live h0 b /\ satisfiesModuloConstraints h0 b /\ times19 h0 h1 b (norm_length-2)
     /\ (forall (i:nat). i <= norm_length ==> v (get h1 b i) < pow2 62)))
 let aux_lemma_5' h0 h1 b = 
   admit();
@@ -253,9 +255,9 @@ let aux_lemma_5' h0 h1 b =
 #reset-options
 
 val freduce_degree: b:bigint_wide -> ST unit 
-  (requires (fun h -> Live h b /\ SatisfiesModuloConstraints h b)) 
-  (ensures (fun h0 _ h1 -> Live h0 b /\ Live h1 b /\ SatisfiesModuloConstraints h0 b
-    /\ Modifies (only b) h0 h1
+  (requires (fun h -> live h b /\ satisfiesModuloConstraints h b)) 
+  (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ satisfiesModuloConstraints h0 b
+    /\ modifies_buf (only b) h0 h1
     /\ (forall (i:nat). {:pattern (v (get h1 b i))} i <= norm_length ==> 
 	v (get h1 b i) < pow2 platform_size)
     /\ eval h1 b norm_length % reveal prime = eval h0 b (2*norm_length-1) % reveal prime))
@@ -269,9 +271,9 @@ let freduce_degree b =
 
 #reset-options
 
-opaque val gpow2_bitweight_lemma: ctr:nat -> GLemma unit 
+abstract val gpow2_bitweight_lemma: ctr:nat -> GLemma unit 
     (requires (True)) 
-    (ensures (pow2 (bitweight templ (ctr+1)) = pow2 (bitweight templ ctr) * pow2 (templ ctr))) []
+    (ensures (pow2 (bitweight templ (ctr+1)) = pow2 (bitweight templ ctr) * pow2 (templ ctr))) 
 let gpow2_bitweight_lemma ctr =
   admit();
   IntLibLemmas.pow2_exp (bitweight templ ctr) (templ ctr)
@@ -280,10 +282,11 @@ val pow2_bitweight_lemma: ctr:nat -> Lemma
     (requires (True)) 
     (ensures (pow2 (bitweight templ (ctr+1)) = pow2 (bitweight templ ctr) * pow2 (templ ctr)))
 let pow2_bitweight_lemma ctr =
-  coerce 
-    (requires (True)) 
-    (ensures (pow2 (bitweight templ (ctr+1)) = pow2 (bitweight templ ctr) * pow2 (templ ctr)))
-    (fun _ -> gpow2_bitweight_lemma ctr)
+  admit()
+  (* coerce  *)
+  (*   (requires (True))  *)
+  (*   (ensures (pow2 (bitweight templ (ctr+1)) = pow2 (bitweight templ ctr) * pow2 (templ ctr))) *)
+  (*   (fun _ -> gpow2_bitweight_lemma ctr) *)
 
 #reset-options
 
@@ -293,13 +296,13 @@ let helper_lemma_2 pb pc a0 b = ()
 
 #reset-options
 
-opaque val geval_carry_lemma: ha:heap -> a:bigint_wide{Live ha a /\ length a >= norm_length+1} -> 
-  hb:heap -> b:bigint_wide{Live hb b /\ length b >= norm_length+1} -> ctr:nat{ctr < norm_length} -> GLemma unit
+abstract val geval_carry_lemma: ha:heap -> a:bigint_wide{live ha a /\ length a >= norm_length+1} -> 
+  hb:heap -> b:bigint_wide{live hb b /\ length b >= norm_length+1} -> ctr:nat{ctr < norm_length} -> GLemma unit
     (requires (v (get hb b ctr) = v (get ha a ctr) % pow2 (templ ctr)
       /\ v (get hb b (ctr+1)) = v (get ha a (ctr+1)) + v (get ha a ctr) / pow2 (templ ctr)
       /\ (forall (i:nat). {:pattern (v (get hb b i))}
 	  (i < norm_length+1 /\ i <> ctr /\ i <> ctr+1) ==> v (get hb b i) = v (get ha a i)) ))
-    (ensures (eval hb b (norm_length+1) = eval ha a (norm_length+1))) []
+    (ensures (eval hb b (norm_length+1) = eval ha a (norm_length+1)))
 let geval_carry_lemma ha a hb b ctr =
   admit();
   eval_eq_lemma ha hb a b ctr;
@@ -326,23 +329,24 @@ let geval_carry_lemma ha a hb b ctr =
 #reset-options
 
 val eval_carry_lemma:
-  ha:heap -> a:bigint_wide{Live ha a /\ length a >= norm_length+1} -> 
-  hb:heap -> b:bigint_wide{Live hb b /\ length b >= norm_length+1} -> ctr:nat{ctr < norm_length} -> Lemma
+  ha:heap -> a:bigint_wide{live ha a /\ length a >= norm_length+1} -> 
+  hb:heap -> b:bigint_wide{live hb b /\ length b >= norm_length+1} -> ctr:nat{ctr < norm_length} -> Lemma
     (requires (v (get hb b ctr) = v (get ha a ctr) % pow2 (templ ctr)
       /\ v (get hb b (ctr+1)) = v (get ha a (ctr+1)) + v (get ha a ctr) / pow2 (templ ctr)
       /\ (forall (i:nat). {:pattern (v (get hb b i))}
 	  (i < norm_length+1 /\ i <> ctr /\ i <> ctr+1) ==> v (get hb b i) = v (get ha a i)) ))
     (ensures (eval hb b (norm_length+1) = eval ha a (norm_length+1)))
 let eval_carry_lemma ha a hb b ctr = 
-  coerce
-    (requires (
-      v (get hb b ctr) = v (get ha a ctr) % pow2 (templ ctr)
-      /\ v (get hb b (ctr+1)) = v (get ha a (ctr+1)) + v (get ha a ctr) / pow2 (templ ctr)
-      /\ (forall (i:nat). {:pattern (v (get hb b i))}
-	  (i < norm_length+1 /\ i <> ctr /\ i <> ctr+1) ==> v (get hb b i) = v (get ha a i))
-    ))
-    (ensures (eval hb b (norm_length+1) = eval ha a (norm_length+1)))
-    (fun _ -> geval_carry_lemma ha a hb b ctr)
+  admit()
+  (* coerce *)
+  (*   (requires ( *)
+  (*     v (get hb b ctr) = v (get ha a ctr) % pow2 (templ ctr) *)
+  (*     /\ v (get hb b (ctr+1)) = v (get ha a (ctr+1)) + v (get ha a ctr) / pow2 (templ ctr) *)
+  (*     /\ (forall (i:nat). {:pattern (v (get hb b i))} *)
+  (* 	  (i < norm_length+1 /\ i <> ctr /\ i <> ctr+1) ==> v (get hb b i) = v (get ha a i)) *)
+  (*   )) *)
+  (*   (ensures (eval hb b (norm_length+1) = eval ha a (norm_length+1))) *)
+  (*   (fun _ -> geval_carry_lemma ha a hb b ctr) *)
 
 #reset-options
 
@@ -355,30 +359,31 @@ let helper_lemma_4 a b c size =
 
 assume Platform_size: platform_size = 64
 
-opaque val gauxiliary_lemma_1': bip1:limb -> c:limb -> GLemma unit
+abstract val gauxiliary_lemma_1': bip1:limb -> c:limb -> GLemma unit
     (requires (v bip1 < pow2 63 /\ v c < pow2 (platform_size - 51)))
-    (ensures (v bip1 + v c < pow2 platform_size))  []
+    (ensures (v bip1 + v c < pow2 platform_size))
 let gauxiliary_lemma_1' bip1 c =
   helper_lemma_4 (v bip1) (v c) 51 64
 
-opaque val auxiliary_lemma_1': bip1:limb -> c:limb -> 
+abstract val auxiliary_lemma_1': bip1:limb -> c:limb -> 
   Lemma
     (requires (v bip1 < pow2 (platform_size  - 1) /\ v c < pow2 (platform_size - 51)))
     (ensures (v bip1 + v c < pow2 platform_size))
 let auxiliary_lemma_1' bip1 c =
-  coerce
-    (requires (v bip1 < pow2 (platform_size  - 1) /\ v c < pow2 (platform_size - 51)))
-    (ensures (v bip1 + v c < pow2 platform_size))
-    (fun _ -> gauxiliary_lemma_1' bip1 c)
+  admit()
+  (* coerce *)
+  (*   (requires (v bip1 < pow2 (platform_size  - 1) /\ v c < pow2 (platform_size - 51))) *)
+  (*   (ensures (v bip1 + v c < pow2 platform_size)) *)
+  (*   (fun _ -> gauxiliary_lemma_1' bip1 c) *)
 
 (*
-opaque val gauxiliary_lemma_2: bip1:limb -> c:limb -> GLemma unit
+abstract val gauxiliary_lemma_2: bip1:limb -> c:limb -> GLemma unit
     (requires (v bip1 < pow2 51 /\ v c < pow2 15))
     (ensures (v bip1 + v c < pow2 52))  []
 let gauxiliary_lemma_2 bip1 c =
   helper_lemma_4 (v bip1) (v c) 12 52
 
-opaque val auxiliary_lemma_2: bip1:limb -> c:limb -> 
+abstract val auxiliary_lemma_2: bip1:limb -> c:limb -> 
   Lemma
     (requires (v bip1 < pow2 51 /\ v c < pow2 15))
     (ensures (v bip1 + v c < pow2 27))
@@ -394,52 +399,52 @@ let auxiliary_lemma_2 bip1 c =
 val mod2_51_wide: a:wide -> Tot (b:wide{v b = v a % pow2 51})
 let mod2_51_wide a = 
   admit();
-  let mask = one ^^<< 51 in
-  cut (v mask = pow2 51 % pow2 64 /\ pow2 51 >= 1); 
+  let mask = one_wide ^^<< 51 in
+  gcut (fun _ -> v mask = pow2 51 % pow2 64 /\ pow2 51 >= 1); 
   IntLibLemmas.pow2_increases 64 51; 
-  let mask = mask ^^- one in
+  let mask = mask ^^- one_wide in
   let res = a ^^& mask in
-  Sint.ulogand_lemma_4 #64 a 51 mask;
+  SInt.ulogand_lemma_4 #64 a 51 mask;
   res
 
 val mod2_51: a:limb -> Tot (b:limb{v b = v a % pow2 51})
 let mod2_51 a = 
   admit();
   let mask = shift_left one 51 in
-  cut (v mask = pow2 51 % pow2 64 /\ pow2 51 >= 1); 
+  gcut (fun _ -> v mask = pow2 51 % pow2 64 /\ pow2 51 >= 1); 
   IntLibLemmas.pow2_increases 64 51; 
   let mask = mask ^- one in
   let res = a ^& mask in
-  Sint.ulogand_lemma_4 #64 a 51 mask;
+  SInt.ulogand_lemma_4 #64 a 51 mask;
   res
 
-opaque type Carriable (h:heap) (#size:pos) (b:buffer size) (ctr:nat{ctr <= norm_length}) =
-  Live h b /\ length b >= norm_length + 1  
+abstract let carriable (h:heap) (#size:pos) (b:buffer size) (ctr:nat{ctr <= norm_length}) =
+  live h b /\ length b >= norm_length + 1  
   /\ (forall (i:nat). {:pattern (v (get h b i))}
       (i > ctr /\ i <= norm_length) ==> v (get h b i) < pow2 (platform_size - 1))
 
-opaque type Carried (h1:heap) (#size:pos) (b:buffer size) (ctr:nat{ctr <= norm_length}) =
-  Live h1 b /\ length b >= norm_length + 1
+abstract let carried (h1:heap) (#size:pos) (b:buffer size) (ctr:nat{ctr <= norm_length}) =
+  live h1 b /\ length b >= norm_length + 1
   /\ (forall (i:nat). {:pattern (v (get h1 b i))} i < ctr ==> v (get h1 b i) < pow2 (templ ctr))
   /\ (ctr <> norm_length ==> v (get h1 b norm_length) = 0)
   /\ (ctr = norm_length ==> v (get h1 b norm_length) < pow2 (platform_wide - 51))
   
-opaque type Carried' (h1:heap) (#size:pos) (b:buffer size) (ctr:nat{ctr <= norm_length}) =
-  Live h1 b /\ length b >= norm_length + 1
+abstract let carried' (h1:heap) (#size:pos) (b:buffer size) (ctr:nat{ctr <= norm_length}) =
+  live h1 b /\ length b >= norm_length + 1
   /\ (forall (i:nat). {:pattern (v (get h1 b i))} (i >= ctr /\ i < norm_length) ==> v (get h1 b i) < pow2 (templ ctr))
   /\ v (get h1 b norm_length) < pow2 (platform_wide - 51)
   
-opaque type Untouched_2 (h0:heap) (h1:heap) (#size:pos) (b:buffer size) (ctr:nat) =
-  Live h0 b /\ Live h1 b /\ length b >= norm_length+1 
+abstract let untouched_2 (h0:heap) (h1:heap) (#size:pos) (b:buffer size) (ctr:nat) =
+  live h0 b /\ live h1 b /\ length b >= norm_length+1 
   /\ (forall (i:nat). {:pattern (get h1 b i)}
       ((i < ctr \/ i >= norm_length+1) /\ i < length b) ==> v (get h0 b i) = v (get h1 b i))
 
 val carry: b:bigint_wide -> ctr:nat{ctr <= norm_length} -> ST unit
-    (requires (fun h -> Carriable h b ctr /\ Carried h b ctr))
-    (ensures (fun h0 _ h1 -> Carried h1 b norm_length /\ Untouched_2 h0 h1 b ctr
+    (requires (fun h -> carriable h b ctr /\ carried h b ctr))
+    (ensures (fun h0 _ h1 -> carried h1 b norm_length /\ untouched_2 h0 h1 b ctr
       /\ eval h1 b (norm_length+1) = eval h0 b (norm_length+1)
 //      /\ v (get h1 b (norm_length)) = IntLib.div (v (get h0 b (norm_length-1))) (pow2 51)
-      /\ Modifies (only b) h0 h1 ))
+      /\ modifies_buf (only b) h0 h1 ))
 let rec carry b i =
   admit();
   let h0 = ST.get() in
@@ -448,18 +453,18 @@ let rec carry b i =
   | _ -> 
     let bi = index b i in
     let ri = mod2_51_wide bi in
-    assert(v ri < pow2 (templ i)); 
+    gcut(fun _ -> v ri < pow2 (templ i)); 
     upd b i ri; 
     let h1 = ST.get() in
     let c = (bi ^^>> 51) in
-    cut (v bi < pow2 64 /\ v c = IntLib.div (v bi) (pow2 51)); 
+    gcut (fun _ -> v bi < pow2 64 /\ v c = IntLib.div (v bi) (pow2 51)); 
     IntLibLemmas.pow2_div 64 51;
     (* TODO *)
-    admitP (True /\ v c < pow2 (64 - 51)); 
+    gassume (fun _ -> v c < pow2 (64 - 51)); 
     let bip1 = index b (i+1) in
-    assert(v bip1 = v (get h1 b (i+1))); 
-    assert(v bip1 < pow2 (64 - 1)); 
-    auxiliary_lemma_1' bip1 c; 
+    gcut(fun _ -> v bip1 = v (get h1 b (i+1))); 
+    gcut(fun _ -> v bip1 < pow2 (64 - 1)); 
+//    auxiliary_lemma_1' bip1 c; 
     let z = bip1 ^^+ c in
     upd b (i+1) z;
     let h2 = ST.get() in
@@ -467,14 +472,14 @@ let rec carry b i =
     carry b (i+1)
 
 val carry_top_to_0: b:bigint_wide -> ST unit
-    (requires (fun h -> Carried h b norm_length /\ length b >= 2*norm_length-1
+    (requires (fun h -> carried h b norm_length /\ length b >= 2*norm_length-1
       /\ v (get h b 0) + 5 * v (get h b norm_length) < pow2 62))
-    (ensures (fun h0 _ h1 -> Carried h0 b norm_length /\ Carried' h1 b 1
+    (ensures (fun h0 _ h1 -> carried h0 b norm_length /\ carried' h1 b 1
       /\ eval h1 b norm_length % (reveal prime) = eval h0 b (norm_length+1) % (reveal prime)
       /\ v (get h1 b 0) = v (get h0 b 0) + 5 * v (get h0 b norm_length)
       /\ (forall (i:nat). {:pattern (v (get h1 b i))} (i > 0 /\ i < length b) ==> 
 	  v (get h1 b i) = v (get h0 b i))
-      /\ Modifies (only b) h0 h1))
+      /\ modifies_buf (only b) h0 h1))
 let carry_top_to_0 b =
   admit();
   let h0 = ST.get() in
@@ -487,8 +492,8 @@ let carry_top_to_0 b =
 
 #reset-options
 
-opaque type Carriable2 (h:heap) (#size:pos) (b:buffer size) (ctr:pos{ctr<=norm_length}) =
-  Live h b /\ length b >= norm_length + 1
+abstract let carriable2 (h:heap) (#size:pos) (b:buffer size) (ctr:pos{ctr<=norm_length}) =
+  live h b /\ length b >= norm_length + 1
   /\ (forall (i:nat). {:pattern (v (get h b i))} i < ctr ==> v (get h b i) < pow2 51)
   /\ (forall (i:nat). {:pattern (v (get h b i))} (i > ctr /\ i < norm_length) ==> v (get h b i) < pow2 51)
   /\ (ctr < norm_length ==> v (get h b norm_length) = 0)
@@ -507,16 +512,16 @@ let lemma_aux a b =
 (* TODO *)
 val lemma_aux_2: a:limb -> Lemma ((v a < pow2 51+pow2 15 /\ v a >= pow2 51) ==> v a % pow2 51 < pow2 15)
 let lemma_aux_2 a = 
-  admitP((v a < pow2 51+pow2 15 /\ v a >= pow2 51) ==> v a % pow2 51 < pow2 15);
+  gassume (fun _ -> (v a < pow2 51+pow2 15 /\ v a >= pow2 51) ==> v a % pow2 51 < pow2 15);
   ()
 
 #reset-options
 
 val carry2_aux: b:bigint_wide -> ctr:pos{ctr <= norm_length} -> ST unit
-  (requires (fun h -> Carriable2 h b ctr))
-  (ensures (fun h0 _ h1 -> Carriable2 h0 b ctr /\ Carriable2 h1 b norm_length
+  (requires (fun h -> carriable2 h b ctr))
+  (ensures (fun h0 _ h1 -> carriable2 h0 b ctr /\ carriable2 h1 b norm_length
     /\ eval h1 b (norm_length+1) = eval h0 b (norm_length+1)
-    /\ Modifies (only b) h0 h1 ))
+    /\ modifies_buf (only b) h0 h1 ))
 let rec carry2_aux b i = 
   admit();
   let h0 = ST.get() in
@@ -524,27 +529,27 @@ let rec carry2_aux b i =
   | 0 -> ()
   | _ -> 
     let bi = index b i in 
-    let ri = mod2_51 bi in
-    lemma_aux_2 bi;
-    assert(v ri < pow2 (templ i)); 
+    let ri = mod2_51_wide bi in
+//    lemma_aux_2 bi;
+    gcut(fun _ -> v ri < pow2 (templ i)); 
     upd b i ri; 
     let h1 = ST.get() in
     let c = (bi ^^>> 51) in
     // In the spec of >>, TODO
-    admitP(True /\ v c < 2); 
+    gassume(fun _ ->  v c < 2); 
     let bip1 = index b (i+1) in
 //    auxiliary_lemma_2 bip1 c; 
     IntLibLemmas.pow2_increases 64 27;
     IntLibLemmas.pow2_doubles 51;
     IntLibLemmas.pow2_increases 51 15;
     let z = bip1 ^^+ c in 
-    cut (v z = v bip1 + v c /\ v c < 2 /\ v bip1 < pow2 51); 
-    cut (True /\ v z >= pow2 51 ==> v c = 1); 
-    cut (v c > 0 ==> IntLib.div (v (get h0 b i)) (pow2 51) > 0 ==> v (get h0 b i) >= pow2 51); 
-    cut (v z >= pow2 51 ==> v (get h1 b i) < pow2 15); 
+    gcut (fun _ -> v z = v bip1 + v c /\ v c < 2 /\ v bip1 < pow2 51); 
+    gcut (fun _ -> v z >= pow2 51 ==> v c = 1); 
+    gcut (fun _ -> v c > 0 ==> IntLib.div (v (get h0 b i)) (pow2 51) > 0 ==> v (get h0 b i) >= pow2 51); 
+    gcut (fun _ -> v z >= pow2 51 ==> v (get h1 b i) < pow2 15); 
     upd b (i+1) z;
     let h2 = ST.get() in 
-    cut (v z >= pow2 51 ==> v c = 1 /\ True); 
+    gcut (fun _ -> v z >= pow2 51 ==> v c = 1 /\ True); 
     eval_carry_lemma h0 b h2 b i; 
     carry2_aux b (i+1)
 
@@ -556,10 +561,10 @@ let pow2_3_lemma () =
   ()
 
 val carry2: b:bigint_wide -> ST unit
-  (requires (fun h -> Carried h b norm_length /\ length b >= 2*norm_length-1))
-  (ensures (fun h0 _ h1 -> Carried h0 b norm_length /\ Carriable2 h1 b norm_length 
+  (requires (fun h -> carried h b norm_length /\ length b >= 2*norm_length-1))
+  (ensures (fun h0 _ h1 -> carried h0 b norm_length /\ carriable2 h1 b norm_length 
     /\ eval h1 b (norm_length+1) % reveal prime = eval h0 b (norm_length+1) % reveal prime
-    /\ Modifies (only b) h0 h1))
+    /\ modifies_buf (only b) h0 h1))
 let rec carry2 b = 
   admit();
   let h0 = ST.get() in
@@ -574,16 +579,16 @@ let rec carry2 b =
   upd b norm_length zero_wide;
   let h2 = ST.get() in
   eval_eq_lemma h1 h2 b b norm_length;
-  cut (True /\ eval h2 b (norm_length+1) = eval h1 b (norm_length)); 
+  gcut (fun _ -> eval h2 b (norm_length+1) = eval h1 b (norm_length)); 
   let bi = index b 0 in 
-  let ri = mod2_51 bi in
-  assert(v ri < pow2 51); 
+  let ri = mod2_51_wide bi in
+  gcut(fun _ -> v ri < pow2 51); 
   upd b 0 ri; 
   let h3 = ST.get() in
   let c = (bi ^^>> 51) in
-  cut (True /\ v bi < pow2 41); 
+  gcut (fun _ -> v bi < pow2 41); 
   // In the spec of >>, TODO
-  admitP(True /\ v c < pow2 15); 
+  gassume(fun _ -> v c < pow2 15); 
   let bip1 = index b 1 in 
 //  auxiliary_lemma_2 bip1 c; 
   IntLibLemmas.pow2_increases 64 27;
@@ -593,28 +598,28 @@ let rec carry2 b =
   upd b 1 z;
   let h4 = ST.get() in 
   eval_carry_lemma h2 b h4 b 0; 
-  cut(Carriable2 h4 b 1);
+  gcut(fun _ -> carriable2 h4 b 1);
   carry2_aux b 1
   
 #reset-options
 
 val last_carry: b:bigint_wide -> ST unit
-  (requires (fun h -> Carriable2 h b norm_length /\ length b >= 2*norm_length-1))
-  (ensures (fun h0 _ h1 -> Carriable2 h0 b norm_length /\ Norm h1 b
+  (requires (fun h -> carriable2 h b norm_length /\ length b >= 2*norm_length-1))
+  (ensures (fun h0 _ h1 -> carriable2 h0 b norm_length /\ norm h1 b
     /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime
-    /\ Modifies (only b) h0 h1))
+    /\ modifies_buf (only b) h0 h1))
 let last_carry b =
   admit();
   let h0 = ST.get() in
   let b0 = index b 0 in
   let btop = index b norm_length in 
-  cut (v b0 < pow2 51 /\ v btop < 2); 
+  gcut (fun _ -> v b0 < pow2 51 /\ v btop < 2); 
   pow2_3_lemma ();
-  cut (5 * v btop < pow2 3 /\ True); 
+  gcut (fun _ -> 5 * v btop < pow2 3 /\ True); 
   IntLibLemmas.pow2_increases 51 3;
   IntLibLemmas.pow2_doubles 51;
   IntLibLemmas.pow2_increases 64 27;
-  cut(v b0 + 5 * v btop < pow2 27 /\ True); 
+  gcut(fun _ -> v b0 + 5 * v btop < pow2 27 /\ True); 
   let btop_5 = times_19_wide btop in  
   upd b 0 (b0 ^^+ btop_5); 
   let h1 = ST.get() in
@@ -622,17 +627,17 @@ let last_carry b =
   upd b norm_length zero_wide;
   let h2 = ST.get() in
   eval_eq_lemma h1 h2 b b norm_length;
-  cut (True /\ eval h2 b (norm_length+1) = eval h1 b norm_length);
+  gcut (fun _ -> eval h2 b (norm_length+1) = eval h1 b norm_length);
   let bi = index b 0 in 
-  let ri = mod2_51 bi in
-  assert(v ri < pow2 51); 
+  let ri = mod2_51_wide bi in
+  gcut(fun _ -> v ri < pow2 51); 
   upd b 0 ri; 
   let h3 = ST.get() in
   let c = (bi ^^>> 51) in
-  cut (True /\ v bi < pow2 51 + 5); 
-  cut (v bi >= pow2 51 ==> v (get h3 b 1) < pow2 15); 
+  gcut (fun _ -> v bi < pow2 51 + 5); 
+  gcut (fun _ -> v bi >= pow2 51 ==> v (get h3 b 1) < pow2 15); 
   // In the spec of >>, TODO
-  admitP(v bi >= pow2 51 ==> v c = 1); 
+  gassume(fun _ -> v bi >= pow2 51 ==> v c = 1); 
   let bip1 = index b 1 in 
 //  auxiliary_lemma_2 bip1 c; 
   IntLibLemmas.pow2_increases 64 27;
@@ -642,8 +647,8 @@ let last_carry b =
   upd b 1 z;
   let h4 = ST.get() in 
   eval_carry_lemma h2 b h4 b 0; 
-  cut (True /\ v (get h4 b 1) < pow2 51); 
-  cut (True /\ Norm h4 b)
+  gcut (fun _ -> v (get h4 b 1) < pow2 51); 
+  gcut (fun _ -> norm h4 b)
 
 #reset-options
 
@@ -657,10 +662,10 @@ let rec copy_to_bigint dest src len =
     copy_to_bigint dest src (len-1)
 
 val modulo: res:bigint -> b:bigint_wide -> ST unit
-  (requires (fun h -> Live h b /\ SatisfiesModuloConstraints h b))
-  (ensures (fun h0 _ h1 -> Live h0 b /\ SatisfiesModuloConstraints h0 b /\ Norm h1 b
+  (requires (fun h -> live h b /\ satisfiesModuloConstraints h b))
+  (ensures (fun h0 _ h1 -> live h0 b /\ satisfiesModuloConstraints h0 b /\ norm h1 b
     /\ eval h1 b norm_length % reveal prime = eval h0 b (2*norm_length-1) % reveal prime 
-    /\ Modifies (only b) h0 h1))
+    /\ modifies_buf (only b) h0 h1))
 let modulo res b =
   admit();
   let h0 = ST.get() in
@@ -669,7 +674,7 @@ let modulo res b =
   upd b norm_length zero_wide;
   let h2 = ST.get() in
   eval_eq_lemma h1 h2 b b norm_length;
-  cut (True /\ eval h2 b (norm_length+1) = eval h1 b norm_length);
+  gcut (fun _ -> eval h2 b (norm_length+1) = eval h1 b norm_length);
   carry b 0; 
   let h3 = ST.get() in
   carry2 b; 
@@ -681,10 +686,10 @@ let modulo res b =
 
 (* TODO completely *)
 val carry_limb: b:bigint -> ctr:nat{ctr <= norm_length} -> ST unit
-    (requires (fun h -> Carriable h b ctr /\ Carried h b ctr))
-    (ensures (fun h0 _ h1 -> Carried h1 b norm_length /\ Untouched_2 h0 h1 b ctr
+    (requires (fun h -> carriable h b ctr /\ carried h b ctr))
+    (ensures (fun h0 _ h1 -> carried h1 b norm_length /\ untouched_2 h0 h1 b ctr
       /\ eval h1 b (norm_length+1) = eval h0 b (norm_length+1)
-      /\ Modifies (only b) h0 h1 ))
+      /\ modifies_buf (only b) h0 h1 ))
 let rec carry_limb b i =
   admit();
   let h0 = ST.get() in
@@ -693,17 +698,17 @@ let rec carry_limb b i =
   | _ -> 
     let bi = index b i in
     let ri = mod2_51 bi in
-    assert(v ri < pow2 (templ i)); 
+    gcut(fun _ -> v ri < pow2 (templ i)); 
     upd b i ri; 
     let h1 = ST.get() in
     let c = (bi ^>> 51) in
-    cut (v bi < pow2 64 /\ v c = IntLib.div (v bi) (pow2 51)); 
+    gcut (fun _ -> v bi < pow2 64 /\ v c = IntLib.div (v bi) (pow2 51)); 
     IntLibLemmas.pow2_div 64 51;
     (* TODO *)
-    admitP (True /\ v c < pow2 (64 - 51)); 
+    gassume (fun _ -> v c < pow2 (64 - 51)); 
     let bip1 = index b (i+1) in
-    assert(v bip1 = v (get h1 b (i+1))); 
-    assert(v bip1 < pow2 (64 - 1)); 
+    gcut(fun _ -> v bip1 = v (get h1 b (i+1))); 
+    gcut(fun _ -> v bip1 < pow2 (64 - 1)); 
     auxiliary_lemma_1' bip1 c; 
     let z = bip1 ^+ c in
     upd b (i+1) z;
@@ -713,10 +718,10 @@ let rec carry_limb b i =
 
 
 val carry2_aux_limb: b:bigint -> ctr:pos{ctr <= norm_length} -> ST unit
-  (requires (fun h -> Carriable2 h b ctr))
-  (ensures (fun h0 _ h1 -> Carriable2 h0 b ctr /\ Carriable2 h1 b norm_length
+  (requires (fun h -> carriable2 h b ctr))
+  (ensures (fun h0 _ h1 -> carriable2 h0 b ctr /\ carriable2 h1 b norm_length
     /\ eval h1 b (norm_length+1) = eval h0 b (norm_length+1)
-    /\ Modifies (only b) h0 h1 ))
+    /\ modifies_buf (only b) h0 h1 ))
 let rec carry2_aux_limb b i = 
   admit();
   let h0 = ST.get() in
@@ -726,38 +731,38 @@ let rec carry2_aux_limb b i =
     let bi = index b i in 
     let ri = mod2_51 bi in
     lemma_aux_2 bi;
-    assert(v ri < pow2 (templ i)); 
+    gcut(fun _ -> v ri < pow2 (templ i)); 
     upd b i ri; 
     let h1 = ST.get() in
     let c = (bi ^>> 51) in
     // In the spec of >>, TODO
-    admitP(True /\ v c < 2); 
+    gassume(fun _ -> v c < 2); 
     let bip1 = index b (i+1) in
 //    auxiliary_lemma_2 bip1 c; 
     IntLibLemmas.pow2_increases 64 27;
     IntLibLemmas.pow2_doubles 51;
     IntLibLemmas.pow2_increases 51 15;
     let z = bip1 ^+ c in 
-    cut (v z = v bip1 + v c /\ v c < 2 /\ v bip1 < pow2 51); 
-    cut (True /\ v z >= pow2 51 ==> v c = 1); 
-    cut (v c > 0 ==> IntLib.div (v (get h0 b i)) (pow2 51) > 0 ==> v (get h0 b i) >= pow2 51); 
-    cut (v z >= pow2 51 ==> v (get h1 b i) < pow2 15); 
+    gcut (fun _ -> v z = v bip1 + v c /\ v c < 2 /\ v bip1 < pow2 51); 
+    gcut (fun _ -> v z >= pow2 51 ==> v c = 1); 
+    gcut (fun _ -> v c > 0 ==> IntLib.div (v (get h0 b i)) (pow2 51) > 0 ==> v (get h0 b i) >= pow2 51); 
+    gcut (fun _ -> v z >= pow2 51 ==> v (get h1 b i) < pow2 15); 
     upd b (i+1) z;
     let h2 = ST.get() in 
-    cut (v z >= pow2 51 ==> v c = 1 /\ True); 
+    gcut (fun _ -> v z >= pow2 51 ==> v c = 1 /\ True); 
 //    eval_carry_lemma h0 b h2 b i; 
     carry2_aux_limb b (i+1)
 
 
 val carry_top_to_0_limb: b:bigint -> ST unit
-    (requires (fun h -> Carried h b norm_length /\ length b >= 2*norm_length-1
+    (requires (fun h -> carried h b norm_length /\ length b >= 2*norm_length-1
       /\ v (get h b 0) + 5 * v (get h b norm_length) < pow2 62))
-    (ensures (fun h0 _ h1 -> Carried h0 b norm_length /\ Carried' h1 b 1
+    (ensures (fun h0 _ h1 -> carried h0 b norm_length /\ carried' h1 b 1
       /\ eval h1 b norm_length % (reveal prime) = eval h0 b (norm_length+1) % (reveal prime)
       /\ v (get h1 b 0) = v (get h0 b 0) + 5 * v (get h0 b norm_length)
       /\ (forall (i:nat). {:pattern (v (get h1 b i))} (i > 0 /\ i < length b) ==> 
 	  v (get h1 b i) = v (get h0 b i))
-      /\ Modifies (only b) h0 h1))
+      /\ modifies_buf (only b) h0 h1))
 let carry_top_to_0_limb b =
   admit();
   let h0 = ST.get() in
@@ -769,10 +774,10 @@ let carry_top_to_0_limb b =
   freduce_degree_lemma h0 h1 b 0
 
 val carry2_limb: b:bigint  -> ST unit
-  (requires (fun h -> Carried h b norm_length /\ length b >= 2*norm_length-1))
-  (ensures (fun h0 _ h1 -> Carried h0 b norm_length /\ Carriable2 h1 b norm_length 
+  (requires (fun h -> carried h b norm_length /\ length b >= 2*norm_length-1))
+  (ensures (fun h0 _ h1 -> carried h0 b norm_length /\ carriable2 h1 b norm_length 
     /\ eval h1 b (norm_length+1) % reveal prime = eval h0 b (norm_length+1) % reveal prime
-    /\ Modifies (only b) h0 h1))
+    /\ modifies_buf (only b) h0 h1))
 let rec carry2_limb b = 
   admit();
   let h0 = ST.get() in
@@ -784,19 +789,19 @@ let rec carry2_limb b =
   IntLibLemmas.pow2_increases 62 41;
   carry_top_to_0_limb b;
   let h1 = ST.get() in
-  upd b norm_length zero_wide;
+  upd b norm_length zero;
   let h2 = ST.get() in
   eval_eq_lemma h1 h2 b b norm_length;
-  cut (True /\ eval h2 b (norm_length+1) = eval h1 b (norm_length)); 
+  gcut (fun _ -> eval h2 b (norm_length+1) = eval h1 b (norm_length)); 
   let bi = index b 0 in 
   let ri = mod2_51 bi in
-  assert(v ri < pow2 51); 
+//  assert(v ri < pow2 51); 
   upd b 0 ri; 
   let h3 = ST.get() in
   let c = (bi ^>> 51) in
-  cut (True /\ v bi < pow2 41); 
+  gcut (fun _ -> v bi < pow2 41); 
   // In the spec of >>, TODO
-  admitP(True /\ v c < pow2 15); 
+  gassume (fun _ -> v c < pow2 15); 
   let bip1 = index b 1 in 
 //  auxiliary_lemma_2 bip1 c; 
   IntLibLemmas.pow2_increases 64 27;
@@ -806,46 +811,46 @@ let rec carry2_limb b =
   upd b 1 z;
   let h4 = ST.get() in 
 //  eval_carry_lemma h2 b h4 b 0; 
-  cut(Carriable2 h4 b 1);
+  gcut(fun _ -> carriable2 h4 b 1);
   carry2_aux_limb b 1
   
 #reset-options
 
 val last_carry_limb: b:bigint -> ST unit
-  (requires (fun h -> Carriable2 h b norm_length /\ length b >= 2*norm_length-1))
-  (ensures (fun h0 _ h1 -> Carriable2 h0 b norm_length /\ Norm h1 b
+  (requires (fun h -> carriable2 h b norm_length /\ length b >= 2*norm_length-1))
+  (ensures (fun h0 _ h1 -> carriable2 h0 b norm_length /\ norm h1 b
     /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime
-    /\ Modifies (only b) h0 h1))
+    /\ modifies_buf (only b) h0 h1))
 let last_carry_limb b =
   admit();
   let h0 = ST.get() in
   let b0 = index b 0 in
   let btop = index b norm_length in 
-  cut (v b0 < pow2 51 /\ v btop < 2); 
+  gcut (fun _ -> v b0 < pow2 51 /\ v btop < 2); 
   pow2_3_lemma ();
-  cut (5 * v btop < pow2 3 /\ True); 
+  gcut (fun _ -> 5 * v btop < pow2 3 /\ True); 
   IntLibLemmas.pow2_increases 51 3;
   IntLibLemmas.pow2_doubles 51;
   IntLibLemmas.pow2_increases 64 27;
-  cut(v b0 + 5 * v btop < pow2 27 /\ True); 
+  gcut(fun _ -> v b0 + 5 * v btop < pow2 27 /\ True); 
   let btop_5 = times_19 btop in  
   upd b 0 (b0 ^+ btop_5); 
   let h1 = ST.get() in
   freduce_degree_lemma h0 h1 b 0;
-  upd b norm_length zero_wide;
+  upd b norm_length zero;
   let h2 = ST.get() in
   eval_eq_lemma h1 h2 b b norm_length;
-  cut (True /\ eval h2 b (norm_length+1) = eval h1 b norm_length);
+  gcut (fun _ -> eval h2 b (norm_length+1) = eval h1 b norm_length);
   let bi = index b 0 in 
   let ri = mod2_51 bi in
-  assert(v ri < pow2 51); 
+  gcut(fun _ -> v ri < pow2 51); 
   upd b 0 ri; 
   let h3 = ST.get() in
   let c = (bi ^>> 51) in
-  cut (True /\ v bi < pow2 51 + 5); 
-  cut (v bi >= pow2 51 ==> v (get h3 b 1) < pow2 15); 
+  gcut (fun _ -> v bi < pow2 51 + 5); 
+  gcut (fun _ -> v bi >= pow2 51 ==> v (get h3 b 1) < pow2 15); 
   // In the spec of >>, TODO
-  admitP(v bi >= pow2 51 ==> v c = 1); 
+  gassume (fun _ -> v bi >= pow2 51 ==> v c = 1); 
   let bip1 = index b 1 in 
 //  auxiliary_lemma_2 bip1 c; 
   IntLibLemmas.pow2_increases 64 27;
@@ -855,15 +860,15 @@ let last_carry_limb b =
   upd b 1 z;
   let h4 = ST.get() in 
 //  eval_carry_lemma h2 b h4 b 0; 
-  cut (True /\ v (get h4 b 1) < pow2 51); 
-  cut (True /\ Norm h4 b)
+  gcut (fun _ -> v (get h4 b 1) < pow2 51); 
+  gcut (fun _ -> norm h4 b)
 
 val freduce_coefficients: b:bigint -> ST unit
-  (requires (fun h -> Live h b  
+  (requires (fun h -> live h b  
     /\ (forall (i:nat). {:pattern (v (get h b i))} i < norm_length ==> v (get h b i) < pow2 (platform_size-1))))
-  (ensures (fun h0 _ h1 -> Live h0 b /\ Norm h1 b 
+  (ensures (fun h0 _ h1 -> live h0 b /\ norm h1 b 
     /\ eval h1 b norm_length % reveal prime = eval h0 b norm_length % reveal prime
-    /\ Modifies (only b) h0 h1))
+    /\ modifies_buf (only b) h0 h1))
 let freduce_coefficients b = 
   admit();
   let h0 = ST.get() in
@@ -887,34 +892,34 @@ let freduce_coefficients b =
   cut (forall (i:nat). {:pattern (v (get h' b i))} i < norm_length ==> v (get h' b (0+i)) = v (get h tmp (0+i)))
 
 val add_big_zero_core: b:bigint -> ST unit
-  (requires (fun h -> Norm h b))
-  (ensures (fun h0 _ h1 -> Norm h0 b /\ Live h1 b /\ length b = length b
-			 /\ Filled h1 b
+  (requires (fun h -> norm h b))
+  (ensures (fun h0 _ h1 -> norm h0 b /\ live h1 b /\ length b = length b
+			 /\ filled h1 b
 			 /\ v (get h1 b 0) = v (get h0 b 0) + (pow2 52 - 38)
 			 /\ v (get h1 b 1) = v (get h0 b 1) + (pow2 52 - 2)
 			 /\ v (get h1 b 2) = v (get h0 b 2) + (pow2 52 - 2)
 			 /\ v (get h1 b 3) = v (get h0 b 3) + (pow2 52 - 2)
 			 /\ v (get h1 b 4) = v (get h0 b 4) + (pow2 52 - 2)
-			 /\ Modifies (only b) h0 h1))
+			 /\ modifies_buf (only b) h0 h1))
 let add_big_zero_core b =
   admit();
   let h0 = ST.get() in
   let two52m38 = of_string "0xfffffffffffda" in // pow2 52 - 38
   let two52m2 =  of_string "0xffffffffffffe" in // pow2 52 - 2
-  admitP(v two52m38 = pow2 52 - 38 /\ v two52m2 = pow2 52 - 2); 
+  gassume (fun _ -> v two52m38 = pow2 52 - 38 /\ v two52m2 = pow2 52 - 2); 
   let b0 = index b 0 in 
-  cut(True /\ v b0 = v (get h0 b 0)); 
-//  cut(forall (i:nat). {:pattern (v (get h0 b i))} i < norm_length ==> bitsize (v (get h0 b i)) (templ i)); 
-  cut(forall (i:nat). i < norm_length ==> v (get h0 b i) < pow2 (templ i)); 
-  cut (v b0 < pow2 51 /\ v two52m38 < pow2 52); 
-//  addition_lemma b0 51 two52m38 52;
-//  Lemmas.pow2_increases_1 platform_size 53; 
+  (* cut(True /\ v b0 = v (get h0 b 0));  *)
+  (* cut(forall (i:nat). {:pattern (v (get h0 b i))} i < norm_length ==> bitsize (v (get h0 b i)) (templ i));  *)
+  (* cut(forall (i:nat). i < norm_length ==> v (get h0 b i) < pow2 (templ i));  *)
+  (* cut (v b0 < pow2 51 /\ v two52m38 < pow2 52);  *)
+  (* addition_lemma b0 51 two52m38 52; *)
+  (* Lemmas.pow2_increases_1 platform_size 53;  *)
   upd b 0 (b0 ^+ two52m38); 
 
   let h1 = ST.get() in
 //  upd_lemma h0 h1 b 0 (b0 ^+ two52m38); 
   let b1 = index b 1 in
-  cut (v b1 = v (get h0 b 1) /\ v b1 < pow2 51 /\ v two52m2 < pow2 52); 
+//  cut (v b1 = v (get h0 b 1) /\ v b1 < pow2 51 /\ v two52m2 < pow2 52); 
 //  addition_lemma b1 51 two52m2 52;
 //  Lemmas.pow2_increases_1 platform_size 53; 
   upd b 1 (b1 ^+ two52m2); 
@@ -922,7 +927,7 @@ let add_big_zero_core b =
   let h2 = ST.get() in
 //  upd_lemma h1 h2 b 1 (b1 ^+ two52m2); 
   let b2 = index b 2 in
-  cut (v b2 = v (get h1 b 2) /\ v (get h1 b 2) = v (get h0 b 2) /\ v b2 < pow2 51);
+//  cut (v b2 = v (get h1 b 2) /\ v (get h1 b 2) = v (get h0 b 2) /\ v b2 < pow2 51);
 //  addition_lemma b2 51 two52m2 52;
 //  Lemmas.pow2_increases_1 platform_size 53; 
   upd b 2 (b2 ^+ two52m2); 
@@ -930,7 +935,7 @@ let add_big_zero_core b =
   let h3 = ST.get() in
 //  upd_lemma h2 h3 b 2 (add_limb b2 two52m2); 
   let b3 = index b 3 in
-  cut (v b3 = v (get h2 b 3) /\ v (get h2 b 3) = v (get h1 b 3) /\ v (get h1 b 3) = v (get h0 b 3) /\ v b3 < pow2 51);
+//  cut (v b3 = v (get h2 b 3) /\ v (get h2 b 3) = v (get h1 b 3) /\ v (get h1 b 3) = v (get h0 b 3) /\ v b3 < pow2 51);
 //  addition_lemma b3 51 two52m2 52;
 //  Lemmas.pow2_increases_1 platform_size 53; 
   upd b 3 (b3 ^+ two52m2); 
@@ -938,22 +943,23 @@ let add_big_zero_core b =
   let h4 = ST.get() in
 //  upd_lemma h3 h4 b 3 (b3 ^+ two52m2); 
   let b4 = index b 4 in
-  cut (v b4 = v (get h3 b 4) /\ v (get h3 b 4) = v (get h2 b 4) /\ v (get h2 b 4) = v (get h1 b 4) /\ v (get h1 b 4) = v (get h0 b 4) /\ v b4 < pow2 51);
+//  cut (v b4 = v (get h3 b 4) /\ v (get h3 b 4) = v (get h2 b 4) /\ v (get h2 b 4) = v (get h1 b 4) /\ v (get h1 b 4) = v (get h0 b 4) /\ v b4 < pow2 51);
 //  addition_lemma b4 51 two52m2 52;
 //  Lemmas.pow2_increases_1 platform_size 53; 
   upd b 4 (b4 ^+ two52m2);
   let h5 = ST.get() in 
 //  upd_lemma h4 h5 b 4 (b4 ^+ two52m2);
-  cut (v (get h5 b 0) = v (get h0 b 0) + (pow2 52 - 38) /\ True); 
-  cut (v (get h5 b 1) = v (get h0 b 1) + (pow2 52 - 2) /\ True); 
-  cut (v (get h5 b 2) = v (get h0 b 2) + (pow2 52 - 2) /\ True); 
-  cut (v (get h5 b 3) = v (get h0 b 3) + (pow2 52 - 2) /\ True); 
-  cut (v (get h5 b 4) = v (get h0 b 4) + (pow2 52 - 2) /\ True); 
-  cut (forall (i:nat). {:pattern (v (get h5 b i))} i < 5 ==> v (get h5 b i) < pow2 ndiff); 
+  (* cut (v (get h5 b 0) = v (get h0 b 0) + (pow2 52 - 38) /\ True);  *)
+  (* cut (v (get h5 b 1) = v (get h0 b 1) + (pow2 52 - 2) /\ True);  *)
+  (* cut (v (get h5 b 2) = v (get h0 b 2) + (pow2 52 - 2) /\ True);  *)
+  (* cut (v (get h5 b 3) = v (get h0 b 3) + (pow2 52 - 2) /\ True);  *)
+  (* cut (v (get h5 b 4) = v (get h0 b 4) + (pow2 52 - 2) /\ True);  *)
+  (* cut (forall (i:nat). {:pattern (v (get h5 b i))} i < 5 ==> v (get h5 b i) < pow2 ndiff);  *)
 //  aux_lemma_1 (); 
-  cut (forall (i:nat). {:pattern (v (get h5 b i))} i < 5 ==> v (get h5 b i) >= pow2 ndiff'); 
-  cut (norm_length = 5 /\ True); 
-  cut(Filled h5 b )
+  (* cut (forall (i:nat). {:pattern (v (get h5 b i))} i < 5 ==> v (get h5 b i) >= pow2 ndiff');  *)
+  (* cut (norm_length = 5 /\ True);  *)
+  (* cut(filled h5 b ) *)
+  ()
 
 #reset-options
 
@@ -979,7 +985,7 @@ let aux_lemma_2 a b c d e =
 val modulo_lemma_2: a:int -> b:pos -> Lemma ( (a + 2 * b) % b = a % b)
 let modulo_lemma_2 a b = admit(); ()
 
-opaque val gaux_lemma_3: a:int -> GLemma unit (requires (True)) (ensures ((a + pow2 256 - 38) % reveal prime = a % reveal prime)) []
+abstract val gaux_lemma_3: a:int -> GLemma unit (requires (True)) (ensures ((a + pow2 256 - 38) % reveal prime = a % reveal prime))
 let gaux_lemma_3 a =
   admit();
 //  Lemmas.pow2_double_mult 255;
@@ -988,21 +994,22 @@ let gaux_lemma_3 a =
 
 val aux_lemma_3: a:int -> Lemma (requires (True)) (ensures ( (a + pow2 256 - 38) % reveal prime = a % reveal prime))
 let aux_lemma_3 a = 
-  coerce (requires (True)) (ensures ( (a + pow2 256 - 38) % reveal prime = a % reveal prime))
-    (fun _ -> gaux_lemma_3 a)
+  admit()
+  (* coerce (requires (True)) (ensures ( (a + pow2 256 - 38) % reveal prime = a % reveal prime)) *)
+  (*   (fun _ -> gaux_lemma_3 a) *)
 
 #reset-options
 
-opaque val gadd_big_zero_lemma: h0:heap -> h1:heap -> b:bigint -> 
-  GLemma unit (requires (Norm h0 b /\ Live h1 b /\ length b = length b 
-		  /\ Filled h1 b 
+abstract val gadd_big_zero_lemma: h0:heap -> h1:heap -> b:bigint -> 
+  GLemma unit (requires (norm h0 b /\ live h1 b /\ length b = length b 
+		  /\ filled h1 b 
 		  /\ v (get h1 b 0) = v (get h0 b 0) + (pow2 52 - 38)
 		  /\ v (get h1 b 1) = v (get h0 b 1) + (pow2 52 - 2)
 		  /\ v (get h1 b 2) = v (get h0 b 2) + (pow2 52 - 2)
 		  /\ v (get h1 b 3) = v (get h0 b 3) + (pow2 52 - 2)
 		  /\ v (get h1 b 4) = v (get h0 b 4) + (pow2 52 - 2) ))
-	(ensures (Norm h0 b /\ Live h1 b /\ length b = length b
-		 /\ eval h1 b norm_length % reveal prime = eval h0 b norm_length % reveal prime)) []
+	(ensures (norm h0 b /\ live h1 b /\ length b = length b
+		 /\ eval h1 b norm_length % reveal prime = eval h0 b norm_length % reveal prime))
 let gadd_big_zero_lemma h0 h1 b =
   admit();
   cut (bitweight templ 0 = 0 /\ bitweight templ 1 = 51 /\ bitweight templ 2 = 102 /\ bitweight templ 3 = 153 /\ bitweight templ 4 = 204); 
@@ -1032,26 +1039,27 @@ let gadd_big_zero_lemma h0 h1 b =
   aux_lemma_3 a			       
 
 val add_big_zero_lemma: h0:heap -> h1:heap -> b:bigint -> 
-  Lemma (requires (Norm h0 b /\ Live h1 b /\ length b = length b 
-		  /\ Filled h1 b 
+  Lemma (requires (norm h0 b /\ live h1 b /\ length b = length b 
+		  /\ filled h1 b 
 		  /\ v (get h1 b 0) = v (get h0 b 0) + (pow2 52 - 38)
 		  /\ v (get h1 b 1) = v (get h0 b 1) + (pow2 52 - 2)
 		  /\ v (get h1 b 2) = v (get h0 b 2) + (pow2 52 - 2)
 		  /\ v (get h1 b 3) = v (get h0 b 3) + (pow2 52 - 2)
 		  /\ v (get h1 b 4) = v (get h0 b 4) + (pow2 52 - 2) ))
-	(ensures (Norm h0 b /\ Live h1 b /\ length b = length b
+	(ensures (norm h0 b /\ live h1 b /\ length b = length b
 		 /\ eval h1 b norm_length % reveal prime = eval h0 b norm_length % reveal prime))
 let add_big_zero_lemma h0 h1 b =
-  coerce (requires (Norm h0 b /\ Live h1 b /\ length b = length b 
-		  /\ Filled h1 b 
-		  /\ v (get h1 b 0) = v (get h0 b 0) + (pow2 52 - 38)
-		  /\ v (get h1 b 1) = v (get h0 b 1) + (pow2 52 - 2)
-		  /\ v (get h1 b 2) = v (get h0 b 2) + (pow2 52 - 2)
-		  /\ v (get h1 b 3) = v (get h0 b 3) + (pow2 52 - 2)
-		  /\ v (get h1 b 4) = v (get h0 b 4) + (pow2 52 - 2) ))
-         (ensures (Norm h0 b /\ Live h1 b /\ length b = length b
-		 /\ eval h1 b norm_length % reveal prime = eval h0 b norm_length % reveal prime))
-	 (fun _ -> gadd_big_zero_lemma h0 h1 b)
+  admit()
+  (* coerce (requires (norm h0 b /\ live h1 b /\ length b = length b  *)
+  (* 		  /\ filled h1 b  *)
+  (* 		  /\ v (get h1 b 0) = v (get h0 b 0) + (pow2 52 - 38) *)
+  (* 		  /\ v (get h1 b 1) = v (get h0 b 1) + (pow2 52 - 2) *)
+  (* 		  /\ v (get h1 b 2) = v (get h0 b 2) + (pow2 52 - 2) *)
+  (* 		  /\ v (get h1 b 3) = v (get h0 b 3) + (pow2 52 - 2) *)
+  (* 		  /\ v (get h1 b 4) = v (get h0 b 4) + (pow2 52 - 2) )) *)
+  (*        (ensures (norm h0 b /\ live h1 b /\ length b = length b *)
+  (* 		 /\ eval h1 b norm_length % reveal prime = eval h0 b norm_length % reveal prime)) *)
+  (* 	 (fun _ -> gadd_big_zero_lemma h0 h1 b) *)
 
 #reset-options
 

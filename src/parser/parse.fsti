@@ -118,6 +118,7 @@ type token =
   | MUTABLE
   | NEW
   | NEW_EFFECT
+  | NEW_EFFECT_FOR_FREE
   | OF
   | EXCEPTION
   | FALSE

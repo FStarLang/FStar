@@ -110,7 +110,7 @@ inline let pure_ite_wlp (a:Type) (wlp_cases:pure_wp a) (post:pure_post a) =
 inline let pure_ite_wp (a:Type) (wlp_cases:pure_wp a) (wp_cases:pure_wp a) (post:pure_post a) =
      pure_ite_wlp a wlp_cases post
     /\ wp_cases (fun (x:a) -> True)
-inline let pure_wp_binop (a:Type) (wp1:pure_wp a) (op:(Type -> Type -> Type)) (wp2:pure_wp a) (p:pure_post a) =
+inline let pure_wp_binop (a:Type) (wp1:pure_wp a) (op:(Type -> Type -> GTot Type)) (wp2:pure_wp a) (p:pure_post a) =
      op (wp1 p) (wp2 p)
 inline let pure_wp_as_type (a:Type) (wp:pure_wp a) = forall (p:pure_post a). wp p
 inline let pure_close_wp (a:Type) (b:Type) (wp:(b -> GTot (pure_wp a))) (p:pure_post a) = forall (b:b). wp b p

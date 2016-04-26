@@ -122,6 +122,17 @@ let lookup_bvar env x =
     try List.nth env x.index
     with _ -> failwith (Util.format1 "Failed to find %s\n" (Print.db_to_string x))
 
+let rec unfold_effect_abbrev env comp =
+  let c = comp_to_comp_typ comp in
+  match Env.lookup_effect_abbrev env (env.universe_of env c.result_typ) c.effect_name with
+    | None -> c
+    | Some (binders, cdef) ->
+      let binders, cdef = SS.open_comp binders cdef in 
+      let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
+      let c1 = SS.subst_comp inst cdef in
+      let c = {Util.comp_to_comp_typ c1 with flags=c.flags} |> mk_Comp in
+      unfold_effect_abbrev env c
+
 (********************************************************************************************************************)
 (* Normal form of a universe u is                                                                                   *)
 (*  either u, where u <> U_max                                                                                      *)
@@ -663,6 +674,7 @@ and norm_pattern_args cfg env args =
     
 and norm_comp : cfg -> env -> comp -> comp = 
     fun cfg env comp -> 
+        let comp = ghost_to_pure_aux cfg env comp in
         match comp.n with 
             | Total t -> 
               {comp with n=Total (norm cfg env [] t)}
@@ -674,7 +686,35 @@ and norm_comp : cfg -> env -> comp -> comp =
               let norm_args args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
               {comp with n=Comp ({ct with result_typ=norm cfg env [] ct.result_typ;
                                           effect_args=norm_args ct.effect_args})}
-    
+
+(* Promotes Ghost T, when T is not informative to Pure T
+        Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
+*)
+and ghost_to_pure_aux cfg env c =
+    let norm t = 
+        norm ({cfg with steps=[Inline; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses]}) env [] t in
+    let non_info t = non_informative (norm t) in
+    match c.n with
+    | Total _ -> c
+    | GTotal t when non_info t -> {c with n=Total t}
+    | Comp ct ->
+        let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
+        if Util.is_ghost_effect l
+        && non_info ct.result_typ
+        then let ct =
+                if Ident.lid_equals ct.effect_name Const.effect_Ghost_lid
+                then {ct with effect_name=Const.effect_Pure_lid}
+                else if Ident.lid_equals ct.effect_name Const.effect_GTot_lid
+                then {ct with effect_name=Const.effect_Tot_lid}
+                else if Ident.lid_equals ct.effect_name Const.effect_GHOST_lid
+                then {ct with effect_name=Const.effect_PURE_lid}
+                else let ct = unfold_effect_abbrev cfg.tcenv c in //must be GHOST
+                     {ct with effect_name=Const.effect_PURE_lid} in
+             {c with n=Comp ct}
+        else c
+    | _ -> c
+
+     
 and norm_binder : cfg -> env -> binder -> binder = 
     fun cfg env (x, imp) -> {x with sort=norm cfg env [] x.sort}, imp
 
@@ -848,6 +888,7 @@ let config s e =
 let normalize s e t = norm (config s e) [] [] t
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
+let ghost_to_pure env c = ghost_to_pure_aux (config [] env) [] c
 
 let term_to_string env t = Print.term_to_string (normalize [AllowUnboundUniverses] env t)
 let comp_to_string env c = Print.comp_to_string (norm_comp (config [AllowUnboundUniverses] env) [] c)
@@ -867,18 +908,8 @@ let normalize_refinement steps env t0 =
        | _ -> t in
    aux t
 
-let rec unfold_effect_abbrev env comp =
-  let c = comp_to_comp_typ comp in
-  match Env.lookup_effect_abbrev env (env.universe_of env c.result_typ) c.effect_name with
-    | None -> c
-    | Some (binders, cdef) ->
-      let binders, cdef = SS.open_comp binders cdef in 
-      let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
-      let c1 = SS.subst_comp inst cdef in
-      let c = {Util.comp_to_comp_typ c1 with flags=c.flags} |> mk_Comp in
-      unfold_effect_abbrev env c
-
 let normalize_sigelt (_:steps) (_:Env.env) (_:sigelt) : sigelt = failwith "NYI: normalize_sigelt"
+
 let eta_expand (_:Env.env) (t:typ) : typ =
     match t.n with 
         | Tm_name x -> 

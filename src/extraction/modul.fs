@@ -257,6 +257,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
          let ml_main, _, _ = Term.term_as_mlexpr g e in
          g, [MLM_Loc (Util.mlloc_of_range r); MLM_Top ml_main]
 
+       | Sig_new_effect_for_free _ ->
+           failwith "impossible -- removed by tc.fs"
 
        | Sig_assume _ //not needed; purely logical
        | Sig_new_effect _

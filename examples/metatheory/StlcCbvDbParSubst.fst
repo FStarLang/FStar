@@ -41,7 +41,7 @@ let extend_gen x t g y = if y < x then g y
 opaque val weakening : n:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
       h:typing g e t -> Tot (typing (extend_gen n t' g) (shift_up_above n e) t)
       (decreases h)
-let rec weakening n g v t t' h =
+let rec weakening n #g #v #t t' h =
   let hs : subst_typing (sub_inc_above n) g (extend_gen n t' g) =
     fun y -> if y < n then TyVar y else TyVar (y+1)
   in substitution (sub_inc_above n) h hs
@@ -66,8 +66,8 @@ let rec step e =
   | _ -> None
 
 val progress : #e:exp -> #t:typ -> h:typing empty e t ->
-      Lemma (ensures (is_value e \/ (is_Some (step e)))) (decreases h)
-let rec progress _ _ h =
+      Lemma (requires True) (ensures (is_value e \/ (is_Some (step e)))) (decreases h)
+let rec progress #e #t h =
   match h with
   | TyVar _   -> ()
   | TyLam _ _ -> ()
@@ -80,8 +80,8 @@ let rec progress _ _ h =
    (it's also a special case of context invariance below) *)
 
 opaque val typing_extensional : #e:exp -> #g:env -> #t:typ ->
-      h:(typing g e t) -> g':env{FEq g g'} -> Tot (typing g' e t)
-let typing_extensional _ _ _ h _ = h
+      h:(typing g e t) -> g':env{feq g g'} -> Tot (typing g' e t)
+let typing_extensional #e #g #t h _ = h
 
 val appears_free_in : x:var -> e:exp -> Tot bool (decreases e)
 let rec appears_free_in x e =
@@ -91,15 +91,15 @@ let rec appears_free_in x e =
   | ELam _ e1 -> appears_free_in (x+1) e1
   | EUnit -> false
 
-opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
+type envEqualE (e:exp) (g1:env) (g2:env) =
                  (forall (x:var). appears_free_in x e ==> g1 x = g2 x)
 
 (* Context invariance (actually used in a single place within substitution,
    for in a specific form of weakening when typing variables) *)
-opaque val context_invariance : #e:exp -> #g:env -> #t:typ ->
-      h:(typing g e t) -> g':env{EnvEqualE e g g'} ->
+val context_invariance : #e:exp -> #g:env -> #t:typ ->
+      h:(typing g e t) -> g':env{envEqualE e g g'} ->
       Tot (typing g' e t) (decreases h)
-let rec context_invariance _ _ _ h g' =
+let rec context_invariance #e #g #t h g' =
   match h with
   | TyVar x -> TyVar x
   | TyLam t_y h1 ->
@@ -109,8 +109,8 @@ let rec context_invariance _ _ _ h g' =
   | TyUnit -> TyUnit
 
 val free_in_context : x:var -> #e:exp -> #g:env -> #t:typ -> h:typing g e t ->
-      Lemma (ensures (appears_free_in x e ==> is_Some (g x))) (decreases h)
-let rec free_in_context x _ _ _ h =
+      Lemma (requires True) (ensures (appears_free_in x e ==> is_Some (g x))) (decreases h)
+let rec free_in_context x #e #g #t h =
   match h with
   | TyVar x -> ()
   | TyLam t h1 -> free_in_context (x+1) h1
@@ -120,7 +120,7 @@ let rec free_in_context x _ _ _ h =
 val typable_empty_not_free : x:var -> #e:exp -> #t:typ -> typing empty e t ->
       Lemma (ensures (not (appears_free_in x e)))
 (*      [SMTPat (appears_free_in x e)] -- CH: adding this makes it fail! *)
-let typable_empty_not_free x _ _ h = free_in_context x h
+let typable_empty_not_free x #e #t h = free_in_context x h
 
 val below : x:var -> e:exp -> Tot bool (decreases e)
 let rec below x e =
@@ -151,10 +151,10 @@ let rec appears_free_closed e =
 
 type below_env (x:var) (g:env) = (forall (y:var). y >= x ==> g y = None)
 
-val typable_below : x:var -> #g:env{below_env x g} -> #e:exp -> #t:typ
-                          -> h:typing g e t ->
-      Lemma (ensures (below x e)) (decreases h)
-let rec typable_below x g _ _ h =
+val typable_below : x:var -> #g:env -> #e:exp -> #t:typ
+                          -> h:typing g e t{below_env x g} ->
+      Lemma (requires True) (ensures (below x e)) (decreases h)
+let rec typable_below x #g #e #t h =
   match h with
   | TyVar y -> ()
   | TyApp h1 h2 -> typable_below x h1; typable_below x h2
@@ -163,7 +163,7 @@ let rec typable_below x g _ _ h =
 
 val typable_empty_closed : #e:exp -> #t:typ -> h:typing empty e t ->
       Lemma (ensures (closed e))
-let typable_empty_closed e t h = typable_below 0 h
+let typable_empty_closed #e #t h = typable_below 0 h
 
 val sub_beta_gen : var -> exp -> Tot sub
 let sub_beta_gen x v = fun y -> if y < x then (EVar y)
@@ -183,14 +183,14 @@ val extend_gt : x:var -> y:var{y > x} -> g:env -> t_x:typ -> Lemma
 let extend_gt x y g t_x = ()
 
 val extend_twice : x:var -> g:env -> t_x:typ -> t_y:typ -> Lemma
-      (ensures (FEq (extend_gen 0 t_y (extend_gen x t_x g) )
+      (ensures (feq (extend_gen 0 t_y (extend_gen x t_x g) )
                       (extend_gen (x+1) t_x (extend_gen 0 t_y g))))
 let extend_twice x g t_x t_y = ()
 
 type sub_below (x:var) (s:sub) = (forall (y:var). y<x ==> s y = EVar y)
 
 val subst_below : x:var -> v:exp{below x v} -> s:sub{sub_below x s} ->
-  Lemma (ensures (v = subst s v)) (decreases v)
+  Lemma (requires True) (ensures (v = subst s v)) (decreases v)
 let rec subst_below x v s =
   match v with
   | EVar y     -> ()
@@ -202,7 +202,7 @@ let rec subst_below x v s =
   | EUnit -> ()
 
 val subst_closed : v:exp{closed v} -> s:sub ->
-  Lemma (ensures (v = subst s v)) (decreases v)
+  Lemma (requires True) (ensures (v = subst s v)) (decreases v)
 let rec subst_closed v s = subst_below 0 v s
 
 val subst_gen_elam_aux : x:var -> v:exp{closed v} -> y:var -> Lemma
@@ -221,7 +221,7 @@ let subst_gen_elam_aux x v y =
      else ())
 
 val subst_gen_elam_aux_forall : x:var -> v:exp{closed v} -> Lemma
-      (ensures (FEq (sub_elam (sub_beta_gen  x    v))
+      (ensures (feq (sub_elam (sub_beta_gen  x    v))
                                 (sub_beta_gen (x+1) v)))
 let subst_gen_elam_aux_forall x v = admit()
 (* should follow from subst_gen_elam_aux and forall_intro *)
@@ -241,7 +241,7 @@ val substitution_preserves_typing :
       =h1:typing empty v t_x ->
       =h2:typing (extend_gen x t_x g) e t ->
        Tot (typing g (subst (sub_beta_gen x v) e) t) (decreases e)
-let rec substitution_preserves_typing x e v t_x t g h1 h2 =
+let rec substitution_preserves_typing x #e #v #t_x #t #g h1 h2 =
   match h2 with
   | TyVar y ->
      if x=y then      (typable_empty_closed h1;
@@ -268,18 +268,18 @@ val extend_gen_0_aux : t:typ -> g:env -> y:var ->
 let extend_gen_0_aux t g y = ()
 
 val extend_gen_0 : t:typ -> g:env ->
-                   Lemma (FEq (extend_gen 0 t g) (extend t g))
+                   Lemma (feq (extend_gen 0 t g) (extend t g))
 let extend_gen_0 t g =
   forall_intro (extend_gen_0_aux t g)
 
-val preservation : #e:exp{is_Some (step e)} -> #t:typ -> h:(typing empty e t) ->
+val preservation : #e:exp -> #t:typ -> h:typing empty e t{is_Some (step e)} ->
       Tot (typing empty (Some.v (step e)) t) (decreases e)
-let rec preservation e t h =
+let rec preservation #e #t h =
   let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = h in
      if is_value e1
      then (if is_value e2
            then let TyLam t_x hbody = h1 in
                 (extend_gen_0 t_x empty;
                  substitution_preserves_typing 0 h2 hbody)
-           else TyApp h1 (preservation h2))
-     else TyApp (preservation h1) h2
+           else TyApp #_ #_ #(Some.v (step e2)) #_ #_ h1 (preservation h2))
+     else TyApp #_ #(Some.v (step e1)) #_ #_ #_ (preservation h1) h2

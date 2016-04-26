@@ -492,45 +492,48 @@ in (_167_178)::(FStar_Extraction_ML_Syntax.MLM_Top (ml_main))::[])
 in (g, _167_179))
 end))
 end
+| FStar_Syntax_Syntax.Sig_new_effect_for_free (_78_394) -> begin
+(FStar_All.failwith "impossible -- removed by tc.fs")
+end
 | (FStar_Syntax_Syntax.Sig_assume (_)) | (FStar_Syntax_Syntax.Sig_new_effect (_)) | (FStar_Syntax_Syntax.Sig_sub_effect (_)) | (FStar_Syntax_Syntax.Sig_effect_abbrev (_)) | (FStar_Syntax_Syntax.Sig_pragma (_)) -> begin
 (g, [])
 end)))
 
-# 268 "FStar.Extraction.ML.Modul.fst"
+# 270 "FStar.Extraction.ML.Modul.fst"
 let extract_iface : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.modul  ->  env_t = (fun g m -> (let _167_184 = (FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations)
 in (FStar_All.pipe_right _167_184 Prims.fst)))
 
-# 270 "FStar.Extraction.ML.Modul.fst"
-let rec extract : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.modul  ->  (FStar_Extraction_ML_UEnv.env * FStar_Extraction_ML_Syntax.mllib Prims.list) = (fun g m -> (
-# 271 "FStar.Extraction.ML.Modul.fst"
-let _78_412 = (FStar_Syntax_Syntax.reset_gensym ())
-in (
 # 272 "FStar.Extraction.ML.Modul.fst"
+let rec extract : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.modul  ->  (FStar_Extraction_ML_UEnv.env * FStar_Extraction_ML_Syntax.mllib Prims.list) = (fun g m -> (
+# 273 "FStar.Extraction.ML.Modul.fst"
+let _78_415 = (FStar_Syntax_Syntax.reset_gensym ())
+in (
+# 274 "FStar.Extraction.ML.Modul.fst"
 let name = (FStar_Extraction_ML_Syntax.mlpath_of_lident m.FStar_Syntax_Syntax.name)
 in (
-# 273 "FStar.Extraction.ML.Modul.fst"
+# 275 "FStar.Extraction.ML.Modul.fst"
 let g = (
-# 273 "FStar.Extraction.ML.Modul.fst"
-let _78_415 = g
-in {FStar_Extraction_ML_UEnv.tcenv = _78_415.FStar_Extraction_ML_UEnv.tcenv; FStar_Extraction_ML_UEnv.gamma = _78_415.FStar_Extraction_ML_UEnv.gamma; FStar_Extraction_ML_UEnv.tydefs = _78_415.FStar_Extraction_ML_UEnv.tydefs; FStar_Extraction_ML_UEnv.currentModule = name})
+# 275 "FStar.Extraction.ML.Modul.fst"
+let _78_418 = g
+in {FStar_Extraction_ML_UEnv.tcenv = _78_418.FStar_Extraction_ML_UEnv.tcenv; FStar_Extraction_ML_UEnv.gamma = _78_418.FStar_Extraction_ML_UEnv.gamma; FStar_Extraction_ML_UEnv.tydefs = _78_418.FStar_Extraction_ML_UEnv.tydefs; FStar_Extraction_ML_UEnv.currentModule = name})
 in if (((m.FStar_Syntax_Syntax.name.FStar_Ident.str = "Prims") || m.FStar_Syntax_Syntax.is_interface) || (let _167_189 = (FStar_ST.read FStar_Options.no_extract)
 in (FStar_List.contains m.FStar_Syntax_Syntax.name.FStar_Ident.str _167_189))) then begin
 (
-# 277 "FStar.Extraction.ML.Modul.fst"
+# 279 "FStar.Extraction.ML.Modul.fst"
 let g = (extract_iface g m)
 in (g, []))
 end else begin
 (
-# 279 "FStar.Extraction.ML.Modul.fst"
-let _78_419 = (let _167_190 = (FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name)
+# 281 "FStar.Extraction.ML.Modul.fst"
+let _78_422 = (let _167_190 = (FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name)
 in (FStar_Util.print1 "Extracting module %s\n" _167_190))
 in (
-# 280 "FStar.Extraction.ML.Modul.fst"
-let _78_423 = (FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations)
-in (match (_78_423) with
+# 282 "FStar.Extraction.ML.Modul.fst"
+let _78_426 = (FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations)
+in (match (_78_426) with
 | (g, sigs) -> begin
 (
-# 281 "FStar.Extraction.ML.Modul.fst"
+# 283 "FStar.Extraction.ML.Modul.fst"
 let mlm = (FStar_List.flatten sigs)
 in (let _167_195 = (let _167_194 = (let _167_193 = (let _167_192 = (let _167_191 = (FStar_Extraction_ML_Util.flatten_mlpath name)
 in (_167_191, Some (([], mlm)), FStar_Extraction_ML_Syntax.MLLib ([])))

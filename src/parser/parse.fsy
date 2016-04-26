@@ -9,25 +9,25 @@
 
    1 s/r conflict on SEMICOLON
        fun x -> e1 ; e2
-	 is parsed as
-		(fun x -> e1; e2)
-	 rather than
-		(fun x -> e1); e2
+     is parsed as
+        (fun x -> e1; e2)
+     rather than
+        (fun x -> e1); e2
 
    1 s/r conflict on DOT
       A.B ^ .C
 
    1 s/r conflict on LBRACE
-	
+    
       Consider:
-		  let f (x: y:int & z:vector y{z=z /\ y=0}) = 0
-	
-	  This is parsed as:
+          let f (x: y:int & z:vector y{z=z /\ y=0}) = 0
+    
+      This is parsed as:
         let f (x: (y:int & z:vector y{z=z /\ y=0})) = 0
-	  rather than:
-	    let f (x: (y:int & z:vector y){z=z /\ y=0}) = 0
+      rather than:
+        let f (x: (y:int & z:vector y){z=z /\ y=0}) = 0
 
-	  Analogous ambiguities with -> and * as well.
+      Analogous ambiguities with -> and * as well.
 *)
 
 // (c) Microsoft Corporation. All rights reserved
@@ -45,27 +45,27 @@ open FStar.Ident
 
 let as_frag d ds =
     let rec as_mlist out (m, cur) ds = match ds with
-    	| [] -> List.rev (Module(m, List.rev cur)::out)
-	| d::ds ->
-	  begin match d.d with
-	  	| TopLevelModule m' -> as_mlist (Module(m, List.rev cur)::out) (m', []) ds
-		| _ -> as_mlist out (m, d::cur) ds
-	  end in
+        | [] -> List.rev (Module(m, List.rev cur)::out)
+    | d::ds ->
+      begin match d.d with
+        | TopLevelModule m' -> as_mlist (Module(m, List.rev cur)::out) (m', []) ds
+        | _ -> as_mlist out (m, d::cur) ds
+      end in
     match d.d with
-    	  | TopLevelModule m ->
-	    let ms = as_mlist [] (m, []) ds in
-	    begin match ms with
-	      | _::Module(n, _)::_ ->
-	      	let msg = "Support for more than one module in a file is deprecated" in
-	        print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid n)) msg
-	      | _ -> ()
-	    end;
-	    Inl ms
-	  | _ ->
-	    let ds = d::ds in
-	    iter (function {d=TopLevelModule _; drange=r} -> raise (Error("Unexpected module declaration", r))
-	    	 	   | _ -> ()) ds;
-	    Inr ds
+          | TopLevelModule m ->
+        let ms = as_mlist [] (m, []) ds in
+        begin match ms with
+          | _::Module(n, _)::_ ->
+            let msg = "Support for more than one module in a file is deprecated" in
+            print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid n)) msg
+          | _ -> ()
+        end;
+        Inl ms
+      | _ ->
+        let ds = d::ds in
+        iter (function {d=TopLevelModule _; drange=r} -> raise (Error("Unexpected module declaration", r))
+                   | _ -> ()) ds;
+        Inr ds
 %}
 
 %token <bytes> BYTEARRAY
@@ -110,7 +110,7 @@ let as_frag d ds =
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE MINUS DOLLAR
 %token PUBLIC PRIVATE LBRACE_COLON_PATTERN PIPE_LEFT PIPE_RIGHT
-%token NEW_EFFECT SUB_EFFECT SQUIGGLY_RARROW TOTAL KIND
+%token NEW_EFFECT NEW_EFFECT_FOR_FREE SUB_EFFECT SQUIGGLY_RARROW TOTAL KIND
 %token PRINT REQUIRES ENSURES
 %token PLUS_OP MINUS_OP BAR_FOCUS
 
@@ -138,16 +138,16 @@ maybe_pragma_light:
 
 pragma:
   | PRAGMA_SET_OPTIONS STRING
-	{
-	   let s = string_of_bytes $2 in
-	   SetOptions s
-	}
+    {
+       let s = string_of_bytes $2 in
+       SetOptions s
+    }
 
   | PRAGMA_RESET_OPTIONS maybeOptions
-	{ ResetOptions $2 }
+    { ResetOptions $2 }
 
 maybeOptions:
-  |			{ None    }
+  |         { None    }
   | STRING  { Some (string_of_bytes $1) }
 
 decls:
@@ -156,7 +156,7 @@ decls:
       { [mk_decl (Main $2) (rhs2 parseState 1 2)] }
   | decl decls
       { ($1::$2) }
-	
+    
 decl:
   | decl2 { mk_decl $1 (rhs parseState 1) }
 
@@ -166,17 +166,17 @@ decl2:
   | MODULE name EQUALS qname
       {  ModuleAbbrev($2, $4) }
   | MODULE qname
-	  {  TopLevelModule $2  }
+      {  TopLevelModule $2  }
   | kind_abbrev
       { $1 }
   | tycon
       { $1 }
   | qualifiers LET recopt letbinding letbindings
       {
-		let r, focus = $3 in
-		let lbs = focusLetBindings ((focus, $4)::$5) (rhs2 parseState 1 5) in
-		ToplevelLet($1, r, lbs)
-	  }
+        let r, focus = $3 in
+        let lbs = focusLetBindings ((focus, $4)::$5) (rhs2 parseState 1 5) in
+        ToplevelLet($1, r, lbs)
+      }
   | qualifiers VAL ident COLON typ
       { Val($1, $3, $5) }
   | assumeTag name COLON formula
@@ -184,41 +184,51 @@ decl2:
   | EXCEPTION name of_typ
       { Exception($2, $3) }
   | qualifiers NEW_EFFECT new_effect
-	  { NewEffect ($1, $3) }
+      { NewEffect ($1, $3) }
   | SUB_EFFECT sub_effect
-	  { SubEffect $2 }
+      { SubEffect $2 }
+  | NEW_EFFECT_FOR_FREE effect_definition
+      { NewEffectForFree $2 }
   | pragma
-	  { Pragma $1 }
+      { Pragma $1 }
 
 tycon:
   | qualifiers TYPE tyconDefinition tyconDefinitions
       { Tycon ($1, List.map (fun f -> f false) ($3::$4)) }
 
   | qualifiers EFFECT tyconDefinition
-	  { Tycon(Effect::$1, [$3 true]) }
+      { Tycon(Effect::$1, [$3 true]) }
 
 kind_abbrev:
   | KIND eitherName binders EQUALS kind
       { KindAbbrev($2, $3, $5) }
 
 new_effect:
+  | effect_redefinition
+    { $1 }
+  | effect_definition
+    { $1 }
+
+effect_redefinition:
   | name binders EQUALS simpleTerm
-	  {
-		 RedefineEffect($1, $2, $4)
-	  }
+      {
+         RedefineEffect($1, $2, $4)
+      }
+
+effect_definition:
   | LBRACE name binders COLON kind WITH effect_decl more_effect_decls RBRACE
       {
-		 DefineEffect($2, $3, $5, $7::$8)
-	  }
+         DefineEffect($2, $3, $5, $7::$8)
+      }
 
 effect_decl:
   | ident EQUALS simpleTerm
-	{
-		mk_decl (Tycon ([], [TyconAbbrev($1, [], None, $3)])) (rhs2 parseState 1 3)
-	}
+    {
+        mk_decl (Tycon ([], [TyconAbbrev($1, [], None, $3)])) (rhs2 parseState 1 3)
+    }
 
 more_effect_decls:
-  |									   	    { []     }
+  |                                         { []     }
   | SEMICOLON effect_decl more_effect_decls { $2::$3 }
 
 
@@ -371,14 +381,14 @@ nonTvarPattern2:
 ascriptionOrPattern:
   |  nonTvarPattern COLON typ refineOpt
       {
-		match $4 with
-		  | None -> PatAscribed($1, $3)
-			  | Some phi ->
-				let t = match $1.pat with
-				  | PatVar(x, _) ->
-					mk_term (Refine(mk_binder (Annotated(x, $3)) (rhs2 parseState 1 3) Type None, phi)) (rhs2 parseState 1 4) Type
-				  | _ -> errorR(Error("Not a valid refinement type", lhs(parseState))); $3 in
-				PatAscribed($1, t)
+        match $4 with
+          | None -> PatAscribed($1, $3)
+              | Some phi ->
+                let t = match $1.pat with
+                  | PatVar(x, _) ->
+                    mk_term (Refine(mk_binder (Annotated(x, $3)) (rhs2 parseState 1 3) Type None, phi)) (rhs2 parseState 1 4) Type
+                  | _ -> errorR(Error("Not a valid refinement type", lhs(parseState))); $3 in
+                PatAscribed($1, t)
       }
   |  pattern                { $1.pat }
 
@@ -402,7 +412,7 @@ binder:
   | ident { mk_binder (Variable($1)) (rhs parseState 1) Type None  }
   | tvar  { mk_binder (TVariable($1)) (rhs parseState 1) Kind None  }
   | LPAREN aqual_opt ident COLON typ refineOpt RPAREN
-	 { mkRefinedBinder $3 $5 $6 (rhs2 parseState 1 7) $2 }
+     { mkRefinedBinder $3 $5 $6 (rhs2 parseState 1 7) $2 }
 
 typars:
   | tvarinsts              { $1 }
@@ -415,9 +425,9 @@ aqual_opt:
   | HASH   { Some Implicit }
   | EQUALS
     {
-  	if !universes
-	then print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
-	Some Equality
+    if !universes
+    then print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
+    Some Equality
     }
   | DOLLAR  { Some Equality }
   |        { None }
@@ -467,7 +477,7 @@ eitherpath:
   | name maybeMorePath { $1::$2 }
 
 maybeMorePath:
-  |		  { [] }
+  |       { [] }
   | DOT eitherpath  { $2 }
 
 lid:
@@ -524,16 +534,16 @@ typ:
 
   | FORALL binders DOT qpat noSeqTerm
       {
-	    match $2 with
-			| [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 2))
-			| _ -> mk_term (QForall($2,$4,$5)) (rhs2 parseState 1 5) Formula
+        match $2 with
+            | [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 2))
+            | _ -> mk_term (QForall($2,$4,$5)) (rhs2 parseState 1 5) Formula
       }
 
   | EXISTS binders DOT qpat noSeqTerm
       {
-	    match $2 with
-			| [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 2))
-			| _ -> mk_term (QExists($2,$4,$5)) (rhs2 parseState 1 5) Formula
+        match $2 with
+            | [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 2))
+            | _ -> mk_term (QExists($2,$4,$5)) (rhs2 parseState 1 5) Formula
       }
 
 term:
@@ -553,7 +563,7 @@ noSeqTerm:
         mk_term (Requires($2, None)) pos Type
      }
 
-	
+    
   | ENSURES typ
      {
         let pos = rhs2 parseState 1 3 in
@@ -567,32 +577,32 @@ noSeqTerm:
 
   | IF noSeqTerm THEN noSeqTerm
       {
-	    let e = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
+        let e = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
         mk_term (If($2, $4, e)) (rhs2 parseState 1 4) Expr
       }
 
   | TRY term WITH firstPatternBranch patternBranches
       {
-		 let branches = focusBranches ($4::$5) (rhs2 parseState 1 5) in
+         let branches = focusBranches ($4::$5) (rhs2 parseState 1 5) in
          mk_term (TryWith($2, branches)) (rhs2 parseState 1 5) Expr
       }
 
   | MATCH term WITH patternBranches
-      {	
-		let branches = focusBranches $4 (rhs2 parseState 1 4) in
-	    mk_term (Match($2, branches)) (rhs2 parseState 1 4) Expr
+      { 
+        let branches = focusBranches $4 (rhs2 parseState 1 4) in
+        mk_term (Match($2, branches)) (rhs2 parseState 1 4) Expr
       }
 
   | LET recopt letbinding letbindings IN term
       {
-		let r, focus = $2 in
-		let lbs = focusLetBindings ((focus,$3)::$4) (rhs2 parseState 2 4) in
+        let r, focus = $2 in
+        let lbs = focusLetBindings ((focus,$3)::$4) (rhs2 parseState 2 4) in
         mk_term (Let(r, lbs, $6)) (rhs2 parseState 1 6) Expr
       }
 
   | FUNCTION firstPatternBranch patternBranches
       {
-	    let branches = focusBranches ($2::$3) (rhs2 parseState 1 3) in
+        let branches = focusBranches ($2::$3) (rhs2 parseState 1 3) in
         mk_function branches (lhs parseState) (rhs2 parseState 1 3)
       }
 
@@ -749,17 +759,17 @@ tmCons:
 
 product:
   | productDomain RARROW product
-	 {
-		let aq, tm = $1 in
-		let b = match extract_named_refinement tm with
-			| None -> mk_binder (NoName tm) (rhs parseState 1) Un aq
-			| Some (x, t, f) -> mkRefinedBinder x t f (rhs2 parseState 1 1) aq in
+     {
+        let aq, tm = $1 in
+        let b = match extract_named_refinement tm with
+            | None -> mk_binder (NoName tm) (rhs parseState 1) Un aq
+            | Some (x, t, f) -> mkRefinedBinder x t f (rhs2 parseState 1 1) aq in
         mk_term (Product([b], $3)) (rhs2 parseState 1 3)  Un
-	
-	 }
+    
+     }
 
   | dtupleTerm
-	  { $1 }
+      { $1 }
 
 productDomain:
   | aqual dtupleTerm { (Some $1, $2) }
@@ -768,30 +778,30 @@ productDomain:
 dtupleTerm:
   | arithTerm AMP dtupleTerm
       {
-		let x, t, f = match extract_named_refinement $1 with
-			| Some (x, t, f) -> x, t, f
-			| _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs2 parseState 1 2)) in
-	    let dom = mkRefinedBinder x t f (rhs2 parseState 1 2) None in
-		let tail = $3 in
-		let dom, res = match tail.tm with
-			| Sum(dom', res) -> dom::dom', res
-			| _ -> [dom], tail in
-	    mk_term (Sum(dom, res)) (rhs2 parseState 1 6) Type
-	  }
+        let x, t, f = match extract_named_refinement $1 with
+            | Some (x, t, f) -> x, t, f
+            | _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs2 parseState 1 2)) in
+        let dom = mkRefinedBinder x t f (rhs2 parseState 1 2) None in
+        let tail = $3 in
+        let dom, res = match tail.tm with
+            | Sum(dom', res) -> dom::dom', res
+            | _ -> [dom], tail in
+        mk_term (Sum(dom, res)) (rhs2 parseState 1 6) Type
+      }
 
   | arithTerm
-	 { $1 }
+     { $1 }
 
 arithTerm:
   | plusOp
-	  { $1 }
+      { $1 }
 
 plusOp:
   | minusOp PLUS_OP plusOp
       { mk_term (Op("+", [$1;$3])) (rhs2 parseState 1 3) Un}
 
   | minusOp
-	  { $1 }
+      { $1 }
 
 minusOp:
   | minusOp MINUS_OP starDivModTerm
@@ -820,13 +830,13 @@ refinementTerm:
       {
         mk_term (NamedTyp($1, $3)) (rhs2 parseState 1 3) Type
       }
-	
+    
   | ident COLON appTerm LBRACE formula RBRACE
       {
         mk_term (Refine(mk_binder (Annotated($1, $3)) (rhs2 parseState 1 3) Type None, $5))
         (rhs2 parseState 1 6) Type
       }
-	
+    
   | LBRACE recordExp RBRACE { $2 }
 
   | unaryTerm { $1 }
@@ -834,8 +844,8 @@ refinementTerm:
 aqual:
   | HASH      { Implicit }
   | EQUALS    { if !universes
-    	      	then print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
-		Equality }
+                then print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
+        Equality }
   | DOLLAR    { Equality }
 
 refineOpt:
@@ -937,15 +947,15 @@ projectionLHS:
         mkConsList (rhs2 parseState 1 3) $2
       }
   | PERCENT_LBRACK semiColonTermList RBRACK
-	  {
-		mkLexList (rhs2 parseState 1 3) $2
-	  }
+      {
+        mkLexList (rhs2 parseState 1 3) $2
+      }
 
   | BANG_LBRACE commaTermList RBRACE
-	  {
-		mkRefSet (rhs2 parseState 1 3) $2
-	  }
-	
+      {
+        mkRefSet (rhs2 parseState 1 3) $2
+      }
+    
 commaTermList:
   |  { [] }
   | appTerm moreCommaTerms
@@ -1032,11 +1042,11 @@ tupleN:
 constant:
   | LPAREN_RPAREN { Const_unit }
   | INT
-	 {
-	    if snd $1 then
+     {
+        if snd $1 then
           errorR(Error("This number is outside the allowable range for representable integer constants", lhs(parseState)));
         Const_int (fst $1, None)
-	 }
+     }
   | CHAR { Const_char $1 }
   | STRING { Const_string ($1,lhs(parseState)) }
   | BYTEARRAY { Const_bytearray ($1,lhs(parseState)) }

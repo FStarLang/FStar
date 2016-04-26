@@ -822,18 +822,19 @@ and desugar_comp r default_ok env t =
     let is_app head (t, _) = match (unparen t).tm with 
        | App({tm=Var d}, _, _) -> d.ident.idText = head
        | _ -> false in
+    let is_decreases = is_app "decreases" in
     let pre_process_comp_typ (t:AST.term) =
         let head, args = head_and_args t in
         match head.tm with
             | Name lemma when (lemma.ident.idText = "Lemma") -> //need to add the unit result type and the empty SMTPat list, if n
               let unit_tm = mk_term (Name C.unit_lid) t.range Type, Nothing in
               let nil_pat = mk_term (Name C.nil_lid) t.range Expr, Nothing in
+              let req_true = mk_term (Requires (mk_term (Name C.true_lid) t.range Formula, None)) t.range Type, Nothing in
               let args = match args with
                     | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
-                    | [ens] -> (* a single ensures clause *)
-                      let req_true = mk_term (Requires (mk_term (Name C.true_lid) t.range Formula, None)) t.range Type, Nothing in
-                      [unit_tm;req_true;ens;nil_pat]
+                    | [ens] -> [unit_tm;req_true;ens;nil_pat] //a single ensures clause
                     | [req;ens] when (is_requires req && is_ensures ens) -> [unit_tm;req;ens;nil_pat]
+                    | [ens;dec] when (is_ensures ens && is_decreases dec) -> [unit_tm;req_true;ens;nil_pat;dec]
                     | [req;ens;dec] when (is_requires req && is_ensures ens && is_app "decreases" dec) -> [unit_tm;req;ens;nil_pat;dec]
                     | more -> unit_tm::more in      
               let head = fail_or (Env.try_lookup_effect_name env) lemma in
@@ -1305,7 +1306,26 @@ let desugar_binders env binders =
       | _ -> raise (Error("Missing name in binder", b.brange))) (env, []) binders in
     env, List.rev binders
 
-let rec desugar_decl env (d:decl) : (env_t * sigelts) = 
+let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind eff_decls mk =
+    let env0 = env in
+    let env = Env.enter_monad_scope env eff_name in
+    let env, binders = desugar_binders env eff_binders in
+    let eff_k = desugar_term (Env.default_total env) eff_kind in
+    let env, decls = eff_decls |> List.fold_left (fun (env, out) decl ->
+        let env, ses = desugar_decl env decl in
+        env, List.hd ses::out) (env, []) in
+    let binders = Subst.close_binders binders in
+    let eff_k = Subst.close binders eff_k in
+    let lookup s =
+        let l = Env.qualify env (mk_ident(s, d.drange)) in
+        [], Subst.close binders <| fail_or (try_lookup_definition env) l in
+    let mname       =qualify env0 eff_name in
+    let qualifiers  =List.map (trans_qual d.drange) quals in
+    let se = mk mname qualifiers binders eff_k lookup in
+    let env = push_sigelt env0 se in
+    env, [se]
+
+and desugar_decl env (d:decl) : (env_t * sigelts) = 
   let trans_qual = trans_qual d.drange in
   match d.d with
   | Pragma p ->
@@ -1433,43 +1453,60 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     let se = Sig_new_effect(ed, d.drange) in
     let env = push_sigelt env0 se in
     env, [se]
-    
+
+  | NewEffectForFree (RedefineEffect _) ->
+    failwith "impossible"
+
+  | NewEffectForFree (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
+    desugar_effect
+      env d [] eff_name eff_binders eff_kind eff_decls
+      (fun mname qualifiers binders eff_k lookup ->
+        let dummy_tscheme = [], mk Tm_unknown None Range.dummyRange in
+        Sig_new_effect_for_free ({
+          mname       = mname;
+          qualifiers  = qualifiers;
+          univs       = [];
+          binders     = binders;
+          signature   = eff_k;
+          ret         = lookup "return";
+          bind_wp     = lookup "bind_wp";
+          bind_wlp    = lookup "bind_wlp";
+          if_then_else= dummy_tscheme;
+          ite_wp      = lookup "ite_wp";
+          ite_wlp     = lookup "ite_wlp";
+          wp_binop    = dummy_tscheme;
+          wp_as_type  = lookup "wp_as_type";
+          close_wp    = dummy_tscheme;
+          assert_p    = dummy_tscheme;
+          assume_p    = dummy_tscheme;
+          null_wp     = lookup "null_wp";
+          trivial     = lookup "trivial"
+      }, d.drange))
+
   | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
-    let env0 = env in
-    let env = Env.enter_monad_scope env eff_name in
-    let env, binders = desugar_binders env eff_binders in
-    let eff_k = desugar_term (Env.default_total env) eff_kind in
-    let env, decls = eff_decls |> List.fold_left (fun (env, out) decl ->
-        let env, ses = desugar_decl env decl in
-        env, List.hd ses::out) (env, []) in
-    let binders = Subst.close_binders binders in
-    let eff_k = Subst.close binders eff_k in
-    let lookup s = 
-        let l = Env.qualify env (mk_ident(s, d.drange)) in
-        [], Subst.close binders <| fail_or (try_lookup_definition env) l in
-    let ed = {
-         mname       =qualify env0 eff_name;
-         qualifiers  =List.map trans_qual quals;
-         univs       =[];
-         binders     =binders;
-         signature   =eff_k;
-         ret         =lookup "return";
-         bind_wp     =lookup "bind_wp";
-         bind_wlp    =lookup "bind_wlp";
-         if_then_else=lookup "if_then_else";
-         ite_wp      =lookup "ite_wp";
-         ite_wlp     =lookup "ite_wlp";
-         wp_binop    =lookup "wp_binop";
-         wp_as_type  =lookup "wp_as_type";
-         close_wp    =lookup "close_wp";
-         assert_p    =lookup "assert_p";
-         assume_p    =lookup "assume_p";
-         null_wp     =lookup "null_wp";
-         trivial     =lookup "trivial"
-    } in
-    let se = Sig_new_effect(ed, d.drange) in
-    let env = push_sigelt env0 se in
-    env, [se]
+    desugar_effect
+      env d quals eff_name eff_binders eff_kind eff_decls
+      (fun mname qualifiers binders eff_k lookup ->
+        Sig_new_effect({
+          mname       = mname;
+          qualifiers  = qualifiers;
+          univs       = [];
+          binders     = binders;
+          signature   = eff_k;
+          ret         = lookup "return";
+          bind_wp     = lookup "bind_wp";
+          bind_wlp    = lookup "bind_wlp";
+          if_then_else= lookup "if_then_else";
+          ite_wp      = lookup "ite_wp";
+          ite_wlp     = lookup "ite_wlp";
+          wp_binop    = lookup "wp_binop";
+          wp_as_type  = lookup "wp_as_type";
+          close_wp    = lookup "close_wp";
+          assert_p    = lookup "assert_p";
+          assume_p    = lookup "assume_p";
+          null_wp     = lookup "null_wp";
+          trivial     = lookup "trivial"
+      }, d.drange))
 
   | SubEffect l ->
     let lookup l = match Env.try_lookup_effect_name env l with

@@ -147,6 +147,7 @@ type decl' =
   | Val of qualifiers * ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
   | NewEffect of qualifiers * effect_decl
+  | NewEffectForFree of effect_decl (* always a [DefineEffect] *)
   | SubEffect of lift
   | Pragma of pragma
 and decl = {d:decl'; drange:range}
@@ -419,6 +420,8 @@ let decl_to_string (d:decl) = match d.d with
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(_, DefineEffect(i, _, _, _)) 
   | NewEffect(_, RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
+  | NewEffectForFree(DefineEffect(i, _, _, _)) 
+  | NewEffectForFree(RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
 

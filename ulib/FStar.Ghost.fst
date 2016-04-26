@@ -66,6 +66,8 @@ let elift2_p #a #c #p #b f ga gc = f ga gc
 val gcut: f:(unit -> GTot Type) -> Pure unit (requires (f ())) (ensures f)
 let gcut f = ()
 
+assume val gassume: f:(unit -> GTot Type) -> Pure unit (requires (True)) (ensures f)
+
 
 (*
 val elift2_wp : #a:Type  -> #c:Type  -> #b:Type -> #pre:(a->c->Type) -> #post:(a->c->b->Type)

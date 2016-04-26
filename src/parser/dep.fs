@@ -254,6 +254,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term
+    | NewEffectForFree ed
     | NewEffect (_, ed) ->
         collect_effect_decl ed
     | Pragma _ ->

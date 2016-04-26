@@ -223,7 +223,7 @@ type st2_gctx (heap:Type) (a:Type) (e:Type) =
 
 val st2_pure : #heap:Type -> #a:Type -> #t:Type -> x:t ->
                         Tot (st2_ctx heap a t)
-let st2_pure #heap #a #t x = fun _ -> fun _ -> x
+let st2_pure #heap #a #t x = fun p h -> x
 
 val st2_app : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                 l:st2_gctx heap a (t1 -> GTot t2) ->
@@ -334,6 +334,18 @@ new_effect {
      ; close_wp     = st2_close_wp heap
      ; assert_p     = st2_assert_p heap
      ; assume_p     = st2_assume_p heap
+     ; null_wp      = st2_null_wp heap
+     ; trivial      = st2_trivial heap
+}
+
+new_effect_for_free {
+  STATE2_h_for_free (heap:Type) : result:Type -> wp:st2_wp heap result -> wlp:st2_wp heap result -> Effect
+  with return       = st2_return heap
+     ; bind_wp      = st2_bind_wp heap
+     ; bind_wlp     = st2_bind_wlp heap
+     ; ite_wlp      = st2_ite_wlp heap
+     ; ite_wp       = st2_ite_wp heap
+     ; wp_as_type   = st2_wp_as_type heap
      ; null_wp      = st2_null_wp heap
      ; trivial      = st2_trivial heap
 }
