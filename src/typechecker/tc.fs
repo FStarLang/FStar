@@ -1980,9 +1980,9 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
   let wp_close = normalize_and_make_binders_explicit wp_close in
   check "wp_close" (U.abs binders wp_close None);
 
+  let ret_tot_type0 = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype0)) in
   let mk_forall (x: S.bv) (body: S.term): S.term =
-    let ret = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype0)) in
-    S.mk (Tm_app (tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret)])) None Range.dummyRange
+    S.mk (Tm_app (tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type0)])) None Range.dummyRange
   in
 
   (* For each (target) type t, we define a binary relation in t called ≤_t.
@@ -2024,36 +2024,25 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
     let body = mk_leq wp_a (S.bv_to_name wp1) (S.bv_to_name wp2) in
-    U.abs (S.binders_of_list [ wp1; wp2 ]) body None
+    U.abs (S.binders_of_list [ wp1; wp2 ]) body ret_tot_type0
   in
   check "stronger" (U.abs (binders @ [ S.mk_binder a ]) stronger None);
 
   let null_wp = snd ed.null_wp in
-  (* JP: it seems like I need to call [tc_term], otherwise there are missing
-   * universe instantiations at depth in [null_wp]. However, [tc_term] only
-   * operates on _closed_ terms, so I first have to close [null_wp] into
-   * [null_wp_c], then [tc_term] it. At this stage, [null_wp_c] can be printed,
-   * normalized, etc. then, I re-instantiate it. *)
-  (* let null_wp_c, _, _ = tc_term env (U.abs binders null_wp None) in *)
-  (* check "null_wp_c" null_wp_c; *)
-  (* d (Print.term_to_string null_wp_c); *)
-  (* d (Print.term_to_string (normalize null_wp_c)); *)
-  (* let null_wp = U.mk_app null_wp_c (args_of_bv (List.map fst binders)) in *)
 
   (* val st2_trivial : heap:Type ->a:Type -> st2_wp heap a -> Tot Type0
     let st2_trivial heap a wp = st2_stronger heap a (st2_null_wp heap a) wp *)
   let wp_trivial =
-    let ret = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype0)) in
     let wp = S.gen_bv "wp" None wp_a in
     let body = U.mk_app stronger (List.map S.as_arg [
       U.mk_app null_wp [ S.as_arg (S.bv_to_name a) ];
       S.bv_to_name wp
     ]) in
-    U.abs (S.binders_of_list [ a; wp ]) body ret
+    U.abs (S.binders_of_list [ a; wp ]) body ret_tot_type0
   in
-  let wp_trivial, _, _ = tc_term env (U.abs binders wp_trivial None) in
   let wp_trivial = normalize_and_make_binders_explicit wp_trivial in
-  check "wp_trivial" wp_trivial;
+  check "wp_trivial" (U.abs binders wp_trivial None);
+  (* TODO: at this stage the leading [binders] should be pop'd off [wp_trivial]. *)
 
   { ed with
     if_then_else = ([], wp_if_then_else);
