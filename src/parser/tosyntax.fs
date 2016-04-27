@@ -1480,7 +1480,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           assert_p    = dummy_tscheme;
           assume_p    = dummy_tscheme;
           null_wp     = lookup "null_wp";
-          trivial     = lookup "trivial"
+          trivial     = dummy_tscheme
       }, d.drange))
 
   | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
