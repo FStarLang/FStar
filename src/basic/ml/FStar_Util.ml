@@ -647,7 +647,7 @@ let print_endline = print_endline
 let map_option f opt = BatOption.map f opt
 
 let format_value_file_name (prefix:string) =
-  (* we use different suffixes for F# and OCaml because they're incompatible encodings of values. *)
+  (* we use different suffixes for F# and OCaml because they use incompatible encodings of values. *)
   format1 "%s.mlval" prefix
 
 let save_value_to_file (fname:string) value =
