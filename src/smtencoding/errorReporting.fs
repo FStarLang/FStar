@@ -33,7 +33,7 @@ type fuel_trace_state =
     }
 
 type fuel_trace_status =
-      FuelTraceUnavailable
+    | FuelTraceUnavailable
     | RecordFuelTrace of list<(int * int)>
     | ReplayFuelTrace of list<(int * int)>
 
