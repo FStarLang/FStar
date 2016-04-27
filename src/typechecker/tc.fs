@@ -1982,6 +1982,7 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
 
   let ret_tot_type0 = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype0)) in
   let mk_forall (x: S.bv) (body: S.term): S.term =
+    let tforall = U.mk_app (S.mk_Tm_uinst U.tforall [ U_unknown ]) [ S.as_arg x.sort ] in
     S.mk (Tm_app (tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type0)])) None Range.dummyRange
   in
 
@@ -2042,7 +2043,6 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
   in
   let wp_trivial = normalize_and_make_binders_explicit wp_trivial in
   check "wp_trivial" (U.abs binders wp_trivial None);
-  (* TODO: at this stage the leading [binders] should be pop'd off [wp_trivial]. *)
 
   { ed with
     if_then_else = ([], wp_if_then_else);
