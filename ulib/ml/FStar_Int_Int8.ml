@@ -2,6 +2,10 @@ type int8 = int
 
 let v (x:int8) : Prims.int = Prims.parse_int (string_of_int x)
 
+let zero = 0
+let one = 1
+let ones = -1                                             
+                                             
 let add (a:int8) (b:int8) : int8 = a + b
 let add_underspec a b = add a b
 let add_mod a b = (add a b) land 255
@@ -16,6 +20,9 @@ let mul_mod a b = (mul a b) land 255
 
 let div (a:int8) (b:int8) : int8 = a / b
 
+let cmod x =
+  if x > 127 then x - 256 else x
+                                         
 let rem (a:int8) (b:int8) : int8 = a mod b
 
 let logand (a:int8) (b:int8) : int8 = a land b
@@ -57,3 +64,5 @@ let op_Hat_Greater = gt
 let op_Hat_Greater_Equal = gte
 let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
+
+let to_string s = string_of_int (cmod s)

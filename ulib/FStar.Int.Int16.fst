@@ -8,31 +8,31 @@ abstract type int16 = | MkInt16: v:int_t n -> int16
 
 let v (x:int16) : Tot (x':int{size x' n}) = x.v
 
-val add: a:int16 -> b:int16{size (v a + v b) n} -> Tot int16
+val add: a:int16 -> b:int16{size (v a + v b) n} -> Tot (c:int16{v c = v a + v b})
 let add a b = MkInt16 (add (v a) (v b))
-val add_underspec: a:int16 -> b:int16 -> Tot int16
+val add_underspec: a:int16 -> b:int16 -> Tot (c:int16{size (v a + v b) n ==> v c = v a + v b})
 let add_underspec a b = MkInt16 (add_underspec #n a.v b.v)
-val add_mod: int16 -> int16 -> Tot int16
+val add_mod: a:int16 -> b:int16 -> Tot (c:int16{v c = ((v a + v b) @% pow2 n)})
 let add_mod a b = MkInt16 (add_mod #n (v a) (v b))
-val sub: a:int16 -> b:int16{size (v a - v b) n} -> Tot int16
+val sub: a:int16 -> b:int16{size (v a - v b) n} -> Tot (c:int16{v c = v a - v b})
 let sub a b = MkInt16 (sub (v a) (v b))
-val sub_underspec: a:int16 -> b:int16 -> Tot int16
+val sub_underspec: a:int16 -> b:int16 -> Tot (c:int16{size (v a - v b) n ==> v c = v a - v b})
 let sub_underspec a b = MkInt16 (sub_underspec (v a) (v b))
-val sub_mod: a:int16 -> b:int16 -> Tot int16
+val sub_mod: a:int16 -> b:int16 -> Tot (c:int16{v c = ((v a - v b) @% pow2 n)})
 let sub_mod a b = MkInt16 (sub_mod (v a) (v b))
-val mul: a:int16 -> b:int16{size (v a * v b) n} -> Tot int16
+val mul: a:int16 -> b:int16{size (v a * v b) n} -> Tot (c:int16{v c = v a * v b})
 let mul a b = MkInt16(mul (v a) (v b))
-val mul_underspec: a:int16 -> b:int16 -> Tot int16
+val mul_underspec: a:int16 -> b:int16 -> Tot (c:int16{size (v a * v b) n ==> v c = v a * v b})
 let mul_underspec a b = MkInt16(mul_underspec (v a) (v b))
-val mul_mod: a:int16 -> b:int16 -> Tot int16
+val mul_mod: a:int16 -> b:int16 -> Tot (c:int16{v c = ((v a * v b) @% pow2 n)})
 let mul_mod a b = MkInt16 (mul_mod (v a) (v b))
 
 (* Division primitives *)
-val div: a:int16 -> b:int16{v b <> 0} -> Tot int16
+val div: a:int16 -> b:int16{v b <> 0} -> Tot (c:int16{v c = v a / v b})
 let div a b = MkInt16(div (v a) (v b))
 
 (* Modulo primitives *)
-val mod: a:int16 -> b:int16{v b <> 0} -> Tot int16
+val mod: a:int16 -> b:int16{v b <> 0} -> Tot (c:int16{v c = v a - ((v a / v b) * v b)})
 let mod a b = MkInt16 (mod (v a) (v b))
 
 (* Bitwise operators *)
@@ -49,10 +49,10 @@ val int_to_int16: x:int -> Tot int16
 let int_to_int16 x = MkInt16 (to_int_t 16 x)
 
 (* Shift operators *)
-val shift_right: a:int16 -> s:nat -> Tot int16
+val shift_right: a:int16 -> s:nat -> Tot (c:int16{v c = (v a /% (pow2 s))})
 let shift_right a s = MkInt16 (shift_right (v a) s)
 
-val shift_left: a:int16 -> s:nat -> Tot int16
+val shift_left: a:int16 -> s:nat -> Tot (c:int16{v c = ((v a * pow2 s) @% pow2 n)})
 let shift_left a s = MkInt16 (shift_left (v a) s)
 
 (* Comparison operators *)

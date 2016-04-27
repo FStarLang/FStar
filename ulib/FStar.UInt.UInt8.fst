@@ -5,36 +5,39 @@ open FStar.UInt
 let n = 8
 
 abstract type uint8 = | MkUInt8: v:uint 8 -> uint8
-type byte = uint8
 
 let v (x:uint8) : Tot (x':int{uSize x' n}) = x.v
 
-val add: a:uint8 -> b:uint8{v a + v b < max_int n} -> Tot uint8
+let zero: z:uint8{v z = 0} = MkUInt8 (zero n)
+let one: z:uint8{v z = 1} = MkUInt8 (one n)
+let ones: z:uint8{v z = pow2 n - 1} = MkUInt8 (ones n)
+
+val add: a:uint8 -> b:uint8{v a + v b <= max_int n} -> Tot (c:uint8{v c = v a + v b})
 let add a b = MkUInt8 (add (v a) (v b))
-val add_underspec: a:uint8 -> b:uint8 -> Tot uint8
+val add_underspec: a:uint8 -> b:uint8 -> Tot (c:uint8{v a + v b <= max_int n ==> v c = v a + v b})
 let add_underspec a b = MkUInt8 (add_underspec #n a.v b.v)
-val add_mod: uint8 -> uint8 -> Tot uint8
+val add_mod: a:uint8 -> b:uint8 -> Tot (c:uint8{v c = (v a + v b) % pow2 n})
 let add_mod a b = MkUInt8 (add_mod #n (v a) (v b))
-val sub: a:uint8 -> b:uint8{v a - v b >= 0} -> Tot uint8
+val sub: a:uint8 -> b:uint8{v a - v b >= min_int n} -> Tot (c:uint8{v c = v a - v b})
 let sub a b = MkUInt8 (sub (v a) (v b))
-val sub_underspec: a:uint8 -> b:uint8 -> Tot uint8
+val sub_underspec: a:uint8 -> b:uint8 -> Tot (c:uint8{v a - v b >= min_int n ==> v c = v a - v b})
 let sub_underspec a b = MkUInt8 (sub_underspec (v a) (v b))
-val sub_mod: a:uint8 -> b:uint8 -> Tot uint8
+val sub_mod: a:uint8 -> b:uint8 -> Tot (c:uint8{v c = (v a - v b) % pow2 n})
 let sub_mod a b = MkUInt8 (sub_mod (v a) (v b))
-val mul: a:uint8 -> b:uint8{v a * v b < pow2 n} -> Tot uint8
+val mul: a:uint8 -> b:uint8{v a * v b <= max_int n} -> Tot (c:uint8{v c = v a * v b})
 let mul a b = MkUInt8(mul (v a) (v b))
-val mul_underspec: a:uint8 -> b:uint8 -> Tot uint8
+val mul_underspec: a:uint8 -> b:uint8 -> Tot (c:uint8{v a * v b <= max_int n ==> v c = v a * v b})
 let mul_underspec a b = MkUInt8(mul_underspec (v a) (v b))
-val mul_mod: a:uint8 -> b:uint8 -> Tot uint8
+val mul_mod: a:uint8 -> b:uint8 -> Tot (c:uint8{v c = (v a * v b) % pow2 n})
 let mul_mod a b = MkUInt8 (mul_mod (v a) (v b))
 
 (* Division primitives *)
-val div: a:uint8 -> b:uint8{v b <> 0} -> Tot uint8
+val div: a:uint8 -> b:uint8{v b <> 0} -> Tot (c:uint8{v c = v a / v b})
 let div a b = MkUInt8(div (v a) (v b))
 
 (* Modulo primitives *)
-val rem: a:uint8 -> b:uint8{v b <> 0} -> Tot uint8
-let rem a b = MkUInt8 (mod (v a) (v b))
+val mod: a:uint8 -> b:uint8{v b <> 0} -> Tot (c:uint8{v c = v a % v b})
+let mod a b = MkUInt8 (mod (v a) (v b))
 
 (* Bitwise operators *)
 val logand: uint8 -> uint8 -> Tot uint8
@@ -46,15 +49,15 @@ let logor a b = MkUInt8 (logor (v a) (v b))
 val lognot: uint8 -> Tot uint8
 let lognot a = MkUInt8 (lognot (v a))
 
-val int_to_uint8: x:int -> Tot uint8
+val int_to_uint8: x:int{x >= min_int n /\ x <= max_int n} -> Tot (y:uint8{v y = x})
 let int_to_uint8 x = MkUInt8 (to_uint 8 x)
 
 (* Shift operators *)
-val shift_right: a:uint8 -> s:uint8 -> Tot uint8
-let shift_right a s = MkUInt8 (shift_right (v a) (v s))
+val shift_right: a:uint8 -> s:nat -> Tot (b:uint8{v b = v a / pow2 s})
+let shift_right a s = MkUInt8 (shift_right (v a) s)
 
-val shift_left: a:uint8 -> s:uint8 -> Tot uint8
-let shift_left a s = MkUInt8 (shift_left (v a) (v s))
+val shift_left: a:uint8 -> s:nat -> Tot (b:uint8{v b = (v a * pow2 s) % pow2 n})
+let shift_left a s = MkUInt8 (shift_left (v a) s)
 
 (* Comparison operators *)
 let eq (a:uint8) (b:uint8) : Tot bool = (eq #n (v a) (v b))
@@ -80,8 +83,8 @@ let op_Hat_Amp = logand
 let op_Hat_Bar = logor
 let op_Hat_Less_Less = shift_left
 let op_Hat_Greater_Greater = shift_right
-let op_Hat_Equal = eq
+let op_Hat_Equals = eq
 let op_Hat_Greater = gt
-let op_Hat_Greater_Equal = gte
+let op_Hat_Greater_Equals = gte
 let op_Hat_Less = gt
-let op_Hat_Less_Equal = gte
+let op_Hat_Less_Equals = gte

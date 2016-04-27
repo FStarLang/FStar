@@ -2,9 +2,13 @@ type int63 = int
 
 let v (x:int63) : Prims.int = Prims.parse_int (string_of_int x)
 
+let zero = 0
+let one = 1
+let ones = -1                                             
+
 let add (a:int63) (b:int63) : int63 = a + b
 let add_underspec a b = add a b
-let add_mod a b = (add a b) 
+let add_mod a b = add a b 
 
 let sub (a:int63) (b:int63) : int63 = a - b
 let sub_underspec a b = sub a b
@@ -57,3 +61,5 @@ let op_Hat_Greater = gt
 let op_Hat_Greater_Equal = gte
 let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
+
+let to_string = string_of_int

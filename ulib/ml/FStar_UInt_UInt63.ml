@@ -5,6 +5,10 @@ let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
 let v (x:uint63) : Prims.int = Prims.parse_int (string_of_int x)
 
+let zero = 0
+let one = 1
+let ones = -1
+
 let add (a:uint63) (b:uint63) : uint63 = a + b
 let add_underspec a b = add a b
 let add_mod a b = add a b
@@ -26,7 +30,7 @@ let logxor (a:uint63) (b:uint63) : uint63 = a lxor b
 let logor  (a:uint63) (b:uint63) : uint63 = a lor b
 let lognot (a:uint63) : uint63 = lnot a
        
-let int_to_uint63 (x:Prims.int) : uint63 = int_of_string (Prims.to_string x) 
+let int_to_uint63 (x:Prims.int) : uint63 = Int64.to_int (Int64.of_string (Prims.to_string x))
 
 let shift_right (a:uint63) (b:uint8) : uint63 = a lsr b
 let shift_left  (a:uint63) (b:uint8) : uint63 = (a lsl b)
@@ -60,3 +64,5 @@ let op_Hat_Greater = gt
 let op_Hat_Greater_Equal = gte
 let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
+
+let to_string s = Int64.to_string (Int64.logand (Int64.of_int s) (Int64.of_string "0x7fffffffffffffff"))

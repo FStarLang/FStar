@@ -2,6 +2,10 @@ type int16 = int
 
 let v (x:int16) : Prims.int = Prims.parse_int (string_of_int x)
 
+let zero = 0
+let one = 1
+let ones = -1                                             
+
 let add (a:int16) (b:int16) : int16 = a + b
 let add_underspec a b = add a b
 let add_mod a b = (add a b) land 65535
@@ -57,3 +61,8 @@ let op_Hat_Greater = gt
 let op_Hat_Greater_Equal = gte
 let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
+
+let cmod x =
+  if x > 32767 then x - 65536 else x
+
+let to_string s = string_of_int (cmod s)

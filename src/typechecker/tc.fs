@@ -1653,7 +1653,7 @@ let open_effect_decl env ed =
              ; trivial     =op ed.trivial } in
    ed, a, wp
 
-let gen_wps_for_free env binders a wp_a =
+let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
   (* A series of macros and combinators to automatically build WP's. In these
    * definitions, both [binders] and [a] are opened. This means that macros
    * close over [binders] and [a], and this means that combinators do not expect
@@ -1683,7 +1683,7 @@ let gen_wps_for_free env binders a wp_a =
     and visit_maybe_lcomp lcomp =
       match lcomp with
       | Some (Inl lcomp) ->
-          Some (Inl (Util.lcomp_of_comp (visit_comp (lcomp.comp ()))))
+          Some (Inl (U.lcomp_of_comp (visit_comp (lcomp.comp ()))))
       | comp ->
           comp
     and visit_comp comp =
@@ -1729,8 +1729,8 @@ let gen_wps_for_free env binders a wp_a =
     let i = ref 0 in
     match (normalize wp_a).n with
     | Tm_arrow (wp_binders, comp) ->
-        (fun t -> Util.arrow wp_binders ({ comp with n = Total t })),
-        (fun t -> Util.arrow wp_binders ({ comp with n = GTotal t })),
+        (fun t -> U.arrow wp_binders ({ comp with n = Total t })),
+        (fun t -> U.arrow wp_binders ({ comp with n = GTotal t })),
         (fun () -> List.map (fun (bv, _) ->
           (* Note: just returning [wp_binders] here would be wrong, because the
            * identity of binders relies on the _physical equality_ of the [bv]
@@ -1755,14 +1755,14 @@ let gen_wps_for_free env binders a wp_a =
        Tot (st2_ctx heap a t)
      let st2_pure #heap #a #t x = fun _post _h -> x *)
   let c_pure =
-    let t = S.gen_bv "t" None Util.ktype in
+    let t = S.gen_bv "t" None U.ktype in
     let x = S.gen_bv "x" None (S.bv_to_name t) in
-    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_ctx (S.bv_to_name t))))) in
+    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_ctx (S.bv_to_name t))))) in
     let gamma = mk_gamma () in
-    let body = Util.abs (implicit_binders_of_list gamma) (S.bv_to_name x) ret in
-    Util.abs (binders_of_list [ t, true; x, false ]) body ret
+    let body = U.abs (implicit_binders_of_list gamma) (S.bv_to_name x) ret in
+    U.abs (binders_of_list [ t, true; x, false ]) body ret
   in
-  check "pure" (Util.abs (binders @ [ S.mk_binder a ]) c_pure None);
+  check "pure" (U.abs (binders @ [ S.mk_binder a ]) c_pure None);
 
   (* val st2_app : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                   l:st2_gctx heap a (t1 -> GTot t2) ->
@@ -1770,26 +1770,26 @@ let gen_wps_for_free env binders a wp_a =
                   Tot (st2_gctx heap a t2)
     let st2_app #heap #a #t1 #t2 l r = fun p h -> l p h (r p h) *)
   let c_app =
-    let t1 = S.gen_bv "t1" None Util.ktype in
-    let t2 = S.gen_bv "t2" None Util.ktype in
+    let t1 = S.gen_bv "t1" None U.ktype in
+    let t2 = S.gen_bv "t2" None U.ktype in
     let l = S.gen_bv "l" None (mk_gctx
-      (Util.arrow [ S.mk_binder (S.new_bv None (S.bv_to_name t1)) ] (S.mk_GTotal (S.bv_to_name t2))))
+      (U.arrow [ S.mk_binder (S.new_bv None (S.bv_to_name t1)) ] (S.mk_GTotal (S.bv_to_name t2))))
     in
     let r = S.gen_bv "r" None (mk_gctx (S.bv_to_name t1)) in
-    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t2))))) in
+    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t2))))) in
     let outer_body =
       let gamma = mk_gamma () in
       let gamma_as_args = args_of_bv gamma in
       let inner_body =
-        Util.mk_app
+        U.mk_app
           (S.bv_to_name l)
-          (gamma_as_args @ [ S.as_arg (Util.mk_app (S.bv_to_name r) gamma_as_args)])
+          (gamma_as_args @ [ S.as_arg (U.mk_app (S.bv_to_name r) gamma_as_args)])
       in
-      Util.abs (implicit_binders_of_list gamma) inner_body ret
+      U.abs (implicit_binders_of_list gamma) inner_body ret
     in
-    Util.abs (binders_of_list [ t1, true; t2, true; l, false; r, false ]) outer_body ret
+    U.abs (binders_of_list [ t1, true; t2, true; l, false; r, false ]) outer_body ret
   in
-  check "app" (Util.abs (binders @ [ S.mk_binder a ]) c_app None);
+  check "app" (U.abs (binders @ [ S.mk_binder a ]) c_app None);
 
   (* val st2_liftGA1 : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                        f : (t1 -> GTot t2) ->
@@ -1800,20 +1800,20 @@ let gen_wps_for_free env binders a wp_a =
   *)
   let unknown = mk Tm_unknown None Range.dummyRange in
   let c_lift1 =
-    let t1 = S.gen_bv "t1" None Util.ktype in
-    let t2 = S.gen_bv "t2" None Util.ktype in
-    let t_f = Util.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2)) in
+    let t1 = S.gen_bv "t1" None U.ktype in
+    let t2 = S.gen_bv "t2" None U.ktype in
+    let t_f = U.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2)) in
     let f = S.gen_bv "f" None t_f in
     let a1 = S.gen_bv "a1" None (mk_gctx (S.bv_to_name t1)) in
-    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t2))))) in
-    Util.abs (binders_of_list [ t1, true; t2, true; f, false; a1, false ]) (
-      Util.mk_app c_app (List.map S.as_arg [
+    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t2))))) in
+    U.abs (binders_of_list [ t1, true; t2, true; f, false; a1, false ]) (
+      U.mk_app c_app (List.map S.as_arg [
         unknown; unknown;
-        Util.mk_app c_pure (List.map S.as_arg [ unknown; S.bv_to_name f ]);
+        U.mk_app c_pure (List.map S.as_arg [ unknown; S.bv_to_name f ]);
         S.bv_to_name a1 ])
     ) ret
   in
-  check "lift1" (Util.abs (binders @ [ S.mk_binder a ]) c_lift1 None);
+  check "lift1" (U.abs (binders @ [ S.mk_binder a ]) c_lift1 None);
 
 
   (* val st2_liftGA2 : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type -> #t3:Type ->
@@ -1825,75 +1825,75 @@ let gen_wps_for_free env binders a wp_a =
       st2_app (st2_app (st2_pure f) a1) a2
   *)
   let c_lift2 =
-    let t1 = S.gen_bv "t1" None Util.ktype in
-    let t2 = S.gen_bv "t2" None Util.ktype in
-    let t3 = S.gen_bv "t3" None Util.ktype in
-    let t_f = Util.arrow
+    let t1 = S.gen_bv "t1" None U.ktype in
+    let t2 = S.gen_bv "t2" None U.ktype in
+    let t3 = S.gen_bv "t3" None U.ktype in
+    let t_f = U.arrow
       [ S.null_binder (S.bv_to_name t1); S.null_binder (S.bv_to_name t2) ]
       (S.mk_GTotal (S.bv_to_name t3))
     in
     let f = S.gen_bv "f" None t_f in
     let a1 = S.gen_bv "a1" None (mk_gctx (S.bv_to_name t1)) in
     let a2 = S.gen_bv "a2" None (mk_gctx (S.bv_to_name t2)) in
-    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t3))))) in
-    Util.abs (binders_of_list [ t1, true; t2, true; t3, true; f, false; a1, false; a2, false ]) (
-      Util.mk_app c_app (List.map S.as_arg [
+    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t3))))) in
+    U.abs (binders_of_list [ t1, true; t2, true; t3, true; f, false; a1, false; a2, false ]) (
+      U.mk_app c_app (List.map S.as_arg [
         unknown; unknown;
-        Util.mk_app c_app (List.map S.as_arg [
+        U.mk_app c_app (List.map S.as_arg [
           unknown; unknown;
-          Util.mk_app c_pure (List.map S.as_arg [ unknown; S.bv_to_name f ]);
+          U.mk_app c_pure (List.map S.as_arg [ unknown; S.bv_to_name f ]);
           S.bv_to_name a1 ]);
         S.bv_to_name a2 ])
     ) ret
   in
-  check "lift2" (Util.abs (binders @ [ S.mk_binder a ]) c_lift2 None);
+  check "lift2" (U.abs (binders @ [ S.mk_binder a ]) c_lift2 None);
 
   (* val st2_push : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                     f:(t1 -> Tot (st2_gctx heap a t2)) ->
                     Tot (st2_ctx heap a (t1->GTot t2))
     let st2_push #heap #a #t1 #t2 f = fun p h e1 -> f e1 p h *)
   let c_push =
-    let t1 = S.gen_bv "t1" None Util.ktype in
-    let t2 = S.gen_bv "t2" None Util.ktype in
-    let t_f = Util.arrow
+    let t1 = S.gen_bv "t1" None U.ktype in
+    let t2 = S.gen_bv "t2" None U.ktype in
+    let t_f = U.arrow
       [ S.null_binder (S.bv_to_name t1) ]
       (S.mk_Total (mk_gctx (S.bv_to_name t2)))
     in
     let f = S.gen_bv "f" None t_f in
-    let ret = Some (Inl (Util.lcomp_of_comp (mk_Total (mk_ctx (
-      Util.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2)))))))
+    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_ctx (
+      U.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2)))))))
     in
     let e1 = S.gen_bv "e1" None (S.bv_to_name t1) in
     let gamma = mk_gamma () in
-    let body = Util.abs (S.binders_of_list gamma @ [ S.mk_binder e1 ]) (
-      Util.mk_app (S.bv_to_name f) (S.as_arg (S.bv_to_name e1) :: args_of_bv gamma)
+    let body = U.abs (S.binders_of_list gamma @ [ S.mk_binder e1 ]) (
+      U.mk_app (S.bv_to_name f) (S.as_arg (S.bv_to_name e1) :: args_of_bv gamma)
     ) ret in
-    Util.abs (binders_of_list [ t1, true; t2, true; f, false ]) body ret
+    U.abs (binders_of_list [ t1, true; t2, true; f, false ]) body ret
   in
-  check "push" (Util.abs (binders @ [ S.mk_binder a ]) c_push None);
+  check "push" (U.abs (binders @ [ S.mk_binder a ]) c_push None);
 
-  let ret_tot_wp_a = Some (Inl (Util.lcomp_of_comp (mk_Total wp_a))) in
+  let ret_tot_wp_a = Some (Inl (U.lcomp_of_comp (mk_Total wp_a))) in
 
   (* val st2_if_then_else : heap:Type -> a:Type -> c:Type0 ->
                             st2_wp heap a -> st2_wp heap a ->
                             Tot (st2_wp heap a)
     let st2_if_then_else heap a c = st2_liftGA2 (l_ITE c) *)
   let wp_if_then_else =
-    let c = S.gen_bv "c" None Util.ktype in
+    let c = S.gen_bv "c" None U.ktype in
     (* Note that this one *does* abstract over [a]. This is in line with the
      * expected shape of the combinator in the effect declaration. (But it does
      * not abstract over [binders]; [tc_eff_decl] will take care of closing
      * [binders]. *)
-    Util.abs (S.binders_of_list [ a; c ]) (
+    U.abs (S.binders_of_list [ a; c ]) (
       let l_ite = fvar Const.ite_lid (S.Delta_unfoldable 2) None in
-      Util.mk_app c_lift2 (List.map S.as_arg [
+      U.mk_app c_lift2 (List.map S.as_arg [
         unknown; unknown; unknown;
-        Util.mk_app l_ite [S.as_arg (S.bv_to_name c)]
+        U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
       ])
     ) ret_tot_wp_a
   in
   let wp_if_then_else = normalize_and_make_binders_explicit wp_if_then_else in
-  check "wp_if_then_else" (Util.abs binders wp_if_then_else None);
+  check "wp_if_then_else" (U.abs binders wp_if_then_else None);
 
   (* val st2_wp_binop : heap:Type -> a:Type -> st2_wp heap a -> op:(Type0->Type0->GTot Type0) ->
                           st2_wp heap a ->
@@ -1901,96 +1901,158 @@ let gen_wps_for_free env binders a wp_a =
      let st2_wp_binop heap a l op r = st2_liftGA2 op l r *)
   let wp_binop =
     let l = S.gen_bv "l" None wp_a in
-    (* JP: I had to change the return effect of op to be [Tot] instead of
-     * [GTot]. The code in [tc_eff_decl] wants [Tot], and is happy with the
-     * definition below. In Guido's [NewPrims.fst], the [wp_binop] combinator
-     * takes an [op] in [GTot], and [tc_eff_decl] is still happy with it.
-     * However, if I change [op] here to be in [GTot], then [tc_eff_decl] is
-     * unhappy. This is puzzling, because the return type of [op] is in negative
-     * position, meaning that we should be able to subtype the [wp_binop]
-     * defined here into the type that [tc_eff_decl] wants. *)
-    let op = S.gen_bv "op" None (Util.arrow
-      [ S.null_binder Util.ktype0; S.null_binder Util.ktype0 ]
-      (S.mk_GTotal Util.ktype0)) in
+    let op = S.gen_bv "op" None (U.arrow
+      [ S.null_binder U.ktype0; S.null_binder U.ktype0 ]
+      (S.mk_GTotal U.ktype0)) in
     let r = S.gen_bv "r" None wp_a in
-    Util.abs
+    U.abs
       (S.binders_of_list [ a; l; op; r ])
-      (Util.mk_app c_lift2 (List.map S.as_arg [
+      (U.mk_app c_lift2 (List.map S.as_arg [
         unknown; unknown; unknown;
         S.bv_to_name op; S.bv_to_name l; S.bv_to_name r ]))
       ret_tot_wp_a
   in
   let wp_binop = normalize_and_make_binders_explicit wp_binop in
-  check "wp_binop" (Util.abs binders wp_binop None);
+  check "wp_binop" (U.abs binders wp_binop None);
 
   (* val st2_assert_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
                        Tot (st2_wp heap a)
     let st2_assert_p heap a q wp = st2_app (st2_pure (l_and q)) wp *)
   let wp_assert =
-    let q = S.gen_bv "q" None Util.ktype0 in
+    let q = S.gen_bv "q" None U.ktype0 in
     let wp = S.gen_bv "wp" None wp_a in
     let l_and = fvar Const.and_lid (S.Delta_unfoldable 1) None in
     let body =
-      Util.mk_app c_app (List.map S.as_arg [
+      U.mk_app c_app (List.map S.as_arg [
         unknown; unknown;
-        Util.mk_app c_pure (List.map S.as_arg [
+        U.mk_app c_pure (List.map S.as_arg [
           unknown;
-          Util.mk_app l_and [S.as_arg (S.bv_to_name q)]]);
+          U.mk_app l_and [S.as_arg (S.bv_to_name q)]]);
         S.bv_to_name wp])
     in
-    Util.abs (S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
+    U.abs (S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
   in
   let wp_assert = normalize_and_make_binders_explicit wp_assert in
-  check "wp_assert" (Util.abs binders wp_assert None);
+  check "wp_assert" (U.abs binders wp_assert None);
 
   (* val st2_assume_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
                        Tot (st2_wp heap a)
     let st2_assume_p heap a q wp = st2_app (st2_pure (l_imp q)) wp *)
   let wp_assume =
-    let q = S.gen_bv "q" None Util.ktype0 in
+    let q = S.gen_bv "q" None U.ktype0 in
     let wp = S.gen_bv "wp" None wp_a in
     let l_imp = fvar Const.imp_lid (S.Delta_unfoldable 1) None in
     let body =
-      Util.mk_app c_app (List.map S.as_arg [
+      U.mk_app c_app (List.map S.as_arg [
         unknown; unknown;
-        Util.mk_app c_pure (List.map S.as_arg [
+        U.mk_app c_pure (List.map S.as_arg [
           unknown;
-          Util.mk_app l_imp [S.as_arg (S.bv_to_name q)]]);
+          U.mk_app l_imp [S.as_arg (S.bv_to_name q)]]);
         S.bv_to_name wp])
     in
-    Util.abs (S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
+    U.abs (S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
   in
   let wp_assume = normalize_and_make_binders_explicit wp_assume in
-  check "wp_assume" (Util.abs binders wp_assume None);
+  check "wp_assume" (U.abs binders wp_assume None);
+
+  let tforall = U.mk_app (S.mk_Tm_uinst U.tforall [ U_unknown ]) [ S.as_arg unknown ] in
 
   (* val st2_close_wp : heap:Type -> a:Type -> b:Type ->
                         f:(b->Tot (st2_wp heap a)) ->
                         Tot (st2_wp heap a)
     let st2_close_wp heap a b f = st2_app (st2_pure l_Forall) (st2_push f) *)
   let wp_close =
-    let b = S.gen_bv "b" None Util.ktype in
-    let t_f = Util.arrow [ S.null_binder (S.bv_to_name b) ] (S.mk_Total wp_a) in
+    let b = S.gen_bv "b" None U.ktype in
+    let t_f = U.arrow [ S.null_binder (S.bv_to_name b) ] (S.mk_Total wp_a) in
     let f = S.gen_bv "f" None t_f in
     let body =
-      Util.mk_app c_app (List.map S.as_arg [
+      U.mk_app c_app (List.map S.as_arg [
         unknown; unknown;
-        Util.mk_app c_pure (List.map S.as_arg [
+        U.mk_app c_pure (List.map S.as_arg [
           unknown;
-          Util.mk_app (S.mk_Tm_uinst Util.tforall [ U_unknown ]) [ S.as_arg unknown ]]);
-        Util.mk_app c_push (List.map S.as_arg [
+          tforall]);
+        U.mk_app c_push (List.map S.as_arg [
           unknown; unknown;
           S.bv_to_name f])])
     in
-    Util.abs (S.binders_of_list [ a; b; f ]) body ret_tot_wp_a
+    U.abs (S.binders_of_list [ a; b; f ]) body ret_tot_wp_a
   in
   let wp_close = normalize_and_make_binders_explicit wp_close in
-  check "wp_close" (Util.abs binders wp_close None);
+  check "wp_close" (U.abs binders wp_close None);
 
-  ([], wp_if_then_else),
-  ([], wp_binop),
-  ([], wp_assert),
-  ([], wp_assume),
-  ([], wp_close)
+  let ret_tot_type0 = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype0)) in
+  let mk_forall (x: S.bv) (body: S.term): S.term =
+    let tforall = U.mk_app (S.mk_Tm_uinst U.tforall [ U_unknown ]) [ S.as_arg x.sort ] in
+    S.mk (Tm_app (tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type0)])) None Range.dummyRange
+  in
+
+  (* For each (target) type t, we define a binary relation in t called ≤_t.
+
+      x ≤_t y            =def=       x = y      [t is base type]
+      x ≤_Type0 y        =def=       x ==> y
+      x ≤_{a->b} y       =def=   ∀a1 a2, a1 ≤_a a2 ==> x a1 ≤_b y a2
+  *)
+  (* Invariant: [x] and [y] have type [t] *)
+  let rec mk_leq t x y =
+    match (normalize (SS.compress t)).n with
+    | Tm_type _ ->
+        Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y);
+        U.mk_imp x y
+    | Tm_arrow ([ binder ], { n = GTotal b })
+    | Tm_arrow ([ binder ], { n = Total b }) when S.is_null_binder binder ->
+        let a = (fst binder).sort in
+        Util.print2 "arrow, a=%s, b=%s\n" (Print.term_to_string a) (Print.term_to_string b);
+        let a1 = S.gen_bv "a1" None a in
+        let a2 = S.gen_bv "a2" None a in
+        let body = U.mk_imp
+          (mk_leq a (S.bv_to_name a1) (S.bv_to_name a2))
+          (mk_leq b
+            (U.mk_app x [ S.as_arg (S.bv_to_name a1) ])
+            (U.mk_app y [ S.as_arg (S.bv_to_name a2) ]))
+        in
+        mk_forall a1 (mk_forall a2 body)
+    | Tm_arrow (binder :: binders, comp) ->
+        let t = { t with n = Tm_arrow ([ binder ], S.mk_Total (U.arrow binders comp)) } in
+        mk_leq t x y
+    | Tm_arrow _ ->
+        failwith "unhandled arrow"
+    | _ ->
+        (* TODO: assert that this is a base type. *)
+        Util.print2 "base, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y);
+        U.mk_eq t t x y
+  in
+  let stronger =
+    let wp1 = S.gen_bv "wp1" None wp_a in
+    let wp2 = S.gen_bv "wp2" None wp_a in
+    let body = mk_leq wp_a (S.bv_to_name wp1) (S.bv_to_name wp2) in
+    U.abs (S.binders_of_list [ wp1; wp2 ]) body ret_tot_type0
+  in
+  check "stronger" (U.abs (binders @ [ S.mk_binder a ]) stronger None);
+
+  let null_wp = snd ed.null_wp in
+
+  (* val st2_trivial : heap:Type ->a:Type -> st2_wp heap a -> Tot Type0
+    let st2_trivial heap a wp = st2_stronger heap a (st2_null_wp heap a) wp *)
+  let wp_trivial =
+    let wp = S.gen_bv "wp" None wp_a in
+    let body = U.mk_app stronger (List.map S.as_arg [
+      U.mk_app null_wp [ S.as_arg (S.bv_to_name a) ];
+      S.bv_to_name wp
+    ]) in
+    U.abs (S.binders_of_list [ a; wp ]) body ret_tot_type0
+  in
+  let wp_trivial = normalize_and_make_binders_explicit wp_trivial in
+  check "wp_trivial" (U.abs binders wp_trivial None);
+
+  { ed with
+    if_then_else = ([], wp_if_then_else);
+    wp_binop     = ([], wp_binop);
+    assert_p     = ([], wp_assert);
+    assume_p     = ([], wp_assume);
+    close_wp     = ([], wp_close);
+    trivial      = ([], wp_trivial)
+  }
+
 
 let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
@@ -2020,24 +2082,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   (* Override dummy fields with automatically-generated combinators, if needed. *)
   let ed =
     match is_for_free with
-    | NotForFree ->
-        ed
-    | ForFree ->
-        let
-          wp_if_then_else,
-          wp_binop,
-          wp_assert,
-          wp_assume,
-          wp_close
-        = gen_wps_for_free env binders a wp_a in
-        { ed with
-          if_then_else = wp_if_then_else;
-          wp_binop = wp_binop;
-          assert_p = wp_assert;
-          assume_p = wp_assume;
-          close_wp = wp_close
-        }
-  in
+    | NotForFree -> ed
+    | ForFree -> gen_wps_for_free env binders a wp_a ed in
 
   let ret =
     let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
