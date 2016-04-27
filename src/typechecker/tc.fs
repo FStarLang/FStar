@@ -1994,7 +1994,7 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
   (* Invariant: [x] and [y] have type [t] *)
   let rec mk_leq t x y =
     match (normalize (SS.compress t)).n with
-    | Tm_type U_zero ->
+    | Tm_type _ ->
         Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y);
         U.mk_imp x y
     | Tm_arrow ([ binder ], { n = GTotal b })
