@@ -21,22 +21,37 @@ open FStar.Util
 open FStar.SMTEncoding.Term
 open FStar.SMTEncoding
 
+type fuel_trace_identity =
+    {
+      source_digest:string;
+    }
+
 type fuel_trace_state =
+    {
+      identity:fuel_trace_identity;
+      fuels:list<(int * int)>
+    }
+
+type fuel_trace_status =
       FuelTraceUnavailable
     | RecordFuelTrace of list<(int * int)>
     | ReplayFuelTrace of list<(int * int)>
 
-let fuel_trace : ref<fuel_trace_state> = Util.mk_ref <| FuelTraceUnavailable
+let fuel_trace : ref<fuel_trace_status> = Util.mk_ref <| FuelTraceUnavailable
 
 let format_fuel_trace_file_name src_fn =
     Util.format_value_file_name <| Util.format1 "%s.fuel" src_fn
 
 let initialize_fuel_trace src_fn =
     let val_fn = format_fuel_trace_file_name src_fn in
-    if Util.file_exists val_fn then
-        let ft = Util.load_value_from_file val_fn in
-        fuel_trace := ReplayFuelTrace ft
-    else
+    match Util.load_value_from_file val_fn with
+    | Some state ->
+        let digest = md5_of_file src_fn in
+        if state.identity.source_digest = digest then
+            fuel_trace := ReplayFuelTrace state.fuels
+        else
+            fuel_trace := RecordFuelTrace []
+    | None ->
         fuel_trace := RecordFuelTrace []
 
 let finalize_fuel_trace src_fn : unit =
@@ -46,12 +61,18 @@ let finalize_fuel_trace src_fn : unit =
     | FuelTraceUnavailable 
     (* verification not performed *)
     | RecordFuelTrace [] ->
-      ()
+        ()
     (* verification successful *)
     | RecordFuelTrace l ->
-      (* todo: need source file digest and z3 executable digest *)
-      let val_fn = format_fuel_trace_file_name src_fn in
-      Util.save_value_to_file val_fn l
+        let val_fn = format_fuel_trace_file_name src_fn in
+        let state = {
+            identity = {
+                source_digest = md5_of_file src_fn
+            };
+            fuels = l
+        }
+        in
+        Util.save_value_to_file val_fn state
     end;
     fuel_trace := FuelTraceUnavailable
 
