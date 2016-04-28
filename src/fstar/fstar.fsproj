@@ -26,9 +26,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--universes --explicit_deps --use_native_int --codegen-lib CoreCrypto --codegen-lib Platform --codegen-lib Classical --codegen-lib SeqProperties --codegen-lib HyperHeap --debug TLSConstants --debug_level Low --no_location_info --lax --codegen OCaml --__temp_no_proj TLSExtensions --__temp_no_proj FStar.Heap --no_extract FStar.All --no_extract FStar.List --no_extract FStar.Heap --no_extract FStar.Set --no_extract FStar.ST --no_extract FStar.HyperHeap --no_extract FStar.IO --no_extract Platform.Bytes --no_extract Platform.Date --no_extract Platform.Error --no_extract Platform.Tcp --no_extract SessionDB --no_extract DB --no_extract DHDB --no_extract CoreCrypto ../../../FStar/ulib/FStar.Ghost.fst ../../../FStar/ulib/FStar.FunctionalExtensionality.fst ../../../FStar/ulib/FStar.Classical.fst ../../../FStar/ulib/FStar.Set.fst ../../../FStar/ulib/FStar.Heap.fst ../../../FStar/ulib/FStar.Map.fst ../../../FStar/ulib/FStar.List.Tot.fst ../../../FStar/ulib/FStar.HyperHeap.fst ../../../FStar/ulib/hyperheap/FStar.ST.fst ../../../FStar/ulib/hyperheap/FStar.All.fst ../../../FStar/ulib/FStar.Monotonic.RRef.fst ../../../FStar/ulib/FStar.Char.fsti ../../../FStar/ulib/FStar.String.fsti ../../../FStar/ulib/FStar.List.fst ../../../FStar/ulib/FStar.ListProperties.fst ../../../FStar/ulib/FStar.Seq.fst ../../../FStar/ulib/FStar.SeqProperties.fst ../../../FStar/ulib/FStar.Float.fsti ../../../FStar/ulib/FStar.IO.fsti ../../../FStar/ucontrib/Platform/fst/Platform.Bytes.fst ../../../FStar/ucontrib/Platform/fst/Platform.Date.fst ../../../FStar/ucontrib/Platform/fst/Platform.Error.fst ../../../FStar/ucontrib/Platform/fst/Platform.Tcp.fst ../../../FStar/ucontrib/CoreCrypto/fst/CoreCrypto.fst ../../../FStar/ucontrib/CoreCrypto/fst/DHDB.fst MonotoneSeq.fst TLSError.fst TLSConstants.fst</StartArguments>
+    <StartArguments>--universes --explicit_deps test.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>d:\workspace\mitls-fstar\src\tls</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\users\nswamy\workspace\FStar\examples\test</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

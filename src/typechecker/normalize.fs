@@ -215,8 +215,7 @@ let rec closure_as_term cfg env t =
             | Tm_name _
             | Tm_fvar _ -> t
 
-            | Tm_uvar(u, t') -> 
-              mk (Tm_uvar(u, closure_as_term_delayed  cfg env t')) t.pos 
+            | Tm_uvar _ -> t //should be closed anyway
 
             | Tm_type u -> 
               mk (Tm_type (norm_universe cfg env u)) t.pos

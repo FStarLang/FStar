@@ -336,16 +336,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             && Util.is_pure_or_ghost_lcomp c //ADD_EQ_REFINEMENT for pure applications
             then TcUtil.maybe_assume_result_eq_pure_term env e c
             else c in
-    if debug env Options.Low
-    then Util.print3 "(%s) About to check %s against expected typ %s\n"
-            (Print.term_to_string e)
-            (Print.comp_to_string <| c.comp())
-            (Env.expected_typ env0 |> (fun x -> match x with | None -> "None" | Some t -> Print.term_to_string t));
     let e, c, g' = comp_check_expected_typ env0 e c in
-    if debug env Options.Low
-    then Util.print2 "(%s) checked ... got %s\n"
-            (Print.term_to_string e)
-            (Print.comp_to_string <| c.comp());
     let gimp =
         match (SS.compress head).n with
             | Tm_uvar(u, _) ->
@@ -767,12 +758,6 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g = expected_function_typ env topt body in
     let body, cbody, guard_body = tc_term ({envbody with top_level=false; use_eq=use_eq}) body in
 
-    if Env.debug env Options.Low
-    then Util.print3 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\n"
-          (Print.term_to_string body)
-          (Print.comp_to_string <| cbody.comp())
-          (guard_to_string env guard_body);
-
     let guard_body =  //we don't abstract over subtyping constraints; so solve them now
         Rel.solve_deferred_constraints envbody guard_body in
 
@@ -960,8 +945,6 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 let app =  mk_Tm_app head (List.rev outargs) (Some comp.res_typ.n) r in
                 let comp = TcUtil.record_application_site env app comp in
                 let comp, g = TcUtil.strengthen_precondition None env app comp g in //Each conjunct in g is already labeled
-                if debug env Options.Low
-                then Util.print2 "\t Type of app term %s is %s\n" (N.term_to_string env app) (Print.comp_to_string (comp.comp()));
                 app, comp, g
 
 
