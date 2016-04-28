@@ -1979,12 +1979,12 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
   let rec mk_leq t x y =
     match (normalize (SS.compress t)).n with
     | Tm_type _ ->
-        Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y);
+        (* Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
         U.mk_imp x y
     | Tm_arrow ([ binder ], { n = GTotal b })
     | Tm_arrow ([ binder ], { n = Total b }) when S.is_null_binder binder ->
         let a = (fst binder).sort in
-        Util.print2 "arrow, a=%s, b=%s\n" (Print.term_to_string a) (Print.term_to_string b);
+        (* Util.print2 "arrow, a=%s, b=%s\n" (Print.term_to_string a) (Print.term_to_string b); *)
         let a1 = S.gen_bv "a1" None a in
         let a2 = S.gen_bv "a2" None a in
         let body = U.mk_imp
@@ -2001,7 +2001,7 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
         failwith "unhandled arrow"
     | _ ->
         (* TODO: assert that this is a base type. *)
-        Util.print2 "base, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y);
+        (* Util.print2 "base, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
         U.mk_eq t t x y
   in
   let stronger =
