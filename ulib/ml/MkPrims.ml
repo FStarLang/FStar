@@ -11,7 +11,7 @@ module Make = functor (X: sig
   val ( < ): int -> int -> bool
   val op_Minus: int -> int
   val parse_int: string -> int
-                             (*  val to_string: int -> string *)
+  val to_string: int -> string
 end) -> struct
   include X
 

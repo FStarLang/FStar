@@ -5,6 +5,10 @@ let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
 let v (x:uint64) : Prims.int = Prims.parse_int (Int64.to_string x)
 
+let zero = Int64.zero
+let one = Int64.one
+let ones = Int64.pred Int64.zero
+
 let add (a:uint64) (b:uint64) : uint64 = Int64.add a b
 let add_underspec a b = add a b
 let add_mod a b = add a b
@@ -25,8 +29,14 @@ let logand (a:uint64) (b:uint64) : uint64 = Int64.logand a b
 let logxor (a:uint64) (b:uint64) : uint64 = Int64.logxor a b
 let logor  (a:uint64) (b:uint64) : uint64 = Int64.logor a b
 let lognot (a:uint64) : uint64 = Int64.lognot a
-       
-let int_to_uint64 (x:Prims.int) : uint64= Int64.of_string (Prims.to_string x) 
+
+let cmod (x:Prims.int) : Prims.int =
+  if Prims.op_GreaterThan x (Prims.parse_int "9223372036854775807")
+  then Prims.op_Subtraction x (Prims.parse_int "18446744073709551616")
+  else x
+                                              
+let int_to_uint64 (x:Prims.int) : uint64= Int64.of_string
+                                            (Prims.to_string (cmod x)) 
 
 let shift_right (a:uint64) (b:uint8) : uint64 = Int64.shift_right_logical a b
 let shift_left  (a:uint64) (b:uint8) : uint64 = Int64.shift_left a b
@@ -60,3 +70,5 @@ let op_Hat_Greater = gt
 let op_Hat_Greater_Equal = gte
 let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
+
+let to_string s = Big_int_Z.string_of_big_int (Big_int_Z.and_big_int (Big_int_Z.big_int_of_int64 s) (Big_int_Z.big_int_of_string "0xffffffffffffffff"))

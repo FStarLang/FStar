@@ -2,6 +2,10 @@ type int32 = int
 
 let v (x:int32) : Prims.int = Prims.parse_int (string_of_int x)
 
+let zero = 0
+let one = 1
+let ones = -1                                             
+
 let add (a:int32) (b:int32) : int32 = a + b
 let add_underspec a b = add a b
 let add_mod a b = (add a b) land 4294967295
@@ -57,3 +61,8 @@ let op_Hat_Greater = gt
 let op_Hat_Greater_Equal = gte
 let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
+
+let cmod x =
+  if x > 2147483647 then x - 4294967296 else x
+
+let to_string s = string_of_int (cmod s)

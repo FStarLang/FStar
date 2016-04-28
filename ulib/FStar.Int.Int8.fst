@@ -8,31 +8,31 @@ abstract type int8 = | MkInt8: v:int_t n -> int8
 
 let v (x:int8) : Tot (x':int{size x' n}) = x.v
 
-val add: a:int8 -> b:int8{size (v a + v b) n} -> Tot int8
+val add: a:int8 -> b:int8{size (v a + v b) n} -> Tot (c:int8{v c = v a + v b})
 let add a b = MkInt8 (add (v a) (v b))
-val add_underspec: a:int8 -> b:int8 -> Tot int8
+val add_underspec: a:int8 -> b:int8 -> Tot (c:int8{size (v a + v b) n ==> v c = v a + v b})
 let add_underspec a b = MkInt8 (add_underspec #n a.v b.v)
-val add_mod: int8 -> int8 -> Tot int8
+val add_mod: a:int8 -> b:int8 -> Tot (c:int8{v c = ((v a + v b) @% pow2 n)})
 let add_mod a b = MkInt8 (add_mod #n (v a) (v b))
-val sub: a:int8 -> b:int8{size (v a - v b) n} -> Tot int8
+val sub: a:int8 -> b:int8{size (v a - v b) n} -> Tot (c:int8{v c = v a - v b})
 let sub a b = MkInt8 (sub (v a) (v b))
-val sub_underspec: a:int8 -> b:int8 -> Tot int8
+val sub_underspec: a:int8 -> b:int8 -> Tot (c:int8{size (v a - v b) n ==> v c = v a - v b})
 let sub_underspec a b = MkInt8 (sub_underspec (v a) (v b))
-val sub_mod: a:int8 -> b:int8 -> Tot int8
+val sub_mod: a:int8 -> b:int8 -> Tot (c:int8{v c = ((v a - v b) @% pow2 n)})
 let sub_mod a b = MkInt8 (sub_mod (v a) (v b))
-val mul: a:int8 -> b:int8{size (v a * v b) n} -> Tot int8
+val mul: a:int8 -> b:int8{size (v a * v b) n} -> Tot (c:int8{v c = v a * v b})
 let mul a b = MkInt8(mul (v a) (v b))
-val mul_underspec: a:int8 -> b:int8 -> Tot int8
+val mul_underspec: a:int8 -> b:int8 -> Tot (c:int8{size (v a * v b) n ==> v c = v a * v b})
 let mul_underspec a b = MkInt8(mul_underspec (v a) (v b))
-val mul_mod: a:int8 -> b:int8 -> Tot int8
+val mul_mod: a:int8 -> b:int8 -> Tot (c:int8{v c = ((v a * v b) @% pow2 n)})
 let mul_mod a b = MkInt8 (mul_mod (v a) (v b))
 
 (* Division primitives *)
-val div: a:int8 -> b:int8{v b <> 0} -> Tot int8
+val div: a:int8 -> b:int8{v b <> 0} -> Tot (c:int8{v c = v a / v b})
 let div a b = MkInt8(div (v a) (v b))
 
 (* Modulo primitives *)
-val mod: a:int8 -> b:int8{v b <> 0} -> Tot int8
+val mod: a:int8 -> b:int8{v b <> 0} -> Tot (c:int8{v c = v a - ((v a / v b) * v b)})
 let mod a b = MkInt8 (mod (v a) (v b))
 
 (* Bitwise operators *)
@@ -49,10 +49,10 @@ val int_to_int8: x:int -> Tot int8
 let int_to_int8 x = MkInt8 (to_int_t 8 x)
 
 (* Shift operators *)
-val shift_right: a:int8 -> s:nat -> Tot int8
+val shift_right: a:int8 -> s:nat -> Tot (c:int8{v c = (v a /% (pow2 s))})
 let shift_right a s = MkInt8 (shift_right (v a) s)
 
-val shift_left: a:int8 -> s:nat -> Tot int8
+val shift_left: a:int8 -> s:nat -> Tot (c:int8{v c = ((v a * pow2 s) @% pow2 n)})
 let shift_left a s = MkInt8 (shift_left (v a) s)
 
 (* Comparison operators *)
