@@ -1708,13 +1708,24 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
    * we thus generate macros parameterized over [e] that build the right
    * context. [gamma] is the series of binders the precede the return type of
    * the context. *)
+  let rec collect_binders (t : term) =
+    match (compress t).n with
+    | Tm_arrow (bs, comp) ->
+        let rest = match comp.n with
+                   | Total t -> t
+                   | _ -> failwith "wp_a contains non-Tot arrow" in
+        bs @ (collect_binders rest)
+    | Tm_type _ ->
+        []
+    | _ ->
+        failwith "wp_a doesn't end in Type0" in
+
   let mk_ctx, mk_gctx, mk_gamma =
     let i = ref 0 in
-    match (normalize wp_a).n with
-    | Tm_arrow (wp_binders, comp) ->
-        (fun t -> U.arrow wp_binders ({ comp with n = Total t })),
-        (fun t -> U.arrow wp_binders ({ comp with n = GTotal t })),
-        (fun () -> List.map (fun (bv, _) ->
+    let wp_binders = collect_binders (normalize wp_a) in
+    (fun t -> U.arrow wp_binders (mk_Total t)),
+    (fun t -> U.arrow wp_binders (mk_GTotal t)),
+    (fun () -> List.map (fun (bv, _) ->
           (* Note: just returning [wp_binders] here would be wrong, because the
            * identity of binders relies on the _physical equality_ of the [bv]
            * data structure. So, arguments passed to [mk_ctx] should never refer
@@ -1723,8 +1734,6 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
           i := !i + 1;
           S.gen_bv ("g" ^ string_of_int !i) None bv.sort
         ) wp_binders)
-    | _ ->
-        failwith "wp_a doesn't have the right shape"
   in
 
   (* A variation where we can specify implicit parameters. *)
