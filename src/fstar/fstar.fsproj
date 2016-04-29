@@ -26,9 +26,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--universes --explicit_deps test.fst</StartArguments>
+    <StartArguments>b.fst --explicit_deps --lax --universes</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>C:\users\nswamy\workspace\FStar\examples\test</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\examples\test\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

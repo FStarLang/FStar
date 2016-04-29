@@ -951,7 +951,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
               let t, decls' = encode_term t env in
               Term.mk_HasType x t, decls@decls'
 
-            | Tm_fvar fv, [_; _; (r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
+            | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
               begin match (SS.compress r).n, (SS.compress msg).n with 
                 | Tm_constant (Const_range r), Tm_constant (Const_string (s, _)) -> 
                   let phi = S.mk (Tm_meta(phi,  Meta_labeled(Util.string_of_unicode s, r, false))) None r in
@@ -996,7 +996,13 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           then Util.print1 ">>>> Got QALL [%s]\n" (vars |> Print.binders_to_string "; ");
 
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
-          (mkForall(pats, vars, mkImp(guard, body)), decls)
+          let tm = mkForall(pats, vars, mkImp(guard, body)) in
+
+          if Env.debug env.tcenv <| Options.Other "Encoding"
+          then Util.print1 ">>>> Encoded QALL to %s\n" (Term.termToSmt tm);
+
+          tm, decls
+
 
         | Some (Util.QEx(vars, pats, body)) ->
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
@@ -1183,13 +1189,9 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let valid = Term.mkApp("Valid", [Term.mkApp(for_some, [a;b])]) in
         let valid_b_x = Term.mkApp("Valid", [mk_ApplyTT b x]) in
         [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkExists([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)), Some "exists interpretation")] in
-   let mk_range_of_interp : env -> string -> term -> decls_t = fun env range_of tt ->
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let a = mkFreeV aa in
-        let b = mkFreeV bb in
-        let range_of_ty = Term.mkApp(range_of, [a;b]) in
-        [Term.Assume(mkForall([[range_of_ty]], [aa;bb], mk_HasTypeZ Term.mk_Range_const range_of_ty), Some "Range_const typing")] in
+   let mk_range_interp : env -> string -> term -> decls_t = fun env range tt ->
+        let range_ty = Term.mkApp(range, []) in
+        [Term.Assume(mk_HasTypeZ Term.mk_Range_const range_ty, Some "Range_const typing")] in
 //   let mk_hyperheap_rref_interp : env -> string -> term -> decls_t = fun env rref t -> 
 //        if Ident.lid_equals (Env.current_module env) Const.fstar_hyperheap_lid
 //        then []
@@ -1200,8 +1202,6 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.int_lid,    mk_int);
                  (Const.string_lid, mk_str);
                  (Const.ref_lid,    mk_ref);
-//                 (Const.char_lid,   mk_int_alias);
-//                 (Const.uint8_lid,  mk_int_alias);
                  (Const.false_lid,  mk_false_interp);
                  (Const.and_lid,    mk_and_interp);
                  (Const.or_lid,     mk_or_interp);
@@ -1210,7 +1210,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.iff_lid,    mk_iff_interp);
                  (Const.forall_lid, mk_forall_interp);
                  (Const.exists_lid, mk_exists_interp);
-                 (Const.range_of_lid, mk_range_of_interp);
+                 (Const.range_lid, mk_range_interp);
 //                 (Const.rref_lid,   mk_hyperheap_rref_interp)
                 ] in
     (fun (env:env) (t:lident) (s:string) (tt:term) ->
