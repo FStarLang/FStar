@@ -24,4 +24,8 @@ make -C src/ocaml-output
 
 echo -e "\e[31m=== Running tests ===\e[0m"
 make -C examples/unit-tests
-make -C src regressions
+if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+  make -C src regressions
+else
+  make -C src regressions OTHERFLAGS=--lax
+fi
