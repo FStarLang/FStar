@@ -597,6 +597,9 @@ val mem_intersect_lemma_mem: p:prin -> eps:eprins{mem p eps}
                                 //[SMTPat (mem p eps); SMTPat (intersect eps (singleton p))]
 let mem_intersect_lemma_mem p eps = ()
 
+(* CH: this is needed on my machine, intermittent failures otherwise *)
+#reset-options "--z3timeout 20"
+
 val slc_v_lem_ps: #m:v_meta -> v:value m -> p:prin -> ps:prins{not (mem p ps)}
                        -> Lemma (requires (True))
                                 (ensures (compose_vals (D_v.v (slice_v p v))
@@ -664,6 +667,9 @@ and slc_en_lem_ps en p ps =
   let _ = cut (FEq (compose_envs (slice_en p en) (slice_en_sps ps en))
                    (slice_en_sps (union (singleton p) ps) en)) in
   ()
+
+#reset-options
+
 
 val slc_v_lem_m: #meta:v_meta -> v:value meta -> ps:prins
                  -> m:value_map ps{(forall p. mem p ps ==>
@@ -1234,7 +1240,6 @@ let if_par_then_exit_sec_to_sec #c #c' h = match h with
   | C_assec_ret _ _ -> ()
   | _               -> ()
 
-(* CH: this sometimes timed out on my laptop *)
 opaque val forward_simulation_par: #c:sconfig -> #c':sconfig
                                    -> h:sstep c c'{is_par c /\
                                                    if_enter_sec_then_from_sec h}
@@ -1288,7 +1293,6 @@ let rec forward_simulation_par #c #c' h ps =
         pstep_par_star_upd_step #ps_rest #(pi_rest, s_rest) #(pi_rest', s_rest')
                                          #c_p #c_p' h_ind h' p
 
-#reset-options
 
 val slice_wire_helper_lemma:
   eps:eprins -> ps:prins -> p:prin{mem p ps}
@@ -2141,8 +2145,6 @@ let pstep_psec_enter_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
    IntroR (ExIntro #(protocol ps)
 		   #(fun pi3 -> (c:cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3){strong_confluence ps pi pi1 pi2 pi3 h1 h2 c}))
 		   (pi13_m, s13) (Conj h13 h23))
-
-#reset-options
 
 opaque val pstep_psec_enter_psec_exit_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
