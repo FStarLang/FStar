@@ -32,6 +32,7 @@ all:
 #	make -C deriving-monads -- still some failing assertions + missing Makefile
 	make -C metatheory
 	make -C wysteria
+	make -C dm4free
 	make -C unit-tests
 
 test: all

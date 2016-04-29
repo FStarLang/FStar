@@ -336,16 +336,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             && Util.is_pure_or_ghost_lcomp c //ADD_EQ_REFINEMENT for pure applications
             then TcUtil.maybe_assume_result_eq_pure_term env e c
             else c in
-    if debug env Options.Low
-    then Util.print3 "(%s) About to check %s against expected typ %s\n"
-            (Print.term_to_string e)
-            (Print.comp_to_string <| c.comp())
-            (Env.expected_typ env0 |> (fun x -> match x with | None -> "None" | Some t -> Print.term_to_string t));
     let e, c, g' = comp_check_expected_typ env0 e c in
-    if debug env Options.Low
-    then Util.print2 "(%s) checked ... got %s\n"
-            (Print.term_to_string e)
-            (Print.comp_to_string <| c.comp());
     let gimp =
         match (SS.compress head).n with
             | Tm_uvar(u, _) ->
@@ -767,12 +758,6 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g = expected_function_typ env topt body in
     let body, cbody, guard_body = tc_term ({envbody with top_level=false; use_eq=use_eq}) body in
 
-    if Env.debug env Options.Low
-    then Util.print3 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\n"
-          (Print.term_to_string body)
-          (Print.comp_to_string <| cbody.comp())
-          (guard_to_string env guard_body);
-
     let guard_body =  //we don't abstract over subtyping constraints; so solve them now
         Rel.solve_deferred_constraints envbody guard_body in
 
@@ -960,8 +945,6 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 let app =  mk_Tm_app head (List.rev outargs) (Some comp.res_typ.n) r in
                 let comp = TcUtil.record_application_site env app comp in
                 let comp, g = TcUtil.strengthen_precondition None env app comp g in //Each conjunct in g is already labeled
-                if debug env Options.Low
-                then Util.print2 "\t Type of app term %s is %s\n" (N.term_to_string env app) (Print.comp_to_string (comp.comp()));
                 app, comp, g
 
 
@@ -1725,13 +1708,24 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
    * we thus generate macros parameterized over [e] that build the right
    * context. [gamma] is the series of binders the precede the return type of
    * the context. *)
+  let rec collect_binders (t : term) =
+    match (compress t).n with
+    | Tm_arrow (bs, comp) ->
+        let rest = match comp.n with
+                   | Total t -> t
+                   | _ -> failwith "wp_a contains non-Tot arrow" in
+        bs @ (collect_binders rest)
+    | Tm_type _ ->
+        []
+    | _ ->
+        failwith "wp_a doesn't end in Type0" in
+
   let mk_ctx, mk_gctx, mk_gamma =
     let i = ref 0 in
-    match (normalize wp_a).n with
-    | Tm_arrow (wp_binders, comp) ->
-        (fun t -> U.arrow wp_binders ({ comp with n = Total t })),
-        (fun t -> U.arrow wp_binders ({ comp with n = GTotal t })),
-        (fun () -> List.map (fun (bv, _) ->
+    let wp_binders = collect_binders (normalize wp_a) in
+    (fun t -> U.arrow wp_binders (mk_Total t)),
+    (fun t -> U.arrow wp_binders (mk_GTotal t)),
+    (fun () -> List.map (fun (bv, _) ->
           (* Note: just returning [wp_binders] here would be wrong, because the
            * identity of binders relies on the _physical equality_ of the [bv]
            * data structure. So, arguments passed to [mk_ctx] should never refer
@@ -1740,8 +1734,6 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
           i := !i + 1;
           S.gen_bv ("g" ^ string_of_int !i) None bv.sort
         ) wp_binders)
-    | _ ->
-        failwith "wp_a doesn't have the right shape"
   in
 
   (* A variation where we can specify implicit parameters. *)
@@ -1996,12 +1988,12 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
   let rec mk_leq t x y =
     match (normalize (SS.compress t)).n with
     | Tm_type _ ->
-        Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y);
+        (* Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
         U.mk_imp x y
     | Tm_arrow ([ binder ], { n = GTotal b })
     | Tm_arrow ([ binder ], { n = Total b }) when S.is_null_binder binder ->
         let a = (fst binder).sort in
-        Util.print2 "arrow, a=%s, b=%s\n" (Print.term_to_string a) (Print.term_to_string b);
+        (* Util.print2 "arrow, a=%s, b=%s\n" (Print.term_to_string a) (Print.term_to_string b); *)
         let a1 = S.gen_bv "a1" None a in
         let a2 = S.gen_bv "a2" None a in
         let body = U.mk_imp
@@ -2018,7 +2010,7 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
         failwith "unhandled arrow"
     | _ ->
         (* TODO: assert that this is a base type. *)
-        Util.print2 "base, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y);
+        (* Util.print2 "base, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
         U.mk_eq t t x y
   in
   let stronger =

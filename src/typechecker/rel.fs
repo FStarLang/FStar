@@ -41,14 +41,13 @@ module N = FStar.TypeChecker.Normalize
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
 let new_uvar r binders k =
-  let binders = binders |> List.filter (fun x -> is_null_binder x |> not) in
   let uv = Unionfind.fresh Uvar in
   match binders with
     | [] ->
       let uv = mk (Tm_uvar(uv,k)) (Some k.n) r in
       uv, uv
     | _ ->
-      let args = Util.args_of_non_null_binders binders in
+      let args = binders |> List.map U.arg_of_non_null_binder in 
       let k' = U.arrow binders (mk_Total k) in
       let uv = mk (Tm_uvar(uv,k')) None r in
       mk (Tm_app(uv, args)) (Some k.n) r, uv
@@ -411,7 +410,6 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     let _ = match (Subst.compress uv).n with
         | Tm_uvar(uvar, k) ->
           let bs = p_scope prob in 
-          let bs = bs |> List.filter (fun x -> is_null_binder x |> not) in
           let phi = u_abs k bs phi in
           if Env.debug wl.tcenv <| Options.Other "Rel"
           then Util.print3 "Solving %s (%s) with formula %s\n" 
@@ -720,8 +718,7 @@ let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<bin
             let rec decompose out = function
                 | [] -> List.rev ((None, COVARIANT, C c)::out)
                 | hd::rest ->
-                  let bopt = if is_null_binder hd then None else Some hd in
-                  decompose ((bopt, CONTRAVARIANT, T ((fst hd).sort))::out) rest in
+                  decompose ((Some hd, CONTRAVARIANT, T ((fst hd).sort))::out) rest in
 
             rebuild, 
             matches, 
@@ -1484,7 +1481,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     let gi_xs, gi = new_uvar r xs k_a in
                     let gi_xs = N.eta_expand env gi_xs in
                     let gi_ps = mk_Tm_app gi ps (Some k_a.n) r in
-                    let subst = if S.is_null_bv a then subst else NT(a, gi_xs)::subst in
+                    let subst = NT(a, gi_xs)::subst in
                     let gi_xs', gi_ps' = aux subst tl in
                     as_arg gi_xs::gi_xs', as_arg gi_ps::gi_ps' in
               aux [] bs in
@@ -1723,11 +1720,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 then Util.print5 "Flex-flex patterns: intersected %s and %s; got %s\n\tk1=%s\n\tk2=%s\n"
                         (Print.binders_to_string ", " xs) (Print.binders_to_string ", " ys) (Print.binders_to_string ", " zs)
                         (Print.term_to_string k1) (Print.term_to_string k2);
-                let u_zs, _ =
+                let u_zs, knew1, knew2 =
                     let t, _ = Util.type_u() in
                     let k, _ = new_uvar r zs t in
-                    new_uvar r zs k in
-                let sub1 = u_abs k1 xs u_zs in
+                    fst <| new_uvar r zs k, 
+                    U.arrow xs (S.mk_Total k), 
+                    U.arrow ys (S.mk_Total k) in
+                let sub1 = u_abs knew1 xs u_zs in
                 let occurs_ok, msg = occurs_check env wl (u1,k1) sub1 in
                 if not occurs_ok
                 then giveup_or_defer orig "flex-flex: failed occcurs check"
@@ -1735,7 +1734,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                      if Unionfind.equivalent u1 u2
                      then let wl = solve_prob orig None [sol1] wl in
                           solve env wl
-                     else let sub2 = u_abs k2 ys u_zs in
+                     else let sub2 = u_abs knew2 ys u_zs in
                           let occurs_ok, msg = occurs_check env wl (u2,k2) sub2 in
                           if not occurs_ok
                           then giveup_or_defer orig "flex-flex: failed occurs check"
