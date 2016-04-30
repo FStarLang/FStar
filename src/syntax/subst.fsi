@@ -49,3 +49,6 @@ val opening_of_binders: binders -> subst_t
 
 val close_tscheme: binders -> tscheme -> tscheme
 val close_univ_vars_tscheme: univ_names -> tscheme -> tscheme
+
+(* AR: this should go *)
+val open_univ_vars_not_fresh: univ_names -> term -> term

@@ -160,6 +160,8 @@ effect Ghost (a:Type) (pre:Type) (post:pure_post a) =
            (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
            (fun (p:pure_post a) -> forall (x:a). pre /\ post x ==> p x)
 
+assume new type hasEq: Type -> GTot Type0
+
 assume new type int : Type0
 assume val op_AmpAmp             : bool -> bool -> Tot bool
 assume val op_BarBar             : bool -> bool -> Tot bool

@@ -467,6 +467,19 @@ let univ_var_opening (us:univ_names) =
         UN(n - i, U_name u'), u') |> List.unzip in
     s, us'
 
+(* AR: alternatively, define a function like opening_of_binders that returns a subst *)
+let univ_var_opening_not_fresh (us:univ_names) =
+    let n = List.length us - 1 in
+    let s, us' = us |> List.mapi (fun i u -> 
+        let u' = u in
+        UN(n - i, U_name u'), u') |> List.unzip in
+    s, us'
+
+let open_univ_vars_not_fresh (us:univ_names) (t:term) :term =
+    let s, _ = univ_var_opening_not_fresh us in
+    let t = subst s t in
+    t
+
 let open_univ_vars  (us:univ_names) (t:term)  : univ_names * term = 
     let s, us' = univ_var_opening us in 
     let t = subst s t in

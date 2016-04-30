@@ -711,6 +711,7 @@ let lex_t    = fvar_const Const.lex_t_lid
 let lex_top  = fvar Const.lextop_lid Delta_constant (Some Data_ctor) 
 let lex_pair = fvar Const.lexcons_lid Delta_constant (Some Data_ctor) 
 let tforall  = fvar Const.forall_lid (Delta_unfoldable 1) None
+let t_haseq   = fvar Const.haseq_lid Delta_constant None
 
 let lcomp_of_comp c0 =
     let c = comp_to_comp_typ c0 in

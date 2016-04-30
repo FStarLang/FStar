@@ -40,7 +40,7 @@ let nm_to_string bv =
     then bv_to_string bv
     else bv.ppname.idText
 
-let db_to_string bv = bv.ppname.idText ^ "@" ^ string_of_int bv.index
+let db_to_string bv = bv.ppname.idText ^ "!" ^ string_of_int bv.index
 
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [
@@ -169,7 +169,7 @@ let uvar_to_string u = if !Options.hide_uvar_nums then "?" else "?" ^ (Unionfind
  
 let rec univ_to_string u = match Subst.compress_univ u with
     | U_unif u -> uvar_to_string u
-    | U_name x -> x.idText
+    | U_name x -> Util.format1 "U_name<%s>" x.idText
     | U_bvar x -> "@"^string_of_int x
     | U_zero   -> "0"
     | U_succ u -> Util.format1 "(S %s)" (univ_to_string u)
@@ -217,9 +217,9 @@ let rec term_to_string x =
     Util.format2 "{:pattern %s} %s" pats (term_to_string t)
 
   | Tm_meta(t, _) ->    term_to_string t
-  | Tm_bvar x ->        db_to_string x  
-  | Tm_name x ->        nm_to_string x
-  | Tm_fvar f ->        fv_to_string f
+  | Tm_bvar x ->        Util.format1 "Tm_bvar:%s" (db_to_string x)  
+  | Tm_name x ->        Util.format1 "Tm_name:%s" (nm_to_string x)
+  | Tm_fvar f ->        Util.format1 "Tm_fvar:%s" (fv_to_string f)
   | Tm_uvar (u, _) ->   uvar_to_string u
   | Tm_constant c ->    const_to_string c
   | Tm_type u ->        if !Options.print_universes then Util.format1 "Type(%s)" (univ_to_string u) else "Type"
@@ -408,9 +408,10 @@ let rec sigelt_to_string x = match x with
   | Sig_pragma(ResetOptions (Some s), _) -> Util.format1 "#reset-options \"%s\"" s
   | Sig_pragma(SetOptions s, _) -> Util.format1 "#set-options \"%s\"" s
   | Sig_inductive_typ(lid, univs, tps, k, _, _, quals, _) -> 
-    Util.format4 "%s type %s %s : %s" 
+    Util.format5 "%s type %s<%s> %s : %s" 
              (quals_to_string quals) 
              lid.str
+             (univ_names_to_string univs)
              (binders_to_string " " tps) 
              (term_to_string k)
   | Sig_datacon(lid, univs, t, _, _, _, _, _) -> 

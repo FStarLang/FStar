@@ -33,6 +33,7 @@ module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module U  = FStar.Syntax.Util
+module PP = FStar.Syntax.Print
 
 // VALS_HACK_HERE
 
@@ -2491,7 +2492,102 @@ let tc_inductive env ses quals lids =
         ([], g) in
 
     let tcs, datas = generalize_and_inst_within env0 g (List.map fst tcs) datas in
-    Sig_bundle(tcs@datas, quals, lids, Env.get_range env0)
+    let sig_bndle = Sig_bundle(tcs@datas, quals, lids, Env.get_range env0) in
+    
+    //generate hasEq predicate for this inductive
+
+    let split_arrow (t:term) :(binders * comp) = match (SS.compress t).n with
+        | Tm_arrow (bs, c) -> bs, c
+        | _ -> failwith "Impossible"
+    in
+
+    let datacon_typ (data:sigelt) :term = match data with
+        | Sig_datacon (_, _, t, _, _, _, _, _) -> t
+        | _ -> failwith "Impossible"
+    in
+
+
+    //assumes non-indexed, non-recursive type
+    let haseq (ty:sigelt) (datas:list<sigelt>) :term =
+        let dr = Range.dummyRange in
+
+        //get conjunct formula for a data constructor
+        //univ_names are univ names that were used to open the inductive type, tbs are new binders for the inductive type
+        let conjunct_for_datacon (data:sigelt) (univ_names:univ_names) (tbs:binders) :term =
+            let t = datacon_typ data in
+            //open univ vars using the same universes as with the inductive type constructor
+            let t = SS.open_univ_vars_not_fresh univ_names t in
+            match (SS.compress t).n with
+                | Tm_arrow (bs, c) ->
+                    let bs = snd (List.splitAt (List.length tbs) bs) in  //filter out inductive type binders
+                    let bs, c = split_arrow (subst (SS.opening_of_binders tbs) (U.arrow bs c)) in  //substitute inductive type binders with tbs
+                    let rec conjunct_for_binders (old_bs:binders) (c:comp) :term =
+                        match old_bs with
+                            | []         -> failwith "Impossible"  //empty binders ?
+                            | b::old_bs' ->
+                                //generate a fresh binder
+                                let new_b = (S.gen_bv (fst b).ppname.idText None (fst b).sort, (snd b)) in
+                                if List.length old_bs' = 0 then
+                                    //it's the last binder, generate forall b. HasEq b.sort
+                                    let body = mk_Tm_app U.t_haseq [S.as_arg (fst new_b).sort] None dr in  //haseq b.sort
+                                    mk_Tm_app U.tforall [S.as_arg (U.abs [new_b] body None)] None dr  //forall, no need to close with new_b since it's not free in body
+                                else
+                                    //open the rest of binders with [b]
+                                    let [new_b], t = SS.open_term [b] (U.arrow old_bs' c) in  //assuming returned length is same as input length ?
+                                    let old_bs', c = split_arrow t in
+                                    //call conjunct_for_binders recursively
+                                    let fml = conjunct_for_binders old_bs' c in
+                                    let body = U.mk_conj (mk_Tm_app U.t_haseq [S.as_arg (fst new_b).sort] None dr) fml in  //haseq new_b /\ fml
+                                    let body = SS.close [new_b] body in  //close
+                                    mk_Tm_app U.tforall [ S.as_arg (U.abs [new_b] body None) ] None dr  //forall new_b
+                    in
+                    conjunct_for_binders bs c
+                | _ -> U.t_true  //if datacon type is not arrow, then constructing type directly ?
+        in
+
+        // /\ of formulas of all the data constructors, splitting manually to avoid unnecessary True in fold_left
+        let formula_for_datacons (univ_names:univ_names) (tbs:binders) :term = match datas with
+            | [] -> U.t_true
+            | data::datas' ->
+                let data_fml = conjunct_for_datacon data univ_names tbs in
+                List.fold_left (fun (t:term) (data:sigelt) -> U.mk_conj t (conjunct_for_datacon data univ_names tbs)) data_fml datas'
+        in
+
+        //work on the inductive
+        match ty with
+            | Sig_inductive_typ (lid, univ_names, bs, t, _, _, _, _) ->
+                //open universe vars
+                let univ_names, ind_type = SS.open_univ_vars univ_names (U.arrow bs (S.mk_Total t)) in
+                let bs, c = split_arrow ind_type in
+
+                //open_comp c, will also substitute binders in case of dependent types ?
+                let bs, c = SS.open_comp bs c in
+
+                //now we have opened the inductive type, i.e. generated fresh binders for each of the binders
+
+                //apply the type t to inductive type params, this bv_to_name is a bit funky ?
+                let ind_ty_applied = mk_Tm_app (S.fvar lid Delta_constant None) (List.map (fun (bv, _) -> S.as_arg (S.bv_to_name bv)) bs) None dr in
+
+                //body of formula which is, all_datacons_formula ==> haseq ind_ty_applied
+                let body = U.mk_imp (formula_for_datacons univ_names bs) (mk_Tm_app U.t_haseq [S.as_arg ind_ty_applied] None dr) in
+
+                //fold_right with binders, close and add a forall b
+                let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [b] (SS.close [b] t) None) ] None dr) bs body in
+                Util.print1 "\n\nHasEq Formula: %s\n\n" (PP.term_to_string fml);
+
+                let env = Env.push_sigelt env0 sig_bndle in
+                let env = Env.push_univ_vars env univ_names in
+
+                Util.print_string "\n\ntyping formula\n\n";
+                let _, _, _ = tc_term env fml in 
+
+                fml
+            | _ -> failwith "Impossible"
+    in
+
+    //test for now
+    //let _ = if env.curmodule.ident.idText = "Test" then ignore (haseq (List.hd tcs) datas) else () in 
+    sig_bndle
 
 let rec tc_decl env se = match se with
     | Sig_inductive_typ _

@@ -75,6 +75,7 @@ let iff_lid    = pconst "l_iff"
 let ite_lid    = pconst "l_ITE"
 let exists_lid = pconst "l_Exists"
 let forall_lid = pconst "l_Forall"
+let haseq_lid  = pconst "hasEq"
 let b2t_lid    = pconst "b2t" (* coercion from boolean to type *)
 let admit_lid  = pconst "admit"
 let magic_lid  = pconst "magic"
