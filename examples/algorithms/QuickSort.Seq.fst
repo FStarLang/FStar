@@ -6,7 +6,10 @@ open FStar.SeqProperties
    of F* and and the option here:
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
 
-opaque val partition: f:('a -> 'a -> Tot bool){total_order 'a f}
+(* CH: this is needed on my machine, intermittent failures otherwise *)
+#reset-options "--z3timeout 20"
+
+val partition: f:('a -> 'a -> Tot bool){total_order 'a f}
     -> s:seq 'a -> pivot:nat{pivot < length s} -> back:nat{pivot <= back /\ back < length s} ->
        Pure (seq 'a * seq 'a)
          (requires (forall (i:nat{i < length s}).
@@ -42,6 +45,8 @@ let rec partition f s pivot back =
             let _ = lemma_swap_permutes s (pivot + 1) back in
             let res = (* admit() *) partition f s' pivot (back - 1) in
             res        
+
+#reset-options
 
 #set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 val sort: f:('a -> 'a -> Tot bool){total_order 'a f}
