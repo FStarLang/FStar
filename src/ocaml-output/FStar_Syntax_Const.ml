@@ -337,9 +337,12 @@ let as_ensures : FStar_Ident.lident = (pconst "as_ensures")
 let decreases_lid : FStar_Ident.lident = (pconst "decreases")
 
 # 157 "FStar.Syntax.Const.fst"
-let range_of_lid : FStar_Ident.lident = (pconst "range_of")
+let range_lid : FStar_Ident.lident = (pconst "range")
 
 # 158 "FStar.Syntax.Const.fst"
+let range_of_lid : FStar_Ident.lident = (pconst "range_of")
+
+# 159 "FStar.Syntax.Const.fst"
 let labeled_lid : FStar_Ident.lident = (pconst "labeled")
 
 

@@ -168,7 +168,10 @@ let t_float : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Synta
 # 75 "FStar.TypeChecker.Common.fst"
 let t_char : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tabbrev FStar_Syntax_Const.char_lid)
 
-# 77 "FStar.TypeChecker.Common.fst"
+# 76 "FStar.TypeChecker.Common.fst"
+let t_range : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tabbrev FStar_Syntax_Const.range_lid)
+
+# 78 "FStar.TypeChecker.Common.fst"
 let rec delta_depth_greater_than : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth  ->  Prims.bool = (fun l m -> (match ((l, m)) with
 | (FStar_Syntax_Syntax.Delta_constant, _51_30) -> begin
 false
@@ -192,7 +195,7 @@ end
 (delta_depth_greater_than l d)
 end))
 
-# 86 "FStar.TypeChecker.Common.fst"
+# 87 "FStar.TypeChecker.Common.fst"
 let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth Prims.option = (fun _51_1 -> (match (_51_1) with
 | (FStar_Syntax_Syntax.Delta_constant) | (FStar_Syntax_Syntax.Delta_equational) -> begin
 None
