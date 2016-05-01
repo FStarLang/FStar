@@ -1057,7 +1057,10 @@ let check_top_level env g lc : (bool * comp) =
   then discharge g, lc.comp()   
   else let c = lc.comp() in
        let steps = [Normalize.Beta; Normalize.SNComp; Normalize.DeltaComp] in
-       let c = Normalize.normalize_comp steps env c |> Util.comp_to_comp_typ in
+       let c = Normalize.unfold_effect_abbrev env c 
+              |> S.mk_Comp
+              |> Normalize.normalize_comp steps env 
+              |> Util.comp_to_comp_typ in
        let md = Env.get_effect_decl env c.effect_name in
        let t, wp, _ = destruct_comp c in
        let vc = mk_Tm_app (inst_effect_fun_with [env.universe_of env t] env md md.trivial) [S.as_arg t; S.as_arg wp] (Some U.ktype0.n) (Env.get_range env) in
