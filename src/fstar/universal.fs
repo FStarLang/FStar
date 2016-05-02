@@ -188,7 +188,7 @@ let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
       | [ (_, l) ] ->
         l
       | _ ->
-        raise <| Util.Failure (format1 "Internal error: expected to find exactly one entry for %s in dependency graph" fn)
+        raise <| FStar.Util.Failure (format1 "Internal error: expected to find exactly one entry for %s in dependency graph" fn)
     end
   in
   FStar.SMTEncoding.ErrorReporting.initialize_fuel_trace fn deps;

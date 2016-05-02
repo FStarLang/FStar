@@ -666,5 +666,8 @@ let load_value_from_file (fname:string) =
   | _ ->
     None
 
-let md5_of_file (fname:string) =
+let digest_of_file (fname:string) =
   BatDigest.file fname
+  
+let digest_of_string (s:string) =
+  BatDigest.string s
