@@ -39,10 +39,20 @@ let init_once () : unit =
   let env = TcEnv.set_current_module env test_lid in
   tcenv_ref := Some env
 
+let init_once_no_prims () : unit =
+  let solver = SMT.dummy in
+  let env = TcEnv.initial_env Tc.type_of solver Const.prims_lid in
+  env.solver.init env;
+//  let dsenv, prims_mod = parse_prims () in
+//  let prims_mod, env = Tc.check_module env prims_mod in
+  let env = TcEnv.set_current_module env test_lid in
+  tcenv_ref := Some env;
+  dsenv_ref := Some (Parser.Env.empty_env())
+
 let rec init () = 
     match !dsenv_ref, !tcenv_ref with 
         | Some e, Some f -> e, f
-        | _ -> init_once(); init()
+        | _ -> init_once_no_prims(); init()
 
 let pars_term_or_fragment is_term s = 
   try 

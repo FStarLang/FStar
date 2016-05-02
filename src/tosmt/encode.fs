@@ -2110,100 +2110,103 @@ let encode_modul tcenv modul =
     Z3.giveZ3 decls
 
 let solve tcenv q : unit =
-    push (Util.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
-    let pop () = pop (Util.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
-    let prefix, labels, qry, suffix =
-        let env = get_env tcenv in
-        let bindings = Tc.Env.fold_env tcenv (fun bs b -> b::bs) [] in
-        let q, bindings = 
-            let rec aux bindings = match bindings with 
-                | Env.Binding_var(x,t)::rest -> 
-                  let out, rest = aux rest in 
-                  let t = Normalize.norm_typ [Normalize.DeltaHard; Normalize.Beta; Normalize.Eta; Normalize.EtaArgs; Normalize.Simplify] env.tcenv t in
-                  Syntax.v_binder (Util.bvd_to_bvar_s x t)::out, rest 
-                | Env.Binding_typ(a, k)::rest -> 
-                  let out, rest = aux rest in 
-                  Syntax.t_binder (Util.bvd_to_bvar_s a k)::out, rest 
-                | _ -> [], bindings in
-            let closing, bindings = aux bindings in 
-            Util.close_forall (List.rev closing) q, bindings in 
-        let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
-        if debug tcenv Options.Low then Util.print1 "Encoding query formula: %s\n" (Print.formula_to_string q);//(Normalize.formula_norm_to_string tcenv q);
-        let phi, labels, qdecls = encode_formula_with_labels q env in
-        let label_prefix, label_suffix = encode_labels labels in
-        let query_prelude =
-            env_decls
-            @label_prefix
-            @qdecls in
-        let qry = Term.Assume(mkNot phi, Some "query") in
-        let suffix = label_suffix@[Term.Echo "Done!"]  in
-        query_prelude, labels, qry, suffix in
-    begin match qry with
-        | Assume({tm=App(False, _)}, _) -> pop(); ()
-        | _ when tcenv.admit -> pop(); ()
-        | Assume(q, _) ->
-            let fresh = String.length q.hash >= 2048 in
-            Z3.giveZ3 prefix;
+    if !Options.admit_smt_queries then () else
+    begin
+        push (Util.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
+        let pop () = pop (Util.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
+        let prefix, labels, qry, suffix =
+            let env = get_env tcenv in
+            let bindings = Tc.Env.fold_env tcenv (fun bs b -> b::bs) [] in
+            let q, bindings = 
+                let rec aux bindings = match bindings with 
+                    | Env.Binding_var(x,t)::rest -> 
+                      let out, rest = aux rest in 
+                      let t = Normalize.norm_typ [Normalize.DeltaHard; Normalize.Beta; Normalize.Eta; Normalize.EtaArgs; Normalize.Simplify] env.tcenv t in
+                      Syntax.v_binder (Util.bvd_to_bvar_s x t)::out, rest 
+                    | Env.Binding_typ(a, k)::rest -> 
+                      let out, rest = aux rest in 
+                      Syntax.t_binder (Util.bvd_to_bvar_s a k)::out, rest 
+                    | _ -> [], bindings in
+                let closing, bindings = aux bindings in 
+                Util.close_forall (List.rev closing) q, bindings in 
+            let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
+            if debug tcenv Options.Low then Util.print1 "Encoding query formula: %s\n" (Print.formula_to_string q);//(Normalize.formula_norm_to_string tcenv q);
+            let phi, labels, qdecls = encode_formula_with_labels q env in
+            let label_prefix, label_suffix = encode_labels labels in
+            let query_prelude =
+                env_decls
+                @label_prefix
+                @qdecls in
+            let qry = Term.Assume(mkNot phi, Some "query") in
+            let suffix = label_suffix@[Term.Echo "Done!"]  in
+            query_prelude, labels, qry, suffix in
+        begin match qry with
+            | Assume({tm=App(False, _)}, _) -> pop(); ()
+            | _ when tcenv.admit -> pop(); ()
+            | Assume(q, _) ->
+                let fresh = String.length q.hash >= 2048 in
+                Z3.giveZ3 prefix;
 
-            let with_fuel p (n, i) =
-                [Term.Caption (Util.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
-                    Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None);
-                    Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None);
-                    p;
-                    Term.CheckSat]@suffix in
+                let with_fuel p (n, i) =
+                    [Term.Caption (Util.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
+                        Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None);
+                        Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None);
+                        p;
+                        Term.CheckSat]@suffix in
 
-            let check (p:decl) =
-                let initial_config = (!Options.initial_fuel, !Options.initial_ifuel) in
-                let alt_configs = List.flatten [(if !Options.max_ifuel > !Options.initial_ifuel then [(!Options.initial_fuel, !Options.max_ifuel)] else []);
-                                                (if !Options.max_fuel / 2 > !Options.initial_fuel then [(!Options.max_fuel / 2, !Options.max_ifuel)] else []);
-                                                (if !Options.max_fuel > !Options.initial_fuel && !Options.max_ifuel > !Options.initial_ifuel then [(!Options.max_fuel, !Options.max_ifuel)] else []);
-                                                (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])] in
+                let check (p:decl) =
+                    let initial_config = (!Options.initial_fuel, !Options.initial_ifuel) in
+                    let alt_configs = List.flatten [(if !Options.max_ifuel > !Options.initial_ifuel then [(!Options.initial_fuel, !Options.max_ifuel)] else []);
+                                                    (if !Options.max_fuel / 2 > !Options.initial_fuel then [(!Options.max_fuel / 2, !Options.max_ifuel)] else []);
+                                                    (if !Options.max_fuel > !Options.initial_fuel && !Options.max_ifuel > !Options.initial_ifuel then [(!Options.max_fuel, !Options.max_ifuel)] else []);
+                                                    (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])] in
 
-                let report errs =
-                    let errs = match errs with
-                            | [] -> [("Unknown assertion failed", dummyRange)]
-                            | _ -> errs in
-                    if !Options.print_fuels
-                    then (Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
-                            (Range.string_of_range (Env.get_range tcenv))
-                            (!Options.max_fuel |> Util.string_of_int)
-                            (!Options.max_ifuel |> Util.string_of_int));
-                    Tc.Errors.add_errors tcenv errs in
-
-                let rec try_alt_configs (p:decl) errs = function
-                    | [] -> report errs
-                    | [mi] ->
-                        begin match errs with
-                        | [] -> Z3.ask fresh labels (with_fuel p mi) (cb mi p [])
-                        | _ -> report errs
-                        end
-
-                    | mi::tl ->
-                        Z3.ask fresh labels (with_fuel p mi) (fun (ok, errs') ->
-                        match errs with
-                            | [] -> cb mi p tl (ok, errs')
-                            | _ -> cb mi p tl (ok, errs))
-
-                and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) =
-                    if ok
-                    then if !Options.print_fuels
-                         then (Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n"
+                    let report errs =
+                        let errs = match errs with
+                                | [] -> [("Unknown assertion failed", dummyRange)]
+                                | _ -> errs in
+                        if !Options.print_fuels
+                        then (Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
                                 (Range.string_of_range (Env.get_range tcenv))
-                                (Util.string_of_int prev_fuel)
-                                (Util.string_of_int prev_ifuel))
-                         else ()
-                    else try_alt_configs p errs alt in
-                Z3.ask fresh labels (with_fuel p initial_config) (cb initial_config p alt_configs)  in
+                                (!Options.max_fuel |> Util.string_of_int)
+                                (!Options.max_ifuel |> Util.string_of_int));
+                        Tc.Errors.add_errors tcenv errs in
 
-            let process_query (q:decl) :unit =
-                if !Options.split_cases > 0 then
-                    let (b, cb) = SplitQueryCases.can_handle_query !Options.split_cases q in
-                    if b then SplitQueryCases.handle_query cb check else check q
-                else check q
-            in
+                    let rec try_alt_configs (p:decl) errs = function
+                        | [] -> report errs
+                        | [mi] ->
+                            begin match errs with
+                            | [] -> Z3.ask fresh labels (with_fuel p mi) (cb mi p [])
+                            | _ -> report errs
+                            end
 
-            if !Options.admit_smt_queries then () else process_query qry;
-            pop ()
+                        | mi::tl ->
+                            Z3.ask fresh labels (with_fuel p mi) (fun (ok, errs') ->
+                            match errs with
+                                | [] -> cb mi p tl (ok, errs')
+                                | _ -> cb mi p tl (ok, errs))
+
+                    and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) =
+                        if ok
+                        then if !Options.print_fuels
+                             then (Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n"
+                                    (Range.string_of_range (Env.get_range tcenv))
+                                    (Util.string_of_int prev_fuel)
+                                    (Util.string_of_int prev_ifuel))
+                             else ()
+                        else try_alt_configs p errs alt in
+                    Z3.ask fresh labels (with_fuel p initial_config) (cb initial_config p alt_configs)  in
+
+                let process_query (q:decl) :unit =
+                    if !Options.split_cases > 0 then
+                        let (b, cb) = SplitQueryCases.can_handle_query !Options.split_cases q in
+                        if b then SplitQueryCases.handle_query cb check else check q
+                    else check q
+                in
+
+                if !Options.admit_smt_queries then () else process_query qry;
+                pop ()
+        end
     end
 
 let is_trivial (tcenv:Tc.Env.env) (q:typ) : bool =

@@ -91,20 +91,21 @@ let run i r expected =
     
 let run_all () = 
     Printf.printf "Testing the normalizer\n";
-    let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
-                                           match x with \
-                                            | [] -> []  \
-                                            | hd::tl -> hd::copy tl" in
-    let _ = Pars.pars_and_tc_fragment "let recons (x:list int) : Tot (list int) = \
-                                           match x with \
-                                            | [] -> []  \
-                                            | hd::tl -> hd::tl" in
-    let _ = Pars.pars_and_tc_fragment "let rev (x:list int) : Tot (list int) = \
-                                            let rec aux (x:list int) (out:list int) : Tot (list int) = \
-                                                match x with \
-                                                | [] -> out \
-                                                | hd::tl -> aux tl (hd::out) in \
-                                            aux x []" in
+//    let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
+//                                           match x with \
+//                                            | [] -> []  \
+//                                            | hd::tl -> hd::copy tl" in
+//    let _ = Pars.pars_and_tc_fragment "let recons (x:list int) : Tot (list int) = \
+//                                           match x with \
+//                                            | [] -> []  \
+//                                            | hd::tl -> hd::tl" in
+//    let _ = Pars.pars_and_tc_fragment "let rev (x:list int) : Tot (list int) = \
+//                                            let rec aux (x:list int) (out:list int) : Tot (list int) = \
+//                                                match x with \
+//                                                | [] -> out \
+//                                                | hd::tl -> aux tl (hd::out) in \
+//                                            aux x []" in
+    run -1 (app id [nm n]) (nm n);
     run 0 (app apply [one; id; nm n]) (nm n);
     run 1 (app apply [tt; nm n; nm m]) (nm n);
     run 2 (app apply [ff; nm n; nm m]) (nm m);
@@ -133,9 +134,9 @@ let run_all () =
     run 19 (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;
     run 20 (minus_nat (encode_nat 10) (encode_nat 10)) znat;
 //    run 21 (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat; //this one takes about 30 sec and ~3.5GB of memory
-    run 21 (tc "recons [0;1]") (tc "[0;1]");
-    run 22 (tc "copy [0;1]") (tc "[0;1]");
-    run 23 (tc "rev [0;1;2;3;4;5;6;7;8;9;10]") (tc "[10;9;8;7;6;5;4;3;2;1;0]");
+//    run 21 (tc "recons [0;1]") (tc "[0;1]");
+//    run 22 (tc "copy [0;1]") (tc "[0;1]");
+//    run 23 (tc "rev [0;1;2;3;4;5;6;7;8;9;10]") (tc "[10;9;8;7;6;5;4;3;2;1;0]");
     Printf.printf "Normalizer ok\n"
  
     

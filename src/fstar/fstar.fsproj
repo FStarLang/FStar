@@ -26,7 +26,7 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>b.fst --explicit_deps --lax --universes</StartArguments>
+    <StartArguments>b.fst --explicit_deps --lax --universes --admit_smt_queries true</StartArguments>
     <StartAction>Project</StartAction>
     <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\examples\test\</StartWorkingDirectory>
   </PropertyGroup>

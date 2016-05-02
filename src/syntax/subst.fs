@@ -62,12 +62,24 @@ let rec compress_univ u = match u with
 (*************************** Delayed substitutions ******************************)
 (********************************************************************************)
 (* A subst_t is a composition of parallel substitutions, expressed as a list of lists *)
-let subst_to_string s = s |> List.map (fun (b, _) -> b.ppname.idText) |> String.concat ", "
+let subst_to_string (s:subst_ts) = 
+    let bv_to_str x = x.ppname.idText ^ "#" ^ (string_of_int x.index) in
+    s |> List.map (function
+        | DB(i, x) -> Util.format2 "DB(%s, %s)" (string_of_int i) (bv_to_str x)
+        | NM(x, i) -> Util.format2 "NM(%s, %s)" (bv_to_str x) (string_of_int i)
+        | NT(x, t) -> Util.format1 "NT(%s, ??)" (bv_to_str x)
+        | UN(i, u) -> Util.format1 "UN(%s, ??)" (string_of_int i)
+        | UD(x, i) -> Util.format2 "UN(%s, %s)" x.idText (string_of_int i)
+        | DT(i, t) -> Util.format1 "DT(%s, ??)" (string_of_int i)
+        | UT(n, t) -> Util.format1 "UT(%s, ??)" n.idText)
+    |> String.concat "; "
 
-//Lookup a bound var or a name in a parallel substitution
+//Lookup a bound var in a parallel substitution
 let subst_bv a s = Util.find_map s (function 
-    | DB (i, x) when (i=a.index) -> 
+    | DB(i, x) when (i=a.index) -> 
       Some (bv_to_name (Syntax.set_range_of_bv x (Syntax.range_of_bv a)))
+    | DT(i, t) when (i=a.index) -> 
+      Some t
     | _ -> None)
 let subst_nm a s = Util.find_map s (function  
     | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({a with index=i})) 
@@ -78,6 +90,7 @@ let subst_univ_bv x s = Util.find_map s (function
     | _ -> None)
 let subst_univ_nm (x:univ_name) s = Util.find_map s (function 
     | UD(y, i) when (x.idText=y.idText) -> Some (U_bvar i)
+    | UT(y, u) when (x.idText=y.idText) -> Some u
     | _ -> None)
 
 (* apply_until_some f s 
@@ -102,10 +115,16 @@ let rec subst_univ s u =
     let u = compress_univ u in
     match u with 
       | U_bvar x -> 
-        apply_until_some_then_map (subst_univ_bv x) s subst_univ u
+        begin match subst_univ_bv x s with 
+            | None -> u
+            | Some u' -> u'
+        end
 
-      | U_name  x ->
-        apply_until_some_then_map (subst_univ_nm x) s subst_univ u
+      | U_name x ->
+        begin match subst_univ_nm x s with 
+            | None -> u
+            | Some u' -> u'
+        end
 
       | U_zero
       | U_unknown 
@@ -113,10 +132,152 @@ let rec subst_univ s u =
       | U_succ u -> U_succ (subst_univ s u)
       | U_max us -> U_max (List.map (subst_univ s) us)
 
+(* s1 and s2 are each parallel substitutions
+    e.g., s1 = [NM(x, 0); NM(y, 1)]
+          s2 = [DB(0, x'); DB(1, y')]
+    compose them to 
+          s  = [NT(x, x'); NT(y, y')]
+*)
+let rec compose_subst s1 s2 = 
+   let find_and_remove f s = 
+        let rec aux out s = match s with 
+            | [] -> None, out
+            | hd::tl -> if f hd then Some hd, out@tl
+                        else aux (hd::out) tl in
+        aux [] s in
+ 
+   let find_name s x = 
+     s |> find_and_remove (function
+        | NM(y, _)
+        | NT(y, _) -> bv_eq x y
+        | _ -> false) in
+ 
+   //consider applying (s1 . s2) to a term 
+   //In general, given a substition is a list (var * term), 
+   //the composition s1 . s2 is  
+   //    s2 |> filter (fun (x, _) -> x not in dom s1)  
+   //    @ map (fun (x, t) -> (x, s2 t) s1
+   //However, our substitutions have more structure and we can optimize a bit further
+   //First, we assume that s1 and s2 have non-overlapping domains
+   let s2_orig = s2 in
+   s1 |> List.fold_left (fun s2 s1_elt -> 
+           match s1_elt with 
+            | DB(i, x) -> //opening i to x
+                 //assert (DB(i, _)) not in s2 (disjoint domains)
+                 //assert x is fresh identifer not occuring im T
+                 let s2_x, s2_remainder = find_name s2 x in
+                 begin match s2_x with 
+                    | Some (NM(_, j)) -> //closing x to j
+                      if i=j 
+                      then s2_remainder //they cancel
+                      else failwith "Impossible" //can't change the de Bruijn index of a term!
 
-let rec subst' (s:subst_ts) t = match s with
-  | [] 
-  | [[]] -> t //force_uvar t
+                    | Some (NT(_, {n=Tm_name y})) -> //renaming x to y
+                      DB(i, y)                       //open i to y directly
+                      ::s2_remainder                 //x does not occur in T, so no need to keep s2_x
+
+                    | Some (NT(_, tm)) ->            //subst x to tm 
+                      DT(i, tm)                      //open and subst i to tm directly
+                      ::s2_remainder                 //x does not occur in T, so no need to keep s2_x
+
+                    | _ -> //must be None; nothing to compose with 
+                      s1_elt
+                      ::s2_remainder                 //s2_remainder == s2, up to reordering
+                 end
+
+           | NM(x, i) -> //closing x to i
+                 //assert {NM(x, _), NT(x, _)} not in s2 (disjoint domains)
+                 //de Bruijn index i does not appear in T
+                 let s2_i, s2_remainder = s2 |> find_and_remove (function
+                    | DB(j, _) 
+                    | DT(j, _) -> i=j
+                    | _ -> false) in
+
+                 begin match s2_i with 
+                    | Some (DB(_, y)) ->  //open i to y; y is fresh
+                      NT(x, bv_to_name y) //rename x to y in one step
+                      ::s2_remainder      //i does not appear in T, so no need to keep s2_i
+
+                    | Some (DT(_, tm)) -> //subst index i to tm
+                      NT(x, tm)           //subst x to tm in one step
+                      ::s2_remainder      //i does not appear in T, so no need to keep s2_i
+                    
+                    | _ ->                //s2_i=None
+                      s1_elt              //nothing to compose with
+                      ::s2_remainder      //s2_remainder == s2, up to reordering
+                 end
+
+           | NT(x, ({n=Tm_name y})) -> //renaming x to y
+                //assert {NM(x, _), NT(x, _)} not in s2 (disjoint domains)
+                let s2_y, _ = find_name s2 y in
+                begin match s2_y with
+                    | Some (NM(_, j)) -> //closing y to j
+                      NM(x, j)           //close x to j in 1 step
+                      ::s2               //y may occur free in T; so keep it in s2
+
+                    | Some (NT(_, tm)) -> //substituting y to tm 
+                      NT(x, tm)           //substitute x to tm directly
+                      ::s2                //y may occur free in T; so keep it in s2
+
+                    | _ ->                //s2_y=None
+                      s1_elt              //nothing to compose with
+                      ::s2
+                end
+
+           | NT(x, tm) -> //can't compose on the RHS; so just apply the RHS substitution to tm
+             NT(x, subst s2_orig tm)
+             ::s2
+
+           | DT(i, tm) ->                   //i is opened and substituted to tm; can't compose on the RHS
+             DT(i, subst s2_orig tm)     //so just apply the RHS substitution to tm
+             ::s2 
+
+           | UN(i, U_name n) ->             //i is opened to n; just like the DB(i, x) case
+             let u_n, s2_remainder = s2 |> find_and_remove (function
+                    | UD(m, _) 
+                    | UT(m, _) -> n=m 
+                    | _ -> false) in
+             //n is fresh, i.e., n not in FV T
+             //i not in dom s2
+             begin match u_n with 
+                | Some(UD(_, j)) ->  //n is closed to j
+                  assert (i=j);
+                  s2_remainder
+
+                | Some(UT(_, u)) ->   //subst n to u
+                  UN(i, u)            //open and subst i to u directly
+                  ::s2_remainder      //n is fresh, so no need to keep u_n
+
+                | _ ->                //u_n is None
+                  s1_elt              //nothing to compose with  
+                  ::s2_remainder      //s2_remainder == s2, up to reordering
+              end
+         
+           | UN(i, u) ->              //i is opened and substituted to u; just like the DT case
+             UN(i, subst_univ s2_orig u)
+             ::s2
+
+           | UD(un, i) ->            //close universe name un with index i; just like the NM case
+             let u_i, s2_remainder = s2 |> find_and_remove (function
+                    | UN(j, _) -> i=j
+                    | _ -> false) in
+             begin match u_i with 
+                | Some(UN(_, u)) ->   //i is mapped to u
+                  UT(un, u)           //subst un with u in 1 step
+                  ::s2_remainder      //i does not appear in T, so no need to keep u_i
+ 
+                | _ ->                //u_i=None
+                  s1_elt              //nothing to compose with
+                  ::s2_remainder      //s2_remainder == s2, up to reordering
+             end
+
+          | UT(un, u) ->              //like the NT case
+            UT(un, subst_univ s2_orig u) //apply the substitution to it to compose
+            ::s2)
+    s2 
+
+and subst (s:subst_ts) t = match s with
+  | [] -> t 
   | _ ->
     let t0 = force_delayed_thunk t in 
     match t0.n with
@@ -129,16 +290,22 @@ let rec subst' (s:subst_ts) t = match s with
             //s is the new subsitution to add to it
             //compose substitutions by concatenating them
             //the order of concatenation is important!
-          mk_Tm_delayed (Inl (t', s'@s)) t.pos
+          mk_Tm_delayed (Inl (t', compose_subst s' s)) t.pos
 
         | Tm_delayed(Inr _, _) -> 
           failwith "Impossible: force_delayed_thunk removes lazy delayed nodes"
 
         | Tm_bvar a ->
-          apply_until_some_then_map (subst_bv a) s subst' t0
+          begin match subst_bv a s with 
+            | None -> t0
+            | Some t -> t
+          end
 
         | Tm_name a -> 
-          apply_until_some_then_map (subst_nm a) s subst' t0
+          begin match subst_nm a s with 
+            | None -> t0
+            | Some t -> t
+          end
 
         | Tm_type u -> 
           mk (Tm_type (subst_univ s u)) None t0.pos 
@@ -147,42 +314,39 @@ let rec subst' (s:subst_ts) t = match s with
 
 and subst_flags' s flags =
     flags |> List.map (function
-        | DECREASES a -> DECREASES (subst' s a)
+        | DECREASES a -> DECREASES (subst s a)
         | f -> f)
 
 and subst_comp_typ' s t = match s with
-  | []
-  | [[]] -> t
+  | [] -> t
   | _ ->
-    {t with result_typ=subst' s t.result_typ;
+    {t with result_typ=subst s t.result_typ;
             flags=subst_flags' s t.flags;
-            effect_args=List.map (fun (t, imp) -> subst' s t, imp) t.effect_args}
+            effect_args=List.map (fun (t, imp) -> subst s t, imp) t.effect_args}
 
-and subst_comp' s t = match s with
-  | []
-  | [[]] -> t
+and subst_comp s t = match s with
+  | [] -> t
   | _ ->
     match t.n with
-      | Total t -> mk_Total (subst' s t)
-      | GTotal t -> mk_GTotal (subst' s t)
+      | Total t -> mk_Total (subst s t)
+      | GTotal t -> mk_GTotal (subst s t)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
-
-and compose_subst (s1:subst_ts) (s2:subst_ts) = s1@s2
 
 let shift n s = match s with 
     | DB(i, t) -> DB(i+n, t)
+    | DT(i, t) -> DT(i+n, t)
     | UN(i, t) -> UN(i+n, t)
     | NM(x, i) -> NM(x, i+n)
     | UD(x, i) -> UD(x, i+n)
     | NT _  -> s
+    | UT _  -> s
 let shift_subst n s = List.map (shift n) s
-let shift_subst' n s = s |> List.map (shift_subst n)
-let subst_binder' s (x, imp) = {x with sort=subst' s x.sort}, imp
+let subst_binder' s (x, imp) = {x with sort=subst s x.sort}, imp
 let subst_binders' s bs = 
     bs |> List.mapi (fun i b -> 
         if i=0 then subst_binder' s b
-        else subst_binder' (shift_subst' i s) b)
-let subst_arg' s (t, imp) = (subst' s t, imp)
+        else subst_binder' (shift_subst i s) b)
+let subst_arg' s (t, imp) = (subst s t, imp)
 let subst_args' s = List.map (subst_arg' s)
 let subst_pat' s p : (pat * int) = 
     let rec aux n p : (pat * int) = match p.v with 
@@ -202,19 +366,19 @@ let subst_pat' s p : (pat * int) =
         {p with v=Pat_cons(fv, List.rev pats)}, n
 
       | Pat_var x ->
-        let s = shift_subst' n s in 
-        let x = {x with sort=subst' s x.sort} in
+        let s = shift_subst n s in 
+        let x = {x with sort=subst s x.sort} in
         {p with v=Pat_var x}, n + 1
 
       | Pat_wild x -> 
-        let s = shift_subst' n s in 
-        let x = {x with sort=subst' s x.sort} in
+        let s = shift_subst n s in 
+        let x = {x with sort=subst s x.sort} in
         {p with v=Pat_wild x}, n + 1 //these may be in scope in the inferred types of other terms, so shift the index
 
       | Pat_dot_term(x, t0) -> 
-        let s = shift_subst' n s in
-        let x = {x with sort=subst' s x.sort} in
-        let t0 = subst' s t0 in 
+        let s = shift_subst n s in
+        let x = {x with sort=subst s x.sort} in
+        let t0 = subst s t0 in 
         {p with v=Pat_dot_term(x, t0)}, n //these are not in scope, so don't shift the index
   in aux 0 p
 
@@ -222,10 +386,11 @@ let push_subst_lcomp s lopt = match lopt with
     | None 
     | Some (Inr _) -> lopt
     | Some (Inl l) -> 
-      Some (Inl ({l with res_typ=subst' s l.res_typ;
-                         comp=(fun () -> subst_comp' s (l.comp()))}))
+      Some (Inl ({l with res_typ=subst s l.res_typ;
+                         comp=(fun () -> subst_comp s (l.comp()))}))
 
 let push_subst s t = 
+    let n = List.length s in
     match t.n with 
         | Tm_delayed _ -> failwith "Impossible"
 
@@ -236,7 +401,7 @@ let push_subst s t =
 
         | Tm_type _
         | Tm_bvar _ 
-        | Tm_name _  -> subst' s t
+        | Tm_name _  -> subst s t
 
         | Tm_uinst(t', us) -> 
           //t' must be an fvar---it cannot be substituted
@@ -244,46 +409,46 @@ let push_subst s t =
           let us = List.map (subst_univ s) us in
           mk_Tm_uinst t' us
 
-        | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args)) None t.pos
+        | Tm_app(t0, args) -> mk (Tm_app(subst s t0, subst_args' s args)) None t.pos
 
-        | Tm_ascribed(t0, Inl t1, lopt) -> mk (Tm_ascribed(subst' s t0, Inl (subst' s t1), lopt)) None t.pos
-        | Tm_ascribed(t0, Inr c, lopt) -> mk (Tm_ascribed(subst' s t0, Inr (subst_comp' s c), lopt)) None t.pos
+        | Tm_ascribed(t0, Inl t1, lopt) -> mk (Tm_ascribed(subst s t0, Inl (subst s t1), lopt)) None t.pos
+        | Tm_ascribed(t0, Inr c, lopt) -> mk (Tm_ascribed(subst s t0, Inr (subst_comp s c), lopt)) None t.pos
        
         | Tm_abs(bs, body, lopt) -> 
           let n = List.length bs in 
-          let s' = shift_subst' n s in
-          mk (Tm_abs(subst_binders' s bs, subst' s' body, push_subst_lcomp s' lopt)) None t.pos   
+          let s' = shift_subst n s in
+          mk (Tm_abs(subst_binders' s bs, subst s' body, push_subst_lcomp s' lopt)) None t.pos   
           
         | Tm_arrow(bs, comp) -> 
           let n = List.length bs in 
-          mk (Tm_arrow(subst_binders' s bs, subst_comp' (shift_subst' n s) comp)) None t.pos   
+          mk (Tm_arrow(subst_binders' s bs, subst_comp (shift_subst n s) comp)) None t.pos   
         
         | Tm_refine(x, phi) -> 
-          let x = {x with sort=subst' s x.sort} in
-          let phi = subst' (shift_subst' 1 s) phi in
+          let x = {x with sort=subst s x.sort} in
+          let phi = subst (shift_subst 1 s) phi in
           mk (Tm_refine(x, phi)) None t.pos
 
         | Tm_match(t0, pats) -> 
-          let t0 = subst' s t0 in
+          let t0 = subst s t0 in
           let pats = pats |> List.map (fun (pat, wopt, branch) -> 
             let pat, n = subst_pat' s pat in 
-            let s = shift_subst' n s in 
+            let s = shift_subst n s in 
             let wopt = match wopt with 
                 | None -> None
-                | Some w -> Some (subst' s w) in
-            let branch = subst' s branch in 
+                | Some w -> Some (subst s w) in
+            let branch = subst s branch in 
             (pat, wopt, branch)) in
           mk (Tm_match(t0, pats)) None t.pos    
            
         | Tm_let((is_rec, lbs), body) -> 
           let n = List.length lbs in
-          let sn = shift_subst' n s in
-          let body = subst' sn body in 
+          let sn = shift_subst n s in
+          let body = subst sn body in 
           let lbs = lbs |> List.map (fun lb -> 
-            let lbt = subst' s lb.lbtyp in
+            let lbt = subst s lb.lbtyp in
             let lbd = if is_rec && Util.is_left (lb.lbname) //if it is a recursive local let, then all the let bound names are in scope for the body
-                      then subst' sn lb.lbdef 
-                      else subst' s lb.lbdef in
+                      then subst sn lb.lbdef 
+                      else subst s lb.lbdef in
             let lbname = match lb.lbname with 
                 | Inl x -> Inl ({x with sort=lbt})
                 | Inr fv -> Inr ({fv with fv_name={fv.fv_name with ty=lbt}}) in
@@ -291,10 +456,10 @@ let push_subst s t =
           mk (Tm_let((is_rec, lbs), body)) None t.pos  
          
         | Tm_meta(t0, Meta_pattern ps) -> 
-          mk (Tm_meta(subst' s t0, Meta_pattern (ps |> List.map (subst_args' s)))) None t.pos
+          mk (Tm_meta(subst s t0, Meta_pattern (ps |> List.map (subst_args' s)))) None t.pos
 
         | Tm_meta(t, m) -> 
-          mk (Tm_meta(subst' s t,  m)) None t.pos 
+          mk (Tm_meta(subst s t,  m)) None t.pos 
 
 let rec compress (t:term) = 
     let t = force_delayed_thunk t in
@@ -307,8 +472,6 @@ let rec compress (t:term) =
         | _ -> force_uvar t
             
 
-let subst s t = subst' [s] t
-let subst_comp s t = subst_comp' [s] t
 let closing_subst bs = 
     List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst 
 let open_binders' bs = 

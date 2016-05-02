@@ -1869,43 +1869,46 @@ let encode_modul tcenv modul =
     Z3.giveZ3 decls
 
 let solve use_env_msg tcenv q : unit =
-    push (Util.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
-    let pop () = pop (Util.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
-    let prefix, labels, qry, suffix =
-        let env = get_env tcenv in
-        let bindings = Env.fold_env tcenv (fun bs b -> b::bs) [] in
-        let q, bindings = 
-            let rec aux bindings = match bindings with 
-                | Env.Binding_var x::rest -> 
-                  let out, rest = aux rest in 
-                  let t = N.normalize [N.Inline; N.Beta; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
-                  Syntax.mk_binder ({x with sort=t})::out, rest 
-                | _ -> [], bindings in
-            let closing, bindings = aux bindings in 
-            Util.close_forall (List.rev closing) q, bindings in 
-        let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
-        if debug tcenv Options.Low 
-        || debug tcenv <| Options.Other "SMTEncoding" 
-        then Util.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
-        let phi, qdecls = encode_formula q env in
-        let phi, labels, _ = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
-        let label_prefix, label_suffix = encode_labels labels in
-        let query_prelude =
-            env_decls
-            @label_prefix
-            @qdecls in
-        let qry = Term.Assume(mkNot phi, Some "query") in
-        let suffix = label_suffix@[Term.Echo "Done!"]  in
-        query_prelude, labels, qry, suffix in
-    begin match qry with
-        | Assume({tm=App(False, _)}, _) -> pop(); ()
-        | _ when tcenv.admit -> pop(); ()
-        | Assume(q, _) ->
-            let fresh = String.length q.hash >= 2048 in
-            ErrorReporting.askZ3_and_report_errors tcenv fresh labels prefix qry suffix;
-            pop ()
+    if !Options.admit_smt_queries then () else
+    begin
+        push (Util.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
+        let pop () = pop (Util.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
+        let prefix, labels, qry, suffix =
+            let env = get_env tcenv in
+            let bindings = Env.fold_env tcenv (fun bs b -> b::bs) [] in
+            let q, bindings = 
+                let rec aux bindings = match bindings with 
+                    | Env.Binding_var x::rest -> 
+                      let out, rest = aux rest in 
+                      let t = N.normalize [N.Inline; N.Beta; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
+                      Syntax.mk_binder ({x with sort=t})::out, rest 
+                    | _ -> [], bindings in
+                let closing, bindings = aux bindings in 
+                Util.close_forall (List.rev closing) q, bindings in 
+            let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
+            if debug tcenv Options.Low 
+            || debug tcenv <| Options.Other "SMTEncoding" 
+            then Util.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
+            let phi, qdecls = encode_formula q env in
+            let phi, labels, _ = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
+            let label_prefix, label_suffix = encode_labels labels in
+            let query_prelude =
+                env_decls
+                @label_prefix
+                @qdecls in
+            let qry = Term.Assume(mkNot phi, Some "query") in
+            let suffix = label_suffix@[Term.Echo "Done!"]  in
+            query_prelude, labels, qry, suffix in
+        begin match qry with
+            | Assume({tm=App(False, _)}, _) -> pop(); ()
+            | _ when tcenv.admit -> pop(); ()
+            | Assume(q, _) ->
+                let fresh = String.length q.hash >= 2048 in
+                ErrorReporting.askZ3_and_report_errors tcenv fresh labels prefix qry suffix;
+                pop ()
 
-        | _ -> failwith "Impossible"
+            | _ -> failwith "Impossible"
+        end
     end
 
 let is_trivial (tcenv:Env.env) (q:typ) : bool =

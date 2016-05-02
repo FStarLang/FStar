@@ -150,13 +150,15 @@ and fv_qual =
   | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
-and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
+and subst_ts = list<subst_elt>                  (* A parallel substitutions *)
 and subst_elt = 
    | DB of int * bv                            (* DB i t: replace a bound variable with index i with name bv                 *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
    | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
+   | DT of int * term                          (* DT i t: replace de Bruijn index i with term t                              *)
+   | UT of univ_name * universe                (* UT u t: replace universe name u with universe term t                       *)
 and freenames = set<bv>
 and uvars     = set<(uvar*typ)>
 and syntax<'a,'b> = {
