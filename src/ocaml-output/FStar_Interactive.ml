@@ -306,12 +306,12 @@ end
 | Some (filename) -> begin
 (
 # 164 "FStar.Interactive.fst"
-let _85_152 = (FStar_ST.op_Colon_Equals FStar_Options.verify_module (((FStar_String.lowercase module_name))::[]))
+let _85_153 = (FStar_ST.op_Colon_Equals FStar_Options.verify_module (((FStar_String.lowercase module_name))::[]))
 in (
 # 165 "FStar.Interactive.fst"
-let _85_157 = (FStar_Parser_Dep.collect ((filename)::[]))
-in (match (_85_157) with
-| (_85_155, all_filenames) -> begin
+let _85_158 = (FStar_Parser_Dep.collect ((filename)::[]))
+in (match (_85_158) with
+| (_85_156, all_filenames) -> begin
 (let _174_181 = (FStar_List.tl all_filenames)
 in (FStar_List.rev _174_181))
 end)))
@@ -337,90 +337,90 @@ in (
 let _85_134 = (FStar_Tc_Errors.warn r (Prims.strcat "Dependency analysis may not be correct because the file failed to parse: " msg))
 in []))
 end
-| _85_137 -> begin
+| (FStar_Syntax_Syntax.Err (msg)) | (FStar_Absyn_Syntax.Err (msg)) -> begin
 (
-# 177 "FStar.Interactive.fst"
-let _85_138 = (FStar_Tc_Errors.warn FStar_Range.dummyRange "Dependency analysis may not be correct because the file failed to parse: ")
+# 178 "FStar.Interactive.fst"
+let _85_139 = (FStar_Tc_Errors.warn FStar_Range.dummyRange (Prims.strcat "Dependency analysis may not be correct because the file failed to parse: " msg))
 in [])
 end
 end))
 
-# 184 "FStar.Interactive.fst"
-let interactive_mode = (fun env initial_mod tc -> (
 # 185 "FStar.Interactive.fst"
-let _85_163 = if (let _174_186 = (FStar_ST.read FStar_Options.codegen)
+let interactive_mode = (fun env initial_mod tc -> (
+# 186 "FStar.Interactive.fst"
+let _85_164 = if (let _174_186 = (FStar_ST.read FStar_Options.codegen)
 in (FStar_Option.isSome _174_186)) then begin
 (FStar_Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag")
 end else begin
 ()
 end
 in (
-# 187 "FStar.Interactive.fst"
+# 188 "FStar.Interactive.fst"
 let rec go = (fun stack curmod env -> (match ((shift_chunk ())) with
 | Pop (msg) -> begin
 (
-# 190 "FStar.Interactive.fst"
-let _85_171 = (tc.pop env msg)
-in (
 # 191 "FStar.Interactive.fst"
-let _85_183 = (match (stack) with
+let _85_172 = (tc.pop env msg)
+in (
+# 192 "FStar.Interactive.fst"
+let _85_184 = (match (stack) with
 | [] -> begin
 (
-# 193 "FStar.Interactive.fst"
-let _85_174 = (FStar_Util.print_error "too many pops")
+# 194 "FStar.Interactive.fst"
+let _85_175 = (FStar_Util.print_error "too many pops")
 in (FStar_All.exit 1))
 end
 | hd::tl -> begin
 (hd, tl)
 end)
-in (match (_85_183) with
+in (match (_85_184) with
 | ((env, curmod), stack) -> begin
 (go stack curmod env)
 end)))
 end
 | Push (msg) -> begin
 (
-# 198 "FStar.Interactive.fst"
+# 199 "FStar.Interactive.fst"
 let stack = ((env, curmod))::stack
 in (
-# 199 "FStar.Interactive.fst"
+# 200 "FStar.Interactive.fst"
 let env = (tc.push env msg)
 in (go stack curmod env)))
 end
 | Code (text, (ok, fail)) -> begin
 (
-# 203 "FStar.Interactive.fst"
-let fail = (fun curmod env_mark -> (
 # 204 "FStar.Interactive.fst"
-let _85_197 = (tc.report_fail ())
-in (
+let fail = (fun curmod env_mark -> (
 # 205 "FStar.Interactive.fst"
-let _85_199 = (FStar_Util.print1 "%s\n" fail)
+let _85_198 = (tc.report_fail ())
 in (
 # 206 "FStar.Interactive.fst"
+let _85_200 = (FStar_Util.print1 "%s\n" fail)
+in (
+# 207 "FStar.Interactive.fst"
 let env = (tc.reset_mark env_mark)
 in (go stack curmod env)))))
 in (
-# 209 "FStar.Interactive.fst"
+# 210 "FStar.Interactive.fst"
 let env_mark = (tc.mark env)
 in (
-# 210 "FStar.Interactive.fst"
+# 211 "FStar.Interactive.fst"
 let res = (tc.check_frag env_mark curmod text)
 in (match (res) with
 | Some (curmod, env, n_errs) -> begin
 if (n_errs = 0) then begin
 (
-# 214 "FStar.Interactive.fst"
-let _85_209 = (FStar_Util.print1 "\n%s\n" ok)
-in (
 # 215 "FStar.Interactive.fst"
+let _85_210 = (FStar_Util.print1 "\n%s\n" ok)
+in (
+# 216 "FStar.Interactive.fst"
 let env = (tc.commit_mark env)
 in (go stack curmod env)))
 end else begin
 (fail curmod env_mark)
 end
 end
-| _85_213 -> begin
+| _85_214 -> begin
 (fail curmod env_mark)
 end))))
 end))

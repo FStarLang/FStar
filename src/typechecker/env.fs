@@ -170,7 +170,8 @@ let mark env =
     push_tabs env
 let commit_mark env =
     env.solver.commit_mark "USER MARK";
-    let commit_tab = function
+    let commit_tab : list<Util.smap<'a>> -> list<Util.smap<'a>> = 
+        function
         | hd::_::tl -> hd::tl
         | _ -> failwith "Impossible" in
     {env with 
@@ -182,7 +183,8 @@ let reset_mark env =
          gamma_cache=List.tl env.gamma_cache;
          sigtab=List.tl env.sigtab}
 let pop env msg =
-    let pop_tab = function
+    let pop_tab : list<Util.smap<'a>> -> list<Util.smap<'a>> = 
+        function
         | []
         | [_] -> failwith "Too many pops"
         | _::tl -> tl in
