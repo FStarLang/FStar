@@ -91,7 +91,6 @@ let run i r expected =
     
 let run_all () = 
     Printf.printf "Testing the normalizer\n";
-    run -1 (app id [nm n]) (nm n);
     let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
                                            match x with \
                                             | [] -> []  \
@@ -107,6 +106,7 @@ let run_all () =
                                                 | hd::tl -> aux tl (hd::out) in \
                                             aux x []" in
     Options.__test_norm_all := true;
+    run -1 (app id [nm n]) (nm n);
     run 0 (app apply [one; id; nm n]) (nm n);
     run 1 (app apply [tt; nm n; nm m]) (nm n);
     run 2 (app apply [ff; nm n; nm m]) (nm m);

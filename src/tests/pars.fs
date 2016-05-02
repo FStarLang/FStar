@@ -47,12 +47,14 @@ let init_once_no_prims () : unit =
 //  let prims_mod, env = Tc.check_module env prims_mod in
   let env = TcEnv.set_current_module env test_lid in
   tcenv_ref := Some env;
-  dsenv_ref := Some (Parser.Env.empty_env())
+  let dsenv = Parser.Env.empty_env() in 
+  let dsenv = {dsenv with curmodule = Some test_lid} in
+  dsenv_ref := Some dsenv
 
 let rec init () = 
     match !dsenv_ref, !tcenv_ref with 
         | Some e, Some f -> e, f
-        | _ -> init_once_no_prims(); init()
+        | _ -> init_once(); init()
 
 let pars_term_or_fragment is_term s = 
   try 
