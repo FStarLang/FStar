@@ -663,15 +663,21 @@ let load_value_from_file (fname:string) =
   | _ ->
     None
 
-let md5_of_file (fname:string) =
-  use md5 = MD5.Create() in
-  use stream = File.OpenRead(fname) in
+let format_md5 bytes =
   let sb = 
     Array.fold 
       (fun (acc:StringBuilder) (by:byte) ->
         acc.Append(by.ToString("x2")))
       (new StringBuilder())
-      (md5.ComputeHash(stream)) in
+      bytes in
   sb.ToString()
 
+let digest_of_file (fname:string) =
+  use md5 = MD5.Create() in
+  use stream = File.OpenRead(fname) in
+  format_md5 <| md5.ComputeHash(stream)
+
+let digest_of_string (s:string) =
+  use md5 = MD5.Create() in
+  format_md5 <| md5.ComputeHash(Encoding.UTF8.GetBytes(s))
 

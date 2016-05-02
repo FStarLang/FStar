@@ -42,11 +42,17 @@ let fuel_trace : ref<fuel_trace_status> = Util.mk_ref <| FuelTraceUnavailable
 let format_fuel_trace_file_name src_fn =
     Util.format_value_file_name <| Util.format1 "%s.fuel" src_fn
 
-let initialize_fuel_trace src_fn =
+let compute_transitive_digest src_fn deps = 
+    (* todo: it would be more robust to obtain the dependencies for `src_fn` directly from `Parser.Dep.collect` here, rather than reply upon the caller to provide them. *)   
+    let digests = List.map digest_of_file <| [src_fn] @ deps in
+    let s = Util.concat_l "," <| List.sortWith String.compare digests in
+    digest_of_string s
+
+let initialize_fuel_trace src_fn deps : unit =
     let val_fn = format_fuel_trace_file_name src_fn in
     match Util.load_value_from_file val_fn with
     | Some state ->
-        let digest = md5_of_file src_fn in
+        let digest = compute_transitive_digest src_fn deps in
         if state.identity.source_digest = digest then
             fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
         else
@@ -54,7 +60,7 @@ let initialize_fuel_trace src_fn =
     | None ->
         fuel_trace := RecordFuelTrace []
 
-let finalize_fuel_trace src_fn : unit =
+let finalize_fuel_trace src_fn deps : unit =
     begin match !fuel_trace with
     | ReplayFuelTrace _ 
     (* failure to verify *)
@@ -67,7 +73,7 @@ let finalize_fuel_trace src_fn : unit =
         let val_fn = format_fuel_trace_file_name src_fn in
         let state = {
             identity = {
-                source_digest = md5_of_file src_fn
+                source_digest = compute_transitive_digest src_fn deps
             };
             fuels = l
         }

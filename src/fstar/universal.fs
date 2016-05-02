@@ -172,13 +172,32 @@ let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
                                * DsEnv.env
                                * TcEnv.env  =
   let dsenv, fmods = parse dsenv pre_fn fn in
-  FStar.SMTEncoding.ErrorReporting.initialize_fuel_trace fn;
+  let deps = 
+    if !Options.explicit_deps then
+      (* only use the digest of `fn` if --explicit_deps is specified (unsound). *)
+      [ fn ]
+    else begin
+      (* use the auto-deps facitity to produce a list of dependencies for `fn` *)
+      let g, _ = Parser.Dep.collect [fn] in
+      match
+        List.filter
+          (fun p ->
+            fst p = fn)
+          g
+      with
+      | [ (_, l) ] ->
+        l
+      | _ ->
+        raise <| Util.Failure (format1 "Internal error: expected to find exactly one entry for %s in dependency graph" fn)
+    end
+  in
+  FStar.SMTEncoding.ErrorReporting.initialize_fuel_trace fn deps;
   let env, all_mods =
     fmods |> List.fold_left (fun (env, all_mods) m ->
                             let m, env = Tc.check_module env m in
                             env, m::all_mods) (env, []) in
   // for the moment, there should be no need to trap exceptions to finalize the fuel trace logic. nothing is done if an error occurs.
-  FStar.SMTEncoding.ErrorReporting.finalize_fuel_trace fn;
+  FStar.SMTEncoding.ErrorReporting.finalize_fuel_trace fn deps;
   List.rev all_mods, dsenv, env
 
 (***********************************************************************)

@@ -72,6 +72,7 @@ let lowercase_module_name f =
     names (e.g. a.b) to filenames (/path/to/A.B.fst). Long names are all
     normalized to lowercase. *)
 let build_map (filenames: list<string>): map =
+  (* todo: it seems that this function could benefit from caching. *)
   let include_directories = Options.get_include_path () in
   let include_directories = List.map normalize_file_path include_directories in
   let include_directories = List.unique include_directories in
