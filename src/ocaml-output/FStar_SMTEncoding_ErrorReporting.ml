@@ -1,20 +1,20 @@
 
 open Prims
-# 22 "FStar.SMTEncoding.ErrorReporting.fst"
+# 24 "FStar.SMTEncoding.ErrorReporting.fst"
 type fuel_trace_identity =
 {source_digest : Prims.string}
 
 # 24 "FStar.SMTEncoding.ErrorReporting.fst"
 let is_Mkfuel_trace_identity : fuel_trace_identity  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfuel_trace_identity"))))
 
-# 27 "FStar.SMTEncoding.ErrorReporting.fst"
+# 29 "FStar.SMTEncoding.ErrorReporting.fst"
 type fuel_trace_state =
 {identity : fuel_trace_identity; fuels : (Prims.int * Prims.int) Prims.list}
 
 # 29 "FStar.SMTEncoding.ErrorReporting.fst"
 let is_Mkfuel_trace_state : fuel_trace_state  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfuel_trace_state"))))
 
-# 33 "FStar.SMTEncoding.ErrorReporting.fst"
+# 35 "FStar.SMTEncoding.ErrorReporting.fst"
 type fuel_trace_status =
 | FuelTraceUnavailable
 | RecordFuelTrace of (Prims.int * Prims.int) Prims.list
@@ -59,14 +59,14 @@ let ___ReplayFuelTrace____0 = (fun projectee -> (match (projectee) with
 _82_12
 end))
 
-# 38 "FStar.SMTEncoding.ErrorReporting.fst"
+# 40 "FStar.SMTEncoding.ErrorReporting.fst"
 let fuel_trace : fuel_trace_status FStar_ST.ref = (FStar_All.pipe_left FStar_Util.mk_ref FuelTraceUnavailable)
 
-# 40 "FStar.SMTEncoding.ErrorReporting.fst"
+# 42 "FStar.SMTEncoding.ErrorReporting.fst"
 let format_fuel_trace_file_name : Prims.string  ->  Prims.string = (fun src_fn -> (let _171_43 = (FStar_Util.format1 "%s.fuel" src_fn)
 in (FStar_All.pipe_left FStar_Util.format_value_file_name _171_43)))
 
-# 43 "FStar.SMTEncoding.ErrorReporting.fst"
+# 45 "FStar.SMTEncoding.ErrorReporting.fst"
 let initialize_fuel_trace : Prims.string  ->  Prims.unit = (fun src_fn -> (
 # 46 "FStar.SMTEncoding.ErrorReporting.fst"
 let val_fn = (format_fuel_trace_file_name src_fn)
@@ -85,7 +85,7 @@ end
 (FStar_ST.op_Colon_Equals fuel_trace (RecordFuelTrace ([])))
 end)))
 
-# 55 "FStar.SMTEncoding.ErrorReporting.fst"
+# 57 "FStar.SMTEncoding.ErrorReporting.fst"
 let finalize_fuel_trace : Prims.string  ->  Prims.unit = (fun src_fn -> (
 # 58 "FStar.SMTEncoding.ErrorReporting.fst"
 let _82_31 = (match ((FStar_ST.read fuel_trace)) with
@@ -105,35 +105,35 @@ in (FStar_Util.save_value_to_file val_fn state)))
 end)
 in (FStar_ST.op_Colon_Equals fuel_trace FuelTraceUnavailable)))
 
-# 77 "FStar.SMTEncoding.ErrorReporting.fst"
+# 79 "FStar.SMTEncoding.ErrorReporting.fst"
 type label =
 FStar_SMTEncoding_Term.error_label
 
-# 79 "FStar.SMTEncoding.ErrorReporting.fst"
+# 80 "FStar.SMTEncoding.ErrorReporting.fst"
 type labels =
 FStar_SMTEncoding_Term.error_labels
 
-# 80 "FStar.SMTEncoding.ErrorReporting.fst"
+# 81 "FStar.SMTEncoding.ErrorReporting.fst"
 let sort_labels : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun l -> (FStar_List.sortWith (fun _82_39 _82_45 -> (match ((_82_39, _82_45)) with
 | ((_82_35, _82_37, r1), (_82_41, _82_43, r2)) -> begin
 (FStar_Range.compare r1 r2)
 end)) l))
 
-# 81 "FStar.SMTEncoding.ErrorReporting.fst"
+# 82 "FStar.SMTEncoding.ErrorReporting.fst"
 let remove_dups : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Int64.int64) Prims.list = (fun l -> (FStar_Util.remove_dups (fun _82_51 _82_56 -> (match ((_82_51, _82_56)) with
 | ((_82_48, m1, r1), (_82_53, m2, r2)) -> begin
 ((r1 = r2) && (m1 = m2))
 end)) l))
 
-# 82 "FStar.SMTEncoding.ErrorReporting.fst"
+# 83 "FStar.SMTEncoding.ErrorReporting.fst"
 type msg =
 (Prims.string * FStar_Range.range)
 
-# 83 "FStar.SMTEncoding.ErrorReporting.fst"
+# 84 "FStar.SMTEncoding.ErrorReporting.fst"
 type ranges =
 (Prims.string Prims.option * FStar_Range.range) Prims.list
 
-# 84 "FStar.SMTEncoding.ErrorReporting.fst"
+# 86 "FStar.SMTEncoding.ErrorReporting.fst"
 let fresh_label : ranges  ->  FStar_SMTEncoding_Term.term  ->  labels  ->  (FStar_SMTEncoding_Term.term * labels) = (
 # 87 "FStar.SMTEncoding.ErrorReporting.fst"
 let ctr = (FStar_ST.alloc 0)
@@ -174,7 +174,7 @@ let lt = (FStar_SMTEncoding_Term.mkOr (lterm, t))
 in (lt, (label)::labs))))
 end))))))
 
-# 98 "FStar.SMTEncoding.ErrorReporting.fst"
+# 107 "FStar.SMTEncoding.ErrorReporting.fst"
 let label_goals : (Prims.unit  ->  Prims.string) Prims.option  ->  FStar_Int64.int64  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.term * labels * ranges) = (fun use_env_msg r q -> (
 # 108 "FStar.SMTEncoding.ErrorReporting.fst"
 let _82_93 = (match (use_env_msg) with
@@ -302,7 +302,7 @@ end))
 in (aux [] q [])))
 end)))
 
-# 183 "FStar.SMTEncoding.ErrorReporting.fst"
+# 195 "FStar.SMTEncoding.ErrorReporting.fst"
 let detail_errors : labels  ->  labels  ->  (FStar_SMTEncoding_Term.decls_t  ->  (Prims.bool * labels))  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun all_labels potential_errors askZ3 -> (
 # 196 "FStar.SMTEncoding.ErrorReporting.fst"
 let ctr = (FStar_Util.mk_ref 0)
@@ -424,7 +424,7 @@ in (
 let active = (minus all_labels potential_errors)
 in (until_fixpoint [] potential_errors active))))))))))
 
-# 251 "FStar.SMTEncoding.ErrorReporting.fst"
+# 253 "FStar.SMTEncoding.ErrorReporting.fst"
 let askZ3_and_report_errors : FStar_TypeChecker_Env.env  ->  Prims.bool  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Int64.int64) Prims.list  ->  FStar_SMTEncoding_Term.decl Prims.list  ->  FStar_SMTEncoding_Term.decl  ->  FStar_SMTEncoding_Term.decl Prims.list  ->  Prims.unit = (fun env use_fresh_z3_context all_labels prefix query suffix -> (
 # 254 "FStar.SMTEncoding.ErrorReporting.fst"
 let _82_403 = (FStar_SMTEncoding_Z3.giveZ3 prefix)

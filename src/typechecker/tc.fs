@@ -147,7 +147,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
     | Some expected_c -> //expected effects should already be normalized
        if debug env Options.Low
        then Util.print3 "\n\n(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
-               (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
+               (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);  
        let c = norm_c env c in
        if debug env Options.Low
        then Util.print3 "\n\nAfter normalization (%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
@@ -286,7 +286,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         | Tm_let((_,[{lbname=x; lbdef=e1}]), e2) -> //NS: Why not handle this specially in the deugaring phase, adding a unit annotation on x?
           let e1, c1, g1 = tc_term (Env.set_expected_typ env Common.t_unit) e1 in
           let e2, c2, g2 = tc_term env e2 in
-          let c = TcUtil.bind env (Some e1) c1 (None, c2) in
+          let c = TcUtil.bind e1.pos env (Some e1) c1 (None, c2) in
           let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, Common.t_unit, e1)]), e2)) (Some c.res_typ.n) e.pos in
           let e = mk (Tm_meta(e, Meta_desugared Sequence)) (Some c.res_typ.n) top.pos in
           e, c, Rel.conj_guard g1 g2
@@ -366,7 +366,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         (f, c)::caccum, Rel.conj_guard g gaccum) t_eqns ([], Rel.trivial_guard) in
       TcUtil.bind_cases env res_t cases, g in (* bind_cases adds an exhaustiveness check *)
 
-    let cres = TcUtil.bind env (Some e1) c1 (Some guard_x, c_branches) in
+    let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some guard_x, c_branches) in
     let e = mk (Tm_match(e1, List.map (fun (f, _, _, _) -> f) t_eqns)) (Some cres.res_typ.n) top.pos in
     //NS: TODO remove ascription below? used to be important to ascribe, for recomputing types
     let e = mk (Tm_ascribed(e, Inl cres.res_typ, Some cres.eff_name)) None e.pos in
@@ -522,16 +522,7 @@ and tc_constant env r (c:sconst) : typ =
       | Const_float _ -> t_float
       | Const_char _ -> t_char
       | Const_effect -> Util.ktype0 //NS: really?
-      | Const_range _ ->
-        let fail () =
-            raise (Error("Range constant cannot be checked in this context; expected an instance of 'range_of'", r)) in
-        begin match Env.expected_typ env with
-            | None -> fail ()
-            | Some t ->
-              if Option.isSome (U.destruct t Const.range_of_lid)
-              then t
-              else fail()
-        end
+      | Const_range _ -> t_range
 
       | _ -> raise (Error("Unsupported constant", r))
 
@@ -810,12 +801,12 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
        match (Util.unrefine tf).n with
         | Tm_uvar _
         | Tm_app({n=Tm_uvar _}, _) ->
-            let rec tc_args env args : (Syntax.args * list<lcomp> * guard_t) = match args with
+            let rec tc_args env args : (Syntax.args * list<(Range.range * lcomp)> * guard_t) = match args with
                 | [] -> ([], [], Rel.trivial_guard)
                 | (e, imp)::tl ->
                     let e, c, g_e = tc_term env e in
                     let args, comps, g_rest = tc_args env tl in
-                    (e, imp)::args, c::comps, Rel.conj_guard g_e g_rest in
+                    (e, imp)::args, (e.pos, c)::comps, Rel.conj_guard g_e g_rest in
             (* Infer: t1 -> ... -> tn -> C ('u x1...xm),
                     where ti are the result types of each arg
                     and   xi are the free type/term variables in the environment
@@ -823,7 +814,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 else C = Tot,  if the ML monad is not in scope
                 else C = ML,   otherwise *)
             let args, comps, g_args = tc_args env args in
-            let bs = null_binders_of_tks (comps |> List.map (fun c -> c.res_typ, None)) in
+            let bs = null_binders_of_tks (comps |> List.map (fun (_, c) -> c.res_typ, None)) in
             let ml_or_tot = match Env.try_lookup_effect_lid env Const.effect_ML_lid with
                 | None -> fun t r -> S.mk_Total t
                 | _ -> Util.ml_comp in
@@ -842,7 +833,11 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             (Print.term_to_string tf)
                             (Print.term_to_string bs_cres);
             Rel.force_trivial_guard env <| Rel.teq env tf bs_cres;
-            let comp = List.fold_right (fun c out -> TcUtil.bind env None c (None, out)) (chead::comps) (U.lcomp_of_comp <| cres) in
+            let comp = 
+                  List.fold_right (fun (r1, c) out -> 
+                       TcUtil.bind r1 env None c (None, out)) 
+                  ((head.pos, chead)::comps) 
+                  (U.lcomp_of_comp <| cres) in
             mk_Tm_app head args (Some comp.res_typ.n) r, comp, Rel.conj_guard ghead g_args
 
         | Tm_arrow(bs, c) ->
@@ -851,7 +846,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let rec tc_args (subst,  (* substituting actuals for formals seen so far, when actual is pure *)
                             outargs, (* type-checked actuals *)
                             arg_rets,(* The results of each argument at the logic level *)
-                            comps,   (* computation types for each actual *)
+                            (comps:(Range.range * bv option * lcomp) list),   (* range info and computation types for each actual *)
                             g,       (* conjoined guard formula for all the actuals *)
                             fvs)     (* unsubstituted formals, to check that they do not occur free elsewhere in the type of f *)
                             bs       (* formal parameters *)
@@ -889,17 +884,17 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 else if TcUtil.is_pure_or_ghost_effect env c.eff_name //its conditionally pure; can substitute, but must check its WP
                 then let subst = maybe_extend_subst subst (List.hd bs) e in
                      let comps, guard =
-                        (Some x, c)::comps, g in
+                        (e.pos, Some x, c)::comps, g in
                      tc_args (subst, arg::outargs, arg::arg_rets, comps, guard, fvs) rest cres rest'
                 else if is_null_binder (List.hd bs) //it's not pure, but the function isn't dependent; just check its WP
                 then let newx = S.new_bv (Some e.pos) c.res_typ in
                      let arg' = S.as_arg <| S.bv_to_name newx in
-                     tc_args (subst, arg::outargs, arg'::arg_rets, (Some newx, c)::comps, g, fvs) rest cres rest'
+                     tc_args (subst, arg::outargs, arg'::arg_rets, (e.pos, Some newx, c)::comps, g, fvs) rest cres rest'
                 else //e is impure and the function may be dependent...
                      //need to check that the variable does not occur free in the rest of the function type
                      //by adding x to fvs
                      tc_args (subst, arg::outargs, S.as_arg (S.bv_to_name x)::arg_rets,
-                             (Some x, c)::comps, g, x::fvs) rest cres rest'
+                             (e.pos, Some x, c)::comps, g, x::fvs) rest cres rest'
 
             | _, [] -> (* no more args; full or partial application *)
                 check_no_escape (Some head) env fvs cres.res_typ;
@@ -918,7 +913,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             //if the function is pure, but its arguments are not, then add an equality refinement here
                             //OW, for pure applications we always add an equality at the end; see ADD_EQ_REFINEMENT below
                             Util.is_pure_or_ghost_lcomp cres
-                            && comps |> Util.for_some (fun (_, c) -> not (Util.is_pure_or_ghost_lcomp c)) in
+                            && comps |> Util.for_some (fun (_, _, c) -> not (Util.is_pure_or_ghost_lcomp c)) in
                             (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
 
                         let cres = //NS: Choosing when to add an equality refinement is VERY important for performance.
@@ -940,10 +935,9 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         U.lcomp_of_comp <| mk_Total  (SS.subst subst <| Util.arrow bs (cres.comp())), g in
 
                 if debug env Options.Low then Util.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);
-                let comp = List.fold_left (fun out c -> TcUtil.bind env None (snd c) (fst c, out)) cres comps in
-                let comp = TcUtil.bind env None chead (None, comp) in
+                let comp = List.fold_left (fun out (r1, x, c) -> TcUtil.bind r1 env None c (x, out)) cres comps in
+                let comp = TcUtil.bind head.pos env None chead (None, comp) in
                 let app =  mk_Tm_app head (List.rev outargs) (Some comp.res_typ.n) r in
-                let comp = TcUtil.record_application_site env app comp in
                 let comp, g = TcUtil.strengthen_precondition None env app comp g in //Each conjunct in g is already labeled
                 app, comp, g
 
@@ -956,7 +950,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         if debug env Options.Low
                         then Util.print1 "%s: Warning: Potentially redundant explicit currying of a function type \n"
                             (Range.string_of_range tres.pos);
-                        tc_args (subst, outargs, arg_rets, (None, cres)::comps, g, fvs) bs (U.lcomp_of_comp cres') args
+                        tc_args (subst, outargs, arg_rets, (Env.get_range env, None, cres)::comps, g, fvs) bs (U.lcomp_of_comp cres') args
                     | _ when (not norm) ->
                         aux true (unfold_whnf env tres)
                     | _ -> raise (Error(Util.format2 "Too many arguments to function of type %s; got %s arguments"
@@ -1299,7 +1293,7 @@ and check_inner_let env e =
        let xbinder = List.hd xb in
        let x = fst xbinder in
        let e2, c2, g2 = tc_term (Env.push_bv env x) e2 in
-       let cres = TcUtil.bind env (Some e1) c1 (Some x, c2) in
+       let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some x, c2) in
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) (Some cres.res_typ.n) e.pos in
        let x_eq_e1 = NonTrivial <| Util.mk_eq c1.res_typ c1.res_typ (S.bv_to_name x) e1 in
        let g2 = Rel.close_guard xb
@@ -2086,7 +2080,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     let b, wp_b = get_effect_signature () in
     let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
     let a_wlp_b = a_wp_b in
-    let expected_k = Util.arrow [S.mk_binder a; S.mk_binder b;
+    let expected_k = Util.arrow [S.null_binder t_range; 
+                                 S.mk_binder a; S.mk_binder b;
                                  S.null_binder wp_a;   S.null_binder wlp_a;
                                  S.null_binder a_wp_b; S.null_binder a_wlp_b]
                                  (S.mk_Total wp_b) in
@@ -2096,7 +2091,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     let wlp_a = wp_a in
     let b, wlp_b = get_effect_signature ()  in
     let a_wlp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wlp_b) in
-    let expected_k = Util.arrow [S.mk_binder a; S.mk_binder b;
+    let expected_k = Util.arrow [S.null_binder t_range; 
+                                 S.mk_binder a; S.mk_binder b;
                                  S.null_binder wlp_a;
                                  S.null_binder a_wlp_b]
                                  (S.mk_Total wlp_b) in

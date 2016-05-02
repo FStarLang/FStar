@@ -529,6 +529,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | [] -> failwith "Impossible"
                         | [_] -> 
                           begin match lopt with 
+                            | None when (!Options.__test_norm_all) -> 
+                              log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
+                              norm cfg (c :: env) stack body 
+
                             | Some (Inr l) 
                                 when (Ident.lid_equals l Const.effect_Tot_lid
                                       || Ident.lid_equals l Const.effect_GTot_lid) ->

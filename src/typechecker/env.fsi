@@ -52,7 +52,7 @@ type env = {
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment and signature elements *)
-  gamma_cache    :Util.smap<cached_elt>;
+  gamma_cache    :list<Util.smap<cached_elt>>;  (* Memo table for the local environment, in a stack for interactive mode retractions *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
   sigtab         :list<Util.smap<sigelt>>;      (* a dictionary of long-names to sigelts *)

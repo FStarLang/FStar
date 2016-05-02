@@ -173,8 +173,9 @@ let detect_dependencies_with_first_interactive_chunk () =
       FStar.Tc.Errors.warn r msg;
       FStar.Tc.Errors.warn r ("Dependency analysis may not be correct because the file failed to parse: "^msg);
       [] 
-    | _ -> 
-      FStar.Tc.Errors.warn Range.dummyRange ("Dependency analysis may not be correct because the file failed to parse: ");
+    | U_Syntax.Err msg
+    | F_Syntax.Err msg -> 
+      FStar.Tc.Errors.warn Range.dummyRange ("Dependency analysis may not be correct because the file failed to parse: " ^msg);
       []
           
 

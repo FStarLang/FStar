@@ -3,6 +3,8 @@ FSTAR_HOME=../..
 include ../Makefile.include
 all: .all.ver ParSubst.univ.ver StlcCbvDbPntSubstNoLists.univ.ver StlcStrongDbParSubst.univ.ver StlcCbvDbParSubst.univ.ver LambdaOmega FOmega.fst MicroFStar HoareWeakestPrecondition
 
+univ: ParSubst.univ.ver StlcCbvDbPntSubstNoLists.univ.ver StlcStrongDbParSubst.univ.ver StlcCbvDbParSubst.univ.ver
+
 _STDLIB_=FStar.Constructive.fst FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst 
 
 %.univ.ver: %.fst

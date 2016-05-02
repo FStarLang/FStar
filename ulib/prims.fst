@@ -64,7 +64,7 @@ type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)
 (* prefix unary '~' *)
 type l_not (p:Type) = p ==> False
 
-type l_ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
+inline type l_ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
 
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)
 assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
@@ -88,6 +88,11 @@ type dtuple2 (a:Type)
 (* exists (x:a). p x : specialized to Type#0 *)
 type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 
+assume new type range : Type0
+assume new type string : Type0
+irreducible type labeled (r:range) (msg:string) (b:Type) = b
+type range_of (#a:Type) (x:a) = range
+
 (* PURE effect *)
 let pure_pre = Type0
 let pure_post (a:Type) = a -> GTot Type0
@@ -95,14 +100,17 @@ let pure_wp   (a:Type) = pure_post a -> GTot pure_pre
 
 inline let pure_return (a:Type) (x:a) (p:pure_post a) =
      p x
-inline let pure_bind_wlp (a:Type) (b:Type)
+inline let pure_bind_wlp (r1:range) (a:Type) (b:Type)
                    (wlp1:pure_wp a) (wlp2:(a -> GTot (pure_wp b)))
                    (p:pure_post b) =
-     wlp1 (fun (x:a) -> wlp2 x p)
-inline let pure_bind_wp  (a:Type) (b:Type)
+     labeled r1 "push" unit 
+     /\ wlp1 (fun (x:a) -> 
+             labeled r1 "pop" unit 
+	     /\ wlp2 x p)
+inline let pure_bind_wp (r1:range) (a:Type) (b:Type)
                    (wp1:pure_wp a) (wlp1:pure_wp a)
                    (wp2: (a -> GTot (pure_wp b))) (wlp2: (a -> GTot (pure_wp b))) =
-     pure_bind_wlp a b wp1 wp2
+     pure_bind_wlp r1 a b wp1 wp2
 inline let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
      l_ITE p (wp_then post) (wp_else post)
 inline let pure_ite_wlp (a:Type) (wlp_cases:pure_wp a) (post:pure_post a) =
@@ -176,7 +184,6 @@ assume val op_LessThan           : int -> int -> Tot bool
    This still allows functions ... TODO: disallow functions *)
 assume val op_Equality :    'a -> 'a -> Tot bool
 assume val op_disEquality : 'a -> 'a -> Tot bool
-assume new type string : Type0
 assume new type exn : Type0
 assume new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
@@ -235,22 +242,27 @@ let st_wp_h   (heap:Type) (a:Type) = st_post_h heap a -> Tot (st_pre_h heap)
 inline let st_return        (heap:Type) (a:Type)
                             (x:a) (p:st_post_h heap a) =
      p x
-inline let st_bind_wp       (heap:Type) (a:Type) (b:Type)
-                            (wp1:st_wp_h heap a) (wlp1:st_wp_h heap a)
-                            (wp2:(a -> GTot (st_wp_h heap b))) (wlp2:(a -> GTot (st_wp_h heap b)))
-                            (p:st_post_h heap b) (h0:heap) =
-     wp1 (fun a h1 -> wp2 a p h1) h0
-inline let st_bind_wlp      (heap:Type) (a:Type) (b:Type)
+inline let st_bind_wlp       (heap:Type) (r1:range) (a:Type) (b:Type)
                              (wlp1:st_wp_h heap a) (wlp2:(a -> GTot (st_wp_h heap b)))
                              (p:st_post_h heap b) (h0:heap) =
      wlp1 (fun a h1 -> wlp2 a p h1) h0
+inline let st_bind_wp       (heap:Type) 
+			    (r1:range) 
+			    (a:Type) (b:Type)
+                            (wp1:st_wp_h heap a) (wlp1:st_wp_h heap a)
+                            (wp2:(a -> GTot (st_wp_h heap b))) (wlp2:(a -> GTot (st_wp_h heap b)))
+                            (p:st_post_h heap b) (h0:heap) =
+     labeled r1 "push" unit
+     /\ wp1 (fun a h1 ->
+       labeled r1 "pop" unit
+       /\ wp2 a p h1) h0
 inline let st_if_then_else  (heap:Type) (a:Type) (p:Type)
                              (wp_then:st_wp_h heap a) (wp_else:st_wp_h heap a)
                              (post:st_post_h heap a) (h0:heap) =
      l_ITE p
         (wp_then post h0)
 	(wp_else post h0)
-inline let st_ite_wlp       (heap:Type) (a:Type)
+inline let st_ite_wlp        (heap:Type) (a:Type)
                              (wlp_cases:st_wp_h heap a)
                              (post:st_post_h heap a) (h0:heap) =
      (forall (a:a) (h:heap).
@@ -310,19 +322,21 @@ let ex_pre  = Type0
 let ex_post (a:Type) = result a -> GTot Type0
 let ex_wp   (a:Type) = ex_post a -> GTot ex_pre
 inline let ex_return   (a:Type) (x:a) (p:ex_post a) : GTot Type0 = p (V x)
-inline let ex_bind_wlp (a:Type) (b:Type) (wlp1:ex_wp a) (wlp2:(a -> GTot (ex_wp b))) (p:ex_post b) 
+inline let ex_bind_wlp (r1:range) (a:Type) (b:Type) (wlp1:ex_wp a) (wlp2:(a -> GTot (ex_wp b))) (p:ex_post b) 
          : GTot Type0 =
-   (forall (rb:result b). p rb \/ wlp1 (fun ra1 -> if is_V ra1
-                                          then wlp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
-                                          else ra1 =!= rb))
-inline let ex_bind_wp (a:Type) (b:Type)
+   (forall (rb:result b). p rb \/ wlp1 (fun ra1 -> l_ITE (is_V ra1)
+						(wlp2 (V.v ra1) (fun rb2 -> rb2=!=rb))
+						(ra1 =!= rb)))
+inline let ex_bind_wp (r1:range) (a:Type) (b:Type)
 		       (wp1:ex_wp a) (wlp1:ex_wp a)
 		       (wp2:(a -> GTot (ex_wp b))) (wlp2:(a -> GTot (ex_wp b))) (p:ex_post b) 
          : GTot Type0 =
-   ex_bind_wlp a b wlp1 wlp2 p
-   /\ wp1 (fun ra1 -> if is_V ra1
-                   then wp2 (V.v ra1) (fun rb2 -> True)
-                   else True)
+   ex_bind_wlp r1 a b wlp1 wlp2 p
+   /\ labeled r1 "push" unit
+   /\ wp1 (fun ra1 ->  
+     labeled r1 "pop" unit
+     /\ (is_V ra1 ==> wp2 (V.v ra1) (fun rb2 -> True)))
+
 inline let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a) (post:ex_post a) =
    l_ITE p
        (wp_then post)
@@ -371,14 +385,17 @@ let all_post_h (h:Type) (a:Type)  = result a -> h -> GTot Type0
 let all_wp_h   (h:Type) (a:Type)  = all_post_h h a -> Tot (all_pre_h h)
 
 inline let all_return  (heap:Type) (a:Type) (x:a) (p:all_post_h heap a) = p (V x)
-inline let all_bind_wp (heap:Type) (a:Type) (b:Type)
-                        (wp1:all_wp_h heap a) (wlp1:all_wp_h heap a)
-                        (wp2:(a -> GTot (all_wp_h heap b))) (wlp2:(a -> GTot (all_wp_h heap b)))
-                        (p:all_post_h heap b) (h0:heap) : GTot Type0 =
-   (wp1 (fun ra h1 -> is_V ra ==> wp2 (V.v ra) p h1) h0)
-inline let all_bind_wlp (heap:Type) (a:Type) (b:Type)
-                         (wlp1:all_wp_h heap a) (wlp2:(a -> GTot (all_wp_h heap b)))
-                         (p:all_post_h heap b) (h0:heap) 
+inline let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
+                       (wp1:all_wp_h heap a) (wlp1:all_wp_h heap a)
+                       (wp2:(a -> GTot (all_wp_h heap b))) (wlp2:(a -> GTot (all_wp_h heap b)))
+                       (p:all_post_h heap b) (h0:heap) : GTot Type0 =
+   labeled r1 "push" unit
+   /\ wp1 (fun ra h1 -> 
+       labeled r1 "pop" unit
+       /\ (is_V ra ==> wp2 (V.v ra) p h1)) h0
+inline let all_bind_wlp (heap:Type) (r1:range) (a:Type) (b:Type)
+                        (wlp1:all_wp_h heap a) (wlp2:(a -> GTot (all_wp_h heap b)))
+                        (p:all_post_h heap b) (h0:heap) 
          : GTot Type0 =
    (forall (rb:result b) (h:heap). wlp1 (fun ra h1 ->
        if is_V ra
@@ -558,8 +575,6 @@ assume val qintro  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> Lemma (p x)) -
 assume val ghost_lemma: #a:Type -> #p:(a -> GTot Type) -> #q:(a -> unit -> GTot Type) ->
   $f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
-assume new type range_of : #a:Type -> a -> Type0
-irreducible type labeled (#a:Type0) (#x:a) (r:range_of x) (msg:string) (b:Type) = b
 
 val ignore: #a:Type -> a -> Tot unit
 let ignore #a x = ()

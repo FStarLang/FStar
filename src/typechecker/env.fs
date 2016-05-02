@@ -57,7 +57,7 @@ type env = {
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment and signature elements *)
-  gamma_cache    :Util.smap<cached_elt>;
+  gamma_cache    :list<Util.smap<cached_elt>>;  (* Memo table for the local environment, in a stack for interactive mode retractions *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
   sigtab         :list<Util.smap<sigelt>>;      (* a dictionary of long-names to sigelts *)
@@ -129,13 +129,14 @@ let glb_delta d1 d2 = match d1, d2 with
 
 let default_table_size = 200
 let new_sigtab () = Util.smap_create default_table_size
+let new_gamma_cache () = Util.smap_create 100
 
 let initial_env tc solver module_lid =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
     gamma= [];
-    gamma_cache=Util.smap_create 100;
+    gamma_cache=[new_gamma_cache()];
     modules= [];
     expected_typ=None;
     sigtab=[new_sigtab()];
@@ -156,27 +157,41 @@ let initial_env tc solver module_lid =
 
 (* Marking and resetting the environment, for the interactive mode *)
 let sigtab env = List.hd env.sigtab
+let gamma_cache env = List.hd env.gamma_cache
+let push_tabs env = 
+    {env with 
+         gamma_cache=Util.smap_copy (gamma_cache env)::env.gamma_cache;
+         sigtab=Util.smap_copy (sigtab env)::env.sigtab}
 let push env msg =
     env.solver.push msg;
-    {env with sigtab=Util.smap_copy (sigtab env)::env.sigtab}
+    push_tabs env
 let mark env =
     env.solver.mark "USER MARK";
-    {env with sigtab=Util.smap_copy (sigtab env)::env.sigtab}
+    push_tabs env
 let commit_mark env =
     env.solver.commit_mark "USER MARK";
-    let sigtab = match env.sigtab with
+    let commit_tab : list<Util.smap<'a>> -> list<Util.smap<'a>> = 
+        function
         | hd::_::tl -> hd::tl
         | _ -> failwith "Impossible" in
-    {env with sigtab=sigtab}
+    {env with 
+         gamma_cache=commit_tab env.gamma_cache;
+         sigtab=commit_tab env.sigtab}
 let reset_mark env =
     env.solver.reset_mark "USER MARK";
-    {env with sigtab=List.tl env.sigtab}
-let pop env msg = match env.sigtab with
-    | []
-    | [_] -> failwith "Too many pops"
-    | _::tl ->
-        env.solver.pop msg;
-        {env with sigtab=tl}
+    {env with 
+         gamma_cache=List.tl env.gamma_cache;
+         sigtab=List.tl env.sigtab}
+let pop env msg =
+    let pop_tab : list<Util.smap<'a>> -> list<Util.smap<'a>> = 
+        function
+        | []
+        | [_] -> failwith "Too many pops"
+        | _::tl -> tl in
+    env.solver.pop msg;
+    {env with 
+         gamma_cache=pop_tab env.gamma_cache;
+         sigtab=pop_tab env.sigtab}
 
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
@@ -254,9 +269,9 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
 
 let lookup_qname env (lid:lident) : option<either<(universes * typ), (sigelt * option<universes>)>>  =
   let cur_mod = in_cur_mod env lid in
-  let cache t = Util.smap_add env.gamma_cache lid.str t; Some t in
+  let cache t = Util.smap_add (gamma_cache env) lid.str t; Some t in
   let found = if cur_mod<>No
-              then match Util.smap_try_find env.gamma_cache lid.str with 
+              then match Util.smap_try_find (gamma_cache env) lid.str with 
                     | None -> 
                       Util.find_map env.gamma (function
                         | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl (inst_tscheme t)) else None
@@ -721,10 +736,10 @@ let finish_module =
                 | _ -> []) |> List.rev
         else m.exports  in
       add_sigelts env sigs;
-      Util.smap_clear env.gamma_cache;
       {env with
         curmodule=empty_lid;
         gamma=[];
+        gamma_cache=[gamma_cache env];
         modules=m::env.modules}
 
 ////////////////////////////////////////////////////////////
