@@ -49,16 +49,21 @@ let compute_transitive_digest src_fn deps =
     digest_of_string s
 
 let initialize_fuel_trace src_fn deps : unit =
-    let val_fn = format_fuel_trace_file_name src_fn in
-    match Util.load_value_from_file val_fn with
-    | Some state ->
-        let digest = compute_transitive_digest src_fn deps in
-        if state.identity.source_digest = digest then
-            fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
-        else
-            fuel_trace := RecordFuelTrace []
-    | None ->
-        fuel_trace := RecordFuelTrace []
+    if !Options.explicit_deps then
+        (* disabled when `--explicit_deps` is specified; we don't have enough information to produce or verify transitive source digests. *)
+        fuel_trace := FuelTraceUnavailable
+    else begin
+      let val_fn = format_fuel_trace_file_name src_fn in
+      match Util.load_value_from_file val_fn with
+      | Some state ->
+          let digest = compute_transitive_digest src_fn deps in
+          if state.identity.source_digest = digest then
+              fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
+          else
+              fuel_trace := RecordFuelTrace []
+      | None ->
+          fuel_trace := RecordFuelTrace []
+    end
 
 let finalize_fuel_trace src_fn deps : unit =
     begin match !fuel_trace with

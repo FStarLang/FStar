@@ -174,8 +174,8 @@ let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
   let dsenv, fmods = parse dsenv pre_fn fn in
   let deps = 
     if !Options.explicit_deps then
-      (* only use the digest of `fn` if --explicit_deps is specified (unsound). *)
-      [ fn ]
+      (* dummy value; we don't use cached fuel traces when `--explicit_deps` is specified; see `FStar.SMTEncoding.ErrorReporting.initialize_fuel_trace` for more info. *)
+      []
     else begin
       (* use the auto-deps facitity to produce a list of dependencies for `fn` *)
       let g, _ = Parser.Dep.collect [fn] in
