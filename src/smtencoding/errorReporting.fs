@@ -35,7 +35,7 @@ type fuel_trace_state =
 type fuel_trace_status =
     | FuelTraceUnavailable
     | RecordFuelTrace of list<(int * int)>
-    | ReplayFuelTrace of list<(int * int)>
+    | ReplayFuelTrace of (string * list<(int * int)>)
 
 let fuel_trace : ref<fuel_trace_status> = Util.mk_ref <| FuelTraceUnavailable
 
@@ -48,7 +48,7 @@ let initialize_fuel_trace src_fn =
     | Some state ->
         let digest = md5_of_file src_fn in
         if state.identity.source_digest = digest then
-            fuel_trace := ReplayFuelTrace state.fuels
+            fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
         else
             fuel_trace := RecordFuelTrace []
     | None ->
@@ -268,19 +268,19 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
         @[Term.CheckSat]
         @suffix in
 
-    let check (p:decl) =
+    let check (p:decl) =        
         let cached_config =
             match !fuel_trace with 
-            | ReplayFuelTrace (hd::tl) ->
+            | ReplayFuelTrace (fname, hd::tl) ->
                 let fuel, ifuel = hd in
-                fuel_trace := ReplayFuelTrace tl;
-                Some (fuel, ifuel)
+                fuel_trace := ReplayFuelTrace (fname, tl);
+                Some (fname, fuel, ifuel)
             | _ ->
                 None
         in
         let initial_config = 
             match cached_config with 
-            | Some x -> x
+            | Some (_, fuel, ifuel) -> (fuel, ifuel)
             | None -> (!Options.initial_fuel, !Options.initial_ifuel) 
         in
         let alt_configs = 
@@ -308,8 +308,8 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
                     | [] -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)]
                     | _ -> errs in
             begin match !fuel_trace with
-            | ReplayFuelTrace _ ->
-                raise <| Util.Failure "Query should not fail when replaying fuel trace."
+            | ReplayFuelTrace (fname, _) ->
+                raise <| Util.Failure (Util.format1 "Query failed while replaying cached fuel trace; please delete the related file (%s) and try again" fname)
             | _ ->
                 fuel_trace := FuelTraceUnavailable
             end;
