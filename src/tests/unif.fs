@@ -43,6 +43,7 @@ let guard_eq i g g' =
 
 
 let unify i x y g' = 
+    printfn "%d ..." i;
     FStar.process_args () |> ignore; //set options
     let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
     FStar.Options.init_options();    //reset them
@@ -78,12 +79,14 @@ let run_all () =
        let id  = pars "fun x -> x" in
        let id' = pars "fun y -> y" in
 
+       Options.__test_norm_all := true;
+
        //syntactic equality of names
        unify 0 x x Trivial;
 
        //different names, equal with a guard
        unify 1 x y (NonTrivial (app (pars "eq2") [x;y]));
-       
+
        //equal after some reduction
        unify 2 x (app id [x]) Trivial;
        

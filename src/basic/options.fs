@@ -56,6 +56,7 @@ let dump_module : ref<option<string>> = Util.mk_ref None
 let should_dump l = match !dump_module with
     | None -> false
     | Some m -> m=l
+let __test_norm_all = Util.mk_ref false
 let logQueries = Util.mk_ref false
 let z3exe = Util.mk_ref true
 let outputDir = Util.mk_ref (Some ".")
