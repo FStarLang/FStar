@@ -85,8 +85,8 @@ let subst_nm a s = Util.find_map s (function
     | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({a with index=i})) 
     | NT (x, t) when bv_eq a x -> Some t
     | _ -> None)
-let subst_univ_bv x s = Util.find_map s (function 
-    | UN(y, t) when (x=y) -> Some t
+let subst_univ_bv i s = Util.find_map s (function 
+    | UN(j, t) when (i=j) -> Some t
     | _ -> None)
 let subst_univ_nm (x:univ_name) s = Util.find_map s (function 
     | UD(y, i) when (x.idText=y.idText) -> Some (U_bvar i)
