@@ -739,7 +739,6 @@ let finish_module =
       {env with
         curmodule=empty_lid;
         gamma=[];
-        gamma_cache=[gamma_cache env];
         modules=m::env.modules}
 
 ////////////////////////////////////////////////////////////
