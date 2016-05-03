@@ -2,25 +2,25 @@
 open Prims
 # 24 "FStar.SMTEncoding.ErrorReporting.fst"
 type fuel_trace_identity =
-{source_digest : Prims.string}
+{module_digest : Prims.string; transitive_digest : Prims.string Prims.option}
 
 # 24 "FStar.SMTEncoding.ErrorReporting.fst"
 let is_Mkfuel_trace_identity : fuel_trace_identity  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfuel_trace_identity"))))
 
-# 29 "FStar.SMTEncoding.ErrorReporting.fst"
+# 30 "FStar.SMTEncoding.ErrorReporting.fst"
 type fuel_trace_state =
 {identity : fuel_trace_identity; fuels : (Prims.int * Prims.int) Prims.list}
 
-# 29 "FStar.SMTEncoding.ErrorReporting.fst"
+# 30 "FStar.SMTEncoding.ErrorReporting.fst"
 let is_Mkfuel_trace_state : fuel_trace_state  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfuel_trace_state"))))
 
-# 35 "FStar.SMTEncoding.ErrorReporting.fst"
+# 36 "FStar.SMTEncoding.ErrorReporting.fst"
 type fuel_trace_status =
 | FuelTraceUnavailable
 | RecordFuelTrace of (Prims.int * Prims.int) Prims.list
 | ReplayFuelTrace of (Prims.string * (Prims.int * Prims.int) Prims.list)
 
-# 36 "FStar.SMTEncoding.ErrorReporting.fst"
+# 37 "FStar.SMTEncoding.ErrorReporting.fst"
 let is_FuelTraceUnavailable = (fun _discr_ -> (match (_discr_) with
 | FuelTraceUnavailable (_) -> begin
 true
@@ -29,7 +29,7 @@ end
 false
 end))
 
-# 37 "FStar.SMTEncoding.ErrorReporting.fst"
+# 38 "FStar.SMTEncoding.ErrorReporting.fst"
 let is_RecordFuelTrace = (fun _discr_ -> (match (_discr_) with
 | RecordFuelTrace (_) -> begin
 true
@@ -38,7 +38,7 @@ end
 false
 end))
 
-# 38 "FStar.SMTEncoding.ErrorReporting.fst"
+# 39 "FStar.SMTEncoding.ErrorReporting.fst"
 let is_ReplayFuelTrace = (fun _discr_ -> (match (_discr_) with
 | ReplayFuelTrace (_) -> begin
 true
@@ -47,248 +47,296 @@ end
 false
 end))
 
-# 37 "FStar.SMTEncoding.ErrorReporting.fst"
-let ___RecordFuelTrace____0 = (fun projectee -> (match (projectee) with
-| RecordFuelTrace (_82_9) -> begin
-_82_9
-end))
-
 # 38 "FStar.SMTEncoding.ErrorReporting.fst"
-let ___ReplayFuelTrace____0 = (fun projectee -> (match (projectee) with
-| ReplayFuelTrace (_82_12) -> begin
-_82_12
+let ___RecordFuelTrace____0 = (fun projectee -> (match (projectee) with
+| RecordFuelTrace (_82_10) -> begin
+_82_10
 end))
 
-# 40 "FStar.SMTEncoding.ErrorReporting.fst"
+# 39 "FStar.SMTEncoding.ErrorReporting.fst"
+let ___ReplayFuelTrace____0 = (fun projectee -> (match (projectee) with
+| ReplayFuelTrace (_82_13) -> begin
+_82_13
+end))
+
+# 41 "FStar.SMTEncoding.ErrorReporting.fst"
 let fuel_trace : fuel_trace_status FStar_ST.ref = (FStar_All.pipe_left FStar_Util.mk_ref FuelTraceUnavailable)
 
-# 42 "FStar.SMTEncoding.ErrorReporting.fst"
-let format_fuel_trace_file_name : Prims.string  ->  Prims.string = (fun src_fn -> (let _171_43 = (FStar_Util.format1 "%s.fuel" src_fn)
-in (FStar_All.pipe_left FStar_Util.format_value_file_name _171_43)))
+# 43 "FStar.SMTEncoding.ErrorReporting.fst"
+let format_fuel_trace_file_name : Prims.string  ->  Prims.string = (fun src_fn -> (let _171_46 = (FStar_Util.format1 "%s.fuel" src_fn)
+in (FStar_All.pipe_left FStar_Util.format_value_file_name _171_46)))
 
-# 45 "FStar.SMTEncoding.ErrorReporting.fst"
+# 46 "FStar.SMTEncoding.ErrorReporting.fst"
 let compute_transitive_digest : Prims.string  ->  Prims.string Prims.list  ->  Prims.string = (fun src_fn deps -> (
-# 47 "FStar.SMTEncoding.ErrorReporting.fst"
-let digests = (let _171_48 = (FStar_All.pipe_left (FStar_List.map FStar_Util.digest_of_file) ((src_fn)::[]))
-in (FStar_List.append _171_48 deps))
-in (
 # 48 "FStar.SMTEncoding.ErrorReporting.fst"
-let s = (let _171_49 = (FStar_List.sortWith FStar_String.compare digests)
-in (FStar_All.pipe_left (FStar_Util.concat_l ",") _171_49))
+let digests = (let _171_51 = (FStar_All.pipe_left (FStar_List.map FStar_Util.digest_of_file) ((src_fn)::[]))
+in (FStar_List.append _171_51 deps))
+in (
+# 49 "FStar.SMTEncoding.ErrorReporting.fst"
+let s = (let _171_52 = (FStar_List.sortWith FStar_String.compare digests)
+in (FStar_All.pipe_left (FStar_Util.concat_l ",") _171_52))
 in (FStar_Util.digest_of_string s))))
 
-# 51 "FStar.SMTEncoding.ErrorReporting.fst"
-let initialize_fuel_trace : Prims.string  ->  Prims.string Prims.list  ->  Prims.unit = (fun src_fn deps -> if (FStar_ST.read FStar_Options.explicit_deps) then begin
-(FStar_ST.op_Colon_Equals fuel_trace FuelTraceUnavailable)
-end else begin
-(
-# 56 "FStar.SMTEncoding.ErrorReporting.fst"
-let val_fn = (format_fuel_trace_file_name src_fn)
+# 52 "FStar.SMTEncoding.ErrorReporting.fst"
+let initialize_fuel_trace : Prims.string  ->  Prims.string Prims.list  ->  Prims.unit = (fun src_fn deps -> (
+# 53 "FStar.SMTEncoding.ErrorReporting.fst"
+let norm_src_fn = (FStar_Util.normalize_file_path src_fn)
+in (
+# 54 "FStar.SMTEncoding.ErrorReporting.fst"
+let val_fn = (format_fuel_trace_file_name norm_src_fn)
 in (match ((FStar_Util.load_value_from_file val_fn)) with
 | Some (state) -> begin
 (
-# 59 "FStar.SMTEncoding.ErrorReporting.fst"
-let digest = (compute_transitive_digest src_fn deps)
-in if (state.identity.source_digest = digest) then begin
-(FStar_ST.op_Colon_Equals fuel_trace (ReplayFuelTrace ((val_fn, state.fuels))))
+# 57 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_32 = if (FStar_ST.read FStar_Options.explicit_deps) then begin
+(
+# 60 "FStar.SMTEncoding.ErrorReporting.fst"
+let expected = (FStar_Util.digest_of_file norm_src_fn)
+in ("Module", (state.identity.module_digest = expected)))
 end else begin
-(FStar_ST.op_Colon_Equals fuel_trace (RecordFuelTrace ([])))
+(let _171_57 = (match (state.identity.transitive_digest) with
+| None -> begin
+false
+end
+| Some (d) -> begin
+(
+# 69 "FStar.SMTEncoding.ErrorReporting.fst"
+let expected = (compute_transitive_digest norm_src_fn deps)
+in (d = expected))
 end)
+in ("Transitive", _171_57))
+end
+in (match (_82_32) with
+| (means, validated) -> begin
+if validated then begin
+(
+# 74 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_33 = if (FStar_ST.read FStar_Options.print_fuels) then begin
+(FStar_Util.print2 "(%s) %s digest is valid.\n" norm_src_fn means)
+end else begin
+()
+end
+in (FStar_ST.op_Colon_Equals fuel_trace (ReplayFuelTrace ((val_fn, state.fuels)))))
+end else begin
+(
+# 81 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_35 = if (FStar_ST.read FStar_Options.print_fuels) then begin
+(FStar_Util.print2 "(%s) %s digest is invalid.\n" norm_src_fn means)
+end else begin
+()
+end
+in (FStar_ST.op_Colon_Equals fuel_trace (RecordFuelTrace ([]))))
+end
+end))
 end
 | None -> begin
-(FStar_ST.op_Colon_Equals fuel_trace (RecordFuelTrace ([])))
-end))
-end)
+(
+# 88 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_38 = if (FStar_ST.read FStar_Options.print_fuels) then begin
+(FStar_Util.print1 "(%s) Unable to read cached fuel trace.\n" norm_src_fn)
+end else begin
+()
+end
+in (FStar_ST.op_Colon_Equals fuel_trace (RecordFuelTrace ([]))))
+end))))
 
-# 68 "FStar.SMTEncoding.ErrorReporting.fst"
+# 94 "FStar.SMTEncoding.ErrorReporting.fst"
 let finalize_fuel_trace : Prims.string  ->  Prims.string Prims.list  ->  Prims.unit = (fun src_fn deps -> (
-# 69 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_37 = (match ((FStar_ST.read fuel_trace)) with
+# 95 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_53 = (match ((FStar_ST.read fuel_trace)) with
 | (ReplayFuelTrace (_)) | (FuelTraceUnavailable) | (RecordFuelTrace ([])) -> begin
 ()
 end
 | RecordFuelTrace (l) -> begin
 (
-# 78 "FStar.SMTEncoding.ErrorReporting.fst"
+# 104 "FStar.SMTEncoding.ErrorReporting.fst"
 let val_fn = (format_fuel_trace_file_name src_fn)
 in (
-# 79 "FStar.SMTEncoding.ErrorReporting.fst"
-let state = (let _171_59 = (let _171_58 = (compute_transitive_digest src_fn deps)
-in {source_digest = _171_58})
-in {identity = _171_59; fuels = l})
-in (FStar_Util.save_value_to_file val_fn state)))
+# 105 "FStar.SMTEncoding.ErrorReporting.fst"
+let xd = if (FStar_ST.read FStar_Options.explicit_deps) then begin
+None
+end else begin
+(let _171_63 = (compute_transitive_digest src_fn deps)
+in (FStar_All.pipe_left (fun _171_62 -> Some (_171_62)) _171_63))
+end
+in (
+# 112 "FStar.SMTEncoding.ErrorReporting.fst"
+let state = (let _171_65 = (let _171_64 = (FStar_Util.digest_of_file src_fn)
+in {module_digest = _171_64; transitive_digest = xd})
+in {identity = _171_65; fuels = l})
+in (FStar_Util.save_value_to_file val_fn state))))
 end)
 in (FStar_ST.op_Colon_Equals fuel_trace FuelTraceUnavailable)))
 
-# 90 "FStar.SMTEncoding.ErrorReporting.fst"
+# 124 "FStar.SMTEncoding.ErrorReporting.fst"
 type label =
 FStar_SMTEncoding_Term.error_label
 
-# 91 "FStar.SMTEncoding.ErrorReporting.fst"
+# 125 "FStar.SMTEncoding.ErrorReporting.fst"
 type labels =
 FStar_SMTEncoding_Term.error_labels
 
-# 92 "FStar.SMTEncoding.ErrorReporting.fst"
-let sort_labels : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun l -> (FStar_List.sortWith (fun _82_45 _82_51 -> (match ((_82_45, _82_51)) with
-| ((_82_41, _82_43, r1), (_82_47, _82_49, r2)) -> begin
+# 126 "FStar.SMTEncoding.ErrorReporting.fst"
+let sort_labels : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun l -> (FStar_List.sortWith (fun _82_61 _82_67 -> (match ((_82_61, _82_67)) with
+| ((_82_57, _82_59, r1), (_82_63, _82_65, r2)) -> begin
 (FStar_Range.compare r1 r2)
 end)) l))
 
-# 93 "FStar.SMTEncoding.ErrorReporting.fst"
-let remove_dups : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Int64.int64) Prims.list = (fun l -> (FStar_Util.remove_dups (fun _82_57 _82_62 -> (match ((_82_57, _82_62)) with
-| ((_82_54, m1, r1), (_82_59, m2, r2)) -> begin
+# 127 "FStar.SMTEncoding.ErrorReporting.fst"
+let remove_dups : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Int64.int64) Prims.list = (fun l -> (FStar_Util.remove_dups (fun _82_73 _82_78 -> (match ((_82_73, _82_78)) with
+| ((_82_70, m1, r1), (_82_75, m2, r2)) -> begin
 ((r1 = r2) && (m1 = m2))
 end)) l))
 
-# 94 "FStar.SMTEncoding.ErrorReporting.fst"
+# 128 "FStar.SMTEncoding.ErrorReporting.fst"
 type msg =
 (Prims.string * FStar_Range.range)
 
-# 95 "FStar.SMTEncoding.ErrorReporting.fst"
+# 129 "FStar.SMTEncoding.ErrorReporting.fst"
 type ranges =
 (Prims.string Prims.option * FStar_Range.range) Prims.list
 
-# 97 "FStar.SMTEncoding.ErrorReporting.fst"
+# 131 "FStar.SMTEncoding.ErrorReporting.fst"
 let fresh_label : ranges  ->  FStar_SMTEncoding_Term.term  ->  labels  ->  (FStar_SMTEncoding_Term.term * labels) = (
-# 98 "FStar.SMTEncoding.ErrorReporting.fst"
+# 132 "FStar.SMTEncoding.ErrorReporting.fst"
 let ctr = (FStar_ST.alloc 0)
 in (fun rs t labs -> (
-# 100 "FStar.SMTEncoding.ErrorReporting.fst"
+# 134 "FStar.SMTEncoding.ErrorReporting.fst"
 let l = (
-# 100 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_67 = (FStar_Util.incr ctr)
-in (let _171_75 = (let _171_74 = (FStar_ST.read ctr)
-in (FStar_Util.string_of_int _171_74))
-in (FStar_Util.format1 "label_%s" _171_75)))
+# 134 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_83 = (FStar_Util.incr ctr)
+in (let _171_81 = (let _171_80 = (FStar_ST.read ctr)
+in (FStar_Util.string_of_int _171_80))
+in (FStar_Util.format1 "label_%s" _171_81)))
 in (
-# 101 "FStar.SMTEncoding.ErrorReporting.fst"
+# 135 "FStar.SMTEncoding.ErrorReporting.fst"
 let lvar = (l, FStar_SMTEncoding_Term.Bool_sort)
 in (
-# 102 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_87 = (match (rs) with
+# 136 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_103 = (match (rs) with
 | [] -> begin
 (t.FStar_SMTEncoding_Term.hash, FStar_Range.dummyRange)
 end
-| (Some (reason), r)::_82_73 -> begin
+| (Some (reason), r)::_82_89 -> begin
 (reason, r)
 end
-| (None, r)::_82_80 -> begin
+| (None, r)::_82_96 -> begin
 ("failed to prove a pre-condition", r)
 end)
-in (match (_82_87) with
+in (match (_82_103) with
 | (message, range) -> begin
 (
-# 106 "FStar.SMTEncoding.ErrorReporting.fst"
+# 140 "FStar.SMTEncoding.ErrorReporting.fst"
 let label = (lvar, message, range)
 in (
-# 107 "FStar.SMTEncoding.ErrorReporting.fst"
+# 141 "FStar.SMTEncoding.ErrorReporting.fst"
 let lterm = (FStar_SMTEncoding_Term.mkFreeV lvar)
 in (
-# 108 "FStar.SMTEncoding.ErrorReporting.fst"
+# 142 "FStar.SMTEncoding.ErrorReporting.fst"
 let lt = (FStar_SMTEncoding_Term.mkOr (lterm, t))
 in (lt, (label)::labs))))
 end))))))
 
-# 118 "FStar.SMTEncoding.ErrorReporting.fst"
+# 152 "FStar.SMTEncoding.ErrorReporting.fst"
 let label_goals : (Prims.unit  ->  Prims.string) Prims.option  ->  FStar_Int64.int64  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.term * labels * ranges) = (fun use_env_msg r q -> (
-# 119 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_99 = (match (use_env_msg) with
+# 153 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_115 = (match (use_env_msg) with
 | None -> begin
 (false, "")
 end
 | Some (f) -> begin
-(let _171_91 = (f ())
-in (true, _171_91))
+(let _171_97 = (f ())
+in (true, _171_97))
 end)
-in (match (_82_99) with
+in (match (_82_115) with
 | (flag, msg_prefix) -> begin
 (
-# 122 "FStar.SMTEncoding.ErrorReporting.fst"
+# 156 "FStar.SMTEncoding.ErrorReporting.fst"
 let fresh_label = (fun rs t labs -> (
-# 123 "FStar.SMTEncoding.ErrorReporting.fst"
+# 157 "FStar.SMTEncoding.ErrorReporting.fst"
 let rs' = if (not (flag)) then begin
 rs
 end else begin
 (match (rs) with
-| (Some (reason), _82_109)::_82_105 -> begin
+| (Some (reason), _82_125)::_82_121 -> begin
 ((Some ((Prims.strcat "Failed to verify implicit argument: " reason)), r))::[]
 end
-| _82_113 -> begin
+| _82_129 -> begin
 ((Some ("Failed to verify implicit argument"), r))::[]
 end)
 end
 in (
-# 128 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_117 = (fresh_label rs' t labs)
-in (match (_82_117) with
+# 162 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_133 = (fresh_label rs' t labs)
+in (match (_82_133) with
 | (lt, labs) -> begin
 (lt, labs, rs)
 end))))
 in (
-# 130 "FStar.SMTEncoding.ErrorReporting.fst"
+# 164 "FStar.SMTEncoding.ErrorReporting.fst"
 let rec aux = (fun rs q labs -> (match (q.FStar_SMTEncoding_Term.tm) with
 | (FStar_SMTEncoding_Term.BoundV (_)) | (FStar_SMTEncoding_Term.Integer (_)) -> begin
 (q, labs, rs)
 end
-| FStar_SMTEncoding_Term.Labeled (_82_129, "push", r) -> begin
+| FStar_SMTEncoding_Term.Labeled (_82_145, "push", r) -> begin
 (FStar_SMTEncoding_Term.mkTrue, labs, ((None, r))::rs)
 end
-| FStar_SMTEncoding_Term.Labeled (_82_135, "pop", r) -> begin
-(let _171_104 = (FStar_List.tl rs)
-in (FStar_SMTEncoding_Term.mkTrue, labs, _171_104))
+| FStar_SMTEncoding_Term.Labeled (_82_151, "pop", r) -> begin
+(let _171_110 = (FStar_List.tl rs)
+in (FStar_SMTEncoding_Term.mkTrue, labs, _171_110))
 end
 | FStar_SMTEncoding_Term.Labeled (arg, reason, r) -> begin
 (
-# 142 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_148 = (aux (((Some (reason), r))::rs) arg labs)
-in (match (_82_148) with
+# 176 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_164 = (aux (((Some (reason), r))::rs) arg labs)
+in (match (_82_164) with
 | (tm, labs, rs) -> begin
-(let _171_105 = (FStar_List.tl rs)
-in (tm, labs, _171_105))
+(let _171_111 = (FStar_List.tl rs)
+in (tm, labs, _171_111))
 end))
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Imp, lhs::rhs::[]) -> begin
 (
-# 146 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_158 = (aux rs rhs labs)
-in (match (_82_158) with
+# 180 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_174 = (aux rs rhs labs)
+in (match (_82_174) with
 | (rhs, labs, rs) -> begin
-(let _171_106 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.Imp, (lhs)::(rhs)::[]))))
-in (_171_106, labs, rs))
+(let _171_112 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.Imp, (lhs)::(rhs)::[]))))
+in (_171_112, labs, rs))
 end))
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.And, conjuncts) -> begin
 (
-# 150 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_175 = (FStar_List.fold_left (fun _82_166 c -> (match (_82_166) with
+# 184 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_191 = (FStar_List.fold_left (fun _82_182 c -> (match (_82_182) with
 | (rs, cs, labs) -> begin
 (
-# 151 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_171 = (aux rs c labs)
-in (match (_82_171) with
+# 185 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_187 = (aux rs c labs)
+in (match (_82_187) with
 | (c, labs, rs) -> begin
 (rs, (c)::cs, labs)
 end))
 end)) (rs, [], labs) conjuncts)
-in (match (_82_175) with
+in (match (_82_191) with
 | (rs, conjuncts, labs) -> begin
-(let _171_109 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.And, (FStar_List.rev conjuncts)))))
-in (_171_109, labs, rs))
+(let _171_115 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.And, (FStar_List.rev conjuncts)))))
+in (_171_115, labs, rs))
 end))
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.ITE, hd::q1::q2::[]) -> begin
 (
-# 158 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_187 = (aux rs q1 labs)
-in (match (_82_187) with
-| (q1, labs, _82_186) -> begin
+# 192 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_203 = (aux rs q1 labs)
+in (match (_82_203) with
+| (q1, labs, _82_202) -> begin
 (
-# 159 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_192 = (aux rs q2 labs)
-in (match (_82_192) with
-| (q2, labs, _82_191) -> begin
-(let _171_110 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.ITE, (hd)::(q1)::(q2)::[]))))
-in (_171_110, labs, rs))
+# 193 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_208 = (aux rs q2 labs)
+in (match (_82_208) with
+| (q2, labs, _82_207) -> begin
+(let _171_116 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.ITE, (hd)::(q1)::(q2)::[]))))
+in (_171_116, labs, rs))
 end))
 end))
 end
@@ -306,70 +354,70 @@ end
 end
 | FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, pats, iopt, sorts, body) -> begin
 (
-# 192 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_314 = (aux rs body labs)
-in (match (_82_314) with
+# 226 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_330 = (aux rs body labs)
+in (match (_82_330) with
 | (body, labs, rs) -> begin
-(let _171_111 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.Quant ((FStar_SMTEncoding_Term.Forall, pats, iopt, sorts, body))))
-in (_171_111, labs, rs))
+(let _171_117 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.Quant ((FStar_SMTEncoding_Term.Forall, pats, iopt, sorts, body))))
+in (_171_117, labs, rs))
 end))
 end))
 in (aux [] q [])))
 end)))
 
-# 206 "FStar.SMTEncoding.ErrorReporting.fst"
+# 240 "FStar.SMTEncoding.ErrorReporting.fst"
 let detail_errors : labels  ->  labels  ->  (FStar_SMTEncoding_Term.decls_t  ->  (Prims.bool * labels))  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun all_labels potential_errors askZ3 -> (
-# 207 "FStar.SMTEncoding.ErrorReporting.fst"
+# 241 "FStar.SMTEncoding.ErrorReporting.fst"
 let ctr = (FStar_Util.mk_ref 0)
 in (
-# 208 "FStar.SMTEncoding.ErrorReporting.fst"
+# 242 "FStar.SMTEncoding.ErrorReporting.fst"
 let elim = (fun labs -> (
-# 209 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_321 = (FStar_Util.incr ctr)
-in (let _171_134 = (let _171_127 = (let _171_126 = (let _171_125 = (FStar_ST.read ctr)
-in (FStar_Util.string_of_int _171_125))
-in (Prims.strcat "DETAILING ERRORS" _171_126))
-in FStar_SMTEncoding_Term.Echo (_171_127))
-in (let _171_133 = (FStar_All.pipe_right labs (FStar_List.map (fun _82_328 -> (match (_82_328) with
-| (l, _82_325, _82_327) -> begin
-(let _171_132 = (let _171_131 = (let _171_130 = (let _171_129 = (FStar_SMTEncoding_Term.mkFreeV l)
-in (_171_129, FStar_SMTEncoding_Term.mkTrue))
-in (FStar_SMTEncoding_Term.mkEq _171_130))
-in (_171_131, Some ("Disabling label")))
-in FStar_SMTEncoding_Term.Assume (_171_132))
+# 243 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_337 = (FStar_Util.incr ctr)
+in (let _171_140 = (let _171_133 = (let _171_132 = (let _171_131 = (FStar_ST.read ctr)
+in (FStar_Util.string_of_int _171_131))
+in (Prims.strcat "DETAILING ERRORS" _171_132))
+in FStar_SMTEncoding_Term.Echo (_171_133))
+in (let _171_139 = (FStar_All.pipe_right labs (FStar_List.map (fun _82_344 -> (match (_82_344) with
+| (l, _82_341, _82_343) -> begin
+(let _171_138 = (let _171_137 = (let _171_136 = (let _171_135 = (FStar_SMTEncoding_Term.mkFreeV l)
+in (_171_135, FStar_SMTEncoding_Term.mkTrue))
+in (FStar_SMTEncoding_Term.mkEq _171_136))
+in (_171_137, Some ("Disabling label")))
+in FStar_SMTEncoding_Term.Assume (_171_138))
 end))))
-in (_171_134)::_171_133))))
+in (_171_140)::_171_139))))
 in (
-# 212 "FStar.SMTEncoding.ErrorReporting.fst"
-let print_labs = (fun tag l -> (FStar_All.pipe_right l (FStar_List.iter (fun _82_337 -> (match (_82_337) with
-| (l, _82_334, _82_336) -> begin
+# 246 "FStar.SMTEncoding.ErrorReporting.fst"
+let print_labs = (fun tag l -> (FStar_All.pipe_right l (FStar_List.iter (fun _82_353 -> (match (_82_353) with
+| (l, _82_350, _82_352) -> begin
 (FStar_Util.print2 "%s : %s; " tag (Prims.fst l))
 end)))))
 in (
-# 214 "FStar.SMTEncoding.ErrorReporting.fst"
-let minus = (fun l1 l2 -> (FStar_All.pipe_right l1 (FStar_List.filter (fun _82_349 -> (match (_82_349) with
-| ((x, _82_343), _82_346, _82_348) -> begin
-(not ((FStar_All.pipe_right l2 (FStar_Util.for_some (fun _82_358 -> (match (_82_358) with
-| ((y, _82_352), _82_355, _82_357) -> begin
+# 248 "FStar.SMTEncoding.ErrorReporting.fst"
+let minus = (fun l1 l2 -> (FStar_All.pipe_right l1 (FStar_List.filter (fun _82_365 -> (match (_82_365) with
+| ((x, _82_359), _82_362, _82_364) -> begin
+(not ((FStar_All.pipe_right l2 (FStar_Util.for_some (fun _82_374 -> (match (_82_374) with
+| ((y, _82_368), _82_371, _82_373) -> begin
 (x = y)
 end))))))
 end)))))
 in (
-# 219 "FStar.SMTEncoding.ErrorReporting.fst"
+# 253 "FStar.SMTEncoding.ErrorReporting.fst"
 let rec linear_check = (fun eliminated errors active -> (match (active) with
 | [] -> begin
 (
-# 221 "FStar.SMTEncoding.ErrorReporting.fst"
+# 255 "FStar.SMTEncoding.ErrorReporting.fst"
 let labs = (FStar_All.pipe_right errors sort_labels)
 in labs)
 end
 | hd::tl -> begin
 (
-# 225 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_371 = (let _171_152 = (FStar_All.pipe_left elim (FStar_List.append (FStar_List.append eliminated errors) tl))
-in (askZ3 _171_152))
-in (match (_82_371) with
-| (ok, _82_370) -> begin
+# 259 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_387 = (let _171_158 = (FStar_All.pipe_left elim (FStar_List.append (FStar_List.append eliminated errors) tl))
+in (askZ3 _171_158))
+in (match (_82_387) with
+| (ok, _82_386) -> begin
 if ok then begin
 (linear_check ((hd)::eliminated) errors tl)
 end else begin
@@ -378,28 +426,28 @@ end
 end))
 end))
 in (
-# 231 "FStar.SMTEncoding.ErrorReporting.fst"
+# 265 "FStar.SMTEncoding.ErrorReporting.fst"
 let rec bisect = (fun eliminated potential_errors active -> (match (active) with
 | [] -> begin
 (eliminated, potential_errors)
 end
-| _82_378 -> begin
+| _82_394 -> begin
 (
-# 235 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_386 = (match (active) with
-| _82_380::[] -> begin
+# 269 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_402 = (match (active) with
+| _82_396::[] -> begin
 (active, [])
 end
-| _82_383 -> begin
+| _82_399 -> begin
 (FStar_Util.first_N ((FStar_List.length active) / 2) active)
 end)
-in (match (_82_386) with
+in (match (_82_402) with
 | (pfx, sfx) -> begin
 (
-# 238 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_389 = (let _171_159 = (elim (FStar_List.append (FStar_List.append eliminated potential_errors) sfx))
-in (askZ3 _171_159))
-in (match (_82_389) with
+# 272 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_405 = (let _171_165 = (elim (FStar_List.append (FStar_List.append eliminated potential_errors) sfx))
+in (askZ3 _171_165))
+in (match (_82_405) with
 | (ok, pfx_subset) -> begin
 if ok then begin
 (bisect (FStar_List.append eliminated pfx) potential_errors sfx)
@@ -408,12 +456,12 @@ end else begin
 | [] -> begin
 (bisect eliminated (FStar_List.append potential_errors pfx) sfx)
 end
-| _82_392 -> begin
+| _82_408 -> begin
 (
-# 247 "FStar.SMTEncoding.ErrorReporting.fst"
+# 281 "FStar.SMTEncoding.ErrorReporting.fst"
 let potential_errors = (FStar_List.append potential_errors pfx_subset)
 in (
-# 248 "FStar.SMTEncoding.ErrorReporting.fst"
+# 282 "FStar.SMTEncoding.ErrorReporting.fst"
 let pfx_active = (minus pfx pfx_subset)
 in (bisect eliminated potential_errors (FStar_List.append pfx_active sfx))))
 end)
@@ -422,11 +470,11 @@ end))
 end))
 end))
 in (
-# 253 "FStar.SMTEncoding.ErrorReporting.fst"
+# 287 "FStar.SMTEncoding.ErrorReporting.fst"
 let rec until_fixpoint = (fun eliminated potential_errors active -> (
-# 254 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_401 = (bisect eliminated potential_errors active)
-in (match (_82_401) with
+# 288 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_417 = (bisect eliminated potential_errors active)
+in (match (_82_417) with
 | (eliminated', potential_errors) -> begin
 if (FStar_Util.physical_equality eliminated eliminated') then begin
 (linear_check eliminated [] potential_errors)
@@ -435,26 +483,26 @@ end else begin
 end
 end)))
 in (
-# 259 "FStar.SMTEncoding.ErrorReporting.fst"
+# 293 "FStar.SMTEncoding.ErrorReporting.fst"
 let active = (minus all_labels potential_errors)
 in (until_fixpoint [] potential_errors active))))))))))
 
-# 264 "FStar.SMTEncoding.ErrorReporting.fst"
+# 298 "FStar.SMTEncoding.ErrorReporting.fst"
 let askZ3_and_report_errors : FStar_TypeChecker_Env.env  ->  Prims.bool  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Int64.int64) Prims.list  ->  FStar_SMTEncoding_Term.decl Prims.list  ->  FStar_SMTEncoding_Term.decl  ->  FStar_SMTEncoding_Term.decl Prims.list  ->  Prims.unit = (fun env use_fresh_z3_context all_labels prefix query suffix -> (
-# 265 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_409 = (FStar_SMTEncoding_Z3.giveZ3 prefix)
+# 299 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_425 = (FStar_SMTEncoding_Z3.giveZ3 prefix)
 in (
-# 266 "FStar.SMTEncoding.ErrorReporting.fst"
+# 300 "FStar.SMTEncoding.ErrorReporting.fst"
 let minimum_workable_fuel = (FStar_Util.mk_ref None)
 in (
-# 267 "FStar.SMTEncoding.ErrorReporting.fst"
+# 301 "FStar.SMTEncoding.ErrorReporting.fst"
 let set_minimum_workable_fuel = (fun f _82_1 -> (match (_82_1) with
 | [] -> begin
 ()
 end
 | errs -> begin
 (match ((FStar_ST.read minimum_workable_fuel)) with
-| Some (_82_418) -> begin
+| Some (_82_434) -> begin
 ()
 end
 | None -> begin
@@ -462,191 +510,191 @@ end
 end)
 end))
 in (
-# 273 "FStar.SMTEncoding.ErrorReporting.fst"
-let with_fuel = (fun label_assumptions p _82_426 -> (match (_82_426) with
+# 307 "FStar.SMTEncoding.ErrorReporting.fst"
+let with_fuel = (fun label_assumptions p _82_442 -> (match (_82_442) with
 | (n, i) -> begin
-(let _171_208 = (let _171_207 = (let _171_206 = (let _171_205 = (let _171_190 = (let _171_189 = (FStar_Util.string_of_int n)
-in (let _171_188 = (FStar_Util.string_of_int i)
-in (FStar_Util.format2 "<fuel=\'%s\' ifuel=\'%s\'>" _171_189 _171_188)))
-in FStar_SMTEncoding_Term.Caption (_171_190))
-in (let _171_204 = (let _171_203 = (let _171_195 = (let _171_194 = (let _171_193 = (let _171_192 = (FStar_SMTEncoding_Term.mkApp ("MaxFuel", []))
-in (let _171_191 = (FStar_SMTEncoding_Term.n_fuel n)
-in (_171_192, _171_191)))
-in (FStar_SMTEncoding_Term.mkEq _171_193))
-in (_171_194, None))
-in FStar_SMTEncoding_Term.Assume (_171_195))
-in (let _171_202 = (let _171_201 = (let _171_200 = (let _171_199 = (let _171_198 = (let _171_197 = (FStar_SMTEncoding_Term.mkApp ("MaxIFuel", []))
-in (let _171_196 = (FStar_SMTEncoding_Term.n_fuel i)
-in (_171_197, _171_196)))
-in (FStar_SMTEncoding_Term.mkEq _171_198))
-in (_171_199, None))
-in FStar_SMTEncoding_Term.Assume (_171_200))
-in (_171_201)::(p)::[])
-in (_171_203)::_171_202))
-in (_171_205)::_171_204))
-in (FStar_List.append _171_206 label_assumptions))
-in (FStar_List.append _171_207 ((FStar_SMTEncoding_Term.CheckSat)::[])))
-in (FStar_List.append _171_208 suffix))
+(let _171_214 = (let _171_213 = (let _171_212 = (let _171_211 = (let _171_196 = (let _171_195 = (FStar_Util.string_of_int n)
+in (let _171_194 = (FStar_Util.string_of_int i)
+in (FStar_Util.format2 "<fuel=\'%s\' ifuel=\'%s\'>" _171_195 _171_194)))
+in FStar_SMTEncoding_Term.Caption (_171_196))
+in (let _171_210 = (let _171_209 = (let _171_201 = (let _171_200 = (let _171_199 = (let _171_198 = (FStar_SMTEncoding_Term.mkApp ("MaxFuel", []))
+in (let _171_197 = (FStar_SMTEncoding_Term.n_fuel n)
+in (_171_198, _171_197)))
+in (FStar_SMTEncoding_Term.mkEq _171_199))
+in (_171_200, None))
+in FStar_SMTEncoding_Term.Assume (_171_201))
+in (let _171_208 = (let _171_207 = (let _171_206 = (let _171_205 = (let _171_204 = (let _171_203 = (FStar_SMTEncoding_Term.mkApp ("MaxIFuel", []))
+in (let _171_202 = (FStar_SMTEncoding_Term.n_fuel i)
+in (_171_203, _171_202)))
+in (FStar_SMTEncoding_Term.mkEq _171_204))
+in (_171_205, None))
+in FStar_SMTEncoding_Term.Assume (_171_206))
+in (_171_207)::(p)::[])
+in (_171_209)::_171_208))
+in (_171_211)::_171_210))
+in (FStar_List.append _171_212 label_assumptions))
+in (FStar_List.append _171_213 ((FStar_SMTEncoding_Term.CheckSat)::[])))
+in (FStar_List.append _171_214 suffix))
 end))
 in (
-# 282 "FStar.SMTEncoding.ErrorReporting.fst"
+# 316 "FStar.SMTEncoding.ErrorReporting.fst"
 let check = (fun p -> (
-# 283 "FStar.SMTEncoding.ErrorReporting.fst"
+# 317 "FStar.SMTEncoding.ErrorReporting.fst"
 let cached_config = (match ((FStar_ST.read fuel_trace)) with
 | ReplayFuelTrace (fname, hd::tl) -> begin
 (
-# 286 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_437 = hd
-in (match (_82_437) with
+# 320 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_453 = hd
+in (match (_82_453) with
 | (fuel, ifuel) -> begin
 (
-# 287 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_438 = (FStar_ST.op_Colon_Equals fuel_trace (ReplayFuelTrace ((fname, tl))))
+# 321 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_454 = (FStar_ST.op_Colon_Equals fuel_trace (ReplayFuelTrace ((fname, tl))))
 in Some ((fname, fuel, ifuel)))
 end))
 end
-| _82_441 -> begin
+| _82_457 -> begin
 None
 end)
 in (
-# 292 "FStar.SMTEncoding.ErrorReporting.fst"
+# 326 "FStar.SMTEncoding.ErrorReporting.fst"
 let initial_config = (match (cached_config) with
-| Some (_82_444, fuel, ifuel) -> begin
+| Some (_82_460, fuel, ifuel) -> begin
 (fuel, ifuel)
 end
 | None -> begin
-(let _171_212 = (FStar_ST.read FStar_Options.initial_fuel)
-in (let _171_211 = (FStar_ST.read FStar_Options.initial_ifuel)
-in (_171_212, _171_211)))
+(let _171_218 = (FStar_ST.read FStar_Options.initial_fuel)
+in (let _171_217 = (FStar_ST.read FStar_Options.initial_ifuel)
+in (_171_218, _171_217)))
 end)
 in (
-# 297 "FStar.SMTEncoding.ErrorReporting.fst"
+# 331 "FStar.SMTEncoding.ErrorReporting.fst"
 let alt_configs = (match (cached_config) with
-| Some (_82_452) -> begin
+| Some (_82_468) -> begin
 []
 end
 | None -> begin
-(let _171_231 = (let _171_230 = if ((FStar_ST.read FStar_Options.max_ifuel) > (FStar_ST.read FStar_Options.initial_ifuel)) then begin
-(let _171_215 = (let _171_214 = (FStar_ST.read FStar_Options.initial_fuel)
-in (let _171_213 = (FStar_ST.read FStar_Options.max_ifuel)
-in (_171_214, _171_213)))
-in (_171_215)::[])
-end else begin
-[]
-end
-in (let _171_229 = (let _171_228 = if (((FStar_ST.read FStar_Options.max_fuel) / 2) > (FStar_ST.read FStar_Options.initial_fuel)) then begin
-(let _171_218 = (let _171_217 = ((FStar_ST.read FStar_Options.max_fuel) / 2)
-in (let _171_216 = (FStar_ST.read FStar_Options.max_ifuel)
-in (_171_217, _171_216)))
-in (_171_218)::[])
-end else begin
-[]
-end
-in (let _171_227 = (let _171_226 = if (((FStar_ST.read FStar_Options.max_fuel) > (FStar_ST.read FStar_Options.initial_fuel)) && ((FStar_ST.read FStar_Options.max_ifuel) > (FStar_ST.read FStar_Options.initial_ifuel))) then begin
-(let _171_221 = (let _171_220 = (FStar_ST.read FStar_Options.max_fuel)
+(let _171_237 = (let _171_236 = if ((FStar_ST.read FStar_Options.max_ifuel) > (FStar_ST.read FStar_Options.initial_ifuel)) then begin
+(let _171_221 = (let _171_220 = (FStar_ST.read FStar_Options.initial_fuel)
 in (let _171_219 = (FStar_ST.read FStar_Options.max_ifuel)
 in (_171_220, _171_219)))
 in (_171_221)::[])
 end else begin
 []
 end
-in (let _171_225 = (let _171_224 = if ((FStar_ST.read FStar_Options.min_fuel) < (FStar_ST.read FStar_Options.initial_fuel)) then begin
-(let _171_223 = (let _171_222 = (FStar_ST.read FStar_Options.min_fuel)
-in (_171_222, 1))
-in (_171_223)::[])
+in (let _171_235 = (let _171_234 = if (((FStar_ST.read FStar_Options.max_fuel) / 2) > (FStar_ST.read FStar_Options.initial_fuel)) then begin
+(let _171_224 = (let _171_223 = ((FStar_ST.read FStar_Options.max_fuel) / 2)
+in (let _171_222 = (FStar_ST.read FStar_Options.max_ifuel)
+in (_171_223, _171_222)))
+in (_171_224)::[])
 end else begin
 []
 end
-in (_171_224)::[])
-in (_171_226)::_171_225))
-in (_171_228)::_171_227))
-in (_171_230)::_171_229))
-in (FStar_List.flatten _171_231))
+in (let _171_233 = (let _171_232 = if (((FStar_ST.read FStar_Options.max_fuel) > (FStar_ST.read FStar_Options.initial_fuel)) && ((FStar_ST.read FStar_Options.max_ifuel) > (FStar_ST.read FStar_Options.initial_ifuel))) then begin
+(let _171_227 = (let _171_226 = (FStar_ST.read FStar_Options.max_fuel)
+in (let _171_225 = (FStar_ST.read FStar_Options.max_ifuel)
+in (_171_226, _171_225)))
+in (_171_227)::[])
+end else begin
+[]
+end
+in (let _171_231 = (let _171_230 = if ((FStar_ST.read FStar_Options.min_fuel) < (FStar_ST.read FStar_Options.initial_fuel)) then begin
+(let _171_229 = (let _171_228 = (FStar_ST.read FStar_Options.min_fuel)
+in (_171_228, 1))
+in (_171_229)::[])
+end else begin
+[]
+end
+in (_171_230)::[])
+in (_171_232)::_171_231))
+in (_171_234)::_171_233))
+in (_171_236)::_171_235))
+in (FStar_List.flatten _171_237))
 end)
 in (
-# 306 "FStar.SMTEncoding.ErrorReporting.fst"
+# 340 "FStar.SMTEncoding.ErrorReporting.fst"
 let report = (fun p errs -> (
-# 307 "FStar.SMTEncoding.ErrorReporting.fst"
+# 341 "FStar.SMTEncoding.ErrorReporting.fst"
 let errs = if ((FStar_ST.read FStar_Options.detail_errors) && ((FStar_ST.read FStar_Options.n_cores) = 1)) then begin
 (
-# 308 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_466 = (match ((FStar_ST.read minimum_workable_fuel)) with
+# 342 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_482 = (match ((FStar_ST.read minimum_workable_fuel)) with
 | Some (f, errs) -> begin
 (f, errs)
 end
 | None -> begin
-(let _171_237 = (let _171_236 = (FStar_ST.read FStar_Options.min_fuel)
-in (_171_236, 1))
-in (_171_237, errs))
+(let _171_243 = (let _171_242 = (FStar_ST.read FStar_Options.min_fuel)
+in (_171_242, 1))
+in (_171_243, errs))
 end)
-in (match (_82_466) with
+in (match (_82_482) with
 | (min_fuel, potential_errors) -> begin
 (
-# 311 "FStar.SMTEncoding.ErrorReporting.fst"
+# 345 "FStar.SMTEncoding.ErrorReporting.fst"
 let ask_z3 = (fun label_assumptions -> (
-# 312 "FStar.SMTEncoding.ErrorReporting.fst"
+# 346 "FStar.SMTEncoding.ErrorReporting.fst"
 let res = (FStar_Util.mk_ref None)
 in (
-# 313 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_471 = (let _171_241 = (with_fuel label_assumptions p min_fuel)
-in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_241 (fun r -> (FStar_ST.op_Colon_Equals res (Some (r))))))
-in (let _171_242 = (FStar_ST.read res)
-in (FStar_Option.get _171_242)))))
+# 347 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_487 = (let _171_247 = (with_fuel label_assumptions p min_fuel)
+in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_247 (fun r -> (FStar_ST.op_Colon_Equals res (Some (r))))))
+in (let _171_248 = (FStar_ST.read res)
+in (FStar_Option.get _171_248)))))
 in (detail_errors all_labels errs ask_z3))
 end))
 end else begin
 errs
 end
 in (
-# 318 "FStar.SMTEncoding.ErrorReporting.fst"
+# 352 "FStar.SMTEncoding.ErrorReporting.fst"
 let errs = (match (errs) with
 | [] -> begin
 ((("", FStar_SMTEncoding_Term.Term_sort), "Unknown assertion failed", FStar_Range.dummyRange))::[]
 end
-| _82_476 -> begin
+| _82_492 -> begin
 errs
 end)
 in (
-# 321 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_485 = (match ((FStar_ST.read fuel_trace)) with
-| ReplayFuelTrace (fname, _82_480) -> begin
-(let _171_244 = (let _171_243 = (FStar_Util.format1 "Query failed while replaying cached fuel trace; please delete the related file (%s) and try again" fname)
-in FStar_Util.Failure (_171_243))
-in (FStar_All.pipe_left Prims.raise _171_244))
+# 355 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_501 = (match ((FStar_ST.read fuel_trace)) with
+| ReplayFuelTrace (fname, _82_496) -> begin
+(let _171_250 = (let _171_249 = (FStar_Util.format1 "Query failed while replaying cached fuel trace; please delete the related file (%s) and try again" fname)
+in FStar_Util.Failure (_171_249))
+in (FStar_All.pipe_left Prims.raise _171_250))
 end
-| _82_484 -> begin
+| _82_500 -> begin
 (FStar_ST.op_Colon_Equals fuel_trace FuelTraceUnavailable)
 end)
 in (
-# 327 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_487 = if (FStar_ST.read FStar_Options.print_fuels) then begin
-(let _171_250 = (let _171_245 = (FStar_TypeChecker_Env.get_range env)
-in (FStar_Range.string_of_range _171_245))
-in (let _171_249 = (let _171_246 = (FStar_ST.read FStar_Options.max_fuel)
-in (FStar_All.pipe_right _171_246 FStar_Util.string_of_int))
-in (let _171_248 = (let _171_247 = (FStar_ST.read FStar_Options.max_ifuel)
-in (FStar_All.pipe_right _171_247 FStar_Util.string_of_int))
-in (FStar_Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _171_250 _171_249 _171_248))))
+# 361 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_503 = if (FStar_ST.read FStar_Options.print_fuels) then begin
+(let _171_256 = (let _171_251 = (FStar_TypeChecker_Env.get_range env)
+in (FStar_Range.string_of_range _171_251))
+in (let _171_255 = (let _171_252 = (FStar_ST.read FStar_Options.max_fuel)
+in (FStar_All.pipe_right _171_252 FStar_Util.string_of_int))
+in (let _171_254 = (let _171_253 = (FStar_ST.read FStar_Options.max_ifuel)
+in (FStar_All.pipe_right _171_253 FStar_Util.string_of_int))
+in (FStar_Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _171_256 _171_255 _171_254))))
 end else begin
 ()
 end
 in (
-# 332 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_494 = (let _171_252 = (FStar_All.pipe_right errs (FStar_List.map (fun _82_493 -> (match (_82_493) with
-| (_82_490, x, y) -> begin
+# 366 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_510 = (let _171_258 = (FStar_All.pipe_right errs (FStar_List.map (fun _82_509 -> (match (_82_509) with
+| (_82_506, x, y) -> begin
 (x, y)
 end))))
-in (FStar_TypeChecker_Errors.add_errors env _171_252))
+in (FStar_TypeChecker_Errors.add_errors env _171_258))
 in if (FStar_ST.read FStar_Options.detail_errors) then begin
 (Prims.raise (FStar_Syntax_Syntax.Err ("Detailed error report follows\n")))
 end else begin
 ()
 end))))))
 in (
-# 336 "FStar.SMTEncoding.ErrorReporting.fst"
+# 370 "FStar.SMTEncoding.ErrorReporting.fst"
 let rec try_alt_configs = (fun prev_f p errs cfgs -> (
-# 337 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_502 = (set_minimum_workable_fuel prev_f errs)
+# 371 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_518 = (set_minimum_workable_fuel prev_f errs)
 in (match (cfgs) with
 | [] -> begin
 (report p errs)
@@ -654,35 +702,35 @@ end
 | mi::[] -> begin
 (match (errs) with
 | [] -> begin
-(let _171_265 = (with_fuel [] p mi)
-in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_265 (cb mi p [])))
+(let _171_271 = (with_fuel [] p mi)
+in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_271 (cb mi p [])))
 end
-| _82_509 -> begin
+| _82_525 -> begin
 (
-# 343 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_510 = (set_minimum_workable_fuel prev_f errs)
+# 377 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_526 = (set_minimum_workable_fuel prev_f errs)
 in (report p errs))
 end)
 end
 | mi::tl -> begin
-(let _171_267 = (with_fuel [] p mi)
-in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_267 (fun _82_517 -> (match (_82_517) with
+(let _171_273 = (with_fuel [] p mi)
+in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_273 (fun _82_533 -> (match (_82_533) with
 | (ok, errs') -> begin
 (match (errs) with
 | [] -> begin
 (cb mi p tl (ok, errs'))
 end
-| _82_520 -> begin
+| _82_536 -> begin
 (cb mi p tl (ok, errs))
 end)
 end))))
 end)))
-and cb = (fun _82_523 p alt _82_528 -> (match ((_82_523, _82_528)) with
+and cb = (fun _82_539 p alt _82_544 -> (match ((_82_539, _82_544)) with
 | ((prev_fuel, prev_ifuel), (ok, errs)) -> begin
 if ok then begin
 (
-# 356 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_535 = (match ((FStar_ST.read fuel_trace)) with
+# 390 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_551 = (match ((FStar_ST.read fuel_trace)) with
 | (ReplayFuelTrace (_)) | (FuelTraceUnavailable) -> begin
 ()
 end
@@ -690,12 +738,12 @@ end
 (FStar_ST.op_Colon_Equals fuel_trace (RecordFuelTrace ((FStar_List.append l (((prev_fuel, prev_ifuel))::[])))))
 end)
 in if (FStar_ST.read FStar_Options.print_fuels) then begin
-(let _171_275 = (let _171_272 = (FStar_TypeChecker_Env.get_range env)
-in (FStar_Range.string_of_range _171_272))
-in (let _171_274 = (FStar_Util.string_of_int prev_fuel)
-in (let _171_273 = (FStar_Util.string_of_int prev_ifuel)
-in (FStar_Util.print4 "(%s) Query succeeded with fuel %s and ifuel %s%s\n" _171_275 _171_274 _171_273 (match (cached_config) with
-| Some (_82_538) -> begin
+(let _171_281 = (let _171_278 = (FStar_TypeChecker_Env.get_range env)
+in (FStar_Range.string_of_range _171_278))
+in (let _171_280 = (FStar_Util.string_of_int prev_fuel)
+in (let _171_279 = (FStar_Util.string_of_int prev_ifuel)
+in (FStar_Util.print4 "(%s) Query succeeded with fuel %s and ifuel %s%s\n" _171_281 _171_280 _171_279 (match (cached_config) with
+| Some (_82_554) -> begin
 " (cached)"
 end
 | None -> begin
@@ -708,16 +756,16 @@ end else begin
 (try_alt_configs (prev_fuel, prev_ifuel) p errs alt)
 end
 end))
-in (let _171_276 = (with_fuel [] p initial_config)
-in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_276 (cb initial_config p alt_configs)))))))))
+in (let _171_282 = (with_fuel [] p initial_config)
+in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_282 (cb initial_config p alt_configs)))))))))
 in (
-# 380 "FStar.SMTEncoding.ErrorReporting.fst"
+# 414 "FStar.SMTEncoding.ErrorReporting.fst"
 let process_query = (fun q -> if ((FStar_ST.read FStar_Options.split_cases) > 0) then begin
 (
-# 382 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_545 = (let _171_282 = (FStar_ST.read FStar_Options.split_cases)
-in (FStar_SMTEncoding_SplitQueryCases.can_handle_query _171_282 q))
-in (match (_82_545) with
+# 416 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_561 = (let _171_288 = (FStar_ST.read FStar_Options.split_cases)
+in (FStar_SMTEncoding_SplitQueryCases.can_handle_query _171_288 q))
+in (match (_82_561) with
 | (b, cb) -> begin
 if b then begin
 (FStar_SMTEncoding_SplitQueryCases.handle_query cb check)
