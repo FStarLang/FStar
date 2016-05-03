@@ -23,7 +23,8 @@ open FStar.SMTEncoding
 
 type fuel_trace_identity =
     {
-      source_digest:string;
+      module_digest:string;
+      transitive_digest:option<string>;
     }
 
 type fuel_trace_state =
@@ -49,21 +50,46 @@ let compute_transitive_digest src_fn deps =
     digest_of_string s
 
 let initialize_fuel_trace src_fn deps : unit =
-    if !Options.explicit_deps then
-        (* disabled when `--explicit_deps` is specified; we don't have enough information to produce or verify transitive source digests. *)
-        fuel_trace := FuelTraceUnavailable
-    else begin
-      let val_fn = format_fuel_trace_file_name src_fn in
-      match Util.load_value_from_file val_fn with
-      | Some state ->
-          let digest = compute_transitive_digest src_fn deps in
-          if state.identity.source_digest = digest then
-              fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
-          else
+    let norm_src_fn = Util.normalize_file_path src_fn in
+    let val_fn = format_fuel_trace_file_name norm_src_fn in
+    match Util.load_value_from_file val_fn with
+    | Some state ->
+        let means, validated = 
+            if !Options.explicit_deps then
+                (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
+                let expected = Util.digest_of_file norm_src_fn in
+                ("Module", state.identity.module_digest = expected)
+            else 
+                ("Transitive",
+                    begin
+                        match state.identity.transitive_digest with
+                        | None ->
+                            false
+                        | Some d ->
+                            let expected = compute_transitive_digest norm_src_fn deps in
+                            d = expected
+                    end)
+        in
+        if validated then
+            begin if !Options.print_fuels then
+                    Util.print2 "(%s) %s digest is valid.\n" norm_src_fn means
+                else
+                    ();
+                fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
+            end
+        else
+            begin if !Options.print_fuels then
+                  Util.print2 "(%s) %s digest is invalid.\n" norm_src_fn means
+              else
+                  ();
               fuel_trace := RecordFuelTrace []
-      | None ->
-          fuel_trace := RecordFuelTrace []
-    end
+            end
+    | None ->
+        if !Options.print_fuels then
+            Util.print1 "(%s) Unable to read cached fuel trace.\n" norm_src_fn
+        else
+            ();
+        fuel_trace := RecordFuelTrace []
 
 let finalize_fuel_trace src_fn deps : unit =
     begin match !fuel_trace with
@@ -76,9 +102,17 @@ let finalize_fuel_trace src_fn deps : unit =
     (* verification successful *)
     | RecordFuelTrace l ->
         let val_fn = format_fuel_trace_file_name src_fn in
+        let xd = 
+            (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
+            if !Options.explicit_deps then
+                None
+            else
+                Some <| compute_transitive_digest src_fn deps
+        in
         let state = {
             identity = {
-                source_digest = compute_transitive_digest src_fn deps
+                module_digest = Util.digest_of_file src_fn;
+                transitive_digest = xd 
             };
             fuels = l
         }
