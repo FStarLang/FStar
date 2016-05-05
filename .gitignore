@@ -6,7 +6,6 @@
 *.smt2
 *.sav
 *.fuel.fsval
-*.fuel.mlval
 cache/
 /VS/packages
 
