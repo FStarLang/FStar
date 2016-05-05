@@ -254,7 +254,7 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
                     | _ -> errs in
             begin match !Z3.fuel_trace with
             | Z3.ReplayFuelTrace (fname, _) ->
-                raise <| Util.Failure (Util.format1 "Query failed while replaying cached fuel trace; please delete the related file (%s) and try again" fname)
+                raise <| Util.Failure (Util.format1 "Query failed while replaying cached fuel trace; please delete the related file (%s) and try again.\n" fname)
             | _ ->
                 Z3.fuel_trace := Z3.FuelTraceUnavailable
             end;
