@@ -6,6 +6,7 @@ type ('a, 'b, 'c) fresh_region = unit
 let extends a b = true
 let as_ref i r = r
 let sel _ = failwith "nope"
+type ('a, 'b, 'c) modifies = unit
 type ('a, 'b, 'c) modifies_one = unit
 type ('a, 'b, 'c, 'd) modifies_rref = unit
 type ('a, 'b, 'c, 'd, 'e) fresh_rref = unit
