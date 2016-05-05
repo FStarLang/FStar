@@ -94,6 +94,22 @@ let hash (h:hash_alg) (b:bytes) =
   ocaml_EVP_MD_CTX_fini(ctx);
   bytes_of_string h
 
+(* digest functions *)
+type hash_ctx = md_ctx (* exported name *)
+
+let digest_create (h:hash_alg) : hash_ctx = 
+  let md = md_of_hash_alg h in
+  let ctx = ocaml_EVP_MD_CTX_create md in
+  ctx 
+  
+let digest_update (ctx:md_ctx) (b:bytes) : unit = 
+  ocaml_EVP_MD_CTX_update ctx (string_of_bytes b)
+
+let digest_final (ctx:md_ctx) : bytes = 
+  let s = ocaml_EVP_MD_CTX_final ctx  in
+  ocaml_EVP_MD_CTX_fini ctx ;
+  bytes_of_string s
+  
 (* -------------------------------------------------------------------- *)
 
 (** HMAC *)
