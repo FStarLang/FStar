@@ -21,7 +21,7 @@ open FStar.SMTEncoding.Term
 open FStar.Util
 
 (****************************************************************************)
-(* Fuel Trace Caching                                                       *)
+(* Fuel Traces (private)                                                    *)
 (****************************************************************************)
 
 type fuel_trace_identity =
@@ -52,77 +52,12 @@ let compute_transitive_digest src_fn deps =
     let s = Util.concat_l "," <| List.sortWith String.compare digests in
     digest_of_string s
 
-let initialize_fuel_trace src_fn deps : unit =
-    let norm_src_fn = Util.normalize_file_path src_fn in
-    let val_fn = format_fuel_trace_file_name norm_src_fn in
-    match Util.load_value_from_file val_fn with
-    | Some state ->
-        let means, validated = 
-            if !Options.explicit_deps then
-                (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
-                let expected = Util.digest_of_file norm_src_fn in
-                ("Module", state.identity.module_digest = expected)
-            else 
-                ("Transitive",
-                    begin
-                        match state.identity.transitive_digest with
-                        | None ->
-                            false
-                        | Some d ->
-                            let expected = compute_transitive_digest norm_src_fn deps in
-                            d = expected
-                    end)
-        in
-        if validated then
-            begin if !Options.print_fuels then
-                    Util.print2 "(%s) %s digest is valid.\n" norm_src_fn means
-                else
-                    ();
-                fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
-            end
-        else
-            begin if !Options.print_fuels then
-                  Util.print2 "(%s) %s digest is invalid.\n" norm_src_fn means
-              else
-                  ();
-              fuel_trace := RecordFuelTrace []
-            end
-    | None ->
-        if !Options.print_fuels then
-            Util.print1 "(%s) Unable to read cached fuel trace.\n" norm_src_fn
-        else
-            ();
-        fuel_trace := RecordFuelTrace []
-
-let finalize_fuel_trace src_fn deps : unit =
-    begin match !fuel_trace with
-    | ReplayFuelTrace _ 
-    (* failure to verify *)
-    | FuelTraceUnavailable 
-    (* verification not performed *)
-    | RecordFuelTrace [] ->
-        ()
-    (* verification successful *)
-    | RecordFuelTrace l ->
-        let val_fn = format_fuel_trace_file_name src_fn in
-        let xd = 
-            (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
-            if !Options.explicit_deps then
-                None
-            else
-                Some <| compute_transitive_digest src_fn deps
-        in
-        let state = {
-            identity = {
-                module_digest = Util.digest_of_file src_fn;
-                transitive_digest = xd 
-            };
-            fuels = l
-        }
-        in
-        Util.save_value_to_file val_fn state
-    end;
-    fuel_trace := FuelTraceUnavailable
+let is_replaying_fuel_trace () =
+  match !fuel_trace with 
+  | ReplayFuelTrace _ ->
+    true
+  | _ ->
+    false
 
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
@@ -167,13 +102,20 @@ let get_z3version () =
         in
             _z3version := Some out; out
 
-let ini_params () =
-  let t =
-    if z3v_le (get_z3version ()) (4, 3, 1)
-    then !Options.z3timeout
-    else !Options.z3timeout * 1000
+let ini_params opt_timeout =
+  let timeout =
+    begin match opt_timeout with
+    | Some n ->
+      let t =
+        if z3v_le (get_z3version ()) (4, 3, 1)
+        then n
+        else n * 1000
+      in
+      format1 "-t:%s" (string_of_int t) 
+    | None ->
+      ""
+    end
   in
-  let timeout = format1 "-t:%s" (string_of_int t) in
   let relevancy =
     if   z3v_le (get_z3version ()) (4, 3, 1)
     then "RELEVANCY"
@@ -198,12 +140,22 @@ let status_to_string = function
     | TIMEOUT -> "timeout"
 
 let tid () = Util.current_tid() |> Util.string_of_int
-let new_z3proc id =
-   let cond pid (s:string) =
-    (let x = Util.trim_string s = "Done!" in
+let new_z3proc id timeout =
+    let cond pid (s:string) =
+        (let x = Util.trim_string s = "Done!" in
 //     Util.print5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
-     x) in
-   Util.start_process id (!Options.z3_exe) (ini_params()) cond
+         x) in
+    let args = ini_params timeout in
+    (* we log the following information with `--print_fuels` because lack of a timeout is only associated with fuel tracing *)
+    if !Options.print_fuels then
+        match timeout with
+        | Some n ->
+            Util.print2 "Starting z3 process `%s` with a timeout of %s.\n" id <| string_of_int n
+        | None ->
+            Util.print1 "Starting z3 process `%s` without a timeout.\n" id
+    else
+        ();
+    Util.start_process id (!Options.z3_exe) args cond
 
 type bgproc = {
     grab:unit -> proc;
@@ -235,7 +187,13 @@ let the_z3proc =
 let ctr = Util.mk_ref (-1)
 
 let new_proc () =
-  new_z3proc (Util.format1 "bg-%s" (incr ctr; !ctr |> string_of_int))
+  let timeout = 
+    if is_replaying_fuel_trace () then
+      None
+    else
+      Some !Options.z3timeout
+  in
+  new_z3proc (Util.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) timeout
 
 let z3proc () =
   if !the_z3proc = None then
@@ -283,7 +241,7 @@ let doZ3Exe' (input:string) (z3proc:proc) =
 let doZ3Exe =
     let ctr = Util.mk_ref 0 in
     fun (fresh:bool) (input:string) ->
-        let z3proc = if fresh then (incr ctr; new_z3proc (Util.string_of_int !ctr)) else bg_z3_proc.grab() in
+        let z3proc = if fresh then (incr ctr; new_z3proc (Util.string_of_int !ctr) (Some !Options.z3timeout)) else bg_z3_proc.grab() in
         let res = doZ3Exe' input z3proc in
         //Printf.printf "z3-%A says %s\n"  (get_z3version()) (status_to_string (fst res));
         if fresh then Util.kill_process z3proc else bg_z3_proc.release();
@@ -431,3 +389,80 @@ let ask fresh label_messages qry (cb: (bool * error_labels) -> unit) =
   if !Options.logQueries then log_query fresh input;
   enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
 
+(****************************************************************************)
+(* Fuel Traces (public)                                                     *)
+(****************************************************************************)
+
+let initialize_fuel_trace src_fn deps : unit =
+    let norm_src_fn = Util.normalize_file_path src_fn in
+    let val_fn = format_fuel_trace_file_name norm_src_fn in
+    begin match Util.load_value_from_file val_fn with
+    | Some state ->
+        let means, validated = 
+            if !Options.explicit_deps then
+                (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
+                let expected = Util.digest_of_file norm_src_fn in
+                ("Module", state.identity.module_digest = expected)
+            else 
+                ("Transitive",
+                    begin
+                        match state.identity.transitive_digest with
+                        | None ->
+                            false
+                        | Some d ->
+                            let expected = compute_transitive_digest norm_src_fn deps in
+                            d = expected
+                    end)
+        in
+        if validated then
+            begin if !Options.print_fuels then
+                    Util.print2 "(%s) %s digest is valid.\n" norm_src_fn means
+                else
+                    ();
+                fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
+            end
+        else
+            begin if !Options.print_fuels then
+                  Util.print2 "(%s) %s digest is invalid.\n" norm_src_fn means
+              else
+                  ();
+              fuel_trace := RecordFuelTrace []
+            end
+    | None ->
+        if !Options.print_fuels then
+            Util.print1 "(%s) Unable to read cached fuel trace.\n" norm_src_fn
+        else
+            ();
+        fuel_trace := RecordFuelTrace []
+    end;
+    refresh ()
+
+let finalize_fuel_trace src_fn deps : unit =
+    begin match !fuel_trace with
+    | ReplayFuelTrace _ 
+    (* failure to verify *)
+    | FuelTraceUnavailable 
+    (* verification not performed *)
+    | RecordFuelTrace [] ->
+        ()
+    (* verification successful *)
+    | RecordFuelTrace l ->
+        let val_fn = format_fuel_trace_file_name src_fn in
+        let xd = 
+            (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
+            if !Options.explicit_deps then
+                None
+            else
+                Some <| compute_transitive_digest src_fn deps
+        in
+        let state = {
+            identity = {
+                module_digest = Util.digest_of_file src_fn;
+                transitive_digest = xd 
+            };
+            fuels = l
+        }
+        in
+        Util.save_value_to_file val_fn state
+    end;
+    fuel_trace := FuelTraceUnavailable
