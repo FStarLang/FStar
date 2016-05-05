@@ -21,106 +21,6 @@ open FStar.Util
 open FStar.SMTEncoding.Term
 open FStar.SMTEncoding
 
-type fuel_trace_identity =
-    {
-      module_digest:string;
-      transitive_digest:option<string>;
-    }
-
-type fuel_trace_state =
-    {
-      identity:fuel_trace_identity;
-      fuels:list<(int * int)>
-    }
-
-type fuel_trace_status =
-    | FuelTraceUnavailable
-    | RecordFuelTrace of list<(int * int)>
-    | ReplayFuelTrace of (string * list<(int * int)>)
-
-let fuel_trace : ref<fuel_trace_status> = Util.mk_ref <| FuelTraceUnavailable
-
-let format_fuel_trace_file_name src_fn =
-    Util.format_value_file_name <| Util.format1 "%s.fuel" src_fn
-
-let compute_transitive_digest src_fn deps = 
-    (* todo: it would be more robust to obtain the dependencies for `src_fn` directly from `Parser.Dep.collect` here, rather than reply upon the caller to provide them. *)   
-    let digests = List.map digest_of_file <| [src_fn] @ deps in
-    let s = Util.concat_l "," <| List.sortWith String.compare digests in
-    digest_of_string s
-
-let initialize_fuel_trace src_fn deps : unit =
-    let norm_src_fn = Util.normalize_file_path src_fn in
-    let val_fn = format_fuel_trace_file_name norm_src_fn in
-    match Util.load_value_from_file val_fn with
-    | Some state ->
-        let means, validated = 
-            if !Options.explicit_deps then
-                (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
-                let expected = Util.digest_of_file norm_src_fn in
-                ("Module", state.identity.module_digest = expected)
-            else 
-                ("Transitive",
-                    begin
-                        match state.identity.transitive_digest with
-                        | None ->
-                            false
-                        | Some d ->
-                            let expected = compute_transitive_digest norm_src_fn deps in
-                            d = expected
-                    end)
-        in
-        if validated then
-            begin if !Options.print_fuels then
-                    Util.print2 "(%s) %s digest is valid.\n" norm_src_fn means
-                else
-                    ();
-                fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
-            end
-        else
-            begin if !Options.print_fuels then
-                  Util.print2 "(%s) %s digest is invalid.\n" norm_src_fn means
-              else
-                  ();
-              fuel_trace := RecordFuelTrace []
-            end
-    | None ->
-        if !Options.print_fuels then
-            Util.print1 "(%s) Unable to read cached fuel trace.\n" norm_src_fn
-        else
-            ();
-        fuel_trace := RecordFuelTrace []
-
-let finalize_fuel_trace src_fn deps : unit =
-    begin match !fuel_trace with
-    | ReplayFuelTrace _ 
-    (* failure to verify *)
-    | FuelTraceUnavailable 
-    (* verification not performed *)
-    | RecordFuelTrace [] ->
-        ()
-    (* verification successful *)
-    | RecordFuelTrace l ->
-        let val_fn = format_fuel_trace_file_name src_fn in
-        let xd = 
-            (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
-            if !Options.explicit_deps then
-                None
-            else
-                Some <| compute_transitive_digest src_fn deps
-        in
-        let state = {
-            identity = {
-                module_digest = Util.digest_of_file src_fn;
-                transitive_digest = xd 
-            };
-            fuels = l
-        }
-        in
-        Util.save_value_to_file val_fn state
-    end;
-    fuel_trace := FuelTraceUnavailable
-
 type label = error_label
 type labels = error_labels
 let sort_labels (l:labels) = List.sortWith (fun (_, _, r1) (_, _, r2) -> Range.compare r1 r2) l
@@ -315,10 +215,10 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
 
     let check (p:decl) =        
         let cached_config =
-            match !fuel_trace with 
-            | ReplayFuelTrace (fname, hd::tl) ->
+            match !Z3.fuel_trace with 
+            | Z3.ReplayFuelTrace (fname, hd::tl) ->
                 let fuel, ifuel = hd in
-                fuel_trace := ReplayFuelTrace (fname, tl);
+                Z3.fuel_trace := Z3.ReplayFuelTrace (fname, tl);
                 Some (fname, fuel, ifuel)
             | _ ->
                 None
@@ -352,11 +252,11 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
             let errs = match errs with
                     | [] -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)]
                     | _ -> errs in
-            begin match !fuel_trace with
-            | ReplayFuelTrace (fname, _) ->
+            begin match !Z3.fuel_trace with
+            | Z3.ReplayFuelTrace (fname, _) ->
                 raise <| Util.Failure (Util.format1 "Query failed while replaying cached fuel trace; please delete the related file (%s) and try again" fname)
             | _ ->
-                fuel_trace := FuelTraceUnavailable
+                Z3.fuel_trace := Z3.FuelTraceUnavailable
             end;
             if !Options.print_fuels
             then (Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
@@ -387,12 +287,12 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
         and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) =
             if ok
             then begin 
-                begin match !fuel_trace with
-                | ReplayFuelTrace _ 
-                | FuelTraceUnavailable -> 
+                begin match !Z3.fuel_trace with
+                | Z3.ReplayFuelTrace _ 
+                | Z3.FuelTraceUnavailable -> 
                     ()
-                | RecordFuelTrace l ->
-                    fuel_trace := RecordFuelTrace (l @ [(prev_fuel, prev_ifuel)])
+                |Z3.RecordFuelTrace l ->
+                    Z3.fuel_trace := Z3.RecordFuelTrace (l @ [(prev_fuel, prev_ifuel)])
                 end;
                 if !Options.print_fuels
                 then (Util.print4 "(%s) Query succeeded with fuel %s and ifuel %s%s\n"

@@ -191,13 +191,13 @@ let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
         raise <| FStar.Util.Failure (format1 "Internal error: expected to find exactly one entry for %s in dependency graph" fn)
     end
   in
-  FStar.SMTEncoding.ErrorReporting.initialize_fuel_trace fn deps;
+  FStar.SMTEncoding.Z3.initialize_fuel_trace fn deps;
   let env, all_mods =
     fmods |> List.fold_left (fun (env, all_mods) m ->
                             let m, env = Tc.check_module env m in
                             env, m::all_mods) (env, []) in
   // for the moment, there should be no need to trap exceptions to finalize the fuel trace logic. nothing is done if an error occurs.
-  FStar.SMTEncoding.ErrorReporting.finalize_fuel_trace fn deps;
+  FStar.SMTEncoding.Z3.finalize_fuel_trace fn deps;
   List.rev all_mods, dsenv, env
 
 (***********************************************************************)

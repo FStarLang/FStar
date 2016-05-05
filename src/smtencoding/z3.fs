@@ -21,6 +21,110 @@ open FStar.SMTEncoding.Term
 open FStar.Util
 
 (****************************************************************************)
+(* Fuel Trace Caching                                                       *)
+(****************************************************************************)
+
+type fuel_trace_identity =
+    {
+      module_digest:string;
+      transitive_digest:option<string>;
+    }
+
+type fuel_trace_state =
+    {
+      identity:fuel_trace_identity;
+      fuels:list<(int * int)>
+    }
+
+type fuel_trace_status =
+    | FuelTraceUnavailable
+    | RecordFuelTrace of list<(int * int)>
+    | ReplayFuelTrace of (string * list<(int * int)>)
+
+let fuel_trace : ref<fuel_trace_status> = Util.mk_ref <| FuelTraceUnavailable
+
+let format_fuel_trace_file_name src_fn =
+    Util.format_value_file_name <| Util.format1 "%s.fuel" src_fn
+
+let compute_transitive_digest src_fn deps = 
+    (* todo: it would be more robust to obtain the dependencies for `src_fn` directly from `Parser.Dep.collect` here, rather than reply upon the caller to provide them. *)   
+    let digests = List.map digest_of_file <| [src_fn] @ deps in
+    let s = Util.concat_l "," <| List.sortWith String.compare digests in
+    digest_of_string s
+
+let initialize_fuel_trace src_fn deps : unit =
+    let norm_src_fn = Util.normalize_file_path src_fn in
+    let val_fn = format_fuel_trace_file_name norm_src_fn in
+    match Util.load_value_from_file val_fn with
+    | Some state ->
+        let means, validated = 
+            if !Options.explicit_deps then
+                (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
+                let expected = Util.digest_of_file norm_src_fn in
+                ("Module", state.identity.module_digest = expected)
+            else 
+                ("Transitive",
+                    begin
+                        match state.identity.transitive_digest with
+                        | None ->
+                            false
+                        | Some d ->
+                            let expected = compute_transitive_digest norm_src_fn deps in
+                            d = expected
+                    end)
+        in
+        if validated then
+            begin if !Options.print_fuels then
+                    Util.print2 "(%s) %s digest is valid.\n" norm_src_fn means
+                else
+                    ();
+                fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
+            end
+        else
+            begin if !Options.print_fuels then
+                  Util.print2 "(%s) %s digest is invalid.\n" norm_src_fn means
+              else
+                  ();
+              fuel_trace := RecordFuelTrace []
+            end
+    | None ->
+        if !Options.print_fuels then
+            Util.print1 "(%s) Unable to read cached fuel trace.\n" norm_src_fn
+        else
+            ();
+        fuel_trace := RecordFuelTrace []
+
+let finalize_fuel_trace src_fn deps : unit =
+    begin match !fuel_trace with
+    | ReplayFuelTrace _ 
+    (* failure to verify *)
+    | FuelTraceUnavailable 
+    (* verification not performed *)
+    | RecordFuelTrace [] ->
+        ()
+    (* verification successful *)
+    | RecordFuelTrace l ->
+        let val_fn = format_fuel_trace_file_name src_fn in
+        let xd = 
+            (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
+            if !Options.explicit_deps then
+                None
+            else
+                Some <| compute_transitive_digest src_fn deps
+        in
+        let state = {
+            identity = {
+                module_digest = Util.digest_of_file src_fn;
+                transitive_digest = xd 
+            };
+            fuels = l
+        }
+        in
+        Util.save_value_to_file val_fn state
+    end;
+    fuel_trace := FuelTraceUnavailable
+
+(****************************************************************************)
 (* Z3 Specifics                                                             *)
 (****************************************************************************)
 type z3version =
