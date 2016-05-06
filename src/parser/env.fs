@@ -39,7 +39,7 @@ type env = {
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
   localbindings:        list<(ident * bv)>;               (* local name bindings for name resolution, paired with an env-generated unique name *)
   recbindings:          list<(ident* lid * delta_depth)>; (* names bound by recursive type and top-level let-bindings definitions only *)
-  sigmap:               list<Util.smap<(sigelt * bool)>>; (* bool indicates that this was declared in an interface file *)
+  sigmap:               Util.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
   default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
@@ -77,12 +77,12 @@ let empty_env () = {curmodule=None;
                     sigaccum=[];
                     localbindings=[];
                     recbindings=[];
-                    sigmap=[new_sigmap()];
+                    sigmap=new_sigmap();
                     default_result_effect=Const.effect_ML_lid;
                     iface=false;
                     admitted_iface=false;
                     expect_typ=false}
-let sigmap env = List.hd env.sigmap
+let sigmap env = env.sigmap
 let default_total env = {env with default_result_effect=Const.effect_Tot_lid}
 let default_ml env = {env with default_result_effect=Const.effect_ML_lid}
 
@@ -473,27 +473,44 @@ let finish env modul =
   {env with
     curmodule=None;
     modules=(modul.name, modul)::env.modules;
+    modul_abbrevs=[];
     open_namespaces=[];
     sigaccum=[];
     localbindings=[];
     recbindings=[]}
 
-let push (env:env) =
-    push_record_cache();
-    {env with
-        sigmap=Util.smap_copy (sigmap env)::env.sigmap;}
+type env_stack_ops = { 
+    push: env -> env;
+    mark: env -> env;
+    reset_mark: env -> env;
+    commit_mark: env -> env;
+    pop:env -> env
+}
 
-let mark env = push env
-let reset_mark env = {env with sigmap=List.tl env.sigmap}
-let commit_mark env = match env.sigmap with
-    | hd::_::tl -> {env with sigmap=hd::tl}
-    | _ -> failwith "Impossible"
-let pop env = match env.sigmap with
-    | _::maps ->
-        pop_record_cache();
-        {env with
-            sigmap=maps}
-    | _ -> failwith "No more modules to pop"
+let stack_ops = 
+    let stack = Util.mk_ref [] in 
+    let push env = 
+        push_record_cache();
+        stack := env::!stack;
+        {env with sigmap=Util.smap_copy (sigmap env)} in
+    let pop env = match !stack with 
+        | env::tl -> 
+         pop_record_cache();
+         stack := tl;
+         env
+        | _ -> failwith "Impossible: Too many pops" in
+    let commit_mark env = ignore (pop env); env in
+    { push=push; 
+      pop=pop;
+      mark=push;
+      reset_mark=pop;
+      commit_mark=commit_mark;}
+
+let push (env:env) = stack_ops.push env
+let mark env = stack_ops.mark env
+let reset_mark env = stack_ops.reset_mark env
+let commit_mark env = stack_ops.commit_mark env
+let pop env = stack_ops.pop env
 
 let export_interface (m:lident) env =
 //    printfn "Exporting interface %s" m.str;
