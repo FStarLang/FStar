@@ -2,7 +2,13 @@ module Prins
 
 open FStar.OrdSet
 
-assume new type prin
+type prin =
+  | Alice
+  | Bob
+  | Charlie
+  | Dave
+  | Evelyn
+  | Fred
 
 assume val p_cmp: f:(prin -> prin -> Tot bool){total_order prin f}
 

@@ -164,7 +164,7 @@ let build_pstep_star_lemma' p r ps x e dv = cut (eq_pi_pi' ps ps)
 
 (* AR: this is temporary, it's actually defined in interpreter.fst *)
 let server_key:server_key =
-  let k = Platform.Bytes.createBytes SHA1.keysize 0uy in
+  let k = Platform.Bytes.createBytes SHA1.keysize (Char.char_of_int 0) in
   assume (server_key_prop k == server_prop_t);
   k
 
@@ -244,7 +244,7 @@ let build_initial_pi_lemma ps p x e r = ()
 
 (* AR: this is temporary, it's actually defined in interpreter *)
 let client_key:client_key =
-  let k = Platform.Bytes.createBytes SHA1.keysize 0uy in
+  let k = Platform.Bytes.createBytes SHA1.keysize (Char.char_of_int 0) in
   assume (client_key_prop k == client_prop_t);
   k
 
@@ -269,8 +269,8 @@ let handle_connection c_in c_out =
     let ps', en_m, out_m, red_m =
       if contains ps !psmap_ref then
         let Some (Mk_psmap ps1 ps' en_m out_m red_m x' e') = select ps !psmap_ref in
-        let _ = admitP (b2t (e = e')) in
-        if ps = ps1 && x = x' then
+        //let _ = admitP (b2t (e = e')) in
+        if ps = ps1 && x = x' && e = e' then
 	  let _ = build_pi_lemma ps ps' en_m red_m x e p r in
 	  
 	  let en_m = update #prin #env #p_cmp p en en_m in
