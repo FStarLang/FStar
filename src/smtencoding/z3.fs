@@ -59,6 +59,8 @@ let is_replaying_fuel_trace () =
   | _ ->
     false
 
+exception BadFuelCache of unit
+
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
 (****************************************************************************)
@@ -393,47 +395,51 @@ let ask fresh label_messages qry (cb: (bool * error_labels) -> unit) =
 (* Fuel Traces (public)                                                     *)
 (****************************************************************************)
 
-let initialize_fuel_trace src_fn deps : unit =
-    let norm_src_fn = Util.normalize_file_path src_fn in
-    let val_fn = format_fuel_trace_file_name norm_src_fn in
-    begin match Util.load_value_from_file val_fn with
-    | Some state ->
-        let means, validated = 
-            if !Options.explicit_deps then
-                (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
-                let expected = Util.digest_of_file norm_src_fn in
-                ("Module", state.identity.module_digest = expected)
-            else 
-                ("Transitive",
-                    begin
-                        match state.identity.transitive_digest with
-                        | None ->
-                            false
-                        | Some d ->
-                            let expected = compute_transitive_digest norm_src_fn deps in
-                            d = expected
-                    end)
-        in
-        if validated then
-            begin if !Options.print_fuels then
-                    Util.print2 "(%s) %s digest is valid.\n" norm_src_fn means
-                else
-                    ();
-                fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
-            end
-        else
-            begin if !Options.print_fuels then
-                  Util.print2 "(%s) %s digest is invalid.\n" norm_src_fn means
-              else
-                  ();
-              fuel_trace := RecordFuelTrace []
-            end
-    | None ->
-        if !Options.print_fuels then
-            Util.print1 "(%s) Unable to read cached fuel trace.\n" norm_src_fn
-        else
-            ();
+let initialize_fuel_trace src_fn deps force_invalid_cache : unit =
+    begin if force_invalid_cache then
         fuel_trace := RecordFuelTrace []
+    else
+        let norm_src_fn = Util.normalize_file_path src_fn in
+        let val_fn = format_fuel_trace_file_name norm_src_fn in
+        begin match Util.load_value_from_file val_fn with
+        | Some state ->
+            let means, validated = 
+                if !Options.explicit_deps then
+                    (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
+                    let expected = Util.digest_of_file norm_src_fn in
+                    ("Module", state.identity.module_digest = expected)
+                else 
+                    ("Transitive",
+                        begin
+                            match state.identity.transitive_digest with
+                            | None ->
+                                false
+                            | Some d ->
+                                let expected = compute_transitive_digest norm_src_fn deps in
+                                d = expected
+                        end)
+            in
+            if validated then
+                begin if !Options.print_fuels then
+                        Util.print2 "(%s) %s digest is valid.\n" norm_src_fn means
+                    else
+                        ();
+                    fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
+                end
+            else
+                begin if !Options.print_fuels then
+                      Util.print2 "(%s) %s digest is invalid.\n" norm_src_fn means
+                  else
+                      ();
+                  fuel_trace := RecordFuelTrace []
+                end
+        | None ->
+            if !Options.print_fuels then
+                Util.print1 "(%s) Unable to read cached fuel trace.\n" norm_src_fn
+            else
+                ();
+            fuel_trace := RecordFuelTrace []
+        end
     end;
     refresh ()
 
