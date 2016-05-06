@@ -282,7 +282,7 @@ end))
 end
 in (
 # 194 "FStar.Universal.fst"
-let _87_177 = (FStar_SMTEncoding_ErrorReporting.initialize_fuel_trace fn deps)
+let _87_177 = (FStar_SMTEncoding_Z3.initialize_fuel_trace fn deps)
 in (
 # 195 "FStar.Universal.fst"
 let _87_188 = (FStar_All.pipe_right fmods (FStar_List.fold_left (fun _87_181 m -> (match (_87_181) with
@@ -299,7 +299,7 @@ in (match (_87_188) with
 | (env, all_mods) -> begin
 (
 # 200 "FStar.Universal.fst"
-let _87_189 = (FStar_SMTEncoding_ErrorReporting.finalize_fuel_trace fn deps)
+let _87_189 = (FStar_SMTEncoding_Z3.finalize_fuel_trace fn deps)
 in ((FStar_List.rev all_mods), dsenv, env))
 end))))
 end)))
