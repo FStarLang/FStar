@@ -457,7 +457,7 @@ and tc_value env (e:term) : term
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
   | Tm_constant c ->
-    let t = tc_constant env top.pos c in
+    let t = tc_constant top.pos c in
     let e = mk (Tm_constant c) (Some t.n) e.pos in
     value_check_expected_typ env e (Inl t) Rel.trivial_guard
 
@@ -505,7 +505,7 @@ and tc_value env (e:term) : term
   | _ ->
     failwith (Util.format1 "Unexpected value: %s" (Print.term_to_string top))
 
-and tc_constant env r (c:sconst) : typ =
+and tc_constant r (c:sconst) : typ =
      match c with
       | Const_unit -> t_unit
       | Const_bool _ -> t_bool
