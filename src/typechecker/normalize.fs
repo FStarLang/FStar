@@ -368,8 +368,8 @@ and close_comp cfg env c =
                                flags=flags})  
 
 and close_lcomp_opt cfg env lopt = match lopt with
-    | Some (Inl lc) -> Some (Inl ({lc with res_typ=closure_as_term_delayed cfg env lc.res_typ;
-                                   comp=(fun () -> close_comp cfg env (lc.comp()))}))
+    | Some (Inl lc) -> //NS: Too expensive to close potentially huge VCs that are hardly read
+      Some (Inr lc.eff_name) //retaining the effect name is sufficient
     | _ -> lopt
 
 (*******************************************************************)
@@ -730,6 +730,19 @@ and norm_binders : cfg -> env -> binders -> binders =
             bs in
         List.rev nbs
 
+and norm_lcomp_opt : cfg -> env -> option<either<lcomp, Ident.lident>> -> option<either<lcomp, Ident.lident>> = 
+    fun cfg env lopt -> 
+        match lopt with
+        | Some (Inl lc) -> 
+          if Util.is_tot_or_gtot_lcomp lc
+          then let t = norm cfg env [] lc.res_typ in
+               if Util.is_total_lcomp lc
+               then Some (Inl (Util.lcomp_of_comp (S.mk_Total t)))
+               else Some (Inl (Util.lcomp_of_comp (S.mk_GTotal t)))
+          else Some (Inr lc.eff_name)
+       | _ -> lopt
+
+
 and rebuild : cfg -> env -> stack -> term -> term = 
     fun cfg env stack t ->
     (* Pre-condition: t is in either weak or strong normal form w.r.t env, depending on whether cfg.steps constains WHNF
@@ -747,7 +760,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
 
             | Abs (env', bs, env'', lopt, r)::stack ->
               let bs = norm_binders cfg env' bs in
-              let lopt = close_lcomp_opt cfg env'' lopt in
+              let lopt = norm_lcomp_opt cfg env'' lopt in
               rebuild cfg env stack ({abs bs t lopt with pos=r})
 
             | Arg (Univ _,  _, _)::_
