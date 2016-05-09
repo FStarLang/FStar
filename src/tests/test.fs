@@ -9,9 +9,10 @@ let r = Range.dummyRange
 [<EntryPoint>] 
 let main argv =
     printfn "Initializing ...";
-    Pars.init() |> ignore;
+//    Pars.init() |> ignore;
+    FStar.Syntax.Print.init();
     Norm.run_all (); 
-    Unif.run_all ();
+//    Unif.run_all ();
     0
 
 

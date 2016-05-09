@@ -461,3 +461,6 @@ let subst_elt_to_string = function
    | UD(u, i) -> Util.format2 "UD (%s, %s)" u.idText (string_of_int i) 
 
  let subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; " 
+
+ let init () = Subst.print_term' := term_to_string;
+               Subst.print_univ' := univ_to_string

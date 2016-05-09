@@ -62,16 +62,21 @@ let rec compress_univ u = match u with
 (*************************** Delayed substitutions ******************************)
 (********************************************************************************)
 (* A subst_t is a composition of parallel substitutions, expressed as a list of lists *)
+let print_term' = ref (fun (t:term) -> "<>")
+let print_univ' = ref (fun (u:universe) -> "<>")
+let print_term t = !print_term' t
+let print_univ u = !print_univ' u
 let subst_to_string (s:subst_ts) = 
     let bv_to_str x = x.ppname.idText ^ "#" ^ (string_of_int x.index) in
     s |> List.map (function
         | DB(i, x) -> Util.format2 "DB(%s, %s)" (string_of_int i) (bv_to_str x)
+        | DD(i, j) -> Util.format2 "DD(%s, %s)" (string_of_int i) (string_of_int j)
         | NM(x, i) -> Util.format2 "NM(%s, %s)" (bv_to_str x) (string_of_int i)
-        | NT(x, t) -> Util.format1 "NT(%s, ??)" (bv_to_str x)
-        | UN(i, u) -> Util.format1 "UN(%s, ??)" (string_of_int i)
+        | NT(x, t) -> Util.format2 "NT(%s, %s)" (bv_to_str x) (print_term t)
+        | UN(i, u) -> Util.format2 "UN(%s, %s)" (string_of_int i) (print_univ u)
         | UD(x, i) -> Util.format2 "UN(%s, %s)" x.idText (string_of_int i)
-        | DT(i, t) -> Util.format1 "DT(%s, ??)" (string_of_int i)
-        | UT(n, t) -> Util.format1 "UT(%s, ??)" n.idText)
+        | DT(i, t) -> Util.format2 "DT(%s, %s)" (string_of_int i) (print_term t)
+        | UT(n, t) -> Util.format2 "UT(%s, %s)" n.idText (print_univ t))
     |> String.concat "; "
 
 //Lookup a bound var in a parallel substitution
@@ -80,6 +85,8 @@ let subst_bv a s = Util.find_map s (function
       Some (bv_to_name (Syntax.set_range_of_bv x (Syntax.range_of_bv a)))
     | DT(i, t) when (i=a.index) -> 
       Some t
+    | DD(i, j) when (i=a.index) -> 
+      Some (bv_to_tm ({a with index=j}))
     | _ -> None)
 let subst_nm a s = Util.find_map s (function  
     | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({a with index=i})) 
@@ -111,19 +118,19 @@ let apply_until_some_then_map f s g t =
     apply_until_some f s 
     |> map_some_curry g t
 
-let rec subst_univ s u =
+let rec subst_univ (s:list<subst_elt>) u =
     let u = compress_univ u in
     match u with 
       | U_bvar x -> 
         begin match subst_univ_bv x s with 
             | None -> u
             | Some u' -> u'
-        end
-
+        end 
+        
       | U_name x ->
         begin match subst_univ_nm x s with 
-            | None -> u
-            | Some u' -> u'
+        | None -> u
+        | Some u' -> u'
         end
 
       | U_zero
@@ -132,13 +139,14 @@ let rec subst_univ s u =
       | U_succ u -> U_succ (subst_univ s u)
       | U_max us -> U_max (List.map (subst_univ s) us)
 
+
 (* s1 and s2 are each parallel substitutions
     e.g., s1 = [NM(x, 0); NM(y, 1)]
           s2 = [DB(0, x'); DB(1, y')]
     compose them to 
           s  = [NT(x, x'); NT(y, y')]
 *)
-let rec compose_subst s1 s2 = 
+let rec compose_subst (s1:subst_ts) (s2:subst_ts) = 
    let find_and_remove f s = 
         let rec aux out s = match s with 
             | [] -> None, out
@@ -152,6 +160,13 @@ let rec compose_subst s1 s2 =
         | NT(y, _) -> bv_eq x y
         | _ -> false) in
  
+   let find_index s i = 
+     s |> find_and_remove (function
+        | DB(j, _) 
+        | DT(j, _)
+        | DD(j, _) -> i=j
+        | _ -> false) in
+
    //consider applying (s1 . s2) to a term 
    //In general, given a substition is a list (var * term), 
    //the composition s1 . s2 is  
@@ -160,7 +175,7 @@ let rec compose_subst s1 s2 =
    //However, our substitutions have more structure and we can optimize a bit further
    //First, we assume that s1 and s2 have non-overlapping domains
    let s2_orig = s2 in
-   s1 |> List.fold_left (fun s2 s1_elt -> 
+   let comp = s1 |> List.fold_left (fun s2 s1_elt -> 
            match s1_elt with 
             | DB(i, x) -> //opening i to x
                  //assert (DB(i, _)) not in s2 (disjoint domains)
@@ -170,7 +185,7 @@ let rec compose_subst s1 s2 =
                     | Some (NM(_, j)) -> //closing x to j
                       if i=j 
                       then s2_remainder //they cancel
-                      else failwith "Impossible" //can't change the de Bruijn index of a term!
+                      else DD(i,j)::s2_remainder
 
                     | Some (NT(_, {n=Tm_name y})) -> //renaming x to y
                       DB(i, y)                       //open i to y directly
@@ -188,10 +203,7 @@ let rec compose_subst s1 s2 =
            | NM(x, i) -> //closing x to i
                  //assert {NM(x, _), NT(x, _)} not in s2 (disjoint domains)
                  //de Bruijn index i does not appear in T
-                 let s2_i, s2_remainder = s2 |> find_and_remove (function
-                    | DB(j, _) 
-                    | DT(j, _) -> i=j
-                    | _ -> false) in
+                 let s2_i, s2_remainder = find_index s2 i in
 
                  begin match s2_i with 
                     | Some (DB(_, y)) ->  //open i to y; y is fresh
@@ -202,10 +214,35 @@ let rec compose_subst s1 s2 =
                       NT(x, tm)           //subst x to tm in one step
                       ::s2_remainder      //i does not appear in T, so no need to keep s2_i
                     
+                    | Some (DD(_, j)) ->  //replace i to j
+                      NM(x, j)            //rename x to j in one step
+                      ::s2_remainder
+                      
                     | _ ->                //s2_i=None
                       s1_elt              //nothing to compose with
                       ::s2_remainder      //s2_remainder == s2, up to reordering
                  end
+
+           | DD(i, j) -> 
+                 let s2_i, s2_remainder = find_index s2 i in
+                 begin match s2_i with 
+                    | Some (DB(_, y)) ->  //open j to y; y is fresh
+                      DB(i, y)            //open i to y
+                      ::s2_remainder      //j does not appear in T, so no need to keep s2_i
+
+                    | Some (DT(_, tm)) -> //subst index j to tm
+                      DT(i, tm)           //subst i to tm in one step
+                      ::s2_remainder      //i does not appear in T, so no need to keep s2_i
+                    
+                    | Some (DD(_, k)) ->  //replace j to k
+                      DD(i, k)            //rename i to k in one step
+                      ::s2_remainder
+                      
+                    | _ ->                //s2_i=None
+                      s1_elt              //nothing to compose with
+                      ::s2_remainder      //s2_remainder == s2, up to reordering
+                 end
+
 
            | NT(x, ({n=Tm_name y})) -> //renaming x to y
                 //assert {NM(x, _), NT(x, _)} not in s2 (disjoint domains)
@@ -228,7 +265,7 @@ let rec compose_subst s1 s2 =
              NT(x, subst s2_orig tm)
              ::s2
 
-           | DT(i, tm) ->                   //i is opened and substituted to tm; can't compose on the RHS
+           | DT(i, tm) ->                //i is opened and substituted to tm; can't compose on the RHS
              DT(i, subst s2_orig tm)     //so just apply the RHS substitution to tm
              ::s2 
 
@@ -274,9 +311,22 @@ let rec compose_subst s1 s2 =
           | UT(un, u) ->              //like the NT case
             UT(un, subst_univ s2_orig u) //apply the substitution to it to compose
             ::s2)
-    s2 
+    s2 in
+  let comp = comp |> remove_dups (fun a b -> 
+        match a, b with
+        | NT(x, _), NT(y, _) 
+        | NM(x, _), NM(y, _) -> bv_eq x y 
+        | DB(i, _), DB(j, _)
+        | DT(i, _), DT(j, _) 
+        | UN(i, _), UN(j, _) -> i=j
+        | UD(x, _), UD(y, _) 
+        | UT(x, _), UT(y, _) -> x.idText = y.idText
+        | _ -> false) in
+  printfn "Composing %s;\tand %s;\tto %s" (subst_to_string s1) (subst_to_string s2) (subst_to_string comp);
+  comp
 
-and subst (s:subst_ts) t = match s with
+and subst (s:subst_ts) t = 
+  match s with
   | [] -> t 
   | _ ->
     let t0 = force_delayed_thunk t in 
@@ -296,10 +346,10 @@ and subst (s:subst_ts) t = match s with
           failwith "Impossible: force_delayed_thunk removes lazy delayed nodes"
 
         | Tm_bvar a ->
-          begin match subst_bv a s with 
+            begin match subst_bv a s with 
             | None -> t0
             | Some t -> t
-          end
+            end 
 
         | Tm_name a -> 
           begin match subst_nm a s with 
@@ -317,14 +367,16 @@ and subst_flags' s flags =
         | DECREASES a -> DECREASES (subst s a)
         | f -> f)
 
-and subst_comp_typ' s t = match s with
+and subst_comp_typ' s t = 
+match s with
   | [] -> t
   | _ ->
     {t with result_typ=subst s t.result_typ;
             flags=subst_flags' s t.flags;
             effect_args=List.map (fun (t, imp) -> subst s t, imp) t.effect_args}
 
-and subst_comp s t = match s with
+and subst_comp s t =
+ match s with
   | [] -> t
   | _ ->
     match t.n with
@@ -334,6 +386,7 @@ and subst_comp s t = match s with
 
 let shift n s = match s with 
     | DB(i, t) -> DB(i+n, t)
+    | DD(i, j) -> DD(i+n, j+n)
     | DT(i, t) -> DT(i+n, t)
     | UN(i, t) -> UN(i+n, t)
     | NM(x, i) -> NM(x, i+n)
@@ -389,8 +442,8 @@ let push_subst_lcomp s lopt = match lopt with
       Some (Inl ({l with res_typ=subst s l.res_typ;
                          comp=(fun () -> subst_comp s (l.comp()))}))
 
-let push_subst s t = 
-    let n = List.length s in
+let push_subst (s:subst_ts) t = 
+//    let n = List.length s in
     match t.n with 
         | Tm_delayed _ -> failwith "Impossible"
 
@@ -479,7 +532,9 @@ let open_binders' bs =
         | [] -> [], o
         | (x, imp)::bs' -> 
           let x' = {freshen_bv x with sort=subst o x.sort} in
-          let o = DB(0, x')::shift_subst 1 o in 
+          let o = 
+            let o' = shift_subst 1 o in 
+            DB(0, x')::o' in
           let bs', o = aux bs' o in 
           (x',imp)::bs', o in
    aux bs [] 
@@ -495,7 +550,7 @@ let open_comp (bs:binders) t =
    bs', subst_comp opening t
 
 
-let open_pat (p:pat) : pat * subst_t =
+let open_pat (p:pat) = // pat * subst_t =
     let rec aux_disj sub renaming p = 
         match p.v with 
            | Pat_disj _ -> failwith "impossible"
@@ -542,12 +597,16 @@ let open_pat (p:pat) : pat * subst_t =
 
        | Pat_var x ->
          let x' = {freshen_bv x with sort=subst sub x.sort} in
-         let sub = DB(0, x')::shift_subst 1 sub in 
+         let sub = 
+            let sub' = shift_subst 1 sub in 
+            DB(0, x')::sub' in
          {p with v=Pat_var x'}, sub, (x,x')::renaming
 
        | Pat_wild x -> 
          let x' = {freshen_bv x with sort=subst sub x.sort} in
-         let sub = DB(0, x')::shift_subst 1 sub in 
+         let sub = 
+            let sub' = shift_subst 1 sub in 
+            DB(0, x')::sub' in
          {p with v=Pat_wild x'}, sub, (x,x')::renaming
 
        | Pat_dot_term(x, t0) -> 
@@ -566,8 +625,8 @@ let open_branch (p, wopt, e) =
     let e = subst opening e in 
     (p, wopt, e)
     
-let close (bs:binders) t = subst (closing_subst bs) t
-let close_comp (bs:binders) (c:comp) = subst_comp (closing_subst bs) c
+let close (bs:binders) t = let s = closing_subst bs in subst s t
+let close_comp (bs:binders) (c:comp) = let s = closing_subst bs in subst_comp s c
 let close_binders (bs:binders) : binders =
     let rec aux s (bs:binders) = match bs with 
         | [] -> []

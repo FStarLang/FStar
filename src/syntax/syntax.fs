@@ -154,6 +154,7 @@ and letbindings = bool * list<letbinding>       (* let recs may have more than o
 and subst_ts = list<subst_elt>
 and subst_elt = 
    | DB of int * bv                            (* DB i t: replace a bound variable with index i with name bv                 *)
+   | DD of int * int                           (* DB i j: replace a bound variable with index i to index j                    *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
    | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
    | DT of int * term                          (* DT i t: replace de Bruijn index i with term t                              *)

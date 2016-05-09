@@ -128,6 +128,7 @@ module U_Util = FStar.Syntax.Util
 
 let main () =
   try
+    FStar.Syntax.Print.init();
     go ();
     cleanup ();
     exit 0

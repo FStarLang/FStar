@@ -22,6 +22,9 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Util
 
+val print_term': ref<(term -> string)>
+val print_univ': ref<(universe -> string)>
+
 val shift_subst:        int -> subst_t -> subst_t
 val subst:              list<subst_elt> -> term -> term
 val subst_comp:         list<subst_elt> -> comp -> comp
