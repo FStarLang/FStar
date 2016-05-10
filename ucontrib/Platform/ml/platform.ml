@@ -389,6 +389,9 @@ module Udp = struct
   open Unix
 
 
+  type socket = file_descr
+  type udpListener = file_descr
+
   (* Default network input buffer size *)
   let default_buffer_size = 2048
 
