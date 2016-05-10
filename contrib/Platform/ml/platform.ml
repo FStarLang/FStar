@@ -456,8 +456,7 @@ module Udp = struct
     ic,oc
 
   (* Flush output channel of the socket *)
-  let flush s =
-    let oc = out_channel_of_descr s in
+  let flush oc =
     flush oc
 
 (*
