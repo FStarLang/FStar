@@ -2507,50 +2507,35 @@ let tc_inductive env ses quals lids =
     in
 
 
-    //assumes non-indexed, non-recursive type
+    //assumes non-indexed type for now
     let haseq (ty:sigelt) (datas:list<sigelt>) :term =
         let dr = Range.dummyRange in
 
-        //get conjunct formula for a data constructor
-        //univ_names are univ names that were used to open the inductive type, tbs are new binders for the inductive type
-        let conjunct_for_datacon (data:sigelt) (univ_names:univ_names) (tbs:binders) :term =
+        let check_soundness_for_datacon (en:env) (guard:term) (us:univ_names) (tbs:binders) (data:sigelt) :unit =
             let t = datacon_typ data in
-            //open univ vars using the same universes as with the inductive type constructor
-            let t = SS.open_univ_vars_not_fresh univ_names t in
+
+            //open universes using us, what happens if there are more universe names in the datacon type than us ?
+            let t = SS.open_univ_vars_not_fresh us t in
             match (SS.compress t).n with
                 | Tm_arrow (bs, c) ->
-                    let bs = snd (List.splitAt (List.length tbs) bs) in  //filter out inductive type binders
-                    let bs, c = split_arrow (subst (SS.opening_of_binders tbs) (U.arrow bs c)) in  //substitute inductive type binders with tbs
-                    let rec conjunct_for_binders (old_bs:binders) (c:comp) :term =
-                        match old_bs with
-                            | []         -> failwith "Impossible"  //empty binders ?
-                            | b::old_bs' ->
-                                //generate a fresh binder
-                                let new_b = (S.gen_bv (fst b).ppname.idText None (fst b).sort, (snd b)) in
-                                if List.length old_bs' = 0 then
-                                    //it's the last binder, generate forall b. HasEq b.sort
-                                    let body = mk_Tm_app U.t_haseq [S.as_arg (fst new_b).sort] None dr in  //haseq b.sort
-                                    mk_Tm_app U.tforall [S.as_arg (U.abs [new_b] body None)] None dr  //forall, no need to close with new_b since it's not free in body
-                                else
-                                    //open the rest of binders with [b]
-                                    let [new_b], t = SS.open_term [b] (U.arrow old_bs' c) in  //assuming returned length is same as input length ?
-                                    let old_bs', c = split_arrow t in
-                                    //call conjunct_for_binders recursively
-                                    let fml = conjunct_for_binders old_bs' c in
-                                    let body = U.mk_conj (mk_Tm_app U.t_haseq [S.as_arg (fst new_b).sort] None dr) fml in  //haseq new_b /\ fml
-                                    let body = SS.close [new_b] body in  //close
-                                    mk_Tm_app U.tforall [ S.as_arg (U.abs [new_b] body None) ] None dr  //forall new_b
-                    in
-                    conjunct_for_binders bs c
-                | _ -> U.t_true  //if datacon type is not arrow, then constructing type directly ?
-        in
-
-        // /\ of formulas of all the data constructors, splitting manually to avoid unnecessary True in fold_left
-        let formula_for_datacons (univ_names:univ_names) (tbs:binders) :term = match datas with
-            | [] -> U.t_true
-            | data::datas' ->
-                let data_fml = conjunct_for_datacon data univ_names tbs in
-                List.fold_left (fun (t:term) (data:sigelt) -> U.mk_conj t (conjunct_for_datacon data univ_names tbs)) data_fml datas'
+                    //filter out inductive type binders, bs are the remaining binders
+                    let bs = snd (List.splitAt (List.length tbs) bs) in
+                    if List.length bs = 0 then ()
+                    else
+                        //substitute inductive type binders by with tbs, making U.arrow and then splitting it, better way ?
+                        let bs, c = split_arrow (subst (SS.opening_of_binders tbs) (U.arrow bs c)) in
+                        //open all the binders, does it return the same binders with fresh names ?
+                        let bs = SS.open_binders bs in
+                        //fold on bs, for each binder, check that it's sort's haseq holds, and then add it to the env
+                        ignore(List.fold_left (fun (en:env) (b:binder) ->
+                            let phi = U.mk_imp guard (mk_Tm_app U.t_haseq [S.as_arg (fst b).sort] None dr) in
+                            let phi, _ = tc_trivial_guard en phi in
+                            Util.print1 "\n\nphi Formula: %s\n\n" (PP.term_to_string phi);
+                            let phi = Rel.guard_of_guard_formula (NonTrivial phi) in
+                            let _ = Rel.force_trivial_guard en phi in
+                            Env.push_binders en [b]
+                        ) en bs)
+                | _ -> ()
         in
 
         //work on the inductive
@@ -2563,30 +2548,48 @@ let tc_inductive env ses quals lids =
                 //open_comp c, will also substitute binders in case of dependent types ?
                 let bs, c = SS.open_comp bs c in
 
-                //now we have opened the inductive type, i.e. generated fresh binders for each of the binders
+                //now we have opened the inductive type, i.e. we have generated fresh names for each of the binders
 
                 //apply the type t to inductive type params, this bv_to_name is a bit funky ?
                 let ind_ty_applied = mk_Tm_app (S.fvar lid Delta_constant None) (List.map (fun (bv, _) -> S.as_arg (S.bv_to_name bv)) bs) None dr in
+                let haseq_ind_ty_applied = mk_Tm_app U.t_haseq [S.as_arg ind_ty_applied] None dr in
 
-                //body of formula which is, all_datacons_formula ==> haseq ind_ty_applied
-                let body = U.mk_imp (formula_for_datacons univ_names bs) (mk_Tm_app U.t_haseq [S.as_arg ind_ty_applied] None dr) in
+                //conjunction of haseq of all the inductive type parameters
+                let conj_params = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None dr)) U.t_true bs in
+                
+                //conj ==> HasEq ind_ty_applied
+                let body = U.mk_imp conj_params haseq_ind_ty_applied in
 
                 //fold_right with binders, close and add a forall b
                 let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [b] (SS.close [b] t) None) ] None dr) bs body in
                 Util.print1 "\n\nHasEq Formula: %s\n\n" (PP.term_to_string fml);
 
+                //push sig_bundle to the environment, it has not been pushed yet
                 let env = Env.push_sigelt env0 sig_bndle in
+                //encode to the solver ? should we push and pop a context ?
+                let _ = env.solver.push "sigelt" in
+                let _ = env.solver.encode_sig env sig_bndle in
+                //let _ = env.solver.pop "sigelt" in
+                //push universe variables
                 let env = Env.push_univ_vars env univ_names in
+                //push inductive type parameters
+                let env = Env.push_binders env bs in
+                //push HasEq for all the binders ? What is the function to do that ? alt. make a conjunction HasEq bs /\ HasEq ind_ty_applied
+                let guard = U.mk_conj conj_params haseq_ind_ty_applied in
 
-                Util.print_string "\n\ntyping formula\n\n";
-                let _, _, _ = tc_term env fml in 
+                List.iter (fun data -> check_soundness_for_datacon env guard univ_names bs data) datas;
+
+                let _ = env.solver.pop "sigelt" in
+
+                //Util.print_string "\n\ntyping formula\n\n";
+                //let _, _, _ = tc_term env fml in 
 
                 fml
             | _ -> failwith "Impossible"
     in
 
     //test for now
-    //let _ = if env.curmodule.ident.idText = "Test" then ignore (haseq (List.hd tcs) datas) else () in 
+    let _ = if env.curmodule.ident.idText = "Test" then ignore (haseq (List.hd tcs) datas) else () in 
     sig_bndle
 
 let rec tc_decl env se = match se with
@@ -2918,5 +2921,3 @@ let check_module env m =
     let m, env = tc_modul env m in
     if Options.should_dump m.name.str then Util.print1 "%s\n" (Print.modul_to_string m);
     m, env
-
-
