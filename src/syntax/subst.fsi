@@ -52,3 +52,4 @@ val close_univ_vars_tscheme: univ_names -> tscheme -> tscheme
 
 (* AR: this should go *)
 val open_univ_vars_not_fresh: univ_names -> term -> term
+val univ_var_opening: univ_names -> list<subst_elt> * list<univ_name>

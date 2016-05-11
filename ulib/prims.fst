@@ -570,6 +570,8 @@ type nat = i:int{i >= 0}
 type pos = i:int{i > 0}
 type nonzero = i:int{i<>0}
 
+assume Haseq_nat: hasEq nat
+
 (*    For the moment we require not just that the divisor is non-zero, *)
 (*    but also that the dividend is natural. This works around a *)
 (*    mismatch between the semantics of integer division in SMT-LIB and *)

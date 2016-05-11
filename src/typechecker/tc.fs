@@ -2506,6 +2506,11 @@ let tc_inductive env ses quals lids =
         | _ -> failwith "Impossible"
     in
 
+    let subst_in_binders (bs:binders) (s:list<subst_elt>) :binders =
+        match bs with
+            | [] -> []
+            | _  -> fst (split_arrow (SS.subst s (U.arrow bs (S.mk_Total t_unit))))
+    in
 
     //assumes non-indexed type for now
     let haseq (ty:sigelt) (datas:list<sigelt>) :term =
@@ -2540,29 +2545,76 @@ let tc_inductive env ses quals lids =
 
         //work on the inductive
         match ty with
-            | Sig_inductive_typ (lid, univ_names, bs, t, _, _, _, _) ->
-                //open universe vars
-                let univ_names, ind_type = SS.open_univ_vars univ_names (U.arrow bs (S.mk_Total t)) in
-                let bs, c = split_arrow ind_type in
+            | Sig_inductive_typ (lid, us, bs, t, _, _, _, _) ->
+                //open universe vars, first get the substitution
+                let usubst, us = SS.univ_var_opening us in
+                //apply the subsitution to bs, making a fake arrow and then splitting it, better way ?
+                let bs = subst_in_binders bs usubst in
+                //apply the substitution to t
+                let t = SS.subst usubst t in
+
+                //open the binders bs now
+                let bs, c = SS.open_term bs t in
+
+                //now we have opened the inductive type, i.e. we have generated fresh names for each of the binders
+                
+                //get the index binders if any
+                let ibs =
+                    match (SS.compress t).n with
+                        | Tm_arrow (ibs, _) -> ibs
+                        | _                 -> []
+                in
+                
+                //open the ibs binders
+                let ibs = SS.open_binders ibs in
+                
+                //term for the unapplied inductive type
+                let ind = S.fvar lid Delta_constant None in
+
+                //apply ind to type parameters bs
+                let ind = if List.length bs = 0 then ind else mk_Tm_app ind (List.map (fun (bv, _) -> S.as_arg (S.bv_to_name bv)) bs) None dr in
+
+                //apply ind to indexed parameters
+                let ind = if List.length ibs = 0 then ind else mk_Tm_app ind (List.map (fun (bv, _) -> S.as_arg (S.bv_to_name bv)) ibs) None dr in
+
+                //haseq of ind
+                let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None dr in
+
+                //conjunction of haseq of all the inductive type parameters
+                let conj_haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None dr)) U.t_true bs in
+
+                //conj ==> HasEq ind
+                let body = U.mk_imp conj_haseq_bs haseq_ind in
+
+                //fold right with ibs, close and add a forall b
+                let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [b] (SS.close [b] t) None) ] None dr) ibs body in
+
+                //fold right with bs, close and add a forall b
+                let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [b] (SS.close [b] t) None) ] None dr) bs fml in
+
+                Util.print1 "\n\nHasEq Formula: %s\n\n" (PP.term_to_string fml);
+
+                //let univ_names, ind_type = SS.open_univ_vars univ_names (U.arrow bs (S.mk_Total t)) in
+                //let bs, c = split_arrow ind_type in
 
                 //open_comp c, will also substitute binders in case of dependent types ?
-                let bs, c = SS.open_comp bs c in
+                //let bs, c = SS.open_comp bs c in
 
                 //now we have opened the inductive type, i.e. we have generated fresh names for each of the binders
 
                 //apply the type t to inductive type params, this bv_to_name is a bit funky ?
-                let ind_ty_applied = mk_Tm_app (S.fvar lid Delta_constant None) (List.map (fun (bv, _) -> S.as_arg (S.bv_to_name bv)) bs) None dr in
-                let haseq_ind_ty_applied = mk_Tm_app U.t_haseq [S.as_arg ind_ty_applied] None dr in
+                //let ind_ty_applied = mk_Tm_app (S.fvar lid Delta_constant None) (List.map (fun (bv, _) -> S.as_arg (S.bv_to_name bv)) bs) None dr in
+                //let haseq_ind_ty_applied = mk_Tm_app U.t_haseq [S.as_arg ind_ty_applied] None dr in
 
                 //conjunction of haseq of all the inductive type parameters
-                let conj_params = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None dr)) U.t_true bs in
+                //let conj_params = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None dr)) U.t_true bs in
                 
                 //conj ==> HasEq ind_ty_applied
-                let body = U.mk_imp conj_params haseq_ind_ty_applied in
+                //let body = U.mk_imp conj_params haseq_ind_ty_applied in
 
                 //fold_right with binders, close and add a forall b
-                let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [b] (SS.close [b] t) None) ] None dr) bs body in
-                Util.print1 "\n\nHasEq Formula: %s\n\n" (PP.term_to_string fml);
+                //let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [b] (SS.close [b] t) None) ] None dr) bs body in
+                //Util.print1 "\n\nHasEq Formula: %s\n\n" (PP.term_to_string fml);
 
                 //push sig_bundle to the environment, it has not been pushed yet
                 let env = Env.push_sigelt env0 sig_bndle in
@@ -2571,13 +2623,15 @@ let tc_inductive env ses quals lids =
                 let _ = env.solver.encode_sig env sig_bndle in
                 //let _ = env.solver.pop "sigelt" in
                 //push universe variables
-                let env = Env.push_univ_vars env univ_names in
+                let env = Env.push_univ_vars env us in
                 //push inductive type parameters
                 let env = Env.push_binders env bs in
-                //push HasEq for all the binders ? What is the function to do that ? alt. make a conjunction HasEq bs /\ HasEq ind_ty_applied
-                let guard = U.mk_conj conj_params haseq_ind_ty_applied in
+                //push ibs
+                let env = Env.push_binders env ibs in
+                //push HasEq for all the binders ? What is the function to do that ? alt. make a conjunction HasEq bs /\ HasEq ind
+                let guard = U.mk_conj conj_haseq_bs haseq_ind in
 
-                List.iter (fun data -> check_soundness_for_datacon env guard univ_names bs data) datas;
+                List.iter (fun data -> check_soundness_for_datacon env guard us bs data) datas;
 
                 let _ = env.solver.pop "sigelt" in
 
