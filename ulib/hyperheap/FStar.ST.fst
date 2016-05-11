@@ -33,14 +33,24 @@ sub_effect
   DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:t) -> wp (fun a -> p a h)
 
 
+assume val color : rid -> GTot int
 
 assume val new_region: r0:rid -> ST rid
       (requires (fun m -> True))
       (ensures (fun (m0:t) (r1:rid) (m1:t) ->
                            extends r1 r0
                         /\ fresh_region r1 m0 m1
+			/\ color r1 = color r0
                         /\ m1=Map.upd m0 r1 Heap.emp))
- 
+
+assume val new_colored_region: r0:rid -> c:int -> ST rid
+      (requires (fun m -> True))
+      (ensures (fun (m0:t) (r1:rid) (m1:t) ->
+                           extends r1 r0
+                        /\ fresh_region r1 m0 m1
+			/\ color r1 = c
+                        /\ m1=Map.upd m0 r1 Heap.emp))
+
 inline let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) = 
      (let region_i = Map.sel m0 i in
        not (Heap.contains region_i (as_ref x))
