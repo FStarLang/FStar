@@ -675,12 +675,11 @@ end
 
 module TestHashUpdate = struct
   type test = {
-    input: string;
+    input: string; (* copied from TestHash but we don't repeat *)
     output: string;
     hash_alg: hash_alg;
   }
 
-(* SI: {SHA1,SHA256,SHA384,SHA512} fail on {a,8{01234567}}. Why? *)
   let tests = [{
       hash_alg = MD5;
       input = "";
@@ -717,15 +716,15 @@ module TestHashUpdate = struct
       hash_alg = SHA1;
       input = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
       output = "84983e441c3bd26ebaae4aa1f95129e5e54670f1";
-    };(* {
+    };{
       hash_alg = SHA1;
       input = "a";
-      output = "34aa973cd4c4daa4f61eeb2bdbad27316534016f";
+      output = "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8"; 
     }; {
       hash_alg = SHA1;
       input = "0123456701234567012345670123456701234567012345670123456701234567";
-      output = "dea356a2cddd90c7a7ecedc5ebb563934f460452";
-    };*) {
+      output = "e0c094e867ef46c350ef54a7f59dd60bed92ae83";
+    }; {
       hash_alg = SHA256;
       input = "abc";
       output = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
@@ -733,15 +732,15 @@ module TestHashUpdate = struct
       hash_alg = SHA256;
       input = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
       output = "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1";
-    }; (*{
+    }; {
       hash_alg = SHA256;
       input = "a";
-      output = "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0";
+      output = "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb";
     }; {
       hash_alg = SHA256;
       input = "0123456701234567012345670123456701234567012345670123456701234567";
-      output = "594847328451bdfa85056225462cc1d867d877fb388df0ce35f25ab5562bfbb5";
-    }; *){
+      output = "8182cadb21af0e37c06414ece08e19c65bdb22c396d48ba7341012eea9ffdfdd";
+    };{
       hash_alg = SHA256;
       input = "\x19";
       output = "68aa2e2ee5dff96e3355e6c7ee373e3d6a4e17f75f9518d843709c0c9bc3e3d4";
@@ -761,15 +760,15 @@ module TestHashUpdate = struct
       hash_alg = SHA384;
       input = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu";
       output = "09330c33f71147e83d192fc782cd1b4753111b173b3b05d22fa08086e3b0f712fcc7c71a557e2db966c3e9fa91746039";
-    }; (*{
+    }; {
       hash_alg = SHA384;
       input = "a";
-      output = "9d0e1809716474cb086e834e310a4a1ced149e9c00f248527972cec5704c2a5b07b8b3dc38ecc4ebae97ddd87f3d8985";
+      output = "54a59b9f22b0b80880d8427e548b7c23abd873486e1f035dce9cd697e85175033caa88e6d57bc35efae0b5afd3145f31";
     }; {
       hash_alg = SHA384;
       input = "0123456701234567012345670123456701234567012345670123456701234567";
-      output = "2fc64a4f500ddb6828f6a3430b8dd72a368eb7f3a8322a70bc84275b9c0b3ab00d27a5cc3c2d224aa6b61a0d79fb4596";
-    }; *){
+      output = "72f5893331c249312d3c2b7a9709a7b96908b7769179dd9824ed578669fcc1f1c2de02c03b3d35a467aa0b472c1bb3d1";
+    }; {
       hash_alg = SHA512;
       input = "abc";
       output = "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f";
@@ -777,15 +776,15 @@ module TestHashUpdate = struct
       hash_alg = SHA512;
       input = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu";
       output = "8e959b75dae313da8cf4f72814fc143f8f7779c6eb9f7fa17299aeadb6889018501d289e4900f7e4331b99dec4b5433ac7d329eeb6dd26545e96e55b874be909";
-    }; (*{
+    }; {
       hash_alg = SHA512;
       input = "a";
-      output = "e718483d0ce769644e2e42c7bc15b4638e1f98b13b2044285632a803afa973ebde0ff244877ea60a4cb0432ce577c31beb009c5c2c49aa2e4eadb217ad8cc09b";
+      output = "1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75";
     }; {
       hash_alg = SHA512;
       input = "0123456701234567012345670123456701234567012345670123456701234567";
-      output = "89d05ba632c699c31231ded4ffc127d5a894dad412c0e024db872d1abd2ba8141a0f85072a9be1e2aa04cf33c765cb510813a39cd5a84c4acaa64d3f3fb7bae9";
-    }*)]
+      output = "846e0ef73436438a4acb0ba7078cfe381f10a0f5edebcb985b3790086ef5e7ac5992ac9c23c77761c764bb3b1c25702d06b99955eb197d45b82fb3d124699d78";
+    }]
 
   (* SI: uses hash, rather than hash's components. *)
   let print_test t =
