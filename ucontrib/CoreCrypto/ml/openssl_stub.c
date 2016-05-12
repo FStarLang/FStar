@@ -1918,7 +1918,8 @@ static int cb(int ok, X509_STORE_CTX *ctx)
     char buf[256];
     static int      cb_index = 0;
 
-#ifdef DEBUG
+#if 0
+//#ifdef DEBUG
     printf("Starting cb #%d (ok = %d)\n", ++cb_index, ok);
     printf("ctx: error = %d. error_depth = %d. current_method = %d. "
            "valid = %d. last_untrusted = %d. "
@@ -1997,7 +1998,7 @@ CAMLprim value ocaml_validate_chain(value chain, value for_signing, value hostna
     X509_STORE_CTX_init(ctx, store, top_cert, sk);
 
     int r = X509_verify_cert(ctx);
-    printf("X509_verify_cert() == %d [%s]\n", r, X509_verify_cert_error_string(ctx->error));
+//    printf("X509_verify_cert() == %d [%s]\n", r, X509_verify_cert_error_string(ctx->error));
 
     X509_STORE_free(store);
     X509_STORE_CTX_free(ctx);  

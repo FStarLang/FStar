@@ -46,6 +46,12 @@ val hash : hash_alg -> bytes -> bytes
 
 val hmac : hash_alg -> bytes -> bytes -> bytes
 
+(* digest functions *)
+type hash_ctx
+val digest_create : hash_alg -> hash_ctx 
+val digest_update : hash_ctx -> bytes -> unit
+val digest_final : hash_ctx -> bytes 
+
 val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
 val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
 val aead_encrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> bytes
