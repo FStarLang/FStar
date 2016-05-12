@@ -14,6 +14,9 @@
    limitations under the License.
 *)
 module Prims
+
+assume new type hasEq: Type -> GTot Type0
+
 (* False is the empty inductive type *)
 type l_False =
 
@@ -24,6 +27,7 @@ type l_True =
 (* another singleton type, with its only inhabitant written '()'
    we assume it is primitive, for convenient interop with other languages *)
 assume new type unit : Type0
+assume HasEq_unit: hasEq unit
 
 (*
    infix binary '==';
@@ -35,6 +39,7 @@ assume type eq2 : #a:Type -> #b:Type -> a -> b -> Type0
 (* bool is a two element type with elements {'true', 'false'}
    we assume it is primitive, for convenient interop with other languages *)
 assume new type bool : Type0
+assume HasEq_bool: hasEq bool
 
 (* bool-to-type coercion *)
 type b2t (b:bool) = (b == true)
@@ -160,9 +165,10 @@ effect Ghost (a:Type) (pre:Type) (post:pure_post a) =
            (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
            (fun (p:pure_post a) -> forall (x:a). pre /\ post x ==> p x)
 
-assume new type hasEq: Type -> GTot Type0
-
 assume new type int : Type0
+
+assume HasEq_int: hasEq int
+
 assume val op_AmpAmp             : bool -> bool -> Tot bool
 assume val op_BarBar             : bool -> bool -> Tot bool
 assume val op_Negation           : bool -> Tot bool
@@ -183,9 +189,15 @@ assume new type exn : Type0
 assume new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
 
+assume HasEq_string: hasEq string
+assume HasEq_exn: hasEq exn
+assume HasEq_array: (forall (a:Type). hasEq a ==> hasEq (array a))
+
 type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
+
+assume HasEq_list: (forall (a:Type). hasEq a ==> hasEq (list a))
 
 type pattern =
   | SMTPat   : #a:Type -> a -> pattern
@@ -208,14 +220,20 @@ type option (a:Type) =
   | None : option a
   | Some : v:a -> option a
 
+assume HasEq_option: (forall (a:Type). hasEq a ==> hasEq (option a))
+
 type either 'a 'b =
   | Inl : v:'a -> either 'a 'b
   | Inr : v:'b -> either 'a 'b
+
+assume HasEq_either: (forall (a:Type) (b:Type). (hasEq a /\ hasEq b) ==> hasEq (either a b))
 
 type result (a:Type) =
   | V   : v:a -> result a
   | E   : e:exn -> result a
   | Err : msg:string -> result a
+
+assume HasEq_result: (forall (a:Type). hasEq a ==> hasEq (result a))
 
 new_effect DIV = PURE
 sub_effect PURE ~> DIV  = purewp_id
@@ -455,12 +473,16 @@ type tuple2 'a 'b =
            -> _2:'b
            -> tuple2 'a 'b
 
+assume HasEq_tuple2: (forall (a:Type) (b:Type). (hasEq a /\ hasEq b) ==> hasEq (tuple2 a b))
+
 (* 'a * 'b * 'c *)
 type tuple3 'a 'b 'c =
   | Mktuple3: _1:'a
            -> _2:'b
            -> _3:'c
           -> tuple3 'a 'b 'c
+
+assume HasEq_tuple3: (forall (a:Type) (b:Type) (c:Type). (hasEq a /\ hasEq b /\ hasEq c) ==> hasEq (tuple3 a b c))
 
 (* 'a * 'b * 'c * 'd *)
 type tuple4 'a 'b 'c 'd =
@@ -470,6 +492,8 @@ type tuple4 'a 'b 'c 'd =
            -> _4:'d
            -> tuple4 'a 'b 'c 'd
 
+assume HasEq_tuple4: (forall (a:Type) (b:Type) (c:Type) (d:Type). (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d) ==> hasEq (tuple4 a b c d))
+
 (* 'a * 'b * 'c * 'd * 'e *)
 type tuple5 'a 'b 'c 'd 'e =
   | Mktuple5: _1:'a
@@ -478,6 +502,8 @@ type tuple5 'a 'b 'c 'd 'e =
            -> _4:'d
            -> _5:'e
            -> tuple5 'a 'b 'c 'd 'e
+
+assume HasEq_tuple5: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type). (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e) ==> hasEq (tuple5 a b c d e))
 
 (* 'a * 'b * 'c * 'd * 'e * 'f *)
 type tuple6 'a 'b 'c 'd 'e 'f =
@@ -489,6 +515,7 @@ type tuple6 'a 'b 'c 'd 'e 'f =
            -> _6:'f
            -> tuple6 'a 'b 'c 'd 'e 'f
 
+assume HasEq_tuple6: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type) (f:Type). (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e /\ hasEq f) ==> hasEq (tuple6 a b c d e f))
 
 (* 'a * 'b * 'c * 'd * 'e * 'f * 'g *)
 type tuple7 'a 'b 'c 'd 'e 'f 'g =
@@ -501,6 +528,8 @@ type tuple7 'a 'b 'c 'd 'e 'f 'g =
            -> _7:'g
            -> tuple7 'a 'b 'c 'd 'e 'f 'g
 
+assume HasEq_tuple7: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type) (f:Type) (g:Type). (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e /\ hasEq f /\ hasEq g) ==> hasEq (tuple7 a b c d e f g))
+
 (* 'a * 'b * 'c * 'd * 'e * 'f * 'g * 'h *)
 type tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
   | Mktuple8: _1:'a
@@ -512,6 +541,8 @@ type tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
            -> _7:'g
            -> _8:'h
            -> tuple8 'a 'b 'c 'd 'e 'f 'g 'h
+
+assume HasEq_tuple8: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type) (f:Type) (g:Type) (h:Type). (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e /\ hasEq f /\ hasEq g /\ hasEq h) ==> hasEq (tuple8 a b c d e f g h))
 
 (* Concrete syntax (x:a & y:b x & c x y) *)
 type dtuple3 (a:Type)
@@ -570,7 +601,10 @@ type nat = i:int{i >= 0}
 type pos = i:int{i > 0}
 type nonzero = i:int{i<>0}
 
-assume Haseq_nat: hasEq nat
+(* TODO: these should come from some common axiom on refinements *)
+assume HasEq_nat: hasEq nat
+assume HasEq_pos: hasEq pos
+assume HasEq_nonzero: hasEq nonzero
 
 (*    For the moment we require not just that the divisor is non-zero, *)
 (*    but also that the dividend is natural. This works around a *)

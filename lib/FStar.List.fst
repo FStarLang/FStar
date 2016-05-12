@@ -379,3 +379,13 @@ let rec sortWithT f = function
      let hi, lo  = partitionT (bool_of_compare f pivot) tl in
      partition_length (bool_of_compare f pivot) tl;
      sortWithT f lo@(pivot::sortWithT f hi)
+
+val splitAt: nat -> list 'a -> (list 'a * list 'a)
+let rec splitAt n l =
+  if n = 0 then l, []
+  else
+    match l with
+      | []     -> failwith "splitAt index is more that list length"
+      | hd::tl ->
+	let l1, l2 = splitAt (n - 1) tl in
+	hd::l1, l2

@@ -2539,7 +2539,8 @@ let tc_inductive env ses quals lids =
     //env is the environment in which the next two terms are well-formed
     //term is the lhs of the implication for soundness
     //term is the soundness condition derived from all the data constructors of this type
-    let haseq_ty (acc:(list<lident * term> * env * term * term)) (ty:sigelt) :list<lident * term> * env * term * term =
+    //let haseq_ty (acc:(list<(lident * term)> * env * term * term)) (ty:sigelt) :list<(lident * term)> * env * term * term = TODO: bootstrapping fails with this annot
+    let haseq_ty acc ty =
         let lid, bs, t, d_lids =
             match ty with
                 | Sig_inductive_typ (lid, _, bs, t, _, d_lids, _, _) -> lid, bs, t, d_lids
@@ -2601,7 +2602,8 @@ let tc_inductive env ses quals lids =
 
         //folding function for t_datas
         //env is the updated env, term is the soundness condition for this data constructor
-        let haseq_data (acc:(env * term)) (data:sigelt) :(env * term) =
+        //let haseq_data (acc:(env * term)) (data:sigelt) :(env * term) = TODO: bootstrapping fails with this annotation
+        let haseq_data acc data =
             let dt = datacon_typ data in
             //apply the universes substitution to dt
             let dt = SS.subst usubst dt in
@@ -2629,19 +2631,28 @@ let tc_inductive env ses quals lids =
         l_axioms @ [axiom_lid, fml], env, U.mk_conj guard' guard, U.mk_conj cond' cond
     in
 
-    if env.curmodule.ident.idText = "Test" then
+    //if env.curmodule.ident.idText = "Test" then
+    //TODO: cannot do it for prims, since all formula use symbols from it
+    if not (lid_equals env.curmodule Const.prims_lid) then
         let env = Env.push_sigelt env0 sig_bndle in
         env.solver.push "haseq";
         env.solver.encode_sig env sig_bndle;
         let env = Env.push_univ_vars env us in
 
+	let debug_lid =
+	    match (List.hd tcs) with
+	        | Sig_inductive_typ (lid, _, _, _, _, _, _, _) -> lid
+                | _                                            -> failwith "Impossible!"
+        in	       
+	
         let axioms, env, guard, cond = List.fold_left haseq_ty ([], env, U.t_true, U.t_true) tcs in
             
         let phi = U.mk_imp guard cond in
 
+	Util.print1 "Checking tc_trivial_guard for:%s\n" (debug_lid.str);
         let phi, _ = tc_trivial_guard env phi in
 
-        Util.print_string "Checking haseq soundness\n\n";
+        Util.print1 "Checking haseq soundness for:%s\n" (debug_lid.str);
         Rel.force_trivial_guard env (Rel.guard_of_guard_formula (NonTrivial phi));
 
         env.solver.pop "haseq";
@@ -2650,7 +2661,7 @@ let tc_inductive env ses quals lids =
         //add universe variables to env, no idea how to handle them ?
         let env = Env.push_univ_vars env0 us in
         let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
-            Util.print_string "Checking tc_assume\n\n";
+            Util.print1 "Checking tc_assume for axiom:%s\n" (lid.str);
             let se = tc_assume env lid fml [] dr in
             //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
             l @ [se] 

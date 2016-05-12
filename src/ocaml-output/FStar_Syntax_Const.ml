@@ -154,192 +154,195 @@ let exists_lid : FStar_Ident.lident = (pconst "l_Exists")
 let forall_lid : FStar_Ident.lident = (pconst "l_Forall")
 
 # 78 "FStar.Syntax.Const.fst"
-let b2t_lid : FStar_Ident.lident = (pconst "b2t")
+let haseq_lid : FStar_Ident.lident = (pconst "hasEq")
 
 # 79 "FStar.Syntax.Const.fst"
-let admit_lid : FStar_Ident.lident = (pconst "admit")
+let b2t_lid : FStar_Ident.lident = (pconst "b2t")
 
 # 80 "FStar.Syntax.Const.fst"
-let magic_lid : FStar_Ident.lident = (pconst "magic")
+let admit_lid : FStar_Ident.lident = (pconst "admit")
 
 # 81 "FStar.Syntax.Const.fst"
+let magic_lid : FStar_Ident.lident = (pconst "magic")
+
+# 82 "FStar.Syntax.Const.fst"
 let has_type_lid : FStar_Ident.lident = (pconst "has_type")
 
-# 84 "FStar.Syntax.Const.fst"
+# 85 "FStar.Syntax.Const.fst"
 let eq2_lid : FStar_Ident.lident = (pconst "eq2")
 
-# 87 "FStar.Syntax.Const.fst"
+# 88 "FStar.Syntax.Const.fst"
 let exp_true_bool : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool (true))))
 
-# 88 "FStar.Syntax.Const.fst"
+# 89 "FStar.Syntax.Const.fst"
 let exp_false_bool : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool (false))))
 
-# 89 "FStar.Syntax.Const.fst"
+# 90 "FStar.Syntax.Const.fst"
 let exp_unit : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_unit)))
 
-# 90 "FStar.Syntax.Const.fst"
+# 91 "FStar.Syntax.Const.fst"
 let cons_lid : FStar_Ident.lident = (pconst "Cons")
 
-# 91 "FStar.Syntax.Const.fst"
+# 92 "FStar.Syntax.Const.fst"
 let nil_lid : FStar_Ident.lident = (pconst "Nil")
 
-# 92 "FStar.Syntax.Const.fst"
+# 93 "FStar.Syntax.Const.fst"
 let assume_lid : FStar_Ident.lident = (pconst "_assume")
 
-# 93 "FStar.Syntax.Const.fst"
+# 94 "FStar.Syntax.Const.fst"
 let assert_lid : FStar_Ident.lident = (pconst "_assert")
 
-# 94 "FStar.Syntax.Const.fst"
+# 95 "FStar.Syntax.Const.fst"
 let list_append_lid : FStar_Ident.lident = (p2l (("FStar")::("List")::("append")::[]))
 
-# 95 "FStar.Syntax.Const.fst"
+# 96 "FStar.Syntax.Const.fst"
 let strcat_lid : FStar_Ident.lident = (p2l (("Prims")::("strcat")::[]))
 
-# 96 "FStar.Syntax.Const.fst"
+# 97 "FStar.Syntax.Const.fst"
 let let_in_typ : FStar_Ident.lident = (p2l (("Prims")::("Let")::[]))
 
-# 99 "FStar.Syntax.Const.fst"
+# 100 "FStar.Syntax.Const.fst"
 let op_Eq : FStar_Ident.lident = (pconst "op_Equality")
 
-# 100 "FStar.Syntax.Const.fst"
+# 101 "FStar.Syntax.Const.fst"
 let op_notEq : FStar_Ident.lident = (pconst "op_disEquality")
 
-# 101 "FStar.Syntax.Const.fst"
+# 102 "FStar.Syntax.Const.fst"
 let op_LT : FStar_Ident.lident = (pconst "op_LessThan")
 
-# 102 "FStar.Syntax.Const.fst"
+# 103 "FStar.Syntax.Const.fst"
 let op_LTE : FStar_Ident.lident = (pconst "op_LessThanOrEqual")
 
-# 103 "FStar.Syntax.Const.fst"
+# 104 "FStar.Syntax.Const.fst"
 let op_GT : FStar_Ident.lident = (pconst "op_GreaterThan")
 
-# 104 "FStar.Syntax.Const.fst"
+# 105 "FStar.Syntax.Const.fst"
 let op_GTE : FStar_Ident.lident = (pconst "op_GreaterThanOrEqual")
 
-# 105 "FStar.Syntax.Const.fst"
+# 106 "FStar.Syntax.Const.fst"
 let op_Subtraction : FStar_Ident.lident = (pconst "op_Subtraction")
 
-# 106 "FStar.Syntax.Const.fst"
+# 107 "FStar.Syntax.Const.fst"
 let op_Minus : FStar_Ident.lident = (pconst "op_Minus")
 
-# 107 "FStar.Syntax.Const.fst"
+# 108 "FStar.Syntax.Const.fst"
 let op_Addition : FStar_Ident.lident = (pconst "op_Addition")
 
-# 108 "FStar.Syntax.Const.fst"
+# 109 "FStar.Syntax.Const.fst"
 let op_Multiply : FStar_Ident.lident = (pconst "op_Multiply")
 
-# 109 "FStar.Syntax.Const.fst"
+# 110 "FStar.Syntax.Const.fst"
 let op_Division : FStar_Ident.lident = (pconst "op_Division")
 
-# 110 "FStar.Syntax.Const.fst"
+# 111 "FStar.Syntax.Const.fst"
 let op_Modulus : FStar_Ident.lident = (pconst "op_Modulus")
 
-# 111 "FStar.Syntax.Const.fst"
+# 112 "FStar.Syntax.Const.fst"
 let op_And : FStar_Ident.lident = (pconst "op_AmpAmp")
 
-# 112 "FStar.Syntax.Const.fst"
+# 113 "FStar.Syntax.Const.fst"
 let op_Or : FStar_Ident.lident = (pconst "op_BarBar")
 
-# 113 "FStar.Syntax.Const.fst"
+# 114 "FStar.Syntax.Const.fst"
 let op_Negation : FStar_Ident.lident = (pconst "op_Negation")
 
-# 116 "FStar.Syntax.Const.fst"
+# 117 "FStar.Syntax.Const.fst"
 let array_lid : FStar_Ident.lident = (p2l (("FStar")::("Array")::("array")::[]))
 
-# 117 "FStar.Syntax.Const.fst"
+# 118 "FStar.Syntax.Const.fst"
 let array_mk_array_lid : FStar_Ident.lident = (p2l (("FStar")::("Array")::("mk_array")::[]))
 
-# 120 "FStar.Syntax.Const.fst"
+# 121 "FStar.Syntax.Const.fst"
 let st_lid : FStar_Ident.lident = (p2l (("FStar")::("ST")::[]))
 
-# 121 "FStar.Syntax.Const.fst"
+# 122 "FStar.Syntax.Const.fst"
 let write_lid : FStar_Ident.lident = (p2l (("FStar")::("ST")::("write")::[]))
 
-# 122 "FStar.Syntax.Const.fst"
+# 123 "FStar.Syntax.Const.fst"
 let read_lid : FStar_Ident.lident = (p2l (("FStar")::("ST")::("read")::[]))
 
-# 123 "FStar.Syntax.Const.fst"
+# 124 "FStar.Syntax.Const.fst"
 let alloc_lid : FStar_Ident.lident = (p2l (("FStar")::("ST")::("alloc")::[]))
 
-# 124 "FStar.Syntax.Const.fst"
+# 125 "FStar.Syntax.Const.fst"
 let op_ColonEq : FStar_Ident.lident = (p2l (("FStar")::("ST")::("op_Colon_Equals")::[]))
 
-# 127 "FStar.Syntax.Const.fst"
+# 128 "FStar.Syntax.Const.fst"
 let ref_lid : FStar_Ident.lident = (p2l (("FStar")::("Heap")::("ref")::[]))
 
-# 128 "FStar.Syntax.Const.fst"
+# 129 "FStar.Syntax.Const.fst"
 let heap_ref : FStar_Ident.lident = (p2l (("FStar")::("Heap")::("Ref")::[]))
 
-# 129 "FStar.Syntax.Const.fst"
+# 130 "FStar.Syntax.Const.fst"
 let set_empty : FStar_Ident.lident = (p2l (("FStar")::("Set")::("empty")::[]))
 
-# 130 "FStar.Syntax.Const.fst"
+# 131 "FStar.Syntax.Const.fst"
 let set_singleton : FStar_Ident.lident = (p2l (("FStar")::("Set")::("singleton")::[]))
 
-# 131 "FStar.Syntax.Const.fst"
+# 132 "FStar.Syntax.Const.fst"
 let set_union : FStar_Ident.lident = (p2l (("FStar")::("Set")::("union")::[]))
 
-# 132 "FStar.Syntax.Const.fst"
+# 133 "FStar.Syntax.Const.fst"
 let fstar_hyperheap_lid : FStar_Ident.lident = (p2l (("FStar")::("HyperHeap")::[]))
 
-# 133 "FStar.Syntax.Const.fst"
+# 134 "FStar.Syntax.Const.fst"
 let rref_lid : FStar_Ident.lident = (p2l (("FStar")::("HyperHeap")::("rref")::[]))
 
-# 136 "FStar.Syntax.Const.fst"
+# 137 "FStar.Syntax.Const.fst"
 let effect_PURE_lid : FStar_Ident.lident = (pconst "PURE")
 
-# 137 "FStar.Syntax.Const.fst"
+# 138 "FStar.Syntax.Const.fst"
 let effect_Pure_lid : FStar_Ident.lident = (pconst "Pure")
 
-# 138 "FStar.Syntax.Const.fst"
+# 139 "FStar.Syntax.Const.fst"
 let effect_Tot_lid : FStar_Ident.lident = (pconst "Tot")
 
-# 139 "FStar.Syntax.Const.fst"
+# 140 "FStar.Syntax.Const.fst"
 let effect_Lemma_lid : FStar_Ident.lident = (pconst "Lemma")
 
-# 140 "FStar.Syntax.Const.fst"
+# 141 "FStar.Syntax.Const.fst"
 let effect_GTot_lid : FStar_Ident.lident = (pconst "GTot")
 
-# 141 "FStar.Syntax.Const.fst"
+# 142 "FStar.Syntax.Const.fst"
 let effect_GHOST_lid : FStar_Ident.lident = (pconst "GHOST")
 
-# 142 "FStar.Syntax.Const.fst"
+# 143 "FStar.Syntax.Const.fst"
 let effect_Ghost_lid : FStar_Ident.lident = (pconst "Ghost")
 
-# 145 "FStar.Syntax.Const.fst"
+# 146 "FStar.Syntax.Const.fst"
 let all_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::[]))
 
-# 146 "FStar.Syntax.Const.fst"
+# 147 "FStar.Syntax.Const.fst"
 let effect_ALL_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::("ALL")::[]))
 
-# 147 "FStar.Syntax.Const.fst"
+# 148 "FStar.Syntax.Const.fst"
 let effect_ML_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::("ML")::[]))
 
-# 148 "FStar.Syntax.Const.fst"
+# 149 "FStar.Syntax.Const.fst"
 let failwith_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::("failwith")::[]))
 
-# 149 "FStar.Syntax.Const.fst"
+# 150 "FStar.Syntax.Const.fst"
 let pipe_right_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::("pipe_right")::[]))
 
-# 150 "FStar.Syntax.Const.fst"
+# 151 "FStar.Syntax.Const.fst"
 let pipe_left_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::("pipe_left")::[]))
 
-# 151 "FStar.Syntax.Const.fst"
+# 152 "FStar.Syntax.Const.fst"
 let try_with_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::("try_with")::[]))
 
-# 153 "FStar.Syntax.Const.fst"
+# 154 "FStar.Syntax.Const.fst"
 let as_requires : FStar_Ident.lident = (pconst "as_requires")
 
-# 154 "FStar.Syntax.Const.fst"
+# 155 "FStar.Syntax.Const.fst"
 let as_ensures : FStar_Ident.lident = (pconst "as_ensures")
 
-# 155 "FStar.Syntax.Const.fst"
+# 156 "FStar.Syntax.Const.fst"
 let decreases_lid : FStar_Ident.lident = (pconst "decreases")
 
-# 157 "FStar.Syntax.Const.fst"
+# 158 "FStar.Syntax.Const.fst"
 let range_of_lid : FStar_Ident.lident = (pconst "range_of")
 
-# 158 "FStar.Syntax.Const.fst"
+# 159 "FStar.Syntax.Const.fst"
 let labeled_lid : FStar_Ident.lident = (pconst "labeled")
 
 
