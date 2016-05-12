@@ -269,7 +269,12 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
                         (Util.string_of_int prev_fuel)
                         (Util.string_of_int prev_ifuel))
                     else ()
-            else try_alt_configs (prev_fuel, prev_ifuel) p errs alt in
+            else (if !Options.print_fuels
+                  then (Util.print3 "(%s) Query failed with fuel %s and ifuel %s ... retrying \n"
+                       (Range.string_of_range (Env.get_range env))
+                       (Util.string_of_int prev_fuel)
+                       (Util.string_of_int prev_ifuel));
+                  try_alt_configs (prev_fuel, prev_ifuel) p errs alt) in
     
         Z3.ask use_fresh_z3_context  //only relevant if we're running with n_cores > 1
                all_labels 
