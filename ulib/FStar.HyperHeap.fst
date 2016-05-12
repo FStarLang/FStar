@@ -147,16 +147,12 @@ abstract val lemma_modifies_just_trans: m1:t -> m2:t -> m3:t
                        -> s1:Set.set rid -> s2:Set.set rid
                        -> Lemma (requires (modifies_just s1 m1 m2 /\ modifies_just s2 m2 m3))
                                (ensures (modifies_just (Set.union s1 s2) m1 m3))
-			       [SMTPat (modifies_just s1 m1 m2);
- 			        SMTPat (modifies_just s2 m2 m3)]
 let lemma_modifies_just_trans m1 m2 m3 s1 s2 = ()
 
 abstract val lemma_modifies_trans: m1:t -> m2:t -> m3:t
                        -> s1:Set.set rid -> s2:Set.set rid
                        -> Lemma (requires (modifies s1 m1 m2 /\ modifies s2 m2 m3))
                                (ensures (modifies (Set.union s1 s2) m1 m3))
-			       [SMTPat (modifies s1 m1 m2);
- 			        SMTPat (modifies s2 m2 m3)]
 let lemma_modifies_trans m1 m2 m3 s1 s2 = ()
 
 abstract val lemma_includes_trans: i:rid -> j:rid -> k:rid
