@@ -10,3 +10,4 @@ type ('a, 'b, 'c) modifies = unit
 type ('a, 'b, 'c) modifies_one = unit
 type ('a, 'b, 'c, 'd) modifies_rref = unit
 type ('a, 'b, 'c, 'd, 'e) fresh_rref = unit
+let parent rid = ()

@@ -57,10 +57,10 @@ type env = {
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment and signature elements *)
-  gamma_cache    :list<Util.smap<cached_elt>>;  (* Memo table for the local environment, in a stack for interactive mode retractions *)
+  gamma_cache    :Util.smap<cached_elt>;        (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
-  sigtab         :list<Util.smap<sigelt>>;      (* a dictionary of long-names to sigelts *)
+  sigtab         :Util.smap<sigelt>;            (* a dictionary of long-names to sigelts *)
   is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
@@ -136,10 +136,10 @@ let initial_env tc solver module_lid =
     range=dummyRange;
     curmodule=module_lid;
     gamma= [];
-    gamma_cache=[new_gamma_cache()];
+    gamma_cache=new_gamma_cache();
     modules= [];
     expected_typ=None;
-    sigtab=[new_sigtab()];
+    sigtab=new_sigtab();
     is_pattern=false;
     instantiate_imp=true;
     effects={decls=[]; order=[]; joins=[]};
@@ -156,42 +156,54 @@ let initial_env tc solver module_lid =
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
-let sigtab env = List.hd env.sigtab
-let gamma_cache env = List.hd env.gamma_cache
-let push_tabs env = 
-    {env with 
-         gamma_cache=Util.smap_copy (gamma_cache env)::env.gamma_cache;
-         sigtab=Util.smap_copy (sigtab env)::env.sigtab}
+let sigtab env = env.sigtab
+let gamma_cache env = env.gamma_cache
+type env_stack_ops = { 
+    es_push: env -> env;
+    es_mark: env -> env;
+    es_reset_mark: env -> env;
+    es_commit_mark: env -> env;
+    es_pop:env -> env
+}
+
+let stack_ops = 
+    let stack = Util.mk_ref [] in 
+    let push env = 
+        stack := env::!stack;
+        {env with sigtab=Util.smap_copy (sigtab env);
+                  gamma_cache=Util.smap_copy (gamma_cache env)} in
+    let pop env = match !stack with 
+        | env::tl -> 
+         stack := tl;
+         env
+        | _ -> failwith "Impossible: Too many pops" in
+    let mark env = 
+        push env in
+    let commit_mark env = 
+        ignore (pop env); env in
+    let reset_mark env =
+        pop env in
+    { es_push=push; 
+      es_pop=pop;
+      es_mark=push;
+      es_reset_mark=pop;
+      es_commit_mark=commit_mark; }
+
 let push env msg =
     env.solver.push msg;
-    push_tabs env
+    stack_ops.es_push env
 let mark env =
     env.solver.mark "USER MARK";
-    push_tabs env
+    stack_ops.es_mark env 
 let commit_mark env =
     env.solver.commit_mark "USER MARK";
-    let commit_tab : list<Util.smap<'a>> -> list<Util.smap<'a>> = 
-        function
-        | hd::_::tl -> hd::tl
-        | _ -> failwith "Impossible" in
-    {env with 
-         gamma_cache=commit_tab env.gamma_cache;
-         sigtab=commit_tab env.sigtab}
+    stack_ops.es_commit_mark env
 let reset_mark env =
     env.solver.reset_mark "USER MARK";
-    {env with 
-         gamma_cache=List.tl env.gamma_cache;
-         sigtab=List.tl env.sigtab}
+    stack_ops.es_reset_mark env
 let pop env msg =
-    let pop_tab : list<Util.smap<'a>> -> list<Util.smap<'a>> = 
-        function
-        | []
-        | [_] -> failwith "Too many pops"
-        | _::tl -> tl in
     env.solver.pop msg;
-    {env with 
-         gamma_cache=pop_tab env.gamma_cache;
-         sigtab=pop_tab env.sigtab}
+    stack_ops.es_pop env
 
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //

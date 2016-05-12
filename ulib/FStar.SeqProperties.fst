@@ -399,10 +399,13 @@ let lemma_trans_perm #a s1 s2 s3 i j = ()
 val snoc : #a:Type -> seq a -> a -> Tot (seq a)
 let snoc #a s x = Seq.append s (Seq.create 1 x)
 
+#set-options "--initial_fuel 2 --max_fuel 2"
+val lemma_mem_snoc : #a:Type -> s:FStar.Seq.seq a -> x:a ->
+   Lemma (ensures (forall y. mem y (snoc s x) <==> mem y s \/ x=y))
+let lemma_mem_snoc #a s x = lemma_append_count s (Seq.create 1 x)
+
+#set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 0 --max_fuel 0"
 type found (i:nat) = True
-
-#set-options "--initial_ifuel 1 --max_ifuel 1"
-
 val seq_find_aux : #a:Type -> f:(a -> Tot bool) -> l:seq a
                    -> ctr:nat{ctr <= Seq.length l}
                    -> Pure (option a)

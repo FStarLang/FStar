@@ -180,6 +180,8 @@ let target_step_lemma p c c' = ()
 
 open Print
 
+open Circuit
+
 open FStar.Ghost
 
 val construct_sstep_star:
@@ -207,21 +209,22 @@ opaque type witness_client_config (#a:Type) (x:a) = True
 
 (* AR: commenting the sec server related code *)
 (* let client_key:client_key = *)
-(*   let k = Platform.Bytes.createBytes SHA1.keysize 0uy in *)
+(*   let k = Platform.Bytes.createBytes SHA1.keysize (Char.char_of_int 0) in *)
 (*   assume (client_key_prop k == client_prop_t); *)
 (*   k *)
 
 (* let server_key:server_key = *)
-(*   let k = Platform.Bytes.createBytes SHA1.keysize 0uy in *)
+(*   let k = Platform.Bytes.createBytes SHA1.keysize (Char.char_of_int 0) in *)
 (*   assume (server_key_prop k == server_prop_t); *)
 (*   k *)
 
 val do_sec_comp:
-  p:prin -> c:tstep_config p{is_T_red (Conf.t c) /\ is_R_assec (T_red.r (Conf.t c))}
+  p:prin -> c:tstep_config p{is_T_red (Conf.t c) /\ is_R_assec (T_red.r (Conf.t c))
+                            /\ is_clos (R_assec.v (T_red.r (Conf.t c)))}
   -> ML dvalue
 let do_sec_comp p c =
   let R_assec ps v = T_red.r (Conf.t c) in
-  let _ = admitP (b2t (is_clos v)) in
+  //let _ = admitP (b2t (is_clos v)) in
   let (en, _, e) = get_en_b v in
   let dv = Circuit.rungmw p ps en (fun _ -> None) e in
   dv
@@ -246,9 +249,8 @@ let do_sec_comp p c =
   (*   let r_opt = verify_server_msg server_key s_m s_t in *)
   (*   if r_opt = None then failwith "Failed to verify secure server mac" *)
   (*   else *)
-  (*     let Some (p', r', ps', x', e', dv) = r_opt in       *)
-  (*     admitP (r = r' /\ e = e'); (\* TODO: add sec block ids *\) *)
-  (*     if p = p' && ps = ps' && x = x' (\* TODO:sec block id && r = r' && e = e' *\) then *)
+  (*     let Some (p', r', ps', x', e', dv) = r_opt in *)
+  (*     if r = r' && e = e' && p = p' && ps = ps' && x = x' (\* TODO:sec block id && *\) then *)
   (* 	let _ = assert (server_prop p r ps x e dv) in *)
   (* 	dv *)
   (*   else failwith "Secure server returned bad output" *)
@@ -257,7 +259,7 @@ let do_sec_comp p c =
 val tstep: p:prin -> tstep_config p -> ML (option (tstep_config p))
 let tstep p c =
   let Conf l m s en t _ = c in
-  if is_T_red t && is_R_assec (T_red.r t) then
+  if is_T_red t && is_R_assec (T_red.r t) && is_clos (R_assec.v (T_red.r (Conf.t c))) then
     let dv = do_sec_comp p c in
     Some (Conf l m s en (T_val #(D_v.meta dv) (D_v.v dv)) (hide []))
   else

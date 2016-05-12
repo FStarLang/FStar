@@ -673,6 +673,135 @@ module TestHash = struct
     Bytes.equalBytes output (Bytes.bytes_of_hex t.output)
 end
 
+module TestHashUpdate = struct
+  type test = {
+    input: string; (* copied from TestHash but we don't repeat *)
+    output: string;
+    hash_alg: hash_alg;
+  }
+
+  let tests = [{
+      hash_alg = MD5;
+      input = "";
+      output = "d41d8cd98f00b204e9800998ecf8427e";
+    }; {
+      hash_alg = MD5;
+      input = "a";
+      output = "0cc175b9c0f1b6a831c399e269772661";
+    }; {
+      hash_alg = MD5;
+      input = "abc";
+      output = "900150983cd24fb0d6963f7d28e17f72";
+    }; {
+      hash_alg = MD5;
+      input = "message digest";
+      output = "f96b697d7cb7938d525a2f31aaf161d0";
+    }; {
+      hash_alg = MD5;
+      input = "abcdefghijklmnopqrstuvwxyz";
+      output = "c3fcd3d76192e4007dfb496cca67e13b";
+    }; {
+      hash_alg = MD5;
+      input = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      output = "d174ab98d277d9f5a5611c2c9f419d9f";
+    }; {
+      hash_alg = MD5;
+      input = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
+      output = "57edf4a22be3c955ac49da2e2107b67a";
+    }; {
+      hash_alg = SHA1;
+      input = "abc";
+      output = "a9993e364706816aba3e25717850c26c9cd0d89d";
+    }; {
+      hash_alg = SHA1;
+      input = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+      output = "84983e441c3bd26ebaae4aa1f95129e5e54670f1";
+    };{
+      hash_alg = SHA1;
+      input = "a";
+      output = "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8"; 
+    }; {
+      hash_alg = SHA1;
+      input = "0123456701234567012345670123456701234567012345670123456701234567";
+      output = "e0c094e867ef46c350ef54a7f59dd60bed92ae83";
+    }; {
+      hash_alg = SHA256;
+      input = "abc";
+      output = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+    }; {
+      hash_alg = SHA256;
+      input = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+      output = "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1";
+    }; {
+      hash_alg = SHA256;
+      input = "a";
+      output = "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb";
+    }; {
+      hash_alg = SHA256;
+      input = "0123456701234567012345670123456701234567012345670123456701234567";
+      output = "8182cadb21af0e37c06414ece08e19c65bdb22c396d48ba7341012eea9ffdfdd";
+    };{
+      hash_alg = SHA256;
+      input = "\x19";
+      output = "68aa2e2ee5dff96e3355e6c7ee373e3d6a4e17f75f9518d843709c0c9bc3e3d4";
+    }; {
+      hash_alg = SHA256;
+      input = "\xe3\xd7\x25\x70\xdc\xdd\x78\x7c\xe3\x88\x7a\xb2\xcd\x68\x46\x52";
+      output = "175ee69b02ba9b58e2b0a5fd13819cea573f3940a94f825128cf4209beabb4e8";
+    }; {
+      hash_alg = SHA256;
+      input = "\x83\x26\x75\x4e\x22\x77\x37\x2f\x4f\xc1\x2b\x20\x52\x7a\xfe\xf0\x4d\x8a\x05\x69\x71\xb1\x1a\xd5\x71\x23\xa7\xc1\x37\x76\x00\x00\xd7\xbe\xf6\xf3\xc1\xf7\xa9\x08\x3a\xa3\x9d\x81\x0d\xb3\x10\x77\x7d\xab\x8b\x1e\x7f\x02\xb8\x4a\x26\xc7\x73\x32\x5f\x8b\x23\x74\xde\x7a\x4b\x5a\x58\xcb\x5c\x5c\xf3\x5b\xce\xe6\xfb\x94\x6e\x5b\xd6\x94\xfa\x59\x3a\x8b\xeb\x3f\x9d\x65\x92\xec\xed\xaa\x66\xca\x82\xa2\x9d\x0c\x51\xbc\xf9\x33\x62\x30\xe5\xd7\x84\xe4\xc0\xa4\x3f\x8d\x79\xa3\x0a\x16\x5c\xba\xbe\x45\x2b\x77\x4b\x9c\x71\x09\xa9\x7d\x13\x8f\x12\x92\x28\x96\x6f\x6c\x0a\xdc\x10\x6a\xad\x5a\x9f\xdd\x30\x82\x57\x69\xb2\xc6\x71\xaf\x67\x59\xdf\x28\xeb\x39\x3d\x54\xd6";
+      output = "97dbca7df46d62c8a422c941dd7e835b8ad3361763f7e9b2d95f4f0da6e1ccbc";
+    }; {
+      hash_alg = SHA384;
+      input = "abc";
+      output = "cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7";
+    }; {
+      hash_alg = SHA384;
+      input = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu";
+      output = "09330c33f71147e83d192fc782cd1b4753111b173b3b05d22fa08086e3b0f712fcc7c71a557e2db966c3e9fa91746039";
+    }; {
+      hash_alg = SHA384;
+      input = "a";
+      output = "54a59b9f22b0b80880d8427e548b7c23abd873486e1f035dce9cd697e85175033caa88e6d57bc35efae0b5afd3145f31";
+    }; {
+      hash_alg = SHA384;
+      input = "0123456701234567012345670123456701234567012345670123456701234567";
+      output = "72f5893331c249312d3c2b7a9709a7b96908b7769179dd9824ed578669fcc1f1c2de02c03b3d35a467aa0b472c1bb3d1";
+    }; {
+      hash_alg = SHA512;
+      input = "abc";
+      output = "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f";
+    }; {
+      hash_alg = SHA512;
+      input = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu";
+      output = "8e959b75dae313da8cf4f72814fc143f8f7779c6eb9f7fa17299aeadb6889018501d289e4900f7e4331b99dec4b5433ac7d329eeb6dd26545e96e55b874be909";
+    }; {
+      hash_alg = SHA512;
+      input = "a";
+      output = "1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75";
+    }; {
+      hash_alg = SHA512;
+      input = "0123456701234567012345670123456701234567012345670123456701234567";
+      output = "846e0ef73436438a4acb0ba7078cfe381f10a0f5edebcb985b3790086ef5e7ac5992ac9c23c77761c764bb3b1c25702d06b99955eb197d45b82fb3d124699d78";
+    }]
+
+  (* SI: uses hash, rather than hash's components. *)
+  let print_test t =
+    Printf.printf "%s(%s) = %s (got: %s)\n"
+      (string_of_hash_alg t.hash_alg) (Bytes.hex_of_string t.input) t.output
+      (Bytes.hex_of_bytes (hash t.hash_alg (bytes_of_string t.input)))
+
+  let test t =
+    let input = bytes_of_string t.input in
+    let ctx = digest_create t.hash_alg in
+    (* Add input incrementally *)
+    for i = input.Bytes.index to (input.Bytes.length - 1) do
+       digest_update ctx (Bytes.abyte (Bytes.index input i))
+    done; 
+    let output = digest_final ctx in  
+    Bytes.equalBytes output (Bytes.bytes_of_hex t.output)
+end
 
 module TestEcc = struct
   type test = {
@@ -1150,6 +1279,7 @@ let _ =
   TestAead.(run_test "AEAD" test_vectors print_test_vector test);
   TestHmac.(run_test "HMAC" test_cases print_test_case test);
   TestHash.(run_test "HASH" tests print_test test);
+  TestHashUpdate.(run_test "HASHUPDATE" tests print_test test);
   TestEcc.(run_test "ECC" tests print_test test);
   TestRsa.(run_test "RSA" tests print_test roundtrip);
   TestDsa.(run_test "DSA" tests print_test check);

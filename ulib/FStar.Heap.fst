@@ -14,15 +14,13 @@ assume val contains :  #a:Type -> heap -> ref a -> Tot bool
 assume val equal:      heap -> heap -> Tot bool
 assume val restrict:   heap -> set aref -> Tot heap
 assume val concat:     heap -> heap -> Tot heap
+assume val domain:     heap -> Tot (set aref)
 
 assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).            {:pattern (sel (upd h r v) r)}
                       sel (upd h r v) r == v
 
 assume SelUpd2:       forall (a:Type) (b:Type) (h:heap) (k1:ref a) (k2:ref b) (v:b).{:pattern (sel (upd h k2 v) k1)}
                       k2=!=k1 ==> sel (upd h k2 v) k1 == sel h k1
-
-assume ContainsUpd:   forall (a:Type) (b:Type) (h:heap) (k1:ref a) (k2:ref b) (v:a).{:pattern contains (upd h k1 v) k2}
-                      contains (upd h k1 v) k2 <==> (k1==k2 \/ contains h k2)
 
 assume InDomEmp:      forall (a:Type) (k:ref a).                           {:pattern contains emp k}
                       not(contains emp k)
@@ -31,25 +29,42 @@ assume Extensional:   forall (h1:heap) (h2:heap).                          {:pat
                       equal h1 h2 <==> h1 == h2
 
 assume Equals:        forall (h1:heap) (h2:heap).                          {:pattern equal h1 h2}
-                      equal h1 h2 <==> (forall (a:Type) (k:ref a).{:pattern (sel h1 k); (sel h2 k)} sel h1 k == sel h2 k)
+                      equal h1 h2 <==> (forall (a:Type) (k:ref a).          {:pattern (sel h1 k); (sel h2 k)} sel h1 k == sel h2 k)
 
 assume RestrictSel:   forall (a:Type) (h:heap) (r:set aref) (a:ref a).     {:pattern sel (restrict h r) a}
                       mem (Ref a) r ==> sel (restrict h r) a == sel h a
 
-assume RestrictIn:    forall (a:Type) (h:heap) (r:set aref) (a:ref a).     {:pattern contains (restrict h r) a}
-                      contains (restrict h r) a == (mem (Ref a) r && contains h a)
-
 assume SelConcat:     forall (a:Type) (h1:heap) (h2:heap) (a:ref a).       {:pattern sel (concat h1 h2) a}
                       if contains h2 a then sel (concat h1 h2) a=sel h2 a else sel (concat h1 h2) a=sel h1 a
 
-assume ContainsConcat:forall (a:Type) (h1:heap) (h2:heap) (a:ref a).       {:pattern contains (concat h1 h2) a}
-                      contains (concat h1 h2) a == (contains h1 a || contains h2 a)
+assume DomUpd:        forall (a:Type) (h:heap) (k1:ref a) (v:a).           {:pattern domain (upd h k1 v)}
+                      domain (upd h k1 v) = Set.union (domain h) (Set.singleton (Ref k1))
+
+assume DomRestrict:   forall (h:heap) (r:set aref).                        {:pattern domain (restrict h r)}
+                      domain (restrict h r) == Set.intersect (domain h) r
+
+assume DomConcat:     forall (h1:heap) (h2:heap).                          {:pattern domain (concat h1 h2)}
+                      domain (concat h1 h2)  == Set.union (domain h1) (domain h2)
+
+assume DomEmp:        domain emp = Set.empty
+
+assume DomContains:   forall (a:Type) (h:heap) (r:ref a).                  {:pattern contains h r}
+	              contains h r = Set.mem (Ref r) (domain h)
 
 type on (r:set aref) (p:(heap -> Type)) (h:heap) = p (restrict h r)
 type fresh (refs:set aref) (h0:heap) (h1:heap) =
   (forall (a:Type) (a:ref a).{:pattern (contains h0 a)} mem (Ref a) refs ==> not(contains h0 a) /\ contains h1 a)
 type modifies (mods:set aref) (h:heap) (h':heap) =
-    b2t (equal h' (concat h' (restrict h (complement mods))))
+    equal h' (concat h' (restrict h (complement mods)))
+    /\ Set.subset (domain h) (domain h')
+
+abstract val lemma_modifies_trans: m1:heap -> m2:heap -> m3:heap
+                       -> s1:Set.set aref -> s2:Set.set aref
+                       -> Lemma (requires (modifies s1 m1 m2 /\ modifies s2 m2 m3))
+                               (ensures (modifies (Set.union s1 s2) m1 m3))
+			       [SMTPat (modifies s1 m1 m2);
+ 			        SMTPat (modifies s2 m2 m3)]
+let lemma_modifies_trans m1 m2 m3 s1 s2 = ()
 
 let only x = Set.singleton (Ref x)
 

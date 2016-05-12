@@ -302,7 +302,11 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
                     (match cached_config with 
                      | Some _ -> " (cached)"
                      | None -> ""))
-                else ()
+                    else (if !Options.print_fuels
+                    then (Util.print3 "(%s) Query failed with fuel %s and ifuel %s ... retrying \n"
+                        (Range.string_of_range (Env.get_range env))
+                        (Util.string_of_int prev_fuel)
+                        (Util.string_of_int prev_ifuel))) 
                 end
             else try_alt_configs (prev_fuel, prev_ifuel) p errs alt in
     

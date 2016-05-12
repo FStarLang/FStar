@@ -19,6 +19,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 
+val tc_constant: FStar.Range.range -> sconst -> typ
 val type_of: env -> term -> term * typ * guard_t
 val check_module: env -> modul -> modul * env
 val tc_partial_modul: env -> modul -> modul * list<sigelt> * env

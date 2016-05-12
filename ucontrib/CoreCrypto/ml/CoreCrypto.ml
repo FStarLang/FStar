@@ -94,6 +94,22 @@ let hash (h:hash_alg) (b:bytes) =
   ocaml_EVP_MD_CTX_fini(ctx);
   bytes_of_string h
 
+(* digest functions *)
+type hash_ctx = md_ctx (* exported name *)
+
+let digest_create (h:hash_alg) : hash_ctx = 
+  let md = md_of_hash_alg h in
+  let ctx = ocaml_EVP_MD_CTX_create md in
+  ctx 
+  
+let digest_update (ctx:md_ctx) (b:bytes) : unit = 
+  ocaml_EVP_MD_CTX_update ctx (string_of_bytes b)
+
+let digest_final (ctx:md_ctx) : bytes = 
+  let s = ocaml_EVP_MD_CTX_final ctx  in
+  ocaml_EVP_MD_CTX_fini ctx ;
+  bytes_of_string s
+  
 (* -------------------------------------------------------------------- *)
 
 (** HMAC *)
@@ -507,13 +523,18 @@ let ssl_key_of_key key =
 
 let ec_gen_key (params: ec_params): ec_key =
   let k = ec_key_new params.curve in
+  let n = ec_bytelen params.curve in
   let g = ssl_group_of_params params in
+  let ecpad s =
+    let pad = String.make (n - (String.length s)) '\x00' in
+    bytes_of_string (pad ^ s) in
+
   ocaml_ec_key_generate k;
   let pub_point = ocaml_ec_key_get0_public_key k in
   let ecx, ecy = ocaml_ec_point_get_affine_coordinates_GFp g pub_point in
   let priv = ocaml_ec_key_get0_private_key k in {
     ec_params = params;
-    ec_point = { ecx = bytes_of_string ecx; ecy = bytes_of_string ecy };
+    ec_point = { ecx = ecpad ecx; ecy = ecpad ecy };
     ec_priv = Some (bytes_of_string priv)
   }
 

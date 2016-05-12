@@ -25,16 +25,28 @@ val concat_traces: erased trace -> erased trace -> Tot (erased trace)
 let concat_traces t1 t2 = elift2 append t1 t2
 
 val vals_traces_h_append_lemma:
-  tr1:trace{vals_trace_h tr1} -> tr2:trace{vals_trace_h tr2}
-  -> Lemma (requires (True)) (ensures (vals_trace_h (append tr1 tr2)))
+  tr1:trace -> tr2:trace
+  -> Lemma (requires (True)) (ensures (vals_trace_h tr1 ==>
+                                   vals_trace_h tr2 ==>
+                                   vals_trace_h (append tr1 tr2)))
 let rec vals_traces_h_append_lemma tr1 tr2 = match tr1 with
   | []   -> ()
   | _::tl -> vals_traces_h_append_lemma tl tr2
 
-assume val vals_traces_h_append_lemma_forall:
+val vals_traces_h_append_lemma_forall_one:
+  tr1:trace
+  -> Lemma (requires (True)) (ensures (forall tr2. vals_trace_h tr1 ==>
+                                          vals_trace_h tr2 ==>
+                                          vals_trace_h (append tr1 tr2)))
+let vals_traces_h_append_lemma_forall_one tr1 =
+  qintro (vals_traces_h_append_lemma tr1)
+
+val vals_traces_h_append_lemma_forall:
   unit -> Lemma (requires (True)) (ensures (forall tr1 tr2. vals_trace_h tr1 ==>
                                                    vals_trace_h tr2 ==>
 						   vals_trace_h (append tr1 tr2)))
+let vals_traces_h_append_lemma_forall _ =
+  qintro vals_traces_h_append_lemma_forall_one
 
 val vals_traces_concat_lemma:
   tr1:erased trace{vals_trace tr1}
@@ -485,7 +497,7 @@ val empty_intersection_lemma_forall: eps1:eprins -> eps2:eprins{intersect eps1 e
                                     -> Lemma (requires (True))
                                              (ensures (forall p. mem p eps1 ==> not (mem p eps2)))                                
 let empty_intersection_lemma_forall eps1 eps2 =
-  forall_intro #prin #(fun p -> mem p eps1 ==> not (mem p eps2)) (empty_intersection_lemma eps1 eps2)
+  qintro (empty_intersection_lemma eps1 eps2)
   
 opaque val compose_wires:
  #eps1:eprins -> #eps2:eprins{is_empty (intersect eps1 eps2)}
@@ -905,6 +917,13 @@ type slice_v_meta_inv (meta:v_meta) (smeta:v_meta) =
   subset (Meta.bps smeta) (Meta.bps meta) /\ (Meta.cb smeta = Meta.cb meta) /\
   subset (Meta.wps smeta) (Meta.wps meta) /\ (Meta.cw smeta = Meta.cw meta)
 
+val empty_intersect_is_empty:
+  ps:prins -> Lemma (requires (True)) (ensures (is_empty (intersect empty ps)))
+let empty_intersect_is_empty ps =
+  let _ = assert (Equal (intersect empty ps) empty) in
+  let _ = eq_lemma (intersect empty ps) empty in
+  ()
+
 opaque val slice_wire:
   #eps:eprins -> p:prin -> w:v_wire eps
   -> Tot (r:v_wire (intersect eps (singleton p)){select p r = select p w})
@@ -931,7 +950,8 @@ let rec slice_v #meta p v =
       let Meta bps cb wps cw = m' in
       let v'' = s p v' in
       let m'' = Meta bps cb (intersect wps (singleton p)) cw in
-      let _ = admitP (is_empty wps ==> is_empty (intersect wps (singleton p))) in
+      let _ = empty_intersect_is_empty (singleton p) in
+      let _ = assert (is_empty wps ==> is_empty (intersect wps (singleton p))) in
       D_v m'' (V_opaque v'' m'' s c sps)
 
     | V_box ps v                ->
@@ -1078,7 +1098,7 @@ let rec compose_vals #m1 #m2 v1 v2 =
 	 let V_sh ps2 v2 b2 = v2 in
 	 if ps1 = ps2 && b1 = b2 then
 	   let D_v meta v = compose_vals v1 v2 in
-	   let _ = admitP (forall (ps:prins). subset ps empty ==> ps = empty) in
+	   //let _ = admitP (forall (ps:prins). subset ps empty ==> ps = empty) in
 	   let _ = cut (b2t (meta.cb = Can_b)) in
 	   let _ = cut (b2t (meta.cw = Can_w)) in
 	   let _ = cut (b2t (subset meta.bps empty)) in
@@ -1167,7 +1187,8 @@ let rec slice_v_sps #meta ps v =
      let Meta bps cb wps cw = m' in
      let v'' = sps ps v' in
      let m'' = Meta bps cb (intersect wps ps) cw in
-     let _ = admitP (is_empty wps ==> is_empty (intersect wps ps)) in
+     let _ = empty_intersect_is_empty ps in
+     let _ = assert (is_empty wps ==> is_empty (intersect wps ps)) in
      D_v m'' (V_opaque v'' m'' s c sps)
 
    | V_box ps' v         ->
@@ -1214,3 +1235,4 @@ let slice_v_sps_ffi ps dv =
   slice_v_sps #meta ps v
 
 (**********)
+

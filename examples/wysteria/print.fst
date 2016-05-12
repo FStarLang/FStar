@@ -102,9 +102,9 @@ let v_meta_to_string m =
   let scw = if cw = Can_w then "Can_w" else "Cannot_w" in
   strcat (strcat (strcat (strcat (strcat (strcat (strcat "Meta " scb) " ") (prins_to_string bps)) " ") scw) " ") (prins_to_string wps)
 
-val value_to_string: #meta:v_meta -> v:value meta -> Tot string (decreases v)
-val v_wire_to_string_helper: #eps:eprins -> eps':eprins{subset eps' eps} -> m:v_wire eps -> string -> Tot string (decreases %[m; (size eps'); 0])
-val v_wire_to_string: #eps:eprins -> m:v_wire eps -> Tot string (decreases %[m; (size eps); 1])
+val value_to_string: #meta:v_meta -> v:value meta -> ML string //(decreases v)
+val v_wire_to_string_helper: #eps:eprins -> eps':eprins{subset eps' eps} -> m:v_wire eps -> string -> ML string //(decreases %[m; (size eps'); 0])
+val v_wire_to_string: #eps:eprins -> m:v_wire eps -> ML string //(decreases %[m; (size eps); 1])
 let rec value_to_string #meta v =
   let s =
     match v with
@@ -137,7 +137,7 @@ and v_wire_to_string_helper #eps eps' m s =
     let Some p = choose eps' in
     let eps'' = remove p eps' in
     let Some v = OrdMap.select p m in
-    let _ = admitP (v << m) in
+    //let _ = admitP (v << m) in
     let s' = strcat (strcat (strcat (strcat s (prin_to_string p)) ":") (value_to_string v)) "; " in
     v_wire_to_string_helper #eps eps'' m s'
 
@@ -202,7 +202,7 @@ let stack_to_string = function
   | []  -> "[]"
   | f::_ -> frame_to_string f
 
-val term_to_string: term -> Tot string
+val term_to_string: term -> ML string
 let term_to_string = function
   | T_exp e    ->
     tagged_unary_to_string "T_exp" (exp_to_string e)
@@ -212,6 +212,6 @@ let term_to_string = function
     tagged_unary_to_string "T_val" (value_to_string v)
   | T_sec_wait -> "T_sec_wait"
 
-val config_to_string: config -> Tot string
+val config_to_string: config -> ML string
 let config_to_string (Conf _ m s en t _) =
   strcat (strcat (strcat (strcat (strcat (strcat "Conf (" (mode_to_string m)) ") (") (stack_to_string s)) ") (") (term_to_string t)) ")"

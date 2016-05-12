@@ -580,21 +580,29 @@ end
 ""
 end)))))
 end else begin
+if (FStar_ST.read FStar_Options.print_fuels) then begin
+(let _171_218 = (let _171_215 = (FStar_TypeChecker_Env.get_range env)
+in (FStar_Range.string_of_range _171_215))
+in (let _171_217 = (FStar_Util.string_of_int prev_fuel)
+in (let _171_216 = (FStar_Util.string_of_int prev_ifuel)
+in (FStar_Util.print3 "(%s) Query failed with fuel %s and ifuel %s ... retrying \n" _171_218 _171_217 _171_216))))
+end else begin
 ()
+end
 end)
 end else begin
 (try_alt_configs (prev_fuel, prev_ifuel) p errs alt)
 end
 end))
-in (let _171_215 = (with_fuel [] p initial_config)
-in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_215 (cb initial_config p alt_configs)))))))))
+in (let _171_219 = (with_fuel [] p initial_config)
+in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_219 (cb initial_config p alt_configs)))))))))
 in (
-# 314 "FStar.SMTEncoding.ErrorReporting.fst"
+# 318 "FStar.SMTEncoding.ErrorReporting.fst"
 let process_query = (fun q -> if ((FStar_ST.read FStar_Options.split_cases) > 0) then begin
 (
-# 316 "FStar.SMTEncoding.ErrorReporting.fst"
-let _82_508 = (let _171_221 = (FStar_ST.read FStar_Options.split_cases)
-in (FStar_SMTEncoding_SplitQueryCases.can_handle_query _171_221 q))
+# 320 "FStar.SMTEncoding.ErrorReporting.fst"
+let _82_508 = (let _171_225 = (FStar_ST.read FStar_Options.split_cases)
+in (FStar_SMTEncoding_SplitQueryCases.can_handle_query _171_225 q))
 in (match (_82_508) with
 | (b, cb) -> begin
 if b then begin
