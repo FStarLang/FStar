@@ -62,8 +62,6 @@ abstract val lemma_modifies_trans: m1:heap -> m2:heap -> m3:heap
                        -> s1:Set.set aref -> s2:Set.set aref
                        -> Lemma (requires (modifies s1 m1 m2 /\ modifies s2 m2 m3))
                                (ensures (modifies (Set.union s1 s2) m1 m3))
-			       [SMTPat (modifies s1 m1 m2);
- 			        SMTPat (modifies s2 m2 m3)]
 let lemma_modifies_trans m1 m2 m3 s1 s2 = ()
 
 let only x = Set.singleton (Ref x)
