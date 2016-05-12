@@ -2268,6 +2268,13 @@ let tc_lex_t env ses quals lids =
         failwith (Util.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (Sig_bundle(ses, [], lids, Range.dummyRange))))
     end
 
+let tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
+    let env = Env.set_range env r in
+    let k, _ = U.type_u() in
+    let phi = tc_check_trivial_guard env phi k |> norm env in
+    TcUtil.check_uvars r phi;
+    Sig_assume(lid, phi, quals, r)
+
 let tc_inductive env ses quals lids =
     (*  Consider this illustrative example:
 
@@ -2528,11 +2535,11 @@ let tc_inductive env ses quals lids =
     //tcs is the list of type constructors, datas is the list of data constructors
 
     //this is the folding function for tcs
-    //list<term> is the list of haseq axioms we are accumulating
+    //list<lident * term> is the list of lidents and formulas of haseq axioms we are accumulating
     //env is the environment in which the next two terms are well-formed
     //term is the lhs of the implication for soundness
     //term is the soundness condition derived from all the data constructors of this type
-    let haseq_ty (acc:(list<term> * env * term * term)) (ty:sigelt) :list<term> * env * term * term =
+    let haseq_ty (acc:(list<lident * term> * env * term * term)) (ty:sigelt) :list<lident * term> * env * term * term =
         let lid, bs, t, d_lids =
             match ty with
                 | Sig_inductive_typ (lid, _, bs, t, _, d_lids, _, _) -> lid, bs, t, d_lids
@@ -2569,7 +2576,7 @@ let tc_inductive env ses quals lids =
         let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [b] (SS.close [b] t) None) ] None dr) ibs fml in
         //fold right with bs, close and add a forall b
         let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [b] (SS.close [b] t) None) ] None dr) bs fml in
-        //so now this is the haseq formula we want to generate, TODO: make it a Sig_assume, and generalize universe variables
+        //so now this is the haseq formula we want to generate, TODO: make it a Sig_assume, and generalize universe variables, TODO: how to add pattern in this forall
 
         //this is the soundness guard
         let guard = U.mk_conj (U.mk_conj haseq_bs haseq_ind) fml in
@@ -2618,39 +2625,38 @@ let tc_inductive env ses quals lids =
         let env, cond = List.fold_left haseq_data (env, U.t_true) t_datas in
 
         //return new accumulator
-        l_axioms @ [fml], env, U.mk_conj guard' guard, U.mk_conj cond' cond
+        let axiom_lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))]) in
+        l_axioms @ [axiom_lid, fml], env, U.mk_conj guard' guard, U.mk_conj cond' cond
     in
 
-    //prep env0
+    if env.curmodule.ident.idText = "Test" then
+        let env = Env.push_sigelt env0 sig_bndle in
+        env.solver.push "haseq";
+        env.solver.encode_sig env sig_bndle;
+        let env = Env.push_univ_vars env us in
 
-    let _ =
-        if env.curmodule.ident.idText = "Test" then
-            let env = Env.push_sigelt env0 sig_bndle in
-            env.solver.push "haseq";
-            env.solver.encode_sig env sig_bndle;
-            let env = Env.push_univ_vars env us in
-
-            let axioms, env, guard, cond = List.fold_left haseq_ty ([], env, U.t_true, U.t_true) tcs in
+        let axioms, env, guard, cond = List.fold_left haseq_ty ([], env, U.t_true, U.t_true) tcs in
             
-            //later make an implication of guard ==> cond, and tc that
-            //let guard, _ = tc_trivial_guard env guard in
-            //let cond, _ = tc_trivial_guard env cond in
+        let phi = U.mk_imp guard cond in
 
-            let phi = U.mk_imp guard cond in
+        let phi, _ = tc_trivial_guard env phi in
 
-            let phi, _ = tc_trivial_guard env phi in
+        Util.print_string "Checking haseq soundness\n\n";
+        Rel.force_trivial_guard env (Rel.guard_of_guard_formula (NonTrivial phi));
 
-            Util.print_string "Checking haseq soundness\n\n";
-            Rel.force_trivial_guard env (Rel.guard_of_guard_formula (NonTrivial phi));
+        env.solver.pop "haseq";
 
-            //Util.print1 "Guard: %s\n\n" (PP.term_to_string guard);
-            //Util.print1 "Cond: %s\n\n" (PP.term_to_string cond);
-
-            env.solver.pop "haseq"
-        else ()
-    in
-
-    sig_bndle
+        //create Sig_assume for the axioms
+        //add universe variables to env, no idea how to handle them ?
+        let env = Env.push_univ_vars env0 us in
+        let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
+            Util.print_string "Checking tc_assume\n\n";
+            let se = tc_assume env lid fml [] dr in
+            //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
+            l @ [se] 
+        ) [] axioms in
+        Sig_bundle(tcs@datas@ses, quals, lids, Env.get_range env0)   
+    else sig_bndle
 
 let rec tc_decl env se = match se with
     | Sig_inductive_typ _
@@ -2744,11 +2750,7 @@ let rec tc_decl env se = match se with
       se, env
 
     | Sig_assume(lid, phi, quals, r) ->
-      let env = Env.set_range env r in
-      let k, _ = U.type_u() in
-      let phi = tc_check_trivial_guard env phi k |> norm env in
-      TcUtil.check_uvars r phi;
-      let se = Sig_assume(lid, phi, quals, r) in
+      let se = tc_assume env lid phi quals r in
       let env = Env.push_sigelt env se in
       se, env
 
