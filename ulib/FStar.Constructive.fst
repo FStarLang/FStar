@@ -10,7 +10,7 @@ type cimp a b = a -> Tot b
 
 type ciff a b = cand (cimp a b) (cimp b a)
 
-type cexists (#a:Type) (p:a -> Type) = 
+noeq type cexists (#a:Type) (p:a -> Type) = 
   | ExIntro : x:a -> h:p x -> cexists p
 
 // val ex_intro_x : #a:Type -> #p:(a -> Type) -> projectee:cexists p -> Tot a

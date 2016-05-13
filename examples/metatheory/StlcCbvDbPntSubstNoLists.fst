@@ -72,7 +72,7 @@ let extend g x t y = if y < x then g y
                      else if y = x then Some t
                      else g (y-1)
 
-type rtyping : env -> exp -> ty -> Type =
+noeq type rtyping : env -> exp -> ty -> Type =
   | TyVar : #g:env ->
             x:var{is_Some (g x)} ->
               rtyping g (EVar x) (Some.v (g x))

@@ -2563,10 +2563,10 @@ let tc_inductive env ses quals lids =
         let ibs = SS.open_binders ibs in
         //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's 
         let ind = mk_Tm_uinst (S.fvar lid Delta_constant None) (List.map (fun u -> U_name u) us) in
-        //apply the bs parameters, bv_to_name ok ?
-        let ind = mk_Tm_app ind (List.map (fun (bv, _) -> S.as_arg (S.bv_to_name bv)) bs) None dr in
-        //apply the ibs parameters, bv_to_name ok ?
-        let ind = mk_Tm_app ind (List.map (fun (bv, _) -> S.as_arg (S.bv_to_name bv)) ibs) None dr in
+        //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
+        let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None dr in
+        //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
+        let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None dr in
         //haseq of ind
         let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None dr in
         //haseq of all binders in bs
@@ -2576,9 +2576,11 @@ let tc_inductive env ses quals lids =
         //attach pattern ?
         let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
         //fold right with ibs, close and add a forall b
-        let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [b] (SS.close [b] t) None) ] None dr) ibs fml in
+	//we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+        let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) ibs fml in
         //fold right with bs, close and add a forall b
-        let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [b] (SS.close [b] t) None) ] None dr) bs fml in
+	//we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+        let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) bs fml in
         //so now this is the haseq formula we want to generate, TODO: make it a Sig_assume, and generalize universe variables, TODO: how to add pattern in this forall
 
         //this is the soundness guard
@@ -2657,7 +2659,7 @@ let tc_inductive env ses quals lids =
             
         let phi = U.mk_imp guard cond in
 
-	    Util.print1 "Checking tc_trivial_guard for:%s\n" (debug_lid.str);
+	Util.print1 "Checking tc_trivial_guard for:%s\n" (debug_lid.str); //(PP.term_to_string phi);
         let phi, _ = tc_trivial_guard env phi in
 
         Util.print1 "Checking haseq soundness for:%s\n" (debug_lid.str);
@@ -2669,7 +2671,7 @@ let tc_inductive env ses quals lids =
         //add universe variables to env, no idea how to handle them ?
         let env = Env.push_univ_vars env0 us in
         let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
-            Util.print1 "Checking tc_assume for axiom:%s\n" (lid.str);
+            Util.print1 "Checking tc_assume for axiom:%s\n" (PP.term_to_string fml); //(lid.str);
             let se = tc_assume env lid fml [] dr in
             //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
             l @ [se] 

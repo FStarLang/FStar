@@ -9,5 +9,9 @@ algorithms:
 QuickSort.Seq.fst fails, but even without haseq, my machine ? Rest pass.
 
 
+metatheory:
+
+StlcCbvDbPntSubstNoLists.fst: noeq on rtyping because of refinements
+
 
 
