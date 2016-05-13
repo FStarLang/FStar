@@ -2573,6 +2573,8 @@ let tc_inductive env ses quals lids =
         let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None dr)) U.t_true bs in
         //implication
         let fml = U.mk_imp haseq_bs haseq_ind in
+        //attach pattern ?
+        let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
         //fold right with ibs, close and add a forall b
         let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [b] (SS.close [b] t) None) ] None dr) ibs fml in
         //fold right with bs, close and add a forall b
@@ -2649,7 +2651,7 @@ let tc_inductive env ses quals lids =
             
         let phi = U.mk_imp guard cond in
 
-	Util.print1 "Checking tc_trivial_guard for:%s\n" (debug_lid.str);
+	    Util.print1 "Checking tc_trivial_guard for:%s\n" (debug_lid.str);
         let phi, _ = tc_trivial_guard env phi in
 
         Util.print1 "Checking haseq soundness for:%s\n" (debug_lid.str);

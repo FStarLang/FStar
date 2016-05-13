@@ -191,13 +191,13 @@ assume val strcat : string -> string -> Tot string
 
 assume HasEq_string: hasEq string
 assume HasEq_exn: hasEq exn
-assume HasEq_array: (forall (a:Type). hasEq a ==> hasEq (array a))
+assume HasEq_array: (forall (a:Type).{:pattern (hasEq (array a))}  hasEq a ==> hasEq (array a))
 
 type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
 
-assume HasEq_list: (forall (a:Type). hasEq a ==> hasEq (list a))
+assume HasEq_list: (forall (a:Type).{:pattern (hasEq (list a))} hasEq a ==> hasEq (list a))
 
 type pattern =
   | SMTPat   : #a:Type -> a -> pattern
@@ -220,20 +220,20 @@ type option (a:Type) =
   | None : option a
   | Some : v:a -> option a
 
-assume HasEq_option: (forall (a:Type). hasEq a ==> hasEq (option a))
+assume HasEq_option: (forall (a:Type).{:pattern (hasEq (option a))} hasEq a ==> hasEq (option a))
 
 type either 'a 'b =
   | Inl : v:'a -> either 'a 'b
   | Inr : v:'b -> either 'a 'b
 
-assume HasEq_either: (forall (a:Type) (b:Type). (hasEq a /\ hasEq b) ==> hasEq (either a b))
+assume HasEq_either: (forall (a:Type) (b:Type).{:pattern (hasEq (either a b))} (hasEq a /\ hasEq b) ==> hasEq (either a b))
 
 type result (a:Type) =
   | V   : v:a -> result a
   | E   : e:exn -> result a
   | Err : msg:string -> result a
 
-assume HasEq_result: (forall (a:Type). hasEq a ==> hasEq (result a))
+assume HasEq_result: (forall (a:Type).{:pattern (hasEq (result a))} hasEq a ==> hasEq (result a))
 
 new_effect DIV = PURE
 sub_effect PURE ~> DIV  = purewp_id
@@ -473,7 +473,7 @@ type tuple2 'a 'b =
            -> _2:'b
            -> tuple2 'a 'b
 
-assume HasEq_tuple2: (forall (a:Type) (b:Type). (hasEq a /\ hasEq b) ==> hasEq (tuple2 a b))
+assume HasEq_tuple2: (forall (a:Type) (b:Type).{:pattern (hasEq (tuple2 a b))} (hasEq a /\ hasEq b) ==> hasEq (tuple2 a b))
 
 (* 'a * 'b * 'c *)
 type tuple3 'a 'b 'c =
@@ -482,7 +482,7 @@ type tuple3 'a 'b 'c =
            -> _3:'c
           -> tuple3 'a 'b 'c
 
-assume HasEq_tuple3: (forall (a:Type) (b:Type) (c:Type). (hasEq a /\ hasEq b /\ hasEq c) ==> hasEq (tuple3 a b c))
+assume HasEq_tuple3: (forall (a:Type) (b:Type) (c:Type).{:pattern (hasEq (tuple3 a b c))} (hasEq a /\ hasEq b /\ hasEq c) ==> hasEq (tuple3 a b c))
 
 (* 'a * 'b * 'c * 'd *)
 type tuple4 'a 'b 'c 'd =
@@ -492,7 +492,7 @@ type tuple4 'a 'b 'c 'd =
            -> _4:'d
            -> tuple4 'a 'b 'c 'd
 
-assume HasEq_tuple4: (forall (a:Type) (b:Type) (c:Type) (d:Type). (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d) ==> hasEq (tuple4 a b c d))
+assume HasEq_tuple4: (forall (a:Type) (b:Type) (c:Type) (d:Type).{:pattern (hasEq (tuple4 a b c d))} (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d) ==> hasEq (tuple4 a b c d))
 
 (* 'a * 'b * 'c * 'd * 'e *)
 type tuple5 'a 'b 'c 'd 'e =
@@ -503,7 +503,7 @@ type tuple5 'a 'b 'c 'd 'e =
            -> _5:'e
            -> tuple5 'a 'b 'c 'd 'e
 
-assume HasEq_tuple5: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type). (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e) ==> hasEq (tuple5 a b c d e))
+assume HasEq_tuple5: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type).{:pattern (hasEq (tuple5 a b c d e))} (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e) ==> hasEq (tuple5 a b c d e))
 
 (* 'a * 'b * 'c * 'd * 'e * 'f *)
 type tuple6 'a 'b 'c 'd 'e 'f =
@@ -515,7 +515,7 @@ type tuple6 'a 'b 'c 'd 'e 'f =
            -> _6:'f
            -> tuple6 'a 'b 'c 'd 'e 'f
 
-assume HasEq_tuple6: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type) (f:Type). (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e /\ hasEq f) ==> hasEq (tuple6 a b c d e f))
+assume HasEq_tuple6: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type) (f:Type).{:pattern (hasEq (tuple6 a b c d e f))} (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e /\ hasEq f) ==> hasEq (tuple6 a b c d e f))
 
 (* 'a * 'b * 'c * 'd * 'e * 'f * 'g *)
 type tuple7 'a 'b 'c 'd 'e 'f 'g =
@@ -528,7 +528,7 @@ type tuple7 'a 'b 'c 'd 'e 'f 'g =
            -> _7:'g
            -> tuple7 'a 'b 'c 'd 'e 'f 'g
 
-assume HasEq_tuple7: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type) (f:Type) (g:Type). (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e /\ hasEq f /\ hasEq g) ==> hasEq (tuple7 a b c d e f g))
+assume HasEq_tuple7: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type) (f:Type) (g:Type).{:pattern (hasEq (tuple7 a b c d e f g))} (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e /\ hasEq f /\ hasEq g) ==> hasEq (tuple7 a b c d e f g))
 
 (* 'a * 'b * 'c * 'd * 'e * 'f * 'g * 'h *)
 type tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
@@ -542,7 +542,7 @@ type tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
            -> _8:'h
            -> tuple8 'a 'b 'c 'd 'e 'f 'g 'h
 
-assume HasEq_tuple8: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type) (f:Type) (g:Type) (h:Type). (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e /\ hasEq f /\ hasEq g /\ hasEq h) ==> hasEq (tuple8 a b c d e f g h))
+assume HasEq_tuple8: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type) (f:Type) (g:Type) (h:Type).{:pattern (hasEq (tuple8 a b c d e f g h))} (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e /\ hasEq f /\ hasEq g /\ hasEq h) ==> hasEq (tuple8 a b c d e f g h))
 
 (* Concrete syntax (x:a & y:b x & c x y) *)
 type dtuple3 (a:Type)
