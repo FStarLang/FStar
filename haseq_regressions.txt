@@ -1,0 +1,13 @@
+data_structures:
+
+ArrayRealized.fst: added a noeq (type content) since do not have support for refinements yet
+Vector.fst: added a name to indexed type parameter for type vector, issue
+rbtree.fst: added a noeq (type rbtree) since do not have support for refinements yet
+
+algorithms:
+
+QuickSort.Seq.fst fails, but even without haseq, my machine ? Rest pass.
+
+
+
+

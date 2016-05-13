@@ -16,7 +16,7 @@
 
 module Vector
 
-type vector 'a : nat -> Type =
+type vector 'a : n:nat -> Type =
   | VNil : vector 'a 0
   | VCons : hd:'a
          -> #n:nat

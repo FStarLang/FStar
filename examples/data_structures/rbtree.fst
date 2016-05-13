@@ -323,7 +323,7 @@ let insert t x =
 
 (* TODO: make rbtree polymorphic *)
 
-type rbtree =
+noeq type rbtree =
   | Mk: tr:rbtree'{balanced_rbtree' tr} -> rbtree
 
 val proj: rbtree -> Pure rbtree' (requires True) (ensures (fun r -> balanced_rbtree' r))
