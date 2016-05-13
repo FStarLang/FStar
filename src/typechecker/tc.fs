@@ -2501,6 +2501,8 @@ let tc_inductive env ses quals lids =
     let tcs, datas = generalize_and_inst_within env0 g (List.map fst tcs) datas in
     let sig_bndle = Sig_bundle(tcs@datas, quals, lids, Env.get_range env0) in
     
+    //Util.print1 "Sig bundle before:\n\n%s\n\n" (PP.sigelt_to_string sig_bndle);
+
     //generate hasEq predicate for this inductive
 
     let split_arrow (t:term) :(binders * comp) =
@@ -2549,8 +2551,8 @@ let tc_inductive env ses quals lids =
  
         //apply usubt to bs
         let bs = subst_in_binders bs usubst in
-        //apply usubst to t
-        let t = SS.subst usubst t in
+        //apply usubst to t, bu first shift usubst -- is there a way to apply usubst to bs and t altogether ?
+        let t = SS.subst (SS.shift_subst (List.length bs) usubst) t in
         //open t with binders bs
         let bs, t = SS.open_term bs t in
         //get the index binders, if any
@@ -2667,7 +2669,7 @@ let tc_inductive env ses quals lids =
             
         let phi = U.mk_imp guard cond in
 
-	    Util.print1 "Checking tc_trivial_guard for:%s\n" (PP.term_to_string phi);//(debug_lid.str);
+	    Util.print1 "Checking tc_trivial_guard for:\n\n%s\n\n" (debug_lid.str); //(PP.term_to_string phi);
         let phi, _ = tc_trivial_guard env phi in
 
         Util.print1 "Checking haseq soundness for:%s\n" (debug_lid.str);

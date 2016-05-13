@@ -17,16 +17,16 @@ noeq type cexists (#a:Type) (p:a -> Type) =
 // let ex_intro_x #a #p = function
 //   | ExIntro x _ -> x
 
-type ceq (#a:Type) x : a -> Type = 
+type ceq (#a:Type) x : y:a -> Type = 
   | Refl : ceq #a x x
 
-type ceq_type a : Type -> Type =
+type ceq_type a : b:Type -> Type =
   | ReflType : ceq_type a a
 
 val eq_ind : #a:Type -> x:a -> p:(a -> Type) -> f:p x -> y:a -> e:ceq x y -> Tot (p y)
 let eq_ind #a x p f y _ = f
 
-val ceq_eq : #a:Type -> #x:a -> #y:a -> h:(ceq x y) -> Lemma (x = y)
+val ceq_eq : #a:Type{hasEq a} -> #x:a -> #y:a -> h:(ceq x y) -> Lemma (x = y)
 let ceq_eq #a #x #y h = ()
 
 val ceq_congruence : #a:Type -> #b:Type -> #x:a -> #y:a -> ceq x y ->
