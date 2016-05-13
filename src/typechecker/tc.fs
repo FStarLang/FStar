@@ -2539,8 +2539,8 @@ let tc_inductive env ses quals lids =
     //env is the environment in which the next two terms are well-formed
     //term is the lhs of the implication for soundness
     //term is the soundness condition derived from all the data constructors of this type
-    //let haseq_ty (acc:(list<(lident * term)> * env * term * term)) (ty:sigelt) :list<(lident * term)> * env * term * term = TODO: bootstrapping fails with this annot
-    let haseq_ty acc ty =
+    let haseq_ty (acc:(list<(lident * term)> * env * term * term)) (ty:sigelt) :list<(lident * term)> * env * term * term = //TODO: bootstrapping fails with this annot
+    //let haseq_ty acc ty =
         let lid, bs, t, d_lids =
             match ty with
                 | Sig_inductive_typ (lid, _, bs, t, _, d_lids, _, _) -> lid, bs, t, d_lids
@@ -2569,17 +2569,25 @@ let tc_inductive env ses quals lids =
         let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None dr in
         //haseq of ind
         let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None dr in
-        //haseq of all binders in bs
-        let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None dr)) U.t_true bs in
+        //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
+        let bs' = List.filter (fun b ->
+            let _, en, _, _ = acc in
+            let opt = Rel.try_subtype en (fst b).sort  (fst (type_u ())) in
+            //is this criteria for success/failure ok ?
+            match opt with
+                | None   -> false
+                | Some _ -> true
+        ) bs in
+        let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None dr)) U.t_true bs' in
         //implication
         let fml = U.mk_imp haseq_bs haseq_ind in
         //attach pattern ?
         let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
         //fold right with ibs, close and add a forall b
-	//we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+	    //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
         let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) ibs fml in
         //fold right with bs, close and add a forall b
-	//we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+	    //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
         let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) bs fml in
         //so now this is the haseq formula we want to generate, TODO: make it a Sig_assume, and generalize universe variables, TODO: how to add pattern in this forall
 
@@ -2606,8 +2614,8 @@ let tc_inductive env ses quals lids =
 
         //folding function for t_datas
         //env is the updated env, term is the soundness condition for this data constructor
-        //let haseq_data (acc:(env * term)) (data:sigelt) :(env * term) = TODO: bootstrapping fails with this annotation
-        let haseq_data acc data =
+        let haseq_data (acc:(env * term)) (data:sigelt) :(env * term) = //TODO: bootstrapping fails with this annotation
+        //let haseq_data acc data =
             let dt = datacon_typ data in
             //apply the universes substitution to dt
             let dt = SS.subst usubst dt in
@@ -2659,7 +2667,7 @@ let tc_inductive env ses quals lids =
             
         let phi = U.mk_imp guard cond in
 
-	Util.print1 "Checking tc_trivial_guard for:%s\n" (debug_lid.str); //(PP.term_to_string phi);
+	    Util.print1 "Checking tc_trivial_guard for:%s\n" (debug_lid.str); //(PP.term_to_string phi);
         let phi, _ = tc_trivial_guard env phi in
 
         Util.print1 "Checking haseq soundness for:%s\n" (debug_lid.str);
@@ -2671,7 +2679,7 @@ let tc_inductive env ses quals lids =
         //add universe variables to env, no idea how to handle them ?
         let env = Env.push_univ_vars env0 us in
         let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
-            Util.print1 "Checking tc_assume for axiom:%s\n" (PP.term_to_string fml); //(lid.str);
+            Util.print1 "Checking tc_assume for axiom:%s\n" (lid.str); //(PP.term_to_string fml)
             let se = tc_assume env lid fml [] dr in
             //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
             l @ [se] 
