@@ -103,8 +103,8 @@ assume val rsa_sign : option hash_alg -> rsa_key -> bytes -> EXT bytes
 assume val rsa_verify : option hash_alg -> rsa_key -> bytes -> bytes -> Tot bool
 
 assume val dsa_gen_key : int -> EXT dsa_key
-assume val dsa_sign : dsa_key -> bytes -> EXT bytes
-assume val dsa_verify : dsa_key -> bytes -> bytes -> Tot bool
+assume val dsa_sign : option hash_alg -> dsa_key -> bytes -> EXT bytes
+assume val dsa_verify : option hash_alg -> dsa_key -> bytes -> bytes -> Tot bool
 
 assume val dh_gen_params : int -> EXT dh_params
 assume val dh_gen_key : p:dh_params
