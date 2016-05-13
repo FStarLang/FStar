@@ -896,8 +896,8 @@ module TestDsa = struct
   let check original_bytes =
     let private_key = dsa_gen_key 2048 in
     let public_key = { private_key with dsa_private = None } in
-    let sig_bytes = dsa_sign private_key original_bytes in
-    if not (dsa_verify public_key original_bytes sig_bytes) then begin
+    let sig_bytes = dsa_sign None private_key original_bytes in
+    if not (dsa_verify None public_key original_bytes sig_bytes) then begin
       Printf.printf "dsa_sign/dsa_verify: check failed\n";
       false
     end else
@@ -1233,12 +1233,22 @@ end
 
 module TestECDSACert = struct
   let test () =
-    let c1 = "MIID4jCCA4mgAwIBAgIQOCnC4aM8TrBUvhYzafzH7jAKBggqhkjOPQQDAjCBkDELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxNjA0BgNVBAMTLUNPTU9ETyBFQ0MgRG9tYWluIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQTAeFw0xNTExMTYwMDAwMDBaFw0xOTAxMDQyMzU5NTlaMFYxITAfBgNVBAsTGERvbWFpbiBDb250cm9sIFZhbGlkYXRlZDEUMBIGA1UECxMLUG9zaXRpdmVTU0wxGzAZBgNVBAMTEnd3dy5mc3Rhci1sYW5nLm9yZzB2MBAGByqGSM49AgEGBSuBBAAiA2IABMQ1tTS6rDb/khQeMlEZnqj088AirFhl2YxDqs1CPJN1Zt9yC5ErBvfF/+6jrmhFTtObpmiiPrTZVssbFoHQV1T78ItBJAsCB/CHOgLmr/nRZ+2guDYT6s8HCLQL9bMmnaOCAd8wggHbMB8GA1UdIwQYMBaAFLv6COC/VO5a/RakNQIJqaTI7P1LMB0GA1UdDgQWBBSD5Rud8nmOCygElvfIIU/2duLH5jAOBgNVHQ8BAf8EBAMCBYAwDAYDVR0TAQH/BAIwADAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwTwYDVR0gBEgwRjA6BgsrBgEEAbIxAQICBzArMCkGCCsGAQUFBwIBFh1odHRwczovL3NlY3VyZS5jb21vZG8uY29tL0NQUzAIBgZngQwBAgEwVAYDVR0fBE0wSzBJoEegRYZDaHR0cDovL2NybC5jb21vZG9jYS5jb20vQ09NT0RPRUNDRG9tYWluVmFsaWRhdGlvblNlY3VyZVNlcnZlckNBLmNybDCBhQYIKwYBBQUHAQEEeTB3ME8GCCsGAQUFBzAChkNodHRwOi8vY3J0LmNvbW9kb2NhLmNvbS9DT01PRE9FQ0NEb21haW5WYWxpZGF0aW9uU2VjdXJlU2VydmVyQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wLQYDVR0RBCYwJIISd3d3LmZzdGFyLWxhbmcub3Jngg5mc3Rhci1sYW5nLm9yZzAKBggqhkjOPQQDAgNHADBEAiACeAvoRDx5Lqyaiq31SyzQNW4tFqE2qsCtePnzlIsXwgIgSvgYglulxKK+a43ZNSzzdOPQ9JTczPVwzDy+QrQQjJs" in
-    let sigv = "MGUCMQCYgbDAAGij8piZZpzF78C0K94/U2YT8hdPsqCoLJPsbcD4rFw4eUTGFtPvNwkfiXgCMDLbGz0bk4e6VWnorqhywRTN126QsxAm4H0uKPnyIwpOsjXHT4vS9HOwNSEcRQkkVQ" in
+    let c1 = "MIIB0jCCAXmgAwIBAgIJAOJIzXwrhyTmMAoGCCqGSM49BAMCMEYxCzAJBgNVBAYTAlVLMRMwEQYDVQQIDApTb21lLVN0YXRlMQ4wDAYDVQQKDAVtaVRMUzESMBAGA1UEAwwJbWl0bHMub3JnMB4XDTE2MDUxMzE1MjMxOVoXDTI2MDUxMTE1MjMxOVowRjELMAkGA1UEBhMCVUsxEzARBgNVBAgMClNvbWUtU3RhdGUxDjAMBgNVBAoMBW1pVExTMRIwEAYDVQQDDAltaXRscy5vcmcwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQSir7rBJZ/wpSd+cbUawAi5mp/aKl8O7t52tgD/N+qC29BfXvTGLycOJKb3KH4RUbuQ/PtFm297Vl45CB4Zrzao1AwTjAdBgNVHQ4EFgQUZUVvmKM0O9/eXV+PxjWUeAit5z4wHwYDVR0jBBgwFoAUZUVvmKM0O9/eXV+PxjWUeAit5z4wDAYDVR0TBAUwAwEB/zAKBggqhkjOPQQDAgNHADBEAiAtElNiXA+iEw9Y01MKRBCVsIXeSqLlOrQTN7n4DSehnQIgdohQ8vTeqmUegyft7IPS2mL3QKqqXYMUkOFC+RTGJwQ" in
+    let sigv = "MEYCIQD6yaMocDqSb5xnzDa8J+ZYQqS98DIERubsToyn48GYEwIhAOphlNSOvshuV/gjPC6fWuQj8gJuW3859lpSnFLH16tE" in
     let c1b = bytes_of_string (BatBase64.str_decode c1) in
     let sigvb = bytes_of_string (BatBase64.str_decode sigv) in
     let tbs = bytes_of_string "Hello World\n" in
     cert_verify_sig c1b CoreCrypto.ECDSA CoreCrypto.SHA256 tbs sigvb
+end
+
+module TestDSACert = struct
+  let test () =
+    let c1 = "MIIFIjCCBOKgAwIBAgIJAOIxk5jud+Z/MAkGByqGSM44BAMwVTELMAkGA1UEBhMCVUsxDjAMBgNVBAgTBUNhbWJzMRIwEAYDVQQHEwlDYW1icmlkZ2UxDjAMBgNVBAoTBW1pVExTMRIwEAYDVQQDEwltaXRscy5vcmcwHhcNMTYwNTExMTY1ODI5WhcNMTYwNjEwMTY1ODI5WjBVMQswCQYDVQQGEwJVSzEOMAwGA1UECBMFQ2FtYnMxEjAQBgNVBAcTCUNhbWJyaWRnZTEOMAwGA1UEChMFbWlUTFMxEjAQBgNVBAMTCW1pdGxzLm9yZzCCAzowggItBgcqhkjOOAQBMIICIAKCAQEAl1tfhKIN2z96xAwWvQVBZVa/QL0vtp44FmqyS0VFyeNQSViYzkT4IprmdVtWb+8kB1zs27O5fA5+Js/s5/0lkoXCp4WQF9CwOv9Bw2GvGZutssx3VbMj4qfYgEIyjwU9ETdRW3yB890wlM/usTDSoNBbn6MRtduYKFGeOrHgBptKerSHwN94rSUO80Ech5qpdUNiZbRgZVBSO2h+KVjw6ZdCpw8XwQfnyI7YooWOrY/RmYA9DtzRtEYuwuHIJUB+sswsNdws/LcZ1rZZCpO+Y+oW50BfQVBrg/nbi78SAtplrLns5HrYyqiQARX4ub6f6zAdHQrvFI0xlPDo+ujXNwIVAK1v2Jw93EA9Hjb7nnaNb528y8itAoIBAFQ3xrCZAD1BkeNzSN0ehZiaakUH5YPpo5zMTfqhWs5jtbf6xe0sn20NVkcEuWYFvgiW91iDA0KOS11l093CstdoVOHaGpUnogSZ1OneOY/CwHWKcNM5JlQbom62G85nL9qWu7WqWSNMwQSRV/BKimmFfbWI3i+65dG7DUtVZMIV8lJ4jJWW9blZUrChuTl6miOdih14+NmFgxom/XNYbhmZz8i68oQCc/PfcPGbt6ayx4MCYMtxWS/FrsvaAVVYT0CLqtdz7rOt+WN+UWOd5B7GFu6nmOaz52qVSYtow+LI9TosAnij60osYoAd1Hrd5kOogjmChfQsFXlX4HOK7joDggEFAAKCAQAh2EQMmXVwgiBaGiuDkMAJFPvYaqqd/d86wYaqJTKknUqoEoOkKtpn9msfWwINF0sXTElTL1bD+pm9Ql6lATqHmO1pYcoSWMR1L7JI7zcMc2gU3jpd0lbUDUx5SboAeEih83k4lSnNEftFdNMQ973YmL3ReFmk3GZzNkzHHeHzo9HnDXFLxCeFM9S7F8gv1Vx9CSgAebQNKv1SHfhuSGp9srknKyZBcGncjtDQAy00fvGpWeCdrlgNoBFVz4EigH5Z15F+4AFkuUJ8fIPAifYWInjOWk0d0PG9IIXN/n7snXtGId+szZdCUnhSUGmC6o/wTJWvZMG9BGtQpPZJ9BCdo4G4MIG1MB0GA1UdDgQWBBSxG0nDZJobYSuj4kj+McWPALyOBzCBhQYDVR0jBH4wfIAUsRtJw2SaG2Ero+JI/jHFjwC8jgehWaRXMFUxCzAJBgNVBAYTAlVLMQ4wDAYDVQQIEwVDYW1iczESMBAGA1UEBxMJQ2FtYnJpZGdlMQ4wDAYDVQQKEwVtaVRMUzESMBAGA1UEAxMJbWl0bHMub3JnggkA4jGTmO535n8wDAYDVR0TBAUwAwEB/zAJBgcqhkjOOAQDAy8AMCwCFASsPMokAXZSGO3ZiYCMic7HC62EAhRVamZaepsT3rAkZSpxMfAE0qN98w" in
+    let sigv = "MC4CFQCWRmyYmzTe9CN4SSgIEpWUPY/6JwIVAJ1STjc12/9L8K341SKw1r6Cai3g" in
+    let c1b = bytes_of_string (BatBase64.str_decode c1) in
+    let sigvb = bytes_of_string (BatBase64.str_decode sigv) in
+    let tbs = bytes_of_string "Hello World\n" in
+    cert_verify_sig c1b CoreCrypto.DSA CoreCrypto.SHA256 tbs sigvb
 end
 
 module TestRSACert = struct
@@ -1290,6 +1300,7 @@ let _ =
   simple_test "ECDH key exchange" TestEcdhke.simple_test;
   simple_test "Certificate chain verify" TestCert.test;
   simple_test "Certificate signature verify (ECDSA)" TestECDSACert.test;
+  simple_test "Certificate signature verify (DSA)" TestDSACert.test;
   simple_test "Certificate signature verify (RSA)" TestRSACert.test;
   simple_test "Certificate load from PEM chain/key" TestCertLoad.test;
   ()
