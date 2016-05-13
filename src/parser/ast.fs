@@ -109,6 +109,7 @@ type tycon =
 type qualifier =
   | Private
   | Abstract
+  | Noeq
   | Assumption
   | DefaultEffect
   | TotalEffect

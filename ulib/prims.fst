@@ -182,7 +182,7 @@ assume val op_GreaterThanOrEqual : int -> int -> Tot bool
 assume val op_LessThan           : int -> int -> Tot bool
 (* Primitive (structural) equality.
    This still allows functions ... TODO: disallow functions *)
-assume val op_Equality :    'a -> 'a -> Tot bool
+assume val op_Equality :    a:Type{hasEq a} -> a -> a -> Tot bool
 assume val op_disEquality : 'a -> 'a -> Tot bool
 assume new type string : Type0
 assume new type exn : Type0

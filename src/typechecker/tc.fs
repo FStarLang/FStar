@@ -2635,17 +2635,23 @@ let tc_inductive env ses quals lids =
 
     //if env.curmodule.ident.idText = "Test" then
     //TODO: cannot do it for prims, since all formula use symbols from it
-    if not (lid_equals env.curmodule Const.prims_lid) then
+
+    let is_noeq = List.exists (fun q -> q = Noeq) quals in
+
+    let debug_lid =
+        match (List.hd tcs) with
+	    | Sig_inductive_typ (lid, _, _, _, _, _, _, _) -> lid
+            | _                                            -> failwith "Impossible!"
+    in
+    let _ =
+        if is_noeq then Util.print1 "Skipping this type since noeq:%s\n" (debug_lid.str) else ()
+    in
+	  
+    if (not (lid_equals env.curmodule Const.prims_lid)) && (not (!Options.no_haseq)) && (not (is_noeq)) then
         let env = Env.push_sigelt env0 sig_bndle in
         env.solver.push "haseq";
         env.solver.encode_sig env sig_bndle;
         let env = Env.push_univ_vars env us in
-
-	let debug_lid =
-	    match (List.hd tcs) with
-	        | Sig_inductive_typ (lid, _, _, _, _, _, _, _) -> lid
-                | _                                            -> failwith "Impossible!"
-        in	       
 	
         let axioms, env, guard, cond = List.fold_left haseq_ty ([], env, U.t_true, U.t_true) tcs in
             

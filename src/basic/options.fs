@@ -89,6 +89,7 @@ let no_slack = Util.mk_ref false
 let eager_inference = Util.mk_ref false
 let universes = Util.mk_ref false
 let unthrottle_inductives = Util.mk_ref false
+let no_haseq = Util.mk_ref false
 let use_eq_at_higher_order = Util.mk_ref false
 let use_native_int = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
@@ -153,6 +154,7 @@ let init_options () =
     no_slack  := false;
     eager_inference  := false;
     unthrottle_inductives  := false;
+    no_haseq  := false;
     use_eq_at_higher_order  := false;
     fs_typ_app  := false;
     n_cores  := 1;
@@ -311,6 +313,7 @@ let rec specs () : list<Getopt.opt> =
      ( 'v',     "version", ZeroArgs (fun _ -> display_version(); exit 0), "Display version number");
      ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
      ( noshort, "z3timeout", OneArg ((fun s -> z3timeout := int_of_string s), "t"), "Set the Z3 per-query (soft) timeout to t seconds (default 5)");
+     ( noshort, "no_haseq", ZeroArgs (fun () -> no_haseq := true), "Don't generate haseq axioms");
   ] in
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
 and parse_codegen s =
