@@ -188,6 +188,7 @@ let qual_to_string = function
   | Unfoldable            -> "unfoldable"
   | Irreducible           -> "irreducible"
   | Abstract              -> "abstract"
+  | Noeq                  -> "noeq"
   | Logic                 -> "logic"
   | TotalEffect           -> "total"
   | Discriminator l       -> Util.format1 "(Discriminator %s)" (lid_to_string l) 

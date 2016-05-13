@@ -2572,7 +2572,7 @@ let tc_inductive env ses quals lids =
         //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
         let bs' = List.filter (fun b ->
             let _, en, _, _ = acc in
-            let opt = Rel.try_subtype en (fst b).sort  (fst (type_u ())) in
+            let opt = Rel.try_subtype' en (fst b).sort  (fst (type_u ())) false in
             //is this criteria for success/failure ok ?
             match opt with
                 | None   -> false
@@ -2667,7 +2667,7 @@ let tc_inductive env ses quals lids =
             
         let phi = U.mk_imp guard cond in
 
-	    Util.print1 "Checking tc_trivial_guard for:%s\n" (debug_lid.str); //(PP.term_to_string phi);
+	    Util.print1 "Checking tc_trivial_guard for:%s\n" (PP.term_to_string phi);//(debug_lid.str);
         let phi, _ = tc_trivial_guard env phi in
 
         Util.print1 "Checking haseq soundness for:%s\n" (debug_lid.str);
