@@ -70,7 +70,7 @@ let path_of_ns (currentModule : mlsymbol) ns =
     let ns' = Util.flatten_ns ns in
     if ns' = currentModule
     then []
-    else let cg_libs = !Options.codegen_libs in
+    else let cg_libs = Options.codegen_libs() in
          let ns_len = List.length ns in
          let found = Util.find_map cg_libs (fun cg_path ->
             let cg_len = List.length cg_path in
@@ -247,7 +247,7 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
   | MLC_Int (s, Some (_, Int8))
   | MLC_Int (s, Some (_, Int16)) -> s
-  | MLC_Int (s, None) -> if !Options.use_native_int
+  | MLC_Int (s, None) -> if (Options.use_native_int())
                          then s
                          else "(Prims.parse_int \"" ^s^ "\")"
   | MLC_Float d -> string_of_float d
@@ -598,7 +598,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
     
 
 and doc_of_loc (lineno, file) =
-    if !Options.no_location_info || Util.codegen_fsharp () then
+    if (Options.no_location_info()) || Util.codegen_fsharp () then
         empty
     else
         let file = Util.basename file in

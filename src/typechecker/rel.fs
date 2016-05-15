@@ -116,11 +116,11 @@ let prob_to_string env = function
 
 let uvi_to_string env = function
     | UNIV (u, t) -> 
-      let x = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
+      let x = if (Options.hide_uvar_nums()) then "?" else Unionfind.uvar_id u |> string_of_int in
       Util.format2 "UNIV %s %s" x (Print.univ_to_string t)
 
     | TERM ((u,_), t) ->
-      let x = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
+      let x = if (Options.hide_uvar_nums()) then "?" else Unionfind.uvar_id u |> string_of_int in
       Util.format2 "TERM %s %s" x (N.term_to_string env t)
 let uvis_to_string env uvis = List.map (uvi_to_string env) uvis |> String.concat  ", "
 let names_to_string nms = Util.set_elements nms |> List.map Print.bv_to_string |> String.concat ", "
@@ -1843,7 +1843,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         (fun scope env subst  ->
             let c1 = Subst.subst_comp subst c1 in
             let c2 = Subst.subst_comp subst c2 in //open both comps
-            let rel = if !Options.use_eq_at_higher_order then EQ else problem.relation in
+            let rel = if (Options.use_eq_at_higher_order()) then EQ else problem.relation in
             CProb <| mk_problem scope orig c1 rel c2 None "function co-domain")
 
       | Tm_abs(bs1, tbody1, lopt1), Tm_abs(bs2, tbody2, lopt2) ->
@@ -1911,7 +1911,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         if wl.defer_ok
         then solve env (defer "flex-rigid subtyping deferred" orig wl)
         else
-            let new_rel = if !Options.no_slack then EQ else problem.relation in
+            let new_rel = problem.relation in
             if not <| is_top_level_prob orig //If it's not top-level and t2 is refined, then we should not try to prove that t2's refinement is saturated
             then solve_t_flex_rigid (TProb <| {problem with relation=new_rel}) (destruct_flex_pattern env t1) t2 wl
             else let t_base, ref_opt = base_and_refinement env wl t2 in
@@ -2202,7 +2202,7 @@ let new_t_prob env t1 rel t2 =
  TProb p, x
 
 let solve_and_commit env probs err =
-  let probs = if !Options.eager_inference then {probs with defer_ok=false} else probs in
+  let probs = if (Options.eager_inference()) then {probs with defer_ok=false} else probs in
   let tx = Unionfind.new_transaction () in
   let sol = solve env probs in
   match sol with

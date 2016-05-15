@@ -529,7 +529,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | [] -> failwith "Impossible"
                         | [_] -> 
                           begin match lopt with 
-                            | None when (!Options.__test_norm_all) -> 
+                            | None when (Options.__unit_tests()) -> 
                               log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
                               norm cfg (c :: env) stack body 
 

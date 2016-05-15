@@ -18,12 +18,12 @@ module FStar.Getopt
 let noshort='\000'
 let nolong=""
 
-type opt_variant =
-  | ZeroArgs of (unit -> unit)
-  | OneArg of (string -> unit) * string
+type opt_variant<'a> =
+  | ZeroArgs of (unit -> 'a)
+  | OneArg of (string -> 'a) * string
 
-type opt = char * string * opt_variant * string
-
+type opt'<'a> = char * string * opt_variant<'a> * string
+type opt = opt'<unit>
 type parse_cmdline_res =
   | Help
   | Die of string

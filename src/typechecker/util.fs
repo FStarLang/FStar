@@ -55,7 +55,7 @@ let t_binders env =
 
 //new unification variable
 let new_uvar_aux env k = 
-    let bs = if !Options.full_context_dependency
+    let bs = if (Options.full_context_dependency())
              || Ident.lid_equals Const.prims_lid (Env.current_module env)
              then Env.all_binders env 
              else t_binders env in
@@ -84,16 +84,13 @@ let check_uvars r t =
   then
     let us = List.map (fun (x, _) -> Print.uvar_to_string x) (Util.set_elements uvs) |> String.concat ", " in
     (* ignoring the hide_uvar_nums and print_implicits flags here *)
-    let hide_uvar_nums_saved = !Options.hide_uvar_nums in
-    let print_implicits_saved = !Options.print_implicits in
-    Options.hide_uvar_nums := false;
-    Options.print_implicits := true;
+    Options.push();
+    Options.set_option "hide_uvar_nums" (Options.Bool false);
+    Options.set_option "print_implicits" (Options.Bool true);
     Errors.report r
       (Util.format2 "Unconstrained unification variables %s in type signature %s; \
        please add an annotation" us (Print.term_to_string t));
-    Options.hide_uvar_nums := hide_uvar_nums_saved;
-    Options.print_implicits := print_implicits_saved
-
+    Options.pop()
 
 (************************************************************************)
 (* Extracting annotations from a term *)
@@ -658,7 +655,7 @@ let ite env (guard:formula) lcomp_then lcomp_else =
       let ifthenelse md res_t g wp_t wp_e = mk_Tm_app (inst_effect_fun_with us env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
       let wp = ifthenelse md res_t guard wp_then wp_else in
       let wlp = ifthenelse md res_t guard wlp_then wlp_else in
-      if !Options.split_cases > 0
+      if (Options.split_cases()) > 0
       then let comp = mk_comp md res_t wp wlp [] in
            add_equality_to_post_condition env comp res_t
       else let wp = mk_Tm_app  (inst_effect_fun_with us env md md.ite_wp)  [S.as_arg res_t; S.as_arg wlp; S.as_arg wp] None wp.pos in
@@ -691,7 +688,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
         let comp = List.fold_right (fun (g, cthen) celse ->
             let (md, _, _), (_, wp_then, wlp_then), (_, wp_else, wlp_else) = lift_and_destruct env (cthen.comp()) celse in
             mk_comp md res_t (ifthenelse md res_t g wp_then wp_else) (ifthenelse md res_t g wlp_then wlp_else) []) lcases default_case in
-        if !Options.split_cases > 0
+        if (Options.split_cases()) > 0
         then add_equality_to_post_condition env comp res_t
         else let comp = U.comp_to_comp_typ comp in
              let md = Env.get_effect_decl env comp.effect_name in

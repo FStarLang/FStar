@@ -22,168 +22,201 @@ open FStar.Util
 open FStar.Getopt
 open FStar.Version
 
+(* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
+let __unit_tests__ = Util.mk_ref false
+let __unit_tests() = !__unit_tests__
+let __set_unit_tests () = __unit_tests__ := true 
+let __clear_unit_tests () = __unit_tests__ := false
+
+
 type debug_level_t =
-    | Low
-    | Medium
-    | High
-    | Extreme
-    | Other of string
+  | Low
+  | Medium
+  | High
+  | Extreme
+  | Other of string
 
-let show_signatures : ref<list<string>> = Util.mk_ref []
-let norm_then_print = Util.mk_ref true
-let z3_exe = Util.mk_ref (Platform.exe "z3")
-let silent=Util.mk_ref false
-let debug : ref<list<string>> = Util.mk_ref []
-let debug_level : ref<list<debug_level_t>> = Util.mk_ref []
+type option_val =
+  | Bool of bool 
+  | String of string
+  | Int of int
+  | List of list<option_val>
+  | Unset
+
+type options = 
+    | Set
+    | Reset
+    | Restore
+
+// VALS_HACK_HERE
+ 
+let as_bool = function
+  | Bool b -> b
+  | _ -> failwith "impos"
+let as_int = function
+  | Int b -> b
+  | _ -> failwith "impos"
+let as_string = function
+  | String b -> b
+  | _ -> failwith "impos"
+let as_list as_t = function
+  | List ts -> ts |> List.map as_t
+  | _ -> failwith "impos"
+let as_option as_t = function
+  | Unset -> None
+  | v -> Some (as_t v)
+   
+let fstar_options : ref<list<Util.smap<option_val>>> = Util.mk_ref []
+let peek () = List.hd !fstar_options
+let pop  () = fstar_options := List.tl !fstar_options
+let push () = fstar_options := Util.smap_copy (peek()) :: !fstar_options
+let set_option k v = Util.smap_add (peek()) k v
+let set_option' (k,v) =  set_option k v
+
+let init () = 
+  let vals = 
+       [
+        ("__temp_no_proj"               , List []);
+        ("_fstar_home"                  , String "");
+        ("_include_path"                , List []);
+        ("admit_smt_queries"            , Bool false);
+        ("cardinality"                  , String "off");
+        ("codegen"                      , Unset);
+        ("codegen_lib"                  , List []);
+        ("debug"                        , List []);
+        ("debug_level"                  , List []);
+        ("dep"                          , Unset);
+        ("detail_errors"                , Bool false);
+        ("dump_module"                  , List []);
+        ("eager_inference"              , Bool false);
+        ("explicit_deps"                , Bool false);
+        ("fs_typ_app"                   , Bool false);
+        ("fsi"                          , Bool false);
+        ("fstar_home"                   , Unset);
+        ("full_context_dependency"      , Bool true);
+        ("hide_genident_nums"           , Bool false);
+        ("hide_uvar_nums"               , Bool false);
+        ("in"                           , Bool false);
+        ("include"                      , List []);
+        ("initial_fuel"                 , Int 2);
+        ("initial_ifuel"                , Int 1);
+        ("inline_arith"                 , Bool false);
+        ("lax"                          , Bool false);
+        ("log_queries"                  , Bool false);
+        ("log_types"                    , Bool false);
+        ("max_fuel"                     , Int 8);
+        ("max_ifuel"                    , Int 2);
+        ("min_fuel"                     , Int 1);
+        ("MLish"                        , Bool false);
+        ("n_cores"                      , Int 1);
+        ("no_default_includes"          , Bool false);
+        ("no_extract"                   , List []);
+        ("no_location_info"             , Bool true);
+        ("odir"                         , Unset);
+        ("prims"                        , Unset);
+        ("pretype"                      , Bool true);
+        ("prims_ref"                    , Unset);
+        ("print_before_norm"            , Bool false);
+        ("print_bound_var_types"        , Bool false);
+        ("print_effect_args"            , Bool false);
+        ("print_fuels"                  , Bool false);
+        ("print_implicits"              , Bool false);
+        ("print_universes"              , Bool false);
+        ("prn"                          , Bool false);
+        ("show_signatures"              , List []);
+        ("silent"                       , Bool false);
+	("smt"                          , Unset);
+        ("split_cases"                  , Int 0);
+        ("timing"                       , Bool false);
+        ("trace_error"                  , Bool false);
+        ("unthrottle_inductives"        , Bool false);
+        ("use_eq_at_higher_order"       , Bool false);
+        ("use_native_int"               , Bool false);
+        ("verify"                       , Bool true);
+        ("verify_module"                , List []);
+        ("warn_top_level_effects"       , Bool false);
+        ("z3timeout"                    , Int 5)] in 
+   let o = Util.smap_create 50 in
+   fstar_options := [o];                                 //clear and reset the options stack
+   vals |> List.iter set_option'                          //initialize it with the default values
+
+let _ = init()
+
+let lookup_opt s c = 
+  match Util.smap_try_find (peek()) s with 
+  | None -> failwith "impos"
+  | Some s -> c s
+
+let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
+let get_cardinality             ()      = lookup_opt "cardinality"              as_string 
+let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
+let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
+let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
+let get_debug_level             ()      = lookup_opt "debug_level"              (as_list as_string)
+let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
+let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
+let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
+let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
+let get_explicit_deps           ()      = lookup_opt "explicit_deps"            as_bool 
+let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool 
+let get_fsi                     ()      = lookup_opt "fsi"                      as_bool 
+let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
+let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
+let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
+let get_in                      ()      = lookup_opt "in"                       as_bool 
+let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
+let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int 
+let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
+let get_inline_arith            ()      = lookup_opt "inline_arith"             as_bool
+let get_lax                     ()      = lookup_opt "lax"                      as_bool 
+let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
+let get_log_types               ()      = lookup_opt "log_types"                as_bool
+let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int 
+let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int 
+let get_min_fuel                ()      = lookup_opt "min_fuel"                 as_int 
+let get_MLish                   ()      = lookup_opt "MLish"                    as_bool 
+let get_n_cores                 ()      = lookup_opt "n_cores"                  as_int 
+let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool 
+let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string) 
+let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
+let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string) 
+let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string) 
+let get_print_before_norm       ()      = lookup_opt "print_before_norm"        as_bool
+let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool 
+let get_print_effect_args       ()      = lookup_opt "print_effect_args"        as_bool 
+let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool 
+let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool 
+let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
+let get_prn                     ()      = lookup_opt "prn"                      as_bool 
+let get_show_signatures         ()      = lookup_opt "show_signatures"          (as_list as_string)
+let get_silent                  ()      = lookup_opt "silent"                   as_bool 
+let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
+let get_split_cases             ()      = lookup_opt "split_cases"              as_int
+let get_timing                  ()      = lookup_opt "timing"                   as_bool 
+let get_trace_error             ()      = lookup_opt "trace_error"              as_bool 
+let get_universes               ()      = lookup_opt "universes"                as_bool 
+let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool 
+let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool 
+let get_use_native_int          ()      = lookup_opt "use_native_int"           as_bool 
+let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
+let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
+let get_version                 ()      = lookup_opt "version"                  as_bool 
+let get_warn_top_level_effects  ()      = lookup_opt "warn_top_level_effects"   as_bool 
+let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int 
+
 let dlevel = function
-    | "Low" -> Low
-    | "Medium" -> Medium
-    | "High" -> High
-    | "Extreme" -> Extreme
-    | s -> Other s
+   | "Low" -> Low
+   | "Medium" -> Medium
+   | "High" -> High
+   | "Extreme" -> Extreme
+   | s -> Other s
 let one_debug_level_geq l1 l2 = match l1 with
-    | Other _
-    | Low -> l1 = l2
-    | Medium -> (l2 = Low || l2 = Medium)
-    | High -> (l2 = Low || l2 = Medium || l2 = High)
-    | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
-let debug_level_geq l2 = !debug_level |> Util.for_some (fun l1 -> one_debug_level_geq l1 l2)
-let log_types = Util.mk_ref false
-let print_effect_args=Util.mk_ref false
-let print_real_names = Util.mk_ref false
-let detail_errors = Util.mk_ref false
-let dump_module : ref<option<string>> = Util.mk_ref None
-let should_dump l = match !dump_module with
-    | None -> false
-    | Some m -> m=l
-let __test_norm_all = Util.mk_ref false
-let logQueries = Util.mk_ref false
-let z3exe = Util.mk_ref true
-let outputDir = Util.mk_ref (Some ".")
-let fstar_home_opt : ref<option<string>> = Util.mk_ref None
-let _fstar_home = Util.mk_ref ""
-let prims_ref : ref<option<string>> = Util.mk_ref None
-let z3timeout = Util.mk_ref 5
-let admit_smt_queries = Util.mk_ref false
-let pretype = Util.mk_ref true
-let codegen : ref<option<string>> = Util.mk_ref None
-let no_extract : ref<list<string>> = Util.mk_ref []
-let no_location_info = Util.mk_ref false
-let codegen_libs : ref<list<list<string>>> = Util.mk_ref []
-let trace_error = Util.mk_ref false
-let verify = Util.mk_ref true
-let full_context_dependency = Util.mk_ref true
-let ml_ish = Util.mk_ref false
-let print_implicits = Util.mk_ref false
-let print_bound_var_types = Util.mk_ref false
-let print_universes = Util.mk_ref false
-let hide_uvar_nums = Util.mk_ref false
-let hide_genident_nums = Util.mk_ref false
-let serialize_mods = Util.mk_ref false
-let initial_fuel = Util.mk_ref 2
-let initial_ifuel = Util.mk_ref 1
-let max_fuel = Util.mk_ref 8
-let min_fuel = Util.mk_ref 1
-let max_ifuel = Util.mk_ref 2
-let warn_top_level_effects = Util.mk_ref false
-let no_slack = Util.mk_ref false
-let eager_inference = Util.mk_ref false
-let universes = Util.mk_ref false
-let unthrottle_inductives = Util.mk_ref false
-let use_eq_at_higher_order = Util.mk_ref false
-let use_native_int = Util.mk_ref false
-let fs_typ_app = Util.mk_ref false
-let n_cores = Util.mk_ref 1
-let verify_module : ref<list<string>> = Util.mk_ref [] // all normalized to lowercase
-let __temp_no_proj : ref<list<string>> = Util.mk_ref []
-let interactive = Util.mk_ref false
-let split_cases = Util.mk_ref 0
-let _include_path : ref<list<string>> = Util.mk_ref []
-let no_default_includes = Util.mk_ref false
-let interactive_fsi = Util.mk_ref false
-let print_fuels = Util.mk_ref false
-let cardinality = Util.mk_ref "off"
-let timing = Util.mk_ref false
-let inline_arith = Util.mk_ref false
-let warn_cardinality () = match !cardinality with
-    | "warn" -> true
-    | _ -> false
-let check_cardinality () = match !cardinality with
-    | "check" -> true
-    | _ -> false
-let dep : ref<option<string>> = Util.mk_ref None
-let explicit_deps = Util.mk_ref false
-let init_options () =
-    show_signatures := [];
-    norm_then_print := true;
-    z3_exe := Platform.exe "z3";
-    silent := false;
-    debug := [];
-    debug_level  := [];
-    log_types  := false;
-    print_effect_args := false;
-    print_real_names  := false;
-    dump_module  := None;
-    logQueries  := false;
-    z3exe  := true;
-    outputDir  := Some ".";
-    fstar_home_opt  := None;
-    _fstar_home  := "";
-    prims_ref  := None;
-    z3timeout  := 5;
-    admit_smt_queries := false;
-    pretype  := true;
-    codegen  := None;
-    codegen_libs := [];
-    no_extract  := [];
-    trace_error  := false;
-    verify  := true;
-    full_context_dependency  := true;
-    print_implicits  := false;
-    print_bound_var_types := false;
-    print_universes := false;
-    hide_uvar_nums  := false;
-    hide_genident_nums  := false;
-    serialize_mods  := false;
-    initial_fuel  := 2;
-    initial_ifuel  := 1;
-    max_fuel  := 8;
-    min_fuel  := 1;
-    max_ifuel  := 2;
-    warn_top_level_effects  := false;
-    no_slack  := false;
-    eager_inference  := false;
-    unthrottle_inductives  := false;
-    use_eq_at_higher_order  := false;
-    fs_typ_app  := false;
-    n_cores  := 1;
-    split_cases := 0;
-    verify_module := [];
-    __temp_no_proj := [];
-    _include_path := [];
-    no_default_includes := false;
-    print_fuels := false;
-    use_native_int := false;
-    explicit_deps := false;
-    dep := None;
-    timing := false;
-    inline_arith := false;
-    detail_errors := false;
-    ml_ish := false
-
-let set_fstar_home () =
-  let fh = match !fstar_home_opt with
-    | None ->
-      let x = Util.get_exec_dir () in
-      let x = x ^ "/.." in
-      _fstar_home := x;
-      fstar_home_opt := Some x;
-      x
-    | Some x -> _fstar_home := x; x in
-  fh
-let get_fstar_home () = match !fstar_home_opt with
-    | None -> ignore <| set_fstar_home(); !_fstar_home
-    | Some x -> x
+   | Other _
+   | Low -> l1 = l2
+   | Medium -> (l2 = Low || l2 = Medium)
+   | High -> (l2 = Low || l2 = Medium || l2 = High)
+   | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
+let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug_level_geq (dlevel l1) l2)
 
 let include_path_base_dirs = 
   ["/lib"; "/lib/fstar"; "/stdlib" ; "/stdlib/fstar"]
@@ -191,18 +224,483 @@ let include_path_base_dirs =
 let universe_include_path_base_dirs = 
   ["/ulib"]
 
-let get_include_path () =
+let display_version () =
+  Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
+                                  version platform compiler date commit)
+
+let display_usage specs =
+  Util.print_string "fstar [option] file...\n";
+  List.iter
+    (fun (_, flag, p, doc) ->
+       match p with
+         | ZeroArgs ig ->
+             if doc = "" then Util.print_string (Util.format1 "  --%s\n" (Util.colorize_bold flag))
+             else Util.print_string (Util.format2 "  --%s  %s\n" (Util.colorize_bold flag) doc)
+         | OneArg (_, argname) ->
+             if doc = "" then Util.print_string (Util.format2 "  --%s %s\n" (Util.colorize_bold flag) (Util.colorize_bold argname))
+             else Util.print_string (Util.format3 "  --%s %s  %s\n" (Util.colorize_bold flag) (Util.colorize_bold argname) doc))
+    specs
+
+let mk_spec (o:opt'<option_val>) : opt = 
+    let ns, name, arg, desc = o in
+    let arg = 
+        match arg with 
+        | ZeroArgs f -> 
+          let g () = set_option' (name, f()) in
+          ZeroArgs g
+
+        | OneArg (f, d) -> 
+          let g x = set_option' (name, f x) in
+          OneArg (g, d) in
+    ns, name, arg, desc
+
+let cons_verify_module s  = 
+    List (String.lowercase s::get_verify_module() |> List.map String)
+
+let add_verify_module s = 
+    set_option "verify_module" (cons_verify_module s)
+
+let rec specs () : list<Getopt.opt> =
+  let specs =
+    [( noshort, 
+       "admit_smt_queries", 
+       OneArg ((fun s -> if s="true" then Bool true 
+                         else if s="false" then Bool false 
+                         else failwith("Invalid argument to --admit_smt_queries")), 
+                "true|false"), 
+       "Admit SMT queries (UNSAFE! But, useful during development); default: 'false'");
+
+     ( noshort, 
+       "cardinality",       
+       OneArg ((fun x -> String (validate_cardinality x)), 
+               "off|warn|check"), 
+       "Check cardinality constraints on inductive data types (default 'off')");
+
+     ( noshort, 
+       "codegen", 
+        OneArg ((fun s -> String (parse_codegen s)), 
+                 "OCaml|FSharp"), 
+        "Generate code for execution");
+
+     ( noshort, 
+        "codegen-lib", 
+        OneArg ((fun s -> List (s::get_codegen_lib() |> List.map String)), 
+                 "namespace"), 
+        "External runtime library library");
+     
+     ( noshort, 
+        "debug", 
+        OneArg ((fun x -> List (x::get_debug() |> List.map String)),
+                 "module name"), 
+        "Print LOTS of debugging information while checking module [arg]");
+      
+       ( noshort,
+        "debug_level", 
+        OneArg ((fun x -> List (x::get_debug_level() |> List.map String)), 
+                 "Low|Medium|High|Extreme|..."), 
+        "Control the verbosity of debugging info");
+      
+       ( noshort,
+        "dep", 
+        OneArg ((fun x -> if x = "make" then String x else failwith "invalid argument to 'dep'"),
+                 "make"), 
+        "Output the transitive closure of the dependency graph in a format suitable for the given tool");
+      
+       ( noshort,
+        "detail_errors", 
+        ZeroArgs (fun () -> Bool true),
+         "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; requires --universes");
+      
+       ( noshort,
+        "dump_module", 
+        OneArg ((fun x -> (x::get_dump_module()) |> List.map String |> List),
+                 "module name"), 
+        "");
+      
+       ( noshort,
+        "eager_inference", 
+        ZeroArgs (fun () -> Bool true),
+        "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
+      
+       ( noshort,
+        "explicit_deps", 
+        ZeroArgs (fun () -> Bool true), 
+        "tell FStar to not find dependencies automatically because the user provides them on the command-line");
+      
+       ( noshort,
+        "fs_typ_app", 
+        ZeroArgs (fun () -> Bool true), 
+        "Allow the use of t<t1, 
+       ..., 
+       tn> syntax for type applications; brittle since it clashes with the integer less-than operator");
+      
+       ( noshort,
+        "fsi", 
+        ZeroArgs (fun () -> Bool true),
+        "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
+      
+       ( noshort,
+        "fstar_home", 
+        OneArg (String,
+                "dir"), 
+        "Set the FSTAR_HOME variable to dir");
+      
+       ( noshort,
+        "hide_genident_nums", 
+        ZeroArgs(fun () -> Bool true), 
+        "Don't print generated identifier numbers");
+      
+       ( noshort,
+        "hide_uvar_nums", 
+        ZeroArgs(fun () -> Bool true),
+        "Don't print unification variable numbers");
+      
+       ( noshort,
+        "in", 
+        ZeroArgs (fun () -> Bool true), 
+        "Interactive mode; reads input from stdin");
+      
+       ( noshort,
+        "include", 
+        OneArg ((fun s -> List (get_include() @ [s] |> List.map String)),
+                "path"), 
+        "A directory in which to search for files included on the command line");
+      
+       ( noshort,
+        "initial_fuel", 
+        OneArg((fun x -> Int (int_of_string x)), 
+                "non-negative integer"), 
+        "Number of unrolling of recursive functions to try initially (default 2)");
+      
+       ( noshort,
+        "initial_ifuel", 
+        OneArg((fun x -> Int (int_of_string x)), 
+                "non-negative integer"), 
+        "Number of unrolling of inductive datatypes to try at first (default 1)");
+      
+       ( noshort,
+        "inline_arith", 
+        ZeroArgs(fun () -> Bool true), 
+        "Inline definitions of arithmetic functions in the SMT encoding");
+      
+       ( noshort,
+        "lax", 
+        ZeroArgs (fun () -> Bool true), //pretype := true; verify := false), 
+        "Run the lax-type checker only (admit all verification conditions)");
+      
+       ( noshort,
+        "log_types", 
+        ZeroArgs (fun () -> Bool true), 
+        "Print types computed for data/val/let-bindings");
+      
+       ( noshort,
+        "log_queries", 
+        ZeroArgs (fun () -> Bool true), 
+        "Log the Z3 queries in queries.smt2");
+      
+       ( noshort,
+        "max_fuel", 
+        OneArg((fun x -> Int (int_of_string x)), 
+                "non-negative integer"), 
+        "Number of unrolling of recursive functions to try at most (default 8)");
+      
+       ( noshort,
+        "max_ifuel", 
+        OneArg((fun x -> Int (int_of_string x)), 
+                "non-negative integer"), 
+        "Number of unrolling of inductive datatypes to try at most (default 2)");
+      
+       ( noshort,
+        "min_fuel", 
+        OneArg((fun x -> Int (int_of_string x)), 
+                "non-negative integer"), 
+        "Minimum number of unrolling of recursive functions to try (default 1)");
+      
+       ( noshort,
+        "MLish", 
+        ZeroArgs(fun () -> Bool true),//ml_ish := true; full_context_dependency := false), 
+        "Introduce unification variables that are only dependent on the type variables in the context");
+      
+       ( noshort,
+        "n_cores", 
+        OneArg ((fun x -> Int (int_of_string x)),//; detail_errors := false), 
+                 "positive integer"), 
+        "Maximum number of cores to use for the solver (default 1); implied detail_errors = false");
+      
+       ( noshort,
+        "no_default_includes", 
+        ZeroArgs (fun () -> Bool true), 
+        "Ignore the default module search paths");
+      
+       ( noshort,
+        "no_extract", 
+        OneArg ((fun x -> List (x :: get_no_extract() |> List.map String)),
+                 "module name"), 
+        "Do not extract code from this module");
+      
+       ( noshort,
+        "no_location_info", 
+        ZeroArgs (fun () -> Bool true),
+        "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
+      
+       ( noshort,
+        "odir", 
+        OneArg (String,
+                "dir"), 
+        "Place output in directory dir");
+      
+       ( noshort,
+        "prims", 
+        OneArg (String, 
+                "file"), 
+        "");
+      
+       ( noshort,
+        "print_before_norm", 
+        ZeroArgs(fun () -> Bool true), // norm_then_print := false), 
+        "Do not normalize types before printing (for debugging)");
+      
+       ( noshort,
+        "print_bound_var_types", 
+        ZeroArgs(fun () -> Bool true), 
+        "Print the types of bound variables");
+      
+       ( noshort,
+        "print_effect_args", 
+        ZeroArgs (fun () -> Bool true), 
+        "Print inferred predicate transformers for all computation types");
+      
+       ( noshort,
+        "print_fuels", 
+        ZeroArgs (fun () -> Bool true), 
+        "Print the fuel amounts used for each successful query");
+      
+       ( noshort,
+        "print_implicits", 
+        ZeroArgs(fun () -> Bool true), 
+        "Print implicit arguments");
+      
+       ( noshort,
+        "print_universes", 
+        ZeroArgs(fun () -> Bool true), 
+        "Print universes");
+      
+       ( noshort,
+        "prn", 
+        ZeroArgs (fun () -> Bool true), 
+        "Print real names---you may want to use this in conjunction with log_queries");
+      
+       ( noshort,
+        "show_signatures", 
+        OneArg((fun x -> List (x::get_show_signatures() |> List.map String)), 
+                "module name"), 
+        "Show the checked signatures for all top-level symbols in the module");
+      
+       ( noshort,
+        "silent", 
+        ZeroArgs (fun () -> Bool true), 
+        " ");
+      
+       ( noshort,
+        "smt", 
+        OneArg ((fun x -> Bool true), 
+                 "path"), 
+        "Path to the SMT solver (usually Z3, 
+        but could be any SMT2-compatible solver)");
+      
+       ( noshort,
+        "split_cases", 
+        OneArg ((fun n -> Int (int_of_string n)), 
+                 "positive integer, n"), 
+        "Partition VC of a match into groups of n cases");
+      
+       ( noshort,
+        "timing", 
+        ZeroArgs (fun () -> Bool true), 
+        "Print the time it takes to verify each top-level definition");
+      
+       ( noshort,
+        "trace_error", 
+        ZeroArgs (fun () -> Bool true), 
+        "Don't print an error message; show an exception trace instead");
+      
+       ( noshort,
+        "universes", 
+        ZeroArgs (fun () -> Bool true), 
+        "Use the (experimental) support for universes");
+      
+       ( noshort,
+        "unthrottle_inductives", 
+        ZeroArgs (fun () -> Bool true), 
+        "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
+      
+       ( noshort,
+        "use_eq_at_higher_order", 
+        ZeroArgs (fun () -> Bool true), 
+        "Use equality constraints when comparing higher-order types; temporary");
+      
+       ( noshort,
+        "use_native_int", 
+        ZeroArgs (fun () -> Bool true), 
+        "Extract the 'int' type to platform-specific native int; you will need to link the generated code with the appropriate version of the prims library");
+      
+       ( noshort,
+        "verify_module", 
+        OneArg (cons_verify_module,
+                 "string"), 
+        "Name of the module to verify");
+      
+       ( noshort,
+        "__temp_no_proj", 
+         OneArg ((fun x -> List (x :: get___temp_no_proj() |> List.map String)), 
+                  "string"), 
+        "Don't generate projectors for this module");
+ 
+       ( 'v', 
+         "version", 
+         ZeroArgs (fun _ -> display_version(); exit 0), 
+         "Display version number");
+      
+       ( noshort,
+        "warn_top_level_effects", 
+        ZeroArgs (fun () -> Bool true), 
+        "Top-level effects are ignored, 
+        by default; turn this flag on to be warned when this happens");
+      
+       ( noshort,
+        "z3timeout", 
+         OneArg ((fun s -> Int (int_of_string s)), 
+                  "positive integer, t"), 
+        "Set the Z3 per-query (soft) timeout to t seconds (default 5)");
+  ] in
+     ( 'h', 
+        "help", 
+        ZeroArgs (fun x -> display_usage specs; exit 0), 
+        "Display this information")::List.map mk_spec specs
+        
+and parse_codegen s =
+  match s with
+  | "OCaml"
+  | "FSharp" -> s
+  | _ ->
+     (Util.print_string "Wrong argument to codegen flag\n";
+      display_usage (specs ()); exit 1)
+
+and validate_cardinality x = match x with
+    | "warn"
+    | "check"
+    | "off" -> x
+    | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
+              display_usage (specs ()); exit 1)
+
+and set_interactive_fsi _ =
+    if get_in() then set_option' ("fsi", Bool true)
+    else (Util.print_string "Set interactive flag first before setting interactive fsi flag\n";
+          display_usage (specs ()); exit 1)
+
+//Several options can only be set at the time the process is created, and not controlled interactively via pragmas
+//Additionaly, the --smt option is a security concern
+let settable = function
+    | "admit_smt_queries"
+    | "cardinality"
+    | "debug"
+    | "debug_level"
+    | "detail_errors"
+    | "eager_inference"
+    | "hide_genident_nums"
+    | "hide_uvar_nums"
+    | "initial_fuel"
+    | "initial_ifuel"
+    | "inline_arith"
+    | "lax"
+    | "log_types"
+    | "log_queries"
+    | "max_fuel"
+    | "max_ifuel"
+    | "min_fuel"
+    | "print_before_norm"
+    | "print_bound_var_types"
+    | "print_effect_args"
+    | "print_fuels"
+    | "print_implicits"
+    | "print_universes"
+    | "prn"
+    | "show_signatures"
+    | "silent"
+    | "split_cases"
+    | "timing"
+    | "trace_error"
+    | "unthrottle_inductives"
+    | "use_eq_at_higher_order"
+    | "__temp_no_proj"
+    | "warn_top_level_effects" -> true
+    | _ -> false 
+
+let resettable s = settable s || s="z3timeout" 
+let all_specs = specs ()
+let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
+let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)
+    
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//PUBLIC API
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+let fstar_home () = 
+    match get_fstar_home() with
+    | None -> 
+      let x = Util.get_exec_dir () in
+      let x = x ^ "/.." in
+      set_option' ("fstar_home", String x);
+      x
+    | Some x -> x
+
+let set_options o s =
+    let specs = match o with 
+        | Set -> settable_specs
+        | Reset -> resettable_specs
+        | Restore -> all_specs in
+    Getopt.parse_string specs (fun _ -> ()) s
+
+let parse_cmd_line () = 
+  let file_list = Util.mk_ref [] in
+  let res = Getopt.parse_cmdline (specs()) (fun i -> file_list := !file_list @ [i]) in
+  res, !file_list
+
+let restore_cmd_line_options () =
+    (* Some options must be preserved because they can't be reset via #pragrams.
+     * Add them here as needed. *)
+    let old_verify_module = get_verify_module() in
+    init();
+    let r = Getopt.parse_cmdline (specs()) (fun x -> ()) in
+    set_option' ("verify_module", List (List.map String old_verify_module));
+    r
+
+let should_verify m =
+  if get_lax() 
+  then false
+  else match get_verify_module() with
+       | [] -> true //the verify_module flag was not set, so verify everything
+       | l -> List.contains (String.lowercase m) l //otherwise, look in the list to see if it is explicitly mentioned
+ 
+let dont_gen_projectors m = List.contains m (get___temp_no_proj())
+
+let should_print_message m =
+    if should_verify m
+    then m <> "Prims"
+    else false
+
+let include_path () =
   (* Allows running fstar either from the source repository, or after
    * installation (into /usr/local for instance) *)
-  if !no_default_includes then
-    !_include_path
+  if get_no_default_includes() then
+    get_include()
   else
-  let h = get_fstar_home () in
-  let defs = if !universes then universe_include_path_base_dirs else include_path_base_dirs in
-  (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ !_include_path @ [ "." ]
+  let h = fstar_home () in
+  let defs = if get_universes() then universe_include_path_base_dirs else include_path_base_dirs in
+  (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
 
 let find_file filename =
-    let search_path = get_include_path () in
+    let search_path = include_path () in
     try
       Util.map_option
         Util.normalize_file_path
@@ -223,190 +721,74 @@ let find_file filename =
     with _ ->
       None
 
-let prims () = match !prims_ref with
+let prims () = 
+  match get_prims() with
   | None ->
-    (let filen = "prims.fst" in
-    match find_file filen with
-    | Some result ->
-      result
-    | None ->
-      raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filen)))
+    let filen = "prims.fst" in
+    begin match find_file filen with
+          | Some result ->
+            result
+          | None ->
+            raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filen))
+    end
   | Some x -> x
 
-let prependOutputDir fname = match !outputDir with
+let prepend_output_dir fname = 
+  match get_odir() with
   | None -> fname
   | Some x -> x ^ "/" ^ fname
 
-let display_version () =
-  Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
-                                  version platform compiler date commit)
-
-let display_usage specs =
-  Util.print_string "fstar [option] file...\n";
-  List.iter
-    (fun (_, flag, p, doc) ->
-       match p with
-         | ZeroArgs ig ->
-             if doc = "" then Util.print_string (Util.format1 "  --%s\n" (Util.colorize_bold flag))
-             else Util.print_string (Util.format2 "  --%s  %s\n" (Util.colorize_bold flag) doc)
-         | OneArg (_, argname) ->
-             if doc = "" then Util.print_string (Util.format2 "  --%s %s\n" (Util.colorize_bold flag) (Util.colorize_bold argname))
-             else Util.print_string (Util.format3 "  --%s %s  %s\n" (Util.colorize_bold flag) (Util.colorize_bold argname) doc))
-    specs
-
-let rec specs () : list<Getopt.opt> =
-  let specs =
-    [( noshort, "admit_smt_queries", OneArg ((fun s -> admit_smt_queries := (if s="true" then true else if s="false" then false else failwith("Invalid argument to --admit_smt_queries"))), "true|false"), "Admit SMT queries (UNSAFE! But, useful during development); default: 'false'");
-     ( noshort, "cardinality", OneArg ((fun x -> cardinality := validate_cardinality x), "off|warn|check"), "Check cardinality constraints on inductive data types (default 'off')");
-     ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s), "OCaml|FSharp"), "Generate code for execution");
-     ( noshort, "codegen-lib", OneArg ((fun s -> codegen_libs := (Util.split s ".")::!codegen_libs), "namespace"), "External runtime library library");
-     ( noshort, "debug", OneArg ((fun x -> debug := x::!debug), "module name"), "Print LOTS of debugging information while checking module [arg]");
-     ( noshort, "debug_level", OneArg ((fun x -> debug_level := dlevel x::!debug_level), "Low|Medium|High|Extreme"), "Control the verbosity of debugging info");
-     ( noshort, "dep", OneArg ((fun x -> dep := Some x), "make"), "Output the transitive closure of the dependency graph in a format suitable for the given tool");
-     ( noshort, "detail_errors", ZeroArgs (fun () -> detail_errors := true; n_cores := 1),  "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; requires --universes");
-     ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
-     ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
-     ( noshort, "explicit_deps", ZeroArgs (fun () -> explicit_deps := true), "tell FStar to not find dependencies automatically because the user provides them on the command-line");
-     ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator");
-     ( noshort, "fsi", ZeroArgs (fun () -> set_interactive_fsi ()), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
-     ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
-     ( noshort, "hide_genident_nums", ZeroArgs(fun () -> hide_genident_nums := true), "Don't print generated identifier numbers");
-     ( noshort, "hide_uvar_nums", ZeroArgs(fun () -> hide_uvar_nums := true), "Don't print unification variable numbers");
-     ( noshort, "in", ZeroArgs (fun () -> interactive := true), "Interactive mode; reads input from stdin");
-     ( noshort, "include", OneArg ((fun s -> _include_path := !_include_path @ [s]), "path"), "A directory in which to search for files included on the command line");
-     ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
-     ( noshort, "initial_ifuel", OneArg((fun x -> initial_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at first (default 1)");
-     ( noshort, "inline_arith", ZeroArgs(fun () -> inline_arith := true), "Inline definitions of arithmetic functions in the SMT encoding");
-     ( noshort, "lax", ZeroArgs (fun () -> pretype := true; verify := false), "Run the lax-type checker only (admit all verification conditions)");
-     ( noshort, "log_types", ZeroArgs (fun () -> log_types := true), "Print types computed for data/val/let-bindings");
-     ( noshort, "log_queries", ZeroArgs (fun () -> logQueries := true), "Log the Z3 queries in queries.smt2");
-     ( noshort, "max_fuel", OneArg((fun x -> max_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try at most (default 8)");
-     ( noshort, "max_ifuel", OneArg((fun x -> max_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at most (default 2)");
-     ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
-     ( noshort, "MLish", ZeroArgs(fun () -> ml_ish := true; full_context_dependency := false), "Introduce unification variables that are only dependent on the type variables in the context");
-     ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x; detail_errors := false), "positive integer"), "Maximum number of cores to use for the solver (default 1); implied detail_errors = false");
-     ( noshort, "no_default_includes", ZeroArgs (fun () -> no_default_includes := true), "Ignore the default module search paths");
-     ( noshort, "no_extract", OneArg ((fun x -> no_extract := x::!no_extract), "module name"), "Do not extract code from this module");
-     ( noshort, "no_location_info", ZeroArgs (fun () -> no_location_info := true), "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
-     ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir");
-     ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
-     ( noshort, "print_before_norm", ZeroArgs(fun () -> norm_then_print := false), "Do not normalize types before printing (for debugging)");
-     ( noshort, "print_bound_var_types", ZeroArgs(fun () -> print_bound_var_types := true), "Print the types of bound variables");
-     ( noshort, "print_effect_args", ZeroArgs (fun () -> print_effect_args := true), "Print inferred predicate transformers for all computation types");
-     ( noshort, "print_fuels", ZeroArgs (fun () -> print_fuels := true), "Print the fuel amounts used for each successful query");
-     ( noshort, "print_implicits", ZeroArgs(fun () -> print_implicits := true), "Print implicit arguments");
-     ( noshort, "print_universes", ZeroArgs(fun () -> print_universes := true), "Print universes");
-     ( noshort, "prn", ZeroArgs (fun () -> print_real_names := true), "Print real names---you may want to use this in conjunction with log_queries");
-     ( noshort, "show_signatures", OneArg((fun x -> show_signatures := x::!show_signatures), "module name"), "Show the checked signatures for all top-level symbols in the module");
-     ( noshort, "silent", ZeroArgs (fun () -> silent := true), " ");
-     ( noshort, "smt", OneArg ((fun x -> z3_exe := x), "path"), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
-     ( noshort, "split_cases", OneArg ((fun n -> split_cases := int_of_string n), "t"), "Partition VC of a match into groups of n cases");
-     ( noshort, "timing", ZeroArgs (fun () -> timing := true), "Print the time it takes to verify each top-level definition");
-     ( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
-     ( noshort, "universes", ZeroArgs (fun () -> universes := true), "Use the (experimental) support for universes");
-     ( noshort, "unthrottle_inductives", ZeroArgs (fun () -> unthrottle_inductives := true), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
-     ( noshort, "use_eq_at_higher_order", ZeroArgs (fun () -> use_eq_at_higher_order := true), "Use equality constraints when comparing higher-order types; temporary");
-     ( noshort, "use_native_int", ZeroArgs (fun () -> use_native_int := true), "Extract the 'int' type to platform-specific native int; you will need to link the generated code with the appropriate version of the prims library");
-     ( noshort, "verify_module", OneArg ((fun x -> verify_module := (String.lowercase x)::!verify_module), "string"), "Name of the module to verify");
-     ( noshort, "__temp_no_proj", OneArg ((fun x -> __temp_no_proj := x::!__temp_no_proj), "string"), "Don't generate projectors for this module");
-     ( 'v',     "version", ZeroArgs (fun _ -> display_version(); exit 0), "Display version number");
-     ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
-     ( noshort, "z3timeout", OneArg ((fun s -> z3timeout := int_of_string s), "t"), "Set the Z3 per-query (soft) timeout to t seconds (default 5)");
-  ] in
-     ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
-and parse_codegen s =
-  match s with
-  | "OCaml"
-  | "FSharp" -> Some s
-  | _ ->
-     (Util.print_string "Wrong argument to codegen flag\n";
-      display_usage (specs ()); exit 1)
-
-and validate_cardinality x = match x with
-    | "warn"
-    | "check"
-    | "off" -> x
-    | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
-              display_usage (specs ()); exit 1)
-
-and set_interactive_fsi _ =
-    if !interactive then interactive_fsi := true
-    else (Util.print_string "Set interactive flag first before setting interactive fsi flag\n";
-          display_usage (specs ()); exit 1)
-
-let should_verify m =
-  if !verify
-  then match !verify_module with
-    | [] -> true //the verify_module flag was not set, so verify everything
-    | l -> List.contains (String.lowercase m) l //otherwise, look in the list to see if it is explicitly mentioned
-  else false
-
-let dont_gen_projectors m = List.contains m (!__temp_no_proj)
-
-let should_print_message m =
-    if should_verify m
-    then m <> "Prims"
-    else false
-
-type options = 
-    | Set
-    | Reset
-    | Restore
-
-let set_options =
-    //Several options can only be set at the time the process is created, and not controlled interactively via pragmas
-    //Additionaly, the --smt option is a security concern
-    let settable = function
-      | "admit_smt_queries"
-      | "cardinality"
-      | "debug"
-      | "debug_level"
-      | "detail_errors"
-      | "eager_inference"
-      | "hide_genident_nums"
-      | "hide_uvar_nums"
-      | "initial_fuel"
-      | "initial_ifuel"
-      | "inline_arith"
-      | "lax"
-      | "log_types"
-      | "log_queries"
-      | "max_fuel"
-      | "max_ifuel"
-      | "min_fuel"
-      | "print_before_norm"
-      | "print_bound_var_types"
-      | "print_effect_args"
-      | "print_fuels"
-      | "print_implicits"
-      | "print_universes"
-      | "prn"
-      | "show_signatures"
-      | "silent"
-      | "split_cases"
-      | "timing"
-      | "trace_error"
-      | "unthrottle_inductives"
-      | "use_eq_at_higher_order"
-      | "__temp_no_proj"
-      | "warn_top_level_effects" -> true
-      | _ -> false in
-    let resettable s = settable s || s="z3timeout" in
-    let all_specs = specs () in
-    let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x) in
-    let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x) in
-    fun o s -> 
-        let specs = match o with 
-            | Set -> settable_specs
-            | Reset -> resettable_specs
-            | Restore -> all_specs in
-        Getopt.parse_string specs (fun _ -> ()) s
-
-let restore_cmd_line_options () =
-    (* Some options must be preserved because they can't be reset via #pragrams.
-     * Add them here as needed. *)
-    let old_verify_module = !verify_module in
-    init_options();
-    let r = Getopt.parse_cmdline (specs()) (fun x -> ()) in
-    verify_module := old_verify_module;
-    r
+let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
+let admit_smt_queries            () = get_admit_smt_queries           ()
+let check_cardinality            () = get_cardinality () = "check"
+let codegen                      () = get_codegen                     ()
+let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
+let debug_any                    () = get_debug () <> []
+let debug_at_level      modul level = get_debug () |> List.contains modul && debug_level_geq level
+let dep                          () = get_dep                         ()
+let detail_errors                () = get_detail_errors               ()
+let dump_module                  s  = get_dump_module() |> List.contains s
+let eager_inference              () = get_eager_inference             ()
+let explicit_deps                () = get_explicit_deps               ()
+let fs_typ_app                   () = get_fs_typ_app                  ()
+let full_context_dependency      () = get_MLish() = false
+let hide_genident_nums           () = get_hide_genident_nums          ()
+let hide_uvar_nums               () = get_hide_uvar_nums              ()
+let initial_fuel                 () = get_initial_fuel                ()
+let initial_ifuel                () = get_initial_ifuel               ()
+let inline_arith                 () = get_inline_arith                ()
+let interactive                  () = get_in                          ()
+let interactive_fsi              () = get_fsi                         ()
+let lax                          () = get_lax                         ()
+let log_queries                  () = get_log_queries                 ()
+let log_types                    () = get_log_types                   ()
+let max_fuel                     () = get_max_fuel                    ()
+let max_ifuel                    () = get_max_ifuel                   ()
+let min_fuel                     () = get_min_fuel                    ()
+let ml_ish                       () = get_MLish                       ()
+let n_cores                      () = get_n_cores                     ()
+let no_default_includes          () = get_no_default_includes         ()
+let no_extract                   s  = get_no_extract() |> List.contains s
+let no_location_info             () = get_no_location_info            ()
+let norm_then_print              () = get_print_before_norm()=false
+let output_dir                   () = get_odir                        ()
+let print_bound_var_types        () = get_print_bound_var_types       ()
+let print_effect_args            () = get_print_effect_args           ()
+let print_fuels                  () = get_print_fuels                 ()
+let print_implicits              () = get_print_implicits             ()
+let print_real_names             () = get_prn                         ()
+let print_universes              () = get_print_universes             ()
+let silent                       () = get_silent                      ()
+let split_cases                  () = get_split_cases                 ()
+let timing                       () = get_timing                      ()
+let trace_error                  () = get_trace_error                 ()
+let universes                    () = get_universes                   ()
+let unthrottle_inductives        () = get_unthrottle_inductives       ()
+let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
+let use_native_int               () = get_use_native_int              ()
+let warn_cardinality             () = get_cardinality() = "warn"
+let warn_top_level_effects       () = get_warn_top_level_effects      ()
+let z3_exe                       () = match get_smt () with
+    				      | None -> Platform.exe "z3"
+				      | Some s -> s
+let z3_timeout                   () = get_z3timeout                   ()

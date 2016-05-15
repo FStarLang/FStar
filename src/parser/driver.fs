@@ -53,12 +53,12 @@ let parse_fragment frag : fragment =
 //      Decls (Desugar.desugar_decls env decls)
 
     | Inl (Inl _) ->
-      if !Options.universes
+      if (Options.universes())
       then raise (Syntax.Syntax.Err("Refusing to check more than one module at a time incrementally"))
       else raise (Absyn.Syntax.Err("Refusing to check more than one module at a time incrementally"))
 
     | Inr (msg,r) ->
-      if !Options.universes
+      if (Options.universes())
       then raise (Syntax.Syntax.Error(msg, r))
       else raise (Absyn.Syntax.Error(msg, r))
 
@@ -71,11 +71,11 @@ let parse_file fn =
   | Inl (Inr _) ->
     let msg = Util.format1 "%s: expected a module\n" fn in
     let r = Range.dummyRange in
-    if !Options.universes
+    if (Options.universes())
     then raise (FStar.Syntax.Syntax.Error(msg, r))
     else raise (FStar.Absyn.Syntax.Error(msg, r))
 
   | Inr (msg, r) ->
-    if !Options.universes
+    if (Options.universes())
     then raise (FStar.Syntax.Syntax.Error(msg, r))
     else raise (FStar.Absyn.Syntax.Error(msg, r))

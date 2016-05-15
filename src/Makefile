@@ -3,7 +3,7 @@
 # --------------------------------------------------------------------
 BASIC=prims-fake.fs basetypes-fake.fs profiling.fs char.fsi char.fs string.fsi string.fs list.fsi \
   list.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi \
-  getoptsimple.fs platform.fsi platform.fs version.fsi version.fs options.fs \
+  getoptsimple.fs platform.fsi platform.fs version.fsi version.fs options.fsi options.fs \
   unionfind.fsi unionfind.fs ident.fs const.fs
 BASIC_SRC=$(addprefix basic/, $(BASIC))
 

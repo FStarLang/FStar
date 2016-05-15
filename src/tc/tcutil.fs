@@ -81,7 +81,7 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
            e, g
 
 let env_binders env =
-    if !Options.full_context_dependency
+    if (Options.full_context_dependency())
     then Env.binders env
     else Env.t_binders env
 
@@ -853,7 +853,7 @@ let ite env (guard:formula) lcomp_then lcomp_else =
       let ifthenelse md res_t g wp_t wp_e = mk_Typ_app(md.if_then_else, [targ res_t; targ g; targ wp_t; targ wp_e]) None (Range.union_ranges wp_t.pos wp_e.pos) in
       let wp = ifthenelse md res_t guard wp_then wp_else in
       let wlp = ifthenelse md res_t guard wlp_then wlp_else in
-      if !Options.split_cases > 0
+      if (Options.split_cases()) > 0
       then let comp = mk_comp md res_t wp wlp [] in
            add_equality_to_post_condition env comp res_t
       else let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) None wp.pos in
@@ -881,7 +881,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
         let comp = List.fold_right (fun (g, cthen) celse ->
             let (md, _, _), (_, wp_then, wlp_then), (_, wp_else, wlp_else) = lift_and_destruct env (cthen.comp()) celse in
             mk_comp md res_t (ifthenelse md res_t g wp_then wp_else) (ifthenelse md res_t g wlp_then wlp_else) []) lcases default_case in
-        if !Options.split_cases > 0
+        if (Options.split_cases()) > 0
         then add_equality_to_post_condition env comp res_t
         else let comp = comp_to_comp_typ comp in
              let md = Tc.Env.get_effect_decl env comp.effect_name in
@@ -1080,15 +1080,15 @@ let check_uvars r t =
     let uk = List.map Print.uvar_k_to_string (Util.set_elements uvt.uvars_k) in
     let union = String.concat ","  (ue @ ut @ uk) in
     (* ignoring the hide_uvar_nums and print_implicits flags here *)
-    let hide_uvar_nums_saved = !Options.hide_uvar_nums in
-    let print_implicits_saved = !Options.print_implicits in
-    Options.hide_uvar_nums := false;
-    Options.print_implicits := true;
+    let hide_uvar_nums_saved = (Options.hide_uvar_nums()) in
+    let print_implicits_saved = (Options.print_implicits()) in
+    Options.push();
+    Options.set_option "hide_uvar_nums" (Options.Bool false);
+    Options.set_option "print_implicits" (Options.Bool true);
     Tc.Errors.report r
       (format2 "Unconstrained unification variables %s in type signature %s; \
        please add an annotation" union (Print.typ_to_string t));
-    Options.hide_uvar_nums := hide_uvar_nums_saved;
-    Options.print_implicits := print_implicits_saved
+    Options.pop()
 
 let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
   if not <| (Util.for_all (fun (_, c) -> Util.is_pure_comp c) ecs) //No value restriction in F*---generalize the types of pure computations

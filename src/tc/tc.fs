@@ -28,7 +28,7 @@ open FStar.Const
 open FStar.Ident
 
 let syn' env k = syn (Tc.Env.get_range env) (Some k)
-let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_module env))
+let log env = (Options.log_types()) && not(lid_equals Const.prims_lid (Env.current_module env))
 let rng env = Tc.Env.get_range env
 let instantiate_both env = {env with Env.instantiate_targs=true; Env.instantiate_vargs=true}
 let no_inst env = {env with Env.instantiate_targs=false; Env.instantiate_vargs=false}
@@ -1118,7 +1118,7 @@ and tc_exp env e : exp * lcomp * guard_t =
             then let ok, c1 = Tc.Util.check_top_level env (Rel.conj_guard g1 guard_f) c1 in
                  if ok
                  then e2, c1
-                 else (if !Options.warn_top_level_effects
+                 else (if (Options.warn_top_level_effects())
                        then Tc.Errors.warn (Tc.Env.get_range env) Tc.Errors.top_level_effect;
                        mk_Exp_meta(Meta_desugared(e2, Masked_effect)), c1)
             else (let g = Rel.conj_guard g1 guard_f in
@@ -1514,7 +1514,7 @@ and tc_decl env se deserialized = match se with
                 set_options Options.Set o;
                 se, env
             | ResetOptions sopt ->
-                Options.restore_cmd_line_options() |> ignore;
+                (Options.restore_cmd_line_options()) |> ignore;
                 let _ = match sopt with 
                     | None -> ()
                     | Some s -> set_options Options.Reset s in
@@ -1619,9 +1619,9 @@ and tc_decl env se deserialized = match se with
         match fst formal with
         | Inl a -> 
           begin 
-              if Options.warn_cardinality()
+              if (Options.warn_cardinality())
               then Tc.Errors.warn r (Tc.Errors.cardinality_constraint_violated lid a)
-              else if Options.check_cardinality()
+              else if (Options.check_cardinality())
               then raise (Error(Tc.Errors.cardinality_constraint_violated lid a, r))
           end;
           let k = Normalize.norm_kind [Normalize.Beta; Normalize.DeltaHard] env a.sort in
@@ -1740,7 +1740,7 @@ and tc_decl env se deserialized = match se with
            Sig_tycon(lid, tps, k, [], [], [], r), t
         | _ -> failwith "impossible") in
       let recs, abbrev_defs = List.split recs in
-      let msg = if !Options.logQueries
+      let msg = if (Options.log_queries())
                 then Util.format1 "Recursive bindings: %s" (Print.sigelt_to_string_short se)
                 else "" in
       env.solver.push msg; //Push a context in the solver to check the recursively bound definitions
@@ -1777,7 +1777,7 @@ and tc_decls env ses deserialized =
           if debug env Options.Low then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
 
           let se, env =
-            if !Options.timing
+            if (Options.timing())
             then time_tc_decl env se deserialized
             else tc_decl env se deserialized in
           env.solver.encode_sig env se;
@@ -1906,7 +1906,7 @@ let finish_partial_modul env modul =
     env.solver.pop ("Ending modul " ^ modul.name.str);
     env.solver.encode_modul env modul;
     env.solver.refresh();
-    Options.restore_cmd_line_options() |> ignore
+    (Options.restore_cmd_line_options()) |> ignore
   end;
   modul, env
 
@@ -1924,10 +1924,10 @@ let add_modul_to_tcenv (en: env) (m: modul) :env =
   Tc.Env.finish_module (List.fold_left do_sigelt en m.exports) m
 
 let check_module env m =
-    if List.length !Options.debug <> 0
+    if Options.debug_any()
     then Util.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
 
     let m, env = tc_modul env m in
-    if Options.should_dump m.name.str then Util.print1 "%s\n" (Print.modul_to_string m);
+    if Options.dump_module m.name.str then Util.print1 "%s\n" (Print.modul_to_string m);
     [m], env
 

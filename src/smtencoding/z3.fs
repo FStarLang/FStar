@@ -49,7 +49,7 @@ let get_z3version () =
     match !_z3version with
     | Some version -> version
     | None ->
-        let _, out, _ = Util.run_proc !Options.z3_exe "-version" "" in
+        let _, out, _ = Util.run_proc (Options.z3_exe()) "-version" "" in
         let out =
             match splitlines out with
             | x :: _ when starts_with x prefix -> begin
@@ -66,8 +66,8 @@ let get_z3version () =
 let ini_params () =
   let t =
     if z3v_le (get_z3version ()) (4, 3, 1)
-    then !Options.z3timeout
-    else !Options.z3timeout * 1000
+    then (Options.z3_timeout())
+    else (Options.z3_timeout()) * 1000
   in
   let timeout = format1 "-t:%s" (string_of_int t) in
   let relevancy =
@@ -99,7 +99,7 @@ let new_z3proc id =
     (let x = Util.trim_string s = "Done!" in
 //     Util.print5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
      x) in
-   Util.start_process id (!Options.z3_exe) (ini_params()) cond
+   Util.start_process id ((Options.z3_exe())) (ini_params()) cond
 
 type bgproc = {
     grab:unit -> proc;
@@ -220,7 +220,7 @@ let z3_job fresh label_messages input () =
   let result = match status with
     | UNSAT -> true, []
     | _ ->
-        if !Options.debug <> [] then print_string <| format1 "Z3 says: %s\n" (status_to_string status);
+        if Options.debug_any() then print_string <| format1 "Z3 says: %s\n" (status_to_string status);
         let failing_assertions = lblnegs |> List.collect (fun l ->
         match label_messages |> List.tryFind (fun (m, _, _) -> fst m = l) with
             | None -> []
@@ -252,7 +252,7 @@ and dequeue () =
 and run_job j = j.callback <| j.job ()
 
 let init () =
-    let n_runners = !Options.n_cores - 1 in
+    let n_runners = (Options.n_cores()) - 1 in
     let rec aux n =
         if n = 0 then ()
         else (spawn dequeue; aux (n - 1)) in
@@ -317,13 +317,13 @@ let commit_mark msg =
         | _ -> failwith "Impossible"
     end
 let ask fresh label_messages qry (cb: (bool * error_labels) -> unit) =
-  let fresh = fresh && !Options.n_cores > 1 in
+  let fresh = fresh && (Options.n_cores()) > 1 in
   let theory = bgtheory fresh in
   let theory =
     if fresh
     then theory@qry
     else theory@[Term.Push]@qry@[Term.Pop] in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
-  if !Options.logQueries then log_query fresh input;
+  if (Options.log_queries()) then log_query fresh input;
   enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
 

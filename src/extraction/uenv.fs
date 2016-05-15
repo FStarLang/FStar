@@ -39,8 +39,7 @@ type env = {
 
 let debug g f =
     let c = string_of_mlpath g.currentModule in
-    if !Options.debug |> Util.for_some (fun x -> c=x)
-    && Options.debug_level_geq (Options.Other "Extraction")
+    if Options.debug_at_level c (Options.Other "Extraction")
     then f ()
 
 // TODO delete

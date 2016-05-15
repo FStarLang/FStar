@@ -26,7 +26,7 @@ open FStar.Ident
 (* Finding the transitive dependences of a list of files               *)
 (***********************************************************************)
 let find_deps_if_needed files =
-  if !Options.explicit_deps then
+  if (Options.explicit_deps()) then
     files, []
   else
     let _, deps = Parser.Dep.collect files in

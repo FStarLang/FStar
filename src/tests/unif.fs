@@ -46,7 +46,7 @@ let unify i x y g' =
     printfn "%d ..." i;
     FStar.process_args () |> ignore; //set options
     let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
-    FStar.Options.init_options();    //reset them
+    Options.init();    //reset them
     guard_eq i g.guard_f g'
 
 let should_fail x y =
@@ -79,7 +79,7 @@ let run_all () =
        let id  = pars "fun x -> x" in
        let id' = pars "fun y -> y" in
 
-       Options.__test_norm_all := true;
+       Options.__set_unit_tests();
 
        //syntactic equality of names
        unify 0 x x Trivial;
@@ -148,6 +148,8 @@ let run_all () =
        let tm2 = pars ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in
        unify 12 tm1 tm2
                 Trivial;
+
+       Options.__clear_unit_tests();
 
        Printf.printf "Unifier ok\n";
 

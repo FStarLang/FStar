@@ -72,7 +72,7 @@ let lowercase_module_name f =
     names (e.g. a.b) to filenames (/path/to/A.B.fst). Long names are all
     normalized to lowercase. *)
 let build_map (filenames: list<string>): map =
-  let include_directories = Options.get_include_path () in
+  let include_directories = Options.include_path () in
   let include_directories = List.map normalize_file_path include_directories in
   let include_directories = List.unique include_directories in
   let cwd = normalize_file_path (getcwd ()) in
@@ -316,7 +316,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
         | Some filename ->
             add_dep (lowercase_module_name filename)
         | None ->
-            if List.length lid.ns > 0 && !Options.debug <> [] then
+            if List.length lid.ns > 0 && Options.debug_any() then
               Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
         end
 
@@ -493,7 +493,7 @@ let print_make (deps: list<(string * list<string>)>): unit =
   ) deps
 
 let print (deps: _): unit =
-  match !Options.dep with
+  match (Options.dep()) with
   | Some "make" ->
       print_make (fst deps)
   | Some _ ->
