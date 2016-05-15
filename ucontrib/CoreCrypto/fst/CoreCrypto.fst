@@ -103,8 +103,8 @@ assume val rsa_sign : option hash_alg -> rsa_key -> bytes -> EXT bytes
 assume val rsa_verify : option hash_alg -> rsa_key -> bytes -> bytes -> Tot bool
 
 assume val dsa_gen_key : int -> EXT dsa_key
-assume val dsa_sign : dsa_key -> bytes -> EXT bytes
-assume val dsa_verify : dsa_key -> bytes -> bytes -> Tot bool
+assume val dsa_sign : option hash_alg -> dsa_key -> bytes -> EXT bytes
+assume val dsa_verify : option hash_alg -> dsa_key -> bytes -> bytes -> Tot bool
 
 assume val dh_gen_params : int -> EXT dh_params
 assume val dh_gen_key : p:dh_params
@@ -152,6 +152,9 @@ assume val ec_gen_key: p:ec_params
                   length k.ec_point.ecy = ec_bytelen k.ec_params.curve})
 
 assume new abstract type certkey
+assume val get_rsa_from_cert: bytes -> Tot (option rsa_key)
+assume val get_dsa_from_cert: bytes -> Tot (option dsa_key)
+assume val get_ecdsa_from_cert: bytes -> Tot (option ec_key)
 assume val validate_chain: der_list:list bytes -> for_signing:bool -> hostname:option string -> ca_file:string -> Tot bool
 assume val cert_verify_sig: bytes -> sig_alg -> hash_alg -> bytes -> bytes -> Tot bool
 assume val cert_sign: certkey -> sig_alg -> hash_alg -> bytes -> Tot (option bytes)

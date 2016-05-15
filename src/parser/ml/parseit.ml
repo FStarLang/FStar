@@ -37,7 +37,7 @@ let parse fn =
     | Inl(f) ->
         check_extension f;
 	let f' = find_file f in
-        (try f', Lexing.from_channel (open_in f')
+        (try f', Lexing.from_string (read_file f')
          with _ -> raise (Err(FStar_Util.format1 "Unable to open file: %s\n" f')))
     | Inr(s) ->
       "<input>", Lexing.from_string s in
