@@ -22,13 +22,6 @@ open FStar.Util
 open FStar.Getopt
 open FStar.Version
 
-(* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
-let __unit_tests__ = Util.mk_ref false
-let __unit_tests() = !__unit_tests__
-let __set_unit_tests () = __unit_tests__ := true 
-let __clear_unit_tests () = __unit_tests__ := false
-
-
 type debug_level_t =
   | Low
   | Medium
@@ -50,18 +43,24 @@ type options =
 
 // VALS_HACK_HERE
  
+(* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
+let __unit_tests__ = Util.mk_ref false
+let __unit_tests() = !__unit_tests__
+let __set_unit_tests () = __unit_tests__ := true 
+let __clear_unit_tests () = __unit_tests__ := false
+
 let as_bool = function
   | Bool b -> b
-  | _ -> failwith "impos"
+  | _ -> failwith "Impos: expected Bool"
 let as_int = function
   | Int b -> b
-  | _ -> failwith "impos"
+  | _ -> failwith "Impos: expected Int"
 let as_string = function
   | String b -> b
-  | _ -> failwith "impos"
+  | _ -> failwith "Impos: expected String"
 let as_list as_t = function
   | List ts -> ts |> List.map as_t
-  | _ -> failwith "impos"
+  | _ -> failwith "Impos: expected List"
 let as_option as_t = function
   | Unset -> None
   | v -> Some (as_t v)
@@ -82,7 +81,7 @@ let init () =
         ("admit_smt_queries"            , Bool false);
         ("cardinality"                  , String "off");
         ("codegen"                      , Unset);
-        ("codegen_lib"                  , List []);
+        ("codegen-lib"                  , List []);
         ("debug"                        , List []);
         ("debug_level"                  , List []);
         ("dep"                          , Unset);
@@ -125,10 +124,11 @@ let init () =
         ("prn"                          , Bool false);
         ("show_signatures"              , List []);
         ("silent"                       , Bool false);
-	("smt"                          , Unset);
+        ("smt"                          , Unset);
         ("split_cases"                  , Int 0);
         ("timing"                       , Bool false);
         ("trace_error"                  , Bool false);
+        ("universes"                    , Bool false);
         ("unthrottle_inductives"        , Bool false);
         ("use_eq_at_higher_order"       , Bool false);
         ("use_native_int"               , Bool false);
@@ -140,11 +140,11 @@ let init () =
    fstar_options := [o];                                 //clear and reset the options stack
    vals |> List.iter set_option'                          //initialize it with the default values
 
-let _ = init()
+let _run = init()
 
 let lookup_opt s c = 
   match Util.smap_try_find (peek()) s with 
-  | None -> failwith "impos"
+  | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> c s
 
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
