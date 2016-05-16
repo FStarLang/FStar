@@ -33,7 +33,7 @@ open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Ident
 
-type map = smap<string>
+type map = smap<(option<string>*option<string>)>
 
 let check_and_strip_suffix (f: string): option<string> =
   let suffixes = [ ".fsti"; ".fst"; ".fsi"; ".fs" ] in
@@ -55,9 +55,22 @@ let check_and_strip_suffix (f: string): option<string> =
 let is_interface (f: string): bool =
   String.get f (String.length f - 1) = 'i'
 
+let is_implementation f =
+  not (is_interface f)
+
+let list_of_option = function Some x -> [x] | None -> []
+
+let list_of_pair (intf, impl) =
+  list_of_option intf @ list_of_option impl
+
+let must_find m k =
+  list_of_pair (must (smap_try_find m k))
+
 let print_map (m: map): unit =
   List.iter (fun k ->
-    Util.print2 "%s: %s\n" k (must (smap_try_find m k))
+    List.iter (fun f ->
+      Util.print2 "%s: %s\n" k f
+    ) (must_find m k)
   ) (List.unique (smap_keys m))
 
 
@@ -69,14 +82,29 @@ let lowercase_module_name f =
       raise (Err (Util.format1 "not a valid FStar file: %s\n" f))
 
 (** List the contents of all include directories, then build a map from long
-    names (e.g. a.b) to filenames (/path/to/A.B.fst). Long names are all
-    normalized to lowercase. *)
+    names (e.g. a.b) to pairs of filenames (/path/to/A.B.fst). Long names are
+    all normalized to lowercase. The first component of the pair is the
+    interface (if any). The second component of the pair is the implementation
+    (if any). *)
 let build_map (filenames: list<string>): map =
   let include_directories = Options.include_path () in
   let include_directories = List.map normalize_file_path include_directories in
   let include_directories = List.unique include_directories in
   let cwd = normalize_file_path (getcwd ()) in
   let map = smap_create 41 in
+  let add_entry key full_path =
+    match smap_try_find map key with
+    | Some (intf, impl) ->
+        if is_interface full_path then
+          smap_add map key (Some full_path, impl)
+        else
+          smap_add map key (intf, Some full_path)
+    | None ->
+        if is_interface full_path then
+          smap_add map key (Some full_path, None)
+        else
+          smap_add map key (None, Some full_path)
+  in
   List.iter (fun d ->
     if file_exists d then
       let files = readdir d in
@@ -84,21 +112,9 @@ let build_map (filenames: list<string>): map =
         let f = basename f in
         match check_and_strip_suffix f with
         | Some longname ->
-            let key = String.lowercase longname in
             let full_path = if d = cwd then f else join_paths d f in
-            begin match smap_try_find map key with
-            | Some existing_file ->
-                (* The precedence is determined by the order of the --include
-                 * arguments passed on the command-line. If at least an
-                 * interface exists, we generate a dependency on the interface
-                 * with the highest precedence. If no interface exists, we
-                 * generate a dependency on the implementation with the highest
-                 * precedence. *)
-                if not (is_interface existing_file) || is_interface f then
-                  smap_add map key full_path
-            | None ->
-                smap_add map key full_path
-            end
+            let key = String.lowercase longname in
+            add_entry key full_path
         | None ->
             ()
       ) files
@@ -107,7 +123,7 @@ let build_map (filenames: list<string>): map =
   ) include_directories;
   (* All the files we've been given on the command-line must be valid FStar files. *)
   List.iter (fun f ->
-    smap_add map (lowercase_module_name f) f
+    add_entry (lowercase_module_name f) f
   ) filenames;
   map
 
@@ -153,7 +169,7 @@ exception Exit
 
 (** Parse a file, walk its AST, return a list of FStar lowercased module names
     it depends on. *)
-let collect_one (original_map: smap<string>) (filename: string): list<string> =
+let collect_one (original_map: map) (filename: string): list<string> =
   let deps = ref [] in
   let add_dep d =
     if not (List.existsb (fun d' -> d' = d) !deps) then
@@ -164,8 +180,8 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
   let record_open lid =
     let key = lowercase_join_longident lid true in
     begin match smap_try_find original_map key with
-    | Some filename ->
-        add_dep (lowercase_module_name filename)
+    | Some pair ->
+        List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
     | None ->
         let r = enter_namespace original_map working_map key in
         if not r then
@@ -313,8 +329,8 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
         (* XXX this is where stuff happens *)
         let key = lowercase_join_longident lid false in
         begin match smap_try_find working_map key with
-        | Some filename ->
-            add_dep (lowercase_module_name filename)
+        | Some pair ->
+            List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
         | None ->
             if List.length lid.ns > 0 && Options.debug_any() then
               Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
@@ -428,8 +444,10 @@ let collect (filenames: list<string>): _ =
   (* This function takes a lowercase module name. *)
   let rec discover_one key =
     if smap_try_find graph key = None then
-      let filename = must (smap_try_find m key) in
-      let deps = collect_one m filename in
+      let intf, impl = must (smap_try_find m key) in
+      let intf_deps = match intf with None -> [] | Some intf -> collect_one m intf in
+      let impl_deps = match impl with None -> [] | Some impl -> collect_one m impl in
+      let deps = List.unique (impl_deps @ intf_deps) in
       smap_add graph key (deps, White);
       List.iter discover_one deps
   in
@@ -472,15 +490,27 @@ let collect (filenames: list<string>): _ =
         all_deps
   in
 
-  let must_find k =
-    must (smap_try_find m k)
-  in
-  let by_target = List.map (fun k ->
-    let deps = List.rev (discover k) in
-    must_find k, List.map must_find deps
+  let must_find = must_find m in
+  let must_find_r f = List.rev (must_find f) in
+  let map_flatten f l = List.flatten (List.map f l) in
+  let by_target = map_flatten (fun k ->
+    let as_list = must_find k in
+    let is_interleaved = List.length as_list = 2 in
+    List.map (fun f ->
+      let should_append_fsti = is_implementation f && is_interleaved in
+      let suffix = if should_append_fsti then [ f ^ "i" ] else [] in
+      let k = lowercase_module_name f in
+      let deps = List.rev (discover k) in
+      let deps_as_filenames = map_flatten must_find deps @ suffix in
+      (* List stored in the "right" order. *)
+      f, deps_as_filenames
+    ) as_list
   ) (smap_keys graph) in
-  let topologically_sorted = List.map must_find !topologically_sorted in
+  let topologically_sorted = map_flatten must_find_r !topologically_sorted in
 
+  (* At this stage the list is kept in reverse to make sure the caller in
+   * [dependencies.fs] can chop [prims.fst] off its head. So make sure we have
+   * [fst, fsti] so that, once reversed, it shows up in the correct order. *)
   by_target, topologically_sorted
 
 

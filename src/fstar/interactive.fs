@@ -160,10 +160,17 @@ let detect_dependencies_with_first_interactive_chunk () =
           | None ->
              fail (Util.format2 "I found a \"module %s\" directive, but there \
                 is no %s.fst\n" module_name module_name)
-          | Some filename ->
+          | Some (None, Some filename)
+          | Some (Some filename, None) ->
               Options.add_verify_module module_name;
               let _, all_filenames = Parser.Dep.collect [ filename ] in
               List.rev (List.tl all_filenames)
+          | Some (Some _, Some _) ->
+             fail (Util.format1 "The combination of split interfaces and \
+               interactive verification is not supported for: %s\n" module_name)
+          | Some (None, None) ->
+              failwith "impossible"
+
  with 
     | U_Syntax.Error(msg, r) -> 
       FStar.TypeChecker.Errors.warn r msg;
