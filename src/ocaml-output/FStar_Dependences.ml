@@ -1,8 +1,8 @@
 
 open Prims
 
-let find_deps_if_needed : Prims.string Prims.list  ->  (Prims.string Prims.list * Prims.string Prims.list) = (fun files -> if (FStar_Options.explicit_deps ()) then begin
-(files, [])
+let find_deps_if_needed : Prims.string Prims.list  ->  Prims.string Prims.list = (fun files -> if (FStar_Options.explicit_deps ()) then begin
+files
 end else begin
 (
 
@@ -14,7 +14,7 @@ in (match (_84_5) with
 (
 
 let _84_7 = (FStar_Util.print_error "Dependency analysis failed; reverting to using only the files provided")
-in (files, []))
+in files)
 end
 | _84_10 -> begin
 (
@@ -31,31 +31,7 @@ end else begin
 let _84_12 = (FStar_Util.print_error "dependency analysis did not find prims.fst?!")
 in (FStar_All.exit 1))
 end
-in (
-
-let admit_fsi = (FStar_ST.alloc [])
-in (
-
-let _84_18 = (FStar_List.iter (fun d -> (
-
-let d = (FStar_Util.basename d)
-in if ((FStar_Util.get_file_extension d) = "fsti") then begin
-(let _173_7 = (let _173_6 = (FStar_Util.substring d 0 ((FStar_String.length d) - 5))
-in (let _173_5 = (FStar_ST.read admit_fsi)
-in (_173_6)::_173_5))
-in (FStar_ST.op_Colon_Equals admit_fsi _173_7))
-end else begin
-if ((FStar_Util.get_file_extension d) = "fsi") then begin
-(let _173_10 = (let _173_9 = (FStar_Util.substring d 0 ((FStar_String.length d) - 4))
-in (let _173_8 = (FStar_ST.read admit_fsi)
-in (_173_9)::_173_8))
-in (FStar_ST.op_Colon_Equals admit_fsi _173_10))
-end else begin
-()
-end
-end)) deps)
-in (let _173_11 = (FStar_ST.read admit_fsi)
-in (deps, _173_11))))))
+in deps))
 end)
 end))
 end)

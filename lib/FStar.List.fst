@@ -379,3 +379,5 @@ let rec sortWithT f = function
      let hi, lo  = partitionT (bool_of_compare f pivot) tl in
      partition_length (bool_of_compare f pivot) tl;
      sortWithT f lo@(pivot::sortWithT f hi)
+
+let map_flatten f l = flatten (map f l)

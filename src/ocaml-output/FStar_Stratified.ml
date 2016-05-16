@@ -105,17 +105,14 @@ in (match (_86_57) with
 | (prims_mod, dsenv, env) -> begin
 (
 
-let _86_60 = (FStar_Dependences.find_deps_if_needed filenames)
-in (match (_86_60) with
-| (filenames, admit_fsi) -> begin
-(
+let filenames = (FStar_Dependences.find_deps_if_needed filenames)
+in (
 
-let _86_64 = (batch_mode_tc_no_prims dsenv env filenames)
-in (match (_86_64) with
+let _86_62 = (batch_mode_tc_no_prims dsenv env filenames)
+in (match (_86_62) with
 | (all_mods, dsenv, env) -> begin
 ((FStar_List.append prims_mod all_mods), dsenv, env)
-end))
-end))
+end)))
 end)))
 
 
@@ -129,8 +126,8 @@ end
 | FStar_Parser_Driver.Modul (ast_modul) -> begin
 (
 
-let _86_90 = (FStar_Parser_Desugar.desugar_partial_modul curmod dsenv ast_modul)
-in (match (_86_90) with
+let _86_88 = (FStar_Parser_Desugar.desugar_partial_modul curmod dsenv ast_modul)
+in (match (_86_88) with
 | (dsenv, modul) -> begin
 (
 
@@ -138,13 +135,13 @@ let env = (match (curmod) with
 | None -> begin
 env
 end
-| Some (_86_93) -> begin
+| Some (_86_91) -> begin
 (Prims.raise (FStar_Absyn_Syntax.Err ("Interactive mode only supports a single module at the top-level")))
 end)
 in (
 
-let _86_98 = (FStar_Tc_Tc.tc_partial_modul env modul)
-in (match (_86_98) with
+let _86_96 = (FStar_Tc_Tc.tc_partial_modul env modul)
+in (match (_86_96) with
 | (modul, env) -> begin
 Some ((Some (modul), dsenv, env))
 end)))
@@ -153,21 +150,21 @@ end
 | FStar_Parser_Driver.Decls (ast_decls) -> begin
 (
 
-let _86_103 = (FStar_Parser_Desugar.desugar_decls dsenv ast_decls)
-in (match (_86_103) with
+let _86_101 = (FStar_Parser_Desugar.desugar_decls dsenv ast_decls)
+in (match (_86_101) with
 | (dsenv, decls) -> begin
 (match (curmod) with
 | None -> begin
 (
 
-let _86_105 = (FStar_Util.print_error "fragment without an enclosing module")
+let _86_103 = (FStar_Util.print_error "fragment without an enclosing module")
 in (FStar_All.exit 1))
 end
 | Some (modul) -> begin
 (
 
-let _86_111 = (FStar_Tc_Tc.tc_more_partial_modul env modul decls)
-in (match (_86_111) with
+let _86_109 = (FStar_Tc_Tc.tc_more_partial_modul env modul decls)
+in (match (_86_109) with
 | (modul, env) -> begin
 Some ((Some (modul), dsenv, env))
 end))
@@ -179,13 +176,13 @@ with
 | FStar_Absyn_Syntax.Error (msg, r) -> begin
 (
 
-let _86_76 = (FStar_Tc_Errors.add_errors env (((msg, r))::[]))
+let _86_74 = (FStar_Tc_Errors.add_errors env (((msg, r))::[]))
 in None)
 end
 | FStar_Absyn_Syntax.Err (msg) -> begin
 (
 
-let _86_80 = (FStar_Tc_Errors.add_errors env (((msg, FStar_Range.dummyRange))::[]))
+let _86_78 = (FStar_Tc_Errors.add_errors env (((msg, FStar_Range.dummyRange))::[]))
 in None)
 end
 | e -> begin
@@ -195,24 +192,24 @@ end)
 
 let interactive_tc : ((FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env), FStar_Absyn_Syntax.modul Prims.option) FStar_Interactive.interactive_tc = (
 
-let pop = (fun _86_115 msg -> (match (_86_115) with
+let pop = (fun _86_113 msg -> (match (_86_113) with
 | (dsenv, env) -> begin
 (
 
-let _86_117 = (let _175_43 = (FStar_Parser_DesugarEnv.pop dsenv)
+let _86_115 = (let _175_43 = (FStar_Parser_DesugarEnv.pop dsenv)
 in (FStar_All.pipe_right _175_43 Prims.ignore))
 in (
 
-let _86_119 = (let _175_44 = (FStar_Tc_Env.pop env msg)
+let _86_117 = (let _175_44 = (FStar_Tc_Env.pop env msg)
 in (FStar_All.pipe_right _175_44 Prims.ignore))
 in (
 
-let _86_121 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.refresh ())
+let _86_119 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.refresh ())
 in (FStar_Options.pop ()))))
 end))
 in (
 
-let push = (fun _86_126 msg -> (match (_86_126) with
+let push = (fun _86_124 msg -> (match (_86_124) with
 | (dsenv, env) -> begin
 (
 
@@ -222,12 +219,12 @@ in (
 let env = (FStar_Tc_Env.push env msg)
 in (
 
-let _86_130 = (FStar_Options.push ())
+let _86_128 = (FStar_Options.push ())
 in (dsenv, env))))
 end))
 in (
 
-let mark = (fun _86_135 -> (match (_86_135) with
+let mark = (fun _86_133 -> (match (_86_133) with
 | (dsenv, env) -> begin
 (
 
@@ -237,12 +234,12 @@ in (
 let env = (FStar_Tc_Env.mark env)
 in (
 
-let _86_138 = (FStar_Options.push ())
+let _86_136 = (FStar_Options.push ())
 in (dsenv, env))))
 end))
 in (
 
-let reset_mark = (fun _86_143 -> (match (_86_143) with
+let reset_mark = (fun _86_141 -> (match (_86_141) with
 | (dsenv, env) -> begin
 (
 
@@ -252,12 +249,12 @@ in (
 let env = (FStar_Tc_Env.reset_mark env)
 in (
 
-let _86_146 = (FStar_Options.pop ())
+let _86_144 = (FStar_Options.pop ())
 in (dsenv, env))))
 end))
 in (
 
-let commit_mark = (fun _86_151 -> (match (_86_151) with
+let commit_mark = (fun _86_149 -> (match (_86_149) with
 | (dsenv, env) -> begin
 (
 
@@ -269,7 +266,7 @@ in (dsenv, env)))
 end))
 in (
 
-let check_frag = (fun _86_157 curmod text -> (match (_86_157) with
+let check_frag = (fun _86_155 curmod text -> (match (_86_155) with
 | (dsenv, env) -> begin
 (match ((tc_one_fragment curmod dsenv env text)) with
 | Some (m, dsenv, env) -> begin
@@ -277,17 +274,17 @@ let check_frag = (fun _86_157 curmod text -> (match (_86_157) with
 in (m, (dsenv, env), _175_61))
 in Some (_175_62))
 end
-| _86_166 -> begin
+| _86_164 -> begin
 None
 end)
 end))
 in (
 
-let report_fail = (fun _86_168 -> (match (()) with
+let report_fail = (fun _86_166 -> (match (()) with
 | () -> begin
 (
 
-let _86_169 = (let _175_65 = (FStar_Tc_Errors.report_all ())
+let _86_167 = (let _175_65 = (FStar_Tc_Errors.report_all ())
 in (FStar_All.pipe_right _175_65 Prims.ignore))
 in (FStar_ST.op_Colon_Equals FStar_Tc_Errors.num_errs 0))
 end))

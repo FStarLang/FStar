@@ -63,8 +63,25 @@ let list_of_option = function Some x -> [x] | None -> []
 let list_of_pair (intf, impl) =
   list_of_option intf @ list_of_option impl
 
-let must_find m k =
+(* Old behavior: just pick the interface if presented with both the interface
+ * and the implementation. *)
+let must_find_stratified m k =
+  match must (smap_try_find m k) with
+  | Some intf, _ ->
+      [ intf ]
+  | None, Some impl ->
+      [ impl ]
+  | None, None ->
+      []
+
+let must_find_universes m k =
   list_of_pair (must (smap_try_find m k))
+
+let must_find m k =
+  if Options.universes () then
+    must_find_universes m k
+  else
+    must_find_stratified m k
 
 let print_map (m: map): unit =
   List.iter (fun k ->
@@ -445,8 +462,8 @@ let collect (filenames: list<string>): _ =
   let rec discover_one key =
     if smap_try_find graph key = None then
       let intf, impl = must (smap_try_find m key) in
-      let intf_deps = match intf with None -> [] | Some intf -> collect_one m intf in
-      let impl_deps = match impl with None -> [] | Some impl -> collect_one m impl in
+      let intf_deps = match intf with | None -> [] | Some intf -> collect_one m intf in
+      let impl_deps = match impl with | None -> [] | Some impl -> collect_one m impl in
       let deps = List.unique (impl_deps @ intf_deps) in
       smap_add graph key (deps, White);
       List.iter discover_one deps
@@ -492,8 +509,7 @@ let collect (filenames: list<string>): _ =
 
   let must_find = must_find m in
   let must_find_r f = List.rev (must_find f) in
-  let map_flatten f l = List.flatten (List.map f l) in
-  let by_target = map_flatten (fun k ->
+  let by_target = List.map_flatten (fun k ->
     let as_list = must_find k in
     let is_interleaved = List.length as_list = 2 in
     List.map (fun f ->
@@ -501,12 +517,12 @@ let collect (filenames: list<string>): _ =
       let suffix = if should_append_fsti then [ f ^ "i" ] else [] in
       let k = lowercase_module_name f in
       let deps = List.rev (discover k) in
-      let deps_as_filenames = map_flatten must_find deps @ suffix in
+      let deps_as_filenames = List.map_flatten must_find deps @ suffix in
       (* List stored in the "right" order. *)
       f, deps_as_filenames
     ) as_list
   ) (smap_keys graph) in
-  let topologically_sorted = map_flatten must_find_r !topologically_sorted in
+  let topologically_sorted = List.map_flatten must_find_r !topologically_sorted in
 
   (* At this stage the list is kept in reverse to make sure the caller in
    * [dependencies.fs] can chop [prims.fst] off its head. So make sure we have

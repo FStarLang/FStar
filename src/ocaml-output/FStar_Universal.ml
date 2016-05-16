@@ -322,7 +322,7 @@ in (match (_87_204) with
 | (all_mods, dsenv, env) -> begin
 (
 
-let _87_227 = (match (intf) with
+let _87_229 = (match (intf) with
 | None -> begin
 (tc_one_file dsenv env intf impl)
 end
@@ -339,25 +339,28 @@ end
 | Some (iname) -> begin
 (
 
+let _87_213 = (FStar_Util.print1 "Interleaving iface+module: %s\n" iname)
+in (
+
 let caption = (Prims.strcat "interface: " iname)
 in (
 
-let _87_216 = (push_context (dsenv, env) caption)
-in (match (_87_216) with
+let _87_218 = (push_context (dsenv, env) caption)
+in (match (_87_218) with
 | (dsenv', env') -> begin
 (
 
-let _87_221 = (tc_one_file dsenv' env' intf impl)
-in (match (_87_221) with
-| (_87_218, dsenv', env') -> begin
+let _87_223 = (tc_one_file dsenv' env' intf impl)
+in (match (_87_223) with
+| (_87_220, dsenv', env') -> begin
 (
 
-let _87_222 = (pop_context (dsenv', env') caption)
+let _87_224 = (pop_context (dsenv', env') caption)
 in (tc_one_file dsenv env None iname))
 end))
-end)))
+end))))
 end)
-in (match (_87_227) with
+in (match (_87_229) with
 | (ms, dsenv, env) -> begin
 (
 
@@ -379,12 +382,12 @@ end)))
 
 let batch_mode_tc_no_prims : FStar_Parser_Env.env  ->  FStar_TypeChecker_Env.env  ->  Prims.string Prims.list  ->  (FStar_Syntax_Syntax.modul Prims.list * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) = (fun dsenv env filenames -> (
 
-let _87_244 = (tc_fold_interleave ([], dsenv, env) filenames)
-in (match (_87_244) with
+let _87_246 = (tc_fold_interleave ([], dsenv, env) filenames)
+in (match (_87_246) with
 | (all_mods, dsenv, env) -> begin
 (
 
-let _87_245 = if ((FStar_Options.interactive ()) && ((FStar_TypeChecker_Errors.get_err_count ()) = 0)) then begin
+let _87_247 = if ((FStar_Options.interactive ()) && ((FStar_TypeChecker_Errors.get_err_count ()) = 0)) then begin
 (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ())
 end else begin
 (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.finish ())
@@ -395,22 +398,19 @@ end)))
 
 let batch_mode_tc : Prims.string Prims.list  ->  (FStar_Syntax_Syntax.modul Prims.list * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) = (fun filenames -> (
 
-let _87_251 = (tc_prims ())
-in (match (_87_251) with
+let _87_253 = (tc_prims ())
+in (match (_87_253) with
 | (prims_mod, dsenv, env) -> begin
 (
 
-let _87_254 = (FStar_Dependences.find_deps_if_needed filenames)
-in (match (_87_254) with
-| (filenames, admit_fsi) -> begin
-(
+let filenames = (FStar_Dependences.find_deps_if_needed filenames)
+in (
 
 let _87_258 = (batch_mode_tc_no_prims dsenv env filenames)
 in (match (_87_258) with
 | (all_mods, dsenv, env) -> begin
 ((prims_mod)::all_mods, dsenv, env)
-end))
-end))
+end)))
 end)))
 
 

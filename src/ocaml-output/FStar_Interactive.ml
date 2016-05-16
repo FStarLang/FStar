@@ -303,18 +303,25 @@ in (match (filename) with
 (let _174_180 = (FStar_Util.format2 "I found a \"module %s\" directive, but there is no %s.fst\n" module_name module_name)
 in (fail _174_180))
 end
-| Some (filename) -> begin
+| (Some (None, Some (filename))) | (Some (Some (filename), None)) -> begin
 (
 
-let _85_153 = (FStar_Options.add_verify_module module_name)
+let _85_160 = (FStar_Options.add_verify_module module_name)
 in (
 
-let _85_158 = (FStar_Parser_Dep.collect ((filename)::[]))
-in (match (_85_158) with
-| (_85_156, all_filenames) -> begin
+let _85_165 = (FStar_Parser_Dep.collect ((filename)::[]))
+in (match (_85_165) with
+| (_85_163, all_filenames) -> begin
 (let _174_181 = (FStar_List.tl all_filenames)
 in (FStar_List.rev _174_181))
 end)))
+end
+| Some (Some (_85_167), Some (_85_170)) -> begin
+(let _174_182 = (FStar_Util.format1 "The combination of split interfaces and interactive verification is not supported for: %s\n" module_name)
+in (fail _174_182))
+end
+| Some (None, None) -> begin
+(FStar_All.failwith "impossible")
 end)))
 end))
 end)
@@ -348,8 +355,8 @@ end))
 
 let interactive_mode = (fun env initial_mod tc -> (
 
-let _85_164 = if (let _174_186 = (FStar_Options.codegen ())
-in (FStar_Option.isSome _174_186)) then begin
+let _85_183 = if (let _174_187 = (FStar_Options.codegen ())
+in (FStar_Option.isSome _174_187)) then begin
 (FStar_Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag")
 end else begin
 ()
@@ -360,20 +367,20 @@ let rec go = (fun stack curmod env -> (match ((shift_chunk ())) with
 | Pop (msg) -> begin
 (
 
-let _85_172 = (tc.pop env msg)
+let _85_191 = (tc.pop env msg)
 in (
 
-let _85_184 = (match (stack) with
+let _85_203 = (match (stack) with
 | [] -> begin
 (
 
-let _85_175 = (FStar_Util.print_error "too many pops")
+let _85_194 = (FStar_Util.print_error "too many pops")
 in (FStar_All.exit 1))
 end
 | hd::tl -> begin
 (hd, tl)
 end)
-in (match (_85_184) with
+in (match (_85_203) with
 | ((env, curmod), stack) -> begin
 (go stack curmod env)
 end)))
@@ -392,10 +399,10 @@ end
 
 let fail = (fun curmod env_mark -> (
 
-let _85_198 = (tc.report_fail ())
+let _85_217 = (tc.report_fail ())
 in (
 
-let _85_200 = (FStar_Util.print1 "%s\n" fail)
+let _85_219 = (FStar_Util.print1 "%s\n" fail)
 in (
 
 let env = (tc.reset_mark env_mark)
@@ -411,7 +418,7 @@ in (match (res) with
 if (n_errs = 0) then begin
 (
 
-let _85_210 = (FStar_Util.print1 "\n%s\n" ok)
+let _85_229 = (FStar_Util.print1 "\n%s\n" ok)
 in (
 
 let env = (tc.commit_mark env)
@@ -420,7 +427,7 @@ end else begin
 (fail curmod env_mark)
 end
 end
-| _85_214 -> begin
+| _85_233 -> begin
 (fail curmod env_mark)
 end))))
 end))

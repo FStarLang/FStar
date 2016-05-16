@@ -211,7 +211,7 @@ let rec tc_fold_interleave acc remaining =
           tc_one_file dsenv env intf impl
 
         | Some iname -> 
-          Util.print1 "Interleaving iface+module: %s\n" iname;
+          FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
           let caption = "interface: " ^ iname in
           //push a new solving context, so that we can blow away implementation details below
           let dsenv', env' = push_context (dsenv, env) caption in
@@ -244,7 +244,6 @@ let batch_mode_tc_no_prims dsenv env filenames =
 let batch_mode_tc filenames =
   let prims_mod, dsenv, env = tc_prims () in
   let filenames = find_deps_if_needed filenames in
-  Util.print1 "FILENAMES: %s\n" (String.concat " " filenames);
   let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
   prims_mod :: all_mods, dsenv, env
 
