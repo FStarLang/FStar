@@ -1,6 +1,7 @@
 module FStar.SST
 
-open FStar.StackHeap
+open FStar.StackHeap2
+module StackHeap = FStar.StackHeap2
 let modifies = StackHeap.modifies
 
 let ref (t:Type) : Type0 = stacked t // JK: old located references
@@ -40,39 +41,42 @@ assume val pop_frame: unit -> ST rid
 (*   (requires (fun h -> (forall h'. fresh_frame h h' ==> pre h'))) *)
 (*   (ensures (fun h0 x h1 -> stack h1 = stack h0)) *)
 
-// JK: allocates on the stack, only allowed in the topmost frame
-assume val salloc: #a:Type -> init:a -> ST (ref a)
+// JK: allocates on the top-most stack frame
+assume val salloc: #a:Type -> init:a -> ST (stacked a)
   (requires (fun m -> True))
-  (ensures (fun m0 r m1 -> (frameOf r) = top_frame_id m0
-    /\ frameOf r = top_frame_id m1
-    /\ fresh_rref (refOf r) m0 m1 /\ m1=StackHeap.upd m0 r init))
+  (ensures (fun m0 r m1 -> 
+       frame_ids m0 = frame_ids m1
+    /\ frameOf r = top_frame_id m1            //frame of the returned ref is the top one
+    /\ fresh_rref (as_rref r) m0 m1           //it's a fresh reference in the top frame
+    /\ m1=StackHeap.upd m0 r init))           //and it's been initialized
 
 // JK: assigns, provided that the reference is good
 assume val op_Colon_Equals: #a:Type -> r:ref a -> v:a -> ST unit
   (requires (fun m -> contains m r))
-  (ensures (fun m0 _ m1 -> m1 == StackHeap.upd m0 r v))
+  (ensures (fun m0 _ m1 -> m1 = StackHeap.upd m0 r v))
 
 // JK: dereferences, provided that the reference is good
 assume val op_Bang: #a:Type -> r:ref a -> ST a
   (requires (fun m -> contains m r))
   (ensures (fun s0 v s1 -> s1=s0 /\ v=StackHeap.sel s0 r))
 
-// JK: Returns the current stack of heaps
+open FStar.Ghost 
+
+// JK: Returns the current stack of heaps --- it should be erased
 assume val get: unit -> ST t
   (requires (fun m -> True))
   (ensures (fun m0 x m1 -> m0=x /\ m1=m0))
 
-open FStar.Ghost 
-
-// JK: Proper function, returning an erased stack of heaps
+// JK: Proper function, returning an erased stack of heaps 
+// YES, this is the proper one
 assume val eget: unit -> ST (erased t)
   (requires (fun m -> True))
   (ensures (fun m0 x m1 -> m0=reveal x /\ m1=m0))
 
-assume val recall: #a:Type -> r:ref a -> STATE unit
-   (fun 'p m0 -> contains m0 r ==> 'p () m0)
-   (fun 'p m0 -> contains m0 r ==> 'p () m0)
+assume val recall: #a:Type -> r:ref a -> ST unit
+  (requires (fun m -> True))
+  (ensures (fun m0 _ m1 -> m0=m1 /\ contains m1 r))
 
-assume val recall_region: i:rid -> STATE unit
-   (fun 'p m0 -> contains_frame m0 i ==> 'p () m0)
-   (fun 'p m0 -> contains_frame m0 i ==> 'p () m0)
+assume val recall_region: i:rid -> ST unit
+  (requires (fun m -> True))
+  (ensures (fun m0 _ m1 -> m0=m1 /\ contains_frame m1 i))

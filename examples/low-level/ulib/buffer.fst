@@ -1,10 +1,11 @@
 module Buffer
 
 open FStar.Seq
-open FStar.StackHeap
+open FStar.StackHeap2
 open FStar.StackArray
 open FStar.Ghost
 open FStar.SST
+module StackHeap = FStar.StackHeap2
 
 (* Buffer general type, fully implemented on FStar's arrays *)
 abstract type buffer (a:Type) = {

@@ -1,12 +1,13 @@
 module FStar.StackArray
 
-//#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+//#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0" ... NEED TO MAKE THIS as_ref, as_ref, as_rref, ... a bit simpler
 
 open FStar.Seq
-open FStar.StackHeap
+open FStar.StackHeap2
 open FStar.SST
+module StackHeap = FStar.StackHeap2
 
-type array (t:Type) = ref (seq t)
+type array (t:Type) = ref (seq t)//NS: TODO if I change this to stacked, then I get unification failures elsewhere. seems like a bug
 
 (* Commented for as long as not specified *)
 // assume val op_At_Bar: #a:Type -> array a -> array a -> St (array a)
@@ -16,43 +17,43 @@ val of_seq: #a:Type -> s:seq a -> ST (array a)
   (ensures  (fun s0 x s1 -> (not(contains s0 x)
 		             /\ frameOf x = top_frame_id s1
                              /\ contains s1 x
-			     /\ stack s1 = stack s0
+			     /\ frame_ids s1 = frame_ids s0
 			     /\ modifies_one (top_frame_id s1) s0 s1
-			     /\ modifies_ref (top_frame_id s1) !{asRef x} s0 s1	                    
+			     /\ modifies_ref (top_frame_id s1) !{as_ref x} s0 s1	                    
                              /\ sel s1 x =s)))
 let of_seq #a s = salloc s
 
 val to_seq: #a:Type -> s:array a -> ST (seq a)
   (requires (fun h -> contains h s))
-  (ensures  (fun h0 x h1 -> (sel h0 s=x /\ h0==h1)))
+  (ensures  (fun h0 x h1 -> sel h0 s=x /\ h0=h1))
 let to_seq #a s = !s
   
 val create : #a:Type -> n:nat -> init:a -> ST (array a)
   (requires (fun h -> True))
-  (ensures  (fun h0 x h1 -> (not(contains h0 x)
-		             /\ frameOf x = top_frame_id h1
-                             /\ contains h1 x
-			     /\ stack h1 = stack h0
-			     /\ modifies_one (top_frame_id h1) h0 h1
-			     /\ modifies_ref (top_frame_id h1) !{asRef x} h0 h1	                    
-			     /\ sel h1 x = Seq.create n init
-			     )))
+  (ensures  (fun h0 x h1 -> frame_ids h1 = frame_ids h0
+		       /\ frameOf x = top_frame_id h1
+		       /\ fresh_rref (as_rref x) h0 h1           //the rest of this is a bit more abstract than salloc; not sure if that's a good thing
+		       /\ contains h1 x
+		       /\ modifies_one (top_frame_id h1) h0 h1
+		       /\ modifies_ref (top_frame_id h1) !{as_ref x} h0 h1	                    
+		       /\ sel h1 x = Seq.create n init
+			     ))
 let create #a n init = salloc (Seq.create n init)
 
 val index : #a:Type -> x:array a -> n:nat -> ST a
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
-  (ensures  (fun h0 v h1 -> (n < Seq.length (sel h0 x)
-                             /\ h0==h1
-                             /\ v=Seq.index (sel h0 x) n)))
+  (ensures  (fun h0 v h1 -> n < Seq.length (sel h0 x)
+                       /\ h0=h1
+                       /\ v=Seq.index (sel h0 x) n))
 let index #a x n = 
-  let s = to_seq x in Seq.index s n
+  let s = to_seq x in Seq.index s n //TODO: Seem to need this eta nonsense ... if we get rid of the let binding, type inference fails
 
 val upd : #a:Type -> x:array a -> n:nat -> v:a -> ST unit
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
-  (ensures  (fun h0 u h1 -> (n < Seq.length (sel h0 x)
+  (ensures  (fun h0 _ h1 -> (n < Seq.length (sel h0 x)
                             /\ contains h1 x
 			    /\ modifies (Set.singleton (frameOf x)) h0 h1
-			    /\ modifies_ref (frameOf x) !{as_ref (refOf x)} h0 h1
+			    /\ modifies_ref (frameOf x) !{as_ref x} h0 h1
                             /\ h1==StackHeap.upd h0 x (Seq.upd (sel h0 x) n v))))
 let upd #a x n v = 
   let s = to_seq x in 
@@ -76,6 +77,9 @@ val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j} -> ST unit
     (j < Seq.length (sel s0 x))
     /\ contains s1 x
     /\ (s1==StackHeap.upd s0 x (SeqProperties.swap (sel s0 x) i j))))
+val gcut : f:(unit -> GTot Type){f ()} -> Tot (u:unit{f()})
+let gcut f = ()
+
 let swap #a x i j =
   let h0 = get () in
   let tmpi = index x i in
@@ -83,9 +87,12 @@ let swap #a x i j =
   upd x j tmpi;
   upd x i tmpj; 
   let h1 = SST.get () in
-  let s1 = sel h1 x in 
-  cut (b2t(Heap.equal (heapOf x h1) (Heap.upd (heapOf x h0) (as_ref (refOf x)) s1))); 
-  cut (Map.equal (heaps h1) (heaps (StackHeap.upd h0 x s1)))
+  gcut (fun () -> 
+        let s1 = sel h1 x in 
+	b2t(Heap.equal (heapOf x h1) (Heap.upd (heapOf x h0) (as_ref x) s1))); 
+  gcut (fun () -> 
+       let s1 = sel h1 x in 
+       (Map.equal (heaps h1) (heaps (StackHeap.upd h0 x s1))))
 
 (* Helper functions for stateful array manipulation *)
 val copy_aux:
@@ -99,7 +106,7 @@ val copy_aux:
 			      /\ modifies_one (frameOf cpy) h0 h1
 			      /\ (modifies_ref (frameOf cpy) !{as_ref (refOf cpy)} h0 h1)
 			      /\ (Seq.equal (sel h1 cpy) (sel h1 s))
-			      /\ stack h1 = stack h0))
+			      /\ frame_ids h1 = frame_ids h0))
 let rec copy_aux #a s cpy ctr =
   match length cpy - ctr with
   | 0 -> ()
@@ -112,7 +119,7 @@ val copy:
      (requires (fun h -> contains h s
 			 /\ Seq.length (sel h s) > 0))
      (ensures (fun h0 r h1 -> modifies_one (top_frame_id h1) h0 h1
-			    /\ modifies_ref (top_frame_id h1) !{asRef s} h0 h1
+			    /\ modifies_ref (top_frame_id h1) !{as_ref s} h0 h1
 	                    /\ frameOf r = top_frame_id h1
 			    /\ not(contains h0 r)
 			    /\ (contains h1 r)
@@ -137,9 +144,9 @@ val blit_aux:
 		    i < ctr ==> Seq.index (sel h s) (s_idx+i) = Seq.index (sel h t) (t_idx+i))))
      (ensures (fun h0 u h1 ->
 	       (contains h1 s /\ contains h1 t /\ s <> t )
-	       /\ stack h1 = stack h0
+	       /\ frame_ids h1 = frame_ids h0
 	       /\ (modifies (Set.singleton (frameOf t)) h0 h1)
-	       /\ (modifies_ref (frameOf t) !{asRef t} h0 h1)
+	       /\ (modifies_ref (frameOf t) !{as_ref t} h0 h1)
 	       /\ (Seq.length (sel h1 s) >= s_idx + len)
 	       /\ (Seq.length (sel h1 t) >= t_idx + len)
 	       /\ (Seq.length (sel h0 s) = Seq.length (sel h1 s))
@@ -155,7 +162,7 @@ let rec blit_aux #a s s_idx t t_idx len ctr =
   | 0 -> ()
   | _ -> upd t (t_idx + ctr) (index s (s_idx + ctr));
 	 let h = get() in
-	 cut (b2t(Heap.equal (heapOf t h) (Heap.upd (heapOf t h0) (asRef t) (sel h t)))); 
+	 cut (b2t(Heap.equal (heapOf t h) (Heap.upd (heapOf t h0) (as_ref t) (sel h t)))); 
 	 cut (Map.equal (heaps h) (heaps (StackHeap.upd h0 t (sel h t)))); 
 	 cut (sel h t = Seq.upd (sel h0 t) (t_idx+ctr) (Seq.index (sel h0 s) (s_idx+ctr))); 
 	 cut (forall (i:nat). i < ctr+1 ==> Seq.index (sel h0 s) (s_idx+i) = Seq.index (sel h t) (t_idx+i));
@@ -173,13 +180,13 @@ val blit:
 		/\ (Seq.length (sel h t) >= t_idx + len)))
      (ensures (fun h0 u h1 ->
 	       (contains h1 s /\ contains h1 t /\ s <> t )
-	       /\ stack h1 = stack h0
+	       /\ frame_ids h1 = frame_ids h0
 	       /\ (Seq.length (sel h1 s) >= s_idx + len)
 	       /\ (Seq.length (sel h1 t) >= t_idx + len)
 	       /\ (Seq.length (sel h0 s) = Seq.length (sel h1 s))
 	       /\ (Seq.length (sel h0 t) = Seq.length (sel h1 t))
 	       /\ (modifies_one (frameOf t) h0 h1)
-	       /\ (modifies_ref (frameOf t) !{asRef t} h0 h1)
+	       /\ (modifies_ref (frameOf t) !{as_ref t} h0 h1)
 	       /\ (forall (i:nat).
 		   i < len ==> Seq.index (sel h1 s) (s_idx+i) = Seq.index (sel h1 t) (t_idx+i))
 	       /\ (forall (i:nat).
@@ -200,7 +207,7 @@ val sub :
       /\ (contains h0 s)
       /\ not(contains h0 t)
       /\ modifies_one (top_frame_id h1) h0 h1
-      /\ modifies_ref (top_frame_id h1) !{asRef t} h0 h1
+      /\ modifies_ref (top_frame_id h1) !{as_ref t} h0 h1
       /\ frameOf t = top_frame_id h1
       /\ (Seq.length (sel h0 s) > 0)
       /\ (idx + len <= Seq.length (sel h0 s))
