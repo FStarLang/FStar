@@ -108,7 +108,8 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
    | Tm_unknown ->
      if univ_vars <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";
      let r = Env.get_range env in
-     let mk_binder scope a = match a.sort.n with
+     let mk_binder scope a =
+        match (SS.compress a.sort).n with
         | Tm_unknown ->
           let k, _ = U.type_u() in
           let t =  Rel.new_uvar e.pos scope k |> fst in 
@@ -135,7 +136,9 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
             | Inl t -> Util.ml_comp t r //let rec without annotations default to being in the ML monad; TODO: revisit this
             | Inr c -> c in
         let t = Util.arrow bs c in 
-        if debug env Options.High then Util.print2 "(%s) Using type %s\n" (Range.string_of_range r) (Print.term_to_string t);
+        if debug env Options.High
+        then Util.print2 "(%s) Using type %s\n"
+                (Range.string_of_range r) (Print.term_to_string t);
         Inl t, check_res || check
 
       | _ -> Inl (Rel.new_uvar r vars Util.ktype0 |> fst), false in
