@@ -111,18 +111,25 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
 (******************************************************************************)
 (* Building an instance of the type-checker to be run in the interactive loop *)
 (******************************************************************************)
+let pop_context (dsenv, env) msg =
+    DsEnv.pop dsenv |> ignore;
+    TcEnv.pop env msg |> ignore;
+    env.solver.refresh()
+
+let push_context (dsenv, env) msg =
+    let dsenv = DsEnv.push dsenv in
+    let env = TcEnv.push env msg in
+    (dsenv, env)
+        
 let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul>> = 
     let pop (dsenv, env) msg = 
-          DsEnv.pop dsenv |> ignore;
-          TcEnv.pop env msg |> ignore;
-          env.solver.refresh();
+          pop_context (dsenv, env) msg;
           Options.pop() in
 
     let push (dsenv, env) msg = 
-          let dsenv = DsEnv.push dsenv in
-          let env = TcEnv.push env msg in
+          let res = push_context (dsenv, env) msg in
           Options.push();
-          (dsenv, env) in
+          res in
 
     let mark (dsenv, env) =
         let dsenv = DsEnv.mark dsenv in
@@ -206,10 +213,10 @@ let rec tc_fold_interleave acc remaining =
         | Some iname -> 
           let caption = "interface: " ^ iname in
           //push a new solving context, so that we can blow away implementation details below
-          let dsenv', env' = interactive_tc.push (dsenv, env) caption in
+          let dsenv', env' = push_context (dsenv, env) caption in
           let _, dsenv', env' = tc_one_file dsenv' env' intf impl in //check the impl and interface together, if any
           //discard the impl and check the interface alone for the rest of the program
-          let _ = interactive_tc.pop (dsenv', env') caption in
+          let _ = pop_context (dsenv', env') caption in
           tc_one_file dsenv env None iname in //check the interface alone
     let acc = all_mods @ ms, dsenv, env in
     tc_fold_interleave acc remaining

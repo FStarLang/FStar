@@ -67,7 +67,10 @@ let as_option as_t = function
    
 let fstar_options : ref<list<Util.smap<option_val>>> = Util.mk_ref []
 let peek () = List.hd !fstar_options
-let pop  () = fstar_options := List.tl !fstar_options
+let pop  () = match !fstar_options with 
+    | []
+    | [_] -> failwith "TOO MANY POPS!"
+    | _::tl -> fstar_options := tl
 let push () = fstar_options := Util.smap_copy (peek()) :: !fstar_options
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v

@@ -141,26 +141,21 @@ end
 end)
 
 
-let interactive_tc : ((FStar_Parser_Env.env * FStar_TypeChecker_Env.env), FStar_Syntax_Syntax.modul Prims.option) FStar_Interactive.interactive_tc = (
-
-let pop = (fun _87_92 msg -> (match (_87_92) with
+let pop_context : (FStar_Parser_Env.env * FStar_TypeChecker_Env.env)  ->  Prims.string  ->  Prims.unit = (fun _87_91 msg -> (match (_87_91) with
 | (dsenv, env) -> begin
 (
 
-let _87_94 = (let _176_30 = (FStar_Parser_Env.pop dsenv)
+let _87_93 = (let _176_30 = (FStar_Parser_Env.pop dsenv)
 in (FStar_All.pipe_right _176_30 Prims.ignore))
 in (
 
-let _87_96 = (let _176_31 = (FStar_TypeChecker_Env.pop env msg)
+let _87_95 = (let _176_31 = (FStar_TypeChecker_Env.pop env msg)
 in (FStar_All.pipe_right _176_31 Prims.ignore))
-in (
-
-let _87_98 = (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ())
-in (FStar_Options.pop ()))))
+in (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ())))
 end))
-in (
 
-let push = (fun _87_103 msg -> (match (_87_103) with
+
+let push_context : (FStar_Parser_Env.env * FStar_TypeChecker_Env.env)  ->  Prims.string  ->  (FStar_Parser_Env.env * FStar_TypeChecker_Env.env) = (fun _87_99 msg -> (match (_87_99) with
 | (dsenv, env) -> begin
 (
 
@@ -168,14 +163,34 @@ let dsenv = (FStar_Parser_Env.push dsenv)
 in (
 
 let env = (FStar_TypeChecker_Env.push env msg)
-in (
+in (dsenv, env)))
+end))
 
-let _87_107 = (FStar_Options.push ())
-in (dsenv, env))))
+
+let interactive_tc : ((FStar_Parser_Env.env * FStar_TypeChecker_Env.env), FStar_Syntax_Syntax.modul Prims.option) FStar_Interactive.interactive_tc = (
+
+let pop = (fun _87_106 msg -> (match (_87_106) with
+| (dsenv, env) -> begin
+(
+
+let _87_108 = (pop_context (dsenv, env) msg)
+in (FStar_Options.pop ()))
 end))
 in (
 
-let mark = (fun _87_112 -> (match (_87_112) with
+let push = (fun _87_113 msg -> (match (_87_113) with
+| (dsenv, env) -> begin
+(
+
+let res = (push_context (dsenv, env) msg)
+in (
+
+let _87_116 = (FStar_Options.push ())
+in res))
+end))
+in (
+
+let mark = (fun _87_121 -> (match (_87_121) with
 | (dsenv, env) -> begin
 (
 
@@ -185,12 +200,12 @@ in (
 let env = (FStar_TypeChecker_Env.mark env)
 in (
 
-let _87_115 = (FStar_Options.push ())
+let _87_124 = (FStar_Options.push ())
 in (dsenv, env))))
 end))
 in (
 
-let reset_mark = (fun _87_120 -> (match (_87_120) with
+let reset_mark = (fun _87_129 -> (match (_87_129) with
 | (dsenv, env) -> begin
 (
 
@@ -200,12 +215,12 @@ in (
 let env = (FStar_TypeChecker_Env.reset_mark env)
 in (
 
-let _87_123 = (FStar_Options.pop ())
+let _87_132 = (FStar_Options.pop ())
 in (dsenv, env))))
 end))
 in (
 
-let commit_mark = (fun _87_128 -> (match (_87_128) with
+let commit_mark = (fun _87_137 -> (match (_87_137) with
 | (dsenv, env) -> begin
 (
 
@@ -217,18 +232,18 @@ in (dsenv, env)))
 end))
 in (
 
-let check_frag = (fun _87_134 curmod text -> (match (_87_134) with
+let check_frag = (fun _87_143 curmod text -> (match (_87_143) with
 | (dsenv, env) -> begin
 try
 (match (()) with
 | () -> begin
 (match ((tc_one_fragment curmod dsenv env text)) with
 | Some (m, dsenv, env) -> begin
-(let _176_50 = (let _176_49 = (FStar_TypeChecker_Errors.get_err_count ())
-in (m, (dsenv, env), _176_49))
-in Some (_176_50))
+(let _176_58 = (let _176_57 = (FStar_TypeChecker_Errors.get_err_count ())
+in (m, (dsenv, env), _176_57))
+in Some (_176_58))
 end
-| _87_158 -> begin
+| _87_167 -> begin
 None
 end)
 end)
@@ -236,27 +251,27 @@ with
 | FStar_Syntax_Syntax.Error (msg, r) when (not ((FStar_Options.trace_error ()))) -> begin
 (
 
-let _87_144 = (FStar_TypeChecker_Errors.add_errors env (((msg, r))::[]))
+let _87_153 = (FStar_TypeChecker_Errors.add_errors env (((msg, r))::[]))
 in None)
 end
 | FStar_Syntax_Syntax.Err (msg) when (not ((FStar_Options.trace_error ()))) -> begin
 (
 
-let _87_148 = (let _176_54 = (let _176_53 = (let _176_52 = (FStar_TypeChecker_Env.get_range env)
-in (msg, _176_52))
-in (_176_53)::[])
-in (FStar_TypeChecker_Errors.add_errors env _176_54))
+let _87_157 = (let _176_62 = (let _176_61 = (let _176_60 = (FStar_TypeChecker_Env.get_range env)
+in (msg, _176_60))
+in (_176_61)::[])
+in (FStar_TypeChecker_Errors.add_errors env _176_62))
 in None)
 end
 end))
 in (
 
-let report_fail = (fun _87_160 -> (match (()) with
+let report_fail = (fun _87_169 -> (match (()) with
 | () -> begin
 (
 
-let _87_161 = (let _176_57 = (FStar_TypeChecker_Errors.report_all ())
-in (FStar_All.pipe_right _176_57 Prims.ignore))
+let _87_170 = (let _176_65 = (FStar_TypeChecker_Errors.report_all ())
+in (FStar_All.pipe_right _176_65 Prims.ignore))
 in (FStar_ST.op_Colon_Equals FStar_TypeChecker_Errors.num_errs 0))
 end))
 in {FStar_Interactive.pop = pop; FStar_Interactive.push = push; FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail})))))))
@@ -264,22 +279,22 @@ in {FStar_Interactive.pop = pop; FStar_Interactive.push = push; FStar_Interactiv
 
 let tc_one_file : FStar_Parser_Env.env  ->  FStar_TypeChecker_Env.env  ->  Prims.string Prims.option  ->  Prims.string  ->  (FStar_Syntax_Syntax.modul Prims.list * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) = (fun dsenv env pre_fn fn -> (
 
-let _87_169 = (parse dsenv pre_fn fn)
-in (match (_87_169) with
+let _87_178 = (parse dsenv pre_fn fn)
+in (match (_87_178) with
 | (dsenv, fmods) -> begin
 (
 
-let _87_179 = (FStar_All.pipe_right fmods (FStar_List.fold_left (fun _87_172 m -> (match (_87_172) with
+let _87_188 = (FStar_All.pipe_right fmods (FStar_List.fold_left (fun _87_181 m -> (match (_87_181) with
 | (env, all_mods) -> begin
 (
 
-let _87_176 = (FStar_TypeChecker_Tc.check_module env m)
-in (match (_87_176) with
+let _87_185 = (FStar_TypeChecker_Tc.check_module env m)
+in (match (_87_185) with
 | (m, env) -> begin
 (env, (m)::all_mods)
 end))
 end)) (env, [])))
-in (match (_87_179) with
+in (match (_87_188) with
 | (env, all_mods) -> begin
 ((FStar_List.rev all_mods), dsenv, env)
 end))
@@ -299,22 +314,22 @@ let rec tc_fold_interleave : (FStar_Syntax_Syntax.modul Prims.list * FStar_Parse
 
 let move = (fun intf impl remaining -> (
 
-let _87_190 = (FStar_Syntax_Syntax.reset_gensym ())
+let _87_199 = (FStar_Syntax_Syntax.reset_gensym ())
 in (
 
-let _87_195 = acc
-in (match (_87_195) with
+let _87_204 = acc
+in (match (_87_204) with
 | (all_mods, dsenv, env) -> begin
 (
 
-let _87_218 = (match (intf) with
+let _87_227 = (match (intf) with
 | None -> begin
 (tc_one_file dsenv env intf impl)
 end
-| Some (_87_198) when ((FStar_Options.codegen ()) <> None) -> begin
+| Some (_87_207) when ((FStar_Options.codegen ()) <> None) -> begin
 (
 
-let _87_200 = if (not ((FStar_Options.lax ()))) then begin
+let _87_209 = if (not ((FStar_Options.lax ()))) then begin
 (Prims.raise (FStar_Syntax_Syntax.Err ("Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately")))
 end else begin
 ()
@@ -327,22 +342,22 @@ end
 let caption = (Prims.strcat "interface: " iname)
 in (
 
-let _87_207 = (interactive_tc.FStar_Interactive.push (dsenv, env) caption)
-in (match (_87_207) with
+let _87_216 = (push_context (dsenv, env) caption)
+in (match (_87_216) with
 | (dsenv', env') -> begin
 (
 
-let _87_212 = (tc_one_file dsenv' env' intf impl)
-in (match (_87_212) with
-| (_87_209, dsenv', env') -> begin
+let _87_221 = (tc_one_file dsenv' env' intf impl)
+in (match (_87_221) with
+| (_87_218, dsenv', env') -> begin
 (
 
-let _87_213 = (interactive_tc.FStar_Interactive.pop (dsenv', env') caption)
+let _87_222 = (pop_context (dsenv', env') caption)
 in (tc_one_file dsenv env None iname))
 end))
 end)))
 end)
-in (match (_87_218) with
+in (match (_87_227) with
 | (ms, dsenv, env) -> begin
 (
 
@@ -364,12 +379,12 @@ end)))
 
 let batch_mode_tc_no_prims : FStar_Parser_Env.env  ->  FStar_TypeChecker_Env.env  ->  Prims.string Prims.list  ->  (FStar_Syntax_Syntax.modul Prims.list * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) = (fun dsenv env filenames -> (
 
-let _87_235 = (tc_fold_interleave ([], dsenv, env) filenames)
-in (match (_87_235) with
+let _87_244 = (tc_fold_interleave ([], dsenv, env) filenames)
+in (match (_87_244) with
 | (all_mods, dsenv, env) -> begin
 (
 
-let _87_236 = if ((FStar_Options.interactive ()) && ((FStar_TypeChecker_Errors.get_err_count ()) = 0)) then begin
+let _87_245 = if ((FStar_Options.interactive ()) && ((FStar_TypeChecker_Errors.get_err_count ()) = 0)) then begin
 (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ())
 end else begin
 (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.finish ())
@@ -380,18 +395,18 @@ end)))
 
 let batch_mode_tc : Prims.string Prims.list  ->  (FStar_Syntax_Syntax.modul Prims.list * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) = (fun filenames -> (
 
-let _87_242 = (tc_prims ())
-in (match (_87_242) with
+let _87_251 = (tc_prims ())
+in (match (_87_251) with
 | (prims_mod, dsenv, env) -> begin
 (
 
-let _87_245 = (FStar_Dependences.find_deps_if_needed filenames)
-in (match (_87_245) with
+let _87_254 = (FStar_Dependences.find_deps_if_needed filenames)
+in (match (_87_254) with
 | (filenames, admit_fsi) -> begin
 (
 
-let _87_249 = (batch_mode_tc_no_prims dsenv env filenames)
-in (match (_87_249) with
+let _87_258 = (batch_mode_tc_no_prims dsenv env filenames)
+in (match (_87_258) with
 | (all_mods, dsenv, env) -> begin
 ((prims_mod)::all_mods, dsenv, env)
 end))

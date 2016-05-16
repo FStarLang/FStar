@@ -103,7 +103,7 @@ let go _ =
             let files = 
               List.map (fun f -> 
                     match Parser.Dep.check_and_strip_suffix (basename f) with 
-                    | None -> Util.print1 "Unrecognized file type: %s\n" f; exit -1
+                    | None -> Util.print1 "Unrecognized file type: %s\n" f; exit 1
                     | Some f -> String.lowercase f) filenames in
             List.iter Options.add_verify_module files
           end;
