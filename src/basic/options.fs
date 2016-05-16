@@ -139,11 +139,16 @@ let init () =
         ("verify_module"                , List []);
         ("warn_top_level_effects"       , Bool false);
         ("z3timeout"                    , Int 5)] in 
-   let o = Util.smap_create 50 in
-   fstar_options := [o];                                 //clear and reset the options stack
+   let o = peek () in 
+   Util.smap_clear o;
    vals |> List.iter set_option'                          //initialize it with the default values
 
-let _run = init()
+let clear () = 
+   let o = Util.smap_create 50 in
+   fstar_options := [o];                                 //clear and reset the options stack
+   init()
+
+let _run = clear()
 
 let lookup_opt s c = 
   match Util.smap_try_find (peek()) s with 

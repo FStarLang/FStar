@@ -40,7 +40,10 @@ type options =
     | Reset
     | Restore
 
-val init                        : unit    -> unit
+val init                        : unit    -> unit  //sets the current options to their defaults
+val clear                       : unit    -> unit  //wipes the stack of options, and then inits
+val restore_cmd_line_options    : unit    -> parse_cmdline_res //inits the current options and then sets it to the cmd line
+
 val __unit_tests                : unit    -> bool
 val __set_unit_tests            : unit    -> unit
 val __clear_unit_tests          : unit    -> unit
@@ -96,7 +99,6 @@ val print_implicits             : unit    -> bool
 val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool
 val push                        : unit    -> unit
-val restore_cmd_line_options    : unit    -> parse_cmdline_res
 val set_option                  : string  -> option_val -> unit
 val set_options                 : options -> string -> parse_cmdline_res
 val should_print_message        : string  -> bool

@@ -1906,7 +1906,8 @@ let finish_partial_modul env modul =
     env.solver.pop ("Ending modul " ^ modul.name.str);
     env.solver.encode_modul env modul;
     env.solver.refresh();
-    (Options.restore_cmd_line_options()) |> ignore
+    Options.clear();
+    Options.restore_cmd_line_options() |> ignore
   end;
   modul, env
 
