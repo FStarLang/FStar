@@ -1057,14 +1057,16 @@ in (res, _113_469))))
 end))
 
 
-let restore_cmd_line_options : Prims.unit  ->  FStar_Getopt.parse_cmdline_res = (fun _24_349 -> (match (()) with
-| () -> begin
-(
+let restore_cmd_line_options : Prims.bool  ->  FStar_Getopt.parse_cmdline_res = (fun should_clear -> (
 
 let old_verify_module = (get_verify_module ())
 in (
 
-let _24_351 = (init ())
+let _24_351 = if should_clear then begin
+(clear ())
+end else begin
+(init ())
+end
 in (
 
 let r = (let _113_473 = (specs ())
@@ -1075,8 +1077,7 @@ let _24_355 = (let _113_477 = (let _113_476 = (let _113_475 = (FStar_List.map (f
 in List (_113_475))
 in ("verify_module", _113_476))
 in (set_option' _113_477))
-in r))))
-end))
+in r)))))
 
 
 let should_verify : Prims.string  ->  Prims.bool = (fun m -> if (get_lax ()) then begin

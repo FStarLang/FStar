@@ -42,7 +42,7 @@ type options =
 
 val init                        : unit    -> unit  //sets the current options to their defaults
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
-val restore_cmd_line_options    : unit    -> parse_cmdline_res //inits the current options and then sets it to the cmd line
+val restore_cmd_line_options    : bool    -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
 
 val __unit_tests                : unit    -> bool
 val __set_unit_tests            : unit    -> unit

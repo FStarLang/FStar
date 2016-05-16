@@ -4214,7 +4214,7 @@ end
 | FStar_Absyn_Syntax.ResetOptions (sopt) -> begin
 (
 
-let _46_2601 = (let _135_1125 = (FStar_Options.restore_cmd_line_options ())
+let _46_2601 = (let _135_1125 = (FStar_Options.restore_cmd_line_options false)
 in (FStar_All.pipe_right _135_1125 Prims.ignore))
 in (
 
@@ -5244,7 +5244,7 @@ in (
 let env = (FStar_Tc_Env.finish_module env modul)
 in (
 
-let _46_3313 = if (not ((FStar_Ident.lid_equals modul.FStar_Absyn_Syntax.name FStar_Absyn_Const.prims_lid))) then begin
+let _46_3311 = if (not ((FStar_Ident.lid_equals modul.FStar_Absyn_Syntax.name FStar_Absyn_Const.prims_lid))) then begin
 (
 
 let _46_3305 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.pop (Prims.strcat "Ending modul " modul.FStar_Absyn_Syntax.name.FStar_Ident.str))
@@ -5254,11 +5254,8 @@ let _46_3307 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.encode_modul env modul)
 in (
 
 let _46_3309 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.refresh ())
-in (
-
-let _46_3311 = (FStar_Options.clear ())
-in (let _135_1276 = (FStar_Options.restore_cmd_line_options ())
-in (FStar_All.pipe_right _135_1276 Prims.ignore))))))
+in (let _135_1276 = (FStar_Options.restore_cmd_line_options true)
+in (FStar_All.pipe_right _135_1276 Prims.ignore)))))
 end else begin
 ()
 end
@@ -5267,8 +5264,8 @@ in (modul, env))))))
 
 let tc_modul : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.modul  ->  (FStar_Absyn_Syntax.modul * FStar_Tc_Env.env) = (fun env modul -> (
 
-let _46_3319 = (tc_partial_modul env modul)
-in (match (_46_3319) with
+let _46_3317 = (tc_partial_modul env modul)
+in (match (_46_3317) with
 | (modul, env) -> begin
 (finish_partial_modul env modul)
 end)))
@@ -5281,7 +5278,7 @@ let do_sigelt = (fun en elt -> (
 let env = (FStar_Tc_Env.push_sigelt en elt)
 in (
 
-let _46_3326 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.encode_sig env elt)
+let _46_3324 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.encode_sig env elt)
 in env)))
 in (
 
@@ -5292,7 +5289,7 @@ in (FStar_Tc_Env.finish_module _135_1289 m)))))
 
 let check_module : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.modul  ->  (FStar_Absyn_Syntax.modul Prims.list * FStar_Tc_Env.env) = (fun env m -> (
 
-let _46_3331 = if (FStar_Options.debug_any ()) then begin
+let _46_3329 = if (FStar_Options.debug_any ()) then begin
 (let _135_1294 = (FStar_Absyn_Print.sli m.FStar_Absyn_Syntax.name)
 in (FStar_Util.print2 "Checking %s: %s\n" (if m.FStar_Absyn_Syntax.is_interface then begin
 "i\'face"
@@ -5304,12 +5301,12 @@ end else begin
 end
 in (
 
-let _46_3335 = (tc_modul env m)
-in (match (_46_3335) with
+let _46_3333 = (tc_modul env m)
+in (match (_46_3333) with
 | (m, env) -> begin
 (
 
-let _46_3336 = if (FStar_Options.dump_module m.FStar_Absyn_Syntax.name.FStar_Ident.str) then begin
+let _46_3334 = if (FStar_Options.dump_module m.FStar_Absyn_Syntax.name.FStar_Ident.str) then begin
 (let _135_1295 = (FStar_Absyn_Print.modul_to_string m)
 in (FStar_Util.print1 "%s\n" _135_1295))
 end else begin

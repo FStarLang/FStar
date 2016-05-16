@@ -2513,7 +2513,7 @@ let rec tc_decl env se = match se with
                 set_options Options.Set o;
                 se, env
             | ResetOptions sopt ->
-                Options.restore_cmd_line_options() |> ignore;
+                Options.restore_cmd_line_options false |> ignore;
                 let _ = match sopt with
                     | None -> ()
                     | Some s -> set_options Options.Reset s in
@@ -2785,8 +2785,7 @@ let finish_partial_modul env modul exports =
     env.solver.pop ("Ending modul " ^ modul.name.str);
     env.solver.encode_modul env modul;
     env.solver.refresh();
-    Options.clear();
-    Options.restore_cmd_line_options() |> ignore
+    Options.restore_cmd_line_options true |> ignore
   end;
   modul, env
 

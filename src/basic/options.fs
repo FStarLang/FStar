@@ -676,11 +676,11 @@ let parse_cmd_line () =
   let res = Getopt.parse_cmdline (specs()) (fun i -> file_list := !file_list @ [i]) in
   res, !file_list
 
-let restore_cmd_line_options () =
+let restore_cmd_line_options should_clear =
     (* Some options must be preserved because they can't be reset via #pragrams.
      * Add them here as needed. *)
     let old_verify_module = get_verify_module() in
-    init();
+    if should_clear then clear() else init();
     let r = Getopt.parse_cmdline (specs()) (fun x -> ()) in
     set_option' ("verify_module", List (List.map String old_verify_module));
     r
