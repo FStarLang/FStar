@@ -71,7 +71,7 @@ let go _ =
   let res, filenames = process_args () in
   match res with
     | Help ->
-        failwith "Impossible: should already have exited with help message"
+        Options.display_usage(); exit 0
     | Die msg ->
         Util.print_string msg
     | GoOn ->
@@ -101,7 +101,10 @@ let go _ =
            * the command-line to be those we want to verify. *)
           if not ((Options.explicit_deps())) then begin
             let files = 
-              List.map (fun f -> must (Parser.Dep.check_and_strip_suffix (basename f)) |> String.lowercase) filenames in
+              List.map (fun f -> 
+                    match Parser.Dep.check_and_strip_suffix (basename f) with 
+                    | None -> Util.print1 "Unrecognized file type: %s\n" f; exit -1
+                    | Some f -> String.lowercase f) filenames in
             List.iter Options.add_verify_module files
           end;
           if (Options.universes())

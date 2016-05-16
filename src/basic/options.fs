@@ -228,7 +228,7 @@ let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
                                   version platform compiler date commit)
 
-let display_usage specs =
+let display_usage_aux specs =
   Util.print_string "fstar [option] file...\n";
   List.iter
     (fun (_, flag, p, doc) ->
@@ -575,7 +575,7 @@ let rec specs () : list<Getopt.opt> =
   ] in
      ( 'h', 
         "help", 
-        ZeroArgs (fun x -> display_usage specs; exit 0), 
+        ZeroArgs (fun x -> display_usage_aux specs; exit 0), 
         "Display this information")::List.map mk_spec specs
         
 and parse_codegen s =
@@ -584,19 +584,19 @@ and parse_codegen s =
   | "FSharp" -> s
   | _ ->
      (Util.print_string "Wrong argument to codegen flag\n";
-      display_usage (specs ()); exit 1)
+      display_usage_aux (specs ()); exit 1)
 
 and validate_cardinality x = match x with
     | "warn"
     | "check"
     | "off" -> x
     | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
-              display_usage (specs ()); exit 1)
+              display_usage_aux (specs ()); exit 1)
 
 and set_interactive_fsi _ =
     if get_in() then set_option' ("fsi", Bool true)
     else (Util.print_string "Set interactive flag first before setting interactive fsi flag\n";
-          display_usage (specs ()); exit 1)
+          display_usage_aux (specs ()); exit 1)
 
 //Several options can only be set at the time the process is created, and not controlled interactively via pragmas
 //Additionaly, the --smt option is a security concern
@@ -645,6 +645,8 @@ let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PUBLIC API
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+let display_usage () = display_usage_aux (specs())
+
 let fstar_home () = 
     match get_fstar_home() with
     | None -> 
