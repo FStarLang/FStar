@@ -466,6 +466,8 @@ let return_value env t v =
   c
 
 let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
+  let lc1 = N.ghost_to_pure_lcomp env lc1 in //downgrade from ghost to pure, if possible
+  let lc2 = N.ghost_to_pure_lcomp env lc2 in
   if debug env Options.Extreme
   then
     (let bstr = match b with

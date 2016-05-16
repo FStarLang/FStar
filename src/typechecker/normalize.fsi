@@ -47,6 +47,7 @@ val normalize_comp:       steps -> Env.env -> comp -> comp
 val normalize_sigelt:     steps -> Env.env -> sigelt -> sigelt
 val normalize_refinement: steps -> Env.env -> typ -> typ
 val ghost_to_pure:        Env.env -> comp -> comp
+val ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
 
 val term_to_string:  Env.env -> term -> string
 val comp_to_string:  Env.env -> comp -> string

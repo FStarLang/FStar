@@ -133,6 +133,15 @@ let rec unfold_effect_abbrev env comp =
       let c = {Util.comp_to_comp_typ c1 with flags=c.flags} |> mk_Comp in
       unfold_effect_abbrev env c
 
+let downgrade_ghost_effect_name l = 
+    if Ident.lid_equals l Const.effect_Ghost_lid
+    then Some Const.effect_Pure_lid
+    else if Ident.lid_equals l Const.effect_GTot_lid
+    then Some Const.effect_Tot_lid
+    else if Ident.lid_equals l Const.effect_GHOST_lid
+    then Some Const.effect_PURE_lid
+    else None
+
 (********************************************************************************************************************)
 (* Normal form of a universe u is                                                                                   *)
 (*  either u, where u <> U_max                                                                                      *)
@@ -704,20 +713,17 @@ and ghost_to_pure_aux cfg env c =
         let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
         if Util.is_ghost_effect l
         && non_info ct.result_typ
-        then let ct =
-                if Ident.lid_equals ct.effect_name Const.effect_Ghost_lid
-                then {ct with effect_name=Const.effect_Pure_lid}
-                else if Ident.lid_equals ct.effect_name Const.effect_GTot_lid
-                then {ct with effect_name=Const.effect_Tot_lid}
-                else if Ident.lid_equals ct.effect_name Const.effect_GHOST_lid
-                then {ct with effect_name=Const.effect_PURE_lid}
-                else let ct = unfold_effect_abbrev cfg.tcenv c in //must be GHOST
-                     {ct with effect_name=Const.effect_PURE_lid} in
+        then let ct = 
+                 match downgrade_ghost_effect_name ct.effect_name with 
+                 | Some pure_eff -> 
+                   {ct with effect_name=pure_eff}
+                 | None -> 
+                    let ct = unfold_effect_abbrev cfg.tcenv c in //must be GHOST
+                    {ct with effect_name=Const.effect_PURE_lid} in
              {c with n=Comp ct}
         else c
     | _ -> c
 
-     
 and norm_binder : cfg -> env -> binder -> binder = 
     fun cfg env (x, imp) -> {x with sort=norm cfg env [] x.sort}, imp
 
@@ -906,6 +912,19 @@ let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
 let ghost_to_pure env c = ghost_to_pure_aux (config [] env) [] c
 
+let ghost_to_pure_lcomp env (lc:lcomp) = 
+    let cfg = config [Inline; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses] env in
+    let non_info t = non_informative (norm cfg [] [] t) in
+    if Util.is_ghost_effect lc.eff_name
+    && non_info lc.res_typ
+    then match downgrade_ghost_effect_name lc.eff_name with 
+         | Some pure_eff -> 
+           {lc with eff_name=pure_eff;
+                    comp=(fun () -> ghost_to_pure env (lc.comp()))}
+         | None -> //can't downgrade, don't know the particular incarnation of PURE to use
+           lc
+    else lc
+     
 let term_to_string env t = Print.term_to_string (normalize [AllowUnboundUniverses] env t)
 let comp_to_string env c = Print.comp_to_string (norm_comp (config [AllowUnboundUniverses] env) [] c)
 
