@@ -66,7 +66,7 @@ let the_interactive_state = {
 let rec read_chunk () =
   let s = the_interactive_state in
   let log =
-    if !Options.debug <> [] then
+    if Options.debug_any() then
       let transcript =
         match !s.log with
         | Some transcript -> transcript
@@ -147,7 +147,7 @@ module F_Syntax = FStar.Absyn.Syntax
 let detect_dependencies_with_first_interactive_chunk () =
  try
      let fail msg = 
-        if !Options.universes
+        if (Options.universes())
         then raise (U_Syntax.Err msg)
         else raise (F_Syntax.Err msg) in
       match find_initial_module_name () with
@@ -160,10 +160,17 @@ let detect_dependencies_with_first_interactive_chunk () =
           | None ->
              fail (Util.format2 "I found a \"module %s\" directive, but there \
                 is no %s.fst\n" module_name module_name)
-          | Some filename ->
-              Options.verify_module := [ String.lowercase module_name ];
+          | Some (None, Some filename)
+          | Some (Some filename, None) ->
+              Options.add_verify_module module_name;
               let _, all_filenames = Parser.Dep.collect [ filename ] in
               List.rev (List.tl all_filenames)
+          | Some (Some _, Some _) ->
+             fail (Util.format1 "The combination of split interfaces and \
+               interactive verification is not supported for: %s\n" module_name)
+          | Some (None, None) ->
+              failwith "impossible"
+
  with 
     | U_Syntax.Error(msg, r) -> 
       FStar.TypeChecker.Errors.warn r msg;
@@ -183,7 +190,7 @@ let detect_dependencies_with_first_interactive_chunk () =
 (* The main interactive loop *)
 (******************************************************************************************)
 let interactive_mode (env:'env) (initial_mod:'modul) (tc:interactive_tc<'env,'modul>) = 
-  if Option.isSome !Options.codegen then
+  if Option.isSome (Options.codegen()) then
     (Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag");
     let rec go (stack:stack<'env,'modul>) (curmod:'modul) (env:'env) = begin
       match shift_chunk () with

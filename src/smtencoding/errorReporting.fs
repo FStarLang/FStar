@@ -226,22 +226,22 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
         let initial_config = 
             match cached_config with 
             | Some (_, fuel, ifuel) -> (fuel, ifuel)
-            | None -> (!Options.initial_fuel, !Options.initial_ifuel) 
+            | None -> ((Options.initial_fuel()), (Options.initial_ifuel()))
         in
         let alt_configs = 
             match cached_config with 
             | Some _ -> []
             | None -> 
-                List.flatten [(if !Options.max_ifuel > !Options.initial_ifuel then [(!Options.initial_fuel, !Options.max_ifuel)] else []);
-                                        (if !Options.max_fuel / 2 > !Options.initial_fuel then [(!Options.max_fuel / 2, !Options.max_ifuel)] else []);
-                                        (if !Options.max_fuel > !Options.initial_fuel && !Options.max_ifuel > !Options.initial_ifuel then [(!Options.max_fuel, !Options.max_ifuel)] else []);
-                                        (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])]
+                List.flatten [(if (Options.max_ifuel()) > (Options.initial_ifuel()) then [((Options.initial_fuel()), (Options.max_ifuel()))] else []);
+                                        (if (Options.max_fuel()) / 2 > (Options.initial_fuel()) then [((Options.max_fuel()) / 2, (Options.max_ifuel()))] else []);
+                                        (if (Options.max_fuel()) > (Options.initial_fuel()) && (Options.max_ifuel()) > (Options.initial_ifuel()) then [((Options.max_fuel()), (Options.max_ifuel()))] else []);
+                                        (if (Options.min_fuel()) < (Options.initial_fuel()) then [((Options.min_fuel()), 1)] else [])]
         in
         let report p (errs:labels) : unit =
-            let errs = if !Options.detail_errors && !Options.n_cores = 1
+            let errs = if (Options.detail_errors()) && (Options.n_cores()) = 1
                        then let min_fuel, potential_errors = match !minimum_workable_fuel with 
                                 | Some (f, errs) -> f, errs
-                                | None -> (!Options.min_fuel, 1), errs in
+                                | None -> ((Options.min_fuel()), 1), errs in
                             let ask_z3 label_assumptions = 
                                 let res = Util.mk_ref None in
                                 Z3.ask use_fresh_z3_context all_labels (with_fuel label_assumptions p min_fuel) (fun r -> res := Some r);
@@ -258,13 +258,13 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
             | _ ->
                 Z3.fuel_trace := Z3.FuelTraceUnavailable
             end;
-            if !Options.print_fuels
+            if (Options.print_fuels())
             then (Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
                     (Range.string_of_range (Env.get_range env))
-                    (!Options.max_fuel |> Util.string_of_int)
-                    (!Options.max_ifuel |> Util.string_of_int));
+                    ((Options.max_fuel()) |> Util.string_of_int)
+                    ((Options.max_ifuel()) |> Util.string_of_int));
             Errors.add_errors env (errs |> List.map (fun (_, x, y) -> x, y));
-            if !Options.detail_errors
+            if (Options.detail_errors())
             then raise (FStar.Syntax.Syntax.Err("Detailed error report follows\n")) in
 
         let rec try_alt_configs prev_f (p:decl) (errs:labels) cfgs = 
@@ -294,18 +294,18 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
                 |Z3.RecordFuelTrace l ->
                     Z3.fuel_trace := Z3.RecordFuelTrace (l @ [(prev_fuel, prev_ifuel)])
                 end;
-                if !Options.print_fuels
+                if (Options.print_fuels())
                 then (Util.print4 "(%s) Query succeeded with fuel %s and ifuel %s%s\n"
-                    (Range.string_of_range (Env.get_range env))
-                    (Util.string_of_int prev_fuel)
+                        (Range.string_of_range (Env.get_range env))
+                        (Util.string_of_int prev_fuel)
                     (Util.string_of_int prev_ifuel)
                     (match cached_config with 
                      | Some _ -> " (cached)"
                      | None -> ""))
-                    else (if !Options.print_fuels
-                    then (Util.print3 "(%s) Query failed with fuel %s and ifuel %s ... retrying \n"
-                        (Range.string_of_range (Env.get_range env))
-                        (Util.string_of_int prev_fuel)
+            else (if (Options.print_fuels())
+                  then (Util.print3 "(%s) Query failed with fuel %s and ifuel %s ... retrying \n"
+                       (Range.string_of_range (Env.get_range env))
+                       (Util.string_of_int prev_fuel)
                         (Util.string_of_int prev_ifuel))) 
                 end
             else try_alt_configs (prev_fuel, prev_ifuel) p errs alt in
@@ -316,10 +316,10 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
                (cb initial_config p alt_configs)  in
 
     let process_query (q:decl) :unit =
-        if !Options.split_cases > 0 then
-            let (b, cb) = SplitQueryCases.can_handle_query !Options.split_cases q in
+        if (Options.split_cases()) > 0 then
+            let (b, cb) = SplitQueryCases.can_handle_query (Options.split_cases()) q in
             if b then SplitQueryCases.handle_query cb check else check q
         else check q
     in
 
-    if !Options.admit_smt_queries then () else process_query query
+    if (Options.admit_smt_queries()) then () else process_query query

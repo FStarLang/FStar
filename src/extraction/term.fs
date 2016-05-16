@@ -506,7 +506,7 @@ let extract_pat (g:env) p (expected_t:mlty) : (env * list<(mlpattern * option<ml
         match p.v with
           | Pat_disj _ -> failwith "Impossible: Nested disjunctive pattern"
 
-          | Pat_constant (Const_int (c, None)) when (not !Options.use_native_int) ->
+          | Pat_constant (Const_int (c, None)) when (not (Options.use_native_int())) ->
             // note: as-patterns are not valid F* and "let Pat_constant i = p.v"
             // is not valid F# ?!!
             let i = Const_int (c, None) in
@@ -663,6 +663,12 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
 
         | _ -> mlAppExpr
 
+let maybe_downgrade_eff g f t =
+    if f = E_GHOST
+    && type_leq g t ml_unit_ty
+    then E_PURE
+    else f
+
 //The main extraction function
 let rec term_as_mlexpr (g:env) (t:term) : (mlexpr * e_tag * mlty) =
     let e, tag, ty = term_as_mlexpr' g t in
@@ -680,6 +686,7 @@ and check_term_as_mlexpr (g:env) (t:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty)
 
 and check_term_as_mlexpr' (g:env) (e0:term) (f:e_tag) (ty:mlty) : (mlexpr * mlty) =
     let e, tag, t = term_as_mlexpr g e0 in
+    let tag = maybe_downgrade_eff g tag t in
     if eff_leq tag f
     then maybe_coerce g e t ty, ty
     else err_unexpected_eff e0 f tag

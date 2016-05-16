@@ -66,7 +66,7 @@ let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
 let tc_prims () : Syntax.modul
                   * DsEnv.env
                   * TcEnv.env =
-  let solver = if !Options.verify then SMT.solver else SMT.dummy in
+  let solver = if Options.lax() then SMT.dummy else SMT.solver in
   let env = TcEnv.initial_env Tc.type_of solver Const.prims_lid in
   env.solver.init env;
   let p = Options.prims () in
@@ -100,37 +100,47 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
             Some (Some modul, dsenv, env) 
 
     with
-      | Syntax.Error(msg, r) when not (!Options.trace_error) ->
+      | Syntax.Error(msg, r) when not ((Options.trace_error())) ->
           TypeChecker.Errors.add_errors env [(msg,r)];
           None
-      | Syntax.Err msg when not (!Options.trace_error) ->
+      | Syntax.Err msg when not ((Options.trace_error())) ->
           TypeChecker.Errors.add_errors env [(msg,Range.dummyRange)];
           None
-      | e when not (!Options.trace_error) -> raise e
+      | e when not ((Options.trace_error())) -> raise e
 
 (******************************************************************************)
 (* Building an instance of the type-checker to be run in the interactive loop *)
 (******************************************************************************)
+let pop_context (dsenv, env) msg =
+    DsEnv.pop dsenv |> ignore;
+    TcEnv.pop env msg |> ignore;
+    env.solver.refresh()
+
+let push_context (dsenv, env) msg =
+    let dsenv = DsEnv.push dsenv in
+    let env = TcEnv.push env msg in
+    (dsenv, env)
+        
 let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul>> = 
     let pop (dsenv, env) msg = 
-          DsEnv.pop dsenv |> ignore;
-          TcEnv.pop env msg |> ignore;
-          env.solver.refresh();
-          Options.restore_cmd_line_options() |> ignore in
+          pop_context (dsenv, env) msg;
+          Options.pop() in
 
     let push (dsenv, env) msg = 
-          let dsenv = DsEnv.push dsenv in
-          let env = TcEnv.push env msg in
-          (dsenv, env) in
+          let res = push_context (dsenv, env) msg in
+          Options.push();
+          res in
 
     let mark (dsenv, env) =
         let dsenv = DsEnv.mark dsenv in
         let env = TcEnv.mark env in
+        Options.push();
         dsenv, env in
 
     let reset_mark (dsenv, env) =
         let dsenv = DsEnv.reset_mark dsenv in
         let env = TcEnv.reset_mark env in
+        Options.pop();
         dsenv, env in
 
     let commit_mark (dsenv, env) =
@@ -145,11 +155,11 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
                   Some (m, (dsenv, env), FStar.TypeChecker.Errors.get_err_count())
                 | _ -> None
         with 
-            | FStar.Syntax.Syntax.Error(msg, r) when not (!Options.trace_error) ->
+            | FStar.Syntax.Syntax.Error(msg, r) when not ((Options.trace_error())) ->
               FStar.TypeChecker.Errors.add_errors env [(msg, r)];
               None
               
-            | FStar.Syntax.Syntax.Err msg when not (!Options.trace_error) ->
+            | FStar.Syntax.Syntax.Err msg when not ((Options.trace_error())) ->
               FStar.TypeChecker.Errors.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
               None in
 
@@ -173,7 +183,7 @@ let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
                                * TcEnv.env  =
   let dsenv, fmods = parse dsenv pre_fn fn in
   let deps = 
-    if !Options.explicit_deps then
+    if (Options.explicit_deps()) then
       (* dummy value; we don't use cached fuel traces when `--explicit_deps` is specified; see `FStar.SMTEncoding.ErrorReporting.initialize_fuel_trace` for more info. *)
       []
     else begin
@@ -226,18 +236,19 @@ let rec tc_fold_interleave acc remaining =
         | None -> //no interface; easy
           tc_one_file dsenv env intf impl 
 
-        | Some _ when (!Options.codegen <> None) -> 
-          if !Options.verify
+        | Some _ when ((Options.codegen()) <> None) -> 
+          if not (Options.lax())
           then raise (Err "Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately");
           tc_one_file dsenv env intf impl
 
         | Some iname -> 
+          FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
           let caption = "interface: " ^ iname in
           //push a new solving context, so that we can blow away implementation details below
-          let dsenv', env' = interactive_tc.push (dsenv, env) caption in
+          let dsenv', env' = push_context (dsenv, env) caption in
           let _, dsenv', env' = tc_one_file dsenv' env' intf impl in //check the impl and interface together, if any
           //discard the impl and check the interface alone for the rest of the program
-          let _ = interactive_tc.pop (dsenv', env') caption in
+          let _ = pop_context (dsenv', env') caption in
           tc_one_file dsenv env None iname in //check the interface alone
     let acc = all_mods @ ms, dsenv, env in
     tc_fold_interleave acc remaining
@@ -256,14 +267,14 @@ let rec tc_fold_interleave acc remaining =
 (***********************************************************************)
 let batch_mode_tc_no_prims dsenv env filenames =
   let all_mods, dsenv, env = tc_fold_interleave ([], dsenv, env) filenames in
-  if !Options.interactive && FStar.TypeChecker.Errors.get_err_count () = 0
+  if (Options.interactive()) && FStar.TypeChecker.Errors.get_err_count () = 0
   then env.solver.refresh()
   else env.solver.finish();
   all_mods, dsenv, env
 
 let batch_mode_tc filenames =
   let prims_mod, dsenv, env = tc_prims () in
-  let filenames, admit_fsi = find_deps_if_needed filenames in
+  let filenames = find_deps_if_needed filenames in
   let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
   prims_mod :: all_mods, dsenv, env
 

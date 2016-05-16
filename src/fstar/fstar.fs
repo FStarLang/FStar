@@ -24,12 +24,7 @@ open FStar.Interactive
 (* process_args:  parses command line arguments, setting FStar.Options *)
 (*                returns an error status and list of filenames        *)
 let process_args () : parse_cmdline_res * list<string> =
-  let file_list = Util.mk_ref [] in
-  let res = Getopt.parse_cmdline (Options.specs()) (fun i -> file_list := !file_list @ [i]) in
-    (match res with
-       | GoOn -> ignore (Options.set_fstar_home ())
-       | _ -> ());
-    (res, !file_list)
+  Options.parse_cmd_line ()
 
 (* cleanup: kills background Z3 processes; relevant when --n_cores > 1 *)
 let cleanup () = Util.kill_all ()
@@ -37,7 +32,7 @@ let cleanup () = Util.kill_all ()
 (* printing total error count *)
 let report_errors () =
   let errs =
-      if !Options.universes
+      if (Options.universes())
       then FStar.TypeChecker.Errors.get_err_count()
       else FStar.Tc.Errors.get_err_count () in
   if errs > 0 then begin
@@ -47,30 +42,26 @@ let report_errors () =
 
 (* printing a finished message *)
 let finished_message fmods =
-  if not !Options.silent then begin
-    let msg =
-      if !Options.verify then "Verifying"
-      else if !Options.pretype then "Lax type-checked"
-      else "Parsed and desugared" in
-        fmods |> List.iter (fun (iface, name) ->
-                 let tag = if iface then "i'face" else "module" in
-                 if Options.should_print_message name.str
-                 then Util.print_string (Util.format3 "%s %s: %s\n" msg tag (Ident.text_of_lid name)));
-        print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
-    end
+  if not (Options.silent()) then begin
+    fmods |> List.iter (fun (iface, name) ->
+                let tag = if iface then "i'face" else "module" in
+                if Options.should_print_message name.str
+                then Util.print_string (Util.format2 "Verifying %s: %s\n" tag (Ident.text_of_lid name)));
+    print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
+  end
 
 (* Extraction to OCaml or F# *)
 let codegen uf_mods_env =
-  if !Options.codegen = Some "OCaml" ||
-     !Options.codegen = Some "FSharp"
+  if (Options.codegen()) = Some "OCaml" ||
+     (Options.codegen()) = Some "FSharp"
   then begin
     let mllibs = match uf_mods_env with 
         | Inl (fmods, env) -> snd <| Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods
         | Inr (umods, env) -> snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
-    let ext = if !Options.codegen = Some "FSharp" then ".fs" else ".ml" in
+    let ext = if (Options.codegen()) = Some "FSharp" then ".fs" else ".ml" in
     let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
-    List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FStar.Format.pretty 120 d)) newDocs
+    List.iter (fun (n,d) -> Util.write_file (Options.prepend_output_dir (n^ext)) (FStar.Format.pretty 120 d)) newDocs
     end
 
 (****************************************************************************)
@@ -80,15 +71,15 @@ let go _ =
   let res, filenames = process_args () in
   match res with
     | Help ->
-        Options.display_usage (Options.specs())
+        Options.display_usage(); exit 0
     | Die msg ->
         Util.print_string msg
     | GoOn ->
-        if !Options.dep <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
+        if (Options.dep()) <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then Parser.Dep.print (Parser.Dep.collect filenames)
-        else if !Options.interactive then //--in
+        else if (Options.interactive()) then //--in
           let filenames =
-            if !Options.explicit_deps then begin
+            if (Options.explicit_deps()) then begin
               if List.length filenames = 0 then
                 Util.print_error "--explicit_deps was provided without a file list!\n";
                 filenames
@@ -99,7 +90,7 @@ let go _ =
                 detect_dependencies_with_first_interactive_chunk ()
               end
           in
-          if !Options.universes
+          if (Options.universes())
           then let fmods, dsenv, env = Universal.batch_mode_tc filenames in //check all the dependences in batch mode
                interactive_mode (dsenv, env) None Universal.interactive_tc //and then start checking chunks from the current buffer
           else let fmods, dsenv, env = Stratified.batch_mode_tc filenames in //check all the dependences in batch mode
@@ -108,10 +99,15 @@ let go _ =
         else if List.length filenames >= 1 then begin //normal batch mode
           (* Unless dependencies are explicit, we take the filenames passed on
            * the command-line to be those we want to verify. *)
-          if not (!Options.explicit_deps) then
-            Options.verify_module := !Options.verify_module @
-              List.map (fun f -> must (Parser.Dep.check_and_strip_suffix (basename f)) |> String.lowercase) filenames;
-          if !Options.universes
+          if not ((Options.explicit_deps())) then begin
+            let files = 
+              List.map (fun f -> 
+                    match Parser.Dep.check_and_strip_suffix (basename f) with 
+                    | None -> Util.print1 "Unrecognized file type: %s\n" f; exit 1
+                    | Some f -> String.lowercase f) filenames in
+            List.iter Options.add_verify_module files
+          end;
+          if (Options.universes())
           then let fmods, dsenv, env = Universal.batch_mode_tc filenames in
                report_errors ();
                codegen (Inr (fmods, env));
@@ -135,7 +131,7 @@ let main () =
     (begin 
         if F_Util.handleable e then F_Util.handle_err false () e;
         if U_Util.handleable e then U_Util.handle_err false e;
-        if !Options.trace_error then
+        if (Options.trace_error()) then
           Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
         else if not (F_Util.handleable e || U_Util.handleable e) then
           Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)

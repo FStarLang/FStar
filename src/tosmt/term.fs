@@ -550,7 +550,7 @@ let mk_HasType v t    = mkApp("HasType", [v;t])
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t])
 let mk_IsTyped v      = mkApp("IsTyped", [v])
 let mk_HasTypeFuel f v t =
-   if !Options.unthrottle_inductives
+   if (Options.unthrottle_inductives())
    then mk_HasType v t
    else mkApp("HasTypeFuel", [f;v;t])
 let mk_HasTypeWithFuel f v t = match f with

@@ -16,3 +16,15 @@ val close_read_file : fd_read -> unit
 val close_write_file : fd_write -> unit
 val read_line : fd_read -> string
 val write_string : fd_write -> string -> unit
+
+(* 
+   An UNSOUND escape hatch for printf-debugging;
+   Although it always returns false, we mark it
+   as returning a bool, so that extraction doesn't
+   erase this call.
+
+   Note: no guarantees are provided regarding the order 
+   of evaluation of this function; since it is marked as pure, 
+   the compiler may re-order or replicate it.
+*)
+val debug_print_string : string -> Tot bool

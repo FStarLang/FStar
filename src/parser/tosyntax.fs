@@ -1555,7 +1555,7 @@ let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul * bool 
 
 let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modul =
   let m =
-    if !Options.interactive_fsi then
+    if (Options.interactive_fsi()) then
         match m with
             | Module(mname, decls) -> AST.Interface(mname, decls, true)
             | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
@@ -1567,7 +1567,7 @@ let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modu
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
   let env, modul, pop_when_done = desugar_modul_common None env m in
   let env = Env.finish_module_or_interface env modul in
-  if Options.should_dump modul.name.str 
+  if Options.dump_module modul.name.str 
   then Util.print1 "%s\n" (Print.modul_to_string modul);
   (if pop_when_done then export_interface modul.name env else env), modul
 

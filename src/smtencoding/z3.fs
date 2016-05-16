@@ -90,7 +90,7 @@ let get_z3version () =
     match !_z3version with
     | Some version -> version
     | None ->
-        let _, out, _ = Util.run_proc !Options.z3_exe "-version" "" in
+        let _, out, _ = Util.run_proc (Options.z3_exe()) "-version" "" in
         let out =
             match splitlines out with
             | x :: _ when starts_with x prefix -> begin
@@ -108,8 +108,8 @@ let ini_params opt_timeout =
   let timeout =
     begin match opt_timeout with
     | Some n ->
-      let t =
-        if z3v_le (get_z3version ()) (4, 3, 1)
+  let t =
+    if z3v_le (get_z3version ()) (4, 3, 1)
         then n
         else n * 1000
       in
@@ -143,13 +143,13 @@ let status_to_string = function
 
 let tid () = Util.current_tid() |> Util.string_of_int
 let new_z3proc id timeout =
-    let cond pid (s:string) =
-        (let x = Util.trim_string s = "Done!" in
+   let cond pid (s:string) =
+    (let x = Util.trim_string s = "Done!" in
 //     Util.print5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
-         x) in
+     x) in
     let args = ini_params timeout in
     (* we log the following information with `--print_fuels` because lack of a timeout is only associated with fuel tracing *)
-    if !Options.print_fuels then
+    if (Options.print_fuels()) then
         match timeout with
         | Some n ->
             Util.print2 "Starting z3 process `%s` with a timeout of %s.\n" id <| string_of_int n
@@ -157,7 +157,7 @@ let new_z3proc id timeout =
             Util.print1 "Starting z3 process `%s` without a timeout.\n" id
     else
         ();
-    Util.start_process id (!Options.z3_exe) args cond
+    Util.start_process id ((Options.z3_exe())) args cond
 
 type bgproc = {
     grab:unit -> proc;
@@ -193,7 +193,7 @@ let new_proc () =
     if is_replaying_fuel_trace () then
       None
     else
-      Some !Options.z3timeout
+      Some (Options.z3_timeout())
   in
   new_z3proc (Util.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) timeout
 
@@ -243,7 +243,7 @@ let doZ3Exe' (input:string) (z3proc:proc) =
 let doZ3Exe =
     let ctr = Util.mk_ref 0 in
     fun (fresh:bool) (input:string) ->
-        let z3proc = if fresh then (incr ctr; new_z3proc (Util.string_of_int !ctr) (Some !Options.z3timeout)) else bg_z3_proc.grab() in
+        let z3proc = if fresh then (incr ctr; new_z3proc (Util.string_of_int !ctr) (Some (Options.z3_timeout()))) else bg_z3_proc.grab() in
         let res = doZ3Exe' input z3proc in
         //Printf.printf "z3-%A says %s\n"  (get_z3version()) (status_to_string (fst res));
         if fresh then Util.kill_process z3proc else bg_z3_proc.release();
@@ -284,7 +284,7 @@ let z3_job fresh label_messages input () =
   let result = match status with
     | UNSAT -> true, []
     | _ ->
-        if !Options.debug <> [] then print_string <| format1 "Z3 says: %s\n" (status_to_string status);
+        if Options.debug_any() then print_string <| format1 "Z3 says: %s\n" (status_to_string status);
         let failing_assertions = lblnegs |> List.collect (fun l ->
         match label_messages |> List.tryFind (fun (m, _, _) -> fst m = l) with
             | None -> []
@@ -316,7 +316,7 @@ and dequeue () =
 and run_job j = j.callback <| j.job ()
 
 let init () =
-    let n_runners = !Options.n_cores - 1 in
+    let n_runners = (Options.n_cores()) - 1 in
     let rec aux n =
         if n = 0 then ()
         else (spawn dequeue; aux (n - 1)) in
@@ -381,14 +381,14 @@ let commit_mark msg =
         | _ -> failwith "Impossible"
     end
 let ask fresh label_messages qry (cb: (bool * error_labels) -> unit) =
-  let fresh = fresh && !Options.n_cores > 1 in
+  let fresh = fresh && (Options.n_cores()) > 1 in
   let theory = bgtheory fresh in
   let theory =
     if fresh
     then theory@qry
     else theory@[Term.Push]@qry@[Term.Pop] in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
-  if !Options.logQueries then log_query fresh input;
+  if (Options.log_queries()) then log_query fresh input;
   enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
 
 (****************************************************************************)
@@ -404,7 +404,7 @@ let initialize_fuel_trace src_fn deps force_invalid_cache : unit =
         begin match Util.load_value_from_file val_fn with
         | Some state ->
             let means, validated = 
-                if !Options.explicit_deps then
+                if (Options.explicit_deps()) then
                     (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
                     let expected = Util.digest_of_file norm_src_fn in
                     ("Module", state.identity.module_digest = expected)
@@ -420,21 +420,21 @@ let initialize_fuel_trace src_fn deps force_invalid_cache : unit =
                         end)
             in
             if validated then
-                begin if !Options.print_fuels then
+                begin if (Options.print_fuels()) then
                         Util.print2 "(%s) %s digest is valid.\n" norm_src_fn means
                     else
                         ();
                     fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
                 end
             else
-                begin if !Options.print_fuels then
+                begin if (Options.print_fuels()) then
                       Util.print2 "(%s) %s digest is invalid.\n" norm_src_fn means
                   else
                       ();
                   fuel_trace := RecordFuelTrace []
                 end
         | None ->
-            if !Options.print_fuels then
+            if (Options.print_fuels()) then
                 Util.print1 "(%s) Unable to read cached fuel trace.\n" norm_src_fn
             else
                 ();
@@ -456,7 +456,7 @@ let finalize_fuel_trace src_fn deps : unit =
         let val_fn = format_fuel_trace_file_name src_fn in
         let xd = 
             (* we're unable to compute the transitive digest when `--explicit_deps` is specified. *)
-            if !Options.explicit_deps then
+            if (Options.explicit_deps()) then
                 None
             else
                 Some <| compute_transitive_digest src_fn deps

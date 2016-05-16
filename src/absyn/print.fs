@@ -128,15 +128,15 @@ let unary_type_op_to_string t = find_lid (get_type_lid t) unary_type_ops
 let quant_to_string t = find_lid (get_type_lid t) quants
 
 let rec sli (l:lident) : string =
-   if !Options.print_real_names
+   if (Options.print_real_names())
    then l.str
    else l.ident.idText
 
 let strBvd bvd =
-    if !Options.print_real_names
+    if (Options.print_real_names())
     then bvd.ppname.idText ^ bvd.realname.idText
     else
-        if !Options.hide_genident_nums && starts_with (bvd.ppname.idText) "_" then
+        if (Options.hide_genident_nums()) && starts_with (bvd.ppname.idText) "_" then
             try
                 let _ = int_of_string (substring_from (bvd.ppname.idText) 1) in "_?"
             with _ -> bvd.ppname.idText
@@ -217,7 +217,7 @@ and typ_to_string x =
         | Inr e -> Util.format1 "(<Expected a type!>%s)" (exp_to_string e) in
       let qbinder_to_string = q_to_string (fun x -> binder_to_string (fst x)) in
       let qbody_to_string = q_to_string (fun x -> typ_to_string (snd x)) in
-      let args' = if !Options.print_implicits && not (is_quant t) then args else filter_imp args in (* drop implicit arguments for type operators *)
+      let args' = if (Options.print_implicits()) && not (is_quant t) then args else filter_imp args in (* drop implicit arguments for type operators *)
       if is_ite t && List.length args = 3 then
         format3 "if %s then %s else %s" (arg_to_string (List.nth args 0)) (arg_to_string (List.nth args 1)) (arg_to_string (List.nth args 2))
       else if is_b2t t && List.length args = 1 then List.nth args 0 |> arg_to_string
@@ -232,7 +232,7 @@ and typ_to_string x =
         Util.format2 "(%s %s)" (t |> typ_to_string) (args |> args_to_string)
   | Typ_lam(binders, t2) ->      Util.format2 "(fun %s -> %s)" (binders_to_string " " binders) (t2|> typ_to_string)
   | Typ_ascribed(t, k) ->
-    if !Options.print_real_names
+    if (Options.print_real_names())
     then Util.format2 "(%s <: %s)" (typ_to_string t) (kind_to_string k)
     else t|> typ_to_string
   | Typ_unknown -> "<UNKNOWN>"
@@ -241,12 +241,12 @@ and typ_to_string x =
       | t -> t|> typ_to_string)
 
 and uvar_t_to_string (uv, k) =
-   if false && !Options.print_real_names
+   if false && (Options.print_real_names())
    then
        Util.format2 "(U%s : %s)"
-       (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
+       (if (Options.hide_uvar_nums()) then "?" else Util.string_of_int (Unionfind.uvar_id uv))
        (kind_to_string k)
-   else Util.format1 "U%s"  (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
+   else Util.format1 "U%s"  (if (Options.hide_uvar_nums()) then "?" else Util.string_of_int (Unionfind.uvar_id uv))
 
 and imp_to_string s = function
   | Some (Implicit _) -> "#" ^ s
@@ -254,13 +254,13 @@ and imp_to_string s = function
   | _ -> s
 
 and binder_to_string' is_arrow b = match b with
-    | Inl a, imp -> if is_null_binder b || (!Options.print_real_names |> not && is_null_pp a.v)
+    | Inl a, imp -> if is_null_binder b || ((Options.print_real_names()) |> not && is_null_pp a.v)
                     then kind_to_string a.sort
-                    else if not is_arrow && not (!Options.print_implicits) then imp_to_string (strBvd a.v) imp
+                    else if not is_arrow && not ((Options.print_implicits())) then imp_to_string (strBvd a.v) imp
                     else imp_to_string ((strBvd a.v) ^ ":" ^ (kind_to_string a.sort)) imp
-    | Inr x, imp -> if is_null_binder b || (!Options.print_real_names |> not && is_null_pp x.v)
+    | Inr x, imp -> if is_null_binder b || ((Options.print_real_names()) |> not && is_null_pp x.v)
                     then typ_to_string x.sort
-                    else if not is_arrow && not (!Options.print_implicits) then imp_to_string (strBvd x.v) imp
+                    else if not is_arrow && not ((Options.print_implicits())) then imp_to_string (strBvd x.v) imp
                     else imp_to_string ((strBvd x.v) ^ ":" ^ (typ_to_string x.sort)) imp
 
 and binder_to_string b =  binder_to_string' false b
@@ -268,7 +268,7 @@ and binder_to_string b =  binder_to_string' false b
 and arrow_binder_to_string b = binder_to_string' true b
 
 and binders_to_string sep bs =
-    let bs = if !Options.print_implicits then bs else filter_imp bs in
+    let bs = if (Options.print_implicits()) then bs else filter_imp bs in
     if sep = " -> "
     then bs |> List.map arrow_binder_to_string |> String.concat sep
     else bs |> List.map binder_to_string |> String.concat sep
@@ -278,7 +278,7 @@ and arg_to_string = function
    | Inr x, imp -> imp_to_string (exp_to_string x) imp
 
 and args_to_string args =
-    let args = if !Options.print_implicits then args else filter_imp args in
+    let args = if (Options.print_implicits()) then args else filter_imp args in
     args |> List.map arg_to_string |> String.concat " "
 
 and lcomp_typ_to_string lc =
@@ -289,13 +289,13 @@ and comp_typ_to_string c =
     | Total t -> Util.format1 "Tot %s" (typ_to_string t)
     | Comp c ->
       let basic =
-          if c.flags |> Util.for_some (function TOTAL -> true | _ -> false) && not !Options.print_effect_args
+          if c.flags |> Util.for_some (function TOTAL -> true | _ -> false) && not (Options.print_effect_args())
           then Util.format1 "Tot %s" (typ_to_string c.result_typ)
-          else if not !Options.print_effect_args && (lid_equals c.effect_name Const.effect_ML_lid)//  || List.contains MLEFFECT c.flags)
+          else if not (Options.print_effect_args()) && (lid_equals c.effect_name Const.effect_ML_lid)//  || List.contains MLEFFECT c.flags)
           then typ_to_string c.result_typ
-          else if not !Options.print_effect_args && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
+          else if not (Options.print_effect_args()) && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
           then Util.format1 "ALL %s" (typ_to_string c.result_typ)
-          else if !Options.print_effect_args
+          else if (Options.print_effect_args())
           then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (c.effect_args |> List.map effect_arg_to_string |> String.concat ", ")//match c.effect_args with hd::_ -> effect_arg_to_string hd | _ ->"")
           else Util.format2 "%s (%s)" (sli c.effect_name) (typ_to_string c.result_typ) in
       let dec = c.flags |> List.collect (function DECREASES e -> [Util.format1 " (decreases %s)" (exp_to_string e)] | _ -> []) |> String.concat " " in
@@ -329,7 +329,7 @@ and formula_to_string_old_now_unused phi =
         | _ -> failwith "impos" in
     let eq_op = function
         | [(Inl t1, _); (Inl t2, _); (Inr e1, _); (Inr e2, _)] ->
-          if !Options.print_implicits
+          if (Options.print_implicits())
           then format4 "Eq2 %s %s %s %s" (typ_to_string t1) (typ_to_string t2) (exp_to_string e1) (exp_to_string e2)
           else format2 "%s == %s" (exp_to_string e1) (exp_to_string e2)
         | [(Inr e1, _); (Inr e2, _)] -> format2 "%s == %s" (exp_to_string e1) (exp_to_string e2)
@@ -373,7 +373,7 @@ and exp_to_string x = match (compress_exp x).n with
   | Exp_constant c -> c |> const_to_string
   | Exp_abs(binders, e) -> Util.format2 "(fun %s -> %s)" (binders_to_string " " binders) (e|> exp_to_string)
   | Exp_app(e, args) ->
-      let lex = if !Options.print_implicits then None else reconstruct_lex x in
+      let lex = if (Options.print_implicits()) then None else reconstruct_lex x in
       (match lex with
       | Some es -> "%[" ^ (String.concat "; " (List.map exp_to_string es)) ^ "]"
       | None ->
@@ -399,7 +399,7 @@ and exp_to_string x = match (compress_exp x).n with
     (e|> exp_to_string)
 
 and uvar_e_to_string (uv, _) =
-    "'e" ^ (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
+    "'e" ^ (if (Options.hide_uvar_nums()) then "?" else Util.string_of_int (Unionfind.uvar_id uv))
 
 and lbs_to_string lbs =
     Util.format2 "let %s %s"
@@ -433,17 +433,17 @@ and kind_to_string x = match (compress_kind x).n with
   | Kind_type -> "Type"
   | Kind_effect -> "Effect"
   | Kind_abbrev((n, args), k) ->
-    if !Options.print_real_names
+    if (Options.print_real_names())
     then kind_to_string k
     else Util.format2 "%s %s" (sli n) (args_to_string args)
   | Kind_arrow(binders, k) -> Util.format2 "(%s -> %s)" (binders_to_string " -> " binders) (k |> kind_to_string)
   | Kind_unknown -> "_"
 
 and uvar_k_to_string uv =
-    "'k_" ^ (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
+    "'k_" ^ (if (Options.hide_uvar_nums()) then "?" else Util.string_of_int (Unionfind.uvar_id uv))
 
 and uvar_k_to_string' (uv,args) =
-   let str = if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv) in
+   let str = if (Options.hide_uvar_nums()) then "?" else Util.string_of_int (Unionfind.uvar_id uv) in
    format2 "('k_%s %s)" str (args_to_string args)
 
 and pat_to_string x = match x.v with

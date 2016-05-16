@@ -177,7 +177,4 @@ let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
                     end
 
                 | _ -> aux ([d]::out) ds impl in
-        let decls = aux [] iface impl in
-        if !Options.debug_level |> List.contains (Options.Other "Interleaving")
-        then Util.print_string (List.map decl_to_string decls |> String.concat "\n");
-        decls
+        aux [] iface impl

@@ -280,3 +280,4 @@ let rec iteri_aux i f x = match x with
   | a::tl -> f i a; iteri_aux (i+1) f tl
 let iteri f x = iteri_aux 0 f x
 
+let map_flatten f l = flatten (map f l)

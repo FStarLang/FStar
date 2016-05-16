@@ -15,7 +15,8 @@
 *)
 #light "off"
 
-//Batch-mode type-checking for the stratified type-checker
+// A dependency-finding routine shared between the universal and stratified
+// flavors of F*
 module FStar.Dependences
 open FStar
 open FStar.Util
@@ -26,15 +27,15 @@ open FStar.Ident
 (* Finding the transitive dependences of a list of files               *)
 (***********************************************************************)
 let find_deps_if_needed files =
-  if !Options.explicit_deps then
-    files, []
+  if Options.explicit_deps () then
+    files
   else
     let _, deps = Parser.Dep.collect files in
-    match deps with 
-    | [] -> 
+    match deps with
+    | [] ->
         Util.print_error "Dependency analysis failed; reverting to using only the files provided";
-        files, []
-    | _ -> 
+        files
+    | _ ->
         let deps = List.rev deps in
         let deps =
           if basename (List.hd deps) = "prims.fst" then
@@ -44,13 +45,4 @@ let find_deps_if_needed files =
             exit 1
           end
         in
-        let admit_fsi = ref [] in
-        List.iter (fun d ->
-                  let d = basename d in
-                  if get_file_extension d = "fsti" then
-                    admit_fsi := substring d 0 (String.length d - 5) :: !admit_fsi
-                  else if get_file_extension d = "fsi" then begin
-                    admit_fsi := substring d 0 (String.length d - 4) :: !admit_fsi end
-        ) deps;
-        deps, !admit_fsi
-
+        deps
