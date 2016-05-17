@@ -1039,7 +1039,7 @@ module TestDhke = struct
     string_of_bytes secret1 = string_of_bytes secret2
 
   let simple_test () =
-    let params = dh_gen_params 1024 in
+    let params = dh_gen_params 512 in
     let alice = dh_gen_key params in
     let bob = dh_gen_key params in
     let shared1 = dh_agreement alice bob.dh_public in
