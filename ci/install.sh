@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-  brew install gcc ocaml opam z3 gmp;
+  brew install ocaml opam z3 gmp;
 fi
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
   sudo apt-get install --yes libssl-dev opam libgmp-dev libsqlite3-dev g++-5 gcc-5;
