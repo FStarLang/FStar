@@ -12,8 +12,12 @@ fi
 export OPAMYES=true
 opam init
 eval $(opam config env)
-opam switch 4.02.3
-eval $(opam config env)
+# Our Ubuntu build boxes come with an old version of OCaml, so start with an
+# upgrade. The OSX boxes use brew, which is up-to-date.
+if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+  opam switch 4.02.3
+  eval $(opam config env)
+fi
 opam install batteries sqlite3 fileutils stdint zarith
 
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
