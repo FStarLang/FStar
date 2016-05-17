@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 eval $(opam config env)
 export Z3=z3-4.4.1-x64-ubuntu-14.04;
 export PATH=/home/travis/build/FStarLang/FStar/$Z3/bin:/home/travis/build/FStarLang/FStar/bin:$PATH;

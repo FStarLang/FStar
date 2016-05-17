@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   brew install ocaml opam z3 gmp;
 fi
