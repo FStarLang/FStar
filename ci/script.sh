@@ -21,4 +21,4 @@ make -C src/ocaml-output
 
 echo -e "\e[31m=== Running tests ===\e[0m"
 make -C examples/unit-tests
-make -C src regressions
+make -C src regressions OTHERFLAGS=--lax
