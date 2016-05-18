@@ -802,11 +802,11 @@ in (FStar_All.pipe_right _113_319 (FStar_List.map (fun _113_318 -> String (_113_
 in List (_113_320))), "module name")), "Print LOTS of debugging information while checking module [arg]"))::((FStar_Getopt.noshort, "debug_level", FStar_Getopt.OneArg (((fun x -> (let _113_327 = (let _113_326 = (let _113_324 = (get_debug_level ())
 in (x)::_113_324)
 in (FStar_All.pipe_right _113_326 (FStar_List.map (fun _113_325 -> String (_113_325)))))
-in List (_113_327))), "Low|Medium|High|Extreme|...")), "Control the verbosity of debugging info"))::((FStar_Getopt.noshort, "dep", FStar_Getopt.OneArg (((fun x -> if (x = "make") then begin
+in List (_113_327))), "Low|Medium|High|Extreme|...")), "Control the verbosity of debugging info"))::((FStar_Getopt.noshort, "dep", FStar_Getopt.OneArg (((fun x -> if ((x = "make") || (x = "graph")) then begin
 String (x)
 end else begin
 (FStar_All.failwith "invalid argument to \'dep\'")
-end), "make")), "Output the transitive closure of the dependency graph in a format suitable for the given tool"))::((FStar_Getopt.noshort, "detail_errors", FStar_Getopt.ZeroArgs ((fun _24_198 -> (match (()) with
+end), "make|graph")), "Output the transitive closure of the dependency graph in a format suitable for the given tool"))::((FStar_Getopt.noshort, "detail_errors", FStar_Getopt.ZeroArgs ((fun _24_198 -> (match (()) with
 | () -> begin
 Bool (true)
 end))), "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; requires --universes"))::((FStar_Getopt.noshort, "dump_module", FStar_Getopt.OneArg (((fun x -> (let _113_339 = (let _113_337 = (let _113_335 = (get_dump_module ())
