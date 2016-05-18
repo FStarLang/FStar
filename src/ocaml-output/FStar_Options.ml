@@ -1471,6 +1471,9 @@ let use_native_int : Prims.unit  ->  Prims.bool = (fun _24_437 -> (match (()) wi
 end))
 
 
+let verify_module : Prims.unit  ->  Prims.string Prims.list = get_verify_module
+
+
 let warn_cardinality : Prims.unit  ->  Prims.bool = (fun _24_438 -> (match (()) with
 | () -> begin
 ((get_cardinality ()) = "warn")
