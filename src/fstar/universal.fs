@@ -244,6 +244,7 @@ let batch_mode_tc_no_prims dsenv env filenames =
 let batch_mode_tc filenames =
   let prims_mod, dsenv, env = tc_prims () in
   let filenames = find_deps_if_needed filenames in
+  FStar.Util.print1 "Filenames: %s\n" (String.concat " " filenames);
   let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
   prims_mod :: all_mods, dsenv, env
 

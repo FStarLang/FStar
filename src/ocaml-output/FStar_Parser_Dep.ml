@@ -765,26 +765,26 @@ in (
 let topologically_sorted = (FStar_ST.alloc [])
 in (
 
-let rec discover = (fun key -> (
+let rec discover = (fun cycle key -> (
 
-let _68_596 = (let _157_182 = (FStar_Util.smap_try_find graph key)
-in (FStar_Util.must _157_182))
-in (match (_68_596) with
+let _68_597 = (let _157_184 = (FStar_Util.smap_try_find graph key)
+in (FStar_Util.must _157_184))
+in (match (_68_597) with
 | (direct_deps, color) -> begin
 (match (color) with
 | Gray -> begin
 (
 
-let _68_598 = (FStar_Util.print1 "Warning: recursive dependency on module %s\n" key)
+let _68_599 = (FStar_Util.print1 "Warning: recursive dependency on module %s\n" key)
 in (
 
-let _68_600 = (FStar_Util.print_string "Here\'s the (non-transitive) dependency graph:\n")
+let _68_601 = (FStar_Util.print1 "The cycle is: %s \n" (FStar_String.concat " -> " cycle))
 in (
 
-let _68_602 = (print_graph ())
+let _68_603 = (print_graph ())
 in (
 
-let _68_604 = (FStar_Util.print_string "\n")
+let _68_605 = (FStar_Util.print_string "\n")
 in (FStar_All.exit 1)))))
 end
 | Black -> begin
@@ -793,34 +793,37 @@ end
 | White -> begin
 (
 
-let _68_608 = (FStar_Util.smap_add graph key (direct_deps, Gray))
+let _68_609 = (FStar_Util.smap_add graph key (direct_deps, Gray))
 in (
 
-let all_deps = (let _157_186 = (let _157_185 = (FStar_List.map (fun dep -> (let _157_184 = (discover dep)
-in (dep)::_157_184)) direct_deps)
-in (FStar_List.flatten _157_185))
-in (FStar_List.unique _157_186))
+let all_deps = (let _157_188 = (let _157_187 = (FStar_List.map (fun dep -> (let _157_186 = (discover ((key)::cycle) dep)
+in (dep)::_157_186)) direct_deps)
+in (FStar_List.flatten _157_187))
+in (FStar_List.unique _157_188))
 in (
 
-let _68_612 = (FStar_Util.smap_add graph key (all_deps, Black))
+let _68_613 = (FStar_Util.smap_add graph key (all_deps, Black))
 in (
 
-let _68_614 = (let _157_188 = (let _157_187 = (FStar_ST.read topologically_sorted)
-in (key)::_157_187)
-in (FStar_ST.op_Colon_Equals topologically_sorted _157_188))
+let _68_615 = (let _157_190 = (let _157_189 = (FStar_ST.read topologically_sorted)
+in (key)::_157_189)
+in (FStar_ST.op_Colon_Equals topologically_sorted _157_190))
 in all_deps))))
 end)
 end)))
 in (
 
+let discover = (discover [])
+in (
+
 let must_find = (must_find m)
 in (
 
-let must_find_r = (fun f -> (let _157_192 = (must_find f)
-in (FStar_List.rev _157_192)))
+let must_find_r = (fun f -> (let _157_195 = (must_find f)
+in (FStar_List.rev _157_195)))
 in (
 
-let by_target = (let _157_197 = (FStar_Util.smap_keys graph)
+let by_target = (let _157_200 = (FStar_Util.smap_keys graph)
 in (FStar_List.map_flatten (fun k -> (
 
 let as_list = (must_find k)
@@ -842,21 +845,21 @@ in (
 let k = (lowercase_module_name f)
 in (
 
-let deps = (let _157_195 = (discover k)
-in (FStar_List.rev _157_195))
+let deps = (let _157_198 = (discover k)
+in (FStar_List.rev _157_198))
 in (
 
-let deps_as_filenames = (let _157_196 = (FStar_List.map_flatten must_find deps)
-in (FStar_List.append _157_196 suffix))
-in (f, deps_as_filenames))))))) as_list)))) _157_197))
+let deps_as_filenames = (let _157_199 = (FStar_List.map_flatten must_find deps)
+in (FStar_List.append _157_199 suffix))
+in (f, deps_as_filenames))))))) as_list)))) _157_200))
 in (
 
-let topologically_sorted = (let _157_198 = (FStar_ST.read topologically_sorted)
-in (FStar_List.map_flatten must_find_r _157_198))
-in (by_target, topologically_sorted))))))))))))))
+let topologically_sorted = (let _157_201 = (FStar_ST.read topologically_sorted)
+in (FStar_List.map_flatten must_find_r _157_201))
+in (by_target, topologically_sorted)))))))))))))))
 
 
-let print_make : (Prims.string * Prims.string Prims.list) Prims.list  ->  Prims.unit = (fun deps -> (FStar_List.iter (fun _68_633 -> (match (_68_633) with
+let print_make : (Prims.string * Prims.string Prims.list) Prims.list  ->  Prims.unit = (fun deps -> (FStar_List.iter (fun _68_635 -> (match (_68_635) with
 | (f, deps) -> begin
 (
 
@@ -869,7 +872,7 @@ let print = (fun deps -> (match ((FStar_Options.dep ())) with
 | Some ("make") -> begin
 (print_make (Prims.fst deps))
 end
-| Some (_68_640) -> begin
+| Some (_68_642) -> begin
 (Prims.raise (FStar_Absyn_Syntax.Err ("unknown tool for --dep\n")))
 end
 | None -> begin

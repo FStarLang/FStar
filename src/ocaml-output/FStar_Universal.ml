@@ -406,11 +406,14 @@ in (match (_87_253) with
 let filenames = (FStar_Dependences.find_deps_if_needed filenames)
 in (
 
-let _87_258 = (batch_mode_tc_no_prims dsenv env filenames)
-in (match (_87_258) with
+let _87_255 = (FStar_Util.print1 "Filenames: %s\n" (FStar_String.concat " " filenames))
+in (
+
+let _87_260 = (batch_mode_tc_no_prims dsenv env filenames)
+in (match (_87_260) with
 | (all_mods, dsenv, env) -> begin
 ((prims_mod)::all_mods, dsenv, env)
-end)))
+end))))
 end)))
 
 

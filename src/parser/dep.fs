@@ -490,12 +490,12 @@ let collect (filenames: list<string>): _ =
   let topologically_sorted = ref [] in
 
   (* Compute the transitive closure. *)
-  let rec discover key =
+  let rec discover cycle key =
     let direct_deps, color = must (smap_try_find graph key) in
     match color with
     | Gray ->
         Util.print1 "Warning: recursive dependency on module %s\n" key;
-        print_string "Here's the (non-transitive) dependency graph:\n";
+        Util.print1 "The cycle is: %s \n" (String.concat " -> " cycle);
         print_graph ();
         print_string "\n";
         exit 1
@@ -507,7 +507,7 @@ let collect (filenames: list<string>): _ =
         (* Unvisited. Compute. *)
         smap_add graph key (direct_deps, Gray);
         let all_deps = List.unique (List.flatten (List.map (fun dep ->
-          dep :: discover dep
+          dep :: discover (key :: cycle) dep
         ) direct_deps)) in
         (* Mutate the graph (it now remembers transitive dependencies). *)
         smap_add graph key (all_deps, Black);
@@ -516,6 +516,7 @@ let collect (filenames: list<string>): _ =
         (* Returns transitive dependencies *)
         all_deps
   in
+  let discover = discover [] in
 
   let must_find = must_find m in
   let must_find_r f = List.rev (must_find f) in
