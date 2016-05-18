@@ -511,7 +511,7 @@ let rec specs () : list<Getopt.opt> =
       
        ( noshort,
         "smt", 
-        OneArg ((fun x -> Bool true), 
+        OneArg (String, 
                  "path"), 
         "Path to the SMT solver (usually Z3, 
         but could be any SMT2-compatible solver)");
