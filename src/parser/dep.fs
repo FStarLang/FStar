@@ -379,7 +379,8 @@ let collect_one (original_map: map) (filename: string): list<string> =
         collect_term t1;
         collect_term t2
     | Record (t, idterms) ->
-        iter_opt t collect_term
+        iter_opt t collect_term;
+        List.iter (fun (_, t) -> collect_term t) idterms
     | Project (t, _) ->
         collect_term t
     | Product (binders, t)
