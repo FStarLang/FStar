@@ -694,7 +694,7 @@ in (
 let _68_565 = (FStar_Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph")
 in (
 
-let _68_567 = (FStar_Util.print_endline "Hint: cat dep.graph |Â grep -v _ | grep -v prims")
+let _68_567 = (FStar_Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims")
 in (let _157_173 = (let _157_172 = (let _157_171 = (let _157_170 = (let _157_169 = (let _157_168 = (FStar_Util.smap_keys graph)
 in (FStar_List.unique _157_168))
 in (FStar_List.map_flatten (fun k -> (
