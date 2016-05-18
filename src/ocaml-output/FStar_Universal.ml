@@ -406,11 +406,23 @@ in (match (_87_253) with
 let filenames = (FStar_Dependences.find_deps_if_needed filenames)
 in (
 
-let _87_255 = (FStar_Util.print1 "Filenames: %s\n" (FStar_String.concat " " filenames))
+let _87_259 = if ((not ((FStar_Options.explicit_deps ()))) && (FStar_Options.debug_any ())) then begin
+(
+
+let _87_255 = (FStar_Util.print_endline "Auto-deps kicked in; here\'s some info.")
 in (
 
-let _87_260 = (batch_mode_tc_no_prims dsenv env filenames)
-in (match (_87_260) with
+let _87_257 = (FStar_Util.print1 "Here\'s the list of filenames we will process: %s\n" (FStar_String.concat " " filenames))
+in (let _176_99 = (let _176_98 = (FStar_Options.verify_module ())
+in (FStar_String.concat " " _176_98))
+in (FStar_Util.print1 "Here\'s the list of modules we will verify: %s\n" _176_99))))
+end else begin
+()
+end
+in (
+
+let _87_264 = (batch_mode_tc_no_prims dsenv env filenames)
+in (match (_87_264) with
 | (all_mods, dsenv, env) -> begin
 ((prims_mod)::all_mods, dsenv, env)
 end))))

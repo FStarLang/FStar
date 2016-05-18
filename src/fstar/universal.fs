@@ -244,8 +244,13 @@ let batch_mode_tc_no_prims dsenv env filenames =
 let batch_mode_tc filenames =
   let prims_mod, dsenv, env = tc_prims () in
   let filenames = find_deps_if_needed filenames in
-  if Options.debug_any () then
-    FStar.Util.print1 "Filenames: %s\n" (String.concat " " filenames);
+  if not (Options.explicit_deps ()) && Options.debug_any () then begin
+    FStar.Util.print_endline "Auto-deps kicked in; here's some info.";
+    FStar.Util.print1 "Here's the list of filenames we will process: %s\n"
+      (String.concat " " filenames);
+    FStar.Util.print1 "Here's the list of modules we will verify: %s\n"
+      (String.concat " " (Options.verify_module ()))
+  end;
   let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
   prims_mod :: all_mods, dsenv, env
 

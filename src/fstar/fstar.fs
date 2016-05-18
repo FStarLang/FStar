@@ -75,7 +75,7 @@ let go _ =
     | Die msg ->
         Util.print_string msg
     | GoOn ->
-        if (Options.dep()) <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
+        if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then Parser.Dep.print (Parser.Dep.collect filenames)
         else if (Options.interactive()) then //--in
           let filenames =
@@ -90,16 +90,17 @@ let go _ =
                 detect_dependencies_with_first_interactive_chunk ()
               end
           in
-          if (Options.universes())
+          if Options.universes()
           then let fmods, dsenv, env = Universal.batch_mode_tc filenames in //check all the dependences in batch mode
                interactive_mode (dsenv, env) None Universal.interactive_tc //and then start checking chunks from the current buffer
           else let fmods, dsenv, env = Stratified.batch_mode_tc filenames in //check all the dependences in batch mode
                interactive_mode (dsenv, env) None Stratified.interactive_tc //and then start checking chunks from the current buffer
 
         else if List.length filenames >= 1 then begin //normal batch mode
-          (* Unless dependencies are explicit, we take the filenames passed on
+          (* Unless dependencies are explicit, and unless the user used
+           * --verify_module manually, we take the filenames passed on
            * the command-line to be those we want to verify. *)
-          if not ((Options.explicit_deps())) then begin
+          if not (Options.explicit_deps()) && not (Options.verify_module () <> []) then begin
             let files = 
               List.map (fun f -> 
                     match Parser.Dep.check_and_strip_suffix (basename f) with 
@@ -107,7 +108,7 @@ let go _ =
                     | Some f -> String.lowercase f) filenames in
             List.iter Options.add_verify_module files
           end;
-          if (Options.universes())
+          if Options.universes()
           then let fmods, dsenv, env = Universal.batch_mode_tc filenames in
                report_errors ();
                codegen (Inr (fmods, env));

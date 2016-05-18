@@ -162,7 +162,7 @@ end else begin
 if ((FStar_List.length filenames) >= 1) then begin
 (
 
-let _88_61 = if (not ((FStar_Options.explicit_deps ()))) then begin
+let _88_61 = if ((not ((FStar_Options.explicit_deps ()))) && (not (((FStar_Options.verify_module ()) <> [])))) then begin
 (
 
 let files = (FStar_List.map (fun f -> (match ((let _177_26 = (FStar_Util.basename f)
