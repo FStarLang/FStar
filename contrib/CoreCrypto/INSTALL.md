@@ -66,4 +66,10 @@ Then, compile and install into a local directory (e.g. `/opt`), then tweak the `
 
 The outdated, system-wide `openssl` library does not work. However, the `Makefile` is setup so that recent versions of `openssl` installed via either Homebrew or MacPorts are found.
 
+JP: it seems like my OCaml sqlite3 package is picking up the system-wide sqlite3 library, instead of the brew one. The system-wide gives errors about a missing `sqlite3_load_extension` function. The hackish solution is:
 
+```
+SQLITE3_DISABLE_LOADABLE_EXTENSIONS=1 opam reinstall sqlite3
+```
+
+The right solution would be to fix the `Makefile` to user proper flags.

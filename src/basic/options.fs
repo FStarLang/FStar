@@ -310,8 +310,8 @@ let rec specs () : list<Getopt.opt> =
       
        ( noshort,
         "dep", 
-        OneArg ((fun x -> if x = "make" then String x else failwith "invalid argument to 'dep'"),
-                 "make"), 
+        OneArg ((fun x -> if x = "make" || x = "graph" then String x else failwith "invalid argument to 'dep'"),
+                 "make|graph"), 
         "Output the transitive closure of the dependency graph in a format suitable for the given tool");
       
        ( noshort,
@@ -511,7 +511,7 @@ let rec specs () : list<Getopt.opt> =
       
        ( noshort,
         "smt", 
-        OneArg ((fun x -> Bool true), 
+        OneArg (String, 
                  "path"), 
         "Path to the SMT solver (usually Z3, 
         but could be any SMT2-compatible solver)");
@@ -796,6 +796,7 @@ let universes                    () = get_universes                   ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_native_int               () = get_use_native_int              ()
+let verify_module                () = get_verify_module               ()
 let warn_cardinality             () = get_cardinality() = "warn"
 let warn_top_level_effects       () = get_warn_top_level_effects      ()
 let z3_exe                       () = match get_smt () with

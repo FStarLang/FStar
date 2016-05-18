@@ -188,7 +188,7 @@ let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
       []
     else begin
       (* use the auto-deps facitity to produce a list of dependencies for `fn` *)
-      let g, _ = Parser.Dep.collect [fn] in
+      let g, _, _ = Parser.Dep.collect [fn] in
       match
         List.filter
           (fun p ->
@@ -275,6 +275,13 @@ let batch_mode_tc_no_prims dsenv env filenames =
 let batch_mode_tc filenames =
   let prims_mod, dsenv, env = tc_prims () in
   let filenames = find_deps_if_needed filenames in
+  if not (Options.explicit_deps ()) && Options.debug_any () then begin
+    FStar.Util.print_endline "Auto-deps kicked in; here's some info.";
+    FStar.Util.print1 "Here's the list of filenames we will process: %s\n"
+      (String.concat " " filenames);
+    FStar.Util.print1 "Here's the list of modules we will verify: %s\n"
+      (String.concat " " (Options.verify_module ()))
+  end;
   let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
   prims_mod :: all_mods, dsenv, env
 

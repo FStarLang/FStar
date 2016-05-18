@@ -379,7 +379,8 @@ let collect_one (original_map: map) (filename: string): list<string> =
         collect_term t1;
         collect_term t2
     | Record (t, idterms) ->
-        iter_opt t collect_term
+        iter_opt t collect_term;
+        List.iter (fun (_, t) -> collect_term t) idterms
     | Project (t, _) ->
         collect_term t
     | Product (binders, t)
@@ -447,6 +448,20 @@ let collect_one (original_map: map) (filename: string): list<string> =
 
 type color = | White | Gray | Black
 
+let print_graph graph =
+  Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph";
+  Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
+  Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims";
+  Util.write_file "dep.graph" (
+    "digraph {\n" ^
+    String.concat "\n" (List.map_flatten (fun k ->
+      let deps = fst (must (smap_try_find graph k)) in
+      let r s = replace_char s '.' '_' in
+      List.map (fun dep -> Util.format2 "  %s -> %s" (r k) (r dep)) deps
+    ) (List.unique (smap_keys graph))) ^
+    "\n}\n"
+  )
+
 (** Collect the dependencies for a list of given files. *)
 let collect (filenames: list<string>): _ =
   (* The dependency graph; keys are lowercased module names, values = list of
@@ -471,22 +486,18 @@ let collect (filenames: list<string>): _ =
   List.iter discover_one (List.map lowercase_module_name filenames);
 
   (* At this point, we have the (immediate) dependency graph of all the files. *)
-  let print_graph () =
-    List.iter (fun k ->
-      Util.print2 "%s: %s\n" k (String.concat " " (fst (must (smap_try_find graph k))))
-    ) (List.unique (smap_keys graph))
-  in
+  let immediate_graph = smap_copy graph in
 
   let topologically_sorted = ref [] in
 
   (* Compute the transitive closure. *)
-  let rec discover key =
+  let rec discover cycle key =
     let direct_deps, color = must (smap_try_find graph key) in
     match color with
     | Gray ->
         Util.print1 "Warning: recursive dependency on module %s\n" key;
-        print_string "Here's the (non-transitive) dependency graph:\n";
-        print_graph ();
+        Util.print1 "The cycle is: %s \n" (String.concat " -> " cycle);
+        print_graph immediate_graph;
         print_string "\n";
         exit 1
     | Black ->
@@ -497,7 +508,7 @@ let collect (filenames: list<string>): _ =
         (* Unvisited. Compute. *)
         smap_add graph key (direct_deps, Gray);
         let all_deps = List.unique (List.flatten (List.map (fun dep ->
-          dep :: discover dep
+          dep :: discover (key :: cycle) dep
         ) direct_deps)) in
         (* Mutate the graph (it now remembers transitive dependencies). *)
         smap_add graph key (all_deps, Black);
@@ -506,6 +517,7 @@ let collect (filenames: list<string>): _ =
         (* Returns transitive dependencies *)
         all_deps
   in
+  let discover = discover [] in
 
   let must_find = must_find m in
   let must_find_r f = List.rev (must_find f) in
@@ -527,7 +539,7 @@ let collect (filenames: list<string>): _ =
   (* At this stage the list is kept in reverse to make sure the caller in
    * [dependencies.fs] can chop [prims.fst] off its head. So make sure we have
    * [fst, fsti] so that, once reversed, it shows up in the correct order. *)
-  by_target, topologically_sorted
+  by_target, topologically_sorted, immediate_graph
 
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
@@ -538,10 +550,12 @@ let print_make (deps: list<(string * list<string>)>): unit =
     Util.print2 "%s: %s\n" f (String.concat " " deps)
   ) deps
 
-let print (deps: _): unit =
+let print (make_deps, _, graph): unit =
   match (Options.dep()) with
   | Some "make" ->
-      print_make (fst deps)
+      print_make make_deps
+  | Some "graph" ->
+      print_graph graph
   | Some _ ->
       raise (Err "unknown tool for --dep\n")
   | None ->

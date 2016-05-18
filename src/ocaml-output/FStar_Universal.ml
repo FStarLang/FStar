@@ -289,14 +289,14 @@ let deps = if (FStar_Options.explicit_deps ()) then begin
 end else begin
 (
 
-let _87_182 = (FStar_Parser_Dep.collect ((fn)::[]))
-in (match (_87_182) with
-| (g, _87_181) -> begin
+let _87_184 = (FStar_Parser_Dep.collect ((fn)::[]))
+in (match (_87_184) with
+| (g, _87_181, _87_183) -> begin
 (match ((FStar_List.filter (fun p -> ((Prims.fst p) = fn)) g)) with
-| (_87_185, l)::[] -> begin
+| (_87_187, l)::[] -> begin
 l
 end
-| _87_190 -> begin
+| _87_192 -> begin
 (let _176_76 = (let _176_75 = (FStar_Util.format1 "Internal error: expected to find exactly one entry for %s in dependency graph" fn)
 in FStar_Util.Failure (_176_75))
 in (FStar_All.pipe_left Prims.raise _176_76))
@@ -307,24 +307,24 @@ in (
 
 let tc = (fun force_invalid_cache -> (
 
-let _87_194 = (FStar_SMTEncoding_Z3.initialize_fuel_trace fn deps force_invalid_cache)
+let _87_196 = (FStar_SMTEncoding_Z3.initialize_fuel_trace fn deps force_invalid_cache)
 in (
 
-let _87_205 = (FStar_All.pipe_right fmods (FStar_List.fold_left (fun _87_198 m -> (match (_87_198) with
+let _87_207 = (FStar_All.pipe_right fmods (FStar_List.fold_left (fun _87_200 m -> (match (_87_200) with
 | (env, all_mods) -> begin
 (
 
-let _87_202 = (FStar_TypeChecker_Tc.check_module env m)
-in (match (_87_202) with
+let _87_204 = (FStar_TypeChecker_Tc.check_module env m)
+in (match (_87_204) with
 | (m, env) -> begin
 (env, (m)::all_mods)
 end))
 end)) (env, [])))
-in (match (_87_205) with
+in (match (_87_207) with
 | (env, all_mods) -> begin
 (
 
-let _87_206 = (FStar_SMTEncoding_Z3.finalize_fuel_trace fn deps)
+let _87_208 = (FStar_SMTEncoding_Z3.finalize_fuel_trace fn deps)
 in ((FStar_List.rev all_mods), dsenv, env))
 end))))
 in try
@@ -339,7 +339,7 @@ with
 let norm_fn = (FStar_Util.normalize_file_path fn)
 in (
 
-let _87_214 = (FStar_Util.print1 "Query failed while replaying cached fuel trace; invalidating cache and retrying.\n" norm_fn)
+let _87_216 = (FStar_Util.print1 "Query failed while replaying cached fuel trace; invalidating cache and retrying.\n" norm_fn)
 in (tc true)))
 end))
 end)))
@@ -358,22 +358,22 @@ let rec tc_fold_interleave : (FStar_Syntax_Syntax.modul Prims.list * FStar_Parse
 
 let move = (fun intf impl remaining -> (
 
-let _87_228 = (FStar_Syntax_Syntax.reset_gensym ())
+let _87_230 = (FStar_Syntax_Syntax.reset_gensym ())
 in (
 
-let _87_233 = acc
-in (match (_87_233) with
+let _87_235 = acc
+in (match (_87_235) with
 | (all_mods, dsenv, env) -> begin
 (
 
-let _87_258 = (match (intf) with
+let _87_260 = (match (intf) with
 | None -> begin
 (tc_one_file dsenv env intf impl)
 end
-| Some (_87_236) when ((FStar_Options.codegen ()) <> None) -> begin
+| Some (_87_238) when ((FStar_Options.codegen ()) <> None) -> begin
 (
 
-let _87_238 = if (not ((FStar_Options.lax ()))) then begin
+let _87_240 = if (not ((FStar_Options.lax ()))) then begin
 (Prims.raise (FStar_Syntax_Syntax.Err ("Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately")))
 end else begin
 ()
@@ -383,28 +383,28 @@ end
 | Some (iname) -> begin
 (
 
-let _87_242 = (FStar_Util.print1 "Interleaving iface+module: %s\n" iname)
+let _87_244 = (FStar_Util.print1 "Interleaving iface+module: %s\n" iname)
 in (
 
 let caption = (Prims.strcat "interface: " iname)
 in (
 
-let _87_247 = (push_context (dsenv, env) caption)
-in (match (_87_247) with
+let _87_249 = (push_context (dsenv, env) caption)
+in (match (_87_249) with
 | (dsenv', env') -> begin
 (
 
-let _87_252 = (tc_one_file dsenv' env' intf impl)
-in (match (_87_252) with
-| (_87_249, dsenv', env') -> begin
+let _87_254 = (tc_one_file dsenv' env' intf impl)
+in (match (_87_254) with
+| (_87_251, dsenv', env') -> begin
 (
 
-let _87_253 = (pop_context (dsenv', env') caption)
+let _87_255 = (pop_context (dsenv', env') caption)
 in (tc_one_file dsenv env None iname))
 end))
 end))))
 end)
-in (match (_87_258) with
+in (match (_87_260) with
 | (ms, dsenv, env) -> begin
 (
 
@@ -426,12 +426,12 @@ end)))
 
 let batch_mode_tc_no_prims : FStar_Parser_Env.env  ->  FStar_TypeChecker_Env.env  ->  Prims.string Prims.list  ->  (FStar_Syntax_Syntax.modul Prims.list * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) = (fun dsenv env filenames -> (
 
-let _87_275 = (tc_fold_interleave ([], dsenv, env) filenames)
-in (match (_87_275) with
+let _87_277 = (tc_fold_interleave ([], dsenv, env) filenames)
+in (match (_87_277) with
 | (all_mods, dsenv, env) -> begin
 (
 
-let _87_276 = if ((FStar_Options.interactive ()) && ((FStar_TypeChecker_Errors.get_err_count ()) = 0)) then begin
+let _87_278 = if ((FStar_Options.interactive ()) && ((FStar_TypeChecker_Errors.get_err_count ()) = 0)) then begin
 (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ())
 end else begin
 (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.finish ())
@@ -442,19 +442,34 @@ end)))
 
 let batch_mode_tc : Prims.string Prims.list  ->  (FStar_Syntax_Syntax.modul Prims.list * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) = (fun filenames -> (
 
-let _87_282 = (tc_prims ())
-in (match (_87_282) with
+let _87_284 = (tc_prims ())
+in (match (_87_284) with
 | (prims_mod, dsenv, env) -> begin
 (
 
 let filenames = (FStar_Dependences.find_deps_if_needed filenames)
 in (
 
-let _87_287 = (batch_mode_tc_no_prims dsenv env filenames)
-in (match (_87_287) with
+let _87_290 = if ((not ((FStar_Options.explicit_deps ()))) && (FStar_Options.debug_any ())) then begin
+(
+
+let _87_286 = (FStar_Util.print_endline "Auto-deps kicked in; here\'s some info.")
+in (
+
+let _87_288 = (FStar_Util.print1 "Here\'s the list of filenames we will process: %s\n" (FStar_String.concat " " filenames))
+in (let _176_106 = (let _176_105 = (FStar_Options.verify_module ())
+in (FStar_String.concat " " _176_105))
+in (FStar_Util.print1 "Here\'s the list of modules we will verify: %s\n" _176_106))))
+end else begin
+()
+end
+in (
+
+let _87_295 = (batch_mode_tc_no_prims dsenv env filenames)
+in (match (_87_295) with
 | (all_mods, dsenv, env) -> begin
 ((prims_mod)::all_mods, dsenv, env)
-end)))
+end))))
 end)))
 
 
