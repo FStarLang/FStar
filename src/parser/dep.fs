@@ -471,10 +471,20 @@ let collect (filenames: list<string>): _ =
   List.iter discover_one (List.map lowercase_module_name filenames);
 
   (* At this point, we have the (immediate) dependency graph of all the files. *)
+  let immediate_graph = smap_copy graph in
   let print_graph () =
-    List.iter (fun k ->
-      Util.print2 "%s: %s\n" k (String.concat " " (fst (must (smap_try_find graph k))))
-    ) (List.unique (smap_keys graph))
+    Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph";
+    Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
+    Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims";
+    Util.write_file "dep.graph" (
+      "digraph {\n" ^
+      String.concat "\n" (List.map_flatten (fun k ->
+        let deps = fst (must (smap_try_find immediate_graph k)) in
+        let r s = replace_char s '.' '_' in
+        List.map (fun dep -> Util.format2 "  %s -> %s" (r k) (r dep)) deps
+      ) (List.unique (smap_keys immediate_graph))) ^
+      "\n}\n"
+    )
   in
 
   let topologically_sorted = ref [] in
