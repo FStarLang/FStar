@@ -68,11 +68,11 @@ val witness: #r:rid
                 (ensures (fun h0 _ h1 -> h0=h1 /\ witnessed p))
 let witness #r #a #b m p = ()
 
-assume val weaken_witness : p:(HH.t -> GTot Type0) 
-			  -> q:(HH.t -> GTot Type0) 
+assume val weaken_witness : p:(t -> GTot Type0) 
+			  -> q:(t -> GTot Type0) 
 			  -> Lemma
-  (requires (forall h. p h ==> q h) /\ MR.witnessed p)
-  (ensures MR.witnessed q)
+  (requires (forall h. p h ==> q h) /\ witnessed p)
+  (ensures witnessed q)
 
 val testify: p:(t -> GTot Type0)
           -> ST unit

@@ -5,7 +5,7 @@ include $(FSTAR_HOME)/src/gmake/nubuild.mk
 UFSTAR=$(FSTAR) --universes
 STDLIB=FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Mul.fst FStar.Int8.fst FStar.Int16.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst 
 
-all: stdlib list array tcp squash elogic ordmap pext st mref twolevelheap relational
+all: stdlib list array tcp squash elogic ordmap pext st mref m_rref twolevelheap relational
 
 stdlib:
 	$(UFSTAR) --explicit_deps $(STDLIB) #verify the library once
@@ -35,6 +35,9 @@ st:
 
 mref:
 	$(UFSTAR) FStar.MRef.fst
+
+m_rref:
+	$(UFSTAR) FStar.Map.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst hyperheap/FStar.All.fst FStar.Monotonic.RRef.fst 
 
 twolevelheap:
 	$(UFSTAR) FStar.TwoLevelHeap.fst
