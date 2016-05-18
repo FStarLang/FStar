@@ -1471,22 +1471,25 @@ let use_native_int : Prims.unit  ->  Prims.bool = (fun _24_437 -> (match (()) wi
 end))
 
 
-let verify_module : Prims.unit  ->  Prims.string Prims.list = get_verify_module
+let verify_module : Prims.unit  ->  Prims.string Prims.list = (fun _24_438 -> (match (()) with
+| () -> begin
+(get_verify_module ())
+end))
 
 
-let warn_cardinality : Prims.unit  ->  Prims.bool = (fun _24_438 -> (match (()) with
+let warn_cardinality : Prims.unit  ->  Prims.bool = (fun _24_439 -> (match (()) with
 | () -> begin
 ((get_cardinality ()) = "warn")
 end))
 
 
-let warn_top_level_effects : Prims.unit  ->  Prims.bool = (fun _24_439 -> (match (()) with
+let warn_top_level_effects : Prims.unit  ->  Prims.bool = (fun _24_440 -> (match (()) with
 | () -> begin
 (get_warn_top_level_effects ())
 end))
 
 
-let z3_exe : Prims.unit  ->  Prims.string = (fun _24_440 -> (match (()) with
+let z3_exe : Prims.unit  ->  Prims.string = (fun _24_441 -> (match (()) with
 | () -> begin
 (match ((get_smt ())) with
 | None -> begin
@@ -1498,7 +1501,7 @@ end)
 end))
 
 
-let z3_timeout : Prims.unit  ->  Prims.int = (fun _24_444 -> (match (()) with
+let z3_timeout : Prims.unit  ->  Prims.int = (fun _24_445 -> (match (()) with
 | () -> begin
 (get_z3timeout ())
 end))
