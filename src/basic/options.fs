@@ -310,8 +310,8 @@ let rec specs () : list<Getopt.opt> =
       
        ( noshort,
         "dep", 
-        OneArg ((fun x -> if x = "make" then String x else failwith "invalid argument to 'dep'"),
-                 "make"), 
+        OneArg ((fun x -> if x = "make" || x = "graph" then String x else failwith "invalid argument to 'dep'"),
+                 "make|graph"), 
         "Output the transitive closure of the dependency graph in a format suitable for the given tool");
       
        ( noshort,
