@@ -451,7 +451,7 @@ type color = | White | Gray | Black
 let print_graph graph =
   Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph";
   Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
-  Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims";
+  Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims";
   Util.write_file "dep.graph" (
     "digraph {\n" ^
     String.concat "\n" (List.map_flatten (fun k ->
