@@ -2168,7 +2168,7 @@ CAMLprim value ocaml_load_chain_from_file(value pem, value key) {
     if(!bio) CAMLreturn(Val_none);
 
     int c = 0; unsigned long n = 0;
-    X509 *x509, *first;
+    X509 *x509, *first = NULL;
 
     // Try to read all x509 structs in the file
     do {
