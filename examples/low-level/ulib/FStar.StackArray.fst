@@ -89,25 +89,6 @@ let swap #a x i j =
   upd x j tmpi;
   upd x i tmpj
 
-(* Helper functions for stateful array manipulation *)
-val copy_aux:
-  #a:Type -> s:array a -> cpy:array a -> ctr:nat ->
-     ST unit
-	(requires (fun h -> (contains h s /\ contains h cpy /\ s <> cpy)
-			    /\ (Seq.length (sel h cpy) = Seq.length (sel h s))
-			    /\ (ctr <= Seq.length (sel h cpy))
-			    /\ (forall (i:nat). i < ctr ==> Seq.index (sel h s) i = Seq.index (sel h cpy) i)))
-	(ensures (fun h0 u h1 -> (contains h1 s /\ contains h1 cpy /\ s <> cpy )
-			      /\ modifies_one (frameOf cpy) h0 h1
-			      /\ (modifies_ref (frameOf cpy) !{as_ref cpy} h0 h1)
-			      /\ (Seq.equal (sel h1 cpy) (sel h0 s))
-			      /\ frame_ids h1 = frame_ids h0))
-let rec copy_aux #a s cpy ctr =
-  match length cpy - ctr with
-  | 0 -> ()
-  | _ -> upd cpy ctr (index s ctr);
-	 copy_aux s cpy (ctr+1)
-
 val copy:
   #a:Type -> s:array a ->
   ST (array a) 
@@ -121,6 +102,25 @@ val copy:
 			    /\ (Seq.equal (sel h1 r) (sel h0 s))))
 let copy #a s =
   let cpy = create (length s) (index s 0) in
+  let rec copy_aux : #a:Type -> s:array a -> cpy:array a -> ctr:nat -> ST unit
+	(requires (fun h -> contains h s 
+		       /\ contains h cpy 
+		       /\ s <> cpy
+		       /\ Seq.length (sel h cpy) = Seq.length (sel h s)
+		       /\ ctr <= Seq.length (sel h cpy)
+ 		       /\ (forall (i:nat). i < ctr ==> Seq.index (sel h s) i = Seq.index (sel h cpy) i)))
+	(ensures (fun h0 u h1 -> contains h1 s 
+			    /\ contains h1 cpy
+			    /\ s <> cpy 
+		            /\ modifies_one (frameOf cpy) h0 h1
+			    /\ modifies_ref (frameOf cpy) !{as_ref cpy} h0 h1
+			    /\ Seq.equal (sel h1 cpy) (sel h0 s)
+			    /\ frame_ids h1 = frame_ids h0))
+     = fun #a s cpy ctr ->
+         match length cpy - ctr with
+	 | 0 -> ()
+	 | _ -> upd cpy ctr (index s ctr);
+	       copy_aux s cpy (ctr+1) in
   copy_aux s cpy 0;
   cpy
 
