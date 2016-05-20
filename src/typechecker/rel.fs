@@ -639,9 +639,9 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_type _, Tm_type _ 
     | Tm_arrow _, Tm_arrow _ -> HeadMatch
 
-    | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head'
-    | Tm_app(head, _), _ -> head_matches env head t2
-    | _, Tm_app(head, _) -> head_matches env t1 head
+    | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head' |> head_match
+    | Tm_app(head, _), _ -> head_matches env head t2 |> head_match
+    | _, Tm_app(head, _) -> head_matches env t1 head |> head_match
 
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
