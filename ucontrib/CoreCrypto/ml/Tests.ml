@@ -894,7 +894,7 @@ module TestDsa = struct
   let tests = TestRsa.tests
 
   let check original_bytes =
-    let private_key = dsa_gen_key 2048 in
+    let private_key = dsa_gen_key 1024 in
     let public_key = { private_key with dsa_private = None } in
     let sig_bytes = dsa_sign None private_key original_bytes in
     if not (dsa_verify None public_key original_bytes sig_bytes) then begin
