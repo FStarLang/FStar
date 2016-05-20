@@ -32,7 +32,7 @@ type rref (i:rid) (a:Type) = s:stacked a{s.id = i}
 
 let frameOf #a (s:stacked a) = s.id
 
-abstract val as_rref : #a:Type -> s:stacked a -> Tot (rref s.id a)
+val as_rref : #a:Type -> s:stacked a -> Tot (rref s.id a)
 let as_rref #a s = s
 
 abstract val as_ref : #a:Type -> s:stacked a -> GTot (ref a)
@@ -84,6 +84,7 @@ let fresh_frame (s0:t) (s1:t) =
 (* Specifies untouched heaps *)
 let modifies (s:Set.set rid) (m0:t) (m1:t) =
   Map.equal (heaps m1) (Map.concat (heaps m1) (Map.restrict (Set.complement s) (heaps m0)))
+  /\ Set.subset (Map.domain (heaps m0)) (Map.domain (heaps m1))
 
 let modifies_top (m0:t) (m1:t) = frame_ids m0 = frame_ids m1 /\ modifies (Set.singleton (top_frame_id m1)) m0 m1
 
@@ -102,6 +103,7 @@ let upd (#a:Type) (m:t) (r:stacked a) (v:a) : t = upd_rref #a #r.id m r v
 
 let modifies_one (r:rid) (m0:t) (m1:t) =
   Map.equal (heaps m1) (Map.concat (heaps m1) (Map.restrict (Set.complement (Set.singleton r)) (heaps m0)))
+  /\ Set.subset (Map.domain (heaps m0)) (Map.domain (heaps m1))
 
 let equal_on (s:Set.set rid) (m0:t) (m1:t) =
  (forall (r:rid). {:pattern (Map.contains (heaps m0) r)} (Set.mem r s /\ Map.contains (heaps m0) r) ==> Map.contains (heaps m1) r)

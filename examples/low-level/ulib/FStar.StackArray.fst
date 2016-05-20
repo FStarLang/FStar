@@ -70,29 +70,24 @@ assume val op: #a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
   (requires (fun h -> contains h x))
   (ensures  (fun h0 u h1 -> modifies_ref (frameOf x) !{as_ref (refOf x)} h0 h1 /\ sel h1 x=f (sel h0 x)))
 *)
-
+let equal s1 s2 = 
+  frame_ids s1 = frame_ids s2
+  /\ Map.equal (heaps s1) (heaps s2)
+  
 val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j} -> ST unit 
   (requires (fun s -> contains s x /\ j < Seq.length (sel s x)))
   (ensures (fun s0 _u s1 ->
     (j < Seq.length (sel s0 x))
     /\ contains s1 x
-    /\ (s1==StackHeap.upd s0 x (SeqProperties.swap (sel s0 x) i j))))
-val gcut : f:(unit -> GTot Type){f ()} -> Tot (u:unit{f()})
-let gcut f = ()
-
+    /\ modifies (Set.singleton (frameOf x)) s0 s1
+    /\ modifies_ref (frameOf x) !{as_ref x} s0 s1
+    /\ Seq.equal (StackHeap.sel s1 x) (SeqProperties.swap (sel s0 x) i j)))
 let swap #a x i j =
   let h0 = get () in
   let tmpi = index x i in
   let tmpj = index x j in
   upd x j tmpi;
-  upd x i tmpj; 
-  let h1 = SST.get () in
-  gcut (fun () -> 
-        let s1 = sel h1 x in 
-	b2t(Heap.equal (heapOf x h1) (Heap.upd (heapOf x h0) (as_ref x) s1))); 
-  gcut (fun () -> 
-       let s1 = sel h1 x in 
-       (Map.equal (heaps h1) (heaps (StackHeap.upd h0 x s1))))
+  upd x i tmpj
 
 (* Helper functions for stateful array manipulation *)
 val copy_aux:
@@ -104,8 +99,8 @@ val copy_aux:
 			    /\ (forall (i:nat). i < ctr ==> Seq.index (sel h s) i = Seq.index (sel h cpy) i)))
 	(ensures (fun h0 u h1 -> (contains h1 s /\ contains h1 cpy /\ s <> cpy )
 			      /\ modifies_one (frameOf cpy) h0 h1
-			      /\ (modifies_ref (frameOf cpy) !{as_ref (refOf cpy)} h0 h1)
-			      /\ (Seq.equal (sel h1 cpy) (sel h1 s))
+			      /\ (modifies_ref (frameOf cpy) !{as_ref cpy} h0 h1)
+			      /\ (Seq.equal (sel h1 cpy) (sel h0 s))
 			      /\ frame_ids h1 = frame_ids h0))
 let rec copy_aux #a s cpy ctr =
   match length cpy - ctr with
@@ -125,11 +120,8 @@ val copy:
 			    /\ (contains h1 r)
 			    /\ (Seq.equal (sel h1 r) (sel h0 s))))
 let copy #a s =
-  let h0 = get () in
   let cpy = create (length s) (index s 0) in
-  let h = get () in
-  copy_aux s cpy 0; 
-  let h1 = get () in
+  copy_aux s cpy 0;
   cpy
 
 val blit_aux:
