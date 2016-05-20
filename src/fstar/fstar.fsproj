@@ -28,7 +28,7 @@
     <OtherFlags>--mlcompatibility</OtherFlags>
     <StartArguments>--universes --explicit_deps test.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\examples\test\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\FStar\examples\test\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

@@ -325,8 +325,17 @@ regressions:
 	make -C ../examples/crypto clean rpc-test cnt-test
 	make -C ../examples/wysteria a.out distclean
 
-test_universes: 
+test_universes: ulib uexamples
 	../bin/tests #all the unit tests
+
+ulib:
+	+make -C ../ulib
+
+uexamples:
+	+make -C ../examples univ
+
+uregressions:
+	time make -j 24 test_universes | grep -i 'error\|Verif'
 
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples

@@ -35,6 +35,17 @@ all:
 	make -C dm4free
 	make -C unit-tests
 
+univ: u_algo u_data_structures u_metatheory
+
+u_algo:
+	+make -C algorithms uall
+
+u_data_structures:
+	+make -C data_structures uall
+
+u_metatheory:
+	+make -C metatheory uall
+
 test: all
 
 stdlib: $(addprefix ../lib/, FStar.List.fst FStar.String.fsti partialmap.fst FStar.ST.fst FStar.ListProperties.fst)
