@@ -1165,12 +1165,37 @@ let _61_937 = env
 in {curmodule = env0.curmodule; modules = _61_937.modules; open_namespaces = env0.open_namespaces; modul_abbrevs = _61_937.modul_abbrevs; sigaccum = _61_937.sigaccum; localbindings = _61_937.localbindings; recbindings = _61_937.recbindings; sigmap = _61_937.sigmap; default_result_effect = _61_937.default_result_effect; iface = _61_937.iface; admitted_iface = _61_937.admitted_iface; expect_typ = _61_937.expect_typ}))
 
 
-let fail_or = (fun lookup lid -> (match ((lookup lid)) with
+let fail_or = (fun env lookup lid -> (match ((lookup lid)) with
 | None -> begin
-(let _150_609 = (let _150_608 = (let _150_607 = (FStar_Util.format1 "Identifier not found: [%s]" (FStar_Ident.text_of_lid lid))
-in (_150_607, (FStar_Ident.range_of_lid lid)))
-in FStar_Syntax_Syntax.Error (_150_608))
-in (Prims.raise _150_609))
+(
+
+let opened_modules = (FStar_List.map (fun _61_946 -> (match (_61_946) with
+| (lid, _61_945) -> begin
+(FStar_Ident.text_of_lid lid)
+end)) env.modules)
+in (
+
+let module_of_the_lid = (let _150_609 = (FStar_Ident.path_of_ns lid.FStar_Ident.ns)
+in (FStar_Ident.text_of_path _150_609))
+in (
+
+let msg = (FStar_Util.format1 "Identifier not found: [%s]" (FStar_Ident.text_of_lid lid))
+in (
+
+let msg = (match (env.curmodule) with
+| Some (m) when (((FStar_Ident.text_of_lid m) = module_of_the_lid) || (module_of_the_lid = "")) -> begin
+msg
+end
+| _61_953 when (FStar_List.existsb (fun m -> (m = module_of_the_lid)) opened_modules) -> begin
+msg
+end
+| _61_956 -> begin
+(let _150_613 = (let _150_612 = (let _150_611 = (FStar_Ident.path_of_ns lid.FStar_Ident.ns)
+in (FStar_Ident.text_of_path _150_611))
+in (FStar_Util.format3 "Hint: %s belongs to module %s, which does not belong to the list of modules in scope, namely %s" (FStar_Ident.text_of_lid lid) _150_612 (FStar_String.concat ", " opened_modules)))
+in (Prims.strcat (Prims.strcat msg "\n") _150_613))
+end)
+in (Prims.raise (FStar_Syntax_Syntax.Error ((msg, (FStar_Ident.range_of_lid lid)))))))))
 end
 | Some (r) -> begin
 r

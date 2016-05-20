@@ -794,7 +794,7 @@ end
 | FStar_Parser_AST.PatName (l) -> begin
 (
 
-let l = (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_datacon env) l)
+let l = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_datacon env) l)
 in (
 
 let x = (FStar_Syntax_Syntax.new_bv (Some (p.FStar_Parser_AST.prange)) FStar_Syntax_Syntax.tun)
@@ -818,7 +818,7 @@ in (match (_63_660) with
 | (loc, env, args) -> begin
 (
 
-let l = (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_datacon env) l)
+let l = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_datacon env) l)
 in (
 
 let x = (FStar_Syntax_Syntax.new_bv (Some (p.FStar_Parser_AST.prange)) FStar_Syntax_Syntax.tun)
@@ -892,7 +892,7 @@ end else begin
 end
 in (
 
-let constr = (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_lid env) l)
+let constr = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_lid env) l)
 in (
 
 let l = (match (constr.FStar_Syntax_Syntax.n) with
@@ -920,14 +920,14 @@ in (match (_63_727) with
 | (f, _63_726) -> begin
 (
 
-let _63_731 = (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_record_by_field_name env) f)
+let _63_731 = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_record_by_field_name env) f)
 in (match (_63_731) with
 | (record, _63_730) -> begin
 (
 
 let fields = (FStar_All.pipe_right fields (FStar_List.map (fun _63_734 -> (match (_63_734) with
 | (f, p) -> begin
-(let _152_280 = (FStar_Parser_Env.fail_or (FStar_Parser_Env.qualify_field_to_record env record) f)
+(let _152_280 = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.qualify_field_to_record env record) f)
 in (_152_280, p))
 end))))
 in (
@@ -1099,7 +1099,7 @@ in (FStar_Syntax_Syntax.as_arg _152_325))))))
 in (
 
 let tup = (let _152_327 = (FStar_Syntax_Util.mk_tuple_lid (FStar_List.length targs) top.FStar_Parser_AST.range)
-in (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_lid env) _152_327))
+in (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_lid env) _152_327))
 in (mk (FStar_Syntax_Syntax.Tm_app ((tup, targs)))))))
 end
 | FStar_Parser_AST.Tvar (a) -> begin
@@ -1137,7 +1137,7 @@ end
 in (FStar_Syntax_Syntax.fvar _152_332 FStar_Syntax_Syntax.Delta_constant None))
 end
 | (FStar_Parser_AST.Var (l)) | (FStar_Parser_AST.Name (l)) -> begin
-(let _152_333 = (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_lid env) l)
+(let _152_333 = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_lid env) l)
 in (FStar_All.pipe_left setpos _152_333))
 end
 | FStar_Parser_AST.Construct (l, args) -> begin
@@ -1145,7 +1145,7 @@ end
 
 let _63_952 = (match ((FStar_Parser_Env.try_lookup_datacon env l)) with
 | None -> begin
-(let _152_334 = (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_lid env) l)
+(let _152_334 = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_lid env) l)
 in (_152_334, false))
 end
 | Some (head) -> begin
@@ -1217,7 +1217,7 @@ in (match (_63_986) with
 (
 
 let tup = (let _152_344 = (FStar_Syntax_Util.mk_dtuple_lid (FStar_List.length targs) top.FStar_Parser_AST.range)
-in (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_lid env) _152_344))
+in (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_lid env) _152_344))
 in (FStar_All.pipe_left mk (FStar_Syntax_Syntax.Tm_app ((tup, targs)))))
 end))
 end
@@ -1742,7 +1742,7 @@ in (match (_63_1332) with
 let qfn = (fun g -> (FStar_Ident.lid_of_ids (FStar_List.append f.FStar_Ident.ns ((g)::[]))))
 in (
 
-let _63_1338 = (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_record_by_field_name env) f)
+let _63_1338 = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_record_by_field_name env) f)
 in (match (_63_1338) with
 | (record, _63_1337) -> begin
 (
@@ -1839,7 +1839,7 @@ end
 | FStar_Parser_AST.Project (e, f) -> begin
 (
 
-let _63_1407 = (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_projector_by_field_name env) f)
+let _63_1407 = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_projector_by_field_name env) f)
 in (match (_63_1407) with
 | (fieldname, is_rec) -> begin
 (
@@ -1970,11 +1970,11 @@ end
 end)
 in (
 
-let head = (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_effect_name env) lemma)
+let head = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_effect_name env) lemma)
 in (head, args))))))
 end
 | FStar_Parser_AST.Name (l) when (FStar_Parser_Env.is_effect_name env l) -> begin
-(let _152_533 = (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_effect_name env) l)
+(let _152_533 = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_effect_name env) l)
 in (_152_533, args))
 end
 | FStar_Parser_AST.Name (l) when ((let _152_534 = (FStar_Parser_Env.current_module env)
@@ -3258,7 +3258,7 @@ in (
 let lookup = (fun s -> (
 
 let l = (FStar_Parser_Env.qualify env (FStar_Ident.mk_ident (s, d.FStar_Parser_AST.drange)))
-in (let _152_931 = (let _152_930 = (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_definition env) l)
+in (let _152_931 = (let _152_930 = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_definition env) l)
 in (FStar_All.pipe_left (FStar_Syntax_Subst.close binders) _152_930))
 in ([], _152_931))))
 in (
@@ -3412,7 +3412,7 @@ end
 | FStar_Parser_AST.Exception (id, None) -> begin
 (
 
-let t = (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_lid env) FStar_Syntax_Const.exn_lid)
+let t = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_lid env) FStar_Syntax_Const.exn_lid)
 in (
 
 let l = (FStar_Parser_Env.qualify env id)
@@ -3444,7 +3444,7 @@ in (
 
 let t = (let _152_958 = (let _152_955 = (FStar_Syntax_Syntax.null_binder t)
 in (_152_955)::[])
-in (let _152_957 = (let _152_956 = (FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_lid env) FStar_Syntax_Const.exn_lid)
+in (let _152_957 = (let _152_956 = (FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_lid env) FStar_Syntax_Const.exn_lid)
 in (FStar_All.pipe_left FStar_Syntax_Syntax.mk_Total _152_956))
 in (FStar_Syntax_Util.arrow _152_958 _152_957)))
 in (
@@ -3511,7 +3511,7 @@ in (match (_63_2573) with
 
 let ed = (match (head.FStar_Parser_AST.tm) with
 | FStar_Parser_AST.Name (l) -> begin
-(FStar_Parser_Env.fail_or (FStar_Parser_Env.try_lookup_effect_defn env) l)
+(FStar_Parser_Env.fail_or env (FStar_Parser_Env.try_lookup_effect_defn env) l)
 end
 | _63_2577 -> begin
 (let _152_963 = (let _152_962 = (let _152_961 = (let _152_960 = (let _152_959 = (FStar_Parser_AST.term_to_string head)

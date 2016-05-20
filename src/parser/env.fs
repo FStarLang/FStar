@@ -585,7 +585,7 @@ let fail_or env lookup lid = match lookup lid with
     let msg = Util.format1 "Identifier not found: [%s]" (text_of_lid lid) in
     let msg =
       match env.curmodule with
-      | Some m when text_of_lid m = module_of_the_lid || module_of_the_lid = "" ->
+      | Some m when (text_of_lid m = module_of_the_lid || module_of_the_lid = "") ->
           (* Lookup in the current module *)
           msg
       | _ when List.existsb (fun m -> m = module_of_the_lid) opened_modules ->
