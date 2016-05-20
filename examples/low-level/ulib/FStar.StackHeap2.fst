@@ -11,6 +11,7 @@ abstract let rid = int
 abstract let root : rid = 0
 
 //l0 `suffix_of` l1 is strict; i.e., l0 <> l1; RENAMED: used to be includes
+//TODO: change this to be non-strict
 val suffix_of: list rid -> list rid -> Tot bool
 let rec suffix_of l0 l1 = 
   if List.Tot.length l0 >= List.Tot.length l1 then false
@@ -18,7 +19,7 @@ let rec suffix_of l0 l1 =
 
 let is_valid_stack s = suffix_of [root] s
 
-let t = (frame_ids:list rid{is_valid_stack frame_ids} & //the stack contains at least 2 elements; is that intentional?
+let t = (frame_ids:list rid{is_valid_stack frame_ids} & //the stack will contain at least 1 element; used to be contains at least 2 elements; is that intentional?
 	 m:Map.t rid heap{forall i. List.Tot.contains i frame_ids ==> Map.contains m i})
 
 let mem = t
