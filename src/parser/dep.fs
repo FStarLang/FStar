@@ -324,7 +324,8 @@ let collect_one (original_map: map) (filename: string): list<string> =
 
   and collect_binder = function
     | { b = Annotated (_, t) }
-    | { b = TAnnotated (_, t) } ->
+    | { b = TAnnotated (_, t) }
+    | { b = NoName t } ->
         collect_term t
     | _ ->
         ()
