@@ -335,7 +335,7 @@ uexamples:
 	+make -C ../examples univ
 
 uregressions:
-	time make -j 24 test_universes | grep -i 'error\|Verif'
+	time make -j 2 test_universes | grep -i 'error\|Verif'
 
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples

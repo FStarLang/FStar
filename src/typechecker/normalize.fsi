@@ -22,10 +22,13 @@ open FStar.TypeChecker
 open FStar.Syntax.Syntax
 
 type step =
+  | Beta
+  | Iota            //pattern matching
+  | Zeta            //fixed points
+  | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | WHNF            //Only produce a weak head normal form
   | Inline
   | UnfoldUntil of delta_depth
-  | Beta            //remove Always do beta
   | BetaUVars       //only beta reduce applications of resolved uvars
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
