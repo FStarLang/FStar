@@ -226,9 +226,9 @@ let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us ->
     | ([], t), [] -> [], t
     | (formals, t), _ -> 
       assert (List.length us = List.length formals);
-      let n = List.length formals - 1 in 
-      let vs = us |> List.mapi (fun i u -> UN (n - i, u)) in
-      us, Subst.subst vs t
+      let names, t = Subst.open_univ_vars formals t in
+      let subst = List.map2 (fun n u -> UName2Univ(n,u)) names us in
+      us, Subst.subst (Instantiation subst) t
 
 //Instantiate the universe variables in a type scheme with new unification variables
 let inst_tscheme : tscheme -> universes * term = function 

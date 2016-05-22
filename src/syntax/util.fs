@@ -92,13 +92,13 @@ let binders_of_freevars fvs = Util.set_elements fvs |> List.map mk_binder
 let mk_subst s = [s]
 
 let subst_of_list (formals:binders) (actuals:args) : subst_t =
-    if (List.length formals = List.length actuals)
-    then List.fold_right2 (fun f a out -> NT(fst f, fst a)::out) formals actuals []
+    if List.length formals = List.length actuals
+    then List.fold_right2 (fun f a out -> Name2Term(fst f, fst a)::out) formals actuals [] |> Instantiation
     else failwith "Ill-formed substitution"
 
 let rename_binders (replace_xs:binders) (with_ys:binders) : subst_t =
     if List.length replace_xs = List.length with_ys
-    then List.map2 (fun (x, _) (y, _) -> NT(x, bv_to_name y)) replace_xs with_ys
+    then List.map2 (fun (x, _) (y, _) -> Name2Name(x, y)) replace_xs with_ys |> Renaming
     else failwith "Ill-formed substitution"
 
 open FStar.Syntax.Subst

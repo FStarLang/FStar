@@ -1048,14 +1048,14 @@ let mk_indexed_projectors iquals fvq refine_domain env tc lid (inductive_tps:bin
     let subst = fields |> List.mapi (fun i (a, _) -> 
             let field_name, _ = Util.mk_field_projector_name lid a i in
             let proj = mk_Tm_app (S.fv_to_tm (S.lid_as_fv field_name Delta_equational None)) [arg] None p in
-            NT(a, proj)) in
+            Name2Term(a, proj)) in
 
     let ntps = List.length tps in
     let all_params = imp_tps@fields in
 
     fields |> List.mapi (fun i (x, _) -> 
         let field_name, _ = Util.mk_field_projector_name lid x i in
-        let t = U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
+        let t = U.arrow binders (S.mk_Total (Subst.subst (Instantiation subst) x.sort)) in
         let only_decl = 
             lid_equals C.prims_lid  (Env.current_module env)
             || fvq<>Data_ctor

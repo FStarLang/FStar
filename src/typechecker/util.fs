@@ -459,7 +459,7 @@ let return_value env t v =
     then mk_Total t //we're still in prims, not yet having fully defined the primitive effects
     else let m = must (Env.effect_decl_opt env Const.effect_PURE_lid) in //if Tot isn't fully defined in prims yet, then just return (Total t)
          let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
-         let k = SS.subst [NT(a, t)] kwp in
+         let k = SS.subst (Instantiation [Name2Term(a, t)]) kwp in
          let wp = N.normalize [N.Beta] env (mk_Tm_app (inst_effect_fun_with [env.universe_of env t] env m m.ret) [S.as_arg t; S.as_arg v] (Some k.n) v.pos) in
          let wlp = wp in
          mk_comp m t wp wlp [RETURN] in
@@ -504,7 +504,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
         let subst_c2 reason = 
             match e1opt, b with 
                 | Some e, Some x -> 
-                  Some (SS.subst_comp [NT(x,e)] c2, reason)
+                  Some (SS.subst_comp (Instantiation [Name2Term(x,e)]) c2, reason)
                 | _ -> aux() in 
         if Util.is_total_comp c1
         && Util.is_total_comp c2
@@ -530,7 +530,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) None r1 in
           let wp_args = [S.as_arg r1; S.as_arg t1; S.as_arg t2; S.as_arg wp1; S.as_arg wlp1; S.as_arg (mk_lam wp2); S.as_arg (mk_lam wlp2)] in
           let wlp_args = [S.as_arg r1; S.as_arg t1; S.as_arg t2; S.as_arg wlp1; S.as_arg (mk_lam wlp2)] in
-          let k = SS.subst [NT(a, t2)] kwp in
+          let k = SS.subst (Instantiation [Name2Term(a, t2)]) kwp in
           let us = [env.universe_of env t1; env.universe_of env t2] in
           let wp = mk_Tm_app  (inst_effect_fun_with us env md md.bind_wp)  wp_args None t2.pos in
           let wlp = mk_Tm_app (inst_effect_fun_with us env md md.bind_wlp) wlp_args None t2.pos in
@@ -544,7 +544,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
 let lift_formula env t mk_wp mk_wlp f =
   let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in
   let a, kwp = Env.wp_signature env md_pure.mname in
-  let k = SS.subst [NT(a, t)] kwp in
+  let k = SS.subst (Instantiation [Name2Term(a, t)]) kwp in
   let wp = mk_Tm_app mk_wp   [S.as_arg t; S.as_arg f] (Some k.n) f.pos in
   let wlp = mk_Tm_app mk_wlp [S.as_arg t; S.as_arg f] (Some k.n) f.pos in
   mk_comp md_pure Common.t_unit wp wlp [] 
@@ -810,7 +810,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
 
                         let ct = Normalize.unfold_effect_abbrev env c in
                         let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
-                        let k = SS.subst [NT(a, t)] kwp in
+                        let k = SS.subst (Instantiation [Name2Term(a, t)]) kwp in
                         let md = Env.get_effect_decl env ct.effect_name in
                         let x = S.new_bv (Some t.pos) t in
                         let xexp = S.bv_to_name x in
@@ -879,9 +879,9 @@ let maybe_instantiate (env:Env.env) e t =
       let bs, c = SS.open_comp bs c in
       let rec aux subst = function
         | (x, Some (Implicit dot))::rest ->
-          let t = SS.subst subst x.sort in
+          let t = SS.subst (Instantiation subst) x.sort in
           let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
-          let subst = NT(x, v)::subst in
+          let subst = Name2Term(x, v)::subst in
           let args, bs, subst, g' = aux subst rest in
           (v, Some (Implicit dot))::args, bs, subst, Rel.conj_guard g g'
         | bs -> [], bs, subst, Rel.trivial_guard in
@@ -900,7 +900,7 @@ let maybe_instantiate (env:Env.env) e t =
           let t = match bs with 
             | [] -> Util.comp_result c
             | _ -> U.arrow bs c in
-          let t = SS.subst subst t in 
+          let t = SS.subst (Instantiation subst) t in 
           let e = S.mk_Tm_app e args (Some t.n) e.pos in
           e, t, guard
       end

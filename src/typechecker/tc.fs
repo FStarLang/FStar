@@ -87,12 +87,16 @@ let maybe_push_binding env b =
         Env.push_bv env (fst b))
 
 let maybe_make_subst = function
-  | Inr(Some x, e) -> [NT(x,e)]
+  | Inr(Some x, e) -> [Name2Term(x,e)]
   | _ -> []
 
-let maybe_extend_subst s b v : subst_t =
+let maybe_extend_subst s b v : instantiation =
     if is_null_binder b then s
-    else NT(fst b, v)::s
+    else Name2Term(fst b, v)::s
+
+let maybe_extend_renaming s b n : renaming =
+    if is_null_binder b then s
+    else Name2Name(fst b, n)::s
 
 let set_lcomp_result lc t =
     {lc with res_typ=t; comp=fun () -> Util.set_result_typ (lc.comp()) t}
@@ -602,7 +606,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                                             * binders                         (* a type-checked prefix of bs       *)
                                             * option<either<binders,binders>> (* suffix of either bs or bs_expected*)
                                             * guard_t                         (* accumulated logical guard         *)
-                                            * subst_t =                         (* alpha conv. of bs_expected to bs  *)
+                                            * renaming =                      (* alpha conv. of bs_expected to bs  *)
         let rec aux (env, out, g, subst) (bs:binders) (bs_expected:binders) = match bs, bs_expected with
             | [], [] -> env, List.rev out, None, g, subst
 
@@ -614,7 +618,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                                                   S.range_of_bv hd))
                     | _ -> ()
                end;
-               let expected_t = SS.subst subst hd_expected.sort in
+               let expected_t = SS.subst (Renaming subst) hd_expected.sort in
                let t, g = match (Util.unmeta hd.sort).n with
                     | Tm_unknown -> expected_t, g
                     | _ ->
@@ -630,7 +634,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 let b = hd, imp in
                 let b_expected = (hd_expected, imp') in
                 let env = maybe_push_binding env b in
-                let subst = maybe_extend_subst subst b_expected  (S.bv_to_name hd) in
+                let subst = maybe_extend_renaming subst b_expected hd in
                 aux (env, b::out, g, subst) bs bs_expected
 
           | rest, [] -> env, List.rev out, Some (Inl rest), g, subst
@@ -688,16 +692,16 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                         2. If the function is a let-rec, and the expected type is pure, then we need to add termination checks.
                     *)
                   let check_actuals_against_formals env bs bs_expected =
-                      let rec handle_more (env, bs, more, guard, subst) c_expected = match more with
+                      let rec handle_more (env, bs, more, guard, renaming) c_expected = match more with
                         | None -> //number of binders match up
-                          env, bs, guard, SS.subst_comp subst c_expected
+                          env, bs, guard, SS.subst_comp (Renaming renaming) c_expected
 
                         | Some (Inr more_bs_expected) -> //more formal parameters; expect the body to return a total function
                           let c = S.mk_Total (Util.arrow more_bs_expected c_expected) in
-                          env, bs, guard, SS.subst_comp subst c
+                          env, bs, guard, SS.subst_comp (Renaming renaming) c
 
                         | Some (Inl more_bs) ->  //more actual args
-                          let c = SS.subst_comp subst c_expected in
+                          let c = SS.subst_comp (Renaming renaming) c_expected in
                           (* the expected type is explicitly curried *)
                           if Util.is_total_comp c
                           then let t = unfold_whnf env (Util.comp_result c) in
@@ -854,10 +858,10 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             args     (* actual arguments  *) : (term * lcomp * guard_t) =
             match bs, args with
             | (x, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit arg *)
-                let t = SS.subst subst x.sort in
+                let t = SS.subst (Instantiation subst) x.sort in
                 check_no_escape (Some head) env fvs t;
                 let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" head.pos env t in //new_uvar env t in
-                let subst = NT(x, varg)::subst in
+                let subst = Name2Term(x, varg)::subst in
                 let arg = varg, as_implicit true in
                 tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard implicits g, fvs) rest cres args
 
@@ -867,7 +871,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 | None, None
                 | Some Equality, None -> ()
                 | _ -> raise (Error("Inconsistent implicit qualifier", e.pos)) in
-                let targ = SS.subst subst x.sort in
+                let targ = SS.subst (Instantiation subst) x.sort in
                 let x = {x with sort=targ} in
                 if debug env Options.Extreme then  Util.print1 "\tType of arg (after subst) = %s\n" (Print.term_to_string targ);
                 check_no_escape (Some head) env fvs targ;
@@ -880,7 +884,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 let arg = e, aq in
                 if Util.is_tot_or_gtot_lcomp c //e is Tot or GTot; we can just substitute it
                 then let subst = maybe_extend_subst subst (List.hd bs) e in
-                    tc_args (subst, arg::outargs, arg::arg_rets, comps, g, fvs) rest cres rest'
+                     tc_args (subst, arg::outargs, arg::arg_rets, comps, g, fvs) rest cres rest'
                 else if TcUtil.is_pure_or_ghost_effect env c.eff_name //its conditionally pure; can substitute, but must check its WP
                 then let subst = maybe_extend_subst subst (List.hd bs) e in
                      let comps, guard =
@@ -901,7 +905,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 let cres, g =
                   match bs with
                     | [] -> (* full app *)
-                        let cres = TcUtil.subst_lcomp subst cres in
+                        let cres = TcUtil.subst_lcomp (Instantiation subst) cres in
                         (* If we have f e1 e2
                             where e1 or e2 is impure but f is a pure function,
                             then refine the result to be equal to f x1 x2,
@@ -932,7 +936,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
                     | _ ->  (* partial app *)
                         let g = Rel.conj_guard ghead g |> Rel.solve_deferred_constraints env in
-                        U.lcomp_of_comp <| mk_Total  (SS.subst subst <| Util.arrow bs (cres.comp())), g in
+                        U.lcomp_of_comp <| mk_Total  (SS.subst (Instantiation subst) (Util.arrow bs (cres.comp()))), g in
 
                 if debug env Options.Low then Util.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);
                 let comp = List.fold_left (fun out (r1, x, c) -> TcUtil.bind r1 env None c (x, out)) cres comps in
@@ -2379,8 +2383,8 @@ let tc_inductive env ses quals lids =
                   //need to map the prefix of bs corresponding to params to the tps of the inductive
                   let _, bs' = Util.first_N ntps bs in
                   let t = mk (Tm_arrow(bs', res)) None t.pos in
-                  let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), x)) in
-(*open*)          Util.arrow_formals (SS.subst subst t)
+                  let subst = tps |> List.mapi (fun i (x, _) -> Index2Name(ntps - (1 + i), x)) in
+(*open*)          Util.arrow_formals (SS.subst (Renaming subst) t)
                 | _ -> [], t in
 
          if Env.debug env Options.Low then Util.print3 "Checking datacon  %s : %s -> %s \n"
@@ -2537,7 +2541,7 @@ let rec tc_decl env se = match se with
     | Sig_sub_effect(sub, r) ->
       let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
       let b, wp_b_tgt = monad_signature env sub.target (Env.lookup_effect_lid env sub.target) in
-      let wp_a_tgt    = SS.subst [NT(b, S.bv_to_name a)] wp_b_tgt in
+      let wp_a_tgt    = SS.subst (Renaming [Name2Name(b, a)]) wp_b_tgt in
       let expected_k   = Util.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
       let lift = check_and_gen env (snd sub.lift) expected_k in
       let sub = {sub with lift=lift} in

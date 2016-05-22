@@ -830,7 +830,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                  else let lb = List.hd lbs in
                     let x = S.freshen_bv (left lb.lbname) in
                     let lb = {lb with lbname=Inl x} in
-                    let e' = SS.subst [DB(0, x)] e' in
+                    let e' = SS.subst (Renaming [Index2Name(0, x)]) e' in
                     [lb], e' in
             //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
           let maybe_generalize {lbname=lbname; lbeff=lbeff; lbtyp=t; lbdef=e} =
@@ -862,7 +862,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 //                             printfn "tbody is %s\n" (Print.typ_to_string tbody);
 //                             printfn "targs are %s\n" (targs |> Print.binders_to_string ", ");
                              let expected_t =
-                                let s = List.map2 (fun (x, _) (y, _) -> S.NT(x, S.bv_to_name y)) tbinders targs in
+                                let s = List.map2 (fun (x, _) (y, _) -> S.Name2Name(x, y)) tbinders targs |> Renaming in
                                 SS.subst s tbody in
 //                             printfn "After subst: expected_t is %s\n" (Print.typ_to_string expected_t);
                              let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g targs in

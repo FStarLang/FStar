@@ -586,8 +586,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     | None -> app_tm, decls@decls'
                     | Some (formals, c) ->
                         let formals, rest = Util.first_N (List.length args_e) formals in
-                        let subst = List.map2 (fun (bv, _) (a, _) -> Syntax.NT(bv, a)) formals args_e in
-                        let ty = Util.arrow rest c |> SS.subst subst in
+                        let subst = List.map2 (fun (bv, _) (a, _) -> Syntax.Name2Term(bv, a)) formals args_e in
+                        let ty = Util.arrow rest c |> SS.subst (Instantiation subst) in
                         let has_type, decls'' = encode_term_pred None ty env app_tm in
                         let cvars = Term.free_variables has_type in
                         let e_typing = Term.Assume(Term.mkForall([[has_type]], cvars, has_type), Some "Partial app typing") in
@@ -1325,7 +1325,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let eta_expand binders formals body t =
             let nbinders = List.length binders in
             let formals, extra_formals = Util.first_N nbinders formals in
-            let subst = List.map2 (fun (formal, _) (binder, _) -> NT(formal, S.bv_to_name binder)) formals binders in
+            let subst = List.map2 (fun (formal, _) (binder, _) -> Name2Name(formal, binder)) formals binders |> Renaming in
             let extra_formals = extra_formals |> List.map (fun (x, i) -> {x with sort=SS.subst subst x.sort}, i) |> Util.name_binders in
             let body = Syntax.extend_app_n (SS.compress body) (snd <| Util.args_of_binders extra_formals) (Some <| (SS.subst subst t).n) body.pos in
             binders@extra_formals, body in 
@@ -1345,7 +1345,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         then let lopt = subst_lcomp_opt opening lopt in
                              let bs0, rest = Util.first_N nformals binders in
                              let c =
-                                let subst = List.map2 (fun (b, _) (x, _) -> NT(b, S.bv_to_name x)) bs0 formals in
+                                let subst = List.map2 (fun (b, _) (x, _) -> Name2Name(b, x)) bs0 formals |> Renaming in
                                 SS.subst_comp subst c in
                              let body = Util.abs rest body lopt in
                              bs0, body, bs0, Util.comp_result c

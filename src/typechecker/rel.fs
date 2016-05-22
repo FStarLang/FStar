@@ -237,7 +237,7 @@ let problem_using_guard orig lhs rel rhs elt reason = {
 let guard_on_element problem x phi =
     match problem.element with
         | None ->   U.mk_forall x phi
-        | Some e -> Subst.subst [NT(x,e)] phi
+        | Some e -> Subst.subst (Instantiation [Name2Term(x,e)]) phi
 let explain env d s =
     Util.format4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n"
                        (Range.string_of_range <| p_loc d)
@@ -1230,7 +1230,7 @@ and solve_flex_rigid_join env tp wl =
             | None -> None
             | Some m ->
               let x = freshen_bv x in 
-              let subst = [DB(0, x)] in
+              let subst = Renaming [Index2Name(0, x)] in
               let phi1 = SS.subst subst phi1 in
               let phi2 = SS.subst subst phi2 in
               Some (U.refine x (Util.mk_conj phi1 phi2), m)
@@ -1314,7 +1314,7 @@ and solve_flex_rigid_join env tp wl =
       | _ -> failwith "Impossible: Not a flex-rigid"
 
 and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
-                  (rhs:binders -> Env.env -> list<subst_elt> -> prob) : solution =
+                  (rhs:binders -> Env.env -> renaming -> prob) : solution =
 
    let rec aux scope env subst (xs:binders) (ys:binders) : either<(probs * formula), string> =
         match xs, ys with
@@ -1326,11 +1326,11 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
               Inl ([rhs_prob], formula)
 
             | (hd1, imp)::xs, (hd2, imp')::ys when (imp=imp') ->
-               let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
-               let hd2 = {hd2 with sort=Subst.subst subst hd2.sort} in 
+               let hd1 = {hd1 with sort=Subst.subst (Renaming subst) hd1.sort} in //open both binders
+               let hd2 = {hd2 with sort=Subst.subst (Renaming subst) hd2.sort} in 
                let prob = TProb <| mk_problem scope orig hd1.sort (invert_rel <| p_rel orig) hd2.sort None "Formal parameter" in
                let hd1 = freshen_bv hd1 in
-               let subst = DB(0, hd1)::SS.shift_subst 1 subst in  //extend the substitution
+               let subst = Index2Name(0, hd1)::SS.shift_renaming 1 subst in  //extend the substitution
                let env = Env.push_bv env hd1 in
                begin match aux ((hd1,imp)::scope) env subst xs ys with
                  | Inl (sub_probs, phi) ->
@@ -1477,11 +1477,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             let rec aux subst bs = match bs with
                 | [] -> [], []
                 | (a, _)::tl ->
-                    let k_a = SS.subst subst a.sort in
+                    let k_a = SS.subst (Instantiation subst) a.sort in
                     let gi_xs, gi = new_uvar r xs k_a in
                     let gi_xs = N.eta_expand env gi_xs in
                     let gi_ps = mk_Tm_app gi ps (Some k_a.n) r in
-                    let subst = NT(a, gi_xs)::subst in
+                    let subst = Name2Term(a, gi_xs)::subst in
                     let gi_xs', gi_ps' = aux subst tl in
                     as_arg gi_xs::gi_xs', as_arg gi_ps::gi_ps' in
               aux [] bs in
@@ -1841,8 +1841,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         
         solve_binders env bs1 bs2 orig wl
         (fun scope env subst  ->
-            let c1 = Subst.subst_comp subst c1 in
-            let c2 = Subst.subst_comp subst c2 in //open both comps
+            let c1 = Subst.subst_comp (Renaming subst) c1 in
+            let c2 = Subst.subst_comp (Renaming subst) c2 in //open both comps
             let rel = if !Options.use_eq_at_higher_order then EQ else problem.relation in
             CProb <| mk_problem scope orig c1 rel c2 None "function co-domain")
 
@@ -1854,16 +1854,16 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             match_num_binders (bs1, mk_t tbody1 lopt1) (bs2, mk_t tbody2 lopt2) in
         solve_binders env bs1 bs2 orig wl
         (fun scope env subst ->
-            TProb <| mk_problem scope orig (Subst.subst subst tbody1) 
+            TProb <| mk_problem scope orig (Subst.subst (Renaming subst) tbody1) 
                                            problem.relation 
-                                           (Subst.subst subst tbody2) None "lambda co-domain")
+                                           (Subst.subst (Renaming subst) tbody2) None "lambda co-domain")
 
       | Tm_refine _, Tm_refine _ ->
         let x1, phi1 = as_refinement env wl t1 in
         let x2, phi2 = as_refinement env wl t2 in
         let base_prob = TProb <| mk_problem (p_scope orig) orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
         let x1 = freshen_bv x1 in
-        let subst = [DB(0, x1)] in
+        let subst = Renaming [Index2Name(0, x1)] in
         let phi1 = Subst.subst subst phi1 in
         let phi2 = Subst.subst subst phi2 in
         let env = Env.push_bv env x1 in

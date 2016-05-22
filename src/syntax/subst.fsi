@@ -22,12 +22,18 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Util
 
-val print_term': ref<(term -> string)>
-val print_univ': ref<(universe -> string)>
+type renaming = list<renaming_subst>
+type inst     = list<inst_subst>
 
-val shift_subst:        int -> subst_t -> subst_t
-val subst:              list<subst_elt> -> term -> term
-val subst_comp:         list<subst_elt> -> comp -> comp
+val bv_to_string': ref<(bv -> string)>
+val print_term'  : ref<(term -> string)>
+val print_univ'  : ref<(universe -> string)>
+val subst_to_string: subst_ts -> string
+
+val shift_renaming:     int -> renaming -> renaming
+val shift_subst:        int -> subst_ts -> subst_ts
+val subst:              subst_t -> term -> term
+val subst_comp:         subst_t -> comp -> comp
 val compress:           term -> term
 val compress_univ:      universe -> universe
 

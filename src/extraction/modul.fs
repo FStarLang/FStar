@@ -110,7 +110,7 @@ let bundle_as_inductive_families env ses quals : list<inductive_family> =
                     | Sig_datacon(d, _, t, l', nparams, _, _, _) when Ident.lid_equals l l' -> 
                         let bs', body = U.arrow_formals t in
                         let bs_params, rest = Util.first_N (List.length bs) bs' in
-                        let subst = List.map2 (fun (b', _) (b, _) -> S.NT(b', S.bv_to_name b)) bs_params bs in
+                        let subst = List.map2 (fun (b', _) (b, _) -> S.Name2Name(b', b)) bs_params bs |> Renaming in
                         let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
