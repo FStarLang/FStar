@@ -31,7 +31,7 @@ val print_univ'  : ref<(universe -> string)>
 val subst_to_string: subst_ts -> string
 
 val shift_renaming:     int -> renaming -> renaming
-val shift_subst:        int -> subst_ts -> subst_ts
+//val shift_subst:        int -> subst_ts -> subst_ts
 val subst:              subst_t -> term -> term
 val subst_comp:         subst_t -> comp -> comp
 val compress:           term -> term

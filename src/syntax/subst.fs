@@ -124,7 +124,6 @@ let subst_name x s =
     | Renaming renaming  -> rename_name x renaming
     | Instantiation inst -> instantiate x inst
 
-
 let subst_uindex i s = 
     let rename_uindex i renaming = Util.find_map renaming (function 
         | UIndex2UName (j, t) when (i=j) -> Some (U_name t)
@@ -149,7 +148,6 @@ let subst_uname x s =
     | Renaming renaming  -> rename_uname x renaming
     | Instantiation inst -> instantiate_uname x inst
 
-
 (* apply_until_some f s 
       applies f to each element of s until it returns (Some t)
 *)
@@ -168,18 +166,24 @@ let apply_until_some_then_map f s g t =
     apply_until_some f s 
     |> map_some_curry g t
 
-let rec subst_univ (s:subst_ts) u =
+let rec subst_univ (s, s_new) u =
     let u = compress_univ u in
     match u with 
     | U_bvar x -> 
-      apply_until_some_then_map (subst_uindex x) s subst_univ u
+      apply_until_some_then_map (subst_uindex x) s (fun rest -> subst_univ (rest, [])) u
+//      let tm, rest = apply_until_some_then_map (subst_uindex x) s (fun rest x -> x, rest) (u, []) in
+//      let _, rest_new = apply_until_some_then_map (subst_uindex x) s_new (fun rest x -> x, rest) (u, []) in
+//      subst_univ (rest, rest_new) tm
     | U_name x ->
-      apply_until_some_then_map (subst_uname x) s subst_univ u
+      apply_until_some_then_map (subst_uname x) s (fun rest -> subst_univ (rest, [])) u
+//      let tm, rest = apply_until_some_then_map (subst_uname x) s (fun rest x -> x, rest) (u, []) in
+//      let _, rest_new = apply_until_some_then_map (subst_uname x) s_new (fun rest x -> x, rest) (u, []) in
+//      subst_univ (rest, rest_new) tm
     | U_zero
     | U_unknown 
     | U_unif _ -> u
-    | U_succ u -> U_succ (subst_univ s u)
-    | U_max us -> U_max (List.map (subst_univ s) us)
+    | U_succ u -> U_succ (subst_univ (s, s_new) u)
+    | U_max us -> U_max (List.map (subst_univ (s, s_new)) us)
 
 (* s1 and s2 are each parallel substitutions
     e.g., s1 = [Name2Index(x, 0); Name2Index(y, 1)]
@@ -382,11 +386,11 @@ let compose_renamings (s1:renaming) (s2:renaming) : renaming =
   comp
 
 
-let compose_subst (s1:subst_ts) (s2:subst_ts) : subst_ts = 
+let compose_subst (s1, s1_new) (s2, s2_new) : subst_ts * subst_ts = 
     let composed = s1@s2 in
-    let composed = List.fold_right (fun ri out -> match ri, out with 
+    let composed_new = List.fold_right (fun ri out -> match ri, out with 
         | Renaming re1, Renaming re2::tl -> Renaming (compose_renamings re1 re2)::tl
-        | _ -> ri::out) composed [] in
+        | _ -> ri::out) (s1_new@s2_new) [] in
 //    if List.length composed = 618
 //    then 
     if Options.debug_at_level "" (Options.Other "Substitutions")
@@ -394,7 +398,7 @@ let compose_subst (s1:subst_ts) (s2:subst_ts) : subst_ts =
                 (subst_to_string s1)
                 (subst_to_string s2)
                 (subst_to_string composed);
-    composed
+    composed, composed_new
 
 let shift n s = match s with 
     | Index2Name   (i, t) -> Index2Name   (i+n, t)
@@ -408,11 +412,13 @@ let shift n s = match s with
 
 let shift_renaming n s = List.map (shift n) s
 
-let shift_subst n (s:subst_ts) = List.map (function 
+let shift_subst' n (s:subst_ts) = List.map (function 
     | Renaming s -> Renaming (shift_renaming n s)
     | x -> x) s
+
+let shift_subst n (s, s_new) = shift_subst' n s, shift_subst' n s_new
     
-let rec subst' (s:subst_ts) t = 
+let rec subst' (s, s_new) t = 
   match s with
   | [] -> t 
   | _ ->
@@ -427,21 +433,27 @@ let rec subst' (s:subst_ts) t =
             //s is the new subsitution to add to it
             //compose substitutions by concatenating them
             //the order of concatenation is important!
-          mk_Tm_delayed (Inl (t', compose_subst s' s)) t.pos
+          mk_Tm_delayed (Inl (t', compose_subst s' (s, s_new))) t.pos
 
         | Tm_delayed(Inr _, _) -> 
           failwith "Impossible: force_delayed_thunk removes lazy delayed nodes"
 
         | Tm_bvar a ->
-          apply_until_some_then_map (subst_index a) s subst' t0
+//          apply_until_some_then_map (subst_index a) s (fun rest -> subst' (rest, [])) t0
+          let tm, rest = apply_until_some_then_map (subst_index a) s (fun rest x -> (x, rest)) (t0, []) in
+          let tm_new, rest_new = apply_until_some_then_map (subst_index a) s_new (fun rest x -> (x, rest)) (t0, []) in
+          subst' (rest, rest_new) tm
 
         | Tm_name a -> 
-          apply_until_some_then_map (subst_name a) s subst' t0
+//          apply_until_some_then_map (subst_name a) s (fun rest -> subst' (rest, [])) t0
+          let tm, rest = apply_until_some_then_map (subst_name a) s (fun rest x -> (x, rest)) (t0, []) in
+          let tm_new, rest_new = apply_until_some_then_map (subst_name a) s_new (fun rest x -> (x, rest)) (t0, []) in
+          subst' (rest, rest_new) tm
 
         | Tm_type u -> 
-          mk (Tm_type (subst_univ s u)) None t0.pos 
+          mk (Tm_type (subst_univ (s, s_new) u)) None t0.pos 
           
-        | _ -> mk_Tm_delayed (Inl(t0, s))  t.pos
+        | _ -> mk_Tm_delayed (Inl(t0, (s, s_new)))  t.pos
 
 and subst_flags' s flags =
     flags |> List.map (function
@@ -449,17 +461,17 @@ and subst_flags' s flags =
         | f -> f)
 
 and subst_comp_typ' s t = 
-match s with
-  | [] -> t
-  | _ ->
+    match fst s with
+      | [] -> t
+      | _ ->
     {t with result_typ=subst' s t.result_typ;
             flags=subst_flags' s t.flags;
             effect_args=List.map (fun (t, imp) -> subst' s t, imp) t.effect_args}
 
-and subst_comp' s t =
- match s with
-  | [] -> t
-  | _ ->
+and subst_comp' s (t:comp) =
+     match fst s with
+      | [] -> t
+      | _ ->
     match t.n with
       | Total t -> mk_Total (subst' s t)
       | GTotal t -> mk_GTotal (subst' s t)
@@ -470,7 +482,7 @@ let subst_binder' s (x, imp) = {x with sort=subst' s x.sort}, imp
 let subst_binders' s bs = 
     bs |> List.mapi (fun i b -> 
         if i=0 then subst_binder' s b
-        else subst_binder' (shift_subst i s) b)
+        else subst_binder' (shift_subst i s)  b)
 let subst_arg' s (t, imp) = (subst' s t, imp)
 let subst_args' s = List.map (subst_arg' s)
 let subst_pat' s p : (pat * int) = 
@@ -514,7 +526,7 @@ let push_subst_lcomp s lopt = match lopt with
       Some (Inl ({l with res_typ=subst' s l.res_typ;
                          comp=(fun () -> subst_comp' s (l.comp()))}))
 
-let push_subst (s:subst_ts) t = 
+let push_subst (s:(subst_ts * subst_ts)) t = 
 //    let n = List.length s in
     match t.n with 
         | Tm_delayed _ -> failwith "Impossible"
@@ -597,11 +609,15 @@ let rec compress (t:term) =
           t'
         | _ -> force_uvar t
 
-let rename s t = subst' [Renaming s] t
-let rename_comp s c = subst_comp' [Renaming s] c
+let rename r t = 
+    let s = [Renaming r] in 
+    subst' (s,s) t
+let rename_comp r c = 
+    let s = [Renaming r] in
+    subst_comp' (s,s) c
 
-let subst (s:subst_t) (t:term) = subst' [s] t
-let subst_comp s t = subst_comp' [s] t
+let subst (s:subst_t) (t:term) = subst' ([s],[s]) t
+let subst_comp s t : comp = subst_comp' ([s],[s]) t
 
 let closing_subst bs = 
     List.fold_right (fun (x, _) (subst, n)  -> (Name2Index(x, n)::subst, n+1)) bs ([], 0) |> fst 

@@ -454,24 +454,6 @@ let rec sigelt_to_string_short x = match x with
 let rec modul_to_string (m:modul) =
   Util.format2 "module %s\n%s" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
 
-let renaming_elt_to_string = function
-   | Index2Name(i, x) -> Util.format2 "Index2Name (%s, %s)" (string_of_int i) (bv_to_string x)
-   | Name2Index(x, i) -> Util.format2 "Name2Index (%s, %s)" (bv_to_string x) (string_of_int i)
-   | Name2Name(x, y)  -> Util.format2 "Name2Name(%s, %s)" (bv_to_string x) (bv_to_string y)
-   | Index2Index(i, j) -> Util.format2 "Index2Index (%d, %d)" (string_of_int i) (string_of_int j)
-   | UIndex2UName(i, u) -> Util.format2 "UIndex2Uname(%d, %s)" (string_of_int i) u.idText
-   | UName2UIndex(u, i) -> Util.format2 "UName2UIndex (%s, %s)" u.idText (string_of_int i) 
-  
-let renaming_to_string r = 
-    Util.format1 "Renaming[%s]" (r |> List.map renaming_elt_to_string |> String.concat "; ")
-
-let instantiation_elt_to_string = function
-   | Name2Term(x, t) -> Util.format2 "Name2Term(%s, %s)" (bv_to_string x) (term_to_string t)
-   | UName2Univ(un, u) -> Util.format2 "UName2Univ(%s, %s)" un.idText (univ_to_string u)
-
-let instantiation_to_string i = 
-    Util.format1 "Instantiation[%s]" (i |> List.map instantiation_elt_to_string |> String.concat "; ")
-
 let subst_to_string s = Subst.subst_to_string s
 
 let init () = Subst.print_term' := term_to_string;
