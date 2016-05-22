@@ -967,7 +967,7 @@ in (match (_56_692) with
 | (a, kwp) -> begin
 (
 # 497 "FStar.TypeChecker.Util.fst"
-let k = (FStar_Syntax_Subst.subst ((FStar_Syntax_Syntax.NT ((a, t)))::[]) kwp)
+let k = (FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Instantiation ((FStar_Syntax_Syntax.Name2Term ((a, t)))::[])) kwp)
 in (
 # 498 "FStar.TypeChecker.Util.fst"
 let wp = (let _145_322 = (let _145_321 = (let _145_316 = (let _145_315 = (env.FStar_TypeChecker_Env.universe_of env t)
@@ -1085,7 +1085,7 @@ in (
 # 539 "FStar.TypeChecker.Util.fst"
 let subst_c2 = (fun reason -> (match ((e1opt, b)) with
 | (Some (e), Some (x)) -> begin
-(let _145_353 = (let _145_352 = (FStar_Syntax_Subst.subst_comp ((FStar_Syntax_Syntax.NT ((x, e)))::[]) c2)
+(let _145_353 = (let _145_352 = (FStar_Syntax_Subst.subst_comp (FStar_Syntax_Syntax.Instantiation ((FStar_Syntax_Syntax.Name2Term ((x, e)))::[])) c2)
 in (_145_352, reason))
 in Some (_145_353))
 end
@@ -1174,7 +1174,7 @@ in (_145_382)::_145_381))
 in (_145_384)::_145_383))
 in (
 # 568 "FStar.TypeChecker.Util.fst"
-let k = (FStar_Syntax_Subst.subst ((FStar_Syntax_Syntax.NT ((a, t2)))::[]) kwp)
+let k = (FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Instantiation ((FStar_Syntax_Syntax.Name2Term ((a, t2)))::[])) kwp)
 in (
 # 569 "FStar.TypeChecker.Util.fst"
 let us = (let _145_387 = (env.FStar_TypeChecker_Env.universe_of env t1)
@@ -1211,7 +1211,7 @@ in (match (_56_788) with
 | (a, kwp) -> begin
 (
 # 582 "FStar.TypeChecker.Util.fst"
-let k = (FStar_Syntax_Subst.subst ((FStar_Syntax_Syntax.NT ((a, t)))::[]) kwp)
+let k = (FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Instantiation ((FStar_Syntax_Syntax.Name2Term ((a, t)))::[])) kwp)
 in (
 # 583 "FStar.TypeChecker.Util.fst"
 let wp = (let _145_404 = (let _145_403 = (FStar_Syntax_Syntax.as_arg t)
@@ -1971,7 +1971,7 @@ in (match (_56_1111) with
 | (a, kwp) -> begin
 (
 # 848 "FStar.TypeChecker.Util.fst"
-let k = (FStar_Syntax_Subst.subst ((FStar_Syntax_Syntax.NT ((a, t)))::[]) kwp)
+let k = (FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Instantiation ((FStar_Syntax_Syntax.Name2Term ((a, t)))::[])) kwp)
 in (
 # 849 "FStar.TypeChecker.Util.fst"
 let md = (FStar_TypeChecker_Env.get_effect_decl env ct.FStar_Syntax_Syntax.effect_name)
@@ -2177,7 +2177,7 @@ let rec aux = (fun subst _56_4 -> (match (_56_4) with
 | (x, Some (FStar_Syntax_Syntax.Implicit (dot)))::rest -> begin
 (
 # 917 "FStar.TypeChecker.Util.fst"
-let t = (FStar_Syntax_Subst.subst subst x.FStar_Syntax_Syntax.sort)
+let t = (FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Instantiation (subst)) x.FStar_Syntax_Syntax.sort)
 in (
 # 918 "FStar.TypeChecker.Util.fst"
 let _56_1226 = (new_implicit_var "Instantiation of implicit argument" e.FStar_Syntax_Syntax.pos env t)
@@ -2185,7 +2185,7 @@ in (match (_56_1226) with
 | (v, _56_1224, g) -> begin
 (
 # 919 "FStar.TypeChecker.Util.fst"
-let subst = (FStar_Syntax_Syntax.NT ((x, v)))::subst
+let subst = (FStar_Syntax_Syntax.Name2Term ((x, v)))::subst
 in (
 # 920 "FStar.TypeChecker.Util.fst"
 let _56_1232 = (aux subst rest)
@@ -2223,7 +2223,7 @@ end
 end)
 in (
 # 938 "FStar.TypeChecker.Util.fst"
-let t = (FStar_Syntax_Subst.subst subst t)
+let t = (FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Instantiation (subst)) t)
 in (
 # 939 "FStar.TypeChecker.Util.fst"
 let e = (FStar_Syntax_Syntax.mk_Tm_app e args (Some (t.FStar_Syntax_Syntax.n)) e.FStar_Syntax_Syntax.pos)

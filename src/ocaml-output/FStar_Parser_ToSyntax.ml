@@ -2489,7 +2489,7 @@ in (match (_63_1907) with
 let proj = (let _152_708 = (let _152_707 = (FStar_Syntax_Syntax.lid_as_fv field_name FStar_Syntax_Syntax.Delta_equational None)
 in (FStar_Syntax_Syntax.fv_to_tm _152_707))
 in (FStar_Syntax_Syntax.mk_Tm_app _152_708 ((arg)::[]) None p))
-in FStar_Syntax_Syntax.NT ((a, proj)))
+in FStar_Syntax_Syntax.Name2Term ((a, proj)))
 end))
 end))))
 in (
@@ -2507,7 +2507,7 @@ in (match (_63_1920) with
 | (field_name, _63_1919) -> begin
 (
 # 1062 "FStar.Parser.ToSyntax.fst"
-let t = (let _152_712 = (let _152_711 = (FStar_Syntax_Subst.subst subst x.FStar_Syntax_Syntax.sort)
+let t = (let _152_712 = (let _152_711 = (FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Instantiation (subst)) x.FStar_Syntax_Syntax.sort)
 in (FStar_Syntax_Syntax.mk_Total _152_711))
 in (FStar_Syntax_Util.arrow binders _152_712))
 in (

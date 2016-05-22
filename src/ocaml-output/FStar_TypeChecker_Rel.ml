@@ -417,7 +417,7 @@ let guard_on_element = (fun problem x phi -> (match (problem.FStar_TypeChecker_C
 (FStar_Syntax_Util.mk_forall x phi)
 end
 | Some (e) -> begin
-(FStar_Syntax_Subst.subst ((FStar_Syntax_Syntax.NT ((x, e)))::[]) phi)
+(FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Instantiation ((FStar_Syntax_Syntax.Name2Term ((x, e)))::[])) phi)
 end))
 
 # 263 "FStar.TypeChecker.Rel.fst"
@@ -2270,7 +2270,7 @@ end
 let x = (FStar_Syntax_Syntax.freshen_bv x)
 in (
 # 1255 "FStar.TypeChecker.Rel.fst"
-let subst = (FStar_Syntax_Syntax.DB ((0, x)))::[]
+let subst = FStar_Syntax_Syntax.Renaming ((FStar_Syntax_Syntax.Index2Name ((0, x)))::[])
 in (
 # 1256 "FStar.TypeChecker.Rel.fst"
 let phi1 = (FStar_Syntax_Subst.subst subst phi1)
@@ -2437,7 +2437,7 @@ end
 end)))))
 end))
 end))))
-and solve_binders : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.binders  ->  FStar_TypeChecker_Common.prob  ->  worklist  ->  (FStar_Syntax_Syntax.binders  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.subst_elt Prims.list  ->  FStar_TypeChecker_Common.prob)  ->  solution = (fun env bs1 bs2 orig wl rhs -> (
+and solve_binders : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.binders  ->  FStar_TypeChecker_Common.prob  ->  worklist  ->  (FStar_Syntax_Syntax.binders  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Subst.renaming  ->  FStar_TypeChecker_Common.prob)  ->  solution = (fun env bs1 bs2 orig wl rhs -> (
 # 1341 "FStar.TypeChecker.Rel.fst"
 let rec aux = (fun scope env subst xs ys -> (match ((xs, ys)) with
 | ([], []) -> begin
@@ -2463,14 +2463,14 @@ end
 let hd1 = (
 # 1351 "FStar.TypeChecker.Rel.fst"
 let _55_1856 = hd1
-in (let _144_929 = (FStar_Syntax_Subst.subst subst hd1.FStar_Syntax_Syntax.sort)
+in (let _144_929 = (FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Renaming (subst)) hd1.FStar_Syntax_Syntax.sort)
 in {FStar_Syntax_Syntax.ppname = _55_1856.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _55_1856.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _144_929}))
 in (
 # 1352 "FStar.TypeChecker.Rel.fst"
 let hd2 = (
 # 1352 "FStar.TypeChecker.Rel.fst"
 let _55_1859 = hd2
-in (let _144_930 = (FStar_Syntax_Subst.subst subst hd2.FStar_Syntax_Syntax.sort)
+in (let _144_930 = (FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Renaming (subst)) hd2.FStar_Syntax_Syntax.sort)
 in {FStar_Syntax_Syntax.ppname = _55_1859.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _55_1859.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _144_930}))
 in (
 # 1353 "FStar.TypeChecker.Rel.fst"
@@ -2482,8 +2482,8 @@ in (
 let hd1 = (FStar_Syntax_Syntax.freshen_bv hd1)
 in (
 # 1355 "FStar.TypeChecker.Rel.fst"
-let subst = (let _144_934 = (FStar_Syntax_Subst.shift_subst 1 subst)
-in (FStar_Syntax_Syntax.DB ((0, hd1)))::_144_934)
+let subst = (let _144_934 = (FStar_Syntax_Subst.shift_renaming 1 subst)
+in (FStar_Syntax_Syntax.Index2Name ((0, hd1)))::_144_934)
 in (
 # 1356 "FStar.TypeChecker.Rel.fst"
 let env = (FStar_TypeChecker_Env.push_bv env hd1)
@@ -2781,7 +2781,7 @@ end
 | (a, _55_2064)::tl -> begin
 (
 # 1502 "FStar.TypeChecker.Rel.fst"
-let k_a = (FStar_Syntax_Subst.subst subst a.FStar_Syntax_Syntax.sort)
+let k_a = (FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Instantiation (subst)) a.FStar_Syntax_Syntax.sort)
 in (
 # 1503 "FStar.TypeChecker.Rel.fst"
 let _55_2070 = (new_uvar r xs k_a)
@@ -2795,7 +2795,7 @@ in (
 let gi_ps = (FStar_Syntax_Syntax.mk_Tm_app gi ps (Some (k_a.FStar_Syntax_Syntax.n)) r)
 in (
 # 1506 "FStar.TypeChecker.Rel.fst"
-let subst = (FStar_Syntax_Syntax.NT ((a, gi_xs)))::subst
+let subst = (FStar_Syntax_Syntax.Name2Term ((a, gi_xs)))::subst
 in (
 # 1507 "FStar.TypeChecker.Rel.fst"
 let _55_2076 = (aux subst tl)
@@ -3634,10 +3634,10 @@ in (match (_55_2505) with
 | ((bs1, c1), (bs2, c2)) -> begin
 (solve_binders env bs1 bs2 orig wl (fun scope env subst -> (
 # 1866 "FStar.TypeChecker.Rel.fst"
-let c1 = (FStar_Syntax_Subst.subst_comp subst c1)
+let c1 = (FStar_Syntax_Subst.subst_comp (FStar_Syntax_Syntax.Renaming (subst)) c1)
 in (
 # 1867 "FStar.TypeChecker.Rel.fst"
-let c2 = (FStar_Syntax_Subst.subst_comp subst c2)
+let c2 = (FStar_Syntax_Subst.subst_comp (FStar_Syntax_Syntax.Renaming (subst)) c2)
 in (
 # 1868 "FStar.TypeChecker.Rel.fst"
 let rel = if (FStar_ST.read FStar_Options.use_eq_at_higher_order) then begin
@@ -3664,8 +3664,8 @@ in (
 let _55_2535 = (match_num_binders (bs1, (mk_t tbody1 lopt1)) (bs2, (mk_t tbody2 lopt2)))
 in (match (_55_2535) with
 | ((bs1, tbody1), (bs2, tbody2)) -> begin
-(solve_binders env bs1 bs2 orig wl (fun scope env subst -> (let _144_1318 = (let _144_1317 = (FStar_Syntax_Subst.subst subst tbody1)
-in (let _144_1316 = (FStar_Syntax_Subst.subst subst tbody2)
+(solve_binders env bs1 bs2 orig wl (fun scope env subst -> (let _144_1318 = (let _144_1317 = (FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Renaming (subst)) tbody1)
+in (let _144_1316 = (FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Renaming (subst)) tbody2)
 in (mk_problem scope orig _144_1317 problem.FStar_TypeChecker_Common.relation _144_1316 None "lambda co-domain")))
 in (FStar_All.pipe_left (fun _144_1315 -> FStar_TypeChecker_Common.TProb (_144_1315)) _144_1318))))
 end)))
@@ -3690,7 +3690,7 @@ in (
 let x1 = (FStar_Syntax_Syntax.freshen_bv x1)
 in (
 # 1888 "FStar.TypeChecker.Rel.fst"
-let subst = (FStar_Syntax_Syntax.DB ((0, x1)))::[]
+let subst = FStar_Syntax_Syntax.Renaming ((FStar_Syntax_Syntax.Index2Name ((0, x1)))::[])
 in (
 # 1889 "FStar.TypeChecker.Rel.fst"
 let phi1 = (FStar_Syntax_Subst.subst subst phi1)

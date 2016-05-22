@@ -249,25 +249,28 @@ try
 | () -> begin
 (
 # 131 "FStar.FStar.fst"
-let _88_99 = (go ())
+let _88_99 = (FStar_Syntax_Print.init ())
 in (
 # 132 "FStar.FStar.fst"
-let _88_101 = (cleanup ())
-in (FStar_All.exit 0)))
+let _88_101 = (go ())
+in (
+# 133 "FStar.FStar.fst"
+let _88_103 = (cleanup ())
+in (FStar_All.exit 0))))
 end)
 with
 | e -> begin
 (
-# 135 "FStar.FStar.fst"
-let _88_89 = (
 # 136 "FStar.FStar.fst"
+let _88_89 = (
+# 137 "FStar.FStar.fst"
 let _88_85 = if (FStar_Absyn_Util.handleable e) then begin
 (FStar_Absyn_Util.handle_err false () e)
 end else begin
 ()
 end
 in (
-# 137 "FStar.FStar.fst"
+# 138 "FStar.FStar.fst"
 let _88_87 = if (FStar_Syntax_Util.handleable e) then begin
 (FStar_Syntax_Util.handle_err false e)
 end else begin
@@ -286,14 +289,14 @@ end else begin
 end
 end))
 in (
-# 143 "FStar.FStar.fst"
+# 144 "FStar.FStar.fst"
 let _88_91 = (cleanup ())
 in (
-# 144 "FStar.FStar.fst"
+# 145 "FStar.FStar.fst"
 let _88_93 = (let _177_47 = (FStar_TypeChecker_Errors.report_all ())
 in (FStar_All.pipe_right _177_47 Prims.ignore))
 in (
-# 145 "FStar.FStar.fst"
+# 146 "FStar.FStar.fst"
 let _88_95 = (report_errors ())
 in (FStar_All.exit 1)))))
 end

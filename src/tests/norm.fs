@@ -35,7 +35,7 @@ let rec encode n =
 let minus m n = app n [pred; m]
 let let_ x e e' : term = app (U.abs [b x] e' None) [e]
 let mk_let x e e' : term = 
-    let e' = FStar.Syntax.Subst.subst [Name2Index(x, 0)] e' in
+    let e' = FStar.Syntax.Subst.subst (Renaming [Name2Index(x, 0)]) e' in
     mk (Tm_let((false, [{lbname=Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=lid_of_path ["Pure"] dummyRange}]), e')) 
                            None dummyRange
 
@@ -68,8 +68,8 @@ let minus_nat t1 t2 =
                   None, 
                   app (nm minus) [pred_nat (nm x); nm n] in
     let lb = {lbname=Inl minus; lbeff=lid_of_path ["Pure"] dummyRange; lbunivs=[]; lbtyp=tun; 
-              lbdef=subst [Name2Index(minus, 0)] (U.abs [b x; b y] (mk_match (nm y) [zbranch; sbranch]) None)} in
-    mk (Tm_let((true, [lb]), subst [Name2Index(minus, 0)] (app (nm minus) [t1; t2]))) None dummyRange
+              lbdef=subst (Renaming [Name2Index(minus, 0)]) (U.abs [b x; b y] (mk_match (nm y) [zbranch; sbranch]) None)} in
+    mk (Tm_let((true, [lb]), subst (Renaming [Name2Index(minus, 0)]) (app (nm minus) [t1; t2]))) None dummyRange
 let encode_nat n = 
     let rec aux out n = 
         if n=0 then out
@@ -112,10 +112,10 @@ let run_all () =
     let z = S.gen_bv "z" None S.tun in
     let t = U.abs [S.mk_binder y] (S.bv_to_name x) None in
     printfn "t = %s\n" (P.term_to_string t);
-    let s1 = S.Name2Term(x, U.mk_conj (S.bv_to_name z) (S.bv_to_name z)) in
-    let t1 = SS.subst [s1] t in
-    let s2 = S.Name2Index(z, 0) in
-    let t2 = SS.subst [s2] t1 in
+    let s1 = [S.Name2Term(x, U.mk_conj (S.bv_to_name z) (S.bv_to_name z))] |> Instantiation in
+    let t1 = SS.subst s1 t in
+    let s2 = [S.Name2Index(z, 0)] |> Renaming in
+    let t2 = SS.subst s2 t1 in
     printfn "t2 = %s\n" (P.term_to_string t2)
 //
 //    run -1 (app id [nm n]) (nm n);

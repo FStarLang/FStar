@@ -1358,7 +1358,7 @@ let _77_1152 = lb
 in {FStar_Syntax_Syntax.lbname = FStar_Util.Inl (x); FStar_Syntax_Syntax.lbunivs = _77_1152.FStar_Syntax_Syntax.lbunivs; FStar_Syntax_Syntax.lbtyp = _77_1152.FStar_Syntax_Syntax.lbtyp; FStar_Syntax_Syntax.lbeff = _77_1152.FStar_Syntax_Syntax.lbeff; FStar_Syntax_Syntax.lbdef = _77_1152.FStar_Syntax_Syntax.lbdef})
 in (
 # 833 "FStar.Extraction.ML.Term.fst"
-let e' = (FStar_Syntax_Subst.subst ((FStar_Syntax_Syntax.DB ((0, x)))::[]) e')
+let e' = (FStar_Syntax_Subst.subst (FStar_Syntax_Syntax.Renaming ((FStar_Syntax_Syntax.Index2Name ((0, x)))::[])) e')
 in ((lb)::[], e')))))
 end
 end
@@ -1417,12 +1417,11 @@ in (match (_77_1199) with
 # 864 "FStar.Extraction.ML.Term.fst"
 let expected_t = (
 # 865 "FStar.Extraction.ML.Term.fst"
-let s = (FStar_List.map2 (fun _77_1203 _77_1207 -> (match ((_77_1203, _77_1207)) with
+let s = (let _166_374 = (FStar_List.map2 (fun _77_1203 _77_1207 -> (match ((_77_1203, _77_1207)) with
 | ((x, _77_1202), (y, _77_1206)) -> begin
-(let _166_374 = (let _166_373 = (FStar_Syntax_Syntax.bv_to_name y)
-in (x, _166_373))
-in FStar_Syntax_Syntax.NT (_166_374))
+FStar_Syntax_Syntax.Name2Name ((x, y))
 end)) tbinders targs)
+in (FStar_All.pipe_right _166_374 (fun _166_373 -> FStar_Syntax_Syntax.Renaming (_166_373))))
 in (FStar_Syntax_Subst.subst s tbody))
 in (
 # 868 "FStar.Extraction.ML.Term.fst"

@@ -146,12 +146,11 @@ in (match (_78_102) with
 | (bs_params, rest) -> begin
 (
 # 113 "FStar.Extraction.ML.Modul.fst"
-let subst = (FStar_List.map2 (fun _78_106 _78_110 -> (match ((_78_106, _78_110)) with
+let subst = (let _167_86 = (FStar_List.map2 (fun _78_106 _78_110 -> (match ((_78_106, _78_110)) with
 | ((b', _78_105), (b, _78_109)) -> begin
-(let _167_86 = (let _167_85 = (FStar_Syntax_Syntax.bv_to_name b)
-in (b', _167_85))
-in FStar_Syntax_Syntax.NT (_167_86))
+FStar_Syntax_Syntax.Name2Name ((b', b))
 end)) bs_params bs)
+in (FStar_All.pipe_right _167_86 (fun _167_85 -> FStar_Syntax_Syntax.Renaming (_167_85))))
 in (
 # 114 "FStar.Extraction.ML.Modul.fst"
 let t = (let _167_88 = (let _167_87 = (FStar_Syntax_Syntax.mk_Total body)
