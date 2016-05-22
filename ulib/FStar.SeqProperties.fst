@@ -399,10 +399,13 @@ let lemma_trans_perm #a s1 s2 s3 i j = ()
 val snoc : #a:Type -> seq a -> a -> Tot (seq a)
 let snoc #a s x = Seq.append s (Seq.create 1 x)
 
+#set-options "--initial_fuel 2 --max_fuel 2"
+val lemma_mem_snoc : #a:Type -> s:FStar.Seq.seq a -> x:a ->
+   Lemma (ensures (forall y. mem y (snoc s x) <==> mem y s \/ x=y))
+let lemma_mem_snoc #a s x = lemma_append_count s (Seq.create 1 x)
+
+#set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 0 --max_fuel 0"
 type found (i:nat) = True
-
-#set-options "--initial_ifuel 1 --max_ifuel 1"
-
 val seq_find_aux : #a:Type -> f:(a -> Tot bool) -> l:seq a
                    -> ctr:nat{ctr <= Seq.length l}
                    -> Pure (option a)
@@ -434,3 +437,15 @@ val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
 let seq_find #a f l =
   admit ();
   seq_find_aux f l (Seq.length l)
+
+#set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 1 --max_fuel 1"
+val seq_mem_k: #a:Type -> s:seq a -> n:nat{n < Seq.length s} -> 
+    Lemma (requires True)
+	  (ensures (mem (Seq.index s n) s))
+	  (decreases n)
+	  [SMTPat (mem (Seq.index s n) s)]
+let rec seq_mem_k #a s n = 
+  if n = 0 then ()
+  else let tl = tail s in
+       seq_mem_k tl (n - 1)
+

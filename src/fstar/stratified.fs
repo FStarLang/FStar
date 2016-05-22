@@ -52,7 +52,7 @@ let parse (env:DsEnv.env) (fn:string) : DsEnv.env
 let tc_prims () : list<Syntax.modul>
                 * DsEnv.env
                 * TcEnv.env =
-  let solver = if !Options.verify then SMT.solver else SMT.dummy in
+  let solver = if Options.lax() then SMT.dummy else SMT.solver in
   let env = TcEnv.initial_env solver Const.prims_lid in
   env.solver.init env;
   let p = Options.prims () in
@@ -83,14 +83,14 @@ let batch_mode_tc_no_prims dsenv env filenames =
                                 let ms, dsenv, env = tc_one_file dsenv env f in
                                 all_mods@ms, dsenv, env)
                                 ([], dsenv, env) in
-  if !Options.interactive && FStar.Tc.Errors.get_err_count () = 0
+  if (Options.interactive()) && FStar.Tc.Errors.get_err_count () = 0
   then env.solver.refresh()
   else env.solver.finish();
   all_mods, dsenv, env
 
 let batch_mode_tc filenames =
   let prims_mod, dsenv, env = tc_prims () in
-  let filenames, admit_fsi = find_deps_if_needed filenames in
+  let filenames = find_deps_if_needed filenames in
   let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
   prims_mod @ all_mods, dsenv, env
 
@@ -137,21 +137,24 @@ let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul
           DsEnv.pop dsenv |> ignore;
           TcEnv.pop env msg |> ignore;
           env.solver.refresh();
-          Options.restore_cmd_line_options() |> ignore in
+          Options.pop() in
 
     let push (dsenv, env) msg = 
           let dsenv = DsEnv.push dsenv in
           let env = TcEnv.push env msg in
+          Options.push();
           (dsenv, env) in
 
     let mark (dsenv, env) =
         let dsenv = DsEnv.mark dsenv in
         let env = TcEnv.mark env in
+        Options.push();
         dsenv, env in
 
     let reset_mark (dsenv, env) =
         let dsenv = DsEnv.reset_mark dsenv in
         let env = TcEnv.reset_mark env in
+        Options.pop();
         dsenv, env in
 
     let commit_mark (dsenv, env) =

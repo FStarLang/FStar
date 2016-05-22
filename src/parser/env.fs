@@ -39,7 +39,7 @@ type env = {
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
   localbindings:        list<(ident * bv)>;               (* local name bindings for name resolution, paired with an env-generated unique name *)
   recbindings:          list<(ident* lid * delta_depth)>; (* names bound by recursive type and top-level let-bindings definitions only *)
-  sigmap:               list<Util.smap<(sigelt * bool)>>; (* bool indicates that this was declared in an interface file *)
+  sigmap:               Util.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
   default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
@@ -77,12 +77,12 @@ let empty_env () = {curmodule=None;
                     sigaccum=[];
                     localbindings=[];
                     recbindings=[];
-                    sigmap=[new_sigmap()];
+                    sigmap=new_sigmap();
                     default_result_effect=Const.effect_ML_lid;
                     iface=false;
                     admitted_iface=false;
                     expect_typ=false}
-let sigmap env = List.hd env.sigmap
+let sigmap env = env.sigmap
 let default_total env = {env with default_result_effect=Const.effect_Tot_lid}
 let default_ml env = {env with default_result_effect=Const.effect_ML_lid}
 
@@ -285,23 +285,30 @@ let record_cache_aux =
         record_cache := List.tl !record_cache in
     let peek () = List.hd !record_cache in
     let insert r = record_cache := (r::peek())::List.tl (!record_cache) in
-    (push, pop, peek, insert) 
+    let commit () = match !record_cache with 
+        | hd::_::tl -> record_cache := hd::tl
+        | _ -> failwith "Impossible" in
+    (push, pop, peek, insert, commit) 
     
 let push_record_cache = 
-    let push, _, _, _ = record_cache_aux in
+    let push, _, _, _, _ = record_cache_aux in
     push
 
 let pop_record_cache = 
-    let _, pop, _, _ = record_cache_aux in
+    let _, pop, _, _, _ = record_cache_aux in
     pop
 
 let peek_record_cache = 
-    let _, _, peek, _ = record_cache_aux in
+    let _, _, peek, _, _ = record_cache_aux in
     peek
 
 let insert_record_cache = 
-    let _, _, _, insert = record_cache_aux in
+    let _, _, _, insert, _ = record_cache_aux in
     insert
+
+let commit_record_cache = 
+    let _, _, _, _, commit = record_cache_aux in
+    commit
 
 let extract_record (e:env) = function
   | Sig_bundle(sigs, _, _, _) ->
@@ -473,27 +480,48 @@ let finish env modul =
   {env with
     curmodule=None;
     modules=(modul.name, modul)::env.modules;
+    modul_abbrevs=[];
     open_namespaces=[];
     sigaccum=[];
     localbindings=[];
     recbindings=[]}
 
-let push (env:env) =
-    push_record_cache();
-    {env with
-        sigmap=Util.smap_copy (sigmap env)::env.sigmap;}
+type env_stack_ops = { 
+    push: env -> env;
+    mark: env -> env;
+    reset_mark: env -> env;
+    commit_mark: env -> env;
+    pop:env -> env
+}
 
-let mark env = push env
-let reset_mark env = {env with sigmap=List.tl env.sigmap}
-let commit_mark env = match env.sigmap with
-    | hd::_::tl -> {env with sigmap=hd::tl}
-    | _ -> failwith "Impossible"
-let pop env = match env.sigmap with
-    | _::maps ->
-        pop_record_cache();
-        {env with
-            sigmap=maps}
-    | _ -> failwith "No more modules to pop"
+let stack_ops = 
+    let stack = Util.mk_ref [] in 
+    let push env = 
+        push_record_cache();
+        stack := env::!stack;
+        {env with sigmap=Util.smap_copy (sigmap env)} in
+    let pop env = match !stack with 
+        | env::tl -> 
+         pop_record_cache();
+         stack := tl;
+         env
+        | _ -> failwith "Impossible: Too many pops" in
+    let commit_mark env = 
+        commit_record_cache();
+        match !stack with 
+         | _::tl -> stack := tl; env
+         | _ -> failwith "Impossible: Too many pops" in
+    { push=push; 
+      pop=pop;
+      mark=push;
+      reset_mark=pop;
+      commit_mark=commit_mark;}
+
+let push (env:env) = stack_ops.push env
+let mark env = stack_ops.mark env
+let reset_mark env = stack_ops.reset_mark env
+let commit_mark env = stack_ops.commit_mark env
+let pop env = stack_ops.pop env
 
 let export_interface (m:lident) env =
 //    printfn "Exporting interface %s" m.str;
@@ -550,9 +578,29 @@ let exit_monad_scope env0 env =
     curmodule=env0.curmodule;
     open_namespaces=env0.open_namespaces}
 
-let fail_or lookup lid = match lookup lid with
+let fail_or env lookup lid = match lookup lid with
   | None ->
-    raise (Error (Util.format1 "Identifier not found: [%s]" (text_of_lid lid), range_of_lid lid))
+    let opened_modules = List.map (fun (lid, _) -> text_of_lid lid) env.modules in
+    let module_of_the_lid = text_of_path (path_of_ns lid.ns) in
+    let msg = Util.format1 "Identifier not found: [%s]" (text_of_lid lid) in
+    let msg =
+      match env.curmodule with
+      | Some m when (text_of_lid m = module_of_the_lid || module_of_the_lid = "") ->
+          (* Lookup in the current module *)
+          msg
+      | _ when List.existsb (fun m -> m = module_of_the_lid) opened_modules ->
+          (* Lookup in a module we've heard about *)
+          msg
+      | _ ->
+          (* Lookup in a module we haven't heard about *)
+          msg ^ "\n" ^
+          Util.format3 "Hint: %s belongs to module %s, which does not belong \
+            to the list of modules in scope, namely %s"
+            (text_of_lid lid)
+            (text_of_path (path_of_ns lid.ns))
+            (String.concat ", " opened_modules)
+    in
+    raise (Error (msg, range_of_lid lid))
   | Some r -> r
 
 let fail_or2 lookup id = match lookup id with

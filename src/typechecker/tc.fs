@@ -38,7 +38,7 @@ module U  = FStar.Syntax.Util
 
 type effect_cost = | ForFree | NotForFree
 
-let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_module env))
+let log env = (Options.log_types()) && not(lid_equals Const.prims_lid (Env.current_module env))
 let rng env = Env.get_range env
 let instantiate_both env = {env with Env.instantiate_imp=true}
 let no_inst env = {env with Env.instantiate_imp=false}
@@ -136,7 +136,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
   let expected_c_opt = match copt with
     | Some _ -> copt
     | None  ->
-        if !Options.ml_ish && Ident.lid_equals Const.effect_ALL_lid (Util.comp_effect_name c)
+        if (Options.ml_ish()) && Ident.lid_equals Const.effect_ALL_lid (Util.comp_effect_name c)
         then Some (Util.ml_comp (Util.comp_result c) e.pos)
         else if (*	env.top_level  || *)
                 Util.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
@@ -461,7 +461,7 @@ and tc_value env (e:term) : term
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
   | Tm_constant c ->
-    let t = tc_constant env top.pos c in
+    let t = tc_constant top.pos c in
     let e = mk (Tm_constant c) (Some t.n) e.pos in
     value_check_expected_typ env e (Inl t) Rel.trivial_guard
 
@@ -509,7 +509,7 @@ and tc_value env (e:term) : term
   | _ ->
     failwith (Util.format1 "Unexpected value: %s" (Print.term_to_string top))
 
-and tc_constant env r (c:sconst) : typ =
+and tc_constant r (c:sconst) : typ =
      match c with
       | Const_unit -> t_unit
       | Const_bool _ -> t_bool
@@ -1257,7 +1257,7 @@ and check_top_level_let env e =
             then let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
                  if ok
                  then e2, c1
-                 else (if !Options.warn_top_level_effects //otherwise warn
+                 else (if (Options.warn_top_level_effects()) //otherwise warn
                        then Errors.warn (Env.get_range env) Errors.top_level_effect;
                        mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
             else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
@@ -2517,7 +2517,7 @@ let rec tc_decl env se = match se with
                 set_options Options.Set o;
                 se, env
             | ResetOptions sopt ->
-                Options.restore_cmd_line_options() |> ignore;
+                Options.restore_cmd_line_options false |> ignore;
                 let _ = match sopt with
                     | None -> ()
                     | Some s -> set_options Options.Reset s in
@@ -2757,7 +2757,7 @@ let tc_decls env ses =
 
           let se, env = tc_decl env se  in
 
-          if !Options.log_types || Env.debug env <| Options.Other "LogTypes"
+          if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"
           then Util.print1 "Checked: %s\n" (Print.sigelt_to_string se);
 
           env.solver.encode_sig env se;
@@ -2789,7 +2789,7 @@ let finish_partial_modul env modul exports =
     env.solver.pop ("Ending modul " ^ modul.name.str);
     env.solver.encode_modul env modul;
     env.solver.refresh();
-    Options.restore_cmd_line_options() |> ignore
+    Options.restore_cmd_line_options true |> ignore
   end;
   modul, env
 
@@ -2809,10 +2809,11 @@ let type_of env e =
     else raise (Error(Util.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e), Env.get_range env))
 
 let check_module env m =
-    if List.length !Options.debug <> 0
+    if Options.debug_any()
     then Util.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
     let m, env = tc_modul env m in
-    if Options.should_dump m.name.str then Util.print1 "%s\n" (Print.modul_to_string m);
+    if Options.dump_module m.name.str 
+    then Util.print1 "%s\n" (Print.modul_to_string m);
     m, env
 
 

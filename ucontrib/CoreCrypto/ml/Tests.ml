@@ -673,6 +673,135 @@ module TestHash = struct
     Bytes.equalBytes output (Bytes.bytes_of_hex t.output)
 end
 
+module TestHashUpdate = struct
+  type test = {
+    input: string; (* copied from TestHash but we don't repeat *)
+    output: string;
+    hash_alg: hash_alg;
+  }
+
+  let tests = [{
+      hash_alg = MD5;
+      input = "";
+      output = "d41d8cd98f00b204e9800998ecf8427e";
+    }; {
+      hash_alg = MD5;
+      input = "a";
+      output = "0cc175b9c0f1b6a831c399e269772661";
+    }; {
+      hash_alg = MD5;
+      input = "abc";
+      output = "900150983cd24fb0d6963f7d28e17f72";
+    }; {
+      hash_alg = MD5;
+      input = "message digest";
+      output = "f96b697d7cb7938d525a2f31aaf161d0";
+    }; {
+      hash_alg = MD5;
+      input = "abcdefghijklmnopqrstuvwxyz";
+      output = "c3fcd3d76192e4007dfb496cca67e13b";
+    }; {
+      hash_alg = MD5;
+      input = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      output = "d174ab98d277d9f5a5611c2c9f419d9f";
+    }; {
+      hash_alg = MD5;
+      input = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
+      output = "57edf4a22be3c955ac49da2e2107b67a";
+    }; {
+      hash_alg = SHA1;
+      input = "abc";
+      output = "a9993e364706816aba3e25717850c26c9cd0d89d";
+    }; {
+      hash_alg = SHA1;
+      input = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+      output = "84983e441c3bd26ebaae4aa1f95129e5e54670f1";
+    };{
+      hash_alg = SHA1;
+      input = "a";
+      output = "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8"; 
+    }; {
+      hash_alg = SHA1;
+      input = "0123456701234567012345670123456701234567012345670123456701234567";
+      output = "e0c094e867ef46c350ef54a7f59dd60bed92ae83";
+    }; {
+      hash_alg = SHA256;
+      input = "abc";
+      output = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+    }; {
+      hash_alg = SHA256;
+      input = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+      output = "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1";
+    }; {
+      hash_alg = SHA256;
+      input = "a";
+      output = "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb";
+    }; {
+      hash_alg = SHA256;
+      input = "0123456701234567012345670123456701234567012345670123456701234567";
+      output = "8182cadb21af0e37c06414ece08e19c65bdb22c396d48ba7341012eea9ffdfdd";
+    };{
+      hash_alg = SHA256;
+      input = "\x19";
+      output = "68aa2e2ee5dff96e3355e6c7ee373e3d6a4e17f75f9518d843709c0c9bc3e3d4";
+    }; {
+      hash_alg = SHA256;
+      input = "\xe3\xd7\x25\x70\xdc\xdd\x78\x7c\xe3\x88\x7a\xb2\xcd\x68\x46\x52";
+      output = "175ee69b02ba9b58e2b0a5fd13819cea573f3940a94f825128cf4209beabb4e8";
+    }; {
+      hash_alg = SHA256;
+      input = "\x83\x26\x75\x4e\x22\x77\x37\x2f\x4f\xc1\x2b\x20\x52\x7a\xfe\xf0\x4d\x8a\x05\x69\x71\xb1\x1a\xd5\x71\x23\xa7\xc1\x37\x76\x00\x00\xd7\xbe\xf6\xf3\xc1\xf7\xa9\x08\x3a\xa3\x9d\x81\x0d\xb3\x10\x77\x7d\xab\x8b\x1e\x7f\x02\xb8\x4a\x26\xc7\x73\x32\x5f\x8b\x23\x74\xde\x7a\x4b\x5a\x58\xcb\x5c\x5c\xf3\x5b\xce\xe6\xfb\x94\x6e\x5b\xd6\x94\xfa\x59\x3a\x8b\xeb\x3f\x9d\x65\x92\xec\xed\xaa\x66\xca\x82\xa2\x9d\x0c\x51\xbc\xf9\x33\x62\x30\xe5\xd7\x84\xe4\xc0\xa4\x3f\x8d\x79\xa3\x0a\x16\x5c\xba\xbe\x45\x2b\x77\x4b\x9c\x71\x09\xa9\x7d\x13\x8f\x12\x92\x28\x96\x6f\x6c\x0a\xdc\x10\x6a\xad\x5a\x9f\xdd\x30\x82\x57\x69\xb2\xc6\x71\xaf\x67\x59\xdf\x28\xeb\x39\x3d\x54\xd6";
+      output = "97dbca7df46d62c8a422c941dd7e835b8ad3361763f7e9b2d95f4f0da6e1ccbc";
+    }; {
+      hash_alg = SHA384;
+      input = "abc";
+      output = "cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7";
+    }; {
+      hash_alg = SHA384;
+      input = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu";
+      output = "09330c33f71147e83d192fc782cd1b4753111b173b3b05d22fa08086e3b0f712fcc7c71a557e2db966c3e9fa91746039";
+    }; {
+      hash_alg = SHA384;
+      input = "a";
+      output = "54a59b9f22b0b80880d8427e548b7c23abd873486e1f035dce9cd697e85175033caa88e6d57bc35efae0b5afd3145f31";
+    }; {
+      hash_alg = SHA384;
+      input = "0123456701234567012345670123456701234567012345670123456701234567";
+      output = "72f5893331c249312d3c2b7a9709a7b96908b7769179dd9824ed578669fcc1f1c2de02c03b3d35a467aa0b472c1bb3d1";
+    }; {
+      hash_alg = SHA512;
+      input = "abc";
+      output = "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f";
+    }; {
+      hash_alg = SHA512;
+      input = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu";
+      output = "8e959b75dae313da8cf4f72814fc143f8f7779c6eb9f7fa17299aeadb6889018501d289e4900f7e4331b99dec4b5433ac7d329eeb6dd26545e96e55b874be909";
+    }; {
+      hash_alg = SHA512;
+      input = "a";
+      output = "1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75";
+    }; {
+      hash_alg = SHA512;
+      input = "0123456701234567012345670123456701234567012345670123456701234567";
+      output = "846e0ef73436438a4acb0ba7078cfe381f10a0f5edebcb985b3790086ef5e7ac5992ac9c23c77761c764bb3b1c25702d06b99955eb197d45b82fb3d124699d78";
+    }]
+
+  (* SI: uses hash, rather than hash's components. *)
+  let print_test t =
+    Printf.printf "%s(%s) = %s (got: %s)\n"
+      (string_of_hash_alg t.hash_alg) (Bytes.hex_of_string t.input) t.output
+      (Bytes.hex_of_bytes (hash t.hash_alg (bytes_of_string t.input)))
+
+  let test t =
+    let input = bytes_of_string t.input in
+    let ctx = digest_create t.hash_alg in
+    (* Add input incrementally *)
+    for i = input.Bytes.index to (input.Bytes.length - 1) do
+       digest_update ctx (Bytes.abyte (Bytes.index input i))
+    done; 
+    let output = digest_final ctx in  
+    Bytes.equalBytes output (Bytes.bytes_of_hex t.output)
+end
 
 module TestEcc = struct
   type test = {
@@ -722,11 +851,11 @@ end
 
 let bytes1, bytes2, bytes3 =
   let chunk1 = bytes_of_string "Lorem ipsum dolor sit amet, consectetur adipiscing elit.  Integer vitae tincidunt enim. Pellentesque luctus, turpis sed lobortis ullamcorper, orci nisi commodo sem, ut sagittis augue elit vel ipsum. Aenean aliquam eros est, sed molestie ex aliquet sed. Vest" in
-  let chunk2 = bytes_of_string "bulum in massa mauris. Phasellus non arcu pulvinar, elementum sapien eu, congue dolor. Fusce malesuada nisl enim, non accumsan mi gravida aliquam. Sed ornare augue eget quam pretium, vitae sodales urna hendrerit.  Curabitur mi ante, fermentum eget lacus ut," in
-  let chunk = Platform.Bytes.(chunk1 @| chunk2) in
-  let _, chunk = Platform.Bytes.split chunk 128 in
-  let chunk, _ = Platform.Bytes.split chunk (256 - 11) in
-  chunk, bytes_of_string "012345678901234567890123456789012345", bytes_of_string "coucou"
+  (*let chunk2 = bytes_of_string "bulum in massa mauris. Phasellus non arcu pulvinar, elementum sapien eu, congue dolor. Fusce malesuada nisl enim, non accumsan mi gravida aliquam. Sed ornare augue eget quam pretium, vitae sodales urna hendrerit.  Curabitur mi ante, fermentum eget lacus ut," in*)
+  (*let chunk = Platform.Bytes.(chunk1 @| chunk2) in*)
+  let chunk11, chunk12 = Platform.Bytes.split chunk1 (128-11) in
+  let nn = "012345678901234567890123456789012345" in
+  chunk11, bytes_of_string nn, bytes_of_string "coucou"
 
 
 module TestRsa = struct
@@ -734,7 +863,7 @@ module TestRsa = struct
   let tests = [bytes1; bytes2; bytes3]
 
   let roundtrip original_bytes =
-    let k = rsa_gen_key 2048 in
+    let k = rsa_gen_key 1024 in
     let cipher_bytes = rsa_encrypt k Pad_PKCS1 original_bytes in
     let plain_bytes = rsa_decrypt k Pad_PKCS1 cipher_bytes in
     try match plain_bytes with
@@ -765,10 +894,10 @@ module TestDsa = struct
   let tests = TestRsa.tests
 
   let check original_bytes =
-    let private_key = dsa_gen_key 2048 in
+    let private_key = dsa_gen_key 1024 in
     let public_key = { private_key with dsa_private = None } in
-    let sig_bytes = dsa_sign private_key original_bytes in
-    if not (dsa_verify public_key original_bytes sig_bytes) then begin
+    let sig_bytes = dsa_sign None private_key original_bytes in
+    if not (dsa_verify None public_key original_bytes sig_bytes) then begin
       Printf.printf "dsa_sign/dsa_verify: check failed\n";
       false
     end else
@@ -910,7 +1039,7 @@ module TestDhke = struct
     string_of_bytes secret1 = string_of_bytes secret2
 
   let simple_test () =
-    let params = dh_gen_params 1024 in
+    let params = dh_gen_params 512 in
     let alice = dh_gen_key params in
     let bob = dh_gen_key params in
     let shared1 = dh_agreement alice bob.dh_public in
@@ -1104,12 +1233,22 @@ end
 
 module TestECDSACert = struct
   let test () =
-    let c1 = "MIID4jCCA4mgAwIBAgIQOCnC4aM8TrBUvhYzafzH7jAKBggqhkjOPQQDAjCBkDELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxNjA0BgNVBAMTLUNPTU9ETyBFQ0MgRG9tYWluIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQTAeFw0xNTExMTYwMDAwMDBaFw0xOTAxMDQyMzU5NTlaMFYxITAfBgNVBAsTGERvbWFpbiBDb250cm9sIFZhbGlkYXRlZDEUMBIGA1UECxMLUG9zaXRpdmVTU0wxGzAZBgNVBAMTEnd3dy5mc3Rhci1sYW5nLm9yZzB2MBAGByqGSM49AgEGBSuBBAAiA2IABMQ1tTS6rDb/khQeMlEZnqj088AirFhl2YxDqs1CPJN1Zt9yC5ErBvfF/+6jrmhFTtObpmiiPrTZVssbFoHQV1T78ItBJAsCB/CHOgLmr/nRZ+2guDYT6s8HCLQL9bMmnaOCAd8wggHbMB8GA1UdIwQYMBaAFLv6COC/VO5a/RakNQIJqaTI7P1LMB0GA1UdDgQWBBSD5Rud8nmOCygElvfIIU/2duLH5jAOBgNVHQ8BAf8EBAMCBYAwDAYDVR0TAQH/BAIwADAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwTwYDVR0gBEgwRjA6BgsrBgEEAbIxAQICBzArMCkGCCsGAQUFBwIBFh1odHRwczovL3NlY3VyZS5jb21vZG8uY29tL0NQUzAIBgZngQwBAgEwVAYDVR0fBE0wSzBJoEegRYZDaHR0cDovL2NybC5jb21vZG9jYS5jb20vQ09NT0RPRUNDRG9tYWluVmFsaWRhdGlvblNlY3VyZVNlcnZlckNBLmNybDCBhQYIKwYBBQUHAQEEeTB3ME8GCCsGAQUFBzAChkNodHRwOi8vY3J0LmNvbW9kb2NhLmNvbS9DT01PRE9FQ0NEb21haW5WYWxpZGF0aW9uU2VjdXJlU2VydmVyQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wLQYDVR0RBCYwJIISd3d3LmZzdGFyLWxhbmcub3Jngg5mc3Rhci1sYW5nLm9yZzAKBggqhkjOPQQDAgNHADBEAiACeAvoRDx5Lqyaiq31SyzQNW4tFqE2qsCtePnzlIsXwgIgSvgYglulxKK+a43ZNSzzdOPQ9JTczPVwzDy+QrQQjJs" in
-    let sigv = "MGUCMQCYgbDAAGij8piZZpzF78C0K94/U2YT8hdPsqCoLJPsbcD4rFw4eUTGFtPvNwkfiXgCMDLbGz0bk4e6VWnorqhywRTN126QsxAm4H0uKPnyIwpOsjXHT4vS9HOwNSEcRQkkVQ" in
+    let c1 = "MIIB0jCCAXmgAwIBAgIJAOJIzXwrhyTmMAoGCCqGSM49BAMCMEYxCzAJBgNVBAYTAlVLMRMwEQYDVQQIDApTb21lLVN0YXRlMQ4wDAYDVQQKDAVtaVRMUzESMBAGA1UEAwwJbWl0bHMub3JnMB4XDTE2MDUxMzE1MjMxOVoXDTI2MDUxMTE1MjMxOVowRjELMAkGA1UEBhMCVUsxEzARBgNVBAgMClNvbWUtU3RhdGUxDjAMBgNVBAoMBW1pVExTMRIwEAYDVQQDDAltaXRscy5vcmcwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQSir7rBJZ/wpSd+cbUawAi5mp/aKl8O7t52tgD/N+qC29BfXvTGLycOJKb3KH4RUbuQ/PtFm297Vl45CB4Zrzao1AwTjAdBgNVHQ4EFgQUZUVvmKM0O9/eXV+PxjWUeAit5z4wHwYDVR0jBBgwFoAUZUVvmKM0O9/eXV+PxjWUeAit5z4wDAYDVR0TBAUwAwEB/zAKBggqhkjOPQQDAgNHADBEAiAtElNiXA+iEw9Y01MKRBCVsIXeSqLlOrQTN7n4DSehnQIgdohQ8vTeqmUegyft7IPS2mL3QKqqXYMUkOFC+RTGJwQ" in
+    let sigv = "MEYCIQD6yaMocDqSb5xnzDa8J+ZYQqS98DIERubsToyn48GYEwIhAOphlNSOvshuV/gjPC6fWuQj8gJuW3859lpSnFLH16tE" in
     let c1b = bytes_of_string (BatBase64.str_decode c1) in
     let sigvb = bytes_of_string (BatBase64.str_decode sigv) in
     let tbs = bytes_of_string "Hello World\n" in
     cert_verify_sig c1b CoreCrypto.ECDSA CoreCrypto.SHA256 tbs sigvb
+end
+
+module TestDSACert = struct
+  let test () =
+    let c1 = "MIIFIjCCBOKgAwIBAgIJAOIxk5jud+Z/MAkGByqGSM44BAMwVTELMAkGA1UEBhMCVUsxDjAMBgNVBAgTBUNhbWJzMRIwEAYDVQQHEwlDYW1icmlkZ2UxDjAMBgNVBAoTBW1pVExTMRIwEAYDVQQDEwltaXRscy5vcmcwHhcNMTYwNTExMTY1ODI5WhcNMTYwNjEwMTY1ODI5WjBVMQswCQYDVQQGEwJVSzEOMAwGA1UECBMFQ2FtYnMxEjAQBgNVBAcTCUNhbWJyaWRnZTEOMAwGA1UEChMFbWlUTFMxEjAQBgNVBAMTCW1pdGxzLm9yZzCCAzowggItBgcqhkjOOAQBMIICIAKCAQEAl1tfhKIN2z96xAwWvQVBZVa/QL0vtp44FmqyS0VFyeNQSViYzkT4IprmdVtWb+8kB1zs27O5fA5+Js/s5/0lkoXCp4WQF9CwOv9Bw2GvGZutssx3VbMj4qfYgEIyjwU9ETdRW3yB890wlM/usTDSoNBbn6MRtduYKFGeOrHgBptKerSHwN94rSUO80Ech5qpdUNiZbRgZVBSO2h+KVjw6ZdCpw8XwQfnyI7YooWOrY/RmYA9DtzRtEYuwuHIJUB+sswsNdws/LcZ1rZZCpO+Y+oW50BfQVBrg/nbi78SAtplrLns5HrYyqiQARX4ub6f6zAdHQrvFI0xlPDo+ujXNwIVAK1v2Jw93EA9Hjb7nnaNb528y8itAoIBAFQ3xrCZAD1BkeNzSN0ehZiaakUH5YPpo5zMTfqhWs5jtbf6xe0sn20NVkcEuWYFvgiW91iDA0KOS11l093CstdoVOHaGpUnogSZ1OneOY/CwHWKcNM5JlQbom62G85nL9qWu7WqWSNMwQSRV/BKimmFfbWI3i+65dG7DUtVZMIV8lJ4jJWW9blZUrChuTl6miOdih14+NmFgxom/XNYbhmZz8i68oQCc/PfcPGbt6ayx4MCYMtxWS/FrsvaAVVYT0CLqtdz7rOt+WN+UWOd5B7GFu6nmOaz52qVSYtow+LI9TosAnij60osYoAd1Hrd5kOogjmChfQsFXlX4HOK7joDggEFAAKCAQAh2EQMmXVwgiBaGiuDkMAJFPvYaqqd/d86wYaqJTKknUqoEoOkKtpn9msfWwINF0sXTElTL1bD+pm9Ql6lATqHmO1pYcoSWMR1L7JI7zcMc2gU3jpd0lbUDUx5SboAeEih83k4lSnNEftFdNMQ973YmL3ReFmk3GZzNkzHHeHzo9HnDXFLxCeFM9S7F8gv1Vx9CSgAebQNKv1SHfhuSGp9srknKyZBcGncjtDQAy00fvGpWeCdrlgNoBFVz4EigH5Z15F+4AFkuUJ8fIPAifYWInjOWk0d0PG9IIXN/n7snXtGId+szZdCUnhSUGmC6o/wTJWvZMG9BGtQpPZJ9BCdo4G4MIG1MB0GA1UdDgQWBBSxG0nDZJobYSuj4kj+McWPALyOBzCBhQYDVR0jBH4wfIAUsRtJw2SaG2Ero+JI/jHFjwC8jgehWaRXMFUxCzAJBgNVBAYTAlVLMQ4wDAYDVQQIEwVDYW1iczESMBAGA1UEBxMJQ2FtYnJpZGdlMQ4wDAYDVQQKEwVtaVRMUzESMBAGA1UEAxMJbWl0bHMub3JnggkA4jGTmO535n8wDAYDVR0TBAUwAwEB/zAJBgcqhkjOOAQDAy8AMCwCFASsPMokAXZSGO3ZiYCMic7HC62EAhRVamZaepsT3rAkZSpxMfAE0qN98w" in
+    let sigv = "MC4CFQCWRmyYmzTe9CN4SSgIEpWUPY/6JwIVAJ1STjc12/9L8K341SKw1r6Cai3g" in
+    let c1b = bytes_of_string (BatBase64.str_decode c1) in
+    let sigvb = bytes_of_string (BatBase64.str_decode sigv) in
+    let tbs = bytes_of_string "Hello World\n" in
+    cert_verify_sig c1b CoreCrypto.DSA CoreCrypto.SHA256 tbs sigvb
 end
 
 module TestRSACert = struct
@@ -1150,6 +1289,7 @@ let _ =
   TestAead.(run_test "AEAD" test_vectors print_test_vector test);
   TestHmac.(run_test "HMAC" test_cases print_test_case test);
   TestHash.(run_test "HASH" tests print_test test);
+  TestHashUpdate.(run_test "HASHUPDATE" tests print_test test);
   TestEcc.(run_test "ECC" tests print_test test);
   TestRsa.(run_test "RSA" tests print_test roundtrip);
   TestDsa.(run_test "DSA" tests print_test check);
@@ -1160,6 +1300,7 @@ let _ =
   simple_test "ECDH key exchange" TestEcdhke.simple_test;
   simple_test "Certificate chain verify" TestCert.test;
   simple_test "Certificate signature verify (ECDSA)" TestECDSACert.test;
+  simple_test "Certificate signature verify (DSA)" TestDSACert.test;
   simple_test "Certificate signature verify (RSA)" TestRSACert.test;
   simple_test "Certificate load from PEM chain/key" TestCertLoad.test;
   ()

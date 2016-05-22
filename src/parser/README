@@ -1,0 +1,24 @@
+Build wizardry
+--------------
+
+There are two lexers:
+- [ml/lex.mll] (building F* via OCaml extraction)
+- [lex.fsl] (building F* with F#)
+
+The former bundles everything lexing-related into a single file. The latter has
+a companion file [lexhelp.fs] that contains various routines.
+
+There is one parser, [parse.fsy], used for building F* with F#. When extracting
+F* to OCaml using F*, [parse.fsy] is run through some sed-foo in
+[ocaml-output/Makefile] in order to produce a valid, ocamlyacc-compatible
+[parse.mly].
+
+Adding a new token
+------------------
+
+If you're adding a new token, you need to edit:
+- [parse.fsti] the token datatype (building F* with F* via OCaml extraction)
+- [parse.fsi] the token datatype (building F* with F#)
+- [lexhelp.fs] to add it to the parser keyword table (F#)
+- [ml/lex.mll] to add it to the parser keyword table (OCaml)
+- [parse.fsy] to expose it to the parser, possibly with an adequate precedence

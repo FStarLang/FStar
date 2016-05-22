@@ -84,73 +84,60 @@ let run i r expected =
     let _, tcenv = Pars.init() in
     FStar.process_args() |> ignore; //set the command line args for debugging
     let x = N.normalize [N.Beta; N.UnfoldUntil Delta_constant] tcenv r in
-    FStar.Options.init_options(); //reset them
+    Options.init(); //reset them
 //    Printf.printf "result = %s\n" (P.term_to_string x);
 //    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
     assert (Util.term_eq (U.unascribe x) expected)
     
 let run_all () = 
     Printf.printf "Testing the normalizer\n";
-//    let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
-//                                           match x with \
-//                                            | [] -> []  \
-//                                            | hd::tl -> hd::copy tl" in
-//    let _ = Pars.pars_and_tc_fragment "let recons (x:list int) : Tot (list int) = \
-//                                           match x with \
-//                                            | [] -> []  \
-//                                            | hd::tl -> hd::tl" in
-//    let _ = Pars.pars_and_tc_fragment "let rev (x:list int) : Tot (list int) = \
-//                                            let rec aux (x:list int) (out:list int) : Tot (list int) = \
-//                                                match x with \
-//                                                | [] -> out \
-//                                                | hd::tl -> aux tl (hd::out) in \
-//                                            aux x []" in
-    Options.__test_norm_all := true;
-    FStar.process_args() |> ignore; //set the command line args for debugging
-    let x = S.gen_bv "x" None S.tun in
-    let y = S.gen_bv "y" None S.tun in
-    let z = S.gen_bv "z" None S.tun in
-    let t = U.abs [S.mk_binder y] (S.bv_to_name x) None in
-    printfn "t = %s\n" (P.term_to_string t);
-    let s1 = [S.Name2Term(x, U.mk_conj (S.bv_to_name z) (S.bv_to_name z))] |> Instantiation in
-    let t1 = SS.subst s1 t in
-    let s2 = [S.Name2Index(z, 0)] |> Renaming in
-    let t2 = SS.subst s2 t1 in
-    printfn "t2 = %s\n" (P.term_to_string t2)
-//
-//    run -1 (app id [nm n]) (nm n);
-//    run 0 (app apply [one; id; nm n]) (nm n);
-//    run 1 (app apply [tt; nm n; nm m]) (nm n);
-//    run 2 (app apply [ff; nm n; nm m]) (nm m);
-//    run 3 (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]) (nm m);
-//    run 4 (app twice [apply; ff; nm n; nm m]) (nm m);
-//    run 5 (minus one z) one;
-//    run 6 (app pred [one]) z;
-//    run 7 (minus one one) z;
-//    run 8 (app mul [one; one]) one;
-//    run 9 (app mul [two; one]) two;
-//    run 10 (app mul [app succ [one]; one]) two;
-//    run 11 (minus (encode 10) (encode 10)) z;
-//    run 12 (minus (encode 100) (encode 100)) z;
-//    run 13 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes 
-//    run 14 (let_ x (app succ [one])
-//            (let_ y (app mul [nm x; nm x])
-//                (let_ h (app mul [nm y; nm y]) 
-//                        (minus (nm h) (nm h))))) z;
-//    run 15 (mk_let x (app succ [one])
-//            (mk_let y (app mul [nm x; nm x])
-//                (mk_let h (app mul [nm y; nm y]) 
-//                          (minus (nm h) (nm h))))) z;
-//    run 16 (pred_nat (snat (snat znat))) (snat znat);
-//    run 17 (minus_nat (snat (snat znat)) (snat znat)) (snat znat);
-//    run 18 (minus_nat (encode_nat 100) (encode_nat 100)) znat;
-//    run 19 (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;
-//    run 20 (minus_nat (encode_nat 10) (encode_nat 10)) znat;
-////    run 21 (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat; //this one takes about 30 sec and ~3.5GB of memory
-//    Options.__test_norm_all := false;
-//    run 21 (tc "recons [0;1]") (tc "[0;1]");
-//    run 22 (tc "copy [0;1]") (tc "[0;1]");
-//    run 23 (tc "rev [0;1;2;3;4;5;6;7;8;9;10]") (tc "[10;9;8;7;6;5;4;3;2;1;0]");
-//    Printf.printf "Normalizer ok\n"
+    let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
+                                           match x with \
+                                            | [] -> []  \
+                                            | hd::tl -> hd::copy tl" in
+    let _ = Pars.pars_and_tc_fragment "let recons (x:list int) : Tot (list int) = \
+                                           match x with \
+                                            | [] -> []  \
+                                            | hd::tl -> hd::tl" in
+    let _ = Pars.pars_and_tc_fragment "let rev (x:list int) : Tot (list int) = \
+                                            let rec aux (x:list int) (out:list int) : Tot (list int) = \
+                                                match x with \
+                                                | [] -> out \
+                                                | hd::tl -> aux tl (hd::out) in \
+                                            aux x []" in
+    Options.__set_unit_tests();
+    run 0 (app apply [one; id; nm n]) (nm n);
+    run 1 (app apply [tt; nm n; nm m]) (nm n);
+    run 2 (app apply [ff; nm n; nm m]) (nm m);
+    run 3 (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]) (nm m);
+    run 4 (app twice [apply; ff; nm n; nm m]) (nm m);
+    run 5 (minus one z) one;
+    run 6 (app pred [one]) z;
+    run 7 (minus one one) z;
+    run 8 (app mul [one; one]) one;
+    run 9 (app mul [two; one]) two;
+    run 10 (app mul [app succ [one]; one]) two;
+    run 11 (minus (encode 10) (encode 10)) z;
+    run 12 (minus (encode 100) (encode 100)) z;
+    run 13 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes 
+    run 14 (let_ x (app succ [one])
+            (let_ y (app mul [nm x; nm x])
+                (let_ h (app mul [nm y; nm y]) 
+                        (minus (nm h) (nm h))))) z;
+    run 15 (mk_let x (app succ [one])
+            (mk_let y (app mul [nm x; nm x])
+                (mk_let h (app mul [nm y; nm y]) 
+                          (minus (nm h) (nm h))))) z;
+    run 16 (pred_nat (snat (snat znat))) (snat znat);
+    run 17 (minus_nat (snat (snat znat)) (snat znat)) (snat znat);
+    run 18 (minus_nat (encode_nat 100) (encode_nat 100)) znat;
+    run 19 (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;
+    run 20 (minus_nat (encode_nat 10) (encode_nat 10)) znat;
+//    run 21 (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat; //this one takes about 30 sec and ~3.5GB of memory
+    Options.__clear_unit_tests();
+    run 21 (tc "recons [0;1]") (tc "[0;1]");
+    run 22 (tc "copy [0;1]") (tc "[0;1]");
+    run 23 (tc "rev [0;1;2;3;4;5;6;7;8;9;10]") (tc "[10;9;8;7;6;5;4;3;2;1;0]");
+    Printf.printf "Normalizer ok\n"
  
     

@@ -2,4 +2,4 @@
 
 BASEDIR=$(dirname $0)
 
-mono $BASEDIR/fstar-mono.exe "$@"
+mono $FSTAR_MONO_ARGS $BASEDIR/fstar-mono.exe "$@"

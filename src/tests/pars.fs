@@ -20,8 +20,8 @@ let test_mod_ref = ref (Some ({name=test_lid;
                                 is_interface=false}))
 
 let parse_prims () =
-    Options.universes := true;
-    let prims = Options.prims() in
+    Options.set_option "universes" (Options.Bool true);
+    let prims = (Options.prims()) in
     match ParseIt.parse (Inl prims) with 
     | Inl (Inl [m]) -> 
         let env',  prims_mod = Parser.ToSyntax.desugar_modul (Parser.Env.empty_env()) m in
@@ -114,7 +114,7 @@ let pars s =
           let t = Parser.Parse.term lexer lexbuf in
           Parser.ToSyntax.desugar_term env t
      with 
-        | e when not (!Options.trace_error) -> failed_to_parse s e
+        | e when not ((Options.trace_error())) -> failed_to_parse s e
 
 let tc s = 
     let tm = pars s in
@@ -123,7 +123,7 @@ let tc s =
     tm
 
 let pars_and_tc_fragment s = 
-    Options.trace_error := true;
+    Options.set_option "trace_error" (Options.Bool true);
     let report () = FStar.TypeChecker.Errors.report_all () |> ignore in
     try
         let env, tcenv = init() in
@@ -137,5 +137,5 @@ let pars_and_tc_fragment s =
                   raise (FStar.Syntax.Syntax.Err (Util.format1 "%s errors were reported" (string_of_int n))))
         | _ -> report(); raise (FStar.Syntax.Syntax.Err ("check_frag returned None: " ^s))
     with 
-        | e when not (!Options.trace_error) -> failed_to_parse s e
+        | e when not ((Options.trace_error())) -> failed_to_parse s e
             

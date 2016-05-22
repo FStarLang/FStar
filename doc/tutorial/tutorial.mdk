@@ -554,14 +554,14 @@ functions below are inferred to have the type `:(int -> ML int)`.
 (Note: Recursive functions are defined using `let rec`
 in ML-like languages.)
 
-    let hello_incr i = Print.print_string "hello"; i + 1
+    let hello_incr i = IO.print_string "hello"; i + 1
     let rec loop i = i + loop (i - 1)
 
 If we provide explicit annotations we can give these functions more
 precise types:
 
     val hello_incr i : int -> IO int
-    let hello_incr i = Print.print_string "hello"; i + 1
+    let hello_incr i = IO.print_string "hello"; i + 1
 
     val loop : int -> Dv int
     let rec loop i = i + loop (i - 1)
@@ -825,7 +825,7 @@ on `x`. The basic concept here is that by programming total functions, we
 can write proofs about other pure expressions. We'll discuss such proofs
 in detail in the remainder of this section.
 
-~ Remark 
+~ Remark
 In F\* an expression being ghost (computationally irrelevant) is an effect. The
 effect `GTot` in the type of `factorial_is_positive` indicates that it is a ghost, total function.
 ~

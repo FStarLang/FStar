@@ -116,11 +116,11 @@ let prob_to_string env = function
 
 let uvi_to_string env = function
     | UNIV (u, t) -> 
-      let x = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
+      let x = if (Options.hide_uvar_nums()) then "?" else Unionfind.uvar_id u |> string_of_int in
       Util.format2 "UNIV %s %s" x (Print.univ_to_string t)
 
     | TERM ((u,_), t) ->
-      let x = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
+      let x = if (Options.hide_uvar_nums()) then "?" else Unionfind.uvar_id u |> string_of_int in
       Util.format2 "TERM %s %s" x (N.term_to_string env t)
 let uvis_to_string env uvis = List.map (uvi_to_string env) uvis |> String.concat  ", "
 let names_to_string nms = Util.set_elements nms |> List.map Print.bv_to_string |> String.concat ", "
@@ -639,9 +639,9 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_type _, Tm_type _ 
     | Tm_arrow _, Tm_arrow _ -> HeadMatch
 
-    | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head'
-    | Tm_app(head, _), _ -> head_matches env head t2
-    | _, Tm_app(head, _) -> head_matches env t1 head
+    | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head' |> head_match
+    | Tm_app(head, _), _ -> head_matches env head t2 |> head_match
+    | _, Tm_app(head, _) -> head_matches env t1 head |> head_match
 
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
@@ -1114,7 +1114,7 @@ and solve_rigid_flex_meet env tp wl =
     then Util.print1 "Trying to solve by meeting refinements:%s\n" (string_of_int tp.pid);
     let u, args = Util.head_and_args tp.rhs in
 
-    let disjoin t1 t2 : option<(term * list<prob>)> = 
+    let rec disjoin t1 t2 : option<(term * list<prob>)> =
         let mr, ts = head_matches_delta env () t1 t2 in 
         match mr with 
             | MisMatch _ -> 
@@ -1133,7 +1133,7 @@ and solve_rigid_flex_meet env tp wl =
                 | None -> SS.compress t1, SS.compress t2 in
               let eq_prob t1 t2 = 
                   TProb <| new_problem env t1 EQ t2 None t1.pos "meeting refinements" in
-              begin match t1.n, t2.n with 
+              begin match t1.n, t2.n with
                 | Tm_refine(x, phi1), Tm_refine(y, phi2) ->
                   Some (mk (Tm_refine(x, Util.mk_disj phi1 phi2)) None t1.pos, [eq_prob x.sort y.sort])
 
@@ -1143,8 +1143,19 @@ and solve_rigid_flex_meet env tp wl =
                 | Tm_refine (x, _), _ ->
                   Some (t2, [eq_prob x.sort t2])
 
-                | _ -> //head matches but no way to take the meet; TODO, generalize to handle function types, constructed types, etc.
-                  None
+                | _ ->
+                  let head1, _ = Util.head_and_args t1 in
+                  begin match (Util.un_uinst head1).n with
+                    | Tm_fvar {fv_delta=Delta_unfoldable i} ->
+                      let prev = if i > 1
+                                 then Delta_unfoldable (i - 1)
+                                 else Delta_constant in
+                      let t1 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t1 in
+                      let t2 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t2 in
+                      disjoin t1 t2
+                    | _ ->  //head matches but no way to take the meet; TODO, generalize to handle function types, constructed types, etc.
+                      None
+                  end
                end in
 
    let tt = u in//compress env wl u in
@@ -1211,14 +1222,16 @@ and solve_flex_rigid_join env tp wl =
         match h1.n, h2.n with
         | Tm_fvar tc1, Tm_fvar tc2 ->
           if S.fv_eq tc1 tc2
-          then (if List.length args1 = 0
-                then Some []
-                else Some [TProb <| new_problem env t1 EQ t2 None t1.pos "joining refinements"])
+          then if List.length args1 = 0
+               then Some []
+               else Some [TProb <| new_problem env t1 EQ t2 None t1.pos "joining refinements"]
           else None
 
         | Tm_name a, Tm_name b ->
           if S.bv_eq a b
-          then Some []
+          then if List.length args1 = 0
+               then Some []
+               else Some [TProb <| new_problem env t1 EQ t2 None t1.pos "joining refinements"]
           else None
 
         | _ -> None in
@@ -1843,7 +1856,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         (fun scope env subst  ->
             let c1 = Subst.subst_comp (Renaming subst) c1 in
             let c2 = Subst.subst_comp (Renaming subst) c2 in //open both comps
-            let rel = if !Options.use_eq_at_higher_order then EQ else problem.relation in
+            let rel = if (Options.use_eq_at_higher_order()) then EQ else problem.relation in
             CProb <| mk_problem scope orig c1 rel c2 None "function co-domain")
 
       | Tm_abs(bs1, tbody1, lopt1), Tm_abs(bs2, tbody2, lopt2) ->
@@ -1911,7 +1924,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         if wl.defer_ok
         then solve env (defer "flex-rigid subtyping deferred" orig wl)
         else
-            let new_rel = if !Options.no_slack then EQ else problem.relation in
+            let new_rel = problem.relation in
             if not <| is_top_level_prob orig //If it's not top-level and t2 is refined, then we should not try to prove that t2's refinement is saturated
             then solve_t_flex_rigid (TProb <| {problem with relation=new_rel}) (destruct_flex_pattern env t1) t2 wl
             else let t_base, ref_opt = base_and_refinement env wl t2 in
@@ -2202,7 +2215,7 @@ let new_t_prob env t1 rel t2 =
  TProb p, x
 
 let solve_and_commit env probs err =
-  let probs = if !Options.eager_inference then {probs with defer_ok=false} else probs in
+  let probs = if (Options.eager_inference()) then {probs with defer_ok=false} else probs in
   let tx = Unionfind.new_transaction () in
   let sol = solve env probs in
   match sol with

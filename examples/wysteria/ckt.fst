@@ -145,11 +145,13 @@ let ctr :ref int = alloc 1
 
 let init_ctr (x:unit) = ctr := 1
 
-val alloc_wires: n:int{n > 0} -> St wrange
+val alloc_wires: n:int -> ML wrange
 let alloc_wires n =
-  let r = (!ctr + 1, !ctr + n) in
-  ctr := !ctr + n;
-  r
+  if n <= 0 then failwith "Alloc wires, non-positive argument"
+  else
+    let r = (!ctr + 1, !ctr + n) in
+    ctr := !ctr + n;
+    r
 
 let nil_range = (-1, -1)
 
@@ -330,7 +332,7 @@ let rec exp_to_ckt cen e = match e with
       else
 	let n2 = snd r2 - fst r2 + 1 in
 	let n1 = snd r1 - fst r1 + 1 in
-	admitP (n1 > 0 /\ n2 > 0);
+	//admitP (n1 > 0 /\ n2 > 0);
 	let r1' = alloc_wires n1 in
         let r2' = alloc_wires n2 in
 
@@ -368,7 +370,7 @@ let rec exp_to_ckt cen e = match e with
     let cs1, r1, _ = exp_to_ckt cen e1 in
     let cs2, r2, t2 = exp_to_ckt cen e2 in
     let cs3, r3, t3 = exp_to_ckt cen e3 in
-    let _ = admitP (b2t (snd r2 - fst r2 + 1 > 0)) in
+    //let _ = admitP (b2t (snd r2 - fst r2 + 1 > 0)) in
     let r = alloc_wires (snd r2 - fst r2 + 1) in
     cs1 @ cs2 @ cs3 @ [Mux r r3 r2 r1], r, t2
 

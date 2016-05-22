@@ -3,7 +3,7 @@
 # --------------------------------------------------------------------
 BASIC=prims-fake.fs basetypes-fake.fs profiling.fs char.fsi char.fs string.fsi string.fs list.fsi \
   list.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi \
-  getoptsimple.fs platform.fsi platform.fs version.fsi version.fs options.fs \
+  getoptsimple.fs platform.fsi platform.fs version.fsi version.fs options.fsi options.fs \
   unionfind.fsi unionfind.fs ident.fs const.fs
 BASIC_SRC=$(addprefix basic/, $(BASIC))
 
@@ -87,7 +87,7 @@ FSLEX   := $(RUNTIME) $(FSLYDIR)/build/fslex.exe
 .PHONY: msbuild msbuild-clean nuget-restore nuget-clean
 
 # --------------------------------------------------------------------
-all: $(BIN)/fstar.exe
+all: $(BIN)/fstar.exe $(BIN)/tests.exe
 
 # --------------------------------------------------------------------
 z3-x86:
@@ -177,6 +177,14 @@ else
 	cp $(BIN)/fstar-mono.sh $(BIN)/fstar.exe
 endif
 
+TESTS_SRC=$(addprefix tests/, pars.fs util.fs norm.fs unif.fs test.fs)
+$(BIN)/tests.exe: $(FSTAR_DEPS) $(TOPLEVEL_SRC) $(TESTS_SRC) $(BIN)/tests-mono.sh
+ifeq ($(OS),Windows_NT)
+	$(FSC)  $(OTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) $(TESTS_SRC)
+else
+	$(FSC)  $(OTHERFLAGS) -o $(BIN)/tests-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) $(TESTS_SRC)
+	cp $(BIN)/tests-mono.sh $(BIN)/tests.exe
+endif
 
 wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMAT_SRC) $(EXTRACTION_SRC) fstar/fstar.fs
 	sloccount $^
@@ -304,9 +312,10 @@ clean-boot-fs:
 # Testing
 # --------------------------------------------------------------------
 
-test:   clean $(BIN)/fstar.exe ocaml-test regressions
+test:   clean $(BIN)/fstar.exe $(BIN)/tests.exe ocaml-test regressions
 
 regressions:
+	$(BIN)/tests.exe
 	make -C ../lib
 	make -C ../ulib
 	make -C ../examples
@@ -316,8 +325,17 @@ regressions:
 	make -C ../examples/crypto clean rpc-test cnt-test
 	make -C ../examples/wysteria a.out distclean
 
-test_universes: 
+test_universes: ulib uexamples
 	../bin/tests #all the unit tests
+
+ulib:
+	+make -C ../ulib
+
+uexamples:
+	+make -C ../examples univ
+
+uregressions:
+	time make -j 2 test_universes | grep -i 'error\|Verif'
 
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples

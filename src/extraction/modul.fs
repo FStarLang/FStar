@@ -275,7 +275,7 @@ let rec extract (g:env) (m:modul) : env * list<mllib> =
     let g = {g with currentModule = name}  in
     if m.name.str = "Prims" 
     || m.is_interface
-    || List.contains m.name.str !Options.no_extract
+    || Options.no_extract m.name.str
     then let g = extract_iface g m in
          g, [] //MLLib([Util.flatten_mlpath name, None, MLLib []])
     else (Util.print1 "Extracting module %s\n" (Print.lid_to_string m.name);

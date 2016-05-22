@@ -69,7 +69,7 @@ end) -> struct
   let cut = ()
   let fst = fst
   let snd = snd
-  let admit () = ()
+  let admit () = failwith "no admits"
   let _assume () = ()
   let _assert x = ()
   let magic () = failwith "no magic"

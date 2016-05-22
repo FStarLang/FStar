@@ -5,8 +5,8 @@ open FStar.Range
 type ident = {idText:string;
               idRange:Range.range}
 
-type lident = {ns:list<ident>; //["Microsoft"; "FStar"; "Absyn"; "Syntax"]
-               ident:ident;    //"LongIdent"
+type lident = {ns:list<ident>; //["FStar"; "Basic"]
+               ident:ident;    //"lident"
                nsstr:string;
                str:string}
 
