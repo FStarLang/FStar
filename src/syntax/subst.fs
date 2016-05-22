@@ -70,19 +70,19 @@ let print_term t = !print_term' t
 let print_univ u = !print_univ' u
 
 let renaming_elt_to_string = function
-   | Index2Name(i, x) -> Util.format2 "Index2Name (%s, %s)" (string_of_int i) (bv_to_string x)
-   | Name2Index(x, i) -> Util.format2 "Name2Index (%s, %s)" (bv_to_string x) (string_of_int i)
-   | Name2Name(x, y)  -> Util.format2 "Name2Name(%s, %s)" (bv_to_string x) (bv_to_string y)
-   | Index2Index(i, j) -> Util.format2 "Index2Index (%d, %d)" (string_of_int i) (string_of_int j)
-   | UIndex2UName(i, u) -> Util.format2 "UIndex2Uname(%d, %s)" (string_of_int i) u.idText
-   | UName2UIndex(u, i) -> Util.format2 "UName2UIndex (%s, %s)" u.idText (string_of_int i) 
-   | UIndex2UIndex(i, j) -> Util.format2 "UIndex2UIndex (%d, %d)" (string_of_int i) (string_of_int j)
-   | UName2UName(u, v) -> Util.format2 "UName2UName(%s, %s)" u.idText v.idText
+   | Index2Name(i, x) ->    Util.format2 "Index2Name   (%s, %s)" (string_of_int i) (bv_to_string x)
+   | Name2Index(x, i) ->    Util.format2 "Name2Index   (%s, %s)" (bv_to_string x) (string_of_int i)
+   | Name2Name(x, y)  ->    Util.format2 "Name2Name    (%s, %s)" (bv_to_string x) (bv_to_string y)
+   | Index2Index(i, j) ->   Util.format2 "Index2Index  (%s, %s)" (string_of_int i) (string_of_int j)
+   | UIndex2UName(i, u) ->  Util.format2 "UIndex2Uname (%s, %s)" (string_of_int i) u.idText
+   | UName2UIndex(u, i) ->  Util.format2 "UName2UIndex (%s, %s)" u.idText (string_of_int i) 
+   | UIndex2UIndex(i, j) -> Util.format2 "UIndex2UIndex(%s, %s)" (string_of_int i) (string_of_int j)
+   | UName2UName(u, v) ->   Util.format2 "UName2UName  (%s, %s)" u.idText v.idText
 let renaming_to_string r = 
     Util.format1 "Renaming[%s]" (r |> List.map renaming_elt_to_string |> String.concat "; ")
 
 let instantiation_elt_to_string = function
-   | Name2Term(x, t) -> Util.format2 "Name2Term(%s, %s)" (bv_to_string x) (print_term t)
+   | Name2Term(x, t) ->   Util.format2 "Name2Term (%s, %s)" (bv_to_string x) (print_term t)
    | UName2Univ(un, u) -> Util.format2 "UName2Univ(%s, %s)" un.idText (print_univ u)
 
 let instantiation_to_string i = 
@@ -284,11 +284,15 @@ let compose_renamings (s1:renaming) (s2:renaming) : renaming =
 
            | Name2Name(x, y) -> //renaming x to y
                 //assert {NM(x, _), NT(x, _)} not in s2 (disjoint domains)
-                let s2_y, _ = find_name s2 y in
+                let s2_y, s2_remainder = find_name s2 y in
                 begin match s2_y with
                     | Some (Name2Index(_, j)) -> //closing y to j
                       Name2Index(x, j)           //close x to j in 1 step
-                      ::s2               //y may occur free in T; so keep it in s2
+                      ::s2             //!!!??? y free in T?
+
+                    | Some (Name2Name(_, z)) -> 
+                      Name2Name(x, z)           //rename x to z in 1 step
+                      ::s2            //!!!??? y free in T?
 
                     | _ ->                //s2_y=None
                       s1_elt              //nothing to compose with
@@ -337,7 +341,7 @@ let compose_renamings (s1:renaming) (s2:renaming) : renaming =
             begin match u_i with 
                 | Some(UName2UIndex (_, i)) ->
                   UName2UIndex(u, i)
-                  ::s2 //v may still be free in T
+                  ::s2  //!!! ?v may still be free in T
 
                 | Some (UName2UName (_, w)) ->
                   UName2UName(u, w)
@@ -345,7 +349,7 @@ let compose_renamings (s1:renaming) (s2:renaming) : renaming =
 
                 | _ -> 
                    s1_elt
-                   ::s2_remainder
+                   ::s2
             end
          
            | UIndex2UIndex(i, j) -> 
@@ -380,9 +384,17 @@ let compose_renamings (s1:renaming) (s2:renaming) : renaming =
 
 let compose_subst (s1:subst_ts) (s2:subst_ts) : subst_ts = 
     let composed = s1@s2 in
-    List.fold_right (fun ri out -> match ri, out with 
+    let composed = List.fold_right (fun ri out -> match ri, out with 
         | Renaming re1, Renaming re2::tl -> Renaming (compose_renamings re1 re2)::tl
-        | _ -> ri::out) [] composed
+        | _ -> ri::out) composed [] in
+//    if List.length composed = 618
+//    then 
+    if Options.debug_at_level "" (Options.Other "Substitutions")
+    then Printf.printf "%s and\n%s to\n%s\n\n" 
+                (subst_to_string s1)
+                (subst_to_string s2)
+                (subst_to_string composed);
+    composed
 
 let shift n s = match s with 
     | Index2Name   (i, t) -> Index2Name   (i+n, t)

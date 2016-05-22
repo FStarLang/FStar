@@ -499,7 +499,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_bvar x -> 
             begin match lookup_bvar env x with 
                 | Univ _ -> failwith "Impossible: term variable is bound to a universe"
-                | Dummy -> failwith "Term variable not found"
+                | Dummy -> failwith (Util.format1 "Term variable not found: %s" (Print.bv_to_string x))
                 | Clos(env, t0, r, fix) ->
                    if not fix || not (List.contains (Exclude Zeta) cfg.steps)
                    then match !r with 
