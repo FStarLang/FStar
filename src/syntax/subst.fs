@@ -167,23 +167,26 @@ let apply_until_some_then_map f s g t =
     |> map_some_curry g t
 
 let rec subst_univ (s, s_new) u =
-    let u = compress_univ u in
-    match u with 
-    | U_bvar x -> 
-      apply_until_some_then_map (subst_uindex x) s (fun rest -> subst_univ (rest, [])) u
-//      let tm, rest = apply_until_some_then_map (subst_uindex x) s (fun rest x -> x, rest) (u, []) in
-//      let _, rest_new = apply_until_some_then_map (subst_uindex x) s_new (fun rest x -> x, rest) (u, []) in
-//      subst_univ (rest, rest_new) tm
-    | U_name x ->
-      apply_until_some_then_map (subst_uname x) s (fun rest -> subst_univ (rest, [])) u
-//      let tm, rest = apply_until_some_then_map (subst_uname x) s (fun rest x -> x, rest) (u, []) in
-//      let _, rest_new = apply_until_some_then_map (subst_uname x) s_new (fun rest x -> x, rest) (u, []) in
-//      subst_univ (rest, rest_new) tm
-    | U_zero
-    | U_unknown 
-    | U_unif _ -> u
-    | U_succ u -> U_succ (subst_univ (s, s_new) u)
-    | U_max us -> U_max (List.map (subst_univ (s, s_new)) us)
+    match s with 
+    | [] -> u
+    | _ -> 
+        let u = compress_univ u in
+        match u with 
+        | U_bvar x -> 
+    //      apply_until_some_then_map (subst_uindex x) s (fun rest -> subst_univ (rest, [])) u
+          let tm, rest = apply_until_some_then_map (subst_uindex x) s (fun rest x -> x, rest) (u, []) in
+          let _, rest_new = apply_until_some_then_map (subst_uindex x) s_new (fun rest x -> x, rest) (u, []) in
+          subst_univ (rest, rest_new) tm
+        | U_name x ->
+//          apply_until_some_then_map (subst_uname x) s (fun rest -> subst_univ (rest, [])) u
+          let tm, rest = apply_until_some_then_map (subst_uname x) s (fun rest x -> x, rest) (u, []) in
+          let _, rest_new = apply_until_some_then_map (subst_uname x) s_new (fun rest x -> x, rest) (u, []) in
+          subst_univ (rest, rest_new) tm
+        | U_zero
+        | U_unknown 
+        | U_unif _ -> u
+        | U_succ u -> U_succ (subst_univ (s, s_new) u)
+        | U_max us -> U_max (List.map (subst_univ (s, s_new)) us)
 
 (* s1 and s2 are each parallel substitutions
     e.g., s1 = [Name2Index(x, 0); Name2Index(y, 1)]
