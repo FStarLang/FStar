@@ -333,7 +333,7 @@ type term' =
 | Tm_ascribed of (term * (term, comp) FStar_Util.either * FStar_Ident.lident Prims.option)
 | Tm_let of (letbindings * term)
 | Tm_uvar of (uvar * term)
-| Tm_delayed of (((term * subst_ts), Prims.unit  ->  term) FStar_Util.either * term memo)
+| Tm_delayed of (((term * (subst_ts * subst_ts)), Prims.unit  ->  term) FStar_Util.either * term memo)
 | Tm_meta of (term * metadata)
 | Tm_unknown 
  and pat' =
@@ -1857,7 +1857,7 @@ end))
 let extend_app : term  ->  arg  ->  mk_t = (fun t arg kopt r -> (extend_app_n t ((arg)::[]) kopt r))
 
 
-let mk_Tm_delayed : ((term * subst_ts), Prims.unit  ->  term) FStar_Util.either  ->  FStar_Range.range  ->  term = (fun lr pos -> (let _122_1358 = (let _122_1357 = (let _122_1356 = (FStar_Util.mk_ref None)
+let mk_Tm_delayed : ((term * (subst_ts * subst_ts)), Prims.unit  ->  term) FStar_Util.either  ->  FStar_Range.range  ->  term = (fun lr pos -> (let _122_1358 = (let _122_1357 = (let _122_1356 = (FStar_Util.mk_ref None)
 in (lr, _122_1356))
 in Tm_delayed (_122_1357))
 in (mk _122_1358 None pos)))

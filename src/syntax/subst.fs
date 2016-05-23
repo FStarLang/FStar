@@ -377,13 +377,14 @@ let collapse_subst s =
         | _ -> ri::out) s []
 
 let compose_subst (s1, s1_new) (s2, s2_new) : subst_ts * subst_ts = 
-    let composed = s1@s2 in
+    let composed = [] in //s1@s2 in
     let composed_new = collapse_subst (s1_new@s2_new) in
     if Options.debug_at_level "" (Options.Other "Substitutions")
-    then Printf.printf "%s and\n%s to\n%s\n\n" 
-                (subst_to_string s1_new)
-                (subst_to_string s2_new)
-                (subst_to_string composed_new);
+    then Util.print1 "Length of composed substs is %s\n" (string_of_int (List.length composed_new)); 
+//    then Printf.printf "%s and\n%s to\n%s\n\n" 
+//                (subst_to_string s1_new)
+//                (subst_to_string s2_new)
+//                (subst_to_string composed_new);
     composed, composed_new
 
 let shift n s = match s with 
@@ -587,8 +588,8 @@ let rec inst_uaux u s = match s with
        )
     | _ -> u, s
 
-let rec subst_univ (s, s_new) u =
-    match s with 
+let rec subst_univ (_, s_new) u =
+    match s_new with 
     | [] -> u
     | _ -> 
         let u = compress_univ u in
@@ -596,12 +597,12 @@ let rec subst_univ (s, s_new) u =
         | U_bvar _
         | U_name _ -> 
     //      apply_until_some_then_map (subst_uindex x) s (fun rest -> subst_univ (rest, [])) u
-          let tm, rest = rename_uaux u s in
+//          let tm, rest = rename_uaux u s in
           let tm_new, rest_new = rename_uaux u s_new in
-          ucheck u tm tm_new ((s,rest), (s_new, rest_new));
-          let tm, rest = inst_uaux tm rest in //apply_until_some_then_map (subst_index a) s (fun rest x -> (x, rest)) (tm, []) in
+//          ucheck u tm tm_new ((s,rest), (s_new, rest_new));
+//          let tm, rest = inst_uaux tm rest in //apply_until_some_then_map (subst_index a) s (fun rest x -> (x, rest)) (tm, []) in
           let tm_new, rest_new = inst_uaux tm_new rest_new in //apply_until_some_then_map (subst_index a) s_new (fun rest x -> (x, rest)) (tm_new, []) in
-          subst_univ (rest, rest_new) tm
+          subst_univ ([], rest_new) tm_new
 
 //        | U_name x ->
 ////          apply_until_some_then_map (subst_uname x) s (fun rest -> subst_univ (rest, [])) u
@@ -612,13 +613,13 @@ let rec subst_univ (s, s_new) u =
         | U_zero
         | U_unknown 
         | U_unif _ -> u
-        | U_succ u -> U_succ (subst_univ (s, s_new) u)
-        | U_max us -> U_max (List.map (subst_univ (s, s_new)) us)
+        | U_succ u -> U_succ (subst_univ ([], s_new) u)
+        | U_max us -> U_max (List.map (subst_univ ([], s_new)) us)
 
 
-let rec subst' (s, s_new) t = 
-  check_subst_inv s s_new;
-  match s with
+let rec subst' (_, s_new) t = 
+//  check_subst_inv s s_new;
+  match s_new with
   | [] -> t 
   | _ ->
     let t0 = force_delayed_thunk t in 
@@ -632,7 +633,7 @@ let rec subst' (s, s_new) t =
             //s is the new subsitution to add to it
             //compose substitutions by concatenating them
             //the order of concatenation is important!
-          mk_Tm_delayed (Inl (t', compose_subst s' (s, s_new))) t.pos
+          mk_Tm_delayed (Inl (t', compose_subst s' ([], s_new))) t.pos
 
         | Tm_delayed(Inr _, _) -> 
           failwith "Impossible: force_delayed_thunk removes lazy delayed nodes"
@@ -640,12 +641,12 @@ let rec subst' (s, s_new) t =
         | Tm_bvar _
         | Tm_name _ ->
 //          apply_until_some_then_map (subst_index a) s (fun rest -> subst' (rest, [])) t0
-          let tm, rest = rename_aux t0 s in
+//          let tm, rest = rename_aux t0 s in
           let tm_new, rest_new = rename_aux t0 s_new in
-          check t0 tm tm_new ((s,rest), (s_new, rest_new));
-          let tm, rest = inst_aux tm rest in //apply_until_some_then_map (subst_index a) s (fun rest x -> (x, rest)) (tm, []) in
+//          check t0 tm tm_new ((s,rest), (s_new, rest_new));
+//          let tm, rest = inst_aux tm rest in //apply_until_some_then_map (subst_index a) s (fun rest x -> (x, rest)) (tm, []) in
           let tm_new, rest_new = inst_aux tm_new rest_new in //apply_until_some_then_map (subst_index a) s_new (fun rest x -> (x, rest)) (tm_new, []) in
-          subst' (rest, rest_new) tm
+          subst' ([], rest_new) tm_new
 
 //        | Tm_name a -> 
 ////          apply_until_some_then_map (subst_name a) s (fun rest -> subst' (rest, [])) t0
@@ -657,9 +658,9 @@ let rec subst' (s, s_new) t =
 //          subst' (rest, rest_new) tm
 
         | Tm_type u -> 
-          mk (Tm_type (subst_univ (s, s_new) u)) None t0.pos 
+          mk (Tm_type (subst_univ ([], s_new) u)) None t0.pos 
           
-        | _ -> mk_Tm_delayed (Inl(t0, (s, s_new)))  t.pos
+        | _ -> mk_Tm_delayed (Inl(t0, ([], s_new)))  t.pos
 
 and subst_flags' s flags =
     flags |> List.map (function
@@ -667,7 +668,7 @@ and subst_flags' s flags =
         | f -> f)
 
 and subst_comp_typ' s t = 
-    match fst s with
+    match snd s with
       | [] -> t
       | _ ->
     {t with result_typ=subst' s t.result_typ;
@@ -675,7 +676,7 @@ and subst_comp_typ' s t =
             effect_args=List.map (fun (t, imp) -> subst' s t, imp) t.effect_args}
 
 and subst_comp' s (t:comp) =
-     match fst s with
+     match snd s with
       | [] -> t
       | _ ->
     match t.n with
