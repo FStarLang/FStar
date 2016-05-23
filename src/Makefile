@@ -226,14 +226,14 @@ ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 	    	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst \
 	    	FStar.Dependences.fst FStar.Interactive.fst FStar.Stratified.fst FStar.Universal.fst FStar.FStar.fst
 
-ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse 
+ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 
 FSTAROPTS=
 
 all_boot_fsts:
 	cp format/format.fsi format/formatml.fsi
-	./tools/make_all_boot_fsts "$(BOOT_ALL)" 
+	./tools/make_all_boot_fsts "$(BOOT_ALL)"
 
 boot_fstis/%.fsti: basic/%.fsi
 	cp $^ $@
@@ -279,30 +279,30 @@ FS_SUPPORT_LIBS=native_int/prims.fs st.fs all.fs option.fs
 FSTAR_SUPPORT_LIBS=char.fsi char.fs string.fsi string.fs list.fsi list.fs util.fsi util.fs platform.fsi platform.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs version.fsi version.fs unionfind.fsi unionfind.fs
 BOOT_FS_BASE=FStar.Options.fs
 BOOT_FS_SYNTAX=FStar.Absyn.Syntax.fs FStar.Absyn.Const.fs FStar.Absyn.Visit.fs FStar.Absyn.Util.fs FStar.Absyn.Print.fs
-BOOT_FS_TC=FStar.Tc.Env.fs FStar.Tc.Recheck.fs FStar.Tc.Normalize.fs FStar.Tc.Errors.fs FStar.Tc.Rel.fs FStar.Tc.Util.fs FStar.Tc.Tc.fs 
+BOOT_FS_TC=FStar.Tc.Env.fs FStar.Tc.Recheck.fs FStar.Tc.Normalize.fs FStar.Tc.Errors.fs FStar.Tc.Rel.fs FStar.Tc.Util.fs FStar.Tc.Tc.fs
 BOOT_FS_PARSER=FStar.Parser.AST.fs parseutil.fs parse.fs FStar.Parser.Lexhelp.fs lex.fs FStar.Parser.DesugarEnv.fs FStar.Parser.Desugar.fs parseit.fs FStar.Parser.Driver.fs
 BOOT_FS_TOSMT=FStar.ToSMT.Term.fs FStar.ToSMT.Z3.fs FStar.ToSMT.SplitQueryCases.fs FStar.ToSMT.Encode.fs
 BOOT_FS_EXTRACTION=FStar.Extraction.ML.Syntax.fs FStar.Extraction.ML.Env.fs FStar.Extraction.ML.Util.fs FStar.Extraction.ML.Code.fs FStar.Extraction.ML.ExtractTyp.fs FStar.Extraction.ML.ExtractExp.fs FStar.Extraction.ML.ExtractMod.fs
 BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC) $(BOOT_FS_PARSER) $(BOOT_FS_TOSMT) $(BOOT_FS_EXTRACTION) FStar.FStar.fs
 
-boot-fsharp: fsharp-output fs plain-fs-files fsharp-output/fstar.exe 
+boot-fsharp: fsharp-output fs plain-fs-files fsharp-output/fstar.exe
 
 fsharp-output/fstar.exe: $(addprefix ../lib/fs/, $(FS_SUPPORT_LIBS)) $(addprefix basic/, $(FSTAR_SUPPORT_LIBS)) $(addprefix fsharp-output/, $(BOOT_FS_FILES) main.fs)
 	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(OTHERFLAGS) $^
 
-fs: $(BOOT_ALL) 
+fs: $(BOOT_ALL)
 	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --MLish --lax --fs_typ_app \
 	  --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
 
-fsharp-output: 
+fsharp-output:
 	mkdir -p fsharp-output
 	make -C VS install-packages
 	cp ../bin/FSharp.PowerPack.* fsharp-output
 
 plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) fstar/main.fs
-	cp $^ fsharp-output/ 
+	cp $^ fsharp-output/
 
-deploy-boot-fs: fsharp-output/fstar.exe 
+deploy-boot-fs: fsharp-output/fstar.exe
 	cp $^ ../bin
 
 clean-boot-fs:
@@ -312,10 +312,14 @@ clean-boot-fs:
 # Testing
 # --------------------------------------------------------------------
 
-test:   clean $(BIN)/fstar.exe $(BIN)/tests.exe ocaml-test regressions
+test:   clean $(BIN)/fstar.exe $(BIN)/tests.exe fsharp-regressions ocaml-test regressions
 
-regressions:
+# The regressions to be run with a working F# build of F*
+fsharp-regressions:
 	$(BIN)/tests.exe
+
+# The regressions to be run with a working OCaml build of F*
+regressions:
 	make -C ../lib
 	make -C ../ulib
 	make -C ../examples
