@@ -109,6 +109,7 @@ type decl =
   | Push
   | Pop
   | CheckSat
+  | SetOption  of string * string
 type decls_t = list<decl>
 
 type error_label = (fv * string * Range.range)
@@ -444,6 +445,7 @@ let rec declToSmt z3options decl = match decl with
   | CheckSat -> "(check-sat)"
   | Push -> "(push)"
   | Pop -> "(pop)"
+  | SetOption (s, v) -> format2 "(set-option :%s %s)" s v
 
 and mkPrelude z3options =
   let basic = z3options ^
