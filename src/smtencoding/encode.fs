@@ -562,7 +562,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let ttm = Term.mk_Term_uvar (Unionfind.uvar_id uv) in
         let t_has_k, decls = encode_term_pred None k env ttm in //TODO: skip encoding this if it has already been encoded before
         let d = Term.Assume(t_has_k, Some "Uvar typing") in
-        ttm, d::decls
+        ttm, decls@[d]
 
       | Tm_app _ ->
         let head, args_e = Util.head_and_args t0 in
