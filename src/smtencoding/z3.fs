@@ -64,22 +64,14 @@ let get_z3version () =
             _z3version := Some out; out
 
 let ini_params () =
-  let t =
-    if z3v_le (get_z3version ()) (4, 3, 1)
-    then (Options.z3_timeout())
-    else (Options.z3_timeout()) * 1000
-  in
-  let timeout = format1 "-t:%s" (string_of_int t) in
-  let relevancy =
-    if   z3v_le (get_z3version ()) (4, 3, 1)
-    then "RELEVANCY"
-    else "SMT.RELEVANCY"
-  in
-  format2 "-smt2 -in %s \
+  begin if z3v_le (get_z3version ()) (4, 3, 1)
+  then raise <| Util.Failure "Z3 v4.3.1 is required."
+  else ()
+  end;
+  "-smt2 -in \
     AUTO_CONFIG=false \
     MODEL=true \
-    %s=2"
-    timeout relevancy
+    SMT.RELEVANCY=2"
 
 type z3status =
     | SAT
