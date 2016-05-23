@@ -123,11 +123,11 @@ let resolve_in_open_namespaces' env lid (finder:lident -> option<'a>) : option<'
 
 let expand_module_abbrevs env lid = 
     match lid.ns with 
-        | [id] ->
+        | id::rest ->
           begin match env.modul_abbrevs |> List.tryFind (fun (id', _) -> id.idText = id'.idText) with 
                 | None -> lid
                 | Some (_, lid') -> 
-                  Ident.lid_of_ids (Ident.ids_of_lid lid' @ [lid.ident])
+                  Ident.lid_of_ids (Ident.ids_of_lid lid' @ rest @ [lid.ident])
           end
         | _ -> lid
 
