@@ -166,28 +166,6 @@ let apply_until_some_then_map f s g t =
     apply_until_some f s 
     |> map_some_curry g t
 
-let rec subst_univ (s, s_new) u =
-    match s with 
-    | [] -> u
-    | _ -> 
-        let u = compress_univ u in
-        match u with 
-        | U_bvar x -> 
-    //      apply_until_some_then_map (subst_uindex x) s (fun rest -> subst_univ (rest, [])) u
-          let tm, rest = apply_until_some_then_map (subst_uindex x) s (fun rest x -> x, rest) (u, []) in
-          let _, rest_new = apply_until_some_then_map (subst_uindex x) s_new (fun rest x -> x, rest) (u, []) in
-          subst_univ (rest, rest_new) tm
-        | U_name x ->
-//          apply_until_some_then_map (subst_uname x) s (fun rest -> subst_univ (rest, [])) u
-          let tm, rest = apply_until_some_then_map (subst_uname x) s (fun rest x -> x, rest) (u, []) in
-          let _, rest_new = apply_until_some_then_map (subst_uname x) s_new (fun rest x -> x, rest) (u, []) in
-          subst_univ (rest, rest_new) tm
-        | U_zero
-        | U_unknown 
-        | U_unif _ -> u
-        | U_succ u -> U_succ (subst_univ (s, s_new) u)
-        | U_max us -> U_max (List.map (subst_univ (s, s_new)) us)
-
 (* s1 and s2 are each parallel substitutions
     e.g., s1 = [Name2Index(x, 0); Name2Index(y, 1)]
           s2 = [Index2Name(0, x'); Index2Name(1, y')]
@@ -452,22 +430,34 @@ let print_subst_detail s =
       aux str hd tl
     
 let check tm0 tm tm' ((s, rest), (s_new, rest_new)) = 
-    match rest with 
-    | Renaming _::_ -> ()
-    | _ ->
-        let rec cmp tm tm' = 
-            match tm.n, tm'.n with 
-            | Tm_bvar a, Tm_bvar b 
-            | Tm_name a, Tm_name b -> bv_eq a b 
-            | _ -> true in
-        if cmp tm tm'
-        then ()
-        else failwith (Util.format5 "%s composed to\n %s\nmapped %s to %s <> %s\n" 
-                            (print_subst_detail s)
-                            (subst_to_string s_new)
-                            (print_term tm0)
-                            (print_term tm)
-                            (print_term tm'))
+    let rec cmp tm tm' = 
+        match tm.n, tm'.n with 
+        | Tm_bvar a, Tm_bvar b 
+        | Tm_name a, Tm_name b -> bv_eq a b 
+        | _ -> true in
+    if cmp tm tm'
+    then ()
+    else failwith (Util.format5 "%s composed to\n %s\nmapped %s to %s <> %s\n" 
+                        (print_subst_detail s)
+                        (subst_to_string s_new)
+                        (print_term tm0)
+                        (print_term tm)
+                        (print_term tm'))
+
+let ucheck u0 u u' ((s, rest), (s_new, rest_new)) = 
+    let rec cmp u u' = 
+        match u, u' with 
+        | U_bvar a, U_bvar b  -> a = b
+        | U_name a, U_name b -> a.idText = b.idText
+        | _ -> true in
+    if cmp u u'
+    then ()
+    else failwith (Util.format5 "%s composed to\n %s\nmapped %s to %s <> %s\n" 
+                        (print_subst_detail s)
+                        (subst_to_string s_new)
+                        (print_univ u0)
+                        (print_univ u)
+                        (print_univ u'))
 
 let rec rename_aux t s = match s with 
     | Renaming r::rest -> 
@@ -559,6 +549,72 @@ let check_subst_inv s s_new =
                     (subst_to_string s_new))
 
               
+let rec rename_uaux u s = match s with 
+    | Renaming r::rest -> 
+      (match u with 
+       | U_bvar a -> 
+         begin match subst_uindex a (Renaming r) with 
+            | None -> rename_uaux u rest
+            | Some u' -> rename_uaux u' rest
+         end
+         
+       | U_name a ->
+         begin match subst_uname a (Renaming r) with 
+            | None -> rename_uaux u rest
+            | Some u' -> rename_uaux u' rest
+         end
+
+       | _ -> failwith "impos"
+       )
+    | _ -> u, s
+
+let rec inst_uaux u s = match s with 
+    | Instantiation i::rest -> 
+      (match u with 
+       | U_bvar a -> 
+         begin match subst_uindex a (Instantiation i) with 
+            | None -> inst_uaux u rest
+            | Some u' -> u', rest
+         end
+         
+       | U_name a ->
+         begin match subst_uname a (Instantiation i) with 
+            | None -> inst_uaux u rest
+            | Some u' -> u', rest
+         end
+
+       | _ -> failwith "impos"
+       )
+    | _ -> u, s
+
+let rec subst_univ (s, s_new) u =
+    match s with 
+    | [] -> u
+    | _ -> 
+        let u = compress_univ u in
+        match u with 
+        | U_bvar _
+        | U_name _ -> 
+    //      apply_until_some_then_map (subst_uindex x) s (fun rest -> subst_univ (rest, [])) u
+          let tm, rest = rename_uaux u s in
+          let tm_new, rest_new = rename_uaux u s_new in
+          ucheck u tm tm_new ((s,rest), (s_new, rest_new));
+          let tm, rest = inst_uaux tm rest in //apply_until_some_then_map (subst_index a) s (fun rest x -> (x, rest)) (tm, []) in
+          let tm_new, rest_new = inst_uaux tm_new rest_new in //apply_until_some_then_map (subst_index a) s_new (fun rest x -> (x, rest)) (tm_new, []) in
+          subst_univ (rest, rest_new) tm
+
+//        | U_name x ->
+////          apply_until_some_then_map (subst_uname x) s (fun rest -> subst_univ (rest, [])) u
+//          let tm, rest = apply_until_some_then_map (subst_uname x) s (fun rest x -> x, rest) (u, []) in
+//          let _, rest_new = apply_until_some_then_map (subst_uname x) s_new (fun rest x -> x, rest) (u, []) in
+//          subst_univ (rest, rest_new) tm
+
+        | U_zero
+        | U_unknown 
+        | U_unif _ -> u
+        | U_succ u -> U_succ (subst_univ (s, s_new) u)
+        | U_max us -> U_max (List.map (subst_univ (s, s_new)) us)
+
 
 let rec subst' (s, s_new) t = 
   check_subst_inv s s_new;
@@ -581,7 +637,8 @@ let rec subst' (s, s_new) t =
         | Tm_delayed(Inr _, _) -> 
           failwith "Impossible: force_delayed_thunk removes lazy delayed nodes"
 
-        | Tm_bvar a ->
+        | Tm_bvar _
+        | Tm_name _ ->
 //          apply_until_some_then_map (subst_index a) s (fun rest -> subst' (rest, [])) t0
           let tm, rest = rename_aux t0 s in
           let tm_new, rest_new = rename_aux t0 s_new in
@@ -590,14 +647,14 @@ let rec subst' (s, s_new) t =
           let tm_new, rest_new = inst_aux tm_new rest_new in //apply_until_some_then_map (subst_index a) s_new (fun rest x -> (x, rest)) (tm_new, []) in
           subst' (rest, rest_new) tm
 
-        | Tm_name a -> 
-//          apply_until_some_then_map (subst_name a) s (fun rest -> subst' (rest, [])) t0
-          let tm, rest = rename_aux t0 s in
-          let tm_new, rest_new = rename_aux t0 s_new in
-          check t0 tm tm_new ((s,rest), (s_new, rest_new));
-          let tm, rest = inst_aux tm rest in //apply_until_some_then_map (subst_name a) s (fun rest x -> (x, rest)) (tm, []) in
-          let tm_new, rest_new = inst_aux tm_new rest_new in //apply_until_some_then_map (subst_name a) s_new (fun rest x -> (x, rest)) (tm_new, []) in
-          subst' (rest, rest_new) tm
+//        | Tm_name a -> 
+////          apply_until_some_then_map (subst_name a) s (fun rest -> subst' (rest, [])) t0
+//          let tm, rest = rename_aux t0 s in
+//          let tm_new, rest_new = rename_aux t0 s_new in
+//          check t0 tm tm_new ((s,rest), (s_new, rest_new));
+//          let tm, rest = inst_aux tm rest in //apply_until_some_then_map (subst_name a) s (fun rest x -> (x, rest)) (tm, []) in
+//          let tm_new, rest_new = inst_aux tm_new rest_new in //apply_until_some_then_map (subst_name a) s_new (fun rest x -> (x, rest)) (tm_new, []) in
+//          subst' (rest, rest_new) tm
 
         | Tm_type u -> 
           mk (Tm_type (subst_univ (s, s_new) u)) None t0.pos 
