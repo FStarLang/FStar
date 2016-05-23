@@ -2,16 +2,34 @@
 module FStar.Tests.Test
 open FStar.Syntax
 open FStar
+open FStar.Syntax.Syntax
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module U = FStar.Syntax.Util
 let r = Range.dummyRange
+
+let bv x n : bv = {
+    ppname=Ident.id_of_text x;
+    index=n;
+    sort=S.tun
+}
+let a = "a"
+let x = "x"
+let wp = "wp"
+let test_subst () = 
+  let s = [Renaming[Index2Name   (0, bv a 5765)];
+           Renaming[Name2Name    (bv a 5765, bv a 5761)];
+           Renaming[Name2Index   (bv a 5761, 1); Name2Index   (bv x 0, 0)];
+           Renaming[Index2Name   (0, bv wp 5773); Index2Name   (1, bv a 5772)]] in
+  printfn "%s" (Subst.print_subst_detail s)
+
 [<EntryPoint>] 
 let main argv =
     printfn "Initializing ...";
 //    Pars.init() |> ignore;
     FStar.Syntax.Print.init();
-    Norm.run_all (); 
+    test_subst();
+//    Norm.run_all (); 
 //    Unif.run_all ();
     0
 

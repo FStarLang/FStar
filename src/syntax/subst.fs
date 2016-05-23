@@ -92,7 +92,7 @@ let instantiation_to_string i =
     s |> List.map (function 
                    | Renaming r -> renaming_to_string r
                    | Instantiation i -> instantiation_to_string i) 
-      |> String.concat "; " 
+      |> String.concat ";\n" 
 
 //Lookup a bound var in a parallel substitution
 type renaming = list<renaming_subst>
@@ -201,25 +201,28 @@ let compose_renamings (s1:renaming) (s2:renaming) : renaming =
             | hd::tl -> if f hd then Some hd, out@tl
                         else aux (hd::out) tl in
         aux [] s in
- 
-   let find_name s x = 
-     s |> find_and_remove (function
+
+   let s2_orig = s2 in 
+   let find_name x = 
+     s2 |> Util.find_opt (function
         | Name2Index(y, _)
         | Name2Name(y, _) -> bv_eq x y
         | _ -> false) in
  
-   let find_index s i = 
-     s |> find_and_remove (function
+   let find_index i = 
+     s2 |> Util.find_opt (function
         | Index2Name(j, _) 
         | Index2Index(j, _) -> i=j
         | _ -> false) in
 
-   let find_uindex s2 i = s2 |> find_and_remove (function
+   let find_uindex i = 
+    s2 |> Util.find_opt (function
         | UIndex2UName (j, _)
         | UIndex2UIndex(j, _) -> i=j
         | _ -> false) in
 
-   let find_uname s2 n = s2 |> find_and_remove (function
+   let find_uname n = 
+    s2 |> Util.find_opt (function
         | UName2UIndex(m, _) 
         | UName2UName (m, _) -> n.idText=m.idText 
         | _ -> false) in
@@ -231,150 +234,152 @@ let compose_renamings (s1:renaming) (s2:renaming) : renaming =
    //    @ map (fun (x, t) -> (x, s2 t) s1
    //However, our substitutions have more structure and we can optimize a bit further
    //First, we assume that s1 and s2 have non-overlapping domains
-   let s2_orig = s2 in
-   let comp = s1 |> List.fold_left (fun s2 s1_elt -> 
+   let s1_elts, s2_removes = s1 |> List.fold_left (fun (s1_elts, s2_removes) s1_elt -> 
            match s1_elt with 
            | Index2Name(i, x) -> //opening i to x
                 //assert (Index2*(i, _)) not in s2 (disjoint domains)
                 //assert x is fresh identifer not occuring im T
-                let s2_x, s2_remainder = find_name s2 x in
+                let s2_x = find_name x in
                 begin match s2_x with 
                     | Some (Name2Index(_, j)) -> //closing x to j
                         if i=j 
-                        then s2_remainder //they cancel
-                        else Index2Index(i,j)::s2_remainder
+                        then (s1_elts, s2_x::s2_removes) //they cancel
+                        else (Index2Index(i,j)::s1_elts, s2_x::s2_removes)
 
                     | Some (Name2Name(_, y)) -> //renaming x to y
-                        Index2Name(i, y)               //open i to y directly
-                        ::s2_remainder                 //x does not occur in T, so no need to keep s2_x
+                        (Index2Name(i, y)::s1_elts,   //open i to y directly;
+                         s2_x::s2_removes)            //x cannot occur free in T
 
                     | _ -> //must be None; nothing to compose with 
-                        s1_elt
-                        ::s2_remainder                 //s2_remainder == s2, up to reordering
+                        (s1_elt::s1_elts, 
+                         s2_removes)
                 end
 
            | Name2Index(x, i) -> //closing x to i
                  //assert {NM(x, _), NT(x, _)} not in s2 (disjoint domains)
                  //de Bruijn index i does not appear in T
-                 let s2_i, s2_remainder = find_index s2 i in
+                 let s2_i = find_index i in
 
                  begin match s2_i with 
-                    | Some (Index2Name(_, y)) ->  //open i to y; y is fresh
-                      Name2Name(x, y)     //rename x to y in one step
-                      ::s2_remainder      //i does not appear in T, so no need to keep s2_i
+                    | Some (Index2Name(_, y)) ->     //open i to y; y is fresh
+                      (Name2Name(x, y)::s1_elts,     //rename x to y in one step
+                       s2_i::s2_removes)             //i does not appear in T, so no need to keep s2_i
                     
-                    | Some (Index2Index(_, j)) ->  //replace i to j
-                      Name2Index(x, j)             //rename x to j in one step
-                      ::s2_remainder
+                    | Some (Index2Index(_, j)) ->   //replace i to j
+                      (Name2Index(x, j)::s1_elts,   //rename x to j in one step
+                       s2_i::s2_removes)
                       
                     | _ ->                //s2_i=None
-                      s1_elt              //nothing to compose with
-                      ::s2_remainder      //s2_remainder == s2, up to reordering
+                      (s1_elt::s1_elts, 
+                       s2_removes)              //nothing to compose with
                  end
 
            | Index2Index(i, j) -> 
-                 let s2_i, s2_remainder = find_index s2 i in
-                 begin match s2_i with 
+                 let s2_j = find_index j in
+                 begin match s2_j with 
                     | Some (Index2Name(_, y)) ->  //open j to y; y is fresh
-                      Index2Name(i, y)            //open i to y
-                      ::s2_remainder              //j does not appear in T, so no need to keep s2_i
+                      (Index2Name(i, y)::s1_elts,     //open i to y
+                       s2_j::s2_removes)              //j does not appear in T, so no need to keep s2_i
 
-                    | Some (Index2Index(_, k)) ->  //replace j to k
-                      Index2Index(i, k)            //rename i to k in one step
-                      ::s2_remainder
+                    | Some (Index2Index(_, k)) ->     //replace j to k
+                      (Index2Index(i, k)::s1_elts,    //rename i to k in one step
+                       s2_j::s2_removes)
                       
-                    | _ ->                //s2_i=None
-                      s1_elt              //nothing to compose with
-                      ::s2_remainder      //s2_remainder == s2, up to reordering
+                    | _ ->                  //s2_i=None
+                      (s1_elt::s1_elts,     //nothing to compose with
+                       s2_removes)          //s2_remainder == s2, up to reordering
                  end
 
 
            | Name2Name(x, y) -> //renaming x to y
                 //assert {NM(x, _), NT(x, _)} not in s2 (disjoint domains)
-                let s2_y, s2_remainder = find_name s2 y in
+                let s2_y = find_name y in
                 begin match s2_y with
                     | Some (Name2Index(_, j)) -> //closing y to j
-                      Name2Index(x, j)           //close x to j in 1 step
-                      ::s2             //!!!??? y free in T?
+                      (Name2Index(x, j)::s1_elts,     //close x to j in 1 step
+                       s2_removes)                    //!!!??? y free in T?
 
                     | Some (Name2Name(_, z)) -> 
-                      Name2Name(x, z)           //rename x to z in 1 step
-                      ::s2            //!!!??? y free in T?
+                      (Name2Name(x, z)::s1_elts,     //rename x to z in 1 step
+                       s2_removes)                   //!!!??? y free in T?
 
                     | _ ->                //s2_y=None
-                      s1_elt              //nothing to compose with
-                      ::s2
+                      (s1_elt::s1_elts,              //nothing to compose with
+                       s2_removes)
                 end
 
            | UIndex2UName(i, n) ->             //i is opened to n; just like the DB(i, x) case
-             let u_n, s2_remainder = find_uname s2 n in
+             let u_n = find_uname n in
 
              //n is fresh, i.e., n not in FV T
              //i not in dom s2
              begin match u_n with 
                 | Some(UName2UIndex(_, j)) ->  //n is closed to j
                   if i=j
-                  then s2_remainder
-                  else UIndex2UIndex(i,j)
-                       ::s2_remainder
+                  then (s1_elts, u_n::s2_removes)
+                  else (UIndex2UIndex(i,j)::s1_elts,
+                        u_n::s2_removes)
 
-                | Some(UName2UName (_, u)) ->   //subst n to u
-                  UIndex2UName(i, u)            //open and subst i to u directly
-                  ::s2_remainder                //n is fresh, so no need to keep u_n
+                | Some(UName2UName (_, u)) ->       //subst n to u
+                  (UIndex2UName(i, u)::s1_elts,     //open and subst i to u directly
+                   u_n::s2_removes)                      //n is fresh, so no need to keep u_n
 
                 | _ ->                //u_n is None
-                  s1_elt              //nothing to compose with  
-                  ::s2_remainder      //s2_remainder == s2, up to reordering
+                  (s1_elt::s1_elts,   //nothing to compose with  
+                   s2_removes)        
               end
           
            | UName2UIndex(u, i) ->            //close universe name un with index i; just like the NM case
-             let u_i, s2_remainder = find_uindex s2 i in
+             let u_i = find_uindex i in
              begin match u_i with 
                 | Some(UIndex2UName(_, v)) ->   //i is mapped to v
-                  UName2UName(u, v)             //rename u to v in 1 step
-                  ::s2_remainder      //i does not appear in T, so no need to keep u_i
+                  (UName2UName(u, v)::s1_elts,  //rename u to v in 1 step
+                   u_i::s2_removes)             //i does not appear in T, so no need to keep u_i
  
                 | Some(UIndex2UIndex(_, k)) ->   //i is mapped to k
-                  UName2UIndex(u, k)
-                  ::s2_remainder
+                  (UName2UIndex(u, k)::s1_elts,
+                   u_i::s2_removes)
                 
                 | _ ->                //u_i=None
-                  s1_elt              //nothing to compose with
-                  ::s2_remainder      //s2_remainder == s2, up to reordering
+                  (s1_elt::s1_elts,   //nothing to compose with
+                   s2_removes)
              end
 
           | UName2UName(u, v) ->              //like the NT case
-            let u_i, s2_remainder = find_uname s2 v in
+            let u_i = find_uname v in
             begin match u_i with 
                 | Some(UName2UIndex (_, i)) ->
-                  UName2UIndex(u, i)
-                  ::s2  //!!! ?v may still be free in T
+                  (UName2UIndex(u, i)::s1_elts,
+                   s2_removes)                 //!!! ?v may still be free in T
 
                 | Some (UName2UName (_, w)) ->
-                  UName2UName(u, w)
-                  ::s2
+                  (UName2UName(u, w)::s1_elts,
+                   s2_removes)
 
                 | _ -> 
-                   s1_elt
-                   ::s2
+                  (s1_elt::s1_elts,
+                   s2_removes)
             end
          
            | UIndex2UIndex(i, j) -> 
-                 let s2_i, s2_remainder = find_uindex s2 i in
-                 begin match s2_i with 
+                 let s2_j = find_uindex j in
+                 begin match s2_j with 
                     | Some (UIndex2UName(_, y)) ->  //open j to y; y is fresh
-                      UIndex2UName(i, y)            //open i to y
-                      ::s2_remainder              //j does not appear in T, so no need to keep s2_i
+                      (UIndex2UName(i, y)::s1_elts,     //open i to y
+                       s2_j::s2_removes)              //j does not appear in T, so no need to keep s2_i
 
                     | Some (UIndex2UIndex(_, k)) ->  //replace j to k
-                      UIndex2UIndex(i, k)            //rename i to k in one step
-                      ::s2_remainder
+                      (UIndex2UIndex(i, k)::s1_elts,            //rename i to k in one step
+                       s2_j::s2_removes)
                       
-                    | _ ->                //s2_i=None
-                      s1_elt              //nothing to compose with
-                      ::s2_remainder      //s2_remainder == s2, up to reordering
-                 end)
-    s2 in
+                    | _ ->                 //s2_i=None
+                      (s1_elt::s1_elts,    //nothing to compose with
+                       s2_removes)     
+                 end) ([], []) in
+    let s2_remainder = s2 |> List.filter (fun x -> 
+            not (s2_removes |> Util.for_some (function None -> false 
+                                       | Some y -> Util.physical_equality x y))) in
+    s1_elts@s2_remainder 
 //  let comp = comp |> remove_dups (fun a b -> 
 //        match a, b with
 //        | Name2Term(x, _), Name2Term(y, _) 
@@ -386,21 +391,21 @@ let compose_renamings (s1:renaming) (s2:renaming) : renaming =
 //        | UName2Univ(x, _), UName2Univ(y, _) -> x.idText = y.idText
 //        | _ -> false) in
 //  printfn "Composing %s;\tand %s;\tto %s" (subst_to_string s1) (subst_to_string s2) (subst_to_string comp);
-  comp
+  
 
+let collapse_subst s = 
+    List.fold_right (fun ri out -> match ri, out with 
+        | Renaming re1, Renaming re2::tl -> Renaming (compose_renamings re1 re2)::tl
+        | _ -> ri::out) s []
 
 let compose_subst (s1, s1_new) (s2, s2_new) : subst_ts * subst_ts = 
     let composed = s1@s2 in
-    let composed_new = List.fold_right (fun ri out -> match ri, out with 
-        | Renaming re1, Renaming re2::tl -> Renaming (compose_renamings re1 re2)::tl
-        | _ -> ri::out) (s1_new@s2_new) [] in
-//    if List.length composed = 618
-//    then 
+    let composed_new = collapse_subst (s1_new@s2_new) in
     if Options.debug_at_level "" (Options.Other "Substitutions")
     then Printf.printf "%s and\n%s to\n%s\n\n" 
-                (subst_to_string s1)
-                (subst_to_string s2)
-                (subst_to_string composed);
+                (subst_to_string s1_new)
+                (subst_to_string s2_new)
+                (subst_to_string composed_new);
     composed, composed_new
 
 let shift n s = match s with 
@@ -420,8 +425,143 @@ let shift_subst' n (s:subst_ts) = List.map (function
     | x -> x) s
 
 let shift_subst n (s, s_new) = shift_subst' n s, shift_subst' n s_new
+
+let print_subst_detail s = 
+    match s with
+    | []
+    | [_] -> subst_to_string s
+    | hd::tl -> 
+      let str = subst_to_string [hd] in
+      let rec aux str prev rest = 
+        match rest with 
+        | [] -> str
+        | Renaming r::rest -> 
+          begin match prev with 
+          | Renaming r0 -> 
+            let next = Renaming <| compose_renamings r0 r in
+            let str = Util.format3 "%s\n+%s\n=%s" str (subst_to_string [Renaming r]) (subst_to_string [next]) in
+            aux str next rest
+          
+          | Instantiation _ -> 
+            let str = Util.format2 "%s\n;%s" str (subst_to_string [Renaming r]) in
+            aux str (Renaming r) rest
+          end
+        | Instantiation i::rest ->
+          let str = Util.format2 "%s\n;%s" str (subst_to_string [Instantiation i]) in
+          aux str (Instantiation i) rest in
+      aux str hd tl
     
+let check tm0 tm tm' ((s, rest), (s_new, rest_new)) = 
+    match rest with 
+    | Renaming _::_ -> ()
+    | _ ->
+        let rec cmp tm tm' = 
+            match tm.n, tm'.n with 
+            | Tm_bvar a, Tm_bvar b 
+            | Tm_name a, Tm_name b -> bv_eq a b 
+            | _ -> true in
+        if cmp tm tm'
+        then ()
+        else failwith (Util.format5 "%s composed to\n %s\nmapped %s to %s <> %s\n" 
+                            (print_subst_detail s)
+                            (subst_to_string s_new)
+                            (print_term tm0)
+                            (print_term tm)
+                            (print_term tm'))
+
+let rec rename_aux t s = match s with 
+    | Renaming r::rest -> 
+      (match t.n with 
+       | Tm_bvar a -> 
+         begin match subst_index a (Renaming r) with 
+            | None -> rename_aux t rest
+            | Some t' -> rename_aux t' rest
+         end
+         
+       | Tm_name a ->
+         begin match subst_name a (Renaming r) with 
+            | None -> rename_aux t rest
+            | Some t' -> rename_aux t' rest
+         end
+
+       | _ -> failwith "impos"
+       )
+    | _ -> t, s
+
+let rec inst_aux t s = match s with 
+    | Instantiation i::rest -> 
+      (match t.n with 
+       | Tm_bvar a -> 
+         begin match subst_index a (Instantiation i) with 
+            | None -> inst_aux t rest
+            | Some t' -> t', rest
+         end
+         
+       | Tm_name a ->
+         begin match subst_name a (Instantiation i) with 
+            | None -> inst_aux t rest
+            | Some t' -> t', rest
+         end
+
+       | _ -> failwith "impos"
+       )
+    | _ -> t, s
+
+let eq_subst s1 s2 = 
+    let cmp_renaming_elt r1 r2 = 
+        Util.compare (renaming_elt_to_string r1) (renaming_elt_to_string r2) in
+  
+    let eq_renaming_elt r1 r2 =
+        match r1, r2 with 
+        | Index2Name(i, x), Index2Name(j, y) 
+        | Name2Index(x, i), Name2Index(y, j) ->  i=j && bv_eq x y
+        | Name2Name(x, y),  Name2Name(w, z)  ->  bv_eq w x && bv_eq y z
+        | Index2Index(i, k), Index2Index(j, l) 
+        | UIndex2UIndex(i, k), UIndex2UIndex(j, l) -> i=j && k=l
+        | UIndex2UName(i, u), UIndex2UName(j, v)
+        | UName2UIndex(u, i), UName2UIndex(v, j) -> i=j && u.idText=v.idText
+        | UName2UName(u, v),  UName2UName(u', v') -> u.idText=u'.idText && v.idText=v'.idText
+        | _ -> false in
+
+    let eq_renaming r1 r2 = 
+       if List.length r1 = List.length r2 
+       then let r1 = Util.sort_with cmp_renaming_elt r1 in
+            let r2 = Util.sort_with cmp_renaming_elt r2 in
+            List.forall2 eq_renaming_elt r1 r2
+       else false in
+
+    if List.length s1 = List.length s2 
+    then List.forall2 (fun s1 s2 -> 
+              match s1, s2 with
+              | Renaming r1, Renaming r2 -> eq_renaming r1 r2
+              | Instantiation _, Instantiation _ -> true
+              | _ -> false) s1 s2
+    else false 
+
+let check_subst_inv s s_new = 
+    let rec collapse_subst out s = 
+        match out, s with 
+        | Renaming r1::out, Renaming r2::s -> 
+          let r = compose_renamings r1 r2 in
+          collapse_subst (Renaming r::out) s
+
+        | _, hd::s -> 
+          collapse_subst (hd::out) s
+
+        | _, [] -> 
+          List.rev out in
+    let s' = collapse_subst [] s in 
+    if eq_subst s' s_new
+    then ()
+    else failwith (Util.format3 "%s should be collapsed to\n%s instead of\n%s\n"
+                    (subst_to_string s)
+                    (subst_to_string s')
+                    (subst_to_string s_new))
+
+              
+
 let rec subst' (s, s_new) t = 
+  check_subst_inv s s_new;
   match s with
   | [] -> t 
   | _ ->
@@ -443,14 +583,20 @@ let rec subst' (s, s_new) t =
 
         | Tm_bvar a ->
 //          apply_until_some_then_map (subst_index a) s (fun rest -> subst' (rest, [])) t0
-          let tm, rest = apply_until_some_then_map (subst_index a) s (fun rest x -> (x, rest)) (t0, []) in
-          let tm_new, rest_new = apply_until_some_then_map (subst_index a) s_new (fun rest x -> (x, rest)) (t0, []) in
+          let tm, rest = rename_aux t0 s in
+          let tm_new, rest_new = rename_aux t0 s_new in
+          check t0 tm tm_new ((s,rest), (s_new, rest_new));
+          let tm, rest = inst_aux tm rest in //apply_until_some_then_map (subst_index a) s (fun rest x -> (x, rest)) (tm, []) in
+          let tm_new, rest_new = inst_aux tm_new rest_new in //apply_until_some_then_map (subst_index a) s_new (fun rest x -> (x, rest)) (tm_new, []) in
           subst' (rest, rest_new) tm
 
         | Tm_name a -> 
 //          apply_until_some_then_map (subst_name a) s (fun rest -> subst' (rest, [])) t0
-          let tm, rest = apply_until_some_then_map (subst_name a) s (fun rest x -> (x, rest)) (t0, []) in
-          let tm_new, rest_new = apply_until_some_then_map (subst_name a) s_new (fun rest x -> (x, rest)) (t0, []) in
+          let tm, rest = rename_aux t0 s in
+          let tm_new, rest_new = rename_aux t0 s_new in
+          check t0 tm tm_new ((s,rest), (s_new, rest_new));
+          let tm, rest = inst_aux tm rest in //apply_until_some_then_map (subst_name a) s (fun rest x -> (x, rest)) (tm, []) in
+          let tm_new, rest_new = inst_aux tm_new rest_new in //apply_until_some_then_map (subst_name a) s_new (fun rest x -> (x, rest)) (tm_new, []) in
           subst' (rest, rest_new) tm
 
         | Tm_type u -> 
