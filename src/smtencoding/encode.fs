@@ -459,10 +459,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let pre_opt, res_t = Util.pure_or_ghost_pre_and_post env.tcenv res in
              let res_pred, decls' = encode_term_pred None res_t env' app in
              let guards, guard_decls = match pre_opt with
-                | None -> mk_and_l guards, decls
+                | None -> mk_and_l guards, []
                 | Some pre ->
                   let guard, decls0 = encode_formula pre env' in
-                  mk_and_l (guard::guards), decls@decls0  in
+                  mk_and_l (guard::guards), decls0  in
              let t_interp =
                        mkForall([[app]],
                                 vars,
@@ -495,7 +495,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   let t_interp = Term.Assume(mkForall([[f_has_t_z]], fsym::cvars, mkIff(f_has_t_z, t_interp)),
                                              Some (tsym ^ " interpretation")) in
 
-                  let t_decls = tdecl::decls@decls'@[k_assumption; pre_typing; t_interp] in
+                  let t_decls = tdecl::decls@decls'@guard_decls@[k_assumption; pre_typing; t_interp] in
                   Util.smap_add env.cache tkey.hash  (tsym, cvar_sorts, t_decls);
                   t, t_decls
              end
