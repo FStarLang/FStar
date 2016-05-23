@@ -48,8 +48,8 @@ BIN=../bin
 PLATFORM       =
 RELEASE       ?= Debug
 BUILD_VERSION  =
-OTHERFLAGS    := --optimize+ --debug:full --nologo --crossoptimize+ --define:DEBUG
-OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
+FSCOTHERFLAGS    := --optimize+ --debug:full --nologo --crossoptimize+ --define:DEBUG
+FSCOTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 
 ALL_DLLS    = basic.dll format.dll absyn.dll extraction.dll parser.dll tc.dll tosmt.dll syntax.dll smtencoding.dll typechecker.dll
 FSHARP_LIBS = System.Runtime.Serialization.dll System.Xml.dll $(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll $(BIN)/FSharp.PPrint.dll
@@ -58,7 +58,7 @@ BASELIBS    = $(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
 
 # --------------------------------------------------------------------
 ifeq ($(PLATFORM), X86)
-override OTHERFLAGS += --platform:x86
+override FSCOTHERFLAGS += --platform:x86
 endif
 
 ifeq ($(OS),Windows_NT)
@@ -127,62 +127,62 @@ parser/lex.fs: parser/lex.fsl $(FSLEX)
 
 BASIC_DEPS=
 $(BIN)/basic.dll: $(BASIC_DEPS) $(BASIC_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(BASIC_DEPS)) $(BASIC_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(BASIC_DEPS)) $(BASIC_SRC)
 
 ABSYN_DEPS=$(addprefix $(BIN)/, basic.dll)
 $(BIN)/absyn.dll: $(ABSYN_DEPS) $(ABSYN_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(ABSYN_DEPS)) $(ABSYN_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(ABSYN_DEPS)) $(ABSYN_SRC)
 
 SYNTAX_DEPS=$(addprefix $(BIN)/, basic.dll)
 $(BIN)/syntax.dll: $(SYNTAX_DEPS) $(SYNTAX_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(SYNTAX_DEPS)) $(SYNTAX_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(SYNTAX_DEPS)) $(SYNTAX_SRC)
 
 $(BIN)/testAbsyn.exe: $(ABSYN_DEPS) $(ABSYN_SRC) absyn/test.fs
-	$(FSC)  $(OTHERFLAGS) --define:TEST --define:DEBUG -o $@ $(BASELIBS) $(addprefix -r , $(ABSYN_DEPS)) $(ABSYN_SRC) absyn/test.fs
+	$(FSC)  $(FSCOTHERFLAGS) --define:TEST --define:DEBUG -o $@ $(BASELIBS) $(addprefix -r , $(ABSYN_DEPS)) $(ABSYN_SRC) absyn/test.fs
 
 FORMAT_DEPS=
 $(BIN)/format.dll: $(FORMAT_DEPS) $(FORMAT_SRC)
-	$(FSC) $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(FORMAT_DEPS)) $(FORMAT_SRC)
+	$(FSC) $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(FORMAT_DEPS)) $(FORMAT_SRC)
 
 EXTRACTION_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll syntax.dll format.dll tc.dll typechecker.dll)
 $(BIN)/extraction.dll: $(EXTRACTION_DEPS) $(EXTRACTION_SRC)
-	$(FSC) $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(EXTRACTION_DEPS)) $(EXTRACTION_SRC)
+	$(FSC) $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(EXTRACTION_DEPS)) $(EXTRACTION_SRC)
 
 PARSER_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tc.dll syntax.dll typechecker.dll)
 $(BIN)/parser.dll: $(PARSER_DEPS) $(PARSER_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(PARSER_DEPS)) $(PARSER_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(PARSER_DEPS)) $(PARSER_SRC)
 
 TOSMT_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tc.dll)
 $(BIN)/tosmt.dll: $(TOSMT_DEPS) $(TOSMT_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TOSMT_DEPS)) $(TOSMT_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TOSMT_DEPS)) $(TOSMT_SRC)
 
 SMTENCODING_DEPS=$(addprefix $(BIN)/, basic.dll syntax.dll typechecker.dll)
 $(BIN)/smtencoding.dll: $(SMTENCODING_DEPS) $(SMTENCODING_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(SMTENCODING_DEPS)) $(SMTENCODING_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(SMTENCODING_DEPS)) $(SMTENCODING_SRC)
 
 TC_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll)
 $(BIN)/tc.dll: $(TC_DEPS) $(TC_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TC_DEPS)) $(TC_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TC_DEPS)) $(TC_SRC)
 
 TYPECHECKER_DEPS=$(addprefix $(BIN)/, basic.dll syntax.dll)
 $(BIN)/typechecker.dll: $(TYPECHECKER_DEPS) $(TYPECHECKER_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TYPECHECKER_DEPS)) $(TYPECHECKER_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TYPECHECKER_DEPS)) $(TYPECHECKER_SRC)
 
 FSTAR_DEPS=$(addprefix $(BIN)/, $(ALL_DLLS))
 $(BIN)/fstar.exe: $(FSTAR_DEPS) $(TOPLEVEL_SRC) fstar/main.fs $(BIN)/fstar-mono.sh
 ifeq ($(OS),Windows_NT)
-	$(FSC)  $(OTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) fstar/main.fs
+	$(FSC)  $(FSCOTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) fstar/main.fs
 else
-	$(FSC)  $(OTHERFLAGS) -o $(BIN)/fstar-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) fstar/main.fs
+	$(FSC)  $(FSCOTHERFLAGS) -o $(BIN)/fstar-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) fstar/main.fs
 	cp $(BIN)/fstar-mono.sh $(BIN)/fstar.exe
 endif
 
 TESTS_SRC=$(addprefix tests/, pars.fs util.fs norm.fs unif.fs test.fs)
 $(BIN)/tests.exe: $(FSTAR_DEPS) $(TOPLEVEL_SRC) $(TESTS_SRC) $(BIN)/tests-mono.sh
 ifeq ($(OS),Windows_NT)
-	$(FSC)  $(OTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) $(TESTS_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) $(TESTS_SRC)
 else
-	$(FSC)  $(OTHERFLAGS) -o $(BIN)/tests-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) $(TESTS_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -o $(BIN)/tests-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) $(TESTS_SRC)
 	cp $(BIN)/tests-mono.sh $(BIN)/tests.exe
 endif
 
@@ -288,7 +288,7 @@ BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC) $
 boot-fsharp: fsharp-output fs plain-fs-files fsharp-output/fstar.exe
 
 fsharp-output/fstar.exe: $(addprefix ../lib/fs/, $(FS_SUPPORT_LIBS)) $(addprefix basic/, $(FSTAR_SUPPORT_LIBS)) $(addprefix fsharp-output/, $(BOOT_FS_FILES) main.fs)
-	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(OTHERFLAGS) $^
+	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(FSCOTHERFLAGS) $^
 
 fs: $(BOOT_ALL)
 	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --MLish --lax --fs_typ_app \
