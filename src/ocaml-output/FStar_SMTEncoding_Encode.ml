@@ -977,7 +977,7 @@ in (match (_83_670) with
 let _83_679 = (match (pre_opt) with
 | None -> begin
 (let _172_566 = (FStar_SMTEncoding_Term.mk_and_l guards)
-in (_172_566, decls))
+in (_172_566, []))
 end
 | Some (pre) -> begin
 (
@@ -986,7 +986,7 @@ let _83_676 = (encode_formula pre env')
 in (match (_83_676) with
 | (guard, decls0) -> begin
 (let _172_567 = (FStar_SMTEncoding_Term.mk_and_l ((guard)::guards))
-in (_172_567, (FStar_List.append decls decls0)))
+in (_172_567, decls0))
 end))
 end)
 in (match (_83_679) with
@@ -1069,7 +1069,7 @@ in (_172_589, Some ((Prims.strcat tsym " interpretation"))))
 in FStar_SMTEncoding_Term.Assume (_172_590))
 in (
 
-let t_decls = (FStar_List.append (FStar_List.append ((tdecl)::decls) decls') ((k_assumption)::(pre_typing)::(t_interp)::[]))
+let t_decls = (FStar_List.append (FStar_List.append (FStar_List.append ((tdecl)::decls) decls') guard_decls) ((k_assumption)::(pre_typing)::(t_interp)::[]))
 in (
 
 let _83_706 = (FStar_Util.smap_add env.cache tkey.FStar_SMTEncoding_Term.hash (tsym, cvar_sorts, t_decls))
@@ -1248,7 +1248,7 @@ in (match (_83_786) with
 (
 
 let d = FStar_SMTEncoding_Term.Assume ((t_has_k, Some ("Uvar typing")))
-in (ttm, (d)::decls))
+in (ttm, (FStar_List.append decls ((d)::[]))))
 end)))
 end
 | FStar_Syntax_Syntax.Tm_app (_83_789) -> begin

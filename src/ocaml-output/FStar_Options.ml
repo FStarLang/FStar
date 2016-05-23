@@ -1030,7 +1030,11 @@ let set_options : options  ->  Prims.string  ->  FStar_Getopt.parse_cmdline_res 
 
 let specs = (match (o) with
 | Set -> begin
+if (get_universes ()) then begin
+resettable_specs
+end else begin
 settable_specs
+end
 end
 | Reset -> begin
 resettable_specs
