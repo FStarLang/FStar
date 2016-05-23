@@ -66,10 +66,33 @@ Then, compile and install into a local directory (e.g. `/opt`), then tweak the `
 
 The outdated, system-wide `openssl` library does not work. However, the `Makefile` is setup so that recent versions of `openssl` installed via either Homebrew or MacPorts are found.
 
-JP: it seems like my OCaml sqlite3 package is picking up the system-wide sqlite3 library, instead of the brew one. The system-wide gives errors about a missing `sqlite3_load_extension` function. The hackish solution is:
+You might have trouble building `miTLS*` under OSX because of `openssl` or `sqlite3`.
+This is because OSX ship with old versions of those libraries by default.
+
+This will cause errors similar to this one when building `miTLS*`:
+```
+Undefined symbols for architecture x86_64:
+  "_sqlite3_enable_load_extension", referenced from:
+      _caml_sqlite3_enable_load_extension in libsqlite3_stubs.a(sqlite3_stubs.o)
+     (maybe you meant: _caml_sqlite3_enable_load_extension)
+ld: symbol(s) not found for architecture x86_64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+File "caml_startup", line 1:
+Error: Error during linking
+ocamlopt.opt returned with exit code 2
+```
+
+You might want to install newer versions using `homebrew` to solve this problem, but be aware that it will not be linked by default. When installing `ocaml-sqlite3` using `opam`, please make sure to reference the correct library or by default it will use the system one. 
+
+In order to do that please set the `PKG_CONFIG_PATH` variable properly before doing `opam install sqlite3`: 
+```
+export PKG_CONFIG_PATH="/usr/local/opt/sqlite/lib/pkgconfig:$PKG_CONFIG_PATH"
+```
+This should be enough to reference and build against the correct `sqlite3` library and solve the problem.
+Note that you might have similar problems with `openssl`, as we use it for some cryptographic primitives.
+
+An alternative solution (not recommended) is to still link against the outdated system-wide `sqlite3`, but disable support for loadable extensions.
 
 ```
 SQLITE3_DISABLE_LOADABLE_EXTENSIONS=1 opam reinstall sqlite3
 ```
-
-The right solution would be to fix the `Makefile` to user proper flags.

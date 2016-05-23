@@ -210,6 +210,7 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
         Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None);
         p]
         @label_assumptions
+        @[Term.SetOption ("timeout", (string_of_int <| Options.z3_timeout() * 1000))]
         @[Term.CheckSat]
         @suffix in
 

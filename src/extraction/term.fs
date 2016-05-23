@@ -121,7 +121,7 @@ let predecessor t = function
 let rec level env t =
     let predecessor l = predecessor t l in
     let t = SS.compress t in
-//    debug env (fun _ -> Util.print2 "level %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
+    debug env (fun _ -> Util.print2 "level %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
 //    printfn "%s\n" (Print.term_to_string t);
     match t.n with
     | Tm_delayed _ ->
@@ -134,7 +134,7 @@ let rec level env t =
         Term_level
 
     | Tm_fvar ({fv_delta=Delta_unfoldable _}) ->
-      let t' = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv t in
+      let t' = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses; N.Exclude N.Zeta; N.Exclude N.Iota] env.tcenv t in
       debug env (fun () -> Util.print2 "Normalized %s to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
       level env t'
 
@@ -350,7 +350,7 @@ let bv_as_mlty (g:env) (bv:bv) =
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
 let rec term_as_mlty (g:env) (t:term) : mlty =
-    let t = N.normalize [N.Beta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
+    let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
     term_as_mlty' g t
 
 and term_as_mlty' env t =
@@ -743,7 +743,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_app(head, args) ->
           begin match head.n with
             | Tm_uvar _ ->
-              let t = N.normalize [N.Beta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
+              let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
               term_as_mlexpr' g t
             | _ ->
               let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =

@@ -437,3 +437,15 @@ val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
 let seq_find #a f l =
   admit ();
   seq_find_aux f l (Seq.length l)
+
+#set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 1 --max_fuel 1"
+val seq_mem_k: #a:Type -> s:seq a -> n:nat{n < Seq.length s} -> 
+    Lemma (requires True)
+	  (ensures (mem (Seq.index s n) s))
+	  (decreases n)
+	  [SMTPat (mem (Seq.index s n) s)]
+let rec seq_mem_k #a s n = 
+  if n = 0 then ()
+  else let tl = tail s in
+       seq_mem_k tl (n - 1)
+

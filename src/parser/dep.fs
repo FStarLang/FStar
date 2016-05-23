@@ -274,7 +274,7 @@ let collect_one (original_map: map) (filename: string): list<string> =
     | ModuleAbbrev (ident, lid) ->
         record_module_alias ident lid
     | ToplevelLet (_, _, patterms) ->
-        List.iter (fun (_, t) -> collect_term t) patterms
+        List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
     | KindAbbrev (_, binders, t) ->
         collect_term t;
         collect_binders binders
@@ -324,7 +324,8 @@ let collect_one (original_map: map) (filename: string): list<string> =
 
   and collect_binder = function
     | { b = Annotated (_, t) }
-    | { b = TAnnotated (_, t) } ->
+    | { b = TAnnotated (_, t) }
+    | { b = NoName t } ->
         collect_term t
     | _ ->
         ()
@@ -362,7 +363,7 @@ let collect_one (original_map: map) (filename: string): list<string> =
         collect_term t1;
         collect_term t2
     | Let (_, patterms, t) ->
-        List.iter (fun (_, t) -> collect_term t) patterms;
+        List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms;
         collect_term t
     | Seq (t1, t2) ->
         collect_term t1;

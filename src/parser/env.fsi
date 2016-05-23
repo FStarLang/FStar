@@ -57,7 +57,7 @@ type foundname =
   | Term_name of term
   | Eff_name  of sigelt * lident
 
-val fail_or:  (lident -> option<'a>) -> lident -> 'a
+val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
 
 val qualify: env -> ident -> lident

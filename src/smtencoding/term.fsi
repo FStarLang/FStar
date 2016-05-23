@@ -88,6 +88,7 @@ type decl =
   | Push
   | Pop
   | CheckSat
+  | SetOption  of string * string
 type decls_t = list<decl>
 
 type error_label = (fv * string * Range.range)

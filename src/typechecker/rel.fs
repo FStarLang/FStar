@@ -639,9 +639,9 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_type _, Tm_type _ 
     | Tm_arrow _, Tm_arrow _ -> HeadMatch
 
-    | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head'
-    | Tm_app(head, _), _ -> head_matches env head t2
-    | _, Tm_app(head, _) -> head_matches env t1 head
+    | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head' |> head_match
+    | Tm_app(head, _), _ -> head_matches env head t2 |> head_match
+    | _, Tm_app(head, _) -> head_matches env t1 head |> head_match
 
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
@@ -1114,7 +1114,7 @@ and solve_rigid_flex_meet env tp wl =
     then Util.print1 "Trying to solve by meeting refinements:%s\n" (string_of_int tp.pid);
     let u, args = Util.head_and_args tp.rhs in
 
-    let disjoin t1 t2 : option<(term * list<prob>)> = 
+    let rec disjoin t1 t2 : option<(term * list<prob>)> =
         let mr, ts = head_matches_delta env () t1 t2 in 
         match mr with 
             | MisMatch _ -> 
@@ -1133,7 +1133,7 @@ and solve_rigid_flex_meet env tp wl =
                 | None -> SS.compress t1, SS.compress t2 in
               let eq_prob t1 t2 = 
                   TProb <| new_problem env t1 EQ t2 None t1.pos "meeting refinements" in
-              begin match t1.n, t2.n with 
+              begin match t1.n, t2.n with
                 | Tm_refine(x, phi1), Tm_refine(y, phi2) ->
                   Some (mk (Tm_refine(x, Util.mk_disj phi1 phi2)) None t1.pos, [eq_prob x.sort y.sort])
 
@@ -1143,8 +1143,19 @@ and solve_rigid_flex_meet env tp wl =
                 | Tm_refine (x, _), _ ->
                   Some (t2, [eq_prob x.sort t2])
 
-                | _ -> //head matches but no way to take the meet; TODO, generalize to handle function types, constructed types, etc.
-                  None
+                | _ ->
+                  let head1, _ = Util.head_and_args t1 in
+                  begin match (Util.un_uinst head1).n with
+                    | Tm_fvar {fv_delta=Delta_unfoldable i} ->
+                      let prev = if i > 1
+                                 then Delta_unfoldable (i - 1)
+                                 else Delta_constant in
+                      let t1 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t1 in
+                      let t2 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t2 in
+                      disjoin t1 t2
+                    | _ ->  //head matches but no way to take the meet; TODO, generalize to handle function types, constructed types, etc.
+                      None
+                  end
                end in
 
    let tt = u in//compress env wl u in
@@ -1211,14 +1222,16 @@ and solve_flex_rigid_join env tp wl =
         match h1.n, h2.n with
         | Tm_fvar tc1, Tm_fvar tc2 ->
           if S.fv_eq tc1 tc2
-          then (if List.length args1 = 0
-                then Some []
-                else Some [TProb <| new_problem env t1 EQ t2 None t1.pos "joining refinements"])
+          then if List.length args1 = 0
+               then Some []
+               else Some [TProb <| new_problem env t1 EQ t2 None t1.pos "joining refinements"]
           else None
 
         | Tm_name a, Tm_name b ->
           if S.bv_eq a b
-          then Some []
+          then if List.length args1 = 0
+               then Some []
+               else Some [TProb <| new_problem env t1 EQ t2 None t1.pos "joining refinements"]
           else None
 
         | _ -> None in

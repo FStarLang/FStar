@@ -851,11 +851,11 @@ end
 
 let bytes1, bytes2, bytes3 =
   let chunk1 = bytes_of_string "Lorem ipsum dolor sit amet, consectetur adipiscing elit.  Integer vitae tincidunt enim. Pellentesque luctus, turpis sed lobortis ullamcorper, orci nisi commodo sem, ut sagittis augue elit vel ipsum. Aenean aliquam eros est, sed molestie ex aliquet sed. Vest" in
-  let chunk2 = bytes_of_string "bulum in massa mauris. Phasellus non arcu pulvinar, elementum sapien eu, congue dolor. Fusce malesuada nisl enim, non accumsan mi gravida aliquam. Sed ornare augue eget quam pretium, vitae sodales urna hendrerit.  Curabitur mi ante, fermentum eget lacus ut," in
-  let chunk = Platform.Bytes.(chunk1 @| chunk2) in
-  let _, chunk = Platform.Bytes.split chunk 128 in
-  let chunk, _ = Platform.Bytes.split chunk (256 - 11) in
-  chunk, bytes_of_string "012345678901234567890123456789012345", bytes_of_string "coucou"
+  (*let chunk2 = bytes_of_string "bulum in massa mauris. Phasellus non arcu pulvinar, elementum sapien eu, congue dolor. Fusce malesuada nisl enim, non accumsan mi gravida aliquam. Sed ornare augue eget quam pretium, vitae sodales urna hendrerit.  Curabitur mi ante, fermentum eget lacus ut," in*)
+  (*let chunk = Platform.Bytes.(chunk1 @| chunk2) in*)
+  let chunk11, chunk12 = Platform.Bytes.split chunk1 (128-11) in
+  let nn = "012345678901234567890123456789012345" in
+  chunk11, bytes_of_string nn, bytes_of_string "coucou"
 
 
 module TestRsa = struct
@@ -863,7 +863,7 @@ module TestRsa = struct
   let tests = [bytes1; bytes2; bytes3]
 
   let roundtrip original_bytes =
-    let k = rsa_gen_key 2048 in
+    let k = rsa_gen_key 1024 in
     let cipher_bytes = rsa_encrypt k Pad_PKCS1 original_bytes in
     let plain_bytes = rsa_decrypt k Pad_PKCS1 cipher_bytes in
     try match plain_bytes with
@@ -894,7 +894,7 @@ module TestDsa = struct
   let tests = TestRsa.tests
 
   let check original_bytes =
-    let private_key = dsa_gen_key 2048 in
+    let private_key = dsa_gen_key 1024 in
     let public_key = { private_key with dsa_private = None } in
     let sig_bytes = dsa_sign None private_key original_bytes in
     if not (dsa_verify None public_key original_bytes sig_bytes) then begin

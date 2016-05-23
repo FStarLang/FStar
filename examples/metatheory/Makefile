@@ -1,9 +1,9 @@
 VERFILES=StlcCbvNamed.fst DbSubst.fst HereditarySubst.fst
 FSTAR_HOME=../..
 include ../Makefile.include
-all: .all.ver ParSubst.univ.ver StlcCbvDbPntSubstNoLists.univ.ver StlcStrongDbParSubst.univ.ver StlcCbvDbParSubst.univ.ver LambdaOmega FOmega.fst MicroFStar HoareWeakestPrecondition
+all: .all.ver uall LambdaOmega FOmega.fst MicroFStar HoareWeakestPrecondition
 
-univ: ParSubst.univ.ver StlcCbvDbPntSubstNoLists.univ.ver StlcStrongDbParSubst.univ.ver StlcCbvDbParSubst.univ.ver
+uall: ParSubst.univ.ver StlcCbvDbPntSubstNoLists.univ.ver StlcStrongDbParSubst.univ.ver StlcCbvDbParSubst.univ.ver
 
 _STDLIB_=FStar.Constructive.fst FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst 
 

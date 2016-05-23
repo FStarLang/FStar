@@ -123,11 +123,11 @@ let resolve_in_open_namespaces' env lid (finder:lident -> option<'a>) : option<'
 
 let expand_module_abbrevs env lid = 
     match lid.ns with 
-        | [id] ->
+        | id::rest ->
           begin match env.modul_abbrevs |> List.tryFind (fun (id', _) -> id.idText = id'.idText) with 
                 | None -> lid
                 | Some (_, lid') -> 
-                  Ident.lid_of_ids (Ident.ids_of_lid lid' @ [lid.ident])
+                  Ident.lid_of_ids (Ident.ids_of_lid lid' @ rest @ [lid.ident])
           end
         | _ -> lid
 
@@ -578,9 +578,29 @@ let exit_monad_scope env0 env =
     curmodule=env0.curmodule;
     open_namespaces=env0.open_namespaces}
 
-let fail_or lookup lid = match lookup lid with
+let fail_or env lookup lid = match lookup lid with
   | None ->
-    raise (Error (Util.format1 "Identifier not found: [%s]" (text_of_lid lid), range_of_lid lid))
+    let opened_modules = List.map (fun (lid, _) -> text_of_lid lid) env.modules in
+    let module_of_the_lid = text_of_path (path_of_ns lid.ns) in
+    let msg = Util.format1 "Identifier not found: [%s]" (text_of_lid lid) in
+    let msg =
+      match env.curmodule with
+      | Some m when (text_of_lid m = module_of_the_lid || module_of_the_lid = "") ->
+          (* Lookup in the current module *)
+          msg
+      | _ when List.existsb (fun m -> m = module_of_the_lid) opened_modules ->
+          (* Lookup in a module we've heard about *)
+          msg
+      | _ ->
+          (* Lookup in a module we haven't heard about *)
+          msg ^ "\n" ^
+          Util.format3 "Hint: %s belongs to module %s, which does not belong \
+            to the list of modules in scope, namely %s"
+            (text_of_lid lid)
+            (text_of_path (path_of_ns lid.ns))
+            (String.concat ", " opened_modules)
+    in
+    raise (Error (msg, range_of_lid lid))
   | Some r -> r
 
 let fail_or2 lookup id = match lookup id with

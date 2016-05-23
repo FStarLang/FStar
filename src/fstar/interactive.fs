@@ -145,11 +145,15 @@ let find_initial_module_name () =
 module U_Syntax = FStar.Syntax.Syntax
 module F_Syntax = FStar.Absyn.Syntax
 let detect_dependencies_with_first_interactive_chunk () =
- try
-     let fail msg = 
-        if (Options.universes())
-        then raise (U_Syntax.Err msg)
-        else raise (F_Syntax.Err msg) in
+  let failr msg r =
+    if Options.universes()
+    then FStar.TypeChecker.Errors.warn r msg
+    else FStar.Tc.Errors.warn r msg;
+    exit 1
+  in
+  let fail msg = failr msg Range.dummyRange in
+  let parse_msg = "Dependency analysis may not be correct because the file failed to parse: " in
+  try
       match find_initial_module_name () with
       | None ->
         fail "No initial module directive found\n"
@@ -171,25 +175,19 @@ let detect_dependencies_with_first_interactive_chunk () =
           | Some (None, None) ->
               failwith "impossible"
 
- with 
-    | U_Syntax.Error(msg, r) -> 
-      FStar.TypeChecker.Errors.warn r msg;
-      FStar.TypeChecker.Errors.warn r ("Dependency analysis may not be correct because the file failed to parse: "^msg);
-      [] 
-    | F_Syntax.Error(msg, r) -> 
-      FStar.Tc.Errors.warn r msg;
-      FStar.Tc.Errors.warn r ("Dependency analysis may not be correct because the file failed to parse: "^msg);
-      [] 
-    | U_Syntax.Err msg
-    | F_Syntax.Err msg -> 
-      FStar.Tc.Errors.warn Range.dummyRange ("Dependency analysis may not be correct because the file failed to parse: " ^msg);
-      []
-          
+  with
+  | U_Syntax.Error(msg, r)
+  | F_Syntax.Error(msg, r) ->
+      failr (parse_msg ^ msg) r
+  | U_Syntax.Err msg
+  | F_Syntax.Err msg ->
+      fail (parse_msg ^ msg)
+
 
 (******************************************************************************************)
 (* The main interactive loop *)
 (******************************************************************************************)
-let interactive_mode (env:'env) (initial_mod:'modul) (tc:interactive_tc<'env,'modul>) = 
+let interactive_mode (env:'env) (initial_mod:'modul) (tc:interactive_tc<'env,'modul>) =
   if Option.isSome (Options.codegen()) then
     (Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag");
     let rec go (stack:stack<'env,'modul>) (curmod:'modul) (env:'env) = begin
@@ -213,7 +211,7 @@ let interactive_mode (env:'env) (initial_mod:'modul) (tc:interactive_tc<'env,'mo
             Util.print1 "%s\n" fail;
             let env = tc.reset_mark env_mark in
             go stack curmod env in
-          
+
           let env_mark = tc.mark env in
           let res = tc.check_frag env_mark curmod text in begin
             match res with
