@@ -121,25 +121,13 @@ let ini_params : Prims.unit  ->  Prims.string = (fun _80_56 -> (match (()) with
 | () -> begin
 (
 
-let t = if (let _169_32 = (get_z3version ())
+let _80_57 = if (let _169_32 = (get_z3version ())
 in (z3v_le _169_32 (4, 3, 1))) then begin
-(FStar_Options.z3_timeout ())
+(FStar_All.pipe_left Prims.raise (FStar_Util.Failure ("Z3 v4.3.1 is required.")))
 end else begin
-((FStar_Options.z3_timeout ()) * 1000)
+()
 end
-in (
-
-let timeout = (let _169_33 = (FStar_Util.string_of_int t)
-in (FStar_Util.format1 "-t:%s" _169_33))
-in (
-
-let relevancy = if (let _169_34 = (get_z3version ())
-in (z3v_le _169_34 (4, 3, 1))) then begin
-"RELEVANCY"
-end else begin
-"SMT.RELEVANCY"
-end
-in (FStar_Util.format2 "-smt2 -in %s AUTO_CONFIG=false MODEL=true %s=2" timeout relevancy))))
+in "-smt2 -in AUTO_CONFIG=false MODEL=true SMT.RELEVANCY=2")
 end))
 
 
@@ -201,10 +189,10 @@ end
 end))
 
 
-let tid : Prims.unit  ->  Prims.string = (fun _80_65 -> (match (()) with
+let tid : Prims.unit  ->  Prims.string = (fun _80_64 -> (match (()) with
 | () -> begin
-(let _169_43 = (FStar_Util.current_tid ())
-in (FStar_All.pipe_right _169_43 FStar_Util.string_of_int))
+(let _169_41 = (FStar_Util.current_tid ())
+in (FStar_All.pipe_right _169_41 FStar_Util.string_of_int))
 end))
 
 
@@ -214,9 +202,9 @@ let cond = (fun pid s -> (
 
 let x = ((FStar_Util.trim_string s) = "Done!")
 in x))
-in (let _169_51 = (FStar_Options.z3_exe ())
-in (let _169_50 = (ini_params ())
-in (FStar_Util.start_process id _169_51 _169_50 cond)))))
+in (let _169_49 = (FStar_Options.z3_exe ())
+in (let _169_48 = (ini_params ())
+in (FStar_Util.start_process id _169_49 _169_48 cond)))))
 
 
 type bgproc =
@@ -235,11 +223,11 @@ let ctr = (FStar_Util.mk_ref 0)
 in (fun fresh -> if fresh then begin
 (
 
-let _80_77 = (FStar_Util.incr ctr)
-in (let _169_84 = (let _169_83 = (let _169_82 = (FStar_ST.read ctr)
-in (FStar_Util.string_of_int _169_82))
-in (FStar_Util.format1 "queries-%s.smt2" _169_83))
-in (FStar_Util.open_file_for_writing _169_84)))
+let _80_76 = (FStar_Util.incr ctr)
+in (let _169_82 = (let _169_81 = (let _169_80 = (FStar_ST.read ctr)
+in (FStar_Util.string_of_int _169_80))
+in (FStar_Util.format1 "queries-%s.smt2" _169_81))
+in (FStar_Util.open_file_for_writing _169_82)))
 end else begin
 (match ((FStar_ST.read queries_dot_smt2)) with
 | None -> begin
@@ -248,7 +236,7 @@ end else begin
 let fh = (FStar_Util.open_file_for_writing "queries-bg-0.smt2")
 in (
 
-let _80_81 = (FStar_ST.op_Colon_Equals queries_dot_smt2 (Some (fh)))
+let _80_80 = (FStar_ST.op_Colon_Equals queries_dot_smt2 (Some (fh)))
 in fh))
 end
 | Some (fh) -> begin
@@ -262,7 +250,7 @@ let log_query : Prims.bool  ->  Prims.string  ->  Prims.unit = (fun fresh i -> (
 let fh = (get_qfile fresh)
 in (
 
-let _80_88 = (FStar_Util.append_to_file fh i)
+let _80_87 = (FStar_Util.append_to_file fh i)
 in if fresh then begin
 (FStar_Util.close_file fh)
 end else begin
@@ -276,31 +264,31 @@ let the_z3proc : FStar_Util.proc Prims.option FStar_ST.ref = (FStar_ST.alloc Non
 let ctr : Prims.int FStar_ST.ref = (FStar_Util.mk_ref (- (1)))
 
 
-let new_proc : Prims.unit  ->  FStar_Util.proc = (fun _80_90 -> (match (()) with
+let new_proc : Prims.unit  ->  FStar_Util.proc = (fun _80_89 -> (match (()) with
 | () -> begin
-(let _169_93 = (let _169_92 = (
+(let _169_91 = (let _169_90 = (
 
-let _80_91 = (FStar_Util.incr ctr)
-in (let _169_91 = (FStar_ST.read ctr)
-in (FStar_All.pipe_right _169_91 FStar_Util.string_of_int)))
-in (FStar_Util.format1 "bg-%s" _169_92))
-in (new_z3proc _169_93))
+let _80_90 = (FStar_Util.incr ctr)
+in (let _169_89 = (FStar_ST.read ctr)
+in (FStar_All.pipe_right _169_89 FStar_Util.string_of_int)))
+in (FStar_Util.format1 "bg-%s" _169_90))
+in (new_z3proc _169_91))
 end))
 
 
-let z3proc : Prims.unit  ->  FStar_Util.proc = (fun _80_93 -> (match (()) with
+let z3proc : Prims.unit  ->  FStar_Util.proc = (fun _80_92 -> (match (()) with
 | () -> begin
 (
 
-let _80_94 = if ((FStar_ST.read the_z3proc) = None) then begin
-(let _169_97 = (let _169_96 = (new_proc ())
-in Some (_169_96))
-in (FStar_ST.op_Colon_Equals the_z3proc _169_97))
+let _80_93 = if ((FStar_ST.read the_z3proc) = None) then begin
+(let _169_95 = (let _169_94 = (new_proc ())
+in Some (_169_94))
+in (FStar_ST.op_Colon_Equals the_z3proc _169_95))
 end else begin
 ()
 end
-in (let _169_98 = (FStar_ST.read the_z3proc)
-in (FStar_Util.must _169_98)))
+in (let _169_96 = (FStar_ST.read the_z3proc)
+in (FStar_Util.must _169_96)))
 end))
 
 
@@ -309,50 +297,50 @@ let bg_z3_proc : bgproc = (
 let x = []
 in (
 
-let grab = (fun _80_98 -> (match (()) with
+let grab = (fun _80_97 -> (match (()) with
 | () -> begin
 (
 
-let _80_99 = (FStar_Util.monitor_enter x)
+let _80_98 = (FStar_Util.monitor_enter x)
 in (z3proc ()))
 end))
 in (
 
-let release = (fun _80_102 -> (match (()) with
+let release = (fun _80_101 -> (match (()) with
 | () -> begin
 (FStar_Util.monitor_exit x)
 end))
 in (
 
-let refresh = (fun _80_104 -> (match (()) with
+let refresh = (fun _80_103 -> (match (()) with
 | () -> begin
 (
 
 let proc = (grab ())
 in (
 
-let _80_106 = (FStar_Util.kill_process proc)
+let _80_105 = (FStar_Util.kill_process proc)
 in (
 
-let _80_108 = (let _169_106 = (let _169_105 = (new_proc ())
-in Some (_169_105))
-in (FStar_ST.op_Colon_Equals the_z3proc _169_106))
+let _80_107 = (let _169_104 = (let _169_103 = (new_proc ())
+in Some (_169_103))
+in (FStar_ST.op_Colon_Equals the_z3proc _169_104))
 in (
 
-let _80_116 = (match ((FStar_ST.read queries_dot_smt2)) with
+let _80_115 = (match ((FStar_ST.read queries_dot_smt2)) with
 | None -> begin
 ()
 end
 | Some (fh) -> begin
 (
 
-let _80_113 = (FStar_Util.close_file fh)
+let _80_112 = (FStar_Util.close_file fh)
 in (
 
-let fh = (let _169_109 = (let _169_108 = (let _169_107 = (FStar_ST.read ctr)
-in (FStar_All.pipe_right _169_107 FStar_Util.string_of_int))
-in (FStar_Util.format1 "queries-bg-%s.smt2" _169_108))
-in (FStar_Util.open_file_for_writing _169_109))
+let fh = (let _169_107 = (let _169_106 = (let _169_105 = (FStar_ST.read ctr)
+in (FStar_All.pipe_right _169_105 FStar_Util.string_of_int))
+in (FStar_Util.format1 "queries-bg-%s.smt2" _169_106))
+in (FStar_Util.open_file_for_writing _169_107))
 in (FStar_ST.op_Colon_Equals queries_dot_smt2 (Some (fh)))))
 end)
 in (release ())))))
@@ -369,13 +357,13 @@ in (
 
 let rec lblnegs = (fun lines -> (match (lines) with
 | lname::"false"::rest -> begin
-(let _169_118 = (lblnegs rest)
-in (lname)::_169_118)
+(let _169_116 = (lblnegs rest)
+in (lname)::_169_116)
 end
-| lname::_80_132::rest -> begin
+| lname::_80_131::rest -> begin
 (lblnegs rest)
 end
-| _80_137 -> begin
+| _80_136 -> begin
 []
 end))
 in (
@@ -385,24 +373,24 @@ let rec result = (fun x -> (match (x) with
 (TIMEOUT, [])
 end
 | "unknown"::tl -> begin
-(let _169_121 = (lblnegs tl)
-in (UNKNOWN, _169_121))
+(let _169_119 = (lblnegs tl)
+in (UNKNOWN, _169_119))
 end
 | "sat"::tl -> begin
-(let _169_122 = (lblnegs tl)
-in (SAT, _169_122))
+(let _169_120 = (lblnegs tl)
+in (SAT, _169_120))
 end
 | "unsat"::tl -> begin
 (UNSAT, [])
 end
-| _80_154::tl -> begin
+| _80_153::tl -> begin
 (result tl)
 end
-| _80_157 -> begin
-(let _169_126 = (let _169_125 = (let _169_124 = (FStar_List.map (fun l -> (FStar_Util.format1 "<%s>" (FStar_Util.trim_string l))) lines)
-in (FStar_String.concat "\n" _169_124))
-in (FStar_Util.format1 "Got output lines: %s\n" _169_125))
-in (FStar_All.pipe_left FStar_All.failwith _169_126))
+| _80_156 -> begin
+(let _169_124 = (let _169_123 = (let _169_122 = (FStar_List.map (fun l -> (FStar_Util.format1 "<%s>" (FStar_Util.trim_string l))) lines)
+in (FStar_String.concat "\n" _169_122))
+in (FStar_Util.format1 "Got output lines: %s\n" _169_123))
+in (FStar_All.pipe_left FStar_All.failwith _169_124))
 end))
 in (result lines)))))
 in (
@@ -419,10 +407,10 @@ in (fun fresh input -> (
 let z3proc = if fresh then begin
 (
 
-let _80_163 = (FStar_Util.incr ctr)
-in (let _169_132 = (let _169_131 = (FStar_ST.read ctr)
-in (FStar_Util.string_of_int _169_131))
-in (new_z3proc _169_132)))
+let _80_162 = (FStar_Util.incr ctr)
+in (let _169_130 = (let _169_129 = (FStar_ST.read ctr)
+in (FStar_Util.string_of_int _169_129))
+in (new_z3proc _169_130)))
 end else begin
 (bg_z3_proc.grab ())
 end
@@ -431,7 +419,7 @@ in (
 let res = (doZ3Exe' input z3proc)
 in (
 
-let _80_167 = if fresh then begin
+let _80_166 = if fresh then begin
 (FStar_Util.kill_process z3proc)
 end else begin
 (bg_z3_proc.release ())
@@ -439,20 +427,20 @@ end
 in res)))))
 
 
-let z3_options : Prims.unit  ->  Prims.string = (fun _80_169 -> (match (()) with
+let z3_options : Prims.unit  ->  Prims.string = (fun _80_168 -> (match (()) with
 | () -> begin
 (
 
-let mbqi = if (let _169_135 = (get_z3version ())
-in (z3v_le _169_135 (4, 3, 1))) then begin
+let mbqi = if (let _169_133 = (get_z3version ())
+in (z3v_le _169_133 (4, 3, 1))) then begin
 "mbqi"
 end else begin
 "smt.mbqi"
 end
 in (
 
-let model_on_timeout = if (let _169_136 = (get_z3version ())
-in (z3v_le _169_136 (4, 3, 1))) then begin
+let model_on_timeout = if (let _169_134 = (get_z3version ())
+in (z3v_le _169_134 (4, 3, 1))) then begin
 "(set-option :model-on-timeout true)\n"
 end else begin
 ""
@@ -480,22 +468,22 @@ let pending_jobs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 0)
 
 let with_monitor = (fun m f -> (
 
-let _80_178 = (FStar_Util.monitor_enter m)
+let _80_177 = (FStar_Util.monitor_enter m)
 in (
 
 let res = (f ())
 in (
 
-let _80_181 = (FStar_Util.monitor_exit m)
+let _80_180 = (FStar_Util.monitor_exit m)
 in res))))
 
 
-let z3_job = (fun fresh label_messages input _80_186 -> (match (()) with
+let z3_job = (fun fresh label_messages input _80_185 -> (match (()) with
 | () -> begin
 (
 
-let _80_189 = (doZ3Exe fresh input)
-in (match (_80_189) with
+let _80_188 = (doZ3Exe fresh input)
+in (match (_80_188) with
 | (status, lblnegs) -> begin
 (
 
@@ -503,19 +491,19 @@ let result = (match (status) with
 | UNSAT -> begin
 (true, [])
 end
-| _80_192 -> begin
+| _80_191 -> begin
 (
 
-let _80_193 = if (FStar_Options.debug_any ()) then begin
-(let _169_166 = (FStar_Util.format1 "Z3 says: %s\n" (status_to_string status))
-in (FStar_All.pipe_left FStar_Util.print_string _169_166))
+let _80_192 = if (FStar_Options.debug_any ()) then begin
+(let _169_164 = (FStar_Util.format1 "Z3 says: %s\n" (status_to_string status))
+in (FStar_All.pipe_left FStar_Util.print_string _169_164))
 end else begin
 ()
 end
 in (
 
-let failing_assertions = (FStar_All.pipe_right lblnegs (FStar_List.collect (fun l -> (match ((FStar_All.pipe_right label_messages (FStar_List.tryFind (fun _80_201 -> (match (_80_201) with
-| (m, _80_198, _80_200) -> begin
+let failing_assertions = (FStar_All.pipe_right lblnegs (FStar_List.collect (fun l -> (match ((FStar_All.pipe_right label_messages (FStar_List.tryFind (fun _80_200 -> (match (_80_200) with
+| (m, _80_197, _80_199) -> begin
 ((Prims.fst m) = l)
 end))))) with
 | None -> begin
@@ -531,7 +519,7 @@ end))
 end))
 
 
-let rec dequeue' : Prims.unit  ->  Prims.unit = (fun _80_210 -> (match (()) with
+let rec dequeue' : Prims.unit  ->  Prims.unit = (fun _80_209 -> (match (()) with
 | () -> begin
 (
 
@@ -542,56 +530,56 @@ end
 | hd::tl -> begin
 (
 
-let _80_215 = (FStar_ST.op_Colon_Equals job_queue tl)
+let _80_214 = (FStar_ST.op_Colon_Equals job_queue tl)
 in hd)
 end)
 in (
 
-let _80_218 = (FStar_Util.incr pending_jobs)
+let _80_217 = (FStar_Util.incr pending_jobs)
 in (
 
-let _80_220 = (FStar_Util.monitor_exit job_queue)
+let _80_219 = (FStar_Util.monitor_exit job_queue)
 in (
 
-let _80_222 = (run_job j)
+let _80_221 = (run_job j)
 in (
 
-let _80_225 = (with_monitor job_queue (fun _80_224 -> (match (()) with
+let _80_224 = (with_monitor job_queue (fun _80_223 -> (match (()) with
 | () -> begin
 (FStar_Util.decr pending_jobs)
 end)))
 in (
 
-let _80_227 = (dequeue ())
+let _80_226 = (dequeue ())
 in ()))))))
 end))
-and dequeue : Prims.unit  ->  Prims.unit = (fun _80_229 -> (match (()) with
+and dequeue : Prims.unit  ->  Prims.unit = (fun _80_228 -> (match (()) with
 | () -> begin
 (
 
-let _80_230 = (FStar_Util.monitor_enter job_queue)
+let _80_229 = (FStar_Util.monitor_enter job_queue)
 in (
 
-let rec aux = (fun _80_233 -> (match (()) with
+let rec aux = (fun _80_232 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read job_queue)) with
 | [] -> begin
 (
 
-let _80_235 = (FStar_Util.monitor_wait job_queue)
+let _80_234 = (FStar_Util.monitor_wait job_queue)
 in (aux ()))
 end
-| _80_238 -> begin
+| _80_237 -> begin
 (dequeue' ())
 end)
 end))
 in (aux ())))
 end))
-and run_job : z3job  ->  Prims.unit = (fun j -> (let _169_178 = (j.job ())
-in (FStar_All.pipe_left j.callback _169_178)))
+and run_job : z3job  ->  Prims.unit = (fun j -> (let _169_176 = (j.job ())
+in (FStar_All.pipe_left j.callback _169_176)))
 
 
-let init : Prims.unit  ->  Prims.unit = (fun _80_240 -> (match (()) with
+let init : Prims.unit  ->  Prims.unit = (fun _80_239 -> (match (()) with
 | () -> begin
 (
 
@@ -603,7 +591,7 @@ let rec aux = (fun n -> if (n = 0) then begin
 end else begin
 (
 
-let _80_244 = (FStar_Util.spawn dequeue)
+let _80_243 = (FStar_Util.spawn dequeue)
 in (aux (n - 1)))
 end)
 in (aux n_runners)))
@@ -615,52 +603,52 @@ let enqueue : Prims.bool  ->  z3job  ->  Prims.unit = (fun fresh j -> if (not (f
 end else begin
 (
 
-let _80_248 = (FStar_Util.monitor_enter job_queue)
+let _80_247 = (FStar_Util.monitor_enter job_queue)
 in (
 
-let _80_250 = (let _169_188 = (let _169_187 = (FStar_ST.read job_queue)
-in (FStar_List.append _169_187 ((j)::[])))
-in (FStar_ST.op_Colon_Equals job_queue _169_188))
+let _80_249 = (let _169_186 = (let _169_185 = (FStar_ST.read job_queue)
+in (FStar_List.append _169_185 ((j)::[])))
+in (FStar_ST.op_Colon_Equals job_queue _169_186))
 in (
 
-let _80_252 = (FStar_Util.monitor_pulse job_queue)
+let _80_251 = (FStar_Util.monitor_pulse job_queue)
 in (FStar_Util.monitor_exit job_queue))))
 end)
 
 
-let finish : Prims.unit  ->  Prims.unit = (fun _80_254 -> (match (()) with
+let finish : Prims.unit  ->  Prims.unit = (fun _80_253 -> (match (()) with
 | () -> begin
 (
 
 let bg = (bg_z3_proc.grab ())
 in (
 
-let _80_256 = (FStar_Util.kill_process bg)
+let _80_255 = (FStar_Util.kill_process bg)
 in (
 
-let _80_258 = (bg_z3_proc.release ())
+let _80_257 = (bg_z3_proc.release ())
 in (
 
-let rec aux = (fun _80_261 -> (match (()) with
+let rec aux = (fun _80_260 -> (match (()) with
 | () -> begin
 (
 
-let _80_265 = (with_monitor job_queue (fun _80_262 -> (match (()) with
+let _80_264 = (with_monitor job_queue (fun _80_261 -> (match (()) with
 | () -> begin
-(let _169_196 = (FStar_ST.read pending_jobs)
-in (let _169_195 = (let _169_194 = (FStar_ST.read job_queue)
-in (FStar_List.length _169_194))
-in (_169_196, _169_195)))
+(let _169_194 = (FStar_ST.read pending_jobs)
+in (let _169_193 = (let _169_192 = (FStar_ST.read job_queue)
+in (FStar_List.length _169_192))
+in (_169_194, _169_193)))
 end)))
-in (match (_80_265) with
+in (match (_80_264) with
 | (n, m) -> begin
 if ((n + m) = 0) then begin
-(let _169_197 = (FStar_TypeChecker_Errors.report_all ())
-in (FStar_All.pipe_right _169_197 Prims.ignore))
+(let _169_195 = (FStar_TypeChecker_Errors.report_all ())
+in (FStar_All.pipe_right _169_195 Prims.ignore))
 end else begin
 (
 
-let _80_266 = (FStar_Util.sleep 500)
+let _80_265 = (FStar_Util.sleep 500)
 in (aux ()))
 end
 end))
@@ -681,58 +669,58 @@ let bg_scope : FStar_SMTEncoding_Term.decl Prims.list FStar_ST.ref = (FStar_Util
 
 let push : Prims.string  ->  Prims.unit = (fun msg -> (
 
-let _80_269 = (let _169_201 = (let _169_200 = (FStar_ST.read fresh_scope)
-in ((FStar_SMTEncoding_Term.Caption (msg))::[])::_169_200)
-in (FStar_ST.op_Colon_Equals fresh_scope _169_201))
-in (let _169_203 = (let _169_202 = (FStar_ST.read bg_scope)
-in (FStar_List.append ((FStar_SMTEncoding_Term.Caption (msg))::(FStar_SMTEncoding_Term.Push)::[]) _169_202))
-in (FStar_ST.op_Colon_Equals bg_scope _169_203))))
+let _80_268 = (let _169_199 = (let _169_198 = (FStar_ST.read fresh_scope)
+in ((FStar_SMTEncoding_Term.Caption (msg))::[])::_169_198)
+in (FStar_ST.op_Colon_Equals fresh_scope _169_199))
+in (let _169_201 = (let _169_200 = (FStar_ST.read bg_scope)
+in (FStar_List.append ((FStar_SMTEncoding_Term.Caption (msg))::(FStar_SMTEncoding_Term.Push)::[]) _169_200))
+in (FStar_ST.op_Colon_Equals bg_scope _169_201))))
 
 
 let pop : Prims.string  ->  Prims.unit = (fun msg -> (
 
-let _80_272 = (let _169_207 = (let _169_206 = (FStar_ST.read fresh_scope)
-in (FStar_List.tl _169_206))
-in (FStar_ST.op_Colon_Equals fresh_scope _169_207))
-in (let _169_209 = (let _169_208 = (FStar_ST.read bg_scope)
-in (FStar_List.append ((FStar_SMTEncoding_Term.Caption (msg))::(FStar_SMTEncoding_Term.Pop)::[]) _169_208))
-in (FStar_ST.op_Colon_Equals bg_scope _169_209))))
+let _80_271 = (let _169_205 = (let _169_204 = (FStar_ST.read fresh_scope)
+in (FStar_List.tl _169_204))
+in (FStar_ST.op_Colon_Equals fresh_scope _169_205))
+in (let _169_207 = (let _169_206 = (FStar_ST.read bg_scope)
+in (FStar_List.append ((FStar_SMTEncoding_Term.Caption (msg))::(FStar_SMTEncoding_Term.Pop)::[]) _169_206))
+in (FStar_ST.op_Colon_Equals bg_scope _169_207))))
 
 
 let giveZ3 : FStar_SMTEncoding_Term.decl Prims.list  ->  Prims.unit = (fun decls -> (
 
-let _80_280 = (match ((FStar_ST.read fresh_scope)) with
+let _80_279 = (match ((FStar_ST.read fresh_scope)) with
 | hd::tl -> begin
 (FStar_ST.op_Colon_Equals fresh_scope (((FStar_List.append hd decls))::tl))
 end
-| _80_279 -> begin
+| _80_278 -> begin
 (FStar_All.failwith "Impossible")
 end)
-in (let _169_213 = (let _169_212 = (FStar_ST.read bg_scope)
-in (FStar_List.append (FStar_List.rev decls) _169_212))
-in (FStar_ST.op_Colon_Equals bg_scope _169_213))))
+in (let _169_211 = (let _169_210 = (FStar_ST.read bg_scope)
+in (FStar_List.append (FStar_List.rev decls) _169_210))
+in (FStar_ST.op_Colon_Equals bg_scope _169_211))))
 
 
 let bgtheory : Prims.bool  ->  FStar_SMTEncoding_Term.decl Prims.list = (fun fresh -> if fresh then begin
-(let _169_217 = (let _169_216 = (FStar_ST.read fresh_scope)
-in (FStar_List.rev _169_216))
-in (FStar_All.pipe_right _169_217 FStar_List.flatten))
+(let _169_215 = (let _169_214 = (FStar_ST.read fresh_scope)
+in (FStar_List.rev _169_214))
+in (FStar_All.pipe_right _169_215 FStar_List.flatten))
 end else begin
 (
 
 let bg = (FStar_ST.read bg_scope)
 in (
 
-let _80_284 = (FStar_ST.op_Colon_Equals bg_scope [])
+let _80_283 = (FStar_ST.op_Colon_Equals bg_scope [])
 in (FStar_List.rev bg)))
 end)
 
 
-let refresh : Prims.unit  ->  Prims.unit = (fun _80_286 -> (match (()) with
+let refresh : Prims.unit  ->  Prims.unit = (fun _80_285 -> (match (()) with
 | () -> begin
 (
 
-let _80_287 = (bg_z3_proc.refresh ())
+let _80_286 = (bg_z3_proc.refresh ())
 in (
 
 let theory = (bgtheory true)
@@ -745,7 +733,7 @@ let mark : Prims.string  ->  Prims.unit = (fun msg -> (push msg))
 
 let reset_mark : Prims.string  ->  Prims.unit = (fun msg -> (
 
-let _80_292 = (pop msg)
+let _80_291 = (pop msg)
 in (refresh ())))
 
 
@@ -753,7 +741,7 @@ let commit_mark = (fun msg -> (match ((FStar_ST.read fresh_scope)) with
 | hd::s::tl -> begin
 (FStar_ST.op_Colon_Equals fresh_scope (((FStar_List.append hd s))::tl))
 end
-| _80_301 -> begin
+| _80_300 -> begin
 (FStar_All.failwith "Impossible")
 end))
 
@@ -773,13 +761,13 @@ end else begin
 end
 in (
 
-let input = (let _169_240 = (let _169_239 = (let _169_238 = (z3_options ())
-in (FStar_SMTEncoding_Term.declToSmt _169_238))
-in (FStar_List.map _169_239 theory))
-in (FStar_All.pipe_right _169_240 (FStar_String.concat "\n")))
+let input = (let _169_238 = (let _169_237 = (let _169_236 = (z3_options ())
+in (FStar_SMTEncoding_Term.declToSmt _169_236))
+in (FStar_List.map _169_237 theory))
+in (FStar_All.pipe_right _169_238 (FStar_String.concat "\n")))
 in (
 
-let _80_310 = if (FStar_Options.log_queries ()) then begin
+let _80_309 = if (FStar_Options.log_queries ()) then begin
 (log_query fresh input)
 end else begin
 ()
