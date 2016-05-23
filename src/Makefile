@@ -334,10 +334,8 @@ ulib:
 uexamples:
 	+make -C ../examples univ
 
-NJOBS=1
-
 uregressions:
-	time make -j $(NJOBS) test_universes | grep -i 'error\|Verif'
+	+make test_universes | grep -i 'error\|Verif'
 
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples
