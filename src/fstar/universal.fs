@@ -71,8 +71,10 @@ let tc_prims () : Syntax.modul
   env.solver.init env;
   let p = Options.prims () in
   let dsenv, prims_mod = parse (DsEnv.empty_env ()) None p in
-  let prims_mod, env = Tc.check_module env (List.hd prims_mod) in
-  prims_mod, dsenv, env
+  FStar.SMTEncoding.Z3.with_fuel_trace_cache p
+    (fun () ->
+      let prims_mod, env = Tc.check_module env (List.hd prims_mod) in
+      prims_mod, dsenv, env)
 
 (***********************************************************************)
 (* Interactive mode: checking a fragment of a code                     *)
