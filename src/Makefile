@@ -62,14 +62,16 @@ override FSCOTHERFLAGS += --platform:x86
 endif
 
 ifeq ($(OS),Windows_NT)
-FSC     = fsc
-MSBUILD = msbuild
+# note that in order to find `msbuild.exe` and related tools, cygwin must be invoked from within a visual studio development console (e.g. vcvars32.bat).
+MSBUILD = msbuild.exe
 else
 FSC     = fsharpc
 MSBUILD = xbuild
 endif
 
-MSBUILD := $(MSBUILD) /verbosity:normal
+MSBUILDCONFIG = Release
+MSBUILDVERBOSITY = minimal
+MSBUILDFLAGS = /verbosity:$(MSBUILDVERBOSITY) /p:Platform="Any CPU" /p:Configuration=$(MSBUILDCONFIG)
 
 # --------------------------------------------------------------------
 ifeq ($(OS),Windows_NT)
@@ -101,20 +103,19 @@ z3-x64:
 # --------------------------------------------------------------------
 
 nuget-restore:
-	$(RUNTIME) VS/.nuget/NuGet.exe restore VS/FStar.sln
+	$(MAKE) -C VS install-packages
 
 nuget-clean:
-	rm -r VS/packages
+	$(MAKE) -C VS clean-packages
 
 $(FSYACC) $(FSLEX): nuget-restore
 
 # --------------------------------------------------------------------
 msbuild: nuget-restore
-	$(MAKE) -C VS install-packages
-	$(MSBUILD) VS/FStar.sln
+	$(MSBUILD) $(MSBUILDFLAGS) VS/FStar.sln
 
 msbuild-clean:
-	$(MSBUILD) /t:clean VS/FStar.sln
+	$(MSBUILD) $(MSBUILDFLAGS) /t:clean VS/FStar.sln
 
 # --------------------------------------------------------------------
 parser/parse.fs: parser/parse.fsy $(FSYACC)
@@ -168,11 +169,11 @@ TYPECHECKER_DEPS=$(addprefix $(BIN)/, basic.dll syntax.dll)
 $(BIN)/typechecker.dll: $(TYPECHECKER_DEPS) $(TYPECHECKER_SRC)
 	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TYPECHECKER_DEPS)) $(TYPECHECKER_SRC)
 
+ifeq ($(OS),Windows_NT)
+$(BIN)/fstar.exe: msbuild
+else
 FSTAR_DEPS=$(addprefix $(BIN)/, $(ALL_DLLS))
 $(BIN)/fstar.exe: $(FSTAR_DEPS) $(TOPLEVEL_SRC) fstar/main.fs $(BIN)/fstar-mono.sh
-ifeq ($(OS),Windows_NT)
-	$(FSC)  $(FSCOTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) fstar/main.fs
-else
 	$(FSC)  $(FSCOTHERFLAGS) -o $(BIN)/fstar-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) fstar/main.fs
 	cp $(BIN)/fstar-mono.sh $(BIN)/fstar.exe
 endif
