@@ -140,6 +140,19 @@ let fresh (#a:Type) (r:stacked a) (m0:t) (m1:t) = fresh_rref #a #r.id r m0 m1
 let modifies_ref (r:rid) (s:Set.set aref) (s0:t) (s1:t) = 
   Heap.modifies s (Map.sel (heaps s0) r) (Map.sel (heaps s1) r)
 
+val lemma_modifies_ref_1: #a:Type -> r:rid -> s:Set.set aref -> s0:t -> s1:t -> x:stacked a -> Lemma
+  (requires (contains s0 x /\ modifies_ref r s s0 s1 /\ modifies_one r s0 s1 /\ 
+		      (frameOf x <> r \/ (frameOf x = r /\ not(Set.mem (Ref (as_ref x)) s)))))
+  (ensures (sel s1 x = sel s0 x))
+  [SMTPat (modifies_ref r s s0 s1); SMTPat (~(Set.mem (Ref (as_ref x)) s))]
+let lemma_modifies_ref_1 #a r s s0 s1 x = ()
+
+val lemma_modifies_ref_2: #a:Type -> y:stacked a -> s0:t -> s1:t -> x:stacked a -> Lemma
+  (requires (contains s0 x /\ modifies_ref (frameOf y) !{as_ref y} s0 s1 /\ modifies_one (frameOf y) s0 s1 /\ (frameOf x <> frameOf y \/ (frameOf x = frameOf y /\ y <> x))))
+  (ensures (sel s1 x = sel s0 x))
+  [SMTPat (modifies_ref (frameOf y) !{as_ref y} s0 s1); SMTPatT (x <> y)]
+let lemma_modifies_ref_2 #a y s0 s1 x = ()
+
 open FStar.Set
 let disjoint_regions (s1:set rid) (s2:set rid) = 
      forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> x <> y
@@ -153,11 +166,17 @@ let asRef #a r = as_ref r
 let stacked_to_ref_lemma_1 (#a:Type) (x:stacked a) (y:stacked a)
   : Lemma (requires (x <> y /\ x.id=y.id))
 	  (ensures (asRef x <> asRef y))
+	  [SMTPat (x <> y)]
   = ()
 
 let stacked_to_ref_lemma_2 (#a:Type) (x:stacked a) (y:stacked a)
   : Lemma (requires (x <> y /\ x.id=y.id))
-	  (ensures (as_ref x =!= as_ref y))
+	  (ensures (as_ref x <> as_ref y))
+	  [SMTPat (x <> y)]
   = ()
-  
 
+let stack_to_ref_lemma_3 (#a:Type) (#a':Type) (x:stacked a) (y:stacked a')
+  : Lemma (requires (a <> a'))
+	  (ensures (as_ref x =!= as_ref y))
+	  [SMTPat (a <> a')]
+  = ()

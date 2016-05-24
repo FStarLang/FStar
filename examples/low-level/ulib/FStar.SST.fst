@@ -80,3 +80,9 @@ assume val recall: #a:Type -> r:ref a -> ST unit
 assume val recall_region: i:rid -> ST unit
   (requires (fun m -> True))
   (ensures (fun m0 _ m1 -> m0=m1 /\ contains_frame m1 i))
+
+let lemma_ref_ineq_1 (#a:Type) (#a':Type) (x:ref a) (y:ref a')
+  : Lemma (requires (a <> a'))
+	  (ensures (as_ref x =!= as_ref y))
+	  [SMTPat (a <> a')]
+  = stack_to_ref_lemma_3 x y

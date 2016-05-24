@@ -78,7 +78,7 @@ let disjointRef #a (b:buffer a) set : GTot Type0 = ~(Set.mem (Heap.Ref (get_ref 
 
 let modifies_buf rid buffs refs h h' = 
   modifies_ref rid  (Set.union (arefs buffs) refs) h h'
-  /\ (forall (#a:Type) (b:buffer a). {:pattern (disjointSet b buffs)}
+  /\ (forall (#a:Type) (b:buffer a). {:pattern (disjointSet b buffs) \/ (disjointRef b refs)}
       (live h b /\ disjointSet b buffs /\ disjointRef b refs) ==> equal h b h' b)
 
 (** Lemmas; TODO: give better names, check triggers **)
@@ -87,7 +87,7 @@ val disjoint_only_lemma: #a:Type -> #a':Type -> b:buffer a -> b':buffer a' -> Le
   (ensures (disjointSet b (only b')))
 let disjoint_only_lemma #t #t' b b' = ()  
 
-let equal_lemma #a #rid h0 h1 b bufs : 
+let equal_lemma #a rid h0 h1 b bufs : 
   Lemma (requires (live h0 b /\ disjointSet b bufs /\ modifies_buf rid bufs Set.empty h0 h1))
 	(ensures (equal h0 b h1 b))
 	[SMTPatT (disjointSet b bufs); SMTPatT (modifies_buf rid bufs Set.empty h0 h1)]
@@ -126,7 +126,7 @@ let modifies_sub_2 #rid bufs subbufs refs subrefs h0 h1 :
     [SMTPatT (modifies_buf rid subbufs refs h0 h1); SMTPat (Set.subset subbufs bufs); SMTPatT (Set.subset subrefs refs)]
  = ()
 
-let modifies_none h : Lemma (requires (True)) (ensures (forall i. List.Tot.contains i (stack h) ==> modifies_buf i Set.empty Set.empty h h)) = ()
+let modifies_none h : Lemma (requires (True)) (ensures (forall i. List.Tot.contains i (frame_ids h) ==> modifies_buf i Set.empty Set.empty h h)) = ()
 
 (* let modifies_fresh #a h0 h1 bufs refs (b:buffer a) : *)
 (*   Lemma  *)
@@ -145,7 +145,7 @@ let atomicUpdate (#a:Type) h0 h1 (b:buffer a) (n:nat) z : GTot Type0 =
   live h0 b /\ live h1 b /\ n < length b /\ get h1 b n == z /\ max_length h1 b = max_length h0 b 
   /\ (forall (i:nat). {:pattern (get h1 b i)} (i < length b /\ i <> n) ==> get h1 b i == get h0 b i)
   /\ modifies_buf (frameOf (content b)) (only b) Set.empty h0 h1
-  /\ stack h0 = stack h1 
+  /\ frame_ids h0 = frame_ids h1 
   /\ modifies_one (frameOf (content b)) h0 h1
   
 (** Concrete getters and setters **)
@@ -156,7 +156,7 @@ let create #a (init:a) (len:nat) :
      (ensures (fun (h0:mem) b h1 ->
        not(contains h0 b) /\ live h1 b /\ idx b = 0 /\ length b = len 
        /\ modifies_buf (top_frame_id h1) Set.empty Set.empty h0 h1
-       /\ stack h1 = stack h0
+       /\ frame_ids h1 = frame_ids h0
        /\ modifies_one (top_frame_id h1) h0 h1
        /\ (forall (i:nat). {:pattern (get h1 b i)} i < len ==> 
 	   get h1 b i == init)))
@@ -169,7 +169,23 @@ let index #a (b:buffer a) (n:nat{n<length b}) :
      (ensures (fun h0 z h1 -> live h0 b /\ (h1 == h0) /\ (z == get h0 b n)))
   = StackArray.index b.content (b.idx+n)
 
-(*
+let lemma_aux_0 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') : Lemma
+  (requires (True))
+  (ensures (frameOf (content b) <> frameOf (content b') ==> content b' =!= content b))
+  [SMTPat (frameOf (content b) <> frameOf (content b'))]
+  = ()
+
+let lemma_aux (#a:Type) (#a':Type) (b:buffer a) (h0:t) (h1:t) (b':buffer a') : Lemma
+  (requires (live h0 b /\ live h0 b'
+	     /\ frame_ids h0 = frame_ids h1
+	     /\ modifies_one (frameOf (content b)) h0 h1 
+	     /\ modifies_ref (frameOf (content b)) !{as_ref (content b)} h0 h1
+	     /\ (content b' =!= content b \/ a <> a')))
+  (ensures (equal h0 b' h1 b'))
+  [SMTPat (equal h0 b' h1 b')]
+  = if frameOf (content b) <> frameOf (content b') then ()
+    else if a <> a' then ()
+    else if a = a' && content b <> content b' then ()
 
 let upd #a (b:buffer a) (n:nat{n < length b}) v :
   ST unit
@@ -178,9 +194,9 @@ let upd #a (b:buffer a) (n:nat{n < length b}) v :
   = let h0 = SST.get () in
     StackArray.upd b.content (b.idx+n) v;
     let h1 = SST.get () in
-    gcut (fun _ -> (Set.mem (Buff b) (only b)));
-    gcut (fun _ -> live h1 b); admit()
-
+    cut (Set.mem (Buff b) (only b));
+    cut (modifies_one (frameOf (content b)) h0 h1);
+    ()
 
 let sub #a (b:buffer a) (i:nat) (len:nat{len <= length b /\ i + len <= length b}) :
   ST (buffer a)
@@ -190,48 +206,32 @@ let sub #a (b:buffer a) (i:nat) (len:nat{len <= length b /\ i + len <= length b}
 
 #reset-options //"--z3timeout 20"
 
-private let rec blit_aux #a (b:buffer a) (idx_b:nat{idx_b<=length b}) (b':buffer a{disjoint b b'}) (idx_b':nat{idx_b'<=length b'}) (len:nat{idx_b+len <= length b /\ idx_b'+len <= length b'}) (ctr:nat{ctr<=len}) :
-  ST unit
-    (requires (fun h -> equalSub h b (idx_b+ctr) h b' (idx_b'+ctr) (len-ctr)))
-    (ensures (fun h0 _ h1 -> 
-      equalSub h1 b idx_b h1 b' idx_b' len /\ modifies (only b') Set.empty h0 h1
+private val blit_aux: #a:Type -> b:buffer a -> idx_b:nat{idx_b<=length b} -> b':buffer a{disjoint b b'} -> idx_b':nat{idx_b'<=length b'} -> len:nat{idx_b+len <= length b /\ idx_b'+len <= length b'} -> ctr:nat{ctr<=len} ->  ST unit
+  (requires (fun h -> equalSub h b (idx_b+ctr) h b' (idx_b'+ctr) (len-ctr)))
+  (ensures (fun h0 _ h1 -> 
+      equalSub h1 b idx_b h1 b' idx_b' len 
+      /\ modifies_one (frameOf (content b')) h0 h1
+      /\ modifies_buf (frameOf (content b')) (only b') Set.empty h0 h1
       /\ equalSub h0 b' 0 h1 b' 0 idx_b'
       /\ equalSub h0 b' (idx_b'+len) h1 b' (idx_b'+len) (length b' - idx_b' - len)))
-  = let h0 = ST.get() in
-    match ctr with
-    | 0 -> admit()
-    | _  -> let i = ctr-1 in
-      let bi = index b (idx_b+i) in
-      upd b' (idx_b'+i) bi; 
-      let h1 = ST.get() in 
-      equal_lemma h0 h1 b (only b');
-      gcut (fun _ -> get h1 b (idx_b+i) == get h1 b' (idx_b'+i)); 
-//      cut (forall (i:nat). i < len - ctr ==> get h1 b' (idx_b'+i) == get h0 b' (idx_b'+i));
-//      admit()
-      admitP (forall (i:nat). {:pattern (get h1 b (idx_b+ctr+i)) \/ (get h1 b' (idx_b'+ctr+i))} 
-	i < len - ctr ==> get h1 b (idx_b+ctr+i) == get h1 b' (idx_b'+ctr+i));
-      cut (forall (j:nat). j < len - i ==> get h1 b (idx_b+i+j) == get h1 b' (idx_b'+i+j));
-      admit()
-      blit_aux b idx_b b' idx_b' len i
-    
 
-private val blit_aux: #a:Type -> a:buffer t -> idx_a:nat{idx_a <= length a} -> b:buffer t{disjoint a b} -> 
-  idx_b:nat{idx_b <= length b} -> len:nat{idx_a+len <= length a /\ idx_b+len <= length b} ->
-  ctr:nat{ctr<=len} -> ST unit
-    (requires (fun h -> copyOf h a idx_a b idx_b ctr len))
-    (ensures (fun h0 _ h1 -> copyOf h0 a idx_a b idx_b ctr len 
-      /\ copyOf h1 a idx_a b idx_b 0 len /\ modifies (only b) h0 h1
-      /\ (forall (i:nat). {:pattern (v (get h1 b i))} ((i >= idx_b + ctr /\ i < length b) \/ i < idx_b) ==> v (get h1 b i) = v (get h0 b i))))
-let rec blit_aux #t a idx_a b idx_b len ctr =
-  let h0 = ST.get() in
+(* JK: WIP, up to here *)
+
+let rec blit_aux #a b idx_b b' idx_b' len ctr = 
+  let h0 = SST.get() in
   match ctr with
-  | 0 -> ()
-  | _  -> let i = ctr-1 in
-    let ai = index a (idx_a+i) in
-    upd b (idx_b+i) ai; 
-    let h1 = ST.get() in 
-    eq_lemma h0 h1 a (only b); 
-    blit_aux a idx_a b idx_b len i
+  | 0 -> admit()
+  | _  -> 
+    let i = ctr-1 in
+    let bi = index b (idx_b+i) in
+    upd b' (idx_b'+i) bi; 
+    let h1 = SST.get() in 
+    equal_lemma (frameOf (content b')) h0 h1 b (only b');
+    assume (get h1 b (idx_b+i) == get h1 b' (idx_b'+i));
+    cut (equalSub h0 b (idx_b+ctr) h0 b' (idx_b'+ctr) (len-ctr));
+    cut (forall (j:nat). j < len - ctr ==> get h0 b (idx_b+ctr+j) = get h0 b' (idx_b'+ctr+j));
+    admit();
+    blit_aux b idx_b b' idx_b' len i
 
 val blit: #a:Type -> a:buffer t -> idx_a:nat{idx_a <= length a} -> b:buffer t{disjoint a b} -> 
   idx_b:nat{idx_b <= length b} -> len:nat{idx_a+len <= length a /\ idx_b+len <= length b} -> ST unit

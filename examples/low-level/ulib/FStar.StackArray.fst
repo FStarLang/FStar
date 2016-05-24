@@ -65,11 +65,6 @@ val length: #a:Type -> x:array a -> ST nat
   (ensures  (fun h0 y h1 -> y=length (sel h0 x) /\ h0==h1))
 let length #a x = Seq.length (to_seq x)
 
-(*
-assume val op: #a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
-  (requires (fun h -> contains h x))
-  (ensures  (fun h0 u h1 -> modifies_ref (frameOf x) !{as_ref (refOf x)} h0 h1 /\ sel h1 x=f (sel h0 x)))
-*)
 let equal s1 s2 = 
   frame_ids s1 = frame_ids s2
   /\ Map.equal (heaps s1) (heaps s2)
@@ -137,7 +132,7 @@ val blit_aux:
      (ensures (fun h0 u h1 ->
 	       (contains h1 s /\ contains h1 t /\ s <> t )
 	       /\ frame_ids h1 = frame_ids h0
-	       /\ (modifies (Set.singleton (frameOf t)) h0 h1)
+               /\ modifies_one (frameOf t) h0 h1
 	       /\ (modifies_ref (frameOf t) !{as_ref t} h0 h1)
 	       /\ (Seq.length (sel h1 s) >= s_idx + len)
 	       /\ (Seq.length (sel h1 t) >= t_idx + len)
@@ -154,9 +149,9 @@ let rec blit_aux #a s s_idx t t_idx len ctr =
   | 0 -> ()
   | _ -> upd t (t_idx + ctr) (index s (s_idx + ctr));
 	 let h = get() in
-	 cut (b2t(Heap.equal (heapOf t h) (Heap.upd (heapOf t h0) (as_ref t) (sel h t)))); 
-	 cut (Map.equal (heaps h) (heaps (StackHeap.upd h0 t (sel h t)))); 
-	 cut (sel h t = Seq.upd (sel h0 t) (t_idx+ctr) (Seq.index (sel h0 s) (s_idx+ctr))); 
+	 cut (b2t(Heap.equal (heapOf t h) (Heap.upd (heapOf t h0) (as_ref t) (sel h t))));
+	 cut (Map.equal (heaps h) (heaps (StackHeap.upd h0 t (sel h t))));
+	 cut (sel h t = Seq.upd (sel h0 t) (t_idx+ctr) (Seq.index (sel h0 s) (s_idx+ctr)));
 	 cut (forall (i:nat). i < ctr+1 ==> Seq.index (sel h0 s) (s_idx+i) = Seq.index (sel h t) (t_idx+i));
 	 assert(s <> t);
 	 blit_aux s s_idx t t_idx len (ctr+1)
@@ -188,23 +183,28 @@ let rec blit #a s s_idx t t_idx len =
   blit_aux s s_idx t t_idx len 0
 
 val sub :
-  #a:Type -> s:array a -> idx:nat -> len:nat ->
-  ST (array a)
-    (requires (fun h ->
-      (contains h s)
-      /\ (Seq.length (sel h s) > 0)
-      /\ (idx + len <= Seq.length (sel h s))))
-    (ensures (fun h0 t h1 ->
-      (contains h1 t)
-      /\ (contains h0 s)
-      /\ not(contains h0 t)
-      /\ modifies_one (top_frame_id h1) h0 h1
-      /\ modifies_ref (top_frame_id h1) !{as_ref t} h0 h1
-      /\ frameOf t = top_frame_id h1
-      /\ (Seq.length (sel h0 s) > 0)
-      /\ (idx + len <= Seq.length (sel h0 s))
-      /\ (Seq.equal (Seq.slice (sel h0 s) idx (idx+len)) (sel h1 t))))
+  #a:Type -> s:array a -> idx:nat -> len:nat -> ST (array a)
+    (requires (fun h -> contains h s
+		      /\ Seq.length (sel h s) > 0
+		      /\ idx + len <= Seq.length (sel h s) ))
+    (ensures (fun h0 t h1 -> contains h1 t
+			   /\ contains h0 s
+			   /\ not(contains h0 t)
+			   /\ modifies_one (top_frame_id h1) h0 h1
+			   /\ modifies_ref (top_frame_id h1) !{as_ref t} h0 h1
+			   /\ frameOf t = top_frame_id h1
+			   /\ Seq.length (sel h0 s) > 0
+			   /\ idx + len <= Seq.length (sel h0 s)
+			   /\ Seq.equal (Seq.slice (sel h0 s) idx (idx+len)) (sel h1 t) ))
 let sub #a s idx len =
   let t = create len (index s 0) in
   blit s idx t 0 len;
   t
+
+(* JK: assuming the following because 'a <> a ==> seq a' <> seq a does cannot be proven
+   by the solver *)
+let lemma_array_ineq_1 (#a:Type) (#a':Type) (x:array a) (y:array a')
+  : Lemma (requires (a <> a'))
+	  (ensures (as_ref x =!= as_ref y))
+	  [SMTPat (a <> a')]
+  = admit() // TODO
