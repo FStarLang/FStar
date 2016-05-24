@@ -8,7 +8,7 @@ opam init
 opam install depext depext-cygwinports
 opam depext ssl
 opam depext sqlite3
-opam install sqlite3
+opam install fileutils sqlite3
 ```
 
 ### Environment
@@ -53,14 +53,23 @@ opam install sqlite3
 
 ## On Linux
 
+### Install OpenSSL
+
 * On recent Ubuntus and Debians, installing `openssl-dev` should be enough and work out of the box. (JP: OpenSSL 1.0.2d 9 Jul 2015 worked for me).
 * On older Ubuntus, we've had success with some PPA that offers a recent OpenSSL. See the `.travis.yml` file in the repo.
+* On Arch you just need the `openssl` package (`pacman -S openssl`)
 
 Otherwise, if you get errors about missing `EVP_AES_GCM`, then you need to obtain the OpenSSL sourcecode, e.g. using
 
     git clone https://github.com/openssl/openssl.git
 
 Then, compile and install into a local directory (e.g. `/opt`), then tweak the `Makefile` so that it has the proper `-L` and `-I` flags.
+
+### Install OCaml package dependencies with opam
+
+```
+opam install fileutils sqlite3
+```
 
 ## On OSX
 

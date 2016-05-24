@@ -666,7 +666,7 @@ let fstar_home () =
 
 let set_options o s =
     let specs = match o with 
-        | Set -> settable_specs
+        | Set -> if get_universes() then resettable_specs else settable_specs
         | Reset -> resettable_specs
         | Restore -> all_specs in
     Getopt.parse_string specs (fun _ -> ()) s
