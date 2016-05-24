@@ -13,13 +13,16 @@ OCAMLC=ocamlfind ocamlopt
 OCAMLLINK=ocamlfind ocamlopt
 CMO=cmx
 
-all: allocator kamregions$(EXE) kamgc$(EXE)
+all: allocator kamregions$(EXE) kamgc$(EXE) kam_simple$(EXE)
 
 kamregions.ml: kam.ml
 	cpp -P -C -DCAMLSTACK kam.ml > $@ 2>/dev/null
 
 kamgc.ml: kam.ml
 	cpp -P -C kam.ml > $@ 2>/dev/null
+
+kam_simple: %.$(CMO)
+	$(OCAMLLINK) -o $@ $^
 
 %$(EXE): %.$(CMO)
 	$(OCAMLLINK) -o $@ $^ $(ALLOCATOR_FILES)
