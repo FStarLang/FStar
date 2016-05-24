@@ -431,13 +431,20 @@ let push_sigelt env s =
       Util.smap_add (sigmap env) lid.str (se, env.iface && not env.admitted_iface)));
   env
 
-let push_namespace env lid =
-  {env with open_namespaces = lid::env.open_namespaces}
+let push_namespace env ns =
+  let modules = env.modules in
+  if modules |> Util.for_some (fun (m, _) ->
+     Util.starts_with (Ident.text_of_lid m) (Ident.text_of_lid ns))
+  then {env with open_namespaces = ns::env.open_namespaces}
+  else raise (Error(Util.format1 "Namespace %s cannot be found" (Ident.text_of_lid ns), Ident.range_of_lid ns))
 
 let push_module_abbrev env x l = 
   if env.modul_abbrevs |> Util.for_some (fun (y, _) -> x.idText=y.idText)
   then raise (Error(Util.format1 "Module %s is already defined" x.idText, x.idRange))
-  else {env with modul_abbrevs=(x,l)::env.modul_abbrevs}
+  else let modules = env.modules in
+       if modules |> Util.for_some (fun (m, _) -> Ident.lid_equals m l)
+       then {env with modul_abbrevs=(x,l)::env.modul_abbrevs}
+       else raise (Error(Util.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
 
 let check_admits env =
   env.sigaccum |> List.iter (fun se -> match se with
@@ -556,6 +563,11 @@ let prepare_module_or_interface intf admitted env mname =
                   else if lid_equals mname Const.st_lid    then [Const.prims_lid]
                   else if lid_equals mname Const.all_lid   then [Const.prims_lid; Const.st_lid]
                   else [Const.prims_lid; Const.st_lid; Const.all_lid; Const.fstar_ns_lid] in
+    let open_ns =
+        if List.length mname.ns <> 0
+        then let ns = Ident.lid_of_ids mname.ns in
+             ns::open_ns //the namespace of the current module, if any, is implicitly in scope
+        else open_ns in
     {env with curmodule=Some mname; sigmap=env.sigmap; open_namespaces = open_ns; iface=intf; admitted_iface=admitted} in
 
   match env.modules |> Util.find_opt (fun (l, _) -> lid_equals l mname) with
