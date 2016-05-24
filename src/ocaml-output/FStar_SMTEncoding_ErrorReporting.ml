@@ -343,106 +343,123 @@ end)
 end))
 in (
 
-let with_fuel = (fun label_assumptions p _82_389 -> (match (_82_389) with
+let with_fuel = (fun label_assumptions p _82_389 use_timeout -> (match (_82_389) with
 | (n, i) -> begin
-(let _171_149 = (let _171_148 = (let _171_147 = (let _171_146 = (let _171_131 = (let _171_130 = (FStar_Util.string_of_int n)
-in (let _171_129 = (FStar_Util.string_of_int i)
-in (FStar_Util.format2 "<fuel=\'%s\' ifuel=\'%s\'>" _171_130 _171_129)))
-in FStar_SMTEncoding_Term.Caption (_171_131))
-in (let _171_145 = (let _171_144 = (let _171_136 = (let _171_135 = (let _171_134 = (let _171_133 = (FStar_SMTEncoding_Term.mkApp ("MaxFuel", []))
-in (let _171_132 = (FStar_SMTEncoding_Term.n_fuel n)
-in (_171_133, _171_132)))
-in (FStar_SMTEncoding_Term.mkEq _171_134))
-in (_171_135, None))
-in FStar_SMTEncoding_Term.Assume (_171_136))
-in (let _171_143 = (let _171_142 = (let _171_141 = (let _171_140 = (let _171_139 = (let _171_138 = (FStar_SMTEncoding_Term.mkApp ("MaxIFuel", []))
-in (let _171_137 = (FStar_SMTEncoding_Term.n_fuel i)
-in (_171_138, _171_137)))
-in (FStar_SMTEncoding_Term.mkEq _171_139))
-in (_171_140, None))
-in FStar_SMTEncoding_Term.Assume (_171_141))
-in (_171_142)::(p)::[])
-in (_171_144)::_171_143))
+(
+
+let timeout_ms = if use_timeout then begin
+((FStar_Options.z3_timeout ()) * 1000)
+end else begin
+(60 * 1000)
+end
+in (let _171_156 = (let _171_155 = (let _171_154 = (let _171_149 = (let _171_148 = (let _171_133 = (let _171_132 = (FStar_Util.string_of_int n)
+in (let _171_131 = (FStar_Util.string_of_int i)
+in (FStar_Util.format2 "<fuel=\'%s\' ifuel=\'%s\'>" _171_132 _171_131)))
+in FStar_SMTEncoding_Term.Caption (_171_133))
+in (let _171_147 = (let _171_146 = (let _171_138 = (let _171_137 = (let _171_136 = (let _171_135 = (FStar_SMTEncoding_Term.mkApp ("MaxFuel", []))
+in (let _171_134 = (FStar_SMTEncoding_Term.n_fuel n)
+in (_171_135, _171_134)))
+in (FStar_SMTEncoding_Term.mkEq _171_136))
+in (_171_137, None))
+in FStar_SMTEncoding_Term.Assume (_171_138))
+in (let _171_145 = (let _171_144 = (let _171_143 = (let _171_142 = (let _171_141 = (let _171_140 = (FStar_SMTEncoding_Term.mkApp ("MaxIFuel", []))
+in (let _171_139 = (FStar_SMTEncoding_Term.n_fuel i)
+in (_171_140, _171_139)))
+in (FStar_SMTEncoding_Term.mkEq _171_141))
+in (_171_142, None))
+in FStar_SMTEncoding_Term.Assume (_171_143))
+in (_171_144)::(p)::[])
 in (_171_146)::_171_145))
-in (FStar_List.append _171_147 label_assumptions))
-in (FStar_List.append _171_148 ((FStar_SMTEncoding_Term.CheckSat)::[])))
-in (FStar_List.append _171_149 suffix))
+in (_171_148)::_171_147))
+in (FStar_List.append _171_149 label_assumptions))
+in (let _171_153 = (let _171_152 = (let _171_151 = (let _171_150 = (FStar_Util.string_of_int timeout_ms)
+in ("timeout", _171_150))
+in FStar_SMTEncoding_Term.SetOption (_171_151))
+in (_171_152)::[])
+in (FStar_List.append _171_154 _171_153)))
+in (FStar_List.append _171_155 ((FStar_SMTEncoding_Term.CheckSat)::[])))
+in (FStar_List.append _171_156 suffix)))
 end))
 in (
 
 let check = (fun p -> (
 
-let cached_config = (match ((FStar_ST.read FStar_SMTEncoding_Z3.fuel_trace)) with
+let default_config = (let _171_160 = (FStar_Options.initial_fuel ())
+in (let _171_159 = (FStar_Options.initial_ifuel ())
+in (_171_160, _171_159)))
+in (
+
+let is_cached_config = (FStar_Util.mk_ref false)
+in (
+
+let initial_config = (match ((FStar_ST.read FStar_SMTEncoding_Z3.fuel_trace)) with
 | FStar_SMTEncoding_Z3.ReplayFuelTrace (fname, hd::tl) -> begin
 (
 
-let _82_400 = hd
-in (match (_82_400) with
+let _82_411 = (match (hd) with
+| Some (a, b) -> begin
+(
+
+let _82_406 = (FStar_ST.op_Colon_Equals is_cached_config true)
+in (a, b))
+end
+| None -> begin
+default_config
+end)
+in (match (_82_411) with
 | (fuel, ifuel) -> begin
 (
 
-let _82_401 = (FStar_ST.op_Colon_Equals FStar_SMTEncoding_Z3.fuel_trace (FStar_SMTEncoding_Z3.ReplayFuelTrace ((fname, tl))))
-in Some ((fname, fuel, ifuel)))
+let _82_412 = (FStar_ST.op_Colon_Equals FStar_SMTEncoding_Z3.fuel_trace (FStar_SMTEncoding_Z3.ReplayFuelTrace ((fname, tl))))
+in (fuel, ifuel))
 end))
 end
-| _82_404 -> begin
-None
+| _82_415 -> begin
+default_config
 end)
 in (
 
-let initial_config = (match (cached_config) with
-| Some (_82_407, fuel, ifuel) -> begin
-(fuel, ifuel)
-end
-| None -> begin
-(let _171_153 = (FStar_Options.initial_fuel ())
-in (let _171_152 = (FStar_Options.initial_ifuel ())
-in (_171_153, _171_152)))
-end)
-in (
-
-let alt_configs = (match (cached_config) with
-| Some (_82_415) -> begin
-[]
-end
-| None -> begin
-(let _171_172 = (let _171_171 = if ((FStar_Options.max_ifuel ()) > (FStar_Options.initial_ifuel ())) then begin
-(let _171_156 = (let _171_155 = (FStar_Options.initial_fuel ())
-in (let _171_154 = (FStar_Options.max_ifuel ())
-in (_171_155, _171_154)))
-in (_171_156)::[])
+let alt_configs = (let _171_180 = (let _171_179 = (let _171_178 = if ((FStar_Options.max_ifuel ()) > (FStar_Options.initial_ifuel ())) then begin
+(let _171_163 = (let _171_162 = (FStar_Options.initial_fuel ())
+in (let _171_161 = (FStar_Options.max_ifuel ())
+in (_171_162, _171_161)))
+in (_171_163)::[])
 end else begin
 []
 end
-in (let _171_170 = (let _171_169 = if (((FStar_Options.max_fuel ()) / 2) > (FStar_Options.initial_fuel ())) then begin
-(let _171_159 = (let _171_158 = ((FStar_Options.max_fuel ()) / 2)
-in (let _171_157 = (FStar_Options.max_ifuel ())
-in (_171_158, _171_157)))
-in (_171_159)::[])
+in (let _171_177 = (let _171_176 = if (((FStar_Options.max_fuel ()) / 2) > (FStar_Options.initial_fuel ())) then begin
+(let _171_166 = (let _171_165 = ((FStar_Options.max_fuel ()) / 2)
+in (let _171_164 = (FStar_Options.max_ifuel ())
+in (_171_165, _171_164)))
+in (_171_166)::[])
 end else begin
 []
 end
-in (let _171_168 = (let _171_167 = if (((FStar_Options.max_fuel ()) > (FStar_Options.initial_fuel ())) && ((FStar_Options.max_ifuel ()) > (FStar_Options.initial_ifuel ()))) then begin
-(let _171_162 = (let _171_161 = (FStar_Options.max_fuel ())
-in (let _171_160 = (FStar_Options.max_ifuel ())
-in (_171_161, _171_160)))
-in (_171_162)::[])
+in (let _171_175 = (let _171_174 = if (((FStar_Options.max_fuel ()) > (FStar_Options.initial_fuel ())) && ((FStar_Options.max_ifuel ()) > (FStar_Options.initial_ifuel ()))) then begin
+(let _171_169 = (let _171_168 = (FStar_Options.max_fuel ())
+in (let _171_167 = (FStar_Options.max_ifuel ())
+in (_171_168, _171_167)))
+in (_171_169)::[])
 end else begin
 []
 end
-in (let _171_166 = (let _171_165 = if ((FStar_Options.min_fuel ()) < (FStar_Options.initial_fuel ())) then begin
-(let _171_164 = (let _171_163 = (FStar_Options.min_fuel ())
-in (_171_163, 1))
-in (_171_164)::[])
+in (let _171_173 = (let _171_172 = if ((FStar_Options.min_fuel ()) < (FStar_Options.initial_fuel ())) then begin
+(let _171_171 = (let _171_170 = (FStar_Options.min_fuel ())
+in (_171_170, 1))
+in (_171_171)::[])
 end else begin
 []
 end
-in (_171_165)::[])
-in (_171_167)::_171_166))
-in (_171_169)::_171_168))
-in (_171_171)::_171_170))
-in (FStar_List.flatten _171_172))
-end)
+in (_171_172)::[])
+in (_171_174)::_171_173))
+in (_171_176)::_171_175))
+in (_171_178)::_171_177))
+in (if (default_config = initial_config) then begin
+[]
+end else begin
+(default_config)::[]
+end)::_171_179)
+in (FStar_List.flatten _171_180))
 in (
 
 let report = (fun p errs -> (
@@ -450,16 +467,16 @@ let report = (fun p errs -> (
 let errs = if ((FStar_Options.detail_errors ()) && ((FStar_Options.n_cores ()) = 1)) then begin
 (
 
-let _82_429 = (match ((FStar_ST.read minimum_workable_fuel)) with
+let _82_428 = (match ((FStar_ST.read minimum_workable_fuel)) with
 | Some (f, errs) -> begin
 (f, errs)
 end
 | None -> begin
-(let _171_178 = (let _171_177 = (FStar_Options.min_fuel ())
-in (_171_177, 1))
-in (_171_178, errs))
+(let _171_186 = (let _171_185 = (FStar_Options.min_fuel ())
+in (_171_185, 1))
+in (_171_186, errs))
 end)
-in (match (_82_429) with
+in (match (_82_428) with
 | (min_fuel, potential_errors) -> begin
 (
 
@@ -468,10 +485,10 @@ let ask_z3 = (fun label_assumptions -> (
 let res = (FStar_Util.mk_ref None)
 in (
 
-let _82_434 = (let _171_182 = (with_fuel label_assumptions p min_fuel)
-in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_182 (fun r -> (FStar_ST.op_Colon_Equals res (Some (r))))))
-in (let _171_183 = (FStar_ST.read res)
-in (FStar_Option.get _171_183)))))
+let _82_433 = (let _171_190 = (with_fuel label_assumptions p min_fuel true)
+in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_190 (fun r -> (FStar_ST.op_Colon_Equals res (Some (r))))))
+in (let _171_191 = (FStar_ST.read res)
+in (FStar_Option.get _171_191)))))
 in (detail_errors all_labels errs ask_z3))
 end))
 end else begin
@@ -483,38 +500,38 @@ let errs = (match (errs) with
 | [] -> begin
 ((("", FStar_SMTEncoding_Term.Term_sort), "Unknown assertion failed", FStar_Range.dummyRange))::[]
 end
-| _82_439 -> begin
+| _82_438 -> begin
 errs
 end)
 in (
 
-let _82_448 = (match ((FStar_ST.read FStar_SMTEncoding_Z3.fuel_trace)) with
-| FStar_SMTEncoding_Z3.ReplayFuelTrace (fname, _82_443) -> begin
-(FStar_All.pipe_left Prims.raise (FStar_SMTEncoding_Z3.BadFuelCache (())))
+let _82_446 = (match ((FStar_ST.read FStar_SMTEncoding_Z3.fuel_trace)) with
+| (FStar_SMTEncoding_Z3.FuelTraceUnavailable) | (FStar_SMTEncoding_Z3.ReplayFuelTrace (_)) -> begin
+()
 end
-| _82_447 -> begin
-(FStar_ST.op_Colon_Equals FStar_SMTEncoding_Z3.fuel_trace FStar_SMTEncoding_Z3.FuelTraceUnavailable)
+| FStar_SMTEncoding_Z3.RecordFuelTrace (l) -> begin
+(FStar_ST.op_Colon_Equals FStar_SMTEncoding_Z3.fuel_trace (FStar_SMTEncoding_Z3.RecordFuelTrace ((FStar_List.append l ((None)::[])))))
 end)
 in (
 
-let _82_450 = if (FStar_Options.print_fuels ()) then begin
-(let _171_189 = (let _171_184 = (FStar_TypeChecker_Env.get_range env)
-in (FStar_Range.string_of_range _171_184))
-in (let _171_188 = (let _171_185 = (FStar_Options.max_fuel ())
-in (FStar_All.pipe_right _171_185 FStar_Util.string_of_int))
-in (let _171_187 = (let _171_186 = (FStar_Options.max_ifuel ())
-in (FStar_All.pipe_right _171_186 FStar_Util.string_of_int))
-in (FStar_Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _171_189 _171_188 _171_187))))
+let _82_448 = if (FStar_Options.print_fuels ()) then begin
+(let _171_197 = (let _171_192 = (FStar_TypeChecker_Env.get_range env)
+in (FStar_Range.string_of_range _171_192))
+in (let _171_196 = (let _171_193 = (FStar_Options.max_fuel ())
+in (FStar_All.pipe_right _171_193 FStar_Util.string_of_int))
+in (let _171_195 = (let _171_194 = (FStar_Options.max_ifuel ())
+in (FStar_All.pipe_right _171_194 FStar_Util.string_of_int))
+in (FStar_Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _171_197 _171_196 _171_195))))
 end else begin
 ()
 end
 in (
 
-let _82_457 = (let _171_191 = (FStar_All.pipe_right errs (FStar_List.map (fun _82_456 -> (match (_82_456) with
-| (_82_453, x, y) -> begin
+let _82_455 = (let _171_199 = (FStar_All.pipe_right errs (FStar_List.map (fun _82_454 -> (match (_82_454) with
+| (_82_451, x, y) -> begin
 (x, y)
 end))))
-in (FStar_TypeChecker_Errors.add_errors env _171_191))
+in (FStar_TypeChecker_Errors.add_errors env _171_199))
 in if (FStar_Options.detail_errors ()) then begin
 (Prims.raise (FStar_Syntax_Syntax.Err ("Detailed error report follows\n")))
 end else begin
@@ -524,7 +541,7 @@ in (
 
 let rec try_alt_configs = (fun prev_f p errs cfgs -> (
 
-let _82_465 = (set_minimum_workable_fuel prev_f errs)
+let _82_463 = (set_minimum_workable_fuel prev_f errs)
 in (match (cfgs) with
 | [] -> begin
 (report p errs)
@@ -532,78 +549,84 @@ end
 | mi::[] -> begin
 (match (errs) with
 | [] -> begin
-(let _171_204 = (with_fuel [] p mi)
-in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_204 (cb mi p [])))
+(let _171_212 = (with_fuel [] p mi true)
+in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_212 (cb mi p [])))
 end
-| _82_472 -> begin
+| _82_470 -> begin
 (
 
-let _82_473 = (set_minimum_workable_fuel prev_f errs)
+let _82_471 = (set_minimum_workable_fuel prev_f errs)
 in (report p errs))
 end)
 end
 | mi::tl -> begin
-(let _171_206 = (with_fuel [] p mi)
-in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_206 (fun _82_480 -> (match (_82_480) with
+(let _171_214 = (with_fuel [] p mi true)
+in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_214 (fun _82_478 -> (match (_82_478) with
 | (ok, errs') -> begin
 (match (errs) with
 | [] -> begin
 (cb mi p tl (ok, errs'))
 end
-| _82_483 -> begin
+| _82_481 -> begin
 (cb mi p tl (ok, errs))
 end)
 end))))
 end)))
-and cb = (fun _82_486 p alt _82_491 -> (match ((_82_486, _82_491)) with
+and cb = (fun _82_484 p alt _82_489 -> (match ((_82_484, _82_489)) with
 | ((prev_fuel, prev_ifuel), (ok, errs)) -> begin
 if ok then begin
 (
 
-let _82_498 = (match ((FStar_ST.read FStar_SMTEncoding_Z3.fuel_trace)) with
+let _82_496 = (match ((FStar_ST.read FStar_SMTEncoding_Z3.fuel_trace)) with
 | (FStar_SMTEncoding_Z3.ReplayFuelTrace (_)) | (FStar_SMTEncoding_Z3.FuelTraceUnavailable) -> begin
 ()
 end
 | FStar_SMTEncoding_Z3.RecordFuelTrace (l) -> begin
-(FStar_ST.op_Colon_Equals FStar_SMTEncoding_Z3.fuel_trace (FStar_SMTEncoding_Z3.RecordFuelTrace ((FStar_List.append l (((prev_fuel, prev_ifuel))::[])))))
+(FStar_ST.op_Colon_Equals FStar_SMTEncoding_Z3.fuel_trace (FStar_SMTEncoding_Z3.RecordFuelTrace ((FStar_List.append l ((Some ((prev_fuel, prev_ifuel)))::[])))))
 end)
 in if (FStar_Options.print_fuels ()) then begin
-(let _171_214 = (let _171_211 = (FStar_TypeChecker_Env.get_range env)
-in (FStar_Range.string_of_range _171_211))
-in (let _171_213 = (FStar_Util.string_of_int prev_fuel)
-in (let _171_212 = (FStar_Util.string_of_int prev_ifuel)
-in (FStar_Util.print4 "(%s) Query succeeded with fuel %s and ifuel %s%s\n" _171_214 _171_213 _171_212 (match (cached_config) with
-| Some (_82_501) -> begin
+(let _171_223 = (let _171_219 = (FStar_TypeChecker_Env.get_range env)
+in (FStar_Range.string_of_range _171_219))
+in (let _171_222 = (FStar_Util.string_of_int prev_fuel)
+in (let _171_221 = (FStar_Util.string_of_int prev_ifuel)
+in (let _171_220 = if (FStar_ST.read is_cached_config) then begin
 " (cached)"
-end
-| None -> begin
-""
-end)))))
 end else begin
-if (FStar_Options.print_fuels ()) then begin
-(let _171_218 = (let _171_215 = (FStar_TypeChecker_Env.get_range env)
-in (FStar_Range.string_of_range _171_215))
-in (let _171_217 = (FStar_Util.string_of_int prev_fuel)
-in (let _171_216 = (FStar_Util.string_of_int prev_ifuel)
-in (FStar_Util.print3 "(%s) Query failed with fuel %s and ifuel %s ... retrying \n" _171_218 _171_217 _171_216))))
+""
+end
+in (FStar_Util.print4 "(%s) Query succeeded with fuel %s and ifuel %s%s\n" _171_223 _171_222 _171_221 _171_220)))))
+end else begin
+()
+end)
+end else begin
+(
+
+let _82_498 = if (FStar_Options.print_fuels ()) then begin
+(let _171_227 = (let _171_224 = (FStar_TypeChecker_Env.get_range env)
+in (FStar_Range.string_of_range _171_224))
+in (let _171_226 = (FStar_Util.string_of_int prev_fuel)
+in (let _171_225 = (FStar_Util.string_of_int prev_ifuel)
+in (FStar_Util.print3 "(%s) Query failed with fuel %s and ifuel %s ... retrying \n" _171_227 _171_226 _171_225))))
 end else begin
 ()
 end
-end)
-end else begin
-(try_alt_configs (prev_fuel, prev_ifuel) p errs alt)
+in (
+
+let _82_500 = (FStar_ST.op_Colon_Equals is_cached_config false)
+in (try_alt_configs (prev_fuel, prev_ifuel) p errs alt)))
 end
 end))
-in (let _171_219 = (with_fuel [] p initial_config)
-in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_219 (cb initial_config p alt_configs)))))))))
+in (let _171_229 = (let _171_228 = (not ((FStar_ST.read is_cached_config)))
+in (with_fuel [] p initial_config _171_228))
+in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_229 (cb initial_config p alt_configs))))))))))
 in (
 
 let process_query = (fun q -> if ((FStar_Options.split_cases ()) > 0) then begin
 (
 
-let _82_508 = (let _171_225 = (FStar_Options.split_cases ())
-in (FStar_SMTEncoding_SplitQueryCases.can_handle_query _171_225 q))
-in (match (_82_508) with
+let _82_506 = (let _171_235 = (FStar_Options.split_cases ())
+in (FStar_SMTEncoding_SplitQueryCases.can_handle_query _171_235 q))
+in (match (_82_506) with
 | (b, cb) -> begin
 if b then begin
 (FStar_SMTEncoding_SplitQueryCases.handle_query cb check)
