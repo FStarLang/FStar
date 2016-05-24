@@ -885,11 +885,11 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         | _ -> failwith "Impossible" in
 
     let enc_prop_c f : args -> (term * decls_t) = fun l ->
-        let phis, decls =
-            List.fold_right (fun (t, _) (phis, decls) ->
+        let decls, phis =
+            Util.fold_map (fun decls (t, _) ->
                 let phi, decls' = encode_formula t env in
-                (phi::phis, decls'@decls))
-            l ([], []) in
+                decls@decls', phi)
+            [] l in
         (f phis, decls) in
 
     let eq_op : args -> (term * decls_t) = function
