@@ -204,40 +204,48 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
                     | Some _ -> ()
                     | None -> minimum_workable_fuel := Some (f, errs) in
 
-    let with_fuel label_assumptions p (n, i) =
+    let with_fuel label_assumptions p (n, i) use_timeout =
+        let timeout_ms =
+            if use_timeout then
+                Options.z3_timeout () * 1000
+            else
+                60 * 1000
+        in
        [Term.Caption (Util.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
         Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None);
         Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None);
         p]
         @label_assumptions
-        @[Term.SetOption ("timeout", (string_of_int <| Options.z3_timeout() * 1000))]
+        @[Term.SetOption ("timeout", string_of_int timeout_ms)]
         @[Term.CheckSat]
         @suffix in
 
-    let check (p:decl) =        
-        let cached_config =
+    let check (p:decl) =
+        let default_config = ((Options.initial_fuel()), (Options.initial_ifuel())) in
+        let is_cached_config = Util.mk_ref false in
+        let initial_config =
             match !Z3.fuel_trace with 
             | Z3.ReplayFuelTrace (fname, hd::tl) ->
-                let fuel, ifuel = hd in
+                let fuel, ifuel = 
+                    match hd with
+                    | Some (a, b) ->
+                        is_cached_config := true;
+                        (a, b)
+                    | None ->
+                        (* we're replaying but encountered a recorded failure. *)
+                        default_config
+                in
                 Z3.fuel_trace := Z3.ReplayFuelTrace (fname, tl);
-                Some (fname, fuel, ifuel)
+                (fuel, ifuel)
             | _ ->
-                None
+                default_config
         in
-        let initial_config = 
-            match cached_config with 
-            | Some (_, fuel, ifuel) -> (fuel, ifuel)
-            | None -> ((Options.initial_fuel()), (Options.initial_ifuel()))
-        in
-        let alt_configs = 
-            match cached_config with 
-            | Some _ -> []
-            | None -> 
-                List.flatten [(if (Options.max_ifuel()) > (Options.initial_ifuel()) then [((Options.initial_fuel()), (Options.max_ifuel()))] else []);
+        let alt_configs = List.flatten [(if default_config = initial_config then [] else [default_config]); (* fall back to the default config if there's a cached config and they're different parameterizations. *)
+                                        (if (Options.max_ifuel()) > (Options.initial_ifuel()) then [((Options.initial_fuel()), (Options.max_ifuel()))] else []);
                                         (if (Options.max_fuel()) / 2 > (Options.initial_fuel()) then [((Options.max_fuel()) / 2, (Options.max_ifuel()))] else []);
                                         (if (Options.max_fuel()) > (Options.initial_fuel()) && (Options.max_ifuel()) > (Options.initial_ifuel()) then [((Options.max_fuel()), (Options.max_ifuel()))] else []);
-                                        (if (Options.min_fuel()) < (Options.initial_fuel()) then [((Options.min_fuel()), 1)] else [])]
-        in
+                                        (if (Options.min_fuel()) < (Options.initial_fuel()) then [((Options.min_fuel()), 1)] else [])] in
+
         let report p (errs:labels) : unit =
             let errs = if (Options.detail_errors()) && (Options.n_cores()) = 1
                        then let min_fuel, potential_errors = match !minimum_workable_fuel with 
@@ -245,7 +253,7 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
                                 | None -> ((Options.min_fuel()), 1), errs in
                             let ask_z3 label_assumptions = 
                                 let res = Util.mk_ref None in
-                                Z3.ask use_fresh_z3_context all_labels (with_fuel label_assumptions p min_fuel) (fun r -> res := Some r);
+                                Z3.ask use_fresh_z3_context all_labels (with_fuel label_assumptions p min_fuel true) (fun r -> res := Some r);
                                 Option.get (!res) in
                             detail_errors all_labels errs ask_z3
                        else errs in
@@ -254,10 +262,11 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
                     | [] -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)]
                     | _ -> errs in
             begin match !Z3.fuel_trace with
-            | Z3.ReplayFuelTrace (fname, _) ->
-                raise <| Z3.BadFuelCache ()
-            | _ ->
-                Z3.fuel_trace := Z3.FuelTraceUnavailable
+            | Z3.FuelTraceUnavailable
+            | Z3.ReplayFuelTrace _ ->
+                ()
+            | Z3.RecordFuelTrace l ->
+                Z3.fuel_trace := Z3.RecordFuelTrace (l @ [None])
             end;
             if (Options.print_fuels())
             then (Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
@@ -274,46 +283,46 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
             | [] -> report p errs
             | [mi] -> //we're down to our last config; last ditch effort to get a counterexample with very low fuel
                 begin match errs with
-                | [] -> Z3.ask use_fresh_z3_context all_labels (with_fuel [] p mi) (cb mi p [])
+                | [] -> Z3.ask use_fresh_z3_context all_labels (with_fuel [] p mi true) (cb mi p [])
                 | _ -> set_minimum_workable_fuel prev_f errs;
                        report p errs
                 end
 
             | mi::tl ->
-                Z3.ask use_fresh_z3_context all_labels (with_fuel [] p mi) (fun (ok, errs') ->
+                Z3.ask use_fresh_z3_context all_labels (with_fuel [] p mi true) (fun (ok, errs') ->
                 match errs with
                     | [] -> cb mi p tl (ok, errs')
                     | _ -> cb mi p tl (ok, errs))
 
         and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) =
             if ok
-            then begin 
+            then begin
                 begin match !Z3.fuel_trace with
                 | Z3.ReplayFuelTrace _ 
                 | Z3.FuelTraceUnavailable -> 
                     ()
                 |Z3.RecordFuelTrace l ->
-                    Z3.fuel_trace := Z3.RecordFuelTrace (l @ [(prev_fuel, prev_ifuel)])
+                    Z3.fuel_trace := Z3.RecordFuelTrace (l @ [Some (prev_fuel, prev_ifuel)])
                 end;
                 if (Options.print_fuels())
-                then (Util.print4 "(%s) Query succeeded with fuel %s and ifuel %s%s\n"
+                    then (Util.print4 "(%s) Query succeeded with fuel %s and ifuel %s%s\n"
                         (Range.string_of_range (Env.get_range env))
                         (Util.string_of_int prev_fuel)
-                    (Util.string_of_int prev_ifuel)
-                    (match cached_config with 
-                     | Some _ -> " (cached)"
-                     | None -> ""))
+                        (Util.string_of_int prev_ifuel)
+                        (if !is_cached_config then " (cached)" else ""))
+                    else ()
+                end
             else (if (Options.print_fuels())
                   then (Util.print3 "(%s) Query failed with fuel %s and ifuel %s ... retrying \n"
                        (Range.string_of_range (Env.get_range env))
                        (Util.string_of_int prev_fuel)
-                        (Util.string_of_int prev_ifuel))) 
-                end
-            else try_alt_configs (prev_fuel, prev_ifuel) p errs alt in
-    
+                       (Util.string_of_int prev_ifuel));
+                  is_cached_config := false; (* if we're retrying, we're certainly not using a cached config anymore *)
+                  try_alt_configs (prev_fuel, prev_ifuel) p errs alt) in
+
         Z3.ask use_fresh_z3_context  //only relevant if we're running with n_cores > 1
                all_labels 
-               (with_fuel [] p initial_config) 
+               (with_fuel [] p initial_config (not !is_cached_config))
                (cb initial_config p alt_configs)  in
 
     let process_query (q:decl) :unit =

@@ -182,42 +182,13 @@ let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
                                * DsEnv.env
                                * TcEnv.env  =
   let dsenv, fmods = parse dsenv pre_fn fn in
-  let deps = 
-    if (Options.explicit_deps()) then
-      (* dummy value; we don't use cached fuel traces when `--explicit_deps` is specified; see `FStar.SMTEncoding.ErrorReporting.initialize_fuel_trace` for more info. *)
-      []
-    else begin
-      (* use the auto-deps facitity to produce a list of dependencies for `fn` *)
-      let g, _, _ = Parser.Dep.collect [fn] in
-      match
-        List.filter
-          (fun p ->
-            fst p = fn)
-          g
-      with
-      | [ (_, l) ] ->
-        l
-      | _ ->
-        raise <| FStar.Util.Failure (format1 "Internal error: expected to find exactly one entry for %s in dependency graph" fn)
-    end
-  in
-  let tc force_invalid_cache =
-      FStar.SMTEncoding.Z3.initialize_fuel_trace fn deps force_invalid_cache;
+  FStar.SMTEncoding.Z3.with_fuel_trace_cache fn
+    (fun () ->
       let env, all_mods =
         fmods |> List.fold_left (fun (env, all_mods) m ->
                                 let m, env = Tc.check_module env m in
                                 env, m::all_mods) (env, []) in
-      // for the moment, there should be no need to trap exceptions to finalize the fuel trace logic. nothing is done if an error occurs.
-      FStar.SMTEncoding.Z3.finalize_fuel_trace fn deps;
-      List.rev all_mods, dsenv, env
-  in
-  try
-      tc false
-  with
-  | FStar.SMTEncoding.Z3.BadFuelCache () ->
-      let norm_fn = FStar.Util.normalize_file_path fn in
-      FStar.Util.print1 "Query failed while replaying cached fuel trace; invalidating cache and retrying.\n" norm_fn;
-      tc true
+      List.rev all_mods, dsenv, env)
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)

@@ -104,7 +104,7 @@ let lowercase_module_name f =
     interface (if any). The second component of the pair is the implementation
     (if any). *)
 let build_map (filenames: list<string>): map =
-  (* todo: it seems that this function could benefit from caching. *)   let include_directories = Options.include_path () in
+  let include_directories = Options.include_path () in
   let include_directories = List.map normalize_file_path include_directories in
   let include_directories = List.unique include_directories in
   let cwd = normalize_file_path (getcwd ()) in
