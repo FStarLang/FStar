@@ -12,6 +12,15 @@ let st_wp (a:Type) = st_wp_h t a
 new_effect STATE = STATE_h t
 effect State (a:Type) (wp:st_wp a) =
        STATE a wp wp
+(* 
+   JK: TODO: change the definitions of the effects so that:
+   - one always have (frame_ids h0 = frame_ids h1)
+   - the topmost frame is always empty (top_frame h0 = Heap.emp)
+*)
+effect STPrime (a:Type) (pre:st_pre) (post: (t -> Tot (st_post a))) =
+       STATE a
+             (fun (p:st_post a) (h:t) -> pre h /\ (forall a h1. post h a h1 ==> p a h1 /\ frame_ids h = frame_ids h1) /\ top_frame h = Heap.emp) (* WP *)
+             (fun (p:st_post a) (h:t) -> forall a h1. (pre h /\ post h a h1) ==> p a h1)          (* WLP *)
 effect ST (a:Type) (pre:st_pre) (post: (t -> Tot (st_post a))) =
        STATE a
              (fun (p:st_post a) (h:t) -> pre h /\ (forall a h1. post h a h1 ==> p a h1)) (* WP *)
@@ -33,7 +42,7 @@ assume val push_frame: unit -> ST unit
   (ensures (fun (m0:t) _ (m1:t) -> fresh_frame m0 m1))
 
 // JK: removes old frame from the stack
-assume val pop_frame: unit -> ST rid
+assume val pop_frame: unit -> ST unit
   (requires (fun m -> poppable m))
   (ensures (fun (m0:t) _ (m1:t) -> popped_stack m0 m1))
 
@@ -80,6 +89,14 @@ assume val recall: #a:Type -> r:ref a -> ST unit
 assume val recall_region: i:rid -> ST unit
   (requires (fun m -> True))
   (ensures (fun m0 _ m1 -> m0=m1 /\ contains_frame m1 i))
+
+(* JK: TODO: review and implement *)
+assume val call: #a:Type -> #pre:st_pre -> #post:(t -> Tot (st_post a)) -> (f: unit -> STPrime a pre post) -> 
+  STPrime a
+    (requires (fun h -> (forall h'. fresh_frame h h' ==> pre h')))
+    (ensures (fun h x h' -> (forall h0. (fresh_frame h h0 ==> pre h0) ==> 
+			    (exists h1. post h0 x h1 /\ popped_stack h1 h')) ))
+(* let call #a #pre #post f = push_frame (); let x = f () in pop_frame (); x *)
 
 let lemma_ref_ineq_1 (#a:Type) (#a':Type) (x:ref a) (y:ref a')
   : Lemma (requires (a <> a'))

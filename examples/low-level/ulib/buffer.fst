@@ -291,7 +291,10 @@ private val of_seq_aux: #a:Type -> s:seq a -> l:pos{l = Seq.length s} -> ctr:nat
     (requires (fun h -> live h b))
     (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b 
       /\ (forall (i:nat). {:pattern (get h1 b i)} i < ctr ==> get h1 b i = Seq.index s i)
-      /\ (forall (i:nat). {:pattern (get h1 b i)} i >= ctr /\ i < length b ==> get h1 b i = get h0 b i)))
+      /\ (forall (i:nat). {:pattern (get h1 b i)} i >= ctr /\ i < length b ==> get h1 b i = get h0 b i)
+      /\ frame_ids h0 = frame_ids h1
+      /\ modifies_one (frameOf (content b)) h0 h1
+      /\ modifies_buf (frameOf (content b)) (only b) Set.empty h0 h1))
 let rec of_seq_aux #a s l ctr b =
   match ctr with
   | 0 -> ()
@@ -302,7 +305,10 @@ let rec of_seq_aux #a s l ctr b =
 val of_seq: #a:Type -> s:seq a -> l:pos{l = Seq.length s} -> ST (buffer a)
   (requires (fun h -> True))
   (ensures (fun h0 b h1 -> idx b = 0 /\ length b = l /\ not(contains h0 b) /\ live h1 b
-    /\ (forall (i:nat). {:pattern (get h1 b i)} i < l ==> get h1 b i = Seq.index s i) ))
+    /\ (forall (i:nat). {:pattern (get h1 b i)} i < l ==> get h1 b i = Seq.index s i)
+    /\ frame_ids h0 = frame_ids h1
+    /\ modifies_one (frameOf (content b)) h0 h1
+    /\ modifies_buf (frameOf (content b)) (only b) Set.empty h0 h1))
 let of_seq #a s l =
   let init = Seq.index s 0 in
   let b = create #a init l in 
