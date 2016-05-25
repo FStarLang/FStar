@@ -119,9 +119,11 @@ msbuild-clean:
 
 # --------------------------------------------------------------------
 parser/parse.fs: parser/parse.fsy $(FSYACC)
+	$(MAKE) -C VS install-packages
 	$(FSYACC) --module FStar.Parser.Parse $<
 
 parser/lex.fs: parser/lex.fsl $(FSLEX)
+	$(MAKE) -C VS install-packages
 	$(FSLEX) --unicode $<
 
 BASIC_DEPS=
@@ -293,8 +295,9 @@ fs: $(BOOT_ALL)
 	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --MLish --lax --fs_typ_app \
 	  --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
 
-fsharp-output: nuget-restore
+fsharp-output:
 	mkdir -p fsharp-output
+	make -C VS install-packages
 	cp ../bin/FSharp.PowerPack.* fsharp-output
 
 plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) fstar/main.fs
