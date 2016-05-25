@@ -10,7 +10,7 @@ endif
 NUGET=$(RUNTIME) .nuget/NuGet.exe
 
 # --------------------------------------------------------------------
-.PHONY: all update-nuget install-packages clean-packages
+.PHONY: all update-nuget install-packages
 
 all: update-nuget install-packages
 
@@ -22,6 +22,3 @@ install-packages:
 	[ -d packages ] || $(MAKE) update-nuget
 	$(NUGET) restore FStar.sln
 	find packages -name '*.exe' -exec chmod +x '{}' ';'
-
-clean-packages:
-	rm -r VS/packages
