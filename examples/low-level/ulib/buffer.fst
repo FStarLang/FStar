@@ -128,12 +128,20 @@ let modifies_sub_2 #rid bufs subbufs refs subrefs h0 h1 :
 
 let modifies_none h : Lemma (requires (True)) (ensures (forall i. List.Tot.contains i (frame_ids h) ==> modifies_buf i Set.empty Set.empty h h)) = ()
 
-(* let modifies_fresh #a h0 h1 bufs refs (b:buffer a) : *)
-(*   Lemma  *)
-(*     (requires (not(contains h0 b) /\ modifies (frameOf (content b)) (bufs ++ b) refs h0 h1)) *)
-(*     (ensures (modifies (frameOf (content b)) bufs refs h0 h1)) *)
-(*     [SMTPat (not(contains h0 b)); SMTPatT (modifies (frameOf (content b)) (bufs ++ b) refs h0 h1)] *)
-(*  = () *)
+(* val lemma_heap: #t:Type -> r:Heap.ref t -> s:Set.set Heap.aref -> h:Heap.heap -> h':Heap.heap -> Lemma  *)
+(*   (requires (Heap.modifies (Set.union s !{r}) h h' *)
+(* 	     /\ not (Heap.contains h r) )) *)
+(*   (ensures (Heap.modifies s h h')) *)
+(* let lemma_heap #t r s h h' = () *)
+
+let modifies_fresh #a h0 h1 bufs refs (b:buffer a) :
+  Lemma
+    (requires (not(contains h0 b) /\ contains h1 b
+	       /\ modifies_buf (frameOf (content b)) (bufs ++ b) refs h0 h1
+	       /\ frame_ids h0 = frame_ids h1))
+    (ensures (modifies_buf (frameOf (content b)) bufs refs h0 h1))
+    [SMTPat (not(contains h0 b)); SMTPatT (modifies_buf (frameOf (content b)) (bufs ++ b) refs h0 h1)]
+ = ()
 
 (* Equality between fragments of buffers *)
 let equalSub (#a:Type) (hb:mem) (b:buffer a) (b_idx:nat) (hb':mem) (b':buffer a) (b_idx':nat) (len:nat) : GTot Type0 =
@@ -206,41 +214,64 @@ let sub #a (b:buffer a) (i:nat) (len:nat{len <= length b /\ i + len <= length b}
 
 #reset-options //"--z3timeout 20"
 
-private val blit_aux: #a:Type -> b:buffer a -> idx_b:nat{idx_b<=length b} -> b':buffer a{disjoint b b'} -> idx_b':nat{idx_b'<=length b'} -> len:nat{idx_b+len <= length b /\ idx_b'+len <= length b'} -> ctr:nat{ctr<=len} ->  ST unit
-  (requires (fun h -> equalSub h b (idx_b+ctr) h b' (idx_b'+ctr) (len-ctr)))
-  (ensures (fun h0 _ h1 -> 
-      equalSub h1 b idx_b h1 b' idx_b' len 
-      /\ modifies_one (frameOf (content b')) h0 h1
-      /\ modifies_buf (frameOf (content b')) (only b') Set.empty h0 h1
-      /\ equalSub h0 b' 0 h1 b' 0 idx_b'
-      /\ equalSub h0 b' (idx_b'+len) h1 b' (idx_b'+len) (length b' - idx_b' - len)))
+let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:t) (h1:t) (h2:t): Lemma
+  (requires (modifies_one (frameOf (content b)) h0 h1 /\ modifies_one (frameOf (content b)) h1 h2))
+  (ensures (modifies_one (frameOf (content b)) h0 h2))
+  [SMTPat (modifies_one (frameOf (content b)) h0 h1); SMTPat (modifies_one (frameOf (content b)) h1 h2)]
+  = ()
 
-(* JK: WIP, up to here *)
-
+(* TODO: simplify, add triggers ? *)
+private val blit_aux: #a:Type -> b:buffer a -> idx_b:nat{idx_b<=length b} -> 
+				 b':buffer a{disjoint b b'} -> idx_b':nat{idx_b'<=length b'} -> 
+				 len:nat{idx_b+len <= length b /\ idx_b'+len <= length b'} -> 
+				 ctr:nat{ctr<=len} ->  ST unit
+  (requires (fun h -> live h b /\ live h b' /\ length b >= idx_b + len /\ length b' >= idx_b' + len
+		    /\ (forall (i:nat). i < ctr ==> get h b (idx_b+i) = get h b' (idx_b'+i)) ))
+  (ensures (fun h0 _ h1 -> live h1 b /\ live h1 b' 
+			 /\ live h0 b /\ live h0 b' 
+			 /\ length b >= idx_b+len /\ length b' >= idx_b'+len
+			 /\ (forall (i:nat). {:pattern (get h1 b' (idx_b'+i))} i < len ==> get h0 b (idx_b+i) = get h1 b' (idx_b'+i))
+			 /\ (forall (i:nat). {:pattern (get h1 b' i)} (i < idx_b' \/ (i >= idx_b'+len /\ i < length b')) 
+			     ==> get h1 b' i = get h0 b' i)
+			 /\ frame_ids h1 = frame_ids h0
+			 /\ modifies_one (frameOf (content b')) h0 h1
+			 /\ modifies_buf (frameOf (content b')) (only b') Set.empty h0 h1 ))
 let rec blit_aux #a b idx_b b' idx_b' len ctr = 
   let h0 = SST.get() in
-  match ctr with
-  | 0 -> admit()
+  match len - ctr with
+  | 0 -> ()
   | _  -> 
-    let i = ctr-1 in
-    let bi = index b (idx_b+i) in
-    upd b' (idx_b'+i) bi; 
-    let h1 = SST.get() in 
+    let bctr = index b (idx_b+ctr) in
+    upd b' (idx_b'+ctr) bctr;
+    let h1 = SST.get() in
     equal_lemma (frameOf (content b')) h0 h1 b (only b');
-    assume (get h1 b (idx_b+i) == get h1 b' (idx_b'+i));
-    cut (equalSub h0 b (idx_b+ctr) h0 b' (idx_b'+ctr) (len-ctr));
-    cut (forall (j:nat). j < len - ctr ==> get h0 b (idx_b+ctr+j) = get h0 b' (idx_b'+ctr+j));
-    admit();
-    blit_aux b idx_b b' idx_b' len i
+    cut (forall (i:nat). {:pattern (get h1 b' i)} (i <> idx_b'+ctr /\ i < length b') ==> get h1 b' i = get h0 b' i);
+    cut (modifies_one (frameOf (content b')) h0 h1);
+    cut (modifies_buf (frameOf (content b')) (only b') Set.empty h0 h1);
+    blit_aux b idx_b b' idx_b' len (ctr+1);
+    let h2 = SST.get() in
+    equal_lemma (frameOf (content b')) h1 h2 b (only b');
+    cut (live h2 b /\ live h2 b');
+    cut (forall (i:nat). {:pattern (get h2 b')} i < len ==> get h2 b' (idx_b'+i) = get h1 b (idx_b+i));
+    cut (forall (i:nat). {:pattern (get h2 b')} i < len ==> get h2 b' (idx_b'+i) = get h0 b (idx_b+i));
+    cut (forall (i:nat). {:pattern (get h2 b')} (i < idx_b' \/ (i >= idx_b'+len /\ i < length b')) ==> get h2 b' i = get h1 b' i);
+    cut (modifies_one (frameOf (content b')) h1 h2);
+    cut (modifies_buf (frameOf (content b')) (only b') Set.empty h1 h2);
+    cut (modifies_one (frameOf (content b')) h0 h2);
+    cut (modifies_buf (frameOf (content b')) (only b') Set.empty h0 h2)
 
-val blit: #a:Type -> a:buffer t -> idx_a:nat{idx_a <= length a} -> b:buffer t{disjoint a b} -> 
+val blit: #t:Type -> a:buffer t -> idx_a:nat{idx_a <= length a} -> b:buffer t{disjoint a b} -> 
   idx_b:nat{idx_b <= length b} -> len:nat{idx_a+len <= length a /\ idx_b+len <= length b} -> ST unit
     (requires (fun h -> live h a /\ live h b))
-    (ensures (fun h0 _ h1 -> live h0 b 
-      /\ copyOf h1 a idx_a b idx_b 0 len
-      /\ (forall (i:nat). {:pattern (v (get h1 b i))} ((i >= idx_b + len /\ i < length b) \/ i < idx_b) ==> v (get h1 b i) = v (get h0 b i))
-      /\ modifies (only b) h0 h1))
-let blit #t a idx_a b idx_b len = blit_aux a idx_a b idx_b len len
+    (ensures (fun h0 _ h1 -> live h0 b /\ live h0 a /\ live h1 b /\ live h1 a
+      /\ (forall (i:nat). {:pattern (get h1 b (idx_b+i))} i < len ==> get h1 b (idx_b+i) = get h0 a (idx_a+i))
+      /\ (forall (i:nat). {:pattern (get h1 b i)} ((i >= idx_b + len /\ i < length b) \/ i < idx_b) ==> get h1 b i = get h0 b i)
+      /\ modifies_one (frameOf (content b)) h0 h1
+      /\ modifies_buf (frameOf (content b)) (only b) Set.empty h0 h1
+      /\ frame_ids h0 = frame_ids h1
+      ))
+let blit #t a idx_a b idx_b len = 
+  blit_aux a idx_a b idx_b len 0
 
 val split: #a:Type -> a:buffer t -> i:nat{i <= length a} -> ST (buffer t * buffer t)
     (requires (fun h -> live h a))
@@ -248,45 +279,49 @@ val split: #a:Type -> a:buffer t -> i:nat{i <= length a} -> ST (buffer t * buffe
       /\ idx (snd b) = idx a + i /\ length (fst b) = i /\ length (snd b) = length a - i 
       /\ disjoint (fst b) (snd b)  /\ content (fst b) = content a /\ content (snd b) = content a))
 let split #t a i = 
-  let a1 = sub a 0 i in let a2 = sub a i (a.length - i) in a1, a2  
+  let a1 = sub a 0 i in let a2 = sub a i (a.length - i) in a1, a2
 
 val offset: #a:Type -> a:buffer t -> i:nat{i <= length a} -> ST (buffer t)
   (requires (fun h -> live h a))
   (ensures (fun h0 a' h1 -> h0 == h1 /\ content a' = content a /\ idx a' = idx a + i /\ length a' = length a - i))
-let offset #t a i = {content = a.content; idx = i+a.idx; length = a.length - i}
+let offset #t a i = 
+  {content = a.content; idx = i+a.idx; length = a.length - i}
 
-private val of_seq_aux: #a:pos -> s:seq (usint a) -> l:pos{l = Seq.length s} -> ctr:nat{ ctr <= l} -> b:buffer a{idx b = 0 /\ length b = l} -> ST unit
+private val of_seq_aux: #a:Type -> s:seq a -> l:pos{l = Seq.length s} -> ctr:nat{ ctr <= l} -> b:buffer a{idx b = 0 /\ length b = l} -> ST unit
     (requires (fun h -> live h b))
     (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b 
-      /\ (forall (i:nat). {:pattern (v (get h1 b i))} i < ctr ==> v (get h1 b i) = v (Seq.index s i))
-      /\ (forall (i:nat). {:pattern (v (get h1 b i))} i >= ctr /\ i < length b ==> v (get h1 b i) = v (get h0 b i))))
+      /\ (forall (i:nat). {:pattern (get h1 b i)} i < ctr ==> get h1 b i = Seq.index s i)
+      /\ (forall (i:nat). {:pattern (get h1 b i)} i >= ctr /\ i < length b ==> get h1 b i = get h0 b i)))
 let rec of_seq_aux #a s l ctr b =
-  let h0 = ST.get() in
   match ctr with
   | 0 -> ()
   | _ -> let j = ctr - 1 in 
          upd b j (Seq.index s j); 
 	 of_seq_aux s l j b	 
 
-val of_seq: #a:pos -> s:seq (usint a) -> l:pos{l = Seq.length s} -> ST (buffer a)
+val of_seq: #a:Type -> s:seq a -> l:pos{l = Seq.length s} -> ST (buffer a)
   (requires (fun h -> True))
   (ensures (fun h0 b h1 -> idx b = 0 /\ length b = l /\ not(contains h0 b) /\ live h1 b
-    /\ (forall (i:nat). {:pattern (v (get h1 b i))} i < l ==> v (get h1 b i) = v (Seq.index s i)) ))
+    /\ (forall (i:nat). {:pattern (get h1 b i)} i < l ==> get h1 b i = Seq.index s i) ))
 let of_seq #a s l =
   let init = Seq.index s 0 in
   let b = create #a init l in 
   of_seq_aux s l l b; 
   b
 
-
-// TODO: Change to clone
-val copy: #a:pos ->  b:buffer a -> l:pos{length b >= l} -> ST (buffer a)
+val clone: #a:Type ->  b:buffer a -> l:pos{length b >= l} -> ST (buffer a)
   (requires (fun h -> live h b))
-  (ensures (fun h0 b' h1 -> not(contains h0 b') /\ contains h1 b' /\ idx b' = 0 
-	      /\ length b' = l /\ copyOf #a h1 b 0 b' 0 0 l
-	      /\ modifies empty h0 h1))
-let copy #a b l =
-  let init = index b 0 in 
-  let b' = create init l in 
+  (ensures (fun h0 b' h1 -> not(contains h0 b')
+	      /\ live h0 b
+	      /\ live h1 b'
+	      /\ idx b' = 0 
+	      /\ length b' = l 
+	      /\ (forall (i:nat). {:pattern (get h1 b' i)} i < l ==> get h1 b' i = get h0 b i)
+	      /\ modifies_one (frameOf (content b')) h0 h1
+	      /\ modifies_buf (frameOf (content b')) Set.empty Set.empty h0 h1
+	      /\ frame_ids h0 = frame_ids h1))
+let clone #a b l =
+  let (init:a) = index b 0 in 
+  let (b':buffer a) = create init l in 
   blit b 0 b' 0 l; 
   b'
