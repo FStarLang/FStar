@@ -103,7 +103,7 @@ z3-x64:
 # --------------------------------------------------------------------
 
 nuget-restore:
-	$(MAKE) -C VS install-packages
+	$(RUNTIME) VS/.nuget/NuGet.exe restore VS/FStar.sln
 
 nuget-clean:
 	$(MAKE) -C VS clean-packages
@@ -119,11 +119,9 @@ msbuild-clean:
 
 # --------------------------------------------------------------------
 parser/parse.fs: parser/parse.fsy $(FSYACC)
-	$(MAKE) -C VS install-packages
 	$(FSYACC) --module FStar.Parser.Parse $<
 
 parser/lex.fs: parser/lex.fsl $(FSLEX)
-	$(MAKE) -C VS install-packages
 	$(FSLEX) --unicode $<
 
 BASIC_DEPS=
@@ -295,9 +293,8 @@ fs: $(BOOT_ALL)
 	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --MLish --lax --fs_typ_app \
 	  --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
 
-fsharp-output:
+fsharp-output: nuget-restore
 	mkdir -p fsharp-output
-	make -C VS install-packages
 	cp ../bin/FSharp.PowerPack.* fsharp-output
 
 plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) fstar/main.fs
