@@ -529,7 +529,7 @@ let collect (filenames: list<string>): _ =
       let should_append_fsti = is_implementation f && is_interleaved in
       let suffix = if should_append_fsti then [ f ^ "i" ] else [] in
       let k = lowercase_module_name f in
-    let deps = List.rev (discover k) in
+      let deps = List.rev (discover k) in
       let deps_as_filenames = List.map_flatten must_find deps @ suffix in
       (* List stored in the "right" order. *)
       f, deps_as_filenames
