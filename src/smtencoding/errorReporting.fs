@@ -142,7 +142,7 @@ let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
         incr ctr;
         Term.Echo ("DETAILING ERRORS" ^ (string_of_int !ctr)) ::
-        (labs |> List.map (fun (l, _, _) -> Term.Assume(mkEq(Term.mkFreeV l, Term.mkTrue), Some "Disabling label"))) in
+        (labs |> List.map (fun (l, _, _) -> Term.Assume(mkEq(Term.mkFreeV l, Term.mkTrue), Some "Disabling label", Some ("disable_label_"^fst l)))) in
     let print_labs tag l = l |> List.iter (fun (l, _, _) -> Util.print2 "%s : %s; " tag (fst l)) in
     //l1 - l2: difference of label lists
     let minus l1 l2 = 
@@ -206,8 +206,8 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
 
     let with_fuel label_assumptions p (n, i) =
        [Term.Caption (Util.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
-        Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None);
-        Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None);
+        Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, None);
+        Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, None);
         p]
         @label_assumptions
         @[Term.SetOption ("timeout", (string_of_int <| Options.z3_timeout() * 1000))]
