@@ -71,6 +71,7 @@ let op_Hat_Amp = logand
 let op_Hat_Hat = logxor
 let op_Hat_Bar = logor
 
+(* To be realized in ML/C directly *)
 assume val eq: x:uint63 -> y:uint63 -> Tot (z:uint63{(v x = v y <==> v z = pow2 63 - 1)
 								  /\ (v x <> v y <==> v z = 0)})
 assume val gte: x:uint63 -> y:uint63 -> Tot (z:uint63{(v x >= v y <==> v z = pow2 63 - 1)

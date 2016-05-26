@@ -3,7 +3,7 @@ FSTAR_HOME=../..
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_DEFAULT_ARGS) # from the included Makefile
 
-OPTIONS_VER=
+OPTIONS_VER=--universes
 OPTIONS_COMPILE=--lax --codegen C
 OPTIONS_OCAML=--lax --codegen OCaml --universes --no_location_info --use_native_int
 
@@ -69,7 +69,7 @@ chacha-ml:
 	$(CHACHA_ODIR)_ml/a.out
 
 poly-ver: poly.fst
-	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 250 $(addprefix --verify_module , Parameters Bigint Bignum Poly)
+	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 20 $(addprefix --verify_module , SBuffer Parameters Bigint Bignum Poly)
 
 poly-test: poly.fst
 	@echo ""

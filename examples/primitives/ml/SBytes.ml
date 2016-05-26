@@ -1,7 +1,7 @@
 open Char
 open SBuffer
 
-type sbytes = unit buffer
+type sbytes = int buffer
 type uint32 = int
 
 let create init len = create 8 init len

@@ -17,7 +17,6 @@ type 'a buffer = {
     length:int;
   }
 
-                   
 type uint32 = int
 
 type uint8s = int buffer
@@ -28,7 +27,7 @@ type uint128s = Stdint.uint128 buffer
                 
 let create t init len = {content = Array.make len init; idx = 0; length = len}
 let index t b n = Array.get b.content (n+b.idx)
-let upd t b n v = Array.set b.content (n+b.idx) v
+let upd t (b:'a buffer) (n:int) (v:'a) = Array.set b.content (n+b.idx) v
 let sub t b i len = {content = b.content; idx = b.idx+i; length = len}
 let offset t b i  = {content = b.content; idx = b.idx+i; length = b.length-i}
 let blit t a idx_a b idx_b len = Array.blit a.content (idx_a+a.idx) b.content (idx_b+b.idx) len
