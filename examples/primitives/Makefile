@@ -68,8 +68,8 @@ chacha-ml:
 	cd $(CHACHA_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(CHACHA_OCAML) test_chacha20.ml
 	$(CHACHA_ODIR)_ml/a.out
 
-poly-ver: poly.fst
-	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 20 $(addprefix --verify_module , SBuffer Parameters Bigint Bignum Poly)
+poly-ver: axioms.fst intlib.fst IntLibLemmas.fst sbuffer.fst parameters.fst bigint.fst bignum.fst poly.fst
+	fstar.exe --universes $^ $(addprefix --verify_module , IntLib IntLibLemma Parameters SBuffer Bigint Bignum Poly)
 
 poly-test: poly.fst
 	@echo ""
