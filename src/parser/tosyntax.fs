@@ -201,6 +201,7 @@ and free_type_vars env t = match (unparen t).tm with
   | Var  _
   | Name _  -> []
 
+  | Assign (_, t)
   | Requires (t, _)
   | Ensures (t, _)
   | NamedTyp(_, t)
@@ -312,6 +313,13 @@ let mk_ref_alloc tm =
     S.fv_to_tm (S.lid_as_fv C.alloc_lid Delta_constant None),
     [ tm, S.as_implicit false ]) in
   S.mk tm' None tm.pos
+
+let mk_ref_assign t1 t2 pos =
+  let tm = Tm_app (
+    S.fv_to_tm (S.lid_as_fv C.write_lid Delta_constant None),
+    [ t1, S.as_implicit false; t2, S.as_implicit false ]) in
+  S.mk tm None pos
+
 
 let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
   let check_linear_pattern_variables (p:Syntax.pat) = 
@@ -529,7 +537,14 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Name {str="Effect"} -> mk (Tm_constant Const_effect)
     | Name {str="True"}   -> S.fvar (Ident.set_lid_range Const.true_lid top.range) Delta_constant None
     | Name {str="False"}   -> S.fvar (Ident.set_lid_range Const.false_lid top.range) Delta_constant None
-   
+
+    | Assign (ident, t2) ->
+      let t2 = desugar_term env t2 in
+      let t1, mut = fail_or2 (Env.try_lookup_id env) ident in
+      if not mut then
+        raise (Error ("Can only assign to mutable values", top.range));
+      mk_ref_assign t1 t2 top.range
+
     | Var l
     | Name l ->
       let tm, mut = fail_or env (Env.try_lookup_lid env) l in

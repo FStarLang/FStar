@@ -192,3 +192,4 @@ type token =
   | INT of (string * bool)
   | YIELD of (bool)
   | UNFOLDABLE
+  | LARROW

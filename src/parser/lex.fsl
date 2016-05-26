@@ -376,6 +376,7 @@ rule token args = parse
  | ',' { COMMA }
  | "~>" { SQUIGGLY_RARROW }
  | "->" { RARROW }
+ | "<-" { LARROW }
  | "<==>" { IFF }
  | "==>" { IMPLIES }
  | ".." { DOT_DOT }

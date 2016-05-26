@@ -302,6 +302,7 @@ rule token = parse
  | ','         { COMMA }
  | "~>"        { SQUIGGLY_RARROW }
  | "->"        { RARROW }
+ | "<-"        { LARROW }
  | "<==>"      { IFF }
  | "==>"       { IMPLIES }
  | "."         { DOT }

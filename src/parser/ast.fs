@@ -75,6 +75,7 @@ type term' =
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
   | Labeled   of term * string * bool
+  | Assign    of ident * term
 
 and term = {tm:term'; range:range; level:level}
 
