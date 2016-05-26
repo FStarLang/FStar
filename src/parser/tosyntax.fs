@@ -168,7 +168,7 @@ let op_as_term env arity rng s : option<S.term> =
         | "<==>" -> r C.iff_lid (Delta_unfoldable 2)
         | _ -> None in
    begin match Env.try_lookup_lid env (compile_op_lid arity s rng) with
-        | Some t -> Some t
+        | Some t -> Some (fst t)
         | _ -> fallback()
    end
 
@@ -301,7 +301,19 @@ type lenv_t = list<bv>
 let mk_lb (n, t, e) = {lbname=n; lbunivs=[]; lbeff=C.effect_ALL_lid; lbtyp=t; lbdef=e}
 let no_annot_abs bs t = U.abs bs t None 
 
-let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
+let mk_ref_read tm =
+  let tm' = Tm_app (
+    S.fv_to_tm (S.lid_as_fv C.read_lid Delta_constant None),
+    [ tm, S.as_implicit false ]) in
+  S.mk tm' None tm.pos
+
+let mk_ref_alloc tm =
+  let tm' = Tm_app (
+    S.fv_to_tm (S.lid_as_fv C.alloc_lid Delta_constant None),
+    [ tm, S.as_implicit false ]) in
+  S.mk tm' None tm.pos
+
+let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
   let check_linear_pattern_variables (p:Syntax.pat) = 
     let rec pat_vars (p:Syntax.pat) = match p.v with 
       | Pat_dot_term _
@@ -320,17 +332,26 @@ let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
         else xs in
     pat_vars p in
 
+  begin match is_mut, p.pat with
+  | false, _
+  | true, PatVar _ ->
+      ()
+  | true, _ ->
+      raise (Error ("let-mutable is for variables only", p.prange))
+  end;
+  let push_bv_maybe_mut = if is_mut then push_bv_mutable else push_bv in
+
   let resolvex (l:lenv_t) e x =
     match l |> Util.find_opt (fun y -> y.ppname.idText=x.idText) with
       | Some y -> l, e, y
       | _ ->
-        let e, x = push_bv e x in
+        let e, x = push_bv_maybe_mut e x in
         (x::l), e, x in
   let resolvea (l:lenv_t) e a =
     match l |> Util.find_opt (fun b -> b.ppname.idText=a.idText) with
       | Some b -> l, e, b
       | _ ->
-        let e, a = push_bv e a in
+        let e, a = push_bv_maybe_mut e a in
         (a::l), e, a in
   let rec aux (loc:lenv_t) env (p:pattern) =
     let pos q = Syntax.withinfo q tun.n p.prange in
@@ -402,7 +423,7 @@ let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
         let args = List.rev args in
         let l = if dep then Util.mk_dtuple_data_lid (List.length args) p.prange
                 else Util.mk_tuple_data_lid (List.length args) p.prange in
-        let constr = fail_or env  (Env.try_lookup_lid env) l in
+        let constr, _ = fail_or env  (Env.try_lookup_lid env) l in
         let l = match constr.n with
           | Tm_fvar fv -> fv
           | _ -> failwith "impossible" in
@@ -432,7 +453,7 @@ let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
   ignore <| check_linear_pattern_variables p;
   env, b, p
 
-and desugar_binding_pat_maybe_top top env p : (env_t * bnd * option<pat>) =
+and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * option<pat>) =
   if top
   then match p.pat with
     | PatVar (x, _) -> (env, LetBinder(qualify env x, tun), None)
@@ -440,17 +461,17 @@ and desugar_binding_pat_maybe_top top env p : (env_t * bnd * option<pat>) =
       (env, LetBinder(qualify env x, desugar_term env t), None)
     | _ -> raise (Error("Unexpected pattern at the top-level", p.prange))
   else
-    let (env, binder, p) = desugar_data_pat env p in
+    let (env, binder, p) = desugar_data_pat env p is_mut in
     let p = match p.v with
       | Pat_var _
       | Pat_wild _ -> None
       | _ -> Some p in
     (env, binder, p)
 
-and desugar_binding_pat env p = desugar_binding_pat_maybe_top false env p
+and desugar_binding_pat env p = desugar_binding_pat_maybe_top false env p false
 
 and desugar_match_pat_maybe_top _ env pat =
-  let (env, _, pat) = desugar_data_pat env pat in
+  let (env, _, pat) = desugar_data_pat env pat false in
   (env, pat)
 
 and desugar_match_pat env p = desugar_match_pat_maybe_top false env p
@@ -489,11 +510,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
               t1::rest
             | _ -> [t] in
       let targs = flatten (unparen top) |> List.map (fun t -> as_arg (desugar_typ env t)) in
-      let tup = fail_or env (Env.try_lookup_lid env) (Util.mk_tuple_lid (List.length targs) top.range) in
+      let tup, _ = fail_or env (Env.try_lookup_lid env) (Util.mk_tuple_lid (List.length targs) top.range) in
       mk (Tm_app(tup, targs))
 
     | Tvar a ->
-      setpos <| fail_or2 (try_lookup_id env) a
+      setpos <| fst (fail_or2 (try_lookup_id env) a)
 
     | Op(s, args) ->
       begin match op_as_term env (List.length args) top.range s with
@@ -511,11 +532,14 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
    
     | Var l
     | Name l ->
-      setpos <| fail_or env (Env.try_lookup_lid env) l
+      let tm, mut = fail_or env (Env.try_lookup_lid env) l in
+      let tm = setpos tm in
+      if mut then mk_ref_read tm
+      else tm
 
     | Construct(l, args) ->
       let head, is_data = match Env.try_lookup_datacon env l with 
-        | None -> fail_or env (Env.try_lookup_lid env) l, false
+        | None -> fst <| fail_or env (Env.try_lookup_lid env) l, false
         | Some head -> mk (Tm_fvar head), true in
       begin match args with
         | [] -> head
@@ -539,7 +563,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 (env, tparams@[{x with sort=t}, None], typs@[as_arg <| no_annot_abs tparams t]))
         (env, [], []) 
         (binders@[mk_binder (NoName t) t.range Type None]) in
-      let tup = fail_or env  (try_lookup_lid env) (Util.mk_dtuple_lid (List.length targs) top.range) in
+      let tup, _ = fail_or env  (try_lookup_lid env) (Util.mk_dtuple_lid (List.length targs) top.range) in
       mk <| Tm_app(tup, targs)
 
     | Product(binders, t) ->
@@ -636,10 +660,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       aux [] top
 
     | Seq(t1, t2) ->
-      mk (Tm_meta(desugar_term env (mk_term (Let(false, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr), 
+      mk (Tm_meta(desugar_term env (mk_term (Let(NoLetQualifier, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr), 
                   Meta_desugared Sequence))
 
-    | Let(is_rec, ((pat, _snd)::_tl), body) ->
+    | Let(qual, ((pat, _snd)::_tl), body) ->
+      let is_rec = qual = Rec in
       let ds_let_rec_or_app () =
         let bindings = (pat, _snd)::_tl in
         let funs = bindings |> List.map (fun (p, def) ->
@@ -691,7 +716,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
       let ds_non_rec pat t1 t2 =
         let t1 = desugar_term env t1 in
-        let env, binder, pat = desugar_binding_pat_maybe_top top_level env pat in
+        // a let-mutable is a hidden ref allocation
+        let t1 = match qual with
+          | Mutable -> mk_ref_alloc t1
+          | _ -> t1
+        in
+        let env, binder, pat = desugar_binding_pat_maybe_top top_level env pat (qual = Mutable) in
         begin match binder with
           | LetBinder(l, t) ->
             let body = desugar_term env t2 in
@@ -705,7 +735,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
               | Some ({v=Pat_wild _}) -> body
               | Some pat -> 
                 S.mk (Tm_match(S.bv_to_name x, [U.branch (pat, None, body)])) None body.pos in
-                mk <| Tm_let((false, [mk_lb (Inl x, x.sort, t1)]), Subst.close [S.mk_binder x] body)
+            mk <| Tm_let((false, [mk_lb (Inl x, x.sort, t1)]), Subst.close [S.mk_binder x] body)
         end in
 
       if is_rec 
@@ -776,7 +806,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
           let x = FStar.Ident.gen e.range in
           let xterm = mk_term (Var (lid_of_ids [x])) x.idRange Expr in
           let record = Record(None, record.fields |> List.map (fun (f, _) -> get_field (Some xterm) f)) in
-          Let(false, [(mk_pattern (PatVar (x, None)) x.idRange, e)], mk_term record top.range top.level) in
+          Let(NoLetQualifier, [(mk_pattern (PatVar (x, None)) x.idRange, e)], mk_term record top.range top.level) in
 
       let recterm = mk_term recterm top.range top.level in
       let e = desugar_term env recterm in
@@ -1386,7 +1416,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     env, [se]
 
   | Exception(id, None) ->
-    let t = fail_or env (try_lookup_lid env) C.exn_lid in
+    let t, _ = fail_or env (try_lookup_lid env) C.exn_lid in
     let l = qualify env id in
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
@@ -1398,7 +1428,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
 
   | Exception(id, Some term) ->
     let t = desugar_term env term in
-    let t = U.arrow ([null_binder t]) (mk_Total <| fail_or env (try_lookup_lid env) C.exn_lid) in
+    let t = U.arrow ([null_binder t]) (mk_Total <| fst (fail_or env (try_lookup_lid env) C.exn_lid)) in
     let l = qualify env id in
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in

@@ -37,7 +37,7 @@ type env = {
   open_namespaces:      list<lident>;                     (* fully qualified names, in order of precedence *)
   modul_abbrevs:        list<(ident * lident)>;           (* module X = A.B.C *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
-  localbindings:        list<(ident * bv)>;               (* local name bindings for name resolution, paired with an env-generated unique name *)
+  localbindings:        list<(ident * bv * bool)>;        (* local name bindings for name resolution, paired with an env-generated unique name and a boolean that is true when the variable has been introduced with let-mutable *)
   recbindings:          list<(ident*lid*delta_depth)>;    (* names bound by recursive type and top-level let-bindings definitions only *)
   sigmap:               Util.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
   default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
@@ -54,7 +54,7 @@ type record_or_dc = {
   is_record:bool
 }
 type foundname =
-  | Term_name of term
+  | Term_name of typ * bool // indicates if mutable
   | Eff_name  of sigelt * lident
 
 val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
@@ -68,8 +68,8 @@ val default_total: env -> env
 val default_ml: env -> env
 
 val current_module: env -> lident
-val try_lookup_id: env -> ident -> option<term>
-val try_lookup_lid: env -> lident -> option<term>
+val try_lookup_id: env -> ident -> option<(term*bool)>
+val try_lookup_lid: env -> lident -> option<(term*bool)>
 val try_lookup_effect_name: env -> lident -> option<lident>
 val try_lookup_effect_defn: env -> lident -> option<eff_decl>
 val try_lookup_datacon: env -> lident -> option<fv>
@@ -82,6 +82,7 @@ val lookup_letbinding_quals: env -> lident -> list<qualifier>
 val qualify_field_to_record: env -> record_or_dc -> lident -> option<lident>
 
 val push_bv: env -> ident -> env * bv
+val push_bv_mutable: env -> ident -> env * bv
 val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env
 val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
@@ -98,7 +99,7 @@ val enter_monad_scope: env -> ident -> env
 val exit_monad_scope: env -> env -> env
 val export_interface: lident ->  env -> env
 
-(* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<term>
+(* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<(term*bool)>
 (* private *) val extract_record: env -> sigelt -> unit
 (* private *) val unique:  bool -> bool -> env -> lident -> bool
 (* private *) val check_admits: env -> unit

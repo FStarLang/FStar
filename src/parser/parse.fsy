@@ -102,7 +102,7 @@ let as_frag d ds =
 %token AND AS ASSERT BEGIN ELSE END DOT_DOT
 %token EXCEPTION FALSE L_FALSE FOR FUN FUNCTION IF IN FINALLY RESERVED MODULE DEFAULT
 %token LAZY MATCH OF
-%token OPEN OR REC THEN TO TRUE L_TRUE TRY TYPE EFFECT VAL
+%token OPEN OR REC MUTABLE THEN TO TRUE L_TRUE TRY TYPE EFFECT VAL
 %token WHEN WITH HASH AMP AMP_AMP QUOTE LPAREN RPAREN LPAREN_RPAREN STAR COMMA RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON ATSIGN HAT COLON_EQUALS SEMICOLON
@@ -171,7 +171,7 @@ decl2:
       { $1 }
   | tycon
       { $1 }
-  | qualifiers LET recopt letbinding letbindings
+  | qualifiers LET letqualifier letbinding letbindings
       {
         let r, focus = $3 in
         let lbs = focusLetBindings ((focus, $4)::$5) (rhs2 parseState 1 5) in
@@ -279,9 +279,11 @@ maybeFocus:
   |  { false }
   | SQUIGGLY_RARROW { true }
 
-recopt:
-  | maybeFocus REC      { true, $1 }
-  |                     { false, false }
+letqualifier:
+  | maybeFocus REC      { Rec, $1 }
+  | MUTABLE             { Mutable, false }
+  |                     { NoLetQualifier, false }
+
 
 letbindings:
   | AND maybeFocus letbinding letbindings
@@ -593,7 +595,7 @@ noSeqTerm:
         mk_term (Match($2, branches)) (rhs2 parseState 1 4) Expr
       }
 
-  | LET recopt letbinding letbindings IN term
+  | LET letqualifier letbinding letbindings IN term
       {
         let r, focus = $2 in
         let lbs = focusLetBindings ((focus,$3)::$4) (rhs2 parseState 2 4) in

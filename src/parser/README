@@ -18,7 +18,7 @@ Adding a new token
 
 If you're adding a new token, you need to edit:
 - [parse.fsti] the token datatype (building F* with F* via OCaml extraction)
-- [parse.fsi] the token datatype (building F* with F#)
+- [parse.fsi] the token datatype (building F* with F#), but this one is auto-generated
 - [lexhelp.fs] to add it to the parser keyword table (F#)
 - [ml/lex.mll] to add it to the parser keyword table (OCaml)
 - [parse.fsy] to expose it to the parser, possibly with an adequate precedence
