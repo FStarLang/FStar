@@ -1426,8 +1426,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                  if quals |> List.contains Logic
                                  then mk_Valid app, encode_formula body env'
                                  else app, encode_term body env' in
-                              let eqn = Term.Assume(mkForall([[app]], vars, mkImp(mk_and_l guards, mkEq(app, body))), 
-                                                    Some (Util.format1 "Equation for %s" flid.str), 
+                              //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
+                              //But the guard is unnecessary given the pattern
+                              let eqn = Term.Assume(mkForall([[app]], vars, mkEq(app,body)),
+                                                    Some (Util.format1 "Equation for %s" flid.str),
                                                     Some ("equation_"^f)) in
                               decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid f app,
                               env
@@ -1454,7 +1456,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                              let gsapp = Term.mkApp(g, Term.mkApp("SFuel", [fuel_tm])::vars_tm) in
                              let gmax = Term.mkApp(g, Term.mkApp("MaxFuel", [])::vars_tm) in
                              let body_tm, decls2 = encode_term body env' in
-                             let eqn_g = Term.Assume(mkForall([[gsapp]], fuel::vars, mkImp(mk_and_l guards, mkEq(gsapp, body_tm))), 
+                             //NS 05.25: This used to be  mkImp(mk_and_l guards, mkEq(gsapp, body_tm)
+                             //But, the pattern ensures that this only applies to well-typed terms
+                             let eqn_g = Term.Assume(mkForall([[gsapp]], fuel::vars,  mkEq(gsapp, body_tm)),
                                                      Some (Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.str),
                                                      Some ("equation_with_fuel_" ^g)) in
                              let eqn_f = Term.Assume(mkForall([[app]], vars, mkEq(app, gmax)), 
