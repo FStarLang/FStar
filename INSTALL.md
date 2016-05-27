@@ -195,7 +195,7 @@ Steps 2 and 3 below require a working OCaml (any version from 4.02.2 to 4.03.0) 
    install Cygwin -- it will just launch Cygwin's setup.exe with the right set
    of packages pre-checked, to make sure you have everything you need. **JP**: make sure you also install: `wget`, `unzip`, `mingw64-x86_64-openssl`, `mingw64-x86_64-sqlite3`, `mingw64-x86_64-gmp`, `mingw64-x86_64-pkg-config`.
 
-1. **Note:** on Windows 8.1 and above, the OCaml installer will fail to launch Cygwin's `setup.exe`. In that case, launch it manually (it has been downloaded from your desktop), install all the packages listed on the installer's webpage, and also install the packages listed above.
+1. **Note:** on Windows 8.1 and above, the OCaml installer will fail to launch Cygwin's `setup.exe`. In that case, launch it manually (it has been downloaded to your desktop), install all the packages listed on the installer's webpage, and also install the packages listed above.
 
 1. Follow the instructions from https://github.com/FStarLang/FStar/blob/master/contrib/CoreCrypto/INSTALL.md to get a working OPAM setup, including `opam init` and `~/.bashrc` configuration.
 
