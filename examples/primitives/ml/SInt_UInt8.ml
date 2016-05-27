@@ -38,7 +38,7 @@ let eq a b =
   let a = a land (a lsl 1) in
   (a asr 7) land 255
 
-let gte x y = (lnot((x - y) asr 15)) land 255
+let gte x y = (lnot((x - y) asr 7)) land 255
 
 let op_Hat_Plus = add
 let op_Hat_Star = mul

@@ -45,6 +45,8 @@ CURVE_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Ax
 
 all: chacha-test poly-test curve-test aes-test
 
+poly: poly-ver poly-ml
+
 low-star-ver:
 	$(FSTAR) $(OPTIONS_VER) sbuffer.fst SInt.UInt8.fst SInt.UInt32.fst SInt.UInt63.fst SBytes.fst
 

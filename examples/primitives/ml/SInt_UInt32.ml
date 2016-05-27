@@ -34,9 +34,16 @@ let of_int s = s
 let of_uint32 s = s
 let of_string s = int_of_string s
                                 
-(* TODO *)
-let eq x y = if x = y then -1 else 0
-let gte x y = if x >= y then -1 else 0
+let eq a b =
+  let a = lnot(a lxor b) in
+  let a = a land (a lsl 16) in
+  let a = a land (a lsl 8) in
+  let a = a land (a lsl 4) in
+  let a = a land (a lsl 2) in
+  let a = a land (a lsl 1) in
+  (a asr 31) land mask
+
+let gte x y = (lnot((x - y) asr 31)) land mask
 
 let op_Less_Less_Less : uint32  ->  Prims.nat  ->  uint32 = rotate_left
 let op_Hat_Less_Less : uint32  ->  Prims.nat  ->  uint32 = shift_left
