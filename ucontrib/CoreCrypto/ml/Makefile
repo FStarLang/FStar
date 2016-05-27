@@ -9,7 +9,7 @@ OCAMLOPT = ocamlfind opt $(INCLUDE) -g -annot
 OCAMLMKLIB = ocamlfind mklib $(INCLUDE)
 OCAMLDEP = ocamlfind dep
 
-CCOPTS = $(addprefix -ccopt ,-Wall -DDEBUG -std=c11 -D__USE_MINGW_ANSI_STDIO)
+CCOPTS = $(addprefix -ccopt ,-Wall -std=c11 -D__USE_MINGW_ANSI_STDIO)
 
 ifeq ($(OS),Windows_NT)
     # On cygwin + cygwinports, DLLs are searched in the PATH, which is not
