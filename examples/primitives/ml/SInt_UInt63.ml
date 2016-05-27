@@ -44,10 +44,12 @@ let op_Hat_Amp = logand
 let op_Hat_Bar = logor
 let op_Hat_Hat = logxor
 
-
-let of_uint32 s = s
-
 (* TODO *)
 let eq x y = if x = y then -1 else 0
 let gte x y = if x >= y then -1 else 0
 
+let of_string s = int_of_string s
+let of_int s = s
+                                                             
+let to_string s = string_of_int s
+let to_int s = s

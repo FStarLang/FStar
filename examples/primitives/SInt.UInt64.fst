@@ -135,7 +135,7 @@ let op_Hat_Less_Less_Less = rotate_left_wide
 let op_Hat_Greater_Greater_Greater = rotate_right_wide
 
 assume val of_string: string -> Tot uint64
-assume val of_int: int -> Tot uint64
+assume val of_int: x:nat{x >= -(pow2 (n-1)) /\ x < pow2 (n-1)} -> Tot (y:uint64{v y = x})
 
 // Constant time comparison masking functions
 assume val eq: x:limb -> y:limb -> Tot (z:limb{(v x = v y <==> v z = pow2 64 - 1)

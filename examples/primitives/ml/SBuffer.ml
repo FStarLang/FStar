@@ -19,10 +19,10 @@ type 'a buffer = {
 
 type uint32 = int
 
-type uint8s = int buffer
-type uint32s = int buffer 
-type uint63s = int buffer 
-type uint64s = Stdint.uint64 buffer 
+type uint8s = SInt_UInt8.uint8 buffer
+type uint32s = SInt_UInt32.uint32 buffer 
+type uint63s = SInt_UInt63.uint63 buffer 
+type uint64s = SInt_UInt64.uint64 buffer 
 type uint128s = Stdint.uint128 buffer 
                 
 let create t init len = {content = Array.make len init; idx = 0; length = len}

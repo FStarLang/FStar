@@ -74,4 +74,4 @@ let op_Less_Less_Less = rotate_left
 let op_Hat_Less_Less = shift_left 
 
 assume val of_string: string -> Tot uint32
-assume val of_int: int -> Tot uint32
+assume val of_int: x:nat{x >= -(pow2 (n-1)) /\ x < pow2 (n-1)} -> Tot (y:uint32{v y = x})
