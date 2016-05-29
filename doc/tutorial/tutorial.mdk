@@ -2914,7 +2914,7 @@ type exp =
 ~~
 Add cases for `ELet` to all definitions and proofs.
 
-[Load answer in editor](code/exercises/ex7c-stlc-let.fst)
+[Load answer in editor](code/solutions/ex7c-stlc-let.fst)
 ~~ CH
 Make the prev kind of link a macro of some sorts. It doesn't have a
 proper body so it's not an environment, but what is it? Entity?
