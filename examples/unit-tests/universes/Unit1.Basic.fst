@@ -7,9 +7,9 @@ type t =
   | B
 let rec comp x y = comp x y
 
-(* let rec foo x = *)
-(*   let rec bar y = bar y in *)
-(*   foo (bar x) *)
+let rec foo x =
+  let rec bar y = bar y in
+  foo (bar x)
 
 let partial_app f x y =
   let g = f x in
