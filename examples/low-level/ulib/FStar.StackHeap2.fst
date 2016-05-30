@@ -19,10 +19,10 @@ let rec suffix_of l0 l1 =
 
 let is_valid_stack s = suffix_of [root] s
 
-let t = (frame_ids:list rid{is_valid_stack frame_ids} & //the stack will contain at least 1 element; used to be contains at least 2 elements; is that intentional?
+let t : Type0 = (frame_ids:list rid{is_valid_stack frame_ids} & //the stack will contain at least 1 element; used to be contains at least 2 elements; is that intentional?
 	 m:Map.t rid heap{forall i. List.Tot.contains i frame_ids ==> Map.contains m i})
 
-let mem = t
+let mem : Type0 = t
 
 (* Type of region references *)
 (* Rewrote this a bit to avoid the assumes below *)
@@ -75,12 +75,22 @@ let top_frame s = Map.sel (heaps s) (top_frame_id s)
 //let valid (s:t) = includes [root] (frame_ids s) \/ frame_ids s = [root]
 let poppable (s:t) = is_valid_stack (Cons.tl (dfst s))
 
+(* Generates fresh region id *)
+assume val fresh_rid: h:t -> Tot (r:rid{not(Map.contains (heaps h) r)})
+
+let push_empty_frame (h:t) : Tot t =
+  let id = fresh_rid h in
+  (| id::frame_ids h,  Map.upd (heaps h) id Heap.emp |)
+  
+let pop_top_frame (h:t{poppable h}) : Tot t =
+  (| Cons.tl (frame_ids h), heaps h |)
+
 (* s1 has a new frame on top of s0. JK: Because of maps monotonicity I believe it 
    guaranties the unicity of the new frame id, needs to be checked *)
-let fresh_frame (s0:t) (s1:t) = 
-  Cons.tl (frame_ids s1) = frame_ids s0 /\      //the new stack extends the old one by just one frame
-  not (Map.contains (heaps s0) (top_frame_id s1)) /\ //this new frame is not anywhere in the old stack
-  (heaps s1 = Map.upd (heaps s0) (top_frame_id s1) emp) //and the new frame's heap is empty
+let fresh_frame (s0:t) (s1:t) = s1 = push_empty_frame s0
+  (* Cons.tl (frame_ids s1) = frame_ids s0 /\      //the new stack extends the old one by just one frame *)
+  (* not (Map.contains (heaps s0) (top_frame_id s1)) /\ //this new frame is not anywhere in the old stack *)
+  (* (heaps s1 = Map.upd (heaps s0) (top_frame_id s1) emp) //and the new frame's heap is empty *)
 
 (* Specifies untouched heaps *)
 let modifies (s:Set.set rid) (m0:t) (m1:t) =
@@ -90,10 +100,10 @@ let modifies (s:Set.set rid) (m0:t) (m1:t) =
 let modifies_top (m0:t) (m1:t) = frame_ids m0 = frame_ids m1 /\ modifies (Set.singleton (top_frame_id m1)) m0 m1
 
 (* s01 is popped into s1 *)
-let popped_stack (s0:t) (s1:t) =
-  suffix_of [root] (frame_ids s0) /\  //again, seems vacuous
-  Cons.tl (frame_ids s0) = frame_ids s1 /\ 
-  modifies Set.empty s1 s0
+let popped_stack (s0:t) (s1:t) = poppable s0 /\ s1 = pop_top_frame s0
+  (* suffix_of [root] (frame_ids s0) /\  //again, seems vacuous *)
+  (* Cons.tl (frame_ids s0) = frame_ids s1 /\  *)
+  (* modifies Set.empty s1 s0 *)
 
 let sel_rref (#a:Type) (#i:rid) (m:t) (r:rref i a) : a = Heap.sel (Map.sel (heaps m) i) (as_ref r)
 let upd_rref (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a) : t = 
@@ -180,3 +190,40 @@ let stack_to_ref_lemma_3 (#a:Type) (#a':Type) (x:stacked a) (y:stacked a')
 	  (ensures (as_ref x =!= as_ref y))
 	  [SMTPat (a <> a')]
   = ()
+
+(* Union of the domains of all the frames on the stack *)
+let domain h : Tot (Set.set aref) =
+  List.Tot.fold_left Set.union Set.empty (List.Tot.map (fun rid -> Heap.domain (Map.sel (heaps h) rid)) (frame_ids h))
+
+let domain_equality (h:t) (h':t) : Type0 =
+  frame_ids h = frame_ids h' /\ domain h = domain h'
+
+assume val domain_equality_lemma_0: h0:t -> Lemma
+  (requires (True))
+  (ensures (domain_equality h0 (pop_top_frame (push_empty_frame h0))))
+  [SMTPat (pop_top_frame (push_empty_frame h0))] 
+
+val domain_equality_lemma_1: h0:t -> h1:t -> h2:t -> h3:t -> Lemma
+  (requires (h1 = push_empty_frame h0 /\ frame_ids h2 = frame_ids h1
+	     /\ domain_equality (pop_top_frame h1) (pop_top_frame h2)
+	     /\ h3 = pop_top_frame h2))
+  (ensures (domain_equality h0 h3))
+  [SMTPat (h1 = push_empty_frame h0); SMTPat (frame_ids h2 = frame_ids h1);
+   SMTPatT (domain_equality (pop_top_frame h1) (pop_top_frame h2)); SMTPat (h3 = pop_top_frame h2)]
+let domain_equality_lemma_1 h0 h1 h2 h3 = ()
+
+assume val domain_equality_lemma_2: h0:t{poppable h0} -> h1:t{frame_ids h0 = frame_ids h1} -> Lemma
+  (requires (modifies_one (top_frame_id h0) h0 h1))
+  (ensures (domain_equality (pop_top_frame h0) (pop_top_frame h1)))
+  [SMTPat (modifies_one (top_frame_id h0) h0 h1)]
+
+assume val domain_equality_lemma_3: h0:t -> h1:t -> Lemma
+  (requires (domain_equality h0 h1))
+  (ensures (modifies_one (top_frame_id h0) h0 h1))
+  [SMTPat (modifies_one (top_frame_id h0) h0 h1)]
+
+assume val domain_equality_lemma_4: h:t -> h':t -> r:rid -> s:Set.set Heap.aref -> Lemma
+  (requires (modifies (Set.singleton r) h h' /\ frame_ids h = frame_ids h' 
+	    /\ modifies_ref r s h h' /\ modifies_ref r s h' h))
+  (ensures (domain_equality h h'))
+  [SMTPat (modifies_ref r s h h')]

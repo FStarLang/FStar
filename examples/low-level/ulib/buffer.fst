@@ -172,7 +172,7 @@ let create #a (init:a) (len:nat) :
     {content = content; idx = 0; length = len}
 
 let index #a (b:buffer a) (n:nat{n<length b}) : 
-  ST a
+  STL a
      (requires (fun h -> live h b))
      (ensures (fun h0 z h1 -> live h0 b /\ (h1 == h0) /\ (z == get h0 b n)))
   = StackArray.index b.content (b.idx+n)
@@ -195,19 +195,22 @@ let lemma_aux (#a:Type) (#a':Type) (b:buffer a) (h0:t) (h1:t) (b':buffer a') : L
     else if a <> a' then ()
     else if a = a' && content b <> content b' then ()
 
+let p_0 b : Type0 = b2t(Set.mem (Buff b) (only b))
+let p_1 b h0 h1 : Type0 = modifies_one (frameOf (content b)) h0 h1
+
 let upd #a (b:buffer a) (n:nat{n < length b}) v :
-  ST unit
+  STL unit
      (requires (fun h -> live h b))
      (ensures (fun h0 _ h1 -> atomicUpdate h0 h1 b n v))
   = let h0 = SST.get () in
     StackArray.upd b.content (b.idx+n) v;
     let h1 = SST.get () in
-    cut (Set.mem (Buff b) (only b));
-    cut (modifies_one (frameOf (content b)) h0 h1);
+    cut (p_0 b);
+    cut (p_1 b h0 h1);
     ()
 
 let sub #a (b:buffer a) (i:nat) (len:nat{len <= length b /\ i + len <= length b}) :
-  ST (buffer a)
+  STL (buffer a)
      (requires (fun h -> live h b))
      (ensures (fun h0 b' h1 -> content b = content b' /\ idx b' = idx b + i /\ length b' = len /\ (h0 == h1)))
   = {content = b.content; idx = i+b.idx; length = len}
@@ -220,11 +223,13 @@ let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:t) (h1:t) (h2:t): Lemm
   [SMTPat (modifies_one (frameOf (content b)) h0 h1); SMTPat (modifies_one (frameOf (content b)) h1 h2)]
   = ()
 
+#reset-options "--z3timeout 20"
+
 (* TODO: simplify, add triggers ? *)
 private val blit_aux: #a:Type -> b:buffer a -> idx_b:nat{idx_b<=length b} -> 
 				 b':buffer a{disjoint b b'} -> idx_b':nat{idx_b'<=length b'} -> 
 				 len:nat{idx_b+len <= length b /\ idx_b'+len <= length b'} -> 
-				 ctr:nat{ctr<=len} ->  ST unit
+				 ctr:nat{ctr<=len} ->  STL unit
   (requires (fun h -> live h b /\ live h b' /\ length b >= idx_b + len /\ length b' >= idx_b' + len
 		    /\ (forall (i:nat). i < ctr ==> get h b (idx_b+i) = get h b' (idx_b'+i)) ))
   (ensures (fun h0 _ h1 -> live h1 b /\ live h1 b' 
@@ -258,10 +263,15 @@ let rec blit_aux #a b idx_b b' idx_b' len ctr =
     cut (modifies_one (frameOf (content b')) h1 h2);
     cut (modifies_buf (frameOf (content b')) (only b') Set.empty h1 h2);
     cut (modifies_one (frameOf (content b')) h0 h2);
-    cut (modifies_buf (frameOf (content b')) (only b') Set.empty h0 h2)
+    cut (modifies_buf (frameOf (content b')) (only b') Set.empty h0 h2);
+    cut (modifies_ref (frameOf (content b')) !{as_ref (content b')} h0 h1); (* Trigger *)
+    cut (modifies_ref (frameOf (content b')) !{as_ref (content b')} h1 h2); (* Trigger *)
+    cut (modifies_ref (frameOf (content b')) !{as_ref (content b')} h0 h2) (* Trigger *)
+
+#reset-options
 
 val blit: #t:Type -> a:buffer t -> idx_a:nat{idx_a <= length a} -> b:buffer t{disjoint a b} -> 
-  idx_b:nat{idx_b <= length b} -> len:nat{idx_a+len <= length a /\ idx_b+len <= length b} -> ST unit
+  idx_b:nat{idx_b <= length b} -> len:nat{idx_a+len <= length a /\ idx_b+len <= length b} -> STL unit
     (requires (fun h -> live h a /\ live h b))
     (ensures (fun h0 _ h1 -> live h0 b /\ live h0 a /\ live h1 b /\ live h1 a
       /\ (forall (i:nat). {:pattern (get h1 b (idx_b+i))} i < len ==> get h1 b (idx_b+i) = get h0 a (idx_a+i))
@@ -281,13 +291,13 @@ val split: #a:Type -> a:buffer t -> i:nat{i <= length a} -> ST (buffer t * buffe
 let split #t a i = 
   let a1 = sub a 0 i in let a2 = sub a i (a.length - i) in a1, a2
 
-val offset: #a:Type -> a:buffer t -> i:nat{i <= length a} -> ST (buffer t)
+val offset: #a:Type -> a:buffer t -> i:nat{i <= length a} -> STL (buffer t)
   (requires (fun h -> live h a))
   (ensures (fun h0 a' h1 -> h0 == h1 /\ content a' = content a /\ idx a' = idx a + i /\ length a' = length a - i))
 let offset #t a i = 
   {content = a.content; idx = i+a.idx; length = a.length - i}
 
-private val of_seq_aux: #a:Type -> s:seq a -> l:pos{l = Seq.length s} -> ctr:nat{ ctr <= l} -> b:buffer a{idx b = 0 /\ length b = l} -> ST unit
+private val of_seq_aux: #a:Type -> s:seq a -> l:pos{l = Seq.length s} -> ctr:nat{ ctr <= l} -> b:buffer a{idx b = 0 /\ length b = l} -> STL unit
     (requires (fun h -> live h b))
     (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b 
       /\ (forall (i:nat). {:pattern (get h1 b i)} i < ctr ==> get h1 b i = Seq.index s i)
