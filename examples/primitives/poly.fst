@@ -1,4 +1,4 @@
-(* Implementation of Chacha20 based on the rfc7539 *)
+(* Implementation of Poly1305 based on the rfc7539 *)
 module Poly
 
 open FStar.Heap
@@ -7,6 +7,7 @@ open Axioms
 open IntLib
 open SInt
 open SInt.UInt63
+open SInt.Cast
 open SBytes
 open SBuffer
 open Bigint
@@ -83,27 +84,27 @@ let num_to_le_bytes s b =
   let b2 = index b 2 in
   let b3 = index b 3 in
   let b4 = index b 4 in 
-  upd s 0 (SInt.UInt8.of_native_int b0);  // 0 
-  upd s 1 (SInt.UInt8.of_native_int (b0 ^>> 8)); //8
-  upd s 2 (SInt.UInt8.of_native_int (b0 ^>> 16)); //16
-  upd s 3 (SInt.UInt8.add_mod (SInt.UInt8.of_native_int (b0 ^>> 24)) // 24 
-			       (SInt.UInt8.of_native_int (b1 ^<< 2))); 
-  upd s 4 (SInt.UInt8.of_native_int (b1 ^>> 6)); // 32
-  upd s 5 (SInt.UInt8.of_native_int (b1 ^>> 14)); // 40
-  upd s 6 (SInt.UInt8.add_mod (SInt.UInt8.of_native_int (b1 ^>> 22)) 
-			       (SInt.UInt8.of_native_int (b2 ^<< 4))); // 48
-  upd s 7 (SInt.UInt8.of_native_int (b2 ^>> 4)); // 56
-  upd s 8 (SInt.UInt8.of_native_int (b2 ^>> 12)); // 64
-  upd s 9 (SInt.UInt8.add_mod (SInt.UInt8.of_native_int (b2 ^>> 20)) 
-			       (SInt.UInt8.of_native_int (b3 ^<< 6))); // 72
-  upd s 10 (SInt.UInt8.of_native_int (b3 ^>> 2)); // 80 
-  upd s 11 (SInt.UInt8.of_native_int (b3 ^>> 10)); // 88
+  upd s 0 (SInt.Cast.uint63_to_uint8 b0);  // 0 
+  upd s 1 (SInt.Cast.uint63_to_uint8 (b0 ^>> 8)); //8
+  upd s 2 (SInt.Cast.uint63_to_uint8 (b0 ^>> 16)); //16
+  upd s 3 (SInt.UInt8.add_mod (SInt.Cast.uint63_to_uint8 (b0 ^>> 24)) // 24 
+			       (SInt.Cast.uint63_to_uint8 (b1 ^<< 2))); 
+  upd s 4 (SInt.Cast.uint63_to_uint8 (b1 ^>> 6)); // 32
+  upd s 5 (SInt.Cast.uint63_to_uint8 (b1 ^>> 14)); // 40
+  upd s 6 (SInt.UInt8.add_mod (SInt.Cast.uint63_to_uint8 (b1 ^>> 22)) 
+			       (SInt.Cast.uint63_to_uint8 (b2 ^<< 4))); // 48
+  upd s 7 (SInt.Cast.uint63_to_uint8 (b2 ^>> 4)); // 56
+  upd s 8 (SInt.Cast.uint63_to_uint8 (b2 ^>> 12)); // 64
+  upd s 9 (SInt.UInt8.add_mod (SInt.Cast.uint63_to_uint8 (b2 ^>> 20)) 
+			       (SInt.Cast.uint63_to_uint8 (b3 ^<< 6))); // 72
+  upd s 10 (SInt.Cast.uint63_to_uint8 (b3 ^>> 2)); // 80 
+  upd s 11 (SInt.Cast.uint63_to_uint8 (b3 ^>> 10)); // 88
   let h = ST.get() in
   cut (SBuffer.live h s /\ modifies_buf (only s) h0 h); 
-  upd s 12 (SInt.UInt8.of_native_int (b3 ^>> 18)); // 96
-  upd s 13 (SInt.UInt8.of_native_int (b4)); // 104
-  upd s 14 (SInt.UInt8.of_native_int (b4 ^>> 8)); // 112 
-  upd s 15 (SInt.UInt8.of_native_int (b4 ^>> 16)); // 120 
+  upd s 12 (SInt.Cast.uint63_to_uint8 (b3 ^>> 18)); // 96
+  upd s 13 (SInt.Cast.uint63_to_uint8 (b4)); // 104
+  upd s 14 (SInt.Cast.uint63_to_uint8 (b4 ^>> 8)); // 112 
+  upd s 15 (SInt.Cast.uint63_to_uint8 (b4 ^>> 16)); // 120 
   ()
 
 (* Bytes to bigint deserializing functions *)
@@ -122,10 +123,10 @@ let le_bytes_to_num b s =
   let s1 = sub s 4  4 in
   let s2 = sub s 8  4 in
   let s3 = sub s 12 4 in
-  let n0 = of_uint32 (SBytes.uint32_of_sbytes s0) in 
-  let n1 = of_uint32 (SBytes.uint32_of_sbytes s1) in
-  let n2 = of_uint32 (SBytes.uint32_of_sbytes s2) in
-  let n3 = of_uint32 (SBytes.uint32_of_sbytes s3) in 
+  let n0 = uint32_to_uint63 (SBytes.uint32_of_sbytes s0) in 
+  let n1 = uint32_to_uint63 (SBytes.uint32_of_sbytes s1) in
+  let n2 = uint32_to_uint63 (SBytes.uint32_of_sbytes s2) in
+  let n3 = uint32_to_uint63 (SBytes.uint32_of_sbytes s3) in 
   ulogand_lemma_4 #63 n0 26 mask_26;
   ulogand_lemma_4 #63 (n1 ^<< 6) 26 mask_26; 
   ulogand_lemma_4 #63 (n2 ^<< 12) 26 mask_26; 

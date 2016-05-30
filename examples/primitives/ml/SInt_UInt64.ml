@@ -7,6 +7,7 @@ type wide = uint128
                     
 let (zero:uint64) = Stdint.Uint64.zero
 let (one:uint64) = Stdint.Uint64.one
+let (ones:uint64) = Stdint.Uint64.pred zero
 let (zero_wide:uint128) = Stdint.Uint128.zero
 let (one_wide:uint128) = Stdint.Uint128.one
 
@@ -95,13 +96,10 @@ let op_Hat_Hat_Amp = logand_wide
 let op_Hat_Hat_Bar = logor_wide
 let op_Hat_Less_Less_Less = rotate_left_wide
 let op_Hat_Greater_Greater_Greater = rotate_right_wide
-
                    
-let of_int s = Stdint.Uint64.of_int s
-let of_string s = Stdint.Uint64.of_string s
-let to_uint8 s = Stdint.Uint64.to_int s land 255
-let of_uint8 s = Stdint.Uint64.of_int s
-let of_uint32 s = of_int s
+(* let to_uint8 s = Stdint.Uint64.to_int s land 255 *)
+(* let of_uint8 s = Stdint.Uint64.of_int s *)
+(* let of_uint32 s = of_int s *)
 
 let wide_to_limb s = Stdint.Uint64.of_uint128 s
 let limb_to_wide s = Stdint.Uint128.of_uint64 s
@@ -123,3 +121,9 @@ let gte x y =
   let b = Stdint.Int128.of_uint64 y in
   let a = Stdint.Int128.shift_right (Stdint.Int128.sub a b) 127 in
   Stdint.Uint64.of_int128 a
+
+let of_string s = Stdint.Uint64.of_string s
+let of_int s = Stdint.Uint64.of_int s
+                                                             
+let to_string s = Stdint.Uint64.to_string s
+let to_int s = Stdint.Uint64.to_int s

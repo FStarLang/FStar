@@ -35,7 +35,7 @@ all:
 	make -C dm4free
 	make -C unit-tests
 
-univ: u_algo u_data_structures u_metatheory
+univ: u_algo u_data_structures u_metatheory u_unit-tests
 
 u_algo:
 	+make -C algorithms uall
@@ -45,6 +45,9 @@ u_data_structures:
 
 u_metatheory:
 	+make -C metatheory uall
+
+u_unit-tests:
+	+make -C unit-tests/universes
 
 test: all
 

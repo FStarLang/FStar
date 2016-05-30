@@ -1355,7 +1355,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                  | fail -> fail
                end
 
-           | _ -> Inr "arity mismatch" in
+           | _ -> Inr "arity or argument-qualifier mismatch" in
 
    let scope = p_scope orig in //Env.bound_vars env |> List.map S.mk_binder in
    match aux scope env [] bs1 bs2 with

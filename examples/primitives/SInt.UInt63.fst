@@ -53,10 +53,13 @@ let shift_right a s = ushift_right #n a s
 let rotate_left a s = urotate_left #n a s
 let rotate_right a s = urotate_right #n a s
 
-val to_uint63: sint -> Tot uint63
-let to_uint63 s = to_usint n s
+(* val to_uint63: sint -> Tot uint63 *)
+(* let to_uint63 s = to_usint n s *)
 
-let of_uint32 s = to_uint63 s
+(* let of_uint32 s = to_uint63 s *)
+
+assume val of_int: x:nat{x >= 0 /\ x < pow2 n} -> Tot (y:uint63{v y = x})
+assume val of_string: string -> Tot uint63
 
 let op_Less_Less = shift_left
 let op_Greater_Greater = shift_right

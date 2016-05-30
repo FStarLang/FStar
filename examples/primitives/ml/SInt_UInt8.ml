@@ -1,9 +1,8 @@
 open Char
 
 let n = 8
-          
+
 type uint8 = int
-type native_int = uint8
 
 let (zero:uint8) = 0
 let (one:uint8) = 1
@@ -32,14 +31,14 @@ let shift_right a s = a lsr s
 let rotate_left a s =  ((( a lsl s) + ( a lsr (8-s))) land 255)
 let rotate_right a s =  ((( a lsl (8-s)) + ( a lsr s)) land 255)
 
-let of_uint32 s =  (s land 255)
-let of_int s =  (s land 255)
-let of_native_int s =  (s land 255)
-let of_string s = int_of_string s
+let eq a b =
+  let a = lnot(a lxor b) in
+  let a = a land (a lsl 4) in
+  let a = a land (a lsl 2) in
+  let a = a land (a lsl 1) in
+  (a asr 7) land 255
 
-(* TODO *)
-let eq x y = if x = y then -1 else 0
-let gte x y = if x >= y then -1 else 0
+let gte x y = (lnot((x - y) asr 7)) land 255
 
 let op_Hat_Plus = add
 let op_Hat_Star = mul
@@ -50,3 +49,12 @@ let op_Hat_Greater_Greater  = shift_right
 let op_Hat_Amp = logand
 let op_Hat_Hat = logxor
 let op_Hat_Bar = logor
+
+let of_string s =
+  let x = int_of_string s in
+  if x >= 256 || x < 0 then failwith "Wrong constant"
+  else x 
+let of_int s = s land 255
+                                                             
+let to_string s = string_of_int s
+let to_int s = s

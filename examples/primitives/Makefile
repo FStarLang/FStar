@@ -31,9 +31,10 @@ COMPILE=ocamlopt -ccopt -O3 fstarlib.c
 
 # OCaml variables
 OCAMLOPT := $(OCAMLOPT) -I $(ULIB_ML)/native_int
-REALIZED=SInt_UInt8 SInt_UInt32 SInt_UInt63 SInt_UInt64 SBuffer SBytes
+REALIZED_MLI=SInt_UInt8 SInt_UInt32 SInt_UInt63 SInt_UInt64
+REALIZED=SInt_Cast SBuffer SBytes
 REALIZED_MODULE=$(subst _,., $(REALIZED))
-REALIZED_ML=$(addsuffix .ml,$(REALIZED))
+REALIZED_ML=$(addsuffix .mli,$(REALIZED_MLI)) $(addsuffix .ml,$(REALIZED_MLI) $(REALIZED))
 NO_CODEGEN=$(addprefix --no_extract , SInt $(REALIZED_MODULE))
 
 POLY_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
@@ -43,6 +44,8 @@ CURVE_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Ax
 .PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test sha-ver sha-ml
 
 all: chacha-test poly-test curve-test aes-test
+
+poly: poly-ver poly-ml
 
 low-star-ver:
 	$(FSTAR) $(OPTIONS_VER) sbuffer.fst SInt.UInt8.fst SInt.UInt32.fst SInt.UInt63.fst SBytes.fst
@@ -68,8 +71,8 @@ chacha-ml:
 	cd $(CHACHA_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(CHACHA_OCAML) test_chacha20.ml
 	$(CHACHA_ODIR)_ml/a.out
 
-poly-ver: poly.fst
-	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 20 $(addprefix --verify_module , SBuffer Parameters Bigint Bignum Poly)
+poly-ver: axioms.fst intlib.fst IntLibLemmas.fst sbuffer.fst parameters.fst bigint.fst bignum.fst poly.fst
+	fstar.exe --universes $^ $(addprefix --verify_module , IntLib IntLibLemma Parameters SBuffer Bigint Bignum Poly)
 
 poly-test: poly.fst
 	@echo ""
@@ -87,12 +90,13 @@ poly-ml:
 	mkdir -p $(POLY_ODIR)
 	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) poly.fst --odir $(POLY_ODIR) #2> /dev/null
 	$(OCAMLOPT) -I ml -I $(POLY_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
-	  $(addprefix $(POLY_ODIR)/,$(POLY_EXTRACTED)) ml/test_poly1305.ml -o test_poly1305.exe
+	  $(addprefix $(POLY_ODIR)/,$(POLY_EXTRACTED)) ml/test_poly1305.ml -o test_poly1305.exe 
 	./test_poly1305.exe
 
 poly-ml-compile:
-	cp ./ml/*.ml $(POLY_ODIR)_ml
-	cd $(POLY_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(POLY_OCAML) test_poly1305.ml
+	$(OCAMLOPT) -I ml -I $(POLY_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
+	  $(addprefix $(POLY_ODIR)/,$(POLY_EXTRACTED)) ml/test_poly1305.ml -o test_poly1305.exe 
+	./test_poly1305.exe
 
 bignum-ver:
 	$(FSTAR) $(OPTIONS_VER) Bignum.Core.fst --lax
@@ -174,5 +178,6 @@ aes-debug: Crypto.AES.fst
 # Cleaning
 clean:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
+	@rm -f $(addprefix ml/, *.cmx *.o *.cmi *~)
 	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(CHACHA_ODIR)_ml $(POLY_ODIR)_ml \
 		$(BIGNUM_ODIR) $(CURVE_ODIR) $(AES_ODIR) *~ *.exe
