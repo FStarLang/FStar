@@ -21,7 +21,7 @@ else
 NEGTESTS=1
 endif
 
-all: all-pos
+all: all-pos all-neg
 
 all-pos: 
 	$(FSTAR) $(VERFILES) --universes
