@@ -1,6 +1,6 @@
 module Unit1.WPsAndTriples
-let as_requires (#a:Type) (wp:pure_wp a) = wp (fun x -> True)
-let as_ensures  (#a:Type) (wlp:pure_wp a) (x:a) = ~ (wlp (fun y -> ~(y=x)))
+inline let as_requires (#a:Type) (wp:pure_wp a) = wp (fun x -> True)
+inline let as_ensures  (#a:Type) (wlp:pure_wp a) (x:a) = ~ (wlp (fun y -> ~(y=x)))
 assume val as_Pure: #a:Type -> #b:(a -> Type)
           -> #wp:(x:a -> GTot (pure_wp (b x)))
           -> #wlp:(x:a -> GTot (pure_wp (b x)))

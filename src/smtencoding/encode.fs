@@ -1312,7 +1312,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         decls@g, env
 
      | Sig_let(lbs, r, _, quals) when (quals |> List.contains S.Irreducible) ->
-       [], env
+       let env, decls = Util.fold_map (fun env lb ->
+        let lid = (right lb.lbname).fv_name.v in
+        if Option.isNone <| Env.try_lookup_val_decl env.tcenv lid 
+        then let val_decl = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, quals, r) in
+             let decls, env = encode_sigelt' env val_decl in
+             env, decls
+        else env, []) env (snd lbs) in
+       List.flatten decls, env
 
      | Sig_let((_, [{lbname=Inr b2t}]), _, _, _) when S.fv_eq_lid b2t Const.b2t_lid ->
        let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v in

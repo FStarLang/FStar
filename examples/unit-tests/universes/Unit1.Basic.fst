@@ -247,13 +247,6 @@ let rec length = function
   | [] -> 0
   | _::tl -> 1 + length tl
 
-(* val length_is_nat: l:list int -> Lemma (ensures (length l >= 0)) *)
-(* let rec length_is_nat l = by_induction_on l length_is_nat *)
-
-(* val poly_length_is_nat: l:list 'a -> Lemma (ensures (length l >= 0)) *)
-(* let rec poly_length_is_nat 'a l = by_induction_on l (poly_length_is_nat #'a) *)
-
-
 val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
 let rec map f = function
   | [] -> []

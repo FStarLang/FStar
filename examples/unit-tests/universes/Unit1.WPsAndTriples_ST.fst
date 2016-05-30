@@ -1,7 +1,7 @@
 module Unit1.WPsAndTriples_ST
 open FStar.Heap
-type as_requires (#a:Type) (wp:st_wp_h heap a)  = wp (fun x h -> True)
-type as_ensures  (#a:Type) (wlp:st_wp_h heap a) (h0:heap) (x:a) (h1:heap) = ~ (wlp (fun y h1' -> y<>x \/ h1<>h1') h0)
+inline let as_requires (#a:Type) (wp:st_wp_h heap a)  = wp (fun x h -> True)
+inline let as_ensures  (#a:Type) (wlp:st_wp_h heap a) (h0:heap) (x:a) (h1:heap) = ~ (wlp (fun y h1' -> y<>x \/ h1<>h1') h0)
 assume val as_ST: #a:Type -> #b:(a -> Type)
           -> #wp:(x:a -> GTot (st_wp_h heap (b x)))
           -> #wlp:(x:a -> GTot (st_wp_h heap (b x)))
