@@ -589,7 +589,7 @@ computation. For example, here is a function that makes a new counter,
 initializing it to `init`.
 
     let new_counter init =
-      let c = ref init in
+      let c = ST.alloc init in
       fun () -> c := !c + 1; !c
 
 F\* infers that `new_counter` has type `:int -> ST (unit -> ST int)`,
@@ -3881,8 +3881,8 @@ Allocating a new point is straightforward:
 
 ```
 let new_point x y =
-  let x = ref x in
-  let y = ref y in
+  let x = ST.alloc x in
+  let y = ST.alloc y in
   Point x y
 ```
 
@@ -4048,8 +4048,8 @@ val new_point: x:int -> y:int -> ST point
                 /\ Heap.sel h1 (Point.x p) = x
                 /\ Heap.sel h1 (Point.y p) = y))
 let new_point x y =
-  let x = ref x in
-  let y = ref y in
+  let x = ST.alloc x in
+  let y = ST.alloc y in
   Point x y
 ```
 
@@ -4061,18 +4061,8 @@ In the body of the definition, we build `Point x y` and the type of
 if we know that `ref` returns a distinct reference each time, i.e., we
 need freshness.
 
-~Remark
-Most identifiers in F\* are resolved unambiguously to some binder in scope. The identifier
-`ref` is the sole exception. It is idiomatic in ML to write `ref t` both for the type of a
-reference and `ref v` to allocate a new reference. To support this idiom, F\* handles the
-`ref` identifier in a special manner: in the latter form, when `ref`
-is applied to an expression, F\* resolves `ref` to `ST.alloc`. If you
-don't like this convention, you can always just write `ST.alloc`
-yourself.
-~
-
-The type of `ST.alloc` (the name to which `ref` is resolved in the body
-of `new_point`) gives us the freshness we need to prove that `x <> y`. The type
+The type of `ST.alloc`
+gives us the freshness we need to prove that `x <> y`. The type
 below says that the returned reference does not exists in the initial heap
 and does exist in the final heap (initialized appropriately).
 
@@ -4101,7 +4091,7 @@ reason.
 
 ```
 let p = new_point () in
-let z = ref 0 in
+let z = ST.alloc 0 in
 assert (Point.x p <> z)
 ```
 
@@ -4124,7 +4114,7 @@ Using this, we can write the following code.
 val f : ref int -> St unit
 let f (x:ref int) =
   recall x;         //gives us that the initial heap contains x, for free
-  let y = ref 0 in
+  let y = ST.alloc 0 in
   assert (y <> x)
 ```
 
