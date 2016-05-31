@@ -49,10 +49,10 @@ let _82_50 = (match (rs) with
 | [] -> begin
 (t.FStar_SMTEncoding_Term.hash, FStar_Range.dummyRange)
 end
-| (Some (reason), r)::_82_36 -> begin
+| ((Some (reason), r))::_82_36 -> begin
 (reason, r)
 end
-| (None, r)::_82_43 -> begin
+| ((None, r))::_82_43 -> begin
 ("failed to prove a pre-condition", r)
 end)
 in (match (_82_50) with
@@ -90,7 +90,7 @@ let rs' = if (not (flag)) then begin
 rs
 end else begin
 (match (rs) with
-| (Some (reason), _82_72)::_82_68 -> begin
+| ((Some (reason), _82_72))::_82_68 -> begin
 ((Some ((Prims.strcat "Failed to verify implicit argument: " reason)), r))::[]
 end
 | _82_76 -> begin
@@ -127,7 +127,7 @@ in (match (_82_111) with
 in (tm, labs, _171_46))
 end))
 end
-| FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Imp, lhs::rhs::[]) -> begin
+| FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Imp, (lhs)::(rhs)::[]) -> begin
 (
 
 let _82_121 = (aux rs rhs labs)
@@ -156,7 +156,7 @@ in (match (_82_138) with
 in (_171_50, labs, rs))
 end))
 end
-| FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.ITE, hd::q1::q2::[]) -> begin
+| FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.ITE, (hd)::(q1)::(q2)::[]) -> begin
 (
 
 let _82_150 = (aux rs q1 labs)
@@ -243,7 +243,7 @@ let rec linear_check = (fun eliminated errors active -> (match (active) with
 let labs = (FStar_All.pipe_right errors sort_labels)
 in labs)
 end
-| hd::tl -> begin
+| (hd)::tl -> begin
 (
 
 let _82_334 = (let _171_93 = (FStar_All.pipe_left elim (FStar_List.append (FStar_List.append eliminated errors) tl))
@@ -267,7 +267,7 @@ end
 (
 
 let _82_349 = (match (active) with
-| _82_343::[] -> begin
+| (_82_343)::[] -> begin
 (active, [])
 end
 | _82_346 -> begin
@@ -496,7 +496,7 @@ in (match (cfgs) with
 | [] -> begin
 (report p errs)
 end
-| mi::[] -> begin
+| (mi)::[] -> begin
 (match (errs) with
 | [] -> begin
 (let _171_210 = (with_fuel [] p mi)
@@ -509,7 +509,7 @@ let _82_439 = (set_minimum_workable_fuel prev_f errs)
 in (report p errs))
 end)
 end
-| mi::tl -> begin
+| (mi)::tl -> begin
 (let _171_212 = (with_fuel [] p mi)
 in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_212 (fun _82_446 -> (match (_82_446) with
 | (ok, errs') -> begin

@@ -81,10 +81,10 @@ let rec curry : FStar_Extraction_ML_Syntax.mlty Prims.list  ->  FStar_Extraction
 | [] -> begin
 out
 end
-| h::[] -> begin
+| (h)::[] -> begin
 FStar_Extraction_ML_Syntax.MLTY_Fun ((h, f, out))
 end
-| h1::h2::tl -> begin
+| (h1)::(h2)::tl -> begin
 (let _163_34 = (let _163_33 = (curry ((h2)::tl) f out)
 in (h1, FStar_Extraction_ML_Syntax.E_PURE, _163_33))
 in FStar_Extraction_ML_Syntax.MLTY_Fun (_163_34))
@@ -361,7 +361,7 @@ let rec parseInductiveTypesFromSigBundle : context  ->  FStar_Absyn_Syntax.sigel
 | [] -> begin
 ([], [], [])
 end
-| FStar_Absyn_Syntax.Sig_tycon (l, bs, kk, _74_309, constrs, qs, _74_313)::tlsig -> begin
+| (FStar_Absyn_Syntax.Sig_tycon (l, bs, kk, _74_309, constrs, qs, _74_313))::tlsig -> begin
 (
 
 let indConstrs = (parseInductiveConstructors c constrs tlsig)
@@ -373,7 +373,7 @@ in (match (_74_321) with
 (({tyName = l; k = kk; tyBinders = bs; constructors = indConstrs; qualifiers = qs})::inds, abbs, exns)
 end)))
 end
-| FStar_Absyn_Syntax.Sig_datacon (l, _74_325, tc, quals, lids, _74_330)::tlsig -> begin
+| (FStar_Absyn_Syntax.Sig_datacon (l, _74_325, tc, quals, lids, _74_330))::tlsig -> begin
 if (FStar_List.contains FStar_Absyn_Syntax.ExceptionConstructor quals) then begin
 (
 
@@ -386,7 +386,7 @@ end else begin
 ([], [], [])
 end
 end
-| FStar_Absyn_Syntax.Sig_typ_abbrev (l, bs, _74_341, t, _74_344, _74_346)::tlsig -> begin
+| (FStar_Absyn_Syntax.Sig_typ_abbrev (l, bs, _74_341, t, _74_344, _74_346))::tlsig -> begin
 (
 
 let _74_353 = (parseInductiveTypesFromSigBundle c tlsig)
@@ -395,7 +395,7 @@ in (match (_74_353) with
 (inds, ({abTyName = l; abTyBinders = bs; abBody = t})::abbs, exns)
 end))
 end
-| se::tlsig -> begin
+| (se)::tlsig -> begin
 (let _163_183 = (let _163_182 = (FStar_Absyn_Print.sigelt_to_string se)
 in (FStar_Util.format1 "unexpected content in a  sig bundle : %s\n" _163_182))
 in (FStar_All.failwith _163_183))
@@ -454,7 +454,7 @@ end)))
 
 
 let rec zipUnequal = (fun la lb -> (match ((la, lb)) with
-| (ha::ta, hb::tb) -> begin
+| ((ha)::ta, (hb)::tb) -> begin
 (let _163_204 = (zipUnequal ta tb)
 in ((ha, hb))::_163_204)
 end
@@ -684,7 +684,7 @@ end
 in (c, _163_268))
 end))
 end
-| FStar_Absyn_Syntax.Sig_bundle (sigs, FStar_Absyn_Syntax.ExceptionConstructor::[], _74_513, range) -> begin
+| FStar_Absyn_Syntax.Sig_bundle (sigs, (FStar_Absyn_Syntax.ExceptionConstructor)::[], _74_513, range) -> begin
 (
 
 let _74_522 = (parseInductiveTypesFromSigBundle c sigs)

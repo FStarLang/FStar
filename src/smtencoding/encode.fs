@@ -999,6 +999,9 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           let p, decls = p |> List.map (fun (t, _) -> encode_term t ({env with use_zfuel_name=true})) |> List.unzip in
            p, List.flatten decls) |> List.unzip in
         let body, decls'' = encode_formula body env in
+	let pats, guards = match pats with 
+	  | [[{tm=App(Var "Prims.guard_free", [p])}]] -> [[p]], []
+	  | _ -> pats, guards in
         vars, pats, mk_and_l guards, body, decls@List.flatten decls'@decls'' in
 
     debug phi;

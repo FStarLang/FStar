@@ -6,7 +6,7 @@ let rec get_next_n_ite : Prims.int  ->  FStar_ToSMT_Term.term  ->  FStar_ToSMT_T
 in (true, _138_14, negs, t))
 end else begin
 (match (t.FStar_ToSMT_Term.tm) with
-| FStar_ToSMT_Term.App (FStar_ToSMT_Term.ITE, g::t::e::_49_7) -> begin
+| FStar_ToSMT_Term.App (FStar_ToSMT_Term.ITE, (g)::(t)::(e)::_49_7) -> begin
 (let _138_19 = (let _138_16 = (let _138_15 = (FStar_ToSMT_Term.mkNot g)
 in (negs, _138_15))
 in (FStar_ToSMT_Term.mkAnd _138_16))
@@ -56,7 +56,7 @@ let rec parse_query_for_split_cases : Prims.int  ->  FStar_ToSMT_Term.term  ->  
 (parse_query_for_split_cases n t (fun x -> (let _138_61 = (FStar_ToSMT_Term.mkForall'' (l, opt, l', x))
 in (f _138_61))))
 end
-| FStar_ToSMT_Term.App (FStar_ToSMT_Term.Imp, t1::t2::_49_50) -> begin
+| FStar_ToSMT_Term.App (FStar_ToSMT_Term.Imp, (t1)::(t2)::_49_50) -> begin
 (
 
 let r = (match (t2.FStar_ToSMT_Term.tm) with
@@ -94,7 +94,7 @@ end))
 
 
 let strip_not : FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term = (fun t -> (match (t.FStar_ToSMT_Term.tm) with
-| FStar_ToSMT_Term.App (FStar_ToSMT_Term.Not, hd::_49_100) -> begin
+| FStar_ToSMT_Term.App (FStar_ToSMT_Term.Not, (hd)::_49_100) -> begin
 hd
 end
 | _49_106 -> begin
