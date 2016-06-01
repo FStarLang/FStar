@@ -20,6 +20,7 @@ The library files (realized directly in ML) are the following:
 
 - INSTALL the latest version of F* from sources (https://github.com/FStarLang/FStar/blob/master/INSTALL.md)
 - move to the current directory (FStar/examples/primitives)
-- run ("make poly-test") to extract and run the code without verifying it
+- run ("make poly-ml") to extract and run the code without verifying it
+  Note: the code extracts to OCaml, and requires the ocaml libraries batteries, zarith and stdint
 - run ("make poly") to verify the code (may require a desktop machine to have all assertions going through)
 
