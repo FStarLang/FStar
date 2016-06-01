@@ -25,18 +25,19 @@ all:
 	$(FSTAR) FStar.Option.fsti
 	$(FSTAR) FStar.OrdSet.fst
 	$(FSTAR) FStar.OrdMap.fst
-#	$(FSTAR) FStar.OrdMapProps.fst -- problem filed as #359
-#	$(FSTAR) FStar.OrdSetProps.fst
+	$(FSTAR) FStar.OrdMapProps.fst
+	$(FSTAR) FStar.OrdSetProps.fst
 	$(FSTAR) FStar.PredicateExtensionality.fst
 	$(FSTAR) FStar.Set.fst
-#	$(FSTAR) stboot.fsi stboot.fst   -- Name "FStar.All.ML" not found
-#	$(FSTAR) FStar.Relational.fst
-#	$(FSTAR) --explicit_deps   FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst map.fsi FStar.List.Tot.fst FStar.HyperHeap.fst stHyperHeap.fst
+#	$(FSTAR) stboot.fsi stboot.fst   -- Unrecognized file extension: stboot.fsi
+	$(FSTAR) FStar.Relational.fst
+	$(FSTAR) --explicit_deps   FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fst stHyperHeap.fst
 	$(FSTAR) FStar.Tcp.fst
-#	$(FSTAR)   FStar.Set.fsi FStar.Heap.fst map.fsi FStar.TwoLevelHeap.fst
-#	$(FSTAR) FStar.Util.fst    -- problem filed as #359
+	$(FSTAR)   FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.TwoLevelHeap.fst
+#	$(FSTAR) --fs_typ_app FStar.Util.fst  # --fs_typ_app needed because automatically generated FStar.Util.fsti will get picked up by automatic dependency tracking and it's not a valid interface file without this flag ... oops, it's actually not valid even with this flag because of the ML exception syntax
 	$(FSTAR) FStar.Squash.fst
-#	$(FSTAR) FStar.SquashProperties.fst
+	$(FSTAR) FStar.SquashProperties.fst
+	$(FSTAR) FStar.SquashEffect.fst
 
 wc:
 	sloccount .
