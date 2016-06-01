@@ -77,14 +77,14 @@ let strip_not (t:term) :term = match t.tm with
     | _                -> t
 
 let rec check_split_cases (f:term -> term) (l:list<term>) (check:decl -> unit) :unit =
-    List.iter (fun t -> check (Assume (mkNot (f t), None))) (List.rev l)
+    List.iter (fun t -> check (Assume (mkNot (f t), None, None))) (List.rev l)
 
 let check_exhaustiveness (f:term -> term) (negs:term) (check:decl -> unit) :unit =
-    check (Assume (mkNot (f (mkNot negs)), None))
+    check (Assume (mkNot (f (mkNot negs)), None, None))
 
 let can_handle_query (n:int) (q:decl) :bool * ((term -> term) * list<term> * term) =
     match q with
-        | Assume(q', _) -> parse_query_for_split_cases n (strip_not q') (fun x -> x)
+        | Assume(q', _, _) -> parse_query_for_split_cases n (strip_not q') (fun x -> x)
         | _ -> false, ((fun x -> x), [], mkFalse)
 
 let handle_query ((f, l, negs):((term -> term) * list<term> * term)) (check:decl -> unit) :unit =

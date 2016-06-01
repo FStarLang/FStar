@@ -8,7 +8,7 @@ opam init
 opam install depext depext-cygwinports
 opam depext ssl
 opam depext sqlite3
-opam install fileutils sqlite3
+opam install stdint fileutils sqlite3
 ```
 
 ### Environment

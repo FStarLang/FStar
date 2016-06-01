@@ -2546,7 +2546,7 @@ fail
 end)))))))
 end
 | _55_1892 -> begin
-FStar_Util.Inr ("arity mismatch")
+FStar_Util.Inr ("arity or argument-qualifier mismatch")
 end))
 in (
 

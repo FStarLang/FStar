@@ -795,7 +795,7 @@ in (
 let body = (
 
 let body_env = (FStar_List.fold_right (fun _53_352 env -> (Dummy)::env) lbs env)
-in (closure_as_term cfg env body))
+in (closure_as_term cfg body_env body))
 in (mk (FStar_Syntax_Syntax.Tm_let (((true, lbs), body))) t.FStar_Syntax_Syntax.pos))))
 end
 | FStar_Syntax_Syntax.Tm_match (head, branches) -> begin
