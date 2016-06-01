@@ -45,7 +45,20 @@ CURVE_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Ax
 
 all: chacha-test poly-test curve-test aes-test
 
-poly: poly-ver poly-ml
+poly: #poly-ver poly-ml
+	$(FSTAR) --universes sbuffer.fst SInt.UInt8.fst SInt.UInt32.fst SInt.UInt63.fst SBytes.fst 
+	$(FSTAR) --universes parameters.fst bigint.fst
+	$(FSTAR) --universes bignum.fst
+	$(FSTAR) --universes poly.fst
+	@echo ""
+	@echo " Extracting POLY1305"
+	@mkdir -p $(POLY_ODIR)
+	$(FSTAR) $(OPTIONS_COMPILE) --odir $(POLY_ODIR) $^
+	@cp ./c/*.c ./c/*.h $(POLY_ODIR)
+	@echo ""
+	@echo " Compiling POLY1305"
+	cd $(POLY_ODIR) && $(COMPILE) $(POLY_C) -o $(POLY)
+	./$(POLY_ODIR)/$(POLY)
 
 low-star-ver:
 	$(FSTAR) $(OPTIONS_VER) sbuffer.fst SInt.UInt8.fst SInt.UInt32.fst SInt.UInt63.fst SBytes.fst
@@ -72,7 +85,7 @@ chacha-ml:
 	$(CHACHA_ODIR)_ml/a.out
 
 poly-ver: axioms.fst intlib.fst IntLibLemmas.fst sbuffer.fst parameters.fst bigint.fst bignum.fst poly.fst
-	fstar.exe --universes $^ $(addprefix --verify_module , IntLib IntLibLemma Parameters SBuffer Bigint Bignum Poly)
+	$(FSTAR) --universes $^ $(addprefix --verify_module , IntLib IntLibLemma Parameters SBuffer Bigint Bignum Poly)
 
 poly-test: poly.fst
 	@echo ""
