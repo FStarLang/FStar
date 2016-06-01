@@ -47,7 +47,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ make -C examples/hello fs
 
-5. You can try out the full regression suite, but keep in mind that
+5. You can try verifying all the examples, but keep in mind that
    things might fail because of timeouts if your machine is not
    sufficiently powerful.
 
@@ -63,7 +63,7 @@ Z3) using the opam package:
 
 ### Homebrew formula for Mac OS X ###
 
-On Macs you can also build and install the latest F\* release using Homebrew
+On Macs you can also build and install the latest F\* release using Homebrew.
 This will install F\* and all required dependencies (including Z3):
 
         $ brew install fstar
@@ -115,7 +115,10 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
     - The Visual F# Tools are installed automatically when you first
       create or open an F# project.
 
-**Easy alternative:** open a Cygwin command prompt, and hit `make` from the `src` directory. This will run `msbuild` on the Visual Studio solution file; in effect, this performs exactly what you would get by clicking the "Build" button within Visual Studio.
+**Easy alternative:** open a Cygwin command prompt, and run `make`
+from the `src` directory. This will run `msbuild` on the Visual Studio
+solution file; in effect, this performs exactly what you would get by
+clicking the "Build" button within Visual Studio.
 
 Read on for the more complete solution involving Visual Studio itself.
 
@@ -165,7 +168,7 @@ Read on for the more complete solution involving Visual Studio itself.
 
   - Depending on your distribution, you might need to manually import
     certificates for Mono (you don't need to do this on Arch if you
-    use the default mono package)
+    use the default `mono` package)
 
           $ mozroots --import --sync
 
@@ -196,7 +199,9 @@ Steps 2 and 3 below require a working OCaml (any version from 4.02.2 to 4.03.0) 
 
 #### Instructions for Windows ####
 
-We will use the  [OCaml Installer for Windows](http://protz.github.io/ocaml-installer/). Follow the [installation guide](https://github.com/protz/ocaml-installer/wiki) that's over there (it's optimized for F*).
+Please use the  [OCaml Installer for Windows](http://protz.github.io/ocaml-installer/).
+Follow the [installation guide](https://github.com/protz/ocaml-installer/wiki)
+that's over there (it's optimized for F*).
 
 #### Instructions for Linux and Mac OS X ####
 
@@ -207,21 +212,23 @@ We will use the  [OCaml Installer for Windows](http://protz.github.io/ocaml-inst
 #### Instructions for all OSes ####
 
 1. Install OPAM (version 1.2.x).
-   - Installation instructions are available at various places
+
+   - If you're on Windows, the OCaml installer should have also installed OPAM for you.
+
+   - For other OSes installation instructions are available at various places
      (e.g., https://github.com/realworldocaml/book/wiki/Installation-Instructions#getting-opam
      or http://opam.ocaml.org/doc/Install.html).
 
-   - If you're on windows, the OCaml installer should have also installed opam for you.
 
 2. Initialize and configure OPAM
-   
+
    - You need to initialize it by running `opam init` and update the `PATH`
      variable to the `ocamlfind` and the OCaml libraries. If you allow
      `opam init` to edit your `~/.bashrc` or `~/.profile`, it is done
      automatically; otherwise, use: `eval $(opam config env)`.
 
-  - If you're on Windows see https://github.com/protz/ocaml-installer/wiki
-   for instructions on how to configure your environment for use with OPAM
+   - If you're on Windows see https://github.com/protz/ocaml-installer/wiki
+     for instructions on how to configure your environment for use with OPAM
 
 3. Install `ocamlfind`, `batteries`, `stdint`, and `zarith` using OPAM:
 
@@ -232,7 +239,8 @@ We will use the  [OCaml Installer for Windows](http://protz.github.io/ocaml-inst
 ### Step 2. Extracting the sources of F* itself to OCaml ###
 
 0. Get an F* binary, either using the F#/.NET build process (step 1
-   above; remember to build a Release version, else you'll get a StackOverflowException in `make ocaml -C src` below), 
+   above; remember to build a Release version, else you'll get a
+   `StackOverflowException` in `make ocaml -C src` below),
    or the OCaml build process (step 3 above).
 
 1. Make sure you follow the instructions above to get a working OCaml setup.
