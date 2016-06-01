@@ -694,7 +694,7 @@ end
 (pat_binders b p)
 end)) b pats)
 end
-| FStar_Absyn_Syntax.Pat_disj (p::_30_662) -> begin
+| FStar_Absyn_Syntax.Pat_disj ((p)::_30_662) -> begin
 (pat_binders b p)
 end
 | FStar_Absyn_Syntax.Pat_disj ([]) -> begin
@@ -738,7 +738,7 @@ in (match (_30_691) with
 end))
 end))
 end
-| FStar_Absyn_Syntax.Exp_let ((false, lb::[]), e2) -> begin
+| FStar_Absyn_Syntax.Exp_let ((false, (lb)::[]), e2) -> begin
 (
 
 let _30_701 = (map_typ env binders lb.FStar_Absyn_Syntax.lbtyp)
@@ -823,10 +823,10 @@ end
 | (FStar_Absyn_Syntax.Kind_uvar (u, _30_771), (_30_775, _30_777, _30_779, args)) -> begin
 (FStar_Absyn_Syntax.mk_Kind_uvar (u, args))
 end
-| (FStar_Absyn_Syntax.Kind_abbrev (kabr, _30_785), (_30_789, k::[], _30_793, args)) -> begin
+| (FStar_Absyn_Syntax.Kind_abbrev (kabr, _30_785), (_30_789, (k)::[], _30_793, args)) -> begin
 (FStar_Absyn_Syntax.mk_Kind_abbrev (((Prims.fst kabr), args), k))
 end
-| (FStar_Absyn_Syntax.Kind_arrow (_30_798, _30_800), (bs, k'::[], _30_807, _30_809)) -> begin
+| (FStar_Absyn_Syntax.Kind_arrow (_30_798, _30_800), (bs, (k')::[], _30_807, _30_809)) -> begin
 (FStar_Absyn_Syntax.mk_Kind_arrow (bs, k'))
 end
 | _30_813 -> begin
@@ -848,37 +848,37 @@ let t' = (match ((t.FStar_Absyn_Syntax.n, tc)) with
 | ((FStar_Absyn_Syntax.Typ_unknown, _)) | ((FStar_Absyn_Syntax.Typ_btvar (_), _)) | ((FStar_Absyn_Syntax.Typ_const (_), _)) -> begin
 t
 end
-| (FStar_Absyn_Syntax.Typ_lam (_30_838), (bs, _30_842, t::[], _30_846, _30_848)) -> begin
+| (FStar_Absyn_Syntax.Typ_lam (_30_838), (bs, _30_842, (t)::[], _30_846, _30_848)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Typ_lam (bs, t)))
 end
-| (FStar_Absyn_Syntax.Typ_app (_30_852), (_30_855, _30_857, t::[], _30_861, args::[])) -> begin
+| (FStar_Absyn_Syntax.Typ_app (_30_852), (_30_855, _30_857, (t)::[], _30_861, (args)::[])) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Typ_app (t, args)))
 end
-| (FStar_Absyn_Syntax.Typ_refine (_30_867), ((FStar_Util.Inr (x), _30_872)::[], _30_876, t::[], _30_880, _30_882)) -> begin
+| (FStar_Absyn_Syntax.Typ_refine (_30_867), (((FStar_Util.Inr (x), _30_872))::[], _30_876, (t)::[], _30_880, _30_882)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Typ_refine (x, t)))
 end
-| (FStar_Absyn_Syntax.Typ_fun (_30_886), (bs, _30_890, _30_892, c::[], _30_896)) -> begin
+| (FStar_Absyn_Syntax.Typ_fun (_30_886), (bs, _30_890, _30_892, (c)::[], _30_896)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Typ_fun (bs, c)))
 end
-| (FStar_Absyn_Syntax.Typ_uvar (x, _30_901), (_30_905, k::[], _30_909, _30_911, _30_913)) -> begin
+| (FStar_Absyn_Syntax.Typ_uvar (x, _30_901), (_30_905, (k)::[], _30_909, _30_911, _30_913)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Typ_uvar' (x, k)))
 end
-| (FStar_Absyn_Syntax.Typ_ascribed (_30_917), (_30_920, k::[], t::[], _30_926, _30_928)) -> begin
+| (FStar_Absyn_Syntax.Typ_ascribed (_30_917), (_30_920, (k)::[], (t)::[], _30_926, _30_928)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Typ_ascribed' (t, k)))
 end
-| (FStar_Absyn_Syntax.Typ_meta (FStar_Absyn_Syntax.Meta_named (_30_932, l)), (_30_938, _30_940, t'::[], _30_944, _30_946)) -> begin
+| (FStar_Absyn_Syntax.Typ_meta (FStar_Absyn_Syntax.Meta_named (_30_932, l)), (_30_938, _30_940, (t')::[], _30_944, _30_946)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Typ_meta' (FStar_Absyn_Syntax.Meta_named ((t', l)))))
 end
-| (FStar_Absyn_Syntax.Typ_meta (FStar_Absyn_Syntax.Meta_pattern (_30_950)), (_30_954, _30_956, t::[], _30_960, args)) -> begin
+| (FStar_Absyn_Syntax.Typ_meta (FStar_Absyn_Syntax.Meta_pattern (_30_950)), (_30_954, _30_956, (t)::[], _30_960, args)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Typ_meta' (FStar_Absyn_Syntax.Meta_pattern ((t, args)))))
 end
-| (FStar_Absyn_Syntax.Typ_meta (FStar_Absyn_Syntax.Meta_labeled (_30_965, l, r, p)), (_30_973, _30_975, t::[], _30_979, _30_981)) -> begin
+| (FStar_Absyn_Syntax.Typ_meta (FStar_Absyn_Syntax.Meta_labeled (_30_965, l, r, p)), (_30_973, _30_975, (t)::[], _30_979, _30_981)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Typ_meta' (FStar_Absyn_Syntax.Meta_labeled ((t, l, r, p)))))
 end
-| (FStar_Absyn_Syntax.Typ_meta (FStar_Absyn_Syntax.Meta_refresh_label (_30_985, b, r)), (_30_992, _30_994, t::[], _30_998, _30_1000)) -> begin
+| (FStar_Absyn_Syntax.Typ_meta (FStar_Absyn_Syntax.Meta_refresh_label (_30_985, b, r)), (_30_992, _30_994, (t)::[], _30_998, _30_1000)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Typ_meta' (FStar_Absyn_Syntax.Meta_refresh_label ((t, b, r)))))
 end
-| (FStar_Absyn_Syntax.Typ_meta (FStar_Absyn_Syntax.Meta_slack_formula (_30_1004, _30_1006, _30_1008)), (_30_1013, _30_1015, t1::t2::[], _30_1020, _30_1022)) -> begin
+| (FStar_Absyn_Syntax.Typ_meta (FStar_Absyn_Syntax.Meta_slack_formula (_30_1004, _30_1006, _30_1008)), (_30_1013, _30_1015, (t1)::(t2)::[], _30_1020, _30_1022)) -> begin
 (let _119_429 = (let _119_428 = (let _119_427 = (let _119_426 = (FStar_Util.mk_ref false)
 in (t1, t2, _119_426))
 in FStar_Absyn_Syntax.Meta_slack_formula (_119_427))
@@ -903,30 +903,30 @@ let e' = (match ((e.FStar_Absyn_Syntax.n, ec)) with
 | ((FStar_Absyn_Syntax.Exp_bvar (_), _)) | ((FStar_Absyn_Syntax.Exp_fvar (_), _)) | ((FStar_Absyn_Syntax.Exp_constant (_), _)) -> begin
 e
 end
-| (FStar_Absyn_Syntax.Exp_uvar (uv, _30_1054), (_30_1058, _30_1060, t::[], _30_1064, _30_1066)) -> begin
+| (FStar_Absyn_Syntax.Exp_uvar (uv, _30_1054), (_30_1058, _30_1060, (t)::[], _30_1064, _30_1066)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Exp_uvar' (uv, t)))
 end
-| (FStar_Absyn_Syntax.Exp_abs (_30_1070), (bs, _30_1074, _30_1076, e::[], _30_1080)) -> begin
+| (FStar_Absyn_Syntax.Exp_abs (_30_1070), (bs, _30_1074, _30_1076, (e)::[], _30_1080)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Exp_abs (bs, e)))
 end
-| (FStar_Absyn_Syntax.Exp_app (_30_1084), (_30_1087, _30_1089, _30_1091, e::[], args)) -> begin
+| (FStar_Absyn_Syntax.Exp_app (_30_1084), (_30_1087, _30_1089, _30_1091, (e)::[], args)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Exp_app (e, args)))
 end
-| (FStar_Absyn_Syntax.Exp_ascribed (_30_1098, _30_1100, l), (_30_1105, _30_1107, t::[], e::[], _30_1113)) -> begin
+| (FStar_Absyn_Syntax.Exp_ascribed (_30_1098, _30_1100, l), (_30_1105, _30_1107, (t)::[], (e)::[], _30_1113)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Exp_ascribed (e, t, l)))
 end
-| (FStar_Absyn_Syntax.Exp_meta (FStar_Absyn_Syntax.Meta_desugared (_30_1117, tag)), (_30_1123, _30_1125, _30_1127, e::[], _30_1131)) -> begin
+| (FStar_Absyn_Syntax.Exp_meta (FStar_Absyn_Syntax.Meta_desugared (_30_1117, tag)), (_30_1123, _30_1125, _30_1127, (e)::[], _30_1131)) -> begin
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Exp_meta' (FStar_Absyn_Syntax.Meta_desugared ((e, tag)))))
 end
-| (FStar_Absyn_Syntax.Exp_match (_30_1135, eqns), (_30_1140, [], [], e1::el, _30_1147)) -> begin
+| (FStar_Absyn_Syntax.Exp_match (_30_1135, eqns), (_30_1140, [], [], (e1)::el, _30_1147)) -> begin
 (
 
 let rec mk_eqns = (fun eqns el -> (match ((eqns, el)) with
-| ((p, None, _30_1157)::eqns', e::el') -> begin
+| (((p, None, _30_1157))::eqns', (e)::el') -> begin
 (let _119_459 = (mk_eqns eqns' el')
 in ((p, None, e))::_119_459)
 end
-| ((p, Some (_30_1167), _30_1170)::eqns', w::e::el') -> begin
+| (((p, Some (_30_1167), _30_1170))::eqns', (w)::(e)::el') -> begin
 (let _119_460 = (mk_eqns eqns' el')
 in ((p, Some (w), e))::_119_460)
 end
@@ -943,7 +943,7 @@ in (FStar_All.pipe_left w _119_465)))
 end
 | (FStar_Absyn_Syntax.Exp_let ((is_rec, lbs), _30_1188), (_30_1192, _30_1194, tl, el, _30_1198)) -> begin
 (match ((FStar_Util.first_N (FStar_List.length lbs) el)) with
-| (el, e'::[]) -> begin
+| (el, (e')::[]) -> begin
 (
 
 let lbs' = (FStar_List.map3 (fun lb t e -> (

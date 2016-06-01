@@ -1,13 +1,12 @@
 module Unit1.WPsAndTriples_ST
 open FStar.Heap
 inline let as_requires (#a:Type) (wp:st_wp_h heap a)  = wp (fun x h -> True)
-inline let as_ensures  (#a:Type) (wlp:st_wp_h heap a) (h0:heap) (x:a) (h1:heap) = ~ (wlp (fun y h1' -> y<>x \/ h1<>h1') h0)
+inline let as_ensures  (#a:Type) (wp:st_wp_h heap a) (h0:heap) (x:a) (h1:heap) = ~ (wp (fun y h1' -> y<>x \/ h1<>h1') h0)
 assume val as_ST: #a:Type -> #b:(a -> Type)
           -> #wp:(x:a -> GTot (st_wp_h heap (b x)))
-          -> #wlp:(x:a -> GTot (st_wp_h heap (b x)))
-          -> $f:(x:a -> STATE (b x) (wp x) (wlp x))
+          -> $f:(x:a -> STATE (b x) (wp x))
           -> x:a -> ST (b x) (as_requires (wp x))
-                             (as_ensures (wlp x))
+                           (as_ensures (wp x))
 
 let f x = op_Multiply !x !x
 

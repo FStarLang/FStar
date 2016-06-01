@@ -321,7 +321,7 @@ in (aux _148_272))))
 
 
 let expand_module_abbrevs : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident = (fun env lid -> (match (lid.FStar_Ident.ns) with
-| id::[] -> begin
+| (id)::[] -> begin
 (match ((FStar_All.pipe_right env.modul_abbrevs (FStar_List.tryFind (fun _59_149 -> (match (_59_149) with
 | (id', _59_148) -> begin
 (id.FStar_Ident.idText = id'.FStar_Ident.idText)
@@ -794,7 +794,7 @@ end
 false
 end)))))
 in (FStar_All.pipe_right sigs (FStar_List.iter (fun _59_11 -> (match (_59_11) with
-| FStar_Absyn_Syntax.Sig_tycon (typename, parms, _59_591, _59_593, dc::[], tags, _59_598) -> begin
+| FStar_Absyn_Syntax.Sig_tycon (typename, parms, _59_591, _59_593, (dc)::[], tags, _59_598) -> begin
 (match ((let _148_531 = (find_dc dc)
 in (FStar_All.pipe_left FStar_Util.must _148_531))) with
 | FStar_Absyn_Syntax.Sig_datacon (constrname, t, _59_604, _59_606, _59_608, _59_610) -> begin
@@ -862,14 +862,14 @@ let rec aux = (fun ns -> (match (ns) with
 | [] -> begin
 (c)::[]
 end
-| c'::[] -> begin
+| (c')::[] -> begin
 if (c'.FStar_Ident.idText = c.FStar_Ident.idText) then begin
 (c)::[]
 end else begin
 (c')::(c)::[]
 end
 end
-| hd::tl -> begin
+| (hd)::tl -> begin
 (let _148_546 = (aux tl)
 in (hd)::_148_546)
 end))
@@ -1292,7 +1292,7 @@ in {curmodule = _59_935.curmodule; modules = _59_935.modules; open_namespaces = 
 
 
 let commit_mark : env  ->  env = (fun env -> (match (env.sigmap) with
-| hd::_59_940::tl -> begin
+| (hd)::(_59_940)::tl -> begin
 (
 
 let _59_944 = env
@@ -1304,7 +1304,7 @@ end))
 
 
 let pop : env  ->  env = (fun env -> (match (env.sigmap) with
-| _59_951::maps -> begin
+| (_59_951)::maps -> begin
 (
 
 let _59_953 = (pop_record_cache ())
@@ -1321,7 +1321,7 @@ end))
 let export_interface : FStar_Ident.lident  ->  env  ->  env = (fun m env -> (
 
 let sigelt_in_m = (fun se -> (match ((FStar_Absyn_Util.lids_of_sigelt se)) with
-| l::_59_964 -> begin
+| (l)::_59_964 -> begin
 (l.FStar_Ident.nsstr = m.FStar_Ident.str)
 end
 | _59_968 -> begin

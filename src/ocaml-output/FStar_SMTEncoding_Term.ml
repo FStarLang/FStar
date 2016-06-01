@@ -988,7 +988,7 @@ end
 | (App (True, _79_368), _79_372) -> begin
 t2
 end
-| (_79_375, App (Imp, t1'::t2'::[])) -> begin
+| (_79_375, App (Imp, (t1')::(t2')::[])) -> begin
 (let _168_359 = (let _168_358 = (let _168_357 = (mkAnd (t1, t1'))
 in (_168_357)::(t2')::[])
 in (Imp, _168_358))
@@ -1066,7 +1066,7 @@ let mkCases : term Prims.list  ->  term = (fun t -> (match (t) with
 | [] -> begin
 (FStar_All.failwith "Impos")
 end
-| hd::tl -> begin
+| (hd)::tl -> begin
 (FStar_List.fold_left (fun out t -> (mkAnd (out, t))) hd tl)
 end))
 
@@ -1484,7 +1484,7 @@ let binders = (FStar_All.pipe_right binders (FStar_String.concat " "))
 in (
 
 let pats_str = (match (pats) with
-| ([]::[]) | ([]) -> begin
+| (([])::[]) | ([]) -> begin
 ""
 end
 | _79_684 -> begin
@@ -1495,7 +1495,7 @@ in (FStar_Util.format1 "\n:pattern (%s)" _168_546)))))
 in (FStar_All.pipe_right _168_547 (FStar_String.concat "\n")))
 end)
 in (match ((pats, wopt)) with
-| (([]::[], None)) | (([], None)) -> begin
+| ((([])::[], None)) | (([], None)) -> begin
 (let _168_548 = (aux n names body)
 in (FStar_Util.format3 "(%s (%s)\n %s);;no pats\n" (qop_to_string qop) binders _168_548))
 end
@@ -1520,10 +1520,10 @@ let _79_710 = (match ((FStar_Util.splitlines c)) with
 | [] -> begin
 (FStar_All.failwith "Impossible")
 end
-| hd::[] -> begin
+| (hd)::[] -> begin
 (hd, "")
 end
-| hd::_79_705 -> begin
+| (hd)::_79_705 -> begin
 (hd, "...")
 end)
 in (match (_79_710) with
@@ -1545,7 +1545,7 @@ end
 | [] -> begin
 ""
 end
-| h::t -> begin
+| (h)::t -> begin
 h
 end)))
 in (FStar_Util.format1 "\n; %s" _168_561))
@@ -1702,54 +1702,54 @@ let mk_PreType : term  ->  term = (fun t -> (mkApp ("PreType", (t)::[])))
 
 
 let mk_Valid : term  ->  term = (fun t -> (match (t.tm) with
-| App (Var ("Prims.b2t"), {tm = App (Var ("Prims.op_Equality"), _79_808::t1::t2::[]); hash = _79_802; freevars = _79_800}::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_Equality"), (_79_808)::(t1)::(t2)::[]); hash = _79_802; freevars = _79_800})::[]) -> begin
 (mkEq (t1, t2))
 end
-| App (Var ("Prims.b2t"), {tm = App (Var ("Prims.op_disEquality"), _79_827::t1::t2::[]); hash = _79_821; freevars = _79_819}::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_disEquality"), (_79_827)::(t1)::(t2)::[]); hash = _79_821; freevars = _79_819})::[]) -> begin
 (let _168_613 = (mkEq (t1, t2))
 in (mkNot _168_613))
 end
-| App (Var ("Prims.b2t"), {tm = App (Var ("Prims.op_LessThanOrEqual"), t1::t2::[]); hash = _79_840; freevars = _79_838}::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_LessThanOrEqual"), (t1)::(t2)::[]); hash = _79_840; freevars = _79_838})::[]) -> begin
 (let _168_616 = (let _168_615 = (unboxInt t1)
 in (let _168_614 = (unboxInt t2)
 in (_168_615, _168_614)))
 in (mkLTE _168_616))
 end
-| App (Var ("Prims.b2t"), {tm = App (Var ("Prims.op_LessThan"), t1::t2::[]); hash = _79_857; freevars = _79_855}::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_LessThan"), (t1)::(t2)::[]); hash = _79_857; freevars = _79_855})::[]) -> begin
 (let _168_619 = (let _168_618 = (unboxInt t1)
 in (let _168_617 = (unboxInt t2)
 in (_168_618, _168_617)))
 in (mkLT _168_619))
 end
-| App (Var ("Prims.b2t"), {tm = App (Var ("Prims.op_GreaterThanOrEqual"), t1::t2::[]); hash = _79_874; freevars = _79_872}::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThanOrEqual"), (t1)::(t2)::[]); hash = _79_874; freevars = _79_872})::[]) -> begin
 (let _168_622 = (let _168_621 = (unboxInt t1)
 in (let _168_620 = (unboxInt t2)
 in (_168_621, _168_620)))
 in (mkGTE _168_622))
 end
-| App (Var ("Prims.b2t"), {tm = App (Var ("Prims.op_GreaterThan"), t1::t2::[]); hash = _79_891; freevars = _79_889}::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThan"), (t1)::(t2)::[]); hash = _79_891; freevars = _79_889})::[]) -> begin
 (let _168_625 = (let _168_624 = (unboxInt t1)
 in (let _168_623 = (unboxInt t2)
 in (_168_624, _168_623)))
 in (mkGT _168_625))
 end
-| App (Var ("Prims.b2t"), {tm = App (Var ("Prims.op_AmpAmp"), t1::t2::[]); hash = _79_908; freevars = _79_906}::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_AmpAmp"), (t1)::(t2)::[]); hash = _79_908; freevars = _79_906})::[]) -> begin
 (let _168_628 = (let _168_627 = (unboxBool t1)
 in (let _168_626 = (unboxBool t2)
 in (_168_627, _168_626)))
 in (mkAnd _168_628))
 end
-| App (Var ("Prims.b2t"), {tm = App (Var ("Prims.op_BarBar"), t1::t2::[]); hash = _79_925; freevars = _79_923}::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_BarBar"), (t1)::(t2)::[]); hash = _79_925; freevars = _79_923})::[]) -> begin
 (let _168_631 = (let _168_630 = (unboxBool t1)
 in (let _168_629 = (unboxBool t2)
 in (_168_630, _168_629)))
 in (mkOr _168_631))
 end
-| App (Var ("Prims.b2t"), {tm = App (Var ("Prims.op_Negation"), t::[]); hash = _79_942; freevars = _79_940}::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_Negation"), (t)::[]); hash = _79_942; freevars = _79_940})::[]) -> begin
 (let _168_632 = (unboxBool t)
 in (mkNot _168_632))
 end
-| App (Var ("Prims.b2t"), t::[]) -> begin
+| App (Var ("Prims.b2t"), (t)::[]) -> begin
 (unboxBool t)
 end
 | _79_960 -> begin
@@ -1846,7 +1846,7 @@ let mk_and_l : term Prims.list  ->  term = (fun l -> (match (l) with
 | [] -> begin
 mkTrue
 end
-| hd::tl -> begin
+| (hd)::tl -> begin
 (FStar_List.fold_left (fun p1 p2 -> (mkAnd (p1, p2))) hd tl)
 end))
 
@@ -1855,7 +1855,7 @@ let mk_or_l : term Prims.list  ->  term = (fun l -> (match (l) with
 | [] -> begin
 mkFalse
 end
-| hd::tl -> begin
+| (hd)::tl -> begin
 (FStar_List.fold_left (fun p1 p2 -> (mkOr (p1, p2))) hd tl)
 end))
 

@@ -228,7 +228,7 @@ let _40_120 = (env.solver.commit_mark "USER MARK")
 in (
 
 let sigtab = (match (env.sigtab) with
-| hd::_40_124::tl -> begin
+| (hd)::(_40_124)::tl -> begin
 (hd)::tl
 end
 | _40_129 -> begin
@@ -251,10 +251,10 @@ in {solver = _40_136.solver; range = _40_136.range; curmodule = _40_136.curmodul
 
 
 let pop : env  ->  Prims.string  ->  env = (fun env msg -> (match (env.sigtab) with
-| ([]) | (_::[]) -> begin
+| ([]) | ((_)::[]) -> begin
 (FStar_All.failwith "Too many pops")
 end
-| _40_146::tl -> begin
+| (_40_146)::tl -> begin
 (
 
 let _40_148 = (env.solver.pop msg)
@@ -327,7 +327,7 @@ in (FStar_All.failwith _129_419))
 end
 | Some (md) -> begin
 (match (md.FStar_Absyn_Syntax.signature.FStar_Absyn_Syntax.n) with
-| FStar_Absyn_Syntax.Kind_arrow ((FStar_Util.Inl (a), _40_215)::(FStar_Util.Inl (wp), _40_210)::(FStar_Util.Inl (wlp), _40_205)::[], {FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Kind_effect; FStar_Absyn_Syntax.tk = _40_225; FStar_Absyn_Syntax.pos = _40_223; FStar_Absyn_Syntax.fvs = _40_221; FStar_Absyn_Syntax.uvs = _40_219}) -> begin
+| FStar_Absyn_Syntax.Kind_arrow (((FStar_Util.Inl (a), _40_215))::((FStar_Util.Inl (wp), _40_210))::((FStar_Util.Inl (wlp), _40_205))::[], {FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Kind_effect; FStar_Absyn_Syntax.tk = _40_225; FStar_Absyn_Syntax.pos = _40_223; FStar_Absyn_Syntax.fvs = _40_221; FStar_Absyn_Syntax.uvs = _40_219}) -> begin
 (a, wp.FStar_Absyn_Syntax.sort)
 end
 | _40_231 -> begin
@@ -620,7 +620,7 @@ end
 | (_40_425, []) -> begin
 false
 end
-| (hd::tl, hd'::tl') when (hd.FStar_Ident.idText = hd'.FStar_Ident.idText) -> begin
+| ((hd)::tl, (hd')::tl') when (hd.FStar_Ident.idText = hd'.FStar_Ident.idText) -> begin
 (aux tl tl')
 end
 | _40_436 -> begin
@@ -808,7 +808,7 @@ end else begin
 Some (t)
 end
 end
-| FStar_Util.Inr (FStar_Absyn_Syntax.Sig_let ((_40_590, {FStar_Absyn_Syntax.lbname = _40_597; FStar_Absyn_Syntax.lbtyp = t; FStar_Absyn_Syntax.lbeff = _40_594; FStar_Absyn_Syntax.lbdef = _40_592}::[]), _40_602, _40_604, _40_606)) -> begin
+| FStar_Util.Inr (FStar_Absyn_Syntax.Sig_let ((_40_590, ({FStar_Absyn_Syntax.lbname = _40_597; FStar_Absyn_Syntax.lbtyp = t; FStar_Absyn_Syntax.lbeff = _40_594; FStar_Absyn_Syntax.lbdef = _40_592})::[]), _40_602, _40_604, _40_606)) -> begin
 Some (t)
 end
 | FStar_Util.Inr (FStar_Absyn_Syntax.Sig_let ((_40_611, lbs), _40_615, _40_617, _40_619)) -> begin
@@ -1053,17 +1053,17 @@ let rec aux = (fun out g -> (match (g) with
 | [] -> begin
 out
 end
-| (Binding_lid (_, t)::tl) | (Binding_var (_, t)::tl) -> begin
+| ((Binding_lid (_, t))::tl) | ((Binding_var (_, t))::tl) -> begin
 (let _129_725 = (let _129_724 = (FStar_Absyn_Util.uvars_in_typ t)
 in (ext out _129_724))
 in (aux _129_725 tl))
 end
-| Binding_typ (_40_922, k)::tl -> begin
+| (Binding_typ (_40_922, k))::tl -> begin
 (let _129_727 = (let _129_726 = (FStar_Absyn_Util.uvars_in_kind k)
 in (ext out _129_726))
 in (aux _129_727 tl))
 end
-| Binding_sig (_40_930)::_40_928 -> begin
+| (Binding_sig (_40_930))::_40_928 -> begin
 out
 end))
 in (aux no_uvs env.gamma)))))

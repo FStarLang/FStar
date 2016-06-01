@@ -77,7 +77,7 @@ let erasableTypeNoDelta : FStar_Extraction_ML_Syntax.mlty  ->  Prims.bool = (fun
 true
 end else begin
 (match (t) with
-| FStar_Extraction_ML_Syntax.MLTY_Named (_70_24, ("FStar"::"Ghost"::[], "erased")) -> begin
+| FStar_Extraction_ML_Syntax.MLTY_Named (_70_24, (("FStar")::("Ghost")::[], "erased")) -> begin
 true
 end
 | _70_33 -> begin
@@ -123,14 +123,14 @@ let btvar_as_mlTermVar : FStar_Absyn_Syntax.btvar  ->  (Prims.string * Prims.int
 
 
 let rec lookup_ty_local : binding Prims.list  ->  FStar_Absyn_Syntax.btvar  ->  FStar_Extraction_ML_Syntax.mlty = (fun gamma b -> (match (gamma) with
-| Ty (bt, mli, mlt)::tl -> begin
+| (Ty (bt, mli, mlt))::tl -> begin
 if (FStar_Absyn_Util.bvd_eq bt.FStar_Absyn_Syntax.v b.FStar_Absyn_Syntax.v) then begin
 mlt
 end else begin
 (lookup_ty_local tl b)
 end
 end
-| _70_55::tl -> begin
+| (_70_55)::tl -> begin
 (lookup_ty_local tl b)
 end
 | [] -> begin
@@ -341,7 +341,7 @@ end))
 
 
 let rec subsetMlidents : FStar_Extraction_ML_Syntax.mlident Prims.list  ->  FStar_Extraction_ML_Syntax.mlident Prims.list  ->  Prims.bool = (fun la lb -> (match (la) with
-| h::tla -> begin
+| (h)::tla -> begin
 ((FStar_List.contains h lb) && (subsetMlidents tla lb))
 end
 | [] -> begin

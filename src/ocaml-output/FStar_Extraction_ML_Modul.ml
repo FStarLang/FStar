@@ -247,7 +247,7 @@ end))
 end))
 end)))
 in (match (se) with
-| FStar_Syntax_Syntax.Sig_bundle (FStar_Syntax_Syntax.Sig_datacon (l, _78_167, t, _78_170, _78_172, _78_174, _78_176, _78_178)::[], FStar_Syntax_Syntax.ExceptionConstructor::[], _78_185, r) -> begin
+| FStar_Syntax_Syntax.Sig_bundle ((FStar_Syntax_Syntax.Sig_datacon (l, _78_167, t, _78_170, _78_172, _78_174, _78_176, _78_178))::[], (FStar_Syntax_Syntax.ExceptionConstructor)::[], _78_185, r) -> begin
 (
 
 let _78_191 = (extract_ctor [] env {dname = l; dtyp = t})
@@ -296,7 +296,7 @@ in (FStar_All.pipe_left (FStar_Extraction_ML_Term.predecessor t) _167_121))
 in (l _167_122))
 in (FStar_Util.print2 "\t\t%s @ %s\n" _167_124 _167_123)))
 end
-| FStar_Syntax_Syntax.Sig_let ((_78_231, lb::_78_233), _78_238, _78_240, _78_242) -> begin
+| FStar_Syntax_Syntax.Sig_let ((_78_231, (lb)::_78_233), _78_238, _78_240, _78_242) -> begin
 (let _167_132 = (let _167_127 = (let _167_126 = (let _167_125 = (FStar_Util.right lb.FStar_Syntax_Syntax.lbname)
 in _167_125.FStar_Syntax_Syntax.fv_name)
 in _167_126.FStar_Syntax_Syntax.v)
@@ -345,7 +345,7 @@ in (extract_typ_abbrev g lid quals _167_142))
 end))
 end
 end
-| FStar_Syntax_Syntax.Sig_let ((false, lb::[]), _78_285, _78_287, quals) when ((FStar_Extraction_ML_Term.level g lb.FStar_Syntax_Syntax.lbtyp) = FStar_Extraction_ML_Term.Kind_level) -> begin
+| FStar_Syntax_Syntax.Sig_let ((false, (lb)::[]), _78_285, _78_287, quals) when ((FStar_Extraction_ML_Term.level g lb.FStar_Syntax_Syntax.lbtyp) = FStar_Extraction_ML_Term.Kind_level) -> begin
 (let _167_145 = (let _167_144 = (let _167_143 = (FStar_Util.right lb.FStar_Syntax_Syntax.lbname)
 in _167_143.FStar_Syntax_Syntax.fv_name)
 in _167_144.FStar_Syntax_Syntax.v)

@@ -228,7 +228,7 @@ type sub_eff = {
 
 (*
   new_effect {
-    STATE_h (heap:Type) : result:Type -> wp:st_wp_h heap result -> wlp:st_wp_h heap result -> Effect
+    STATE_h (heap:Type) : result:Type -> wp:st_wp_h heap result -> Effect
     with return ....
   }     
 *)
@@ -240,10 +240,8 @@ type eff_decl = {
     signature   :term;             //: result:Type ... -> Effect
     ret         :tscheme;          //the remaining fields ... one for each element of the interface
     bind_wp     :tscheme;
-    bind_wlp    :tscheme;
     if_then_else:tscheme;
     ite_wp      :tscheme;
-    ite_wlp     :tscheme;
     wp_binop    :tscheme;
     wp_as_type  :tscheme;
     close_wp    :tscheme;

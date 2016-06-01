@@ -81,7 +81,7 @@ in (match (_80_31) with
 (
 
 let out = (match ((FStar_Util.splitlines out)) with
-| x::_80_33 when (FStar_Util.starts_with x prefix) -> begin
+| (x)::_80_33 when (FStar_Util.starts_with x prefix) -> begin
 (
 
 let x = (let _169_27 = (FStar_Util.substring_from x (FStar_String.length prefix))
@@ -98,7 +98,7 @@ with
 []
 end
 in (match (x) with
-| i1::i2::i3::[] -> begin
+| (i1)::(i2)::(i3)::[] -> begin
 Z3V ((i1, i2, i3))
 end
 | _80_50 -> begin
@@ -356,11 +356,11 @@ let lines = (FStar_All.pipe_right (FStar_String.split (('\n')::[]) z3out) (FStar
 in (
 
 let rec lblnegs = (fun lines -> (match (lines) with
-| lname::"false"::rest -> begin
+| (lname)::("false")::rest -> begin
 (let _169_116 = (lblnegs rest)
 in (lname)::_169_116)
 end
-| lname::_80_131::rest -> begin
+| (lname)::(_80_131)::rest -> begin
 (lblnegs rest)
 end
 | _80_136 -> begin
@@ -369,21 +369,21 @@ end))
 in (
 
 let rec result = (fun x -> (match (x) with
-| "timeout"::tl -> begin
+| ("timeout")::tl -> begin
 (TIMEOUT, [])
 end
-| "unknown"::tl -> begin
+| ("unknown")::tl -> begin
 (let _169_119 = (lblnegs tl)
 in (UNKNOWN, _169_119))
 end
-| "sat"::tl -> begin
+| ("sat")::tl -> begin
 (let _169_120 = (lblnegs tl)
 in (SAT, _169_120))
 end
-| "unsat"::tl -> begin
+| ("unsat")::tl -> begin
 (UNSAT, [])
 end
-| _80_153::tl -> begin
+| (_80_153)::tl -> begin
 (result tl)
 end
 | _80_156 -> begin
@@ -527,7 +527,7 @@ let j = (match ((FStar_ST.read job_queue)) with
 | [] -> begin
 (FStar_All.failwith "Impossible")
 end
-| hd::tl -> begin
+| (hd)::tl -> begin
 (
 
 let _80_214 = (FStar_ST.op_Colon_Equals job_queue tl)
@@ -690,7 +690,7 @@ in (FStar_ST.op_Colon_Equals bg_scope _169_207))))
 let giveZ3 : FStar_SMTEncoding_Term.decl Prims.list  ->  Prims.unit = (fun decls -> (
 
 let _80_279 = (match ((FStar_ST.read fresh_scope)) with
-| hd::tl -> begin
+| (hd)::tl -> begin
 (FStar_ST.op_Colon_Equals fresh_scope (((FStar_List.append hd decls))::tl))
 end
 | _80_278 -> begin
@@ -738,7 +738,7 @@ in (refresh ())))
 
 
 let commit_mark = (fun msg -> (match ((FStar_ST.read fresh_scope)) with
-| hd::s::tl -> begin
+| (hd)::(s)::tl -> begin
 (FStar_ST.op_Colon_Equals fresh_scope (((FStar_List.append hd s))::tl))
 end
 | _80_300 -> begin

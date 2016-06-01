@@ -607,7 +607,7 @@ let wp_sig_aux decls m =
     let _, s = inst_tscheme (md.univs, md.signature) in
     let s = Subst.compress s in
     match md.binders, s.n with
-      | [], Tm_arrow([(a, _); (wp, _); (wlp, _)], c) when (is_teff (comp_result c)) -> a, wp.sort
+      | [], Tm_arrow([(a, _); (wp, _)], c) when (is_teff (comp_result c)) -> a, wp.sort
       | _ -> failwith "Impossible"
 
 let wp_signature env m = wp_sig_aux env.effects.decls m
