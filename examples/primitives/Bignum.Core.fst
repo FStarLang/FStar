@@ -16,6 +16,8 @@ open Bignum.Fscalar
 open Bignum.Fproduct
 open Bignum.Modulo
 
+#set-options "--lax"
+
 // TODO: dummy while proof not rewritten
 val valueOf: h:FStar.Heap.heap -> #size:pos -> b:buffer size{live h b} -> GTot nat
 let valueOf h #size b = eval h b norm_length % reveal prime
@@ -51,17 +53,11 @@ abstract let serialized (h:FStar.Heap.heap) (b:buffer 8) = live h b /\ length b 
 val valueOfBytes: h:FStar.Heap.heap -> b:buffer 8{serialized h b} -> GTot nat
 let valueOfBytes h b = eval h b bytes_length
 
-abstract val gcast_lemma_1: x:wide{v x < pow2 platform_size} -> GLemma unit
+val cast_lemma_1: x:wide{v x < pow2 platform_size} -> Lemma 
   (requires (True)) (ensures (v x % pow2 platform_size = v x)) 
-let gcast_lemma_1 x = 
-  admit()
-  //BignumLemmas.modulo_lemma_1 (v x) (pow2 platform_size)
-
-val cast_lemma_1: x:wide{v x < pow2 platform_size} -> Lemma (v x % pow2 platform_size = v x)
 let cast_lemma_1 x = 
-  admit()
-  (* coerce   (requires (True)) (ensures (v x % pow2 platform_size = v x))  *)
-  (*   (fun _ -> gcast_lemma_1 x) *)
+  ()
+  //BignumLemmas.modulo_lemma_1 (v x) (pow2 platform_size)
 
 (*
 val copy_to_bigint':
@@ -211,7 +207,6 @@ val erase_wide: b:bigint_wide -> idx:nat -> len:nat{length b >= idx+len} -> ctr:
       /\ (equalSub h1 b 0 h0 b 0 idx) /\ (equalSub h1 b (idx+len) h0 b (idx+len) (length b-(idx+len)))
       /\ (modifies_buf (only b) h0 h1)  ))
 let rec erase_wide b idx len ctr = 
-  admit();
   let h0 = ST.get() in
   match len - ctr with
   | 0 -> ()
@@ -267,7 +262,6 @@ let fsum_lemma h0 h1 res a b =
    /\ valueOf h1 res = (valueOf h0 a ^+ valueOf h0 b))) 
    (fun _ -> gfsum_lemma h0 h1 res a b)
 *)
-#reset-options
 
 val fsum:
   a:bigint -> b:bigint{disjoint a b} -> ST unit
@@ -276,7 +270,6 @@ val fsum:
 //      /\ (valueOf h1 a = (valueOf h0 a ^+ valueOf h0 b))
       /\ (modifies_buf (only a) h0 h1) ))
 let fsum a b =
-  admit();
   let h0 = ST.get() in
 //  standardized_eq_norm h0 a; standardized_eq_norm h0 b; 
   Fsum.fsum' a b;
@@ -302,8 +295,6 @@ let fsum a b =
   cut(modifies_buf !{getRef a} h0 h1)
 *)
 
-#reset-options
-
 (*
 abstract val gfdifference_lemma: h0:heap -> h1:heap -> res:bigint -> a:bigint -> b:bigint -> GLemma unit
   (requires (norm h0 a /\ norm h0 b /\ norm h1 res
@@ -325,7 +316,6 @@ let fdifference_lemma h0 h1 res a b =
    /\ valueOf h1 res = (valueOf h0 a ^- valueOf h0 b))) 
    (fun _ -> gfdifference_lemma h0 h1 res a b)
 *)
-#reset-options
 
 val fdifference:
   a:bigint -> b:bigint{disjoint a b} ->  ST unit 
@@ -334,7 +324,6 @@ val fdifference:
 //      /\ (valueOf h1 a = (valueOf h0 b ^- valueOf h0 a))
       /\ (modifies_buf (only a) h0 h1) ))
 let fdifference a b =
-  admit();
   let h0 = ST.get() in
 //  standardized_eq_norm h0 a; standardized_eq_norm h0 b; 
   let b' = create #64 zero norm_length in
@@ -343,9 +332,9 @@ let fdifference a b =
   let h1 = ST.get() in
   add_big_zero b';
   let h2 = ST.get() in
-  gcut (fun _ -> modifies_buf (only b') h0 h2); 
+  cut (modifies_buf (only b') h0 h2); 
   eq_lemma h0 h2 a (only b'); 
-  gcut (fun _ -> norm h2 a); 
+  cut (norm h2 a); 
   fdifference' a b'; 
   freduce_coefficients a;
   ()
@@ -365,8 +354,6 @@ let fdifference a b =
   admitP (modifies_buf !{getRef a} h0 h6)
 *)
 
-#reset-options
-
 val fscalar:
   res:bigint -> b:bigint{disjoint res b} -> #n:nat{n <= ndiff'} -> s:limb{v s < pow2 n} -> ST unit
   (requires (fun h -> (live h res) /\ (norm h b)))
@@ -375,7 +362,6 @@ val fscalar:
 //    /\ (valueOf h1 res = (v s +* valueOf h0 b))
     /\ (modifies_buf (only res) h0 h1) ))
 let fscalar res b #n s =
-  admit();
   let h0 = ST.get() in
 //  standardized_eq_norm h0 b; 
   let tmp = create #128 zero_wide (2*norm_length-1) in
@@ -385,8 +371,6 @@ let fscalar res b #n s =
   modulo res tmp;
   let h1 = ST.get() in ()
   //admitP(True /\ (valueOf h1 res = (v s +* valueOf h0 b)))
-
-#reset-options
 
 (*
 assume val norm_lemma_2: h:heap -> b:bigint -> 
@@ -422,7 +406,6 @@ let fmul_lemma h0 h1 res a b =
    /\ valueOf h1 res = (valueOf h0 a ^* valueOf h0 b))) 
    (fun _ -> gfmul_lemma h0 h1 res a b)
 *)
-#reset-options
 
 val fmul: res:bigint -> a:bigint{disjoint res a} -> b:bigint{disjoint res b} -> ST unit 
     (requires (fun h -> (live h res) /\ (norm h a) /\ (norm h b))) 
@@ -431,7 +414,6 @@ val fmul: res:bigint -> a:bigint{disjoint res a} -> b:bigint{disjoint res b} -> 
 //      /\ (valueOf h1 res = (valueOf h0 a ^* valueOf h0 b))
       /\ (modifies_buf (only res) h0 h1)  ))
 let fmul res a b =
-  admit();
   let h0 = ST.get() in
 //  standardized_eq_norm h0 a; standardized_eq_norm h0 b; 
   let tmp = create #128 zero_wide (2*norm_length-1) in
@@ -456,7 +438,6 @@ val fsquare:
 //      /\ (valueOf h1 res = (valueOf h0 a ^* valueOf h0 a))
       /\ (modifies_buf (only res) h0 h1) ))
 let fsquare res a =
-  admit();
   fmul res a a
 
 val loop:
@@ -473,7 +454,6 @@ let rec loop tmp v ctr =
 val crecip':
   output:bigint -> z:bigint -> St unit
 let crecip' output z = 
-  admit();
   let z2 = create #64 zero norm_length in
   let z9 = create #64 zero norm_length in
   let z11 = create #64 zero norm_length in

@@ -23,7 +23,7 @@ type uint8s = SInt_UInt8.uint8 buffer
 type uint32s = SInt_UInt32.uint32 buffer 
 type uint63s = SInt_UInt63.uint63 buffer 
 type uint64s = SInt_UInt64.uint64 buffer 
-type uint128s = Stdint.uint128 buffer 
+type uint128s = SInt_UInt64.uint128 buffer 
                 
 let create t init len = {content = Array.make len init; idx = 0; length = len}
 let index t b n = Array.get b.content (n+b.idx)
