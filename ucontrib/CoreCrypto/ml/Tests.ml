@@ -1208,18 +1208,19 @@ module TestEcdhke = struct
 end
 
 module TestCertLoad = struct
-   let test () =
-      match cert_load_chain "test_chain.pem" "test_client.key" with
+  let test () =
+    match load_chain "test_chain.pem" with
+    | None -> false
+    | Some chain ->
+      begin
+      (*Printf.printf "Parsed a chain of %d elements.\n" (List.length chain);*)
+      match load_key "test_client.key" with
       | None -> false
-      | Some (k, chain) ->
-         Printf.printf "Parsed a chain of %d elements.\n" (List.length chain);
-         let tbs = bytes_of_string "hello world" in
-         match cert_sign k RSASIG SHA256 tbs with
-         | Some sigv ->
-           let ps = BatBase64.str_encode (string_of_bytes sigv) in
-           Printf.printf "Got signature payload, checking against certificate...\n%s\n" ps;
-           cert_verify_sig (List.hd chain) RSASIG SHA256 tbs sigv
-         | None -> false
+      | Some k ->
+        let tbs = bytes_of_string "hello world" in
+        let sigv = maybe_hash_and_sign k (Some SHA256) tbs in
+        verify_signature k (Some SHA256) tbs sigv
+      end
 end
 
 module TestCert = struct
@@ -1238,7 +1239,9 @@ module TestECDSACert = struct
     let c1b = bytes_of_string (BatBase64.str_decode c1) in
     let sigvb = bytes_of_string (BatBase64.str_decode sigv) in
     let tbs = bytes_of_string "Hello World\n" in
-    cert_verify_sig c1b CoreCrypto.ECDSA CoreCrypto.SHA256 tbs sigvb
+    match get_key_from_cert c1b with
+    | Some k -> verify_signature k (Some SHA256) tbs sigvb
+    | None -> false
 end
 
 module TestDSACert = struct
@@ -1248,7 +1251,9 @@ module TestDSACert = struct
     let c1b = bytes_of_string (BatBase64.str_decode c1) in
     let sigvb = bytes_of_string (BatBase64.str_decode sigv) in
     let tbs = bytes_of_string "Hello World\n" in
-    cert_verify_sig c1b CoreCrypto.DSA CoreCrypto.SHA256 tbs sigvb
+    match get_key_from_cert c1b with
+    | Some k -> verify_signature k (Some SHA256) tbs sigvb
+    | None -> false
 end
 
 module TestRSACert = struct
@@ -1258,8 +1263,10 @@ module TestRSACert = struct
     let c1b = bytes_of_string (BatBase64.str_decode c1) in
     let sigvb = bytes_of_string (BatBase64.str_decode sigv) in
     let tbs = bytes_of_string "Hello World\n" in
-    cert_verify_sig c1b CoreCrypto.RSASIG CoreCrypto.SHA256 tbs sigvb
-end
+    match get_key_from_cert c1b with
+    | Some k -> verify_signature k (Some SHA256) tbs sigvb
+    | None -> false
+ end
 
 let run_test section test_vectors print_test_vector test_vector =
   let passed = ref 0 in
