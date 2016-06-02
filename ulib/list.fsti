@@ -98,4 +98,4 @@ val unzip3T : list ('_40328 * '_40327 * '_40326) -> Tot (list '_40328 * list '_4
    compile with F#. OCaml does not have this problem, as it features a
    polymorphic comparison. *)
 val unique: list 'a -> list 'a
-val map_flatten: ('a -> list 'b) -> list 'a -> list 'b
+val filter_map: ('a -> option<'b>) -> list<'a> -> list<'b>
