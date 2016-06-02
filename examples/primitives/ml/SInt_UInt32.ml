@@ -53,6 +53,7 @@ let op_Hat_Star = mul
 let op_Hat_Slash = div
 let op_Hat_Less_Less = shift_left
 let op_Hat_Greater_Greater = shift_right
+let op_Greater_Greater_Greater : uint32  ->  Prims.nat  ->  uint32 = rotate_right
 let op_Hat_Amp = logand
 let op_Hat_Bar = logor
 let op_Hat_Hat = logxor
