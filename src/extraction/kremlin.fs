@@ -84,8 +84,20 @@ type binary_format = version * list<file>
 
 (** END COPY-PASTED... *)
 
+let fst3 (x, _, _) = x
+let snd3 (_, x, _) = x
+let thd3 (_, _, x) = x
+
 let rec translate (MLLib modules): list<file> =
-  List.map translate_module modules
+  List.filter_map (fun m ->
+    try
+      Some (translate_module m)
+    with
+    | e ->
+        Util.print2 "Unable to translate module: %s\n%s\n"
+          (fst3 m) (Util.print_exn e);
+        None
+  ) modules
 
 and translate_module (name, modul, _): file =
   let program = match modul with
@@ -108,16 +120,39 @@ and translate_decl d: option<decl> =
       let body = translate_expr body in
       Some (DFunction (t, name, binders, body))
 
-  | _ ->
+  | MLM_Let _ ->
+      failwith "todo: translate_decl [MLM_Let]"
+
+  | MLM_Loc _ ->
       None
+
+  | MLM_Ty _ ->
+      failwith "todo: translate_decl [MLM_Ty]"
+
+  | MLM_Top _ ->
+      failwith "todo: translate_decl [MLM_Top]"
+
+  | MLM_Exn _ ->
+      failwith "todo: translate_decl [MLM_Exn]"
 
 and translate_type t: typ =
   match t with
   | MLTY_Tuple []
   | MLTY_Top ->
       TUnit
-  | _ ->
-      failwith "todo: translate_type"
+  | MLTY_Var _ ->
+      failwith "todo: translate_type [MLTY_Var]"
+  | MLTY_Fun _ ->
+      failwith "todo: translate_type [MLTY_Fun]"
+  | MLTY_Named (_, p) ->
+      begin match Syntax.string_of_mlpath p with
+      | "Prims.unit" ->
+          TUnit
+      | _ ->
+          failwith (Util.format1 "todo: translate_type [MLTY_Named] %s" (Syntax.string_of_mlpath p))
+      end
+  | MLTY_Tuple _ ->
+      failwith "todo: translate_type [MLTY_Tuple]"
 
 and translate_binders args =
   List.map translate_binder args
@@ -129,5 +164,52 @@ and translate_expr e: expr =
   match e.expr with
   | MLE_Tuple [] ->
       EUnit
-  | _ ->
-      failwith "todo: translate_expr"
+  | MLE_Const c ->
+      translate_constant c
+  | MLE_Var _ ->
+      failwith "todo: translate_expr [MLE_Var]"
+  | MLE_Name _ ->
+      failwith "todo: translate_expr [MLE_Name]"
+  | MLE_Let _ ->
+      failwith "todo: translate_expr [MLE_Let]"
+  | MLE_App _ ->
+      failwith "todo: translate_expr [MLE_App]"
+  | MLE_Fun _ ->
+      failwith "todo: translate_expr [MLE_Fun]"
+  | MLE_Match _ ->
+      failwith "todo: translate_expr [MLE_Match]"
+  | MLE_Coerce _ ->
+      failwith "todo: translate_expr [MLE_Coerce]"
+  | MLE_CTor _ ->
+      failwith "todo: translate_expr [MLE_CTor]"
+  | MLE_Seq _ ->
+      failwith "todo: translate_expr [MLE_Seq]"
+  | MLE_Tuple _ ->
+      failwith "todo: translate_expr [MLE_Tuple]"
+  | MLE_Record _ ->
+      failwith "todo: translate_expr [MLE_Record]"
+  | MLE_Proj _ ->
+      failwith "todo: translate_expr [MLE_Proj]"
+  | MLE_If _ ->
+      failwith "todo: translate_expr [MLE_If]"
+  | MLE_Raise _ ->
+      failwith "todo: translate_expr [MLE_Raise]"
+  | MLE_Try _ ->
+      failwith "todo: translate_expr [MLE_Try]"
+
+and translate_constant c: expr =
+  match c with
+  | MLC_Unit ->
+      EUnit
+  | MLC_Bool _ ->
+      failwith "todo: translate_expr [MLC_Bool]"
+  | MLC_Int _ ->
+      failwith "todo: translate_expr [MLC_Int]"
+  | MLC_Float _ ->
+      failwith "todo: translate_expr [MLC_Float]"
+  | MLC_Char _ ->
+      failwith "todo: translate_expr [MLC_Char]"
+  | MLC_String _ ->
+      failwith "todo: translate_expr [MLC_String]"
+  | MLC_Bytes _ ->
+      failwith "todo: translate_expr [MLC_Bytes]"

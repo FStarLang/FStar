@@ -661,3 +661,6 @@ let load_value_from_file (fname:string) =
   with
   | _ ->
     None
+
+let print_exn e =
+  Printexc.to_string e

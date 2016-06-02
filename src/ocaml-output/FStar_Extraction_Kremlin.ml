@@ -321,25 +321,56 @@ type binary_format =
 (version * file Prims.list)
 
 
-let rec translate : FStar_Extraction_ML_Syntax.mllib  ->  file Prims.list = (fun _79_52 -> (match (_79_52) with
-| FStar_Extraction_ML_Syntax.MLLib (modules) -> begin
-(FStar_List.map translate_module modules)
+let fst3 = (fun _79_56 -> (match (_79_56) with
+| (x, _79_53, _79_55) -> begin
+x
 end))
-and translate_module : (FStar_Extraction_ML_Syntax.mlsymbol * (FStar_Extraction_ML_Syntax.mlsig * FStar_Extraction_ML_Syntax.mlmodule) Prims.option * FStar_Extraction_ML_Syntax.mllib)  ->  file = (fun _79_57 -> (match (_79_57) with
-| (name, modul, _79_56) -> begin
+
+
+let snd3 = (fun _79_62 -> (match (_79_62) with
+| (_79_58, x, _79_61) -> begin
+x
+end))
+
+
+let thd3 = (fun _79_68 -> (match (_79_68) with
+| (_79_64, _79_66, x) -> begin
+x
+end))
+
+
+let rec translate : FStar_Extraction_ML_Syntax.mllib  ->  file Prims.list = (fun _79_70 -> (match (_79_70) with
+| FStar_Extraction_ML_Syntax.MLLib (modules) -> begin
+(FStar_List.filter_map (fun m -> try
+(match (()) with
+| () -> begin
+(let _169_236 = (translate_module m)
+in Some (_169_236))
+end)
+with
+| e -> begin
+(
+
+let _79_76 = (let _169_238 = (FStar_Util.print_exn e)
+in (FStar_Util.print2 "Unable to translate module: %s\n%s\n" (fst3 m) _169_238))
+in None)
+end) modules)
+end))
+and translate_module : (Prims.string * (FStar_Extraction_ML_Syntax.mlsig * FStar_Extraction_ML_Syntax.mlmodule) Prims.option * FStar_Extraction_ML_Syntax.mllib)  ->  file = (fun _79_84 -> (match (_79_84) with
+| (name, modul, _79_83) -> begin
 (
 
 let program = (match (modul) with
 | Some (_signature, decls) -> begin
 (FStar_List.filter_map translate_decl decls)
 end
-| _79_63 -> begin
+| _79_90 -> begin
 (FStar_All.failwith "Unexpected standalone interface or nested modules")
 end)
 in (name, program))
 end))
 and translate_decl : FStar_Extraction_ML_Syntax.mlmodule1  ->  decl Prims.option = (fun d -> (match (d) with
-| FStar_Extraction_ML_Syntax.MLM_Let (is_rec, {FStar_Extraction_ML_Syntax.mllb_name = (name, _79_92); FStar_Extraction_ML_Syntax.mllb_tysc = Some ([], FStar_Extraction_ML_Syntax.MLTY_Fun (_79_82, _79_84, t)); FStar_Extraction_ML_Syntax.mllb_add_unit = _79_79; FStar_Extraction_ML_Syntax.mllb_def = {FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Fun (args, body); FStar_Extraction_ML_Syntax.mlty = _79_72; FStar_Extraction_ML_Syntax.loc = _79_70}; FStar_Extraction_ML_Syntax.print_typ = _79_68}::[]) -> begin
+| FStar_Extraction_ML_Syntax.MLM_Let (is_rec, {FStar_Extraction_ML_Syntax.mllb_name = (name, _79_119); FStar_Extraction_ML_Syntax.mllb_tysc = Some ([], FStar_Extraction_ML_Syntax.MLTY_Fun (_79_109, _79_111, t)); FStar_Extraction_ML_Syntax.mllb_add_unit = _79_106; FStar_Extraction_ML_Syntax.mllb_def = {FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Fun (args, body); FStar_Extraction_ML_Syntax.mlty = _79_99; FStar_Extraction_ML_Syntax.loc = _79_97}; FStar_Extraction_ML_Syntax.print_typ = _79_95}::[]) -> begin
 (
 
 let t = (translate_type t)
@@ -351,28 +382,123 @@ in (
 let body = (translate_expr body)
 in Some (DFunction ((t, name, binders, body))))))
 end
-| _79_102 -> begin
+| FStar_Extraction_ML_Syntax.MLM_Let (_79_129) -> begin
+(FStar_All.failwith "todo: translate_decl [MLM_Let]")
+end
+| FStar_Extraction_ML_Syntax.MLM_Loc (_79_132) -> begin
 None
+end
+| FStar_Extraction_ML_Syntax.MLM_Ty (_79_135) -> begin
+(FStar_All.failwith "todo: translate_decl [MLM_Ty]")
+end
+| FStar_Extraction_ML_Syntax.MLM_Top (_79_138) -> begin
+(FStar_All.failwith "todo: translate_decl [MLM_Top]")
+end
+| FStar_Extraction_ML_Syntax.MLM_Exn (_79_141) -> begin
+(FStar_All.failwith "todo: translate_decl [MLM_Exn]")
 end))
 and translate_type : FStar_Extraction_ML_Syntax.mlty  ->  typ = (fun t -> (match (t) with
 | (FStar_Extraction_ML_Syntax.MLTY_Tuple ([])) | (FStar_Extraction_ML_Syntax.MLTY_Top) -> begin
 TUnit
 end
-| _79_108 -> begin
-(FStar_All.failwith "todo: translate_type")
+| FStar_Extraction_ML_Syntax.MLTY_Var (_79_148) -> begin
+(FStar_All.failwith "todo: translate_type [MLTY_Var]")
+end
+| FStar_Extraction_ML_Syntax.MLTY_Fun (_79_151) -> begin
+(FStar_All.failwith "todo: translate_type [MLTY_Fun]")
+end
+| FStar_Extraction_ML_Syntax.MLTY_Named (_79_154, p) -> begin
+(match ((FStar_Extraction_ML_Syntax.string_of_mlpath p)) with
+| "Prims.unit" -> begin
+TUnit
+end
+| _79_160 -> begin
+(let _169_242 = (FStar_Util.format1 "todo: translate_type [MLTY_Named] %s" (FStar_Extraction_ML_Syntax.string_of_mlpath p))
+in (FStar_All.failwith _169_242))
+end)
+end
+| FStar_Extraction_ML_Syntax.MLTY_Tuple (_79_162) -> begin
+(FStar_All.failwith "todo: translate_type [MLTY_Tuple]")
 end))
 and translate_binders : (FStar_Extraction_ML_Syntax.mlident * FStar_Extraction_ML_Syntax.mlty) Prims.list  ->  binder Prims.list = (fun args -> (FStar_List.map translate_binder args))
-and translate_binder : (FStar_Extraction_ML_Syntax.mlident * FStar_Extraction_ML_Syntax.mlty)  ->  binder = (fun _79_115 -> (match (_79_115) with
-| ((name, _79_112), typ) -> begin
-(let _169_235 = (translate_type typ)
-in {name = name; typ = _169_235; mut = false})
+and translate_binder : (FStar_Extraction_ML_Syntax.mlident * FStar_Extraction_ML_Syntax.mlty)  ->  binder = (fun _79_170 -> (match (_79_170) with
+| ((name, _79_167), typ) -> begin
+(let _169_245 = (translate_type typ)
+in {name = name; typ = _169_245; mut = false})
 end))
 and translate_expr : FStar_Extraction_ML_Syntax.mlexpr  ->  expr = (fun e -> (match (e.FStar_Extraction_ML_Syntax.expr) with
 | FStar_Extraction_ML_Syntax.MLE_Tuple ([]) -> begin
 EUnit
 end
-| _79_120 -> begin
-(FStar_All.failwith "todo: translate_expr")
+| FStar_Extraction_ML_Syntax.MLE_Const (c) -> begin
+(translate_constant c)
+end
+| FStar_Extraction_ML_Syntax.MLE_Var (_79_177) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_Var]")
+end
+| FStar_Extraction_ML_Syntax.MLE_Name (_79_180) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_Name]")
+end
+| FStar_Extraction_ML_Syntax.MLE_Let (_79_183) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_Let]")
+end
+| FStar_Extraction_ML_Syntax.MLE_App (_79_186) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_App]")
+end
+| FStar_Extraction_ML_Syntax.MLE_Fun (_79_189) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_Fun]")
+end
+| FStar_Extraction_ML_Syntax.MLE_Match (_79_192) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_Match]")
+end
+| FStar_Extraction_ML_Syntax.MLE_Coerce (_79_195) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_Coerce]")
+end
+| FStar_Extraction_ML_Syntax.MLE_CTor (_79_198) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_CTor]")
+end
+| FStar_Extraction_ML_Syntax.MLE_Seq (_79_201) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_Seq]")
+end
+| FStar_Extraction_ML_Syntax.MLE_Tuple (_79_204) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_Tuple]")
+end
+| FStar_Extraction_ML_Syntax.MLE_Record (_79_207) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_Record]")
+end
+| FStar_Extraction_ML_Syntax.MLE_Proj (_79_210) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_Proj]")
+end
+| FStar_Extraction_ML_Syntax.MLE_If (_79_213) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_If]")
+end
+| FStar_Extraction_ML_Syntax.MLE_Raise (_79_216) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_Raise]")
+end
+| FStar_Extraction_ML_Syntax.MLE_Try (_79_219) -> begin
+(FStar_All.failwith "todo: translate_expr [MLE_Try]")
+end))
+and translate_constant : FStar_Extraction_ML_Syntax.mlconstant  ->  expr = (fun c -> (match (c) with
+| FStar_Extraction_ML_Syntax.MLC_Unit -> begin
+EUnit
+end
+| FStar_Extraction_ML_Syntax.MLC_Bool (_79_224) -> begin
+(FStar_All.failwith "todo: translate_expr [MLC_Bool]")
+end
+| FStar_Extraction_ML_Syntax.MLC_Int (_79_227) -> begin
+(FStar_All.failwith "todo: translate_expr [MLC_Int]")
+end
+| FStar_Extraction_ML_Syntax.MLC_Float (_79_230) -> begin
+(FStar_All.failwith "todo: translate_expr [MLC_Float]")
+end
+| FStar_Extraction_ML_Syntax.MLC_Char (_79_233) -> begin
+(FStar_All.failwith "todo: translate_expr [MLC_Char]")
+end
+| FStar_Extraction_ML_Syntax.MLC_String (_79_236) -> begin
+(FStar_All.failwith "todo: translate_expr [MLC_String]")
+end
+| FStar_Extraction_ML_Syntax.MLC_Bytes (_79_239) -> begin
+(FStar_All.failwith "todo: translate_expr [MLC_Bytes]")
 end))
 
 

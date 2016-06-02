@@ -70,11 +70,7 @@ let codegen uf_mods_env =
           Util.write_file (Options.prepend_output_dir (n^ext)) (FStar.Format.pretty 120 d)
         ) newDocs
     | Some "Kremlin" ->
-        let programs = List.flatten (List.filter_map (fun lib ->
-            try Some (Extraction.Kremlin.translate lib)
-            with _ -> None
-          ) mllibs)
-        in
+        let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
         save_value_to_file "out.krml" bin
 
