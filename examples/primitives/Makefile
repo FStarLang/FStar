@@ -34,6 +34,14 @@ CURVE_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Ax
 
 .PHONY: lib-ver chacha-ver chacha-ml poly-ver poly-ml
 
+all: lib-ver \
+chacha-ver \
+chacha-ml \
+poly-ver \
+poly-ml \
+curve-lax \
+curve-ml
+
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
 	$(FSTAR) $(OPTIONS_VER) sbuffer.fst SInt.UInt8.fst SInt.UInt32.fst SInt.UInt63.fst SBytes.fst
