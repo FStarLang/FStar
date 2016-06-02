@@ -1,5 +1,6 @@
 /* -------------------------------------------------------------------- */
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -2092,8 +2093,17 @@ CAMLprim value ocaml_validate_chain(value chain, value for_signing, value hostna
     if(!ctx || !store || !param) CAMLreturn(Val_false);
 
     X509_STORE_set_default_paths(store);
-    X509_STORE_load_locations(store, String_val(cafile), NULL);
     X509_STORE_set_verify_cb_func(store, cb);
+
+    struct stat sb;
+    if(stat(String_val(cafile), &sb) == 0 && S_ISDIR(sb.st_mode)) {
+      if (X509_STORE_load_locations(store, NULL, String_val(cafile)) != 1)
+	caml_failwith("ocaml_validate_chain: failed to load CAPath");
+    }
+    else {
+      if (X509_STORE_load_locations(store, String_val(cafile), NULL) != 1)
+	caml_failwith("ocaml_validate_chain: failed to load CAFile");
+    }
 
     // Validation parameters
     X509_VERIFY_PARAM_set_flags(param, X509_V_FLAG_USE_CHECK_TIME | X509_V_FLAG_CRL_CHECK_ALL);
