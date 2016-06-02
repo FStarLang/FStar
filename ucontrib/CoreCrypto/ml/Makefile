@@ -17,14 +17,12 @@ ifeq ($(OS),Windows_NT)
     # find dllcorecrypto.dll; it is in the current directory, which Windows
     # always uses to search for DLLs.
     EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
-    EXE = .exe
     ARCH = win32
 else
     # On Unix-like systems, the library search path is LD_LIBRARY_PATH, which is
     # correctly setup to find libssleay.so and the like, but never includes the
     # current directory, which is where dllcorecrypto.so is located.
     EXTRA_PATH = LD_LIBRARY_PATH=.
-    EXE =
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         EXTRA_OPTS = -ccopt -L. -I /usr/local/opt/openssl/include -I /opt/local/include/openssl
@@ -67,17 +65,17 @@ CoreCrypto.cma: $(DLL_BYTE)
 	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $^
 
 TEST_CMX = Tests.cmx
-Tests$(EXE): CoreCrypto.cmxa $(TEST_CMX)
+Tests.exe: CoreCrypto.cmxa $(TEST_CMX)
 	$(OCAMLOPT) $(EXTRA_OPTS) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
 	CoreCrypto.cmxa $(TEST_CMX)
 
-test: Tests$(EXE)
-	@$(EXTRA_PATH) ./Tests$(EXE)
+test: Tests.exe
+	@$(EXTRA_PATH) ./Tests.exe
 
 clean:
 	$(MAKE) -C $(DB) clean
 	$(MAKE) -C $(PLATFORM) clean
-	rm -f Tests$(EXE) *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll
+	rm -f Tests.exe *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll
 
 depend:
 	$(OCAMLDEP) *.ml *.mli > .depend
