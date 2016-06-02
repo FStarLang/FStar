@@ -1,27 +1,41 @@
 module Buffer
 
 open FStar.Seq
+open FStar.UInt.UInt32
 open FStar.StackHeap2
 open FStar.StackArray
 open FStar.Ghost
 open FStar.SST
 module StackHeap = FStar.StackHeap2
 
+let lemma_uSize (x:int) (n:nat) : Lemma (requires (UInt.uSize x n))
+				     (ensures (x >= 0))
+				     [SMTPatT (UInt.uSize x n)]
+  = ()
+  
 (* Buffer general type, fully implemented on FStar's arrays *)
 abstract type buffer (a:Type) = {
   content:array a; 
-  idx:nat;    
-  length:nat;
+  idx:uint32;    // JK: used machine integer so that if the code is meant to go to OCaml, that module can be extracted instead of being realized 
+  length:uint32;
 }
 
 // JK: should those heap functions not be ghost ? Or returned an erased type ?
-let contains #a h (b:buffer a) : GTot bool = StackHeap.contains #(seq a) h b.content
-let sel #a h (b:buffer a) : GTot (seq a) = StackHeap.sel #(seq a) h b.content
+let contains #a h (b:buffer a) : GTot bool = StackHeap.contains #(bounded_seq a) h b.content
+let sel #a h (b:buffer a) : GTot (seq a) = StackHeap.sel #(bounded_seq a) h b.content
 let max_length #a h (b:buffer a) : GTot nat = Seq.length (sel h b)
-let length #a (b:buffer a) : GTot nat = b.length
-let idx #a (b:buffer a) : GTot nat = b.idx
+
+val length: #a:Type -> b:buffer a -> GTot nat 
+let length #a b = v b.length
+
+(* let length_fail (#a:Type) (b:buffer a) : GTot nat = v b.length (\* JK: Fails to typecheck for some reason *\) *)
+
+let length' #a (b:buffer a) : GTot uint32 = b.length
+val idx: #a:Type -> b:buffer a -> GTot nat
+let idx #a b = v b.idx
+(* let idx #a (b:buffer a) : GTot nat = v b.idx (\* JK: idem above *\) *)
 let content #a (b:buffer a) : GTot (array a) = (b.content)
-let get_ref #a (b:buffer a) : GTot (Heap.ref (seq a)) = asRef (b.content)
+let get_ref #a (b:buffer a) : GTot (Heap.ref (bounded_seq a)) = asRef (b.content)
 
 (* Liveness condition, necessary for any computation on the buffer *)
 // JK: coercion is not well enforced between booleans and Type0s
@@ -158,24 +172,24 @@ let atomicUpdate (#a:Type) h0 h1 (b:buffer a) (n:nat) z : GTot Type0 =
   
 (** Concrete getters and setters **)
 
-let create #a (init:a) (len:nat) : 
+let create #a (init:a) (len:uint32) : 
   ST (buffer a)
      (requires (fun h -> True))
      (ensures (fun (h0:mem) b h1 ->
-       not(contains h0 b) /\ live h1 b /\ idx b = 0 /\ length b = len 
+       not(contains h0 b) /\ live h1 b /\ idx b = 0 /\ length b = v len 
        /\ modifies_buf (top_frame_id h1) Set.empty Set.empty h0 h1
        /\ frame_ids h1 = frame_ids h0
        /\ modifies_one (top_frame_id h1) h0 h1
-       /\ (forall (i:nat). {:pattern (get h1 b i)} i < len ==> 
+       /\ (forall (i:nat). {:pattern (get h1 b i)} i < v len ==> 
 	   get h1 b i == init)))
   = let content = StackArray.create len init in 
-    {content = content; idx = 0; length = len}
+    {content = content; idx = zero; length = len}
 
-let index #a (b:buffer a) (n:nat{n<length b}) : 
+let index #a (b:buffer a) (n:uint32{v n<length b}) : 
   STL a
      (requires (fun h -> live h b))
-     (ensures (fun h0 z h1 -> live h0 b /\ (h1 == h0) /\ (z == get h0 b n)))
-  = StackArray.index b.content (b.idx+n)
+     (ensures (fun h0 z h1 -> live h0 b /\ (h1 == h0) /\ (z == get h0 b (v n))))
+  = StackArray.index b.content (b.idx^+n)
 
 let lemma_aux_0 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') : Lemma
   (requires (True))
@@ -195,27 +209,22 @@ let lemma_aux (#a:Type) (#a':Type) (b:buffer a) (h0:t) (h1:t) (b':buffer a') : L
     else if a <> a' then ()
     else if a = a' && content b <> content b' then ()
 
-let p_0 b : Type0 = b2t(Set.mem (Buff b) (only b))
-let p_1 b h0 h1 : Type0 = modifies_one (frameOf (content b)) h0 h1
-
-let upd #a (b:buffer a) (n:nat{n < length b}) v :
+let upd #a (b:buffer a) (n:uint32{v n < length b}) z :
   STL unit
      (requires (fun h -> live h b))
-     (ensures (fun h0 _ h1 -> atomicUpdate h0 h1 b n v))
+     (ensures (fun h0 _ h1 -> atomicUpdate #a h0 h1 b (v n) z))
   = let h0 = SST.get () in
-    StackArray.upd b.content (b.idx+n) v;
+    StackArray.upd b.content (b.idx ^+ n) z;
     let h1 = SST.get () in
-    cut (p_0 b);
-    cut (p_1 b h0 h1);
+    cut (Set.mem (Buff b) (only b));
+    cut (modifies_one (frameOf (content b)) h0 h1);
     ()
 
-let sub #a (b:buffer a) (i:nat) (len:nat{len <= length b /\ i + len <= length b}) :
+let sub #a (b:buffer a) (i:uint32) (len:uint32{v len <= length b /\ v i + v len <= length b}) :
   STL (buffer a)
      (requires (fun h -> live h b))
-     (ensures (fun h0 b' h1 -> content b = content b' /\ idx b' = idx b + i /\ length b' = len /\ (h0 == h1)))
-  = {content = b.content; idx = i+b.idx; length = len}
-
-#reset-options //"--z3timeout 20"
+     (ensures (fun h0 b' h1 -> content b = content b' /\ idx b' = idx b + v i /\ length b' = v len /\ (h0 == h1)))
+  = {content = b.content; idx = i ^+ b.idx; length = len}
 
 let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:t) (h1:t) (h2:t): Lemma
   (requires (modifies_one (frameOf (content b)) h0 h1 /\ modifies_one (frameOf (content b)) h1 h2))
@@ -223,43 +232,46 @@ let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:t) (h1:t) (h2:t): Lemm
   [SMTPat (modifies_one (frameOf (content b)) h0 h1); SMTPat (modifies_one (frameOf (content b)) h1 h2)]
   = ()
 
-#reset-options "--z3timeout 20"
+#reset-options "--z3timeout 100"
 
 (* TODO: simplify, add triggers ? *)
-private val blit_aux: #a:Type -> b:buffer a -> idx_b:nat{idx_b<=length b} -> 
-				 b':buffer a{disjoint b b'} -> idx_b':nat{idx_b'<=length b'} -> 
-				 len:nat{idx_b+len <= length b /\ idx_b'+len <= length b'} -> 
-				 ctr:nat{ctr<=len} ->  STL unit
-  (requires (fun h -> live h b /\ live h b' /\ length b >= idx_b + len /\ length b' >= idx_b' + len
-		    /\ (forall (i:nat). i < ctr ==> get h b (idx_b+i) = get h b' (idx_b'+i)) ))
+private val blit_aux: #a:Type -> b:buffer a -> idx_b:uint32{v idx_b<=length b} -> 
+				 b':buffer a{disjoint b b'} -> idx_b':uint32{v idx_b'<=length b'} -> 
+				 len:uint32{v idx_b+v len <= length b /\ v idx_b'+v len <= length b'} -> 
+				 ctr:uint32{v ctr<=v len} ->  STL unit
+  (requires (fun h -> live h b /\ live h b' /\ length b >= v idx_b + v len /\ length b' >= v idx_b' + v len
+		    /\ (forall (i:nat). i < v ctr ==> get h b (v idx_b+i) = get h b' (v idx_b'+i)) ))
   (ensures (fun h0 _ h1 -> live h1 b /\ live h1 b' 
 			 /\ live h0 b /\ live h0 b' 
-			 /\ length b >= idx_b+len /\ length b' >= idx_b'+len
-			 /\ (forall (i:nat). {:pattern (get h1 b' (idx_b'+i))} i < len ==> get h0 b (idx_b+i) = get h1 b' (idx_b'+i))
-			 /\ (forall (i:nat). {:pattern (get h1 b' i)} (i < idx_b' \/ (i >= idx_b'+len /\ i < length b')) 
+			 /\ length b >= v idx_b+v len /\ length b' >= v idx_b'+v len
+			 /\ (forall (i:nat). {:pattern (get h1 b' (v idx_b'+i))} i < v len ==> get h0 b (v idx_b+i) = get h1 b' (v idx_b'+i))
+			 /\ (forall (i:nat). {:pattern (get h1 b' i)} (i < v idx_b' \/ (i >= v idx_b'+v len /\ i < length b')) 
 			     ==> get h1 b' i = get h0 b' i)
 			 /\ frame_ids h1 = frame_ids h0
 			 /\ modifies_one (frameOf (content b')) h0 h1
 			 /\ modifies_buf (frameOf (content b')) (only b') Set.empty h0 h1 ))
 let rec blit_aux #a b idx_b b' idx_b' len ctr = 
   let h0 = SST.get() in
-  match len - ctr with
-  | 0 -> ()
-  | _  -> 
-    let bctr = index b (idx_b+ctr) in
-    upd b' (idx_b'+ctr) bctr;
+  (* match v len - v ctr with *)
+  (* | 0 -> () *)
+  (* | _  ->  *)
+  if (len ^- ctr) ^= zero then ()
+  else 
+  begin
+    let bctr = index b (idx_b ^+ ctr) in
+    upd b' (idx_b' ^+ ctr) bctr;
     let h1 = SST.get() in
     equal_lemma (frameOf (content b')) h0 h1 b (only b');
-    cut (forall (i:nat). {:pattern (get h1 b' i)} (i <> idx_b'+ctr /\ i < length b') ==> get h1 b' i = get h0 b' i);
+    cut (forall (i:nat). {:pattern (get h1 b' i)} (i <> v idx_b'+v ctr /\ i < length b') ==> get h1 b' i = get h0 b' i);
     cut (modifies_one (frameOf (content b')) h0 h1);
     cut (modifies_buf (frameOf (content b')) (only b') Set.empty h0 h1);
-    blit_aux b idx_b b' idx_b' len (ctr+1);
+    blit_aux b idx_b b' idx_b' len (ctr ^+ one);
     let h2 = SST.get() in
     equal_lemma (frameOf (content b')) h1 h2 b (only b');
     cut (live h2 b /\ live h2 b');
-    cut (forall (i:nat). {:pattern (get h2 b')} i < len ==> get h2 b' (idx_b'+i) = get h1 b (idx_b+i));
-    cut (forall (i:nat). {:pattern (get h2 b')} i < len ==> get h2 b' (idx_b'+i) = get h0 b (idx_b+i));
-    cut (forall (i:nat). {:pattern (get h2 b')} (i < idx_b' \/ (i >= idx_b'+len /\ i < length b')) ==> get h2 b' i = get h1 b' i);
+    cut (forall (i:nat). {:pattern (get h2 b')} i < v len ==> get h2 b' (v idx_b'+i) = get h1 b (v idx_b+i));
+    cut (forall (i:nat). {:pattern (get h2 b')} i < v len ==> get h2 b' (v idx_b'+i) = get h0 b (v idx_b+i));
+    cut (forall (i:nat). {:pattern (get h2 b')} (i < v idx_b' \/ (i >= v idx_b'+v len /\ i < length b')) ==> get h2 b' i = get h1 b' i);
     cut (modifies_one (frameOf (content b')) h1 h2);
     cut (modifies_buf (frameOf (content b')) (only b') Set.empty h1 h2);
     cut (modifies_one (frameOf (content b')) h0 h2);
@@ -267,55 +279,58 @@ let rec blit_aux #a b idx_b b' idx_b' len ctr =
     cut (modifies_ref (frameOf (content b')) !{as_ref (content b')} h0 h1); (* Trigger *)
     cut (modifies_ref (frameOf (content b')) !{as_ref (content b')} h1 h2); (* Trigger *)
     cut (modifies_ref (frameOf (content b')) !{as_ref (content b')} h0 h2) (* Trigger *)
+  end
 
 #reset-options
 
-val blit: #t:Type -> a:buffer t -> idx_a:nat{idx_a <= length a} -> b:buffer t{disjoint a b} -> 
-  idx_b:nat{idx_b <= length b} -> len:nat{idx_a+len <= length a /\ idx_b+len <= length b} -> STL unit
+val blit: #t:Type -> a:buffer t -> idx_a:uint32{v idx_a <= length a} -> b:buffer t{disjoint a b} -> 
+  idx_b:uint32{v idx_b <= length b} -> len:uint32{v idx_a+v len <= length a /\ v idx_b+v len <= length b} -> STL unit
     (requires (fun h -> live h a /\ live h b))
     (ensures (fun h0 _ h1 -> live h0 b /\ live h0 a /\ live h1 b /\ live h1 a
-      /\ (forall (i:nat). {:pattern (get h1 b (idx_b+i))} i < len ==> get h1 b (idx_b+i) = get h0 a (idx_a+i))
-      /\ (forall (i:nat). {:pattern (get h1 b i)} ((i >= idx_b + len /\ i < length b) \/ i < idx_b) ==> get h1 b i = get h0 b i)
+      /\ (forall (i:nat). {:pattern (get h1 b (v idx_b+i))} i < v len ==> get h1 b (v idx_b+i) = get h0 a (v idx_a+i))
+      /\ (forall (i:nat). {:pattern (get h1 b i)} ((i >= v idx_b + v len /\ i < length b) \/ i < v idx_b) ==> get h1 b i = get h0 b i)
       /\ modifies_one (frameOf (content b)) h0 h1
       /\ modifies_buf (frameOf (content b)) (only b) Set.empty h0 h1
       /\ frame_ids h0 = frame_ids h1
       ))
 let blit #t a idx_a b idx_b len = 
-  blit_aux a idx_a b idx_b len 0
+  blit_aux a idx_a b idx_b len zero
 
-val split: #a:Type -> a:buffer t -> i:nat{i <= length a} -> ST (buffer t * buffer t)
+val split: #a:Type -> a:buffer t -> i:uint32{v i <= length a} -> ST (buffer t * buffer t)
     (requires (fun h -> live h a))
     (ensures (fun h0 b h1 -> live h1 (fst b) /\ live h1 (snd b) /\ h1 == h0 /\ idx (fst b) = idx a 
-      /\ idx (snd b) = idx a + i /\ length (fst b) = i /\ length (snd b) = length a - i 
+      /\ idx (snd b) = idx a + v i /\ length (fst b) = v i /\ length (snd b) = length a - v i 
       /\ disjoint (fst b) (snd b)  /\ content (fst b) = content a /\ content (snd b) = content a))
 let split #t a i = 
-  let a1 = sub a 0 i in let a2 = sub a i (a.length - i) in a1, a2
+  let a1 = sub a zero i in let a2 = sub a i (a.length ^- i) in a1, a2
 
-val offset: #a:Type -> a:buffer t -> i:nat{i <= length a} -> STL (buffer t)
+val offset: #a:Type -> a:buffer t -> i:uint32{v i <= length a} -> STL (buffer t)
   (requires (fun h -> live h a))
-  (ensures (fun h0 a' h1 -> h0 == h1 /\ content a' = content a /\ idx a' = idx a + i /\ length a' = length a - i))
+  (ensures (fun h0 a' h1 -> h0 == h1 /\ content a' = content a /\ idx a' = idx a + v i /\ length a' = length a - v i))
 let offset #t a i = 
-  {content = a.content; idx = i+a.idx; length = a.length - i}
+  {content = a.content; idx = i ^+ a.idx; length = a.length ^- i}
 
-private val of_seq_aux: #a:Type -> s:seq a -> l:pos{l = Seq.length s} -> ctr:nat{ ctr <= l} -> b:buffer a{idx b = 0 /\ length b = l} -> STL unit
+private val of_seq_aux: #a:Type -> s:bounded_seq a -> l:uint32{v l = Seq.length s} -> ctr:uint32{v ctr <= v l} -> b:buffer a{idx b = 0 /\ length b = v l} -> STL unit
     (requires (fun h -> live h b))
     (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b 
-      /\ (forall (i:nat). {:pattern (get h1 b i)} i < ctr ==> get h1 b i = Seq.index s i)
-      /\ (forall (i:nat). {:pattern (get h1 b i)} i >= ctr /\ i < length b ==> get h1 b i = get h0 b i)
+      /\ (forall (i:nat). {:pattern (get h1 b i)} i < v ctr ==> get h1 b i = Seq.index s i)
+      /\ (forall (i:nat). {:pattern (get h1 b i)} i >= v ctr /\ i < length b ==> get h1 b i = get h0 b i)
       /\ frame_ids h0 = frame_ids h1
       /\ modifies_one (frameOf (content b)) h0 h1
       /\ modifies_buf (frameOf (content b)) (only b) Set.empty h0 h1))
 let rec of_seq_aux #a s l ctr b =
-  match ctr with
-  | 0 -> ()
-  | _ -> let j = ctr - 1 in 
-         upd b j (Seq.index s j); 
-	 of_seq_aux s l j b	 
+  if ctr ^= zero then ()
+  else 
+  begin
+    let j = ctr ^- one in 
+    upd b j (Seq.index s (v j)); (* JK: no concrete implementation of Seq for now as far as I know *)
+    of_seq_aux s l j b	 
+  end
 
-val of_seq: #a:Type -> s:seq a -> l:pos{l = Seq.length s} -> ST (buffer a)
+val of_seq: #a:Type -> s:seq a -> l:uint32{v l = Seq.length s /\ v l > 0} -> ST (buffer a)
   (requires (fun h -> True))
-  (ensures (fun h0 b h1 -> idx b = 0 /\ length b = l /\ not(contains h0 b) /\ live h1 b
-    /\ (forall (i:nat). {:pattern (get h1 b i)} i < l ==> get h1 b i = Seq.index s i)
+  (ensures (fun h0 b h1 -> idx b = 0 /\ length b = v l /\ not(contains h0 b) /\ live h1 b
+    /\ (forall (i:nat). {:pattern (get h1 b i)} i < v l ==> get h1 b i = Seq.index s i)
     /\ frame_ids h0 = frame_ids h1
     /\ modifies_one (frameOf (content b)) h0 h1
     /\ modifies_buf (frameOf (content b)) (only b) Set.empty h0 h1))
@@ -325,19 +340,19 @@ let of_seq #a s l =
   of_seq_aux s l l b; 
   b
 
-val clone: #a:Type ->  b:buffer a -> l:pos{length b >= l} -> ST (buffer a)
+val clone: #a:Type ->  b:buffer a -> l:uint32{length b >= v l /\ v l > 0} -> ST (buffer a)
   (requires (fun h -> live h b))
   (ensures (fun h0 b' h1 -> not(contains h0 b')
 	      /\ live h0 b
 	      /\ live h1 b'
 	      /\ idx b' = 0 
-	      /\ length b' = l 
-	      /\ (forall (i:nat). {:pattern (get h1 b' i)} i < l ==> get h1 b' i = get h0 b i)
+	      /\ length b' = v l 
+	      /\ (forall (i:nat). {:pattern (get h1 b' i)} i < v l ==> get h1 b' i = get h0 b i)
 	      /\ modifies_one (frameOf (content b')) h0 h1
 	      /\ modifies_buf (frameOf (content b')) Set.empty Set.empty h0 h1
 	      /\ frame_ids h0 = frame_ids h1))
 let clone #a b l =
-  let (init:a) = index b 0 in 
+  let (init:a) = index b zero in 
   let (b':buffer a) = create init l in 
-  blit b 0 b' 0 l; 
+  blit b zero b' zero l; 
   b'
