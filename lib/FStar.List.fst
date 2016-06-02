@@ -380,4 +380,16 @@ let rec sortWithT f = function
      partition_length (bool_of_compare f pivot) tl;
      sortWithT f lo@(pivot::sortWithT f hi)
 
-let map_flatten f l = flatten (map f l)
+let filter_map f l =
+  let rec filter_map acc l =
+    match l with
+    | [] ->
+        rev acc
+    | hd :: tl ->
+        match f hd with
+        | Some hd ->
+            filter_map (hd :: acc) tl
+        | None ->
+            filter_map acc tl
+  in
+  filter_map [] l

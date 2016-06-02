@@ -456,7 +456,7 @@ let print_graph graph =
   Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims";
   Util.write_file "dep.graph" (
     "digraph {\n" ^
-    String.concat "\n" (List.map_flatten (fun k ->
+    String.concat "\n" (List.collect (fun k ->
       let deps = fst (must (smap_try_find graph k)) in
       let r s = replace_char s '.' '_' in
       List.map (fun dep -> Util.format2 "  %s -> %s" (r k) (r dep)) deps
@@ -523,7 +523,7 @@ let collect (filenames: list<string>): _ =
 
   let must_find = must_find m in
   let must_find_r f = List.rev (must_find f) in
-  let by_target = List.map_flatten (fun k ->
+  let by_target = List.collect (fun k ->
     let as_list = must_find k in
     let is_interleaved = List.length as_list = 2 in
     List.map (fun f ->
@@ -531,12 +531,12 @@ let collect (filenames: list<string>): _ =
       let suffix = if should_append_fsti then [ f ^ "i" ] else [] in
       let k = lowercase_module_name f in
       let deps = List.rev (discover k) in
-      let deps_as_filenames = List.map_flatten must_find deps @ suffix in
+      let deps_as_filenames = List.collect must_find deps @ suffix in
       (* List stored in the "right" order. *)
       f, deps_as_filenames
     ) as_list
   ) (smap_keys graph) in
-  let topologically_sorted = List.map_flatten must_find_r !topologically_sorted in
+  let topologically_sorted = List.collect must_find_r !topologically_sorted in
 
   (* At this stage the list is kept in reverse to make sure the caller in
    * [dependencies.fs] can chop [prims.fst] off its head. So make sure we have

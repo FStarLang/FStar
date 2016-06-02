@@ -549,7 +549,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Name l ->
       let tm, mut = fail_or env (Env.try_lookup_lid env) l in
       let tm = setpos tm in
-      if mut then mk_ref_read tm
+      if mut then mk <| Tm_meta (mk_ref_read tm, Meta_desugared Mutable_rval)
       else tm
 
     | Construct(l, args) ->
@@ -731,27 +731,32 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
       let ds_non_rec pat t1 t2 =
         let t1 = desugar_term env t1 in
+        let is_mutable = qual = Mutable in
         // a let-mutable is a hidden ref allocation
-        let t1 = match qual with
-          | Mutable -> mk_ref_alloc t1
-          | _ -> t1
+        let t1 = if is_mutable
+                 then mk_ref_alloc t1
+                 else t1
         in
-        let env, binder, pat = desugar_binding_pat_maybe_top top_level env pat (qual = Mutable) in
-        begin match binder with
-          | LetBinder(l, t) ->
-            let body = desugar_term env t2 in
-            let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
-            mk <| Tm_let((false, [({lbname=Inr fv; lbunivs=[]; lbeff=C.effect_ALL_lid; lbtyp=t; lbdef=t1})]), body)
+        let env, binder, pat = desugar_binding_pat_maybe_top top_level env pat is_mutable in
+        let tm = begin match binder with
+            | LetBinder(l, t) ->
+              let body = desugar_term env t2 in
+              let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
+              mk <| Tm_let((false, [({lbname=Inr fv; lbunivs=[]; lbeff=C.effect_ALL_lid; lbtyp=t; lbdef=t1})]), body)
 
-          | LocalBinder (x,_) ->
-            let body = desugar_term env t2 in
-            let body = match pat with
-              | None
-              | Some ({v=Pat_wild _}) -> body
-              | Some pat -> 
-                S.mk (Tm_match(S.bv_to_name x, [U.branch (pat, None, body)])) None body.pos in
-            mk <| Tm_let((false, [mk_lb (Inl x, x.sort, t1)]), Subst.close [S.mk_binder x] body)
-        end in
+            | LocalBinder (x,_) ->
+              let body = desugar_term env t2 in
+              let body = match pat with
+                | None
+                | Some ({v=Pat_wild _}) -> body
+                | Some pat -> 
+                  S.mk (Tm_match(S.bv_to_name x, [U.branch (pat, None, body)])) None body.pos in
+              mk <| Tm_let((false, [mk_lb (Inl x, x.sort, t1)]), Subst.close [S.mk_binder x] body)
+          end in
+        if is_mutable
+        then mk <| Tm_meta (tm, Meta_desugared Mutable_alloc)
+        else tm
+      in
 
       if is_rec 
       || is_app_pattern pat

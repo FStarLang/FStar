@@ -251,7 +251,7 @@ let try_lookup_definition env (lid:lident) =
   resolve_in_open_namespaces env lid find_in_sig
 
 
-let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<term * bool> =
+let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<(term * bool)> =
   match try_lookup_name any_val exclude_interf env lid with
     | Some (Term_name (e, mut)) -> Some (e, mut)
     | _ -> None

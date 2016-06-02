@@ -644,3 +644,16 @@ let print_endline x =
 
 let map_option f opt = Option.map f opt
 
+let save_value_to_file (fname:string) value =
+  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextWriter` to be passed to `output_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent vers
+  use writer = new System.IO.StreamWriter(fname) in
+  output_value writer value
+
+let load_value_from_file (fname:string) =
+  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versi
+  try
+    use reader = new System.IO.StreamReader(fname) in
+    Some <| input_value reader
+  with
+  | _ ->
+    None

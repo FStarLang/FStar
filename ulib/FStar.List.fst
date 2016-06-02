@@ -184,3 +184,16 @@ let rec sortWith f = function
      let hi, lo  = partition (fun x -> f pivot x > 0) tl in
      sortWith f lo@(pivot::sortWith f hi)
 
+let filter_map f l =
+  let rec filter_map acc l =
+    match l with
+    | [] ->
+        rev acc
+    | hd :: tl ->
+        match f hd with
+        | Some hd ->
+            filter_map (hd :: acc) tl
+        | None ->
+            filter_map acc tl
+  in
+  filter_map [] l

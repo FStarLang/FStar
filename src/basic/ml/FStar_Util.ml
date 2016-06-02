@@ -645,3 +645,19 @@ let basename = Filename.basename
 let print_endline = print_endline
 
 let map_option f opt = BatOption.map f opt
+
+let save_value_to_file (fname:string) value =
+  BatFile.with_file_out 
+    fname
+    (fun f ->
+      BatPervasives.output_value f value)
+
+let load_value_from_file (fname:string) =
+  try
+    BatFile.with_file_in
+      fname
+      (fun f ->
+        Some (BatPervasives.input_value f))
+  with
+  | _ ->
+    None

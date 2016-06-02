@@ -287,14 +287,14 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, 
        "codegen", 
         OneArg ((fun s -> String (parse_codegen s)), 
-                 "OCaml|FSharp"), 
+                 "OCaml|FSharp|Kremlin"), 
         "Generate code for execution");
 
      ( noshort, 
         "codegen-lib", 
         OneArg ((fun s -> List (s::get_codegen_lib() |> List.map String)), 
                  "namespace"), 
-        "External runtime library library");
+        "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
      
      ( noshort, 
         "debug", 
@@ -588,6 +588,7 @@ let rec specs () : list<Getopt.opt> =
         
 and parse_codegen s =
   match s with
+  | "Kremlin"
   | "OCaml"
   | "FSharp" -> s
   | _ ->

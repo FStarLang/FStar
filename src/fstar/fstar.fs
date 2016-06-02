@@ -50,19 +50,34 @@ let finished_message fmods =
     print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
   end
 
-(* Extraction to OCaml or F# *)
+(* Extraction to OCaml, F# or Kremlin *)
 let codegen uf_mods_env =
-  if (Options.codegen()) = Some "OCaml" ||
-     (Options.codegen()) = Some "FSharp"
-  then begin
-    let mllibs = match uf_mods_env with 
+  let opt = Options.codegen () in
+  if opt <> None then
+    let mllibs = match uf_mods_env with
         | Inl (fmods, env) -> snd <| Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods
         | Inr (umods, env) -> snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
-    let ext = if (Options.codegen()) = Some "FSharp" then ".fs" else ".ml" in
-    let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
-    List.iter (fun (n,d) -> Util.write_file (Options.prepend_output_dir (n^ext)) (FStar.Format.pretty 120 d)) newDocs
-    end
+    let ext = match opt with
+      | Some "FSharp" -> ".fs"
+      | Some "OCaml" -> ".ml"
+      | Some "Kremlin" -> ".krml"
+    in
+    match opt with
+    | Some "FSharp" | Some "OCaml" ->
+        let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
+        List.iter (fun (n,d) ->
+          Util.write_file (Options.prepend_output_dir (n^ext)) (FStar.Format.pretty 120 d)
+        ) newDocs
+    | Some "Kremlin" ->
+        let programs = List.flatten (List.filter_map (fun lib ->
+            try Some (Extraction.Kremlin.translate lib)
+            with _ -> None
+          ) mllibs)
+        in
+        let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
+        save_value_to_file "out.krml" bin
+
 
 (****************************************************************************)
 (* Main function                                                            *)
