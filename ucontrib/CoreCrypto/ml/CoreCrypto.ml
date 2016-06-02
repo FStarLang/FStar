@@ -524,7 +524,7 @@ external ocaml_ec_key_generate: ssl_ec_key -> unit =
   "ocaml_ec_key_generate"
 external ocaml_ec_key_get0_public_key: ssl_ec_key -> ssl_ec_point =
   "ocaml_ec_key_get0_public_key"
-external ocaml_ec_key_get0_private_key: ssl_ec_key -> string =
+external ocaml_ec_key_get0_private_key: ssl_ec_key -> string option =
   "ocaml_ec_key_get0_private_key"
 external ocaml_ec_key_set_public_key: ssl_ec_key -> ssl_ec_point -> unit =
   "ocaml_ec_key_set_public_key"
@@ -549,6 +549,21 @@ let ssl_key_of_key key =
     ocaml_ec_key_set_private_key ssl_key (string_of_bytes (Option.must key.ec_priv));
   ssl_key
 
+let ec_build_key (params:ec_params) (eck:ssl_ec_key): ec_key =
+  let n = ec_bytelen params.curve in
+  let ecpad s =
+    let pad = String.make (n - (String.length s)) '\x00' in
+    bytes_of_string (pad ^ s) in
+  let g = ssl_group_of_params params in
+  let pub_point = ocaml_ec_key_get0_public_key eck in
+  let ecx, ecy = ocaml_ec_point_get_affine_coordinates_GFp g pub_point in
+  let priv = ocaml_ec_key_get0_private_key eck in
+  {
+    ec_params = params;
+    ec_point = { ecx = ecpad ecx; ecy = ecpad ecy };
+    ec_priv = Option.map bytes_of_string priv
+  }
+
 let ec_key_of_ssl_ec_key eck: ec_key =
   let curve =
     (* See https://tools.ietf.org/html/rfc5480#section-2.1.1.1 *)
@@ -559,32 +574,12 @@ let ec_key_of_ssl_ec_key eck: ec_key =
     | _  -> failwith "Unsupported curve in certificate"
   in
   let params = { curve = curve; point_compression = false } in
-  let g = ssl_group_of_params params in
-  let p = ocaml_ec_key_get0_public_key eck in
-  let x, y = ocaml_ec_point_get_affine_coordinates_GFp g p in
-  let ecp = { ecx = bytes_of_string x; ecy = bytes_of_string y } in
-  {
-    ec_params = params;
-    ec_point = ecp;
-    ec_priv = None
-  }
+  ec_build_key params eck
 
-let ec_gen_key (params: ec_params): ec_key =
-  let k = ec_key_new params.curve in
-  let n = ec_bytelen params.curve in
-  let g = ssl_group_of_params params in
-  let ecpad s =
-    let pad = String.make (n - (String.length s)) '\x00' in
-    bytes_of_string (pad ^ s) in
-
-  ocaml_ec_key_generate k;
-  let pub_point = ocaml_ec_key_get0_public_key k in
-  let ecx, ecy = ocaml_ec_point_get_affine_coordinates_GFp g pub_point in
-  let priv = ocaml_ec_key_get0_private_key k in {
-    ec_params = params;
-    ec_point = { ecx = ecpad ecx; ecy = ecpad ecy };
-    ec_priv = Some (bytes_of_string priv)
-  }
+let ec_gen_key (params:ec_params): ec_key =
+  let eck = ec_key_new params.curve in
+  ocaml_ec_key_generate eck;
+  ec_build_key params eck
 
 let ecdh_agreement (key: ec_key) (point: ec_point) =
   let ssl_key = ssl_key_of_key key in
