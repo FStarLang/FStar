@@ -1223,6 +1223,26 @@ module TestCertLoad = struct
       end
 end
 
+module TestCertAndSign = struct
+  let test mode () =
+    match load_chain ("pki/" ^ mode ^ "/certificates/" ^ mode ^ ".cert.mitls.org.crt") with
+    | None -> false
+    | Some chain ->
+       if validate_chain chain true (Some (mode ^ ".cert.mitls.org"))
+         ("pki/" ^ mode ^ "/certificates/ca.crt") then
+        begin
+        match load_key ("pki/" ^ mode ^ "/certificates/" ^ mode ^ ".cert.mitls.org.key") with
+        | None -> (Printf.printf "Coudln't load key\n"; false)
+        | Some k ->
+          let tbs = bytes_of_string "hello world" in
+          let sigv = maybe_hash_and_sign k (Some SHA256) tbs in
+          match get_key_from_cert (List.hd chain) with
+          | Some k -> verify_signature k (Some SHA256) tbs sigv
+          | None -> false
+        end
+      else (Printf.printf "Invalid chain\n"; false)
+end
+
 module TestCert = struct
    let test () =
       let c1 = "MIIEvzCCA6egAwIBAgISESGKFzM2mw6wNuApCakhJ3f2MA0GCSqGSIb3DQEBCwUAMEwxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSIwIAYDVQQDExlBbHBoYVNTTCBDQSAtIFNIQTI1NiAtIEcyMB4XDTE1MDIxMTE1MzUxOFoXDTE3MDYwMjE3Mjc1NVowNTEhMB8GA1UECxMYRG9tYWluIENvbnRyb2wgVmFsaWRhdGVkMRAwDgYDVQQDFAcqLmh0LnZjMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqN7uyVXDSmnwpRIL7c5MKjFUbcRdQ4w4EA90vPRHAusmFmlrpY2pNrxzgXaTYaxrx7Rs3BUHBfr84hc4yrmpXsFd2+BuznR1l0KLM5tkY7gS5H5L53r0tPSrh+qrZrHq9S6zm4oEOFJ6zaslYUCdfW0mpIlG3YBROEkllE924fW+jdnk9G76nPSL/1/WPiQ67m4cZ+fwQt5FeFs/mu1016DqokZL24ymtan+bfSQx++wtSIdulSAPNeq7NL3l9sXgOvjcoRJVq8WsePjrS5D8A9iD3gKn1SWZgAg76RTpzbq40B2m2tXyxKFnCkW1UddIFBuxyjcOm8NTbZ9i/HBgwIDAQABo4IBsDCCAawwDgYDVR0PAQH/BAQDAgWgMEkGA1UdIARCMEAwPgYGZ4EMAQIBMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMBkGA1UdEQQSMBCCByouaHQudmOCBWh0LnZjMAkGA1UdEwQCMAAwHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMD4GA1UdHwQ3MDUwM6AxoC+GLWh0dHA6Ly9jcmwyLmFscGhhc3NsLmNvbS9ncy9nc2FscGhhc2hhMmcyLmNybDCBiQYIKwYBBQUHAQEEfTB7MEIGCCsGAQUFBzAChjZodHRwOi8vc2VjdXJlMi5hbHBoYXNzbC5jb20vY2FjZXJ0L2dzYWxwaGFzaGEyZzJyMS5jcnQwNQYIKwYBBQUHMAGGKWh0dHA6Ly9vY3NwMi5nbG9iYWxzaWduLmNvbS9nc2FscGhhc2hhMmcyMB0GA1UdDgQWBBRqqrlNqjRoJa7dF/eY/jOsXrWjTjAfBgNVHSMEGDAWgBT1zdU8CFD5ak86t5faVoPmadJo9zANBgkqhkiG9w0BAQsFAAOCAQEAwt6NjuZuIykka+jiK+t4mXar7yO3SwcM6bFIyBOVIJ7rdTIMtbPUrg8PJK3Xzs+iF8vQvmWRLCmSCvcR2OZpjBQXMFMt0UpIQUa+q02YUCasX4viFsD+GlWf+TuC3kJo9Gu+ZWfrMI21WrLjFGYVeTHyQ0TTJj6fHEirfMkG8Kl3+CRz3d13tfkWYein4OUmRxfPq0YB/pDmxKPaGc7dD6NAss4u3o0XkCpXUlMa3XCNMNVRPMsww7Vmlavupc3GEjs/zNi8Vls+CkgD7ADEvRPNgepDLY0LQZCmEFmF/7VSLldWncb6rSVlFxlksE/MF9X2aX97z8WJOqmWLnqESQ" in
@@ -1306,8 +1326,11 @@ let _ =
   TestEcdhke.(run_test "ECDHE" test_vectors print_test_vector test);
   simple_test "ECDH key exchange" TestEcdhke.simple_test;
   simple_test "Certificate chain verify" TestCert.test;
-  simple_test "Certificate signature verify (ECDSA)" TestECDSACert.test;
-  simple_test "Certificate signature verify (DSA)" TestDSACert.test;
-  simple_test "Certificate signature verify (RSA)" TestRSACert.test;
-  simple_test "Certificate load from PEM chain/key" TestCertLoad.test;
+  simple_test "Certificate ECDSA certs and signatures" (TestCertAndSign.test "ecdsa");
+  simple_test "Certificate DSA   certs and signatures" (TestCertAndSign.test "dsa");
+  simple_test "Certificate RSA   certs and signatures" (TestCertAndSign.test "rsa");
+  simple_test "Certificate signature verify (ECDSA)  " TestECDSACert.test;
+  simple_test "Certificate signature verify (DSA)    " TestDSACert.test;
+  simple_test "Certificate signature verify (RSA)    " TestRSACert.test;
+  simple_test "Certificate load from PEM chain/key   " TestCertLoad.test;
   ()
