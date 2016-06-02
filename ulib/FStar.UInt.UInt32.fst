@@ -4,9 +4,10 @@ open FStar.UInt
 
 let n = 32
 
-abstract type uint32 = | MkUInt32: v:uint 32 -> uint32
+abstract type uint32 : Type0 = | MkUInt32: v:uint 32 -> uint32
 
-let v (x:uint32) : Tot (x':int{uSize x' n}) = x.v
+(* This is not a secret value, hence accessing the mathematical value is fine, it should be compiled to Zarith bigintegers  *)
+let v (x:uint32) : Tot (x':int{uSize x' n}) = x.v 
 
 let zero: z:uint32{v z = 0} = MkUInt32 (zero n)
 let one: z:uint32{v z = 1} = MkUInt32 (one n)
