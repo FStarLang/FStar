@@ -1,7 +1,7 @@
 module NegativeTests.ShortCircuiting
 
-type Bad : bool -> Type
-val bad : x:int -> Tot (b:bool{Bad b})
+type bad_p : bool -> Type
+val bad : x:int -> Tot (b:bool{bad_p b})
 let rec bad x = true || bad (x-1)
 
 val ff : unit -> Lemma (ensures False)
