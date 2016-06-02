@@ -6,19 +6,10 @@ FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_DEFAULT_ARGS) # from the included Make
 OPTIONS_VER=--universes
 OPTIONS_OCAML=--lax --codegen OCaml --universes --no_location_info --use_native_int
 
-# C variables
-CHACHA=chacha
-POLY=poly
-BIGNUM=bignum
-CURVE=curve25519
-# AES=aes
-# SHA=sha256
-
 CHACHA_ODIR=chacha20
 POLY_ODIR=poly1305
-# BIGNUM_ODIR=bignum_library
 CURVE_ODIR=curve25519
-# AES_ODIR=aes
+AES_ODIR=aes
 
 # OCaml variables
 OCAMLOPT := $(OCAMLOPT) -I $(ULIB_ML)/native_int
@@ -31,6 +22,7 @@ NO_CODEGEN=$(addprefix --no_extract , SInt $(REALIZED_MODULE))
 CHACHA_EXTRACTED=Chacha.ml
 POLY_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
 CURVE_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Bignum_Parameters.ml Bignum_Bigint.ml Bignum_Fsum.ml Bignum_FsumWide.ml Bignum_Fdifference.ml Bignum_Fscalar.ml Bignum_Fproduct.ml Bignum_Modulo.ml Bignum_Core.ml Curve_Point.ml Curve_AddAndDouble.ml Curve_Ladder.ml
+AES_EXTRACTED=Crypto_AES.ml
 
 .PHONY: lib-ver chacha-ver chacha-ml poly-ver poly-ml
 
@@ -90,26 +82,16 @@ curve-ml:
 	./test_curve25519.exe
 
 # AES targets
-# aes-ver:
-# 	$(FSTAR) $(OPTIONS_VER) Crypto.AES.fst --lax
+aes-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.AES.fst --lax
 
-# aes-test: Crypto.AES.fst
-# 	@echo ""
-# 	@echo " Extracting AES library "
-# 	@mkdir -p $(AES_ODIR)
-# 	$(FSTAR) $(OPTIONS_COMPILE) --odir $(AES_ODIR) $^
-# 	@cp ./c/*.c ./c/*.h $(AES_ODIR)
-# 	@echo ""
-# 	@echo " Compiling AES"
-# 	cd $(AES_ODIR) && $(COMPILE) $(AES_C) -o $(AES)
-# 	./$(AES_ODIR)/$(AES)
-
-# aes-debug: Crypto.AES.fst
-# 	@cp ./c/*.c ./c/*.h $(AES_ODIR)
-# 	@echo ""
-# 	@echo " Compiling AES"
-# 	cd $(AES_ODIR) && $(COMPILE) $(AES_C) -o $(AES)
-# 	./$(AES_ODIR)/$(AES)
+aes-ml:
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml PRIMS_DIR=native_int
+	mkdir -p $(AES_ODIR)
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.AES.fst --odir $(AES_ODIR) 
+	$(OCAMLOPT) -I ml -I $(AES_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
+	  $(addprefix $(AES_ODIR)/,$(AES_EXTRACTED)) ml/test_aes.ml -o test_aes.exe
+	./test_aes.exe
 
 # Cleaning
 clean:
