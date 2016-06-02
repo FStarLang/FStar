@@ -425,7 +425,7 @@ module Udp = struct
 
   (* Receive bytes from the socket and make them abstract *)
   let sock_recv sock maxlen =
-    let str = String.create maxlen in
+    let str = StdBytes.create maxlen in
     let recvlen = recv sock str 0 maxlen [] in
     let str = String.sub str 0 recvlen in
     abytes str
