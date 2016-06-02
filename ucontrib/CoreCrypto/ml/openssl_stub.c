@@ -1886,10 +1886,12 @@ CAMLprim value ocaml_ec_key_get0_private_key(value mlkey) {
   EC_KEY* key = EC_KEY_val(mlkey);
   const BIGNUM* n = EC_KEY_get0_private_key(key);
 
+  if (n == NULL) CAMLreturn(Val_none);
+
   value mln = caml_alloc_string(BN_num_bytes(n));
   (void) BN_bn2bin(n, (uint8_t*) String_val(mln));
 
-  CAMLreturn(mln);
+  CAMLreturn(Val_some(mln));
 }
 
 CAMLprim value ocaml_ec_key_set_private_key(value mlkey, value mlpriv) {
