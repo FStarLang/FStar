@@ -88,3 +88,9 @@ let op_Hat_Greater = gt
 let op_Hat_Greater_Equals = gte
 let op_Hat_Less = gt
 let op_Hat_Less_Equals = gte
+
+(* To input constants *)
+assume val to_string: uint8 -> Tot string
+let to_int: uint8 -> Tot int = fun x -> v x
+assume val of_string: string -> Tot uint8 // The function should actually not be Tot
+assume val of_int: x:int{x >= 0 /\ x < 255} -> Tot uint8

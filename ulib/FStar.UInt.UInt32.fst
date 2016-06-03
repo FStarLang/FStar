@@ -89,3 +89,6 @@ let op_Hat_Greater = gt
 let op_Hat_Greater_Equals = gte
 let op_Hat_Less = gt
 let op_Hat_Less_Equals = gte
+
+let of_int (x:int{uSize x n}) : Tot uint32 = MkUInt32 x
+let to_int (x:uint32) : Tot int = v x

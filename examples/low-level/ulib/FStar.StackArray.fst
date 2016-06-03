@@ -94,19 +94,7 @@ let swap #a x i j =
   upd x j tmpi;
   upd x i tmpj
 	 
-val copy:
-  #a:Type -> s:array a ->
-  ST (array a) 
-     (requires (fun h -> contains h s
-			 /\ Seq.length (sel h s) > 0))
-     (ensures (fun h0 r h1 -> modifies_one (top_frame_id h1) h0 h1
-			    /\ modifies_ref (top_frame_id h1) !{as_ref s} h0 h1
-	                    /\ frameOf r = top_frame_id h1
-			    /\ not(contains h0 r)
-			    /\ (contains h1 r)
-			    /\ (Seq.equal (sel h1 r) (sel h0 s))))
-let copy #a s =
-  let rec copy_aux: #a:Type -> s:array a -> cpy:array a -> ctr:uint32 -> ST unit
+let rec copy_aux: #a:Type -> s:array a -> cpy:array a -> ctr:uint32 -> ST unit
   (requires (fun h -> contains h s 
 	       /\ contains h cpy 
 	       /\ s <> cpy
@@ -123,8 +111,20 @@ let copy #a s =
   = fun #a s cpy ctr -> 
     if (eq (length cpy) ctr) then ()
     else (upd cpy ctr (index s ctr);
-	  copy_aux s cpy (ctr ^+ one))
-    in
+	  copy_aux #a s cpy (ctr ^+ one))
+
+val copy:
+  #a:Type -> s:array a ->
+  ST (array a) 
+     (requires (fun h -> contains h s
+			 /\ Seq.length (sel h s) > 0))
+     (ensures (fun h0 r h1 -> modifies_one (top_frame_id h1) h0 h1
+			    /\ modifies_ref (top_frame_id h1) !{as_ref s} h0 h1
+	                    /\ frameOf r = top_frame_id h1
+			    /\ not(contains h0 r)
+			    /\ (contains h1 r)
+			    /\ (Seq.equal (sel h1 r) (sel h0 s))))
+let copy #a s =
   let cpy = create (length s) (index s zero) in
   copy_aux s cpy zero;
   cpy

@@ -197,15 +197,17 @@ let lemma_aux_0 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') : Lemma
   [SMTPat (frameOf (content b) <> frameOf (content b'))]
   = ()
 
+(* JK: Breaks extraction for some reason *)
 let lemma_aux (#a:Type) (#a':Type) (b:buffer a) (h0:t) (h1:t) (b':buffer a') : Lemma
   (requires (live h0 b /\ live h0 b'
 	     /\ frame_ids h0 = frame_ids h1
-	     /\ modifies_one (frameOf (content b)) h0 h1 
+	     /\ modifies_one (frameOf (content b)) h0 h1
 	     /\ modifies_ref (frameOf (content b)) !{as_ref (content b)} h0 h1
 	     /\ (content b' =!= content b \/ a <> a')))
   (ensures (equal h0 b' h1 b'))
   [SMTPat (equal h0 b' h1 b')]
-  = if frameOf (content b) <> frameOf (content b') then ()
+  = (* admit() *)
+    if frameOf (content b) <> frameOf (content b') then ()
     else if a <> a' then ()
     else if a = a' && content b <> content b' then ()
 
@@ -252,21 +254,20 @@ private val blit_aux: #a:Type -> b:buffer a -> idx_b:uint32{v idx_b<=length b} -
 			 /\ modifies_buf (frameOf (content b')) (only b') Set.empty h0 h1 ))
 let rec blit_aux #a b idx_b b' idx_b' len ctr = 
   let h0 = SST.get() in
-  (* match v len - v ctr with *)
-  (* | 0 -> () *)
-  (* | _  ->  *)
   if (len ^- ctr) ^= zero then ()
   else 
   begin
     let bctr = index b (idx_b ^+ ctr) in
     upd b' (idx_b' ^+ ctr) bctr;
     let h1 = SST.get() in
+    // JK: required for verfication but breaks extraction (infinite loop)
     equal_lemma (frameOf (content b')) h0 h1 b (only b');
     cut (forall (i:nat). {:pattern (get h1 b' i)} (i <> v idx_b'+v ctr /\ i < length b') ==> get h1 b' i = get h0 b' i);
     cut (modifies_one (frameOf (content b')) h0 h1);
     cut (modifies_buf (frameOf (content b')) (only b') Set.empty h0 h1);
     blit_aux b idx_b b' idx_b' len (ctr ^+ one);
     let h2 = SST.get() in
+    // JK: required for verfication but breaks extraction (infinite loop)
     equal_lemma (frameOf (content b')) h1 h2 b (only b');
     cut (live h2 b /\ live h2 b');
     cut (forall (i:nat). {:pattern (get h2 b')} i < v len ==> get h2 b' (v idx_b'+i) = get h1 b (v idx_b+i));
