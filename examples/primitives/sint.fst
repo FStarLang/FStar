@@ -2,17 +2,6 @@ module SInt
 open Axioms
 open FStar.Ghost
 open IntLib
-
-(* 
-   Coercion function to change a 'Type -> GTot unit (Pre -> Type) (Post -> Type)',
-   intuitively a 'GLemma' into a Lemma (in the PURE effect) 
-   /!\ This should be moved to FStar.Ghost if approved 
-*)
-(** TODO : find how to write it using what is in prims.fst **)
-effect GLemma (a:Type) (pre:Type) (post:Type) =
-       Ghost a pre (fun r -> post)
-
-assume val coerce: pre:Type -> post:Type -> g:(unit -> Ghost unit pre (fun r -> post)) -> Pure unit pre (fun r -> post)
  
 (** Opaque integers **)
 assume new type sint : Type0
@@ -25,26 +14,6 @@ let usize (x:sint) (n:nat)   : GTot Type0 = (v x >= 0 /\ v x < pow2 n)
 (* Concrete types *)
 type ssint (n:pos) = x:sint{ssize x n}
 type usint (n:nat) = x:sint{usize x n}
-
-val nth: #n:nat -> usint n -> i:nat{i < n} -> GTot bool
-let nth #n x i = ((v x / pow2 i) % 2 = 1)
-
-val sum_aux: #n:nat -> x:usint n -> l:nat{l <= n} -> GTot int
-let rec sum_aux #n x l =
-  if l = 0 then 0
-  else
-    let z = if nth #n x (l-1) then pow2 (l-1) else 0 in
-    z + sum_aux #n x (l-1)
-
-val sum: #n:nat -> x:usint n -> GTot int
-let sum #n x = sum_aux #n x n
-
-val nth_lemma: #n:nat -> x:usint n -> l:nat{l <= n} -> Lemma
-  (requires (True))
-  (ensures (v x % pow2 l = sum_aux #n x l))
-let rec nth_lemma #n x l =
-  (** TODO **)
-  admit()
 
 (* Specs *)
 assume val esmax_int: #n:pos -> Tot (max:erased nat{reveal max = pow2 (n-1) - 1})
@@ -116,8 +85,6 @@ assume val umul_large: #n:pos -> a:usint n -> b:usint n ->
   Tot (c:usint (2*n){v c = v a * v b})
 
 (* Division primitives *)
-(* JK: I think that this is the standard definition of the division
-   on words, but needs double-checking *)
 assume val sdiv: #n:pos -> a:ssint n ->
   b:ssint n{v b <> 0} -> Tot (c:ssint n{v c = div (v a) (v b)})
 assume val udiv: #n:nat -> a:usint n -> b:usint n{v b <> 0} ->

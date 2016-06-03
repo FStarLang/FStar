@@ -1299,7 +1299,7 @@ and check_inner_let env e =
        let g2 = Rel.close_guard xb
                       (Rel.imp_guard (Rel.guard_of_guard_formula x_eq_e1) g2) in
        let guard = Rel.conj_guard g1 g2 in
-       if annotated
+       if Option.isSome (Env.expected_typ env)
        then e, cres, guard
        else (* no expected type; check that x doesn't escape it's scope *)
             (check_no_escape None env [x] cres.res_typ;

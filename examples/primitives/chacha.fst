@@ -1,45 +1,37 @@
-(* --build-config
-  options:--admit_fsi FStar.Set --verify_module Chacha20 --z3timeout 50;
-  other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi seq.fsi FStar.Seq.fst FStar.SeqProperties.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Array.fst FStar.Ghost.fst axioms.fst intlib.fst lemmas.fst sint.fst FStar.UInt8.fst FStar.UInt32.fst sbuffer.fst FStar.SBytes.fst;
-  --*)
-
 module Chacha
 
 open FStar.Ghost
 open FStar.Heap
-open Sint
-open FStar.UInt8
-open FStar.UInt32
-open FStar.SBytes
+open SInt
+open SInt.UInt8
+open SInt.UInt32
+open SBytes
 open SBuffer
 
 (** Infix operators and helping lemmas **)
 val aux_lemma: #t:pos -> a:buffer t -> #t':pos -> b:buffer t' -> #t'':pos -> c:buffer t'' -> 
-  Lemma (requires (Disjoint a b /\ Disjoint a c))
-	(ensures (DisjointSet a (only b ++ c)))
+  Lemma (requires (disjoint a b /\ disjoint a c))
+	(ensures (disjointSet a (only b ++ c)))
 let aux_lemma #t a #t' b #t'' c = ()
 
 val aux_lemma': #t:pos -> a:buffer t -> #t':pos -> b:buffer t' -> 
-  Lemma (requires (Disjoint a b))
-	(ensures (DisjointSet a (only b)))
+  Lemma (requires (disjoint a b))
+	(ensures (disjointSet a (only b)))
 let aux_lemma' #t a #t' b = ()
 
 val aux_lemma'': #t:pos -> a:buffer t -> #t':pos -> a':buffer t' -> 
-  Lemma (FStar.Set.Equal (only a ++ a') (only a' ++ a))
+  Lemma (Set.equal (only a ++ a') (only a' ++ a))
 let aux_lemma'' #t a #t' a' = ()  
 
-val empty_lemma: #t:pos -> b:buffer t -> Lemma (FStar.Set.Equal (empty ++ b) (only b))
+val empty_lemma: #t:pos -> b:buffer t -> Lemma (Set.equal (empty ++ b) (only b))
 let empty_lemma #t b = ()
 
-#reset-options
-
 (* Chacha 20 code *)
-
 val quarter_round: 
   m:uint32s{length m = 16} -> a:nat{a < 16} -> b:nat{b<16} -> c:nat{c<16} -> d:nat{d<16} -> 
   ST unit 
-    (requires (fun h -> Live h m)) 
-    (ensures (fun h0 _ h1 -> Live h1 m /\ Modifies (only m) h0 h1))
+    (requires (fun h -> live h m)) 
+    (ensures (fun h0 _ h1 -> live h1 m /\ modifies_buf (only m) h0 h1))
 let quarter_round m a b c d =
   upd m a (index m a ^+ index m b); 
   upd m d (index m d ^^ index m a);
@@ -59,12 +51,10 @@ let quarter_round m a b c d =
   upd m b (tmp <<< 7);
   ()
  
-#reset-options
-
 (* Chacha20 block function *)
 val column_round: m:uint32s{length m = 16} -> ST unit
-    (requires (fun h -> Live h m))
-    (ensures (fun h0 _ h1 -> Live h1 m /\ Modifies (only m) h0 h1))
+    (requires (fun h -> live h m))
+    (ensures (fun h0 _ h1 -> live h1 m /\ modifies_buf (only m) h0 h1))
 let column_round m =
   quarter_round m 0 4 8 12;
   quarter_round m 1 5 9 13;
@@ -73,8 +63,8 @@ let column_round m =
   ()
 
 val diagonal_round: m:uint32s{length m = 16} -> ST unit
-    (requires (fun h -> Live h m))
-    (ensures (fun h0 _ h1 -> Live h1 m /\ Modifies (only m) h0 h1))
+    (requires (fun h -> live h m))
+    (ensures (fun h0 _ h1 -> live h1 m /\ modifies_buf (only m) h0 h1))
 let diagonal_round m =
   quarter_round m 0 5 10 15;
   quarter_round m 1 6 11 12;
@@ -82,13 +72,12 @@ let diagonal_round m =
   quarter_round m 3 4 9 14;
   ()
 
-#reset-options
+#reset-options "--z3timeout 20"
 
-val initialize_state: state:uint32s{length state = 16} -> key:sbytes{length key = 32 /\ Disjoint state key} -> counter:uint32 -> nonce:sbytes{length nonce = 12 /\ Disjoint key nonce /\ Disjoint state nonce} -> ST unit
-  (requires (fun h -> Live h state /\ Live h key /\ Live h nonce))
-  (ensures (fun h0 _ h1 -> Modifies (only state) h0 h1 /\ Live h1 state))
+val initialize_state: state:uint32s{length state = 16} -> key:sbytes{length key = 32 /\ disjoint state key} -> counter:uint32 -> nonce:sbytes{length nonce = 12 /\ disjoint key nonce /\ disjoint state nonce} -> ST unit
+  (requires (fun h -> live h state /\ live h key /\ live h nonce))
+  (ensures (fun h0 _ h1 -> modifies_buf (only state) h0 h1 /\ live h1 state))
 let initialize_state state key counter nonce =
-  //admit();
   (* Constant part *)
   upd state 0 (of_string "0x61707865");
   upd state 1 (of_string "0x3320646e");
@@ -124,13 +113,12 @@ let initialize_state state key counter nonce =
   upd state 15 (uint32_of_sbytes n2);
   ()
 
-#reset-options
+#reset-options "--z3timeout 20"
 
-val sum_matrixes: new_state:uint32s{length new_state = 16} -> old_state:uint32s{length old_state = 16 /\ Disjoint new_state old_state} -> ST unit
-  (requires (fun h -> Live h new_state /\ Live h old_state))
-  (ensures (fun h0 _ h1 -> Live h1 new_state /\ Modifies (only new_state) h0 h1))
+val sum_matrixes: new_state:uint32s{length new_state = 16} -> old_state:uint32s{length old_state = 16 /\ disjoint new_state old_state} -> ST unit
+  (requires (fun h -> live h new_state /\ live h old_state))
+  (ensures (fun h0 _ h1 -> live h1 new_state /\ modifies_buf (only new_state) h0 h1))
 let sum_matrixes m m0 =
-  //admit();
   upd m 0 (index m 0 ^+ index m0 0); 
   upd m 1 (index m 1 ^+ index m0 1);
   upd m 2 (index m 2 ^+ index m0 2);
@@ -151,19 +139,20 @@ let sum_matrixes m m0 =
 
 #reset-options
 
-val chacha20_block: output:sbytes{length output = 64} -> state:uint32s{length state = 16 /\ Disjoint state output} -> key:sbytes{length key = 32 /\ Disjoint state key /\ Disjoint output key} -> counter:uint32 -> nonce:sbytes{length nonce = 12 /\ Disjoint key nonce /\ Disjoint state nonce /\ Disjoint nonce output} -> ST unit
-    (requires (fun h -> Live h state /\ Live h output /\ Live h key /\ Live h nonce))
-    (ensures (fun h0 _ h1 -> Live h1 output /\ Live h1 state /\ Modifies (only output ++ state) h0 h1))
+#reset-options "--z3timeout 20"
+
+val chacha20_block: output:sbytes{length output = 64} -> state:uint32s{length state = 16 /\ disjoint state output} -> key:sbytes{length key = 32 /\ disjoint state key /\ disjoint output key} -> counter:uint32 -> nonce:sbytes{length nonce = 12 /\ disjoint key nonce /\ disjoint state nonce /\ disjoint nonce output} -> ST unit
+    (requires (fun h -> live h state /\ live h output /\ live h key /\ live h nonce))
+    (ensures (fun h0 _ h1 -> live h1 output /\ live h1 state /\ modifies_buf (only output ++ state) h0 h1))
 let chacha20_block output m key counter nonce =
-  //admit();
     let h0 = ST.get() in
   (* Initialize internal state *)
   initialize_state m key counter nonce;
     let h1 = ST.get() in
   (* Initial state *) 
-  let m0 = create #32 FStar.UInt32.zero 16 in
+  let m0 = create #32 SInt.UInt32.zero 16 in
   blit m 0 m0 0 16;
-    let h1' = ST.get() in cut (Modifies (only m) h0 h1 /\ Modifies empty h1 h1'); 
+    let h1' = ST.get() in cut (modifies_buf (only m) h0 h1 /\ modifies_buf empty h1 h1'); 
   (* 20 rounds *)
   column_round m; diagonal_round m; 
   column_round m; diagonal_round m;
@@ -176,7 +165,7 @@ let chacha20_block output m key counter nonce =
   column_round m; diagonal_round m;
   column_round m; diagonal_round m; 
     let h2 = ST.get() in
-    cut (Live h2 m /\ Modifies (only m) h0 h2); 
+    cut (live h2 m /\ modifies_buf (only m) h0 h2); 
   (* Sum the matrixes *)
   sum_matrixes m m0;
     let h3 = ST.get() in 
@@ -187,20 +176,19 @@ let chacha20_block output m key counter nonce =
     aux_lemma' m output; eq_lemma h3 h4 m (only output);
     ()
 
-#reset-options
+let op_Star = Prims.op_Multiply
 
 val chacha20_encrypt_loop: 
-  state:uint32s{length state = 16} -> key:sbytes{length key = 32 /\ Disjoint state key} -> 
-  counter:uint32 -> nonce:sbytes{length nonce = 12 /\ Disjoint state nonce /\ Disjoint key nonce} -> 
-  plaintext:sbytes{Disjoint state plaintext /\ Disjoint key plaintext /\ Disjoint nonce plaintext} -> 
-  ciphertext:sbytes{Disjoint state ciphertext /\ Disjoint key ciphertext /\ Disjoint nonce ciphertext /\ Disjoint plaintext ciphertext} -> j:nat -> max:nat{j <= max} -> 
+  state:uint32s{length state = 16} -> key:sbytes{length key = 32 /\ disjoint state key} -> 
+  counter:uint32 -> nonce:sbytes{length nonce = 12 /\ disjoint state nonce /\ disjoint key nonce} -> 
+  plaintext:sbytes{disjoint state plaintext /\ disjoint key plaintext /\ disjoint nonce plaintext} -> 
+  ciphertext:sbytes{disjoint state ciphertext /\ disjoint key ciphertext /\ disjoint nonce ciphertext /\ disjoint plaintext ciphertext} -> j:nat -> max:nat{j <= max /\ v counter + max < IntLib.pow2 n} -> 
   ST unit
-    (requires (fun h -> Live h state /\ Live h key /\ Live h nonce /\ Live h plaintext  /\ Live h ciphertext
+    (requires (fun h -> live h state /\ live h key /\ live h nonce /\ live h plaintext  /\ live h ciphertext
       /\ length plaintext >= (max-j) * 64  /\ length ciphertext >= (max-j) * 64 ))
-    (ensures (fun h0 _ h1 -> Live h1 ciphertext /\ Live h1 state 
-      /\ Modifies (only ciphertext ++ state) h0 h1))
+    (ensures (fun h0 _ h1 -> live h1 ciphertext /\ live h1 state 
+      /\ modifies_buf (only ciphertext ++ state) h0 h1))
 let rec chacha20_encrypt_loop state key counter nonce plaintext ciphertext j max =
-  //admit();
   let h0 = ST.get() in
   if j = max then ()
   else 
@@ -245,16 +233,15 @@ let rec chacha20_encrypt_loop state key counter nonce plaintext ciphertext j max
     end
 
 val chacha20_encrypt: 
-  ciphertext:sbytes -> key:sbytes{length key = 32 /\ Disjoint ciphertext key} -> counter:uint32 -> 
-  nonce:sbytes{length nonce = 12 /\ Disjoint ciphertext nonce /\ Disjoint key nonce} -> 
-  plaintext:sbytes{Disjoint ciphertext plaintext /\ Disjoint key plaintext /\ Disjoint nonce plaintext} -> len:nat{length ciphertext >= len /\ length plaintext >= len} -> ST unit
-    (requires (fun h -> Live h ciphertext /\ Live h key /\ Live h nonce /\ Live h plaintext))
-    (ensures (fun h0 _ h1 -> Modifies (only ciphertext) h0 h1 /\ Live h1 ciphertext))
+  ciphertext:sbytes -> key:sbytes{length key = 32 /\ disjoint ciphertext key} -> counter:uint32 -> 
+  nonce:sbytes{length nonce = 12 /\ disjoint ciphertext nonce /\ disjoint key nonce} -> 
+  plaintext:sbytes{disjoint ciphertext plaintext /\ disjoint key plaintext /\ disjoint nonce plaintext} -> len:nat{length ciphertext >= len /\ length plaintext >= len /\ v counter + len / 64 < IntLib.pow2 32} -> ST unit
+    (requires (fun h -> live h ciphertext /\ live h key /\ live h nonce /\ live h plaintext))
+    (ensures (fun h0 _ h1 -> modifies_buf (only ciphertext) h0 h1 /\ live h1 ciphertext))
 let chacha20_encrypt ciphertext key counter nonce plaintext len = 
-  //admit();
   let h0 = ST.get() in
   (* Allocate the internal state *)
-  let state = create #32 FStar.UInt32.zero 16  in
+  let state = create #32 SInt.UInt32.zero 16  in
   (* Compute number of iterations *)
   let max = (len / 64) in 
   let rem = len % 64 in
@@ -283,7 +270,7 @@ let chacha20_encrypt ciphertext key counter nonce plaintext len =
 	eq_lemma h1 h2 nonce (only ciphertext ++ state); 
 	(** End lemmas **)
       (* Apply Chacha20 to last block *)
-      let cipher_block = create FStar.UInt8.zero 64 in
+      let cipher_block = create SInt.UInt8.zero 64 in
       let cipher_block' = offset ciphertext (max*64) in
       let plain_block = offset plaintext (max*64) in
       chacha20_block cipher_block state key (counter ^+ (of_int max)) nonce; 
@@ -303,4 +290,3 @@ let chacha20_encrypt ciphertext key counter nonce plaintext len =
 	modifies_fresh h0 h4 (only ciphertext) state
 	(** End lemmas **)	
     end
-    

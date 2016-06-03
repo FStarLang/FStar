@@ -21,6 +21,12 @@ type l_False =
 type l_True =
   | T
 
+(* An SMT-pattern to control unfolding inductives;
+   In a proof, you can say `allow_inversion (option a)`
+   to allow the SMT solver. cf. allow_inversion below
+ *)
+let inversion (a:Type) = True
+
 (* another singleton type, with its only inhabitant written '()'
    we assume it is primitive, for convenient interop with other languages *)
 assume new type unit : Type0
@@ -90,7 +96,7 @@ type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 
 assume new type range : Type0
 assume new type string : Type0
-irreducible type labeled (r:range) (msg:string) (b:Type) = b
+irreducible let labeled (r:range) (msg:string) (b:Type) = b
 type range_of (#a:Type) (x:a) = range
 
 (* PURE effect *)
@@ -576,12 +582,17 @@ assume val ghost_lemma: #a:Type -> #p:(a -> GTot Type) -> #q:(a -> unit -> GTot 
   $f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
 
+
 val ignore: #a:Type -> a -> Tot unit
 let ignore #a x = ()
 
 type nat = i:int{i >= 0}
 type pos = i:int{i > 0}
 type nonzero = i:int{i<>0}
+
+let allow_inversion (a:Type) 
+  : Pure unit (requires True) (ensures (fun x -> inversion a))
+  = ()
 
 (*    For the moment we require not just that the divisor is non-zero, *)
 (*    but also that the dividend is natural. This works around a *)

@@ -81,7 +81,7 @@ type decl =
   | DefPrelude
   | DeclFun    of string * list<sort> * sort * caption
   | DefineFun  of string * list<sort> * sort * term * caption
-  | Assume     of term   * caption
+  | Assume     of term   * caption * option<string>
   | Caption    of string
   | Eval       of term
   | Echo       of string

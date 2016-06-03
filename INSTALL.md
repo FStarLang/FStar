@@ -193,9 +193,17 @@ Steps 2 and 3 below require a working OCaml (any version from 4.02.2 to 4.03.0) 
 0. Install the [OCaml Installer for
    Windows](http://protz.github.io/ocaml-installer/). Make sure you ask it to
    install Cygwin -- it will just launch Cygwin's setup.exe with the right set
-   of packages pre-checked, to make sure you have everything you need.
+   of packages pre-checked, to make sure you have everything you need. **JP**: make sure you also install: `wget`, `unzip`, `mingw64-x86_64-openssl`, `mingw64-x86_64-sqlite3`, `mingw64-x86_64-gmp`, `mingw64-x86_64-pkg-config`.
 
-1. Open the Cygwin terminal and fake the installation of OPAM package `conf-gmp`:
+1. **Note:** on Windows 8.1 and above, the OCaml installer will fail to launch Cygwin's `setup.exe`. In that case, launch it manually (it has been downloaded to your desktop), install all the packages listed on the installer's webpage, and also install the packages listed above.
+
+1. Follow the instructions from https://github.com/FStarLang/FStar/blob/master/contrib/CoreCrypto/INSTALL.md to get a working OPAM setup, including `opam init` and `~/.bashrc` configuration.
+
+2. Add `/usr/x86_64-w64-mingw32/sys-root/mingw/bin/` to your `PATH`.
+
+2. `opam install zarith batteries`
+
+1. If OPAM complains that the system dependency on GMP cannot be found, and if you're positive that `mingw64-x86_64-gmp` is installed, then open the Cygwin terminal and fake the installation of OPAM package `conf-gmp`:
 
   ```sh
   $ opam install --fake conf-gmp

@@ -4,7 +4,7 @@ MAINTAINER Benjamin Beurdouche <benjamin.beurdouche@inria.fr>
 
 
 # Define versions of dependencies
-ENV opamv 4.02.3
+ENV opamv 4.03.0
 ENV z3v z3-4.4.1
 
 # Define working directory
@@ -18,7 +18,7 @@ RUN add-apt-repository --yes ppa:avsm/ppa
 RUN apt-get -qq update
 
 # Install required packages and set versions
-RUN apt-get install --yes libssl-dev libsqlite3-dev g++-5 gcc-5 m4 make opam pkg-config python
+RUN apt-get install --yes libssl-dev libsqlite3-dev g++-5 gcc-5 m4 make opam pkg-config python libgmp3-dev
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 200
 RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 200
 
@@ -28,7 +28,7 @@ RUN opam init
 RUN eval $(opam config env)
 RUN opam switch ${opamv}
 RUN eval $(opam config env)
-RUN opam install ocamlfind batteries sqlite3 fileutils stdint
+RUN opam install ocamlfind batteries sqlite3 fileutils stdint zarith
 RUN eval $(opam config env)
 
 # Prepare and build Z3

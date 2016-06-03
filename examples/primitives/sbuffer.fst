@@ -6,11 +6,6 @@ open FStar.Heap
 open FStar.Array
 open FStar.Ghost
 
-(*
-  TODO: distinction entre 'ST' et 'STF', le second poussant une 'frame'
-  Le premier étant un rafinement disant que la frame n'a pas changé.
-  *)
-
 (* Buffer general type *)
 private type buffer (t:pos) = {
   content:array (usint t); // length "max_length"
@@ -18,7 +13,7 @@ private type buffer (t:pos) = {
   length:nat; // idx + length <= max_length
 }
 
-// Required hardcoded library types because the parameter value is erased 
+// Required library types because the parameter value is erased 
 // at extraction
 type uint32s = buffer 32
 type uint8s = buffer 8
@@ -102,7 +97,6 @@ assume Arefs4: forall (s1:FStar.Set.set abuffer) (s2:FStar.Set.set abuffer). {:p
 assume Arefs5: forall (#t:pos) (b:buffer t). {:pattern (arefs (FStar.Set.singleton (Buff b)))}
   FStar.Set.equal (arefs (FStar.Set.singleton (Buff b))) (FStar.Set.singleton (Ref (content b)))
 
-
 (* Specifies that a buffer is disjoint from a set of abstract buffers *)
 let disjointSet (#t:pos) (b:buffer t) (buffs:FStar.Set.set abuffer) : GTot Type0 =
   (forall (#t':pos) (b':buffer t'). {:pattern (FStar.Set.mem (Buff b') buffs) \/ (disjoint b b')} FStar.Set.mem (Buff b') buffs ==> disjoint b b')
@@ -110,8 +104,8 @@ let disjointSet (#t:pos) (b:buffer t) (buffs:FStar.Set.set abuffer) : GTot Type0
 (* Buffer specific modifies clause *)
 // TODO: too restrictive when changing also references to other types
 let modifies_buf (buffs:FStar.Set.set abuffer) (h:heap) (h':heap) : GTot Type0 =
-//  modifies buffs h h'
-  FStar.Heap.equal h' (FStar.Heap.concat h' (FStar.Heap.restrict h (FStar.Set.complement (arefs buffs))))
+  modifies (arefs buffs) h h'
+//  FStar.Heap.equal h' (FStar.Heap.concat h' (FStar.Heap.restrict h (FStar.Set.complement (arefs buffs))))
   /\ (forall (#t:pos) (b:buffer t). {:pattern (disjointSet b buffs)}
 				  (live h b /\ disjointSet b buffs) ==> equal h b h' b)
 
@@ -138,7 +132,7 @@ val modifies_subset_lemma: mods:FStar.Set.set abuffer -> submods:FStar.Set.set a
     (requires (FStar.Set.subset submods mods /\ modifies_buf submods h0 h1))
     (ensures (modifies_buf mods h0 h1))
     [SMTPatT (modifies_buf submods h0 h1); SMTPat (FStar.Set.subset submods mods)]
-let modifies_subset_lemma mods submods h0 h1 = 
+let modifies_subset_lemma mods submods h0 h1 =
   cut (modifies (arefs mods) h0 h1);
   cut (forall (#t:pos) (b:buffer t). (live h0 b /\ disjointSet b mods) ==> (live h0 b /\ disjointSet b submods) ==> equal h0 b h1 b)
 
@@ -284,8 +278,6 @@ let of_seq #size s l =
   of_seq_aux s l l b; 
   b
 
-
-// TODO: Change to clone
 val copy: #a:pos ->  b:buffer a -> l:pos{length b >= l} -> ST (buffer a)
   (requires (fun h -> live h b))
   (ensures (fun h0 b' h1 -> not(contains h0 b') /\ contains h1 b' /\ idx b' = 0 
