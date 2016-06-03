@@ -71,5 +71,5 @@ type bytes = {
        length: nat;
        (* The start index of the subset. *)
        index: nat;
-       }
+}
   
