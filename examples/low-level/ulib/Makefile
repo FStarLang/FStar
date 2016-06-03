@@ -45,4 +45,5 @@ aes-compile:
 	./test_aes.exe
 
 clean:
-	rm -rf ./aes *~ ./ml/*.cmi ./ml/*.cmx ./ml/*.cmo ./ml/*.o
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
+	rm -rf $(AES_ODIR) *~ ./ml/*.cmi ./ml/*.cmx ./ml/*.cmo ./ml/*.o

@@ -411,9 +411,9 @@ let subWord word sbox =
   let w1 = index word one in
   let w2 = index word two in
   let w3 = index word three in
-  upd word zero (access sbox w0);
-  upd word one (access sbox w1);
-  upd word two (access sbox w2);
+  upd word zero  (access sbox w0);
+  upd word one   (access sbox w1);
+  upd word two   (access sbox w2);
   upd word three (access sbox w3)
 
 (* TODO: use table ? *)
@@ -484,26 +484,26 @@ let invShiftRows state =
   let three = one @+ two in
   let four  = two @+ two in
   let eight  = four @+ four in
-  let twelve  = four @+ eight in
+  let twelve = four @+ eight in
   let i = three in
   let tmp = index state i in
-  upd state i      (index state (i@+four)); 
-  upd state (i@+four)  (index state (i@+eight)); 
+  upd state i           (index state (i@+four)); 
+  upd state (i@+four)   (index state (i@+eight)); 
   upd state (i@+eight)  (index state (i@+twelve)); 
   upd state (i@+twelve) tmp;
   let i = two in
   let tmp = index state i in
-  upd state i      (index state (i@+eight)); 
+  upd state i           (index state (i@+eight)); 
   upd state (i@+eight)  tmp; 
   let tmp = index state (i@+four) in
-  upd state (i@+four)  (index state (i@+twelve)); 
+  upd state (i@+four)   (index state (i@+twelve)); 
   upd state (i@+twelve) tmp;
   let i = one in
   let tmp = index state i in
-  upd state i      (index state (i@+twelve)); 
+  upd state i           (index state (i@+twelve)); 
   upd state (i@+twelve) (index state (i@+eight));
   upd state (i@+eight)  (index state (i@+four)); 
-  upd state (i@+four)  tmp; 
+  upd state (i@+four)   tmp; 
   ()
 
 val invSubBytes_aux_sbox: state:suint8s -> sbox:suint8s -> ctr:uint32 -> STL unit
@@ -532,13 +532,13 @@ let invMixColumns state =
   let one   = UInt.UInt32.one in
   let two   = one @+ one in
   let three = one @+ two in
-  let four = two @+ two in
+  let four  = two @+ two in
   let c = zero in
   let s0 = index state (zero  @+(four * c)) in
   let s1 = index state (one   @+(four * c)) in
   let s2 = index state (two   @+(four * c)) in
   let s3 = index state (three @+(four * c)) in
-  upd state ((four*c) @+ one) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1
+  upd state ((four*c) @+ zero) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1
   	       ^^ multiply (of_int 0xd) s2 ^^ multiply (of_int 0x9) s3);
   upd state ((four*c) @+ one) (multiply (of_int 0xe) s1 ^^ multiply (of_int 0xb) s2
   	       ^^ multiply (of_int 0xd) s3 ^^ multiply (of_int 0x9) s0);
