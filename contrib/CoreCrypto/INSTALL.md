@@ -2,6 +2,7 @@
 
 * If you already use [Cygwin](http://cygwin.com/), make sure it's the the 64-bit version.
 * Use the latest [Windows installer with OPAM](https://protz.github.io/ocaml-installer/). This document was most recently updated when *Installer for 64-bit OCaml 4.02.3 + OPAM* was presented as the latest version.
+* The OCAML installer for Windows is **not** compatible with "Bash on Windows", a.k.a. the native ELF binary from Ubuntu that runs through the Linux syscall emulation on Windows. Uninstall it. (OPAM will try to fork off the wrong `bash` when running commands found in `opam.install` files, and you'll get a cryptic `  E r r o r :   0 x 8 0 0 7 0 0 5 7` message.)
 
 ```
 opam init
