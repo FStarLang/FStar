@@ -148,6 +148,8 @@ and translate_type t: typ =
       begin match Syntax.string_of_mlpath p with
       | "Prims.unit" ->
           TUnit
+      | "Prims.int" ->
+          TInt32
       | _ ->
           failwith (Util.format1 "todo: translate_type [MLTY_Named] %s" (Syntax.string_of_mlpath p))
       end
