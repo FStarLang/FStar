@@ -203,7 +203,7 @@ Steps 2 and 3 below require a working OCaml (any version from 4.02.2 to 4.03.0) 
 
 2. `opam install zarith batteries`
 
-1. If OPAM complains that the system dependency on GMP cannot be found, then open the Cygwin terminal and fake the installation of OPAM package `conf-gmp`:
+1. If OPAM complains that the system dependency on GMP cannot be found, and if you're positive that `mingw64-x86_64-gmp` is installed, then open the Cygwin terminal and fake the installation of OPAM package `conf-gmp`:
 
   ```sh
   $ opam install --fake conf-gmp
