@@ -1,27 +1,28 @@
+open FStar_UInt_UInt32
 open SInt_UInt8
-open SBuffer
-open Crypto_AES
+open FStar_Buffer
+open AES
 
-let print (b:uint8s) =
+let print (b:suint8s) =
   for i = 0 to (Array.length b.content - 1) do
-    Printf.printf "%2x " (to_int (index 0 b i));
+    Printf.printf "%2x " (to_int (index b i));
     if i mod 4 = 3 then print_string "\n"
   done;
   print_string "\n"
        
 let _ =
-  let plaintext = create 0 zero 16 in
-  let plaintext2 = create 0 zero 16 in
-  let key = create 0 zero 32 in
-  let ciphertext = create 0 zero 16 in
-  let w = create 0 zero 240 in
-  let sbox = create 0 zero 256 in
-  let inv_sbox = create 0 zero 256 in
+  let plaintext = create zero 16 in
+  let plaintext2 = create zero 16 in
+  let key = create zero 32 in
+  let ciphertext = create zero 16 in
+  let w = create zero 240 in
+  let sbox = create zero 256 in
+  let inv_sbox = create zero 256 in
   (* Initialize the test vectors *)
   for i = 0 to 15 do
-    upd 0 plaintext i (of_int (i + (i lsl 4)));
-    upd 0 key (2*i) (of_int (2*i)); 
-    upd 0 key (2*i+1) (of_int (2*i+1))
+    upd plaintext i (of_int (i + (i lsl 4)));
+    upd key (2*i) (of_int (2*i)); 
+    upd key (2*i+1) (of_int (2*i+1))
   done;
   (* Initialize sboxes *)
   mk_sbox sbox;

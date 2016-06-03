@@ -37,8 +37,8 @@ val div: a:uint32 -> b:uint32{v b <> 0} -> Tot (c:uint32{v c = v a / v b})
 let div a b = MkUInt32(div (v a) (v b))
 
 (* Modulo primitives *)
-val mod: a:uint32 -> b:uint32{v b <> 0} -> Tot (c:uint32{v c = v a % v b})
-let mod a b = MkUInt32 (mod (v a) (v b))
+val rem: a:uint32 -> b:uint32{v b <> 0} -> Tot (c:uint32{v c = v a % v b})
+let rem a b = MkUInt32 (mod (v a) (v b))
 
 (* Bitwise operators *)
 val logand: uint32 -> uint32 -> Tot uint32

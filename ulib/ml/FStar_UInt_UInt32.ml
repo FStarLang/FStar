@@ -65,3 +65,5 @@ let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
 
 let to_string s = string_of_int s
+let to_int s = s
+let of_int s = s

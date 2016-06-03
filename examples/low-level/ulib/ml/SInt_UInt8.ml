@@ -64,6 +64,7 @@ let of_string s =
   if x >= 256 || x < 0 then failwith "Wrong constant"
   else x 
 let of_int s = s land 255
-                                                             
+let of_uint32 s = s land 255
+                        
 let to_string s = string_of_int s
 let to_int s = s

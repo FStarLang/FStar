@@ -60,6 +60,9 @@ let of_native_int s = to_usint n s
 
 assume val of_string: string -> Tot uint8
 assume val of_int: x:nat{x >= 0 /\ x < pow2 n} -> Tot (y:uint8{v y = x})
+(* TODO: port to libraries *)
+type uint32 = FStar.UInt.UInt32.uint32
+assume val of_uint32: x:uint32{FStar.UInt.UInt32.v x < 256} -> Tot uint8
 
 let op_Hat_Plus = add
 let op_Hat_Plus_Percent = add_mod

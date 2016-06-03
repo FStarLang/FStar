@@ -5,7 +5,7 @@ open FStar.StackHeap2
 open FStar.SST
 open SInt
 open SInt.UInt8
-open Buffer
+open FStar.Buffer
 
 #set-options "--lax"
 
@@ -33,8 +33,6 @@ let multiply a b =
   ^^ (xtime (xtime (xtime (xtime (xtime a)))) ^*% ((b ^>> 5) ^& one))
   ^^ (xtime (xtime (xtime (xtime (xtime (xtime a))))) ^*% ((b ^>> 6) ^& one))
   ^^ (xtime (xtime (xtime (xtime (xtime (xtime (xtime a)))))) ^*% ((b ^>> 7) ^& one)))
-
-(*
 
 val mk_sbox: sbox:suint8s{length sbox = 64} -> STL unit
   (requires (fun h -> True))
@@ -173,9 +171,6 @@ let mk_inv_sbox sbox =
   upd sbox (UInt.UInt32.of_int 244 ) (SInt.UInt8.of_int 0xba); upd sbox (UInt.UInt32.of_int 245 ) (SInt.UInt8.of_int 0x77); upd sbox (UInt.UInt32.of_int 246 ) (SInt.UInt8.of_int 0xd6); upd sbox (UInt.UInt32.of_int 247 ) (SInt.UInt8.of_int 0x26); 
   upd sbox (UInt.UInt32.of_int 248 ) (SInt.UInt8.of_int 0xe1); upd sbox (UInt.UInt32.of_int 249 ) (SInt.UInt8.of_int 0x69); upd sbox (UInt.UInt32.of_int 250 ) (SInt.UInt8.of_int 0x14); upd sbox (UInt.UInt32.of_int 251 ) (SInt.UInt8.of_int 0x63); 
   upd sbox (UInt.UInt32.of_int 252 ) (SInt.UInt8.of_int 0x55); upd sbox (UInt.UInt32.of_int 253 ) (SInt.UInt8.of_int 0x21); upd sbox (UInt.UInt32.of_int 254 ) (SInt.UInt8.of_int 0x0c); upd sbox (UInt.UInt32.of_int 255 ) (SInt.UInt8.of_int 0x7d)
-
-(* TODO: port to libraries *)
-assume val of_uint32: uint32 -> Tot suint8
 
 val access: sbox:suint8s -> idx:suint8 -> STL suint8
   (requires (fun h -> True))
@@ -403,7 +398,7 @@ let rotWord word =
   upd word one   w2;
   upd word two   w3;
   upd word three w0
-  
+
 val subWord: word:suint8s{length word = 4} -> sbox:suint8s -> STL unit
   (requires (fun h -> True))
   (ensures (fun h0 _ h1 -> True))
@@ -431,7 +426,7 @@ let rec rcon i tmp =
   end
 
 let op_At_Slash = UInt.UInt32.div
-let op_At_Percent = UInt.UInt32.mod
+let op_At_Percent = UInt.UInt32.rem
 
 val keyExpansion_aux: suint8s -> suint8s -> suint8s -> suint8s -> uint32 -> STL unit
   (requires (fun h -> True))
@@ -445,7 +440,7 @@ let rec keyExpansion_aux key w temp sbox i =
     let three = one @+ two in
     let four  = two @+ two in
     blit w (i @- four) temp zero four;
-    if UInt.UInt32.eq (UInt.UInt32.mod (UInt.UInt32.div i four) nk) zero then (
+    if UInt.UInt32.eq ((UInt.UInt32.div i four) @% nk) zero then (
       rotWord temp;
       subWord temp sbox;
       upd temp UInt.UInt32.zero (index temp zero ^^ rcon ((i @/ four) @/ nk) SInt.UInt8.one) 
@@ -532,7 +527,7 @@ let invSubBytes_sbox state sbox =
 val invMixColumns: suint8s -> STL unit
   (requires (fun h -> True))
   (ensures (fun h0 _ h1 -> True))
-let invMixColumns state =
+let invMixColumns state = 
   let zero  = UInt.UInt32.zero in
   let one   = UInt.UInt32.one in
   let two   = one @+ one in
@@ -543,53 +538,54 @@ let invMixColumns state =
   let s1 = index state (one   @+(four * c)) in
   let s2 = index state (two   @+(four * c)) in
   let s3 = index state (three @+(four * c)) in
-  upd state ((four*c) @+ one) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1 
-	       ^^ multiply (of_int 0xd) s2 ^^ multiply (of_int 0x9) s3);
-  upd state ((four*c) @+ one) (multiply (of_int 0xe) s1 ^^ multiply (of_int 0xb) s2 
-	       ^^ multiply (of_int 0xd) s3 ^^ multiply (of_int 0x9) s0);
-  upd state ((four*c) @+ two) (multiply (of_int 0xe) s2 ^^ multiply (of_int 0xb) s3 
-	       ^^ multiply (of_int 0xd) s0 ^^ multiply (of_int 0x9) s1);
-  upd state ((four*c) @+ three) (multiply (of_int 0xe) s3 ^^ multiply (of_int 0xb) s0 
-	       ^^ multiply (of_int 0xd) s1 ^^ multiply (of_int 0x9) s2);
+  upd state ((four*c) @+ one) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1
+  	       ^^ multiply (of_int 0xd) s2 ^^ multiply (of_int 0x9) s3);
+  upd state ((four*c) @+ one) (multiply (of_int 0xe) s1 ^^ multiply (of_int 0xb) s2
+  	       ^^ multiply (of_int 0xd) s3 ^^ multiply (of_int 0x9) s0);
+  upd state ((four*c) @+ two) (multiply (of_int 0xe) s2 ^^ multiply (of_int 0xb) s3
+  	       ^^ multiply (of_int 0xd) s0 ^^ multiply (of_int 0x9) s1);
+  upd state ((four*c) @+ three) (multiply (of_int 0xe) s3 ^^ multiply (of_int 0xb) s0
+  	       ^^ multiply (of_int 0xd) s1 ^^ multiply (of_int 0x9) s2); 
   let c = one in
   let s0 = index state (zero  @+ (four*c)) in
   let s1 = index state (one   @+ (four*c)) in
   let s2 = index state (two   @+ (four*c)) in
   let s3 = index state (three @+ (four*c)) in
-  upd state ((four*c) @+ zero) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1 
-	       ^^ multiply (of_int 0xd) s2 ^^ multiply (of_int 0x9) s3);
-  upd state ((four*c) @+ one) (multiply (of_int 0xe) s1 ^^ multiply (of_int 0xb) s2 
-	       ^^ multiply (of_int 0xd) s3 ^^ multiply (of_int 0x9) s0);
-  upd state ((four*c) @+ two) (multiply (of_int 0xe) s2 ^^ multiply (of_int 0xb) s3 
-	       ^^ multiply (of_int 0xd) s0 ^^ multiply (of_int 0x9) s1);
-  upd state ((four*c) @+ three) (multiply (of_int 0xe) s3 ^^ multiply (of_int 0xb) s0 
-	       ^^ multiply (of_int 0xd) s1 ^^ multiply (of_int 0x9) s2);
+  upd state ((four*c) @+ zero) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1
+  	       ^^ multiply (of_int 0xd) s2 ^^ multiply (of_int 0x9) s3);
+  upd state ((four*c) @+ one) (multiply (of_int 0xe) s1 ^^ multiply (of_int 0xb) s2
+  	       ^^ multiply (of_int 0xd) s3 ^^ multiply (of_int 0x9) s0);
+  upd state ((four*c) @+ two) (multiply (of_int 0xe) s2 ^^ multiply (of_int 0xb) s3
+  	       ^^ multiply (of_int 0xd) s0 ^^ multiply (of_int 0x9) s1);
+  upd state ((four*c) @+ three) (multiply (of_int 0xe) s3 ^^ multiply (of_int 0xb) s0
+  	       ^^ multiply (of_int 0xd) s1 ^^ multiply (of_int 0x9) s2); 
   let c = two in
   let s0 = index state (zero  @+ (four*c)) in
   let s1 = index state (one   @+ (four*c)) in
   let s2 = index state (two   @+ (four*c)) in
   let s3 = index state (three @+ (four*c)) in
-  upd state ((four*c) @+ zero) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1 
-	       ^^ multiply (of_int 0xd) s2 ^^ multiply (of_int 0x9) s3);
-  upd state ((four*c) @+ one) (multiply (of_int 0xe) s1 ^^ multiply (of_int 0xb) s2 
-	       ^^ multiply (of_int 0xd) s3 ^^ multiply (of_int 0x9) s0);
-  upd state ((four*c) @+ two) (multiply (of_int 0xe) s2 ^^ multiply (of_int 0xb) s3 
-	       ^^ multiply (of_int 0xd) s0 ^^ multiply (of_int 0x9) s1);
-  upd state ((four*c) @+ three) (multiply (of_int 0xe) s3 ^^ multiply (of_int 0xb) s0 
-	       ^^ multiply (of_int 0xd) s1 ^^ multiply (of_int 0x9) s2);
+  upd state ((four*c) @+ zero) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1
+  	       ^^ multiply (of_int 0xd) s2 ^^ multiply (of_int 0x9) s3);
+  upd state ((four*c) @+ one) (multiply (of_int 0xe) s1 ^^ multiply (of_int 0xb) s2
+  	       ^^ multiply (of_int 0xd) s3 ^^ multiply (of_int 0x9) s0);
+  upd state ((four*c) @+ two) (multiply (of_int 0xe) s2 ^^ multiply (of_int 0xb) s3
+  	       ^^ multiply (of_int 0xd) s0 ^^ multiply (of_int 0x9) s1);
+  upd state ((four*c) @+ three) (multiply (of_int 0xe) s3 ^^ multiply (of_int 0xb) s0
+  	       ^^ multiply (of_int 0xd) s1 ^^ multiply (of_int 0x9) s2); 
   let c = three in
   let s0 = index state (zero  @+ (four*c)) in
   let s1 = index state (one   @+ (four*c)) in
   let s2 = index state (two   @+ (four*c)) in
   let s3 = index state (three @+ (four*c)) in
-  upd state ((four*c) @+ zero) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1 
-	       ^^ multiply (of_int 0xd) s2 ^^ multiply (of_int 0x9) s3);
-  upd state ((four*c) @+ one) (multiply (of_int 0xe) s1 ^^ multiply (of_int 0xb) s2 
-	       ^^ multiply (of_int 0xd) s3 ^^ multiply (of_int 0x9) s0);
-  upd state ((four*c) @+ two) (multiply (of_int 0xe) s2 ^^ multiply (of_int 0xb) s3 
-	       ^^ multiply (of_int 0xd) s0 ^^ multiply (of_int 0x9) s1);
-  upd state ((four*c) @+ three) (multiply (of_int 0xe) s3 ^^ multiply (of_int 0xb) s0 
-	       ^^ multiply (of_int 0xd) s1 ^^ multiply (of_int 0x9) s2)
+  upd state ((four*c) @+ zero) (multiply (of_int 0xe) s0 ^^ multiply (of_int 0xb) s1
+  	       ^^ multiply (of_int 0xd) s2 ^^ multiply (of_int 0x9) s3);
+  upd state ((four*c) @+ one) (multiply (of_int 0xe) s1 ^^ multiply (of_int 0xb) s2
+  	       ^^ multiply (of_int 0xd) s3 ^^ multiply (of_int 0x9) s0);
+  upd state ((four*c) @+ two) (multiply (of_int 0xe) s2 ^^ multiply (of_int 0xb) s3
+  	       ^^ multiply (of_int 0xd) s0 ^^ multiply (of_int 0x9) s1); 
+  upd state ((four*c) @+ three) (multiply (of_int 0xe) s3 ^^ multiply (of_int 0xb) s0
+  	       ^^ multiply (of_int 0xd) s1 ^^ multiply (of_int 0x9) s2);
+  () (* JK: Without this "unit", the extraction gets into an infinite loop *)
 
 val inv_cipher_loop: state:suint8s -> w:suint8s -> suint8s -> round:uint32 -> STL unit
   (requires (fun h -> True))
@@ -599,7 +595,7 @@ let rec inv_cipher_loop state w sbox round =
   else begin
     invShiftRows state;
     invSubBytes_sbox state sbox;
-    addRoundKey state w round; 
+    addRoundKey state w round;
     invMixColumns state;
     inv_cipher_loop state w sbox (round @- UInt.UInt32.one)
   end
