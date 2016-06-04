@@ -1,75 +1,228 @@
 module Platform.Bytes
 open FStar
+open FStar.List
 
-val repr_bytes : nat -> GTot (n:nat{n>0})
-let repr_bytes n =
-    if n < 256 then 1
-    else if n < 65536 then 2
-    else if n < 16777216 then 3
-    else if n < 4294967296 then 4
-    else if n < 1099511627776 then 5
-    else if n < 281474976710656 then 6
-    else if n < 72057594037927936 then 7
-    else if n < 18446744073709551616 then 8
-    else 9
+  val repr_bytes : nat -> GTot (n:nat{n>0})
+  let repr_bytes n =
+      if n < 256 then 1
+      else if n < 65536 then 2
+      else if n < 16777216 then 3
+      else if n < 4294967296 then 4
+      else if n < 1099511627776 then 5
+      else if n < 281474976710656 then 6
+      else if n < 72057594037927936 then 7
+      else if n < 18446744073709551616 then 8
+      else 9
 
-val lemma_repr_bytes_values: n:nat ->
-  Lemma (   ( n < 256 <==> repr_bytes n = 1 )
-         /\ ( (n >= 256 /\ n < 65536) <==> repr_bytes n = 2 )
-         /\ ( (n >= 65536 /\ n < 16777216) <==> repr_bytes n = 3 )
-         /\ ( (n >= 16777216 /\ n < 4294967296) <==> repr_bytes n = 4 )
-         /\ ( (n >= 4294967296 /\ n < 1099511627776) <==> repr_bytes n = 5 )
-         /\ ( (n >= 1099511627776 /\ n < 281474976710656) <==> repr_bytes n = 6 )
-         /\ ( (n >= 281474976710656 /\ n < 72057594037927936) <==> repr_bytes n = 7 )
-         /\ ( (n >= 72057594037927936 /\ n < 18446744073709551616) <==> repr_bytes n = 8 ) )
-let lemma_repr_bytes_values n = ()
+  val lemma_repr_bytes_values: n:nat ->
+    Lemma (   ( n < 256 <==> repr_bytes n = 1 )
+           /\ ( (n >= 256 /\ n < 65536) <==> repr_bytes n = 2 )
+           /\ ( (n >= 65536 /\ n < 16777216) <==> repr_bytes n = 3 )
+           /\ ( (n >= 16777216 /\ n < 4294967296) <==> repr_bytes n = 4 )
+           /\ ( (n >= 4294967296 /\ n < 1099511627776) <==> repr_bytes n = 5 )
+           /\ ( (n >= 1099511627776 /\ n < 281474976710656) <==> repr_bytes n = 6 )
+           /\ ( (n >= 281474976710656 /\ n < 72057594037927936) <==> repr_bytes n = 7 )
+           /\ ( (n >= 72057594037927936 /\ n < 18446744073709551616) <==> repr_bytes n = 8 ) )
+  let lemma_repr_bytes_values n = ()
 
-type byte = Char.char
-type cbytes = string
+  type byte = Char.char
 
-let rec getByte (bl:list cbytes) (i:int) =
-  match bl with
-    | Nil -> failwith "getByte: array out of bounds"
-    | h::t -> 
-      if i >= String.length h then 
-        getByte t (i-String.length h)
-      else 
-        String.get h i
+  type cbytes = string
 
-let rec getByte2 (bl: list cbytes) i : byte * byte =
+  (* let add_nat (a : nat) (b : nat) : nat = a + b *)
+
+  (* val sum : list nat -> Tot nat *)
+  (* let sum ls = fold_leftT add_nat 0 ls *)
+
+  val sum_length : list string -> Tot nat
+  (* let sum_length ls = sum (mapT String.length ls) *)
+  let rec sum_length ls =
+    match ls with
+    | [] -> 0
+    | h :: t -> String.length h + sum_length t
+
+  type proto_bytes = {
+         (*  A series of strings whose total concatenated length is [max]. *)
+         bl: list cbytes;
+         max: nat;
+         (* The length of the subset. *)
+         length: nat;
+         (* The start index of the subset. *)
+         index: nat
+  }
+
+  type good_bytes (b:proto_bytes) = b.max = sum_length b.bl /\ b.index <= b.max /\ b.index + b.length <= b.max
+
+  type bytes = b:proto_bytes{good_bytes b}
+
+  (* type bytes =  *)
+  (*   | MkBytes :  *)
+  (*        (\*  A series of strings whose total concatenated length is [max]. *\) *)
+  (*        bl: list cbytes -> *)
+  (*        max: nat -> *)
+  (*        (\* The length of the subset. *\) *)
+  (*        length: nat -> *)
+  (*        (\* The start index of the subset. *\) *)
+  (*        index: nat{max = sum_length bl /\ index <= max /\ index + length <= max} -> *)
+  (*        bytes *)
+
+  let rec getByte (bl:list cbytes) (i:int) =
     match bl with
-   | Nil -> failwith "array out of bounds"
-   | h::t -> 
-     if i >= String.length h then 
-       getByte2 t (i - String.length h)
-     else if (String.length h) - i >= 2 then 
-       (String.get h i, String.get h (i+1))
-     else 
-     match bl with
-     | h1::h2::t ->
-       if (String.length h1) - i = 1 && (String.length h2) > 0 then 
-         (String.get h1 i, String.get h2 0)
-       else failwith "getByte2: array out of bounds"
-     | _ -> failwith "getByte2: array out of bounds"
+      | [] -> failwith "getByte: array out of bounds"
+      | h::t -> 
+        if i >= String.length h then 
+          getByte t (i-String.length h)
+        else 
+          String.get h i
 
-let rec getBytes (bl: list cbytes) i n  =
-    match bl with
-    | Nil -> if n > 0 then failwith "getBytes: array out of bounds" else ""
-    | h::t ->
-        if i >= (String.length h)
-        then getBytes t (i- (String.length h)) n
-        else let curr = (String.length h) - i in
-             if curr >= n
-             then String.substring h i n
-             else (String.substring h i curr) ^ (getBytes t 0 (n-curr))
+  let rec getByte2 (bl: list cbytes) i : byte * byte =
+      match bl with
+     | [] -> failwith "array out of bounds"
+     | h::t -> 
+       if i >= String.length h then 
+         getByte2 t (i - String.length h)
+       else if (String.length h) - i >= 2 then 
+         (String.get h i, String.get h (i+1))
+       else 
+       match bl with
+       | h1::h2::t ->
+         if (String.length h1) - i = 1 && (String.length h2) > 0 then 
+           (String.get h1 i, String.get h2 0)
+         else failwith "getByte2: array out of bounds"
+       | _ -> failwith "getByte2: array out of bounds"
 
-type bytes = {
-       (*  A series of strings whose total concatenated length is [max]. *)
-       bl: list cbytes;
-       max: nat;
-       (* The length of the subset. *)
-       length: nat;
-       (* The start index of the subset. *)
-       index: nat;
-}
+  assume val substringT: s:string -> start:nat -> len:nat{let l = String.length s in start <= l && start + len <= l} -> Tot (res:string{String.length res = len})
+  assume val string_length_concat: a:string -> b:string -> Lemma (String.length (a ^ b) = String.length a + String.length b)
+  assume val string_length_empty: unit -> Lemma (String.length "" = 0)
+
+  val string_concat : a:string -> b:string -> Tot (res:string{String.length res = String.length a + String.length b})
+  let string_concat a b = 
+    let _ = string_length_concat a b in 
+    a ^ b
+  val empty_string : s:string{String.length s = 0}
+  let empty_string = 
+    let _ = string_length_empty () in
+    ""
+
+  (* val sum_length_le : i:nat -> h:cbytes -> t:list cbytes -> Lemma (i <= sum_length (h::t) ==> i - String.length h <= sum_length t) *)
+  (* let sum_length_le i h t = () *)
+
+  (* val sum_length_cons : h:cbytes -> t:list cbytes -> Lemma (sum_length (h::t) = String.length h + sum_length t) (decreases t) *)
+  (* let rec sum_length_cons h t =  *)
+  (*   match t with *)
+  (*    | [] -> () *)
+  (*    | h' :: t' -> sum_length_cons h' t' *)
+
+  val getBytes : bl:list cbytes -> i:nat{i <= sum_length bl} -> n:nat{i+n <= sum_length bl} -> Tot (b:cbytes{String.length b = n})
+  let rec getBytes (bl: list cbytes) i n  =
+      match bl with
+      | [] -> 
+        if n = 0
+        then empty_string
+        else admit() (*ToDo: should be 'exfalso'*)
+      | h::t ->
+          if i >= (String.length h)
+          then getBytes t (i- (String.length h)) n
+          else let curr = (String.length h) - i in
+               if curr >= n
+               then substringT h i n
+               else 
+               string_concat (substringT h i curr) (getBytes t 0 (n-curr))
+
+  let cbyte (b:bytes) =
+    if b.length = 1 then
+      let b1 = getByte b.bl b.index in b1
+    else failwith "cbyte: expected an array of length 1"
+
+  let cbyte2 (b:bytes) =
+      if b.length = 2 then
+        let (b1,b2) = getByte2 b.bl b.index in b1,b2
+      else failwith "cbyte2: expected an array of length 2"
+
+  let index (b:bytes) i =
+    if b.length >= i then
+      let s = getBytes b.bl b.index b.length in
+      String.get s i
+    else failwith "index: index out of range"
+
+  val string_concat_all : ls:list string -> Tot (r:string{String.length r = sum_length ls})
+  let rec string_concat_all ls =
+    match ls with
+    | [] -> empty_string
+    | x :: xs -> string_concat x (string_concat_all xs)
   
+  val get_cbytes : b:bytes -> Tot (r:cbytes{String.length r = b.length})
+  let get_cbytes (b:bytes) =
+      if b.length = b.max && b.index = 0 then
+        string_concat empty_string (string_concat_all b.bl)
+      else
+        getBytes b.bl b.index b.length
+
+  let abytes (ba:cbytes) =
+      {bl = [ba]; length = String.length ba; index = 0; max = String.length ba}
+
+  (* let rec for_ first last init f = *)
+  (*   if first > last then *)
+  (*     init *)
+  (*   else *)
+  (*     for_ (first + 1) last (f init first) f *)
+
+  let abytes_max (ba:cbytes) (max:int) =
+    let len = String.length ba in
+    if len <= max then
+      let arr = ba ^ String.make (max-len) (Char.char_of_int 0) in
+      {bl = [arr]; length = len; index = 0; max = len}
+    else
+      failwith "abytes_max: length exceeds max"
+
+  let abyte (ba:byte) =
+      {bl = [String.make 1 ba]; length = 1; index = 0; max = 1}
+
+  let abyte2 (ba1,ba2) =
+      let s = String.make 1 ba1 ^ String.make 1 ba2 in
+      {bl = [s]; length = 2; index = 0; max = 2}
+
+  val sum_length_concat : a:list string -> b:list string -> Lemma (sum_length (a @ b) = sum_length a + sum_length b)
+  let rec sum_length_concat a b =
+    match a with
+      | [] -> ()
+      | x :: a' -> sum_length_concat a' b
+
+  val op_At_Bar: bytes -> bytes -> Tot bytes
+  let op_At_Bar (a:bytes) (b:bytes) =
+      if a.length + a.index = a.max && b.index = 0 then
+        let _ = sum_length_concat a.bl b.bl in
+        {bl = (a.bl @ b.bl);
+         length = a.length + b.length;
+         index = a.index;
+         max = a.max + b.max}
+      else
+        {bl = [string_concat (get_cbytes a) (get_cbytes b)];
+         length = a.length + b.length;
+         index = 0;
+         max = a.length + b.length}
+
+  let op_AtBar = op_At_Bar
+
+  let length (d:bytes) = d.length
+
+  type bytes_eq (a:bytes) (b:bytes) = (get_cbytes a = get_cbytes b)
+  
+  val split : s:bytes -> i:nat{i <= length s} -> Tot (x:(bytes * bytes){length (fst x) = i && length (snd x) = length s - i /\ bytes_eq ((fst x) @| (snd x)) s})
+  let split (b:bytes) (i:nat{i <= length b}) =
+      {bl = b.bl;
+       length = i;
+       index = b.index;
+       max = b.max},
+      {bl = b.bl;
+       length = b.length - i;
+       index = b.index + i;
+       max = b.max}
+
+  val split_eq: s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Pure
+    (x:(bytes * bytes){length (fst x) = i && length (snd x) = length s - i})
+    (requires True)
+    (ensures (fun x -> ((fst x) @| (snd x) = s)))
+  
+  let split_eq = split
+
