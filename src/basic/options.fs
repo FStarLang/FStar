@@ -275,43 +275,43 @@ let rec specs () : list<Getopt.opt> =
        OneArg ((fun s -> if s="true" then Bool true 
                          else if s="false" then Bool false 
                          else failwith("Invalid argument to --admit_smt_queries")), 
-                "true|false"), 
-       "Admit SMT queries (UNSAFE! But, useful during development); default: 'false'");
+                "[true|false]"),
+       "Admit SMT queries, unsafe! (default 'false')");
 
      ( noshort, 
        "cardinality",       
        OneArg ((fun x -> String (validate_cardinality x)), 
-               "off|warn|check"), 
+               "[off|warn|check]"),
        "Check cardinality constraints on inductive data types (default 'off')");
 
      ( noshort, 
        "codegen", 
         OneArg ((fun s -> String (parse_codegen s)), 
-                 "OCaml|FSharp"), 
+                 "[OCaml|FSharp]"),
         "Generate code for execution");
 
      ( noshort, 
         "codegen-lib", 
         OneArg ((fun s -> List (s::get_codegen_lib() |> List.map String)), 
-                 "namespace"), 
-        "External runtime library library");
+                 "[namespace]"),
+        "External runtime library");
      
      ( noshort, 
         "debug", 
         OneArg ((fun x -> List (x::get_debug() |> List.map String)),
-                 "module name"), 
-        "Print LOTS of debugging information while checking module [arg]");
+                 "[module name]"),
+        "Print lots of debugging information while checking module");
       
        ( noshort,
         "debug_level", 
         OneArg ((fun x -> List (x::get_debug_level() |> List.map String)), 
-                 "Low|Medium|High|Extreme|..."), 
+                 "[Low|Medium|High|Extreme|...]"),
         "Control the verbosity of debugging info");
       
        ( noshort,
         "dep", 
         OneArg ((fun x -> if x = "make" || x = "graph" then String x else failwith "invalid argument to 'dep'"),
-                 "make|graph"), 
+                 "[make|graph]"),
         "Output the transitive closure of the dependency graph in a format suitable for the given tool");
       
        ( noshort,
@@ -320,9 +320,9 @@ let rec specs () : list<Getopt.opt> =
          "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; requires --universes");
       
        ( noshort,
-        "dump_module", 
+        "dump_module",
         OneArg ((fun x -> (x::get_dump_module()) |> List.map String |> List),
-                 "module name"), 
+                 "[module name]"),
         "");
       
        ( noshort,
@@ -333,7 +333,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "explicit_deps", 
         ZeroArgs (fun () -> Bool true), 
-        "tell FStar to not find dependencies automatically because the user provides them on the command-line");
+        "Do not find dependencies automatically, the user provides them on the command-line");
       
        ( noshort,
         "fs_typ_app", 
@@ -350,54 +350,54 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "fstar_home", 
         OneArg (String,
-                "dir"), 
-        "Set the FSTAR_HOME variable to dir");
+                "[dir]"),
+        "Set the FSTAR_HOME variable to [dir]");
       
        ( noshort,
-        "hide_genident_nums", 
+        "hide_genident_nums",
         ZeroArgs(fun () -> Bool true), 
         "Don't print generated identifier numbers");
       
        ( noshort,
-        "hide_uvar_nums", 
+        "hide_uvar_nums",
         ZeroArgs(fun () -> Bool true),
         "Don't print unification variable numbers");
       
        ( noshort,
-        "in", 
+        "in",
         ZeroArgs (fun () -> Bool true), 
         "Interactive mode; reads input from stdin");
       
        ( noshort,
-        "include", 
+        "include",
         OneArg ((fun s -> List (get_include() @ [s] |> List.map String)),
-                "path"), 
+                "[path]"), 
         "A directory in which to search for files included on the command line");
       
        ( noshort,
-        "initial_fuel", 
+        "initial_fuel",
         OneArg((fun x -> Int (int_of_string x)), 
-                "non-negative integer"), 
+                "[non-negative integer]"), 
         "Number of unrolling of recursive functions to try initially (default 2)");
       
        ( noshort,
-        "initial_ifuel", 
+        "initial_ifuel",
         OneArg((fun x -> Int (int_of_string x)), 
-                "non-negative integer"), 
+                "[non-negative integer]"), 
         "Number of unrolling of inductive datatypes to try at first (default 1)");
       
        ( noshort,
-        "inline_arith", 
+        "inline_arith",
         ZeroArgs(fun () -> Bool true), 
         "Inline definitions of arithmetic functions in the SMT encoding");
       
        ( noshort,
-        "lax", 
+        "lax",
         ZeroArgs (fun () -> Bool true), //pretype := true; verify := false), 
         "Run the lax-type checker only (admit all verification conditions)");
       
        ( noshort,
-        "log_types", 
+        "log_types",
         ZeroArgs (fun () -> Bool true), 
         "Print types computed for data/val/let-bindings");
       
@@ -409,19 +409,19 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "max_fuel", 
         OneArg((fun x -> Int (int_of_string x)), 
-                "non-negative integer"), 
+                "[non-negative integer]"), 
         "Number of unrolling of recursive functions to try at most (default 8)");
       
        ( noshort,
         "max_ifuel", 
         OneArg((fun x -> Int (int_of_string x)), 
-                "non-negative integer"), 
+                "[non-negative integer]"), 
         "Number of unrolling of inductive datatypes to try at most (default 2)");
       
        ( noshort,
         "min_fuel", 
         OneArg((fun x -> Int (int_of_string x)), 
-                "non-negative integer"), 
+                "[non-negative integer]"), 
         "Minimum number of unrolling of recursive functions to try (default 1)");
       
        ( noshort,
@@ -432,8 +432,8 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "n_cores", 
         OneArg ((fun x -> Int (int_of_string x)),//; detail_errors := false), 
-                 "positive integer"), 
-        "Maximum number of cores to use for the solver (default 1); implied detail_errors = false");
+                 "[positive integer]"), 
+        "Maximum number of cores to use for the solver (implies detail_errors = false) (default 1)");
       
        ( noshort,
         "no_default_includes", 
@@ -443,7 +443,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "no_extract", 
         OneArg ((fun x -> List (x :: get_no_extract() |> List.map String)),
-                 "module name"), 
+                 "[module name]"), 
         "Do not extract code from this module");
       
        ( noshort,
@@ -454,8 +454,8 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "odir", 
         OneArg (String,
-                "dir"), 
-        "Place output in directory dir");
+                "[dir]"), 
+        "Place output in directory [dir]");
       
        ( noshort,
         "prims", 
@@ -496,12 +496,12 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "prn", 
         ZeroArgs (fun () -> Bool true), 
-        "Print real names---you may want to use this in conjunction with log_queries");
+        "Print real names (you may want to use this in conjunction with log_queries)");
       
        ( noshort,
         "show_signatures", 
         OneArg((fun x -> List (x::get_show_signatures() |> List.map String)), 
-                "module name"), 
+                "[module name]"), 
         "Show the checked signatures for all top-level symbols in the module");
       
        ( noshort,
@@ -512,15 +512,15 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "smt", 
         OneArg (String, 
-                 "path"), 
+                 "[path]"), 
         "Path to the SMT solver (usually Z3, 
         but could be any SMT2-compatible solver)");
       
        ( noshort,
         "split_cases", 
         OneArg ((fun n -> Int (int_of_string n)), 
-                 "positive integer, n"), 
-        "Partition VC of a match into groups of n cases");
+                 "[positive integer]"), 
+        "Partition VC of a match into groups of [n] cases");
       
        ( noshort,
         "timing", 
@@ -535,7 +535,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "universes", 
         ZeroArgs (fun () -> Bool true), 
-        "Use the (experimental) support for universes");
+        "Use the support for universes");
       
        ( noshort,
         "unthrottle_inductives", 
@@ -545,23 +545,23 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "use_eq_at_higher_order", 
         ZeroArgs (fun () -> Bool true), 
-        "Use equality constraints when comparing higher-order types; temporary");
+        "Use equality constraints when comparing higher-order types (Temporary)");
       
        ( noshort,
         "use_native_int", 
         ZeroArgs (fun () -> Bool true), 
-        "Extract the 'int' type to platform-specific native int; you will need to link the generated code with the appropriate version of the prims library");
+        "Extract the 'int' type to platform-specific native int (You will need to link the generated code with the appropriate version of the prims library)");
       
        ( noshort,
         "verify_module", 
         OneArg (cons_verify_module,
-                 "string"), 
+                 "[module name]"), 
         "Name of the module to verify");
       
        ( noshort,
         "__temp_no_proj", 
          OneArg ((fun x -> List (x :: get___temp_no_proj() |> List.map String)), 
-                  "string"), 
+                  "[module name]"), 
         "Don't generate projectors for this module");
  
        ( 'v', 
@@ -578,8 +578,8 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "z3timeout", 
          OneArg ((fun s -> Int (int_of_string s)), 
-                  "positive integer, t"), 
-        "Set the Z3 per-query (soft) timeout to t seconds (default 5)");
+                  "[positive integer]"), 
+        "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)");
   ] in
      ( 'h', 
         "help", 
