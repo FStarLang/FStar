@@ -22,7 +22,7 @@ AES_EXTRACTED=AES.ml
 
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
-	$(FSTAR) $(OPTIONS_VER) FStar.StackHeap2.fst FStar.SST.fst FStar.StackArray.fst buffer.fst
+	$(FSTAR) $(OPTIONS_VER) FStar.StackHeap2.fst FStar.SST.fst FStar.StackArray.fst FStar.Buffer.fst
 
 # AES targets
 aes-ver:
