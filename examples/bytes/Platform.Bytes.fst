@@ -125,6 +125,13 @@ let rec concat_append a b =
     | x :: xs -> 
       concat_append xs b
 
+
+assume val length_0_empty : s:string -> Lemma 
+  (requires String.length s = 0)
+  (ensures s = "")
+  [SMTPat (String.length s = 0)]
+
+
 val getBytes : bl:list cbytes -> i:nat{i <= sum_length bl} -> n:nat{i+n <= sum_length bl} -> Tot (b:cbytes{String.length b = n})
 let rec getBytes (bl: list cbytes) i n  =
     match bl with
@@ -141,17 +148,77 @@ let rec getBytes (bl: list cbytes) i n  =
              else 
                substringT h i curr ^ getBytes t 0 (n-curr)
 
+
 val lemma_getBytes: ls1:list cbytes -> ls2:list cbytes -> i:nat{i <= sum_length ls1} -> n:nat{sum_length ls1 <= i + n /\ i + n <= sum_length ls1 + sum_length ls2} -> Lemma
   (requires True)
   (ensures getBytes (ls1 @ ls2) i n = (getBytes ls1 i (sum_length ls1 - i) ^ getBytes ls2 0 (i + n - sum_length ls1)))
   [SMTPat (getBytes (ls1 @ ls2) i n)]
-let lemma_getBytes ls1 ls2 i n = admit ()
+
+
+let rec lemma_getBytes ls1 ls2 i n = 
+  match ls1 with
+  | [] ->
+    ()
+  | h :: t ->
+    if String.length h <= i then
+      lemma_getBytes t ls2 (i - String.length h) n
+    else
+      let curr = (String.length h) - i in
+      if n <= curr then 
+        let _ = assert (i + n - sum_length ls1 = 0) in
+        ()
+      else 
+        let _ = lemma_getBytes t ls2 0 (n - curr) in
+        if sum_length ls1 - i <= curr then
+          let _ = assert (sum_length t = 0) in
+          ()
+        else
+          ()
+        
 
 val lemma_getBytes_2 : ls:list cbytes -> Lemma
   (requires True)
   (ensures getBytes ls 0 (sum_length ls) = string_concat ls)
   [SMTPat (getBytes ls 0 (sum_length ls))]
-let lemma_getBytes_2 ls = admit ()
+
+
+val sum_length_0_concat_empty : ls:list string -> Lemma 
+  (requires sum_length ls = 0)
+  (ensures string_concat ls = "")
+  [SMTPat (sum_length ls = 0)]
+
+
+let rec sum_length_0_concat_empty ls =
+  match ls with
+  | [] -> ()
+  | x :: xs ->
+    let _ = assert (String.length x = 0) in
+    sum_length_0_concat_empty xs
+
+
+assume val substring_full : s:string -> Lemma
+  (requires True)
+  (ensures substringT s 0 (String.length s) = s)
+  [SMTPat (substringT s 0 (String.length s))]
+
+
+let rec lemma_getBytes_2 ls = 
+  match ls with
+  | [] ->
+    ()
+  | h :: t ->
+    if String.length h <= 0 then
+      let _ = assert (String.length h = 0) in
+      lemma_getBytes_2 t 
+    else
+      let curr = String.length h in
+      if sum_length ls <= curr then
+        let _ = assert (sum_length t = 0) in
+        ()
+      else
+        let _ = lemma_getBytes_2 t in
+        ()
+          
 
 val get_cbytes : b:bytes -> Tot (r:cbytes{String.length r = b.length})
 let get_cbytes (b:bytes) =
@@ -175,27 +242,122 @@ let op_At_Bar (a:bytes) (b:bytes) =
 (* let op_AtBar = op_At_Bar *)
 
 
-val lemma_op_At_Bar : a:bytes -> b:bytes -> Lemma (get_cbytes (a @| b) = (get_cbytes a ^ get_cbytes b))
-let lemma_op_At_Bar a b =
-  let c = a @| b in
-  if a.length + a.index = a.max && b.index = 0 then
-    if a.index = 0 then
-      if b.length = b.max then
-        ()
-      else
-        ()
-    else
-      if b.length = b.max then
-        ()
-      else
-        ()
-  else
-    if c.length = c.max && c.index = 0 then
-      ()
-    else
-      exfalso ()
-      
-    
+(* a version of get_cbytes that doesn't have the [string_concat] part so it's easier to reason about *)
+val get_cbytes' : b:bytes -> Tot (r:cbytes{String.length r = b.length})
+let get_cbytes' (b:bytes) =
+      getBytes b.bl b.index b.length
+
+
+val get_cbytes'_ok : b : bytes -> Lemma
+  (requires True)
+  (ensures get_cbytes b = get_cbytes' b)
+  [SMTPat (get_cbytes b)]
+
+
+let get_cbytes'_ok b = ()
+
+
+val lemma_op_At_Bar : a:bytes -> b:bytes -> Lemma 
+  (requires True)
+  (ensures get_cbytes (a @| b) = (get_cbytes a ^ get_cbytes b))
+  [SMTPat (get_cbytes (a @| b))]
+let lemma_op_At_Bar a b = ()
+
+
+let length (d:bytes) = d.length
+
+
+val split: b:bytes -> n:nat{n <= length b} ->
+  Tot (x:(bytes * bytes) {length (fst (x))= n /\ length (snd (x)) == (length b) - n }) 
+
+
+let split b i =
+    {bl = b.bl;
+     length = i;
+     index = b.index;
+     max = b.max},
+    {bl = b.bl;
+     length = b.length - i;
+     index = b.index + i;
+     max = b.max}
+
+
+val lemma_split_1 : b:bytes -> i:nat{i <= length b} -> Lemma (let x = split b i in length (fst x) = i && length (snd x) = length b - i)
+let lemma_split_1 b i = ()
+
+
+(* getBytes on sub-range *)
+val lemma_getBytes_3: ls:list cbytes -> i:nat{i <= sum_length ls} -> n:nat{i + n <= sum_length ls} -> i2:nat{i <= i2 /\ i2 <= i+n} -> n2:nat{i2+n2<=i+n} -> Lemma
+  (requires True)
+  (ensures getBytes ls i2 n2 = substringT (getBytes ls i n) (i2 - i) n2)
+  [SMTPat (getBytes ls i2 n2)]
+  
+
+let lemma_getBytes_3 ls i n i2 n2 = 
+  admit ()
+
+
+val splitTwo : s : string -> i:nat{i <= String.length s} -> Tot ((a:string{String.length a = i}) * (b:string{String.length b = String.length s - i}))
+let splitTwo s i = (substringT s 0 i, substringT s i (String.length s - i))
+
+
+val lemma_split_2 : b:bytes -> i:nat{i <= length b} -> Lemma 
+  (let p = split b i in 
+   let ap = splitTwo (get_cbytes b) i in
+   get_cbytes (fst p) = fst ap /\
+   get_cbytes (snd p) = snd ap)
+
+
+let lemma_split_2 b i =
+  let _ = lemma_getBytes_3 b.bl b.index b.length b.index i in
+  let _ = lemma_getBytes_3 b.bl b.index b.length (b.index+i) (b.length-i) in
+  let _ = assert (get_cbytes (snd (split b i)) = snd (splitTwo (get_cbytes b) i)) in
+  ()
+
+
+type bytes_eq (a:bytes) (b:bytes) = (get_cbytes a = get_cbytes b)
+
+
+assume val split_append : s:string -> i:nat{i <= String.length s} -> Lemma
+  (requires True)
+  (ensures 
+    (let p = splitTwo s i in 
+    fst p ^ snd p = s))
+  
+
+val lemma_split_3 : b:bytes -> i:nat{i <= length b} -> Lemma 
+  (let p = split b i in 
+   bytes_eq (fst p @| snd p) b)
+
+
+let lemma_split_3 b i =
+  let _ = lemma_split_2 b i in
+  let _ = split_append (get_cbytes b) i in
+  ()
+
+
+assume val bytes_extensionality: a:bytes -> b:bytes -> Lemma
+  (requires bytes_eq a b)
+  (ensures a = b)
+  [SMTPat (bytes_eq a b)]
+
+
+val lemma_split : s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Lemma
+  (ensures ((fst (split s i)) @| (snd (split s i)) = s))
+let lemma_split s i = lemma_split_3 s i
+
+  
+val split_eq: s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Pure
+  (x:(bytes * bytes){length (fst x) = i && length (snd x) = length s - i})
+  (requires True)
+  (ensures (fun x -> ((fst x) @| (snd x) = s)))
+
+
+let split_eq s i =
+  let _ = lemma_split s i in
+  split s i
+  
+
 let abytes (ba:cbytes) =
     {bl = [ba]; length = String.length ba; index = 0; max = String.length ba}
 
@@ -219,8 +381,6 @@ let abyte (ba:byte) =
 let abyte2 (ba1,ba2) =
     let s = String.make 1 ba1 ^ String.make 1 ba2 in
     {bl = [s]; length = 2; index = 0; max = 2}
-
-let length (d:bytes) = d.length
 
 val getByte : list cbytes -> int -> Char.char
 let rec getByte (bl:list cbytes) (i:int) =
@@ -266,33 +426,4 @@ let index (b:bytes) i =
     let s = getBytes b.bl b.index b.length in
     getT s i
   else failwith "index: index out of range"
-
-type bytes_eq (a:bytes) (b:bytes) = (get_cbytes a = get_cbytes b)
-
-val split : s:bytes -> i:nat{i <= length s} -> Tot (bytes * bytes)
-let split b i =
-    {bl = b.bl;
-     length = i;
-     index = b.index;
-     max = b.max},
-    {bl = b.bl;
-     length = b.length - i;
-     index = b.index + i;
-     max = b.max}
-
-val lemma_split_1 : s:bytes -> i:nat{i <= length s} -> Lemma (let x = split s i in length (fst x) = i && length (snd x) = length s - i)
-let lemma_split_1 s i = ()
-
-
-(* val lemma_split2 : s:bytes -> i:nat{i <= length s} -> Lemma (let x = split s i in bytes_eq ((fst x) @| (snd x)) s) *)
-(* let lemma_split2 s i = () *)
-
-(* val split_eq : s:bytes -> i:nat{i <= length s} -> Tot (x:(bytes * bytes){length (fst x) = i && length (snd x) = length s - i /\ bytes_eq ((fst x) @| (snd x)) s}) *)
-(* let split_eq =  *)
-(*   split *)
-
-(* val split_eq: s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Pure *)
-(*   (x:(bytes * bytes){length (fst x) = i && length (snd x) = length s - i}) *)
-(*   (requires True) *)
-(*   (ensures (fun x -> ((fst x) @| (snd x) = s))) *)
 
