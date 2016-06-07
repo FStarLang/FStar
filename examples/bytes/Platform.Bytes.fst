@@ -69,12 +69,24 @@ type bytes = b:proto_bytes{good_bytes b}
 assume val substringT: s:string -> start:nat -> len:nat{let l = String.length s in start <= l && start + len <= l} -> Tot (res:string{String.length res = len})
 assume val string_length_append: a:string -> b:string -> Lemma 
   (requires True)
-  (ensures (String.length (a ^ b) = String.length a + String.length b))
+  (ensures String.length (a ^ b) = String.length a + String.length b)
   [SMTPat (String.length (a ^ b))]
 assume val string_length_empty: unit -> Lemma 
   (requires True)
-  (ensures (String.length "" = 0))
+  (ensures String.length "" = 0)
   [SMTPat (String.length "")]
+assume val append_empty : s:string -> Lemma 
+  (requires True)
+  (ensures s ^ "" = s)
+  [SMTPat (s ^ "")]
+assume val empty_append : s:string -> Lemma 
+  (requires True)
+  (ensures "" ^ s = s)
+  [SMTPat ("" ^ s)]
+assume val append_assoc : a:string -> b:string -> c:string -> Lemma 
+  (requires True)
+  (ensures (a ^ (b ^ c)) = ((a ^ b) ^ c))
+  [SMTPat (a ^ (b ^ c))]
 
 (* val sum_length_le : i:nat -> h:cbytes -> t:list cbytes -> Lemma (i <= sum_length (h::t) ==> i - String.length h <= sum_length t) *)
 (* let sum_length_le i h t = () *)
@@ -87,6 +99,31 @@ assume val string_length_empty: unit -> Lemma
 
 val exfalso : #a:Type -> u:unit{False} -> Tot a
 let rec exfalso #a _ = exfalso ()
+
+val string_concat : ls:list string -> Tot (r:string{String.length r = sum_length ls})
+let rec string_concat ls =
+  match ls with
+  | [] -> ""
+  | x :: xs -> x ^ string_concat xs
+
+val sum_length_append : a:list string -> b:list string -> Lemma 
+  (requires True)
+  (ensures (sum_length (a @ b) = sum_length a + sum_length b))
+  [SMTPat (sum_length (a @ b))]
+let rec sum_length_append a b =
+  match a with
+    | [] -> ()
+    | x :: a' -> sum_length_append a' b
+
+val concat_append : a:list string -> b:list string -> Lemma 
+  (requires True)
+  (ensures (string_concat (a @ b) = (string_concat a ^ string_concat b)))
+  [SMTPat (string_concat (a @ b))]
+let rec concat_append a b =
+  match a with
+    | [] -> ()
+    | x :: xs -> 
+      concat_append xs b
 
 val getBytes : bl:list cbytes -> i:nat{i <= sum_length bl} -> n:nat{i+n <= sum_length bl} -> Tot (b:cbytes{String.length b = n})
 let rec getBytes (bl: list cbytes) i n  =
@@ -104,11 +141,17 @@ let rec getBytes (bl: list cbytes) i n  =
              else 
                substringT h i curr ^ getBytes t 0 (n-curr)
 
-val string_concat : ls:list string -> Tot (r:string{String.length r = sum_length ls})
-let rec string_concat ls =
-  match ls with
-  | [] -> ""
-  | x :: xs -> x ^ string_concat xs
+val lemma_getBytes: ls1:list cbytes -> ls2:list cbytes -> i:nat{i <= sum_length ls1} -> n:nat{sum_length ls1 <= i + n /\ i + n <= sum_length ls1 + sum_length ls2} -> Lemma
+  (requires True)
+  (ensures getBytes (ls1 @ ls2) i n = (getBytes ls1 i (sum_length ls1 - i) ^ getBytes ls2 0 (i + n - sum_length ls1)))
+  [SMTPat (getBytes (ls1 @ ls2) i n)]
+let lemma_getBytes ls1 ls2 i n = admit ()
+
+val lemma_getBytes_2 : ls:list cbytes -> Lemma
+  (requires True)
+  (ensures getBytes ls 0 (sum_length ls) = string_concat ls)
+  [SMTPat (getBytes ls 0 (sum_length ls))]
+let lemma_getBytes_2 ls = admit ()
 
 val get_cbytes : b:bytes -> Tot (r:cbytes{String.length r = b.length})
 let get_cbytes (b:bytes) =
@@ -117,16 +160,9 @@ let get_cbytes (b:bytes) =
     else
       getBytes b.bl b.index b.length
 
-val sum_length_append : a:list string -> b:list string -> Lemma (sum_length (a @ b) = sum_length a + sum_length b)
-let rec sum_length_append a b =
-  match a with
-    | [] -> ()
-    | x :: a' -> sum_length_append a' b
-
 val op_At_Bar: bytes -> bytes -> Tot bytes
 let op_At_Bar (a:bytes) (b:bytes) =
     if a.length + a.index = a.max && b.index = 0 then
-      let _ = sum_length_append a.bl b.bl in
       {bl = (a.bl @ b.bl);
        length = a.length + b.length;
        index = a.index;
@@ -136,65 +172,29 @@ let op_At_Bar (a:bytes) (b:bytes) =
        length = a.length + b.length;
        index = 0;
        max = a.length + b.length}
+(* let op_AtBar = op_At_Bar *)
 
-let op_AtBar = op_At_Bar
 
 val lemma_op_At_Bar : a:bytes -> b:bytes -> Lemma (get_cbytes (a @| b) = (get_cbytes a ^ get_cbytes b))
-
-assume val append_empty : s:string -> Lemma 
-  (requires True)
-  (ensures (s ^ "" = s))
-  [SMTPat (s ^ "")]
-assume val empty_append : s:string -> Lemma 
-  (requires True)
-  (ensures ("" ^ s = s))
-  [SMTPat ("" ^ s)]
-assume val append_assoc : a:string -> b:string -> c:string -> Lemma 
-  (requires True)
-  (ensures ((a ^ (b ^ c)) = ((a ^ b) ^ c)))
-  [SMTPat (a ^ (b ^ c))]
-
-val concat_append : a:list string -> b:list string -> Lemma (string_concat (a @ b) = (string_concat a ^ string_concat b))
-let rec concat_append a b =
-  match a with
-    | [] -> 
-    ()
-    | x :: xs -> 
-    let _ = concat_append xs b in
-    ()
-
-(*
-assume val append_empty : unit -> Lemma (forall s. s ^ "" = s)
-assume Append_empty : forall s. s ^ "" = s
-assume val empty_append : unit -> Lemma (forall s. ("" ^ s) = s)
-assume Empty_append: forall s. "" ^ s = s
-assume val append_assoc : unit -> Lemma (forall a b c. (a ^ (b ^ c)) = ((a ^ b) ^ c))
-assume Append_assoc : forall a b c. (a ^ (b ^ c)) = ((a ^ b) ^ c)
-
-val concat_append : a:list string -> b:list string -> Lemma (string_concat (a @ b) = (string_concat a ^ string_concat b))
-let rec concat_append a b =
-  match a with
-    | [] -> 
-    let _ = empty_append () in
-    ()
-    | x :: xs -> 
-    let _ = append_assoc () in
-    let _ = concat_append xs b in
-    ()
-*)
-
 let lemma_op_At_Bar a b =
   let c = a @| b in
   if a.length + a.index = a.max && b.index = 0 then
     if a.index = 0 then
-      admit ()
+      if b.length = b.max then
+        ()
+      else
+        ()
     else
-      admit ()
+      if b.length = b.max then
+        ()
+      else
+        ()
   else
     if c.length = c.max && c.index = 0 then
       ()
     else
       exfalso ()
+      
     
 let abytes (ba:cbytes) =
     {bl = [ba]; length = String.length ba; index = 0; max = String.length ba}
@@ -283,12 +283,13 @@ let split b i =
 val lemma_split_1 : s:bytes -> i:nat{i <= length s} -> Lemma (let x = split s i in length (fst x) = i && length (snd x) = length s - i)
 let lemma_split_1 s i = ()
 
-val lemma_split2 : s:bytes -> i:nat{i <= length s} -> Lemma (let x = split s i in bytes_eq ((fst x) @| (snd x)) s)
-let lemma_split2 s i = ()
 
-val split_eq : s:bytes -> i:nat{i <= length s} -> Tot (x:(bytes * bytes){length (fst x) = i && length (snd x) = length s - i /\ bytes_eq ((fst x) @| (snd x)) s})
-let split_eq = 
-  split
+(* val lemma_split2 : s:bytes -> i:nat{i <= length s} -> Lemma (let x = split s i in bytes_eq ((fst x) @| (snd x)) s) *)
+(* let lemma_split2 s i = () *)
+
+(* val split_eq : s:bytes -> i:nat{i <= length s} -> Tot (x:(bytes * bytes){length (fst x) = i && length (snd x) = length s - i /\ bytes_eq ((fst x) @| (snd x)) s}) *)
+(* let split_eq =  *)
+(*   split *)
 
 (* val split_eq: s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Pure *)
 (*   (x:(bytes * bytes){length (fst x) = i && length (snd x) = length s - i}) *)
