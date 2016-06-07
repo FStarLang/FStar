@@ -10,8 +10,10 @@ let within_int64 (i:int) =
     min_value_int <= i
     && i <= max_value_int
 
-private type int64 =
-  | Int64 : i:int{within_int64 i} -> int64
+private type int64' =
+  | Int64 : i:int{within_int64 i} -> int64'
+
+type int64 = int64'
 
 val min_value : int64
 let min_value = Int64 min_value_int
@@ -22,7 +24,7 @@ let max_value = Int64 max_value_int
 val as_int: i:int64 -> GTot int
 let as_int (Int64 i) = i
 
-type nat64 = x:int64{Prims.op_GreaterThanOrEqual (as_int x) 0}
+type nat63 = x:int64{Prims.op_GreaterThanOrEqual (as_int x) 0}
 
 //a ?+ b may overflow
 //must be marked abstract because the body has an intentional admit
