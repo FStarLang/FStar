@@ -137,7 +137,12 @@ and mllb = {
     print_typ:bool;
 }
 
-and mlletbinding = bool * list<mllb>
+and mlletbinding = mlletflavor * list<mllb>
+
+and mlletflavor =
+  | Rec
+  | Mutable // C backend only
+  | NoLetQualifier
 
 type mltybody =
 | MLTD_Abbrev of mlty

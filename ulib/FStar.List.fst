@@ -197,3 +197,16 @@ let filter_map f l =
             filter_map acc tl
   in
   filter_map [] l
+
+let index f l =
+  let rec index i f l =
+    match l with
+    | [] ->
+        failwith "List.index: not found"
+    | hd :: tl ->
+        if f hd then
+          i
+        else
+          index (i + 1) f tl
+  in
+  index 0 f l

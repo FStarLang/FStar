@@ -1120,7 +1120,7 @@ in (_163_385)::_163_384))
 in (_163_387)::_163_386))
 in (FStar_Format.combine FStar_Format.hardline _163_388)))
 end))
-and doc_of_lets : FStar_Extraction_ML_Syntax.mlsymbol  ->  (Prims.bool * Prims.bool * FStar_Extraction_ML_Syntax.mllb Prims.list)  ->  FStar_Format.doc = (fun currentModule _73_543 -> (match (_73_543) with
+and doc_of_lets : FStar_Extraction_ML_Syntax.mlsymbol  ->  (FStar_Extraction_ML_Syntax.mlletflavor * Prims.bool * FStar_Extraction_ML_Syntax.mllb Prims.list)  ->  FStar_Format.doc = (fun currentModule _73_543 -> (match (_73_543) with
 | (rec_, top_level, lets) -> begin
 (
 
@@ -1143,7 +1143,7 @@ in (
 let ty_annot = if (not (pt)) then begin
 (FStar_Format.text "")
 end else begin
-if ((FStar_Extraction_ML_Util.codegen_fsharp ()) && (rec_ || top_level)) then begin
+if ((FStar_Extraction_ML_Util.codegen_fsharp ()) && ((rec_ = FStar_Extraction_ML_Syntax.Rec) || top_level)) then begin
 (match (tys) with
 | (Some (_::_, _)) | (None) -> begin
 (FStar_Format.text "")
@@ -1186,7 +1186,7 @@ in (FStar_Format.reduce1 _163_404))))))
 end))
 in (
 
-let letdoc = if rec_ then begin
+let letdoc = if (rec_ = FStar_Extraction_ML_Syntax.Rec) then begin
 (let _163_408 = (let _163_407 = (FStar_Format.text "let")
 in (let _163_406 = (let _163_405 = (FStar_Format.text "rec")
 in (_163_405)::[])

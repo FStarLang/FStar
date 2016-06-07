@@ -565,7 +565,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
         let ty_annot =
             if (not pt) then text ""
             else
-            if Util.codegen_fsharp () && (rec_ || top_level) //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
+            if Util.codegen_fsharp () && (rec_ = Rec || top_level) //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
             then match tys with
                     | Some (_::_, _) | None -> //except, emitting binders for type variables in F# sometimes also requires emitting type constraints; which is not yet supported
                       text ""
@@ -587,7 +587,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
             else text "" in
         reduce1 [text (idsym name); reduce1 ids; ty_annot; text "="; e] in
 
-    let letdoc = if rec_ then reduce1 [text "let"; text "rec"] else text "let" in
+    let letdoc = if rec_ = Rec then reduce1 [text "let"; text "rec"] else text "let" in
 
     let lets = List.map for1 lets in
     let lets = List.mapi (fun i doc ->

@@ -63,3 +63,4 @@ val contains<'_17778 when '_17778 : equality>  : '_17778 -> (list<'_17778>) -> T
 val unzip : (list<('_36948 * '_36947)>) -> Tot<((list<'_36948>) * (list<'_36947>))>
 val unique<'a when 'a:equality> : list<'a> -> list<'a>
 val filter_map: ('a -> option<'b>) -> list<'a> -> list<'b>
+val index<'a when 'a:equality> : ('a -> bool) -> list<'a> -> int

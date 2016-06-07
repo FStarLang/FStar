@@ -293,3 +293,5 @@ let filter_map f l =
             filter_map acc tl
   in
   filter_map [] l
+
+let index f l = List.findIndex f l

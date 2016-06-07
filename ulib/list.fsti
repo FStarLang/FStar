@@ -99,3 +99,4 @@ val unzip3T : list ('_40328 * '_40327 * '_40326) -> Tot (list '_40328 * list '_4
    polymorphic comparison. *)
 val unique: list 'a -> list 'a
 val filter_map: ('a -> option 'b) -> list 'a -> list 'b
+val index: ('a -> bool) -> list 'a -> int
