@@ -10,6 +10,7 @@ let (one:uint64) = Stdint.Uint64.one
 let (ones:uint64) = Stdint.Uint64.pred zero
 let (zero_wide:uint128) = Stdint.Uint128.zero
 let (one_wide:uint128) = Stdint.Uint128.one
+let (ones_wide:uint128) = Stdint.Uint128.pred zero_wide
 
 let bits = 64
 
@@ -45,11 +46,11 @@ let to_uint64 s = to_usint n s
  *)
 
 let add_wide a b = Stdint.Uint128.add a b
-let add_mod_wide a b = add a b
+let add_mod_wide a b = Stdint.Uint128.add a b
 let sub_wide a b = Stdint.Uint128.sub a b
-let sub_mod_wide a b = sub a b
+let sub_mod_wide a b = Stdint.Uint128.sub a b
 let mul_wide_wide a b = Stdint.Uint128.mul a b
-let mul_mod_wide a b = mul a b
+let mul_mod_wide a b = Stdint.Uint128.mul a b
 let div_wide a b = Stdint.Uint128.div a b
 let rem_wide a b = Stdint.Uint128.rem a b
 
@@ -103,7 +104,7 @@ let op_Hat_Greater_Greater_Greater = rotate_right_wide
 
 let wide_to_limb s = Stdint.Uint64.of_uint128 s
 let limb_to_wide s = Stdint.Uint128.of_uint64 s
-                                               
+
 let eq x y =
   let a = Stdint.Uint64.lognot (Stdint.Uint64.logxor x y) in
   let a = Stdint.Uint64.logand a (Stdint.Uint64.shift_left a 32) in
@@ -124,6 +125,9 @@ let gte x y =
 
 let of_string s = Stdint.Uint64.of_string s
 let of_int s = Stdint.Uint64.of_int s
-                                                             
+let uint128_of_int s = Stdint.Uint128.of_int s
+let uint128_of_string s = Stdint.Uint128.of_string s
 let to_string s = Stdint.Uint64.to_string s
 let to_int s = Stdint.Uint64.to_int s
+let uint128_to_string s = Stdint.Uint128.to_string s
+let uint128_to_int s = Stdint.Uint128.to_int s

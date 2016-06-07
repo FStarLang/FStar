@@ -1,28 +1,28 @@
 open Chacha
 open Char
 open SBuffer
-open FStar_SBytes
+open SBytes
        
-let key = {content = Array.init 32 (fun x -> x); idx = 0; length = 32 }
+let key = {content = Array.init 32 (fun x -> (SInt_UInt8.of_int x)); idx = 0; length = 32 }
 
 let nonce =
-  let n = create 0 12 in
-  upd n 7 0x4a;
+  let n = create SInt_UInt8.zero 12 in
+  upd n 7 (SInt_UInt8.of_int 0x4a);
   n
 
-let counter = 1
+let counter = SInt_UInt32.one
 
 let from_string s =
-  let b = create 0 (String.length s) in
+  let b = create SInt_UInt8.zero (String.length s) in
   for i = 0 to (String.length s - 1) do
-    upd b i (code (String.get s i))
+    upd b i (SInt_UInt8.of_int (code (String.get s i)))
   done;
   b
                 
-let print b =
+let print (b:sbytes) =
   let s = ref "" in
   for i = 0 to b.length - 1 do
-    let s' = Printf.sprintf "%X" (index b i)  in
+    let s' = Printf.sprintf "%X" (SInt_UInt8.to_int (index b i))  in
     let s' = if String.length s' = 1 then "0" ^ s' else s' in 
     s := !s ^ s';
   done;
@@ -56,7 +56,7 @@ let expected = "  000  6e 2e 35 9a 25 68 f9 80 41 ba 07 28 dd 0d 69 81  n.5.%h..
   112  87 4d\n"
 
 let _ =
-  let ciphertext = create 0 114 in
+  let ciphertext = create SInt_UInt8.zero 114 in
   (*  let state = SBuffer.create 0 0 16 in *)
   chacha20_encrypt ciphertext key counter nonce plaintext 114;
   print_string "Test key:\n";

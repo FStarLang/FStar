@@ -239,11 +239,23 @@ let guard_on_element problem x phi =
         | None ->   U.mk_forall x phi
         | Some e -> Subst.subst [NT(x,e)] phi
 let explain env d s =
-    Util.format4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n"
+    if Env.debug env <| Options.Other "ExplainRel"
+    then Util.format4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n"
                        (Range.string_of_range <| p_loc d)
                        (prob_to_string env d)
                        (p_reason d |> String.concat "\n\t>")
                        s
+    else let d = maybe_invert_p d in 
+         let rel = match p_rel d with 
+            | EQ -> "equal to"
+            | SUB -> "a subtype of"
+            | _ -> failwith "impossible" in
+         let lhs, rhs = match d with 
+            | TProb tp -> Print.term_to_string tp.lhs, Print.term_to_string tp.rhs
+            | CProb cp -> Print.comp_to_string cp.lhs, Print.comp_to_string cp.rhs in
+         Util.format3 "%s is not %s the expected type %s" lhs rel rhs
+                
+                    
 (* ------------------------------------------------*)
 (* </prob ops>                                     *)
 (* ------------------------------------------------*)

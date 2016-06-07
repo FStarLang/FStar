@@ -4,30 +4,12 @@ include $(FSTAR_HOME)/ulib/ml/Makefile.include
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_DEFAULT_ARGS) # from the included Makefile
 
 OPTIONS_VER=--universes
-OPTIONS_COMPILE=--lax --codegen C
 OPTIONS_OCAML=--lax --codegen OCaml --universes --no_location_info --use_native_int
-
-# C variables
-CHACHA=chacha
-POLY=poly
-BIGNUM=bignum
-CURVE=curve25519
-AES=aes
-SHA=sha256
 
 CHACHA_ODIR=chacha20
 POLY_ODIR=poly1305
-BIGNUM_ODIR=bignum_library
 CURVE_ODIR=curve25519
 AES_ODIR=aes
-
-CHACHA_C=Chacha.c test_chacha.c
-POLY_C=Parameters.c Bignum.c Poly.c test_poly.c
-BIGNUM_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c Bignum_Fscalar.c Bignum_Fproduct.c Bignum_Modulo.c Bignum_Core.c test_bignum.c
-CURVE_C=Bignum_Parameters.c Bignum_Fsum.c Bignum_FsumWide.c Bignum_Fdifference.c Bignum_Fscalar.c Bignum_Fproduct.c Bignum_Modulo.c Bignum_Core.c Curve_Point.c Curve_AddAndDouble.c Curve_Ladder.c test_curve.c
-AES_C=Crypto_AES.c test_aes.c
-
-COMPILE=ocamlopt -ccopt -O3 fstarlib.c
 
 # OCaml variables
 OCAMLOPT := $(OCAMLOPT) -I $(ULIB_ML)/native_int
@@ -37,67 +19,46 @@ REALIZED_MODULE=$(subst _,., $(REALIZED))
 REALIZED_ML=$(addsuffix .mli,$(REALIZED_MLI)) $(addsuffix .ml,$(REALIZED_MLI) $(REALIZED))
 NO_CODEGEN=$(addprefix --no_extract , SInt $(REALIZED_MODULE))
 
+CHACHA_EXTRACTED=Chacha.ml
 POLY_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
-CHACHA_OCAML=SInt_UInt8.ml SInt_UInt32.ml SBuffer.ml SBytes.ml Chacha.ml
 CURVE_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Bignum_Parameters.ml Bignum_Bigint.ml Bignum_Fsum.ml Bignum_FsumWide.ml Bignum_Fdifference.ml Bignum_Fscalar.ml Bignum_Fproduct.ml Bignum_Modulo.ml Bignum_Core.ml Curve_Point.ml Curve_AddAndDouble.ml Curve_Ladder.ml
+AES_EXTRACTED=Crypto_AES.ml
 
-.PHONY: low-star-ver chacha-ver chacha-test poly-ver poly-test sha-ver sha-ml
+.PHONY: lib-ver chacha-ver chacha-ml poly-ver poly-ml
 
-all: chacha-test poly-test curve-test aes-test
+all: lib-ver \
+chacha-ver \
+chacha-ml \
+poly-ver \
+poly-ml \
+curve-lax \
+curve-ml
 
-poly: #poly-ver poly-ml
+# Verification target for the low-level libraries of F* in universes
+lib-ver:
+	$(FSTAR) $(OPTIONS_VER) sbuffer.fst SInt.UInt8.fst SInt.UInt32.fst SInt.UInt63.fst SBytes.fst
+
+# Verification target for CHACHA20
+chacha-ver: 
+	$(FSTAR) $(OPTIONS_VER) chacha.fst
+
+# OCaml extracton of CHACHA20
+chacha-ml:
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml PRIMS_DIR=native_int
+	mkdir -p $(CHACHA_ODIR)
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) chacha.fst --odir $(CHACHA_ODIR) 
+	$(OCAMLOPT) -I ml -I $(CHACHA_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
+	  $(addprefix $(CHACHA_ODIR)/,$(CHACHA_EXTRACTED)) ml/test_chacha20.ml -o test_chacha20.exe 
+	./test_chacha20.exe
+
+# Verification target for POLY1305
+poly-ver:
 	$(FSTAR) --universes sbuffer.fst SInt.UInt8.fst SInt.UInt32.fst SInt.UInt63.fst SBytes.fst 
 	$(FSTAR) --universes parameters.fst bigint.fst
 	$(FSTAR) --universes bignum.fst
 	$(FSTAR) --universes poly.fst
-	@echo ""
-	@echo " Extracting POLY1305"
-	@mkdir -p $(POLY_ODIR)
-	$(FSTAR) $(OPTIONS_COMPILE) --odir $(POLY_ODIR) $^
-	@cp ./c/*.c ./c/*.h $(POLY_ODIR)
-	@echo ""
-	@echo " Compiling POLY1305"
-	cd $(POLY_ODIR) && $(COMPILE) $(POLY_C) -o $(POLY)
-	./$(POLY_ODIR)/$(POLY)
 
-low-star-ver:
-	$(FSTAR) $(OPTIONS_VER) sbuffer.fst SInt.UInt8.fst SInt.UInt32.fst SInt.UInt63.fst SBytes.fst
-
-chacha-ver: chacha.fst
-	$(FSTAR) $(OPTIONS_VER) $^ --z3timeout 50 $(addprefix --verify_module , Chacha)
-
-chacha-test: chacha.fst
-	@echo ""
-	@echo " Extracting CHACHA20"
-	@mkdir -p $(CHACHA_ODIR)
-	$(FSTAR) $(OPTIONS_COMPILE) --odir $(CHACHA_ODIR) $^
-	@cp ./c/*.c ./c/*.h $(CHACHA_ODIR)
-	@echo ""
-	@echo " Compiling CHACHA20"
-	cd $(CHACHA_ODIR) && $(COMPILE) $(CHACHA_C) -o $(CHACHA)
-	./$(CHACHA_ODIR)/$(CHACHA)
-
-chacha-ml:
-	mkdir -p $(CHACHA_ODIR)_ml
-	$(FSTAR) $(OPTIONS_OCAML) $(FSTAR_LIB) chacha.fst --odir $(CHACHA_ODIR)_ml
-	cp ./ml/*.ml $(CHACHA_ODIR)_ml
-	cd $(CHACHA_ODIR)_ml && $(OCAML) $(OCAML_INCLUDE_PATHS) $(OCAML_LIB) $(CHACHA_OCAML) test_chacha20.ml
-	$(CHACHA_ODIR)_ml/a.out
-
-poly-ver: axioms.fst intlib.fst IntLibLemmas.fst sbuffer.fst parameters.fst bigint.fst bignum.fst poly.fst
-	$(FSTAR) --universes $^ $(addprefix --verify_module , IntLib IntLibLemma Parameters SBuffer Bigint Bignum Poly)
-
-poly-test: poly.fst
-	@echo ""
-	@echo " Extracting POLY1305"
-	@mkdir -p $(POLY_ODIR)
-	$(FSTAR) $(OPTIONS_COMPILE) --odir $(POLY_ODIR) $^
-	@cp ./c/*.c ./c/*.h $(POLY_ODIR)
-	@echo ""
-	@echo " Compiling POLY1305"
-	cd $(POLY_ODIR) && $(COMPILE) $(POLY_C) -o $(POLY)
-	./$(POLY_ODIR)/$(POLY)
-
+# OCaml extracton of POLY1305
 poly-ml:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml PRIMS_DIR=native_int
 	mkdir -p $(POLY_ODIR)
@@ -106,55 +67,11 @@ poly-ml:
 	  $(addprefix $(POLY_ODIR)/,$(POLY_EXTRACTED)) ml/test_poly1305.ml -o test_poly1305.exe 
 	./test_poly1305.exe
 
-poly-ml-compile:
-	$(OCAMLOPT) -I ml -I $(POLY_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
-	  $(addprefix $(POLY_ODIR)/,$(POLY_EXTRACTED)) ml/test_poly1305.ml -o test_poly1305.exe 
-	./test_poly1305.exe
-
-bignum-ver:
-	$(FSTAR) $(OPTIONS_VER) Bignum.Core.fst --lax
-
-bignum-test: Bignum.Core.fst
-	@echo ""
-	@echo " Extracting BIGNUM library "
-	@mkdir -p $(BIGNUM_ODIR)
-	$(FSTAR) $(OPTIONS_COMPILE) --odir $(BIGNUM_ODIR) $^
-	@cp ./c/*.c ./c/*.h $(BIGNUM_ODIR)
-	@echo ""
-	@echo " Compiling BIGNUM"
-	cd $(BIGNUM_ODIR) && $(COMPILE) $(BIGNUM_C) -o $(BIGNUM)
-	./$(BIGNUM_ODIR)/$(BIGNUM)
-
-bignum-debug: Bignum.Core.fst
-	@cp ./c/*.c ./c/*.h $(BIGNUM_ODIR)
-	@echo ""
-	@echo " Compiling BIGNUM"
-	cd $(BIGNUM_ODIR) && $(COMPILE) $(BIGNUM_C) -o $(BIGNUM)
-	./$(BIGNUM_ODIR)/$(BIGNUM)
-
-
-# Curve targets
-curve-ver:
+# Curve25519 lax typechecking
+curve-lax:
 	$(FSTAR) $(OPTIONS_VER) Curve.Ladder.fst --lax
 
-curve-test: Curve.Ladder.fst
-	@echo ""
-	@echo " Extracting CURVE library "
-	@mkdir -p $(CURVE_ODIR)
-	$(FSTAR) $(OPTIONS_COMPILE) --odir $(CURVE_ODIR) $^
-	@cp ./c/*.c ./c/*.h $(CURVE_ODIR)
-	@echo ""
-	@echo " Compiling CURVE"
-	cd $(CURVE_ODIR) && $(COMPILE) $(CURVE_C) -o $(CURVE)
-	./$(CURVE_ODIR)/$(CURVE)
-
-curve-debug: Curve.Ladder.fst
-	@cp ./c/*.c ./c/*.h $(CURVE_ODIR)
-	@echo ""
-	@echo " Compiling CURVE"
-	cd $(CURVE_ODIR) && $(COMPILE) $(CURVE_C) -o $(CURVE)
-	./$(CURVE_ODIR)/$(CURVE)
-
+# Curve25519 extraction to OCaml
 curve-ml:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml PRIMS_DIR=native_int
 	mkdir -p $(CURVE_ODIR)
@@ -168,25 +85,13 @@ curve-ml:
 aes-ver:
 	$(FSTAR) $(OPTIONS_VER) Crypto.AES.fst --lax
 
-aes-test: Crypto.AES.fst
-	@echo ""
-	@echo " Extracting AES library "
-	@mkdir -p $(AES_ODIR)
-	$(FSTAR) $(OPTIONS_COMPILE) --odir $(AES_ODIR) $^
-	@cp ./c/*.c ./c/*.h $(AES_ODIR)
-	@echo ""
-	@echo " Compiling AES"
-	cd $(AES_ODIR) && $(COMPILE) $(AES_C) -o $(AES)
-	./$(AES_ODIR)/$(AES)
-
-aes-debug: Crypto.AES.fst
-	@cp ./c/*.c ./c/*.h $(AES_ODIR)
-	@echo ""
-	@echo " Compiling AES"
-	cd $(AES_ODIR) && $(COMPILE) $(AES_C) -o $(AES)
-	./$(AES_ODIR)/$(AES)
-
-
+aes-ml:
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml PRIMS_DIR=native_int
+	mkdir -p $(AES_ODIR)
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.AES.fst --odir $(AES_ODIR) 
+	$(OCAMLOPT) -I ml -I $(AES_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
+	  $(addprefix $(AES_ODIR)/,$(AES_EXTRACTED)) ml/test_aes.ml -o test_aes.exe
+	./test_aes.exe
 
 # Cleaning
 clean:

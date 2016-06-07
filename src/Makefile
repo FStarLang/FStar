@@ -321,8 +321,7 @@ regressions:
 	make -C ../ulib
 	make -C ../examples
 	make -C ../examples/hello ocaml
-	make -C ../contrib/Platform/ml/
-	make -C ../contrib/CoreCrypto/ml/ all test
+	make -C ../ucontrib/CoreCrypto/ml/ test
 	make -C ../examples/crypto clean rpc-test cnt-test
 	make -C ../examples/wysteria a.out distclean
 

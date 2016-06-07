@@ -17,26 +17,25 @@ let rec bitweight t i =
   | 0 -> 0
   | _ -> t i + bitweight t (i-1)
 			      
-let rnd_bigint_donna_64 () =
-  let a = SBuffer.create 0 one 5 in
-  let b = ref zero_big_int in
-  for i = 0 to 4 do
-    let r = (Random.int64 (Int64.of_int 0x7ffffffffffff)) in
-    upd 64 a i (Uint64.of_int64 r);
-    b := add_big_int !b (mult_int_big_int (Int64.to_int r) (power_int_positive_int 2 (bitweight t i)));
-  done;
-  print_string "\n";
-  (a, !b)
+(* let rnd_bigint_donna_64 () = *)
+(*   let a = SBuffer.create 0 one 5 in *)
+(*   let b = ref zero_big_int in *)
+(*   for i = 0 to 4 do *)
+(*     let r = (Random.int64 (Int64.of_int 0x7ffffffffffff)) in *)
+(*     upd 64 a i (Uint64.of_int64 r); *)
+(*     b := add_big_int !b (mult_int_big_int (Int64.to_int r) (power_int_positive_int 2 (bitweight t i))); *)
+(*   done; *)
+(*   print_string "\n"; *)
+(*   (a, !b) *)
         
 let print_bigint_64 b =
   let mask = Uint64.of_string "0x3ffffff" in
   for i = 0 to norm_length-1 do
-    print_string (Uint64.to_string (index 64 b i));
+    print_string (SInt_UInt64.to_string (index 64 b i));
     print_string " ";
   done;
   print_string "\n"
-	       
-   
+	          
 let print_bigint_donna_128 b =
   for i = 0 to Array.length b.content - 1 do
     print_string (Uint128.to_string (index 128 b i));
@@ -56,9 +55,9 @@ let modulo b =
   mod_big_int b prime
 
 let format_secret s =
-  upd 8 s 0 ((index 8 s 0) land (248));
-  upd 8 s 31 ( (index 8 s 31) land (127));
-  upd 8 s 31 ((index 8 s 31) lor (64) land 255)
+  upd 8 s 0 (SInt_UInt8.logand (index 8 s 0) (SInt_UInt8.of_int 248));
+  upd 8 s 31 (SInt_UInt8.logand (index 8 s 31) (SInt_UInt8.of_int 127));
+  upd 8 s 31 (SInt_UInt8.logand (SInt_UInt8.logor (index 8 s 31) (SInt_UInt8.of_int 64)) (SInt_UInt8.of_int 255))
 
 let scalar1 = "a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5a18506a2244ba449ac4"
 let scalar2 = "4b66e9d4d1b4673c5ad22691957d6af5c11b6421e0ea01d42ca4169e7918ba0d"
@@ -67,7 +66,7 @@ let input1 = "e6db6867583030db3594c1a424b15f7c726624ec26b3353b10a903a6d0ab1c4c"
 let input2 = "e5210f12786811d3f4b7959d0538ae2c31dbe7106fc03c3efc4cd549c715a493"
 		      
 let get_input_scalar scalar_string =
-  let bytes = Array.init 32 (fun i -> int_of_string ("0x" ^ (String.sub scalar_string (2*i) 2))) in
+  let bytes = Array.init 32 (fun i -> SInt_UInt8.of_string ("0x" ^ (String.sub scalar_string (2*i) 2))) in
   {content = bytes; idx=0; length = 32}
 	       
 let get_input input_string =
@@ -83,16 +82,16 @@ let get_input input_string =
        a.(idx) <- Uint64.add a.(idx) (Uint64.shift_left (Uint64.of_int b.(i)) (shift*8));
        fill a b (i-1) in
   fill input64 bytes 32;
-  let input51 = Array.make 5 Stdint.Uint64.zero in
+  let input51 = Array.make 5 SInt_UInt64.zero in
   let mask = Uint64.of_string "0x7ffffffffffff" in
-  input51.(0) <- Uint64.logand input64.(0) mask;
-  input51.(1) <- Uint64.add (Uint64.logand (Uint64.shift_right input64.(0) 51) mask)
-			    (Uint64.logand (Uint64.shift_left (input64.(1)) 13) mask);
-  input51.(2) <- Uint64.add (Uint64.logand (Uint64.shift_right input64.(1) 38) mask)
-			    (Uint64.logand (Uint64.shift_left (input64.(2)) 26) mask);
-  input51.(3) <- Uint64.add (Uint64.logand (Uint64.shift_right input64.(2) 25) mask)
-			    (Uint64.logand (Uint64.shift_left (input64.(3)) 39) mask);
-  input51.(4) <- Uint64.logand (Uint64.shift_right input64.(3) 12) mask;
+  input51.(0) <- SInt_UInt64.of_string (Uint64.to_string (Uint64.logand input64.(0) mask));
+  input51.(1) <- SInt_UInt64.of_string (Uint64.to_string (Uint64.add (Uint64.logand (Uint64.shift_right input64.(0) 51) mask)
+			    (Uint64.logand (Uint64.shift_left (input64.(1)) 13) mask)));
+  input51.(2) <- SInt_UInt64.of_string (Uint64.to_string (Uint64.add (Uint64.logand (Uint64.shift_right input64.(1) 38) mask)
+			    (Uint64.logand (Uint64.shift_left (input64.(2)) 26) mask)));
+  input51.(3) <- SInt_UInt64.of_string (Uint64.to_string (Uint64.add (Uint64.logand (Uint64.shift_right input64.(2) 25) mask)
+			    (Uint64.logand (Uint64.shift_left (input64.(3)) 39) mask)));
+  input51.(4) <- SInt_UInt64.of_string (Uint64.to_string (Uint64.logand (Uint64.shift_right input64.(3) 12) mask));
   {content = input51; idx = 0; length = 5}
 
 let get_input2 input_string =
@@ -102,25 +101,25 @@ let get_input2 input_string =
     match i with
     | 0 -> Uint64.zero | _ -> Uint64.add (Uint64.shift_left (Uint64.of_int b.(idx+i-1)) (8*(i-1)))
 				(mk64 b idx (i-1)) in
-  let input51 = Array.make 5 Uint64.zero in
-  input51.(0) <- Uint64.logand (mk64 bytes 0 8) mask;
-  input51.(1) <- Uint64.logand (Uint64.shift_right (mk64 bytes 6 8) 3) mask;
-  input51.(2) <- Uint64.logand (Uint64.shift_right (mk64 bytes 12 8) 6) mask;
-  input51.(3) <- Uint64.logand (Uint64.shift_right (mk64 bytes 19 8) 1) mask;
-  input51.(4) <- Uint64.logand (Uint64.shift_right (mk64 bytes 24 8) 12) mask;
+  let input51 = Array.make 5 SInt_UInt64.zero in
+  input51.(0) <- SInt_UInt64.of_string (Uint64.to_string (Uint64.logand (mk64 bytes 0 8) mask));
+  input51.(1) <- SInt_UInt64.of_string (Uint64.to_string (Uint64.logand (Uint64.shift_right (mk64 bytes 6 8) 3) mask));
+  input51.(2) <- SInt_UInt64.of_string (Uint64.to_string (Uint64.logand (Uint64.shift_right (mk64 bytes 12 8) 6) mask));
+  input51.(3) <- SInt_UInt64.of_string (Uint64.to_string (Uint64.logand (Uint64.shift_right (mk64 bytes 19 8) 1) mask));
+  input51.(4) <- SInt_UInt64.of_string (Uint64.to_string (Uint64.logand (Uint64.shift_right (mk64 bytes 24 8) 12) mask));
   {content = input51; idx = 0; length = 5}
          
 let get_output output =
   let input51 = output.content in
-  let input64 = Array.make 5 Uint64.zero in
-  input64.(0) <- Uint64.add input51.(0) (Uint64.shift_left input51.(1) 51);
-  input64.(1) <- Uint64.add (Uint64.shift_right input51.(1) 13) (Uint64.shift_left input51.(2) 48);
-  input64.(2) <- Uint64.add (Uint64.shift_right input51.(2) 26) (Uint64.shift_left input51.(3) 25);
-  input64.(3) <- Uint64.add (Uint64.shift_right input51.(3) 39) (Uint64.shift_left input51.(4) 12);
+  let input64 = Array.make 5 SInt_UInt64.zero in
+  input64.(0) <- SInt_UInt64.add input51.(0) (SInt_UInt64.shift_left input51.(1) 51);
+  input64.(1) <- SInt_UInt64.add (SInt_UInt64.shift_right input51.(1) 13) (SInt_UInt64.shift_left input51.(2) 48);
+  input64.(2) <- SInt_UInt64.add (SInt_UInt64.shift_right input51.(2) 26) (SInt_UInt64.shift_left input51.(3) 25);
+  input64.(3) <- SInt_UInt64.add (SInt_UInt64.shift_right input51.(3) 39) (SInt_UInt64.shift_left input51.(4) 12);
   let s = ref "" in
   for i = 0 to 3 do
     for j = 0 to 7 do
-      let s' = (Uint8.to_string_hex (Uint8.of_uint64 (Uint64.shift_right input64.(i) (j*8)))) in
+      let s' = (Uint8.to_string_hex (Uint8.of_uint64 (Uint64.of_string (SInt_UInt64.to_string (SInt_UInt64.shift_right input64.(i) (j*8)))))) in
       let s' = String.sub s' 2 (String.length s' - 2) in
       let s' = if String.length s' = 2 then s' else ("0" ^ s') in
       s := !s ^ s';
@@ -142,7 +141,7 @@ let test4 () =
   let scalar = get_input_scalar scalar1 in
   format_secret scalar;
   print_string "Input scalar:\n";
-  Array.iter (fun x -> print_string ((string_of_int x) ^ " ")) (scalar.content);
+  Array.iter (fun x -> print_string ((SInt_UInt8.to_string x) ^ " ")) (scalar.content);
   print_string "\n";
 
   (* Create basepoint *)

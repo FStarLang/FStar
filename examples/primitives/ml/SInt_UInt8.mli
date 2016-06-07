@@ -29,6 +29,9 @@ val rotate_right:uint8 -> int -> uint8
 val op_Hat_Plus: uint8 -> uint8 -> uint8
 val op_Hat_Subtraction: uint8 -> uint8 -> uint8
 val op_Hat_Star: uint8 -> uint8 -> uint8
+val op_Hat_Plus_Percent: uint8 -> uint8 -> uint8
+val op_Hat_Subtraction_Percent: uint8 -> uint8 -> uint8
+val op_Hat_Star_Percent: uint8 -> uint8 -> uint8
 val op_Hat_Slash:uint8 -> uint8 -> uint8
 val op_Hat_Less_Less:uint8 -> int -> uint8
 val op_Hat_Greater_Greater:uint8 -> int -> uint8

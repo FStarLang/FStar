@@ -1207,19 +1207,24 @@ module TestEcdhke = struct
     string_of_bytes shared1 = string_of_bytes shared2
 end
 
-module TestCertLoad = struct
-   let test () =
-      match cert_load_chain "test_chain.pem" "test_client.key" with
-      | None -> false
-      | Some (k, chain) ->
-         Printf.printf "Parsed a chain of %d elements.\n" (List.length chain);
-         let tbs = bytes_of_string "hello world" in
-         match cert_sign k RSASIG SHA256 tbs with
-         | Some sigv ->
-           let ps = BatBase64.str_encode (string_of_bytes sigv) in
-           Printf.printf "Got signature payload, checking against certificate...\n%s\n" ps;
-           cert_verify_sig (List.hd chain) RSASIG SHA256 tbs sigv
-         | None -> false
+module TestCertAndSign = struct
+  let test mode () =
+    match load_chain ("pki/" ^ mode ^ "/certificates/" ^ mode ^ ".cert.mitls.org.crt") with
+    | None -> false
+    | Some chain ->
+       if validate_chain chain true (Some (mode ^ ".cert.mitls.org"))
+         ("pki/" ^ mode ^ "/certificates/ca.crt") then
+        begin
+        match load_key ("pki/" ^ mode ^ "/certificates/" ^ mode ^ ".cert.mitls.org.key") with
+        | None -> (Printf.printf "Coudln't load key\n"; false)
+        | Some k ->
+          let tbs = bytes_of_string "hello world" in
+          let sigv = maybe_hash_and_sign k (Some SHA256) tbs in
+          match get_key_from_cert (List.hd chain) with
+          | Some k -> verify_signature k (Some SHA256) tbs sigv
+          | None -> false
+        end
+      else (Printf.printf "Invalid chain\n"; false)
 end
 
 module TestCert = struct
@@ -1228,7 +1233,7 @@ module TestCert = struct
      let c2 = "MIIETTCCAzWgAwIBAgILBAAAAAABRE7wNjEwDQYJKoZIhvcNAQELBQAwVzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNVBAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xNDAyMjAxMDAwMDBaFw0yNDAyMjAxMDAwMDBaMEwxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSIwIAYDVQQDExlBbHBoYVNTTCBDQSAtIFNIQTI1NiAtIEcyMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2gHs5OxzYPt+j2q3xhfjkmQy1KwA2aIPue3ua4qGypJn2XTXXUcCPI9A1p5tFM3D2ik5pw8FCmiiZhoexLKLdljlq10dj0CzOYvvHoN9ItDjqQAu7FPPYhmFRChMwCfLew7sEGQAEKQFzKByvkFsMVtI5LHsuSPrVU3QfWJKpbSlpFmFxSWRpv6mCZ8GEG2PgQxkQF5zAJrgLmWYVBAAcJjI4e00X9icxw3A1iNZRfz+VXqG7pRgIvGu0eZVRvaZxRsIdF+ssGSEj4k4HKGnkCFPAm694GFn1PhChw8K98kEbSqpL+9Cpd/do1PbmB6B+Zpye1reTz5/olig4hetZwIDAQABo4IBIzCCAR8wDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFPXN1TwIUPlqTzq3l9pWg+Zp0mj3MEUGA1UdIAQ+MDwwOgYEVR0gADAyMDAGCCsGAQUFBwIBFiRodHRwczovL3d3dy5hbHBoYXNzbC5jb20vcmVwb3NpdG9yeS8wMwYDVR0fBCwwKjAooCagJIYiaHR0cDovL2NybC5nbG9iYWxzaWduLm5ldC9yb290LmNybDA9BggrBgEFBQcBAQQxMC8wLQYIKwYBBQUHMAGGIWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL3Jvb3RyMTAfBgNVHSMEGDAWgBRge2YaRQ2XyolQL30EzTSo//z9SzANBgkqhkiG9w0BAQsFAAOCAQEAYEBoFkfnFo3bXKFWKsv0XJuwHqJL9csCP/gLofKnQtS3TOvjZoDzJUN4LhsXVgdSGMvRqOzm+3M+pGKMgLTSxRJzo9P6Aji+Yz2EuJnB8br3n8NA0VgYU8Fi3a8YQn80TsVD1XGwMADH45CuP1eGl87qDBKOInDjZqdUfy4oy9RU0LMeYmcI+Sfhy+NmuCQbiWqJRGXy2UzSWByMTsCVodTvZy84IOgu/5ZR8LrYPZJwR2UcnnNytGAMXOLRc3bgr07i5TelRS+KIz6HxzDmMTh89N1SyvNTBCVXVmaU6Avu5gMUTu79bZRknl7OedSyps9AsUSoPocZXun4IRZZUw" in
      let tob x = bytes_of_string (BatBase64.str_decode x) in
      let chain = List.map tob [c1; c2] in
-     validate_chain chain true (Some "test.ht.vc") "CAFile.pem"  
+     validate_chain chain true (Some "test.ht.vc") "pki/CAFile.pem"
 end                 
 
 module TestECDSACert = struct
@@ -1238,7 +1243,9 @@ module TestECDSACert = struct
     let c1b = bytes_of_string (BatBase64.str_decode c1) in
     let sigvb = bytes_of_string (BatBase64.str_decode sigv) in
     let tbs = bytes_of_string "Hello World\n" in
-    cert_verify_sig c1b CoreCrypto.ECDSA CoreCrypto.SHA256 tbs sigvb
+    match get_key_from_cert c1b with
+    | Some k -> verify_signature k (Some SHA256) tbs sigvb
+    | None -> false
 end
 
 module TestDSACert = struct
@@ -1248,7 +1255,9 @@ module TestDSACert = struct
     let c1b = bytes_of_string (BatBase64.str_decode c1) in
     let sigvb = bytes_of_string (BatBase64.str_decode sigv) in
     let tbs = bytes_of_string "Hello World\n" in
-    cert_verify_sig c1b CoreCrypto.DSA CoreCrypto.SHA256 tbs sigvb
+    match get_key_from_cert c1b with
+    | Some k -> verify_signature k (Some SHA256) tbs sigvb
+    | None -> false
 end
 
 module TestRSACert = struct
@@ -1258,8 +1267,10 @@ module TestRSACert = struct
     let c1b = bytes_of_string (BatBase64.str_decode c1) in
     let sigvb = bytes_of_string (BatBase64.str_decode sigv) in
     let tbs = bytes_of_string "Hello World\n" in
-    cert_verify_sig c1b CoreCrypto.RSASIG CoreCrypto.SHA256 tbs sigvb
-end
+    match get_key_from_cert c1b with
+    | Some k -> verify_signature k (Some SHA256) tbs sigvb
+    | None -> false
+ end
 
 let run_test section test_vectors print_test_vector test_vector =
   let passed = ref 0 in
@@ -1299,8 +1310,10 @@ let _ =
   TestEcdhke.(run_test "ECDHE" test_vectors print_test_vector test);
   simple_test "ECDH key exchange" TestEcdhke.simple_test;
   simple_test "Certificate chain verify" TestCert.test;
-  simple_test "Certificate signature verify (ECDSA)" TestECDSACert.test;
-  simple_test "Certificate signature verify (DSA)" TestDSACert.test;
-  simple_test "Certificate signature verify (RSA)" TestRSACert.test;
-  simple_test "Certificate load from PEM chain/key" TestCertLoad.test;
+  simple_test "Certificate ECDSA certs and signatures" (TestCertAndSign.test "ecdsa");
+  simple_test "Certificate DSA   certs and signatures" (TestCertAndSign.test "dsa");
+  simple_test "Certificate RSA   certs and signatures" (TestCertAndSign.test "rsa");
+  simple_test "Certificate signature verify (ECDSA)  " TestECDSACert.test;
+  simple_test "Certificate signature verify (DSA)    " TestDSACert.test;
+  simple_test "Certificate signature verify (RSA)    " TestRSACert.test;
   ()

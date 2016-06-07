@@ -18,3 +18,6 @@ let uint63_to_uint64 (s:uint63) : uint64 = SInt_UInt64.of_int (SInt_UInt63.to_in
 let uint64_to_uint8  (s:uint64) : uint8  = SInt_UInt8.of_int  (SInt_UInt64.to_int s)
 let uint64_to_uint32 (s:uint64) : uint32 = SInt_UInt32.of_int (SInt_UInt64.to_int s)
 let uint64_to_uint63 (s:uint64) : uint63 = SInt_UInt63.of_int (SInt_UInt64.to_int s)
+
+let uint128_to_uint64 (a:uint128) : uint64 = SInt_UInt64.of_string (SInt_UInt64.uint128_to_string a)
+let uint64_to_uint128 (a:uint64) : uint128 = SInt_UInt64.uint128_of_string (SInt_UInt64.to_string a)

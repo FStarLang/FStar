@@ -151,11 +151,15 @@ assume val ec_gen_key: p:ec_params
                   length k.ec_point.ecx = ec_bytelen k.ec_params.curve /\
                   length k.ec_point.ecy = ec_bytelen k.ec_params.curve})
 
-assume new abstract type certkey
-assume val get_rsa_from_cert: bytes -> Tot (option rsa_key)
-assume val get_dsa_from_cert: bytes -> Tot (option dsa_key)
-assume val get_ecdsa_from_cert: bytes -> Tot (option ec_key)
+//TODO: keep also abtsract OpenSSL representation for efficiency?
+type key =
+  | KeyRSA of rsa_key
+  | KeyDSA of dsa_key
+  | KeyECDSA of ec_key
+
 assume val validate_chain: der_list:list bytes -> for_signing:bool -> hostname:option string -> ca_file:string -> Tot bool
-assume val cert_verify_sig: bytes -> sig_alg -> hash_alg -> bytes -> bytes -> Tot bool
-assume val cert_sign: certkey -> sig_alg -> hash_alg -> bytes -> Tot (option bytes)
-assume val cert_load_chain: string -> string -> Tot (option (certkey * list bytes))
+assume val get_key_from_cert: bytes -> Tot (option key)
+assume val hash_and_sign: key -> hash_alg -> bytes -> Tot bytes
+assume val verify_signature: key -> hash_alg -> tbs:bytes -> sigv:bytes -> Tot bool
+assume val load_chain: pemfile:string -> Tot (option (list bytes))
+assume val load_key: keyfile:string -> Tot (option key)
