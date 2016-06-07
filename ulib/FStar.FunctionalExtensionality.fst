@@ -20,7 +20,7 @@ module FStar.FunctionalExtensionality
 type efun (a:Type) (b:Type) = a -> Tot b
 
 type feq (#a:Type) (#b:Type) (f:efun a b) (g:efun a b) =
-  (forall x.{:pattern (f x) \/ (g x)} f x = g x)
+  (forall x.{:pattern (f x) \/ (g x)} f x == g x)
 
 assume Extensionality : forall (a:Type) (b:Type) (f: efun a b) (g: efun a b).
-                        {:pattern feq #a #b f g} feq #a #b f g <==> f=g
+                        {:pattern feq #a #b f g} feq #a #b f g <==> f==g

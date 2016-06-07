@@ -2516,16 +2516,9 @@ let tc_inductive env ses quals lids =
         | _ -> failwith "Impossible!"
     in
 
-    //to substitute in binders, making a fake arrow and splitting it, better way ?
-    let subst_in_binders (bs:binders) (s:list<subst_elt>) :binders =
-        match bs with
-            | [] -> []
-            | _  -> fst (split_arrow (SS.subst s (U.arrow bs (S.mk_Total t_unit))))
-    in
-
     let dr = Range.dummyRange in
 
-    //we will open all tcs and datas with same universe names
+    //we will open all tcs and datas with the same universe names
     let us =
         let ty = List.hd tcs in
         match ty with
@@ -2550,8 +2543,8 @@ let tc_inductive env ses quals lids =
         in
  
         //apply usubt to bs
-        let bs = subst_in_binders bs usubst in
-        //apply usubst to t, bu first shift usubst -- is there a way to apply usubst to bs and t altogether ?
+        let bs = SS.subst_binders usubst bs in
+        //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t altogether ?
         let t = SS.subst (SS.shift_subst (List.length bs) usubst) t in
         //open t with binders bs
         let bs, t = SS.open_term bs t in
@@ -2563,7 +2556,7 @@ let tc_inductive env ses quals lids =
         in
         //open the ibs binders
         let ibs = SS.open_binders ibs in
-        //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's 
+        //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
         let ind = mk_Tm_uinst (S.fvar lid Delta_constant None) (List.map (fun u -> U_name u) us) in
         //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
         let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None dr in
@@ -2572,8 +2565,10 @@ let tc_inductive env ses quals lids =
         //haseq of ind
         let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None dr in
         //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
+        //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
         let bs' = List.filter (fun b ->
             let _, en, _, _ = acc in
+            //false means don't use SMT solver
             let opt = Rel.try_subtype' en (fst b).sort  (fst (type_u ())) false in
             //is this criteria for success/failure ok ?
             match opt with
@@ -2583,7 +2578,7 @@ let tc_inductive env ses quals lids =
         let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None dr)) U.t_true bs' in
         //implication
         let fml = U.mk_imp haseq_bs haseq_ind in
-        //attach pattern ?
+        //attach pattern -- is this the right place ?
         let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
         //fold right with ibs, close and add a forall b
 	    //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
@@ -2593,8 +2588,8 @@ let tc_inductive env ses quals lids =
         let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) bs fml in
         //so now this is the haseq formula we want to generate, TODO: make it a Sig_assume, and generalize universe variables, TODO: how to add pattern in this forall
 
-        //this is the soundness guard
-        let guard = U.mk_conj (U.mk_conj haseq_bs haseq_ind) fml in
+        //this is the soundness guard, we should not need to add haseq_ind
+        let guard = U.mk_conj haseq_bs fml in
 
         //now work on checking the soundness of this formula
         //split acc
@@ -2626,7 +2621,7 @@ let tc_inductive env ses quals lids =
                     //filter out the inductive type parameters, dbs are the remaining binders
                     let dbs = snd (List.splitAt (List.length bs) dbs) in
                     //substitute bs into dbs
-                    let dbs = subst_in_binders dbs (SS.opening_of_binders bs) in
+                    let dbs = SS.subst_binders (SS.opening_of_binders bs) dbs in
                     //open dbs
                     let dbs = SS.open_binders dbs in
                     //fold on dbs, add haseq of its sort to the guard
@@ -2669,19 +2664,20 @@ let tc_inductive env ses quals lids =
             
         let phi = U.mk_imp guard cond in
 
-	    Util.print1 "Checking tc_trivial_guard for:\n\n%s\n\n" (debug_lid.str); //(PP.term_to_string phi);
+	    Util.print1 "Checking tc_trivial_guard for:\n\n%s\n\n" (debug_lid.str); //(PP.term_to_string phi)
         let phi, _ = tc_trivial_guard env phi in
 
-        Util.print1 "Checking haseq soundness for:%s\n" (debug_lid.str);
+        Util.print1 "Checking haseq soundness for:%s\n" (PP.term_to_string phi); //(debug_lid.str)
         Rel.force_trivial_guard env (Rel.guard_of_guard_formula (NonTrivial phi));
 
         env.solver.pop "haseq";
 
         //create Sig_assume for the axioms
         //add universe variables to env, no idea how to handle them ?
+        //TODO: don't add Sig_assume to the bundle, the code might assume it only contains tycon and datacons, instead modify tc interface to return list of sigelts
         let env = Env.push_univ_vars env0 us in
         let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
-            Util.print1 "Checking tc_assume for axiom:%s\n" (lid.str); //(PP.term_to_string fml)
+            Util.print1 "Checking tc_assume for axiom:%s\n" (PP.term_to_string fml); //(lid.str)
             let se = tc_assume env lid fml [] dr in
             //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
             l @ [se] 

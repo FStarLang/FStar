@@ -1542,10 +1542,17 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             kindingAx
             @(inversion_axioms tapp vars)
             @[pretype_axiom tapp vars] in
+        
+        //TODO: Find a better way to do this.
+        let valid_axiom =
+            if lid_equals t Const.false_lid then
+                [Term.Assume ((mkNot (mk_Valid (Term.mkFreeV (Const.false_lid.str, Term_sort)))), Some "false validity")]
+            else []
+        in
 
         let g = decls
                 @binder_decls
-                @aux in
+                @aux@valid_axiom in
         g, env
 
     | Sig_datacon(d, _, _, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env

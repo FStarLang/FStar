@@ -83,6 +83,9 @@ type squash (p:Type) = x:unit{p}
 (* forall (x:a). p x : specialized to Type#0 *)
 type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
 
+(* eq2 is reflexive *)
+assume Eq2_refl: forall (a:Type) (b:Type) (x:a) (y:b). eq2 #a #b x y == eq2 #b #a y x
+
 (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
 type dtuple2 (a:Type)
              (b:(a -> GTot Type)) =
