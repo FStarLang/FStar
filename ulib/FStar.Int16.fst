@@ -11,8 +11,10 @@ let within_int16 (i:int) =
     min_value_int <= i
     && i <= max_value_int
 
-private type int16 =
-  | Int16 : i:int{within_int16 i} -> int16
+private type int16' =
+  | Int16 : i:int{within_int16 i} -> int16'
+
+type int16 = int16'
 
 val min_value : int16
 let min_value = Int16 min_value_int
@@ -23,7 +25,7 @@ let max_value = Int16 max_value_int
 val as_int: i:int16 -> GTot int
 let as_int (Int16 i) = i
 
-type nat16 = x:int16{Prims.op_GreaterThanOrEqual (as_int x) 0}
+type nat15 = x:int16{Prims.op_GreaterThanOrEqual (as_int x) 0}
 
 //a ?+ b may overflow
 //must be marked abstract because the body has an intentional admit
