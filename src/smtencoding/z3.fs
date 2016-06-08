@@ -356,7 +356,7 @@ let ask fresh label_messages qry (cb: (bool * error_labels) -> unit) =
 (****************************************************************************)
 
 let initialize_fuel_trace src_fn force_record : unit =
-    begin if force_record then
+    if force_record then
         fuel_trace := RecordFuelTrace []
     else
         let norm_src_fn = Util.normalize_file_path src_fn in
@@ -385,8 +385,7 @@ let initialize_fuel_trace src_fn force_record : unit =
                 ();
             fuel_trace := RecordFuelTrace []
         end
-    end
-
+    
 let finalize_fuel_trace src_fn : unit =
     begin match !fuel_trace with
     | ReplayFuelTrace _ 
@@ -408,9 +407,11 @@ let finalize_fuel_trace src_fn : unit =
         Util.save_value_to_file val_fn state
     end;
     fuel_trace := FuelTraceUnavailable
+
 let with_fuel_trace_cache fname f =
     initialize_fuel_trace fname false;
     let result = f () in
-    // for the moment, there should be no need to trap exceptions to finalize the fuel trace logic. no cleanup needs to occur if an error occurs.
+    // for the moment, there should be no need to trap exceptions to finalize the fuel trace logic. 
+    // no cleanup needs to occur if an error occurs.
     finalize_fuel_trace fname;
     result
