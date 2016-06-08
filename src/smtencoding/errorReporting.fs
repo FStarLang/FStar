@@ -81,8 +81,9 @@ let label_goals use_env_msg r q : term * labels * ranges =
             | App(And, [typing;
                         {tm=Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])})}]) ->
               let r, labs, rs = aux rs r labs in
-              let q = mk <| Quant(Forall, [[p]], iopt, sorts, mk (App(Iff, [l;r]))) in
+              let q = mk <| Quant(Forall, [[p]], Some 0, sorts, mk (App(Iff, [l;r]))) in
               let lhs = mk <| App(And, [typing; q]) in
+              let rhs, labs, rs = aux rs rhs labs in
               Term.mkImp(lhs, rhs), labs, rs
             | _ ->
               let rhs, labs, rs = aux rs rhs labs in
