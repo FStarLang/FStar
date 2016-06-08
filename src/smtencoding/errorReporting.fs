@@ -77,16 +77,26 @@ let label_goals use_env_msg r q : term * labels * ranges =
           tm, labs, List.tl rs
 
         | App(Imp, [lhs;rhs]) -> 
-          let rhs, labs, rs = aux rs rhs labs in
-          mk (App(Imp, [lhs; rhs])), labs, rs
+          begin match lhs.tm with
+            | App(And, [typing;
+                        {tm=Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])})}]) ->
+              let r, labs, rs = aux rs r labs in
+              let q = mk <| Quant(Forall, [[p]], iopt, sorts, mk (App(Iff, [l;r]))) in
+              let lhs = mk <| App(And, [typing; q]) in
+              Term.mkImp(lhs, rhs), labs, rs
+            | _ ->
+              let rhs, labs, rs = aux rs rhs labs in
+              Term.mkImp(lhs, rhs), labs, rs
+          end
 
-        | App(And, conjuncts) -> 
+        | App(And, conjuncts) ->
           let rs, conjuncts, labs = List.fold_left (fun (rs, cs, labs) c -> 
             let c, labs, rs = aux rs c labs in
             rs, c::cs, labs) 
             (rs, [], labs)
             conjuncts in
-          mk (App(And, List.rev conjuncts)), labs, rs
+          let tm = List.fold_left (fun out conjunct -> Term.mkAnd(out, conjunct)) Term.mkTrue conjuncts in
+          tm, labs, rs
        
         | App(ITE, [hd; q1; q2]) -> 
           let q1, labs, _ = aux rs q1 labs in
