@@ -68,7 +68,7 @@ FLAVOR=msbuild
 else
 FSC     = fsharpc
 MSBUILD = xbuild
-FLAVOR=regular
+FLAVOR=msbuild
 endif
 
 MSBUILD := $(MSBUILD) /verbosity:normal /p:Configuration=Release
