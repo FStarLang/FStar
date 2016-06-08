@@ -851,13 +851,14 @@ end
 
 (* State for Test{Rsa,Dsa} modules *)
 let keysize_small, keysize_large = 1024, 2048
-let keysize = keysize_large
+(* ci/corecryptotest_reduce_keysize.sh alters next line: *)
+let keysize = keysize_small
 
 let bytes1, bytes2, bytes3 =
-  let chunk1 = bytes_of_string "Lorem ipsum dolor sit amet, consectetur adipiscing elit.  Integer vitae tincidunt enim. Pellentesque luctus, turpis sed lobortis ullamcorper, orci nisi commodo sem, ut sagittis augue elit vel ipsum. Aenean aliquam eros est, sed molestie ex aliquet sed. Vest" in
-  let chunk11, _chunk12 = Platform.Bytes.split chunk1 (128-11) in (* bytes_in_small_keysize - padding *)
-  let nn = "012345678901234567890123456789012345" in
-  chunk11, bytes_of_string nn, bytes_of_string "coucou"
+  let chunk = CoreCrypto.random ((keysize/8) - 11) in (* bytes_in_keysize - padding *)
+  let one_char = "0" in
+  let cc = "coucou" in 
+  chunk, bytes_of_string one_char, bytes_of_string cc
 
 
 module TestRsa = struct
