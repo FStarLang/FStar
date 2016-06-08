@@ -557,7 +557,7 @@ end
 | "Prims.unit" -> begin
 TUnit
 end
-| "Prims.int" -> begin
+| "FStar.Int32.int32" -> begin
 TInt32
 end
 | _79_193 -> begin
@@ -648,7 +648,7 @@ in (let _169_338 = (translate_expr env e)
 in (_169_339, _169_338)))
 in EAssign (_169_340))
 end
-| FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (p); FStar_Extraction_ML_Syntax.mlty = _79_314; FStar_Extraction_ML_Syntax.loc = _79_312}, args) when ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "Prims.op_Addition") -> begin
+| FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (p); FStar_Extraction_ML_Syntax.mlty = _79_314; FStar_Extraction_ML_Syntax.loc = _79_312}, args) when ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.Int32.op_Plus") -> begin
 (let _169_342 = (let _169_341 = (FStar_List.map (translate_expr env) args)
 in (EOp (Add), _169_341))
 in EApp (_169_342))

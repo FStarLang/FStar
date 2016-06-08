@@ -197,7 +197,7 @@ and translate_type env t: typ =
       begin match Syntax.string_of_mlpath p with
       | "Prims.unit" ->
           TUnit
-      | "Prims.int" ->
+      | "FStar.Int32.int32" ->
           TInt32
       | _ ->
           failwith (Util.format1 "todo: translate_type [MLTY_Named] %s" (Syntax.string_of_mlpath p))
@@ -262,7 +262,7 @@ and translate_expr env e: expr =
       EAssign (EBound (find env v), translate_expr env e)
 
   | MLE_App ({ expr = MLE_Name p }, args)
-    when (string_of_mlpath p = "Prims.op_Addition") ->
+    when (string_of_mlpath p = "FStar.Int32.op_Plus") ->
       EApp (EOp Add, List.map (translate_expr env) args)
 
   | MLE_App ({ expr = MLE_Name p }, _) ->
