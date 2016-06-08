@@ -18,11 +18,15 @@ module Prims
 assume new type hasEq: Type -> GTot Type0
 
 (* False is the empty inductive type *)
-type l_False =
+type c_False =
 
 (* True is the singleton inductive type *)
-type l_True =
+type c_True =
   | T
+
+type l_True = c_True
+
+type l_False = c_False
 
 (* another singleton type, with its only inhabitant written '()'
    we assume it is primitive, for convenient interop with other languages *)
