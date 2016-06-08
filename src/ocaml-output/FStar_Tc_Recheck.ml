@@ -159,7 +159,7 @@ end
 (let _130_51 = (FStar_Absyn_Syntax.mk_Kind_arrow (bs, k) t.FStar_Absyn_Syntax.pos)
 in (FStar_All.pipe_right _130_51 (FStar_Absyn_Util.subst_kind subst)))
 end
-| (b::bs, a::args) -> begin
+| ((b)::bs, (a)::args) -> begin
 (
 
 let subst = (let _130_52 = (FStar_Absyn_Util.subst_formal b a)
@@ -238,7 +238,7 @@ end
 (let _130_73 = (FStar_Absyn_Syntax.mk_Typ_fun (bs, c) None e.FStar_Absyn_Syntax.pos)
 in (FStar_All.pipe_right _130_73 (FStar_Absyn_Util.subst_typ subst)))
 end
-| (b::bs, a::args) -> begin
+| ((b)::bs, (a)::args) -> begin
 (
 
 let subst = (let _130_74 = (FStar_Absyn_Util.subst_formal b a)

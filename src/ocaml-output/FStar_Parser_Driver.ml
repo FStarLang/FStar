@@ -53,7 +53,7 @@ let parse_fragment : Prims.string  ->  fragment = (fun frag -> (match ((FStar_Pa
 | FStar_Util.Inl (FStar_Util.Inl ([])) -> begin
 Empty
 end
-| FStar_Util.Inl (FStar_Util.Inl (modul::[])) -> begin
+| FStar_Util.Inl (FStar_Util.Inl ((modul)::[])) -> begin
 Modul (modul)
 end
 | FStar_Util.Inl (FStar_Util.Inr (decls)) -> begin

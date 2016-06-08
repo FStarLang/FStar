@@ -24,11 +24,10 @@ let st_post (a:Type) = st_post_h t a
 let st_wp (a:Type) = st_wp_h t a
 new_effect STATE = STATE_h t
 effect State (a:Type) (wp:st_wp a) =
-       STATE a wp wp
+       STATE a wp
 effect ST (a:Type) (pre:st_pre) (post: (t -> Tot (st_post a))) =
        STATE a
-             (fun (p:st_post a) (h:t) -> pre h /\ (forall a h1. post h a h1 ==> p a h1)) (* WP *)
-             (fun (p:st_post a) (h:t) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
+             (fun (p:st_post a) (h:t) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
 effect St (a:Type) =
        ST a (fun h -> True) (fun h0 r h1 -> True)
 sub_effect

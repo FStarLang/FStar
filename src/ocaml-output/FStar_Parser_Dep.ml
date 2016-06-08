@@ -23,7 +23,7 @@ end else begin
 None
 end))) suffixes)
 in (match ((FStar_List.filter FStar_Util.is_some matches)) with
-| Some (m)::_68_19 -> begin
+| (Some (m))::_68_19 -> begin
 Some (m)
 end
 | _68_24 -> begin
@@ -356,7 +356,7 @@ end
 (collect_decls decls)
 end))
 and collect_file = (fun _68_3 -> (match (_68_3) with
-| modul::[] -> begin
+| (modul)::[] -> begin
 (collect_module modul)
 end
 | modules -> begin

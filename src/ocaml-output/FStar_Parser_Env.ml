@@ -172,7 +172,7 @@ in (aux _150_140))))
 
 
 let expand_module_abbrevs : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident = (fun env lid -> (match (lid.FStar_Ident.ns) with
-| id::rest -> begin
+| (id)::rest -> begin
 (match ((FStar_All.pipe_right env.modul_abbrevs (FStar_List.tryFind (fun _61_109 -> (match (_61_109) with
 | (id', _61_108) -> begin
 (id.FStar_Ident.idText = id'.FStar_Ident.idText)
@@ -532,7 +532,7 @@ in (
 let commit = (fun _61_450 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read record_cache)) with
-| hd::_61_453::tl -> begin
+| (hd)::(_61_453)::tl -> begin
 (FStar_ST.op_Colon_Equals record_cache ((hd)::tl))
 end
 | _61_458 -> begin
@@ -608,7 +608,7 @@ end
 false
 end)))))
 in (FStar_All.pipe_right sigs (FStar_List.iter (fun _61_9 -> (match (_61_9) with
-| FStar_Syntax_Syntax.Sig_inductive_typ (typename, univs, parms, _61_557, _61_559, dc::[], tags, _61_564) -> begin
+| FStar_Syntax_Syntax.Sig_inductive_typ (typename, univs, parms, _61_557, _61_559, (dc)::[], tags, _61_564) -> begin
 (match ((let _150_393 = (find_dc dc)
 in (FStar_All.pipe_left FStar_Util.must _150_393))) with
 | FStar_Syntax_Syntax.Sig_datacon (constrname, _61_569, t, _61_572, _61_574, _61_576, _61_578, _61_580) -> begin
@@ -664,14 +664,14 @@ let rec aux = (fun ns -> (match (ns) with
 | [] -> begin
 (c)::[]
 end
-| c'::[] -> begin
+| (c')::[] -> begin
 if (c'.FStar_Ident.idText = c.FStar_Ident.idText) then begin
 (c)::[]
 end else begin
 (c')::(c)::[]
 end
 end
-| hd::tl -> begin
+| (hd)::tl -> begin
 (let _150_408 = (aux tl)
 in (hd)::_150_408)
 end))
@@ -1028,7 +1028,7 @@ in {curmodule = _61_850.curmodule; modules = _61_850.modules; open_namespaces = 
 in (
 
 let pop = (fun env -> (match ((FStar_ST.read stack)) with
-| env::tl -> begin
+| (env)::tl -> begin
 (
 
 let _61_857 = (pop_record_cache ())
@@ -1046,7 +1046,7 @@ let commit_mark = (fun env -> (
 
 let _61_865 = (commit_record_cache ())
 in (match ((FStar_ST.read stack)) with
-| _61_869::tl -> begin
+| (_61_869)::tl -> begin
 (
 
 let _61_871 = (FStar_ST.op_Colon_Equals stack tl)
@@ -1076,7 +1076,7 @@ let pop : env  ->  env = (fun env -> (stack_ops.pop env))
 let export_interface : FStar_Ident.lident  ->  env  ->  env = (fun m env -> (
 
 let sigelt_in_m = (fun se -> (match ((FStar_Syntax_Util.lids_of_sigelt se)) with
-| l::_61_885 -> begin
+| (l)::_61_885 -> begin
 (l.FStar_Ident.nsstr = m.FStar_Ident.str)
 end
 | _61_889 -> begin

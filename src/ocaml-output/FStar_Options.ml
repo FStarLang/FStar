@@ -250,10 +250,10 @@ end))
 let pop : Prims.unit  ->  Prims.unit = (fun _24_52 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read fstar_options)) with
-| ([]) | (_::[]) -> begin
+| ([]) | ((_)::[]) -> begin
 (FStar_All.failwith "TOO MANY POPS!")
 end
-| _24_59::tl -> begin
+| (_24_59)::tl -> begin
 (FStar_ST.op_Colon_Equals fstar_options tl)
 end)
 end))

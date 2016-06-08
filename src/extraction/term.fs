@@ -758,10 +758,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                           List.length mlargs_f = 1 ||
                           Util.codegen_fsharp () ||
                           (match head.n with
-                          | Tm_fvar { fv_name = { v = v } }
-                            when (v = Syntax.Const.op_And || v = Syntax.Const.op_Or) ->
-                              true
-                          | _ ->
+                           | Tm_fvar { fv_name = { v = v } } ->
+                             v = Syntax.Const.op_And || v = Syntax.Const.op_Or
+                           | _ ->
                               false)
                         in
                         let lbs, mlargs =

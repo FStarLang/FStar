@@ -234,7 +234,8 @@ let mkOr (t1, t2)  = match t1.tm, t2.tm with
     | App(Or, ts1), _ -> mkApp'(Or, ts1@[t2])
     | _ -> mkApp'(Or, [t1;t2])
 let mkImp (t1, t2) = match t1.tm, t2.tm with
-    | _, App(True, _) -> mkTrue
+    | _, App(True, _)
+    | App(False, _), _ -> mkTrue
     | App(True, _), _ -> t2
     | _, App(Imp, [t1'; t2']) -> mkApp'(Imp, [mkAnd(t1, t1'); t2'])
     | _ -> mkApp'(Imp, [t1; t2])

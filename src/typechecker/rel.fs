@@ -2041,13 +2041,13 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
     let solve_sub c1 edge c2 = 
         let r = Env.get_range env in
         if problem.relation = EQ
-        then let wp, wlp = match c1.effect_args with
-                            | [(wp1,_); (wlp1, _)] -> wp1, wlp1
-                            | _ -> failwith (Util.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
+        then let wp = match c1.effect_args with
+                      | [(wp1,_)] -> wp1
+                      | _ -> failwith (Util.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
              let c1 = {
                 effect_name=c2.effect_name;
                 result_typ=c1.result_typ;
-                effect_args=[as_arg (edge.mlift c1.result_typ wp); as_arg (edge.mlift c1.result_typ wlp)];
+                effect_args=[as_arg (edge.mlift c1.result_typ wp)];
                 flags=c1.flags
              } in
              solve_eq c1 c2

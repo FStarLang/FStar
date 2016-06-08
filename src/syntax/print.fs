@@ -375,10 +375,8 @@ let eff_decl_to_string ed =
     Util.format "new_effect { %s<%s> %s : %s \n\t\
         ret         = %s\n\
       ; bind_wp     = %s\n\
-      ; bind_wlp    = %s\n\
       ; if_then_else= %s\n\
       ; ite_wp      = %s\n\
-      ; ite_wlp     = %s\n\
       ; wp_binop    = %s\n\
       ; wp_as_type  = %s\n\
       ; close_wp    = %s\n\
@@ -392,10 +390,8 @@ let eff_decl_to_string ed =
          term_to_string ed.signature;
          tscheme_to_string ed.ret;
          tscheme_to_string ed.bind_wp;
-         tscheme_to_string ed.bind_wlp;
          tscheme_to_string ed.if_then_else;
          tscheme_to_string ed.ite_wp;
-         tscheme_to_string ed.ite_wlp;
          tscheme_to_string ed.wp_binop;
          tscheme_to_string ed.wp_as_type;
          tscheme_to_string ed.close_wp;

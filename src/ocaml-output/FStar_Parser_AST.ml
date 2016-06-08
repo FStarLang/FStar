@@ -1714,7 +1714,7 @@ end
 in (let _147_1176 = (FStar_All.pipe_right t2 term_to_string)
 in (FStar_Util.format3 "%s %s%s" _147_1177 (imp_to_string imp) _147_1176)))
 end
-| Let (false, (pat, tm)::[], body) -> begin
+| Let (false, ((pat, tm))::[], body) -> begin
 (let _147_1180 = (FStar_All.pipe_right pat pat_to_string)
 in (let _147_1179 = (FStar_All.pipe_right tm term_to_string)
 in (let _147_1178 = (FStar_All.pipe_right body term_to_string)
@@ -1788,15 +1788,15 @@ end
 | Product ([], t) -> begin
 (term_to_string t)
 end
-| Product (b::hd::tl, t) -> begin
+| Product ((b)::(hd)::tl, t) -> begin
 (term_to_string (mk_term (Product (((b)::[], (mk_term (Product (((hd)::tl, t))) x.range x.level)))) x.range x.level))
 end
-| Product (b::[], t) when (x.level = Type) -> begin
+| Product ((b)::[], t) when (x.level = Type) -> begin
 (let _147_1209 = (FStar_All.pipe_right b binder_to_string)
 in (let _147_1208 = (FStar_All.pipe_right t term_to_string)
 in (FStar_Util.format2 "%s -> %s" _147_1209 _147_1208)))
 end
-| Product (b::[], t) when (x.level = Kind) -> begin
+| Product ((b)::[], t) when (x.level = Kind) -> begin
 (let _147_1211 = (FStar_All.pipe_right b binder_to_string)
 in (let _147_1210 = (FStar_All.pipe_right t term_to_string)
 in (FStar_Util.format2 "%s => %s" _147_1211 _147_1210)))
