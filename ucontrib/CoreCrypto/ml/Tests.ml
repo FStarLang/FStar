@@ -849,21 +849,18 @@ module TestEcc = struct
 
 end
 
-(* State for Test{Rsa,Dsa} modules *)
-let keysize_small, keysize_large = 1024, 2048
-(* ci/corecryptotest_reduce_keysize.sh alters next line: *)
-let keysize = keysize_small
-
-let bytes1, bytes2, bytes3 =
-  let chunk = CoreCrypto.random ((keysize/8) - 11) in (* bytes_in_keysize - padding *)
-  let one_char = "0" in
-  let cc = "coucou" in 
-  chunk, bytes_of_string one_char, bytes_of_string cc
-
 
 module TestRsa = struct
 
-  let tests = [bytes1; bytes2; bytes3]
+  let keysize_small, keysize_large = 1024, 2048
+  (* ci/corecryptotest_reduce_keysize.sh alters next line: *)
+  let keysize = keysize_large
+
+  (* Test vectors for RSA/DSA/ECDSA below *)
+  let tests =
+    let large = CoreCrypto.random (keysize/8 - 11) in (* bytes_in_keysize - padding *)
+    let small = CoreCrypto.random ((min keysize 512)/8 - 11) in
+    [large; small; bytes_of_string "0"]
 
   let roundtrip original_bytes =
     let k = rsa_gen_key keysize in
@@ -894,6 +891,10 @@ end
 
 module TestDsa = struct
 
+  let keysize_small, keysize_large = 1024, 2048
+  (* ci/corecryptotest_reduce_keysize.sh alters next line: *)
+  let keysize = keysize_large
+
   let tests = TestRsa.tests
 
   let check original_bytes =
@@ -915,7 +916,7 @@ module TestEcdsa = struct
   let tests = TestRsa.tests
 
   let check original_bytes =
-    let params = { curve = ECC_P521; point_compression = false } in
+    let params = { curve = ECC_P256; point_compression = false } in
     let private_key = ec_gen_key params in
     let public_key = { private_key with ec_priv = None } in
     let sig_bytes = ecdsa_sign None private_key original_bytes in
@@ -1042,7 +1043,8 @@ module TestDhke = struct
     string_of_bytes secret1 = string_of_bytes secret2
 
   let dh_param_size_small, dh_param_size_large = 512, 1024
-  let dh_param_size = dh_param_size_small
+  (* ci/corecryptotest_reduce_keysize.sh alters next line: *)
+  let dh_param_size = dh_param_size_large
 
   let simple_test () =
     let params = dh_gen_params dh_param_size in
@@ -1205,7 +1207,7 @@ module TestEcdhke = struct
     string_of_bytes secret1 = string_of_bytes secret2
 
   let simple_test () =
-    let params = { curve = ECC_P521; point_compression = false } in
+    let params = { curve = ECC_P256; point_compression = false } in
     let alice = ec_gen_key params in
     let bob = ec_gen_key params in
     let shared1 = ecdh_agreement alice bob.ec_point in
