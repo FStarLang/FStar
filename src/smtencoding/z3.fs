@@ -21,36 +21,24 @@ open FStar.SMTEncoding.Term
 open FStar.Util
 
 (****************************************************************************)
-(* Fuel Traces (private)                                                    *)
+(* Hint databases for record and replay (private)                           *)
 (****************************************************************************)
+type hint = 
+    | FuelOnly of int * int
+    | FuelAndUnsatCore of int * int * list<string>
 
-type fuel_trace_identity =
-    {
-      module_digest:string;
-    }
+type hints = list<hint>
 
-type fuel_trace_state =
-    {
-      identity:fuel_trace_identity;
-      fuels:list<option<(int * int)>>
-    }
+type hints_db = {
+    module_digest:string;
+    hints: hints
+}
 
-type fuel_trace_status =
-    | FuelTraceUnavailable
-    | RecordFuelTrace of list<option<(int * int)>>
-    | ReplayFuelTrace of (string * list<option<(int * int)>>)
+let recorded_hints : ref<option<hints>> = Util.mk_ref None
+let replaying_hints: ref<option<hints>> = Util.mk_ref None
 
-let fuel_trace : ref<fuel_trace_status> = Util.mk_ref <| FuelTraceUnavailable
-
-let format_fuel_trace_file_name src_fn =
-    Util.format_value_file_name <| Util.format1 "%s.fuel" src_fn
-
-let is_replaying_fuel_trace () =
-  match !fuel_trace with 
-  | ReplayFuelTrace _ ->
-    true
-  | _ ->
-    false
+let format_hints_file_name src_fn =
+    Util.format_value_file_name <| Util.format1 "%s.hints" src_fn
 
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
@@ -352,41 +340,32 @@ let ask fresh label_messages qry (cb: (bool * error_labels) -> unit) =
   enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
 
 (****************************************************************************)
-(* Fuel Traces (public)                                                     *)
+(* Hint databases (public)                                                  *)
 (****************************************************************************)
 
-let initialize_fuel_trace src_fn force_record : unit =
-    if force_record then
-        fuel_trace := RecordFuelTrace []
-    else
-        let norm_src_fn = Util.normalize_file_path src_fn in
-        let val_fn = format_fuel_trace_file_name norm_src_fn in
-        begin match Util.load_value_from_file val_fn with
-        | Some state ->
-            let expected_digest = Util.digest_of_file norm_src_fn in
-            if state.identity.module_digest = expected_digest then
-                begin if (Options.print_fuels()) then
-                        Util.print1 "(%s) digest is valid.\n" norm_src_fn
-                    else
-                        ();
-                    fuel_trace := ReplayFuelTrace (val_fn, state.fuels)
-                end
-            else
-                begin if (Options.print_fuels()) then
-                      Util.print1 "(%s) digest is invalid.\n" norm_src_fn
-                  else
-                      ();
-                  fuel_trace := RecordFuelTrace []
-                end
-        | None ->
-            if (Options.print_fuels()) then
-                Util.print1 "(%s) Unable to read cached fuel trace.\n" norm_src_fn
-            else
-                ();
-            fuel_trace := RecordFuelTrace []
-        end
+let initialize_hints_db src_fn force_record : unit =
+    if Options.record_hints() then recorded_hints := Some [];
+    if Options.use_hints()
+    then let norm_src_fn = Util.normalize_file_path src_fn in
+         let val_fn = format_hints_file_name norm_src_fn in
+         begin match Util.load_value_from_file val_fn with
+            | Some hints ->
+                let expected_digest = Util.digest_of_file norm_src_fn in
+                if hints.module_digest = expected_digest then 
+                    begin
+                       if Options.print_fuels()
+                       then Util.print1 "(%s) digest is valid; using hints db.\n" norm_src_fn;
+                       replaying_hints := Some hints.hints
+                    end
+                else if Options.print_fuels() 
+                     then Util.print1 "(%s) digest is invalid.\n" norm_src_fn
+            | None ->
+                if (Options.print_fuels()) then
+                    Util.print1 "(%s) Unable to read hints db.\n" norm_src_fn
+         end
     
-let finalize_fuel_trace src_fn : unit =
+let finalize_hints_db src_fn : unit =
+    if !OPt
     begin match !fuel_trace with
     | ReplayFuelTrace _ 
     (* failure to verify *)
@@ -408,10 +387,10 @@ let finalize_fuel_trace src_fn : unit =
     end;
     fuel_trace := FuelTraceUnavailable
 
-let with_fuel_trace_cache fname f =
-    initialize_fuel_trace fname false;
+let with_hints_db fname f =
+    initialize_hints_db fname false;
     let result = f () in
-    // for the moment, there should be no need to trap exceptions to finalize the fuel trace logic. 
+    // for the moment, there should be no need to trap exceptions to finalize the hints db 
     // no cleanup needs to occur if an error occurs.
-    finalize_fuel_trace fname;
+    finalize_hints_db fname;
     result

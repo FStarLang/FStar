@@ -71,10 +71,8 @@ let tc_prims () : Syntax.modul
   env.solver.init env;
   let p = Options.prims () in
   let dsenv, prims_mod = parse (DsEnv.empty_env ()) None p in
-  FStar.SMTEncoding.Z3.with_fuel_trace_cache p
-    (fun () ->
-      let prims_mod, env = Tc.check_module env (List.hd prims_mod) in
-      prims_mod, dsenv, env)
+  let prims_mod, env = Tc.check_module env (List.hd prims_mod) in
+  prims_mod, dsenv, env
 
 (***********************************************************************)
 (* Interactive mode: checking a fragment of a code                     *)
@@ -184,13 +182,17 @@ let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
                                * DsEnv.env
                                * TcEnv.env  =
   let dsenv, fmods = parse dsenv pre_fn fn in
-  FStar.SMTEncoding.Z3.with_fuel_trace_cache fn
-    (fun () ->
+  let check_mods () = 
       let env, all_mods =
-        fmods |> List.fold_left (fun (env, all_mods) m ->
+          fmods |> List.fold_left (fun (env, all_mods) m ->
                                 let m, env = Tc.check_module env m in
                                 env, m::all_mods) (env, []) in
-      List.rev all_mods, dsenv, env)
+      List.rev all_mods, dsenv, env 
+  in
+  if FStar.Options.record_hints()
+  || FStar.Options.use_hints()
+  then FStar.SMTEncoding.Z3.with_hints_db fn check_mods
+  else check_mods()
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)

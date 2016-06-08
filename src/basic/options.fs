@@ -125,6 +125,8 @@ let init () =
         ("print_implicits"              , Bool false);
         ("print_universes"              , Bool false);
         ("prn"                          , Bool false);
+        ("record_hints"                 , Bool false);
+        ("record_unsat_core"            , Bool false);
         ("show_signatures"              , List []);
         ("silent"                       , Bool false);
         ("smt"                          , Unset);
@@ -196,6 +198,8 @@ let get_print_fuels             ()      = lookup_opt "print_fuels"              
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
+let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
+let get_record_unsat_core       ()      = lookup_opt "record_unsat_core"        as_bool
 let get_show_signatures         ()      = lookup_opt "show_signatures"          (as_list as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
@@ -205,6 +209,7 @@ let get_trace_error             ()      = lookup_opt "trace_error"              
 let get_universes               ()      = lookup_opt "universes"                as_bool
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
+let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
 let get_use_native_int          ()      = lookup_opt "use_native_int"           as_bool
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
@@ -270,7 +275,7 @@ let add_verify_module s =
 
 let rec specs () : list<Getopt.opt> =
   let specs =
-    [( noshort,
+    [  ( noshort,
        "admit_smt_queries",
        OneArg ((fun s -> if s="true" then Bool true
                          else if s="false" then Bool false
@@ -278,25 +283,25 @@ let rec specs () : list<Getopt.opt> =
                 "[true|false]"),
        "Admit SMT queries, unsafe! (default 'false')");
 
-     ( noshort,
+       ( noshort,
        "cardinality",
        OneArg ((fun x -> String (validate_cardinality x)),
                "[off|warn|check]"),
        "Check cardinality constraints on inductive data types (default 'off')");
 
-     ( noshort,
+       ( noshort,
        "codegen",
         OneArg ((fun s -> String (parse_codegen s)),
                  "[OCaml|FSharp]"),
         "Generate code for execution");
 
-     ( noshort,
+       ( noshort,
         "codegen-lib",
         OneArg ((fun s -> List (s::get_codegen_lib() |> List.map String)),
                  "[namespace]"),
         "External runtime library");
 
-     ( noshort,
+       ( noshort,
         "debug",
         OneArg ((fun x -> List (x::get_debug() |> List.map String)),
                  "[module name]"),
@@ -499,6 +504,16 @@ let rec specs () : list<Getopt.opt> =
         "Print real names (you may want to use this in conjunction with log_queries)");
 
        ( noshort,
+        "record_hints",
+        ZeroArgs (fun () -> Bool true),
+        "Record a database of hints for efficient proof replay");
+
+       ( noshort,
+        "record_unsat_core",
+        ZeroArgs (fun () -> Bool true),
+        "Add the unsat core (if any) to the database of hints");
+
+       ( noshort,
         "show_signatures",
         OneArg((fun x -> List (x::get_show_signatures() |> List.map String)),
                 "[module name]"),
@@ -546,6 +561,11 @@ let rec specs () : list<Getopt.opt> =
         "use_eq_at_higher_order",
         ZeroArgs (fun () -> Bool true),
         "Use equality constraints when comparing higher-order types (Temporary)");
+
+       ( noshort,
+        "use_hints",
+        ZeroArgs (fun () -> Bool true),
+        "Use a previously recorded hints database for proof replay");
 
        ( noshort,
         "use_native_int",
@@ -633,6 +653,7 @@ let settable = function
     | "print_implicits"
     | "print_universes"
     | "prn"
+    | "record_unsat_core"
     | "show_signatures"
     | "silent"
     | "split_cases"
@@ -788,6 +809,8 @@ let print_fuels                  () = get_print_fuels                 ()
 let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn                         ()
 let print_universes              () = get_print_universes             ()
+let record_hints                 () = get_record_hints                ()
+let record_unsat_core            () = get_record_unsat_core           ()
 let silent                       () = get_silent                      ()
 let split_cases                  () = get_split_cases                 ()
 let timing                       () = get_timing                      ()
@@ -795,11 +818,12 @@ let trace_error                  () = get_trace_error                 ()
 let universes                    () = get_universes                   ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
+let use_hints                    () = get_use_hints                   ()
 let use_native_int               () = get_use_native_int              ()
 let verify_module                () = get_verify_module               ()
 let warn_cardinality             () = get_cardinality() = "warn"
 let warn_top_level_effects       () = get_warn_top_level_effects      ()
 let z3_exe                       () = match get_smt () with
-    				      | None -> Platform.exe "z3"
-				      | Some s -> s
+                                    | None -> Platform.exe "z3"
+                                    | Some s -> s
 let z3_timeout                   () = get_z3timeout                   ()
