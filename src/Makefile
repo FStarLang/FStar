@@ -71,7 +71,7 @@ MSBUILD = xbuild
 FLAVOR=regular
 endif
 
-MSBUILD := $(MSBUILD) /verbosity:normal
+MSBUILD := $(MSBUILD) /verbosity:normal /p:Configuration=Release
 
 # --------------------------------------------------------------------
 ifeq ($(OS),Windows_NT)
