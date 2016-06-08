@@ -849,21 +849,21 @@ module TestEcc = struct
 
 end
 
-let bytes1, bytes2, bytes3 =
-  let chunk1 = bytes_of_string "Lorem ipsum dolor sit amet, consectetur adipiscing elit.  Integer vitae tincidunt enim. Pellentesque luctus, turpis sed lobortis ullamcorper, orci nisi commodo sem, ut sagittis augue elit vel ipsum. Aenean aliquam eros est, sed molestie ex aliquet sed. Vest" in
-  (*let chunk2 = bytes_of_string "bulum in massa mauris. Phasellus non arcu pulvinar, elementum sapien eu, congue dolor. Fusce malesuada nisl enim, non accumsan mi gravida aliquam. Sed ornare augue eget quam pretium, vitae sodales urna hendrerit.  Curabitur mi ante, fermentum eget lacus ut," in*)
-  (*let chunk = Platform.Bytes.(chunk1 @| chunk2) in*)
-  let chunk11, chunk12 = Platform.Bytes.split chunk1 (128-11) in
-  let nn = "012345678901234567890123456789012345" in
-  chunk11, bytes_of_string nn, bytes_of_string "coucou"
-
 
 module TestRsa = struct
 
-  let tests = [bytes1; bytes2; bytes3]
+  let keysize_small, keysize_large = 1024, 2048
+  (* ci/corecryptotest_reduce_keysize.sh alters next line: *)
+  let keysize = keysize_large
+
+  (* Test vectors for RSA/DSA/ECDSA below *)
+  let tests =
+    let large = CoreCrypto.random (keysize/8 - 11) in (* bytes_in_keysize - padding *)
+    let small = CoreCrypto.random ((min keysize 512)/8 - 11) in
+    [large; small; bytes_of_string "0"]
 
   let roundtrip original_bytes =
-    let k = rsa_gen_key 1024 in
+    let k = rsa_gen_key keysize in
     let cipher_bytes = rsa_encrypt k Pad_PKCS1 original_bytes in
     let plain_bytes = rsa_decrypt k Pad_PKCS1 cipher_bytes in
     try match plain_bytes with
@@ -891,10 +891,14 @@ end
 
 module TestDsa = struct
 
+  let keysize_small, keysize_large = 1024, 2048
+  (* ci/corecryptotest_reduce_keysize.sh alters next line: *)
+  let keysize = keysize_large
+
   let tests = TestRsa.tests
 
   let check original_bytes =
-    let private_key = dsa_gen_key 1024 in
+    let private_key = dsa_gen_key keysize in
     let public_key = { private_key with dsa_private = None } in
     let sig_bytes = dsa_sign None private_key original_bytes in
     if not (dsa_verify None public_key original_bytes sig_bytes) then begin
@@ -912,7 +916,7 @@ module TestEcdsa = struct
   let tests = TestRsa.tests
 
   let check original_bytes =
-    let params = { curve = ECC_P521; point_compression = false } in
+    let params = { curve = ECC_P256; point_compression = false } in
     let private_key = ec_gen_key params in
     let public_key = { private_key with ec_priv = None } in
     let sig_bytes = ecdsa_sign None private_key original_bytes in
@@ -1038,8 +1042,12 @@ module TestDhke = struct
     Bytes.hex_of_bytes secret1 = v.secret &&
     string_of_bytes secret1 = string_of_bytes secret2
 
+  let dh_param_size_small, dh_param_size_large = 512, 1024
+  (* ci/corecryptotest_reduce_keysize.sh alters next line: *)
+  let dh_param_size = dh_param_size_large
+
   let simple_test () =
-    let params = dh_gen_params 512 in
+    let params = dh_gen_params dh_param_size in
     let alice = dh_gen_key params in
     let bob = dh_gen_key params in
     let shared1 = dh_agreement alice bob.dh_public in
@@ -1199,7 +1207,7 @@ module TestEcdhke = struct
     string_of_bytes secret1 = string_of_bytes secret2
 
   let simple_test () =
-    let params = { curve = ECC_P521; point_compression = false } in
+    let params = { curve = ECC_P256; point_compression = false } in
     let alice = ec_gen_key params in
     let bob = ec_gen_key params in
     let shared1 = ecdh_agreement alice bob.ec_point in
