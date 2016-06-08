@@ -1041,8 +1041,11 @@ module TestDhke = struct
     Bytes.hex_of_bytes secret1 = v.secret &&
     string_of_bytes secret1 = string_of_bytes secret2
 
+  let dh_param_size_small, dh_param_size_large = 512, 1024
+  let dh_param_size = dh_param_size_small
+
   let simple_test () =
-    let params = dh_gen_params 512 in
+    let params = dh_gen_params dh_param_size in
     let alice = dh_gen_key params in
     let bob = dh_gen_key params in
     let shared1 = dh_agreement alice bob.dh_public in
