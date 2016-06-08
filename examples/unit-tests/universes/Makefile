@@ -18,7 +18,7 @@ NEGFILES=NegativeTests.BST.fst     NegativeTests.Heap.fst  NegativeTests.ShortCi
 ifeq ($(filter $(OTHERFLAGS),--lax),)
 NEGTESTS=31
 else
-NEGTESTS=1
+NEGTESTS= 
 endif
 
 all: all-pos all-neg

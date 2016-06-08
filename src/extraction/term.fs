@@ -754,8 +754,18 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         //2. If we're generating OCaml, and any of the arguments are impure,
                         //   and the head is not a primitive short-circuiting op,
                         //   then evaluation order must be enforced to be L-to-R (by hoisting)
+                        let evaluation_order_guaranteed =
+                          List.length mlargs_f = 1 ||
+                          Util.codegen_fsharp () ||
+                          match head.n with
+                          | Tm_fvar { fv_name = { v = v } }
+                            when v = Syntax.Const.op_And || v = Syntax.Const.op_Or ->
+                              true
+                          | _ ->
+                              false
+                        in
                         let lbs, mlargs =
-                            if U.is_primop head || Util.codegen_fsharp()
+                            if evaluation_order_guaranteed
                             then [], List.rev mlargs_f |> List.map fst
                             else List.fold_left (fun (lbs, out_args) (arg, f) ->
                                     if f=E_PURE || f=E_GHOST

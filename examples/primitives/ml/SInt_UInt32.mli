@@ -35,6 +35,8 @@ val op_Hat_Greater_Greater:uint32 -> int -> uint32
 val op_Hat_Amp:uint32 -> uint32 -> uint32
 val op_Hat_Bar:uint32 -> uint32 -> uint32
 val op_Hat_Hat:uint32 -> uint32 -> uint32
+val op_Less_Less_Less:uint32 -> int -> uint32
+val op_Greater_Greater_Greater:uint32 -> int -> uint32
 
 val of_int: int -> uint32
 val of_string: string -> uint32
