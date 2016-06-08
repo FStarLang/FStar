@@ -28,84 +28,86 @@ let mem x s = s x
 
 (* constructors *)
 abstract val empty      : #a:Type -> Tot (set a)
-abstract val singleton  : 'a -> Tot (set 'a)
-abstract val union      : set 'a -> set 'a -> Tot (set 'a)
-abstract val intersect  : set 'a -> set 'a -> Tot (set 'a)
-abstract val complement : set 'a -> Tot (set 'a)
+(* abstract val singleton  : 'a -> Tot (set 'a) *)
+(* abstract val union      : set 'a -> set 'a -> Tot (set 'a) *)
+(* abstract val intersect  : set 'a -> set 'a -> Tot (set 'a) *)
+(* abstract val complement : set 'a -> Tot (set 'a) *)
 
 
 let empty           = fun #a x -> False
-let singleton x     = fun y -> y == x
-let union s1 s2     = fun x -> s1 x \/ s2 x
-let intersect s1 s2 = fun x -> s1 x /\ s2 x
-let complement s    = fun x -> ~ (s x)
+(* let singleton x     = fun y -> y == x *)
+(* let union s1 s2     = fun x -> s1 x \/ s2 x *)
+(* let intersect s1 s2 = fun x -> s1 x /\ s2 x *)
+(* let complement s    = fun x -> ~ (s x) *)
 
 (* ops *)
-abstract val subset       : set 'a -> set 'a -> Tot Type0
-let subset s1 s2 = (intersect s1 s2) == s1
+(* abstract val subset       : set 'a -> set 'a -> Tot Type0 *)
+(* let subset s1 s2 = (intersect s1 s2) == s1 *)
 
 (* Properties *)
 abstract val mem_empty: #a:Type -> x:a -> Lemma
    (requires True)
    (ensures (~ (mem x empty)))
    [SMTPat (mem x empty)]
+let mem_empty #a x = ()
 
-abstract val mem_singleton: #a:Type -> x:a -> y:a -> Lemma
-   (requires True)
-   (ensures (mem y (singleton x) == (x==y)))
-   [SMTPat (mem y (singleton x))]
 
-abstract val mem_union: #a:Type -> x:a -> s1:set a -> s2:set a -> Lemma
-   (requires True)
-   (ensures (mem x (union s1 s2) == (mem x s1 \/ mem x s2)))
-   [SMTPat (mem x (union s1 s2))]
+(* abstract val mem_singleton: #a:Type -> x:a -> y:a -> Lemma *)
+(*    (requires True) *)
+(*    (ensures (mem y (singleton x) == (x==y))) *)
+(*    [SMTPat (mem y (singleton x))] *)
 
-abstract val mem_intersect: #a:Type -> x:a -> s1:set a -> s2:set a -> Lemma
-   (requires True)
-   (ensures (mem x (intersect s1 s2) == (mem x s1 /\ mem x s2)))
-   [SMTPat (mem x (intersect s1 s2))]
+(* abstract val mem_union: #a:Type -> x:a -> s1:set a -> s2:set a -> Lemma *)
+(*    (requires True) *)
+(*    (ensures (mem x (union s1 s2) == (mem x s1 \/ mem x s2))) *)
+(*    [SMTPat (mem x (union s1 s2))] *)
 
-abstract val mem_complement: #a:Type -> x:a -> s:set a -> Lemma
-   (requires True)
-   (ensures (mem x (complement s) == ~(mem x s)))
-   [SMTPat (mem x (complement s))]
+(* abstract val mem_intersect: #a:Type -> x:a -> s1:set a -> s2:set a -> Lemma *)
+(*    (requires True) *)
+(*    (ensures (mem x (intersect s1 s2) == (mem x s1 /\ mem x s2))) *)
+(*    [SMTPat (mem x (intersect s1 s2))] *)
 
-abstract val mem_subset: #a:Type -> s1:set a -> s2:set a -> Lemma
-   (requires (forall x. mem x s1 ==> mem x s2))
-   (ensures (subset s1 s2))
-   [SMTPat (subset s1 s2)]
+(* abstract val mem_complement: #a:Type -> x:a -> s:set a -> Lemma *)
+(*    (requires True) *)
+(*    (ensures (mem x (complement s) == ~(mem x s))) *)
+(*    [SMTPat (mem x (complement s))] *)
 
-abstract val subset_mem: #a:Type -> s1:set a -> s2:set a -> Lemma
-   (requires (subset s1 s2))
-   (ensures (forall x. mem x s1 ==> mem x s2))
-   [SMTPat (subset s1 s2)]
+(* abstract val mem_subset: #a:Type -> s1:set a -> s2:set a -> Lemma *)
+(*    (requires (forall x. mem x s1 ==> mem x s2)) *)
+(*    (ensures (subset s1 s2)) *)
+(*    [SMTPat (subset s1 s2)] *)
 
-let mem_empty      #a x       = ()
-let mem_singleton  #a x y     = ()
-let mem_union      #a x s1 s2 = ()
-let mem_intersect  #a x s1 s2 = ()
-let mem_complement #a x s     = ()
-let subset_mem     #a s1 s2   = ()
-let mem_subset     #a s1 s2   = cut (equal (intersect s1 s2) s1)
+(* abstract val subset_mem: #a:Type -> s1:set a -> s2:set a -> Lemma *)
+(*    (requires (subset s1 s2)) *)
+(*    (ensures (forall x. mem x s1 ==> mem x s2)) *)
+(*    [SMTPat (subset s1 s2)] *)
 
-(* extensionality *)
+(* let mem_empty      #a x       = () *)
+(* let mem_singleton  #a x y     = () *)
+(* let mem_union      #a x s1 s2 = () *)
+(* let mem_intersect  #a x s1 s2 = () *)
+(* let mem_complement #a x s     = () *)
+(* let subset_mem     #a s1 s2   = () *)
+(* let mem_subset     #a s1 s2   = cut (equal (intersect s1 s2) s1) *)
 
-abstract val lemma_equal_intro: #a:Type -> s1:set a -> s2:set a -> Lemma
-    (requires  (forall x. mem x s1 = mem x s2))
-    (ensures (equal s1 s2))
-    [SMTPatT (equal s1 s2)]
+(* (\* extensionality *\) *)
 
-abstract val lemma_equal_elim: #a:Type -> s1:set a -> s2:set a -> Lemma
-    (requires (equal s1 s2))
-    (ensures  (s1 = s2))
-    [SMTPatT (equal s1 s2)]
+(* abstract val lemma_equal_intro: #a:Type -> s1:set a -> s2:set a -> Lemma *)
+(*     (requires  (forall x. mem x s1 = mem x s2)) *)
+(*     (ensures (equal s1 s2)) *)
+(*     [SMTPatT (equal s1 s2)] *)
 
-abstract val lemma_equal_refl: #a:Type -> s1:set a -> s2:set a -> Lemma 
-    (requires (s1 = s2))
-    (ensures  (equal s1 s2))
-    [SMTPatT (equal s1 s2)]
+(* abstract val lemma_equal_elim: #a:Type -> s1:set a -> s2:set a -> Lemma *)
+(*     (requires (equal s1 s2)) *)
+(*     (ensures  (s1 = s2)) *)
+(*     [SMTPatT (equal s1 s2)] *)
 
-let lemma_equal_intro #a s1 s2 = ()
-let lemma_equal_elim  #a s1 s2 = ()
-let lemma_equal_refl  #a s1 s2 = ()
+(* abstract val lemma_equal_refl: #a:Type -> s1:set a -> s2:set a -> Lemma  *)
+(*     (requires (s1 = s2)) *)
+(*     (ensures  (equal s1 s2)) *)
+(*     [SMTPatT (equal s1 s2)] *)
+
+(* let lemma_equal_intro #a s1 s2 = () *)
+(* let lemma_equal_elim  #a s1 s2 = () *)
+(* let lemma_equal_refl  #a s1 s2 = () *)
 
