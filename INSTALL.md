@@ -25,7 +25,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 1. Add `fstar.exe` and `z3` to your `PATH`, either permanently
    or temporarily, for instance by running this:
 
-        $ source setenv.sh
+        $ export PATH=/path/to/fstar/bin:$PATH
         $ fstar.exe --version
         F* 0.9.1.1
         platform=Linux_x86_64
@@ -178,11 +178,19 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
 
   - Try out
 
-          $ source setenv.sh
+          $ export PATH=/path/to/fstar/bin:$PATH
           $ make test.net -C src
 
   - If `make test.net` (`make boot` in fact) causes a stack overflow try
     issuing `ulimit -s unlimited` in the terminal beforehand.
+
+Note: you may want to make the `PATH` change permanent by adding:
+
+```
+export PATH=/path/to/fstar/bin:$PATH
+```
+
+into your `~/.bashrc`.
 
 ### Prerequisite for steps 2 and 3: Working OCaml setup  ###
 
@@ -190,16 +198,7 @@ Steps 2 and 3 below require a working OCaml (any version from 4.02.2 to 4.03.0) 
 
 #### Instructions for Windows ####
 
-0. Install the [OCaml Installer for
-   Windows](http://protz.github.io/ocaml-installer/). Make sure you ask it to
-   install Cygwin -- it will just launch Cygwin's setup.exe with the right set
-   of packages pre-checked, to make sure you have everything you need.
-
-1. Open the Cygwin terminal and fake the installation of OPAM package `conf-gmp`:
-
-  ```sh
-  $ opam install --fake conf-gmp
-  ```
+We will use the  [OCaml Installer for Windows](http://protz.github.io/ocaml-installer/). Follow the [installation guide](https://github.com/protz/ocaml-installer/wiki) that's over there (it's optimized for F*).
 
 #### Instructions for Linux and Mac OS X ####
 

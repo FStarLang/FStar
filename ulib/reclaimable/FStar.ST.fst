@@ -31,11 +31,10 @@ inline let lift_div_state (a:Type) (wp:pure_wp a) (p:st_post a) (h:heap) = wp (f
 sub_effect DIV ~> STATE = lift_div_state
 
 effect State (a:Type) (wp:st_wp a) =
-       STATE a wp wp
+       STATE a wp
 effect ST (a:Type) (pre:st_pre) (post: (heap -> Tot (st_post a))) =
        STATE a
              (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
-             (fun (p:st_post a) (h:heap) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 effect St (a:Type) =
        ST a (fun h -> True) (fun h0 r h1 -> True)
 

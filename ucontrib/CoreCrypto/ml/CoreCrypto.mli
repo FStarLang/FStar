@@ -102,12 +102,14 @@ val ecdsa_sign: hash_alg option -> ec_key -> bytes -> bytes
 val ecdsa_verify: hash_alg option -> ec_key -> bytes -> bytes -> bool
 val ec_gen_key: ec_params -> ec_key
 
-type certkey
+type key =
+  | KeyRSA of rsa_key
+  | KeyDSA of dsa_key
+  | KeyECDSA of ec_key
 
-val get_rsa_from_cert: bytes -> rsa_key option
-val get_dsa_from_cert: bytes -> dsa_key option
-val get_ecdsa_from_cert: bytes -> ec_key option
 val validate_chain: bytes list -> bool -> string option -> string -> bool
-val cert_verify_sig: bytes -> sig_alg -> hash_alg -> bytes -> bytes -> bool
-val cert_sign: certkey -> sig_alg -> hash_alg -> bytes -> bytes option
-val cert_load_chain: string -> string -> (certkey * bytes list) option
+val get_key_from_cert: bytes -> key option
+val maybe_hash_and_sign: key -> hash_alg option -> bytes -> bytes
+val verify_signature: key -> hash_alg option -> bytes -> bytes -> bool
+val load_chain: string -> (bytes list) option
+val load_key: string -> key option

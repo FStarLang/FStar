@@ -102,7 +102,7 @@ type decl =
   | DefPrelude
   | DeclFun    of string * list<sort> * sort * caption        //uninterpreted function
   | DefineFun  of string * list<sort> * sort * term * caption //defined function
-  | Assume     of term   * caption
+  | Assume     of term   * caption * option<string>           //optionally named
   | Caption    of string
   | Eval       of term
   | Echo       of string
@@ -234,7 +234,8 @@ let mkOr (t1, t2)  = match t1.tm, t2.tm with
     | App(Or, ts1), _ -> mkApp'(Or, ts1@[t2])
     | _ -> mkApp'(Or, [t1;t2])
 let mkImp (t1, t2) = match t1.tm, t2.tm with
-    | _, App(True, _) -> mkTrue
+    | _, App(True, _)
+    | App(False, _), _ -> mkTrue
     | App(True, _), _ -> t2
     | _, App(Imp, [t1'; t2']) -> mkApp'(Imp, [mkAnd(t1, t1'); t2'])
     | _ -> mkApp'(Imp, [t1; t2])
@@ -325,7 +326,8 @@ let mkExists (pats, vars, body) = mkQuant' (Exists, pats, None, vars, body)
 let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, abstr vars tm, c)
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
 let fresh_token (tok_name, sort) id =
-    Assume(mkEq(mkInteger' id, mkApp(constr_id_of_sort sort, [mkApp (tok_name,[])])), Some "fresh token")
+    let a_name = "fresh_token_" ^tok_name in
+    Assume(mkEq(mkInteger' id, mkApp(constr_id_of_sort sort, [mkApp (tok_name,[])])), Some "fresh token", Some a_name)
 
 let fresh_constructor (name, arg_sorts, sort, id) = 
     let id = string_of_int id in
@@ -333,7 +335,8 @@ let fresh_constructor (name, arg_sorts, sort, id) =
     let bvar_names = List.map fv_of_term bvars in
     let capp = mkApp(name, bvars) in
     let cid_app = mkApp(constr_id_of_sort sort, [capp]) in
-    Assume(mkForall([[capp]], bvar_names, mkEq(mkInteger id, cid_app)), Some "Constructor distinct") 
+    let a_name = "constructor_distinct_" ^name in
+    Assume(mkForall([[capp]], bvar_names, mkEq(mkInteger id, cid_app)), Some "Constructor distinct", Some a_name) 
 
 let injective_constructor (name, projectors, sort) = 
     let n_bvars = List.length projectors in
@@ -347,8 +350,9 @@ let injective_constructor (name, projectors, sort) =
     |> List.mapi (fun i (name, s) ->
             let cproj_app = mkApp(name, [capp]) in
             let proj_name = DeclFun(name, [sort], s, Some "Projector") in
+            let a_name = "projection_inverse_"^name in
             [proj_name;
-                Assume(mkForall([[capp]], bvar_names, mkEq(cproj_app, bvar i s)), Some "Projection inverse")])
+                Assume(mkForall([[capp]], bvar_names, mkEq(cproj_app, bvar i s)), Some "Projection inverse", Some a_name)])
     |> List.flatten
 
 let constructor_to_decl (name, projectors, sort, id, injective) =
@@ -425,7 +429,9 @@ let caption_to_string = function
             | hd::_ -> hd, "..." in
         format2 ";;;;;;;;;;;;;;;;%s%s\n" hd suffix
 
-let rec declToSmt z3options decl = match decl with
+let rec declToSmt z3options decl = 
+  let escape (s:string) = Util.replace_char s '\'' '_' in
+  match decl with
   | DefPrelude -> mkPrelude z3options
   | Caption c ->
     format1 "\n; %s" (Util.splitlines c |> (function [] -> "" | h::t -> h))
@@ -436,7 +442,9 @@ let rec declToSmt z3options decl = match decl with
     let names, binders = name_binders arg_sorts in
     let body = inst (List.map mkFreeV names) body in
     format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (String.concat " " binders) (strSort retsort) (termToSmt body)
-  | Assume(t,c) ->
+  | Assume(t,c,Some n) ->
+    format3 "%s(assert (!\n%s\n:named %s))" (caption_to_string c) (termToSmt t) (escape n)
+  | Assume(t,c,None) ->
     format2 "%s(assert %s)" (caption_to_string c) (termToSmt t)
   | Eval t ->
     format1 "(eval %s)" (termToSmt t)

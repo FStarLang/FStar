@@ -10,12 +10,10 @@ kind PureWP   (a:Type) = PurePost a -> PurePre
 
 effect Squash (a:Type) (pre:PurePre) (post:PurePost a) =
        SQUASH a
-           (fun (p:PurePost a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
-           (fun (p:PurePost a) -> forall a. pre /\ post a ==> p a)   (* WLP *)
+           (fun (p:PurePost a) -> pre /\ (forall a. pre /\ post a ==> p a)) (* WP *)
 
 effect Sq (a:Type) =
      SQUASH a (fun (p:PurePost a) -> (forall (x:a). p x))
-              (fun (p:PurePost a) -> (forall (x:a). p x))
 
 sub_effect
   PURE ~> SQUASH = fun (a:Type) (wp:PureWP a) (p:PurePost a) -> wp (fun a -> p a)

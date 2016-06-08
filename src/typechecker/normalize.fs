@@ -307,7 +307,7 @@ let rec closure_as_term cfg env t =
              let lbs = lbs |> List.map (norm_one_lb env) in
              let body = 
                 let body_env = List.fold_right (fun _ env -> Dummy::env) lbs env in
-                closure_as_term cfg env body in
+                closure_as_term cfg body_env body in
              mk (Tm_let((true, lbs), body)) t.pos
 
            | Tm_match(head, branches) -> 

@@ -78,15 +78,28 @@ let label_goals use_env_msg r q : term * labels * ranges =
 
         | App(Imp, [lhs;rhs]) -> 
           let rhs, labs, rs = aux rs rhs labs in
-          mk (App(Imp, [lhs; rhs])), labs, rs
+          let lhs, labs, rs = match lhs.tm with 
+            | App(And, conjuncts) -> 
+              let (labs, rs), conjuncts = Util.fold_map (fun (labs, rs) tm -> 
+                match tm.tm with 
+                | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])}) ->
+                  let r, labs, rs = aux rs r labs in
+                  let q = mk <| Quant(Forall, [[p]], Some 0, sorts, mk (App(Iff, [l;r]))) in
+                  (labs, rs), q
+                | _ -> (labs, rs), tm) (labs, rs) conjuncts in
+              let tm = List.fold_right (fun conjunct out -> Term.mkAnd(out, conjunct)) conjuncts Term.mkTrue in
+              tm, labs, rs
+           | _ -> lhs, labs, rs in
+          Term.mkImp(lhs, rhs), labs, rs
 
-        | App(And, conjuncts) -> 
+        | App(And, conjuncts) ->
           let rs, conjuncts, labs = List.fold_left (fun (rs, cs, labs) c -> 
             let c, labs, rs = aux rs c labs in
             rs, c::cs, labs) 
             (rs, [], labs)
             conjuncts in
-          mk (App(And, List.rev conjuncts)), labs, rs
+          let tm = List.fold_left (fun out conjunct -> Term.mkAnd(out, conjunct)) Term.mkTrue conjuncts in
+          tm, labs, rs
        
         | App(ITE, [hd; q1; q2]) -> 
           let q1, labs, _ = aux rs q1 labs in
@@ -142,7 +155,7 @@ let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
         incr ctr;
         Term.Echo ("DETAILING ERRORS" ^ (string_of_int !ctr)) ::
-        (labs |> List.map (fun (l, _, _) -> Term.Assume(mkEq(Term.mkFreeV l, Term.mkTrue), Some "Disabling label"))) in
+        (labs |> List.map (fun (l, _, _) -> Term.Assume(mkEq(Term.mkFreeV l, Term.mkTrue), Some "Disabling label", Some ("disable_label_"^fst l)))) in
     let print_labs tag l = l |> List.iter (fun (l, _, _) -> Util.print2 "%s : %s; " tag (fst l)) in
     //l1 - l2: difference of label lists
     let minus l1 l2 = 
@@ -212,8 +225,8 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
                 60 * 1000
         in
        [Term.Caption (Util.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
-        Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None);
-        Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None);
+        Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, None);
+        Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, None);
         p]
         @label_assumptions
         @[Term.SetOption ("timeout", string_of_int timeout_ms)]

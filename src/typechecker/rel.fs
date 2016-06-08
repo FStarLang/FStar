@@ -239,11 +239,23 @@ let guard_on_element problem x phi =
         | None ->   U.mk_forall x phi
         | Some e -> Subst.subst [NT(x,e)] phi
 let explain env d s =
-    Util.format4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n"
+    if Env.debug env <| Options.Other "ExplainRel"
+    then Util.format4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n"
                        (Range.string_of_range <| p_loc d)
                        (prob_to_string env d)
                        (p_reason d |> String.concat "\n\t>")
                        s
+    else let d = maybe_invert_p d in 
+         let rel = match p_rel d with 
+            | EQ -> "equal to"
+            | SUB -> "a subtype of"
+            | _ -> failwith "impossible" in
+         let lhs, rhs = match d with 
+            | TProb tp -> Print.term_to_string tp.lhs, Print.term_to_string tp.rhs
+            | CProb cp -> Print.comp_to_string cp.lhs, Print.comp_to_string cp.rhs in
+         Util.format3 "%s is not %s the expected type %s" lhs rel rhs
+                
+                    
 (* ------------------------------------------------*)
 (* </prob ops>                                     *)
 (* ------------------------------------------------*)
@@ -1355,7 +1367,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                  | fail -> fail
                end
 
-           | _ -> Inr "arity mismatch" in
+           | _ -> Inr "arity or argument-qualifier mismatch" in
 
    let scope = p_scope orig in //Env.bound_vars env |> List.map S.mk_binder in
    match aux scope env [] bs1 bs2 with
@@ -2029,13 +2041,13 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
     let solve_sub c1 edge c2 = 
         let r = Env.get_range env in
         if problem.relation = EQ
-        then let wp, wlp = match c1.effect_args with
-                            | [(wp1,_); (wlp1, _)] -> wp1, wlp1
-                            | _ -> failwith (Util.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
+        then let wp = match c1.effect_args with
+                      | [(wp1,_)] -> wp1
+                      | _ -> failwith (Util.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
              let c1 = {
                 effect_name=c2.effect_name;
                 result_typ=c1.result_typ;
-                effect_args=[as_arg (edge.mlift c1.result_typ wp); as_arg (edge.mlift c1.result_typ wlp)];
+                effect_args=[as_arg (edge.mlift c1.result_typ wp)];
                 flags=c1.flags
              } in
              solve_eq c1 c2

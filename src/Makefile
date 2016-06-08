@@ -63,13 +63,15 @@ endif
 
 ifeq ($(OS),Windows_NT)
 FSC     = fsc
-MSBUILD = msbuild
+MSBUILD = $(shell cygpath -u \"$$(reg.exe query 'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0' /v MSBuildToolsPath | tail -n 2 | head -n 1 | sed 's/.*REG_SZ\s\+//g')\")/MSBuild.exe
+FLAVOR=msbuild
 else
 FSC     = fsharpc
 MSBUILD = xbuild
+FLAVOR=regular
 endif
 
-MSBUILD := $(MSBUILD) /verbosity:normal
+MSBUILD := $(MSBUILD) /verbosity:normal /p:Configuration=Release
 
 # --------------------------------------------------------------------
 ifeq ($(OS),Windows_NT)
@@ -87,7 +89,11 @@ FSLEX   := $(RUNTIME) $(FSLYDIR)/build/fslex.exe
 .PHONY: msbuild msbuild-clean nuget-restore nuget-clean
 
 # --------------------------------------------------------------------
-all: $(BIN)/fstar.exe $(BIN)/tests.exe
+all: all-$(FLAVOR)
+
+clean: clean-$(FLAVOR)
+
+all-regular: $(BIN)/fstar.exe $(BIN)/tests.exe
 
 # --------------------------------------------------------------------
 z3-x86:
@@ -109,20 +115,18 @@ nuget-clean:
 $(FSYACC) $(FSLEX): nuget-restore
 
 # --------------------------------------------------------------------
-msbuild: nuget-restore
+all-msbuild: nuget-restore
 	$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
 
-msbuild-clean:
+clean-msbuild:
 	$(MSBUILD) /t:clean VS/FStar.sln
 
 # --------------------------------------------------------------------
 parser/parse.fs: parser/parse.fsy $(FSYACC)
-	$(MAKE) -C VS install-packages
 	$(FSYACC) --module FStar.Parser.Parse $<
 
 parser/lex.fs: parser/lex.fsl $(FSLEX)
-	$(MAKE) -C VS install-packages
 	$(FSLEX) --unicode $<
 
 BASIC_DEPS=
@@ -189,7 +193,7 @@ endif
 wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMAT_SRC) $(EXTRACTION_SRC) fstar/fstar.fs
 	sloccount $^
 
-clean:
+clean-regular:
 	rm -rf *.exe $(addprefix $(BIN)/, $(ALL_DLLS) fstar.exe) *~ *res
 	rm -rf $(BIN)/*.pdb  $(BIN)/*.mdb $(BIN)/queries
 	make -s -C ocaml-output clean
@@ -294,9 +298,8 @@ fs: $(BOOT_ALL)
 	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --MLish --lax --fs_typ_app \
 	  --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
 
-fsharp-output:
+fsharp-output: nuget-restore
 	mkdir -p fsharp-output
-	make -C VS install-packages
 	cp ../bin/FSharp.PowerPack.* fsharp-output
 
 plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) fstar/main.fs
@@ -324,8 +327,7 @@ regressions:
 	make -C ../ulib
 	make -C ../examples
 	make -C ../examples/hello ocaml
-	make -C ../contrib/Platform/ml/
-	make -C ../contrib/CoreCrypto/ml/ all test
+	make -C ../ucontrib/CoreCrypto/ml/ test
 	make -C ../examples/crypto clean rpc-test cnt-test
 	make -C ../examples/wysteria a.out distclean
 

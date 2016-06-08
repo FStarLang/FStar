@@ -256,7 +256,7 @@ external ocaml_rsa_fini   : rsa -> unit = "ocaml_rsa_fini"
 
 external ocaml_rsa_gen_key : size:int -> exp:int -> string * string * string = "ocaml_rsa_gen_key"
 external ocaml_rsa_set_key : rsa -> rsa_key -> unit = "ocaml_rsa_set_key"
-external ocaml_rsa_get_key : rsa -> string * string = "ocaml_rsa_get_key"
+external ocaml_rsa_get_key : rsa -> string * string * (string option) = "ocaml_rsa_get_key"
 
 external ocaml_rsa_encrypt : rsa -> prv:bool -> rsa_padding -> string -> string = "ocaml_rsa_encrypt"
 external ocaml_rsa_decrypt : rsa -> prv:bool -> rsa_padding -> string -> string = "ocaml_rsa_decrypt"
@@ -272,11 +272,11 @@ let rsa_gen_key (i:int) =
   }
 
 let rsa_key_of_rsa (rsa:rsa) : rsa_key =
-  let n, e = ocaml_rsa_get_key rsa in
+  let n, e, d = ocaml_rsa_get_key rsa in
   {
     rsa_mod     = bytes_of_string n;
     rsa_pub_exp = bytes_of_string e;
-    rsa_prv_exp = None
+    rsa_prv_exp = Option.map bytes_of_string d;
   }
 
 let rsa_encrypt (pk:rsa_key) (p:rsa_padding) (d:bytes) =
@@ -333,13 +333,13 @@ external ocaml_dsa_gen_params : int -> string * string * string = "ocaml_dsa_gen
 external ocaml_dsa_gen_key : dsa_params -> string * string = "ocaml_dsa_gen_key"
 
 external ocaml_dsa_set_key : dsa -> dsa_key -> unit = "ocaml_dsa_set_key"
-external ocaml_dsa_get_key : dsa -> string * string * string * string = "ocaml_dsa_get_key"
+external ocaml_dsa_get_key : dsa -> string * string * string * string * (string option) = "ocaml_dsa_get_key"
 
 external ocaml_dsa_sign : dsa -> string -> string = "ocaml_dsa_sign"
 external ocaml_dsa_verify : dsa -> data:string -> sig_:string -> bool = "ocaml_dsa_verify"
 
 let dsa_key_of_dsa (dsa:dsa) =
-  let p, q, g, pk = ocaml_dsa_get_key dsa in
+  let p, q, g, pk, sk = ocaml_dsa_get_key dsa in
   let dp = {
     dsa_p = bytes_of_string p;
     dsa_q = bytes_of_string q;
@@ -348,7 +348,7 @@ let dsa_key_of_dsa (dsa:dsa) =
   {
     dsa_params = dp;
     dsa_public = bytes_of_string pk;
-    dsa_private = None
+    dsa_private = Option.map bytes_of_string sk;
   }
 
 let dsa_gen_key (n:int) =
@@ -524,7 +524,7 @@ external ocaml_ec_key_generate: ssl_ec_key -> unit =
   "ocaml_ec_key_generate"
 external ocaml_ec_key_get0_public_key: ssl_ec_key -> ssl_ec_point =
   "ocaml_ec_key_get0_public_key"
-external ocaml_ec_key_get0_private_key: ssl_ec_key -> string =
+external ocaml_ec_key_get0_private_key: ssl_ec_key -> string option =
   "ocaml_ec_key_get0_private_key"
 external ocaml_ec_key_set_public_key: ssl_ec_key -> ssl_ec_point -> unit =
   "ocaml_ec_key_set_public_key"
@@ -549,42 +549,37 @@ let ssl_key_of_key key =
     ocaml_ec_key_set_private_key ssl_key (string_of_bytes (Option.must key.ec_priv));
   ssl_key
 
-let ec_key_of_ssl_ec_key eck: ec_key =
-    let curve =
-      (* See https://tools.ietf.org/html/rfc5480#section-2.1.1.1 *)
-      match ocaml_ec_key_get_curve_name eck with
-      | "prime256v1" -> ECC_P256 
-      | "secp384r1"  -> ECC_P384
-      | "secp521r1"  -> ECC_P521
-      | _  -> failwith "Unsupported curve in certificate"
-    in
-    let params = { curve = curve; point_compression = false } in
-    let g = ssl_group_of_params params in
-    let p = ocaml_ec_key_get0_public_key eck in
-    let x, y = ocaml_ec_point_get_affine_coordinates_GFp g p in
-    let ecp = { ecx = bytes_of_string x; ecy = bytes_of_string y } in
-    {
-      ec_params = params;
-      ec_point = ecp;
-      ec_priv = None
-    }
-
-let ec_gen_key (params: ec_params): ec_key =
-  let k = ec_key_new params.curve in
+let ec_build_key (params:ec_params) (eck:ssl_ec_key): ec_key =
   let n = ec_bytelen params.curve in
-  let g = ssl_group_of_params params in
   let ecpad s =
     let pad = String.make (n - (String.length s)) '\x00' in
     bytes_of_string (pad ^ s) in
-
-  ocaml_ec_key_generate k;
-  let pub_point = ocaml_ec_key_get0_public_key k in
+  let g = ssl_group_of_params params in
+  let pub_point = ocaml_ec_key_get0_public_key eck in
   let ecx, ecy = ocaml_ec_point_get_affine_coordinates_GFp g pub_point in
-  let priv = ocaml_ec_key_get0_private_key k in {
+  let priv = ocaml_ec_key_get0_private_key eck in
+  {
     ec_params = params;
     ec_point = { ecx = ecpad ecx; ecy = ecpad ecy };
-    ec_priv = Some (bytes_of_string priv)
+    ec_priv = Option.map bytes_of_string priv
   }
+
+let ec_key_of_ssl_ec_key eck: ec_key =
+  let curve =
+    (* See https://tools.ietf.org/html/rfc5480#section-2.1.1.1 *)
+    match ocaml_ec_key_get_curve_name eck with
+    | "prime256v1" -> ECC_P256 
+    | "secp384r1"  -> ECC_P384
+    | "secp521r1"  -> ECC_P521
+    | _  -> failwith "Unsupported curve in certificate"
+  in
+  let params = { curve = curve; point_compression = false } in
+  ec_build_key params eck
+
+let ec_gen_key (params:ec_params): ec_key =
+  let eck = ec_key_new params.curve in
+  ocaml_ec_key_generate eck;
+  ec_build_key params eck
 
 let ecdh_agreement (key: ec_key) (point: ec_point) =
   let ssl_key = ssl_key_of_key key in
@@ -617,72 +612,50 @@ type certkey =
   | CertDSA of dsa
   | CertECDSA of ssl_ec_key
 
+type key =
+  | KeyRSA of rsa_key
+  | KeyDSA of dsa_key
+  | KeyECDSA of ec_key
+
 external ocaml_validate_chain: string list -> bool -> string option -> string -> bool = "ocaml_validate_chain"
-external ocaml_load_chain_from_file: string -> string -> (certkey * string list) option = "ocaml_load_chain_from_file"
-external ocaml_get_rsa_from_cert: string -> rsa option = "ocaml_get_rsa_from_cert"
-external ocaml_get_dsa_from_cert: string -> dsa option = "ocaml_get_dsa_from_cert"
-external ocaml_get_ecdsa_from_cert: string -> ssl_ec_key option = "ocaml_get_ecdsa_from_cert"
+external ocaml_get_key_from_cert: string -> certkey option = "ocaml_get_key_from_cert"
+external ocaml_load_chain: string -> (string list) option = "ocaml_load_chain"
+external ocaml_load_key: string -> certkey option = "ocaml_load_key"
 
-let get_rsa_from_cert cert: rsa_key option =
-  match ocaml_get_rsa_from_cert (string_of_bytes cert) with
-  | None -> None
-  | Some rsa -> Some (rsa_key_of_rsa rsa)
-
-let get_dsa_from_cert cert: dsa_key option =
-  match ocaml_get_dsa_from_cert (string_of_bytes cert) with
-  | None -> None
-  | Some dsa -> Some (dsa_key_of_dsa dsa)
-
-let get_ecdsa_from_cert cert: ec_key option =
-  match ocaml_get_ecdsa_from_cert (string_of_bytes cert) with
-  | None -> None
-  | Some eck -> Some (ec_key_of_ssl_ec_key eck)
- 
 let validate_chain cert_list for_signing hostname cafile =
   let csl = List.map string_of_bytes cert_list in
   ocaml_validate_chain csl for_signing hostname cafile
 
-let cert_verify_sig cert sa ha tbs sigv =
-  match sa with
-  | RSASIG ->
-     begin
-     match get_rsa_from_cert cert with
-      | None -> false
-      | Some rsa -> rsa_verify (Some ha) rsa tbs sigv
-      end
-  | DSA ->
-     begin
-     match get_dsa_from_cert cert with
-      | None -> false
-      | Some dsa -> dsa_verify (Some ha) dsa tbs sigv
-     end
-  | ECDSA ->
-     begin
-     match get_ecdsa_from_cert cert with
-      | None -> false
-      | Some ecdsa -> ecdsa_verify (Some ha) ecdsa tbs sigv
-     end
-  | _ -> false
-
-let cert_load_chain pemfile keyfile =
-  match ocaml_load_chain_from_file pemfile keyfile with
-  | Some (sk, chain) -> Some (sk, List.rev_map bytes_of_string chain)
+let get_key_from_cert cert: key option =
+  match ocaml_get_key_from_cert (string_of_bytes cert) with
+  | Some (CertRSA rsa)   -> Some (KeyRSA   (rsa_key_of_rsa rsa))
+  | Some (CertDSA dsa)   -> Some (KeyDSA   (dsa_key_of_dsa dsa))
+  | Some (CertECDSA eck) -> Some (KeyECDSA (ec_key_of_ssl_ec_key eck))
   | None -> None
 
-let cert_sign key sa ha tbs =
-  let tbs = hash ha tbs in
-  match sa, key with
-  | RSASIG, CertRSA rsa ->
-     let ret = ocaml_rsa_sign rsa (Some ha) (string_of_bytes tbs) in
-     Some (bytes_of_string ret)
-  | DSA, CertDSA dsa ->
-     let ret = ocaml_dsa_sign dsa (string_of_bytes tbs) in
-     Some (bytes_of_string ret)
-  | ECDSA, CertECDSA ec ->
-     let ret = ocaml_ecdsa_sign ec (string_of_bytes tbs) in
-     Some (bytes_of_string ret)
-  | _ -> None
+let maybe_hash_and_sign key h tbs =
+  match key with
+  | KeyRSA rsa   -> rsa_sign   h rsa tbs
+  | KeyDSA dsa   -> dsa_sign   h dsa tbs
+  | KeyECDSA eck -> ecdsa_sign h eck tbs
 
+let verify_signature key h tbs sigv =
+  match key with
+  | KeyRSA rsa   -> rsa_verify   h rsa tbs sigv
+  | KeyDSA dsa   -> dsa_verify   h dsa tbs sigv
+  | KeyECDSA eck -> ecdsa_verify h eck tbs sigv
+
+let load_chain pemfile =
+  match ocaml_load_chain pemfile with
+  | Some chain -> Some (List.rev_map bytes_of_string chain)
+  | None -> None
+
+let load_key keyfile =
+  match ocaml_load_key keyfile with
+  | Some (CertRSA rsa)   -> Some (KeyRSA   (rsa_key_of_rsa rsa))
+  | Some (CertDSA dsa)   -> Some (KeyDSA   (dsa_key_of_dsa dsa))
+  | Some (CertECDSA eck) -> Some (KeyECDSA (ec_key_of_ssl_ec_key eck))
+  | None -> None
 
 (* -------------------------------------------------------------------------- *)
 

@@ -2245,7 +2245,7 @@ end))
 let mk_Exp_abs' : (binders * exp)  ->  typ Prims.option  ->  FStar_Range.range  ->  exp = (fun _28_638 t' p -> (match (_28_638) with
 | (b, e) -> begin
 (let _117_1618 = (match ((b, e.n)) with
-| (_28_642, Exp_abs (b0::bs, body)) -> begin
+| (_28_642, Exp_abs ((b0)::bs, body)) -> begin
 Exp_abs (((FStar_List.append b ((b0)::bs)), body))
 end
 | ([], _28_652) -> begin

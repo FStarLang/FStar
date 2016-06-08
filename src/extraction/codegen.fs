@@ -524,7 +524,7 @@ and doc_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : doc =
        let doc =
          match name, pats with
            (* Special case for Cons *)
-           | "::", [x;xs] -> reduce [doc_of_pattern currentModule x; text "::"; doc_of_pattern currentModule xs]
+           | "::", [x;xs] -> reduce [parens (doc_of_pattern currentModule x); text "::"; doc_of_pattern currentModule xs]
            | _, [MLP_Tuple _] -> reduce1 [text name; doc_of_pattern currentModule (List.hd pats)] //no redundant parens; particularly if we have (T of a * b), we must generate T (x, y) not T ((x, y))
            | _ -> reduce1 [text name; parens (combine (text ", ") (List.map (doc_of_pattern currentModule) pats))] in
        maybe_paren (min_op_prec, NonAssoc) e_app_prio doc

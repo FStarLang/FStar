@@ -59,35 +59,20 @@ val maxValue_lemma_aux: h:heap -> #size:pos -> b:buffer size{live h b} -> l:pos{
   Lemma (forall (i:nat). i < l ==> v (get h b i) <= maxValue h b l)
 let rec maxValue_lemma_aux h #size b l = match l with | 1 -> () | _ -> maxValue_lemma_aux h b (l-1)
 
-abstract val gmaxValue_lemma: h:heap -> #size:pos -> b:buffer size{live h b /\ length b > 0} ->
-  GLemma unit (requires (True)) 
-	(ensures (forall (i:nat). {:pattern (v (get h b i))} i < length b ==> v (get h b i) <= maxValue h b (length b)))
-let rec gmaxValue_lemma h #size b = maxValue_lemma_aux h b (length b)
-
 val maxValue_lemma: h:heap -> #size:pos -> b:buffer size{live h b /\ length b > 0} ->
   Lemma (requires (True)) 
-	(ensures (forall (i:nat). {:pattern (v (get h b i))} i < length b ==> v (get h b i) <= maxValue h b (length b))) 
-	[SMTPat (maxValue h b (length b))]
-let maxValue_lemma h #size b = coerce (requires (True)) (ensures (forall (i:nat). i < length b ==> v (get h b i) <= maxValue h b (length b))) (fun _ -> gmaxValue_lemma h b)
+	(ensures (forall (i:nat). {:pattern (v (get h b i))} i < length b ==> v (get h b i) <= maxValue h b (length b)))
+let rec maxValue_lemma h #size b = maxValue_lemma_aux h b (length b)
 
 val maxValue_bound_lemma_aux: h:heap -> #size:pos -> b:buffer size{live h b /\ length b > 0} -> l:pos{l<=length b} -> 
   bound:nat ->  Lemma (requires (forall (i:nat). i < l ==> v (get h b i) <= bound))
 	             (ensures (maxValue h b l <= bound))
 let rec maxValue_bound_lemma_aux h #size b l bound = match l with | 1 -> () | _ -> maxValue_bound_lemma_aux h b (l-1) bound
 
-abstract val gmaxValue_bound_lemma: h:heap -> #size:pos -> b:buffer size{live h b /\ length b > 0} -> bound:nat ->  
-  GLemma unit (requires (forall (i:nat). i < length b ==> v (get h b i) <= bound))
-	      (ensures (maxValue h b (length b) <= bound))
-let gmaxValue_bound_lemma h #size b bound = maxValue_bound_lemma_aux h b (length b) bound
-
-assume val maxValue_bound_lemma: h:heap -> #size:pos -> b:buffer size{live h b /\ length b > 0} -> bound:nat ->  
+val maxValue_bound_lemma: h:heap -> #size:pos -> b:buffer size{live h b /\ length b > 0} -> bound:nat ->  
   Lemma (requires (forall (i:nat). i < length b ==> v (get h b i) <= bound))
-	(ensures (maxValue h b (length b) <= bound)) 
-
-(* let maxValue_bound_lemma h #size b bound = *)
-(*   coerce (requires (forall (i:nat). i < length b ==> v (get h b i) <= bound)) *)
-(* 	 (ensures (maxValue h b (length b) <= bound)) *)
-(* 	 (fun _ -> gmaxValue_bound_lemma h b bound) *)
+	      (ensures (maxValue h b (length b) <= bound))
+let maxValue_bound_lemma h #size b bound = maxValue_bound_lemma_aux h b (length b) bound
 
 val maxValueNorm: h:heap -> #size:pos -> b:buffer size{live h  b /\ length  b >= norm_length} -> GTot nat
 let maxValueNorm h #size b = maxValue h b norm_length
@@ -124,6 +109,8 @@ let rec eval_eq_lemma ha hb #size_a a #size_b b len =
   | 0 -> ()
   | _ -> eval_eq_lemma ha hb a b (len-1)
 
+#reset-options "--z3timeout 20"
+
 val eval_partial_eq_lemma: ha:heap -> hb:heap -> #size:pos -> a:buffer size{live ha a} -> b:buffer size{live hb b} -> 
   ctr:nat -> len:nat{ ctr <= len /\ len <= length a /\ len <= length b} -> Lemma
     (requires (equalSub ha a ctr hb b ctr (len-ctr)))
@@ -134,9 +121,11 @@ let rec eval_partial_eq_lemma ha hb #size a b ctr len =
   | _ -> 
     cut (forall (i:nat). {:pattern (v (get ha a i))} i < len - ctr ==> v (get ha a (ctr+i)) = v (get hb b (ctr+i))); 
     eval_partial_eq_lemma ha hb a b ctr (len-1); 
-    gcut (fun _ -> eval ha a (len-1) - eval ha a ctr = eval hb b (len-1) - eval hb b ctr); 
-    gcut (fun _ -> eval ha a len = pow2 (bitweight templ (len-1)) * v (get ha a (len-1)) + eval ha a (len-1) /\ eval hb b len = pow2 (bitweight templ (len-1)) * v (get hb b (len-1)) + eval hb b (len-1)); 
-    gcut (fun _ -> v (get ha a (ctr + (len-ctr-1))) = v (get hb b (len-1)))
+    cut (eval ha a (len-1) - eval ha a ctr = eval hb b (len-1) - eval hb b ctr); 
+    cut (eval ha a len = pow2 (bitweight templ (len-1)) * v (get ha a (len-1)) + eval ha a (len-1) /\ eval hb b len = pow2 (bitweight templ (len-1)) * v (get hb b (len-1)) + eval hb b (len-1)); 
+    cut (v (get ha a (ctr + (len-ctr-1))) = v (get hb b (len-1)))
+
+#reset-options
 
 val eval_null: h:heap -> #size:pos -> b:buffer size{live h b} -> len:nat{len <= length b} -> Lemma
     (requires (forall (i:nat). {:pattern (v (get h b i))} i < len ==> v (get h b i) = 0))

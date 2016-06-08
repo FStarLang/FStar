@@ -18,7 +18,7 @@ end
 
 let pre_ast = (FStar_Parser_Driver.parse_file pre_fn)
 in (match ((pre_ast, ast)) with
-| (FStar_Parser_AST.Interface (lid1, decls1, _87_13)::[], FStar_Parser_AST.Module (lid2, decls2)::[]) when (FStar_Ident.lid_equals lid1 lid2) -> begin
+| ((FStar_Parser_AST.Interface (lid1, decls1, _87_13))::[], (FStar_Parser_AST.Module (lid2, decls2))::[]) when (FStar_Ident.lid_equals lid1 lid2) -> begin
 (let _176_11 = (let _176_10 = (let _176_9 = (FStar_Parser_Interleave.interleave decls1 decls2)
 in (lid1, _176_9))
 in FStar_Parser_AST.Module (_176_10))
@@ -375,10 +375,10 @@ in (tc_fold_interleave acc remaining))
 end))
 end))))
 in (match (remaining) with
-| intf::impl::remaining when (needs_interleaving intf impl) -> begin
+| (intf)::(impl)::remaining when (needs_interleaving intf impl) -> begin
 (move (Some (intf)) impl remaining)
 end
-| intf_or_impl::remaining -> begin
+| (intf_or_impl)::remaining -> begin
 (move None intf_or_impl remaining)
 end
 | [] -> begin
