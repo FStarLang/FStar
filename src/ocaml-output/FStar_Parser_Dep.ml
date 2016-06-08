@@ -23,10 +23,10 @@ end else begin
 None
 end))) suffixes)
 in (match ((FStar_List.filter FStar_Util.is_some matches)) with
-| Some (m)::_68_18 -> begin
+| Some (m)::_68_19 -> begin
 Some (m)
 end
-| _68_23 -> begin
+| _68_24 -> begin
 None
 end))))
 
@@ -46,7 +46,7 @@ end
 end))
 
 
-let list_of_pair = (fun _68_32 -> (match (_68_32) with
+let list_of_pair = (fun _68_33 -> (match (_68_33) with
 | (intf, impl) -> begin
 (FStar_List.append (list_of_option intf) (list_of_option impl))
 end))
@@ -54,7 +54,7 @@ end))
 
 let must_find_stratified = (fun m k -> (match ((let _157_13 = (FStar_Util.smap_try_find m k)
 in (FStar_Util.must _157_13))) with
-| (Some (intf), _68_38) -> begin
+| (Some (intf), _68_39) -> begin
 (intf)::[]
 end
 | (None, Some (impl)) -> begin
@@ -130,7 +130,7 @@ end
 end))
 in (
 
-let _68_81 = (FStar_List.iter (fun d -> if (FStar_Util.file_exists d) then begin
+let _68_82 = (FStar_List.iter (fun d -> if (FStar_Util.file_exists d) then begin
 (
 
 let files = (FStar_Util.readdir d)
@@ -161,7 +161,7 @@ in (Prims.raise _157_42))
 end) include_directories)
 in (
 
-let _68_84 = (FStar_List.iter (fun f -> (let _157_44 = (lowercase_module_name f)
+let _68_85 = (FStar_List.iter (fun f -> (let _157_44 = (lowercase_module_name f)
 in (add_entry _157_44 f))) filenames)
 in map)))))))))
 
@@ -174,7 +174,7 @@ in (
 let prefix = (Prims.strcat prefix ".")
 in (
 
-let _68_96 = (let _157_54 = (let _157_53 = (FStar_Util.smap_keys original_map)
+let _68_97 = (let _157_54 = (let _157_53 = (FStar_Util.smap_keys original_map)
 in (FStar_List.unique _157_53))
 in (FStar_List.iter (fun k -> if (FStar_Util.starts_with k prefix) then begin
 (
@@ -186,7 +186,7 @@ let filename = (let _157_52 = (FStar_Util.smap_try_find original_map k)
 in (FStar_Util.must _157_52))
 in (
 
-let _68_94 = (FStar_Util.smap_add working_map suffix filename)
+let _68_95 = (FStar_Util.smap_add working_map suffix filename)
 in (FStar_ST.op_Colon_Equals found true))))
 end else begin
 ()
@@ -302,10 +302,10 @@ in try
 | () -> begin
 (
 
-let _68_143 = (FStar_List.iteri (fun i x -> if (s = x) then begin
+let _68_144 = (FStar_List.iteri (fun i x -> if (s = x) then begin
 (
 
-let _68_141 = (FStar_ST.op_Colon_Equals found i)
+let _68_142 = (FStar_ST.op_Colon_Equals found i)
 in (Prims.raise Exit))
 end else begin
 ()
@@ -345,7 +345,7 @@ in (FStar_List.filter (fun lid -> ((let _157_113 = (lowercase_join_longident lid
 in (index_or_length _157_113 ordered)) < my_index)) desired_opens)))))))
 in (
 
-let _68_155 = (FStar_List.iter record_open auto_open)
+let _68_156 = (FStar_List.iter record_open auto_open)
 in (
 
 let rec collect_fragment = (fun _68_2 -> (match (_68_2) with
@@ -362,14 +362,14 @@ end
 | modules -> begin
 (
 
-let _68_182 = (FStar_Util.fprint FStar_Util.stderr "Warning: file %s does not respect the one module per file convention\n" ((filename)::[]))
+let _68_184 = (FStar_Util.fprint FStar_Util.stderr "Warning: file %s does not respect the one module per file convention\n" ((filename)::[]))
 in (FStar_List.iter collect_module modules))
 end))
 and collect_module = (fun _68_4 -> (match (_68_4) with
 | (FStar_Parser_AST.Module (lid, decls)) | (FStar_Parser_AST.Interface (lid, decls, _)) -> begin
 (
 
-let _68_193 = (check_module_declaration_against_filename lid filename)
+let _68_195 = (check_module_declaration_against_filename lid filename)
 in (collect_decls decls))
 end))
 and collect_decls = (fun decls -> (FStar_List.iter (fun x -> (collect_decl x.FStar_Parser_AST.d)) decls))
@@ -380,90 +380,90 @@ end
 | FStar_Parser_AST.ModuleAbbrev (ident, lid) -> begin
 (record_module_alias ident lid)
 end
-| FStar_Parser_AST.ToplevelLet (_68_205, _68_207, patterms) -> begin
-(FStar_List.iter (fun _68_213 -> (match (_68_213) with
+| FStar_Parser_AST.ToplevelLet (_68_207, _68_209, patterms) -> begin
+(FStar_List.iter (fun _68_215 -> (match (_68_215) with
 | (pat, t) -> begin
 (
 
-let _68_214 = (collect_pattern pat)
+let _68_216 = (collect_pattern pat)
 in (collect_term t))
 end)) patterms)
 end
-| FStar_Parser_AST.KindAbbrev (_68_217, binders, t) -> begin
+| FStar_Parser_AST.KindAbbrev (_68_219, binders, t) -> begin
 (
 
-let _68_222 = (collect_term t)
+let _68_224 = (collect_term t)
 in (collect_binders binders))
 end
 | (FStar_Parser_AST.Main (t)) | (FStar_Parser_AST.Assume (_, _, t)) | (FStar_Parser_AST.SubEffect ({FStar_Parser_AST.msource = _; FStar_Parser_AST.mdest = _; FStar_Parser_AST.lift_op = t})) | (FStar_Parser_AST.Val (_, _, t)) -> begin
 (collect_term t)
 end
-| FStar_Parser_AST.Tycon (_68_245, ts) -> begin
+| FStar_Parser_AST.Tycon (_68_247, ts) -> begin
 (FStar_List.iter collect_tycon ts)
 end
-| FStar_Parser_AST.Exception (_68_250, t) -> begin
+| FStar_Parser_AST.Exception (_68_252, t) -> begin
 (FStar_Util.iter_opt t collect_term)
 end
 | (FStar_Parser_AST.NewEffectForFree (ed)) | (FStar_Parser_AST.NewEffect (_, ed)) -> begin
 (collect_effect_decl ed)
 end
-| FStar_Parser_AST.Pragma (_68_261) -> begin
+| FStar_Parser_AST.Pragma (_68_263) -> begin
 ()
 end))
 and collect_tycon = (fun _68_6 -> (match (_68_6) with
-| FStar_Parser_AST.TyconAbstract (_68_265, binders, k) -> begin
+| FStar_Parser_AST.TyconAbstract (_68_267, binders, k) -> begin
 (
 
-let _68_270 = (collect_binders binders)
+let _68_272 = (collect_binders binders)
 in (FStar_Util.iter_opt k collect_term))
 end
-| FStar_Parser_AST.TyconAbbrev (_68_273, binders, k, t) -> begin
+| FStar_Parser_AST.TyconAbbrev (_68_275, binders, k, t) -> begin
 (
 
-let _68_279 = (collect_binders binders)
+let _68_281 = (collect_binders binders)
 in (
 
-let _68_281 = (FStar_Util.iter_opt k collect_term)
+let _68_283 = (FStar_Util.iter_opt k collect_term)
 in (collect_term t)))
 end
-| FStar_Parser_AST.TyconRecord (_68_284, binders, k, identterms) -> begin
+| FStar_Parser_AST.TyconRecord (_68_286, binders, k, identterms) -> begin
 (
 
-let _68_290 = (collect_binders binders)
+let _68_292 = (collect_binders binders)
 in (
 
-let _68_292 = (FStar_Util.iter_opt k collect_term)
-in (FStar_List.iter (fun _68_297 -> (match (_68_297) with
-| (_68_295, t) -> begin
+let _68_294 = (FStar_Util.iter_opt k collect_term)
+in (FStar_List.iter (fun _68_299 -> (match (_68_299) with
+| (_68_297, t) -> begin
 (collect_term t)
 end)) identterms)))
 end
-| FStar_Parser_AST.TyconVariant (_68_299, binders, k, identterms) -> begin
+| FStar_Parser_AST.TyconVariant (_68_301, binders, k, identterms) -> begin
 (
 
-let _68_305 = (collect_binders binders)
+let _68_307 = (collect_binders binders)
 in (
 
-let _68_307 = (FStar_Util.iter_opt k collect_term)
-in (FStar_List.iter (fun _68_314 -> (match (_68_314) with
-| (_68_310, t, _68_313) -> begin
+let _68_309 = (FStar_Util.iter_opt k collect_term)
+in (FStar_List.iter (fun _68_316 -> (match (_68_316) with
+| (_68_312, t, _68_315) -> begin
 (FStar_Util.iter_opt t collect_term)
 end)) identterms)))
 end))
 and collect_effect_decl = (fun _68_7 -> (match (_68_7) with
-| FStar_Parser_AST.DefineEffect (_68_317, binders, t, decls) -> begin
+| FStar_Parser_AST.DefineEffect (_68_319, binders, t, decls) -> begin
 (
 
-let _68_323 = (collect_binders binders)
+let _68_325 = (collect_binders binders)
 in (
 
-let _68_325 = (collect_term t)
+let _68_327 = (collect_term t)
 in (collect_decls decls)))
 end
-| FStar_Parser_AST.RedefineEffect (_68_328, binders, t) -> begin
+| FStar_Parser_AST.RedefineEffect (_68_330, binders, t) -> begin
 (
 
-let _68_333 = (collect_binders binders)
+let _68_335 = (collect_binders binders)
 in (collect_term t))
 end))
 and collect_binders = (fun binders -> (FStar_List.iter collect_binder binders))
@@ -471,21 +471,53 @@ and collect_binder = (fun _68_8 -> (match (_68_8) with
 | ({FStar_Parser_AST.b = FStar_Parser_AST.Annotated (_, t); FStar_Parser_AST.brange = _; FStar_Parser_AST.blevel = _; FStar_Parser_AST.aqual = _}) | ({FStar_Parser_AST.b = FStar_Parser_AST.TAnnotated (_, t); FStar_Parser_AST.brange = _; FStar_Parser_AST.blevel = _; FStar_Parser_AST.aqual = _}) | ({FStar_Parser_AST.b = FStar_Parser_AST.NoName (t); FStar_Parser_AST.brange = _; FStar_Parser_AST.blevel = _; FStar_Parser_AST.aqual = _}) -> begin
 (collect_term t)
 end
-| _68_369 -> begin
+| _68_371 -> begin
 ()
 end))
 and collect_term = (fun t -> (collect_term' t.FStar_Parser_AST.tm))
-and collect_term' = (fun _68_9 -> (match (_68_9) with
+and collect_constant = (fun _68_9 -> (match (_68_9) with
+| FStar_Const.Const_int (_68_375, Some (signedness, width)) -> begin
+(
+
+let u = (match (signedness) with
+| FStar_Const.Unsigned -> begin
+"u"
+end
+| FStar_Const.Signed -> begin
+""
+end)
+in (
+
+let w = (match (width) with
+| FStar_Const.Int8 -> begin
+"8"
+end
+| FStar_Const.Int16 -> begin
+"16"
+end
+| FStar_Const.Int32 -> begin
+"32"
+end
+| FStar_Const.Int64 -> begin
+"64"
+end)
+in (let _157_146 = (FStar_Util.format2 "fstar.%sint%s" u w)
+in (add_dep _157_146))))
+end
+| _68_391 -> begin
+()
+end))
+and collect_term' = (fun _68_10 -> (match (_68_10) with
 | FStar_Parser_AST.Wild -> begin
 ()
 end
-| FStar_Parser_AST.Const (_68_374) -> begin
-()
+| FStar_Parser_AST.Const (c) -> begin
+(collect_constant c)
 end
-| FStar_Parser_AST.Op (_68_377, ts) -> begin
+| FStar_Parser_AST.Op (_68_397, ts) -> begin
 (FStar_List.iter collect_term ts)
 end
-| FStar_Parser_AST.Tvar (_68_382) -> begin
+| FStar_Parser_AST.Tvar (_68_402) -> begin
 ()
 end
 | (FStar_Parser_AST.Var (lid)) | (FStar_Parser_AST.Name (lid)) -> begin
@@ -494,45 +526,45 @@ end
 let key = (lowercase_join_longident lid false)
 in (match ((FStar_Util.smap_try_find working_map key)) with
 | Some (pair) -> begin
-(FStar_List.iter (fun f -> (let _157_146 = (lowercase_module_name f)
-in (add_dep _157_146))) (list_of_pair pair))
+(FStar_List.iter (fun f -> (let _157_149 = (lowercase_module_name f)
+in (add_dep _157_149))) (list_of_pair pair))
 end
 | None -> begin
 if (((FStar_List.length lid.FStar_Ident.ns) > 0) && (FStar_Options.debug_any ())) then begin
-(let _157_148 = (let _157_147 = (string_of_lid lid false)
-in (_157_147)::[])
-in (FStar_Util.fprint FStar_Util.stderr "Warning: unbound module reference %s\n" _157_148))
+(let _157_151 = (let _157_150 = (string_of_lid lid false)
+in (_157_150)::[])
+in (FStar_Util.fprint FStar_Util.stderr "Warning: unbound module reference %s\n" _157_151))
 end else begin
 ()
 end
 end))
 end
-| FStar_Parser_AST.Construct (_68_393, termimps) -> begin
-(FStar_List.iter (fun _68_400 -> (match (_68_400) with
-| (t, _68_399) -> begin
+| FStar_Parser_AST.Construct (_68_413, termimps) -> begin
+(FStar_List.iter (fun _68_420 -> (match (_68_420) with
+| (t, _68_419) -> begin
 (collect_term t)
 end)) termimps)
 end
 | FStar_Parser_AST.Abs (pats, t) -> begin
 (
 
-let _68_405 = (collect_patterns pats)
+let _68_425 = (collect_patterns pats)
 in (collect_term t))
 end
-| FStar_Parser_AST.App (t1, t2, _68_410) -> begin
+| FStar_Parser_AST.App (t1, t2, _68_430) -> begin
 (
 
-let _68_413 = (collect_term t1)
+let _68_433 = (collect_term t1)
 in (collect_term t2))
 end
-| FStar_Parser_AST.Let (_68_416, patterms, t) -> begin
+| FStar_Parser_AST.Let (_68_436, patterms, t) -> begin
 (
 
-let _68_426 = (FStar_List.iter (fun _68_423 -> (match (_68_423) with
+let _68_446 = (FStar_List.iter (fun _68_443 -> (match (_68_443) with
 | (pat, t) -> begin
 (
 
-let _68_424 = (collect_pattern pat)
+let _68_444 = (collect_pattern pat)
 in (collect_term t))
 end)) patterms)
 in (collect_term t))
@@ -540,64 +572,64 @@ end
 | FStar_Parser_AST.Seq (t1, t2) -> begin
 (
 
-let _68_432 = (collect_term t1)
+let _68_452 = (collect_term t1)
 in (collect_term t2))
 end
 | FStar_Parser_AST.If (t1, t2, t3) -> begin
 (
 
-let _68_439 = (collect_term t1)
+let _68_459 = (collect_term t1)
 in (
 
-let _68_441 = (collect_term t2)
+let _68_461 = (collect_term t2)
 in (collect_term t3)))
 end
 | (FStar_Parser_AST.Match (t, bs)) | (FStar_Parser_AST.TryWith (t, bs)) -> begin
 (
 
-let _68_449 = (collect_term t)
+let _68_469 = (collect_term t)
 in (collect_branches bs))
 end
 | FStar_Parser_AST.Ascribed (t1, t2) -> begin
 (
 
-let _68_455 = (collect_term t1)
+let _68_475 = (collect_term t1)
 in (collect_term t2))
 end
 | FStar_Parser_AST.Record (t, idterms) -> begin
 (
 
-let _68_461 = (FStar_Util.iter_opt t collect_term)
-in (FStar_List.iter (fun _68_466 -> (match (_68_466) with
-| (_68_464, t) -> begin
+let _68_481 = (FStar_Util.iter_opt t collect_term)
+in (FStar_List.iter (fun _68_486 -> (match (_68_486) with
+| (_68_484, t) -> begin
 (collect_term t)
 end)) idterms))
 end
-| FStar_Parser_AST.Project (t, _68_469) -> begin
+| FStar_Parser_AST.Project (t, _68_489) -> begin
 (collect_term t)
 end
 | (FStar_Parser_AST.Product (binders, t)) | (FStar_Parser_AST.Sum (binders, t)) -> begin
 (
 
-let _68_478 = (collect_binders binders)
+let _68_498 = (collect_binders binders)
 in (collect_term t))
 end
 | (FStar_Parser_AST.QForall (binders, ts, t)) | (FStar_Parser_AST.QExists (binders, ts, t)) -> begin
 (
 
-let _68_487 = (collect_binders binders)
+let _68_507 = (collect_binders binders)
 in (
 
-let _68_489 = (FStar_List.iter (FStar_List.iter collect_term) ts)
+let _68_509 = (FStar_List.iter (FStar_List.iter collect_term) ts)
 in (collect_term t)))
 end
 | FStar_Parser_AST.Refine (binder, t) -> begin
 (
 
-let _68_495 = (collect_binder binder)
+let _68_515 = (collect_binder binder)
 in (collect_term t))
 end
-| FStar_Parser_AST.NamedTyp (_68_498, t) -> begin
+| FStar_Parser_AST.NamedTyp (_68_518, t) -> begin
 (collect_term t)
 end
 | FStar_Parser_AST.Paren (t) -> begin
@@ -608,17 +640,17 @@ end
 end))
 and collect_patterns = (fun ps -> (FStar_List.iter collect_pattern ps))
 and collect_pattern = (fun p -> (collect_pattern' p.FStar_Parser_AST.pat))
-and collect_pattern' = (fun _68_10 -> (match (_68_10) with
+and collect_pattern' = (fun _68_11 -> (match (_68_11) with
 | FStar_Parser_AST.PatWild -> begin
 ()
 end
-| FStar_Parser_AST.PatConst (_68_524) -> begin
+| FStar_Parser_AST.PatConst (_68_544) -> begin
 ()
 end
 | FStar_Parser_AST.PatApp (p, ps) -> begin
 (
 
-let _68_530 = (collect_pattern p)
+let _68_550 = (collect_pattern p)
 in (collect_patterns ps))
 end
 | (FStar_Parser_AST.PatVar (_)) | (FStar_Parser_AST.PatName (_)) | (FStar_Parser_AST.PatTvar (_)) -> begin
@@ -628,26 +660,26 @@ end
 (collect_patterns ps)
 end
 | FStar_Parser_AST.PatRecord (lidpats) -> begin
-(FStar_List.iter (fun _68_553 -> (match (_68_553) with
-| (_68_551, p) -> begin
+(FStar_List.iter (fun _68_573 -> (match (_68_573) with
+| (_68_571, p) -> begin
 (collect_pattern p)
 end)) lidpats)
 end
 | FStar_Parser_AST.PatAscribed (p, t) -> begin
 (
 
-let _68_558 = (collect_pattern p)
+let _68_578 = (collect_pattern p)
 in (collect_term t))
 end))
 and collect_branches = (fun bs -> (FStar_List.iter collect_branch bs))
-and collect_branch = (fun _68_564 -> (match (_68_564) with
+and collect_branch = (fun _68_584 -> (match (_68_584) with
 | (pat, t1, t2) -> begin
 (
 
-let _68_565 = (collect_pattern pat)
+let _68_585 = (collect_pattern pat)
 in (
 
-let _68_567 = (FStar_Util.iter_opt t1 collect_term)
+let _68_587 = (FStar_Util.iter_opt t1 collect_term)
 in (collect_term t2)))
 end))
 in (
@@ -655,7 +687,7 @@ in (
 let ast = (FStar_Parser_Driver.parse_file filename)
 in (
 
-let _68_570 = (collect_file ast)
+let _68_590 = (collect_file ast)
 in (FStar_ST.read deps))))))))))))
 
 
@@ -694,28 +726,28 @@ end))
 
 let print_graph = (fun graph -> (
 
-let _68_573 = (FStar_Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph")
+let _68_593 = (FStar_Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph")
 in (
 
-let _68_575 = (FStar_Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph")
+let _68_595 = (FStar_Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph")
 in (
 
-let _68_577 = (FStar_Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims")
-in (let _157_173 = (let _157_172 = (let _157_171 = (let _157_170 = (let _157_169 = (let _157_168 = (FStar_Util.smap_keys graph)
-in (FStar_List.unique _157_168))
+let _68_597 = (FStar_Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims")
+in (let _157_176 = (let _157_175 = (let _157_174 = (let _157_173 = (let _157_172 = (let _157_171 = (FStar_Util.smap_keys graph)
+in (FStar_List.unique _157_171))
 in (FStar_List.map_flatten (fun k -> (
 
-let deps = (let _157_164 = (let _157_163 = (FStar_Util.smap_try_find graph k)
-in (FStar_Util.must _157_163))
-in (Prims.fst _157_164))
+let deps = (let _157_167 = (let _157_166 = (FStar_Util.smap_try_find graph k)
+in (FStar_Util.must _157_166))
+in (Prims.fst _157_167))
 in (
 
 let r = (fun s -> (FStar_Util.replace_char s '.' '_'))
-in (FStar_List.map (fun dep -> (FStar_Util.format2 "  %s -> %s" (r k) (r dep))) deps)))) _157_169))
-in (FStar_String.concat "\n" _157_170))
-in (Prims.strcat "digraph {\n" _157_171))
-in (Prims.strcat _157_172 "\n}\n"))
-in (FStar_Util.write_file "dep.graph" _157_173))))))
+in (FStar_List.map (fun dep -> (FStar_Util.format2 "  %s -> %s" (r k) (r dep))) deps)))) _157_172))
+in (FStar_String.concat "\n" _157_173))
+in (Prims.strcat "digraph {\n" _157_174))
+in (Prims.strcat _157_175 "\n}\n"))
+in (FStar_Util.write_file "dep.graph" _157_176))))))
 
 
 let collect : Prims.string Prims.list  ->  ((Prims.string * Prims.string Prims.list) Prims.list * Prims.string Prims.list * (Prims.string Prims.list * color) FStar_Util.smap) = (fun filenames -> (
@@ -729,9 +761,9 @@ in (
 let rec discover_one = (fun key -> if ((FStar_Util.smap_try_find graph key) = None) then begin
 (
 
-let _68_591 = (let _157_178 = (FStar_Util.smap_try_find m key)
-in (FStar_Util.must _157_178))
-in (match (_68_591) with
+let _68_611 = (let _157_181 = (FStar_Util.smap_try_find m key)
+in (FStar_Util.must _157_181))
+in (match (_68_611) with
 | (intf, impl) -> begin
 (
 
@@ -756,7 +788,7 @@ in (
 let deps = (FStar_List.unique (FStar_List.append impl_deps intf_deps))
 in (
 
-let _68_601 = (FStar_Util.smap_add graph key (deps, White))
+let _68_621 = (FStar_Util.smap_add graph key (deps, White))
 in (FStar_List.iter discover_one deps)))))
 end))
 end else begin
@@ -764,8 +796,8 @@ end else begin
 end)
 in (
 
-let _68_603 = (let _157_179 = (FStar_List.map lowercase_module_name filenames)
-in (FStar_List.iter discover_one _157_179))
+let _68_623 = (let _157_182 = (FStar_List.map lowercase_module_name filenames)
+in (FStar_List.iter discover_one _157_182))
 in (
 
 let immediate_graph = (FStar_Util.smap_copy graph)
@@ -776,24 +808,24 @@ in (
 
 let rec discover = (fun cycle key -> (
 
-let _68_612 = (let _157_184 = (FStar_Util.smap_try_find graph key)
-in (FStar_Util.must _157_184))
-in (match (_68_612) with
+let _68_632 = (let _157_187 = (FStar_Util.smap_try_find graph key)
+in (FStar_Util.must _157_187))
+in (match (_68_632) with
 | (direct_deps, color) -> begin
 (match (color) with
 | Gray -> begin
 (
 
-let _68_614 = (FStar_Util.print1 "Warning: recursive dependency on module %s\n" key)
+let _68_634 = (FStar_Util.print1 "Warning: recursive dependency on module %s\n" key)
 in (
 
-let _68_616 = (FStar_Util.print1 "The cycle is: %s \n" (FStar_String.concat " -> " cycle))
+let _68_636 = (FStar_Util.print1 "The cycle is: %s \n" (FStar_String.concat " -> " cycle))
 in (
 
-let _68_618 = (print_graph immediate_graph)
+let _68_638 = (print_graph immediate_graph)
 in (
 
-let _68_620 = (FStar_Util.print_string "\n")
+let _68_640 = (FStar_Util.print_string "\n")
 in (FStar_All.exit 1)))))
 end
 | Black -> begin
@@ -802,21 +834,21 @@ end
 | White -> begin
 (
 
-let _68_624 = (FStar_Util.smap_add graph key (direct_deps, Gray))
+let _68_644 = (FStar_Util.smap_add graph key (direct_deps, Gray))
 in (
 
-let all_deps = (let _157_188 = (let _157_187 = (FStar_List.map (fun dep -> (let _157_186 = (discover ((key)::cycle) dep)
-in (dep)::_157_186)) direct_deps)
-in (FStar_List.flatten _157_187))
-in (FStar_List.unique _157_188))
+let all_deps = (let _157_191 = (let _157_190 = (FStar_List.map (fun dep -> (let _157_189 = (discover ((key)::cycle) dep)
+in (dep)::_157_189)) direct_deps)
+in (FStar_List.flatten _157_190))
+in (FStar_List.unique _157_191))
 in (
 
-let _68_628 = (FStar_Util.smap_add graph key (all_deps, Black))
+let _68_648 = (FStar_Util.smap_add graph key (all_deps, Black))
 in (
 
-let _68_630 = (let _157_190 = (let _157_189 = (FStar_ST.read topologically_sorted)
-in (key)::_157_189)
-in (FStar_ST.op_Colon_Equals topologically_sorted _157_190))
+let _68_650 = (let _157_193 = (let _157_192 = (FStar_ST.read topologically_sorted)
+in (key)::_157_192)
+in (FStar_ST.op_Colon_Equals topologically_sorted _157_193))
 in all_deps))))
 end)
 end)))
@@ -828,11 +860,11 @@ in (
 let must_find = (must_find m)
 in (
 
-let must_find_r = (fun f -> (let _157_195 = (must_find f)
-in (FStar_List.rev _157_195)))
+let must_find_r = (fun f -> (let _157_198 = (must_find f)
+in (FStar_List.rev _157_198)))
 in (
 
-let by_target = (let _157_200 = (FStar_Util.smap_keys graph)
+let by_target = (let _157_203 = (FStar_Util.smap_keys graph)
 in (FStar_List.map_flatten (fun k -> (
 
 let as_list = (must_find k)
@@ -854,21 +886,21 @@ in (
 let k = (lowercase_module_name f)
 in (
 
-let deps = (let _157_198 = (discover k)
-in (FStar_List.rev _157_198))
+let deps = (let _157_201 = (discover k)
+in (FStar_List.rev _157_201))
 in (
 
-let deps_as_filenames = (let _157_199 = (FStar_List.map_flatten must_find deps)
-in (FStar_List.append _157_199 suffix))
-in (f, deps_as_filenames))))))) as_list)))) _157_200))
+let deps_as_filenames = (let _157_202 = (FStar_List.map_flatten must_find deps)
+in (FStar_List.append _157_202 suffix))
+in (f, deps_as_filenames))))))) as_list)))) _157_203))
 in (
 
-let topologically_sorted = (let _157_201 = (FStar_ST.read topologically_sorted)
-in (FStar_List.map_flatten must_find_r _157_201))
+let topologically_sorted = (let _157_204 = (FStar_ST.read topologically_sorted)
+in (FStar_List.map_flatten must_find_r _157_204))
 in (by_target, topologically_sorted, immediate_graph))))))))))))))
 
 
-let print_make : (Prims.string * Prims.string Prims.list) Prims.list  ->  Prims.unit = (fun deps -> (FStar_List.iter (fun _68_650 -> (match (_68_650) with
+let print_make : (Prims.string * Prims.string Prims.list) Prims.list  ->  Prims.unit = (fun deps -> (FStar_List.iter (fun _68_670 -> (match (_68_670) with
 | (f, deps) -> begin
 (
 
@@ -877,8 +909,8 @@ in (FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps)))
 end)) deps))
 
 
-let print = (fun _68_657 -> (match (_68_657) with
-| (make_deps, _68_655, graph) -> begin
+let print = (fun _68_677 -> (match (_68_677) with
+| (make_deps, _68_675, graph) -> begin
 (match ((FStar_Options.dep ())) with
 | Some ("make") -> begin
 (print_make make_deps)
@@ -886,7 +918,7 @@ end
 | Some ("graph") -> begin
 (print_graph graph)
 end
-| Some (_68_663) -> begin
+| Some (_68_683) -> begin
 (Prims.raise (FStar_Absyn_Syntax.Err ("unknown tool for --dep\n")))
 end
 | None -> begin
