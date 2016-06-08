@@ -87,6 +87,22 @@ assume val append_assoc : a:string -> b:string -> c:string -> Lemma
   (requires True)
   (ensures (a ^ (b ^ c)) = ((a ^ b) ^ c))
   [SMTPat (a ^ (b ^ c))]
+assume val length_0_empty : s:string -> Lemma 
+  (requires String.length s = 0)
+  (ensures s = "")
+  [SMTPat (String.length s = 0)]
+assume val substring_full : s:string -> Lemma
+  (requires True)
+  (ensures substringT s 0 (String.length s) = s)
+  [SMTPat (substringT s 0 (String.length s))]
+val splitTwo : s : string -> i:nat{i <= String.length s} -> Tot ((a:string{String.length a = i}) * (b:string{String.length b = String.length s - i}))
+let splitTwo s i = (substringT s 0 i, substringT s i (String.length s - i))
+assume val split_append : s:string -> i:nat{i <= String.length s} -> Lemma
+  (requires True)
+  (ensures 
+    (let p = splitTwo s i in 
+    fst p ^ snd p = s))
+
 
 (* val sum_length_le : i:nat -> h:cbytes -> t:list cbytes -> Lemma (i <= sum_length (h::t) ==> i - String.length h <= sum_length t) *)
 (* let sum_length_le i h t = () *)
@@ -126,12 +142,6 @@ let rec concat_append a b =
       concat_append xs b
 
 
-assume val length_0_empty : s:string -> Lemma 
-  (requires String.length s = 0)
-  (ensures s = "")
-  [SMTPat (String.length s = 0)]
-
-
 val getBytes : bl:list cbytes -> i:nat{i <= sum_length bl} -> n:nat{i+n <= sum_length bl} -> Tot (b:cbytes{String.length b = n})
 let rec getBytes (bl: list cbytes) i n  =
     match bl with
@@ -149,12 +159,27 @@ let rec getBytes (bl: list cbytes) i n  =
                substringT h i curr ^ getBytes t 0 (n-curr)
 
 
+assume val substring_sub_range: s:string -> i:nat{i <= String.length s} -> n:nat{i + n <= String.length s} -> i2:nat{i <= i2 /\ i2 <= i+n} -> n2:nat{i2+n2<=i+n} -> Lemma
+  (requires True)
+  (ensures substringT s i2 n2 = substringT (substringT s i n) (i2 - i) n2)
+
+
+assume val substring_prefix: prefix:string -> s:string -> i:nat{i <= String.length s} -> n:nat{i + n <= String.length s} -> Lemma 
+  (substringT (prefix ^ s) (String.length prefix + i) n = substringT s i n)
+
+
+assume val substring_suffix: s:string -> i:nat{i <= String.length s} -> n:nat{i + n <= String.length s} -> suffix:string -> Lemma 
+  (substringT (s ^ suffix) i n = substringT s i n)
+
+
+assume val substring_append: s1:string -> i1:nat{i1 <= String.length s1} -> s2:string -> n2:nat{n2 <= String.length s2} -> Lemma
+  (substringT s1 i1 (String.length s1 - i1) ^ substringT s2 0 n2 = substringT (s1 ^ s2) i1 (String.length s1 - i1 + n2))
+
+
 val lemma_getBytes: ls1:list cbytes -> ls2:list cbytes -> i:nat{i <= sum_length ls1} -> n:nat{sum_length ls1 <= i + n /\ i + n <= sum_length ls1 + sum_length ls2} -> Lemma
   (requires True)
   (ensures getBytes (ls1 @ ls2) i n = (getBytes ls1 i (sum_length ls1 - i) ^ getBytes ls2 0 (i + n - sum_length ls1)))
   [SMTPat (getBytes (ls1 @ ls2) i n)]
-
-
 let rec lemma_getBytes ls1 ls2 i n = 
   match ls1 with
   | [] ->
@@ -163,7 +188,7 @@ let rec lemma_getBytes ls1 ls2 i n =
     if String.length h <= i then
       lemma_getBytes t ls2 (i - String.length h) n
     else
-      let curr = (String.length h) - i in
+      let curr = String.length h - i in
       if n <= curr then 
         let _ = assert (i + n - sum_length ls1 = 0) in
         ()
@@ -176,18 +201,10 @@ let rec lemma_getBytes ls1 ls2 i n =
           ()
         
 
-val lemma_getBytes_2 : ls:list cbytes -> Lemma
-  (requires True)
-  (ensures getBytes ls 0 (sum_length ls) = string_concat ls)
-  [SMTPat (getBytes ls 0 (sum_length ls))]
-
-
 val sum_length_0_concat_empty : ls:list string -> Lemma 
   (requires sum_length ls = 0)
   (ensures string_concat ls = "")
   [SMTPat (sum_length ls = 0)]
-
-
 let rec sum_length_0_concat_empty ls =
   match ls with
   | [] -> ()
@@ -196,12 +213,10 @@ let rec sum_length_0_concat_empty ls =
     sum_length_0_concat_empty xs
 
 
-assume val substring_full : s:string -> Lemma
+val lemma_getBytes_2 : ls:list cbytes -> Lemma
   (requires True)
-  (ensures substringT s 0 (String.length s) = s)
-  [SMTPat (substringT s 0 (String.length s))]
-
-
+  (ensures getBytes ls 0 (sum_length ls) = string_concat ls)
+  [SMTPat (getBytes ls 0 (sum_length ls))]
 let rec lemma_getBytes_2 ls = 
   match ls with
   | [] ->
@@ -219,6 +234,44 @@ let rec lemma_getBytes_2 ls =
         let _ = lemma_getBytes_2 t in
         ()
           
+
+(* getBytes on sub-range *)
+val lemma_getBytes_3: ls:list cbytes -> i:nat{i <= sum_length ls} -> n:nat{i + n <= sum_length ls} -> i2:nat{i <= i2 /\ i2 <= i+n} -> n2:nat{i2+n2<=i+n} -> Lemma
+  (requires True)
+  (ensures getBytes ls i2 n2 = substringT (getBytes ls i n) (i2 - i) n2)
+  [SMTPat (getBytes ls i2 n2)]
+let rec lemma_getBytes_3 ls i n i2 n2 = 
+  match ls with
+  | [] ->
+    ()
+  | h :: t ->
+    if String.length h <= i then
+      lemma_getBytes_3 t (i - String.length h) n (i2 - String.length h) n2
+    else
+      let curr = String.length h - i in
+      if String.length h <= i2 then
+        let _ = lemma_getBytes_3 t 0 (n-curr) (i2-String.length h) n2 in
+        if n <= curr then
+          let _ = assert (n2 = 0) in
+          ()
+        else
+          let _ = substring_prefix (substringT h i curr) (getBytes t 0 (n-curr)) (i2-String.length h) n2 in
+          ()
+      else
+        if n <= curr then
+          let _ = substring_sub_range h i n i2 n2 in
+          ()
+        else
+          if i2 + n2 <= String.length h then
+            let _ = substring_sub_range h i curr i2 n2 in
+            let _ = substring_suffix (substringT h i curr) (i2-i) n2 (getBytes t 0 (n-curr)) in
+            ()
+          else
+            let _ = lemma_getBytes_3 t 0 (n-curr) 0 (i2+n2-String.length h) in
+            let _ = substring_sub_range h i curr i2 (String.length h - i2) in
+            let _ = substring_append (substringT h i curr) (i2-i) (getBytes t 0 (n-curr)) (i2+n2-String.length h) in
+            ()
+        
 
 val get_cbytes : b:bytes -> Tot (r:cbytes{String.length r = b.length})
 let get_cbytes (b:bytes) =
@@ -286,21 +339,6 @@ val lemma_split_1 : b:bytes -> i:nat{i <= length b} -> Lemma (let x = split b i 
 let lemma_split_1 b i = ()
 
 
-(* getBytes on sub-range *)
-val lemma_getBytes_3: ls:list cbytes -> i:nat{i <= sum_length ls} -> n:nat{i + n <= sum_length ls} -> i2:nat{i <= i2 /\ i2 <= i+n} -> n2:nat{i2+n2<=i+n} -> Lemma
-  (requires True)
-  (ensures getBytes ls i2 n2 = substringT (getBytes ls i n) (i2 - i) n2)
-  [SMTPat (getBytes ls i2 n2)]
-  
-
-let lemma_getBytes_3 ls i n i2 n2 = 
-  admit ()
-
-
-val splitTwo : s : string -> i:nat{i <= String.length s} -> Tot ((a:string{String.length a = i}) * (b:string{String.length b = String.length s - i}))
-let splitTwo s i = (substringT s 0 i, substringT s i (String.length s - i))
-
-
 val lemma_split_2 : b:bytes -> i:nat{i <= length b} -> Lemma 
   (let p = split b i in 
    let ap = splitTwo (get_cbytes b) i in
@@ -317,13 +355,6 @@ let lemma_split_2 b i =
 
 type bytes_eq (a:bytes) (b:bytes) = (get_cbytes a = get_cbytes b)
 
-
-assume val split_append : s:string -> i:nat{i <= String.length s} -> Lemma
-  (requires True)
-  (ensures 
-    (let p = splitTwo s i in 
-    fst p ^ snd p = s))
-  
 
 val lemma_split_3 : b:bytes -> i:nat{i <= length b} -> Lemma 
   (let p = split b i in 
