@@ -138,21 +138,27 @@ in (match (_82_160) with
 (
 
 let q = (let _171_49 = (let _171_48 = (let _171_47 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.Iff, (l)::(r)::[]))))
-in (FStar_SMTEncoding_Term.Forall, ((p)::[])::[], iopt, sorts, _171_47))
+in (FStar_SMTEncoding_Term.Forall, ((p)::[])::[], Some (0), sorts, _171_47))
 in FStar_SMTEncoding_Term.Quant (_171_48))
 in (FStar_All.pipe_left FStar_SMTEncoding_Term.mk _171_49))
 in (
 
 let lhs = (FStar_All.pipe_left FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.And, (typing)::(q)::[]))))
-in (let _171_50 = (FStar_SMTEncoding_Term.mkImp (lhs, rhs))
-in (_171_50, labs, rs))))
+in (
+
+let _82_166 = (aux rs rhs labs)
+in (match (_82_166) with
+| (rhs, labs, rs) -> begin
+(let _171_50 = (FStar_SMTEncoding_Term.mkImp (lhs, rhs))
+in (_171_50, labs, rs))
+end))))
 end))
 end
-| _82_164 -> begin
+| _82_168 -> begin
 (
 
-let _82_168 = (aux rs rhs labs)
-in (match (_82_168) with
+let _82_172 = (aux rs rhs labs)
+in (match (_82_172) with
 | (rhs, labs, rs) -> begin
 (let _171_51 = (FStar_SMTEncoding_Term.mkImp (lhs, rhs))
 in (_171_51, labs, rs))
@@ -162,17 +168,17 @@ end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.And, conjuncts) -> begin
 (
 
-let _82_185 = (FStar_List.fold_left (fun _82_176 c -> (match (_82_176) with
+let _82_189 = (FStar_List.fold_left (fun _82_180 c -> (match (_82_180) with
 | (rs, cs, labs) -> begin
 (
 
-let _82_181 = (aux rs c labs)
-in (match (_82_181) with
+let _82_185 = (aux rs c labs)
+in (match (_82_185) with
 | (c, labs, rs) -> begin
 (rs, (c)::cs, labs)
 end))
 end)) (rs, [], labs) conjuncts)
-in (match (_82_185) with
+in (match (_82_189) with
 | (rs, conjuncts, labs) -> begin
 (
 
@@ -183,14 +189,14 @@ end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.ITE, (hd)::(q1)::(q2)::[]) -> begin
 (
 
-let _82_200 = (aux rs q1 labs)
-in (match (_82_200) with
-| (q1, labs, _82_199) -> begin
+let _82_204 = (aux rs q1 labs)
+in (match (_82_204) with
+| (q1, labs, _82_203) -> begin
 (
 
-let _82_205 = (aux rs q2 labs)
-in (match (_82_205) with
-| (q2, labs, _82_204) -> begin
+let _82_209 = (aux rs q2 labs)
+in (match (_82_209) with
+| (q2, labs, _82_208) -> begin
 (let _171_56 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App ((FStar_SMTEncoding_Term.ITE, (hd)::(q1)::(q2)::[]))))
 in (_171_56, labs, rs))
 end))
@@ -211,8 +217,8 @@ end
 | FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, pats, iopt, sorts, body) -> begin
 (
 
-let _82_327 = (aux rs body labs)
-in (match (_82_327) with
+let _82_331 = (aux rs body labs)
+in (match (_82_331) with
 | (body, labs, rs) -> begin
 (let _171_57 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.Quant ((FStar_SMTEncoding_Term.Forall, pats, iopt, sorts, body))))
 in (_171_57, labs, rs))
@@ -229,13 +235,13 @@ in (
 
 let elim = (fun labs -> (
 
-let _82_334 = (FStar_Util.incr ctr)
+let _82_338 = (FStar_Util.incr ctr)
 in (let _171_80 = (let _171_73 = (let _171_72 = (let _171_71 = (FStar_ST.read ctr)
 in (FStar_Util.string_of_int _171_71))
 in (Prims.strcat "DETAILING ERRORS" _171_72))
 in FStar_SMTEncoding_Term.Echo (_171_73))
-in (let _171_79 = (FStar_All.pipe_right labs (FStar_List.map (fun _82_341 -> (match (_82_341) with
-| (l, _82_338, _82_340) -> begin
+in (let _171_79 = (FStar_All.pipe_right labs (FStar_List.map (fun _82_345 -> (match (_82_345) with
+| (l, _82_342, _82_344) -> begin
 (let _171_78 = (let _171_77 = (let _171_76 = (let _171_75 = (FStar_SMTEncoding_Term.mkFreeV l)
 in (_171_75, FStar_SMTEncoding_Term.mkTrue))
 in (FStar_SMTEncoding_Term.mkEq _171_76))
@@ -245,16 +251,16 @@ end))))
 in (_171_80)::_171_79))))
 in (
 
-let print_labs = (fun tag l -> (FStar_All.pipe_right l (FStar_List.iter (fun _82_350 -> (match (_82_350) with
-| (l, _82_347, _82_349) -> begin
+let print_labs = (fun tag l -> (FStar_All.pipe_right l (FStar_List.iter (fun _82_354 -> (match (_82_354) with
+| (l, _82_351, _82_353) -> begin
 (FStar_Util.print2 "%s : %s; " tag (Prims.fst l))
 end)))))
 in (
 
-let minus = (fun l1 l2 -> (FStar_All.pipe_right l1 (FStar_List.filter (fun _82_362 -> (match (_82_362) with
-| ((x, _82_356), _82_359, _82_361) -> begin
-(not ((FStar_All.pipe_right l2 (FStar_Util.for_some (fun _82_371 -> (match (_82_371) with
-| ((y, _82_365), _82_368, _82_370) -> begin
+let minus = (fun l1 l2 -> (FStar_All.pipe_right l1 (FStar_List.filter (fun _82_366 -> (match (_82_366) with
+| ((x, _82_360), _82_363, _82_365) -> begin
+(not ((FStar_All.pipe_right l2 (FStar_Util.for_some (fun _82_375 -> (match (_82_375) with
+| ((y, _82_369), _82_372, _82_374) -> begin
 (x = y)
 end))))))
 end)))))
@@ -270,10 +276,10 @@ end
 | (hd)::tl -> begin
 (
 
-let _82_384 = (let _171_98 = (FStar_All.pipe_left elim (FStar_List.append (FStar_List.append eliminated errors) tl))
+let _82_388 = (let _171_98 = (FStar_All.pipe_left elim (FStar_List.append (FStar_List.append eliminated errors) tl))
 in (askZ3 _171_98))
-in (match (_82_384) with
-| (ok, _82_383) -> begin
+in (match (_82_388) with
+| (ok, _82_387) -> begin
 if ok then begin
 (linear_check ((hd)::eliminated) errors tl)
 end else begin
@@ -287,23 +293,23 @@ let rec bisect = (fun eliminated potential_errors active -> (match (active) with
 | [] -> begin
 (eliminated, potential_errors)
 end
-| _82_391 -> begin
+| _82_395 -> begin
 (
 
-let _82_399 = (match (active) with
-| (_82_393)::[] -> begin
+let _82_403 = (match (active) with
+| (_82_397)::[] -> begin
 (active, [])
 end
-| _82_396 -> begin
+| _82_400 -> begin
 (FStar_Util.first_N ((FStar_List.length active) / 2) active)
 end)
-in (match (_82_399) with
+in (match (_82_403) with
 | (pfx, sfx) -> begin
 (
 
-let _82_402 = (let _171_105 = (elim (FStar_List.append (FStar_List.append eliminated potential_errors) sfx))
+let _82_406 = (let _171_105 = (elim (FStar_List.append (FStar_List.append eliminated potential_errors) sfx))
 in (askZ3 _171_105))
-in (match (_82_402) with
+in (match (_82_406) with
 | (ok, pfx_subset) -> begin
 if ok then begin
 (bisect (FStar_List.append eliminated pfx) potential_errors sfx)
@@ -312,7 +318,7 @@ end else begin
 | [] -> begin
 (bisect eliminated (FStar_List.append potential_errors pfx) sfx)
 end
-| _82_405 -> begin
+| _82_409 -> begin
 (
 
 let potential_errors = (FStar_List.append potential_errors pfx_subset)
@@ -329,8 +335,8 @@ in (
 
 let rec until_fixpoint = (fun eliminated potential_errors active -> (
 
-let _82_414 = (bisect eliminated potential_errors active)
-in (match (_82_414) with
+let _82_418 = (bisect eliminated potential_errors active)
+in (match (_82_418) with
 | (eliminated', potential_errors) -> begin
 if (FStar_Util.physical_equality eliminated eliminated') then begin
 (linear_check eliminated [] potential_errors)
@@ -346,7 +352,7 @@ in (until_fixpoint [] potential_errors active))))))))))
 
 let askZ3_and_report_errors : FStar_TypeChecker_Env.env  ->  Prims.bool  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Int64.int64) Prims.list  ->  FStar_SMTEncoding_Term.decl Prims.list  ->  FStar_SMTEncoding_Term.decl  ->  FStar_SMTEncoding_Term.decl Prims.list  ->  Prims.unit = (fun env use_fresh_z3_context all_labels prefix query suffix -> (
 
-let _82_422 = (FStar_SMTEncoding_Z3.giveZ3 prefix)
+let _82_426 = (FStar_SMTEncoding_Z3.giveZ3 prefix)
 in (
 
 let minimum_workable_fuel = (FStar_Util.mk_ref None)
@@ -358,7 +364,7 @@ let set_minimum_workable_fuel = (fun f _82_1 -> (match (_82_1) with
 end
 | errs -> begin
 (match ((FStar_ST.read minimum_workable_fuel)) with
-| Some (_82_431) -> begin
+| Some (_82_435) -> begin
 ()
 end
 | None -> begin
@@ -367,7 +373,7 @@ end)
 end))
 in (
 
-let with_fuel = (fun label_assumptions p _82_439 -> (match (_82_439) with
+let with_fuel = (fun label_assumptions p _82_443 -> (match (_82_443) with
 | (n, i) -> begin
 (let _171_160 = (let _171_159 = (let _171_158 = (let _171_152 = (let _171_151 = (let _171_136 = (let _171_135 = (FStar_Util.string_of_int n)
 in (let _171_134 = (FStar_Util.string_of_int i)
@@ -450,7 +456,7 @@ let report = (fun p errs -> (
 let errs = if ((FStar_Options.detail_errors ()) && ((FStar_Options.n_cores ()) = 1)) then begin
 (
 
-let _82_454 = (match ((FStar_ST.read minimum_workable_fuel)) with
+let _82_458 = (match ((FStar_ST.read minimum_workable_fuel)) with
 | Some (f, errs) -> begin
 (f, errs)
 end
@@ -459,7 +465,7 @@ end
 in (_171_188, 1))
 in (_171_189, errs))
 end)
-in (match (_82_454) with
+in (match (_82_458) with
 | (min_fuel, potential_errors) -> begin
 (
 
@@ -468,7 +474,7 @@ let ask_z3 = (fun label_assumptions -> (
 let res = (FStar_Util.mk_ref None)
 in (
 
-let _82_459 = (let _171_193 = (with_fuel label_assumptions p min_fuel)
+let _82_463 = (let _171_193 = (with_fuel label_assumptions p min_fuel)
 in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_193 (fun r -> (FStar_ST.op_Colon_Equals res (Some (r))))))
 in (let _171_194 = (FStar_ST.read res)
 in (FStar_Option.get _171_194)))))
@@ -483,12 +489,12 @@ let errs = (match (errs) with
 | [] -> begin
 ((("", FStar_SMTEncoding_Term.Term_sort), "Unknown assertion failed", FStar_Range.dummyRange))::[]
 end
-| _82_464 -> begin
+| _82_468 -> begin
 errs
 end)
 in (
 
-let _82_466 = if (FStar_Options.print_fuels ()) then begin
+let _82_470 = if (FStar_Options.print_fuels ()) then begin
 (let _171_200 = (let _171_195 = (FStar_TypeChecker_Env.get_range env)
 in (FStar_Range.string_of_range _171_195))
 in (let _171_199 = (let _171_196 = (FStar_Options.max_fuel ())
@@ -501,8 +507,8 @@ end else begin
 end
 in (
 
-let _82_473 = (let _171_202 = (FStar_All.pipe_right errs (FStar_List.map (fun _82_472 -> (match (_82_472) with
-| (_82_469, x, y) -> begin
+let _82_477 = (let _171_202 = (FStar_All.pipe_right errs (FStar_List.map (fun _82_476 -> (match (_82_476) with
+| (_82_473, x, y) -> begin
 (x, y)
 end))))
 in (FStar_TypeChecker_Errors.add_errors env _171_202))
@@ -515,7 +521,7 @@ in (
 
 let rec try_alt_configs = (fun prev_f p errs cfgs -> (
 
-let _82_481 = (set_minimum_workable_fuel prev_f errs)
+let _82_485 = (set_minimum_workable_fuel prev_f errs)
 in (match (cfgs) with
 | [] -> begin
 (report p errs)
@@ -526,27 +532,27 @@ end
 (let _171_215 = (with_fuel [] p mi)
 in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_215 (cb mi p [])))
 end
-| _82_488 -> begin
+| _82_492 -> begin
 (
 
-let _82_489 = (set_minimum_workable_fuel prev_f errs)
+let _82_493 = (set_minimum_workable_fuel prev_f errs)
 in (report p errs))
 end)
 end
 | (mi)::tl -> begin
 (let _171_217 = (with_fuel [] p mi)
-in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_217 (fun _82_496 -> (match (_82_496) with
+in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context all_labels _171_217 (fun _82_500 -> (match (_82_500) with
 | (ok, errs') -> begin
 (match (errs) with
 | [] -> begin
 (cb mi p tl (ok, errs'))
 end
-| _82_499 -> begin
+| _82_503 -> begin
 (cb mi p tl (ok, errs))
 end)
 end))))
 end)))
-and cb = (fun _82_502 p alt _82_507 -> (match ((_82_502, _82_507)) with
+and cb = (fun _82_506 p alt _82_511 -> (match ((_82_506, _82_511)) with
 | ((prev_fuel, prev_ifuel), (ok, errs)) -> begin
 if ok then begin
 if (FStar_Options.print_fuels ()) then begin
@@ -561,7 +567,7 @@ end
 end else begin
 (
 
-let _82_508 = if (FStar_Options.print_fuels ()) then begin
+let _82_512 = if (FStar_Options.print_fuels ()) then begin
 (let _171_229 = (let _171_226 = (FStar_TypeChecker_Env.get_range env)
 in (FStar_Range.string_of_range _171_226))
 in (let _171_228 = (FStar_Util.string_of_int prev_fuel)
@@ -580,9 +586,9 @@ in (
 let process_query = (fun q -> if ((FStar_Options.split_cases ()) > 0) then begin
 (
 
-let _82_514 = (let _171_236 = (FStar_Options.split_cases ())
+let _82_518 = (let _171_236 = (FStar_Options.split_cases ())
 in (FStar_SMTEncoding_SplitQueryCases.can_handle_query _171_236 q))
-in (match (_82_514) with
+in (match (_82_518) with
 | (b, cb) -> begin
 if b then begin
 (FStar_SMTEncoding_SplitQueryCases.handle_query cb check)
