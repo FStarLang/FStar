@@ -77,18 +77,20 @@ let label_goals use_env_msg r q : term * labels * ranges =
           tm, labs, List.tl rs
 
         | App(Imp, [lhs;rhs]) -> 
-          begin match lhs.tm with
-            | App(And, [typing;
-                        {tm=Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])})}]) ->
-              let r, labs, rs = aux rs r labs in
-              let q = mk <| Quant(Forall, [[p]], Some 0, sorts, mk (App(Iff, [l;r]))) in
-              let lhs = mk <| App(And, [typing; q]) in
-              let rhs, labs, rs = aux rs rhs labs in
-              Term.mkImp(lhs, rhs), labs, rs
-            | _ ->
-              let rhs, labs, rs = aux rs rhs labs in
-              Term.mkImp(lhs, rhs), labs, rs
-          end
+          let rhs, labs, rs = aux rs rhs labs in
+          let lhs, labs, rs = match lhs.tm with 
+            | App(And, conjuncts) -> 
+              let (labs, rs), conjuncts = Util.fold_map (fun (labs, rs) tm -> 
+                match tm.tm with 
+                | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])}) ->
+                  let r, labs, rs = aux rs r labs in
+                  let q = mk <| Quant(Forall, [[p]], Some 0, sorts, mk (App(Iff, [l;r]))) in
+                  (labs, rs), q
+                | _ -> (labs, rs), tm) (labs, rs) conjuncts in
+              let tm = List.fold_right (fun conjunct out -> Term.mkAnd(out, conjunct)) conjuncts Term.mkTrue in
+              tm, labs, rs
+           | _ -> lhs, labs, rs in
+          Term.mkImp(lhs, rhs), labs, rs
 
         | App(And, conjuncts) ->
           let rs, conjuncts, labs = List.fold_left (fun (rs, cs, labs) c -> 
