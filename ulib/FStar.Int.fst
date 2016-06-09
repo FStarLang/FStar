@@ -1,14 +1,10 @@
 module FStar.Int
+open FStar.Mul
 
-let op_Star = op_Multiply
+(* NOTE: anything that you fix/update here should be reflected in [FStar.UInt.fst], which is mostly
+ * a copy-paste of this module. *)
 
-(* Necessary mathematical functions *)
-
-// Powers of n
-let rec pow2 (x:nat) : Tot pos = if x = 0 then 1 else op_Multiply 2 (pow2 (x-1))
-
-// Absolute value
-let abs (x:int) : Tot int = if x >= 0 then x else -x
+(* Necessary mathematical functions. Note: should these go into [prims.fst] or something else? *)
 
 // 'flooring' division
 let op_Slash (a:int) (b:int{b <> 0}) : Tot int = 
@@ -16,21 +12,26 @@ let op_Slash (a:int) (b:int{b <> 0}) : Tot int =
   else abs a / abs b
 
 // Euclidian division
-let div_eucl (a:int) (b:nonzero) : Tot int =  if a < 0 then (if a % b = 0 then -(-a/b) else -(-a/b) -1) else a / b
+let div_eucl (a:int) (b:nonzero) : Tot int =
+  if a < 0 then
+    if a % b = 0 then -(-a/b) else -(-a/b) -1
+  else
+    a / b
 let op_Slash_Percent = div_eucl
 
 // 'Circular modulo operator : wraps into [-p/2; p/2[
-let op_At_Percent (v:int) (p:int{p>0/\ p%2=0}) : Tot int = let m = v % p in if m >= p/2 then m - p else m
+let op_At_Percent (v:int) (p:int{p>0/\ p%2=0}) : Tot int =
+  let m = v % p in if m >= p/2 then m - p else m
 
 (* Specs *)
 let max_int (n:pos) : Tot int = pow2 (n-1) - 1
 let min_int (n:pos) : Tot int = - (pow2 (n-1))
 
-let fits (x:int) (n:pos) : Tot bool = (min_int n <= x && x <= max_int n)
+let fits (x:int) (n:pos) : Tot bool = min_int n <= x && x <= max_int n
 let size (x:int) (n:pos) : Tot Type0 = b2t(fits x n)
 
+(* Machine integer type *)
 type int_t (n:pos) = x:int{size x n}
-
 
 (* Addition primitives *)
 val add: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
