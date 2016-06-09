@@ -1,103 +1,150 @@
 module FStar.UInt16
+
+let n = 16
+
+open FStar.Int
 open FStar.Mul
-val min_value_int : int
-let min_value_int = 0
 
-val max_value_int : int
-let max_value_int = 65535
+(* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
+ * a copy-paste of this module. *)
 
-let within_uint16 (i:int) =
-    min_value_int <= i
-    && i <= max_value_int
+private type t' = | Mk: v:int_t n -> t'
+type t = t'
 
-private type uint16' =
-  | UInt16 : i:int{within_uint16 i} -> uint16'
+let v (x:t) : Tot (int_t n) = x.v
 
-type uint16 = uint16'
+val add: a:t -> b:t -> Pure t
+  (requires (size (v a + v b) n))
+  (ensures (fun c -> v a + v b = v c))
+let add a b =
+  Mk (add (v a) (v b))
 
-val min_value : uint16
-let min_value = UInt16 min_value_int
+val add_underspec: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c ->
+    size (v a + v b) n ==> v a + v b = v c))
+let add_underspec a b =
+  Mk (add_underspec (v a) (v b))
 
-val max_value : uint16
-let max_value = UInt16 max_value_int
+val add_mod: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c -> (v a + v b) @% pow2 n = v c))
+let add_mod a b =
+  Mk (add_mod (v a) (v b))
 
-val as_int: i:uint16 -> GTot int
-let as_int (UInt16 i) = i
+(* Subtraction primitives *)
+val sub: a:t -> b:t -> Pure t
+  (requires (size (v a - v b) n))
+  (ensures (fun c -> v a - v b = v c))
+let sub a b =
+  Mk (sub (v a) (v b))
 
-//a ?+ b may overflow
-//must be marked abstract because the body has an intentional admit
-abstract val op_Question_Plus: i:uint16
-              -> j:uint16
-              -> Tot (k:uint16{within_uint16 (as_int i + as_int j) ==> as_int k = as_int i + as_int j})
-let op_Question_Plus (UInt16 i) (UInt16 j) =
-  if within_uint16 (i + j)
-  then UInt16 (i + j)
-  else magic()//mark as admit, because we do not specify the overflow semantics
+val sub_underspec: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c ->
+    size (v a - v b) n ==> v a - v b = v c))
+let sub_underspec a b =
+  Mk (sub_underspec (v a) (v b))
 
-val op_Plus: i:uint16
-          -> j:uint16{within_uint16 (as_int i + as_int j)}
-          -> Tot uint16
-let op_Plus (UInt16 i) (UInt16 j) = UInt16 (i + j)
+val sub_mod: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c -> (v a - v b) @% pow2 n = v c))
+let sub_mod a b =
+  Mk (sub_mod (v a) (v b))
 
-//a ?- b may overflow
-//must be marked abstract because the body has an intentional admit
-abstract val op_Question_Subtraction: i:uint16
-              -> j:uint16
-              -> Tot (k:uint16{within_uint16 (as_int i - as_int j) ==> as_int k = as_int i - as_int j})
-let op_Question_Subtraction (UInt16 i) (UInt16 j) =
-  if within_uint16 (i - j)
-  then UInt16 (i - j)
-  else magic()//mark as admit, because we do not specify the overflow semantics
+(* Multiplication primitives *)
+val mul: a:t -> b:t -> Pure t
+  (requires (size (v a * v b) n))
+  (ensures (fun c -> v a * v b = v c))
+let mul a b =
+  Mk (mul (v a) (v b))
 
-val op_Subtraction: i:uint16
-                 -> j:uint16{within_uint16 (as_int i - as_int j)}
-                 -> Tot uint16
-let op_Subtraction (UInt16 i) (UInt16 j) = UInt16 (i - j)
+val mul_underspec: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c ->
+    size (v a * v b) n ==> v a * v b = v c))
+let mul_underspec a b =
+  Mk (mul_underspec (v a) (v b))
 
-//a ?* b may overflow
-//must be marked abstract because the body has an intentional admit
-abstract val op_Question_Star:
-                 i:uint16
-              -> j:uint16
-              -> Tot (k:uint16{within_uint16 (op_Multiply (as_int i) (as_int j)) ==> as_int k = op_Multiply (as_int i) (as_int j)})
-let op_Question_Star (UInt16 i) (UInt16 j) =
-  if within_uint16 (op_Multiply i j)
-  then UInt16 (op_Multiply i j)
-  else magic()//mark as admit, because we do not specify the overflow semantics
+val mul_mod: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c -> (v a * v b) @% pow2 n = v c))
+let mul_mod a b =
+  Mk (mul_mod (v a) (v b))
 
-val op_Star: i:uint16
-          -> j:uint16{within_uint16 (op_Multiply (as_int i) (as_int j))}
-          -> Tot uint16
-let op_Star (UInt16 i) (UInt16 j) = UInt16 (op_Multiply i j)
+(* Division primitives *)
+val div: a:t -> b:t{v b <> 0} -> Pure t
+  (requires (size (v a / v b) n))
+  (ensures (fun c -> v b <> 0 ==> v a / v b = v c))
+let div a b =
+  Mk (div (v a) (v b))
 
-// division cannot overflow with unsigned integers
-val op_Slash: i:uint16
-           -> j:uint16{as_int j <> 0}
-           -> Tot uint16
-let op_Slash (UInt16 i) (UInt16 j) = UInt16 (i / j)
+val div_underspec: a:t -> b:t{v b <> 0} -> Pure t
+  (requires True)
+  (ensures (fun c ->
+    (v b <> 0 /\ size (v a / v b) n) ==> v a / v b = v c))
+let div_underspec a b =
+  Mk (div_underspec (v a) (v b))
 
-//a ?% b cannot overflow
-val op_Percent: i:uint16
-             -> j:uint16{as_int j <> 0}
-             -> Tot uint16
-let op_Percent (UInt16 i) (UInt16 j) = UInt16 (i % j)
+(* Modulo primitives *)
+val mod: a:t -> b:t{v b <> 0} -> Pure t
+  (requires True)
+  (ensures (fun c ->
+    v a - ((v a / v b) * v b) = v c))
+let mod a b = Mk (mod (v a) (v b))
 
-val op_Less_Equals: i:uint16
-                 -> j:uint16
-                 -> Tot bool
-let op_Less_Equals (UInt16 i) (UInt16 j) = i <= j
+(* Bitwise operators *)
+val logand: t -> t -> Tot t
+let logand a b = Mk (logand (v a) (v b))
+val logxor: t -> t -> Tot t
+let logxor a b = Mk (logxor (v a) (v b))
+val logor: t -> t -> Tot t
+let logor a b = Mk (logor (v a) (v b))
+val lognot: t -> Tot t
+let lognot a = Mk (lognot (v a))
 
-val op_Less: i:uint16
-          -> j:uint16
-          -> Tot bool
-let op_Less (UInt16 i) (UInt16 j) = (i < j)
+val int_to_t: x:(int_t n) -> Pure t
+  (requires True)
+  (ensures (fun y -> v y = x))
+let int_to_t x = Mk (to_int_t n x)
 
-val op_Greater_Equals: i:uint16
-                    -> j:uint16
-                    -> Tot bool
-let op_Greater_Equals (UInt16 i) (UInt16 j) = i >= j
+(* Shift operators *)
+val shift_right: a:t -> s:nat -> Pure t
+  (requires True)
+  (ensures (fun c -> v c = (v a /% (pow2 s))))
+let shift_right a s = Mk (shift_right (v a) s)
 
-val op_Greater: i:uint16
-             -> j:uint16
-             -> Tot bool
-let op_Greater (UInt16 i) (UInt16 j) = i > j
+val shift_left: a:t -> s:nat -> Pure t
+  (requires True)
+  (ensures (fun c -> v c = ((v a * pow2 s) @% pow2 n)))
+let shift_left a s = Mk (shift_left (v a) s)
+
+(* Comparison operators *)
+let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
+let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
+let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
+let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
+let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
+
+(* Infix notations *)
+let op_Plus_Hat = add
+let op_Plus_Question_Hat = add_underspec
+let op_Plus_Percent_Hat = add_mod
+let op_Subtraction_Hat = sub
+let op_Subtraction_Question_Hat = sub_underspec
+let op_Subtraction_Percent_Hat = sub_mod
+let op_Star_Hat = mul
+let op_Star_Question_Hat = mul_underspec
+let op_Star_Percent_Hat = mul_mod
+let op_Slash_Hat = div
+let op_Percent_Hat = mod
+let op_Hat_Hat = logxor  
+let op_Amp_Hat = logand
+let op_Bar_Hat = logor
+let op_Less_Less_Hat = shift_left
+let op_Greater_Greater_Hat = shift_right
+let op_Equal_Hat = eq
+let op_Greater_Hat = gt
+let op_Greater_Equal_Hat = gte
+let op_Less_Hat = gt
+let op_Less_Equal_Hat = gte

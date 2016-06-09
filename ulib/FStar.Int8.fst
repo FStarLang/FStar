@@ -3,13 +3,15 @@ module FStar.Int8
 let n = 8
 
 open FStar.Int
+open FStar.Mul
+
+(* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
+ * a copy-paste of this module. *)
 
 private type t' = | Mk: v:int_t n -> t'
-
 type t = t'
 
-let v (x:t) : Tot (x':int{size x' n}) =
-  x.v
+let v (x:t) : Tot (int_t n) = x.v
 
 val add: a:t -> b:t -> Pure t
   (requires (size (v a + v b) n))
@@ -101,8 +103,10 @@ let logor a b = Mk (logor (v a) (v b))
 val lognot: t -> Tot t
 let lognot a = Mk (lognot (v a))
 
-val int_to_t: x:int -> Tot t
-let int_to_t x = Mk (to_int_t 64 x)
+val int_to_t: x:(int_t n) -> Pure t
+  (requires True)
+  (ensures (fun y -> v y = x))
+let int_to_t x = Mk (to_int_t n x)
 
 (* Shift operators *)
 val shift_right: a:t -> s:nat -> Pure t
