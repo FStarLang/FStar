@@ -3,46 +3,6 @@ open FStar
 open FStar.List
 open FStar.List.Tot
 
-type byte = Char.char
-type cbytes = string
-
-(* let add_nat (a : nat) (b : nat) : nat = a + b *)
-
-(* val sum : list nat -> Tot nat *)
-(* let sum ls = fold_leftT add_nat 0 ls *)
-
-val sum_length : list string -> Tot nat
-(* let sum_length ls = sum (mapT String.length ls) *)
-let rec sum_length ls =
-  match ls with
-  | [] -> 0
-  | h :: t -> String.length h + sum_length t
-
-type proto_bytes = {
-       (*  A series of strings whose total concatenated length is [max]. *)
-       bl: list cbytes;
-       max: nat;
-       (* The length of the subset. *)
-       length: nat;
-       (* The start index of the subset. *)
-       index: nat
-}
-
-type good_bytes (b:proto_bytes) = b.max = sum_length b.bl /\ b.index <= b.max /\ b.index + b.length <= b.max
-
-type bytes = b:proto_bytes{good_bytes b}
-
-(* type bytes =  *)
-(*   | MkBytes :  *)
-(*        (\*  A series of strings whose total concatenated length is [max]. *\) *)
-(*        bl: list cbytes -> *)
-(*        max: nat -> *)
-(*        (\* The length of the subset. *\) *)
-(*        length: nat -> *)
-(*        (\* The start index of the subset. *\) *)
-(*        index: nat{max = sum_length bl /\ index <= max /\ index + length <= max} -> *)
-(*        bytes *)
-
 assume val substringT: s:string -> start:nat -> len:nat{let l = String.length s in start <= l && start + len <= l} -> Tot (res:string{String.length res = len})
 assume val string_length_append: a:string -> b:string -> Lemma 
   (requires True)
@@ -79,19 +39,130 @@ assume val split_append : s:string -> i:nat{i <= String.length s} -> Lemma
   (ensures 
     (let p = splitTwo s i in 
     fst p ^ snd p = s))
+assume val substring_sub_range: s:string -> i:nat{i <= String.length s} -> n:nat{i + n <= String.length s} -> i2:nat{i <= i2 /\ i2 <= i+n} -> n2:nat{i2+n2<=i+n} -> Lemma
+  (requires True)
+  (ensures substringT s i2 n2 = substringT (substringT s i n) (i2 - i) n2)
+assume val substring_prefix: prefix:string -> s:string -> i:nat{i <= String.length s} -> n:nat{i + n <= String.length s} -> Lemma 
+  (substringT (prefix ^ s) (String.length prefix + i) n = substringT s i n)
+assume val substring_suffix: s:string -> i:nat{i <= String.length s} -> n:nat{i + n <= String.length s} -> suffix:string -> Lemma 
+  (substringT (s ^ suffix) i n = substringT s i n)
+assume val substring_append: s1:string -> i1:nat{i1 <= String.length s1} -> s2:string -> n2:nat{n2 <= String.length s2} -> Lemma
+  (substringT s1 i1 (String.length s1 - i1) ^ substringT s2 0 n2 = substringT (s1 ^ s2) i1 (String.length s1 - i1 + n2))
+assume val make_length : n:nat -> c:Char.char -> Lemma
+  (requires True)
+  (ensures String.length (String.make n c) = n)
+  [SMTPat (String.length (String.make n c))]
+assume val getT : s:string -> i:nat{i < String.length s} -> Tot Char.char
+assume val compare_eq : a:string -> b:string -> Lemma
+ (requires True)
+ (ensures String.compare a b = 0 <==> a = b)
+ (* (ensures (String.compare a b = 0 ==> a = b) /\ (String.compare a b <> 0 ==> a <> b)) *)
+ (* [SMTPat (String.compare a b = 0)] *)
+assume val string_xor : l:nat -> a:string{String.length a = l} -> b:string{String.length b = l} -> Tot (s:string{String.length s = l})
+(* reference implementation in OCaml *)
+(* let string_xor len s1 s2 = *)
+(*         let res = String.make len (char_of_int 0) in *)
+(*         for i=0 to len-1 do *)
+(*           Bytes.set res i (char_of_int ((int_of_char s1.[i]) lxor (int_of_char s2.[i]))) *)
+(*         done; *)
+(*         res *)
+assume val string_append_inj: s1:string -> s2:string -> t1:string -> t2:string {String.length s1 = String.length t1 \/ String.length s2 = String.length t2} ->
+  Lemma (requires ((s1 ^ s2) = (t1 ^ t2)))
+        (ensures (s1 = t1 /\ s2 = t2))
 
 
-(* val sum_length_le : i:nat -> h:cbytes -> t:list cbytes -> Lemma (i <= sum_length (h::t) ==> i - String.length h <= sum_length t) *)
-(* let sum_length_le i h t = () *)
+val repr_bytes : nat -> GTot (n:nat{n>0})
+let repr_bytes n =
+    if n < 256 then 1
+    else if n < 65536 then 2
+    else if n < 16777216 then 3
+    else if n < 4294967296 then 4
+    else if n < 1099511627776 then 5
+    else if n < 281474976710656 then 6
+    else if n < 72057594037927936 then 7
+    else if n < 18446744073709551616 then 8
+    else 9
 
-(* val sum_length_cons : h:cbytes -> t:list cbytes -> Lemma (sum_length (h::t) = String.length h + sum_length t) (decreases t) *)
-(* let rec sum_length_cons h t =  *)
-(*   match t with *)
-(*    | [] -> () *)
-(*    | h' :: t' -> sum_length_cons h' t' *)
+val lemma_repr_bytes_values: n:nat ->
+  Lemma (   ( n < 256 <==> repr_bytes n = 1 )
+         /\ ( (n >= 256 /\ n < 65536) <==> repr_bytes n = 2 )
+         /\ ( (n >= 65536 /\ n < 16777216) <==> repr_bytes n = 3 )
+         /\ ( (n >= 16777216 /\ n < 4294967296) <==> repr_bytes n = 4 )
+         /\ ( (n >= 4294967296 /\ n < 1099511627776) <==> repr_bytes n = 5 )
+         /\ ( (n >= 1099511627776 /\ n < 281474976710656) <==> repr_bytes n = 6 )
+         /\ ( (n >= 281474976710656 /\ n < 72057594037927936) <==> repr_bytes n = 7 )
+         /\ ( (n >= 72057594037927936 /\ n < 18446744073709551616) <==> repr_bytes n = 8 ) )
+let lemma_repr_bytes_values n = ()
+
+
+assume val string_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Tot (r:string {String.length r = l})
+(* reference implementation *)
+  (* let string_of_int nb i = *)
+  (*   let rec put_bytes bb lb n = *)
+  (*     if lb = 0 then failwith "not enough bytes" *)
+  (*     else *)
+  (*       begin *)
+  (*         Bytes.set bb (lb-1) (char_of_int (n mod 256)); *)
+  (*         if n/256 > 0 then *)
+  (*           put_bytes bb (lb-1) (n/256) *)
+  (*         else bb *)
+  (*       end *)
+  (*   in *)
+  (*   let b = String.make nb (char_of_int 0) in *)
+  (*     put_bytes b nb i *)
+assume val int_of_string : s:string ->
+    Tot (n:nat{repr_bytes n <= String.length s /\
+             (String.length s = 1 ==> n < 256) /\
+             s = string_of_int (String.length s) n})
+(* reference implementation *)
+  (* let int_of_string c : int = *)
+  (*     let x = ref 0 in *)
+  (*     for y = 0 to b.length-1 do *)
+  (*         x := 256 * !x + (int_of_char (String.get c y)) *)
+  (*     done; *)
+  (*     !x *)
+assume val int_of_string_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Lemma 
+  (requires True)
+  (ensures n = int_of_string (string_of_int l n))
+  [SMTPat (int_of_string (string_of_int l n))]
+assume val string_of_hex: string -> Tot string
+assume val hex_of_string: string -> Tot string
+
+
+type byte = Char.char
+type cbytes = string
+
+
+val sum_length : list string -> Tot nat
+(* let sum_length ls = sum (mapT String.length ls) *)
+let rec sum_length ls =
+  match ls with
+  | [] -> 0
+  | h :: t -> String.length h + sum_length t
+
+type proto_bytes = {
+       (*  A series of strings whose total concatenated length is [max]. *)
+       bl: list cbytes;
+       max: nat;
+       (* The length of the subset. *)
+       length: nat;
+       (* The start index of the subset. *)
+       index: nat
+}
+
+type good_bytes (b:proto_bytes) = b.max = sum_length b.bl /\ b.index <= b.max /\ b.index + b.length <= b.max
+
+type bytes = b:proto_bytes{good_bytes b}
+
+
+(* don't have these two, since bytes is not Seq *)
+(* val seq_of_bytes: b:bytes -> GTot (Seq.seq byte) *)
+(* let seq_of_bytes b = b *)
+
 
 val exfalso : #a:Type -> u:unit{False} -> Tot a
 let rec exfalso #a _ = exfalso ()
+
 
 val string_concat : ls:list string -> Tot (r:string{String.length r = sum_length ls})
 let rec string_concat ls =
@@ -134,23 +205,6 @@ let rec getBytes (bl: list cbytes) i n  =
              then substringT h i n
              else 
                substringT h i curr ^ getBytes t 0 (n-curr)
-
-
-assume val substring_sub_range: s:string -> i:nat{i <= String.length s} -> n:nat{i + n <= String.length s} -> i2:nat{i <= i2 /\ i2 <= i+n} -> n2:nat{i2+n2<=i+n} -> Lemma
-  (requires True)
-  (ensures substringT s i2 n2 = substringT (substringT s i n) (i2 - i) n2)
-
-
-assume val substring_prefix: prefix:string -> s:string -> i:nat{i <= String.length s} -> n:nat{i + n <= String.length s} -> Lemma 
-  (substringT (prefix ^ s) (String.length prefix + i) n = substringT s i n)
-
-
-assume val substring_suffix: s:string -> i:nat{i <= String.length s} -> n:nat{i + n <= String.length s} -> suffix:string -> Lemma 
-  (substringT (s ^ suffix) i n = substringT s i n)
-
-
-assume val substring_append: s1:string -> i1:nat{i1 <= String.length s1} -> s2:string -> n2:nat{n2 <= String.length s2} -> Lemma
-  (substringT s1 i1 (String.length s1 - i1) ^ substringT s2 0 n2 = substringT (s1 ^ s2) i1 (String.length s1 - i1 + n2))
 
 
 val lemma_getBytes: ls1:list cbytes -> ls2:list cbytes -> i:nat{i <= sum_length ls1} -> n:nat{sum_length ls1 <= i + n /\ i + n <= sum_length ls1 + sum_length ls2} -> Lemma
@@ -258,6 +312,14 @@ let get_cbytes (b:bytes) =
     else
       getBytes b.bl b.index b.length
 
+
+type bytes_eq (a:bytes) (b:bytes) = (get_cbytes a = get_cbytes b)
+assume val bytes_extensionality: a:bytes -> b:bytes -> Lemma
+  (requires True)
+  (ensures bytes_eq a b <==> a = b)
+  (* [SMTPat (bytes_eq a b)] *)
+
+
 val op_At_Bar: bytes -> bytes -> Tot bytes
 let op_At_Bar (a:bytes) (b:bytes) =
     if a.length + a.index = a.max && b.index = 0 then
@@ -271,28 +333,6 @@ let op_At_Bar (a:bytes) (b:bytes) =
        index = 0;
        max = a.length + b.length}
 (* let op_AtBar = op_At_Bar *)
-
-
-(* a version of get_cbytes that doesn't have the [string_concat] part so it's easier to reason about *)
-val get_cbytes' : b:bytes -> Tot (r:cbytes{String.length r = b.length})
-let get_cbytes' (b:bytes) =
-      getBytes b.bl b.index b.length
-
-
-val get_cbytes'_ok : b : bytes -> Lemma
-  (requires True)
-  (ensures get_cbytes b = get_cbytes' b)
-  [SMTPat (get_cbytes b)]
-
-
-let get_cbytes'_ok b = ()
-
-
-val lemma_op_At_Bar : a:bytes -> b:bytes -> Lemma 
-  (requires True)
-  (ensures get_cbytes (a @| b) = (get_cbytes a ^ get_cbytes b))
-  [SMTPat (get_cbytes (a @| b))]
-let lemma_op_At_Bar a b = ()
 
 
 val length : bytes -> Tot nat
@@ -315,22 +355,23 @@ let abytes (ba:cbytes) =
     {bl = [ba]; length = String.length ba; index = 0; max = String.length ba}
 
 
-type bytes_eq (a:bytes) (b:bytes) = (get_cbytes a = get_cbytes b)
+val createBytes : nat -> byte -> Tot bytes
+let createBytes n b = 
+    {bl = [String.make n b]; 
+    length = n; 
+    index = 0; 
+    max = n}
 
 
-assume val bytes_extensionality: a:bytes -> b:bytes -> Lemma
-  (requires True)
-  (ensures bytes_eq a b <==> a = b)
-  (* [SMTPat (bytes_eq a b)] *)
+val abyte : (byte -> Tot bytes)
+let abyte (b:byte) =
+    createBytes 1 b
 
 
-assume val make_length : n:nat -> c:Char.char -> Lemma
-  (requires True)
-  (ensures String.length (String.make n c) = n)
-  [SMTPat (String.length (String.make n c))]
-
-
-assume val getT : s:string -> i:nat{i < String.length s} -> Tot Char.char
+val abyte2 : (byte * byte) -> Tot bytes
+let abyte2 (ba1,ba2) =
+    let s = String.make 1 ba1 ^ String.make 1 ba2 in
+    {bl = [s]; length = 2; index = 0; max = 2}
 
 
 val cbyte : b:bytes{length b > 0} -> Tot byte
@@ -364,21 +405,6 @@ let index b i =
   getT s 0
 
 
-val createBytes : nat -> byte -> Tot bytes
-let createBytes n b = 
-    {bl = [String.make n b]; 
-    length = n; 
-    index = 0; 
-    max = n}
-
-
-assume val compare_eq : a:string -> b:string -> Lemma
- (requires True)
- (ensures String.compare a b = 0 <==> a = b)
- (* (ensures (String.compare a b = 0 ==> a = b) /\ (String.compare a b <> 0 ==> a <> b)) *)
- (* [SMTPat (String.compare a b = 0)] *)
-
-
 val equalBytes : b1:bytes -> b2:bytes -> Tot (b:bool{b = (b1=b2)})
 let equalBytes a b =
   let _ = bytes_extensionality a b in
@@ -386,30 +412,7 @@ let equalBytes a b =
   String.compare (get_cbytes a) (get_cbytes b) = 0 
 
 
-val abyte : (byte -> Tot bytes)
-let abyte (b:byte) =
-    createBytes 1 b
-
-
-val abyte2 : (byte * byte) -> Tot bytes
-let abyte2 (ba1,ba2) =
-    let s = String.make 1 ba1 ^ String.make 1 ba2 in
-    {bl = [s]; length = 2; index = 0; max = 2}
-
-
-assume val string_xor : l:nat -> a:string{String.length a = l} -> b:string{String.length b = l} -> Tot (s:string{String.length s = l})
-(* reference implementation in OCaml *)
-(* let string_xor len s1 s2 = *)
-(*         let res = String.make len (char_of_int 0) in *)
-(*         for i=0 to len-1 do *)
-(*           Bytes.set res i (char_of_int ((int_of_char s1.[i]) lxor (int_of_char s2.[i]))) *)
-(*         done; *)
-(*         res *)
-
-
 val xor: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
-
-
 let xor len s1 s2 =
         let s1 = get_cbytes s1 in
         let s2 = get_cbytes s2 in
@@ -428,6 +431,28 @@ let split b i =
      length = b.length - i;
      index = b.index + i;
      max = b.max}
+
+
+(* a version of get_cbytes that doesn't have the [string_concat] part so it's easier to reason about *)
+val get_cbytes' : b:bytes -> Tot (r:cbytes{String.length r = b.length})
+let get_cbytes' (b:bytes) =
+      getBytes b.bl b.index b.length
+
+
+val get_cbytes'_ok : b : bytes -> Lemma
+  (requires True)
+  (ensures get_cbytes b = get_cbytes' b)
+  [SMTPat (get_cbytes b)]
+
+
+let get_cbytes'_ok b = ()
+
+
+val lemma_op_At_Bar : a:bytes -> b:bytes -> Lemma 
+  (requires True)
+  (ensures get_cbytes (a @| b) = (get_cbytes a ^ get_cbytes b))
+  [SMTPat (get_cbytes (a @| b))]
+let lemma_op_At_Bar a b = ()
 
 
 val lemma_split_1 : b:bytes -> i:nat{i <= length b} -> Lemma (let x = split b i in length (fst x) = i && length (snd x) = length b - i)
@@ -472,11 +497,6 @@ let split_eq s i =
   split s i
   
 
-assume val string_append_inj: s1:string -> s2:string -> t1:string -> t2:string {String.length s1 = String.length t1 \/ String.length s2 = String.length t2} ->
-  Lemma (requires ((s1 ^ s2) = (t1 ^ t2)))
-        (ensures (s1 = t1 /\ s2 = t2))
-
-
 val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes -> t2:bytes {length s1 = length t1 \/ length s2 = length t2} ->
   Lemma (requires ((s1 @| s2) = (t1 @| t2)))
         (ensures (s1 = t1 /\ s2 = t2))
@@ -497,47 +517,6 @@ let split2 bs n1 n2 =
   (a, b, c)
   
 
-val repr_bytes : nat -> GTot (n:nat{n>0})
-let repr_bytes n =
-    if n < 256 then 1
-    else if n < 65536 then 2
-    else if n < 16777216 then 3
-    else if n < 4294967296 then 4
-    else if n < 1099511627776 then 5
-    else if n < 281474976710656 then 6
-    else if n < 72057594037927936 then 7
-    else if n < 18446744073709551616 then 8
-    else 9
-
-val lemma_repr_bytes_values: n:nat ->
-  Lemma (   ( n < 256 <==> repr_bytes n = 1 )
-         /\ ( (n >= 256 /\ n < 65536) <==> repr_bytes n = 2 )
-         /\ ( (n >= 65536 /\ n < 16777216) <==> repr_bytes n = 3 )
-         /\ ( (n >= 16777216 /\ n < 4294967296) <==> repr_bytes n = 4 )
-         /\ ( (n >= 4294967296 /\ n < 1099511627776) <==> repr_bytes n = 5 )
-         /\ ( (n >= 1099511627776 /\ n < 281474976710656) <==> repr_bytes n = 6 )
-         /\ ( (n >= 281474976710656 /\ n < 72057594037927936) <==> repr_bytes n = 7 )
-         /\ ( (n >= 72057594037927936 /\ n < 18446744073709551616) <==> repr_bytes n = 8 ) )
-let lemma_repr_bytes_values n = ()
-
-
-assume val string_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Tot (r:string {String.length r = l})
-(* reference implementation *)
-  (* let string_of_int nb i = *)
-  (*   let rec put_bytes bb lb n = *)
-  (*     if lb = 0 then failwith "not enough bytes" *)
-  (*     else *)
-  (*       begin *)
-  (*         Bytes.set bb (lb-1) (char_of_int (n mod 256)); *)
-  (*         if n/256 > 0 then *)
-  (*           put_bytes bb (lb-1) (n/256) *)
-  (*         else bb *)
-  (*       end *)
-  (*   in *)
-  (*   let b = String.make nb (char_of_int 0) in *)
-  (*     put_bytes b nb i *)
-
-
 val bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Tot (lbytes l)
 let bytes_of_int l n =
   let s = string_of_int l n in
@@ -549,19 +528,6 @@ val int_of_bytes : b:bytes ->
              (length b = 1 ==> n < 256) /\
              b=bytes_of_int (length b) n})
              
-
-assume val int_of_string : s:string ->
-    Tot (n:nat{repr_bytes n <= String.length s /\
-             (String.length s = 1 ==> n < 256) /\
-             s = string_of_int (String.length s) n})
-(* reference implementation *)
-  (* let int_of_string c : int = *)
-  (*     let x = ref 0 in *)
-  (*     for y = 0 to b.length-1 do *)
-  (*         x := 256 * !x + (int_of_char (String.get c y)) *)
-  (*     done; *)
-  (*     !x *)
-
 
 let int_of_bytes (b:bytes) =
   let c = get_cbytes b in
@@ -578,21 +544,11 @@ let abytes_get_cbytes s =
   ()
 
 
-assume val int_of_string_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Lemma 
-  (requires True)
-  (ensures n = int_of_string (string_of_int l n))
-  [SMTPat (int_of_string (string_of_int l n))]
-
-
 val int_of_bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} ->
     Lemma (n = int_of_bytes (bytes_of_int l n))
 let int_of_bytes_of_int l n =
   ()
   
-
-// Pretty printing of bytes for debugging
-assume val print_bytes: bytes -> Tot string
-
 
 val byte_of_int: n:nat{n < 256} -> Tot byte
 let byte_of_int n =
@@ -600,11 +556,15 @@ let byte_of_int n =
   index (bytes_of_int 1 n) 0
 
 
-// No definition for these: they're only meant to be used to write tests within
-// F*.
-assume val bytes_of_hex: string -> Tot bytes
-assume val hex_of_bytes: bytes -> Tot string
-assume val string_of_hex: string -> Tot string
-assume val hex_of_string: string -> Tot string
+// Pretty printing of bytes for debugging
+assume val print_bytes: bytes -> Tot string
 
 
+val bytes_of_hex: string -> Tot bytes
+let bytes_of_hex s =
+  abytes (string_of_hex s)
+  
+
+val hex_of_bytes: bytes -> Tot string
+let hex_of_bytes b =
+  hex_of_string (get_cbytes b)
