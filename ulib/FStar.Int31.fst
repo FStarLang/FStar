@@ -1,6 +1,6 @@
-module FStar.Int8
+module FStar.Int31
 
-let n = 8
+let n = 31
 
 open FStar.Int
 

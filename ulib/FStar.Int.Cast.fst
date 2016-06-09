@@ -5,11 +5,11 @@ module U16 = FStar.UInt.UInt16
 module U32 = FStar.UInt.UInt32
 module U63 = FStar.UInt.UInt63
 module U64 = FStar.UInt.UInt64
-module I8  = FStar.Int.Int8
-module I16 = FStar.Int.Int16
-module I32 = FStar.Int.Int32
-module I63 = FStar.Int.Int63
-module I64 = FStar.Int.Int64
+module I8  = FStar.Int8
+module I16 = FStar.Int16
+module I32 = FStar.Int32
+module I63 = FStar.Int63
+module I64 = FStar.Int64
 
 type u8  = U8.uint8
 type u16 = U16.uint16
@@ -17,11 +17,11 @@ type u32 = U32.uint32
 type u63 = U63.uint63
 type u64 = U64.uint64
 
-type i8  = I8.int8
-type i16 = I16.int16
-type i32 = I32.int32
-type i63 = I63.int63
-type i64 = I64.int64
+type i8  = I8.t
+type i16 = I16.t
+type i32 = I32.t
+type i63 = I63.t
+type i64 = I64.t
 
 let op_At_Percent = FStar.Int.op_At_Percent
 

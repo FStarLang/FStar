@@ -1,7 +1,3 @@
-module FStar.Int8
-
-let n = 8
-
 open FStar.Int
 
 private type t' = | Mk: v:int_t n -> t'
