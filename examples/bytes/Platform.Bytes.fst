@@ -58,6 +58,21 @@ assume val compare_eq : a:string -> b:string -> Lemma
  (ensures String.compare a b = 0 <==> a = b)
  (* (ensures (String.compare a b = 0 ==> a = b) /\ (String.compare a b <> 0 ==> a <> b)) *)
  (* [SMTPat (String.compare a b = 0)] *)
+val concatT : sep:string -> ls:list string -> Tot string
+let rec concatT sep ls =
+  match ls with
+  | [] -> ""
+  | x :: xs -> 
+    match xs with
+    | [] -> x
+    | _ -> x ^ sep ^ concatT sep xs
+assume val concat_concatT : sep:string -> ls:list string -> Lemma
+  (String.concat sep ls = concatT sep ls)
+assume val string_append_inj: s1:string -> s2:string -> t1:string -> t2:string {String.length s1 = String.length t1 \/ String.length s2 = String.length t2} ->
+  Lemma (requires ((s1 ^ s2) = (t1 ^ t2)))
+        (ensures (s1 = t1 /\ s2 = t2))
+
+
 assume val string_xor : l:nat -> a:string{String.length a = l} -> b:string{String.length b = l} -> Tot (s:string{String.length s = l})
 (* reference implementation in OCaml *)
 (* let string_xor len s1 s2 = *)
@@ -66,9 +81,6 @@ assume val string_xor : l:nat -> a:string{String.length a = l} -> b:string{Strin
 (*           Bytes.set res i (char_of_int ((int_of_char s1.[i]) lxor (int_of_char s2.[i]))) *)
 (*         done; *)
 (*         res *)
-assume val string_append_inj: s1:string -> s2:string -> t1:string -> t2:string {String.length s1 = String.length t1 \/ String.length s2 = String.length t2} ->
-  Lemma (requires ((s1 ^ s2) = (t1 ^ t2)))
-        (ensures (s1 = t1 /\ s2 = t2))
 
 
 val repr_bytes : nat -> GTot (n:nat{n>0})
@@ -82,7 +94,6 @@ let repr_bytes n =
     else if n < 72057594037927936 then 7
     else if n < 18446744073709551616 then 8
     else 9
-
 val lemma_repr_bytes_values: n:nat ->
   Lemma (   ( n < 256 <==> repr_bytes n = 1 )
          /\ ( (n >= 256 /\ n < 65536) <==> repr_bytes n = 2 )
@@ -164,12 +175,6 @@ val exfalso : #a:Type -> u:unit{False} -> Tot a
 let rec exfalso #a _ = exfalso ()
 
 
-val string_concat : ls:list string -> Tot (r:string{String.length r = sum_length ls})
-let rec string_concat ls =
-  match ls with
-  | [] -> ""
-  | x :: xs -> x ^ string_concat xs
-
 val sum_length_append : a:list string -> b:list string -> Lemma 
   (requires True)
   (ensures (sum_length (a @ b) = sum_length a + sum_length b))
@@ -178,16 +183,6 @@ let rec sum_length_append a b =
   match a with
     | [] -> ()
     | x :: a' -> sum_length_append a' b
-
-val concat_append : a:list string -> b:list string -> Lemma 
-  (requires True)
-  (ensures (string_concat (a @ b) = (string_concat a ^ string_concat b)))
-  [SMTPat (string_concat (a @ b))]
-let rec concat_append a b =
-  match a with
-    | [] -> ()
-    | x :: xs -> 
-      concat_append xs b
 
 
 val getBytes : bl:list cbytes -> i:nat{i <= sum_length bl} -> n:nat{i+n <= sum_length bl} -> Tot (b:cbytes{String.length b = n})
@@ -232,9 +227,23 @@ let rec lemma_getBytes ls1 ls2 i n =
           ()
         
 
+val concatT_empty : ls:list string -> Tot (r:string{String.length r = sum_length ls})
+let rec concatT_empty ls =
+  match ls with
+  | [] -> ""
+  | x :: xs -> x ^ concatT_empty xs
+val concat_append : a:list string -> b:list string -> Lemma 
+  (requires True)
+  (ensures (concatT_empty (a @ b) = (concatT_empty a ^ concatT_empty b)))
+  [SMTPat (concatT_empty (a @ b))]
+let rec concat_append a b =
+  match a with
+    | [] -> ()
+    | x :: xs -> 
+      concat_append xs b
 val sum_length_0_concat_empty : ls:list string -> Lemma 
   (requires sum_length ls = 0)
-  (ensures string_concat ls = "")
+  (ensures concatT_empty ls = "")
   [SMTPat (sum_length ls = 0)]
 let rec sum_length_0_concat_empty ls =
   match ls with
@@ -246,7 +255,7 @@ let rec sum_length_0_concat_empty ls =
 
 val lemma_getBytes_2 : ls:list cbytes -> Lemma
   (requires True)
-  (ensures getBytes ls 0 (sum_length ls) = string_concat ls)
+  (ensures getBytes ls 0 (sum_length ls) = concatT_empty ls)
   [SMTPat (getBytes ls 0 (sum_length ls))]
 let rec lemma_getBytes_2 ls = 
   match ls with
@@ -308,9 +317,38 @@ val get_cbytes : (bytes -> Tot cbytes)
 (* val get_cbytes : b:bytes -> Tot (r:cbytes{String.length r = b.length}) *)
 let get_cbytes (b:bytes) =
     if b.length = b.max && b.index = 0 then
-      string_concat b.bl
+      (* concatT_empty b.bl *)
+      String.concat "" b.bl
     else
       getBytes b.bl b.index b.length
+
+
+(* a version of get_cbytes that doesn't have the [concatT_empty] part so it's easier to reason about *)
+val get_cbytes' : b:bytes -> Tot (r:cbytes{String.length r = b.length})
+let get_cbytes' (b:bytes) =
+      getBytes b.bl b.index b.length
+
+
+val concatT_empty_concatT : ls:list string -> Lemma
+  (requires True)
+  (ensures concatT "" ls = concatT_empty ls)
+  [SMTPat (concatT "" ls)]
+let rec concatT_empty_concatT ls =
+  match ls with
+  | [] -> ()
+  | x :: xs ->
+    match xs with
+    | [] -> ()
+    | _ -> concatT_empty_concatT xs
+
+
+val get_cbytes'_ok : b : bytes -> Lemma
+  (requires True)
+  (ensures get_cbytes b = get_cbytes' b)
+  [SMTPat (get_cbytes b)]
+let get_cbytes'_ok b =
+  let _ = concat_concatT "" b.bl in
+  ()
 
 
 type bytes_eq (a:bytes) (b:bytes) = (get_cbytes a = get_cbytes b)
@@ -431,21 +469,6 @@ let split b i =
      length = b.length - i;
      index = b.index + i;
      max = b.max}
-
-
-(* a version of get_cbytes that doesn't have the [string_concat] part so it's easier to reason about *)
-val get_cbytes' : b:bytes -> Tot (r:cbytes{String.length r = b.length})
-let get_cbytes' (b:bytes) =
-      getBytes b.bl b.index b.length
-
-
-val get_cbytes'_ok : b : bytes -> Lemma
-  (requires True)
-  (ensures get_cbytes b = get_cbytes' b)
-  [SMTPat (get_cbytes b)]
-
-
-let get_cbytes'_ok b = ()
 
 
 val lemma_op_At_Bar : a:bytes -> b:bytes -> Lemma 
