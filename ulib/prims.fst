@@ -572,5 +572,8 @@ let allow_inversion (a:Type)
 assume val op_Modulus            : int -> nonzero -> Tot int
 assume val op_Division           : nat -> nonzero -> Tot int
 
+let rec pow2 (x:nat) : Tot pos = if x = 0 then 1 else op_Multiply 2 (pow2 (x-1))
+let abs (x:int) : Tot int = if x >= 0 then x else -x
+
 assume val string_of_bool: bool -> Tot string
 assume val string_of_int: int -> Tot string

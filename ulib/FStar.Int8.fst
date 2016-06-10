@@ -1,143 +1,150 @@
 module FStar.Int8
+
+let n = 8
+
+open FStar.Int
 open FStar.Mul
-val min_value_int : int
-let min_value_int = -128
 
-val max_value_int : int
-let max_value_int = 127
+(* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
+ * a copy-paste of this module. *)
 
-let within_int8 (i:int) =
-    min_value_int <= i
-    && i <= max_value_int
+private type t' = | Mk: v:int_t n -> t'
+type t = t'
 
-private type int8' =
-  | Int8 : i:int{within_int8 i} -> int8'
+let v (x:t) : Tot (int_t n) = x.v
 
-type int8 = int8'
+val add: a:t -> b:t -> Pure t
+  (requires (size (v a + v b) n))
+  (ensures (fun c -> v a + v b = v c))
+let add a b =
+  Mk (add (v a) (v b))
 
-val min_value : int8
-let min_value = Int8 min_value_int
+val add_underspec: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c ->
+    size (v a + v b) n ==> v a + v b = v c))
+let add_underspec a b =
+  Mk (add_underspec (v a) (v b))
 
-val max_value : int8
-let max_value = Int8 max_value_int
+val add_mod: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c -> (v a + v b) @% pow2 n = v c))
+let add_mod a b =
+  Mk (add_mod (v a) (v b))
 
-val as_int: i:int8 -> GTot int
-let as_int (Int8 i) = i
+(* Subtraction primitives *)
+val sub: a:t -> b:t -> Pure t
+  (requires (size (v a - v b) n))
+  (ensures (fun c -> v a - v b = v c))
+let sub a b =
+  Mk (sub (v a) (v b))
 
-type nat8 = x:int8{Prims.op_GreaterThanOrEqual (as_int x) 0}
+val sub_underspec: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c ->
+    size (v a - v b) n ==> v a - v b = v c))
+let sub_underspec a b =
+  Mk (sub_underspec (v a) (v b))
 
-//a ?+ b may overflow
-//must be marked opaque because the body has an intentional admit
-abstract val op_Question_Plus: i:int8
-              -> j:int8
-              -> Tot (k:int8{within_int8 (as_int i + as_int j) ==> as_int k = as_int i + as_int j})
-let op_Question_Plus (Int8 i) (Int8 j) =
-  if within_int8 (i + j)
-  then Int8 (i + j)
-  else magic()//mark as admit, because we do not specify the overflow semantics
+val sub_mod: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c -> (v a - v b) @% pow2 n = v c))
+let sub_mod a b =
+  Mk (sub_mod (v a) (v b))
 
-val op_Plus: i:int8
-          -> j:int8{within_int8 (as_int i + as_int j)}
-          -> Tot int8
-let op_Plus (Int8 i) (Int8 j) = Int8 (i + j)
+(* Multiplication primitives *)
+val mul: a:t -> b:t -> Pure t
+  (requires (size (v a * v b) n))
+  (ensures (fun c -> v a * v b = v c))
+let mul a b =
+  Mk (mul (v a) (v b))
 
-//a ?- b may overflow
-//must be marked opaque because the body has an intentional admit
-abstract val op_Question_Subtraction: i:int8
-              -> j:int8
-              -> Tot (k:int8{within_int8 (as_int i - as_int j) ==> as_int k = as_int i - as_int j})
-let op_Question_Subtraction (Int8 i) (Int8 j) =
-  if within_int8 (i - j)
-  then Int8 (i - j)
-  else magic()//mark as admit, because we do not specify the overflow semantics
+val mul_underspec: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c ->
+    size (v a * v b) n ==> v a * v b = v c))
+let mul_underspec a b =
+  Mk (mul_underspec (v a) (v b))
 
-val op_Subtraction: i:int8
-                 -> j:int8{within_int8 (as_int i - as_int j)}
-                 -> Tot int8
-let op_Subtraction (Int8 i) (Int8 j) = Int8 (i - j)
+val mul_mod: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c -> (v a * v b) @% pow2 n = v c))
+let mul_mod a b =
+  Mk (mul_mod (v a) (v b))
 
-//a ?* b may overflow
-//must be marked opaque because the body has an intentional admit
-abstract val op_Question_Star:
-                 i:int8
-              -> j:int8
-              -> Tot (k:int8{within_int8 (op_Multiply (as_int i) (as_int j)) ==> as_int k = op_Multiply (as_int i) (as_int j)})
-let op_Question_Star (Int8 i) (Int8 j) =
-  if within_int8 (op_Multiply i j)
-  then Int8 (op_Multiply i j)
-  else magic()//mark as admit, because we do not specify the overflow semantics
+(* Division primitives *)
+val div: a:t -> b:t{v b <> 0} -> Pure t
+  (requires (size (v a / v b) n))
+  (ensures (fun c -> v b <> 0 ==> v a / v b = v c))
+let div a b =
+  Mk (div (v a) (v b))
 
-val op_Star: i:int8
-          -> j:int8{within_int8 (op_Multiply (as_int i) (as_int j))}
-          -> Tot int8
-let op_Star (Int8 i) (Int8 j) = Int8 (op_Multiply i j)
+val div_underspec: a:t -> b:t{v b <> 0} -> Pure t
+  (requires True)
+  (ensures (fun c ->
+    (v b <> 0 /\ size (v a / v b) n) ==> v a / v b = v c))
+let div_underspec a b =
+  Mk (div_underspec (v a) (v b))
 
-//When the dividend is negative, the semantics is platform dependent
-//must be marked opaque because the body has an intentional admit
-abstract val op_Question_Slash: i:int8
-                           -> j:int8{as_int j <> 0}
-                           -> Tot (k:int8{as_int i >= 0 ==> as_int k = as_int i / as_int j})
-let op_Question_Slash (Int8 i) (Int8 j) =
-  if i < 0
-  then magic ()//mark as admit, because we do not specify the overflow semantics
-  else Int8 (i / j)
+(* Modulo primitives *)
+val mod: a:t -> b:t{v b <> 0} -> Pure t
+  (requires True)
+  (ensures (fun c ->
+    v a - ((v a / v b) * v b) = v c))
+let mod a b = Mk (mod (v a) (v b))
 
-//division does not overflow when the dividend is non-negative
-val op_Slash: i:int8{as_int i >= 0}
-           -> j:int8{as_int j <> 0}
-           -> Tot int8
-let op_Slash (Int8 i) (Int8 j) = Int8 (i / j)
+(* Bitwise operators *)
+val logand: t -> t -> Tot t
+let logand a b = Mk (logand (v a) (v b))
+val logxor: t -> t -> Tot t
+let logxor a b = Mk (logxor (v a) (v b))
+val logor: t -> t -> Tot t
+let logor a b = Mk (logor (v a) (v b))
+val lognot: t -> Tot t
+let lognot a = Mk (lognot (v a))
 
-//a ?% b can overflow
-//must be marked opaque because the body has an intentional admit
-abstract val op_Question_Percent:
-                i:int8
-             -> j:int8{as_int j <> 0}
-             -> Tot (k:int8{not(as_int i = min_value_int && as_int j = -1)
-                             ==> as_int k = as_int i % as_int j})
-let op_Question_Percent (Int8 i) (Int8 j) =
-  if i=min_value_int && j = -1
-  then magic()//mark as admit, because we do not specify the overflow semantics
-  else Int8 (i % j)
+val int_to_t: x:(int_t n) -> Pure t
+  (requires True)
+  (ensures (fun y -> v y = x))
+let int_to_t x = Mk x
 
-//From: http://stackoverflow.com/questions/19285163/does-modulus-overflow
-//Overflow can occur during a modulo operation when the dividend is equal to the
-//minimum (negative) value for the signed integer type and the divisor is equal
-//to -1.
-val op_Percent: i:int8
-             -> j:int8{as_int j <> 0 /\ not(i = min_value && as_int j = -1)}
-             -> Tot int8
-let op_Percent (Int8 i) (Int8 j) = Int8 (i % j)
+(* Shift operators *)
+val shift_right: a:t -> s:UInt32.t -> Pure t
+  (requires True)
+  (ensures (fun c -> v c = (v a /% (pow2 (UInt32.v s)))))
+let shift_right a s = Mk (shift_right (v a) (UInt32.v s))
 
-//?- a    can overflow
-//must be marked opaque because the body has an intentional admit
-abstract val op_Question_Minus: i:int8
-                   -> Tot int8
-let op_Question_Minus (Int8 i) =
-  if i = min_value_int
-  then magic()//mark as admit, because we do not specify the overflow semantics
-  else Int8 (-i)
+val shift_left: a:t -> s:UInt32.t -> Pure t
+  (requires True)
+  (ensures (fun c -> v c = ((v a * pow2 (UInt32.v s)) @% pow2 n)))
+let shift_left a s = Mk (shift_left (v a) (UInt32.v s))
 
-val op_Minus: i:int8{i <> min_value}
-           -> Tot int8
-let op_Minus (Int8 i) = Int8 (-i)
+(* Comparison operators *)
+let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
+let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
+let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
+let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
+let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 
-val op_Less_Equals: i:int8
-                 -> j:int8
-                 -> Tot bool
-let op_Less_Equals (Int8 i) (Int8 j) = i <= j
-
-val op_Less: i:int8
-          -> j:int8
-          -> Tot bool
-let op_Less (Int8 i) (Int8 j) = (i < j)
-
-val op_Greater_Equals: i:int8
-                    -> j:int8
-                    -> Tot bool
-let op_Greater_Equals (Int8 i) (Int8 j) = i >= j
-
-val op_Greater: i:int8
-             -> j:int8
-             -> Tot bool
-let op_Greater (Int8 i) (Int8 j) = i > j
+(* Infix notations *)
+let op_Plus_Hat = add
+let op_Plus_Question_Hat = add_underspec
+let op_Plus_Percent_Hat = add_mod
+let op_Subtraction_Hat = sub
+let op_Subtraction_Question_Hat = sub_underspec
+let op_Subtraction_Percent_Hat = sub_mod
+let op_Star_Hat = mul
+let op_Star_Question_Hat = mul_underspec
+let op_Star_Percent_Hat = mul_mod
+let op_Slash_Hat = div
+let op_Percent_Hat = mod
+let op_Hat_Hat = logxor  
+let op_Amp_Hat = logand
+let op_Bar_Hat = logor
+let op_Less_Less_Hat = shift_left
+let op_Greater_Greater_Hat = shift_right
+let op_Equal_Hat = eq
+let op_Greater_Hat = gt
+let op_Greater_Equal_Hat = gte
+let op_Less_Hat = gt
+let op_Less_Equal_Hat = gte
