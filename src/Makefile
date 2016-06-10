@@ -315,7 +315,7 @@ clean-boot-fs:
 # Testing
 # --------------------------------------------------------------------
 
-test:   clean $(BIN)/fstar.exe $(BIN)/tests.exe fsharp-regressions ocaml-test regressions
+test:   $(BIN)/fstar.exe $(BIN)/tests.exe fsharp-regressions ocaml-test regressions
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
