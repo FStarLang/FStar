@@ -579,6 +579,28 @@ let byte_of_int n =
   index (bytes_of_int 1 n) 0
 
 
+val utf8 : string -> Tot bytes
+let utf8 (x:string) : bytes = abytes x (* TODO: use Camomile *)
+
+
+val iutf8_opt : bytes -> Tot (option string)
+let iutf8_opt (x:bytes) : option string = Some (get_cbytes x)
+
+
+val get_cbytes_abytes : b:bytes -> Lemma
+  (requires True)
+  (ensures abytes (get_cbytes b) = b)
+  [SMTPat (abytes (get_cbytes b))]
+let get_cbytes_abytes b =
+  let _ = bytes_extensionality (abytes (get_cbytes b)) b in
+  ()
+
+
+val iutf8 : m:bytes -> s:string{utf8 s == m}
+let iutf8 (x:bytes) = 
+  get_cbytes x (* TODO: use Camomile *)
+
+
 // Pretty printing of bytes for debugging
 assume val print_bytes: bytes -> Tot string
 
