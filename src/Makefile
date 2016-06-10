@@ -212,7 +212,7 @@ STDLIB=$(addprefix $(LIB)/, allboot.fsti stboot.fsti list.fsti option.fsti \
   FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
 BOOT_BASIC_FSTI=$(addprefix boot_fstis/, string.fsti bytes.fsti platform.fsti version.fsti range.fsti)
 BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
-BOOT_PARSER=$(addprefix parser/, ast.fs dsenv.fs desugar.fs env.fs interleave.fs tosyntax.fs parse.fsti lexhelp.fs parseit.fsi driver.fs dep.fs)
+BOOT_PARSER=$(addprefix parser/, ast.fs dsenv.fs desugar.fs env.fs interleave.fs tosyntax.fs lexhelp.fs parseit.fsi driver.fs dep.fs)
 BOOT_FORMAT=$(addprefix format/, formatml.fs)
 BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) \
   $(TOSMT_SRC) $(BOOT_PARSER) $(TYPECHECKER_SRC) $(EXTRACTION_SRC) $(SMTENCODING_SRC) $(TOPLEVEL_SRC)
@@ -242,8 +242,9 @@ all_boot_fsts:
 boot_fstis/%.fsti: basic/%.fsi
 	cp $^ $@
 
-boot_fsts/FStar.Parser.Parse.fsti: parser/parse.fsti
-	cp $^ $@
+boot_fsts/FStar.Parser.Parse.fsti: parser/parse.fsi
+	head -n -12 $^ > $@
+	sed -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse open FStar.BaseTypes type bytes = array<byte>/' $@
 
 boot_fsts/FStar.Parser.ParseIt.fsti: parser/parseit.fsi
 	cp $^ $@
