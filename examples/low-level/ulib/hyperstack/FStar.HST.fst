@@ -58,12 +58,12 @@ assume val salloc: #a:Type -> init:a -> ST (stackref a)
     /\ m1=HyperStack.upd m0 s init))           //and it's been initialized
 
 // JK: assigns, provided that the reference is good
-assume val op_Colon_Equals: #a:Type -> r:stackref a -> v:a -> ST unit
-  (requires (fun m -> HH.includes r.id m.tip))
-  (ensures (fun m0 _ m1 -> HH.includes r.id m0.tip /\ m1 = HyperStack.upd m0 r v))
+assume val op_Colon_Equals: #a:Type -> r:stackref a -> v:a -> STL unit
+  (requires (fun m -> contains m r))
+  (ensures (fun m0 _ m1 -> contains m0 r /\ m1 = HyperStack.upd m0 r v))
 
 // JK: dereferences, provided that the reference is good
-assume val op_Bang: #a:Type -> r:stackref a -> ST a
+assume val op_Bang: #a:Type -> r:stackref a -> STL a
   (requires (fun m -> HH.includes r.id m.tip))
   (ensures (fun s0 v s1 -> s1=s0 /\ v=HyperStack.sel s0 r))
 
@@ -131,3 +131,31 @@ let test_nested_stl2 () =
   push_frame ();
   let x = test_do_nothing 0 in 
   pop_frame ()
+
+val with_frame: #a:Type -> #pre:st_pre -> #post:(mem -> Tot (st_post a)) -> $f:(unit -> STL a pre post) 
+	     -> STL a (fun s0 -> forall s1. fresh_frame s0 s1 ==> pre s1)
+		     (fun s0 x s1 -> 
+			exists s0' s1'. fresh_frame s0 s0' 
+			         /\ poppable s0' 
+				 /\ post s0' x s1'
+				 /\ equal_domains s0' s1'
+				 /\ s1 = pop s1')
+let with_frame #a #pre #post f = 
+  push_frame();
+  let x = f() in
+  pop_frame();
+  x
+
+let test_with_frame (x:stackref int) (v:int) 
+  : STL unit (requires (fun m -> contains m x))
+	     (ensures (fun m0 _ m1 -> modifies (Set.singleton x.id) m0 m1 /\ sel m1 x = v))
+ = with_frame (fun _ -> x := v)
+
+
+let as_requires (#a:Type) (wp:st_wp a) = wp (fun x s -> True)
+let as_ensures (#a:Type) (wp:st_wp a) = fun s0 x s1 -> wp (fun y s1' -> y<>x \/ s1<>s1') s0
+assume val as_stl: #a:Type -> #wp:st_wp a -> $f:(unit -> STATE a wp) -> 
+	   Pure (unit -> STL a (as_requires wp)
+			      (as_ensures wp))
+	        (requires (forall s0 x s1. as_ensures wp s0 x s1 ==> equal_domains s0 s1))
+ 	        (ensures (fun x -> True))
