@@ -1,4 +1,8 @@
 module Platform.Bytes
+
+(* A verified implementation of lazy byte sequences, with constant-time split and other efficient
+ * operations. *)
+
 open FStar
 open FStar.List
 open FStar.List.Tot
@@ -74,15 +78,9 @@ assume val string_append_inj: s1:string -> s2:string -> t1:string -> t2:string {
 
 
 assume val string_xor : l:nat -> a:string{String.length a = l} -> b:string{String.length b = l} -> Tot (s:string{String.length s = l})
-(* reference implementation in OCaml *)
-(* let string_xor len s1 s2 = *)
-(*         let res = String.make len (char_of_int 0) in *)
-(*         for i=0 to len-1 do *)
-(*           Bytes.set res i (char_of_int ((int_of_char s1.[i]) lxor (int_of_char s2.[i]))) *)
-(*         done; *)
-(*         res *)
 
-
+// This is just [ceil (log2 n / 8)]. Why don't we use this instead and let the normalizer handle it?
+// This is fairly unreadable!
 val repr_bytes : nat -> GTot (n:nat{n>0})
 let repr_bytes n =
     if n < 256 then 1
@@ -106,32 +104,13 @@ val lemma_repr_bytes_values: n:nat ->
 let lemma_repr_bytes_values n = ()
 
 
+(* Takes a natural number [n] whose binary representation fits in [l] bytes; returns a [string]
+ * of length [l] whose first bytes are the little-endian machine representation of integer [n]. *)
 assume val string_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Tot (r:string {String.length r = l})
-(* reference implementation *)
-  (* let string_of_int nb i = *)
-  (*   let rec put_bytes bb lb n = *)
-  (*     if lb = 0 then failwith "not enough bytes" *)
-  (*     else *)
-  (*       begin *)
-  (*         Bytes.set bb (lb-1) (char_of_int (n mod 256)); *)
-  (*         if n/256 > 0 then *)
-  (*           put_bytes bb (lb-1) (n/256) *)
-  (*         else bb *)
-  (*       end *)
-  (*   in *)
-  (*   let b = String.make nb (char_of_int 0) in *)
-  (*     put_bytes b nb i *)
 assume val int_of_string : s:string ->
     Tot (n:nat{repr_bytes n <= String.length s /\
              (String.length s = 1 ==> n < 256) /\
              s = string_of_int (String.length s) n})
-(* reference implementation *)
-  (* let int_of_string c : int = *)
-  (*     let x = ref 0 in *)
-  (*     for y = 0 to b.length-1 do *)
-  (*         x := 256 * !x + (int_of_char (String.get c y)) *)
-  (*     done; *)
-  (*     !x *)
 assume val int_of_string_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Lemma 
   (requires True)
   (ensures n = int_of_string (string_of_int l n))
@@ -139,13 +118,10 @@ assume val int_of_string_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Lemma
 assume val string_of_hex: string -> Tot string
 assume val hex_of_string: string -> Tot string
 
-
 type byte = Char.char
 type cbytes = string
 
-
 val sum_length : list string -> Tot nat
-(* let sum_length ls = sum (mapT String.length ls) *)
 let rec sum_length ls =
   match ls with
   | [] -> 0
@@ -452,10 +428,10 @@ let equalBytes a b =
 
 val xor: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
 let xor len s1 s2 =
-        let s1 = get_cbytes s1 in
-        let s2 = get_cbytes s2 in
-        let res = string_xor len s1 s2 in
-        abytes res
+  let s1 = get_cbytes s1 in
+  let s2 = get_cbytes s2 in
+  let res = string_xor len s1 s2 in
+  abytes res
 
 
 val split: b:bytes -> n:nat{n <= length b} ->

@@ -53,7 +53,7 @@ module StringFacts = struct
 
   let hex_of_string s =
     let n = String.length s in
-    let buf = Buffer.create n in
+    let buf = Buffer.create (2 * n) in
     for i = 0 to n - 1 do
       let d1,d2 = char_to_hex s.[i] in
       Buffer.add_char buf d1;
