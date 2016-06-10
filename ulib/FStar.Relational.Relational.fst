@@ -12,7 +12,7 @@ type rel (a:Type) (b:Type) : Type =
 
 (* Some frequently used abbreviations *)
 type double (t:Type) = rel t t
-type eq (t:Type) = p:(double t){R.l p = R.r p}
+type eq (t:Type) = p:(double t){R.l p == R.r p}
 
 let twice x = R x x
 let tu = twice ()
@@ -20,6 +20,9 @@ let tu = twice ()
 (* functions to lift normal functions to Relational functions *)
 val rel_map1T : ('a -> Tot 'b) -> (double 'a) -> Tot (double 'b)
 let rel_map1T f (R x1 x2)  = R (f x1) (f x2)
+
+val rel_map2Teq : #a:eqtype -> #b:eqtype -> #c:Type -> (a -> b -> Tot c) -> (double a) -> (double b) -> Tot (double c)
+let rel_map2Teq #a #b #c f (R x1 x2) (R y1 y2) = R (f x1 y1) (f x2 y2)
 
 val rel_map2T : ('a -> 'b -> Tot 'c) -> (double 'a) -> (double 'b) -> Tot (double 'c)
 let rel_map2T f (R x1 x2) (R y1 y2) = R (f x1 y1) (f x2 y2)
@@ -30,7 +33,7 @@ let rel_map3T f (R x1 x2) (R y1 y2) (R z1 z2) = R (f x1 y1 z1) (f x2 y2 z2)
 (* Some convenient arithmetic functions *)
 let op_Hat_Plus = rel_map2T (fun x y -> x + y)
 let op_Hat_Minus = rel_map2T (fun x y -> x - y)
-let op_Hat_Star = rel_map2T (fun x y -> x * y)
+let op_Hat_Star = rel_map2T (fun x y -> op_Multiply x y)
 let op_Hat_Slash = rel_map2T (fun x y -> x / y)
 
 (* Some convenient list functions *)
@@ -46,12 +49,13 @@ let snd_rel = rel_map1T snd
 (* Some convenient boolean functions *)
 let and_rel = rel_map2T (fun x y -> x && y)
 let or_rel = rel_map2T (fun x y -> x || y)
-let eq_rel = rel_map2T (fun x y -> x = y)
+let eq_rel = rel_map2Teq (fun x y -> x = y)
 
 (* Some convenient functions combining left and right side (for specification only) *)
 let and_irel (R a b) = a && b
 let or_irel (R a b) = a || b
-let eq_irel (R a b) = a = b
+let eq_irel (#t:eqtype) (x:(rel t t)) = match x with
+  | R a b -> a = b
 
 (* Some convenient functions on heap (for specification) *)
 let sel_rel1 h r  = rel_map2T sel h (twice r)
