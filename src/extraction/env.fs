@@ -38,10 +38,8 @@ type env = {
     currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
-let debug g f =
-    if !Options.debug <> []
-    && (List.contains "Prims" (!Options.debug) ||
-        g.currentModule <> ([], "Prims"))
+let debug (g:env) f =
+    if Options.debug_at_level (snd g.currentModule) (Options.Other "Extraction")
     then f ()
 
 let mkFvvar (l: lident) (t:typ) : fvvar =

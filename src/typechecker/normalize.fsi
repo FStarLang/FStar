@@ -22,10 +22,13 @@ open FStar.TypeChecker
 open FStar.Syntax.Syntax
 
 type step =
+  | Beta
+  | Iota            //pattern matching
+  | Zeta            //fixed points
+  | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | WHNF            //Only produce a weak head normal form
   | Inline
   | UnfoldUntil of delta_depth
-  | Beta            //remove Always do beta
   | BetaUVars       //only beta reduce applications of resolved uvars
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
@@ -47,6 +50,7 @@ val normalize_comp:       steps -> Env.env -> comp -> comp
 val normalize_sigelt:     steps -> Env.env -> sigelt -> sigelt
 val normalize_refinement: steps -> Env.env -> typ -> typ
 val ghost_to_pure:        Env.env -> comp -> comp
+val ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
 
 val term_to_string:  Env.env -> term -> string
 val comp_to_string:  Env.env -> comp -> string

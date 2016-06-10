@@ -32,7 +32,22 @@ all:
 #	make -C deriving-monads -- still some failing assertions + missing Makefile
 	make -C metatheory
 	make -C wysteria
+	make -C dm4free
 	make -C unit-tests
+
+univ: u_algo u_data_structures u_metatheory u_unit-tests
+
+u_algo:
+	+make -C algorithms uall
+
+u_data_structures:
+	+make -C data_structures uall
+
+u_metatheory:
+	+make -C metatheory uall
+
+u_unit-tests:
+	+make -C unit-tests/universes
 
 test: all
 

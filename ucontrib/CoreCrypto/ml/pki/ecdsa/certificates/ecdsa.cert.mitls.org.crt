@@ -1,0 +1,46 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 1 (0x1)
+        Signature Algorithm: ecdsa-with-SHA1
+        Issuer: C=CC, ST=State, L=Location, O=Organization, CN=ecdsa.mitls.org/emailAddress=root@mitls.org
+        Validity
+            Not Before: Jun  2 17:42:28 2016 GMT
+            Not After : Aug 19 17:42:28 2024 GMT
+        Subject: C=CC, ST=State, O=Organization, CN=ecdsa.cert.mitls.org/emailAddress=root@mitls.org
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+            EC Public Key:
+                pub: 
+                    04:e8:38:73:92:e4:cd:c2:01:e5:a8:eb:54:ff:b2:
+                    db:3e:be:49:9e:40:44:b5:49:a4:54:de:0e:8b:ea:
+                    fd:c8:6c:09:4c:de:14:34:75:f0:5b:2f:ba:fc:36:
+                    2b:ca:dd:4d:f7:de:a9:86:62:04:ae:a7:44:71:61:
+                    ee:d2:1e:ec:6f
+                ASN1 OID: prime256v1
+        X509v3 extensions:
+            X509v3 Key Usage: 
+                Digital Signature, Non Repudiation, Key Encipherment
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            Netscape Comment: 
+                OpenSSL Generated Certificate
+    Signature Algorithm: ecdsa-with-SHA1
+        30:44:02:20:4c:52:e5:5f:34:dc:19:0c:99:9a:65:97:18:07:
+        81:2b:2e:54:b5:e4:63:68:bd:c4:71:50:48:bf:f1:35:55:d8:
+        02:20:51:d9:4a:95:5e:ee:c5:9f:69:17:ba:e3:58:06:3e:bd:
+        11:c2:ee:7a:d8:b2:ad:f6:71:b3:36:6c:75:78:12:6e
+-----BEGIN CERTIFICATE-----
+MIICJzCCAc+gAwIBAgIBATAJBgcqhkjOPQQBMIGAMQswCQYDVQQGEwJDQzEOMAwG
+A1UECAwFU3RhdGUxETAPBgNVBAcMCExvY2F0aW9uMRUwEwYDVQQKDAxPcmdhbml6
+YXRpb24xGDAWBgNVBAMMD2VjZHNhLm1pdGxzLm9yZzEdMBsGCSqGSIb3DQEJARYO
+cm9vdEBtaXRscy5vcmcwHhcNMTYwNjAyMTc0MjI4WhcNMjQwODE5MTc0MjI4WjBy
+MQswCQYDVQQGEwJDQzEOMAwGA1UECAwFU3RhdGUxFTATBgNVBAoMDE9yZ2FuaXph
+dGlvbjEdMBsGA1UEAwwUZWNkc2EuY2VydC5taXRscy5vcmcxHTAbBgkqhkiG9w0B
+CQEWDnJvb3RAbWl0bHMub3JnMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE6Dhz
+kuTNwgHlqOtU/7LbPr5JnkBEtUmkVN4Oi+r9yGwJTN4UNHXwWy+6/DYryt1N996p
+hmIErqdEcWHu0h7sb6NIMEYwCwYDVR0PBAQDAgXgMAkGA1UdEwQCMAAwLAYJYIZI
+AYb4QgENBB8WHU9wZW5TU0wgR2VuZXJhdGVkIENlcnRpZmljYXRlMAkGByqGSM49
+BAEDRwAwRAIgTFLlXzTcGQyZmmWXGAeBKy5UteRjaL3EcVBIv/E1VdgCIFHZSpVe
+7sWfaRe641gGPr0Rwu562LKt9nGzNmx1eBJu
+-----END CERTIFICATE-----

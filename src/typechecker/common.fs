@@ -73,6 +73,7 @@ let t_int    = tconst C.int_lid
 let t_string = tconst C.string_lid
 let t_float  = tconst C.float_lid
 let t_char   = tabbrev C.char_lid
+let t_range  = tabbrev C.range_lid
 
 let rec delta_depth_greater_than l m = match l, m with 
     | Delta_constant, _ -> false

@@ -1,9 +1,9 @@
 VERFILES=Unit1.Basic.fst        Unit1.Projectors2.fst          Unit1.WPsAndTriples.fst \
 	 Unit1.Parser.fst       Unit1.RefinementInference.fst  Unit1.WPsAndTriples_ST.fst \
 	 Unit1.Projectors1.fst  Unit1.UnificationTests.fst     unit2.fst \
-	 testset.fst 		testheap.fst 		       short-circuit.fst \
-	 first-proofs.fst 	              	 	       testmref.fst \
-	 testTwoLevelHeap.fst   mac2.fst 		       testghost.fst \
+	 testset.fst 		testheap.fst 		       ShortCircuit.fst \
+	 FirstProofs.fst 	              	 	       testmref.fst \
+	 testTwoLevelHeap.fst   mac.fst 		       testghost.fst \
 	 inverse.fst
 
 FSTAR_HOME=../..
@@ -22,6 +22,7 @@ NEGTESTS=1
 endif
 
 all: all-pos all-neg
+	+make -C universes
 
 all-pos: 
 	$(FSTAR) $(VERFILES)
@@ -33,8 +34,8 @@ all-neg: $(NEGFILES)
 	-$(FSTAR) --explicit_deps $(STDLIB) --split_cases 1 $^ 2>&1 | tee fstar_log
 	@FAILC=`egrep "^Error: [0-9]* errors" -o fstar_log | egrep -o "[0-9]+"`; if [ "$$FAILC" != "$(NEGTESTS)" ]; then echo "Wrong failure count: $$FAILC (expected $(NEGTESTS))" && false; else echo "Success: $$FAILC failures were expected"; fi
 
-mac2: mac2.fst
-	$(FSTAR) --explicit_deps $(STDLIB) FStar.Seq.fst mac2.fst
+mac: mac.fst
+	$(FSTAR) --explicit_deps $(STDLIB) FStar.Seq.fst mac.fst
 
 inverse:
 	$(FSTAR) --explicit_deps --max_fuel 0 --max_ifuel 3 --initial_ifuel 3 --initial_fuel 0 $(call add_stdlib_prefix, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Seq.fst) inverse.fst

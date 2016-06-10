@@ -44,10 +44,23 @@ let op_Hat_Amp = logand
 let op_Hat_Bar = logor
 let op_Hat_Hat = logxor
 
+let of_string s = int_of_string s
+let of_int s = s
+                                                             
+let to_string s = string_of_int s
+let to_int s = s
 
-let of_uint32 s = s
+let eq x y =
+  let x = lnot(x lxor y) in
+  let x = x land (x lsl 32) in
+  let x = x land (x lsl 16) in
+  let x = x land (x lsl 8) in
+  let x = x land (x lsl 4) in
+  let x = x land (x lsl 2) in
+  let x = x land (x lsl 1) in
+  (x asr 62)
 
-(* TODO *)
-let eq x y = if x = y then -1 else 0
-let gte x y = if x >= y then -1 else 0
-
+let gte x y =
+  let x = (Stdint.Uint64.sub (Stdint.Uint64.of_string (to_string x)) (Stdint.Uint64.of_string (to_string x))) in
+  let x = Stdint.Uint64.shift_right x 63 in
+  of_int (Stdint.Uint64.to_int x)

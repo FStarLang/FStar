@@ -96,7 +96,7 @@
   let ba_of_string s = Array.init (String.length s) (fun i -> Char.code (String.get s i))
   let n_typ_apps = FStar_Util.mk_ref 0
   let is_typ_app lexbuf =
-  if not !FStar_Options.fs_typ_app then false
+  if not (FStar_Options.fs_typ_app()) then false
   else try
    let char_ok = function
      | '(' | ')' | '<' | '>' | '*' | '-' | '\'' | '_' | ',' | '.' | ' ' | '\t' -> true

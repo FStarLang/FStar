@@ -1,5 +1,6 @@
 /* -------------------------------------------------------------------- */
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -392,8 +393,10 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_iv(value mlctx, value iv, value variable
     if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
         caml_failwith("CIPHER_CTX has been disposed");
 
+    ERR_clear_error();
+    
     if(Bool_val(variable_iv_length) && EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, caml_string_length(iv), NULL) != 1) {
-        unsigned long err = ERR_get_error();
+        unsigned long err = ERR_peek_last_error();
         char* err_string = ERR_error_string(err, NULL);
         caml_failwith(err_string);
     }
@@ -768,6 +771,39 @@ bailout:
 }
 
 /* -------------------------------------------------------------------- */
+CAMLprim value ocaml_rsa_get_key(value mlrsa) {
+  RSA *rsa = NULL;
+
+  CAMLparam1(mlrsa);
+
+  if ((rsa = RSA_val(mlrsa)) == NULL)
+    caml_failwith("RSA has been disposed");
+
+  CAMLlocal3(n, e, d);
+  n = caml_alloc_string(BN_num_bytes(rsa->n));
+  e = caml_alloc_string(BN_num_bytes(rsa->e));
+
+  (void) BN_bn2bin(rsa->n, (uint8_t*) String_val(n));
+  (void) BN_bn2bin(rsa->e, (uint8_t*) String_val(e));
+
+  CAMLlocal1(ret);
+  ret = caml_alloc_tuple(3);
+  
+  Field(ret, 0) = n;
+  Field(ret, 1) = e;
+
+  if (rsa->d == NULL)
+    Field(ret, 2) = Val_none;
+  else {
+    d = caml_alloc_string(BN_num_bytes(rsa->d));
+    (void) BN_bn2bin(rsa->d, (uint8_t*) String_val(d));
+    Field(ret, 2) = Val_some(d);
+  }
+  
+  CAMLreturn(ret);
+}
+
+/* -------------------------------------------------------------------- */
 typedef int (rsa_dec_t)(int, const uint8_t *, uint8_t *, RSA *, int);
 typedef int (rsa_enc_t)(int, const uint8_t *, uint8_t *, RSA *, int);
 
@@ -809,11 +845,13 @@ CAMLprim value ocaml_rsa_encrypt(value mlrsa, value mlprv, value mlpadding, valu
 
     enc = Bool_val(mlprv) ? &RSA_private_encrypt : &RSA_public_encrypt;
 
+    ERR_clear_error();
+    
     if (enc(caml_string_length(data),
             (uint8_t*) String_val(data),
             (uint8_t*) String_val(output),
             rsa, padding) < 0) {
-      unsigned long err = ERR_get_error();
+      unsigned long err = ERR_peek_last_error();
       char* err_string = ERR_error_string(err, NULL);
       caml_failwith(err_string);
     }
@@ -849,11 +887,13 @@ CAMLprim value ocaml_rsa_decrypt(value mlrsa, value mlprv, value mlpadding, valu
 
     dec = Bool_val(mlprv) ? RSA_private_decrypt : RSA_public_decrypt;
 
+    ERR_clear_error();
+    
     if ((rr = dec(rsasz,
                   (uint8_t*) String_val(data),
                   (uint8_t*) String_val(buffer),
                   rsa, padding)) < 0) {
-      unsigned long err = ERR_get_error();
+      unsigned long err = ERR_peek_last_error();
       char* err_string = ERR_error_string(err, NULL);
       caml_failwith(err_string);
     }
@@ -888,6 +928,8 @@ CAMLprim value ocaml_rsa_sign(value mlrsa, value mldigest, value data) {
     output = caml_alloc_string(RSA_size(rsa));
     olen = caml_string_length(output);
 
+    ERR_clear_error();
+    
     if (RSA_sign(dig,
                  (uint8_t*) String_val(data),
                  caml_string_length(data),
@@ -897,7 +939,7 @@ CAMLprim value ocaml_rsa_sign(value mlrsa, value mldigest, value data) {
           printf("ocaml_rsa_sign: caml_string_length(data)=%zu, RSA_size(rsa)=%u\n",
             caml_string_length(data), RSA_size(rsa));
 #     endif
-      unsigned long err = ERR_get_error();
+      unsigned long err = ERR_peek_last_error();
       char* err_string = ERR_error_string(err, NULL);
       caml_failwith(err_string);
     }
@@ -932,6 +974,8 @@ CAMLprim value ocaml_rsa_verify(value mlrsa, value mldigest, value data, value s
     else
       dig = RSADigest_val(Some_val(mldigest));
 
+    ERR_clear_error();
+    
     rr = RSA_verify(dig,
                     (uint8_t*) String_val(data),
                     caml_string_length(data),
@@ -942,7 +986,7 @@ CAMLprim value ocaml_rsa_verify(value mlrsa, value mldigest, value data, value s
       printf("ocaml_rsa_verify: caml_string_length(data)=%zu, RSA_size(rsa)=%u, dig=%d\n",
         caml_string_length(data), RSA_size(rsa), dig);
       if (rr != 1) {
-        unsigned long err = ERR_get_error();
+        unsigned long err = ERR_peek_last_error();
         char* err_string = ERR_error_string(err, NULL);
         printf("ocaml_rsa_verify: %s\n", err_string);
       }
@@ -1117,6 +1161,45 @@ bailout:
 }
 
 /* -------------------------------------------------------------------- */
+CAMLprim value ocaml_dsa_get_key(value mldsa) {
+  DSA *dsa = NULL;
+
+  CAMLparam1(mldsa);
+
+  if ((dsa = DSA_val(mldsa)) == NULL)
+    caml_failwith("DSA has been disposed");
+
+  CAMLlocal5(p, g, q, pk, sk);
+  p = caml_alloc_string(BN_num_bytes(dsa->p));
+  q = caml_alloc_string(BN_num_bytes(dsa->q));
+  g = caml_alloc_string(BN_num_bytes(dsa->g));
+  pk = caml_alloc_string(BN_num_bytes(dsa->pub_key));
+
+  (void) BN_bn2bin(dsa->p, (uint8_t*) String_val(p));
+  (void) BN_bn2bin(dsa->q, (uint8_t*) String_val(q));
+  (void) BN_bn2bin(dsa->g, (uint8_t*) String_val(g));
+  (void) BN_bn2bin(dsa->pub_key, (uint8_t*) String_val(pk));
+
+  CAMLlocal1(ret);
+  ret = caml_alloc_tuple(5);
+
+  Field(ret, 0) = p;
+  Field(ret, 1) = q;
+  Field(ret, 2) = g;
+  Field(ret, 3) = pk;
+
+  if (dsa->priv_key == NULL)
+    Field(ret, 4) = Val_none;
+  else {
+    sk = caml_alloc_string(BN_num_bytes(dsa->priv_key));
+    (void) BN_bn2bin(dsa->priv_key, (uint8_t*) String_val(sk));
+    Field(ret, 4) = Val_some(sk);
+  }
+  
+  CAMLreturn(ret);
+}
+
+/* -------------------------------------------------------------------- */
 CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
     DSA *dsa = NULL;
     BIGNUM *p = NULL;
@@ -1234,12 +1317,14 @@ CAMLprim value ocaml_dsa_sign(value mldsa, value data) {
     output = caml_alloc_string(DSA_size(dsa));
     olen = caml_string_length(output);
 
+    ERR_clear_error();
+    
     if (DSA_sign(0,             /* ignored */
                  (uint8_t*) String_val(data),
                  caml_string_length(data),
                  (uint8_t*) String_val(output),
                  (unsigned*) &olen, dsa) == 0) {
-      unsigned long err = ERR_get_error();
+      unsigned long err = ERR_peek_last_error();
       char* err_string = ERR_error_string(err, NULL);
       caml_failwith(err_string);
     }
@@ -1268,6 +1353,8 @@ CAMLprim value ocaml_dsa_verify(value mldsa, value data, value sig) {
     if (dsa->pub_key == NULL)
         caml_failwith("DSA:verify: DSA (public) keys not set");
 
+    ERR_clear_error();
+    
     rr = DSA_verify(0, /* ignored */
                     (uint8_t*) String_val(data),
                     caml_string_length(data),
@@ -1276,7 +1363,7 @@ CAMLprim value ocaml_dsa_verify(value mldsa, value data, value sig) {
                     dsa);
 
     if (rr == -1) {
-      unsigned long err = ERR_get_error();
+      unsigned long err = ERR_peek_last_error();
       char* err_string = ERR_error_string(err, NULL);
       caml_failwith(err_string);
     }
@@ -1800,10 +1887,12 @@ CAMLprim value ocaml_ec_key_get0_private_key(value mlkey) {
   EC_KEY* key = EC_KEY_val(mlkey);
   const BIGNUM* n = EC_KEY_get0_private_key(key);
 
+  if (n == NULL) CAMLreturn(Val_none);
+
   value mln = caml_alloc_string(BN_num_bytes(n));
   (void) BN_bn2bin(n, (uint8_t*) String_val(mln));
 
-  CAMLreturn(mln);
+  CAMLreturn(Val_some(mln));
 }
 
 CAMLprim value ocaml_ec_key_set_private_key(value mlkey, value mlpriv) {
@@ -1825,6 +1914,21 @@ CAMLprim value ocaml_ec_key_set_public_key(value mlkey, value mlpoint) {
   CAMLreturn(Val_unit);
 }
 
+CAMLprim value ocaml_ec_key_get_curve_name(value mlkey) {
+  CAMLparam1(mlkey);
+
+  EC_KEY* key;
+  int nid = 0;
+
+  if ((key = EC_KEY_val(mlkey)) == NULL)
+    caml_failwith("EC_KEY has been disposed");
+
+  const EC_GROUP* group = EC_KEY_get0_group(key);
+  if (group != NULL)
+    nid = EC_GROUP_get_curve_name(group);
+
+  CAMLreturn(caml_copy_string(OBJ_nid2sn(nid)));
+}
 
 CAMLprim value ocaml_ecdh_agreement(value mlkey, value mlgroup, value mlpoint) {
   CAMLparam2(mlkey, mlpoint);
@@ -1852,25 +1956,26 @@ CAMLprim value ocaml_ecdh_agreement(value mlkey, value mlgroup, value mlpoint) {
 }
 
 CAMLprim value ocaml_ecdsa_sign(value mlkey, value data) {
+    EC_KEY *key = NULL;
+    size_t olen = 0;
+
     CAMLparam2(mlkey, data);
     CAMLlocal1(output);
-
-    EC_KEY *key = NULL;
 
     if ((key = EC_KEY_val(mlkey)) == NULL)
         caml_failwith("EC_KEY has been disposed");
 
-    size_t olen = 0;
-
     output = caml_alloc_string(ECDSA_size(key));
     olen = caml_string_length(output);
 
+    ERR_clear_error();
+    
     if (ECDSA_sign(0,             /* ignored */
                  (uint8_t*) String_val(data),
                  caml_string_length(data),
                  (uint8_t*) String_val(output),
                  (unsigned*) &olen, key) == 0) {
-      unsigned long err = ERR_get_error();
+      unsigned long err = ERR_peek_last_error();
       char* err_string = ERR_error_string(err, NULL);
       caml_failwith(err_string);
     }
@@ -1895,6 +2000,8 @@ CAMLprim value ocaml_ecdsa_verify(value mlkey, value data, value sig) {
     if ((key = EC_KEY_val(mlkey)) == NULL)
         caml_failwith("key has been disposed");
 
+    ERR_clear_error();
+    
     rr = ECDSA_verify(0, /* ignored */
                     (uint8_t*) String_val(data),
                     caml_string_length(data),
@@ -1903,7 +2010,7 @@ CAMLprim value ocaml_ecdsa_verify(value mlkey, value data, value sig) {
                     key);
 
     if (rr == -1) {
-      unsigned long err = ERR_get_error();
+      unsigned long err = ERR_peek_last_error();
       char* err_string = ERR_error_string(err, NULL);
       caml_failwith(err_string);
     }
@@ -1915,10 +2022,11 @@ CAMLprim value ocaml_ecdsa_verify(value mlkey, value data, value sig) {
 
 static int cb(int ok, X509_STORE_CTX *ctx)
 {
+#if 0
     char buf[256];
     static int      cb_index = 0;
 
-#ifdef DEBUG
+  //#ifdef DEBUG
     printf("Starting cb #%d (ok = %d)\n", ++cb_index, ok);
     printf("ctx: error = %d. error_depth = %d. current_method = %d. "
            "valid = %d. last_untrusted = %d. "
@@ -1985,8 +2093,17 @@ CAMLprim value ocaml_validate_chain(value chain, value for_signing, value hostna
     if(!ctx || !store || !param) CAMLreturn(Val_false);
 
     X509_STORE_set_default_paths(store);
-    X509_STORE_load_locations(store, String_val(cafile), NULL);
     X509_STORE_set_verify_cb_func(store, cb);
+
+    struct stat sb;
+    if(stat(String_val(cafile), &sb) == 0 && S_ISDIR(sb.st_mode)) {
+      if (X509_STORE_load_locations(store, NULL, String_val(cafile)) != 1)
+	caml_failwith("ocaml_validate_chain: failed to load CAPath");
+    }
+    else {
+      if (X509_STORE_load_locations(store, String_val(cafile), NULL) != 1)
+	caml_failwith("ocaml_validate_chain: failed to load CAFile");
+    }
 
     // Validation parameters
     X509_VERIFY_PARAM_set_flags(param, X509_V_FLAG_USE_CHECK_TIME | X509_V_FLAG_CRL_CHECK_ALL);
@@ -1997,7 +2114,7 @@ CAMLprim value ocaml_validate_chain(value chain, value for_signing, value hostna
     X509_STORE_CTX_init(ctx, store, top_cert, sk);
 
     int r = X509_verify_cert(ctx);
-    printf("X509_verify_cert() == %d [%s]\n", r, X509_verify_cert_error_string(ctx->error));
+//    printf("X509_verify_cert() == %d [%s]\n", r, X509_verify_cert_error_string(ctx->error));
 
     X509_STORE_free(store);
     X509_STORE_CTX_free(ctx);  
@@ -2007,149 +2124,150 @@ CAMLprim value ocaml_validate_chain(value chain, value for_signing, value hostna
     CAMLreturn(r==1 ? Val_true : Val_false);
 }
 
-
-CAMLprim value ocaml_get_rsa_from_cert(value c) {
-    CAMLparam1(c);
-    CAMLlocal2(mlrsa, mlret);
-
-    RSA* rsa;
-    X509* x509;
-    EVP_PKEY* ek;
-
-    mlrsa = caml_alloc_custom(&evp_rsa_ops, sizeof(RSA*), 0, 1);
-    unsigned char *cert = (unsigned char*)String_val(c);
-    x509 = d2i_X509(NULL, (const unsigned char**) &cert, caml_string_length(c));
-    if(!x509) CAMLreturn(Val_none);
-
-    ek = X509_get_pubkey(x509);
-    if(!ek) CAMLreturn(Val_none);
-
-    rsa = EVP_PKEY_get1_RSA(ek);
-    if(!rsa) CAMLreturn(Val_none);
-
-    (void) RSA_set_method(rsa, RSA_PKCS1_SSLeay());
-    RSA_val(mlrsa) = rsa;
-
-    mlret = caml_alloc_tuple(1);
-    Field(mlret, 0) = mlrsa;
-    CAMLreturn(mlret);
-}
-
-CAMLprim value ocaml_get_ecdsa_from_cert(value c) {
-    CAMLparam1(c);
-    CAMLlocal2(mlec, mlret);
-
-    EC_KEY* ec;
-    X509* x509;
-    EVP_PKEY* ek;
+CAMLprim value ocaml_get_key_from_cert(value c) {
+  CAMLparam1(c);
 	    
-    mlec = caml_alloc_custom(&key_ops, sizeof(EC_KEY*), 0, 1);
-    unsigned char *cert = (unsigned char*)String_val(c);
-    x509 = d2i_X509(NULL, (const unsigned char**) &cert, caml_string_length(c));
-    if(!x509) CAMLreturn(Val_none);
+  unsigned char* cert = (unsigned char*)String_val(c);
+  X509* x509 = d2i_X509(NULL, (const unsigned char**) &cert, caml_string_length(c));
+  if(!x509) CAMLreturn(Val_none);
 
-    ek = X509_get_pubkey(x509);
-    if(!ek) CAMLreturn(Val_none);
+  EVP_PKEY* pk = X509_get_pubkey(x509);
+  if(!pk) CAMLreturn(Val_none);
 
-    ec = EVP_PKEY_get1_EC_KEY(ek);
-    if(!ec) CAMLreturn(Val_none);
+  CAMLlocal4(mlkey, mlrsa, mldsa, mlec);
 
-    EC_KEY_val(mlec) = ec;
-    mlret = caml_alloc_tuple(1);
-    Field(mlret, 0) = mlec;
-    CAMLreturn(mlret);
+  switch(EVP_PKEY_type(pk->type))
+  {
+    case EVP_PKEY_RSA:
+      mlrsa = caml_alloc_custom(&evp_rsa_ops, sizeof(RSA*), 0, 1);
+      RSA* rsa = EVP_PKEY_get1_RSA(pk);
+      if(!rsa) CAMLreturn(Val_none);
+      (void) RSA_set_method(rsa, RSA_PKCS1_SSLeay());
+      RSA_val(mlrsa) = rsa;
+      mlkey = caml_alloc(1, 0); // CertRSA
+      Store_field(mlkey, 0, mlrsa);
+      break;
+
+    case EVP_PKEY_DSA:
+      mldsa = caml_alloc_custom(&evp_dsa_ops, sizeof(DSA*), 0, 1);
+      DSA* dsa = EVP_PKEY_get1_DSA(pk);
+      if (!dsa) CAMLreturn(Val_none);
+      (void) DSA_set_method(dsa, DSA_OpenSSL());
+      DSA_val(mldsa) = dsa;
+      mlkey = caml_alloc(1, 1); // CertDSA
+      Store_field(mlkey, 0, mldsa);
+      break;
+
+    case EVP_PKEY_EC:
+      mlec = caml_alloc_custom(&key_ops, sizeof(EC_KEY*), 0, 1);
+      EC_KEY* eck = EVP_PKEY_get1_EC_KEY(pk);
+      if(!eck) CAMLreturn(Val_none);
+      EC_KEY_val(mlec) = eck;
+      mlkey = caml_alloc(1, 2); // CertECDSA
+      Store_field(mlkey, 0, mlec);
+      break;
+
+    default:
+      CAMLreturn(Val_none);
+  }
+
+  CAMLreturn(Val_some(mlkey));
 }
 
-CAMLprim value ocaml_load_chain_from_file(value pem, value key) {
-    CAMLparam2(pem, key);
-    CAMLlocal2(mlc, mlret);
-    mlret = Val_emptylist;
+CAMLprim value ocaml_load_chain(value pem) {
+  CAMLparam1(pem);
 
-    char *pemfile = (char*)String_val(pem);
-    char *keyfile = (char*)String_val(key);
+  char *pemfile = (char*)String_val(pem);
+  BIO *bio = BIO_new_file(pemfile, "r");
+  if(!bio) CAMLreturn(Val_none);
 
-    BIO *bio = BIO_new_file(pemfile, "r");
-    if(!bio) CAMLreturn(Val_none);
+  int c = 0;
+  unsigned long n = 0;
+  X509 *x509, *first = NULL;
 
-    int c = 0; unsigned long n = 0;
-    X509 *x509, *first;
+  CAMLlocal2(mlc, mlret);
+  mlret = Val_emptylist;
 
-    // Try to read all x509 structs in the file
-    do {
-      x509 = PEM_read_bio_X509_AUX(bio, NULL, NULL, NULL);
-      if(!c) first = x509;
+  ERR_clear_error();
+  
+  // Try to read all x509 structs in the file
+  do {
+    x509 = PEM_read_bio_X509_AUX(bio, NULL, NULL, NULL);
 
-      if(!x509)
-      {
-        n = ERR_get_error();
-	if(!c ||
-           !(ERR_GET_LIB(n) == ERR_LIB_PEM
-            && ERR_GET_REASON(n) == PEM_R_NO_START_LINE))
-          CAMLreturn(Val_none);
-        else break;
-      }
+    if(!c) first = x509;
 
-      int len;
-      unsigned char *buf = NULL;
-      len = i2d_X509(x509, &buf);
-      if (len < 0) CAMLreturn(Val_none); // Yes there is a leak there
-
-      CAMLlocal1(der_cert);
-      der_cert = caml_alloc_string(len);
-      memcpy(String_val(der_cert), buf, len);
-
-      mlc = caml_alloc(2, 0);
-      Store_field(mlc, 0, der_cert);
-      Store_field(mlc, 1, mlret);
-      mlret = mlc;
-    }
-    while(++c);
-
-    EVP_PKEY* pk;
-    pk = X509_get_pubkey(first);
-    if(!pk) CAMLreturn(Val_none);
-
-    bio = BIO_new_file(keyfile, "r");
-    if(!bio) CAMLreturn(Val_none);
-
-    EVP_PKEY* sk;
-    sk = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
-    if(!sk) CAMLreturn(Val_none);
-    CAMLlocal3(mlkey, mlrsa, mlec);
-    
-    switch(EVP_PKEY_type(pk->type))
+    if(!x509)
     {
-      case EVP_PKEY_RSA:
-        mlrsa = caml_alloc_custom(&evp_rsa_ops, sizeof(RSA*), 0, 1);
-        RSA* rsa = EVP_PKEY_get1_RSA(sk);
-        if(!rsa) CAMLreturn(Val_none);
-	RSA_val(mlrsa) = rsa;
-
-	mlkey = caml_alloc(1, 0); // CertRSA
-	Store_field(mlkey, 0, mlrsa);
-        break;
-
-      case EVP_PKEY_EC:
-        mlec = caml_alloc_custom(&key_ops, sizeof(EC_KEY*), 0, 1);
-        EC_KEY* eck = EVP_PKEY_get1_EC_KEY(sk);
-        if(!eck) CAMLreturn(Val_none);
-        EC_KEY_val(mlec) = eck;
-
-        mlkey = caml_alloc(1, 1); // CertECDSA
-        Store_field(mlkey, 0, mlec);
-        break;
-
-      default:
-        CAMLreturn(Val_none);
+      n = ERR_peek_last_error();
+      if(!c ||
+	 !(ERR_GET_LIB(n) == ERR_LIB_PEM
+	  && ERR_GET_REASON(n) == PEM_R_NO_START_LINE))
+	CAMLreturn(Val_none);
+      else break;
     }
 
-    mlc = caml_alloc_tuple(2);
-    Store_field(mlc, 0, mlkey);
-    Store_field(mlc, 1, mlret);
-    mlret = mlc;            // (certkey * string list)
+    int len;
+    unsigned char *buf = NULL;
+    len = i2d_X509(x509, &buf);
+    if (len < 0) CAMLreturn(Val_none); // Yes there is a leak there
 
-    mlc = caml_alloc_tuple(1);
-    Store_field(mlc, 0, mlret);
-    CAMLreturn(mlc);        // (certkey * string list) option
+    CAMLlocal1(der_cert);
+    der_cert = caml_alloc_string(len);
+    memcpy(String_val(der_cert), buf, len);
+
+    mlc = caml_alloc(2, 0);
+    Store_field(mlc, 0, der_cert);
+    Store_field(mlc, 1, mlret);
+    mlret = mlc;
+  }
+  while(++c);
+
+  CAMLreturn(Val_some(mlret));
 }
 
+CAMLprim value ocaml_load_key(value pem) {
+  CAMLparam1(pem);
+
+  char *pemfile = (char*)String_val(pem);
+  BIO *bio = BIO_new_file(pemfile, "r");
+  if(!bio) CAMLreturn(Val_none);
+
+  EVP_PKEY* sk = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
+  if(!sk) CAMLreturn(Val_none);
+  CAMLlocal4(mlkey, mlrsa, mldsa, mlec);
+
+  switch(EVP_PKEY_type(sk->type))
+  {
+    case EVP_PKEY_RSA:
+      mlrsa = caml_alloc_custom(&evp_rsa_ops, sizeof(RSA*), 0, 1);
+      RSA* rsa = EVP_PKEY_get1_RSA(sk);
+      if(!rsa) CAMLreturn(Val_none);
+      RSA_val(mlrsa) = rsa;
+      mlkey = caml_alloc(1, 0); // CertRSA
+      Store_field(mlkey, 0, mlrsa);
+      break;
+
+    case EVP_PKEY_DSA:
+      mldsa = caml_alloc_custom(&evp_dsa_ops, sizeof(DSA*), 0, 1);
+      DSA* dsa = EVP_PKEY_get1_DSA(sk);
+      if (!dsa) CAMLreturn(Val_none);
+      DSA_val(mldsa) = dsa;
+      mlkey = caml_alloc(1, 1); // CertDSA
+      Store_field(mlkey, 0, mldsa);
+      break;
+
+    case EVP_PKEY_EC:
+      mlec = caml_alloc_custom(&key_ops, sizeof(EC_KEY*), 0, 1);
+      EC_KEY* eck = EVP_PKEY_get1_EC_KEY(sk);
+      if(!eck) CAMLreturn(Val_none);
+      EC_KEY_val(mlec) = eck;
+      mlkey = caml_alloc(1, 2); // CertECDSA
+      Store_field(mlkey, 0, mlec);
+      break;
+
+    default:
+      CAMLreturn(Val_none);
+  }
+
+  CAMLreturn(Val_some(mlkey));
+}

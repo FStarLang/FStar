@@ -371,7 +371,7 @@ let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
         loc, env, LocalBinder(xbv, aq), pos <| Pat_var xbv, imp
 
       | PatName l ->
-        let l = fail_or (try_lookup_datacon env) l in
+        let l = fail_or env (try_lookup_datacon env) l in
         let x = S.new_bv (Some p.prange) tun in
         loc, env, LocalBinder(x,  None), pos <| Pat_cons(l, []), false
 
@@ -379,7 +379,7 @@ let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
         let loc, env, args = List.fold_right (fun arg (loc,env,args) ->
           let loc, env, _, arg, imp = aux loc env arg in
           (loc, env, (arg, imp)::args)) args (loc, env, []) in
-        let l = fail_or  (try_lookup_datacon env) l in
+        let l = fail_or env  (try_lookup_datacon env) l in
         let x = S.new_bv (Some p.prange) tun in
         loc, env, LocalBinder(x, None), pos <| Pat_cons(l, args), false
 
@@ -403,7 +403,7 @@ let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
         let args = List.rev args in
         let l = if dep then Util.mk_dtuple_data_lid (List.length args) p.prange
                 else Util.mk_tuple_data_lid (List.length args) p.prange in
-        let constr = fail_or  (Env.try_lookup_lid env) l in
+        let constr = fail_or env  (Env.try_lookup_lid env) l in
         let l = match constr.n with
           | Tm_fvar fv -> fv
           | _ -> failwith "impossible" in
@@ -415,9 +415,9 @@ let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
 
       | PatRecord (fields) ->
         let (f, _) = List.hd fields in
-        let record, _ = fail_or (try_lookup_record_by_field_name env) f in
+        let record, _ = fail_or env (try_lookup_record_by_field_name env) f in
         let fields = fields |> List.map (fun (f, p) ->
-          (fail_or (qualify_field_to_record env record) f, p)) in
+          (fail_or env (qualify_field_to_record env record) f, p)) in
         let args = record.fields |> List.map (fun (f, _) ->
           match fields |> List.tryFind (fun (g, _) -> lid_equals f g) with
             | None -> mk_pattern PatWild p.prange
@@ -490,7 +490,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
               t1::rest
             | _ -> [t] in
       let targs = flatten (unparen top) |> List.map (fun t -> as_arg (desugar_typ env t)) in
-      let tup = fail_or (Env.try_lookup_lid env) (Util.mk_tuple_lid (List.length targs) top.range) in
+      let tup = fail_or env (Env.try_lookup_lid env) (Util.mk_tuple_lid (List.length targs) top.range) in
       mk (Tm_app(tup, targs))
 
     | Tvar a ->
@@ -512,11 +512,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
    
     | Var l
     | Name l ->
-      setpos <| fail_or (Env.try_lookup_lid env) l
+      setpos <| fail_or env (Env.try_lookup_lid env) l
 
     | Construct(l, args) ->
       let head, is_data = match Env.try_lookup_datacon env l with 
-        | None -> fail_or (Env.try_lookup_lid env) l, false
+        | None -> fail_or env (Env.try_lookup_lid env) l, false
         | Some head -> mk (Tm_fvar head), true in
       begin match args with
         | [] -> head
@@ -540,7 +540,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 (env, tparams@[{x with sort=t}, None], typs@[as_arg <| no_annot_abs tparams t]))
         (env, [], []) 
         (binders@[mk_binder (NoName t) t.range Type None]) in
-      let tup = fail_or  (try_lookup_lid env) (Util.mk_dtuple_lid (List.length targs) top.range) in
+      let tup = fail_or env  (try_lookup_lid env) (Util.mk_dtuple_lid (List.length targs) top.range) in
       mk <| Tm_app(tup, targs)
 
     | Product(binders, t) ->
@@ -752,7 +752,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Record(eopt, fields) ->
       let f, _ = List.hd fields in
       let qfn g = lid_of_ids (f.ns@[g]) in
-      let record, _ = fail_or  (try_lookup_record_by_field_name env) f in
+      let record, _ = fail_or env  (try_lookup_record_by_field_name env) f in
       let get_field xopt f =
         let fn = f.ident in
         let found = fields |> Util.find_opt (fun (g, _) ->
@@ -791,7 +791,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       end
 
     | Project(e, f) ->
-      let fieldname, is_rec = fail_or  (try_lookup_projector_by_field_name env) f in
+      let fieldname, is_rec = fail_or env  (try_lookup_projector_by_field_name env) f in
       let e = desugar_term env e in
       let fn =
         let ns, _ = Util.prefix fieldname.ns in
@@ -838,12 +838,12 @@ and desugar_comp r default_ok env t =
                     | [ens;dec] when (is_ensures ens && is_decreases dec) -> [unit_tm;req_true;ens;nil_pat;dec]
                     | [req;ens;dec] when (is_requires req && is_ensures ens && is_app "decreases" dec) -> [unit_tm;req;ens;nil_pat;dec]
                     | more -> unit_tm::more in      
-              let head = fail_or (Env.try_lookup_effect_name env) lemma in
+              let head = fail_or env (Env.try_lookup_effect_name env) lemma in
               head, args
 
             | Name l when Env.is_effect_name env l ->
              //we have an explicit effect annotation ... no need to add anything
-             fail_or (Env.try_lookup_effect_name env) l, args
+             fail_or env (Env.try_lookup_effect_name env) l, args
 
 
             | Name l when (lid_equals (Env.current_module env) C.prims_lid //we're right at the beginning of Prims, when Tot isn't yet fully defined           
@@ -1319,7 +1319,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
     let eff_k = Subst.close binders eff_k in
     let lookup s =
         let l = Env.qualify env (mk_ident(s, d.drange)) in
-        [], Subst.close binders <| fail_or (try_lookup_definition env) l in
+        [], Subst.close binders <| fail_or env (try_lookup_definition env) l in
     let mname       =qualify env0 eff_name in
     let qualifiers  =List.map (trans_qual d.drange) quals in
     let se = mk mname qualifiers binders eff_k lookup in
@@ -1387,7 +1387,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     env, [se]
 
   | Exception(id, None) ->
-    let t = fail_or (try_lookup_lid env) C.exn_lid in
+    let t = fail_or env (try_lookup_lid env) C.exn_lid in
     let l = qualify env id in
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
@@ -1399,7 +1399,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
 
   | Exception(id, Some term) ->
     let t = desugar_term env term in
-    let t = U.arrow ([null_binder t]) (mk_Total <| fail_or (try_lookup_lid env) C.exn_lid) in
+    let t = U.arrow ([null_binder t]) (mk_Total <| fail_or env (try_lookup_lid env) C.exn_lid) in
     let l = qualify env id in
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
@@ -1423,7 +1423,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let ed, args = 
         let head, args = head_and_args defn in 
         let ed = match head.tm with 
-          | Name l -> fail_or (Env.try_lookup_effect_defn env) l
+          | Name l -> fail_or env (Env.try_lookup_effect_defn env) l
           | _ -> raise (Error("Effect " ^AST.term_to_string head^ " not found", d.drange)) in
         ed, desugar_args env args in
     let binders = Subst.close_binders binders in
@@ -1439,10 +1439,8 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
             signature   =snd (sub ([], ed.signature));
             ret         =sub ed.ret;
             bind_wp     =sub ed.bind_wp;
-            bind_wlp    =sub ed.bind_wlp;
             if_then_else=sub ed.if_then_else;
             ite_wp      =sub ed.ite_wp;
-            ite_wlp     =sub ed.ite_wlp;
             wp_binop    =sub ed.wp_binop;
             wp_as_type  =sub ed.wp_as_type;
             close_wp    =sub ed.close_wp;
@@ -1471,10 +1469,8 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           signature   = eff_k;
           ret         = lookup "return";
           bind_wp     = lookup "bind_wp";
-          bind_wlp    = lookup "bind_wlp";
           if_then_else= dummy_tscheme;
           ite_wp      = lookup "ite_wp";
-          ite_wlp     = lookup "ite_wlp";
           wp_binop    = dummy_tscheme;
           wp_as_type  = lookup "wp_as_type";
           close_wp    = dummy_tscheme;
@@ -1496,10 +1492,8 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           signature   = eff_k;
           ret         = lookup "return";
           bind_wp     = lookup "bind_wp";
-          bind_wlp    = lookup "bind_wlp";
           if_then_else= lookup "if_then_else";
           ite_wp      = lookup "ite_wp";
-          ite_wlp     = lookup "ite_wlp";
           wp_binop    = lookup "wp_binop";
           wp_as_type  = lookup "wp_as_type";
           close_wp    = lookup "close_wp";
@@ -1528,23 +1522,18 @@ let open_prims_all =
     [AST.mk_decl (AST.Open C.prims_lid) Range.dummyRange;
      AST.mk_decl (AST.Open C.all_lid) Range.dummyRange]
 
-(* Most important function: from AST to a module
+(* Top-level functionality: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)
 let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul * bool =
-  let open_ns (mname:lident) d =
-    let d = if List.length mname.ns <> 0
-            then (AST.mk_decl (AST.Open (lid_of_ids mname.ns)) (range_of_lid mname))  :: d
-            else d in
-    d in
   let env = match curmod with
     | None -> env
     | Some(prev_mod) ->  Env.finish_module_or_interface env prev_mod in
   let (env, pop_when_done), mname, decls, intf = match m with
     | Interface(mname, decls, admitted) ->
-      Env.prepare_module_or_interface true admitted env mname, mname, open_ns mname decls, true
+      Env.prepare_module_or_interface true admitted env mname, mname, decls, true
     | Module(mname, decls) ->
-      Env.prepare_module_or_interface false false env mname, mname, open_ns mname decls, false in
+      Env.prepare_module_or_interface false false env mname, mname, decls, false in
   let env, sigelts = desugar_decls env decls in
   let modul = {
     name = mname;
@@ -1556,7 +1545,7 @@ let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul * bool 
 
 let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modul =
   let m =
-    if !Options.interactive_fsi then
+    if (Options.interactive_fsi()) then
         match m with
             | Module(mname, decls) -> AST.Interface(mname, decls, true)
             | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
@@ -1568,7 +1557,7 @@ let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modu
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
   let env, modul, pop_when_done = desugar_modul_common None env m in
   let env = Env.finish_module_or_interface env modul in
-  if Options.should_dump modul.name.str 
+  if Options.dump_module modul.name.str 
   then Util.print1 "%s\n" (Print.modul_to_string modul);
   (if pop_when_done then export_interface modul.name env else env), modul
 

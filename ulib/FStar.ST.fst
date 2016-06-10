@@ -29,17 +29,15 @@ inline let lift_div_state (a:Type) (wp:pure_wp a) (p:st_post a) (h:heap) = wp (f
 sub_effect DIV ~> STATE = lift_div_state
 
 effect State (a:Type) (wp:st_wp a) =
-       STATE a wp wp
+       STATE a wp
 effect ST (a:Type) (pre:st_pre) (post: (heap -> Tot (st_post a))) =
        STATE a
-             (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
-             (fun (p:st_post a) (h:heap) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
+             (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1))
 effect St (a:Type) =
        ST a (fun h -> True) (fun h0 r h1 -> True)
 
 (* signatures WITHOUT permissions *)
 assume val recall: #a:Type -> r:ref a -> STATE unit
-                                         (fun 'p h -> Heap.contains h r ==> 'p () h)
                                          (fun 'p h -> Heap.contains h r ==> 'p () h)
 
 assume val alloc:  #a:Type -> init:a -> ST (ref a)
@@ -47,7 +45,6 @@ assume val alloc:  #a:Type -> init:a -> ST (ref a)
                                            (fun h0 r h1 -> not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)
 
 assume val read:  #a:Type -> r:ref a -> STATE a
-                                         (fun 'p h -> 'p (sel h r) h)
                                          (fun 'p h -> 'p (sel h r) h)
 
 assume val write:  #a:Type -> r:ref a -> v:a -> ST unit

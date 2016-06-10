@@ -87,7 +87,6 @@ val reset_mark: env -> env
 val commit_mark: env -> env
 val bound_vars: env -> list<Util.either<btvar, bvvar>>
 val debug: env -> Options.debug_level_t -> bool
-val show: env -> bool
 val initial_env : solver_t -> lident -> env
 val finish_module : env -> modul -> env
 val set_level : env -> level -> env

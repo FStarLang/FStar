@@ -1,6 +1,5 @@
 module Platform.Tcp
 
-open FStar.Heap
 open FStar.HyperHeap
 
 open Platform.Bytes
@@ -16,7 +15,7 @@ assume new type tcpListener: Type0
 
 effect EXT (a:Type) = ST a
   (requires (fun _ -> True)) 
-  (ensures (fun h0 _ h -> modifies Set.empty h0 h))
+  (ensures (fun h0 _ h1 -> HyperHeap.modifies Set.empty h0 h1))
 
 (* Server side *)
 
@@ -32,7 +31,7 @@ assume val connect: string -> nat -> EXT networkStream
 
 (* Input/Output *)
 
-assume val recv: networkStream -> nat -> EXT (optResult string bytes)
+assume val recv: networkStream -> max:nat -> EXT (optResult string (b:bytes {length b <= max}))
 assume val send: networkStream -> bytes -> EXT (optResult string unit)
 assume val close: networkStream -> EXT unit
 
@@ -40,3 +39,4 @@ assume val close: networkStream -> EXT unit
    Only used by the application interface TLSharp. *)
 (* assume val create: System.IO.Stream -> NetworkStream*)
 
+ 

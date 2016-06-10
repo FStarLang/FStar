@@ -178,7 +178,7 @@ let prob_to_string env = function
 
 let uvi_to_string env uvi =
   (* By design. F* does not generalize inner lets by default. *)
-  let str (u:Unionfind.uvar<'a>) = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
+  let str (u:Unionfind.uvar<'a>) = if (Options.hide_uvar_nums()) then "?" else Unionfind.uvar_id u |> string_of_int in
   match uvi with
       | UK (u, _) -> str u |> Util.format1 "UK %s"
       | UT ((u,_), t) -> str u |> (fun x -> Util.format2 "UT %s %s" x (Normalize.typ_norm_to_string env t))
@@ -1371,7 +1371,7 @@ and solve (env:Tc.Env.env) (probs:worklist) : solution =
          begin match hd with
             | KProb kp -> solve_k' env (maybe_invert kp) probs
             | TProb tp ->
-              if not probs.defer_ok && flex_refine_inner <= rank && rank <= flex_rigid && not (!Options.no_slack)
+              if not probs.defer_ok && flex_refine_inner <= rank && rank <= flex_rigid 
               then begin match solve_flex_rigid_join env tp probs with
 //                            | Inr true -> solve_t' env (maybe_invert tp) probs
                             | None -> solve_t' env (maybe_invert tp) probs//giveup env "join doesn't exist" hd
@@ -1854,7 +1854,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         solve_binders env bs1 bs2 orig wl
         (fun scope env subst  ->
             let c1 = Util.subst_comp subst c1 in
-            let rel = if !Options.use_eq_at_higher_order then EQ else problem.relation in
+            let rel = if (Options.use_eq_at_higher_order()) then EQ else problem.relation in
             let _ = if Tc.Env.debug env <| Options.Other "EQ"
                     then Util.print2 "(%s) Using relation %s at higher order\n" (Env.get_range env |> Range.string_of_range) (rel_to_string rel) in
             CProb <| mk_problem scope orig c1 rel c2 None "function co-domain")
@@ -1922,7 +1922,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         if wl.defer_ok
         then solve env (defer "flex-rigid subtyping deferred" orig wl)
         else
-            let new_rel = if !Options.no_slack then EQ else problem.relation in
+            let new_rel = problem.relation in
             if not <| is_top_level_prob orig //If it's not top-level and t2 is refined, then we should not try to prove that t2's refinement is saturated
             then solve_t_flex_rigid (TProb <| {problem with relation=new_rel}) (destruct_flex_pattern env t1) t2 wl
             else let t_base, ref_opt = base_and_refinement env wl t2 in
@@ -2471,7 +2471,7 @@ let simplify_guard env g = match g.guard_f with
       {g with guard_f=f}
 
 let solve_and_commit env probs err =
-  let probs = if !Options.eager_inference then {probs with defer_ok=false} else probs in
+  let probs = if (Options.eager_inference()) then {probs with defer_ok=false} else probs in
   let sol = solve env probs in
   match sol with
     | Success (s, deferred) ->

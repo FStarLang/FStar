@@ -46,6 +46,12 @@ val hash : hash_alg -> bytes -> bytes
 
 val hmac : hash_alg -> bytes -> bytes -> bytes
 
+(* digest functions *)
+type hash_ctx
+val digest_create : hash_alg -> hash_ctx 
+val digest_update : hash_ctx -> bytes -> unit
+val digest_final : hash_ctx -> bytes 
+
 val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
 val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
 val aead_encrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> bytes
@@ -66,17 +72,17 @@ val rsa_sign : hash_alg option -> rsa_key -> bytes -> bytes
 val rsa_verify : hash_alg option -> rsa_key -> bytes -> bytes -> bool
 
 val dsa_gen_key : int -> dsa_key
-val dsa_sign : dsa_key -> bytes -> bytes
-val dsa_verify : dsa_key -> bytes -> bytes -> bool
+val dsa_sign : hash_alg option -> dsa_key -> bytes -> bytes
+val dsa_verify : hash_alg option -> dsa_key -> bytes -> bytes -> bool
 
 val dh_gen_params : int -> dh_params
 val dh_gen_key : dh_params -> dh_key
 val dh_agreement : dh_key -> bytes -> bytes
 
 type ec_curve =
-     | ECC_P256
-     | ECC_P384
-     | ECC_P521
+  | ECC_P256
+  | ECC_P384
+  | ECC_P521
 
 val ec_bytelen: ec_curve -> int
 
@@ -84,9 +90,9 @@ type ec_params = { curve: ec_curve; point_compression: bool; }
 type ec_point = { ecx : bytes; ecy : bytes; }
 
 type ec_key = {
-     ec_params : ec_params;
-     ec_point : ec_point;
-     ec_priv : bytes option;
+  ec_params : ec_params;
+  ec_point : ec_point;
+  ec_priv : bytes option;
 }
 
 val ec_is_on_curve: ec_params -> ec_point -> bool
@@ -96,8 +102,14 @@ val ecdsa_sign: hash_alg option -> ec_key -> bytes -> bytes
 val ecdsa_verify: hash_alg option -> ec_key -> bytes -> bytes -> bool
 val ec_gen_key: ec_params -> ec_key
 
-type certkey
+type key =
+  | KeyRSA of rsa_key
+  | KeyDSA of dsa_key
+  | KeyECDSA of ec_key
+
 val validate_chain: bytes list -> bool -> string option -> string -> bool
-val cert_verify_sig: bytes -> sig_alg -> hash_alg -> bytes -> bytes -> bool
-val cert_sign: certkey -> sig_alg -> hash_alg -> bytes -> bytes option
-val cert_load_chain: string -> string -> (certkey * bytes list) option
+val get_key_from_cert: bytes -> key option
+val maybe_hash_and_sign: key -> hash_alg option -> bytes -> bytes
+val verify_signature: key -> hash_alg option -> bytes -> bytes -> bool
+val load_chain: string -> (bytes list) option
+val load_key: string -> key option

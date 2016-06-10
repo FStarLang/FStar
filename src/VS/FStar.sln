@@ -8,6 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Performance1.psess = Performance1.psess
 		Performance2.psess = Performance2.psess
 		Performance3.psess = Performance3.psess
+		Performance4.psess = Performance4.psess
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{8D74F56B-3B0F-4931-9AF8-A26215B25559}"

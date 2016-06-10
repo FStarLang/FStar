@@ -113,9 +113,7 @@ let has_interface env l =
   env.modules |> Util.for_some (fun m -> m.is_interface && lid_equals m.name l)
 
 let debug env (l:Options.debug_level_t) =
-       !Options.debug |> Util.for_some (fun x -> env.curmodule.str = x)
-    && Options.debug_level_geq l
-let show env = !Options.show_signatures |> Util.for_some (fun x -> env.curmodule.str = x)
+       Options.debug_at_level env.curmodule.str l
 
 let new_sigtab () = Util.smap_create default_table_size
 let sigtab env = List.hd env.sigtab

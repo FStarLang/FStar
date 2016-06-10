@@ -82,9 +82,17 @@ let rec slice_tr_sps_h_vals_lemma ps tr = match tr with
   | []   -> ()
   | _::tl -> slice_tr_sps_h_vals_lemma ps tl
 
-assume val slice_tr_sps_h_vals_lemma_forall:
+val slice_tr_sps_h_vals_lemma_forall_one:
+  ps:prins -> Lemma (requires (True))
+               (ensures (forall tr. vals_trace_h (slice_tr_sps_h ps tr)))
+let slice_tr_sps_h_vals_lemma_forall_one ps =
+  qintro (slice_tr_sps_h_vals_lemma ps)
+
+val slice_tr_sps_h_vals_lemma_forall:
   unit -> Lemma (requires (True))
                (ensures (forall ps tr. vals_trace_h (slice_tr_sps_h ps tr)))
+let slice_tr_sps_h_vals_lemma_forall _ =
+  qintro slice_tr_sps_h_vals_lemma_forall_one
 
 val vals_trace_h_vals_trace_lemma:
   tr:erased trace{vals_trace_h (reveal tr)}
@@ -197,6 +205,7 @@ val de_morgan_intersect_over_union: eps1:eprins -> eps2:eprins -> ps:prins
                                                        (union (intersect eps1 ps) (intersect eps2 ps))))
 let de_morgan_intersect_over_union eps1 eps2 ps = ()
 
+(* FFI axiom *)
 assume val exec_ffi_axiom_ps:
   ps:prins -> n:nat -> fn:'a -> vs:list dvalue -> inj:'b
   -> Lemma (requires (True))
@@ -210,22 +219,37 @@ let rec slice_h_append_lemma_sps ps tr1 tr2 = match tr1 with
   | []   -> ()
   | _::tl -> slice_h_append_lemma_sps ps tl tr2
 
-assume val slice_h_append_lemma_forall_sps:
+val slice_h_append_lemma_sps_forall_one:
+  ps:prins -> tr1:trace
+  -> Lemma (requires (True))
+          (ensures (forall tr2. slice_tr_sps_h ps (append tr1 tr2) = append (slice_tr_sps_h ps tr1) (slice_tr_sps_h ps tr2)))
+let slice_h_append_lemma_sps_forall_one ps tr1 =
+  qintro (slice_h_append_lemma_sps ps tr1) 
+
+val slice_h_append_lemma_sps_forall_two:
+  ps:prins
+  -> Lemma (requires (True))
+          (ensures (forall tr1 tr2. slice_tr_sps_h ps (append tr1 tr2) = append (slice_tr_sps_h ps tr1) (slice_tr_sps_h ps tr2)))
+let slice_h_append_lemma_sps_forall_two ps =
+  qintro  (slice_h_append_lemma_sps_forall_one ps)
+
+val slice_h_append_lemma_forall_sps:
   unit -> Lemma (requires (True))
                (ensures (forall ps tr1 tr2. slice_tr_sps_h ps (append tr1 tr2) = append (slice_tr_sps_h ps tr1) (slice_tr_sps_h ps tr2)))
-
+let slice_h_append_lemma_forall_sps _ =
+  qintro  slice_h_append_lemma_sps_forall_two
+  
 val slice_concat_lemma_sps:
   ps:prins -> tr1:erased trace -> tr2:erased trace
   -> Lemma (requires (True))
           (ensures (slice_tr_sps ps (concat_traces tr1 tr2) = concat_traces (slice_tr_sps ps tr1) (slice_tr_sps ps tr2)))
     [SMTPat (slice_tr_sps ps (concat_traces tr1 tr2))]
-let slice_concat_lemma_sps ps tr1 tr2 = admit()
+let slice_concat_lemma_sps ps tr1 tr2 =
 (* CH: this times out on my laptop with Unknown assertion failed
-   AR: works for me
+   AR: works for me*)
   slice_h_append_lemma_forall_sps ();
   let _ = assert (slice_tr_sps_h ps (append (reveal tr1) (reveal tr2)) = append (slice_tr_sps_h ps (reveal tr1)) (slice_tr_sps_h ps (reveal tr2))) in
   ()
-*)
 
 opaque val sstep_sec_slice_lemma: c:sconfig{is_sec c}
                                   -> c':sconfig -> h:sstep c c'{if_exit_sec_then_to_sec h}
@@ -330,19 +354,21 @@ let sstep_sec_slice_lemma c c' h = match h with
 #reset-options
 (**********)
 
+val slice_emp_en': p:prin
+                  -> Lemma (slice_en p empty_env = empty_env)
+let slice_emp_en' p =
+  let _ = cut (FEq (slice_en p empty_env) empty_env) in
+  ()
+
 val slice_emp_en: p:prin
                   -> Lemma (requires (True))
                            (ensures (slice_en p empty_env = empty_env))
                            [SMTPat (slice_en p empty_env)]
- let slice_emp_en p =
-  let _ = cut (FEq (slice_en p empty_env) empty_env) in
-  ()
+let slice_emp_en p = slice_emp_en' p
 
 val slice_emp_en_forall: unit -> Lemma (requires (True))
                                        (ensures (forall p. slice_en p empty_env = empty_env))
-let slice_emp_en_forall _ = admit ()
-  (* TODO: FIXME: because of SMTPat in slice_emp_en, this doesn't work *)
-  //forall_intro #prin #(fun x -> b2t (slice_en x empty_env = empty_env)) slice_emp_en
+let slice_emp_en_forall _ = qintro slice_emp_en'
 
 val slice_e: prin -> exp -> Tot exp
 let slice_e p e = e
@@ -454,6 +480,43 @@ val slice_lem_singl_wire: #eps:eprins -> w:v_wire eps -> p:prin
                                                           (slice_wire_sps #eps (singleton p) w)))
 let slice_lem_singl_wire #eps w p = ()
 
+val mem_intersect_not_empty_lemma:
+  p:prin -> ps:prins
+  -> Lemma (requires (True))
+          (ensures (mem p ps ==> not (is_empty (intersect (singleton p) ps))))
+let mem_intersect_not_empty_lemma p ps =
+  mem_intersect p (singleton p) ps;
+  FStar.OrdSet.mem_singleton #prin #p_cmp p p
+
+val empty_forall_no_mem_lemma:
+  ps:prins -> Lemma (requires (True)) (ensures ((forall p. not (mem p ps)) ==> is_empty ps))
+let empty_forall_no_mem_lemma ps =
+  let _ = assert ((forall p. not (mem #prin #p_cmp p ps)) ==> Equal #prin #p_cmp ps (empty #prin #p_cmp)) in
+  let _ = assert (Equal #prin #p_cmp ps (empty #prin #p_cmp) ==> ps = (empty #prin #p_cmp)) in
+  ()
+
+val empty_forall_no_mem_lemma_forall:
+  unit -> Lemma (requires (True)) (ensures (forall ps. (forall p. not (mem p ps)) ==> is_empty ps))
+let empty_forall_no_mem_lemma_forall _ = qintro empty_forall_no_mem_lemma
+
+val mem_intersect_not_empty_lemma_opp:
+  p:prin -> ps:prins
+  -> Lemma (requires (True))
+          (ensures ((not (mem p ps)) ==> is_empty (intersect (singleton p) ps)))
+let mem_intersect_not_empty_lemma_opp p ps =
+  let ps1 = singleton #prin #p_cmp p in
+  mem_intersect p (singleton p) ps;
+  FStar.OrdSet.mem_singleton #prin #p_cmp p p;
+
+  (* let _ = assert (mem p (intersect ps1 ps) = (mem p ps1 && mem p ps)) in *)
+  (* let _ = assert (forall x. mem x ps1 ==> (x = p)) in *)
+  (* let _ = assert (forall x. mem x (intersect ps1 ps) ==> (x = p)) in *)
+  (* let _ = assert ((not (mem p ps)) ==> (forall x. (not (mem x (intersect ps1 ps))))) in *)
+  let _ = empty_forall_no_mem_lemma_forall () in
+  //let _ = assert (forall s. (forall x. not (mem x s)) ==> is_empty s) in
+  ()
+
+(* V_opaque axiom *)
 assume val v_opaque_slice_lem_singl_v_axiom:
   #m:v_meta -> v:value m{is_V_opaque v} -> p:prin
   -> Lemma (requires (True))
@@ -481,7 +544,9 @@ let rec slice_lem_singl_v #m v p = match v with
   | V_bool _             -> ()
   | V_opaque 'a _ _ _ _ _ -> v_opaque_slice_lem_singl_v_axiom v p
   | V_box ps v           ->
-    let _ = admitP (mem p ps <==> not (is_empty (intersect (singleton p) ps))) in
+    let _ = mem_intersect_not_empty_lemma p ps in
+    let _ = mem_intersect_not_empty_lemma_opp p ps in
+    let _ = assert (mem p ps <==> not (is_empty (intersect (singleton p) ps))) in
     if mem p ps then slice_lem_singl_v v p else ()
   | V_wire _ eps w       -> slice_lem_singl_wire #eps w p
   | V_clos en _ _        -> slice_lem_singl_en en p
@@ -583,7 +648,8 @@ val slc_wire_lem_ps: #eps:eprins -> w:v_wire eps -> p:prin -> ps:prins{not (mem 
                                                      (slice_wire_sps #eps (union (singleton p) ps) w)))
 let slc_wire_lem_ps #eps w p ps =
   cut (Equal (intersect (intersect eps (singleton p)) (intersect eps ps)) empty)
-  
+
+(* V_opaque axiom *)
 assume val v_opaque_slc_v_lem_ps_axiom:
   #m:v_meta -> v:value m{is_V_opaque v} -> p:prin -> ps:prins{not (mem p ps)}
   -> Lemma (requires (True))
@@ -597,6 +663,8 @@ val mem_intersect_lemma_mem: p:prin -> eps:eprins{mem p eps}
                                 //[SMTPat (mem p eps); SMTPat (intersect eps (singleton p))]
 let mem_intersect_lemma_mem p eps = ()
 
+(* CH: this is needed on my machine, intermittent failures otherwise *)
+#reset-options "--z3timeout 20"
 val slc_v_lem_ps: #m:v_meta -> v:value m -> p:prin -> ps:prins{not (mem p ps)}
                        -> Lemma (requires (True))
                                 (ensures (compose_vals (D_v.v (slice_v p v))
@@ -664,6 +732,7 @@ and slc_en_lem_ps en p ps =
   let _ = cut (FEq (compose_envs (slice_en p en) (slice_en_sps ps en))
                    (slice_en_sps (union (singleton p) ps) en)) in
   ()
+#reset-options
 
 val slc_v_lem_m: #meta:v_meta -> v:value meta -> ps:prins
                  -> m:value_map ps{(forall p. mem p ps ==>
@@ -771,6 +840,7 @@ val slice_wire_compose_lemma:
 let slice_wire_compose_lemma #eps1 #eps2 w1 w2 p =
   cut (Equal (intersect (intersect eps1 (singleton p)) (intersect eps2 (singleton p))) empty)
 
+(* FFI axiom *)
 assume val exec_ffi_axiom:
   p:prin -> n:nat -> fn:'a -> vs:list dvalue -> inj:'b
   -> Lemma (requires (True))
@@ -798,22 +868,35 @@ let rec slice_h_append_lemma p tr1 tr2 = match tr1 with
     else
       slice_h_append_lemma p tl tr2
 
-assume val slice_h_append_lemma_forall:
+val slice_h_append_lemma_forall_one:
+  p:prin -> tr1:trace
+  -> Lemma (requires (True))
+          (ensures (forall tr2. b2t (slice_tr_h p (append tr1 tr2) = append (slice_tr_h p tr1) (slice_tr_h p tr2))))
+let slice_h_append_lemma_forall_one p tr1 = qintro (slice_h_append_lemma p tr1)
+
+val slice_h_append_lemma_forall_two:
+  p:prin
+  -> Lemma (requires (True))
+          (ensures (forall tr1 tr2. b2t (slice_tr_h p (append tr1 tr2) = append (slice_tr_h p tr1) (slice_tr_h p tr2))))
+let slice_h_append_lemma_forall_two p = qintro (slice_h_append_lemma_forall_one p)
+
+val slice_h_append_lemma_forall:
   unit -> Lemma (requires (True))
                (ensures (forall p tr1 tr2. slice_tr_h p (append tr1 tr2) = append (slice_tr_h p tr1) (slice_tr_h p tr2)))
-
+let slice_h_append_lemma_forall _ = qintro slice_h_append_lemma_forall_two
+	 
 val slice_concat_lemma:
   p:prin -> tr1:erased trace -> tr2:erased trace
   -> Lemma (requires (True))
           (ensures (slice_tr p (concat_traces tr1 tr2) = concat_traces (slice_tr p tr1) (slice_tr p tr2)))
     [SMTPat (slice_tr p (concat_traces tr1 tr2))]
-let slice_concat_lemma p tr1 tr2 = admit()
+let slice_concat_lemma p tr1 tr2 =
 (* CH: this fails on my laptop with Unknown assertion failed
-   AR: works for me
+   AR: works for me*)
   slice_h_append_lemma_forall ();
   let _ = assert (slice_tr_h p (append (reveal tr1) (reveal tr2)) = append (slice_tr_h p (reveal tr1)) (slice_tr_h p (reveal tr2))) in
   ()
-*)
+
 
 val append_l_nil: l:list 'a ->
   Lemma (requires True)
@@ -823,15 +906,28 @@ let rec append_l_nil = function
   | hd::tl -> append_l_nil tl
 
 val scoped_trace_mem_slice_lemma_h:
-  p:prin -> ps:prins{mem p ps} -> tr:trace
+  p:prin -> ps:prins -> tr:trace
   -> Lemma (requires (True))
-          (ensures (slice_tr_h p [ Tr_scope ps tr] = slice_tr_h p tr))
+          (ensures (mem p ps ==> (slice_tr_h p [ Tr_scope ps tr] = slice_tr_h p tr)))
 let scoped_trace_mem_slice_lemma_h p ps tr = append_l_nil (slice_tr_h p tr)
 
-assume val scoped_trace_mem_slice_lemma_forall_h:
+val scoped_trace_mem_slice_lemma_h_forall_one:
+  p:prin -> ps:prins
+  -> Lemma (requires (True))
+          (ensures (forall tr. (mem p ps ==> (slice_tr_h p [ Tr_scope ps tr] = slice_tr_h p tr))))
+let scoped_trace_mem_slice_lemma_h_forall_one p ps = qintro (scoped_trace_mem_slice_lemma_h p ps)
+
+val scoped_trace_mem_slice_lemma_h_forall_two:
+  p:prin
+  -> Lemma (requires (True))
+          (ensures (forall ps tr. (mem p ps ==> (slice_tr_h p [ Tr_scope ps tr] = slice_tr_h p tr))))
+let scoped_trace_mem_slice_lemma_h_forall_two p = qintro (scoped_trace_mem_slice_lemma_h_forall_one p)
+
+val scoped_trace_mem_slice_lemma_forall_h:
   unit ->
   Lemma (requires (True))
         (ensures (forall p ps tr. mem p ps ==> slice_tr_h p [ Tr_scope ps tr] = slice_tr_h p tr))
+let scoped_trace_mem_slice_lemma_forall_h _ = qintro scoped_trace_mem_slice_lemma_h_forall_two
 
 val scoped_trace_mem_slice_lemma:
   p:prin -> ps:prins{mem p ps} -> tr:erased trace
@@ -841,15 +937,29 @@ let scoped_trace_mem_slice_lemma p ps tr =
   scoped_trace_mem_slice_lemma_forall_h ()
 
 val scoped_trace_not_mem_slice_lemma_h:
-  p:prin -> ps:prins{not (mem p ps)} -> tr:trace
+  p:prin -> ps:prins -> tr:trace
   -> Lemma (requires (True))
-          (ensures (slice_tr_h p [ Tr_scope ps tr ] = []))
+          (ensures (not (mem p ps) ==> slice_tr_h p [ Tr_scope ps tr ] = []))
 let scoped_trace_not_mem_slice_lemma_h p ps tr = append_l_nil []	  
 
-assume val scoped_trace_not_mem_slice_lemma_forall_h:
+val scoped_trace_not_mem_slice_lemma_h_forall_one:
+  p:prin -> ps:prins
+  -> Lemma (requires (True))
+          (ensures (forall tr. not (mem p ps) ==> slice_tr_h p [ Tr_scope ps tr ] = []))
+let scoped_trace_not_mem_slice_lemma_h_forall_one p ps = qintro (scoped_trace_not_mem_slice_lemma_h p ps)
+
+val scoped_trace_not_mem_slice_lemma_h_forall_two:
+  p:prin
+  -> Lemma (requires (True))
+          (ensures (forall (ps:prins) tr. (not (mem p ps)) ==> slice_tr_h p [ Tr_scope ps tr ] = []))
+let scoped_trace_not_mem_slice_lemma_h_forall_two p = qintro (scoped_trace_not_mem_slice_lemma_h_forall_one p)
+
+(* This lemma is simply forall of lemma above *)
+val scoped_trace_not_mem_slice_lemma_forall_h:
   unit ->
   Lemma (requires (True))
         (ensures (forall p (ps:prins) tr. not (mem p ps) ==> slice_tr_h p [ Tr_scope ps tr] = []))
+let scoped_trace_not_mem_slice_lemma_forall_h _ = qintro scoped_trace_not_mem_slice_lemma_h_forall_two
 
 val scoped_trace_not_mem_slice_lemma:
   p:prin -> ps:prins{not (mem p ps)} -> tr:erased trace
@@ -1234,7 +1344,8 @@ let if_par_then_exit_sec_to_sec #c #c' h = match h with
   | C_assec_ret _ _ -> ()
   | _               -> ()
 
-(* CH: this sometimes timed out on my laptop *)
+#reset-options "--z3timeout 20"
+
 opaque val forward_simulation_par: #c:sconfig -> #c':sconfig
                                    -> h:sstep c c'{is_par c /\
                                                    if_enter_sec_then_from_sec h}
@@ -1303,6 +1414,7 @@ val slice_wire_lem_singl_of_ps: #eps:eprins -> w:v_wire eps
                                                                 (slice_wire #eps p w)))
 let slice_wire_lem_singl_of_ps #eps w ps p = ()
 
+(* V_opaque axiom *)
 assume val v_opaque_slice_v_lem_singl_of_ps:
   #m:v_meta -> v:value m -> ps:prins -> p:prin{mem p ps}
   -> Lemma (requires(True))
@@ -1681,6 +1793,7 @@ let sstep_par_to_sec_en_compose_lemma #c #c' h ps =
   let Conf _ _ _ _ (T_red (R_assec _ v)) _ = c in
   slice_clos_lem v
 
+#reset-options "--z3timeout 20"
 opaque val forward_simulation_enter_sec:
   #c:sconfig -> #c':sconfig -> h:sstep c c'{is_C_assec_beta h /\ is_par c}
   -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
@@ -1747,6 +1860,7 @@ let forward_simulation_enter_sec #c #c' h ps =
   let _ = cut (b2t ((pi', s') = (pi_tmp, s_s))) in
 
   P_sec_enter #ps (pi, s) ps' x e (pi_tmp, s_s)
+#reset-options
 
 opaque val forward_simulation: #c:sconfig -> #c':sconfig -> h:sstep c c'
                                -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
@@ -2079,6 +2193,13 @@ val pstep_psec_enter_psec_enter_empty_intersection:
   -> Lemma (requires (True)) (ensures (Equal (intersect (P_sec_enter.ps h1) (P_sec_enter.ps h2)) empty))
 let pstep_psec_enter_psec_enter_empty_intersection #ps pi pi1 pi2 h1 h2 = ()
 
+val empty_intersect_mem_disjoint_lemma:
+  ps1:prins -> ps2:prins{Equal (intersect ps1 ps2) empty}
+  -> Lemma (requires (True))
+          (ensures  (forall p. mem p ps1 ==> not (mem p ps2)))
+let empty_intersect_mem_disjoint_lemma ps1 ps2 = ()
+
+#reset-options "--z3timeout 20"
 
 opaque val pstep_psec_enter_psec_enter_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
@@ -2136,8 +2257,9 @@ let pstep_psec_enter_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
     let _ = cut (forall p l. mem p ps ==> (not (mem p (P_sec_enter.ps h1))) ==>
     			   (not (mem p (P_sec_enter.ps h2))) ==>
                            project_two_psteps #ps #pi #pi1 #(pi13_m, s13) h1 h13 p l=
-    			   project_two_psteps #ps #pi #pi2 #(pi23_m, s23) h2 h23 p l) in
-   let _ = admitP (forall p. mem p (P_sec_enter.ps h1) ==> not (mem p (P_sec_enter.ps h2))) in
+    			   project_two_psteps #ps #pi #pi2 #(pi23_m, s23) h2 h23 p l)   in
+   let _ = empty_intersect_mem_disjoint_lemma (P_sec_enter.ps h1) (P_sec_enter.ps h2) in
+   let _ = assert (forall p. mem p (P_sec_enter.ps h1) ==> not (mem p (P_sec_enter.ps h2))) in
    IntroR (ExIntro #(protocol ps)
 		   #(fun pi3 -> (c:cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3){strong_confluence ps pi pi1 pi2 pi3 h1 h2 c}))
 		   (pi13_m, s13) (Conj h13 h23))

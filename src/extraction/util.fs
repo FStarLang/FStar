@@ -220,7 +220,7 @@ let tbinder_prefix t = match (Util.compress_typ t).n with
 
 let is_xtuple (ns, n) =
     if ns = ["Prims"]
-    then if !Options.universes
+    then if (Options.universes())
          then match n with
             | "Mktuple2" -> Some 2
             | "Mktuple3" -> Some 3
@@ -273,7 +273,7 @@ let resugar_pat q p = match p with
 
 let is_xtuple_ty (ns, n) =
     if ns = ["Prims"]
-    then if !Options.universes
+    then if (Options.universes())
          then match n with
             | "tuple2" -> Some 2
             | "tuple3" -> Some 3
@@ -302,7 +302,7 @@ let resugar_mlty t = match t with
       end
     | _ -> t
 
-let codegen_fsharp () = Option.get (!Options.codegen) = "FSharp"
+let codegen_fsharp () = Option.get (Options.codegen()) = "FSharp"
 let flatten_ns ns =
     if codegen_fsharp()
     then String.concat "." ns

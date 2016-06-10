@@ -389,3 +389,5 @@ let rec splitAt n l =
       | hd::tl ->
 	let l1, l2 = splitAt (n - 1) tl in
 	hd::l1, l2
+
+let map_flatten f l = flatten (map f l)

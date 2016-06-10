@@ -81,13 +81,14 @@ type decl =
   | DefPrelude
   | DeclFun    of string * list<sort> * sort * caption
   | DefineFun  of string * list<sort> * sort * term * caption
-  | Assume     of term   * caption
+  | Assume     of term   * caption * option<string>
   | Caption    of string
   | Eval       of term
   | Echo       of string
   | Push
   | Pop
   | CheckSat
+  | SetOption  of string * string
 type decls_t = list<decl>
 
 type error_label = (fv * string * Range.range)

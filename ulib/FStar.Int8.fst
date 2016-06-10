@@ -10,13 +10,13 @@ let within_int8 (i:int) =
     min_value_int <= i
     && i <= max_value_int
 
-(*
- * TODO: this is a hack, we should handle refinement types more uniformly
- *)
+(* haseq refinement hack *)
 assume HasEq_within_int: hasEq (i:int{within_int8 i})
 
-private type int8 =
-  | Int8 : i:int{within_int8 i} -> int8
+private type int8' =
+  | Int8 : i:int{within_int8 i} -> int8'
+
+type int8 = int8'
 
 val min_value : int8
 let min_value = Int8 min_value_int

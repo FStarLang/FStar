@@ -57,10 +57,10 @@ type env = {
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment and signature elements *)
-  gamma_cache    :Util.smap<cached_elt>;
+  gamma_cache    :Util.smap<cached_elt>;        (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
-  sigtab         :list<Util.smap<sigelt>>;      (* a dictionary of long-names to sigelts *)
+  sigtab         :Util.smap<sigelt>;            (* a dictionary of long-names to sigelts *)
   is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
@@ -129,16 +129,17 @@ let glb_delta d1 d2 = match d1, d2 with
 
 let default_table_size = 200
 let new_sigtab () = Util.smap_create default_table_size
+let new_gamma_cache () = Util.smap_create 100
 
 let initial_env tc solver module_lid =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
     gamma= [];
-    gamma_cache=Util.smap_create 100;
+    gamma_cache=new_gamma_cache();
     modules= [];
     expected_typ=None;
-    sigtab=[new_sigtab()];
+    sigtab=new_sigtab();
     is_pattern=false;
     instantiate_imp=true;
     effects={decls=[]; order=[]; joins=[]};
@@ -155,35 +156,60 @@ let initial_env tc solver module_lid =
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
-let sigtab env = List.hd env.sigtab
+let sigtab env = env.sigtab
+let gamma_cache env = env.gamma_cache
+type env_stack_ops = { 
+    es_push: env -> env;
+    es_mark: env -> env;
+    es_reset_mark: env -> env;
+    es_commit_mark: env -> env;
+    es_pop:env -> env
+}
+
+let stack_ops = 
+    let stack = Util.mk_ref [] in 
+    let push env = 
+        stack := env::!stack;
+        {env with sigtab=Util.smap_copy (sigtab env);
+                  gamma_cache=Util.smap_copy (gamma_cache env)} in
+    let pop env = match !stack with 
+        | env::tl -> 
+         stack := tl;
+         env
+        | _ -> failwith "Impossible: Too many pops" in
+    let mark env = 
+        push env in
+    let commit_mark env = 
+        ignore (pop env); env in
+    let reset_mark env =
+        pop env in
+    { es_push=push; 
+      es_pop=pop;
+      es_mark=push;
+      es_reset_mark=pop;
+      es_commit_mark=commit_mark; }
+
 let push env msg =
     env.solver.push msg;
-    {env with sigtab=Util.smap_copy (sigtab env)::env.sigtab}
+    stack_ops.es_push env
 let mark env =
     env.solver.mark "USER MARK";
-    {env with sigtab=Util.smap_copy (sigtab env)::env.sigtab}
+    stack_ops.es_mark env 
 let commit_mark env =
     env.solver.commit_mark "USER MARK";
-    let sigtab = match env.sigtab with
-        | hd::_::tl -> hd::tl
-        | _ -> failwith "Impossible" in
-    {env with sigtab=sigtab}
+    stack_ops.es_commit_mark env
 let reset_mark env =
     env.solver.reset_mark "USER MARK";
-    {env with sigtab=List.tl env.sigtab}
-let pop env msg = match env.sigtab with
-    | []
-    | [_] -> failwith "Too many pops"
-    | _::tl ->
-        env.solver.pop msg;
-        {env with sigtab=tl}
+    stack_ops.es_reset_mark env
+let pop env msg =
+    env.solver.pop msg;
+    stack_ops.es_pop env
 
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
 ////////////////////////////////////////////////////////////
 let debug env (l:Options.debug_level_t) =
-       !Options.debug |> Util.for_some (fun x -> env.curmodule.str="" || env.curmodule.str = x)
-    && Options.debug_level_geq l
+    Options.debug_at_level env.curmodule.str l
 let set_range e r = if r=dummyRange then e else {e with range=r}
 let get_range e = e.range
 
@@ -254,9 +280,9 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
 
 let lookup_qname env (lid:lident) : option<either<(universes * typ), (sigelt * option<universes>)>>  =
   let cur_mod = in_cur_mod env lid in
-  let cache t = Util.smap_add env.gamma_cache lid.str t; Some t in
+  let cache t = Util.smap_add (gamma_cache env) lid.str t; Some t in
   let found = if cur_mod<>No
-              then match Util.smap_try_find env.gamma_cache lid.str with 
+              then match Util.smap_try_find (gamma_cache env) lid.str with 
                     | None -> 
                       Util.find_map env.gamma (function
                         | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl (inst_tscheme t)) else None
@@ -581,7 +607,7 @@ let wp_sig_aux decls m =
     let _, s = inst_tscheme (md.univs, md.signature) in
     let s = Subst.compress s in
     match md.binders, s.n with
-      | [], Tm_arrow([(a, _); (wp, _); (wlp, _)], c) when (is_teff (comp_result c)) -> a, wp.sort
+      | [], Tm_arrow([(a, _); (wp, _)], c) when (is_teff (comp_result c)) -> a, wp.sort
       | _ -> failwith "Impossible"
 
 let wp_signature env m = wp_sig_aux env.effects.decls m
@@ -721,7 +747,6 @@ let finish_module =
                 | _ -> []) |> List.rev
         else m.exports  in
       add_sigelts env sigs;
-      Util.smap_clear env.gamma_cache;
       {env with
         curmodule=empty_lid;
         gamma=[];

@@ -164,7 +164,7 @@ type inputFragment = either<file,list<decl>>
 
 (********************************************************************************)
 let check_id id = 
-    if !FStar.Options.universes
+    if Options.universes()
     then let first_char = String.substring id.idText 0 1 in
          if String.lowercase first_char = first_char
          then ()
@@ -180,7 +180,7 @@ let un_curry_abs ps body = match body.tm with
     | _ -> Abs(ps, body)
 let mk_function branches r1 r2 =
   let x = 
-    if !FStar.Options.universes
+    if Options.universes()
     then let i = FStar.Syntax.Syntax.next_id () in
          Ident.gen r1 
     else U.genident (Some r1) in
@@ -262,14 +262,14 @@ let mkFsTypApp t args r =
 
 let mkTuple args r =
   let cons = 
-    if !FStar.Options.universes
+    if Options.universes()
     then FStar.Syntax.Util.mk_tuple_data_lid (List.length args) r
     else U.mk_tuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkDTuple args r =
   let cons = 
-        if !FStar.Options.universes
+        if Options.universes()
         then FStar.Syntax.Util.mk_dtuple_data_lid (List.length args) r
         else U.mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
@@ -440,6 +440,6 @@ let modul_to_string (m:modul) = match m with
 let error msg tm r =
  let tm = tm |> term_to_string in
  let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in
- if !FStar.Options.universes
+ if Options.universes()
  then raise (FStar.Syntax.Syntax.Error(msg^"\n"^tm, r))
  else raise (S.Error(msg^"\n"^tm, r))

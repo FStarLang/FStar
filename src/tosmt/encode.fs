@@ -28,7 +28,7 @@ open FStar.Ident
 open FStar.Const
 open FStar.ToSMT.SplitQueryCases
 
-let add_fuel x tl = if !Options.unthrottle_inductives then tl else x::tl
+let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
 let vargs args = List.filter (function (Inl _, _) -> false | _ -> true) args
 
@@ -269,7 +269,7 @@ let tok_of_name env nm =
 
 let mkForall_fuel' n (pats, vars, body) =
     let fallback () = Term.mkForall(pats, vars, body) in
-    if !Options.unthrottle_inductives
+    if (Options.unthrottle_inductives())
     then fallback ()
     else let fsym, fterm = fresh_fvar "f" Fuel_sort in
          let add_fuel tms =
@@ -452,7 +452,7 @@ let rec encode_knd_term (k:knd) (env:env_t) : (term * decls_t) =
                   let ksym = varops.fresh "Kind_arrow" in
                   let cvar_sorts = List.map snd cvars in
                   let caption =
-                    if !Options.logQueries
+                    if (Options.log_queries())
                     then Some (Normalize.kind_norm_to_string env.tcenv k)
                     else None in
 
@@ -572,7 +572,7 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
                   let tsym = varops.fresh "Typ_fun" in
                   let cvar_sorts = List.map snd cvars in
                   let caption =
-                    if !Options.logQueries
+                    if (Options.log_queries())
                     then Some (Normalize.typ_norm_to_string env.tcenv t0)
                     else None in
 
@@ -1237,7 +1237,7 @@ let prims =
         [vname_decl;
          Term.Assume(mkForall([[t1]], vars, mkEq(t1, body)), None)] in
     let def_or_quant vars body x = 
-        if !Options.inline_arith
+        if (Options.inline_arith())
         then deffun vars body x
         else quant vars body x in
     let axy = [(asym, Type_sort); (xsym, Term_sort); (ysym, Term_sort)] in
@@ -2002,7 +2002,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t *
             then (Util.print3 "Normalized %s : %s to %s\n" (Print.strBvd x) (Print.typ_to_string t0) (Print.typ_to_string t1));
             let t, decls' = encode_typ_pred None t1 env xx in
             let caption =
-                if !Options.logQueries
+                if (Options.log_queries())
                 then Some (Util.format3 "%s : %s (%s)" (Print.strBvd x) (Print.typ_to_string t0) (Print.typ_to_string t1))
                 else None in
             let g = [Term.DeclFun(xxsym, [], Term_sort, caption)]
@@ -2085,7 +2085,7 @@ let commit_mark msg =
     Z3.commit_mark msg
 let encode_sig tcenv se =
    let caption decls =
-    if !Options.logQueries
+    if (Options.log_queries())
     then Term.Caption ("encoding sigelt " ^ (Print.sigelt_to_string_short se))::decls
     else decls in
    let env = get_env tcenv in
@@ -2100,7 +2100,7 @@ let encode_modul tcenv modul =
     let env = get_env tcenv in
     let decls, env = encode_signature ({env with warn=false}) modul.exports in
     let caption decls =
-    if !Options.logQueries
+    if (Options.log_queries())
     then let msg = "Externals for " ^ name in
          Caption msg::decls@[Caption ("End " ^ msg)]
     else decls in
@@ -2153,21 +2153,21 @@ let solve tcenv q : unit =
                     Term.CheckSat]@suffix in
 
             let check (p:decl) =
-                let initial_config = (!Options.initial_fuel, !Options.initial_ifuel) in
-                let alt_configs = List.flatten [(if !Options.max_ifuel > !Options.initial_ifuel then [(!Options.initial_fuel, !Options.max_ifuel)] else []);
-                                                (if !Options.max_fuel / 2 > !Options.initial_fuel then [(!Options.max_fuel / 2, !Options.max_ifuel)] else []);
-                                                (if !Options.max_fuel > !Options.initial_fuel && !Options.max_ifuel > !Options.initial_ifuel then [(!Options.max_fuel, !Options.max_ifuel)] else []);
-                                                (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])] in
+                let initial_config = ((Options.initial_fuel()), (Options.initial_ifuel())) in
+                let alt_configs = List.flatten [(if (Options.max_ifuel()) > (Options.initial_ifuel()) then [((Options.initial_fuel()), (Options.max_ifuel()))] else []);
+                                                (if (Options.max_fuel()) / 2 > (Options.initial_fuel()) then [((Options.max_fuel()) / 2, (Options.max_ifuel()))] else []);
+                                                (if (Options.max_fuel()) > (Options.initial_fuel()) && (Options.max_ifuel()) > (Options.initial_ifuel()) then [((Options.max_fuel()), (Options.max_ifuel()))] else []);
+                                                (if (Options.min_fuel()) < (Options.initial_fuel()) then [((Options.min_fuel()), 1)] else [])] in
 
                 let report errs =
                     let errs = match errs with
                             | [] -> [("Unknown assertion failed", dummyRange)]
                             | _ -> errs in
-                    if !Options.print_fuels
+                    if (Options.print_fuels())
                     then (Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
                             (Range.string_of_range (Env.get_range tcenv))
-                            (!Options.max_fuel |> Util.string_of_int)
-                            (!Options.max_ifuel |> Util.string_of_int));
+                            ((Options.max_fuel()) |> Util.string_of_int)
+                            ((Options.max_ifuel()) |> Util.string_of_int));
                     Tc.Errors.add_errors tcenv errs in
 
                 let rec try_alt_configs (p:decl) errs = function
@@ -2186,7 +2186,7 @@ let solve tcenv q : unit =
 
                 and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) =
                     if ok
-                    then if !Options.print_fuels
+                    then if (Options.print_fuels())
                          then (Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n"
                                 (Range.string_of_range (Env.get_range tcenv))
                                 (Util.string_of_int prev_fuel)
@@ -2196,13 +2196,13 @@ let solve tcenv q : unit =
                 Z3.ask fresh labels (with_fuel p initial_config) (cb initial_config p alt_configs)  in
 
             let process_query (q:decl) :unit =
-                if !Options.split_cases > 0 then
-                    let (b, cb) = SplitQueryCases.can_handle_query !Options.split_cases q in
+                if (Options.split_cases()) > 0 then
+                    let (b, cb) = SplitQueryCases.can_handle_query (Options.split_cases()) q in
                     if b then SplitQueryCases.handle_query cb check else check q
                 else check q
             in
 
-            if !Options.admit_smt_queries then () else process_query qry;
+            if (Options.admit_smt_queries()) then () else process_query qry;
             pop ()
     end
 

@@ -33,6 +33,8 @@ module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
 module C  = FStar.Syntax.Const
 
+exception Un_extractable
+
 (*
   Below, "the thesis" refers to:
     Letouzey, Pierre.
@@ -119,7 +121,7 @@ let predecessor t = function
 let rec level env t =
     let predecessor l = predecessor t l in
     let t = SS.compress t in
-//    debug env (fun _ -> Util.print2 "level %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
+    debug env (fun _ -> Util.print2 "level %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
 //    printfn "%s\n" (Print.term_to_string t);
     match t.n with
     | Tm_delayed _ ->
@@ -132,7 +134,7 @@ let rec level env t =
         Term_level
 
     | Tm_fvar ({fv_delta=Delta_unfoldable _}) ->
-      let t' = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv t in
+      let t' = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses; N.Exclude N.Zeta; N.Exclude N.Iota] env.tcenv t in
       debug env (fun () -> Util.print2 "Normalized %s to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
       level env t'
 
@@ -348,7 +350,7 @@ let bv_as_mlty (g:env) (bv:bv) =
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
 let rec term_as_mlty (g:env) (t:term) : mlty =
-    let t = N.normalize [N.Beta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
+    let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
     term_as_mlty' g t
 
 and term_as_mlty' env t =
@@ -491,16 +493,20 @@ let resugar_pat q p = match p with
       end
     | _ -> p
 
-//extract_pat g p
+//extract_pat g p expected_t
 //     Translates an F* pattern to an ML pattern
 //     The main work is erasing inaccessible (dot) patterns
 //     And turning F*'s curried pattern style to ML's fully applied ones
-let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
-    let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) g p : env * option<(mlpattern * list<mlexpr>)> =
+let extract_pat (g:env) p (expected_t:mlty) : (env * list<(mlpattern * option<mlexpr>)> * bool) =
+    let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) g p expected_topt : env * option<(mlpattern * list<mlexpr>)> * bool =
+        let ok t = 
+            match expected_topt with 
+            | None -> true
+            | Some t' -> type_leq g t t' in
         match p.v with
           | Pat_disj _ -> failwith "Impossible: Nested disjunctive pattern"
 
-          | Pat_constant (Const_int (c, None)) when (not !Options.use_native_int) ->
+          | Pat_constant (Const_int (c, None)) when (not (Options.use_native_int())) ->
             // note: as-patterns are not valid F* and "let Pat_constant i = p.v"
             // is not valid F# ?!!
             let i = Const_int (c, None) in
@@ -509,10 +515,28 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
             let when_clause = with_ty ml_bool_ty <|
               MLE_App(prims_op_equality, [with_ty ml_int_ty <| MLE_Var x;
                                         with_ty ml_int_ty <| (MLE_Const <| mlconst_of_const' p.p i)]) in
-            g, Some (MLP_Var x, [when_clause])
+            g, Some (MLP_Var x, [when_clause]), ok ml_int_ty
 
           | Pat_constant s     ->
-            g, Some (MLP_Const (mlconst_of_const' p.p s), [])
+            let t : term = TC.tc_constant Range.dummyRange s in
+            let mlty = term_as_mlty g t in
+            g, Some (MLP_Const (mlconst_of_const' p.p s), []), ok mlty
+
+          | Pat_var x ->
+            let mlty = term_as_mlty g x.sort in
+            let g = extend_bv g x ([], mlty) false false imp in
+            g, (if imp then None else Some (MLP_Var (bv_as_mlident x), [])), ok mlty
+
+          | Pat_wild x when disjunctive_pat ->
+            g, Some (MLP_Wild, []), true
+
+          | Pat_wild x -> (*how is this different from Pat_var? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
+            let mlty = term_as_mlty g x.sort in
+            let g = UEnv.extend_bv g x ([], mlty) false false imp in
+            g, (if imp then None else Some (MLP_Var (bv_as_mlident x), [])), ok mlty
+
+          | Pat_dot_term _ ->
+            g, None, true
 
           | Pat_cons (f, pats) ->
             let d, tys = match lookup_fv g f with
@@ -520,30 +544,31 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
                 | _ -> failwith "Expected a constructor" in
             let nTyVars = List.length (fst tys) in
             let tysVarPats, restPats =  Util.first_N nTyVars pats in
-            let g, tyMLPats = Util.fold_map (fun g (p, imp) -> extract_one_pat disjunctive_pat true g p) g tysVarPats in (*not all of these were type vars in ML*)
-            let g, restMLPats = Util.fold_map (fun g (p, imp) -> extract_one_pat disjunctive_pat false g p) g restPats in
+            let pat_ty_compat = 
+                match expected_topt with 
+                | None -> true
+                | Some expected_t -> 
+                    try 
+                        let mlty_args = tysVarPats |> List.map (fun (p, _) -> 
+                            match p.v with 
+                            | Pat_dot_term (_, t) -> term_as_mlty g t
+                            | _ -> raise Un_extractable) in
+                        let pat_ty = subst tys mlty_args in
+                        type_leq g pat_ty expected_t 
+                    with Un_extractable -> false in
+            let g, tyMLPats = Util.fold_map (fun g (p, imp) -> 
+                let g, p, _ = extract_one_pat disjunctive_pat true g p None in
+                g, p) g tysVarPats in (*not all of these were type vars in ML*)
+            let g, restMLPats = Util.fold_map (fun g (p, imp) -> 
+                let g, p, _ = extract_one_pat disjunctive_pat false g p None in
+                g, p) g restPats in
             let mlPats, when_clauses = List.append tyMLPats restMLPats |> List.collect (function (Some x) -> [x] | _ -> []) |> List.split in
-            g, Some (resugar_pat f.fv_qual (MLP_CTor (d, mlPats)), when_clauses |> List.flatten)
+            g, Some (resugar_pat f.fv_qual (MLP_CTor (d, mlPats)), when_clauses |> List.flatten), pat_ty_compat in
 
-          | Pat_var x ->
-            let mlty = term_as_mlty g x.sort in
-            let g = extend_bv g x ([], mlty) false false imp in
-            g, (if imp then None else Some (MLP_Var (bv_as_mlident x), []))
 
-          | Pat_wild x when disjunctive_pat ->
-            g, Some (MLP_Wild, [])
-
-          | Pat_wild x -> (*how is this different from Pat_var? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
-            let mlty = term_as_mlty g x.sort in
-            let g = UEnv.extend_bv g x ([], mlty) false false imp in
-            g, (if imp then None else Some (MLP_Var (bv_as_mlident x), []))
-
-          | Pat_dot_term _ ->
-            g, None in
-
-    let extract_one_pat disj g p =
-        match extract_one_pat disj false g p with
-            | g, Some (x, v) -> g, (x, v)
+    let extract_one_pat disj g p expected_t =
+        match extract_one_pat disj false g p expected_t with
+            | g, Some (x, v), b -> g, (x, v), b
             | _ -> failwith "Impossible: Unable to translate pattern" in
 
     let mk_when_clause whens =
@@ -555,20 +580,23 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
       | Pat_disj [] -> failwith "Impossible: Empty disjunctive pattern"
 
       | Pat_disj (p::pats)      ->
-        let g, p = extract_one_pat true g p in
-        let ps = p :: (pats |> List.map (fun x -> snd (extract_one_pat true g x))) in
+        let g, p, b = extract_one_pat true g p (Some expected_t) in
+        let b, ps = Util.fold_map (fun b p ->
+                    let _, p, b' = extract_one_pat true g p (Some expected_t) in
+                    b && b', p) b pats in
+        let ps = p :: ps in
         let ps_when, rest = ps |> List.partition (function (_, _::_) -> true | _ -> false) in
         let ps = ps_when |> List.map (fun (x, whens) -> (x, mk_when_clause whens)) in
         //branches that contains a new when clause need to be split out
         let res = match rest with
-            | [] -> g, ps
-            | rest -> g,  (MLP_Branch(List.map fst rest), None) :: ps in
+            | [] -> g, ps, b
+            | rest -> g,  (MLP_Branch(List.map fst rest), None) :: ps, b in
         res
 
       | _ ->
-        let g, (p, whens) = extract_one_pat false g p in
+        let g, (p, whens), b = extract_one_pat false g p (Some expected_t) in
         let when_clause = mk_when_clause whens in
-        g, [(p, when_clause)]
+        g, [(p, when_clause)], b
 
 (*
   maybe_lalloc_eta_data_and_project_record g qual residualType mlAppExpr:
@@ -635,9 +663,19 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
 
         | _ -> mlAppExpr
 
+let maybe_downgrade_eff g f t =
+    if f = E_GHOST
+    && type_leq g t ml_unit_ty
+    then E_PURE
+    else f
+
 //The main extraction function
 let rec term_as_mlexpr (g:env) (t:term) : (mlexpr * e_tag * mlty) =
     let e, tag, ty = term_as_mlexpr' g t in
+    (debug g (fun u -> Util.print_string (Util.format3 "term_as_mlexpr (%s) :  %s has ML type %s\n" 
+        (Print.tag_of_term t) 
+        (Print.term_to_string t)
+        (Code.string_of_mlty g.currentModule ty))));
     erase g e ty tag
 
 and check_term_as_mlexpr (g:env) (t:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
@@ -648,6 +686,7 @@ and check_term_as_mlexpr (g:env) (t:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty)
 
 and check_term_as_mlexpr' (g:env) (e0:term) (f:e_tag) (ty:mlty) : (mlexpr * mlty) =
     let e, tag, t = term_as_mlexpr g e0 in
+    let tag = maybe_downgrade_eff g tag t in
     if eff_leq tag f
     then maybe_coerce g e t ty, ty
     else err_unexpected_eff e0 f tag
@@ -704,7 +743,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_app(head, args) ->
           begin match head.n with
             | Tm_uvar _ ->
-              let t = N.normalize [N.Beta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
+              let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
               term_as_mlexpr' g t
             | _ ->
               let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
@@ -715,8 +754,17 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         //2. If we're generating OCaml, and any of the arguments are impure,
                         //   and the head is not a primitive short-circuiting op,
                         //   then evaluation order must be enforced to be L-to-R (by hoisting)
+                        let evaluation_order_guaranteed =
+                          List.length mlargs_f = 1 ||
+                          Util.codegen_fsharp () ||
+                          (match head.n with
+                           | Tm_fvar { fv_name = { v = v } } ->
+                             v = Syntax.Const.op_And || v = Syntax.Const.op_Or
+                           | _ ->
+                              false)
+                        in
                         let lbs, mlargs =
-                            if U.is_primop head || Util.codegen_fsharp()
+                            if evaluation_order_guaranteed
                             then [], List.rev mlargs_f |> List.map fst
                             else List.fold_left (fun (lbs, out_args) (arg, f) ->
                                     if f=E_PURE || f=E_GHOST
@@ -950,9 +998,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                     t_branch
                 | _ -> failwith "ITE pats matched but then and else expressions not found?"
         else
-            let mlbranches = pats |> List.collect (fun br ->
+            let pat_t_compat, mlbranches = pats |> Util.fold_map (fun compat br -> 
                 let pat, when_opt, branch = SS.open_branch br in
-                let env, p = extract_pat g pat in
+                let env, p, pat_t_compat = extract_pat g pat t_e in
                 let when_opt, f_when = match when_opt with
                     | None -> None, E_PURE
                     | Some w ->
@@ -961,11 +1009,16 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         Some w, f_w in
                 let mlbranch, f_branch, t_branch = term_as_mlexpr env branch in
                 //Printf.printf "Extracted %s to %A\n" (Print.exp_to_string branch) mlbranch;
+                compat&&pat_t_compat, 
                 p |> List.map (fun (p, wopt) ->
                     let when_clause = conjoin_opt wopt when_opt in
-                    p, (when_clause, f_when), (mlbranch, f_branch, t_branch)))
-            in
-            begin match mlbranches with
+                    p, (when_clause, f_when), (mlbranch, f_branch, t_branch))) 
+                true in
+             let mlbranches = List.flatten mlbranches in
+             //if the type of the pattern isn't compatible with the type of the scrutinee
+             //    insert a magic around the scrutinee
+             let e = if pat_t_compat then e else with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top) in
+             begin match mlbranches with
                 | [] ->
                     let fw, _, _ = Util.right <| UEnv.lookup_fv g (S.lid_as_fv FStar.Syntax.Const.failwith_lid Delta_constant None) in
                     with_ty ml_unit_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),

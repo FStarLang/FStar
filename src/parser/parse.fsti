@@ -37,6 +37,7 @@ type token =
   | CLASS
   | VIRTUAL
   | ABSTRACT
+  | NOEQUALITY
   | OVERRIDE
   | OPAQUE
   | DEFAULT

@@ -4,7 +4,7 @@ open FStar.FunctionalExtensionality
 
 abstract type t (key:Type) (value:Type) = {
   mappings: key -> Tot value;
-  domain:   key -> Tot bool
+  domain:   set key
 }
 
 abstract val sel: t 'key 'value -> 'key -> Tot 'value
@@ -13,25 +13,27 @@ abstract val const: 'value -> Tot (t 'key 'value)
 abstract val concat: t 'key 'value -> t 'key 'value -> Tot (t 'key 'value)
 abstract val contains: t 'key 'value -> 'key -> Tot bool
 abstract val restrict: set 'key -> t 'key 'value -> Tot (t 'key 'value)
+abstract val domain: t 'key 'value -> Tot (set 'key)
 
 let sel m k = m.mappings k
 let upd m k v = {
   mappings = (fun x -> if x = k then v else m.mappings x);
-  domain =   (fun x -> x = k || m.domain x)
+  domain =   Set.union m.domain (Set.singleton k)
 }
 let const v = {
   mappings = (fun _ -> v);
-  domain =   (fun _ -> true)
+  domain =   Set.complement Set.empty
 }
 let concat m1 m2 = {
-  mappings = (fun x -> if m2.domain x then m2.mappings x else m1.mappings x);
-  domain =   (fun x -> m1.domain x || m2.domain x)
+  mappings = (fun x -> if Set.mem x m2.domain then m2.mappings x else m1.mappings x);
+  domain =   Set.union m1.domain m2.domain
 }
-let contains m k = m.domain k
+let contains m k = Set.mem k m.domain
 let restrict s m = {
   mappings = m.mappings;
-  domain =   (fun x -> mem x s && contains m x)
+  domain =   Set.intersect s m.domain
 }
+let domain m = m.domain
 
 abstract val lemma_SelUpd1: m:t 'key 'value -> k:'key -> v:'value ->
                    Lemma (requires True) (ensures (sel (upd m k v) k = v))
@@ -77,7 +79,15 @@ abstract val lemma_InDomRestrict: m:t 'key 'value -> ks:set 'key -> k:'key ->
                          Lemma (requires True) (ensures (contains (restrict ks m) k == (mem k ks && contains m k)))
                          [SMTPat (contains (restrict ks m) k)]
 
+abstract val lemma_ContainsDom: m:t 'key 'value -> k:'key -> 
+  Lemma (requires True) (ensures (contains m k = Set.mem k (domain m)))
+                      [SMTPat (contains m k)]
 
+abstract val lemma_UpdDomain : m:t 'key 'value -> k:'key -> v:'value ->
+  Lemma (requires True) 
+	(ensures (Set.equal (domain (upd m k v)) (Set.union (domain m) (Set.singleton k))))
+	[SMTPat (domain (upd m k v))]
+  
 let lemma_SelUpd1 m k v        = ()
 let lemma_SelUpd2 m k1 k2 v    = ()
 let lemma_SelConst v k         = ()
@@ -89,9 +99,11 @@ let lemma_InDomUpd2 m k1 k2 v  = ()
 let lemma_InDomConstMap v k    = ()
 let lemma_InDomConcat m1 m2 k  = ()
 let lemma_InDomRestrict m ks k = ()
+let lemma_ContainsDom m k      = ()
+let lemma_UpdDomain m k v      = ()
 
 abstract type equal (#key:Type) (#value:Type) (m1:t key value) (m2:t key value) =
-    feq m1.mappings m2.mappings /\ feq m1.domain m2.domain
+    feq m1.mappings m2.mappings /\ Set.equal m1.domain m2.domain
 
 
 abstract val lemma_equal_intro: m1:t 'key 'value -> m2:t 'key 'value ->

@@ -11,7 +11,9 @@ the [online F\* editor] that's part of the [F\* tutorial].
 Every now and then we release [F\* binaries on GitHub].
 This is the easiest way to get F\* quickly running on your machine,
 but if the release you use is old you might be missing out on new
-features and bug fixes.
+features and bug fixes. Please do not report bugs in old releases
+until making sure they still exist in the `master` branch (see
+Building F\* from sources section below).
 
 [F\* binaries on GitHub]: https://github.com/FStarLang/FStar/releases
 
@@ -23,7 +25,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 1. Add `fstar.exe` and `z3` to your `PATH`, either permanently
    or temporarily, for instance by running this:
 
-        $ source setenv.sh
+        $ export PATH=/path/to/fstar/bin:$PATH
         $ fstar.exe --version
         F* 0.9.1.1
         platform=Linux_x86_64
@@ -53,8 +55,9 @@ following commands. (On Windows this requires Cygwin and `make`)
 
 ### OPAM package ###
 
-If the OCaml package manager is present on your platform, you can install F\*
-and required dependencies (except for Z3) using the opam package:
+If the OCaml package manager is present on your platform, you can
+install the latest F\* release and required dependencies (except for
+Z3) using the opam package:
 
         $ opam install fstar
 
@@ -65,7 +68,7 @@ This will install F\* and all required dependencies (including Z3):
 
         $ brew install fstar
 
-For building and installing the latest F\* sources from GitHub (the master branch)
+For building and installing the latest F\* sources from GitHub (the `master` branch)
 instead of the latest release you can do:
 
         $ brew install --HEAD fstar
@@ -73,7 +76,7 @@ instead of the latest release you can do:
 ## Building F* from sources ##
 
 If you have a serious interest in F\* or want to report bugs then we
-recommend that you build F\* from the sources on GitHub (the master branch).
+recommend that you build F\* from the sources on GitHub (the `master` branch).
 
 F\* is written in a subset of F# that F\* itself can also parse with a
 special flag. Therefore, the standard build process of F* involves the following
@@ -96,7 +99,7 @@ dependency you can stop already after step 1.
 
 **Easier alternative:**  If you don't want to use F#/.NET/Mono at all you can
 also build F\* directly from the generated OCaml sources.  Therefore, for
-convenience, we keep a (possibly outdated) snapshot of the F\* sources
+convenience, we keep a (possibly a bit outdated) snapshot of the F\* sources
 extracted to OCaml (the result of step 2) in the repo.  This allows
 you to skip directly to step 3 and build F* with just an OCaml compiler.
 
@@ -125,7 +128,7 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
         All packages listed in packages.config are already installed.
 
   - Using Visual Studio, open `src/VS/FStar.sln` and build the solution
-    (in the menus: Build > Build Solution). **Make sure to chose the 'Release' configuration**. 
+    (in the menus: Build > Build Solution). **Make sure to choose the 'Release' configuration**.
     Note: the 'Debug' configuration may be the default, although it has no optimizations enabled
     and is not capable of bootstrapping.
 
@@ -143,7 +146,7 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono from 3.10.x to 4.2.x and fsharp 4.0.1.0
+  - Install mono (any version from 3.10.x to 4.4.x) and fsharp (version 4.0.1.x)
 
     - On Debian/Ubuntu
 
@@ -175,32 +178,31 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
 
   - Try out
 
-          $ source setenv.sh
+          $ export PATH=/path/to/fstar/bin:$PATH
           $ make test.net -C src
 
   - If `make test.net` (`make boot` in fact) causes a stack overflow try
     issuing `ulimit -s unlimited` in the terminal beforehand.
 
+Note: you may want to make the `PATH` change permanent by adding:
+
+```
+export PATH=/path/to/fstar/bin:$PATH
+```
+
+into your `~/.bashrc`.
+
 ### Prerequisite for steps 2 and 3: Working OCaml setup  ###
 
-Steps 2 and 3 below require a working OCaml (4.02.2 or later) setup.
+Steps 2 and 3 below require a working OCaml (any version from 4.02.2 to 4.03.0) setup.
 
 #### Instructions for Windows ####
 
-0. Install the [OCaml Installer for
-   Windows](http://protz.github.io/ocaml-installer/). Make sure you ask it to
-   install Cygwin -- it will just launch Cygwin's setup.exe with the right set
-   of packages pre-checked, to make sure you have everything you need.
-
-1. Open the Cygwin terminal and fake the installation of OPAM package `conf-gmp`:
-
-  ```sh
-  $ opam install --fake conf-gmp
-  ```
+We will use the  [OCaml Installer for Windows](http://protz.github.io/ocaml-installer/). Follow the [installation guide](https://github.com/protz/ocaml-installer/wiki) that's over there (it's optimized for F*).
 
 #### Instructions for Linux and Mac OS X ####
 
-0. Install OCaml (version 4.02.2 or later)
+0. Install OCaml (any version from 4.02.2 to 4.03.0)
    - Can be installed using either your package manager or using OPAM
      (see below).
 

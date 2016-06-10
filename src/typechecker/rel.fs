@@ -41,14 +41,13 @@ module N = FStar.TypeChecker.Normalize
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
 let new_uvar r binders k =
-  let binders = binders |> List.filter (fun x -> is_null_binder x |> not) in
   let uv = Unionfind.fresh Uvar in
   match binders with
     | [] ->
       let uv = mk (Tm_uvar(uv,k)) (Some k.n) r in
       uv, uv
     | _ ->
-      let args = Util.args_of_non_null_binders binders in
+      let args = binders |> List.map U.arg_of_non_null_binder in 
       let k' = U.arrow binders (mk_Total k) in
       let uv = mk (Tm_uvar(uv,k')) None r in
       mk (Tm_app(uv, args)) (Some k.n) r, uv
@@ -117,11 +116,11 @@ let prob_to_string env = function
 
 let uvi_to_string env = function
     | UNIV (u, t) -> 
-      let x = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
+      let x = if (Options.hide_uvar_nums()) then "?" else Unionfind.uvar_id u |> string_of_int in
       Util.format2 "UNIV %s %s" x (Print.univ_to_string t)
 
     | TERM ((u,_), t) ->
-      let x = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
+      let x = if (Options.hide_uvar_nums()) then "?" else Unionfind.uvar_id u |> string_of_int in
       Util.format2 "TERM %s %s" x (N.term_to_string env t)
 let uvis_to_string env uvis = List.map (uvi_to_string env) uvis |> String.concat  ", "
 let names_to_string nms = Util.set_elements nms |> List.map Print.bv_to_string |> String.concat ", "
@@ -241,11 +240,23 @@ let guard_on_element problem x phi =
         | None ->   U.mk_forall x phi
         | Some e -> Subst.subst [NT(x,e)] phi
 let explain env d s =
-    Util.format4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n"
+    if Env.debug env <| Options.Other "ExplainRel"
+    then Util.format4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n"
                        (Range.string_of_range <| p_loc d)
                        (prob_to_string env d)
                        (p_reason d |> String.concat "\n\t>")
                        s
+    else let d = maybe_invert_p d in 
+         let rel = match p_rel d with 
+            | EQ -> "equal to"
+            | SUB -> "a subtype of"
+            | _ -> failwith "impossible" in
+         let lhs, rhs = match d with 
+            | TProb tp -> Print.term_to_string tp.lhs, Print.term_to_string tp.rhs
+            | CProb cp -> Print.comp_to_string cp.lhs, Print.comp_to_string cp.rhs in
+         Util.format3 "%s is not %s the expected type %s" lhs rel rhs
+                
+                    
 (* ------------------------------------------------*)
 (* </prob ops>                                     *)
 (* ------------------------------------------------*)
@@ -412,7 +423,6 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     let _ = match (Subst.compress uv).n with
         | Tm_uvar(uvar, k) ->
           let bs = p_scope prob in 
-          let bs = bs |> List.filter (fun x -> is_null_binder x |> not) in
           let phi = u_abs k bs phi in
           if Env.debug wl.tcenv <| Options.Other "Rel"
           then Util.print3 "Solving %s (%s) with formula %s\n" 
@@ -642,9 +652,9 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_type _, Tm_type _ 
     | Tm_arrow _, Tm_arrow _ -> HeadMatch
 
-    | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head'
-    | Tm_app(head, _), _ -> head_matches env head t2
-    | _, Tm_app(head, _) -> head_matches env t1 head
+    | Tm_app(head, _), Tm_app(head', _) -> head_matches env head head' |> head_match
+    | Tm_app(head, _), _ -> head_matches env head t2 |> head_match
+    | _, Tm_app(head, _) -> head_matches env t1 head |> head_match
 
     | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
 
@@ -721,8 +731,7 @@ let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<bin
             let rec decompose out = function
                 | [] -> List.rev ((None, COVARIANT, C c)::out)
                 | hd::rest ->
-                  let bopt = if is_null_binder hd then None else Some hd in
-                  decompose ((bopt, CONTRAVARIANT, T ((fst hd).sort))::out) rest in
+                  decompose ((Some hd, CONTRAVARIANT, T ((fst hd).sort))::out) rest in
 
             rebuild, 
             matches, 
@@ -1118,7 +1127,7 @@ and solve_rigid_flex_meet env tp wl =
     then Util.print1 "Trying to solve by meeting refinements:%s\n" (string_of_int tp.pid);
     let u, args = Util.head_and_args tp.rhs in
 
-    let disjoin t1 t2 : option<(term * list<prob>)> = 
+    let rec disjoin t1 t2 : option<(term * list<prob>)> =
         let mr, ts = head_matches_delta env () t1 t2 in 
         match mr with 
             | MisMatch _ -> 
@@ -1137,7 +1146,7 @@ and solve_rigid_flex_meet env tp wl =
                 | None -> SS.compress t1, SS.compress t2 in
               let eq_prob t1 t2 = 
                   TProb <| new_problem env t1 EQ t2 None t1.pos "meeting refinements" in
-              begin match t1.n, t2.n with 
+              begin match t1.n, t2.n with
                 | Tm_refine(x, phi1), Tm_refine(y, phi2) ->
                   Some (mk (Tm_refine(x, Util.mk_disj phi1 phi2)) None t1.pos, [eq_prob x.sort y.sort])
 
@@ -1147,8 +1156,19 @@ and solve_rigid_flex_meet env tp wl =
                 | Tm_refine (x, _), _ ->
                   Some (t2, [eq_prob x.sort t2])
 
-                | _ -> //head matches but no way to take the meet; TODO, generalize to handle function types, constructed types, etc.
-                  None
+                | _ ->
+                  let head1, _ = Util.head_and_args t1 in
+                  begin match (Util.un_uinst head1).n with
+                    | Tm_fvar {fv_delta=Delta_unfoldable i} ->
+                      let prev = if i > 1
+                                 then Delta_unfoldable (i - 1)
+                                 else Delta_constant in
+                      let t1 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t1 in
+                      let t2 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t2 in
+                      disjoin t1 t2
+                    | _ ->  //head matches but no way to take the meet; TODO, generalize to handle function types, constructed types, etc.
+                      None
+                  end
                end in
 
    let tt = u in//compress env wl u in
@@ -1215,14 +1235,16 @@ and solve_flex_rigid_join env tp wl =
         match h1.n, h2.n with
         | Tm_fvar tc1, Tm_fvar tc2 ->
           if S.fv_eq tc1 tc2
-          then (if List.length args1 = 0
-                then Some []
-                else Some [TProb <| new_problem env t1 EQ t2 None t1.pos "joining refinements"])
+          then if List.length args1 = 0
+               then Some []
+               else Some [TProb <| new_problem env t1 EQ t2 None t1.pos "joining refinements"]
           else None
 
         | Tm_name a, Tm_name b ->
           if S.bv_eq a b
-          then Some []
+          then if List.length args1 = 0
+               then Some []
+               else Some [TProb <| new_problem env t1 EQ t2 None t1.pos "joining refinements"]
           else None
 
         | _ -> None in
@@ -1346,7 +1368,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                  | fail -> fail
                end
 
-           | _ -> Inr "arity mismatch" in
+           | _ -> Inr "arity or argument-qualifier mismatch" in
 
    let scope = p_scope orig in //Env.bound_vars env |> List.map S.mk_binder in
    match aux scope env [] bs1 bs2 with
@@ -1485,7 +1507,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     let gi_xs, gi = new_uvar r xs k_a in
                     let gi_xs = N.eta_expand env gi_xs in
                     let gi_ps = mk_Tm_app gi ps (Some k_a.n) r in
-                    let subst = if S.is_null_bv a then subst else NT(a, gi_xs)::subst in
+                    let subst = NT(a, gi_xs)::subst in
                     let gi_xs', gi_ps' = aux subst tl in
                     as_arg gi_xs::gi_xs', as_arg gi_ps::gi_ps' in
               aux [] bs in
@@ -1724,11 +1746,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 then Util.print5 "Flex-flex patterns: intersected %s and %s; got %s\n\tk1=%s\n\tk2=%s\n"
                         (Print.binders_to_string ", " xs) (Print.binders_to_string ", " ys) (Print.binders_to_string ", " zs)
                         (Print.term_to_string k1) (Print.term_to_string k2);
-                let u_zs, _ =
+                let u_zs, knew1, knew2 =
                     let t, _ = Util.type_u() in
                     let k, _ = new_uvar r zs t in
-                    new_uvar r zs k in
-                let sub1 = u_abs k1 xs u_zs in
+                    fst <| new_uvar r zs k, 
+                    U.arrow xs (S.mk_Total k), 
+                    U.arrow ys (S.mk_Total k) in
+                let sub1 = u_abs knew1 xs u_zs in
                 let occurs_ok, msg = occurs_check env wl (u1,k1) sub1 in
                 if not occurs_ok
                 then giveup_or_defer orig "flex-flex: failed occcurs check"
@@ -1736,7 +1760,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                      if Unionfind.equivalent u1 u2
                      then let wl = solve_prob orig None [sol1] wl in
                           solve env wl
-                     else let sub2 = u_abs k2 ys u_zs in
+                     else let sub2 = u_abs knew2 ys u_zs in
                           let occurs_ok, msg = occurs_check env wl (u2,k2) sub2 in
                           if not occurs_ok
                           then giveup_or_defer orig "flex-flex: failed occurs check"
@@ -1845,7 +1869,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         (fun scope env subst  ->
             let c1 = Subst.subst_comp subst c1 in
             let c2 = Subst.subst_comp subst c2 in //open both comps
-            let rel = if !Options.use_eq_at_higher_order then EQ else problem.relation in
+            let rel = if (Options.use_eq_at_higher_order()) then EQ else problem.relation in
             CProb <| mk_problem scope orig c1 rel c2 None "function co-domain")
 
       | Tm_abs(bs1, tbody1, lopt1), Tm_abs(bs2, tbody2, lopt2) ->
@@ -1913,7 +1937,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         if wl.defer_ok
         then solve env (defer "flex-rigid subtyping deferred" orig wl)
         else
-            let new_rel = if !Options.no_slack then EQ else problem.relation in
+            let new_rel = problem.relation in
             if not <| is_top_level_prob orig //If it's not top-level and t2 is refined, then we should not try to prove that t2's refinement is saturated
             then solve_t_flex_rigid (TProb <| {problem with relation=new_rel}) (destruct_flex_pattern env t1) t2 wl
             else let t_base, ref_opt = base_and_refinement env wl t2 in
@@ -2018,13 +2042,13 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
     let solve_sub c1 edge c2 = 
         let r = Env.get_range env in
         if problem.relation = EQ
-        then let wp, wlp = match c1.effect_args with
-                            | [(wp1,_); (wlp1, _)] -> wp1, wlp1
-                            | _ -> failwith (Util.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
+        then let wp = match c1.effect_args with
+                      | [(wp1,_)] -> wp1
+                      | _ -> failwith (Util.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
              let c1 = {
                 effect_name=c2.effect_name;
                 result_typ=c1.result_typ;
-                effect_args=[as_arg (edge.mlift c1.result_typ wp); as_arg (edge.mlift c1.result_typ wlp)];
+                effect_args=[as_arg (edge.mlift c1.result_typ wp)];
                 flags=c1.flags
              } in
              solve_eq c1 c2
@@ -2204,7 +2228,7 @@ let new_t_prob env t1 rel t2 =
  TProb p, x
 
 let solve_and_commit env probs err =
-  let probs = if !Options.eager_inference then {probs with defer_ok=false} else probs in
+  let probs = if (Options.eager_inference()) then {probs with defer_ok=false} else probs in
   let tx = Unionfind.new_transaction () in
   let sol = solve env probs in
   match sol with

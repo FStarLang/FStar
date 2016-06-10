@@ -52,10 +52,10 @@ type env = {
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment and signature elements *)
-  gamma_cache    :Util.smap<cached_elt>;
+  gamma_cache    :Util.smap<cached_elt>;        (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
-  sigtab         :list<Util.smap<sigelt>>;      (* a dictionary of long-names to sigelts *)
+  sigtab         :Util.smap<sigelt>;            (* a dictionary of long-names to sigelts *)
   is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)

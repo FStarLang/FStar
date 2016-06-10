@@ -26,13 +26,13 @@ let within_int32 (i:int) =
     min_value_int <= i
     && i <= max_value_int
 
-(*
- * TODO: this is a hack, we should handle refinement types more uniformly
- *)
+(* haseq refinement hack *)
 assume HasEq_within_int: hasEq (i:int{within_int32 i})
 
-private type int32 =
-  | Int32 : i:int{within_int32 i} -> int32
+private type int32' =
+  | Int32 : i:int{within_int32 i} -> int32'
+
+type int32 = int32'
 
 val min_value : int32
 let min_value = Int32 min_value_int
@@ -43,21 +43,26 @@ let max_value = Int32 max_value_int
 val as_int: i:int32 -> GTot int
 let as_int (Int32 i) = i
 
-type nat32 = x:int32{Prims.op_GreaterThanOrEqual (as_int x) 0}
+type nat31 = x:int32{Prims.op_GreaterThanOrEqual (as_int x) 0}
 
 //a ?+ b may overflow
 //must be marked abstract because the body has an intentional admit
 abstract val op_Question_Plus: i:int32
               -> j:int32
-              -> Tot (k:int32{within_int32 (as_int i + as_int j) ==> as_int k = as_int i + as_int j})
+              -> Pure int32
+                  (requires True)
+                  (ensures (fun k ->
+                    within_int32 (as_int i + as_int j) ==> as_int k = as_int i + as_int j))
 let op_Question_Plus (Int32 i) (Int32 j) =
   if within_int32 (i + j)
   then Int32 (i + j)
   else magic()//mark as admit, because we do not specify the overflow semantics
 
 val op_Plus: i:int32
-          -> j:int32{within_int32 (as_int i + as_int j)}
-          -> Tot int32
+          -> j:int32
+          -> Pure int32
+              (requires (b2t (within_int32 (as_int i + as_int j))))
+              (ensures (fun _ -> True))
 let op_Plus (Int32 i) (Int32 j) = Int32 (i + j)
 
 //a ?- b may overflow

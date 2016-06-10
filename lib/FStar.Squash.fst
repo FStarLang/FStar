@@ -1,26 +1,24 @@
 module FStar.Squash
 
+(* This file shows that there is another natural model for some of the
+   squash things; for this one it doesn't seem to harm importing this
+   file (exposing the implementation); it probably doesn't help either *)
 
-(* This file shows that there is a natural model for some of the squash things;
-   DO NOT IMPORT THIS FILE; USE FStar.Squash.fsti and --admit_fsi FStar.Squash INSTEAD
- *)
+type squash (t:Type) = u:unit{t}
 
-type squash (t:Type) = t
+let return_squash x = ()
 
-let return_squash x = x
+assume val bind_squash : #a:Type -> #b:Type -> squash a ->
+  (a -> Tot (squash b)) -> Tot (squash b)
 
-let bind_squash x f = f x
+let map_squash (#a:Type) (#b:Type) s f =
+  bind_squash #a #b s (fun x -> return_squash (f x))
 
-let map_squash x f = f x
+let get_proof (p:Type) = ()
 
-(* Inconsistent, see #355 *)
-assume val get_proof : p:Type ->
-  Pure (squash p) (requires p) (ensures (fun _ -> True))
+let give_proof (p:Type) _ = ()
 
-let give_proof (#p:Type) (s:squash p) = ()
+let proof_irrelevance (p:Type) x y = ()
 
-(* Inconsistent *)
-assume val proof_irrelevance : p:Type -> x:squash p ->
-                                        y:squash p -> Tot (squash (x = y))
-
-let squash_double_arrow (#a:Type) (#p:a -> Type) f = f
+assume val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
+  =f:(squash (x:a -> Tot (squash (p x)))) -> Tot (squash (x:a -> Tot (p x)))

@@ -78,15 +78,28 @@ let label_goals use_env_msg r q : term * labels * ranges =
 
         | App(Imp, [lhs;rhs]) -> 
           let rhs, labs, rs = aux rs rhs labs in
-          mk (App(Imp, [lhs; rhs])), labs, rs
+          let lhs, labs, rs = match lhs.tm with 
+            | App(And, conjuncts) -> 
+              let (labs, rs), conjuncts = Util.fold_map (fun (labs, rs) tm -> 
+                match tm.tm with 
+                | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])}) ->
+                  let r, labs, rs = aux rs r labs in
+                  let q = mk <| Quant(Forall, [[p]], Some 0, sorts, mk (App(Iff, [l;r]))) in
+                  (labs, rs), q
+                | _ -> (labs, rs), tm) (labs, rs) conjuncts in
+              let tm = List.fold_right (fun conjunct out -> Term.mkAnd(out, conjunct)) conjuncts Term.mkTrue in
+              tm, labs, rs
+           | _ -> lhs, labs, rs in
+          Term.mkImp(lhs, rhs), labs, rs
 
-        | App(And, conjuncts) -> 
+        | App(And, conjuncts) ->
           let rs, conjuncts, labs = List.fold_left (fun (rs, cs, labs) c -> 
             let c, labs, rs = aux rs c labs in
             rs, c::cs, labs) 
             (rs, [], labs)
             conjuncts in
-          mk (App(And, List.rev conjuncts)), labs, rs
+          let tm = List.fold_left (fun out conjunct -> Term.mkAnd(out, conjunct)) Term.mkTrue conjuncts in
+          tm, labs, rs
        
         | App(ITE, [hd; q1; q2]) -> 
           let q1, labs, _ = aux rs q1 labs in
@@ -142,7 +155,7 @@ let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
         incr ctr;
         Term.Echo ("DETAILING ERRORS" ^ (string_of_int !ctr)) ::
-        (labs |> List.map (fun (l, _, _) -> Term.Assume(mkEq(Term.mkFreeV l, Term.mkTrue), Some "Disabling label"))) in
+        (labs |> List.map (fun (l, _, _) -> Term.Assume(mkEq(Term.mkFreeV l, Term.mkTrue), Some "Disabling label", Some ("disable_label_"^fst l)))) in
     let print_labs tag l = l |> List.iter (fun (l, _, _) -> Util.print2 "%s : %s; " tag (fst l)) in
     //l1 - l2: difference of label lists
     let minus l1 l2 = 
@@ -206,25 +219,26 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
 
     let with_fuel label_assumptions p (n, i) =
        [Term.Caption (Util.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
-        Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None);
-        Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None);
+        Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, None);
+        Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, None);
         p]
         @label_assumptions
+        @[Term.SetOption ("timeout", (string_of_int <| Options.z3_timeout() * 1000))]
         @[Term.CheckSat]
         @suffix in
 
     let check (p:decl) =
-        let initial_config = (!Options.initial_fuel, !Options.initial_ifuel) in
-        let alt_configs = List.flatten [(if !Options.max_ifuel > !Options.initial_ifuel then [(!Options.initial_fuel, !Options.max_ifuel)] else []);
-                                        (if !Options.max_fuel / 2 > !Options.initial_fuel then [(!Options.max_fuel / 2, !Options.max_ifuel)] else []);
-                                        (if !Options.max_fuel > !Options.initial_fuel && !Options.max_ifuel > !Options.initial_ifuel then [(!Options.max_fuel, !Options.max_ifuel)] else []);
-                                        (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])] in
+        let initial_config = ((Options.initial_fuel()), (Options.initial_ifuel())) in
+        let alt_configs = List.flatten [(if (Options.max_ifuel()) > (Options.initial_ifuel()) then [((Options.initial_fuel()), (Options.max_ifuel()))] else []);
+                                        (if (Options.max_fuel()) / 2 > (Options.initial_fuel()) then [((Options.max_fuel()) / 2, (Options.max_ifuel()))] else []);
+                                        (if (Options.max_fuel()) > (Options.initial_fuel()) && (Options.max_ifuel()) > (Options.initial_ifuel()) then [((Options.max_fuel()), (Options.max_ifuel()))] else []);
+                                        (if (Options.min_fuel()) < (Options.initial_fuel()) then [((Options.min_fuel()), 1)] else [])] in
 
         let report p (errs:labels) : unit =
-            let errs = if !Options.detail_errors && !Options.n_cores = 1
+            let errs = if (Options.detail_errors()) && (Options.n_cores()) = 1
                        then let min_fuel, potential_errors = match !minimum_workable_fuel with 
                                 | Some (f, errs) -> f, errs
-                                | None -> (!Options.min_fuel, 1), errs in
+                                | None -> ((Options.min_fuel()), 1), errs in
                             let ask_z3 label_assumptions = 
                                 let res = Util.mk_ref None in
                                 Z3.ask use_fresh_z3_context all_labels (with_fuel label_assumptions p min_fuel) (fun r -> res := Some r);
@@ -235,13 +249,13 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
             let errs = match errs with
                     | [] -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)]
                     | _ -> errs in
-            if !Options.print_fuels
+            if (Options.print_fuels())
             then (Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
                     (Range.string_of_range (Env.get_range env))
-                    (!Options.max_fuel |> Util.string_of_int)
-                    (!Options.max_ifuel |> Util.string_of_int));
+                    ((Options.max_fuel()) |> Util.string_of_int)
+                    ((Options.max_ifuel()) |> Util.string_of_int));
             Errors.add_errors env (errs |> List.map (fun (_, x, y) -> x, y));
-            if !Options.detail_errors
+            if (Options.detail_errors())
             then raise (FStar.Syntax.Syntax.Err("Detailed error report follows\n")) in
 
         let rec try_alt_configs prev_f (p:decl) (errs:labels) cfgs = 
@@ -263,13 +277,18 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
 
         and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) =
             if ok
-            then if !Options.print_fuels
+            then if (Options.print_fuels())
                     then (Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n"
                         (Range.string_of_range (Env.get_range env))
                         (Util.string_of_int prev_fuel)
                         (Util.string_of_int prev_ifuel))
                     else ()
-            else try_alt_configs (prev_fuel, prev_ifuel) p errs alt in
+            else (if (Options.print_fuels())
+                  then (Util.print3 "(%s) Query failed with fuel %s and ifuel %s ... retrying \n"
+                       (Range.string_of_range (Env.get_range env))
+                       (Util.string_of_int prev_fuel)
+                       (Util.string_of_int prev_ifuel));
+                  try_alt_configs (prev_fuel, prev_ifuel) p errs alt) in
     
         Z3.ask use_fresh_z3_context  //only relevant if we're running with n_cores > 1
                all_labels 
@@ -277,10 +296,10 @@ let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suf
                (cb initial_config p alt_configs)  in
 
     let process_query (q:decl) :unit =
-        if !Options.split_cases > 0 then
-            let (b, cb) = SplitQueryCases.can_handle_query !Options.split_cases q in
+        if (Options.split_cases()) > 0 then
+            let (b, cb) = SplitQueryCases.can_handle_query (Options.split_cases()) q in
             if b then SplitQueryCases.handle_query cb check else check q
         else check q
     in
 
-    if !Options.admit_smt_queries then () else process_query query
+    if (Options.admit_smt_queries()) then () else process_query query

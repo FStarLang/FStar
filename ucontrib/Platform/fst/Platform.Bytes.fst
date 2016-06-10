@@ -1,6 +1,6 @@
 module Platform.Bytes
 
-assume val repr_bytes : nat -> GTot nat
+assume val repr_bytes : nat -> GTot (n:nat{n>0})
 (* Integer literals are currently extracted to int32, rather than bigint, so the definition below
    breaks extraction:
    Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.

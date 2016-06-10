@@ -74,6 +74,12 @@ type dh_key = {
 assume val hash : alg:hash_alg -> bytes -> Tot (h:bytes{length h = hashSize alg})
 assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hashSize alg})
 
+(* Digest functions *)
+assume type hash_ctx : Type0 (* SI: or assume_new_abstract_type?*)
+assume val digest_create : hash_alg -> hash_ctx
+assume val digest_update : hash_ctx -> bytes -> unit 
+assume val digest_final : hash_ctx -> bytes  
+
 assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> Tot bytes
 assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> Tot bytes
 assume val aead_encrypt : (a:aead_cipher) -> (k:bytes)
@@ -97,8 +103,8 @@ assume val rsa_sign : option hash_alg -> rsa_key -> bytes -> EXT bytes
 assume val rsa_verify : option hash_alg -> rsa_key -> bytes -> bytes -> Tot bool
 
 assume val dsa_gen_key : int -> EXT dsa_key
-assume val dsa_sign : dsa_key -> bytes -> EXT bytes
-assume val dsa_verify : dsa_key -> bytes -> bytes -> Tot bool
+assume val dsa_sign : option hash_alg -> dsa_key -> bytes -> EXT bytes
+assume val dsa_verify : option hash_alg -> dsa_key -> bytes -> bytes -> Tot bool
 
 assume val dh_gen_params : int -> EXT dh_params
 assume val dh_gen_key : p:dh_params
@@ -145,8 +151,15 @@ assume val ec_gen_key: p:ec_params
                   length k.ec_point.ecx = ec_bytelen k.ec_params.curve /\
                   length k.ec_point.ecy = ec_bytelen k.ec_params.curve})
 
-assume new abstract type certkey
+//TODO: keep also abtsract OpenSSL representation for efficiency?
+type key =
+  | KeyRSA of rsa_key
+  | KeyDSA of dsa_key
+  | KeyECDSA of ec_key
+
 assume val validate_chain: der_list:list bytes -> for_signing:bool -> hostname:option string -> ca_file:string -> Tot bool
-assume val cert_verify_sig: bytes -> sig_alg -> hash_alg -> bytes -> bytes -> Tot bool
-assume val cert_sign: certkey -> sig_alg -> hash_alg -> bytes -> Tot (option bytes)
-assume val cert_load_chain: string -> string -> Tot (option (certkey * list bytes))
+assume val get_key_from_cert: bytes -> Tot (option key)
+assume val hash_and_sign: key -> hash_alg -> bytes -> Tot bytes
+assume val verify_signature: key -> hash_alg -> tbs:bytes -> sigv:bytes -> Tot bool
+assume val load_chain: pemfile:string -> Tot (option (list bytes))
+assume val load_key: keyfile:string -> Tot (option key)

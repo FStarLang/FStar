@@ -9,6 +9,8 @@ open SBuffer
 open Bignum.Bigint
 open Bignum.Core
 
+#set-options "--lax"
+
 type point = { x:bigint; y:bigint; z:bigint}
 
 val get_x: point -> Tot bigint
@@ -126,21 +128,6 @@ let rec swap_conditional_aux' a b swap ctr =
     cut (forall (i:nat). {:pattern (get h1 b i)} i < ctr ==> v (get h1 b i) = v (get h3 b i));
     ()
 
-#reset-options
-
-abstract val gswap_conditional_aux_lemma: h0:heap -> h1:heap -> a:bigint -> b:bigint{disjoint a b} ->
-  is_swap:limb{v is_swap = IntLib.pow2 platform_size -1 \/ v is_swap = 0} -> 
-  GLemma unit
-    (requires (partialSwap h0 h1 is_swap 0 a b))
-    (ensures (norm h0 a /\ norm h1 a /\ norm h0 b /\ norm h1 b 
-      /\ (v is_swap = 0 ==> ((valueOf h1 a = valueOf h0 a) /\ (valueOf h1 b = valueOf h0 b)))
-      /\ (v is_swap = IntLib.pow2 platform_size - 1 ==> 
-  	  ((valueOf h1 a = valueOf h0 b) /\ (valueOf h1 b = valueOf h0 a))) )) 
-let rec gswap_conditional_aux_lemma h0 h1 a b swap =
-  admit();
-  if (v swap = 0) then (eval_eq_lemma h0 h1 a a norm_length; eval_eq_lemma h0 h1 b b norm_length)
-  else (eval_eq_lemma h0 h1 a b norm_length; eval_eq_lemma h0 h1 b a norm_length)
-
 val swap_conditional_aux_lemma: h0:heap -> h1:heap -> a:bigint -> b:bigint{disjoint a b} ->
   is_swap:limb{v is_swap = IntLib.pow2 platform_size -1 \/ v is_swap = 0} -> 
   Lemma
@@ -148,18 +135,10 @@ val swap_conditional_aux_lemma: h0:heap -> h1:heap -> a:bigint -> b:bigint{disjo
     (ensures (norm h0 a /\ norm h1 a /\ norm h0 b /\ norm h1 b 
       /\ (v is_swap = 0 ==> ((valueOf h1 a = valueOf h0 a) /\ (valueOf h1 b = valueOf h0 b)))
       /\ (v is_swap = IntLib.pow2 platform_size - 1 ==> 
-  	  ((valueOf h1 a = valueOf h0 b) /\ (valueOf h1 b = valueOf h0 a))) ))
-let swap_conditional_aux_lemma h0 h1 a b is_swap =
-  admit()
-  (* coerce *)
-  (*   (requires (partialSwap h0 h1 is_swap 0 a b)) *)
-  (*   (ensures (norm h0 a /\ norm h1 a /\ norm h0 b /\ norm h1 b  *)
-  (*     /\ (v is_swap = 0 ==> ((valueOf h1 a = valueOf h0 a) /\ (valueOf h1 b = valueOf h0 b))) *)
-  (*     /\ (v is_swap = IntLib.pow2 platform_size - 1 ==>  *)
-  (*  	  ((valueOf h1 a = valueOf h0 b) /\ (valueOf h1 b = valueOf h0 a))) )) *)
-  (*   (fun _ -> gswap_conditional_aux_lemma h0 h1 a b is_swap) *)
-
-#reset-options
+  	  ((valueOf h1 a = valueOf h0 b) /\ (valueOf h1 b = valueOf h0 a))) )) 
+let rec swap_conditional_aux_lemma h0 h1 a b swap =
+  if (v swap = 0) then (eval_eq_lemma h0 h1 a a norm_length; eval_eq_lemma h0 h1 b b norm_length)
+  else (eval_eq_lemma h0 h1 a b norm_length; eval_eq_lemma h0 h1 b a norm_length)
 
 val swap_conditional_aux: a:bigint -> b:bigint{disjoint a b} ->
   is_swap:limb{v is_swap = IntLib.pow2 platform_size -1 \/ v is_swap = 0} -> 
@@ -171,29 +150,22 @@ val swap_conditional_aux: a:bigint -> b:bigint{disjoint a b} ->
       /\ (v is_swap = IntLib.pow2 platform_size - 1 ==> 
   	  ((valueOf h1 a = valueOf h0 b) /\ (valueOf h1 b = valueOf h0 a))) ))
 let rec swap_conditional_aux a b swap ctr =
-  admit();
   let h0 = ST.get() in
   swap_conditional_aux' a b swap 0; 
   let h1 = ST.get() in 
   swap_conditional_aux_lemma h0 h1 a b swap  
 
-#reset-options
-
 val norm_lemma: h0:heap -> h1:heap -> b:bigint{norm h0 b} -> mods:FStar.Set.set abuffer ->
   Lemma (requires (modifies_buf mods h0 h1 /\ not(FStar.Set.mem (Buff b) mods)))
 	(ensures (norm h1 b /\ valueOf h1 b = valueOf h0 b))
 let norm_lemma h0 h1 b mods =
-  admit();
   eval_eq_lemma h0 h1 b b norm_length
 
 val enorm_lemma: h0:heap -> h1:heap -> b:bigint{norm h0 b} -> mods:erased (FStar.Set.set abuffer) ->
   Lemma (requires (modifies_buf (reveal mods) h0 h1 /\ not(FStar.Set.mem (Buff b) (reveal mods))))
 	(ensures (norm h1 b /\ valueOf h1 b = valueOf h0 b))
 let enorm_lemma h0 h1 b mods =
-  admit();
   eval_eq_lemma h0 h1 b b norm_length
-
-#reset-options
 
 (*
 val swap_is_on_curve: h0:heap -> h3:heap -> a:point -> b:point{distinct a b} -> 
@@ -220,7 +192,7 @@ let swap_is_on_curve h0 h3 a b is_swap =
 
 #reset-options
 abstract val gswap_conditional_lemma: h0:heap -> h1:heap -> h2:heap -> h3:heap -> a:point -> b:point{distinct a b} -> is_swap:limb{v is_swap = IntLib.pow2 platform_size -1 \/ v is_swap = 0} ->
-  GLemma unit (requires (onCurve h0 a /\ onCurve h0 b /\ modifies !{getRef (get_x a), getRef (get_x b)} h0 h1
+  Lemma (requires (onCurve h0 a /\ onCurve h0 b /\ modifies !{getRef (get_x a), getRef (get_x b)} h0 h1
            /\ modifies !{getRef (get_y a), getRef (get_y b)} h1 h2
 	   /\ modifies !{getRef (get_z a), getRef (get_z b)} h2 h3
 	   /\ norm h1 (get_x a) /\ norm h1 (get_x b) /\ norm h1 (get_y a) /\ norm h1 (get_y b)
@@ -353,8 +325,6 @@ let swap_conditional_lemma h0 h1 h2 h3 a b is_swap =
   (fun _ -> gswap_conditional_lemma h0 h1 h2 h3 a b is_swap)
 *)
 
-#reset-options
-
 val swap_conditional: 
   a:point -> b:point{distinct a b} -> 
   is_swap:limb{v is_swap = IntLib.pow2 platform_size -1 \/ v is_swap = 0} ->
@@ -368,7 +338,6 @@ val swap_conditional:
 //  	  ((pointOf h1 a) == (pointOf h0 b) /\ (pointOf h1 b) == (pointOf h0 a))) 
 	  ))
 let swap_conditional a b is_swap =
-  admit();
   let h0 = ST.get() in
   swap_conditional_aux (get_x a) (get_x b) is_swap 0;
   let h1 = ST.get() in
@@ -386,22 +355,16 @@ let swap_conditional a b is_swap =
 //  swap_conditional_lemma h0 h1 h2 h3 a b is_swap;
   ()
 
-#reset-options
-
 val bignum_live_lemma: h0:heap -> h1:heap -> b:bigint{Bignum.Bigint.live h0 b} -> mods:FStar.Set.set abuffer ->
   Lemma (requires (modifies_buf mods h0 h1 /\ not(FStar.Set.mem (Buff b) mods)))
 	(ensures (Bignum.Bigint.live h1 b))
 let bignum_live_lemma h0 h1 b mods = 
-  admit();
   ()
-
-#reset-options
 
 val norm_lemma_2: h0:heap -> h1:heap -> a:bigint -> b:bigint ->
   Lemma (requires (equalSub h0 a 0 h1 b 0 norm_length /\ norm h0 a))
         (ensures (norm h1 b))
 let norm_lemma_2 h0 h1 a b = 
-  admit();
   cut(forall (i:nat). {:pattern (get h1 b i)} 0+i = i); 
   cut (forall (i:nat). i < norm_length ==> v (get h1 b i) = v (get h0 a i))
 
@@ -414,7 +377,6 @@ val copy:
 //      /\ (pointOf h1 a = pointOf h0 b) /\ (pointOf h1 b = pointOf h0 b)
       /\ (modifies_buf (refs a) h0 h1) ))
 let copy a b =
-  admit();
   let h0 = ST.get() in
   blit (get_x b) 0 (get_x a) 0 norm_length; 
   let h1 = ST.get() in 
@@ -449,16 +411,14 @@ val swap:
 //      /\ (pointOf h0 a) == (pointOf h1 b)
       /\ modifies_buf (refs a +++ refs b) h0 h1))
 let swap a b = 
-  admit();
   copy b a
 
-abstract val gon_curve_lemma: h0:heap -> h1:heap -> a:point -> mods:erased (FStar.Set.set abuffer) -> GLemma unit
+val on_curve_lemma: h0:heap -> h1:heap -> a:point -> mods:erased (FStar.Set.set abuffer) -> Lemma
   (requires (onCurve h0 a /\ modifies_buf (reveal mods) h0 h1 /\ FStar.Set.intersect (reveal mods) (refs a) = !{}))
   (ensures (onCurve h0 a /\ onCurve h1 a 
 //    /\ pointOf h1 a = pointOf h0 a
     )) 
-let gon_curve_lemma h0 h1 a mods = 
-  admit();
+let on_curve_lemma h0 h1 a mods = 
   cut(True /\ FStar.Set.mem (Buff (get_x a)) (refs a));
   cut(True /\ FStar.Set.mem (Buff (get_y a)) (refs a));
   cut(True /\ FStar.Set.mem (Buff (get_z a)) (refs a));
@@ -469,64 +429,22 @@ let gon_curve_lemma h0 h1 a mods =
   eval_eq_lemma h0 h1 (get_y a) (get_y a) norm_length;
   eval_eq_lemma h0 h1 (get_z a) (get_z a) norm_length
 
-#reset-options
-val on_curve_lemma: h0:heap -> h1:heap -> a:point -> mods:FStar.Ghost.erased (FStar.Set.set abuffer) -> Lemma
-  (requires (onCurve h0 a /\ modifies_buf (reveal mods) h0 h1 /\ FStar.Set.intersect (reveal mods) (refs a) = !{}))
-  (ensures (onCurve h0 a /\ onCurve h1 a 
-//    /\ pointOf h1 a = pointOf h0 a
-    ))
-let on_curve_lemma h0 h1 a mods = admit()
-(*   coerce  *)
-(*      (requires (onCurve h0 a /\ modifies_buf (reveal mods) h0 h1 /\ FStar.Set.intersect (reveal mods) (refs a) = !{})) *)
-(*      (ensures (onCurve h0 a /\ onCurve h1 a  *)
-(* //       /\ pointOf h1 a = pointOf h0 a *)
-(*        )) *)
-(*      (fun _ -> gon_curve_lemma h0 h1 a mods) *)
-
-abstract val glive_lemma: h0:heap -> h1:heap -> a:point -> mods:erased (FStar.Set.set abuffer) -> GLemma unit
+val live_lemma: h0:heap -> h1:heap -> a:point -> mods:erased (FStar.Set.set abuffer) -> Lemma
   (requires (live h0 a /\ modifies_buf (reveal mods) h0 h1 /\ FStar.Set.intersect (reveal mods) (refs a) = !{}))
   (ensures (live h1 a)) 
-let glive_lemma h0 h1 a mods = 
-  admit();
+let live_lemma h0 h1 a mods = 
   cut(True /\ FStar.Set.mem (Buff (get_x a)) (refs a));
   cut(True /\ FStar.Set.mem (Buff (get_y a)) (refs a));
   cut(True /\ FStar.Set.mem (Buff (get_z a)) (refs a))
 
-#reset-options
 
-val live_lemma: h0:heap -> h1:heap -> a:point -> mods:erased (FStar.Set.set abuffer) -> Lemma
-  (requires (live h0 a /\ modifies_buf (reveal mods) h0 h1 /\ FStar.Set.intersect (reveal mods) (refs a) = !{}))
-  (ensures (live h1 a))
-let live_lemma h0 h1 a mods = 
-  admit()
-  (* coerce *)
-  (*   (requires (live h0 a /\ modifies_buf (reveal mods) h0 h1 /\ FStar.Set.intersect (reveal mods) (refs a) = !{})) *)
-  (*   (ensures (live h1 a)) *)
-  (*   (fun _ -> glive_lemma h0 h1 a mods) *)
-
-#reset-options
-
-abstract val gdistinct_lemma: a:point -> b:point{distinct a b} -> GLemma unit (requires (True)) (ensures (FStar.Set.intersect (refs a) (refs b) = !{})) 
-let gdistinct_lemma a b = 
-  admit();
-  FStar.Set.lemma_equal_intro (FStar.Set.intersect (refs a) (refs b)) !{}
-
-#reset-options
-
-val distinct_lemma: a:point -> b:point{distinct a b} -> Lemma (FStar.Set.intersect (refs a) (refs b) = !{})
+val distinct_lemma: a:point -> b:point{distinct a b} -> Lemma (requires (True)) (ensures (FStar.Set.intersect (refs a) (refs b) = !{})) 
 let distinct_lemma a b = 
-  admit()
-  (* coerce  *)
-  (*   (requires (True))  *)
-  (*   (ensures (FStar.Set.intersect (refs a) (refs b) = !{})) *)
-  (*   (fun _ -> gdistinct_lemma a b) *)
-
-#reset-options
+  FStar.Set.lemma_equal_intro (FStar.Set.intersect (refs a) (refs b)) !{}
 
 val distinct_commutative: a:point -> b:point -> Lemma 
   (requires (True)) (ensures (distinct a b <==> distinct b a)) [SMTPatT (distinct a b)]
 let distinct_commutative a b = 
-  admit();
   ()
 
 val swap_both:
@@ -539,7 +457,6 @@ val swap_both:
 //      /\ (pointOf h0 a) == (pointOf h1 c) /\ (pointOf h0 b) == (pointOf h1 d)
       /\ modifies_buf ((refs a) +++ (refs b) +++ (refs c) +++ (refs d)) h0 h1))
 let swap_both a b c d =
-  admit();
   let h0 = ST.get() in
   copy c a; 
   let h1 = ST.get() in
@@ -573,7 +490,6 @@ val copy2:
 //      /\ ((pointOf h1 q') == (pointOf h0 q))
     ))
 let copy2 p' q' p q =
-  admit();
   let h0 = ST.get() in
   copy p' p; 
   let h1 = ST.get() in

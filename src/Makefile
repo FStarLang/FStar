@@ -3,7 +3,7 @@
 # --------------------------------------------------------------------
 BASIC=prims-fake.fs basetypes-fake.fs profiling.fs char.fsi char.fs string.fsi string.fs list.fsi \
   list.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi \
-  getoptsimple.fs platform.fsi platform.fs version.fsi version.fs options.fs \
+  getoptsimple.fs platform.fsi platform.fs version.fsi version.fs options.fsi options.fs \
   unionfind.fsi unionfind.fs ident.fs const.fs
 BASIC_SRC=$(addprefix basic/, $(BASIC))
 
@@ -48,8 +48,8 @@ BIN=../bin
 PLATFORM       =
 RELEASE       ?= Debug
 BUILD_VERSION  =
-OTHERFLAGS    := --optimize+ --debug:full --nologo --crossoptimize+ --define:DEBUG
-OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
+FSCOTHERFLAGS    := --optimize+ --debug:full --nologo --crossoptimize+ --define:DEBUG
+FSCOTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 
 ALL_DLLS    = basic.dll format.dll absyn.dll extraction.dll parser.dll tc.dll tosmt.dll syntax.dll smtencoding.dll typechecker.dll
 FSHARP_LIBS = System.Runtime.Serialization.dll System.Xml.dll $(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll $(BIN)/FSharp.PPrint.dll
@@ -58,18 +58,20 @@ BASELIBS    = $(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
 
 # --------------------------------------------------------------------
 ifeq ($(PLATFORM), X86)
-override OTHERFLAGS += --platform:x86
+override FSCOTHERFLAGS += --platform:x86
 endif
 
 ifeq ($(OS),Windows_NT)
 FSC     = fsc
-MSBUILD = msbuild
+MSBUILD = $(shell cygpath -u \"$$(reg.exe query 'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0' /v MSBuildToolsPath | tail -n 2 | head -n 1 | sed 's/.*REG_SZ\s\+//g')\")/MSBuild.exe
+FLAVOR=msbuild
 else
 FSC     = fsharpc
 MSBUILD = xbuild
+FLAVOR=regular
 endif
 
-MSBUILD := $(MSBUILD) /verbosity:normal
+MSBUILD := $(MSBUILD) /verbosity:normal /p:Configuration=Release
 
 # --------------------------------------------------------------------
 ifeq ($(OS),Windows_NT)
@@ -87,7 +89,11 @@ FSLEX   := $(RUNTIME) $(FSLYDIR)/build/fslex.exe
 .PHONY: msbuild msbuild-clean nuget-restore nuget-clean
 
 # --------------------------------------------------------------------
-all: $(BIN)/fstar.exe
+all: all-$(FLAVOR)
+
+clean: clean-$(FLAVOR)
+
+all-regular: $(BIN)/fstar.exe $(BIN)/tests.exe
 
 # --------------------------------------------------------------------
 z3-x86:
@@ -109,79 +115,85 @@ nuget-clean:
 $(FSYACC) $(FSLEX): nuget-restore
 
 # --------------------------------------------------------------------
-msbuild: nuget-restore
+all-msbuild: nuget-restore
 	$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
 
-msbuild-clean:
+clean-msbuild:
 	$(MSBUILD) /t:clean VS/FStar.sln
 
 # --------------------------------------------------------------------
 parser/parse.fs: parser/parse.fsy $(FSYACC)
-	$(MAKE) -C VS install-packages
 	$(FSYACC) --module FStar.Parser.Parse $<
 
 parser/lex.fs: parser/lex.fsl $(FSLEX)
-	$(MAKE) -C VS install-packages
 	$(FSLEX) --unicode $<
 
 BASIC_DEPS=
 $(BIN)/basic.dll: $(BASIC_DEPS) $(BASIC_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(BASIC_DEPS)) $(BASIC_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(BASIC_DEPS)) $(BASIC_SRC)
 
 ABSYN_DEPS=$(addprefix $(BIN)/, basic.dll)
 $(BIN)/absyn.dll: $(ABSYN_DEPS) $(ABSYN_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(ABSYN_DEPS)) $(ABSYN_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(ABSYN_DEPS)) $(ABSYN_SRC)
 
 SYNTAX_DEPS=$(addprefix $(BIN)/, basic.dll)
 $(BIN)/syntax.dll: $(SYNTAX_DEPS) $(SYNTAX_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(SYNTAX_DEPS)) $(SYNTAX_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(SYNTAX_DEPS)) $(SYNTAX_SRC)
 
 $(BIN)/testAbsyn.exe: $(ABSYN_DEPS) $(ABSYN_SRC) absyn/test.fs
-	$(FSC)  $(OTHERFLAGS) --define:TEST --define:DEBUG -o $@ $(BASELIBS) $(addprefix -r , $(ABSYN_DEPS)) $(ABSYN_SRC) absyn/test.fs
+	$(FSC)  $(FSCOTHERFLAGS) --define:TEST --define:DEBUG -o $@ $(BASELIBS) $(addprefix -r , $(ABSYN_DEPS)) $(ABSYN_SRC) absyn/test.fs
 
 FORMAT_DEPS=
 $(BIN)/format.dll: $(FORMAT_DEPS) $(FORMAT_SRC)
-	$(FSC) $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(FORMAT_DEPS)) $(FORMAT_SRC)
+	$(FSC) $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(FORMAT_DEPS)) $(FORMAT_SRC)
 
 EXTRACTION_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll syntax.dll format.dll tc.dll typechecker.dll)
 $(BIN)/extraction.dll: $(EXTRACTION_DEPS) $(EXTRACTION_SRC)
-	$(FSC) $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(EXTRACTION_DEPS)) $(EXTRACTION_SRC)
+	$(FSC) $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(EXTRACTION_DEPS)) $(EXTRACTION_SRC)
 
 PARSER_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tc.dll syntax.dll typechecker.dll)
 $(BIN)/parser.dll: $(PARSER_DEPS) $(PARSER_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(PARSER_DEPS)) $(PARSER_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(PARSER_DEPS)) $(PARSER_SRC)
 
 TOSMT_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tc.dll)
 $(BIN)/tosmt.dll: $(TOSMT_DEPS) $(TOSMT_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TOSMT_DEPS)) $(TOSMT_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TOSMT_DEPS)) $(TOSMT_SRC)
 
 SMTENCODING_DEPS=$(addprefix $(BIN)/, basic.dll syntax.dll typechecker.dll)
 $(BIN)/smtencoding.dll: $(SMTENCODING_DEPS) $(SMTENCODING_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(SMTENCODING_DEPS)) $(SMTENCODING_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(SMTENCODING_DEPS)) $(SMTENCODING_SRC)
 
 TC_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll)
 $(BIN)/tc.dll: $(TC_DEPS) $(TC_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TC_DEPS)) $(TC_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TC_DEPS)) $(TC_SRC)
 
 TYPECHECKER_DEPS=$(addprefix $(BIN)/, basic.dll syntax.dll)
 $(BIN)/typechecker.dll: $(TYPECHECKER_DEPS) $(TYPECHECKER_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TYPECHECKER_DEPS)) $(TYPECHECKER_SRC)
+	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TYPECHECKER_DEPS)) $(TYPECHECKER_SRC)
 
 FSTAR_DEPS=$(addprefix $(BIN)/, $(ALL_DLLS))
 $(BIN)/fstar.exe: $(FSTAR_DEPS) $(TOPLEVEL_SRC) fstar/main.fs $(BIN)/fstar-mono.sh
 ifeq ($(OS),Windows_NT)
-	$(FSC)  $(OTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) fstar/main.fs
+	$(FSC)  $(FSCOTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) fstar/main.fs
 else
-	$(FSC)  $(OTHERFLAGS) -o $(BIN)/fstar-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) fstar/main.fs
+	$(FSC)  $(FSCOTHERFLAGS) -o $(BIN)/fstar-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) fstar/main.fs
 	cp $(BIN)/fstar-mono.sh $(BIN)/fstar.exe
 endif
 
+TESTS_SRC=$(addprefix tests/, pars.fs util.fs norm.fs unif.fs test.fs)
+$(BIN)/tests.exe: $(FSTAR_DEPS) $(TOPLEVEL_SRC) $(TESTS_SRC) $(BIN)/tests-mono.sh
+ifeq ($(OS),Windows_NT)
+	$(FSC)  $(FSCOTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) $(TESTS_SRC)
+else
+	$(FSC)  $(FSCOTHERFLAGS) -o $(BIN)/tests-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) $(TESTS_SRC)
+	cp $(BIN)/tests-mono.sh $(BIN)/tests.exe
+endif
 
 wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMAT_SRC) $(EXTRACTION_SRC) fstar/fstar.fs
 	sloccount $^
 
-clean:
+clean-regular:
 	rm -rf *.exe $(addprefix $(BIN)/, $(ALL_DLLS) fstar.exe) *~ *res
 	rm -rf $(BIN)/*.pdb  $(BIN)/*.mdb $(BIN)/queries
 	make -s -C ocaml-output clean
@@ -218,14 +230,14 @@ ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 	    	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst \
 	    	FStar.Dependences.fst FStar.Interactive.fst FStar.Stratified.fst FStar.Universal.fst FStar.FStar.fst
 
-ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse 
+ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 
 FSTAROPTS=
 
 all_boot_fsts:
 	cp format/format.fsi format/formatml.fsi
-	./tools/make_all_boot_fsts "$(BOOT_ALL)" 
+	./tools/make_all_boot_fsts "$(BOOT_ALL)"
 
 boot_fstis/%.fsti: basic/%.fsi
 	cp $^ $@
@@ -271,30 +283,29 @@ FS_SUPPORT_LIBS=native_int/prims.fs st.fs all.fs option.fs
 FSTAR_SUPPORT_LIBS=char.fsi char.fs string.fsi string.fs list.fsi list.fs util.fsi util.fs platform.fsi platform.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs version.fsi version.fs unionfind.fsi unionfind.fs
 BOOT_FS_BASE=FStar.Options.fs
 BOOT_FS_SYNTAX=FStar.Absyn.Syntax.fs FStar.Absyn.Const.fs FStar.Absyn.Visit.fs FStar.Absyn.Util.fs FStar.Absyn.Print.fs
-BOOT_FS_TC=FStar.Tc.Env.fs FStar.Tc.Recheck.fs FStar.Tc.Normalize.fs FStar.Tc.Errors.fs FStar.Tc.Rel.fs FStar.Tc.Util.fs FStar.Tc.Tc.fs 
+BOOT_FS_TC=FStar.Tc.Env.fs FStar.Tc.Recheck.fs FStar.Tc.Normalize.fs FStar.Tc.Errors.fs FStar.Tc.Rel.fs FStar.Tc.Util.fs FStar.Tc.Tc.fs
 BOOT_FS_PARSER=FStar.Parser.AST.fs parseutil.fs parse.fs FStar.Parser.Lexhelp.fs lex.fs FStar.Parser.DesugarEnv.fs FStar.Parser.Desugar.fs parseit.fs FStar.Parser.Driver.fs
 BOOT_FS_TOSMT=FStar.ToSMT.Term.fs FStar.ToSMT.Z3.fs FStar.ToSMT.SplitQueryCases.fs FStar.ToSMT.Encode.fs
 BOOT_FS_EXTRACTION=FStar.Extraction.ML.Syntax.fs FStar.Extraction.ML.Env.fs FStar.Extraction.ML.Util.fs FStar.Extraction.ML.Code.fs FStar.Extraction.ML.ExtractTyp.fs FStar.Extraction.ML.ExtractExp.fs FStar.Extraction.ML.ExtractMod.fs
 BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC) $(BOOT_FS_PARSER) $(BOOT_FS_TOSMT) $(BOOT_FS_EXTRACTION) FStar.FStar.fs
 
-boot-fsharp: fsharp-output fs plain-fs-files fsharp-output/fstar.exe 
+boot-fsharp: fsharp-output fs plain-fs-files fsharp-output/fstar.exe
 
 fsharp-output/fstar.exe: $(addprefix ../lib/fs/, $(FS_SUPPORT_LIBS)) $(addprefix basic/, $(FSTAR_SUPPORT_LIBS)) $(addprefix fsharp-output/, $(BOOT_FS_FILES) main.fs)
-	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(OTHERFLAGS) $^
+	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(FSCOTHERFLAGS) $^
 
-fs: $(BOOT_ALL) 
+fs: $(BOOT_ALL)
 	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --MLish --lax --fs_typ_app \
 	  --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
 
-fsharp-output: 
+fsharp-output: nuget-restore
 	mkdir -p fsharp-output
-	make -C VS install-packages
 	cp ../bin/FSharp.PowerPack.* fsharp-output
 
 plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) fstar/main.fs
-	cp $^ fsharp-output/ 
+	cp $^ fsharp-output/
 
-deploy-boot-fs: fsharp-output/fstar.exe 
+deploy-boot-fs: fsharp-output/fstar.exe
 	cp $^ ../bin
 
 clean-boot-fs:
@@ -304,20 +315,33 @@ clean-boot-fs:
 # Testing
 # --------------------------------------------------------------------
 
-test:   clean $(BIN)/fstar.exe ocaml-test regressions
+test:   clean $(BIN)/fstar.exe $(BIN)/tests.exe fsharp-regressions ocaml-test regressions
 
+# The regressions to be run with a working F# build of F*
+fsharp-regressions:
+	$(BIN)/tests.exe
+
+# The regressions to be run with a working OCaml build of F*
 regressions:
 	make -C ../lib
 	make -C ../ulib
 	make -C ../examples
 	make -C ../examples/hello ocaml
-	make -C ../contrib/Platform/ml/
-	make -C ../contrib/CoreCrypto/ml/ all test
+	make -C ../ucontrib/CoreCrypto/ml/ test
 	make -C ../examples/crypto clean rpc-test cnt-test
 	make -C ../examples/wysteria a.out distclean
 
-test_universes: 
+test_universes: ulib uexamples
 	../bin/tests #all the unit tests
+
+ulib:
+	+make -C ../ulib
+
+uexamples:
+	+make -C ../examples univ
+
+uregressions:
+	+make test_universes | grep -i 'error\|Verif'
 
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples

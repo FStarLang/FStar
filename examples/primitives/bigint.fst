@@ -59,36 +59,20 @@ val maxValue_lemma_aux: h:heap -> b:bigint{live h b} -> l:pos{l<=length b} ->
   Lemma (forall (i:nat). i < l ==> v (get h b i) <= maxValue h b l)
 let rec maxValue_lemma_aux h b l = match l with | 1 -> () | _ -> maxValue_lemma_aux h b (l-1)
 
-abstract val gmaxValue_lemma: h:heap -> b:bigint{live h b /\ length b > 0} ->
-  GLemma unit (requires (True)) 
-	(ensures (forall (i:nat). {:pattern (v (get h b i))} i < length b ==> v (get h b i) <= maxValue h b (length b))) 
-let rec gmaxValue_lemma h b = maxValue_lemma_aux h b (length b)
-
 val maxValue_lemma: h:heap -> b:bigint{live h b /\ length b > 0} ->
   Lemma (requires (True)) 
-	(ensures (forall (i:nat). {:pattern (v (get h b i))} i < length b ==> v (get h b i) <= maxValue h b (length b))) 
-	[SMTPat (maxValue h b (length b))]
-let maxValue_lemma h b = coerce (requires (True)) (ensures (forall (i:nat). i < length b ==> v (get h b i) <= maxValue h b (length b))) (fun _ -> gmaxValue_lemma h b)
+	(ensures (forall (i:nat). {:pattern (v (get h b i))} i < length b ==> v (get h b i) <= maxValue h b (length b)))
+let rec maxValue_lemma h b = maxValue_lemma_aux h b (length b)
 
 val maxValue_bound_lemma_aux: h:heap -> b:bigint{live h b /\ length b > 0} -> l:pos{l<=length b} -> 
   bound:nat ->  Lemma (requires (forall (i:nat). i < l ==> v (get h b i) <= bound))
 	             (ensures (maxValue h b l <= bound))
 let rec maxValue_bound_lemma_aux h b l bound = match l with | 1 -> () | _ -> maxValue_bound_lemma_aux h b (l-1) bound
 
-opaque val gmaxValue_bound_lemma: h:heap -> b:bigint{live h b /\ length b > 0} -> bound:nat ->  
-  GLemma unit (requires (forall (i:nat). i < length b ==> v (get h b i) <= bound))
-	      (ensures (maxValue h b (length b) <= bound))
-let gmaxValue_bound_lemma h b bound = maxValue_bound_lemma_aux h b (length b) bound
-
-assume val maxValue_bound_lemma: h:heap -> b:bigint{live h b /\ length b > 0} -> bound:nat ->  
+val maxValue_bound_lemma: h:heap -> b:bigint{live h b /\ length b > 0} -> bound:nat ->  
   Lemma (requires (forall (i:nat). i < length b ==> v (get h b i) <= bound))
-	(ensures (maxValue h b (length b) <= bound)) 
-	(*
-let maxValue_bound_lemma h b bound = 
-  coerce (requires (forall (i:nat). i < length b ==> v (get h b i) <= bound))
-	 (ensures (maxValue h b (length b) <= bound)) 
-	 (fun _ -> gmaxValue_bound_lemma h b bound)
-*)
+	(ensures (maxValue h b (length b) <= bound))
+let maxValue_bound_lemma h b bound = maxValue_bound_lemma_aux h b (length b) bound
 
 val maxValueNorm: h:heap -> b:bigint{live h  b /\ length  b >= norm_length} -> GTot nat
 let maxValueNorm h  b = maxValue h b norm_length
@@ -150,4 +134,3 @@ let rec max_value_of_null_lemma h b l =
   match l with
   | 1 -> ()
   | _ -> max_value_of_null_lemma h b (l-1)
-
