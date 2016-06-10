@@ -558,9 +558,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               let x_has_t = mk_HasTypeWithFuel (Some fterm) xtm t in
               let t_has_kind = mk_HasType t Term.mk_Term_type in
 
-              //add a base refinement type function
-              let t_baserefinementtypepat = mk_BaseRefinementTypePat t in
-              let t_baserefinementtype = mk_BaseRefinementType t base_t in
+              //add hasEq axiom for this refinement type
+              let t_haseq_base = mk_haseq base_t in
+              let t_haseq_ref = mk_haseq t in
+
+              let t_haseq = Assume (mkForall ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
+                                    Some ("haseq for " ^ tsym), Some ("haseq" ^ tsym)) in
 
               let t_kinding = Assume(mkForall([[t_has_kind]], cvars, t_has_kind),
                                      Some "refinement kinding",
@@ -568,17 +571,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               let t_interp = Assume(mkForall([[x_has_t]], ffv::xfv::cvars, mkIff(x_has_t, encoding)),
                                     Some (Print.term_to_string t0), 
                                     Some("refinement_interpretation_"^tsym)) in
-              let t_baserefinementtype = Assume (mkForall ([[t_baserefinementtypepat]], cvars, t_baserefinementtype),
-                                                 Some "base refinement type",
-                                                 Some ("base_refinement_type" ^ tsym)) in
-              
-
 
               let t_decls = decls
                             @decls'
                             @[tdecl;
                               t_kinding;
-                              t_interp;t_baserefinementtype] in
+                              t_interp;t_haseq] in
               Util.smap_add env.cache tkey.hash (tsym, cvar_sorts, t_decls);
               t, t_decls
         end

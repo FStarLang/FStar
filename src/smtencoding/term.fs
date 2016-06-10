@@ -602,8 +602,7 @@ let mk_or_l l = match l with
   | [] -> mkFalse
   | hd::tl -> List.fold_left (fun p1 p2 -> mkOr(p1,p2)) hd tl
 
-let mk_BaseRefinementTypePat t1 = mkApp ("Prims.baseRefinementType", [t1])
-let mk_BaseRefinementType t1 t2 = mkEq (mk_BaseRefinementTypePat t1, t2)
+let mk_haseq t = mk_Valid (mkApp ("Prims.hasEq", [t]))
 
 let rec print_smt_term (t:term) :string = match t.tm with
   | Integer n               -> Util.format1 "(Integer %s)" n
