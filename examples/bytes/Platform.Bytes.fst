@@ -163,7 +163,7 @@ type proto_bytes = {
 
 type good_bytes (b:proto_bytes) = b.max = sum_length b.bl /\ b.index <= b.max /\ b.index + b.length <= b.max
 
-type bytes = b:proto_bytes{good_bytes b}
+abstract type bytes = b:proto_bytes{good_bytes b}
 
 
 (* don't have these two, since bytes is not Seq *)
@@ -602,7 +602,11 @@ let iutf8 (x:bytes) =
 
 
 // Pretty printing of bytes for debugging
-assume val print_bytes: bytes -> Tot string
+assume val debug_print_string: string -> Tot string
+val print_bytes: bytes -> Tot string
+let print_bytes (x:bytes) : string =
+  let s = get_cbytes x in
+  debug_print_string s
 
 
 val bytes_of_hex: string -> Tot bytes
