@@ -109,15 +109,15 @@ val int_to_t: x:(int_t n) -> Pure t
 let int_to_t x = Mk x
 
 (* Shift operators *)
-val shift_right: a:t -> s:nat -> Pure t
+val shift_right: a:t -> s:UInt32.t -> Pure t
   (requires True)
-  (ensures (fun c -> v c = (v a /% (pow2 s))))
-let shift_right a s = Mk (shift_right (v a) s)
+  (ensures (fun c -> v c = (v a /% (pow2 (UInt32.v s)))))
+let shift_right a s = Mk (shift_right (v a) (UInt32.v s))
 
-val shift_left: a:t -> s:nat -> Pure t
+val shift_left: a:t -> s:UInt32.t -> Pure t
   (requires True)
-  (ensures (fun c -> v c = ((v a * pow2 s) @% pow2 n)))
-let shift_left a s = Mk (shift_left (v a) s)
+  (ensures (fun c -> v c = ((v a * pow2 (UInt32.v s)) @% pow2 n)))
+let shift_left a s = Mk (shift_left (v a) (UInt32.v s))
 
 (* Comparison operators *)
 let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
