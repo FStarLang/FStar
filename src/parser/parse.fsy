@@ -82,7 +82,7 @@ let as_frag d ds =
 /* bool indicates if INT8 was 'bad' max_int+1, e.g. '128'  */
 %token <string * bool> INT8
 %token <string * bool> INT16
-%token <string * bool> INT32 INT32_DOT_DOT
+%token <string * bool> INT32
 %token <string * bool> INT64
 %token <string * bool> INT
 
