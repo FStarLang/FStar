@@ -2066,13 +2066,8 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                           mk (Tm_app(inst_effect_fun_with [env.universe_of env c1.result_typ] env c2_decl c2_decl.trivial, 
                                     [as_arg c1.result_typ; as_arg <| edge.mlift c1.result_typ wpc1])) 
                              (Some U.ktype0.n) r
-                     else let wp2_imp_wp1 = mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.wp_binop,
-                                                        [as_arg c2.result_typ;
-                                                            as_arg wpc2;
-                                                            as_arg <| S.fvar (Ident.set_lid_range Const.imp_lid r) (Delta_unfoldable 1) None;
-                                                            as_arg <| edge.mlift c1.result_typ wpc1])) None r in
-                            mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.wp_as_type, 
-                                        [as_arg c2.result_typ; as_arg wp2_imp_wp1])) (Some U.ktype0.n) r  in
+                     else mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.stronger,
+                                        [as_arg c2.result_typ; as_arg wpc2; as_arg <| edge.mlift c1.result_typ wpc1])) (Some U.ktype0.n) r  in
                   let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
                   let wl = solve_prob orig (Some <| Util.mk_conj (p_guard base_prob |> fst) g) [] wl in
                   solve env (attempt [base_prob] wl) 

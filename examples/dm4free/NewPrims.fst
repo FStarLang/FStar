@@ -164,10 +164,6 @@ val pure2_wp_binop : a:Type -> pure2_wp a -> op:(Type0->Type0->GTot Type0) ->
                               Tot (pure2_wp a)
 let pure2_wp_binop a l op r = pure2_liftGA2 op l r
 
-// Not derivable, but apparently not needed
-inline val pure2_wp_as_type : a:Type -> (wp:pure2_wp a) -> Tot Type0
-inline let pure2_wp_as_type a wp = l_Forall wp
-
 val pure2_close_wp : a:Type -> b:Type ->
                     f:(b->Tot (pure2_wp a)) ->
                     Tot (pure2_wp a)
@@ -192,12 +188,12 @@ total new_effect {
      ; if_then_else = pure2_if_then_else
      ; ite_wp       = pure2_ite_wp
      ; wp_binop     = pure2_wp_binop
-     ; wp_as_type   = pure2_wp_as_type
      ; close_wp     = pure2_close_wp
      ; assert_p     = pure2_assert_p
      ; assume_p     = pure2_assume_p
      ; null_wp      = pure2_null_wp
      ; trivial      = pure2_trivial
+     ; stronger     = pure2_stronger
 }
 
 effect Pure2 (a:Type) (pre:Type0) (post:a -> Tot Type0) =
@@ -283,9 +279,6 @@ val st2_wp_binop : heap:Type -> a:Type -> st2_wp heap a -> op:(Type0->Type0->GTo
                               Tot (st2_wp heap a)
 let st2_wp_binop heap a l op r = st2_liftGA2 op l r
 
-inline val st2_wp_as_type : heap:Type -> a:Type -> st2_wp heap a -> Tot Type0
-inline let st2_wp_as_type heap a wp = l_Forall (fun (p,h) -> wp p h)
-
 val st2_close_wp : heap:Type -> a:Type -> b:Type ->
                     f:(b->Tot (st2_wp heap a)) ->
                     Tot (st2_wp heap a)
@@ -310,12 +303,12 @@ new_effect {
      ; if_then_else = st2_if_then_else heap
      ; ite_wp       = st2_ite_wp heap
      ; wp_binop     = st2_wp_binop heap
-     ; wp_as_type   = st2_wp_as_type heap
      ; close_wp     = st2_close_wp heap
      ; assert_p     = st2_assert_p heap
      ; assume_p     = st2_assume_p heap
      ; null_wp      = st2_null_wp heap
      ; trivial      = st2_trivial heap
+     ; stronger     = st2_stronger heap
 }
 
 new_effect_for_free {
@@ -323,8 +316,8 @@ new_effect_for_free {
   with return       = st2_return heap
      ; bind_wp      = st2_bind_wp heap
      ; ite_wp       = st2_ite_wp heap
-     ; wp_as_type   = st2_wp_as_type heap
      ; null_wp      = st2_null_wp heap
+     ; stronger     = st2_stronger heap
 }
 
 (* Ex *)
@@ -412,10 +405,6 @@ val ex2_wp_binop : a:Type -> ex2_wp a -> op:(Type0->Type0->GTot Type0) ->
                               Tot (ex2_wp a)
 let ex2_wp_binop a l op r = ex2_liftGA2 op l r
 
-// Not derivable, but apparently not needed
-inline val ex2_wp_as_type : a:Type -> (wp:ex2_wp a) -> Tot Type0
-inline let ex2_wp_as_type a wp = l_Forall wp
-
 val ex2_close_wp : a:Type -> b:Type ->
                     f:(b->Tot (ex2_wp a)) ->
                     Tot (ex2_wp a)
@@ -441,12 +430,12 @@ new_effect {
   ; if_then_else = ex2_if_then_else
   ; ite_wp       = ex2_ite_wp
   ; wp_binop     = ex2_wp_binop
-  ; wp_as_type   = ex2_wp_as_type
   ; close_wp     = ex2_close_wp
   ; assert_p     = ex2_assert_p
   ; assume_p     = ex2_assume_p
   ; null_wp      = ex2_null_wp
   ; trivial      = ex2_trivial
+  ; stronger     = ex2_stronger
 }
 
 (* ALL effect *)
@@ -523,9 +512,6 @@ val all2_wp_binop : heap:Type -> a:Type -> all2_wp heap a -> op:(Type0->Type0->G
                               Tot (all2_wp heap a)
 let all2_wp_binop heap a l op r = all2_liftGA2 op l r
 
-inline val all2_wp_as_type : heap:Type -> a:Type -> all2_wp heap a -> Tot Type0
-inline let all2_wp_as_type heap a wp = l_Forall (fun (p,h) -> wp p h)
-
 val all2_close_wp : heap:Type -> a:Type -> b:Type ->
                     f:(b->Tot (all2_wp heap a)) ->
                     Tot (all2_wp heap a)
@@ -551,11 +537,11 @@ new_effect {
   ; if_then_else = all2_if_then_else heap
   ; ite_wp       = all2_ite_wp       heap
   ; wp_binop     = all2_wp_binop     heap
-  ; wp_as_type   = all2_wp_as_type   heap
   ; close_wp     = all2_close_wp     heap
   ; assert_p     = all2_assert_p     heap
   ; assume_p     = all2_assume_p     heap
   ; null_wp      = all2_null_wp      heap
   ; trivial      = all2_trivial      heap
+  ; stronger     = all2_stronger     heap
 }
 

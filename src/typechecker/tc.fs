@@ -1611,7 +1611,7 @@ let open_effect_decl env ed =
              ; if_then_else=op ed.if_then_else
              ; ite_wp      =op ed.ite_wp
              ; wp_binop    =op ed.wp_binop
-             ; wp_as_type  =op ed.wp_as_type
+             ; stronger    =op ed.stronger
              ; close_wp    =op ed.close_wp
              ; assert_p    =op ed.assert_p
              ; assume_p    =op ed.assume_p
@@ -2101,12 +2101,13 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                  (S.mk_Total wp_a) in
     check_and_gen' env ed.wp_binop expected_k in
 
-  let wp_as_type =
+  let stronger =
     let t, _ = U.type_u() in
     let expected_k = Util.arrow [S.mk_binder a;
+                                 S.null_binder wp_a;
                                  S.null_binder wp_a]
                                 (S.mk_Total t) in
-    check_and_gen' env ed.wp_as_type expected_k in
+    check_and_gen' env ed.stronger expected_k in
 
   let close_wp =
     let b = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
@@ -2161,7 +2162,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     ; if_then_else= close 0 if_then_else
     ; ite_wp      = close 0 ite_wp
     ; wp_binop    = close 0 wp_binop
-    ; wp_as_type  = close 0 wp_as_type
+    ; stronger    = close 0 stronger
     ; close_wp    = close 1 close_wp
     ; assert_p    = close 0 assert_p
     ; assume_p    = close 0 assume_p
