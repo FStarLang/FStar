@@ -273,6 +273,7 @@ let collect_one (original_map: map) (filename: string): list<string> =
     | Open lid ->
         record_open lid
     | ModuleAbbrev (ident, lid) ->
+        add_dep (lowercase_join_longident lid true);
         record_module_alias ident lid
     | ToplevelLet (_, _, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
