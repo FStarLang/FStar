@@ -93,7 +93,7 @@ all: all-$(FLAVOR)
 
 clean: clean-$(FLAVOR)
 
-all-regular: $(BIN)/fstar.exe $(BIN)/tests.exe
+all-regular: $(BIN)/FStar.exe $(BIN)/tests.exe
 
 # --------------------------------------------------------------------
 z3-x86:
@@ -119,7 +119,7 @@ all-msbuild: nuget-restore
 	$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
 	chmod a+x $(BIN)/tests.exe
-	chmod a+x $(BIN)/fstar.exe
+	chmod a+x $(BIN)/FStar.exe
 
 clean-msbuild:
 	$(MSBUILD) /t:clean VS/FStar.sln
@@ -175,12 +175,12 @@ $(BIN)/typechecker.dll: $(TYPECHECKER_DEPS) $(TYPECHECKER_SRC)
 	$(FSC)  $(FSCOTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TYPECHECKER_DEPS)) $(TYPECHECKER_SRC)
 
 FSTAR_DEPS=$(addprefix $(BIN)/, $(ALL_DLLS))
-$(BIN)/fstar.exe: $(FSTAR_DEPS) $(TOPLEVEL_SRC) fstar/main.fs $(BIN)/fstar-mono.sh
+$(BIN)/FStar.exe: $(FSTAR_DEPS) $(TOPLEVEL_SRC) fstar/main.fs $(BIN)/fstar-mono.sh
 ifeq ($(OS),Windows_NT)
 	$(FSC)  $(FSCOTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) fstar/main.fs
 else
 	$(FSC)  $(FSCOTHERFLAGS) -o $(BIN)/fstar-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) $(TOPLEVEL_SRC) fstar/main.fs
-	cp $(BIN)/fstar-mono.sh $(BIN)/fstar.exe
+	cp $(BIN)/fstar-mono.sh $(BIN)/FStar.exe
 endif
 
 TESTS_SRC=$(addprefix tests/, pars.fs util.fs norm.fs unif.fs test.fs)
@@ -196,7 +196,7 @@ wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMA
 	sloccount $^
 
 clean-regular:
-	rm -rf *.exe $(addprefix $(BIN)/, $(ALL_DLLS) fstar.exe) *~ *res
+	rm -rf *.exe $(addprefix $(BIN)/, $(ALL_DLLS) FStar.exe) *~ *res
 	rm -rf $(BIN)/*.pdb  $(BIN)/*.mdb $(BIN)/queries
 	make -s -C ocaml-output clean
 
@@ -267,7 +267,7 @@ clean_ocaml_prep:
 extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
-	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app \
+	../bin/FStar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app \
 	  $(addprefix --no_extract ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
 
 ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml
@@ -291,13 +291,13 @@ BOOT_FS_TOSMT=FStar.ToSMT.Term.fs FStar.ToSMT.Z3.fs FStar.ToSMT.SplitQueryCases.
 BOOT_FS_EXTRACTION=FStar.Extraction.ML.Syntax.fs FStar.Extraction.ML.Env.fs FStar.Extraction.ML.Util.fs FStar.Extraction.ML.Code.fs FStar.Extraction.ML.ExtractTyp.fs FStar.Extraction.ML.ExtractExp.fs FStar.Extraction.ML.ExtractMod.fs
 BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC) $(BOOT_FS_PARSER) $(BOOT_FS_TOSMT) $(BOOT_FS_EXTRACTION) FStar.FStar.fs
 
-boot-fsharp: fsharp-output fs plain-fs-files fsharp-output/fstar.exe
+boot-fsharp: fsharp-output fs plain-fs-files fsharp-output/FStar.exe
 
-fsharp-output/fstar.exe: $(addprefix ../lib/fs/, $(FS_SUPPORT_LIBS)) $(addprefix basic/, $(FSTAR_SUPPORT_LIBS)) $(addprefix fsharp-output/, $(BOOT_FS_FILES) main.fs)
+fsharp-output/FStar.exe: $(addprefix ../lib/fs/, $(FS_SUPPORT_LIBS)) $(addprefix basic/, $(FSTAR_SUPPORT_LIBS)) $(addprefix fsharp-output/, $(BOOT_FS_FILES) main.fs)
 	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(FSCOTHERFLAGS) $^
 
 fs: $(BOOT_ALL)
-	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --MLish --lax --fs_typ_app \
+	../bin/FStar.exe --explicit_deps --use_native_int --eager_inference --MLish --lax --fs_typ_app \
 	  --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
 
 fsharp-output: nuget-restore
@@ -307,7 +307,7 @@ fsharp-output: nuget-restore
 plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) fstar/main.fs
 	cp $^ fsharp-output/
 
-deploy-boot-fs: fsharp-output/fstar.exe
+deploy-boot-fs: fsharp-output/FStar.exe
 	cp $^ ../bin
 
 clean-boot-fs:
@@ -345,7 +345,7 @@ uexamples:
 uregressions:
 	+make test_universes | grep -i 'error\|Verif'
 
-test.net: clean $(BIN)/fstar.exe boot
+test.net: clean $(BIN)/FStar.exe boot
 	make -C ../examples
 
 test.diff:
