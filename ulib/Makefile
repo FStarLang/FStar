@@ -3,7 +3,7 @@ include $(FSTAR_HOME)/src/gmake/fstar.mk
 include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
 UFSTAR=$(FSTAR) --universes
-STDLIB=FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Mul.fst FStar.Int8.fst FStar.Int16.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst 
+STDLIB=FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Mul.fst FStar.UInt.fst FStar.Int.fst FStar.Int8.fst FStar.Int16.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst FStar.UInt8.fst FStar.UInt16.fst FStar.UInt32.fst FStar.UInt63.fst FStar.UInt64.fst FStar.Int.Cast.fst
 
 all: stdlib list array tcp squash elogic ordmap pext st mref m_rref twolevelheap relational
 

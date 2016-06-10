@@ -106,7 +106,7 @@ let lognot a = Mk (lognot (v a))
 val uint_to_t: x:(uint_t n) -> Pure t
   (requires True)
   (ensures (fun y -> v y = x))
-let uint_to_t x = Mk (to_uint_t n x)
+let uint_to_t x = Mk x
 
 (* Shift operators *)
 val shift_right: a:t -> s:nat -> Pure t
