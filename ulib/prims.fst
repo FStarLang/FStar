@@ -16,7 +16,10 @@
 module Prims
 
 assume new type hasEq: Type -> GTot Type0
+assume type baseRefinementType: Type -> GTot Type
+
 type eqtype = a:Type{hasEq a}
+
 
 (* False is the empty inductive type *)
 type c_False =
@@ -97,6 +100,8 @@ type squash (p:Type) = x:unit{p}
   
 (* forall (x:a). p x : specialized to Type#0 *)
 type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
+
+assume HasEq_refinements: forall (a:Type).{:pattern (hasEq a)} hasEq (baseRefinementType a) ==> hasEq a
 
 (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
 type dtuple2 (a:Type)

@@ -38,7 +38,7 @@ assume SelConcat:     forall (a:Type) (h1:heap) (h2:heap) (a:ref a).       {:pat
                       if contains h2 a then sel (concat h1 h2) a==sel h2 a else sel (concat h1 h2) a==sel h1 a
 
 assume DomUpd:        forall (a:Type) (h:heap) (k1:ref a) (v:a).           {:pattern domain (upd h k1 v)}
-                      domain (upd h k1 v) = Set.union (domain h) (Set.singleton (Ref k1))
+                      domain (upd h k1 v) == Set.union (domain h) (Set.singleton (Ref k1))
 
 assume DomRestrict:   forall (h:heap) (r:set aref).                        {:pattern domain (restrict h r)}
                       domain (restrict h r) == Set.intersect (domain h) r
@@ -46,7 +46,7 @@ assume DomRestrict:   forall (h:heap) (r:set aref).                        {:pat
 assume DomConcat:     forall (h1:heap) (h2:heap).                          {:pattern domain (concat h1 h2)}
                       domain (concat h1 h2)  == Set.union (domain h1) (domain h2)
 
-assume DomEmp:        domain emp = Set.empty
+assume DomEmp:        domain emp == (Set.empty #aref)
 
 assume DomContains:   forall (a:Type) (h:heap) (r:ref a).                  {:pattern contains h r}
 	              contains h r <==> Set.mem (Ref r) (domain h)

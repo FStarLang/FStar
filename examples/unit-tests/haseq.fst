@@ -1,7 +1,7 @@
 module Haseq
 
-type t (a:Type) =
-  | C: a -> t a
+type mtype = x:int{x > 4}
 
-let foo _ = assert (hasEq (t int))
-let bar _ = assert (hasEq (t nat))
+let foo _ = assert (hasEq mtype)
+
+

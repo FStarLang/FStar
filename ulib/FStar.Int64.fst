@@ -10,9 +10,6 @@ let within_int64 (i:int) =
     min_value_int <= i
     && i <= max_value_int
 
-(* haseq refinement hack *)
-assume HasEq_within_int: hasEq (i:int{within_int64 i})
-
 private type int64' =
   | Int64 : i:int{within_int64 i} -> int64'
 
