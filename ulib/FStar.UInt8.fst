@@ -149,3 +149,7 @@ let op_Greater_Equal_Hat = gte
 let op_Less_Hat = gt
 let op_Less_Equal_Hat = gte
 type byte = t
+
+assume val to_string: t -> Tot string
+assume val of_string: string -> Tot t // The function should actually not be Tot
+let to_int (x:t) : Tot int = v x

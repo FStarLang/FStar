@@ -148,3 +148,7 @@ let op_Greater_Hat = gt
 let op_Greater_Equal_Hat = gte
 let op_Less_Hat = gt
 let op_Less_Equal_Hat = gte
+
+let to_int (x:t) : Tot int = v x
+assume val to_string: t -> Tot string
+assume val of_string: string -> Tot t // The function should actually not be Tot
