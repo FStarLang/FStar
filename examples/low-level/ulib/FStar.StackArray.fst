@@ -5,11 +5,11 @@ module FStar.StackArray
 open FStar.Seq
 open FStar.StackHeap2
 open FStar.SST
-open FStar.UInt.UInt32
+open FStar.UInt32
 
 module StackHeap = FStar.StackHeap2
 
-let uint32 = UInt.UInt32.uint32
+let uint32 = UInt32.t
 
 type bounded_seq (t:Type) = s:seq t{length s <= UInt.max_int n}
 type array (t:Type) = ref (bounded_seq t)//NS: TODO if I change this to stacked, then I get unification failures elsewhere. seems like a bug
@@ -73,7 +73,7 @@ val length: #a:Type -> x:array a -> STL uint32
   (ensures  (fun h0 y h1 -> v y=length (sel h0 x) /\ h0==h1))
 let length #a x = 
   let s = to_seq x in
-  int_to_uint32 (Seq.length s)
+  uint_to_t (Seq.length s)
 
 let equal s1 s2 = 
   frame_ids s1 = frame_ids s2
@@ -111,7 +111,7 @@ let rec copy_aux: #a:Type -> s:array a -> cpy:array a -> ctr:uint32 -> ST unit
   = fun #a s cpy ctr -> 
     if (eq (length cpy) ctr) then ()
     else (upd cpy ctr (index s ctr);
-	  copy_aux #a s cpy (ctr ^+ one))
+	  copy_aux #a s cpy (ctr +^ (uint_to_t 1)))
 
 val copy:
   #a:Type -> s:array a ->
@@ -125,8 +125,8 @@ val copy:
 			    /\ (contains h1 r)
 			    /\ (Seq.equal (sel h1 r) (sel h0 s))))
 let copy #a s =
-  let cpy = create (length s) (index s zero) in
-  copy_aux s cpy zero;
+  let cpy = create (length s) (index s (uint_to_t 0)) in
+  copy_aux s cpy (uint_to_t 0);
   cpy
 
 val blit_aux:
@@ -158,17 +158,17 @@ val blit_aux:
 
 let rec blit_aux #a s s_idx t t_idx len ctr =
   let h0 = get() in
-  if (len ^- ctr) ^= zero then ()
+  if (len -^ ctr) =^ (uint_to_t 0) then ()
   else 
     begin 
-      upd t (t_idx ^+ ctr) (index s (s_idx ^+ ctr));
+      upd t (t_idx +^ ctr) (index s (s_idx +^ ctr));
       let h = SST.get() in
       cut (b2t(Heap.equal (heapOf t h) (Heap.upd (heapOf t h0) (as_ref t) (sel h t))));
       cut (Map.equal (heaps h) (heaps (StackHeap.upd h0 t (sel h t))));
       cut (sel h t = Seq.upd (sel h0 t) (v t_idx+v ctr) (Seq.index (sel h0 s) (v s_idx+v ctr)));
       cut (forall (i:nat). i < v ctr+1 ==> Seq.index (sel h0 s) (v s_idx+i) = Seq.index (sel h t) (v t_idx+i));
       assert(s <> t);
-      blit_aux s s_idx t t_idx len (ctr^+one);
+      blit_aux s s_idx t t_idx len (ctr+^(uint_to_t 1));
       let h'= get() in
       cut (modifies_ref (frameOf t) !{as_ref t} h h') (* JK: trigger *)
     end
@@ -199,7 +199,7 @@ val blit:
 		   (i < Seq.length (sel h1 t) /\ (i < v t_idx \/ i >= v t_idx + v len)) ==>
 		     (Seq.index (sel h1 t) i = Seq.index (sel h0 t) i)) ))
 let rec blit #a s s_idx t t_idx len =
-  blit_aux s s_idx t t_idx len zero
+  blit_aux s s_idx t t_idx len (uint_to_t 0)
 
 val sub :
   #a:Type -> s:array a -> idx:uint32 -> len:uint32 -> ST (array a)
@@ -216,8 +216,8 @@ val sub :
 			   /\ v idx + v len <= Seq.length (sel h0 s)
 			   /\ Seq.equal (Seq.slice (sel h0 s) (v idx) (v idx+v len)) (sel h1 t) ))
 let sub #a s idx len =
-  let t = create len (index s zero) in
-  blit s idx t zero len;
+  let t = create len (index s (uint_to_t 0)) in
+  blit s idx t (uint_to_t 0) len;
   t
 
 (* JK: assuming the following because 'a <> a ==> seq a' <> seq a does cannot be proven

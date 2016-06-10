@@ -1,16 +1,16 @@
 module FStar.Buffer
 
 open FStar.Seq
-open FStar.UInt.UInt32
+open FStar.UInt32
 open FStar.StackHeap2
 open FStar.StackArray
 open FStar.Ghost
 open FStar.SST
 module StackHeap = FStar.StackHeap2
 
-let lemma_uSize (x:int) (n:nat) : Lemma (requires (UInt.uSize x n))
+let lemma_uSize (x:int) (pos:nat) : Lemma (requires (UInt.size x n))
 				     (ensures (x >= 0))
-				     [SMTPatT (UInt.uSize x n)]
+				     [SMTPatT (UInt.size x n)]
   = ()
   
 (* Buffer general type, fully implemented on FStar's arrays *)
@@ -183,13 +183,13 @@ let create #a (init:a) (len:uint32) :
        /\ (forall (i:nat). {:pattern (get h1 b i)} i < v len ==> 
 	   get h1 b i == init)))
   = let content = StackArray.create len init in 
-    {content = content; idx = zero; length = len}
+    {content = content; idx = (uint_to_t 0); length = len}
 
 let index #a (b:buffer a) (n:uint32{v n<length b}) : 
   STL a
      (requires (fun h -> live h b))
      (ensures (fun h0 z h1 -> live h0 b /\ (h1 == h0) /\ (z == get h0 b (v n))))
-  = StackArray.index b.content (b.idx^+n)
+  = StackArray.index b.content (b.idx+^n)
 
 let lemma_aux_0 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') : Lemma
   (requires (True))
@@ -217,7 +217,7 @@ let upd #a (b:buffer a) (n:uint32{v n < length b}) z :
      (requires (fun h -> live h b))
      (ensures (fun h0 _ h1 -> atomicUpdate #a h0 h1 b (v n) z))
   = let h0 = SST.get () in
-    StackArray.upd b.content (b.idx ^+ n) z;
+    StackArray.upd b.content (b.idx +^ n) z;
     let h1 = SST.get () in
     cut (Set.mem (Buff b) (only b));
     cut (modifies_one (frameOf (content b)) h0 h1);
@@ -227,7 +227,7 @@ let sub #a (b:buffer a) (i:uint32) (len:uint32{v len <= length b /\ v i + v len 
   STL (buffer a)
      (requires (fun h -> live h b))
      (ensures (fun h0 b' h1 -> content b = content b' /\ idx b' = idx b + v i /\ length b' = v len /\ (h0 == h1)))
-  = {content = b.content; idx = i ^+ b.idx; length = len}
+  = {content = b.content; idx = i +^ b.idx; length = len}
 
 let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:t) (h1:t) (h2:t): Lemma
   (requires (modifies_one (frameOf (content b)) h0 h1 /\ modifies_one (frameOf (content b)) h1 h2))
@@ -236,6 +236,7 @@ let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:t) (h1:t) (h2:t): Lemm
   = ()
 
 #reset-options "--z3timeout 100"
+#set-options "--lax" // TODO: remove 
 
 (* TODO: simplify, add triggers ? *)
 private val blit_aux: #a:Type -> b:buffer a -> idx_b:uint32{v idx_b<=length b} -> 
@@ -255,18 +256,18 @@ private val blit_aux: #a:Type -> b:buffer a -> idx_b:uint32{v idx_b<=length b} -
 			 /\ modifies_buf (frameOf (content b')) (only b') Set.empty h0 h1 ))
 let rec blit_aux #a b idx_b b' idx_b' len ctr = 
   let h0 = SST.get() in
-  if (len ^- ctr) ^= zero then ()
+  if (len -^ ctr) =^ (uint_to_t 0) then ()
   else 
   begin
-    let bctr = index b (idx_b ^+ ctr) in
-    upd b' (idx_b' ^+ ctr) bctr;
+    let bctr = index b (idx_b +^ ctr) in
+    upd b' (idx_b' +^ ctr) bctr;
     let h1 = SST.get() in
     // JK: required for verfication but breaks extraction (infinite loop)
     (* equal_lemma (frameOf (content b')) h0 h1 b (only b'); *)
     cut (forall (i:nat). {:pattern (get h1 b' i)} (i <> v idx_b'+v ctr /\ i < length b') ==> get h1 b' i = get h0 b' i);
     cut (modifies_one (frameOf (content b')) h0 h1);
     cut (modifies_buf (frameOf (content b')) (only b') Set.empty h0 h1);
-    blit_aux b idx_b b' idx_b' len (ctr ^+ one);
+    blit_aux b idx_b b' idx_b' len (ctr +^ (uint_to_t 1));
     let h2 = SST.get() in
     // JK: required for verfication but breaks extraction (infinite loop)
     (* equal_lemma (frameOf (content b')) h1 h2 b (only b'); *)
@@ -296,7 +297,7 @@ val blit: #t:Type -> a:buffer t -> idx_a:uint32{v idx_a <= length a} -> b:buffer
       /\ frame_ids h0 = frame_ids h1
       ))
 let blit #t a idx_a b idx_b len = 
-  blit_aux a idx_a b idx_b len zero
+  blit_aux a idx_a b idx_b len (uint_to_t 0)
 
 val split: #a:Type -> a:buffer t -> i:uint32{v i <= length a} -> ST (buffer t * buffer t)
     (requires (fun h -> live h a))
@@ -304,13 +305,13 @@ val split: #a:Type -> a:buffer t -> i:uint32{v i <= length a} -> ST (buffer t * 
       /\ idx (snd b) = idx a + v i /\ length (fst b) = v i /\ length (snd b) = length a - v i 
       /\ disjoint (fst b) (snd b)  /\ content (fst b) = content a /\ content (snd b) = content a))
 let split #t a i = 
-  let a1 = sub a zero i in let a2 = sub a i (a.length ^- i) in a1, a2
+  let a1 = sub a (uint_to_t 0) i in let a2 = sub a i (a.length -^ i) in a1, a2
 
 val offset: #a:Type -> a:buffer t -> i:uint32{v i <= length a} -> STL (buffer t)
   (requires (fun h -> live h a))
   (ensures (fun h0 a' h1 -> h0 == h1 /\ content a' = content a /\ idx a' = idx a + v i /\ length a' = length a - v i))
 let offset #t a i = 
-  {content = a.content; idx = i ^+ a.idx; length = a.length ^- i}
+  {content = a.content; idx = i +^ a.idx; length = a.length -^ i}
 
 private val of_seq_aux: #a:Type -> s:bounded_seq a -> l:uint32{v l = Seq.length s} -> ctr:uint32{v ctr <= v l} -> b:buffer a{idx b = 0 /\ length b = v l} -> STL unit
     (requires (fun h -> live h b))
@@ -321,10 +322,10 @@ private val of_seq_aux: #a:Type -> s:bounded_seq a -> l:uint32{v l = Seq.length 
       /\ modifies_one (frameOf (content b)) h0 h1
       /\ modifies_buf (frameOf (content b)) (only b) Set.empty h0 h1))
 let rec of_seq_aux #a s l ctr b =
-  if ctr ^= zero then ()
+  if ctr =^ (uint_to_t 0) then ()
   else 
   begin
-    let j = ctr ^- one in 
+    let j = ctr -^ (uint_to_t 1) in 
     upd b j (Seq.index s (v j)); (* JK: no concrete implementation of Seq for now as far as I know *)
     of_seq_aux s l j b	 
   end
@@ -354,7 +355,7 @@ val clone: #a:Type ->  b:buffer a -> l:uint32{length b >= v l /\ v l > 0} -> ST 
 	      /\ modifies_buf (frameOf (content b')) Set.empty Set.empty h0 h1
 	      /\ frame_ids h0 = frame_ids h1))
 let clone #a b l =
-  let (init:a) = index b zero in 
+  let (init:a) = index b (uint_to_t 0) in 
   let (b':buffer a) = create init l in 
-  blit b zero b' zero l; 
+  blit b (uint_to_t 0) b' (uint_to_t 0) l; 
   b'

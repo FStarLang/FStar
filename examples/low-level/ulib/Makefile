@@ -33,14 +33,14 @@ aes-ml:
 	mkdir -p $(AES_ODIR)
 	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) aes.fst --odir $(AES_ODIR) 
 	$(OCAMLOPT) -I ml -I $(AES_ODIR) \
-	  $(FSTAR_HOME)/ulib/ml/FStar_UInt_UInt32.ml \
+	  $(FSTAR_HOME)/ulib/ml/FStar_UInt32.ml \
 	  $(addprefix ml/,$(REALIZED_ML)) \
 	  $(addprefix $(AES_ODIR)/,$(AES_EXTRACTED)) ml/test_aes.ml -o test_aes.exe
 	./test_aes.exe 
 
 aes-compile:
 	$(OCAMLOPT) -I ml -I $(AES_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
-	  $(FSTAR_HOME)/ulib/ml/FStar_UInt_UInt32.ml \
+	  $(FSTAR_HOME)/ulib/ml/FStar_UInt32.ml \
 	  $(addprefix $(AES_ODIR)/,$(AES_EXTRACTED)) ml/test_aes.ml -o test_aes.exe
 	./test_aes.exe
 

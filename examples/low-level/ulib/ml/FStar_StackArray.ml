@@ -1,6 +1,6 @@
 type nonrec 'a array = 'a array 
 
-type uint32 = FStar_UInt_UInt32.uint32
+type uint32 = FStar_UInt32.uint32
                           
 let create len init = Array.make init len
 let index x i = Array.get x i

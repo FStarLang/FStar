@@ -1,5 +1,6 @@
 type int64 = Int64.t
 type uint8 = int
+type t = int64
                
 let v (x:int64) : Prims.int = Prims.parse_int (Int64.to_string x)
 
@@ -64,3 +65,4 @@ let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
 
 let to_string = Int64.to_string                     
+let int_to_t s = s

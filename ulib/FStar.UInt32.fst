@@ -87,11 +87,11 @@ let div_underspec a b =
   Mk (div_underspec (v a) (v b))
 
 (* Modulo primitives *)
-val mod: a:t -> b:t{v b <> 0} -> Pure t
+val rem: a:t -> b:t{v b <> 0} -> Pure t
   (requires True)
   (ensures (fun c ->
     v a - ((v a / v b) * v b) = v c))
-let mod a b = Mk (mod (v a) (v b))
+let rem a b = Mk (mod (v a) (v b))
 
 (* Bitwise operators *)
 val logand: t -> t -> Tot t
@@ -143,7 +143,7 @@ let op_Amp_Hat = logand
 let op_Bar_Hat = logor
 let op_Less_Less_Hat = shift_left
 let op_Greater_Greater_Hat = shift_right
-let op_Equal_Hat = eq
+let op_Equals_Hat = eq
 let op_Greater_Hat = gt
 let op_Greater_Equal_Hat = gte
 let op_Less_Hat = gt

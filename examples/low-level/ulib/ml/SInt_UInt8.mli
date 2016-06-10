@@ -40,7 +40,7 @@ val op_Hat_Bar:uint8 -> uint8 -> uint8
 val op_Hat_Hat:uint8 -> uint8 -> uint8
 
 val of_int: int -> uint8
-val of_uint32: FStar_UInt_UInt32.uint32 -> uint8
+val of_uint32: FStar_UInt32.uint32 -> uint8
 val of_string: string -> uint8
                                 
 val eq:uint8 -> uint8 -> uint8

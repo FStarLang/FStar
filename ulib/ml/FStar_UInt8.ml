@@ -1,6 +1,7 @@
 type uint8 = int
 type byte = uint8
-
+type t = uint8
+              
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
 let v (x:uint8) : Prims.int = Prims.parse_int (string_of_int x)
@@ -66,3 +67,4 @@ let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
 
 let to_string s = string_of_int s
+let uint_to_t s = s

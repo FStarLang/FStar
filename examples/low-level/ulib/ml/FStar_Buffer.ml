@@ -4,7 +4,7 @@ type ('a, 'b, 'c) live = unit
 
 type abuffer = unit
                            
-type uint32 = FStar_UInt_UInt32.uint32
+type uint32 = FStar_UInt32.uint32
 
 type 'a buffer = {
     content:'a array;

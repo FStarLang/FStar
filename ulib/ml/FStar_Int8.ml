@@ -1,5 +1,6 @@
 type int8 = int
-
+type t = int8
+           
 let v (x:int8) : Prims.int = Prims.parse_int (string_of_int x)
 
 let zero = 0
@@ -66,3 +67,4 @@ let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
 
 let to_string s = string_of_int (cmod s)
+let int_to_t s = s

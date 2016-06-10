@@ -31,7 +31,7 @@ hyperheap: $(HH_OBJS)
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
 %.o: %.ml
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c -I $(PRIMS_DIR) $<
 
 depend:
 	$(OCAMLDEP) -I native_int -I hyperheap $(FILES) $(HYPERHEAP) > .depend
