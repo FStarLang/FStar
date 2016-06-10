@@ -5,7 +5,7 @@ assume new type heap : Type0
 abstract type ref (a:Type) = 
   | MkRef of a //this implementation of ref is not realistic; it's just to get the universes right
 #reset-options
-type aref =
+noeq type aref =
   | Ref : #a:Type -> r:ref a -> aref
 assume val sel :       #a:Type -> heap -> ref a -> Tot a
 assume val upd :       #a:Type -> heap -> ref a -> a -> Tot heap
@@ -37,10 +37,10 @@ assume RestrictSel:   forall (a:Type) (h:heap) (r:set aref) (a:ref a).     {:pat
                       mem (Ref a) r ==> sel (restrict h r) a == sel h a
 
 assume RestrictIn:    forall (a:Type) (h:heap) (r:set aref) (a:ref a).     {:pattern contains (restrict h r) a}
-                      contains (restrict h r) a == (mem (Ref a) r && contains h a)
+                      (b2t (contains (restrict h r) a)) == (mem (Ref a) r /\ contains h a)
 
 assume SelConcat:     forall (a:Type) (h1:heap) (h2:heap) (a:ref a).       {:pattern sel (concat h1 h2) a}
-                      if contains h2 a then sel (concat h1 h2) a=sel h2 a else sel (concat h1 h2) a=sel h1 a
+                      if contains h2 a then sel (concat h1 h2) a==sel h2 a else sel (concat h1 h2) a==sel h1 a
 
 assume ContainsConcat:forall (a:Type) (h1:heap) (h2:heap) (a:ref a).       {:pattern contains (concat h1 h2) a}
                       contains (concat h1 h2) a == (contains h1 a || contains h2 a)

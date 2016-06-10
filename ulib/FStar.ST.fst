@@ -58,4 +58,4 @@ assume val op_Colon_Equals:  #a:Type -> r:ref a -> v:a -> ST unit
                                                  (fun h -> True)
                                                  (fun h0 x h1 -> h1==upd h0 r v)
 
-assume val get: unit -> ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h=h1)
+assume val get: unit -> ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1)

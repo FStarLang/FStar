@@ -40,8 +40,8 @@ let rec nth l n = match l with
   | []     -> None
   | hd::tl -> if n = 0 then Some hd else nth tl (n - 1)
 
-val count: 'a -> list 'a -> Tot nat
-let rec count x = function
+val count: #a:eqtype -> a -> list a -> Tot nat
+let rec count #a x = function
   | [] -> 0
   | hd::tl -> if x=hd then 1 + count x tl else count x tl
 
@@ -103,8 +103,8 @@ let rec fold_right f l x = match l with
 
 (** List searching **)
 
-val mem: 'a -> list 'a -> Tot bool
-let rec mem x = function
+val mem: #a:eqtype -> a -> list a -> Tot bool
+let rec mem #a x = function
   | [] -> false
   | hd::tl -> if hd = x then true else mem x tl
 let contains = mem
@@ -125,8 +125,8 @@ let rec find #a f l = match l with
   | [] -> None #(x:a{f x}) //These type annotations are only present because it makes bootstrapping go much faster
   | hd::tl -> if f hd then Some #(x:a{f x}) hd else find f tl
 
-val filter: f:('a -> Tot bool) -> list 'a -> Tot (m:list 'a{forall x. mem x m ==> f x})
-let rec filter f = function
+val filter: #a:eqtype -> f:(a -> Tot bool) -> list a -> Tot (m:list a{forall x. mem x m ==> f x})
+let rec filter #a f = function
   | [] -> []
   | hd::tl -> if f hd then hd::filter f tl else filter f tl
 
@@ -172,21 +172,21 @@ let rec partition f = function
 
 (** [subset la lb] is true if and only if all the elements from [la]
     are also in [lb]. *)
-val subset: list 'a -> list 'a -> Tot bool
-let rec subset la lb =
+val subset: #a:eqtype -> list a -> list a -> Tot bool
+let rec subset #a la lb =
   match la with
   | [] -> true
   | h :: tl ->  mem h lb && subset tl lb
 
-val noRepeats : list 'a -> Tot bool
-let rec noRepeats la =
+val noRepeats : #a:eqtype -> list a -> Tot bool
+let rec noRepeats #a la =
   match la with
   | [] -> true
   | h :: tl -> not(mem h tl) && noRepeats tl
 
 (** List of tuples **)
-val assoc: 'a -> list ('a * 'b) -> Tot (option 'b)
-let rec assoc x = function
+val assoc: #a:eqtype -> #b:Type -> a -> list (a * b) -> Tot (option b)
+let rec assoc #a #b x = function
   | [] -> None
   | (x', y)::tl -> if x=x' then Some y else assoc x tl
 
