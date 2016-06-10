@@ -91,8 +91,6 @@ effect GC (a:Type) (pre:gc_state -> Type0) (post: gc_state -> Tot (gc_post a)) =
        GC_STATE a
              (fun (p:gc_post a) (gc:gc_state) ->
                   pre gc /\ (forall a gc'. (pre gc /\ post gc a gc') ==> p a gc')) (* WP *)
-             (fun (p:gc_post a) (gc:gc_state) ->
-                  (forall a gc'. (pre gc /\ post gc a gc') ==> p a gc'))           (* WLP *)
 
 effect GCMut (res:Type) (req:gc_state -> Type0) (ens:gc_state -> Tot (gc_post res)) =
        GC res (fun gc -> req gc /\ mutator_inv gc)

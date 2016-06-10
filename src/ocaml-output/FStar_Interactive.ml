@@ -141,7 +141,7 @@ in if (FStar_Util.starts_with l "#end") then begin
 (
 
 let responses = (match ((FStar_Util.split l " ")) with
-| _85_59::ok::fail::[] -> begin
+| (_85_59)::(ok)::(fail)::[] -> begin
 (ok, fail)
 end
 | _85_62 -> begin
@@ -193,7 +193,7 @@ in (match ((FStar_ST.read s.buffer)) with
 | [] -> begin
 (read_chunk ())
 end
-| chunk::chunks -> begin
+| (chunk)::chunks -> begin
 (
 
 let _85_81 = (FStar_ST.op_Colon_Equals s.buffer chunks)
@@ -247,7 +247,7 @@ in try
 (
 
 let _85_114 = (match ((FStar_ST.read the_interactive_state.buffer)) with
-| Push (_85_105)::Code (code, _85_101)::[] -> begin
+| (Push (_85_105))::(Code (code, _85_101))::[] -> begin
 (
 
 let lines = (FStar_Util.split code "\n")
@@ -368,7 +368,7 @@ let _85_199 = (match (stack) with
 let _85_190 = (FStar_Util.print_error "too many pops")
 in (FStar_All.exit 1))
 end
-| hd::tl -> begin
+| (hd)::tl -> begin
 (hd, tl)
 end)
 in (match (_85_199) with

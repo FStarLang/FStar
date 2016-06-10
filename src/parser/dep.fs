@@ -28,6 +28,7 @@ open FStar.Parser
 open FStar.Parser.AST
 open FStar.Parser.Parse
 open FStar.Util
+open FStar.Const
 
 open FStar.Absyn
 open FStar.Absyn.Syntax
@@ -272,6 +273,7 @@ let collect_one (original_map: map) (filename: string): list<string> =
     | Open lid ->
         record_open lid
     | ModuleAbbrev (ident, lid) ->
+        add_dep (lowercase_join_longident lid true);
         record_module_alias ident lid
     | ToplevelLet (_, _, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
@@ -333,11 +335,19 @@ let collect_one (original_map: map) (filename: string): list<string> =
   and collect_term t =
     collect_term' t.tm
 
+  and collect_constant = function
+    | Const_int (_, Some (signedness, width)) ->
+        let u = match signedness with | Unsigned -> "u" | Signed -> "" in
+        let w = match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" in
+        add_dep (Util.format2 "fstar.%sint%s" u w)
+    | _ ->
+        ()
+
   and collect_term' = function
     | Wild ->
         ()
-    | Const _ ->
-        ()
+    | Const c ->
+        collect_constant c
     | Op (_, ts) ->
         List.iter collect_term ts
     | Tvar _ ->
@@ -473,6 +483,15 @@ let collect (filenames: list<string>): _ =
    * filenames (e.g. [/where/to/find/A.B.C.fst]). Consider this map
    * immutable from there on. *)
   let m = build_map filenames in
+  (* Debug. *)
+  (* List.map (fun k ->
+    let p = function
+      | Some x -> Util.format1 "Some %s" x
+      | None -> "None"
+    in
+    let intf, impl = must (smap_try_find m k) in
+    Util.print3 "%s: %s, %s\n" k (p intf) (p impl)
+  ) (smap_keys m); *)
 
   (* This function takes a lowercase module name. *)
   let rec discover_one key =

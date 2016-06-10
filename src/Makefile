@@ -63,13 +63,15 @@ endif
 
 ifeq ($(OS),Windows_NT)
 FSC     = fsc
-MSBUILD = msbuild
+MSBUILD = $(shell cygpath -u \"$$(reg.exe query 'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0' /v MSBuildToolsPath | tail -n 2 | head -n 1 | sed 's/.*REG_SZ\s\+//g')\")/MSBuild.exe
+FLAVOR=msbuild
 else
 FSC     = fsharpc
 MSBUILD = xbuild
+FLAVOR=regular
 endif
 
-MSBUILD := $(MSBUILD) /verbosity:normal
+MSBUILD := $(MSBUILD) /verbosity:normal /p:Configuration=Release
 
 # --------------------------------------------------------------------
 ifeq ($(OS),Windows_NT)
@@ -87,7 +89,11 @@ FSLEX   := $(RUNTIME) $(FSLYDIR)/build/fslex.exe
 .PHONY: msbuild msbuild-clean nuget-restore nuget-clean
 
 # --------------------------------------------------------------------
-all: $(BIN)/fstar.exe $(BIN)/tests.exe
+all: all-$(FLAVOR)
+
+clean: clean-$(FLAVOR)
+
+all-regular: $(BIN)/fstar.exe $(BIN)/tests.exe
 
 # --------------------------------------------------------------------
 z3-x86:
@@ -109,11 +115,11 @@ nuget-clean:
 $(FSYACC) $(FSLEX): nuget-restore
 
 # --------------------------------------------------------------------
-msbuild: nuget-restore
+all-msbuild: nuget-restore
 	$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
 
-msbuild-clean:
+clean-msbuild:
 	$(MSBUILD) /t:clean VS/FStar.sln
 
 # --------------------------------------------------------------------
@@ -187,7 +193,7 @@ endif
 wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMAT_SRC) $(EXTRACTION_SRC) fstar/fstar.fs
 	sloccount $^
 
-clean:
+clean-regular:
 	rm -rf *.exe $(addprefix $(BIN)/, $(ALL_DLLS) fstar.exe) *~ *res
 	rm -rf $(BIN)/*.pdb  $(BIN)/*.mdb $(BIN)/queries
 	make -s -C ocaml-output clean
@@ -321,8 +327,7 @@ regressions:
 	make -C ../ulib
 	make -C ../examples
 	make -C ../examples/hello ocaml
-	make -C ../contrib/Platform/ml/
-	make -C ../contrib/CoreCrypto/ml/ all test
+	make -C ../ucontrib/CoreCrypto/ml/ test
 	make -C ../examples/crypto clean rpc-test cnt-test
 	make -C ../examples/wysteria a.out distclean
 

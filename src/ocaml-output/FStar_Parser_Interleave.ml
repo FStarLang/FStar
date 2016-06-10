@@ -51,7 +51,7 @@ let rec aux = (fun out iface impl -> (match (iface) with
 (let _151_34 = (FStar_All.pipe_right (FStar_List.rev out) FStar_List.flatten)
 in (FStar_List.append _151_34 impl))
 end
-| d::ds -> begin
+| (d)::ds -> begin
 (match (d.FStar_Parser_AST.d) with
 | FStar_Parser_AST.Tycon (_62_72, tys) when (FStar_All.pipe_right tys (FStar_Util.for_some (fun _62_2 -> (match (_62_2) with
 | FStar_Parser_AST.TyconAbstract (_62_78) -> begin
