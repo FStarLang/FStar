@@ -65,13 +65,13 @@ let ifProp #p b e1 e2 =
 (* The powerset operator *)
 type pow (p:Type) = p -> Tot bool
 
-type retract 'a 'b : Type =
+noeq type retract 'a 'b : Type =
   | MkR: i:('a -> Tot 'b) ->
          j:('b -> Tot 'a) ->
          inv:(x:'a -> Tot (ceq (j (i x)) x)) ->
          retract 'a 'b
 
-type retract_cond 'a 'b : Type =
+noeq type retract_cond 'a 'b : Type =
   | MkC: i2:('a -> Tot 'b) ->
          j2:('b -> Tot 'a) ->
          inv2:(retract 'a 'b -> x:'a -> Tot (ceq (j2 (i2 x)) x)) ->

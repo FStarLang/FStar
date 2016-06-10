@@ -2,29 +2,33 @@ module FStar.Map
 open FStar.Set
 open FStar.FunctionalExtensionality
 
-abstract type t (key:Type) (value:Type) = {
+noeq abstract type t (key:eqtype) (value:Type) = {
   mappings: key -> Tot value;
   domain:   set key
 }
 
-abstract val sel: t 'key 'value -> 'key -> Tot 'value
-abstract val upd: t 'key 'value -> 'key -> 'value -> Tot (t 'key 'value)
-abstract val const: 'value -> Tot (t 'key 'value)
-abstract val concat: t 'key 'value -> t 'key 'value -> Tot (t 'key 'value)
-abstract val contains: t 'key 'value -> 'key -> Tot bool
-abstract val restrict: set 'key -> t 'key 'value -> Tot (t 'key 'value)
-abstract val domain: t 'key 'value -> Tot (set 'key)
+abstract val sel: #key:eqtype -> #value:Type -> t key value -> key -> Tot value
+abstract val upd: #key:eqtype -> #value:Type -> t key value -> key -> value -> Tot (t key value)
+abstract val const: #key:eqtype -> #value:Type -> value -> Tot (t key value)
+abstract val concat: #key:eqtype -> #value:Type -> t key value -> t key value -> Tot (t key value)
+abstract val contains: #key:eqtype -> #value:Type -> t key value -> key -> Tot bool
+abstract val restrict: #key:eqtype -> #value:Type -> set key -> t key value -> Tot (t key value)
+abstract val domain: #key:eqtype -> #value:Type -> t key value -> Tot (set key)
 
-let sel m k = m.mappings k
-let upd m k v = {
+let sel #key #value m k = m.mappings k
+let upd #key #value m k v = {
   mappings = (fun x -> if x = k then v else m.mappings x);
   domain =   Set.union m.domain (Set.singleton k)
 }
-let const v = {
+let const #key #value v = {
   mappings = (fun _ -> v);
   domain =   Set.complement Set.empty
 }
-let concat m1 m2 = {
+
+val foo: nat -> Tot nat
+let foo n =
+
+let concat #key #value m1 m2 = {
   mappings = (fun x -> if Set.mem x m2.domain then m2.mappings x else m1.mappings x);
   domain =   Set.union m1.domain m2.domain
 }
@@ -102,7 +106,7 @@ let lemma_InDomRestrict m ks k = ()
 let lemma_ContainsDom m k      = ()
 let lemma_UpdDomain m k v      = ()
 
-abstract type equal (#key:Type) (#value:Type) (m1:t key value) (m2:t key value) =
+abstract type equal (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value) =
     feq m1.mappings m2.mappings /\ Set.equal m1.domain m2.domain
 
 
@@ -125,10 +129,10 @@ let lemma_equal_intro m1 m2 = ()
 let lemma_equal_elim m1 m2  = ()
 let lemma_equal_refl m1 m2  = ()
 
-let const_on (#key:Type) (#value:Type) (dom:set key) (v:value) = restrict dom (const v)
+let const_on (#key:eqtype) (#value:Type) (dom:set key) (v:value) = restrict dom (const v)
 
-type disjoint_dom (#key:Type) (#value:Type) (m1:t key value) (m2:t key value) =
+type disjoint_dom (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value) =
     (forall x.{:pattern (contains m1 x)(* ; (contains m2 x) *)} contains m1 x ==> not (contains m2 x))
 
-type has_dom (#key:Type) (#value:Type) (m:t key value) (dom:set key) =
+type has_dom (#key:eqtype) (#value:Type) (m:t key value) (dom:set key) =
   (forall x. contains m x <==> mem x dom)

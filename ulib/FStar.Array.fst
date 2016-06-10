@@ -28,24 +28,24 @@ assume val of_seq: #a:Type -> s:seq a -> ST (array a)
   (ensures  (fun h0 x h1 -> (not(contains h0 x)
                              /\ contains h1 x
                              /\ modifies !{} h0 h1
-                             /\ sel h1 x=s)))
+                             /\ sel h1 x==s)))
 
 assume val to_seq: #a:Type -> s:array a -> ST (seq a)
   (requires (fun h -> contains h s))
-  (ensures  (fun h0 x h1 -> (sel h0 s=x /\ h0==h1)))
+  (ensures  (fun h0 x h1 -> (sel h0 s==x /\ h0==h1)))
 
 assume val create : #a:Type -> n:nat -> init:a -> ST (array a)
   (requires (fun h -> True))
   (ensures  (fun h0 x h1 -> (not(contains h0 x)
                              /\ contains h1 x
                              /\ modifies !{} h0 h1
-                             /\ sel h1 x=Seq.create n init)))
+                             /\ sel h1 x==Seq.create n init)))
 
 assume val index : #a:Type -> x:array a -> n:nat -> ST a
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
   (ensures  (fun h0 v h1 -> (n < Seq.length (sel h0 x)
                              /\ h0==h1
-                             /\ v=Seq.index (sel h0 x) n)))
+                             /\ v==Seq.index (sel h0 x) n)))
 
 
 assume val upd : #a:Type -> x:array a -> n:nat -> v:a -> ST unit
@@ -60,7 +60,7 @@ assume val length: #a:Type -> x:array a -> ST nat
 
 assume val op: #a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
   (requires (fun h -> contains h x))
-  (ensures  (fun h0 u h1 -> modifies !{x} h0 h1 /\ sel h1 x=f (sel h0 x)))
+  (ensures  (fun h0 u h1 -> modifies !{x} h0 h1 /\ sel h1 x==f (sel h0 x)))
 
 val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j}
                  -> ST unit (requires (fun h -> contains h x /\ j < Seq.length (sel h x)))
@@ -82,11 +82,11 @@ let swap #a x i j =
 val copy_aux:
   #a:Type -> s:array a -> cpy:array a -> ctr:nat ->
      ST unit
-	(requires (fun h -> (contains h s /\ contains h cpy /\ s <> cpy)
+	(requires (fun h -> (contains h s /\ contains h cpy /\ s =!= cpy)
 			    /\ (Seq.length (sel h cpy) = Seq.length (sel h s))
 			    /\ (ctr <= Seq.length (sel h cpy))
-			    /\ (forall (i:nat). i < ctr ==> Seq.index (sel h s) i = Seq.index (sel h cpy) i)))
-	(ensures (fun h0 u h1 -> (contains h1 s /\ contains h1 cpy /\ s <> cpy )
+			    /\ (forall (i:nat). i < ctr ==> Seq.index (sel h s) i == Seq.index (sel h cpy) i)))
+	(ensures (fun h0 u h1 -> (contains h1 s /\ contains h1 cpy /\ s =!= cpy )
 			      /\ (modifies !{cpy} h0 h1)
 			      /\ (Seq.equal (sel h1 cpy) (sel h1 s))))
 let rec copy_aux #a s cpy ctr =
@@ -113,24 +113,24 @@ val blit_aux:
   #a:Type -> s:array a -> s_idx:nat -> t:array a -> t_idx:nat -> len:nat -> ctr:nat ->
   ST unit
      (requires (fun h ->
-		(contains h s /\ contains h t /\ s <> t)
+		(contains h s /\ contains h t /\ s =!= t)
 		/\ (Seq.length (sel h s) >= s_idx + len)
 		/\ (Seq.length (sel h t) >= t_idx + len)
 		/\ (ctr <= len)
 		/\ (forall (i:nat).
-		    i < ctr ==> Seq.index (sel h s) (s_idx+i) = Seq.index (sel h t) (t_idx+i))))
+		    i < ctr ==> Seq.index (sel h s) (s_idx+i) == Seq.index (sel h t) (t_idx+i))))
      (ensures (fun h0 u h1 ->
-	       (contains h1 s /\ contains h1 t /\ s <> t )
+	       (contains h1 s /\ contains h1 t /\ s =!= t )
 	       /\ (modifies !{t} h0 h1)
 	       /\ (Seq.length (sel h1 s) >= s_idx + len)
 	       /\ (Seq.length (sel h1 t) >= t_idx + len)
 	       /\ (Seq.length (sel h0 s) = Seq.length (sel h1 s))
 	       /\ (Seq.length (sel h0 t) = Seq.length (sel h1 t))
 	       /\ (forall (i:nat).
-		   i < len ==> Seq.index (sel h1 s) (s_idx+i) = Seq.index (sel h1 t) (t_idx+i))
+		   i < len ==> Seq.index (sel h1 s) (s_idx+i) == Seq.index (sel h1 t) (t_idx+i))
 	       /\ (forall (i:nat).
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
-		     Seq.index (sel h1 t) i = Seq.index (sel h0 t) i) ))
+		     Seq.index (sel h1 t) i == Seq.index (sel h0 t) i) ))
 let rec blit_aux #a s s_idx t t_idx len ctr =
   match len - ctr with
   | 0 -> ()
@@ -143,21 +143,21 @@ val blit:
      (requires (fun h ->
 		(contains h s)
 		/\ (contains h t)
-		/\ (s <> t)
+		/\ (s =!= t)
 		/\ (Seq.length (sel h s) >= s_idx + len)
 		/\ (Seq.length (sel h t) >= t_idx + len)))
      (ensures (fun h0 u h1 ->
-	       (contains h1 s /\ contains h1 t /\ s <> t )
+	       (contains h1 s /\ contains h1 t /\ s =!= t )
 	       /\ (Seq.length (sel h1 s) >= s_idx + len)
 	       /\ (Seq.length (sel h1 t) >= t_idx + len)
 	       /\ (Seq.length (sel h0 s) = Seq.length (sel h1 s))
 	       /\ (Seq.length (sel h0 t) = Seq.length (sel h1 t))
 	       /\ (modifies !{t} h0 h1)
 	       /\ (forall (i:nat).
-		   i < len ==> Seq.index (sel h1 s) (s_idx+i) = Seq.index (sel h1 t) (t_idx+i))
+		   i < len ==> Seq.index (sel h1 s) (s_idx+i) == Seq.index (sel h1 t) (t_idx+i))
 	       /\ (forall (i:nat).
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
-		     (Seq.index (sel h1 t) i = Seq.index (sel h0 t) i)) ))
+		     (Seq.index (sel h1 t) i == Seq.index (sel h0 t) i)) ))
 let rec blit #a s s_idx t t_idx len =
   blit_aux s s_idx t t_idx len 0
 
