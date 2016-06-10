@@ -321,7 +321,7 @@ test:   all fsharp-regressions ocaml-test regressions
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
-	$(BIN)/tests.exe
+	$(RUNTIME) $(BIN)/tests.exe
 
 # The regressions to be run with a working OCaml build of F*
 regressions:
