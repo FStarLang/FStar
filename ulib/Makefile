@@ -8,7 +8,7 @@ STDLIB=FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.
 all: stdlib list array tcp squash elogic ordmap pext st mref m_rref twolevelheap relational
 
 stdlib:
-	$(UFSTAR) --explicit_deps $(STDLIB) #verify the library once
+	$(UFSTAR) $(STDLIB) #verify the library once
 
 list:
 	$(UFSTAR) FStar.List.Tot.fst FStar.ListProperties.fst FStar.List.fst

@@ -20,4 +20,7 @@ let n = $i
 
 EOF
   cat FStar.IntN.fstp >> $f
+  if [ $i -eq 8 ]; then
+    echo "type byte = t" >> $f
+  fi
 done
