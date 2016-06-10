@@ -118,6 +118,8 @@ $(FSYACC) $(FSLEX): nuget-restore
 all-msbuild: nuget-restore
 	$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
+	chmod a+x $(BIN)/tests.exe
+	chmod a+x $(BIN)/fstar.exe
 
 clean-msbuild:
 	$(MSBUILD) /t:clean VS/FStar.sln
