@@ -8,7 +8,7 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 module DsEnv = FStar.Parser.Env
 module TcEnv = FStar.TypeChecker.Env
-module SMT = FStar.SMTEncoding.Encode
+module SMT = FStar.SMTEncoding.Solver
 module Tc = FStar.TypeChecker.Tc
 
 let test_lid = Ident.lid_of_path ["Test"] Range.dummyRange

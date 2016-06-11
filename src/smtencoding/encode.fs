@@ -1951,45 +1951,37 @@ let encode_modul tcenv modul =
     let decls = caption decls in
     Z3.giveZ3 decls
 
-let solve use_env_msg tcenv q : unit =
-    push (Util.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
-    let pop () = pop (Util.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
-    let prefix, labels, qry, suffix =
-        let env = get_env tcenv in
-        let bindings = Env.fold_env tcenv (fun bs b -> b::bs) [] in
-        let q, bindings = 
-            let rec aux bindings = match bindings with 
-                | Env.Binding_var x::rest -> 
-                  let out, rest = aux rest in 
-                  let t = N.normalize [N.Inline; N.Beta; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
-                  Syntax.mk_binder ({x with sort=t})::out, rest 
-                | _ -> [], bindings in
-            let closing, bindings = aux bindings in 
-            Util.close_forall (List.rev closing) q, bindings in 
-        let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
-        if debug tcenv Options.Low 
-        || debug tcenv <| Options.Other "SMTEncoding" 
-        then Util.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
-        let phi, qdecls = encode_formula q env in
-        let phi, labels, _ = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
-        let label_prefix, label_suffix = encode_labels labels in
-        let query_prelude =
-            env_decls
-            @label_prefix
-            @qdecls in
-        let qry = Term.Assume(mkNot phi, Some "query", Some (varops.fresh "query")) in
-        let suffix = label_suffix@[Term.Echo "Done!"]  in
-        query_prelude, labels, qry, suffix in
-    begin match qry with
-        | Assume({tm=App(False, _)}, _, _) -> pop(); ()
-        | _ when tcenv.admit -> pop(); ()
-        | Assume(q, _, _) ->
-            let fresh = String.length q.hash >= 2048 in
-            ErrorReporting.askZ3_and_report_errors tcenv fresh labels prefix qry suffix;
-            pop ()
-
-        | _ -> failwith "Impossible"
-    end
+let encode_query use_env_msg tcenv q 
+  : list<decl>  //prelude, translation of tcenv
+  * list<label> //labels in the query
+  * decl        //the query itself
+  * list<decl>  //suffix, evaluating labels in the model, etc.
+  = let env = get_env tcenv in
+    let bindings = Env.fold_env tcenv (fun bs b -> b::bs) [] in
+    let q, bindings = 
+        let rec aux bindings = match bindings with 
+            | Env.Binding_var x::rest -> 
+                let out, rest = aux rest in 
+                let t = N.normalize [N.Inline; N.Beta; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
+                Syntax.mk_binder ({x with sort=t})::out, rest 
+            | _ -> [], bindings in
+        let closing, bindings = aux bindings in 
+        Util.close_forall (List.rev closing) q, bindings 
+    in 
+    let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
+    if debug tcenv Options.Low 
+    || debug tcenv <| Options.Other "SMTEncoding" 
+    then Util.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
+    let phi, qdecls = encode_formula q env in
+    let phi, labels, _ = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
+    let label_prefix, label_suffix = encode_labels labels in
+    let query_prelude =
+        env_decls
+        @label_prefix
+        @qdecls in
+    let qry = Term.Assume(mkNot phi, Some "query", Some (varops.fresh "query")) in
+    let suffix = label_suffix@[Term.Echo "Done!"]  in
+    query_prelude, labels, qry, suffix 
 
 let is_trivial (tcenv:Env.env) (q:typ) : bool =
    let env = get_env tcenv in
@@ -1999,33 +1991,4 @@ let is_trivial (tcenv:Env.env) (q:typ) : bool =
    match f.tm with
     | App(True, _) -> true
     | _ -> false
-
-let solver = {
-    init=init;
-    push=push;
-    pop=pop;
-    mark=mark;
-    reset_mark=reset_mark;
-    commit_mark=commit_mark;
-    encode_sig=encode_sig;
-    encode_modul=encode_modul;
-    solve=solve;
-    is_trivial=is_trivial;
-    finish=Z3.finish;
-    refresh=Z3.refresh;
-}
-let dummy = {
-    init=(fun _ -> ());
-    push=(fun _ -> ());
-    pop=(fun _ -> ());
-    mark=(fun _ -> ());
-    reset_mark=(fun _ -> ());
-    commit_mark=(fun _ -> ());
-    encode_sig=(fun _ _ -> ());
-    encode_modul=(fun _ _ -> ());
-    solve=(fun _ _ _ -> ());
-    is_trivial=(fun _ _ -> false);
-    finish=(fun () -> ());
-    refresh=(fun () -> ());
-}
 

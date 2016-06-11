@@ -76,6 +76,7 @@
     <Compile Include="splitcases.fs" />
     <Compile Include="errorReporting.fs" />
     <Compile Include="encode.fs" />
+    <Compile Include="solver.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

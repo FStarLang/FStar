@@ -32,7 +32,7 @@ module TcEnv   = FStar.TypeChecker.Env
 module Syntax  = FStar.Syntax.Syntax
 module Util    = FStar.Syntax.Util
 module Desugar = FStar.Parser.ToSyntax
-module SMT     = FStar.SMTEncoding.Encode
+module SMT     = FStar.SMTEncoding.Solver
 module Const   = FStar.Syntax.Const
 module Tc      = FStar.TypeChecker.Tc
 
@@ -191,7 +191,7 @@ let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
   in
   if FStar.Options.record_hints()
   || FStar.Options.use_hints()
-  then FStar.SMTEncoding.Z3.with_hints_db fn check_mods
+  then SMT.with_hints_db fn check_mods
   else check_mods()
 
 (***********************************************************************)
