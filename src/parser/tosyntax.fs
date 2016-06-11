@@ -1428,6 +1428,8 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let binders = Subst.close_binders binders in
     let sub (_, x) =
         let edb, x = Subst.open_term ed.binders x in
+        if List.length args <> List.length edb
+        then raise (Error("Unexpected number of arguments to effect constructor", defn.range));
         let s = Util.subst_of_list edb args in
         [], Subst.close binders (Subst.subst s x) in
     let ed = {

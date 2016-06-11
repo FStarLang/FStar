@@ -10,6 +10,7 @@ CHACHA_ODIR=chacha20
 POLY_ODIR=poly1305
 CURVE_ODIR=curve25519
 AES_ODIR=aes
+SHA_ODIR=sha
 
 # OCaml variables
 OCAMLOPT := $(OCAMLOPT) -I $(ULIB_ML)/native_int
@@ -23,6 +24,7 @@ CHACHA_EXTRACTED=Chacha.ml
 POLY_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Parameters.ml Bigint.ml Bignum.ml Poly.ml
 CURVE_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Bignum_Parameters.ml Bignum_Bigint.ml Bignum_Fsum.ml Bignum_FsumWide.ml Bignum_Fdifference.ml Bignum_Fscalar.ml Bignum_Fproduct.ml Bignum_Modulo.ml Bignum_Core.ml Curve_Point.ml Curve_AddAndDouble.ml Curve_Ladder.ml
 AES_EXTRACTED=Crypto_AES.ml
+SHA256_EXTRACTED=Crypto_Sha256.ml
 
 .PHONY: lib-ver chacha-ver chacha-ml poly-ver poly-ml
 
@@ -32,7 +34,9 @@ chacha-ml \
 poly-ver \
 poly-ml \
 curve-lax \
-curve-ml
+curve-ml \
+sha-lax \
+sha-ml
 
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
@@ -92,6 +96,21 @@ aes-ml:
 	$(OCAMLOPT) -I ml -I $(AES_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
 	  $(addprefix $(AES_ODIR)/,$(AES_EXTRACTED)) ml/test_aes.ml -o test_aes.exe
 	./test_aes.exe
+
+# SHA targets
+sha256-ver:
+	$(FSTAR) $(OPTIONS_VER) Crypto.Sha256.fst
+
+sha256-lax:
+	$(FSTAR) $(OPTIONS_VER) Crypto.Sha256.fst --lax
+
+sha256-ml:
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml PRIMS_DIR=native_int
+	mkdir -p $(SHA_ODIR)256
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) Crypto.Sha256.fst --odir $(SHA_ODIR)256
+	$(OCAMLOPT) -I ml -I $(SHA_ODIR)256 $(addprefix ml/,$(REALIZED_ML)) \
+	  $(addprefix $(SHA_ODIR)256/,$(SHA256_EXTRACTED)) ml/test_sha256.ml -o test_sha256.exe
+	./test_sha256.exe
 
 # Cleaning
 clean:

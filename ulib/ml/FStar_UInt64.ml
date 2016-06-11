@@ -1,6 +1,7 @@
 type uint64 = Int64.t
 type uint8 = int
-               
+type t = uint64
+           
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
 let v (x:uint64) : Prims.int = Prims.parse_int (Int64.to_string x)
@@ -72,3 +73,5 @@ let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
 
 let to_string s = Big_int_Z.string_of_big_int (Big_int_Z.and_big_int (Big_int_Z.big_int_of_int64 s) (Big_int_Z.big_int_of_string "0xffffffffffffffff"))
+
+let uint_to_t s = s

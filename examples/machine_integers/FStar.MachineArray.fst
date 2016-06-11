@@ -20,12 +20,12 @@ module FStar.MachineArray
 
 open FStar.Seq
 open FStar.Heap
-open FStar.UInt.UInt32
+open FStar.UInt32
 
 type bounded_seq (t:Type) = s:seq t{length s <= UInt.max_int n} 
 type array (t:Type) = ref (bounded_seq t)
 
-type uint32 = uint32
+type uint32 = t
 
 val of_seq: #a:Type -> s:bounded_seq a -> ST (array a)
   (requires (fun h -> True))
@@ -71,7 +71,7 @@ let upd #a x n z =
 val length: #a:Type -> x:array a -> ST uint32
   (requires (fun h -> contains h x))
   (ensures  (fun h0 y h1 -> v y=length (sel h0 x) /\ h0==h1))
-let length #a x = let s = to_seq x in int_to_uint32 (Seq.length s)
+let length #a x = let s = to_seq x in uint_to_t (Seq.length s)
 
 val op: #a:Type -> f:(bounded_seq a -> Tot (bounded_seq a)) -> x:array a -> ST unit
   (requires (fun h -> contains h x))
@@ -111,7 +111,7 @@ val copy_aux:
 let rec copy_aux #a s cpy ctr =
   if (eq (length cpy) ctr) then ()
   else (upd cpy ctr (index s ctr);
-       copy_aux s cpy (ctr ^+ one))
+       copy_aux s cpy (ctr +^ (uint_to_t 1)))
 
 val copy:
   #a:Type -> s:array a ->
@@ -123,8 +123,8 @@ val copy:
 				     /\ (contains h1 r)
 				     /\ (Seq.equal (sel h1 r) (sel h0 s))))
 let copy #a s =
-  let cpy = create (length s) (index s zero) in
-  copy_aux s cpy zero;
+  let cpy = create (length s) (index s (uint_to_t 0)) in
+  copy_aux s cpy (uint_to_t 0);
   cpy
 
 val blit_aux:
@@ -150,12 +150,12 @@ val blit_aux:
 		   (i < Seq.length (sel h1 t) /\ (i < v t_idx \/ i >= v t_idx + v len)) ==>
 		     Seq.index (sel h1 t) i = Seq.index (sel h0 t) i) ))
 let rec blit_aux #a s s_idx t t_idx len ctr =
-  if (len ^- ctr) ^= zero then ()
+  if (len -^ ctr) =^ (uint_to_t 0) then ()
   else 
     begin 
       let h = ST.get() in
-      upd t (t_idx ^+ ctr) (index s (s_idx ^+ ctr));
-      blit_aux s s_idx t t_idx len (ctr^+one)
+      upd t (t_idx +^ ctr) (index s (s_idx +^ ctr));
+      blit_aux s s_idx t t_idx len (ctr+^(uint_to_t 1))
     end
 
 val blit:
@@ -180,7 +180,7 @@ val blit:
 		   (i < Seq.length (sel h1 t) /\ (i < v t_idx \/ i >= v t_idx + v len)) ==>
 		     (Seq.index (sel h1 t) i = Seq.index (sel h0 t) i)) ))
 let rec blit #a s s_idx t t_idx len =
-  blit_aux s s_idx t t_idx len zero
+  blit_aux s s_idx t t_idx len (uint_to_t 0)
 
 val sub :
   #a:Type -> s:array a -> idx:uint32 -> len:uint32 ->
@@ -198,6 +198,6 @@ val sub :
       /\ (v idx + v len <= Seq.length (sel h0 s))
       /\ (Seq.equal (Seq.slice (sel h0 s) (v idx) (v idx + v len)) (sel h1 t))))
 let sub #a s idx len =
-  let t = create len (index s zero) in
-  blit s idx t zero len;
+  let t = create len (index s (uint_to_t 0)) in
+  blit s idx t (uint_to_t 0) len;
   t

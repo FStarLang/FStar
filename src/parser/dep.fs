@@ -210,8 +210,11 @@ let collect_one (original_map: map) (filename: string): list<string> =
   let record_module_alias ident lid =
     let key = String.lowercase (text_of_id ident) in
     let alias = lowercase_join_longident lid true in
-    let deps_of_aliased_module = must (smap_try_find working_map alias) in
-    smap_add working_map key deps_of_aliased_module
+    match smap_try_find working_map alias with
+    | Some deps_of_aliased_module ->
+        smap_add working_map key deps_of_aliased_module
+    | None ->
+        raise (Err (Util.format1 "module not found in search path: %s\n" alias))
   in
 
   (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
@@ -273,6 +276,7 @@ let collect_one (original_map: map) (filename: string): list<string> =
     | Open lid ->
         record_open lid
     | ModuleAbbrev (ident, lid) ->
+        add_dep (lowercase_join_longident lid true);
         record_module_alias ident lid
     | ToplevelLet (_, _, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms

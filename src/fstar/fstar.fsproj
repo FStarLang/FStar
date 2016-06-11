@@ -26,9 +26,10 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--universes --lax --codegen OCaml --explicit_deps test.fst</StartArguments>
+    <StartArguments>--universes --lax --explicit_deps EffectProblem.fst --debug Bug --debug_level Extreme</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\examples\test\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\FStar\examples\test\</StartWorkingDirectory>
+    <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
