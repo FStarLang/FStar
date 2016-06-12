@@ -163,13 +163,14 @@ let doZ3Exe' (input:string) (z3proc:proc) =
     let lines = String.split ['\n'] z3out |> List.map Util.trim_string in
     let unsat_core lines = 
         let parse_core s =
-            let s = Util.substring s 1 (String.length s - 1) in
+            let s = Util.trim_string s in
+            let s = Util.substring s 1 (String.length s - 2) in
             if Util.starts_with s "error"
             then None
             else Util.split s " " |> Some in
         match lines with 
         | "<unsat-core>"::core::"</unsat-core>"::rest -> 
-          parse_core core, rest
+          parse_core core, lines 
         | _ -> None, lines in
     let rec lblnegs lines = match lines with
       | lname::"false"::rest -> lname::lblnegs rest
@@ -207,7 +208,7 @@ type job<'a> = {
     job:unit -> 'a;
     callback: 'a -> unit
 }
-type z3job = job<(either<unsat_core, error_labels> * float)>
+type z3job = job<(either<unsat_core, error_labels> * int)>
 
 let job_queue : ref<list<z3job>> = Util.mk_ref []
 
@@ -218,10 +219,10 @@ let with_monitor m f =
     Util.monitor_exit(m);
     res
 
-let z3_job fresh label_messages input () : either<unsat_core, error_labels> * float =
+let z3_job fresh label_messages input () : either<unsat_core, error_labels> * int =
   let start = Util.now() in
   let status = doZ3Exe fresh input in
-  let elapsed_time = Util.time_diff (Util.now()) start in
+  let _, elapsed_time = Util.time_diff start (Util.now()) in
   let result = match status with
     | UNSAT core -> Inl core, elapsed_time
     | TIMEOUT lblnegs
@@ -324,13 +325,40 @@ let commit_mark msg =
         | _ -> failwith "Impossible"
     end
 
-let ask fresh label_messages qry (cb: (either<unsat_core, error_labels> * float) -> unit) =
-  let fresh = fresh && (Options.n_cores()) > 1 in
+let ask fresh (core:unsat_core) label_messages qry (cb: (either<unsat_core, error_labels> * int) -> unit) =
+  let filter_assertions theory = match core with 
+    | None -> theory, false
+    | Some core ->
+      let theory', n_retained, n_pruned =
+          List.fold_right (fun d (theory, n_retained, n_pruned) -> match d with 
+            | Assume(_, _, Some name) when not (Util.starts_with name "@") -> 
+              if List.contains name core
+              then d::theory, n_retained+1, n_pruned
+              else theory, n_retained, n_pruned+1
+            | _ -> d::theory, n_retained, n_pruned)
+          theory ([], 0, 0) in 
+      if n_retained = List.length core
+      then let _ = if Options.print_fuels() 
+                   then Util.print2 "Retained %s assertions and pruned %s assertions using recorded unsat core\n" 
+                         (Util.string_of_int n_retained)
+                         (Util.string_of_int n_pruned) in
+           theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true
+      else let _ = if Options.print_fuels() 
+                   then Util.print1 "Did not used unsat core, since %s assertions were not found\n" 
+                         (Util.string_of_int (List.length core - n_retained)) in
+           theory, false in
   let theory = bgtheory fresh in
   let theory =
     if fresh
     then theory@qry
     else theory@[Term.Push]@qry@[Term.Pop] in
+  let theory, used_unsat_core = filter_assertions theory in
+  let cb (uc_errs, time) = 
+    if used_unsat_core
+    then match uc_errs with 
+         | Inl _ -> cb (uc_errs, time)
+         | Inr _ -> cb (Inr [], time) //if we filtered the theory, then the error message is unreliable
+    else cb (uc_errs, time) in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
   if (Options.log_queries()) then log_query fresh input;
   enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})

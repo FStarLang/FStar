@@ -151,7 +151,7 @@ let label_goals use_env_msg r q : term * labels * ranges =
 
       -- potential_errors are the labels in the initial counterexample model
  *)
-let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -> (either<Z3.unsat_core, error_labels> * float)) : labels = 
+let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -> (either<Z3.unsat_core, error_labels> * int)) : labels = 
     let ctr = Util.mk_ref 0 in
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
         incr ctr;

@@ -34,7 +34,10 @@ let return_all x = x
 
 type time = float
 let now () = Unix.gettimeofday ()
-let time_diff (t1:time) (t2:time) : float = t2 -. t1
+let time_diff (t1:time) (t2:time) : float * int =
+  let n = t2 -. t1 in
+  n, 
+  int_of_float (n *. 1000.0)
 
 exception Impos
 exception NYI of string

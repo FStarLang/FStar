@@ -4997,19 +4997,22 @@ in (
 let stop = (FStar_Util.now ())
 in (
 
-let diff = (FStar_Util.time_diff start stop)
-in (
+let _46_3115 = (FStar_Util.time_diff start stop)
+in (match (_46_3115) with
+| (diff, _46_3114) -> begin
+(
 
-let _46_3113 = (let _136_1232 = (FStar_Absyn_Print.sigelt_to_string_short se)
+let _46_3116 = (let _136_1232 = (FStar_Absyn_Print.sigelt_to_string_short se)
 in (FStar_Util.print2 "Time %ss : %s\n" (FStar_Util.string_of_float diff) _136_1232))
-in res))))))
+in res)
+end))))))
 in (
 
-let _46_3128 = (FStar_All.pipe_right ses (FStar_List.fold_left (fun _46_3117 se -> (match (_46_3117) with
+let _46_3131 = (FStar_All.pipe_right ses (FStar_List.fold_left (fun _46_3120 se -> (match (_46_3120) with
 | (ses, env) -> begin
 (
 
-let _46_3119 = if (FStar_Tc_Env.debug env FStar_Options.Low) then begin
+let _46_3122 = if (FStar_Tc_Env.debug env FStar_Options.Low) then begin
 (let _136_1236 = (let _136_1235 = (FStar_Absyn_Print.sigelt_to_string se)
 in (FStar_Util.format1 "Checking sigelt\t%s\n" _136_1235))
 in (FStar_Util.print_string _136_1236))
@@ -5018,20 +5021,20 @@ end else begin
 end
 in (
 
-let _46_3123 = if (FStar_Options.timing ()) then begin
+let _46_3126 = if (FStar_Options.timing ()) then begin
 (time_tc_decl env se deserialized)
 end else begin
 (tc_decl env se deserialized)
 end
-in (match (_46_3123) with
+in (match (_46_3126) with
 | (se, env) -> begin
 (
 
-let _46_3124 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.encode_sig env se)
+let _46_3127 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.encode_sig env se)
 in ((se)::ses, env))
 end)))
 end)) ([], env)))
-in (match (_46_3128) with
+in (match (_46_3131) with
 | (ses, env) -> begin
 ((FStar_List.rev ses), env)
 end))))
@@ -5043,7 +5046,7 @@ let is_abstract = (fun quals -> (FStar_All.pipe_right quals (FStar_Util.for_some
 | FStar_Absyn_Syntax.Abstract -> begin
 true
 end
-| _46_3137 -> begin
+| _46_3140 -> begin
 false
 end)))))
 in (
@@ -5052,14 +5055,14 @@ let is_hidden_proj_or_disc = (fun q -> (match (q) with
 | (FStar_Absyn_Syntax.Projector (l, _)) | (FStar_Absyn_Syntax.Discriminator (l)) -> begin
 (FStar_All.pipe_right hidden (FStar_Util.for_some (FStar_Ident.lid_equals l)))
 end
-| _46_3147 -> begin
+| _46_3150 -> begin
 false
 end))
 in (match (se) with
-| FStar_Absyn_Syntax.Sig_pragma (_46_3149) -> begin
+| FStar_Absyn_Syntax.Sig_pragma (_46_3152) -> begin
 ([], hidden)
 end
-| FStar_Absyn_Syntax.Sig_datacon (_46_3152) -> begin
+| FStar_Absyn_Syntax.Sig_datacon (_46_3155) -> begin
 (FStar_All.failwith "Impossible")
 end
 | (FStar_Absyn_Syntax.Sig_kind_abbrev (_)) | (FStar_Absyn_Syntax.Sig_tycon (_)) -> begin
@@ -5075,12 +5078,12 @@ end else begin
 ((se)::[], hidden)
 end
 end
-| FStar_Absyn_Syntax.Sig_bundle (ses, quals, _46_3172, _46_3174) -> begin
+| FStar_Absyn_Syntax.Sig_bundle (ses, quals, _46_3175, _46_3177) -> begin
 if (is_abstract quals) then begin
-(FStar_List.fold_right (fun se _46_3180 -> (match (_46_3180) with
+(FStar_List.fold_right (fun se _46_3183 -> (match (_46_3183) with
 | (out, hidden) -> begin
 (match (se) with
-| FStar_Absyn_Syntax.Sig_tycon (l, bs, t, _46_3185, _46_3187, quals, r) -> begin
+| FStar_Absyn_Syntax.Sig_tycon (l, bs, t, _46_3188, _46_3190, quals, r) -> begin
 (
 
 let dec = FStar_Absyn_Syntax.Sig_tycon ((l, bs, t, [], [], quals, r))
@@ -5103,7 +5106,7 @@ end else begin
 ((se)::[], hidden)
 end
 end
-| FStar_Absyn_Syntax.Sig_assume (_46_3205, _46_3207, quals, _46_3210) -> begin
+| FStar_Absyn_Syntax.Sig_assume (_46_3208, _46_3210, quals, _46_3213) -> begin
 if (is_abstract quals) then begin
 ([], hidden)
 end else begin
@@ -5118,7 +5121,7 @@ if (FStar_All.pipe_right quals (FStar_Util.for_some (fun _46_18 -> (match (_46_1
 | (FStar_Absyn_Syntax.Assumption) | (FStar_Absyn_Syntax.Projector (_)) | (FStar_Absyn_Syntax.Discriminator (_)) -> begin
 true
 end
-| _46_3228 -> begin
+| _46_3231 -> begin
 false
 end)))) then begin
 ((se)::[], hidden)
@@ -5127,13 +5130,13 @@ end else begin
 end
 end
 end
-| FStar_Absyn_Syntax.Sig_main (_46_3230) -> begin
+| FStar_Absyn_Syntax.Sig_main (_46_3233) -> begin
 ([], hidden)
 end
 | (FStar_Absyn_Syntax.Sig_new_effect (_)) | (FStar_Absyn_Syntax.Sig_sub_effect (_)) | (FStar_Absyn_Syntax.Sig_effect_abbrev (_)) -> begin
 ((se)::[], hidden)
 end
-| FStar_Absyn_Syntax.Sig_let ((false, (lb)::[]), _46_3246, _46_3248, quals) when (FStar_All.pipe_right quals (FStar_Util.for_some is_hidden_proj_or_disc)) -> begin
+| FStar_Absyn_Syntax.Sig_let ((false, (lb)::[]), _46_3249, _46_3251, quals) when (FStar_All.pipe_right quals (FStar_Util.for_some is_hidden_proj_or_disc)) -> begin
 (
 
 let lid = (FStar_Util.right lb.FStar_Absyn_Syntax.lbname)
@@ -5160,18 +5163,18 @@ end))))
 
 let get_exports : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.modul  ->  FStar_Absyn_Syntax.sigelt Prims.list = (fun env modul -> (
 
-let _46_3273 = (FStar_All.pipe_right modul.FStar_Absyn_Syntax.declarations (FStar_List.fold_left (fun _46_3265 se -> (match (_46_3265) with
+let _46_3276 = (FStar_All.pipe_right modul.FStar_Absyn_Syntax.declarations (FStar_List.fold_left (fun _46_3268 se -> (match (_46_3268) with
 | (exports, hidden) -> begin
 (
 
-let _46_3269 = (for_export env hidden se)
-in (match (_46_3269) with
+let _46_3272 = (for_export env hidden se)
+in (match (_46_3272) with
 | (exports', hidden) -> begin
 ((exports')::exports, hidden)
 end))
 end)) ([], [])))
-in (match (_46_3273) with
-| (exports, _46_3272) -> begin
+in (match (_46_3276) with
+| (exports, _46_3275) -> begin
 (FStar_All.pipe_right (FStar_List.rev exports) FStar_List.flatten)
 end)))
 
@@ -5190,12 +5193,12 @@ in (
 
 let env = (
 
-let _46_3278 = env
+let _46_3281 = env
 in (let _136_1265 = (not ((FStar_Options.should_verify modul.FStar_Absyn_Syntax.name.FStar_Ident.str)))
-in {FStar_Tc_Env.solver = _46_3278.FStar_Tc_Env.solver; FStar_Tc_Env.range = _46_3278.FStar_Tc_Env.range; FStar_Tc_Env.curmodule = _46_3278.FStar_Tc_Env.curmodule; FStar_Tc_Env.gamma = _46_3278.FStar_Tc_Env.gamma; FStar_Tc_Env.modules = _46_3278.FStar_Tc_Env.modules; FStar_Tc_Env.expected_typ = _46_3278.FStar_Tc_Env.expected_typ; FStar_Tc_Env.level = _46_3278.FStar_Tc_Env.level; FStar_Tc_Env.sigtab = _46_3278.FStar_Tc_Env.sigtab; FStar_Tc_Env.is_pattern = _46_3278.FStar_Tc_Env.is_pattern; FStar_Tc_Env.instantiate_targs = _46_3278.FStar_Tc_Env.instantiate_targs; FStar_Tc_Env.instantiate_vargs = _46_3278.FStar_Tc_Env.instantiate_vargs; FStar_Tc_Env.effects = _46_3278.FStar_Tc_Env.effects; FStar_Tc_Env.generalize = _46_3278.FStar_Tc_Env.generalize; FStar_Tc_Env.letrecs = _46_3278.FStar_Tc_Env.letrecs; FStar_Tc_Env.top_level = _46_3278.FStar_Tc_Env.top_level; FStar_Tc_Env.check_uvars = _46_3278.FStar_Tc_Env.check_uvars; FStar_Tc_Env.use_eq = _46_3278.FStar_Tc_Env.use_eq; FStar_Tc_Env.is_iface = modul.FStar_Absyn_Syntax.is_interface; FStar_Tc_Env.admit = _136_1265; FStar_Tc_Env.default_effects = _46_3278.FStar_Tc_Env.default_effects}))
+in {FStar_Tc_Env.solver = _46_3281.FStar_Tc_Env.solver; FStar_Tc_Env.range = _46_3281.FStar_Tc_Env.range; FStar_Tc_Env.curmodule = _46_3281.FStar_Tc_Env.curmodule; FStar_Tc_Env.gamma = _46_3281.FStar_Tc_Env.gamma; FStar_Tc_Env.modules = _46_3281.FStar_Tc_Env.modules; FStar_Tc_Env.expected_typ = _46_3281.FStar_Tc_Env.expected_typ; FStar_Tc_Env.level = _46_3281.FStar_Tc_Env.level; FStar_Tc_Env.sigtab = _46_3281.FStar_Tc_Env.sigtab; FStar_Tc_Env.is_pattern = _46_3281.FStar_Tc_Env.is_pattern; FStar_Tc_Env.instantiate_targs = _46_3281.FStar_Tc_Env.instantiate_targs; FStar_Tc_Env.instantiate_vargs = _46_3281.FStar_Tc_Env.instantiate_vargs; FStar_Tc_Env.effects = _46_3281.FStar_Tc_Env.effects; FStar_Tc_Env.generalize = _46_3281.FStar_Tc_Env.generalize; FStar_Tc_Env.letrecs = _46_3281.FStar_Tc_Env.letrecs; FStar_Tc_Env.top_level = _46_3281.FStar_Tc_Env.top_level; FStar_Tc_Env.check_uvars = _46_3281.FStar_Tc_Env.check_uvars; FStar_Tc_Env.use_eq = _46_3281.FStar_Tc_Env.use_eq; FStar_Tc_Env.is_iface = modul.FStar_Absyn_Syntax.is_interface; FStar_Tc_Env.admit = _136_1265; FStar_Tc_Env.default_effects = _46_3281.FStar_Tc_Env.default_effects}))
 in (
 
-let _46_3281 = if (not ((FStar_Ident.lid_equals modul.FStar_Absyn_Syntax.name FStar_Absyn_Const.prims_lid))) then begin
+let _46_3284 = if (not ((FStar_Ident.lid_equals modul.FStar_Absyn_Syntax.name FStar_Absyn_Const.prims_lid))) then begin
 (env.FStar_Tc_Env.solver.FStar_Tc_Env.push msg)
 end else begin
 ()
@@ -5205,27 +5208,27 @@ in (
 let env = (FStar_Tc_Env.set_current_module env modul.FStar_Absyn_Syntax.name)
 in (
 
-let _46_3286 = (tc_decls env modul.FStar_Absyn_Syntax.declarations modul.FStar_Absyn_Syntax.is_deserialized)
-in (match (_46_3286) with
+let _46_3289 = (tc_decls env modul.FStar_Absyn_Syntax.declarations modul.FStar_Absyn_Syntax.is_deserialized)
+in (match (_46_3289) with
 | (ses, env) -> begin
 ((
 
-let _46_3287 = modul
-in {FStar_Absyn_Syntax.name = _46_3287.FStar_Absyn_Syntax.name; FStar_Absyn_Syntax.declarations = ses; FStar_Absyn_Syntax.exports = _46_3287.FStar_Absyn_Syntax.exports; FStar_Absyn_Syntax.is_interface = _46_3287.FStar_Absyn_Syntax.is_interface; FStar_Absyn_Syntax.is_deserialized = _46_3287.FStar_Absyn_Syntax.is_deserialized}), env)
+let _46_3290 = modul
+in {FStar_Absyn_Syntax.name = _46_3290.FStar_Absyn_Syntax.name; FStar_Absyn_Syntax.declarations = ses; FStar_Absyn_Syntax.exports = _46_3290.FStar_Absyn_Syntax.exports; FStar_Absyn_Syntax.is_interface = _46_3290.FStar_Absyn_Syntax.is_interface; FStar_Absyn_Syntax.is_deserialized = _46_3290.FStar_Absyn_Syntax.is_deserialized}), env)
 end))))))))
 
 
 let tc_more_partial_modul : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.modul  ->  FStar_Absyn_Syntax.sigelt Prims.list  ->  (FStar_Absyn_Syntax.modul * FStar_Tc_Env.env) = (fun env modul decls -> (
 
-let _46_3294 = (tc_decls env decls false)
-in (match (_46_3294) with
+let _46_3297 = (tc_decls env decls false)
+in (match (_46_3297) with
 | (ses, env) -> begin
 (
 
 let modul = (
 
-let _46_3295 = modul
-in {FStar_Absyn_Syntax.name = _46_3295.FStar_Absyn_Syntax.name; FStar_Absyn_Syntax.declarations = (FStar_List.append modul.FStar_Absyn_Syntax.declarations ses); FStar_Absyn_Syntax.exports = _46_3295.FStar_Absyn_Syntax.exports; FStar_Absyn_Syntax.is_interface = _46_3295.FStar_Absyn_Syntax.is_interface; FStar_Absyn_Syntax.is_deserialized = _46_3295.FStar_Absyn_Syntax.is_deserialized})
+let _46_3298 = modul
+in {FStar_Absyn_Syntax.name = _46_3298.FStar_Absyn_Syntax.name; FStar_Absyn_Syntax.declarations = (FStar_List.append modul.FStar_Absyn_Syntax.declarations ses); FStar_Absyn_Syntax.exports = _46_3298.FStar_Absyn_Syntax.exports; FStar_Absyn_Syntax.is_interface = _46_3298.FStar_Absyn_Syntax.is_interface; FStar_Absyn_Syntax.is_deserialized = _46_3298.FStar_Absyn_Syntax.is_deserialized})
 in (modul, env))
 end)))
 
@@ -5237,23 +5240,23 @@ in (
 
 let modul = (
 
-let _46_3301 = modul
-in {FStar_Absyn_Syntax.name = _46_3301.FStar_Absyn_Syntax.name; FStar_Absyn_Syntax.declarations = _46_3301.FStar_Absyn_Syntax.declarations; FStar_Absyn_Syntax.exports = exports; FStar_Absyn_Syntax.is_interface = modul.FStar_Absyn_Syntax.is_interface; FStar_Absyn_Syntax.is_deserialized = modul.FStar_Absyn_Syntax.is_deserialized})
+let _46_3304 = modul
+in {FStar_Absyn_Syntax.name = _46_3304.FStar_Absyn_Syntax.name; FStar_Absyn_Syntax.declarations = _46_3304.FStar_Absyn_Syntax.declarations; FStar_Absyn_Syntax.exports = exports; FStar_Absyn_Syntax.is_interface = modul.FStar_Absyn_Syntax.is_interface; FStar_Absyn_Syntax.is_deserialized = modul.FStar_Absyn_Syntax.is_deserialized})
 in (
 
 let env = (FStar_Tc_Env.finish_module env modul)
 in (
 
-let _46_3311 = if (not ((FStar_Ident.lid_equals modul.FStar_Absyn_Syntax.name FStar_Absyn_Const.prims_lid))) then begin
+let _46_3314 = if (not ((FStar_Ident.lid_equals modul.FStar_Absyn_Syntax.name FStar_Absyn_Const.prims_lid))) then begin
 (
 
-let _46_3305 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.pop (Prims.strcat "Ending modul " modul.FStar_Absyn_Syntax.name.FStar_Ident.str))
+let _46_3308 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.pop (Prims.strcat "Ending modul " modul.FStar_Absyn_Syntax.name.FStar_Ident.str))
 in (
 
-let _46_3307 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.encode_modul env modul)
+let _46_3310 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.encode_modul env modul)
 in (
 
-let _46_3309 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.refresh ())
+let _46_3312 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.refresh ())
 in (let _136_1276 = (FStar_Options.restore_cmd_line_options true)
 in (FStar_All.pipe_right _136_1276 Prims.ignore)))))
 end else begin
@@ -5264,8 +5267,8 @@ in (modul, env))))))
 
 let tc_modul : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.modul  ->  (FStar_Absyn_Syntax.modul * FStar_Tc_Env.env) = (fun env modul -> (
 
-let _46_3317 = (tc_partial_modul env modul)
-in (match (_46_3317) with
+let _46_3320 = (tc_partial_modul env modul)
+in (match (_46_3320) with
 | (modul, env) -> begin
 (finish_partial_modul env modul)
 end)))
@@ -5278,7 +5281,7 @@ let do_sigelt = (fun en elt -> (
 let env = (FStar_Tc_Env.push_sigelt en elt)
 in (
 
-let _46_3324 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.encode_sig env elt)
+let _46_3327 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.encode_sig env elt)
 in env)))
 in (
 
@@ -5289,7 +5292,7 @@ in (FStar_Tc_Env.finish_module _136_1289 m)))))
 
 let check_module : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.modul  ->  (FStar_Absyn_Syntax.modul Prims.list * FStar_Tc_Env.env) = (fun env m -> (
 
-let _46_3329 = if (FStar_Options.debug_any ()) then begin
+let _46_3332 = if (FStar_Options.debug_any ()) then begin
 (let _136_1294 = (FStar_Absyn_Print.sli m.FStar_Absyn_Syntax.name)
 in (FStar_Util.print2 "Checking %s: %s\n" (if m.FStar_Absyn_Syntax.is_interface then begin
 "i\'face"
@@ -5301,12 +5304,12 @@ end else begin
 end
 in (
 
-let _46_3333 = (tc_modul env m)
-in (match (_46_3333) with
+let _46_3336 = (tc_modul env m)
+in (match (_46_3336) with
 | (m, env) -> begin
 (
 
-let _46_3334 = if (FStar_Options.dump_module m.FStar_Absyn_Syntax.name.FStar_Ident.str) then begin
+let _46_3337 = if (FStar_Options.dump_module m.FStar_Absyn_Syntax.name.FStar_Ident.str) then begin
 (let _136_1295 = (FStar_Absyn_Print.modul_to_string m)
 in (FStar_Util.print1 "%s\n" _136_1295))
 end else begin

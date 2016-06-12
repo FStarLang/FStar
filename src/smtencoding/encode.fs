@@ -577,7 +577,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_uvar (uv, k) ->
         let ttm = Term.mk_Term_uvar (Unionfind.uvar_id uv) in
         let t_has_k, decls = encode_term_pred None k env ttm in //TODO: skip encoding this if it has already been encoded before
-        let d = Term.Assume(t_has_k, Some "Uvar typing", Some (varops.fresh (Util.format1 "uvar_typing_%s" (Util.string_of_int <| Unionfind.uvar_id uv)))) in
+        let d = Term.Assume(t_has_k, Some "Uvar typing", Some (varops.fresh (Util.format1 "@uvar_typing_%s" (Util.string_of_int <| Unionfind.uvar_id uv)))) in
         ttm, decls@[d]
 
       | Tm_app _ ->
@@ -608,7 +608,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                         let cvars = Term.free_variables has_type in
                         let e_typing = Term.Assume(Term.mkForall([[has_type]], cvars, has_type), 
                                                    Some "Partial app typing", 
-                                                   Some ("partial_app_typing_" ^ (Util.string_of_int <| varops.next_id()))) in
+                                                   Some (varops.fresh "@partial_app_typing_")) in 
                         app_tm, decls@decls'@decls''@[e_typing]
                 end in
 
@@ -1086,7 +1086,7 @@ let pretype_axiom tapp vars =
     let ffsym, ff = fresh_fvar "f" Fuel_sort in
     let xx_has_type = mk_HasTypeFuel ff xx tapp in
     Term.Assume(mkForall([[xx_has_type]], (xxsym, Term_sort)::(ffsym, Fuel_sort)::vars,
-                         mkImp(xx_has_type, mkEq(tapp, mkApp("PreType", [xx])))), Some "pretyping", Some (varops.fresh "pretyping_"))
+                         mkImp(xx_has_type, mkEq(tapp, mkApp("PreType", [xx])))), Some "pretyping", Some (varops.fresh "@pretyping_"))
 
 let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
     let xx = ("x", Term_sort) in
@@ -1218,12 +1218,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
    let mk_range_interp : env -> string -> term -> decls_t = fun env range tt ->
         let range_ty = Term.mkApp(range, []) in
         [Term.Assume(mk_HasTypeZ Term.mk_Range_const range_ty, Some "Range_const typing", Some (varops.fresh "typing_range_const"))] in
-//   let mk_hyperheap_rref_interp : env -> string -> term -> decls_t = fun env rref t -> 
-//        if Ident.lid_equals (Env.current_module env) Const.fstar_hyperheap_lid
-//        then []
-//        else Term.injective_constructor (rref, [(rref^"@r", Term_sort); (rref^"@t", Term_sort)], Term_sort) in
 
-    let prims = [(Const.unit_lid,   mk_unit);
+   let prims = [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
                  (Const.string_lid, mk_str);
@@ -1698,7 +1694,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                        mkEq(app, dapp)), Some "equality for proxy", Some ("equality_tok_"^ddtok));
                   Term.Assume(mkForall([[ty_pred']],add_fuel (fuel_var, Fuel_sort) vars', mkImp(guard', ty_pred')), 
                               Some "data constructor typing intro", 
-                              Some ("data_tping_intro_"^ddtok));
+                              Some ("data_typing_intro_"^ddtok));
                   ]
                 @elim in
         datacons@g, env
@@ -1979,7 +1975,7 @@ let encode_query use_env_msg tcenv q
         env_decls
         @label_prefix
         @qdecls in
-    let qry = Term.Assume(mkNot phi, Some "query", Some (varops.fresh "query")) in
+    let qry = Term.Assume(mkNot phi, Some "query", Some (varops.fresh "@query")) in
     let suffix = label_suffix@[Term.Echo "Done!"]  in
     query_prelude, labels, qry, suffix 
 

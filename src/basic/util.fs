@@ -28,8 +28,9 @@ let return_all x = x
 
 type time = System.DateTime
 let now () = System.DateTime.Now
-let time_diff (t1:time) (t2:time) : float =
-    let ts = t2 - t1 in ts.TotalSeconds
+let time_diff (t1:time) (t2:time) : float * int =
+    let ts = t2 - t1 in 
+    ts.TotalSeconds, int32 ts.TotalMilliseconds
 
 exception Impos
 exception NYI of string
