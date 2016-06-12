@@ -24,12 +24,16 @@ open FStar.Util
 (* Z3 Specifics                                                             *)
 (****************************************************************************)
 type z3version =
-| Z3V_Unknown
+| Z3V_Unknown of string
 | Z3V of int * int * int
+
+let z3version_as_string = function
+    | Z3V_Unknown s -> Util.format1 "unknown version: %s" s
+    | Z3V (i, j, k) -> Util.format3 "%s.%s.%s" (Util.string_of_int i) (Util.string_of_int j) (Util.string_of_int k)
 
 let z3v_compare known (w1, w2, w3) =
     match known with
-    | Z3V_Unknown -> None
+    | Z3V_Unknown _-> None
     | Z3V (k1, k2, k3) -> Some(
         if k1 <> w1 then w1 - k1 else
         if k2 <> w2 then w2 - k2 else
@@ -57,15 +61,16 @@ let get_z3version () =
                 let x = try List.map int_of_string (split x ".") with _ -> [] in
                 match x with
                 | [i1; i2; i3] -> Z3V (i1, i2, i3)
-                | _ -> Z3V_Unknown
+                | _ -> Z3V_Unknown out
             end
-            | _ -> Z3V_Unknown
+            | _ -> Z3V_Unknown out
         in
             _z3version := Some out; out
 
 let ini_params () =
-  begin if z3v_le (get_z3version ()) (4, 3, 1)
-  then raise <| Util.Failure "Z3 v4.3.1 is required."
+  let z3_v = get_z3version () in
+  begin if z3v_le (get_z3version ()) (4, 4, 0)
+  then raise <| Util.Failure (Util.format1 "Z3 v4.4.1 is required; got %s\n" (z3version_as_string z3_v))
   else ()
   end;
   "-smt2 -in \
@@ -73,17 +78,19 @@ let ini_params () =
     MODEL=true \
     SMT.RELEVANCY=2"
 
+type label = string
+type unsat_core = option<list<string>>
 type z3status =
-    | SAT
-    | UNSAT
-    | UNKNOWN
-    | TIMEOUT
+    | UNSAT   of unsat_core
+    | SAT     of list<label>          //error labels
+    | UNKNOWN of list<label>          //error labels
+    | TIMEOUT of list<label>          //error labels
 
 let status_to_string = function
-    | SAT  -> "sat"
-    | UNSAT -> "unsat"
-    | UNKNOWN -> "unknown"
-    | TIMEOUT -> "timeout"
+    | SAT  _ -> "sat"
+    | UNSAT _ -> "unsat"
+    | UNKNOWN _ -> "unknown"
+    | TIMEOUT _ -> "timeout"
 
 let tid () = Util.current_tid() |> Util.string_of_int
 let new_z3proc id =
@@ -153,15 +160,28 @@ let bg_z3_proc =
 let doZ3Exe' (input:string) (z3proc:proc) =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map Util.trim_string in
+    let unsat_core lines = 
+        let parse_core s =
+            let s = Util.substring s 1 (String.length s - 1) in
+            if Util.starts_with s "error"
+            then None
+            else Util.split s " " |> Some in
+        match lines with 
+        | "<unsat-core>"::core::"</unsat-core>"::rest -> 
+          parse_core core, rest
+        | _ -> None, lines in
     let rec lblnegs lines = match lines with
       | lname::"false"::rest -> lname::lblnegs rest
       | lname::_::rest -> lblnegs rest
       | _ -> [] in
+    let rec unsat_core_and_lblnegs lines = 
+       let core_opt, rest = unsat_core lines in
+       core_opt, lblnegs rest in
     let rec result x = match x with
-      | "timeout"::tl -> TIMEOUT, []
-      | "unknown"::tl -> UNKNOWN, lblnegs tl
-      | "sat"::tl -> SAT, lblnegs tl
-      | "unsat"::tl -> UNSAT, []
+      | "timeout"::tl -> TIMEOUT []
+      | "unknown"::tl -> UNKNOWN (snd (unsat_core_and_lblnegs tl))
+      | "sat"::tl     -> SAT     (snd (unsat_core_and_lblnegs tl))
+      | "unsat"::tl   -> UNSAT   (fst (unsat_core tl))
       | _::tl -> result tl
       | _ -> failwith <| format1 "Got output lines: %s\n" (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (Util.trim_string l)) lines)) in
       result lines in
@@ -178,27 +198,17 @@ let doZ3Exe =
         res
 
 let z3_options () =
-  let mbqi =
-    if   z3v_le (get_z3version ()) (4, 3, 1)
-    then "mbqi"
-    else "smt.mbqi" in
-  let model_on_timeout =
-    if   z3v_le (get_z3version ()) (4, 3, 1)
-    then "(set-option :model-on-timeout true)\n"
-    else ""
-  in "(set-option :global-decls false)\n" ^
-     "(set-option :" ^ mbqi ^ " false)\n" ^
-     model_on_timeout
+    "(set-option :global-decls false)\
+     (set-option :smt.mbqi false)\
+     (set-option :produce-unsat-cores true)\n"
 
 type job<'a> = {
     job:unit -> 'a;
     callback: 'a -> unit
 }
-type z3job = job<(bool * list<error_label>)>
+type z3job = job<(either<unsat_core, error_labels> * float)>
 
 let job_queue : ref<list<z3job>> = Util.mk_ref []
-//    let x = Util.mk_ref [{job=(fun () -> (false, [(("", Term_sort), "", Range.mk_range "" 0 0)])); callback=(fun a -> ())}] in
-//    x:=[]; x
 
 let pending_jobs = Util.mk_ref 0
 let with_monitor m f =
@@ -207,17 +217,21 @@ let with_monitor m f =
     Util.monitor_exit(m);
     res
 
-let z3_job fresh label_messages input () =
-  let status, lblnegs = doZ3Exe fresh input in
+let z3_job fresh label_messages input () : either<unsat_core, error_labels> * float =
+  let start = Util.now() in
+  let status = doZ3Exe fresh input in
+  let elapsed_time = Util.time_diff (Util.now()) start in
   let result = match status with
-    | UNSAT -> true, []
-    | _ ->
+    | UNSAT core -> Inl core, elapsed_time
+    | TIMEOUT lblnegs
+    | SAT lblnegs
+    | UNKNOWN lblnegs ->
         if Options.debug_any() then print_string <| format1 "Z3 says: %s\n" (status_to_string status);
         let failing_assertions = lblnegs |> List.collect (fun l ->
         match label_messages |> List.tryFind (fun (m, _, _) -> fst m = l) with
             | None -> []
             | Some (lbl, msg, r) -> [(lbl, msg, r)]) in
-        false, failing_assertions in
+        Inr failing_assertions, elapsed_time in
     result
 
 let rec dequeue' () =
@@ -308,7 +322,8 @@ let commit_mark msg =
         | hd::s::tl -> fresh_scope := (hd@s)::tl
         | _ -> failwith "Impossible"
     end
-let ask fresh label_messages qry (cb: (bool * error_labels) -> unit) =
+
+let ask fresh label_messages qry (cb: (either<unsat_core, error_labels> * float) -> unit) =
   let fresh = fresh && (Options.n_cores()) > 1 in
   let theory = bgtheory fresh in
   let theory =

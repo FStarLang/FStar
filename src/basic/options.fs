@@ -136,6 +136,7 @@ let init () =
         ("universes"                    , Bool false);
         ("unthrottle_inductives"        , Bool false);
         ("use_eq_at_higher_order"       , Bool false);
+        ("use_hints"                    , Bool false);
         ("use_native_int"               , Bool false);
         ("verify"                       , Bool true);
         ("verify_module"                , List []);
