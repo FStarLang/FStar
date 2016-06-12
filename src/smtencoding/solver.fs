@@ -18,7 +18,12 @@
 module FStar.SMTEncoding.Solver
 open FStar
 open FStar.SMTEncoding.Term
+open FStar.BaseTypes
 open FStar.Util
+open FStar.TypeChecker
+open FStar.TypeChecker.Env
+open FStar.SMTEncoding.ErrorReporting
+open FStar.SMTEncoding.Encode
 
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
@@ -103,8 +108,6 @@ let record_hint hint =
 (***********************************************************************************)
 (* Invoking the SMT solver and extracting an error report from the model, if any   *)
 (***********************************************************************************)
-open FStar.TypeChecker
-open FStar.SMTEncoding.ErrorReporting
 
 let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffix = 
     Z3.giveZ3 prefix;
@@ -240,8 +243,6 @@ let solve use_env_msg tcenv q : unit =
 (**********************************************************************************************)
 (* Top-level interface *)
 (**********************************************************************************************)
-open FStar.TypeChecker.Env
-open FStar.SMTEncoding.Encode
 let solver = {
     init=init;
     push=push;

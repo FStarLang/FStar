@@ -17,6 +17,7 @@
 
 module FStar.SMTEncoding.ErrorReporting
 open FStar
+open FStar.BaseTypes
 open FStar.Util
 open FStar.SMTEncoding.Term
 open FStar.SMTEncoding

@@ -18,6 +18,7 @@
 module FStar.SMTEncoding.Z3
 open FStar
 open FStar.SMTEncoding.Term
+open FStar.BaseTypes
 open FStar.Util
 
 (****************************************************************************)
