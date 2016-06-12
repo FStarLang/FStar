@@ -215,7 +215,7 @@ end
 | Some (hint) -> begin
 (
 
-let _84_86 = if ((FStar_Option.isSome hint.unsat_core) && (hint.query_elapsed_time >= 200)) then begin
+let _84_86 = if (FStar_Option.isSome hint.unsat_core) then begin
 (hint.unsat_core, (3 * 1000))
 end else begin
 (None, (60 * 1000))
