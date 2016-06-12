@@ -126,7 +126,7 @@ let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffi
         @label_assumptions
         @[Term.SetOption ("timeout", string_of_int timeout_ms)]
         @[Term.CheckSat]
-        @(if Options.record_unsat_core() then [Term.GetUnsatCore] else [])
+        @(if Options.record_hints() then [Term.GetUnsatCore] else [])
         @suffix in
 
     let check (p:decl) =

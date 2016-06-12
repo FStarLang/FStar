@@ -188,7 +188,7 @@ in FStar_SMTEncoding_Term.SetOption (_174_81))
 in (_174_82)::[])
 in (FStar_List.append _174_84 _174_83)))
 in (FStar_List.append _174_85 ((FStar_SMTEncoding_Term.CheckSat)::[])))
-in (let _174_86 = if (FStar_Options.record_unsat_core ()) then begin
+in (let _174_86 = if (FStar_Options.record_hints ()) then begin
 (FStar_SMTEncoding_Term.GetUnsatCore)::[]
 end else begin
 []
@@ -403,7 +403,7 @@ in (FStar_Range.string_of_range _174_158))
 in (let _174_161 = (FStar_Util.string_of_int elapsed_time)
 in (let _174_160 = (FStar_Util.string_of_int prev_fuel)
 in (let _174_159 = (FStar_Util.string_of_int prev_ifuel)
-in (FStar_Util.print4 "(%s) Query succeeded in %s seconds with fuel %s and ifuel %s\n" _174_162 _174_161 _174_160 _174_159)))))
+in (FStar_Util.print4 "(%s) Query succeeded in %s milliseconds with fuel %s and ifuel %s\n" _174_162 _174_161 _174_160 _174_159)))))
 end else begin
 ()
 end))
@@ -417,7 +417,7 @@ in (FStar_Range.string_of_range _174_163))
 in (let _174_166 = (FStar_Util.string_of_int elapsed_time)
 in (let _174_165 = (FStar_Util.string_of_int prev_fuel)
 in (let _174_164 = (FStar_Util.string_of_int prev_ifuel)
-in (FStar_Util.print4 "(%s) Query failed in %s seconds with fuel %s and ifuel %s ... retrying \n" _174_167 _174_166 _174_165 _174_164)))))
+in (FStar_Util.print4 "(%s) Query failed in %s milliseconds with fuel %s and ifuel %s ... retrying \n" _174_167 _174_166 _174_165 _174_164)))))
 end else begin
 ()
 end
