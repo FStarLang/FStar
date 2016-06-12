@@ -331,22 +331,23 @@ let ask fresh (core:unsat_core) label_messages qry (cb: (either<unsat_core, erro
     | Some core ->
       let theory', n_retained, n_pruned =
           List.fold_right (fun d (theory, n_retained, n_pruned) -> match d with 
-            | Assume(_, _, Some name) when not (Util.starts_with name "@") -> 
+            | Assume(_, _, Some name) ->
               if List.contains name core
               then d::theory, n_retained+1, n_pruned
+              else if Util.starts_with name "@"
+              then d::theory, n_retained, n_pruned 
               else theory, n_retained, n_pruned+1
             | _ -> d::theory, n_retained, n_pruned)
           theory ([], 0, 0) in 
-      if n_retained = List.length core
-      then let _ = if Options.print_fuels() 
-                   then Util.print2 "Retained %s assertions and pruned %s assertions using recorded unsat core\n" 
+      if Options.print_fuels ()
+      then begin
+           let n = List.length core in
+           Util.print3 "Retained %s assertions%s and pruned %s assertions using recorded unsat core\n" 
                          (Util.string_of_int n_retained)
-                         (Util.string_of_int n_pruned) in
-           theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true
-      else let _ = if Options.print_fuels() 
-                   then Util.print1 "Did not used unsat core, since %s assertions were not found\n" 
-                         (Util.string_of_int (List.length core - n_retained)) in
-           theory, false in
+                         (if n <> n_retained then Util.format1 " (expected %s; replay may be inaccurate)" (Util.string_of_int n) else "")
+                         (Util.string_of_int n_pruned)
+      end;
+      theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true in
   let theory = bgtheory fresh in
   let theory =
     if fresh

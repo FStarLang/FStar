@@ -207,14 +207,14 @@ let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffi
                              unsat_core=unsat_core } in
                 record_hint (Some hint);
                 if Options.print_fuels()
-                then Util.print4 "(%s) Query succeeded in %s seconds with fuel %s and ifuel %s\n"
+                then Util.print4 "(%s) Query succeeded in %s milliseconds with fuel %s and ifuel %s\n"
                                 (Range.string_of_range (Env.get_range env))
                                 (Util.string_of_int elapsed_time)
                                 (Util.string_of_int prev_fuel)
                                 (Util.string_of_int prev_ifuel)
             | Inr errs -> 
                  if Options.print_fuels()
-                 then Util.print4 "(%s) Query failed in %s seconds with fuel %s and ifuel %s ... retrying \n"
+                 then Util.print4 "(%s) Query failed in %s milliseconds with fuel %s and ifuel %s ... retrying \n"
                        (Range.string_of_range (Env.get_range env))
                        (Util.string_of_int elapsed_time)
                        (Util.string_of_int prev_fuel)
