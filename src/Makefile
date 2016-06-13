@@ -204,8 +204,8 @@ fsharp-regressions:
 # The regressions to be run with a working OCaml build of F*
 regressions:
 	make -C ../lib
-	make -C ../ulib
-	make -C ../examples
+	+make -C ../ulib
+	+make -C ../examples
 	make -C ../examples/hello ocaml
 	make -C ../ucontrib/CoreCrypto/ml/ test
 	make -C ../examples/crypto clean rpc-test cnt-test
