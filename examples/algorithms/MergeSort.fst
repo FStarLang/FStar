@@ -24,6 +24,7 @@ type merge_inv (l1:list int) (l2:list int) (l:list int) =
     (is_Cons l2 /\ is_Cons l /\ Cons.hd l2 = Cons.hd l) \/
     (is_Nil l1 /\ is_Nil l2 /\ is_Nil l)
 
+#reset-options "--z3timeout 15"
 val merge: l1:list int -> l2:list int -> Pure (list int)
              (requires (sorted l1 /\ sorted l2))
              (ensures (fun l -> sorted l /\ permutation_2 l l1 l2
@@ -45,3 +46,5 @@ let rec mergesort l = match l with
     let sl1 = mergesort l1 in
     let sl2 = mergesort l2 in
     merge sl1 sl2
+#reset-options
+

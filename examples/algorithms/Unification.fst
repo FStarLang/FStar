@@ -32,9 +32,9 @@ open FStar.List.Tot
 
 (* First, a missing lemma from the list library *)
 let op_At = append
-val lemma_shift_append: l:list 'a -> x:'a -> m:list 'a -> Lemma
+val lemma_shift_append: #a:eqtype -> l:list a -> x:a -> m:list a -> Lemma
   (ensures ( (l@(x::m)) = ((l@[x])@m)))
-let rec lemma_shift_append l x m = match l with
+let rec lemma_shift_append #a l x m = match l with
   | [] -> ()
   | hd::tl -> lemma_shift_append tl x m
 
@@ -340,6 +340,7 @@ val lemma_not_solveable_cons:  x:nat -> t:term -> tl:eqns -> Lemma
     (ensures (not_solveable_eqns ((V x, t)::tl)))
 let lemma_not_solveable_cons x t tl = ()
 
+#reset-options "--z3timeout 15"
 val unify_correct_aux: l:list subst -> e:eqns -> Pure (list subst)
  (requires (b2t (lsubst_eqns l e = e)))
  (ensures (fun m ->
@@ -385,6 +386,7 @@ let rec unify_correct_aux l = function
 	evars_unfun t1 t2 s1 s2 tl;
  	unify_correct_aux l ((t1, s1)::(t2, s2)::tl)
      end
+#reset-options
 
 val unify_eqns : e:eqns -> Tot (option lsubst)
 let unify_eqns e = unify e []
