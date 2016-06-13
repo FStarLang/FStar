@@ -22,7 +22,7 @@ let test6 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
 
 
 (* GADTs *)
-type t : a:Type -> Type =
+type t : Type -> Type =
   | Int : i:int -> t int
   | Bool : b:bool -> t bool
 

@@ -91,7 +91,7 @@ let sub_beta v = fun y -> if y = 0 then v      (* substitute *)
 (* Small-step operational semantics; strong / full-beta reduction is
    non-deterministic, so necessarily as inductive relation *)
 
-type step : e1:exp -> e2:exp -> Type =
+type step : exp -> exp -> Type =
   | SBeta : t:typ ->
             e1:exp ->
             e2:exp ->
@@ -119,7 +119,7 @@ val extend : typ -> env -> Tot env
 let extend t g y = if y = 0 then Some t
                    else g (y-1)
 
-noeq type typing : en:env -> e1:exp -> e2:typ -> Type =
+noeq type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
              x:var{is_Some (g x)} ->
              typing g (EVar x) (Some.v (g x))

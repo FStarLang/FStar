@@ -2517,6 +2517,9 @@ let tc_inductive env ses quals lids =
                 | Tm_arrow (ibs, _) -> ibs
                 | _                 -> []
         in
+        //the formula that we generate will mention these indexes too, and if they are _, typechecker assumes that they are not referenced later
+        //this breaks the typechecker invariant, hence if null bv, generate a fresh bv
+        let ibs = List.map (fun b -> if is_null_bv (fst b) then (gen_bv "_indexb_" None (fst b).sort, snd b) else b) ibs in
         //open the ibs binders
         let ibs = SS.open_binders ibs in
         //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
