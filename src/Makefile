@@ -28,7 +28,7 @@ PARSER_NOGEN_SRC=$(addprefix parser/, $(PARSER_NOGEN))
 TOSMT=term.fsi term.fs z3.fs splitcases.fs encode.fs
 TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
 
-SMTENCODING=term.fsi term.fs z3.fs splitcases.fs errorReporting.fs encode.fs
+SMTENCODING=term.fsi term.fs z3.fs splitcases.fs errorReporting.fs encode.fs solver.fs
 SMTENCODING_SRC=$(addprefix smtencoding/, $(SMTENCODING))
 
 TC=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
@@ -45,6 +45,7 @@ LIB=../lib
 BIN=../bin
 
 # --------------------------------------------------------------------
+UNAME	       = $(shell uname)
 PLATFORM       =
 RELEASE       ?= Debug
 BUILD_VERSION  =
@@ -62,13 +63,21 @@ override FSCOTHERFLAGS += --platform:x86
 endif
 
 ifeq ($(OS),Windows_NT)
-FSC     = fsc
-MSBUILD = $(shell cygpath -u \"$$(reg.exe query 'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0' /v MSBuildToolsPath | tail -n 2 | head -n 1 | sed 's/.*REG_SZ\s\+//g')\")/MSBuild.exe
-FLAVOR=msbuild
+  FSC     = fsc
+  MSBUILD = $(shell cygpath -u \"$$(reg.exe query 'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0' /v MSBuildToolsPath | tail -n 2 | head -n 1 | sed 's/.*REG_SZ\s\+//g')\")/MSBuild.exe
+  FLAVOR=msbuild
 else
-FSC     = fsharpc
-MSBUILD = xbuild
-FLAVOR=regular
+  FSC     = fsharpc
+  MSBUILD = xbuild
+  FLAVOR=regular
+endif
+
+ifeq ($(UNAME),Darwin)
+  HEAD=ghead
+  SED=gsed
+else
+  HEAD=head
+  SED=sed
 endif
 
 MSBUILD := $(MSBUILD) /verbosity:normal /p:Configuration=Release
@@ -212,7 +221,7 @@ STDLIB=$(addprefix $(LIB)/, allboot.fsti stboot.fsti list.fsti option.fsti \
   FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
 BOOT_BASIC_FSTI=$(addprefix boot_fstis/, string.fsti bytes.fsti platform.fsti version.fsti range.fsti)
 BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
-BOOT_PARSER=$(addprefix parser/, ast.fs dsenv.fs desugar.fs env.fs interleave.fs tosyntax.fs parse.fsti lexhelp.fs parseit.fsi driver.fs dep.fs)
+BOOT_PARSER=$(addprefix parser/, ast.fs dsenv.fs desugar.fs env.fs interleave.fs tosyntax.fs lexhelp.fs parseit.fsi driver.fs dep.fs)
 BOOT_FORMAT=$(addprefix format/, formatml.fs)
 BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) \
   $(TOSMT_SRC) $(BOOT_PARSER) $(TYPECHECKER_SRC) $(EXTRACTION_SRC) $(SMTENCODING_SRC) $(TOPLEVEL_SRC)
@@ -227,7 +236,7 @@ ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 	    	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Errors.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.Tc.fst \
 		FStar.Parser.AST.fst FStar.Parser.DesugarEnv.fst FStar.Parser.Desugar.fst FStar.Parser.Env.fst FStar.Parser.Interleave.fst FStar.Parser.ToSyntax.fst FStar.Parser.Parse.fsti FStar.Parser.Lexhelp.fst FStar.Parser.ParseIt.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst \
 		FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.Env.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst FStar.Extraction.ML.ExtractTyp.fst FStar.Extraction.ML.ExtractExp.fst FStar.Extraction.ML.ExtractMod.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst  \
-	    	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst \
+	    	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst \
 	    	FStar.Dependences.fst FStar.Interactive.fst FStar.Stratified.fst FStar.Universal.fst FStar.FStar.fst
 
 ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse
@@ -242,20 +251,21 @@ all_boot_fsts:
 boot_fstis/%.fsti: basic/%.fsi
 	cp $^ $@
 
-boot_fsts/FStar.Parser.Parse.fsti: parser/parse.fsti
-	cp $^ $@
+boot_fsts/FStar.Parser.Parse.fsti: parser/parse.fsi
+	$(HEAD) -n -12 $^ > $@
+	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse open FStar.BaseTypes type bytes = array<byte>/' $@
 
 boot_fsts/FStar.Parser.ParseIt.fsti: parser/parseit.fsi
 	cp $^ $@
 
 $(LIB)/FStar.Util.fsti: basic/util.fsi
-	cat $^ | sed 's/open System.IO//g' | sed 's/type time.*/new type time/g' | sed 's/type smap.*/new type smap : Type -> Type/g' | sed 's/type out_channel.*/new type out_channel/g' | sed 's/type file_handle.*/new type file_handle/g' | sed 's/type stream_reader.*/new type stream_reader/g' | sed 's/type string_builder.*/new type string_builder/g' | sed 's/type proc.*/new type proc/g' | sed 's/type set.*/new type set:Type -> Type/g' > $@
+	cat $^ | $(SED) 's/open System.IO//g' | $(SED) 's/type time.*/new type time/g' | $(SED) 's/type smap.*/new type smap : Type -> Type/g' | $(SED) 's/type out_channel.*/new type out_channel/g' | $(SED) 's/type file_handle.*/new type file_handle/g' | $(SED) 's/type stream_reader.*/new type stream_reader/g' | $(SED) 's/type string_builder.*/new type string_builder/g' | $(SED) 's/type proc.*/new type proc/g' | $(SED) 's/type set.*/new type set:Type -> Type/g' > $@
 
 $(LIB)/FStar.GetOpt.fsti: basic/getoptsimple.fsi
 	cp $^ $@
 
 $(LIB)/FStar.Unionfind.fsti: basic/unionfind.fsi
-	cat $^ | sed 's/type cell.*//g' | sed 's/and contents.*//g' | sed 's/.*| Data.*//g' | sed 's/.*| Fwd.*//g' | sed 's/type uvar.*/new type uvar : Type -> Type/g' > $@
+	cat $^ | $(SED) 's/type cell.*//g' | $(SED) 's/and contents.*//g' | $(SED) 's/.*| Data.*//g' | $(SED) 's/.*| Fwd.*//g' | $(SED) 's/type uvar.*/new type uvar : Type -> Type/g' > $@
 
 clean_ocaml_prep:
 	rm -rf boot_fsts boot_fstis

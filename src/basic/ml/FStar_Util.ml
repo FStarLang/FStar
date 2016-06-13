@@ -34,7 +34,10 @@ let return_all x = x
 
 type time = float
 let now () = Unix.gettimeofday ()
-let time_diff (t1:time) (t2:time) : float = t2 -. t1
+let time_diff (t1:time) (t2:time) : float * int =
+  let n = t2 -. t1 in
+  n, 
+  int_of_float (n *. 1000.0)
 
 exception Impos
 exception NYI of string
@@ -645,3 +648,29 @@ let basename = Filename.basename
 let print_endline = print_endline
 
 let map_option f opt = BatOption.map f opt
+
+let format_value_file_name (prefix:string) =
+  (* we use different suffixes for F# and OCaml because they use incompatible encodings of values. *)
+  format1 "%s.mlval" prefix
+
+let save_value_to_file (fname:string) value =
+  BatFile.with_file_out 
+    fname
+    (fun f ->
+      BatPervasives.output_value f value)
+
+let load_value_from_file (fname:string) =
+  try
+    BatFile.with_file_in
+      fname
+      (fun f ->
+        Some (BatPervasives.input_value f))
+  with
+  | _ ->
+    None
+
+let digest_of_file (fname:string) =
+  BatDigest.file fname
+  
+let digest_of_string (s:string) =
+  BatDigest.string s

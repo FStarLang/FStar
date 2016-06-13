@@ -233,6 +233,7 @@ rule token = parse
      { TVAR id }
  | (integer | xinteger) as x
      { INT (clean_number x, false)  }
+ (* TODO: check bounds!! *)
  | uint8 as x
      { UINT8 (clean_number x) }
  | char8 as x
@@ -242,18 +243,18 @@ rule token = parse
          failwith "Out-of-range character literal";
        x
        )) }
- | int8 as x
+ | int8 as x  
      { INT8 (clean_number x, false) }
  | uint16 as x
      { UINT16 (clean_number x) }
  | int16 as x
      { INT16 (clean_number x, false) }
  | uint32 as x
-     { failwith "TODO: uint32" }
- | int32 as x (* TODO: check bounds *)
+     { UINT32 (clean_number x) }
+ | int32 as x
      { INT32 (clean_number x, false) }
  | uint64 as x
-     { failwith "TODO: uint64" }
+     { UINT64 (clean_number x) }
  | int64 as x
      { INT64 (clean_number x, false) }
  | (ieee64 | xieee64) as x

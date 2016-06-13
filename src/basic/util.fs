@@ -22,13 +22,15 @@ open System.Text
 open System.Diagnostics
 open System.IO
 open System.IO.Compression
+open System.Security.Cryptography
 
 let return_all x = x
 
 type time = System.DateTime
 let now () = System.DateTime.Now
-let time_diff (t1:time) (t2:time) : float =
-    let ts = t2 - t1 in ts.TotalSeconds
+let time_diff (t1:time) (t2:time) : float * int =
+    let ts = t2 - t1 in 
+    ts.TotalSeconds, int32 ts.TotalMilliseconds
 
 exception Impos
 exception NYI of string
@@ -643,4 +645,40 @@ let print_endline x =
   print_endline x
 
 let map_option f opt = Option.map f opt
+
+let format_value_file_name (prefix:string) =
+  // we use different suffixes for F# and OCaml because they use incompatible encodings of values.
+  String.Format("{0}.fsval", prefix)
+
+let save_value_to_file (fname:string) value =
+  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextWriter` to be passed to `output_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
+  use writer = new System.IO.StreamWriter(fname) in
+  output_value writer value
+
+let load_value_from_file (fname:string) =
+  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
+  try
+    use reader = new System.IO.StreamReader(fname) in
+    Some <| input_value reader
+  with
+  | _ ->
+    None
+
+let format_md5 bytes =
+  let sb = 
+    Array.fold 
+      (fun (acc:StringBuilder) (by:byte) ->
+        acc.Append(by.ToString("x2")))
+      (new StringBuilder())
+      bytes in
+  sb.ToString()
+
+let digest_of_file (fname:string) =
+  use md5 = MD5.Create() in
+  use stream = File.OpenRead(fname) in
+  format_md5 <| md5.ComputeHash(stream)
+
+let digest_of_string (s:string) =
+  use md5 = MD5.Create() in
+  format_md5 <| md5.ComputeHash(Encoding.UTF8.GetBytes(s))
 

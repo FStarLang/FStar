@@ -1,6 +1,7 @@
 type uint63 = int
 type uint8 = int
-                
+type t = uint63
+               
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
 let v (x:uint63) : Prims.int = Prims.parse_int (string_of_int x)
@@ -66,3 +67,4 @@ let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
 
 let to_string s = Int64.to_string (Int64.logand (Int64.of_int s) (Int64.of_string "0x7fffffffffffffff"))
+let uint_to_t s = s

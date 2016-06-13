@@ -1,4 +1,5 @@
 type int63 = int
+type t = int63
 
 let v (x:int63) : Prims.int = Prims.parse_int (string_of_int x)
 
@@ -63,3 +64,4 @@ let op_Hat_Less = gt
 let op_Hat_Less_Equal = gte
 
 let to_string = string_of_int
+let int_to_t s = s

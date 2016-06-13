@@ -948,6 +948,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 let tres = SS.compress tres |> Util.unrefine in
                 match tres.n with
                     | Tm_arrow(bs, cres') ->
+                        let bs, cres' = SS.open_comp bs cres' in
                         if debug env Options.Low
                         then Util.print1 "%s: Warning: Potentially redundant explicit currying of a function type \n"
                             (Range.string_of_range tres.pos);

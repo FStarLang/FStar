@@ -28,7 +28,7 @@ val return_all: 'a -> 'a
 
 type time = System.DateTime
 val now : unit -> time
-val time_diff: time -> time -> float
+val time_diff: time -> time -> float*int
 
 (* generic utils *)
 (* Functional sets *)
@@ -288,3 +288,8 @@ val print_endline: string -> unit
 
 val map_option: ('a -> 'b) -> option<'a> -> option<'b>
 
+val save_value_to_file: string -> 'a -> unit
+val load_value_from_file: string -> option<'a>
+val format_value_file_name: string -> string
+val digest_of_file: string -> string
+val digest_of_string: string -> string

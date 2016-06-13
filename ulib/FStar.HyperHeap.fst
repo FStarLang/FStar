@@ -226,4 +226,16 @@ let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()
 
 open FStar.Set
 let disjoint_regions (s1:set rid) (s2:set rid) = 
-     forall x y. {:pattern (mem x s1); (mem y s2)} (mem x s1 /\ mem y s2) ==> disjoint x y
+     forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> disjoint x y
+
+let extends_parent (tip:rid{tip<>root}) (r:rid)
+  : Lemma (requires True)
+	  (extends r (parent tip) /\ r<>tip ==> disjoint r tip \/ extends r tip)
+	  [SMTPat (extends r (parent tip))]
+  = ()
+
+let includes_child (tip:rid{tip<>root}) (r:rid)
+  : Lemma (requires True)
+	  (includes r tip ==> r=tip \/ includes r (parent tip))
+	  [SMTPat (includes r (parent tip))]
+  = ()

@@ -109,6 +109,7 @@ type decl =
   | Push
   | Pop
   | CheckSat
+  | GetUnsatCore
   | SetOption  of string * string
 type decls_t = list<decl>
 
@@ -451,6 +452,7 @@ let rec declToSmt z3options decl =
   | Echo s ->
     format1 "(echo \"%s\")" s
   | CheckSat -> "(check-sat)"
+  | GetUnsatCore -> "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
   | Push -> "(push)"
   | Pop -> "(pop)"
   | SetOption (s, v) -> format2 "(set-option :%s %s)" s v

@@ -4,9 +4,9 @@ open Prims
 let exhaustiveness_check : Prims.string = "Patterns are incomplete"
 
 
-let subtyping_failed : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.typ  ->  Prims.unit  ->  Prims.string = (fun env t1 t2 x -> (let _143_10 = (FStar_TypeChecker_Normalize.term_to_string env t2)
-in (let _143_9 = (FStar_TypeChecker_Normalize.term_to_string env t1)
-in (FStar_Util.format2 "Subtyping check failed; expected type %s; got type %s" _143_10 _143_9))))
+let subtyping_failed : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.typ  ->  Prims.unit  ->  Prims.string = (fun env t1 t2 x -> (let _144_10 = (FStar_TypeChecker_Normalize.term_to_string env t2)
+in (let _144_9 = (FStar_TypeChecker_Normalize.term_to_string env t1)
+in (FStar_Util.format2 "Subtyping check failed; expected type %s; got type %s" _144_10 _144_9))))
 
 
 let ill_kinded_type : Prims.string = "Ill-kinded type"
@@ -16,17 +16,17 @@ let totality_check : Prims.string = "This term may not terminate"
 
 
 let diag : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> if (FStar_Options.debug_any ()) then begin
-(let _143_16 = (let _143_15 = (FStar_Range.string_of_range r)
-in (FStar_Util.format2 "%s (Diagnostic): %s\n" _143_15 msg))
-in (FStar_Util.print_string _143_16))
+(let _144_16 = (let _144_15 = (FStar_Range.string_of_range r)
+in (FStar_Util.format2 "%s (Diagnostic): %s\n" _144_15 msg))
+in (FStar_Util.print_string _144_16))
 end else begin
 ()
 end)
 
 
-let warn : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> (let _143_22 = (let _143_21 = (FStar_Range.string_of_range r)
-in (FStar_Util.format2 "%s (Warning): %s\n" _143_21 msg))
-in (FStar_Util.print_string _143_22)))
+let warn : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> (let _144_22 = (let _144_21 = (FStar_Range.string_of_range r)
+in (FStar_Util.format2 "%s (Warning): %s\n" _144_21 msg))
+in (FStar_Util.print_string _144_22)))
 
 
 let num_errs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 0)
@@ -55,11 +55,11 @@ in (FStar_Util.atomically (fun _54_17 -> (match (()) with
 | () -> begin
 (
 
-let _54_18 = (let _143_30 = (let _143_29 = (FStar_ST.read verification_errs)
-in (FStar_List.append errs _143_29))
-in (FStar_ST.op_Colon_Equals verification_errs _143_30))
-in (let _143_31 = ((FStar_ST.read num_errs) + n_errs)
-in (FStar_ST.op_Colon_Equals num_errs _143_31)))
+let _54_18 = (let _144_30 = (let _144_29 = (FStar_ST.read verification_errs)
+in (FStar_List.append errs _144_29))
+in (FStar_ST.op_Colon_Equals verification_errs _144_30))
+in (let _144_31 = ((FStar_ST.read num_errs) + n_errs)
+in (FStar_ST.op_Colon_Equals num_errs _144_31)))
 end))))))
 
 
@@ -87,8 +87,8 @@ in (
 
 let _54_38 = (FStar_All.pipe_right all_errs (FStar_List.iter (fun _54_37 -> (match (_54_37) with
 | (r, msg) -> begin
-(let _143_38 = (FStar_Range.string_of_range r)
-in (FStar_Util.print2 "%s: %s\n" _143_38 msg))
+(let _144_38 = (FStar_Range.string_of_range r)
+in (FStar_Util.print2 "%s: %s\n" _144_38 msg))
 end))))
 in (FStar_List.length all_errs))))
 end))
@@ -97,9 +97,9 @@ end))
 let report : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> (
 
 let _54_42 = (FStar_Util.incr num_errs)
-in (let _143_44 = (let _143_43 = (FStar_Range.string_of_range r)
-in (FStar_Util.format2 "%s: %s\n" _143_43 msg))
-in (FStar_Util.print_string _143_44))))
+in (let _144_44 = (let _144_43 = (FStar_Range.string_of_range r)
+in (FStar_Util.format2 "%s: %s\n" _144_43 msg))
+in (FStar_Util.print_string _144_44))))
 
 
 let get_err_count : Prims.unit  ->  Prims.int = (fun _54_44 -> (match (()) with
@@ -108,46 +108,46 @@ let get_err_count : Prims.unit  ->  Prims.int = (fun _54_44 -> (match (()) with
 end))
 
 
-let unexpected_signature_for_monad : FStar_TypeChecker_Env.env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env m k -> (let _143_53 = (FStar_TypeChecker_Normalize.term_to_string env k)
-in (FStar_Util.format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type => WP a => WP a => Effect);\ngot %s" m.FStar_Ident.str _143_53)))
+let unexpected_signature_for_monad : FStar_TypeChecker_Env.env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env m k -> (let _144_53 = (FStar_TypeChecker_Normalize.term_to_string env k)
+in (FStar_Util.format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type => WP a => WP a => Effect);\ngot %s" m.FStar_Ident.str _144_53)))
 
 
-let expected_a_term_of_type_t_got_a_function : FStar_TypeChecker_Env.env  ->  Prims.string  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env msg t e -> (let _143_63 = (FStar_TypeChecker_Normalize.term_to_string env t)
-in (let _143_62 = (FStar_Syntax_Print.term_to_string e)
-in (FStar_Util.format3 "Expected a term of type \"%s\";\ngot a function \"%s\" (%s)" _143_63 _143_62 msg))))
+let expected_a_term_of_type_t_got_a_function : FStar_TypeChecker_Env.env  ->  Prims.string  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env msg t e -> (let _144_63 = (FStar_TypeChecker_Normalize.term_to_string env t)
+in (let _144_62 = (FStar_Syntax_Print.term_to_string e)
+in (FStar_Util.format3 "Expected a term of type \"%s\";\ngot a function \"%s\" (%s)" _144_63 _144_62 msg))))
 
 
 let unexpected_implicit_argument : Prims.string = "Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"
 
 
-let expected_expression_of_type : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env t1 e t2 -> (let _143_74 = (FStar_TypeChecker_Normalize.term_to_string env t1)
-in (let _143_73 = (FStar_Syntax_Print.term_to_string e)
-in (let _143_72 = (FStar_TypeChecker_Normalize.term_to_string env t2)
-in (FStar_Util.format3 "Expected expression of type \"%s\";\ngot expression \"%s\" of type \"%s\"" _143_74 _143_73 _143_72)))))
+let expected_expression_of_type : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env t1 e t2 -> (let _144_74 = (FStar_TypeChecker_Normalize.term_to_string env t1)
+in (let _144_73 = (FStar_Syntax_Print.term_to_string e)
+in (let _144_72 = (FStar_TypeChecker_Normalize.term_to_string env t2)
+in (FStar_Util.format3 "Expected expression of type \"%s\";\ngot expression \"%s\" of type \"%s\"" _144_74 _144_73 _144_72)))))
 
 
-let expected_function_with_parameter_of_type : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string  ->  Prims.string = (fun env t1 t2 -> (let _143_86 = (FStar_TypeChecker_Normalize.term_to_string env t1)
-in (let _143_85 = (FStar_TypeChecker_Normalize.term_to_string env t2)
-in (FStar_Util.format3 "Expected a function with a parameter of type \"%s\"; this function has a parameter of type \"%s\"" _143_86 _143_85))))
+let expected_function_with_parameter_of_type : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string  ->  Prims.string = (fun env t1 t2 -> (let _144_86 = (FStar_TypeChecker_Normalize.term_to_string env t1)
+in (let _144_85 = (FStar_TypeChecker_Normalize.term_to_string env t2)
+in (FStar_Util.format3 "Expected a function with a parameter of type \"%s\"; this function has a parameter of type \"%s\"" _144_86 _144_85))))
 
 
-let expected_pattern_of_type : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env t1 e t2 -> (let _143_97 = (FStar_TypeChecker_Normalize.term_to_string env t1)
-in (let _143_96 = (FStar_Syntax_Print.term_to_string e)
-in (let _143_95 = (FStar_TypeChecker_Normalize.term_to_string env t2)
-in (FStar_Util.format3 "Expected pattern of type \"%s\";\ngot pattern \"%s\" of type \"%s\"" _143_97 _143_96 _143_95)))))
+let expected_pattern_of_type : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env t1 e t2 -> (let _144_97 = (FStar_TypeChecker_Normalize.term_to_string env t1)
+in (let _144_96 = (FStar_Syntax_Print.term_to_string e)
+in (let _144_95 = (FStar_TypeChecker_Normalize.term_to_string env t2)
+in (FStar_Util.format3 "Expected pattern of type \"%s\";\ngot pattern \"%s\" of type \"%s\"" _144_97 _144_96 _144_95)))))
 
 
 let basic_type_error : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term Prims.option  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env eopt t1 t2 -> (match (eopt) with
 | None -> begin
-(let _143_107 = (FStar_TypeChecker_Normalize.term_to_string env t1)
-in (let _143_106 = (FStar_TypeChecker_Normalize.term_to_string env t2)
-in (FStar_Util.format2 "Expected type \"%s\";\ngot type \"%s\"" _143_107 _143_106)))
+(let _144_107 = (FStar_TypeChecker_Normalize.term_to_string env t1)
+in (let _144_106 = (FStar_TypeChecker_Normalize.term_to_string env t2)
+in (FStar_Util.format2 "Expected type \"%s\";\ngot type \"%s\"" _144_107 _144_106)))
 end
 | Some (e) -> begin
-(let _143_110 = (FStar_TypeChecker_Normalize.term_to_string env t1)
-in (let _143_109 = (FStar_Syntax_Print.term_to_string e)
-in (let _143_108 = (FStar_TypeChecker_Normalize.term_to_string env t2)
-in (FStar_Util.format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" _143_110 _143_109 _143_108))))
+(let _144_110 = (FStar_TypeChecker_Normalize.term_to_string env t1)
+in (let _144_109 = (FStar_Syntax_Print.term_to_string e)
+in (let _144_108 = (FStar_TypeChecker_Normalize.term_to_string env t2)
+in (FStar_Util.format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" _144_110 _144_109 _144_108))))
 end))
 
 
@@ -157,55 +157,55 @@ let occurs_check : Prims.string = "Possibly infinite typ (occurs check failed)"
 let unification_well_formedness : Prims.string = "Term or type of an unexpected sort"
 
 
-let incompatible_kinds : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env k1 k2 -> (let _143_118 = (FStar_TypeChecker_Normalize.term_to_string env k1)
-in (let _143_117 = (FStar_TypeChecker_Normalize.term_to_string env k2)
-in (FStar_Util.format2 "Kinds \"%s\" and \"%s\" are incompatible" _143_118 _143_117))))
+let incompatible_kinds : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env k1 k2 -> (let _144_118 = (FStar_TypeChecker_Normalize.term_to_string env k1)
+in (let _144_117 = (FStar_TypeChecker_Normalize.term_to_string env k2)
+in (FStar_Util.format2 "Kinds \"%s\" and \"%s\" are incompatible" _144_118 _144_117))))
 
 
-let constructor_builds_the_wrong_type : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env d t t' -> (let _143_129 = (FStar_Syntax_Print.term_to_string d)
-in (let _143_128 = (FStar_TypeChecker_Normalize.term_to_string env t)
-in (let _143_127 = (FStar_TypeChecker_Normalize.term_to_string env t')
-in (FStar_Util.format3 "Constructor \"%s\" builds a value of type \"%s\"; expected \"%s\"" _143_129 _143_128 _143_127)))))
+let constructor_builds_the_wrong_type : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env d t t' -> (let _144_129 = (FStar_Syntax_Print.term_to_string d)
+in (let _144_128 = (FStar_TypeChecker_Normalize.term_to_string env t)
+in (let _144_127 = (FStar_TypeChecker_Normalize.term_to_string env t')
+in (FStar_Util.format3 "Constructor \"%s\" builds a value of type \"%s\"; expected \"%s\"" _144_129 _144_128 _144_127)))))
 
 
-let constructor_fails_the_positivity_check = (fun env d l -> (let _143_134 = (FStar_Syntax_Print.term_to_string d)
-in (let _143_133 = (FStar_Syntax_Print.lid_to_string l)
-in (FStar_Util.format2 "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type" _143_134 _143_133))))
+let constructor_fails_the_positivity_check = (fun env d l -> (let _144_134 = (FStar_Syntax_Print.term_to_string d)
+in (let _144_133 = (FStar_Syntax_Print.lid_to_string l)
+in (FStar_Util.format2 "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type" _144_134 _144_133))))
 
 
-let inline_type_annotation_and_val_decl : FStar_Ident.lid  ->  Prims.string = (fun l -> (let _143_137 = (FStar_Syntax_Print.lid_to_string l)
-in (FStar_Util.format1 "\"%s\" has a val declaration as well as an inlined type annotation; remove one" _143_137)))
+let inline_type_annotation_and_val_decl : FStar_Ident.lid  ->  Prims.string = (fun l -> (let _144_137 = (FStar_Syntax_Print.lid_to_string l)
+in (FStar_Util.format1 "\"%s\" has a val declaration as well as an inlined type annotation; remove one" _144_137)))
 
 
-let inferred_type_causes_variable_to_escape : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.bv  ->  Prims.string = (fun env t x -> (let _143_145 = (FStar_TypeChecker_Normalize.term_to_string env t)
-in (let _143_144 = (FStar_Syntax_Print.bv_to_string x)
-in (FStar_Util.format2 "Inferred type \"%s\" causes variable \"%s\" to escape its scope" _143_145 _143_144))))
+let inferred_type_causes_variable_to_escape : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.bv  ->  Prims.string = (fun env t x -> (let _144_145 = (FStar_TypeChecker_Normalize.term_to_string env t)
+in (let _144_144 = (FStar_Syntax_Print.bv_to_string x)
+in (FStar_Util.format2 "Inferred type \"%s\" causes variable \"%s\" to escape its scope" _144_145 _144_144))))
 
 
-let expected_typ_of_kind : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env k1 t k2 -> (let _143_156 = (FStar_TypeChecker_Normalize.term_to_string env k1)
-in (let _143_155 = (FStar_TypeChecker_Normalize.term_to_string env t)
-in (let _143_154 = (FStar_TypeChecker_Normalize.term_to_string env k2)
-in (FStar_Util.format3 "Expected type of kind \"%s\";\ngot \"%s\" of kind \"%s\"" _143_156 _143_155 _143_154)))))
+let expected_typ_of_kind : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env k1 t k2 -> (let _144_156 = (FStar_TypeChecker_Normalize.term_to_string env k1)
+in (let _144_155 = (FStar_TypeChecker_Normalize.term_to_string env t)
+in (let _144_154 = (FStar_TypeChecker_Normalize.term_to_string env k2)
+in (FStar_Util.format3 "Expected type of kind \"%s\";\ngot \"%s\" of kind \"%s\"" _144_156 _144_155 _144_154)))))
 
 
-let expected_tcon_kind : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env t k -> (let _143_164 = (FStar_TypeChecker_Normalize.term_to_string env t)
-in (let _143_163 = (FStar_TypeChecker_Normalize.term_to_string env k)
-in (FStar_Util.format2 "Expected a type-to-type constructor or function;\ngot a type \"%s\" of kind \"%s\"" _143_164 _143_163))))
+let expected_tcon_kind : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env t k -> (let _144_164 = (FStar_TypeChecker_Normalize.term_to_string env t)
+in (let _144_163 = (FStar_TypeChecker_Normalize.term_to_string env k)
+in (FStar_Util.format2 "Expected a type-to-type constructor or function;\ngot a type \"%s\" of kind \"%s\"" _144_164 _144_163))))
 
 
-let expected_dcon_kind : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env t k -> (let _143_172 = (FStar_TypeChecker_Normalize.term_to_string env t)
-in (let _143_171 = (FStar_TypeChecker_Normalize.term_to_string env k)
-in (FStar_Util.format2 "Expected a term-to-type constructor or function;\ngot a type \"%s\" of kind \"%s\"" _143_172 _143_171))))
+let expected_dcon_kind : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env t k -> (let _144_172 = (FStar_TypeChecker_Normalize.term_to_string env t)
+in (let _144_171 = (FStar_TypeChecker_Normalize.term_to_string env k)
+in (FStar_Util.format2 "Expected a term-to-type constructor or function;\ngot a type \"%s\" of kind \"%s\"" _144_172 _144_171))))
 
 
-let expected_function_typ : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env t -> (let _143_177 = (FStar_TypeChecker_Normalize.term_to_string env t)
-in (FStar_Util.format1 "Expected a function;\ngot an expression of type \"%s\"" _143_177)))
+let expected_function_typ : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env t -> (let _144_177 = (FStar_TypeChecker_Normalize.term_to_string env t)
+in (FStar_Util.format1 "Expected a function;\ngot an expression of type \"%s\"" _144_177)))
 
 
-let expected_poly_typ : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env f t targ -> (let _143_188 = (FStar_Syntax_Print.term_to_string f)
-in (let _143_187 = (FStar_TypeChecker_Normalize.term_to_string env t)
-in (let _143_186 = (FStar_TypeChecker_Normalize.term_to_string env targ)
-in (FStar_Util.format3 "Expected a polymorphic function;\ngot an expression \"%s\" of type \"%s\" applied to a type \"%s\"" _143_188 _143_187 _143_186)))))
+let expected_poly_typ : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env f t targ -> (let _144_188 = (FStar_Syntax_Print.term_to_string f)
+in (let _144_187 = (FStar_TypeChecker_Normalize.term_to_string env t)
+in (let _144_186 = (FStar_TypeChecker_Normalize.term_to_string env targ)
+in (FStar_Util.format3 "Expected a polymorphic function;\ngot an expression \"%s\" of type \"%s\" applied to a type \"%s\"" _144_188 _144_187 _144_186)))))
 
 
 let nonlinear_pattern_variable : FStar_Syntax_Syntax.bv  ->  Prims.string = (fun x -> (
@@ -216,11 +216,11 @@ in (FStar_Util.format1 "The pattern variable \"%s\" was used more than once" m))
 
 let disjunctive_pattern_vars : FStar_Syntax_Syntax.bv Prims.list  ->  FStar_Syntax_Syntax.bv Prims.list  ->  Prims.string = (fun v1 v2 -> (
 
-let vars = (fun v -> (let _143_197 = (FStar_All.pipe_right v (FStar_List.map FStar_Syntax_Print.bv_to_string))
-in (FStar_All.pipe_right _143_197 (FStar_String.concat ", "))))
-in (let _143_199 = (vars v1)
-in (let _143_198 = (vars v2)
-in (FStar_Util.format2 "Every alternative of an \'or\' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")" _143_199 _143_198)))))
+let vars = (fun v -> (let _144_197 = (FStar_All.pipe_right v (FStar_List.map FStar_Syntax_Print.bv_to_string))
+in (FStar_All.pipe_right _144_197 (FStar_String.concat ", "))))
+in (let _144_199 = (vars v1)
+in (let _144_198 = (vars v2)
+in (FStar_Util.format2 "Every alternative of an \'or\' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")" _144_199 _144_198)))))
 
 
 let name_and_result = (fun c -> (match (c.FStar_Syntax_Syntax.n) with
@@ -231,8 +231,8 @@ end
 ("GTot", t)
 end
 | FStar_Syntax_Syntax.Comp (ct) -> begin
-(let _143_201 = (FStar_Syntax_Print.lid_to_string ct.FStar_Syntax_Syntax.effect_name)
-in (_143_201, ct.FStar_Syntax_Syntax.result_typ))
+(let _144_201 = (FStar_Syntax_Print.lid_to_string ct.FStar_Syntax_Syntax.effect_name)
+in (_144_201, ct.FStar_Syntax_Syntax.result_typ))
 end))
 
 
@@ -246,37 +246,37 @@ in (match (_54_119) with
 let _54_122 = (name_and_result c')
 in (match (_54_122) with
 | (f2, r2) -> begin
-(let _143_207 = (FStar_TypeChecker_Normalize.term_to_string env r1)
-in (let _143_206 = (FStar_TypeChecker_Normalize.term_to_string env r2)
-in (FStar_Util.format4 "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\"" _143_207 f1 _143_206 f2)))
+(let _144_207 = (FStar_TypeChecker_Normalize.term_to_string env r1)
+in (let _144_206 = (FStar_TypeChecker_Normalize.term_to_string env r2)
+in (FStar_Util.format4 "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\"" _144_207 f1 _144_206 f2)))
 end))
 end)))
 
 
-let unexpected_non_trivial_precondition_on_term : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env f -> (let _143_212 = (FStar_TypeChecker_Normalize.term_to_string env f)
-in (FStar_Util.format1 "Term has an unexpected non-trivial pre-condition: %s" _143_212)))
+let unexpected_non_trivial_precondition_on_term : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env f -> (let _144_212 = (FStar_TypeChecker_Normalize.term_to_string env f)
+in (FStar_Util.format1 "Term has an unexpected non-trivial pre-condition: %s" _144_212)))
 
 
-let expected_pure_expression = (fun e c -> (let _143_217 = (FStar_Syntax_Print.term_to_string e)
-in (let _143_216 = (let _143_215 = (name_and_result c)
-in (FStar_All.pipe_left Prims.fst _143_215))
-in (FStar_Util.format2 "Expected a pure expression;\ngot an expression \"%s\" with effect \"%s\"" _143_217 _143_216))))
+let expected_pure_expression = (fun e c -> (let _144_217 = (FStar_Syntax_Print.term_to_string e)
+in (let _144_216 = (let _144_215 = (name_and_result c)
+in (FStar_All.pipe_left Prims.fst _144_215))
+in (FStar_Util.format2 "Expected a pure expression;\ngot an expression \"%s\" with effect \"%s\"" _144_217 _144_216))))
 
 
-let expected_ghost_expression = (fun e c -> (let _143_222 = (FStar_Syntax_Print.term_to_string e)
-in (let _143_221 = (let _143_220 = (name_and_result c)
-in (FStar_All.pipe_left Prims.fst _143_220))
-in (FStar_Util.format2 "Expected a ghost expression;\ngot an expression \"%s\" with effect \"%s\"" _143_222 _143_221))))
+let expected_ghost_expression = (fun e c -> (let _144_222 = (FStar_Syntax_Print.term_to_string e)
+in (let _144_221 = (let _144_220 = (name_and_result c)
+in (FStar_All.pipe_left Prims.fst _144_220))
+in (FStar_Util.format2 "Expected a ghost expression;\ngot an expression \"%s\" with effect \"%s\"" _144_222 _144_221))))
 
 
-let expected_effect_1_got_effect_2 : FStar_Ident.lident  ->  FStar_Ident.lident  ->  Prims.string = (fun c1 c2 -> (let _143_228 = (FStar_Syntax_Print.lid_to_string c1)
-in (let _143_227 = (FStar_Syntax_Print.lid_to_string c2)
-in (FStar_Util.format2 "Expected a computation with effect %s; but it has effect %s\n" _143_228 _143_227))))
+let expected_effect_1_got_effect_2 : FStar_Ident.lident  ->  FStar_Ident.lident  ->  Prims.string = (fun c1 c2 -> (let _144_228 = (FStar_Syntax_Print.lid_to_string c1)
+in (let _144_227 = (FStar_Syntax_Print.lid_to_string c2)
+in (FStar_Util.format2 "Expected a computation with effect %s; but it has effect %s\n" _144_228 _144_227))))
 
 
-let failed_to_prove_specification_of : FStar_Syntax_Syntax.lbname  ->  Prims.string Prims.list  ->  Prims.string = (fun l lbls -> (let _143_234 = (FStar_Syntax_Print.lbname_to_string l)
-in (let _143_233 = (FStar_All.pipe_right lbls (FStar_String.concat ", "))
-in (FStar_Util.format2 "Failed to prove specification of %s; assertions at [%s] may fail" _143_234 _143_233))))
+let failed_to_prove_specification_of : FStar_Syntax_Syntax.lbname  ->  Prims.string Prims.list  ->  Prims.string = (fun l lbls -> (let _144_234 = (FStar_Syntax_Print.lbname_to_string l)
+in (let _144_233 = (FStar_All.pipe_right lbls (FStar_String.concat ", "))
+in (FStar_Util.format2 "Failed to prove specification of %s; assertions at [%s] may fail" _144_234 _144_233))))
 
 
 let failed_to_prove_specification : Prims.string Prims.list  ->  Prims.string = (fun lbls -> (match (lbls) with
@@ -284,17 +284,17 @@ let failed_to_prove_specification : Prims.string Prims.list  ->  Prims.string = 
 "An unknown assertion in the term at this location was not provable"
 end
 | _54_136 -> begin
-(let _143_237 = (FStar_All.pipe_right lbls (FStar_String.concat "\n\t"))
-in (FStar_Util.format1 "The following problems were found:\n\t%s" _143_237))
+(let _144_237 = (FStar_All.pipe_right lbls (FStar_String.concat "\n\t"))
+in (FStar_Util.format1 "The following problems were found:\n\t%s" _144_237))
 end))
 
 
 let top_level_effect : Prims.string = "Top-level let-bindings must be total; this term may have effects"
 
 
-let cardinality_constraint_violated = (fun l a -> (let _143_241 = (FStar_Syntax_Print.lid_to_string l)
-in (let _143_240 = (FStar_Syntax_Print.bv_to_string a.FStar_Syntax_Syntax.v)
-in (FStar_Util.format2 "Constructor %s violates the cardinality of Type at parameter \'%s\'; type arguments are not allowed" _143_241 _143_240))))
+let cardinality_constraint_violated = (fun l a -> (let _144_241 = (FStar_Syntax_Print.lid_to_string l)
+in (let _144_240 = (FStar_Syntax_Print.bv_to_string a.FStar_Syntax_Syntax.v)
+in (FStar_Util.format2 "Constructor %s violates the cardinality of Type at parameter \'%s\'; type arguments are not allowed" _144_241 _144_240))))
 
 
 

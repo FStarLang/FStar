@@ -88,6 +88,7 @@ type decl =
   | Push
   | Pop
   | CheckSat
+  | GetUnsatCore
   | SetOption  of string * string
 type decls_t = list<decl>
 
