@@ -1,5 +1,5 @@
 module Haseq
 
-type step : a:Type -> Type =
-  | SApp1 : step nat
+type step : a:Type -> Type -> a -> Type =
+  | SApp1 : step nat int 0
 
