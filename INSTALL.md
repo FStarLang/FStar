@@ -105,7 +105,7 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
 
 ### Step 1. Building F* from sources using the F# compiler ###
 
-#### On Windows 7/8/10 using Visual Studio 2015 ####
+#### On Windows 7/8/10 ####
 
   - Prerequisite: .NET framework 4.5
 
@@ -114,6 +114,10 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
       [Visual Studio Community](https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx)
     - The Visual F# Tools are installed automatically when you first
       create or open an F# project.
+
+**Easy alternative:** open a Cygwin command prompt, and hit `make` from the `src` directory. This will run `msbuild` on the Visual Studio solution file; in effect, this performs exactly what you would get by clicking the "Build" button within Visual Studio.
+
+Read on for the more complete solution involving Visual Studio itself.
 
   - Run the `src/VS/nuget-restore.bat` script _from the top-level F* directory_
     before opening the solution for the first time.
@@ -131,11 +135,6 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
     (in the menus: Build > Build Solution). **Make sure to choose the 'Release' configuration**.
     Note: the 'Debug' configuration may be the default, although it has no optimizations enabled
     and is not capable of bootstrapping.
-
-**Note:** on Windows if you want to build F\* using F# you need use
-  Visual Studio (building using `fsc.exe` in Cygwin is not supported
-  currently; `make -C src` succeeds but produces a broken binary:
-  https://github.com/FStarLang/FStar/issues/159)
 
 **Note:** If Visual Studio fails to open one or more projects, the
   problem is likely that the NuGet package cache hasn't been
@@ -179,10 +178,9 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
   - Try out
 
           $ export PATH=/path/to/fstar/bin:$PATH
-          $ make test.net -C src
+          $ make -C src boot && make -C examples
 
-  - If `make test.net` (`make boot` in fact) causes a stack overflow try
-    issuing `ulimit -s unlimited` in the terminal beforehand.
+  - If `make boot` causes a stack overflow try issuing `ulimit -s unlimited` in the terminal beforehand.
 
 Note: you may want to make the `PATH` change permanent by adding:
 
@@ -222,7 +220,7 @@ We will use the  [OCaml Installer for Windows](http://protz.github.io/ocaml-inst
      `opam init` to edit your `~/.bashrc` or `~/.profile`, it is done
      automatically; otherwise, use: `eval $(opam config env)`.
 
-  - If you're on Windows see https://github.com/FStarLang/FStar/blob/master/contrib/CoreCrypto/INSTALL.md
+  - If you're on Windows see https://github.com/protz/ocaml-installer/wiki
    for instructions on how to configure your environment for use with OPAM
 
 3. Install `ocamlfind`, `batteries`, `stdint`, and `zarith` using OPAM:
