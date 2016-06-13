@@ -682,3 +682,8 @@ let digest_of_string (s:string) =
   use md5 = MD5.Create() in
   format_md5 <| md5.ComputeHash(Encoding.UTF8.GetBytes(s))
 
+let ensure_decimal (s: string) =
+  if s.StartsWith "0x" then
+    sprintf "%A" (System.Numerics.BigInteger.Parse (s.[2..], System.Globalization.NumberStyles.AllowHexSpecifier))
+  else
+    s

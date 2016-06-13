@@ -293,3 +293,5 @@ val load_value_from_file: string -> option<'a>
 val format_value_file_name: string -> string
 val digest_of_file: string -> string
 val digest_of_string: string -> string
+
+val ensure_decimal: string -> string

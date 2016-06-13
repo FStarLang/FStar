@@ -353,7 +353,7 @@ let encode_const = function
     | Const_bool false -> boxBool mkFalse
     | Const_char c -> Term.mkApp("FStar.Char.Char", [boxInt (mkInteger' (Util.int_of_char c))])
     | Const_int (i, None)  -> boxInt (mkInteger i)
-    | Const_int (i, Some q) -> Term.mkApp(constructor_string_of_int_qualifier q, [boxInt (mkInteger i)])
+    | Const_int (i, Some _) -> failwith "Machine integers should be desugared"
     | Const_string(bytes, _) -> varops.string_const (Util.string_of_bytes <| bytes)
     | Const_range r -> mk_Range_const
     | Const_effect -> mk_Term_type
