@@ -280,7 +280,7 @@ extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
 
 ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml
 
-ocaml-test: ocaml boot-ocaml
+fstar-ocaml: ocaml boot-ocaml
 
 boot-ocaml:
 	make -C ocaml-output
@@ -325,7 +325,14 @@ clean-boot-fs:
 # Testing
 # --------------------------------------------------------------------
 
-test:   clean $(BIN)/fstar.exe $(BIN)/tests.exe fsharp-regressions ocaml-test regressions
+test:   clean $(BIN)/fstar.exe $(BIN)/tests.exe fsharp-regressions fstar-ocaml regressions
+
+utest:  
+	make clean
+	make all-$(FLAVOR)
+	make fsharp-regressions
+	make fstar-ocaml
+	+make uregressions
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
@@ -342,7 +349,6 @@ regressions:
 	make -C ../examples/wysteria a.out distclean
 
 test_universes: ulib uexamples
-	../bin/tests #all the unit tests
 
 ulib:
 	+make -C ../ulib

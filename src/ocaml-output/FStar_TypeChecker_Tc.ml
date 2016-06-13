@@ -146,7 +146,7 @@ end))
 in (aux false kt)))
 
 
-let maybe_push_binding = (fun env b -> (FStar_TypeChecker_Env.push_bv env (Prims.fst b)))
+let push_binding = (fun env b -> (FStar_TypeChecker_Env.push_bv env (Prims.fst b)))
 
 
 let maybe_make_subst = (fun _57_2 -> (match (_57_2) with
@@ -1591,7 +1591,7 @@ in (
 let b_expected = (hd_expected, imp')
 in (
 
-let env = (maybe_push_binding env b)
+let env = (push_binding env b)
 in (
 
 let subst = (let _147_388 = (FStar_Syntax_Syntax.bv_to_name hd)
@@ -3439,7 +3439,7 @@ in (FStar_Util.print2 "Pushing binder %s at type %s\n" _147_747 _147_746)))
 end else begin
 ()
 end
-in (let _147_748 = (maybe_push_binding env x)
+in (let _147_748 = (push_binding env x)
 in (x, _147_748, g, u))))
 end))
 end))
