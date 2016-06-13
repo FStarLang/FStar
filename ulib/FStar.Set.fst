@@ -16,10 +16,10 @@
 *)
 module FStar.Set
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-open FStar.FunctionalExtensionality
+open FStar.PredicateExtensionality
 
 abstract type set a = a -> Tot Type0
-abstract type equal (#a:Type) (s1:set a) (s2:set a) = feq s1 s2
+abstract type equal (#a:Type) (s1:set a) (s2:set a) = peq s1 s2
 
 (* destructors *)
 
@@ -89,7 +89,7 @@ let mem_subset     #a s1 s2   = ()
 (* extensionality *)
 
 abstract val lemma_equal_intro: #a:Type -> s1:set a -> s2:set a -> Lemma
-    (requires  (forall x. mem x s1 == mem x s2))
+    (requires  (forall x. mem x s1 <==> mem x s2))
     (ensures (equal s1 s2))
     [SMTPatT (equal s1 s2)]
 

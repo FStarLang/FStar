@@ -1,7 +1,8 @@
 module Unit2
 
 (* Proving alpha equivalence in the solver *)
-let test1 _ = assert ((fun (x:int) -> x) = (fun y -> y))
+(* AR: with the use of eq2, annotation on y is required, else typechecker dies *)
+let test1 _ = assert ((fun (x:int) -> x) == (fun (y:int) -> y))
 assume type vector : Type -> nat -> Type
 let test2 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
                       (b:Type -> y:nat -> Tot (vector b y)))
@@ -21,7 +22,7 @@ let test6 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
 
 
 (* GADTs *)
-type t : Type -> Type =
+type t : a:Type -> Type =
   | Int : i:int -> t int
   | Bool : b:bool -> t bool
 

@@ -10,7 +10,7 @@ assume val y : ref int
 assume val z : ref int
 
 val test_frame_write_ref : unit -> ST unit
-                              (requires (fun h -> y <> z))
+                              (requires (fun h -> y =!= z))
                               (ensures (fun h0 x h1 -> modifies !{y} h0 h1))
 let test_frame_write_ref u =
   let v = !z in
@@ -19,7 +19,7 @@ let test_frame_write_ref u =
   assert (v=v')
 
 val test_frame_write_mref : unit -> ST unit
-                              (requires (fun h -> y <> MRef.as_ref x))
+                              (requires (fun h -> y =!= MRef.as_ref x))
                               (ensures (fun h0 x h1 -> modifies !{y} h0 h1))
 let test_frame_write_mref u =
   let v = MRef.read x in

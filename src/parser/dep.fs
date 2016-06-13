@@ -232,7 +232,7 @@ let collect_one (original_map: map) (filename: string): list<string> =
     in
     (* All the dependencies of FStar.All.fst, in order. *)
     let ordered = [
-      "fstar"; "prims"; "fstar.list.tot"; "fstar.functionalextensionality";
+      "fstar"; "prims"; "fstar.list.tot"; "fstar.functionalextensionality"; "fstar.predicateextensionality";
       "fstar.set"; "fstar.heap"; "fstar.map"; "fstar.hyperheap"; "fstar.st"; "fstar.all"
     ] in
     (* The [open] statements that we wish to prepend. *)

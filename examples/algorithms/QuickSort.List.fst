@@ -67,7 +67,7 @@ let rec partition_lemma #a f l = match l with
     | hd::tl -> cut (trigger hd); partition_lemma f tl
 
 
-val sorted_app_lemma: #a:Type
+val sorted_app_lemma: #a:eqtype
                       -> f:(a -> a -> Tot bool){total_order a f}
                       -> l1:list a{sorted f l1}
                       -> l2:list a{sorted f l2}
@@ -81,7 +81,7 @@ let rec sorted_app_lemma #a f l1 l2 pivot = match l1 with
     | [] -> if is_Cons l2 then cut (trigger (Cons.hd l2)) else ()
     | hd::tl -> cut (trigger hd); sorted_app_lemma f tl l2 pivot
 
-val sort: #a:Type{hasEq a} -> f:(a -> a -> Tot bool){total_order a f}
+val sort: #a:eqtype -> f:(a -> a -> Tot bool){total_order a f}
        -> l:list a
        -> Tot (m:list a{sorted f m /\ (forall i.{:pattern trigger i} trigger i ==> (count i l = count i m))})
               (decreases (length l))

@@ -1,7 +1,5 @@
 module Haseq
 
-type mtype = x:int{x > 4}
-
-let foo _ = assert (hasEq mtype)
-
+type step : a:Type -> Type =
+  | SApp1 : step nat
 

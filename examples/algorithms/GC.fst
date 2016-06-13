@@ -25,7 +25,8 @@ type field =
   | F1
   | F2
 
-assume type abs_node : Type0
+(* AR: eqtype ? *)
+assume type abs_node : eqtype
 assume val no_abs : abs_node
 let valid a = a <> no_abs
 type valid_node = a:abs_node{valid a}
@@ -48,7 +49,7 @@ type to_abs_inj (to_abs:abs_map) =
     /\ i1 <> i2
     ==> to_abs i1 <> to_abs i2
 
-type gc_state = { 
+noeq type gc_state = { 
   to_abs: abs_map;
   color: color_map;
   abs_fields: abs_field_map;
