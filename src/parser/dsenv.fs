@@ -602,10 +602,14 @@ let finish_module_or_interface env modul =
 let prepare_module_or_interface intf admitted env mname =
   let prep env =
     (* These automatic directives must be kept in sync with [dep.fs]. *)
-    let open_ns = if      lid_equals mname Const.prims_lid then []
-                  else if lid_equals mname Const.st_lid    then [Const.prims_lid]
-                  else if lid_equals mname Const.all_lid   then [Const.prims_lid; Const.st_lid]
-                  else [Const.prims_lid; Const.st_lid; Const.all_lid; Const.fstar_ns_lid] in
+    let open_ns =
+      if lid_equals mname Const.prims_lid then
+        []
+      else if starts_with "FStar." (text_of_lid mname) then
+        [ Const.prims_lid; Const.fstar_ns_lid ]
+      else
+        [ Const.prims_lid; Const.st_lid; Const.all_lid; Const.fstar_ns_lid ]
+    in
     {env with curmodule=Some mname; sigmap=env.sigmap; open_namespaces = open_ns; iface=intf; admitted_iface=admitted} in
 
   match env.modules |> Util.find_opt (fun (l, _) -> lid_equals l mname) with

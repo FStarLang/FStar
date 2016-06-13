@@ -221,33 +221,12 @@ let collect_one (original_map: map) (filename: string): list<string> =
   (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
    * auto-generated. With universes, there's some copy/pasta in [env.fs] too. *)
   let auto_open =
-    let index_of s l =
-      let found = ref (-1) in
-      try
-        List.iteri (fun i x ->
-          if s = x then begin
-            found := i;
-            raise Exit
-          end
-        ) l;
-        -1
-      with Exit ->
-        !found
-    in
-    (* All the dependencies of FStar.All.fst, in order. *)
-    let ordered = [
-      "fstar"; "prims"; "fstar.list.tot"; "fstar.functionalextensionality";
-      "fstar.set"; "fstar.heap"; "fstar.map"; "fstar.hyperheap"; "fstar.st"; "fstar.all"
-    ] in
-    (* The [open] statements that we wish to prepend. *)
-    let desired_opens = [ Const.fstar_ns_lid; Const.prims_lid; Const.st_lid; Const.all_lid ] in
-    let me = String.lowercase (must (check_and_strip_suffix (basename filename))) in
-    let index_or_length s l =
-      let i = index_of s l in
-      if i < 0 then List.length l else i
-    in
-    let my_index = index_or_length me ordered in
-    List.filter (fun lid -> index_or_length (lowercase_join_longident lid true) ordered < my_index) desired_opens
+    if basename filename = "prims.fst" then
+      []
+    else if starts_with (String.lowercase (basename filename)) "fstar." then
+      [ Const.fstar_ns_lid; Const.prims_lid ]
+    else
+      [ Const.fstar_ns_lid; Const.prims_lid; Const.st_lid; Const.all_lid ]
   in
   List.iter record_open auto_open;
 

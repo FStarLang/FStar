@@ -1,6 +1,8 @@
 module FStar.Bytes
 type byte = FStar.UInt8.byte
 
+open FStar.All
+
 assume type bytes
 assume val length : bytes -> Tot int
 assume val get : b:bytes -> pos:nat{pos < length b} -> Tot byte
