@@ -27,7 +27,7 @@ assume val of_seq: #a:Type -> s:seq a -> ST (array a)
   (requires (fun h -> True))
   (ensures  (fun h0 x h1 -> (not(contains h0 x)
                              /\ contains h1 x
-                             /\ modifies !{} h0 h1
+                             /\ modifies TSet.empty h0 h1
                              /\ sel h1 x==s)))
 
 assume val to_seq: #a:Type -> s:array a -> ST (seq a)
@@ -38,7 +38,7 @@ assume val create : #a:Type -> n:nat -> init:a -> ST (array a)
   (requires (fun h -> True))
   (ensures  (fun h0 x h1 -> (not(contains h0 x)
                              /\ contains h1 x
-                             /\ modifies !{} h0 h1
+                             /\ modifies TSet.empty h0 h1
                              /\ sel h1 x==Seq.create n init)))
 
 assume val index : #a:Type -> x:array a -> n:nat -> ST a
@@ -60,7 +60,7 @@ assume val length: #a:Type -> x:array a -> ST nat
 
 assume val op: #a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
   (requires (fun h -> contains h x))
-  (ensures  (fun h0 u h1 -> modifies !{x} h0 h1 /\ sel h1 x==f (sel h0 x)))
+  (ensures  (fun h0 u h1 -> modifies (TSet.singleton (Ref x)) h0 h1 /\ sel h1 x==f (sel h0 x)))
 
 val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j}
                  -> ST unit (requires (fun h -> contains h x /\ j < Seq.length (sel h x)))
@@ -87,7 +87,7 @@ val copy_aux:
 			    /\ (ctr <= Seq.length (sel h cpy))
 			    /\ (forall (i:nat). i < ctr ==> Seq.index (sel h s) i == Seq.index (sel h cpy) i)))
 	(ensures (fun h0 u h1 -> (contains h1 s /\ contains h1 cpy /\ s =!= cpy )
-			      /\ (modifies !{cpy} h0 h1)
+			      /\ (modifies (TSet.singleton (Ref cpy)) h0 h1)
 			      /\ (Seq.equal (sel h1 cpy) (sel h1 s))))
 let rec copy_aux #a s cpy ctr =
   match length cpy - ctr with
@@ -100,7 +100,7 @@ val copy:
   ST (array a)
      (requires (fun h -> contains h s
 			 /\ Seq.length (sel h s) > 0))
-     (ensures (fun h0 r h1 -> (modifies !{} h0 h1)
+     (ensures (fun h0 r h1 -> (modifies TSet.empty h0 h1)
 				     /\ not(contains h0 r)
 				     /\ (contains h1 r)
 				     /\ (Seq.equal (sel h1 r) (sel h0 s))))
@@ -121,7 +121,7 @@ val blit_aux:
 		    i < ctr ==> Seq.index (sel h s) (s_idx+i) == Seq.index (sel h t) (t_idx+i))))
      (ensures (fun h0 u h1 ->
 	       (contains h1 s /\ contains h1 t /\ s =!= t )
-	       /\ (modifies !{t} h0 h1)
+	       /\ (modifies (TSet.singleton (Ref t)) h0 h1)
 	       /\ (Seq.length (sel h1 s) >= s_idx + len)
 	       /\ (Seq.length (sel h1 t) >= t_idx + len)
 	       /\ (Seq.length (sel h0 s) = Seq.length (sel h1 s))
@@ -152,7 +152,7 @@ val blit:
 	       /\ (Seq.length (sel h1 t) >= t_idx + len)
 	       /\ (Seq.length (sel h0 s) = Seq.length (sel h1 s))
 	       /\ (Seq.length (sel h0 t) = Seq.length (sel h1 t))
-	       /\ (modifies !{t} h0 h1)
+	       /\ (modifies (TSet.singleton (Ref t)) h0 h1)
 	       /\ (forall (i:nat).
 		   i < len ==> Seq.index (sel h1 s) (s_idx+i) == Seq.index (sel h1 t) (t_idx+i))
 	       /\ (forall (i:nat).
@@ -172,7 +172,7 @@ val sub :
       (contains h1 t)
       /\ (contains h0 s)
       /\ not(contains h0 t)
-      /\ (modifies !{} h0 h1)
+      /\ (modifies (TSet.empty) h0 h1)
       /\ (Seq.length (sel h0 s) > 0)
       /\ (idx + len <= Seq.length (sel h0 s))
       /\ (Seq.equal (Seq.slice (sel h0 s) idx (idx+len)) (sel h1 t))))

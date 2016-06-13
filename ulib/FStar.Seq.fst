@@ -117,6 +117,21 @@ abstract type equal (#a:Type) (s1:seq a) (s2:seq a) =
   (length s1 = length s2
    /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i)))
 
+(* decidable equality *)
+private val eq_i:
+  #a:eqtype -> s1:seq a -> s2:seq a{length s1 = length s2}
+  -> i:nat{i <= length s1}
+  -> Tot (r:bool{r <==> (forall j. (j >= i /\ j < length s1) ==> (index s1 j = index s2 j))})
+    (decreases (length s1 - i))
+let rec eq_i #a s1 s2 i =
+  if i = length s1 then true
+  else
+    if index s1 i = index s2 i then eq_i s1 s2 (i + 1)
+    else false
+
+abstract val eq: #a:eqtype -> s1:seq a -> s2:seq a -> Tot (r:bool{r <==> equal s1 s2})
+let eq #a s1 s2 = if length s1 = length s2 then eq_i s1 s2 0 else false
+
 abstract val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (length s1 = length s2
                /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i))))

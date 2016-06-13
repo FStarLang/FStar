@@ -1,6 +1,6 @@
 (* ******************************************************************************** *)
 module NegativeTests.Heap
-open FStar.Set
+open FStar.TSet
 open FStar.Heap
 assume val x : ref int
 assume val y : ref int

@@ -2627,7 +2627,7 @@ let tc_inductive env ses quals lids =
             
         let phi = U.mk_imp guard cond in
 
-	    Util.print1 "Checking tc_trivial_guard for:\n\n%s\n\n" (debug_lid.str); //(PP.term_to_string phi)
+	    Util.print1 "Checking tc_trivial_guard for:\n\n%s\n\n" (PP.term_to_string phi); //(debug_lid.str); 
         let phi, _ = tc_trivial_guard env phi in
 
         Util.print1 "Checking haseq soundness for:%s\n" (PP.term_to_string phi); //(debug_lid.str)

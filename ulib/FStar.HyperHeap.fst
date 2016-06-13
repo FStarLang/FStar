@@ -20,6 +20,10 @@ open FStar.Heap
 abstract let rid = list int
 let t = Map.t rid heap
 
+(* TODO: this generates pattern does not contain bound variables warnings *)
+val hasEq_rid_lemma: unit -> Lemma (requires (True)) (ensures (hasEq rid)) [SMTPatT (hasEq rid)]
+let hasEq_rid_lemma _ = ()
+
 abstract let root : rid = []
 
 abstract let rref (id:rid) (a:Type) = Heap.ref a
@@ -124,7 +128,7 @@ let fresh_region (i:rid) (m0:t) (m1:t) =
 let sel (#a:Type) (#i:rid) (m:t) (r:rref i a) = Heap.sel (Map.sel m i) (as_ref r)
 let upd (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a) = Map.upd m i (Heap.upd (Map.sel m i) (as_ref r) v)
 
-open FStar.BSet
+open FStar.Set
 
 assume val mod_set : set rid -> Tot (set rid)
 assume Mod_set_def: forall (x:rid) (s:set rid). {:pattern mem x (mod_set s)}
@@ -197,7 +201,7 @@ let fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
   not (Heap.contains (Map.sel m0 i) (as_ref r))
   /\  (Heap.contains (Map.sel m1 i) (as_ref r))
 
-let modifies_rref (r:rid) (s:Set.set aref) h0 h1 = Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
+let modifies_rref (r:rid) (s:TSet.set aref) h0 h1 = Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
 
 abstract val lemma_include_cons: i:rid -> j:rid -> Lemma
   (requires (i<>j /\ includes i j))

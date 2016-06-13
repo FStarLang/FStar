@@ -1,5 +1,5 @@
 module FStar.Map
-open FStar.BSet
+open FStar.Set
 open FStar.FunctionalExtensionality
 
 noeq abstract type t (key:eqtype) (value:Type) = {

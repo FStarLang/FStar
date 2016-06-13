@@ -72,8 +72,8 @@ assume val get: unit -> ST t
   (requires (fun m -> True))
   (ensures (fun m0 x m1 -> m0==x /\ m1==m0))
 
-let modifies (s:BSet.set rid) (m0:t) (m1:t) =
-    Map.equal m1 (Map.concat m1 (Map.restrict (BSet.complement s) m0))
+let modifies (s:Set.set rid) (m0:t) (m1:t) =
+    Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement s) m0))
 
 let fresh_region (i:rid) (m0:t) (m1:t) =
   not (Map.contains m0 i)

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.ST
-open FStar.Set
+open FStar.TSet
 open FStar.Heap
 type ref (a:Type) = Heap.ref a
 // this intentionally does not preclude h' extending h with fresh refs
