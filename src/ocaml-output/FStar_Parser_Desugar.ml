@@ -3629,17 +3629,10 @@ end
 in (desugar_tycon env d.FStar_Parser_AST.drange _150_1036 tcs))
 end
 | FStar_Parser_AST.ToplevelLet (quals, isrec, lets) -> begin
-<<<<<<< HEAD
-(match ((let _149_1038 = (let _149_1037 = (desugar_exp_maybe_top true env (FStar_Parser_AST.mk_term (FStar_Parser_AST.Let ((isrec, lets, (FStar_Parser_AST.mk_term (FStar_Parser_AST.Const (FStar_Const.Const_unit)) d.FStar_Parser_AST.drange FStar_Parser_AST.Expr)))) d.FStar_Parser_AST.drange FStar_Parser_AST.Expr))
-in (FStar_All.pipe_left FStar_Absyn_Util.compress_exp _149_1037))
-in _149_1038.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Exp_let (lbs, _60_2839) -> begin
-=======
 (match ((let _150_1038 = (let _150_1037 = (desugar_exp_maybe_top true env (FStar_Parser_AST.mk_term (FStar_Parser_AST.Let ((isrec, lets, (FStar_Parser_AST.mk_term (FStar_Parser_AST.Const (FStar_Const.Const_unit)) d.FStar_Parser_AST.drange FStar_Parser_AST.Expr)))) d.FStar_Parser_AST.drange FStar_Parser_AST.Expr))
 in (FStar_All.pipe_left FStar_Absyn_Util.compress_exp _150_1037))
 in _150_1038.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Exp_let (lbs, _60_2838) -> begin
->>>>>>> master
+| FStar_Absyn_Syntax.Exp_let (lbs, _60_2839) -> begin
 (
 
 let lids = (FStar_All.pipe_right (Prims.snd lbs) (FStar_List.map (fun lb -> (match (lb.FStar_Absyn_Syntax.lbname) with
@@ -3868,21 +3861,12 @@ let env = (FStar_Parser_DesugarEnv.push_sigelt env0 se)
 in (env, (se)::[]))))))
 end)
 end
-<<<<<<< HEAD
 | _60_2967 -> begin
-(let _149_1080 = (let _149_1079 = (let _149_1078 = (let _149_1077 = (FStar_Absyn_Print.typ_to_string head)
-in (Prims.strcat _149_1077 " is not an effect"))
-in (_149_1078, d.FStar_Parser_AST.drange))
-in FStar_Absyn_Syntax.Error (_149_1079))
-in (Prims.raise _149_1080))
-=======
-| _60_2966 -> begin
 (let _150_1080 = (let _150_1079 = (let _150_1078 = (let _150_1077 = (FStar_Absyn_Print.typ_to_string head)
 in (Prims.strcat _150_1077 " is not an effect"))
 in (_150_1078, d.FStar_Parser_AST.drange))
 in FStar_Absyn_Syntax.Error (_150_1079))
 in (Prims.raise _150_1080))
->>>>>>> master
 end)
 end)))
 end)))
@@ -4090,15 +4074,9 @@ in (match (_60_3078) with
 let env = (FStar_Parser_DesugarEnv.finish_module_or_interface env modul)
 in (
 
-<<<<<<< HEAD
 let _60_3080 = if (FStar_Options.dump_module modul.FStar_Absyn_Syntax.name.FStar_Ident.str) then begin
-(let _149_1146 = (FStar_Absyn_Print.modul_to_string modul)
-in (FStar_Util.print1 "%s\n" _149_1146))
-=======
-let _60_3079 = if (FStar_Options.dump_module modul.FStar_Absyn_Syntax.name.FStar_Ident.str) then begin
 (let _150_1146 = (FStar_Absyn_Print.modul_to_string modul)
 in (FStar_Util.print1 "%s\n" _150_1146))
->>>>>>> master
 end else begin
 ()
 end

@@ -1873,8 +1873,8 @@ end
 end))
 
 
-let mk_haseq : term  ->  term = (fun t -> (let _168_709 = (mkApp ("Prims.hasEq", (t)::[]))
-in (mk_Valid _168_709)))
+let mk_haseq : term  ->  term = (fun t -> (let _169_710 = (mkApp ("Prims.hasEq", (t)::[]))
+in (mk_Valid _169_710)))
 
 
 let rec print_smt_term : term  ->  Prims.string = (fun t -> (match (t.tm) with
@@ -1882,55 +1882,30 @@ let rec print_smt_term : term  ->  Prims.string = (fun t -> (match (t.tm) with
 (FStar_Util.format1 "(Integer %s)" n)
 end
 | BoundV (n) -> begin
-<<<<<<< HEAD
-(let _168_714 = (FStar_Util.string_of_int n)
-in (FStar_Util.format1 "(BoundV %s)" _168_714))
-=======
-(let _169_712 = (FStar_Util.string_of_int n)
-in (FStar_Util.format1 "(BoundV %s)" _169_712))
->>>>>>> master
+(let _169_715 = (FStar_Util.string_of_int n)
+in (FStar_Util.format1 "(BoundV %s)" _169_715))
 end
 | FreeV (fv) -> begin
 (FStar_Util.format1 "(FreeV %s)" (Prims.fst fv))
 end
 | App (op, l) -> begin
-<<<<<<< HEAD
-(let _168_715 = (print_smt_term_list l)
-in (FStar_Util.format2 "(%s %s)" (op_to_string op) _168_715))
+(let _169_716 = (print_smt_term_list l)
+in (FStar_Util.format2 "(%s %s)" (op_to_string op) _169_716))
 end
 | Labeled (t, r1, r2) -> begin
-(let _168_716 = (print_smt_term t)
-in (FStar_Util.format2 "(Labeled \'%s\' %s)" r1 _168_716))
+(let _169_717 = (print_smt_term t)
+in (FStar_Util.format2 "(Labeled \'%s\' %s)" r1 _169_717))
 end
-| Quant (qop, l, _79_1051, _79_1053, t) -> begin
-(let _168_718 = (print_smt_term_list_list l)
-in (let _168_717 = (print_smt_term t)
-in (FStar_Util.format3 "(%s %s %s)" (qop_to_string qop) _168_718 _168_717)))
+| Quant (qop, l, _79_1052, _79_1054, t) -> begin
+(let _169_719 = (print_smt_term_list_list l)
+in (let _169_718 = (print_smt_term t)
+in (FStar_Util.format3 "(%s %s %s)" (qop_to_string qop) _169_719 _169_718)))
 end))
-and print_smt_term_list : term Prims.list  ->  Prims.string = (fun l -> (let _168_720 = (FStar_List.map print_smt_term l)
-in (FStar_All.pipe_right _168_720 (FStar_String.concat " "))))
-and print_smt_term_list_list : term Prims.list Prims.list  ->  Prims.string = (fun l -> (FStar_List.fold_left (fun s l -> (let _168_725 = (let _168_724 = (print_smt_term_list l)
-in (Prims.strcat (Prims.strcat s "; [ ") _168_724))
-in (Prims.strcat _168_725 " ] "))) "" l))
-=======
-(let _169_713 = (print_smt_term_list l)
-in (FStar_Util.format2 "(%s %s)" (op_to_string op) _169_713))
-end
-| Labeled (t, r1, r2) -> begin
-(let _169_714 = (print_smt_term t)
-in (FStar_Util.format2 "(Labeled \'%s\' %s)" r1 _169_714))
-end
-| Quant (qop, l, _79_1051, _79_1053, t) -> begin
-(let _169_716 = (print_smt_term_list_list l)
-in (let _169_715 = (print_smt_term t)
-in (FStar_Util.format3 "(%s %s %s)" (qop_to_string qop) _169_716 _169_715)))
-end))
-and print_smt_term_list : term Prims.list  ->  Prims.string = (fun l -> (let _169_718 = (FStar_List.map print_smt_term l)
-in (FStar_All.pipe_right _169_718 (FStar_String.concat " "))))
-and print_smt_term_list_list : term Prims.list Prims.list  ->  Prims.string = (fun l -> (FStar_List.fold_left (fun s l -> (let _169_723 = (let _169_722 = (print_smt_term_list l)
-in (Prims.strcat (Prims.strcat s "; [ ") _169_722))
-in (Prims.strcat _169_723 " ] "))) "" l))
->>>>>>> master
+and print_smt_term_list : term Prims.list  ->  Prims.string = (fun l -> (let _169_721 = (FStar_List.map print_smt_term l)
+in (FStar_All.pipe_right _169_721 (FStar_String.concat " "))))
+and print_smt_term_list_list : term Prims.list Prims.list  ->  Prims.string = (fun l -> (FStar_List.fold_left (fun s l -> (let _169_726 = (let _169_725 = (print_smt_term_list l)
+in (Prims.strcat (Prims.strcat s "; [ ") _169_725))
+in (Prims.strcat _169_726 " ] "))) "" l))
 
 
 

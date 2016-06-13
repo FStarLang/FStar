@@ -1,7 +1,7 @@
 module NegativeTests.BST
 
 (* The type of a binary tree indexed by its max element *)
-type tree: int -> Type =
+type tree: n:int -> Type =
   | Leaf : n:int -> tree n
   | Node : #l   :int
         -> left :option (tree l)
