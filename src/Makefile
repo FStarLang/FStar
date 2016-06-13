@@ -222,13 +222,5 @@ ulib:
 uexamples:
 	+make -C ../examples univ
 
-test.net: clean $(BIN)/fstar.exe boot
-	make -C ../examples
-
-test.diff:
-	@make -s test | grep -v "^make\[" > .test.out
-	@diff .test.out expected-test-output
-	@echo "F* ok"
-
 wc-boot:
 	wc -l $(BOOT_ALL)
