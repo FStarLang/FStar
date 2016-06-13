@@ -210,7 +210,8 @@ let collect_one (original_map: map) (filename: string): list<string> =
   let record_module_alias ident lid =
     let key = String.lowercase (text_of_id ident) in
     let alias = lowercase_join_longident lid true in
-    match smap_try_find working_map alias with
+    // Only fully qualified module aliases are allowed.
+    match smap_try_find original_map alias with
     | Some deps_of_aliased_module ->
         smap_add working_map key deps_of_aliased_module
     | None ->
@@ -218,7 +219,7 @@ let collect_one (original_map: map) (filename: string): list<string> =
   in
 
   (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
-   * auto-generated. *)
+   * auto-generated. With universes, there's some copy/pasta in [env.fs] too. *)
   let auto_open =
     let index_of s l =
       let found = ref (-1) in
@@ -458,6 +459,7 @@ let collect_one (original_map: map) (filename: string): list<string> =
   in
   let ast = Driver.parse_file filename in
   collect_file ast;
+  (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps
 
 type color = | White | Gray | Black
@@ -499,6 +501,7 @@ let collect (filenames: list<string>): _ =
   (* This function takes a lowercase module name. *)
   let rec discover_one key =
     if smap_try_find graph key = None then
+      (* Util.print1 "key: %s\n" key; *)
       let intf, impl = must (smap_try_find m key) in
       let intf_deps = match intf with | None -> [] | Some intf -> collect_one m intf in
       let impl_deps = match impl with | None -> [] | Some impl -> collect_one m impl in

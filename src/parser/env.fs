@@ -559,6 +559,7 @@ let finish_module_or_interface env modul =
 
 let prepare_module_or_interface intf admitted env mname =
   let prep env =
+    (* These automatic directives must be kept in sync with [dep.fs]. *)
     let open_ns = if      lid_equals mname Const.prims_lid then []
                   else if lid_equals mname Const.st_lid    then [Const.prims_lid]
                   else if lid_equals mname Const.all_lid   then [Const.prims_lid; Const.st_lid]
