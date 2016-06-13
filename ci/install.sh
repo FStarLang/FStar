@@ -3,7 +3,7 @@
 set -e
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-  brew install ocaml opam z3 gmp gnu-sed;
+  brew install ocaml opam z3 gmp gnu-sed findutils;
 fi
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
   sudo apt-get install --yes libssl-dev opam libgmp-dev libsqlite3-dev g++-5 gcc-5;

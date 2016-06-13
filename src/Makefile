@@ -107,7 +107,6 @@ ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 FSTAROPTS=
 
 all_boot_fsts:
-	cp format/format.fsi format/formatml.fsi
 	./tools/make_all_boot_fsts "$(BOOT_ALL)"
 
 boot_fstis/%.fsti: basic/%.fsi
