@@ -80,11 +80,8 @@ let check_no_escape head_opt env (fvs:list<bv>) kt =
          end in
     aux false kt
 
-let maybe_push_binding env b =
-  if is_null_binder b then env
-  else (if Env.debug env Options.High
-        then Util.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string (fst b)) (Print.term_to_string (fst b).sort);
-        Env.push_bv env (fst b))
+let push_binding env b =
+  Env.push_bv env (fst b)
 
 let maybe_make_subst = function
   | Inr(Some x, e) -> [NT(x,e)]
@@ -629,7 +626,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 let hd = {hd with sort=t} in
                 let b = hd, imp in
                 let b_expected = (hd_expected, imp') in
-                let env = maybe_push_binding env b in
+                let env = push_binding env b in
                 let subst = maybe_extend_subst subst b_expected  (S.bv_to_name hd) in
                 aux (env, b::out, g, subst) bs bs_expected
 
@@ -1495,7 +1492,7 @@ and tc_binder env (x, imp) =
     let x = {x with sort=t}, imp in
     if Env.debug env Options.High
     then Util.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string (fst x)) (Print.term_to_string t);
-    x, maybe_push_binding env x, g, u
+    x, push_binding env x, g, u
 
 and tc_binders env bs =
     let rec aux env bs = match bs with
