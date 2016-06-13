@@ -69,7 +69,7 @@ ifeq ($(OS),Windows_NT)
 else
   FSC     = fsharpc
   MSBUILD = xbuild
-  FLAVOR=regular
+  FLAVOR=msbuild
 endif
 
 ifeq ($(UNAME),Darwin)
@@ -127,6 +127,8 @@ $(FSYACC) $(FSLEX): nuget-restore
 all-msbuild: nuget-restore
 	$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
+	chmod a+x $(BIN)/tests.exe
+	chmod a+x $(BIN)/fstar.exe
 
 clean-msbuild:
 	$(MSBUILD) /t:clean VS/FStar.sln
@@ -275,7 +277,7 @@ clean_ocaml_prep:
 extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
-	../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app \
+	$(RUNTIME) ../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app \
 	  $(addprefix --no_extract ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
 
 ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml
@@ -325,6 +327,7 @@ clean-boot-fs:
 # Testing
 # --------------------------------------------------------------------
 
+<<<<<<< HEAD
 test:   clean $(BIN)/fstar.exe $(BIN)/tests.exe fsharp-regressions fstar-ocaml regressions
 
 utest:  
@@ -333,10 +336,13 @@ utest:
 	make fsharp-regressions
 	make fstar-ocaml
 	+make uregressions
+=======
+test:   all fsharp-regressions ocaml-test regressions
+>>>>>>> origin/test
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
-	$(BIN)/tests.exe
+	$(RUNTIME) $(BIN)/tests.exe
 
 # The regressions to be run with a working OCaml build of F*
 regressions:
