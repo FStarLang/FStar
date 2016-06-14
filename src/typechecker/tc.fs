@@ -2471,15 +2471,6 @@ let tc_inductive env ses quals lids =
 
     let dr = Range.dummyRange in
 
-    //we will open all tcs and datas with the same universe names
-    let us =
-        let ty = List.hd tcs in
-        match ty with
-            | Sig_inductive_typ (_, us, _, _, _, _, _, _) -> us
-            | _                                           -> failwith "Impossible"
-    in
-    let usubst, us = SS.univ_var_opening us in
-
     //tcs is the list of type constructors, datas is the list of data constructors
 
     //this is the folding function for tcs
@@ -2488,7 +2479,7 @@ let tc_inductive env ses quals lids =
     //term is the lhs of the implication for soundness
     //term is the soundness condition derived from all the data constructors of this type
     //let haseq_ty (acc:(list<(lident * term)> * env * term * term)) (ty:sigelt) :list<(lident * term)> * env * term * term = //TODO: bootstrapping fails with this annot
-    let haseq_ty acc ty =
+    let haseq_ty usubst us acc ty =
         let lid, bs, t, d_lids =
             match ty with
                 | Sig_inductive_typ (lid, _, bs, t, _, d_lids, _, _) -> lid, bs, t, d_lids
@@ -2601,22 +2592,37 @@ let tc_inductive env ses quals lids =
 
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in
 
-    let debug_lid =
-        match (List.hd tcs) with
-	    | Sig_inductive_typ (lid, _, _, _, _, _, _, _) -> lid
-            | _                                            -> failwith "Impossible!"
-    in
     let _ =
-        if is_noeq then Util.print1 "Skipping this type since noeq:%s\n" (debug_lid.str) else ()
+        if List.length tcs > 0 then
+            let debug_lid =
+                match (List.hd tcs) with
+	                | Sig_inductive_typ (lid, _, _, _, _, _, _, _) -> lid
+                    | _                                            -> failwith "Impossible!"
+            in
+            let _ =
+                if is_noeq then Util.print1 "Skipping this type since noeq:%s\n" (debug_lid.str) else ()
+            in
+            ()
+        else ()
     in
-	  
-    if (not (lid_equals env.curmodule Const.prims_lid)) && (not (is_noeq)) then
+
+    (* TODO: we need to check for List.length tcs because of exception type, is there a better way ? *)	  
+    if (not (lid_equals env.curmodule Const.prims_lid)) && (not (is_noeq)) && (List.length tcs > 0) then
+        //we will open all tcs and datas with the same universe names
+        let us =
+            let ty = List.hd tcs in
+            match ty with
+                | Sig_inductive_typ (_, us, _, _, _, _, _, _) -> us
+                | _                                           -> failwith "Impossible"
+        in
+        let usubst, us = SS.univ_var_opening us in
+
         let env = Env.push_sigelt env0 sig_bndle in
         env.solver.push "haseq";
         env.solver.encode_sig env sig_bndle;
         let env = Env.push_univ_vars env us in
 	
-        let axioms, env, guard, cond = List.fold_left haseq_ty ([], env, U.t_true, U.t_true) tcs in
+        let axioms, env, guard, cond = List.fold_left (haseq_ty usubst us) ([], env, U.t_true, U.t_true) tcs in
             
         let phi = U.mk_imp guard cond in
 

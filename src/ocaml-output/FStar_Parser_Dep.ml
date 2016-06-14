@@ -299,40 +299,10 @@ in (
 let auto_open = if ((FStar_Util.basename filename) = "prims.fst") then begin
 []
 end else begin
-<<<<<<< HEAD
-()
-end) l)
-in (- (1)))
-end)
-with
-| Exit -> begin
-(FStar_ST.read found)
-end))
-in (
-
-let ordered = ("fstar")::("prims")::("fstar.list.tot")::("fstar.predicateextensionality")::("fstar.tset")::("fstar.functionalextensionality")::("fstar.set")::("fstar.heap")::("fstar.map")::("fstar.hyperheap")::("fstar.st")::("fstar.all")::[]
-in (
-
-let desired_opens = (FStar_Absyn_Const.fstar_ns_lid)::(FStar_Absyn_Const.prims_lid)::(FStar_Absyn_Const.st_lid)::(FStar_Absyn_Const.all_lid)::[]
-in (
-
-let me = (let _158_108 = (let _158_107 = (let _158_106 = (FStar_Util.basename filename)
-in (check_and_strip_suffix _158_106))
-in (FStar_Util.must _158_107))
-in (FStar_String.lowercase _158_108))
-in (
-
-let index_or_length = (fun s l -> (
-
-let i = (index_of s l)
-in if (i < 0) then begin
-(FStar_List.length l)
-=======
 if (let _158_99 = (let _158_98 = (FStar_Util.basename filename)
 in (FStar_String.lowercase _158_98))
 in (FStar_Util.starts_with _158_99 "fstar.")) then begin
 (FStar_Absyn_Const.fstar_ns_lid)::(FStar_Absyn_Const.prims_lid)::[]
->>>>>>> master
 end else begin
 (FStar_Absyn_Const.fstar_ns_lid)::(FStar_Absyn_Const.prims_lid)::(FStar_Absyn_Const.st_lid)::(FStar_Absyn_Const.all_lid)::[]
 end
