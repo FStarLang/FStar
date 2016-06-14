@@ -8,7 +8,7 @@
     <ProjectGuid>f95b3965-1a6a-4fbf-a079-e849e8ea3ff7</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>FStar</RootNamespace>
-    <AssemblyName>FStar</AssemblyName>
+    <AssemblyName>fstar</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>FStar</Name>
@@ -39,7 +39,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\Release\FStar.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\fstar.XML</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>

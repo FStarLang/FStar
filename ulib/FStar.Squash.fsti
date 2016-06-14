@@ -5,15 +5,6 @@ Quotient Types: A Modular Approach. Aleksey Nogin, TPHOLs 2002.
 http://www.nuprl.org/documents/Nogin/QuotientTypes_02.pdf
 *)
 
-(*
-assume new type squash : Type -> Type0
-Interface contains an abstract 'type' declaration; use 'val' instead
-*)
-
-(*
-val squash : Type -> Type0
-val squash in the interface is implemented with a 'type'
-*)
 val squash : Type -> Type0
 
 val get_proof : p:Type ->

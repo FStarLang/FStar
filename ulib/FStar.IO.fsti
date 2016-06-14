@@ -1,5 +1,7 @@
 module FStar.IO
 
+open FStar.All
+
 exception EOF
 assume new type fd_read : Type0
 assume new type fd_write : Type0

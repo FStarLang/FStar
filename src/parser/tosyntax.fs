@@ -464,6 +464,19 @@ and desugar_typ env e : S.term =
     let env = {env with expect_typ=true} in
     desugar_term_maybe_top false env e
 
+and desugar_machine_integer env repr (signedness, width) range =
+  let lid = "FStar." ^
+    (match signedness with | Unsigned -> "U" | Signed -> "") ^ "Int" ^
+    (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64") ^
+    "." ^ (match signedness with | Unsigned -> "u" | Signed -> "") ^ "int_to_t"
+  in
+  let lid = lid_of_path (path_of_text lid) range in
+  let lid = match Env.try_lookup_lid env lid with
+    | Some lid -> lid
+    | None -> failwith (Util.format1 "%s not in scope\n" (text_of_lid lid)) in
+  let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
+  S.mk (Tm_app (lid, [repr, as_implicit false])) None range
+
 and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
   let mk e = S.mk e None top.range in
   let setpos e = {e with pos=top.range} in
@@ -478,7 +491,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Ensures (t, lopt) ->
       desugar_formula env t
 
-    | Const c -> mk (Tm_constant c)
+    | Const (Const_int (i, Some size)) ->
+        desugar_machine_integer env i size top.range
+
+    | Const c ->
+        mk (Tm_constant c)
 
     | Op("=!=", args) ->
       desugar_term env (mk_term(Op("~", [mk_term (Op("==", args)) top.range top.level])) top.range top.level)

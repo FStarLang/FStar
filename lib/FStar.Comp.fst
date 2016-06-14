@@ -3,6 +3,8 @@ module FStar.Comp
 open FStar.Heap
 open FStar.Relational
 
+open FStar.All
+
 type heap2 = double heap
 
 new_effect STATE2 = STATE_h heap2

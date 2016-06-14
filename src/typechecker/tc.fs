@@ -81,11 +81,8 @@ let check_no_escape head_opt env (fvs:list<bv>) kt =
          end in
     aux false kt
 
-let maybe_push_binding env b =
-  if is_null_binder b then env
-  else (if Env.debug env Options.High
-        then Util.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string (fst b)) (Print.term_to_string (fst b).sort);
-        Env.push_bv env (fst b))
+let push_binding env b =
+  Env.push_bv env (fst b)
 
 let maybe_make_subst = function
   | Inr(Some x, e) -> [NT(x,e)]
@@ -511,14 +508,7 @@ and tc_constant r (c:sconst) : typ =
       | Const_unit -> t_unit
       | Const_bool _ -> t_bool
       | Const_int (_, None) -> t_int
-      | Const_int (_, Some (Unsigned, Int8)) -> t_uint8
-      | Const_int (_, Some (Signed, Int8)) -> t_int8
-      | Const_int (_, Some (Unsigned, Int16)) -> t_uint16
-      | Const_int (_, Some (Signed, Int16)) -> t_int16
-      | Const_int (_, Some (Unsigned, Int32)) -> t_uint32
-      | Const_int (_, Some (Signed, Int32)) -> t_int32
-      | Const_int (_, Some (Unsigned, Int64)) -> t_uint64
-      | Const_int (_, Some (Signed, Int64)) -> t_int64
+      | Const_int (_, Some _) -> failwith "machine integers should be desugared"
       | Const_string _ -> t_string
       | Const_float _ -> t_float
       | Const_char _ -> t_char
@@ -630,7 +620,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 let hd = {hd with sort=t} in
                 let b = hd, imp in
                 let b_expected = (hd_expected, imp') in
-                let env = maybe_push_binding env b in
+                let env = push_binding env b in
                 let subst = maybe_extend_subst subst b_expected  (S.bv_to_name hd) in
                 aux (env, b::out, g, subst) bs bs_expected
 
@@ -1496,7 +1486,7 @@ and tc_binder env (x, imp) =
     let x = {x with sort=t}, imp in
     if Env.debug env Options.High
     then Util.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string (fst x)) (Print.term_to_string t);
-    x, maybe_push_binding env x, g, u
+    x, push_binding env x, g, u
 
 and tc_binders env bs =
     let rec aux env bs = match bs with

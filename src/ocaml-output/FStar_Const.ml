@@ -67,60 +67,6 @@ false
 end))
 
 
-let string_of_int_qualifier : (signedness * width)  ->  Prims.string = (fun _26_1 -> (match (_26_1) with
-| (Unsigned, Int8) -> begin
-"FStar.UInt8.uint8"
-end
-| (Signed, Int8) -> begin
-"FStar.Int8.int8"
-end
-| (Unsigned, Int16) -> begin
-"FStar.UInt16.uint16"
-end
-| (Signed, Int16) -> begin
-"FStar.Int16.int16"
-end
-| (Unsigned, Int32) -> begin
-"FStar.UInt32.uint32"
-end
-| (Signed, Int32) -> begin
-"FStar.Int32.int32"
-end
-| (Unsigned, Int64) -> begin
-"FStar.UInt64.uint64"
-end
-| (Signed, Int64) -> begin
-"FStar.Int64.int64"
-end))
-
-
-let constructor_string_of_int_qualifier : (signedness * width)  ->  Prims.string = (fun _26_2 -> (match (_26_2) with
-| (Unsigned, Int8) -> begin
-"FStar.UInt8.UInt8"
-end
-| (Signed, Int8) -> begin
-"FStar.Int8.Int8"
-end
-| (Unsigned, Int16) -> begin
-"FStar.UInt16.UInt16"
-end
-| (Signed, Int16) -> begin
-"FStar.Int16.Int16"
-end
-| (Unsigned, Int32) -> begin
-"FStar.UInt32.UInt32"
-end
-| (Signed, Int32) -> begin
-"FStar.Int32.Int32"
-end
-| (Unsigned, Int64) -> begin
-"FStar.UInt64.UInt64"
-end
-| (Signed, Int64) -> begin
-"FStar.Int64.Int64"
-end))
-
-
 type sconst =
 | Const_effect
 | Const_unit
@@ -215,44 +161,44 @@ end))
 
 
 let ___Const_bool____0 = (fun projectee -> (match (projectee) with
-| Const_bool (_26_55) -> begin
-_26_55
+| Const_bool (_26_3) -> begin
+_26_3
 end))
 
 
 let ___Const_int____0 = (fun projectee -> (match (projectee) with
-| Const_int (_26_58) -> begin
-_26_58
+| Const_int (_26_6) -> begin
+_26_6
 end))
 
 
 let ___Const_char____0 = (fun projectee -> (match (projectee) with
-| Const_char (_26_61) -> begin
-_26_61
+| Const_char (_26_9) -> begin
+_26_9
 end))
 
 
 let ___Const_float____0 = (fun projectee -> (match (projectee) with
-| Const_float (_26_64) -> begin
-_26_64
+| Const_float (_26_12) -> begin
+_26_12
 end))
 
 
 let ___Const_bytearray____0 = (fun projectee -> (match (projectee) with
-| Const_bytearray (_26_67) -> begin
-_26_67
+| Const_bytearray (_26_15) -> begin
+_26_15
 end))
 
 
 let ___Const_string____0 = (fun projectee -> (match (projectee) with
-| Const_string (_26_70) -> begin
-_26_70
+| Const_string (_26_18) -> begin
+_26_18
 end))
 
 
 let ___Const_range____0 = (fun projectee -> (match (projectee) with
-| Const_range (_26_73) -> begin
-_26_73
+| Const_range (_26_21) -> begin
+_26_21
 end))
 
 

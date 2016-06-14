@@ -1,5 +1,6 @@
 module FStar.UInt8
-open FStar.Mul
+open FStar.All
+open FStar.All open FStar.Mul
 val min_value_int : int
 let min_value_int = 0
 

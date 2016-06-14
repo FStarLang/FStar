@@ -15,6 +15,7 @@
 *)
 module FStar.Option
 
+open FStar.All
 
 val isNone: option 'a -> bool
 val isSome: option 'a -> bool

@@ -1,6 +1,8 @@
 module FStar.Bytes
 type byte = FStar.UInt8.byte
 
+open FStar.All
+
 assume type bytes
 assume HasEq_bytes: hasEq bytes
 

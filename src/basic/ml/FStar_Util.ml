@@ -674,3 +674,5 @@ let digest_of_file (fname:string) =
   
 let digest_of_string (s:string) =
   BatDigest.string s
+
+let ensure_decimal s = Z.to_string (Z.of_string s)

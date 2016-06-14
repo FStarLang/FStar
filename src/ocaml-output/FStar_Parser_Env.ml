@@ -1135,14 +1135,10 @@ let prep = (fun env -> (
 let open_ns = if (FStar_Ident.lid_equals mname FStar_Syntax_Const.prims_lid) then begin
 []
 end else begin
-if (FStar_Ident.lid_equals mname FStar_Syntax_Const.st_lid) then begin
-(FStar_Syntax_Const.prims_lid)::[]
-end else begin
-if (FStar_Ident.lid_equals mname FStar_Syntax_Const.all_lid) then begin
-(FStar_Syntax_Const.prims_lid)::(FStar_Syntax_Const.st_lid)::[]
+if (FStar_Util.starts_with "FStar." (FStar_Ident.text_of_lid mname)) then begin
+(FStar_Syntax_Const.prims_lid)::(FStar_Syntax_Const.fstar_ns_lid)::[]
 end else begin
 (FStar_Syntax_Const.prims_lid)::(FStar_Syntax_Const.st_lid)::(FStar_Syntax_Const.all_lid)::(FStar_Syntax_Const.fstar_ns_lid)::[]
-end
 end
 end
 in (

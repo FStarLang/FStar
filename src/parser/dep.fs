@@ -210,7 +210,8 @@ let collect_one (original_map: map) (filename: string): list<string> =
   let record_module_alias ident lid =
     let key = String.lowercase (text_of_id ident) in
     let alias = lowercase_join_longident lid true in
-    match smap_try_find working_map alias with
+    // Only fully qualified module aliases are allowed.
+    match smap_try_find original_map alias with
     | Some deps_of_aliased_module ->
         smap_add working_map key deps_of_aliased_module
     | None ->
@@ -218,35 +219,14 @@ let collect_one (original_map: map) (filename: string): list<string> =
   in
 
   (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
-   * auto-generated. *)
+   * auto-generated. With universes, there's some copy/pasta in [env.fs] too. *)
   let auto_open =
-    let index_of s l =
-      let found = ref (-1) in
-      try
-        List.iteri (fun i x ->
-          if s = x then begin
-            found := i;
-            raise Exit
-          end
-        ) l;
-        -1
-      with Exit ->
-        !found
-    in
-    (* All the dependencies of FStar.All.fst, in order. *)
-    let ordered = [
-      "fstar"; "prims"; "fstar.list.tot"; "fstar.predicateextensionality"; "fstar.tset";
-       "fstar.functionalextensionality"; "fstar.set"; "fstar.heap"; "fstar.map"; "fstar.hyperheap"; "fstar.st"; "fstar.all"
-    ] in
-    (* The [open] statements that we wish to prepend. *)
-    let desired_opens = [ Const.fstar_ns_lid; Const.prims_lid; Const.st_lid; Const.all_lid ] in
-    let me = String.lowercase (must (check_and_strip_suffix (basename filename))) in
-    let index_or_length s l =
-      let i = index_of s l in
-      if i < 0 then List.length l else i
-    in
-    let my_index = index_or_length me ordered in
-    List.filter (fun lid -> index_or_length (lowercase_join_longident lid true) ordered < my_index) desired_opens
+    if basename filename = "prims.fst" then
+      []
+    else if starts_with (String.lowercase (basename filename)) "fstar." then
+      [ Const.fstar_ns_lid; Const.prims_lid ]
+    else
+      [ Const.fstar_ns_lid; Const.prims_lid; Const.st_lid; Const.all_lid ]
   in
   List.iter record_open auto_open;
 
@@ -458,6 +438,7 @@ let collect_one (original_map: map) (filename: string): list<string> =
   in
   let ast = Driver.parse_file filename in
   collect_file ast;
+  (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps
 
 type color = | White | Gray | Black
@@ -499,6 +480,7 @@ let collect (filenames: list<string>): _ =
   (* This function takes a lowercase module name. *)
   let rec discover_one key =
     if smap_try_find graph key = None then
+      (* Util.print1 "key: %s\n" key; *)
       let intf, impl = must (smap_try_find m key) in
       let intf_deps = match intf with | None -> [] | Some intf -> collect_one m intf in
       let impl_deps = match impl with | None -> [] | Some impl -> collect_one m impl in

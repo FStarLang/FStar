@@ -221,6 +221,7 @@ val balance: c:color -> lt:rbtree' -> ky:nat -> rt:rbtree' ->
              Pure rbtree'
              (requires (pre_balance c lt ky rt))
 	     (ensures (fun r -> post_balance c lt ky rt r))
+#set-options "--z3timeout 10" //longer timeout is more robust
 (* it's pretty cool that the spec is proved easily without any hints ! *)
 let balance c lt ky rt =
   match (c, lt, ky, rt) with
@@ -230,6 +231,7 @@ let balance c lt ky rt =
     | (B, a, x, (T R b y (T R c z d))) -> T R (T B a x b) y (T B c z d)
     | _ -> T c lt ky rt
 #reset-options
+#set-options "--z3timeout 5"
 
 (*
  * a helper function that inserts a red node with new key, and calls
