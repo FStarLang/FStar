@@ -189,10 +189,12 @@ let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
                                 env, m::all_mods) (env, []) in
       List.rev all_mods, dsenv, env 
   in
-  if FStar.Options.record_hints()
-  || FStar.Options.use_hints()
-  then SMT.with_hints_db fn check_mods
-  else check_mods()
+  match fmods with 
+  | [m] when (Options.should_verify m.name.str //if we're verifying this module
+              && (FStar.Options.record_hints() //and if we're recording or using hints
+                  || FStar.Options.use_hints())) ->
+    SMT.with_hints_db fn check_mods
+  | _ -> check_mods() //don't add a hints file for modules that are not actually verified
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)
