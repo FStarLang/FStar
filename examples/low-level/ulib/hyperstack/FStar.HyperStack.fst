@@ -74,12 +74,35 @@ let modifies (s:Set.set rid) (m0:mem) (m1:mem) =
   HH.modifies s m0.h m1.h
   /\ m0.tip=m1.tip
 
+let as_ref #a (x:stackref a) : Tot (Heap.ref a) = HH.as_ref #a #x.id x.ref
+let as_aref #a (x:stackref a) : Tot Heap.aref = Heap.Ref (HH.as_ref #a #x.id x.ref)
+let modifies_one id h0 h1 = HH.modifies_one id h0.h h1.h
+let modifies_ref (id:rid) (s:Set.set Heap.aref) (h0:mem) (h1:mem) =
+  HH.modifies_rref id s h0.h h1.h /\ h1.tip=h0.tip
 
+let lemma_upd_1 #a (h:mem) (x:stackref a) (v:a) : Lemma
+  (requires (contains h x))
+  (ensures (contains h x
+	    /\ modifies_one (frameOf x) h (upd h x v)
+	    /\ modifies_ref (frameOf x) (Set.singleton (as_aref x)) h (upd h x v)
+	    /\ sel (upd h x v) x = v ))
+  [SMTPat (upd h x v); SMTPatT (contains h x)]
+  = ()
 
+let lemma_upd_2 #a (h:mem) (x:stackref a) (v:a) : Lemma
+  (requires (~(contains h x) /\ frameOf x = h.tip))
+  (ensures (~(contains h x)
+	    /\ frameOf x = h.tip
+	    /\ modifies_one h.tip h (upd h x v)
+	    /\ modifies_ref h.tip Set.empty h (upd h x v)
+	    /\ sel (upd h x v) x = v ))
+  [SMTPat (upd h x v); SMTPatT (~(contains h x))]
+  = ()
 
-
-
-
+assume val lemma_live_1: #a:Type ->  #a':Type -> h:mem -> x:stackref a -> x':stackref a' -> Lemma
+  (requires (contains h x /\ ~(contains h x')))
+  (ensures  (Heap.Ref (as_ref x) <> Heap.Ref (as_ref x')))
+  [SMTPat (contains h x); SMTPatT (~(contains h x'))]
 
 (* (\* //l0 `suffix_of` l1 is strict; i.e., l0 <> l1; RENAMED: used to be includes *\) *)
 (* (\* //TODO: change this to be non-strict *\) *)

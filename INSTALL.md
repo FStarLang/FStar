@@ -148,7 +148,7 @@ Read on for the more complete solution involving Visual Studio itself.
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono (any version from 3.10.x to 4.4.x) and fsharp (version 4.0.1.x)
+  - Install mono (any version from 4.0.3.0 to 4.4.x) and fsharp (version 4.0.1.x)
 
     - On Debian/Ubuntu
 
