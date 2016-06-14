@@ -303,11 +303,13 @@ in (match (_88_190) with
 ((FStar_List.rev all_mods), dsenv, env)
 end))
 end))
-in if ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ())) then begin
+in (match (fmods) with
+| (m)::[] when ((FStar_Options.should_verify m.FStar_Syntax_Syntax.name.FStar_Ident.str) && ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ()))) -> begin
 (FStar_SMTEncoding_Solver.with_hints_db fn check_mods)
-end else begin
+end
+| _88_194 -> begin
 (check_mods ())
-end)
+end))
 end)))
 
 
@@ -324,22 +326,22 @@ let rec tc_fold_interleave : (FStar_Syntax_Syntax.modul Prims.list * FStar_Parse
 
 let move = (fun intf impl remaining -> (
 
-let _88_201 = (FStar_Syntax_Syntax.reset_gensym ())
+let _88_205 = (FStar_Syntax_Syntax.reset_gensym ())
 in (
 
-let _88_206 = acc
-in (match (_88_206) with
+let _88_210 = acc
+in (match (_88_210) with
 | (all_mods, dsenv, env) -> begin
 (
 
-let _88_231 = (match (intf) with
+let _88_235 = (match (intf) with
 | None -> begin
 (tc_one_file dsenv env intf impl)
 end
-| Some (_88_209) when ((FStar_Options.codegen ()) <> None) -> begin
+| Some (_88_213) when ((FStar_Options.codegen ()) <> None) -> begin
 (
 
-let _88_211 = if (not ((FStar_Options.lax ()))) then begin
+let _88_215 = if (not ((FStar_Options.lax ()))) then begin
 (Prims.raise (FStar_Syntax_Syntax.Err ("Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately")))
 end else begin
 ()
@@ -349,28 +351,28 @@ end
 | Some (iname) -> begin
 (
 
-let _88_215 = (FStar_Util.print1 "Interleaving iface+module: %s\n" iname)
+let _88_219 = (FStar_Util.print1 "Interleaving iface+module: %s\n" iname)
 in (
 
 let caption = (Prims.strcat "interface: " iname)
 in (
 
-let _88_220 = (push_context (dsenv, env) caption)
-in (match (_88_220) with
+let _88_224 = (push_context (dsenv, env) caption)
+in (match (_88_224) with
 | (dsenv', env') -> begin
 (
 
-let _88_225 = (tc_one_file dsenv' env' intf impl)
-in (match (_88_225) with
-| (_88_222, dsenv', env') -> begin
+let _88_229 = (tc_one_file dsenv' env' intf impl)
+in (match (_88_229) with
+| (_88_226, dsenv', env') -> begin
 (
 
-let _88_226 = (pop_context (dsenv', env') caption)
+let _88_230 = (pop_context (dsenv', env') caption)
 in (tc_one_file dsenv env None iname))
 end))
 end))))
 end)
-in (match (_88_231) with
+in (match (_88_235) with
 | (ms, dsenv, env) -> begin
 (
 
@@ -392,12 +394,12 @@ end)))
 
 let batch_mode_tc_no_prims : FStar_Parser_Env.env  ->  FStar_TypeChecker_Env.env  ->  Prims.string Prims.list  ->  (FStar_Syntax_Syntax.modul Prims.list * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) = (fun dsenv env filenames -> (
 
-let _88_248 = (tc_fold_interleave ([], dsenv, env) filenames)
-in (match (_88_248) with
+let _88_252 = (tc_fold_interleave ([], dsenv, env) filenames)
+in (match (_88_252) with
 | (all_mods, dsenv, env) -> begin
 (
 
-let _88_249 = if ((FStar_Options.interactive ()) && ((FStar_TypeChecker_Errors.get_err_count ()) = 0)) then begin
+let _88_253 = if ((FStar_Options.interactive ()) && ((FStar_TypeChecker_Errors.get_err_count ()) = 0)) then begin
 (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ())
 end else begin
 (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.finish ())
@@ -408,21 +410,21 @@ end)))
 
 let batch_mode_tc : Prims.string Prims.list  ->  (FStar_Syntax_Syntax.modul Prims.list * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) = (fun filenames -> (
 
-let _88_255 = (tc_prims ())
-in (match (_88_255) with
+let _88_259 = (tc_prims ())
+in (match (_88_259) with
 | (prims_mod, dsenv, env) -> begin
 (
 
 let filenames = (FStar_Dependences.find_deps_if_needed filenames)
 in (
 
-let _88_261 = if ((not ((FStar_Options.explicit_deps ()))) && (FStar_Options.debug_any ())) then begin
+let _88_265 = if ((not ((FStar_Options.explicit_deps ()))) && (FStar_Options.debug_any ())) then begin
 (
 
-let _88_257 = (FStar_Util.print_endline "Auto-deps kicked in; here\'s some info.")
+let _88_261 = (FStar_Util.print_endline "Auto-deps kicked in; here\'s some info.")
 in (
 
-let _88_259 = (FStar_Util.print1 "Here\'s the list of filenames we will process: %s\n" (FStar_String.concat " " filenames))
+let _88_263 = (FStar_Util.print1 "Here\'s the list of filenames we will process: %s\n" (FStar_String.concat " " filenames))
 in (let _178_101 = (let _178_100 = (FStar_Options.verify_module ())
 in (FStar_String.concat " " _178_100))
 in (FStar_Util.print1 "Here\'s the list of modules we will verify: %s\n" _178_101))))
@@ -431,8 +433,8 @@ end else begin
 end
 in (
 
-let _88_266 = (batch_mode_tc_no_prims dsenv env filenames)
-in (match (_88_266) with
+let _88_270 = (batch_mode_tc_no_prims dsenv env filenames)
+in (match (_88_270) with
 | (all_mods, dsenv, env) -> begin
 ((prims_mod)::all_mods, dsenv, env)
 end))))

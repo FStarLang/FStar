@@ -48,25 +48,21 @@ in (match ((FStar_Util.load_value_from_file val_fn)) with
 (
 
 let expected_digest = (FStar_Util.digest_of_file norm_src_fn)
-in if (hints.module_digest = expected_digest) then begin
-(
+in (
 
-let _84_20 = if (FStar_Options.print_fuels ()) then begin
+let _84_20 = if (FStar_Options.hint_info ()) then begin
+if (hints.module_digest = expected_digest) then begin
 (FStar_Util.print1 "(%s) digest is valid; using hints db.\n" norm_src_fn)
 end else begin
-()
+(FStar_Util.print1 "(%s) digest is invalid; using potentially stale hints\n" norm_src_fn)
 end
-in (FStar_ST.op_Colon_Equals replaying_hints (Some (hints.hints))))
-end else begin
-if (FStar_Options.print_fuels ()) then begin
-(FStar_Util.print1 "(%s) digest is invalid.\n" norm_src_fn)
 end else begin
 ()
 end
-end)
+in (FStar_ST.op_Colon_Equals replaying_hints (Some (hints.hints)))))
 end
 | None -> begin
-if (FStar_Options.print_fuels ()) then begin
+if (FStar_Options.hint_info ()) then begin
 (FStar_Util.print1 "(%s) Unable to read hints db.\n" norm_src_fn)
 end else begin
 ()
@@ -319,7 +315,7 @@ in (
 let _84_113 = (record_hint None)
 in (
 
-let _84_115 = if (FStar_Options.print_fuels ()) then begin
+let _84_115 = if ((FStar_Options.print_fuels ()) || (FStar_Options.hint_info ())) then begin
 (let _174_130 = (let _174_125 = (FStar_TypeChecker_Env.get_range env)
 in (FStar_Range.string_of_range _174_125))
 in (let _174_129 = (let _174_126 = (FStar_Options.max_fuel ())
@@ -397,7 +393,7 @@ let hint = {fuel = prev_fuel; ifuel = prev_ifuel; unsat_core = unsat_core; query
 in (
 
 let _84_180 = (record_hint (Some (hint)))
-in if (FStar_Options.print_fuels ()) then begin
+in if ((FStar_Options.print_fuels ()) || (FStar_Options.hint_info ())) then begin
 (let _174_162 = (let _174_158 = (FStar_TypeChecker_Env.get_range env)
 in (FStar_Range.string_of_range _174_158))
 in (let _174_161 = (FStar_Util.string_of_int elapsed_time)
@@ -411,7 +407,7 @@ end
 | FStar_Util.Inr (errs) -> begin
 (
 
-let _84_184 = if (FStar_Options.print_fuels ()) then begin
+let _84_184 = if ((FStar_Options.print_fuels ()) || (FStar_Options.hint_info ())) then begin
 (let _174_167 = (let _174_163 = (FStar_TypeChecker_Env.get_range env)
 in (FStar_Range.string_of_range _174_163))
 in (let _174_166 = (FStar_Util.string_of_int elapsed_time)

@@ -98,6 +98,7 @@ let init () =
         ("full_context_dependency"      , Bool true);
         ("hide_genident_nums"           , Bool false);
         ("hide_uvar_nums"               , Bool false);
+        ("hint_info"                    , Bool false);
         ("in"                           , Bool false);
         ("include"                      , List []);
         ("initial_fuel"                 , Int 2);
@@ -173,6 +174,7 @@ let get_fsi                     ()      = lookup_opt "fsi"                      
 let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
 let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
+let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
@@ -366,6 +368,11 @@ let rec specs () : list<Getopt.opt> =
         "hide_uvar_nums",
         ZeroArgs(fun () -> Bool true),
         "Don't print unification variable numbers");
+
+       ( noshort,
+        "hint_info",
+        ZeroArgs(fun () -> Bool true),
+        "Print information regarding hints");
 
        ( noshort,
         "in",
@@ -631,6 +638,7 @@ let settable = function
     | "eager_inference"
     | "hide_genident_nums"
     | "hide_uvar_nums"
+    | "hint_info"
     | "initial_fuel"
     | "initial_ifuel"
     | "inline_arith"
@@ -778,6 +786,7 @@ let fs_typ_app                   () = get_fs_typ_app                  ()
 let full_context_dependency      () = get_MLish() = false
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
+let hint_info                    () = get_hint_info                   ()
 let initial_fuel                 () = get_initial_fuel                ()
 let initial_ifuel                () = get_initial_ifuel               ()
 let inline_arith                 () = get_inline_arith                ()

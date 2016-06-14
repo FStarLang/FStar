@@ -70,6 +70,7 @@ val fstar_home                  : unit    -> string
 val full_context_dependency     : unit    -> bool
 val hide_genident_nums          : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
+val hint_info                   : unit    -> bool
 val include_path                : unit    -> list<string>
 val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int

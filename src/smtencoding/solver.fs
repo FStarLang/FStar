@@ -59,17 +59,16 @@ let initialize_hints_db src_fn force_record : unit =
          begin match Util.load_value_from_file val_fn with
             | Some hints ->
                 let expected_digest = Util.digest_of_file norm_src_fn in
-                if hints.module_digest = expected_digest then 
-                    begin
-                       if Options.print_fuels()
-                       then Util.print1 "(%s) digest is valid; using hints db.\n" norm_src_fn;
-                       replaying_hints := Some hints.hints
-                    end
-                else if Options.print_fuels() 
-                     then Util.print1 "(%s) digest is invalid.\n" norm_src_fn
+                if Options.hint_info()
+                then begin 
+                     if hints.module_digest = expected_digest 
+                     then Util.print1 "(%s) digest is valid; using hints db.\n" norm_src_fn
+                     else Util.print1 "(%s) digest is invalid; using potentially stale hints\n" norm_src_fn
+                end;
+                replaying_hints := Some hints.hints
             | None ->
-                if (Options.print_fuels()) then
-                    Util.print1 "(%s) Unable to read hints db.\n" norm_src_fn
+                if Options.hint_info() 
+                then Util.print1 "(%s) Unable to read hints db.\n" norm_src_fn
          end
     
 let finalize_hints_db src_fn : unit =
@@ -168,7 +167,7 @@ let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffi
                 | [] -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)]
                 | _ -> errs in
             record_hint None;
-            if Options.print_fuels()
+            if Options.print_fuels() || Options.hint_info()
             then Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
                     (Range.string_of_range (Env.get_range env))
                     (Options.max_fuel()  |> Util.string_of_int)
@@ -206,14 +205,14 @@ let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffi
                              query_elapsed_time=elapsed_time;
                              unsat_core=unsat_core } in
                 record_hint (Some hint);
-                if Options.print_fuels()
+                if Options.print_fuels() || Options.hint_info()
                 then Util.print4 "(%s) Query succeeded in %s milliseconds with fuel %s and ifuel %s\n"
                                 (Range.string_of_range (Env.get_range env))
                                 (Util.string_of_int elapsed_time)
                                 (Util.string_of_int prev_fuel)
                                 (Util.string_of_int prev_ifuel)
             | Inr errs -> 
-                 if Options.print_fuels()
+                 if Options.print_fuels() || Options.hint_info()
                  then Util.print4 "(%s) Query failed in %s milliseconds with fuel %s and ifuel %s ... retrying \n"
                        (Range.string_of_range (Env.get_range env))
                        (Util.string_of_int elapsed_time)

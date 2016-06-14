@@ -5929,7 +5929,7 @@ errs
 end)
 in (
 
-let _50_3614 = if (FStar_Options.print_fuels ()) then begin
+let _50_3614 = if ((FStar_Options.print_fuels ()) || (FStar_Options.hint_info ())) then begin
 (let _140_2439 = (let _140_2434 = (FStar_Tc_Env.get_range tcenv)
 in (FStar_Range.string_of_range _140_2434))
 in (let _140_2438 = (let _140_2435 = (FStar_Options.max_fuel ())
@@ -5973,7 +5973,7 @@ end))
 and cb = (fun _50_3638 p alt _50_3643 -> (match ((_50_3638, _50_3643)) with
 | ((prev_fuel, prev_ifuel), (ok, errs)) -> begin
 if ok then begin
-if (FStar_Options.print_fuels ()) then begin
+if ((FStar_Options.print_fuels ()) || (FStar_Options.hint_info ())) then begin
 (let _140_2460 = (let _140_2457 = (FStar_Tc_Env.get_range tcenv)
 in (FStar_Range.string_of_range _140_2457))
 in (let _140_2459 = (FStar_Util.string_of_int prev_fuel)

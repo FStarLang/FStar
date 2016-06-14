@@ -339,7 +339,7 @@ let ask fresh (core:unsat_core) label_messages qry (cb: (either<unsat_core, erro
               else theory, n_retained, n_pruned+1
             | _ -> d::theory, n_retained, n_pruned)
           theory ([], 0, 0) in 
-      if Options.print_fuels ()
+      if Options.hint_info ()
       then begin
            let n = List.length core in
            Util.print3 "Retained %s assertions%s and pruned %s assertions using recorded unsat core\n" 

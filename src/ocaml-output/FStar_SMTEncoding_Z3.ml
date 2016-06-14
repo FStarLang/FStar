@@ -861,7 +861,7 @@ in (match (_80_388) with
 | (theory', n_retained, n_pruned) -> begin
 (
 
-let _80_390 = if (FStar_Options.print_fuels ()) then begin
+let _80_390 = if (FStar_Options.hint_info ()) then begin
 (
 
 let n = (FStar_List.length core)
