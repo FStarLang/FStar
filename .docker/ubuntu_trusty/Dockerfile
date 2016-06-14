@@ -1,7 +1,6 @@
-FROM ubuntu:trusty
+FROM fsharp/fsharp
 
 MAINTAINER Benjamin Beurdouche <benjamin.beurdouche@inria.fr>
-
 
 # Define versions of dependencies
 ENV opamv 4.02.3
@@ -22,7 +21,7 @@ RUN add-apt-repository --yes ppa:0k53d-karl-f830m/openssl
 RUN apt-get -qq update
 
 # Install required packages and set versions
-RUN apt-get install --yes libssl-dev libsqlite3-dev g++-5 gcc-5 m4 make opam pkg-config python
+RUN apt-get install --yes g++-5 gcc-5 m4 make opam pkg-config python libgmp3-dev
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 200
 RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 200
 
@@ -32,7 +31,7 @@ RUN opam init
 RUN eval $(opam config env)
 RUN opam switch ${opamv}
 RUN eval $(opam config env)
-RUN opam install ocamlfind batteries sqlite3 fileutils stdint
+RUN opam install ocamlfind batteries sqlite3 fileutils stdint zarith
 RUN eval $(opam config env)
 
 # Prepare Z3
@@ -42,10 +41,12 @@ RUN unzip ${z3v}.zip
 ENV PATH "/worker/${z3v}/bin:$PATH"
 
 # Prepare and build F*
+ENV BIN ../bin
 RUN git clone https://github.com/FStarLang/FStar.git
 ENV PATH "/worker/FStar/bin:$PATH"
 WORKDIR FStar
 RUN opam config exec -- make -C src/ocaml-output
+RUN opam config exec -- make -C src ${BIN}/tests.exe 
 
 # F* Testing
 RUN opam config exec -- make -C examples/unit-tests
