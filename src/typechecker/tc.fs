@@ -1610,7 +1610,6 @@ let open_effect_decl env ed =
              ; bind_wp     =op ed.bind_wp
              ; if_then_else=op ed.if_then_else
              ; ite_wp      =op ed.ite_wp
-             ; wp_binop    =op ed.wp_binop
              ; stronger    =op ed.stronger
              ; close_wp    =op ed.close_wp
              ; assert_p    =op ed.assert_p
@@ -1870,26 +1869,6 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
   let wp_if_then_else = normalize_and_make_binders_explicit wp_if_then_else in
   check "wp_if_then_else" (U.abs binders wp_if_then_else None);
 
-  (* val st2_wp_binop : heap:Type -> a:Type -> st2_wp heap a -> op:(Type0->Type0->GTot Type0) ->
-                          st2_wp heap a ->
-                          Tot (st2_wp heap a)
-     let st2_wp_binop heap a l op r = st2_liftGA2 op l r *)
-  let wp_binop =
-    let l = S.gen_bv "l" None wp_a in
-    let op = S.gen_bv "op" None (U.arrow
-      [ S.null_binder U.ktype0; S.null_binder U.ktype0 ]
-      (S.mk_GTotal U.ktype0)) in
-    let r = S.gen_bv "r" None wp_a in
-    U.abs
-      (S.binders_of_list [ a; l; op; r ])
-      (U.mk_app c_lift2 (List.map S.as_arg [
-        unknown; unknown; unknown;
-        S.bv_to_name op; S.bv_to_name l; S.bv_to_name r ]))
-      ret_tot_wp_a
-  in
-  let wp_binop = normalize_and_make_binders_explicit wp_binop in
-  check "wp_binop" (U.abs binders wp_binop None);
-
   (* val st2_assert_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
                        Tot (st2_wp heap a)
     let st2_assert_p heap a q wp = st2_app (st2_pure (l_and q)) wp *)
@@ -2021,7 +2000,6 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
 
   { ed with
     if_then_else = ([], wp_if_then_else);
-    wp_binop     = ([], wp_binop);
     assert_p     = ([], wp_assert);
     assume_p     = ([], wp_assume);
     close_wp     = ([], wp_close);
@@ -2088,19 +2066,6 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                  (S.mk_Total wp_a) in
     check_and_gen' env ed.ite_wp expected_k in
 
-  let wp_binop =
-    let bin_op =
-        let t1, u1 = U.type_u() in
-        let t2, u2 = U.type_u() in
-        let t = mk (Tm_type(S.U_max [u1; u2])) None (Env.get_range env) in
-        Util.arrow [S.null_binder t1; S.null_binder t2] (S.mk_GTotal t) in
-    let expected_k = Util.arrow [S.mk_binder a;
-                                 S.null_binder wp_a;
-                                 S.null_binder bin_op;
-                                 S.null_binder wp_a]
-                                 (S.mk_Total wp_a) in
-    check_and_gen' env ed.wp_binop expected_k in
-
   let stronger =
     let t, _ = U.type_u() in
     let expected_k = Util.arrow [S.mk_binder a;
@@ -2161,7 +2126,6 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     ; bind_wp     = close 1 bind_wp
     ; if_then_else= close 0 if_then_else
     ; ite_wp      = close 0 ite_wp
-    ; wp_binop    = close 0 wp_binop
     ; stronger    = close 0 stronger
     ; close_wp    = close 1 close_wp
     ; assert_p    = close 0 assert_p

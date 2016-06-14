@@ -158,12 +158,6 @@ let pure2_ite_wp (a:Type) (wp:pure2_wp a) =
         fun p -> (forall (x:a). wp (fun (x':a) -> ~(eq2 #a #a x x')) \/ p x)
                  /\ wp (fun (x:a) -> True)
 
-// only a special case of liftGA2, with t1=t2=t3=Type0
-val pure2_wp_binop : a:Type -> pure2_wp a -> op:(Type0->Type0->GTot Type0) ->
-                              pure2_wp a ->
-                              Tot (pure2_wp a)
-let pure2_wp_binop a l op r = pure2_liftGA2 op l r
-
 val pure2_close_wp : a:Type -> b:Type ->
                     f:(b->Tot (pure2_wp a)) ->
                     Tot (pure2_wp a)
@@ -187,7 +181,6 @@ total new_effect {
      ; bind_wp      = pure2_bind_wp
      ; if_then_else = pure2_if_then_else
      ; ite_wp       = pure2_ite_wp
-     ; wp_binop     = pure2_wp_binop
      ; close_wp     = pure2_close_wp
      ; assert_p     = pure2_assert_p
      ; assume_p     = pure2_assume_p
@@ -274,11 +267,6 @@ val st2_if_then_else : heap:Type -> a:Type -> c:Type0 ->
                         Tot (st2_wp heap a)
 let st2_if_then_else heap a c = st2_liftGA2 (l_ITE c)
 
-val st2_wp_binop : heap:Type -> a:Type -> st2_wp heap a -> op:(Type0->Type0->GTot Type0) ->
-                              st2_wp heap a ->
-                              Tot (st2_wp heap a)
-let st2_wp_binop heap a l op r = st2_liftGA2 op l r
-
 val st2_close_wp : heap:Type -> a:Type -> b:Type ->
                     f:(b->Tot (st2_wp heap a)) ->
                     Tot (st2_wp heap a)
@@ -302,7 +290,6 @@ new_effect {
      ; bind_wp      = st2_bind_wp heap
      ; if_then_else = st2_if_then_else heap
      ; ite_wp       = st2_ite_wp heap
-     ; wp_binop     = st2_wp_binop heap
      ; close_wp     = st2_close_wp heap
      ; assert_p     = st2_assert_p heap
      ; assume_p     = st2_assume_p heap
@@ -399,12 +386,6 @@ val ex2_if_then_else : a:Type -> c:Type0 ->
                         ex2_wp a -> ex2_wp a -> Tot (ex2_wp a)
 let ex2_if_then_else a c = ex2_liftGA2 (l_ITE c)
 
-// only a special case of liftGA2, with t1=t2=t3=Type0
-val ex2_wp_binop : a:Type -> ex2_wp a -> op:(Type0->Type0->GTot Type0) ->
-                              ex2_wp a ->
-                              Tot (ex2_wp a)
-let ex2_wp_binop a l op r = ex2_liftGA2 op l r
-
 val ex2_close_wp : a:Type -> b:Type ->
                     f:(b->Tot (ex2_wp a)) ->
                     Tot (ex2_wp a)
@@ -429,7 +410,6 @@ new_effect {
   ; bind_wp      = ex2_bind_wp
   ; if_then_else = ex2_if_then_else
   ; ite_wp       = ex2_ite_wp
-  ; wp_binop     = ex2_wp_binop
   ; close_wp     = ex2_close_wp
   ; assert_p     = ex2_assert_p
   ; assume_p     = ex2_assume_p
@@ -507,11 +487,6 @@ val all2_if_then_else : heap:Type -> a:Type -> c:Type0 ->
                         Tot (all2_wp heap a)
 let all2_if_then_else heap a c = all2_liftGA2 (l_ITE c)
 
-val all2_wp_binop : heap:Type -> a:Type -> all2_wp heap a -> op:(Type0->Type0->GTot Type0) ->
-                              all2_wp heap a ->
-                              Tot (all2_wp heap a)
-let all2_wp_binop heap a l op r = all2_liftGA2 op l r
-
 val all2_close_wp : heap:Type -> a:Type -> b:Type ->
                     f:(b->Tot (all2_wp heap a)) ->
                     Tot (all2_wp heap a)
@@ -536,7 +511,6 @@ new_effect {
   ; bind_wp      = all2_bind_wp      heap
   ; if_then_else = all2_if_then_else heap
   ; ite_wp       = all2_ite_wp       heap
-  ; wp_binop     = all2_wp_binop     heap
   ; close_wp     = all2_close_wp     heap
   ; assert_p     = all2_assert_p     heap
   ; assume_p     = all2_assume_p     heap

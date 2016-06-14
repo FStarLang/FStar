@@ -233,7 +233,6 @@ type eff_decl = {
     bind_wp     :tscheme;
     if_then_else:tscheme;
     ite_wp      :tscheme;
-    wp_binop    :tscheme;
     stronger    :tscheme;
     close_wp    :tscheme;
     assert_p    :tscheme;

@@ -377,7 +377,6 @@ let eff_decl_to_string ed =
       ; bind_wp     = %s\n\
       ; if_then_else= %s\n\
       ; ite_wp      = %s\n\
-      ; wp_binop    = %s\n\
       ; stronger    = %s\n\
       ; close_wp    = %s\n\
       ; assert_p    = %s\n\
@@ -392,7 +391,6 @@ let eff_decl_to_string ed =
          tscheme_to_string ed.bind_wp;
          tscheme_to_string ed.if_then_else;
          tscheme_to_string ed.ite_wp;
-         tscheme_to_string ed.wp_binop;
          tscheme_to_string ed.stronger;
          tscheme_to_string ed.close_wp;
          tscheme_to_string ed.assert_p;
