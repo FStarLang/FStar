@@ -2607,7 +2607,7 @@ let tc_inductive env ses quals lids =
     in
 
     (* TODO: we need to check for List.length tcs because of exception type, is there a better way ? *)	  
-    if (not (lid_equals env.curmodule Const.prims_lid)) && (not (is_noeq)) && (List.length tcs > 0) then
+    if (not (Options.nohaseq ())) && (not (lid_equals env.curmodule Const.prims_lid)) && (not (is_noeq)) && (List.length tcs > 0) then
         //we will open all tcs and datas with the same universe names
         let us =
             let ty = List.hd tcs in

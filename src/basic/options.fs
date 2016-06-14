@@ -140,7 +140,8 @@ let init () =
         ("verify"                       , Bool true);
         ("verify_module"                , List []);
         ("warn_top_level_effects"       , Bool false);
-        ("z3timeout"                    , Int 5)] in
+        ("z3timeout"                    , Int 5);
+        ("nohaseq"                      , Bool false)] in
    let o = peek () in
    Util.smap_clear o;
    vals |> List.iter set_option'                          //initialize it with the default values
@@ -215,6 +216,7 @@ let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           
 let get_version                 ()      = lookup_opt "version"                  as_bool
 let get_warn_top_level_effects  ()      = lookup_opt "warn_top_level_effects"   as_bool
 let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
+let get_nohaseq                 ()      = lookup_opt "nohaseq"                  as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -594,6 +596,12 @@ let rec specs () : list<Getopt.opt> =
          OneArg ((fun s -> Int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)");
+
+       ( noshort,
+        "nohaseq",
+         ZeroArgs (fun () -> Bool true),
+        "Don't generate hasEq axioms");
+
   ] in
      ( 'h',
         "help",
@@ -819,3 +827,4 @@ let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s
 let z3_timeout                   () = get_z3timeout                   ()
+let nohaseq                      () = get_nohaseq                     ()
