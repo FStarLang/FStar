@@ -77,18 +77,39 @@ wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMA
 # in ulib/ as fstis, though, so the --no_extract argument will go away once the
 # F* compiler bootstraps in universes.
 NUM=FStar.Int8 FStar.UInt8 FStar.Int16 FStar.UInt16 FStar.Int32 FStar.UInt32 FStar.Int64 FStar.UInt64
+
+# Modules already written as valid .fst files
 STDLIB=$(addprefix $(LIB)/, allboot.fsti stboot.fsti list.fsti option.fsti \
   FStar.Float.fsti FStar.Char.fsti $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti \
   FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
 BOOT_BASIC_FSTI=$(addprefix boot_fstis/, string.fsti bytes.fsti platform.fsti version.fsti range.fsti)
-# Basically, almost every [.fs] and [.fsi] in the current directory
-BOOT_ALL=$(shell $(FIND) . -iname '*.fs' \
-	 	-and -not -ipath './basic/bytes.fs' \
-	 	-and -not -ipath './basic/getoptsimple.fs' \
-	 	-and -not -ipath './basic/unionfind.fs' \
-	 	-and -not -ipath './basic/range.fs')
+
+# All the .fs and .fsi files that need to be pre-processed into valid .fst files.
+BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
+BOOT_FORMAT=$(addprefix format/, formatml.fs)
+ABSYN=syntax.fs const.fs visit.fs util.fs print.fs
+ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
+SYNTAX=syntax.fsi syntax.fs const.fs subst.fsi subst.fs free.fsi free.fs instfv.fsi instfv.fs util.fs print.fsi print.fs
+SYNTAX_SRC=$(addprefix syntax/, $(SYNTAX))
+TC=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
+TC_SRC=$(addprefix tc/, $(TC))
+TOSMT=term.fsi term.fs z3.fs splitcases.fs encode.fs
+TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
+BOOT_PARSER=$(addprefix parser/, ast.fs dsenv.fs desugar.fs env.fs interleave.fs tosyntax.fs lexhelp.fs parseit.fsi driver.fs dep.fs)
+TYPECHECKER=common.fs env.fsi env.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs util.fsi util.fs tc.fsi tc.fs
+TYPECHECKER_SRC=$(addprefix typechecker/, $(TYPECHECKER))
+EXTRACTION=ml-syntax.fs env.fs uenv.fs util.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs term.fs modul.fs
+EXTRACTION_SRC=$(addprefix extraction/, $(EXTRACTION))
+SMTENCODING=term.fsi term.fs z3.fs splitcases.fs errorReporting.fs encode.fs solver.fs
+SMTENCODING_SRC=$(addprefix smtencoding/, $(SMTENCODING))
+TOPLEVEL=dependences.fs interactive.fs stratified.fs universal.fs fstar.fs
+TOPLEVEL_SRC=$(addprefix fstar/, $(TOPLEVEL))
+
+BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) \
+  $(TOSMT_SRC) $(BOOT_PARSER) $(TYPECHECKER_SRC) $(EXTRACTION_SRC) $(SMTENCODING_SRC) $(TOPLEVEL_SRC)
 
 ALL_INTERFACES=$(STDLIB) $(BOOT_BASIC_FSTI)
+# In the dependency order... eventually we want to use auto-deps
 ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 	        FStar.Format.fst \
 	    	FStar.Absyn.Syntax.fst FStar.Absyn.Const.fst FStar.Absyn.Visit.fst FStar.Absyn.Util.fst FStar.Absyn.Print.fst \
