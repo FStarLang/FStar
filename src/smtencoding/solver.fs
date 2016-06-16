@@ -163,8 +163,9 @@ let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffi
     let check (p:decl) =
         let default_timeout = Options.z3_timeout () * 1000 in
         let default_initial_config = Options.initial_fuel(), Options.initial_ifuel(), default_timeout in
+        let hint_opt = next_hint() in
         let unsat_core, initial_config =
-            match next_hint() with
+            match hint_opt with
             | None -> None, default_initial_config 
             | Some hint -> 
               let core, timeout = 
@@ -229,7 +230,7 @@ let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffi
                     (fun (result, elapsed_time) -> cb false mi p tl (use_errors errs result, elapsed_time))
 
         and cb used_hint (prev_fuel, prev_ifuel, timeout) (p:decl) alt (result, elapsed_time) =
-            if used_hint then (Z3.refresh(); record_hint_stat None result elapsed_time (Env.get_range env));
+            if used_hint then (Z3.refresh(); record_hint_stat hint_opt result elapsed_time (Env.get_range env));
             match result with 
             | Inl unsat_core ->
                 let hint = { fuel=prev_fuel;
