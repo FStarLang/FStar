@@ -5,7 +5,7 @@ type hint =
 {fuel : Prims.int; ifuel : Prims.int; unsat_core : FStar_SMTEncoding_Z3.unsat_core; query_elapsed_time : Prims.int}
 
 
-let is_Mkhint : hint  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkhint"))))
+let replaying_hints : FStar_Util.hints Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
 
 type hints =
@@ -80,7 +80,7 @@ end
 end else begin
 ()
 end
-in (FStar_ST.op_Colon_Equals replaying_hints (Some (hints.hints)))))
+in (FStar_ST.op_Colon_Equals replaying_hints (Some (hints.FStar_Util.hints)))))
 end
 | None -> begin
 if (FStar_Options.hint_info ()) then begin
@@ -169,7 +169,7 @@ end)
 end))
 
 
-let record_hint : hint Prims.option  ->  Prims.unit = (fun hint -> (match ((FStar_ST.read recorded_hints)) with
+let record_hint : FStar_Util.hint Prims.option  ->  Prims.unit = (fun hint -> (match ((FStar_ST.read recorded_hints)) with
 | Some (l) -> begin
 (FStar_ST.op_Colon_Equals recorded_hints (Some ((FStar_List.append l ((hint)::[])))))
 end
@@ -274,7 +274,7 @@ end else begin
 end
 in (match (_84_109) with
 | (core, timeout) -> begin
-(core, (hint.fuel, hint.ifuel, timeout))
+(core, (hint.FStar_Util.fuel, hint.FStar_Util.ifuel, timeout))
 end))
 end)
 in (match (_84_112) with
@@ -449,7 +449,7 @@ in (match (result) with
 | FStar_Util.Inl (unsat_core) -> begin
 (
 
-let hint = {fuel = prev_fuel; ifuel = prev_ifuel; unsat_core = unsat_core; query_elapsed_time = elapsed_time}
+let hint = {FStar_Util.fuel = prev_fuel; FStar_Util.ifuel = prev_ifuel; FStar_Util.unsat_core = unsat_core; FStar_Util.query_elapsed_time = elapsed_time}
 in (
 
 let _84_205 = (record_hint (Some (hint)))

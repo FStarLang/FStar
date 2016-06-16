@@ -646,10 +646,6 @@ let print_endline x =
 
 let map_option f opt = Option.map f opt
 
-let format_value_file_name (prefix:string) =
-  // we use different suffixes for F# and OCaml because they use incompatible encodings of values.
-  String.Format("{0}.fsval", prefix)
-
 let save_value_to_file (fname:string) value =
   // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextWriter` to be passed to `output_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
   use writer = new System.IO.StreamWriter(fname) in
@@ -687,3 +683,26 @@ let ensure_decimal (s: string) =
     sprintf "%A" (System.Numerics.BigInteger.Parse (s.[2..], System.Globalization.NumberStyles.AllowHexSpecifier))
   else
     s
+
+
+
+(** Hints. *)
+type hint = {
+    fuel:int;  //fuel for unrolling recursive functions
+    ifuel:int; //fuel for inverting inductive datatypes
+    unsat_core:option<(list<string>)>; //unsat core, if requested
+    query_elapsed_time:int //time in milliseconds taken for the query, to decide if a fresh replay is worth it
+}
+
+type hints = list<(option<hint>)>
+
+type hints_db = {
+    module_digest:string;
+    hints: hints
+}
+
+let write_hints (_: string) (_: hints_db): unit =
+  failwith "[record_hints_json]: not implemented"
+
+let read_hints (_: string): option<hints_db> =
+  failwith "[record_hints_json]: not implemented"

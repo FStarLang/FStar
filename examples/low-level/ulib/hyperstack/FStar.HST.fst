@@ -31,7 +31,8 @@ effect STF (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
 sub_effect
   DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:mem) -> wp (fun a -> p a h)
 
-(* let ref (t:Type) : Type0 = stacked t // JK: old located references *)
+// JK: old located references
+(* let ref (t:Type) : Type0 = stacked t *)
 
 // JK: pushes a new emtpy frame on the stack
 assume val push_frame: unit -> ST unit

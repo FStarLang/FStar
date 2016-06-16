@@ -37,10 +37,8 @@ type hint = {
 
 type hints = list<(option<hint>)>
 
-type hints_db = {
-    module_digest:string;
-    hints: hints
-}
+// The type definition is now in [FStar.Util], since it needs to be visible to
+// both the F# and OCaml implementations.
 
 type z3_result = either<Z3.unsat_core, error_labels>
 type hint_stat = {
