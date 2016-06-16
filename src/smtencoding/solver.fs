@@ -28,14 +28,6 @@ open FStar.SMTEncoding.Encode
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
 (****************************************************************************)
-type hint = {
-    fuel:int;  //fuel for unrolling recursive functions
-    ifuel:int; //fuel for inverting inductive datatypes
-    unsat_core:Z3.unsat_core; //unsat core, if requested
-    query_elapsed_time:int //time in milliseconds taken for the query, to decide if a fresh replay is worth it
-}
-
-type hints = list<(option<hint>)>
 
 // The type definition is now in [FStar.Util], since it needs to be visible to
 // both the F# and OCaml implementations.
@@ -53,7 +45,7 @@ let replaying_hints: ref<(option<hints>)> = Util.mk_ref None
 let hint_stats     : ref<hint_stats_t>    = Util.mk_ref []
 
 let format_hints_file_name src_filename =
-    Util.format_value_file_name <| Util.format1 "%s.hints" src_filename
+    Util.format1 "%s.hints" src_filename
 
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
