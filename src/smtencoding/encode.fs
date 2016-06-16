@@ -954,6 +954,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         (Const.ite_lid,   mk_ite);
         (Const.not_lid,   enc_prop_c <| un_op mkNot);
         (Const.eq2_lid,   eq_op);
+        (Const.eq3_lid,   eq_op);
         (Const.true_lid,  const_op mkTrue);
         (Const.false_lid, const_op mkFalse);
     ] in
@@ -1171,6 +1172,15 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkOr(valid_a, valid_b), valid)), Some "\/ interpretation", Some "l_or-interp")] in
     let mk_eq2_interp : env -> string -> term -> decls_t = fun env eq2 tt ->
         let aa = ("a", Term_sort) in
+        let xx = ("x", Term_sort) in
+        let yy = ("y", Term_sort) in
+        let a = mkFreeV aa in
+        let x = mkFreeV xx in
+        let y = mkFreeV yy in
+        let valid = Term.mkApp("Valid", [Term.mkApp(eq2, [a;x;y])]) in
+        [Term.Assume(mkForall([[valid]], [aa;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation", Some "eq2-interp")] in
+    let mk_eq3_interp : env -> string -> term -> decls_t = fun env eq3 tt ->
+        let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
         let xx = ("x", Term_sort) in
         let yy = ("y", Term_sort) in
@@ -1178,8 +1188,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let b = mkFreeV bb in
         let x = mkFreeV xx in
         let y = mkFreeV yy in
-        let valid = Term.mkApp("Valid", [Term.mkApp(eq2, [a;b;x;y])]) in
-        [Term.Assume(mkForall([[valid]], [aa;bb;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation", Some "eq2-interp")] in
+        let valid = Term.mkApp("Valid", [Term.mkApp(eq3, [a;b;x;y])]) in
+        [Term.Assume(mkForall([[valid]], [aa;bb;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq3 interpretation", Some "eq3-interp")] in
     let mk_imp_interp : env -> string -> term -> decls_t = fun env imp tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
@@ -1235,6 +1245,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.and_lid,    mk_and_interp);
                  (Const.or_lid,     mk_or_interp);
                  (Const.eq2_lid,    mk_eq2_interp);
+                 (Const.eq3_lid,    mk_eq3_interp);
                  (Const.imp_lid,    mk_imp_interp);
                  (Const.iff_lid,    mk_iff_interp);
                  (Const.forall_lid, mk_forall_interp);

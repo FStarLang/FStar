@@ -83,6 +83,7 @@ let has_type_lid = pconst "has_type"
 
 (* Various equality predicates *)
 let eq2_lid    = pconst  "eq2"
+let eq3_lid    = pconst  "eq3"
 
 (* Some common term constructors *)
 let exp_true_bool   = mk (Tm_constant (Const_bool true))

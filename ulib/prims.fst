@@ -50,7 +50,9 @@ assume HasEq_unit: hasEq unit
    proof irrelevant, heterogeneous equality in Type#0;
    primitive (TODO: make it an inductive?)
 *)
-assume type eq2 : #a:Type -> #b:Type -> a -> b -> Type0
+assume type eq2 : #a:Type -> a -> a -> Type0
+
+assume type eq3 : #a:Type -> #b:Type -> a -> b -> Type0
 
 (* bool is a two element type with elements {'true', 'false'}
    we assume it is primitive, for convenient interop with other languages *)

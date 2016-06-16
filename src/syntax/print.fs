@@ -63,7 +63,8 @@ let infix_prim_ops = [
     (Const.imp_lid     , "==>");
     (Const.iff_lid     , "<==>");
     (Const.precedes_lid, "<<");
-    (Const.eq2_lid     , "==")
+    (Const.eq2_lid     , "==");
+    (Const.eq3_lid     , "===");
 ]
 
 let unary_prim_ops = [

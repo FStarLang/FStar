@@ -20,8 +20,8 @@ open FStar.Heap
 abstract let rid = list int
 let t = Map.t rid heap
 
-val hasEq_rid_lemma: a:Type -> Lemma (requires (a == rid)) (ensures (hasEq a)) [SMTPatT (hasEq rid); SMTPatT (hasEq a)]
-let hasEq_rid_lemma a = ()
+val hasEq_rid_lemma: unit -> Lemma (requires (True)) (ensures (hasEq rid)) [SMTPatT (hasEq rid)]
+let hasEq_rid_lemma _ = ()
 
 abstract let root : rid = []
 
