@@ -500,7 +500,7 @@ and desugar_machine_integer env repr (signedness, width) range =
   in
   let lid = lid_of_path (path_of_text lid) range in
   let lid = match Env.try_lookup_lid env lid with
-    | Some lid -> lid
+    | Some lid -> fst lid
     | None -> failwith (Util.format1 "%s not in scope\n" (text_of_lid lid)) in
   let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
   S.mk (Tm_app (lid, [repr, as_implicit false])) None range
