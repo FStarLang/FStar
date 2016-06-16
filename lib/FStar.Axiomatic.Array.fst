@@ -16,6 +16,8 @@
 
 (* A logical theory of integer-indexed arrays, from [0, n) *)
 module FStar.Axiomatic.Array
+open FStar.All
+open FStar.ST
 
 type seq            : Type -> Type
 assume val index    : #a:Type -> seq a -> int -> Tot a

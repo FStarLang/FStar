@@ -261,40 +261,13 @@ rule token args = parse
        let s = ulexeme lexbuf in INT(s, false)
      }
 
- | ieee32
-     { IEEE32 (try float32(trim_right lexbuf 1) with _ -> fail lexbuf "Invalid floating point number" 0.0f) }
  | ieee64
      { IEEE64 (try float(ulexeme lexbuf) with _ -> fail lexbuf "Invalid floating point number" 0.0) }
-
-(*  | ieee64d    { IEEE64 (float (trim_right lexbuf 1)) } *)
- | decimal
-     { try
-          let s = trim_right lexbuf 1 in
-          (* This implements a range check for decimal literals *)
-          let d = System.Decimal.Parse(s,System.Globalization.CultureInfo.InvariantCulture) in
-          DECIMAL d
-       with
-          e -> fail lexbuf "This number is outside the allowable range for decimal literals" (DECIMAL (decimal 0))
-     }
- | xieee32
-     {
-       let s = trim_right lexbuf 2 in
-       let n64 = int64 s in
-       if n64 > 0xFFFFFFFFL || n64 < 0L then
-         fail lexbuf "This number is outside the allowable range for 32-bit floats" (IEEE32 0.0f)
-       else
-         IEEE32 (System.BitConverter.ToSingle(System.BitConverter.GetBytes(int32 (uint32 (uint64 n64))),0)) }
 
  | xieee64
      {
        let n64 = int64 (trim_right lexbuf 2) in
        IEEE64 (System.BitConverter.Int64BitsToDouble(n64)) }
-
- | bigint
-       { BIGINT (Bytes.string_as_unicode_bytes (trim_right lexbuf 1)) }
-
- | bignum
-       { BIGNUM (Bytes.string_as_unicode_bytes (trim_right lexbuf 1)) }
 
  | (integer | xinteger | float) ident_char+
        { fail lexbuf "This is not a valid numeric literal. Sample formats include 4, 0x4, 0b0100, 4L, 4UL, 4u, 4s, 4us, 4y, 4uy, 4.0, 4.0f, 4N, 4I" (INT32("0",false)) }

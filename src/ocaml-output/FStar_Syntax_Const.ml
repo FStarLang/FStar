@@ -61,28 +61,28 @@ let smtpatT_lid : FStar_Ident.lident = (pconst "SMTPatT")
 let smtpatOr_lid : FStar_Ident.lident = (pconst "SMTPatOr")
 
 
-let int8_lid : FStar_Ident.lident = (p2l (("FStar")::("Int8")::("int8")::[]))
+let int8_lid : FStar_Ident.lident = (p2l (("FStar")::("Int8")::("t")::[]))
 
 
-let uint8_lid : FStar_Ident.lident = (p2l (("FStar")::("UInt8")::("uint8")::[]))
+let uint8_lid : FStar_Ident.lident = (p2l (("FStar")::("UInt8")::("t")::[]))
 
 
-let int16_lid : FStar_Ident.lident = (p2l (("FStar")::("Int16")::("int16")::[]))
+let int16_lid : FStar_Ident.lident = (p2l (("FStar")::("Int16")::("t")::[]))
 
 
-let uint16_lid : FStar_Ident.lident = (p2l (("FStar")::("UInt16")::("uint16")::[]))
+let uint16_lid : FStar_Ident.lident = (p2l (("FStar")::("UInt16")::("t")::[]))
 
 
-let int32_lid : FStar_Ident.lident = (p2l (("FStar")::("Int32")::("int32")::[]))
+let int32_lid : FStar_Ident.lident = (p2l (("FStar")::("Int32")::("t")::[]))
 
 
-let uint32_lid : FStar_Ident.lident = (p2l (("FStar")::("UInt32")::("uint32")::[]))
+let uint32_lid : FStar_Ident.lident = (p2l (("FStar")::("UInt32")::("t")::[]))
 
 
-let int64_lid : FStar_Ident.lident = (p2l (("FStar")::("Int64")::("int64")::[]))
+let int64_lid : FStar_Ident.lident = (p2l (("FStar")::("Int64")::("t")::[]))
 
 
-let uint64_lid : FStar_Ident.lident = (p2l (("FStar")::("UInt64")::("uint64")::[]))
+let uint64_lid : FStar_Ident.lident = (p2l (("FStar")::("UInt64")::("t")::[]))
 
 
 let float_lid : FStar_Ident.lident = (p2l (("FStar")::("Float")::("float")::[]))

@@ -28,7 +28,7 @@ val return_all: 'a -> 'a
 
 type time = System.DateTime
 val now : unit -> time
-val time_diff: time -> time -> float
+val time_diff: time -> time -> float*int
 
 (* generic utils *)
 (* Functional sets *)
@@ -291,3 +291,25 @@ val map_option: ('a -> 'b) -> option<'a> -> option<'b>
 val save_value_to_file: string -> 'a -> unit
 val load_value_from_file: string -> option<'a>
 val print_exn: exn -> string
+val digest_of_file: string -> string
+val digest_of_string: string -> string
+
+val ensure_decimal: string -> string
+
+(** Hints. *)
+type hint = {
+    fuel:int;  //fuel for unrolling recursive functions
+    ifuel:int; //fuel for inverting inductive datatypes
+    unsat_core:option<(list<string>)>; //unsat core, if requested
+    query_elapsed_time:int //time in milliseconds taken for the query, to decide if a fresh replay is worth it
+}
+
+type hints = list<(option<hint>)>
+
+type hints_db = {
+    module_digest:string;
+    hints: hints
+}
+
+val write_hints: string -> hints_db -> unit
+val read_hints: string -> option<hints_db>

@@ -70,6 +70,7 @@ val fstar_home                  : unit    -> string
 val full_context_dependency     : unit    -> bool
 val hide_genident_nums          : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
+val hint_info                   : unit    -> bool
 val include_path                : unit    -> list<string>
 val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
@@ -99,6 +100,7 @@ val print_implicits             : unit    -> bool
 val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool
 val push                        : unit    -> unit
+val record_hints                : unit    -> bool
 val set_option                  : string  -> option_val -> unit
 val set_options                 : options -> string -> parse_cmdline_res
 val should_print_message        : string  -> bool
@@ -110,6 +112,7 @@ val trace_error                 : unit    -> bool
 val universes                   : unit    -> bool
 val unthrottle_inductives       : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
+val use_hints                   : unit    -> bool
 val use_native_int              : unit    -> bool
 val verify_module               : unit    -> list<string>
 val warn_cardinality            : unit    -> bool

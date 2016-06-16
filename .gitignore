@@ -5,6 +5,9 @@
 *.suo
 *.smt2
 *.sav
+*.hints.fsval
+*.hints.mlval
+dump*
 cache/
 /VS/packages
 

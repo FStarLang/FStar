@@ -98,6 +98,7 @@ let init () =
         ("full_context_dependency"      , Bool true);
         ("hide_genident_nums"           , Bool false);
         ("hide_uvar_nums"               , Bool false);
+        ("hint_info"                    , Bool false);
         ("in"                           , Bool false);
         ("include"                      , List []);
         ("initial_fuel"                 , Int 2);
@@ -125,6 +126,7 @@ let init () =
         ("print_implicits"              , Bool false);
         ("print_universes"              , Bool false);
         ("prn"                          , Bool false);
+        ("record_hints"                 , Bool false);
         ("show_signatures"              , List []);
         ("silent"                       , Bool false);
         ("smt"                          , Unset);
@@ -134,6 +136,7 @@ let init () =
         ("universes"                    , Bool false);
         ("unthrottle_inductives"        , Bool false);
         ("use_eq_at_higher_order"       , Bool false);
+        ("use_hints"                    , Bool false);
         ("use_native_int"               , Bool false);
         ("verify"                       , Bool true);
         ("verify_module"                , List []);
@@ -171,6 +174,7 @@ let get_fsi                     ()      = lookup_opt "fsi"                      
 let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
 let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
+let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
@@ -196,6 +200,7 @@ let get_print_fuels             ()      = lookup_opt "print_fuels"              
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
+let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_show_signatures         ()      = lookup_opt "show_signatures"          (as_list as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
@@ -205,6 +210,7 @@ let get_trace_error             ()      = lookup_opt "trace_error"              
 let get_universes               ()      = lookup_opt "universes"                as_bool
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
+let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
 let get_use_native_int          ()      = lookup_opt "use_native_int"           as_bool
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
@@ -270,7 +276,7 @@ let add_verify_module s =
 
 let rec specs () : list<Getopt.opt> =
   let specs =
-    [( noshort,
+    [  ( noshort,
        "admit_smt_queries",
        OneArg ((fun s -> if s="true" then Bool true
                          else if s="false" then Bool false
@@ -278,7 +284,7 @@ let rec specs () : list<Getopt.opt> =
                 "[true|false]"),
        "Admit SMT queries, unsafe! (default 'false')");
 
-     ( noshort,
+       ( noshort,
        "cardinality",
        OneArg ((fun x -> String (validate_cardinality x)),
                "[off|warn|check]"),
@@ -362,6 +368,11 @@ let rec specs () : list<Getopt.opt> =
         "hide_uvar_nums",
         ZeroArgs(fun () -> Bool true),
         "Don't print unification variable numbers");
+
+       ( noshort,
+        "hint_info",
+        ZeroArgs(fun () -> Bool true),
+        "Print information regarding hints");
 
        ( noshort,
         "in",
@@ -499,6 +510,11 @@ let rec specs () : list<Getopt.opt> =
         "Print real names (you may want to use this in conjunction with log_queries)");
 
        ( noshort,
+        "record_hints",
+        ZeroArgs (fun () -> Bool true),
+        "Record a database of hints for efficient proof replay");
+
+       ( noshort,
         "show_signatures",
         OneArg((fun x -> List (x::get_show_signatures() |> List.map String)),
                 "[module name]"),
@@ -546,6 +562,11 @@ let rec specs () : list<Getopt.opt> =
         "use_eq_at_higher_order",
         ZeroArgs (fun () -> Bool true),
         "Use equality constraints when comparing higher-order types (Temporary)");
+
+       ( noshort,
+        "use_hints",
+        ZeroArgs (fun () -> Bool true),
+        "Use a previously recorded hints database for proof replay");
 
        ( noshort,
         "use_native_int",
@@ -618,6 +639,7 @@ let settable = function
     | "eager_inference"
     | "hide_genident_nums"
     | "hide_uvar_nums"
+    | "hint_info"
     | "initial_fuel"
     | "initial_ifuel"
     | "inline_arith"
@@ -765,6 +787,7 @@ let fs_typ_app                   () = get_fs_typ_app                  ()
 let full_context_dependency      () = get_MLish() = false
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
+let hint_info                    () = get_hint_info                   ()
 let initial_fuel                 () = get_initial_fuel                ()
 let initial_ifuel                () = get_initial_ifuel               ()
 let inline_arith                 () = get_inline_arith                ()
@@ -789,6 +812,7 @@ let print_fuels                  () = get_print_fuels                 ()
 let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn                         ()
 let print_universes              () = get_print_universes             ()
+let record_hints                 () = get_record_hints                ()
 let silent                       () = get_silent                      ()
 let split_cases                  () = get_split_cases                 ()
 let timing                       () = get_timing                      ()
@@ -796,11 +820,12 @@ let trace_error                  () = get_trace_error                 ()
 let universes                    () = get_universes                   ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
+let use_hints                    () = get_use_hints                   ()
 let use_native_int               () = get_use_native_int              ()
 let verify_module                () = get_verify_module               ()
 let warn_cardinality             () = get_cardinality() = "warn"
 let warn_top_level_effects       () = get_warn_top_level_effects      ()
 let z3_exe                       () = match get_smt () with
-    				      | None -> Platform.exe "z3"
-				      | Some s -> s
+                                    | None -> Platform.exe "z3"
+                                    | Some s -> s
 let z3_timeout                   () = get_z3timeout                   ()

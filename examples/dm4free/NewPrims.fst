@@ -121,13 +121,10 @@ type pure2_stronger (a:Type) (wp1:pure2_wp a) (wp2:pure2_wp a) =
 val pure2_return : a:Type -> x:a -> Tot (pure2_wp a)
 let pure2_return a x p = p x
 
-inline let pure2_bind_wlp (r:range) (a:Type) (b:Type)
-                   (wlp1:pure2_wp a) (wlp2:(a -> GTot (pure2_wp b))) =
-                   fun p -> wlp1 (fun (x:a) -> wlp2 x p)
 inline let pure2_bind_wp (r:range) (a:Type) (b:Type)
-                   (wp1:pure2_wp a) (wlp1:pure2_wp a)
-                   (wp2: (a -> GTot (pure2_wp b))) (wlp2: (a -> GTot (pure2_wp b))) =
-     pure2_bind_wlp r a b wp1 wp2
+                   (wp1:pure2_wp a)
+                   (wp2: (a -> Tot (pure2_wp b))) =
+           fun p -> wp1 (fun (x:a) -> wp2 x p)
 
 (* Null wp, which we can't define in terms of the previous *)
 
@@ -157,22 +154,9 @@ val pure2_if_then_else : a:Type -> c:Type0 ->
                         pure2_wp a -> pure2_wp a -> Tot (pure2_wp a)
 let pure2_if_then_else a c = pure2_liftGA2 (l_ITE c)
 
-let pure2_ite_wlp (a:Type) (wlp_cases:pure2_wp a) =
-        fun p -> (forall (x:a). wlp_cases (fun (x':a) -> ~(eq2 #a #a x x')) \/ p x)
-
-let pure2_ite_wp (a:Type) (wlp_cases:pure2_wp a) (wp_cases:pure2_wp a) =
-        fun p -> pure2_ite_wlp a wlp_cases p
-              /\ wp_cases (fun (x:a) -> True)
-
-// only a special case of liftGA2, with t1=t2=t3=Type0
-val pure2_wp_binop : a:Type -> pure2_wp a -> op:(Type0->Type0->GTot Type0) ->
-                              pure2_wp a ->
-                              Tot (pure2_wp a)
-let pure2_wp_binop a l op r = pure2_liftGA2 op l r
-
-// Not derivable, but apparently not needed
-inline val pure2_wp_as_type : a:Type -> (wp:pure2_wp a) -> Tot Type0
-inline let pure2_wp_as_type a wp = l_Forall wp
+let pure2_ite_wp (a:Type) (wp:pure2_wp a) =
+        fun p -> (forall (x:a). wp (fun (x':a) -> ~(eq2 #a #a x x')) \/ p x)
+                 /\ wp (fun (x:a) -> True)
 
 val pure2_close_wp : a:Type -> b:Type ->
                     f:(b->Tot (pure2_wp a)) ->
@@ -192,26 +176,22 @@ val pure2_trivial : a:Type -> pure2_wp a -> Tot Type0
 let pure2_trivial a wp = pure2_stronger a (pure2_null_wp a) wp
 
 total new_effect {
-  PURE2 : a:Type -> wp:pure2_wp a -> wlp:pure2_wp a -> Effect
+  PURE2 : a:Type -> wp:pure2_wp a -> Effect
   with return       = pure2_return
-     ; bind_wlp     = pure2_bind_wlp
      ; bind_wp      = pure2_bind_wp
      ; if_then_else = pure2_if_then_else
-     ; ite_wlp      = pure2_ite_wlp
      ; ite_wp       = pure2_ite_wp
-     ; wp_binop     = pure2_wp_binop
-     ; wp_as_type   = pure2_wp_as_type
      ; close_wp     = pure2_close_wp
      ; assert_p     = pure2_assert_p
      ; assume_p     = pure2_assume_p
      ; null_wp      = pure2_null_wp
      ; trivial      = pure2_trivial
+     ; stronger     = pure2_stronger
 }
 
 effect Pure2 (a:Type) (pre:Type0) (post:a -> Tot Type0) =
         PURE2 a
              (fun p -> pre /\ (forall (x:a). post x ==> p x)) // pure2_wp
-             (fun p -> forall (x:a). pre /\ post x ==> p x)   // WLP
 
 (* Let's go for state *)
 
@@ -249,30 +229,21 @@ val st2_return : heap:Type -> a:Type -> x:a -> Tot (st2_wp heap a)
 let st2_return _ a x p = fun h -> p x h
 
 inline let st2_bind_wp      (heap:Type) (r:range) (a:Type) (b:Type)
-                            (wp1:st2_wp heap a) (wlp1:st2_wp heap a)
-                            (wp2:(a -> GTot (st2_wp heap b))) (wlp2:(a -> GTot (st2_wp heap b)))
+                            (wp1:st2_wp heap a)
+                            (wp2:(a -> GTot (st2_wp heap b)))
                             = fun p h0 ->
      wp1 (fun a h1 -> wp2 a p h1) h0
-inline let st2_bind_wlp      (heap:Type) (r:range) (a:Type) (b:Type)
-                             (wlp1:st2_wp heap a) (wlp2:(a -> GTot (st2_wp heap b)))
-                            = fun p h0 ->
-     wlp1 (fun a h1 -> wlp2 a p h1) h0
 
 val st2_null_wp : heap:Type -> a:Type -> Tot (st2_wp heap a)
 let st2_null_wp _ a = fun p _ -> forall x h. p x h
 
-inline let st2_ite_wlp       (heap:Type) (a:Type)
-                             (wlp_cases:st2_wp heap a)
-                             = fun p h0 ->
-     (forall (a:a) (h:heap).
-           wlp_cases (fun a1 h1 -> a=!=a1 \/ h=!=h1) h0
-        \/ p a h)
-
 inline let st2_ite_wp        (heap:Type) (a:Type)
-                             (wlp_cases:st2_wp heap a) (wp_cases:st2_wp heap a) =
+                             (wp:st2_wp heap a) =
                              fun p h0 ->
-     st2_ite_wlp heap a wlp_cases p h0
-     /\ wp_cases (fun a h_ -> True) h0
+     (forall (a:a) (h:heap).
+           wp (fun a1 h1 -> a=!=a1 \/ h=!=h1) h0
+        \/ p a h)
+     /\ wp (fun a h_ -> True) h0
 
 (* Derived OPS. Are exactly the same as for pure except working
    on different types, and carrying the heap type all over *)
@@ -296,14 +267,6 @@ val st2_if_then_else : heap:Type -> a:Type -> c:Type0 ->
                         Tot (st2_wp heap a)
 let st2_if_then_else heap a c = st2_liftGA2 (l_ITE c)
 
-val st2_wp_binop : heap:Type -> a:Type -> st2_wp heap a -> op:(Type0->Type0->GTot Type0) ->
-                              st2_wp heap a ->
-                              Tot (st2_wp heap a)
-let st2_wp_binop heap a l op r = st2_liftGA2 op l r
-
-inline val st2_wp_as_type : heap:Type -> a:Type -> st2_wp heap a -> Tot Type0
-inline let st2_wp_as_type heap a wp = l_Forall (fun (p,h) -> wp p h)
-
 val st2_close_wp : heap:Type -> a:Type -> b:Type ->
                     f:(b->Tot (st2_wp heap a)) ->
                     Tot (st2_wp heap a)
@@ -322,31 +285,26 @@ val st2_trivial : heap:Type ->a:Type -> st2_wp heap a -> Tot Type0
 let st2_trivial heap a wp = st2_stronger heap a (st2_null_wp heap a) wp
 
 new_effect {
-  STATE2_h (heap:Type) : result:Type -> wp:st2_wp heap result -> wlp:st2_wp heap result -> Effect
+  STATE2_h (heap:Type) : result:Type -> wp:st2_wp heap result -> Effect
   with return       = st2_return heap
      ; bind_wp      = st2_bind_wp heap
-     ; bind_wlp     = st2_bind_wlp heap
      ; if_then_else = st2_if_then_else heap
-     ; ite_wlp      = st2_ite_wlp heap
      ; ite_wp       = st2_ite_wp heap
-     ; wp_binop     = st2_wp_binop heap
-     ; wp_as_type   = st2_wp_as_type heap
      ; close_wp     = st2_close_wp heap
      ; assert_p     = st2_assert_p heap
      ; assume_p     = st2_assume_p heap
      ; null_wp      = st2_null_wp heap
      ; trivial      = st2_trivial heap
+     ; stronger     = st2_stronger heap
 }
 
 new_effect_for_free {
-  STATE2_h_for_free (heap:Type) : result:Type -> wp:st2_wp heap result -> wlp:st2_wp heap result -> Effect
+  STATE2_h_for_free (heap:Type) : result:Type -> wp:st2_wp heap result -> Effect
   with return       = st2_return heap
      ; bind_wp      = st2_bind_wp heap
-     ; bind_wlp     = st2_bind_wlp heap
-     ; ite_wlp      = st2_ite_wlp heap
      ; ite_wp       = st2_ite_wp heap
-     ; wp_as_type   = st2_wp_as_type heap
      ; null_wp      = st2_null_wp heap
+     ; stronger     = st2_stronger heap
 }
 
 (* Ex *)
@@ -386,23 +344,19 @@ type ex2_stronger (a:Type) (wp1:ex2_wp a) (wp2:ex2_wp a) =
 val ex2_return : a:Type -> x:a -> Tot (ex2_wp a)
 let ex2_return a x p = p (V x)
 
-inline let ex2_bind_wlp (r:range) (a:Type) (b:Type) (wlp1:ex2_wp a) (wlp2:(a -> GTot (ex2_wp b))) = fun p ->
-   (forall (rb:result b). p rb \/ wlp1 (fun ra1 -> if is_V ra1
-                                          then wlp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
-                                          else ra1 =!= rb))
 inline let ex2_bind_wp (r:range) (a:Type) (b:Type)
-		       (wp1:ex2_wp a) (wlp1:ex2_wp a)
-		       (wp2:(a -> GTot (ex2_wp b))) (wlp2:(a -> GTot (ex2_wp b))) = fun p ->
-   ex2_bind_wlp r a b wlp1 wlp2 p
+		       (wp1:ex2_wp a)
+		       (wp2:(a -> GTot (ex2_wp b))) = fun p ->
+   (forall (rb:result b). p rb \/ wp1 (fun ra1 -> if is_V ra1
+                                         then wp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
+                                         else ra1 =!= rb))
    /\ wp1 (fun ra1 -> if is_V ra1
                    then wp2 (V.v ra1) (fun rb2 -> True)
                    else True)
 
-inline let ex2_ite_wlp  (a:Type) (wlp_cases:ex2_wp a) = fun post ->
-    (forall (a:result a). wlp_cases (fun a1 -> a=!=a1) \/ post a)
-inline let ex2_ite_wp (a:Type) (wlp_cases:ex2_wp a) (wp_cases:ex2_wp a) = fun post ->
-    ex2_ite_wlp a wlp_cases post
-    /\ wp_cases (fun ra2 -> True)
+inline let ex2_ite_wp (a:Type) (wp:ex2_wp a) = fun post ->
+    (forall (a:result a). wp (fun a1 -> a=!=a1) \/ post a)
+    /\ wp (fun ra2 -> True)
 
 (* Null wp, which we can't define in terms of the previous *)
 
@@ -432,16 +386,6 @@ val ex2_if_then_else : a:Type -> c:Type0 ->
                         ex2_wp a -> ex2_wp a -> Tot (ex2_wp a)
 let ex2_if_then_else a c = ex2_liftGA2 (l_ITE c)
 
-// only a special case of liftGA2, with t1=t2=t3=Type0
-val ex2_wp_binop : a:Type -> ex2_wp a -> op:(Type0->Type0->GTot Type0) ->
-                              ex2_wp a ->
-                              Tot (ex2_wp a)
-let ex2_wp_binop a l op r = ex2_liftGA2 op l r
-
-// Not derivable, but apparently not needed
-inline val ex2_wp_as_type : a:Type -> (wp:ex2_wp a) -> Tot Type0
-inline let ex2_wp_as_type a wp = l_Forall wp
-
 val ex2_close_wp : a:Type -> b:Type ->
                     f:(b->Tot (ex2_wp a)) ->
                     Tot (ex2_wp a)
@@ -460,21 +404,18 @@ val ex2_trivial : a:Type -> ex2_wp a -> Tot Type0
 let ex2_trivial a wp = ex2_stronger a (ex2_null_wp a) wp
 
 new_effect {
-  EXN2 : result:Type -> wp:ex2_wp result -> wlp:ex2_wp result -> Effect
+  EXN2 : result:Type -> wp:ex2_wp result -> Effect
   with
     return       = ex2_return
-  ; bind_wlp     = ex2_bind_wlp
   ; bind_wp      = ex2_bind_wp
   ; if_then_else = ex2_if_then_else
-  ; ite_wlp      = ex2_ite_wlp
   ; ite_wp       = ex2_ite_wp
-  ; wp_binop     = ex2_wp_binop
-  ; wp_as_type   = ex2_wp_as_type
   ; close_wp     = ex2_close_wp
   ; assert_p     = ex2_assert_p
   ; assume_p     = ex2_assume_p
   ; null_wp      = ex2_null_wp
   ; trivial      = ex2_trivial
+  ; stronger     = ex2_stronger
 }
 
 (* ALL effect *)
@@ -512,28 +453,17 @@ val all2_return : heap:Type -> a:Type -> x:a -> Tot (all2_wp heap a)
 let all2_return _ a x p = fun h -> p (V x) h
 
 inline let all2_bind_wp (heap:Type) (r:range) (a:Type) (b:Type)
-                        (wp1:all2_wp heap a) (wlp1:all2_wp heap a)
-                        (wp2:(a -> GTot (all2_wp heap b))) (wlp2:(a -> GTot (all2_wp heap b))) = fun p h0 ->
+                        (wp1:all2_wp heap a)
+                        (wp2:(a -> GTot (all2_wp heap b))) = fun p h0 ->
    (wp1 (fun ra h1 -> is_V ra ==> wp2 (V.v ra) p h1) h0)
-
-inline let all2_bind_wlp (heap:Type) (r:range) (a:Type) (b:Type)
-                         (wlp1:all2_wp heap a) (wlp2: (a -> GTot (all2_wp heap b))) =
-   fun (p : result b -> heap -> GTot Type0) (h0 : heap) ->
-   (forall rb h. wlp1 (fun ra h1 ->
-       if is_V ra
-       then wlp2 (V.v ra) (fun rb2 h2 -> rb=!=rb2 \/ h=!=h2) h1
-       else rb=!=ra \/ h=!=h1) h0 \/ p rb h)
 
 val all2_null_wp : heap:Type -> a:Type -> Tot (all2_wp heap a)
 let all2_null_wp _ a = fun p _ -> forall x h. p x h
 
-inline let all2_ite_wlp  (heap:Type) (a:Type)
-                         (wlp_cases:all2_wp heap a) = fun post h0 ->
-     (forall (ra:result a) (h:heap). wlp_cases (fun ra2 h2 -> ra=!=ra2 \/ h=!=h2) h0 \/ post ra h)
 inline let all2_ite_wp (heap:Type) (a:Type)
-                       (wlp_cases:all2_wp heap a) (wp_cases:all2_wp heap a) = fun post h0 ->
-     (forall (ra:result a) (h:heap). wlp_cases (fun ra2 h2 -> ra=!=ra2 \/ h=!=h2) h0 \/ post ra h)
-      /\ wp_cases (fun _a _b -> True) h0
+                       (wp:all2_wp heap a) = fun post h0 ->
+     (forall (ra:result a) (h:heap). wp (fun ra2 h2 -> ra=!=ra2 \/ h=!=h2) h0 \/ post ra h)
+      /\ wp (fun _a _b -> True) h0
 
 (* Derived OPS. Are exactly the same as for pure except working
    on different types, and carrying the heap type all over *)
@@ -557,14 +487,6 @@ val all2_if_then_else : heap:Type -> a:Type -> c:Type0 ->
                         Tot (all2_wp heap a)
 let all2_if_then_else heap a c = all2_liftGA2 (l_ITE c)
 
-val all2_wp_binop : heap:Type -> a:Type -> all2_wp heap a -> op:(Type0->Type0->GTot Type0) ->
-                              all2_wp heap a ->
-                              Tot (all2_wp heap a)
-let all2_wp_binop heap a l op r = all2_liftGA2 op l r
-
-inline val all2_wp_as_type : heap:Type -> a:Type -> all2_wp heap a -> Tot Type0
-inline let all2_wp_as_type heap a wp = l_Forall (fun (p,h) -> wp p h)
-
 val all2_close_wp : heap:Type -> a:Type -> b:Type ->
                     f:(b->Tot (all2_wp heap a)) ->
                     Tot (all2_wp heap a)
@@ -583,20 +505,17 @@ val all2_trivial : heap:Type ->a:Type -> all2_wp heap a -> Tot Type0
 let all2_trivial heap a wp = all2_stronger heap a (all2_null_wp heap a) wp
 
 new_effect {
-  ALL2_h (heap:Type) : a:Type -> wp:all2_wp heap a -> wlp:all2_wp heap a -> Effect
+  ALL2_h (heap:Type) : a:Type -> wp:all2_wp heap a -> Effect
   with
     return       = all2_return       heap
   ; bind_wp      = all2_bind_wp      heap
-  ; bind_wlp     = all2_bind_wlp     heap
   ; if_then_else = all2_if_then_else heap
-  ; ite_wlp      = all2_ite_wlp      heap
   ; ite_wp       = all2_ite_wp       heap
-  ; wp_binop     = all2_wp_binop     heap
-  ; wp_as_type   = all2_wp_as_type   heap
   ; close_wp     = all2_close_wp     heap
   ; assert_p     = all2_assert_p     heap
   ; assume_p     = all2_assume_p     heap
   ; null_wp      = all2_null_wp      heap
   ; trivial      = all2_trivial      heap
+  ; stronger     = all2_stronger     heap
 }
 

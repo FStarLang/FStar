@@ -1768,7 +1768,7 @@ and tc_decls env ses deserialized =
     let start = FStar.Util.now() in
     let res = tc_decl env se ds in
     let stop = FStar.Util.now () in 
-    let diff = FStar.Util.time_diff start stop in 
+    let diff, _ = FStar.Util.time_diff start stop in 
     Util.print2 "Time %ss : %s\n" (Util.string_of_float diff) (Print.sigelt_to_string_short se);
     res in
 

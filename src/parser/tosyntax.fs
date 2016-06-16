@@ -492,6 +492,19 @@ and desugar_typ env e : S.term =
     let env = {env with expect_typ=true} in
     desugar_term_maybe_top false env e
 
+and desugar_machine_integer env repr (signedness, width) range =
+  let lid = "FStar." ^
+    (match signedness with | Unsigned -> "U" | Signed -> "") ^ "Int" ^
+    (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64") ^
+    "." ^ (match signedness with | Unsigned -> "u" | Signed -> "") ^ "int_to_t"
+  in
+  let lid = lid_of_path (path_of_text lid) range in
+  let lid = match Env.try_lookup_lid env lid with
+    | Some lid -> lid
+    | None -> failwith (Util.format1 "%s not in scope\n" (text_of_lid lid)) in
+  let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
+  S.mk (Tm_app (lid, [repr, as_implicit false])) None range
+
 and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
   let mk e = S.mk e None top.range in
   let setpos e = {e with pos=top.range} in
@@ -506,7 +519,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Ensures (t, lopt) ->
       desugar_formula env t
 
-    | Const c -> mk (Tm_constant c)
+    | Const (Const_int (i, Some size)) ->
+        desugar_machine_integer env i size top.range
+
+    | Const c ->
+        mk (Tm_constant c)
 
     | Op("=!=", args) ->
       desugar_term env (mk_term(Op("~", [mk_term (Op("==", args)) top.range top.level])) top.range top.level)
@@ -1478,6 +1495,8 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let binders = Subst.close_binders binders in
     let sub (_, x) =
         let edb, x = Subst.open_term ed.binders x in
+        if List.length args <> List.length edb
+        then raise (Error("Unexpected number of arguments to effect constructor", defn.range));
         let s = Util.subst_of_list edb args in
         [], Subst.close binders (Subst.subst s x) in
     let ed = {
@@ -1488,12 +1507,9 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
             signature   =snd (sub ([], ed.signature));
             ret         =sub ed.ret;
             bind_wp     =sub ed.bind_wp;
-            bind_wlp    =sub ed.bind_wlp;
             if_then_else=sub ed.if_then_else;
             ite_wp      =sub ed.ite_wp;
-            ite_wlp     =sub ed.ite_wlp;
-            wp_binop    =sub ed.wp_binop;
-            wp_as_type  =sub ed.wp_as_type;
+            stronger    =sub ed.stronger;
             close_wp    =sub ed.close_wp;
             assert_p    =sub ed.assert_p;
             assume_p    =sub ed.assume_p;
@@ -1520,12 +1536,9 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           signature   = eff_k;
           ret         = lookup "return";
           bind_wp     = lookup "bind_wp";
-          bind_wlp    = lookup "bind_wlp";
           if_then_else= dummy_tscheme;
           ite_wp      = lookup "ite_wp";
-          ite_wlp     = lookup "ite_wlp";
-          wp_binop    = dummy_tscheme;
-          wp_as_type  = lookup "wp_as_type";
+          stronger    = lookup "stronger";
           close_wp    = dummy_tscheme;
           assert_p    = dummy_tscheme;
           assume_p    = dummy_tscheme;
@@ -1545,12 +1558,9 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           signature   = eff_k;
           ret         = lookup "return";
           bind_wp     = lookup "bind_wp";
-          bind_wlp    = lookup "bind_wlp";
           if_then_else= lookup "if_then_else";
           ite_wp      = lookup "ite_wp";
-          ite_wlp     = lookup "ite_wlp";
-          wp_binop    = lookup "wp_binop";
-          wp_as_type  = lookup "wp_as_type";
+          stronger    = lookup "stronger";
           close_wp    = lookup "close_wp";
           assert_p    = lookup "assert_p";
           assume_p    = lookup "assume_p";

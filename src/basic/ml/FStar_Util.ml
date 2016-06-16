@@ -34,7 +34,10 @@ let return_all x = x
 
 type time = float
 let now () = Unix.gettimeofday ()
-let time_diff (t1:time) (t2:time) : float = t2 -. t1
+let time_diff (t1:time) (t2:time) : float * int =
+  let n = t2 -. t1 in
+  n, 
+  int_of_float (n *. 1000.0)
 
 exception Impos
 exception NYI of string
@@ -664,3 +667,91 @@ let load_value_from_file (fname:string) =
 
 let print_exn e =
   Printexc.to_string e
+
+let digest_of_file (fname:string) =
+  BatDigest.file fname
+  
+let digest_of_string (s:string) =
+  BatDigest.string s
+
+let ensure_decimal s = Z.to_string (Z.of_string s)
+
+
+(** Hints. *)
+type hint = {
+    fuel:int;
+    ifuel:int;
+    unsat_core: string list option;
+    query_elapsed_time:int
+}
+
+type hints = hint option list
+
+type hints_db = {
+    module_digest:string;
+    hints: hints
+}
+
+let write_hints (filename: string) (hints: hints_db): unit =
+  let json = `List [
+    `String hints.module_digest;
+    `List (List.map (function
+      | None -> `Null
+      | Some { fuel; ifuel; unsat_core; query_elapsed_time } ->
+          `List [
+            `Int fuel;
+            `Int ifuel;
+            (match unsat_core with
+            | None -> `Null
+            | Some strings ->
+                `List (List.map (fun s -> `String s) strings));
+            `Int query_elapsed_time
+          ]
+    ) hints.hints)
+  ] in
+  Yojson.Safe.pretty_to_channel (open_out filename) json
+
+let read_hints (filename: string): hints_db option =
+  let json = Yojson.Safe.from_channel (open_in filename) in
+  try
+    Some (match json with
+    | `List [
+        `String module_digest;
+        `List hints
+      ] ->
+        {
+          module_digest; 
+          hints = List.map (function
+            | `Null -> None
+            | `List [
+                `Int fuel;
+                `Int ifuel;
+                unsat_core;
+                `Int query_elapsed_time
+              ] ->
+                Some {
+                  fuel;
+                  ifuel;
+                  unsat_core = begin match unsat_core with
+                    | `Null ->
+                        None
+                    | `List strings ->
+                        Some (List.map (function
+                          | `String s -> s
+                          | _ -> raise Exit
+                        ) strings)
+                    |  _ ->
+                        raise Exit
+                  end;
+                  query_elapsed_time
+                }
+              | _ ->
+                 raise Exit 
+          ) hints
+        }
+    | _ ->
+        raise Exit
+    )
+  with Exit ->
+    Printf.eprintf "Malformed JSON hints file: %s\n" filename;
+    None

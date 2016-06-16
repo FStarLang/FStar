@@ -218,7 +218,7 @@ in (let _162_75 = ((mk_ty_fun ()) xs body.FStar_Extraction_ML_Syntax.mlty)
 in (FStar_Extraction_ML_Syntax.with_ty _162_75 e)))
 end))
 in (match (e) with
-| Some ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Fun (x::xs, body); FStar_Extraction_ML_Syntax.mlty = _72_185; FStar_Extraction_ML_Syntax.loc = _72_183}) -> begin
+| Some ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Fun ((x)::xs, body); FStar_Extraction_ML_Syntax.mlty = _72_185; FStar_Extraction_ML_Syntax.loc = _72_183}) -> begin
 if ((type_leq unfold t1' t1) && (eff_leq f f')) then begin
 if ((f = FStar_Extraction_ML_Syntax.E_PURE) && (f' = FStar_Extraction_ML_Syntax.E_GHOST)) then begin
 if (type_leq unfold t2 t2') then begin
@@ -335,7 +335,7 @@ in (FStar_Absyn_Syntax.v_binder x))
 
 
 let is_type_abstraction = (fun _72_4 -> (match (_72_4) with
-| (FStar_Util.Inl (_72_258), _72_261)::_72_256 -> begin
+| ((FStar_Util.Inl (_72_258), _72_261))::_72_256 -> begin
 true
 end
 | _72_265 -> begin
@@ -450,7 +450,7 @@ end))
 
 
 let record_field_path : FStar_Ident.lident Prims.list  ->  Prims.string Prims.list = (fun _72_6 -> (match (_72_6) with
-| f::_72_328 -> begin
+| (f)::_72_328 -> begin
 (
 
 let _72_334 = (FStar_Util.prefix f.FStar_Ident.ns)

@@ -233,12 +233,9 @@ type eff_decl = {
     signature   :term;
     ret         :tscheme;
     bind_wp     :tscheme;
-    bind_wlp    :tscheme;
     if_then_else:tscheme;
     ite_wp      :tscheme;
-    ite_wlp     :tscheme;
-    wp_binop    :tscheme;
-    wp_as_type  :tscheme;
+    stronger    :tscheme;
     close_wp    :tscheme;
     assert_p    :tscheme;
     assume_p    :tscheme;

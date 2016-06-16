@@ -17,6 +17,7 @@
 
 module FStar.SMTEncoding.ErrorReporting
 open FStar
+open FStar.BaseTypes
 open FStar.Util
 open FStar.SMTEncoding.Term
 open FStar.SMTEncoding
@@ -78,15 +79,28 @@ let label_goals use_env_msg r q : term * labels * ranges =
 
         | App(Imp, [lhs;rhs]) -> 
           let rhs, labs, rs = aux rs rhs labs in
-          mk (App(Imp, [lhs; rhs])), labs, rs
+          let lhs, labs, rs = match lhs.tm with 
+            | App(And, conjuncts) -> 
+              let (labs, rs), conjuncts = Util.fold_map (fun (labs, rs) tm -> 
+                match tm.tm with 
+                | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])}) ->
+                  let r, labs, rs = aux rs r labs in
+                  let q = mk <| Quant(Forall, [[p]], Some 0, sorts, mk (App(Iff, [l;r]))) in
+                  (labs, rs), q
+                | _ -> (labs, rs), tm) (labs, rs) conjuncts in
+              let tm = List.fold_right (fun conjunct out -> Term.mkAnd(out, conjunct)) conjuncts Term.mkTrue in
+              tm, labs, rs
+           | _ -> lhs, labs, rs in
+          Term.mkImp(lhs, rhs), labs, rs
 
-        | App(And, conjuncts) -> 
+        | App(And, conjuncts) ->
           let rs, conjuncts, labs = List.fold_left (fun (rs, cs, labs) c -> 
             let c, labs, rs = aux rs c labs in
             rs, c::cs, labs) 
             (rs, [], labs)
             conjuncts in
-          mk (App(And, List.rev conjuncts)), labs, rs
+          let tm = List.fold_left (fun out conjunct -> Term.mkAnd(out, conjunct)) Term.mkTrue conjuncts in
+          tm, labs, rs
        
         | App(ITE, [hd; q1; q2]) -> 
           let q1, labs, _ = aux rs q1 labs in
@@ -137,7 +151,7 @@ let label_goals use_env_msg r q : term * labels * ranges =
 
       -- potential_errors are the labels in the initial counterexample model
  *)
-let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -> (bool * labels)) : labels = 
+let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -> (either<Z3.unsat_core, error_labels> * int)) : labels = 
     let ctr = Util.mk_ref 0 in
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
         incr ctr;
@@ -156,8 +170,8 @@ let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -
 //                    print_labs "Localized errors: " labs;
                     labs
             | hd::tl -> 
-              let ok, _ = askZ3 (elim <| (eliminated @ errors @ tl)) in //hd is the only thing to prove
-              if ok //hd is provable
+              let result, _ = askZ3 (elim <| (eliminated @ errors @ tl)) in //hd is the only thing to prove
+              if Util.is_left result //hd is provable
               then linear_check (hd::eliminated) errors tl
               else linear_check eliminated (hd::errors) tl in
 
@@ -169,18 +183,20 @@ let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -
               let pfx, sfx = match active with 
                 | [_] -> active, []
                 | _ -> Util.first_N (List.length active / 2) active in
-              let ok, pfx_subset = askZ3 (elim (eliminated @ potential_errors @ sfx)) in //focus on the goals in pfx, only
-              if ok //good; everything in the pfx is provable
-              then bisect (eliminated@pfx) potential_errors sfx
-              else match pfx_subset with 
-                     | [] ->  //didn't prove it, but didn't get back a useful error report either
-                       //all of them may be errors
-                       bisect eliminated (potential_errors@pfx) sfx
-
-                     | _ -> //looks like something in pfx_subset may be to blame 
-                       let potential_errors = potential_errors@pfx_subset in
-                       let pfx_active = minus pfx pfx_subset in //but we can't yet eliminate pfx_active
-                       bisect eliminated potential_errors (pfx_active@sfx)  
+              let result, _ = askZ3 (elim (eliminated @ potential_errors @ sfx)) in //focus on the goals in pfx, only
+              begin match result with 
+              | Inl _ -> //good; everything in the pfx is provable 
+                bisect (eliminated@pfx) potential_errors sfx
+              | Inr [] ->
+                //didn't prove it, but didn't get back a useful error report either
+                //all of them may be errors
+                bisect eliminated (potential_errors@pfx) sfx
+              | Inr pfx_subset -> 
+                //looks like something in pfx_subset may be to blame 
+                let potential_errors = potential_errors@pfx_subset in
+                let pfx_active = minus pfx pfx_subset in //but we can't yet eliminate pfx_active
+                bisect eliminated potential_errors (pfx_active@sfx)  
+              end
     in
 
     //bisect until fixed point; then do a linear scan on the potential errors
@@ -192,101 +208,3 @@ let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -
 
     let active = minus all_labels potential_errors in
     until_fixpoint [] potential_errors active
-
-open FStar.TypeChecker
-
-let askZ3_and_report_errors env use_fresh_z3_context all_labels prefix query suffix = 
-    Z3.giveZ3 prefix;
-    let minimum_workable_fuel = Util.mk_ref None in
-    let set_minimum_workable_fuel f = function 
-        | [] -> ()
-        | errs -> match !minimum_workable_fuel with 
-                    | Some _ -> ()
-                    | None -> minimum_workable_fuel := Some (f, errs) in
-
-    let with_fuel label_assumptions p (n, i) =
-       [Term.Caption (Util.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
-        Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, None);
-        Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, None);
-        p]
-        @label_assumptions
-        @[Term.SetOption ("timeout", (string_of_int <| Options.z3_timeout() * 1000))]
-        @[Term.CheckSat]
-        @suffix in
-
-    let check (p:decl) =
-        let initial_config = ((Options.initial_fuel()), (Options.initial_ifuel())) in
-        let alt_configs = List.flatten [(if (Options.max_ifuel()) > (Options.initial_ifuel()) then [((Options.initial_fuel()), (Options.max_ifuel()))] else []);
-                                        (if (Options.max_fuel()) / 2 > (Options.initial_fuel()) then [((Options.max_fuel()) / 2, (Options.max_ifuel()))] else []);
-                                        (if (Options.max_fuel()) > (Options.initial_fuel()) && (Options.max_ifuel()) > (Options.initial_ifuel()) then [((Options.max_fuel()), (Options.max_ifuel()))] else []);
-                                        (if (Options.min_fuel()) < (Options.initial_fuel()) then [((Options.min_fuel()), 1)] else [])] in
-
-        let report p (errs:labels) : unit =
-            let errs = if (Options.detail_errors()) && (Options.n_cores()) = 1
-                       then let min_fuel, potential_errors = match !minimum_workable_fuel with 
-                                | Some (f, errs) -> f, errs
-                                | None -> ((Options.min_fuel()), 1), errs in
-                            let ask_z3 label_assumptions = 
-                                let res = Util.mk_ref None in
-                                Z3.ask use_fresh_z3_context all_labels (with_fuel label_assumptions p min_fuel) (fun r -> res := Some r);
-                                Option.get (!res) in
-                            detail_errors all_labels errs ask_z3
-                       else errs in
-
-            let errs = match errs with
-                    | [] -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)]
-                    | _ -> errs in
-            if (Options.print_fuels())
-            then (Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
-                    (Range.string_of_range (Env.get_range env))
-                    ((Options.max_fuel()) |> Util.string_of_int)
-                    ((Options.max_ifuel()) |> Util.string_of_int));
-            Errors.add_errors env (errs |> List.map (fun (_, x, y) -> x, y));
-            if (Options.detail_errors())
-            then raise (FStar.Syntax.Syntax.Err("Detailed error report follows\n")) in
-
-        let rec try_alt_configs prev_f (p:decl) (errs:labels) cfgs = 
-            set_minimum_workable_fuel prev_f errs;
-            match cfgs with
-            | [] -> report p errs
-            | [mi] -> //we're down to our last config; last ditch effort to get a counterexample with very low fuel
-                begin match errs with
-                | [] -> Z3.ask use_fresh_z3_context all_labels (with_fuel [] p mi) (cb mi p [])
-                | _ -> set_minimum_workable_fuel prev_f errs;
-                       report p errs
-                end
-
-            | mi::tl ->
-                Z3.ask use_fresh_z3_context all_labels (with_fuel [] p mi) (fun (ok, errs') ->
-                match errs with
-                    | [] -> cb mi p tl (ok, errs')
-                    | _ -> cb mi p tl (ok, errs))
-
-        and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) =
-            if ok
-            then if (Options.print_fuels())
-                    then (Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n"
-                        (Range.string_of_range (Env.get_range env))
-                        (Util.string_of_int prev_fuel)
-                        (Util.string_of_int prev_ifuel))
-                    else ()
-            else (if (Options.print_fuels())
-                  then (Util.print3 "(%s) Query failed with fuel %s and ifuel %s ... retrying \n"
-                       (Range.string_of_range (Env.get_range env))
-                       (Util.string_of_int prev_fuel)
-                       (Util.string_of_int prev_ifuel));
-                  try_alt_configs (prev_fuel, prev_ifuel) p errs alt) in
-    
-        Z3.ask use_fresh_z3_context  //only relevant if we're running with n_cores > 1
-               all_labels 
-               (with_fuel [] p initial_config) 
-               (cb initial_config p alt_configs)  in
-
-    let process_query (q:decl) :unit =
-        if (Options.split_cases()) > 0 then
-            let (b, cb) = SplitQueryCases.can_handle_query (Options.split_cases()) q in
-            if b then SplitQueryCases.handle_query cb check else check q
-        else check q
-    in
-
-    if (Options.admit_smt_queries()) then () else process_query query

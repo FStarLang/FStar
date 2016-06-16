@@ -80,11 +80,8 @@ let check_no_escape head_opt env (fvs:list<bv>) kt =
          end in
     aux false kt
 
-let maybe_push_binding env b =
-  if is_null_binder b then env
-  else (if Env.debug env Options.High
-        then Util.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string (fst b)) (Print.term_to_string (fst b).sort);
-        Env.push_bv env (fst b))
+let push_binding env b =
+  Env.push_bv env (fst b)
 
 let maybe_make_subst = function
   | Inr(Some x, e) -> [NT(x,e)]
@@ -510,14 +507,7 @@ and tc_constant r (c:sconst) : typ =
       | Const_unit -> t_unit
       | Const_bool _ -> t_bool
       | Const_int (_, None) -> t_int
-      | Const_int (_, Some (Unsigned, Int8)) -> t_uint8
-      | Const_int (_, Some (Signed, Int8)) -> t_int8
-      | Const_int (_, Some (Unsigned, Int16)) -> t_uint16
-      | Const_int (_, Some (Signed, Int16)) -> t_int16
-      | Const_int (_, Some (Unsigned, Int32)) -> t_uint32
-      | Const_int (_, Some (Signed, Int32)) -> t_int32
-      | Const_int (_, Some (Unsigned, Int64)) -> t_uint64
-      | Const_int (_, Some (Signed, Int64)) -> t_int64
+      | Const_int (_, Some _) -> failwith "machine integers should be desugared"
       | Const_string _ -> t_string
       | Const_float _ -> t_float
       | Const_char _ -> t_char
@@ -629,7 +619,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 let hd = {hd with sort=t} in
                 let b = hd, imp in
                 let b_expected = (hd_expected, imp') in
-                let env = maybe_push_binding env b in
+                let env = push_binding env b in
                 let subst = maybe_extend_subst subst b_expected  (S.bv_to_name hd) in
                 aux (env, b::out, g, subst) bs bs_expected
 
@@ -947,6 +937,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 let tres = SS.compress tres |> Util.unrefine in
                 match tres.n with
                     | Tm_arrow(bs, cres') ->
+                        let bs, cres' = SS.open_comp bs cres' in
                         if debug env Options.Low
                         then Util.print1 "%s: Warning: Potentially redundant explicit currying of a function type \n"
                             (Range.string_of_range tres.pos);
@@ -1494,7 +1485,7 @@ and tc_binder env (x, imp) =
     let x = {x with sort=t}, imp in
     if Env.debug env Options.High
     then Util.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string (fst x)) (Print.term_to_string t);
-    x, maybe_push_binding env x, g, u
+    x, push_binding env x, g, u
 
 and tc_binders env bs =
     let rec aux env bs = match bs with
@@ -1574,7 +1565,7 @@ let monad_signature env m s =
   | Tm_arrow(bs, c) ->
     let bs = SS.open_binders bs in
     begin match bs with
-        | [(a, _);(wp, _); (_wlp, _)] -> a, wp.sort
+        | [(a, _);(wp, _)] -> a, wp.sort
         | _ -> fail()
     end
   | _ -> fail()
@@ -1597,7 +1588,7 @@ let open_effect_signature env mname signature =
       | Tm_arrow(bs, c) ->
         let bs = SS.open_binders bs in
         begin match bs with
-            | [(a, _);(wp, _); (_wlp, _)] -> a, wp.sort
+            | [(a, _);(wp, _)] -> a, wp.sort
             | _ -> fail signature
         end
       | _ -> fail signature
@@ -1617,12 +1608,9 @@ let open_effect_decl env ed =
          { ed with
                ret         =op ed.ret
              ; bind_wp     =op ed.bind_wp
-             ; bind_wlp    =op ed.bind_wlp
              ; if_then_else=op ed.if_then_else
              ; ite_wp      =op ed.ite_wp
-             ; ite_wlp     =op ed.ite_wlp
-             ; wp_binop    =op ed.wp_binop
-             ; wp_as_type  =op ed.wp_as_type
+             ; stronger    =op ed.stronger
              ; close_wp    =op ed.close_wp
              ; assert_p    =op ed.assert_p
              ; assume_p    =op ed.assume_p
@@ -1881,26 +1869,6 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
   let wp_if_then_else = normalize_and_make_binders_explicit wp_if_then_else in
   check "wp_if_then_else" (U.abs binders wp_if_then_else None);
 
-  (* val st2_wp_binop : heap:Type -> a:Type -> st2_wp heap a -> op:(Type0->Type0->GTot Type0) ->
-                          st2_wp heap a ->
-                          Tot (st2_wp heap a)
-     let st2_wp_binop heap a l op r = st2_liftGA2 op l r *)
-  let wp_binop =
-    let l = S.gen_bv "l" None wp_a in
-    let op = S.gen_bv "op" None (U.arrow
-      [ S.null_binder U.ktype0; S.null_binder U.ktype0 ]
-      (S.mk_GTotal U.ktype0)) in
-    let r = S.gen_bv "r" None wp_a in
-    U.abs
-      (S.binders_of_list [ a; l; op; r ])
-      (U.mk_app c_lift2 (List.map S.as_arg [
-        unknown; unknown; unknown;
-        S.bv_to_name op; S.bv_to_name l; S.bv_to_name r ]))
-      ret_tot_wp_a
-  in
-  let wp_binop = normalize_and_make_binders_explicit wp_binop in
-  check "wp_binop" (U.abs binders wp_binop None);
-
   (* val st2_assert_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
                        Tot (st2_wp heap a)
     let st2_assert_p heap a q wp = st2_app (st2_pure (l_and q)) wp *)
@@ -2032,7 +2000,6 @@ let gen_wps_for_free env binders a wp_a (ed: Syntax.eff_decl): Syntax.eff_decl =
 
   { ed with
     if_then_else = ([], wp_if_then_else);
-    wp_binop     = ([], wp_binop);
     assert_p     = ([], wp_assert);
     assume_p     = ([], wp_assume);
     close_wp     = ([], wp_close);
@@ -2076,27 +2043,14 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     check_and_gen' env ed.ret expected_k in
 
   let bind_wp =
-    let wlp_a = wp_a in
     let b, wp_b = get_effect_signature () in
     let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
-    let a_wlp_b = a_wp_b in
     let expected_k = Util.arrow [S.null_binder t_range; 
                                  S.mk_binder a; S.mk_binder b;
-                                 S.null_binder wp_a;   S.null_binder wlp_a;
-                                 S.null_binder a_wp_b; S.null_binder a_wlp_b]
+                                 S.null_binder wp_a;
+                                 S.null_binder a_wp_b]
                                  (S.mk_Total wp_b) in
     check_and_gen' env ed.bind_wp expected_k in
-
-  let bind_wlp =
-    let wlp_a = wp_a in
-    let b, wlp_b = get_effect_signature ()  in
-    let a_wlp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wlp_b) in
-    let expected_k = Util.arrow [S.null_binder t_range; 
-                                 S.mk_binder a; S.mk_binder b;
-                                 S.null_binder wlp_a;
-                                 S.null_binder a_wlp_b]
-                                 (S.mk_Total wlp_b) in
-    check_and_gen' env ed.bind_wlp expected_k in
 
   let if_then_else =
     let p = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
@@ -2107,39 +2061,18 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     check_and_gen' env ed.if_then_else expected_k in
 
   let ite_wp =
-    let wlp_a = wp_a in
     let expected_k = Util.arrow [S.mk_binder a;
-                                 S.null_binder wlp_a;
                                  S.null_binder wp_a]
                                  (S.mk_Total wp_a) in
     check_and_gen' env ed.ite_wp expected_k in
 
-  let ite_wlp =
-    let wlp_a = wp_a in
-    let expected_k = Util.arrow [S.mk_binder a;
-                                 S.null_binder wlp_a]
-                                (S.mk_Total wlp_a) in
-    check_and_gen' env ed.ite_wlp expected_k in
-
-  let wp_binop =
-    let bin_op =
-        let t1, u1 = U.type_u() in
-        let t2, u2 = U.type_u() in
-        let t = mk (Tm_type(S.U_max [u1; u2])) None (Env.get_range env) in
-        Util.arrow [S.null_binder t1; S.null_binder t2] (S.mk_GTotal t) in
-    let expected_k = Util.arrow [S.mk_binder a;
-                                 S.null_binder wp_a;
-                                 S.null_binder bin_op;
-                                 S.null_binder wp_a]
-                                 (S.mk_Total wp_a) in
-    check_and_gen' env ed.wp_binop expected_k in
-
-  let wp_as_type =
+  let stronger =
     let t, _ = U.type_u() in
     let expected_k = Util.arrow [S.mk_binder a;
+                                 S.null_binder wp_a;
                                  S.null_binder wp_a]
                                 (S.mk_Total t) in
-    check_and_gen' env ed.wp_as_type expected_k in
+    check_and_gen' env ed.stronger expected_k in
 
   let close_wp =
     let b = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
@@ -2191,12 +2124,9 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     ; signature   = signature
     ; ret         = close 0 ret
     ; bind_wp     = close 1 bind_wp
-    ; bind_wlp    = close 1 bind_wlp
     ; if_then_else= close 0 if_then_else
     ; ite_wp      = close 0 ite_wp
-    ; ite_wlp     = close 0 ite_wlp
-    ; wp_binop    = close 0 wp_binop
-    ; wp_as_type  = close 0 wp_as_type
+    ; stronger    = close 0 stronger
     ; close_wp    = close 1 close_wp
     ; assert_p    = close 0 assert_p
     ; assume_p    = close 0 assume_p

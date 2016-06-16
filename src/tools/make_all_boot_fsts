@@ -15,15 +15,17 @@ for file in $1; do
         echo $file | grep -q '.*fs$'
         if [ $? -eq 0 ]; then
             ./tools/mkfst $noext_file
-            if [ $? != 0 ]; then
-                exit 1
+            RESULT=$?
+            if [ $RESULT -gt 1 ]; then
+              exit 1
             fi;
-            mv $noext_file.fst $BOOT_FSTS/$full_name.fst
-            ALL_FST_FILES="$ALL_FST_FILES $full_name.fst"
+            if [ $RESULT -eq 0 ]; then
+              mv $noext_file.fst $BOOT_FSTS/$full_name.fst
+              ALL_FST_FILES="$ALL_FST_FILES $full_name.fst"
+            fi;
         fi
     else
         echo "$file does not contain an FStar module";
-        exit 1
     fi
 done
 echo $ALL_FST_FILES

@@ -109,6 +109,7 @@ type decl =
   | Push
   | Pop
   | CheckSat
+  | GetUnsatCore
   | SetOption  of string * string
 type decls_t = list<decl>
 
@@ -205,7 +206,7 @@ let mk t =
 
 let mkTrue       = mk (App(True, []))
 let mkFalse      = mk (App(False, []))
-let mkInteger i  = mk (Integer i)
+let mkInteger i  = mk (Integer (ensure_decimal i))
 let mkInteger' i  = mkInteger (string_of_int i)
 let mkBoundV i   = mk (BoundV i)
 let mkFreeV x    = mk (FreeV x)
@@ -234,7 +235,8 @@ let mkOr (t1, t2)  = match t1.tm, t2.tm with
     | App(Or, ts1), _ -> mkApp'(Or, ts1@[t2])
     | _ -> mkApp'(Or, [t1;t2])
 let mkImp (t1, t2) = match t1.tm, t2.tm with
-    | _, App(True, _) -> mkTrue
+    | _, App(True, _)
+    | App(False, _), _ -> mkTrue
     | App(True, _), _ -> t2
     | _, App(Imp, [t1'; t2']) -> mkApp'(Imp, [mkAnd(t1, t1'); t2'])
     | _ -> mkApp'(Imp, [t1; t2])
@@ -450,6 +452,7 @@ let rec declToSmt z3options decl =
   | Echo s ->
     format1 "(echo \"%s\")" s
   | CheckSat -> "(check-sat)"
+  | GetUnsatCore -> "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
   | Push -> "(push)"
   | Pop -> "(pop)"
   | SetOption (s, v) -> format2 "(set-option :%s %s)" s v

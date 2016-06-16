@@ -15,6 +15,7 @@
 *)
 module FStar.List
 
+open FStar.All
 
 (** Base operations **)
 

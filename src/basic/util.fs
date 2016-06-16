@@ -22,13 +22,15 @@ open System.Text
 open System.Diagnostics
 open System.IO
 open System.IO.Compression
+open System.Security.Cryptography
 
 let return_all x = x
 
 type time = System.DateTime
 let now () = System.DateTime.Now
-let time_diff (t1:time) (t2:time) : float =
-    let ts = t2 - t1 in ts.TotalSeconds
+let time_diff (t1:time) (t2:time) : float * int =
+    let ts = t2 - t1 in 
+    ts.TotalSeconds, int32 ts.TotalMilliseconds
 
 exception Impos
 exception NYI of string
@@ -645,12 +647,12 @@ let print_endline x =
 let map_option f opt = Option.map f opt
 
 let save_value_to_file (fname:string) value =
-  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextWriter` to be passed to `output_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent vers
+  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextWriter` to be passed to `output_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
   use writer = new System.IO.StreamWriter(fname) in
   output_value writer value
 
 let load_value_from_file (fname:string) =
-  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versi
+  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
   try
     use reader = new System.IO.StreamReader(fname) in
     Some <| input_value reader
@@ -660,3 +662,50 @@ let load_value_from_file (fname:string) =
 
 let print_exn (e: exn): string =
   e.Message
+
+let format_md5 bytes =
+  let sb = 
+    Array.fold 
+      (fun (acc:StringBuilder) (by:byte) ->
+        acc.Append(by.ToString("x2")))
+      (new StringBuilder())
+      bytes in
+  sb.ToString()
+
+let digest_of_file (fname:string) =
+  use md5 = MD5.Create() in
+  use stream = File.OpenRead(fname) in
+  format_md5 <| md5.ComputeHash(stream)
+
+let digest_of_string (s:string) =
+  use md5 = MD5.Create() in
+  format_md5 <| md5.ComputeHash(Encoding.UTF8.GetBytes(s))
+
+let ensure_decimal (s: string) =
+  if s.StartsWith "0x" then
+    sprintf "%A" (System.Numerics.BigInteger.Parse (s.[2..], System.Globalization.NumberStyles.AllowHexSpecifier))
+  else
+    s
+
+
+
+(** Hints. *)
+type hint = {
+    fuel:int;  //fuel for unrolling recursive functions
+    ifuel:int; //fuel for inverting inductive datatypes
+    unsat_core:option<(list<string>)>; //unsat core, if requested
+    query_elapsed_time:int //time in milliseconds taken for the query, to decide if a fresh replay is worth it
+}
+
+type hints = list<(option<hint>)>
+
+type hints_db = {
+    module_digest:string;
+    hints: hints
+}
+
+let write_hints (_: string) (_: hints_db): unit =
+  failwith "[record_hints_json]: not implemented"
+
+let read_hints (_: string): option<hints_db> =
+  failwith "[record_hints_json]: not implemented"

@@ -32,7 +32,7 @@ module TcEnv   = FStar.TypeChecker.Env
 module Syntax  = FStar.Syntax.Syntax
 module Util    = FStar.Syntax.Util
 module Desugar = FStar.Parser.ToSyntax
-module SMT     = FStar.SMTEncoding.Encode
+module SMT     = FStar.SMTEncoding.Solver
 module Const   = FStar.Syntax.Const
 module Tc      = FStar.TypeChecker.Tc
 
@@ -182,11 +182,19 @@ let tc_one_file dsenv env pre_fn fn : list<Syntax.modul>
                                * DsEnv.env
                                * TcEnv.env  =
   let dsenv, fmods = parse dsenv pre_fn fn in
-  let env, all_mods =
-    fmods |> List.fold_left (fun (env, all_mods) m ->
-                            let m, env = Tc.check_module env m in
-                            env, m::all_mods) (env, []) in
-  List.rev all_mods, dsenv, env
+  let check_mods () = 
+      let env, all_mods =
+          fmods |> List.fold_left (fun (env, all_mods) m ->
+                                let m, env = Tc.check_module env m in
+                                env, m::all_mods) (env, []) in
+      List.rev all_mods, dsenv, env 
+  in
+  match fmods with 
+  | [m] when (Options.should_verify m.name.str //if we're verifying this module
+              && (FStar.Options.record_hints() //and if we're recording or using hints
+                  || FStar.Options.use_hints())) ->
+    SMT.with_hints_db fn check_mods
+  | _ -> check_mods() //don't add a hints file for modules that are not actually verified
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)

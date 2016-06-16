@@ -67,7 +67,7 @@ let erasableTypeNoDelta : FStar_Extraction_ML_Syntax.mlty  ->  Prims.bool = (fun
 true
 end else begin
 (match (t) with
-| FStar_Extraction_ML_Syntax.MLTY_Named (_71_22, ("FStar"::"Ghost"::[], "erased")) -> begin
+| FStar_Extraction_ML_Syntax.MLTY_Named (_71_22, (("FStar")::("Ghost")::[], "erased")) -> begin
 true
 end
 | _71_31 -> begin
@@ -115,21 +115,21 @@ in (removeTick _161_69)))
 
 
 let rec lookup_ty_local : binding Prims.list  ->  FStar_Syntax_Syntax.bv  ->  FStar_Extraction_ML_Syntax.mlty = (fun gamma b -> (match (gamma) with
-| Bv (b', FStar_Util.Inl (mli, mlt))::tl -> begin
+| (Bv (b', FStar_Util.Inl (mli, mlt)))::tl -> begin
 if (FStar_Syntax_Syntax.bv_eq b b') then begin
 mlt
 end else begin
 (lookup_ty_local tl b)
 end
 end
-| Bv (b', FStar_Util.Inr (_71_56))::tl -> begin
+| (Bv (b', FStar_Util.Inr (_71_56)))::tl -> begin
 if (FStar_Syntax_Syntax.bv_eq b b') then begin
 (FStar_All.failwith (Prims.strcat "Type/Expr clash: " b.FStar_Syntax_Syntax.ppname.FStar_Ident.idText))
 end else begin
 (lookup_ty_local tl b)
 end
 end
-| _71_63::tl -> begin
+| (_71_63)::tl -> begin
 (lookup_ty_local tl b)
 end
 | [] -> begin
@@ -341,7 +341,7 @@ end))
 
 
 let rec subsetMlidents : FStar_Extraction_ML_Syntax.mlident Prims.list  ->  FStar_Extraction_ML_Syntax.mlident Prims.list  ->  Prims.bool = (fun la lb -> (match (la) with
-| h::tla -> begin
+| (h)::tla -> begin
 ((FStar_List.contains h lb) && (subsetMlidents tla lb))
 end
 | [] -> begin

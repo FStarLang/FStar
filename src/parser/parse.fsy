@@ -90,11 +90,8 @@ let as_frag d ds =
 %token <string> UINT16
 %token <string> UINT32
 %token <string> UINT64
-%token <single> IEEE32
 %token <double> IEEE64
 %token <char> CHAR
-%token <decimal> DECIMAL
-%token <bytes> BIGINT BIGNUM
 %token <bool> LET
 %token <string * bool> LQUOTE RQUOTE
 %token FORALL EXISTS ASSUME NEW QUERY DEFINE LOGIC IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
@@ -113,6 +110,7 @@ let as_frag d ds =
 %token NEW_EFFECT NEW_EFFECT_FOR_FREE SUB_EFFECT SQUIGGLY_RARROW TOTAL KIND
 %token PRINT REQUIRES ENSURES
 %token PLUS_OP MINUS_OP BAR_FOCUS
+%token BLAH
 
 /* These are artificial */
 %token <string> LEX_FAILURE
@@ -1086,7 +1084,3 @@ constant:
           errorR(Error("This number is outside the allowable range for 64-bit signed integers", lhs(parseState)));
         Const_int (fst $1, Some (Signed, Int64))
       }
-  /* | BIGINT { Const_bigint $1 }
-  | DECIMAL { Const_decimal $1 }
-  | BIGNUM { Const_bignum $1 }
-  | IEEE32 { Const_float32 $1 }  */

@@ -2,6 +2,7 @@
 
 if [[ $# != 1 ]]; then
   echo "Usage: $0 FILENAME OUTPUT_DIR where FILENAME.fs exists and FILENAME.fsi may exist";
+  echo "Returns 0 if move should happen; returns 1 if move should not happen; returns > 1 in case of error";
   exit 1
 fi;
 
@@ -10,7 +11,7 @@ THE_FST=${1}.fst
 THE_FSI=${1}.fsi
 if [ ! -f "$THE_FS" ]; then
   echo "$THE_FS does not exist"
-  exit 1
+  exit 2
 fi;
 
 if [ -f "$THE_FSI" ]; then

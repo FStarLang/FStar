@@ -122,7 +122,7 @@ let rec apply_until_some = (fun f s -> (match (s) with
 | [] -> begin
 None
 end
-| s0::rest -> begin
+| (s0)::rest -> begin
 (match ((f s0)) with
 | None -> begin
 (apply_until_some f rest)
@@ -170,7 +170,7 @@ end)))
 
 
 let rec subst' : FStar_Syntax_Syntax.subst_ts  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun s t -> (match (s) with
-| ([]) | ([]::[]) -> begin
+| ([]) | (([])::[]) -> begin
 t
 end
 | _35_139 -> begin
@@ -211,7 +211,7 @@ end
 f
 end)))))
 and subst_comp_typ' : FStar_Syntax_Syntax.subst_elt Prims.list Prims.list  ->  FStar_Syntax_Syntax.comp_typ  ->  FStar_Syntax_Syntax.comp_typ = (fun s t -> (match (s) with
-| ([]) | ([]::[]) -> begin
+| ([]) | (([])::[]) -> begin
 t
 end
 | _35_184 -> begin
@@ -228,7 +228,7 @@ in (let _125_99 = (subst_flags' s t.FStar_Syntax_Syntax.flags)
 in {FStar_Syntax_Syntax.effect_name = _35_185.FStar_Syntax_Syntax.effect_name; FStar_Syntax_Syntax.result_typ = _125_101; FStar_Syntax_Syntax.effect_args = _125_100; FStar_Syntax_Syntax.flags = _125_99}))))
 end))
 and subst_comp' : FStar_Syntax_Syntax.subst_elt Prims.list Prims.list  ->  (FStar_Syntax_Syntax.comp', Prims.unit) FStar_Syntax_Syntax.syntax  ->  (FStar_Syntax_Syntax.comp', Prims.unit) FStar_Syntax_Syntax.syntax = (fun s t -> (match (s) with
-| ([]) | ([]::[]) -> begin
+| ([]) | (([])::[]) -> begin
 t
 end
 | _35_196 -> begin
@@ -311,7 +311,7 @@ end
 | FStar_Syntax_Syntax.Pat_constant (_35_253) -> begin
 (p, n)
 end
-| FStar_Syntax_Syntax.Pat_disj (p::ps) -> begin
+| FStar_Syntax_Syntax.Pat_disj ((p)::ps) -> begin
 (
 
 let _35_261 = (aux n p)
@@ -633,7 +633,7 @@ let rec aux = (fun bs o -> (match (bs) with
 | [] -> begin
 ([], o)
 end
-| (x, imp)::bs' -> begin
+| ((x, imp))::bs' -> begin
 (
 
 let x' = (
@@ -777,7 +777,7 @@ end
 | FStar_Syntax_Syntax.Pat_constant (_35_565) -> begin
 (p, sub, renaming)
 end
-| FStar_Syntax_Syntax.Pat_disj (p::ps) -> begin
+| FStar_Syntax_Syntax.Pat_disj ((p)::ps) -> begin
 (
 
 let _35_574 = (aux sub renaming p)
@@ -911,7 +911,7 @@ let rec aux = (fun s bs -> (match (bs) with
 | [] -> begin
 []
 end
-| (x, imp)::tl -> begin
+| ((x, imp))::tl -> begin
 (
 
 let x = (
@@ -952,7 +952,7 @@ end
 | FStar_Syntax_Syntax.Pat_constant (_35_673) -> begin
 (p, sub)
 end
-| FStar_Syntax_Syntax.Pat_disj (p::ps) -> begin
+| FStar_Syntax_Syntax.Pat_disj ((p)::ps) -> begin
 (
 
 let _35_681 = (aux sub p)

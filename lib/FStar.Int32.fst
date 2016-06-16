@@ -15,6 +15,7 @@
 *)
 module FStar.Int32
 
+open FStar.All
 
 val min_value_int : int
 let min_value_int = -2147483648

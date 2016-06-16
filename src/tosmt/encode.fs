@@ -390,6 +390,17 @@ type pattern = {
  }
 exception Let_rec_unencodeable
 
+let constructor_string_of_int_qualifier = function
+  | Unsigned, Int8 -> "FStar.UInt8.UInt8"
+  | Signed, Int8 -> "FStar.Int8.Int8"
+  | Unsigned, Int16 -> "FStar.UInt16.UInt16"
+  | Signed, Int16 -> "FStar.Int16.Int16"
+  | Unsigned, Int32 -> "FStar.UInt32.UInt32"
+  | Signed, Int32 -> "FStar.Int32.Int32"
+  | Unsigned, Int64 -> "FStar.UInt64.UInt64"
+  | Signed, Int64 -> "FStar.Int64.Int64"
+
+
 let encode_const = function
     | Const_unit -> mk_Term_unit
     | Const_bool true -> boxBool mkTrue
@@ -2163,7 +2174,7 @@ let solve tcenv q : unit =
                     let errs = match errs with
                             | [] -> [("Unknown assertion failed", dummyRange)]
                             | _ -> errs in
-                    if (Options.print_fuels())
+                    if Options.print_fuels() || Options.hint_info()
                     then (Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
                             (Range.string_of_range (Env.get_range tcenv))
                             ((Options.max_fuel()) |> Util.string_of_int)
@@ -2186,7 +2197,7 @@ let solve tcenv q : unit =
 
                 and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) =
                     if ok
-                    then if (Options.print_fuels())
+                    then if Options.print_fuels() || Options.hint_info()
                          then (Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n"
                                 (Range.string_of_range (Env.get_range tcenv))
                                 (Util.string_of_int prev_fuel)
