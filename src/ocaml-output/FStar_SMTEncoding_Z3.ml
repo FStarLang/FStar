@@ -873,7 +873,7 @@ end else begin
 ""
 end
 in (let _170_332 = (FStar_Util.string_of_int n_pruned)
-in (FStar_Util.print3 "Retained %s assertions%s and pruned %s assertions using recorded unsat core\n" _170_334 _170_333 _170_332)))))
+in (FStar_Util.print3 "Hint-info: Retained %s assertions%s and pruned %s assertions using recorded unsat core\n" _170_334 _170_333 _170_332)))))
 end else begin
 ()
 end

@@ -342,7 +342,7 @@ let ask fresh (core:unsat_core) label_messages qry (cb: (either<unsat_core, erro
       if Options.hint_info ()
       then begin
            let n = List.length core in
-           Util.print3 "Retained %s assertions%s and pruned %s assertions using recorded unsat core\n" 
+           Util.print3 "Hint-info: Retained %s assertions%s and pruned %s assertions using recorded unsat core\n" 
                          (Util.string_of_int n_retained)
                          (if n <> n_retained then Util.format1 " (expected %s; replay may be inaccurate)" (Util.string_of_int n) else "")
                          (Util.string_of_int n_pruned)
