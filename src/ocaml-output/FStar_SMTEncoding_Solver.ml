@@ -45,7 +45,7 @@ let norm_src_filename = (FStar_Util.normalize_file_path src_filename)
 in (
 
 let val_filename = (format_hints_file_name norm_src_filename)
-in (match ((FStar_Util.load_value_from_file val_filename)) with
+in (match ((FStar_Util.read_hints val_filename)) with
 | Some (hints) -> begin
 (
 
@@ -89,7 +89,7 @@ in {FStar_Util.module_digest = _174_21; FStar_Util.hints = hints})
 in (
 
 let hints_file_name = (format_hints_file_name src_filename)
-in (FStar_Util.save_value_to_file hints_file_name hints_db))))
+in (FStar_Util.write_hints hints_file_name hints_db))))
 end else begin
 ()
 end

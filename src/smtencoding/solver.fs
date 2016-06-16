@@ -56,7 +56,7 @@ let initialize_hints_db src_filename force_record : unit =
     if Options.use_hints()
     then let norm_src_filename = Util.normalize_file_path src_filename in
          let val_filename = format_hints_file_name norm_src_filename in
-         begin match Util.load_value_from_file val_filename with
+         begin match Util.read_hints val_filename with
             | Some hints ->
                 let expected_digest = Util.digest_of_file norm_src_filename in
                 if Options.hint_info()
@@ -79,7 +79,7 @@ let finalize_hints_db src_filename : unit =
                 hints = hints
               }  in
           let hints_file_name = format_hints_file_name src_filename in
-          Util.save_value_to_file hints_file_name hints_db
+          Util.write_hints hints_file_name hints_db
     end;
     begin if Options.hint_info() then 
         let stats = !hint_stats |> List.rev in
