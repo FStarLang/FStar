@@ -167,7 +167,7 @@ let doZ3Exe' (input:string) (z3proc:proc) =
             let s = Util.substring s 1 (String.length s - 2) in
             if Util.starts_with s "error"
             then None
-            else Util.split s " " |> Some in
+            else Util.split s " " |> Util.sort_with String.compare |> Some in
         match lines with 
         | "<unsat-core>"::core::"</unsat-core>"::rest -> 
           parse_core core, lines 

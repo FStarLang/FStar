@@ -113,8 +113,11 @@ let next_hint () =
     | _ -> None
 
 let record_hint hint = 
+    let hint = match hint with 
+        | None -> None //recording the elapsed time prevents us from reaching a fixpoint in the hints db
+        | Some h -> Some ({h with query_elapsed_time=0}) in
     match !recorded_hints with 
-    | Some l -> recorded_hints := Some (l@[hint])
+    | Some l -> recorded_hints := Some (l@[hint]) 
     | _ -> ()
 
 let record_hint_stat (h:option<hint>) (res:z3_result) (time:int) (r:Range.range) = 
