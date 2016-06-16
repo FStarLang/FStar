@@ -166,8 +166,13 @@ let new_term_constant (env:env_t) (x:bv) =
 let push_term_var (env:env_t) (x:bv) (t:term) =
     {env with bindings=Binding_var(x,t)::env.bindings}
 let lookup_term_var env a =
-    match lookup_binding env (function Binding_var(b, t) when Syntax.bv_eq b a -> Some (b,t) | _ -> None) with
-    | None -> failwith (format1 "Bound term variable not found: %s" (Print.bv_to_string a))
+    let aux a' = lookup_binding env (function Binding_var(b, t) when Syntax.bv_eq b a' -> Some (b,t) | _ -> None) in
+    match aux a with
+    | None ->
+        let a = unmangle a in
+        (match aux a with
+            | None -> failwith (format1 "Bound term variable not found (after unmangling): %s" (Print.bv_to_string a))
+            | Some (b,t) -> t)
     | Some (b,t) -> t
 
 (* Qualified term names *)

@@ -1,5 +1,8 @@
 module Haseq
 
-type step : a:Type -> Type -> a -> Type =
-  | SApp1 : step nat int 0
+type l = list int
 
+type t = {
+  fld1: x:l{List.Tot.length x > 4};
+  fld2: y:l{List.Tot.length y > 5};
+}
