@@ -230,10 +230,10 @@ that's over there (it's optimized for F*).
    - If you're on Windows see https://github.com/protz/ocaml-installer/wiki
      for instructions on how to configure your environment for use with OPAM
 
-3. Install `ocamlfind`, `batteries`, `stdint`, and `zarith` using OPAM:
+3. F* depends on a bunch of external OCaml packages which you can install using OPAM:
 
   ```sh
-  $ opam install ocamlfind batteries stdint zarith
+  $ opam install ocamlfind batteries stdint zarith yojson
   ```
 
 ### Step 2. Extracting the sources of F* itself to OCaml ###
