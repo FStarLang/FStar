@@ -304,19 +304,19 @@ let no_annot_abs bs t = U.abs bs t None
 
 let mk_ref_read tm =
   let tm' = Tm_app (
-    S.fv_to_tm (S.lid_as_fv C.read_lid Delta_constant None),
+    S.fv_to_tm (S.lid_as_fv C.sread_lid Delta_constant None),
     [ tm, S.as_implicit false ]) in
   S.mk tm' None tm.pos
 
 let mk_ref_alloc tm =
   let tm' = Tm_app (
-    S.fv_to_tm (S.lid_as_fv C.alloc_lid Delta_constant None),
+    S.fv_to_tm (S.lid_as_fv C.salloc_lid Delta_constant None),
     [ tm, S.as_implicit false ]) in
   S.mk tm' None tm.pos
 
 let mk_ref_assign t1 t2 pos =
   let tm = Tm_app (
-    S.fv_to_tm (S.lid_as_fv C.write_lid Delta_constant None),
+    S.fv_to_tm (S.lid_as_fv C.swrite_lid Delta_constant None),
     [ t1, S.as_implicit false; t2, S.as_implicit false ]) in
   S.mk tm None pos
 

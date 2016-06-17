@@ -33,6 +33,7 @@ type program =
 
 and decl =
   | DFunction of typ * ident * list<binder> * expr
+  | DTypeAlias of ident * typ
 
 and expr =
   | EBound of var
@@ -53,7 +54,7 @@ and expr =
   | EMatch of expr * branches
   | EOp of op
 
-and op = | Add | Sub | Div | Mult | Mod
+and op = | Add | AddW | Sub | Div | Mult | Mod | Or | And | Xor | ShiftL | ShiftR
 
 and branches =
   list<branch>
@@ -65,7 +66,14 @@ and pattern =
   | PUnit
 
 and constant =
-  | CInt of string
+  | CUInt8 of string
+  | CUInt16 of string
+  | CUInt32 of string
+  | CUInt64 of string
+  | CInt8 of string
+  | CInt16 of string
+  | CInt32 of string
+  | CInt64 of string
 
 and var =
   int (** a De Bruijn index *)
@@ -83,9 +91,17 @@ and lident =
   list<ident> * ident
 
 and typ =
+  | TUInt8
+  | TUInt16
+  | TUInt32
+  | TUInt64
+  | TInt8
+  | TInt16
   | TInt32
+  | TInt64
   | TBuf of typ
   | TUnit
+  | TAlias of ident
 
 (** Versioned binary writing/reading of ASTs *)
 
@@ -102,10 +118,16 @@ let fst3 (x, _, _) = x
 let snd3 (_, x, _) = x
 let thd3 (_, _, x) = x
 
+let is_machine_int = function
+  | "UInt8" | "UInt16" | "UInt32" | "UInt64"
+  | "Int8" | "Int16" | "Int32" | "Int64" -> true
+  | _ -> false
+
 (* Environments **************************************************************)
 
 type env = {
   names: list<name>;
+  module_name: string;
 }
 
 and name = {
@@ -113,8 +135,9 @@ and name = {
   mut: bool;
 }
 
-let empty = {
-  names = []
+let empty module_name = {
+  names = [];
+  module_name = module_name
 }
 
 let extend env x is_mut =
@@ -131,7 +154,13 @@ let is_mutable env x =
   (find_name env x).mut
 
 let find env x =
-  List.index (fun name -> name.pretty = x) env.names
+  try
+    List.index (fun name -> name.pretty = x) env.names
+  with _ ->
+    failwith (Util.format1 "Internal error: name not found %s\n" x)
+
+let add_binders env binders =
+  List.fold_left (fun env ((name, _), _) -> extend env name false) env binders
 
 (* Actual translation ********************************************************)
 
@@ -140,20 +169,20 @@ let rec translate (MLLib modules): list<file> =
     try
       Some (translate_module m)
     with
-    | e ->
+    | e when (fst3 m <> "Test") ->
         Util.print2 "Unable to translate module: %s\n%s\n"
           (fst3 m) (Util.print_exn e);
         None
   ) modules
 
-and translate_module (name, modul, _): file =
+and translate_module (module_name, modul, _): file =
   let program = match modul with
     | Some (_signature, decls) ->
-        List.filter_map (translate_decl empty) decls
+        List.filter_map (translate_decl (empty module_name)) decls
     | _ ->
         failwith "Unexpected standalone interface or nested modules"
   in
-  name, program
+  module_name, program
 
 and translate_decl env d: option<decl> =
   match d with
@@ -164,16 +193,29 @@ and translate_decl env d: option<decl> =
     } ]) ->
       assert (flavor <> Mutable);
       let env = if flavor = Rec then extend env name false else env in
-      let t = translate_type env t in
+      let rec find_return_type = function
+        | MLTY_Fun (_, _, t) ->
+            find_return_type t
+        | t ->
+            t
+      in
+      let t = translate_type env (find_return_type t) in
       let binders = translate_binders env args in
+      let env = add_binders env args in
       let body = translate_expr env body in
       Some (DFunction (t, name, binders, body))
 
   | MLM_Let _ ->
+      (* Things we currently do not translate:
+       * - polymorphic functions (lemmas do count, sadly)
+       *)
       failwith "todo: translate_decl [MLM_Let]"
 
   | MLM_Loc _ ->
       None
+
+  | MLM_Ty [ (name, [], Some (MLTD_Abbrev t)) ] ->
+      Some (DTypeAlias (name, translate_type env t))
 
   | MLM_Ty _ ->
       failwith "todo: translate_decl [MLM_Ty]"
@@ -193,15 +235,30 @@ and translate_type env t: typ =
       failwith "todo: translate_type [MLTY_Var]"
   | MLTY_Fun _ ->
       failwith "todo: translate_type [MLTY_Fun]"
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.unit") ->
+      TUnit
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt8.t") ->
+      TUInt8
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt16.t") ->
+      TUInt16
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt32.t") ->
+      TUInt32
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt64.t") ->
+      TUInt64
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Int8.t") ->
+      TInt8
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Int16.t") ->
+      TInt16
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Int32.t") ->
+      TInt32
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Int64.t") ->
+      TInt64
+  | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Buffer.buffer") ->
+      TBuf (translate_type env arg)
+  | MLTY_Named ([], ([ module_name ], type_name)) when (module_name = env.module_name) ->
+      TAlias type_name
   | MLTY_Named (_, p) ->
-      begin match Syntax.string_of_mlpath p with
-      | "Prims.unit" ->
-          TUnit
-      | "FStar.Int32.int32" ->
-          TInt32
-      | _ ->
-          failwith (Util.format1 "todo: translate_type [MLTY_Named] %s" (Syntax.string_of_mlpath p))
-      end
+      failwith (Util.format1 "todo: translate_type [MLTY_Named] %s" (Syntax.string_of_mlpath p))
   | MLTY_Tuple _ ->
       failwith "todo: translate_type [MLTY_Tuple]"
 
@@ -235,7 +292,7 @@ and translate_expr env e: expr =
       let typ, body =
         if flavor = Mutable then
           (match typ with
-          | MLTY_Named ([ t ], p) when (string_of_mlpath p = "FStar.ST.ref") -> t
+          | MLTY_Named ([ t ], p) when (string_of_mlpath p = "FStar.HST.salloc") -> t
           | _ -> failwith "unexpected: bad desugaring of Mutable"),
           (match body with
           | { expr = MLE_App (_, [ body ]) } -> body
@@ -254,19 +311,60 @@ and translate_expr env e: expr =
       EMatch (translate_expr env expr, translate_branches env branches)
 
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var (v, _) } ])
-    when (string_of_mlpath p = "FStar.ST.read" && is_mutable env v) ->
+    when (string_of_mlpath p = "FStar.HST.op_Bang" && is_mutable env v) ->
       EBound (find env v)
 
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var (v, _) }; e ])
-    when (string_of_mlpath p = "FStar.ST.write" && is_mutable env v) ->
+    when (string_of_mlpath p = "FStar.HST.op_Colon_Equals" && is_mutable env v) ->
       EAssign (EBound (find env v), translate_expr env e)
 
-  | MLE_App ({ expr = MLE_Name p }, args)
-    when (string_of_mlpath p = "FStar.Int32.op_Plus") ->
-      EApp (EOp Add, List.map (translate_expr env) args)
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.index") ->
+      EBufRead (translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.create") ->
+      EBufCreate (translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.upd") ->
+      EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
 
-  | MLE_App ({ expr = MLE_Name p }, _) ->
-      failwith (Util.format1 "todo: translate_expr [MLE_App=%s]" (string_of_mlpath p))
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Plus_Hat") }, args) when is_machine_int m ->
+      mk_op env Add args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Plus_Percent_Hat") }, args) when is_machine_int m ->
+      mk_op env AddW args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Subtraction_Hat") }, args) when is_machine_int m ->
+      mk_op env Sub args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Bar_Hat") }, args) when is_machine_int m ->
+      mk_op env Or args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Hat_Hat") }, args) when is_machine_int m ->
+      mk_op env Xor args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Amp_Hat") }, args) when is_machine_int m ->
+      mk_op env And args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Greater_Greater_Hat") }, args) when is_machine_int m ->
+      mk_op env ShiftR args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Less_Less_Hat") }, args) when is_machine_int m ->
+      mk_op env ShiftL args
+
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt8.uint_to_t") ->
+      EConstant (CUInt8 c)
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt16.uint_to_t") ->
+      EConstant (CUInt16 c)
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt32.uint_to_t") ->
+      EConstant (CUInt32 c)
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt64.uint_to_t") ->
+      EConstant (CUInt64 c)
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.Int8.uint_to_t") ->
+      EConstant (CInt8 c)
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.Int16.uint_to_t") ->
+      EConstant (CInt16 c)
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.Int32.uint_to_t") ->
+      EConstant (CInt32 c)
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.Int64.uint_to_t") ->
+      EConstant (CInt64 c)
+
+  | MLE_App ({ expr = MLE_Name ([ module_name ], function_name) }, args) when (module_name = env.module_name) ->
+      EApp (EQualified ([], function_name), List.map (translate_expr env) args)
+
+  | MLE_App ({ expr = MLE_Name p }, args) ->
+      failwith (Util.format2 "todo: translate_expr [MLE_App=%s; %s]"
+        (string_of_mlpath p) (string_of_int (List.length args)))
 
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
@@ -329,8 +427,8 @@ and translate_constant c: expr =
       EUnit
   | MLC_Bool _ ->
       failwith "todo: translate_expr [MLC_Bool]"
-  | MLC_Int (s, _) ->
-      EConstant (CInt s)
+  | MLC_Int (s, Some _) ->
+      failwith "impossible: machine integer not desugared to a function call"
   | MLC_Float _ ->
       failwith "todo: translate_expr [MLC_Float]"
   | MLC_Char _ ->
@@ -339,3 +437,8 @@ and translate_constant c: expr =
       failwith "todo: translate_expr [MLC_String]"
   | MLC_Bytes _ ->
       failwith "todo: translate_expr [MLC_Bytes]"
+
+(* Helper functions **********************************************************)
+
+and mk_op env op args =
+  EApp (EOp op, List.map (translate_expr env) args)

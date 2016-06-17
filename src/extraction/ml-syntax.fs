@@ -76,7 +76,7 @@ let dummy_loc: mlloc = 0, ""
 
 type mlty =
 | MLTY_Var   of mlident
-| MLTY_Fun   of mlty * e_tag * mlty 
+| MLTY_Fun   of mlty * e_tag * mlty
 | MLTY_Named of list<mlty> * mlpath
 | MLTY_Tuple of list<mlty>
 | MLTY_Top
