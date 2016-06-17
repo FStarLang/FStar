@@ -1,4 +1,4 @@
-module Bug
+module Bug400
 
 val bar : (u:unit & unit) -> Tot unit
 let bar p = 

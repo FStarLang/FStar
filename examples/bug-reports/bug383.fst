@@ -1,4 +1,4 @@
-module M
+module Bug383
 
 type t (n:nat) = unit
 

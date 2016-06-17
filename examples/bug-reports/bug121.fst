@@ -1,4 +1,4 @@
-module Bug121FunctionNotEqualToItsDefinition
+module Bug121
 
 open FunctionalExtensionality
 
