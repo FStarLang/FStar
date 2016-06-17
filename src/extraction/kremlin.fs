@@ -65,15 +65,17 @@ and branch =
 and pattern =
   | PUnit
 
-and constant =
-  | CUInt8 of string
-  | CUInt16 of string
-  | CUInt32 of string
-  | CUInt64 of string
-  | CInt8 of string
-  | CInt16 of string
-  | CInt32 of string
-  | CInt64 of string
+and width =
+  | UInt8
+  | UInt16
+  | UInt32
+  | UInt64
+  | Int8
+  | Int16
+  | Int32
+  | Int64
+
+and constant = width * string
 
 and var =
   int (** a De Bruijn index *)
@@ -91,14 +93,7 @@ and lident =
   list<ident> * ident
 
 and typ =
-  | TUInt8
-  | TUInt16
-  | TUInt32
-  | TUInt64
-  | TInt8
-  | TInt16
-  | TInt32
-  | TInt64
+  | TInt of width
   | TBuf of typ
   | TUnit
   | TAlias of ident
@@ -238,21 +233,21 @@ and translate_type env t: typ =
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.unit") ->
       TUnit
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt8.t") ->
-      TUInt8
+      TInt UInt8
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt16.t") ->
-      TUInt16
+      TInt UInt16
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt32.t") ->
-      TUInt32
+      TInt UInt32
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt64.t") ->
-      TUInt64
+      TInt UInt64
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Int8.t") ->
-      TInt8
+      TInt Int8
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Int16.t") ->
-      TInt16
+      TInt Int16
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Int32.t") ->
-      TInt32
+      TInt Int32
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Int64.t") ->
-      TInt64
+      TInt Int64
   | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Buffer.buffer") ->
       TBuf (translate_type env arg)
   | MLTY_Named ([], ([ module_name ], type_name)) when (module_name = env.module_name) ->
@@ -343,21 +338,21 @@ and translate_expr env e: expr =
       mk_op env ShiftL args
 
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt8.uint_to_t") ->
-      EConstant (CUInt8 c)
+      EConstant (UInt8, c)
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt16.uint_to_t") ->
-      EConstant (CUInt16 c)
+      EConstant (UInt16, c)
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt32.uint_to_t") ->
-      EConstant (CUInt32 c)
+      EConstant (UInt32, c)
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt64.uint_to_t") ->
-      EConstant (CUInt64 c)
+      EConstant (UInt64, c)
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.Int8.uint_to_t") ->
-      EConstant (CInt8 c)
+      EConstant (Int8, c)
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.Int16.uint_to_t") ->
-      EConstant (CInt16 c)
+      EConstant (Int16, c)
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.Int32.uint_to_t") ->
-      EConstant (CInt32 c)
+      EConstant (Int32, c)
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.Int64.uint_to_t") ->
-      EConstant (CInt64 c)
+      EConstant (Int64, c)
 
   | MLE_App ({ expr = MLE_Name ([ module_name ], function_name) }, args) when (module_name = env.module_name) ->
       EApp (EQualified ([], function_name), List.map (translate_expr env) args)
