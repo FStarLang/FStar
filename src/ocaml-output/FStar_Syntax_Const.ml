@@ -172,6 +172,9 @@ let has_type_lid : FStar_Ident.lident = (pconst "has_type")
 let eq2_lid : FStar_Ident.lident = (pconst "eq2")
 
 
+let eq3_lid : FStar_Ident.lident = (pconst "eq3")
+
+
 let exp_true_bool : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool (true))))
 
 
@@ -287,6 +290,15 @@ let fstar_hyperheap_lid : FStar_Ident.lident = (p2l (("FStar")::("HyperHeap")::[
 
 
 let rref_lid : FStar_Ident.lident = (p2l (("FStar")::("HyperHeap")::("rref")::[]))
+
+
+let tset_empty : FStar_Ident.lident = (p2l (("FStar")::("TSet")::("empty")::[]))
+
+
+let tset_singleton : FStar_Ident.lident = (p2l (("FStar")::("TSet")::("singleton")::[]))
+
+
+let tset_union : FStar_Ident.lident = (p2l (("FStar")::("TSet")::("union")::[]))
 
 
 let effect_PURE_lid : FStar_Ident.lident = (pconst "PURE")

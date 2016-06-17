@@ -1491,7 +1491,7 @@ end))
 
 let mkRefSet : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (
 
-let empty = (let _148_1080 = (let _148_1079 = (FStar_Ident.set_lid_range FStar_Absyn_Const.set_empty r)
+let empty = (let _148_1080 = (let _148_1079 = (FStar_Ident.set_lid_range FStar_Absyn_Const.tset_empty r)
 in Var (_148_1079))
 in (mk_term _148_1080 r Expr))
 in (
@@ -1501,12 +1501,12 @@ in Var (_148_1081))
 in (mk_term _148_1082 r Expr))
 in (
 
-let singleton = (let _148_1084 = (let _148_1083 = (FStar_Ident.set_lid_range FStar_Absyn_Const.set_singleton r)
+let singleton = (let _148_1084 = (let _148_1083 = (FStar_Ident.set_lid_range FStar_Absyn_Const.tset_singleton r)
 in Var (_148_1083))
 in (mk_term _148_1084 r Expr))
 in (
 
-let union = (let _148_1086 = (let _148_1085 = (FStar_Ident.set_lid_range FStar_Absyn_Const.set_union r)
+let union = (let _148_1086 = (let _148_1085 = (FStar_Ident.set_lid_range FStar_Absyn_Const.tset_union r)
 in Var (_148_1085))
 in (mk_term _148_1086 r Expr))
 in (FStar_List.fold_right (fun e tl -> (
