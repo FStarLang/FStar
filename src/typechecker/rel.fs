@@ -100,8 +100,9 @@ let term_to_string env t = Print.term_to_string t
 
 let prob_to_string env = function
   | TProb p ->
-    Util.format "\t%s (%s)\n\t\t%s\n\t%s (%s) (guard %s)\n\t\t<Reason>\n\t\t\t%s\n\t\t</Reason>"
-        [(term_to_string env p.lhs);
+    Util.format "\t%s: %s (%s)\n\t\t%s\n\t%s (%s) (guard %s)\n\t\t<Reason>\n\t\t\t%s\n\t\t</Reason>"
+        [(Util.string_of_int p.pid);
+         (term_to_string env p.lhs);
          (Print.tag_of_term p.lhs);
          (rel_to_string p.relation);
          (term_to_string env p.rhs);

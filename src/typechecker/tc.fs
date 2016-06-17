@@ -342,7 +342,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             | _ -> Rel.trivial_guard in
     let gres = Rel.conj_guard g (Rel.conj_guard g' gimp) in
     if Env.debug env Options.Extreme
-    then Util.print1 "Guard from application node is %s\n" (Rel.guard_to_string env gres);
+    then Util.print2 "Guard from application node %s is %s\n" 
+                (Print.term_to_string e)
+                (Rel.guard_to_string env gres);
     e, c, gres
 
   | Tm_match(e1, eqns) ->
@@ -548,7 +550,7 @@ and tc_comp env c : comp                                      (* checked version
         | f -> f, Rel.trivial_guard) |> List.unzip in
       let u = match !(fst res).tk with //TODO:ugly
         | Some (Tm_type u) -> u
-        | tk -> failwith (Printf.sprintf "Impossible: res=%s,  %A" (Print.term_to_string (fst res)) tk) in
+        | tk -> failwith "Impossible" in
       mk_Comp ({c with
           result_typ=fst res;
           effect_args=args}),
@@ -810,7 +812,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         * guard_t //and whatever guard remains 
         =
         check_no_escape (Some head) env fvs cres.res_typ;
-        let cres, g =
+        let cres, guard =
             match bs with
             | [] -> (* full app *)
                 let cres = TcUtil.subst_lcomp subst cres in
@@ -837,9 +839,11 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             (mk_Tm_app head (List.rev arg_rets) (Some cres.res_typ.n) r)
                             cres
                     else (if Env.debug env Options.Low
-                            then Util.print3 "Not refining result: f=%s; cres=%s; guard=%s\n"
-                                (Print.term_to_string head) (Print.lcomp_to_string cres) (guard_to_string env g);
-                            cres) in
+                          then Util.print3 "Not refining result: f=%s; cres=%s; guard=%s\n"
+                                                  (Print.term_to_string head) 
+                                                  (Print.lcomp_to_string cres) 
+                                                  (guard_to_string env g);
+                          cres) in
                 cres, g
 
             | _ ->  (* partial app *)
@@ -856,7 +860,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         let e = TcUtil.maybe_lift env e c.eff_name out_c.eff_name in
                         (e, q)::args, out_c) ([], cres) arg_comps_rev in
         let comp = TcUtil.bind head.pos env None chead (None, comp) in
-        let app =  mk_Tm_app head (List.rev args) (Some comp.res_typ.n) r in
+        let app =  mk_Tm_app head args (Some comp.res_typ.n) r in
         let app = TypeChecker.Util.maybe_monadic env app comp.eff_name in
         let comp, g = TcUtil.strengthen_precondition None env app comp guard in //Each conjunct in g is already labeled
         app, comp, g 
@@ -880,11 +884,12 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             tc_args head_info (subst, (arg, None, None)::outargs, arg::arg_rets, Rel.conj_guard implicits g, fvs) rest args
 
         | (x, aqual)::rest, (e, aq)::rest' -> (* a concrete argument *)
-            let _ = match aqual, aq with
-            | Some (Implicit _), Some (Implicit _)
-            | None, None
-            | Some Equality, None -> ()
-            | _ -> raise (Error("Inconsistent implicit qualifier", e.pos)) in
+            let _ = 
+                match aqual, aq with
+                | Some (Implicit _), Some (Implicit _)
+                | None, None
+                | Some Equality, None -> ()
+                | _ -> raise (Error("Inconsistent implicit qualifier", e.pos)) in
             let targ = SS.subst subst x.sort in
             let x = {x with sort=targ} in
             if debug env Options.Extreme then  Util.print1 "\tType of arg (after subst) = %s\n" (Print.term_to_string targ);
@@ -907,9 +912,9 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                     let arg' = S.as_arg <| S.bv_to_name newx in
                     tc_args head_info (subst, (arg, Some newx, Some c)::outargs, arg'::arg_rets, g, fvs) rest rest'
             else //e is impure and the function may be dependent...
-                    //need to check that the variable does not occur free in the rest of the function type
-                    //by adding x to fvs
-                    tc_args head_info (subst, (arg, Some x, Some c)::outargs, S.as_arg (S.bv_to_name x)::arg_rets, g, x::fvs) rest rest'
+                 //need to check that the variable does not occur free in the rest of the function type
+                 //by adding x to fvs
+                 tc_args head_info (subst, (arg, Some x, Some c)::outargs, S.as_arg (S.bv_to_name x)::arg_rets, g, x::fvs) rest rest'
 
         | _, [] -> (* no more args; full or partial application *)
             monadic_application head_info subst outargs arg_rets g fvs bs
@@ -926,7 +931,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         then Util.print1 "%s: Warning: Potentially redundant explicit currying of a function type \n"
                             (Range.string_of_range tres.pos);
                         tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
-                    | _ when (not norm) ->
+                    | _ when not norm ->
                         aux true (unfold_whnf env tres)
                     | _ -> raise (Error(Util.format2 "Too many arguments to function of type %s; got %s arguments"
                                             (N.term_to_string env thead) (Util.string_of_int n_args), argpos arg)) in
