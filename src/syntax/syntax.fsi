@@ -64,6 +64,7 @@ and univ_name = ident
 type universe_uvar = Unionfind.uvar<option<universe>>
 type univ_names    = list<univ_name>
 type universes     = list<universe>
+type monad_name    = lident
 type delta_depth = 
   | Delta_constant                  //A defined constant, e.g., int, list, etc. 
   | Delta_unfoldable of int         //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
@@ -110,7 +111,7 @@ and comp_typ = {
   flags:list<cflags>
 }
 and comp' =
-  | Total  of typ 
+  | Total  of typ
   | GTotal of typ
   | Comp   of comp_typ
 and term = syntax<term',term'>
@@ -135,6 +136,8 @@ and metadata =
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
+  | Meta_monadic       of monad_name                             (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
+  | Meta_monadic_lift  of monad_name * monad_name                (* Sub-effecting: a lift from m1 to m2 *)
 and uvar_basis<'a> =
   | Uvar
   | Fixed of 'a
