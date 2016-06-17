@@ -163,8 +163,7 @@ let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffi
             | Some hint -> 
               let core, timeout = 
                 if Option.isSome hint.unsat_core 
-                //&& hint.query_elapsed_time >= 200 (*ms*) 
-                then hint.unsat_core, 3 * 1000
+                then hint.unsat_core, default_timeout
                 else None, 60 * 1000 in
               core,
               (hint.fuel, hint.ifuel, timeout) in

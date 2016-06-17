@@ -261,7 +261,7 @@ end
 (
 
 let _84_107 = if (FStar_Option.isSome hint.FStar_Util.unsat_core) then begin
-(hint.FStar_Util.unsat_core, (3 * 1000))
+(hint.FStar_Util.unsat_core, default_timeout)
 end else begin
 (None, (60 * 1000))
 end
