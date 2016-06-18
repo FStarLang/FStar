@@ -1,6 +1,8 @@
+// This file needs --universes now
+
 module Bug121
 
-open FunctionalExtensionality
+open FStar.FunctionalExtensionality
 
 type var = nat
 
@@ -10,7 +12,7 @@ type exp =
 
 type sub = var -> Tot exp
 
-opaque type renaming (s:sub) = (forall (x:var). is_EVar (s x))
+type renaming (s:sub) = (forall (x:var). is_EVar (s x))
 
 assume val is_renaming : s:sub -> Tot (n:int{  (renaming s  ==> n=0) /\
                                       (~(renaming s) ==> n=1)})
@@ -41,7 +43,7 @@ let sub_lam s y = if y=0 then EVar y
                    else subst sub_inc (s (y-1))
 
 (* Substitution extensional; trivial with the extensionality axiom *)
-val subst_extensional: s1:sub -> s2:sub{FEq s1 s2} -> e:exp ->
+val subst_extensional: s1:sub -> s2:sub{feq s1 s2} -> e:exp ->
                         Lemma (requires True) (ensures (subst s1 e = subst s2 e))
                        (* [SMTPat (subst s1 e);  SMTPat (subst s2 e)] *)
 let subst_extensional s1 s2 e = ()
