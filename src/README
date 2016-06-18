@@ -1,0 +1,25 @@
+These directories and files implement [--universes]:
+- syntax/ including parser/tosyntax.fs
+- typechecker/
+- smtencoding/
+- extraction/{term,modul}
+
+These directories and files implement the old stratified version of F*:
+- absyn/ including parser/desugar.fs
+- tc/
+- tosmt/
+- extraction/extract{mod,typ,exp}
+
+Because of the dual reading of F*'s sources as either an F# program or an F*
+program, here's the list of files you need to modify if you want to (properly)
+implement a new function for the [List] module.
+- basic/list.fsi (interface file for F*-as-an-F#-project)
+- basic/list.fs (implementation file for F*-as-an-F#-project)
+- ../lib/list.fsti (interface file for F*-as-an-F*-project)
+- ../lib/ml/FStar_List.ml (implementation file for F*-as-an-F*-project)
+- ../lib/FStar.List.fst (because if someone starts verifying against list.fsti,
+  later on switches to the .fst and realizes that the function doesn't exist,
+  they're going to be unhappy)
+- ../ulib/list.fsti (be a good F* citizen)
+- ../ulib/ml/FStar_List.ml (same)
+- ../ulib/FStar.List.fst (same)

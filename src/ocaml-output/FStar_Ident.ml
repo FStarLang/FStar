@@ -33,13 +33,13 @@ let gen : FStar_Range.range  ->  ident = (
 let x = (FStar_Util.mk_ref 0)
 in (fun r -> (
 
-let _25_14 = (let _115_25 = ((FStar_ST.read x) + 1)
-in (FStar_ST.op_Colon_Equals x _115_25))
-in (let _115_29 = (let _115_28 = (let _115_27 = (let _115_26 = (FStar_ST.read x)
-in (Prims.string_of_int _115_26))
-in (Prims.strcat reserved_prefix _115_27))
-in (_115_28, r))
-in (mk_ident _115_29)))))
+let _25_14 = (let _116_25 = ((FStar_ST.read x) + 1)
+in (FStar_ST.op_Colon_Equals x _116_25))
+in (let _116_29 = (let _116_28 = (let _116_27 = (let _116_26 = (FStar_ST.read x)
+in (Prims.string_of_int _116_26))
+in (Prims.strcat reserved_prefix _116_27))
+in (_116_28, r))
+in (mk_ident _116_29)))))
 
 
 let id_of_text : Prims.string  ->  ident = (fun str -> (mk_ident (str, FStar_Range.dummyRange)))
@@ -70,8 +70,8 @@ in (match (_25_26) with
 | (ns, id) -> begin
 (
 
-let nsstr = (let _115_46 = (FStar_List.map text_of_id ns)
-in (FStar_All.pipe_right _115_46 text_of_path))
+let nsstr = (let _116_46 = (FStar_List.map text_of_id ns)
+in (FStar_All.pipe_right _116_46 text_of_path))
 in {ns = ns; ident = id; nsstr = nsstr; str = if (nsstr = "") then begin
 id.idText
 end else begin

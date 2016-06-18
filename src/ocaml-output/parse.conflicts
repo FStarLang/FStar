@@ -1,0 +1,251 @@
+
+** Conflict (shift/reduce) in state 369.
+** Token involved: BAR
+** This state is reached from term after reading:
+
+FUNCTION maybeBar disjunctivePattern maybeWhen maybeFocusArrow TRY term WITH firstPatternBranch patternBranches 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+term 
+noSeqTerm 
+(?)
+
+** In state 369, looking ahead at BAR, reducing production
+** noSeqTerm -> TRY term WITH firstPatternBranch patternBranches 
+** is permitted because of the following sub-derivation:
+
+FUNCTION firstPatternBranch patternBranches // lookahead token appears because patternBranches can begin with BAR
+         maybeBar disjunctivePattern maybeWhen maybeFocusArrow term // lookahead token is inherited
+                                                               noSeqTerm // lookahead token is inherited
+                                                               TRY term WITH firstPatternBranch patternBranches . 
+
+** In state 369, looking ahead at BAR, shifting is permitted
+** because of the following sub-derivation:
+
+FUNCTION firstPatternBranch patternBranches 
+         maybeBar disjunctivePattern maybeWhen maybeFocusArrow term 
+                                                               noSeqTerm 
+                                                               TRY term WITH firstPatternBranch patternBranches 
+                                                                                                patternBranches patternBranch 
+                                                                                                                . BAR disjunctivePattern maybeWhen maybeFocusArrow term 
+
+** Conflict (shift/reduce) in state 351.
+** Token involved: BAR
+** This state is reached from term after reading:
+
+FUNCTION maybeBar disjunctivePattern maybeWhen maybeFocusArrow MATCH term WITH patternBranches 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+term 
+noSeqTerm 
+(?)
+
+** In state 351, looking ahead at BAR, reducing production
+** noSeqTerm -> MATCH term WITH patternBranches 
+** is permitted because of the following sub-derivation:
+
+FUNCTION firstPatternBranch patternBranches // lookahead token appears because patternBranches can begin with BAR
+         maybeBar disjunctivePattern maybeWhen maybeFocusArrow term // lookahead token is inherited
+                                                               noSeqTerm // lookahead token is inherited
+                                                               MATCH term WITH patternBranches . 
+
+** In state 351, looking ahead at BAR, shifting is permitted
+** because of the following sub-derivation:
+
+FUNCTION firstPatternBranch patternBranches 
+         maybeBar disjunctivePattern maybeWhen maybeFocusArrow term 
+                                                               noSeqTerm 
+                                                               MATCH term WITH patternBranches 
+                                                                               patternBranches patternBranch 
+                                                                                               . BAR disjunctivePattern maybeWhen maybeFocusArrow term 
+
+** Conflict (shift/reduce) in state 294.
+** Token involved: BAR
+** This state is reached from term after reading:
+
+FUNCTION maybeBar disjunctivePattern maybeWhen maybeFocusArrow FUNCTION firstPatternBranch patternBranches 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+term 
+noSeqTerm 
+(?)
+
+** In state 294, looking ahead at BAR, reducing production
+** noSeqTerm -> FUNCTION firstPatternBranch patternBranches 
+** is permitted because of the following sub-derivation:
+
+FUNCTION firstPatternBranch patternBranches // lookahead token appears because patternBranches can begin with BAR
+         maybeBar disjunctivePattern maybeWhen maybeFocusArrow term // lookahead token is inherited
+                                                               noSeqTerm // lookahead token is inherited
+                                                               FUNCTION firstPatternBranch patternBranches . 
+
+** In state 294, looking ahead at BAR, shifting is permitted
+** because of the following sub-derivation:
+
+FUNCTION firstPatternBranch patternBranches 
+         maybeBar disjunctivePattern maybeWhen maybeFocusArrow term 
+                                                               noSeqTerm 
+                                                               FUNCTION firstPatternBranch patternBranches 
+                                                                                           patternBranches patternBranch 
+                                                                                                           . BAR disjunctivePattern maybeWhen maybeFocusArrow term 
+
+** Conflict (shift/reduce) in state 289.
+** Token involved: SEMICOLON
+** This state is reached from term after reading:
+
+FUN atomicPattern atomicPatterns funArrow noSeqTerm 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+term 
+(?)
+
+** In state 289, looking ahead at SEMICOLON, reducing production
+** term -> noSeqTerm 
+** is permitted because of the following sub-derivation:
+
+noSeqTerm SEMICOLON term // lookahead token appears
+typ // lookahead token is inherited
+simpleTerm // lookahead token is inherited
+FUN atomicPattern atomicPatterns funArrow term // lookahead token is inherited
+                                          noSeqTerm . 
+
+** In state 289, looking ahead at SEMICOLON, shifting is permitted
+** because of the following sub-derivation:
+
+noSeqTerm 
+typ 
+simpleTerm 
+FUN atomicPattern atomicPatterns funArrow term 
+                                          noSeqTerm . SEMICOLON term 
+
+** Conflict (shift/reduce) in state 211.
+** Token involved: LBRACE
+** This state is reached from term after reading:
+
+FUN LPAREN nonTvarPattern COLON ident COLON appTerm 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+term 
+noSeqTerm 
+typ 
+simpleTerm 
+FUN atomicPattern atomicPatterns funArrow term 
+    atomicPattern2 
+    nonTvarPattern2 
+    LPAREN ascriptionOrPattern RPAREN 
+           (?)
+
+** In state 211, looking ahead at LBRACE, reducing production
+** refinementTerm -> ident COLON appTerm 
+** is permitted because of the following sub-derivation:
+
+nonTvarPattern COLON typ refineOpt // lookahead token appears because refineOpt can begin with LBRACE
+                     simpleTerm // lookahead token is inherited
+                     tmIff // lookahead token is inherited
+                     tmImplies // lookahead token is inherited
+                     tmDisjunction // lookahead token is inherited
+                     tmConjunction // lookahead token is inherited
+                     tmTuple // lookahead token is inherited
+                     tupleN // lookahead token is inherited
+                     tmEq // lookahead token is inherited
+                     tmOr // lookahead token is inherited
+                     tmAnd // lookahead token is inherited
+                     cmpTerm // lookahead token is inherited
+                     tmCons // lookahead token is inherited
+                     product // lookahead token is inherited
+                     dtupleTerm // lookahead token is inherited
+                     arithTerm // lookahead token is inherited
+                     plusOp // lookahead token is inherited
+                     minusOp // lookahead token is inherited
+                     starDivModTerm // lookahead token is inherited
+                     refinementTerm // lookahead token is inherited
+                     ident COLON appTerm . 
+
+** In state 211, looking ahead at LBRACE, shifting is permitted
+** because of the following sub-derivation:
+
+nonTvarPattern COLON typ refineOpt 
+                     simpleTerm 
+                     tmIff 
+                     tmImplies IFF tmIff 
+                     tmDisjunction IMPLIES tmImplies 
+                     tmConjunction 
+                     tmTuple 
+                     tupleN 
+                     tmEq 
+                     tmOr 
+                     tmAnd 
+                     cmpTerm 
+                     tmCons 
+                     product COLON_COLON tmCons 
+                     dtupleTerm 
+                     arithTerm AMP dtupleTerm 
+                     plusOp 
+                     minusOp PLUS_OP plusOp 
+                     starDivModTerm 
+                     refinementTerm STAR starDivModTerm 
+                     ident COLON appTerm . LBRACE formula RBRACE 
+
+** Conflict (shift/reduce) in state 137.
+** Token involved: DOT
+** This state is reached from term after reading:
+
+name 
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+term 
+noSeqTerm 
+typ 
+simpleTerm 
+tmIff 
+tmImplies IFF tmIff 
+tmDisjunction IMPLIES tmImplies 
+tmConjunction 
+tmTuple 
+tupleN 
+tmEq 
+tmOr 
+tmAnd 
+cmpTerm 
+tmCons 
+product COLON_COLON tmCons 
+dtupleTerm 
+arithTerm AMP dtupleTerm 
+plusOp 
+minusOp PLUS_OP plusOp 
+starDivModTerm 
+unaryTerm DIV_MOD_OP starDivModTerm 
+appTerm 
+atomicTerm hashAtomicTerms 
+(?)
+
+** In state 137, looking ahead at DOT, reducing production
+** maybeMorePath -> 
+** is permitted because of the following sub-derivation:
+
+projectionLHS maybeFieldProjections // lookahead token appears because maybeFieldProjections can begin with DOT
+eitherQname maybeInsts // lookahead token is inherited because maybeInsts can vanish
+eitherpath // lookahead token is inherited
+name maybeMorePath // lookahead token is inherited
+     . 
+
+** In state 137, looking ahead at DOT, shifting is permitted
+** because of the following sub-derivation:
+
+projectionLHS maybeFieldProjections 
+eitherQname maybeInsts 
+eitherpath 
+name maybeMorePath 
+     . DOT eitherpath 

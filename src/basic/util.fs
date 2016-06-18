@@ -660,6 +660,9 @@ let load_value_from_file (fname:string) =
   | _ ->
     None
 
+let print_exn (e: exn): string =
+  e.Message
+
 let format_md5 bytes =
   let sb = 
     Array.fold 

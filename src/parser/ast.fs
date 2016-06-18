@@ -41,6 +41,12 @@ type arg_qualifier =
     | Equality
 type aqual = option<arg_qualifier>
 
+// let rec mutable makes no sense, so just don't do it
+type let_qualifier =
+  | NoLetQualifier
+  | Rec
+  | Mutable
+
 type term' =
   | Wild
   | Const     of sconst
@@ -51,7 +57,7 @@ type term' =
   | Construct of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
-  | Let       of bool * list<(pattern * term)> * term  (* bool is for let rec *)
+  | Let       of let_qualifier * list<(pattern * term)> * term
   | Seq       of term * term
   | If        of term * term * term
   | Match     of term * list<branch>
@@ -69,6 +75,7 @@ type term' =
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
   | Labeled   of term * string * bool
+  | Assign    of ident * term
 
 and term = {tm:term'; range:range; level:level}
 
@@ -140,7 +147,7 @@ type decl' =
   | Open of lid
   | ModuleAbbrev of ident * lid
   | KindAbbrev of ident * list<binder> * knd
-  | ToplevelLet of qualifiers * bool * list<(pattern * term)>
+  | ToplevelLet of qualifiers * let_qualifier * list<(pattern * term)>
   | Main of term
   | Assume of qualifiers * ident * term
   | Tycon of qualifiers * list<tycon>
@@ -289,6 +296,10 @@ let rec extract_named_refinement t1  =
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging
 //////////////////////////////////////////////////////////////////////////////////////////////
+let string_of_let_qualifier = function
+  | NoLetQualifier -> ""
+  | Rec -> "rec"
+  | Mutable -> "mutable"
 let to_string_l sep f l =
   String.concat sep (List.map f l)
 let imp_to_string = function
@@ -304,17 +315,17 @@ let rec term_to_string (x:term) = match x.tm with
   | Tvar id -> id.idText
   | Var l
   | Name l -> l.str
-  | Construct(l, args) ->
+  | Construct (l, args) ->
     Util.format2 "(%s %s)" l.str (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
   | Abs(pats, t) when (x.level = Expr) ->
     Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | Abs(pats, t) when (x.level = Type) ->
     Util.format2 "(fun %s => %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
-  | Let(false, [(pat,tm)], body) ->
-    Util.format3 "let %s = %s in %s" (pat|> pat_to_string) (tm|> term_to_string) (body|> term_to_string)
-  | Let(_, lbs, body) ->
+  | Let (Rec, lbs, body) ->
     Util.format2 "let rec %s in %s" (to_string_l " and " (fun (p,b) -> Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string)) lbs) (body|> term_to_string)
+  | Let (q, [(pat,tm)], body) ->
+    Util.format4 "let %s %s = %s in %s" (string_of_let_qualifier q) (pat|> pat_to_string) (tm|> term_to_string) (body|> term_to_string)
   | Seq(t1, t2) ->
     Util.format2 "%s; %s" (t1|> term_to_string) (t2|> term_to_string)
   | If(t1, t2, t3) ->
