@@ -1,3 +1,3 @@
-module Bug
+module Bug378
 
 type foo = Tot int

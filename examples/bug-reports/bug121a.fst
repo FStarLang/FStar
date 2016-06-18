@@ -1,4 +1,4 @@
-module Bug121aFunctionNotEqualToItsDefinition
+module Bug121a
 
 val apply : ('a -> Tot 'b) -> 'a -> Tot 'b
 let apply f x = f x
