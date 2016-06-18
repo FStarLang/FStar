@@ -17,7 +17,7 @@ else
   MSBUILD = xbuild
 endif
 
-MSBUILD := $(MSBUILD) /verbosity:normal /p:Configuration=Release /m:4
+MSBUILD := $(MSBUILD) /verbosity:normal /p:Configuration=Release
 
 ifeq ($(UNAME),Darwin)
   HEAD=ghead
