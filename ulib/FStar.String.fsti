@@ -15,6 +15,8 @@
 *)
 module FStar.String
 
+open FStar.All
+
 type char = FStar.Char.char
 
 (* The name of this file is misleading: most string functions are to be found in

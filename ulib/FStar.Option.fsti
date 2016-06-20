@@ -14,7 +14,11 @@
    limitations under the License.
 *)
 module FStar.Option
-val isNone: option 'a -> bool
-val isSome: option 'a -> bool
+
+open FStar.All
+
+val isNone: option 'a -> Tot bool
+val isSome: option 'a -> Tot bool
 val map: ('a -> 'b) -> option 'a -> option 'b
+val mapTot: ('a -> Tot 'b) -> option 'a -> Tot (option 'b)
 val get: option 'a -> 'a 

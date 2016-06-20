@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.HyperHeap;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst map.fsi hyperHeap.fsi
-  --*)
 module FStar.Util
 
 let op_Plus_Plus x y = Set.union x y

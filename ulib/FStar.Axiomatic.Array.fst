@@ -17,6 +17,8 @@
 (* A logical theory of integer-indexed arrays, from [0, n) *)
 module FStar.Axiomatic.Array
 
+open FStar.Heap
+
 assume new type seq : Type -> Type
 assume val index    : #a:Type -> seq a -> int -> Tot a
 assume val update   : #a:Type -> seq a -> int -> a -> Tot (seq a)
