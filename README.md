@@ -93,4 +93,4 @@ previously released [0.7 versions and earlier].
 [F\* v0.7.1] and earlier are no longer maintained, so please do not
 create any issues here about those versions.
 
-[F\* v0.7.1]: https://github.com/FStarLang/FStar/blob/master/old/fstar-0.7.1-alpha.zip
+[F\* v0.7.1]: https://github.com/FStarLang/FStar/blob/master/.old/fstar-0.7.1-alpha.zip?raw=true
