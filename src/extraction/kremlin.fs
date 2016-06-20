@@ -52,9 +52,9 @@ and expr =
   | EBufWrite of expr * expr * expr
   | EBufSub of expr * expr * expr
   | EMatch of expr * branches
-  | EOp of op
+  | EOp of op * width
 
-and op = | Add | AddW | Sub | Div | Mult | Mod | Or | And | Xor | ShiftL | ShiftR
+and op = | Add | AddW | Sub | SubW | Div | Mult | Mod | Or | And | Xor | ShiftL | ShiftR
 
 and branches =
   list<branch>
@@ -113,10 +113,19 @@ let fst3 (x, _, _) = x
 let snd3 (_, x, _) = x
 let thd3 (_, _, x) = x
 
-let is_machine_int = function
-  | "UInt8" | "UInt16" | "UInt32" | "UInt64"
-  | "Int8" | "Int16" | "Int32" | "Int64" -> true
-  | _ -> false
+let mk_width = function
+  | "UInt8" -> Some UInt8
+  | "UInt16" -> Some UInt16
+  | "UInt32" -> Some UInt32
+  | "UInt64" -> Some UInt64
+  | "Int8" -> Some Int8
+  | "Int16" -> Some Int16
+  | "Int32" -> Some Int32
+  | "Int64" -> Some Int64
+  | _ -> None
+
+let is_machine_int m =
+  mk_width m <> None
 
 (* Environments **************************************************************)
 
@@ -321,21 +330,23 @@ and translate_expr env e: expr =
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
 
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Plus_Hat") }, args) when is_machine_int m ->
-      mk_op env Add args
+      mk_op env (must (mk_width m)) Add args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Plus_Percent_Hat") }, args) when is_machine_int m ->
-      mk_op env AddW args
+      mk_op env (must (mk_width m)) AddW args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Subtraction_Hat") }, args) when is_machine_int m ->
-      mk_op env Sub args
+      mk_op env (must (mk_width m)) Sub args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Subtraction_Percent_Hat") }, args) when is_machine_int m ->
+      mk_op env (must (mk_width m)) SubW args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Bar_Hat") }, args) when is_machine_int m ->
-      mk_op env Or args
+      mk_op env (must (mk_width m)) Or args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Hat_Hat") }, args) when is_machine_int m ->
-      mk_op env Xor args
+      mk_op env (must (mk_width m)) Xor args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Amp_Hat") }, args) when is_machine_int m ->
-      mk_op env And args
+      mk_op env (must (mk_width m)) And args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Greater_Greater_Hat") }, args) when is_machine_int m ->
-      mk_op env ShiftR args
+      mk_op env (must (mk_width m)) ShiftR args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Less_Less_Hat") }, args) when is_machine_int m ->
-      mk_op env ShiftL args
+      mk_op env (must (mk_width m)) ShiftL args
 
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt8.uint_to_t") ->
       EConstant (UInt8, c)
@@ -435,5 +446,5 @@ and translate_constant c: expr =
 
 (* Helper functions **********************************************************)
 
-and mk_op env op args =
-  EApp (EOp op, List.map (translate_expr env) args)
+and mk_op env w op args =
+  EApp (EOp (op, w), List.map (translate_expr env) args)
