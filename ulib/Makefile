@@ -4,7 +4,7 @@ include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
 UFSTAR=$(FSTAR) --universes
 
-FLAKY=FStar.Int31.fst FStar.UInt31.fst
+FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
 
 HYPERHEAP=FStar.Monotonic.RRef.fst
 

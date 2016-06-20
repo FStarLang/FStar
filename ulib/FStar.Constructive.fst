@@ -10,14 +10,14 @@ type cimp a b = a -> Tot b
 
 type ciff a b = cand (cimp a b) (cimp b a)
 
-type cexists (#a:Type) (p:a -> Type) = 
+type cexists (#a:Type) (p:a -> Type) =
   | ExIntro : x:a -> h:p x -> cexists p
 
 // val ex_intro_x : #a:Type -> #p:(a -> Type) -> projectee:cexists p -> Tot a
 // let ex_intro_x #a #p = function
 //   | ExIntro x _ -> x
 
-type ceq (#a:Type) x : a -> Type = 
+type ceq (#a:Type) x : a -> Type =
   | Refl : ceq #a x x
 
 type ceq_type a : Type -> Type =
@@ -46,7 +46,7 @@ type ctrue =
 type cfalse : Type =
 
 val cfalse_elim : #a:Type -> cfalse -> Tot a
-let cfalse_elim #a f = match f with 
+let cfalse_elim #a f = match f with
 
 val false_elim2 : #a:Type -> cfalse -> Tot a
 let rec false_elim2 #a x = false_elim2 x

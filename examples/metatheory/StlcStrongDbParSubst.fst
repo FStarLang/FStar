@@ -185,7 +185,8 @@ let rec substitution #g1 #e #t s #g2 h1 hs =
        fun x -> TyVar (x+1) in
      let hs' : subst_typing (sub_elam s) (extend tlam g1) (extend tlam g2) =
        fun y -> if y = 0 then TyVar y
-             else substitution #_ #_ #(Some.v (g1 (y - 1))) sub_inc #_ (hs (y - 1)) hs'' //NS: needed to instantiate the Some.v 
+             else let n:var = y - 1 in //Silly limitation of implicits and refinements
+                  substitution #_ #_ #(Some.v (g1 n)) sub_inc #_ (hs n) hs'' //NS: needed to instantiate the Some.v 
      in TyLam tlam (substitution (sub_elam s) hbody hs')
   | TyUnit -> TyUnit
 

@@ -426,9 +426,10 @@ and tc_value env (e:term) : term
 
   | Tm_unknown -> //only occurs where type annotations are missing in source programs
     let k, u = U.type_u () in
-    let t = TcUtil.new_uvar env k in
-    let e = TcUtil.new_uvar env t in
-    value_check_expected_typ env e (Inl t) Rel.trivial_guard
+    let r = Env.get_range env in 
+    let t, _, g0 = TcUtil.new_implicit_var "type of user-provided implicit term" r env k in
+    let e, _, g1 = TcUtil.new_implicit_var "user-provided implicit term" r env t in
+    value_check_expected_typ env e (Inl t) (Rel.conj_guard g0 g1)
 
   | Tm_name x ->
     let t = if env.use_bv_sorts then x.sort else Env.lookup_bv env x in
@@ -2297,15 +2298,18 @@ let tc_inductive env ses quals lids =
     let tc_tycon env (s:sigelt) : env_t          (* environment extended with a refined type for the type-constructor *)
                                 * sigelt         (* the typed version of s, with universe variables still TBD *)
                                 * universe       (* universe of the constructed type *)
+                                * guard_t        (* constraints on implicit variables *)
                                 = match s with
        | Sig_inductive_typ (tc, uvs, tps, k, mutuals, data, quals, r) -> //the only valid qual is Private
          assert (uvs = []);
          warn_positivity tc r;
  (*open*)let tps, k = SS.open_term tps k in
-         let tps, env_tps, us = tc_tparams env tps in
+         let tps, env_tps, guard_params, us = tc_binders env tps in
          let indices, t = Util.arrow_formals k in
-         let indices, env', us' = tc_tparams env_tps indices in
-         let t, _ = tc_trivial_guard env' t in
+         let indices, env', guard_indices, us' = tc_binders env_tps indices in
+         let t, guard = 
+             let t, _, g = tc_tot_or_gtot_term env' t in
+             t, Rel.discharge_guard env' (Rel.conj_guard guard_params (Rel.conj_guard guard_indices g)) in
          let k = Util.arrow indices (S.mk_Total t) in
          let t_type, u = U.type_u() in
          Rel.force_trivial_guard env' (Rel.teq env' t t_type);
@@ -2316,7 +2320,8 @@ let tc_inductive env ses quals lids =
          let fv_tc = S.lid_as_fv tc Delta_constant None in
          Env.push_let_binding env_tps (Inr fv_tc) ([], t_tc),
          Sig_inductive_typ(tc, [], tps, k, mutuals, data, quals, r),
-         u
+         u, 
+         guard
 
         | _ -> failwith "impossible" in
 
@@ -2436,11 +2441,11 @@ let tc_inductive env ses quals lids =
 
     (* Check each tycon *)
     let env, tcs, g = List.fold_right (fun tc (env, all_tcs, g)  ->
-            let env, tc, tc_u = tc_tycon env tc in
+            let env, tc, tc_u, guard = tc_tycon env tc in
             let g' = Rel.universe_inequality S.U_zero tc_u in
             if Env.debug env Options.Low
             then Util.print1 "Checked inductive: %s\n" (Print.sigelt_to_string tc);
-            env, (tc, tc_u)::all_tcs, Rel.conj_guard g g')
+            env, (tc, tc_u)::all_tcs, Rel.conj_guard g (Rel.conj_guard guard g'))
         tys
         (env, [], Rel.trivial_guard) in
 

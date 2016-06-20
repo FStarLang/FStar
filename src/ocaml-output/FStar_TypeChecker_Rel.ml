@@ -5030,8 +5030,8 @@ end
 in (let _146_1764 = (FStar_Syntax_Print.term_to_string e)
 in (FStar_Util.format3 "Failed to resolve implicit argument of type \'%s\' introduced in %s because %s" _146_1765 _146_1764 reason)))
 in (_146_1766, r))
-in FStar_Syntax_Syntax.Error (_146_1767))
-in (Prims.raise _146_1768))
+in (_146_1767)::[])
+in (FStar_TypeChecker_Errors.add_errors env _146_1768))
 end)))
 
 

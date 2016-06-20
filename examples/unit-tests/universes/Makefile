@@ -11,12 +11,12 @@ include ../../Makefile.include
 
 NEGFILES=NegativeTests.BST.fst     NegativeTests.Heap.fst  NegativeTests.ShortCircuiting.fst \
 	 NegativeTests.Bug260.fst  NegativeTests.Neg.fst   NegativeTests.Termination.fst \
-	 NegativeTests.False.fst   NegativeTests.Set.fst
+	 NegativeTests.False.fst   NegativeTests.Set.fst   NegativeTests.ImplicitFalse.fst
 
 
 # if the `--lax` flag is used, negative tests will report a single error.
 ifeq ($(filter $(OTHERFLAGS),--lax),)
-NEGTESTS=31
+NEGTESTS=32
 else
 NEGTESTS= 
 endif
