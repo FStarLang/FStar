@@ -228,8 +228,10 @@ let rec term_to_string x =
     begin match lc with 
         | Some (Inl l) when (Options.print_implicits()) -> 
           Util.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| l.comp())
+        | Some (Inr l) when (Options.print_implicits()) -> 
+          Util.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) l.str
         | _ -> 
-         Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
+          Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
     end
   | Tm_refine(xt, f) -> Util.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(t, args) ->  Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
@@ -348,7 +350,11 @@ and comp_to_string c =
                && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
           then Util.format1 "ALL %s" (term_to_string c.result_typ)
           else if (Options.print_effect_args())
-          then Util.format3 "%s (%s) %s" (sli c.effect_name) (term_to_string c.result_typ) (c.effect_args |> List.map arg_to_string |> String.concat ", ")
+          then Util.format4 "%s (%s) %s {FLAGS=%s}" 
+                    (sli c.effect_name) 
+                    (term_to_string c.result_typ) 
+                    (c.effect_args |> List.map arg_to_string |> String.concat ", ")
+                    (Printf.sprintf "%A" c.flags)
           else Util.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
       let dec = c.flags |> List.collect (function DECREASES e -> [Util.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
       Util.format2 "%s%s" basic dec

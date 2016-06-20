@@ -1418,7 +1418,8 @@ let rec aux = (fun f _38_1076 -> (match (_38_1076) with
 | (lid, arity) -> begin
 (
 
-let _38_1079 = (head_and_args f)
+let _38_1079 = (let _128_513 = (unmeta f)
+in (head_and_args _128_513))
 in (match (_38_1079) with
 | (t, args) -> begin
 (
@@ -1439,12 +1440,12 @@ let patterns = (fun t -> (
 let t = (FStar_Syntax_Subst.compress t)
 in (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_meta (t, FStar_Syntax_Syntax.Meta_pattern (pats)) -> begin
-(let _128_515 = (FStar_Syntax_Subst.compress t)
-in (pats, _128_515))
+(let _128_516 = (FStar_Syntax_Subst.compress t)
+in (pats, _128_516))
 end
 | _38_1090 -> begin
-(let _128_516 = (FStar_Syntax_Subst.compress t)
-in ([], _128_516))
+(let _128_517 = (FStar_Syntax_Subst.compress t)
+in ([], _128_517))
 end)))
 in (
 
@@ -1462,18 +1463,18 @@ let flat = (fun t -> (
 let _38_1100 = (head_and_args t)
 in (match (_38_1100) with
 | (t, args) -> begin
-(let _128_528 = (un_uinst t)
-in (let _128_527 = (FStar_All.pipe_right args (FStar_List.map (fun _38_1103 -> (match (_38_1103) with
+(let _128_529 = (un_uinst t)
+in (let _128_528 = (FStar_All.pipe_right args (FStar_List.map (fun _38_1103 -> (match (_38_1103) with
 | (t, imp) -> begin
-(let _128_526 = (unascribe t)
-in (_128_526, imp))
+(let _128_527 = (unascribe t)
+in (_128_527, imp))
 end))))
-in (_128_528, _128_527)))
+in (_128_529, _128_528)))
 end)))
 in (
 
-let rec aux = (fun qopt out t -> (match ((let _128_535 = (flat t)
-in (qopt, _128_535))) with
+let rec aux = (fun qopt out t -> (match ((let _128_536 = (flat t)
+in (qopt, _128_536))) with
 | ((Some (fa), ({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar (tc); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _}, (({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_abs ((b)::[], t2, _); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _}, _))::[]))) | ((Some (fa), ({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar (tc); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _}, (_)::(({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_abs ((b)::[], t2, _); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _}, _))::[]))) when (is_q fa tc) -> begin
 (aux qopt ((b)::out) t2)
 end
@@ -1508,7 +1509,7 @@ end))
 in (aux None [] t)))))
 in (
 
-let phi = (FStar_Syntax_Subst.compress f)
+let phi = (unmeta f)
 in (match ((destruct_base_conn phi)) with
 | Some (b) -> begin
 Some (b)

@@ -480,7 +480,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   let tsym = varops.fresh "Tm_arrow" in
                   let cvar_sorts = List.map snd cvars in
                   let caption =
-                    if (Options.log_queries())
+                    if Options.log_queries()
                     then Some (N.term_to_string env.tcenv t0)
                     else None in
 
@@ -668,7 +668,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
             | Some lc ->
               if not <| is_pure_or_ghost lc 
-              then fallback ()
+              then (printfn "%s: FALLING BACK WHEN ENCODING %s BECAUSE %A\n" 
+                        (Range.string_of_range t0.pos)
+                        (Print.term_to_string t0) 
+                        lc; fallback ())
               else  let c = codomain_eff lc in
 //                    Printf.printf "Printf.printf body comp type is %s\n\topened to %s\n\topening is %s\n\tbody=%s\n" 
 //                            (Print.comp_to_string c0) (Print.comp_to_string c) (opening |> Print.subst_to_string) (Print.term_to_string body);
@@ -955,6 +958,9 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         | Tm_meta(phi', Meta_labeled(msg, r, b)) ->
           let phi, decls = encode_formula phi' env in
           mk (Term.Labeled(phi, msg, r)), decls
+
+        | Tm_meta _ -> 
+          encode_formula (Util.unmeta phi) env
 
         | Tm_match(e, pats) -> 
            let t, decls = encode_match e pats Term.mkFalse env encode_formula in
@@ -1839,7 +1845,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
             then (Util.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
             let t, decls' = encode_term_pred None t1 env xx in
             let caption =
-                if (Options.log_queries())
+                if Options.log_queries()
                 then Some (Util.format3 "%s : %s (%s)" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1))
                 else None in
             let ax = 
@@ -1923,7 +1929,7 @@ let commit_mark msg =
     Z3.commit_mark msg
 let encode_sig tcenv se =
    let caption decls =
-    if (Options.log_queries())
+    if Options.log_queries()
     then Term.Caption ("encoding sigelt " ^ (Util.lids_of_sigelt se |> List.map Print.lid_to_string |> String.concat ", "))::decls
     else decls in
    let env = get_env tcenv in
@@ -1938,7 +1944,7 @@ let encode_modul tcenv modul =
     let env = get_env tcenv in
     let decls, env = encode_signature ({env with warn=false}) modul.exports in
     let caption decls =
-    if (Options.log_queries())
+    if Options.log_queries()
     then let msg = "Externals for " ^ name in
          Caption msg::decls@[Caption ("End " ^ msg)]
     else decls in

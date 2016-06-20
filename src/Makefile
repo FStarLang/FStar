@@ -234,7 +234,7 @@ regressions:
 
 # Getting parallelism from this target
 uregressions:
-	+make ulib uexamples | grep -i 'error\|Verif'
+	+make ulib uexamples
 
 ulib:
 	+make -C ../ulib

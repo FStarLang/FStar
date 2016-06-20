@@ -2723,5 +2723,30 @@ end)
 end)))
 
 
+let maybe_lift : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Ident.lident  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term = (fun env e c1 c2 -> (
+
+let m1 = (FStar_TypeChecker_Env.norm_eff_name env c1)
+in (
+
+let m2 = (FStar_TypeChecker_Env.norm_eff_name env c2)
+in if (FStar_Ident.lid_equals m1 m2) then begin
+e
+end else begin
+(let _146_977 = (FStar_ST.read e.FStar_Syntax_Syntax.tk)
+in (FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_meta ((e, FStar_Syntax_Syntax.Meta_monadic_lift ((m1, m2))))) _146_977 e.FStar_Syntax_Syntax.pos))
+end)))
+
+
+let maybe_monadic : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term = (fun env e c -> (
+
+let m = (FStar_TypeChecker_Env.norm_eff_name env c)
+in if (((is_pure_or_ghost_effect env m) || (FStar_Ident.lid_equals m FStar_Syntax_Const.effect_Tot_lid)) || (FStar_Ident.lid_equals m FStar_Syntax_Const.effect_GTot_lid)) then begin
+e
+end else begin
+(let _146_984 = (FStar_ST.read e.FStar_Syntax_Syntax.tk)
+in (FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_meta ((e, FStar_Syntax_Syntax.Meta_monadic (m)))) _146_984 e.FStar_Syntax_Syntax.pos))
+end))
+
+
 
 

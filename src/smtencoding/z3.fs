@@ -339,12 +339,23 @@ let ask fresh (core:unsat_core) label_messages qry (cb: (either<unsat_core, erro
               else theory, n_retained, n_pruned+1
             | _ -> d::theory, n_retained, n_pruned)
           theory ([], 0, 0) in 
+      let missed_assertions th core =
+        let missed = 
+            core |> List.filter (fun nm -> 
+              th |> Util.for_some (function Assume(_, _, Some nm') -> nm=nm' | _ -> false) |> not)
+            |> String.concat ", " in
+        let included = th |> List.collect (function Assume(_, _, Some nm) -> [nm] | _ -> []) |> String.concat ", " in
+        Util.format2 "missed={%s}; included={%s}" missed included in
       if Options.hint_info ()
       then begin
            let n = List.length core in
+           let missed = if n <> n_retained then missed_assertions theory' core else "" in
            Util.print3 "Hint-info: Retained %s assertions%s and pruned %s assertions using recorded unsat core\n" 
                          (Util.string_of_int n_retained)
-                         (if n <> n_retained then Util.format1 " (expected %s; replay may be inaccurate)" (Util.string_of_int n) else "")
+                         (if n <> n_retained 
+                          then Util.format2 " (expected %s (%s); replay may be inaccurate)" 
+                               (Util.string_of_int n) missed 
+                          else "")
                          (Util.string_of_int n_pruned)
       end;
       theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true in
@@ -361,6 +372,6 @@ let ask fresh (core:unsat_core) label_messages qry (cb: (either<unsat_core, erro
          | Inr _ -> cb (Inr [], time) //if we filtered the theory, then the error message is unreliable
     else cb (uc_errs, time) in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
-  if (Options.log_queries()) then log_query fresh input;
+  if Options.log_queries() then log_query fresh input;
   enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
 
