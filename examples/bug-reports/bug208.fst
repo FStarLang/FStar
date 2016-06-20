@@ -8,4 +8,4 @@ assume val acc_inv : #r:(int -> Type) -> acc r ->
 assume val axiom1 : #b:Type -> f:(int -> Tot b) -> Lemma True
 
 val fix_F : r:(int -> Type) -> acc r -> Tot unit
-let rec fix_F a = axiom1 (acc_inv a)
+let rec fix_F (r:int->Type) a = axiom1 (acc_inv a)

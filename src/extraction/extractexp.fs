@@ -372,7 +372,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                     let app = maybe_lalloc_eta_data g is_data t <| (with_ty t <| MLE_App(mlhead, mlargs)) in
                     let l_app = List.fold_right
                         (fun (x, arg) out ->
-                            with_ty out.mlty <| MLE_Let((false, [{mllb_name=x; mllb_tysc=Some ([], arg.mlty); mllb_add_unit=false; mllb_def=arg; print_typ=true}]),
+                            with_ty out.mlty <| MLE_Let((NoLetQualifier, [{mllb_name=x; mllb_tysc=Some ([], arg.mlty); mllb_add_unit=false; mllb_def=arg; print_typ=true}]),
                                                       out))
                         lbs app in // lets are to ensure L to R eval ordering of arguments
                     l_app, f, t
@@ -561,6 +561,8 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
           let f = join_l (f'::List.map fst lbs) in
 
+          let is_rec = if is_rec then Rec else NoLetQualifier in
+
           with_ty_loc t' (MLE_Let((is_rec, List.map snd lbs), e')) (Util.mlloc_of_range e.pos), f, t'
 
       | Exp_match(scrutinee, pats) ->
@@ -675,4 +677,4 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
                                     // Note: it is legal in OCaml to write [Foo _] for a constructor with zero arguments, so don't bother.
                                    [MLP_CTor(mlpath_of_lident constrName, [MLP_Wild]), None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool true);
                                     MLP_Wild, None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool false)]))) in
-    MLM_Let (false,[{mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody; print_typ=true}] )
+    MLM_Let (NoLetQualifier,[{mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody; print_typ=true}] )

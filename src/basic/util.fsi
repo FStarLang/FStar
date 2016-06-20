@@ -290,6 +290,7 @@ val map_option: ('a -> 'b) -> option<'a> -> option<'b>
 
 val save_value_to_file: string -> 'a -> unit
 val load_value_from_file: string -> option<'a>
+val print_exn: exn -> string
 val digest_of_file: string -> string
 val digest_of_string: string -> string
 

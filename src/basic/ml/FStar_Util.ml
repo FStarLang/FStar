@@ -665,6 +665,9 @@ let load_value_from_file (fname:string) =
   | _ ->
     None
 
+let print_exn e =
+  Printexc.to_string e
+
 let digest_of_file (fname:string) =
   BatDigest.file fname
   

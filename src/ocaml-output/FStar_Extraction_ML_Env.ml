@@ -66,8 +66,8 @@ end else begin
 end)
 
 
-let mkFvvar : FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ  ->  (FStar_Ident.lident, FStar_Absyn_Syntax.typ) FStar_Absyn_Syntax.withinfo_t = (fun l t -> (let _160_69 = (FStar_Range.mk_range "" 0 0)
-in {FStar_Absyn_Syntax.v = l; FStar_Absyn_Syntax.sort = t; FStar_Absyn_Syntax.p = _160_69}))
+let mkFvvar : FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ  ->  (FStar_Ident.lident, FStar_Absyn_Syntax.typ) FStar_Absyn_Syntax.withinfo_t = (fun l t -> (let _161_69 = (FStar_Range.mk_range "" 0 0)
+in {FStar_Absyn_Syntax.v = l; FStar_Absyn_Syntax.sort = t; FStar_Absyn_Syntax.p = _161_69}))
 
 
 let erasedContent : FStar_Extraction_ML_Syntax.mlty = FStar_Extraction_ML_Syntax.ml_unit_ty
@@ -102,8 +102,8 @@ end))
 let removeTick = (fun _70_39 -> (match (_70_39) with
 | (x, n) -> begin
 if (FStar_Util.starts_with x "\'") then begin
-(let _160_74 = (FStar_Util.substring_from x 1)
-in (_160_74, n))
+(let _161_74 = (FStar_Util.substring_from x 1)
+in (_161_74, n))
 end else begin
 (x, n)
 end
@@ -187,9 +187,9 @@ None
 end)))
 in (match (x) with
 | None -> begin
-(let _160_104 = (let _160_103 = (FStar_Absyn_Print.sli fv)
-in (FStar_Util.format1 "free Variable %s not found\n" _160_103))
-in (FStar_All.failwith _160_104))
+(let _161_104 = (let _161_103 = (FStar_Absyn_Print.sli fv)
+in (FStar_Util.format1 "free Variable %s not found\n" _161_103))
+in (FStar_All.failwith _161_104))
 end
 | Some (y) -> begin
 y
@@ -207,10 +207,10 @@ None
 end)))
 in (match (x) with
 | None -> begin
-(let _160_112 = (let _160_111 = (FStar_Range.string_of_range fv.FStar_Absyn_Syntax.p)
-in (let _160_110 = (FStar_Absyn_Print.sli fv.FStar_Absyn_Syntax.v)
-in (FStar_Util.format2 "(%s) free Variable %s not found\n" _160_111 _160_110)))
-in (FStar_All.failwith _160_112))
+(let _161_112 = (let _161_111 = (FStar_Range.string_of_range fv.FStar_Absyn_Syntax.p)
+in (let _161_110 = (FStar_Absyn_Print.sli fv.FStar_Absyn_Syntax.v)
+in (FStar_Util.format2 "(%s) free Variable %s not found\n" _161_111 _161_110)))
+in (FStar_All.failwith _161_112))
 end
 | Some (y) -> begin
 y
@@ -228,10 +228,10 @@ None
 end)))
 in (match (x) with
 | None -> begin
-(let _160_120 = (let _160_119 = (FStar_Range.string_of_range bv.FStar_Absyn_Syntax.p)
-in (let _160_118 = (FStar_Absyn_Print.strBvd bv.FStar_Absyn_Syntax.v)
-in (FStar_Util.format2 "(%s) bound Variable %s not found\n" _160_119 _160_118)))
-in (FStar_All.failwith _160_120))
+(let _161_120 = (let _161_119 = (FStar_Range.string_of_range bv.FStar_Absyn_Syntax.p)
+in (let _161_118 = (FStar_Absyn_Print.strBvd bv.FStar_Absyn_Syntax.v)
+in (FStar_Util.format2 "(%s) bound Variable %s not found\n" _161_119 _161_118)))
+in (FStar_All.failwith _161_120))
 end
 | Some (y) -> begin
 y
@@ -249,12 +249,12 @@ end))
 
 let lookup_var = (fun g e -> (match (e.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Exp_bvar (x) -> begin
-(let _160_127 = (lookup g (FStar_Util.Inl (x)))
-in (_160_127, None))
+(let _161_127 = (lookup g (FStar_Util.Inl (x)))
+in (_161_127, None))
 end
 | FStar_Absyn_Syntax.Exp_fvar (x, b) -> begin
-(let _160_128 = (lookup g (FStar_Util.Inr (x)))
-in (_160_128, b))
+(let _161_128 = (lookup g (FStar_Util.Inr (x)))
+in (_161_128, b))
 end
 | _70_144 -> begin
 (FStar_All.failwith "impossible")
@@ -325,9 +325,9 @@ let rec mltyFvars : FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syn
 (x)::[]
 end
 | FStar_Extraction_ML_Syntax.MLTY_Fun (t1, f, t2) -> begin
-(let _160_150 = (mltyFvars t1)
-in (let _160_149 = (mltyFvars t2)
-in (FStar_List.append _160_150 _160_149)))
+(let _161_150 = (mltyFvars t1)
+in (let _161_149 = (mltyFvars t2)
+in (FStar_List.append _161_150 _161_149)))
 end
 | FStar_Extraction_ML_Syntax.MLTY_Named (args, path) -> begin
 (FStar_List.collect mltyFvars args)
@@ -349,8 +349,8 @@ true
 end))
 
 
-let tySchemeIsClosed : FStar_Extraction_ML_Syntax.mltyscheme  ->  Prims.bool = (fun tys -> (let _160_157 = (mltyFvars (Prims.snd tys))
-in (subsetMlidents _160_157 (Prims.fst tys))))
+let tySchemeIsClosed : FStar_Extraction_ML_Syntax.mltyscheme  ->  Prims.bool = (fun tys -> (let _161_157 = (mltyFvars (Prims.snd tys))
+in (subsetMlidents _161_157 (Prims.fst tys))))
 
 
 let extend_fv' : env  ->  FStar_Absyn_Syntax.fvvar  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mltyscheme  ->  Prims.bool  ->  Prims.bool  ->  env = (fun g x y t_x add_unit is_rec -> if (tySchemeIsClosed t_x) then begin
@@ -396,8 +396,8 @@ in (extend_fv' g x mlp t_x add_unit is_rec)))
 
 let extend_lb : env  ->  FStar_Absyn_Syntax.lbname  ->  FStar_Absyn_Syntax.typ  ->  FStar_Extraction_ML_Syntax.mltyscheme  ->  Prims.bool  ->  Prims.bool  ->  (env * FStar_Extraction_ML_Syntax.mlident) = (fun g l t t_x add_unit is_rec -> (match (l) with
 | FStar_Util.Inl (x) -> begin
-(let _160_192 = (extend_bv g (FStar_Absyn_Util.bvd_to_bvar_s x t) t_x add_unit is_rec false)
-in (_160_192, (FStar_Extraction_ML_Syntax.as_mlident x)))
+(let _161_192 = (extend_bv g (FStar_Absyn_Util.bvd_to_bvar_s x t) t_x add_unit is_rec false)
+in (_161_192, (FStar_Extraction_ML_Syntax.as_mlident x)))
 end
 | FStar_Util.Inr (f) -> begin
 (
@@ -405,8 +405,8 @@ end
 let _70_233 = (FStar_Extraction_ML_Syntax.mlpath_of_lident f)
 in (match (_70_233) with
 | (p, y) -> begin
-(let _160_193 = (extend_fv' g (FStar_Absyn_Util.fvvar_of_lid f t) (p, y) t_x add_unit is_rec)
-in (_160_193, (y, 0)))
+(let _161_193 = (extend_fv' g (FStar_Absyn_Util.fvvar_of_lid f t) (p, y) t_x add_unit is_rec)
+in (_161_193, (y, 0)))
 end))
 end))
 
@@ -432,8 +432,8 @@ let a = ("\'a", (- (1)))
 in (
 
 let failwith_ty = ((a)::[], FStar_Extraction_ML_Syntax.MLTY_Fun ((FStar_Extraction_ML_Syntax.MLTY_Named (([], (("Prims")::[], "string"))), FStar_Extraction_ML_Syntax.E_IMPURE, FStar_Extraction_ML_Syntax.MLTY_Var (a))))
-in (let _160_200 = (extend_lb env (FStar_Util.Inr (FStar_Absyn_Const.failwith_lid)) FStar_Absyn_Syntax.tun failwith_ty false false)
-in (FStar_All.pipe_right _160_200 Prims.fst))))))
+in (let _161_200 = (extend_lb env (FStar_Util.Inr (FStar_Absyn_Const.failwith_lid)) FStar_Absyn_Syntax.tun failwith_ty false false)
+in (FStar_All.pipe_right _161_200 Prims.fst))))))
 
 
 

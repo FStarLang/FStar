@@ -91,28 +91,28 @@ let char_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Char")::("char")::
 let heap_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Heap")::("heap")::[]))
 
 
-let kunary : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k k' -> (let _119_11 = (let _119_10 = (let _119_9 = (FStar_Absyn_Syntax.null_t_binder k)
-in (_119_9)::[])
-in (_119_10, k'))
-in (FStar_Absyn_Syntax.mk_Kind_arrow _119_11 FStar_Absyn_Syntax.dummyRange)))
+let kunary : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k k' -> (let _120_11 = (let _120_10 = (let _120_9 = (FStar_Absyn_Syntax.null_t_binder k)
+in (_120_9)::[])
+in (_120_10, k'))
+in (FStar_Absyn_Syntax.mk_Kind_arrow _120_11 FStar_Absyn_Syntax.dummyRange)))
 
 
-let kbin : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k1 k2 k' -> (let _119_22 = (let _119_21 = (let _119_20 = (FStar_Absyn_Syntax.null_t_binder k1)
-in (let _119_19 = (let _119_18 = (FStar_Absyn_Syntax.null_t_binder k2)
-in (_119_18)::[])
-in (_119_20)::_119_19))
-in (_119_21, k'))
-in (FStar_Absyn_Syntax.mk_Kind_arrow _119_22 FStar_Absyn_Syntax.dummyRange)))
+let kbin : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k1 k2 k' -> (let _120_22 = (let _120_21 = (let _120_20 = (FStar_Absyn_Syntax.null_t_binder k1)
+in (let _120_19 = (let _120_18 = (FStar_Absyn_Syntax.null_t_binder k2)
+in (_120_18)::[])
+in (_120_20)::_120_19))
+in (_120_21, k'))
+in (FStar_Absyn_Syntax.mk_Kind_arrow _120_22 FStar_Absyn_Syntax.dummyRange)))
 
 
-let ktern : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k1 k2 k3 k' -> (let _119_37 = (let _119_36 = (let _119_35 = (FStar_Absyn_Syntax.null_t_binder k1)
-in (let _119_34 = (let _119_33 = (FStar_Absyn_Syntax.null_t_binder k2)
-in (let _119_32 = (let _119_31 = (FStar_Absyn_Syntax.null_t_binder k3)
-in (_119_31)::[])
-in (_119_33)::_119_32))
-in (_119_35)::_119_34))
-in (_119_36, k'))
-in (FStar_Absyn_Syntax.mk_Kind_arrow _119_37 FStar_Absyn_Syntax.dummyRange)))
+let ktern : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k1 k2 k3 k' -> (let _120_37 = (let _120_36 = (let _120_35 = (FStar_Absyn_Syntax.null_t_binder k1)
+in (let _120_34 = (let _120_33 = (FStar_Absyn_Syntax.null_t_binder k2)
+in (let _120_32 = (let _120_31 = (FStar_Absyn_Syntax.null_t_binder k3)
+in (_120_31)::[])
+in (_120_33)::_120_32))
+in (_120_35)::_120_34))
+in (_120_36, k'))
+in (FStar_Absyn_Syntax.mk_Kind_arrow _120_37 FStar_Absyn_Syntax.dummyRange)))
 
 
 let true_lid : FStar_Absyn_Syntax.lident = (pconst "True")

@@ -76,7 +76,7 @@ let dummy_loc: mlloc = 0, ""
 
 type mlty =
 | MLTY_Var   of mlident
-| MLTY_Fun   of mlty * e_tag * mlty 
+| MLTY_Fun   of mlty * e_tag * mlty
 | MLTY_Named of list<mlty> * mlpath
 | MLTY_Tuple of list<mlty>
 | MLTY_Top
@@ -137,7 +137,12 @@ and mllb = {
     print_typ:bool;
 }
 
-and mlletbinding = bool * list<mllb>
+and mlletbinding = mlletflavor * list<mllb>
+
+and mlletflavor =
+  | Rec
+  | Mutable // C backend only
+  | NoLetQualifier
 
 type mltybody =
 | MLTD_Abbrev of mlty

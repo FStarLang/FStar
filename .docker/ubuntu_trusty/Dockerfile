@@ -32,7 +32,7 @@ RUN opam init
 RUN eval $(opam config env)
 RUN opam switch ${opamv}
 RUN eval $(opam config env)
-RUN opam install ocamlfind batteries sqlite3 fileutils stdint zarith
+RUN opam install ocamlfind batteries sqlite3 fileutils stdint zarith yojson
 RUN eval $(opam config env)
 
 # Prepare Z3
