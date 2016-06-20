@@ -856,7 +856,9 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                     match c with
                     | None -> (e, q)::args, out_c
                     | Some c -> 
-                        let out_c = TcUtil.bind e.pos env (Some e) c (x, out_c) in
+                        let out_c = 
+                            TcUtil.bind e.pos env None  //proving (Some e) here instead of None causes significant Z3 overhead
+                                        c (x, out_c) in
                         let e = TcUtil.maybe_lift env e c.eff_name out_c.eff_name in
                         (e, q)::args, out_c) ([], cres) arg_comps_rev in
         let comp = TcUtil.bind head.pos env None chead (None, comp) in

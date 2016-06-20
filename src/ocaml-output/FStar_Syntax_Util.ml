@@ -1418,8 +1418,8 @@ let rec aux = (fun f _38_1076 -> (match (_38_1076) with
 | (lid, arity) -> begin
 (
 
-let _38_1079 = (let _128_513 = (unmeta f)
-in (head_and_args _128_513))
+let _38_1079 = (let _129_513 = (unmeta f)
+in (head_and_args _129_513))
 in (match (_38_1079) with
 | (t, args) -> begin
 (
@@ -1440,21 +1440,12 @@ let patterns = (fun t -> (
 let t = (FStar_Syntax_Subst.compress t)
 in (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_meta (t, FStar_Syntax_Syntax.Meta_pattern (pats)) -> begin
-<<<<<<< HEAD
-(let _128_516 = (FStar_Syntax_Subst.compress t)
-in (pats, _128_516))
-end
-| _38_1090 -> begin
-(let _128_517 = (FStar_Syntax_Subst.compress t)
-in ([], _128_517))
-=======
-(let _129_515 = (FStar_Syntax_Subst.compress t)
-in (pats, _129_515))
-end
-| _38_1090 -> begin
 (let _129_516 = (FStar_Syntax_Subst.compress t)
-in ([], _129_516))
->>>>>>> origin
+in (pats, _129_516))
+end
+| _38_1090 -> begin
+(let _129_517 = (FStar_Syntax_Subst.compress t)
+in ([], _129_517))
 end)))
 in (
 
@@ -1472,33 +1463,18 @@ let flat = (fun t -> (
 let _38_1100 = (head_and_args t)
 in (match (_38_1100) with
 | (t, args) -> begin
-<<<<<<< HEAD
-(let _128_529 = (un_uinst t)
-in (let _128_528 = (FStar_All.pipe_right args (FStar_List.map (fun _38_1103 -> (match (_38_1103) with
+(let _129_529 = (un_uinst t)
+in (let _129_528 = (FStar_All.pipe_right args (FStar_List.map (fun _38_1103 -> (match (_38_1103) with
 | (t, imp) -> begin
-(let _128_527 = (unascribe t)
-in (_128_527, imp))
+(let _129_527 = (unascribe t)
+in (_129_527, imp))
 end))))
-in (_128_529, _128_528)))
+in (_129_529, _129_528)))
 end)))
 in (
 
-let rec aux = (fun qopt out t -> (match ((let _128_536 = (flat t)
-in (qopt, _128_536))) with
-=======
-(let _129_528 = (un_uinst t)
-in (let _129_527 = (FStar_All.pipe_right args (FStar_List.map (fun _38_1103 -> (match (_38_1103) with
-| (t, imp) -> begin
-(let _129_526 = (unascribe t)
-in (_129_526, imp))
-end))))
-in (_129_528, _129_527)))
-end)))
-in (
-
-let rec aux = (fun qopt out t -> (match ((let _129_535 = (flat t)
-in (qopt, _129_535))) with
->>>>>>> origin
+let rec aux = (fun qopt out t -> (match ((let _129_536 = (flat t)
+in (qopt, _129_536))) with
 | ((Some (fa), ({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar (tc); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _}, (({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_abs ((b)::[], t2, _); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _}, _))::[]))) | ((Some (fa), ({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar (tc); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _}, (_)::(({FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_abs ((b)::[], t2, _); FStar_Syntax_Syntax.tk = _; FStar_Syntax_Syntax.pos = _; FStar_Syntax_Syntax.vars = _}, _))::[]))) when (is_q fa tc) -> begin
 (aux qopt ((b)::out) t2)
 end
