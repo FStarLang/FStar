@@ -1,8 +1,3 @@
-(*--build-config
-    options:;
-    other-files:FStar.List.Tot.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst
-  --*)
-
 module FStar.Relational.Relational
 open FStar.Heap
 

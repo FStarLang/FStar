@@ -17,7 +17,7 @@ module FStar.Matrix2
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 "
 
-type matrix2 : nat -> nat -> Type -> Type
+assume new type matrix2 : nat -> nat -> Type -> Type
 open FStar.Seq
 
 (* Destructors *)
@@ -92,15 +92,15 @@ val lemma_index_upd_col2: #a:Type -> m:nat -> n:nat -> x:matrix2 m n a -> s:seq 
   [SMTPat (index (upd_col x j s) i j')]
 
 (* Extensionality *)
-type Eq: #a:Type -> #m:nat -> #n:nat -> matrix2 m n a -> matrix2 m n a -> Type
+assume new type eq: #a:Type -> #m:nat -> #n:nat -> matrix2 m n a -> matrix2 m n a -> Type
 val lemma_eq_intro: #a:Type -> #m:nat -> #n:nat -> x1:matrix2 m n a -> x2:matrix2 m n a -> Lemma
      (requires ((forall (i:nat{i < m}) (j:nat{j<n}). {:pattern (index x1 i j); (index x2 i j)} (index x1 i j == index x2 i j))))
-     (ensures (Eq x1 x2))
-     [SMTPatT (Eq x1 x2)]
+     (ensures (eq x1 x2))
+     [SMTPatT (eq x1 x2)]
 
 val lemma_eq_elim: #a:Type -> #m:nat -> #n:nat -> x1:matrix2 m n a -> x2:matrix2 m n a -> Lemma
-     (requires (Eq x1 x2))
+     (requires (eq x1 x2))
      (ensures (x1=x2))
-     [SMTPatT (Eq x1 x2)]
+     [SMTPatT (eq x1 x2)]
 
 
