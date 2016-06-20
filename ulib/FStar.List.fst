@@ -198,8 +198,8 @@ let filter_map f l =
   in
   filter_map [] l
 
-let index (f:'a -> bool) (l:list 'a) =
-  let rec index (i:nat) (f:'a -> bool) (l:list 'a): nat =
+let index f l =
+  let rec index f l i =
     match l with
     | [] ->
         failwith "List.index: not found"
