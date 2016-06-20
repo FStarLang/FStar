@@ -153,6 +153,8 @@ let const_to_string x = match x with
   | Const_bytearray _  ->  "<bytearray>"
   | Const_int (x, _) -> x
   | Const_range r -> Range.string_of_range r
+  | Const_reify
+  | Const_reflect -> "unsupported constant"
 
 let rec tag_of_typ t = match t.n with
   | Typ_btvar _ -> "Typ_btvar"

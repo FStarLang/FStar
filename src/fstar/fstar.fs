@@ -62,6 +62,7 @@ let codegen uf_mods_env =
       | Some "FSharp" -> ".fs"
       | Some "OCaml" -> ".ml"
       | Some "Kremlin" -> ".krml"
+      | _ -> failwith "Unrecognized option"
     in
     match opt with
     | Some "FSharp" | Some "OCaml" ->
@@ -73,6 +74,8 @@ let codegen uf_mods_env =
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
         save_value_to_file "out.krml" bin
+   | _ -> failwith "Unrecognized option"
+
 
 
 (****************************************************************************)

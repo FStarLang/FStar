@@ -16,3 +16,5 @@ type sconst =
   | Const_bytearray   of array<byte> * Range.range
   | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
   | Const_range       of Range.range                         (* not denotable by the programmer *)
+  | Const_reify                                              (* a coercion from a computation to a Tot term *)
+  | Const_reflect                                            (* a coercion from a Tot term to a computation *)
