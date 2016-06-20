@@ -23,8 +23,10 @@ endif
 
 all: all-pos all-neg
 
-all-pos: 
-	$(FSTAR) $(VERFILES) --universes
+all-pos: $(addsuffix -ver, $(VERFILES))
+
+%.fst-ver: %.fst
+	$(FSTAR) --universes $^
 
 basictests: $(VERFILES)
 	$(FSTAR) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^
