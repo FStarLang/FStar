@@ -668,10 +668,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
             | Some lc ->
               if not <| is_pure_or_ghost lc 
-              then (printfn "%s: FALLING BACK WHEN ENCODING %s BECAUSE %A\n" 
-                        (Range.string_of_range t0.pos)
-                        (Print.term_to_string t0) 
-                        lc; fallback ())
+              then fallback ()
               else  let c = codomain_eff lc in
 //                    Printf.printf "Printf.printf body comp type is %s\n\topened to %s\n\topening is %s\n\tbody=%s\n" 
 //                            (Print.comp_to_string c0) (Print.comp_to_string c) (opening |> Print.subst_to_string) (Print.term_to_string body);

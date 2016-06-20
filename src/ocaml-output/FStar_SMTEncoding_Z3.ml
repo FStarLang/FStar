@@ -875,11 +875,6 @@ in (FStar_All.pipe_right _170_338 Prims.op_Negation)))))
 in (FStar_All.pipe_right _170_339 (FStar_String.concat ", ")))
 in (
 
-let orig = FStar_List.collect (function
-   | FStar_SMTEncoding_Term.Assume (_80_409, _80_411, Some (nm)) -> [nm]
-   | _ -> []) theory in
-let orig = FStar_String.concat ", " orig in
-
 let included = (let _170_341 = (FStar_All.pipe_right th (FStar_List.collect (fun _80_4 -> (match (_80_4) with
 | FStar_SMTEncoding_Term.Assume (_80_409, _80_411, Some (nm)) -> begin
 (nm)::[]
@@ -888,7 +883,7 @@ end
 []
 end))))
 in (FStar_All.pipe_right _170_341 (FStar_String.concat ", ")))
-in (FStar_Util.format3 "missed={%s}; included={%s}; orig={%s}" missed included orig))))
+in (FStar_Util.format2 "missed={%s}; included={%s}" missed included))))
 in (
 
 let _80_421 = if (FStar_Options.hint_info ()) then begin

@@ -1001,7 +1001,15 @@ end)
 end))
 and close_lcomp_opt : cfg  ->  closure Prims.list  ->  (FStar_Syntax_Syntax.lcomp, FStar_Ident.lident) FStar_Util.either Prims.option  ->  (FStar_Syntax_Syntax.lcomp, FStar_Ident.lident) FStar_Util.either Prims.option = (fun cfg env lopt -> (match (lopt) with
 | Some (FStar_Util.Inl (lc)) -> begin
+if (FStar_Syntax_Util.is_total_lcomp lc) then begin
+Some (FStar_Util.Inr (FStar_Syntax_Const.effect_Tot_lid))
+end else begin
+if (FStar_Syntax_Util.is_tot_or_gtot_lcomp lc) then begin
+Some (FStar_Util.Inr (FStar_Syntax_Const.effect_GTot_lid))
+end else begin
 Some (FStar_Util.Inr (lc.FStar_Syntax_Syntax.eff_name))
+end
+end
 end
 | _53_498 -> begin
 lopt
