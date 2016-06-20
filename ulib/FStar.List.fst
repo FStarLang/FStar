@@ -199,7 +199,7 @@ let filter_map f l =
   filter_map [] l
 
 let index f l =
-  let rec index i f l =
+  let rec index f l i =
     match l with
     | [] ->
         failwith "List.index: not found"
@@ -207,6 +207,6 @@ let index f l =
         if f hd then
           i
         else
-          index (i + 1) f tl
+          index f tl (i + 1)
   in
-  index 0 f l
+  index f l 0
