@@ -31,10 +31,10 @@ endif
 
 
 # --------------------------------------------------------------------
-ifeq ($(OS),Windows_NT)
-RUNTIME =
-else
+ifeq ($(OS),Darwin)
 RUNTIME = mono
+else
+RUNTIME = 
 endif
 
 FSLYDIR := VS/packages/FsLexYacc.6.1.0
