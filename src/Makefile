@@ -7,14 +7,14 @@ BIN=../bin
 # --------------------------------------------------------------------
 # Configuration of some platform-specific tools; eventually we will want a configure script
 
-UNAME	       = $(shell uname)
-
 ifeq ($(OS),Windows_NT)
   FSC     = fsc
   MSBUILD = $(shell cygpath -u \"$$(reg.exe query 'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0' /v MSBuildToolsPath | tail -n 2 | head -n 1 | sed 's/.*REG_SZ\s\+//g')\")/MSBuild.exe
+  UNAME   = Windows_NT
 else
   FSC     = fsharpc
   MSBUILD = xbuild
+  UNAME   = $(shell uname -s)
 endif
 
 MSBUILD := $(MSBUILD) /verbosity:normal /p:Configuration=Release
@@ -23,19 +23,15 @@ ifeq ($(UNAME),Darwin)
   HEAD=ghead
   SED=gsed
   FIND=gfind
+  RUNTIME = mono
 else
   HEAD=head
   SED=sed
   FIND=find
+  RUNTIME=
 endif
-
 
 # --------------------------------------------------------------------
-ifeq ($(OS),Darwin)
-RUNTIME = mono
-else
-RUNTIME = 
-endif
 
 FSLYDIR := VS/packages/FsLexYacc.6.1.0
 FSYACC  := $(RUNTIME) $(FSLYDIR)/build/fsyacc.exe
