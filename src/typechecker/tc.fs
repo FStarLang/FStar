@@ -1648,7 +1648,7 @@ let open_effect_decl env ed =
             let t1 = SS.subst opening (snd ts) in
             ([], t1) in
          { ed with
-               ret         =op ed.ret
+               ret_wp         =op ed.ret_wp
              ; bind_wp     =op ed.bind_wp
              ; if_then_else=op ed.if_then_else
              ; ite_wp      =op ed.ite_wp
@@ -2082,7 +2082,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
 
   let ret =
     let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
-    check_and_gen' env ed.ret expected_k in
+    check_and_gen' env ed.ret_wp expected_k in
 
   let bind_wp =
     let b, wp_b = get_effect_signature () in
@@ -2164,7 +2164,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
       univs       = univs
     ; binders     = binders
     ; signature   = signature
-    ; ret         = close 0 ret
+    ; ret_wp         = close 0 ret
     ; bind_wp     = close 1 bind_wp
     ; if_then_else= close 0 if_then_else
     ; ite_wp      = close 0 ite_wp

@@ -460,7 +460,7 @@ let return_value env t v =
     else let m = must (Env.effect_decl_opt env Const.effect_PURE_lid) in //if Tot isn't fully defined in prims yet, then just return (Total t)
          let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
          let k = SS.subst [NT(a, t)] kwp in
-         let wp = N.normalize [N.Beta] env (mk_Tm_app (inst_effect_fun_with [env.universe_of env t] env m m.ret) [S.as_arg t; S.as_arg v] (Some k.n) v.pos) in
+         let wp = N.normalize [N.Beta] env (mk_Tm_app (inst_effect_fun_with [env.universe_of env t] env m m.ret_wp) [S.as_arg t; S.as_arg v] (Some k.n) v.pos) in
          mk_comp m t wp [RETURN] in
   if debug env <| Options.Other "Return"
   then Util.print3 "(%s) returning %s at comp type %s\n" 
@@ -635,7 +635,7 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let y = S.new_bv None res_t in
     let xexp, yexp = S.bv_to_name x, S.bv_to_name y in
     let us = [env.universe_of env res_t] in
-    let yret = mk_Tm_app (inst_effect_fun_with us env md_pure md_pure.ret) [S.as_arg res_t; S.as_arg yexp] None res_t.pos in
+    let yret = mk_Tm_app (inst_effect_fun_with us env md_pure md_pure.ret_wp) [S.as_arg res_t; S.as_arg yexp] None res_t.pos in
     let x_eq_y_yret = mk_Tm_app (inst_effect_fun_with us env md_pure md_pure.assume_p) [S.as_arg res_t; S.as_arg <| Util.mk_eq res_t res_t xexp yexp; S.as_arg <| yret] None res_t.pos in
     let forall_y_x_eq_y_yret = 
         mk_Tm_app (inst_effect_fun_with (us@us) env md_pure md_pure.close_wp) 
@@ -807,7 +807,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                         let x = S.new_bv (Some t.pos) t in
                         let xexp = S.bv_to_name x in
                         let us = [env.universe_of env t] in
-                        let wp = mk_Tm_app (inst_effect_fun_with us env md md.ret) [S.as_arg t; S.as_arg xexp] (Some k.n) xexp.pos in
+                        let wp = mk_Tm_app (inst_effect_fun_with us env md md.ret_wp) [S.as_arg t; S.as_arg xexp] (Some k.n) xexp.pos in
                         let cret = Util.lcomp_of_comp <| mk_comp md t wp [RETURN] in
                         let guard = if apply_guard then mk_Tm_app f [S.as_arg xexp] (Some U.ktype0.n) f.pos else f in
                         let eq_ret, _trivial_so_ok_to_discard =

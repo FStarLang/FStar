@@ -209,8 +209,10 @@ type qualifier =
   | Irreducible                            //a definition that can never be unfolded by the normalizer
   | Abstract                               //a symbol whose definition is only visible within the defining module
   | TotalEffect                            //an effect that forbis non-termination
-  //the remaining qualifiers are internal: the programmer cannot write them
   | Logic                                  //a symbol whose intended usage is in the refinement logic
+  //the remaining qualifiers are internal: the programmer cannot write them
+  | Reify
+  | Reflect
   | Discriminator of lident                //discriminator for a datacon l 
   | Projector of lident * ident            //projector for datacon l's argument x
   | RecordType of list<fieldname>          //record type whose unmangled field names are ...
@@ -238,12 +240,12 @@ type sub_eff = {
   }     
 *)
 type eff_decl = {
-    qualifiers  :list<qualifier>;  //probably empty in all existing cases
+    qualifiers  :list<qualifier>;  //[Reify;Reflect; ...]
     mname       :lident;           //STATE_h
     univs       :univ_names;       //initially empty; but after type-checking and generalization, usually the universe of the result type etc.
     binders     :binders;          //heap:Type
     signature   :term;             //: result:Type ... -> Effect
-    ret         :tscheme;          //the remaining fields ... one for each element of the interface
+    ret_wp      :tscheme;          //the remaining fields ... one for each element of the interface
     bind_wp     :tscheme;
     if_then_else:tscheme;
     ite_wp      :tscheme;
@@ -253,6 +255,14 @@ type eff_decl = {
     assume_p    :tscheme;
     null_wp     :tscheme;
     trivial     :tscheme;
+    //NEW FIELDS
+    //representation of the effect as pure type
+    repr        :term;
+    //operations on the representation
+    return_repr :tscheme;
+    bind_repr   :tscheme;
+    //actions for the effect
+    actions     :list<(lident * tscheme)>
 }
 and sigelt =
   | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t 

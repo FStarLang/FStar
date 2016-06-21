@@ -199,6 +199,8 @@ let qual_to_string = function
   | ExceptionConstructor  -> "ExceptionConstructor"
   | HasMaskedEffect       -> "HasMaskedEffect"
   | Effect                -> "Effect"
+  | Reify                 -> "reify"
+  | Reflect               -> "reflect"
 let quals_to_string quals = match quals with 
     | [] -> ""
     | _ -> (quals |> List.map qual_to_string |> String.concat " ") ^ " "
@@ -394,7 +396,7 @@ let eff_decl_to_string ed =
          univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
          term_to_string ed.signature;
-         tscheme_to_string ed.ret;
+         tscheme_to_string ed.ret_wp;
          tscheme_to_string ed.bind_wp;
          tscheme_to_string ed.if_then_else;
          tscheme_to_string ed.ite_wp;

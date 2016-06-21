@@ -81,9 +81,10 @@ new_effect {
      ; reflect 
 }
 
-sub_effect PURE ~> STATE = 
-  lift_pure_state : #a:Type -> #wp:pure_wp a -> f:PURE.repr a wp -> STATE.repr a (lift_star wp)
-		  = ...
+sub_effect PURE ~> STATE {
+  lift_wp: #a:Type -> #wp:pure_wp a -> st_wp a = ...
+  lift   : #a:Type -> #wp:pure_wp a -> f:PURE.repr a wp -> STATE.repr a (lift_star wp) = ...
+}  
 
 ////////////////////////////////////////////////////////////////////////////////
 (* let repr_STATE (a:Type) (wp:st_wp a) =  *)

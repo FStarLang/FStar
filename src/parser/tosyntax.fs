@@ -1505,7 +1505,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
             univs       =[];
             binders     =binders;
             signature   =snd (sub ([], ed.signature));
-            ret         =sub ed.ret;
+            ret_wp         =sub ed.ret_wp;
             bind_wp     =sub ed.bind_wp;
             if_then_else=sub ed.if_then_else;
             ite_wp      =sub ed.ite_wp;
@@ -1514,7 +1514,12 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
             assert_p    =sub ed.assert_p;
             assume_p    =sub ed.assume_p;
             null_wp     =sub ed.null_wp;
-            trivial     =sub ed.trivial
+            trivial     =sub ed.trivial;
+
+            repr        = Syntax.tun;
+            bind_repr   = ([], Syntax.tun);
+            return_repr = ([], Syntax.tun);
+            actions     = [];
     } in
     let se = Sig_new_effect(ed, d.drange) in
     let env = push_sigelt env0 se in
@@ -1534,7 +1539,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           univs       = [];
           binders     = binders;
           signature   = eff_k;
-          ret         = lookup "return";
+          ret_wp         = lookup "return";
           bind_wp     = lookup "bind_wp";
           if_then_else= dummy_tscheme;
           ite_wp      = lookup "ite_wp";
@@ -1543,7 +1548,11 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           assert_p    = dummy_tscheme;
           assume_p    = dummy_tscheme;
           null_wp     = lookup "null_wp";
-          trivial     = dummy_tscheme
+          trivial     = dummy_tscheme;
+          repr        = Syntax.tun;
+          bind_repr   = ([], Syntax.tun);
+          return_repr = ([], Syntax.tun);
+          actions     = [];
       }, d.drange))
 
   | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
@@ -1556,7 +1565,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           univs       = [];
           binders     = binders;
           signature   = eff_k;
-          ret         = lookup "return";
+          ret_wp         = lookup "return";
           bind_wp     = lookup "bind_wp";
           if_then_else= lookup "if_then_else";
           ite_wp      = lookup "ite_wp";
@@ -1565,7 +1574,11 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           assert_p    = lookup "assert_p";
           assume_p    = lookup "assume_p";
           null_wp     = lookup "null_wp";
-          trivial     = lookup "trivial"
+          trivial     = lookup "trivial";
+          repr        = Syntax.tun;
+          bind_repr   = ([], Syntax.tun);
+          return_repr = ([], Syntax.tun);
+          actions     = [];
       }, d.drange))
 
   | SubEffect l ->
