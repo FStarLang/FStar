@@ -34,16 +34,19 @@ type l_True = c_True
 
 type l_False = c_False
 
+(* another singleton type, with its only inhabitant written '()'
+   we assume it is primitive, for convenient interop with other languages *)
+assume new type unit : Type0
+assume HasEq_unit: hasEq unit
+
+(* A coercion down to universe 0 *)
+type squash (p:Type) : Type0 = x:unit{p}
+
 (* An SMT-pattern to control unfolding inductives;
    In a proof, you can say `allow_inversion (option a)`
    to allow the SMT solver. cf. allow_inversion below
  *)
 let inversion (a:Type) = True
-
-(* another singleton type, with its only inhabitant written '()'
-   we assume it is primitive, for convenient interop with other languages *)
-assume new type unit : Type0
-assume HasEq_unit: hasEq unit
 
 (*
    infix binary '==';
@@ -67,7 +70,7 @@ type c_and  (p:Type) (q:Type) =
   | And   : p -> q -> c_and p q
 
 (* '/\'  : specialized to Type#0 *)
-type l_and (p:Type0) (q:Type0) = c_and p q
+type l_and (p:Type0) (q:Type0) = squash (c_and p q)
 
 (* constructive disjunction *)
 type c_or   (p:Type) (q:Type) =
@@ -75,10 +78,10 @@ type c_or   (p:Type) (q:Type) =
   | Right : q -> c_or p q
 
 (* '\/'  : specialized to Type#0 *)
-type l_or (p:Type0) (q:Type0) = c_or p q
+type l_or (p:Type0) (q:Type0) = squash (c_or p q)
 
 (* '==>' : specialized to Type#0 *)
-type l_imp (p:Type0) (q:Type0) = p -> GTot q
+type l_imp (p:Type0) (q:Type0) = squash (p -> GTot q)
                                          (* ^^^ NB: The Tot effect is primitive;            *)
 				         (*         elaborated using PURE a few lines below *)
 (* infix binary '<==>' *)
@@ -94,9 +97,6 @@ assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
 
 (* internalizing the typing relation for the SMT encoding: (has_type x t) *)
 assume type has_type : #a:Type -> a -> Type -> Type0
-
-(* A coercion down to universe 0 *)
-type squash (p:Type) = x:unit{p}
   
 (* forall (x:a). p x : specialized to Type#0 *)
 type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
