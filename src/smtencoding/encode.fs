@@ -1388,7 +1388,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         else binders, body, formals, tres
                      
                      | Tm_refine(x, _) -> 
-                       aux true x.sort
+                       aux norm x.sort
 
                      | _ when not norm -> //have another go, after unfolding all definitions
                        let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.WHNF; N.UnfoldUntil Delta_constant; N.EraseUniverses] env.tcenv t_norm in
