@@ -29,6 +29,9 @@ effect_definition {
       ; left_unit  = lemma_left_unit  // : a:Type -> x:a -> f:(a -> ST b) -> Lemma (bind (return x) f = f x) = ... proof ...
       ; assoc      = lemma_assoc // a:Type -> b:Type -> c:Type -> f:ST a -> g:(a -> ST b) -> h:(b -> ST c) -> Lemma
 				 //(bind f (fun x -> bind (g x) h) = bind (bind f g) h) = ... proof ...
+  allowing 
+        reify
+      ; reflect
 }
 
 sub_effect {
