@@ -46,7 +46,7 @@ sub_effect {
 ////////////////////////////////////////////////////////////////////////////////
 //What follows is to be produced by a * and elaboration transformation of the definitions above
 ////////////////////////////////////////////////////////////////////////////////
-new_effect { 
+reifiable reflectable new_effect { 
   ST : a:Type -> wp:st_wp a -> Effect
   with //repr is new; it's the reprentation of ST as a value type
        repr (a:Type) (wp:pure_wp a) = n0:nat -> PURE (a * nat) (fun post -> wp (fun a n -> post (a, n)) n0)
@@ -76,9 +76,6 @@ new_effect {
     //these are new
       get  = fun (_:unit) : repr nat (fun post n0 -> post (n0, n0)) -> fun n0 -> (n0, n0)
     ; put  = fun (x:nat) : repr unit (fun post n0 -> post ((), x)) -> fun n0 -> ((), x)   
-  and coercions 
-       reify        
-     ; reflect 
 }
 
 sub_effect PURE ~> STATE {

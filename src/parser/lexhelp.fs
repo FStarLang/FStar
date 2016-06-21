@@ -134,6 +134,7 @@ type compatibilityMode =
 
 let keywords =
   [ ALWAYS, "abstract"   ,ABSTRACT;
+    ALWAYS, "actions"    ,ACTIONS;
     ALWAYS, "and"        ,AND;
     ALWAYS, "as"         ,AS;
     ALWAYS, "assert"     ,ASSERT;
@@ -174,6 +175,8 @@ let keywords =
     ALWAYS, "private"    ,PRIVATE;
     FSHARP, "public"     ,PUBLIC;
     ALWAYS, "rec"        ,REC;
+    ALWAYS, "reifiable"  ,REIFIABLE;
+    ALWAYS, "reflectable",REFLECTABLE;    
     ALWAYS, "requires"   ,REQUIRES;
     ALWAYS, "sub_effect" ,SUB_EFFECT;
     ALWAYS, "then"       ,THEN;

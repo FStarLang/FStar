@@ -1486,6 +1486,8 @@ let trans_qual r = function
   | AST.TotalEffect -> TotalEffect
   | AST.DefaultEffect -> DefaultEffect None
   | AST.Effect -> Effect
+  | AST.Reflectable
+  | AST.Reifiable
   | AST.Inline 
   | AST.Irreducible 
   | AST.Unfoldable -> raise (Error("This qualifier is supported only with the --universes option", r))
@@ -1622,7 +1624,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     | _ -> raise (Error((Print.typ_to_string head) ^ " is not an effect", d.drange))
     end
 
-  | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
+  | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, _actions)) ->
     let env0 = env in
     let env = DesugarEnv.enter_monad_scope env eff_name in
     let env, binders = desugar_binders env eff_binders in

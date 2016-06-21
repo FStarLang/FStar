@@ -50,6 +50,8 @@ let trans_qual r = function
   | AST.New  ->          S.New
   | AST.Abstract ->      S.Abstract
   | AST.Opaque ->        FStar.TypeChecker.Errors.warn r "The 'opaque' qualifier is deprecated; use 'unfoldable', which is also the default"; S.Unfoldable 
+  | AST.Reflectable ->   S.Reflect
+  | AST.Reifiable ->     S.Reify
   | AST.DefaultEffect -> raise (Error("The 'default' qualifier on effects is no longer supported", r))
   
 let trans_pragma = function
@@ -1528,7 +1530,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
   | NewEffectForFree (RedefineEffect _) ->
     failwith "impossible"
 
-  | NewEffectForFree (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
+  | NewEffectForFree (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, _actions)) ->
     desugar_effect
       env d [] eff_name eff_binders eff_kind eff_decls
       (fun mname qualifiers binders eff_k lookup ->
@@ -1539,7 +1541,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           univs       = [];
           binders     = binders;
           signature   = eff_k;
-          ret_wp         = lookup "return";
+          ret_wp      = lookup "return";
           bind_wp     = lookup "bind_wp";
           if_then_else= dummy_tscheme;
           ite_wp      = lookup "ite_wp";
@@ -1555,7 +1557,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           actions     = [];
       }, d.drange))
 
-  | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
+  | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, _actions)) ->
     desugar_effect
       env d quals eff_name eff_binders eff_kind eff_decls
       (fun mname qualifiers binders eff_k lookup ->
@@ -1565,7 +1567,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           univs       = [];
           binders     = binders;
           signature   = eff_k;
-          ret_wp         = lookup "return";
+          ret_wp      = lookup "return";
           bind_wp     = lookup "bind_wp";
           if_then_else= lookup "if_then_else";
           ite_wp      = lookup "ite_wp";

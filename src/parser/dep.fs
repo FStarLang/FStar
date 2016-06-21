@@ -296,10 +296,11 @@ let collect_one (original_map: map) (filename: string): list<string> =
         List.iter (fun (_, t, _) -> iter_opt t collect_term) identterms
 
   and collect_effect_decl = function
-    | DefineEffect (_, binders, t, decls) ->
+    | DefineEffect (_, binders, t, decls, actions) ->
         collect_binders binders;
         collect_term t;
-        collect_decls decls
+        collect_decls decls;
+        collect_decls actions
     | RedefineEffect (_, binders, t) ->
         collect_binders binders;
         collect_term t

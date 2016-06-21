@@ -124,6 +124,8 @@ type qualifier =
   | Inline                                 //a definition that *should* always be unfolded by the normalizer
   | Unfoldable                             //a definition that may be unfolded by the normalizer, but only if necessary (default)
   | Irreducible                            //a definition that can never be unfolded by the normalizer
+  | Reifiable
+  | Reflectable
   //old qualifiers
   | Opaque
   | Logic
@@ -159,7 +161,7 @@ type decl' =
   | Pragma of pragma
 and decl = {d:decl'; drange:range}
 and effect_decl =
-  | DefineEffect   of ident * list<binder> * term * list<decl>
+  | DefineEffect   of ident * list<binder> * term * list<decl> * list<decl>
   | RedefineEffect of ident * list<binder> * term
 
 type modul =
@@ -429,9 +431,9 @@ let decl_to_string (d:decl) = match d.d with
   | Tycon(_, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
   | Val(_, i, _) -> "val " ^ i.idText
   | Exception(i, _) -> "exception " ^ i.idText
-  | NewEffect(_, DefineEffect(i, _, _, _)) 
+  | NewEffect(_, DefineEffect(i, _, _, _, _)) 
   | NewEffect(_, RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | NewEffectForFree(DefineEffect(i, _, _, _)) 
+  | NewEffectForFree(DefineEffect(i, _, _, _, _)) 
   | NewEffectForFree(RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
