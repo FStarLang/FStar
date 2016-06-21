@@ -241,6 +241,12 @@ let sub #a (b:buffer a) (i:u32) (len:u32{v len <= length b /\ v i + v len <= len
      (ensures (fun h0 b' h1 -> content b = content b' /\ idx b' = idx b + v i /\ length b' = v len /\ (h0 == h1)))
   = {content = b.content; idx = i +^ b.idx; length = len}
 
+let offset #a (b:buffer a) (i:u32) : STL (buffer a)
+  (requires (fun h -> live h b))
+  (ensures (fun h0 b' h1 -> content b' = content b /\ idx b' = idx b + v i /\ length b' = length b - v i
+    /\ h0 == h1))
+  = {content = b.content; idx = i +^ b.idx; length = b.length -^ i}
+
 let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem): Lemma
   (requires (modifies_one (frameOf b) h0 h1 /\ modifies_one (frameOf b) h1 h2))
   (ensures (modifies_one (frameOf b) h0 h2))
@@ -312,11 +318,6 @@ val split: #a:Type -> a:buffer t -> i:u32{v i <= length a} -> ST (buffer t * buf
       /\ disjoint (fst b) (snd b)  /\ content (fst b) = content a /\ content (snd b) = content a))
 let split #t a i = 
   let a1 = sub a (uint_to_t 0) i in let a2 = sub a i (a.length -^ i) in a1, a2
-
-val offset: #a:Type -> a:buffer t -> i:u32{v i <= length a} -> STL (buffer t)
-  (requires (fun h -> live h a))
-  (ensures (fun h0 a' h1 -> h0 == h1 /\ content a' = content a /\ idx a' = idx a + v i /\ length a' = length a - v i))
-let offset #t a i = {content = a.content; idx = i +^ a.idx; length = a.length -^ i}
 
 private val of_seq_aux: #a:Type -> s:bounded_seq a -> l:u32{v l = Seq.length s} -> ctr:u32{v ctr <= v l} -> b:buffer a{idx b = 0 /\ length b = v l} -> STL unit
     (requires (fun h -> live h b))

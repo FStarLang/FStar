@@ -152,3 +152,6 @@ let op_Greater_Hat = gt
 let op_Greater_Equal_Hat = gte
 let op_Less_Hat = gt
 let op_Less_Equal_Hat = gte
+
+assume val of_string: string -> Tot t
+assume val to_string: t -> Tot string

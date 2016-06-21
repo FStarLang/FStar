@@ -2,11 +2,11 @@ open Chacha
 open Char
 open FStar_Buffer
        
-let key = {content = Array.init 32 (fun x -> (FStar_UInt8.uint_to_t x)); idx = 0; length = 32 }
+let key = {content = Array.init 32 (fun x -> x); idx = 0; length = 32 }
 
 let nonce =
   let n = create FStar_UInt8.zero 12 in
-  upd n 7 (FStar_UInt8.uint_to_t 0x4a);
+  upd n 7 0x4a;
   n
 
 let counter = FStar_UInt32.one
@@ -14,14 +14,14 @@ let counter = FStar_UInt32.one
 let from_string s =
   let b = create FStar_UInt8.zero (String.length s) in
   for i = 0 to (String.length s - 1) do
-    upd b i (FStar_UInt8.uint_to_t (code (String.get s i)))
+    upd b i (code (String.get s i))
   done;
   b
                 
 let print (b:bytes) =
   let s = ref "" in
   for i = 0 to b.length - 1 do
-    let s' = Printf.sprintf "%X" (FStar_UInt8.to_int (index b i))  in
+    let s' = Printf.sprintf "%X" ((index b i))  in
     let s' = if String.length s' = 1 then "0" ^ s' else s' in 
     s := !s ^ s';
   done;

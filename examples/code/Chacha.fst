@@ -47,7 +47,7 @@ val quarter_round:
     (requires (fun h -> live h m)) 
     (ensures (fun h0 _ h1 -> live h1 m 
       /\ modifies_one (frameOf m) h0 h1
-      /\ modifies_buf (frameOf m) (only m) Set.empty h0 h1))
+      /\ modifies_buf (frameOf m) (only m)h0 h1))
 let quarter_round m a b c d =
   upd m a (index m a +%^ index m b); 
   upd m d (index m d ^^ index m a);
@@ -72,7 +72,7 @@ val column_round: m:uint32s{length m = 16} -> ST unit
     (requires (fun h -> live h m))
     (ensures (fun h0 _ h1 -> live h1 m 
       /\ modifies_one (frameOf m) h0 h1
-      /\ modifies_buf (frameOf m) (only m) Set.empty h0 h1 ))
+      /\ modifies_buf (frameOf m) (only m) h0 h1 ))
 let column_round m =
   quarter_round m 0ul 4ul 8ul 12ul;
   quarter_round m 1ul 5ul 9ul 13ul;
@@ -83,7 +83,7 @@ val diagonal_round: m:uint32s{length m = 16} -> ST unit
     (requires (fun h -> live h m))
     (ensures (fun h0 _ h1 -> live h1 m
       /\ modifies_one (frameOf m) h0 h1
-      /\ modifies_buf (frameOf m) (only m) Set.empty h0 h1))
+      /\ modifies_buf (frameOf m) (only m) h0 h1))
 let diagonal_round m =
   quarter_round m 0ul 5ul 10ul 15ul;
   quarter_round m 1ul 6ul 11ul 12ul;
@@ -117,7 +117,7 @@ val bytes_of_uint32s: output:bytes -> m:uint32s{disjoint output m} -> len:u32{op
   (requires (fun h -> live h output /\ live h m))
   (ensures (fun h0 _ h1 -> live h0 output /\ live h0 m /\ live h1 output /\ live h1 m
     /\ modifies_one (frameOf output) h0 h1
-    /\ modifies_buf (frameOf output) (only output) Set.empty h0 h1 ))
+    /\ modifies_buf (frameOf output) (only output) h0 h1 ))
 let rec bytes_of_uint32s output m len =
   if len =^ 0ul then ()
   else 
@@ -143,7 +143,7 @@ val xor_bytes: output:bytes -> in1:bytes -> in2:bytes{disjoint in1 in2 /\ disjoi
   (ensures  (fun h0 _ h1 -> live h0 output /\ live h0 in1 /\ live h0 in2 
     /\ live h1 output /\ live h1 in1 /\ live h1 in2
     /\ modifies_one (frameOf output) h0 h1
-    /\ modifies_buf (frameOf output) (only output) Set.empty h0 h1
+    /\ modifies_buf (frameOf output) (only output) h0 h1
     /\ (forall (i:nat). i < v len ==> get h1 output i = (UInt8.logxor (get h0 in1 i) (get h0 in2 i))) ))
 let rec xor_bytes output in1 in2 len =
   if len =^ 0ul then ()
@@ -161,7 +161,7 @@ val initialize_state: state:uint32s{length state = 16} -> key:bytes{length key =
   (requires (fun h -> live h state /\ live h key /\ live h nonce))
   (ensures (fun h0 _ h1 -> live h1 state
     /\ modifies_one (frameOf state) h0 h1
-    /\ modifies_buf (frameOf state) (only state) Set.empty h0 h1))
+    /\ modifies_buf (frameOf state) (only state) h0 h1))
 let initialize_state state key counter nonce =
   (* Constant part *)
   upd state 0ul (of_string "0x61707865");
@@ -207,7 +207,7 @@ let initialize_state state key counter nonce =
 
 val sum_matrixes: new_state:uint32s{length new_state = 16} -> old_state:uint32s{length old_state = 16 /\ disjoint new_state old_state} -> ST unit
   (requires (fun h -> live h new_state /\ live h old_state))
-  (ensures (fun h0 _ h1 -> live h1 new_state /\ modifies_buf (frameOf new_state) (only new_state) Set.empty h0 h1))
+  (ensures (fun h0 _ h1 -> live h1 new_state /\ modifies_buf (frameOf new_state) (only new_state) h0 h1))
 let sum_matrixes m m0 =
   upd m 0ul (index m 0ul +%^ index m0 0ul); 
   upd m 1ul (index m 1ul +%^ index m0 1ul);
@@ -245,7 +245,7 @@ let chacha20_block output m key counter nonce =
   (* Initial state *) 
   let m0 = create 0ul 16ul in
   blit m 0ul m0 0ul 16ul;
-    let h1' = HST.get() in cut (modifies_buf (frameOf m) (only m) Set.empty h0 h1 /\ modifies_buf h1.tip Set.empty Set.empty h1 h1'); 
+    let h1' = HST.get() in cut (modifies_buf (frameOf m) (only m) h0 h1 /\ modifies_buf h1.tip Set.empty h1 h1'); 
   (* 20 rounds *)
   column_round m; diagonal_round m; 
   column_round m; diagonal_round m;
@@ -258,7 +258,7 @@ let chacha20_block output m key counter nonce =
   column_round m; diagonal_round m;
   column_round m; diagonal_round m; 
     let h2 = HST.get() in
-    cut (live h2 m /\ modifies_buf (frameOf m) (only m) Set.empty h0 h2); 
+    cut (live h2 m /\ modifies_buf (frameOf m) (only m) h0 h2); 
   (* Sum the matrixes *)
   sum_matrixes m m0;
     let h3 = HST.get() in 
@@ -335,7 +335,7 @@ val chacha20_encrypt:
     (requires (fun h -> live h ciphertext /\ live h key /\ live h nonce /\ live h plaintext))
     (ensures (fun h0 _ h1 -> live h1 ciphertext 
       /\ modifies_one (frameOf ciphertext) h0 h1
-      /\ modifies_buf (frameOf ciphertext) (only ciphertext) Set.empty h0 h1))
+      /\ modifies_buf (frameOf ciphertext) (only ciphertext) h0 h1))
 let chacha20_encrypt ciphertext key counter nonce plaintext len = 
   push_frame ();
   let h0 = HST.get() in
@@ -353,7 +353,7 @@ let chacha20_encrypt ciphertext key counter nonce plaintext len =
   chacha20_encrypt_loop state key counter nonce plaintext ciphertext 0ul max; 
     (** Lemmas **)
     let h2 = HST.get() in
-    modifies_fresh h0 h2 (only ciphertext) Set.empty state;
+    modifies_fresh h0 h2 (only ciphertext) state;
     (** End lemmas **)
   if rem =^ 0ul then 
     begin
@@ -386,10 +386,10 @@ let chacha20_encrypt ciphertext key counter nonce plaintext len =
 	(** Lemmas **)
 	let h4 = HST.get() in 
 	aux_lemma'' state cipher_block;
-	modifies_fresh h2 h3 (only state) Set.empty cipher_block; 
+	modifies_fresh h2 h3 (only state) cipher_block; 
 	(* modifies_subbuffer_lemma h3 h4 empty cipher_block' ciphertext;  *)
 	empty_lemma ciphertext;
-	modifies_fresh h0 h4 (only ciphertext) Set.empty state
+	modifies_fresh h0 h4 (only ciphertext) state
 	(** End lemmas **)	
     end;
     pop_frame ()
