@@ -12,13 +12,13 @@ matrix:
       rvm: system
 
 before_install:
-  - ./ci/before_install.sh
+  - ./.ci/before_install.sh
 
 install:
-  - ./ci/install.sh
+  - ./.ci/install.sh
 
 script:
-  - ./ci/script.sh
+  - ./.ci/script.sh
 
 notifications:
   slack:
