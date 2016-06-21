@@ -35,21 +35,21 @@ let aux_lemma'' #t a #t' a' = ()
 val empty_lemma: #t:Type -> b:buffer t -> Lemma (Set.equal (empty ++ b) (only b))
 let empty_lemma #t b = ()
 
-let op_Greater_Greater_Greater (a:u32) (s:u32{v s <= 32}) = 
-  (op_Greater_Greater_Hat a s) |^ (a <<^ (32ul -^ s))
+let op_Greater_Greater_Greater (a:u32) (s:u32{v s <= 32}) =
+  let (m:u32{v m = 32}) = 32ul in
+  (op_Greater_Greater_Hat a s) |^ (a <<^ (m -^ s))
 
-let op_Less_Less_Less (a:u32) (s:u32{v s <= 32}) = 
-  (op_Less_Less_Hat a s) |^ (op_Greater_Greater_Hat a (32ul -^ s))
+let op_Less_Less_Less (a:u32) (s:u32{v s <= 32}) =
+  let (m:u32{v m = 32}) = 32ul in  
+  (op_Less_Less_Hat a s) |^ (op_Greater_Greater_Hat a (m -^ s))
 
 (* Chacha 20 code *)
-val quarter_round: 
-  m:uint32s{length m = 16} -> a:u32{v a < 16} -> b:u32{v b<16} -> c:u32{v c<16} -> d:u32{v d<16} -> ST unit 
-    (requires (fun h -> live h m)) 
-    (ensures (fun h0 _ h1 -> live h1 m 
-      /\ modifies_one (frameOf m) h0 h1
-      /\ modifies_buf (frameOf m) (only m)h0 h1))
+val quarter_round: m:uint32s{length m = 16} -> 
+  a:u32{v a < 16} -> b:u32{v b<16} -> c:u32{v c<16} -> d:u32{v d<16} -> ST unit 
+  (requires (fun h -> live h m)) 
+  (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1))
 let quarter_round m a b c d =
-  upd m a (index m a +%^ index m b); 
+  upd m a (index m a +%^ index m b);
   upd m d (index m d ^^ index m a);
   let (tmp:u32) = index m d in 
   upd m d (tmp <<< UInt32.uint_to_t 16); 
@@ -64,15 +64,12 @@ let quarter_round m a b c d =
   upd m c (index m c +%^ index m d); 
   upd m b (index m b ^^ index m c); 
   let tmp = index m b in
-  upd m b (tmp <<< UInt32.uint_to_t 7);
-  ()
+  upd m b (tmp <<< UInt32.uint_to_t 7)
  
 (* Chacha20 block function *)
 val column_round: m:uint32s{length m = 16} -> ST unit
     (requires (fun h -> live h m))
-    (ensures (fun h0 _ h1 -> live h1 m 
-      /\ modifies_one (frameOf m) h0 h1
-      /\ modifies_buf (frameOf m) (only m) h0 h1 ))
+    (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1 ))
 let column_round m =
   quarter_round m 0ul 4ul 8ul 12ul;
   quarter_round m 1ul 5ul 9ul 13ul;
@@ -81,9 +78,7 @@ let column_round m =
 
 val diagonal_round: m:uint32s{length m = 16} -> ST unit
     (requires (fun h -> live h m))
-    (ensures (fun h0 _ h1 -> live h1 m
-      /\ modifies_one (frameOf m) h0 h1
-      /\ modifies_buf (frameOf m) (only m) h0 h1))
+    (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1 ))
 let diagonal_round m =
   quarter_round m 0ul 5ul 10ul 15ul;
   quarter_round m 1ul 6ul 11ul 12ul;
@@ -113,11 +108,15 @@ let op_Hat_Star = op_Star_Hat
 
 #reset-options "--z3timeout 20"
 
+// Needs to be instanciated differently
+assume MaxUint32: FStar.UInt.max_int 32 = 4294967295
+
 val bytes_of_uint32s: output:bytes -> m:uint32s{disjoint output m} -> len:u32{op_Multiply 4 (v len)<=length output /\ v len<=length m} -> STL unit
   (requires (fun h -> live h output /\ live h m))
   (ensures (fun h0 _ h1 -> live h0 output /\ live h0 m /\ live h1 output /\ live h1 m
-    /\ modifies_one (frameOf output) h0 h1
-    /\ modifies_buf (frameOf output) (only output) h0 h1 ))
+    /\ modifies_1 output h0 h1 ))
+    (* /\ modifies_one (frameOf output) h0 h1 *)
+    (* /\ modifies_buf (frameOf output) (only output) h0 h1 )) *)
 let rec bytes_of_uint32s output m len =
   if len =^ 0ul then ()
   else 
@@ -136,24 +135,30 @@ let rec bytes_of_uint32s output m len =
       bytes_of_uint32s output m l
     end
 
-#set-options "--lax" // TODO
+(* #set-options "--lax" // TODO *)
+#reset-options
 
 val xor_bytes: output:bytes -> in1:bytes -> in2:bytes{disjoint in1 in2 /\ disjoint in1 output /\ disjoint in2 output} -> len:u32{v len <= length output /\ v len <= length in1 /\ v len <= length in2} -> STL unit
   (requires (fun h -> live h output /\ live h in1 /\ live h in2))
   (ensures  (fun h0 _ h1 -> live h0 output /\ live h0 in1 /\ live h0 in2 
     /\ live h1 output /\ live h1 in1 /\ live h1 in2
-    /\ modifies_one (frameOf output) h0 h1
-    /\ modifies_buf (frameOf output) (only output) h0 h1
-    /\ (forall (i:nat). i < v len ==> get h1 output i = (UInt8.logxor (get h0 in1 i) (get h0 in2 i))) ))
+    /\ modifies_1 output h0 h1 ))
+    (* /\ modifies_one (frameOf output) h0 h1 *)
+    (* /\ modifies_buf (frameOf output) (only output) h0 h1 *)
+    (* /\ (forall (i:nat). i < v len ==> get h1 output i = (UInt8.logxor (get h0 in1 i) (get h0 in2 i))) )) *)
 let rec xor_bytes output in1 in2 len =
+  let h0 = HST.get() in
   if len =^ 0ul then ()
-  else 
+  else
     begin
       let i = len -^ 1ul in 
       let in1i = index in1 i in
       let in2i = index in2 i in
       let oi = UInt8.logxor in1i in2i in
       upd output i oi; 
+      let h1 = HST.get() in
+      no_upd_lemma_1 h0 h1 output in1;
+      no_upd_lemma_1 h0 h1 output in2;
       xor_bytes output in1 in2 i
     end
 
