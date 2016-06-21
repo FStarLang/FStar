@@ -5967,7 +5967,7 @@ in ()))
 end else begin
 ()
 end
-in if (((not ((FStar_Ident.lid_equals env.FStar_TypeChecker_Env.curmodule FStar_Syntax_Const.prims_lid))) && (not (is_noeq))) && ((FStar_List.length tcs) > 0)) then begin
+in if ((((not ((FStar_Options.nohaseq ()))) && (not ((FStar_Ident.lid_equals env.FStar_TypeChecker_Env.curmodule FStar_Syntax_Const.prims_lid)))) && (not (is_noeq))) && ((FStar_List.length tcs) > 0)) then begin
 (
 
 let us = (

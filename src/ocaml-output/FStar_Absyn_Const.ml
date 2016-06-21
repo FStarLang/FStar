@@ -298,6 +298,15 @@ let set_singleton : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::("sing
 let set_union : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Set")::("union")::[]))
 
 
+let tset_empty : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("TSet")::("empty")::[]))
+
+
+let tset_singleton : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("TSet")::("singleton")::[]))
+
+
+let tset_union : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("TSet")::("union")::[]))
+
+
 let effect_PURE_lid : FStar_Absyn_Syntax.lident = (pconst "PURE")
 
 
