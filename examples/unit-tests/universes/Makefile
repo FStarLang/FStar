@@ -11,20 +11,22 @@ include ../../Makefile.include
 
 NEGFILES=NegativeTests.BST.fst     NegativeTests.Heap.fst  NegativeTests.ShortCircuiting.fst \
 	 NegativeTests.Bug260.fst  NegativeTests.Neg.fst   NegativeTests.Termination.fst \
-	 NegativeTests.False.fst   NegativeTests.Set.fst
+	 NegativeTests.False.fst   NegativeTests.Set.fst   NegativeTests.ImplicitFalse.fst
 
 
 # if the `--lax` flag is used, negative tests will report a single error.
 ifeq ($(filter $(OTHERFLAGS),--lax),)
-NEGTESTS=31
+NEGTESTS=32
 else
-NEGTESTS= 
+NEGTESTS=1
 endif
 
 all: all-pos all-neg
 
-all-pos: 
-	$(FSTAR) $(VERFILES) --universes
+all-pos: $(addsuffix -ver, $(VERFILES))
+
+%.fst-ver: %.fst
+	$(FSTAR) --universes $^
 
 basictests: $(VERFILES)
 	$(FSTAR) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^

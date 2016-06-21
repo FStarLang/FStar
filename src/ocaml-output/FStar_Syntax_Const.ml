@@ -85,6 +85,15 @@ let int64_lid : FStar_Ident.lident = (p2l (("FStar")::("Int64")::("t")::[]))
 let uint64_lid : FStar_Ident.lident = (p2l (("FStar")::("UInt64")::("t")::[]))
 
 
+let salloc_lid : FStar_Ident.lident = (p2l (("FStar")::("HST")::("salloc")::[]))
+
+
+let swrite_lid : FStar_Ident.lident = (p2l (("FStar")::("HST")::("op_Colon_Equals")::[]))
+
+
+let sread_lid : FStar_Ident.lident = (p2l (("FStar")::("HST")::("op_Bang")::[]))
+
+
 let float_lid : FStar_Ident.lident = (p2l (("FStar")::("Float")::("float")::[]))
 
 
@@ -94,34 +103,34 @@ let char_lid : FStar_Ident.lident = (p2l (("FStar")::("Char")::("char")::[]))
 let heap_lid : FStar_Ident.lident = (p2l (("FStar")::("Heap")::("heap")::[]))
 
 
-let kunary : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun k k' -> (let _124_15 = (let _124_14 = (let _124_13 = (let _124_11 = (FStar_Syntax_Syntax.null_binder k)
-in (_124_11)::[])
-in (let _124_12 = (FStar_Syntax_Syntax.mk_Total k')
-in (_124_13, _124_12)))
-in FStar_Syntax_Syntax.Tm_arrow (_124_14))
-in (mk _124_15)))
+let kunary : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun k k' -> (let _125_15 = (let _125_14 = (let _125_13 = (let _125_11 = (FStar_Syntax_Syntax.null_binder k)
+in (_125_11)::[])
+in (let _125_12 = (FStar_Syntax_Syntax.mk_Total k')
+in (_125_13, _125_12)))
+in FStar_Syntax_Syntax.Tm_arrow (_125_14))
+in (mk _125_15)))
 
 
-let kbin : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun k1 k2 k' -> (let _124_28 = (let _124_27 = (let _124_26 = (let _124_24 = (FStar_Syntax_Syntax.null_binder k1)
-in (let _124_23 = (let _124_22 = (FStar_Syntax_Syntax.null_binder k2)
-in (_124_22)::[])
-in (_124_24)::_124_23))
-in (let _124_25 = (FStar_Syntax_Syntax.mk_Total k')
-in (_124_26, _124_25)))
-in FStar_Syntax_Syntax.Tm_arrow (_124_27))
-in (mk _124_28)))
+let kbin : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun k1 k2 k' -> (let _125_28 = (let _125_27 = (let _125_26 = (let _125_24 = (FStar_Syntax_Syntax.null_binder k1)
+in (let _125_23 = (let _125_22 = (FStar_Syntax_Syntax.null_binder k2)
+in (_125_22)::[])
+in (_125_24)::_125_23))
+in (let _125_25 = (FStar_Syntax_Syntax.mk_Total k')
+in (_125_26, _125_25)))
+in FStar_Syntax_Syntax.Tm_arrow (_125_27))
+in (mk _125_28)))
 
 
-let ktern : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun k1 k2 k3 k' -> (let _124_45 = (let _124_44 = (let _124_43 = (let _124_41 = (FStar_Syntax_Syntax.null_binder k1)
-in (let _124_40 = (let _124_39 = (FStar_Syntax_Syntax.null_binder k2)
-in (let _124_38 = (let _124_37 = (FStar_Syntax_Syntax.null_binder k3)
-in (_124_37)::[])
-in (_124_39)::_124_38))
-in (_124_41)::_124_40))
-in (let _124_42 = (FStar_Syntax_Syntax.mk_Total k')
-in (_124_43, _124_42)))
-in FStar_Syntax_Syntax.Tm_arrow (_124_44))
-in (mk _124_45)))
+let ktern : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun k1 k2 k3 k' -> (let _125_45 = (let _125_44 = (let _125_43 = (let _125_41 = (FStar_Syntax_Syntax.null_binder k1)
+in (let _125_40 = (let _125_39 = (FStar_Syntax_Syntax.null_binder k2)
+in (let _125_38 = (let _125_37 = (FStar_Syntax_Syntax.null_binder k3)
+in (_125_37)::[])
+in (_125_39)::_125_38))
+in (_125_41)::_125_40))
+in (let _125_42 = (FStar_Syntax_Syntax.mk_Total k')
+in (_125_43, _125_42)))
+in FStar_Syntax_Syntax.Tm_arrow (_125_44))
+in (mk _125_45)))
 
 
 let true_lid : FStar_Ident.lident = (pconst "l_True")

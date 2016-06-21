@@ -99,4 +99,5 @@ val unzip3T : (list (Tuple3 '_40328 '_40327 '_40326)) -> Tot (Tuple3 (list '_403
    polymorphic comparison. *)
 val unique: list 'a -> list 'a
 val splitAt: nat -> list 'a -> (list 'a * list 'a)
-val map_flatten: ('a -> list 'b) -> list 'a -> list 'b
+val filter_map: ('a -> option 'b) -> list 'a -> list 'b
+val index: ('a -> bool) -> list 'a -> int

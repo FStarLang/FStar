@@ -649,10 +649,6 @@ let print_endline = print_endline
 
 let map_option f opt = BatOption.map f opt
 
-let format_value_file_name (prefix:string) =
-  (* we use different suffixes for F# and OCaml because they use incompatible encodings of values. *)
-  format1 "%s.mlval" prefix
-
 let save_value_to_file (fname:string) value =
   BatFile.with_file_out 
     fname
@@ -669,6 +665,9 @@ let load_value_from_file (fname:string) =
   | _ ->
     None
 
+let print_exn e =
+  Printexc.to_string e
+
 let digest_of_file (fname:string) =
   BatDigest.file fname
   
@@ -676,3 +675,87 @@ let digest_of_string (s:string) =
   BatDigest.string s
 
 let ensure_decimal s = Z.to_string (Z.of_string s)
+
+
+(** Hints. *)
+type hint = {
+    fuel:int;
+    ifuel:int;
+    unsat_core: string list option;
+    query_elapsed_time:int
+}
+
+type hints = hint option list
+
+type hints_db = {
+    module_digest:string;
+    hints: hints
+}
+
+let write_hints (filename: string) (hints: hints_db): unit =
+  let json = `List [
+    `String hints.module_digest;
+    `List (List.map (function
+      | None -> `Null
+      | Some { fuel; ifuel; unsat_core; query_elapsed_time } ->
+          `List [
+            `Int fuel;
+            `Int ifuel;
+            (match unsat_core with
+            | None -> `Null
+            | Some strings ->
+                `List (List.map (fun s -> `String s) strings));
+            `Int query_elapsed_time
+          ]
+    ) hints.hints)
+  ] in
+  Yojson.Safe.pretty_to_channel (open_out filename) json
+
+let read_hints (filename: string): hints_db option =
+  try
+    let json = Yojson.Safe.from_channel (open_in filename) in
+    Some (match json with
+    | `List [
+        `String module_digest;
+        `List hints
+      ] ->
+        {
+          module_digest; 
+          hints = List.map (function
+            | `Null -> None
+            | `List [
+                `Int fuel;
+                `Int ifuel;
+                unsat_core;
+                `Int query_elapsed_time
+              ] ->
+                Some {
+                  fuel;
+                  ifuel;
+                  unsat_core = begin match unsat_core with
+                    | `Null ->
+                        None
+                    | `List strings ->
+                        Some (List.map (function
+                          | `String s -> s
+                          | _ -> raise Exit
+                        ) strings)
+                    |  _ ->
+                        raise Exit
+                  end;
+                  query_elapsed_time
+                }
+              | _ ->
+                 raise Exit 
+          ) hints
+        }
+    | _ ->
+        raise Exit
+    )
+  with
+   | Exit ->
+      Printf.eprintf "Malformed JSON hints file: %s\n" filename;
+      None
+   | Sys_error _ -> 
+      Printf.eprintf "Unable to open hints file: %s\n" filename;
+      None

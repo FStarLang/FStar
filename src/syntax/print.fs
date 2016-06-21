@@ -230,8 +230,10 @@ let rec term_to_string x =
     begin match lc with 
         | Some (Inl l) when (Options.print_implicits()) -> 
           Util.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| l.comp())
+        | Some (Inr l) when (Options.print_implicits()) -> 
+          Util.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) l.str
         | _ -> 
-         Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
+          Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
     end
   | Tm_refine(xt, f) -> Util.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(t, args) ->  Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
@@ -350,7 +352,10 @@ and comp_to_string c =
                && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
           then Util.format1 "ALL %s" (term_to_string c.result_typ)
           else if (Options.print_effect_args())
-          then Util.format3 "%s (%s) %s" (sli c.effect_name) (term_to_string c.result_typ) (c.effect_args |> List.map arg_to_string |> String.concat ", ")
+          then Util.format3 "%s (%s) %s"
+                    (sli c.effect_name) 
+                    (term_to_string c.result_typ) 
+                    (c.effect_args |> List.map arg_to_string |> String.concat ", ")
           else Util.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
       let dec = c.flags |> List.collect (function DECREASES e -> [Util.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
       Util.format2 "%s%s" basic dec
@@ -379,8 +384,7 @@ let eff_decl_to_string ed =
       ; bind_wp     = %s\n\
       ; if_then_else= %s\n\
       ; ite_wp      = %s\n\
-      ; wp_binop    = %s\n\
-      ; wp_as_type  = %s\n\
+      ; stronger    = %s\n\
       ; close_wp    = %s\n\
       ; assert_p    = %s\n\
       ; assume_p    = %s\n\
@@ -394,8 +398,7 @@ let eff_decl_to_string ed =
          tscheme_to_string ed.bind_wp;
          tscheme_to_string ed.if_then_else;
          tscheme_to_string ed.ite_wp;
-         tscheme_to_string ed.wp_binop;
-         tscheme_to_string ed.wp_as_type;
+         tscheme_to_string ed.stronger;
          tscheme_to_string ed.close_wp;
          tscheme_to_string ed.assert_p;
          tscheme_to_string ed.assume_p;

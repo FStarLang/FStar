@@ -164,6 +164,7 @@ let keywords =
     ALWAYS, "logic"      ,LOGIC;
     ALWAYS, "match"      ,MATCH;
     ALWAYS, "module"     ,MODULE;
+    ALWAYS, "mutable"    ,MUTABLE;
     ALWAYS, "new"        ,NEW;
     ALWAYS, "new_effect" ,NEW_EFFECT;
     ALWAYS, "new_effect_for_free", NEW_EFFECT_FOR_FREE;

@@ -17,7 +17,7 @@ noeq type cexists (#a:Type) (p:a -> Type) =
 // let ex_intro_x #a #p = function
 //   | ExIntro x _ -> x
 
-type ceq (#a:Type) x : y:a -> Type = 
+type ceq (#a:Type) x : a -> Type =
   | Refl : ceq #a x x
 
 type ceq_type a : b:Type -> Type =
@@ -46,7 +46,7 @@ type ctrue =
 type cfalse : Type =
 
 val cfalse_elim : #a:Type -> cfalse -> Tot a
-let cfalse_elim #a f = match f with 
+let cfalse_elim #a f = match f with
 
 val false_elim2 : #a:Type -> cfalse -> Tot a
 let rec false_elim2 #a x = false_elim2 x

@@ -61,3 +61,6 @@ let rec unzip3 l =
 let unique = BatList.unique
 let splitAt = BatList.split_at
 let map_flatten f l = flatten (map f l)
+let filter_map = BatList.filter_map
+let index f l =
+  fst (BatList.findi (fun _ x -> f x) l)

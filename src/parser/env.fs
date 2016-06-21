@@ -37,7 +37,7 @@ type env = {
   open_namespaces:      list<lident>;                     (* fully qualified names, in order of precedence *)
   modul_abbrevs:        list<(ident * lident)>;           (* module X = A.B.C *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
-  localbindings:        list<(ident * bv)>;               (* local name bindings for name resolution, paired with an env-generated unique name *)
+  localbindings:        list<(ident * bv * bool)>;        (* local name bindings for name resolution, paired with an env-generated unique name and a boolean that is true when the variable has been introduced with let-mutable *)
   recbindings:          list<(ident* lid * delta_depth)>; (* names bound by recursive type and top-level let-bindings definitions only *)
   sigmap:               Util.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
   default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
@@ -47,7 +47,7 @@ type env = {
 }
 
 type foundname =
-  | Term_name of typ
+  | Term_name of typ * bool // indicates if mutable
   | Eff_name  of sigelt * lident
 
 type record_or_dc = {
@@ -103,12 +103,11 @@ let unmangleOpName (id:ident) : option<term> =
 
 let try_lookup_id env (id:ident) =
   match unmangleOpName id with
-    | Some f -> Some f
-    | _ ->
-      find_map env.localbindings (function
-        | id', x when (id'.idText=id.idText) -> 
-          Some (bv_to_name x id.idRange)
-        | _ -> None) 
+  | Some f -> Some (f, false)
+  | _ ->
+    find_map env.localbindings (function
+      | id', x, mut when (id'.idText=id.idText) -> Some (bv_to_name x id.idRange, mut)
+      | _ -> None)
 
 let resolve_in_open_namespaces' env lid (finder:lident -> option<'a>) : option<'a> =
   let aux (namespaces:list<lident>) : option<'a> =
@@ -164,11 +163,11 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
       | None -> None
       | Some (se, _) ->
         begin match se with
-          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar lid Delta_constant None))
-          | Sig_datacon _ ->         Some (Term_name(S.fvar lid Delta_constant (fv_qual_of_se se)))
+          | Sig_inductive_typ _ ->   Some (Term_name(S.fvar lid Delta_constant None, false))
+          | Sig_datacon _ ->         Some (Term_name(S.fvar lid Delta_constant (fv_qual_of_se se), false))
           | Sig_let((_, lbs), _, _, _) ->
             let fv = lb_fv lbs lid in
-            Some (Term_name(S.fvar lid fv.fv_delta fv.fv_qual))
+            Some (Term_name(S.fvar lid fv.fv_delta fv.fv_qual, false))
           | Sig_declare_typ(lid, _, _, quals, _) ->
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
             || quals |> Util.for_some (function Assumption -> true | _ -> false)
@@ -176,7 +175,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                           || (Util.starts_with lid.nsstr "Prims." && quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
-                    Some (Term_name(fvar lid dd (fv_qual_of_se se)))
+                    Some (Term_name(fvar lid dd (fv_qual_of_se se), false))
             else None
           | Sig_new_effect(ne, _) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid lid)))
           | Sig_effect_abbrev _ ->   Some (Eff_name(se, lid))
@@ -186,11 +185,11 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
   let found_id = match lid.ns with
     | [] ->
       begin match try_lookup_id env (lid.ident) with
-        | Some e -> Some (Term_name e)
+        | Some (e, mut) -> Some (Term_name (e, mut))
         | None ->
           let recname = qualify env lid.ident in
           Util.find_map env.recbindings (fun (id, l, dd) -> if id.idText=lid.ident.idText 
-                                                        then Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None))
+                                                        then Some (Term_name(S.fvar (set_lid_range l (range_of_lid lid)) dd None, false))
                                                         else None)
       end
     | _ -> None in
@@ -252,9 +251,9 @@ let try_lookup_definition env (lid:lident) =
   resolve_in_open_namespaces env lid find_in_sig
 
 
-let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<term> =
+let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<(term * bool)> =
   match try_lookup_name any_val exclude_interf env lid with
-    | Some (Term_name e) -> Some e
+    | Some (Term_name (e, mut)) -> Some (e, mut)
     | _ -> None
 let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
 
@@ -392,9 +391,15 @@ let unique any_val exclude_if env lid =
     | None -> true
     | Some _ -> false
 
-let push_bv env (x:ident) =
+let push_bv' env (x:ident) is_mutable =
   let bv = S.gen_bv x.idText (Some x.idRange) tun in
-  {env with localbindings=(x, bv)::env.localbindings}, bv
+  {env with localbindings=(x, bv, is_mutable)::env.localbindings}, bv
+
+let push_bv_mutable env x =
+  push_bv' env x true
+
+let push_bv env x =
+  push_bv' env x false
 
 let push_top_level_rec_binding env (x:ident) dd = 
   let l = qualify env x in
@@ -624,4 +629,3 @@ let fail_or env lookup lid = match lookup lid with
 let fail_or2 lookup id = match lookup id with
   | None -> raise (Error ("Identifier not found [" ^id.idText^"]", id.idRange))
   | Some r -> r
-

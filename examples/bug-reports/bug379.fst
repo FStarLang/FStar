@@ -1,4 +1,4 @@
-module BugTot
+module Bug379
 
 val test1 : nat -> nat -> Tot nat
 let rec test1 x y = if x = 0 then y else test1 0 y

@@ -42,8 +42,8 @@ val lemma_append_inj: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a {l
            (ensures (equal s1 t1 /\ equal s2 t2))
 let lemma_append_inj #a s1 s2 t1 t2 =
   lemma_append_len_disj s1 s2 t1 t2;
-  Classical.forall_intro #(i:nat{i < length s1}) #(fun i -> index s1 i == index t1 i) (lemma_append_inj_l s1 s2 t1 t2);
-  Classical.forall_intro #(i:nat{i < length s2}) #(fun i -> index s2 i == index t2 i) (lemma_append_inj_r s1 s2 t1 t2)
+  qintro #(i:nat{i < length s1}) #(fun i -> index s1 i == index t1 i) (lemma_append_inj_l s1 s2 t1 t2);
+  qintro #(i:nat{i < length s2}) #(fun i -> index s2 i == index t2 i) (lemma_append_inj_r s1 s2 t1 t2)
 
 val head: #a:Type -> s:seq a{length s > 0} -> Tot a
 let head #a s = index s 0
@@ -244,7 +244,7 @@ type permutation (a:eqtype) (s1:seq a) (s2:seq a) =
        (forall i. count i s1 = count i s2)
 val lemma_swap_permutes: #a:eqtype -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> Lemma
   (permutation a s (swap s i j))
-let lemma_swap_permutes #a s i j = Classical.forall_intro #a #(fun x -> count x s = count x (swap s i j)) (lemma_swap_permutes_aux s i j)
+let lemma_swap_permutes #a s i j = qintro #a #(fun x -> count x s = count x (swap s i j)) (lemma_swap_permutes_aux s i j)
 
 
 #set-options "--max_fuel 1 --initial_fuel 1"

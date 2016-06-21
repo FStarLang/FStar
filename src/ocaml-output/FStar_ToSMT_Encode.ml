@@ -33,31 +33,31 @@ a.FStar_Absyn_Syntax.ppname.FStar_Ident.idText
 end)
 
 
-let mk_typ_projector_name : FStar_Ident.lident  ->  FStar_Absyn_Syntax.btvdef  ->  Prims.string = (fun lid a -> (let _140_14 = (FStar_Util.format2 "%s_%s" lid.FStar_Ident.str (escape_null_name a))
-in (FStar_All.pipe_left escape _140_14)))
+let mk_typ_projector_name : FStar_Ident.lident  ->  FStar_Absyn_Syntax.btvdef  ->  Prims.string = (fun lid a -> (let _141_14 = (FStar_Util.format2 "%s_%s" lid.FStar_Ident.str (escape_null_name a))
+in (FStar_All.pipe_left escape _141_14)))
 
 
 let mk_term_projector_name : FStar_Ident.lident  ->  FStar_Absyn_Syntax.bvvdef  ->  Prims.string = (fun lid a -> (
 
-let a = (let _140_19 = (FStar_Absyn_Util.unmangle_field_name a.FStar_Absyn_Syntax.ppname)
-in {FStar_Absyn_Syntax.ppname = _140_19; FStar_Absyn_Syntax.realname = a.FStar_Absyn_Syntax.realname})
-in (let _140_20 = (FStar_Util.format2 "%s_%s" lid.FStar_Ident.str (escape_null_name a))
-in (FStar_All.pipe_left escape _140_20))))
+let a = (let _141_19 = (FStar_Absyn_Util.unmangle_field_name a.FStar_Absyn_Syntax.ppname)
+in {FStar_Absyn_Syntax.ppname = _141_19; FStar_Absyn_Syntax.realname = a.FStar_Absyn_Syntax.realname})
+in (let _141_20 = (FStar_Util.format2 "%s_%s" lid.FStar_Ident.str (escape_null_name a))
+in (FStar_All.pipe_left escape _141_20))))
 
 
 let primitive_projector_by_pos : FStar_Tc_Env.env  ->  FStar_Ident.lident  ->  Prims.int  ->  Prims.string = (fun env lid i -> (
 
 let fail = (fun _50_62 -> (match (()) with
 | () -> begin
-(let _140_30 = (let _140_29 = (FStar_Util.string_of_int i)
-in (FStar_Util.format2 "Projector %s on data constructor %s not found" _140_29 lid.FStar_Ident.str))
-in (FStar_All.failwith _140_30))
+(let _141_30 = (let _141_29 = (FStar_Util.string_of_int i)
+in (FStar_Util.format2 "Projector %s on data constructor %s not found" _141_29 lid.FStar_Ident.str))
+in (FStar_All.failwith _141_30))
 end))
 in (
 
 let t = (FStar_Tc_Env.lookup_datacon env lid)
-in (match ((let _140_31 = (FStar_Absyn_Util.compress_typ t)
-in _140_31.FStar_Absyn_Syntax.n)) with
+in (match ((let _141_31 = (FStar_Absyn_Util.compress_typ t)
+in _141_31.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Typ_fun (binders, _50_66) -> begin
 if ((i < 0) || (i >= (FStar_List.length binders))) then begin
 (fail ())
@@ -79,24 +79,24 @@ end
 end))))
 
 
-let mk_term_projector_name_by_pos : FStar_Ident.lident  ->  Prims.int  ->  Prims.string = (fun lid i -> (let _140_37 = (let _140_36 = (FStar_Util.string_of_int i)
-in (FStar_Util.format2 "%s_%s" lid.FStar_Ident.str _140_36))
-in (FStar_All.pipe_left escape _140_37)))
+let mk_term_projector_name_by_pos : FStar_Ident.lident  ->  Prims.int  ->  Prims.string = (fun lid i -> (let _141_37 = (let _141_36 = (FStar_Util.string_of_int i)
+in (FStar_Util.format2 "%s_%s" lid.FStar_Ident.str _141_36))
+in (FStar_All.pipe_left escape _141_37)))
 
 
-let mk_typ_projector : FStar_Ident.lident  ->  FStar_Absyn_Syntax.btvdef  ->  FStar_ToSMT_Term.term = (fun lid a -> (let _140_43 = (let _140_42 = (mk_typ_projector_name lid a)
-in (_140_42, FStar_ToSMT_Term.Arrow ((FStar_ToSMT_Term.Term_sort, FStar_ToSMT_Term.Type_sort))))
-in (FStar_ToSMT_Term.mkFreeV _140_43)))
+let mk_typ_projector : FStar_Ident.lident  ->  FStar_Absyn_Syntax.btvdef  ->  FStar_ToSMT_Term.term = (fun lid a -> (let _141_43 = (let _141_42 = (mk_typ_projector_name lid a)
+in (_141_42, FStar_ToSMT_Term.Arrow ((FStar_ToSMT_Term.Term_sort, FStar_ToSMT_Term.Type_sort))))
+in (FStar_ToSMT_Term.mkFreeV _141_43)))
 
 
-let mk_term_projector : FStar_Ident.lident  ->  FStar_Absyn_Syntax.bvvdef  ->  FStar_ToSMT_Term.term = (fun lid a -> (let _140_49 = (let _140_48 = (mk_term_projector_name lid a)
-in (_140_48, FStar_ToSMT_Term.Arrow ((FStar_ToSMT_Term.Term_sort, FStar_ToSMT_Term.Term_sort))))
-in (FStar_ToSMT_Term.mkFreeV _140_49)))
+let mk_term_projector : FStar_Ident.lident  ->  FStar_Absyn_Syntax.bvvdef  ->  FStar_ToSMT_Term.term = (fun lid a -> (let _141_49 = (let _141_48 = (mk_term_projector_name lid a)
+in (_141_48, FStar_ToSMT_Term.Arrow ((FStar_ToSMT_Term.Term_sort, FStar_ToSMT_Term.Term_sort))))
+in (FStar_ToSMT_Term.mkFreeV _141_49)))
 
 
-let mk_term_projector_by_pos : FStar_Ident.lident  ->  Prims.int  ->  FStar_ToSMT_Term.term = (fun lid i -> (let _140_55 = (let _140_54 = (mk_term_projector_name_by_pos lid i)
-in (_140_54, FStar_ToSMT_Term.Arrow ((FStar_ToSMT_Term.Term_sort, FStar_ToSMT_Term.Term_sort))))
-in (FStar_ToSMT_Term.mkFreeV _140_55)))
+let mk_term_projector_by_pos : FStar_Ident.lident  ->  Prims.int  ->  FStar_ToSMT_Term.term = (fun lid i -> (let _141_55 = (let _141_54 = (mk_term_projector_name_by_pos lid i)
+in (_141_54, FStar_ToSMT_Term.Arrow ((FStar_ToSMT_Term.Term_sort, FStar_ToSMT_Term.Term_sort))))
+in (FStar_ToSMT_Term.mkFreeV _141_55)))
 
 
 let mk_data_tester = (fun env l x -> (FStar_ToSMT_Term.mk_tester (escape l.FStar_Ident.str) x))
@@ -119,15 +119,15 @@ in (
 
 let new_scope = (fun _50_101 -> (match (()) with
 | () -> begin
-(let _140_159 = (FStar_Util.smap_create 100)
-in (let _140_158 = (FStar_Util.smap_create 100)
-in (_140_159, _140_158)))
+(let _141_159 = (FStar_Util.smap_create 100)
+in (let _141_158 = (FStar_Util.smap_create 100)
+in (_141_159, _141_158)))
 end))
 in (
 
-let scopes = (let _140_161 = (let _140_160 = (new_scope ())
-in (_140_160)::[])
-in (FStar_Util.mk_ref _140_161))
+let scopes = (let _141_161 = (let _141_160 = (new_scope ())
+in (_141_160)::[])
+in (FStar_Util.mk_ref _141_161))
 in (
 
 let mk_unique = (fun y -> (
@@ -135,8 +135,8 @@ let mk_unique = (fun y -> (
 let y = (escape y)
 in (
 
-let y = (match ((let _140_165 = (FStar_ST.read scopes)
-in (FStar_Util.find_map _140_165 (fun _50_109 -> (match (_50_109) with
+let y = (match ((let _141_165 = (FStar_ST.read scopes)
+in (FStar_Util.find_map _141_165 (fun _50_109 -> (match (_50_109) with
 | (names, _50_108) -> begin
 (FStar_Util.smap_try_find names y)
 end))))) with
@@ -147,24 +147,24 @@ end
 (
 
 let _50_114 = (FStar_Util.incr ctr)
-in (let _140_167 = (let _140_166 = (FStar_ST.read ctr)
-in (FStar_Util.string_of_int _140_166))
-in (Prims.strcat (Prims.strcat y "__") _140_167)))
+in (let _141_167 = (let _141_166 = (FStar_ST.read ctr)
+in (FStar_Util.string_of_int _141_166))
+in (Prims.strcat (Prims.strcat y "__") _141_167)))
 end)
 in (
 
-let top_scope = (let _140_169 = (let _140_168 = (FStar_ST.read scopes)
-in (FStar_List.hd _140_168))
-in (FStar_All.pipe_left Prims.fst _140_169))
+let top_scope = (let _141_169 = (let _141_168 = (FStar_ST.read scopes)
+in (FStar_List.hd _141_168))
+in (FStar_All.pipe_left Prims.fst _141_169))
 in (
 
 let _50_118 = (FStar_Util.smap_add top_scope y true)
 in y)))))
 in (
 
-let new_var = (fun pp rn -> (let _140_175 = (let _140_174 = (FStar_All.pipe_left mk_unique pp.FStar_Ident.idText)
-in (Prims.strcat _140_174 "__"))
-in (Prims.strcat _140_175 rn.FStar_Ident.idText)))
+let new_var = (fun pp rn -> (let _141_175 = (let _141_174 = (FStar_All.pipe_left mk_unique pp.FStar_Ident.idText)
+in (Prims.strcat _141_174 "__"))
+in (Prims.strcat _141_175 rn.FStar_Ident.idText)))
 in (
 
 let new_fvar = (fun lid -> (mk_unique lid.FStar_Ident.str))
@@ -179,13 +179,13 @@ in (FStar_ST.read ctr))
 end))
 in (
 
-let fresh = (fun pfx -> (let _140_183 = (let _140_182 = (next_id ())
-in (FStar_All.pipe_left FStar_Util.string_of_int _140_182))
-in (FStar_Util.format2 "%s_%s" pfx _140_183)))
+let fresh = (fun pfx -> (let _141_183 = (let _141_182 = (next_id ())
+in (FStar_All.pipe_left FStar_Util.string_of_int _141_182))
+in (FStar_Util.format2 "%s_%s" pfx _141_183)))
 in (
 
-let string_const = (fun s -> (match ((let _140_187 = (FStar_ST.read scopes)
-in (FStar_Util.find_map _140_187 (fun _50_136 -> (match (_50_136) with
+let string_const = (fun s -> (match ((let _141_187 = (FStar_ST.read scopes)
+in (FStar_Util.find_map _141_187 (fun _50_136 -> (match (_50_136) with
 | (_50_134, strings) -> begin
 (FStar_Util.smap_try_find strings s)
 end))))) with
@@ -198,13 +198,13 @@ end
 let id = (next_id ())
 in (
 
-let f = (let _140_188 = (FStar_ToSMT_Term.mk_String_const id)
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxString _140_188))
+let f = (let _141_188 = (FStar_ToSMT_Term.mk_String_const id)
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxString _141_188))
 in (
 
-let top_scope = (let _140_190 = (let _140_189 = (FStar_ST.read scopes)
-in (FStar_List.hd _140_189))
-in (FStar_All.pipe_left Prims.snd _140_190))
+let top_scope = (let _141_190 = (let _141_189 = (FStar_ST.read scopes)
+in (FStar_List.hd _141_189))
+in (FStar_All.pipe_left Prims.snd _141_190))
 in (
 
 let _50_143 = (FStar_Util.smap_add top_scope s f)
@@ -214,18 +214,18 @@ in (
 
 let push = (fun _50_146 -> (match (()) with
 | () -> begin
-(let _140_195 = (let _140_194 = (new_scope ())
-in (let _140_193 = (FStar_ST.read scopes)
-in (_140_194)::_140_193))
-in (FStar_ST.op_Colon_Equals scopes _140_195))
+(let _141_195 = (let _141_194 = (new_scope ())
+in (let _141_193 = (FStar_ST.read scopes)
+in (_141_194)::_141_193))
+in (FStar_ST.op_Colon_Equals scopes _141_195))
 end))
 in (
 
 let pop = (fun _50_148 -> (match (()) with
 | () -> begin
-(let _140_199 = (let _140_198 = (FStar_ST.read scopes)
-in (FStar_List.tl _140_198))
-in (FStar_ST.op_Colon_Equals scopes _140_199))
+(let _141_199 = (let _141_198 = (FStar_ST.read scopes)
+in (FStar_List.tl _141_198))
+in (FStar_ST.op_Colon_Equals scopes _141_199))
 end))
 in (
 
@@ -260,10 +260,10 @@ end))
 in {push = push; pop = pop; mark = mark; reset_mark = reset_mark; commit_mark = commit_mark; new_var = new_var; new_fvar = new_fvar; fresh = fresh; string_const = string_const; next_id = next_id})))))))))))))))
 
 
-let unmangle = (fun x -> (let _140_215 = (let _140_214 = (FStar_Absyn_Util.unmangle_field_name x.FStar_Absyn_Syntax.ppname)
-in (let _140_213 = (FStar_Absyn_Util.unmangle_field_name x.FStar_Absyn_Syntax.realname)
-in (_140_214, _140_213)))
-in (FStar_Absyn_Util.mkbvd _140_215)))
+let unmangle = (fun x -> (let _141_215 = (let _141_214 = (FStar_Absyn_Util.unmangle_field_name x.FStar_Absyn_Syntax.ppname)
+in (let _141_213 = (FStar_Absyn_Util.unmangle_field_name x.FStar_Absyn_Syntax.realname)
+in (_141_214, _141_213)))
+in (FStar_Absyn_Util.mkbvd _141_215)))
 
 
 type binding =
@@ -343,7 +343,7 @@ type env_t =
 let is_Mkenv_t : env_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv_t"))))
 
 
-let print_env : env_t  ->  Prims.string = (fun e -> (let _140_301 = (FStar_All.pipe_right e.bindings (FStar_List.map (fun _50_2 -> (match (_50_2) with
+let print_env : env_t  ->  Prims.string = (fun e -> (let _141_301 = (FStar_All.pipe_right e.bindings (FStar_List.map (fun _50_2 -> (match (_50_2) with
 | Binding_var (x, t) -> begin
 (FStar_Absyn_Print.strBvd x)
 end
@@ -356,15 +356,15 @@ end
 | Binding_ftvar (l, s, t) -> begin
 (FStar_Absyn_Print.sli l)
 end))))
-in (FStar_All.pipe_right _140_301 (FStar_String.concat ", "))))
+in (FStar_All.pipe_right _141_301 (FStar_String.concat ", "))))
 
 
 let lookup_binding = (fun env f -> (FStar_Util.find_map env.bindings f))
 
 
 let caption_t : env_t  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  Prims.string Prims.option = (fun env t -> if (FStar_Tc_Env.debug env.tcenv FStar_Options.Low) then begin
-(let _140_311 = (FStar_Absyn_Print.typ_to_string t)
-in Some (_140_311))
+(let _141_311 = (FStar_Absyn_Print.typ_to_string t)
+in Some (_141_311))
 end else begin
 None
 end)
@@ -373,14 +373,14 @@ end)
 let fresh_fvar : Prims.string  ->  FStar_ToSMT_Term.sort  ->  (Prims.string * FStar_ToSMT_Term.term) = (fun x s -> (
 
 let xsym = (varops.fresh x)
-in (let _140_316 = (FStar_ToSMT_Term.mkFreeV (xsym, s))
-in (xsym, _140_316))))
+in (let _141_316 = (FStar_ToSMT_Term.mkFreeV (xsym, s))
+in (xsym, _141_316))))
 
 
 let gen_term_var : env_t  ->  FStar_Absyn_Syntax.bvvdef  ->  (Prims.string * FStar_ToSMT_Term.term * env_t) = (fun env x -> (
 
-let ysym = (let _140_321 = (FStar_Util.string_of_int env.depth)
-in (Prims.strcat "@x" _140_321))
+let ysym = (let _141_321 = (FStar_Util.string_of_int env.depth)
+in (Prims.strcat "@x" _141_321))
 in (
 
 let y = (FStar_ToSMT_Term.mkFreeV (ysym, FStar_ToSMT_Term.Term_sort))
@@ -416,9 +416,9 @@ end
 None
 end)))) with
 | None -> begin
-(let _140_336 = (let _140_335 = (FStar_Absyn_Print.strBvd a.FStar_Absyn_Syntax.v)
-in (FStar_Util.format1 "Bound term variable not found: %s" _140_335))
-in (FStar_All.failwith _140_336))
+(let _141_336 = (let _141_335 = (FStar_Absyn_Print.strBvd a.FStar_Absyn_Syntax.v)
+in (FStar_Util.format1 "Bound term variable not found: %s" _141_335))
+in (FStar_All.failwith _141_336))
 end
 | Some (b, t) -> begin
 t
@@ -427,8 +427,8 @@ end))
 
 let gen_typ_var : env_t  ->  FStar_Absyn_Syntax.btvdef  ->  (Prims.string * FStar_ToSMT_Term.term * env_t) = (fun env x -> (
 
-let ysym = (let _140_341 = (FStar_Util.string_of_int env.depth)
-in (Prims.strcat "@a" _140_341))
+let ysym = (let _141_341 = (FStar_Util.string_of_int env.depth)
+in (Prims.strcat "@a" _141_341))
 in (
 
 let y = (FStar_ToSMT_Term.mkFreeV (ysym, FStar_ToSMT_Term.Type_sort))
@@ -464,9 +464,9 @@ end
 None
 end)))) with
 | None -> begin
-(let _140_356 = (let _140_355 = (FStar_Absyn_Print.strBvd a.FStar_Absyn_Syntax.v)
-in (FStar_Util.format1 "Bound type variable not found: %s" _140_355))
-in (FStar_All.failwith _140_356))
+(let _141_356 = (let _141_355 = (FStar_Absyn_Print.strBvd a.FStar_Absyn_Syntax.v)
+in (FStar_Util.format1 "Bound type variable not found: %s" _141_355))
+in (FStar_All.failwith _141_356))
 end
 | Some (b, t) -> begin
 t
@@ -479,16 +479,16 @@ let fname = (varops.new_fvar x)
 in (
 
 let ftok = (Prims.strcat fname "@tok")
-in (let _140_367 = (
+in (let _141_367 = (
 
 let _50_295 = env
-in (let _140_366 = (let _140_365 = (let _140_364 = (let _140_363 = (let _140_362 = (FStar_ToSMT_Term.mkApp (ftok, []))
-in (FStar_All.pipe_left (fun _140_361 -> Some (_140_361)) _140_362))
-in (x, fname, _140_363, None))
-in Binding_fvar (_140_364))
-in (_140_365)::env.bindings)
-in {bindings = _140_366; depth = _50_295.depth; tcenv = _50_295.tcenv; warn = _50_295.warn; cache = _50_295.cache; nolabels = _50_295.nolabels; use_zfuel_name = _50_295.use_zfuel_name; encode_non_total_function_typ = _50_295.encode_non_total_function_typ}))
-in (fname, ftok, _140_367)))))
+in (let _141_366 = (let _141_365 = (let _141_364 = (let _141_363 = (let _141_362 = (FStar_ToSMT_Term.mkApp (ftok, []))
+in (FStar_All.pipe_left (fun _141_361 -> Some (_141_361)) _141_362))
+in (x, fname, _141_363, None))
+in Binding_fvar (_141_364))
+in (_141_365)::env.bindings)
+in {bindings = _141_366; depth = _50_295.depth; tcenv = _50_295.tcenv; warn = _50_295.warn; cache = _50_295.cache; nolabels = _50_295.nolabels; use_zfuel_name = _50_295.use_zfuel_name; encode_non_total_function_typ = _50_295.encode_non_total_function_typ}))
+in (fname, ftok, _141_367)))))
 
 
 let try_lookup_lid : env_t  ->  FStar_Ident.lident  ->  (Prims.string * FStar_ToSMT_Term.term Prims.option * FStar_ToSMT_Term.term Prims.option) Prims.option = (fun env a -> (lookup_binding env (fun _50_5 -> (match (_50_5) with
@@ -502,9 +502,9 @@ end))))
 
 let lookup_lid : env_t  ->  FStar_Ident.lident  ->  (Prims.string * FStar_ToSMT_Term.term Prims.option * FStar_ToSMT_Term.term Prims.option) = (fun env a -> (match ((try_lookup_lid env a)) with
 | None -> begin
-(let _140_378 = (let _140_377 = (FStar_Absyn_Print.sli a)
-in (FStar_Util.format1 "Name not found: %s" _140_377))
-in (FStar_All.failwith _140_378))
+(let _141_378 = (let _141_377 = (FStar_Absyn_Print.sli a)
+in (FStar_Util.format1 "Name not found: %s" _141_377))
+in (FStar_All.failwith _141_378))
 end
 | Some (s) -> begin
 s
@@ -524,10 +524,10 @@ in (match (_50_326) with
 | (t1, t2, _50_325) -> begin
 (
 
-let t3 = (let _140_395 = (let _140_394 = (let _140_393 = (FStar_ToSMT_Term.mkApp ("ZFuel", []))
-in (_140_393)::[])
-in (f, _140_394))
-in (FStar_ToSMT_Term.mkApp _140_395))
+let t3 = (let _141_395 = (let _141_394 = (let _141_393 = (FStar_ToSMT_Term.mkApp ("ZFuel", []))
+in (_141_393)::[])
+in (f, _141_394))
+in (FStar_ToSMT_Term.mkApp _141_395))
 in (
 
 let _50_328 = env
@@ -549,11 +549,11 @@ end
 | Some (t) -> begin
 (match (t.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.App (_50_343, (fuel)::[]) -> begin
-if (let _140_399 = (let _140_398 = (FStar_ToSMT_Term.fv_of_term fuel)
-in (FStar_All.pipe_right _140_398 Prims.fst))
-in (FStar_Util.starts_with _140_399 "fuel")) then begin
-(let _140_400 = (FStar_ToSMT_Term.mkFreeV (name, FStar_ToSMT_Term.Term_sort))
-in (FStar_ToSMT_Term.mk_ApplyEF _140_400 fuel))
+if (let _141_399 = (let _141_398 = (FStar_ToSMT_Term.fv_of_term fuel)
+in (FStar_All.pipe_right _141_398 Prims.fst))
+in (FStar_Util.starts_with _141_399 "fuel")) then begin
+(let _141_400 = (FStar_ToSMT_Term.mkFreeV (name, FStar_ToSMT_Term.Term_sort))
+in (FStar_ToSMT_Term.mk_ApplyEF _141_400 fuel))
 end else begin
 t
 end
@@ -563,9 +563,9 @@ t
 end)
 end
 | _50_351 -> begin
-(let _140_402 = (let _140_401 = (FStar_Absyn_Print.sli a.FStar_Absyn_Syntax.v)
-in (FStar_Util.format1 "Name not found: %s" _140_401))
-in (FStar_All.failwith _140_402))
+(let _141_402 = (let _141_401 = (FStar_Absyn_Print.sli a.FStar_Absyn_Syntax.v)
+in (FStar_Util.format1 "Name not found: %s" _141_401))
+in (FStar_All.failwith _141_402))
 end)
 end)
 end)))
@@ -613,16 +613,16 @@ let fname = (varops.new_fvar x)
 in (
 
 let ftok = (Prims.strcat fname "@tok")
-in (let _140_417 = (
+in (let _141_417 = (
 
 let _50_392 = env
-in (let _140_416 = (let _140_415 = (let _140_414 = (let _140_413 = (let _140_412 = (FStar_ToSMT_Term.mkApp (ftok, []))
-in (FStar_All.pipe_left (fun _140_411 -> Some (_140_411)) _140_412))
-in (x, fname, _140_413))
-in Binding_ftvar (_140_414))
-in (_140_415)::env.bindings)
-in {bindings = _140_416; depth = _50_392.depth; tcenv = _50_392.tcenv; warn = _50_392.warn; cache = _50_392.cache; nolabels = _50_392.nolabels; use_zfuel_name = _50_392.use_zfuel_name; encode_non_total_function_typ = _50_392.encode_non_total_function_typ}))
-in (fname, ftok, _140_417)))))
+in (let _141_416 = (let _141_415 = (let _141_414 = (let _141_413 = (let _141_412 = (FStar_ToSMT_Term.mkApp (ftok, []))
+in (FStar_All.pipe_left (fun _141_411 -> Some (_141_411)) _141_412))
+in (x, fname, _141_413))
+in Binding_ftvar (_141_414))
+in (_141_415)::env.bindings)
+in {bindings = _141_416; depth = _50_392.depth; tcenv = _50_392.tcenv; warn = _50_392.warn; cache = _50_392.cache; nolabels = _50_392.nolabels; use_zfuel_name = _50_392.use_zfuel_name; encode_non_total_function_typ = _50_392.encode_non_total_function_typ}))
+in (fname, ftok, _141_417)))))
 
 
 let lookup_tlid : env_t  ->  FStar_Ident.lident  ->  (Prims.string * FStar_ToSMT_Term.term Prims.option) = (fun env a -> (match ((lookup_binding env (fun _50_6 -> (match (_50_6) with
@@ -633,9 +633,9 @@ end
 None
 end)))) with
 | None -> begin
-(let _140_424 = (let _140_423 = (FStar_Absyn_Print.sli a)
-in (FStar_Util.format1 "Type name not found: %s" _140_423))
-in (FStar_All.failwith _140_424))
+(let _141_424 = (let _141_423 = (FStar_Absyn_Print.sli a)
+in (FStar_Util.format1 "Type name not found: %s" _141_423))
+in (FStar_All.failwith _141_424))
 end
 | Some (s) -> begin
 s
@@ -648,20 +648,20 @@ let _50_411 = env
 in {bindings = (Binding_ftvar ((x, fname, ftok)))::env.bindings; depth = _50_411.depth; tcenv = _50_411.tcenv; warn = _50_411.warn; cache = _50_411.cache; nolabels = _50_411.nolabels; use_zfuel_name = _50_411.use_zfuel_name; encode_non_total_function_typ = _50_411.encode_non_total_function_typ}))
 
 
-let lookup_free_tvar = (fun env a -> (match ((let _140_435 = (lookup_tlid env a.FStar_Absyn_Syntax.v)
-in (FStar_All.pipe_right _140_435 Prims.snd))) with
+let lookup_free_tvar = (fun env a -> (match ((let _141_435 = (lookup_tlid env a.FStar_Absyn_Syntax.v)
+in (FStar_All.pipe_right _141_435 Prims.snd))) with
 | None -> begin
-(let _140_437 = (let _140_436 = (FStar_Absyn_Print.sli a.FStar_Absyn_Syntax.v)
-in (FStar_Util.format1 "Type name not found: %s" _140_436))
-in (FStar_All.failwith _140_437))
+(let _141_437 = (let _141_436 = (FStar_Absyn_Print.sli a.FStar_Absyn_Syntax.v)
+in (FStar_Util.format1 "Type name not found: %s" _141_436))
+in (FStar_All.failwith _141_437))
 end
 | Some (t) -> begin
 t
 end))
 
 
-let lookup_free_tvar_name = (fun env a -> (let _140_440 = (lookup_tlid env a.FStar_Absyn_Syntax.v)
-in (FStar_All.pipe_right _140_440 Prims.fst)))
+let lookup_free_tvar_name = (fun env a -> (let _141_440 = (lookup_tlid env a.FStar_Absyn_Syntax.v)
+in (FStar_All.pipe_right _141_440 Prims.fst)))
 
 
 let tok_of_name : env_t  ->  Prims.string  ->  FStar_ToSMT_Term.term Prims.option = (fun env nm -> (FStar_Util.find_map env.bindings (fun _50_7 -> (match (_50_7) with
@@ -709,12 +709,12 @@ let body = (match (body.FStar_ToSMT_Term.tm) with
 
 let guard = (match (guard.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.App (FStar_ToSMT_Term.And, guards) -> begin
-(let _140_453 = (add_fuel guards)
-in (FStar_ToSMT_Term.mk_and_l _140_453))
+(let _141_453 = (add_fuel guards)
+in (FStar_ToSMT_Term.mk_and_l _141_453))
 end
 | _50_469 -> begin
-(let _140_454 = (add_fuel ((guard)::[]))
-in (FStar_All.pipe_right _140_454 FStar_List.hd))
+(let _141_454 = (add_fuel ((guard)::[]))
+in (FStar_All.pipe_right _141_454 FStar_List.hd))
 end)
 in (FStar_ToSMT_Term.mkImp (guard, body')))
 end
@@ -741,8 +741,8 @@ in (match (t.FStar_Absyn_Syntax.n) with
 true
 end
 | (FStar_Absyn_Syntax.Typ_const (v)) | (FStar_Absyn_Syntax.Typ_app ({FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Typ_const (v); FStar_Absyn_Syntax.tk = _; FStar_Absyn_Syntax.pos = _; FStar_Absyn_Syntax.fvs = _; FStar_Absyn_Syntax.uvs = _}, _)) -> begin
-(let _140_460 = (FStar_Tc_Env.lookup_typ_abbrev env.tcenv v.FStar_Absyn_Syntax.v)
-in (FStar_All.pipe_right _140_460 FStar_Option.isNone))
+(let _141_460 = (FStar_Tc_Env.lookup_typ_abbrev env.tcenv v.FStar_Absyn_Syntax.v)
+in (FStar_All.pipe_right _141_460 FStar_Option.isNone))
 end
 | _50_510 -> begin
 false
@@ -765,25 +765,25 @@ let norm_t : env_t  ->  FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.typ = (fu
 let norm_k : env_t  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun env k -> (FStar_Tc_Normalize.normalize_kind env.tcenv k))
 
 
-let trivial_post : FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.typ = (fun t -> (let _140_482 = (let _140_481 = (let _140_479 = (FStar_Absyn_Syntax.null_v_binder t)
-in (_140_479)::[])
-in (let _140_480 = (FStar_Absyn_Util.ftv FStar_Absyn_Const.true_lid FStar_Absyn_Syntax.ktype)
-in (_140_481, _140_480)))
-in (FStar_Absyn_Syntax.mk_Typ_lam _140_482 None t.FStar_Absyn_Syntax.pos)))
+let trivial_post : FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.typ = (fun t -> (let _141_482 = (let _141_481 = (let _141_479 = (FStar_Absyn_Syntax.null_v_binder t)
+in (_141_479)::[])
+in (let _141_480 = (FStar_Absyn_Util.ftv FStar_Absyn_Const.true_lid FStar_Absyn_Syntax.ktype)
+in (_141_481, _141_480)))
+in (FStar_Absyn_Syntax.mk_Typ_lam _141_482 None t.FStar_Absyn_Syntax.pos)))
 
 
 let mk_ApplyE : FStar_ToSMT_Term.term  ->  (Prims.string * FStar_ToSMT_Term.sort) Prims.list  ->  FStar_ToSMT_Term.term = (fun e vars -> (FStar_All.pipe_right vars (FStar_List.fold_left (fun out var -> (match ((Prims.snd var)) with
 | FStar_ToSMT_Term.Type_sort -> begin
-(let _140_489 = (FStar_ToSMT_Term.mkFreeV var)
-in (FStar_ToSMT_Term.mk_ApplyET out _140_489))
+(let _141_489 = (FStar_ToSMT_Term.mkFreeV var)
+in (FStar_ToSMT_Term.mk_ApplyET out _141_489))
 end
 | FStar_ToSMT_Term.Fuel_sort -> begin
-(let _140_490 = (FStar_ToSMT_Term.mkFreeV var)
-in (FStar_ToSMT_Term.mk_ApplyEF out _140_490))
+(let _141_490 = (FStar_ToSMT_Term.mkFreeV var)
+in (FStar_ToSMT_Term.mk_ApplyEF out _141_490))
 end
 | _50_527 -> begin
-(let _140_491 = (FStar_ToSMT_Term.mkFreeV var)
-in (FStar_ToSMT_Term.mk_ApplyEE out _140_491))
+(let _141_491 = (FStar_ToSMT_Term.mkFreeV var)
+in (FStar_ToSMT_Term.mk_ApplyEE out _141_491))
 end)) e)))
 
 
@@ -798,12 +798,12 @@ end)) e)))
 
 let mk_ApplyT : FStar_ToSMT_Term.term  ->  (Prims.string * FStar_ToSMT_Term.sort) Prims.list  ->  FStar_ToSMT_Term.term = (fun t vars -> (FStar_All.pipe_right vars (FStar_List.fold_left (fun out var -> (match ((Prims.snd var)) with
 | FStar_ToSMT_Term.Type_sort -> begin
-(let _140_504 = (FStar_ToSMT_Term.mkFreeV var)
-in (FStar_ToSMT_Term.mk_ApplyTT out _140_504))
+(let _141_504 = (FStar_ToSMT_Term.mkFreeV var)
+in (FStar_ToSMT_Term.mk_ApplyTT out _141_504))
 end
 | _50_542 -> begin
-(let _140_505 = (FStar_ToSMT_Term.mkFreeV var)
-in (FStar_ToSMT_Term.mk_ApplyTE out _140_505))
+(let _141_505 = (FStar_ToSMT_Term.mkFreeV var)
+in (FStar_ToSMT_Term.mk_ApplyTE out _141_505))
 end)) t)))
 
 
@@ -925,31 +925,31 @@ end
 (FStar_ToSMT_Term.boxBool FStar_ToSMT_Term.mkFalse)
 end
 | FStar_Const.Const_char (c) -> begin
-(let _140_566 = (let _140_565 = (let _140_564 = (let _140_563 = (FStar_ToSMT_Term.mkInteger' (FStar_Util.int_of_char c))
-in (FStar_ToSMT_Term.boxInt _140_563))
-in (_140_564)::[])
-in ("FStar.Char.Char", _140_565))
-in (FStar_ToSMT_Term.mkApp _140_566))
+(let _141_566 = (let _141_565 = (let _141_564 = (let _141_563 = (FStar_ToSMT_Term.mkInteger' (FStar_Util.int_of_char c))
+in (FStar_ToSMT_Term.boxInt _141_563))
+in (_141_564)::[])
+in ("FStar.Char.Char", _141_565))
+in (FStar_ToSMT_Term.mkApp _141_566))
 end
 | FStar_Const.Const_int (i, None) -> begin
-(let _140_567 = (FStar_ToSMT_Term.mkInteger i)
-in (FStar_ToSMT_Term.boxInt _140_567))
+(let _141_567 = (FStar_ToSMT_Term.mkInteger i)
+in (FStar_ToSMT_Term.boxInt _141_567))
 end
 | FStar_Const.Const_int (i, Some (q)) -> begin
-(let _140_571 = (let _140_570 = (let _140_569 = (let _140_568 = (FStar_ToSMT_Term.mkInteger i)
-in (FStar_ToSMT_Term.boxInt _140_568))
-in (_140_569)::[])
-in ((constructor_string_of_int_qualifier q), _140_570))
-in (FStar_ToSMT_Term.mkApp _140_571))
+(let _141_571 = (let _141_570 = (let _141_569 = (let _141_568 = (FStar_ToSMT_Term.mkInteger i)
+in (FStar_ToSMT_Term.boxInt _141_568))
+in (_141_569)::[])
+in ((constructor_string_of_int_qualifier q), _141_570))
+in (FStar_ToSMT_Term.mkApp _141_571))
 end
 | FStar_Const.Const_string (bytes, _50_655) -> begin
-(let _140_572 = (FStar_All.pipe_left FStar_Util.string_of_bytes bytes)
-in (varops.string_const _140_572))
+(let _141_572 = (FStar_All.pipe_left FStar_Util.string_of_bytes bytes)
+in (varops.string_const _141_572))
 end
 | c -> begin
-(let _140_574 = (let _140_573 = (FStar_Absyn_Print.const_to_string c)
-in (FStar_Util.format1 "Unhandled constant: %s\n" _140_573))
-in (FStar_All.failwith _140_574))
+(let _141_574 = (let _141_573 = (FStar_Absyn_Print.const_to_string c)
+in (FStar_Util.format1 "Unhandled constant: %s\n" _141_573))
+in (FStar_All.failwith _141_574))
 end))
 
 
@@ -963,25 +963,25 @@ in (match (t.FStar_Absyn_Syntax.n) with
 t
 end
 | FStar_Absyn_Syntax.Typ_refine (_50_669) -> begin
-(let _140_583 = (FStar_Absyn_Util.unrefine t)
-in (aux true _140_583))
+(let _141_583 = (FStar_Absyn_Util.unrefine t)
+in (aux true _141_583))
 end
 | _50_672 -> begin
 if norm then begin
-(let _140_584 = (whnf env t)
-in (aux false _140_584))
+(let _141_584 = (whnf env t)
+in (aux false _141_584))
 end else begin
-(let _140_587 = (let _140_586 = (FStar_Range.string_of_range t0.FStar_Absyn_Syntax.pos)
-in (let _140_585 = (FStar_Absyn_Print.typ_to_string t0)
-in (FStar_Util.format2 "(%s) Expected a function typ; got %s" _140_586 _140_585)))
-in (FStar_All.failwith _140_587))
+(let _141_587 = (let _141_586 = (FStar_Range.string_of_range t0.FStar_Absyn_Syntax.pos)
+in (let _141_585 = (FStar_Absyn_Print.typ_to_string t0)
+in (FStar_Util.format2 "(%s) Expected a function typ; got %s" _141_586 _141_585)))
+in (FStar_All.failwith _141_587))
 end
 end)))
 in (aux true t0)))
 
 
-let rec encode_knd_term : FStar_Absyn_Syntax.knd  ->  env_t  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decls_t) = (fun k env -> (match ((let _140_624 = (FStar_Absyn_Util.compress_kind k)
-in _140_624.FStar_Absyn_Syntax.n)) with
+let rec encode_knd_term : FStar_Absyn_Syntax.knd  ->  env_t  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decls_t) = (fun k env -> (match ((let _141_624 = (FStar_Absyn_Util.compress_kind k)
+in _141_624.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Kind_type -> begin
 (FStar_ToSMT_Term.mk_Kind_type, [])
 end
@@ -989,24 +989,24 @@ end
 (
 
 let _50_681 = if (FStar_Tc_Env.debug env.tcenv (FStar_Options.Other ("Encoding"))) then begin
-(let _140_626 = (FStar_Absyn_Print.kind_to_string k)
-in (let _140_625 = (FStar_Absyn_Print.kind_to_string k0)
-in (FStar_Util.print2 "Encoding kind abbrev %s, expanded to %s\n" _140_626 _140_625)))
+(let _141_626 = (FStar_Absyn_Print.kind_to_string k)
+in (let _141_625 = (FStar_Absyn_Print.kind_to_string k0)
+in (FStar_Util.print2 "Encoding kind abbrev %s, expanded to %s\n" _141_626 _141_625)))
 end else begin
 ()
 end
 in (encode_knd_term k0 env))
 end
 | FStar_Absyn_Syntax.Kind_uvar (uv, _50_685) -> begin
-(let _140_628 = (let _140_627 = (FStar_Unionfind.uvar_id uv)
-in (FStar_ToSMT_Term.mk_Kind_uvar _140_627))
-in (_140_628, []))
+(let _141_628 = (let _141_627 = (FStar_Unionfind.uvar_id uv)
+in (FStar_ToSMT_Term.mk_Kind_uvar _141_627))
+in (_141_628, []))
 end
 | FStar_Absyn_Syntax.Kind_arrow (bs, kbody) -> begin
 (
 
-let tsym = (let _140_629 = (varops.fresh "t")
-in (_140_629, FStar_ToSMT_Term.Type_sort))
+let tsym = (let _141_629 = (varops.fresh "t")
+in (_141_629, FStar_ToSMT_Term.Type_sort))
 in (
 
 let t = (FStar_ToSMT_Term.mkFreeV tsym)
@@ -1043,14 +1043,14 @@ let body = (match (vars) with
 body
 end
 | _50_723 -> begin
-(let _140_638 = (let _140_637 = (let _140_636 = (FStar_ToSMT_Term.mk_PreKind app)
-in (FStar_ToSMT_Term.mk_tester "Kind_arrow" _140_636))
-in (_140_637, body))
-in (FStar_ToSMT_Term.mkAnd _140_638))
+(let _141_638 = (let _141_637 = (let _141_636 = (FStar_ToSMT_Term.mk_PreKind app)
+in (FStar_ToSMT_Term.mk_tester "Kind_arrow" _141_636))
+in (_141_637, body))
+in (FStar_ToSMT_Term.mkAnd _141_638))
 end)
-in (let _140_640 = (let _140_639 = (FStar_ToSMT_Term.mkImp (g, body))
-in (((app)::[])::[], (x)::[], _140_639))
-in (FStar_ToSMT_Term.mkForall _140_640)))))
+in (let _141_640 = (let _141_639 = (FStar_ToSMT_Term.mkImp (g, body))
+in (((app)::[])::[], (x)::[], _141_639))
+in (FStar_ToSMT_Term.mkForall _141_640)))))
 end
 | _50_726 -> begin
 (FStar_All.failwith "Impossible: vars and guards are in 1-1 correspondence")
@@ -1060,8 +1060,8 @@ in (
 let k_interp = (aux t vars guards)
 in (
 
-let cvars = (let _140_642 = (FStar_ToSMT_Term.free_variables k_interp)
-in (FStar_All.pipe_right _140_642 (FStar_List.filter (fun _50_731 -> (match (_50_731) with
+let cvars = (let _141_642 = (FStar_ToSMT_Term.free_variables k_interp)
+in (FStar_All.pipe_right _141_642 (FStar_List.filter (fun _50_731 -> (match (_50_731) with
 | (x, _50_730) -> begin
 (x <> (Prims.fst tsym))
 end)))))
@@ -1070,10 +1070,10 @@ in (
 let tkey = (FStar_ToSMT_Term.mkForall ([], (tsym)::cvars, k_interp))
 in (match ((FStar_Util.smap_try_find env.cache tkey.FStar_ToSMT_Term.hash)) with
 | Some (k', sorts, _50_737) -> begin
-(let _140_645 = (let _140_644 = (let _140_643 = (FStar_All.pipe_right cvars (FStar_List.map FStar_ToSMT_Term.mkFreeV))
-in (k', _140_643))
-in (FStar_ToSMT_Term.mkApp _140_644))
-in (_140_645, []))
+(let _141_645 = (let _141_644 = (let _141_643 = (FStar_All.pipe_right cvars (FStar_List.map FStar_ToSMT_Term.mkFreeV))
+in (k', _141_643))
+in (FStar_ToSMT_Term.mkApp _141_644))
+in (_141_645, []))
 end
 | None -> begin
 (
@@ -1085,8 +1085,8 @@ let cvar_sorts = (FStar_List.map Prims.snd cvars)
 in (
 
 let caption = if (FStar_Options.log_queries ()) then begin
-(let _140_646 = (FStar_Tc_Normalize.kind_norm_to_string env.tcenv k)
-in Some (_140_646))
+(let _141_646 = (FStar_Tc_Normalize.kind_norm_to_string env.tcenv k)
+in Some (_141_646))
 end else begin
 None
 end
@@ -1095,24 +1095,24 @@ in (
 let kdecl = FStar_ToSMT_Term.DeclFun ((ksym, cvar_sorts, FStar_ToSMT_Term.Kind_sort, caption))
 in (
 
-let k = (let _140_648 = (let _140_647 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
-in (ksym, _140_647))
-in (FStar_ToSMT_Term.mkApp _140_648))
+let k = (let _141_648 = (let _141_647 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
+in (ksym, _141_647))
+in (FStar_ToSMT_Term.mkApp _141_648))
 in (
 
 let t_has_k = (FStar_ToSMT_Term.mk_HasKind t k)
 in (
 
-let k_interp = (let _140_657 = (let _140_656 = (let _140_655 = (let _140_654 = (let _140_653 = (let _140_652 = (let _140_651 = (let _140_650 = (let _140_649 = (FStar_ToSMT_Term.mk_PreKind t)
-in (FStar_ToSMT_Term.mk_tester "Kind_arrow" _140_649))
-in (_140_650, k_interp))
-in (FStar_ToSMT_Term.mkAnd _140_651))
-in (t_has_k, _140_652))
-in (FStar_ToSMT_Term.mkIff _140_653))
-in (((t_has_k)::[])::[], (tsym)::cvars, _140_654))
-in (FStar_ToSMT_Term.mkForall _140_655))
-in (_140_656, Some ((Prims.strcat ksym " interpretation"))))
-in FStar_ToSMT_Term.Assume (_140_657))
+let k_interp = (let _141_657 = (let _141_656 = (let _141_655 = (let _141_654 = (let _141_653 = (let _141_652 = (let _141_651 = (let _141_650 = (let _141_649 = (FStar_ToSMT_Term.mk_PreKind t)
+in (FStar_ToSMT_Term.mk_tester "Kind_arrow" _141_649))
+in (_141_650, k_interp))
+in (FStar_ToSMT_Term.mkAnd _141_651))
+in (t_has_k, _141_652))
+in (FStar_ToSMT_Term.mkIff _141_653))
+in (((t_has_k)::[])::[], (tsym)::cvars, _141_654))
+in (FStar_ToSMT_Term.mkForall _141_655))
+in (_141_656, Some ((Prims.strcat ksym " interpretation"))))
+in FStar_ToSMT_Term.Assume (_141_657))
 in (
 
 let k_decls = (FStar_List.append (FStar_List.append decls decls') ((kdecl)::(k_interp)::[]))
@@ -1125,23 +1125,23 @@ end)))
 end))))
 end
 | _50_752 -> begin
-(let _140_659 = (let _140_658 = (FStar_Absyn_Print.kind_to_string k)
-in (FStar_Util.format1 "Unknown kind: %s" _140_658))
-in (FStar_All.failwith _140_659))
+(let _141_659 = (let _141_658 = (FStar_Absyn_Print.kind_to_string k)
+in (FStar_Util.format1 "Unknown kind: %s" _141_658))
+in (FStar_All.failwith _141_659))
 end))
 and encode_knd : FStar_Absyn_Syntax.knd  ->  env_t  ->  FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decl Prims.list) = (fun k env t -> (
 
 let _50_758 = (encode_knd_term k env)
 in (match (_50_758) with
 | (k, decls) -> begin
-(let _140_663 = (FStar_ToSMT_Term.mk_HasKind t k)
-in (_140_663, decls))
+(let _141_663 = (FStar_ToSMT_Term.mk_HasKind t k)
+in (_141_663, decls))
 end)))
 and encode_binders : FStar_ToSMT_Term.term Prims.option  ->  FStar_Absyn_Syntax.binders  ->  env_t  ->  (FStar_ToSMT_Term.fv Prims.list * FStar_ToSMT_Term.term Prims.list * env_t * FStar_ToSMT_Term.decls_t * (FStar_Absyn_Syntax.btvdef, FStar_Absyn_Syntax.bvvdef) FStar_Util.either Prims.list) = (fun fuel_opt bs env -> (
 
 let _50_762 = if (FStar_Tc_Env.debug env.tcenv FStar_Options.Low) then begin
-(let _140_667 = (FStar_Absyn_Print.binders_to_string ", " bs)
-in (FStar_Util.print1 "Encoding binders %s\n" _140_667))
+(let _141_667 = (FStar_Absyn_Print.binders_to_string ", " bs)
+in (FStar_Util.print1 "Encoding binders %s\n" _141_667))
 end else begin
 ()
 end
@@ -1164,9 +1164,9 @@ in (match (_50_781) with
 (
 
 let _50_782 = if (FStar_Tc_Env.debug env.tcenv (FStar_Options.Other ("Encoding"))) then begin
-(let _140_671 = (FStar_Absyn_Print.strBvd a)
-in (let _140_670 = (FStar_Absyn_Print.kind_to_string k)
-in (FStar_Util.print3 "Encoding type binder %s (%s) at kind %s\n" _140_671 aasym _140_670)))
+(let _141_671 = (FStar_Absyn_Print.strBvd a)
+in (let _141_670 = (FStar_Absyn_Print.kind_to_string k)
+in (FStar_Util.print3 "Encoding type binder %s (%s) at kind %s\n" _141_671 aasym _141_670)))
 end else begin
 ()
 end
@@ -1190,8 +1190,8 @@ in (match (_50_797) with
 | (xxsym, xx, env') -> begin
 (
 
-let _50_800 = (let _140_672 = (norm_t env t)
-in (encode_typ_pred fuel_opt _140_672 env xx))
+let _50_800 = (let _141_672 = (norm_t env t)
+in (encode_typ_pred fuel_opt _141_672 env xx))
 in (match (_50_800) with
 | (guard_x_t, decls') -> begin
 ((xxsym, FStar_ToSMT_Term.Term_sort), guard_x_t, env', decls', FStar_Util.Inr (x))
@@ -1215,8 +1215,8 @@ in (
 let _50_820 = (encode_typ_term t env)
 in (match (_50_820) with
 | (t, decls) -> begin
-(let _140_677 = (FStar_ToSMT_Term.mk_HasTypeWithFuel fuel_opt e t)
-in (_140_677, decls))
+(let _141_677 = (FStar_ToSMT_Term.mk_HasTypeWithFuel fuel_opt e t)
+in (_141_677, decls))
 end))))
 and encode_typ_pred' : FStar_ToSMT_Term.term Prims.option  ->  FStar_Absyn_Syntax.typ  ->  env_t  ->  FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decls_t) = (fun fuel_opt t env e -> (
 
@@ -1228,12 +1228,12 @@ in (match (_50_828) with
 | (t, decls) -> begin
 (match (fuel_opt) with
 | None -> begin
-(let _140_682 = (FStar_ToSMT_Term.mk_HasTypeZ e t)
-in (_140_682, decls))
+(let _141_682 = (FStar_ToSMT_Term.mk_HasTypeZ e t)
+in (_141_682, decls))
 end
 | Some (f) -> begin
-(let _140_683 = (FStar_ToSMT_Term.mk_HasTypeFuel f e t)
-in (_140_683, decls))
+(let _141_683 = (FStar_ToSMT_Term.mk_HasTypeFuel f e t)
+in (_141_683, decls))
 end)
 end))))
 and encode_typ_term : FStar_Absyn_Syntax.typ  ->  env_t  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decls_t) = (fun t env -> (
@@ -1241,12 +1241,12 @@ and encode_typ_term : FStar_Absyn_Syntax.typ  ->  env_t  ->  (FStar_ToSMT_Term.t
 let t0 = (FStar_Absyn_Util.compress_typ t)
 in (match (t0.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_btvar (a) -> begin
-(let _140_686 = (lookup_typ_var env a)
-in (_140_686, []))
+(let _141_686 = (lookup_typ_var env a)
+in (_141_686, []))
 end
 | FStar_Absyn_Syntax.Typ_const (fv) -> begin
-(let _140_687 = (lookup_free_tvar env fv)
-in (_140_687, []))
+(let _141_687 = (lookup_free_tvar env fv)
+in (_141_687, []))
 end
 | FStar_Absyn_Syntax.Typ_fun (binders, res) -> begin
 if ((env.encode_non_total_function_typ && (FStar_Absyn_Util.is_pure_or_ghost_comp res)) || (FStar_Absyn_Util.is_tot_or_gtot_comp res)) then begin
@@ -1257,8 +1257,8 @@ in (match (_50_849) with
 | (vars, guards, env', decls, _50_848) -> begin
 (
 
-let fsym = (let _140_688 = (varops.fresh "f")
-in (_140_688, FStar_ToSMT_Term.Term_sort))
+let fsym = (let _141_688 = (varops.fresh "f")
+in (_141_688, FStar_ToSMT_Term.Term_sort))
 in (
 
 let f = (FStar_ToSMT_Term.mkFreeV fsym)
@@ -1279,8 +1279,8 @@ in (match (_50_858) with
 
 let _50_867 = (match (pre_opt) with
 | None -> begin
-(let _140_689 = (FStar_ToSMT_Term.mk_and_l guards)
-in (_140_689, decls))
+(let _141_689 = (FStar_ToSMT_Term.mk_and_l guards)
+in (_141_689, decls))
 end
 | Some (pre) -> begin
 (
@@ -1288,21 +1288,21 @@ end
 let _50_864 = (encode_formula pre env')
 in (match (_50_864) with
 | (guard, decls0) -> begin
-(let _140_690 = (FStar_ToSMT_Term.mk_and_l ((guard)::guards))
-in (_140_690, (FStar_List.append decls decls0)))
+(let _141_690 = (FStar_ToSMT_Term.mk_and_l ((guard)::guards))
+in (_141_690, (FStar_List.append decls decls0)))
 end))
 end)
 in (match (_50_867) with
 | (guards, guard_decls) -> begin
 (
 
-let t_interp = (let _140_692 = (let _140_691 = (FStar_ToSMT_Term.mkImp (guards, res_pred))
-in (((app)::[])::[], vars, _140_691))
-in (FStar_ToSMT_Term.mkForall _140_692))
+let t_interp = (let _141_692 = (let _141_691 = (FStar_ToSMT_Term.mkImp (guards, res_pred))
+in (((app)::[])::[], vars, _141_691))
+in (FStar_ToSMT_Term.mkForall _141_692))
 in (
 
-let cvars = (let _140_694 = (FStar_ToSMT_Term.free_variables t_interp)
-in (FStar_All.pipe_right _140_694 (FStar_List.filter (fun _50_872 -> (match (_50_872) with
+let cvars = (let _141_694 = (FStar_ToSMT_Term.free_variables t_interp)
+in (FStar_All.pipe_right _141_694 (FStar_List.filter (fun _50_872 -> (match (_50_872) with
 | (x, _50_871) -> begin
 (x <> (Prims.fst fsym))
 end)))))
@@ -1311,10 +1311,10 @@ in (
 let tkey = (FStar_ToSMT_Term.mkForall ([], (fsym)::cvars, t_interp))
 in (match ((FStar_Util.smap_try_find env.cache tkey.FStar_ToSMT_Term.hash)) with
 | Some (t', sorts, _50_878) -> begin
-(let _140_697 = (let _140_696 = (let _140_695 = (FStar_All.pipe_right cvars (FStar_List.map FStar_ToSMT_Term.mkFreeV))
-in (t', _140_695))
-in (FStar_ToSMT_Term.mkApp _140_696))
-in (_140_697, []))
+(let _141_697 = (let _141_696 = (let _141_695 = (FStar_All.pipe_right cvars (FStar_List.map FStar_ToSMT_Term.mkFreeV))
+in (t', _141_695))
+in (FStar_ToSMT_Term.mkApp _141_696))
+in (_141_697, []))
 end
 | None -> begin
 (
@@ -1326,8 +1326,8 @@ let cvar_sorts = (FStar_List.map Prims.snd cvars)
 in (
 
 let caption = if (FStar_Options.log_queries ()) then begin
-(let _140_698 = (FStar_Tc_Normalize.typ_norm_to_string env.tcenv t0)
-in Some (_140_698))
+(let _141_698 = (FStar_Tc_Normalize.typ_norm_to_string env.tcenv t0)
+in Some (_141_698))
 end else begin
 None
 end
@@ -1336,17 +1336,17 @@ in (
 let tdecl = FStar_ToSMT_Term.DeclFun ((tsym, cvar_sorts, FStar_ToSMT_Term.Type_sort, caption))
 in (
 
-let t = (let _140_700 = (let _140_699 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
-in (tsym, _140_699))
-in (FStar_ToSMT_Term.mkApp _140_700))
+let t = (let _141_700 = (let _141_699 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
+in (tsym, _141_699))
+in (FStar_ToSMT_Term.mkApp _141_700))
 in (
 
 let t_has_kind = (FStar_ToSMT_Term.mk_HasKind t FStar_ToSMT_Term.mk_Kind_type)
 in (
 
-let k_assumption = (let _140_702 = (let _140_701 = (FStar_ToSMT_Term.mkForall (((t_has_kind)::[])::[], cvars, t_has_kind))
-in (_140_701, Some ((Prims.strcat tsym " kinding"))))
-in FStar_ToSMT_Term.Assume (_140_702))
+let k_assumption = (let _141_702 = (let _141_701 = (FStar_ToSMT_Term.mkForall (((t_has_kind)::[])::[], cvars, t_has_kind))
+in (_141_701, Some ((Prims.strcat tsym " kinding"))))
+in FStar_ToSMT_Term.Assume (_141_702))
 in (
 
 let f_has_t = (FStar_ToSMT_Term.mk_HasType f t)
@@ -1355,21 +1355,21 @@ in (
 let f_has_t_z = (FStar_ToSMT_Term.mk_HasTypeZ f t)
 in (
 
-let pre_typing = (let _140_709 = (let _140_708 = (let _140_707 = (let _140_706 = (let _140_705 = (let _140_704 = (let _140_703 = (FStar_ToSMT_Term.mk_PreType f)
-in (FStar_ToSMT_Term.mk_tester "Typ_fun" _140_703))
-in (f_has_t, _140_704))
-in (FStar_ToSMT_Term.mkImp _140_705))
-in (((f_has_t)::[])::[], (fsym)::cvars, _140_706))
-in (mkForall_fuel _140_707))
-in (_140_708, Some ("pre-typing for functions")))
-in FStar_ToSMT_Term.Assume (_140_709))
+let pre_typing = (let _141_709 = (let _141_708 = (let _141_707 = (let _141_706 = (let _141_705 = (let _141_704 = (let _141_703 = (FStar_ToSMT_Term.mk_PreType f)
+in (FStar_ToSMT_Term.mk_tester "Typ_fun" _141_703))
+in (f_has_t, _141_704))
+in (FStar_ToSMT_Term.mkImp _141_705))
+in (((f_has_t)::[])::[], (fsym)::cvars, _141_706))
+in (mkForall_fuel _141_707))
+in (_141_708, Some ("pre-typing for functions")))
+in FStar_ToSMT_Term.Assume (_141_709))
 in (
 
-let t_interp = (let _140_713 = (let _140_712 = (let _140_711 = (let _140_710 = (FStar_ToSMT_Term.mkIff (f_has_t_z, t_interp))
-in (((f_has_t_z)::[])::[], (fsym)::cvars, _140_710))
-in (FStar_ToSMT_Term.mkForall _140_711))
-in (_140_712, Some ((Prims.strcat tsym " interpretation"))))
-in FStar_ToSMT_Term.Assume (_140_713))
+let t_interp = (let _141_713 = (let _141_712 = (let _141_711 = (let _141_710 = (FStar_ToSMT_Term.mkIff (f_has_t_z, t_interp))
+in (((f_has_t_z)::[])::[], (fsym)::cvars, _141_710))
+in (FStar_ToSMT_Term.mkForall _141_711))
+in (_141_712, Some ((Prims.strcat tsym " interpretation"))))
+in FStar_ToSMT_Term.Assume (_141_713))
 in (
 
 let t_decls = (FStar_List.append (FStar_List.append decls decls') ((tdecl)::(k_assumption)::(pre_typing)::(t_interp)::[]))
@@ -1394,9 +1394,9 @@ in (
 let t = (FStar_ToSMT_Term.mkApp (tsym, []))
 in (
 
-let t_kinding = (let _140_715 = (let _140_714 = (FStar_ToSMT_Term.mk_HasKind t FStar_ToSMT_Term.mk_Kind_type)
-in (_140_714, None))
-in FStar_ToSMT_Term.Assume (_140_715))
+let t_kinding = (let _141_715 = (let _141_714 = (FStar_ToSMT_Term.mk_HasKind t FStar_ToSMT_Term.mk_Kind_type)
+in (_141_714, None))
+in FStar_ToSMT_Term.Assume (_141_715))
 in (
 
 let fsym = ("f", FStar_ToSMT_Term.Term_sort)
@@ -1408,14 +1408,14 @@ in (
 let f_has_t = (FStar_ToSMT_Term.mk_HasType f t)
 in (
 
-let t_interp = (let _140_722 = (let _140_721 = (let _140_720 = (let _140_719 = (let _140_718 = (let _140_717 = (let _140_716 = (FStar_ToSMT_Term.mk_PreType f)
-in (FStar_ToSMT_Term.mk_tester "Typ_fun" _140_716))
-in (f_has_t, _140_717))
-in (FStar_ToSMT_Term.mkImp _140_718))
-in (((f_has_t)::[])::[], (fsym)::[], _140_719))
-in (mkForall_fuel _140_720))
-in (_140_721, Some ("pre-typing")))
-in FStar_ToSMT_Term.Assume (_140_722))
+let t_interp = (let _141_722 = (let _141_721 = (let _141_720 = (let _141_719 = (let _141_718 = (let _141_717 = (let _141_716 = (FStar_ToSMT_Term.mk_PreType f)
+in (FStar_ToSMT_Term.mk_tester "Typ_fun" _141_716))
+in (f_has_t, _141_717))
+in (FStar_ToSMT_Term.mkImp _141_718))
+in (((f_has_t)::[])::[], (fsym)::[], _141_719))
+in (mkForall_fuel _141_720))
+in (_141_721, Some ("pre-typing")))
+in FStar_ToSMT_Term.Assume (_141_722))
 in (t, (tdecl)::(t_kinding)::(t_interp)::[])))))))))
 end
 end
@@ -1453,13 +1453,13 @@ in (match (_50_937) with
 | (fsym, fterm) -> begin
 (
 
-let encoding = (let _140_724 = (let _140_723 = (FStar_ToSMT_Term.mk_HasTypeWithFuel (Some (fterm)) xtm base_t)
-in (_140_723, refinement))
-in (FStar_ToSMT_Term.mkAnd _140_724))
+let encoding = (let _141_724 = (let _141_723 = (FStar_ToSMT_Term.mk_HasTypeWithFuel (Some (fterm)) xtm base_t)
+in (_141_723, refinement))
+in (FStar_ToSMT_Term.mkAnd _141_724))
 in (
 
-let cvars = (let _140_726 = (FStar_ToSMT_Term.free_variables encoding)
-in (FStar_All.pipe_right _140_726 (FStar_List.filter (fun _50_942 -> (match (_50_942) with
+let cvars = (let _141_726 = (FStar_ToSMT_Term.free_variables encoding)
+in (FStar_All.pipe_right _141_726 (FStar_List.filter (fun _50_942 -> (match (_50_942) with
 | (y, _50_941) -> begin
 ((y <> x) && (y <> fsym))
 end)))))
@@ -1474,10 +1474,10 @@ in (
 let tkey = (FStar_ToSMT_Term.mkForall ([], (ffv)::(xfv)::cvars, encoding))
 in (match ((FStar_Util.smap_try_find env.cache tkey.FStar_ToSMT_Term.hash)) with
 | Some (t, _50_949, _50_951) -> begin
-(let _140_729 = (let _140_728 = (let _140_727 = (FStar_All.pipe_right cvars (FStar_List.map FStar_ToSMT_Term.mkFreeV))
-in (t, _140_727))
-in (FStar_ToSMT_Term.mkApp _140_728))
-in (_140_729, []))
+(let _141_729 = (let _141_728 = (let _141_727 = (FStar_All.pipe_right cvars (FStar_List.map FStar_ToSMT_Term.mkFreeV))
+in (t, _141_727))
+in (FStar_ToSMT_Term.mkApp _141_728))
+in (_141_729, []))
 end
 | None -> begin
 (
@@ -1491,9 +1491,9 @@ in (
 let tdecl = FStar_ToSMT_Term.DeclFun ((tsym, cvar_sorts, FStar_ToSMT_Term.Type_sort, None))
 in (
 
-let t = (let _140_731 = (let _140_730 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
-in (tsym, _140_730))
-in (FStar_ToSMT_Term.mkApp _140_731))
+let t = (let _141_731 = (let _141_730 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
+in (tsym, _141_730))
+in (FStar_ToSMT_Term.mkApp _141_731))
 in (
 
 let x_has_t = (FStar_ToSMT_Term.mk_HasTypeWithFuel (Some (fterm)) xtm t)
@@ -1505,19 +1505,19 @@ in (
 let t_kinding = (FStar_ToSMT_Term.mkForall (((t_has_kind)::[])::[], cvars, t_has_kind))
 in (
 
-let assumption = (let _140_733 = (let _140_732 = (FStar_ToSMT_Term.mkIff (x_has_t, encoding))
-in (((x_has_t)::[])::[], (ffv)::(xfv)::cvars, _140_732))
-in (FStar_ToSMT_Term.mkForall _140_733))
+let assumption = (let _141_733 = (let _141_732 = (FStar_ToSMT_Term.mkIff (x_has_t, encoding))
+in (((x_has_t)::[])::[], (ffv)::(xfv)::cvars, _141_732))
+in (FStar_ToSMT_Term.mkForall _141_733))
 in (
 
-let t_decls = (let _140_740 = (let _140_739 = (let _140_738 = (let _140_737 = (let _140_736 = (let _140_735 = (let _140_734 = (FStar_Absyn_Print.typ_to_string t0)
-in Some (_140_734))
-in (assumption, _140_735))
-in FStar_ToSMT_Term.Assume (_140_736))
-in (_140_737)::[])
-in (FStar_ToSMT_Term.Assume ((t_kinding, None)))::_140_738)
-in (tdecl)::_140_739)
-in (FStar_List.append (FStar_List.append decls decls') _140_740))
+let t_decls = (let _141_740 = (let _141_739 = (let _141_738 = (let _141_737 = (let _141_736 = (let _141_735 = (let _141_734 = (FStar_Absyn_Print.typ_to_string t0)
+in Some (_141_734))
+in (assumption, _141_735))
+in FStar_ToSMT_Term.Assume (_141_736))
+in (_141_737)::[])
+in (FStar_ToSMT_Term.Assume ((t_kinding, None)))::_141_738)
+in (tdecl)::_141_739)
+in (FStar_List.append (FStar_List.append decls decls') _141_740))
 in (
 
 let _50_964 = (FStar_Util.smap_add env.cache tkey.FStar_ToSMT_Term.hash (tsym, cvar_sorts, t_decls))
@@ -1532,8 +1532,8 @@ end
 | FStar_Absyn_Syntax.Typ_uvar (uv, k) -> begin
 (
 
-let ttm = (let _140_741 = (FStar_Unionfind.uvar_id uv)
-in (FStar_ToSMT_Term.mk_Typ_uvar _140_741))
+let ttm = (let _141_741 = (FStar_Unionfind.uvar_id uv)
+in (FStar_ToSMT_Term.mk_Typ_uvar _141_741))
 in (
 
 let _50_973 = (encode_knd k env ttm)
@@ -1592,12 +1592,12 @@ if (is_full_app ()) then begin
 let head = (lookup_free_tvar_name env fv)
 in (
 
-let t = (let _140_746 = (let _140_745 = (FStar_List.map (fun _50_11 -> (match (_50_11) with
+let t = (let _141_746 = (let _141_745 = (FStar_List.map (fun _50_11 -> (match (_50_11) with
 | (FStar_Util.Inl (t)) | (FStar_Util.Inr (t)) -> begin
 t
 end)) args)
-in (head, _140_745))
-in (FStar_ToSMT_Term.mkApp _140_746))
+in (head, _141_745))
+in (FStar_ToSMT_Term.mkApp _141_746))
 in (t, decls)))
 end else begin
 (
@@ -1613,8 +1613,8 @@ end
 | FStar_Absyn_Syntax.Typ_uvar (uv, k) -> begin
 (
 
-let ttm = (let _140_747 = (FStar_Unionfind.uvar_id uv)
-in (FStar_ToSMT_Term.mk_Typ_uvar _140_747))
+let ttm = (let _141_747 = (FStar_Unionfind.uvar_id uv)
+in (FStar_ToSMT_Term.mk_Typ_uvar _141_747))
 in (
 
 let _50_1014 = (encode_knd k env ttm)
@@ -1646,11 +1646,11 @@ in (match (_50_1032) with
 | (body, decls') -> begin
 (
 
-let key_body = (let _140_751 = (let _140_750 = (let _140_749 = (let _140_748 = (FStar_ToSMT_Term.mk_and_l guards)
-in (_140_748, body))
-in (FStar_ToSMT_Term.mkImp _140_749))
-in ([], vars, _140_750))
-in (FStar_ToSMT_Term.mkForall _140_751))
+let key_body = (let _141_751 = (let _141_750 = (let _141_749 = (let _141_748 = (FStar_ToSMT_Term.mk_and_l guards)
+in (_141_748, body))
+in (FStar_ToSMT_Term.mkImp _141_749))
+in ([], vars, _141_750))
+in (FStar_ToSMT_Term.mkForall _141_751))
 in (
 
 let cvars = (FStar_ToSMT_Term.free_variables key_body)
@@ -1659,10 +1659,10 @@ in (
 let tkey = (FStar_ToSMT_Term.mkForall ([], cvars, key_body))
 in (match ((FStar_Util.smap_try_find env.cache tkey.FStar_ToSMT_Term.hash)) with
 | Some (t, _50_1038, _50_1040) -> begin
-(let _140_754 = (let _140_753 = (let _140_752 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
-in (t, _140_752))
-in (FStar_ToSMT_Term.mkApp _140_753))
-in (_140_754, []))
+(let _141_754 = (let _141_753 = (let _141_752 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
+in (t, _141_752))
+in (FStar_ToSMT_Term.mkApp _141_753))
+in (_141_754, []))
 end
 | None -> begin
 (match ((is_eta env vars body)) with
@@ -1681,35 +1681,35 @@ in (
 let tdecl = FStar_ToSMT_Term.DeclFun ((tsym, cvar_sorts, FStar_ToSMT_Term.Type_sort, None))
 in (
 
-let t = (let _140_756 = (let _140_755 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
-in (tsym, _140_755))
-in (FStar_ToSMT_Term.mkApp _140_756))
+let t = (let _141_756 = (let _141_755 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
+in (tsym, _141_755))
+in (FStar_ToSMT_Term.mkApp _141_756))
 in (
 
 let app = (mk_ApplyT t vars)
 in (
 
-let interp = (let _140_763 = (let _140_762 = (let _140_761 = (let _140_760 = (let _140_759 = (let _140_758 = (FStar_ToSMT_Term.mk_and_l guards)
-in (let _140_757 = (FStar_ToSMT_Term.mkEq (app, body))
-in (_140_758, _140_757)))
-in (FStar_ToSMT_Term.mkImp _140_759))
-in (((app)::[])::[], (FStar_List.append vars cvars), _140_760))
-in (FStar_ToSMT_Term.mkForall _140_761))
-in (_140_762, Some ("Typ_lam interpretation")))
-in FStar_ToSMT_Term.Assume (_140_763))
+let interp = (let _141_763 = (let _141_762 = (let _141_761 = (let _141_760 = (let _141_759 = (let _141_758 = (FStar_ToSMT_Term.mk_and_l guards)
+in (let _141_757 = (FStar_ToSMT_Term.mkEq (app, body))
+in (_141_758, _141_757)))
+in (FStar_ToSMT_Term.mkImp _141_759))
+in (((app)::[])::[], (FStar_List.append vars cvars), _141_760))
+in (FStar_ToSMT_Term.mkForall _141_761))
+in (_141_762, Some ("Typ_lam interpretation")))
+in FStar_ToSMT_Term.Assume (_141_763))
 in (
 
 let kinding = (
 
-let _50_1055 = (let _140_764 = (FStar_Tc_Recheck.recompute_kind t0)
-in (encode_knd _140_764 env t))
+let _50_1055 = (let _141_764 = (FStar_Tc_Recheck.recompute_kind t0)
+in (encode_knd _141_764 env t))
 in (match (_50_1055) with
 | (ktm, decls'') -> begin
-(let _140_768 = (let _140_767 = (let _140_766 = (let _140_765 = (FStar_ToSMT_Term.mkForall (((t)::[])::[], cvars, ktm))
-in (_140_765, Some ("Typ_lam kinding")))
-in FStar_ToSMT_Term.Assume (_140_766))
-in (_140_767)::[])
-in (FStar_List.append decls'' _140_768))
+(let _141_768 = (let _141_767 = (let _141_766 = (let _141_765 = (FStar_ToSMT_Term.mkForall (((t)::[])::[], cvars, ktm))
+in (_141_765, Some ("Typ_lam kinding")))
+in FStar_ToSMT_Term.Assume (_141_766))
+in (_141_767)::[])
+in (FStar_List.append decls'' _141_768))
 end))
 in (
 
@@ -1727,16 +1727,16 @@ end
 (encode_typ_term t env)
 end
 | FStar_Absyn_Syntax.Typ_meta (_50_1066) -> begin
-(let _140_769 = (FStar_Absyn_Util.unmeta_typ t0)
-in (encode_typ_term _140_769 env))
+(let _141_769 = (FStar_Absyn_Util.unmeta_typ t0)
+in (encode_typ_term _141_769 env))
 end
 | (FStar_Absyn_Syntax.Typ_delayed (_)) | (FStar_Absyn_Syntax.Typ_unknown) -> begin
-(let _140_774 = (let _140_773 = (FStar_All.pipe_left FStar_Range.string_of_range t.FStar_Absyn_Syntax.pos)
-in (let _140_772 = (FStar_Absyn_Print.tag_of_typ t0)
-in (let _140_771 = (FStar_Absyn_Print.typ_to_string t0)
-in (let _140_770 = (FStar_Absyn_Print.typ_to_string t)
-in (FStar_Util.format4 "(%s) Impossible: %s\n%s\n%s\n" _140_773 _140_772 _140_771 _140_770)))))
-in (FStar_All.failwith _140_774))
+(let _141_774 = (let _141_773 = (FStar_All.pipe_left FStar_Range.string_of_range t.FStar_Absyn_Syntax.pos)
+in (let _141_772 = (FStar_Absyn_Print.tag_of_typ t0)
+in (let _141_771 = (FStar_Absyn_Print.typ_to_string t0)
+in (let _141_770 = (FStar_Absyn_Print.typ_to_string t)
+in (FStar_Util.format4 "(%s) Impossible: %s\n%s\n%s\n" _141_773 _141_772 _141_771 _141_770)))))
+in (FStar_All.failwith _141_774))
 end)))
 and encode_exp : FStar_Absyn_Syntax.exp  ->  env_t  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decls_t) = (fun e env -> (
 
@@ -1746,8 +1746,8 @@ in (
 let e0 = e
 in (match (e.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Exp_delayed (_50_1077) -> begin
-(let _140_777 = (FStar_Absyn_Util.compress_exp e)
-in (encode_exp _140_777 env))
+(let _141_777 = (FStar_Absyn_Util.compress_exp e)
+in (encode_exp _141_777 env))
 end
 | FStar_Absyn_Syntax.Exp_bvar (x) -> begin
 (
@@ -1756,12 +1756,12 @@ let t = (lookup_term_var env x)
 in (t, []))
 end
 | FStar_Absyn_Syntax.Exp_fvar (v, _50_1084) -> begin
-(let _140_778 = (lookup_free_var env v)
-in (_140_778, []))
+(let _141_778 = (lookup_free_var env v)
+in (_141_778, []))
 end
 | FStar_Absyn_Syntax.Exp_constant (c) -> begin
-(let _140_779 = (encode_const c)
-in (_140_779, []))
+(let _141_779 = (encode_const c)
+in (_141_779, []))
 end
 | FStar_Absyn_Syntax.Exp_ascribed (e, t, _50_1092) -> begin
 (
@@ -1775,8 +1775,8 @@ end
 | FStar_Absyn_Syntax.Exp_uvar (uv, _50_1105) -> begin
 (
 
-let e = (let _140_780 = (FStar_Unionfind.uvar_id uv)
-in (FStar_ToSMT_Term.mk_Exp_uvar _140_780))
+let e = (let _141_780 = (FStar_Unionfind.uvar_id uv)
+in (FStar_ToSMT_Term.mk_Exp_uvar _141_780))
 in (e, []))
 end
 | FStar_Absyn_Syntax.Exp_abs (bs, body) -> begin
@@ -1790,8 +1790,8 @@ let f = (varops.fresh "Exp_abs")
 in (
 
 let decl = FStar_ToSMT_Term.DeclFun ((f, [], FStar_ToSMT_Term.Term_sort, None))
-in (let _140_783 = (FStar_ToSMT_Term.mkFreeV (f, FStar_ToSMT_Term.Term_sort))
-in (_140_783, (decl)::[]))))
+in (let _141_783 = (FStar_ToSMT_Term.mkFreeV (f, FStar_ToSMT_Term.Term_sort))
+in (_141_783, (decl)::[]))))
 end))
 in (match ((FStar_ST.read e.FStar_Absyn_Syntax.tk)) with
 | None -> begin
@@ -1801,8 +1801,8 @@ let _50_1118 = (FStar_Tc_Errors.warn e.FStar_Absyn_Syntax.pos "Losing precision 
 in (fallback ()))
 end
 | Some (tfun) -> begin
-if (let _140_784 = (FStar_Absyn_Util.is_pure_or_ghost_function tfun)
-in (FStar_All.pipe_left Prims.op_Negation _140_784)) then begin
+if (let _141_784 = (FStar_Absyn_Util.is_pure_or_ghost_function tfun)
+in (FStar_All.pipe_left Prims.op_Negation _141_784)) then begin
 (fallback ())
 end else begin
 (
@@ -1830,9 +1830,9 @@ end
 end)
 in (
 
-let e = (let _140_786 = (let _140_785 = (FStar_Absyn_Syntax.mk_Exp_abs (rest, body) (Some (res_t)) body.FStar_Absyn_Syntax.pos)
-in (bs0, _140_785))
-in (FStar_Absyn_Syntax.mk_Exp_abs _140_786 (Some (tfun)) e0.FStar_Absyn_Syntax.pos))
+let e = (let _141_786 = (let _141_785 = (FStar_Absyn_Syntax.mk_Exp_abs (rest, body) (Some (res_t)) body.FStar_Absyn_Syntax.pos)
+in (bs0, _141_785))
+in (FStar_Absyn_Syntax.mk_Exp_abs _141_786 (Some (tfun)) e0.FStar_Absyn_Syntax.pos))
 in (encode_exp e env)))
 end))
 end else begin
@@ -1848,11 +1848,11 @@ in (match (_50_1146) with
 | (body, decls') -> begin
 (
 
-let key_body = (let _140_790 = (let _140_789 = (let _140_788 = (let _140_787 = (FStar_ToSMT_Term.mk_and_l guards)
-in (_140_787, body))
-in (FStar_ToSMT_Term.mkImp _140_788))
-in ([], vars, _140_789))
-in (FStar_ToSMT_Term.mkForall _140_790))
+let key_body = (let _141_790 = (let _141_789 = (let _141_788 = (let _141_787 = (FStar_ToSMT_Term.mk_and_l guards)
+in (_141_787, body))
+in (FStar_ToSMT_Term.mkImp _141_788))
+in ([], vars, _141_789))
+in (FStar_ToSMT_Term.mkForall _141_790))
 in (
 
 let cvars = (FStar_ToSMT_Term.free_variables key_body)
@@ -1861,10 +1861,10 @@ in (
 let tkey = (FStar_ToSMT_Term.mkForall ([], cvars, key_body))
 in (match ((FStar_Util.smap_try_find env.cache tkey.FStar_ToSMT_Term.hash)) with
 | Some (t, _50_1152, _50_1154) -> begin
-(let _140_793 = (let _140_792 = (let _140_791 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
-in (t, _140_791))
-in (FStar_ToSMT_Term.mkApp _140_792))
-in (_140_793, []))
+(let _141_793 = (let _141_792 = (let _141_791 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
+in (t, _141_791))
+in (FStar_ToSMT_Term.mkApp _141_792))
+in (_141_793, []))
 end
 | None -> begin
 (match ((is_eta env vars body)) with
@@ -1883,9 +1883,9 @@ in (
 let fdecl = FStar_ToSMT_Term.DeclFun ((fsym, cvar_sorts, FStar_ToSMT_Term.Term_sort, None))
 in (
 
-let f = (let _140_795 = (let _140_794 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
-in (fsym, _140_794))
-in (FStar_ToSMT_Term.mkApp _140_795))
+let f = (let _141_795 = (let _141_794 = (FStar_List.map FStar_ToSMT_Term.mkFreeV cvars)
+in (fsym, _141_794))
+in (FStar_ToSMT_Term.mkApp _141_795))
 in (
 
 let app = (mk_ApplyE f vars)
@@ -1896,19 +1896,19 @@ in (match (_50_1168) with
 | (f_has_t, decls'') -> begin
 (
 
-let typing_f = (let _140_797 = (let _140_796 = (FStar_ToSMT_Term.mkForall (((f)::[])::[], cvars, f_has_t))
-in (_140_796, Some ((Prims.strcat fsym " typing"))))
-in FStar_ToSMT_Term.Assume (_140_797))
+let typing_f = (let _141_797 = (let _141_796 = (FStar_ToSMT_Term.mkForall (((f)::[])::[], cvars, f_has_t))
+in (_141_796, Some ((Prims.strcat fsym " typing"))))
+in FStar_ToSMT_Term.Assume (_141_797))
 in (
 
-let interp_f = (let _140_804 = (let _140_803 = (let _140_802 = (let _140_801 = (let _140_800 = (let _140_799 = (FStar_ToSMT_Term.mk_IsTyped app)
-in (let _140_798 = (FStar_ToSMT_Term.mkEq (app, body))
-in (_140_799, _140_798)))
-in (FStar_ToSMT_Term.mkImp _140_800))
-in (((app)::[])::[], (FStar_List.append vars cvars), _140_801))
-in (FStar_ToSMT_Term.mkForall _140_802))
-in (_140_803, Some ((Prims.strcat fsym " interpretation"))))
-in FStar_ToSMT_Term.Assume (_140_804))
+let interp_f = (let _141_804 = (let _141_803 = (let _141_802 = (let _141_801 = (let _141_800 = (let _141_799 = (FStar_ToSMT_Term.mk_IsTyped app)
+in (let _141_798 = (FStar_ToSMT_Term.mkEq (app, body))
+in (_141_799, _141_798)))
+in (FStar_ToSMT_Term.mkImp _141_800))
+in (((app)::[])::[], (FStar_List.append vars cvars), _141_801))
+in (FStar_ToSMT_Term.mkForall _141_802))
+in (_141_803, Some ((Prims.strcat fsym " interpretation"))))
+in FStar_ToSMT_Term.Assume (_141_804))
 in (
 
 let f_decls = (FStar_List.append (FStar_List.append (FStar_List.append decls decls') ((fdecl)::decls'')) ((typing_f)::(interp_f)::[]))
@@ -1940,14 +1940,14 @@ in (match (_50_1211) with
 let _50_1214 = (encode_exp v2 env)
 in (match (_50_1214) with
 | (v2, decls2) -> begin
-(let _140_805 = (FStar_ToSMT_Term.mk_LexCons v1 v2)
-in (_140_805, (FStar_List.append decls1 decls2)))
+(let _141_805 = (FStar_ToSMT_Term.mk_LexCons v1 v2)
+in (_141_805, (FStar_List.append decls1 decls2)))
 end))
 end))
 end
 | FStar_Absyn_Syntax.Exp_app ({FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Exp_abs (_50_1224); FStar_Absyn_Syntax.tk = _50_1222; FStar_Absyn_Syntax.pos = _50_1220; FStar_Absyn_Syntax.fvs = _50_1218; FStar_Absyn_Syntax.uvs = _50_1216}, _50_1228) -> begin
-(let _140_806 = (whnf_e env e)
-in (encode_exp _140_806 env))
+(let _141_806 = (whnf_e env e)
+in (encode_exp _141_806 env))
 end
 | FStar_Absyn_Syntax.Exp_app (head, args_e) -> begin
 (
@@ -1980,8 +1980,8 @@ in (match (_50_1251) with
 let subst = (FStar_Absyn_Util.formals_for_actuals formals args_e)
 in (
 
-let ty = (let _140_809 = (FStar_Absyn_Syntax.mk_Typ_fun (rest, c) (Some (FStar_Absyn_Syntax.ktype)) e0.FStar_Absyn_Syntax.pos)
-in (FStar_All.pipe_right _140_809 (FStar_Absyn_Util.subst_typ subst)))
+let ty = (let _141_809 = (FStar_Absyn_Syntax.mk_Typ_fun (rest, c) (Some (FStar_Absyn_Syntax.ktype)) e0.FStar_Absyn_Syntax.pos)
+in (FStar_All.pipe_right _141_809 (FStar_Absyn_Util.subst_typ subst)))
 in (
 
 let _50_1256 = (encode_typ_pred None ty env app_tm)
@@ -1992,9 +1992,9 @@ in (match (_50_1256) with
 let cvars = (FStar_ToSMT_Term.free_variables has_type)
 in (
 
-let e_typing = (let _140_811 = (let _140_810 = (FStar_ToSMT_Term.mkForall (((has_type)::[])::[], cvars, has_type))
-in (_140_810, None))
-in FStar_ToSMT_Term.Assume (_140_811))
+let e_typing = (let _141_811 = (let _141_810 = (FStar_ToSMT_Term.mkForall (((has_type)::[])::[], cvars, has_type))
+in (_141_810, None))
+in FStar_ToSMT_Term.Assume (_141_811))
 in (app_tm, (FStar_List.append (FStar_List.append (FStar_List.append decls decls') decls'') ((e_typing)::[])))))
 end))))
 end))
@@ -2009,13 +2009,13 @@ in (match (_50_1263) with
 | (fname, fuel_args) -> begin
 (
 
-let tm = (let _140_817 = (let _140_816 = (let _140_815 = (FStar_List.map (fun _50_12 -> (match (_50_12) with
+let tm = (let _141_817 = (let _141_816 = (let _141_815 = (FStar_List.map (fun _50_12 -> (match (_50_12) with
 | (FStar_Util.Inl (t)) | (FStar_Util.Inr (t)) -> begin
 t
 end)) args)
-in (FStar_List.append fuel_args _140_815))
-in (fname, _140_816))
-in (FStar_ToSMT_Term.mkApp' _140_817))
+in (FStar_List.append fuel_args _141_815))
+in (fname, _141_816))
+in (FStar_ToSMT_Term.mkApp' _141_817))
 in (tm, decls))
 end)))
 in (
@@ -2024,35 +2024,35 @@ let head = (FStar_Absyn_Util.compress_exp head)
 in (
 
 let _50_1270 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env.tcenv) (FStar_Options.Other ("186"))) then begin
-(let _140_819 = (FStar_Absyn_Print.exp_to_string head)
-in (let _140_818 = (FStar_Absyn_Print.exp_to_string e)
-in (FStar_Util.print2 "Recomputing type for %s\nFull term is %s\n" _140_819 _140_818)))
+(let _141_819 = (FStar_Absyn_Print.exp_to_string head)
+in (let _141_818 = (FStar_Absyn_Print.exp_to_string e)
+in (FStar_Util.print2 "Recomputing type for %s\nFull term is %s\n" _141_819 _141_818)))
 end else begin
 ()
 end
 in (
 
-let head_type = (let _140_822 = (let _140_821 = (let _140_820 = (FStar_Tc_Recheck.recompute_typ head)
-in (FStar_Absyn_Util.unrefine _140_820))
-in (whnf env _140_821))
-in (FStar_All.pipe_left FStar_Absyn_Util.unrefine _140_822))
+let head_type = (let _141_822 = (let _141_821 = (let _141_820 = (FStar_Tc_Recheck.recompute_typ head)
+in (FStar_Absyn_Util.unrefine _141_820))
+in (whnf env _141_821))
+in (FStar_All.pipe_left FStar_Absyn_Util.unrefine _141_822))
 in (
 
 let _50_1273 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env.tcenv) (FStar_Options.Other ("Encoding"))) then begin
-(let _140_825 = (FStar_Absyn_Print.exp_to_string head)
-in (let _140_824 = (FStar_Absyn_Print.tag_of_exp head)
-in (let _140_823 = (FStar_Absyn_Print.typ_to_string head_type)
-in (FStar_Util.print3 "Recomputed type of head %s (%s) to be %s\n" _140_825 _140_824 _140_823))))
+(let _141_825 = (FStar_Absyn_Print.exp_to_string head)
+in (let _141_824 = (FStar_Absyn_Print.tag_of_exp head)
+in (let _141_823 = (FStar_Absyn_Print.typ_to_string head_type)
+in (FStar_Util.print3 "Recomputed type of head %s (%s) to be %s\n" _141_825 _141_824 _141_823))))
 end else begin
 ()
 end
 in (match ((FStar_Absyn_Util.function_formals head_type)) with
 | None -> begin
-(let _140_829 = (let _140_828 = (FStar_Range.string_of_range e0.FStar_Absyn_Syntax.pos)
-in (let _140_827 = (FStar_Absyn_Print.exp_to_string e0)
-in (let _140_826 = (FStar_Absyn_Print.typ_to_string head_type)
-in (FStar_Util.format3 "(%s) term is %s; head type is %s\n" _140_828 _140_827 _140_826))))
-in (FStar_All.failwith _140_829))
+(let _141_829 = (let _141_828 = (FStar_Range.string_of_range e0.FStar_Absyn_Syntax.pos)
+in (let _141_827 = (FStar_Absyn_Print.exp_to_string e0)
+in (let _141_826 = (FStar_Absyn_Print.typ_to_string head_type)
+in (FStar_Util.format3 "(%s) term is %s; head type is %s\n" _141_828 _141_827 _141_826))))
+in (FStar_All.failwith _141_829))
 end
 | Some (formals, c) -> begin
 (match (head.FStar_Absyn_Syntax.n) with
@@ -2100,8 +2100,8 @@ let e = (varops.fresh "let-rec")
 in (
 
 let decl_e = FStar_ToSMT_Term.DeclFun ((e, [], FStar_ToSMT_Term.Term_sort, None))
-in (let _140_830 = (FStar_ToSMT_Term.mkFreeV (e, FStar_ToSMT_Term.Term_sort))
-in (_140_830, (decl_e)::[])))))
+in (let _141_830 = (FStar_ToSMT_Term.mkFreeV (e, FStar_ToSMT_Term.Term_sort))
+in (_141_830, (decl_e)::[])))))
 end
 | FStar_Absyn_Syntax.Exp_match (e, pats) -> begin
 (
@@ -2148,12 +2148,12 @@ end
 let _50_1368 = (encode_exp w env)
 in (match (_50_1368) with
 | (w, decls2) -> begin
-(let _140_841 = (let _140_840 = (let _140_839 = (let _140_838 = (let _140_837 = (FStar_ToSMT_Term.boxBool FStar_ToSMT_Term.mkTrue)
-in (w, _140_837))
-in (FStar_ToSMT_Term.mkEq _140_838))
-in (guard, _140_839))
-in (FStar_ToSMT_Term.mkAnd _140_840))
-in (_140_841, decls2))
+(let _141_841 = (let _141_840 = (let _141_839 = (let _141_838 = (let _141_837 = (FStar_ToSMT_Term.boxBool FStar_ToSMT_Term.mkTrue)
+in (w, _141_837))
+in (FStar_ToSMT_Term.mkEq _141_838))
+in (guard, _141_839))
+in (FStar_ToSMT_Term.mkAnd _141_840))
+in (_141_841, decls2))
 end))
 end)
 in (match (_50_1371) with
@@ -2163,8 +2163,8 @@ in (match (_50_1371) with
 let _50_1374 = (encode_exp br env)
 in (match (_50_1374) with
 | (br, decls3) -> begin
-(let _140_842 = (FStar_ToSMT_Term.mkITE (guard, br, else_case))
-in (_140_842, (FStar_List.append (FStar_List.append decls decls2) decls3)))
+(let _141_842 = (FStar_ToSMT_Term.mkITE (guard, br, else_case))
+in (_141_842, (FStar_List.append (FStar_List.append decls decls2) decls3)))
 end))
 end)))))
 end)) patterns (else_case, decls)))
@@ -2176,24 +2176,24 @@ end))
 end))
 end
 | FStar_Absyn_Syntax.Exp_meta (_50_1379) -> begin
-(let _140_845 = (let _140_844 = (FStar_Range.string_of_range e.FStar_Absyn_Syntax.pos)
-in (let _140_843 = (FStar_Absyn_Print.exp_to_string e)
-in (FStar_Util.format2 "(%s): Impossible: encode_exp got %s" _140_844 _140_843)))
-in (FStar_All.failwith _140_845))
+(let _141_845 = (let _141_844 = (FStar_Range.string_of_range e.FStar_Absyn_Syntax.pos)
+in (let _141_843 = (FStar_Absyn_Print.exp_to_string e)
+in (FStar_Util.format2 "(%s): Impossible: encode_exp got %s" _141_844 _141_843)))
+in (FStar_All.failwith _141_845))
 end))))
 and encode_pat : env_t  ->  FStar_Absyn_Syntax.pat  ->  (env_t * pattern) Prims.list = (fun env pat -> (match (pat.FStar_Absyn_Syntax.v) with
 | FStar_Absyn_Syntax.Pat_disj (ps) -> begin
 (FStar_List.map (encode_one_pat env) ps)
 end
 | _50_1386 -> begin
-(let _140_848 = (encode_one_pat env pat)
-in (_140_848)::[])
+(let _141_848 = (encode_one_pat env pat)
+in (_141_848)::[])
 end))
 and encode_one_pat : env_t  ->  FStar_Absyn_Syntax.pat  ->  (env_t * pattern) = (fun env pat -> (
 
 let _50_1389 = if (FStar_Tc_Env.debug env.tcenv FStar_Options.Low) then begin
-(let _140_851 = (FStar_Absyn_Print.pat_to_string pat)
-in (FStar_Util.print1 "Encoding pattern %s\n" _140_851))
+(let _141_851 = (FStar_Absyn_Print.pat_to_string pat)
+in (FStar_Util.print1 "Encoding pattern %s\n" _141_851))
 end else begin
 ()
 end
@@ -2238,9 +2238,9 @@ end
 FStar_ToSMT_Term.mkTrue
 end
 | FStar_Absyn_Syntax.Pat_constant (c) -> begin
-(let _140_859 = (let _140_858 = (encode_const c)
-in (scrutinee, _140_858))
-in (FStar_ToSMT_Term.mkEq _140_859))
+(let _141_859 = (let _141_858 = (encode_const c)
+in (scrutinee, _141_858))
+in (FStar_ToSMT_Term.mkEq _141_859))
 end
 | FStar_Absyn_Syntax.Pat_cons (f, _50_1443, args) -> begin
 (
@@ -2253,8 +2253,8 @@ let sub_term_guards = (FStar_All.pipe_right args (FStar_List.mapi (fun i _50_145
 (
 
 let proj = (primitive_projector_by_pos env.tcenv f.FStar_Absyn_Syntax.v i)
-in (let _140_862 = (FStar_ToSMT_Term.mkApp (proj, (scrutinee)::[]))
-in (mk_guard arg _140_862)))
+in (let _141_862 = (FStar_ToSMT_Term.mkApp (proj, (scrutinee)::[]))
+in (mk_guard arg _141_862)))
 end))))
 in (FStar_ToSMT_Term.mk_and_l ((is_f)::sub_term_guards))))
 end))
@@ -2274,15 +2274,15 @@ end
 []
 end
 | FStar_Absyn_Syntax.Pat_cons (f, _50_1480, args) -> begin
-(let _140_870 = (FStar_All.pipe_right args (FStar_List.mapi (fun i _50_1488 -> (match (_50_1488) with
+(let _141_870 = (FStar_All.pipe_right args (FStar_List.mapi (fun i _50_1488 -> (match (_50_1488) with
 | (arg, _50_1487) -> begin
 (
 
 let proj = (primitive_projector_by_pos env.tcenv f.FStar_Absyn_Syntax.v i)
-in (let _140_869 = (FStar_ToSMT_Term.mkApp (proj, (scrutinee)::[]))
-in (mk_projections arg _140_869)))
+in (let _141_869 = (FStar_ToSMT_Term.mkApp (proj, (scrutinee)::[]))
+in (mk_projections arg _141_869)))
 end))))
-in (FStar_All.pipe_right _140_870 FStar_List.flatten))
+in (FStar_All.pipe_right _141_870 FStar_List.flatten))
 end))
 in (
 
@@ -2345,14 +2345,14 @@ end)
 end)))
 and encode_function_type_as_formula : FStar_ToSMT_Term.term Prims.option  ->  FStar_Absyn_Syntax.exp Prims.option  ->  FStar_Absyn_Syntax.typ  ->  env_t  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decls_t) = (fun induction_on new_pats t env -> (
 
-let rec list_elements = (fun e -> (match ((let _140_885 = (FStar_Absyn_Util.unmeta_exp e)
-in _140_885.FStar_Absyn_Syntax.n)) with
+let rec list_elements = (fun e -> (match ((let _141_885 = (FStar_Absyn_Util.unmeta_exp e)
+in _141_885.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Exp_app ({FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Exp_fvar (fv, _50_1547); FStar_Absyn_Syntax.tk = _50_1544; FStar_Absyn_Syntax.pos = _50_1542; FStar_Absyn_Syntax.fvs = _50_1540; FStar_Absyn_Syntax.uvs = _50_1538}, _50_1552) when (FStar_Ident.lid_equals fv.FStar_Absyn_Syntax.v FStar_Absyn_Const.nil_lid) -> begin
 []
 end
 | FStar_Absyn_Syntax.Exp_app ({FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Exp_fvar (fv, _50_1565); FStar_Absyn_Syntax.tk = _50_1562; FStar_Absyn_Syntax.pos = _50_1560; FStar_Absyn_Syntax.fvs = _50_1558; FStar_Absyn_Syntax.uvs = _50_1556}, (_50_1580)::((FStar_Util.Inr (hd), _50_1577))::((FStar_Util.Inr (tl), _50_1572))::[]) when (FStar_Ident.lid_equals fv.FStar_Absyn_Syntax.v FStar_Absyn_Const.cons_lid) -> begin
-(let _140_886 = (list_elements tl)
-in (hd)::_140_886)
+(let _141_886 = (list_elements tl)
+in (hd)::_141_886)
 end
 | _50_1585 -> begin
 (
@@ -2362,8 +2362,8 @@ in [])
 end))
 in (
 
-let v_or_t_pat = (fun p -> (match ((let _140_889 = (FStar_Absyn_Util.unmeta_exp p)
-in _140_889.FStar_Absyn_Syntax.n)) with
+let v_or_t_pat = (fun p -> (match ((let _141_889 = (FStar_Absyn_Util.unmeta_exp p)
+in _141_889.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Exp_app ({FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Exp_fvar (fv, _50_1600); FStar_Absyn_Syntax.tk = _50_1597; FStar_Absyn_Syntax.pos = _50_1595; FStar_Absyn_Syntax.fvs = _50_1593; FStar_Absyn_Syntax.uvs = _50_1591}, ((FStar_Util.Inl (_50_1610), _50_1613))::((FStar_Util.Inr (e), _50_1607))::[]) when (FStar_Ident.lid_equals fv.FStar_Absyn_Syntax.v FStar_Absyn_Const.smtpat_lid) -> begin
 (FStar_Absyn_Syntax.varg e)
 end
@@ -2380,18 +2380,18 @@ let lemma_pats = (fun p -> (
 let elts = (list_elements p)
 in (match (elts) with
 | ({FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Exp_app ({FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Exp_fvar (fv, _50_1663); FStar_Absyn_Syntax.tk = _50_1660; FStar_Absyn_Syntax.pos = _50_1658; FStar_Absyn_Syntax.fvs = _50_1656; FStar_Absyn_Syntax.uvs = _50_1654}, ((FStar_Util.Inr (e), _50_1670))::[]); FStar_Absyn_Syntax.tk = _50_1652; FStar_Absyn_Syntax.pos = _50_1650; FStar_Absyn_Syntax.fvs = _50_1648; FStar_Absyn_Syntax.uvs = _50_1646})::[] when (FStar_Ident.lid_equals fv.FStar_Absyn_Syntax.v FStar_Absyn_Const.smtpatOr_lid) -> begin
-(let _140_894 = (list_elements e)
-in (FStar_All.pipe_right _140_894 (FStar_List.map (fun branch -> (let _140_893 = (list_elements branch)
-in (FStar_All.pipe_right _140_893 (FStar_List.map v_or_t_pat)))))))
+(let _141_894 = (list_elements e)
+in (FStar_All.pipe_right _141_894 (FStar_List.map (fun branch -> (let _141_893 = (list_elements branch)
+in (FStar_All.pipe_right _141_893 (FStar_List.map v_or_t_pat)))))))
 end
 | _50_1679 -> begin
-(let _140_895 = (FStar_All.pipe_right elts (FStar_List.map v_or_t_pat))
-in (_140_895)::[])
+(let _141_895 = (FStar_All.pipe_right elts (FStar_List.map v_or_t_pat))
+in (_141_895)::[])
 end)))
 in (
 
-let _50_1722 = (match ((let _140_896 = (FStar_Absyn_Util.compress_typ t)
-in _140_896.FStar_Absyn_Syntax.n)) with
+let _50_1722 = (match ((let _141_896 = (FStar_Absyn_Util.compress_typ t)
+in _141_896.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Typ_fun (binders, {FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Comp (ct); FStar_Absyn_Syntax.tk = _50_1688; FStar_Absyn_Syntax.pos = _50_1686; FStar_Absyn_Syntax.fvs = _50_1684; FStar_Absyn_Syntax.uvs = _50_1682}) -> begin
 (match (ct.FStar_Absyn_Syntax.effect_args) with
 | ((FStar_Util.Inl (pre), _50_1707))::((FStar_Util.Inl (post), _50_1702))::((FStar_Util.Inr (pats), _50_1697))::[] -> begin
@@ -2404,8 +2404,8 @@ end
 | None -> begin
 pats
 end)
-in (let _140_897 = (lemma_pats pats')
-in (binders, pre, post, _140_897)))
+in (let _141_897 = (lemma_pats pats')
+in (binders, pre, post, _141_897)))
 end
 | _50_1715 -> begin
 (FStar_All.failwith "impos")
@@ -2423,9 +2423,9 @@ in (match (_50_1729) with
 | (vars, guards, env, decls, _50_1728) -> begin
 (
 
-let _50_1749 = (let _140_901 = (FStar_All.pipe_right patterns (FStar_List.map (fun branch -> (
+let _50_1749 = (let _141_901 = (FStar_All.pipe_right patterns (FStar_List.map (fun branch -> (
 
-let _50_1746 = (let _140_900 = (FStar_All.pipe_right branch (FStar_List.map (fun _50_13 -> (match (_50_13) with
+let _50_1746 = (let _141_900 = (FStar_All.pipe_right branch (FStar_List.map (fun _50_13 -> (match (_50_13) with
 | (FStar_Util.Inl (t), _50_1735) -> begin
 (encode_formula t env)
 end
@@ -2435,12 +2435,12 @@ end
 let _50_1742 = env
 in {bindings = _50_1742.bindings; depth = _50_1742.depth; tcenv = _50_1742.tcenv; warn = _50_1742.warn; cache = _50_1742.cache; nolabels = _50_1742.nolabels; use_zfuel_name = true; encode_non_total_function_typ = _50_1742.encode_non_total_function_typ}))
 end))))
-in (FStar_All.pipe_right _140_900 FStar_List.unzip))
+in (FStar_All.pipe_right _141_900 FStar_List.unzip))
 in (match (_50_1746) with
 | (pats, decls) -> begin
 (pats, decls)
 end)))))
-in (FStar_All.pipe_right _140_901 FStar_List.unzip))
+in (FStar_All.pipe_right _141_901 FStar_List.unzip))
 in (match (_50_1749) with
 | (pats, decls') -> begin
 (
@@ -2458,28 +2458,28 @@ end
 pats
 end
 | (l)::[] -> begin
-(FStar_All.pipe_right pats (FStar_List.map (fun p -> (let _140_904 = (let _140_903 = (FStar_ToSMT_Term.mkFreeV l)
-in (FStar_ToSMT_Term.mk_Precedes _140_903 e))
-in (_140_904)::p))))
+(FStar_All.pipe_right pats (FStar_List.map (fun p -> (let _141_904 = (let _141_903 = (FStar_ToSMT_Term.mkFreeV l)
+in (FStar_ToSMT_Term.mk_Precedes _141_903 e))
+in (_141_904)::p))))
 end
 | _50_1759 -> begin
 (
 
 let rec aux = (fun tl vars -> (match (vars) with
 | [] -> begin
-(FStar_All.pipe_right pats (FStar_List.map (fun p -> (let _140_910 = (FStar_ToSMT_Term.mk_Precedes tl e)
-in (_140_910)::p))))
+(FStar_All.pipe_right pats (FStar_List.map (fun p -> (let _141_910 = (FStar_ToSMT_Term.mk_Precedes tl e)
+in (_141_910)::p))))
 end
 | ((x, FStar_ToSMT_Term.Term_sort))::vars -> begin
-(let _140_912 = (let _140_911 = (FStar_ToSMT_Term.mkFreeV (x, FStar_ToSMT_Term.Term_sort))
-in (FStar_ToSMT_Term.mk_LexCons _140_911 tl))
-in (aux _140_912 vars))
+(let _141_912 = (let _141_911 = (FStar_ToSMT_Term.mkFreeV (x, FStar_ToSMT_Term.Term_sort))
+in (FStar_ToSMT_Term.mk_LexCons _141_911 tl))
+in (aux _141_912 vars))
 end
 | _50_1771 -> begin
 pats
 end))
-in (let _140_913 = (FStar_ToSMT_Term.mkFreeV ("Prims.LexTop", FStar_ToSMT_Term.Term_sort))
-in (aux _140_913 vars)))
+in (let _141_913 = (FStar_ToSMT_Term.mkFreeV ("Prims.LexTop", FStar_ToSMT_Term.Term_sort))
+in (aux _141_913 vars)))
 end)
 end)
 in (
@@ -2490,25 +2490,25 @@ let _50_1773 = env
 in {bindings = _50_1773.bindings; depth = _50_1773.depth; tcenv = _50_1773.tcenv; warn = _50_1773.warn; cache = _50_1773.cache; nolabels = true; use_zfuel_name = _50_1773.use_zfuel_name; encode_non_total_function_typ = _50_1773.encode_non_total_function_typ})
 in (
 
-let _50_1778 = (let _140_914 = (FStar_Absyn_Util.unmeta_typ pre)
-in (encode_formula _140_914 env))
+let _50_1778 = (let _141_914 = (FStar_Absyn_Util.unmeta_typ pre)
+in (encode_formula _141_914 env))
 in (match (_50_1778) with
 | (pre, decls'') -> begin
 (
 
-let _50_1781 = (let _140_915 = (FStar_Absyn_Util.unmeta_typ post)
-in (encode_formula _140_915 env))
+let _50_1781 = (let _141_915 = (FStar_Absyn_Util.unmeta_typ post)
+in (encode_formula _141_915 env))
 in (match (_50_1781) with
 | (post, decls''') -> begin
 (
 
 let decls = (FStar_List.append (FStar_List.append (FStar_List.append decls (FStar_List.flatten decls')) decls'') decls''')
-in (let _140_920 = (let _140_919 = (let _140_918 = (let _140_917 = (let _140_916 = (FStar_ToSMT_Term.mk_and_l ((pre)::guards))
-in (_140_916, post))
-in (FStar_ToSMT_Term.mkImp _140_917))
-in (pats, vars, _140_918))
-in (FStar_ToSMT_Term.mkForall _140_919))
-in (_140_920, decls)))
+in (let _141_920 = (let _141_919 = (let _141_918 = (let _141_917 = (let _141_916 = (FStar_ToSMT_Term.mk_and_l ((pre)::guards))
+in (_141_916, post))
+in (FStar_ToSMT_Term.mkImp _141_917))
+in (pats, vars, _141_918))
+in (FStar_ToSMT_Term.mkForall _141_919))
+in (_141_920, decls)))
 end))
 end)))))
 end))
@@ -2539,8 +2539,8 @@ end))
 end)) [] l)
 in (match (_50_1802) with
 | (decls, args) -> begin
-(let _140_938 = (f args)
-in (_140_938, [], decls))
+(let _141_938 = (f args)
+in (_141_938, [], decls))
 end)))
 in (
 
@@ -2564,16 +2564,16 @@ end)
 end)) l ([], [], []))
 in (match (_50_1822) with
 | (phis, labs, decls) -> begin
-(let _140_954 = (f phis)
-in (_140_954, labs, decls))
+(let _141_954 = (f phis)
+in (_141_954, labs, decls))
 end)))
 in (
 
 let const_op = (fun f _50_1825 -> (f, [], []))
 in (
 
-let un_op = (fun f l -> (let _140_968 = (FStar_List.hd l)
-in (FStar_All.pipe_left f _140_968)))
+let un_op = (fun f l -> (let _141_968 = (FStar_List.hd l)
+in (FStar_All.pipe_left f _141_968)))
 in (
 
 let bin_op = (fun f _50_14 -> (match (_50_14) with
@@ -2611,8 +2611,8 @@ end
 let _50_1874 = (encode_formula_with_labels lhs env)
 in (match (_50_1874) with
 | (l2, labs2, decls2) -> begin
-(let _140_982 = (FStar_ToSMT_Term.mkImp (l2, l1))
-in (_140_982, (FStar_List.append labs1 labs2), (FStar_List.append decls1 decls2)))
+(let _141_982 = (FStar_ToSMT_Term.mkImp (l2, l1))
+in (_141_982, (FStar_List.append labs1 labs2), (FStar_List.append decls1 decls2)))
 end))
 end)
 end))
@@ -2652,27 +2652,27 @@ end
 end))
 in (
 
-let unboxInt_l = (fun f l -> (let _140_994 = (FStar_List.map FStar_ToSMT_Term.unboxInt l)
-in (f _140_994)))
+let unboxInt_l = (fun f l -> (let _141_994 = (FStar_List.map FStar_ToSMT_Term.unboxInt l)
+in (f _141_994)))
 in (
 
-let connectives = (let _140_1055 = (let _140_1003 = (FStar_All.pipe_left enc_prop_c (bin_op FStar_ToSMT_Term.mkAnd))
-in (FStar_Absyn_Const.and_lid, _140_1003))
-in (let _140_1054 = (let _140_1053 = (let _140_1009 = (FStar_All.pipe_left enc_prop_c (bin_op FStar_ToSMT_Term.mkOr))
-in (FStar_Absyn_Const.or_lid, _140_1009))
-in (let _140_1052 = (let _140_1051 = (let _140_1050 = (let _140_1018 = (FStar_All.pipe_left enc_prop_c (bin_op FStar_ToSMT_Term.mkIff))
-in (FStar_Absyn_Const.iff_lid, _140_1018))
-in (let _140_1049 = (let _140_1048 = (let _140_1047 = (let _140_1027 = (FStar_All.pipe_left enc_prop_c (un_op FStar_ToSMT_Term.mkNot))
-in (FStar_Absyn_Const.not_lid, _140_1027))
-in (let _140_1046 = (let _140_1045 = (let _140_1033 = (FStar_All.pipe_left enc (bin_op FStar_ToSMT_Term.mkEq))
-in (FStar_Absyn_Const.eqT_lid, _140_1033))
-in (_140_1045)::((FStar_Absyn_Const.eq2_lid, eq_op))::((FStar_Absyn_Const.true_lid, (const_op FStar_ToSMT_Term.mkTrue)))::((FStar_Absyn_Const.false_lid, (const_op FStar_ToSMT_Term.mkFalse)))::[])
-in (_140_1047)::_140_1046))
-in ((FStar_Absyn_Const.ite_lid, mk_ite))::_140_1048)
-in (_140_1050)::_140_1049))
-in ((FStar_Absyn_Const.imp_lid, mk_imp))::_140_1051)
-in (_140_1053)::_140_1052))
-in (_140_1055)::_140_1054))
+let connectives = (let _141_1055 = (let _141_1003 = (FStar_All.pipe_left enc_prop_c (bin_op FStar_ToSMT_Term.mkAnd))
+in (FStar_Absyn_Const.and_lid, _141_1003))
+in (let _141_1054 = (let _141_1053 = (let _141_1009 = (FStar_All.pipe_left enc_prop_c (bin_op FStar_ToSMT_Term.mkOr))
+in (FStar_Absyn_Const.or_lid, _141_1009))
+in (let _141_1052 = (let _141_1051 = (let _141_1050 = (let _141_1018 = (FStar_All.pipe_left enc_prop_c (bin_op FStar_ToSMT_Term.mkIff))
+in (FStar_Absyn_Const.iff_lid, _141_1018))
+in (let _141_1049 = (let _141_1048 = (let _141_1047 = (let _141_1027 = (FStar_All.pipe_left enc_prop_c (un_op FStar_ToSMT_Term.mkNot))
+in (FStar_Absyn_Const.not_lid, _141_1027))
+in (let _141_1046 = (let _141_1045 = (let _141_1033 = (FStar_All.pipe_left enc (bin_op FStar_ToSMT_Term.mkEq))
+in (FStar_Absyn_Const.eqT_lid, _141_1033))
+in (_141_1045)::((FStar_Absyn_Const.eq2_lid, eq_op))::((FStar_Absyn_Const.true_lid, (const_op FStar_ToSMT_Term.mkTrue)))::((FStar_Absyn_Const.false_lid, (const_op FStar_ToSMT_Term.mkFalse)))::[])
+in (_141_1047)::_141_1046))
+in ((FStar_Absyn_Const.ite_lid, mk_ite))::_141_1048)
+in (_141_1050)::_141_1049))
+in ((FStar_Absyn_Const.imp_lid, mk_imp))::_141_1051)
+in (_141_1053)::_141_1052))
+in (_141_1055)::_141_1054))
 in (
 
 let fallback = (fun phi -> (match (phi.FStar_Absyn_Syntax.n) with
@@ -2687,8 +2687,8 @@ if env.nolabels then begin
 end else begin
 (
 
-let lvar = (let _140_1058 = (varops.fresh "label")
-in (_140_1058, FStar_ToSMT_Term.Bool_sort))
+let lvar = (let _141_1058 = (varops.fresh "label")
+in (_141_1058, FStar_ToSMT_Term.Bool_sort))
 in (
 
 let lterm = (FStar_ToSMT_Term.mkFreeV lvar)
@@ -2746,8 +2746,8 @@ end
 let _50_2001 = (encode_typ_term phi env)
 in (match (_50_2001) with
 | (tt, decls) -> begin
-(let _140_1059 = (FStar_ToSMT_Term.mk_Valid tt)
-in (_140_1059, [], decls))
+(let _141_1059 = (FStar_ToSMT_Term.mk_Valid tt)
+in (_141_1059, [], decls))
 end))
 end))
 in (
@@ -2759,9 +2759,9 @@ in (match (_50_2013) with
 | (vars, guards, env, decls, _50_2012) -> begin
 (
 
-let _50_2033 = (let _140_1071 = (FStar_All.pipe_right ps (FStar_List.map (fun p -> (
+let _50_2033 = (let _141_1071 = (FStar_All.pipe_right ps (FStar_List.map (fun p -> (
 
-let _50_2030 = (let _140_1070 = (FStar_All.pipe_right p (FStar_List.map (fun _50_18 -> (match (_50_18) with
+let _50_2030 = (let _141_1070 = (FStar_All.pipe_right p (FStar_List.map (fun _50_18 -> (match (_50_18) with
 | (FStar_Util.Inl (t), _50_2019) -> begin
 (encode_typ_term t env)
 end
@@ -2771,12 +2771,12 @@ end
 let _50_2026 = env
 in {bindings = _50_2026.bindings; depth = _50_2026.depth; tcenv = _50_2026.tcenv; warn = _50_2026.warn; cache = _50_2026.cache; nolabels = _50_2026.nolabels; use_zfuel_name = true; encode_non_total_function_typ = _50_2026.encode_non_total_function_typ}))
 end))))
-in (FStar_All.pipe_right _140_1070 FStar_List.unzip))
+in (FStar_All.pipe_right _141_1070 FStar_List.unzip))
 in (match (_50_2030) with
 | (p, decls) -> begin
 (p, (FStar_List.flatten decls))
 end)))))
-in (FStar_All.pipe_right _140_1071 FStar_List.unzip))
+in (FStar_All.pipe_right _141_1071 FStar_List.unzip))
 in (match (_50_2033) with
 | (pats, decls') -> begin
 (
@@ -2784,16 +2784,16 @@ in (match (_50_2033) with
 let _50_2037 = (encode_formula_with_labels body env)
 in (match (_50_2037) with
 | (body, labs, decls'') -> begin
-(let _140_1072 = (FStar_ToSMT_Term.mk_and_l guards)
-in (vars, pats, _140_1072, body, labs, (FStar_List.append (FStar_List.append decls (FStar_List.flatten decls')) decls'')))
+(let _141_1072 = (FStar_ToSMT_Term.mk_and_l guards)
+in (vars, pats, _141_1072, body, labs, (FStar_List.append (FStar_List.append decls (FStar_List.flatten decls')) decls'')))
 end))
 end))
 end)))
 in (
 
 let _50_2038 = if (FStar_Tc_Env.debug env.tcenv FStar_Options.Low) then begin
-(let _140_1073 = (FStar_Absyn_Print.formula_to_string phi)
-in (FStar_Util.print1 ">>>> Destructing as formula ... %s\n" _140_1073))
+(let _141_1073 = (FStar_Absyn_Print.formula_to_string phi)
+in (FStar_Util.print1 ">>>> Destructing as formula ... %s\n" _141_1073))
 end else begin
 ()
 end
@@ -2820,8 +2820,8 @@ end
 (
 
 let _50_2063 = if (FStar_Tc_Env.debug env.tcenv FStar_Options.Low) then begin
-(let _140_1090 = (FStar_All.pipe_right vars (FStar_Absyn_Print.binders_to_string "; "))
-in (FStar_Util.print1 ">>>> Got QALL [%s]\n" _140_1090))
+(let _141_1090 = (FStar_All.pipe_right vars (FStar_Absyn_Print.binders_to_string "; "))
+in (FStar_Util.print1 ">>>> Got QALL [%s]\n" _141_1090))
 end else begin
 ()
 end
@@ -2830,10 +2830,10 @@ in (
 let _50_2071 = (encode_q_body env vars pats body)
 in (match (_50_2071) with
 | (vars, pats, guard, body, labs, decls) -> begin
-(let _140_1093 = (let _140_1092 = (let _140_1091 = (FStar_ToSMT_Term.mkImp (guard, body))
-in (pats, vars, _140_1091))
-in (FStar_ToSMT_Term.mkForall _140_1092))
-in (_140_1093, labs, decls))
+(let _141_1093 = (let _141_1092 = (let _141_1091 = (FStar_ToSMT_Term.mkImp (guard, body))
+in (pats, vars, _141_1091))
+in (FStar_ToSMT_Term.mkForall _141_1092))
+in (_141_1093, labs, decls))
 end)))
 end
 | Some (FStar_Absyn_Util.QEx (vars, pats, body)) -> begin
@@ -2842,10 +2842,10 @@ end
 let _50_2084 = (encode_q_body env vars pats body)
 in (match (_50_2084) with
 | (vars, pats, guard, body, labs, decls) -> begin
-(let _140_1096 = (let _140_1095 = (let _140_1094 = (FStar_ToSMT_Term.mkAnd (guard, body))
-in (pats, vars, _140_1094))
-in (FStar_ToSMT_Term.mkExists _140_1095))
-in (_140_1096, labs, decls))
+(let _141_1096 = (let _141_1095 = (let _141_1094 = (FStar_ToSMT_Term.mkAnd (guard, body))
+in (pats, vars, _141_1094))
+in (FStar_ToSMT_Term.mkExists _141_1095))
+in (_141_1096, labs, decls))
 end))
 end))))))))))))))))
 
@@ -2874,30 +2874,30 @@ in (match (_50_2096) with
 | (ysym, y) -> begin
 (
 
-let deffun = (fun vars body x -> (let _140_1131 = (let _140_1130 = (let _140_1129 = (FStar_All.pipe_right vars (FStar_List.map Prims.snd))
-in (let _140_1128 = (FStar_ToSMT_Term.abstr vars body)
-in (x, _140_1129, FStar_ToSMT_Term.Term_sort, _140_1128, None)))
-in FStar_ToSMT_Term.DefineFun (_140_1130))
-in (_140_1131)::[]))
+let deffun = (fun vars body x -> (let _141_1131 = (let _141_1130 = (let _141_1129 = (FStar_All.pipe_right vars (FStar_List.map Prims.snd))
+in (let _141_1128 = (FStar_ToSMT_Term.abstr vars body)
+in (x, _141_1129, FStar_ToSMT_Term.Term_sort, _141_1128, None)))
+in FStar_ToSMT_Term.DefineFun (_141_1130))
+in (_141_1131)::[]))
 in (
 
 let quant = (fun vars body x -> (
 
-let t1 = (let _140_1143 = (let _140_1142 = (FStar_List.map FStar_ToSMT_Term.mkFreeV vars)
-in (x, _140_1142))
-in (FStar_ToSMT_Term.mkApp _140_1143))
+let t1 = (let _141_1143 = (let _141_1142 = (FStar_List.map FStar_ToSMT_Term.mkFreeV vars)
+in (x, _141_1142))
+in (FStar_ToSMT_Term.mkApp _141_1143))
 in (
 
-let vname_decl = (let _140_1145 = (let _140_1144 = (FStar_All.pipe_right vars (FStar_List.map Prims.snd))
-in (x, _140_1144, FStar_ToSMT_Term.Term_sort, None))
-in FStar_ToSMT_Term.DeclFun (_140_1145))
-in (let _140_1151 = (let _140_1150 = (let _140_1149 = (let _140_1148 = (let _140_1147 = (let _140_1146 = (FStar_ToSMT_Term.mkEq (t1, body))
-in (((t1)::[])::[], vars, _140_1146))
-in (FStar_ToSMT_Term.mkForall _140_1147))
-in (_140_1148, None))
-in FStar_ToSMT_Term.Assume (_140_1149))
-in (_140_1150)::[])
-in (vname_decl)::_140_1151))))
+let vname_decl = (let _141_1145 = (let _141_1144 = (FStar_All.pipe_right vars (FStar_List.map Prims.snd))
+in (x, _141_1144, FStar_ToSMT_Term.Term_sort, None))
+in FStar_ToSMT_Term.DeclFun (_141_1145))
+in (let _141_1151 = (let _141_1150 = (let _141_1149 = (let _141_1148 = (let _141_1147 = (let _141_1146 = (FStar_ToSMT_Term.mkEq (t1, body))
+in (((t1)::[])::[], vars, _141_1146))
+in (FStar_ToSMT_Term.mkForall _141_1147))
+in (_141_1148, None))
+in FStar_ToSMT_Term.Assume (_141_1149))
+in (_141_1150)::[])
+in (vname_decl)::_141_1151))))
 in (
 
 let def_or_quant = (fun vars body x -> if (FStar_Options.inline_arith ()) then begin
@@ -2916,124 +2916,124 @@ in (
 let qx = ((xsym, FStar_ToSMT_Term.Term_sort))::[]
 in (
 
-let prims = (let _140_1317 = (let _140_1166 = (let _140_1165 = (let _140_1164 = (FStar_ToSMT_Term.mkEq (x, y))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _140_1164))
-in (def_or_quant axy _140_1165))
-in (FStar_Absyn_Const.op_Eq, _140_1166))
-in (let _140_1316 = (let _140_1315 = (let _140_1173 = (let _140_1172 = (let _140_1171 = (let _140_1170 = (FStar_ToSMT_Term.mkEq (x, y))
-in (FStar_ToSMT_Term.mkNot _140_1170))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _140_1171))
-in (def_or_quant axy _140_1172))
-in (FStar_Absyn_Const.op_notEq, _140_1173))
-in (let _140_1314 = (let _140_1313 = (let _140_1182 = (let _140_1181 = (let _140_1180 = (let _140_1179 = (let _140_1178 = (FStar_ToSMT_Term.unboxInt x)
-in (let _140_1177 = (FStar_ToSMT_Term.unboxInt y)
-in (_140_1178, _140_1177)))
-in (FStar_ToSMT_Term.mkLT _140_1179))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _140_1180))
-in (def_or_quant xy _140_1181))
-in (FStar_Absyn_Const.op_LT, _140_1182))
-in (let _140_1312 = (let _140_1311 = (let _140_1191 = (let _140_1190 = (let _140_1189 = (let _140_1188 = (let _140_1187 = (FStar_ToSMT_Term.unboxInt x)
-in (let _140_1186 = (FStar_ToSMT_Term.unboxInt y)
-in (_140_1187, _140_1186)))
-in (FStar_ToSMT_Term.mkLTE _140_1188))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _140_1189))
-in (def_or_quant xy _140_1190))
-in (FStar_Absyn_Const.op_LTE, _140_1191))
-in (let _140_1310 = (let _140_1309 = (let _140_1200 = (let _140_1199 = (let _140_1198 = (let _140_1197 = (let _140_1196 = (FStar_ToSMT_Term.unboxInt x)
-in (let _140_1195 = (FStar_ToSMT_Term.unboxInt y)
-in (_140_1196, _140_1195)))
-in (FStar_ToSMT_Term.mkGT _140_1197))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _140_1198))
-in (def_or_quant xy _140_1199))
-in (FStar_Absyn_Const.op_GT, _140_1200))
-in (let _140_1308 = (let _140_1307 = (let _140_1209 = (let _140_1208 = (let _140_1207 = (let _140_1206 = (let _140_1205 = (FStar_ToSMT_Term.unboxInt x)
-in (let _140_1204 = (FStar_ToSMT_Term.unboxInt y)
-in (_140_1205, _140_1204)))
-in (FStar_ToSMT_Term.mkGTE _140_1206))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _140_1207))
-in (def_or_quant xy _140_1208))
-in (FStar_Absyn_Const.op_GTE, _140_1209))
-in (let _140_1306 = (let _140_1305 = (let _140_1218 = (let _140_1217 = (let _140_1216 = (let _140_1215 = (let _140_1214 = (FStar_ToSMT_Term.unboxInt x)
-in (let _140_1213 = (FStar_ToSMT_Term.unboxInt y)
-in (_140_1214, _140_1213)))
-in (FStar_ToSMT_Term.mkSub _140_1215))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxInt _140_1216))
-in (def_or_quant xy _140_1217))
-in (FStar_Absyn_Const.op_Subtraction, _140_1218))
-in (let _140_1304 = (let _140_1303 = (let _140_1225 = (let _140_1224 = (let _140_1223 = (let _140_1222 = (FStar_ToSMT_Term.unboxInt x)
-in (FStar_ToSMT_Term.mkMinus _140_1222))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxInt _140_1223))
-in (def_or_quant qx _140_1224))
-in (FStar_Absyn_Const.op_Minus, _140_1225))
-in (let _140_1302 = (let _140_1301 = (let _140_1234 = (let _140_1233 = (let _140_1232 = (let _140_1231 = (let _140_1230 = (FStar_ToSMT_Term.unboxInt x)
-in (let _140_1229 = (FStar_ToSMT_Term.unboxInt y)
-in (_140_1230, _140_1229)))
-in (FStar_ToSMT_Term.mkAdd _140_1231))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxInt _140_1232))
-in (def_or_quant xy _140_1233))
-in (FStar_Absyn_Const.op_Addition, _140_1234))
-in (let _140_1300 = (let _140_1299 = (let _140_1243 = (let _140_1242 = (let _140_1241 = (let _140_1240 = (let _140_1239 = (FStar_ToSMT_Term.unboxInt x)
-in (let _140_1238 = (FStar_ToSMT_Term.unboxInt y)
-in (_140_1239, _140_1238)))
-in (FStar_ToSMT_Term.mkMul _140_1240))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxInt _140_1241))
-in (def_or_quant xy _140_1242))
-in (FStar_Absyn_Const.op_Multiply, _140_1243))
-in (let _140_1298 = (let _140_1297 = (let _140_1252 = (let _140_1251 = (let _140_1250 = (let _140_1249 = (let _140_1248 = (FStar_ToSMT_Term.unboxInt x)
-in (let _140_1247 = (FStar_ToSMT_Term.unboxInt y)
-in (_140_1248, _140_1247)))
-in (FStar_ToSMT_Term.mkDiv _140_1249))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxInt _140_1250))
-in (def_or_quant xy _140_1251))
-in (FStar_Absyn_Const.op_Division, _140_1252))
-in (let _140_1296 = (let _140_1295 = (let _140_1261 = (let _140_1260 = (let _140_1259 = (let _140_1258 = (let _140_1257 = (FStar_ToSMT_Term.unboxInt x)
-in (let _140_1256 = (FStar_ToSMT_Term.unboxInt y)
-in (_140_1257, _140_1256)))
-in (FStar_ToSMT_Term.mkMod _140_1258))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxInt _140_1259))
-in (def_or_quant xy _140_1260))
-in (FStar_Absyn_Const.op_Modulus, _140_1261))
-in (let _140_1294 = (let _140_1293 = (let _140_1270 = (let _140_1269 = (let _140_1268 = (let _140_1267 = (let _140_1266 = (FStar_ToSMT_Term.unboxBool x)
-in (let _140_1265 = (FStar_ToSMT_Term.unboxBool y)
-in (_140_1266, _140_1265)))
-in (FStar_ToSMT_Term.mkAnd _140_1267))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _140_1268))
-in (def_or_quant xy _140_1269))
-in (FStar_Absyn_Const.op_And, _140_1270))
-in (let _140_1292 = (let _140_1291 = (let _140_1279 = (let _140_1278 = (let _140_1277 = (let _140_1276 = (let _140_1275 = (FStar_ToSMT_Term.unboxBool x)
-in (let _140_1274 = (FStar_ToSMT_Term.unboxBool y)
-in (_140_1275, _140_1274)))
-in (FStar_ToSMT_Term.mkOr _140_1276))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _140_1277))
-in (def_or_quant xy _140_1278))
-in (FStar_Absyn_Const.op_Or, _140_1279))
-in (let _140_1290 = (let _140_1289 = (let _140_1286 = (let _140_1285 = (let _140_1284 = (let _140_1283 = (FStar_ToSMT_Term.unboxBool x)
-in (FStar_ToSMT_Term.mkNot _140_1283))
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _140_1284))
-in (def_or_quant qx _140_1285))
-in (FStar_Absyn_Const.op_Negation, _140_1286))
-in (_140_1289)::[])
-in (_140_1291)::_140_1290))
-in (_140_1293)::_140_1292))
-in (_140_1295)::_140_1294))
-in (_140_1297)::_140_1296))
-in (_140_1299)::_140_1298))
-in (_140_1301)::_140_1300))
-in (_140_1303)::_140_1302))
-in (_140_1305)::_140_1304))
-in (_140_1307)::_140_1306))
-in (_140_1309)::_140_1308))
-in (_140_1311)::_140_1310))
-in (_140_1313)::_140_1312))
-in (_140_1315)::_140_1314))
-in (_140_1317)::_140_1316))
+let prims = (let _141_1317 = (let _141_1166 = (let _141_1165 = (let _141_1164 = (FStar_ToSMT_Term.mkEq (x, y))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _141_1164))
+in (def_or_quant axy _141_1165))
+in (FStar_Absyn_Const.op_Eq, _141_1166))
+in (let _141_1316 = (let _141_1315 = (let _141_1173 = (let _141_1172 = (let _141_1171 = (let _141_1170 = (FStar_ToSMT_Term.mkEq (x, y))
+in (FStar_ToSMT_Term.mkNot _141_1170))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _141_1171))
+in (def_or_quant axy _141_1172))
+in (FStar_Absyn_Const.op_notEq, _141_1173))
+in (let _141_1314 = (let _141_1313 = (let _141_1182 = (let _141_1181 = (let _141_1180 = (let _141_1179 = (let _141_1178 = (FStar_ToSMT_Term.unboxInt x)
+in (let _141_1177 = (FStar_ToSMT_Term.unboxInt y)
+in (_141_1178, _141_1177)))
+in (FStar_ToSMT_Term.mkLT _141_1179))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _141_1180))
+in (def_or_quant xy _141_1181))
+in (FStar_Absyn_Const.op_LT, _141_1182))
+in (let _141_1312 = (let _141_1311 = (let _141_1191 = (let _141_1190 = (let _141_1189 = (let _141_1188 = (let _141_1187 = (FStar_ToSMT_Term.unboxInt x)
+in (let _141_1186 = (FStar_ToSMT_Term.unboxInt y)
+in (_141_1187, _141_1186)))
+in (FStar_ToSMT_Term.mkLTE _141_1188))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _141_1189))
+in (def_or_quant xy _141_1190))
+in (FStar_Absyn_Const.op_LTE, _141_1191))
+in (let _141_1310 = (let _141_1309 = (let _141_1200 = (let _141_1199 = (let _141_1198 = (let _141_1197 = (let _141_1196 = (FStar_ToSMT_Term.unboxInt x)
+in (let _141_1195 = (FStar_ToSMT_Term.unboxInt y)
+in (_141_1196, _141_1195)))
+in (FStar_ToSMT_Term.mkGT _141_1197))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _141_1198))
+in (def_or_quant xy _141_1199))
+in (FStar_Absyn_Const.op_GT, _141_1200))
+in (let _141_1308 = (let _141_1307 = (let _141_1209 = (let _141_1208 = (let _141_1207 = (let _141_1206 = (let _141_1205 = (FStar_ToSMT_Term.unboxInt x)
+in (let _141_1204 = (FStar_ToSMT_Term.unboxInt y)
+in (_141_1205, _141_1204)))
+in (FStar_ToSMT_Term.mkGTE _141_1206))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _141_1207))
+in (def_or_quant xy _141_1208))
+in (FStar_Absyn_Const.op_GTE, _141_1209))
+in (let _141_1306 = (let _141_1305 = (let _141_1218 = (let _141_1217 = (let _141_1216 = (let _141_1215 = (let _141_1214 = (FStar_ToSMT_Term.unboxInt x)
+in (let _141_1213 = (FStar_ToSMT_Term.unboxInt y)
+in (_141_1214, _141_1213)))
+in (FStar_ToSMT_Term.mkSub _141_1215))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxInt _141_1216))
+in (def_or_quant xy _141_1217))
+in (FStar_Absyn_Const.op_Subtraction, _141_1218))
+in (let _141_1304 = (let _141_1303 = (let _141_1225 = (let _141_1224 = (let _141_1223 = (let _141_1222 = (FStar_ToSMT_Term.unboxInt x)
+in (FStar_ToSMT_Term.mkMinus _141_1222))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxInt _141_1223))
+in (def_or_quant qx _141_1224))
+in (FStar_Absyn_Const.op_Minus, _141_1225))
+in (let _141_1302 = (let _141_1301 = (let _141_1234 = (let _141_1233 = (let _141_1232 = (let _141_1231 = (let _141_1230 = (FStar_ToSMT_Term.unboxInt x)
+in (let _141_1229 = (FStar_ToSMT_Term.unboxInt y)
+in (_141_1230, _141_1229)))
+in (FStar_ToSMT_Term.mkAdd _141_1231))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxInt _141_1232))
+in (def_or_quant xy _141_1233))
+in (FStar_Absyn_Const.op_Addition, _141_1234))
+in (let _141_1300 = (let _141_1299 = (let _141_1243 = (let _141_1242 = (let _141_1241 = (let _141_1240 = (let _141_1239 = (FStar_ToSMT_Term.unboxInt x)
+in (let _141_1238 = (FStar_ToSMT_Term.unboxInt y)
+in (_141_1239, _141_1238)))
+in (FStar_ToSMT_Term.mkMul _141_1240))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxInt _141_1241))
+in (def_or_quant xy _141_1242))
+in (FStar_Absyn_Const.op_Multiply, _141_1243))
+in (let _141_1298 = (let _141_1297 = (let _141_1252 = (let _141_1251 = (let _141_1250 = (let _141_1249 = (let _141_1248 = (FStar_ToSMT_Term.unboxInt x)
+in (let _141_1247 = (FStar_ToSMT_Term.unboxInt y)
+in (_141_1248, _141_1247)))
+in (FStar_ToSMT_Term.mkDiv _141_1249))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxInt _141_1250))
+in (def_or_quant xy _141_1251))
+in (FStar_Absyn_Const.op_Division, _141_1252))
+in (let _141_1296 = (let _141_1295 = (let _141_1261 = (let _141_1260 = (let _141_1259 = (let _141_1258 = (let _141_1257 = (FStar_ToSMT_Term.unboxInt x)
+in (let _141_1256 = (FStar_ToSMT_Term.unboxInt y)
+in (_141_1257, _141_1256)))
+in (FStar_ToSMT_Term.mkMod _141_1258))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxInt _141_1259))
+in (def_or_quant xy _141_1260))
+in (FStar_Absyn_Const.op_Modulus, _141_1261))
+in (let _141_1294 = (let _141_1293 = (let _141_1270 = (let _141_1269 = (let _141_1268 = (let _141_1267 = (let _141_1266 = (FStar_ToSMT_Term.unboxBool x)
+in (let _141_1265 = (FStar_ToSMT_Term.unboxBool y)
+in (_141_1266, _141_1265)))
+in (FStar_ToSMT_Term.mkAnd _141_1267))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _141_1268))
+in (def_or_quant xy _141_1269))
+in (FStar_Absyn_Const.op_And, _141_1270))
+in (let _141_1292 = (let _141_1291 = (let _141_1279 = (let _141_1278 = (let _141_1277 = (let _141_1276 = (let _141_1275 = (FStar_ToSMT_Term.unboxBool x)
+in (let _141_1274 = (FStar_ToSMT_Term.unboxBool y)
+in (_141_1275, _141_1274)))
+in (FStar_ToSMT_Term.mkOr _141_1276))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _141_1277))
+in (def_or_quant xy _141_1278))
+in (FStar_Absyn_Const.op_Or, _141_1279))
+in (let _141_1290 = (let _141_1289 = (let _141_1286 = (let _141_1285 = (let _141_1284 = (let _141_1283 = (FStar_ToSMT_Term.unboxBool x)
+in (FStar_ToSMT_Term.mkNot _141_1283))
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _141_1284))
+in (def_or_quant qx _141_1285))
+in (FStar_Absyn_Const.op_Negation, _141_1286))
+in (_141_1289)::[])
+in (_141_1291)::_141_1290))
+in (_141_1293)::_141_1292))
+in (_141_1295)::_141_1294))
+in (_141_1297)::_141_1296))
+in (_141_1299)::_141_1298))
+in (_141_1301)::_141_1300))
+in (_141_1303)::_141_1302))
+in (_141_1305)::_141_1304))
+in (_141_1307)::_141_1306))
+in (_141_1309)::_141_1308))
+in (_141_1311)::_141_1310))
+in (_141_1313)::_141_1312))
+in (_141_1315)::_141_1314))
+in (_141_1317)::_141_1316))
 in (
 
-let mk = (fun l v -> (let _140_1349 = (FStar_All.pipe_right prims (FStar_List.filter (fun _50_2120 -> (match (_50_2120) with
+let mk = (fun l v -> (let _141_1349 = (FStar_All.pipe_right prims (FStar_List.filter (fun _50_2120 -> (match (_50_2120) with
 | (l', _50_2119) -> begin
 (FStar_Ident.lid_equals l l')
 end))))
-in (FStar_All.pipe_right _140_1349 (FStar_List.collect (fun _50_2124 -> (match (_50_2124) with
+in (FStar_All.pipe_right _141_1349 (FStar_List.collect (fun _50_2124 -> (match (_50_2124) with
 | (_50_2122, b) -> begin
 (b v)
 end))))))
@@ -3066,18 +3066,18 @@ in (
 let mk_unit = (fun _50_2136 tt -> (
 
 let typing_pred = (FStar_ToSMT_Term.mk_HasType x tt)
-in (let _140_1381 = (let _140_1372 = (let _140_1371 = (FStar_ToSMT_Term.mk_HasType FStar_ToSMT_Term.mk_Term_unit tt)
-in (_140_1371, Some ("unit typing")))
-in FStar_ToSMT_Term.Assume (_140_1372))
-in (let _140_1380 = (let _140_1379 = (let _140_1378 = (let _140_1377 = (let _140_1376 = (let _140_1375 = (let _140_1374 = (let _140_1373 = (FStar_ToSMT_Term.mkEq (x, FStar_ToSMT_Term.mk_Term_unit))
-in (typing_pred, _140_1373))
-in (FStar_ToSMT_Term.mkImp _140_1374))
-in (((typing_pred)::[])::[], (xx)::[], _140_1375))
-in (mkForall_fuel _140_1376))
-in (_140_1377, Some ("unit inversion")))
-in FStar_ToSMT_Term.Assume (_140_1378))
-in (_140_1379)::[])
-in (_140_1381)::_140_1380))))
+in (let _141_1381 = (let _141_1372 = (let _141_1371 = (FStar_ToSMT_Term.mk_HasType FStar_ToSMT_Term.mk_Term_unit tt)
+in (_141_1371, Some ("unit typing")))
+in FStar_ToSMT_Term.Assume (_141_1372))
+in (let _141_1380 = (let _141_1379 = (let _141_1378 = (let _141_1377 = (let _141_1376 = (let _141_1375 = (let _141_1374 = (let _141_1373 = (FStar_ToSMT_Term.mkEq (x, FStar_ToSMT_Term.mk_Term_unit))
+in (typing_pred, _141_1373))
+in (FStar_ToSMT_Term.mkImp _141_1374))
+in (((typing_pred)::[])::[], (xx)::[], _141_1375))
+in (mkForall_fuel _141_1376))
+in (_141_1377, Some ("unit inversion")))
+in FStar_ToSMT_Term.Assume (_141_1378))
+in (_141_1379)::[])
+in (_141_1381)::_141_1380))))
 in (
 
 let mk_bool = (fun _50_2141 tt -> (
@@ -3089,24 +3089,24 @@ let bb = ("b", FStar_ToSMT_Term.Bool_sort)
 in (
 
 let b = (FStar_ToSMT_Term.mkFreeV bb)
-in (let _140_1402 = (let _140_1391 = (let _140_1390 = (let _140_1389 = (let _140_1388 = (let _140_1387 = (let _140_1386 = (FStar_ToSMT_Term.mk_tester "BoxBool" x)
-in (typing_pred, _140_1386))
-in (FStar_ToSMT_Term.mkImp _140_1387))
-in (((typing_pred)::[])::[], (xx)::[], _140_1388))
-in (mkForall_fuel _140_1389))
-in (_140_1390, Some ("bool inversion")))
-in FStar_ToSMT_Term.Assume (_140_1391))
-in (let _140_1401 = (let _140_1400 = (let _140_1399 = (let _140_1398 = (let _140_1397 = (let _140_1396 = (let _140_1393 = (let _140_1392 = (FStar_ToSMT_Term.boxBool b)
-in (_140_1392)::[])
-in (_140_1393)::[])
-in (let _140_1395 = (let _140_1394 = (FStar_ToSMT_Term.boxBool b)
-in (FStar_ToSMT_Term.mk_HasType _140_1394 tt))
-in (_140_1396, (bb)::[], _140_1395)))
-in (FStar_ToSMT_Term.mkForall _140_1397))
-in (_140_1398, Some ("bool typing")))
-in FStar_ToSMT_Term.Assume (_140_1399))
-in (_140_1400)::[])
-in (_140_1402)::_140_1401))))))
+in (let _141_1402 = (let _141_1391 = (let _141_1390 = (let _141_1389 = (let _141_1388 = (let _141_1387 = (let _141_1386 = (FStar_ToSMT_Term.mk_tester "BoxBool" x)
+in (typing_pred, _141_1386))
+in (FStar_ToSMT_Term.mkImp _141_1387))
+in (((typing_pred)::[])::[], (xx)::[], _141_1388))
+in (mkForall_fuel _141_1389))
+in (_141_1390, Some ("bool inversion")))
+in FStar_ToSMT_Term.Assume (_141_1391))
+in (let _141_1401 = (let _141_1400 = (let _141_1399 = (let _141_1398 = (let _141_1397 = (let _141_1396 = (let _141_1393 = (let _141_1392 = (FStar_ToSMT_Term.boxBool b)
+in (_141_1392)::[])
+in (_141_1393)::[])
+in (let _141_1395 = (let _141_1394 = (FStar_ToSMT_Term.boxBool b)
+in (FStar_ToSMT_Term.mk_HasType _141_1394 tt))
+in (_141_1396, (bb)::[], _141_1395)))
+in (FStar_ToSMT_Term.mkForall _141_1397))
+in (_141_1398, Some ("bool typing")))
+in FStar_ToSMT_Term.Assume (_141_1399))
+in (_141_1400)::[])
+in (_141_1402)::_141_1401))))))
 in (
 
 let mk_int = (fun _50_2148 tt -> (
@@ -3129,70 +3129,70 @@ in (
 let b = (FStar_ToSMT_Term.mkFreeV bb)
 in (
 
-let precedes = (let _140_1414 = (let _140_1413 = (let _140_1412 = (let _140_1411 = (let _140_1410 = (let _140_1409 = (FStar_ToSMT_Term.boxInt a)
-in (let _140_1408 = (let _140_1407 = (FStar_ToSMT_Term.boxInt b)
-in (_140_1407)::[])
-in (_140_1409)::_140_1408))
-in (tt)::_140_1410)
-in (tt)::_140_1411)
-in ("Prims.Precedes", _140_1412))
-in (FStar_ToSMT_Term.mkApp _140_1413))
-in (FStar_All.pipe_left FStar_ToSMT_Term.mk_Valid _140_1414))
+let precedes = (let _141_1414 = (let _141_1413 = (let _141_1412 = (let _141_1411 = (let _141_1410 = (let _141_1409 = (FStar_ToSMT_Term.boxInt a)
+in (let _141_1408 = (let _141_1407 = (FStar_ToSMT_Term.boxInt b)
+in (_141_1407)::[])
+in (_141_1409)::_141_1408))
+in (tt)::_141_1410)
+in (tt)::_141_1411)
+in ("Prims.Precedes", _141_1412))
+in (FStar_ToSMT_Term.mkApp _141_1413))
+in (FStar_All.pipe_left FStar_ToSMT_Term.mk_Valid _141_1414))
 in (
 
-let precedes_y_x = (let _140_1415 = (FStar_ToSMT_Term.mkApp ("Precedes", (y)::(x)::[]))
-in (FStar_All.pipe_left FStar_ToSMT_Term.mk_Valid _140_1415))
-in (let _140_1457 = (let _140_1421 = (let _140_1420 = (let _140_1419 = (let _140_1418 = (let _140_1417 = (let _140_1416 = (FStar_ToSMT_Term.mk_tester "BoxInt" x)
-in (typing_pred, _140_1416))
-in (FStar_ToSMT_Term.mkImp _140_1417))
-in (((typing_pred)::[])::[], (xx)::[], _140_1418))
-in (mkForall_fuel _140_1419))
-in (_140_1420, Some ("int inversion")))
-in FStar_ToSMT_Term.Assume (_140_1421))
-in (let _140_1456 = (let _140_1455 = (let _140_1429 = (let _140_1428 = (let _140_1427 = (let _140_1426 = (let _140_1423 = (let _140_1422 = (FStar_ToSMT_Term.boxInt b)
-in (_140_1422)::[])
-in (_140_1423)::[])
-in (let _140_1425 = (let _140_1424 = (FStar_ToSMT_Term.boxInt b)
-in (FStar_ToSMT_Term.mk_HasType _140_1424 tt))
-in (_140_1426, (bb)::[], _140_1425)))
-in (FStar_ToSMT_Term.mkForall _140_1427))
-in (_140_1428, Some ("int typing")))
-in FStar_ToSMT_Term.Assume (_140_1429))
-in (let _140_1454 = (let _140_1453 = (let _140_1452 = (let _140_1451 = (let _140_1450 = (let _140_1449 = (let _140_1448 = (let _140_1447 = (let _140_1446 = (let _140_1445 = (let _140_1444 = (let _140_1443 = (let _140_1432 = (let _140_1431 = (FStar_ToSMT_Term.unboxInt x)
-in (let _140_1430 = (FStar_ToSMT_Term.mkInteger' 0)
-in (_140_1431, _140_1430)))
-in (FStar_ToSMT_Term.mkGT _140_1432))
-in (let _140_1442 = (let _140_1441 = (let _140_1435 = (let _140_1434 = (FStar_ToSMT_Term.unboxInt y)
-in (let _140_1433 = (FStar_ToSMT_Term.mkInteger' 0)
-in (_140_1434, _140_1433)))
-in (FStar_ToSMT_Term.mkGTE _140_1435))
-in (let _140_1440 = (let _140_1439 = (let _140_1438 = (let _140_1437 = (FStar_ToSMT_Term.unboxInt y)
-in (let _140_1436 = (FStar_ToSMT_Term.unboxInt x)
-in (_140_1437, _140_1436)))
-in (FStar_ToSMT_Term.mkLT _140_1438))
-in (_140_1439)::[])
-in (_140_1441)::_140_1440))
-in (_140_1443)::_140_1442))
-in (typing_pred_y)::_140_1444)
-in (typing_pred)::_140_1445)
-in (FStar_ToSMT_Term.mk_and_l _140_1446))
-in (_140_1447, precedes_y_x))
-in (FStar_ToSMT_Term.mkImp _140_1448))
-in (((typing_pred)::(typing_pred_y)::(precedes_y_x)::[])::[], (xx)::(yy)::[], _140_1449))
-in (mkForall_fuel _140_1450))
-in (_140_1451, Some ("well-founded ordering on nat (alt)")))
-in FStar_ToSMT_Term.Assume (_140_1452))
-in (_140_1453)::[])
-in (_140_1455)::_140_1454))
-in (_140_1457)::_140_1456)))))))))))
+let precedes_y_x = (let _141_1415 = (FStar_ToSMT_Term.mkApp ("Precedes", (y)::(x)::[]))
+in (FStar_All.pipe_left FStar_ToSMT_Term.mk_Valid _141_1415))
+in (let _141_1457 = (let _141_1421 = (let _141_1420 = (let _141_1419 = (let _141_1418 = (let _141_1417 = (let _141_1416 = (FStar_ToSMT_Term.mk_tester "BoxInt" x)
+in (typing_pred, _141_1416))
+in (FStar_ToSMT_Term.mkImp _141_1417))
+in (((typing_pred)::[])::[], (xx)::[], _141_1418))
+in (mkForall_fuel _141_1419))
+in (_141_1420, Some ("int inversion")))
+in FStar_ToSMT_Term.Assume (_141_1421))
+in (let _141_1456 = (let _141_1455 = (let _141_1429 = (let _141_1428 = (let _141_1427 = (let _141_1426 = (let _141_1423 = (let _141_1422 = (FStar_ToSMT_Term.boxInt b)
+in (_141_1422)::[])
+in (_141_1423)::[])
+in (let _141_1425 = (let _141_1424 = (FStar_ToSMT_Term.boxInt b)
+in (FStar_ToSMT_Term.mk_HasType _141_1424 tt))
+in (_141_1426, (bb)::[], _141_1425)))
+in (FStar_ToSMT_Term.mkForall _141_1427))
+in (_141_1428, Some ("int typing")))
+in FStar_ToSMT_Term.Assume (_141_1429))
+in (let _141_1454 = (let _141_1453 = (let _141_1452 = (let _141_1451 = (let _141_1450 = (let _141_1449 = (let _141_1448 = (let _141_1447 = (let _141_1446 = (let _141_1445 = (let _141_1444 = (let _141_1443 = (let _141_1432 = (let _141_1431 = (FStar_ToSMT_Term.unboxInt x)
+in (let _141_1430 = (FStar_ToSMT_Term.mkInteger' 0)
+in (_141_1431, _141_1430)))
+in (FStar_ToSMT_Term.mkGT _141_1432))
+in (let _141_1442 = (let _141_1441 = (let _141_1435 = (let _141_1434 = (FStar_ToSMT_Term.unboxInt y)
+in (let _141_1433 = (FStar_ToSMT_Term.mkInteger' 0)
+in (_141_1434, _141_1433)))
+in (FStar_ToSMT_Term.mkGTE _141_1435))
+in (let _141_1440 = (let _141_1439 = (let _141_1438 = (let _141_1437 = (FStar_ToSMT_Term.unboxInt y)
+in (let _141_1436 = (FStar_ToSMT_Term.unboxInt x)
+in (_141_1437, _141_1436)))
+in (FStar_ToSMT_Term.mkLT _141_1438))
+in (_141_1439)::[])
+in (_141_1441)::_141_1440))
+in (_141_1443)::_141_1442))
+in (typing_pred_y)::_141_1444)
+in (typing_pred)::_141_1445)
+in (FStar_ToSMT_Term.mk_and_l _141_1446))
+in (_141_1447, precedes_y_x))
+in (FStar_ToSMT_Term.mkImp _141_1448))
+in (((typing_pred)::(typing_pred_y)::(precedes_y_x)::[])::[], (xx)::(yy)::[], _141_1449))
+in (mkForall_fuel _141_1450))
+in (_141_1451, Some ("well-founded ordering on nat (alt)")))
+in FStar_ToSMT_Term.Assume (_141_1452))
+in (_141_1453)::[])
+in (_141_1455)::_141_1454))
+in (_141_1457)::_141_1456)))))))))))
 in (
 
-let mk_int_alias = (fun _50_2160 tt -> (let _140_1466 = (let _140_1465 = (let _140_1464 = (let _140_1463 = (let _140_1462 = (FStar_ToSMT_Term.mkApp (FStar_Absyn_Const.int_lid.FStar_Ident.str, []))
-in (tt, _140_1462))
-in (FStar_ToSMT_Term.mkEq _140_1463))
-in (_140_1464, Some ("mapping to int; for now")))
-in FStar_ToSMT_Term.Assume (_140_1465))
-in (_140_1466)::[]))
+let mk_int_alias = (fun _50_2160 tt -> (let _141_1466 = (let _141_1465 = (let _141_1464 = (let _141_1463 = (let _141_1462 = (FStar_ToSMT_Term.mkApp (FStar_Absyn_Const.int_lid.FStar_Ident.str, []))
+in (tt, _141_1462))
+in (FStar_ToSMT_Term.mkEq _141_1463))
+in (_141_1464, Some ("mapping to int; for now")))
+in FStar_ToSMT_Term.Assume (_141_1465))
+in (_141_1466)::[]))
 in (
 
 let mk_str = (fun _50_2164 tt -> (
@@ -3204,24 +3204,24 @@ let bb = ("b", FStar_ToSMT_Term.String_sort)
 in (
 
 let b = (FStar_ToSMT_Term.mkFreeV bb)
-in (let _140_1487 = (let _140_1476 = (let _140_1475 = (let _140_1474 = (let _140_1473 = (let _140_1472 = (let _140_1471 = (FStar_ToSMT_Term.mk_tester "BoxString" x)
-in (typing_pred, _140_1471))
-in (FStar_ToSMT_Term.mkImp _140_1472))
-in (((typing_pred)::[])::[], (xx)::[], _140_1473))
-in (mkForall_fuel _140_1474))
-in (_140_1475, Some ("string inversion")))
-in FStar_ToSMT_Term.Assume (_140_1476))
-in (let _140_1486 = (let _140_1485 = (let _140_1484 = (let _140_1483 = (let _140_1482 = (let _140_1481 = (let _140_1478 = (let _140_1477 = (FStar_ToSMT_Term.boxString b)
-in (_140_1477)::[])
-in (_140_1478)::[])
-in (let _140_1480 = (let _140_1479 = (FStar_ToSMT_Term.boxString b)
-in (FStar_ToSMT_Term.mk_HasType _140_1479 tt))
-in (_140_1481, (bb)::[], _140_1480)))
-in (FStar_ToSMT_Term.mkForall _140_1482))
-in (_140_1483, Some ("string typing")))
-in FStar_ToSMT_Term.Assume (_140_1484))
-in (_140_1485)::[])
-in (_140_1487)::_140_1486))))))
+in (let _141_1487 = (let _141_1476 = (let _141_1475 = (let _141_1474 = (let _141_1473 = (let _141_1472 = (let _141_1471 = (FStar_ToSMT_Term.mk_tester "BoxString" x)
+in (typing_pred, _141_1471))
+in (FStar_ToSMT_Term.mkImp _141_1472))
+in (((typing_pred)::[])::[], (xx)::[], _141_1473))
+in (mkForall_fuel _141_1474))
+in (_141_1475, Some ("string inversion")))
+in FStar_ToSMT_Term.Assume (_141_1476))
+in (let _141_1486 = (let _141_1485 = (let _141_1484 = (let _141_1483 = (let _141_1482 = (let _141_1481 = (let _141_1478 = (let _141_1477 = (FStar_ToSMT_Term.boxString b)
+in (_141_1477)::[])
+in (_141_1478)::[])
+in (let _141_1480 = (let _141_1479 = (FStar_ToSMT_Term.boxString b)
+in (FStar_ToSMT_Term.mk_HasType _141_1479 tt))
+in (_141_1481, (bb)::[], _141_1480)))
+in (FStar_ToSMT_Term.mkForall _141_1482))
+in (_141_1483, Some ("string typing")))
+in FStar_ToSMT_Term.Assume (_141_1484))
+in (_141_1485)::[])
+in (_141_1487)::_141_1486))))))
 in (
 
 let mk_ref = (fun reft_name _50_2172 -> (
@@ -3235,51 +3235,51 @@ in (
 let bb = ("b", FStar_ToSMT_Term.Type_sort)
 in (
 
-let refa = (let _140_1494 = (let _140_1493 = (let _140_1492 = (FStar_ToSMT_Term.mkFreeV aa)
-in (_140_1492)::[])
-in (reft_name, _140_1493))
-in (FStar_ToSMT_Term.mkApp _140_1494))
+let refa = (let _141_1494 = (let _141_1493 = (let _141_1492 = (FStar_ToSMT_Term.mkFreeV aa)
+in (_141_1492)::[])
+in (reft_name, _141_1493))
+in (FStar_ToSMT_Term.mkApp _141_1494))
 in (
 
-let refb = (let _140_1497 = (let _140_1496 = (let _140_1495 = (FStar_ToSMT_Term.mkFreeV bb)
-in (_140_1495)::[])
-in (reft_name, _140_1496))
-in (FStar_ToSMT_Term.mkApp _140_1497))
+let refb = (let _141_1497 = (let _141_1496 = (let _141_1495 = (FStar_ToSMT_Term.mkFreeV bb)
+in (_141_1495)::[])
+in (reft_name, _141_1496))
+in (FStar_ToSMT_Term.mkApp _141_1497))
 in (
 
 let typing_pred = (FStar_ToSMT_Term.mk_HasType x refa)
 in (
 
 let typing_pred_b = (FStar_ToSMT_Term.mk_HasType x refb)
-in (let _140_1516 = (let _140_1503 = (let _140_1502 = (let _140_1501 = (let _140_1500 = (let _140_1499 = (let _140_1498 = (FStar_ToSMT_Term.mk_tester "BoxRef" x)
-in (typing_pred, _140_1498))
-in (FStar_ToSMT_Term.mkImp _140_1499))
-in (((typing_pred)::[])::[], (xx)::(aa)::[], _140_1500))
-in (mkForall_fuel _140_1501))
-in (_140_1502, Some ("ref inversion")))
-in FStar_ToSMT_Term.Assume (_140_1503))
-in (let _140_1515 = (let _140_1514 = (let _140_1513 = (let _140_1512 = (let _140_1511 = (let _140_1510 = (let _140_1509 = (let _140_1508 = (FStar_ToSMT_Term.mkAnd (typing_pred, typing_pred_b))
-in (let _140_1507 = (let _140_1506 = (let _140_1505 = (FStar_ToSMT_Term.mkFreeV aa)
-in (let _140_1504 = (FStar_ToSMT_Term.mkFreeV bb)
-in (_140_1505, _140_1504)))
-in (FStar_ToSMT_Term.mkEq _140_1506))
-in (_140_1508, _140_1507)))
-in (FStar_ToSMT_Term.mkImp _140_1509))
-in (((typing_pred)::(typing_pred_b)::[])::[], (xx)::(aa)::(bb)::[], _140_1510))
-in (mkForall_fuel' 2 _140_1511))
-in (_140_1512, Some ("ref typing is injective")))
-in FStar_ToSMT_Term.Assume (_140_1513))
-in (_140_1514)::[])
-in (_140_1516)::_140_1515))))))))))
+in (let _141_1516 = (let _141_1503 = (let _141_1502 = (let _141_1501 = (let _141_1500 = (let _141_1499 = (let _141_1498 = (FStar_ToSMT_Term.mk_tester "BoxRef" x)
+in (typing_pred, _141_1498))
+in (FStar_ToSMT_Term.mkImp _141_1499))
+in (((typing_pred)::[])::[], (xx)::(aa)::[], _141_1500))
+in (mkForall_fuel _141_1501))
+in (_141_1502, Some ("ref inversion")))
+in FStar_ToSMT_Term.Assume (_141_1503))
+in (let _141_1515 = (let _141_1514 = (let _141_1513 = (let _141_1512 = (let _141_1511 = (let _141_1510 = (let _141_1509 = (let _141_1508 = (FStar_ToSMT_Term.mkAnd (typing_pred, typing_pred_b))
+in (let _141_1507 = (let _141_1506 = (let _141_1505 = (FStar_ToSMT_Term.mkFreeV aa)
+in (let _141_1504 = (FStar_ToSMT_Term.mkFreeV bb)
+in (_141_1505, _141_1504)))
+in (FStar_ToSMT_Term.mkEq _141_1506))
+in (_141_1508, _141_1507)))
+in (FStar_ToSMT_Term.mkImp _141_1509))
+in (((typing_pred)::(typing_pred_b)::[])::[], (xx)::(aa)::(bb)::[], _141_1510))
+in (mkForall_fuel' 2 _141_1511))
+in (_141_1512, Some ("ref typing is injective")))
+in FStar_ToSMT_Term.Assume (_141_1513))
+in (_141_1514)::[])
+in (_141_1516)::_141_1515))))))))))
 in (
 
 let mk_false_interp = (fun _50_2182 false_tm -> (
 
 let valid = (FStar_ToSMT_Term.mkApp ("Valid", (false_tm)::[]))
-in (let _140_1523 = (let _140_1522 = (let _140_1521 = (FStar_ToSMT_Term.mkIff (FStar_ToSMT_Term.mkFalse, valid))
-in (_140_1521, Some ("False interpretation")))
-in FStar_ToSMT_Term.Assume (_140_1522))
-in (_140_1523)::[])))
+in (let _141_1523 = (let _141_1522 = (let _141_1521 = (FStar_ToSMT_Term.mkIff (FStar_ToSMT_Term.mkFalse, valid))
+in (_141_1521, Some ("False interpretation")))
+in FStar_ToSMT_Term.Assume (_141_1522))
+in (_141_1523)::[])))
 in (
 
 let mk_and_interp = (fun conj _50_2188 -> (
@@ -3296,24 +3296,24 @@ in (
 let b = (FStar_ToSMT_Term.mkFreeV bb)
 in (
 
-let valid = (let _140_1530 = (let _140_1529 = (let _140_1528 = (FStar_ToSMT_Term.mkApp (conj, (a)::(b)::[]))
-in (_140_1528)::[])
-in ("Valid", _140_1529))
-in (FStar_ToSMT_Term.mkApp _140_1530))
+let valid = (let _141_1530 = (let _141_1529 = (let _141_1528 = (FStar_ToSMT_Term.mkApp (conj, (a)::(b)::[]))
+in (_141_1528)::[])
+in ("Valid", _141_1529))
+in (FStar_ToSMT_Term.mkApp _141_1530))
 in (
 
 let valid_a = (FStar_ToSMT_Term.mkApp ("Valid", (a)::[]))
 in (
 
 let valid_b = (FStar_ToSMT_Term.mkApp ("Valid", (b)::[]))
-in (let _140_1537 = (let _140_1536 = (let _140_1535 = (let _140_1534 = (let _140_1533 = (let _140_1532 = (let _140_1531 = (FStar_ToSMT_Term.mkAnd (valid_a, valid_b))
-in (_140_1531, valid))
-in (FStar_ToSMT_Term.mkIff _140_1532))
-in (((valid)::[])::[], (aa)::(bb)::[], _140_1533))
-in (FStar_ToSMT_Term.mkForall _140_1534))
-in (_140_1535, Some ("/\\ interpretation")))
-in FStar_ToSMT_Term.Assume (_140_1536))
-in (_140_1537)::[])))))))))
+in (let _141_1537 = (let _141_1536 = (let _141_1535 = (let _141_1534 = (let _141_1533 = (let _141_1532 = (let _141_1531 = (FStar_ToSMT_Term.mkAnd (valid_a, valid_b))
+in (_141_1531, valid))
+in (FStar_ToSMT_Term.mkIff _141_1532))
+in (((valid)::[])::[], (aa)::(bb)::[], _141_1533))
+in (FStar_ToSMT_Term.mkForall _141_1534))
+in (_141_1535, Some ("/\\ interpretation")))
+in FStar_ToSMT_Term.Assume (_141_1536))
+in (_141_1537)::[])))))))))
 in (
 
 let mk_or_interp = (fun disj _50_2199 -> (
@@ -3330,24 +3330,24 @@ in (
 let b = (FStar_ToSMT_Term.mkFreeV bb)
 in (
 
-let valid = (let _140_1544 = (let _140_1543 = (let _140_1542 = (FStar_ToSMT_Term.mkApp (disj, (a)::(b)::[]))
-in (_140_1542)::[])
-in ("Valid", _140_1543))
-in (FStar_ToSMT_Term.mkApp _140_1544))
+let valid = (let _141_1544 = (let _141_1543 = (let _141_1542 = (FStar_ToSMT_Term.mkApp (disj, (a)::(b)::[]))
+in (_141_1542)::[])
+in ("Valid", _141_1543))
+in (FStar_ToSMT_Term.mkApp _141_1544))
 in (
 
 let valid_a = (FStar_ToSMT_Term.mkApp ("Valid", (a)::[]))
 in (
 
 let valid_b = (FStar_ToSMT_Term.mkApp ("Valid", (b)::[]))
-in (let _140_1551 = (let _140_1550 = (let _140_1549 = (let _140_1548 = (let _140_1547 = (let _140_1546 = (let _140_1545 = (FStar_ToSMT_Term.mkOr (valid_a, valid_b))
-in (_140_1545, valid))
-in (FStar_ToSMT_Term.mkIff _140_1546))
-in (((valid)::[])::[], (aa)::(bb)::[], _140_1547))
-in (FStar_ToSMT_Term.mkForall _140_1548))
-in (_140_1549, Some ("\\/ interpretation")))
-in FStar_ToSMT_Term.Assume (_140_1550))
-in (_140_1551)::[])))))))))
+in (let _141_1551 = (let _141_1550 = (let _141_1549 = (let _141_1548 = (let _141_1547 = (let _141_1546 = (let _141_1545 = (FStar_ToSMT_Term.mkOr (valid_a, valid_b))
+in (_141_1545, valid))
+in (FStar_ToSMT_Term.mkIff _141_1546))
+in (((valid)::[])::[], (aa)::(bb)::[], _141_1547))
+in (FStar_ToSMT_Term.mkForall _141_1548))
+in (_141_1549, Some ("\\/ interpretation")))
+in FStar_ToSMT_Term.Assume (_141_1550))
+in (_141_1551)::[])))))))))
 in (
 
 let mk_eq2_interp = (fun eq2 tt -> (
@@ -3376,18 +3376,18 @@ in (
 let y = (FStar_ToSMT_Term.mkFreeV yy)
 in (
 
-let valid = (let _140_1558 = (let _140_1557 = (let _140_1556 = (FStar_ToSMT_Term.mkApp (eq2, (a)::(b)::(x)::(y)::[]))
-in (_140_1556)::[])
-in ("Valid", _140_1557))
-in (FStar_ToSMT_Term.mkApp _140_1558))
-in (let _140_1565 = (let _140_1564 = (let _140_1563 = (let _140_1562 = (let _140_1561 = (let _140_1560 = (let _140_1559 = (FStar_ToSMT_Term.mkEq (x, y))
-in (_140_1559, valid))
-in (FStar_ToSMT_Term.mkIff _140_1560))
-in (((valid)::[])::[], (aa)::(bb)::(xx)::(yy)::[], _140_1561))
-in (FStar_ToSMT_Term.mkForall _140_1562))
-in (_140_1563, Some ("Eq2 interpretation")))
-in FStar_ToSMT_Term.Assume (_140_1564))
-in (_140_1565)::[])))))))))))
+let valid = (let _141_1558 = (let _141_1557 = (let _141_1556 = (FStar_ToSMT_Term.mkApp (eq2, (a)::(b)::(x)::(y)::[]))
+in (_141_1556)::[])
+in ("Valid", _141_1557))
+in (FStar_ToSMT_Term.mkApp _141_1558))
+in (let _141_1565 = (let _141_1564 = (let _141_1563 = (let _141_1562 = (let _141_1561 = (let _141_1560 = (let _141_1559 = (FStar_ToSMT_Term.mkEq (x, y))
+in (_141_1559, valid))
+in (FStar_ToSMT_Term.mkIff _141_1560))
+in (((valid)::[])::[], (aa)::(bb)::(xx)::(yy)::[], _141_1561))
+in (FStar_ToSMT_Term.mkForall _141_1562))
+in (_141_1563, Some ("Eq2 interpretation")))
+in FStar_ToSMT_Term.Assume (_141_1564))
+in (_141_1565)::[])))))))))))
 in (
 
 let mk_imp_interp = (fun imp tt -> (
@@ -3404,24 +3404,24 @@ in (
 let b = (FStar_ToSMT_Term.mkFreeV bb)
 in (
 
-let valid = (let _140_1572 = (let _140_1571 = (let _140_1570 = (FStar_ToSMT_Term.mkApp (imp, (a)::(b)::[]))
-in (_140_1570)::[])
-in ("Valid", _140_1571))
-in (FStar_ToSMT_Term.mkApp _140_1572))
+let valid = (let _141_1572 = (let _141_1571 = (let _141_1570 = (FStar_ToSMT_Term.mkApp (imp, (a)::(b)::[]))
+in (_141_1570)::[])
+in ("Valid", _141_1571))
+in (FStar_ToSMT_Term.mkApp _141_1572))
 in (
 
 let valid_a = (FStar_ToSMT_Term.mkApp ("Valid", (a)::[]))
 in (
 
 let valid_b = (FStar_ToSMT_Term.mkApp ("Valid", (b)::[]))
-in (let _140_1579 = (let _140_1578 = (let _140_1577 = (let _140_1576 = (let _140_1575 = (let _140_1574 = (let _140_1573 = (FStar_ToSMT_Term.mkImp (valid_a, valid_b))
-in (_140_1573, valid))
-in (FStar_ToSMT_Term.mkIff _140_1574))
-in (((valid)::[])::[], (aa)::(bb)::[], _140_1575))
-in (FStar_ToSMT_Term.mkForall _140_1576))
-in (_140_1577, Some ("==> interpretation")))
-in FStar_ToSMT_Term.Assume (_140_1578))
-in (_140_1579)::[])))))))))
+in (let _141_1579 = (let _141_1578 = (let _141_1577 = (let _141_1576 = (let _141_1575 = (let _141_1574 = (let _141_1573 = (FStar_ToSMT_Term.mkImp (valid_a, valid_b))
+in (_141_1573, valid))
+in (FStar_ToSMT_Term.mkIff _141_1574))
+in (((valid)::[])::[], (aa)::(bb)::[], _141_1575))
+in (FStar_ToSMT_Term.mkForall _141_1576))
+in (_141_1577, Some ("==> interpretation")))
+in FStar_ToSMT_Term.Assume (_141_1578))
+in (_141_1579)::[])))))))))
 in (
 
 let mk_iff_interp = (fun iff tt -> (
@@ -3438,24 +3438,24 @@ in (
 let b = (FStar_ToSMT_Term.mkFreeV bb)
 in (
 
-let valid = (let _140_1586 = (let _140_1585 = (let _140_1584 = (FStar_ToSMT_Term.mkApp (iff, (a)::(b)::[]))
-in (_140_1584)::[])
-in ("Valid", _140_1585))
-in (FStar_ToSMT_Term.mkApp _140_1586))
+let valid = (let _141_1586 = (let _141_1585 = (let _141_1584 = (FStar_ToSMT_Term.mkApp (iff, (a)::(b)::[]))
+in (_141_1584)::[])
+in ("Valid", _141_1585))
+in (FStar_ToSMT_Term.mkApp _141_1586))
 in (
 
 let valid_a = (FStar_ToSMT_Term.mkApp ("Valid", (a)::[]))
 in (
 
 let valid_b = (FStar_ToSMT_Term.mkApp ("Valid", (b)::[]))
-in (let _140_1593 = (let _140_1592 = (let _140_1591 = (let _140_1590 = (let _140_1589 = (let _140_1588 = (let _140_1587 = (FStar_ToSMT_Term.mkIff (valid_a, valid_b))
-in (_140_1587, valid))
-in (FStar_ToSMT_Term.mkIff _140_1588))
-in (((valid)::[])::[], (aa)::(bb)::[], _140_1589))
-in (FStar_ToSMT_Term.mkForall _140_1590))
-in (_140_1591, Some ("<==> interpretation")))
-in FStar_ToSMT_Term.Assume (_140_1592))
-in (_140_1593)::[])))))))))
+in (let _141_1593 = (let _141_1592 = (let _141_1591 = (let _141_1590 = (let _141_1589 = (let _141_1588 = (let _141_1587 = (FStar_ToSMT_Term.mkIff (valid_a, valid_b))
+in (_141_1587, valid))
+in (FStar_ToSMT_Term.mkIff _141_1588))
+in (((valid)::[])::[], (aa)::(bb)::[], _141_1589))
+in (FStar_ToSMT_Term.mkForall _141_1590))
+in (_141_1591, Some ("<==> interpretation")))
+in FStar_ToSMT_Term.Assume (_141_1592))
+in (_141_1593)::[])))))))))
 in (
 
 let mk_forall_interp = (fun for_all tt -> (
@@ -3478,31 +3478,31 @@ in (
 let x = (FStar_ToSMT_Term.mkFreeV xx)
 in (
 
-let valid = (let _140_1600 = (let _140_1599 = (let _140_1598 = (FStar_ToSMT_Term.mkApp (for_all, (a)::(b)::[]))
-in (_140_1598)::[])
-in ("Valid", _140_1599))
-in (FStar_ToSMT_Term.mkApp _140_1600))
+let valid = (let _141_1600 = (let _141_1599 = (let _141_1598 = (FStar_ToSMT_Term.mkApp (for_all, (a)::(b)::[]))
+in (_141_1598)::[])
+in ("Valid", _141_1599))
+in (FStar_ToSMT_Term.mkApp _141_1600))
 in (
 
-let valid_b_x = (let _140_1603 = (let _140_1602 = (let _140_1601 = (FStar_ToSMT_Term.mk_ApplyTE b x)
-in (_140_1601)::[])
-in ("Valid", _140_1602))
-in (FStar_ToSMT_Term.mkApp _140_1603))
-in (let _140_1617 = (let _140_1616 = (let _140_1615 = (let _140_1614 = (let _140_1613 = (let _140_1612 = (let _140_1611 = (let _140_1610 = (let _140_1609 = (let _140_1605 = (let _140_1604 = (FStar_ToSMT_Term.mk_HasTypeZ x a)
-in (_140_1604)::[])
-in (_140_1605)::[])
-in (let _140_1608 = (let _140_1607 = (let _140_1606 = (FStar_ToSMT_Term.mk_HasTypeZ x a)
-in (_140_1606, valid_b_x))
-in (FStar_ToSMT_Term.mkImp _140_1607))
-in (_140_1609, (xx)::[], _140_1608)))
-in (FStar_ToSMT_Term.mkForall _140_1610))
-in (_140_1611, valid))
-in (FStar_ToSMT_Term.mkIff _140_1612))
-in (((valid)::[])::[], (aa)::(bb)::[], _140_1613))
-in (FStar_ToSMT_Term.mkForall _140_1614))
-in (_140_1615, Some ("forall interpretation")))
-in FStar_ToSMT_Term.Assume (_140_1616))
-in (_140_1617)::[]))))))))))
+let valid_b_x = (let _141_1603 = (let _141_1602 = (let _141_1601 = (FStar_ToSMT_Term.mk_ApplyTE b x)
+in (_141_1601)::[])
+in ("Valid", _141_1602))
+in (FStar_ToSMT_Term.mkApp _141_1603))
+in (let _141_1617 = (let _141_1616 = (let _141_1615 = (let _141_1614 = (let _141_1613 = (let _141_1612 = (let _141_1611 = (let _141_1610 = (let _141_1609 = (let _141_1605 = (let _141_1604 = (FStar_ToSMT_Term.mk_HasTypeZ x a)
+in (_141_1604)::[])
+in (_141_1605)::[])
+in (let _141_1608 = (let _141_1607 = (let _141_1606 = (FStar_ToSMT_Term.mk_HasTypeZ x a)
+in (_141_1606, valid_b_x))
+in (FStar_ToSMT_Term.mkImp _141_1607))
+in (_141_1609, (xx)::[], _141_1608)))
+in (FStar_ToSMT_Term.mkForall _141_1610))
+in (_141_1611, valid))
+in (FStar_ToSMT_Term.mkIff _141_1612))
+in (((valid)::[])::[], (aa)::(bb)::[], _141_1613))
+in (FStar_ToSMT_Term.mkForall _141_1614))
+in (_141_1615, Some ("forall interpretation")))
+in FStar_ToSMT_Term.Assume (_141_1616))
+in (_141_1617)::[]))))))))))
 in (
 
 let mk_exists_interp = (fun for_all tt -> (
@@ -3525,31 +3525,31 @@ in (
 let x = (FStar_ToSMT_Term.mkFreeV xx)
 in (
 
-let valid = (let _140_1624 = (let _140_1623 = (let _140_1622 = (FStar_ToSMT_Term.mkApp (for_all, (a)::(b)::[]))
-in (_140_1622)::[])
-in ("Valid", _140_1623))
-in (FStar_ToSMT_Term.mkApp _140_1624))
+let valid = (let _141_1624 = (let _141_1623 = (let _141_1622 = (FStar_ToSMT_Term.mkApp (for_all, (a)::(b)::[]))
+in (_141_1622)::[])
+in ("Valid", _141_1623))
+in (FStar_ToSMT_Term.mkApp _141_1624))
 in (
 
-let valid_b_x = (let _140_1627 = (let _140_1626 = (let _140_1625 = (FStar_ToSMT_Term.mk_ApplyTE b x)
-in (_140_1625)::[])
-in ("Valid", _140_1626))
-in (FStar_ToSMT_Term.mkApp _140_1627))
-in (let _140_1641 = (let _140_1640 = (let _140_1639 = (let _140_1638 = (let _140_1637 = (let _140_1636 = (let _140_1635 = (let _140_1634 = (let _140_1633 = (let _140_1629 = (let _140_1628 = (FStar_ToSMT_Term.mk_HasTypeZ x a)
-in (_140_1628)::[])
-in (_140_1629)::[])
-in (let _140_1632 = (let _140_1631 = (let _140_1630 = (FStar_ToSMT_Term.mk_HasTypeZ x a)
-in (_140_1630, valid_b_x))
-in (FStar_ToSMT_Term.mkImp _140_1631))
-in (_140_1633, (xx)::[], _140_1632)))
-in (FStar_ToSMT_Term.mkExists _140_1634))
-in (_140_1635, valid))
-in (FStar_ToSMT_Term.mkIff _140_1636))
-in (((valid)::[])::[], (aa)::(bb)::[], _140_1637))
-in (FStar_ToSMT_Term.mkForall _140_1638))
-in (_140_1639, Some ("exists interpretation")))
-in FStar_ToSMT_Term.Assume (_140_1640))
-in (_140_1641)::[]))))))))))
+let valid_b_x = (let _141_1627 = (let _141_1626 = (let _141_1625 = (FStar_ToSMT_Term.mk_ApplyTE b x)
+in (_141_1625)::[])
+in ("Valid", _141_1626))
+in (FStar_ToSMT_Term.mkApp _141_1627))
+in (let _141_1641 = (let _141_1640 = (let _141_1639 = (let _141_1638 = (let _141_1637 = (let _141_1636 = (let _141_1635 = (let _141_1634 = (let _141_1633 = (let _141_1629 = (let _141_1628 = (FStar_ToSMT_Term.mk_HasTypeZ x a)
+in (_141_1628)::[])
+in (_141_1629)::[])
+in (let _141_1632 = (let _141_1631 = (let _141_1630 = (FStar_ToSMT_Term.mk_HasTypeZ x a)
+in (_141_1630, valid_b_x))
+in (FStar_ToSMT_Term.mkImp _141_1631))
+in (_141_1633, (xx)::[], _141_1632)))
+in (FStar_ToSMT_Term.mkExists _141_1634))
+in (_141_1635, valid))
+in (FStar_ToSMT_Term.mkIff _141_1636))
+in (((valid)::[])::[], (aa)::(bb)::[], _141_1637))
+in (FStar_ToSMT_Term.mkForall _141_1638))
+in (_141_1639, Some ("exists interpretation")))
+in FStar_ToSMT_Term.Assume (_141_1640))
+in (_141_1641)::[]))))))))))
 in (
 
 let mk_foralltyp_interp = (fun for_all tt -> (
@@ -3572,31 +3572,31 @@ in (
 let b = (FStar_ToSMT_Term.mkFreeV bb)
 in (
 
-let valid = (let _140_1648 = (let _140_1647 = (let _140_1646 = (FStar_ToSMT_Term.mkApp (for_all, (k)::(a)::[]))
-in (_140_1646)::[])
-in ("Valid", _140_1647))
-in (FStar_ToSMT_Term.mkApp _140_1648))
+let valid = (let _141_1648 = (let _141_1647 = (let _141_1646 = (FStar_ToSMT_Term.mkApp (for_all, (k)::(a)::[]))
+in (_141_1646)::[])
+in ("Valid", _141_1647))
+in (FStar_ToSMT_Term.mkApp _141_1648))
 in (
 
-let valid_a_b = (let _140_1651 = (let _140_1650 = (let _140_1649 = (FStar_ToSMT_Term.mk_ApplyTE a b)
-in (_140_1649)::[])
-in ("Valid", _140_1650))
-in (FStar_ToSMT_Term.mkApp _140_1651))
-in (let _140_1665 = (let _140_1664 = (let _140_1663 = (let _140_1662 = (let _140_1661 = (let _140_1660 = (let _140_1659 = (let _140_1658 = (let _140_1657 = (let _140_1653 = (let _140_1652 = (FStar_ToSMT_Term.mk_HasKind b k)
-in (_140_1652)::[])
-in (_140_1653)::[])
-in (let _140_1656 = (let _140_1655 = (let _140_1654 = (FStar_ToSMT_Term.mk_HasKind b k)
-in (_140_1654, valid_a_b))
-in (FStar_ToSMT_Term.mkImp _140_1655))
-in (_140_1657, (bb)::[], _140_1656)))
-in (FStar_ToSMT_Term.mkForall _140_1658))
-in (_140_1659, valid))
-in (FStar_ToSMT_Term.mkIff _140_1660))
-in (((valid)::[])::[], (kk)::(aa)::[], _140_1661))
-in (FStar_ToSMT_Term.mkForall _140_1662))
-in (_140_1663, Some ("ForallTyp interpretation")))
-in FStar_ToSMT_Term.Assume (_140_1664))
-in (_140_1665)::[]))))))))))
+let valid_a_b = (let _141_1651 = (let _141_1650 = (let _141_1649 = (FStar_ToSMT_Term.mk_ApplyTE a b)
+in (_141_1649)::[])
+in ("Valid", _141_1650))
+in (FStar_ToSMT_Term.mkApp _141_1651))
+in (let _141_1665 = (let _141_1664 = (let _141_1663 = (let _141_1662 = (let _141_1661 = (let _141_1660 = (let _141_1659 = (let _141_1658 = (let _141_1657 = (let _141_1653 = (let _141_1652 = (FStar_ToSMT_Term.mk_HasKind b k)
+in (_141_1652)::[])
+in (_141_1653)::[])
+in (let _141_1656 = (let _141_1655 = (let _141_1654 = (FStar_ToSMT_Term.mk_HasKind b k)
+in (_141_1654, valid_a_b))
+in (FStar_ToSMT_Term.mkImp _141_1655))
+in (_141_1657, (bb)::[], _141_1656)))
+in (FStar_ToSMT_Term.mkForall _141_1658))
+in (_141_1659, valid))
+in (FStar_ToSMT_Term.mkIff _141_1660))
+in (((valid)::[])::[], (kk)::(aa)::[], _141_1661))
+in (FStar_ToSMT_Term.mkForall _141_1662))
+in (_141_1663, Some ("ForallTyp interpretation")))
+in FStar_ToSMT_Term.Assume (_141_1664))
+in (_141_1665)::[]))))))))))
 in (
 
 let mk_existstyp_interp = (fun for_some tt -> (
@@ -3619,31 +3619,31 @@ in (
 let b = (FStar_ToSMT_Term.mkFreeV bb)
 in (
 
-let valid = (let _140_1672 = (let _140_1671 = (let _140_1670 = (FStar_ToSMT_Term.mkApp (for_some, (k)::(a)::[]))
-in (_140_1670)::[])
-in ("Valid", _140_1671))
-in (FStar_ToSMT_Term.mkApp _140_1672))
+let valid = (let _141_1672 = (let _141_1671 = (let _141_1670 = (FStar_ToSMT_Term.mkApp (for_some, (k)::(a)::[]))
+in (_141_1670)::[])
+in ("Valid", _141_1671))
+in (FStar_ToSMT_Term.mkApp _141_1672))
 in (
 
-let valid_a_b = (let _140_1675 = (let _140_1674 = (let _140_1673 = (FStar_ToSMT_Term.mk_ApplyTE a b)
-in (_140_1673)::[])
-in ("Valid", _140_1674))
-in (FStar_ToSMT_Term.mkApp _140_1675))
-in (let _140_1689 = (let _140_1688 = (let _140_1687 = (let _140_1686 = (let _140_1685 = (let _140_1684 = (let _140_1683 = (let _140_1682 = (let _140_1681 = (let _140_1677 = (let _140_1676 = (FStar_ToSMT_Term.mk_HasKind b k)
-in (_140_1676)::[])
-in (_140_1677)::[])
-in (let _140_1680 = (let _140_1679 = (let _140_1678 = (FStar_ToSMT_Term.mk_HasKind b k)
-in (_140_1678, valid_a_b))
-in (FStar_ToSMT_Term.mkImp _140_1679))
-in (_140_1681, (bb)::[], _140_1680)))
-in (FStar_ToSMT_Term.mkExists _140_1682))
-in (_140_1683, valid))
-in (FStar_ToSMT_Term.mkIff _140_1684))
-in (((valid)::[])::[], (kk)::(aa)::[], _140_1685))
-in (FStar_ToSMT_Term.mkForall _140_1686))
-in (_140_1687, Some ("ExistsTyp interpretation")))
-in FStar_ToSMT_Term.Assume (_140_1688))
-in (_140_1689)::[]))))))))))
+let valid_a_b = (let _141_1675 = (let _141_1674 = (let _141_1673 = (FStar_ToSMT_Term.mk_ApplyTE a b)
+in (_141_1673)::[])
+in ("Valid", _141_1674))
+in (FStar_ToSMT_Term.mkApp _141_1675))
+in (let _141_1689 = (let _141_1688 = (let _141_1687 = (let _141_1686 = (let _141_1685 = (let _141_1684 = (let _141_1683 = (let _141_1682 = (let _141_1681 = (let _141_1677 = (let _141_1676 = (FStar_ToSMT_Term.mk_HasKind b k)
+in (_141_1676)::[])
+in (_141_1677)::[])
+in (let _141_1680 = (let _141_1679 = (let _141_1678 = (FStar_ToSMT_Term.mk_HasKind b k)
+in (_141_1678, valid_a_b))
+in (FStar_ToSMT_Term.mkImp _141_1679))
+in (_141_1681, (bb)::[], _141_1680)))
+in (FStar_ToSMT_Term.mkExists _141_1682))
+in (_141_1683, valid))
+in (FStar_ToSMT_Term.mkIff _141_1684))
+in (((valid)::[])::[], (kk)::(aa)::[], _141_1685))
+in (FStar_ToSMT_Term.mkForall _141_1686))
+in (_141_1687, Some ("ExistsTyp interpretation")))
+in FStar_ToSMT_Term.Assume (_141_1688))
+in (_141_1689)::[]))))))))))
 in (
 
 let prims = ((FStar_Absyn_Const.unit_lid, mk_unit))::((FStar_Absyn_Const.bool_lid, mk_bool))::((FStar_Absyn_Const.int_lid, mk_int))::((FStar_Absyn_Const.string_lid, mk_str))::((FStar_Absyn_Const.ref_lid, mk_ref))::((FStar_Absyn_Const.false_lid, mk_false_interp))::((FStar_Absyn_Const.and_lid, mk_and_interp))::((FStar_Absyn_Const.or_lid, mk_or_interp))::((FStar_Absyn_Const.eq2_lid, mk_eq2_interp))::((FStar_Absyn_Const.imp_lid, mk_imp_interp))::((FStar_Absyn_Const.iff_lid, mk_iff_interp))::((FStar_Absyn_Const.forall_lid, mk_forall_interp))::((FStar_Absyn_Const.exists_lid, mk_exists_interp))::[]
@@ -3662,8 +3662,8 @@ end)))))))))))))))))))))))
 let rec encode_sigelt : env_t  ->  FStar_Absyn_Syntax.sigelt  ->  (FStar_ToSMT_Term.decls_t * env_t) = (fun env se -> (
 
 let _50_2301 = if (FStar_Tc_Env.debug env.tcenv FStar_Options.Low) then begin
-(let _140_1820 = (FStar_Absyn_Print.sigelt_to_string se)
-in (FStar_All.pipe_left (FStar_Util.print1 ">>>>Encoding [%s]\n") _140_1820))
+(let _141_1820 = (FStar_Absyn_Print.sigelt_to_string se)
+in (FStar_All.pipe_left (FStar_Util.print1 ">>>>Encoding [%s]\n") _141_1820))
 end else begin
 ()
 end
@@ -3683,20 +3683,20 @@ in (match (_50_2309) with
 | (g, e) -> begin
 (match (g) with
 | [] -> begin
-(let _140_1823 = (let _140_1822 = (let _140_1821 = (FStar_Util.format1 "<Skipped %s/>" nm)
-in FStar_ToSMT_Term.Caption (_140_1821))
-in (_140_1822)::[])
-in (_140_1823, e))
+(let _141_1823 = (let _141_1822 = (let _141_1821 = (FStar_Util.format1 "<Skipped %s/>" nm)
+in FStar_ToSMT_Term.Caption (_141_1821))
+in (_141_1822)::[])
+in (_141_1823, e))
 end
 | _50_2312 -> begin
-(let _140_1830 = (let _140_1829 = (let _140_1825 = (let _140_1824 = (FStar_Util.format1 "<Start encoding %s>" nm)
-in FStar_ToSMT_Term.Caption (_140_1824))
-in (_140_1825)::g)
-in (let _140_1828 = (let _140_1827 = (let _140_1826 = (FStar_Util.format1 "</end encoding %s>" nm)
-in FStar_ToSMT_Term.Caption (_140_1826))
-in (_140_1827)::[])
-in (FStar_List.append _140_1829 _140_1828)))
-in (_140_1830, e))
+(let _141_1830 = (let _141_1829 = (let _141_1825 = (let _141_1824 = (FStar_Util.format1 "<Start encoding %s>" nm)
+in FStar_ToSMT_Term.Caption (_141_1824))
+in (_141_1825)::g)
+in (let _141_1828 = (let _141_1827 = (let _141_1826 = (FStar_Util.format1 "</end encoding %s>" nm)
+in FStar_ToSMT_Term.Caption (_141_1826))
+in (_141_1827)::[])
+in (FStar_List.append _141_1829 _141_1828)))
+in (_141_1830, e))
 end)
 end)))))
 and encode_sigelt' : env_t  ->  FStar_Absyn_Syntax.sigelt  ->  (FStar_ToSMT_Term.decls_t * env_t) = (fun env se -> (
@@ -3713,9 +3713,9 @@ let _50_2325 = (encode_free_var env lid t tt quals)
 in (match (_50_2325) with
 | (decls, env) -> begin
 if (FStar_Absyn_Util.is_smt_lemma t) then begin
-(let _140_1844 = (let _140_1843 = (encode_smt_lemma env lid t)
-in (FStar_List.append decls _140_1843))
-in (_140_1844, env))
+(let _141_1844 = (let _141_1843 = (encode_smt_lemma env lid t)
+in (FStar_List.append decls _141_1843))
+in (_141_1844, env))
 end else begin
 (decls, env)
 end
@@ -3726,8 +3726,8 @@ let encode_top_level_vals = (fun env bindings quals -> (FStar_All.pipe_right bin
 | (decls, env) -> begin
 (
 
-let _50_2336 = (let _140_1853 = (FStar_Util.right lb.FStar_Absyn_Syntax.lbname)
-in (encode_top_level_val env _140_1853 lb.FStar_Absyn_Syntax.lbtyp quals))
+let _50_2336 = (let _141_1853 = (FStar_Util.right lb.FStar_Absyn_Syntax.lbname)
+in (encode_top_level_val env _141_1853 lb.FStar_Absyn_Syntax.lbtyp quals))
 in (match (_50_2336) with
 | (decls', env) -> begin
 ((FStar_List.append decls decls'), env)
@@ -3754,21 +3754,21 @@ in (
 let x = (FStar_ToSMT_Term.mkFreeV xx)
 in (
 
-let valid_b2t_x = (let _140_1856 = (let _140_1855 = (let _140_1854 = (FStar_ToSMT_Term.mkApp ("Prims.b2t", (x)::[]))
-in (_140_1854)::[])
-in ("Valid", _140_1855))
-in (FStar_ToSMT_Term.mkApp _140_1856))
+let valid_b2t_x = (let _141_1856 = (let _141_1855 = (let _141_1854 = (FStar_ToSMT_Term.mkApp ("Prims.b2t", (x)::[]))
+in (_141_1854)::[])
+in ("Valid", _141_1855))
+in (FStar_ToSMT_Term.mkApp _141_1856))
 in (
 
-let decls = (let _140_1864 = (let _140_1863 = (let _140_1862 = (let _140_1861 = (let _140_1860 = (let _140_1859 = (let _140_1858 = (let _140_1857 = (FStar_ToSMT_Term.mkApp ("BoxBool_proj_0", (x)::[]))
-in (valid_b2t_x, _140_1857))
-in (FStar_ToSMT_Term.mkEq _140_1858))
-in (((valid_b2t_x)::[])::[], (xx)::[], _140_1859))
-in (FStar_ToSMT_Term.mkForall _140_1860))
-in (_140_1861, Some ("b2t def")))
-in FStar_ToSMT_Term.Assume (_140_1862))
-in (_140_1863)::[])
-in (FStar_ToSMT_Term.DeclFun ((tname, (FStar_ToSMT_Term.Term_sort)::[], FStar_ToSMT_Term.Type_sort, None)))::_140_1864)
+let decls = (let _141_1864 = (let _141_1863 = (let _141_1862 = (let _141_1861 = (let _141_1860 = (let _141_1859 = (let _141_1858 = (let _141_1857 = (FStar_ToSMT_Term.mkApp ("BoxBool_proj_0", (x)::[]))
+in (valid_b2t_x, _141_1857))
+in (FStar_ToSMT_Term.mkEq _141_1858))
+in (((valid_b2t_x)::[])::[], (xx)::[], _141_1859))
+in (FStar_ToSMT_Term.mkForall _141_1860))
+in (_141_1861, Some ("b2t def")))
+in FStar_ToSMT_Term.Assume (_141_1862))
+in (_141_1863)::[])
+in (FStar_ToSMT_Term.DeclFun ((tname, (FStar_ToSMT_Term.Term_sort)::[], FStar_ToSMT_Term.Type_sort, None)))::_141_1864)
 in (decls, env)))))
 end))
 end
@@ -3796,16 +3796,16 @@ in (match (_50_2414) with
 | (vars, guards, env', binder_decls, _50_2413) -> begin
 (
 
-let tok_app = (let _140_1865 = (FStar_ToSMT_Term.mkApp (ttok, []))
-in (mk_ApplyT _140_1865 vars))
+let tok_app = (let _141_1865 = (FStar_ToSMT_Term.mkApp (ttok, []))
+in (mk_ApplyT _141_1865 vars))
 in (
 
 let tok_decl = FStar_ToSMT_Term.DeclFun ((ttok, [], FStar_ToSMT_Term.Type_sort, None))
 in (
 
-let app = (let _140_1867 = (let _140_1866 = (FStar_List.map FStar_ToSMT_Term.mkFreeV vars)
-in (tname, _140_1866))
-in (FStar_ToSMT_Term.mkApp _140_1867))
+let app = (let _141_1867 = (let _141_1866 = (FStar_List.map FStar_ToSMT_Term.mkFreeV vars)
+in (tname, _141_1866))
+in (FStar_ToSMT_Term.mkApp _141_1867))
 in (
 
 let fresh_tok = (match (vars) with
@@ -3813,24 +3813,24 @@ let fresh_tok = (match (vars) with
 []
 end
 | _50_2420 -> begin
-(let _140_1869 = (let _140_1868 = (varops.next_id ())
-in (FStar_ToSMT_Term.fresh_token (ttok, FStar_ToSMT_Term.Type_sort) _140_1868))
-in (_140_1869)::[])
+(let _141_1869 = (let _141_1868 = (varops.next_id ())
+in (FStar_ToSMT_Term.fresh_token (ttok, FStar_ToSMT_Term.Type_sort) _141_1868))
+in (_141_1869)::[])
 end)
 in (
 
-let decls = (let _140_1880 = (let _140_1873 = (let _140_1872 = (let _140_1871 = (let _140_1870 = (FStar_List.map Prims.snd vars)
-in (tname, _140_1870, FStar_ToSMT_Term.Type_sort, None))
-in FStar_ToSMT_Term.DeclFun (_140_1871))
-in (_140_1872)::(tok_decl)::[])
-in (FStar_List.append _140_1873 fresh_tok))
-in (let _140_1879 = (let _140_1878 = (let _140_1877 = (let _140_1876 = (let _140_1875 = (let _140_1874 = (FStar_ToSMT_Term.mkEq (tok_app, app))
-in (((tok_app)::[])::[], vars, _140_1874))
-in (FStar_ToSMT_Term.mkForall _140_1875))
-in (_140_1876, Some ("name-token correspondence")))
-in FStar_ToSMT_Term.Assume (_140_1877))
-in (_140_1878)::[])
-in (FStar_List.append _140_1880 _140_1879)))
+let decls = (let _141_1880 = (let _141_1873 = (let _141_1872 = (let _141_1871 = (let _141_1870 = (FStar_List.map Prims.snd vars)
+in (tname, _141_1870, FStar_ToSMT_Term.Type_sort, None))
+in FStar_ToSMT_Term.DeclFun (_141_1871))
+in (_141_1872)::(tok_decl)::[])
+in (FStar_List.append _141_1873 fresh_tok))
+in (let _141_1879 = (let _141_1878 = (let _141_1877 = (let _141_1876 = (let _141_1875 = (let _141_1874 = (FStar_ToSMT_Term.mkEq (tok_app, app))
+in (((tok_app)::[])::[], vars, _141_1874))
+in (FStar_ToSMT_Term.mkForall _141_1875))
+in (_141_1876, Some ("name-token correspondence")))
+in FStar_ToSMT_Term.Assume (_141_1877))
+in (_141_1878)::[])
+in (FStar_List.append _141_1880 _141_1879)))
 in (
 
 let t = if (FStar_All.pipe_right tags (FStar_List.contains FStar_Absyn_Syntax.Opaque)) then begin
@@ -3847,47 +3847,47 @@ end
 | _50_2427 -> begin
 false
 end)))) then begin
-(let _140_1883 = (FStar_ToSMT_Term.mk_Valid app)
-in (let _140_1882 = (encode_formula t env')
-in (_140_1883, _140_1882)))
+(let _141_1883 = (FStar_ToSMT_Term.mk_Valid app)
+in (let _141_1882 = (encode_formula t env')
+in (_141_1883, _141_1882)))
 end else begin
-(let _140_1884 = (encode_typ_term t env')
-in (app, _140_1884))
+(let _141_1884 = (encode_typ_term t env')
+in (app, _141_1884))
 end
 in (match (_50_2432) with
 | (def, (body, decls1)) -> begin
 (
 
-let abbrev_def = (let _140_1891 = (let _140_1890 = (let _140_1889 = (let _140_1888 = (let _140_1887 = (let _140_1886 = (FStar_ToSMT_Term.mk_and_l guards)
-in (let _140_1885 = (FStar_ToSMT_Term.mkEq (def, body))
-in (_140_1886, _140_1885)))
-in (FStar_ToSMT_Term.mkImp _140_1887))
-in (((def)::[])::[], vars, _140_1888))
-in (FStar_ToSMT_Term.mkForall _140_1889))
-in (_140_1890, Some ("abbrev. elimination")))
-in FStar_ToSMT_Term.Assume (_140_1891))
+let abbrev_def = (let _141_1891 = (let _141_1890 = (let _141_1889 = (let _141_1888 = (let _141_1887 = (let _141_1886 = (FStar_ToSMT_Term.mk_and_l guards)
+in (let _141_1885 = (FStar_ToSMT_Term.mkEq (def, body))
+in (_141_1886, _141_1885)))
+in (FStar_ToSMT_Term.mkImp _141_1887))
+in (((def)::[])::[], vars, _141_1888))
+in (FStar_ToSMT_Term.mkForall _141_1889))
+in (_141_1890, Some ("abbrev. elimination")))
+in FStar_ToSMT_Term.Assume (_141_1891))
 in (
 
 let kindingAx = (
 
-let _50_2436 = (let _140_1892 = (FStar_Tc_Recheck.recompute_kind t)
-in (encode_knd _140_1892 env' app))
+let _50_2436 = (let _141_1892 = (FStar_Tc_Recheck.recompute_kind t)
+in (encode_knd _141_1892 env' app))
 in (match (_50_2436) with
 | (k, decls) -> begin
-(let _140_1900 = (let _140_1899 = (let _140_1898 = (let _140_1897 = (let _140_1896 = (let _140_1895 = (let _140_1894 = (let _140_1893 = (FStar_ToSMT_Term.mk_and_l guards)
-in (_140_1893, k))
-in (FStar_ToSMT_Term.mkImp _140_1894))
-in (((app)::[])::[], vars, _140_1895))
-in (FStar_ToSMT_Term.mkForall _140_1896))
-in (_140_1897, Some ("abbrev. kinding")))
-in FStar_ToSMT_Term.Assume (_140_1898))
-in (_140_1899)::[])
-in (FStar_List.append decls _140_1900))
+(let _141_1900 = (let _141_1899 = (let _141_1898 = (let _141_1897 = (let _141_1896 = (let _141_1895 = (let _141_1894 = (let _141_1893 = (FStar_ToSMT_Term.mk_and_l guards)
+in (_141_1893, k))
+in (FStar_ToSMT_Term.mkImp _141_1894))
+in (((app)::[])::[], vars, _141_1895))
+in (FStar_ToSMT_Term.mkForall _141_1896))
+in (_141_1897, Some ("abbrev. kinding")))
+in FStar_ToSMT_Term.Assume (_141_1898))
+in (_141_1899)::[])
+in (FStar_List.append decls _141_1900))
 end))
 in (
 
-let g = (let _140_1901 = (primitive_type_axioms lid tname app)
-in (FStar_List.append (FStar_List.append (FStar_List.append (FStar_List.append binder_decls decls) decls1) ((abbrev_def)::kindingAx)) _140_1901))
+let g = (let _141_1901 = (primitive_type_axioms lid tname app)
+in (FStar_List.append (FStar_List.append (FStar_List.append (FStar_List.append binder_decls decls) decls1) ((abbrev_def)::kindingAx)) _141_1901))
 in (g, env))))
 end))))))))
 end))
@@ -3909,12 +3909,12 @@ in (match (_50_2456) with
 | (f, decls) -> begin
 (
 
-let g = (let _140_1906 = (let _140_1905 = (let _140_1904 = (let _140_1903 = (let _140_1902 = (FStar_Absyn_Print.sli l)
-in (FStar_Util.format1 "Assumption: %s" _140_1902))
-in Some (_140_1903))
-in (f, _140_1904))
-in FStar_ToSMT_Term.Assume (_140_1905))
-in (_140_1906)::[])
+let g = (let _141_1906 = (let _141_1905 = (let _141_1904 = (let _141_1903 = (let _141_1902 = (FStar_Absyn_Print.sli l)
+in (FStar_Util.format1 "Assumption: %s" _141_1902))
+in Some (_141_1903))
+in (f, _141_1904))
+in FStar_ToSMT_Term.Assume (_141_1905))
+in (_141_1906)::[])
 in ((FStar_List.append decls g), env))
 end))
 end
@@ -3937,9 +3937,9 @@ let tsym = (FStar_ToSMT_Term.mkFreeV (tname, FStar_ToSMT_Term.Type_sort))
 in (
 
 let decl = FStar_ToSMT_Term.DeclFun ((tname, [], FStar_ToSMT_Term.Type_sort, None))
-in (let _140_1908 = (let _140_1907 = (primitive_type_axioms t tname tsym)
-in (decl)::_140_1907)
-in (_140_1908, (push_free_tvar env t tname (Some (tsym))))))))
+in (let _141_1908 = (let _141_1907 = (primitive_type_axioms t tname tsym)
+in (decl)::_141_1907)
+in (_141_1908, (push_free_tvar env t tname (Some (tsym))))))))
 end
 | FStar_Absyn_Syntax.Sig_tycon (t, tps, k, _50_2495, datas, quals, _50_2499) -> begin
 (
@@ -3959,18 +3959,18 @@ let constructor_or_logic_type_decl = (fun c -> if is_logical then begin
 let _50_2516 = c
 in (match (_50_2516) with
 | (name, args, _50_2513, _50_2515) -> begin
-(let _140_1914 = (let _140_1913 = (let _140_1912 = (FStar_All.pipe_right args (FStar_List.map Prims.snd))
-in (name, _140_1912, FStar_ToSMT_Term.Type_sort, None))
-in FStar_ToSMT_Term.DeclFun (_140_1913))
-in (_140_1914)::[])
+(let _141_1914 = (let _141_1913 = (let _141_1912 = (FStar_All.pipe_right args (FStar_List.map Prims.snd))
+in (name, _141_1912, FStar_ToSMT_Term.Type_sort, None))
+in FStar_ToSMT_Term.DeclFun (_141_1913))
+in (_141_1914)::[])
 end))
 end else begin
 (FStar_ToSMT_Term.constructor_to_decl c)
 end)
 in (
 
-let inversion_axioms = (fun tapp vars -> if (((FStar_List.length datas) = 0) || (FStar_All.pipe_right datas (FStar_Util.for_some (fun l -> (let _140_1920 = (FStar_Tc_Env.lookup_qname env.tcenv l)
-in (FStar_All.pipe_right _140_1920 FStar_Option.isNone)))))) then begin
+let inversion_axioms = (fun tapp vars -> if (((FStar_List.length datas) = 0) || (FStar_All.pipe_right datas (FStar_Util.for_some (fun l -> (let _141_1920 = (FStar_Tc_Env.lookup_qname env.tcenv l)
+in (FStar_All.pipe_right _141_1920 FStar_Option.isNone)))))) then begin
 []
 end else begin
 (
@@ -3998,8 +3998,8 @@ in (match (_50_2536) with
 | (args, res) -> begin
 (
 
-let indices = (match ((let _140_1923 = (FStar_Absyn_Util.compress_typ res)
-in _140_1923.FStar_Absyn_Syntax.n)) with
+let indices = (match ((let _141_1923 = (FStar_Absyn_Util.compress_typ res)
+in _141_1923.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Typ_app (_50_2538, indices) -> begin
 indices
 end
@@ -4010,16 +4010,16 @@ in (
 
 let env = (FStar_All.pipe_right args (FStar_List.fold_left (fun env a -> (match ((Prims.fst a)) with
 | FStar_Util.Inl (a) -> begin
-(let _140_1928 = (let _140_1927 = (let _140_1926 = (mk_typ_projector_name l a.FStar_Absyn_Syntax.v)
-in (_140_1926, (xx)::[]))
-in (FStar_ToSMT_Term.mkApp _140_1927))
-in (push_typ_var env a.FStar_Absyn_Syntax.v _140_1928))
+(let _141_1928 = (let _141_1927 = (let _141_1926 = (mk_typ_projector_name l a.FStar_Absyn_Syntax.v)
+in (_141_1926, (xx)::[]))
+in (FStar_ToSMT_Term.mkApp _141_1927))
+in (push_typ_var env a.FStar_Absyn_Syntax.v _141_1928))
 end
 | FStar_Util.Inr (x) -> begin
-(let _140_1931 = (let _140_1930 = (let _140_1929 = (mk_term_projector_name l x.FStar_Absyn_Syntax.v)
-in (_140_1929, (xx)::[]))
-in (FStar_ToSMT_Term.mkApp _140_1930))
-in (push_term_var env x.FStar_Absyn_Syntax.v _140_1931))
+(let _141_1931 = (let _141_1930 = (let _141_1929 = (mk_term_projector_name l x.FStar_Absyn_Syntax.v)
+in (_141_1929, (xx)::[]))
+in (FStar_ToSMT_Term.mkApp _141_1930))
+in (push_term_var env x.FStar_Absyn_Syntax.v _141_1931))
 end)) env))
 in (
 
@@ -4035,24 +4035,24 @@ end else begin
 end
 in (
 
-let eqs = (let _140_1938 = (FStar_List.map2 (fun v a -> (match (a) with
+let eqs = (let _141_1938 = (FStar_List.map2 (fun v a -> (match (a) with
 | FStar_Util.Inl (a) -> begin
-(let _140_1935 = (let _140_1934 = (FStar_ToSMT_Term.mkFreeV v)
-in (_140_1934, a))
-in (FStar_ToSMT_Term.mkEq _140_1935))
+(let _141_1935 = (let _141_1934 = (FStar_ToSMT_Term.mkFreeV v)
+in (_141_1934, a))
+in (FStar_ToSMT_Term.mkEq _141_1935))
 end
 | FStar_Util.Inr (a) -> begin
-(let _140_1937 = (let _140_1936 = (FStar_ToSMT_Term.mkFreeV v)
-in (_140_1936, a))
-in (FStar_ToSMT_Term.mkEq _140_1937))
+(let _141_1937 = (let _141_1936 = (FStar_ToSMT_Term.mkFreeV v)
+in (_141_1936, a))
+in (FStar_ToSMT_Term.mkEq _141_1937))
 end)) vars indices)
-in (FStar_All.pipe_right _140_1938 FStar_ToSMT_Term.mk_and_l))
-in (let _140_1943 = (let _140_1942 = (let _140_1941 = (let _140_1940 = (let _140_1939 = (mk_data_tester env l xx)
-in (_140_1939, eqs))
-in (FStar_ToSMT_Term.mkAnd _140_1940))
-in (out, _140_1941))
-in (FStar_ToSMT_Term.mkOr _140_1942))
-in (_140_1943, (FStar_List.append decls decls')))))
+in (FStar_All.pipe_right _141_1938 FStar_ToSMT_Term.mk_and_l))
+in (let _141_1943 = (let _141_1942 = (let _141_1941 = (let _141_1940 = (let _141_1939 = (mk_data_tester env l xx)
+in (_141_1939, eqs))
+in (FStar_ToSMT_Term.mkAnd _141_1940))
+in (out, _141_1941))
+in (FStar_ToSMT_Term.mkOr _141_1942))
+in (_141_1943, (FStar_List.append decls decls')))))
 end))))
 end)))
 end)) (FStar_ToSMT_Term.mkFalse, [])))
@@ -4065,16 +4065,16 @@ in (match (_50_2569) with
 | (ffsym, ff) -> begin
 (
 
-let xx_has_type = (let _140_1944 = (FStar_ToSMT_Term.mkApp ("SFuel", (ff)::[]))
-in (FStar_ToSMT_Term.mk_HasTypeFuel _140_1944 xx tapp))
-in (let _140_1951 = (let _140_1950 = (let _140_1949 = (let _140_1948 = (let _140_1947 = (let _140_1946 = (add_fuel (ffsym, FStar_ToSMT_Term.Fuel_sort) (((xxsym, FStar_ToSMT_Term.Term_sort))::vars))
-in (let _140_1945 = (FStar_ToSMT_Term.mkImp (xx_has_type, data_ax))
-in (((xx_has_type)::[])::[], _140_1946, _140_1945)))
-in (FStar_ToSMT_Term.mkForall _140_1947))
-in (_140_1948, Some ("inversion axiom")))
-in FStar_ToSMT_Term.Assume (_140_1949))
-in (_140_1950)::[])
-in (FStar_List.append decls _140_1951)))
+let xx_has_type = (let _141_1944 = (FStar_ToSMT_Term.mkApp ("SFuel", (ff)::[]))
+in (FStar_ToSMT_Term.mk_HasTypeFuel _141_1944 xx tapp))
+in (let _141_1951 = (let _141_1950 = (let _141_1949 = (let _141_1948 = (let _141_1947 = (let _141_1946 = (add_fuel (ffsym, FStar_ToSMT_Term.Fuel_sort) (((xxsym, FStar_ToSMT_Term.Term_sort))::vars))
+in (let _141_1945 = (FStar_ToSMT_Term.mkImp (xx_has_type, data_ax))
+in (((xx_has_type)::[])::[], _141_1946, _141_1945)))
+in (FStar_ToSMT_Term.mkForall _141_1947))
+in (_141_1948, Some ("inversion axiom")))
+in FStar_ToSMT_Term.Assume (_141_1949))
+in (_141_1950)::[])
+in (FStar_List.append decls _141_1951)))
 end))
 end))
 end))
@@ -4084,8 +4084,8 @@ in (
 let k = (FStar_Absyn_Util.close_kind tps k)
 in (
 
-let _50_2581 = (match ((let _140_1952 = (FStar_Absyn_Util.compress_kind k)
-in _140_1952.FStar_Absyn_Syntax.n)) with
+let _50_2581 = (match ((let _141_1952 = (FStar_Absyn_Util.compress_kind k)
+in _141_1952.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Kind_arrow (bs, res) -> begin
 (true, bs, res)
 end
@@ -4144,18 +4144,18 @@ in (match (_50_2627) with
 | (xx, suffix) -> begin
 (
 
-let dproj_app = (let _140_1966 = (let _140_1965 = (let _140_1964 = (mk_typ_projector_name d a)
-in (let _140_1963 = (let _140_1962 = (FStar_ToSMT_Term.mkFreeV xx)
-in (_140_1962)::[])
-in (_140_1964, _140_1963)))
-in (FStar_ToSMT_Term.mkApp _140_1965))
-in (mk_ApplyT _140_1966 suffix))
-in (let _140_1971 = (let _140_1970 = (let _140_1969 = (let _140_1968 = (let _140_1967 = (FStar_ToSMT_Term.mkEq (tapp, dproj_app))
-in (((tapp)::[])::[], vars, _140_1967))
-in (FStar_ToSMT_Term.mkForall _140_1968))
-in (_140_1969, Some ("projector axiom")))
-in FStar_ToSMT_Term.Assume (_140_1970))
-in (_140_1971)::[]))
+let dproj_app = (let _141_1966 = (let _141_1965 = (let _141_1964 = (mk_typ_projector_name d a)
+in (let _141_1963 = (let _141_1962 = (FStar_ToSMT_Term.mkFreeV xx)
+in (_141_1962)::[])
+in (_141_1964, _141_1963)))
+in (FStar_ToSMT_Term.mkApp _141_1965))
+in (mk_ApplyT _141_1966 suffix))
+in (let _141_1971 = (let _141_1970 = (let _141_1969 = (let _141_1968 = (let _141_1967 = (FStar_ToSMT_Term.mkEq (tapp, dproj_app))
+in (((tapp)::[])::[], vars, _141_1967))
+in (FStar_ToSMT_Term.mkForall _141_1968))
+in (_141_1969, Some ("projector axiom")))
+in FStar_ToSMT_Term.Assume (_141_1970))
+in (_141_1971)::[]))
 end))))
 end
 | _50_2630 -> begin
@@ -4176,16 +4176,16 @@ in (match (_50_2639) with
 (
 
 let xx_has_type = (FStar_ToSMT_Term.mk_HasTypeFuel ff xx tapp)
-in (let _140_1984 = (let _140_1983 = (let _140_1982 = (let _140_1981 = (let _140_1980 = (let _140_1979 = (let _140_1978 = (let _140_1977 = (let _140_1976 = (FStar_ToSMT_Term.mkApp ("PreType", (xx)::[]))
-in (tapp, _140_1976))
-in (FStar_ToSMT_Term.mkEq _140_1977))
-in (xx_has_type, _140_1978))
-in (FStar_ToSMT_Term.mkImp _140_1979))
-in (((xx_has_type)::[])::[], ((xxsym, FStar_ToSMT_Term.Term_sort))::((ffsym, FStar_ToSMT_Term.Fuel_sort))::vars, _140_1980))
-in (FStar_ToSMT_Term.mkForall _140_1981))
-in (_140_1982, Some ("pretyping")))
-in FStar_ToSMT_Term.Assume (_140_1983))
-in (_140_1984)::[]))
+in (let _141_1984 = (let _141_1983 = (let _141_1982 = (let _141_1981 = (let _141_1980 = (let _141_1979 = (let _141_1978 = (let _141_1977 = (let _141_1976 = (FStar_ToSMT_Term.mkApp ("PreType", (xx)::[]))
+in (tapp, _141_1976))
+in (FStar_ToSMT_Term.mkEq _141_1977))
+in (xx_has_type, _141_1978))
+in (FStar_ToSMT_Term.mkImp _141_1979))
+in (((xx_has_type)::[])::[], ((xxsym, FStar_ToSMT_Term.Term_sort))::((ffsym, FStar_ToSMT_Term.Fuel_sort))::vars, _141_1980))
+in (FStar_ToSMT_Term.mkForall _141_1981))
+in (_141_1982, Some ("pretyping")))
+in FStar_ToSMT_Term.Assume (_141_1983))
+in (_141_1984)::[]))
 end))
 end)))
 in (
@@ -4201,28 +4201,28 @@ in (
 let guard = (FStar_ToSMT_Term.mk_and_l guards)
 in (
 
-let tapp = (let _140_1986 = (let _140_1985 = (FStar_List.map FStar_ToSMT_Term.mkFreeV vars)
-in (tname, _140_1985))
-in (FStar_ToSMT_Term.mkApp _140_1986))
+let tapp = (let _141_1986 = (let _141_1985 = (FStar_List.map FStar_ToSMT_Term.mkFreeV vars)
+in (tname, _141_1985))
+in (FStar_ToSMT_Term.mkApp _141_1986))
 in (
 
 let _50_2665 = (
 
-let tname_decl = (let _140_1990 = (let _140_1989 = (FStar_All.pipe_right vars (FStar_List.map (fun _50_2650 -> (match (_50_2650) with
+let tname_decl = (let _141_1990 = (let _141_1989 = (FStar_All.pipe_right vars (FStar_List.map (fun _50_2650 -> (match (_50_2650) with
 | (n, s) -> begin
 ((Prims.strcat tname n), s)
 end))))
-in (let _140_1988 = (varops.next_id ())
-in (tname, _140_1989, FStar_ToSMT_Term.Type_sort, _140_1988)))
-in (constructor_or_logic_type_decl _140_1990))
+in (let _141_1988 = (varops.next_id ())
+in (tname, _141_1989, FStar_ToSMT_Term.Type_sort, _141_1988)))
+in (constructor_or_logic_type_decl _141_1990))
 in (
 
 let _50_2662 = (match (vars) with
 | [] -> begin
-(let _140_1994 = (let _140_1993 = (let _140_1992 = (FStar_ToSMT_Term.mkApp (tname, []))
-in (FStar_All.pipe_left (fun _140_1991 -> Some (_140_1991)) _140_1992))
-in (push_free_tvar env t tname _140_1993))
-in ([], _140_1994))
+(let _141_1994 = (let _141_1993 = (let _141_1992 = (FStar_ToSMT_Term.mkApp (tname, []))
+in (FStar_All.pipe_left (fun _141_1991 -> Some (_141_1991)) _141_1992))
+in (push_free_tvar env t tname _141_1993))
+in ([], _141_1994))
 end
 | _50_2654 -> begin
 (
@@ -4230,8 +4230,8 @@ end
 let ttok_decl = FStar_ToSMT_Term.DeclFun ((ttok, [], FStar_ToSMT_Term.Type_sort, Some ("token")))
 in (
 
-let ttok_fresh = (let _140_1995 = (varops.next_id ())
-in (FStar_ToSMT_Term.fresh_token (ttok, FStar_ToSMT_Term.Type_sort) _140_1995))
+let ttok_fresh = (let _141_1995 = (varops.next_id ())
+in (FStar_ToSMT_Term.fresh_token (ttok, FStar_ToSMT_Term.Type_sort) _141_1995))
 in (
 
 let ttok_app = (mk_ApplyT ttok_tm vars)
@@ -4240,11 +4240,11 @@ in (
 let pats = ((ttok_app)::[])::((tapp)::[])::[]
 in (
 
-let name_tok_corr = (let _140_1999 = (let _140_1998 = (let _140_1997 = (let _140_1996 = (FStar_ToSMT_Term.mkEq (ttok_app, tapp))
-in (pats, None, vars, _140_1996))
-in (FStar_ToSMT_Term.mkForall' _140_1997))
-in (_140_1998, Some ("name-token correspondence")))
-in FStar_ToSMT_Term.Assume (_140_1999))
+let name_tok_corr = (let _141_1999 = (let _141_1998 = (let _141_1997 = (let _141_1996 = (FStar_ToSMT_Term.mkEq (ttok_app, tapp))
+in (pats, None, vars, _141_1996))
+in (FStar_ToSMT_Term.mkForall' _141_1997))
+in (_141_1998, Some ("name-token correspondence")))
+in FStar_ToSMT_Term.Assume (_141_1999))
 in ((ttok_decl)::(ttok_fresh)::(name_tok_corr)::[], env))))))
 end)
 in (match (_50_2662) with
@@ -4263,36 +4263,36 @@ in (match (_50_2668) with
 (
 
 let karr = if is_kind_arrow then begin
-(let _140_2003 = (let _140_2002 = (let _140_2001 = (let _140_2000 = (FStar_ToSMT_Term.mk_PreKind ttok_tm)
-in (FStar_ToSMT_Term.mk_tester "Kind_arrow" _140_2000))
-in (_140_2001, Some ("kinding")))
-in FStar_ToSMT_Term.Assume (_140_2002))
-in (_140_2003)::[])
+(let _141_2003 = (let _141_2002 = (let _141_2001 = (let _141_2000 = (FStar_ToSMT_Term.mk_PreKind ttok_tm)
+in (FStar_ToSMT_Term.mk_tester "Kind_arrow" _141_2000))
+in (_141_2001, Some ("kinding")))
+in FStar_ToSMT_Term.Assume (_141_2002))
+in (_141_2003)::[])
 end else begin
 []
 end
-in (let _140_2009 = (let _140_2008 = (let _140_2007 = (let _140_2006 = (let _140_2005 = (let _140_2004 = (FStar_ToSMT_Term.mkImp (guard, k))
-in (((tapp)::[])::[], vars, _140_2004))
-in (FStar_ToSMT_Term.mkForall _140_2005))
-in (_140_2006, Some ("kinding")))
-in FStar_ToSMT_Term.Assume (_140_2007))
-in (_140_2008)::[])
-in (FStar_List.append (FStar_List.append decls karr) _140_2009)))
+in (let _141_2009 = (let _141_2008 = (let _141_2007 = (let _141_2006 = (let _141_2005 = (let _141_2004 = (FStar_ToSMT_Term.mkImp (guard, k))
+in (((tapp)::[])::[], vars, _141_2004))
+in (FStar_ToSMT_Term.mkForall _141_2005))
+in (_141_2006, Some ("kinding")))
+in FStar_ToSMT_Term.Assume (_141_2007))
+in (_141_2008)::[])
+in (FStar_List.append (FStar_List.append decls karr) _141_2009)))
 end))
 in (
 
 let aux = if is_logical then begin
-(let _140_2010 = (projection_axioms tapp vars)
-in (FStar_List.append kindingAx _140_2010))
+(let _141_2010 = (projection_axioms tapp vars)
+in (FStar_List.append kindingAx _141_2010))
 end else begin
-(let _140_2017 = (let _140_2015 = (let _140_2013 = (let _140_2011 = (primitive_type_axioms t tname tapp)
-in (FStar_List.append kindingAx _140_2011))
-in (let _140_2012 = (inversion_axioms tapp vars)
-in (FStar_List.append _140_2013 _140_2012)))
-in (let _140_2014 = (projection_axioms tapp vars)
-in (FStar_List.append _140_2015 _140_2014)))
-in (let _140_2016 = (pretype_axioms tapp vars)
-in (FStar_List.append _140_2017 _140_2016)))
+(let _141_2017 = (let _141_2015 = (let _141_2013 = (let _141_2011 = (primitive_type_axioms t tname tapp)
+in (FStar_List.append kindingAx _141_2011))
+in (let _141_2012 = (inversion_axioms tapp vars)
+in (FStar_List.append _141_2013 _141_2012)))
+in (let _141_2014 = (projection_axioms tapp vars)
+in (FStar_List.append _141_2015 _141_2014)))
+in (let _141_2016 = (pretype_axioms tapp vars)
+in (FStar_List.append _141_2017 _141_2016)))
 end
 in (
 
@@ -4309,11 +4309,11 @@ end
 | FStar_Absyn_Syntax.Sig_datacon (d, t, (_50_2689, tps, _50_2692), quals, _50_2696, drange) -> begin
 (
 
-let t = (let _140_2019 = (FStar_List.map (fun _50_2703 -> (match (_50_2703) with
+let t = (let _141_2019 = (FStar_List.map (fun _50_2703 -> (match (_50_2703) with
 | (x, _50_2702) -> begin
 (x, Some (FStar_Absyn_Syntax.Implicit (true)))
 end)) tps)
-in (FStar_Absyn_Util.close_typ _140_2019 t))
+in (FStar_Absyn_Util.close_typ _141_2019 t))
 in (
 
 let _50_2708 = (new_term_constant_and_tok_from_lid env d)
@@ -4350,18 +4350,18 @@ in (match (_50_2727) with
 
 let projectors = (FStar_All.pipe_right names (FStar_List.map (fun _50_23 -> (match (_50_23) with
 | FStar_Util.Inl (a) -> begin
-(let _140_2021 = (mk_typ_projector_name d a)
-in (_140_2021, FStar_ToSMT_Term.Type_sort))
+(let _141_2021 = (mk_typ_projector_name d a)
+in (_141_2021, FStar_ToSMT_Term.Type_sort))
 end
 | FStar_Util.Inr (x) -> begin
-(let _140_2022 = (mk_term_projector_name d x)
-in (_140_2022, FStar_ToSMT_Term.Term_sort))
+(let _141_2022 = (mk_term_projector_name d x)
+in (_141_2022, FStar_ToSMT_Term.Term_sort))
 end))))
 in (
 
-let datacons = (let _140_2024 = (let _140_2023 = (varops.next_id ())
-in (ddconstrsym, projectors, FStar_ToSMT_Term.Term_sort, _140_2023))
-in (FStar_All.pipe_right _140_2024 FStar_ToSMT_Term.constructor_to_decl))
+let datacons = (let _141_2024 = (let _141_2023 = (varops.next_id ())
+in (ddconstrsym, projectors, FStar_ToSMT_Term.Term_sort, _141_2023))
+in (FStar_All.pipe_right _141_2024 FStar_ToSMT_Term.constructor_to_decl))
 in (
 
 let app = (mk_ApplyE ddtok_tm vars)
@@ -4405,9 +4405,9 @@ let proxy_fresh = (match (formals) with
 []
 end
 | _50_2757 -> begin
-(let _140_2026 = (let _140_2025 = (varops.next_id ())
-in (FStar_ToSMT_Term.fresh_token (ddtok, FStar_ToSMT_Term.Term_sort) _140_2025))
-in (_140_2026)::[])
+(let _141_2026 = (let _141_2025 = (varops.next_id ())
+in (FStar_ToSMT_Term.fresh_token (ddtok, FStar_ToSMT_Term.Term_sort) _141_2025))
+in (_141_2026)::[])
 end)
 in (
 
@@ -4418,8 +4418,8 @@ let encode_elim = (fun _50_2760 -> (match (()) with
 let _50_2763 = (FStar_Absyn_Util.head_and_args t_res)
 in (match (_50_2763) with
 | (head, args) -> begin
-(match ((let _140_2029 = (FStar_Absyn_Util.compress_typ head)
-in _140_2029.FStar_Absyn_Syntax.n)) with
+(match ((let _141_2029 = (FStar_Absyn_Util.compress_typ head)
+in _141_2029.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Typ_const (fv) -> begin
 (
 
@@ -4437,25 +4437,25 @@ let _50_2793 = (FStar_List.fold_left (fun _50_2773 arg -> (match (_50_2773) with
 | FStar_Util.Inl (targ) -> begin
 (
 
-let _50_2781 = (let _140_2032 = (FStar_Absyn_Util.new_bvd None)
-in (gen_typ_var env _140_2032))
+let _50_2781 = (let _141_2032 = (FStar_Absyn_Util.new_bvd None)
+in (gen_typ_var env _141_2032))
 in (match (_50_2781) with
 | (_50_2778, tv, env) -> begin
-(let _140_2034 = (let _140_2033 = (FStar_ToSMT_Term.mkEq (targ, tv))
-in (_140_2033)::eqns)
-in (env, (tv)::arg_vars, _140_2034))
+(let _141_2034 = (let _141_2033 = (FStar_ToSMT_Term.mkEq (targ, tv))
+in (_141_2033)::eqns)
+in (env, (tv)::arg_vars, _141_2034))
 end))
 end
 | FStar_Util.Inr (varg) -> begin
 (
 
-let _50_2788 = (let _140_2035 = (FStar_Absyn_Util.new_bvd None)
-in (gen_term_var env _140_2035))
+let _50_2788 = (let _141_2035 = (FStar_Absyn_Util.new_bvd None)
+in (gen_term_var env _141_2035))
 in (match (_50_2788) with
 | (_50_2785, xv, env) -> begin
-(let _140_2037 = (let _140_2036 = (FStar_ToSMT_Term.mkEq (varg, xv))
-in (_140_2036)::eqns)
-in (env, (xv)::arg_vars, _140_2037))
+(let _141_2037 = (let _141_2036 = (FStar_ToSMT_Term.mkEq (varg, xv))
+in (_141_2036)::eqns)
+in (env, (xv)::arg_vars, _141_2037))
 end))
 end)
 end)) (env', [], []) encoded_args)
@@ -4481,35 +4481,35 @@ in (
 let arg_binders = (FStar_List.map FStar_ToSMT_Term.fv_of_term arg_vars)
 in (
 
-let typing_inversion = (let _140_2044 = (let _140_2043 = (let _140_2042 = (let _140_2041 = (add_fuel (fuel_var, FStar_ToSMT_Term.Fuel_sort) (FStar_List.append vars arg_binders))
-in (let _140_2040 = (let _140_2039 = (let _140_2038 = (FStar_ToSMT_Term.mk_and_l (FStar_List.append eqns guards))
-in (ty_pred, _140_2038))
-in (FStar_ToSMT_Term.mkImp _140_2039))
-in (((ty_pred)::[])::[], _140_2041, _140_2040)))
-in (FStar_ToSMT_Term.mkForall _140_2042))
-in (_140_2043, Some ("data constructor typing elim")))
-in FStar_ToSMT_Term.Assume (_140_2044))
+let typing_inversion = (let _141_2044 = (let _141_2043 = (let _141_2042 = (let _141_2041 = (add_fuel (fuel_var, FStar_ToSMT_Term.Fuel_sort) (FStar_List.append vars arg_binders))
+in (let _141_2040 = (let _141_2039 = (let _141_2038 = (FStar_ToSMT_Term.mk_and_l (FStar_List.append eqns guards))
+in (ty_pred, _141_2038))
+in (FStar_ToSMT_Term.mkImp _141_2039))
+in (((ty_pred)::[])::[], _141_2041, _141_2040)))
+in (FStar_ToSMT_Term.mkForall _141_2042))
+in (_141_2043, Some ("data constructor typing elim")))
+in FStar_ToSMT_Term.Assume (_141_2044))
 in (
 
 let subterm_ordering = if (FStar_Ident.lid_equals d FStar_Absyn_Const.lextop_lid) then begin
 (
 
-let x = (let _140_2045 = (varops.fresh "x")
-in (_140_2045, FStar_ToSMT_Term.Term_sort))
+let x = (let _141_2045 = (varops.fresh "x")
+in (_141_2045, FStar_ToSMT_Term.Term_sort))
 in (
 
 let xtm = (FStar_ToSMT_Term.mkFreeV x)
-in (let _140_2055 = (let _140_2054 = (let _140_2053 = (let _140_2052 = (let _140_2047 = (let _140_2046 = (FStar_ToSMT_Term.mk_Precedes xtm dapp)
-in (_140_2046)::[])
-in (_140_2047)::[])
-in (let _140_2051 = (let _140_2050 = (let _140_2049 = (FStar_ToSMT_Term.mk_tester "LexCons" xtm)
-in (let _140_2048 = (FStar_ToSMT_Term.mk_Precedes xtm dapp)
-in (_140_2049, _140_2048)))
-in (FStar_ToSMT_Term.mkImp _140_2050))
-in (_140_2052, (x)::[], _140_2051)))
-in (FStar_ToSMT_Term.mkForall _140_2053))
-in (_140_2054, Some ("lextop is top")))
-in FStar_ToSMT_Term.Assume (_140_2055))))
+in (let _141_2055 = (let _141_2054 = (let _141_2053 = (let _141_2052 = (let _141_2047 = (let _141_2046 = (FStar_ToSMT_Term.mk_Precedes xtm dapp)
+in (_141_2046)::[])
+in (_141_2047)::[])
+in (let _141_2051 = (let _141_2050 = (let _141_2049 = (FStar_ToSMT_Term.mk_tester "LexCons" xtm)
+in (let _141_2048 = (FStar_ToSMT_Term.mk_Precedes xtm dapp)
+in (_141_2049, _141_2048)))
+in (FStar_ToSMT_Term.mkImp _141_2050))
+in (_141_2052, (x)::[], _141_2051)))
+in (FStar_ToSMT_Term.mkForall _141_2053))
+in (_141_2054, Some ("lextop is top")))
+in FStar_ToSMT_Term.Assume (_141_2055))))
 end else begin
 (
 
@@ -4518,21 +4518,21 @@ let prec = (FStar_All.pipe_right vars (FStar_List.collect (fun v -> (match ((Pri
 []
 end
 | FStar_ToSMT_Term.Term_sort -> begin
-(let _140_2058 = (let _140_2057 = (FStar_ToSMT_Term.mkFreeV v)
-in (FStar_ToSMT_Term.mk_Precedes _140_2057 dapp))
-in (_140_2058)::[])
+(let _141_2058 = (let _141_2057 = (FStar_ToSMT_Term.mkFreeV v)
+in (FStar_ToSMT_Term.mk_Precedes _141_2057 dapp))
+in (_141_2058)::[])
 end
 | _50_2808 -> begin
 (FStar_All.failwith "unexpected sort")
 end))))
-in (let _140_2065 = (let _140_2064 = (let _140_2063 = (let _140_2062 = (add_fuel (fuel_var, FStar_ToSMT_Term.Fuel_sort) (FStar_List.append vars arg_binders))
-in (let _140_2061 = (let _140_2060 = (let _140_2059 = (FStar_ToSMT_Term.mk_and_l prec)
-in (ty_pred, _140_2059))
-in (FStar_ToSMT_Term.mkImp _140_2060))
-in (((ty_pred)::[])::[], _140_2062, _140_2061)))
-in (FStar_ToSMT_Term.mkForall _140_2063))
-in (_140_2064, Some ("subterm ordering")))
-in FStar_ToSMT_Term.Assume (_140_2065)))
+in (let _141_2065 = (let _141_2064 = (let _141_2063 = (let _141_2062 = (add_fuel (fuel_var, FStar_ToSMT_Term.Fuel_sort) (FStar_List.append vars arg_binders))
+in (let _141_2061 = (let _141_2060 = (let _141_2059 = (FStar_ToSMT_Term.mk_and_l prec)
+in (ty_pred, _141_2059))
+in (FStar_ToSMT_Term.mkImp _141_2060))
+in (((ty_pred)::[])::[], _141_2062, _141_2061)))
+in (FStar_ToSMT_Term.mkForall _141_2063))
+in (_141_2064, Some ("subterm ordering")))
+in FStar_ToSMT_Term.Assume (_141_2065)))
 end
 in (arg_decls, (typing_inversion)::(subterm_ordering)::[])))))))))
 end))
@@ -4541,10 +4541,10 @@ end
 | _50_2812 -> begin
 (
 
-let _50_2813 = (let _140_2068 = (let _140_2067 = (FStar_Absyn_Print.sli d)
-in (let _140_2066 = (FStar_Absyn_Print.typ_to_string head)
-in (FStar_Util.format2 "Constructor %s builds an unexpected type %s\n" _140_2067 _140_2066)))
-in (FStar_Tc_Errors.warn drange _140_2068))
+let _50_2813 = (let _141_2068 = (let _141_2067 = (FStar_Absyn_Print.sli d)
+in (let _141_2066 = (FStar_Absyn_Print.typ_to_string head)
+in (FStar_Util.format2 "Constructor %s builds an unexpected type %s\n" _141_2067 _141_2066)))
+in (FStar_Tc_Errors.warn drange _141_2068))
 in ([], []))
 end)
 end))
@@ -4556,32 +4556,32 @@ in (match (_50_2817) with
 | (decls2, elim) -> begin
 (
 
-let g = (let _140_2093 = (let _140_2092 = (let _140_2077 = (let _140_2076 = (let _140_2075 = (let _140_2074 = (let _140_2073 = (let _140_2072 = (let _140_2071 = (let _140_2070 = (let _140_2069 = (FStar_Absyn_Print.sli d)
-in (FStar_Util.format1 "data constructor proxy: %s" _140_2069))
-in Some (_140_2070))
-in (ddtok, [], FStar_ToSMT_Term.Term_sort, _140_2071))
-in FStar_ToSMT_Term.DeclFun (_140_2072))
-in (_140_2073)::[])
-in (FStar_List.append (FStar_List.append (FStar_List.append binder_decls decls2) decls3) _140_2074))
-in (FStar_List.append _140_2075 proxy_fresh))
-in (FStar_List.append _140_2076 decls_formals))
-in (FStar_List.append _140_2077 decls_pred))
-in (let _140_2091 = (let _140_2090 = (let _140_2089 = (let _140_2081 = (let _140_2080 = (let _140_2079 = (let _140_2078 = (FStar_ToSMT_Term.mkEq (app, dapp))
-in (((app)::[])::[], vars, _140_2078))
-in (FStar_ToSMT_Term.mkForall _140_2079))
-in (_140_2080, Some ("equality for proxy")))
-in FStar_ToSMT_Term.Assume (_140_2081))
-in (let _140_2088 = (let _140_2087 = (let _140_2086 = (let _140_2085 = (let _140_2084 = (let _140_2083 = (add_fuel (fuel_var, FStar_ToSMT_Term.Fuel_sort) vars')
-in (let _140_2082 = (FStar_ToSMT_Term.mkImp (guard', ty_pred'))
-in (((ty_pred')::[])::[], _140_2083, _140_2082)))
-in (FStar_ToSMT_Term.mkForall _140_2084))
-in (_140_2085, Some ("data constructor typing intro")))
-in FStar_ToSMT_Term.Assume (_140_2086))
-in (_140_2087)::[])
-in (_140_2089)::_140_2088))
-in (FStar_ToSMT_Term.Assume ((tok_typing, Some ("typing for data constructor proxy"))))::_140_2090)
-in (FStar_List.append _140_2092 _140_2091)))
-in (FStar_List.append _140_2093 elim))
+let g = (let _141_2093 = (let _141_2092 = (let _141_2077 = (let _141_2076 = (let _141_2075 = (let _141_2074 = (let _141_2073 = (let _141_2072 = (let _141_2071 = (let _141_2070 = (let _141_2069 = (FStar_Absyn_Print.sli d)
+in (FStar_Util.format1 "data constructor proxy: %s" _141_2069))
+in Some (_141_2070))
+in (ddtok, [], FStar_ToSMT_Term.Term_sort, _141_2071))
+in FStar_ToSMT_Term.DeclFun (_141_2072))
+in (_141_2073)::[])
+in (FStar_List.append (FStar_List.append (FStar_List.append binder_decls decls2) decls3) _141_2074))
+in (FStar_List.append _141_2075 proxy_fresh))
+in (FStar_List.append _141_2076 decls_formals))
+in (FStar_List.append _141_2077 decls_pred))
+in (let _141_2091 = (let _141_2090 = (let _141_2089 = (let _141_2081 = (let _141_2080 = (let _141_2079 = (let _141_2078 = (FStar_ToSMT_Term.mkEq (app, dapp))
+in (((app)::[])::[], vars, _141_2078))
+in (FStar_ToSMT_Term.mkForall _141_2079))
+in (_141_2080, Some ("equality for proxy")))
+in FStar_ToSMT_Term.Assume (_141_2081))
+in (let _141_2088 = (let _141_2087 = (let _141_2086 = (let _141_2085 = (let _141_2084 = (let _141_2083 = (add_fuel (fuel_var, FStar_ToSMT_Term.Fuel_sort) vars')
+in (let _141_2082 = (FStar_ToSMT_Term.mkImp (guard', ty_pred'))
+in (((ty_pred')::[])::[], _141_2083, _141_2082)))
+in (FStar_ToSMT_Term.mkForall _141_2084))
+in (_141_2085, Some ("data constructor typing intro")))
+in FStar_ToSMT_Term.Assume (_141_2086))
+in (_141_2087)::[])
+in (_141_2089)::_141_2088))
+in (FStar_ToSMT_Term.Assume ((tok_typing, Some ("typing for data constructor proxy"))))::_141_2090)
+in (FStar_List.append _141_2092 _141_2091)))
+in (FStar_List.append _141_2093 elim))
 in ((FStar_List.append datacons g), env))
 end)))))
 end))
@@ -4649,30 +4649,30 @@ in (match (_50_2888) with
 
 let subst = (FStar_List.map2 (fun formal binder -> (match (((Prims.fst formal), (Prims.fst binder))) with
 | (FStar_Util.Inl (a), FStar_Util.Inl (b)) -> begin
-(let _140_2108 = (let _140_2107 = (FStar_Absyn_Util.btvar_to_typ b)
-in (a.FStar_Absyn_Syntax.v, _140_2107))
-in FStar_Util.Inl (_140_2108))
+(let _141_2108 = (let _141_2107 = (FStar_Absyn_Util.btvar_to_typ b)
+in (a.FStar_Absyn_Syntax.v, _141_2107))
+in FStar_Util.Inl (_141_2108))
 end
 | (FStar_Util.Inr (x), FStar_Util.Inr (y)) -> begin
-(let _140_2110 = (let _140_2109 = (FStar_Absyn_Util.bvar_to_exp y)
-in (x.FStar_Absyn_Syntax.v, _140_2109))
-in FStar_Util.Inr (_140_2110))
+(let _141_2110 = (let _141_2109 = (FStar_Absyn_Util.bvar_to_exp y)
+in (x.FStar_Absyn_Syntax.v, _141_2109))
+in FStar_Util.Inr (_141_2110))
 end
 | _50_2902 -> begin
 (FStar_All.failwith "Impossible")
 end)) formals binders)
 in (
 
-let extra_formals = (let _140_2111 = (FStar_Absyn_Util.subst_binders subst extra_formals)
-in (FStar_All.pipe_right _140_2111 FStar_Absyn_Util.name_binders))
+let extra_formals = (let _141_2111 = (FStar_Absyn_Util.subst_binders subst extra_formals)
+in (FStar_All.pipe_right _141_2111 FStar_Absyn_Util.name_binders))
 in (
 
-let body = (let _140_2117 = (let _140_2113 = (let _140_2112 = (FStar_Absyn_Util.args_of_binders extra_formals)
-in (FStar_All.pipe_left Prims.snd _140_2112))
-in (body, _140_2113))
-in (let _140_2116 = (let _140_2115 = (FStar_Absyn_Util.subst_typ subst t)
-in (FStar_All.pipe_left (fun _140_2114 -> Some (_140_2114)) _140_2115))
-in (FStar_Absyn_Syntax.mk_Exp_app_flat _140_2117 _140_2116 body.FStar_Absyn_Syntax.pos)))
+let body = (let _141_2117 = (let _141_2113 = (let _141_2112 = (FStar_Absyn_Util.args_of_binders extra_formals)
+in (FStar_All.pipe_left Prims.snd _141_2112))
+in (body, _141_2113))
+in (let _141_2116 = (let _141_2115 = (FStar_Absyn_Util.subst_typ subst t)
+in (FStar_All.pipe_left (fun _141_2114 -> Some (_141_2114)) _141_2115))
+in (FStar_Absyn_Syntax.mk_Exp_app_flat _141_2117 _141_2116 body.FStar_Absyn_Syntax.pos)))
 in ((FStar_List.append binders extra_formals), body))))
 end))))
 in (
@@ -4725,10 +4725,10 @@ end
 end)))
 end
 | _50_2951 -> begin
-(let _140_2126 = (let _140_2125 = (FStar_Absyn_Print.exp_to_string e)
-in (let _140_2124 = (FStar_Absyn_Print.typ_to_string t_norm)
-in (FStar_Util.format3 "Impossible! let-bound lambda %s = %s has a type that\'s not a function: %s\n" flid.FStar_Ident.str _140_2125 _140_2124)))
-in (FStar_All.failwith _140_2126))
+(let _141_2126 = (let _141_2125 = (FStar_Absyn_Print.exp_to_string e)
+in (let _141_2124 = (FStar_Absyn_Print.typ_to_string t_norm)
+in (FStar_Util.format3 "Impossible! let-bound lambda %s = %s has a type that\'s not a function: %s\n" flid.FStar_Ident.str _141_2125 _141_2124)))
+in (FStar_All.failwith _141_2126))
 end)
 end
 | _50_2953 -> begin
@@ -4774,18 +4774,18 @@ end else begin
 end
 in (
 
-let t_norm = (let _140_2132 = (whnf env lb.FStar_Absyn_Syntax.lbtyp)
-in (FStar_All.pipe_right _140_2132 FStar_Absyn_Util.compress_typ))
+let t_norm = (let _141_2132 = (whnf env lb.FStar_Absyn_Syntax.lbtyp)
+in (FStar_All.pipe_right _141_2132 FStar_Absyn_Util.compress_typ))
 in (
 
-let _50_2990 = (let _140_2133 = (FStar_Util.right lb.FStar_Absyn_Syntax.lbname)
-in (declare_top_level_let env _140_2133 lb.FStar_Absyn_Syntax.lbtyp t_norm))
+let _50_2990 = (let _141_2133 = (FStar_Util.right lb.FStar_Absyn_Syntax.lbname)
+in (declare_top_level_let env _141_2133 lb.FStar_Absyn_Syntax.lbtyp t_norm))
 in (match (_50_2990) with
 | (tok, decl, env) -> begin
-(let _140_2136 = (let _140_2135 = (let _140_2134 = (FStar_Util.right lb.FStar_Absyn_Syntax.lbname)
-in (_140_2134, tok))
-in (_140_2135)::toks)
-in (_140_2136, (t_norm)::typs, (decl)::decls, env))
+(let _141_2136 = (let _141_2135 = (let _141_2134 = (FStar_Util.right lb.FStar_Absyn_Syntax.lbname)
+in (_141_2134, tok))
+in (_141_2135)::toks)
+in (_141_2136, (t_norm)::typs, (decl)::decls, env))
 end))))
 end)) ([], [], [], env)))
 in (match (_50_2995) with
@@ -4805,8 +4805,8 @@ true
 end
 | _50_3002 -> begin
 false
-end)))) || (FStar_All.pipe_right typs (FStar_Util.for_some (fun t -> ((FStar_Absyn_Util.is_lemma t) || (let _140_2139 = (FStar_Absyn_Util.is_pure_or_ghost_function t)
-in (FStar_All.pipe_left Prims.op_Negation _140_2139))))))) then begin
+end)))) || (FStar_All.pipe_right typs (FStar_Util.for_some (fun t -> ((FStar_Absyn_Util.is_lemma t) || (let _141_2139 = (FStar_Absyn_Util.is_pure_or_ghost_function t)
+in (FStar_All.pipe_left Prims.op_Negation _141_2139))))))) then begin
 (decls, env)
 end else begin
 if (not (is_rec)) then begin
@@ -4829,9 +4829,9 @@ let app = (match (vars) with
 (FStar_ToSMT_Term.mkFreeV (f, FStar_ToSMT_Term.Term_sort))
 end
 | _50_3036 -> begin
-(let _140_2141 = (let _140_2140 = (FStar_List.map FStar_ToSMT_Term.mkFreeV vars)
-in (f, _140_2140))
-in (FStar_ToSMT_Term.mkApp _140_2141))
+(let _141_2141 = (let _141_2140 = (FStar_List.map FStar_ToSMT_Term.mkFreeV vars)
+in (f, _141_2140))
+in (FStar_ToSMT_Term.mkApp _141_2141))
 end)
 in (
 
@@ -4840,16 +4840,16 @@ in (match (_50_3040) with
 | (body, decls2) -> begin
 (
 
-let eqn = (let _140_2150 = (let _140_2149 = (let _140_2146 = (let _140_2145 = (let _140_2144 = (let _140_2143 = (FStar_ToSMT_Term.mk_and_l guards)
-in (let _140_2142 = (FStar_ToSMT_Term.mkEq (app, body))
-in (_140_2143, _140_2142)))
-in (FStar_ToSMT_Term.mkImp _140_2144))
-in (((app)::[])::[], vars, _140_2145))
-in (FStar_ToSMT_Term.mkForall _140_2146))
-in (let _140_2148 = (let _140_2147 = (FStar_Util.format1 "Equation for %s" flid.FStar_Ident.str)
-in Some (_140_2147))
-in (_140_2149, _140_2148)))
-in FStar_ToSMT_Term.Assume (_140_2150))
+let eqn = (let _141_2150 = (let _141_2149 = (let _141_2146 = (let _141_2145 = (let _141_2144 = (let _141_2143 = (FStar_ToSMT_Term.mk_and_l guards)
+in (let _141_2142 = (FStar_ToSMT_Term.mkEq (app, body))
+in (_141_2143, _141_2142)))
+in (FStar_ToSMT_Term.mkImp _141_2144))
+in (((app)::[])::[], vars, _141_2145))
+in (FStar_ToSMT_Term.mkForall _141_2146))
+in (let _141_2148 = (let _141_2147 = (FStar_Util.format1 "Equation for %s" flid.FStar_Ident.str)
+in Some (_141_2147))
+in (_141_2149, _141_2148)))
+in FStar_ToSMT_Term.Assume (_141_2150))
 in ((FStar_List.append (FStar_List.append (FStar_List.append decls binder_decls) decls2) ((eqn)::[])), env))
 end)))
 end))
@@ -4861,8 +4861,8 @@ end)
 end else begin
 (
 
-let fuel = (let _140_2151 = (varops.fresh "fuel")
-in (_140_2151, FStar_ToSMT_Term.Fuel_sort))
+let fuel = (let _141_2151 = (varops.fresh "fuel")
+in (_141_2151, FStar_ToSMT_Term.Fuel_sort))
 in (
 
 let fuel_tm = (FStar_ToSMT_Term.mkFreeV fuel)
@@ -4881,9 +4881,9 @@ in (
 let gtok = (varops.new_fvar flid)
 in (
 
-let env = (let _140_2156 = (let _140_2155 = (FStar_ToSMT_Term.mkApp (g, (fuel_tm)::[]))
-in (FStar_All.pipe_left (fun _140_2154 -> Some (_140_2154)) _140_2155))
-in (push_free_var env flid gtok _140_2156))
+let env = (let _141_2156 = (let _141_2155 = (FStar_ToSMT_Term.mkApp (g, (fuel_tm)::[]))
+in (FStar_All.pipe_left (fun _141_2154 -> Some (_141_2154)) _141_2155))
+in (push_free_var env flid gtok _141_2156))
 in (((flid, f, ftok, g, gtok))::gtoks, env))))
 end)) ([], env)))
 in (match (_50_3060) with
@@ -4907,10 +4907,10 @@ in (match (_50_3090) with
 | (vars, guards, env', binder_decls, _50_3089) -> begin
 (
 
-let decl_g = (let _140_2167 = (let _140_2166 = (let _140_2165 = (FStar_List.map Prims.snd vars)
-in (FStar_ToSMT_Term.Fuel_sort)::_140_2165)
-in (g, _140_2166, FStar_ToSMT_Term.Term_sort, Some ("Fuel-instrumented function name")))
-in FStar_ToSMT_Term.DeclFun (_140_2167))
+let decl_g = (let _141_2167 = (let _141_2166 = (let _141_2165 = (FStar_List.map Prims.snd vars)
+in (FStar_ToSMT_Term.Fuel_sort)::_141_2165)
+in (g, _141_2166, FStar_ToSMT_Term.Term_sort, Some ("Fuel-instrumented function name")))
+in FStar_ToSMT_Term.DeclFun (_141_2167))
 in (
 
 let env0 = (push_zfuel_name env0 flid g)
@@ -4925,16 +4925,16 @@ in (
 let app = (FStar_ToSMT_Term.mkApp (f, vars_tm))
 in (
 
-let gsapp = (let _140_2170 = (let _140_2169 = (let _140_2168 = (FStar_ToSMT_Term.mkApp ("SFuel", (fuel_tm)::[]))
-in (_140_2168)::vars_tm)
-in (g, _140_2169))
-in (FStar_ToSMT_Term.mkApp _140_2170))
+let gsapp = (let _141_2170 = (let _141_2169 = (let _141_2168 = (FStar_ToSMT_Term.mkApp ("SFuel", (fuel_tm)::[]))
+in (_141_2168)::vars_tm)
+in (g, _141_2169))
+in (FStar_ToSMT_Term.mkApp _141_2170))
 in (
 
-let gmax = (let _140_2173 = (let _140_2172 = (let _140_2171 = (FStar_ToSMT_Term.mkApp ("MaxFuel", []))
-in (_140_2171)::vars_tm)
-in (g, _140_2172))
-in (FStar_ToSMT_Term.mkApp _140_2173))
+let gmax = (let _141_2173 = (let _141_2172 = (let _141_2171 = (FStar_ToSMT_Term.mkApp ("MaxFuel", []))
+in (_141_2171)::vars_tm)
+in (g, _141_2172))
+in (FStar_ToSMT_Term.mkApp _141_2173))
 in (
 
 let _50_3100 = (encode_exp body env')
@@ -4942,35 +4942,35 @@ in (match (_50_3100) with
 | (body_tm, decls2) -> begin
 (
 
-let eqn_g = (let _140_2182 = (let _140_2181 = (let _140_2178 = (let _140_2177 = (let _140_2176 = (let _140_2175 = (FStar_ToSMT_Term.mk_and_l guards)
-in (let _140_2174 = (FStar_ToSMT_Term.mkEq (gsapp, body_tm))
-in (_140_2175, _140_2174)))
-in (FStar_ToSMT_Term.mkImp _140_2176))
-in (((gsapp)::[])::[], (fuel)::vars, _140_2177))
-in (FStar_ToSMT_Term.mkForall _140_2178))
-in (let _140_2180 = (let _140_2179 = (FStar_Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.FStar_Ident.str)
-in Some (_140_2179))
-in (_140_2181, _140_2180)))
-in FStar_ToSMT_Term.Assume (_140_2182))
+let eqn_g = (let _141_2182 = (let _141_2181 = (let _141_2178 = (let _141_2177 = (let _141_2176 = (let _141_2175 = (FStar_ToSMT_Term.mk_and_l guards)
+in (let _141_2174 = (FStar_ToSMT_Term.mkEq (gsapp, body_tm))
+in (_141_2175, _141_2174)))
+in (FStar_ToSMT_Term.mkImp _141_2176))
+in (((gsapp)::[])::[], (fuel)::vars, _141_2177))
+in (FStar_ToSMT_Term.mkForall _141_2178))
+in (let _141_2180 = (let _141_2179 = (FStar_Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.FStar_Ident.str)
+in Some (_141_2179))
+in (_141_2181, _141_2180)))
+in FStar_ToSMT_Term.Assume (_141_2182))
 in (
 
-let eqn_f = (let _140_2186 = (let _140_2185 = (let _140_2184 = (let _140_2183 = (FStar_ToSMT_Term.mkEq (app, gmax))
-in (((app)::[])::[], vars, _140_2183))
-in (FStar_ToSMT_Term.mkForall _140_2184))
-in (_140_2185, Some ("Correspondence of recursive function to instrumented version")))
-in FStar_ToSMT_Term.Assume (_140_2186))
+let eqn_f = (let _141_2186 = (let _141_2185 = (let _141_2184 = (let _141_2183 = (FStar_ToSMT_Term.mkEq (app, gmax))
+in (((app)::[])::[], vars, _141_2183))
+in (FStar_ToSMT_Term.mkForall _141_2184))
+in (_141_2185, Some ("Correspondence of recursive function to instrumented version")))
+in FStar_ToSMT_Term.Assume (_141_2186))
 in (
 
-let eqn_g' = (let _140_2195 = (let _140_2194 = (let _140_2193 = (let _140_2192 = (let _140_2191 = (let _140_2190 = (let _140_2189 = (let _140_2188 = (let _140_2187 = (FStar_ToSMT_Term.n_fuel 0)
-in (_140_2187)::vars_tm)
-in (g, _140_2188))
-in (FStar_ToSMT_Term.mkApp _140_2189))
-in (gsapp, _140_2190))
-in (FStar_ToSMT_Term.mkEq _140_2191))
-in (((gsapp)::[])::[], (fuel)::vars, _140_2192))
-in (FStar_ToSMT_Term.mkForall _140_2193))
-in (_140_2194, Some ("Fuel irrelevance")))
-in FStar_ToSMT_Term.Assume (_140_2195))
+let eqn_g' = (let _141_2195 = (let _141_2194 = (let _141_2193 = (let _141_2192 = (let _141_2191 = (let _141_2190 = (let _141_2189 = (let _141_2188 = (let _141_2187 = (FStar_ToSMT_Term.n_fuel 0)
+in (_141_2187)::vars_tm)
+in (g, _141_2188))
+in (FStar_ToSMT_Term.mkApp _141_2189))
+in (gsapp, _141_2190))
+in (FStar_ToSMT_Term.mkEq _141_2191))
+in (((gsapp)::[])::[], (fuel)::vars, _141_2192))
+in (FStar_ToSMT_Term.mkForall _141_2193))
+in (_141_2194, Some ("Fuel irrelevance")))
+in FStar_ToSMT_Term.Assume (_141_2195))
 in (
 
 let _50_3123 = (
@@ -4988,13 +4988,13 @@ in (
 
 let tok_corr = (
 
-let tok_app = (let _140_2196 = (FStar_ToSMT_Term.mkFreeV (gtok, FStar_ToSMT_Term.Term_sort))
-in (mk_ApplyE _140_2196 ((fuel)::vars)))
-in (let _140_2200 = (let _140_2199 = (let _140_2198 = (let _140_2197 = (FStar_ToSMT_Term.mkEq (tok_app, gapp))
-in (((tok_app)::[])::[], (fuel)::vars, _140_2197))
-in (FStar_ToSMT_Term.mkForall _140_2198))
-in (_140_2199, Some ("Fuel token correspondence")))
-in FStar_ToSMT_Term.Assume (_140_2200)))
+let tok_app = (let _141_2196 = (FStar_ToSMT_Term.mkFreeV (gtok, FStar_ToSMT_Term.Term_sort))
+in (mk_ApplyE _141_2196 ((fuel)::vars)))
+in (let _141_2200 = (let _141_2199 = (let _141_2198 = (let _141_2197 = (FStar_ToSMT_Term.mkEq (tok_app, gapp))
+in (((tok_app)::[])::[], (fuel)::vars, _141_2197))
+in (FStar_ToSMT_Term.mkForall _141_2198))
+in (_141_2199, Some ("Fuel token correspondence")))
+in FStar_ToSMT_Term.Assume (_141_2200)))
 in (
 
 let _50_3120 = (
@@ -5002,15 +5002,15 @@ let _50_3120 = (
 let _50_3117 = (encode_typ_pred None tres env gapp)
 in (match (_50_3117) with
 | (g_typing, d3) -> begin
-(let _140_2208 = (let _140_2207 = (let _140_2206 = (let _140_2205 = (let _140_2204 = (let _140_2203 = (let _140_2202 = (let _140_2201 = (FStar_ToSMT_Term.mk_and_l v_guards)
-in (_140_2201, g_typing))
-in (FStar_ToSMT_Term.mkImp _140_2202))
-in (((gapp)::[])::[], (fuel)::vars, _140_2203))
-in (FStar_ToSMT_Term.mkForall _140_2204))
-in (_140_2205, None))
-in FStar_ToSMT_Term.Assume (_140_2206))
-in (_140_2207)::[])
-in (d3, _140_2208))
+(let _141_2208 = (let _141_2207 = (let _141_2206 = (let _141_2205 = (let _141_2204 = (let _141_2203 = (let _141_2202 = (let _141_2201 = (FStar_ToSMT_Term.mk_and_l v_guards)
+in (_141_2201, g_typing))
+in (FStar_ToSMT_Term.mkImp _141_2202))
+in (((gapp)::[])::[], (fuel)::vars, _141_2203))
+in (FStar_ToSMT_Term.mkForall _141_2204))
+in (_141_2205, None))
+in FStar_ToSMT_Term.Assume (_141_2206))
+in (_141_2207)::[])
+in (d3, _141_2208))
 end))
 in (match (_50_3120) with
 | (aux_decls, typing_corr) -> begin
@@ -5027,7 +5027,7 @@ end))
 end))
 in (
 
-let _50_3139 = (let _140_2211 = (FStar_List.zip3 gtoks typs bindings)
+let _50_3139 = (let _141_2211 = (FStar_List.zip3 gtoks typs bindings)
 in (FStar_List.fold_left (fun _50_3127 _50_3131 -> (match ((_50_3127, _50_3131)) with
 | ((decls, eqns, env0), (gtok, ty, bs)) -> begin
 (
@@ -5037,13 +5037,13 @@ in (match (_50_3135) with
 | (decls', eqns', env0) -> begin
 ((decls')::decls, (FStar_List.append eqns' eqns), env0)
 end))
-end)) ((decls)::[], [], env0) _140_2211))
+end)) ((decls)::[], [], env0) _141_2211))
 in (match (_50_3139) with
 | (decls, eqns, env0) -> begin
 (
 
-let _50_3148 = (let _140_2213 = (FStar_All.pipe_right decls FStar_List.flatten)
-in (FStar_All.pipe_right _140_2213 (FStar_List.partition (fun _50_29 -> (match (_50_29) with
+let _50_3148 = (let _141_2213 = (FStar_All.pipe_right decls FStar_List.flatten)
+in (FStar_All.pipe_right _141_2213 (FStar_List.partition (fun _50_29 -> (match (_50_29) with
 | FStar_ToSMT_Term.DeclFun (_50_3142) -> begin
 true
 end
@@ -5068,8 +5068,8 @@ with
 | Let_rec_unencodeable -> begin
 (
 
-let msg = (let _140_2216 = (FStar_All.pipe_right bindings (FStar_List.map (fun lb -> (FStar_Absyn_Print.lbname_to_string lb.FStar_Absyn_Syntax.lbname))))
-in (FStar_All.pipe_right _140_2216 (FStar_String.concat " and ")))
+let msg = (let _141_2216 = (FStar_All.pipe_right bindings (FStar_List.map (fun lb -> (FStar_Absyn_Print.lbname_to_string lb.FStar_Absyn_Syntax.lbname))))
+in (FStar_All.pipe_right _141_2216 (FStar_String.concat " and ")))
 in (
 
 let decl = FStar_ToSMT_Term.Caption ((Prims.strcat "let rec unencodeable: Skipping: " msg))
@@ -5105,8 +5105,8 @@ in (match (_50_3192) with
 | (form, decls) -> begin
 (FStar_List.append decls ((FStar_ToSMT_Term.Assume ((form, Some ((Prims.strcat "Lemma: " lid.FStar_Ident.str)))))::[]))
 end)))
-and encode_free_var : env_t  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  FStar_Absyn_Syntax.qualifier Prims.list  ->  (FStar_ToSMT_Term.decl Prims.list * env_t) = (fun env lid tt t_norm quals -> if ((let _140_2229 = (FStar_Absyn_Util.is_pure_or_ghost_function t_norm)
-in (FStar_All.pipe_left Prims.op_Negation _140_2229)) || (FStar_Absyn_Util.is_lemma t_norm)) then begin
+and encode_free_var : env_t  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  FStar_Absyn_Syntax.qualifier Prims.list  ->  (FStar_ToSMT_Term.decl Prims.list * env_t) = (fun env lid tt t_norm quals -> if ((let _141_2229 = (FStar_Absyn_Util.is_pure_or_ghost_function t_norm)
+in (FStar_All.pipe_left Prims.op_Negation _141_2229)) || (FStar_Absyn_Util.is_lemma t_norm)) then begin
 (
 
 let _50_3201 = (new_term_constant_and_tok_from_lid env lid)
@@ -5156,8 +5156,8 @@ in (
 let _50_3234 = (match ((FStar_Absyn_Util.function_formals t_norm)) with
 | Some (args, comp) -> begin
 if encode_non_total_function_typ then begin
-(let _140_2231 = (FStar_Tc_Util.pure_or_ghost_pre_and_post env.tcenv comp)
-in (args, _140_2231))
+(let _141_2231 = (FStar_Tc_Util.pure_or_ghost_pre_and_post env.tcenv comp)
+in (args, _141_2231))
 end else begin
 (args, (None, (FStar_Absyn_Util.comp_result comp)))
 end
@@ -5193,15 +5193,15 @@ in (match (_50_3257) with
 (
 
 let xx = (FStar_ToSMT_Term.mkFreeV (xxsym, FStar_ToSMT_Term.Term_sort))
-in (let _140_2248 = (let _140_2247 = (let _140_2246 = (let _140_2245 = (let _140_2244 = (let _140_2243 = (let _140_2242 = (let _140_2241 = (FStar_ToSMT_Term.mk_tester (escape d.FStar_Ident.str) xx)
-in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _140_2241))
-in (vapp, _140_2242))
-in (FStar_ToSMT_Term.mkEq _140_2243))
-in (((vapp)::[])::[], vars, _140_2244))
-in (FStar_ToSMT_Term.mkForall _140_2245))
-in (_140_2246, Some ("Discriminator equation")))
-in FStar_ToSMT_Term.Assume (_140_2247))
-in (_140_2248)::[]))
+in (let _141_2248 = (let _141_2247 = (let _141_2246 = (let _141_2245 = (let _141_2244 = (let _141_2243 = (let _141_2242 = (let _141_2241 = (FStar_ToSMT_Term.mk_tester (escape d.FStar_Ident.str) xx)
+in (FStar_All.pipe_left FStar_ToSMT_Term.boxBool _141_2241))
+in (vapp, _141_2242))
+in (FStar_ToSMT_Term.mkEq _141_2243))
+in (((vapp)::[])::[], vars, _141_2244))
+in (FStar_ToSMT_Term.mkForall _141_2245))
+in (_141_2246, Some ("Discriminator equation")))
+in FStar_ToSMT_Term.Assume (_141_2247))
+in (_141_2248)::[]))
 end))
 end
 | FStar_Absyn_Syntax.Projector (d, FStar_Util.Inr (f)) -> begin
@@ -5215,15 +5215,15 @@ in (match (_50_3270) with
 let xx = (FStar_ToSMT_Term.mkFreeV (xxsym, FStar_ToSMT_Term.Term_sort))
 in (
 
-let prim_app = (let _140_2250 = (let _140_2249 = (mk_term_projector_name d f)
-in (_140_2249, (xx)::[]))
-in (FStar_ToSMT_Term.mkApp _140_2250))
-in (let _140_2255 = (let _140_2254 = (let _140_2253 = (let _140_2252 = (let _140_2251 = (FStar_ToSMT_Term.mkEq (vapp, prim_app))
-in (((vapp)::[])::[], vars, _140_2251))
-in (FStar_ToSMT_Term.mkForall _140_2252))
-in (_140_2253, Some ("Projector equation")))
-in FStar_ToSMT_Term.Assume (_140_2254))
-in (_140_2255)::[])))
+let prim_app = (let _141_2250 = (let _141_2249 = (mk_term_projector_name d f)
+in (_141_2249, (xx)::[]))
+in (FStar_ToSMT_Term.mkApp _141_2250))
+in (let _141_2255 = (let _141_2254 = (let _141_2253 = (let _141_2252 = (let _141_2251 = (FStar_ToSMT_Term.mkEq (vapp, prim_app))
+in (((vapp)::[])::[], vars, _141_2251))
+in (FStar_ToSMT_Term.mkForall _141_2252))
+in (_141_2253, Some ("Projector equation")))
+in FStar_ToSMT_Term.Assume (_141_2254))
+in (_141_2255)::[])))
 end))
 end
 | _50_3274 -> begin
@@ -5238,8 +5238,8 @@ in (match (_50_3281) with
 
 let _50_3290 = (match (pre_opt) with
 | None -> begin
-(let _140_2256 = (FStar_ToSMT_Term.mk_and_l guards)
-in (_140_2256, decls1))
+(let _141_2256 = (FStar_ToSMT_Term.mk_and_l guards)
+in (_141_2256, decls1))
 end
 | Some (p) -> begin
 (
@@ -5247,8 +5247,8 @@ end
 let _50_3287 = (encode_formula p env')
 in (match (_50_3287) with
 | (g, ds) -> begin
-(let _140_2257 = (FStar_ToSMT_Term.mk_and_l ((g)::guards))
-in (_140_2257, (FStar_List.append decls1 ds)))
+(let _141_2257 = (FStar_ToSMT_Term.mk_and_l ((g)::guards))
+in (_141_2257, (FStar_List.append decls1 ds)))
 end))
 end)
 in (match (_50_3290) with
@@ -5258,22 +5258,22 @@ in (match (_50_3290) with
 let vtok_app = (mk_ApplyE vtok_tm vars)
 in (
 
-let vapp = (let _140_2259 = (let _140_2258 = (FStar_List.map FStar_ToSMT_Term.mkFreeV vars)
-in (vname, _140_2258))
-in (FStar_ToSMT_Term.mkApp _140_2259))
+let vapp = (let _141_2259 = (let _141_2258 = (FStar_List.map FStar_ToSMT_Term.mkFreeV vars)
+in (vname, _141_2258))
+in (FStar_ToSMT_Term.mkApp _141_2259))
 in (
 
 let _50_3321 = (
 
-let vname_decl = (let _140_2262 = (let _140_2261 = (FStar_All.pipe_right formals (FStar_List.map (fun _50_32 -> (match (_50_32) with
+let vname_decl = (let _141_2262 = (let _141_2261 = (FStar_All.pipe_right formals (FStar_List.map (fun _50_32 -> (match (_50_32) with
 | (FStar_Util.Inl (_50_3295), _50_3298) -> begin
 FStar_ToSMT_Term.Type_sort
 end
 | _50_3301 -> begin
 FStar_ToSMT_Term.Term_sort
 end))))
-in (vname, _140_2261, FStar_ToSMT_Term.Term_sort, None))
-in FStar_ToSMT_Term.DeclFun (_140_2262))
+in (vname, _141_2261, FStar_ToSMT_Term.Term_sort, None))
+in FStar_ToSMT_Term.DeclFun (_141_2262))
 in (
 
 let _50_3308 = (
@@ -5296,10 +5296,10 @@ in (
 
 let _50_3318 = (match (formals) with
 | [] -> begin
-(let _140_2266 = (let _140_2265 = (let _140_2264 = (FStar_ToSMT_Term.mkFreeV (vname, FStar_ToSMT_Term.Term_sort))
-in (FStar_All.pipe_left (fun _140_2263 -> Some (_140_2263)) _140_2264))
-in (push_free_var env lid vname _140_2265))
-in ((FStar_List.append decls2 ((tok_typing)::[])), _140_2266))
+(let _141_2266 = (let _141_2265 = (let _141_2264 = (FStar_ToSMT_Term.mkFreeV (vname, FStar_ToSMT_Term.Term_sort))
+in (FStar_All.pipe_left (fun _141_2263 -> Some (_141_2263)) _141_2264))
+in (push_free_var env lid vname _141_2265))
+in ((FStar_List.append decls2 ((tok_typing)::[])), _141_2266))
 end
 | _50_3312 -> begin
 (
@@ -5307,15 +5307,15 @@ end
 let vtok_decl = FStar_ToSMT_Term.DeclFun ((vtok, [], FStar_ToSMT_Term.Term_sort, None))
 in (
 
-let vtok_fresh = (let _140_2267 = (varops.next_id ())
-in (FStar_ToSMT_Term.fresh_token (vtok, FStar_ToSMT_Term.Term_sort) _140_2267))
+let vtok_fresh = (let _141_2267 = (varops.next_id ())
+in (FStar_ToSMT_Term.fresh_token (vtok, FStar_ToSMT_Term.Term_sort) _141_2267))
 in (
 
-let name_tok_corr = (let _140_2271 = (let _140_2270 = (let _140_2269 = (let _140_2268 = (FStar_ToSMT_Term.mkEq (vtok_app, vapp))
-in (((vtok_app)::[])::[], vars, _140_2268))
-in (FStar_ToSMT_Term.mkForall _140_2269))
-in (_140_2270, None))
-in FStar_ToSMT_Term.Assume (_140_2271))
+let name_tok_corr = (let _141_2271 = (let _141_2270 = (let _141_2269 = (let _141_2268 = (FStar_ToSMT_Term.mkEq (vtok_app, vapp))
+in (((vtok_app)::[])::[], vars, _141_2268))
+in (FStar_ToSMT_Term.mkForall _141_2269))
+in (_141_2270, None))
+in FStar_ToSMT_Term.Assume (_141_2271))
 in ((FStar_List.append decls2 ((vtok_decl)::(vtok_fresh)::(name_tok_corr)::(tok_typing)::[])), env))))
 end)
 in (match (_50_3318) with
@@ -5335,23 +5335,23 @@ in (
 let _50_3325 = (encode_typ_term res_t env')
 in (match (_50_3325) with
 | (encoded_res_t, decls) -> begin
-(let _140_2272 = (FStar_ToSMT_Term.mk_HasType vapp encoded_res_t)
-in (encoded_res_t, _140_2272, decls))
+(let _141_2272 = (FStar_ToSMT_Term.mk_HasType vapp encoded_res_t)
+in (encoded_res_t, _141_2272, decls))
 end)))
 in (match (_50_3329) with
 | (encoded_res_t, ty_pred, decls3) -> begin
 (
 
-let typingAx = (let _140_2276 = (let _140_2275 = (let _140_2274 = (let _140_2273 = (FStar_ToSMT_Term.mkImp (guard, ty_pred))
-in (((vapp)::[])::[], vars, _140_2273))
-in (FStar_ToSMT_Term.mkForall _140_2274))
-in (_140_2275, Some ("free var typing")))
-in FStar_ToSMT_Term.Assume (_140_2276))
+let typingAx = (let _141_2276 = (let _141_2275 = (let _141_2274 = (let _141_2273 = (FStar_ToSMT_Term.mkImp (guard, ty_pred))
+in (((vapp)::[])::[], vars, _141_2273))
+in (FStar_ToSMT_Term.mkForall _141_2274))
+in (_141_2275, Some ("free var typing")))
+in FStar_ToSMT_Term.Assume (_141_2276))
 in (
 
-let g = (let _140_2278 = (let _140_2277 = (mk_disc_proj_axioms guard encoded_res_t vapp vars)
-in (typingAx)::_140_2277)
-in (FStar_List.append (FStar_List.append (FStar_List.append decls1 decls2) decls3) _140_2278))
+let g = (let _141_2278 = (let _141_2277 = (mk_disc_proj_axioms guard encoded_res_t vapp vars)
+in (typingAx)::_141_2277)
+in (FStar_List.append (FStar_List.append (FStar_List.append decls1 decls2) decls3) _141_2278))
 in (g, env)))
 end))
 end))))
@@ -5390,10 +5390,10 @@ let t1 = (FStar_Tc_Normalize.norm_typ ((FStar_Tc_Normalize.DeltaHard)::(FStar_Tc
 in (
 
 let _50_3357 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env.tcenv) (FStar_Options.Other ("Encoding"))) then begin
-(let _140_2293 = (FStar_Absyn_Print.strBvd x)
-in (let _140_2292 = (FStar_Absyn_Print.typ_to_string t0)
-in (let _140_2291 = (FStar_Absyn_Print.typ_to_string t1)
-in (FStar_Util.print3 "Normalized %s : %s to %s\n" _140_2293 _140_2292 _140_2291))))
+(let _141_2293 = (FStar_Absyn_Print.strBvd x)
+in (let _141_2292 = (FStar_Absyn_Print.typ_to_string t0)
+in (let _141_2291 = (FStar_Absyn_Print.typ_to_string t1)
+in (FStar_Util.print3 "Normalized %s : %s to %s\n" _141_2293 _141_2292 _141_2291))))
 end else begin
 ()
 end
@@ -5405,11 +5405,11 @@ in (match (_50_3361) with
 (
 
 let caption = if (FStar_Options.log_queries ()) then begin
-(let _140_2297 = (let _140_2296 = (FStar_Absyn_Print.strBvd x)
-in (let _140_2295 = (FStar_Absyn_Print.typ_to_string t0)
-in (let _140_2294 = (FStar_Absyn_Print.typ_to_string t1)
-in (FStar_Util.format3 "%s : %s (%s)" _140_2296 _140_2295 _140_2294))))
-in Some (_140_2297))
+(let _141_2297 = (let _141_2296 = (FStar_Absyn_Print.strBvd x)
+in (let _141_2295 = (FStar_Absyn_Print.typ_to_string t0)
+in (let _141_2294 = (FStar_Absyn_Print.typ_to_string t1)
+in (FStar_Util.format3 "%s : %s (%s)" _141_2296 _141_2295 _141_2294))))
+in Some (_141_2297))
 end else begin
 None
 end
@@ -5433,13 +5433,13 @@ in (match (_50_3374) with
 | (k, decls') -> begin
 (
 
-let g = (let _140_2303 = (let _140_2302 = (let _140_2301 = (let _140_2300 = (let _140_2299 = (let _140_2298 = (FStar_Absyn_Print.strBvd a)
-in Some (_140_2298))
-in (aasym, [], FStar_ToSMT_Term.Type_sort, _140_2299))
-in FStar_ToSMT_Term.DeclFun (_140_2300))
-in (_140_2301)::[])
-in (FStar_List.append _140_2302 decls'))
-in (FStar_List.append _140_2303 ((FStar_ToSMT_Term.Assume ((k, None)))::[])))
+let g = (let _141_2303 = (let _141_2302 = (let _141_2301 = (let _141_2300 = (let _141_2299 = (let _141_2298 = (FStar_Absyn_Print.strBvd a)
+in Some (_141_2298))
+in (aasym, [], FStar_ToSMT_Term.Type_sort, _141_2299))
+in FStar_ToSMT_Term.DeclFun (_141_2300))
+in (_141_2301)::[])
+in (FStar_List.append _141_2302 decls'))
+in (FStar_List.append _141_2303 ((FStar_ToSMT_Term.Assume ((k, None)))::[])))
 in ((FStar_List.append decls g), env'))
 end))
 end))
@@ -5479,11 +5479,11 @@ in (
 
 let suffix = (FStar_All.pipe_right labs (FStar_List.collect (fun _50_3402 -> (match (_50_3402) with
 | (l, _50_3399, _50_3401) -> begin
-(let _140_2311 = (FStar_All.pipe_left (fun _140_2307 -> FStar_ToSMT_Term.Echo (_140_2307)) (Prims.fst l))
-in (let _140_2310 = (let _140_2309 = (let _140_2308 = (FStar_ToSMT_Term.mkFreeV l)
-in FStar_ToSMT_Term.Eval (_140_2308))
-in (_140_2309)::[])
-in (_140_2311)::_140_2310))
+(let _141_2311 = (FStar_All.pipe_left (fun _141_2307 -> FStar_ToSMT_Term.Echo (_141_2307)) (Prims.fst l))
+in (let _141_2310 = (let _141_2309 = (let _141_2308 = (FStar_ToSMT_Term.mkFreeV l)
+in FStar_ToSMT_Term.Eval (_141_2308))
+in (_141_2309)::[])
+in (_141_2311)::_141_2310))
 end))))
 in (prefix, suffix))))
 
@@ -5491,10 +5491,10 @@ in (prefix, suffix))))
 let last_env : env_t Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
 
-let init_env : FStar_Tc_Env.env  ->  Prims.unit = (fun tcenv -> (let _140_2316 = (let _140_2315 = (let _140_2314 = (FStar_Util.smap_create 100)
-in {bindings = []; depth = 0; tcenv = tcenv; warn = true; cache = _140_2314; nolabels = false; use_zfuel_name = false; encode_non_total_function_typ = true})
-in (_140_2315)::[])
-in (FStar_ST.op_Colon_Equals last_env _140_2316)))
+let init_env : FStar_Tc_Env.env  ->  Prims.unit = (fun tcenv -> (let _141_2316 = (let _141_2315 = (let _141_2314 = (FStar_Util.smap_create 100)
+in {bindings = []; depth = 0; tcenv = tcenv; warn = true; cache = _141_2314; nolabels = false; use_zfuel_name = false; encode_non_total_function_typ = true})
+in (_141_2315)::[])
+in (FStar_ST.op_Colon_Equals last_env _141_2316)))
 
 
 let get_env : FStar_Tc_Env.env  ->  env_t = (fun tcenv -> (match ((FStar_ST.read last_env)) with
@@ -5595,8 +5595,8 @@ in (FStar_ToSMT_Z3.push msg))))
 
 let pop : Prims.string  ->  Prims.unit = (fun msg -> (
 
-let _50_3456 = (let _140_2337 = (pop_env ())
-in (FStar_All.pipe_left Prims.ignore _140_2337))
+let _50_3456 = (let _141_2337 = (pop_env ())
+in (FStar_All.pipe_left Prims.ignore _141_2337))
 in (
 
 let _50_3458 = (varops.pop ())
@@ -5633,10 +5633,10 @@ in (FStar_ToSMT_Z3.commit_mark msg))))
 let encode_sig : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.sigelt  ->  Prims.unit = (fun tcenv se -> (
 
 let caption = (fun decls -> if (FStar_Options.log_queries ()) then begin
-(let _140_2351 = (let _140_2350 = (let _140_2349 = (FStar_Absyn_Print.sigelt_to_string_short se)
-in (Prims.strcat "encoding sigelt " _140_2349))
-in FStar_ToSMT_Term.Caption (_140_2350))
-in (_140_2351)::decls)
+(let _141_2351 = (let _141_2350 = (let _141_2349 = (FStar_Absyn_Print.sigelt_to_string_short se)
+in (Prims.strcat "encoding sigelt " _141_2349))
+in FStar_ToSMT_Term.Caption (_141_2350))
+in (_141_2351)::decls)
 end else begin
 decls
 end)
@@ -5651,8 +5651,8 @@ in (match (_50_3482) with
 (
 
 let _50_3483 = (set_env env)
-in (let _140_2352 = (caption decls)
-in (FStar_ToSMT_Z3.giveZ3 _140_2352)))
+in (let _141_2352 = (caption decls)
+in (FStar_ToSMT_Z3.giveZ3 _141_2352)))
 end)))))
 
 
@@ -5666,8 +5666,8 @@ end) modul.FStar_Absyn_Syntax.name.FStar_Ident.str)
 in (
 
 let _50_3488 = if (FStar_Tc_Env.debug tcenv FStar_Options.Low) then begin
-(let _140_2357 = (FStar_All.pipe_right (FStar_List.length modul.FStar_Absyn_Syntax.exports) FStar_Util.string_of_int)
-in (FStar_Util.print2 "Encoding externals for %s ... %s exports\n" name _140_2357))
+(let _141_2357 = (FStar_All.pipe_right (FStar_List.length modul.FStar_Absyn_Syntax.exports) FStar_Util.string_of_int)
+in (FStar_Util.print2 "Encoding externals for %s ... %s exports\n" name _141_2357))
 end else begin
 ()
 end
@@ -5714,18 +5714,18 @@ end))))))
 
 let solve : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.typ  ->  Prims.unit = (fun tcenv q -> (
 
-let _50_3508 = (let _140_2366 = (let _140_2365 = (let _140_2364 = (FStar_Tc_Env.get_range tcenv)
-in (FStar_All.pipe_left FStar_Range.string_of_range _140_2364))
-in (FStar_Util.format1 "Starting query at %s" _140_2365))
-in (push _140_2366))
+let _50_3508 = (let _141_2366 = (let _141_2365 = (let _141_2364 = (FStar_Tc_Env.get_range tcenv)
+in (FStar_All.pipe_left FStar_Range.string_of_range _141_2364))
+in (FStar_Util.format1 "Starting query at %s" _141_2365))
+in (push _141_2366))
 in (
 
 let pop = (fun _50_3511 -> (match (()) with
 | () -> begin
-(let _140_2371 = (let _140_2370 = (let _140_2369 = (FStar_Tc_Env.get_range tcenv)
-in (FStar_All.pipe_left FStar_Range.string_of_range _140_2369))
-in (FStar_Util.format1 "Ending query at %s" _140_2370))
-in (pop _140_2371))
+(let _141_2371 = (let _141_2370 = (let _141_2369 = (FStar_Tc_Env.get_range tcenv)
+in (FStar_All.pipe_left FStar_Range.string_of_range _141_2369))
+in (FStar_Util.format1 "Ending query at %s" _141_2370))
+in (pop _141_2371))
 end))
 in (
 
@@ -5749,9 +5749,9 @@ in (match (_50_3526) with
 (
 
 let t = (FStar_Tc_Normalize.norm_typ ((FStar_Tc_Normalize.DeltaHard)::(FStar_Tc_Normalize.Beta)::(FStar_Tc_Normalize.Eta)::(FStar_Tc_Normalize.EtaArgs)::(FStar_Tc_Normalize.Simplify)::[]) env.tcenv t)
-in (let _140_2377 = (let _140_2376 = (FStar_Absyn_Syntax.v_binder (FStar_Absyn_Util.bvd_to_bvar_s x t))
-in (_140_2376)::out)
-in (_140_2377, rest)))
+in (let _141_2377 = (let _141_2376 = (FStar_Absyn_Syntax.v_binder (FStar_Absyn_Util.bvd_to_bvar_s x t))
+in (_141_2376)::out)
+in (_141_2377, rest)))
 end))
 end
 | (FStar_Tc_Env.Binding_typ (a, k))::rest -> begin
@@ -5760,9 +5760,9 @@ end
 let _50_3536 = (aux rest)
 in (match (_50_3536) with
 | (out, rest) -> begin
-(let _140_2379 = (let _140_2378 = (FStar_Absyn_Syntax.t_binder (FStar_Absyn_Util.bvd_to_bvar_s a k))
-in (_140_2378)::out)
-in (_140_2379, rest))
+(let _141_2379 = (let _141_2378 = (FStar_Absyn_Syntax.t_binder (FStar_Absyn_Util.bvd_to_bvar_s a k))
+in (_141_2378)::out)
+in (_141_2379, rest))
 end))
 end
 | _50_3538 -> begin
@@ -5773,28 +5773,28 @@ in (
 let _50_3541 = (aux bindings)
 in (match (_50_3541) with
 | (closing, bindings) -> begin
-(let _140_2380 = (FStar_Absyn_Util.close_forall (FStar_List.rev closing) q)
-in (_140_2380, bindings))
+(let _141_2380 = (FStar_Absyn_Util.close_forall (FStar_List.rev closing) q)
+in (_141_2380, bindings))
 end)))
 in (match (_50_3544) with
 | (q, bindings) -> begin
 (
 
-let _50_3553 = (let _140_2382 = (FStar_List.filter (fun _50_33 -> (match (_50_33) with
+let _50_3553 = (let _141_2382 = (FStar_List.filter (fun _50_33 -> (match (_50_33) with
 | FStar_Tc_Env.Binding_sig (_50_3547) -> begin
 false
 end
 | _50_3550 -> begin
 true
 end)) bindings)
-in (encode_env_bindings env _140_2382))
+in (encode_env_bindings env _141_2382))
 in (match (_50_3553) with
 | (env_decls, env) -> begin
 (
 
 let _50_3554 = if (FStar_Tc_Env.debug tcenv FStar_Options.Low) then begin
-(let _140_2383 = (FStar_Absyn_Print.formula_to_string q)
-in (FStar_Util.print1 "Encoding query formula: %s\n" _140_2383))
+(let _141_2383 = (FStar_Absyn_Print.formula_to_string q)
+in (FStar_Util.print1 "Encoding query formula: %s\n" _141_2383))
 end else begin
 ()
 end
@@ -5813,9 +5813,9 @@ in (match (_50_3562) with
 let query_prelude = (FStar_List.append (FStar_List.append env_decls label_prefix) qdecls)
 in (
 
-let qry = (let _140_2385 = (let _140_2384 = (FStar_ToSMT_Term.mkNot phi)
-in (_140_2384, Some ("query")))
-in FStar_ToSMT_Term.Assume (_140_2385))
+let qry = (let _141_2385 = (let _141_2384 = (FStar_ToSMT_Term.mkNot phi)
+in (_141_2384, Some ("query")))
+in FStar_ToSMT_Term.Assume (_141_2385))
 in (
 
 let suffix = (FStar_List.append label_suffix ((FStar_ToSMT_Term.Echo ("Done!"))::[]))
@@ -5850,72 +5850,72 @@ in (
 
 let with_fuel = (fun p _50_3603 -> (match (_50_3603) with
 | (n, i) -> begin
-(let _140_2408 = (let _140_2407 = (let _140_2392 = (let _140_2391 = (FStar_Util.string_of_int n)
-in (let _140_2390 = (FStar_Util.string_of_int i)
-in (FStar_Util.format2 "<fuel=\'%s\' ifuel=\'%s\'>" _140_2391 _140_2390)))
-in FStar_ToSMT_Term.Caption (_140_2392))
-in (let _140_2406 = (let _140_2405 = (let _140_2397 = (let _140_2396 = (let _140_2395 = (let _140_2394 = (FStar_ToSMT_Term.mkApp ("MaxFuel", []))
-in (let _140_2393 = (FStar_ToSMT_Term.n_fuel n)
-in (_140_2394, _140_2393)))
-in (FStar_ToSMT_Term.mkEq _140_2395))
-in (_140_2396, None))
-in FStar_ToSMT_Term.Assume (_140_2397))
-in (let _140_2404 = (let _140_2403 = (let _140_2402 = (let _140_2401 = (let _140_2400 = (let _140_2399 = (FStar_ToSMT_Term.mkApp ("MaxIFuel", []))
-in (let _140_2398 = (FStar_ToSMT_Term.n_fuel i)
-in (_140_2399, _140_2398)))
-in (FStar_ToSMT_Term.mkEq _140_2400))
-in (_140_2401, None))
-in FStar_ToSMT_Term.Assume (_140_2402))
-in (_140_2403)::(p)::(FStar_ToSMT_Term.CheckSat)::[])
-in (_140_2405)::_140_2404))
-in (_140_2407)::_140_2406))
-in (FStar_List.append _140_2408 suffix))
+(let _141_2408 = (let _141_2407 = (let _141_2392 = (let _141_2391 = (FStar_Util.string_of_int n)
+in (let _141_2390 = (FStar_Util.string_of_int i)
+in (FStar_Util.format2 "<fuel=\'%s\' ifuel=\'%s\'>" _141_2391 _141_2390)))
+in FStar_ToSMT_Term.Caption (_141_2392))
+in (let _141_2406 = (let _141_2405 = (let _141_2397 = (let _141_2396 = (let _141_2395 = (let _141_2394 = (FStar_ToSMT_Term.mkApp ("MaxFuel", []))
+in (let _141_2393 = (FStar_ToSMT_Term.n_fuel n)
+in (_141_2394, _141_2393)))
+in (FStar_ToSMT_Term.mkEq _141_2395))
+in (_141_2396, None))
+in FStar_ToSMT_Term.Assume (_141_2397))
+in (let _141_2404 = (let _141_2403 = (let _141_2402 = (let _141_2401 = (let _141_2400 = (let _141_2399 = (FStar_ToSMT_Term.mkApp ("MaxIFuel", []))
+in (let _141_2398 = (FStar_ToSMT_Term.n_fuel i)
+in (_141_2399, _141_2398)))
+in (FStar_ToSMT_Term.mkEq _141_2400))
+in (_141_2401, None))
+in FStar_ToSMT_Term.Assume (_141_2402))
+in (_141_2403)::(p)::(FStar_ToSMT_Term.CheckSat)::[])
+in (_141_2405)::_141_2404))
+in (_141_2407)::_141_2406))
+in (FStar_List.append _141_2408 suffix))
 end))
 in (
 
 let check = (fun p -> (
 
-let initial_config = (let _140_2412 = (FStar_Options.initial_fuel ())
-in (let _140_2411 = (FStar_Options.initial_ifuel ())
-in (_140_2412, _140_2411)))
+let initial_config = (let _141_2412 = (FStar_Options.initial_fuel ())
+in (let _141_2411 = (FStar_Options.initial_ifuel ())
+in (_141_2412, _141_2411)))
 in (
 
-let alt_configs = (let _140_2431 = (let _140_2430 = if ((FStar_Options.max_ifuel ()) > (FStar_Options.initial_ifuel ())) then begin
-(let _140_2415 = (let _140_2414 = (FStar_Options.initial_fuel ())
-in (let _140_2413 = (FStar_Options.max_ifuel ())
-in (_140_2414, _140_2413)))
-in (_140_2415)::[])
+let alt_configs = (let _141_2431 = (let _141_2430 = if ((FStar_Options.max_ifuel ()) > (FStar_Options.initial_ifuel ())) then begin
+(let _141_2415 = (let _141_2414 = (FStar_Options.initial_fuel ())
+in (let _141_2413 = (FStar_Options.max_ifuel ())
+in (_141_2414, _141_2413)))
+in (_141_2415)::[])
 end else begin
 []
 end
-in (let _140_2429 = (let _140_2428 = if (((FStar_Options.max_fuel ()) / 2) > (FStar_Options.initial_fuel ())) then begin
-(let _140_2418 = (let _140_2417 = ((FStar_Options.max_fuel ()) / 2)
-in (let _140_2416 = (FStar_Options.max_ifuel ())
-in (_140_2417, _140_2416)))
-in (_140_2418)::[])
+in (let _141_2429 = (let _141_2428 = if (((FStar_Options.max_fuel ()) / 2) > (FStar_Options.initial_fuel ())) then begin
+(let _141_2418 = (let _141_2417 = ((FStar_Options.max_fuel ()) / 2)
+in (let _141_2416 = (FStar_Options.max_ifuel ())
+in (_141_2417, _141_2416)))
+in (_141_2418)::[])
 end else begin
 []
 end
-in (let _140_2427 = (let _140_2426 = if (((FStar_Options.max_fuel ()) > (FStar_Options.initial_fuel ())) && ((FStar_Options.max_ifuel ()) > (FStar_Options.initial_ifuel ()))) then begin
-(let _140_2421 = (let _140_2420 = (FStar_Options.max_fuel ())
-in (let _140_2419 = (FStar_Options.max_ifuel ())
-in (_140_2420, _140_2419)))
-in (_140_2421)::[])
+in (let _141_2427 = (let _141_2426 = if (((FStar_Options.max_fuel ()) > (FStar_Options.initial_fuel ())) && ((FStar_Options.max_ifuel ()) > (FStar_Options.initial_ifuel ()))) then begin
+(let _141_2421 = (let _141_2420 = (FStar_Options.max_fuel ())
+in (let _141_2419 = (FStar_Options.max_ifuel ())
+in (_141_2420, _141_2419)))
+in (_141_2421)::[])
 end else begin
 []
 end
-in (let _140_2425 = (let _140_2424 = if ((FStar_Options.min_fuel ()) < (FStar_Options.initial_fuel ())) then begin
-(let _140_2423 = (let _140_2422 = (FStar_Options.min_fuel ())
-in (_140_2422, 1))
-in (_140_2423)::[])
+in (let _141_2425 = (let _141_2424 = if ((FStar_Options.min_fuel ()) < (FStar_Options.initial_fuel ())) then begin
+(let _141_2423 = (let _141_2422 = (FStar_Options.min_fuel ())
+in (_141_2422, 1))
+in (_141_2423)::[])
 end else begin
 []
 end
-in (_140_2424)::[])
-in (_140_2426)::_140_2425))
-in (_140_2428)::_140_2427))
-in (_140_2430)::_140_2429))
-in (FStar_List.flatten _140_2431))
+in (_141_2424)::[])
+in (_141_2426)::_141_2425))
+in (_141_2428)::_141_2427))
+in (_141_2430)::_141_2429))
+in (FStar_List.flatten _141_2431))
 in (
 
 let report = (fun errs -> (
@@ -5929,14 +5929,14 @@ errs
 end)
 in (
 
-let _50_3614 = if (FStar_Options.print_fuels ()) then begin
-(let _140_2439 = (let _140_2434 = (FStar_Tc_Env.get_range tcenv)
-in (FStar_Range.string_of_range _140_2434))
-in (let _140_2438 = (let _140_2435 = (FStar_Options.max_fuel ())
-in (FStar_All.pipe_right _140_2435 FStar_Util.string_of_int))
-in (let _140_2437 = (let _140_2436 = (FStar_Options.max_ifuel ())
-in (FStar_All.pipe_right _140_2436 FStar_Util.string_of_int))
-in (FStar_Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _140_2439 _140_2438 _140_2437))))
+let _50_3614 = if ((FStar_Options.print_fuels ()) || (FStar_Options.hint_info ())) then begin
+(let _141_2439 = (let _141_2434 = (FStar_Tc_Env.get_range tcenv)
+in (FStar_Range.string_of_range _141_2434))
+in (let _141_2438 = (let _141_2435 = (FStar_Options.max_fuel ())
+in (FStar_All.pipe_right _141_2435 FStar_Util.string_of_int))
+in (let _141_2437 = (let _141_2436 = (FStar_Options.max_ifuel ())
+in (FStar_All.pipe_right _141_2436 FStar_Util.string_of_int))
+in (FStar_Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _141_2439 _141_2438 _141_2437))))
 end else begin
 ()
 end
@@ -5950,16 +5950,16 @@ end
 | (mi)::[] -> begin
 (match (errs) with
 | [] -> begin
-(let _140_2450 = (with_fuel p mi)
-in (FStar_ToSMT_Z3.ask fresh labels _140_2450 (cb mi p [])))
+(let _141_2450 = (with_fuel p mi)
+in (FStar_ToSMT_Z3.ask fresh labels _141_2450 (cb mi p [])))
 end
 | _50_3626 -> begin
 (report errs)
 end)
 end
 | (mi)::tl -> begin
-(let _140_2452 = (with_fuel p mi)
-in (FStar_ToSMT_Z3.ask fresh labels _140_2452 (fun _50_3632 -> (match (_50_3632) with
+(let _141_2452 = (with_fuel p mi)
+in (FStar_ToSMT_Z3.ask fresh labels _141_2452 (fun _50_3632 -> (match (_50_3632) with
 | (ok, errs') -> begin
 (match (errs) with
 | [] -> begin
@@ -5973,12 +5973,12 @@ end))
 and cb = (fun _50_3638 p alt _50_3643 -> (match ((_50_3638, _50_3643)) with
 | ((prev_fuel, prev_ifuel), (ok, errs)) -> begin
 if ok then begin
-if (FStar_Options.print_fuels ()) then begin
-(let _140_2460 = (let _140_2457 = (FStar_Tc_Env.get_range tcenv)
-in (FStar_Range.string_of_range _140_2457))
-in (let _140_2459 = (FStar_Util.string_of_int prev_fuel)
-in (let _140_2458 = (FStar_Util.string_of_int prev_ifuel)
-in (FStar_Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n" _140_2460 _140_2459 _140_2458))))
+if ((FStar_Options.print_fuels ()) || (FStar_Options.hint_info ())) then begin
+(let _141_2460 = (let _141_2457 = (FStar_Tc_Env.get_range tcenv)
+in (FStar_Range.string_of_range _141_2457))
+in (let _141_2459 = (FStar_Util.string_of_int prev_fuel)
+in (let _141_2458 = (FStar_Util.string_of_int prev_ifuel)
+in (FStar_Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n" _141_2460 _141_2459 _141_2458))))
 end else begin
 ()
 end
@@ -5986,15 +5986,15 @@ end else begin
 (try_alt_configs p errs alt)
 end
 end))
-in (let _140_2461 = (with_fuel p initial_config)
-in (FStar_ToSMT_Z3.ask fresh labels _140_2461 (cb initial_config p alt_configs))))))))
+in (let _141_2461 = (with_fuel p initial_config)
+in (FStar_ToSMT_Z3.ask fresh labels _141_2461 (cb initial_config p alt_configs))))))))
 in (
 
 let process_query = (fun q -> if ((FStar_Options.split_cases ()) > 0) then begin
 (
 
-let _50_3648 = (let _140_2467 = (FStar_Options.split_cases ())
-in (FStar_ToSMT_SplitQueryCases.can_handle_query _140_2467 q))
+let _50_3648 = (let _141_2467 = (FStar_Options.split_cases ())
+in (FStar_ToSMT_SplitQueryCases.can_handle_query _141_2467 q))
 in (match (_50_3648) with
 | (b, cb) -> begin
 if b then begin

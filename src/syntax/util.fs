@@ -759,7 +759,7 @@ let destruct_typ_as_formula f : option<connective> =
                             (Const.eq2_lid, 2)
                         ] in
         let rec aux f (lid, arity) =
-            let t, args = head_and_args f in
+            let t, args = head_and_args (unmeta f) in
             let t = un_uinst t in
             if is_constructor t lid
             && List.length args = arity
@@ -800,7 +800,7 @@ let destruct_typ_as_formula f : option<connective> =
             | _ -> None in
         aux None [] t in
 
-    let phi = compress f in
+    let phi = unmeta f in
         match destruct_base_conn phi with
         | Some b -> Some b
         | None -> destruct_q_conn phi

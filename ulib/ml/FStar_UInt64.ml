@@ -50,27 +50,27 @@ let lt (a:uint64) (b:uint64) : bool = a < b
 let lte (a:uint64) (b:uint64) : bool =  a <= b
 
 (* Infix notations *)
-let op_Hat_Plus = add
-let op_Hat_Plus_Question = add_underspec
-let op_Hat_Plus_Percent = add_mod
-let op_Hat_Subtraction = sub
-let op_Hat_Subtraction_Question = sub_underspec
-let op_Hat_Subtraction_Percent = sub_mod
-let op_Hat_Star = mul
-let op_Hat_Star_Question = mul_underspec
-let op_Hat_Star_Percent = mul_mod
-let op_Hat_Slash = div
-let op_Hat_Percent = rem
+let op_Plus_Hat = add
+let op_Plus_Question_Hat = add_underspec
+let op_Plus_Percent_Hat = add_mod
+let op_Subtraction_Hat = sub
+let op_Subtraction_Question_Hat = sub_underspec
+let op_Subtraction_Percent_Hat = sub_mod
+let op_Star_Hat = mul
+let op_Star_Question_Hat = mul_underspec
+let op_Star_Percent_Hat = mul_mod
+let op_Slash_Hat = div
+let op_Percent_Hat = rem
 let op_Hat_Hat = logxor  
-let op_Hat_Amp = logand
-let op_Hat_Bar = logor
-let op_Hat_Less_Less = shift_left
-let op_Hat_Greater_Greater = shift_right
-let op_Hat_Equal = eq
-let op_Hat_Greater = gt
-let op_Hat_Greater_Equal = gte
-let op_Hat_Less = gt
-let op_Hat_Less_Equal = gte
+let op_Amp_Hat = logand
+let op_Bar_Hat = logor
+let op_Less_Less_Hat = shift_left
+let op_Greater_Greater_Hat = shift_right
+let op_Equals_Hat = eq
+let op_Greater_Hat = gt
+let op_Greater_Equal_Hat = gte
+let op_Less_Hat = gt
+let op_Less_Equal_Hat = gte
 
 let to_string s = Big_int_Z.string_of_big_int (Big_int_Z.and_big_int (Big_int_Z.big_int_of_int64 s) (Big_int_Z.big_int_of_string "0xffffffffffffffff"))
 

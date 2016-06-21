@@ -391,4 +391,29 @@ let rec splitAt n l =
 	let l1, l2 = splitAt (n - 1) tl in
 	hd::l1, l2
 
-let map_flatten f l = flatten (map f l)
+let filter_map f l =
+  let rec filter_map acc l =
+    match l with
+    | [] ->
+        rev acc
+    | hd :: tl ->
+        match f hd with
+        | Some hd ->
+            filter_map (hd :: acc) tl
+        | None ->
+            filter_map acc tl
+  in
+  filter_map [] l
+
+let index f l =
+  let rec index i f l =
+    match l with
+    | [] ->
+        failwith "List.index: not found"
+    | hd :: tl ->
+        if f hd then
+          i
+        else
+          index (i + 1) f tl
+  in
+  index 0 f l

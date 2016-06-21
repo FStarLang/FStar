@@ -193,9 +193,9 @@ let rec is_type env (t:term) =
             | _ -> false //no other patterns are permitted in type functions
          end in
        aux env pats
-    | Let(false, [({pat=PatVar _}, _)], t) -> is_type env t
-    | Let(false, [({pat=PatAscribed({pat=PatVar _}, _)}, _)], t) -> is_type env t
-    | Let(false, [({pat=PatVar _}, _)], t) -> is_type env t
+    | Let(NoLetQualifier, [({pat=PatVar _}, _)], t) -> is_type env t
+    | Let(NoLetQualifier, [({pat=PatAscribed({pat=PatVar _}, _)}, _)], t) -> is_type env t
+    | Let(NoLetQualifier, [({pat=PatVar _}, _)], t) -> is_type env t
     | _ -> false
 
 and is_kind env (t:term) : bool =
@@ -650,10 +650,11 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       aux [] top
 
     | Seq(t1, t2) ->
-      setpos <| mk_Exp_meta(Meta_desugared(desugar_exp env (mk_term (Let(false, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr),
+      setpos <| mk_Exp_meta(Meta_desugared(desugar_exp env (mk_term (Let(NoLetQualifier, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr),
                               Sequence))
 
     | Let(is_rec, ((pat, _snd)::_tl), body) ->
+      let is_rec = is_rec = Rec in
       let ds_let_rec () =
         let bindings = (pat, _snd)::_tl in
         let funs = bindings |> List.map (fun (p, def) ->
@@ -772,7 +773,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
           let x = genident (Some e.range) in
           let xterm = mk_term (Var (lid_of_ids [x])) x.idRange Expr in
           let record = Record(None, record.fields |> List.map (fun (f, _) -> get_field (Some xterm) f)) in
-          Let(false, [(mk_pattern (PatVar (x, None)) x.idRange, e)], mk_term record top.range top.level) in
+          Let(NoLetQualifier, [(mk_pattern (PatVar (x, None)) x.idRange, e)], mk_term record top.range top.level) in
 
       let recterm = mk_term recterm top.range top.level in
       let e = desugar_exp env recterm in
@@ -939,7 +940,7 @@ and desugar_typ env (top:term) : typ =
 
     | Record _ -> failwith "Unexpected record type"
 
-    | Let(false, [(x, v)], t) -> 
+    | Let(NoLetQualifier, [(x, v)], t) -> 
       //desugar as Let v (fun x -> t) 
       let let_v = mk_term (App(mk_term(Name Const.let_in_typ) top.range top.level, v, Nothing)) v.range v.level in
       let t' = mk_term(App(let_v, mk_term (Abs([x], t)) t.range t.level, Nothing)) top.range top.level in

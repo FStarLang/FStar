@@ -263,6 +263,10 @@ type universes =
 universe Prims.list
 
 
+type monad_name =
+FStar_Ident.lident
+
+
 type delta_depth =
 | Delta_constant
 | Delta_unfoldable of Prims.int
@@ -363,7 +367,9 @@ type term' =
 | Meta_pattern of args Prims.list
 | Meta_named of FStar_Ident.lident
 | Meta_labeled of (Prims.string * FStar_Range.range * Prims.bool)
-| Meta_desugared of meta_source_info 
+| Meta_desugared of meta_source_info
+| Meta_monadic of monad_name
+| Meta_monadic_lift of (monad_name * monad_name) 
  and 'a uvar_basis =
 | Uvar
 | Fixed of 'a 
@@ -372,7 +378,9 @@ type term' =
 | Sequence
 | Primop
 | Masked_effect
-| Meta_smt_pat 
+| Meta_smt_pat
+| Mutable_alloc
+| Mutable_rval 
  and fv_qual =
 | Data_ctor
 | Record_projector of FStar_Ident.lident
@@ -764,6 +772,24 @@ false
 end))
 
 
+let is_Meta_monadic = (fun _discr_ -> (match (_discr_) with
+| Meta_monadic (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let is_Meta_monadic_lift = (fun _discr_ -> (match (_discr_) with
+| Meta_monadic_lift (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
 let is_Uvar = (fun _ _discr_ -> (match (_discr_) with
 | Uvar (_) -> begin
 true
@@ -820,6 +846,24 @@ end))
 
 let is_Meta_smt_pat = (fun _discr_ -> (match (_discr_) with
 | Meta_smt_pat (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let is_Mutable_alloc = (fun _discr_ -> (match (_discr_) with
+| Mutable_alloc (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let is_Mutable_rval = (fun _discr_ -> (match (_discr_) with
+| Mutable_rval (_) -> begin
 true
 end
 | _ -> begin
@@ -1094,51 +1138,63 @@ _33_170
 end))
 
 
-let ___Fixed____0 = (fun projectee -> (match (projectee) with
-| Fixed (_33_173) -> begin
+let ___Meta_monadic____0 = (fun projectee -> (match (projectee) with
+| Meta_monadic (_33_173) -> begin
 _33_173
 end))
 
 
-let ___Record_projector____0 = (fun projectee -> (match (projectee) with
-| Record_projector (_33_176) -> begin
+let ___Meta_monadic_lift____0 = (fun projectee -> (match (projectee) with
+| Meta_monadic_lift (_33_176) -> begin
 _33_176
 end))
 
 
-let ___Record_ctor____0 = (fun projectee -> (match (projectee) with
-| Record_ctor (_33_179) -> begin
+let ___Fixed____0 = (fun projectee -> (match (projectee) with
+| Fixed (_33_179) -> begin
 _33_179
 end))
 
 
-let ___DB____0 = (fun projectee -> (match (projectee) with
-| DB (_33_182) -> begin
+let ___Record_projector____0 = (fun projectee -> (match (projectee) with
+| Record_projector (_33_182) -> begin
 _33_182
 end))
 
 
-let ___NM____0 = (fun projectee -> (match (projectee) with
-| NM (_33_185) -> begin
+let ___Record_ctor____0 = (fun projectee -> (match (projectee) with
+| Record_ctor (_33_185) -> begin
 _33_185
 end))
 
 
-let ___NT____0 = (fun projectee -> (match (projectee) with
-| NT (_33_188) -> begin
+let ___DB____0 = (fun projectee -> (match (projectee) with
+| DB (_33_188) -> begin
 _33_188
 end))
 
 
-let ___UN____0 = (fun projectee -> (match (projectee) with
-| UN (_33_191) -> begin
+let ___NM____0 = (fun projectee -> (match (projectee) with
+| NM (_33_191) -> begin
 _33_191
 end))
 
 
-let ___UD____0 = (fun projectee -> (match (projectee) with
-| UD (_33_194) -> begin
+let ___NT____0 = (fun projectee -> (match (projectee) with
+| NT (_33_194) -> begin
 _33_194
+end))
+
+
+let ___UN____0 = (fun projectee -> (match (projectee) with
+| UN (_33_197) -> begin
+_33_197
+end))
+
+
+let ___UD____0 = (fun projectee -> (match (projectee) with
+| UD (_33_200) -> begin
+_33_200
 end))
 
 
@@ -1332,26 +1388,26 @@ end))
 
 
 let ___Discriminator____0 = (fun projectee -> (match (projectee) with
-| Discriminator (_33_202) -> begin
-_33_202
-end))
-
-
-let ___Projector____0 = (fun projectee -> (match (projectee) with
-| Projector (_33_205) -> begin
-_33_205
-end))
-
-
-let ___RecordType____0 = (fun projectee -> (match (projectee) with
-| RecordType (_33_208) -> begin
+| Discriminator (_33_208) -> begin
 _33_208
 end))
 
 
-let ___RecordConstructor____0 = (fun projectee -> (match (projectee) with
-| RecordConstructor (_33_211) -> begin
+let ___Projector____0 = (fun projectee -> (match (projectee) with
+| Projector (_33_211) -> begin
 _33_211
+end))
+
+
+let ___RecordType____0 = (fun projectee -> (match (projectee) with
+| RecordType (_33_214) -> begin
+_33_214
+end))
+
+
+let ___RecordConstructor____0 = (fun projectee -> (match (projectee) with
+| RecordConstructor (_33_217) -> begin
+_33_217
 end))
 
 
@@ -1374,7 +1430,7 @@ let is_Mksub_eff : sub_eff  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.fa
 
 
 type eff_decl =
-{qualifiers : qualifier Prims.list; mname : FStar_Ident.lident; univs : univ_names; binders : binders; signature : term; ret : tscheme; bind_wp : tscheme; if_then_else : tscheme; ite_wp : tscheme; wp_binop : tscheme; wp_as_type : tscheme; close_wp : tscheme; assert_p : tscheme; assume_p : tscheme; null_wp : tscheme; trivial : tscheme} 
+{qualifiers : qualifier Prims.list; mname : FStar_Ident.lident; univs : univ_names; binders : binders; signature : term; ret : tscheme; bind_wp : tscheme; if_then_else : tscheme; ite_wp : tscheme; stronger : tscheme; close_wp : tscheme; assert_p : tscheme; assume_p : tscheme; null_wp : tscheme; trivial : tscheme} 
  and sigelt =
 | Sig_inductive_typ of (FStar_Ident.lident * univ_names * binders * typ * FStar_Ident.lident Prims.list * FStar_Ident.lident Prims.list * qualifier Prims.list * FStar_Range.range)
 | Sig_bundle of (sigelt Prims.list * qualifier Prims.list * FStar_Ident.lident Prims.list * FStar_Range.range)
@@ -1502,74 +1558,74 @@ end))
 
 
 let ___Sig_inductive_typ____0 = (fun projectee -> (match (projectee) with
-| Sig_inductive_typ (_33_239) -> begin
-_33_239
+| Sig_inductive_typ (_33_244) -> begin
+_33_244
 end))
 
 
 let ___Sig_bundle____0 = (fun projectee -> (match (projectee) with
-| Sig_bundle (_33_242) -> begin
-_33_242
+| Sig_bundle (_33_247) -> begin
+_33_247
 end))
 
 
 let ___Sig_datacon____0 = (fun projectee -> (match (projectee) with
-| Sig_datacon (_33_245) -> begin
-_33_245
+| Sig_datacon (_33_250) -> begin
+_33_250
 end))
 
 
 let ___Sig_declare_typ____0 = (fun projectee -> (match (projectee) with
-| Sig_declare_typ (_33_248) -> begin
-_33_248
+| Sig_declare_typ (_33_253) -> begin
+_33_253
 end))
 
 
 let ___Sig_let____0 = (fun projectee -> (match (projectee) with
-| Sig_let (_33_251) -> begin
-_33_251
+| Sig_let (_33_256) -> begin
+_33_256
 end))
 
 
 let ___Sig_main____0 = (fun projectee -> (match (projectee) with
-| Sig_main (_33_254) -> begin
-_33_254
+| Sig_main (_33_259) -> begin
+_33_259
 end))
 
 
 let ___Sig_assume____0 = (fun projectee -> (match (projectee) with
-| Sig_assume (_33_257) -> begin
-_33_257
+| Sig_assume (_33_262) -> begin
+_33_262
 end))
 
 
 let ___Sig_new_effect____0 = (fun projectee -> (match (projectee) with
-| Sig_new_effect (_33_260) -> begin
-_33_260
+| Sig_new_effect (_33_265) -> begin
+_33_265
 end))
 
 
 let ___Sig_new_effect_for_free____0 = (fun projectee -> (match (projectee) with
-| Sig_new_effect_for_free (_33_263) -> begin
-_33_263
+| Sig_new_effect_for_free (_33_268) -> begin
+_33_268
 end))
 
 
 let ___Sig_sub_effect____0 = (fun projectee -> (match (projectee) with
-| Sig_sub_effect (_33_266) -> begin
-_33_266
+| Sig_sub_effect (_33_271) -> begin
+_33_271
 end))
 
 
 let ___Sig_effect_abbrev____0 = (fun projectee -> (match (projectee) with
-| Sig_effect_abbrev (_33_269) -> begin
-_33_269
+| Sig_effect_abbrev (_33_274) -> begin
+_33_274
 end))
 
 
 let ___Sig_pragma____0 = (fun projectee -> (match (projectee) with
-| Sig_pragma (_33_272) -> begin
-_33_272
+| Sig_pragma (_33_277) -> begin
+_33_277
 end))
 
 
@@ -1633,44 +1689,44 @@ let range_of_bv : bv  ->  FStar_Range.range = (fun x -> x.ppname.FStar_Ident.idR
 
 let set_range_of_bv : bv  ->  FStar_Range.range  ->  bv = (fun x r -> (
 
-let _33_304 = x
-in {ppname = (FStar_Ident.mk_ident (x.ppname.FStar_Ident.idText, r)); index = _33_304.index; sort = _33_304.sort}))
+let _33_309 = x
+in {ppname = (FStar_Ident.mk_ident (x.ppname.FStar_Ident.idText, r)); index = _33_309.index; sort = _33_309.sort}))
 
 
 let syn = (fun p k f -> (f k p))
 
 
-let mk_fvs = (fun _33_309 -> (match (()) with
+let mk_fvs = (fun _33_314 -> (match (()) with
 | () -> begin
 (FStar_Util.mk_ref None)
 end))
 
 
-let mk_uvs = (fun _33_310 -> (match (()) with
+let mk_uvs = (fun _33_315 -> (match (()) with
 | () -> begin
 (FStar_Util.mk_ref None)
 end))
 
 
-let new_bv_set : Prims.unit  ->  bv FStar_Util.set = (fun _33_311 -> (match (()) with
+let new_bv_set : Prims.unit  ->  bv FStar_Util.set = (fun _33_316 -> (match (()) with
 | () -> begin
 (FStar_Util.new_set order_bv (fun x -> (x.index + (FStar_Util.hashcode x.ppname.FStar_Ident.idText))))
 end))
 
 
-let new_uv_set : Prims.unit  ->  uvars = (fun _33_313 -> (match (()) with
+let new_uv_set : Prims.unit  ->  uvars = (fun _33_318 -> (match (()) with
 | () -> begin
-(FStar_Util.new_set (fun _33_321 _33_325 -> (match ((_33_321, _33_325)) with
-| ((x, _33_320), (y, _33_324)) -> begin
+(FStar_Util.new_set (fun _33_326 _33_330 -> (match ((_33_326, _33_330)) with
+| ((x, _33_325), (y, _33_329)) -> begin
 ((FStar_Unionfind.uvar_id x) - (FStar_Unionfind.uvar_id y))
-end)) (fun _33_317 -> (match (_33_317) with
-| (x, _33_316) -> begin
+end)) (fun _33_322 -> (match (_33_322) with
+| (x, _33_321) -> begin
 (FStar_Unionfind.uvar_id x)
 end)))
 end))
 
 
-let new_universe_uvar_set : Prims.unit  ->  universe_uvar FStar_Util.set = (fun _33_326 -> (match (()) with
+let new_universe_uvar_set : Prims.unit  ->  universe_uvar FStar_Util.set = (fun _33_331 -> (match (()) with
 | () -> begin
 (FStar_Util.new_set (fun x y -> ((FStar_Unionfind.uvar_id x) - (FStar_Unionfind.uvar_id y))) (fun x -> (FStar_Unionfind.uvar_id x)))
 end))
@@ -1700,6 +1756,7 @@ let freenames_of_list : bv Prims.list  ->  freenames = (fun l -> (FStar_List.fol
 let list_of_freenames : freenames  ->  bv Prims.list = (fun fvs -> (FStar_Util.set_elements fvs))
 
 
+<<<<<<< HEAD
 let mk = (fun t topt r -> (let _123_1214 = (FStar_Util.mk_ref topt)
 in (let _123_1213 = (FStar_Util.mk_ref None)
 in {n = t; tk = _123_1214; pos = r; vars = _123_1213})))
@@ -1711,13 +1768,26 @@ in (mk (Tm_bvar (bv)) (Some (bv.sort.n)) _123_1217)))
 
 let bv_to_name : bv  ->  term = (fun bv -> (let _123_1220 = (range_of_bv bv)
 in (mk (Tm_name (bv)) (Some (bv.sort.n)) _123_1220)))
+=======
+let mk = (fun t topt r -> (let _124_1240 = (FStar_Util.mk_ref topt)
+in (let _124_1239 = (FStar_Util.mk_ref None)
+in {n = t; tk = _124_1240; pos = r; vars = _124_1239})))
+
+
+let bv_to_tm : bv  ->  term = (fun bv -> (let _124_1243 = (range_of_bv bv)
+in (mk (Tm_bvar (bv)) (Some (bv.sort.n)) _124_1243)))
+
+
+let bv_to_name : bv  ->  term = (fun bv -> (let _124_1246 = (range_of_bv bv)
+in (mk (Tm_name (bv)) (Some (bv.sort.n)) _124_1246)))
+>>>>>>> master
 
 
 let mk_Tm_app : term  ->  args  ->  mk_t = (fun t1 args k p -> (match (args) with
 | [] -> begin
 t1
 end
-| _33_345 -> begin
+| _33_350 -> begin
 (mk (Tm_app ((t1, args))) k p)
 end))
 
@@ -1728,10 +1798,10 @@ t
 end
 | us -> begin
 (match (t.n) with
-| Tm_fvar (_33_351) -> begin
+| Tm_fvar (_33_356) -> begin
 (mk (Tm_uinst ((t, us))) None t.pos)
 end
-| _33_354 -> begin
+| _33_359 -> begin
 (FStar_All.failwith "Unexpected universe instantiation")
 end)
 end))
@@ -1741,7 +1811,7 @@ let extend_app_n : term  ->  args  ->  mk_t = (fun t args' kopt r -> (match (t.n
 | Tm_app (head, args) -> begin
 (mk_Tm_app head (FStar_List.append args args') kopt r)
 end
-| _33_364 -> begin
+| _33_369 -> begin
 (mk_Tm_app t args' kopt r)
 end))
 
@@ -1749,10 +1819,17 @@ end))
 let extend_app : term  ->  arg  ->  mk_t = (fun t arg kopt r -> (extend_app_n t ((arg)::[]) kopt r))
 
 
+<<<<<<< HEAD
 let mk_Tm_delayed : ((term * subst_ts), Prims.unit  ->  term) FStar_Util.either  ->  FStar_Range.range  ->  term = (fun lr pos -> (let _123_1255 = (let _123_1254 = (let _123_1253 = (FStar_Util.mk_ref None)
 in (lr, _123_1253))
 in Tm_delayed (_123_1254))
 in (mk _123_1255 None pos)))
+=======
+let mk_Tm_delayed : ((term * subst_ts), Prims.unit  ->  term) FStar_Util.either  ->  FStar_Range.range  ->  term = (fun lr pos -> (let _124_1281 = (let _124_1280 = (let _124_1279 = (FStar_Util.mk_ref None)
+in (lr, _124_1279))
+in Tm_delayed (_124_1280))
+in (mk _124_1281 None pos)))
+>>>>>>> master
 
 
 let mk_Total : typ  ->  comp = (fun t -> (mk (Total (t)) None t.pos))
@@ -1764,7 +1841,7 @@ let mk_GTotal : typ  ->  comp = (fun t -> (mk (GTotal (t)) None t.pos))
 let mk_Comp : comp_typ  ->  comp = (fun ct -> (mk (Comp (ct)) None ct.result_typ.pos))
 
 
-let mk_lb : (lbname * univ_name Prims.list * FStar_Ident.lident * typ * term)  ->  letbinding = (fun _33_379 -> (match (_33_379) with
+let mk_lb : (lbname * univ_name Prims.list * FStar_Ident.lident * typ * term)  ->  letbinding = (fun _33_384 -> (match (_33_384) with
 | (x, univs, eff, t, e) -> begin
 {lbname = x; lbunivs = univs; lbtyp = t; lbeff = eff; lbdef = e}
 end))
@@ -1789,16 +1866,16 @@ let is_teff : term  ->  Prims.bool = (fun t -> (match (t.n) with
 | Tm_constant (FStar_Const.Const_effect) -> begin
 true
 end
-| _33_388 -> begin
+| _33_393 -> begin
 false
 end))
 
 
 let is_type : term  ->  Prims.bool = (fun t -> (match (t.n) with
-| Tm_type (_33_391) -> begin
+| Tm_type (_33_396) -> begin
 true
 end
-| _33_394 -> begin
+| _33_399 -> begin
 false
 end))
 
@@ -1812,8 +1889,13 @@ let null_bv : term  ->  bv = (fun k -> {ppname = null_id; index = 0; sort = k})
 let mk_binder : bv  ->  binder = (fun a -> (a, None))
 
 
+<<<<<<< HEAD
 let null_binder : term  ->  binder = (fun t -> (let _123_1282 = (null_bv t)
 in (_123_1282, None)))
+=======
+let null_binder : term  ->  binder = (fun t -> (let _124_1308 = (null_bv t)
+in (_124_1308, None)))
+>>>>>>> master
 
 
 let imp_tag : arg_qualifier = Implicit (false)
@@ -1832,16 +1914,16 @@ let is_null_binder : binder  ->  Prims.bool = (fun b -> (is_null_bv (Prims.fst b
 
 
 let is_top_level : letbinding Prims.list  ->  Prims.bool = (fun _33_2 -> (match (_33_2) with
-| ({lbname = FStar_Util.Inr (_33_414); lbunivs = _33_412; lbtyp = _33_410; lbeff = _33_408; lbdef = _33_406})::_33_404 -> begin
+| ({lbname = FStar_Util.Inr (_33_419); lbunivs = _33_417; lbtyp = _33_415; lbeff = _33_413; lbdef = _33_411})::_33_409 -> begin
 true
 end
-| _33_419 -> begin
+| _33_424 -> begin
 false
 end))
 
 
-let freenames_of_binders : binders  ->  freenames = (fun bs -> (FStar_List.fold_right (fun _33_424 out -> (match (_33_424) with
-| (x, _33_423) -> begin
+let freenames_of_binders : binders  ->  freenames = (fun bs -> (FStar_List.fold_right (fun _33_429 out -> (match (_33_429) with
+| (x, _33_428) -> begin
 (FStar_Util.set_add x out)
 end)) bs no_names))
 
@@ -1849,15 +1931,20 @@ end)) bs no_names))
 let binders_of_list : bv Prims.list  ->  binders = (fun fvs -> (FStar_All.pipe_right fvs (FStar_List.map (fun t -> (t, None)))))
 
 
+<<<<<<< HEAD
 let binders_of_freenames : freenames  ->  binders = (fun fvs -> (let _123_1302 = (FStar_Util.set_elements fvs)
 in (FStar_All.pipe_right _123_1302 binders_of_list)))
+=======
+let binders_of_freenames : freenames  ->  binders = (fun fvs -> (let _124_1328 = (FStar_Util.set_elements fvs)
+in (FStar_All.pipe_right _124_1328 binders_of_list)))
+>>>>>>> master
 
 
 let is_implicit : aqual  ->  Prims.bool = (fun _33_3 -> (match (_33_3) with
-| Some (Implicit (_33_431)) -> begin
+| Some (Implicit (_33_436)) -> begin
 true
 end
-| _33_435 -> begin
+| _33_440 -> begin
 false
 end))
 
@@ -1866,7 +1953,7 @@ let as_implicit : Prims.bool  ->  aqual = (fun _33_4 -> (match (_33_4) with
 | true -> begin
 Some (imp_tag)
 end
-| _33_439 -> begin
+| _33_444 -> begin
 None
 end))
 
@@ -1880,20 +1967,25 @@ end
 | (Pat_wild (x)) | (Pat_var (x)) -> begin
 (x)::b
 end
-| Pat_cons (_33_454, pats) -> begin
-(FStar_List.fold_left (fun b _33_462 -> (match (_33_462) with
-| (p, _33_461) -> begin
+| Pat_cons (_33_459, pats) -> begin
+(FStar_List.fold_left (fun b _33_467 -> (match (_33_467) with
+| (p, _33_466) -> begin
 (aux b p)
 end)) b pats)
 end
-| Pat_disj ((p)::_33_464) -> begin
+| Pat_disj ((p)::_33_469) -> begin
 (aux b p)
 end
 | Pat_disj ([]) -> begin
 (FStar_All.failwith "impossible")
 end))
+<<<<<<< HEAD
 in (let _123_1315 = (aux [] p)
 in (FStar_All.pipe_left FStar_List.rev _123_1315))))
+=======
+in (let _124_1341 = (aux [] p)
+in (FStar_All.pipe_left FStar_List.rev _124_1341))))
+>>>>>>> master
 
 
 let gen_reset : ((Prims.unit  ->  Prims.int) * (Prims.unit  ->  Prims.unit)) = (
@@ -1901,16 +1993,16 @@ let gen_reset : ((Prims.unit  ->  Prims.int) * (Prims.unit  ->  Prims.unit)) = (
 let x = (FStar_ST.alloc 0)
 in (
 
-let gen = (fun _33_472 -> (match (()) with
+let gen = (fun _33_477 -> (match (()) with
 | () -> begin
 (
 
-let _33_473 = (FStar_Util.incr x)
+let _33_478 = (FStar_Util.incr x)
 in (FStar_ST.read x))
 end))
 in (
 
-let reset = (fun _33_476 -> (match (()) with
+let reset = (fun _33_481 -> (match (()) with
 | () -> begin
 (FStar_ST.op_Colon_Equals x 0)
 end))
@@ -1925,9 +2017,15 @@ let reset_gensym : Prims.unit  ->  Prims.unit = (Prims.snd gen_reset)
 
 let freshen_bv : bv  ->  bv = (fun bv -> (
 
+<<<<<<< HEAD
 let _33_478 = bv
 in (let _123_1334 = (next_id ())
 in {ppname = _33_478.ppname; index = _123_1334; sort = _33_478.sort})))
+=======
+let _33_483 = bv
+in (let _124_1360 = (next_id ())
+in {ppname = _33_483.ppname; index = _124_1360; sort = _33_483.sort})))
+>>>>>>> master
 
 
 let range_of_ropt : FStar_Range.range Prims.option  ->  FStar_Range.range = (fun _33_5 -> (match (_33_5) with
@@ -1942,8 +2040,13 @@ end))
 let gen_bv : Prims.string  ->  FStar_Range.range Prims.option  ->  typ  ->  bv = (fun s r t -> (
 
 let id = (FStar_Ident.mk_ident (s, (range_of_ropt r)))
+<<<<<<< HEAD
 in (let _123_1343 = (next_id ())
 in {ppname = id; index = _123_1343; sort = t})))
+=======
+in (let _124_1369 = (next_id ())
+in {ppname = id; index = _124_1369; sort = t})))
+>>>>>>> master
 
 
 let new_bv : FStar_Range.range Prims.option  ->  typ  ->  bv = (fun ropt t -> (gen_bv FStar_Ident.reserved_prefix ropt t))
@@ -1952,9 +2055,15 @@ let new_bv : FStar_Range.range Prims.option  ->  typ  ->  bv = (fun ropt t -> (g
 let new_univ_name : FStar_Range.range Prims.option  ->  univ_name = (fun ropt -> (
 
 let id = (next_id ())
+<<<<<<< HEAD
 in (let _123_1351 = (let _123_1350 = (FStar_Util.string_of_int id)
 in (_123_1350, (range_of_ropt ropt)))
 in (FStar_Ident.mk_ident _123_1351))))
+=======
+in (let _124_1377 = (let _124_1376 = (FStar_Util.string_of_int id)
+in (_124_1376, (range_of_ropt ropt)))
+in (FStar_Ident.mk_ident _124_1377))))
+>>>>>>> master
 
 
 let mkbv : FStar_Ident.ident  ->  Prims.int  ->  term  ->  bv = (fun x y t -> {ppname = x; index = y; sort = t})
@@ -1967,7 +2076,7 @@ end
 | (FStar_Util.Inr (l), FStar_Util.Inr (m)) -> begin
 (FStar_Ident.lid_equals l m)
 end
-| _33_508 -> begin
+| _33_513 -> begin
 false
 end))
 
@@ -1980,19 +2089,29 @@ let fv_eq_lid : fv  ->  FStar_Ident.lident  ->  Prims.bool = (fun fv lid -> (FSt
 
 let set_bv_range : bv  ->  FStar_Range.range  ->  bv = (fun bv r -> (
 
-let _33_515 = bv
-in {ppname = (FStar_Ident.mk_ident (bv.ppname.FStar_Ident.idText, r)); index = _33_515.index; sort = _33_515.sort}))
+let _33_520 = bv
+in {ppname = (FStar_Ident.mk_ident (bv.ppname.FStar_Ident.idText, r)); index = _33_520.index; sort = _33_520.sort}))
 
 
+<<<<<<< HEAD
 let lid_as_fv : FStar_Ident.lident  ->  delta_depth  ->  fv_qual Prims.option  ->  fv = (fun l dd dq -> (let _123_1380 = (withinfo l tun (FStar_Ident.range_of_lid l))
 in {fv_name = _123_1380; fv_delta = dd; fv_qual = dq}))
+=======
+let lid_as_fv : FStar_Ident.lident  ->  delta_depth  ->  fv_qual Prims.option  ->  fv = (fun l dd dq -> (let _124_1406 = (withinfo l tun (FStar_Ident.range_of_lid l))
+in {fv_name = _124_1406; fv_delta = dd; fv_qual = dq}))
+>>>>>>> master
 
 
 let fv_to_tm : fv  ->  term = (fun fv -> (mk (Tm_fvar (fv)) None (FStar_Ident.range_of_lid fv.fv_name.v)))
 
 
+<<<<<<< HEAD
 let fvar : FStar_Ident.lident  ->  delta_depth  ->  fv_qual Prims.option  ->  term = (fun l dd dq -> (let _123_1389 = (lid_as_fv l dd dq)
 in (fv_to_tm _123_1389)))
+=======
+let fvar : FStar_Ident.lident  ->  delta_depth  ->  fv_qual Prims.option  ->  term = (fun l dd dq -> (let _124_1415 = (lid_as_fv l dd dq)
+in (fv_to_tm _124_1415)))
+>>>>>>> master
 
 
 

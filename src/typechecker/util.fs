@@ -1141,3 +1141,20 @@ let maybe_add_implicit_binders (env:env) (bs:binders)  : binders =
                       end
 
                     | _ -> bs
+
+
+//Decorating terms with monadic operators
+let maybe_lift env e c1 c2 = 
+    let m1 = Env.norm_eff_name env c1 in
+    let m2 = Env.norm_eff_name env c2 in
+    if Ident.lid_equals m1 m2
+    then e
+    else mk (Tm_meta(e, Meta_monadic_lift(m1, m2))) !e.tk e.pos
+
+let maybe_monadic env e c = 
+    let m = Env.norm_eff_name env c in
+    if is_pure_or_ghost_effect env m
+    || Ident.lid_equals m Const.effect_Tot_lid
+    || Ident.lid_equals m Const.effect_GTot_lid //for the cases in prims where Pure is not yet defined
+    then e
+    else mk (Tm_meta(e, Meta_monadic m)) !e.tk e.pos

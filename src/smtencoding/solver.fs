@@ -28,62 +28,74 @@ open FStar.SMTEncoding.Encode
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
 (****************************************************************************)
-type hint = {
-    fuel:int;  //fuel for unrolling recursive functions
-    ifuel:int; //fuel for inverting inductive datatypes
-    unsat_core:option<(list<string>)>; //unsat core, if requested
-    query_elapsed_time:int //time in milliseconds taken for the query, to decide if a fresh replay is worth it
+
+// The type definition is now in [FStar.Util], since it needs to be visible to
+// both the F# and OCaml implementations.
+
+type z3_result = either<Z3.unsat_core, error_labels>
+type hint_stat = {
+    hint:option<hint>;
+    replay_result:z3_result;
+    elapsed_time:int;
+    source_location:Range.range
 }
+type hint_stats_t = list<hint_stat>
+let recorded_hints : ref<(option<hints>)> = Util.mk_ref None
+let replaying_hints: ref<(option<hints>)> = Util.mk_ref None
+let hint_stats     : ref<hint_stats_t>    = Util.mk_ref []
 
-type hints = list<(option<hint>)>
-
-type hints_db = {
-    module_digest:string;
-    hints: hints
-}
-
-let recorded_hints : ref<option<hints>> = Util.mk_ref None
-let replaying_hints: ref<option<hints>> = Util.mk_ref None
-
-let format_hints_file_name src_fn =
-    Util.format_value_file_name <| Util.format1 "%s.hints" src_fn
+let format_hints_file_name src_filename =
+    Util.format1 "%s.hints" src_filename
 
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
 (****************************************************************************)
-let initialize_hints_db src_fn force_record : unit =
+let initialize_hints_db src_filename force_record : unit =
+    hint_stats := [];
     if Options.record_hints() then recorded_hints := Some [];
     if Options.use_hints()
-    then let norm_src_fn = Util.normalize_file_path src_fn in
-         let val_fn = format_hints_file_name norm_src_fn in
-         begin match Util.load_value_from_file val_fn with
+    then let norm_src_filename = Util.normalize_file_path src_filename in
+         let val_filename = format_hints_file_name norm_src_filename in
+         begin match Util.read_hints val_filename with
             | Some hints ->
-                let expected_digest = Util.digest_of_file norm_src_fn in
-                if hints.module_digest = expected_digest then 
-                    begin
-                       if Options.print_fuels()
-                       then Util.print1 "(%s) digest is valid; using hints db.\n" norm_src_fn;
-                       replaying_hints := Some hints.hints
-                    end
-                else if Options.print_fuels() 
-                     then Util.print1 "(%s) digest is invalid.\n" norm_src_fn
+                let expected_digest = Util.digest_of_file norm_src_filename in
+                if Options.hint_info()
+                then begin 
+                     if hints.module_digest = expected_digest 
+                     then Util.print1 "(%s) digest is valid; using hints db.\n" norm_src_filename
+                     else Util.print1 "(%s) digest is invalid; using potentially stale hints\n" norm_src_filename
+                end;
+                replaying_hints := Some hints.hints
             | None ->
-                if (Options.print_fuels()) then
-                    Util.print1 "(%s) Unable to read hints db.\n" norm_src_fn
+                if Options.hint_info() 
+                then Util.print1 "(%s) Unable to read hints db.\n" norm_src_filename
          end
     
-let finalize_hints_db src_fn : unit =
+let finalize_hints_db src_filename : unit =
     begin if Options.record_hints () then
           let hints = Option.get !recorded_hints in
           let hints_db = {
-                module_digest = Util.digest_of_file src_fn;
+                module_digest = Util.digest_of_file src_filename;
                 hints = hints
               }  in
-          let hints_file_name = format_hints_file_name src_fn in
-          Util.save_value_to_file hints_file_name hints_db
+          let hints_file_name = format_hints_file_name src_filename in
+          Util.write_hints hints_file_name hints_db
+    end;
+    begin if Options.hint_info() then 
+        let stats = !hint_stats |> List.rev in
+        stats |> List.iter (fun s -> match s.replay_result with
+            | Inl _unsat_core -> 
+              Util.print2 "Hint-info (%s): Replay succeeded in %s milliseconds\n"
+                (Range.string_of_range s.source_location)
+                (Util.string_of_int s.elapsed_time)
+            | Inr _error ->
+              Util.print2 "Hint-info (%s): Replay failed in %s milliseconds\n"
+                (Range.string_of_range s.source_location)
+                (Util.string_of_int s.elapsed_time))
     end;
     recorded_hints := None;
-    replaying_hints := None
+    replaying_hints := None;
+    hint_stats := []
 
 let with_hints_db fname f =
     initialize_hints_db fname false;
@@ -101,9 +113,21 @@ let next_hint () =
     | _ -> None
 
 let record_hint hint = 
+    let hint = match hint with 
+        | None -> None //recording the elapsed time prevents us from reaching a fixpoint in the hints db
+        | Some h -> Some ({h with query_elapsed_time=0}) in
     match !recorded_hints with 
-    | Some l -> recorded_hints := Some (l@[hint])
+    | Some l -> recorded_hints := Some (l@[hint]) 
     | _ -> ()
+
+let record_hint_stat (h:option<hint>) (res:z3_result) (time:int) (r:Range.range) = 
+    let s = {
+        hint=h;
+        replay_result=res;
+        elapsed_time=time;
+        source_location=r;
+    } in
+    hint_stats := s::!hint_stats
 
 (***********************************************************************************)
 (* Invoking the SMT solver and extracting an error report from the model, if any   *)
@@ -132,14 +156,14 @@ let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffi
     let check (p:decl) =
         let default_timeout = Options.z3_timeout () * 1000 in
         let default_initial_config = Options.initial_fuel(), Options.initial_ifuel(), default_timeout in
+        let hint_opt = next_hint() in
         let unsat_core, initial_config =
-            match next_hint() with
+            match hint_opt with
             | None -> None, default_initial_config 
             | Some hint -> 
               let core, timeout = 
                 if Option.isSome hint.unsat_core 
-                //&& hint.query_elapsed_time >= 200 (*ms*) 
-                then hint.unsat_core, 3 * 1000
+                then hint.unsat_core, default_timeout
                 else None, 60 * 1000 in
               core,
               (hint.fuel, hint.ifuel, timeout) in
@@ -197,8 +221,8 @@ let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffi
                 Z3.ask use_fresh_z3_context None all_labels (with_fuel [] p mi) 
                     (fun (result, elapsed_time) -> cb false mi p tl (use_errors errs result, elapsed_time))
 
-        and cb refresh (prev_fuel, prev_ifuel, timeout) (p:decl) alt (result, elapsed_time) =
-            if refresh then Z3.refresh();
+        and cb used_hint (prev_fuel, prev_ifuel, timeout) (p:decl) alt (result, elapsed_time) =
+            if used_hint then (Z3.refresh(); record_hint_stat hint_opt result elapsed_time (Env.get_range env));
             match result with 
             | Inl unsat_core ->
                 let hint = { fuel=prev_fuel;

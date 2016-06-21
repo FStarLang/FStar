@@ -155,8 +155,8 @@ assume val int_of_bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} ->
 (*@ assume val utf8 : (s:string -> (b:bytes){b = Utf8 (s)}) @*)
 assume val utf8 : string -> Tot bytes
 (*@ assume val iutf8 : (b:bytes -> (s:string){b = Utf8 (s)}) @*)
-assume val iutf8_opt : bytes -> Tot (option string)
-assume val iutf8 : m:bytes -> s:string{utf8 s == m}
+assume val iutf8_opt : m:bytes -> Tot (option (s:string{utf8 s = m}))
+assume val iutf8 : m:bytes -> s:string{utf8 s = m}
 (*@  assume (!x. (!y. Utf8 (x) = Utf8 (y) => x = y)) @*)
 
 // Pretty printing of bytes for debugging

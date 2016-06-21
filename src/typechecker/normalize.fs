@@ -381,7 +381,11 @@ and close_comp cfg env c =
 
 and close_lcomp_opt cfg env lopt = match lopt with
     | Some (Inl lc) -> //NS: Too expensive to close potentially huge VCs that are hardly read
-      Some (Inr lc.eff_name) //retaining the effect name is sufficient
+      if Util.is_total_lcomp lc
+      then Some (Inr Const.effect_Tot_lid)
+      else if Util.is_tot_or_gtot_lcomp lc
+      then Some (Inr Const.effect_GTot_lid)
+      else Some (Inr lc.eff_name) //retaining the effect name is sufficient
     | _ -> lopt
 
 (*******************************************************************)

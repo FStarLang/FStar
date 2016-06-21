@@ -140,9 +140,10 @@ inline let pure_ite_wp (a:Type) (wp:pure_wp a) (post:pure_post a) =
      forall (k:pure_post a).
 	 (forall (x:a).{:pattern (guard_free (k x))} k x <==> post x)
 	 ==> wp k
-inline let pure_wp_binop (a:Type) (wp1:pure_wp a) (op:(Type -> Type -> GTot Type)) (wp2:pure_wp a) (p:pure_post a) =
-     op (wp1 p) (wp2 p)
-inline let pure_wp_as_type (a:Type) (wp:pure_wp a) = forall (p:pure_post a). wp p
+
+inline let pure_stronger (a:Type) (wp1:pure_wp a) (wp2:pure_wp a) =
+        forall (p:pure_post a). wp1 p ==> wp2 p
+
 inline let pure_close_wp (a:Type) (b:Type) (wp:(b -> GTot (pure_wp a))) (p:pure_post a) = forall (b:b). wp b p
 inline let pure_assert_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q /\ wp p
 inline let pure_assume_p (a:Type) (q:Type) (wp:pure_wp a) (p:pure_post a) = q ==> wp p
@@ -155,8 +156,7 @@ total new_effect { (* The definition of the PURE effect is fixed; no user should
      ; bind_wp      = pure_bind_wp
      ; if_then_else = pure_if_then_else
      ; ite_wp       = pure_ite_wp
-     ; wp_binop     = pure_wp_binop
-     ; wp_as_type   = pure_wp_as_type
+     ; stronger     = pure_stronger
      ; close_wp     = pure_close_wp
      ; assert_p     = pure_assert_p
      ; assume_p     = pure_assume_p
@@ -297,14 +297,10 @@ inline let st_ite_wp        (heap:Type) (a:Type)
      forall (k:st_post_h heap a).
 	 (forall (x:a) (h:heap).{:pattern (guard_free (k x h))} k x h <==> post x h)
 	 ==> wp k h0
-inline let st_wp_binop      (heap:Type) (a:Type)
-                             (wp1:st_wp_h heap a)
-                             (op:(Type -> Type -> GTot Type))
-                             (wp2:st_wp_h heap a)
-                             (p:st_post_h heap a) (h:heap) =
-     op (wp1 p h) (wp2 p h)
-inline let st_wp_as_type    (heap:Type) (a:Type) (wp:st_wp_h heap a) =
-     (forall (p:st_post_h heap a) (h:heap). wp p h)
+inline let st_stronger  (heap:Type) (a:Type) (wp1:st_wp_h heap a)
+                        (wp2:st_wp_h heap a) =
+     (forall (p:st_post_h heap a) (h:heap). wp1 p h ==> wp2 p h)
+
 inline let st_close_wp      (heap:Type) (a:Type) (b:Type)
                              (wp:(b -> GTot (st_wp_h heap a)))
                              (p:st_post_h heap a) (h:heap) =
@@ -330,8 +326,7 @@ new_effect {
      ; bind_wp      = st_bind_wp heap
      ; if_then_else = st_if_then_else heap
      ; ite_wp       = st_ite_wp heap
-     ; wp_binop     = st_wp_binop heap
-     ; wp_as_type   = st_wp_as_type heap
+     ; stronger     = st_stronger heap
      ; close_wp     = st_close_wp heap
      ; assert_p     = st_assert_p heap
      ; assume_p     = st_assume_p heap
@@ -364,9 +359,9 @@ inline let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a)
    l_ITE p
        (wp_then post)
        (wp_else post)
-inline let ex_wp_binop (a:Type) (wp1:ex_wp a) (op:(Type -> Type -> GTot Type)) (wp2:ex_wp a) (p:ex_post a) =
-   op (wp1 p) (wp2 p)
-inline let ex_wp_as_type (a:Type) (wp:ex_wp a) = (forall (p:ex_post a). wp p)
+inline let ex_stronger (a:Type) (wp1:ex_wp a) (wp2:ex_wp a) =
+        (forall (p:ex_post a). wp1 p ==> wp2 p)
+
 inline let ex_close_wp (a:Type) (b:Type) (wp:(b -> GTot (ex_wp a))) (p:ex_post a) = (forall (b:b). wp b p)
 inline let ex_assert_p (a:Type) (q:Type) (wp:ex_wp a) (p:ex_post a) = (q /\ wp p)
 inline let ex_assume_p (a:Type) (q:Type) (wp:ex_wp a) (p:ex_post a) = (q ==> wp p)
@@ -380,8 +375,7 @@ new_effect {
   ; bind_wp      = ex_bind_wp
   ; if_then_else = ex_if_then_else
   ; ite_wp       = ex_ite_wp
-  ; wp_binop     = ex_wp_binop
-  ; wp_as_type   = ex_wp_as_type
+  ; stronger     = ex_stronger
   ; close_wp     = ex_close_wp
   ; assert_p     = ex_assert_p
   ; assume_p     = ex_assume_p
@@ -422,12 +416,10 @@ inline let all_if_then_else (heap:Type) (a:Type) (p:Type)
    l_ITE p
        (wp_then post h0)
        (wp_else post h0)
-inline let all_wp_binop (heap:Type) (a:Type)
-                         (wp1:all_wp_h heap a) (op:(Type -> Type -> GTot Type))
-                         (wp2:all_wp_h heap a) (p:all_post_h heap a) (h:heap) =
-     op (wp1 p h) (wp2 p h)
-inline let all_wp_as_type (heap:Type) (a:Type) (wp:all_wp_h heap a) =
-    (forall (p:all_post_h heap a) (h:heap). wp p h)
+inline let all_stronger (heap:Type) (a:Type) (wp1:all_wp_h heap a)
+                        (wp2:all_wp_h heap a) =
+    (forall (p:all_post_h heap a) (h:heap). wp1 p h ==> wp2 p h)
+
 inline let all_close_wp (heap:Type) (a:Type) (b:Type)
                          (wp:(b -> GTot (all_wp_h heap a)))
                          (p:all_post_h heap a) (h:heap) =
@@ -451,8 +443,7 @@ new_effect {
   ; bind_wp      = all_bind_wp      heap
   ; if_then_else = all_if_then_else heap
   ; ite_wp       = all_ite_wp       heap
-  ; wp_binop     = all_wp_binop     heap
-  ; wp_as_type   = all_wp_as_type   heap
+  ; stronger     = all_stronger     heap
   ; close_wp     = all_close_wp     heap
   ; assert_p     = all_assert_p     heap
   ; assume_p     = all_assume_p     heap

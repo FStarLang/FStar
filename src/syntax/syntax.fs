@@ -65,6 +65,7 @@ and univ_name = ident
 type universe_uvar = Unionfind.uvar<option<universe>>
 type univ_names    = list<univ_name>
 type universes     = list<universe>
+type monad_name    = lident
 type delta_depth = 
   | Delta_constant                  //A defined constant, e.g., int, list, etc. 
   | Delta_unfoldable of int         //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
@@ -80,10 +81,10 @@ type term' =
   | Tm_abs        of binders*term*option<either<lcomp, lident>>  (* fun (xi:ti) -> t : (M t' wp | N) *)
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
-  | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
+  | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right; with monadic application in monad_name *)
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
   | Tm_ascribed   of term * either<term,comp> * option<lident>   (* an effect label is the third arg, filled in by the type-checker *)
-  | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
+  | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e; monadic bind in monad_name *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
   | Tm_delayed    of either<(term * subst_ts), (unit -> term)> 
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
@@ -136,6 +137,8 @@ and metadata =
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
+  | Meta_monadic       of monad_name                             (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
+  | Meta_monadic_lift  of monad_name * monad_name                (* Sub-effecting: a lift from m1 to m2 *)
 and uvar_basis<'a> =
   | Uvar
   | Fixed of 'a 
@@ -145,6 +148,8 @@ and meta_source_info =
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
+  | Mutable_alloc
+  | Mutable_rval
 and fv_qual =
   | Data_ctor
   | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
@@ -234,8 +239,7 @@ type eff_decl = {
     bind_wp     :tscheme;
     if_then_else:tscheme;
     ite_wp      :tscheme;
-    wp_binop    :tscheme;
-    wp_as_type  :tscheme;
+    stronger    :tscheme;
     close_wp    :tscheme;
     assert_p    :tscheme;
     assume_p    :tscheme;

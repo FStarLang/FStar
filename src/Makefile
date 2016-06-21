@@ -77,18 +77,39 @@ wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMA
 # in ulib/ as fstis, though, so the --no_extract argument will go away once the
 # F* compiler bootstraps in universes.
 NUM=FStar.Int8 FStar.UInt8 FStar.Int16 FStar.UInt16 FStar.Int32 FStar.UInt32 FStar.Int64 FStar.UInt64
+
+# Modules already written as valid .fst files
 STDLIB=$(addprefix $(LIB)/, allboot.fsti stboot.fsti list.fsti option.fsti \
   FStar.Float.fsti FStar.Char.fsti $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti \
   FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
 BOOT_BASIC_FSTI=$(addprefix boot_fstis/, string.fsti bytes.fsti platform.fsti version.fsti range.fsti)
-# Basically, almost every [.fs] and [.fsi] in the current directory
-BOOT_ALL=$(shell $(FIND) . -iname '*.fs' \
-	 	-and -not -ipath './basic/bytes.fs' \
-	 	-and -not -ipath './basic/getoptsimple.fs' \
-	 	-and -not -ipath './basic/unionfind.fs' \
-	 	-and -not -ipath './basic/range.fs')
+
+# All the .fs and .fsi files that need to be pre-processed into valid .fst files.
+BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
+BOOT_FORMAT=$(addprefix format/, formatml.fs)
+ABSYN=syntax.fs const.fs visit.fs util.fs print.fs
+ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
+SYNTAX=syntax.fsi syntax.fs const.fs subst.fsi subst.fs free.fsi free.fs instfv.fsi instfv.fs util.fs print.fsi print.fs
+SYNTAX_SRC=$(addprefix syntax/, $(SYNTAX))
+TC=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
+TC_SRC=$(addprefix tc/, $(TC))
+TOSMT=term.fsi term.fs z3.fs splitcases.fs encode.fs
+TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
+BOOT_PARSER=$(addprefix parser/, ast.fs dsenv.fs desugar.fs env.fs interleave.fs tosyntax.fs lexhelp.fs parseit.fsi driver.fs dep.fs)
+TYPECHECKER=common.fs env.fsi env.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs util.fsi util.fs tc.fsi tc.fs
+TYPECHECKER_SRC=$(addprefix typechecker/, $(TYPECHECKER))
+EXTRACTION=ml-syntax.fs env.fs uenv.fs util.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs term.fs modul.fs kremlin.fs
+EXTRACTION_SRC=$(addprefix extraction/, $(EXTRACTION))
+SMTENCODING=term.fsi term.fs z3.fs splitcases.fs errorReporting.fs encode.fs solver.fs
+SMTENCODING_SRC=$(addprefix smtencoding/, $(SMTENCODING))
+TOPLEVEL=dependences.fs interactive.fs stratified.fs universal.fs fstar.fs
+TOPLEVEL_SRC=$(addprefix fstar/, $(TOPLEVEL))
+
+BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) \
+  $(TOSMT_SRC) $(BOOT_PARSER) $(TYPECHECKER_SRC) $(EXTRACTION_SRC) $(SMTENCODING_SRC) $(TOPLEVEL_SRC)
 
 ALL_INTERFACES=$(STDLIB) $(BOOT_BASIC_FSTI)
+# In the dependency order... eventually we want to use auto-deps
 ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 	        FStar.Format.fst \
 	    	FStar.Absyn.Syntax.fst FStar.Absyn.Const.fst FStar.Absyn.Visit.fst FStar.Absyn.Util.fst FStar.Absyn.Print.fst \
@@ -97,7 +118,7 @@ ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
 	    	FStar.ToSMT.Term.fst FStar.ToSMT.Z3.fst FStar.ToSMT.SplitQueryCases.fst FStar.ToSMT.Encode.fst \
 	    	FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Errors.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.Tc.fst \
 		FStar.Parser.AST.fst FStar.Parser.DesugarEnv.fst FStar.Parser.Desugar.fst FStar.Parser.Env.fst FStar.Parser.Interleave.fst FStar.Parser.ToSyntax.fst FStar.Parser.Parse.fsti FStar.Parser.Lexhelp.fst FStar.Parser.ParseIt.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst \
-		FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.Env.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst FStar.Extraction.ML.ExtractTyp.fst FStar.Extraction.ML.ExtractExp.fst FStar.Extraction.ML.ExtractMod.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst  \
+		FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.Env.fst FStar.Extraction.ML.UEnv.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst FStar.Extraction.ML.ExtractTyp.fst FStar.Extraction.ML.ExtractExp.fst FStar.Extraction.ML.ExtractMod.fst FStar.Extraction.ML.Term.fst FStar.Extraction.ML.Modul.fst FStar.Extraction.Kremlin.fst \
 	    	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Encode.fst FStar.SMTEncoding.Solver.fst \
 	    	FStar.Dependences.fst FStar.Interactive.fst FStar.Stratified.fst FStar.Universal.fst FStar.FStar.fst
 
@@ -159,7 +180,7 @@ BOOT_FS_SYNTAX=FStar.Absyn.Syntax.fs FStar.Absyn.Const.fs FStar.Absyn.Visit.fs F
 BOOT_FS_TC=FStar.Tc.Env.fs FStar.Tc.Recheck.fs FStar.Tc.Normalize.fs FStar.Tc.Errors.fs FStar.Tc.Rel.fs FStar.Tc.Util.fs FStar.Tc.Tc.fs
 BOOT_FS_PARSER=FStar.Parser.AST.fs parseutil.fs parse.fs FStar.Parser.Lexhelp.fs lex.fs FStar.Parser.DesugarEnv.fs FStar.Parser.Desugar.fs parseit.fs FStar.Parser.Driver.fs
 BOOT_FS_TOSMT=FStar.ToSMT.Term.fs FStar.ToSMT.Z3.fs FStar.ToSMT.SplitQueryCases.fs FStar.ToSMT.Encode.fs
-BOOT_FS_EXTRACTION=FStar.Extraction.ML.Syntax.fs FStar.Extraction.ML.Env.fs FStar.Extraction.ML.Util.fs FStar.Extraction.ML.Code.fs FStar.Extraction.ML.ExtractTyp.fs FStar.Extraction.ML.ExtractExp.fs FStar.Extraction.ML.ExtractMod.fs
+BOOT_FS_EXTRACTION=FStar.Extraction.ML.Syntax.fs FStar.Extraction.ML.Env.fs FStar.Extraction.ML.Util.fs FStar.Extraction.ML.Code.fs FStar.Extraction.ML.ExtractTyp.fs FStar.Extraction.ML.ExtractExp.fs FStar.Extraction.ML.ExtractMod.fs FStar.Extraction.Kremlin.fs
 BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC) $(BOOT_FS_PARSER) $(BOOT_FS_TOSMT) $(BOOT_FS_EXTRACTION) FStar.FStar.fs
 
 boot-fsharp: fsharp-output fs plain-fs-files fsharp-output/fstar.exe
@@ -190,7 +211,7 @@ clean-boot-fs:
 
 test:   all fsharp-regressions fstar-ocaml regressions
 
-utest:  
+utest:
 	make clean
 	make all
 	make fsharp-regressions
@@ -213,7 +234,7 @@ regressions:
 
 # Getting parallelism from this target
 uregressions:
-	+make ulib uexamples | grep -i 'error\|Verif'
+	+make ulib uexamples
 
 ulib:
 	+make -C ../ulib
@@ -223,3 +244,6 @@ uexamples:
 
 wc-boot:
 	wc -l $(BOOT_ALL)
+
+ctags:
+	ctags --exclude=boot_fsts --exclude=boot_fstis --exclude=ocaml-output -R .

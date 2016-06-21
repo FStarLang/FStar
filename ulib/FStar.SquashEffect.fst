@@ -1,59 +1,58 @@
-
-module SquashEffect
+module FStar.SquashEffect
 
 total new_effect SQUASH = PURE
 
 (* needed to copy these, why? *)
-kind PurePre = Type
-kind PurePost (a:Type) = a -> Type
-kind PureWP   (a:Type) = PurePost a -> PurePre
+//kind PurePre = Type
+//kind pure_post (a:Type) = a -> Type
+//kind pure_wp   (a:Type) = pure_post a -> PurePre
 
-effect Squash (a:Type) (pre:PurePre) (post:PurePost a) =
+effect Squash (a:Type) (pre:pure_pre) (post:pure_post a) =
        SQUASH a
-           (fun (p:PurePost a) -> pre /\ (forall a. pre /\ post a ==> p a)) (* WP *)
+           (fun (p:pure_post a) -> pre /\ (forall a. pre /\ post a ==> p a)) (* WP *)
 
 effect Sq (a:Type) =
-     SQUASH a (fun (p:PurePost a) -> (forall (x:a). p x))
+     SQUASH a (fun (p:pure_post a) -> (forall (x:a). p x))
 
 sub_effect
-  PURE ~> SQUASH = fun (a:Type) (wp:PureWP a) (p:PurePost a) -> wp (fun a -> p a)
+  PURE ~> SQUASH = fun (a:Type) (wp:pure_wp a) (p:pure_post a) -> wp (fun a -> p a)
 
 type squash (p:Type) = (x:unit{p})
 
 assume val unsquash : #p:Type -> squash p -> Sq p
 
 // this correctly fails, squash p and p are not related by subtyping
-(* assume val resquash : #p:Type -> #wp:PureWP p -> #wlp:PureWP p -> *)
+(* assume val resquash : #p:Type -> #wp:pure_wp p -> #wlp:pure_wp p -> *)
 (*                       (unit -> SQUASH p wp wlp) -> PURE (squash p) wp wlp *)
 // wp : (p -> Type) -> Type  not <: ((squash p) -> Type) -> Type
 
 // The post-condition of a Squash is really about the inhabitant,
 // but we can't allow that to escape into the non-squash world
-assume val resquash : #p:Type -> #pre:PurePre -> #post:PurePost p ->
+assume val resquash : #p:Type -> #pre:pure_pre -> #post:pure_post p ->
                       (unit -> Squash p pre post) ->
                       Pure (squash p) (requires pre) (ensures (fun _ -> True))
 
 // less general but much better inference
 val resquash' : #p:Type -> (unit -> Sq p) -> Tot (squash p)
-let resquash' (p:Type) = resquash #p #True #(fun _ -> True)
+let resquash' (#p:Type) = resquash #p #True #(fun _ -> True)
 
 // Sanity check: this can encode return_squash and bind_squash
 
 val return_squash : #a:Type -> a -> Tot (squash a)
-let return_squash (a:Type) (x:a) = resquash' (fun () -> x)
+let return_squash (#a:Type) (x:a) = resquash' (fun () -> x)
 
 // CH: currently, F* can prove return_squash directly
 // let return_squash (a:Type) (x:a) = ()
 
 val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> Tot (squash b)) ->
   Tot (squash b)
-let bind_squash (a:Type) (b:Type) (x:squash a) f =
+let bind_squash (#a:Type) (#b:Type) (x:squash a) f =
   resquash' #b (fun _ -> unsquash (f (unsquash x)))
 
 
 // with this we still can't prove squash_double_arrow
 assume val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
-  =f:(squash (x:a -> Tot (squash (p x)))) -> Tot (squash (x:a -> Tot (p x)))
+  $f:(squash (x:a -> Tot (squash (p x)))) -> Tot (squash (x:a -> Tot (p x)))
 // the error bellow is silly though:
 // Too many arguments to function of type (#p:Type -> (squash p) -> Sq (p));
 // got (unsquash #(x:a -> Tot (squash (p x))) f x)

@@ -148,7 +148,7 @@ Read on for the more complete solution involving Visual Studio itself.
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono (any version from 3.10.x to 4.4.x) and fsharp (version 4.0.1.x)
+  - Install mono (any version from 4.0.3.0 to 4.4.x) and fsharp (version 4.0.1.x)
 
     - On Debian/Ubuntu
 
@@ -230,10 +230,10 @@ that's over there (it's optimized for F*).
    - If you're on Windows see https://github.com/protz/ocaml-installer/wiki
      for instructions on how to configure your environment for use with OPAM
 
-3. Install `ocamlfind`, `batteries`, `stdint`, and `zarith` using OPAM:
+3. F* depends on a bunch of external OCaml packages which you can install using OPAM:
 
   ```sh
-  $ opam install ocamlfind batteries stdint zarith
+  $ opam install ocamlfind batteries stdint zarith yojson
   ```
 
 ### Step 2. Extracting the sources of F* itself to OCaml ###
