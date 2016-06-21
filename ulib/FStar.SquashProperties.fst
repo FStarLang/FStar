@@ -4,18 +4,18 @@ open FStar.Constructive
 
 open FStar.Squash
 
-val join_squash : #a:Type -> squash (squash a) -> Tot (squash a)
+val join_squash : #a:Type -> squash (squash a) -> GTot (squash a)
 let join_squash #a s = bind_squash #(squash a) #a s (fun x -> x)
 
 val squash_arrow : #a:Type -> #p:(a -> Type) ->
-  $f:(x:a -> Tot (squash (p x))) -> Tot (squash (x:a -> Tot (p x)))
+  $f:(x:a -> GTot (squash (p x))) -> GTot (squash (x:a -> GTot (p x)))
 let squash_arrow #a #p f = squash_double_arrow (return_squash f)
 
 val forall_intro : #a:Type -> #p:(a -> Type) ->
   $f:(x:a -> Lemma (p x)) -> Lemma (x:a -> Tot (p x))(* (forall (x:a). p x) *)
 let forall_intro #a #p f =
-  let ff : (x:a -> Tot (squash (p x))) = (fun x -> f x; get_proof (p x)) in
-  give_proof #(x:a -> Tot (p x)) (squash_arrow #a #p ff)
+  let ff : (x:a -> GTot (squash (p x))) = (fun x -> f x; get_proof (p x)) in
+  give_proof #(x:a -> GTot (p x)) (squash_arrow #a #p ff)
 
 
 // currently unused
@@ -34,17 +34,17 @@ let forall_intro #a #p f =
 (* The whole point of defining squash is to soundly allow define excluded_middle;
    here this follows from get_proof and give_proof *)
 
-val bool_of_or : #p:Type -> #q:Type -> (p \/ q) ->
+val bool_of_or : #p:Type -> #q:Type -> c_or p q ->
   Tot (b:bool{(b ==> p) /\ (not(b) ==> q)})
-let bool_of_or #p #q (t:p \/ q) =
+let bool_of_or #p #q t =
   match t with
   | Left  _ -> true
   | Right _ -> false
 
-val excluded_middle : p:Type -> Tot (squash (b:bool{b <==> p}))
-let excluded_middle (p:Type) = map_squash (get_proof (p \/ ~p)) bool_of_or
+val excluded_middle : p:Type -> GTot (squash (b:bool{b <==> p}))
+let excluded_middle (p:Type) = map_squash (join_squash (get_proof (p \/ (~p)))) bool_of_or
 
-val excluded_middle_squash : p:Type0 -> Tot (squash (cor p (cnot p)))
+val excluded_middle_squash : p:Type0 -> GTot (p \/ ~p)
 let excluded_middle_squash p =
   bind_squash (excluded_middle p) (fun x ->
   if x then
@@ -55,52 +55,59 @@ let excluded_middle_squash p =
 (* we thought we might prove proof irrelevance by Berardi ... but didn't manage *)
 
 (* Conditional on any Type -- unused below *)
-val ifProp: #p:Type0 -> b:Type0 -> (e1:squash p) -> (e2:squash p) -> Tot (squash p)
+val ifProp: #p:Type0 -> b:Type0 -> e1:squash p -> e2:squash p -> GTot (squash p)
 let ifProp #p b e1 e2 =
-   bind_squash (excluded_middle_squash b) (fun x ->
-   match x with
-   | IntroL _ -> e1
-   | IntroR _ -> e2)
+   bind_squash (excluded_middle_squash b) 
+	       (fun (x:c_or b (~ b)) -> 
+		match x with
+	        | Left _ -> e1
+		| Right _ -> e2)
 
 (* The powerset operator *)
-type pow (p:Type) = p -> Tot bool
+type pow (p:Type) = p -> GTot bool
 
 type retract 'a 'b : Type =
-  | MkR: i:('a -> Tot 'b) ->
-         j:('b -> Tot 'a) ->
-         inv:(x:'a -> Tot (ceq (j (i x)) x)) ->
+  | MkR: i:('a -> GTot 'b) ->
+         j:('b -> GTot 'a) ->
+         inv:(x:'a -> GTot (ceq (j (i x)) x)) ->
          retract 'a 'b
 
 type retract_cond 'a 'b : Type =
-  | MkC: i2:('a -> Tot 'b) ->
-         j2:('b -> Tot 'a) ->
-         inv2:(retract 'a 'b -> x:'a -> Tot (ceq (j2 (i2 x)) x)) ->
+  | MkC: i2:('a -> GTot 'b) ->
+         j2:('b -> GTot 'a) ->
+         inv2:(retract 'a 'b -> x:'a -> GTot (ceq (j2 (i2 x)) x)) ->
          retract_cond 'a 'b
 
 (* unused below *)
 val ac: r:retract_cond 'a 'b -> retract 'a 'b -> x:'a ->
-          Tot (ceq ((MkC.j2 r) (MkC.i2 r x)) x)
+          GTot (ceq ((MkC.j2 r) (MkC.i2 r x)) x)
 let ac (MkC _ _ inv2) = inv2
 
+let false_elim (#a:Type) (f:False) : Tot a
+  = match f with
 
-val l1: (a:Type0) -> (b:Type0) -> Tot (squash (retract_cond (pow a) (pow b)))
+val l1: (a:Type0) -> (b:Type0) -> GTot (squash (retract_cond (pow a) (pow b)))
 let l1 (a:Type) (b:Type) =
-   map_squash (excluded_middle_squash (retract (pow a) (pow b))) (fun x ->
-   match x with
-   | IntroL (MkR f0 g0 e) -> MkC f0 g0 (fun _ -> e)
-   | IntroR nr ->
-    let f0 (x:pow a) (y:b) = false in
-     let g0 (x:pow b) (y:a) = false in
-     MkC f0 g0 (fun r -> cfalse_elim (nr r)))
+   bind_squash (excluded_middle_squash (retract (pow a) (pow b))) 
+	      (fun (x:c_or (retract (pow a) (pow b)) (~ (retract (pow a) (pow b)))) ->
+	         match x with
+		 | Left (MkR f0 g0 e) -> 
+		   return_squash (MkC f0 g0 (fun _ -> e))
+		 | Right nr ->
+		   let f0 (x:pow a) (y:b) = false in
+		   let g0 (x:pow b) (y:a) = false in
+		   map_squash nr (fun (f:(retract (pow a) (pow b) -> GTot False)) -> 
+				  MkC f0 g0 (fun r x -> false_elim (f r))))
 
 (* The paradoxical set *)
 type u = p:Type -> Tot (squash (pow p))
 
 (* NS: FAILS TO CHECK BEYOND HERE ... TODO, revisit *)
 
-// (* Bijection between U and (pow U) *)
-// val f : U -> Tot (squash (pow U))
-// let f u = u U
+(* Bijection between U and (pow U) *)
+val f : u -> Tot (squash (pow u))
+#set-options "--print_universes"
+(* let f x = x u  *) //fails here without a means of denoting universes
 
 // val g : squash (pow U) -> Tot U
 // let g sh = fun (x:Type) -> 

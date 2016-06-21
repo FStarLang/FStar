@@ -4,8 +4,6 @@ module FStar.Squash
    squash things; for this one it doesn't seem to harm importing this
    file (exposing the implementation); it probably doesn't help either *)
 
-let squash (t:Type) = u:unit{t}
-
 let get_proof (p:Type) = ()
 
 let give_proof (#p:Type) _ = ()

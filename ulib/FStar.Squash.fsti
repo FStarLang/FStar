@@ -5,8 +5,6 @@ Quotient Types: A Modular Approach. Aleksey Nogin, TPHOLs 2002.
 http://www.nuprl.org/documents/Nogin/QuotientTypes_02.pdf
 *)
 
-val squash : Type -> Type0
-
 val get_proof : p:Type ->
   Pure (squash p) (requires p) (ensures (fun _ -> True))
 
@@ -17,7 +15,7 @@ val proof_irrelevance : p:Type -> x:squash p ->
                                  y:squash p -> Tot (squash (x = y))
 
 val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
-  $f:(squash (x:a -> Tot (squash (p x)))) -> Tot (squash (x:a -> Tot (p x)))
+  $f:(squash (x:a -> GTot (squash (p x)))) -> GTot (squash (x:a -> GTot (p x)))
 
 val squash_double_sum:  #a:Type -> #p:(a -> Type) ->
   $f:(squash (x:a & squash (p x))) -> Tot (squash (x:a & p x))
@@ -26,8 +24,8 @@ val squash_double_sum:  #a:Type -> #p:(a -> Type) ->
 
 val return_squash : #a:Type -> a -> Tot (squash a)
 
-val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> Tot (squash b)) ->
-  Tot (squash b)
+val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> GTot (squash b)) ->
+  GTot (squash b)
 
-val map_squash : #a:Type -> #b:Type -> squash a -> (a -> Tot b) ->
-  Tot (squash b)
+val map_squash : #a:Type -> #b:Type -> squash a -> (a -> GTot b) ->
+  GTot (squash b)

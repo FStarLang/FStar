@@ -16,9 +16,9 @@ NEGFILES=NegativeTests.BST.fst     NegativeTests.Heap.fst  NegativeTests.ShortCi
 
 # if the `--lax` flag is used, negative tests will report a single error.
 ifeq ($(filter $(OTHERFLAGS),--lax),)
-NEGTESTS=32
+NEGTESTS=34
 else
-NEGTESTS= 
+NEGTESTS=3
 endif
 
 all: all-pos all-neg

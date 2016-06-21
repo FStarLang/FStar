@@ -10,7 +10,6 @@ HYPERHEAP=FStar.Monotonic.RRef.fst
 
 ALL=$(filter-out $(FLAKY) $(HYPERHEAP),$(wildcard FStar.*.fst FStar.*.fsti))
 
-#unfortunately, array seems to be flaky when run in parallel
 all: $(addsuffix -ver, $(ALL)) st m_rref
 
 %-ver: %
