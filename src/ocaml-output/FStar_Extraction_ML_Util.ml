@@ -179,11 +179,7 @@ end))
 let join_l : FStar_Extraction_ML_Syntax.e_tag Prims.list  ->  FStar_Extraction_ML_Syntax.e_tag = (fun fs -> (FStar_List.fold_left join FStar_Extraction_ML_Syntax.E_PURE fs))
 
 
-<<<<<<< HEAD
-let mk_ty_fun = (fun _90_95 -> (FStar_List.fold_right (fun _72_147 t -> (match (_72_147) with
-=======
 let mk_ty_fun = (fun _91_95 -> (FStar_List.fold_right (fun _72_147 t -> (match (_72_147) with
->>>>>>> master
 | (_72_145, t0) -> begin
 FStar_Extraction_ML_Syntax.MLTY_Fun ((t0, FStar_Extraction_ML_Syntax.E_PURE, t))
 end))))

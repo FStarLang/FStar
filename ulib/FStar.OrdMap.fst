@@ -10,10 +10,10 @@ type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
 
 let cmp (a:eqtype) = f:(a -> a -> Tot bool){total_order a f}
 
-abstract let map_t (k:eqtype) (v:Type) (f:cmp k) (d:ordset k f) =
+abstract let map_t (k:eqtype) (v:eqtype) (f:cmp k) (d:ordset k f) =
   g:(k -> Tot (option v)){(forall x. (mem x d = is_Some (g x)))}
 
-abstract noeq type ordmap (k:eqtype) (v:Type) (f:cmp k) =
+abstract noeq type ordmap (k:eqtype) (v:eqtype) (f:cmp k) =
   | Mk_map: d:ordset k f -> m:map_t k v f d -> ordmap k v f
 
 abstract val empty   : #key:eqtype -> #value:eqtype -> #f:cmp key -> Tot (ordmap key value f)
