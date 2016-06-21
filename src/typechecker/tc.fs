@@ -2436,7 +2436,8 @@ let tc_inductive env ses quals lids =
         tcs, datas in
 
     let tys, datas = ses |> List.partition (function Sig_inductive_typ _ -> true | _ -> false) in
-
+    if datas |> Util.for_some (function Sig_datacon _ -> false | _ -> true)
+    then raise (Error("Mutually defined type contains a non-inductive element", Env.get_range env)); 
     let env0 = env in
 
     (* Check each tycon *)

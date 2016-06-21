@@ -1,8 +1,8 @@
-module Bug267
+module Bug279
 
-type t =
-  | T : ts -> t
-and ts = list t
+(* type t = *)
+(*   | T : ts -> t *)
+(* and ts = list t *)
 
 let rec f (x:t) = match x with
   | T ts -> g ts
