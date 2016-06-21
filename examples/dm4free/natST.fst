@@ -48,27 +48,35 @@ sub_effect {
 ////////////////////////////////////////////////////////////////////////////////
 new_effect { 
   ST : a:Type -> wp:st_wp a -> Effect
-  with repr (a:Type) (wp:pure_wp a) = n0:nat -> PURE (a * nat) (fun post -> wp (fun a n -> post (a, n)) n0)
-     ; bind = fun (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b) 
-	        (f:repr a wp1)
-		(g:(x:a -> Tot (repr b (wp2 x)))) 
-		:  repr b (bind_star wp1 wp2)
-		-> fun n0 -> let x, n1 = f n0 in g x n1
-     ; return = fun (a:Type) (x:a)
-		:  repr a (return_star x)
-		-> fun n0 -> (x, n0)
-     ; if_then_else = pure_if_then_else
-     ; ite_wp       = pure_ite_wp
-     ; stronger     = pure_stronger
-     ; close_wp     = pure_close_wp
-     ; assert_p     = pure_assert_p
-     ; assume_p     = pure_assume_p
-     ; null_wp      = pure_null_wp
-     ; trivial      = pure_trivial
+  with //repr is new; it's the reprentation of ST as a value type
+       repr (a:Type) (wp:pure_wp a) = n0:nat -> PURE (a * nat) (fun post -> wp (fun a n -> post (a, n)) n0)
+      //bind_wp is exactly as it is currently
+      //produced by the *-translation of bind above
+     ; bind_wp      = fun (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b) : st_wp b -> ...
+      //bind is new, it is the elaboration of the bind above
+     ; bind         = fun (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b) 
+	                (f:repr a wp1)
+			(g:(x:a -> Tot (repr b (wp2 x)))) 
+			:  repr b (bind_wp wp1 wp2)
+			-> fun n0 -> let x, n1 = f n0 in g x n1
+      //return_wp is a renaming of the current return, it is the *-translation of the return above
+     ; return_wp    = fun (a:Type) (x:a) : st_wp a = ...
+      //return is new; it is the elaboration of the return above     
+     ; return       = fun (a:Type) (x:a) : repr a (return_wp x) -> fun n -> (x, n)
+     //the remaining are just as what we have now
+     ; if_then_else = ...
+     ; ite_wp       = ...
+     ; stronger     = ...
+     ; close_wp     = ...
+     ; assert_p     = ...
+     ; assume_p     = ...
+     ; null_wp      = ...
+     ; trivial      = ..
   and actions
+    //these are new
       get  = fun (_:unit) : repr nat (fun post n0 -> post (n0, n0)) -> fun n0 -> (n0, n0)
     ; put  = fun (x:nat) : repr unit (fun post n0 -> post ((), x)) -> fun n0 -> ((), x)   
-  allowing
+  and coercions 
        reify        
      ; reflect 
 }
