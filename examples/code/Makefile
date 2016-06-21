@@ -29,6 +29,8 @@ POLY_EXTRACTED=FStar_Ghost.ml Poly_Parameters.ml Curve_Bigint.ml Poly_Bignum.ml 
 
 .PHONY: lib-ver curve-ver curve-ml chacha-ver chacha-ml
 
+all: curve-ml chacha-ml poly-ml
+
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
 	$(FSTAR) $(OPTIONS_VER) FStar.HyperStack.fst FStar.HST.fst FStar.Buffer.fst

@@ -241,7 +241,7 @@ let sub #a (b:buffer a) (i:u32) (len:u32{v len <= length b /\ v i + v len <= len
      (ensures (fun h0 b' h1 -> content b = content b' /\ idx b' = idx b + v i /\ length b' = v len /\ (h0 == h1)))
   = {content = b.content; idx = i +^ b.idx; length = len}
 
-let offset #a (b:buffer a) (i:u32) : STL (buffer a)
+let offset #a (b:buffer a) (i:u32{v i <= length b}) : STL (buffer a)
   (requires (fun h -> live h b))
   (ensures (fun h0 b' h1 -> content b' = content b /\ idx b' = idx b + v i /\ length b' = length b - v i
     /\ h0 == h1))
