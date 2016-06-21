@@ -1,0 +1,4 @@
+- How much coding using hyperheaps ?
+- does h1.tip = h0.tip ==> same structure h0 h1
+- uniqueness of the tip ?
+- equivalent of frame_ids ?

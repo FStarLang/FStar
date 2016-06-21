@@ -68,4 +68,4 @@ let op_Less_Equal_Hat_Hat = gte
 let of_string s = int_of_string s
 let to_string s = string_of_int s
 let to_int s = s
-let uint_to_t s = s
+let uint_to_t s = int_to_uint32 s

@@ -121,8 +121,12 @@ let shift_left a s = Mk (shift_left (v a) (UInt32.v s))
 
 (* Comparison operators *)
 let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
+assume val eq_mask: a:t -> b:t -> Tot (r:t{(v a = v b ==> v r = max_int n)
+					    /\ (v a <> v b ==> v r = 0)})
 let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
 let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
+assume val gte_mask: a:t -> b:t -> Tot (r:t{(v a >= v b ==> v r = max_int n)
+					    /\ (v a < v b ==> v r = 0)})
 let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
 let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 

@@ -5,6 +5,7 @@ module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 module U63 = FStar.UInt63
 module U64 = FStar.UInt64
+module U128 = FStar.UInt128
 module I8  = FStar.Int8
 module I16 = FStar.Int16
 module I32 = FStar.Int32
@@ -16,6 +17,7 @@ type u16 = U16.t
 type u32 = U32.t
 type u63 = U63.t
 type u64 = U64.t
+type u128 = U128.t 
 
 type i8  = I8.t
 type i16 = I16.t
@@ -186,3 +188,6 @@ assume val int64_to_uint63: a:i64 -> Tot (b:u63{U63.v b = I64.v a % pow2 63})
 assume val int64_to_uint32: a:i64 -> Tot (b:u32{U32.v b = I64.v a % pow2 32})
 assume val int64_to_uint16: a:i64 -> Tot (b:u16{U16.v b = I64.v a % pow2 16})
 assume val int64_to_uint8 : a:i64 -> Tot (b:u8 {U8.v b  = I64.v a % pow2 8})
+
+assume val uint128_to_uint64: a:u128 -> Tot (b:u64{U64.v b = U128.v a % pow2 64})
+assume val uint64_to_uint128: a:u64 -> Tot (b:u128{U128.v b = U64.v a})
