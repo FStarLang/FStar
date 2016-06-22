@@ -53,6 +53,7 @@ and expr =
   | EBufSub of expr * expr * expr
   | EMatch of expr * branches
   | EOp of op * width
+  | ECast of expr * typ
 
 and op = | Add | AddW | Sub | SubW | Div | Mult | Mod | Or | And | Xor | ShiftL | ShiftR
 
@@ -367,6 +368,26 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_Name ([ module_name ], function_name) }, args) when (module_name = env.module_name) ->
       EApp (EQualified ([], function_name), List.map (translate_expr env) args)
+
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; "Int"; "Cast" ], c) }, [ arg ]) ->
+      if ends_with c "uint64" then
+        ECast (translate_expr env arg, TInt UInt64)
+      else if ends_with c "uint32" then
+        ECast (translate_expr env arg, TInt UInt32)
+      else if ends_with c "uint16" then
+        ECast (translate_expr env arg, TInt UInt32)
+      else if ends_with c "uint8" then
+        ECast (translate_expr env arg, TInt UInt32)
+      else if ends_with c "int64" then
+        ECast (translate_expr env arg, TInt Int64)
+      else if ends_with c "int32" then
+        ECast (translate_expr env arg, TInt Int32)
+      else if ends_with c "int16" then
+        ECast (translate_expr env arg, TInt Int32)
+      else if ends_with c "int8" then
+        ECast (translate_expr env arg, TInt Int32)
+      else
+        failwith (Util.format1 "Unrecognized function from Cast module: %s\n" c)
 
   | MLE_App ({ expr = MLE_Name p }, args) ->
       failwith (Util.format2 "todo: translate_expr [MLE_App=%s; %s]"
