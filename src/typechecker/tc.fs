@@ -2080,7 +2080,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     | NotForFree -> ed
     | ForFree -> gen_wps_for_free env binders a wp_a ed in
 
-  let ret =
+  let return_wp =
     let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
     check_and_gen' env ed.ret_wp expected_k in
 
@@ -2149,7 +2149,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                 (S.mk_GTotal t) in
     check_and_gen' env ed.trivial expected_k in
 
-  let repr =
+  let repr, bind_repr, return_repr, actions =
       if ed.qualifiers |> List.contains Reifiable
       || ed.qualifiers |> List.contains Reflectable
       then begin
@@ -2164,31 +2164,35 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
             | [] -> repr
             | _ -> raise (Error("Unexpected universe-polymorphic effect representation", repr.pos)) in
 
+        let mk_repr' t wp =
+            mk (Tm_app(repr, [as_arg t; as_arg wp])) None Range.dummyRange in
+
         let mk_repr a wp = 
-            mk (Tm_app(repr, [as_arg (S.bv_to_name a); as_arg wp])) None Range.dummyRange in
+            mk_repr' (S.bv_to_name a) wp in
 
         let bind_repr = 
-            let r = S.new_bv None t_range in
+            let r = S.gen_bv "r" None t_range in
             let b, wp_b = get_effect_signature () in
             let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
-            let wp_f = S.new_bv None wp_a in
-            let wp_g = S.new_bv None a_wp_b in
-            let xb = S.new_bv None (S.bv_to_name b) in
-            let x_wp_g = mk_Tm_app (S.bv_to_name wp_g) [as_arg <| S.bv_to_name xb] None Range.dummyRange in
+            let wp_f = S.gen_bv "wp_f" None wp_a in
+            let wp_g = S.gen_bv "wp_g" None a_wp_b in
+            let x_a = S.gen_bv "x_a" None (S.bv_to_name a) in
+            let wp_g_x = mk_Tm_app (S.bv_to_name wp_g) [as_arg <| S.bv_to_name x_a] None Range.dummyRange in
             let res = 
                 let wp = mk_Tm_app (Env.inst_tscheme bind_wp |> snd)
                                    (List.map as_arg [S.bv_to_name r; S.bv_to_name a; 
                                                      S.bv_to_name b; S.bv_to_name wp_f; 
                                                      S.bv_to_name wp_g])
                                    None Range.dummyRange in
-                mk_repr a wp in
+                mk_repr b wp in
 
             let expected_k = Util.arrow [S.mk_binder r;
-                                         S.mk_binder a; S.mk_binder b;
+                                         S.mk_binder a; 
+                                         S.mk_binder b;
                                          S.mk_binder wp_f;
                                          S.mk_binder wp_g;
                                          S.null_binder (mk_repr a (S.bv_to_name wp_f));
-                                         S.null_binder (Util.arrow [S.mk_binder xb] (S.mk_Total x_wp_g))]
+                                         S.null_binder (Util.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))]
                                         (S.mk_Total res) in
             printfn "About to check bind=%s, at type %s\n" 
                     (Print.term_to_string (snd ed.bind_repr))
@@ -2196,11 +2200,46 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
             let env = Env.set_range env (snd (ed.bind_repr)).pos in
             check_and_gen' env ed.bind_repr expected_k in
 
-        let return_repr = ed.return_repr in
-        
-        repr, bind_repr, return_repr
+        let return_repr = 
+            let x_a = S.gen_bv "x_a" None (S.bv_to_name a) in
+            let res = 
+                let wp = mk_Tm_app (Env.inst_tscheme return_wp |> snd)
+                                   (List.map as_arg [S.bv_to_name a; S.bv_to_name x_a]) 
+                                   None Range.dummyRange in
+                mk_repr a wp in
+            let expected_k = Util.arrow [S.mk_binder a;
+                                         S.mk_binder x_a]
+                                    (S.mk_Total res) in
+            printfn "About to check return_repr=%s, at type %s\n" 
+                    (Print.term_to_string (snd ed.return_repr))
+                    (Print.term_to_string expected_k);
+            let env = Env.set_range env (snd (ed.return_repr)).pos in
+            let univs, repr = check_and_gen' env ed.return_repr expected_k in
+            match univs with
+            | [] -> [], repr
+            | _ -> raise (Error("Unexpected universe-polymorphic return for effect", repr.pos)) in
+
+      let actions = 
+        let check_action (lid, (_, a)) = 
+            let action, c, g_a = 
+                tc_tot_or_gtot_term env a in
+            printfn "Inferred action %s has type %s\n" (Print.term_to_string a) (Print.term_to_string c.res_typ);
+            let expected_k, g_k = 
+                let x = S.gen_bv "x" None S.tun in
+                let res = mk_repr' S.tun S.tun in
+                let k = Util.arrow [S.mk_binder x] (S.mk_Total res) in
+                let k, _, g = tc_tot_or_gtot_term env k in
+                k, g in
+            let g = Rel.teq env c.res_typ expected_k in
+            Rel.force_trivial_guard env (Rel.conj_guard g_a (Rel.conj_guard g_k g));
+            printfn "Checked action %s against type %s\n" 
+                    (Print.term_to_string a) 
+                    (Print.term_to_string (N.normalize [N.Beta] env expected_k));
+            (lid, ([], action)) in
+        ed.actions |> List.map check_action in
+      repr, bind_repr, return_repr, actions
       end 
-      else ed.repr, ed.bind_repr, ed.return_repr in
+      else ed.repr, ed.bind_repr, ed.return_repr, ed.actions in
 
   //generalize and close
   let t = U.arrow ed.binders (S.mk_Total ed.signature) in
@@ -2211,13 +2250,13 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     | _ -> failwith "Impossible" in
   let close n ts =
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
-    assert (List.length (fst ts) = n);
+    if n >= 0 then assert (List.length (fst ts) = n);
     ts in
   let ed = { ed with
       univs       = univs
     ; binders     = binders
     ; signature   = signature
-    ; ret_wp         = close 0 ret
+    ; ret_wp      = close 0 return_wp
     ; bind_wp     = close 1 bind_wp
     ; if_then_else= close 0 if_then_else
     ; ite_wp      = close 0 ite_wp
@@ -2226,7 +2265,11 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     ; assert_p    = close 0 assert_p
     ; assume_p    = close 0 assume_p
     ; null_wp     = close 0 null_wp
-    ; trivial     = close 0 trivial_wp } in
+    ; trivial     = close 0 trivial_wp
+    ; repr        = repr
+    ; return_repr = close 0 return_repr
+    ; bind_repr   = close 1 bind_repr
+    ; actions     = List.map (fun (l, t) -> l, close -1 t) actions} in
 
   if Env.debug env Options.Low
   then Util.print_string (Print.eff_decl_to_string ed);

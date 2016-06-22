@@ -135,7 +135,7 @@ inline let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (x:a) -> True)
 
 total new_effect { (* The definition of the PURE effect is fixed; no user should ever change this *)
   PURE : a:Type -> wp:pure_wp a -> Effect
-  with return       = pure_return
+  with return_wp       = pure_return
      ; bind_wp      = pure_bind_wp
      ; if_then_else = pure_if_then_else
      ; ite_wp       = pure_ite_wp
@@ -288,7 +288,7 @@ inline let st_trivial       (heap:Type) (a:Type)
 
 new_effect {
   STATE_h (heap:Type) : result:Type -> wp:st_wp_h heap result -> Effect
-  with return       = st_return heap
+  with return_wp      = st_return heap
      ; bind_wp      = st_bind_wp heap
      ; if_then_else = st_if_then_else heap
      ; ite_wp       = st_ite_wp heap
@@ -337,7 +337,7 @@ inline let ex_trivial (a:Type) (wp:ex_wp a) = wp (fun r -> True)
 new_effect {
   EXN : result:Type -> wp:ex_wp result -> Effect
   with
-    return       = ex_return
+    return_wp    = ex_return
   ; bind_wp      = ex_bind_wp
   ; if_then_else = ex_if_then_else
   ; ite_wp       = ex_ite_wp
@@ -405,7 +405,7 @@ inline let all_trivial (heap:Type) (a:Type) (wp:all_wp_h heap a) =
 new_effect {
   ALL_h (heap:Type) : a:Type -> wp:all_wp_h heap a -> Effect
   with
-    return       = all_return       heap
+    return_wp    = all_return       heap
   ; bind_wp      = all_bind_wp      heap
   ; if_then_else = all_if_then_else heap
   ; ite_wp       = all_ite_wp       heap

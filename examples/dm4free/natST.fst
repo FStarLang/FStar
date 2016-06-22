@@ -60,6 +60,7 @@ let st_get (u:unit) : st_repr nat (fun n0 post -> post (n0, n0))
 let st_put (n:nat) : st_repr unit (fun n0 post -> post ((), n))
   = fun x -> (), n
 
+//#reset-options "--debug NatST --debug_level SMTEncoding"
 
 reifiable reflectable new_effect {
   ST : a:Type -> wp:st_wp a -> Effect
@@ -73,7 +74,7 @@ reifiable reflectable new_effect {
       //return_wp is a renaming of the current return, it is the *-translation of the return above
      ; return_wp    = st_return_wp
       //return is new; it is the elaboration of the return above
-     ; return       = st_return_wp
+     ; return       = st_return
      //the remaining are just as what we have now
      ; if_then_else = st_if_then_else
      ; ite_wp       = st_ite_wp
