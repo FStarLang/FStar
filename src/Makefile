@@ -23,7 +23,7 @@ ifeq ($(UNAME),Darwin)
   HEAD=ghead
   SED=gsed
   FIND=gfind
-  RUNTIME = 
+  RUNTIME = mono
 else
   HEAD=head
   SED=sed
