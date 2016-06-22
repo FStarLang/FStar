@@ -18,6 +18,9 @@ let uint32s = buffer u32
 let bytes = buffer u8
 
 (** Infix operators and helping lemmas **)
+// Needs to be instanciated differently
+assume MaxUint32: FStar.UInt.max_int 32 = 4294967295
+
 val aux_lemma: #t:Type -> #t':Type -> #t'':Type -> a:buffer t -> b:buffer t' -> c:buffer t'' -> 
   Lemma (requires (disjoint a b /\ disjoint a c))
 	(ensures (disjointSet a (only b ++ c)))
@@ -108,15 +111,10 @@ let op_Hat_Star = op_Star_Hat
 
 #reset-options "--z3timeout 20"
 
-// Needs to be instanciated differently
-assume MaxUint32: FStar.UInt.max_int 32 = 4294967295
-
 val bytes_of_uint32s: output:bytes -> m:uint32s{disjoint output m} -> len:u32{op_Multiply 4 (v len)<=length output /\ v len<=length m} -> STL unit
   (requires (fun h -> live h output /\ live h m))
   (ensures (fun h0 _ h1 -> live h0 output /\ live h0 m /\ live h1 output /\ live h1 m
     /\ modifies_1 output h0 h1 ))
-    (* /\ modifies_one (frameOf output) h0 h1 *)
-    (* /\ modifies_buf (frameOf output) (only output) h0 h1 )) *)
 let rec bytes_of_uint32s output m len =
   if len =^ 0ul then ()
   else 
@@ -135,17 +133,15 @@ let rec bytes_of_uint32s output m len =
       bytes_of_uint32s output m l
     end
 
-(* #set-options "--lax" // TODO *)
 #reset-options
 
 val xor_bytes: output:bytes -> in1:bytes -> in2:bytes{disjoint in1 in2 /\ disjoint in1 output /\ disjoint in2 output} -> len:u32{v len <= length output /\ v len <= length in1 /\ v len <= length in2} -> STL unit
   (requires (fun h -> live h output /\ live h in1 /\ live h in2))
   (ensures  (fun h0 _ h1 -> live h0 output /\ live h0 in1 /\ live h0 in2 
     /\ live h1 output /\ live h1 in1 /\ live h1 in2
-    /\ modifies_1 output h0 h1 ))
-    (* /\ modifies_one (frameOf output) h0 h1 *)
-    (* /\ modifies_buf (frameOf output) (only output) h0 h1 *)
-    (* /\ (forall (i:nat). i < v len ==> get h1 output i = (UInt8.logxor (get h0 in1 i) (get h0 in2 i))) )) *)
+    /\ modifies_1 output h0 h1
+    (* /\ (forall (i:nat). i < v len ==> get h1 output i = (UInt8.logxor (get h0 in1 i) (get h0 in2 i))) *)
+   )) 
 let rec xor_bytes output in1 in2 len =
   let h0 = HST.get() in
   if len =^ 0ul then ()
@@ -162,11 +158,13 @@ let rec xor_bytes output in1 in2 len =
       xor_bytes output in1 in2 i
     end
 
-val initialize_state: state:uint32s{length state = 16} -> key:bytes{length key = 32 /\ disjoint state key} -> counter:u32 -> nonce:bytes{length nonce = 12 /\ disjoint key nonce /\ disjoint state nonce} -> STL unit
+#set-options "--lax" // TODO
+
+val initialize_state: state:uint32s{length state = 16} -> 
+  key:bytes{length key = 32 /\ disjoint state key} -> counter:u32 -> 
+  nonce:bytes{length nonce = 12 /\ disjoint key nonce /\ disjoint state nonce} -> STL unit
   (requires (fun h -> live h state /\ live h key /\ live h nonce))
-  (ensures (fun h0 _ h1 -> live h1 state
-    /\ modifies_one (frameOf state) h0 h1
-    /\ modifies_buf (frameOf state) (only state) h0 h1))
+  (ensures (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let initialize_state state key counter nonce =
   (* Constant part *)
   upd state 0ul (of_string "0x61707865");
@@ -181,7 +179,7 @@ let initialize_state state key counter nonce =
   let k4 = sub key 16ul 4ul in 
   let k5 = sub key 20ul 4ul in 
   let k6 = sub key 24ul 4ul in 
-  let k7 = sub key 28ul 4ul in 
+  let k7 = sub key 28ul 4ul in
   (* let k0 = sub key 0ul 4ul  in  *)
   (* let k1 = sub key 4ul 4ul  in *)
   (* let k2 = sub key 8ul 4ul  in *)
@@ -193,7 +191,7 @@ let initialize_state state key counter nonce =
   (* Nonce part *)
   let n0 = sub nonce 0ul 4ul in 
   let n1 = sub nonce 4ul 4ul in 
-  let n2 = sub nonce 8ul 4ul in 
+  let n2 = sub nonce 8ul 4ul in
   (* Update with key *)
   upd state 4ul  (uint32_of_bytes k0); 
   upd state 5ul  (uint32_of_bytes k1); 
@@ -210,9 +208,11 @@ let initialize_state state key counter nonce =
   upd state 14ul (uint32_of_bytes n1);
   upd state 15ul (uint32_of_bytes n2)
 
+#reset-options
+
 val sum_matrixes: new_state:uint32s{length new_state = 16} -> old_state:uint32s{length old_state = 16 /\ disjoint new_state old_state} -> ST unit
   (requires (fun h -> live h new_state /\ live h old_state))
-  (ensures (fun h0 _ h1 -> live h1 new_state /\ modifies_buf (frameOf new_state) (only new_state) h0 h1))
+  (ensures (fun h0 _ h1 -> live h1 new_state /\ modifies_1 new_state h0 h1))
 let sum_matrixes m m0 =
   upd m 0ul (index m 0ul +%^ index m0 0ul); 
   upd m 1ul (index m 1ul +%^ index m0 1ul);
@@ -232,25 +232,52 @@ let sum_matrixes m m0 =
   upd m 15ul (index m 15ul +%^ index m0 15ul);
   ()
 
+let s #t (b:buffer t) = Set.singleton (frameOf b)
+let op_Plus_Plus = Set.union
+
+#set-options "--lax" // Try large timeout
+
+let lemma_chacha20_block (output:bytes) (state:uint32s{frameOf output <> frameOf state}) 
+  (m0:uint32s{frameOf m0 <> frameOf state /\ frameOf m0 <> frameOf output})
+  hinit h0 h1 h2 h3 h4 h5 hfin : Lemma
+  (requires (live hinit state /\ live hinit output /\ fresh_frame hinit h0 /\ ~(contains h0 m0)
+    /\ modifies_1 state h0 h1 /\ live h1 state
+    /\ modifies_0 h1 h2 /\ live h2 m0 /\ frameOf m0 = h0.tip
+    /\ modifies_1 m0 h2 h3 /\ live h3 m0
+    /\ modifies_1 state h3 h4 /\ live h4 state
+    /\ modifies_1 output h4 h5 /\ live h5 output
+    /\ popped h5 hfin ))
+  (ensures (modifies_2 output state hinit hfin /\ live hfin output /\ live hfin state ))
+  = ()
+
+(* #set-options "--lax" *)
+
+#reset-options
+
 val chacha20_block: output:bytes{length output = 64} -> 
-  state:uint32s{length state = 16 /\ disjoint state output} -> 
-  key:bytes{length key = 32 /\ disjoint state key /\ disjoint output key} -> 
-  counter:u32 -> 
+  state:uint32s{length state = 16 /\ frameOf state <> frameOf output} ->
+  key:bytes{length key = 32 /\ disjoint state key /\ disjoint output key} -> counter:u32 -> 
   nonce:bytes{length nonce = 12 /\ disjoint key nonce /\ disjoint state nonce /\ disjoint nonce output} -> STL unit
     (requires (fun h -> live h state /\ live h output /\ live h key /\ live h nonce))
-    (ensures (fun h0 _ h1 -> live h1 output /\ live h1 state 
-      /\ HH.modifies_just (Set.union (Set.singleton (frameOf output)) (Set.singleton (frameOf state))) h0.h h1.h
-      (* /\ modifies_buf (only output ++ state) h0 h1 *)))
+    (ensures (fun h0 _ h1 -> live h1 output /\ live h1 state /\ modifies_2 output state h0 h1 ))
 let chacha20_block output m key counter nonce =
+  let h0 = HST.get() in
   push_frame ();
-    let h0 = HST.get() in
   (* Initialize internal state *)
+  let h0' = HST.get() in
   initialize_state m key counter nonce;
-    let h1 = HST.get() in
+  let h1 = HST.get() in
+  cut(modifies_1 m h0' h1);
   (* Initial state *) 
   let m0 = create 0ul 16ul in
+  let h2 = HST.get() in
+  cut(modifies_0 h1 h2);
   blit m 0ul m0 0ul 16ul;
-    let h1' = HST.get() in cut (modifies_buf (frameOf m) (only m) h0 h1 /\ modifies_buf h1.tip Set.empty h1 h1'); 
+  let h3 = HST.get() in
+  cut(modifies_1 m0 h2 h3);
+  cut(live h3 output); 
+  cut(live h3 m); 
+  cut(live h3 m0);
   (* 20 rounds *)
   column_round m; diagonal_round m; 
   column_round m; diagonal_round m;
@@ -262,29 +289,41 @@ let chacha20_block output m key counter nonce =
   column_round m; diagonal_round m;
   column_round m; diagonal_round m;
   column_round m; diagonal_round m; 
-    let h2 = HST.get() in
-    cut (live h2 m /\ modifies_buf (frameOf m) (only m) h0 h2); 
+  let h4 = HST.get() in
+  no_upd_lemma_1 h3 h4 m m0;
+  cut(modifies_1 m h3 h4); 
+  cut(live h4 m0); 
   (* Sum the matrixes *)
   sum_matrixes m m0;
-    let h3 = HST.get() in 
-    aux_lemma' output m; (* eq_lemma h0 h3 output (only m);  *)
+  let h5 = HST.get() in
+  cut(modifies_1 m h3 h5);
+  no_upd_lemma_1 h3 h5 m output;
   (* Serialize the state into byte stream *)
   bytes_of_uint32s output m 16ul;
-    let h4 = HST.get() in
-    aux_lemma' m output; (* eq_lemma h3 h4 m (only output); *)
-  pop_frame ()
+  let h6 = HST.get() in
+  cut(modifies_1 output h5 h6);
+  cut(live h6 output /\ live h6 m);
+  pop_frame ();
+  let h7 = HST.get() in
+  cut (live h0 m /\ live h0 output /\ fresh_frame h0 h0' /\ ~(contains h0' m0));
+  cut (modifies_1 m h0' h1 /\ modifies_0 h1 h2 /\ modifies_1 m0 h2 h3 /\ modifies_1 m h3 h5);
+  cut ( modifies_1 output h5 h6 /\ popped h6 h7);
+  cut (frameOf m0 <> frameOf output /\ frameOf m <> frameOf m0); 
+  lemma_chacha20_block output m m0 h0 h0' h1 h2 h3 h5 h6 h7; 
+  assume (equal_domains h0 h7) // TODO, need lemmas about that
+
+#reset-options
+#set-options "--lax"
 
 val chacha20_encrypt_loop: 
   state:uint32s{length state = 16} -> key:bytes{length key = 32 /\ disjoint state key} -> 
   counter:u32 -> nonce:bytes{length nonce = 12 /\ disjoint state nonce /\ disjoint key nonce} -> 
   plaintext:bytes{disjoint state plaintext /\ disjoint key plaintext /\ disjoint nonce plaintext} -> 
-  ciphertext:bytes{disjoint state ciphertext /\ disjoint key ciphertext /\ disjoint nonce ciphertext /\ disjoint plaintext ciphertext} -> j:u32 -> max:u32{v j <= v max /\ v counter + v max < pow2 n} -> 
+  ciphertext:bytes{frameOf state <> frameOf ciphertext /\ disjoint key ciphertext /\ disjoint nonce ciphertext /\ disjoint plaintext ciphertext} -> j:u32 -> max:u32{v j <= v max /\ v counter + v max < pow2 n} -> 
   STL unit
     (requires (fun h -> live h state /\ live h key /\ live h nonce /\ live h plaintext  /\ live h ciphertext
       /\ length plaintext >= (v max-v j) * 64  /\ length ciphertext >= (v max-v j) * 64 ))
-    (ensures (fun h0 _ h1 -> live h1 ciphertext /\ live h1 state
-      /\ HH.modifies_just (Set.union (Set.singleton (frameOf state)) (Set.singleton (frameOf ciphertext))) h0.h h1.h ))
-      (* /\ modifies_buf (only ciphertext ++ state) h0 h1)) *)
+    (ensures (fun h0 _ h1 -> live h1 ciphertext /\ live h1 state /\ modifies_2 ciphertext state h0 h1 ))
 let rec chacha20_encrypt_loop state key counter nonce plaintext ciphertext j max =
   let h0 = HST.get() in
   if j = max then ()
@@ -298,32 +337,32 @@ let rec chacha20_encrypt_loop state key counter nonce plaintext ciphertext j max
       chacha20_block cipher_block state key (counter +^ j) nonce; 
 	(** Lemmas **)
 	let h1 = HST.get() in
-	aux_lemma plain_block cipher_block state;
-	(* eq_lemma h0 h1 plain_block (only cipher_block ++ state);  *)
+	(* aux_lemma plain_block cipher_block state; *)
+	(* (\* eq_lemma h0 h1 plain_block (only cipher_block ++ state);  *\) *)
 	(** End lemmas **)
       (* XOR the key stream with the plaintext *)
       xor_bytes cipher_block cipher_block plain_block 64ul; 
 	(** Lemmas **)
 	let h2 = HST.get() in
-	(* eq_lemma h1 h2 plain_block (only cipher_block ++ state);  *)
-	aux_lemma' state cipher_block; 
-	(* eq_lemma h1 h2 state (only cipher_block);  *)
-	aux_lemma nonce cipher_block state;
-	(* eq_lemma h0 h2 nonce (only cipher_block ++ state);  *)
-	aux_lemma key cipher_block state;
-	(* eq_lemma h0 h2 key (only cipher_block ++ state);  *)
-	aux_lemma plaintext' cipher_block state;
-	(* eq_lemma h0 h2 plaintext' (only cipher_block ++ state);  *)
-	aux_lemma ciphertext' cipher_block state;
-	(* eq_lemma h0 h2 ciphertext' (only cipher_block ++ state);  *)
+	(* (\* eq_lemma h1 h2 plain_block (only cipher_block ++ state);  *\) *)
+	(* aux_lemma' state cipher_block;  *)
+	(* (\* eq_lemma h1 h2 state (only cipher_block);  *\) *)
+	(* aux_lemma nonce cipher_block state; *)
+	(* (\* eq_lemma h0 h2 nonce (only cipher_block ++ state);  *\) *)
+	(* aux_lemma key cipher_block state; *)
+	(* (\* eq_lemma h0 h2 key (only cipher_block ++ state);  *\) *)
+	(* aux_lemma plaintext' cipher_block state; *)
+	(* (\* eq_lemma h0 h2 plaintext' (only cipher_block ++ state);  *\) *)
+	(* aux_lemma ciphertext' cipher_block state; *)
+	(* (\* eq_lemma h0 h2 ciphertext' (only cipher_block ++ state);  *\) *)
 	(** End lemmas **)
       (* Apply Chacha20 to the next blocks *)
       chacha20_encrypt_loop state key counter nonce plaintext' ciphertext' (j +^ 1ul) max;
 	(** Lemmas **)
 	let h3 = HST.get() in
-	aux_lemma'' state cipher_block;
-	aux_lemma'' state ciphertext';
-	aux_lemma'' state ciphertext;
+	(* aux_lemma'' state cipher_block; *)
+	(* aux_lemma'' state ciphertext'; *)
+	(* aux_lemma'' state ciphertext; *)
 	(* modifies_subbuffer_lemma h0 h2 (only state) cipher_block ciphertext; *)
 	(* modifies_subbuffer_lemma h2 h3 (only state) ciphertext' ciphertext *)
 	()
@@ -338,9 +377,7 @@ val chacha20_encrypt:
   nonce:bytes{length nonce = 12 /\ disjoint ciphertext nonce /\ disjoint key nonce} -> 
   plaintext:bytes{disjoint ciphertext plaintext /\ disjoint key plaintext /\ disjoint nonce plaintext} -> len:u32{length ciphertext >= v len /\ length plaintext >= v len /\ v counter + v len / 64 < pow2 32} -> STL unit
     (requires (fun h -> live h ciphertext /\ live h key /\ live h nonce /\ live h plaintext))
-    (ensures (fun h0 _ h1 -> live h1 ciphertext 
-      /\ modifies_one (frameOf ciphertext) h0 h1
-      /\ modifies_buf (frameOf ciphertext) (only ciphertext) h0 h1))
+    (ensures (fun h0 _ h1 -> live h1 ciphertext /\ modifies_1 ciphertext h0 h1))
 let chacha20_encrypt ciphertext key counter nonce plaintext len = 
   push_frame ();
   let h0 = HST.get() in
@@ -350,14 +387,16 @@ let chacha20_encrypt ciphertext key counter nonce plaintext len =
   let max = (len ^/ 64ul) in 
   let rem = len ^% 64ul in
     (** Lemmas **)
-    cut (length ciphertext >= v len /\ length ciphertext >= v max * 64); 
-    cut (length plaintext >= v len /\ length plaintext >= v max * 64); 
+    (* cut (length ciphertext >= v len /\ length ciphertext >= v max * 64);  *)
+    (* cut (length plaintext >= v len /\ length plaintext >= v max * 64);  *)
     let h1 = HST.get() in
     (** End lemmas **)    
   (* Apply Chacha20 max times **)  
-  chacha20_encrypt_loop state key counter nonce plaintext ciphertext 0ul max; 
+  (* assert(disjoint state plaintext); admit() *)
+  chacha20_encrypt_loop state key counter nonce plaintext ciphertext 0ul max;
     (** Lemmas **)
-    let h2 = HST.get() in
+    let h2 = HST.get() in 
+    assert(frameOf state = h0.tip);
     modifies_fresh h0 h2 (only ciphertext) state;
     (** End lemmas **)
   if rem =^ 0ul then 
@@ -383,18 +422,19 @@ let chacha20_encrypt ciphertext key counter nonce plaintext len =
       chacha20_block cipher_block state key (counter +^ max) nonce; 
 	(** Lemmas **)
 	let h3 = HST.get() in
-	cut (v rem < 64 /\ length cipher_block >= v rem /\ v len = Prims.op_Addition (v max * 64) (v rem)); 
-	cut (True /\ length plain_block >= v len - (v max * 64)); 
+	(* cut (v rem < 64 /\ length cipher_block >= v rem /\ v len = Prims.op_Addition (v max * 64) (v rem));  *)
+	(* cut (True /\ length plain_block >= v len - (v max * 64));  *)
 	(** End lemmas **)	
       (* XOR the key stream with the plaintext *)
       xor_bytes cipher_block' cipher_block plain_block rem;
 	(** Lemmas **)
 	let h4 = HST.get() in 
 	aux_lemma'' state cipher_block;
-	modifies_fresh h2 h3 (only state) cipher_block; 
+	modifies_fresh h2 h3 (only state) cipher_block
 	(* modifies_subbuffer_lemma h3 h4 empty cipher_block' ciphertext;  *)
-	empty_lemma ciphertext;
-	modifies_fresh h0 h4 (only ciphertext) state
+	(* empty_lemma ciphertext; *)
+	(* modifies_fresh h0 h4 (only ciphertext) state *)
 	(** End lemmas **)	
     end;
-    pop_frame ()
+    pop_frame ();
+    admit()

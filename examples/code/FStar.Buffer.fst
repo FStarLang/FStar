@@ -67,21 +67,12 @@ let includes #a (x:buffer a) (y:buffer a) : GTot Type0 =
   x.content = y.content /\ idx y >= idx x /\ idx x + length x >= idx y + length y
 
 let disjoint #a #a' (x:buffer a) (y:buffer a') : GTot Type0 =
-  as_aref x <> as_aref y
-  \/ (as_aref x = as_aref y /\ (idx x + length x <= idx y \/ idx y + length y <= idx x))
+  frameOf x <> frameOf y \/ as_aref x <> as_aref y
+  \/ (as_aref x = as_aref y /\ frameOf x = frameOf y /\ (idx x + length x <= idx y \/ idx y + length y <= idx x))
 
 (* Abstraction of buffers of any type *)
 #set-options "--__temp_no_proj SBuffer"
 type abuffer = | Buff: #t:Type -> b:buffer t -> abuffer
-
-let disjoint_a b b' : GTot Type0 =
-  as_aref (b.b) <> as_aref (b'.b)
-  \/ (as_aref (b.b) = as_aref (b'.b) /\ (idx b.b + length b.b <= idx b'.b \/ idx b'.b + length b'.b <= idx b.b))
-
-let lemma_test_1 (#a:Type) (b:buffer a) (b':buffer a) : Lemma
-  (requires (as_ref b <> as_ref b'))
-  (ensures (disjoint b b'))
-  = ()
 
 // JK: these should be GTot, but painful in lemma calls
 let empty : Set.set abuffer = Set.empty #abuffer
@@ -104,9 +95,6 @@ assume Arefs4: forall (s1:Set.set abuffer) (s2:Set.set abuffer).
 let disjointSet #a (b:buffer a) (bufs:Set.set abuffer) =
   (forall b'. Set.mem b' bufs ==> disjoint b b'.b)
 
-(* let disjointSet (#a:Type) (b:buffer a) (buffs:FStar.Set.set abuffer) : GTot Type0 = *)
-(*   (forall b'. Set.mem b' buffs ==> disjoint_a (Buff b) b') *)
-
 let disjointRef #a (b:buffer a) (set:Set.set Heap.aref) = 
   ~(Set.mem (as_aref b) set)
 
@@ -126,7 +114,7 @@ let modifies_trans #rid bufs h0 h1 h2 :
 	[SMTPatT (modifies_buf rid bufs h0 h1); SMTPatT (modifies_buf rid bufs h1 h2)]
  = ()
 
-let modifies_sub #rid bufs subbufs h0 h1 :
+let modifies_sub rid bufs subbufs h0 h1 :
   Lemma
     (requires (Set.subset subbufs bufs /\ modifies_buf rid subbufs h0 h1))
     (ensures (modifies_buf rid bufs h0 h1))
@@ -167,23 +155,74 @@ val modifies_fresh: #a:Type -> h0:mem -> h1:mem -> bufs:Set.set abuffer -> b:buf
     /\ modifies_buf h0.tip bufs h0 h1 ))
 let modifies_fresh #a h0 h1 bufs b = ()
 
+(* Modifies clauses that do not change the shape of the HyperStack (h1.tip = h0.tip) *)
+let modifies_0 h0 h1 = 
+  modifies_one h0.tip h0 h1 /\ modifies_ref h0.tip Set.empty h0 h1
+
 let modifies_1 (#a:Type) (b:buffer a) h0 h1 =
   let rid = frameOf b in
   modifies_one rid h0 h1 /\ modifies_buf rid (only b) h0 h1
 
-let modifies_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a) h0 h1 =
+let modifies_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 =
   let rid = frameOf b in let rid' = frameOf b' in
-  HH.modifies_just (Set.union (Set.singleton rid) (Set.singleton rid')) h0.h h1.h 
-  /\ modifies_buf rid (only b) h0 h1
+  ((rid = rid' /\ modifies_buf rid (only b ++ b') h0 h1 /\ modifies_one rid h0 h1)
+  \/ (rid <> rid' /\ HH.modifies_just (Set.union (Set.singleton rid) (Set.singleton rid')) h0.h h1.h  
+      /\ modifies_buf rid (only b) h0 h1 /\ modifies_buf rid' (only b') h0 h1 ))
 
 let modifies_region rid bufs h0 h1 =
   modifies_one rid h0 h1 /\ modifies_buf rid bufs h0 h1
+
+let lemma_stl_1 (#a:Type) (b:buffer a) h0 h1 h2 h3 : Lemma
+  (requires (live h0 b /\ fresh_frame h0 h1 /\ modifies_1 b h1 h2 /\ popped h2 h3))
+  (ensures  (modifies_1 b h0 h3))
+  [SMTPat (modifies_1 b h1 h2); SMTPat (fresh_frame h0 h1); SMTPat (popped h2 h3)]
+  = ()
+
+#reset-options "--z3timeout 100"
+#set-options "--lax" // For speed only, goes through
+
+let lemma_stl_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 h3 : Lemma
+  (requires (live h0 b /\ live h0 b' /\ fresh_frame h0 h1 /\ modifies_2 b b' h1 h2 /\ popped h2 h3))
+  (ensures  (modifies_2 b b' h0 h3))
+  [SMTPat (modifies_2 b b' h1 h2); SMTPat (fresh_frame h0 h1); SMTPat (popped h2 h3)]
+  = let rid = frameOf b in
+    let rid' = frameOf b' in
+    if rid = rid' then ()
+    else ()
+
+#reset-options "--z3timeout 10"
+#set-options "--lax" // For speed only, goes through
+
+let lemma_modifies_1_1 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 : Lemma
+  (requires (live h0 b /\ live h0 b' /\ disjoint b b'
+    /\ modifies_1 b h0 h1 /\ modifies_1 b' h1 h2))
+  (ensures  (modifies_2 b b' h0 h2))
+  [SMTPat (modifies_1 b h0 h1); SMTPat (modifies_1 b' h1 h2)]
+  = let rid = frameOf b in
+    let rid' = frameOf b' in
+    let modset = (only b ++ b') in
+      cut (Set.subset (only b) (only b ++ b'));
+    cut (Set.subset (only b') (only b ++ b'));
+    if rid <> rid' then begin
+      assert (HH.modifies_just (Set.union (Set.singleton rid) (Set.singleton rid')) h0.h h2.h);
+      modifies_sub rid modset (only b) h0 h1;
+      modifies_sub rid' modset (only b') h1 h2
+    end
+    else ()
+
+#reset-options
 
 let equal_lemma #a rid h0 h1 b bufs :
   Lemma (requires (live h0 b /\ disjointSet b bufs /\ modifies_region rid bufs h0 h1))
 	(ensures (equal h0 b h1 b))
 	[SMTPatT (disjointSet b bufs); SMTPatT (modifies_region rid bufs h0 h1)]
  = ()
+
+val lemma_modifies_fresh_2: #t:Type -> #t':Type -> a:buffer t -> b:buffer t' -> h0:mem -> h1:mem -> Lemma
+  (requires (~(contains h0 b) /\ live h1 b /\ frameOf b = h0.tip /\ modifies_2 a b h0 h1))
+  (ensures (~(contains h0 b) /\ live h1 b /\ frameOf b = h0.tip
+    /\ modifies_buf (frameOf a) (only a) h0 h1 ))
+let lemma_modifies_fresh_2 #t #t' a b h0 h1 = ()
 
 (** Concrete getters and setters **)
 let create #a (init:a) (len:u32) : ST (buffer a)
@@ -386,3 +425,12 @@ val no_upd_lemma_1: #t:Type -> #t':Type -> h0:mem -> h1:mem -> a:buffer t -> b:b
   (ensures  (live h0 b /\ live h1 b /\ equal h0 b h1 b))
   [SMTPat (modifies_1 a h0 h1); SMTPat (live h0 b); SMTPat (disjoint a b)]
 let no_upd_lemma_1 #t #t' h0 h1 a b = ()
+
+val no_upd_lemma_2: #t:Type -> #t':Type -> #t'':Type -> h0:mem -> h1:mem -> a:buffer t -> a':buffer t' -> b:buffer t'' -> Lemma
+  (requires (live h0 b /\ disjoint a b /\ disjoint a' b /\ modifies_2 a a' h0 h1))
+  (ensures  (live h0 b /\ live h1 b /\ equal h0 b h1 b))
+  [SMTPat (modifies_1 a h0 h1); SMTPat (live h0 b); SMTPat (disjoint a b)]
+let no_upd_lemma_2 #t #t' #t'' h0 h1 a a' b = ()
+
+(* val lemma_disjoint_1: #t:Type -> #t':Type -> a:buffer t -> b:buffer t' -> h0:mem -> h1:mem -> h2:mem ->  *)
+(*   Lemma (requires (live a h0 /\ fresh_frame h0 h1 /\ live h1  *)
