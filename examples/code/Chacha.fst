@@ -48,7 +48,7 @@ let op_Less_Less_Less (a:u32) (s:u32{v s <= 32}) =
 
 (* Chacha 20 code *)
 val quarter_round: m:uint32s{length m = 16} -> 
-  a:u32{v a < 16} -> b:u32{v b<16} -> c:u32{v c<16} -> d:u32{v d<16} -> ST unit 
+  a:u32{v a < 16} -> b:u32{v b<16} -> c:u32{v c<16} -> d:u32{v d<16} -> STL unit 
   (requires (fun h -> live h m)) 
   (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1))
 let quarter_round m a b c d =
@@ -70,7 +70,7 @@ let quarter_round m a b c d =
   upd m b (tmp <<< UInt32.uint_to_t 7)
  
 (* Chacha20 block function *)
-val column_round: m:uint32s{length m = 16} -> ST unit
+val column_round: m:uint32s{length m = 16} -> STL unit
     (requires (fun h -> live h m))
     (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1 ))
 let column_round m =
@@ -79,7 +79,7 @@ let column_round m =
   quarter_round m 2ul 6ul 10ul 14ul;
   quarter_round m 3ul 7ul 11ul 15ul
 
-val diagonal_round: m:uint32s{length m = 16} -> ST unit
+val diagonal_round: m:uint32s{length m = 16} -> STL unit
     (requires (fun h -> live h m))
     (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1 ))
 let diagonal_round m =
@@ -141,7 +141,7 @@ val xor_bytes: output:bytes -> in1:bytes -> in2:bytes{disjoint in1 in2 /\ disjoi
     /\ live h1 output /\ live h1 in1 /\ live h1 in2
     /\ modifies_1 output h0 h1
     (* /\ (forall (i:nat). i < v len ==> get h1 output i = (UInt8.logxor (get h0 in1 i) (get h0 in2 i))) *)
-   )) 
+   ))
 let rec xor_bytes output in1 in2 len =
   let h0 = HST.get() in
   if len =^ 0ul then ()
@@ -158,7 +158,7 @@ let rec xor_bytes output in1 in2 len =
       xor_bytes output in1 in2 i
     end
 
-#set-options "--lax" // TODO
+(* #set-options "--lax" // TODO *)
 
 val initialize_state: state:uint32s{length state = 16} -> 
   key:bytes{length key = 32 /\ disjoint state key} -> counter:u32 -> 
