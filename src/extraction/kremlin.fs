@@ -55,7 +55,10 @@ and expr =
   | EOp of op * width
   | ECast of expr * typ
 
-and op = | Add | AddW | Sub | SubW | Div | Mult | Mod | Or | And | Xor | ShiftL | ShiftR
+and op =
+  | Add | AddW | Sub | SubW | Div | Mult | Mod
+  | BOr | BAnd | BXor | BShiftL | BShiftR
+  | Eq
 
 and branches =
   list<branch>
@@ -65,6 +68,8 @@ and branch =
 
 and pattern =
   | PUnit
+  | PBool of bool
+  | PVar of binder
 
 and width =
   | UInt8
@@ -85,6 +90,7 @@ and binder = {
   name: ident;
   typ: typ;
   mut: bool;
+  mark: int;
 }
 
 and ident =
@@ -98,11 +104,12 @@ and typ =
   | TBuf of typ
   | TUnit
   | TAlias of ident
+  | TBool
 
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 1
+let current_version: version = 2
 
 type file = string * program
 type binary_format = version * list<file>
@@ -242,6 +249,8 @@ and translate_type env t: typ =
       failwith "todo: translate_type [MLTY_Fun]"
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.unit") ->
       TUnit
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.bool") ->
+      TBool
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt8.t") ->
       TInt UInt8
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt16.t") ->
@@ -271,7 +280,7 @@ and translate_binders env args =
   List.map (translate_binder env) args
 
 and translate_binder env ((name, _), typ) =
-  { name = name; typ = translate_type env typ; mut = false }
+  { name = name; typ = translate_type env typ; mut = false; mark = 0 }
 
 and translate_expr env e: expr =
   match e.expr with
@@ -306,14 +315,15 @@ and translate_expr env e: expr =
           typ, body
       in
       let is_mut = flavor = Mutable in
-      let binder = { name = name; typ = translate_type env typ; mut = is_mut } in
+      let binder = { name = name; typ = translate_type env typ; mut = is_mut; mark = 0 } in
       let body = translate_expr env body in
       let env = extend env name is_mut in
       let continuation = translate_expr env continuation in
       ELet (binder, body, continuation)
 
   | MLE_Match (expr, branches) ->
-      EMatch (translate_expr env expr, translate_branches env branches)
+      let t = expr.mlty in
+      EMatch (translate_expr env expr, translate_branches env t branches)
 
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var (v, _) } ])
     when (string_of_mlpath p = "FStar.HST.op_Bang" && is_mutable env v) ->
@@ -338,16 +348,20 @@ and translate_expr env e: expr =
       mk_op env (must (mk_width m)) Sub args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Subtraction_Percent_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) SubW args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Star_Hat") }, args) when is_machine_int m ->
+      mk_op env (must (mk_width m)) Mult args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Bar_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) Or args
+      mk_op env (must (mk_width m)) BOr args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Hat_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) Xor args
+      mk_op env (must (mk_width m)) BXor args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Amp_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) And args
+      mk_op env (must (mk_width m)) BAnd args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Greater_Greater_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) ShiftR args
+      mk_op env (must (mk_width m)) BShiftR args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Less_Less_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) ShiftL args
+      mk_op env (must (mk_width m)) BShiftL args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Equals_Hat") }, args) when is_machine_int m ->
+      mk_op env (must (mk_width m)) Eq args
 
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt8.uint_to_t") ->
       EConstant (UInt8, c)
@@ -420,25 +434,29 @@ and translate_expr env e: expr =
   | MLE_Try _ ->
       failwith "todo: translate_expr [MLE_Try]"
 
-and translate_branches env branches =
-  List.map (translate_branch env) branches
+and translate_branches env t branches =
+  List.map (translate_branch env t) branches
 
-and translate_branch env (pat, guard, expr) =
+and translate_branch env t (pat, guard, expr) =
   if guard = None then
-    translate_pat env pat, translate_expr env expr
+    let env, pat = translate_pat env t pat in
+    pat, translate_expr env expr
   else
     failwith "todo: translate_branch"
 
-and translate_pat env p: pattern =
+and translate_pat env t p =
   match p with
   | MLP_Const MLC_Unit ->
-      PUnit
+      env, PUnit
+  | MLP_Const (MLC_Bool b) ->
+      env, PBool b
+  | MLP_Var (name, _) ->
+      let env = extend env name false in
+      env, PVar ({ name = name; typ = translate_type env t; mut = false; mark = 0 })
   | MLP_Wild ->
       failwith "todo: translate_pat [MLP_Wild]"
   | MLP_Const _ ->
       failwith "todo: translate_pat [MLP_Const]"
-  | MLP_Var _ ->
-      failwith "todo: translate_pat [MLP_Var]"
   | MLP_CTor _ ->
       failwith "todo: translate_pat [MLP_CTor]"
   | MLP_Branch _ ->
