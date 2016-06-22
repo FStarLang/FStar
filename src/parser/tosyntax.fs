@@ -50,8 +50,8 @@ let trans_qual r = function
   | AST.New  ->          S.New
   | AST.Abstract ->      S.Abstract
   | AST.Opaque ->        FStar.TypeChecker.Errors.warn r "The 'opaque' qualifier is deprecated; use 'unfoldable', which is also the default"; S.Unfoldable 
-  | AST.Reflectable ->   S.Reflect
-  | AST.Reifiable ->     S.Reify
+  | AST.Reflectable ->   S.Reflectable
+  | AST.Reifiable ->     S.Reifiable
   | AST.DefaultEffect -> raise (Error("The 'default' qualifier on effects is no longer supported", r))
   
 let trans_pragma = function
@@ -1507,7 +1507,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
             univs       =[];
             binders     =binders;
             signature   =snd (sub ([], ed.signature));
-            ret_wp         =sub ed.ret_wp;
+            ret_wp      =sub ed.ret_wp;
             bind_wp     =sub ed.bind_wp;
             if_then_else=sub ed.if_then_else;
             ite_wp      =sub ed.ite_wp;
@@ -1561,6 +1561,9 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     desugar_effect
       env d quals eff_name eff_binders eff_kind eff_decls
       (fun mname qualifiers binders eff_k lookup ->
+        let rr =  qualifiers |> List.contains S.Reifiable
+               || qualifiers |> List.contains S.Reflectable in
+        let un_ts = [], Syntax.tun in
         Sig_new_effect({
           mname       = mname;
           qualifiers  = qualifiers;
@@ -1577,9 +1580,9 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           assume_p    = lookup "assume_p";
           null_wp     = lookup "null_wp";
           trivial     = lookup "trivial";
-          repr        = Syntax.tun;
-          bind_repr   = ([], Syntax.tun);
-          return_repr = ([], Syntax.tun);
+          repr        = if rr then snd <| lookup "repr" else S.tun;
+          bind_repr   = if rr then lookup "bind" else un_ts;
+          return_repr = if rr then lookup "return" else un_ts;
           actions     = [];
       }, d.drange))
 

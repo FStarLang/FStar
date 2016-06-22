@@ -3749,7 +3749,7 @@ in ([], t1)))))
 in (
 
 let _57_2287 = ed
-in (let _148_866 = (op ed.FStar_Syntax_Syntax.ret)
+in (let _148_866 = (op ed.FStar_Syntax_Syntax.ret_wp)
 in (let _148_865 = (op ed.FStar_Syntax_Syntax.bind_wp)
 in (let _148_864 = (op ed.FStar_Syntax_Syntax.if_then_else)
 in (let _148_863 = (op ed.FStar_Syntax_Syntax.ite_wp)
@@ -3759,7 +3759,7 @@ in (let _148_860 = (op ed.FStar_Syntax_Syntax.assert_p)
 in (let _148_859 = (op ed.FStar_Syntax_Syntax.assume_p)
 in (let _148_858 = (op ed.FStar_Syntax_Syntax.null_wp)
 in (let _148_857 = (op ed.FStar_Syntax_Syntax.trivial)
-in {FStar_Syntax_Syntax.qualifiers = _57_2287.FStar_Syntax_Syntax.qualifiers; FStar_Syntax_Syntax.mname = _57_2287.FStar_Syntax_Syntax.mname; FStar_Syntax_Syntax.univs = _57_2287.FStar_Syntax_Syntax.univs; FStar_Syntax_Syntax.binders = _57_2287.FStar_Syntax_Syntax.binders; FStar_Syntax_Syntax.signature = _57_2287.FStar_Syntax_Syntax.signature; FStar_Syntax_Syntax.ret = _148_866; FStar_Syntax_Syntax.bind_wp = _148_865; FStar_Syntax_Syntax.if_then_else = _148_864; FStar_Syntax_Syntax.ite_wp = _148_863; FStar_Syntax_Syntax.stronger = _148_862; FStar_Syntax_Syntax.close_wp = _148_861; FStar_Syntax_Syntax.assert_p = _148_860; FStar_Syntax_Syntax.assume_p = _148_859; FStar_Syntax_Syntax.null_wp = _148_858; FStar_Syntax_Syntax.trivial = _148_857})))))))))))))
+in {FStar_Syntax_Syntax.qualifiers = _57_2287.FStar_Syntax_Syntax.qualifiers; FStar_Syntax_Syntax.mname = _57_2287.FStar_Syntax_Syntax.mname; FStar_Syntax_Syntax.univs = _57_2287.FStar_Syntax_Syntax.univs; FStar_Syntax_Syntax.binders = _57_2287.FStar_Syntax_Syntax.binders; FStar_Syntax_Syntax.signature = _57_2287.FStar_Syntax_Syntax.signature; FStar_Syntax_Syntax.ret_wp = _148_866; FStar_Syntax_Syntax.bind_wp = _148_865; FStar_Syntax_Syntax.if_then_else = _148_864; FStar_Syntax_Syntax.ite_wp = _148_863; FStar_Syntax_Syntax.stronger = _148_862; FStar_Syntax_Syntax.close_wp = _148_861; FStar_Syntax_Syntax.assert_p = _148_860; FStar_Syntax_Syntax.assume_p = _148_859; FStar_Syntax_Syntax.null_wp = _148_858; FStar_Syntax_Syntax.trivial = _148_857; FStar_Syntax_Syntax.repr = _57_2287.FStar_Syntax_Syntax.repr; FStar_Syntax_Syntax.return_repr = _57_2287.FStar_Syntax_Syntax.return_repr; FStar_Syntax_Syntax.bind_repr = _57_2287.FStar_Syntax_Syntax.bind_repr; FStar_Syntax_Syntax.actions = _57_2287.FStar_Syntax_Syntax.actions})))))))))))))
 end)
 in (ed, a, wp))
 end)))
@@ -4516,7 +4516,7 @@ in (check "wp_trivial" _148_1222))
 in (
 
 let _57_2560 = ed
-in {FStar_Syntax_Syntax.qualifiers = _57_2560.FStar_Syntax_Syntax.qualifiers; FStar_Syntax_Syntax.mname = _57_2560.FStar_Syntax_Syntax.mname; FStar_Syntax_Syntax.univs = _57_2560.FStar_Syntax_Syntax.univs; FStar_Syntax_Syntax.binders = _57_2560.FStar_Syntax_Syntax.binders; FStar_Syntax_Syntax.signature = _57_2560.FStar_Syntax_Syntax.signature; FStar_Syntax_Syntax.ret = _57_2560.FStar_Syntax_Syntax.ret; FStar_Syntax_Syntax.bind_wp = _57_2560.FStar_Syntax_Syntax.bind_wp; FStar_Syntax_Syntax.if_then_else = ([], wp_if_then_else); FStar_Syntax_Syntax.ite_wp = _57_2560.FStar_Syntax_Syntax.ite_wp; FStar_Syntax_Syntax.stronger = _57_2560.FStar_Syntax_Syntax.stronger; FStar_Syntax_Syntax.close_wp = ([], wp_close); FStar_Syntax_Syntax.assert_p = ([], wp_assert); FStar_Syntax_Syntax.assume_p = ([], wp_assume); FStar_Syntax_Syntax.null_wp = _57_2560.FStar_Syntax_Syntax.null_wp; FStar_Syntax_Syntax.trivial = ([], wp_trivial)}))))))))))))))))))))))))))))))))))))))
+in {FStar_Syntax_Syntax.qualifiers = _57_2560.FStar_Syntax_Syntax.qualifiers; FStar_Syntax_Syntax.mname = _57_2560.FStar_Syntax_Syntax.mname; FStar_Syntax_Syntax.univs = _57_2560.FStar_Syntax_Syntax.univs; FStar_Syntax_Syntax.binders = _57_2560.FStar_Syntax_Syntax.binders; FStar_Syntax_Syntax.signature = _57_2560.FStar_Syntax_Syntax.signature; FStar_Syntax_Syntax.ret_wp = _57_2560.FStar_Syntax_Syntax.ret_wp; FStar_Syntax_Syntax.bind_wp = _57_2560.FStar_Syntax_Syntax.bind_wp; FStar_Syntax_Syntax.if_then_else = ([], wp_if_then_else); FStar_Syntax_Syntax.ite_wp = _57_2560.FStar_Syntax_Syntax.ite_wp; FStar_Syntax_Syntax.stronger = _57_2560.FStar_Syntax_Syntax.stronger; FStar_Syntax_Syntax.close_wp = ([], wp_close); FStar_Syntax_Syntax.assert_p = ([], wp_assert); FStar_Syntax_Syntax.assume_p = ([], wp_assume); FStar_Syntax_Syntax.null_wp = _57_2560.FStar_Syntax_Syntax.null_wp; FStar_Syntax_Syntax.trivial = ([], wp_trivial); FStar_Syntax_Syntax.repr = _57_2560.FStar_Syntax_Syntax.repr; FStar_Syntax_Syntax.return_repr = _57_2560.FStar_Syntax_Syntax.return_repr; FStar_Syntax_Syntax.bind_repr = _57_2560.FStar_Syntax_Syntax.bind_repr; FStar_Syntax_Syntax.actions = _57_2560.FStar_Syntax_Syntax.actions}))))))))))))))))))))))))))))))))))))))
 end))))))))
 
 
@@ -4543,7 +4543,7 @@ in (match (_57_2578) with
 let ed = (
 
 let _57_2579 = ed
-in {FStar_Syntax_Syntax.qualifiers = _57_2579.FStar_Syntax_Syntax.qualifiers; FStar_Syntax_Syntax.mname = _57_2579.FStar_Syntax_Syntax.mname; FStar_Syntax_Syntax.univs = _57_2579.FStar_Syntax_Syntax.univs; FStar_Syntax_Syntax.binders = binders; FStar_Syntax_Syntax.signature = signature; FStar_Syntax_Syntax.ret = _57_2579.FStar_Syntax_Syntax.ret; FStar_Syntax_Syntax.bind_wp = _57_2579.FStar_Syntax_Syntax.bind_wp; FStar_Syntax_Syntax.if_then_else = _57_2579.FStar_Syntax_Syntax.if_then_else; FStar_Syntax_Syntax.ite_wp = _57_2579.FStar_Syntax_Syntax.ite_wp; FStar_Syntax_Syntax.stronger = _57_2579.FStar_Syntax_Syntax.stronger; FStar_Syntax_Syntax.close_wp = _57_2579.FStar_Syntax_Syntax.close_wp; FStar_Syntax_Syntax.assert_p = _57_2579.FStar_Syntax_Syntax.assert_p; FStar_Syntax_Syntax.assume_p = _57_2579.FStar_Syntax_Syntax.assume_p; FStar_Syntax_Syntax.null_wp = _57_2579.FStar_Syntax_Syntax.null_wp; FStar_Syntax_Syntax.trivial = _57_2579.FStar_Syntax_Syntax.trivial})
+in {FStar_Syntax_Syntax.qualifiers = _57_2579.FStar_Syntax_Syntax.qualifiers; FStar_Syntax_Syntax.mname = _57_2579.FStar_Syntax_Syntax.mname; FStar_Syntax_Syntax.univs = _57_2579.FStar_Syntax_Syntax.univs; FStar_Syntax_Syntax.binders = binders; FStar_Syntax_Syntax.signature = signature; FStar_Syntax_Syntax.ret_wp = _57_2579.FStar_Syntax_Syntax.ret_wp; FStar_Syntax_Syntax.bind_wp = _57_2579.FStar_Syntax_Syntax.bind_wp; FStar_Syntax_Syntax.if_then_else = _57_2579.FStar_Syntax_Syntax.if_then_else; FStar_Syntax_Syntax.ite_wp = _57_2579.FStar_Syntax_Syntax.ite_wp; FStar_Syntax_Syntax.stronger = _57_2579.FStar_Syntax_Syntax.stronger; FStar_Syntax_Syntax.close_wp = _57_2579.FStar_Syntax_Syntax.close_wp; FStar_Syntax_Syntax.assert_p = _57_2579.FStar_Syntax_Syntax.assert_p; FStar_Syntax_Syntax.assume_p = _57_2579.FStar_Syntax_Syntax.assume_p; FStar_Syntax_Syntax.null_wp = _57_2579.FStar_Syntax_Syntax.null_wp; FStar_Syntax_Syntax.trivial = _57_2579.FStar_Syntax_Syntax.trivial; FStar_Syntax_Syntax.repr = _57_2579.FStar_Syntax_Syntax.repr; FStar_Syntax_Syntax.return_repr = _57_2579.FStar_Syntax_Syntax.return_repr; FStar_Syntax_Syntax.bind_repr = _57_2579.FStar_Syntax_Syntax.bind_repr; FStar_Syntax_Syntax.actions = _57_2579.FStar_Syntax_Syntax.actions})
 in (
 
 let _57_2585 = (open_effect_decl env ed)
@@ -4601,7 +4601,7 @@ in (_148_1242)::[])
 in (_148_1244)::_148_1243))
 in (let _148_1245 = (FStar_Syntax_Syntax.mk_GTotal wp_a)
 in (FStar_Syntax_Util.arrow _148_1246 _148_1245)))
-in (check_and_gen' env ed.FStar_Syntax_Syntax.ret expected_k))
+in (check_and_gen' env ed.FStar_Syntax_Syntax.ret_wp expected_k))
 in (
 
 let bind_wp = (
@@ -4813,7 +4813,7 @@ in (let _148_1335 = (close 0 assert_p)
 in (let _148_1334 = (close 0 assume_p)
 in (let _148_1333 = (close 0 null_wp)
 in (let _148_1332 = (close 0 trivial_wp)
-in {FStar_Syntax_Syntax.qualifiers = _57_2666.FStar_Syntax_Syntax.qualifiers; FStar_Syntax_Syntax.mname = _57_2666.FStar_Syntax_Syntax.mname; FStar_Syntax_Syntax.univs = univs; FStar_Syntax_Syntax.binders = binders; FStar_Syntax_Syntax.signature = signature; FStar_Syntax_Syntax.ret = _148_1341; FStar_Syntax_Syntax.bind_wp = _148_1340; FStar_Syntax_Syntax.if_then_else = _148_1339; FStar_Syntax_Syntax.ite_wp = _148_1338; FStar_Syntax_Syntax.stronger = _148_1337; FStar_Syntax_Syntax.close_wp = _148_1336; FStar_Syntax_Syntax.assert_p = _148_1335; FStar_Syntax_Syntax.assume_p = _148_1334; FStar_Syntax_Syntax.null_wp = _148_1333; FStar_Syntax_Syntax.trivial = _148_1332})))))))))))
+in {FStar_Syntax_Syntax.qualifiers = _57_2666.FStar_Syntax_Syntax.qualifiers; FStar_Syntax_Syntax.mname = _57_2666.FStar_Syntax_Syntax.mname; FStar_Syntax_Syntax.univs = univs; FStar_Syntax_Syntax.binders = binders; FStar_Syntax_Syntax.signature = signature; FStar_Syntax_Syntax.ret_wp = _148_1341; FStar_Syntax_Syntax.bind_wp = _148_1340; FStar_Syntax_Syntax.if_then_else = _148_1339; FStar_Syntax_Syntax.ite_wp = _148_1338; FStar_Syntax_Syntax.stronger = _148_1337; FStar_Syntax_Syntax.close_wp = _148_1336; FStar_Syntax_Syntax.assert_p = _148_1335; FStar_Syntax_Syntax.assume_p = _148_1334; FStar_Syntax_Syntax.null_wp = _148_1333; FStar_Syntax_Syntax.trivial = _148_1332; FStar_Syntax_Syntax.repr = _57_2666.FStar_Syntax_Syntax.repr; FStar_Syntax_Syntax.return_repr = _57_2666.FStar_Syntax_Syntax.return_repr; FStar_Syntax_Syntax.bind_repr = _57_2666.FStar_Syntax_Syntax.bind_repr; FStar_Syntax_Syntax.actions = _57_2666.FStar_Syntax_Syntax.actions})))))))))))
 in (
 
 let _57_2669 = if (FStar_TypeChecker_Env.debug env FStar_Options.Low) then begin

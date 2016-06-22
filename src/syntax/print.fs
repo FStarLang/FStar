@@ -30,8 +30,8 @@ open FStar.Const
 
 let lid_to_string (l:lid) = l.str
 
-//let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
-let fv_to_string fv = lid_to_string fv.fv_name.v
+let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
+//let fv_to_string fv = lid_to_string fv.fv_name.v
 
 let bv_to_string bv = bv.ppname.idText ^ "#" ^ string_of_int bv.index
    
@@ -199,8 +199,8 @@ let qual_to_string = function
   | ExceptionConstructor  -> "ExceptionConstructor"
   | HasMaskedEffect       -> "HasMaskedEffect"
   | Effect                -> "Effect"
-  | Reify                 -> "reify"
-  | Reflect               -> "reflect"
+  | Reifiable                 -> "reify"
+  | Reflectable               -> "reflect"
 let quals_to_string quals = match quals with 
     | [] -> ""
     | _ -> (quals |> List.map qual_to_string |> String.concat " ") ^ " "

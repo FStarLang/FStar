@@ -2149,6 +2149,59 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                 (S.mk_GTotal t) in
     check_and_gen' env ed.trivial expected_k in
 
+  let repr =
+      if ed.qualifiers |> List.contains Reifiable
+      || ed.qualifiers |> List.contains Reflectable
+      then begin
+        let repr = 
+            let t, _ = Util.type_u () in
+            let expected_k = Util.arrow [S.mk_binder a;
+                                         S.null_binder wp_a]
+                                         (S.mk_GTotal t) in
+            printfn "About to check repr=%s\n" (Print.term_to_string ed.repr);
+            let univs, repr = check_and_gen' env ([], ed.repr) expected_k in
+            match univs with
+            | [] -> repr
+            | _ -> raise (Error("Unexpected universe-polymorphic effect representation", repr.pos)) in
+
+        let mk_repr a wp = 
+            mk (Tm_app(repr, [as_arg (S.bv_to_name a); as_arg wp])) None Range.dummyRange in
+
+        let bind_repr = 
+            let r = S.new_bv None t_range in
+            let b, wp_b = get_effect_signature () in
+            let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
+            let wp_f = S.new_bv None wp_a in
+            let wp_g = S.new_bv None a_wp_b in
+            let xb = S.new_bv None (S.bv_to_name b) in
+            let x_wp_g = mk_Tm_app (S.bv_to_name wp_g) [as_arg <| S.bv_to_name xb] None Range.dummyRange in
+            let res = 
+                let wp = mk_Tm_app (Env.inst_tscheme bind_wp |> snd)
+                                   (List.map as_arg [S.bv_to_name r; S.bv_to_name a; 
+                                                     S.bv_to_name b; S.bv_to_name wp_f; 
+                                                     S.bv_to_name wp_g])
+                                   None Range.dummyRange in
+                mk_repr a wp in
+
+            let expected_k = Util.arrow [S.mk_binder r;
+                                         S.mk_binder a; S.mk_binder b;
+                                         S.mk_binder wp_f;
+                                         S.mk_binder wp_g;
+                                         S.null_binder (mk_repr a (S.bv_to_name wp_f));
+                                         S.null_binder (Util.arrow [S.mk_binder xb] (S.mk_Total x_wp_g))]
+                                        (S.mk_Total res) in
+            printfn "About to check bind=%s, at type %s\n" 
+                    (Print.term_to_string (snd ed.bind_repr))
+                    (Print.term_to_string expected_k);
+            let env = Env.set_range env (snd (ed.bind_repr)).pos in
+            check_and_gen' env ed.bind_repr expected_k in
+
+        let return_repr = ed.return_repr in
+        
+        repr, bind_repr, return_repr
+      end 
+      else ed.repr, ed.bind_repr, ed.return_repr in
+
   //generalize and close
   let t = U.arrow ed.binders (S.mk_Total ed.signature) in
   let (univs, t) = TcUtil.generalize_universes env0 t in

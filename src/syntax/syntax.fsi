@@ -210,9 +210,9 @@ type qualifier =
   | Abstract                               //a symbol whose definition is only visible within the defining module
   | TotalEffect                            //an effect that forbis non-termination
   | Logic                                  //a symbol whose intended usage is in the refinement logic
+  | Reifiable
+  | Reflectable
   //the remaining qualifiers are internal: the programmer cannot write them
-  | Reify
-  | Reflect
   | Discriminator of lident                //discriminator for a datacon l 
   | Projector of lident * ident            //projector for datacon l's argument x
   | RecordType of list<fieldname>          //record type whose unmangled field names are ...

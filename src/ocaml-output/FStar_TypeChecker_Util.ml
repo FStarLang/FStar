@@ -959,7 +959,7 @@ in (
 
 let wp = (let _147_316 = (let _147_315 = (let _147_310 = (let _147_309 = (env.FStar_TypeChecker_Env.universe_of env t)
 in (_147_309)::[])
-in (FStar_TypeChecker_Env.inst_effect_fun_with _147_310 env m m.FStar_Syntax_Syntax.ret))
+in (FStar_TypeChecker_Env.inst_effect_fun_with _147_310 env m m.FStar_Syntax_Syntax.ret_wp))
 in (let _147_314 = (let _147_313 = (FStar_Syntax_Syntax.as_arg t)
 in (let _147_312 = (let _147_311 = (FStar_Syntax_Syntax.as_arg v)
 in (_147_311)::[])
@@ -1431,7 +1431,7 @@ let us = (let _147_484 = (env.FStar_TypeChecker_Env.universe_of env res_t)
 in (_147_484)::[])
 in (
 
-let yret = (let _147_489 = (FStar_TypeChecker_Env.inst_effect_fun_with us env md_pure md_pure.FStar_Syntax_Syntax.ret)
+let yret = (let _147_489 = (FStar_TypeChecker_Env.inst_effect_fun_with us env md_pure md_pure.FStar_Syntax_Syntax.ret_wp)
 in (let _147_488 = (let _147_487 = (FStar_Syntax_Syntax.as_arg res_t)
 in (let _147_486 = (let _147_485 = (FStar_Syntax_Syntax.as_arg yexp)
 in (_147_485)::[])
@@ -1901,7 +1901,7 @@ let us = (let _147_696 = (env.FStar_TypeChecker_Env.universe_of env t)
 in (_147_696)::[])
 in (
 
-let wp = (let _147_701 = (FStar_TypeChecker_Env.inst_effect_fun_with us env md md.FStar_Syntax_Syntax.ret)
+let wp = (let _147_701 = (FStar_TypeChecker_Env.inst_effect_fun_with us env md md.FStar_Syntax_Syntax.ret_wp)
 in (let _147_700 = (let _147_699 = (FStar_Syntax_Syntax.as_arg t)
 in (let _147_698 = (let _147_697 = (FStar_Syntax_Syntax.as_arg xexp)
 in (_147_697)::[])

@@ -134,7 +134,6 @@ type compatibilityMode =
 
 let keywords =
   [ ALWAYS, "abstract"   ,ABSTRACT;
-    ALWAYS, "actions"    ,ACTIONS;
     ALWAYS, "and"        ,AND;
     ALWAYS, "as"         ,AS;
     ALWAYS, "assert"     ,ASSERT;
@@ -142,6 +141,7 @@ let keywords =
     ALWAYS, "begin"      ,BEGIN;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
+    ALWAYS, "effect_actions",ACTIONS;
     ALWAYS, "else"       ,ELSE;
     ALWAYS, "end"        ,END;
     ALWAYS, "ensures"    ,ENSURES;
