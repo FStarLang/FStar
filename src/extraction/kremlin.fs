@@ -50,7 +50,7 @@ and expr =
   | EBufCreate of expr * expr
   | EBufRead of expr * expr
   | EBufWrite of expr * expr * expr
-  | EBufSub of expr * expr * expr
+  | EBufSub of expr * expr
   | EMatch of expr * branches
   | EOp of op * width
   | ECast of expr * typ
