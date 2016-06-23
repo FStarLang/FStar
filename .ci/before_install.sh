@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo -e "\e[31m=== Running $0 ===\e[0m"
+
 set -e
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
