@@ -230,6 +230,13 @@ type sub_eff = {
   target:lident;
   lift  :tscheme;
  }
+
+type action = {
+    action_name:lident;
+    action_univs:univ_names;
+    action_defn:term;
+    action_typ: typ;
+}
 type eff_decl = {
     qualifiers  :list<qualifier>;
     mname       :lident;
@@ -253,7 +260,7 @@ type eff_decl = {
     return_repr :tscheme;
     bind_repr   :tscheme;
     //actions for the effect
-    actions     :list<(lident * tscheme)>
+    actions     :list<action>
 }
 and sigelt =
   | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t 

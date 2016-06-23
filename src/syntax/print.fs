@@ -381,7 +381,15 @@ and formula_to_string phi = term_to_string phi
 let tscheme_to_string (us, t) = Util.format2 "<%s> %s" (univ_names_to_string us) (term_to_string t)
 
 let eff_decl_to_string ed = 
-    Util.format "new_effect { %s<%s> %s : %s \n\t\
+    let actions_to_string actions =
+        actions |> List.map (fun a -> 
+          Util.format4 "%s<%s> : %s = %s"
+            (sli a.action_name)
+            (univ_names_to_string a.action_univs)
+            (term_to_string a.action_typ)
+            (term_to_string a.action_defn))
+        |> String.concat ",\n\t" in
+    Util.format "new_effect { %s<%s> %s : %s \n  \
         ret         = %s\n\
       ; bind_wp     = %s\n\
       ; if_then_else= %s\n\
@@ -391,7 +399,11 @@ let eff_decl_to_string ed =
       ; assert_p    = %s\n\
       ; assume_p    = %s\n\
       ; null_wp     = %s\n\
-      ; trivial     = %s}\n" 
+      ; trivial     = %s\n\
+      ; repr        = %s\n\
+      ; bind_repr   = %s\n\
+      ; return_repr = %s\n\
+      ; actions     = \n\t%s\n}\n" 
         [lid_to_string ed.mname;
          univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
@@ -405,7 +417,11 @@ let eff_decl_to_string ed =
          tscheme_to_string ed.assert_p;
          tscheme_to_string ed.assume_p;
          tscheme_to_string ed.null_wp;
-         tscheme_to_string ed.trivial]
+         tscheme_to_string ed.trivial;
+         term_to_string ed.repr;
+         tscheme_to_string ed.bind_repr;
+         tscheme_to_string ed.return_repr;
+         actions_to_string ed.actions]
 
 let rec sigelt_to_string x = match x with
   | Sig_pragma(ResetOptions None, _) -> "#reset-options"

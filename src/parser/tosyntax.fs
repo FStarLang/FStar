@@ -1385,9 +1385,13 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
         env, List.hd ses::out) (env, []) in
     let actions = actions |> List.collect (fun d -> match d.d with 
         | Tycon(_, [TyconAbbrev(name, _, _, defn)]) -> 
-          let defn = [], desugar_term env defn in 
-          let name = Env.qualify env name in 
-          [(name, defn)]
+          let a = { 
+            action_name=Env.qualify env name;
+            action_univs=[];
+            action_defn=desugar_term env defn;
+            action_typ=S.tun
+          } in
+          [a]
         | _ -> []) in
     let binders = Subst.close_binders binders in
     let eff_k = Subst.close binders eff_k in

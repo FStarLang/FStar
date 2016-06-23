@@ -2150,8 +2150,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     check_and_gen' env ed.trivial expected_k in
 
   let repr, bind_repr, return_repr, actions =
-      if ed.qualifiers |> List.contains Reifiable
-      || ed.qualifiers |> List.contains Reflectable
+      if (ed.qualifiers |> List.contains Reifiable
+          || ed.qualifiers |> List.contains Reflectable)
       then begin
         let repr = 
             let t, _ = Util.type_u () in
@@ -2159,16 +2159,18 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                          S.null_binder wp_a]
                                          (S.mk_GTotal t) in
             printfn "About to check repr=%s\n" (Print.term_to_string ed.repr);
-            let univs, repr = check_and_gen' env ([], ed.repr) expected_k in
-            match univs with
-            | [] -> repr
-            | _ -> raise (Error("Unexpected universe-polymorphic effect representation", repr.pos)) in
+            tc_check_trivial_guard env ed.repr expected_k in
 
         let mk_repr' t wp =
-            mk (Tm_app(repr, [as_arg t; as_arg wp])) None Range.dummyRange in
+            mk (Tm_app(Util.un_uinst repr, [as_arg t; as_arg wp])) None Range.dummyRange in
 
         let mk_repr a wp = 
             mk_repr' (S.bv_to_name a) wp in
+
+        let destruct_repr t = 
+            match (SS.compress t).n with 
+            | Tm_app(_, [(t, _); (wp, _)]) -> t, wp
+            | _ -> failwith "Unexpected repr type" in
 
         let bind_repr = 
             let r = S.gen_bv "r" None t_range in
@@ -2194,6 +2196,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                          S.null_binder (mk_repr a (S.bv_to_name wp_f));
                                          S.null_binder (Util.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))]
                                         (S.mk_Total res) in
+            let expected_k, _, _ = 
+                tc_tot_or_gtot_term env expected_k in
             printfn "About to check bind=%s, at type %s\n" 
                     (Print.term_to_string (snd ed.bind_repr))
                     (Print.term_to_string expected_k);
@@ -2209,7 +2213,9 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                 mk_repr a wp in
             let expected_k = Util.arrow [S.mk_binder a;
                                          S.mk_binder x_a]
-                                    (S.mk_Total res) in
+                                       (S.mk_Total res) in
+            let expected_k, _, _ = 
+                tc_tot_or_gtot_term env expected_k in
             printfn "About to check return_repr=%s, at type %s\n" 
                     (Print.term_to_string (snd ed.return_repr))
                     (Print.term_to_string expected_k);
@@ -2220,22 +2226,43 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
             | _ -> raise (Error("Unexpected universe-polymorphic return for effect", repr.pos)) in
 
       let actions = 
-        let check_action (lid, (_, a)) = 
-            let action, c, g_a = 
-                tc_tot_or_gtot_term env a in
-            printfn "Inferred action %s has type %s\n" (Print.term_to_string a) (Print.term_to_string c.res_typ);
+        let check_action act = 
+            let act_defn, c, g_a = 
+                tc_tot_or_gtot_term env act.action_defn in
+            printfn "Inferred action %s has type %s\n" (Print.term_to_string act_defn) (Print.term_to_string c.res_typ);
             let expected_k, g_k = 
-                let x = S.gen_bv "x" None S.tun in
-                let res = mk_repr' S.tun S.tun in
-                let k = Util.arrow [S.mk_binder x] (S.mk_Total res) in
-                let k, _, g = tc_tot_or_gtot_term env k in
-                k, g in
+                match (SS.compress c.res_typ).n with 
+                | Tm_arrow(bs, c) -> 
+                  let bs, _ = SS.open_comp bs c in
+                  let res = mk_repr' S.tun S.tun in
+                  let k = Util.arrow bs (S.mk_Total res) in
+                  let k, _, g = tc_tot_or_gtot_term env k in
+                  k, g
+                | _ -> raise (Error("Actions must have function types", act_defn.pos)) in
+            printfn "Checking against expected type %s\n" (Print.term_to_string expected_k);
             let g = Rel.teq env c.res_typ expected_k in
             Rel.force_trivial_guard env (Rel.conj_guard g_a (Rel.conj_guard g_k g));
+            let act_ty = match (SS.compress expected_k).n with 
+                | Tm_arrow(bs, c) -> 
+                  let bs, c = SS.open_comp bs c in
+                  let a, wp = destruct_repr (Util.comp_result c) in
+                  let c = {
+                    effect_name = ed.mname;
+                    result_typ = a;
+                    effect_args = [as_arg wp];
+                    flags = [] 
+                  } in
+                  Util.arrow bs (S.mk_Comp c)
+                | _ -> failwith "" in
             printfn "Checked action %s against type %s\n" 
-                    (Print.term_to_string a) 
-                    (Print.term_to_string (N.normalize [N.Beta] env expected_k));
-            (lid, ([], action)) in
+                    (Print.term_to_string act_defn) 
+                    (Print.term_to_string (N.normalize [N.Beta] env act_ty));
+            let univs, act_defn = TcUtil.generalize_universes env act_defn in
+            let act_ty = N.normalize [N.Beta] env act_ty in
+            {act with 
+                action_univs=univs;
+                action_defn=act_defn;
+                action_typ =act_ty } in
         ed.actions |> List.map check_action in
       repr, bind_repr, return_repr, actions
       end 
@@ -2252,6 +2279,14 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
     if n >= 0 then assert (List.length (fst ts) = n);
     ts in
+  let close_action act = 
+    let univs, defn = close -1 (act.action_univs, act.action_defn) in
+    let univs', typ = close -1 (act.action_univs, act.action_typ) in
+    assert (List.length univs = List.length univs');
+    { act with 
+        action_univs=univs;
+        action_defn=defn;
+        action_typ=typ; } in
   let ed = { ed with
       univs       = univs
     ; binders     = binders
@@ -2266,12 +2301,13 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     ; assume_p    = close 0 assume_p
     ; null_wp     = close 0 null_wp
     ; trivial     = close 0 trivial_wp
-    ; repr        = repr
+    ; repr        = (snd (close 0 ([], repr)))
     ; return_repr = close 0 return_repr
     ; bind_repr   = close 1 bind_repr
-    ; actions     = List.map (fun (l, t) -> l, close -1 t) actions} in
+    ; actions     = List.map close_action actions} in
 
   if Env.debug env Options.Low
+  || Env.debug env <| Options.Other "EffDecl"
   then Util.print_string (Print.eff_decl_to_string ed);
   ed
 
