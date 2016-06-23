@@ -9,11 +9,13 @@ matrix:
       dist: trusty
       sudo: required
 
-  allow_failures:
     - env: OSX=10.11
       os: osx
       osx_image: xcode7.3
       rvm: system
+
+  allow_failures:
+    - os: osx
 
 before_install:
   - ./.ci/before_install.sh
