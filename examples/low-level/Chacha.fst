@@ -106,8 +106,8 @@ let uint32_of_bytes (b:bytes{length b >= 4}) =
   assume (v r = UInt8.v b0 * pow2 8 * UInt8.v b1  + pow2 16 * UInt8.v b2 + pow2 24 * UInt8.v b3);
   r
 
-let op_Hat_Greater_Greater = op_Greater_Greater_Hat
-let op_Hat_Star = op_Star_Hat
+let op_Hat_Greater_Greater a b = op_Greater_Greater_Hat a b
+let op_Hat_Star a b = op_Star_Hat a b
 
 #reset-options "--z3timeout 20"
 
@@ -158,7 +158,8 @@ let rec xor_bytes output in1 in2 len =
       xor_bytes output in1 in2 i
     end
 
-(* #set-options "--lax" // TODO *)
+// TODO 
+(* #set-options "--lax" *)
 
 val initialize_state: state:uint32s{length state = 16} -> 
   key:bytes{length key = 32 /\ disjoint state key} -> counter:u32 -> 
@@ -167,10 +168,10 @@ val initialize_state: state:uint32s{length state = 16} ->
   (ensures (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let initialize_state state key counter nonce =
   (* Constant part *)
-  upd state 0ul (of_string "0x61707865");
-  upd state 1ul (of_string "0x3320646e");
-  upd state 2ul (of_string "0x79622d32");
-  upd state 3ul (of_string "0x6b206574");
+  upd state 0ul 0x61707865ul;
+  upd state 1ul 0x3320646eul;
+  upd state 2ul 0x79622d32ul;
+  upd state 3ul 0x6b206574ul;
   (* Key part *)
   let k0 = sub key 0ul  4ul in 
   let k1 = sub key 4ul  4ul in 
@@ -326,7 +327,7 @@ val chacha20_encrypt_loop:
     (ensures (fun h0 _ h1 -> live h1 ciphertext /\ live h1 state /\ modifies_2 ciphertext state h0 h1 ))
 let rec chacha20_encrypt_loop state key counter nonce plaintext ciphertext j max =
   let h0 = HST.get() in
-  if j = max then ()
+  if j =^ max then ()
   else 
     begin
       (* Generate new state for block *)
@@ -369,8 +370,8 @@ let rec chacha20_encrypt_loop state key counter nonce plaintext ciphertext j max
 	(** End lemmas **)
     end
 
-let op_Hat_Slash = op_Slash_Hat
-let op_Hat_Percent = op_Percent_Hat
+let op_Hat_Slash a b = op_Slash_Hat a b
+let op_Hat_Percent a b = op_Percent_Hat a b
 
 val chacha20_encrypt: 
   ciphertext:bytes -> key:bytes{length key = 32 /\ disjoint ciphertext key} -> counter:u32 -> 

@@ -34,6 +34,7 @@ type program =
 and decl =
   | DFunction of typ * ident * list<binder> * expr
   | DTypeAlias of ident * typ
+  | DGlobal of ident * typ * expr
 
 and expr =
   | EBound of var
@@ -108,6 +109,8 @@ and typ =
   | TUnit
   | TAlias of ident
   | TBool
+  | TAny
+  | TArrow of typ * typ
 
 (** Versioned binary writing/reading of ASTs *)
 
@@ -220,11 +223,25 @@ and translate_decl env d: option<decl> =
       let body = translate_expr env body in
       Some (DFunction (t, name, binders, body))
 
-  | MLM_Let _ ->
+  | MLM_Let (flavor, [ {
+      mllb_name = name, _;
+      mllb_tysc = Some ([], t);
+      mllb_def = expr
+    } ]) ->
+      assert (flavor <> Mutable);
+      let t = translate_type env t in
+      let expr = translate_expr env expr in
+      Some (DGlobal (name, t, expr))
+
+  | MLM_Let (_, { mllb_name = name, _ } :: _) ->
       (* Things we currently do not translate:
        * - polymorphic functions (lemmas do count, sadly)
        *)
-      failwith "todo: translate_decl [MLM_Let]"
+      Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
+      None
+
+  | MLM_Let _ ->
+      failwith "impossible"
 
   | MLM_Loc _ ->
       None
@@ -248,8 +265,8 @@ and translate_type env t: typ =
       TUnit
   | MLTY_Var _ ->
       failwith "todo: translate_type [MLTY_Var]"
-  | MLTY_Fun _ ->
-      failwith "todo: translate_type [MLTY_Fun]"
+  | MLTY_Fun (t1, _, t2) ->
+      TArrow (translate_type env t1, translate_type env t2)
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.unit") ->
       TUnit
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.bool") ->
@@ -272,6 +289,9 @@ and translate_type env t: typ =
       TInt Int64
   | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Buffer.buffer") ->
       TBuf (translate_type env arg)
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.HyperStack.mem") ->
+      // HACK ALERT HACK ALERT we shouldn't even be extracting this!
+      TAny
   | MLTY_Named ([], ([ module_name ], type_name)) when (module_name = env.module_name) ->
       TAlias type_name
   | MLTY_Named (_, p) ->
@@ -296,8 +316,8 @@ and translate_expr env e: expr =
   | MLE_Var (name, _) ->
       EBound (find env name)
 
-  | MLE_Name _ ->
-      failwith "todo: translate_expr [MLE_Name]"
+  | MLE_Name n ->
+      EQualified n
 
   | MLE_Let ((flavor, [{
       mllb_name = name, _;
@@ -350,6 +370,9 @@ and translate_expr env e: expr =
       EPopFrame
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3; e4; e5 ]) when (string_of_mlpath p = "FStar.Buffer.blit") ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
+  | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HST.get") ->
+      // HACK ALERT HACK ALERT we shouldn't even be extracting this!
+      EConstant (UInt8, "0")
 
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Plus_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) Add args
@@ -361,6 +384,10 @@ and translate_expr env e: expr =
       mk_op env (must (mk_width m)) SubW args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Star_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) Mult args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Slash_Hat") }, args) when is_machine_int m ->
+      mk_op env (must (mk_width m)) Div args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Percent_Hat") }, args) when is_machine_int m ->
+      mk_op env (must (mk_width m)) Mod args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "logor") }, args)
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Bar_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) BOr args
