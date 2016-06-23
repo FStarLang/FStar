@@ -51,9 +51,12 @@ and expr =
   | EBufRead of expr * expr
   | EBufWrite of expr * expr * expr
   | EBufSub of expr * expr
+  | EBufBlit of expr * expr * expr * expr * expr
   | EMatch of expr * branches
   | EOp of op * width
   | ECast of expr * typ
+  | EPushFrame
+  | EPopFrame
 
 and op =
   | Add | AddW | Sub | SubW | Div | Mult | Mod
@@ -109,7 +112,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 2
+let current_version: version = 3
 
 type file = string * program
 type binary_format = version * list<file>
@@ -341,6 +344,12 @@ and translate_expr env e: expr =
       EBufSub (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.upd") ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
+  | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HST.push_frame") ->
+      EPushFrame
+  | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HST.pop_frame") ->
+      EPopFrame
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3; e4; e5 ]) when (string_of_mlpath p = "FStar.Buffer.blit") ->
+      EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
 
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Plus_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) Add args
