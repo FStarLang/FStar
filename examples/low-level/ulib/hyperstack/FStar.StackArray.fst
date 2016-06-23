@@ -15,6 +15,8 @@ let u32 = UInt32.t
 type bounded_seq (t:Type) = s:seq t{length s <= UInt.max_int n}
 type array (t:Type) = stackref (bounded_seq t)//NS: TODO if I change this to stacked, then I get unification failures elsewhere. seems like a bug
 
+let as_stackref (#t:Type) (a:array t) : GTot (stackref (bounded_seq t)) = a
+
 (* Commented for as long as not specified *)
 // assume val op_At_Bar: #a:Type -> array a -> array a -> St (array a)
 

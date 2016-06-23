@@ -1,6 +1,6 @@
-module FStar.UInt64
+module FStar.UInt128
 
-let n = 64
+let n = 128
 
 open FStar.UInt
 open FStar.Mul
@@ -72,6 +72,11 @@ val mul_mod: a:t -> b:t -> Pure t
 let mul_mod a b =
   Mk (mul_mod (v a) (v b))
 
+val mul_wide: a:UInt64.t -> b:UInt64.t -> Pure t
+  (requires True)
+  (ensures (fun c -> v c = UInt64.v a * UInt64.v b))
+let mul_wide a b = Mk ((UInt64.v a) * (UInt64.v b))
+
 (* Division primitives *)
 val div: a:t -> b:t{v b <> 0} -> Pure t
   (requires (size (v a / v b) n))
@@ -121,12 +126,8 @@ let shift_left a s = Mk (shift_left (v a) (UInt32.v s))
 
 (* Comparison operators *)
 let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
-assume val eq_mask: a:t -> b:t -> Tot (r:t{(v a = v b ==> v r = max_int n)
-					    /\ (v a <> v b ==> v r = 0)})
 let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
 let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
-assume val gte_mask: a:t -> b:t -> Tot (r:t{(v a >= v b ==> v r = max_int n)
-					    /\ (v a < v b ==> v r = 0)})
 let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
 let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 

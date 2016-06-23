@@ -5,6 +5,7 @@ module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 module U63 = FStar.UInt63
 module U64 = FStar.UInt64
+module U128 = FStar.UInt128
 module I8  = FStar.Int8
 module I16 = FStar.Int16
 module I32 = FStar.Int32
@@ -130,7 +131,6 @@ assume val uint64_to_int32: a:U64.t -> Tot (b:I32.t{I32.v b = (U64.v a @% pow2 3
 assume val uint64_to_int16: a:U64.t -> Tot (b:I16.t{I16.v b = (U64.v a @% pow2 16)})
 assume val uint64_to_int8 : a:U64.t -> Tot (b:I8.t {I8.v b  = (U64.v a @% pow2 8)})
 
-(** Ints to uints *)
 assume val int8_to_uint64: a:I8.t -> Tot (b:U64.t{U64.v b = I8.v a % pow2 64})
 assume val int8_to_uint63: a:I8.t -> Tot (b:U63.t{U63.v b = I8.v a % pow2 63})
 assume val int8_to_uint32: a:I8.t -> Tot (b:U32.t{U32.v b = I8.v a % pow2 32})
@@ -174,3 +174,6 @@ assume val int64_to_uint63: a:I64.t -> Tot (b:U63.t{U63.v b = I64.v a % pow2 63}
 assume val int64_to_uint32: a:I64.t -> Tot (b:U32.t{U32.v b = I64.v a % pow2 32})
 assume val int64_to_uint16: a:I64.t -> Tot (b:U16.t{U16.v b = I64.v a % pow2 16})
 assume val int64_to_uint8 : a:I64.t -> Tot (b:U8.t {U8.v b  = I64.v a % pow2 8})
+
+assume val uint128_to_uint64: a:U128.t -> Tot (b:U64.t{U64.v b = U128.v a % pow2 64})
+assume val uint64_to_uint128: a:U64.t -> Tot (b:U128.t{U128.v b = U64.v a})
