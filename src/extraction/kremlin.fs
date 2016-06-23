@@ -337,6 +337,8 @@ and translate_expr env e: expr =
       EBufRead (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.create") ->
       EBufCreate (translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
+      EBufSub (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.upd") ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
 
@@ -350,10 +352,13 @@ and translate_expr env e: expr =
       mk_op env (must (mk_width m)) SubW args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Star_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) Mult args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "logor") }, args)
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Bar_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) BOr args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "logxor") }, args)
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Hat_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) BXor args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "logand") }, args)
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Amp_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) BAnd args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Greater_Greater_Hat") }, args) when is_machine_int m ->
