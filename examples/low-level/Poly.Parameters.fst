@@ -1,9 +1,9 @@
 module Poly.Parameters
 
 (* Standard platform integer size *)
-let platform_size = 63
+let platform_size = 64
 (* Integer size after multiplication *)
-let platform_wide = 63
+let platform_wide = 64
 (* Canonical number of limbs *)
 let norm_length = 5
 let nlength = 5ul

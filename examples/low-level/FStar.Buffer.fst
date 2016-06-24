@@ -210,6 +210,13 @@ let lemma_modifies_1_1 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2
 
 #reset-options
 
+let lemma_modifies_2_trans (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 : Lemma
+  (requires (live h0 b /\ live h0 b' /\ live h1 b /\ live h1 b'
+    /\ modifies_2 b b' h0 h1 /\ modifies_2 b b' h1 h2))
+  (ensures (modifies_2 b b' h0 h2))
+  [SMTPat (modifies_2 b b' h0 h1); SMTPat (modifies_2 b b' h1 h2)]
+  = ()
+
 let equal_lemma #a rid h0 h1 b bufs :
   Lemma (requires (live h0 b /\ disjointSet b bufs /\ modifies_region rid bufs h0 h1))
 	(ensures (equal h0 b h1 b))
