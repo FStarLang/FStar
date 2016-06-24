@@ -169,7 +169,7 @@ let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionf
  
 let rec univ_to_string u = match Subst.compress_univ u with
     | U_unif u -> uvar_to_string u
-    | U_name x -> x.idText
+    | U_name x -> "n"^x.idText
     | U_bvar x -> "@"^string_of_int x
     | U_zero   -> "0"
     | U_succ u -> Util.format1 "(S %s)" (univ_to_string u)
