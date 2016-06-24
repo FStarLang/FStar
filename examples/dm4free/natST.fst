@@ -108,16 +108,17 @@ let incr (_:unit)
   = let n = get () in
     put (n + 1)
 
-reifiable let incr2 (_:unit) 
+reifiable let incr2 (_:unit)
   : St unit
-  = let n = get() in 
+  = let n = get() in
     put (n + 1)
-
-(* let f =  *)
-(*     let n0 = ST.get() in *)
-(*     let n1 = reify (incr2 ()) n0 in *)
-(*     assert (n1 = n0 + 1); *)
-(*     put n1 *)
+assume val reify_ : unit -> nat -> Tot nat
+#set-options "--log_queries"
+let f =
+    let n0 = get() in
+    let n1 = reify_ (incr2 ()) n0 in
+    assert (n1 = n0 + 1);
+    put n1
     
 (* sub_effect PURE ~> STATE { *)
 (*   lift_wp: #a:Type -> #wp:pure_wp a -> st_wp a = ... *)
