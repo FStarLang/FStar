@@ -1,7 +1,7 @@
 VERFILES=Unit1.Basic.fst        Unit1.Projectors2.fst          Unit1.WPsAndTriples.fst \
 	 Unit1.Parser.fst       Unit1.RefinementInference.fst  Unit1.WPsAndTriples_ST.fst \
-	 Unit1.Projectors1.fst  Unit1.UnificationTests.fst     unit2.fst \
-	 testset.fst 		testheap.fst 		       ShortCircuit.fst \
+	 Unit1.Projectors1.fst  Unit1.UnificationTests.fst     Unit1.RecursiveTypeFunctions.fst \
+	 unit2.fst              testset.fst 		       testheap.fst 		       ShortCircuit.fst \
 	 FirstProofs.fst 	              	 	       testmref.fst \
 	 testTwoLevelHeap.fst   mac.fst 		       testghost.fst 
 	 #inverse.fst
