@@ -12,6 +12,7 @@ open Math.Lib
 open Curve.Parameters
 
 let u8 = UInt8.t
+let u32 = UInt32.t
 let u64  = UInt64.t
 let u128 = UInt128.t
 let heap = HyperStack.mem
