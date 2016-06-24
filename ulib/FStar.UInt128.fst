@@ -75,7 +75,9 @@ let mul_mod a b =
 val mul_wide: a:UInt64.t -> b:UInt64.t -> Pure t
   (requires True)
   (ensures (fun c -> v c = UInt64.v a * UInt64.v b))
-let mul_wide a b = Mk ((UInt64.v a) * (UInt64.v b))
+let mul_wide a b = 
+  assume (UInt64.v a * UInt64.v b < pow2 128);
+  Mk ((UInt64.v a) * (UInt64.v b))
 
 (* Division primitives *)
 val div: a:t -> b:t{v b <> 0} -> Pure t
