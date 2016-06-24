@@ -316,6 +316,42 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, Inl t, Some c.eff_name)) (Some t.n) top.pos) c in
     e, c, Rel.conj_guard f (Rel.conj_guard g f2)
 
+  | Tm_app({n=Tm_constant Const_reify}, a::hd::rest)
+  | Tm_app({n=Tm_constant Const_reflect}, a::hd::rest) ->
+    //reify and reflect are a unary operators; 
+    //if there are more args, then explicitly curry them
+    let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
+    let unary_op, _ = Util.head_and_args top in
+    let head = mk (Tm_app(unary_op, [a])) None (Range.union_ranges unary_op.pos (fst a).pos) in
+    let t = mk (Tm_app(head, rest)) None top.pos in
+    tc_term env t
+  
+  | Tm_app({n=Tm_constant Const_reify}, [(e, aqual)]) ->
+    if Option.isSome aqual
+    then Errors.warn e.pos "Qualifier on argument to reify is irrelevant and will be ignored";
+    let no_reify l = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, e.pos)) in
+    let e, c, g = tc_term env e in
+    let reify_op, _ = Util.head_and_args top in
+    begin match Env.effect_decl_opt env (Env.norm_eff_name env c.eff_name) with 
+    | None -> no_reify c.eff_name
+    | Some ed -> 
+      if not (ed.qualifiers |> List.contains Reifiable) then no_reify c.eff_name;
+      let c = N.unfold_effect_abbrev env (c.comp()) in
+      let res_typ, wp = c.result_typ, List.hd c.effect_args in
+      let universe = 
+         let _, c, _ = tc_term env res_typ in
+         match (SS.compress c.res_typ).n with
+         | Tm_type u -> u
+         | _ -> failwith "Unexpected result type of computation" in
+      let repr = Env.inst_effect_fun_with [universe] env ed ([], ed.repr) in
+      let repr = mk (Tm_app(repr, [as_arg res_typ; wp])) None e.pos in
+      let e = mk (Tm_app(reify_op, [(e, aqual)])) (Some repr.n) top.pos in
+      e, S.mk_Total repr |> Util.lcomp_of_comp, g
+    end
+    
+  | Tm_app({n=Tm_constant Const_reflect}, [(a, aqual)])->
+    failwith "NYI: reflect"
+
   | Tm_app(head, args) ->
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in

@@ -112,12 +112,12 @@ reifiable let incr2 (_:unit)
   : St unit
   = let n = get() in
     put (n + 1)
-assume val reify_ : unit -> nat -> Tot nat
-#set-options "--log_queries"
-let f =
+
+(* #set-options "--log_queries" *)
+let f (_:unit) : St unit =
     let n0 = get() in
-    let n1 = reify_ (incr2 ()) n0 in
-    assert (n1 = n0 + 1);
+    let _, n1 = reify (incr2 ()) n0 in
+    (* assert (n1 = n0 + 1); *)
     put n1
     
 (* sub_effect PURE ~> STATE { *)
