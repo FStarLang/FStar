@@ -177,7 +177,6 @@ let keywords =
     ALWAYS, "rec"        ,REC;
     ALWAYS, "reifiable"  ,REIFIABLE;
     ALWAYS, "reify"      ,REIFY;
-    ALWAYS, "reflect"    ,REFLECT;        
     ALWAYS, "reflectable",REFLECTABLE;
     ALWAYS, "requires"   ,REQUIRES;
     ALWAYS, "sub_effect" ,SUB_EFFECT;

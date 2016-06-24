@@ -46,7 +46,7 @@ let mlconst_of_const (sctt : sconst) =
       MLC_String (string_of_unicode (bytes))
 
   | Const_reify
-  | Const_reflect ->
+  | Const_reflect _ ->
     failwith "Unhandled constant: reify/reflect"
 
 let mlconst_of_const' (p:Range.range) (c:sconst) = 

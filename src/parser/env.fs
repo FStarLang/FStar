@@ -152,6 +152,7 @@ let lb_fv lbs lid =
         if S.fv_eq_lid fv lid then Some fv else None) |> must 
 
 let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> =
+  let occurrence_range = Ident.range_of_lid lid in
   (* Resolve using, in order,
      0. local bindings, if the lid is unqualified
      1. rec bindings, if the lid is unqualified
@@ -175,7 +176,11 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                           || (Util.starts_with lid.nsstr "Prims." && quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
-                    Some (Term_name(fvar lid dd (fv_qual_of_se se), false))
+                    if quals |> List.contains Reflectable //this is really a M.reflect
+                    then let refl_monad = Ident.lid_of_path (lid.ns |> List.map (fun x -> x.idText)) occurrence_range in
+                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
+                         Some (Term_name (refl_const, false))
+                    else Some (Term_name(fvar lid dd (fv_qual_of_se se), false))
             else None
           | Sig_new_effect(ne, _) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid lid)))
           | Sig_effect_abbrev _ ->   Some (Eff_name(se, lid))

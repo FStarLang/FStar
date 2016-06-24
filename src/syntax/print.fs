@@ -138,7 +138,7 @@ let const_to_string x = match x with
   | Const_char c -> Util.string_of_char c
   | Const_range r -> Range.string_of_range r
   | Const_reify -> "reify"
-  | Const_reflect -> "reflect"
+  | Const_reflect l -> Util.format1 "[[%s.reflect]]" (sli l)
 
 let lbname_to_string = function
   | Inl l -> bv_to_string l

@@ -317,7 +317,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     e, c, Rel.conj_guard f (Rel.conj_guard g f2)
 
   | Tm_app({n=Tm_constant Const_reify}, a::hd::rest)
-  | Tm_app({n=Tm_constant Const_reflect}, a::hd::rest) ->
+  | Tm_app({n=Tm_constant (Const_reflect _)}, a::hd::rest) ->
     //reify and reflect are a unary operators; 
     //if there are more args, then explicitly curry them
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
@@ -349,7 +349,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       e, S.mk_Total repr |> Util.lcomp_of_comp, g
     end
     
-  | Tm_app({n=Tm_constant Const_reflect}, [(a, aqual)])->
+  | Tm_app({n=Tm_constant (Const_reflect _)}, [(a, aqual)])->
     failwith "NYI: reflect"
 
   | Tm_app(head, args) ->

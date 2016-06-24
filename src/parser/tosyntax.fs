@@ -1377,8 +1377,8 @@ let desugar_binders env binders =
 
 let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind eff_decls actions mk =
     let env0 = env in
-    let env = Env.enter_monad_scope env eff_name in
-    let env, binders = desugar_binders env eff_binders in
+    let monad_env = Env.enter_monad_scope env eff_name in
+    let env, binders = desugar_binders monad_env eff_binders in
     let eff_k = desugar_term (Env.default_total env) eff_kind in
     let env, decls = eff_decls |> List.fold_left (fun (env, out) decl ->
         let env, ses = desugar_decl env decl in
@@ -1405,6 +1405,12 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
     let env = actions |> List.fold_left (fun env a -> 
         printfn "Pushing action %s\n" a.action_name.str;
         push_sigelt env (Util.action_as_lb a)) env in
+    let env = 
+        if quals |> List.contains Reflectable
+        then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
+             let refl_decl = S.Sig_declare_typ(reflect_lid, [], S.tun, [S.Assumption; S.Reflectable], d.drange) in
+             push_sigelt env refl_decl
+        else env in
     env, [se]
 
 and desugar_decl env (d:decl) : (env_t * sigelts) = 
