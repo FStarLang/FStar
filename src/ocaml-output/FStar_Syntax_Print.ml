@@ -281,7 +281,7 @@ let rec univ_to_string : FStar_Syntax_Syntax.universe  ->  Prims.string = (fun u
 (uvar_to_string u)
 end
 | FStar_Syntax_Syntax.U_name (x) -> begin
-x.FStar_Ident.idText
+(Prims.strcat "n" x.FStar_Ident.idText)
 end
 | FStar_Syntax_Syntax.U_bvar (x) -> begin
 (let _130_77 = (FStar_Util.string_of_int x)
