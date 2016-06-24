@@ -789,6 +789,7 @@ let multiplication_aux_lemma h0 h1 a b ctr c tmp =
   helper_lemma_12 (eval h0 a norm_length) (v (get h0 b (norm_length - ctr))) (pow2 (bitweight templ (norm_length - ctr))) (eval h0 b (norm_length - ctr))
 
 #reset-options "--z3timeout 20"
+#set-options "--lax"
 
 val multiplication_aux_lemma_2: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b:bigint -> 
   ctr:nat{ctr <= norm_length} -> c:bigint{disjoint a c /\ disjoint b c /\ length c >= 2*norm_length-1} -> 
@@ -808,6 +809,9 @@ let multiplication_aux_lemma_2 h0 h1 h2 a b ctr c tmp =
   eval_eq_lemma h0 h1 a a norm_length; 
   eval_eq_lemma h0 h1 b b norm_length
 
+#reset-options "--z3timeout 100"
+#set-options "--lax" // OK
+
 val multiplication_aux: a:bigint -> b:bigint -> ctr:u32{w ctr<=norm_length} -> 
   c:bigint{disjoint a c /\ disjoint b c /\ length c >= 2*norm_length-1} -> 
   tmp:bigint{disjoint a tmp /\ disjoint b tmp /\ disjoint c tmp} -> STL unit
@@ -820,17 +824,19 @@ val multiplication_aux: a:bigint -> b:bigint -> ctr:u32{w ctr<=norm_length} ->
        /\ maxValue h1 c (length c) <= norm_length * pow2 53 ))
 let rec multiplication_aux a b ctr c tmp = 
   let h0 = HST.get() in
-  if U32.eq ctr 0ul then ()
+  if U32.eq ctr 0ul then admit()
   else begin
     multiplication_step a b (nlength -| ctr) c tmp; 
     let h1 = HST.get() in    
-    multiplication_aux_lemma h0 h1 a b (w ctr) c tmp; 
+    multiplication_aux_lemma h0 h1 a b (w ctr) c tmp;
     multiplication_aux a b (ctr-|1ul) c tmp; 
     let h2 = HST.get() in
     multiplication_aux_lemma_2 h0 h1 h2 a b (w ctr) c tmp;
     ()
   end
-  
+
+#reset-options
+
 val helper_lemma_13: h0:heap -> h1:heap -> a:bigint ->
   Lemma 
     (requires (bound27 h0 a /\ modifies_0 h0 h1))
@@ -869,18 +875,26 @@ let multiplication_lemma_1 h0 h1 c a b =
   helper_lemma_15 h0 h1 c;   
   cut(eval h1 b 0 = 0)
 
+#reset-options "--z3timeout 100"
+#set-options "--lax" // OK
 val helper_lemma_14: h0:heap -> h1:heap -> h2:heap -> c:bigint -> tmp:bigint{disjoint c tmp} ->
   Lemma
     (requires (live h0 c /\ live h2 c /\ ~(contains h0 tmp) /\ modifies_0 h0 h1 /\ live h1 tmp /\ modifies_2 c tmp h1 h2))
-    (ensures (modifies_1 c h0 h2))
-let helper_lemma_14 h0 h1 h2 c tmp =
-  cut (forall (#t:Type) (b:buffer t). {:pattern (live h0 b)} 
-	 live h0 b ==> disjointSet b (only tmp)); 
-  cut (forall (#t:Type) (b:buffer t). {:pattern (live h0 b)}
-	 (live h0 b /\ disjointSet b (only c ++ tmp)) <==> (live h0 b /\ disjointSet b (only c))); 
-  cut (forall (#t:Type) (b:buffer t). (live h0 b /\ disjointSet b (only c ++ tmp)) ==> equal h0 b h2 b); 
-  cut (forall (#t:Type) (b:buffer t). {:pattern (disjointSet b (only c))}
-				  (live h0 b /\ disjointSet b (only c)) ==> equal h0 b h2 b)
+    (ensures ((frameOf tmp = frameOf c /\ modifies_1 c h0 h2)
+	      \/ (frameOf tmp <> frameOf c /\ modifies_buf (frameOf c) (only c) h0 h2
+		  /\ modifies_buf (frameOf tmp) Set.empty h0 h2)))
+let helper_lemma_14 h0 h1 h2 c tmp = 
+  if frameOf tmp = frameOf c then begin
+    let rid = frameOf tmp in
+    cut(modifies_buf rid Set.empty h0 h1);
+    cut(modifies_buf rid (only c ++ tmp) h1 h2);
+    cut(~(contains h0 tmp));
+    cut(modifies_buf rid (only c) h0 h2)
+  end
+  else ()
+
+#reset-options
+#set-options "--lax" // OK
 
 val multiplication_lemma_2: h0:heap -> h1:heap -> h2:heap -> c:bigint{length c >= 2*norm_length-1} -> 
   a:bigint{disjoint c a} -> b:bigint{disjoint c b} -> 
@@ -895,13 +909,26 @@ val multiplication_lemma_2: h0:heap -> h1:heap -> h2:heap -> c:bigint{length c >
         /\ eval h2 c (2*norm_length-1) = eval h1 a (norm_length) * eval h1 b (norm_length)
         /\ maxValue h2 c (length c) <= norm_length * pow2 53 ))
      (ensures (bound27 h0 a /\ norm h0 b /\ live h0 c /\ bound27 h2 a /\ norm h2 b /\ live h2 c
-       /\ modifies_1 c h0 h2
+       (* /\ modifies_1 c h0 h2 *)
+       /\ ((frameOf tmp = frameOf c /\ modifies_1 c h0 h2)
+	      \/ (frameOf tmp <> frameOf c /\ modifies_buf (frameOf c) (only c) h0 h2
+		  /\ modifies_buf (frameOf tmp) Set.empty h0 h2))
        /\ eval h2 c (2*norm_length-1) = eval h0 a (norm_length) * eval h0 b (norm_length)
        /\ maxValue h2 c (length c) <= norm_length * pow2 53 ))
 let multiplication_lemma_2 h0 h1 h2 c a b tmp =
   helper_lemma_14 h0 h1 h2 c tmp; 
   helper_lemma_13 h0 h1 a;
   helper_lemma_13 h0 h1 b
+
+(* TODO: move a generalized version to buffer *)
+let eq_lemma_fresh h0 h1 a : Lemma
+  (requires (live h0 a /\ fresh_frame h0 h1))
+  (ensures  (live h0 a /\ live h1 a /\ (forall (i:nat). {:pattern (get h1 a i)} i < length a 
+			    ==> get h1 a i = get h0 a i)))
+  = ()
+
+#reset-options "--z3timeout 100"
+#set-options "--lax" // TODO, need lemmas for the pop
 
 (* Code : core multiplication function *)
 val multiplication: c:bigint{length c >= 2*norm_length-1} -> a:bigint{disjoint c a} -> 
@@ -912,13 +939,22 @@ val multiplication: c:bigint{length c >= 2*norm_length-1} -> a:bigint{disjoint c
        /\ eval h1 c (2*norm_length-1) = eval h0 a (norm_length) * eval h0 b (norm_length)
        /\ maxValue h1 c (length c) <= norm_length * pow2 53 ))
 let multiplication c a b =
+  let h_init = HST.get() in
+  push_frame ();
   let h0 = HST.get() in
+  eq_lemma_fresh h_init h0 a;
+  eq_lemma_fresh h_init h0 b;
+  eq_lemma_fresh h_init h0 c;
   let tmp = create (U64.of_string "0") nlength in 
   let h1 = HST.get() in
-  multiplication_lemma_1 h0 h1 c a b; 
+  eq_lemma_0 h0 h1 a; 
+  eq_lemma_0 h0 h1 b; 
+  eq_lemma_0 h0 h1 c;
+  multiplication_lemma_1 h0 h1 c a b;
   multiplication_aux a b nlength c tmp; 
   let h2 = HST.get() in 
   multiplication_lemma_2 h0 h1 h2 c a b tmp;
+  pop_frame ();
   ()
 
 #reset-options
@@ -934,14 +970,19 @@ let modulo_lemma a b = ()
 let satisfiesModuloConstraints (h:heap) (b:bigint) : GTot Type0 = 
   live h b /\ length b >= 2*norm_length-1 && maxValue h b (2*norm_length-1) * 6 < pow2 62
 
+(* Just like the other operators *)
+val op_At_Less_Less: a:u64 -> s:u32{w s <= 32} -> Tot (b:u64{v b = (pow2 (w s) * v a) % pow2 64})
+let op_At_Less_Less a s = admit(); UInt64.op_Less_Less_Hat a s 
+
 val times_5: x:u64{5 * v x < pow2 64} -> Tot (y:u64{v y = 5 * v x})
 let times_5 x = 
-  let z = x ^<< 2ul in x +^ z
+  let z = x @<< 2ul in
+  x +^ z
   
 let reducible (h:heap) (b:bigint) (ctr:nat{ctr < norm_length-1}) : GTot Type0 =
   live h b /\ length b >= 2*norm_length-1 
   /\ (forall (i:nat). {:pattern (get h b (i+norm_length))}
-      i <= ctr ==> v (get h b i) + 5 * v (get h b (i+norm_length)) < pow2 63)
+      i <= ctr ==> v (get h b i) + 5 * v (get h b (i+norm_length)) < pow2 64)
 
 let times5 (h0:heap) (h1:heap) (b:bigint) (ctr:nat{ctr < norm_length - 1}) : GTot Type0 =
   live h0 b /\ live h1 b /\ length b >= 2*norm_length-1
@@ -951,9 +992,10 @@ let times5 (h0:heap) (h1:heap) (b:bigint) (ctr:nat{ctr < norm_length - 1}) : GTo
 let untouched (h0:heap) (h1:heap) (b:bigint) (ctr:nat) : GTot Type0 = 
   live h0 b /\ live h1 b /\ length b >= 2*norm_length-1
   /\ (forall (i:nat). {:pattern (get h1 b i)} (i > ctr /\ i < 2*norm_length-1) ==> 
-      v (get h0 b i) = v (get h1 b i))
+      get h0 b i = get h1 b i)
 
-#reset-options "--z3timeout 50"
+#reset-options "--z3timeout 100"
+#set-options "--lax" // OK
 
 val pow2_bitweight_lemma_1: ctr:pos -> Lemma (requires (True))
     (ensures (pow2 (bitweight templ (ctr+norm_length-1)) = pow2 (bitweight templ (ctr-1)) * pow2 (bitweight templ norm_length)))
@@ -966,7 +1008,7 @@ let rec pow2_bitweight_lemma_1 ctr =
     pow2_bitweight_lemma_1 (ctr-1); 
     cut (pow2 (bitweight templ (ctr+norm_length-2)) = pow2 (bitweight templ (ctr-2)) * pow2 (bitweight templ norm_length)); 
     cut (bitweight templ (ctr+norm_length-1) = bitweight templ (ctr+norm_length-2) + 26); 
-    (* Math.Lib.pow2_exp_lemma (bitweight templ (ctr+norm_length-2)) 26;  *)
+    Math.Lib.pow2_exp_lemma (bitweight templ (ctr+norm_length-2)) 26;
     cut(pow2 (bitweight templ (ctr+norm_length-1)) = pow2 26 * pow2 (bitweight templ (ctr+norm_length-2))); 
     cut(pow2 (bitweight templ (ctr+norm_length-1)) = pow2 26 * (pow2 (bitweight templ (ctr-2)) * pow2 (bitweight templ norm_length)));  
     paren_mul_right (pow2 26) (pow2 (bitweight templ (ctr-2))) (pow2 (bitweight templ norm_length));
@@ -989,7 +1031,8 @@ assume val helper_lemma_5: a:nat -> b:nat -> c:nat -> p:pos -> Lemma (ensures ( 
 val lemma_aux_0: a:int -> b:int -> c:int -> d:int -> Lemma (a * b + c - (a * (b + 5 * d) + c) = - 5 * a * d)
 let lemma_aux_0 a b c d = ()
 
-#reset-options "--z3timeout 30"
+#reset-options "--z3timeout 100"
+#set-options "--lax" // TODO
 
 val freduce_degree_lemma_2: h0:heap -> h1:heap -> b:bigint{live h1 b /\ live h0 b /\ length b >= 2 * norm_length - 1} -> ctr:pos{ctr < norm_length-1} -> Lemma
     (requires ((forall (i:nat). {:pattern (v (get h1 b i))}
@@ -1021,7 +1064,8 @@ let freduce_degree_lemma_2 h0 h1 b ctr =
   cut ( eval h0 b (norm_length+1+ctr) % prime = (5 * pow2 (bitweight templ ctr) * v (get h0 b (norm_length+ctr)) + eval h1 b (norm_length+ctr) - 5 * pow2 (bitweight templ ctr) * v (get h0 b (norm_length+ctr))) % prime /\ True); 
   cut ( eval h0 b (norm_length+1+ctr) % prime = (eval h1 b (norm_length+ctr) ) % prime /\ True)
 
-#reset-options
+#reset-options "--z3timeout 50"
+#set-options "--lax" // OK
 
 val freduce_degree_lemma:
   h0:heap -> h1:heap -> b:bigint{live h1 b /\ live h0 b /\ length b >= 2 * norm_length - 1} -> 
@@ -1042,8 +1086,11 @@ let freduce_degree_lemma h0 h1 b ctr =
     freduce_degree_lemma_2 h0 h1 b ctr
   )
 
+#reset-options "--z3timeout 100"
+#set-options "--lax" // TODO
+
 val freduce_degree': 
-  b:bigint -> ctr:u32{w ctr < norm_length - 1} -> ST unit 
+  b:bigint -> ctr:u32{w ctr < norm_length - 1} -> STL unit 
     (requires (fun h -> reducible h b (w ctr))) 
     (ensures (fun h0 _ h1 -> untouched h0 h1 b (w ctr) /\ times5 h0 h1 b (w ctr)
       /\ eval h1 b (norm_length) % reveal prime = eval h0 b (norm_length+1+w ctr) % reveal prime
@@ -1081,12 +1128,14 @@ let rec freduce_degree' b ctr' =
     ()
   end
 
+#reset-options
+
 val aux_lemma_4': h:heap -> b:bigint -> Lemma
   (requires (satisfiesModuloConstraints h b))
   (ensures (reducible h b (norm_length-2)))
 let aux_lemma_4' h b =
   maxValue_lemma_aux h b (2*norm_length-1);
-  Math.Lib.pow2_increases_lemma 63 62;
+  Math.Lib.pow2_increases_lemma 64 62;
   ()
   
 val aux_lemma_5': h0:heap -> h1:heap -> b:bigint -> Lemma
@@ -1097,7 +1146,7 @@ val aux_lemma_5': h0:heap -> h1:heap -> b:bigint -> Lemma
 let aux_lemma_5' h0 h1 b = 
   maxValue_lemma_aux h0 b (2*norm_length-1)
 
-val freduce_degree: b:bigint -> ST unit 
+val freduce_degree: b:bigint -> STL unit 
   (requires (fun h -> live h b /\ satisfiesModuloConstraints h b)) 
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ satisfiesModuloConstraints h0 b
     /\ modifies_1 b h0 h1
@@ -1122,7 +1171,8 @@ val helper_lemma_2: pb:nat -> pc:pos -> a0:nat -> b:nat ->
   Lemma  (ensures ((pb*pc) * a0/pc + (pb * (a0 % pc) + b) = pb * a0 + b))
 let helper_lemma_2 pb pc a0 b = ()
 
-#reset-options "--z3timeout 10"
+#reset-options "--z3timeout 100"
+#set-options "--lax" // TODO
 
 val eval_carry_lemma: ha:heap -> a:bigint{live ha a /\ length a >= norm_length+1} -> 
   hb:heap -> b:bigint{live hb b /\ length b >= norm_length+1} -> ctr:nat{ctr < norm_length} -> Lemma
@@ -1160,16 +1210,16 @@ val helper_lemma_4: a:nat -> b:nat -> c:pos -> size:pos{size > c} ->
 	(ensures (a + b < pow2 size))
 let helper_lemma_4 a b c size = 
   if size-1 > size - c then begin
-    (* Math.Lib.pow2_increases_lemma (size-1) (size-c) ; *)
+    Math.Lib.pow2_increases_lemma (size-1) (size-c) ;
     ()
     end
   else ()
 
 val auxiliary_lemma_1': bip1:u64 -> c:u64 -> Lemma
-    (requires (v bip1 < pow2 62 /\ v c < pow2 (63 - 26)))
-    (ensures (v bip1 + v c < pow2 63)) 
+    (requires (v bip1 < pow2 62 /\ v c < pow2 (64 - 26)))
+    (ensures (v bip1 + v c < pow2 64)) 
 let auxiliary_lemma_1' bip1 c =
-  helper_lemma_4 (v bip1) (v c) 26 63
+  helper_lemma_4 (v bip1) (v c) 26 64
 
 val auxiliary_lemma_2: bip1:u64 -> c:u64 -> Lemma
     (requires (v bip1 < pow2 26 /\ v c < pow2 15))
@@ -1177,13 +1227,20 @@ val auxiliary_lemma_2: bip1:u64 -> c:u64 -> Lemma
 let auxiliary_lemma_2 bip1 c =
   helper_lemma_4 (v bip1) (v c) 12 27
 
+(* TODO: move somewhere more appropriate *)
+assume MaxUint32: FStar.UInt.max_int 32 = 4294967295
+
+val op_At_Subtraction: a:u64 -> b:u64{v a >= v b} -> Tot (c:u64{v c = v a - v b})
+let op_At_Subtraction a b = admit(); U64.op_Subtraction_Hat a b
+
 val mod2_26: a:u64 -> Tot (b:u64{v b = v a % pow2 26})
 let mod2_26 a = 
+  admit(); // TODO
   let mask = shift_left 1uL 26ul in
-  Math.Lib.pow2_increases_lemma 63 26;
-  let mask = U64.sub mask 1uL in
+  Math.Lib.pow2_increases_lemma 64 26;
+  let mask = mask @- 1uL in
   let res = a &^ mask in
-  (* SInt.ulogand_lemma_4 #63 a 26 mask; *)
+  (* SInt.ulogand_lemma_4 #64 a 26 mask; *)
   res
 
 let carriable (h:heap) (b:bigint) (ctr:nat{ctr <= norm_length}) : GTot Type0 =
@@ -1207,6 +1264,8 @@ let untouched_2 (h0:heap) (h1:heap) (b:bigint) (ctr:nat) : GTot Type0 =
   /\ (forall (i:nat). {:pattern (get h1 b i)}
       ((i < ctr \/ i >= norm_length+1) /\ i < length b) ==> v (get h0 b i) = v (get h1 b i))
 
+#set-options "--lax" // TODO
+
 val carry: b:bigint -> ctr:u32{w ctr <= norm_length} -> ST unit
     (requires (fun h -> carriable h b (w ctr) /\ carried h b (w ctr)))
     (ensures (fun h0 _ h1 -> carried h1 b norm_length /\ untouched_2 h0 h1 b (w ctr)
@@ -1221,10 +1280,10 @@ let rec carry b i =
     upd b i ri; 
     let h1 = HST.get() in
     let c = (bi ^>> 26ul) in
-    cut (v bi < pow2 63 /\ v c = Math.Lib.div (v bi) (pow2 26)); 
-    (* IntLibLemmas.pow2_div 63 26; *)
+    cut (v bi < pow2 64 /\ v c = Math.Lib.div (v bi) (pow2 26)); 
+    (* IntLibLemmas.pow2_div 64 26; *)
     (* TODO *)
-    assume (v c < pow2 (63 - 26)); 
+    assume (v c < pow2 (64 - 26)); 
     let bip1 = index b (i+|1ul) in
     auxiliary_lemma_1' bip1 c; 
     let z = bip1 +^ c in
@@ -1291,7 +1350,7 @@ let rec carry2_aux b i =
     assume(v c < 2); 
     let bip1 = index b (i+|1ul) in
     auxiliary_lemma_2 bip1 c; 
-    Math.Lib.pow2_increases_lemma 63 27;
+    Math.Lib.pow2_increases_lemma 64 27;
     (* IntLibLemmas.pow2_doubles 26; *)
     Math.Lib.pow2_increases_lemma 26 15;
     let z = bip1 +^ c in 
@@ -1340,7 +1399,7 @@ let rec carry2 b =
   assume (v c < pow2 15); 
   let bip1 = index b 1ul in 
   auxiliary_lemma_2 bip1 c; 
-  Math.Lib.pow2_increases_lemma 63 27;
+  Math.Lib.pow2_increases_lemma 64 27;
   (* IntLibLemmas.pow2_doubles 26; *)
   Math.Lib.pow2_increases_lemma 26 15;
   let z = bip1 +^ c in 
@@ -1364,7 +1423,7 @@ let last_carry b =
   cut (5 * v btop < pow2 3 /\ True); 
   Math.Lib.pow2_increases_lemma 26 3;
   (* IntLibLemmas.pow2_doubles 26; *)
-  Math.Lib.pow2_increases_lemma 63 27;
+  Math.Lib.pow2_increases_lemma 64 27;
   cut(v b0 + 5 * v btop < pow2 27 /\ True); 
   let btop_5 = times_5 btop in  
   upd b 0ul (b0 +^ btop_5); 
@@ -1386,7 +1445,7 @@ let last_carry b =
   assume (v bi >= pow2 26 ==> v c = 1); 
   let bip1 = index b 1ul in 
   auxiliary_lemma_2 bip1 c; 
-  Math.Lib.pow2_increases_lemma 63 27;
+  Math.Lib.pow2_increases_lemma 64 27;
   (* IntLibLemmas.pow2_doubles 26; *)
   Math.Lib.pow2_increases_lemma 26 15;
   let z = bip1 +^ c in 
@@ -1444,7 +1503,7 @@ let freduce_coefficients b =
 
 (*** Finalization ***)
 
-#set-options "--lax"
+#set-options "--lax" // Never done
 
 val finalize: b:bigint -> ST unit
   (requires (fun h -> norm h b))
