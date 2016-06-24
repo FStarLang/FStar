@@ -120,13 +120,14 @@ let f (_:unit) : St unit =
     (* assert (n1 = n0 + 1); *)
     put n1
 
-let g (_:unit) : St unit =
+let g (_:unit) : St nat =
     let n0 = get () in
     let f : st_repr unit (fun n0 post -> post ((), n0 + 2)) =
       fun n0 -> (), n0+2 in 
     STATE.reflect f;
     let n1 = get () in 
-    assert (n0 + 2 = n1)
+    n1
+    (* assert (n0 + 2 = n1) *)
 
 (* sub_effect PURE ~> STATE { *)
 (*   lift_wp: #a:Type -> #wp:pure_wp a -> st_wp a = ... *)

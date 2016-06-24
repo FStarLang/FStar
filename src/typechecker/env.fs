@@ -229,7 +229,7 @@ let variable_not_found v =
   format1 "Variable \"%s\" not found" (Print.bv_to_string v)
 
 //Construct a new universe unification variable
-let new_u_univ _ = U_unif (Unionfind.fresh None)
+let new_u_univ () = U_unif (Unionfind.fresh None)
 
 //Instantiate the universe variables in a type scheme with provided universes
 let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us -> 

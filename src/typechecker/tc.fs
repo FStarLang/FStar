@@ -330,7 +330,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     if Option.isSome aqual
     then Errors.warn e.pos "Qualifier on argument to reify is irrelevant and will be ignored";
     let no_reify l = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, e.pos)) in
-    let e, c, g = tc_term env e in
+    let e, c, g = 
+        let env0, _ = Env.clear_expected_typ env in
+        tc_term env0 e in
     let reify_op, _ = Util.head_and_args top in
     begin match Env.effect_decl_opt env (Env.norm_eff_name env c.eff_name) with 
     | None -> no_reify c.eff_name
@@ -346,12 +348,48 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       let repr = Env.inst_effect_fun_with [universe] env ed ([], ed.repr) in
       let repr = mk (Tm_app(repr, [as_arg res_typ; wp])) None e.pos in
       let e = mk (Tm_app(reify_op, [(e, aqual)])) (Some repr.n) top.pos in
-      e, S.mk_Total repr |> Util.lcomp_of_comp, g
+      let c = S.mk_Total repr |> Util.lcomp_of_comp in
+      let e, c, g' = comp_check_expected_typ env e c in
+      e, c, Rel.conj_guard g g'
     end
     
-  | Tm_app({n=Tm_constant (Const_reflect _)}, [(a, aqual)])->
-    failwith "NYI: reflect"
-
+  | Tm_app({n=Tm_constant (Const_reflect l)}, [(e, aqual)])->
+    if Option.isSome aqual
+    then Errors.warn e.pos "Qualifier on argument to reflect is irrelevant and will be ignored";
+    let no_reflect () = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, e.pos)) in
+    let reflect_op, _ = Util.head_and_args top in
+    begin match Env.effect_decl_opt env l with
+    | None -> no_reflect()
+    | Some ed -> 
+      if not (ed.qualifiers |> List.contains Reflectable) then no_reflect ();
+      let env_no_ex, topt = Env.clear_expected_typ env in
+      let expected_repr_typ, res_typ, wp, g0 = 
+            let u = Env.new_u_univ () in 
+            let repr = Env.inst_effect_fun_with [u] env ed ([], ed.repr) in
+            let t = mk (Tm_app(repr, [as_arg S.tun; as_arg S.tun])) None top.pos in
+            let t, _, g = tc_tot_or_gtot_term (Env.clear_expected_typ env |> fst) t in
+            match (SS.compress t).n with 
+            | Tm_app(_, [(res, _); (wp, _)]) -> t, res, wp, g
+            | _ -> failwith "Impossible" in
+      let e, g = 
+            let e, c, g = tc_tot_or_gtot_term env_no_ex e in
+            if not <| Util.is_total_lcomp c
+            then Errors.add_errors env ["Expected Tot, got a GTot computation", e.pos];
+            match Rel.try_teq env_no_ex c.res_typ expected_repr_typ with
+            | None -> Errors.add_errors env [Util.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
+                      e, Rel.conj_guard g g0
+            | Some g' -> e, Rel.conj_guard g' (Rel.conj_guard g g0) in
+      let c = S.mk_Comp ({
+            effect_name = ed.mname;
+            result_typ=res_typ;
+            effect_args=[as_arg wp];
+            flags=[]
+          }) |> Util.lcomp_of_comp in
+      let e = mk (Tm_app(reflect_op, [(e, aqual)])) (Some res_typ.n) top.pos in
+      let e, c, g' = comp_check_expected_typ env e c in
+      e, c, Rel.conj_guard g' g
+    end
+    
   | Tm_app(head, args) ->
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
@@ -1611,11 +1649,12 @@ and tc_check_tot_or_gtot_term env e t : term
     let env = Env.set_expected_typ env t in
     tc_tot_or_gtot_term env e
 
-(*****************Type-checking the signature of a module*****************************)
-let tc_trivial_guard env t =
+and tc_trivial_guard env t =
   let t, c, g = tc_tot_or_gtot_term env t in
   Rel.force_trivial_guard env g;
   t,c
+
+(*****************Type-checking the signature of a module*****************************)
 
 let tc_check_trivial_guard env t k =
   let t, c, g = tc_check_tot_or_gtot_term env t k in
