@@ -2643,6 +2643,9 @@ let rec tc_decl env se = match se with
       let ne = tc_eff_decl env ne NotForFree in
       let se = Sig_new_effect(ne, r) in
       let env = Env.push_sigelt env se in
+      let env, ses = ne.actions |> List.fold_left (fun (env, ses) a -> 
+          let se_let = Util.action_as_lb a in
+          Env.push_sigelt env se_let, se_let::ses) (env, [se]) in
       se, env
 
     | Sig_sub_effect(sub, r) ->

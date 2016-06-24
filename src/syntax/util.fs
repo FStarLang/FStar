@@ -803,3 +803,15 @@ let destruct_typ_as_formula f : option<connective> =
         match destruct_base_conn phi with
         | Some b -> Some b
         | None -> destruct_q_conn phi
+
+
+  let action_as_lb a = 
+        let lb = {
+            lbname=Inr (lid_as_fv a.action_name Delta_equational None);
+            lbunivs=a.action_univs;
+            lbtyp=a.action_typ;
+            lbdef=a.action_defn;
+            lbeff=Const.effect_Tot_lid
+        } in
+        Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [])
+    

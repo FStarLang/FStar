@@ -63,7 +63,7 @@ let st_put (n:nat) : st_repr unit (fun n0 post -> post ((), n))
 //#reset-options "--debug NatST --debug_level SMTEncoding"
 
 reifiable reflectable new_effect {
-  ST : a:Type -> wp:st_wp a -> Effect
+  STATE : a:Type -> wp:st_wp a -> Effect
   with //repr is new; it's the reprentation of ST as a value type
        repr         = st_repr
        //bind_wp is exactly as it is currently
@@ -89,7 +89,36 @@ reifiable reflectable new_effect {
       get  = st_get
     ; put  = st_put
 }
+inline let lift_pure_state (a:Type) (wp:pure_wp a) (n:nat) (p:st_post a) = wp (fun a -> p (a, n))
+sub_effect PURE ~> STATE = lift_pure_state
 
+effect ST (a:Type) (pre:st_pre) (post: (nat -> a -> nat -> GTot Type0)) = 
+       STATE a
+             (fun n0 p -> pre n0 /\ (forall a n1. pre n0 /\ post n0 a n1 ==> p (a, n1)))
+
+effect St (a:Type) =
+       STATE a
+             (fun n0 p -> forall x. p x)
+
+////////////////////////////////////////////////////////////////////////////////
+
+let incr (_:unit)
+  :  ST unit (requires (fun n -> True))
+	     (ensures (fun n0 _ n1 -> n1 = n0 + 1))
+  = let n = get () in
+    put (n + 1)
+
+reifiable let incr2 (_:unit) 
+  : St unit
+  = let n = get() in 
+    put (n + 1)
+
+(* let f =  *)
+(*     let n0 = ST.get() in *)
+(*     let n1 = reify (incr2 ()) n0 in *)
+(*     assert (n1 = n0 + 1); *)
+(*     put n1 *)
+    
 (* sub_effect PURE ~> STATE { *)
 (*   lift_wp: #a:Type -> #wp:pure_wp a -> st_wp a = ... *)
 (*   lift   : #a:Type -> #wp:pure_wp a -> f:PURE.repr a wp -> STATE.repr a (lift_star wp) = ... *)

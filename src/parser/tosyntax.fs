@@ -1386,7 +1386,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
     let actions = actions |> List.collect (fun d -> match d.d with 
         | Tycon(_, [TyconAbbrev(name, _, _, defn)]) -> 
           let a = { 
-            action_name=Env.qualify env name;
+            action_name=Env.qualify env0 name;
             action_univs=[];
             action_defn=desugar_term env defn;
             action_typ=S.tun
@@ -1402,6 +1402,9 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
     let qualifiers  =List.map (trans_qual d.drange) quals in
     let se = mk mname qualifiers binders eff_k lookup actions in
     let env = push_sigelt env0 se in
+    let env = actions |> List.fold_left (fun env a -> 
+        printfn "Pushing action %s\n" a.action_name.str;
+        push_sigelt env (Util.action_as_lb a)) env in
     env, [se]
 
 and desugar_decl env (d:decl) : (env_t * sigelts) = 
