@@ -1970,6 +1970,7 @@ let encode_query use_env_msg tcenv q
     let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
     if debug tcenv Options.Low 
     || debug tcenv <| Options.Other "SMTEncoding" 
+    || debug tcenv <| Options.Other "SMTQuery"
     then Util.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
     let phi, qdecls = encode_formula q env in
     let phi, labels, _ = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in

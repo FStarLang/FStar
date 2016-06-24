@@ -1,50 +1,51 @@
 module NatST
 
-let st_pre = nat -> Type0
-let st_post (a:Type) = (a * nat) -> Type0
-let st_wp (a:Type) = nat -> st_post a -> Type0
+let st_pre = int -> Type0
+let st_post (a:Type) = (a * int) -> Type0
+let st_wp (a:Type) = int -> st_post a -> Type0
 assume val r0: range
-inline let st_return_wp (a:Type) (x:a) (n0:nat) (post:st_post a) = post (x, n0)
+inline let st_return_wp (a:Type) (x:a) (n0:int) (post:st_post a) = 
+  forall y. y=(x, n0) ==> post y
 inline let st_bind_wp (r:range) (a:Type) (b:Type) (f:st_wp a) (g:(a -> Tot (st_wp b))) : st_wp b = 
     fun n0 post -> f n0 (fun x_n1 -> g (fst x_n1) (snd x_n1) post)
 
 inline let st_if_then_else  (a:Type) (p:Type)
                             (wp_then:st_wp a) (wp_else:st_wp a)
-                            (h0:nat) (post:st_post a) =
+                            (h0:int) (post:st_post a) =
      l_ITE p
         (wp_then h0 post)
 	(wp_else h0 post)
 inline let st_ite_wp        (a:Type)
                             (wp:st_wp a)
-                            (h0:nat) (post:st_post a) =
+                            (h0:int) (post:st_post a) =
      forall (k:st_post a).
-	 (forall (x:a) (h:nat).{:pattern (guard_free (k (x, h)))} k (x, h) <==> post (x, h))
+	 (forall (x:a) (h:int).{:pattern (guard_free (k (x, h)))} k (x, h) <==> post (x, h))
 	 ==> wp h0 k
 inline let st_stronger  (a:Type) (wp1:st_wp a) (wp2:st_wp a) =
-     (forall (p:st_post a) (h:nat). wp1 h p ==> wp2 h p)
+     (forall (p:st_post a) (h:int). wp1 h p ==> wp2 h p)
 
 inline let st_close_wp      (a:Type) (b:Type)
                             (wp:(b -> GTot (st_wp a)))
-                            (h:nat) (p:st_post a) =
+                            (h:int) (p:st_post a) =
      (forall (b:b). wp b h p)
 inline let st_assert_p      (a:Type) (p:Type)
                             (wp:st_wp a)
-                            (h:nat) (q:st_post a) =
+                            (h:int) (q:st_post a) =
      p /\ wp h q
 inline let st_assume_p      (a:Type) (p:Type)
                             (wp:st_wp a)
-                            (h:nat) (q:st_post a) =
+                            (h:int) (q:st_post a) =
      p ==> wp h q
 inline let st_null_wp       (a:Type)
-                            (h:nat) (p:st_post a) =
-     (forall (x:a) (h:nat). p (x,h))
+                            (h:int) (p:st_post a) =
+     (forall (x:a) (h:int). p (x,h))
 inline let st_trivial       (a:Type)
                             (wp:st_wp a) =
      (forall h0. wp h0 (fun r -> True))
 
 //new
 let st_repr (a:Type) (wp:st_wp a) =  
-    n0:nat -> PURE (a * nat) (wp n0)
+    n0:int -> PURE (a * int) (wp n0)
 let st_bind (r:range) (a:Type) (b:Type) (wp0:st_wp a) (wp1:(a -> Tot (st_wp b)))
 	    (f:st_repr a wp0)
 	    (g:(x:a -> Tot (st_repr b (wp1 x)))) 
@@ -54,10 +55,10 @@ let st_return (a:Type) (x:a)
   : st_repr a (st_return_wp a x)
   = fun n0 -> (x, n0)
 
-let st_get (u:unit) : st_repr nat (fun n0 post -> post (n0, n0)) 
+let st_get (u:unit) : st_repr int (fun n0 post -> post (n0, n0)) 
   = fun n0 -> n0, n0
 
-let st_put (n:nat) : st_repr unit (fun n0 post -> post ((), n))
+let st_put (n:int) : st_repr unit (fun n0 post -> post ((), n))
   = fun x -> (), n
 
 //#reset-options "--debug NatST --debug_level SMTEncoding"
@@ -89,10 +90,10 @@ reifiable reflectable new_effect {
       get  = st_get
     ; put  = st_put
 }
-inline let lift_pure_state (a:Type) (wp:pure_wp a) (n:nat) (p:st_post a) = wp (fun a -> p (a, n))
+inline let lift_pure_state (a:Type) (wp:pure_wp a) (n:int) (p:st_post a) = wp (fun a -> p (a, n))
 sub_effect PURE ~> STATE = lift_pure_state
 
-effect ST (a:Type) (pre:st_pre) (post: (nat -> a -> nat -> GTot Type0)) = 
+effect ST (a:Type) (pre:st_pre) (post: (int -> a -> int -> GTot Type0)) = 
        STATE a
              (fun n0 p -> pre n0 /\ (forall a n1. pre n0 /\ post n0 a n1 ==> p (a, n1)))
 
@@ -102,11 +103,11 @@ effect St (a:Type) =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let incr (_:unit)
-  :  ST unit (requires (fun n -> True))
-	     (ensures (fun n0 _ n1 -> n1 = n0 + 1))
-  = let n = get () in
-    put (n + 1)
+val incr : unit -> ST unit (requires (fun n -> True))
+			  (ensures (fun n0 _ n1 -> n1 = n0 + 1))
+let incr u = 
+  let n = get () in
+  put (n + 1)
 
 reifiable let incr2 (_:unit)
   : St unit
@@ -114,20 +115,26 @@ reifiable let incr2 (_:unit)
     put (n + 1)
 
 (* #set-options "--log_queries" *)
-let f (_:unit) : St unit =
-    let n0 = get() in
-    let _, n1 = reify (incr2 ()) n0 in
-    (* assert (n1 = n0 + 1); *)
-    put n1
+(* let f (_:unit) : St unit = *)
+(*     let n0 = get() in *)
+(*     let _, n1 = reify (incr2 ()) n0 in *)
+(*     assert (n1 = n0 + 1); *)
+(*     put n1 *)
 
-let g (_:unit) : St nat =
+val g : unit -> St int
+#reset-options
+let g u =
     let n0 = get () in
-    let f : st_repr unit (fun n0 post -> post ((), n0 + 2)) =
-      fun n0 -> (), n0+2 in 
+    let f : st_repr unit (fun n0 post -> forall x. snd x=n0+2 ==> post x) =
+      fun n0 -> (), n0+2 in
     STATE.reflect f;
-    let n1 = get () in 
+    let n1 = get () in
+    assert (n0 + 2 = n1);
     n1
-    (* assert (n0 + 2 = n1) *)
+
+    
+    
+
 
 (* sub_effect PURE ~> STATE { *)
 (*   lift_wp: #a:Type -> #wp:pure_wp a -> st_wp a = ... *)
