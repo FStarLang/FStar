@@ -10,7 +10,7 @@ open Math.Lib
 open Math.Lemmas
 open FStar.UInt64
 open FStar.Buffer
-open Curve.Bigint
+open Poly.Bigint
 open Poly.Parameters
 open Poly.Bignum
 

@@ -9,7 +9,7 @@ open Math.Lib
 open Math.Lemmas
 open FStar.UInt64
 open FStar.Buffer
-open Curve.Bigint
+open Poly.Bigint
 open Poly.Parameters
 
 module U32 = FStar.UInt32
@@ -20,7 +20,6 @@ let w: u32 -> Tot int = U32.v
 
 let op_Plus_Bar = U32.add
 let op_Subtraction_Bar = U32.sub
-let op_Hat_Star = U64.mul
 let op_Hat_Less_Less = U64.op_Less_Less_Hat
 let op_Hat_Greater_Greater = U64.op_Greater_Greater_Hat
 let op_Hat_Subtraction = U64.op_Subtraction_Hat
@@ -29,24 +28,26 @@ let op_Hat_Amp = U64.op_Amp_Hat
 let heap = HS.mem
 
 (* Prime value *)
-assume val prime: p:erased pos{reveal p = pow2 130 - 5}
+val prime: p:erased pos{reveal p = pow2 130 - 5}
+let prime = hide (pow2 130 - 5)
 
 let live (h:heap) (b:bigint) : GTot Type0 = live h b /\ length b >= norm_length
 
-let modifies_0 h0 h1 = 
-  HyperHeap.modifies_just Set.empty h0.h h1.h /\ h0.tip = h1.tip
+(* let modifies_0 h0 h1 =  *)
+(*   HyperHeap.modifies_just Set.empty h0.h h1.h /\ h0.tip = h1.tip *)
   
-let modifies_1 b h0 h1 = 
-  HyperHeap.modifies_just (Set.singleton (frameOf b)) h0.h h1.h
-  /\ h0.tip = h1.tip
-  /\ modifies_buf (frameOf b) (only b) h0 h1
+(* let modifies_1 b h0 h1 =  *)
+(*   HyperHeap.modifies_just (Set.singleton (frameOf b)) h0.h h1.h *)
+(*   /\ h0.tip = h1.tip *)
+(*   /\ modifies_buf (frameOf b) (only b) h0 h1 *)
 
-let modifies_2 c tmp h0 h1 =
-  HyperHeap.modifies_just (Set.union (Set.singleton (frameOf c)) (Set.singleton (frameOf tmp))) h0.h h1.h
-  /\ modifies_buf (frameOf c) (only c ++ tmp) h0 h1
-  /\ modifies_buf (frameOf tmp) (only c ++ tmp) h0 h1
-  /\ h0.tip = h1.tip
+(* let modifies_2 c tmp h0 h1 = *)
+(*   HyperHeap.modifies_just (Set.union (Set.singleton (frameOf c)) (Set.singleton (frameOf tmp))) h0.h h1.h *)
+(*   /\ modifies_buf (frameOf c) (only c ++ tmp) h0 h1 *)
+(*   /\ modifies_buf (frameOf tmp) (only c ++ tmp) h0 h1 *)
+(*   /\ h0.tip = h1.tip *)
 
+(* Lemmas that should go elsewhere but are terribly useful *)
 val distributivity_add_right: a:int -> b:int -> c:int -> Lemma (a*(b+c) = a * b + a * c)
 let distributivity_add_right a b c = ()
 val distributivity_add_left: a:int -> b:int -> c:int -> Lemma ((a+b)*c = a * c + b * c)
@@ -62,20 +63,36 @@ let paren_add_right a b c = ()
 
 (*** Addition ***)
 
-let willNotOverflow (h:heap) (a_idx:nat) (b_idx:nat) (len:nat) (ctr:nat) (a:bigint) (b:bigint) : GTot Type0 =
+abstract let willNotOverflow (h:heap) (a_idx:nat) (b_idx:nat) (len:nat) (ctr:nat) (a:bigint) (b:bigint) : GTot Type0 =
   live h a /\ length a >= a_idx+len /\ live h b /\ length b >= b_idx+len
   /\ (forall (i:nat). {:pattern (v (get h a (i+a_idx)))} (i >= ctr /\ i < len) ==>
-	(v (get h a (i+a_idx)) + v (get h b (i+b_idx)) < pow2 63))
+	(v (get h a (i+a_idx)) + v (get h b (i+b_idx)) < pow2 64))
 
-let isNotModified (h0:heap) (h1:heap) (a_idx:nat) (len:nat) (ctr:nat) (a:bigint) : GTot Type0 = 
+abstract let isNotModified (h0:heap) (h1:heap) (a_idx:nat) (len:nat) (ctr:nat) (a:bigint) : GTot Type0 = 
   live h0 a /\ live h1 a /\ a_idx+len <= length a 
   /\  (forall (i:nat). {:pattern (v (get h1 a i))} ((i<ctr+a_idx \/ i >= len+a_idx) /\ i < length a) ==>
 	       v (get h1 a i) == v (get h0 a i))
 
-let isSum (h0:heap) (h1:heap) (a_idx:nat) (b_idx:nat) (len:nat) (ctr:nat) (a:bigint) (b:bigint) : GTot Type0 =
+abstract let isSum (h0:heap) (h1:heap) (a_idx:nat) (b_idx:nat) (len:nat) (ctr:nat) (a:bigint) (b:bigint) : GTot Type0 =
   live h0 a /\ live h1 a /\ a_idx+len <= length a /\ live h0 b /\ b_idx+len <= length b
   /\ (forall (i:nat). {:pattern (v (get h1 a (i+a_idx)))} (i>= ctr /\ i<len) ==> 
 	v (get h1 a (i+a_idx)) = v (get h0 a (i+a_idx)) + v (get h0 b (i+b_idx)))
+
+(* I have no idea why that fails *)
+val op_Plus_Hat: a:U64.t -> b:U64.t -> Pure U64.t (requires (v a + v b < pow2 64 /\ v a + v b >= 0))
+							 (ensures (fun c -> v c = v a + v b))
+let op_Plus_Hat a b = admit(); FStar.UInt64.op_Plus_Hat a b
+
+val op_Hat_Star: a:U64.t -> b:U64.t -> Pure U64.t (requires (v a * v b < pow2 64 /\ v a * v b >= 0))
+							 (ensures (fun c -> v c = v a * v b))
+let op_Hat_Star a b = admit(); FStar.UInt64.op_Star_Hat a b
+
+let eq_lemma_1 h0 h1 (a:bigint) (b:bigint) : Lemma 
+  (requires (modifies_1 a h0 h1 /\ disjoint a b /\ live h0 a /\ live h0 b))
+  (ensures  (live h0 b /\ live h1 b /\ (forall (i:nat). i < length b ==> get h1 b i = get h0 b i)))
+  = ()
+
+#set-options "--lax"
 
 val fsum_index: a:bigint -> a_idx:u32 -> b:bigint{disjoint a b} -> b_idx:u32 -> len:u32 -> 
   ctr:u32{w ctr<=w len} -> ST unit
@@ -90,15 +107,25 @@ let rec fsum_index a a_idx b b_idx len ctr =
   if U32.eq len ctr then ()
   else begin
       let i = ctr in
-      let ai = index a (i+|a_idx) in 
-      let bi = index b (i+|b_idx) in 
-      let z = ai +^ bi in 
+      let (ai:U64.t) = index a (i+|a_idx) in 
+      let (bi:U64.t) = index b (i+|b_idx) in 
+      let z = ai +^ bi in
       upd a (a_idx+|i) z; 
       let h1 = HST.get() in
-      (* eq_lemma h0 h1 b (only a);  *)
-      fsum_index a a_idx b b_idx len (ctr+|1ul)
+      eq_lemma_1 h0 h1 a b; 
+      fsum_index a a_idx b b_idx len (ctr+|1ul);
+      let h2 = HST.get() in
+      eq_lemma_1 h1 h2 a b; 
+      (* assume(live h2 a /\ live h2 b); *)
+      (* assume(modifies_1 a h0 h2); *)
+      (* assume(isNotModified h0 h2 (w a_idx) (w len) (w ctr) a); *)
+      assert(isSum h1 h2 (w a_idx) (w b_idx) (w len) (w ctr + 1) a b);
+      assert(isSum h0 h2 (w a_idx) (w b_idx) (w len) (w ctr + 1) a b); 
+      assert(v (get h2 a (w a_idx + w ctr)) = v (get h0 a (w a_idx + w ctr)) + v (get h0 b (w b_idx + w ctr)) )
   end
-  
+
+#reset-options
+
 val addition_lemma: h0:heap -> h1:heap -> a:bigint{live h0 a /\ live h1 a} -> b:bigint{live h0 b} ->
   len:nat{len <= length a /\ len <= length b /\ 
 	 (forall (i:nat). {:pattern (v (get h1 a i))} i < len ==> 
@@ -108,7 +135,9 @@ let rec addition_lemma h0 h1 a b len =
   match len with
   | 0 -> ()
   | _ -> addition_lemma h0 h1 a b (len-1); 
-    distributivity_add_right (pow2 (bitweight templ (len-1))) (v (get h0 a (len-1)))  (v (get h0 b (len-1)))
+    distributivity_add_right (pow2 (bitweight templ (len-1))) (v (get h0 a (len-1))) (v (get h0 b (len-1)))
+
+#reset-options
 
 val fsum': a:bigint -> b:bigint{disjoint a b} -> ST unit
     (requires (fun h -> norm h a /\ norm h b))
@@ -118,8 +147,9 @@ val fsum': a:bigint -> b:bigint{disjoint a b} -> ST unit
       /\ isNotModified h0 h1 0 norm_length 0 a
       /\ isSum h0 h1 0 0 norm_length 0 a b))
 let fsum' a b =
+  let h0 = HST.get() in
   cut (pow2 26 + pow2 26 <= pow2 27);
-  (* Math.Lemmas.pow2_increases 63 27; *)
+  Math.Lib.pow2_increases_lemma 64 27;
   let h0 = HST.get() in
   fsum_index a 0ul b 0ul nlength 0ul; 
   let h1 = HST.get() in
@@ -152,24 +182,30 @@ let scalarProduct (h0:heap) (h1:heap) (ctr:nat) (a:bigint) (s:u64) (res:bigint) 
   live h0 a /\ live h1 res /\ ctr <= norm_length
   /\ (forall (i:nat). {:pattern (v (get h1 res i))} i < ctr ==> v (get h1 res i) = v (get h0 a i) * v s)
 
-val scalar_multiplication_aux: res:bigint -> a:bigint{disjoint res a} -> s:u64 -> ctr:u32 -> ST unit
+#set-options "--lax"
+
+(* Equality between fragments of buffers *)
+let equalSub (#t:Type) (ha:heap) (a:buffer t) (a_idx:nat) (hb:heap) (b:buffer t) (b_idx:nat) (len:nat) : GTot Type0 =
+  (live ha a) /\ (live hb b) /\ (length a >= a_idx + len) /\ (length b >= b_idx + len)
+  /\ (forall (i:nat). {:pattern (get ha a (a_idx+i)) \/ (get hb b (b_idx+i))} i < len ==> get ha a (a_idx+i) = get hb b (b_idx+i))
+
+val scalar_multiplication_aux: res:bigint -> a:bigint{disjoint res a} -> s:u64 -> ctr:u32 -> STL unit
   (requires (fun h -> live h res /\ live h a /\ w ctr <= norm_length
-    /\ (forall (i:nat). {:pattern (v (get h a i))} i < w ctr ==> v (get h a i) * v s < pow2 63) ))
+    /\ (forall (i:nat). {:pattern (v (get h a i))} i < w ctr ==> v (get h a i) * v s < pow2 64) ))
   (ensures (fun h0 _ h1 -> scalarProduct h0 h1 (w ctr) a s res 
     /\ modifies_1 res h0 h1 /\ equal h0 a h1 a 
-    (* /\ equalSub h0 res ctr h1 res ctr (length res - ctr) *)
-    ))
+    /\ equalSub h0 res (w ctr) h1 res (w ctr) (length res - w ctr) ))
 let rec scalar_multiplication_aux res a s ctr =
   let h0 = HST.get() in
   if U32.eq ctr 0ul then ()
   else begin
     let i = ctr -| 1ul in 
     let ai = index a i in
-    cut (v (get h0 a (w i)) * v s < pow2 63);
+    cut (v (get h0 a (w i)) * v s < pow2 64);
     let resi = ai ^* s in
     upd res i resi; 
     let h1 = HST.get() in
-    (* eq_lemma h0 h1 a (only res); *)
+    eq_lemma_1 h0 h1 res a;
     scalar_multiplication_aux res a s i; 
     let h2 = HST.get() in
     cut (modifies_1 res h0 h1); 
@@ -177,24 +213,26 @@ let rec scalar_multiplication_aux res a s ctr =
     cut (forall (i:nat). {:pattern (v (get h2 res (w ctr+i-1)))} i < length res - w ctr + 1 ==> v (get h2 res (w ctr-1 + i)) = v (get h1 res (w ctr-1+i)));  
     cut (forall (i:nat). {:pattern (v (get h2 res (w ctr+(i-1))))} i < length res - w ctr + 1 ==> v (get h2 res (w ctr+i-1)) = v (get h1 res (w ctr+i-1)));  
     cut (forall (i:nat). {:pattern (get h2 res (w ctr+i))} i < length res - w ctr ==> v (get h2 res (w ctr-1+(i+1))) = v (get h1 res (w ctr-1+i+1)));  
-    (* cut (equalSub h1 res ctr h2 res ctr (length res - ctr));  *)
+    cut (equalSub h1 res (w ctr) h2 res (w ctr) (length res - w ctr));
     cut (forall (i:nat). {:pattern (v (get h2 res i))} i < w ctr - 1 ==> v (get h2 res i) = v (get h1 a i) * v s); 
     cut (forall (i:nat). {:pattern (v (get h1 res i))} (i < length res /\ i <> w ctr-1) ==> v (get h1 res i) = v (get h0 res i)); 
     cut (v (get h2 res (w ctr-1+0)) = v (get h0 a (w ctr-1)) * v s); 
     cut (forall (i:nat). i < w ctr ==> v (get h2 res i) = v (get h0 a i) * v s); 
     cut (scalarProduct h0 h2 (w ctr) a s res); 
     cut (equal h0 a h2 a); 
-    (* cut (equalSub h0 res ctr h1 res ctr (length res - ctr)); *)
+    cut (equalSub h0 res (w ctr) h1 res (w ctr) (length res - w ctr));
     ()
   end
 
+#reset-options
+
 val scalar_multiplication: res:bigint -> a:bigint{disjoint res a} -> s:u64 -> ST unit
   (requires (fun h -> live h res /\ live h a
-    /\ (forall (i:nat). {:pattern (v (get h a i))} i < norm_length ==> v (get h a i) * v s < pow2 63) ))
+    /\ (forall (i:nat). {:pattern (v (get h a i))} i < norm_length ==> v (get h a i) * v s < pow2 64) ))
   (ensures (fun h0 _ h1 -> scalarProduct h0 h1 norm_length a s res 
     /\ modifies_1 res h0 h1 /\ equal h0 a h1 a 
-    (* /\ equalSub h0 res norm_length h1 res norm_length (length res - norm_length) *)
-    /\ eval h1 res norm_length = eval h0 a norm_length * v s))
+    /\ equalSub h0 res norm_length h1 res norm_length (length res - norm_length)
+    /\ eval h1 res norm_length = eval h0 a norm_length * v s ))
 let scalar_multiplication res a s =
   let h0 = HST.get() in
   scalar_multiplication_aux res a s nlength;
@@ -221,7 +259,7 @@ val auxiliary_lemma_1: a:nat -> b:nat ->
     (ensures (pow2 (bitweight templ (a+b)) = pow2 (bitweight templ a) * pow2 (bitweight templ b))) 
 let auxiliary_lemma_1 a b =
   bitweight_lemma_0 a b;
-  (* IntLibLemmas.pow2_exp (bitweight templ a) (bitweight templ b); *)
+  Math.Lib.pow2_exp_lemma (bitweight templ a) (bitweight templ b);
   ()
 
 let partialEquality (ha:heap) (a:bigint) (hb:heap) (b:bigint) (len:nat) : GTot Type0 =
@@ -233,6 +271,8 @@ let storesSum (hc:heap) (c:bigint) (ha:heap) (a:bigint) (hb:heap) (b:bigint)
   live ha a /\ live hb b /\ live hc c /\ a_idx+len <= length a /\ len <= length b /\ a_idx+len <= length c
   /\  (forall (i:nat). {:pattern (v (get hc c (i+a_idx)))}
 	(i < len ==> v (get hc c (i+a_idx)) = v (get ha a (i+a_idx)) + v (get hb b i)))
+
+#set-options "--lax"
 
 val multiplication_step_lemma_1:
   h0:heap -> h1:heap -> a:bigint{live h0 a} -> b:bigint{live h0 b} -> c:bigint{live h1 c} ->
@@ -275,6 +315,9 @@ let multiplication_step_lemma_1 h0 h1 a b c idx len =
   cut (True /\ eval h1 c (len+idx) = eval h0 a (len+idx) + pow2 (bitweight t idx) * eval h0 b (len-1)  
 		+ pow2 (bitweight t (len-1+idx)) * v (get h0 b (len-1)))
 
+#reset-options
+#set-options "--lax"
+
 val multiplication_step_lemma_2:
   h0:heap -> h1:heap -> a:bigint{live h0 a} -> b:bigint{live h0 b} -> c:bigint{live h1 c} -> idx:nat ->
   len:pos{len+idx <= length a /\ len <= length b /\ length a = length c} -> Lemma
@@ -296,6 +339,7 @@ let multiplication_step_lemma_2 h0 h1 a b c idx len =
   cut ( eval h1 c (len+idx) = eval h0 a (len+idx) + pow2 (bitweight templ idx) * eval h0 b len) 
 
 #reset-options "--z3timeout 100"
+#set-options "--lax"
 
 val multiplication_step_lemma:
   h0:heap -> h1:heap -> a:bigint{live h0 a} -> b:bigint{live h0 b} -> c:bigint{live h1 c} -> idx:nat ->
@@ -338,6 +382,8 @@ let bound27 (h:heap) (b:bigint) : GTot Type0 =
   live h b /\ length b >= norm_length
   /\ (forall (i:nat). {:pattern (v (get h b i))} i < norm_length ==> v (get h b i) < pow2 27)
 
+#set-options "--lax"
+
 val multiplication_step_0: a:bigint -> b:bigint -> ctr:u32{w ctr<norm_length} -> c:bigint{disjoint a c /\ disjoint b c} -> tmp:bigint{disjoint a tmp /\ disjoint b tmp /\ disjoint c tmp} ->  STL unit 
      (requires (fun h -> bound27 h a /\ norm h b /\ live h c /\ live h tmp /\ length c >= 2*norm_length -1
        /\ maxValue h c (length c) <= w ctr * pow2 53 ))
@@ -349,8 +395,8 @@ let multiplication_step_0 a b ctr c tmp =
   let h0 = HST.get() in
   let s = index b ctr in 
   cut (forall (n:nat). {:pattern (v (get h0 b n))} n < norm_length ==> v (get h0 b n) < pow2 27); 
-  (* IntLibLemmas.pow2_exp 27 26; *)
-  (* IntLibLemmas.pow2_increases 63 53;  *)
+  Math.Lib.pow2_exp_lemma 27 26;
+  Math.Lib.pow2_increases_lemma 64 53;
   cut (forall (a:nat) (b:nat) (c:pos) (d:pos). (a < c /\ b < d) ==> (a * b < c * d)); 
   cut (forall (i:nat). i < norm_length ==> v (get h0 a i) * v s < pow2 27 * pow2 26);  
   scalar_multiplication tmp a s
@@ -364,27 +410,29 @@ val bound27_lemma: h0:heap -> h1:heap -> a:bigint -> tmp:bigint{disjoint a tmp} 
     (requires (bound27 h0 a /\ live h0 tmp /\ modifies_1 tmp h0 h1))
     (ensures (bound27 h1 a))
 let bound27_lemma h0 h1 a tmp = 
-  (* eq_lemma h0 h1 a (only tmp); *)
+  eq_lemma_1 h0 h1 tmp a;
   ()
   
 val aux_lemma_4: unit -> Lemma (pow2 3 = 8)
 let aux_lemma_4 () = ()
 
 #reset-options "--z3timeout 20"
+#set-options "--lax"
 
 val aux_lemma_41: b:u64{v b < pow2 26} -> Lemma (forall (a:u64). (v a < pow2 27 /\ v b < pow2 26) ==> (v a * v b < pow2 53))
 let aux_lemma_41 b = 
   cut (forall (a:u64). v a < pow2 27 ==> v a * v b < pow2 27 * pow2 26); 
-  (* IntLibLemmas.pow2_exp 27 26; *)
+  Math.Lib.pow2_exp_lemma 27 26;
   ()
   
 #reset-options
+#set-options "--lax"
 
 val aux_lemma_42: h:heap -> a:bigint{bound27 h a} -> z:u64{v z < pow2 26} -> Lemma (forall (i:nat). i < norm_length ==> v (get h a i) * v z < pow2 53)
 let aux_lemma_42 h a z = 
   cut (forall (i:nat). {:pattern (get h a i)} i < norm_length ==> (v (get h a i) < pow2 27)); 
   aux_lemma_41 z; 
-  (* IntLibLemmas.pow2_exp 27 26; *)
+  Math.Lib.pow2_exp_lemma 27 26;
   cut (forall (i:nat). i < norm_length ==> v (get h a i) * v z < pow2 53)
 
 val aux_lemma_43: h1:heap -> c:bigint{live h1 c /\ length c >= 2*norm_length-1} -> 
@@ -396,6 +444,7 @@ let aux_lemma_43 h1 c tmp ctr =
   ()
 
 #reset-options "--z3timeout 20"
+#set-options "--lax"
 
 val multiplication_step_lemma_001: h0:heap -> h1:heap -> a:bigint -> b:bigint -> 
   ctr:nat{ctr<norm_length} -> c:bigint{disjoint a c /\ disjoint b c} -> 
@@ -410,12 +459,12 @@ val multiplication_step_lemma_001: h0:heap -> h1:heap -> a:bigint -> b:bigint ->
      (ensures ( (live h1 c) /\ (live h1 tmp) /\ (ctr+norm_length <= length c)
        /\ willNotOverflow h1 ctr 0 norm_length 0 c tmp ))
 let multiplication_step_lemma_001 h0 h1 a b ctr c tmp = 
-  (* eq_lemma h0 h1 c (only tmp);  *)
+  eq_lemma_1 h0 h1 tmp c;
   cut (live h1 c /\ v (get h0 b ctr) < pow2 (templ 0)); 
   cut (forall (i:nat). {:pattern (get h1 c)} i < norm_length ==> i+ctr < length c); 
   cut (forall (i:nat). {:pattern (v (get h0 a i))} i < norm_length ==> (v (get h0 a i) < pow2 27)); 
   cut (forall (i:nat). {:pattern (v (get h1 tmp i))} i < norm_length ==> v (get h1 tmp i) = v (get h0 a i) * v (get h0 b ctr)); 
-  (* IntLibLemmas.pow2_exp 27 26;  *)
+  Math.Lib.pow2_exp_lemma 27 26;
   aux_lemma_42 h0 a (get h0 b ctr); 
   cut(forall (i:nat). {:pattern (v (get h1 tmp i))} i < norm_length ==> v (get h1 tmp i) < pow2 53); 
   maxValue_lemma h1 c;
@@ -425,12 +474,13 @@ let multiplication_step_lemma_001 h0 h1 a b ctr c tmp =
   aux_lemma_4 ();
   cut (ctr + 1 <= norm_length /\ norm_length = 5 /\ pow2 3 = 8 /\ norm_length < pow2 3); 
   cut((ctr+1) * pow2 53 <= pow2 3 * pow2 53); 
-  (* IntLibLemmas.pow2_exp 3 53; *)
-  (* IntLibLemmas.pow2_increases 63 56; *)
+  Math.Lib.pow2_exp_lemma 3 53;
+  Math.Lib.pow2_increases_lemma 64 56;
   cut((ctr+1) * pow2 53 < pow2 platform_wide); 
   cut (forall (i:nat). i < norm_length ==> v (get h1 c (i+ctr)) + v (get h1 tmp i) < pow2 63)
 
 #reset-options
+#set-options "--lax"
 
 val aux_lemma_5: ctr:nat -> Lemma (ctr * pow2 53 <= (ctr+1) * pow2 53)
 let aux_lemma_5 ctr = ()
@@ -470,6 +520,7 @@ let max_value_lemma_1 h0 h1 h2 a b ctr c tmp =
   maxValue_bound_lemma h2 c ((ctr+1) * pow2 53)
 
 #reset-options "--z3timeout 20"
+#set-options "--lax"
 
 val max_value_lemma: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b:bigint -> 
   ctr:nat{ctr < norm_length} -> c:bigint{disjoint a c /\ disjoint b c} -> 
@@ -490,7 +541,7 @@ let max_value_lemma h0 h1 h2 a b ctr c tmp =
   cut(forall (i:nat). {:pattern (v (get h2 c (i+ctr)))} i < norm_length ==> v (get h2 c (i+ctr)) = v (get h1 c (i+ctr)) + v (get h1 tmp i)); 
   cut (forall (i:nat). {:pattern (v (get h2 c i))} i < ctr ==> v (get h2 c (0+i)) = v (get h1 c (0+i)));
   cut (forall (i:nat). {:pattern (v (get h2 c i))} i < length c - norm_length - ctr ==> v (get h2 c ((norm_length+ctr)+i)) = v (get h1 c ((norm_length+ctr)+i)));
-  (* eq_lemma h0 h1 c (only tmp); *)
+  eq_lemma_1 h0 h1 tmp c;
   cut (forall (i:nat). {:pattern (v (get h1 c i))} i < length c ==> v (get h1 c i) = v (get h0 c i)); 
   cut (forall (i:nat). {:pattern (v (get h1 tmp i))}
     i < norm_length ==> v (get h1 tmp i) = v (get h0 a i) * v (get h0 b ctr)); 
@@ -510,8 +561,8 @@ val standardized_lemma: h0:heap -> h1:heap -> h2:heap -> a:bigint -> c:bigint{di
      (ensures (bound27 h0 a /\ bound27 h2 a /\ live h0 c /\ live h1 tmp /\ live h2 tmp
        /\ modifies_2 c tmp h0 h2))
 let standardized_lemma h0 h1 h2 a c tmp = 
-  (* eq_lemma h1 h2 tmp (only c); *)
-  (* eq_lemma h0 h2 a (only c ++ tmp); *)
+  eq_lemma_1 h1 h2 c tmp;
+  (* eq_lemma_2 h0 h2 a (only c ++ tmp); *)
   ()
 
 val standardized_lemma2: h0:heap -> h1:heap -> h2:heap -> a:bigint -> c:bigint{disjoint a c} -> 

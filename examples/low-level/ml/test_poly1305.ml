@@ -1,7 +1,7 @@
 open Poly_Poly1305
 open Char
 open FStar_Buffer
-open Curve_Bigint
+open Poly_Bigint
        
 let from_string s : bytes =
   let b = create 0 (String.length s) in
