@@ -19,6 +19,8 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS = FStar.HyperStack
 
+let u32 = UInt32.t
+
 let w: u32 -> Tot int = U32.v
 
 let op_Plus_Bar = U32.add
@@ -154,7 +156,7 @@ let le_bytes_to_num b s =
   (* IntLibLemmas.pow2_increases 63 26; *)
   (* IntLibLemmas.pow2_increases 63 32; *)
   (* IntLibLemmas.pow2_increases 26 24; *)
-  let mask_26 = U64.sub ((U64.of_string "1") ^<< 26ul) (U64.of_string "1") in 
+  let mask_26 = U64.sub (1UL ^<< 26ul) 1UL in 
   (* cut (v mask_26 = v one * pow2 26 - v one /\ v one = 1);  *)
   cut (v mask_26 = pow2 26 - 1); 
   let s0 = sub s 0ul  4ul in
@@ -200,7 +202,7 @@ let add_and_multiply acc block r =
   let h0 = HST.get() in
   fsum' acc block; 
   let h1 = HST.get() in
-  let tmp = create (U64.of_string "0") (U32.mul 2ul nlength-|1ul) in 
+  let tmp = create 0UL (U32.mul 2ul nlength-|1ul) in 
   let h2 = HST.get() in 
   cut (forall (i:nat). {:pattern (v (get h2 acc i))} i < norm_length ==> v (get h2 acc i) = v (get h1 acc i));
   cut (forall (i:nat). {:pattern (v (get h1 acc i))} i < norm_length ==> v (get h1 acc i) = v (get h0 acc (i+0)) + v (get h0 block (i+0)));
@@ -257,13 +259,13 @@ let rec poly1305_step msg acc r ctr =
     let msg = offset msg 16ul in
     //    let n, msg = SBytes.split msg 16 in 
     let h = HST.get() in
-    let block = create (U64.of_string "0") nlength in 
+    let block = create 0UL nlength in 
     let h' = HST.get() in
     le_bytes_to_num block n; 
     let b4 = index block 4ul in
     (* IntLibLemmas.pow2_doubles 24; IntLibLemmas.pow2_increases 26 25; *)
     (* IntLibLemmas.pow2_increases 63 26;  *)
-    upd block 4ul (b4 +^ ((U64.of_string "1") ^<< 24ul)); 
+    upd block 4ul (b4 +^ (1UL ^<< 24ul)); 
     let h1 = HST.get() in
     (* eq_lemma h0 h1 r (empty);  *)
     (* eq_lemma h0 h1 acc empty; *)
@@ -298,7 +300,7 @@ let poly1305_last msg acc r len =
     blit msg (len -| l) n 0ul l; 
     upd n l 1uy;
     let h1 = HST.get() in
-    let block = create (U64.of_string "0") nlength in 
+    let block = create 0UL nlength in 
     let h2 = HST.get() in
     le_bytes_to_num block n; 
     let b4 = index block 4ul in
@@ -330,15 +332,15 @@ let poly1305_mac hash msg len key =
   let h0' = HST.get() in
   clamp r; 
   let h0'' = HST.get() in
-  let bigint_r = create (U64.of_string "0") nlength in
-  let bigint_s = create (U64.of_string "0") nlength in 
+  let bigint_r = create 0UL nlength in
+  let bigint_s = create 0UL nlength in 
   le_bytes_to_num bigint_r r; 
   let h1 = HST.get() in
   disjoint_only_lemma s r; 
   le_bytes_to_num bigint_s s; 
   let h2 = HST.get() in
   cut (modifies_1 r h0'' h2); 
-  let acc = create (U64.of_string "0") nlength in 
+  let acc = create 0UL nlength in 
   let h2' = HST.get() in
   let ctr = U32.div len 16ul in
   let rest = U32.rem len 16ul in 

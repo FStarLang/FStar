@@ -9,8 +9,6 @@ open FStar.HST
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-let u32 = UInt32.t
-
 let lemma_size (x:int) (pos:nat) : Lemma (requires (UInt.size x n))
 				     (ensures (x >= 0))
 				     [SMTPatT (UInt.size x n)]
@@ -21,8 +19,8 @@ type bounded_seq (t:Type) = s:seq t{length s <= UInt.max_int n}
 (* Buffer general type, fully implemented on FStar's arrays *)
 private type buffer' (a:Type) = {
   content:stackref (bounded_seq a); 
-  idx:u32;    // JK: used machine integer so that if the code is meant to go to OCaml, that module can be extracted instead of being realized 
-  length:u32;
+  idx:UInt32.t;    // JK: used machine integer so that if the code is meant to go to OCaml, that module can be extracted instead of being realized 
+  length:UInt32.t;
 }
 type buffer (a:Type) = buffer' a
 
@@ -31,7 +29,7 @@ let contains #a h (b:buffer a) : GTot Type0 = HS.contains #(bounded_seq a) h b.c
 let sel #a h (b:buffer a{contains h b}) : GTot (seq a) = HS.sel #(bounded_seq a) h b.content
 let max_length #a h (b:buffer a{contains h b}) : GTot nat = Seq.length (sel h b)
 let length #a (b:buffer a) : GTot nat = v b.length
-let length' #a (b:buffer a) : GTot u32 = b.length
+let length' #a (b:buffer a) : GTot UInt32.t = b.length
 let idx #a (b:buffer a) : GTot nat = v b.idx
 let content #a (b:buffer a) : GTot (stackref (bounded_seq a)) = b.content
 let as_ref #a (b:buffer a) : GTot (Heap.ref (bounded_seq a)) = as_ref (b.content)
@@ -225,7 +223,7 @@ val lemma_modifies_fresh_2: #t:Type -> #t':Type -> a:buffer t -> b:buffer t' -> 
 let lemma_modifies_fresh_2 #t #t' a b h0 h1 = ()
 
 (** Concrete getters and setters **)
-let create #a (init:a) (len:u32) : ST (buffer a)
+let create #a (init:a) (len:UInt32.t) : ST (buffer a)
      (requires (fun h -> True))
      (ensures (fun (h0:mem) b h1 -> ~(contains h0 b) 
        /\ live h1 b /\ idx b = 0 /\ length b = v len /\ frameOf b = h0.tip
@@ -236,7 +234,7 @@ let create #a (init:a) (len:u32) : ST (buffer a)
   = let content = salloc (Seq.create (v len) init) in
     {content = content; idx = (uint_to_t 0); length = len}
 
-let index #a (b:buffer a) (n:u32{v n<length b}) : STL a
+let index #a (b:buffer a) (n:UInt32.t{v n<length b}) : STL a
      (requires (fun h -> live h b))
      (ensures (fun h0 z h1 -> live h0 b /\ h1 == h0 /\ z == get h0 b (v n) ))
   = let s = !b.content in
@@ -259,7 +257,7 @@ let lemma_aux_7 (#a:Type) (b:buffer a) : Lemma
   = cut (Set.equal (Set.union Set.empty (arefs (only b))) (arefs (only b)))
 
 // TODO
-let lemma_aux_6 #a (b:buffer a) (n:u32{v n < length b}) (z:a) h0 : Lemma
+let lemma_aux_6 #a (b:buffer a) (n:UInt32.t{v n < length b}) (z:a) h0 : Lemma
   (requires (live h0 b))
   (ensures (live h0 b
     /\ modifies_1 b h0 (HS.upd h0 (content b) (Seq.upd (sel h0 b) (idx b + v n) z)) ))
@@ -269,7 +267,7 @@ let lemma_aux_6 #a (b:buffer a) (n:u32{v n < length b}) (z:a) h0 : Lemma
   = let h1 = HS.upd h0 (content b) (Seq.upd (sel h0 b) (idx b + v n) z) in
     assume (forall (#a':Type) (b':buffer a'). (live h0 b' /\ disjointSet b' (only b)) ==> equal h0 b' h1 b')
 
-val upd: #a:Type -> b:buffer a -> n:u32 -> z:a -> STL unit
+val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> STL unit
   (requires (fun h -> live h b /\ v n < length b))
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ v n < length b
     /\ modifies_1 b h0 h1
@@ -284,12 +282,12 @@ let upd #a b n z =
   b.content := s
 
 (* Could be made Total with a couple changes in the spec *)
-let sub #a (b:buffer a) (i:u32) (len:u32{v len <= length b /\ v i + v len <= length b}) : STL (buffer a)
+let sub #a (b:buffer a) (i:UInt32.t) (len:UInt32.t{v len <= length b /\ v i + v len <= length b}) : STL (buffer a)
      (requires (fun h -> live h b))
      (ensures (fun h0 b' h1 -> content b = content b' /\ idx b' = idx b + v i /\ length b' = v len /\ (h0 == h1)))
   = {content = b.content; idx = i +^ b.idx; length = len}
 
-let offset #a (b:buffer a) (i:u32{v i <= length b}) : STL (buffer a)
+let offset #a (b:buffer a) (i:UInt32.t{v i <= length b}) : STL (buffer a)
   (requires (fun h -> live h b))
   (ensures (fun h0 b' h1 -> content b' = content b /\ idx b' = idx b + v i /\ length b' = length b - v i
     /\ h0 == h1))
@@ -306,9 +304,9 @@ let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem)
 (* #reset-options "--z3timeout 100" *)
 
 (* TODO: simplify, add triggers ? *)
-private val blit_aux: #a:Type -> b:buffer a -> idx_b:u32 -> 
-  b':buffer a -> idx_b':u32 -> len:u32{v idx_b+v len<=length b/\v idx_b'+v len<= length b'} -> 
-  ctr:u32{v ctr <= v len} ->  STL unit
+private val blit_aux: #a:Type -> b:buffer a -> idx_b:UInt32.t -> 
+  b':buffer a -> idx_b':UInt32.t -> len:UInt32.t{v idx_b+v len<=length b/\v idx_b'+v len<= length b'} -> 
+  ctr:UInt32.t{v ctr <= v len} ->  STL unit
   (requires (fun h -> live h b /\ live h b' /\ disjoint b b'
     /\ (forall (i:nat). i < v ctr ==> get h b (v idx_b+i) = get h b' (v idx_b'+i)) ))
   (ensures (fun h0 _ h1 -> live h1 b /\ live h1 b'  /\ live h0 b /\ live h0 b' 
@@ -353,8 +351,8 @@ let rec blit_aux #a b idx_b b' idx_b' len ctr =
 
 #reset-options
 
-val blit: #t:Type -> a:buffer t -> idx_a:u32{v idx_a <= length a} -> b:buffer t{disjoint a b} -> 
-  idx_b:u32{v idx_b <= length b} -> len:u32{v idx_a+v len <= length a /\ v idx_b+v len <= length b} -> STL unit
+val blit: #t:Type -> a:buffer t -> idx_a:UInt32.t{v idx_a <= length a} -> b:buffer t{disjoint a b} -> 
+  idx_b:UInt32.t{v idx_b <= length b} -> len:UInt32.t{v idx_a+v len <= length a /\ v idx_b+v len <= length b} -> STL unit
     (requires (fun h -> live h a /\ live h b))
     (ensures (fun h0 _ h1 -> live h0 b /\ live h0 a /\ live h1 b /\ live h1 a
       /\ (forall (i:nat). {:pattern (get h1 b (v idx_b+i))} i < v len ==> get h1 b (v idx_b+i) = get h0 a (v idx_a+i))
@@ -364,7 +362,7 @@ val blit: #t:Type -> a:buffer t -> idx_a:u32{v idx_a <= length a} -> b:buffer t{
       (* /\ modifies_buf (frameOf b) (only b) h0 h1 )) *)
 let blit #t a idx_a b idx_b len = blit_aux a idx_a b idx_b len (uint_to_t 0)
 
-val split: #a:Type -> a:buffer t -> i:u32{v i <= length a} -> ST (buffer t * buffer t)
+val split: #a:Type -> a:buffer t -> i:UInt32.t{v i <= length a} -> ST (buffer t * buffer t)
     (requires (fun h -> live h a))
     (ensures (fun h0 b h1 -> live h1 (fst b) /\ live h1 (snd b) /\ h1 == h0 /\ idx (fst b) = idx a 
       /\ idx (snd b) = idx a + v i /\ length (fst b) = v i /\ length (snd b) = length a - v i 
@@ -372,7 +370,7 @@ val split: #a:Type -> a:buffer t -> i:u32{v i <= length a} -> ST (buffer t * buf
 let split #t a i = 
   let a1 = sub a (uint_to_t 0) i in let a2 = sub a i (a.length -^ i) in a1, a2
 
-private val of_seq_aux: #a:Type -> s:bounded_seq a -> l:u32{v l = Seq.length s} -> ctr:u32{v ctr <= v l} -> b:buffer a{idx b = 0 /\ length b = v l} -> STL unit
+private val of_seq_aux: #a:Type -> s:bounded_seq a -> l:UInt32.t{v l = Seq.length s} -> ctr:UInt32.t{v ctr <= v l} -> b:buffer a{idx b = 0 /\ length b = v l} -> STL unit
     (requires (fun h -> live h b))
     (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b 
       /\ (forall (i:nat). {:pattern (get h1 b i)} i < v ctr ==> get h1 b i = Seq.index s i)
@@ -389,7 +387,7 @@ let rec of_seq_aux #a s l ctr b =
     of_seq_aux s l j b	 
   end
 
-val of_seq: #a:Type -> s:seq a -> l:u32{v l = Seq.length s /\ v l > 0} -> ST (buffer a)
+val of_seq: #a:Type -> s:seq a -> l:UInt32.t{v l = Seq.length s /\ v l > 0} -> ST (buffer a)
   (requires (fun h -> True))
   (ensures (fun h0 b h1 -> idx b = 0 /\ length b = v l /\ ~(contains h0 b) /\ live h1 b
     /\ frameOf b = h1.tip
@@ -402,7 +400,7 @@ let of_seq #a s l =
   let s' = salloc (Seq.slice s 0 (v l)) in
   {content = s'; idx = 0ul; length = l}
 
-val clone: #a:Type ->  b:buffer a -> l:u32{length b >= v l /\ v l > 0} -> ST (buffer a)
+val clone: #a:Type ->  b:buffer a -> l:UInt32.t{length b >= v l /\ v l > 0} -> ST (buffer a)
   (requires (fun h -> live h b))
   (ensures (fun h0 b' h1 -> ~(contains h0 b') /\ live h0 b /\ live h1 b' /\ idx b' = 0 /\ length b' = v l
     (* /\ sel h1 b' = Seq.slice (sel h0 b) 0 (v l) *)
@@ -417,7 +415,7 @@ let clone #a b l =
   blit b (uint_to_t 0) b' (uint_to_t 0) l; 
   b'
 
-val upd_lemma: #t:Type -> ha:mem -> hb:mem -> a:buffer t -> ctr:u32 -> x:t -> Lemma (True)
+val upd_lemma: #t:Type -> ha:mem -> hb:mem -> a:buffer t -> ctr:UInt32.t -> x:t -> Lemma (True)
 val no_upd_lemma: #t:Type -> ha:mem -> hb:mem -> a:buffer t -> bufs:(Set.set abuffer) -> Lemma (True)
 let upd_lemma #t ha hb a ctr x = ()
 let no_upd_lemma #t ha hb a bufs = ()

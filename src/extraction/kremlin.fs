@@ -111,6 +111,7 @@ and typ =
   | TBool
   | TAny
   | TArrow of typ * typ
+  | TZ
 
 (** Versioned binary writing/reading of ASTs *)
 
@@ -269,6 +270,8 @@ and translate_type env t: typ =
       TArrow (translate_type env t1, translate_type env t2)
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.unit") ->
       TUnit
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.int") ->
+      TZ
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.bool") ->
       TBool
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt8.t") ->
@@ -292,10 +295,14 @@ and translate_type env t: typ =
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.HyperStack.mem") ->
       // HACK ALERT HACK ALERT we shouldn't even be extracting this!
       TAny
-  | MLTY_Named ([], ([ module_name ], type_name)) when (module_name = env.module_name) ->
+  | MLTY_Named ([], (path, type_name)) when (String.concat "_" path = env.module_name) ->
+      TAlias type_name
+  | MLTY_Named ([], (_, type_name)) ->
+      (* FIXME *)
       TAlias type_name
   | MLTY_Named (_, p) ->
-      failwith (Util.format1 "todo: translate_type [MLTY_Named] %s" (Syntax.string_of_mlpath p))
+      failwith (Util.format2 "todo: translate_type [MLTY_Named] %s (module_name = %s)"
+        (Syntax.string_of_mlpath p) env.module_name)
   | MLTY_Tuple _ ->
       failwith "todo: translate_type [MLTY_Tuple]"
 
@@ -374,18 +381,25 @@ and translate_expr env e: expr =
       // HACK ALERT HACK ALERT we shouldn't even be extracting this!
       EConstant (UInt8, "0")
 
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "add") }, args)
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Plus_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) Add args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "add_mod") }, args)
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Plus_Percent_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) AddW args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "sub") }, args)
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Subtraction_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) Sub args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "sub_mod") }, args)
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Subtraction_Percent_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) SubW args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "mul") }, args)
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Star_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) Mult args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "div") }, args)
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Slash_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) Div args
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "mod") }, args)
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Percent_Hat") }, args) when is_machine_int m ->
       mk_op env (must (mk_width m)) Mod args
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "logor") }, args)
@@ -421,7 +435,7 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.Int64.uint_to_t") ->
       EConstant (Int64, c)
 
-  | MLE_App ({ expr = MLE_Name ([ module_name ], function_name) }, args) when (module_name = env.module_name) ->
+  | MLE_App ({ expr = MLE_Name (path, function_name) }, args) when (String.concat "_" path = env.module_name) ->
       EApp (EQualified ([], function_name), List.map (translate_expr env) args)
 
   | MLE_App ({ expr = MLE_Name ([ "FStar"; "Int"; "Cast" ], c) }, [ arg ]) ->
@@ -444,9 +458,9 @@ and translate_expr env e: expr =
       else
         failwith (Util.format1 "Unrecognized function from Cast module: %s\n" c)
 
-  | MLE_App ({ expr = MLE_Name p }, args) ->
-      failwith (Util.format2 "todo: translate_expr [MLE_App=%s; %s]"
-        (string_of_mlpath p) (string_of_int (List.length args)))
+  | MLE_App ({ expr = MLE_Name (_, function_name) }, args) ->
+      (* FIXME: all functions end up in the same module... *)
+      EApp (EQualified ([], function_name), List.map (translate_expr env) args)
 
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not

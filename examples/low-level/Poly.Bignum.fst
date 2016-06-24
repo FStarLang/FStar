@@ -16,6 +16,8 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS = FStar.HyperStack
 
+let u32 = UInt32.t
+
 let w: u32 -> Tot int = U32.v
 
 let op_Plus_Bar = U32.add
