@@ -1386,7 +1386,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
     let actions = actions |> List.collect (fun d -> match d.d with 
         | Tycon(_, [TyconAbbrev(name, _, _, defn)]) -> 
           let a = { 
-            action_name=Env.qualify env0 name;
+            action_name=Env.qualify env name;
             action_univs=[];
             action_defn=desugar_term env defn;
             action_typ=S.tun

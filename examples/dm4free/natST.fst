@@ -106,13 +106,13 @@ effect St (a:Type) =
 val incr : unit -> ST unit (requires (fun n -> True))
 			  (ensures (fun n0 _ n1 -> n1 = n0 + 1))
 let incr u = 
-  let n = get () in
-  put (n + 1)
+  let n = STATE.get () in
+  STATE.put (n + 1)
 
 reifiable let incr2 (_:unit)
   : St unit
-  = let n = get() in
-    put (n + 1)
+  = let n = STATE.get() in
+    STATE.put (n + 1)
 
 (* #set-options "--log_queries" *)
 (* let f (_:unit) : St unit = *)
@@ -121,14 +121,16 @@ reifiable let incr2 (_:unit)
 (*     assert (n1 = n0 + 1); *)
 (*     put n1 *)
 
+module Test
+open NatST
 val g : unit -> St int
 #reset-options
 let g u =
-    let n0 = get () in
+    let n0 = STATE.get () in
     let f : st_repr unit (fun n0 post -> forall x. snd x=n0+2 ==> post x) =
       fun n0 -> (), n0+2 in
     STATE.reflect f;
-    let n1 = get () in
+    let n1 = STATE.get () in
     assert (n0 + 2 = n1);
     n1
 

@@ -317,7 +317,13 @@ let rec add_sigelt env se = match se with
     | Sig_bundle(ses, _, _, _) -> add_sigelts env ses
     | _ ->
     let lids = lids_of_sigelt se in
-    List.iter (fun l -> Util.smap_add (sigtab env) l.str se) lids
+    List.iter (fun l -> Util.smap_add (sigtab env) l.str se) lids;
+    match se with 
+    | Sig_new_effect(ne, _) ->
+      ne.actions |> List.iter (fun a ->
+          let se_let = Util.action_as_lb a in
+          Util.smap_add (sigtab env) a.action_name.str se_let)
+    | _ -> ()
 
 and add_sigelts env ses =
     ses |> List.iter (add_sigelt env) 
