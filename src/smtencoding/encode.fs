@@ -697,7 +697,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                         Term.Assume(Term.mkForall([[f]], cvars, f_has_t), a_name, a_name) in
                                     let interp_f = 
                                         let a_name = Some ("interpretation_" ^fsym) in
-                                        Term.Assume(Term.mkForall([[app]], vars@cvars, mkImp(Term.mk_IsTyped app, mkEq(app, body))),
+                                        Term.Assume(Term.mkForall([[app]], vars@cvars, mkEq(app, body)),
                                                     a_name, a_name) in
                                     let f_decls = decls@decls'@(fdecl::decls'')@[typing_f;interp_f] in
                                     Util.smap_add env.cache tkey.hash (fsym, cvar_sorts, f_decls);
@@ -1286,9 +1286,44 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
          failwith "impossible -- removed by tc.fs"
      | Sig_pragma _
      | Sig_main _
-     | Sig_new_effect _
      | Sig_effect_abbrev _
      | Sig_sub_effect _ -> [], env
+
+     | Sig_new_effect(ed, _) ->
+       if ed.qualifiers |> List.contains Reifiable |> not
+       then [], env
+       else (* The basic idea:
+                    1. Encode M.bind_repr: a:Type -> b:Type -> wp_a -> wp_b -> f:st_repr a wp_a -> g:(a -> st_repr b) : st_repr b
+                                       = e
+                       by encoding a function (erasing type arguments)
+                       M.bind_repr (f Term) (g Term) : [[e]]]
+
+                    2. Likewise for M.return_repr
+
+                    3. For each action, a : x1:n -> ... -> xn:tn -> st_repr t wp = fun x1..xn -> e
+                        encode forall x1..xn. Reify (Apply a x1 ... xn) = [[e]]
+            *)
+            let encode_action env (a:S.action) = 
+                let aname, atok, env = new_term_constant_and_tok_from_lid env a.action_name in
+                let formals, _ = Util.arrow_formals_comp a.action_typ in 
+                let tm, decls = encode_term a.action_defn env in
+                let a_decls = 
+                    [Term.DeclFun(aname, formals |> List.map (fun _ -> Term_sort), Term_sort, Some "Action");
+                     Term.DeclFun(atok, [], Term_sort, Some "Action token")] in
+                let xs_sorts, xs = formals |> List.map (fun (bv, _) -> let xxsym, xx, _ = gen_term_var env bv in (xxsym, Term_sort), xx) |> List.split in
+                let app = Term.App(Var "Reify", [mk (Term.App(Var aname, xs))]) |> mk in
+                let a_eq = Term.Assume(Term.mkForall([[app]], xs_sorts, Term.mkEq(app, mk_Apply tm xs_sorts)), 
+                                       Some "Action equality", 
+                                       Some (aname ^"_equality")) in
+                let tok_correspondence = 
+                    let tok_term = Term.mkFreeV(atok,Term_sort) in
+                    let tok_app = mk_Apply tok_term xs_sorts in
+                    Term.Assume(Term.mkForall([[tok_app]], xs_sorts, Term.mkEq(tok_app, app)), 
+                                Some "Action token correspondence", Some (aname ^ "_token_correspondence")) in
+                env, decls@a_decls@[a_eq; tok_correspondence] in
+                
+            let env, decls = Util.fold_map encode_action env ed.actions in
+            List.flatten decls, env
 
      | Sig_declare_typ(lid, _, _, _, _) when (lid_equals lid Const.precedes_lid) ->
         let tname, ttok, env = new_term_constant_and_tok_from_lid env lid in
