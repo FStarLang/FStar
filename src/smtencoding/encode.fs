@@ -582,6 +582,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
       | Tm_app _ ->
         let head, args_e = Util.head_and_args t0 in
+        if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+        then printfn "Encoding app head=%s, n_args=%d" (Print.term_to_string head) (List.length args_e);
         begin match (SS.compress head).n, args_e with 
             | _, _ when head_redex env head -> encode_term (whnf env t) env
 
@@ -591,6 +593,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               let v1, decls1 = encode_term v1 env in
               let v2, decls2 = encode_term v2 env in
               Term.mk_LexCons v1 v2, decls1@decls2
+
+            | Tm_constant Const_reify, (_::_::_) -> 
+              let e0 = S.mk (S.Tm_app(head, [List.hd args_e])) None head.pos in
+              let e = S.mk (S.Tm_app(e0, List.tl args_e)) None t0.pos in
+              encode_term e env
+
+            | Tm_constant Const_reify, [(arg, _)] -> 
+              let tm, decls = encode_term arg env in 
+              mk (Term.App(Var "Reify", [tm])), decls
 
             | _ -> 
             let args, decls = encode_args args_e env in
@@ -1412,6 +1423,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           encode_sigelt env se
      end
       
+//    | Sig_let((is_rec, bindings), _, _, quals) when (quals |> List.contains Reifiable) ->
+//      [], env
 
     | Sig_let((is_rec, bindings), _, _, quals) ->
         let eta_expand binders formals body t =

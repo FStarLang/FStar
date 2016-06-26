@@ -115,16 +115,15 @@ reifiable let incr2 (_:unit)
     STATE.put (n + 1)
 
 (* #set-options "--log_queries" *)
-(* let f (_:unit) : St unit = *)
-(*     let n0 = get() in *)
-(*     let _, n1 = reify (incr2 ()) n0 in *)
-(*     assert (n1 = n0 + 1); *)
-(*     put n1 *)
-
 module Test
 open NatST
+let f (_:unit) : St unit =
+    let n0 = STATE.get() in
+    let _, n1 = reify (incr2 ()) n0 in
+    assert (n1 = n0 + 1);
+    STATE.put n1
+
 val g : unit -> St int
-#reset-options
 let g u =
     let n0 = STATE.get () in
     let f : st_repr unit (fun n0 post -> forall x. snd x=n0+2 ==> post x) =
