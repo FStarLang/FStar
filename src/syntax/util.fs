@@ -508,13 +508,18 @@ let rec abs_formals t = match (Subst.compress t).n with
       Subst.open_term (bs@bs') t
     | _ -> [], t 
 
-let abs bs t lopt = match bs with 
+let abs bs t lopt = 
+    let close_lopt lopt = match lopt with
+        | None
+        | Some (Inr _)  -> lopt
+        | Some (Inl lc) -> Some (Inl (close_lcomp bs lc)) in
+    match bs with 
     | [] -> t
     | _ -> 
     let body = compress (Subst.close bs t) in
     match body.n, lopt with 
         | Tm_abs(bs', t, lopt'), None -> 
-          mk (Tm_abs(close_binders bs@bs', t, lopt)) None t.pos
+          mk (Tm_abs(close_binders bs@bs', t, close_lopt lopt')) None t.pos
         | _ -> 
           let lopt = match lopt with 
             | None

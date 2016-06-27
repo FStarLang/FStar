@@ -1581,7 +1581,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     if name = "bind"
                     then  [("@x0", Term_sort); ("@x1", Term_sort); 
                            ("@x2", Term_sort); ("@x3", Term_sort); 
-                           ("@x4", Term_sort); ("@x5", Term_sort); ("@x6", Term_sort)] 
+                           ("@x4", Term_sort); ("@x5", Term_sort)] 
                     else  [("@x0", Term_sort); ("@x1", Term_sort); ("@x2", Term_sort)] in
                 let m_decl = 
                     Term.DeclFun(br_name, xs |> List.map snd, Term_sort, Some name) in

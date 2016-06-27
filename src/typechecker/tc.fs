@@ -2241,7 +2241,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
             | _ -> failwith "Unexpected repr type" in
 
         let bind_repr = 
-            let r = S.gen_bv "r" None t_range in
+            let r = S.lid_as_fv FStar.Syntax.Const.range_0 Delta_constant None |> S.fv_to_tm in
             let b, wp_b = get_effect_signature () in
             let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
             let wp_f = S.gen_bv "wp_f" None wp_a in
@@ -2250,14 +2250,13 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
             let wp_g_x = mk_Tm_app (S.bv_to_name wp_g) [as_arg <| S.bv_to_name x_a] None Range.dummyRange in
             let res = 
                 let wp = mk_Tm_app (Env.inst_tscheme bind_wp |> snd)
-                                   (List.map as_arg [S.bv_to_name r; S.bv_to_name a; 
+                                   (List.map as_arg [r; S.bv_to_name a; 
                                                      S.bv_to_name b; S.bv_to_name wp_f; 
                                                      S.bv_to_name wp_g])
                                    None Range.dummyRange in
                 mk_repr b wp in
 
-            let expected_k = Util.arrow [S.mk_binder r;
-                                         S.mk_binder a; 
+            let expected_k = Util.arrow [S.mk_binder a; 
                                          S.mk_binder b;
                                          S.mk_binder wp_f;
                                          S.mk_binder wp_g;

@@ -65,7 +65,7 @@ let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty)  : mlty =
 
 let subst ((formals, t):mltyscheme) (args:list<mlty>) : mlty =
     if List.length formals <> List.length args
-    then failwith ("Substitution must be fully applied: instantiation of %A failed; got %A\n")
+    then failwith "Substitution must be fully applied"
     else subst_aux (List.zip formals args) t
 
 let delta_unfold g = function
@@ -80,6 +80,8 @@ let udelta_unfold (g:UEnv.env) = function
     | MLTY_Named(args, n) ->
       begin match UEnv.lookup_ty_const g n with
         | Some ts -> 
+          UEnv.debug g (fun _ -> printfn "Instantiating %A with %d formals with %d args" 
+                                    n (List.length <| fst ts) (List.length args));
           Some (subst ts args)
         | _ -> None
       end

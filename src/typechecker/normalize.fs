@@ -489,7 +489,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Inl x -> 
                       let head = U.mk_reify lb.lbdef in
                       let body = S.mk (Tm_abs([S.mk_binder x], U.mk_reify body, None)) None body.pos in
-                      let reified = S.mk (Tm_app(bind_repr, [as_arg S.tun; as_arg S.tun; as_arg S.tun; as_arg S.tun; as_arg S.tun; as_arg head; as_arg body])) None t.pos in
+                      let reified = S.mk (Tm_app(bind_repr, [as_arg S.tun; as_arg S.tun; as_arg S.tun; 
+                                                             as_arg S.tun; as_arg head; as_arg body])) None t.pos in
                       printfn "Reified %s to %s\n" (Print.term_to_string t) (Print.term_to_string reified);
                       norm cfg env stack reified
                     | Inr _ -> failwith "Cannot reify a top-level let binding"
@@ -519,6 +520,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  norm cfg env stack t'
      
           | Tm_fvar f -> 
+            let t0 = t in
             let should_delta = match cfg.delta_level with 
                 | NoDelta -> false
                 | OnlyInline -> true
@@ -528,7 +530,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
             then rebuild cfg env stack t
             else begin match Env.lookup_definition cfg.delta_level cfg.tcenv f.fv_name.v with 
                     | None -> rebuild cfg env stack t
-                    | Some (us, t) -> 
+                    | Some (us, t) ->
+                      log cfg (fun () -> Util.print2 ">>> Unfolded %s to %s\n" 
+                                    (Print.term_to_string t0) (Print.term_to_string t));
                       let n = List.length us in 
                       if n > 0 
                       then match stack with //universe beta reduction

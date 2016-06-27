@@ -95,6 +95,7 @@ type dtuple2 (a:Type)
 type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 
 assume new type range : Type0
+assume val range_0:range
 assume new type string : Type0
 irreducible let labeled (r:range) (msg:string) (b:Type) = b
 type range_of (#a:Type) (x:a) = range
