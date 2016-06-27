@@ -815,3 +815,8 @@ let destruct_typ_as_formula f : option<connective> =
         } in
         Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [])
     
+(* Some reification utilities *)
+let mk_reify t = 
+    let reify = mk (Tm_constant(FStar.Const.Const_reify)) None t.pos in
+    mk (Tm_app(reify, [as_arg t])) None t.pos 
+

@@ -927,18 +927,20 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         if debug env Options.Low then Util.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);
         //Note: The outargs are in reverse order. e.g., f e1 e2 e3, we have outargs = [(e3, _, c3); (e2; _; c2); (e1; _; c2)]
         //We build bind chead (bind c1 (bind c2 (bind c3 cres)))
-        let args, comp = List.fold_left (fun (args, out_c) ((e, q), x, c) -> 
+        let args, comp, monadic = List.fold_left (fun (args, out_c, monadic) ((e, q), x, c) -> 
                     match c with
-                    | None -> (e, q)::args, out_c
+                    | None -> (e, q)::args, out_c, monadic
                     | Some c -> 
+                        let monadic = monadic || not (Util.is_pure_or_ghost_lcomp c) in
                         let out_c = 
                             TcUtil.bind e.pos env None  //proving (Some e) here instead of None causes significant Z3 overhead
                                         c (x, out_c) in
+                        let e = TcUtil.maybe_monadic env e c.eff_name in
                         let e = TcUtil.maybe_lift env e c.eff_name out_c.eff_name in
-                        (e, q)::args, out_c) ([], cres) arg_comps_rev in
+                        (e, q)::args, out_c, monadic) ([], cres, false) arg_comps_rev in
         let comp = TcUtil.bind head.pos env None chead (None, comp) in
         let app =  mk_Tm_app head args (Some comp.res_typ.n) r in
-        let app = TypeChecker.Util.maybe_monadic env app comp.eff_name in
+        let app = if monadic then TypeChecker.Util.maybe_monadic env app comp.eff_name else app in
         let comp, g = TcUtil.strengthen_precondition None env app comp guard in //Each conjunct in g is already labeled
         app, comp, g 
     in
