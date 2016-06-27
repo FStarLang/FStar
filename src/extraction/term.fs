@@ -32,6 +32,7 @@ module U  = FStar.Syntax.Util
 module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
 module C  = FStar.Syntax.Const
+module TcEnv = FStar.TypeChecker.Env
 
 exception Un_extractable
 
@@ -67,14 +68,16 @@ let err_uninst env (t:term) (vars, ty) =
                     (vars |> List.map fst |> String.concat ", ")
                     (ML.Code.string_of_mlty env.currentModule ty))
 
-let err_ill_typed_application (t : term) args (ty : mlty) =
-    fail t.pos (Util.format2 "Ill-typed application: application is %s \n remaining args are %s\n"
+let err_ill_typed_application env (t : term) args (ty : mlty) =
+    fail t.pos (Util.format3 "Ill-typed application: application is %s \n remaining args are %s\nml type of head is %s\n"
                 (Print.term_to_string t)
-                (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " "))
+                (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " ")
+                (ML.Code.string_of_mlty env.currentModule ty))
 
 
 let err_value_restriction t =
-    fail t.pos ("Refusing to generalize because of the value restriction")
+    fail t.pos (Util.format2 "Refusing to generalize because of the value restriction: (%s) %s" 
+                    (Print.tag_of_term t) (Print.term_to_string t))
 
 let err_unexpected_eff t f0 f1 =
     fail t.pos (Util.format3 "for expression %s, Expected effect %s; got effect %s" (Print.term_to_string t) (eff_to_string f0) (eff_to_string f1))
@@ -379,7 +382,18 @@ and term_as_mlty' env t =
       | Tm_arrow(bs, c) ->
         let bs, c = SS.open_comp bs c in
         let mlbs, env = binders_as_ml_binders env bs in
-        let t_ret = term_as_mlty' env (U.comp_result c) in
+        let t_ret = 
+            let eff = TcEnv.norm_eff_name env.tcenv (U.comp_effect_name c) in
+            let ed = TcEnv.get_effect_decl env.tcenv eff in 
+            if ed.qualifiers |> List.contains Reifiable
+            then let t = FStar.TypeChecker.Util.reify_comp env.tcenv (U.lcomp_of_comp c) U_unknown in
+                 let _ = printfn "Translating comp type %s as %s\n" 
+                        (Print.comp_to_string c) (Print.term_to_string t) in
+                 let res = term_as_mlty' env t in
+                 let _ = printfn "Translated comp type %s as %s ... to %s\n" 
+                        (Print.comp_to_string c) (Print.term_to_string t) (ML.Code.string_of_mlty env.currentModule res) in
+                 res
+            else term_as_mlty' env (U.comp_result c) in
         let erase = effect_as_etag env (U.comp_effect_name c) in
         let _, t = List.fold_right (fun (_, t) (tag, t') -> (E_PURE, MLTY_Fun(t, tag, t'))) mlbs (erase, t_ret) in
         t
@@ -387,7 +401,7 @@ and term_as_mlty' env t =
       (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? : Yes *)
       (* should we try to apply additional arguments here? if not, where? FIX!! *)
       | Tm_app (head, args) ->
-        let res = match (SS.compress head).n with
+        let res = match (U.un_uinst head).n with
             | Tm_name bv ->
               (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
               bv_as_mlty env bv
@@ -721,6 +735,30 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                 failwith "impossible"
             end
 
+        | Tm_meta(t, Meta_monadic m) -> 
+          let t = SS.compress t in
+          begin match t.n with 
+            | Tm_let((false, [lb]), body) when (Util.is_left lb.lbname) -> 
+              let ed = TypeChecker.Env.get_effect_decl g.tcenv m in
+              if ed.qualifiers |> List.contains Reifiable |> not
+              then term_as_mlexpr' g t
+              else //this should be interpreted as a bind
+                   let ml_result_ty_1 = term_as_mlty g lb.lbtyp in
+                   let comp_1, _, _ = term_as_mlexpr g lb.lbdef in
+                   let ml_k, ty =
+                        let k = U.abs [left (lb.lbname) |> S.mk_binder] body None in
+                        let ml_k, _, t_k = term_as_mlexpr g k in
+                        let m_2 = match t_k with 
+                            | MLTY_Fun(_, _, m_2) -> m_2 
+                            | _ -> failwith "Impossible" in
+                        ml_k, m_2 in
+                   let bind = with_ty MLTY_Top <| MLE_Name (monad_op_name ed "bind" |> fst) in
+                   with_ty ty <| MLE_App(bind, [comp_1; ml_k]), E_IMPURE, ty
+            | _ -> term_as_mlexpr' g t
+         end
+
+
+
         | Tm_meta(t, _) //TODO: handle the resugaring in case it's a 'Meta_desugared' ... for more readable output
         | Tm_uinst(t, _) ->
           term_as_mlexpr' g t
@@ -812,7 +850,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                     | _ ->
                       begin match Util.udelta_unfold g t with
                         | Some t -> extract_app is_data (mlhead, mlargs_f) (f, t) restArgs
-                        | None -> err_ill_typed_application top restArgs t
+                        | None -> err_ill_typed_application g top restArgs t
                       end in
 
               let extract_app_maybe_projector is_data mlhead (f, t) args =
@@ -897,7 +935,15 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                     let e' = SS.subst [DB(0, x)] e' in
                     [lb], e' in
             //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
-          let maybe_generalize {lbname=lbname; lbeff=lbeff; lbtyp=t; lbdef=e} =
+          let maybe_generalize {lbname=lbname; lbeff=lbeff; lbtyp=t; lbdef=e} 
+            : lbname //just lbname returned back
+            * e_tag  //the ML version of the effect label lbeff
+            * (typ   //just the source type lbtyp=t, after compression
+               * (S.binders //the erased type binders
+                  * mltyscheme)) //translation of the source type t as a ML type scheme
+            * bool   //whether or not to add a unit argument
+            * term   //the term e, maybe after some type binders have been erased
+            =
               let f_e = effect_as_etag g lbeff in
               let t = SS.compress t in
             //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (Print.lbname_to_string lbname) (Print.typ_to_string t) f_e);
@@ -925,12 +971,16 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 //                             printfn "tbinders are %s\n" (tbinders |> (Print.binders_to_string ", "));
 //                             printfn "tbody is %s\n" (Print.typ_to_string tbody);
 //                             printfn "targs are %s\n" (targs |> Print.binders_to_string ", ");
-                             let expected_t =
+                             let expected_source_ty =
                                 let s = List.map2 (fun (x, _) (y, _) -> S.NT(x, S.bv_to_name y)) tbinders targs in
                                 SS.subst s tbody in
 //                             printfn "After subst: expected_t is %s\n" (Print.typ_to_string expected_t);
                              let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g targs in
-                             let expected_t = term_as_mlty env expected_t in
+                             let expected_t = term_as_mlty env expected_source_ty in
+                             debug g (fun () -> printfn "+++LB=%s ... Translated source type %s to mlty %s"
+                                            (Print.lbname_to_string lbname)
+                                            (Print.term_to_string expected_source_ty)
+                                            (ML.Code.string_of_mlty g.currentModule expected_t));
                              let polytype = targs |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
                              let add_unit = match rest_args with
                                 | [] -> not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
@@ -950,6 +1000,18 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                                 Could eta-expand; but with effects this is problem; see ETA-EXPANSION and NO GENERALIZATION below
                              *)
                              failwith "Not enough type binders" //TODO: better error message
+                     
+                     | Tm_uinst _
+                     | Tm_fvar _
+                     | Tm_name _ -> 
+                       let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g tbinders in
+                       let expected_t = term_as_mlty env tbody in
+                       let polytype = tbinders |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
+                       //In this case, an eta expansion is safe
+                       let args = tbinders |> List.map (fun (bv, _) -> S.bv_to_name bv |> as_arg) in
+                       let e = mk (Tm_app(e, args)) None e.pos in
+                       (lbname, f_e, (t, (tbinders, polytype)), false, e)
+
                      | _ ->
                         //ETA-EXPANSION?
                         //An alternative here could be to eta expand the body, but with effects, that's quite dodgy
@@ -968,6 +1030,10 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
                 | _ ->  (* no generalizations; TODO: normalize and retry? *)
                   let expected_t = term_as_mlty g t in
+                  debug g (fun () -> printfn "+++LB=%s ... Translated source type %s to mlty %s"
+                                        (Print.lbname_to_string lbname)
+                                        (Print.term_to_string t)
+                                        (ML.Code.string_of_mlty g.currentModule expected_t));
                   (lbname, f_e, (t, ([], ([],expected_t))), false, e) in
 
           let check_lb env (nm, (lbname, f, (t, (targs, polytype)), add_unit, e)) =

@@ -23,6 +23,7 @@ end) -> struct
   type nonrec 'a list = 'a list
   type nonrec 'a option = 'a option
 
+  type range     = unit
   type nat       = int
   type pos       = int
   type 'd b2t    = unit

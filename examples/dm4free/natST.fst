@@ -108,16 +108,16 @@ effect St (a:Type) =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-(* val incr : unit -> ST unit (requires (fun n -> True)) *)
-(* 			  (ensures (fun n0 _ n1 -> n1 = n0 + 1)) *)
-(* let incr u = *)
-(*   let n = STATE.get () in *)
-(*   STATE.put (n + 1) *)
+val incr : unit -> ST unit (requires (fun n -> True))
+			  (ensures (fun n0 _ n1 -> n1 = n0 + 1))
+let incr u =
+  let n = STATE.get () in
+  STATE.put (n + 1)
 
-(* reifiable val incr2 : unit -> St unit *)
-(* let incr2 u = *)
-(*     let n = STATE.get() in *)
-(*     STATE.put (n + 1) *)
+reifiable val incr2 : unit -> St unit
+let incr2 u =
+    let n = STATE.get() in
+    STATE.put (n + 1)
 
 (* (\* #set-options "--log_queries" *\) *)
 (* module Test *)
