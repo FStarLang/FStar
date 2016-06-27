@@ -661,61 +661,64 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           let fallback () =
             let f = varops.fresh "Tm_abs" in
             let decl = Term.DeclFun(f, [], Term_sort, Some "Imprecise function encoding") in
-            Term.mkFreeV(f, Term_sort), [decl] in
+            Term.mkFreeV(f, Term_sort), [decl] 
+          in
 
-          let is_pure_or_ghost lc_eff = match lc_eff with 
-            | Inl lc -> Util.is_pure_or_ghost_lcomp lc
-            | Inr eff -> Ident.lid_equals eff Const.effect_Tot_lid 
-                         || Ident.lid_equals eff Const.effect_GTot_lid in
-             
+          let is_impure = function 
+            | Inl lc -> not (Util.is_pure_or_ghost_lcomp lc)
+            | Inr eff -> TypeChecker.Util.is_pure_or_ghost_effect env.tcenv eff |> not 
+          in
+
           let codomain_eff lc = match lc with 
-            | Inl lc -> SS.subst_comp opening (lc.comp()) 
-            | Inr ef -> S.mk_Total (FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (Util.ktype0) |> fst) in
+            | Inl lc -> SS.subst_comp opening (lc.comp()) |> Some
+            | Inr eff -> 
+                let new_uvar () = FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (Util.ktype0) |> fst in
+                if Ident.lid_equals eff Const.effect_Tot_lid 
+                then S.mk_Total (new_uvar()) |> Some
+                else if Ident.lid_equals eff Const.effect_GTot_lid 
+                then S.mk_GTotal (new_uvar()) |> Some
+                else None 
+          in
 
           begin match lopt with
-            | None ->
+            | None -> //we don't even know if this is a pure function, so give up
               Errors.warn t0.pos (Util.format1 "Losing precision when encoding a function literal: %s" (Print.term_to_string t0));
               fallback ()
 
             | Some lc ->
-              if not <| is_pure_or_ghost lc 
-              then fallback ()
-              else  let c = codomain_eff lc in
-//                    Printf.printf "Printf.printf body comp type is %s\n\topened to %s\n\topening is %s\n\tbody=%s\n" 
-//                            (Print.comp_to_string c0) (Print.comp_to_string c) (opening |> Print.subst_to_string) (Print.term_to_string body);
-                    let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                    let body, decls' = encode_term body envbody in
-                    let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
-                    let cvars = Term.free_variables key_body in
-                    let tkey = mkForall([], cvars, key_body) in
-
-                    begin match Util.smap_try_find env.cache tkey.hash with
-                        | Some (t, _, _) -> Term.mkApp(t, List.map mkFreeV cvars), []
-                        | None ->
-                            begin match is_eta env vars body with
-                                | Some t ->
-                                    t, []
-                                | None ->
-                                    let cvar_sorts = List.map snd cvars in
-                                    let fsym = varops.fresh "Exp_abs" in
-                                    let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
-                                    let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
-                                    let app = mk_Apply f vars in
-                                    let tfun = Util.arrow bs c in
-                                    let f_has_t, decls'' = encode_term_pred None tfun env f in
-                                    let typing_f = 
-                                        let a_name = Some("typing_"^fsym) in
-                                        Term.Assume(Term.mkForall([[f]], cvars, f_has_t), a_name, a_name) in
-                                    let interp_f = 
-                                        let a_name = Some ("interpretation_" ^fsym) in
-                                        Term.Assume(Term.mkForall([[app]], vars@cvars, mkEq(app, body)),
-                                                    a_name, a_name) in
-                                    let f_decls = decls@decls'@(fdecl::decls'')@[typing_f;interp_f] in
-                                    Util.smap_add env.cache tkey.hash (fsym, cvar_sorts, f_decls);
-                                    f, f_decls
-                            end
-                    end
-         end
+              if is_impure lc
+              then fallback() //we know it's not pure; so don't encode it precisely
+              else let vars, guards, envbody, decls, _ = encode_binders None bs env in
+                   let body, decls' = encode_term body envbody in
+                   let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
+                   let cvars = Term.free_variables key_body in
+                   let tkey = mkForall([], cvars, key_body) in
+                   match Util.smap_try_find env.cache tkey.hash with
+                   | Some (t, _, _) -> Term.mkApp(t, List.map mkFreeV cvars), []
+                   | None ->
+                     match is_eta env vars body with
+                     | Some t -> t, []
+                     | None ->
+                        let cvar_sorts = List.map snd cvars in
+                        let fsym = varops.fresh "Exp_abs" in
+                        let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
+                        let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
+                        let app = mk_Apply f vars in
+                        let typing_f = 
+                            match codomain_eff lc with 
+                            | None -> [] //no typing axiom for this lambda, because we don't have enough info
+                            | Some c -> 
+                                let tfun = Util.arrow bs c in
+                                let f_has_t, decls'' = encode_term_pred None tfun env f in
+                                let a_name = Some("typing_"^fsym) in
+                                decls''@[Term.Assume(Term.mkForall([[f]], cvars, f_has_t), a_name, a_name)] in
+                        let interp_f = 
+                            let a_name = Some ("interpretation_" ^fsym) in
+                            Term.Assume(Term.mkForall([[app]], vars@cvars, mkEq(app, body)), a_name, a_name) in
+                        let f_decls = decls@decls'@(fdecl::typing_f)@[interp_f] in
+                        Util.smap_add env.cache tkey.hash (fsym, cvar_sorts, f_decls);
+                        f, f_decls
+          end
 
       | Tm_let((_, {lbname=Inr _}::_), _) -> 
         failwith "Impossible: already handled by encoding of Sig_let"
@@ -1456,7 +1459,14 @@ let encode_top_level_let env (is_rec, bindings) quals =
                     let eqn = Term.Assume(mkForall([[app]], vars, mkEq(app,body)),
                                         Some (Util.format1 "Equation for %s" flid.str),
                                         Some ("equation_"^f)) in
-                    decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid f app,
+                    let reified_eqn = 
+                        if quals |> List.contains Reifiable 
+                        then let reified_app = Term.mk (Term.App(Var "Reify", [app])) in
+                             [Term.Assume(mkForall([[reified_app]], vars, mkEq(reified_app,app)),
+                                        Some (Util.format1 "Reified equation for %s" flid.str),
+                                        Some ("reified_equation_"^f))] 
+                        else [] in
+                    decls@binder_decls@decls2@[eqn]@reified_eqn@primitive_type_axioms env.tcenv flid f app,
                     env
 
                 | _ -> failwith "Impossible"
@@ -1681,7 +1691,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           let body = Util.mk_reify body in
           let tm = S.mk (Tm_abs(bs, body, None)) None lb.lbdef.pos in
           let tm' = N.normalize [N.Beta; N.Reify; N.Inline; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv tm in
-          let lb_typ = Util.arrow bs (S.mk_Total S.tun) in
+          let lb_typ = 
+            let formals, comp = Util.arrow_formals_comp lb.lbtyp in
+            let reified_typ = FStar.TypeChecker.Util.reify_comp env.tcenv (Util.lcomp_of_comp comp) U_unknown in
+            Util.arrow formals (S.mk_Total reified_typ) in
           let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in
           printfn "%s: Reified %s\nto %s\n" (Print.lbname_to_string lb.lbname) (Print.term_to_string tm) (Print.term_to_string tm');
           encode_top_level_let env (false, [lb]) quals

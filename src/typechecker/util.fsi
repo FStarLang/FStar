@@ -83,3 +83,5 @@ val fvar_const: env -> lident -> term
 val maybe_lift: env -> term -> lident -> lident -> term
 val maybe_monadic: env -> term -> lident -> term
    
+//reification
+val reify_comp: env -> lcomp -> universe -> term

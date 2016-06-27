@@ -123,15 +123,15 @@ let f (_:unit) : St unit =
     assert (n1 = n0 + 1);
     STATE.put n1
 
-(* val g : unit -> St int *)
-(* let g u = *)
-(*     let n0 = STATE.get () in *)
-(*     let f : st_repr unit (fun n0 post -> forall x. snd x=n0+2 ==> post x) = *)
-(*       fun n0 -> (), n0+2 in *)
-(*     STATE.reflect f; *)
-(*     let n1 = STATE.get () in *)
-(*     assert (n0 + 2 = n1); *)
-(*     n1 *)
+val g : unit -> St int
+let g u =
+    let n0 = STATE.get () in
+    let f : st_repr unit (fun n0 post -> forall x. snd x=n0+2 ==> post x) =
+      fun n0 -> (), n0+2 in
+    STATE.reflect f;
+    let n1 = STATE.get () in
+    assert (n0 + 2 = n1);
+    n1
 
     
     

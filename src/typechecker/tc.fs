@@ -329,30 +329,21 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_app({n=Tm_constant Const_reify}, [(e, aqual)]) ->
     if Option.isSome aqual
     then Errors.warn e.pos "Qualifier on argument to reify is irrelevant and will be ignored";
-    let no_reify l = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, e.pos)) in
     let e, c, g = 
         let env0, _ = Env.clear_expected_typ env in
         tc_term env0 e in
     let reify_op, _ = Util.head_and_args top in
-    begin match Env.effect_decl_opt env (Env.norm_eff_name env c.eff_name) with 
-    | None -> no_reify c.eff_name
-    | Some ed -> 
-      if not (ed.qualifiers |> List.contains Reifiable) then no_reify c.eff_name;
-      let c = N.unfold_effect_abbrev env (c.comp()) in
-      let res_typ, wp = c.result_typ, List.hd c.effect_args in
-      let universe = 
-         let _, c, _ = tc_term env res_typ in
-         match (SS.compress c.res_typ).n with
-         | Tm_type u -> u
-         | _ -> failwith "Unexpected result type of computation" in
-      let repr = Env.inst_effect_fun_with [universe] env ed ([], ed.repr) in
-      let repr = mk (Tm_app(repr, [as_arg res_typ; wp])) None e.pos in
-      let e = mk (Tm_app(reify_op, [(e, aqual)])) (Some repr.n) top.pos in
-      let c = S.mk_Total repr |> Util.lcomp_of_comp in
-      let e, c, g' = comp_check_expected_typ env e c in
-      e, c, Rel.conj_guard g g'
-    end
-    
+    let u_c = 
+        let _, c, _ = tc_term env c.res_typ in
+        match (SS.compress c.res_typ).n with
+        | Tm_type u -> u
+        | _ -> failwith "Unexpected result type of computation" in
+    let repr = TcUtil.reify_comp env c u_c in 
+    let e = mk (Tm_app(reify_op, [(e, aqual)])) (Some repr.n) top.pos in
+    let c = S.mk_Total repr |> Util.lcomp_of_comp in
+    let e, c, g' = comp_check_expected_typ env e c in
+    e, c, Rel.conj_guard g g'
+      
   | Tm_app({n=Tm_constant (Const_reflect l)}, [(e, aqual)])->
     if Option.isSome aqual
     then Errors.warn e.pos "Qualifier on argument to reflect is irrelevant and will be ignored";

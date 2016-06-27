@@ -1161,3 +1161,14 @@ let maybe_monadic env e c =
     || Ident.lid_equals m Const.effect_GTot_lid //for the cases in prims where Pure is not yet defined
     then e
     else mk (Tm_meta(e, Meta_monadic m)) !e.tk e.pos
+
+let reify_comp env c u_c : term = 
+    let no_reify l = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, Env.get_range env)) in
+    match Env.effect_decl_opt env (Env.norm_eff_name env c.eff_name) with 
+    | None -> no_reify c.eff_name
+    | Some ed -> 
+        if not (ed.qualifiers |> List.contains Reifiable) then no_reify c.eff_name;
+        let c = N.unfold_effect_abbrev env (c.comp()) in
+        let res_typ, wp = c.result_typ, List.hd c.effect_args in
+        let repr = Env.inst_effect_fun_with [u_c] env ed ([], ed.repr) in
+        mk (Tm_app(repr, [as_arg res_typ; wp])) None (Env.get_range env)
