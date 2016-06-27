@@ -861,10 +861,10 @@ the variables `:x_1 ... x_m` may appear free in `:t`.
 
 ### Some syntactic sugar for refinement types and lemmas
 
-How shall we specify that `factorial` is strictly increasing when its
-argument is greater than 2? Here's a first cut:
+How shall we specify that `factorial` is strictly greater than
+its argument when its argument is greater than 2? Here's a first cut:
 
-    val factorial_is_increasing_1: x:(y:nat{y > 2}) -> GTot (u:unit{factorial x > x})
+    val factorial_is_greater_than_arg_1: x:(y:nat{y > 2}) -> GTot (u:unit{factorial x > x})
 
 This does the job, but the type of the function's argument is a bit
 clumsy, since we needed two names: `y` to restrict the domain to natural
@@ -874,22 +874,22 @@ syntactic sugar for it---we have seen it already in passing in the first
 type we gave to `factorial`. Using it, we can write the following type,
 which is equivalent to, but more concise than, the type above.
 
-    val factorial_is_increasing_2: x:nat{x > 2} -> GTot (u:unit{factorial x > x})
+    val factorial_is_greater_than_arg_2: x:nat{x > 2} -> GTot (u:unit{factorial x > x})
 
 Another bit of clumsiness that you have no doubt noticed is the result
 type of the lemmas which include a refinement of the
 `:unit` type. To make this lighter, F\* provides the `:Lemma` keyword which
 can be used in place of the `:GTot` effect.
 
-For example, the type of `factorial_is_increasing_2` is equivalent to the
-type of `factorial_is_increasing_3` (below), which is just a little
+For example, the type of `factorial_is_greater_than_arg_2` is equivalent to the
+type of `factorial_is_greater_than_arg_3` (below), which is just a little
 easier to read and write.
 
-    val factorial_is_increasing_3: x:nat{x > 2} -> Lemma (factorial x > x)
+    val factorial_is_greater_than_arg_3: x:nat{x > 2} -> Lemma (factorial x > x)
 
 We can also write it in the following way, when that's more convenient:
 
-    val factorial_is_increasing_4: x:nat -> Lemma (requires (x > 2))
+    val factorial_is_greater_than_arg_4: x:nat -> Lemma (requires (x > 2))
                                                   (ensures (factorial x > x))
 
 The formula after `requires` is the _pre-condition_ of the
@@ -897,12 +897,12 @@ function/lemma, while the one after `ensures` is its _post-condition_.
 
 ### A simple lemma proved by induction, in detail
 
-Now, let's look at a proof of `factorial_is_increasing` in detail. Here it is:
+Now, let's look at a proof of `factorial_is_greater_than_arg` in detail. Here it is:
 
-    let rec factorial_is_increasing x =
+    let rec factorial_is_greater_than_arg x =
       match x with
       | 3 -> ()
-      | _ -> factorial_is_increasing (x - 1)
+      | _ -> factorial_is_greater_than_arg (x - 1)
 
 The proof is a recursive function (as indicated by the `let rec`); the
 function is defined by cases on `x`.
@@ -916,7 +916,7 @@ done. This is the base case of the induction.
 
 The cases are taken in order, so if we reach the second case, then we
 know that the first case is inapplicable, i.e., in the second case, we
-know from the type for `factorial_is_increasing` that `x:nat{x > 2}`, and
+know from the type for `factorial_is_greater_than_arg` that `x:nat{x > 2}`, and
 from the inapplicability of the previous case that `x <> 3`. In other
 words, the second case is the induction step and handles the proof when
 `x > 3`.
@@ -932,15 +932,15 @@ that `x*x - x > x`---which is true for `x > 3`.
 Let's see how this works formally in F\*.
 
 When defining a total recursive function, the function being defined
-(`factorial_is_increasing` in this case) is available for use in the body
+(`factorial_is_greater_than_arg` in this case) is available for use in the body
 of the definition, but only at a type that ensures that the recursive
-call will terminate. In this case, the type of `factorial_is_increasing` in
+call will terminate. In this case, the type of `factorial_is_greater_than_arg` in
 the body of the definition is:
 
     n:nat{2 < n && n < x} -> Lemma (factorial n > n)
 
 This is, of course, exactly our induction hypothesis. By calling
-`factorial_is_increasing (x - 1)` in the second case, we, in effect, make
+`factorial_is_greater_than_arg (x - 1)` in the second case, we, in effect, make
 use of the induction hypothesis to prove that
 `factorial (x - 1) > x - 1`, provided we can prove that
 `2 < x - 1 && x - 1 < x`---we give this to Z3 to prove, which it can,
@@ -949,12 +949,12 @@ goal `factorial x > x` from the `x > 3` and the property we obtained
 from our use of the induction hypothesis: again, Z3 proves this easily.
 
 ~ Exercise
-Prove the following increasingness property for the fibonacci function:
+Prove the following property for the fibonacci function:
 ~~ ExerciseFragment {exname=ex3c-fibonacci}
-[INCLUDE=code/exercises/ex3c-fibonacci.fst:FibonacciIncreasing]
+[INCLUDE=code/exercises/ex3c-fibonacci.fst:FibonacciGreaterThanArg]
 ~~
 ~~ AnswerFragment {exname=ex3c-fibonacci}
-[INCLUDE=code/solutions/ex3c-fibonacci.fst:FibonacciIncreasingProof]
+[INCLUDE=code/solutions/ex3c-fibonacci.fst:FibonacciGreaterThanArgProof]
 ~~
 ~
 
@@ -986,7 +986,7 @@ all but one case, if F\* can prove the lemma automatically, then the case
 is trivial. For this F\* provides an `admit` function, that can be used
 as follows:
 ```
-    let rec factorial_is_increasing x =
+    let rec factorial_is_greater_than_arg x =
       match x with
       | 3 -> ()
       | _ -> admit()
@@ -1016,11 +1016,11 @@ analysis and call the induction hypothesis as needed. Surely, we should
 automate this for you---and we do, in many cases using an **experimental**
 _automatic induction_ feature.
 
-Here's another proof of `factorial_is_increasing`:
+Here's another proof of `factorial_is_greater_than_arg`:
 
-    let rec factorial_is_increasing n = by_induction_on n factorial_is_increasing
+    let rec factorial_is_greater_than_arg n = by_induction_on n factorial_is_greater_than_arg
 
-Calling `by_induction_on` with `n` and `factorial_is_increasing` as argument
+Calling `by_induction_on` with `n` and `factorial_is_greater_than_arg` as argument
 causes F\* to encode the induction hypothesis as a quantified logical
 formula and feed it to Z3, which in simple examples can take care of
 the rest.
