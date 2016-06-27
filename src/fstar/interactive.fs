@@ -167,7 +167,7 @@ let detect_dependencies_with_first_interactive_chunk () =
           | Some (None, Some filename)
           | Some (Some filename, None) ->
               Options.add_verify_module module_name;
-              let _, all_filenames, _ = Parser.Dep.collect [ filename ] in
+              let _, all_filenames, _ = Parser.Dep.collect Parser.Dep.VerifyUserList [ filename ] in
               List.rev (List.tl all_filenames)
           | Some (Some _, Some _) ->
              fail (Util.format1 "The combination of split interfaces and \

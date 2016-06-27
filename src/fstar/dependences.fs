@@ -26,11 +26,11 @@ open FStar.Ident
 (***********************************************************************)
 (* Finding the transitive dependences of a list of files               *)
 (***********************************************************************)
-let find_deps_if_needed files =
+let find_deps_if_needed verify_mode files =
   if Options.explicit_deps () then
     files
   else
-    let _, deps, _ = Parser.Dep.collect files in
+    let _, deps, _ = Parser.Dep.collect verify_mode files in
     match deps with
     | [] ->
         Util.print_error "Dependency analysis failed; reverting to using only the files provided";

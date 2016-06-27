@@ -318,7 +318,7 @@ end
 let _87_154 = (FStar_Options.add_verify_module module_name)
 in (
 
-let _87_161 = (FStar_Parser_Dep.collect ((filename)::[]))
+let _87_161 = (FStar_Parser_Dep.collect FStar_Parser_Dep.VerifyUserList ((filename)::[]))
 in (match (_87_161) with
 | (_87_157, all_filenames, _87_160) -> begin
 (let _178_185 = (FStar_List.tl all_filenames)
