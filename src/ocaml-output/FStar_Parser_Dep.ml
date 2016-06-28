@@ -936,7 +936,7 @@ in (
 
 let _68_669 = (FStar_List.iter (fun _68_668 -> (match (_68_668) with
 | (m, r) -> begin
-if (not ((FStar_ST.read r))) then begin
+if ((not ((FStar_ST.read r))) && (not ((FStar_Options.interactive ())))) then begin
 (let _159_217 = (let _159_216 = (FStar_Util.format2 "You passed --verify_module %s but I found no file that contains [module %s] in the dependency graph\n" m m)
 in FStar_Absyn_Syntax.Err (_159_216))
 in (Prims.raise _159_217))

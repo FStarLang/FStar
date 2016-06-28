@@ -106,8 +106,15 @@ let uint32_of_bytes (b:bytes{length b >= 4}) =
   assume (v r = UInt8.v b0 * pow2 8 * UInt8.v b1  + pow2 16 * UInt8.v b2 + pow2 24 * UInt8.v b3);
   r
 
-let op_Hat_Greater_Greater a b = op_Greater_Greater_Hat a b
-let op_Hat_Star a b = op_Star_Hat a b
+let op_Hat_Greater_Greater (a: u32) (b: u32): Pure u32
+  (requires True)
+  (ensures (fun c -> v c = (v a / (pow2 (v b))))) =
+  op_Greater_Greater_Hat a b
+
+let op_Hat_Star (a: u32) (b: u32): Pure u32
+  (requires (FStar.UInt.size (v a * v b) 32))
+  (ensures (fun c -> v a * v b = v c)) =
+  op_Star_Hat a b
 
 #reset-options "--z3timeout 20"
 

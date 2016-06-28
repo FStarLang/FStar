@@ -63,6 +63,8 @@ let _ =
   print_bytes nonce;
   print_string "Expected ciphertext:\n";
   print_string expected;
+  print_string "Plaintext:\n";
+  print_bytes plaintext;
   print_string "Got ciphertext:\n";
   print_bytes ciphertext
               (*  print_array state *)

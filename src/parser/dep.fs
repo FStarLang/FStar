@@ -581,7 +581,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
   let topologically_sorted = List.collect must_find_r !topologically_sorted in
 
   List.iter (fun (m, r) ->
-    if not (!r) then
+    if not !r && not (Options.interactive ()) then
       raise (Err (Util.format2 "You passed --verify_module %s but I found no \
         file that contains [module %s] in the dependency graph\n" m m))
   ) verify_flags;
