@@ -6,11 +6,11 @@ open Math.Axioms
 (** Useful mathematical fonctions **)
 
 (* Function : power of 2 *)
-val pow2:
-  n:nat -> Tot pos
-let rec pow2 n =
-  if n = 0 then 1
-  else 2 * pow2 (n-1)
+(* val pow2: *)
+(*   n:nat -> Tot pos *)
+(* let rec pow2 n = *)
+(*   if n = 0 then 1 *)
+(*   else 2 * pow2 (n-1) *)
 
 (* Function : power of x *)
 val powx : x:int -> n:nat -> Tot int
@@ -63,6 +63,7 @@ let min x y =
 val div:
   a:int -> b:pos -> Tot (c:int{ (a < 0 ==> c < 0) /\ (a >= 0 ==> c >= 0)})
 let div a b =
+  admit();
   if a < 0 then
     (if a % b = 0 then 0-(0-a/b)
     else 0-(0-a/b) -1)

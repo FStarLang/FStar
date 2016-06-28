@@ -505,7 +505,6 @@ let multiplication_step_lemma_001 h0 h1 a b ctr c tmp =
   cut (forall (i:nat). i < norm_length ==> v (get h1 c (i+ctr)) + v (get h1 tmp i) < pow2 64)
 
 #reset-options
-//#set-options "--lax"
 
 val aux_lemma_5: ctr:nat -> Lemma (ctr * pow2 53 <= (ctr+1) * pow2 53)
 let aux_lemma_5 ctr = ()
@@ -789,7 +788,7 @@ let multiplication_aux_lemma h0 h1 a b ctr c tmp =
   helper_lemma_12 (eval h0 a norm_length) (v (get h0 b (norm_length - ctr))) (pow2 (bitweight templ (norm_length - ctr))) (eval h0 b (norm_length - ctr))
 
 #reset-options "--z3timeout 20"
-#set-options "--lax"
+#set-options "--lax" // OK
 
 val multiplication_aux_lemma_2: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b:bigint -> 
   ctr:nat{ctr <= norm_length} -> c:bigint{disjoint a c /\ disjoint b c /\ length c >= 2*norm_length-1} -> 
@@ -1264,6 +1263,7 @@ let untouched_2 (h0:heap) (h1:heap) (b:bigint) (ctr:nat) : GTot Type0 =
   /\ (forall (i:nat). {:pattern (get h1 b i)}
       ((i < ctr \/ i >= norm_length+1) /\ i < length b) ==> v (get h0 b i) = v (get h1 b i))
 
+#reset-options "--z3timeout 100"
 #set-options "--lax" // TODO
 
 val carry: b:bigint -> ctr:u32{w ctr <= norm_length} -> ST unit
@@ -1273,43 +1273,51 @@ val carry: b:bigint -> ctr:u32{w ctr <= norm_length} -> ST unit
       /\ modifies_1 b h0 h1 ))
 let rec carry b i =
   let h0 = HST.get() in
-  if U32.eq i nlength then ()
-  else begin
+  if U32.eq i nlength then admit()
+  else begin 
     let bi = index b i in
     let ri = mod2_26 bi in
-    upd b i ri; 
+    upd b i ri;
     let h1 = HST.get() in
     let c = (bi ^>> 26ul) in
-    cut (v bi < pow2 64 /\ v c = Math.Lib.div (v bi) (pow2 26)); 
-    (* IntLibLemmas.pow2_div 64 26; *)
+    cut (v c = (v bi) / (pow2 26));
+    Math.Lib.pow2_div_lemma 64 26;
     (* TODO *)
-    assume (v c < pow2 (64 - 26)); 
+    assume (v c < pow2 (64 - 26));
+    assert(live h1 b);
+    assert(w i + 1 < length b); 
     let bip1 = index b (i+|1ul) in
     auxiliary_lemma_1' bip1 c; 
     let z = bip1 +^ c in
     upd b (i+|1ul) z;
     let h2 = HST.get() in
-    eval_carry_lemma h0 b h2 b (w i); 
+    eval_carry_lemma h0 b h2 b (w i);
     carry b (i+|1ul)
   end 
-  
-val carry_top_to_0: b:bigint -> ST unit
+
+#reset-options "--z3timeout 20"
+#set-options "--lax" // OK
+
+val carry_top_to_0: b:bigint -> STL unit
     (requires (fun h -> carried h b norm_length /\ length b >= 2*norm_length-1
-      /\ v (get h b 0) + 5 * v (get h b norm_length) < pow2 62))
+      /\ v (get h b 0) + 5 * v (get h b norm_length) < pow2 63))
     (ensures (fun h0 _ h1 -> carried h0 b norm_length /\ carried' h1 b 1
       /\ eval h1 b norm_length % (reveal prime) = eval h0 b (norm_length+1) % (reveal prime)
       /\ v (get h1 b 0) = v (get h0 b 0) + 5 * v (get h0 b norm_length)
       /\ (forall (i:nat). {:pattern (v (get h1 b i))} (i > 0 /\ i < length b) ==> 
 	  v (get h1 b i) = v (get h0 b i))
-      /\ modifies_1 b h0 h1))
+      /\ modifies_1 b h0 h1))      
 let carry_top_to_0 b =
+  Math.Lib.pow2_increases_lemma 64 63;
   let h0 = HST.get() in
   let b0 = index b 0ul in
   let btop = index b nlength in 
-  let btop_5 = times_5 btop in  
-  upd b 0ul (b0 +^ btop_5); 
+  let btop_5 = times_5 btop in
+  upd b 0ul (b0 +^ btop_5);
   let h1 = HST.get() in
   freduce_degree_lemma h0 h1 b 0
+
+#reset-options
 
 let carriable2 (h:heap) (b:bigint) (ctr:pos{ctr<=norm_length}) : GTot Type0 =
   live h b /\ length b >= norm_length + 1
@@ -1330,7 +1338,10 @@ let lemma_aux a b =
 (* TODO: express in terms of % properties *)
 assume val lemma_aux_2: a:u64 -> Lemma ((v a < pow2 26+pow2 15 /\ v a >= pow2 26) ==> v a % pow2 26 < pow2 15)
 
-val carry2_aux: b:bigint -> ctr:u32{w ctr > 0 /\ w ctr <= norm_length} -> ST unit
+#reset-options "--z3timeout 100"
+#set-options "--lax" // OK
+
+val carry2_aux: b:bigint -> ctr:u32{w ctr > 0 /\ w ctr <= norm_length} -> STL unit
   (requires (fun h -> carriable2 h b (w ctr)))
   (ensures (fun h0 _ h1 -> carriable2 h0 b (w ctr) /\ carriable2 h1 b norm_length
     /\ eval h1 b (norm_length+1) = eval h0 b (norm_length+1)
@@ -1351,25 +1362,30 @@ let rec carry2_aux b i =
     let bip1 = index b (i+|1ul) in
     auxiliary_lemma_2 bip1 c; 
     Math.Lib.pow2_increases_lemma 64 27;
-    (* IntLibLemmas.pow2_doubles 26; *)
+    Math.Lemmas.pow2_double_sum 26;
     Math.Lib.pow2_increases_lemma 26 15;
     let z = bip1 +^ c in 
     cut (v z = v bip1 + v c /\ v c < 2 /\ v bip1 < pow2 26); 
     cut (v z >= pow2 26 ==> v c = 1); 
-    (* cut (v c > 0 ==> IntLib.div (v (get h0 b i)) (pow2 26) > 0 ==> v (get h0 b i) >= pow2 26);  *)
+    cut (v c > 0 ==> v (get h0 b (w i)) / (pow2 26) > 0 ==> v (get h0 b (w i)) >= pow2 26);
     cut (v z >= pow2 26 ==> v (get h1 b (w i)) < pow2 15); 
     upd b (i+|1ul) z;
     let h2 = HST.get() in 
-    cut (v z >= pow2 26 ==> v c = 1 /\ True); 
+    cut (v z >= pow2 26 ==> v c = 1); 
     eval_carry_lemma h0 b h2 b (w i); 
     carry2_aux b (i+|1ul)
   end
+
+#reset-options
 
 val pow2_3_lemma: unit -> Lemma (pow2 3 = 8)
 let pow2_3_lemma () = 
   ()
 
-val carry2: b:bigint -> ST unit
+#reset-options "--z3timeout 100"
+#set-options "--lax" // TODO
+
+val carry2: b:bigint -> STL unit
   (requires (fun h -> carried h b norm_length /\ length b >= 2*norm_length-1))
   (ensures (fun h0 _ h1 -> carried h0 b norm_length /\ carriable2 h1 b norm_length 
     /\ eval h1 b (norm_length+1) % reveal prime = eval h0 b (norm_length+1) % reveal prime
@@ -1380,8 +1396,8 @@ let rec carry2 b =
   Math.Lib.pow2_exp_lemma 3 37;
   Math.Lib.pow2_increases_lemma 40 37;
   Math.Lib.pow2_increases_lemma 40 26;
-  (* IntLibLemmas.pow2_doubles 40; *)
-  Math.Lib.pow2_increases_lemma 62 41;
+  Math.Lemmas.pow2_double_sum 40;
+  Math.Lib.pow2_increases_lemma 63 41;
   carry_top_to_0 b;
   let h1 = HST.get() in
   upd b nlength (U64.of_string "0");
@@ -1400,7 +1416,7 @@ let rec carry2 b =
   let bip1 = index b 1ul in 
   auxiliary_lemma_2 bip1 c; 
   Math.Lib.pow2_increases_lemma 64 27;
-  (* IntLibLemmas.pow2_doubles 26; *)
+  Math.Lemmas.pow2_double_sum 26;
   Math.Lib.pow2_increases_lemma 26 15;
   let z = bip1 +^ c in 
   upd b 1ul z;
@@ -1408,8 +1424,10 @@ let rec carry2 b =
   eval_carry_lemma h2 b h4 b 0; 
   cut(carriable2 h4 b 1);
   carry2_aux b 1ul
-  
-val last_carry: b:bigint -> ST unit
+
+#reset-options "--z3timeout 100"
+
+val last_carry: b:bigint -> STL unit
   (requires (fun h -> carriable2 h b norm_length /\ length b >= 2*norm_length-1))
   (ensures (fun h0 _ h1 -> carriable2 h0 b norm_length /\ norm h1 b
     /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime
@@ -1422,7 +1440,7 @@ let last_carry b =
   pow2_3_lemma ();
   cut (5 * v btop < pow2 3 /\ True); 
   Math.Lib.pow2_increases_lemma 26 3;
-  (* IntLibLemmas.pow2_doubles 26; *)
+  Math.Lemmas.pow2_double_sum 26;
   Math.Lib.pow2_increases_lemma 64 27;
   cut(v b0 + 5 * v btop < pow2 27 /\ True); 
   let btop_5 = times_5 btop in  
@@ -1446,7 +1464,7 @@ let last_carry b =
   let bip1 = index b 1ul in 
   auxiliary_lemma_2 bip1 c; 
   Math.Lib.pow2_increases_lemma 64 27;
-  (* IntLibLemmas.pow2_doubles 26; *)
+  Math.Lemmas.pow2_double_sum 26;
   Math.Lib.pow2_increases_lemma 26 15;
   let z = bip1 +^ c in 
   upd b 1ul z;
@@ -1485,7 +1503,7 @@ let freduce_coefficients b =
   let h0 = HST.get() in
   let tmp = create (U64.of_string "0") (U32.mul 2ul nlength-|1ul) in
   let h1 = HST.get() in
-  (* eq_lemma h0 h1 b empty;  *)
+  eq_lemma_0 h0 h1 b;
   eval_eq_lemma h0 h1 b b norm_length; 
   blit b 0ul tmp 0ul nlength;
   let h2 = HST.get() in
