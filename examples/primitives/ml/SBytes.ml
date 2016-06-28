@@ -23,10 +23,10 @@ let uint32s_of_sbytes (res:uint32 buffer) (b:sbytes) l =
     upd res i (SInt_UInt32.of_int (SInt_UInt8.to_int (index b (4*i)) + (SInt_UInt8.to_int (index b (4*i+1)) lsl 8) + (SInt_UInt8.to_int (index b (4*i+2)) lsl 16) + (SInt_UInt8.to_int (index b (4*i+3)) lsl 24)))
   done
 
-let be_uint32s_of_sbytes (res:uint32 buffer) (b:sbytes) l =
-  for i = 0 to l/4-1 do
-    upd res i (SInt_UInt8.to_int (index b (4*i+3)) + (SInt_UInt8.to_int (index b (4*i+2)) lsl 8) + (SInt_UInt8.to_int (index b (4*i+1)) lsl 16) + (SInt_UInt8.to_int (index b (4*i)) lsl 24))
-  done
+(* let be_uint32s_of_sbytes (res:uint32 buffer) (b:sbytes) l = *)
+(*   for i = 0 to l/4-1 do *)
+(*     upd res i (SInt_UInt8.to_int (index b (4*i+3)) + (SInt_UInt8.to_int (index b (4*i+2)) lsl 8) + (SInt_UInt8.to_int (index b (4*i+1)) lsl 16) + (SInt_UInt8.to_int (index b (4*i)) lsl 24)) *)
+(*   done *)
 
 let sbytes_of_uint32s (res:sbytes) (b:uint32 buffer) l =
   for i = 0 to l-1 do
