@@ -14,6 +14,41 @@
 module Effects.Def
 open FStar.FunctionalExtensionality //proving the laws requires feq
 
+//A generic template for proving the monad laws, via some equivalence relation eq_m
+let eq_m (m:Type -> Type) = eq:(a:Type -> m a -> m a -> Type){forall a x y. eq a x y ==> x==y}
+val monad_laws_via_eq: m:(Type -> Type) 
+         -> eq:eq_m m
+	 -> return:(a:Type -> x:a -> Tot (m a))
+	 ->   bind:(a:Type -> b:Type -> m a -> (a -> Tot (m b)) -> Tot (m b)) 
+	 ->   Lemma (requires (forall (a:Type) (f:m a). eq a (bind a a f (return a)) f) 
+			   /\ (forall (a:Type) (b:Type) (x:a) (f:a -> Tot (m b)). eq b (bind a b (return a x) f) (f x)) 
+			   /\ (forall (a:Type) (b:Type) (c:Type) (f:m a) (g:(a -> Tot (m b))) (h:(b -> Tot (m c))). 
+			             eq c (bind a c f (fun x -> bind b c (g x) h)) (bind b c (bind a b f g) h)))
+		   (ensures  (forall (a:Type) (f:m a). bind a a f (return a) == f)                               //right unit
+			   /\ (forall (a:Type) (b:Type) (x:a) (f:a -> Tot (m b)). bind a b (return a x) f == f x)  //left unit
+			   /\ (forall (a:Type) (b:Type) (c:Type) (f:m a) (g:(a -> Tot (m b))) (h:(b -> Tot (m c))). //associativity
+			             bind a c f (fun x -> bind b c (g x) h) = bind b c (bind a b f g) h))
+let monad_laws_via_eq m eq return bind = ()
+
+//A generic template for proving the monad morphism laws, via some equivalence relation eq_m
+val morphism_laws_via_eq: m:(Type -> Type) 
+			-> n:(Type -> Type) 
+			-> eq_n:eq_m n
+			-> return_m:(a:Type -> x:a -> Tot (m a))
+			-> bind_m:(a:Type -> b:Type -> m a -> (a -> Tot (m b)) -> Tot (m b)) 
+			-> return_n:(a:Type -> x:a -> Tot (n a))
+			-> bind_n:(a:Type -> b:Type -> n a -> (a -> Tot (n b)) -> Tot (n b)) 
+			-> lift:(a:Type -> m a -> Tot (n a))
+			-> Lemma (requires (forall (a:Type) (x:a). eq_n a (lift a (return_m a x)) (return_n a x))
+					/\ (forall (a:Type) (b:Type) (f:m a) (g: a -> Tot (m b)). 
+					      eq_n b (lift b (bind_m a b f g)) (bind_n a b (lift a f) (fun x -> lift b (g x)))))
+			        (ensures  (forall (a:Type) (x:a). lift a (return_m a x) == return_n a x)                          //lift-unit
+					/\ (forall (a:Type) (b:Type) (f:m a) (g: a -> Tot (m b)).
+					      lift b (bind_m a b f g) = bind_n a b (lift a f) (fun x -> lift b (g x))))         //lift-bind
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 20"					      
+let morphism_laws_via_eq m n eqn return_n bind_m return_n bind_n lift = ()
+#reset-options
+
 (********************************************************************************)
 (* Effect (st a) : A state monad over an abstract state type s                  *)
 (********************************************************************************)
@@ -21,10 +56,12 @@ assume type s : Type //an abstract type of the state
 
 let st (a:Type) = s -> Tot (a * s)
 
-let return_st  (#a:Type) (x:a)
+let eq_st (a:Type) (x:st a) (y:st a) = feq x y //extensional equality on st
+
+let return_st  (a:Type) (x:a)
   : st a = fun s -> (x, s)
   
-let bind_st (#a:Type) (#b:Type) (f:st a) (g: a -> Tot (st b))
+let bind_st (a:Type) (b:Type) (f:st a) (g: a -> Tot (st b))
   : st b 
   = fun s0 -> let x, s1 = f s0 in 
            g x s1
@@ -33,31 +70,20 @@ let bind_st (#a:Type) (#b:Type) (f:st a) (g: a -> Tot (st b))
 let get (u:unit) : st s = fun s -> s, s
 let put (s:s) : st unit = fun _ -> (),s
 
-////////////////////////////////////////////////////////////////////////////////
-// The monad laws for (st a)
-////////////////////////////////////////////////////////////////////////////////
-let right_unit (a:Type) (f:st a) 
-  : Lemma (bind_st f return_st = f)
-  = assert (feq (bind_st f return_st) f)
-  
-let left_unit (a:Type) (b:Type) (x:a) (f:a -> Tot (st b)) 
-  : Lemma (bind_st (return_st x) f = f x)
-  = assert (feq (bind_st (return_st x) f) (f x))
-
-let assoc (a:Type) (b:Type) (c:Type) (f:st a) (g:(a -> Tot (st b))) (h:(b -> Tot (st c)))
-  : Lemma  (bind_st f (fun x -> bind_st (g x) h) = bind_st (bind_st f g) h) 
-  = assert (feq (bind_st f (fun x -> bind_st (g x) h)) (bind_st (bind_st f g) h))
+let st_laws = monad_laws_via_eq st eq_st return_st bind_st
 
 (********************************************************************************)
 (* Effect (ex a) : A state monad over an abstract state type s                  *)
 (********************************************************************************)
 let ex (a:Type) = unit -> Tot (option a)
 
-let return_ex (#a:Type) (x:a) 
+let eq_ex (a:Type) (x:ex a) (y:ex a) = feq x y //extensional equality on ex
+
+let return_ex (a:Type) (x:a) 
   : ex a 
   = fun _ -> Some x
   
-let bind_ex (#a:Type) (#b:Type) (f:ex a) (g: a -> Tot (ex b)) 
+let bind_ex (a:Type) (b:Type) (f:ex a) (g: a -> Tot (ex b)) 
   : ex b 
   = fun _ -> match f () with 
           | None -> None
@@ -75,145 +101,96 @@ let handle (#a:Type) (f:ex a) (g:unit -> Tot a)
     | None -> g()
     | Some x -> x
 
-////////////////////////////////////////////////////////////////////////////////
-// The monad laws for (ex a)
-////////////////////////////////////////////////////////////////////////////////
-let right_unit_ex (a:Type) (f:ex a) : Lemma (bind_ex f return_ex = f)
-  = assert (feq (bind_ex f return_ex) f)
-  
-let left_unit_ex (a:Type) (b:Type) (x:a) (f:a -> Tot (ex b)) : Lemma (bind_ex (return_ex x) f = f x)
-  = assert (feq (bind_ex (return_ex x) f) (f x))
-
-let assoc_ex (a:Type) (b:Type) (c:Type) (f:ex a) (g:(a -> Tot (ex b))) (h:(b -> Tot (ex c)))
-  : Lemma  (bind_ex f (fun x -> bind_ex (g x) h) = bind_ex (bind_ex f g) h) 
-  = assert (feq (bind_ex f (fun x -> bind_ex (g x) h)) (bind_ex (bind_ex f g) h))
+let ex_laws = monad_laws_via_eq ex eq_ex return_ex bind_ex
 
 (********************************************************************************)
 (* Effect (stexn a) : A combined monad, exceptions over state                   *)
 (********************************************************************************)
 let stexn (a:Type) = s -> Tot (option a * s)
 
-let return_stexn (#a:Type) (x:a) 
+let eq_stexn (a:Type) (x:stexn a) (y:stexn a) = feq x y
+
+let return_stexn (a:Type) (x:a) 
   : stexn a 
   = fun s -> Some x, s
   
-let bind_stexn (#a:Type) (#b:Type) (f:stexn a) (g: a -> Tot (stexn b)) 
+let bind_stexn (a:Type) (b:Type) (f:stexn a) (g: a -> Tot (stexn b)) 
   : stexn b 
   = fun s0 -> match f s0 with 
            | None, s1 -> None, s1
   	   | Some x, s1 -> g x s1
 
-//no actions of its own
-
-////////////////////////////////////////////////////////////////////////////////
-// The monad laws for (stexn a)
-////////////////////////////////////////////////////////////////////////////////
-let right_unit_stexn (a:Type) (f:stexn a) 
-  : Lemma (bind_stexn f return_stexn = f)
-  = assert (feq (bind_stexn f return_stexn) f)
-  
-let left_unit_stexn (a:Type) (b:Type) (x:a) (f:a -> Tot (stexn b)) 
-  : Lemma (bind_stexn (return_stexn x) f = f x)
-  = assert (feq (bind_stexn (return_stexn x) f) (f x))
-
-let assoc_stexn (a:Type) (b:Type) (c:Type) (f:stexn a) (g:(a -> Tot (stexn b))) (h:(b -> Tot (stexn c)))
-  : Lemma  (bind_stexn f (fun x -> bind_stexn (g x) h) = bind_stexn (bind_stexn f g) h) 
-  = assert (feq (bind_stexn f (fun x -> bind_stexn (g x) h)) (bind_stexn (bind_stexn f g) h))
+let stexn_laws = monad_laws_via_eq stexn eq_stexn return_stexn bind_stexn
 
 (********************************************************************************)
 (* Effect (exnst a) : A combined monad, state over exceptions                   *)
 (********************************************************************************)
 let exnst (a:Type) = s -> Tot (option (a * s))
 
-let return_exnst (#a:Type) (x:a) 
+let eq_exnst (a:Type) (x:exnst a) (y:exnst a) = feq x y
+
+let return_exnst (a:Type) (x:a) 
   : exnst a 
   = fun s -> Some (x, s)
   
-let bind_exnst (#a:Type) (#b:Type) (f:exnst a) (g: a -> Tot (exnst b)) 
+let bind_exnst (a:Type) (b:Type) (f:exnst a) (g: a -> Tot (exnst b)) 
   : exnst b 
   = fun s0 -> match f s0 with 
            | None -> None
            | Some (x, s1) -> g x s1
-	   
-//no actions of its own
 
-////////////////////////////////////////////////////////////////////////////////
-// The monad laws for (exnst a)
-////////////////////////////////////////////////////////////////////////////////
-let right_unit_exnst (a:Type) (f:exnst a) 
-  : Lemma (bind_exnst f return_exnst = f)
-  = assert (feq (bind_exnst f return_exnst) f)
-  
-let left_unit_exnst (a:Type) (b:Type) (x:a) (f:a -> Tot (exnst b)) 
-  : Lemma (bind_exnst (return_exnst x) f = f x)
-  = assert (feq (bind_exnst (return_exnst x) f) (f x))
-
-let assoc_exnst (a:Type) (b:Type) (c:Type) (f:exnst a) (g:(a -> Tot (exnst b))) (h:(b -> Tot (exnst c)))
-  : Lemma  (bind_exnst f (fun x -> bind_exnst (g x) h) = bind_exnst (bind_exnst f g) h) 
-  = assert (feq (bind_exnst f (fun x -> bind_exnst (g x) h)) (bind_exnst (bind_exnst f g) h))
+let exnst_laws = monad_laws_via_eq exnst eq_exnst return_exnst bind_exnst
 
 (********************************************************************************)
 (* Morphism: st -> stexn                                                        *)
 (********************************************************************************)
-let lift_st_stexn (#a:Type) (f:st a) 
+let lift_st_stexn (a:Type) (f:st a) 
   : stexn a 
   = fun s0 -> let x, s1 = f s0 in Some x, s1
 
-//morphism laws
-let lift_unit_st_stexn (a:Type) (x:a) 
-  : Lemma (lift_st_stexn (return_st x) = return_stexn x)
-  = assert (feq (lift_st_stexn (return_st x)) (return_stexn x))
-
-let lift_bind_st_stexn (a:Type) (b:Type) (f:st a) (g:(a -> Tot (st b)))
-  : Lemma (lift_st_stexn (bind_st f g) = bind_stexn (lift_st_stexn f) (fun x -> lift_st_stexn (g x)))
-  = assert (feq (lift_st_stexn (bind_st f g)) (bind_stexn (lift_st_stexn f) (fun x -> lift_st_stexn (g x))))
+let morphism_lift_st_exn =
+  morphism_laws_via_eq st stexn eq_stexn
+		       return_st bind_st 
+		       return_stexn bind_stexn 
+		       lift_st_stexn
 
 (********************************************************************************)
 (* Morphism: exn -> stexn                                                       *)
 (********************************************************************************)
-let lift_ex_stexn (#a:Type) (f:ex a) 
+let lift_ex_stexn (a:Type) (f:ex a) 
   : stexn a 
   = fun s0 -> f (), s0
 
-//morphism laws
-let lift_unit_ex_stexn (a:Type) (x:a) 
-  : Lemma (lift_ex_stexn (return_ex x) = return_stexn x)
-  = assert (feq (lift_ex_stexn (return_ex x)) (return_stexn x))
-
-let lift_bind_ex_stexn (a:Type) (b:Type) (f:ex a) (g:(a -> Tot (ex b)))
-  : Lemma (lift_ex_stexn (bind_ex f g) = bind_stexn (lift_ex_stexn f) (fun x -> lift_ex_stexn (g x)))
-  = assert (feq (lift_ex_stexn (bind_ex f g)) (bind_stexn (lift_ex_stexn f) (fun x -> lift_ex_stexn (g x))))
+let morphism_lift_ex_stexn = 
+  morphism_laws_via_eq ex stexn eq_stexn
+		       return_ex bind_ex 
+		       return_stexn bind_stexn 
+		       lift_ex_stexn
 
 (********************************************************************************)
 (* Morphism: st -> exnst                                                        *)
 (********************************************************************************)
-let lift_st_exnst (#a:Type) (f:st a) 
+let lift_st_exnst (a:Type) (f:st a) 
   : exnst a 
   = fun s0 -> Some (f s0)
 
-//morphism laws
-let lift_unit_st_exnst (a:Type) (x:a) 
-  : Lemma (lift_st_exnst (return_st x) = return_exnst x)
-  = assert (feq (lift_st_exnst (return_st x)) (return_exnst x))
-
-let lift_bind_st_exnst (a:Type) (b:Type) (f:st a) (g:(a -> Tot (st b)))
-  : Lemma (lift_st_exnst (bind_st f g) = bind_exnst (lift_st_exnst f) (fun x -> lift_st_exnst (g x)))
-  = assert (feq (lift_st_exnst (bind_st f g)) (bind_exnst (lift_st_exnst f) (fun x -> lift_st_exnst (g x))))
+let morphism_lift_st_exnst = 
+  morphism_laws_via_eq st exnst eq_exnst
+		       return_st bind_st 
+		       return_exnst bind_exnst 
+		       lift_st_exnst
 
 (********************************************************************************)
 (* Morphism: ex -> exnst                                                        *)
 (********************************************************************************)
-let lift_ex_exnst (#a:Type) (f:ex a) 
+let lift_ex_exnst (a:Type) (f:ex a) 
   : exnst a 
   = fun s0 -> match f () with 
            | None -> None
 	   | Some x -> Some (x, s0)
 
-//morphism laws  
-let lift_unit_ex_exnst (a:Type) (x:a) 
-  : Lemma (lift_ex_exnst (return_ex x) = return_exnst x)
-  = assert (feq (lift_ex_exnst (return_ex x)) (return_exnst x))
-
-let lift_bind_ex_exnst (a:Type) (b:Type) (f:ex a) (g:(a -> Tot (ex b)))
-  : Lemma (lift_ex_exnst (bind_ex f g) = bind_exnst (lift_ex_exnst f) (fun x -> lift_ex_exnst (g x)))
-  = assert (feq (lift_ex_exnst (bind_ex f g)) (bind_exnst (lift_ex_exnst f) (fun x -> lift_ex_exnst (g x))))
+let morphism_lift_ex_exnst = 
+  morphism_laws_via_eq ex exnst eq_exnst
+		       return_ex bind_ex 
+		       return_exnst bind_exnst 
+		       lift_ex_exnst
