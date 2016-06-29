@@ -65,7 +65,7 @@ reifiable reflectable new_effect {
   ; repr         = ex_repr
   ; bind         = ex_bind
   ; return       = ex_return
-  (* and effect_actions *)
+  (* and effect_actions *) //defining it here fails because of some type inference issue, but see raise below
   (*   raise        = raise *)
 }
 
