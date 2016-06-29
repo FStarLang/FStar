@@ -107,7 +107,7 @@ and typ =
   | TInt of width
   | TBuf of typ
   | TUnit
-  | TAlias of ident
+  | TQualified of lident
   | TBool
   | TAny
   | TArrow of typ * typ
@@ -116,7 +116,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 3
+let current_version: version = 4
 
 type file = string * program
 type binary_format = version * list<file>
@@ -138,6 +138,39 @@ let mk_width = function
   | "Int32" -> Some Int32
   | "Int64" -> Some Int64
   | _ -> None
+
+let mk_op = function
+  | "add" | "op_Plus_Hat" ->
+      Some Add
+  | "add_mod" | "op_Plus_Percent_Hat" ->
+      Some AddW
+  | "sub" | "op_Subtraction_Hat" ->
+      Some Sub
+  | "sub_mod" | "op_Subtraction_Percent_Hat" ->
+      Some SubW
+  | "mul" | "op_Star_Hat" ->
+      Some Mult
+  | "div" | "op_Slash_Hat" ->
+      Some Div
+  | "mod" | "op_Percent_Hat" ->
+      Some Mod
+  | "logor" | "op_Bar_Hat" ->
+      Some BOr
+  | "logxor" | "op_Hat_Hat" ->
+      Some BXor
+  | "logand" | "op_Amp_Hat" ->
+      Some BAnd
+  | "op_Greater_Greater_Hat" ->
+      Some BShiftR
+  | "op_Less_Less_Hat" ->
+      Some BShiftL
+  | "op_Equals_Hat" ->
+      Some Eq
+  | _ ->
+      None
+
+let is_op op =
+  mk_op op <> None
 
 let is_machine_int m =
   mk_width m <> None
@@ -222,6 +255,7 @@ and translate_decl env d: option<decl> =
       let binders = translate_binders env args in
       let env = add_binders env args in
       let body = translate_expr env body in
+      let name = env.module_name ^ "_" ^ name in
       Some (DFunction (t, name, binders, body))
 
   | MLM_Let (flavor, [ {
@@ -232,6 +266,7 @@ and translate_decl env d: option<decl> =
       assert (flavor <> Mutable);
       let t = translate_type env t in
       let expr = translate_expr env expr in
+      let name = env.module_name ^ "_" ^ name in
       Some (DGlobal (name, t, expr))
 
   | MLM_Let (_, { mllb_name = name, _ } :: _) ->
@@ -248,6 +283,7 @@ and translate_decl env d: option<decl> =
       None
 
   | MLM_Ty [ (name, [], Some (MLTD_Abbrev t)) ] ->
+      let name = env.module_name ^ "_" ^ name in
       Some (DTypeAlias (name, translate_type env t))
 
   | MLM_Ty _ ->
@@ -295,11 +331,8 @@ and translate_type env t: typ =
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.HyperStack.mem") ->
       // HACK ALERT HACK ALERT we shouldn't even be extracting this!
       TAny
-  | MLTY_Named ([], (path, type_name)) when (String.concat "_" path = env.module_name) ->
-      TAlias type_name
-  | MLTY_Named ([], (_, type_name)) ->
-      (* FIXME *)
-      TAlias type_name
+  | MLTY_Named ([], (path, type_name)) ->
+      TQualified (path, type_name)
   | MLTY_Named (_, p) ->
       failwith (Util.format2 "todo: translate_type [MLTY_Named] %s (module_name = %s)"
         (Syntax.string_of_mlpath p) env.module_name)
@@ -322,6 +355,10 @@ and translate_expr env e: expr =
 
   | MLE_Var (name, _) ->
       EBound (find env name)
+
+  // Some of these may not appear beneath an [EApp] node because of partial applications
+  | MLE_Name ([ "FStar"; m ], op) when (is_machine_int m && is_op op) ->
+      EOp (must (mk_op op), must (mk_width m))
 
   | MLE_Name n ->
       EQualified n
@@ -355,14 +392,12 @@ and translate_expr env e: expr =
       let t = expr.mlty in
       EMatch (translate_expr env expr, translate_branches env t branches)
 
-  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var (v, _) } ])
-    when (string_of_mlpath p = "FStar.HST.op_Bang" && is_mutable env v) ->
+  // We recognize certain distinguished names from [FStar.HST] and other
+  // modules, and translate them into built-in Kremlin constructs
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var (v, _) } ]) when (string_of_mlpath p = "FStar.HST.op_Bang" && is_mutable env v) ->
       EBound (find env v)
-
-  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var (v, _) }; e ])
-    when (string_of_mlpath p = "FStar.HST.op_Colon_Equals" && is_mutable env v) ->
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var (v, _) }; e ]) when (string_of_mlpath p = "FStar.HST.op_Colon_Equals" && is_mutable env v) ->
       EAssign (EBound (find env v), translate_expr env e)
-
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.index") ->
       EBufRead (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.create") ->
@@ -381,62 +416,13 @@ and translate_expr env e: expr =
       // HACK ALERT HACK ALERT we shouldn't even be extracting this!
       EConstant (UInt8, "0")
 
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "add") }, args)
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Plus_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) Add args
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "add_mod") }, args)
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Plus_Percent_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) AddW args
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "sub") }, args)
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Subtraction_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) Sub args
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "sub_mod") }, args)
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Subtraction_Percent_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) SubW args
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "mul") }, args)
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Star_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) Mult args
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "div") }, args)
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Slash_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) Div args
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "mod") }, args)
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Percent_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) Mod args
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "logor") }, args)
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Bar_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) BOr args
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "logxor") }, args)
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Hat_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) BXor args
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "logand") }, args)
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Amp_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) BAnd args
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Greater_Greater_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) BShiftR args
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Less_Less_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) BShiftL args
-  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "op_Equals_Hat") }, args) when is_machine_int m ->
-      mk_op env (must (mk_width m)) Eq args
+  // Operators from fixed-width integer modules, e.g. [FStar.Int32.addw].
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], op) }, args) when (is_machine_int m && is_op op) ->
+      mk_op_app env (must (mk_width m)) (must (mk_op op)) args
 
-  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt8.uint_to_t") ->
-      EConstant (UInt8, c)
-  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt16.uint_to_t") ->
-      EConstant (UInt16, c)
-  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt32.uint_to_t") ->
-      EConstant (UInt32, c)
-  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.UInt64.uint_to_t") ->
-      EConstant (UInt64, c)
-  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.Int8.uint_to_t") ->
-      EConstant (Int8, c)
-  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.Int16.uint_to_t") ->
-      EConstant (Int16, c)
-  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.Int32.uint_to_t") ->
-      EConstant (Int32, c)
-  | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when (string_of_mlpath p = "FStar.Int64.uint_to_t") ->
-      EConstant (Int64, c)
-
-  | MLE_App ({ expr = MLE_Name (path, function_name) }, args) when (String.concat "_" path = env.module_name) ->
-      EApp (EQualified ([], function_name), List.map (translate_expr env) args)
+  // Fixed-width literals are represented as calls to [FStar.Int32.uint_to_t]
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "uint_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when is_machine_int m ->
+      EConstant (must (mk_width m), c)
 
   | MLE_App ({ expr = MLE_Name ([ "FStar"; "Int"; "Cast" ], c) }, [ arg ]) ->
       if ends_with c "uint64" then
@@ -458,9 +444,8 @@ and translate_expr env e: expr =
       else
         failwith (Util.format1 "Unrecognized function from Cast module: %s\n" c)
 
-  | MLE_App ({ expr = MLE_Name (_, function_name) }, args) ->
-      (* FIXME: all functions end up in the same module... *)
-      EApp (EQualified ([], function_name), List.map (translate_expr env) args)
+  | MLE_App ({ expr = MLE_Name (path, function_name) }, args) ->
+      EApp (EQualified (path, function_name), List.map (translate_expr env) args)
 
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
@@ -540,5 +525,5 @@ and translate_constant c: expr =
 
 (* Helper functions **********************************************************)
 
-and mk_op env w op args =
+and mk_op_app env w op args =
   EApp (EOp (op, w), List.map (translate_expr env) args)
