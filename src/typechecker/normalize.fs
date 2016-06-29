@@ -483,6 +483,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 begin match (SS.compress e).n with 
                 | Tm_let((false, [lb]), body) ->
                     //this is M.bind
+                    //reify (M.bind e1 \x.e2) ~> M.bind_repr (reify e1) (\x. (reify e2))
                     let ed = Env.get_effect_decl cfg.tcenv m in
                     let _, bind_repr = ed.bind_repr in 
                     begin match lb.lbname with 
@@ -502,6 +503,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   let stack = App(reify_head, None, t.pos)::stack in
                   norm cfg env stack a
                 end
+
+            | Tm_app({n=Tm_constant (Const.Const_reflect _)}, [a]) -> 
+              //reify (reflect e) ~> e
+              norm cfg env stack (fst a)
+
+            | Tm_match(e, branches) -> 
+              //reify (match e with p -> e') ~> match (reify e) with p -> reify e'
+              let e = Util.mk_reify e in 
+              let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, Util.mk_reify tm) in
+              let tm = mk (Tm_match(e, branches)) t.pos in
+              norm cfg env stack tm
 
             | _ ->
               let stack = App(reify_head, None, t.pos)::stack in

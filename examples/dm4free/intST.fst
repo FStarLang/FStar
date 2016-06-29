@@ -1,4 +1,4 @@
-module NatST
+module IntST
 
 let st_pre = int -> Type0
 let st_post (a:Type) = (a * int) -> Type0
@@ -119,28 +119,25 @@ let incr2 u =
     let n = STATE.get() in
     STATE.put (n + 1)
 
-(* (\* #set-options "--log_queries" *\) *)
-(* module Test *)
-(* open NatST *)
-(* let f (_:unit) : St unit = *)
-(*     let n0 = STATE.get() in *)
-(*     let _, n1 = reify (incr2 ()) n0 in *)
-(*     assert (n1 = n0 + 1); *)
-(*     STATE.put n1 *)
+let f (_:unit) : St unit =
+    let n0 = STATE.get() in
+    let _, n1 = reify (incr2 ()) n0 in
+    assert (n1 = n0 + 1);
+    STATE.put n1
 
-(* val g : unit -> St int *)
-(* let g u = *)
-(*     let n0 = STATE.get () in *)
-(*     let f : st_repr unit (fun n0 post -> forall x. snd x=n0+2 ==> post x) = *)
-(*       fun n0 -> (), n0+2 in *)
-(*     STATE.reflect f; *)
-(*     let n1 = STATE.get () in *)
-(*     assert (n0 + 2 = n1); *)
-(*     n1 *)
+val g : unit -> St int
+let g u =
+    let n0 = STATE.get () in
+    let f : st_repr unit (fun n0 post -> forall x. snd x=n0+2 ==> post x) =
+      fun n0 -> (), n0+2 in
+    STATE.reflect f;
+    let n1 = STATE.get () in
+    assert (n0 + 2 = n1);
+    n1
 
-    
-    
-
+let top =
+  let _, one = reify (incr2 ()) 0 in 
+  FStar.IO.print_string ("incr2 returned: " ^ string_of_int one)
 
 (* (\* sub_effect PURE ~> STATE { *\) *)
 (* (\*   lift_wp: #a:Type -> #wp:pure_wp a -> st_wp a = ... *\) *)

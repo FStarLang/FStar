@@ -794,11 +794,20 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             ml_bs (f, t) in
           with_ty tfun <| MLE_Fun(ml_bs, ml_body), f, tfun
 
+        | Tm_app({n=Tm_constant Const_reify}, [t]) ->
+          let ml, e_tag, mlty = term_as_mlexpr' g (fst t) in
+          ml, E_PURE, mlty
+
+        | Tm_app({n=Tm_constant (Const_reflect _)}, [t]) ->
+          let ml, e_tag, mlty = term_as_mlexpr' g (fst t) in 
+          ml, E_IMPURE, mlty
+
         | Tm_app(head, args) ->
           begin match head.n with
             | Tm_uvar _ ->
               let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
               term_as_mlexpr' g t
+
             | _ ->
               let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
     //            Printf.printf "synth_app restArgs=%d, t=%A\n" (List.length restArgs) t;

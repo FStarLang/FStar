@@ -14,10 +14,10 @@ include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
 # This target is very concise and re-uses the variables defined in
 # Makefile.include. You shouldn't need to call `cp` ever.
-natST.test: out natST.fst
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --universes natST.fst
-	$(OCAMLOPT) -I out out/NatST.ml Top.ml -o Top.exe
-	./Top.exe
+intST.test: out intST.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --universes intST.fst
+	$(OCAMLOPT) -I out out/IntST.ml -o out/IntST.exe
+	./out/IntST.exe
 
 ulib:
 	$(MAKE) -C $(ULIB_ML)

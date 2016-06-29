@@ -122,8 +122,8 @@ end) -> struct
     | _     -> failwith "impossible"
 
   let string_of_bool = string_of_bool
-  let string_of_int = string_of_int
-
+  let string_of_int = to_string
+  
   type ('a, 'b) dtuple2 =
     | Mkdtuple2 of 'a * 'b
 

@@ -603,6 +603,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               let tm, decls = encode_term arg env in 
               mk (Term.App(Var "Reify", [tm])), decls
 
+            | Tm_constant (Const_reflect _), [(arg, _)] -> 
+              encode_term arg env
+
             | _ -> 
             let args, decls = encode_args args_e env in
 
@@ -1459,14 +1462,14 @@ let encode_top_level_let env (is_rec, bindings) quals =
                     let eqn = Term.Assume(mkForall([[app]], vars, mkEq(app,body)),
                                         Some (Util.format1 "Equation for %s" flid.str),
                                         Some ("equation_"^f)) in
-                    let reified_eqn = 
-                        if quals |> List.contains Reifiable 
-                        then let reified_app = Term.mk (Term.App(Var "Reify", [app])) in
-                             [Term.Assume(mkForall([[reified_app]], vars, mkEq(reified_app,app)),
-                                        Some (Util.format1 "Reified equation for %s" flid.str),
-                                        Some ("reified_equation_"^f))] 
-                        else [] in
-                    decls@binder_decls@decls2@[eqn]@reified_eqn@primitive_type_axioms env.tcenv flid f app,
+//                    let reified_eqn = 
+//                        if quals |> List.contains Reifiable 
+//                        then let reified_app = Term.mk (Term.App(Var "Reify", [app])) in
+//                             [Term.Assume(mkForall([[reified_app]], vars, mkEq(reified_app,app)),
+//                                        Some (Util.format1 "Reified equation for %s" flid.str),
+//                                        Some ("reified_equation_"^f))] 
+//                        else [] in
+                    decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid f app,
                     env
 
                 | _ -> failwith "Impossible"
