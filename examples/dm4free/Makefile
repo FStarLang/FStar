@@ -2,7 +2,7 @@ FSTAR_HOME=../..
 OTHERFLAGS=
 include ../Makefile.include
 
-all: intST.uver ex.uver stexn.uver
+all: intST.uver ex.uver stexn.uver stexn.handle.uver
 
 %.uver: %.fst
 	$(FSTAR) --universes $^

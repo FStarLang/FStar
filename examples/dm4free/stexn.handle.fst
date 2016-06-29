@@ -1,4 +1,4 @@
-module StExn
+module StExn.Handle
 let pre = int -> Type0
 let post (a:Type) = (option a * int) -> Type0
 let wp (a:Type) = int -> post a -> Type0
@@ -67,8 +67,10 @@ let get (u:unit) : repr int (fun n0 post -> post (Some n0, n0))
 val raise : a:Type0 -> Tot (repr a (fun h0 (p:post a) -> p (None, h0 + 1)))
 let raise a (h:int) = None, h + 1
 
-//no reflect, to preserve the 'raise' abstraction
-reifiable new_effect {
+//adding a reflect do define a handler below, 
+//but want to restrict it so that it is private to this module
+//although we don't have syntax for that yet ...
+reifiable reflectable new_effect {
   StateExn : a:Type -> wp:wp a -> Effect
   with //repr is new; it's the reprentation of ST as a value type
        repr         = repr
@@ -109,8 +111,8 @@ effect S (a:Type) =
 //let f = StateExn.reflect (fun h0 -> None, h0); this rightfully fails, since StateExn is not reflectable
 val div_intrinsic : i:nat -> j:int -> StExn int
   (requires (fun h -> True))
-  (ensures (fun h0 x h1 -> match x with 
-			| None -> h0 + 1 = h1 /\ j=0 
+  (ensures (fun h0 x h1 -> match x with
+			| None -> h0 + 1 = h1 /\ j=0
 			| Some z -> h0 = h1 /\ j<>0 /\ z = i / j))
 let div_intrinsic i j =
   if j=0 then StateExn.raise int
@@ -124,3 +126,61 @@ let lemma_div_extrinsic (i:nat) (j:int) :
   Lemma (match reify (div_extrinsic i j) 0 with
          | None, 1 -> j = 0
 	 | Some z, 0 -> j <> 0 /\ z = i / j) = ()
+
+val try_div': i:nat -> j:nat -> Tot (repr int (fun h0 post -> 
+		       if j = 0
+		       then post (Some 0, h0 + 1)
+                       else post (Some (i / j), h0)))
+let try_div' i j h0 = 
+     match reify (div_intrinsic i j) h0 with 
+     | None, h1 -> assert (h0 + 1 = h1); assert (j = 0); Some 0, h1
+     | Some x, h1 -> assert (x = i / j); assert (h0 = h1); Some x, h1
+
+val try_div: i:nat -> j:nat -> StExn int 
+  (requires (fun h -> True))
+  (ensures (fun h0 x h1 -> if j=0 
+		        then x=Some 0 /\ h1 = h0 + 1
+			else x=Some (i/j) /\ h0 = h1))
+let try_div i j = StateExn.reflect (try_div' i j)			
+
+//unfortunately, this yet doesn't work with type-inference:
+(*
+let try_div i j = 
+  StateExn.reflect (fun h0 -> match reify (div_intrinsic i j) h0 with 
+			      | None, h1 -> Some 0, h1
+			      | x -> x)
+*)
+
+//Also, tried packaging up this reflect/reify pattern into a handler
+val handle: #a:Type0 -> #wp:wp a -> $f:(unit -> StateExn a wp) 
+	  -> def:a 
+	  -> StateExn a (fun h0 post -> 
+			  wp h0 (fun (x, h1) -> 
+				   match x with 
+				   | None -> post (Some def, h1)
+				   |  _ -> post (x, h1)))
+//but this fails to verify because the WPs are too abstract,
+//e.g., we don't have any monotonicity property on them
+(* let handle #a #wp f def =  *)
+(*   admit(); *)
+(*   StateExn.reflect (fun h0 ->  *)
+(*     admit(); *)
+(*      match reify (f ()) h0 with  *)
+(*      | None, h1 -> Some def, h1 *)
+(*      | Some x, h1 -> Some x, h1) *)
+
+
+(* //Another attempt: *)
+(* val handle2: #a:Type0 -> #req:pre -> #ens:(int -> option a -> int -> GTot Type0)  *)
+(*           -> $f:(unit -> StExn a req ens) *)
+(*           -> def:a  *)
+(*           -> StExn a req (fun h0 x h1 ->  *)
+(*                           match x with  *)
+(*                           | None -> False *)
+(*                           | Some z -> (ens h0 None h1 /\ z=def) \/ ens h0 x h1) *)
+(* #set-options "--debug StExn.Handle --debug_level HACK!"			   *)
+(* let handle2 #a #req #ens f def = *)
+(*   StateExn.reflect (fun h0 -> *)
+(*      match reify (f ()) h0 with *)
+(*      | None, h1 -> Some def, h1 *)
+(*      | Some x, h1 -> Some x, h1) *)
