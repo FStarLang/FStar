@@ -1,4 +1,4 @@
-module While
+module Bug173
 
 (* binary operators *)
 type binop =
@@ -62,7 +62,7 @@ let rec step_exp h e = match e with
     | (VInt i1, VInt i2) -> (match op with
       | Plus -> Some (Val (VInt (i1 + i2)))
       | Minus -> Some (Val (VInt (i1 - i2)))
-      | Times -> Some (Val (VInt (i1 * i2)))
+      | Times -> Some (Val (VInt (op_Multiply i1 i2)))
       | Gt -> Some (Val (if (i1 > i2) then VBool true else VBool false))
       | Lt -> Some (Val (if (i1 < i2) then VBool true else VBool false))
       | Eq -> Some (Val (if (i1 = i2) then VBool true else VBool false))
@@ -204,8 +204,8 @@ let rec preservation_exp g h e = match e with
 (* type preservation for statments -- working variant *)
 val preservation : g:env -> h:heap{typed_heap g h} -> 
                    s:stmt{typing g s /\ is_Some (step h s)} -> Lemma
-                   (typing g (MkTuple2._2 (Some.v (step h s))) /\
-                     typed_heap g (MkTuple2._1 (Some.v (step h s))))
+                   (typing g (Mktuple2._2 (Some.v (step h s))) /\
+                     typed_heap g (Mktuple2._1 (Some.v (step h s))))
 let rec preservation g h s = match s with
 | Skip -> ()
 | Assign x t -> if not (is_Val t) then preservation_exp g h t
