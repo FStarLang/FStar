@@ -944,7 +944,7 @@ let multiplication c a b =
   eq_lemma_fresh h_init h0 a;
   eq_lemma_fresh h_init h0 b;
   eq_lemma_fresh h_init h0 c;
-  let tmp = create (U64.of_string "0") nlength in 
+  let tmp = create 0UL nlength in 
   let h1 = HST.get() in
   eq_lemma_0 h0 h1 a; 
   eq_lemma_0 h0 h1 b; 
@@ -1400,7 +1400,7 @@ let rec carry2 b =
   Math.Lib.pow2_increases_lemma 63 41;
   carry_top_to_0 b;
   let h1 = HST.get() in
-  upd b nlength (U64.of_string "0");
+  upd b nlength 0UL;
   let h2 = HST.get() in
   eval_eq_lemma h1 h2 b b norm_length;
   cut ( eval h2 b (norm_length+1) = eval h1 b (norm_length)); 
@@ -1447,7 +1447,7 @@ let last_carry b =
   upd b 0ul (b0 +^ btop_5); 
   let h1 = HST.get() in
   freduce_degree_lemma h0 h1 b 0;
-  upd b nlength (U64.of_string "0");
+  upd b nlength 0UL;
   let h2 = HST.get() in
   eval_eq_lemma h1 h2 b b norm_length;
   cut (eval h2 b (norm_length+1) = eval h1 b norm_length);
@@ -1483,7 +1483,7 @@ let modulo b =
   let h0 = HST.get() in
   freduce_degree b; 
   let h1 = HST.get() in
-  upd b nlength (U64.of_string "0");
+  upd b nlength 0UL;
   let h2 = HST.get() in
   eval_eq_lemma h1 h2 b b norm_length;
   cut (eval h2 b (norm_length+1) = eval h1 b norm_length);
@@ -1501,7 +1501,7 @@ val freduce_coefficients: b:bigint -> ST unit
     /\ modifies_1 b h0 h1))
 let freduce_coefficients b = 
   let h0 = HST.get() in
-  let tmp = create (U64.of_string "0") (U32.mul 2ul nlength-|1ul) in
+  let tmp = create 0UL (U32.mul 2ul nlength-|1ul) in
   let h1 = HST.get() in
   eq_lemma_0 h0 h1 b;
   eval_eq_lemma h0 h1 b b norm_length; 
@@ -1529,8 +1529,8 @@ val finalize: b:bigint -> ST unit
     /\ modifies_1 b h0 h1
     /\ eval h1 b norm_length = eval h0 b norm_length % reveal prime))
 let finalize b =
-  let mask_26 = U64.sub ((U64.of_string "1") ^<< 26ul) (U64.of_string "1") in
-  let mask2_26m5 = U64.sub mask_26 (U64.of_string "1" ^<< 2ul) in
+  let mask_26 = U64.sub (1UL ^<< 26ul) 1UL in
+  let mask2_26m5 = U64.sub mask_26 (1UL ^<< 2ul) in
   let b0 = index b 0ul in
   let b1 = index b 1ul in
   let b2 = index b 2ul in

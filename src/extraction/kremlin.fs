@@ -152,7 +152,7 @@ let mk_op = function
       Some Mult
   | "div" | "op_Slash_Hat" ->
       Some Div
-  | "mod" | "op_Percent_Hat" ->
+  | "rem" | "op_Percent_Hat" ->
       Some Mod
   | "logor" | "op_Bar_Hat" ->
       Some BOr
@@ -160,11 +160,11 @@ let mk_op = function
       Some BXor
   | "logand" | "op_Amp_Hat" ->
       Some BAnd
-  | "op_Greater_Greater_Hat" ->
+  | "shift_right" | "op_Greater_Greater_Hat" ->
       Some BShiftR
-  | "op_Less_Less_Hat" ->
+  | "shift_left" | "op_Less_Less_Hat" ->
       Some BShiftL
-  | "op_Equals_Hat" ->
+  | "eq" | "op_Equals_Hat" ->
       Some Eq
   | _ ->
       None
@@ -219,10 +219,11 @@ let add_binders env binders =
 let rec translate (MLLib modules): list<file> =
   List.filter_map (fun m ->
     try
+      Util.print1 "Attempting to translate module %s\n" (fst3 m);
       Some (translate_module m)
     with
-    | e when (fst3 m <> "Test") ->
-        Util.print2 "Unable to translate module: %s\n%s\n"
+    | e ->
+        Util.print2 "Unable to translate module: %s because:\n  %s\n"
           (fst3 m) (Util.print_exn e);
         None
   ) modules
@@ -244,19 +245,24 @@ and translate_decl env d: option<decl> =
       mllb_def = { expr = MLE_Fun (args, body) }
     } ]) ->
       assert (flavor <> Mutable);
-      let env = if flavor = Rec then extend env name false else env in
-      let rec find_return_type = function
-        | MLTY_Fun (_, _, t) ->
-            find_return_type t
-        | t ->
-            t
-      in
-      let t = translate_type env (find_return_type t) in
-      let binders = translate_binders env args in
-      let env = add_binders env args in
-      let body = translate_expr env body in
-      let name = env.module_name ^ "_" ^ name in
-      Some (DFunction (t, name, binders, body))
+      begin try
+        let env = if flavor = Rec then extend env name false else env in
+        let rec find_return_type = function
+          | MLTY_Fun (_, _, t) ->
+              find_return_type t
+          | t ->
+              t
+        in
+        let t = translate_type env (find_return_type t) in
+        let binders = translate_binders env args in
+        let env = add_binders env args in
+        let body = translate_expr env body in
+        let name = env.module_name ^ "_" ^ name in
+        Some (DFunction (t, name, binders, body))
+      with e ->
+        Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
+        None
+      end
 
   | MLM_Let (flavor, [ {
       mllb_name = name, _;
@@ -264,10 +270,15 @@ and translate_decl env d: option<decl> =
       mllb_def = expr
     } ]) ->
       assert (flavor <> Mutable);
-      let t = translate_type env t in
-      let expr = translate_expr env expr in
-      let name = env.module_name ^ "_" ^ name in
-      Some (DGlobal (name, t, expr))
+      begin try
+        let t = translate_type env t in
+        let expr = translate_expr env expr in
+        let name = env.module_name ^ "_" ^ name in
+        Some (DGlobal (name, t, expr))
+      with e ->
+        Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
+        None
+      end
 
   | MLM_Let (_, { mllb_name = name, _ } :: _) ->
       (* Things we currently do not translate:
@@ -286,8 +297,9 @@ and translate_decl env d: option<decl> =
       let name = env.module_name ^ "_" ^ name in
       Some (DTypeAlias (name, translate_type env t))
 
-  | MLM_Ty _ ->
-      failwith "todo: translate_decl [MLM_Ty]"
+  | MLM_Ty ((name, _, _) :: _) ->
+      Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
+      None
 
   | MLM_Top _ ->
       failwith "todo: translate_decl [MLM_Top]"
@@ -306,8 +318,6 @@ and translate_type env t: typ =
       TArrow (translate_type env t1, translate_type env t2)
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.unit") ->
       TUnit
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.int") ->
-      TZ
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.bool") ->
       TBool
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt8.t") ->
@@ -330,6 +340,8 @@ and translate_type env t: typ =
       TBuf (translate_type env arg)
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.HyperStack.mem") ->
       // HACK ALERT HACK ALERT we shouldn't even be extracting this!
+      TAny
+  | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
   | MLTY_Named ([], (path, type_name)) ->
       TQualified (path, type_name)
@@ -404,6 +416,8 @@ and translate_expr env e: expr =
       EBufCreate (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset") ->
+      EBufSub (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.upd") ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HST.push_frame") ->
@@ -447,6 +461,9 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_Name (path, function_name) }, args) ->
       EApp (EQualified (path, function_name), List.map (translate_expr env) args)
 
+  | MLE_Coerce (e, _, _) ->
+      translate_expr env e
+
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
        * supported, and quantified type schemes are not supported either *)
@@ -455,8 +472,6 @@ and translate_expr env e: expr =
       failwith "todo: translate_expr [MLE_App]"
   | MLE_Fun _ ->
       failwith "todo: translate_expr [MLE_Fun]"
-  | MLE_Coerce _ ->
-      failwith "todo: translate_expr [MLE_Coerce]"
   | MLE_CTor _ ->
       failwith "todo: translate_expr [MLE_CTor]"
   | MLE_Seq seqs ->
