@@ -7,4 +7,4 @@ all: uall
 uall: NewPrims.uver
 
 %.uver: %.fst
-	$(FSTAR) --universes --verify_module $* $^
+	$(FSTAR) --verify_module $* $^
