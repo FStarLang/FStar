@@ -1339,12 +1339,12 @@ in ECast (_170_585))
 end else begin
 if (FStar_Util.ends_with c "uint16") then begin
 (let _170_587 = (let _170_586 = (translate_expr env arg)
-in (_170_586, TInt (UInt32)))
+in (_170_586, TInt (UInt16)))
 in ECast (_170_587))
 end else begin
 if (FStar_Util.ends_with c "uint8") then begin
 (let _170_589 = (let _170_588 = (translate_expr env arg)
-in (_170_588, TInt (UInt32)))
+in (_170_588, TInt (UInt8)))
 in ECast (_170_589))
 end else begin
 if (FStar_Util.ends_with c "int64") then begin
@@ -1359,12 +1359,12 @@ in ECast (_170_593))
 end else begin
 if (FStar_Util.ends_with c "int16") then begin
 (let _170_595 = (let _170_594 = (translate_expr env arg)
-in (_170_594, TInt (Int32)))
+in (_170_594, TInt (Int16)))
 in ECast (_170_595))
 end else begin
 if (FStar_Util.ends_with c "int8") then begin
 (let _170_597 = (let _170_596 = (translate_expr env arg)
-in (_170_596, TInt (Int32)))
+in (_170_596, TInt (Int8)))
 in ECast (_170_597))
 end else begin
 (let _170_598 = (FStar_Util.format1 "Unrecognized function from Cast module: %s\n" c)

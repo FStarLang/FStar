@@ -455,17 +455,17 @@ and translate_expr env e: expr =
       else if ends_with c "uint32" then
         ECast (translate_expr env arg, TInt UInt32)
       else if ends_with c "uint16" then
-        ECast (translate_expr env arg, TInt UInt32)
+        ECast (translate_expr env arg, TInt UInt16)
       else if ends_with c "uint8" then
-        ECast (translate_expr env arg, TInt UInt32)
+        ECast (translate_expr env arg, TInt UInt8)
       else if ends_with c "int64" then
         ECast (translate_expr env arg, TInt Int64)
       else if ends_with c "int32" then
         ECast (translate_expr env arg, TInt Int32)
       else if ends_with c "int16" then
-        ECast (translate_expr env arg, TInt Int32)
+        ECast (translate_expr env arg, TInt Int16)
       else if ends_with c "int8" then
-        ECast (translate_expr env arg, TInt Int32)
+        ECast (translate_expr env arg, TInt Int8)
       else
         failwith (Util.format1 "Unrecognized function from Cast module: %s\n" c)
 
