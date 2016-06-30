@@ -60,12 +60,7 @@ let return (a:Type) (x:a)
   : repr a (return_wp a x)
   = fun n0 -> Some (x, n0)
 
-let get (u:unit) : repr int (fun n0 post -> post (Some (n0, n0)))
-  = fun n0 -> Some (n0, n0)
-
-let put (n:int) : repr unit (fun n0 post -> post (Some ((), n)))
-  = fun n0 -> Some ((), n)
-  
+//Just raise; get and put are just lifted from IntST.STATE
 val raise : a:Type0 -> Tot (repr a (fun h0 (p:post a) -> p None))
 let raise a (h:int) = None
 
@@ -92,14 +87,21 @@ reifiable reflectable new_effect {
      ; null_wp      = null_wp
      ; trivial      = trivial
   and effect_actions
-    //these are new
-      get  = get
-    ; put  = put
-    ; raise = raise
+      raise = raise
 }
 
 inline let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:post a) = wp (fun a -> p (Some (a, h0)))
 sub_effect PURE ~> ExnState = lift_pure_exnst
+
+let lift_state_exnst_wp (a:Type) (wp:IntST.wp a) (h0:int) (p:post a) = wp h0 (function (x, h1) -> p (Some (x, h1)))
+let lift_state_exnst (a:Type) (wp:IntST.wp a) (f:IntST.repr a wp) 
+  : (repr a (lift_state_exnst_wp a wp))
+  = fun h0 -> admit(); Some (f h0)
+  
+sub_effect IntST.STATE ~> ExnState {
+  lift_wp = lift_state_exnst_wp;
+  lift = lift_state_exnst
+}
 
 effect ExnSt (a:Type) (req:pre) (ens:int -> option (a * int) -> GTot Type0) =
        ExnState a
@@ -108,13 +110,6 @@ effect ExnSt (a:Type) (req:pre) (ens:int -> option (a * int) -> GTot Type0) =
 effect S (a:Type) = 
        ExnState a (fun h0 p -> forall x. p x)
 
-let incr (_:unit) : ExnSt unit 
-    (requires (fun h -> True)) 
-    (ensures (fun h0 -> function None -> False | Some (x, h1) -> h1 = h0 + 1))
-  = let i = ExnState.get () in 
-    ExnState.put (i + 1)
-    
-//let f = ExnState.reflect (fun h0 -> None, h0); this rightfully fails, since ExnState is not reflectable
 val div_intrinsic : i:nat -> j:int -> ExnSt int
   (requires (fun h -> True))
   (ensures (fun h0 x -> match x with 
@@ -122,7 +117,7 @@ val div_intrinsic : i:nat -> j:int -> ExnSt int
 		     | Some (z, h1) -> h0 = h1 /\ j<>0 /\ z = i / j))
 let div_intrinsic i j =
   if j=0 
-  then (incr (); ExnState.raise int) //despite the incr, the state is reset
+  then (IntST.incr (); ExnState.raise int) //despite the incr (implicitly lifted), the state is reset
   else i / j
 
 reifiable let div_extrinsic (i:nat) (j:int) : S int =

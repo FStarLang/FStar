@@ -98,22 +98,7 @@ reifiable new_effect {
 
 inline let lift_pure_stexn (a:Type) (wp:pure_wp a) (h0:int) (p:post a) = wp (fun a -> p (Some a, h0))
 sub_effect PURE ~> StateExn = lift_pure_stexn
-let lift_state_stexn_wp (a:Type) (wp:IntST.wp a) (h0:int) (p:post a) = wp h0 (function (x, h1) -> p (Some x, h1))
-
-let stronger_post (#a:Type) (p1:IntST.post a) (p2:IntST.post a) = 
-      (forall x. p1 x ==> p2 x)
-let monotone_wp (#a:Type) (wp:IntST.wp a) = 
-  forall (p1:IntST.post a) (p2:IntST.post a) h0. {:pattern (wp h0 p1); (wp h0 p2)}
-      (stronger_post p1 p2
-      /\ wp h0 p1)
-      ==> wp h0 p2
-val lift_state_stexn: (a:Type) -> wp:IntST.wp a -> IntST.repr a wp -> Tot (repr a (lift_state_stexn_wp a wp))
-let lift_state_stexn w wp f =
-  fun h0 -> admit(); let x, h1 = f h0 in Some x, h1
-sub_effect IntST.STATE ~> StateExn {
-  lift_wp = lift_state_stexn_wp;
-  lift = lift_state_stexn
-}
+//NOTE: no lift from IntST.STATE to StateExn, since that would break the abstraction of counting abstractions
 
 effect StExn (a:Type) (req:pre) (ens:int -> option a -> int -> GTot Type0) =
        StateExn a
