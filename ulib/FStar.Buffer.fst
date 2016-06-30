@@ -9,7 +9,7 @@ open FStar.HST
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-let lemma_size (x:int) (pos:nat) : Lemma (requires (UInt.size x n))
+let lemma_size (x:int) : Lemma (requires (UInt.size x n))
 				     (ensures (x >= 0))
 				     [SMTPatT (UInt.size x n)]
   = ()
@@ -135,7 +135,7 @@ let lemma_aux_3 #a #a' h b b' = ()
 val lemma_aux_2: #a:Type -> #a':Type -> h:mem -> b:buffer a -> b':buffer a' -> Lemma
   (requires (live h b /\ ~(contains h b')))
   (ensures (disjoint b b'))
-  [SMTPatT (disjoint b b')]
+  [SMTPatT (disjoint b b'); SMTPatT (live h b)]
 let lemma_aux_2 #a #a' h b b' = lemma_live_1 h (content b) (content b')
 
 val lemma_aux_1: #a:Type -> #a':Type -> h0:mem -> h1:mem -> bufs:Set.set abuffer -> b:buffer a -> b':buffer a' -> Lemma
@@ -233,7 +233,7 @@ let lemma_modifies_2_trans (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h
   [SMTPat (modifies_2 b b' h0 h1); SMTPat (modifies_2 b b' h1 h2)]
   = ()
 
-let equal_lemma #a rid h0 h1 b bufs :
+let equal_lemma #a rid h0 h1 (b: buffer a) bufs :
   Lemma (requires (live h0 b /\ disjointSet b bufs /\ modifies_region rid bufs h0 h1))
 	(ensures (equal h0 b h1 b))
 	[SMTPatT (disjointSet b bufs); SMTPatT (modifies_region rid bufs h0 h1)]
@@ -270,7 +270,7 @@ let lemma_aux_5 (#a:Type) (#a':Type) (b:buffer a) (h0:mem) (h1:mem) (b':buffer a
 	     (* /\ modifies_ref (frameOf b) !{as_ref b} h0 h1 *)
 	     /\ as_aref b <> as_aref b'))
   (ensures (equal h0 b' h1 b'))
-  [SMTPat (equal h0 b' h1 b')]
+  [SMTPat (equal h0 b' h1 b'); SMTPat (modifies_1 b h0 h1)]
   = ()
 
 let lemma_aux_7 (#a:Type) (b:buffer a) : Lemma
@@ -452,7 +452,7 @@ let no_upd_lemma_1 #t #t' h0 h1 a b = ()
 val no_upd_lemma_2: #t:Type -> #t':Type -> #t'':Type -> h0:mem -> h1:mem -> a:buffer t -> a':buffer t' -> b:buffer t'' -> Lemma
   (requires (live h0 b /\ disjoint a b /\ disjoint a' b /\ modifies_2 a a' h0 h1))
   (ensures  (live h0 b /\ live h1 b /\ equal h0 b h1 b))
-  [SMTPat (modifies_1 a h0 h1); SMTPat (live h0 b); SMTPat (disjoint a b)]
+  [SMTPat (live h0 b); SMTPat (disjoint a b); SMTPat (modifies_2 a a' h0 h1)]
 let no_upd_lemma_2 #t #t' #t'' h0 h1 a a' b = ()
 
 (* val lemma_disjoint_1: #t:Type -> #t':Type -> a:buffer t -> b:buffer t' -> h0:mem -> h1:mem -> h2:mem ->  *)
