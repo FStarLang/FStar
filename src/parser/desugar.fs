@@ -1666,7 +1666,10 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
         | Some l -> l in
     let src = lookup l.msource in
     let dst = lookup l.mdest in
-    let lift = desugar_typ env l.lift_op in
+    let non_reifiable = function 
+        | NonReifiableLift f -> f
+        | _ -> raise (Error("Unexpected reifiable sub-effect", d.drange)) in
+    let lift = desugar_typ env (non_reifiable l.lift_op) in
     let se = Sig_sub_effect({source=src; target=dst; lift=lift}, d.drange) in
     env, [se]
 

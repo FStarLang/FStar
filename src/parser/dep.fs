@@ -265,9 +265,12 @@ let collect_one (original_map: map) (filename: string): list<string> =
         collect_binders binders
     | Main t
     | Assume (_, _, t)
-    | SubEffect { lift_op = t }
+    | SubEffect { lift_op = NonReifiableLift t }
     | Val (_, _, t) ->
         collect_term t
+    | SubEffect { lift_op = ReifiableLift (t0, t1) } ->
+        collect_term t0; 
+        collect_term t1
     | Tycon (_, ts) ->
         List.iter collect_tycon ts
     | Exception (_, t) ->

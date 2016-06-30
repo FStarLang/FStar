@@ -134,10 +134,14 @@ type qualifier =
  
 type qualifiers = list<qualifier>
 
+type lift_op = 
+  | NonReifiableLift of term
+  | ReifiableLift    of term * term //lift_wp, lift
+
 type lift = {
   msource: lid;
   mdest:   lid;
-  lift_op: term
+  lift_op: lift_op;
 }
 
 type pragma =

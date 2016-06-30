@@ -453,7 +453,7 @@ let rec sigelt_to_string x = match x with
   | Sig_bundle(ses, _, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
   | Sig_new_effect(ed, _) -> eff_decl_to_string ed
   | Sig_sub_effect (se, r) ->
-    let us, t = Subst.open_univ_vars (fst se.lift) (snd se.lift) in
+    let us, t = Subst.open_univ_vars (fst se.lift_wp) (snd se.lift_wp) in
     Util.format4 "sub_effect %s ~> %s : <%s> %s" 
         (lid_to_string se.source) (lid_to_string se.target) 
         (univ_names_to_string us) (term_to_string t)

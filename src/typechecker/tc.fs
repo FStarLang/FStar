@@ -2720,8 +2720,8 @@ let rec tc_decl env se = match se with
       let b, wp_b_tgt = monad_signature env sub.target (Env.lookup_effect_lid env sub.target) in
       let wp_a_tgt    = SS.subst [NT(b, S.bv_to_name a)] wp_b_tgt in
       let expected_k   = Util.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
-      let lift = check_and_gen env (snd sub.lift) expected_k in
-      let sub = {sub with lift=lift} in
+      let lift_wp = check_and_gen env (snd sub.lift_wp) expected_k in
+      let sub = {sub with lift_wp=lift_wp} in
       let se = Sig_sub_effect(sub, r) in
       let env = Env.push_sigelt env se in
       se, env
