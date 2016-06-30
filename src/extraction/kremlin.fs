@@ -320,6 +320,8 @@ and translate_type env t: typ =
       TUnit
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.bool") ->
       TBool
+  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.int") ->
+      failwith "todo: translate_type [Prims.int]"
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt8.t") ->
       TInt UInt8
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt16.t") ->
@@ -461,8 +463,8 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_Name (path, function_name) }, args) ->
       EApp (EQualified (path, function_name), List.map (translate_expr env) args)
 
-  | MLE_Coerce (e, _, _) ->
-      translate_expr env e
+  | MLE_Coerce ({ expr = MLE_Const MLC_Unit }, t_from, t_to) ->
+      ECast (translate_expr env e, translate_type env t_to)
 
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
