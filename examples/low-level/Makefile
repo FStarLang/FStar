@@ -3,8 +3,7 @@ FSTAR_HOME=../..
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_DEFAULT_ARGS) # from the included Makefile
 
-OPTIONS_VER=--universes
-OPTIONS_OCAML=--lax --codegen OCaml --universes --no_location_info
+OPTIONS_OCAML=--lax --codegen OCaml --no_location_info
 
 CURVE_ODIR=curve
 CHACHA_ODIR=chacha
@@ -32,11 +31,11 @@ all: curve-ml chacha-ml poly-ml
 
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
-	$(FSTAR) $(OPTIONS_VER) FStar.HyperStack.fst FStar.HST.fst FStar.Buffer.fst
+	$(FSTAR) FStar.HyperStack.fst FStar.HST.fst FStar.Buffer.fst
 
 # Curve25519 lax typechecking
 curve-lax:
-	$(FSTAR) $(OPTIONS_VER) Curve.Crecip.fst Curve.Ladder.fst --lax
+	$(FSTAR) Curve.Crecip.fst Curve.Ladder.fst --lax
 
 # Curve25519 extraction to OCaml
 curve-ml:
@@ -55,7 +54,7 @@ curve-compile:
 
 # AES targets
 chacha-ver:
-	$(FSTAR) $(OPTIONS_VER) Chacha.fst 
+	$(FSTAR) Chacha.fst 
 
 chacha-ml:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
