@@ -298,7 +298,7 @@ val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> STL unit
     (* /\ modifies_buf (frameOf b) (only b) h0 h1 *)
     /\ sel h1 b = Seq.upd (sel h0 b) (idx b + v n) z
     /\ get h1 b (v n) = z
-    /\ (forall (i:nat). {:pattern (get h1 b (v n))} (i < length b /\ i <> v n) ==> get h1 b i = get h0 b i) ))
+    /\ (forall (i:nat). {:pattern (get h1 b i)} (i < length b /\ i <> v n) ==> get h1 b i = get h0 b i) ))
 let upd #a b n z =
   let s = !b.content in
   let s = Seq.upd s (v b.idx + v n) z in
