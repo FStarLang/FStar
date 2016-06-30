@@ -464,7 +464,7 @@ and translate_expr env e: expr =
       EApp (EQualified (path, function_name), List.map (translate_expr env) args)
 
   | MLE_Coerce ({ expr = MLE_Const MLC_Unit }, t_from, t_to) ->
-      ECast (translate_expr env e, translate_type env t_to)
+      ECast (EUnit, translate_type env t_to)
 
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
