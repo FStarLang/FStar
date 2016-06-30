@@ -22,11 +22,11 @@ endif
 EXAMPLES_DIR=./examples
 
 api:
-	make -C examples api FSTAR="$(FSTAR)"
+	make -C examples api FSTAR="$(SFSTAR)"
 
 theory:
 	export CONTRIB=../../contrib
-	$(FSTAR) --explicit_deps \
+	$(SFSTAR) --explicit_deps \
 	      --z3timeout 10 --__temp_no_proj PSemantics --__temp_no_proj Metatheory \
 	  FStar.FunctionalExtensionality.fst FStar.Classical.fst FStar.Ghost.fst FStar.List.Tot.fst FStar.Set.fst \
 	  FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.OrdSet.fst FStar.OrdMap.fst \
@@ -34,18 +34,18 @@ theory:
 	  theory.fst
 
 traces:
-	$(FSTAR) --z3timeout 10 --explicit_deps  FStar.Seq.fst FStar.Matrix2.fsti examples/fstar_main/traces.fst
+	$(SFSTAR) --z3timeout 10 --explicit_deps  FStar.Seq.fst FStar.Matrix2.fsti examples/fstar_main/traces.fst
 
 crypto:
 	export CONTRIB=../../contrib
-	$(FSTAR) --explicit_deps \
+	$(SFSTAR) --explicit_deps \
 	       --__temp_no_proj PSemantics --verify_module Crypto \
 	FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Ghost.fst FStar.List.Tot.fst FStar.OrdSet.fst FStar.OrdMap.fst FStar.List.fst \
 	FStar.Float.fsti FStar.IO.fsti FStar.Char.fsti FStar.String.fsti prins.fst FStar.UInt8.fst $(CONTRIB)/Platform/fst/Platform.Bytes.fst ast.fst ffibridge.fsti sem.fst psem.fst runtime.fsti print.fst $(CONTRIB)/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst
 
 secserver:
 	export CONTRIB=../../contrib
-	$(FSTAR) --explicit_deps \
+	$(SFSTAR) --explicit_deps \
 	         --__temp_no_proj  PSemantics --__temp_no_proj SecServer --verify_module SecServer \
 						FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst \
 						FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst \
@@ -80,7 +80,7 @@ INTERPRETER_FILES=prins.fst FStar.UInt8.fst $(CONTRIB)/Platform/fst/Platform.Byt
 codegen:
 	cp $(SMCIF) smciface.fsti
 	cp $(SMCMAIN) smc_main.fst
-	$(FSTAR_ALWAYS) --explicit_deps $(CODEGEN_FLAGS) $(EXTERNAL_FLAGS) $(FSTAR_LIB_FILES) $(INTERPRETER_FILES) smciface.fsti smc_main.fst
+	$(FSTAR_ALWAYS) --stratified --explicit_deps $(CODEGEN_FLAGS) $(EXTERNAL_FLAGS) $(FSTAR_LIB_FILES) $(INTERPRETER_FILES) smciface.fsti smc_main.fst
 
 # codegen:
 # 	$(FSTAR)       \

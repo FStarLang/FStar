@@ -4,10 +4,10 @@ all: russell berardi
 #value-restriction
 
 russell:
-	$(FSTAR) russell.fst
+	$(SFSTAR) russell.fst
 
 berardi:
-	$(FSTAR) FStar.Constructive.fst berardi.fst
+	$(SFSTAR) FStar.Constructive.fst berardi.fst
 
 value-restriction: value-restriction.fst
-	$(FSTAR) FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst  $^
+	$(SFSTAR) FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst  $^

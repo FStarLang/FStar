@@ -6,4 +6,4 @@ ALLFILES=CPS.Double.fst       CPS.DoubleLambdaLifting.fst   CPS.Simple.fst\
 FSTAR_HOME=../..
 include ../Makefile.include
 all:$(ALLFILES)
-	$(FSTAR) $^
+	$(SFSTAR) $^
