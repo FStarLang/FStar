@@ -58,6 +58,7 @@ and expr =
   | ECast of expr * typ
   | EPushFrame
   | EPopFrame
+  | EBool of bool
 
 and op =
   | Add | AddW | Sub | SubW | Div | Mult | Mod
@@ -535,8 +536,8 @@ and translate_constant c: expr =
   match c with
   | MLC_Unit ->
       EUnit
-  | MLC_Bool _ ->
-      failwith "todo: translate_expr [MLC_Bool]"
+  | MLC_Bool b ->
+      EBool b
   | MLC_Int (s, Some _) ->
       failwith "impossible: machine integer not desugared to a function call"
   | MLC_Float _ ->
