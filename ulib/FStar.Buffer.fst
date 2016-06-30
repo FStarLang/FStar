@@ -161,6 +161,12 @@ let modifies_1 (#a:Type) (b:buffer a) h0 h1 =
   let rid = frameOf b in
   modifies_one rid h0 h1 /\ modifies_buf rid (only b) h0 h1
 
+let modifies_2_1 (#a:Type) (b:buffer a) h0 h1 =
+  let rid = frameOf b in
+  ((rid = h0.tip /\ modifies_buf rid (only b) h0 h1 /\ modifies_one rid h0 h1)
+  \/ (rid <> h0.tip /\ HH.modifies_just (Set.union (Set.singleton rid) (Set.singleton h0.tip)) h0.h h1.h  
+      /\ modifies_buf rid (only b) h0 h1 /\ modifies_buf h0.tip !{} h0 h1 ))
+
 let modifies_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 =
   let rid = frameOf b in let rid' = frameOf b' in
   ((rid = rid' /\ modifies_buf rid (only b ++ b') h0 h1 /\ modifies_one rid h0 h1)
@@ -207,6 +213,16 @@ let lemma_modifies_1_1 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2
       modifies_sub rid' modset (only b') h1 h2
     end
     else ()
+
+#reset-options "--z3timeout 50"
+#set-options "--lax" // OK
+
+let lemma_modifies_2_1 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 : Lemma
+  (requires (live h0 b /\ live h0 b' /\ disjoint b b'
+    /\ modifies_2 b b' h0 h1 /\ modifies_1 b h1 h2))
+  (ensures  (modifies_2 b b' h0 h2))
+  [SMTPat (modifies_2 b b' h0 h1); SMTPat (modifies_1 b h1 h2)]
+  = ()
 
 #reset-options
 
@@ -441,3 +457,57 @@ let no_upd_lemma_2 #t #t' #t'' h0 h1 a a' b = ()
 
 (* val lemma_disjoint_1: #t:Type -> #t':Type -> a:buffer t -> b:buffer t' -> h0:mem -> h1:mem -> h2:mem ->  *)
 (*   Lemma (requires (live a h0 /\ fresh_frame h0 h1 /\ live h1  *)
+
+(* More specialized than the "no_upd_lemma_1" from FStar.Buffer.fst *)
+let eq_lemma_1 (#t:Type) (#t':Type) h0 h1 (a:buffer t) (b:buffer t') : Lemma 
+  (requires (modifies_1 a h0 h1 /\ disjoint a b /\ live h0 a /\ live h0 b))
+  (ensures  (live h0 b /\ live h1 b /\ (forall (i:nat). {:pattern (get h1 b i)} i < length b 
+					       ==> get h1 b i = get h0 b i)))
+  (* [SMTPat (modifies_1 a h0 h1); SMTPat (disjoint a b)] *)
+  = ()
+
+let eq_lemma_2 (#t:Type) (#t':Type) (#t'':Type) h0 h1 (a:buffer t) (a':buffer t') (b:buffer t'') : Lemma
+  (requires (modifies_2 a a' h0 h1 /\ disjoint a b /\ disjoint a' b
+    /\ live h0 a /\ live h0 b /\ live h0 a'))
+  (ensures  (live h0 b /\ live h1 b /\ (forall (i:nat). {:pattern (get h1 b i)} i < length b ==> get h1 b i = get h0 b i)))
+  (* [SMTPat (modifies_2 a a' h0 h1); SMTPat (disjoint a b); SMTPat (disjoint a' b)] *)
+  = ()
+
+(* TODO *)
+let modifies_subbuffer_1 (#t:Type) h0 h1 (sub:buffer t) (a:buffer t) : Lemma
+  (requires (live h0 a /\ modifies_1 sub h0 h1 /\ includes a sub))
+  (ensures  (modifies_1 a h0 h1))
+  = admit() 
+  
+    (* let rid = frameOf sub in *)
+    (* assert(frameOf a = rid); *)
+    (* assert(Set.equal (arefs (only sub)) (arefs (only a))); *)
+    (* assert(forall (#t:Type) (b:buffer t). {:pattern (disjointSet b (only a))}  *)
+    (*   disjoint b a ==> disjoint b sub); *)
+    (* assert(forall (#t:Type) (b:buffer t). {:pattern (disjointSet b (only a))}  *)
+    (*   disjointSet b (only a) ==> disjoint b a); admit() *)
+    (* assert(forall (#t:Type) (b:buffer t). (frameOf b = rid /\ live h0 b /\ disjointSet b (only a)) ==> (frameOf b = rid /\ live h0 b /\ disjointSet b (only sub)));  *)
+    (* admit() *)
+
+(* TODO *)
+let modifies_subbuffer_2 (#t:Type) (#t':Type) h0 h1 (sub:buffer t) (a':buffer t') (a:buffer t) : Lemma
+  (requires (live h0 a /\ live h0 a' /\ includes a sub /\ modifies_2 sub a' h0 h1))
+  (ensures  (modifies_2 a a' h0 h1 /\ live h1 a))
+  = admit()
+
+let modifies_popped_1 (#t:Type) (a:buffer t) h0 h1 h2 h3 : Lemma
+  (requires (live h0 a /\ fresh_frame h0 h1 /\ popped h2 h3 /\ modifies_2_1 a h1 h2))
+  (ensures  (modifies_1 a h0 h3))
+  [SMTPat (fresh_frame h0 h1 /\ popped h2 h3 /\ modifies_2_1 a h1 h2)]
+  = ()
+
+#reset-options "--z3timeout 100"
+#set-options "--lax" // OK
+
+let lemma_modifies_2_0 (#t:Type) (#t':Type) (b:buffer t) (b':buffer t') h0 h1 h2 : Lemma
+  (requires (live h0 b /\ ~(contains h0 b') /\ modifies_0 h0 h1 /\ live h1 b'
+    /\ frameOf b' = h0.tip /\ modifies_2 b b' h1 h2))
+  (ensures  (modifies_2_1 b h0 h2))
+  = ()
+
+#reset-options

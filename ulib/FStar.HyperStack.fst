@@ -36,6 +36,12 @@ let equal_domains (m0:mem) (m1:mem) =
   /\ Set.equal (Map.domain m0.h) (Map.domain m1.h)
   /\ (forall r. Map.contains m0.h r ==> Set.equal (Heap.domain (Map.sel m0.h r)) (Heap.domain (Map.sel m1.h r)))
 
+let lemma_equal_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
+  (requires (equal_domains m0 m1 /\ equal_domains m1 m2))
+  (ensures  (equal_domains m0 m2))
+  [SMTPat (equal_domains m0 m1); SMTPat (equal_domains m1 m2)]
+  = ()
+
 let top_frame (m:mem) = Map.sel m.h m.tip
 
 let fresh_frame (m0:mem) (m1:mem) = 

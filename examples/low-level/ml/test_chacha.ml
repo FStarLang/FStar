@@ -54,9 +54,14 @@ let expected = "  000  6e 2e 35 9a 25 68 f9 80 41 ba 07 28 dd 0d 69 81  n.5.%h..
   096  5a f9 0b bf 74 a3 5b e6 b4 0b 8e ed f2 78 5e 42  Z...t.[......x^B
   112  87 4d\n"
 
+let time f x s =
+  let t = Sys.time() in
+  let _ = f x in
+  Printf.printf "Ellapsed time for %s : %fs\n" s (Sys.time() -. t)
+
 let _ =
   let ciphertext = create 0 114 in
-  chacha20_encrypt ciphertext key counter nonce plaintext 114;
+  time (fun () -> for i = 0 to 10000 do chacha20_encrypt ciphertext key counter nonce plaintext 114 done) () "10.000 chacha iterations";
   print_string "Test key:\n";
   print_bytes key;
   print_string "Test nonce:\n";
