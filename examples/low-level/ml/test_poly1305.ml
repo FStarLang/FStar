@@ -30,7 +30,10 @@ let time f x s =
   
 let key = from_bytestring "85d6be7857556d337f4452fe42d506a80103808afb0db2fd4abff6af4149f51b"
 let msg = from_string "Cryptographic Forum Research Group"
-let expected = "a8:06:1d:c1:30:51:36:c6:c2:2b:8b:af:0c:01:27:a9"
+let expected_bytes = [
+  0xa8; 0x06; 0x1d; 0xc1; 0x30; 0x51; 0x36; 0xc6; 0xc2; 0x2b; 0x8b; 0xaf; 0x0c; 0x01; 0x27; 0xa9
+]
+let expected = String.concat ":" (List.map (Printf.sprintf "%02x") expected_bytes)
 
 let _ =
   print_string "Testing poly1305...\n";
@@ -42,4 +45,8 @@ let _ =
   print_string ("Expected: " ^ expected ^ "\n");
   print_string  "Got hash: ";
   print hash 16;
-  print_string "\n"
+  print_string "\n";
+  List.iteri (fun i c ->
+    if index hash i <> c then
+      failwith (Printf.sprintf "ciphertext and reference differ at byte %d" i)
+  ) expected_bytes
