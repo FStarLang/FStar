@@ -69,8 +69,7 @@ let put (n:int) : repr unit (fun n0 post -> post (Some ((), n)))
 val raise : a:Type0 -> Tot (repr a (fun h0 (p:post a) -> p None))
 let raise a (h:int) = None
 
-//no reflect, to preserve the 'raise' abstraction
-reifiable new_effect {
+reifiable reflectable new_effect {
   ExnState : a:Type -> wp:wp a -> Effect
   with //repr is new; it's the reprentation of ST as a value type
        repr         = repr
@@ -109,6 +108,12 @@ effect ExnSt (a:Type) (req:pre) (ens:int -> option (a * int) -> GTot Type0) =
 effect S (a:Type) = 
        ExnState a (fun h0 p -> forall x. p x)
 
+let incr (_:unit) : ExnSt unit 
+    (requires (fun h -> True)) 
+    (ensures (fun h0 -> function None -> False | Some (x, h1) -> h1 = h0 + 1))
+  = let i = ExnState.get () in 
+    ExnState.put (i + 1)
+    
 //let f = ExnState.reflect (fun h0 -> None, h0); this rightfully fails, since ExnState is not reflectable
 val div_intrinsic : i:nat -> j:int -> ExnSt int
   (requires (fun h -> True))
@@ -116,7 +121,8 @@ val div_intrinsic : i:nat -> j:int -> ExnSt int
 		     | None -> j=0 
 		     | Some (z, h1) -> h0 = h1 /\ j<>0 /\ z = i / j))
 let div_intrinsic i j =
-  if j=0 then ExnState.raise int
+  if j=0 
+  then (incr (); ExnState.raise int) //despite the incr, the state is reset
   else i / j
 
 reifiable let div_extrinsic (i:nat) (j:int) : S int =
