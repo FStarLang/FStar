@@ -283,7 +283,7 @@ let init : Prims.unit  ->  Prims.unit = (fun _24_67 -> (match (()) with
 | () -> begin
 (
 
-let vals = (("__temp_no_proj", List ([])))::(("_fstar_home", String ("")))::(("_include_path", List ([])))::(("admit_smt_queries", Bool (false)))::(("cardinality", String ("off")))::(("codegen", Unset))::(("codegen-lib", List ([])))::(("debug", List ([])))::(("debug_level", List ([])))::(("dep", Unset))::(("detail_errors", Bool (false)))::(("dump_module", List ([])))::(("eager_inference", Bool (false)))::(("explicit_deps", Bool (false)))::(("fs_typ_app", Bool (false)))::(("fsi", Bool (false)))::(("fstar_home", Unset))::(("full_context_dependency", Bool (true)))::(("hide_genident_nums", Bool (false)))::(("hide_uvar_nums", Bool (false)))::(("hint_info", Bool (false)))::(("in", Bool (false)))::(("include", List ([])))::(("initial_fuel", Int (2)))::(("initial_ifuel", Int (1)))::(("inline_arith", Bool (false)))::(("lax", Bool (false)))::(("log_queries", Bool (false)))::(("log_types", Bool (false)))::(("max_fuel", Int (8)))::(("max_ifuel", Int (2)))::(("min_fuel", Int (1)))::(("MLish", Bool (false)))::(("n_cores", Int (1)))::(("no_default_includes", Bool (false)))::(("no_extract", List ([])))::(("no_location_info", Bool (true)))::(("odir", Unset))::(("prims", Unset))::(("pretype", Bool (true)))::(("prims_ref", Unset))::(("print_before_norm", Bool (false)))::(("print_bound_var_types", Bool (false)))::(("print_effect_args", Bool (false)))::(("print_fuels", Bool (false)))::(("print_implicits", Bool (false)))::(("print_universes", Bool (false)))::(("prn", Bool (false)))::(("record_hints", Bool (false)))::(("show_signatures", List ([])))::(("silent", Bool (false)))::(("smt", Unset))::(("split_cases", Int (0)))::(("timing", Bool (false)))::(("trace_error", Bool (false)))::(("universes", Bool (false)))::(("unthrottle_inductives", Bool (false)))::(("use_eq_at_higher_order", Bool (false)))::(("use_hints", Bool (false)))::(("use_native_int", Bool (false)))::(("verify", Bool (true)))::(("verify_all", Bool (false)))::(("verify_module", List ([])))::(("warn_top_level_effects", Bool (false)))::(("z3timeout", Int (5)))::[]
+let vals = (("__temp_no_proj", List ([])))::(("_fstar_home", String ("")))::(("_include_path", List ([])))::(("admit_smt_queries", Bool (false)))::(("cardinality", String ("off")))::(("codegen", Unset))::(("codegen-lib", List ([])))::(("debug", List ([])))::(("debug_level", List ([])))::(("dep", Unset))::(("detail_errors", Bool (false)))::(("dump_module", List ([])))::(("eager_inference", Bool (false)))::(("explicit_deps", Bool (false)))::(("fs_typ_app", Bool (false)))::(("fsi", Bool (false)))::(("fstar_home", Unset))::(("full_context_dependency", Bool (true)))::(("hide_genident_nums", Bool (false)))::(("hide_uvar_nums", Bool (false)))::(("hint_info", Bool (false)))::(("in", Bool (false)))::(("include", List ([])))::(("initial_fuel", Int (2)))::(("initial_ifuel", Int (1)))::(("inline_arith", Bool (false)))::(("lax", Bool (false)))::(("log_queries", Bool (false)))::(("log_types", Bool (false)))::(("max_fuel", Int (8)))::(("max_ifuel", Int (2)))::(("min_fuel", Int (1)))::(("MLish", Bool (false)))::(("n_cores", Int (1)))::(("no_default_includes", Bool (false)))::(("no_extract", List ([])))::(("no_location_info", Bool (true)))::(("odir", Unset))::(("prims", Unset))::(("pretype", Bool (true)))::(("prims_ref", Unset))::(("print_before_norm", Bool (false)))::(("print_bound_var_types", Bool (false)))::(("print_effect_args", Bool (false)))::(("print_fuels", Bool (false)))::(("print_implicits", Bool (false)))::(("print_universes", Bool (false)))::(("prn", Bool (false)))::(("record_hints", Bool (false)))::(("show_signatures", List ([])))::(("silent", Bool (false)))::(("smt", Unset))::(("split_cases", Int (0)))::(("stratified", Bool (false)))::(("timing", Bool (false)))::(("trace_error", Bool (false)))::(("unthrottle_inductives", Bool (false)))::(("use_eq_at_higher_order", Bool (false)))::(("use_hints", Bool (false)))::(("use_native_int", Bool (false)))::(("verify", Bool (true)))::(("verify_all", Bool (false)))::(("verify_module", List ([])))::(("warn_top_level_effects", Bool (false)))::(("z3timeout", Int (5)))::[]
 in (
 
 let o = (peek ())
@@ -601,21 +601,21 @@ let get_split_cases : Prims.unit  ->  Prims.int = (fun _24_127 -> (match (()) wi
 end))
 
 
-let get_timing : Prims.unit  ->  Prims.bool = (fun _24_128 -> (match (()) with
+let get_stratified : Prims.unit  ->  Prims.bool = (fun _24_128 -> (match (()) with
+| () -> begin
+(lookup_opt "stratified" as_bool)
+end))
+
+
+let get_timing : Prims.unit  ->  Prims.bool = (fun _24_129 -> (match (()) with
 | () -> begin
 (lookup_opt "timing" as_bool)
 end))
 
 
-let get_trace_error : Prims.unit  ->  Prims.bool = (fun _24_129 -> (match (()) with
+let get_trace_error : Prims.unit  ->  Prims.bool = (fun _24_130 -> (match (()) with
 | () -> begin
 (lookup_opt "trace_error" as_bool)
-end))
-
-
-let get_universes : Prims.unit  ->  Prims.bool = (fun _24_130 -> (match (()) with
-| () -> begin
-(lookup_opt "universes" as_bool)
 end))
 
 
@@ -924,16 +924,16 @@ in List (_115_421))), "[module name]")), "Show the checked signatures for all to
 | () -> begin
 Bool (true)
 end))), " "))::((FStar_Getopt.noshort, "smt", FStar_Getopt.OneArg (((fun _115_424 -> String (_115_424)), "[path]")), "Path to the SMT solver (usually Z3,\n        but could be any SMT2-compatible solver)"))::((FStar_Getopt.noshort, "split_cases", FStar_Getopt.OneArg (((fun n -> (let _115_428 = (FStar_Util.int_of_string n)
-in Int (_115_428))), "[positive integer]")), "Partition VC of a match into groups of [n] cases"))::((FStar_Getopt.noshort, "timing", FStar_Getopt.ZeroArgs ((fun _24_238 -> (match (()) with
+in Int (_115_428))), "[positive integer]")), "Partition VC of a match into groups of [n] cases"))::((FStar_Getopt.noshort, "stratified", FStar_Getopt.ZeroArgs ((fun _24_238 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Print the time it takes to verify each top-level definition"))::((FStar_Getopt.noshort, "trace_error", FStar_Getopt.ZeroArgs ((fun _24_239 -> (match (()) with
+end))), "Remove the support for universes"))::((FStar_Getopt.noshort, "timing", FStar_Getopt.ZeroArgs ((fun _24_239 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Don\'t print an error message; show an exception trace instead"))::((FStar_Getopt.noshort, "universes", FStar_Getopt.ZeroArgs ((fun _24_240 -> (match (()) with
+end))), "Print the time it takes to verify each top-level definition"))::((FStar_Getopt.noshort, "trace_error", FStar_Getopt.ZeroArgs ((fun _24_240 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Use the support for universes"))::((FStar_Getopt.noshort, "unthrottle_inductives", FStar_Getopt.ZeroArgs ((fun _24_241 -> (match (()) with
+end))), "Don\'t print an error message; show an exception trace instead"))::((FStar_Getopt.noshort, "unthrottle_inductives", FStar_Getopt.ZeroArgs ((fun _24_241 -> (match (()) with
 | () -> begin
 Bool (true)
 end))), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)"))::((FStar_Getopt.noshort, "use_eq_at_higher_order", FStar_Getopt.ZeroArgs ((fun _24_242 -> (match (()) with
@@ -1066,7 +1066,7 @@ let set_options : options  ->  Prims.string  ->  FStar_Getopt.parse_cmdline_res 
 
 let specs = (match (o) with
 | Set -> begin
-if (get_universes ()) then begin
+if (not ((get_stratified ()))) then begin
 resettable_specs
 end else begin
 settable_specs
@@ -1154,7 +1154,7 @@ end else begin
 let h = (fstar_home ())
 in (
 
-let defs = if (get_universes ()) then begin
+let defs = if (not ((get_stratified ()))) then begin
 universe_include_path_base_dirs
 end else begin
 include_path_base_dirs
@@ -1501,7 +1501,7 @@ end))
 
 let universes : Prims.unit  ->  Prims.bool = (fun _24_446 -> (match (()) with
 | () -> begin
-(get_universes ())
+(not ((get_stratified ())))
 end))
 
 
