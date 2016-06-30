@@ -25,38 +25,40 @@ NI_FILES=NonInterference.NI.fst        NonInterference.Example1.fst\
 	 NonInterference.Example4.fst  NonInterference.Example5.fst\
 	 NonInterference.Example7.fst  NonInterference.Example7.fst 
 
+SFSTAR=$(FSTAR) --stratified 
+
 noninterference: $(NI_FILES)
-	$(FSTAR) --z3timeout 15 --eager_inference distinct.fst $^
+	$(SFSTAR) --z3timeout 15 --eager_inference distinct.fst $^
 
 sample_examples:
-	$(FSTAR) bijection.fst sample.fst xor.fst Sample.Example1.fst Sample.Example2.fst
+	$(SFSTAR) bijection.fst sample.fst xor.fst Sample.Example1.fst Sample.Example2.fst
 
 ro_single:
-	$(FSTAR) xor.fst ro_single.fst
+	$(SFSTAR) xor.fst ro_single.fst
 
 ro:
-	$(FSTAR) xor.fst bijection.fst sample.fst RandomOracle.RO.fst RandomOracle.Encryption.fst
+	$(SFSTAR) xor.fst bijection.fst sample.fst RandomOracle.RO.fst RandomOracle.Encryption.fst
 
 smart_meter:
-	$(FSTAR) smart_meter.fst
+	$(SFSTAR) smart_meter.fst
 
 spdz:SPDZ.Fp.fst  SPDZ.Sharing.fst  SPDZ.Triples.fst SPDZ.MPC.fst  
-	$(FSTAR) bijection.fst sample.fst $^
+	$(SFSTAR) bijection.fst sample.fst $^
 
 simple_st2_examples:
-	$(FSTAR) simple_st2_examples.fst
+	$(SFSTAR) simple_st2_examples.fst
 
 cache:
-	$(FSTAR) cache.fst
+	$(SFSTAR) cache.fst
 
 ifc_compiler:
-	$(FSTAR) distinct.fst IFC.IFC.fst IFC.Example1.fst IFC.Example3.fst IFC.Example5.fst IFC.Compiler.fst
+	$(SFSTAR) distinct.fst IFC.IFC.fst IFC.Example1.fst IFC.Example3.fst IFC.Example5.fst IFC.Compiler.fst
 
 ifc:
-	$(FSTAR) while.fst ifc.fst
+	$(SFSTAR) while.fst ifc.fst
 
 monotone::
-	$(FSTAR) monotone.fst
+	$(SFSTAR) monotone.fst
 
 projection_test:
-	$(FSTAR) projection_test.fst
+	$(SFSTAR) projection_test.fst

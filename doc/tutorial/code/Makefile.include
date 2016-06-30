@@ -7,6 +7,7 @@ endif
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
+SFSTAR=$(FSTAR) --stratified 
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
 SECLIB = $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fst partialmap.fst FStar.List.fst FStar.ST.fst array-realized.fst )
 OTHERFLAGS+=$(STDLIB)
