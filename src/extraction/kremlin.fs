@@ -62,7 +62,7 @@ and expr =
 and op =
   | Add | AddW | Sub | SubW | Div | Mult | Mod
   | BOr | BAnd | BXor | BShiftL | BShiftR
-  | Eq
+  | Eq | Lt | Lte | Gt | Gte
 
 and branches =
   list<branch>
@@ -116,7 +116,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 4
+let current_version: version = 5
 
 type file = string * program
 type binary_format = version * list<file>
@@ -166,6 +166,14 @@ let mk_op = function
       Some BShiftL
   | "eq" | "op_Equals_Hat" ->
       Some Eq
+  | "op_Greater_Hat" | "gt" ->
+      Some Gt
+  | "op_Greater_Equal_Hat" | "gte" ->
+      Some Gte
+  | "op_Less_Hat" | "lt" ->
+      Some Lt
+  | "op_Less_Equal_Hat" | "lte" ->
+      Some Lte
   | _ ->
       None
 
