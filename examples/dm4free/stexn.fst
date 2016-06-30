@@ -107,7 +107,7 @@ let monotone_wp (#a:Type) (wp:IntST.wp a) =
       (stronger_post p1 p2
       /\ wp h0 p1)
       ==> wp h0 p2
-val lift_state_stexn: (a:Type) -> (wp:IntST.wp a{monotone_wp wp}) -> (f:IntST.repr a wp) -> Tot (repr a (lift_state_stexn_wp a wp))
+val lift_state_stexn: (a:Type) -> wp:IntST.wp a -> IntST.repr a wp -> Tot (repr a (lift_state_stexn_wp a wp))
 let lift_state_stexn w wp f =
   fun h0 -> admit(); let x, h1 = f h0 in Some x, h1
 sub_effect IntST.STATE ~> StateExn {

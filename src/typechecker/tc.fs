@@ -2716,12 +2716,43 @@ let rec tc_decl env se = match se with
       se, env
 
     | Sig_sub_effect(sub, r) ->
+      let ed_src = Env.get_effect_decl env sub.source in
+      let ed_tgt = Env.get_effect_decl env sub.target in
       let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
       let b, wp_b_tgt = monad_signature env sub.target (Env.lookup_effect_lid env sub.target) in
       let wp_a_tgt    = SS.subst [NT(b, S.bv_to_name a)] wp_b_tgt in
-      let expected_k   = Util.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
+      let expected_k  = Util.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
       let lift_wp = check_and_gen env (snd sub.lift_wp) expected_k in
-      let sub = {sub with lift_wp=lift_wp} in
+      let repr_type eff_name a wp =
+        let no_reify l = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, Env.get_range env)) in
+        match Env.effect_decl_opt env eff_name with
+        | None -> no_reify eff_name
+        | Some ed -> 
+            let repr = Env.inst_effect_fun_with [U_unknown] env ed ([], ed.repr) in
+            if not (ed.qualifiers |> List.contains Reifiable) then no_reify eff_name;
+            mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env) in
+      let lift = match sub.lift with 
+        | None -> None
+        | Some (_, lift) -> 
+          let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
+          let wp_a = S.new_bv None wp_a_src in
+          let a_typ = S.bv_to_name a in
+          let wp_a_typ = S.bv_to_name wp_a in
+          let repr_f = repr_type sub.source a_typ wp_a_typ in
+          let repr_result = 
+            let lift_wp_a = mk (Tm_app(snd sub.lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
+            repr_type sub.target a_typ lift_wp_a in
+          let expected_k =
+            Util.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f] 
+                        (S.mk_Total repr_result) in
+//          printfn "LIFT: Expected type for lift = %s\n" (Print.term_to_string expected_k);
+          let expected_k, _, _ =
+            tc_tot_or_gtot_term env expected_k in
+//          printfn "LIFT: Checking %s against expected type %s\n" (Print.term_to_string lift) (Print.term_to_string expected_k);
+          let lift = check_and_gen env lift expected_k in
+//          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
+          Some lift in
+      let sub = {sub with lift_wp=lift_wp; lift=lift} in
       let se = Sig_sub_effect(sub, r) in
       let env = Env.push_sigelt env se in
       se, env
