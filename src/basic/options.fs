@@ -740,26 +740,19 @@ let include_path () =
   (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
 
 let find_file filename =
-    let search_path = include_path () in
-    try
-      Util.map_option
-        Util.normalize_file_path
-        (if Util.is_path_absolute filename then
-          if Util.file_exists filename then
-            Some filename
-          else
-            None
-        else
-          Util.find_map
-            search_path
-            (fun p ->
-              let path = Util.join_paths p filename in
-              if Util.file_exists path then
-                Some path
-              else
-                None))
-    with _ ->
+  if Util.is_path_absolute filename then
+    if Util.file_exists filename then
+      Some filename
+    else
       None
+  else
+    (* In reverse, because the last directory has the highest precedence. *)
+    Util.find_map (List.rev (include_path ())) (fun p ->
+      let path = Util.join_paths p filename in
+      if Util.file_exists path then
+        Some path
+      else
+        None)
 
 let prims () =
   match get_prims() with

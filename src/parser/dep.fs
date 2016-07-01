@@ -119,6 +119,8 @@ let lowercase_module_name f =
 let build_map (filenames: list<string>): map =
   let include_directories = Options.include_path () in
   let include_directories = List.map normalize_file_path include_directories in
+  (* Note that [BatList.unique] keeps the last occurrence, that way one can
+   * always override the precedence order. *)
   let include_directories = List.unique include_directories in
   let cwd = normalize_file_path (getcwd ()) in
   let map = smap_create 41 in
