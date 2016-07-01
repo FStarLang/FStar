@@ -3620,7 +3620,7 @@ end)))
 end))
 end
 | FStar_Syntax_Syntax.Tm_refine (x, _84_2229) -> begin
-(aux true x.FStar_Syntax_Syntax.sort)
+(aux norm x.FStar_Syntax_Syntax.sort)
 end
 | _84_2233 when (not (norm)) -> begin
 (
