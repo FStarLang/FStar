@@ -15,5 +15,5 @@ assume val eval:
   a:seq int -> len:nat{ len <= length a } -> Tot int
 
 assume val bla2:
-  a:seq_int_1 int{ length a = 10 } ->
+  a:seq_int_1{ length a = 10 } ->
   b:seq_int_2{ (length b = length a) /\ (eval a (length a) = eval b (length b)) }
