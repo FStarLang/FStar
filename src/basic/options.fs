@@ -325,7 +325,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "detail_errors",
         ZeroArgs (fun () -> Bool true),
-         "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; requires --universes");
+         "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; incompatible with --stratified");
 
        ( noshort,
         "dump_module",
