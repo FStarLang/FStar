@@ -1,4 +1,4 @@
-module Bug99
+module Bug99b
 
 type equivalence (a:Type) (f:(a -> a -> Tot bool)) =
     (forall (x:a). (f x x = true))
