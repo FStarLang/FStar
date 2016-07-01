@@ -79,6 +79,7 @@
     Hashtbl.add keywords "rec"           REC         ;
     Hashtbl.add keywords "reflectable"   REFLECTABLE ;
     Hashtbl.add keywords "reifiable"     REIFIABLE   ;
+    Hashtbl.add keywords "reify"         REIFY       ;
     Hashtbl.add keywords "requires"      REQUIRES    ;
     Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
     Hashtbl.add keywords "then"          THEN        ;

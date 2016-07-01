@@ -224,6 +224,11 @@ type result (a:Type) =
   | E   : e:exn -> result a
   | Err : msg:string -> result a
 
+(* This new bit for Dijkstra Monads for Free; it has a "double meaning",
+ * either as an alias for reasoning about the direct definitions, or as a marker
+ * for places where a CPS transformation should happen. *)
+effect M (a:Type) = Tot a
+
 new_effect DIV = PURE
 sub_effect PURE ~> DIV  = purewp_id
 
