@@ -18,21 +18,18 @@ val lemma_right_unit : ...
 
 
 
-effect_definition {
+reifiable reflectable new_effect_for_free {
   ST (a:Type) = nat -> T (a * nat)
   with bind   = bind_st //(a:Type) (f:ST a) (g:a -> ST b) : ST b = ... 
      ; return = return_st //(a:Type) (x:a) : ST a = ... 
-  and actions
+  and effect_actions
        get    = get_st //
      ; put    = put_st //
-  where right_unit = lemma_right_unit // : a:Type -> f:ST a -> Lemma (bind f (return a) = f) = ... proof ... 
-      ; left_unit  = lemma_left_unit  // : a:Type -> x:a -> f:(a -> ST b) -> Lemma (bind (return x) f = f x) = ... proof ...
-      ; assoc      = lemma_assoc // a:Type -> b:Type -> c:Type -> f:ST a -> g:(a -> ST b) -> h:(b -> ST c) -> Lemma
-				 //(bind f (fun x -> bind (g x) h) = bind (bind f g) h) = ... proof ...
-  allowing 
-        reify
-      ; reflect
 }
+
+where right_unit = lemma_right_unit // : a:Type -> f:ST a -> Lemma (bind f (return a) = f) = ... proof ... 
+    ; left_unit  = lemma_left_unit  // : a:Type -> x:a -> f:(a -> ST b) -> Lemma (bind (return x) f = f x) = ... proof ...
+    ; assoc      = lemma_assoc // a:Type -> b:Type -> c:Type -> f:ST a -> g:(a -> ST b) -> h:(b -> ST c) -> Lemma
 
 sub_effect {
    PURE ~> ST 

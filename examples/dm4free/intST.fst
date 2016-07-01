@@ -66,7 +66,7 @@ let get (u:unit) : repr int (fun n0 post -> post (n0, n0))
 let put (n:int) : repr unit (fun n0 post -> post ((), n))
   = fun x -> (), n
 
-(* //#reset-options "--debug NatST --debug_level SMTEncoding" *)
+(* #reset-options "--debug NatST --debug_level SMTEncoding" *)
 
 reifiable reflectable new_effect {
   STATE : a:Type -> wp:wp a -> Effect

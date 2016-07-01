@@ -477,7 +477,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 when (cfg.steps |> List.contains Reify) ->
             let reify_head, _ = Util.head_and_args t in
             let a = SS.compress (fst a) in
-            printfn "TRYING NORMALIZATION OF REIFY: %s ... %s" (Print.tag_of_term a) (Print.term_to_string a);
+            // printfn "TRYING NORMALIZATION OF REIFY: %s ... %s" (Print.tag_of_term a) (Print.term_to_string a);
             begin match a.n with 
             | Tm_meta(e, Meta_monadic m) ->
                 begin match (SS.compress e).n with 
@@ -492,7 +492,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       let body = S.mk (Tm_abs([S.mk_binder x], U.mk_reify body, None)) None body.pos in
                       let reified = S.mk (Tm_app(bind_repr, [as_arg S.tun; as_arg S.tun; as_arg S.tun; 
                                                              as_arg S.tun; as_arg head; as_arg body])) None t.pos in
-                      printfn "Reified %s to %s\n" (Print.term_to_string t) (Print.term_to_string reified);
+                      // printfn "Reified %s to %s\n" (Print.term_to_string t) (Print.term_to_string reified);
                       norm cfg env stack reified
                     | Inr _ -> failwith "Cannot reify a top-level let binding"
                     end

@@ -1403,7 +1403,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
     let se = mk mname qualifiers binders eff_k lookup actions in
     let env = push_sigelt env0 se in
     let env = actions |> List.fold_left (fun env a -> 
-        printfn "Pushing action %s\n" a.action_name.str;
+        //printfn "Pushing action %s\n" a.action_name.str;
         push_sigelt env (Util.action_as_lb a)) env in
     let env = 
         if quals |> List.contains Reflectable
@@ -1599,9 +1599,9 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           assume_p    = lookup "assume_p";
           null_wp     = lookup "null_wp";
           trivial     = lookup "trivial";
-          repr        = if rr then snd <| lookup "repr" else S.tun;
-          bind_repr   = if rr then lookup "bind" else un_ts;
-          return_repr = if rr then lookup "return" else un_ts;
+          repr        = (if rr then snd <| lookup "repr" else S.tun);
+          bind_repr   = (if rr then lookup "bind" else un_ts);
+          return_repr = (if rr then lookup "return" else un_ts);
           actions     = actions;
       }, d.drange))
 

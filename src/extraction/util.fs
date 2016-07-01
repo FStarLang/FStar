@@ -80,8 +80,8 @@ let udelta_unfold (g:UEnv.env) = function
     | MLTY_Named(args, n) ->
       begin match UEnv.lookup_ty_const g n with
         | Some ts -> 
-          UEnv.debug g (fun _ -> printfn "Instantiating %A with %d formals with %d args" 
-                                    n (List.length <| fst ts) (List.length args));
+          (* UEnv.debug g (fun _ -> printfn "Instantiating %A with %d formals with %d args" *) 
+          (*                           n (List.length <| fst ts) (List.length args)); *)
           Some (subst ts args)
         | _ -> None
       end

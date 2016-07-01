@@ -582,8 +582,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
       | Tm_app _ ->
         let head, args_e = Util.head_and_args t0 in
-        if Env.debug env.tcenv <| Options.Other "SMTEncoding"
-        then printfn "Encoding app head=%s, n_args=%d" (Print.term_to_string head) (List.length args_e);
+        (* if Env.debug env.tcenv <| Options.Other "SMTEncoding" *)
+        (* then printfn "Encoding app head=%s, n_args=%d" (Print.term_to_string head) (List.length args_e); *)
         begin match (SS.compress head).n, args_e with 
             | _, _ when head_redex env head -> encode_term (whnf env t) env
 
@@ -1692,7 +1692,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let reified_typ = FStar.TypeChecker.Util.reify_comp env.tcenv (Util.lcomp_of_comp comp) U_unknown in
             Util.arrow formals (S.mk_Total reified_typ) in
           let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in
-          printfn "%s: Reified %s\nto %s\n" (Print.lbname_to_string lb.lbname) (Print.term_to_string tm) (Print.term_to_string tm');
+          (* printfn "%s: Reified %s\nto %s\n" (Print.lbname_to_string lb.lbname) (Print.term_to_string tm) (Print.term_to_string tm'); *)
           encode_top_level_let env (false, [lb]) quals
         | _ -> [], env
       end

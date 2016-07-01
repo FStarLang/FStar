@@ -2735,7 +2735,7 @@ let m1 = (FStar_TypeChecker_Env.norm_eff_name env c1)
 in (
 
 let m2 = (FStar_TypeChecker_Env.norm_eff_name env c2)
-in if (FStar_Ident.lid_equals m1 m2) then begin
+in if ((FStar_Ident.lid_equals m1 m2) || (FStar_Syntax_Util.is_pure_effect c1)) then begin
 e
 end else begin
 (let _147_977 = (FStar_ST.read e.FStar_Syntax_Syntax.tk)
@@ -2752,6 +2752,46 @@ end else begin
 (let _147_984 = (FStar_ST.read e.FStar_Syntax_Syntax.tk)
 in (FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_meta ((e, FStar_Syntax_Syntax.Meta_monadic (m)))) _147_984 e.FStar_Syntax_Syntax.pos))
 end))
+
+
+let reify_comp : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.lcomp  ->  FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.term = (fun env c u_c -> (
+
+let no_reify = (fun l -> (let _147_996 = (let _147_995 = (let _147_994 = (FStar_Util.format1 "Effect %s cannot be reified" l.FStar_Ident.str)
+in (let _147_993 = (FStar_TypeChecker_Env.get_range env)
+in (_147_994, _147_993)))
+in FStar_Syntax_Syntax.Error (_147_995))
+in (Prims.raise _147_996)))
+in (match ((let _147_997 = (FStar_TypeChecker_Env.norm_eff_name env c.FStar_Syntax_Syntax.eff_name)
+in (FStar_TypeChecker_Env.effect_decl_opt env _147_997))) with
+| None -> begin
+(no_reify c.FStar_Syntax_Syntax.eff_name)
+end
+| Some (ed) -> begin
+if (not ((FStar_All.pipe_right ed.FStar_Syntax_Syntax.qualifiers (FStar_List.contains FStar_Syntax_Syntax.Reifiable)))) then begin
+(no_reify c.FStar_Syntax_Syntax.eff_name)
+end else begin
+(
+
+let c = (let _147_998 = (c.FStar_Syntax_Syntax.comp ())
+in (FStar_TypeChecker_Normalize.unfold_effect_abbrev env _147_998))
+in (
+
+let _56_1596 = (let _147_999 = (FStar_List.hd c.FStar_Syntax_Syntax.effect_args)
+in (c.FStar_Syntax_Syntax.result_typ, _147_999))
+in (match (_56_1596) with
+| (res_typ, wp) -> begin
+(
+
+let repr = (FStar_TypeChecker_Env.inst_effect_fun_with ((u_c)::[]) env ed ([], ed.FStar_Syntax_Syntax.repr))
+in (let _147_1004 = (let _147_1002 = (let _147_1001 = (let _147_1000 = (FStar_Syntax_Syntax.as_arg res_typ)
+in (_147_1000)::(wp)::[])
+in (repr, _147_1001))
+in FStar_Syntax_Syntax.Tm_app (_147_1002))
+in (let _147_1003 = (FStar_TypeChecker_Env.get_range env)
+in (FStar_Syntax_Syntax.mk _147_1004 None _147_1003))))
+end)))
+end
+end)))
 
 
 

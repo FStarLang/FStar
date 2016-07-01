@@ -175,10 +175,10 @@ end))
 let lookup_tyvar : env  ->  FStar_Syntax_Syntax.bv  ->  FStar_Extraction_ML_Syntax.mlty = (fun g bt -> (lookup_ty_local g.gamma bt))
 
 
-let lookup_fv_by_lid : env  ->  FStar_Ident.lident  ->  ty_or_exp_b = (fun g fv -> (
+let lookup_fv_by_lid : env  ->  FStar_Ident.lident  ->  ty_or_exp_b = (fun g lid -> (
 
 let x = (FStar_Util.find_map g.gamma (fun _71_1 -> (match (_71_1) with
-| Fv (fv', x) when (FStar_Syntax_Syntax.fv_eq_lid fv' fv) -> begin
+| Fv (fv', x) when (FStar_Syntax_Syntax.fv_eq_lid fv' lid) -> begin
 Some (x)
 end
 | _71_100 -> begin
@@ -186,7 +186,7 @@ None
 end)))
 in (match (x) with
 | None -> begin
-(let _162_90 = (FStar_Util.format1 "free Variable %s not found\n" fv.FStar_Ident.nsstr)
+(let _162_90 = (FStar_Util.format1 "free Variable %s not found\n" lid.FStar_Ident.nsstr)
 in (FStar_All.failwith _162_90))
 end
 | Some (y) -> begin
@@ -437,6 +437,36 @@ in (let _162_193 = (let _162_192 = (let _162_191 = (FStar_Syntax_Syntax.lid_as_f
 in FStar_Util.Inr (_162_191))
 in (extend_lb env _162_192 FStar_Syntax_Syntax.tun failwith_ty false false))
 in (FStar_All.pipe_right _162_193 Prims.fst))))))
+
+
+let monad_op_name : FStar_Syntax_Syntax.eff_decl  ->  Prims.string  ->  ((Prims.string Prims.list * Prims.string) * FStar_Ident.lident) = (fun ed nm -> (
+
+let _71_247 = (ed.FStar_Syntax_Syntax.mname.FStar_Ident.ns, ed.FStar_Syntax_Syntax.mname.FStar_Ident.ident)
+in (match (_71_247) with
+| (module_name, eff_name) -> begin
+(
+
+let mangled_name = (Prims.strcat (Prims.strcat (Prims.strcat FStar_Ident.reserved_prefix eff_name.FStar_Ident.idText) "_") nm)
+in (
+
+let mangled_lid = (FStar_Ident.lid_of_ids (FStar_List.append module_name (((FStar_Ident.id_of_text mangled_name))::[])))
+in (
+
+let ml_name = (FStar_Extraction_ML_Syntax.mlpath_of_lident mangled_lid)
+in (
+
+let lid = (FStar_All.pipe_right (FStar_List.append (FStar_Ident.ids_of_lid ed.FStar_Syntax_Syntax.mname) (((FStar_Ident.id_of_text nm))::[])) FStar_Ident.lid_of_ids)
+in (ml_name, lid)))))
+end)))
+
+
+let action_name : FStar_Syntax_Syntax.eff_decl  ->  FStar_Syntax_Syntax.action  ->  ((Prims.string Prims.list * Prims.string) * FStar_Ident.lident) = (fun ed a -> (monad_op_name ed a.FStar_Syntax_Syntax.action_name.FStar_Ident.ident.FStar_Ident.idText))
+
+
+let bind_name : FStar_Syntax_Syntax.eff_decl  ->  ((Prims.string Prims.list * Prims.string) * FStar_Ident.lident) = (fun ed -> (monad_op_name ed "bind"))
+
+
+let return_name : FStar_Syntax_Syntax.eff_decl  ->  ((Prims.string Prims.list * Prims.string) * FStar_Ident.lident) = (fun ed -> (monad_op_name ed "return"))
 
 
 

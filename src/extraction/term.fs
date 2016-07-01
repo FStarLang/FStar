@@ -387,11 +387,11 @@ and term_as_mlty' env t =
             let ed = TcEnv.get_effect_decl env.tcenv eff in 
             if ed.qualifiers |> List.contains Reifiable
             then let t = FStar.TypeChecker.Util.reify_comp env.tcenv (U.lcomp_of_comp c) U_unknown in
-                 let _ = printfn "Translating comp type %s as %s\n" 
-                        (Print.comp_to_string c) (Print.term_to_string t) in
+                 (* let _ = printfn "Translating comp type %s as %s\n" *) 
+                 (*        (Print.comp_to_string c) (Print.term_to_string t) in *)
                  let res = term_as_mlty' env t in
-                 let _ = printfn "Translated comp type %s as %s ... to %s\n" 
-                        (Print.comp_to_string c) (Print.term_to_string t) (ML.Code.string_of_mlty env.currentModule res) in
+                 (* let _ = printfn "Translated comp type %s as %s ... to %s\n" *) 
+                 (*        (Print.comp_to_string c) (Print.term_to_string t) (ML.Code.string_of_mlty env.currentModule res) in *)
                  res
             else term_as_mlty' env (U.comp_result c) in
         let erase = effect_as_etag env (U.comp_effect_name c) in
@@ -944,7 +944,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                     let e' = SS.subst [DB(0, x)] e' in
                     [lb], e' in
             //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
-          let maybe_generalize {lbname=lbname; lbeff=lbeff; lbtyp=t; lbdef=e} 
+          let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=t; lbdef=e} 
             : lbname //just lbname returned back
             * e_tag  //the ML version of the effect label lbeff
             * (typ   //just the source type lbtyp=t, after compression
@@ -986,10 +986,10 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 //                             printfn "After subst: expected_t is %s\n" (Print.typ_to_string expected_t);
                              let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) g targs in
                              let expected_t = term_as_mlty env expected_source_ty in
-                             debug g (fun () -> printfn "+++LB=%s ... Translated source type %s to mlty %s"
-                                            (Print.lbname_to_string lbname)
-                                            (Print.term_to_string expected_source_ty)
-                                            (ML.Code.string_of_mlty g.currentModule expected_t));
+                             (* debug g (fun () -> printfn "+++LB=%s ... Translated source type %s to mlty %s" *)
+                             (*                (Print.lbname_to_string lbname) *)
+                             (*                (Print.term_to_string expected_source_ty) *)
+                             (*                (ML.Code.string_of_mlty g.currentModule expected_t)); *)
                              let polytype = targs |> List.map (fun (x, _) -> bv_as_ml_tyvar x), expected_t in
                              let add_unit = match rest_args with
                                 | [] -> not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
@@ -998,7 +998,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                              let body = match rest_args with
                                 | [] -> body
                                 | _ -> U.abs rest_args body None in
-                             (lbname, f_e, (t, (targs, polytype)), add_unit, body)
+                             (lbname_, f_e, (t, (targs, polytype)), add_unit, body)
 
                         else (* fails to handle:
                                 let f : a:Type -> b:Type -> a -> b -> Tot (nat * a * b) =
@@ -1019,7 +1019,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                        //In this case, an eta expansion is safe
                        let args = tbinders |> List.map (fun (bv, _) -> S.bv_to_name bv |> as_arg) in
                        let e = mk (Tm_app(e, args)) None e.pos in
-                       (lbname, f_e, (t, (tbinders, polytype)), false, e)
+                       (lbname_, f_e, (t, (tbinders, polytype)), false, e)
 
                      | _ ->
                         //ETA-EXPANSION?
@@ -1039,11 +1039,11 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
                 | _ ->  (* no generalizations; TODO: normalize and retry? *)
                   let expected_t = term_as_mlty g t in
-                  debug g (fun () -> printfn "+++LB=%s ... Translated source type %s to mlty %s"
-                                        (Print.lbname_to_string lbname)
-                                        (Print.term_to_string t)
-                                        (ML.Code.string_of_mlty g.currentModule expected_t));
-                  (lbname, f_e, (t, ([], ([],expected_t))), false, e) in
+                  (* debug g (fun () -> printfn "+++LB=%s ... Translated source type %s to mlty %s" *)
+                  (*                       (Print.lbname_to_string lbname) *)
+                  (*                       (Print.term_to_string t) *)
+                  (*                       (ML.Code.string_of_mlty g.currentModule expected_t)); *)
+                  (lbname_, f_e, (t, ([], ([],expected_t))), false, e) in
 
           let check_lb env (nm, (lbname, f, (t, (targs, polytype)), add_unit, e)) =
               let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) env targs in

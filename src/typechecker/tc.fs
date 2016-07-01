@@ -352,33 +352,35 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     begin match Env.effect_decl_opt env l with
     | None -> no_reflect()
     | Some ed -> 
-      if not (ed.qualifiers |> List.contains Reflectable) then no_reflect ();
-      let env_no_ex, topt = Env.clear_expected_typ env in
-      let expected_repr_typ, res_typ, wp, g0 = 
-            let u = Env.new_u_univ () in 
-            let repr = Env.inst_effect_fun_with [u] env ed ([], ed.repr) in
-            let t = mk (Tm_app(repr, [as_arg S.tun; as_arg S.tun])) None top.pos in
-            let t, _, g = tc_tot_or_gtot_term (Env.clear_expected_typ env |> fst) t in
-            match (SS.compress t).n with 
-            | Tm_app(_, [(res, _); (wp, _)]) -> t, res, wp, g
-            | _ -> failwith "Impossible" in
-      let e, g = 
-            let e, c, g = tc_tot_or_gtot_term env_no_ex e in
-            if not <| Util.is_total_lcomp c
-            then Errors.add_errors env ["Expected Tot, got a GTot computation", e.pos];
-            match Rel.try_teq env_no_ex c.res_typ expected_repr_typ with
-            | None -> Errors.add_errors env [Util.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
-                      e, Rel.conj_guard g g0
-            | Some g' -> e, Rel.conj_guard g' (Rel.conj_guard g g0) in
-      let c = S.mk_Comp ({
-            effect_name = ed.mname;
-            result_typ=res_typ;
-            effect_args=[as_arg wp];
-            flags=[]
-          }) |> Util.lcomp_of_comp in
-      let e = mk (Tm_app(reflect_op, [(e, aqual)])) (Some res_typ.n) top.pos in
-      let e, c, g' = comp_check_expected_typ env e c in
-      e, c, Rel.conj_guard g' g
+      if not (ed.qualifiers |> List.contains Reflectable) then
+        no_reflect ()
+      else
+        let env_no_ex, topt = Env.clear_expected_typ env in
+        let expected_repr_typ, res_typ, wp, g0 = 
+              let u = Env.new_u_univ () in 
+              let repr = Env.inst_effect_fun_with [u] env ed ([], ed.repr) in
+              let t = mk (Tm_app(repr, [as_arg S.tun; as_arg S.tun])) None top.pos in
+              let t, _, g = tc_tot_or_gtot_term (Env.clear_expected_typ env |> fst) t in
+              match (SS.compress t).n with 
+              | Tm_app(_, [(res, _); (wp, _)]) -> t, res, wp, g
+              | _ -> failwith "Impossible" in
+        let e, g = 
+              let e, c, g = tc_tot_or_gtot_term env_no_ex e in
+              if not <| Util.is_total_lcomp c
+              then Errors.add_errors env ["Expected Tot, got a GTot computation", e.pos];
+              match Rel.try_teq env_no_ex c.res_typ expected_repr_typ with
+              | None -> Errors.add_errors env [Util.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
+                        e, Rel.conj_guard g g0
+              | Some g' -> e, Rel.conj_guard g' (Rel.conj_guard g g0) in
+        let c = S.mk_Comp ({
+              effect_name = ed.mname;
+              result_typ=res_typ;
+              effect_args=[as_arg wp];
+              flags=[]
+            }) |> Util.lcomp_of_comp in
+        let e = mk (Tm_app(reflect_op, [(e, aqual)])) (Some res_typ.n) top.pos in
+        let e, c, g' = comp_check_expected_typ env e c in
+        e, c, Rel.conj_guard g' g
     end
     
   | Tm_app(head, args) ->
@@ -2226,7 +2228,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
             let expected_k = Util.arrow [S.mk_binder a;
                                          S.null_binder wp_a]
                                          (S.mk_GTotal t) in
-            printfn "About to check repr=%s\n" (Print.term_to_string ed.repr);
+            (* printfn "About to check repr=%s\n" (Print.term_to_string ed.repr); *)
             tc_check_trivial_guard env ed.repr expected_k in
 
         let mk_repr' t wp =
@@ -2265,9 +2267,9 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                         (S.mk_Total res) in
             let expected_k, _, _ = 
                 tc_tot_or_gtot_term env expected_k in
-            printfn "About to check bind=%s, at type %s\n" 
-                    (Print.term_to_string (snd ed.bind_repr))
-                    (Print.term_to_string expected_k);
+            (* printfn "About to check bind=%s, at type %s\n" *) 
+            (*         (Print.term_to_string (snd ed.bind_repr)) *)
+            (*         (Print.term_to_string expected_k); *)
             let env = Env.set_range env (snd (ed.bind_repr)).pos in
             check_and_gen' env ed.bind_repr expected_k in
 
@@ -2283,9 +2285,9 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                        (S.mk_Total res) in
             let expected_k, _, _ = 
                 tc_tot_or_gtot_term env expected_k in
-            printfn "About to check return_repr=%s, at type %s\n" 
-                    (Print.term_to_string (snd ed.return_repr))
-                    (Print.term_to_string expected_k);
+            (* printfn "About to check return_repr=%s, at type %s\n" *) 
+            (*         (Print.term_to_string (snd ed.return_repr)) *)
+            (*         (Print.term_to_string expected_k); *)
             let env = Env.set_range env (snd (ed.return_repr)).pos in
             let univs, repr = check_and_gen' env ed.return_repr expected_k in
             match univs with
@@ -2296,7 +2298,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
         let check_action act = 
             let act_defn, c, g_a = 
                 tc_tot_or_gtot_term env act.action_defn in
-            printfn "Inferred action %s has type %s\n" (Print.term_to_string act_defn) (Print.term_to_string c.res_typ);
+            (* printfn "Inferred action %s has type %s\n" (Print.term_to_string act_defn) (Print.term_to_string c.res_typ); *)
             let expected_k, g_k = 
                 match (SS.compress c.res_typ).n with 
                 | Tm_arrow(bs, c) -> 
@@ -2306,7 +2308,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                   let k, _, g = tc_tot_or_gtot_term env k in
                   k, g
                 | _ -> raise (Error("Actions must have function types", act_defn.pos)) in
-            printfn "Checking against expected type %s\n" (Print.term_to_string expected_k);
+            (* printfn "Checking against expected type %s\n" (Print.term_to_string expected_k); *)
             let g = Rel.teq env c.res_typ expected_k in
             Rel.force_trivial_guard env (Rel.conj_guard g_a (Rel.conj_guard g_k g));
             let act_ty = match (SS.compress expected_k).n with 
@@ -2321,9 +2323,9 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                   } in
                   Util.arrow bs (S.mk_Comp c)
                 | _ -> failwith "" in
-            printfn "Checked action %s against type %s\n" 
-                    (Print.term_to_string act_defn) 
-                    (Print.term_to_string (N.normalize [N.Beta] env act_ty));
+            (* printfn "Checked action %s against type %s\n" *) 
+            (*         (Print.term_to_string act_defn) *) 
+            (*         (Print.term_to_string (N.normalize [N.Beta] env act_ty)); *)
             let univs, act_defn = TcUtil.generalize_universes env act_defn in
             let act_ty = N.normalize [N.Beta] env act_ty in
             {act with 
@@ -2347,8 +2349,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     if n >= 0 then assert (List.length (fst ts) = n);
     ts in
   let close_action act = 
-    let univs, defn = close -1 (act.action_univs, act.action_defn) in
-    let univs', typ = close -1 (act.action_univs, act.action_typ) in
+    let univs, defn = close (-1) (act.action_univs, act.action_defn) in
+    let univs', typ = close (-1) (act.action_univs, act.action_typ) in
     assert (List.length univs = List.length univs');
     { act with 
         action_univs=univs;
@@ -2729,8 +2731,10 @@ let rec tc_decl env se = match se with
         | None -> no_reify eff_name
         | Some ed -> 
             let repr = Env.inst_effect_fun_with [U_unknown] env ed ([], ed.repr) in
-            if not (ed.qualifiers |> List.contains Reifiable) then no_reify eff_name;
-            mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env) in
+            if not (ed.qualifiers |> List.contains Reifiable) then
+              no_reify eff_name
+            else
+              mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env) in
       let lift = match sub.lift with 
         | None -> None
         | Some (_, lift) -> 

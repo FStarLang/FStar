@@ -355,5 +355,8 @@ let range_of_lid : FStar_Ident.lident = (pconst "range_of")
 let labeled_lid : FStar_Ident.lident = (pconst "labeled")
 
 
+let range_0 : FStar_Ident.lident = (pconst "range_0")
+
+
 
 
