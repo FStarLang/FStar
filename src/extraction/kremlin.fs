@@ -58,11 +58,12 @@ and expr =
   | ECast of expr * typ
   | EPushFrame
   | EPopFrame
+  | EBool of bool
 
 and op =
   | Add | AddW | Sub | SubW | Div | Mult | Mod
   | BOr | BAnd | BXor | BShiftL | BShiftR
-  | Eq
+  | Eq | Lt | Lte | Gt | Gte
 
 and branches =
   list<branch>
@@ -116,7 +117,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 4
+let current_version: version = 5
 
 type file = string * program
 type binary_format = version * list<file>
@@ -166,6 +167,14 @@ let mk_op = function
       Some BShiftL
   | "eq" | "op_Equals_Hat" ->
       Some Eq
+  | "op_Greater_Hat" | "gt" ->
+      Some Gt
+  | "op_Greater_Equal_Hat" | "gte" ->
+      Some Gte
+  | "op_Less_Hat" | "lt" ->
+      Some Lt
+  | "op_Less_Equal_Hat" | "lte" ->
+      Some Lte
   | _ ->
       None
 
@@ -446,17 +455,17 @@ and translate_expr env e: expr =
       else if ends_with c "uint32" then
         ECast (translate_expr env arg, TInt UInt32)
       else if ends_with c "uint16" then
-        ECast (translate_expr env arg, TInt UInt32)
+        ECast (translate_expr env arg, TInt UInt16)
       else if ends_with c "uint8" then
-        ECast (translate_expr env arg, TInt UInt32)
+        ECast (translate_expr env arg, TInt UInt8)
       else if ends_with c "int64" then
         ECast (translate_expr env arg, TInt Int64)
       else if ends_with c "int32" then
         ECast (translate_expr env arg, TInt Int32)
       else if ends_with c "int16" then
-        ECast (translate_expr env arg, TInt Int32)
+        ECast (translate_expr env arg, TInt Int16)
       else if ends_with c "int8" then
-        ECast (translate_expr env arg, TInt Int32)
+        ECast (translate_expr env arg, TInt Int8)
       else
         failwith (Util.format1 "Unrecognized function from Cast module: %s\n" c)
 
@@ -527,8 +536,8 @@ and translate_constant c: expr =
   match c with
   | MLC_Unit ->
       EUnit
-  | MLC_Bool _ ->
-      failwith "todo: translate_expr [MLC_Bool]"
+  | MLC_Bool b ->
+      EBool b
   | MLC_Int (s, Some _) ->
       failwith "impossible: machine integer not desugared to a function call"
   | MLC_Float _ ->
