@@ -7,7 +7,40 @@ open FStar.UInt8
 open FStar.UInt64
 open FStar.UInt32
 
+let uint32_to_bytes (x:uint32) : Tot (bytes*bytes*bytes*bytes) = ((bytes)x, (bytes)x>>8, (bytes)x>>16, (bytes)x>>24)
 
+let rec seq_u32_to_seq_bytes (s:seq u32) : Tot (seq u8) = 
+  match length s with
+  | 0 -> Seq.empty
+  | _ -> 
+    let x = Seq.index s 0 in
+    let s'= Seq.create 0uy 4 in
+    let s' = Seq.upd s' 0 (u32_to_byte (x)) in
+    let s' = Seq.upd s' 1 (u32_to_byte (x >> 8)) in
+    let s' = Seq.upd s' 2 (u32_to_byte (x >> 16)) in
+    let s' = Seq.upd s' 3 (u32_to_byte (x >> 24)) in
+    Seq.append s' (seq_u32_to_seq_bytes (Seq.slice s 1 (Seq.length s - 1)))
+
+let rec seq_bytes_to_seq_u32 (s:seq u32) : Tot (seq u8) = 
+  match length s with
+  | 0 -> Seq.empty
+  | _ -> Seq.empty
+    (* let x = Seq.index s 0 in *)
+    (* let s'= Seq.create 0uy 4 in *)
+    (* let s' = Seq.upd s' 0 (u32_to_byte (x)) in *)
+    (* let s' = Seq.upd s' 1 (u32_to_byte (x >> 8)) in *)
+    (* let s' = Seq.upd s' 2 (u32_to_byte (x >> 16)) in *)
+    (* let s' = Seq.upd s' 3 (u32_to_byte (x >> 24)) in *)
+    (* Seq.append s' (seq_u32_to_seq_bytes (Seq.slice s 1 (Seq.length s - 1))) *)
+
+val sha: seq byte -> Tot (seq byte)
+
+
+val blah: x:sbyte -> GTot (r:nat{r = v x})
+
+val concrete_sha: b:buffer 8 -> ST unit
+  (requires (...))
+  (ensures  (fun h0 _ h1 -> sel h1 b = f (sel h0 b)))
 
 (* [FIPS 180-4] section 4.1.1 *)
 val _Ch: x:uint32 -> y:uint32 -> z:uint32 -> Tot uint32

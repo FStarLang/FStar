@@ -5,7 +5,7 @@ include ../Makefile.include
 all: intST.uver ex.uver stexn.uver stexn.handle.uver exnst.uver
 
 %.uver: %.fst
-	$(FSTAR) --universes $^
+	$(FSTAR) $^
 
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include

@@ -90,7 +90,7 @@ let go _ =
         Util.print_string msg
     | GoOn ->
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
-        then Parser.Dep.print (Parser.Dep.collect filenames)
+        then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)
         else if (Options.interactive()) then //--in
           let filenames =
             if (Options.explicit_deps()) then begin
@@ -105,32 +105,34 @@ let go _ =
               end
           in
           if Options.universes()
-          then let fmods, dsenv, env = Universal.batch_mode_tc filenames in //check all the dependences in batch mode
+          then let fmods, dsenv, env = Universal.batch_mode_tc Parser.Dep.VerifyUserList filenames in //check all the dependences in batch mode
                interactive_mode (dsenv, env) None Universal.interactive_tc //and then start checking chunks from the current buffer
-          else let fmods, dsenv, env = Stratified.batch_mode_tc filenames in //check all the dependences in batch mode
+          else let fmods, dsenv, env = Stratified.batch_mode_tc Parser.Dep.VerifyUserList filenames in //check all the dependences in batch mode
                interactive_mode (dsenv, env) None Stratified.interactive_tc //and then start checking chunks from the current buffer
 
         else if List.length filenames >= 1 then begin //normal batch mode
-          (* Unless dependencies are explicit, and unless the user used
-           * --verify_module manually, we take the filenames passed on
-           * the command-line to be those we want to verify. *)
-          if not (Options.explicit_deps()) && not (Options.verify_module () <> []) then begin
-            let files = 
-              List.map (fun f -> 
-                    match Parser.Dep.check_and_strip_suffix (basename f) with 
-                    | None -> Util.print1 "Unrecognized file type: %s\n" f; exit 1
-                    | Some f -> String.lowercase f) filenames in
-            List.iter Options.add_verify_module files
-          end;
-          if Options.universes()
-          then let fmods, dsenv, env = Universal.batch_mode_tc filenames in
-               report_errors ();
-               codegen (Inr (fmods, env));
-               finished_message (fmods |> List.map Universal.module_or_interface_name)               
-          else let fmods, dsenv, env = Stratified.batch_mode_tc filenames in
-               report_errors ();
-               codegen (Inl (fmods, env));
-               finished_message (fmods |> List.map Stratified.module_or_interface_name)
+          let verify_mode =
+            if Options.verify_all () then begin
+              if Options.verify_module () <> [] then begin
+                Util.print_error "--verify_module is incompatible with --verify_all";
+                exit 1
+              end;
+              Parser.Dep.VerifyAll
+            end else if Options.verify_module () <> [] then
+              Parser.Dep.VerifyUserList
+            else
+              Parser.Dep.VerifyFigureItOut
+          in
+          if Options.universes() then
+            let fmods, dsenv, env = Universal.batch_mode_tc verify_mode filenames in
+            report_errors ();
+            codegen (Inr (fmods, env));
+            finished_message (fmods |> List.map Universal.module_or_interface_name)
+          else
+            let fmods, dsenv, env = Stratified.batch_mode_tc verify_mode filenames in
+            report_errors ();
+            codegen (Inl (fmods, env));
+            finished_message (fmods |> List.map Stratified.module_or_interface_name)
         end else
           Util.print_error "no file provided\n"
 

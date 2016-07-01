@@ -38,7 +38,7 @@ let extend_gen x t g y = if y < x then g y
                          else if y = x then Some t
                          else g (y-1)
 
-opaque val weakening : n:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
+irreducible val weakening : n:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
       h:typing g e t -> Tot (typing (extend_gen n t' g) (shift_up_above n e) t)
       (decreases h)
 let rec weakening n #g #v #t t' h =
@@ -79,7 +79,7 @@ let rec progress #e #t h =
 (* Typing extensional follows directly from functional extensionality
    (it's also a special case of context invariance below) *)
 
-opaque val typing_extensional : #e:exp -> #g:env -> #t:typ ->
+irreducible val typing_extensional : #e:exp -> #g:env -> #t:typ ->
       h:(typing g e t) -> g':env{feq g g'} -> Tot (typing g' e t)
 let typing_extensional #e #g #t h _ = h
 
@@ -238,8 +238,8 @@ let subst_gen_elam x v t_y e' =
 
 val substitution_preserves_typing :
        x:var -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
-      =h1:typing empty v t_x ->
-      =h2:typing (extend_gen x t_x g) e t ->
+      $h1:typing empty v t_x ->
+      $h2:typing (extend_gen x t_x g) e t ->
        Tot (typing g (subst (sub_beta_gen x v) e) t) (decreases e)
 let rec substitution_preserves_typing x #e #v #t_x #t #g h1 h2 =
   match h2 with

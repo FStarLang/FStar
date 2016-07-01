@@ -1,74 +1,92 @@
-ifdef WINDIR
-EXE=.exe
-else
-EXE=
-endif
+# FStar variables
 FSTAR_HOME=../..
-include ../Makefile.include
+include $(FSTAR_HOME)/ulib/ml/Makefile.include
+FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_DEFAULT_ARGS) # from the included Makefile
 
-ALLOCATOR_DIR = ../../runtime/allocator
-ALLOCATOR_FILES = $(ALLOCATOR_DIR)/camlstack.o $(ALLOCATOR_DIR)/stack.o $(ALLOCATOR_DIR)/bitmask.o $(ALLOCATOR_DIR)/camlstack.mli
+OPTIONS_OCAML=--lax --codegen OCaml --no_location_info
 
-OCAML = ocamlfind ocamlopt -g -package batteries -linkpkg -thread -I ../../src/ocaml-output/ -I $(ALLOCATOR_DIR) $(ALLOCATOR_FILES) ../../src/ocaml-output/support.ml
+CURVE_ODIR=curve
+CHACHA_ODIR=chacha
+POLY_ODIR=poly
 
-all:
-	$(FSTAR) --include lib FStar.Regions.RST.fst
+# OCaml variables
+OCAMLOPT := ocamlfind opt -package batteries,stdint,zarith -linkpkg -g -I $(ULIB_ML) \
+	-I $(ULIB_ML)/hyperheap $(ULIB_ML)/fstarlib-hyperheap.cmxa -w -8-20-26
 
-Factorial.ml: factorial.fst
-	$(FSTAR) --codegen OCaml $^
-	./revertManualMLs.sh
+REALIZED_MLI=
+REALIZED=FStar_Mul FStar_HyperStack FStar_HST FStar_Buffer
+REALIZED_MODULE=$(subst _,., $(REALIZED))
+REALIZED_ML=$(addsuffix .mli,$(REALIZED_MLI)) $(addsuffix .ml,$(REALIZED_MLI) $(REALIZED))
+NO_CODEGEN=$(addprefix --no_extract , SInt $(REALIZED_MODULE))
 
-PRE_SST_FILES=ListSet.ml Stack.ml FunctionalExtensionality.ml Ghost.ml Located.ml Lref.ml StackAndHeap.ml
+# CURVE_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Bignum_Parameters.ml Bignum_Bigint.ml Bignum_Fsum.ml Bignum_FsumWide.ml Bignum_Fdifference.ml Bignum_Fscalar.ml Bignum_Fproduct.ml Bignum_Modulo.ml Bignum_Core.ml Curve_Point.ml Curve_AddAndDouble.ml Curve_Ladder.ml
 
-# make Factorial.ml should build all the remailing .ml files
-factorial$(EXE):  $(PRE_SST_FILES) SST.ml SSTCombinators.ml Factorial.ml Test.ml
-	$(OCAML) -o $@ $^
+CURVE_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Ghost.ml Math_Axioms.ml Math_Lib.ml Math_Definitions.ml Math_Field.ml Math_Curve.ml Curve_Parameters.ml Curve_Bigint.ml Curve_Fsum.ml Curve_FsumWide.ml Curve_Fdifference.ml Curve_Fscalar.ml Curve_Fproduct.ml Curve_Modulo.ml Curve_Bignum.ml Curve_Crecip.ml Curve_Point.ml Curve_AddAndDouble.ml Curve_Ladder.ml
+CHACHA_EXTRACTED=Chacha.ml
+POLY_EXTRACTED=FStar_Ghost.ml Poly_Parameters.ml Poly_Bigint.ml Poly_Bignum.ml Poly_Poly1305.ml
 
+.PHONY: lib-ver curve-ver curve-ml chacha-ver chacha-ml
 
-MD5.ml: md5.fst
-	$(FSTAR) MD5.fst
-	./revertManualMLs.sh
+all: curve-ml chacha-ml poly-ml
 
-md5$(EXE): $(PRE_SST_FILES) SST.ml SSTCombinators.ml MachineWord.ml Seq.ml SSTArray.ml ArrayAlgos.ml MD5Common.ml MD5.ml
-	$(OCAML) -o $@ $^
+# Verification target for the low-level libraries of F* in universes
+lib-ver:
+	$(FSTAR) FStar.HyperStack.fst FStar.HST.fst FStar.Buffer.fst
 
-Sieve.ml: sieve.fst
-	$(FSTAR) --codegen OCaml $^
-	./revertManualMLs.sh
+# Curve25519 lax typechecking
+curve-lax:
+	$(FSTAR) Curve.Crecip.fst Curve.Ladder.fst --lax
 
-ARRAY_FILES=Seq.ml SSTArray.ml ArrayAlgos.ml
+# Curve25519 extraction to OCaml
+curve-ml:
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
+	mkdir -p $(CURVE_ODIR)
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) Curve.Crecip.fst Curve.Ladder.fst --odir $(CURVE_ODIR) #2> /dev/null
+	@sed -i.bak 's/(Obj.magic ((fun pp ppq p pq q n ctr b scalar/(((fun pp ppq p pq q n ctr b scalar/g' $(CURVE_ODIR)/Curve_Ladder.ml
+	$(OCAMLOPT) -I ml -I $(CURVE_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
+	  $(addprefix $(CURVE_ODIR)/,$(CURVE_EXTRACTED)) ml/test_curve.ml -o test_curve.exe
+	./test_curve.exe
 
-sieve$(EXE): $(PRE_SST_FILES)  SST.ml SSTCombinators.ml $(ARRAY_FILES) SieveFun.ml Sieve.ml TestSieve.ml
-	$(OCAML) -o $@ $^
+curve-compile:
+	$(OCAMLOPT) -I ml -I $(CURVE_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
+	  $(addprefix $(CURVE_ODIR)/,$(CURVE_EXTRACTED)) ml/test_curve.ml -o test_curve.exe
+	./test_curve.exe
 
-#run make Sieve.ml, and make clean if you just made sieveLoopHeap
-sieveLoop$(EXE): $(PRE_SST_FILES)  SST.ml SSTCombinators.ml $(ARRAY_FILES) SieveFun.ml Sieve.ml TestSieveInLoop.ml
-	$(OCAML) $^ -o $@
+# AES targets
+chacha-ver:
+	$(FSTAR) Chacha.fst 
 
-#run make Sieve.ml
-sieveLoopHeap$(EXE): $(PRE_SST_FILES)  SSTAllHeap.ml  SSTArrayAllHeap.ml SST.ml SSTCombinators.ml $(ARRAY_FILES) SieveFun.ml Sieve.ml TestSieveInLoop.ml
-	cp SSTAllHeap.ml SST.ml
-	cp SSTArrayAllHeap.ml SSTArray.ml
-	$(OCAML) -o $@ $^
+chacha-ml:
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
+	mkdir -p $(CHACHA_ODIR)
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) Chacha.fst --odir $(CHACHA_ODIR) 
+	$(OCAMLOPT) -I ml -I $(CHACHA_ODIR) \
+	  $(FSTAR_HOME)/ulib/ml/FStar_UInt32.ml \
+	  $(addprefix ml/,$(REALIZED_ML)) \
+	  $(addprefix $(CHACHA_ODIR)/,$(CHACHA_EXTRACTED)) ml/test_chacha.ml -o test_chacha.exe
+	./test_chacha.exe 
 
-SieveFun.ml: sieveFun.fst
-	$(FSTAR) --codegen OCaml $^
-	./revertManualMLs.sh
+chacha-compile:
+	$(OCAMLOPT) -I ml -I $(CHACHA_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
+	  $(FSTAR_HOME)/ulib/ml/FStar_UInt32.ml \
+	  $(addprefix $(CHACHA_ODIR)/,$(CHACHA_EXTRACTED)) ml/test_chacha.ml -o test_chacha.exe
+	./test_chacha.exe
 
-sieveFun$(EXE): $(PRE_SST_FILES) SST.ml SSTCombinators.ml $(ARRAY_FILES) SieveFun.ml TestSieve.ml
-	$(OCAML) -o $@ $^
+poly-ml:
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
+	mkdir -p $(POLY_ODIR)
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) Poly.Poly1305.fst --odir $(POLY_ODIR) #2> /dev/null
+	$(OCAMLOPT) -I ml -I $(POLY_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
+	  $(addprefix $(POLY_ODIR)/,$(POLY_EXTRACTED)) ml/test_poly1305.ml -o test_poly.exe
+	./test_poly.exe
 
+poly-compile:
+	$(OCAMLOPT) -I ml -I $(POLY_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
+	  $(addprefix $(POLY_ODIR)/,$(POLY_EXTRACTED)) ml/test_poly1305.ml -o test_poly.exe
+	./test_poly.exe
 
-LallocTest.ml: lallocTest.fst
-	$(FSTAR) --codegen OCaml $^ --debug yes --prn
-	./revertManualMLs.sh
-
-lallocTest$(EXE): $(PRE_SST_FILES)  SST.ml LallocTest.ml TestLalloc.ml
-	$(OCAML) -o $@ $^
-
-support: #run this whenever the src file of cp is updated. It is tracked in git.
-	cp ../../src/support/ocaml/fstar-lib/src/support.ml  ../../src/ocaml-output/
-
+# Cleaning
 clean:
-	rm *.cm* MD5.ml Sieve.ml Factorial.ml LallocTest.ml md5 factorial sieve SieveFun.ml ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Ghost.ml StackAndHeap.ml SSTCombinators.ml MachineWord.ml Seq.ml ArrayAlgos.ml MD5Common.ml All.ml
-	./revertManualMLs
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
+	@rm -f $(addprefix ml/, *.cmx *.o *.cmi *~)
+	@rm -rf $(CURVE_ODIR) $(CHACHA_ODIR) $(POLY_ODIR) *~ *.exe

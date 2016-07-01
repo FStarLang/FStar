@@ -3,8 +3,7 @@ FSTAR_HOME=../..
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_DEFAULT_ARGS) # from the included Makefile
 
-OPTIONS_VER=--universes
-OPTIONS_OCAML=--lax --codegen OCaml --universes --no_location_info --use_native_int
+OPTIONS_OCAML=--lax --codegen OCaml --no_location_info --use_native_int
 
 CHACHA_ODIR=chacha20
 POLY_ODIR=poly1305
@@ -40,11 +39,11 @@ sha-ml
 
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
-	$(FSTAR) $(OPTIONS_VER) sbuffer.fst SInt.UInt8.fst SInt.UInt32.fst SInt.UInt63.fst SBytes.fst
+	$(FSTAR) sbuffer.fst SInt.UInt8.fst SInt.UInt32.fst SInt.UInt63.fst SBytes.fst
 
 # Verification target for CHACHA20
 chacha-ver: 
-	$(FSTAR) $(OPTIONS_VER) chacha.fst
+	$(FSTAR) chacha.fst
 
 # OCaml extracton of CHACHA20
 chacha-ml:
@@ -57,10 +56,10 @@ chacha-ml:
 
 # Verification target for POLY1305
 poly-ver:
-	$(FSTAR) --universes sbuffer.fst SInt.UInt8.fst SInt.UInt32.fst SInt.UInt63.fst SBytes.fst 
-	$(FSTAR) --universes parameters.fst bigint.fst
-	$(FSTAR) --universes bignum.fst
-	$(FSTAR) --universes poly.fst
+	$(FSTAR) sbuffer.fst SInt.UInt8.fst SInt.UInt32.fst SInt.UInt63.fst SBytes.fst 
+	$(FSTAR) parameters.fst bigint.fst
+	$(FSTAR) bignum.fst
+	$(FSTAR) poly.fst
 
 # OCaml extracton of POLY1305
 poly-ml:
@@ -73,7 +72,7 @@ poly-ml:
 
 # Curve25519 lax typechecking
 curve-lax:
-	$(FSTAR) $(OPTIONS_VER) Curve.Ladder.fst --lax
+	$(FSTAR) Curve.Ladder.fst --lax
 
 # Curve25519 extraction to OCaml
 curve-ml:
@@ -87,7 +86,7 @@ curve-ml:
 
 # AES targets
 aes-ver:
-	$(FSTAR) $(OPTIONS_VER) Crypto.AES.fst --lax
+	$(FSTAR) Crypto.AES.fst --lax
 
 aes-ml:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml PRIMS_DIR=native_int
@@ -99,10 +98,10 @@ aes-ml:
 
 # SHA targets
 sha256-ver:
-	$(FSTAR) $(OPTIONS_VER) Crypto.Sha256.fst
+	$(FSTAR) Crypto.Sha256.fst
 
 sha256-lax:
-	$(FSTAR) $(OPTIONS_VER) Crypto.Sha256.fst --lax
+	$(FSTAR) Crypto.Sha256.fst --lax
 
 sha256-ml:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml PRIMS_DIR=native_int

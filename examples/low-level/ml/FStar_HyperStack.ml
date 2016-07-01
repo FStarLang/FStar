@@ -1,0 +1,1 @@
+type mem = unit

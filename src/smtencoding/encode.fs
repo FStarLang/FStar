@@ -1410,7 +1410,7 @@ let encode_top_level_let env (is_rec, bindings) quals =
                     else binders, body, formals, tres
                      
                     | Tm_refine(x, _) -> 
-                    aux true x.sort
+                    aux norm x.sort
 
                     | _ when not norm -> //have another go, after unfolding all definitions
                     let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.WHNF; N.UnfoldUntil Delta_constant; N.EraseUniverses] env.tcenv t_norm in

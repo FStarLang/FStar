@@ -131,14 +131,15 @@ let init () =
         ("silent"                       , Bool false);
         ("smt"                          , Unset);
         ("split_cases"                  , Int 0);
+        ("stratified"                   , Bool false); // ~universes
         ("timing"                       , Bool false);
         ("trace_error"                  , Bool false);
-        ("universes"                    , Bool false);
         ("unthrottle_inductives"        , Bool false);
         ("use_eq_at_higher_order"       , Bool false);
         ("use_hints"                    , Bool false);
         ("use_native_int"               , Bool false);
         ("verify"                       , Bool true);
+        ("verify_all"                   , Bool false);
         ("verify_module"                , List []);
         ("warn_top_level_effects"       , Bool false);
         ("z3timeout"                    , Int 5)] in
@@ -205,13 +206,14 @@ let get_show_signatures         ()      = lookup_opt "show_signatures"          
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
 let get_split_cases             ()      = lookup_opt "split_cases"              as_int
+let get_stratified              ()      = lookup_opt "stratified"               as_bool
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
 let get_trace_error             ()      = lookup_opt "trace_error"              as_bool
-let get_universes               ()      = lookup_opt "universes"                as_bool
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
 let get_use_native_int          ()      = lookup_opt "use_native_int"           as_bool
+let get_verify_all              ()      = lookup_opt "verify_all"               as_bool
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
@@ -323,7 +325,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "detail_errors",
         ZeroArgs (fun () -> Bool true),
-         "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; requires --universes");
+         "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; incompatible with --stratified");
 
        ( noshort,
         "dump_module",
@@ -539,6 +541,11 @@ let rec specs () : list<Getopt.opt> =
         "Partition VC of a match into groups of [n] cases");
 
        ( noshort,
+        "stratified",
+        ZeroArgs (fun () -> Bool true),
+        "Remove the support for universes");
+
+       ( noshort,
         "timing",
         ZeroArgs (fun () -> Bool true),
         "Print the time it takes to verify each top-level definition");
@@ -547,11 +554,6 @@ let rec specs () : list<Getopt.opt> =
         "trace_error",
         ZeroArgs (fun () -> Bool true),
         "Don't print an error message; show an exception trace instead");
-
-       ( noshort,
-        "universes",
-        ZeroArgs (fun () -> Bool true),
-        "Use the support for universes");
 
        ( noshort,
         "unthrottle_inductives",
@@ -572,6 +574,11 @@ let rec specs () : list<Getopt.opt> =
         "use_native_int",
         ZeroArgs (fun () -> Bool true),
         "Extract the 'int' type to platform-specific native int (You will need to link the generated code with the appropriate version of the prims library)");
+
+       ( noshort,
+        "verify_all",
+        ZeroArgs (fun () -> Bool true),
+        "With automatic dependencies, verify all the dependencies, not just the files passed on the command-line.");
 
        ( noshort,
         "verify_module",
@@ -689,7 +696,7 @@ let fstar_home () =
 
 let set_options o s =
     let specs = match o with
-        | Set -> if get_universes() then resettable_specs else settable_specs
+        | Set -> if (not (get_stratified())) then resettable_specs else settable_specs
         | Reset -> resettable_specs
         | Restore -> all_specs in
     Getopt.parse_string specs (fun _ -> ()) s
@@ -729,7 +736,7 @@ let include_path () =
     get_include()
   else
   let h = fstar_home () in
-  let defs = if get_universes() then universe_include_path_base_dirs else include_path_base_dirs in
+  let defs = if (not (get_stratified())) then universe_include_path_base_dirs else include_path_base_dirs in
   (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
 
 let find_file filename =
@@ -817,11 +824,12 @@ let silent                       () = get_silent                      ()
 let split_cases                  () = get_split_cases                 ()
 let timing                       () = get_timing                      ()
 let trace_error                  () = get_trace_error                 ()
-let universes                    () = get_universes                   ()
+let universes                    () = (not (get_stratified()))
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
 let use_native_int               () = get_use_native_int              ()
+let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
 let warn_cardinality             () = get_cardinality() = "warn"
 let warn_top_level_effects       () = get_warn_top_level_effects      ()
