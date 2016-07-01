@@ -833,7 +833,7 @@ end else begin
 end), "[make|graph]")), "Output the transitive closure of the dependency graph in a format suitable for the given tool"))::((FStar_Getopt.noshort, "detail_errors", FStar_Getopt.ZeroArgs ((fun _24_202 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; requires --universes"))::((FStar_Getopt.noshort, "dump_module", FStar_Getopt.OneArg (((fun x -> (let _115_347 = (let _115_345 = (let _115_343 = (get_dump_module ())
+end))), "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; incompatible with --stratified"))::((FStar_Getopt.noshort, "dump_module", FStar_Getopt.OneArg (((fun x -> (let _115_347 = (let _115_345 = (let _115_343 = (get_dump_module ())
 in (x)::_115_343)
 in (FStar_All.pipe_right _115_345 (FStar_List.map (fun _115_344 -> String (_115_344)))))
 in (FStar_All.pipe_right _115_347 (fun _115_346 -> List (_115_346))))), "[module name]")), ""))::((FStar_Getopt.noshort, "eager_inference", FStar_Getopt.ZeroArgs ((fun _24_204 -> (match (()) with
