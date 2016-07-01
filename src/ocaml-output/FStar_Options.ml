@@ -1168,37 +1168,27 @@ end
 end))
 
 
-let find_file : Prims.string  ->  Prims.string Prims.option = (fun filename -> (
-
-let search_path = (include_path ())
-in try
-(match (()) with
-| () -> begin
-(let _115_507 = if (FStar_Util.is_path_absolute filename) then begin
+let find_file : Prims.string  ->  Prims.string Prims.option = (fun filename -> if (FStar_Util.is_path_absolute filename) then begin
 if (FStar_Util.file_exists filename) then begin
 Some (filename)
 end else begin
 None
 end
 end else begin
-(FStar_Util.find_map search_path (fun p -> (
+(let _115_507 = (let _115_505 = (include_path ())
+in (FStar_List.rev _115_505))
+in (FStar_Util.find_map _115_507 (fun p -> (
 
 let path = (FStar_Util.join_paths p filename)
 in if (FStar_Util.file_exists path) then begin
 Some (path)
 end else begin
 None
-end)))
-end
-in (FStar_Util.map_option FStar_Util.normalize_file_path _115_507))
+end))))
 end)
-with
-| _24_381 -> begin
-None
-end))
 
 
-let prims : Prims.unit  ->  Prims.string = (fun _24_386 -> (match (()) with
+let prims : Prims.unit  ->  Prims.string = (fun _24_378 -> (match (()) with
 | () -> begin
 (match ((get_prims ())) with
 | None -> begin
@@ -1210,9 +1200,9 @@ in (match ((find_file filen)) with
 result
 end
 | None -> begin
-(let _115_512 = (let _115_511 = (FStar_Util.format1 "unable to find required file \"%s\" in the module search path.\n" filen)
-in FStar_Util.Failure (_115_511))
-in (Prims.raise _115_512))
+(let _115_511 = (let _115_510 = (FStar_Util.format1 "unable to find required file \"%s\" in the module search path.\n" filen)
+in FStar_Util.Failure (_115_510))
+in (Prims.raise _115_511))
 end))
 end
 | Some (x) -> begin
@@ -1230,330 +1220,330 @@ end
 end))
 
 
-let __temp_no_proj : Prims.string  ->  Prims.bool = (fun s -> (let _115_517 = (get___temp_no_proj ())
-in (FStar_All.pipe_right _115_517 (FStar_List.contains s))))
+let __temp_no_proj : Prims.string  ->  Prims.bool = (fun s -> (let _115_516 = (get___temp_no_proj ())
+in (FStar_All.pipe_right _115_516 (FStar_List.contains s))))
 
 
-let admit_smt_queries : Prims.unit  ->  Prims.bool = (fun _24_399 -> (match (()) with
+let admit_smt_queries : Prims.unit  ->  Prims.bool = (fun _24_391 -> (match (()) with
 | () -> begin
 (get_admit_smt_queries ())
 end))
 
 
-let check_cardinality : Prims.unit  ->  Prims.bool = (fun _24_400 -> (match (()) with
+let check_cardinality : Prims.unit  ->  Prims.bool = (fun _24_392 -> (match (()) with
 | () -> begin
 ((get_cardinality ()) = "check")
 end))
 
 
-let codegen : Prims.unit  ->  Prims.string Prims.option = (fun _24_401 -> (match (()) with
+let codegen : Prims.unit  ->  Prims.string Prims.option = (fun _24_393 -> (match (()) with
 | () -> begin
 (get_codegen ())
 end))
 
 
-let codegen_libs : Prims.unit  ->  Prims.string Prims.list Prims.list = (fun _24_402 -> (match (()) with
+let codegen_libs : Prims.unit  ->  Prims.string Prims.list Prims.list = (fun _24_394 -> (match (()) with
 | () -> begin
-(let _115_527 = (get_codegen_lib ())
-in (FStar_All.pipe_right _115_527 (FStar_List.map (fun x -> (FStar_Util.split x ".")))))
+(let _115_526 = (get_codegen_lib ())
+in (FStar_All.pipe_right _115_526 (FStar_List.map (fun x -> (FStar_Util.split x ".")))))
 end))
 
 
-let debug_any : Prims.unit  ->  Prims.bool = (fun _24_404 -> (match (()) with
+let debug_any : Prims.unit  ->  Prims.bool = (fun _24_396 -> (match (()) with
 | () -> begin
 ((get_debug ()) <> [])
 end))
 
 
-let debug_at_level : Prims.string  ->  debug_level_t  ->  Prims.bool = (fun modul level -> (((modul = "") || (let _115_534 = (get_debug ())
-in (FStar_All.pipe_right _115_534 (FStar_List.contains modul)))) && (debug_level_geq level)))
+let debug_at_level : Prims.string  ->  debug_level_t  ->  Prims.bool = (fun modul level -> (((modul = "") || (let _115_533 = (get_debug ())
+in (FStar_All.pipe_right _115_533 (FStar_List.contains modul)))) && (debug_level_geq level)))
 
 
-let dep : Prims.unit  ->  Prims.string Prims.option = (fun _24_407 -> (match (()) with
+let dep : Prims.unit  ->  Prims.string Prims.option = (fun _24_399 -> (match (()) with
 | () -> begin
 (get_dep ())
 end))
 
 
-let detail_errors : Prims.unit  ->  Prims.bool = (fun _24_408 -> (match (()) with
+let detail_errors : Prims.unit  ->  Prims.bool = (fun _24_400 -> (match (()) with
 | () -> begin
 (get_detail_errors ())
 end))
 
 
-let dump_module : Prims.string  ->  Prims.bool = (fun s -> (let _115_541 = (get_dump_module ())
-in (FStar_All.pipe_right _115_541 (FStar_List.contains s))))
+let dump_module : Prims.string  ->  Prims.bool = (fun s -> (let _115_540 = (get_dump_module ())
+in (FStar_All.pipe_right _115_540 (FStar_List.contains s))))
 
 
-let eager_inference : Prims.unit  ->  Prims.bool = (fun _24_410 -> (match (()) with
+let eager_inference : Prims.unit  ->  Prims.bool = (fun _24_402 -> (match (()) with
 | () -> begin
 (get_eager_inference ())
 end))
 
 
-let explicit_deps : Prims.unit  ->  Prims.bool = (fun _24_411 -> (match (()) with
+let explicit_deps : Prims.unit  ->  Prims.bool = (fun _24_403 -> (match (()) with
 | () -> begin
 (get_explicit_deps ())
 end))
 
 
-let fs_typ_app : Prims.unit  ->  Prims.bool = (fun _24_412 -> (match (()) with
+let fs_typ_app : Prims.unit  ->  Prims.bool = (fun _24_404 -> (match (()) with
 | () -> begin
 (get_fs_typ_app ())
 end))
 
 
-let full_context_dependency : Prims.unit  ->  Prims.bool = (fun _24_413 -> (match (()) with
+let full_context_dependency : Prims.unit  ->  Prims.bool = (fun _24_405 -> (match (()) with
 | () -> begin
 ((get_MLish ()) = false)
 end))
 
 
-let hide_genident_nums : Prims.unit  ->  Prims.bool = (fun _24_414 -> (match (()) with
+let hide_genident_nums : Prims.unit  ->  Prims.bool = (fun _24_406 -> (match (()) with
 | () -> begin
 (get_hide_genident_nums ())
 end))
 
 
-let hide_uvar_nums : Prims.unit  ->  Prims.bool = (fun _24_415 -> (match (()) with
+let hide_uvar_nums : Prims.unit  ->  Prims.bool = (fun _24_407 -> (match (()) with
 | () -> begin
 (get_hide_uvar_nums ())
 end))
 
 
-let hint_info : Prims.unit  ->  Prims.bool = (fun _24_416 -> (match (()) with
+let hint_info : Prims.unit  ->  Prims.bool = (fun _24_408 -> (match (()) with
 | () -> begin
 (get_hint_info ())
 end))
 
 
-let initial_fuel : Prims.unit  ->  Prims.int = (fun _24_417 -> (match (()) with
+let initial_fuel : Prims.unit  ->  Prims.int = (fun _24_409 -> (match (()) with
 | () -> begin
 (get_initial_fuel ())
 end))
 
 
-let initial_ifuel : Prims.unit  ->  Prims.int = (fun _24_418 -> (match (()) with
+let initial_ifuel : Prims.unit  ->  Prims.int = (fun _24_410 -> (match (()) with
 | () -> begin
 (get_initial_ifuel ())
 end))
 
 
-let inline_arith : Prims.unit  ->  Prims.bool = (fun _24_419 -> (match (()) with
+let inline_arith : Prims.unit  ->  Prims.bool = (fun _24_411 -> (match (()) with
 | () -> begin
 (get_inline_arith ())
 end))
 
 
-let interactive : Prims.unit  ->  Prims.bool = (fun _24_420 -> (match (()) with
+let interactive : Prims.unit  ->  Prims.bool = (fun _24_412 -> (match (()) with
 | () -> begin
 (get_in ())
 end))
 
 
-let interactive_fsi : Prims.unit  ->  Prims.bool = (fun _24_421 -> (match (()) with
+let interactive_fsi : Prims.unit  ->  Prims.bool = (fun _24_413 -> (match (()) with
 | () -> begin
 (get_fsi ())
 end))
 
 
-let lax : Prims.unit  ->  Prims.bool = (fun _24_422 -> (match (()) with
+let lax : Prims.unit  ->  Prims.bool = (fun _24_414 -> (match (()) with
 | () -> begin
 (get_lax ())
 end))
 
 
-let log_queries : Prims.unit  ->  Prims.bool = (fun _24_423 -> (match (()) with
+let log_queries : Prims.unit  ->  Prims.bool = (fun _24_415 -> (match (()) with
 | () -> begin
 (get_log_queries ())
 end))
 
 
-let log_types : Prims.unit  ->  Prims.bool = (fun _24_424 -> (match (()) with
+let log_types : Prims.unit  ->  Prims.bool = (fun _24_416 -> (match (()) with
 | () -> begin
 (get_log_types ())
 end))
 
 
-let max_fuel : Prims.unit  ->  Prims.int = (fun _24_425 -> (match (()) with
+let max_fuel : Prims.unit  ->  Prims.int = (fun _24_417 -> (match (()) with
 | () -> begin
 (get_max_fuel ())
 end))
 
 
-let max_ifuel : Prims.unit  ->  Prims.int = (fun _24_426 -> (match (()) with
+let max_ifuel : Prims.unit  ->  Prims.int = (fun _24_418 -> (match (()) with
 | () -> begin
 (get_max_ifuel ())
 end))
 
 
-let min_fuel : Prims.unit  ->  Prims.int = (fun _24_427 -> (match (()) with
+let min_fuel : Prims.unit  ->  Prims.int = (fun _24_419 -> (match (()) with
 | () -> begin
 (get_min_fuel ())
 end))
 
 
-let ml_ish : Prims.unit  ->  Prims.bool = (fun _24_428 -> (match (()) with
+let ml_ish : Prims.unit  ->  Prims.bool = (fun _24_420 -> (match (()) with
 | () -> begin
 (get_MLish ())
 end))
 
 
-let n_cores : Prims.unit  ->  Prims.int = (fun _24_429 -> (match (()) with
+let n_cores : Prims.unit  ->  Prims.int = (fun _24_421 -> (match (()) with
 | () -> begin
 (get_n_cores ())
 end))
 
 
-let no_default_includes : Prims.unit  ->  Prims.bool = (fun _24_430 -> (match (()) with
+let no_default_includes : Prims.unit  ->  Prims.bool = (fun _24_422 -> (match (()) with
 | () -> begin
 (get_no_default_includes ())
 end))
 
 
-let no_extract : Prims.string  ->  Prims.bool = (fun s -> (let _115_586 = (get_no_extract ())
-in (FStar_All.pipe_right _115_586 (FStar_List.contains s))))
+let no_extract : Prims.string  ->  Prims.bool = (fun s -> (let _115_585 = (get_no_extract ())
+in (FStar_All.pipe_right _115_585 (FStar_List.contains s))))
 
 
-let no_location_info : Prims.unit  ->  Prims.bool = (fun _24_432 -> (match (()) with
+let no_location_info : Prims.unit  ->  Prims.bool = (fun _24_424 -> (match (()) with
 | () -> begin
 (get_no_location_info ())
 end))
 
 
-let norm_then_print : Prims.unit  ->  Prims.bool = (fun _24_433 -> (match (()) with
+let norm_then_print : Prims.unit  ->  Prims.bool = (fun _24_425 -> (match (()) with
 | () -> begin
 ((get_print_before_norm ()) = false)
 end))
 
 
-let output_dir : Prims.unit  ->  Prims.string Prims.option = (fun _24_434 -> (match (()) with
+let output_dir : Prims.unit  ->  Prims.string Prims.option = (fun _24_426 -> (match (()) with
 | () -> begin
 (get_odir ())
 end))
 
 
-let print_bound_var_types : Prims.unit  ->  Prims.bool = (fun _24_435 -> (match (()) with
+let print_bound_var_types : Prims.unit  ->  Prims.bool = (fun _24_427 -> (match (()) with
 | () -> begin
 (get_print_bound_var_types ())
 end))
 
 
-let print_effect_args : Prims.unit  ->  Prims.bool = (fun _24_436 -> (match (()) with
+let print_effect_args : Prims.unit  ->  Prims.bool = (fun _24_428 -> (match (()) with
 | () -> begin
 (get_print_effect_args ())
 end))
 
 
-let print_fuels : Prims.unit  ->  Prims.bool = (fun _24_437 -> (match (()) with
+let print_fuels : Prims.unit  ->  Prims.bool = (fun _24_429 -> (match (()) with
 | () -> begin
 (get_print_fuels ())
 end))
 
 
-let print_implicits : Prims.unit  ->  Prims.bool = (fun _24_438 -> (match (()) with
+let print_implicits : Prims.unit  ->  Prims.bool = (fun _24_430 -> (match (()) with
 | () -> begin
 (get_print_implicits ())
 end))
 
 
-let print_real_names : Prims.unit  ->  Prims.bool = (fun _24_439 -> (match (()) with
+let print_real_names : Prims.unit  ->  Prims.bool = (fun _24_431 -> (match (()) with
 | () -> begin
 (get_prn ())
 end))
 
 
-let print_universes : Prims.unit  ->  Prims.bool = (fun _24_440 -> (match (()) with
+let print_universes : Prims.unit  ->  Prims.bool = (fun _24_432 -> (match (()) with
 | () -> begin
 (get_print_universes ())
 end))
 
 
-let record_hints : Prims.unit  ->  Prims.bool = (fun _24_441 -> (match (()) with
+let record_hints : Prims.unit  ->  Prims.bool = (fun _24_433 -> (match (()) with
 | () -> begin
 (get_record_hints ())
 end))
 
 
-let silent : Prims.unit  ->  Prims.bool = (fun _24_442 -> (match (()) with
+let silent : Prims.unit  ->  Prims.bool = (fun _24_434 -> (match (()) with
 | () -> begin
 (get_silent ())
 end))
 
 
-let split_cases : Prims.unit  ->  Prims.int = (fun _24_443 -> (match (()) with
+let split_cases : Prims.unit  ->  Prims.int = (fun _24_435 -> (match (()) with
 | () -> begin
 (get_split_cases ())
 end))
 
 
-let timing : Prims.unit  ->  Prims.bool = (fun _24_444 -> (match (()) with
+let timing : Prims.unit  ->  Prims.bool = (fun _24_436 -> (match (()) with
 | () -> begin
 (get_timing ())
 end))
 
 
-let trace_error : Prims.unit  ->  Prims.bool = (fun _24_445 -> (match (()) with
+let trace_error : Prims.unit  ->  Prims.bool = (fun _24_437 -> (match (()) with
 | () -> begin
 (get_trace_error ())
 end))
 
 
-let universes : Prims.unit  ->  Prims.bool = (fun _24_446 -> (match (()) with
+let universes : Prims.unit  ->  Prims.bool = (fun _24_438 -> (match (()) with
 | () -> begin
 (not ((get_stratified ())))
 end))
 
 
-let unthrottle_inductives : Prims.unit  ->  Prims.bool = (fun _24_447 -> (match (()) with
+let unthrottle_inductives : Prims.unit  ->  Prims.bool = (fun _24_439 -> (match (()) with
 | () -> begin
 (get_unthrottle_inductives ())
 end))
 
 
-let use_eq_at_higher_order : Prims.unit  ->  Prims.bool = (fun _24_448 -> (match (()) with
+let use_eq_at_higher_order : Prims.unit  ->  Prims.bool = (fun _24_440 -> (match (()) with
 | () -> begin
 (get_use_eq_at_higher_order ())
 end))
 
 
-let use_hints : Prims.unit  ->  Prims.bool = (fun _24_449 -> (match (()) with
+let use_hints : Prims.unit  ->  Prims.bool = (fun _24_441 -> (match (()) with
 | () -> begin
 (get_use_hints ())
 end))
 
 
-let use_native_int : Prims.unit  ->  Prims.bool = (fun _24_450 -> (match (()) with
+let use_native_int : Prims.unit  ->  Prims.bool = (fun _24_442 -> (match (()) with
 | () -> begin
 (get_use_native_int ())
 end))
 
 
-let verify_all : Prims.unit  ->  Prims.bool = (fun _24_451 -> (match (()) with
+let verify_all : Prims.unit  ->  Prims.bool = (fun _24_443 -> (match (()) with
 | () -> begin
 (get_verify_all ())
 end))
 
 
-let verify_module : Prims.unit  ->  Prims.string Prims.list = (fun _24_452 -> (match (()) with
+let verify_module : Prims.unit  ->  Prims.string Prims.list = (fun _24_444 -> (match (()) with
 | () -> begin
 (get_verify_module ())
 end))
 
 
-let warn_cardinality : Prims.unit  ->  Prims.bool = (fun _24_453 -> (match (()) with
+let warn_cardinality : Prims.unit  ->  Prims.bool = (fun _24_445 -> (match (()) with
 | () -> begin
 ((get_cardinality ()) = "warn")
 end))
 
 
-let warn_top_level_effects : Prims.unit  ->  Prims.bool = (fun _24_454 -> (match (()) with
+let warn_top_level_effects : Prims.unit  ->  Prims.bool = (fun _24_446 -> (match (()) with
 | () -> begin
 (get_warn_top_level_effects ())
 end))
 
 
-let z3_exe : Prims.unit  ->  Prims.string = (fun _24_455 -> (match (()) with
+let z3_exe : Prims.unit  ->  Prims.string = (fun _24_447 -> (match (()) with
 | () -> begin
 (match ((get_smt ())) with
 | None -> begin
@@ -1565,7 +1555,7 @@ end)
 end))
 
 
-let z3_timeout : Prims.unit  ->  Prims.int = (fun _24_459 -> (match (()) with
+let z3_timeout : Prims.unit  ->  Prims.int = (fun _24_451 -> (match (()) with
 | () -> begin
 (get_z3timeout ())
 end))
