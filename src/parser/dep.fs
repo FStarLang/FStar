@@ -299,11 +299,14 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term
-    | NewEffectForFree ed
+    | NewEffectForFree (_, ed)
     | NewEffect (_, ed) ->
         collect_effect_decl ed
     | Pragma _ ->
         ()
+    | TopLevelModule lid ->
+        raise (Err (Util.format1 "Automatic dependency analysis demands one \
+          module per file (module %s not supported)" (string_of_lid lid true)))
 
   and collect_tycon = function
     | TyconAbstract (_, binders, k) ->

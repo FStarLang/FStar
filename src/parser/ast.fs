@@ -91,7 +91,7 @@ and pattern' =
   | PatWild
   | PatConst    of sconst
   | PatApp      of pattern * list<pattern>
-  | PatVar      of ident * option<arg_qualifier>   
+  | PatVar      of ident * option<arg_qualifier>
   | PatName     of lid
   | PatTvar     of ident * option<arg_qualifier>
   | PatList     of list<pattern>
@@ -130,11 +130,11 @@ type qualifier =
   | Opaque
   | Logic
 
- 
- 
+
+
 type qualifiers = list<qualifier>
 
-type lift_op = 
+type lift_op =
   | NonReifiableLift of term
   | ReifiableLift    of term * term //lift_wp, lift
 
@@ -160,7 +160,7 @@ type decl' =
   | Val of qualifiers * ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
   | NewEffect of qualifiers * effect_decl
-  | NewEffectForFree of effect_decl (* always a [DefineEffect] *)
+  | NewEffectForFree of qualifiers * effect_decl (* always a [DefineEffect] *)
   | SubEffect of lift
   | Pragma of pragma
 and decl = {d:decl'; drange:range}
@@ -175,7 +175,7 @@ type file = list<modul>
 type inputFragment = either<file,list<decl>>
 
 (********************************************************************************)
-let check_id id = 
+let check_id id =
     if Options.universes()
     then let first_char = String.substring id.idText 0 1 in
          if String.lowercase first_char = first_char
@@ -191,10 +191,10 @@ let un_curry_abs ps body = match body.tm with
     | Abs(p', body') -> Abs(ps@p', body')
     | _ -> Abs(ps, body)
 let mk_function branches r1 r2 =
-  let x = 
+  let x =
     if Options.universes()
     then let i = FStar.Syntax.Syntax.next_id () in
-         Ident.gen r1 
+         Ident.gen r1
     else U.genident (Some r1) in
   mk_term (Abs([mk_pattern (PatVar(x,None)) r1],
                mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
@@ -254,33 +254,33 @@ let mkWildAdmitMagic r = (mk_pattern PatWild r, None, mkAdmitMagic r)
 
 let focusBranches branches r =
     let should_filter = Util.for_some fst branches in
-	if should_filter
-	then let _ = Tc.Errors.warn r "Focusing on only some cases" in
+        if should_filter
+        then let _ = Tc.Errors.warn r "Focusing on only some cases" in
          let focussed = List.filter fst branches |> List.map snd in
-		 focussed@[mkWildAdmitMagic r]
-	else branches |> List.map snd
+                 focussed@[mkWildAdmitMagic r]
+        else branches |> List.map snd
 
 let focusLetBindings lbs r =
     let should_filter = Util.for_some fst lbs in
-	if should_filter
-	then let _ = Tc.Errors.warn r "Focusing on only some cases in this (mutually) recursive definition" in
+        if should_filter
+        then let _ = Tc.Errors.warn r "Focusing on only some cases in this (mutually) recursive definition" in
          List.map (fun (f, lb) ->
               if f then lb
               else (fst lb, mkAdmitMagic r)) lbs
-	else lbs |> List.map snd
+        else lbs |> List.map snd
 
 let mkFsTypApp t args r =
   mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
 
 let mkTuple args r =
-  let cons = 
+  let cons =
     if Options.universes()
     then FStar.Syntax.Util.mk_tuple_data_lid (List.length args) r
     else U.mk_tuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkDTuple args r =
-  let cons = 
+  let cons =
         if Options.universes()
         then FStar.Syntax.Util.mk_dtuple_data_lid (List.length args) r
         else U.mk_dtuple_data_lid (List.length args) r in
@@ -294,10 +294,10 @@ let mkRefinedBinder id t refopt m implicit =
 
 let rec extract_named_refinement t1  =
     match t1.tm with
-	| NamedTyp(x, t) -> Some (x, t, None)
-	| Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
+        | NamedTyp(x, t) -> Some (x, t, None)
+        | Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
     | Paren t -> extract_named_refinement t
-	| _ -> None
+        | _ -> None
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging
@@ -390,7 +390,7 @@ and binder_to_string x =
   | NoName t -> t |> term_to_string in
   Util.format2 "%s%s" (aqual_to_string x.aqual) s
 
-and aqual_to_string = function 
+and aqual_to_string = function
    | Some Equality -> "$"
    | Some Implicit -> "#"
    | _ -> ""
@@ -409,22 +409,22 @@ and pat_to_string x = match x.pat with
   | PatOr l ->  to_string_l "|\n " pat_to_string l
   | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
 
-let rec head_id_of_pat p = match p.pat with 
+let rec head_id_of_pat p = match p.pat with
         | PatName l -> [l]
         | PatVar (i, _) -> [FStar.Ident.lid_of_ids [i]]
         | PatApp(p, _) -> head_id_of_pat p
         | PatAscribed(p, _) -> head_id_of_pat p
-        | _ -> [] 
+        | _ -> []
 
-let lids_of_let defs =  defs |> List.collect (fun (p, _) -> head_id_of_pat p) 
+let lids_of_let defs =  defs |> List.collect (fun (p, _) -> head_id_of_pat p)
 
 let id_of_tycon = function
   | TyconAbstract(i, _, _)
   | TyconAbbrev(i, _, _, _)
-  | TyconRecord(i, _, _, _) 
+  | TyconRecord(i, _, _, _)
   | TyconVariant(i, _, _, _) -> i.idText
 
-let decl_to_string (d:decl) = match d.d with 
+let decl_to_string (d:decl) = match d.d with
   | TopLevelModule l -> "module " ^ l.str
   | Open l -> "open " ^ l.str
   | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" i.idText l.str
@@ -435,19 +435,19 @@ let decl_to_string (d:decl) = match d.d with
   | Tycon(_, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
   | Val(_, i, _) -> "val " ^ i.idText
   | Exception(i, _) -> "exception " ^ i.idText
-  | NewEffect(_, DefineEffect(i, _, _, _, _)) 
+  | NewEffect(_, DefineEffect(i, _, _, _, _))
   | NewEffect(_, RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | NewEffectForFree(DefineEffect(i, _, _, _, _)) 
-  | NewEffectForFree(RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
+  | NewEffectForFree(_, DefineEffect(i, _, _, _, _))
+  | NewEffectForFree(_, RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
 
 
-let modul_to_string (m:modul) = match m with 
+let modul_to_string (m:modul) = match m with
     | Module (_, decls)
-    | Interface (_, decls, _) -> 
+    | Interface (_, decls, _) ->
       decls |> List.map decl_to_string |> String.concat "\n"
-      
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Error reporting

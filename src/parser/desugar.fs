@@ -286,6 +286,7 @@ and free_type_vars env t = match (unparen t).tm with
   | Record _
   | Match _
   | TryWith _
+  | Assign _
   | Seq _ -> error "Unexpected type in free_type_vars computation" t t.range
 
 let head_and_args t =

@@ -50,7 +50,7 @@ type l_or (p:Type0) (q:Type0) = c_or p q
 (* '==>' : specialized to Type#0 *)
 type l_imp (p:Type0) (q:Type0) = p -> GTot q
                                          (* ^^^ NB: The Tot effect is primitive;            *)
-				         (*         elaborated using PURE a few lines below *)
+                                         (*         elaborated using PURE a few lines below *)
 (* infix binary '<==>' *)
 type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)
 
@@ -67,7 +67,7 @@ assume type has_type : #a:Type -> a -> Type -> Type0
 
 (* A coercion down to universe 0 *)
 type squash (p:Type) = x:unit{p}
-  
+
 (* forall (x:a). p x : specialized to Type#0 *)
 type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
 
@@ -345,8 +345,8 @@ val ex2_return : a:Type -> x:a -> Tot (ex2_wp a)
 let ex2_return a x p = p (V x)
 
 inline let ex2_bind_wp (r:range) (a:Type) (b:Type)
-		       (wp1:ex2_wp a)
-		       (wp2:(a -> GTot (ex2_wp b))) = fun p ->
+                       (wp1:ex2_wp a)
+                       (wp2:(a -> GTot (ex2_wp b))) = fun p ->
    (forall (rb:result b). p rb \/ wp1 (fun ra1 -> if is_V ra1
                                          then wp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
                                          else ra1 =!= rb))

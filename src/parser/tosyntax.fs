@@ -1546,12 +1546,12 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let env = push_sigelt env0 se in
     env, [se]
 
-  | NewEffectForFree (RedefineEffect _) ->
+  | NewEffectForFree (_, RedefineEffect _) ->
     failwith "impossible"
 
-  | NewEffectForFree (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
+  | NewEffectForFree (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
     desugar_effect
-      env d [] eff_name eff_binders eff_kind eff_decls actions
+      env d quals eff_name eff_binders eff_kind eff_decls actions
       (fun mname qualifiers binders eff_k lookup actions ->
         let dummy_tscheme = [], mk Tm_unknown None Range.dummyRange in
         Sig_new_effect_for_free ({
@@ -1560,8 +1560,8 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           univs       = [];
           binders     = binders;
           signature   = eff_k;
-          ret_wp      = lookup "return_wp";
-          bind_wp     = lookup "bind_wp";
+          ret_wp      = dummy_tscheme;
+          bind_wp     = dummy_tscheme;
           if_then_else= dummy_tscheme;
           ite_wp      = lookup "ite_wp";
           stronger    = lookup "stronger";
@@ -1570,9 +1570,9 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           assume_p    = dummy_tscheme;
           null_wp     = lookup "null_wp";
           trivial     = dummy_tscheme;
-          repr        = Syntax.tun;
-          bind_repr   = ([], Syntax.tun);
-          return_repr = ([], Syntax.tun);
+          repr        = snd (lookup "repr");
+          bind_repr   = lookup "bind";
+          return_repr = lookup "return";
           actions     = actions;
       }, d.drange))
 
