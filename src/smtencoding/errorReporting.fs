@@ -35,7 +35,10 @@ let fresh_label : ranges -> term -> labels -> term * labels =
         let l = incr ctr; format1 "label_%s" (string_of_int !ctr) in
         let lvar = l, Bool_sort in
         let message, range = match rs with 
-            | [] -> t.hash, Range.dummyRange
+            | [] -> 
+              if Options.debug_any()
+              then  t.hash, Range.dummyRange
+              else "Z3 provided a counterexample, but, unfortunately, F* could not translate it back to something meaningful", Range.dummyRange
             | (Some reason, r)::_ -> reason, r
             | (None, r)::_ -> "failed to prove a pre-condition", r in
         let label = (lvar, message, range) in
