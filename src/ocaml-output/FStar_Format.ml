@@ -49,19 +49,25 @@ end))
 
 let brackets : doc  ->  doc = (fun _27_13 -> (match (_27_13) with
 | Doc (d) -> begin
-(enclose (text "[") (text "]") (Doc (d)))
+(let _119_22 = (text "[")
+in (let _119_21 = (text "]")
+in (enclose _119_22 _119_21 (Doc (d)))))
 end))
 
 
 let cbrackets : doc  ->  doc = (fun _27_15 -> (match (_27_15) with
 | Doc (d) -> begin
-(enclose (text "{") (text "}") (Doc (d)))
+(let _119_26 = (text "{")
+in (let _119_25 = (text "}")
+in (enclose _119_26 _119_25 (Doc (d)))))
 end))
 
 
 let parens : doc  ->  doc = (fun _27_17 -> (match (_27_17) with
 | Doc (d) -> begin
-(enclose (text "(") (text ")") (Doc (d)))
+(let _119_30 = (text "(")
+in (let _119_29 = (text ")")
+in (enclose _119_30 _119_29 (Doc (d)))))
 end))
 
 
@@ -80,8 +86,8 @@ Doc (d)
 end))
 
 
-let groups : doc Prims.list  ->  doc = (fun docs -> (let _118_35 = (reduce docs)
-in (group _118_35)))
+let groups : doc Prims.list  ->  doc = (fun docs -> (let _119_41 = (reduce docs)
+in (group _119_41)))
 
 
 let combine : doc  ->  doc Prims.list  ->  doc = (fun _27_27 docs -> (match (_27_27) with

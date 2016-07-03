@@ -1,22 +1,25 @@
-module Test
+module FStar.DM4F.Test
 
-//
+// Note: being in the [FStar] namespace, only [Prims] is automatically opened
+// for the current module. In particular, this means the default effect is [Tot]
+// and we don't need to annotate our function types.
+
 let st (a:Type) =
   int -> M (a * int)
 
-val return_st : a:Type -> x:a -> Tot (st a) 
+val return_st : a:Type -> x:a -> st a
 let return_st a x = fun s -> x, s
 
-val bind_st : a:Type -> b:Type -> f:st a -> g:(a -> Tot (st b)) -> Tot (st b) 
+val bind_st : a:Type -> b:Type -> f:st a -> g:(a -> st b) -> st b
 let bind_st a b f g = fun s0 ->
   let x, s1 = f s0 in
   g x s1
 
-val get: unit -> Tot (st int)
+val get: unit -> st int
 let get u = fun s ->
   s, s
 
-val put: int -> Tot (st unit)
+val put: int -> st unit
 let put s = fun _ -> (), s
 
 (* TODO: at this stage, not elaborating and generating the following three
@@ -39,10 +42,11 @@ inline let null_wp (a:Type) (h:int) (p:post a) =
   (forall (x:a) (h:int). p (x,h))
 
 reifiable reflectable new_effect_for_free {
-  ST: a:Type -> Effect
+  STInt: a:Type -> Effect
   with repr     = st
      ; bind     = bind_st
      ; return   = return_st
+     // The three combinators below are meant to be automatically generated.
      ; ite_wp   = ite_wp
      ; stronger = stronger
      ; null_wp  = null_wp
@@ -50,4 +54,3 @@ reifiable reflectable new_effect_for_free {
        get      = get
      ; put      = put
 }
-

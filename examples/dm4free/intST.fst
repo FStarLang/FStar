@@ -4,7 +4,7 @@ let pre = int -> Type0
 let post (a:Type) = (a * int) -> Type0
 let wp (a:Type) = int -> post a -> Type0
 assume val r0: range
-inline let return_wp (a:Type) (x:a) (n0:int) (post:post a) = 
+inline let return_wp (a:Type) (x:a) (n0:int) (post:post a) =
   forall y. y=(x, n0) ==> post y
 
 //working around #517 by adding an explicit 'val'
@@ -17,13 +17,13 @@ inline let if_then_else  (a:Type) (p:Type)
                             (h0:int) (post:post a) =
      l_ITE p
         (wp_then h0 post)
-	(wp_else h0 post)
+        (wp_else h0 post)
 inline let ite_wp        (a:Type)
                             (wp:wp a)
                             (h0:int) (q:post a) =
      forall (k:post a).
-	 (forall (x:a) (h:int).{:pattern (guard_free (k (x, h)))} k (x, h) <==> q (x, h))
-	 ==> wp h0 k
+         (forall (x:a) (h:int).{:pattern (guard_free (k (x, h)))} k (x, h) <==> q (x, h))
+         ==> wp h0 k
 inline let stronger  (a:Type) (wp1:wp a) (wp2:wp a) =
      (forall (p:post a) (h:int). wp1 h p ==> wp2 h p)
 
@@ -50,11 +50,11 @@ inline let trivial       (a:Type)
 let repr (a:Type) (wp:wp a) =
     n0:int -> PURE (a * int) (wp n0)
 
-inline val bind: (a:Type) -> (b:Type) -> (wp0:wp a) -> (wp1:(a -> Tot (wp b))) 
-		 -> (f:repr a wp0)
-		 -> (g:(x:a -> Tot (repr b (wp1 x)))) 
-		 -> Tot (repr b (bind_wp r0 a b wp0 wp1))
-let bind a b wp0 wp1 f g  
+inline val bind: (a:Type) -> (b:Type) -> (wp0:wp a) -> (wp1:(a -> Tot (wp b)))
+                 -> (f:repr a wp0)
+                 -> (g:(x:a -> Tot (repr b (wp1 x))))
+                 -> Tot (repr b (bind_wp r0 a b wp0 wp1))
+let bind a b wp0 wp1 f g
   = fun n0 -> admit(); let (x,n1) = f n0 in g x n1
 let return (a:Type) (x:a)
   : repr a (return_wp a x)
@@ -109,7 +109,7 @@ effect St (a:Type) =
 ////////////////////////////////////////////////////////////////////////////////
 
 val incr : unit -> ST unit (requires (fun n -> True))
-			  (ensures (fun n0 _ n1 -> n1 = n0 + 1))
+                          (ensures (fun n0 _ n1 -> n1 = n0 + 1))
 let incr u =
   let n = STATE.get () in
   STATE.put (n + 1)
@@ -136,7 +136,7 @@ let g u =
     n1
 
 let top =
-  let _, one = reify (incr2 ()) 0 in 
+  let _, one = reify (incr2 ()) 0 in
   FStar.IO.print_string ("incr2 returned: " ^ string_of_int one)
 
 (* (\* sub_effect PURE ~> STATE { *\) *)
@@ -193,10 +193,10 @@ let top =
 (* (\* (\\* assume val r : range *\\) *\) *)
 
 (* (\* (\\* val repr_bind: #a:Type -> #b:Type -> #wp1:wp a -> #wp2:(a -> GTot (wp b)) *\\) *\) *)
-(* (\* (\\* 	     -> repr_STATE a wp1 *\\) *\) *)
-(* (\* (\\* 	     -> (x:a -> Tot (repr_STATE b (wp2 x))) *\\) *\) *)
-(* (\* (\\* 	     -> Tot (repr_STATE b (bind_wp nat r a b wp1 wp2)) *\\) *\) *)
-(* (\* (\\* #reset-options "--log_queries"	      *\\) *\) *)
+(* (\* (\\*          -> repr_STATE a wp1 *\\) *\) *)
+(* (\* (\\*          -> (x:a -> Tot (repr_STATE b (wp2 x))) *\\) *\) *)
+(* (\* (\\*          -> Tot (repr_STATE b (bind_wp nat r a b wp1 wp2)) *\\) *\) *)
+(* (\* (\\* #reset-options "--log_queries"            *\\) *\) *)
 (* (\* (\\* let repr_bind #a #b #wp1 #wp2 f g =  *\\) *\) *)
 (* (\* (\\*   fun n0 -> admit(); //the encoding to SMT isn't sufficiently smart to capture monotonicity *\\) *\) *)
 (* (\* (\\*          let x, n1 = f n0 in *\\) *\) *)

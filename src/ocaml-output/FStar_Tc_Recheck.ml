@@ -98,8 +98,8 @@ let rec recompute_kind : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Pri
 
 let recompute = (fun t -> (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_delayed (_41_91) -> begin
-(let _132_40 = (FStar_Absyn_Util.compress_typ t)
-in (recompute_kind _132_40))
+(let _133_40 = (FStar_Absyn_Util.compress_typ t)
+in (recompute_kind _133_40))
 end
 | FStar_Absyn_Syntax.Typ_btvar (a) -> begin
 a.FStar_Absyn_Syntax.sort
@@ -107,9 +107,9 @@ end
 | FStar_Absyn_Syntax.Typ_const (tc) -> begin
 (match (tc.FStar_Absyn_Syntax.sort.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Kind_unknown -> begin
-(let _132_42 = (let _132_41 = (FStar_Absyn_Print.typ_to_string t)
-in (FStar_Util.format1 "UNKNOWN KIND FOR %s" _132_41))
-in (FStar_All.failwith _132_42))
+(let _133_42 = (let _133_41 = (FStar_Absyn_Print.typ_to_string t)
+in (FStar_Util.format1 "UNKNOWN KIND FOR %s" _133_41))
+in (FStar_All.failwith _133_42))
 end
 | _41_99 -> begin
 tc.FStar_Absyn_Syntax.sort
@@ -131,9 +131,9 @@ end
 (recompute_kind t)
 end
 | FStar_Absyn_Syntax.Typ_lam (binders, body) -> begin
-(let _132_44 = (let _132_43 = (recompute_kind body)
-in (binders, _132_43))
-in (FStar_Absyn_Syntax.mk_Kind_arrow _132_44 t.FStar_Absyn_Syntax.pos))
+(let _133_44 = (let _133_43 = (recompute_kind body)
+in (binders, _133_43))
+in (FStar_Absyn_Syntax.mk_Kind_arrow _133_44 t.FStar_Absyn_Syntax.pos))
 end
 | FStar_Absyn_Syntax.Typ_app (t1, args) -> begin
 (match (t1.FStar_Absyn_Syntax.n) with
@@ -156,24 +156,24 @@ let rec aux = (fun subst bs args -> (match ((bs, args)) with
 (FStar_Absyn_Util.subst_kind subst k)
 end
 | (_41_165, []) -> begin
-(let _132_51 = (FStar_Absyn_Syntax.mk_Kind_arrow (bs, k) t.FStar_Absyn_Syntax.pos)
-in (FStar_All.pipe_right _132_51 (FStar_Absyn_Util.subst_kind subst)))
+(let _133_51 = (FStar_Absyn_Syntax.mk_Kind_arrow (bs, k) t.FStar_Absyn_Syntax.pos)
+in (FStar_All.pipe_right _133_51 (FStar_Absyn_Util.subst_kind subst)))
 end
 | ((b)::bs, (a)::args) -> begin
 (
 
-let subst = (let _132_52 = (FStar_Absyn_Util.subst_formal b a)
-in (_132_52)::subst)
+let subst = (let _133_52 = (FStar_Absyn_Util.subst_formal b a)
+in (_133_52)::subst)
 in (aux subst bs args))
 end
 | _41_177 -> begin
-(let _132_58 = (let _132_57 = (FStar_Range.string_of_range t.FStar_Absyn_Syntax.pos)
-in (let _132_56 = (FStar_Absyn_Print.kind_to_string k1)
-in (let _132_55 = (FStar_Absyn_Print.tag_of_typ t)
-in (let _132_54 = (FStar_Absyn_Print.kind_to_string k)
-in (let _132_53 = (FStar_All.pipe_right (FStar_List.length args) FStar_Util.string_of_int)
-in (FStar_Util.format5 "(%s) HEAD KIND is %s\nToo many arguments in type %s; result kind is %s\nwith %s remaining args\n" _132_57 _132_56 _132_55 _132_54 _132_53))))))
-in (FStar_All.failwith _132_58))
+(let _133_58 = (let _133_57 = (FStar_Range.string_of_range t.FStar_Absyn_Syntax.pos)
+in (let _133_56 = (FStar_Absyn_Print.kind_to_string k1)
+in (let _133_55 = (FStar_Absyn_Print.tag_of_typ t)
+in (let _133_54 = (FStar_Absyn_Print.kind_to_string k)
+in (let _133_53 = (FStar_All.pipe_right (FStar_List.length args) FStar_Util.string_of_int)
+in (FStar_Util.format5 "(%s) HEAD KIND is %s\nToo many arguments in type %s; result kind is %s\nwith %s remaining args\n" _133_57 _133_56 _133_55 _133_54 _133_53))))))
+in (FStar_All.failwith _133_58))
 end))
 in (aux [] bs args))
 end)))
@@ -201,8 +201,8 @@ let rec recompute_typ : FStar_Absyn_Syntax.exp  ->  FStar_Absyn_Syntax.typ = (fu
 
 let recompute = (fun e -> (match (e.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Exp_delayed (_41_189) -> begin
-(let _132_63 = (FStar_Absyn_Util.compress_exp e)
-in (recompute_typ _132_63))
+(let _133_63 = (FStar_Absyn_Util.compress_exp e)
+in (recompute_typ _133_63))
 end
 | FStar_Absyn_Syntax.Exp_bvar (x) -> begin
 x.FStar_Absyn_Syntax.sort
@@ -214,10 +214,10 @@ end
 (typing_const e.FStar_Absyn_Syntax.pos s)
 end
 | FStar_Absyn_Syntax.Exp_abs (bs, body) -> begin
-(let _132_66 = (let _132_65 = (let _132_64 = (recompute_typ body)
-in (FStar_Absyn_Syntax.mk_Total _132_64))
-in (bs, _132_65))
-in (FStar_Absyn_Syntax.mk_Typ_fun _132_66 None e.FStar_Absyn_Syntax.pos))
+(let _133_66 = (let _133_65 = (let _133_64 = (recompute_typ body)
+in (FStar_Absyn_Syntax.mk_Total _133_64))
+in (bs, _133_65))
+in (FStar_Absyn_Syntax.mk_Typ_fun _133_66 None e.FStar_Absyn_Syntax.pos))
 end
 | FStar_Absyn_Syntax.Exp_app (head, args) -> begin
 (
@@ -235,14 +235,14 @@ let rec aux = (fun subst bs args -> (match ((bs, args)) with
 (FStar_Absyn_Util.subst_typ subst (FStar_Absyn_Util.comp_result c))
 end
 | (_41_222, []) -> begin
-(let _132_73 = (FStar_Absyn_Syntax.mk_Typ_fun (bs, c) None e.FStar_Absyn_Syntax.pos)
-in (FStar_All.pipe_right _132_73 (FStar_Absyn_Util.subst_typ subst)))
+(let _133_73 = (FStar_Absyn_Syntax.mk_Typ_fun (bs, c) None e.FStar_Absyn_Syntax.pos)
+in (FStar_All.pipe_right _133_73 (FStar_Absyn_Util.subst_typ subst)))
 end
 | ((b)::bs, (a)::args) -> begin
 (
 
-let subst = (let _132_74 = (FStar_Absyn_Util.subst_formal b a)
-in (_132_74)::subst)
+let subst = (let _133_74 = (FStar_Absyn_Util.subst_formal b a)
+in (_133_74)::subst)
 in (aux subst bs args))
 end
 | _41_234 -> begin

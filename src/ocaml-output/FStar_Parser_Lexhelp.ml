@@ -11,7 +11,7 @@ end
 | None -> begin
 (
 
-let _65_6 = (FStar_Util.smap_add strings s s)
+let _66_6 = (FStar_Util.smap_add strings s s)
 in s)
 end)))
 
@@ -19,17 +19,17 @@ end)))
 let default_string_finish = (fun endm b s -> FStar_Parser_Parse.STRING (s))
 
 
-let call_string_finish = (fun fin buf endm b -> (let _156_19 = (FStar_Bytes.close buf)
-in (fin endm b _156_19)))
+let call_string_finish = (fun fin buf endm b -> (let _158_19 = (FStar_Bytes.close buf)
+in (fin endm b _158_19)))
 
 
-let add_string : FStar_Bytes.bytebuf  ->  Prims.string  ->  Prims.unit = (fun buf x -> (let _156_24 = (FStar_Bytes.string_as_unicode_bytes x)
-in (FStar_Bytes.emit_bytes buf _156_24)))
+let add_string : FStar_Bytes.bytebuf  ->  Prims.string  ->  Prims.unit = (fun buf x -> (let _158_24 = (FStar_Bytes.string_as_unicode_bytes x)
+in (FStar_Bytes.emit_bytes buf _158_24)))
 
 
 let add_int_char : FStar_Bytes.bytebuf  ->  Prims.int  ->  Prims.unit = (fun buf c -> (
 
-let _65_19 = (FStar_Bytes.emit_int_as_byte buf (c % 256))
+let _66_19 = (FStar_Bytes.emit_int_as_byte buf (c % 256))
 in (FStar_Bytes.emit_int_as_byte buf (c / 256))))
 
 
@@ -42,8 +42,8 @@ let add_byte_char : FStar_Bytes.bytebuf  ->  FStar_BaseTypes.char  ->  Prims.uni
 let stringbuf_as_bytes : FStar_Bytes.bytebuf  ->  FStar_Bytes.bytes = (fun buf -> (
 
 let bytes = (FStar_Bytes.close buf)
-in (let _156_40 = ((FStar_Bytes.length bytes) / 2)
-in (FStar_Bytes.make (fun i -> (FStar_Bytes.get bytes (i * 2))) _156_40))))
+in (let _158_40 = ((FStar_Bytes.length bytes) / 2)
+in (FStar_Bytes.make (fun i -> (FStar_Bytes.get bytes (i * 2))) _158_40))))
 
 
 let stringbuf_is_bytes : FStar_Bytes.bytebuf  ->  Prims.bool = (fun buf -> (
@@ -54,8 +54,8 @@ in (
 let ok = (FStar_Util.mk_ref true)
 in (
 
-let _65_32 = (let _156_44 = (((FStar_Bytes.length bytes) / 2) - 1)
-in (FStar_Util.for_range 0 _156_44 (fun i -> if ((FStar_Bytes.get bytes ((i * 2) + 1)) <> 0) then begin
+let _66_32 = (let _158_44 = (((FStar_Bytes.length bytes) / 2) - 1)
+in (FStar_Util.for_range 0 _158_44 (fun i -> if ((FStar_Bytes.get bytes ((i * 2) + 1)) <> 0) then begin
 (FStar_ST.op_Colon_Equals ok false)
 end else begin
 ()
@@ -100,22 +100,22 @@ end))
 let unicodegraph_short : Prims.string  ->  FStar_BaseTypes.uint16 = (fun s -> if ((FStar_String.length s) <> 4) then begin
 (FStar_All.failwith "unicodegraph")
 end else begin
-(let _156_63 = (((let _156_59 = (FStar_Util.char_at s 0)
-in (hexdigit _156_59)) * 4096) + (((let _156_60 = (FStar_Util.char_at s 1)
-in (hexdigit _156_60)) * 256) + (((let _156_61 = (FStar_Util.char_at s 2)
-in (hexdigit _156_61)) * 16) + (let _156_62 = (FStar_Util.char_at s 3)
-in (hexdigit _156_62)))))
-in (FStar_Util.uint16_of_int _156_63))
+(let _158_63 = (((let _158_59 = (FStar_Util.char_at s 0)
+in (hexdigit _158_59)) * 4096) + (((let _158_60 = (FStar_Util.char_at s 1)
+in (hexdigit _158_60)) * 256) + (((let _158_61 = (FStar_Util.char_at s 2)
+in (hexdigit _158_61)) * 16) + (let _158_62 = (FStar_Util.char_at s 3)
+in (hexdigit _158_62)))))
+in (FStar_Util.uint16_of_int _158_63))
 end)
 
 
 let hexgraph_short : Prims.string  ->  FStar_BaseTypes.uint16 = (fun s -> if ((FStar_String.length s) <> 2) then begin
 (FStar_All.failwith "hexgraph")
 end else begin
-(let _156_68 = (((let _156_66 = (FStar_Util.char_at s 0)
-in (hexdigit _156_66)) * 16) + (let _156_67 = (FStar_Util.char_at s 1)
-in (hexdigit _156_67)))
-in (FStar_Util.uint16_of_int _156_68))
+(let _158_68 = (((let _158_66 = (FStar_Util.char_at s 0)
+in (hexdigit _158_66)) * 16) + (let _158_67 = (FStar_Util.char_at s 1)
+in (hexdigit _158_67)))
+in (FStar_Util.uint16_of_int _158_68))
 end)
 
 
@@ -124,18 +124,18 @@ let unicodegraph_long : Prims.string  ->  (FStar_BaseTypes.uint16 Prims.option *
 end else begin
 (
 
-let high = (((let _156_71 = (FStar_Util.char_at s 0)
-in (hexdigit _156_71)) * 4096) + (((let _156_72 = (FStar_Util.char_at s 1)
-in (hexdigit _156_72)) * 256) + (((let _156_73 = (FStar_Util.char_at s 2)
-in (hexdigit _156_73)) * 16) + (let _156_74 = (FStar_Util.char_at s 3)
-in (hexdigit _156_74)))))
+let high = (((let _158_71 = (FStar_Util.char_at s 0)
+in (hexdigit _158_71)) * 4096) + (((let _158_72 = (FStar_Util.char_at s 1)
+in (hexdigit _158_72)) * 256) + (((let _158_73 = (FStar_Util.char_at s 2)
+in (hexdigit _158_73)) * 16) + (let _158_74 = (FStar_Util.char_at s 3)
+in (hexdigit _158_74)))))
 in (
 
-let low = (((let _156_75 = (FStar_Util.char_at s 4)
-in (hexdigit _156_75)) * 4096) + (((let _156_76 = (FStar_Util.char_at s 5)
-in (hexdigit _156_76)) * 256) + (((let _156_77 = (FStar_Util.char_at s 6)
-in (hexdigit _156_77)) * 16) + (let _156_78 = (FStar_Util.char_at s 7)
-in (hexdigit _156_78)))))
+let low = (((let _158_75 = (FStar_Util.char_at s 4)
+in (hexdigit _158_75)) * 4096) + (((let _158_76 = (FStar_Util.char_at s 5)
+in (hexdigit _158_76)) * 256) + (((let _158_77 = (FStar_Util.char_at s 6)
+in (hexdigit _158_77)) * 16) + (let _158_78 = (FStar_Util.char_at s 7)
+in (hexdigit _158_78)))))
 in if (high = 0) then begin
 (None, (FStar_Util.uint16_of_int low))
 end else begin
@@ -191,18 +191,18 @@ false
 end))
 
 
-let keywords : (compatibilityMode * Prims.string * FStar_Parser_Parse.token) Prims.list = (let _156_84 = (FStar_List.map (fun s -> (FSHARP, s, FStar_Parser_Parse.RESERVED)) (("atomic")::("break")::("checked")::("component")::("constraint")::("constructor")::("continue")::("eager")::("fixed")::("functor")::("global")::("include")::("mixin")::("parallel")::("process")::("protected")::("pure")::("sealed")::("trait")::("tailcall")::("volatile")::[]))
-in (FStar_List.append (((ALWAYS, "abstract", FStar_Parser_Parse.ABSTRACT))::((ALWAYS, "and", FStar_Parser_Parse.AND))::((ALWAYS, "as", FStar_Parser_Parse.AS))::((ALWAYS, "assert", FStar_Parser_Parse.ASSERT))::((ALWAYS, "assume", FStar_Parser_Parse.ASSUME))::((ALWAYS, "begin", FStar_Parser_Parse.BEGIN))::((FSHARP, "default", FStar_Parser_Parse.DEFAULT))::((ALWAYS, "effect", FStar_Parser_Parse.EFFECT))::((ALWAYS, "effect_actions", FStar_Parser_Parse.ACTIONS))::((ALWAYS, "else", FStar_Parser_Parse.ELSE))::((ALWAYS, "end", FStar_Parser_Parse.END))::((ALWAYS, "ensures", FStar_Parser_Parse.ENSURES))::((ALWAYS, "exception", FStar_Parser_Parse.EXCEPTION))::((ALWAYS, "exists", FStar_Parser_Parse.EXISTS))::((ALWAYS, "false", FStar_Parser_Parse.FALSE))::((ALWAYS, "False", FStar_Parser_Parse.L_FALSE))::((ALWAYS, "finally", FStar_Parser_Parse.FINALLY))::((ALWAYS, "for", FStar_Parser_Parse.FOR))::((ALWAYS, "forall", FStar_Parser_Parse.FORALL))::((ALWAYS, "fun", FStar_Parser_Parse.FUN))::((ALWAYS, "function", FStar_Parser_Parse.FUNCTION))::((ALWAYS, "if", FStar_Parser_Parse.IF))::((ALWAYS, "kind", FStar_Parser_Parse.KIND))::((ALWAYS, "in", FStar_Parser_Parse.IN))::((ALWAYS, "inline", FStar_Parser_Parse.INLINE))::((ALWAYS, "irreducible", FStar_Parser_Parse.IRREDUCIBLE))::((ALWAYS, "lazy", FStar_Parser_Parse.LAZY))::((ALWAYS, "let", FStar_Parser_Parse.LET (false)))::((ALWAYS, "logic", FStar_Parser_Parse.LOGIC))::((ALWAYS, "match", FStar_Parser_Parse.MATCH))::((ALWAYS, "module", FStar_Parser_Parse.MODULE))::((ALWAYS, "mutable", FStar_Parser_Parse.MUTABLE))::((ALWAYS, "new", FStar_Parser_Parse.NEW))::((ALWAYS, "new_effect", FStar_Parser_Parse.NEW_EFFECT))::((ALWAYS, "new_effect_for_free", FStar_Parser_Parse.NEW_EFFECT_FOR_FREE))::((ALWAYS, "of", FStar_Parser_Parse.OF))::((ALWAYS, "open", FStar_Parser_Parse.OPEN))::((ALWAYS, "or", FStar_Parser_Parse.OR))::((ALWAYS, "opaque", FStar_Parser_Parse.OPAQUE))::((ALWAYS, "private", FStar_Parser_Parse.PRIVATE))::((FSHARP, "public", FStar_Parser_Parse.PUBLIC))::((ALWAYS, "rec", FStar_Parser_Parse.REC))::((ALWAYS, "reifiable", FStar_Parser_Parse.REIFIABLE))::((ALWAYS, "reify", FStar_Parser_Parse.REIFY))::((ALWAYS, "reflectable", FStar_Parser_Parse.REFLECTABLE))::((ALWAYS, "requires", FStar_Parser_Parse.REQUIRES))::((ALWAYS, "sub_effect", FStar_Parser_Parse.SUB_EFFECT))::((ALWAYS, "then", FStar_Parser_Parse.THEN))::((ALWAYS, "to", FStar_Parser_Parse.TO))::((ALWAYS, "total", FStar_Parser_Parse.TOTAL))::((ALWAYS, "true", FStar_Parser_Parse.TRUE))::((ALWAYS, "True", FStar_Parser_Parse.L_TRUE))::((ALWAYS, "try", FStar_Parser_Parse.TRY))::((ALWAYS, "type", FStar_Parser_Parse.TYPE))::((ALWAYS, "unfoldable", FStar_Parser_Parse.UNFOLDABLE))::((ALWAYS, "val", FStar_Parser_Parse.VAL))::((ALWAYS, "when", FStar_Parser_Parse.WHEN))::((ALWAYS, "with", FStar_Parser_Parse.WITH))::((ALWAYS, "_", FStar_Parser_Parse.UNDERSCORE))::[]) _156_84))
+let keywords : (compatibilityMode * Prims.string * FStar_Parser_Parse.token) Prims.list = (let _158_84 = (FStar_List.map (fun s -> (FSHARP, s, FStar_Parser_Parse.RESERVED)) (("atomic")::("break")::("checked")::("component")::("constraint")::("constructor")::("continue")::("eager")::("fixed")::("functor")::("global")::("include")::("mixin")::("parallel")::("process")::("protected")::("pure")::("sealed")::("trait")::("tailcall")::("volatile")::[]))
+in (FStar_List.append (((ALWAYS, "abstract", FStar_Parser_Parse.ABSTRACT))::((ALWAYS, "and", FStar_Parser_Parse.AND))::((ALWAYS, "as", FStar_Parser_Parse.AS))::((ALWAYS, "assert", FStar_Parser_Parse.ASSERT))::((ALWAYS, "assume", FStar_Parser_Parse.ASSUME))::((ALWAYS, "begin", FStar_Parser_Parse.BEGIN))::((FSHARP, "default", FStar_Parser_Parse.DEFAULT))::((ALWAYS, "effect", FStar_Parser_Parse.EFFECT))::((ALWAYS, "effect_actions", FStar_Parser_Parse.ACTIONS))::((ALWAYS, "else", FStar_Parser_Parse.ELSE))::((ALWAYS, "end", FStar_Parser_Parse.END))::((ALWAYS, "ensures", FStar_Parser_Parse.ENSURES))::((ALWAYS, "exception", FStar_Parser_Parse.EXCEPTION))::((ALWAYS, "exists", FStar_Parser_Parse.EXISTS))::((ALWAYS, "false", FStar_Parser_Parse.FALSE))::((ALWAYS, "False", FStar_Parser_Parse.L_FALSE))::((ALWAYS, "finally", FStar_Parser_Parse.FINALLY))::((ALWAYS, "for", FStar_Parser_Parse.FOR))::((ALWAYS, "forall", FStar_Parser_Parse.FORALL))::((ALWAYS, "fun", FStar_Parser_Parse.FUN))::((ALWAYS, "function", FStar_Parser_Parse.FUNCTION))::((ALWAYS, "if", FStar_Parser_Parse.IF))::((ALWAYS, "kind", FStar_Parser_Parse.KIND))::((ALWAYS, "in", FStar_Parser_Parse.IN))::((ALWAYS, "inline", FStar_Parser_Parse.INLINE))::((ALWAYS, "irreducible", FStar_Parser_Parse.IRREDUCIBLE))::((ALWAYS, "lazy", FStar_Parser_Parse.LAZY))::((ALWAYS, "let", FStar_Parser_Parse.LET (false)))::((ALWAYS, "logic", FStar_Parser_Parse.LOGIC))::((ALWAYS, "match", FStar_Parser_Parse.MATCH))::((ALWAYS, "module", FStar_Parser_Parse.MODULE))::((ALWAYS, "mutable", FStar_Parser_Parse.MUTABLE))::((ALWAYS, "new", FStar_Parser_Parse.NEW))::((ALWAYS, "new_effect", FStar_Parser_Parse.NEW_EFFECT))::((ALWAYS, "new_effect_for_free", FStar_Parser_Parse.NEW_EFFECT_FOR_FREE))::((ALWAYS, "of", FStar_Parser_Parse.OF))::((ALWAYS, "open", FStar_Parser_Parse.OPEN))::((ALWAYS, "or", FStar_Parser_Parse.OR))::((ALWAYS, "opaque", FStar_Parser_Parse.OPAQUE))::((ALWAYS, "private", FStar_Parser_Parse.PRIVATE))::((FSHARP, "public", FStar_Parser_Parse.PUBLIC))::((ALWAYS, "rec", FStar_Parser_Parse.REC))::((ALWAYS, "reifiable", FStar_Parser_Parse.REIFIABLE))::((ALWAYS, "reify", FStar_Parser_Parse.REIFY))::((ALWAYS, "reflectable", FStar_Parser_Parse.REFLECTABLE))::((ALWAYS, "requires", FStar_Parser_Parse.REQUIRES))::((ALWAYS, "sub_effect", FStar_Parser_Parse.SUB_EFFECT))::((ALWAYS, "then", FStar_Parser_Parse.THEN))::((ALWAYS, "to", FStar_Parser_Parse.TO))::((ALWAYS, "total", FStar_Parser_Parse.TOTAL))::((ALWAYS, "true", FStar_Parser_Parse.TRUE))::((ALWAYS, "True", FStar_Parser_Parse.L_TRUE))::((ALWAYS, "try", FStar_Parser_Parse.TRY))::((ALWAYS, "type", FStar_Parser_Parse.TYPE))::((ALWAYS, "unfoldable", FStar_Parser_Parse.UNFOLDABLE))::((ALWAYS, "val", FStar_Parser_Parse.VAL))::((ALWAYS, "when", FStar_Parser_Parse.WHEN))::((ALWAYS, "with", FStar_Parser_Parse.WITH))::((ALWAYS, "_", FStar_Parser_Parse.UNDERSCORE))::[]) _158_84))
 
 
-let stringKeywords : Prims.string Prims.list = (FStar_List.map (fun _65_62 -> (match (_65_62) with
-| (_65_58, w, _65_61) -> begin
+let stringKeywords : Prims.string Prims.list = (FStar_List.map (fun _66_62 -> (match (_66_62) with
+| (_66_58, w, _66_61) -> begin
 w
 end)) keywords)
 
 
-let unreserve_words : Prims.string Prims.list = (FStar_List.choose (fun _65_67 -> (match (_65_67) with
-| (mode, keyword, _65_66) -> begin
+let unreserve_words : Prims.string Prims.list = (FStar_List.choose (fun _66_67 -> (match (_66_67) with
+| (mode, keyword, _66_66) -> begin
 if (mode = FSHARP) then begin
 Some (keyword)
 end else begin
@@ -216,7 +216,7 @@ let kwd_table : FStar_Parser_Parse.token FStar_Util.smap = (
 let tab = (FStar_Util.smap_create 1000)
 in (
 
-let _65_73 = (FStar_List.iter (fun _65_72 -> (match (_65_72) with
+let _66_73 = (FStar_List.iter (fun _66_72 -> (match (_66_72) with
 | (mode, keyword, token) -> begin
 (FStar_Util.smap_add tab keyword token)
 end)) keywords)
@@ -239,8 +239,8 @@ end))
 
 
 let ___ReservedKeyword____0 = (fun projectee -> (match (projectee) with
-| ReservedKeyword (_65_77) -> begin
-_65_77
+| ReservedKeyword (_66_77) -> begin
+_66_77
 end))
 
 
@@ -257,8 +257,8 @@ end))
 
 
 let ___IndentationProblem____0 = (fun projectee -> (match (projectee) with
-| IndentationProblem (_65_79) -> begin
-_65_79
+| IndentationProblem (_66_79) -> begin
+_66_79
 end))
 
 
@@ -269,7 +269,7 @@ type lexargs =
 let is_Mklexargs : lexargs  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklexargs"))))
 
 
-let mkLexargs = (fun _65_86 -> (match (_65_86) with
+let mkLexargs = (fun _66_86 -> (match (_66_86) with
 | (srcdir, filename, contents) -> begin
 {getSourceDirectory = srcdir; contents = contents}
 end))
@@ -280,11 +280,11 @@ let kwd_or_id : lexargs  ->  FStar_Range.range  ->  Prims.string  ->  FStar_Pars
 if (v = FStar_Parser_Parse.RESERVED) then begin
 (
 
-let _65_92 = (let _156_127 = (let _156_126 = (FStar_Range.string_of_range r)
-in (FStar_Util.format2 "The keyword \'%s\' is reserved for future use by F#. (%s)" s _156_126))
-in (FStar_Util.print_string _156_127))
-in (let _156_128 = (intern_string s)
-in FStar_Parser_Parse.IDENT (_156_128)))
+let _66_92 = (let _158_127 = (let _158_126 = (FStar_Range.string_of_range r)
+in (FStar_Util.format2 "The keyword \'%s\' is reserved for future use by F#. (%s)" s _158_126))
+in (FStar_Util.print_string _158_127))
+in (let _158_128 = (intern_string s)
+in FStar_Parser_Parse.IDENT (_158_128)))
 end else begin
 v
 end
@@ -292,28 +292,28 @@ end
 | None -> begin
 (match (s) with
 | "__SOURCE_DIRECTORY__" -> begin
-(let _156_130 = (let _156_129 = (args.getSourceDirectory ())
-in (FStar_Bytes.string_as_unicode_bytes _156_129))
-in FStar_Parser_Parse.STRING (_156_130))
+(let _158_130 = (let _158_129 = (args.getSourceDirectory ())
+in (FStar_Bytes.string_as_unicode_bytes _158_129))
+in FStar_Parser_Parse.STRING (_158_130))
 end
 | "__SOURCE_FILE__" -> begin
-(let _156_132 = (let _156_131 = (FStar_Range.file_of_range r)
-in (FStar_Bytes.string_as_unicode_bytes _156_131))
-in FStar_Parser_Parse.STRING (_156_132))
+(let _158_132 = (let _158_131 = (FStar_Range.file_of_range r)
+in (FStar_Bytes.string_as_unicode_bytes _158_131))
+in FStar_Parser_Parse.STRING (_158_132))
 end
 | "__LINE__" -> begin
-(let _156_136 = (let _156_135 = (let _156_134 = (let _156_133 = (FStar_Range.start_of_range r)
-in (FStar_Range.line_of_pos _156_133))
-in (FStar_All.pipe_left FStar_Util.string_of_int _156_134))
-in (_156_135, false))
-in FStar_Parser_Parse.INT (_156_136))
+(let _158_136 = (let _158_135 = (let _158_134 = (let _158_133 = (FStar_Range.start_of_range r)
+in (FStar_Range.line_of_pos _158_133))
+in (FStar_All.pipe_left FStar_Util.string_of_int _158_134))
+in (_158_135, false))
+in FStar_Parser_Parse.INT (_158_136))
 end
-| _65_99 -> begin
+| _66_99 -> begin
 if (FStar_Util.starts_with s FStar_Ident.reserved_prefix) then begin
 (Prims.raise (FStar_Syntax_Syntax.Error (((Prims.strcat FStar_Ident.reserved_prefix " is a reserved prefix for an identifier"), r))))
 end else begin
-(let _156_137 = (intern_string s)
-in FStar_Parser_Parse.IDENT (_156_137))
+(let _158_137 = (intern_string s)
+in FStar_Parser_Parse.IDENT (_158_137))
 end
 end)
 end))
