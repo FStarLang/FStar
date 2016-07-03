@@ -445,23 +445,24 @@ let is_monadic_arrow n =
 // The star-transformation from the POPL'17 submission
 let rec star t =
   let mk x = mk x None t.pos in
-  let n = (SS.compress t).n in
-  match n with
+  let t = SS.compress t in
+  match t.n with
   | Tm_arrow (binders, _) ->
+      // N-arrows and T-arrows
       let binders = List.map (fun (bv, aqual) ->
         { bv with sort = star bv.sort }, aqual
       ) binders in
-      begin match is_monadic_arrow n with
+      begin match is_monadic_arrow t.n with
       | N hn ->
           (* Simple case:
            *   (H_0  -> ... -> H_n)* =
-           *   H_0* -> ... -> H_n*
+           *    H_0* -> ... -> H_n*
            *)
           mk (Tm_arrow (binders, mk_Total (star hn)))
       | T a ->
           (* F*'s arrows are n-ary (and the intermediary arrows are pure), so the rule is:
            *   (H_0  -> ... -> H_n  -t-> A)* =
-           *   H_0* -> ... -> H_n* -> (A* -> Type) -> Type
+           *    H_0* -> ... -> H_n* -> (A* -> Type) -> Type
            *)
           let arr = mk (Tm_arrow (
             [S.null_bv (star a), S.as_implicit false],
@@ -471,6 +472,27 @@ let rec star t =
             binders @ [ S.null_bv arr, S.as_implicit false ],
             mk_Total Util.ktype))
       end
+  | Tm_app (head, args) ->
+      // Sums and products
+      let rec is_valid_application head =
+        match (SS.compress head).n with
+        | Tm_fvar fv when (
+          // TODO: implement a better check (non-dependent, user-defined data type)
+          fv_eq_lid fv Const.option_lid ||
+          fv_eq_lid fv Const.either_lid ||
+          is_tuple_constructor (SS.compress head)
+        ) ->
+            true
+        | Tm_uinst (head, _) ->
+            is_valid_application head
+        | _ ->
+            false
+      in
+      if is_valid_application head then
+        mk (Tm_app (head, List.map (fun (t, qual) -> star t, qual) args))
+      else
+        raise (Err ("For now, only [either] and [option] are supported in the \
+          definition language"))
   | Tm_abs _
   | Tm_bvar _
   | Tm_name _
@@ -479,7 +501,6 @@ let rec star t =
   | Tm_constant _
   | Tm_type _
   | Tm_refine _
-  | Tm_app _
   | Tm_match _
   | Tm_ascribed _
   | Tm_let _

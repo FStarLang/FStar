@@ -3,8 +3,11 @@ module FStar.DM4F.Test
 // Note: being in the [FStar] namespace, only [Prims] is automatically opened
 // for the current module.
 
-let st (a:Type) =
+let st (a: Type) =
   int -> M (a * int)
+
+let exnst (a: Type) =
+  int -> M (option (a * int))
 
 val return_st : a:Type -> x:a -> st a
 let return_st a x = fun s -> x, s
