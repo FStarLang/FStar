@@ -756,5 +756,114 @@ in {FStar_Syntax_Syntax.qualifiers = _57_272.FStar_Syntax_Syntax.qualifiers; FSt
 end))))))))
 
 
+type n_or_t =
+| N of FStar_Syntax_Syntax.typ
+| T of FStar_Syntax_Syntax.typ
+
+
+let is_N = (fun _discr_ -> (match (_discr_) with
+| N (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let is_T = (fun _discr_ -> (match (_discr_) with
+| T (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let ___N____0 = (fun projectee -> (match (projectee) with
+| N (_57_276) -> begin
+_57_276
+end))
+
+
+let ___T____0 = (fun projectee -> (match (projectee) with
+| T (_57_279) -> begin
+_57_279
+end))
+
+
+let is_monadic_arrow : FStar_Syntax_Syntax.term'  ->  n_or_t = (fun n -> (match (n) with
+| FStar_Syntax_Syntax.Tm_arrow (_57_282, {FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Comp (c); FStar_Syntax_Syntax.tk = _57_288; FStar_Syntax_Syntax.pos = _57_286; FStar_Syntax_Syntax.vars = _57_284}) when (FStar_Ident.lid_equals c.FStar_Syntax_Syntax.effect_name FStar_Syntax_Const.monadic_lid) -> begin
+T (c.FStar_Syntax_Syntax.result_typ)
+end
+| FStar_Syntax_Syntax.Tm_arrow (_57_295, {FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Total (t); FStar_Syntax_Syntax.tk = _57_301; FStar_Syntax_Syntax.pos = _57_299; FStar_Syntax_Syntax.vars = _57_297}) -> begin
+N (t)
+end
+| FStar_Syntax_Syntax.Tm_arrow (_57_308) -> begin
+(Prims.raise (FStar_Syntax_Syntax.Err ("Prims.M and Prims.Tot are the only possible effects in the definition language")))
+end
+| _57_311 -> begin
+(FStar_All.failwith "unexpected_argument: [is_monadic_arrow]")
+end))
+
+
+let rec star : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  FStar_Syntax_Syntax.term = (fun t -> (
+
+let mk = (fun x -> (FStar_Syntax_Syntax.mk x None t.FStar_Syntax_Syntax.pos))
+in (
+
+let n = (let _149_393 = (FStar_Syntax_Subst.compress t)
+in _149_393.FStar_Syntax_Syntax.n)
+in (match (n) with
+| FStar_Syntax_Syntax.Tm_arrow (binders, _57_318) -> begin
+(
+
+let binders = (FStar_List.map (fun _57_323 -> (match (_57_323) with
+| (bv, aqual) -> begin
+(let _149_396 = (
+
+let _57_324 = bv
+in (let _149_395 = (star bv.FStar_Syntax_Syntax.sort)
+in {FStar_Syntax_Syntax.ppname = _57_324.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _57_324.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _149_395}))
+in (_149_396, aqual))
+end)) binders)
+in (match ((is_monadic_arrow n)) with
+| N (hn) -> begin
+(let _149_400 = (let _149_399 = (let _149_398 = (let _149_397 = (star hn)
+in (FStar_Syntax_Syntax.mk_Total _149_397))
+in (binders, _149_398))
+in FStar_Syntax_Syntax.Tm_arrow (_149_399))
+in (mk _149_400))
+end
+| T (a) -> begin
+(
+
+let arr = (let _149_408 = (let _149_407 = (let _149_406 = (let _149_404 = (let _149_403 = (let _149_401 = (star a)
+in (FStar_Syntax_Syntax.null_bv _149_401))
+in (let _149_402 = (FStar_Syntax_Syntax.as_implicit false)
+in (_149_403, _149_402)))
+in (_149_404)::[])
+in (let _149_405 = (FStar_Syntax_Syntax.mk_Total FStar_Syntax_Util.ktype)
+in (_149_406, _149_405)))
+in FStar_Syntax_Syntax.Tm_arrow (_149_407))
+in (mk _149_408))
+in (let _149_416 = (let _149_415 = (let _149_414 = (let _149_412 = (let _149_411 = (let _149_410 = (FStar_Syntax_Syntax.null_bv arr)
+in (let _149_409 = (FStar_Syntax_Syntax.as_implicit false)
+in (_149_410, _149_409)))
+in (_149_411)::[])
+in (FStar_List.append binders _149_412))
+in (let _149_413 = (FStar_Syntax_Syntax.mk_Total FStar_Syntax_Util.ktype)
+in (_149_414, _149_413)))
+in FStar_Syntax_Syntax.Tm_arrow (_149_415))
+in (mk _149_416)))
+end))
+end
+| (FStar_Syntax_Syntax.Tm_abs (_)) | (FStar_Syntax_Syntax.Tm_bvar (_)) | (FStar_Syntax_Syntax.Tm_name (_)) | (FStar_Syntax_Syntax.Tm_fvar (_)) | (FStar_Syntax_Syntax.Tm_uinst (_)) | (FStar_Syntax_Syntax.Tm_constant (_)) | (FStar_Syntax_Syntax.Tm_type (_)) | (FStar_Syntax_Syntax.Tm_refine (_)) | (FStar_Syntax_Syntax.Tm_app (_)) | (FStar_Syntax_Syntax.Tm_match (_)) | (FStar_Syntax_Syntax.Tm_ascribed (_)) | (FStar_Syntax_Syntax.Tm_let (_)) | (FStar_Syntax_Syntax.Tm_uvar (_)) | (FStar_Syntax_Syntax.Tm_meta (_)) | (FStar_Syntax_Syntax.Tm_unknown) -> begin
+t
+end
+| FStar_Syntax_Syntax.Tm_delayed (_57_376) -> begin
+(FStar_All.failwith "impossible")
+end))))
+
+
 
 

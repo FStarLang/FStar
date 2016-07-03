@@ -61,6 +61,9 @@ let smtpatT_lid : FStar_Ident.lident = (pconst "SMTPatT")
 let smtpatOr_lid : FStar_Ident.lident = (pconst "SMTPatOr")
 
 
+let monadic_lid : FStar_Ident.lident = (pconst "M")
+
+
 let int8_lid : FStar_Ident.lident = (p2l (("FStar")::("Int8")::("t")::[]))
 
 

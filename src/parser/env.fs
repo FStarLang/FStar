@@ -78,13 +78,21 @@ let empty_env () = {curmodule=None;
                     localbindings=[];
                     recbindings=[];
                     sigmap=new_sigmap();
-                    default_result_effect=Const.effect_ML_lid;
+                    default_result_effect=Const.effect_Tot_lid;
                     iface=false;
                     admitted_iface=false;
                     expect_typ=false}
 let sigmap env = env.sigmap
+let has_all_in_scope env =
+  List.existsb (fun (m, _) ->
+    lid_equals m Const.all_lid) env.modules
+
 let default_total env = {env with default_result_effect=Const.effect_Tot_lid}
-let default_ml env = {env with default_result_effect=Const.effect_ML_lid}
+let default_ml env =
+  if has_all_in_scope env then
+    { env with default_result_effect=Const.effect_ML_lid }
+  else
+    env
 
 
 let set_bv_range bv r = 
@@ -584,7 +592,16 @@ let prepare_module_or_interface intf admitted env mname =
       then let ns = Ident.lid_of_ids mname.ns in
            ns::open_ns //the namespace of the current module, if any, is implicitly in scope
       else open_ns in
-    {env with curmodule=Some mname; sigmap=env.sigmap; open_namespaces = open_ns; iface=intf; admitted_iface=admitted} in
+    {
+      env with curmodule=Some mname;
+      sigmap=env.sigmap;
+      open_namespaces = open_ns;
+      iface=intf;
+      admitted_iface=admitted;
+      default_result_effect=
+        (if lid_equals mname Const.all_lid || has_all_in_scope env
+         then Const.effect_ML_lid
+         else Const.effect_Tot_lid) } in
 
   match env.modules |> Util.find_opt (fun (l, _) -> lid_equals l mname) with
     | None -> prep env, false

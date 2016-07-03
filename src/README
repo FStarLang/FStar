@@ -1,11 +1,11 @@
 These directories and files implement [--universes]:
-- syntax/ including parser/tosyntax.fs
+- syntax/ including parser/tosyntax.fs and parser/env.fs
 - typechecker/
 - smtencoding/
 - extraction/{term,modul}
 
 These directories and files implement the old stratified version of F*:
-- absyn/ including parser/desugar.fs
+- absyn/ including parser/desugar.fs and parser/dsenv.fs
 - tc/
 - tosmt/
 - extraction/extract{mod,typ,exp}

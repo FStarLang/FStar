@@ -2006,7 +2006,7 @@ let elaborate_and_star env0 ed =
   let a =
     // TODO: more stringent checks on the shape of the signature; better errors
     match (SS.compress signature).n with
-    | Tm_arrow ([a, _], _) ->
+    | Tm_arrow ([(a, _)], _) ->
         a
     | _ ->
         failwith "bad shape for effect-for-free signature"

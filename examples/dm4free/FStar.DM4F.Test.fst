@@ -6,19 +6,19 @@ module FStar.DM4F.Test
 let st (a:Type) =
   int -> M (a * int)
 
-val return_st : a:Type -> x:a -> Tot (st a)
+val return_st : a:Type -> x:a -> st a
 let return_st a x = fun s -> x, s
 
-val bind_st : a:Type -> b:Type -> f:st a -> g:(a -> Tot (st b)) -> Tot (st b)
+val bind_st : a:Type -> b:Type -> f:st a -> g:(a -> st b) -> st b
 let bind_st a b f g = fun s0 ->
   let x, s1 = f s0 in
   g x s1
 
-val get: unit -> Tot (st int)
+val get: unit -> st int
 let get u = fun s ->
   s, s
 
-val put: int -> Tot (st unit)
+val put: int -> st unit
 let put s = fun _ -> (), s
 
 (* TODO: at this stage, not elaborating and generating the following three
