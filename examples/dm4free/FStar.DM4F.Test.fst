@@ -1,25 +1,24 @@
 module FStar.DM4F.Test
 
 // Note: being in the [FStar] namespace, only [Prims] is automatically opened
-// for the current module. In particular, this means the default effect is [Tot]
-// and we don't need to annotate our function types.
+// for the current module.
 
 let st (a:Type) =
   int -> M (a * int)
 
-val return_st : a:Type -> x:a -> st a
+val return_st : a:Type -> x:a -> Tot (st a)
 let return_st a x = fun s -> x, s
 
-val bind_st : a:Type -> b:Type -> f:st a -> g:(a -> st b) -> st b
+val bind_st : a:Type -> b:Type -> f:st a -> g:(a -> Tot (st b)) -> Tot (st b)
 let bind_st a b f g = fun s0 ->
   let x, s1 = f s0 in
   g x s1
 
-val get: unit -> st int
+val get: unit -> Tot (st int)
 let get u = fun s ->
   s, s
 
-val put: int -> st unit
+val put: int -> Tot (st unit)
 let put s = fun _ -> (), s
 
 (* TODO: at this stage, not elaborating and generating the following three

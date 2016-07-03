@@ -423,3 +423,69 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
   }
 
 
+// N-arrows are "normal" arrows of pure computations. T-arrows are arrows that
+// denote effectful computations (terminology from the paper).
+type n_or_t =
+  | N of typ
+  | T of typ
+
+let is_monadic_arrow n =
+  match n with
+  | Tm_arrow (_, { n = Comp c}) when lid_equals c.effect_name Const.monadic_lid ->
+      T c.result_typ
+  | Tm_arrow (_, { n = Total t}) ->
+      N t
+  | Tm_arrow _ ->
+      raise (Err "Prims.M and Prims.Tot are the only possible effects in the \
+        definition language")
+  | _ ->
+      failwith "unexpected_argument: [is_monadic_arrow]"
+
+
+// The star-transformation from the POPL'17 submission
+let rec star t =
+  let mk x = mk x None t.pos in
+  let n = (SS.compress t).n in
+  match n with
+  | Tm_arrow (binders, _) ->
+      let binders = List.map (fun (bv, aqual) ->
+        { bv with sort = star bv.sort }, aqual
+      ) binders in
+      begin match is_monadic_arrow n with
+      | N hn ->
+          (* Simple case:
+           *   (H_0  -> ... -> H_n)* =
+           *   H_0* -> ... -> H_n*
+           *)
+          mk (Tm_arrow (binders, mk_Total (star hn)))
+      | T a ->
+          (* F*'s arrows are n-ary (and the intermediary arrows are pure), so the rule is:
+           *   (H_0  -> ... -> H_n  -t-> A)* =
+           *   H_0* -> ... -> H_n* -> (A* -> Type) -> Type
+           *)
+          let arr = mk (Tm_arrow (
+            [S.null_bv (star a), S.as_implicit false],
+            mk_Total Util.ktype
+          )) in
+          mk (Tm_arrow (
+            binders @ [ S.null_bv arr, S.as_implicit false ],
+            mk_Total Util.ktype))
+      end
+  | Tm_abs _
+  | Tm_bvar _
+  | Tm_name _
+  | Tm_fvar _
+  | Tm_uinst _
+  | Tm_constant _
+  | Tm_type _
+  | Tm_refine _
+  | Tm_app _
+  | Tm_match _
+  | Tm_ascribed _
+  | Tm_let _
+  | Tm_uvar _
+  | Tm_meta _
+  | Tm_unknown ->
+      t
+  | Tm_delayed _ ->
+      failwith "impossible"

@@ -43,6 +43,7 @@ let lextop_lid   = pconst "LexTop"
 let smtpat_lid   = pconst "SMTPat"
 let smtpatT_lid  = pconst "SMTPatT"
 let smtpatOr_lid = pconst "SMTPatOr"
+let monadic_lid = pconst "M"
 
 let int8_lid   = p2l ["FStar"; "Int8"; "t"]
 let uint8_lid  = p2l ["FStar"; "UInt8"; "t"]

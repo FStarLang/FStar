@@ -1715,7 +1715,6 @@ let open_effect_decl env ed =
        let opening = SS.opening_of_binders ed.binders in
        let op ts =
             assert (fst ts = []);
-            let t0 = snd ts in
             let t1 = SS.subst opening (snd ts) in
             ([], t1) in
          { ed with
@@ -1731,7 +1730,7 @@ let open_effect_decl env ed =
              ; trivial     =op ed.trivial } in
    ed, a, wp
 
-let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
+let tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
   let binders_un, signature_un = SS.open_term ed.binders ed.signature in
   let binders, env, _ = tc_tparams env0 binders_un in
@@ -1991,6 +1990,69 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   || Env.debug env <| Options.Other "EffDecl"
   then Util.print_string (Print.eff_decl_to_string ed);
   ed
+
+
+let elaborate_and_star env0 ed =
+  // Using [STInt: a:Type -> Effect] as an example...
+  let binders_un, signature_un = SS.open_term ed.binders ed.signature in
+  // [binders] is the empty list (for [ST (h: heap)], there would be one binder)
+  let binders, env, _ = tc_tparams env0 binders_un in
+  // [signature] is a:Type -> effect
+  let signature, _ = tc_trivial_guard env signature_un in
+
+  // Every combinator found in the effect declaration is parameterized over
+  // [binders], then [a]. This is a variant of [open_effect_signature] where we
+  // just extract the binder [a].
+  let a =
+    // TODO: more stringent checks on the shape of the signature; better errors
+    match (SS.compress signature).n with
+    | Tm_arrow ([a, _], _) ->
+        a
+    | _ ->
+        failwith "bad shape for effect-for-free signature"
+  in
+  let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env in
+  let open_and_reduce t =
+    let subst = SS.opening_of_binders binders in
+    let t = SS.subst subst t in
+    let t, _, _ = tc_term env t in
+    normalize t
+  in
+
+  // Most likely, the user wrote [repr = st], so we need to reduce the term to
+  // find the _actual_ definition of [st]
+  let repr = open_and_reduce ed.repr in
+  Util.print1 "Representation is: %s\n" (Print.term_to_string repr);
+
+  let repr =
+    match repr.n with
+    | Tm_abs ([ binder ], repr, something) ->
+        let subst = SS.opening_of_binders [ binder ] in
+        let repr = SS.subst subst repr in
+        let repr = DMFF.star repr in
+        let repr = SS.close [ binder ] repr in
+        mk (Tm_abs ([ binder ], repr, something)) None repr.pos
+    | _ ->
+        raise (Err "Expected a representation of the form [fun (a: Type) -> ...]")
+  in
+  Util.print1 "Representation has been CPS'd to: %s\n" (Print.term_to_string repr);
+
+  failwith "not implemented"
+
+
+let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
+  let ed =
+    (* If this is an "effect for free", then the effect declaration is
+     * understood to be written in the "definition language"; we elaborate and
+     * cps-transform these definitions to get a definition that is in the F*
+     * language per se. The output of [elaborate_and_star] is still partial
+     * (i.e. some combinators are missing); [tc_real_eff_decl] will can
+     * [gen_wps_for_free] as needed. *)
+    match is_for_free with
+    | ForFree -> elaborate_and_star env0 ed
+    | NotForFree -> ed
+  in
+  tc_real_eff_decl env0 ed is_for_free
 
 let tc_lex_t env ses quals lids =
     (* We specifically type lex_t as:
