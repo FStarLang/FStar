@@ -541,9 +541,21 @@ and star_type t =
 //   - [match e0 with xi -> ei] is translated as [match e0* with xi -> ei*]
 //   - for all other expressions: if the type provided from the context is [M _]
 //     then this is understood to be a [return], otherwise, recursively descend
-type mode = InMonad | InPure
+type mode = InMonad of typ | InPure
 
-let rec star_expr (e: term) (t: typ) (m: mode) =
+let wrap_if (m: mode) (e: term) =
+  let mk x = mk x None e.pos in
+  let mk_star_to_type = mk_star_to_type mk in
+  match m with
+  | InPure ->
+      e
+  | InMonad t ->
+      let p_type = mk_star_to_type t in
+      let p = S.gen_bv "p" None p_type in
+      let body = mk (Tm_app (mk (Tm_bvar p), [ e, S.as_implicit false ])) in
+      U.abs [ S.mk_binder p ] body None
+
+let rec star_expr (e: term) (m: mode) =
   let mk x = mk x None e.pos in
   let mk_star_to_type = mk_star_to_type mk in
   match (SS.compress e).n with
@@ -556,28 +568,28 @@ let rec star_expr (e: term) (t: typ) (m: mode) =
       let x_binders, e2 = SS.open_term x_binders e2 in
       // Two cases.
       if is_monadic then begin
-        if m <> InMonad then
-          raise (Err ("monadic [let] in a context that does not return [M]"));
-        // p: A* -> Type
-        let p_type = mk_star_to_type t in
-        let p = S.gen_bv "p" None p_type in
-        // e1*
-        let e1 = star_expr e1 binding.lbtyp InPure in
-        // e2*
-        let e2 = star_expr e2 t InMonad in
-        // e2* p
-        let e2 = mk (Tm_app (e2, [ mk (Tm_bvar p), S.as_implicit false ])) in
-        // fun x -> e2* p; this takes care of closing [x].
-        let e2 = U.abs x_binders e2 None in
-        // e1* (fun x -> e2* p)
-        let body = mk (Tm_app (e1, [ e2, S.as_implicit false ])) in
-        U.abs [ S.mk_binder p ] body None
-      end else begin
-        let e1 = star_expr e1 binding.lbtyp InPure in
-        let e2 = star_expr e2 t InPure in
-        let subst = [ NM (x, 0) ] in
+        match m with
+          | InPure ->
+              raise (Err ("monadic [let] in a context that does not return [M]"))
+          | InMonad t ->
+              // p: A* -> Type
+              let p_type = mk_star_to_type t in
+              let p = S.gen_bv "p" None p_type in
+              // e1*
+              let e1 = star_expr e1 InPure in
+              // e2*
+              let e2 = star_expr e2 m in
+              // e2* p
+              let e2 = mk (Tm_app (e2, [ mk (Tm_bvar p), S.as_implicit false ])) in
+              // fun x -> e2* p; this takes care of closing [x].
+              let e2 = U.abs x_binders e2 None in
+              // e1* (fun x -> e2* p)
+              let body = mk (Tm_app (e1, [ e2, S.as_implicit false ])) in
+              U.abs [ S.mk_binder p ] body None
+      end else
+        let e1 = star_expr e1 InPure in
+        let e2 = star_expr e2 InPure in
         mk (Tm_let ((false, [ { binding with lbdef = e1 } ]), SS.close x_binders e2))
-      end
 
   | Tm_let _ ->
       raise (Err ("[let rec] and [let and] not supported in the definition
@@ -590,44 +602,39 @@ let rec star_expr (e: term) (t: typ) (m: mode) =
       let body = SS.subst subst body in
 
       let ret_type =
-        match (SS.compress t).n with
+        (* match (SS.compress t).n with
         | Tm_arrow (binders, comp) ->
             let binders, comp = open_comp binders comp in
             begin match comp.n with
             | Total t | GTotal t | Comp { result_typ = t } ->
                 t
-            end
+            end *)
+        match what with
+        | Some (Inl { res_typ = t }) ->
+            t
         | _ ->
-            failwith "impossible"
+            failwith "what impossible"
       in
 
       let binders = List.map (fun (bv, qual) ->
         let sort = star_type bv.sort in
         { bv with sort = sort }, qual
       ) binders in
-      let body = star_expr body ret_type (if is_monadic what then InMonad else InPure) in
+      let body = star_expr body (if is_monadic what then InMonad ret_type else InPure) in
       let body = close binders body in
       let binders = close_binders binders in
-      mk (Tm_abs (binders, body, what))
+      wrap_if m (mk (Tm_abs (binders, body, what)))
 
   | Tm_ascribed (e, _, _) ->
-      star_expr e t m
+      star_expr e m
 
   | Tm_match (e0, branches) ->
-      // Assuming here that this is not a dependent pattern-matching and all
-      // branches match on the same type
-      let t0 = match branches with
-      | ({ ty = t0 }, _, _) :: _ ->
-          t0
-      | _ ->
-          raise (Err ("No empty pattern-matches in the definition language"))
-      in
       // TODO: currently, no one is checking that [e0] is a pure computation
-      let e0 = star_expr e0 (mk t0) InPure in
+      let e0 = star_expr e0 InPure in
       let branches = List.map (fun b ->
         match open_branch b with
         | pat, None, body ->
-            let body = star_expr body t m in
+            let body = star_expr body m in
             close_branch (pat, None, body)
         | _ ->
             raise (Err ("No when clauses in the definition language"))
@@ -635,15 +642,19 @@ let rec star_expr (e: term) (t: typ) (m: mode) =
       mk (Tm_match (e0, branches))
 
   | Tm_app (head, args) ->
-      failwith "TODO: Tm_app"
+      // [args] cannot be monadic computations, because one cannot write in the
+      // definition language a function that takes an [M t]... for [head], the
+      // type-checking rules of the definition language will disallow it
+      let head = star_expr head InPure in
+      let args = List.map (fun (arg, qual) -> star_expr arg InPure, qual) args in
+      let t = mk (Tm_app (head, args)) in
+      wrap_if m t
 
-
-  | Tm_bvar _ ->
-      failwith "TODO: Tm_bvar"
-  | Tm_name _ ->
-      failwith "TODO: Tm_name"
+  | Tm_bvar _
+  | Tm_name _
   | Tm_fvar _ ->
-      failwith "TODO: Tm_fvar"
+      wrap_if m e
+
   | Tm_uinst _ ->
       failwith "TODO: Tm_uinst"
   | Tm_constant _ ->
@@ -671,7 +682,7 @@ let star_expression (e: term) (t: typ) =
   match (SS.compress e).n with
   | Tm_abs (_, _, what) ->
       if is_monadic what then
-        star_expr e t InPure
+        star_expr e InPure
       else
         raise (Err (Util.format2 "The following effect combinator should return in [M]: %s; \
           instead, it has type: %s\n" (Print.term_to_string e) (Print.term_to_string t)))
