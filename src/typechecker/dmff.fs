@@ -541,7 +541,7 @@ and star_type t =
 //   - [match e0 with xi -> ei] is translated as [match e0* with xi -> ei*]
 //   - for all other expressions: if the type provided from the context is [M _]
 //     then this is understood to be a [return], otherwise, recursively descend
-type mode = InMonad of typ | InPure
+type mode = | InMonad of typ | InPure
 
 let wrap_if (m: mode) (e: term) =
   let mk x = mk x None e.pos in
@@ -669,7 +669,7 @@ let rec star_expr (e: term) (m: mode) =
       failwith "TODO: Tm_uvar"
   | Tm_meta _ ->
       failwith "TODO: Tm_meta"
-  | Tm_unknown _ ->
+  | Tm_unknown ->
       failwith "TODO: Tm_unknown"
 
   | Tm_delayed _ ->

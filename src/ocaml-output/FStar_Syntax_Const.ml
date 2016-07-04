@@ -37,6 +37,12 @@ let exn_lid : FStar_Ident.lident = (pconst "exn")
 let list_lid : FStar_Ident.lident = (pconst "list")
 
 
+let option_lid : FStar_Ident.lident = (pconst "option")
+
+
+let either_lid : FStar_Ident.lident = (pconst "either")
+
+
 let pattern_lid : FStar_Ident.lident = (pconst "pattern")
 
 
