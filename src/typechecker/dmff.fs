@@ -442,15 +442,18 @@ let is_monadic_arrow n =
       failwith "unexpected_argument: [is_monadic_arrow]"
 
 
-// The star-transformation from the POPL'17 submission
-let rec star t =
+// The star-transformation from the POPL'17 submission, for types. The
+// definition language is stratified, so there's two separate functions for
+// types and terms. Some checks are intertwined with the *-transformation,
+// eventually, these should be performed in a proper type-checker.
+let rec star_type t =
   let mk x = mk x None t.pos in
   let t = SS.compress t in
   match t.n with
   | Tm_arrow (binders, _) ->
       // N-arrows and T-arrows
       let binders = List.map (fun (bv, aqual) ->
-        { bv with sort = star bv.sort }, aqual
+        { bv with sort = star_type bv.sort }, aqual
       ) binders in
       begin match is_monadic_arrow t.n with
       | N hn ->
@@ -458,14 +461,14 @@ let rec star t =
            *   (H_0  -> ... -> H_n)* =
            *    H_0* -> ... -> H_n*
            *)
-          mk (Tm_arrow (binders, mk_Total (star hn)))
+          mk (Tm_arrow (binders, mk_Total (star_type hn)))
       | T a ->
           (* F*'s arrows are n-ary (and the intermediary arrows are pure), so the rule is:
            *   (H_0  -> ... -> H_n  -t-> A)* =
            *    H_0* -> ... -> H_n* -> (A* -> Type) -> Type
            *)
           let arr = mk (Tm_arrow (
-            [S.null_bv (star a), S.as_implicit false],
+            [S.null_bv (star_type a), S.as_implicit false],
             mk_Total Util.ktype
           )) in
           mk (Tm_arrow (
@@ -489,14 +492,16 @@ let rec star t =
             false
       in
       if is_valid_application head then
-        mk (Tm_app (head, List.map (fun (t, qual) -> star t, qual) args))
+        mk (Tm_app (head, List.map (fun (t, qual) -> star_type t, qual) args))
       else
-        raise (Err ("For now, only [either] and [option] are supported in the \
-          definition language"))
-  | Tm_abs _
+        raise (Err (Util.format1 "For now, only [either] and [option] are \
+          supported in the definition language (got: %s)"
+            (Print.term_to_string t)))
   | Tm_bvar _
   | Tm_name _
-  | Tm_fvar _
+  | Tm_fvar _ ->
+      t
+  | Tm_abs _
   | Tm_uinst _
   | Tm_constant _
   | Tm_type _
@@ -507,6 +512,7 @@ let rec star t =
   | Tm_uvar _
   | Tm_meta _
   | Tm_unknown ->
-      t
+      raise (Err (Util.format1 "The following term is outside of the definition language: %s"
+        (Print.term_to_string t)))
   | Tm_delayed _ ->
       failwith "impossible"

@@ -2029,7 +2029,7 @@ let elaborate_and_star env0 ed =
     | Tm_abs ([ binder ], repr, something) ->
         let subst = SS.opening_of_binders [ binder ] in
         let repr = SS.subst subst repr in
-        let repr = DMFF.star repr in
+        let repr = DMFF.star_type repr in
         let repr = SS.close [ binder ] repr in
         mk (Tm_abs ([ binder ], repr, something)) None repr.pos
     | _ ->
