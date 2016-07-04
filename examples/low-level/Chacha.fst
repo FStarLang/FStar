@@ -20,7 +20,7 @@ let bytes = buffer u8
 //#set-options "--lax" // OK
 
 (** Infix operators and helping lemmas **)
-// Needs to be instanciated differently
+// TODO: Needs to be instanciated differently
 assume MaxUint32: FStar.UInt.max_int 32 = 4294967295
 
 val aux_lemma: #t:Type -> #t':Type -> #t'':Type -> a:buffer t -> b:buffer t' -> c:buffer t'' -> 
@@ -92,9 +92,7 @@ let diagonal_round m =
 
 val uint32_of_bytes: b:bytes{length b >= 4} -> STL u32
   (requires (fun h -> live h b))
-  (ensures (fun h0 r h1 -> h0 == h1 /\ live h0 b
-    /\ v r = UInt8.v (get h0 b 0) * pow2 8 * UInt8.v (get h0 b 1)
-      + pow2 16 * UInt8.v (get h0 b 2) + pow2 24 * UInt8.v (get h0 b 3)))
+  (ensures (fun h0 r h1 -> h0 == h1 /\ live h0 b))
 let uint32_of_bytes (b:bytes{length b >= 4}) =
   let b0 = (index b 0ul) in
   let b1 = (index b 1ul) in
@@ -104,8 +102,6 @@ let uint32_of_bytes (b:bytes{length b >= 4}) =
 	+%^ (op_Less_Less_Hat (uint8_to_uint32 b2) 16ul)
 	+%^ (op_Less_Less_Hat (uint8_to_uint32 b1) 8ul)
 	+%^ uint8_to_uint32 b0 in
-  (* TODO *)
-  assume (v r = UInt8.v b0 * pow2 8 * UInt8.v b1  + pow2 16 * UInt8.v b2 + pow2 24 * UInt8.v b3);
   r
 
 let op_Hat_Greater_Greater (a: u32) (b: u32): Pure u32
@@ -157,28 +153,6 @@ let rec bytes_of_uint32s output m l =
       else ()
     end
   end
-
-(* val bytes_of_uint32s: output:bytes -> m:uint32s{disjoint output m} -> len:u32{op_Multiply 4 (v len)<=length output /\ v len<=length m} -> STL unit *)
-(*   (requires (fun h -> live h output /\ live h m)) *)
-(*   (ensures (fun h0 _ h1 -> live h0 output /\ live h0 m /\ live h1 output /\ live h1 m *)
-(*     /\ modifies_1 output h0 h1 )) *)
-(* let rec bytes_of_uint32s output m len = *)
-(*   if len =^ 0ul then () *)
-(*   else  *)
-(*     begin *)
-(*       let l = len -^ 1ul in *)
-(*       let x = index m l in *)
-(*       let b0 = uint32_to_uint8 (x &^ 255ul) in *)
-(*       let b1 = uint32_to_uint8 ((x ^>> 8ul) &^ 255ul) in *)
-(*       let b2 = uint32_to_uint8 ((x ^>> 16ul) &^ 255ul) in *)
-(*       let b3 = uint32_to_uint8 ((x ^>> 24ul) &^ 255ul) in *)
-(*       let l4 = l ^* 4ul in *)
-(*       upd output l4 b0;  *)
-(*       upd output (l4 +^ 1ul) b1; *)
-(*       upd output (l4 +^ 2ul) b2; *)
-(*       upd output (l4 +^ 3ul) b3; *)
-(*       bytes_of_uint32s output m l *)
-(*     end *)
 
 #reset-options
 //#set-options "--lax" // OK
@@ -312,7 +286,7 @@ let s #t (b:buffer t) = Set.singleton (frameOf b)
 let op_Plus_Plus = Set.union
 
 #reset-options "--z3timeout 200"
-//#set-options "--lax" // OK with large timeout
+//#set-options "--lax" // OK
 
 let lemma_chacha20_block (output:bytes) (state:uint32s{frameOf output <> frameOf state}) 
   (m0:uint32s{frameOf m0 <> frameOf state /\ frameOf m0 <> frameOf output})
@@ -327,8 +301,8 @@ let lemma_chacha20_block (output:bytes) (state:uint32s{frameOf output <> frameOf
   (ensures (modifies_2 output state hinit hfin /\ live hfin output /\ live hfin state ))
   = ()
 
-#reset-options "--z3timeout 50"
-//#set-options "--lax" // OK modulo assume
+#reset-options "--z3timeout 200"
+//#set-options "--lax" // OK, a lemma about the push -> modifies -> pop ==> equal_domains would make it much faster
 
 val chacha20_block: output:bytes -> 
   state:uint32s{length state = 16 /\ frameOf state <> frameOf output} ->
@@ -388,7 +362,7 @@ let chacha20_block output m key counter nonce len =
   cut ( modifies_1 output h5 h6 /\ popped h6 h7);
   cut (frameOf m0 <> frameOf output /\ frameOf m <> frameOf m0); 
   lemma_chacha20_block output m m0 h0 h0' h1 h2 h3 h5 h6 h7; 
-  assume (equal_domains h0 h7) // TODO, need lemmas about that
+  cut (equal_domains h0 h7)
 
 #reset-options "--z3timeout 100"
 //#set-options "--lax" // OK
@@ -451,7 +425,7 @@ let rec chacha20_encrypt_loop state key counter nonce plaintext ciphertext j max
 	(** End lemmas **)
     end
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3timeout 500"
 
 let op_Hat_Slash a b = op_Slash_Hat a b
 let op_Hat_Percent a b = op_Percent_Hat a b
@@ -521,5 +495,4 @@ let chacha20_encrypt ciphertext key counter nonce plaintext len =
     pop_frame ();
     let hfin = HST.get() in
     modifies_popped_1 ciphertext hinit h0' h1' hfin;
-    assume (equal_domains hinit hfin) // TODO, need lemmas about that
-
+    cut (equal_domains hinit hfin)
