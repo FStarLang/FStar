@@ -429,6 +429,12 @@ type n_or_t =
   | N of typ
   | T of typ
 
+let is_monadic = function
+  | None ->
+      failwith "un-annotated lambda?!"
+  | Some (Inl { eff_name = lid }) | Some (Inr lid) ->
+      lid_equals lid Const.monadic_lid
+
 let is_monadic_arrow n =
   match n with
   | Tm_arrow (_, { n = Comp c}) when lid_equals c.effect_name Const.monadic_lid ->
@@ -607,9 +613,15 @@ let rec star_expr (e: term) (t: typ) (m: mode) =
       failwith "Impossible"
 
 let star_expression (e: term) (t: typ) =
-  match is_monadic_arrow (SS.compress t).n with
-  | N _ ->
-      raise (Err (Util.format2 "The following effect combinator should return in [M]: %s; \
-        instead, it has type: %s\n" (Print.term_to_string e) (Print.term_to_string t)))
-  | T _ ->
-      star_expr e t InPure
+  // Actually, can't use [t] here, because the type-checking routine reduces the
+  // return type and the [M] disappears; instead, check the [Tm_abs] node which
+  // seems more reliable
+  match (SS.compress e).n with
+  | Tm_abs (_, _, what) ->
+      if is_monadic what then
+        star_expr e t InPure
+      else
+        raise (Err (Util.format2 "The following effect combinator should return in [M]: %s; \
+          instead, it has type: %s\n" (Print.term_to_string e) (Print.term_to_string t)))
+  | _ ->
+      failwith "Not an arrow?!"
