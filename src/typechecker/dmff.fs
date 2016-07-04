@@ -509,13 +509,13 @@ and star_type t =
 
   | Tm_bvar _
   | Tm_name _
+  | Tm_type _ // TODO check
   | Tm_fvar _ ->
       t
 
   | Tm_abs _
   | Tm_uinst _
   | Tm_constant _
-  | Tm_type _
   | Tm_refine _
   | Tm_match _
   | Tm_ascribed _
@@ -544,12 +544,17 @@ and star_type t =
 type mode = InMonad | InPure
 
 let rec star_expr (e: term) (t: typ) (m: mode) =
-  let mk x = mk x None t.pos in
+  let mk x = mk x None e.pos in
   let mk_star_to_type = mk_star_to_type mk in
   match (SS.compress e).n with
   | Tm_let ((false, [ binding ]), e2) ->
-      let e1 = binding.lbdef in
       let is_monadic = lid_equals binding.lbeff Const.monadic_lid in
+      let e1 = binding.lbdef in
+      // This is [let x = e1 in e2]. Open [x] in [e2].
+      let x = Util.left binding.lbname in
+      let subst = [ DB (0, x) ] in
+      let e2 = SS.subst subst e2 in
+      // Two cases.
       if is_monadic then begin
         if m <> InMonad then
           raise (Err ("monadic [let] in a context that does not return [M]"));
@@ -562,21 +567,51 @@ let rec star_expr (e: term) (t: typ) (m: mode) =
         let e2 = star_expr e2 t InMonad in
         // e2* p
         let e2 = mk (Tm_app (e2, [ mk (Tm_bvar p), S.as_implicit false ])) in
-        let x = Util.left binding.lbname in
-        // fun x -> e2* p
+        // fun x -> e2* p; this takes care of closing [x].
         let e2 = U.abs [ S.mk_binder x ] e2 None in
         // e1* (fun x -> e2* p)
         let body = mk (Tm_app (e1, [ e2, S.as_implicit false ])) in
         U.abs [ S.mk_binder p ] body None
       end else begin
         let e1 = star_expr e1 binding.lbtyp InPure in
-        let e2 = star_expr e1 t InPure in
-        mk (Tm_let ((false, [ { binding with lbdef = e1 } ]), e2))
+        let e2 = star_expr e2 t InPure in
+        let subst = [ NM (x, 0) ] in
+        mk (Tm_let ((false, [ { binding with lbdef = e1 } ]), SS.subst subst e2))
       end
 
   | Tm_let _ ->
       raise (Err ("[let rec] and [let and] not supported in the definition
         language"))
+
+  | Tm_abs (binders, body, what) ->
+      // OPEN ALL THE THINGS
+      let binders = SS.open_binders binders in
+      let subst = SS.opening_of_binders binders in
+      let body = SS.subst subst body in
+
+      let ret_type =
+        match (SS.compress t).n with
+        | Tm_arrow (binders, comp) ->
+            let binders, comp = open_comp binders comp in
+            begin match comp.n with
+            | Total t | GTotal t | Comp { result_typ = t } ->
+                t
+            end
+        | _ ->
+            failwith "impossible"
+      in
+
+      let binders = List.map (fun (bv, qual) ->
+        let sort = star_type bv.sort in
+        { bv with sort = sort }, qual
+      ) binders in
+      let body = star_expr body ret_type (if is_monadic what then InMonad else InPure) in
+      let body = close binders body in
+      let binders = close_binders binders in
+      mk (Tm_abs (binders, body, what))
+
+  | Tm_ascribed (e, _, _) ->
+      star_expr e t m
 
   | Tm_bvar _ ->
       failwith "TODO: Tm_bvar"
@@ -590,8 +625,6 @@ let rec star_expr (e: term) (t: typ) (m: mode) =
       failwith "TODO: Tm_constant"
   | Tm_type _ ->
       failwith "TODO: Tm_type"
-  | Tm_abs _ ->
-      failwith "TODO: Tm_abs"
   | Tm_arrow _ ->
       failwith "TODO: Tm_arrow"
   | Tm_refine _ ->
@@ -600,8 +633,6 @@ let rec star_expr (e: term) (t: typ) (m: mode) =
       failwith "TODO: Tm_app"
   | Tm_match _ ->
       failwith "TODO: Tm_match"
-  | Tm_ascribed _ ->
-      failwith "TODO: Tm_ascribed"
   | Tm_uvar _ ->
       failwith "TODO: Tm_uvar"
   | Tm_meta _ ->

@@ -14,7 +14,8 @@ let return_st a x = fun s -> x, s
 
 val bind_st : a:Type -> b:Type -> f:st a -> g:(a -> st b) -> st b
 let bind_st a b f g = fun s0 ->
-  let x, s1 = f s0 in
+  let tmp = f s0 in
+  let x, s1 = tmp in
   g x s1
 
 val get: unit -> st int
