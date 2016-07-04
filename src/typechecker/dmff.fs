@@ -441,13 +441,19 @@ let is_monadic_arrow n =
   | _ ->
       failwith "unexpected_argument: [is_monadic_arrow]"
 
-
 // The star-transformation from the POPL'17 submission, for types. The
 // definition language is stratified, so there's two separate functions for
 // types and terms. Some checks are intertwined with the *-transformation,
 // eventually, these should be performed in a proper type-checker.
-let rec star_type t =
+let rec mk_star_to_type mk a =
+  mk (Tm_arrow (
+    [S.null_bv (star_type a), S.as_implicit false],
+    mk_Total Util.ktype
+  ))
+
+and star_type t =
   let mk x = mk x None t.pos in
+  let mk_star_to_type = mk_star_to_type mk in
   let t = SS.compress t in
   match t.n with
   | Tm_arrow (binders, _) ->
@@ -467,14 +473,11 @@ let rec star_type t =
            *   (H_0  -> ... -> H_n  -t-> A)* =
            *    H_0* -> ... -> H_n* -> (A* -> Type) -> Type
            *)
-          let arr = mk (Tm_arrow (
-            [S.null_bv (star_type a), S.as_implicit false],
-            mk_Total Util.ktype
-          )) in
           mk (Tm_arrow (
-            binders @ [ S.null_bv arr, S.as_implicit false ],
+            binders @ [ S.null_bv (mk_star_to_type a), S.as_implicit false ],
             mk_Total Util.ktype))
       end
+
   | Tm_app (head, args) ->
       // Sums and products
       let rec is_valid_application head =
@@ -497,10 +500,12 @@ let rec star_type t =
         raise (Err (Util.format1 "For now, only [either] and [option] are \
           supported in the definition language (got: %s)"
             (Print.term_to_string t)))
+
   | Tm_bvar _
   | Tm_name _
   | Tm_fvar _ ->
       t
+
   | Tm_abs _
   | Tm_uinst _
   | Tm_constant _
@@ -514,5 +519,97 @@ let rec star_type t =
   | Tm_unknown ->
       raise (Err (Util.format1 "The following term is outside of the definition language: %s"
         (Print.term_to_string t)))
+
   | Tm_delayed _ ->
       failwith "impossible"
+
+// The star-transformation, for expressions. The transformation is syntax-directed
+// (following the paper) and type-directed. The concrete implementation strategy is
+// as follows:
+//   - [let x = e1 in e2] where [e1] has type [M _] is understood to be
+//     [bind e1 (fun x -> e2)] and is translated accordingly
+//   - [let x = e1 in e2] is understood to be a regular let-binding and is
+//     translated as [let x = e1* in e2*]
+//   - [match e0 with xi -> ei] where [e0] has type [M _] is an error (todo:
+//     rewrite as [let y = e0 in match y with ...])
+//   - [match e0 with xi -> ei] is translated as [match e0* with xi -> ei*]
+//   - for all other expressions: if the type provided from the context is [M _]
+//     then this is understood to be a [return], otherwise, recursively descend
+type mode = InMonad | InPure
+
+let rec star_expr (e: term) (t: typ) (m: mode) =
+  let mk x = mk x None t.pos in
+  let mk_star_to_type = mk_star_to_type mk in
+  match (SS.compress e).n with
+  | Tm_let ((false, [ binding ]), e2) ->
+      let e1 = binding.lbdef in
+      let is_monadic = lid_equals binding.lbeff Const.monadic_lid in
+      if is_monadic then begin
+        if m <> InMonad then
+          raise (Err ("monadic [let] in a context that does not return [M]"));
+        // p: A* -> Type
+        let p_type = mk_star_to_type t in
+        let p = S.gen_bv "p" None p_type in
+        // e1*
+        let e1 = star_expr e1 binding.lbtyp InPure in
+        // e2*
+        let e2 = star_expr e2 t InMonad in
+        // e2* p
+        let e2 = mk (Tm_app (e2, [ mk (Tm_bvar p), S.as_implicit false ])) in
+        let x = Util.left binding.lbname in
+        // fun x -> e2* p
+        let e2 = U.abs [ S.mk_binder x ] e2 None in
+        // e1* (fun x -> e2* p)
+        let body = mk (Tm_app (e1, [ e2, S.as_implicit false ])) in
+        U.abs [ S.mk_binder p ] body None
+      end else begin
+        let e1 = star_expr e1 binding.lbtyp InPure in
+        let e2 = star_expr e1 t InPure in
+        mk (Tm_let ((false, [ { binding with lbdef = e1 } ]), e2))
+      end
+
+  | Tm_let _ ->
+      raise (Err ("[let rec] and [let and] not supported in the definition
+        language"))
+
+  | Tm_bvar _ ->
+      failwith "TODO: Tm_bvar"
+  | Tm_name _ ->
+      failwith "TODO: Tm_name"
+  | Tm_fvar _ ->
+      failwith "TODO: Tm_fvar"
+  | Tm_uinst _ ->
+      failwith "TODO: Tm_uinst"
+  | Tm_constant _ ->
+      failwith "TODO: Tm_constant"
+  | Tm_type _ ->
+      failwith "TODO: Tm_type"
+  | Tm_abs _ ->
+      failwith "TODO: Tm_abs"
+  | Tm_arrow _ ->
+      failwith "TODO: Tm_arrow"
+  | Tm_refine _ ->
+      failwith "TODO: Tm_refine"
+  | Tm_app _ ->
+      failwith "TODO: Tm_app"
+  | Tm_match _ ->
+      failwith "TODO: Tm_match"
+  | Tm_ascribed _ ->
+      failwith "TODO: Tm_ascribed"
+  | Tm_uvar _ ->
+      failwith "TODO: Tm_uvar"
+  | Tm_meta _ ->
+      failwith "TODO: Tm_meta"
+  | Tm_unknown _ ->
+      failwith "TODO: Tm_unknown"
+
+  | Tm_delayed _ ->
+      failwith "Impossible"
+
+let star_expression (e: term) (t: typ) =
+  match is_monadic_arrow (SS.compress t).n with
+  | N _ ->
+      raise (Err (Util.format2 "The following effect combinator should return in [M]: %s; \
+        instead, it has type: %s\n" (Print.term_to_string e) (Print.term_to_string t)))
+  | T _ ->
+      star_expr e t InPure
