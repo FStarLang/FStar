@@ -552,8 +552,8 @@ let rec star_expr (e: term) (t: typ) (m: mode) =
       let e1 = binding.lbdef in
       // This is [let x = e1 in e2]. Open [x] in [e2].
       let x = Util.left binding.lbname in
-      let subst = [ DB (0, x) ] in
-      let e2 = SS.subst subst e2 in
+      let x_binders = [ S.mk_binder x ] in
+      let x_binders, e2 = SS.open_term x_binders e2 in
       // Two cases.
       if is_monadic then begin
         if m <> InMonad then
@@ -568,7 +568,7 @@ let rec star_expr (e: term) (t: typ) (m: mode) =
         // e2* p
         let e2 = mk (Tm_app (e2, [ mk (Tm_bvar p), S.as_implicit false ])) in
         // fun x -> e2* p; this takes care of closing [x].
-        let e2 = U.abs [ S.mk_binder x ] e2 None in
+        let e2 = U.abs x_binders e2 None in
         // e1* (fun x -> e2* p)
         let body = mk (Tm_app (e1, [ e2, S.as_implicit false ])) in
         U.abs [ S.mk_binder p ] body None
@@ -576,7 +576,7 @@ let rec star_expr (e: term) (t: typ) (m: mode) =
         let e1 = star_expr e1 binding.lbtyp InPure in
         let e2 = star_expr e2 t InPure in
         let subst = [ NM (x, 0) ] in
-        mk (Tm_let ((false, [ { binding with lbdef = e1 } ]), SS.subst subst e2))
+        mk (Tm_let ((false, [ { binding with lbdef = e1 } ]), SS.close x_binders e2))
       end
 
   | Tm_let _ ->
@@ -613,6 +613,31 @@ let rec star_expr (e: term) (t: typ) (m: mode) =
   | Tm_ascribed (e, _, _) ->
       star_expr e t m
 
+  | Tm_match (e0, branches) ->
+      // Assuming here that this is not a dependent pattern-matching and all
+      // branches match on the same type
+      let t0 = match branches with
+      | ({ ty = t0 }, _, _) :: _ ->
+          t0
+      | _ ->
+          raise (Err ("No empty pattern-matches in the definition language"))
+      in
+      // TODO: currently, no one is checking that [e0] is a pure computation
+      let e0 = star_expr e0 (mk t0) InPure in
+      let branches = List.map (fun b ->
+        match open_branch b with
+        | pat, None, body ->
+            let body = star_expr body t m in
+            close_branch (pat, None, body)
+        | _ ->
+            raise (Err ("No when clauses in the definition language"))
+      ) branches in
+      mk (Tm_match (e0, branches))
+
+  | Tm_app (head, args) ->
+      failwith "TODO: Tm_app"
+
+
   | Tm_bvar _ ->
       failwith "TODO: Tm_bvar"
   | Tm_name _ ->
@@ -629,10 +654,6 @@ let rec star_expr (e: term) (t: typ) (m: mode) =
       failwith "TODO: Tm_arrow"
   | Tm_refine _ ->
       failwith "TODO: Tm_refine"
-  | Tm_app _ ->
-      failwith "TODO: Tm_app"
-  | Tm_match _ ->
-      failwith "TODO: Tm_match"
   | Tm_uvar _ ->
       failwith "TODO: Tm_uvar"
   | Tm_meta _ ->
