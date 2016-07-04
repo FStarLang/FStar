@@ -75,4 +75,4 @@ let op_Less_Equal_Hat = gte
 let to_string s = Stdint.Uint64.to_string s
 let of_string s = Stdint.Uint64.of_string s
 
-let uint_to_t s = int_to_uint64 s
+let uint_to_t s = Stdint.Uint64.of_string (Z.to_string s)

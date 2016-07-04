@@ -21,12 +21,12 @@ let uint16_to_uint63 (a:u16) : (u63) = a
 let uint16_to_uint32 (a:u16) : (u32) = a
 let uint16_to_uint8  (a:u16) : (u8) = a land 255
 
-let uint32_to_uint64 (a:u32) : (u64) = Stdint.Uint64.of_int a
+let uint32_to_uint64 (a:u32) : (u64) = Stdint.Uint64.of_string (string_of_int a)
 let uint32_to_uint63 (a:u32) : (u63) = a
 let uint32_to_uint16 (a:u32) : (u16) = a land 65535
 let uint32_to_uint8  (a:u32) : (u8) = a land 255
 
-let uint63_to_uint64 (a:u63) : (u64) = Stdint.Uint64.of_int a
+let uint63_to_uint64 (a:u63) : (u64) = Stdint.Uint64.of_string (string_of_int a)
 let uint63_to_uint32 (a:u63) : (u32) = a land 4294967295
 let uint63_to_uint16 (a:u63) : (u16) = a land 65535
 let uint63_to_uint8  (a:u63) : (u8)  = a land 255
@@ -34,7 +34,9 @@ let uint63_to_uint8  (a:u63) : (u8)  = a land 255
 let uint64_to_uint63 (a:u64) : (u63) = Stdint.Uint64.to_int a
 let uint64_to_uint32 (a:u64) : (u32) = Stdint.Uint64.to_int (Stdint.Uint64.logand a (Stdint.Uint64.of_int 4294967295))
 let uint64_to_uint16 (a:u64) : (u16) = Stdint.Uint64.to_int (Stdint.Uint64.logand a (Stdint.Uint64.of_int 65535))     
-let uint64_to_uint8  (a:u64) : (u8)  = Stdint.Uint64.to_int (Stdint.Uint64.logand a (Stdint.Uint64.of_int 255))
+let uint64_to_uint8  (a:u64) : (u8)  = int_of_string (Stdint.Uint64.to_string (Stdint.Uint64.logand a (Stdint.Uint64.of_string "255")))
+
+  (* Stdint.Uint64.to_int (Stdint.Uint64.logand a (Stdint.Uint64.of_int 255)) *)
 
 (** Ints to Ints **)
 let int8_to_int64 (a:i8) : (i64) = Int64.of_int a
