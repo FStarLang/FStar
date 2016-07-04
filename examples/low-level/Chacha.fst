@@ -117,42 +117,52 @@ let op_Hat_Star (a: u32) (b: u32): Pure u32
 #reset-options "--z3timeout 20"
 //#set-options "--lax" // OK
 
+let op_Hat_Slash a b = op_Slash_Hat a b
+let op_Hat_Percent a b = op_Percent_Hat a b
+
 val bytes_of_uint32s: output:bytes -> m:uint32s{disjoint output m} -> len:u32{v len <=length output /\ v len<=op_Multiply 4 (length m)} -> STL unit
   (requires (fun h -> live h output /\ live h m))
   (ensures (fun h0 _ h1 -> live h0 output /\ live h0 m /\ live h1 output /\ live h1 m
     /\ modifies_1 output h0 h1 ))
 let rec bytes_of_uint32s output m l =
-  if UInt32.gte l 4ul then begin
-    let l = UInt32.sub l 4ul in
-    let x = index m (UInt32.div l 4ul) in
-    let b0 = uint32_to_uint8 (x &^ 255ul) in
-    let b1 = uint32_to_uint8 ((x ^>> 8ul) &^ 255ul) in
-    let b2 = uint32_to_uint8 ((x ^>> 16ul) &^ 255ul) in
-    let b3 = uint32_to_uint8 ((x ^>> 24ul) &^ 255ul) in
-    upd output l b0;
-    upd output (l +^ 1ul) b1;
-    upd output (l +^ 2ul) b2;
-    upd output (l +^ 3ul) b3;
-    bytes_of_uint32s output m l 
-  end
-  else begin
-    if UInt32.eq l 0ul then ()
-    else begin
-      let x = index m (UInt32.div l 4ul) in
+  if UInt32.gt l 0ul then
+    begin
+    let rem = l ^% 4ul in
+    if UInt32.gt rem 0ul then
+      begin
+      let l = l -^ rem in
+      let x = index m (l /^ 4ul) in
       let b0 = uint32_to_uint8 (x &^ 255ul) in
-      upd output 0ul b0;
-      if UInt32.gte l 2ul then begin
-	let b1 = uint32_to_uint8 ((x ^>> 8ul) &^ 255ul) in
-	upd output (1ul) b1;
-	if UInt32.gte l 3ul then begin
+      upd output l b0;
+      if UInt32.gt rem 1ul then
+        begin
+        let b1 = uint32_to_uint8 ((x ^>> 8ul) &^ 255ul) in
+        upd output (l +^ 1ul) b1;
+	if UInt32.gt rem 2ul then
+	  begin
 	  let b2 = uint32_to_uint8 ((x ^>> 16ul) &^ 255ul) in
-	  upd output (2ul) b2
+	  upd output (l +^ 2ul) b2
+          end
+	else ()
 	end
-        else ()
+      else ();
+      bytes_of_uint32s output m l
       end
-      else ()
+    else
+      begin
+      let l = l -^ 4ul in
+      let x = index m (l /^ 4ul) in
+      let b0 = uint32_to_uint8 (x &^ 255ul) in
+      let b1 = uint32_to_uint8 ((x ^>> 8ul) &^ 255ul) in
+      let b2 = uint32_to_uint8 ((x ^>> 16ul) &^ 255ul) in
+      let b3 = uint32_to_uint8 ((x ^>> 24ul) &^ 255ul) in
+      upd output l b0;
+      upd output (l +^ 1ul) b1;
+      upd output (l +^ 2ul) b2;
+      upd output (l +^ 3ul) b3;
+      bytes_of_uint32s output m l
+      end
     end
-  end
 
 #reset-options
 //#set-options "--lax" // OK
@@ -426,9 +436,6 @@ let rec chacha20_encrypt_loop state key counter nonce plaintext ciphertext j max
     end
 
 #reset-options "--z3timeout 500"
-
-let op_Hat_Slash a b = op_Slash_Hat a b
-let op_Hat_Percent a b = op_Percent_Hat a b
 
 val chacha20_encrypt: 
   ciphertext:bytes -> key:bytes{length key = 32 /\ disjoint ciphertext key} -> counter:u32 -> 
