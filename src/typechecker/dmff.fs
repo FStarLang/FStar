@@ -590,8 +590,8 @@ let is_monadic = function
 let mk_return env (t: typ) (e: term) =
   let mk x = mk x None e.pos in
   let p_type = mk_star_to_type mk env t in
-  let p = S.gen_bv "p" None p_type in
-  let body = mk (Tm_app (mk (Tm_bvar p), [ e, S.as_implicit false ])) in
+  let p = S.gen_bv "p'" None p_type in
+  let body = mk (Tm_app (S.bv_to_name p, [ e, S.as_implicit false ])) in
   U.abs [ S.mk_binder p ] body None
 
 let is_unknown = function | Tm_unknown -> true | _ -> false
@@ -622,10 +622,11 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term =
   in
 
   match (SS.compress e).n with
-  | Tm_bvar bv
+  | Tm_bvar bv ->
+      failwith "I failed to open a binder... boo"
+
   | Tm_name bv ->
-      let t' = lookup_bv env.env bv in
-      return_if (N t', e)
+      return_if (N bv.sort, e)
 
   | Tm_abs _ ->
       return_if (infer env e)
@@ -654,6 +655,9 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term =
       // non-monadic computation.
       mk_match env e0 branches (fun env body -> check env body context_nm)
 
+  | Tm_ascribed (e, _, _) ->
+      check env e context_nm
+
   | _ ->
       failwith (Util.format1 "[check]: todo %s" (Print.term_to_string e))
 
@@ -663,9 +667,13 @@ and infer (env: env) (e: term): nm * term =
   let mk x = mk x None e.pos in
   let normalize = N.normalize [ (* N.Beta; N.Inline; *) N.UnfoldUntil S.Delta_constant ] env.env in
   match (SS.compress e).n with
-  | Tm_bvar bv
+  | Tm_bvar bv ->
+      failwith "I failed to open a binder... boo"
+
   | Tm_name bv ->
-      N (lookup_bv env.env bv), e
+      (* Util.print1 "[debug]: vars in env %s\n" (String.concat ", " (List.map (fun
+        bv -> Print.term_to_string (mk (Tm_bvar bv))) (Env.bound_vars env.env))); *)
+      N bv.sort, e
 
   | Tm_abs (binders, body, what) ->
       let binders = SS.open_binders binders in
@@ -718,6 +726,9 @@ and infer (env: env) (e: term): nm * term =
 
   | Tm_match (e0, branches) ->
       mk_match env e0 branches infer
+
+  | Tm_ascribed (e, _, _) ->
+      infer env e
 
   | _ ->
       failwith (Util.format1 "[infer]: todo %s" (Print.term_to_string e))
@@ -773,13 +784,14 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       let nm_rec, e2 = proceed env e2 in
       nm_rec, mk (Tm_let ((false, [ { binding with lbdef = e1 } ]), SS.close x_binders e2))
   | M t1, e1 ->
+      let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
       let t2, e2 = ensure_m env e2 in
       // Now, generate the bind.
       // p: A* -> Type
       let p_type = mk_star_to_type mk env t2 in
-      let p = S.gen_bv "p" None p_type in
+      let p = S.gen_bv "p''" None p_type in
       // e2* p
-      let e2 = mk (Tm_app (e2, [ mk (Tm_bvar p), S.as_implicit false ])) in
+      let e2 = mk (Tm_app (e2, [ S.bv_to_name p, S.as_implicit false ])) in
       // fun x -> e2* p; this takes care of closing [x].
       let e2 = U.abs x_binders e2 None in
       // e1* (fun x -> e2* p)

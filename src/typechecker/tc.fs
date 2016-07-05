@@ -2017,6 +2017,7 @@ let elaborate_and_star env0 ed =
     t, comp
   in
   let recheck_debug env t =
+    Util.print1 "Term has been *-transformed to: %s\n" (Print.term_to_string t);
     let t, _, _ = tc_term env t in
     Util.print1 "Re-checked; got: %s\n" (Print.term_to_string t)
   in
@@ -2027,7 +2028,6 @@ let elaborate_and_star env0 ed =
 
   let dmff_env = DMFF.empty env in
   let dmff_env, wp_type = DMFF.star_type_definition dmff_env repr in
-  Util.print1 "Representation has been CPS'd to: %s\n" (Print.term_to_string wp_type);
   recheck_debug env wp_type;
   // TODO: derive the effect signature of the form [a -> wp_a -> Effect] (and
   // figure out how to reuse the binder smartly). The [repr] field of the
