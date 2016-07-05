@@ -28,7 +28,6 @@ open FStar.Syntax.Util
 open FStar.Const
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
-open FStar.TypeChecker.DMFF
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
@@ -1759,7 +1758,7 @@ let tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   let ed =
     match is_for_free with
     | NotForFree -> ed
-    | ForFree -> gen_wps_for_free env binders a wp_a tc_term ed in
+    | ForFree -> DMFF.gen_wps_for_free env binders a wp_a tc_term ed in
 
   let return_wp =
     let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
@@ -2017,14 +2016,19 @@ let elaborate_and_star env0 ed =
     let t, comp, _ = tc_term env t in
     t, comp
   in
+  let recheck_debug env t =
+    let t, _, _ = tc_term env t in
+    Util.print1 "Re-checked; got: %s\n" (Print.term_to_string t)
+  in
 
   // TODO: check that [_comp] is [Tot Type]
   let repr, _comp = open_and_reduce ed.repr in
   Util.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
-  let dmff_env: DMFF.env = { env = env; definitions = [] } in
-  let dmff_env, wp_type = star_type_definition dmff_env repr in
+  let dmff_env = DMFF.empty env in
+  let dmff_env, wp_type = DMFF.star_type_definition dmff_env repr in
   Util.print1 "Representation has been CPS'd to: %s\n" (Print.term_to_string wp_type);
+  recheck_debug env wp_type;
   // TODO: derive the effect signature of the form [a -> wp_a -> Effect] (and
   // figure out how to reuse the binder smartly). The [repr] field of the
   // effect definition does not need to change.
@@ -2035,8 +2039,8 @@ let elaborate_and_star env0 ed =
   if not (Util.is_total_lcomp bind_comp) then
     raise (Err ("Computation for [bind] is not total!"));
 
-  let dmff_env, bind_wp = star_expr_definition dmff_env bind in
-  Util.print1 "bind_wp: %s\n" (Print.term_to_string bind_wp);
+  let dmff_env, bind_wp = DMFF.star_expr_definition dmff_env bind in
+  recheck_debug env bind_wp;
 
   failwith "not implemented"
 

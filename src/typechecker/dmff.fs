@@ -432,7 +432,16 @@ type env = {
   definitions: list<(lid * typ)>;
 }
 
+let empty env = {
+  env = env;
+  definitions = []
+}
+
+type env_ = env
+
 type nm = | N of typ | M of typ
+
+type nm_ = nm
 
 let nm_of_comp = function
   | Total t ->
@@ -465,7 +474,8 @@ let rec mk_star_to_type mk env a =
 and star_type env t =
   let mk x = mk x None t.pos in
   let mk_star_to_type = mk_star_to_type mk in
-  let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env.env in
+  //Util.print1 "[debug]: star_type %s\n" (Print.term_to_string t);
+  let normalize = N.normalize [ (* N.Beta; N.Inline; *) N.UnfoldUntil S.Delta_constant ] env.env in
   let t = normalize t in
   let t = SS.compress t in
   match t.n with
@@ -552,18 +562,19 @@ let star_definition env t f =
       Util.print1 "Recording definition of %s\n" (text_of_lid lid.v);
       let store, ret =
         match lookup_definition (Unfold Delta_constant) env.env lid.v, lookup_lid env.env lid.v with
-        | Some (_univs, e), (_univs', t) ->
-            // TODO: check [_univs] is the empty list
-            f env e t
+        | Some ([], e), ([], t) ->
+            f env e
         | _ ->
             raise (Err ("Bad definition in [star_type_definition]"))
       in
       { env with definitions = (lid.v, store) :: env.definitions }, ret
+  | Tm_uinst _ ->
+      raise (Err "Ill-formed definition (hint: use Type0, not Type)")
   | _ ->
       raise (Err (Util.format1 "Ill-formed definition: %s" (Print.term_to_string t)))
 
 let star_type_definition env t =
-  star_definition env t (fun env e _ -> let t = star_type env e in t, t)
+  star_definition env t (fun env e -> let t = star_type env e in t, t)
 
 
 // The bi-directional *-transformation and checker for expressions ------------
@@ -591,11 +602,12 @@ let is_unknown = function | Tm_unknown -> true | _ -> false
 // if it was unknown, the inferred type (pre star-transformation). Furthermore,
 // it returns a starred version of the (elaborated) term.
 let rec check (env: env) (e: term) (context_nm: nm): nm * term =
+  Util.print1 "[debug]: check %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
   let return_if (rec_nm, e) =
     let check t1 t2 =
       if not (is_unknown t2.n) && not (Rel.is_trivial (Rel.teq env.env t1 t2)) then
-        raise (Err ("[check]: term does not have the expected type"));
+        raise (Err ("[check]: term does not have the expected type"))
     in
     match rec_nm, e, context_nm with
     | N t1, e, N t2
@@ -606,7 +618,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term =
         check t1 t2;
         M t1, mk_return env t1 e
     | M _, _, N _ ->
-        raise (Err ("[check]: got an effectful computation in lieu of a pure computation"));
+        raise (Err ("[check]: got an effectful computation in lieu of a pure computation"))
   in
 
   match (SS.compress e).n with
@@ -647,7 +659,9 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term =
 
 
 and infer (env: env) (e: term): nm * term =
+  Util.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
+  let normalize = N.normalize [ (* N.Beta; N.Inline; *) N.UnfoldUntil S.Delta_constant ] env.env in
   match (SS.compress e).n with
   | Tm_bvar bv
   | Tm_name bv ->
@@ -683,6 +697,7 @@ and infer (env: env) (e: term): nm * term =
   | Tm_app (head, args) ->
       // TODO: hook up the lookup for already-defined combinators here
       let t_head, head = check_n env head in
+      let t_head = normalize t_head in
       begin match (SS.compress t_head).n with
       | Tm_arrow (binders, comp) ->
           let binders, comp = SS.open_comp binders comp in
@@ -695,7 +710,7 @@ and infer (env: env) (e: term): nm * term =
           let comp = SS.subst_comp subst_elts comp in
           nm_of_comp comp.n, mk (Tm_app (head, args))
       | _ ->
-          raise (Err ("Not a function"))
+          raise (Err (Util.format1 "%s: not a function type" (Print.term_to_string t_head)))
       end
 
   | Tm_let ((false, [ binding ]), e2) ->
@@ -720,7 +735,7 @@ and mk_match env e0 branches f =
     | _ ->
         raise (Err ("No when clauses in the definition language"))
   ) branches) in
-  let t1 = match List.hd nms with M t1 | N t1 -> t1 in
+  let t1 = match List.hd nms with | M t1 | N t1 -> t1 in
   let has_m = List.existsb (function | M _ -> true | _ -> false) nms in
   let nms, branches = List.split (List.map2 (fun nm (pat, guard, body) ->
     let check t t' =
@@ -742,9 +757,9 @@ and mk_match env e0 branches f =
   (if has_m then M t1 else N t1), mk (Tm_match (e0, branches))
 
 
-and mk_let (env: env) (binding: letbinding) (e2: term)
-    (proceed: env -> term -> nm * term)
-    (ensure_m: env -> term -> term * term) =
+and mk_let (env: env_) (binding: letbinding) (e2: term)
+    (proceed: env_ -> term -> nm * term)
+    (ensure_m: env_ -> term -> term * term) =
   let mk x = mk x None e2.pos in
   let e1 = binding.lbdef in
   // This is [let x = e1 in e2]. Open [x] in [e2].
@@ -753,7 +768,7 @@ and mk_let (env: env) (binding: letbinding) (e2: term)
   let x_binders, e2 = SS.open_term x_binders e2 in
   begin match infer env e1 with
   | N t1, e1 ->
-      let env = { env with env = push_bv env.env { x with sort = t1 } } in
+      let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
       // Simple case: just a regular let-binding. We defer checks to e2.
       let nm_rec, e2 = proceed env e2 in
       nm_rec, mk (Tm_let ((false, [ { binding with lbdef = e1 } ]), SS.close x_binders e2))
@@ -773,19 +788,19 @@ and mk_let (env: env) (binding: letbinding) (e2: term)
   end
 
 
-and check_n (env: env) (e: term): typ * term =
+and check_n (env: env_) (e: term): typ * term =
   let mn = N (mk Tm_unknown None e.pos) in
   match check env e mn with
   | N t, e -> t, e
   | _ -> failwith "[check_n]: impossible"
 
-and check_m (env: env) (e: term): typ * term =
+and check_m (env: env_) (e: term): typ * term =
   let mn = M (mk Tm_unknown None e.pos) in
   match check env e mn with
   | M t, e -> t, e
   | _ -> failwith "[check_m]: impossible"
 
-and comp_of_nm (nm: nm): comp =
+and comp_of_nm (nm: nm_): comp =
   match nm with
   | N t -> mk_Total t
   | M t -> mk_M t
@@ -800,6 +815,4 @@ and mk_M (t: typ): comp =
 
 
 let star_expr_definition env t =
-  star_definition env t (fun env e _ ->
-    let t, e = check_n env e in
-    t, e)
+  star_definition env t check_n
