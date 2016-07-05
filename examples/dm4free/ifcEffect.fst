@@ -78,6 +78,8 @@ assume val write : l:label -> b:bool ->
 (* dummy implementation works too
 let write l b = fun l0 -> if flows l0 l then (Some ((), l0)) else None *)
 
+(* Normally we would remove reifiable reflectable below,
+   but that's not yet supported *)
 reifiable reflectable new_effect {
   ExnState : a:Type -> wp:wp a -> Effect
   with //repr is new; it's the reprentation of ST as a value type
