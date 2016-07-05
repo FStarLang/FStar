@@ -1,44 +1,49 @@
-module ExnSt
-let pre = int -> Type0
-let post (a:Type) = option (a * int) -> Type0
-let wp (a:Type) = int -> post a -> Type0
-inline let return_wp (a:Type) (x:a) (n0:int) (post:post a) = 
+module IfcEffect
+
+open IFC
+
+(* This first part is a copy of most exnst, with int replaced by label *)
+
+let pre = label -> Type0
+let post (a:Type) = option (a * label) -> Type0
+let wp (a:Type) = label -> post a -> Type0
+inline let return_wp (a:Type) (x:a) (n0:label) (post:post a) =
   forall y. y=Some (x, n0) ==> post y
 
 //working around #517 by adding an explicit 'val'
 inline val bind_wp : r:range -> (a:Type) -> (b:Type) -> (f:wp a) -> (g:(a -> Tot (wp b))) -> Tot (wp b)
 let bind_wp r a b f g =
-    fun n0 post -> f n0 (function 
+    fun n0 post -> f n0 (function
         | None -> post None
 	| Some (x, n1) -> g x n1 post)
 
 inline let if_then_else  (a:Type) (p:Type)
                          (wp_then:wp a) (wp_else:wp a)
-                         (h0:int) (post:post a) =
+                         (h0:label) (post:post a) =
      l_ITE p
         (wp_then h0 post)
 	(wp_else h0 post)
 inline let ite_wp        (a:Type)
                          (wp:wp a)
-                         (h0:int) (post:post a) =
+                         (h0:label) (post:post a) =
   wp h0 post
 inline let stronger  (a:Type) (wp1:wp a) (wp2:wp a) =
-     (forall (p:post a) (h:int). wp1 h p ==> wp2 h p)
+     (forall (p:post a) (h:label). wp1 h p ==> wp2 h p)
 
 inline let close_wp      (a:Type) (b:Type)
                             (wp:(b -> GTot (wp a)))
-                            (h:int) (p:post a) =
+                            (h:label) (p:post a) =
      (forall (b:b). wp b h p)
 inline let assert_p      (a:Type) (p:Type)
                             (wp:wp a)
-                            (h:int) (q:post a) =
+                            (h:label) (q:post a) =
      p /\ wp h q
 inline let assume_p      (a:Type) (p:Type)
                             (wp:wp a)
-                            (h:int) (q:post a) =
+                            (h:label) (q:post a) =
      p ==> wp h q
 inline let null_wp       (a:Type)
-                         (h:int) (p:post a) =
+                         (h:label) (p:post a) =
      (forall x. p x)
 inline let trivial       (a:Type)
                             (wp:wp a) =
@@ -46,25 +51,34 @@ inline let trivial       (a:Type)
 
 //new
 let repr (a:Type) (wp:wp a) =
-    n0:int -> PURE (option (a * int)) (wp n0)
+    n0:label -> PURE (option (a * label)) (wp n0)
 
-inline val bind: (a:Type) -> (b:Type) -> (wp0:wp a) -> (wp1:(a -> Tot (wp b))) 
+inline val bind: (a:Type) -> (b:Type) -> (wp0:wp a) -> (wp1:(a -> Tot (wp b)))
 		 -> (f:repr a wp0)
-		 -> (g:(x:a -> Tot (repr b (wp1 x)))) 
+		 -> (g:(x:a -> Tot (repr b (wp1 x))))
 		 -> Tot (repr b (bind_wp range_0 a b wp0 wp1))
-let bind a b wp0 wp1 f g  
-  = fun n0 -> admit(); match f n0 with 
+let bind a b wp0 wp1 f g
+  = fun n0 -> admit(); match f n0 with
 		    | None -> None
 		    | Some (x, n1) -> g x n1
 let return (a:Type) (x:a)
   : repr a (return_wp a x)
   = fun n0 -> Some (x, n0)
 
-//Just raise; get and put are just lifted from IntST.STATE
-val raise : a:Type0 -> Tot (repr a (fun h0 (p:post a) -> p None))
-let raise a (h:int) = None
+(* The read and write actions are new, the rest of the effect definition old *)
 
-reifiable reflectable new_effect {
+assume val read : l:label ->
+  Tot (repr bool (fun l0 (p:post bool) -> forall b. p (Some (b, join l0 l))))
+(* dummy implementation works too
+let read l = fun l0 -> Some (true, join l0 l) *)
+
+assume val write : l:label -> b:bool ->
+  Tot (repr unit (fun l0 (p:post unit) -> if flows l0 l then p (Some ((), l0))
+                                                        else p None))
+(* dummy implementation works too
+let write l b = fun l0 -> if flows l0 l then (Some ((), l0)) else None *)
+
+new_effect {
   ExnState : a:Type -> wp:wp a -> Effect
   with //repr is new; it's the reprentation of ST as a value type
        repr         = repr
@@ -87,44 +101,32 @@ reifiable reflectable new_effect {
      ; null_wp      = null_wp
      ; trivial      = trivial
   and effect_actions
-      raise = raise
+      read = read
+    ; write = write
 }
 
-inline let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:post a) = wp (fun a -> p (Some (a, h0)))
+inline let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:label) (p:post a) = wp (fun a -> p (Some (a, h0)))
 sub_effect PURE ~> ExnState = lift_pure_exnst
 
-let lift_state_exnst_wp (a:Type) (wp:IntST.wp a) (h0:int) (p:post a) = wp h0 (function (x, h1) -> p (Some (x, h1)))
-let lift_state_exnst (a:Type) (wp:IntST.wp a) (f:IntST.repr a wp) 
-  : (repr a (lift_state_exnst_wp a wp))
-  = fun h0 -> admit(); Some (f h0)
-  
-sub_effect IntST.STATE ~> ExnState {
-  lift_wp = lift_state_exnst_wp;
-  lift = lift_state_exnst
-}
-
-effect ExnSt (a:Type) (req:pre) (ens:int -> option (a * int) -> GTot Type0) =
+effect ExnSt (a:Type) (req:pre) (ens:label -> option (a * label) -> GTot Type0) =
        ExnState a
-         (fun (h0:int) (p:post a) -> req h0 /\ (forall r. (req h0 /\ ens h0 r) ==> p r))
+         (fun (h0:label) (p:post a) -> req h0 /\ (forall r. (req h0 /\ ens h0 r) ==> p r))
 
-effect S (a:Type) = 
+effect S (a:Type) =
        ExnState a (fun h0 p -> forall x. p x)
 
-val div_intrinsic : i:nat -> j:int -> ExnSt int
-  (requires (fun h -> True))
-  (ensures (fun h0 x -> match x with 
-		     | None -> j=0 
-		     | Some (z, h1) -> h0 = h1 /\ j<>0 /\ z = i / j))
-let div_intrinsic i j =
-  if j=0 
-  then (IntST.incr (); ExnState.raise int) //despite the incr (implicitly lifted), the state is reset
-  else i / j
+(* Here is where the more interesting part starts *)
 
-reifiable let div_extrinsic (i:nat) (j:int) : S int =
-  if j=0 then ExnState.raise int
-  else i / j
+val p : unit -> ExnSt unit (requires (fun l   -> True))
+                           (ensures  (fun l r -> True))
+let p () =
+  (* let b1, b2 = read Low, read Low in *)
+  let b1 = ExnState.read Low in ()
 
-let lemma_div_extrinsic (i:nat) (j:int) :
-  Lemma (match reify (div_extrinsic i j) 0 with
-         | None -> j = 0
-	 | Some (z, 0) -> j <> 0 /\ z = i / j) = ()
+(*
+  let b2 = ExnState.read Low in
+  ExnState.write Low (b1 && b2);
+  let b3 = ExnState.read High in
+  ExnState.write High (b1 || b3);
+  ExnState.write Low (xor b3 b3)
+*)
