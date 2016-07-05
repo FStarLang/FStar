@@ -607,7 +607,8 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term =
   let return_if (rec_nm, e) =
     let check t1 t2 =
       if not (is_unknown t2.n) && not (Rel.is_trivial (Rel.teq env.env t1 t2)) then
-        raise (Err ("[check]: term does not have the expected type"))
+        raise (Err (Util.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]"
+          (Print.term_to_string e) (Print.term_to_string t1) (Print.term_to_string t2)))
     in
     match rec_nm, e, context_nm with
     | N t1, e, N t2
@@ -622,15 +623,10 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term =
   in
 
   match (SS.compress e).n with
-  | Tm_bvar bv ->
-      failwith "I failed to open a binder... boo"
-
-  | Tm_name bv ->
-      return_if (N bv.sort, e)
-
-  | Tm_abs _ ->
-      return_if (infer env e)
-
+  | Tm_bvar _
+  | Tm_name _
+  | Tm_fvar _
+  | Tm_abs _
   | Tm_app _ ->
       return_if (infer env e)
 
@@ -655,24 +651,38 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term =
       // non-monadic computation.
       mk_match env e0 branches (fun env body -> check env body context_nm)
 
+  | Tm_meta (e, _)
+  | Tm_uinst (e, _)
   | Tm_ascribed (e, _, _) ->
       check env e context_nm
 
-  | _ ->
-      failwith (Util.format1 "[check]: todo %s" (Print.term_to_string e))
+  | Tm_let _ ->
+      failwith (Util.format1 "[check]: Tm_let %s" (Print.term_to_string e))
+  | Tm_constant _ ->
+      failwith (Util.format1 "[check]: Tm_constant %s" (Print.term_to_string e))
+  | Tm_type _ ->
+      failwith "impossible (stratified)"
+  | Tm_arrow _ ->
+      failwith "impossible (stratified)"
+  | Tm_refine _ ->
+      failwith (Util.format1 "[check]: Tm_refine %s" (Print.term_to_string e))
+  | Tm_uvar _ ->
+      failwith (Util.format1 "[check]: Tm_uvar %s" (Print.term_to_string e))
+  | Tm_delayed _ ->
+      failwith "impossible (compressed)"
+  | Tm_unknown _ ->
+      failwith (Util.format1 "[check]: Tm_unknown %s" (Print.term_to_string e))
 
 
 and infer (env: env) (e: term): nm * term =
   Util.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
-  let normalize = N.normalize [ (* N.Beta; N.Inline; *) N.UnfoldUntil S.Delta_constant ] env.env in
+  let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env.env in
   match (SS.compress e).n with
   | Tm_bvar bv ->
       failwith "I failed to open a binder... boo"
 
   | Tm_name bv ->
-      (* Util.print1 "[debug]: vars in env %s\n" (String.concat ", " (List.map (fun
-        bv -> Print.term_to_string (mk (Tm_bvar bv))) (Env.bound_vars env.env))); *)
       N bv.sort, e
 
   | Tm_abs (binders, body, what) ->
@@ -702,17 +712,41 @@ and infer (env: env) (e: term): nm * term =
       let binders = close_binders binders in
       N t, mk (Tm_abs (binders, body, what))
 
+  | Tm_fvar { fv_name = { v = lid } } ->
+      begin match List.find (fun (lid', _) -> lid_equals lid lid') env.definitions with
+      | Some (_, t) ->
+          Util.print2 "[debug]: lookup %s hit %s\n" (text_of_lid lid) (Print.term_to_string t);
+          N t, e
+      | None ->
+          let _, t = Env.lookup_lid env.env lid in
+          let txt = text_of_lid lid in
+          let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None" ] in
+          Util.print2 "[debug]: lookup %s miss %s\n" txt (Print.term_to_string t);
+          if List.existsb (fun s -> Util.starts_with txt ("Prims." ^ s)) allowed_prefixes then
+            N t, e
+          else
+            raise (Err (Util.format1 "The %s constructor has not been whitelisted for the definition language" txt))
+      end
+
   | Tm_app (head, args) ->
-      // TODO: hook up the lookup for already-defined combinators here
       let t_head, head = check_n env head in
       let t_head = normalize t_head in
+      Util.print1 "[debug] type of [head] is %s\n" (Print.term_to_string t_head);
       begin match (SS.compress t_head).n with
       | Tm_arrow (binders, comp) ->
           let binders, comp = SS.open_comp binders comp in
           // Return the starred argument (for elaboration) and a substitution to
           // apply on the computation to get the original return type
           let args, subst_elts = List.split (List.map2 (fun (bv, _) (arg, q) ->
-            let _, starred_arg = check env arg (N bv.sort) in
+            // TODO: implement additional check that the arguments are T-free if
+            // head is [Tm_fvar ...] with [Mktuple], [Left], etc.
+            // Note: not enforcing the type of the argument because 1) it has
+            // been enforced by the main F* type-checker and 2) it's a hassle with
+            // binders and stuff
+            let starred_arg = match (normalize (SS.compress bv.sort)).n with
+              | Tm_type _ -> normalize arg
+              | _ -> snd (check_n env arg)
+            in
             (starred_arg, q), NT (bv, arg)
           ) binders args) in
           let comp = SS.subst_comp subst_elts comp in
@@ -727,11 +761,27 @@ and infer (env: env) (e: term): nm * term =
   | Tm_match (e0, branches) ->
       mk_match env e0 branches infer
 
+  | Tm_uinst (e, _)
+  | Tm_meta (e, _)
   | Tm_ascribed (e, _, _) ->
       infer env e
 
-  | _ ->
-      failwith (Util.format1 "[infer]: todo %s" (Print.term_to_string e))
+  | Tm_let _ ->
+      failwith (Util.format1 "[check]: Tm_let %s" (Print.term_to_string e))
+  | Tm_constant _ ->
+      failwith (Util.format1 "[infer]: Tm_constant %s" (Print.term_to_string e))
+  | Tm_type _ ->
+      failwith "impossible (stratified)"
+  | Tm_arrow _ ->
+      failwith "impossible (stratified)"
+  | Tm_refine _ ->
+      failwith (Util.format1 "[infer]: Tm_refine %s" (Print.term_to_string e))
+  | Tm_uvar _ ->
+      failwith (Util.format1 "[infer]: Tm_uvar %s" (Print.term_to_string e))
+  | Tm_delayed _ ->
+      failwith "impossible (compressed)"
+  | Tm_unknown _ ->
+      failwith (Util.format1 "[infer]: Tm_unknown %s" (Print.term_to_string e))
 
 and mk_match env e0 branches f =
   let mk x = mk x None e0.pos in

@@ -2033,14 +2033,21 @@ let elaborate_and_star env0 ed =
   // figure out how to reuse the binder smartly). The [repr] field of the
   // effect definition does not need to change.
 
-  let u_bind, bind = ed.bind_repr in
-  // TODO: assert no universe polymorphism
-  let bind, bind_comp = open_and_reduce bind in
-  if not (Util.is_total_lcomp bind_comp) then
-    raise (Err ("Computation for [bind] is not total!"));
+  // TODO: we assume that reading the top-level definitions in the order that
+  // they come in the effect definition is enough... probably not
+  let elaborate_and_star dmff_env item =
+    let u_item, item = item in
+    // TODO: assert no universe polymorphism
+    let item, item_comp = open_and_reduce item in
+    if not (Util.is_total_lcomp item_comp) then
+      raise (Err ("Computation for [item] is not total!"));
+    let dmff_env, item_wp = DMFF.star_expr_definition dmff_env item in
+    recheck_debug env item_wp;
+    dmff_env, item_wp
+  in
 
-  let dmff_env, bind_wp = DMFF.star_expr_definition dmff_env bind in
-  recheck_debug env bind_wp;
+  let dmff_env, bind_wp = elaborate_and_star dmff_env ed.bind_repr in
+  let dmff_env, return_wp = elaborate_and_star dmff_env ed.return_repr in
 
   failwith "not implemented"
 
