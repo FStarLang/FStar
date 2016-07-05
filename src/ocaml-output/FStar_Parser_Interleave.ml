@@ -60,7 +60,7 @@ end
 | _63_81 -> begin
 false
 end)))) -> begin
-(Prims.raise (FStar_Syntax_Syntax.Error (("Interface contains an abstract \'type\' declaration; use \'val\' instead", d.FStar_Parser_AST.drange))))
+(Prims.raise (FStar_Syntax_Syntax.Error ((("Interface contains an abstract \'type\' declaration; use \'val\' instead"), (d.FStar_Parser_AST.drange)))))
 end
 | FStar_Parser_AST.Val (qs, x, t) -> begin
 (
@@ -72,21 +72,21 @@ end
 | Some ({FStar_Parser_AST.d = FStar_Parser_AST.Val (_63_91); FStar_Parser_AST.drange = r}) -> begin
 (let _155_40 = (let _155_39 = (let _155_38 = (let _155_37 = (FStar_Parser_AST.decl_to_string d)
 in (FStar_Util.format1 "%s is repeated in the implementation" _155_37))
-in (_155_38, r))
+in ((_155_38), (r)))
 in FStar_Syntax_Syntax.Error (_155_39))
 in (Prims.raise _155_40))
 end
 | Some (i) -> begin
 (let _155_44 = (let _155_43 = (let _155_42 = (let _155_41 = (FStar_Parser_AST.decl_to_string d)
 in (FStar_Util.format1 "%s in the interface is implemented with a \'type\'" _155_41))
-in (_155_42, i.FStar_Parser_AST.drange))
+in ((_155_42), (i.FStar_Parser_AST.drange)))
 in FStar_Syntax_Syntax.Error (_155_43))
 in (Prims.raise _155_44))
 end)
 in (match ((prefix_until_let x iface)) with
 | Some (_63_100) -> begin
 (let _155_47 = (let _155_46 = (let _155_45 = (FStar_Util.format2 "\'val %s\' and \'let %s\' cannot both be provided in an interface" x.FStar_Ident.idText x.FStar_Ident.idText)
-in (_155_45, d.FStar_Parser_AST.drange))
+in ((_155_45), (d.FStar_Parser_AST.drange)))
 in FStar_Syntax_Syntax.Error (_155_46))
 in (Prims.raise _155_47))
 end
@@ -99,14 +99,14 @@ in (match (lopt) with
 if (FStar_All.pipe_right qs (FStar_List.contains FStar_Parser_AST.Assumption)) then begin
 (aux (((d)::[])::out) ds impl)
 end else begin
-(Prims.raise (FStar_Syntax_Syntax.Error (((Prims.strcat "No definition found for " x.FStar_Ident.idText), d.FStar_Parser_AST.drange))))
+(Prims.raise (FStar_Syntax_Syntax.Error ((((Prims.strcat "No definition found for " x.FStar_Ident.idText)), (d.FStar_Parser_AST.drange)))))
 end
 end
 | Some (prefix, let_x, rest_impl) -> begin
 if (FStar_All.pipe_right qs (FStar_List.contains FStar_Parser_AST.Assumption)) then begin
 (let _155_51 = (let _155_50 = (let _155_49 = (let _155_48 = (FStar_Range.string_of_range let_x.FStar_Parser_AST.drange)
 in (FStar_Util.format2 "Assumed declaration %s is defined at %s" x.FStar_Ident.idText _155_48))
-in (_155_49, d.FStar_Parser_AST.drange))
+in ((_155_49), (d.FStar_Parser_AST.drange)))
 in FStar_Syntax_Syntax.Error (_155_50))
 in (Prims.raise _155_51))
 end else begin
@@ -124,7 +124,7 @@ in (match ((FStar_All.pipe_right prefix (FStar_List.tryFind (fun d -> (FStar_All
 (let _155_59 = (let _155_58 = (let _155_57 = (let _155_56 = (FStar_Parser_AST.decl_to_string d)
 in (let _155_55 = (FStar_Parser_AST.decl_to_string let_x)
 in (FStar_Util.format2 "%s is out of order with %s" _155_56 _155_55)))
-in (_155_57, d.FStar_Parser_AST.drange))
+in ((_155_57), (d.FStar_Parser_AST.drange)))
 in FStar_Syntax_Syntax.Error (_155_58))
 in (Prims.raise _155_59))
 end
@@ -147,10 +147,10 @@ in (
 
 let _63_154 = (match (iface_prefix_opt) with
 | None -> begin
-(iface, [])
+((iface), ([]))
 end
 | Some (all_vals_for_defs, first_non_val, rest_iface) -> begin
-(all_vals_for_defs, (first_non_val)::rest_iface)
+((all_vals_for_defs), ((first_non_val)::rest_iface))
 end)
 in (match (_63_154) with
 | (all_vals_for_defs, rest_iface) -> begin

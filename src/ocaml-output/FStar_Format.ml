@@ -41,7 +41,7 @@ let break0 : doc = (break_ 0)
 let break1 : doc = (text " ")
 
 
-let enclose : doc  ->  doc  ->  doc  ->  doc = (fun _27_7 _27_9 _27_11 -> (match ((_27_7, _27_9, _27_11)) with
+let enclose : doc  ->  doc  ->  doc  ->  doc = (fun _27_7 _27_9 _27_11 -> (match (((_27_7), (_27_9), (_27_11))) with
 | (Doc (l), Doc (r), Doc (x)) -> begin
 Doc ((Prims.strcat (Prims.strcat l x) r))
 end))
@@ -65,7 +65,7 @@ let parens : doc  ->  doc = (fun _27_17 -> (match (_27_17) with
 end))
 
 
-let cat : doc  ->  doc  ->  doc = (fun _27_19 _27_21 -> (match ((_27_19, _27_21)) with
+let cat : doc  ->  doc  ->  doc = (fun _27_19 _27_21 -> (match (((_27_19), (_27_21))) with
 | (Doc (d1), Doc (d2)) -> begin
 Doc ((Prims.strcat d1 d2))
 end))

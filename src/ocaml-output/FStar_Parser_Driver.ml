@@ -68,9 +68,9 @@ end
 end
 | FStar_Util.Inr (msg, r) -> begin
 if (FStar_Options.universes ()) then begin
-(Prims.raise (FStar_Syntax_Syntax.Error ((msg, r))))
+(Prims.raise (FStar_Syntax_Syntax.Error (((msg), (r)))))
 end else begin
-(Prims.raise (FStar_Absyn_Syntax.Error ((msg, r))))
+(Prims.raise (FStar_Absyn_Syntax.Error (((msg), (r)))))
 end
 end))
 
@@ -87,16 +87,16 @@ in (
 
 let r = FStar_Range.dummyRange
 in if (FStar_Options.universes ()) then begin
-(Prims.raise (FStar_Syntax_Syntax.Error ((msg, r))))
+(Prims.raise (FStar_Syntax_Syntax.Error (((msg), (r)))))
 end else begin
-(Prims.raise (FStar_Absyn_Syntax.Error ((msg, r))))
+(Prims.raise (FStar_Absyn_Syntax.Error (((msg), (r)))))
 end))
 end
 | FStar_Util.Inr (msg, r) -> begin
 if (FStar_Options.universes ()) then begin
-(Prims.raise (FStar_Syntax_Syntax.Error ((msg, r))))
+(Prims.raise (FStar_Syntax_Syntax.Error (((msg), (r)))))
 end else begin
-(Prims.raise (FStar_Absyn_Syntax.Error ((msg, r))))
+(Prims.raise (FStar_Absyn_Syntax.Error (((msg), (r)))))
 end
 end))
 

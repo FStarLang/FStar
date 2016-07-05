@@ -38,11 +38,11 @@ in (FStar_ST.op_Colon_Equals x _117_25))
 in (let _117_29 = (let _117_28 = (let _117_27 = (let _117_26 = (FStar_ST.read x)
 in (Prims.string_of_int _117_26))
 in (Prims.strcat reserved_prefix _117_27))
-in (_117_28, r))
+in ((_117_28), (r)))
 in (mk_ident _117_29)))))
 
 
-let id_of_text : Prims.string  ->  ident = (fun str -> (mk_ident (str, FStar_Range.dummyRange)))
+let id_of_text : Prims.string  ->  ident = (fun str -> (mk_ident ((str), (FStar_Range.dummyRange))))
 
 
 let text_of_id : ident  ->  Prims.string = (fun id -> id.idText)
@@ -82,7 +82,7 @@ end)))
 
 let lid_of_path : Prims.string Prims.list  ->  FStar_Range.range  ->  lident = (fun path pos -> (
 
-let ids = (FStar_List.map (fun s -> (mk_ident (s, pos))) path)
+let ids = (FStar_List.map (fun s -> (mk_ident ((s), (pos)))) path)
 in (lid_of_ids ids)))
 
 
@@ -109,7 +109,7 @@ let range_of_lid : lid  ->  FStar_Range.range = (fun lid -> lid.ident.idRange)
 
 let set_lid_range : lident  ->  FStar_Range.range  ->  lident = (fun l r -> (
 
-let ids = (FStar_All.pipe_right (FStar_List.append l.ns ((l.ident)::[])) (FStar_List.map (fun i -> (mk_ident (i.idText, r)))))
+let ids = (FStar_All.pipe_right (FStar_List.append l.ns ((l.ident)::[])) (FStar_List.map (fun i -> (mk_ident ((i.idText), (r))))))
 in (lid_of_ids ids)))
 
 

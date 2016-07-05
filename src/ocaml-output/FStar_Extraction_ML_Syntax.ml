@@ -50,7 +50,7 @@ let _70_14 = (FStar_Util.incr ctr)
 in (FStar_ST.read ctr))
 in (FStar_Util.string_of_int _162_28))
 in (Prims.strcat _162_30 _162_29)))
-in (_162_31, 0))
+in ((_162_31), (0)))
 end)); reset = (fun _70_16 -> (match (()) with
 | () -> begin
 (
@@ -84,10 +84,10 @@ end))
 
 
 let mlpath_of_lident : FStar_Ident.lident  ->  (Prims.string Prims.list * Prims.string) = (fun x -> (let _162_44 = (FStar_List.map (fun x -> x.FStar_Ident.idText) x.FStar_Ident.ns)
-in (_162_44, x.FStar_Ident.ident.FStar_Ident.idText)))
+in ((_162_44), (x.FStar_Ident.ident.FStar_Ident.idText))))
 
 
-let as_mlident = (fun x -> (x.FStar_Absyn_Syntax.ppname.FStar_Ident.idText, 0))
+let as_mlident = (fun x -> ((x.FStar_Absyn_Syntax.ppname.FStar_Ident.idText), (0)))
 
 
 type mlidents =
@@ -135,7 +135,7 @@ type mlloc =
 (Prims.int * Prims.string)
 
 
-let dummy_loc : (Prims.int * Prims.string) = (0, "")
+let dummy_loc : (Prims.int * Prims.string) = ((0), (""))
 
 
 type mlty =
@@ -977,36 +977,36 @@ _70_176
 end))
 
 
-let ml_unit_ty : mlty = MLTY_Named (([], (("Prims")::[], "unit")))
+let ml_unit_ty : mlty = MLTY_Named ((([]), (((("Prims")::[]), ("unit")))))
 
 
-let ml_bool_ty : mlty = MLTY_Named (([], (("Prims")::[], "bool")))
+let ml_bool_ty : mlty = MLTY_Named ((([]), (((("Prims")::[]), ("bool")))))
 
 
-let ml_int_ty : mlty = MLTY_Named (([], (("Prims")::[], "int")))
+let ml_int_ty : mlty = MLTY_Named ((([]), (((("Prims")::[]), ("int")))))
 
 
-let ml_string_ty : mlty = MLTY_Named (([], (("Prims")::[], "string")))
+let ml_string_ty : mlty = MLTY_Named ((([]), (((("Prims")::[]), ("string")))))
 
 
 let ml_unit : mlexpr = (with_ty ml_unit_ty (MLE_Const (MLC_Unit)))
 
 
-let mlp_lalloc : (Prims.string Prims.list * Prims.string) = (("SST")::[], "lalloc")
+let mlp_lalloc : (Prims.string Prims.list * Prims.string) = ((("SST")::[]), ("lalloc"))
 
 
 let apply_obj_repr : mlexpr  ->  mlty  ->  mlexpr = (fun x t -> (
 
-let obj_repr = (with_ty (MLTY_Fun ((t, E_PURE, MLTY_Top))) (MLE_Name ((("Obj")::[], "repr"))))
-in (with_ty_loc MLTY_Top (MLE_App ((obj_repr, (x)::[]))) x.loc)))
+let obj_repr = (with_ty (MLTY_Fun (((t), (E_PURE), (MLTY_Top)))) (MLE_Name (((("Obj")::[]), ("repr")))))
+in (with_ty_loc MLTY_Top (MLE_App (((obj_repr), ((x)::[])))) x.loc)))
 
 
 let bv_as_mlident : FStar_Syntax_Syntax.bv  ->  (Prims.string * Prims.int) = (fun x -> if ((FStar_Util.starts_with x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText FStar_Ident.reserved_prefix) || (FStar_Syntax_Syntax.is_null_bv x)) then begin
 (let _162_720 = (let _162_719 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
 in (Prims.strcat (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText "_") _162_719))
-in (_162_720, 0))
+in ((_162_720), (0)))
 end else begin
-(x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText, 0)
+((x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText), (0))
 end)
 
 

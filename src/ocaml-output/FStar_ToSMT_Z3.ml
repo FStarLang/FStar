@@ -110,7 +110,7 @@ with
 end
 in (match (x) with
 | (i1)::(i2)::(i3)::[] -> begin
-Z3V ((i1, i2, i3))
+Z3V (((i1), (i2), (i3)))
 end
 | _48_59 -> begin
 Z3V_Unknown
@@ -133,7 +133,7 @@ let ini_params : Prims.unit  ->  Prims.string = (fun _48_65 -> (match (()) with
 (
 
 let t = if (let _140_34 = (get_z3version ())
-in (z3v_le _140_34 (4, 3, 1))) then begin
+in (z3v_le _140_34 ((4), (3), (1)))) then begin
 (FStar_Options.z3_timeout ())
 end else begin
 ((FStar_Options.z3_timeout ()) * 1000)
@@ -145,7 +145,7 @@ in (FStar_Util.format1 "-t:%s" _140_35))
 in (
 
 let relevancy = if (let _140_36 = (get_z3version ())
-in (z3v_le _140_36 (4, 3, 1))) then begin
+in (z3v_le _140_36 ((4), (3), (1)))) then begin
 "RELEVANCY"
 end else begin
 "SMT.RELEVANCY"
@@ -393,18 +393,18 @@ in (
 
 let rec result = (fun x -> (match (x) with
 | ("timeout")::tl -> begin
-(TIMEOUT, [])
+((TIMEOUT), ([]))
 end
 | ("unknown")::tl -> begin
 (let _140_123 = (lblnegs tl)
-in (UNKNOWN, _140_123))
+in ((UNKNOWN), (_140_123)))
 end
 | ("sat")::tl -> begin
 (let _140_124 = (lblnegs tl)
-in (SAT, _140_124))
+in ((SAT), (_140_124)))
 end
 | ("unsat")::tl -> begin
-(UNSAT, [])
+((UNSAT), ([]))
 end
 | (_48_163)::tl -> begin
 (result tl)
@@ -455,7 +455,7 @@ let z3_options : Prims.unit  ->  Prims.string = (fun _48_178 -> (match (()) with
 (
 
 let mbqi = if (let _140_137 = (get_z3version ())
-in (z3v_le _140_137 (4, 3, 1))) then begin
+in (z3v_le _140_137 ((4), (3), (1)))) then begin
 "mbqi"
 end else begin
 "smt.mbqi"
@@ -463,7 +463,7 @@ end
 in (
 
 let model_on_timeout = if (let _140_138 = (get_z3version ())
-in (z3v_le _140_138 (4, 3, 1))) then begin
+in (z3v_le _140_138 ((4), (3), (1)))) then begin
 "(set-option :model-on-timeout true)\n"
 end else begin
 ""
@@ -488,9 +488,9 @@ let job_queue : z3job Prims.list FStar_ST.ref = (
 let x = (FStar_Util.mk_ref (({job = (fun _48_185 -> (match (()) with
 | () -> begin
 (let _140_162 = (let _140_161 = (let _140_160 = (FStar_Range.mk_range "" 0 0)
-in ("", _140_160))
+in ((""), (_140_160)))
 in (_140_161)::[])
-in (false, _140_162))
+in ((false), (_140_162)))
 end)); callback = (fun a -> ())})::[]))
 in (
 
@@ -524,7 +524,7 @@ in (match (_48_203) with
 
 let result = (match (status) with
 | UNSAT -> begin
-(true, [])
+((true), ([]))
 end
 | _48_206 -> begin
 (
@@ -545,9 +545,9 @@ end))))) with
 []
 end
 | Some (_48_218, msg, r) -> begin
-((msg, r))::[]
+(((msg), (r)))::[]
 end))))
-in (false, failing_assertions)))
+in ((false), (failing_assertions))))
 end)
 in result)
 end))
@@ -673,7 +673,7 @@ let _48_280 = (with_monitor job_queue (fun _48_277 -> (match (()) with
 (let _140_203 = (FStar_ST.read pending_jobs)
 in (let _140_202 = (let _140_201 = (FStar_ST.read job_queue)
 in (FStar_List.length _140_201))
-in (_140_203, _140_202)))
+in ((_140_203), (_140_202))))
 end)))
 in (match (_48_280) with
 | (n, m) -> begin

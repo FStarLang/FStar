@@ -2,7 +2,7 @@
 
 FSTAR_HOME=../..
 
-OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28"
+OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28" -annot
 
 OCAMLC=ocamlfind ocamlc $(OPTIONS)
 OCAMLOPT=ocamlfind ocamlopt $(OPTIONS)

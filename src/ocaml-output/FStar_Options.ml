@@ -283,7 +283,7 @@ let init : Prims.unit  ->  Prims.unit = (fun _24_67 -> (match (()) with
 | () -> begin
 (
 
-let vals = (("__temp_no_proj", List ([])))::(("_fstar_home", String ("")))::(("_include_path", List ([])))::(("admit_smt_queries", Bool (false)))::(("cardinality", String ("off")))::(("codegen", Unset))::(("codegen-lib", List ([])))::(("debug", List ([])))::(("debug_level", List ([])))::(("dep", Unset))::(("detail_errors", Bool (false)))::(("dump_module", List ([])))::(("eager_inference", Bool (false)))::(("explicit_deps", Bool (false)))::(("fs_typ_app", Bool (false)))::(("fsi", Bool (false)))::(("fstar_home", Unset))::(("full_context_dependency", Bool (true)))::(("hide_genident_nums", Bool (false)))::(("hide_uvar_nums", Bool (false)))::(("hint_info", Bool (false)))::(("in", Bool (false)))::(("include", List ([])))::(("initial_fuel", Int (2)))::(("initial_ifuel", Int (1)))::(("inline_arith", Bool (false)))::(("lax", Bool (false)))::(("log_queries", Bool (false)))::(("log_types", Bool (false)))::(("max_fuel", Int (8)))::(("max_ifuel", Int (2)))::(("min_fuel", Int (1)))::(("MLish", Bool (false)))::(("n_cores", Int (1)))::(("no_default_includes", Bool (false)))::(("no_extract", List ([])))::(("no_location_info", Bool (true)))::(("odir", Unset))::(("prims", Unset))::(("pretype", Bool (true)))::(("prims_ref", Unset))::(("print_before_norm", Bool (false)))::(("print_bound_var_types", Bool (false)))::(("print_effect_args", Bool (false)))::(("print_fuels", Bool (false)))::(("print_implicits", Bool (false)))::(("print_universes", Bool (false)))::(("prn", Bool (false)))::(("record_hints", Bool (false)))::(("show_signatures", List ([])))::(("silent", Bool (false)))::(("smt", Unset))::(("split_cases", Int (0)))::(("stratified", Bool (false)))::(("timing", Bool (false)))::(("trace_error", Bool (false)))::(("unthrottle_inductives", Bool (false)))::(("use_eq_at_higher_order", Bool (false)))::(("use_hints", Bool (false)))::(("use_native_int", Bool (false)))::(("verify", Bool (true)))::(("verify_all", Bool (false)))::(("verify_module", List ([])))::(("warn_top_level_effects", Bool (false)))::(("z3timeout", Int (5)))::[]
+let vals = ((("__temp_no_proj"), (List ([]))))::((("_fstar_home"), (String (""))))::((("_include_path"), (List ([]))))::((("admit_smt_queries"), (Bool (false))))::((("cardinality"), (String ("off"))))::((("codegen"), (Unset)))::((("codegen-lib"), (List ([]))))::((("debug"), (List ([]))))::((("debug_level"), (List ([]))))::((("dep"), (Unset)))::((("detail_errors"), (Bool (false))))::((("dump_module"), (List ([]))))::((("eager_inference"), (Bool (false))))::((("explicit_deps"), (Bool (false))))::((("fs_typ_app"), (Bool (false))))::((("fsi"), (Bool (false))))::((("fstar_home"), (Unset)))::((("full_context_dependency"), (Bool (true))))::((("hide_genident_nums"), (Bool (false))))::((("hide_uvar_nums"), (Bool (false))))::((("hint_info"), (Bool (false))))::((("in"), (Bool (false))))::((("include"), (List ([]))))::((("initial_fuel"), (Int (2))))::((("initial_ifuel"), (Int (1))))::((("inline_arith"), (Bool (false))))::((("lax"), (Bool (false))))::((("log_queries"), (Bool (false))))::((("log_types"), (Bool (false))))::((("max_fuel"), (Int (8))))::((("max_ifuel"), (Int (2))))::((("min_fuel"), (Int (1))))::((("MLish"), (Bool (false))))::((("n_cores"), (Int (1))))::((("no_default_includes"), (Bool (false))))::((("no_extract"), (List ([]))))::((("no_location_info"), (Bool (true))))::((("odir"), (Unset)))::((("prims"), (Unset)))::((("pretype"), (Bool (true))))::((("prims_ref"), (Unset)))::((("print_before_norm"), (Bool (false))))::((("print_bound_var_types"), (Bool (false))))::((("print_effect_args"), (Bool (false))))::((("print_fuels"), (Bool (false))))::((("print_implicits"), (Bool (false))))::((("print_universes"), (Bool (false))))::((("prn"), (Bool (false))))::((("record_hints"), (Bool (false))))::((("show_signatures"), (List ([]))))::((("silent"), (Bool (false))))::((("smt"), (Unset)))::((("split_cases"), (Int (0))))::((("stratified"), (Bool (false))))::((("timing"), (Bool (false))))::((("trace_error"), (Bool (false))))::((("unthrottle_inductives"), (Bool (false))))::((("use_eq_at_higher_order"), (Bool (false))))::((("use_hints"), (Bool (false))))::((("use_native_int"), (Bool (false))))::((("verify"), (Bool (true))))::((("verify_all"), (Bool (false))))::((("verify_module"), (List ([]))))::((("warn_top_level_effects"), (Bool (false))))::((("z3timeout"), (Int (5))))::[]
 in (
 
 let o = (peek ())
@@ -776,7 +776,7 @@ let arg = (match (arg) with
 let g = (fun _24_184 -> (match (()) with
 | () -> begin
 (let _116_283 = (let _116_282 = (f ())
-in (name, _116_282))
+in ((name), (_116_282)))
 in (set_option' _116_283))
 end))
 in FStar_Getopt.ZeroArgs (g))
@@ -785,11 +785,11 @@ end
 (
 
 let g = (fun x -> (let _116_288 = (let _116_287 = (f x)
-in (name, _116_287))
+in ((name), (_116_287)))
 in (set_option' _116_288)))
-in FStar_Getopt.OneArg ((g, d)))
+in FStar_Getopt.OneArg (((g), (d))))
 end)
-in (ns, name, arg, desc))
+in ((ns), (name), (arg), (desc)))
 end)))
 
 
@@ -807,7 +807,7 @@ let rec specs : Prims.unit  ->  FStar_Getopt.opt Prims.list = (fun _24_194 -> (m
 | () -> begin
 (
 
-let specs = ((FStar_Getopt.noshort, "admit_smt_queries", FStar_Getopt.OneArg (((fun s -> if (s = "true") then begin
+let specs = (((FStar_Getopt.noshort), ("admit_smt_queries"), (FStar_Getopt.OneArg ((((fun s -> if (s = "true") then begin
 Bool (true)
 end else begin
 if (s = "false") then begin
@@ -815,155 +815,155 @@ Bool (false)
 end else begin
 (FStar_All.failwith "Invalid argument to --admit_smt_queries")
 end
-end), "[true|false]")), "Admit SMT queries, unsafe! (default \'false\')"))::((FStar_Getopt.noshort, "cardinality", FStar_Getopt.OneArg (((fun x -> (let _116_310 = (validate_cardinality x)
-in String (_116_310))), "[off|warn|check]")), "Check cardinality constraints on inductive data types (default \'off\')"))::((FStar_Getopt.noshort, "codegen", FStar_Getopt.OneArg (((fun s -> (let _116_314 = (parse_codegen s)
-in String (_116_314))), "[OCaml|FSharp|Kremlin]")), "Generate code for execution"))::((FStar_Getopt.noshort, "codegen-lib", FStar_Getopt.OneArg (((fun s -> (let _116_321 = (let _116_320 = (let _116_318 = (get_codegen_lib ())
+end)), ("[true|false]")))), ("Admit SMT queries, unsafe! (default \'false\')")))::(((FStar_Getopt.noshort), ("cardinality"), (FStar_Getopt.OneArg ((((fun x -> (let _116_310 = (validate_cardinality x)
+in String (_116_310)))), ("[off|warn|check]")))), ("Check cardinality constraints on inductive data types (default \'off\')")))::(((FStar_Getopt.noshort), ("codegen"), (FStar_Getopt.OneArg ((((fun s -> (let _116_314 = (parse_codegen s)
+in String (_116_314)))), ("[OCaml|FSharp|Kremlin]")))), ("Generate code for execution")))::(((FStar_Getopt.noshort), ("codegen-lib"), (FStar_Getopt.OneArg ((((fun s -> (let _116_321 = (let _116_320 = (let _116_318 = (get_codegen_lib ())
 in (s)::_116_318)
 in (FStar_All.pipe_right _116_320 (FStar_List.map (fun _116_319 -> String (_116_319)))))
-in List (_116_321))), "[namespace]")), "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)"))::((FStar_Getopt.noshort, "debug", FStar_Getopt.OneArg (((fun x -> (let _116_328 = (let _116_327 = (let _116_325 = (get_debug ())
+in List (_116_321)))), ("[namespace]")))), ("External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)")))::(((FStar_Getopt.noshort), ("debug"), (FStar_Getopt.OneArg ((((fun x -> (let _116_328 = (let _116_327 = (let _116_325 = (get_debug ())
 in (x)::_116_325)
 in (FStar_All.pipe_right _116_327 (FStar_List.map (fun _116_326 -> String (_116_326)))))
-in List (_116_328))), "[module name]")), "Print lots of debugging information while checking module"))::((FStar_Getopt.noshort, "debug_level", FStar_Getopt.OneArg (((fun x -> (let _116_335 = (let _116_334 = (let _116_332 = (get_debug_level ())
+in List (_116_328)))), ("[module name]")))), ("Print lots of debugging information while checking module")))::(((FStar_Getopt.noshort), ("debug_level"), (FStar_Getopt.OneArg ((((fun x -> (let _116_335 = (let _116_334 = (let _116_332 = (get_debug_level ())
 in (x)::_116_332)
 in (FStar_All.pipe_right _116_334 (FStar_List.map (fun _116_333 -> String (_116_333)))))
-in List (_116_335))), "[Low|Medium|High|Extreme|...]")), "Control the verbosity of debugging info"))::((FStar_Getopt.noshort, "dep", FStar_Getopt.OneArg (((fun x -> if ((x = "make") || (x = "graph")) then begin
+in List (_116_335)))), ("[Low|Medium|High|Extreme|...]")))), ("Control the verbosity of debugging info")))::(((FStar_Getopt.noshort), ("dep"), (FStar_Getopt.OneArg ((((fun x -> if ((x = "make") || (x = "graph")) then begin
 String (x)
 end else begin
 (FStar_All.failwith "invalid argument to \'dep\'")
-end), "[make|graph]")), "Output the transitive closure of the dependency graph in a format suitable for the given tool"))::((FStar_Getopt.noshort, "detail_errors", FStar_Getopt.ZeroArgs ((fun _24_202 -> (match (()) with
+end)), ("[make|graph]")))), ("Output the transitive closure of the dependency graph in a format suitable for the given tool")))::(((FStar_Getopt.noshort), ("detail_errors"), (FStar_Getopt.ZeroArgs ((fun _24_202 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; incompatible with --stratified"))::((FStar_Getopt.noshort, "dump_module", FStar_Getopt.OneArg (((fun x -> (let _116_347 = (let _116_345 = (let _116_343 = (get_dump_module ())
+end)))), ("Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; incompatible with --stratified")))::(((FStar_Getopt.noshort), ("dump_module"), (FStar_Getopt.OneArg ((((fun x -> (let _116_347 = (let _116_345 = (let _116_343 = (get_dump_module ())
 in (x)::_116_343)
 in (FStar_All.pipe_right _116_345 (FStar_List.map (fun _116_344 -> String (_116_344)))))
-in (FStar_All.pipe_right _116_347 (fun _116_346 -> List (_116_346))))), "[module name]")), ""))::((FStar_Getopt.noshort, "eager_inference", FStar_Getopt.ZeroArgs ((fun _24_204 -> (match (()) with
+in (FStar_All.pipe_right _116_347 (fun _116_346 -> List (_116_346)))))), ("[module name]")))), ("")))::(((FStar_Getopt.noshort), ("eager_inference"), (FStar_Getopt.ZeroArgs ((fun _24_204 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality"))::((FStar_Getopt.noshort, "explicit_deps", FStar_Getopt.ZeroArgs ((fun _24_205 -> (match (()) with
+end)))), ("Solve all type-inference constraints eagerly; more efficient but at the cost of generality")))::(((FStar_Getopt.noshort), ("explicit_deps"), (FStar_Getopt.ZeroArgs ((fun _24_205 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Do not find dependencies automatically, the user provides them on the command-line"))::((FStar_Getopt.noshort, "fs_typ_app", FStar_Getopt.ZeroArgs ((fun _24_206 -> (match (()) with
+end)))), ("Do not find dependencies automatically, the user provides them on the command-line")))::(((FStar_Getopt.noshort), ("fs_typ_app"), (FStar_Getopt.ZeroArgs ((fun _24_206 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Allow the use of t<t1,\n       ...,\n       tn> syntax for type applications; brittle since it clashes with the integer less-than operator"))::((FStar_Getopt.noshort, "fsi", FStar_Getopt.ZeroArgs ((fun _24_207 -> (match (()) with
+end)))), ("Allow the use of t<t1,\n       ...,\n       tn> syntax for type applications; brittle since it clashes with the integer less-than operator")))::(((FStar_Getopt.noshort), ("fsi"), (FStar_Getopt.ZeroArgs ((fun _24_207 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode"))::((FStar_Getopt.noshort, "fstar_home", FStar_Getopt.OneArg (((fun _116_353 -> String (_116_353)), "[dir]")), "Set the FSTAR_HOME variable to [dir]"))::((FStar_Getopt.noshort, "hide_genident_nums", FStar_Getopt.ZeroArgs ((fun _24_208 -> (match (()) with
+end)))), ("fsi flag; A flag to indicate if type checking a fsi in the interactive mode")))::(((FStar_Getopt.noshort), ("fstar_home"), (FStar_Getopt.OneArg ((((fun _116_353 -> String (_116_353))), ("[dir]")))), ("Set the FSTAR_HOME variable to [dir]")))::(((FStar_Getopt.noshort), ("hide_genident_nums"), (FStar_Getopt.ZeroArgs ((fun _24_208 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Don\'t print generated identifier numbers"))::((FStar_Getopt.noshort, "hide_uvar_nums", FStar_Getopt.ZeroArgs ((fun _24_209 -> (match (()) with
+end)))), ("Don\'t print generated identifier numbers")))::(((FStar_Getopt.noshort), ("hide_uvar_nums"), (FStar_Getopt.ZeroArgs ((fun _24_209 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Don\'t print unification variable numbers"))::((FStar_Getopt.noshort, "hint_info", FStar_Getopt.ZeroArgs ((fun _24_210 -> (match (()) with
+end)))), ("Don\'t print unification variable numbers")))::(((FStar_Getopt.noshort), ("hint_info"), (FStar_Getopt.ZeroArgs ((fun _24_210 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Print information regarding hints"))::((FStar_Getopt.noshort, "in", FStar_Getopt.ZeroArgs ((fun _24_211 -> (match (()) with
+end)))), ("Print information regarding hints")))::(((FStar_Getopt.noshort), ("in"), (FStar_Getopt.ZeroArgs ((fun _24_211 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Interactive mode; reads input from stdin"))::((FStar_Getopt.noshort, "include", FStar_Getopt.OneArg (((fun s -> (let _116_364 = (let _116_363 = (let _116_361 = (get_include ())
+end)))), ("Interactive mode; reads input from stdin")))::(((FStar_Getopt.noshort), ("include"), (FStar_Getopt.OneArg ((((fun s -> (let _116_364 = (let _116_363 = (let _116_361 = (get_include ())
 in (FStar_List.append _116_361 ((s)::[])))
 in (FStar_All.pipe_right _116_363 (FStar_List.map (fun _116_362 -> String (_116_362)))))
-in List (_116_364))), "[path]")), "A directory in which to search for files included on the command line"))::((FStar_Getopt.noshort, "initial_fuel", FStar_Getopt.OneArg (((fun x -> (let _116_368 = (FStar_Util.int_of_string x)
-in Int (_116_368))), "[non-negative integer]")), "Number of unrolling of recursive functions to try initially (default 2)"))::((FStar_Getopt.noshort, "initial_ifuel", FStar_Getopt.OneArg (((fun x -> (let _116_372 = (FStar_Util.int_of_string x)
-in Int (_116_372))), "[non-negative integer]")), "Number of unrolling of inductive datatypes to try at first (default 1)"))::((FStar_Getopt.noshort, "inline_arith", FStar_Getopt.ZeroArgs ((fun _24_215 -> (match (()) with
+in List (_116_364)))), ("[path]")))), ("A directory in which to search for files included on the command line")))::(((FStar_Getopt.noshort), ("initial_fuel"), (FStar_Getopt.OneArg ((((fun x -> (let _116_368 = (FStar_Util.int_of_string x)
+in Int (_116_368)))), ("[non-negative integer]")))), ("Number of unrolling of recursive functions to try initially (default 2)")))::(((FStar_Getopt.noshort), ("initial_ifuel"), (FStar_Getopt.OneArg ((((fun x -> (let _116_372 = (FStar_Util.int_of_string x)
+in Int (_116_372)))), ("[non-negative integer]")))), ("Number of unrolling of inductive datatypes to try at first (default 1)")))::(((FStar_Getopt.noshort), ("inline_arith"), (FStar_Getopt.ZeroArgs ((fun _24_215 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Inline definitions of arithmetic functions in the SMT encoding"))::((FStar_Getopt.noshort, "lax", FStar_Getopt.ZeroArgs ((fun _24_216 -> (match (()) with
+end)))), ("Inline definitions of arithmetic functions in the SMT encoding")))::(((FStar_Getopt.noshort), ("lax"), (FStar_Getopt.ZeroArgs ((fun _24_216 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Run the lax-type checker only (admit all verification conditions)"))::((FStar_Getopt.noshort, "log_types", FStar_Getopt.ZeroArgs ((fun _24_217 -> (match (()) with
+end)))), ("Run the lax-type checker only (admit all verification conditions)")))::(((FStar_Getopt.noshort), ("log_types"), (FStar_Getopt.ZeroArgs ((fun _24_217 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Print types computed for data/val/let-bindings"))::((FStar_Getopt.noshort, "log_queries", FStar_Getopt.ZeroArgs ((fun _24_218 -> (match (()) with
+end)))), ("Print types computed for data/val/let-bindings")))::(((FStar_Getopt.noshort), ("log_queries"), (FStar_Getopt.ZeroArgs ((fun _24_218 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Log the Z3 queries in queries.smt2"))::((FStar_Getopt.noshort, "max_fuel", FStar_Getopt.OneArg (((fun x -> (let _116_380 = (FStar_Util.int_of_string x)
-in Int (_116_380))), "[non-negative integer]")), "Number of unrolling of recursive functions to try at most (default 8)"))::((FStar_Getopt.noshort, "max_ifuel", FStar_Getopt.OneArg (((fun x -> (let _116_384 = (FStar_Util.int_of_string x)
-in Int (_116_384))), "[non-negative integer]")), "Number of unrolling of inductive datatypes to try at most (default 2)"))::((FStar_Getopt.noshort, "min_fuel", FStar_Getopt.OneArg (((fun x -> (let _116_388 = (FStar_Util.int_of_string x)
-in Int (_116_388))), "[non-negative integer]")), "Minimum number of unrolling of recursive functions to try (default 1)"))::((FStar_Getopt.noshort, "MLish", FStar_Getopt.ZeroArgs ((fun _24_222 -> (match (()) with
+end)))), ("Log the Z3 queries in queries.smt2")))::(((FStar_Getopt.noshort), ("max_fuel"), (FStar_Getopt.OneArg ((((fun x -> (let _116_380 = (FStar_Util.int_of_string x)
+in Int (_116_380)))), ("[non-negative integer]")))), ("Number of unrolling of recursive functions to try at most (default 8)")))::(((FStar_Getopt.noshort), ("max_ifuel"), (FStar_Getopt.OneArg ((((fun x -> (let _116_384 = (FStar_Util.int_of_string x)
+in Int (_116_384)))), ("[non-negative integer]")))), ("Number of unrolling of inductive datatypes to try at most (default 2)")))::(((FStar_Getopt.noshort), ("min_fuel"), (FStar_Getopt.OneArg ((((fun x -> (let _116_388 = (FStar_Util.int_of_string x)
+in Int (_116_388)))), ("[non-negative integer]")))), ("Minimum number of unrolling of recursive functions to try (default 1)")))::(((FStar_Getopt.noshort), ("MLish"), (FStar_Getopt.ZeroArgs ((fun _24_222 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Introduce unification variables that are only dependent on the type variables in the context"))::((FStar_Getopt.noshort, "n_cores", FStar_Getopt.OneArg (((fun x -> (let _116_393 = (FStar_Util.int_of_string x)
-in Int (_116_393))), "[positive integer]")), "Maximum number of cores to use for the solver (implies detail_errors = false) (default 1)"))::((FStar_Getopt.noshort, "no_default_includes", FStar_Getopt.ZeroArgs ((fun _24_224 -> (match (()) with
+end)))), ("Introduce unification variables that are only dependent on the type variables in the context")))::(((FStar_Getopt.noshort), ("n_cores"), (FStar_Getopt.OneArg ((((fun x -> (let _116_393 = (FStar_Util.int_of_string x)
+in Int (_116_393)))), ("[positive integer]")))), ("Maximum number of cores to use for the solver (implies detail_errors = false) (default 1)")))::(((FStar_Getopt.noshort), ("no_default_includes"), (FStar_Getopt.ZeroArgs ((fun _24_224 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Ignore the default module search paths"))::((FStar_Getopt.noshort, "no_extract", FStar_Getopt.OneArg (((fun x -> (let _116_401 = (let _116_400 = (let _116_398 = (get_no_extract ())
+end)))), ("Ignore the default module search paths")))::(((FStar_Getopt.noshort), ("no_extract"), (FStar_Getopt.OneArg ((((fun x -> (let _116_401 = (let _116_400 = (let _116_398 = (get_no_extract ())
 in (x)::_116_398)
 in (FStar_All.pipe_right _116_400 (FStar_List.map (fun _116_399 -> String (_116_399)))))
-in List (_116_401))), "[module name]")), "Do not extract code from this module"))::((FStar_Getopt.noshort, "no_location_info", FStar_Getopt.ZeroArgs ((fun _24_226 -> (match (()) with
+in List (_116_401)))), ("[module name]")))), ("Do not extract code from this module")))::(((FStar_Getopt.noshort), ("no_location_info"), (FStar_Getopt.ZeroArgs ((fun _24_226 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)"))::((FStar_Getopt.noshort, "odir", FStar_Getopt.OneArg (((fun _116_404 -> String (_116_404)), "[dir]")), "Place output in directory [dir]"))::((FStar_Getopt.noshort, "prims", FStar_Getopt.OneArg (((fun _116_406 -> String (_116_406)), "file")), ""))::((FStar_Getopt.noshort, "print_before_norm", FStar_Getopt.ZeroArgs ((fun _24_227 -> (match (()) with
+end)))), ("Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)")))::(((FStar_Getopt.noshort), ("odir"), (FStar_Getopt.OneArg ((((fun _116_404 -> String (_116_404))), ("[dir]")))), ("Place output in directory [dir]")))::(((FStar_Getopt.noshort), ("prims"), (FStar_Getopt.OneArg ((((fun _116_406 -> String (_116_406))), ("file")))), ("")))::(((FStar_Getopt.noshort), ("print_before_norm"), (FStar_Getopt.ZeroArgs ((fun _24_227 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Do not normalize types before printing (for debugging)"))::((FStar_Getopt.noshort, "print_bound_var_types", FStar_Getopt.ZeroArgs ((fun _24_228 -> (match (()) with
+end)))), ("Do not normalize types before printing (for debugging)")))::(((FStar_Getopt.noshort), ("print_bound_var_types"), (FStar_Getopt.ZeroArgs ((fun _24_228 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Print the types of bound variables"))::((FStar_Getopt.noshort, "print_effect_args", FStar_Getopt.ZeroArgs ((fun _24_229 -> (match (()) with
+end)))), ("Print the types of bound variables")))::(((FStar_Getopt.noshort), ("print_effect_args"), (FStar_Getopt.ZeroArgs ((fun _24_229 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Print inferred predicate transformers for all computation types"))::((FStar_Getopt.noshort, "print_fuels", FStar_Getopt.ZeroArgs ((fun _24_230 -> (match (()) with
+end)))), ("Print inferred predicate transformers for all computation types")))::(((FStar_Getopt.noshort), ("print_fuels"), (FStar_Getopt.ZeroArgs ((fun _24_230 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Print the fuel amounts used for each successful query"))::((FStar_Getopt.noshort, "print_implicits", FStar_Getopt.ZeroArgs ((fun _24_231 -> (match (()) with
+end)))), ("Print the fuel amounts used for each successful query")))::(((FStar_Getopt.noshort), ("print_implicits"), (FStar_Getopt.ZeroArgs ((fun _24_231 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Print implicit arguments"))::((FStar_Getopt.noshort, "print_universes", FStar_Getopt.ZeroArgs ((fun _24_232 -> (match (()) with
+end)))), ("Print implicit arguments")))::(((FStar_Getopt.noshort), ("print_universes"), (FStar_Getopt.ZeroArgs ((fun _24_232 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Print universes"))::((FStar_Getopt.noshort, "prn", FStar_Getopt.ZeroArgs ((fun _24_233 -> (match (()) with
+end)))), ("Print universes")))::(((FStar_Getopt.noshort), ("prn"), (FStar_Getopt.ZeroArgs ((fun _24_233 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Print real names (you may want to use this in conjunction with log_queries)"))::((FStar_Getopt.noshort, "record_hints", FStar_Getopt.ZeroArgs ((fun _24_234 -> (match (()) with
+end)))), ("Print real names (you may want to use this in conjunction with log_queries)")))::(((FStar_Getopt.noshort), ("record_hints"), (FStar_Getopt.ZeroArgs ((fun _24_234 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Record a database of hints for efficient proof replay"))::((FStar_Getopt.noshort, "show_signatures", FStar_Getopt.OneArg (((fun x -> (let _116_421 = (let _116_420 = (let _116_418 = (get_show_signatures ())
+end)))), ("Record a database of hints for efficient proof replay")))::(((FStar_Getopt.noshort), ("show_signatures"), (FStar_Getopt.OneArg ((((fun x -> (let _116_421 = (let _116_420 = (let _116_418 = (get_show_signatures ())
 in (x)::_116_418)
 in (FStar_All.pipe_right _116_420 (FStar_List.map (fun _116_419 -> String (_116_419)))))
-in List (_116_421))), "[module name]")), "Show the checked signatures for all top-level symbols in the module"))::((FStar_Getopt.noshort, "silent", FStar_Getopt.ZeroArgs ((fun _24_236 -> (match (()) with
+in List (_116_421)))), ("[module name]")))), ("Show the checked signatures for all top-level symbols in the module")))::(((FStar_Getopt.noshort), ("silent"), (FStar_Getopt.ZeroArgs ((fun _24_236 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), " "))::((FStar_Getopt.noshort, "smt", FStar_Getopt.OneArg (((fun _116_424 -> String (_116_424)), "[path]")), "Path to the SMT solver (usually Z3,\n        but could be any SMT2-compatible solver)"))::((FStar_Getopt.noshort, "split_cases", FStar_Getopt.OneArg (((fun n -> (let _116_428 = (FStar_Util.int_of_string n)
-in Int (_116_428))), "[positive integer]")), "Partition VC of a match into groups of [n] cases"))::((FStar_Getopt.noshort, "stratified", FStar_Getopt.ZeroArgs ((fun _24_238 -> (match (()) with
+end)))), (" ")))::(((FStar_Getopt.noshort), ("smt"), (FStar_Getopt.OneArg ((((fun _116_424 -> String (_116_424))), ("[path]")))), ("Path to the SMT solver (usually Z3,\n        but could be any SMT2-compatible solver)")))::(((FStar_Getopt.noshort), ("split_cases"), (FStar_Getopt.OneArg ((((fun n -> (let _116_428 = (FStar_Util.int_of_string n)
+in Int (_116_428)))), ("[positive integer]")))), ("Partition VC of a match into groups of [n] cases")))::(((FStar_Getopt.noshort), ("stratified"), (FStar_Getopt.ZeroArgs ((fun _24_238 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Remove the support for universes"))::((FStar_Getopt.noshort, "timing", FStar_Getopt.ZeroArgs ((fun _24_239 -> (match (()) with
+end)))), ("Remove the support for universes")))::(((FStar_Getopt.noshort), ("timing"), (FStar_Getopt.ZeroArgs ((fun _24_239 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Print the time it takes to verify each top-level definition"))::((FStar_Getopt.noshort, "trace_error", FStar_Getopt.ZeroArgs ((fun _24_240 -> (match (()) with
+end)))), ("Print the time it takes to verify each top-level definition")))::(((FStar_Getopt.noshort), ("trace_error"), (FStar_Getopt.ZeroArgs ((fun _24_240 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Don\'t print an error message; show an exception trace instead"))::((FStar_Getopt.noshort, "unthrottle_inductives", FStar_Getopt.ZeroArgs ((fun _24_241 -> (match (()) with
+end)))), ("Don\'t print an error message; show an exception trace instead")))::(((FStar_Getopt.noshort), ("unthrottle_inductives"), (FStar_Getopt.ZeroArgs ((fun _24_241 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)"))::((FStar_Getopt.noshort, "use_eq_at_higher_order", FStar_Getopt.ZeroArgs ((fun _24_242 -> (match (()) with
+end)))), ("Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)")))::(((FStar_Getopt.noshort), ("use_eq_at_higher_order"), (FStar_Getopt.ZeroArgs ((fun _24_242 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Use equality constraints when comparing higher-order types (Temporary)"))::((FStar_Getopt.noshort, "use_hints", FStar_Getopt.ZeroArgs ((fun _24_243 -> (match (()) with
+end)))), ("Use equality constraints when comparing higher-order types (Temporary)")))::(((FStar_Getopt.noshort), ("use_hints"), (FStar_Getopt.ZeroArgs ((fun _24_243 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Use a previously recorded hints database for proof replay"))::((FStar_Getopt.noshort, "use_native_int", FStar_Getopt.ZeroArgs ((fun _24_244 -> (match (()) with
+end)))), ("Use a previously recorded hints database for proof replay")))::(((FStar_Getopt.noshort), ("use_native_int"), (FStar_Getopt.ZeroArgs ((fun _24_244 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Extract the \'int\' type to platform-specific native int (You will need to link the generated code with the appropriate version of the prims library)"))::((FStar_Getopt.noshort, "verify_all", FStar_Getopt.ZeroArgs ((fun _24_245 -> (match (()) with
+end)))), ("Extract the \'int\' type to platform-specific native int (You will need to link the generated code with the appropriate version of the prims library)")))::(((FStar_Getopt.noshort), ("verify_all"), (FStar_Getopt.ZeroArgs ((fun _24_245 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "With automatic dependencies, verify all the dependencies, not just the files passed on the command-line."))::((FStar_Getopt.noshort, "verify_module", FStar_Getopt.OneArg ((cons_verify_module, "[module name]")), "Name of the module to verify"))::((FStar_Getopt.noshort, "__temp_no_proj", FStar_Getopt.OneArg (((fun x -> (let _116_444 = (let _116_443 = (let _116_441 = (get___temp_no_proj ())
+end)))), ("With automatic dependencies, verify all the dependencies, not just the files passed on the command-line.")))::(((FStar_Getopt.noshort), ("verify_module"), (FStar_Getopt.OneArg (((cons_verify_module), ("[module name]")))), ("Name of the module to verify")))::(((FStar_Getopt.noshort), ("__temp_no_proj"), (FStar_Getopt.OneArg ((((fun x -> (let _116_444 = (let _116_443 = (let _116_441 = (get___temp_no_proj ())
 in (x)::_116_441)
 in (FStar_All.pipe_right _116_443 (FStar_List.map (fun _116_442 -> String (_116_442)))))
-in List (_116_444))), "[module name]")), "Don\'t generate projectors for this module"))::(('v', "version", FStar_Getopt.ZeroArgs ((fun _24_247 -> (
+in List (_116_444)))), ("[module name]")))), ("Don\'t generate projectors for this module")))::((('v'), ("version"), (FStar_Getopt.ZeroArgs ((fun _24_247 -> (
 
 let _24_249 = (display_version ())
-in (FStar_All.exit 0)))), "Display version number"))::((FStar_Getopt.noshort, "warn_top_level_effects", FStar_Getopt.ZeroArgs ((fun _24_251 -> (match (()) with
+in (FStar_All.exit 0))))), ("Display version number")))::(((FStar_Getopt.noshort), ("warn_top_level_effects"), (FStar_Getopt.ZeroArgs ((fun _24_251 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Top-level effects are ignored,\n        by default; turn this flag on to be warned when this happens"))::((FStar_Getopt.noshort, "z3timeout", FStar_Getopt.OneArg (((fun s -> (let _116_450 = (FStar_Util.int_of_string s)
-in Int (_116_450))), "[positive integer]")), "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)"))::[]
+end)))), ("Top-level effects are ignored,\n        by default; turn this flag on to be warned when this happens")))::(((FStar_Getopt.noshort), ("z3timeout"), (FStar_Getopt.OneArg ((((fun s -> (let _116_450 = (FStar_Util.int_of_string s)
+in Int (_116_450)))), ("[positive integer]")))), ("Set the Z3 per-query (soft) timeout to [t] seconds (default 5)")))::[]
 in (let _116_452 = (FStar_List.map mk_spec specs)
-in (('h', "help", FStar_Getopt.ZeroArgs ((fun x -> (
+in ((('h'), ("help"), (FStar_Getopt.ZeroArgs ((fun x -> (
 
 let _24_255 = (display_usage_aux specs)
-in (FStar_All.exit 0)))), "Display this information"))::_116_452))
+in (FStar_All.exit 0))))), ("Display this information")))::_116_452))
 end))
 and parse_codegen : Prims.string  ->  Prims.string = (fun s -> (match (s) with
 | ("Kremlin") | ("OCaml") | ("FSharp") -> begin
@@ -994,7 +994,7 @@ in (display_usage_aux _116_456))
 in (FStar_All.exit 1)))
 end))
 and set_interactive_fsi = (fun _24_277 -> if (get_in ()) then begin
-(set_option' ("fsi", Bool (true)))
+(set_option' (("fsi"), (Bool (true))))
 end else begin
 (
 
@@ -1053,7 +1053,7 @@ in (
 let x = (Prims.strcat x "/..")
 in (
 
-let _24_342 = (set_option' ("fstar_home", String (x)))
+let _24_342 = (set_option' (("fstar_home"), (String (x))))
 in x)))
 end
 | Some (x) -> begin
@@ -1093,7 +1093,7 @@ in (FStar_Getopt.parse_cmdline _116_479 (fun i -> (let _116_478 = (let _116_477 
 in (FStar_List.append _116_477 ((i)::[])))
 in (FStar_ST.op_Colon_Equals file_list _116_478)))))
 in (let _116_480 = (FStar_ST.read file_list)
-in (res, _116_480))))
+in ((res), (_116_480)))))
 end))
 
 
@@ -1115,7 +1115,7 @@ in (
 
 let _24_364 = (let _116_488 = (let _116_487 = (let _116_486 = (FStar_List.map (fun _116_485 -> String (_116_485)) old_verify_module)
 in List (_116_486))
-in ("verify_module", _116_487))
+in (("verify_module"), (_116_487)))
 in (set_option' _116_488))
 in r)))))
 

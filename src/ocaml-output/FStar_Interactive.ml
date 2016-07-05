@@ -142,10 +142,10 @@ in if (FStar_Util.starts_with l "#end") then begin
 
 let responses = (match ((FStar_Util.split l " ")) with
 | (_88_59)::(ok)::(fail)::[] -> begin
-(ok, fail)
+((ok), (fail))
 end
 | _88_62 -> begin
-("ok", "fail")
+(("ok"), ("fail"))
 end)
 in (
 
@@ -153,7 +153,7 @@ let str = (FStar_Util.string_of_string_builder s.chunk)
 in (
 
 let _88_65 = (FStar_Util.clear_string_builder s.chunk)
-in Code ((str, responses)))))
+in Code (((str), (responses))))))
 end else begin
 if (FStar_Util.starts_with l "#pop") then begin
 (
@@ -369,7 +369,7 @@ let _88_190 = (FStar_Util.print_error "too many pops")
 in (FStar_All.exit 1))
 end
 | (hd)::tl -> begin
-(hd, tl)
+((hd), (tl))
 end)
 in (match (_88_199) with
 | ((env, curmod), stack) -> begin
@@ -379,7 +379,7 @@ end
 | Push (msg) -> begin
 (
 
-let stack = ((env, curmod))::stack
+let stack = (((env), (curmod)))::stack
 in (
 
 let env = (tc.push env msg)

@@ -197,7 +197,7 @@ end
 ()
 end
 | None -> begin
-(FStar_ST.op_Colon_Equals minimum_workable_fuel (Some ((f, errs))))
+(FStar_ST.op_Colon_Equals minimum_workable_fuel (Some (((f), (errs)))))
 end)
 end))
 in (
@@ -208,24 +208,24 @@ let with_fuel = (fun label_assumptions p _86_96 -> (match (_86_96) with
 in (let _178_69 = (FStar_Util.string_of_int i)
 in (FStar_Util.format2 "<fuel=\'%s\' ifuel=\'%s\'>" _178_70 _178_69)))
 in FStar_SMTEncoding_Term.Caption (_178_71))
-in (let _178_85 = (let _178_84 = (let _178_76 = (let _178_75 = (let _178_74 = (let _178_73 = (FStar_SMTEncoding_Term.mkApp ("MaxFuel", []))
+in (let _178_85 = (let _178_84 = (let _178_76 = (let _178_75 = (let _178_74 = (let _178_73 = (FStar_SMTEncoding_Term.mkApp (("MaxFuel"), ([])))
 in (let _178_72 = (FStar_SMTEncoding_Term.n_fuel n)
-in (_178_73, _178_72)))
+in ((_178_73), (_178_72))))
 in (FStar_SMTEncoding_Term.mkEq _178_74))
-in (_178_75, None, None))
+in ((_178_75), (None), (None)))
 in FStar_SMTEncoding_Term.Assume (_178_76))
-in (let _178_83 = (let _178_82 = (let _178_81 = (let _178_80 = (let _178_79 = (let _178_78 = (FStar_SMTEncoding_Term.mkApp ("MaxIFuel", []))
+in (let _178_83 = (let _178_82 = (let _178_81 = (let _178_80 = (let _178_79 = (let _178_78 = (FStar_SMTEncoding_Term.mkApp (("MaxIFuel"), ([])))
 in (let _178_77 = (FStar_SMTEncoding_Term.n_fuel i)
-in (_178_78, _178_77)))
+in ((_178_78), (_178_77))))
 in (FStar_SMTEncoding_Term.mkEq _178_79))
-in (_178_80, None, None))
+in ((_178_80), (None), (None)))
 in FStar_SMTEncoding_Term.Assume (_178_81))
 in (_178_82)::(p)::[])
 in (_178_84)::_178_83))
 in (_178_86)::_178_85))
 in (FStar_List.append _178_87 label_assumptions))
 in (let _178_91 = (let _178_90 = (let _178_89 = (let _178_88 = (FStar_Util.string_of_int timeout_ms)
-in ("timeout", _178_88))
+in (("timeout"), (_178_88)))
 in FStar_SMTEncoding_Term.SetOption (_178_89))
 in (_178_90)::[])
 in (FStar_List.append _178_92 _178_91)))
@@ -247,7 +247,7 @@ in (
 
 let default_initial_config = (let _178_100 = (FStar_Options.initial_fuel ())
 in (let _178_99 = (FStar_Options.initial_ifuel ())
-in (_178_100, _178_99, default_timeout)))
+in ((_178_100), (_178_99), (default_timeout))))
 in (
 
 let hint_opt = (next_hint ())
@@ -255,19 +255,19 @@ in (
 
 let _86_110 = (match (hint_opt) with
 | None -> begin
-(None, default_initial_config)
+((None), (default_initial_config))
 end
 | Some (hint) -> begin
 (
 
 let _86_107 = if (FStar_Option.isSome hint.FStar_Util.unsat_core) then begin
-(hint.FStar_Util.unsat_core, default_timeout)
+((hint.FStar_Util.unsat_core), (default_timeout))
 end else begin
-(None, (60 * 1000))
+((None), ((60 * 1000)))
 end
 in (match (_86_107) with
 | (core, timeout) -> begin
-(core, (hint.FStar_Util.fuel, hint.FStar_Util.ifuel, timeout))
+((core), (((hint.FStar_Util.fuel), (hint.FStar_Util.ifuel), (timeout))))
 end))
 end)
 in (match (_86_110) with
@@ -282,7 +282,7 @@ end
 in (let _178_119 = (let _178_118 = if ((FStar_Options.max_ifuel ()) > (FStar_Options.initial_ifuel ())) then begin
 (let _178_103 = (let _178_102 = (FStar_Options.initial_fuel ())
 in (let _178_101 = (FStar_Options.max_ifuel ())
-in (_178_102, _178_101, default_timeout)))
+in ((_178_102), (_178_101), (default_timeout))))
 in (_178_103)::[])
 end else begin
 []
@@ -290,7 +290,7 @@ end
 in (let _178_117 = (let _178_116 = if (((FStar_Options.max_fuel ()) / 2) > (FStar_Options.initial_fuel ())) then begin
 (let _178_106 = (let _178_105 = ((FStar_Options.max_fuel ()) / 2)
 in (let _178_104 = (FStar_Options.max_ifuel ())
-in (_178_105, _178_104, default_timeout)))
+in ((_178_105), (_178_104), (default_timeout))))
 in (_178_106)::[])
 end else begin
 []
@@ -298,14 +298,14 @@ end
 in (let _178_115 = (let _178_114 = if (((FStar_Options.max_fuel ()) > (FStar_Options.initial_fuel ())) && ((FStar_Options.max_ifuel ()) > (FStar_Options.initial_ifuel ()))) then begin
 (let _178_109 = (let _178_108 = (FStar_Options.max_fuel ())
 in (let _178_107 = (FStar_Options.max_ifuel ())
-in (_178_108, _178_107, default_timeout)))
+in ((_178_108), (_178_107), (default_timeout))))
 in (_178_109)::[])
 end else begin
 []
 end
 in (let _178_113 = (let _178_112 = if ((FStar_Options.min_fuel ()) < (FStar_Options.initial_fuel ())) then begin
 (let _178_111 = (let _178_110 = (FStar_Options.min_fuel ())
-in (_178_110, 1, default_timeout))
+in ((_178_110), (1), (default_timeout)))
 in (_178_111)::[])
 end else begin
 []
@@ -325,12 +325,12 @@ let errs = if ((FStar_Options.detail_errors ()) && ((FStar_Options.n_cores ()) =
 
 let _86_122 = (match ((FStar_ST.read minimum_workable_fuel)) with
 | Some (f, errs) -> begin
-(f, errs)
+((f), (errs))
 end
 | None -> begin
 (let _178_127 = (let _178_126 = (FStar_Options.min_fuel ())
-in (_178_126, 1, default_timeout))
-in (_178_127, errs))
+in ((_178_126), (1), (default_timeout)))
+in ((_178_127), (errs)))
 end)
 in (match (_86_122) with
 | (min_fuel, potential_errors) -> begin
@@ -354,7 +354,7 @@ in (
 
 let errs = (match (errs) with
 | [] -> begin
-((("", FStar_SMTEncoding_Term.Term_sort), "Unknown assertion failed", FStar_Range.dummyRange))::[]
+(((((""), (FStar_SMTEncoding_Term.Term_sort))), ("Unknown assertion failed"), (FStar_Range.dummyRange)))::[]
 end
 | _86_132 -> begin
 errs
@@ -379,7 +379,7 @@ in (
 
 let _86_143 = (let _178_140 = (FStar_All.pipe_right errs (FStar_List.map (fun _86_142 -> (match (_86_142) with
 | (_86_139, x, y) -> begin
-(x, y)
+((x), (y))
 end))))
 in (FStar_TypeChecker_Errors.add_errors env _178_140))
 in if (FStar_Options.detail_errors ()) then begin
@@ -389,7 +389,7 @@ end else begin
 end))))))
 in (
 
-let use_errors = (fun errs result -> (match ((errs, result)) with
+let use_errors = (fun errs result -> (match (((errs), (result))) with
 | (([], _)) | ((_, FStar_Util.Inl (_))) -> begin
 result
 end
@@ -422,10 +422,10 @@ end
 (let _178_160 = (with_fuel [] p mi)
 in (FStar_SMTEncoding_Z3.ask use_fresh_z3_context None all_labels _178_160 (fun _86_185 -> (match (_86_185) with
 | (result, elapsed_time) -> begin
-(cb false mi p tl ((use_errors errs result), elapsed_time))
+(cb false mi p tl (((use_errors errs result)), (elapsed_time)))
 end))))
 end)))
-and cb = (fun used_hint _86_190 p alt _86_195 -> (match ((_86_190, _86_195)) with
+and cb = (fun used_hint _86_190 p alt _86_195 -> (match (((_86_190), (_86_195))) with
 | ((prev_fuel, prev_ifuel, timeout), (result, elapsed_time)) -> begin
 (
 
@@ -470,7 +470,7 @@ in (FStar_Util.print4 "(%s) Query failed in %s milliseconds with fuel %s and ifu
 end else begin
 ()
 end
-in (try_alt_configs (prev_fuel, prev_ifuel, timeout) p errs alt))
+in (try_alt_configs ((prev_fuel), (prev_ifuel), (timeout)) p errs alt))
 end))
 end))
 in (

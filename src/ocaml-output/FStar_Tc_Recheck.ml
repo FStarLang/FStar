@@ -90,7 +90,7 @@ end
 t_char
 end
 | _41_86 -> begin
-(Prims.raise (FStar_Absyn_Syntax.Error (("Unsupported constant", r))))
+(Prims.raise (FStar_Absyn_Syntax.Error ((("Unsupported constant"), (r)))))
 end))
 
 
@@ -132,7 +132,7 @@ end
 end
 | FStar_Absyn_Syntax.Typ_lam (binders, body) -> begin
 (let _133_44 = (let _133_43 = (recompute_kind body)
-in (binders, _133_43))
+in ((binders), (_133_43)))
 in (FStar_Absyn_Syntax.mk_Kind_arrow _133_44 t.FStar_Absyn_Syntax.pos))
 end
 | FStar_Absyn_Syntax.Typ_app (t1, args) -> begin
@@ -151,12 +151,12 @@ in (match (_41_156) with
 | (bs, k) -> begin
 (
 
-let rec aux = (fun subst bs args -> (match ((bs, args)) with
+let rec aux = (fun subst bs args -> (match (((bs), (args))) with
 | ([], []) -> begin
 (FStar_Absyn_Util.subst_kind subst k)
 end
 | (_41_165, []) -> begin
-(let _133_51 = (FStar_Absyn_Syntax.mk_Kind_arrow (bs, k) t.FStar_Absyn_Syntax.pos)
+(let _133_51 = (FStar_Absyn_Syntax.mk_Kind_arrow ((bs), (k)) t.FStar_Absyn_Syntax.pos)
 in (FStar_All.pipe_right _133_51 (FStar_Absyn_Util.subst_kind subst)))
 end
 | ((b)::bs, (a)::args) -> begin
@@ -216,7 +216,7 @@ end
 | FStar_Absyn_Syntax.Exp_abs (bs, body) -> begin
 (let _133_66 = (let _133_65 = (let _133_64 = (recompute_typ body)
 in (FStar_Absyn_Syntax.mk_Total _133_64))
-in (bs, _133_65))
+in ((bs), (_133_65)))
 in (FStar_Absyn_Syntax.mk_Typ_fun _133_66 None e.FStar_Absyn_Syntax.pos))
 end
 | FStar_Absyn_Syntax.Exp_app (head, args) -> begin
@@ -230,12 +230,12 @@ end
 | Some (bs, c) -> begin
 (
 
-let rec aux = (fun subst bs args -> (match ((bs, args)) with
+let rec aux = (fun subst bs args -> (match (((bs), (args))) with
 | ([], []) -> begin
 (FStar_Absyn_Util.subst_typ subst (FStar_Absyn_Util.comp_result c))
 end
 | (_41_222, []) -> begin
-(let _133_73 = (FStar_Absyn_Syntax.mk_Typ_fun (bs, c) None e.FStar_Absyn_Syntax.pos)
+(let _133_73 = (FStar_Absyn_Syntax.mk_Typ_fun ((bs), (c)) None e.FStar_Absyn_Syntax.pos)
 in (FStar_All.pipe_right _133_73 (FStar_Absyn_Util.subst_typ subst)))
 end
 | ((b)::bs, (a)::args) -> begin

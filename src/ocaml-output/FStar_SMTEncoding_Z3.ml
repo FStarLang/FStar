@@ -117,7 +117,7 @@ with
 end
 in (match (x) with
 | (i1)::(i2)::(i3)::[] -> begin
-Z3V ((i1, i2, i3))
+Z3V (((i1), (i2), (i3)))
 end
 | _82_66 -> begin
 Z3V_Unknown (out)
@@ -143,7 +143,7 @@ let z3_v = (get_z3version ())
 in (
 
 let _82_74 = if (let _174_50 = (get_z3version ())
-in (z3v_le _174_50 (4, 4, 0))) then begin
+in (z3v_le _174_50 ((4), (4), (0)))) then begin
 (let _174_53 = (let _174_52 = (let _174_51 = (z3version_as_string z3_v)
 in (FStar_Util.format1 "Z3 v4.4.1 is required; got %s\n" _174_51))
 in FStar_Util.Failure (_174_52))
@@ -428,10 +428,10 @@ end)))
 in (match (lines) with
 | ("<unsat-core>")::(core)::("</unsat-core>")::rest -> begin
 (let _174_193 = (parse_core core)
-in (_174_193, lines))
+in ((_174_193), (lines)))
 end
 | _82_173 -> begin
-(None, lines)
+((None), (lines))
 end)))
 in (
 
@@ -454,7 +454,7 @@ let _82_193 = (unsat_core lines)
 in (match (_82_193) with
 | (core_opt, rest) -> begin
 (let _174_199 = (lblnegs rest)
-in (core_opt, _174_199))
+in ((core_opt), (_174_199)))
 end)))
 in (
 
@@ -574,7 +574,7 @@ in (match (_82_246) with
 
 let result = (match (status) with
 | UNSAT (core) -> begin
-(FStar_Util.Inl (core), elapsed_time)
+((FStar_Util.Inl (core)), (elapsed_time))
 end
 | (TIMEOUT (lblnegs)) | (SAT (lblnegs)) | (UNKNOWN (lblnegs)) -> begin
 (
@@ -595,9 +595,9 @@ end))))) with
 []
 end
 | Some (lbl, msg, r) -> begin
-((lbl, msg, r))::[]
+(((lbl), (msg), (r)))::[]
 end))))
-in (FStar_Util.Inr (failing_assertions), elapsed_time)))
+in ((FStar_Util.Inr (failing_assertions)), (elapsed_time))))
 end)
 in result)
 end))))
@@ -723,7 +723,7 @@ let _82_325 = (with_monitor job_queue (fun _82_322 -> (match (()) with
 (let _174_284 = (FStar_ST.read pending_jobs)
 in (let _174_283 = (let _174_282 = (FStar_ST.read job_queue)
 in (FStar_List.length _174_282))
-in (_174_284, _174_283)))
+in ((_174_284), (_174_283))))
 end)))
 in (match (_82_325) with
 | (n, m) -> begin
@@ -835,7 +835,7 @@ let ask : Prims.bool  ->  unsat_core  ->  ((label * FStar_SMTEncoding_Term.sort)
 
 let filter_assertions = (fun theory -> (match (core) with
 | None -> begin
-(theory, false)
+((theory), (false))
 end
 | Some (core) -> begin
 (
@@ -845,19 +845,19 @@ let _82_390 = (FStar_List.fold_right (fun d _82_376 -> (match (_82_376) with
 (match (d) with
 | FStar_SMTEncoding_Term.Assume (_82_378, _82_380, Some (name)) -> begin
 if (FStar_List.contains name core) then begin
-((d)::theory, (n_retained + 1), n_pruned)
+(((d)::theory), ((n_retained + 1)), (n_pruned))
 end else begin
 if (FStar_Util.starts_with name "@") then begin
-((d)::theory, n_retained, n_pruned)
+(((d)::theory), (n_retained), (n_pruned))
 end else begin
-(theory, n_retained, (n_pruned + 1))
+((theory), (n_retained), ((n_pruned + 1)))
 end
 end
 end
 | _82_386 -> begin
-((d)::theory, n_retained, n_pruned)
+(((d)::theory), (n_retained), (n_pruned))
 end)
-end)) theory ([], 0, 0))
+end)) theory (([]), (0), (0)))
 in (match (_82_390) with
 | (theory', n_retained, n_pruned) -> begin
 (
@@ -914,7 +914,7 @@ in (Prims.strcat "UNSAT CORE: " _174_346))
 in FStar_SMTEncoding_Term.Caption (_174_347))
 in (_174_348)::[])
 in (FStar_List.append theory' _174_349))
-in (_174_350, true))))
+in ((_174_350), (true)))))
 end))
 end))
 in (
@@ -939,13 +939,13 @@ let cb = (fun _82_431 -> (match (_82_431) with
 if used_unsat_core then begin
 (match (uc_errs) with
 | FStar_Util.Inl (_82_433) -> begin
-(cb (uc_errs, time))
+(cb ((uc_errs), (time)))
 end
 | FStar_Util.Inr (_82_436) -> begin
-(cb (FStar_Util.Inr ([]), time))
+(cb ((FStar_Util.Inr ([])), (time)))
 end)
 end else begin
-(cb (uc_errs, time))
+(cb ((uc_errs), (time)))
 end
 end))
 in (

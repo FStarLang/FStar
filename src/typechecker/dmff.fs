@@ -670,7 +670,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term =
       failwith (Util.format1 "[check]: Tm_uvar %s" (Print.term_to_string e))
   | Tm_delayed _ ->
       failwith "impossible (compressed)"
-  | Tm_unknown _ ->
+  | Tm_unknown ->
       failwith (Util.format1 "[check]: Tm_unknown %s" (Print.term_to_string e))
 
 
@@ -780,7 +780,7 @@ and infer (env: env) (e: term): nm * term =
       failwith (Util.format1 "[infer]: Tm_uvar %s" (Print.term_to_string e))
   | Tm_delayed _ ->
       failwith "impossible (compressed)"
-  | Tm_unknown _ ->
+  | Tm_unknown ->
       failwith (Util.format1 "[infer]: Tm_unknown %s" (Print.term_to_string e))
 
 and mk_match env e0 branches f =

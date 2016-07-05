@@ -149,16 +149,16 @@ in (
 let add_entry = (fun key full_path -> (match ((FStar_Util.smap_try_find map key)) with
 | Some (intf, impl) -> begin
 if (is_interface full_path) then begin
-(FStar_Util.smap_add map key (Some (full_path), impl))
+(FStar_Util.smap_add map key ((Some (full_path)), (impl)))
 end else begin
-(FStar_Util.smap_add map key (intf, Some (full_path)))
+(FStar_Util.smap_add map key ((intf), (Some (full_path))))
 end
 end
 | None -> begin
 if (is_interface full_path) then begin
-(FStar_Util.smap_add map key (Some (full_path), None))
+(FStar_Util.smap_add map key ((Some (full_path)), (None)))
 end else begin
-(FStar_Util.smap_add map key (None, Some (full_path)))
+(FStar_Util.smap_add map key ((None), (Some (full_path))))
 end
 end))
 in (
@@ -799,7 +799,7 @@ in (
 
 let verify_flags = (let _161_186 = (FStar_Options.verify_module ())
 in (FStar_List.map (fun f -> (let _161_185 = (FStar_ST.alloc false)
-in (f, _161_185))) _161_186))
+in ((f), (_161_185)))) _161_186))
 in (
 
 let m = (build_map filenames)
@@ -838,7 +838,7 @@ in (
 let deps = (FStar_List.unique (FStar_List.append impl_deps intf_deps))
 in (
 
-let _69_641 = (FStar_Util.smap_add graph key (deps, White))
+let _69_641 = (FStar_Util.smap_add graph key ((deps), (White)))
 in (FStar_List.iter (discover_one false) deps)))))
 end))
 end else begin
@@ -884,7 +884,7 @@ end
 | White -> begin
 (
 
-let _69_664 = (FStar_Util.smap_add graph key (direct_deps, Gray))
+let _69_664 = (FStar_Util.smap_add graph key ((direct_deps), (Gray)))
 in (
 
 let all_deps = (let _161_204 = (let _161_203 = (FStar_List.map (fun dep -> (let _161_202 = (discover ((key)::cycle) dep)
@@ -893,7 +893,7 @@ in (FStar_List.flatten _161_203))
 in (FStar_List.unique _161_204))
 in (
 
-let _69_668 = (FStar_Util.smap_add graph key (all_deps, Black))
+let _69_668 = (FStar_Util.smap_add graph key ((all_deps), (Black)))
 in (
 
 let _69_670 = (let _161_206 = (let _161_205 = (FStar_ST.read topologically_sorted)
@@ -942,7 +942,7 @@ in (
 
 let deps_as_filenames = (let _161_215 = (FStar_List.collect must_find deps)
 in (FStar_List.append _161_215 suffix))
-in (f, deps_as_filenames))))))) as_list)))) _161_216))
+in ((f), (deps_as_filenames)))))))) as_list)))) _161_216))
 in (
 
 let topologically_sorted = (let _161_217 = (FStar_ST.read topologically_sorted)
@@ -959,7 +959,7 @@ end else begin
 ()
 end
 end)) verify_flags)
-in (by_target, topologically_sorted, immediate_graph)))))))))))))))))
+in ((by_target), (topologically_sorted), (immediate_graph))))))))))))))))))
 
 
 let print_make : (Prims.string * Prims.string Prims.list) Prims.list  ->  Prims.unit = (fun deps -> (FStar_List.iter (fun _69_695 -> (match (_69_695) with

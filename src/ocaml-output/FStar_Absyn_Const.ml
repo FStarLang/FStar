@@ -93,7 +93,7 @@ let heap_lid : FStar_Absyn_Syntax.lident = (p2l (("FStar")::("Heap")::("heap")::
 
 let kunary : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun k k' -> (let _121_11 = (let _121_10 = (let _121_9 = (FStar_Absyn_Syntax.null_t_binder k)
 in (_121_9)::[])
-in (_121_10, k'))
+in ((_121_10), (k')))
 in (FStar_Absyn_Syntax.mk_Kind_arrow _121_11 FStar_Absyn_Syntax.dummyRange)))
 
 
@@ -101,7 +101,7 @@ let kbin : FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_S
 in (let _121_19 = (let _121_18 = (FStar_Absyn_Syntax.null_t_binder k2)
 in (_121_18)::[])
 in (_121_20)::_121_19))
-in (_121_21, k'))
+in ((_121_21), (k')))
 in (FStar_Absyn_Syntax.mk_Kind_arrow _121_22 FStar_Absyn_Syntax.dummyRange)))
 
 
@@ -111,7 +111,7 @@ in (let _121_32 = (let _121_31 = (FStar_Absyn_Syntax.null_t_binder k3)
 in (_121_31)::[])
 in (_121_33)::_121_32))
 in (_121_35)::_121_34))
-in (_121_36, k'))
+in ((_121_36), (k')))
 in (FStar_Absyn_Syntax.mk_Kind_arrow _121_37 FStar_Absyn_Syntax.dummyRange)))
 
 

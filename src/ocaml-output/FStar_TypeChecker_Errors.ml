@@ -46,7 +46,7 @@ let r = if (r = FStar_Range.dummyRange) then begin
 end else begin
 r
 end
-in (r, msg))
+in ((r), (msg)))
 end))))
 in (
 
@@ -79,7 +79,7 @@ in x))
 end)))
 in (
 
-let all_errs = (FStar_List.sortWith (fun _54_29 _54_33 -> (match ((_54_29, _54_33)) with
+let all_errs = (FStar_List.sortWith (fun _54_29 _54_33 -> (match (((_54_29), (_54_33))) with
 | ((r1, _54_28), (r2, _54_32)) -> begin
 (FStar_Range.compare r1 r2)
 end)) all_errs)
@@ -225,14 +225,14 @@ in (FStar_Util.format2 "Every alternative of an \'or\' pattern must bind the sam
 
 let name_and_result = (fun c -> (match (c.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Total (t) -> begin
-("Tot", t)
+(("Tot"), (t))
 end
 | FStar_Syntax_Syntax.GTotal (t) -> begin
-("GTot", t)
+(("GTot"), (t))
 end
 | FStar_Syntax_Syntax.Comp (ct) -> begin
 (let _146_201 = (FStar_Syntax_Print.lid_to_string ct.FStar_Syntax_Syntax.effect_name)
-in (_146_201, ct.FStar_Syntax_Syntax.result_typ))
+in ((_146_201), (ct.FStar_Syntax_Syntax.result_typ)))
 end))
 
 

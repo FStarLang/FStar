@@ -1480,7 +1480,7 @@ in if ((FStar_String.lowercase first_char) = first_char) then begin
 ()
 end else begin
 (let _151_1033 = (let _151_1032 = (let _151_1031 = (FStar_Util.format1 "Invalid identifer \'%s\'; expected a symbol that begins with a lower-case character" id.FStar_Ident.idText)
-in (_151_1031, id.FStar_Ident.idRange))
+in ((_151_1031), (id.FStar_Ident.idRange)))
 in FStar_Syntax_Syntax.Error (_151_1032))
 in (Prims.raise _151_1033))
 end)
@@ -1503,10 +1503,10 @@ let mk_pattern : pattern'  ->  FStar_Range.range  ->  pattern = (fun p r -> {pat
 
 let un_curry_abs : pattern Prims.list  ->  term  ->  term' = (fun ps body -> (match (body.tm) with
 | Abs (p', body') -> begin
-Abs (((FStar_List.append ps p'), body'))
+Abs ((((FStar_List.append ps p')), (body')))
 end
 | _59_248 -> begin
-Abs ((ps, body))
+Abs (((ps), (body)))
 end))
 
 
@@ -1523,17 +1523,17 @@ end
 in (let _151_1073 = (let _151_1072 = (let _151_1071 = (let _151_1070 = (let _151_1069 = (let _151_1068 = (let _151_1067 = (let _151_1066 = (FStar_Ident.lid_of_ids ((x)::[]))
 in Var (_151_1066))
 in (mk_term _151_1067 r1 Expr))
-in (_151_1068, branches))
+in ((_151_1068), (branches)))
 in Match (_151_1069))
 in (mk_term _151_1070 r2 Expr))
-in (((mk_pattern (PatVar ((x, None))) r1))::[], _151_1071))
+in ((((mk_pattern (PatVar (((x), (None)))) r1))::[]), (_151_1071)))
 in Abs (_151_1072))
 in (mk_term _151_1073 r2 Expr))))
 
 
-let un_function : pattern  ->  term  ->  (pattern * term) Prims.option = (fun p tm -> (match ((p.pat, tm.tm)) with
+let un_function : pattern  ->  term  ->  (pattern * term) Prims.option = (fun p tm -> (match (((p.pat), (tm.tm))) with
 | (PatVar (_59_257), Abs (pats, body)) -> begin
-Some (((mk_pattern (PatApp ((p, pats))) p.prange), body))
+Some ((((mk_pattern (PatApp (((p), (pats)))) p.prange)), (body)))
 end
 | _59_265 -> begin
 None
@@ -1544,24 +1544,24 @@ let lid_with_range : FStar_Ident.lident  ->  FStar_Range.range  ->  FStar_Ident.
 in (FStar_Ident.lid_of_path _151_1082 r)))
 
 
-let consPat : FStar_Range.range  ->  pattern  ->  pattern  ->  pattern' = (fun r hd tl -> PatApp (((mk_pattern (PatName (FStar_Absyn_Const.cons_lid)) r), (hd)::(tl)::[])))
+let consPat : FStar_Range.range  ->  pattern  ->  pattern  ->  pattern' = (fun r hd tl -> PatApp ((((mk_pattern (PatName (FStar_Absyn_Const.cons_lid)) r)), ((hd)::(tl)::[]))))
 
 
-let consTerm : FStar_Range.range  ->  term  ->  term  ->  term = (fun r hd tl -> (mk_term (Construct ((FStar_Absyn_Const.cons_lid, ((hd, Nothing))::((tl, Nothing))::[]))) r Expr))
+let consTerm : FStar_Range.range  ->  term  ->  term  ->  term = (fun r hd tl -> (mk_term (Construct (((FStar_Absyn_Const.cons_lid), ((((hd), (Nothing)))::(((tl), (Nothing)))::[])))) r Expr))
 
 
-let lexConsTerm : FStar_Range.range  ->  term  ->  term  ->  term = (fun r hd tl -> (mk_term (Construct ((FStar_Absyn_Const.lexcons_lid, ((hd, Nothing))::((tl, Nothing))::[]))) r Expr))
+let lexConsTerm : FStar_Range.range  ->  term  ->  term  ->  term = (fun r hd tl -> (mk_term (Construct (((FStar_Absyn_Const.lexcons_lid), ((((hd), (Nothing)))::(((tl), (Nothing)))::[])))) r Expr))
 
 
 let mkConsList : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (
 
-let nil = (mk_term (Construct ((FStar_Absyn_Const.nil_lid, []))) r Expr)
+let nil = (mk_term (Construct (((FStar_Absyn_Const.nil_lid), ([])))) r Expr)
 in (FStar_List.fold_right (fun e tl -> (consTerm r e tl)) elts nil)))
 
 
 let mkLexList : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (
 
-let nil = (mk_term (Construct ((FStar_Absyn_Const.lextop_lid, []))) r Expr)
+let nil = (mk_term (Construct (((FStar_Absyn_Const.lextop_lid), ([])))) r Expr)
 in (FStar_List.fold_right (fun e tl -> (lexConsTerm r e tl)) elts nil)))
 
 
@@ -1572,12 +1572,12 @@ end
 | _59_292 -> begin
 (match (t.tm) with
 | Name (s) -> begin
-(mk_term (Construct ((s, args))) r Un)
+(mk_term (Construct (((s), (args)))) r Un)
 end
 | _59_296 -> begin
 (FStar_List.fold_left (fun t _59_300 -> (match (_59_300) with
 | (a, imp) -> begin
-(mk_term (App ((t, a, imp))) r Un)
+(mk_term (App (((t), (a), (imp)))) r Un)
 end)) t args)
 end)
 end))
@@ -1605,11 +1605,11 @@ in Var (_151_1131))
 in (mk_term _151_1132 r Expr))
 in (FStar_List.fold_right (fun e tl -> (
 
-let e = (mkApp ref_constr (((e, Nothing))::[]) r)
+let e = (mkApp ref_constr ((((e), (Nothing)))::[]) r)
 in (
 
-let single_e = (mkApp singleton (((e, Nothing))::[]) r)
-in (mkApp union (((single_e, Nothing))::((tl, Nothing))::[]) r)))) elts empty))))))
+let single_e = (mkApp singleton ((((e), (Nothing)))::[]) r)
+in (mkApp union ((((single_e), (Nothing)))::(((tl), (Nothing)))::[]) r)))) elts empty))))))
 
 
 let mkExplicitApp : term  ->  term Prims.list  ->  FStar_Range.range  ->  term = (fun t args r -> (match (args) with
@@ -1619,13 +1619,13 @@ end
 | _59_316 -> begin
 (match (t.tm) with
 | Name (s) -> begin
-(let _151_1144 = (let _151_1143 = (let _151_1142 = (FStar_List.map (fun a -> (a, Nothing)) args)
-in (s, _151_1142))
+(let _151_1144 = (let _151_1143 = (let _151_1142 = (FStar_List.map (fun a -> ((a), (Nothing))) args)
+in ((s), (_151_1142)))
 in Construct (_151_1143))
 in (mk_term _151_1144 r Un))
 end
 | _59_321 -> begin
-(FStar_List.fold_left (fun t a -> (mk_term (App ((t, a, Nothing))) r Un)) t args)
+(FStar_List.fold_left (fun t a -> (mk_term (App (((t), (a), (Nothing)))) r Un)) t args)
 end)
 end))
 
@@ -1651,12 +1651,12 @@ in (mk_term _151_1152 r Expr))
 in (mkExplicitApp magic_name ((unit_const)::[]) r))
 in (
 
-let admit_magic = (mk_term (Seq ((admit, magic))) r Expr)
+let admit_magic = (mk_term (Seq (((admit), (magic)))) r Expr)
 in admit_magic)))))
 
 
 let mkWildAdmitMagic = (fun r -> (let _151_1154 = (mkAdmitMagic r)
-in ((mk_pattern PatWild r), None, _151_1154)))
+in (((mk_pattern PatWild r)), (None), (_151_1154))))
 
 
 let focusBranches = (fun branches r -> (
@@ -1691,7 +1691,7 @@ if f then begin
 lb
 end else begin
 (let _151_1163 = (mkAdmitMagic r)
-in ((Prims.fst lb), _151_1163))
+in (((Prims.fst lb)), (_151_1163)))
 end
 end)) lbs))
 end else begin
@@ -1699,7 +1699,7 @@ end else begin
 end))
 
 
-let mkFsTypApp : term  ->  term Prims.list  ->  FStar_Range.range  ->  term = (fun t args r -> (let _151_1171 = (FStar_List.map (fun a -> (a, FsTypApp)) args)
+let mkFsTypApp : term  ->  term Prims.list  ->  FStar_Range.range  ->  term = (fun t args r -> (let _151_1171 = (FStar_List.map (fun a -> ((a), (FsTypApp))) args)
 in (mkApp t _151_1171 r)))
 
 
@@ -1710,7 +1710,7 @@ let cons = if (FStar_Options.universes ()) then begin
 end else begin
 (FStar_Absyn_Util.mk_tuple_data_lid (FStar_List.length args) r)
 end
-in (let _151_1177 = (FStar_List.map (fun x -> (x, Nothing)) args)
+in (let _151_1177 = (FStar_List.map (fun x -> ((x), (Nothing))) args)
 in (mkApp (mk_term (Name (cons)) r Expr) _151_1177 r))))
 
 
@@ -1721,28 +1721,28 @@ let cons = if (FStar_Options.universes ()) then begin
 end else begin
 (FStar_Absyn_Util.mk_dtuple_data_lid (FStar_List.length args) r)
 end
-in (let _151_1183 = (FStar_List.map (fun x -> (x, Nothing)) args)
+in (let _151_1183 = (FStar_List.map (fun x -> ((x), (Nothing))) args)
 in (mkApp (mk_term (Name (cons)) r Expr) _151_1183 r))))
 
 
 let mkRefinedBinder : FStar_Ident.ident  ->  term  ->  term Prims.option  ->  FStar_Range.range  ->  aqual  ->  binder = (fun id t refopt m implicit -> (
 
-let b = (mk_binder (Annotated ((id, t))) m Type implicit)
+let b = (mk_binder (Annotated (((id), (t)))) m Type implicit)
 in (match (refopt) with
 | None -> begin
 b
 end
 | Some (t) -> begin
-(mk_binder (Annotated ((id, (mk_term (Refine ((b, t))) m Type)))) m Type implicit)
+(mk_binder (Annotated (((id), ((mk_term (Refine (((b), (t)))) m Type))))) m Type implicit)
 end)))
 
 
 let rec extract_named_refinement : term  ->  (FStar_Ident.ident * term * term Prims.option) Prims.option = (fun t1 -> (match (t1.tm) with
 | NamedTyp (x, t) -> begin
-Some ((x, t, None))
+Some (((x), (t), (None)))
 end
 | Refine ({b = Annotated (x, t); brange = _59_377; blevel = _59_375; aqual = _59_373}, t') -> begin
-Some ((x, t, Some (t')))
+Some (((x), (t), (Some (t'))))
 end
 | Paren (t) -> begin
 (extract_named_refinement t)
@@ -1905,7 +1905,7 @@ end
 (term_to_string t)
 end
 | Product ((b)::(hd)::tl, t) -> begin
-(term_to_string (mk_term (Product (((b)::[], (mk_term (Product (((hd)::tl, t))) x.range x.level)))) x.range x.level))
+(term_to_string (mk_term (Product ((((b)::[]), ((mk_term (Product ((((hd)::tl), (t)))) x.range x.level))))) x.range x.level))
 end
 | Product ((b)::[], t) when (x.level = Type) -> begin
 (let _151_1258 = (FStar_All.pipe_right b binder_to_string)
@@ -2134,9 +2134,9 @@ end else begin
 tm
 end
 in if (FStar_Options.universes ()) then begin
-(Prims.raise (FStar_Syntax_Syntax.Error (((Prims.strcat (Prims.strcat msg "\n") tm), r))))
+(Prims.raise (FStar_Syntax_Syntax.Error ((((Prims.strcat (Prims.strcat msg "\n") tm)), (r)))))
 end else begin
-(Prims.raise (FStar_Absyn_Syntax.Error (((Prims.strcat (Prims.strcat msg "\n") tm), r))))
+(Prims.raise (FStar_Absyn_Syntax.Error ((((Prims.strcat (Prims.strcat msg "\n") tm)), (r)))))
 end)))
 
 

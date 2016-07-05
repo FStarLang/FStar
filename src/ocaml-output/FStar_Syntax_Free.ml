@@ -59,7 +59,7 @@ end
 (singleton_bv x)
 end
 | FStar_Syntax_Syntax.Tm_uvar (x, t) -> begin
-(singleton_uv (x, t))
+(singleton_uv ((x), (t)))
 end
 | FStar_Syntax_Syntax.Tm_type (u) -> begin
 (free_univs u)
@@ -84,7 +84,7 @@ in (aux_binders bs _128_48))
 end
 | FStar_Syntax_Syntax.Tm_refine (bv, t) -> begin
 (let _128_49 = (free_names_and_uvars t)
-in (aux_binders (((bv, None))::[]) _128_49))
+in (aux_binders ((((bv), (None)))::[]) _128_49))
 end
 | FStar_Syntax_Syntax.Tm_app (t, args) -> begin
 (let _128_50 = (free_names_and_uvars t)

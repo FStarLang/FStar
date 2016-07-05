@@ -370,7 +370,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         maybe_paren outer e_app_prio doc
 
     | MLE_Tuple es ->
-        let docs = List.map (doc_of_expr currentModule (min_op_prec, NonAssoc)) es in
+        let docs = List.map (fun x -> parens (doc_of_expr currentModule (min_op_prec, NonAssoc) x)) es in
         let docs = parens (combine (text ", ") docs) in
         docs
 

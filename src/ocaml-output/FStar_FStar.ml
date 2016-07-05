@@ -114,7 +114,7 @@ let programs = (let _183_22 = (FStar_List.map FStar_Extraction_Kremlin.translate
 in (FStar_List.flatten _183_22))
 in (
 
-let bin = (FStar_Extraction_Kremlin.current_version, programs)
+let bin = ((FStar_Extraction_Kremlin.current_version), (programs))
 in (FStar_Util.save_value_to_file "out.krml" bin)))
 end
 | _91_48 -> begin
@@ -173,7 +173,7 @@ in if (FStar_Options.universes ()) then begin
 let _91_68 = (FStar_Universal.batch_mode_tc FStar_Parser_Dep.VerifyUserList filenames)
 in (match (_91_68) with
 | (fmods, dsenv, env) -> begin
-(FStar_Interactive.interactive_mode (dsenv, env) None FStar_Universal.interactive_tc)
+(FStar_Interactive.interactive_mode ((dsenv), (env)) None FStar_Universal.interactive_tc)
 end))
 end else begin
 (
@@ -181,7 +181,7 @@ end else begin
 let _91_72 = (FStar_Stratified.batch_mode_tc FStar_Parser_Dep.VerifyUserList filenames)
 in (match (_91_72) with
 | (fmods, dsenv, env) -> begin
-(FStar_Interactive.interactive_mode (dsenv, env) None FStar_Stratified.interactive_tc)
+(FStar_Interactive.interactive_mode ((dsenv), (env)) None FStar_Stratified.interactive_tc)
 end))
 end)
 end else begin
@@ -218,7 +218,7 @@ in (match (_91_81) with
 let _91_82 = (report_errors ())
 in (
 
-let _91_84 = (codegen (FStar_Util.Inr ((fmods, env))))
+let _91_84 = (codegen (FStar_Util.Inr (((fmods), (env)))))
 in (let _183_25 = (FStar_All.pipe_right fmods (FStar_List.map FStar_Universal.module_or_interface_name))
 in (finished_message _183_25))))
 end))
@@ -233,7 +233,7 @@ in (match (_91_89) with
 let _91_90 = (report_errors ())
 in (
 
-let _91_92 = (codegen (FStar_Util.Inl ((fmods, env))))
+let _91_92 = (codegen (FStar_Util.Inl (((fmods), (env)))))
 in (let _183_26 = (FStar_All.pipe_right fmods (FStar_List.map FStar_Stratified.module_or_interface_name))
 in (finished_message _183_26))))
 end))
