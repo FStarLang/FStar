@@ -740,7 +740,7 @@ and infer (env: env) (e: term): nm * term =
           let args, subst_elts = List.split (List.map2 (fun (bv, _) (arg, q) ->
             // TODO: implement additional check that the arguments are T-free if
             // head is [Tm_fvar ...] with [Mktuple], [Left], etc.
-            // Note: not enforcing the type of the argument because 1) it has
+            // Note: not enforcing the types of the arguments because 1) it has
             // been enforced by the main F* type-checker and 2) it's a hassle with
             // binders and stuff
             let starred_arg = match (normalize (SS.compress bv.sort)).n with
