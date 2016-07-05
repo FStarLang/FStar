@@ -2011,41 +2011,31 @@ let elaborate_and_star env0 ed =
     | _ ->
         failwith "bad shape for effect-for-free signature"
   in
-  let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env in
   let open_and_reduce t =
     let subst = SS.opening_of_binders binders in
     let t = SS.subst subst t in
     let t, comp, _ = tc_term env t in
-    normalize t, comp
+    t, comp
   in
 
-  // Most likely, the user wrote [repr = st], so we need to reduce the term to
-  // find the _actual_ definition of [st]
   // TODO: check that [_comp] is [Tot Type]
   let repr, _comp = open_and_reduce ed.repr in
   Util.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
-  let wp_type =
-    match repr.n with
-    | Tm_abs ([ binder ], repr, something) ->
-        let subst = SS.opening_of_binders [ binder ] in
-        let repr = SS.subst subst repr in
-        let repr = DMFF.star_type repr in
-        let repr = SS.close [ binder ] repr in
-        mk (Tm_abs ([ binder ], repr, something)) None repr.pos
-    | _ ->
-        raise (Err "Expected a representation of the form [fun (a: Type) -> ...]")
-  in
+  let dmff_env: DMFF.env = { env = env; definitions = [] } in
+  let dmff_env, wp_type = star_type_definition dmff_env repr in
   Util.print1 "Representation has been CPS'd to: %s\n" (Print.term_to_string wp_type);
   // TODO: derive the effect signature of the form [a -> wp_a -> Effect] (and
   // figure out how to reuse the binder smartly). The [repr] field of the
   // effect definition does not need to change.
 
   let u_bind, bind = ed.bind_repr in
+  // TODO: assert no universe polymorphism
   let bind, bind_comp = open_and_reduce bind in
   if not (Util.is_total_lcomp bind_comp) then
     raise (Err ("Computation for [bind] is not total!"));
-  let bind_wp = star_expression bind bind_comp.res_typ in
+
+  let dmff_env, bind_wp = star_expr_definition dmff_env bind in
   Util.print1 "bind_wp: %s\n" (Print.term_to_string bind_wp);
 
   failwith "not implemented"

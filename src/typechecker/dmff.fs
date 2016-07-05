@@ -34,6 +34,8 @@ module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module U  = FStar.Syntax.Util
 
+// Synthesis of WPs from a partial effect definition (in F*) ------------------
+
 let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.eff_decl =
   (* A series of macros and combinators to automatically build WP's. In these
    * definitions, both [binders] and [a] are opened. This means that macros
@@ -423,17 +425,12 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
   }
 
 
-// N-arrows are "normal" arrows of pure computations. T-arrows are arrows that
-// denote effectful computations (terminology from the paper).
-type n_or_t =
-  | N of typ
-  | T of typ
+// Some helpers for... --------------------------------------------------------
 
-let is_monadic = function
-  | None ->
-      failwith "un-annotated lambda?!"
-  | Some (Inl { eff_name = lid }) | Some (Inr lid) ->
-      lid_equals lid Const.monadic_lid
+type env = {
+  env: FStar.TypeChecker.Env.env;
+  definitions: list<(lid * typ)>;
+}
 
 let is_monadic_arrow n =
   match n with
@@ -447,25 +444,30 @@ let is_monadic_arrow n =
   | _ ->
       failwith "unexpected_argument: [is_monadic_arrow]"
 
-// The star-transformation from the POPL'17 submission, for types. The
-// definition language is stratified, so there's two separate functions for
-// types and terms. Some checks are intertwined with the *-transformation,
-// eventually, these should be performed in a proper type-checker.
-let rec mk_star_to_type mk a =
+
+// ... the _ and * transformations from the definition language to F* ---------
+
+let rec mk_star_to_type mk env a =
   mk (Tm_arrow (
-    [S.null_bv (star_type a), S.as_implicit false],
+    [S.null_bv (star_type env a), S.as_implicit false],
     mk_Total Util.ktype
   ))
 
-and star_type t =
+
+// The *-transformation for types, purely syntactic. Has been enriched with the
+// [Tm_abs] case to account for parameterized types
+
+and star_type env t =
   let mk x = mk x None t.pos in
   let mk_star_to_type = mk_star_to_type mk in
+  let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env.env in
+  let t = normalize t in
   let t = SS.compress t in
   match t.n with
   | Tm_arrow (binders, _) ->
       // N-arrows and T-arrows
       let binders = List.map (fun (bv, aqual) ->
-        { bv with sort = star_type bv.sort }, aqual
+        { bv with sort = star_type env bv.sort }, aqual
       ) binders in
       begin match is_monadic_arrow t.n with
       | N hn ->
@@ -473,19 +475,21 @@ and star_type t =
            *   (H_0  -> ... -> H_n)* =
            *    H_0* -> ... -> H_n*
            *)
-          mk (Tm_arrow (binders, mk_Total (star_type hn)))
+          mk (Tm_arrow (binders, mk_Total (star_type env hn)))
       | T a ->
           (* F*'s arrows are n-ary (and the intermediary arrows are pure), so the rule is:
            *   (H_0  -> ... -> H_n  -t-> A)* =
            *    H_0* -> ... -> H_n* -> (A* -> Type) -> Type
            *)
           mk (Tm_arrow (
-            binders @ [ S.null_bv (mk_star_to_type a), S.as_implicit false ],
+            binders @ [ S.null_bv (mk_star_to_type env a), S.as_implicit false ],
             mk_Total Util.ktype))
       end
 
   | Tm_app (head, args) ->
-      // Sums and products
+      // Sums and products. TODO: do not treat known types (e.g. [st]) as
+      // abstract symbols, but look them up in our own environment and reduce
+      // them accordingly
       let rec is_valid_application head =
         match (SS.compress head).n with
         | Tm_fvar fv when (
@@ -501,7 +505,7 @@ and star_type t =
             false
       in
       if is_valid_application head then
-        mk (Tm_app (head, List.map (fun (t, qual) -> star_type t, qual) args))
+        mk (Tm_app (head, List.map (fun (t, qual) -> star_type env t, qual) args))
       else
         raise (Err (Util.format1 "For now, only [either] and [option] are \
           supported in the definition language (got: %s)"
@@ -509,9 +513,19 @@ and star_type t =
 
   | Tm_bvar _
   | Tm_name _
-  | Tm_type _ // TODO check
+  | Tm_type _ // TODO: does [Tm_type] make sense?
   | Tm_fvar _ ->
       t
+
+  | Tm_abs (binders, repr, something) ->
+      // For parameterized data types... check that this only appears at
+      // top-level
+      let subst = SS.opening_of_binders binders in
+      let repr = SS.subst subst repr in
+      let env = { env with env = push_binders env.env binders } in
+      let repr = star_type env repr in
+      let repr = SS.close binders repr in
+      mk (Tm_abs (binders, repr, something)
 
   | Tm_abs _
   | Tm_uinst _
@@ -529,162 +543,244 @@ and star_type t =
   | Tm_delayed _ ->
       failwith "impossible"
 
-// The star-transformation, for expressions. The transformation is syntax-directed
-// (following the paper) and type-directed. The concrete implementation strategy is
-// as follows:
-//   - [let x = e1 in e2] where [e1] has type [M _] is understood to be
-//     [bind e1 (fun x -> e2)] and is translated accordingly
-//   - [let x = e1 in e2] is understood to be a regular let-binding and is
-//     translated as [let x = e1* in e2*]
-//   - [match e0 with xi -> ei] where [e0] has type [M _] is an error (todo:
-//     rewrite as [let y = e0 in match y with ...])
-//   - [match e0 with xi -> ei] is translated as [match e0* with xi -> ei*]
-//   - for all other expressions: if the type provided from the context is [M _]
-//     then this is understood to be a [return], otherwise, recursively descend
-type mode = | InMonad of typ | InPure
 
-let wrap_if (m: mode) (e: term) =
-  let mk x = mk x None e.pos in
-  let mk_star_to_type = mk_star_to_type mk in
-  match m with
-  | InPure ->
-      e
-  | InMonad t ->
-      let p_type = mk_star_to_type t in
-      let p = S.gen_bv "p" None p_type in
-      let body = mk (Tm_app (mk (Tm_bvar p), [ e, S.as_implicit false ])) in
-      U.abs [ S.mk_binder p ] body None
+// Recording a new definition in our top-level environment --------------------
 
-let rec star_expr (e: term) (m: mode) =
+let star_definition env t f =
+  match (SS.compress t).n with
+  | Tm_fvar { fv_name = lid } ->
+      Util.print1 "Recording definition of %s\n" (text_of_lid lid);
+      let t =
+        match lookup_definition env.env (Unfold Delta_constant) lid, lookup_lid env.env lid with
+        | Some (_univs, e), Some (_univs', t) ->
+            // TODO: check [_univs] is the empty list
+            f env e t
+        | _ ->
+            raise (Err ("Bad definition in [star_type_definition]"))
+      in
+      // TODO: register a top-level, auto-generated lid for the starred version
+      // of this type; this will ensure we can translate (st a)* as (st* a).
+      { env with definitions = (name, t) :: definitions }, t
+  | _ ->
+      raise (Err (Util.format1 "Ill-formed definition: %s" (Print.term_to_string t)))
+
+let star_type_definition env t =
+  star_definition env t (fun env e _ -> star_type env e)
+
+
+// The bi-directional *-transformation and checker for expressions ------------
+
+type nm = | N of typ | M of typ
+
+let is_monadic = function
+  | None ->
+      failwith "un-annotated lambda?!"
+  | Some (Inl { eff_name = lid }) | Some (Inr lid) ->
+      lid_equals lid Const.monadic_lid
+
+// This function assumes [e] has been starred already and returns:
+//   [fun (p: t* -> Type) -> p e
+let mk_return env (t: typ) (e: term) =
   let mk x = mk x None e.pos in
-  let mk_star_to_type = mk_star_to_type mk in
+  let p_type = mk_star_to_type mk env t in
+  let p = S.gen_bv "p" None p_type in
+  let body = mk (Tm_app (mk (Tm_bvar p), [ e, S.as_implicit false ])) in
+  U.abs [ S.mk_binder p ] body None
+
+// [check] ensures that the sub-term is of the desired effect (N or M) _and_
+// of the desired type. In case the type is [Tm_unknown], [check] skips the
+// latter check. It always returns the desired effect and the desired type or,
+// if it was unknown, the inferred type.
+let rec check (env: env) (e: term) (context_nm: nm): nm * term =
+  let mk x = mk x None e.pos in
+  let return_if (rec_nm, e) =
+    let check t1 t2 =
+      if t2.n <> Tm_unknown && not (Rel.is_trivial (Rel.teq env t1 t2)) then
+        raise (Err ("[check]: term does not have the expected type"));
+    in
+    match rec_nm, e, context_nm with
+    | N t1, e, N t2
+    | M t1, e, M t2 ->
+        check t1 t2;
+        rec_nm, e
+    | N t1, e, M t2 ->
+        check t1 t2;
+        M t1, mk_return t e
+    | M _, _, N _ ->
+        raise (Err ("[check]: got an effectful computation in lieu of a pure computation"));
+  in
+
   match (SS.compress e).n with
+  | Tm_bvar bv
+  | Tm_name bv ->
+      let t' = lookup_bv env.env bv in
+      return_if (N t', e)
+
+  | Tm_abs _ ->
+      return_if (infer env e)
+
+  | Tm_app _ ->
+      return_if (infer env e)
+
+  | Tm_match (e0, branches) ->
+      mk_match e0 branches (fun env body -> check env body context_nm)
+
   | Tm_let ((false, [ binding ]), e2) ->
-      let is_monadic = lid_equals binding.lbeff Const.monadic_lid in
-      let e1 = binding.lbdef in
-      // This is [let x = e1 in e2]. Open [x] in [e2].
-      let x = Util.left binding.lbname in
-      let x_binders = [ S.mk_binder x ] in
-      let x_binders, e2 = SS.open_term x_binders e2 in
-      // Two cases.
-      if is_monadic then begin
-        match m with
-          | InPure ->
-              raise (Err ("monadic [let] in a context that does not return [M]"))
-          | InMonad t ->
-              // p: A* -> Type
-              let p_type = mk_star_to_type t in
-              let p = S.gen_bv "p" None p_type in
-              // e1*
-              let e1 = star_expr e1 InPure in
-              // e2*
-              let e2 = star_expr e2 m in
-              // e2* p
-              let e2 = mk (Tm_app (e2, [ mk (Tm_bvar p), S.as_implicit false ])) in
-              // fun x -> e2* p; this takes care of closing [x].
-              let e2 = U.abs x_binders e2 None in
-              // e1* (fun x -> e2* p)
-              let body = mk (Tm_app (e1, [ e2, S.as_implicit false ])) in
-              U.abs [ S.mk_binder p ] body None
-      end else
-        let e1 = star_expr e1 InPure in
-        let e2 = star_expr e2 InPure in
-        mk (Tm_let ((false, [ { binding with lbdef = e1 } ]), SS.close x_binders e2))
+      // Check that the continuation of the let has the exact right monadic
+      // type.
+      mk_let env binding e2 (fun env e2 -> check env e2 context_nm)
 
-  | Tm_let _ ->
-      raise (Err ("[let rec] and [let and] not supported in the definition
-        language"))
 
-  | Tm_abs (binders, body, what) ->
-      // OPEN ALL THE THINGS
+and infer (env: env) (e: term): nm * term =
+  let mk x = mk x None e.pos in
+  match (SS.compress e).n with
+  | Tm_bvar bv
+  | Tm_name bv ->
+      N (lookup_bv env.env bv), e
+
+  | Tm_abs (binders, term, what) ->
       let binders = SS.open_binders binders in
       let subst = SS.opening_of_binders binders in
       let body = SS.subst subst body in
-
-      let ret_type =
-        (* match (SS.compress t).n with
-        | Tm_arrow (binders, comp) ->
-            let binders, comp = open_comp binders comp in
-            begin match comp.n with
-            | Total t | GTotal t | Comp { result_typ = t } ->
-                t
-            end *)
-        match what with
-        | Some (Inl { res_typ = t }) ->
-            t
-        | _ ->
-            failwith "what impossible"
-      in
+      let env = { env with env = push_binders env.env } in
 
       let binders = List.map (fun (bv, qual) ->
-        let sort = star_type bv.sort in
+        let sort = star_type env bv.sort in
         { bv with sort = sort }, qual
       ) binders in
-      let body = star_expr body (if is_monadic what then InMonad ret_type else InPure) in
+      let ret_type, body =
+        let check_what = if is_monadic what then check_m else check_n in
+        let t, body = check_what env body in
+        comp_of_nm t, body
+      in
+
       let body = close binders body in
       let binders = close_binders binders in
-      wrap_if m (mk (Tm_abs (binders, body, what)))
-
-  | Tm_ascribed (e, _, _) ->
-      star_expr e m
-
-  | Tm_match (e0, branches) ->
-      // TODO: currently, no one is checking that [e0] is a pure computation
-      let e0 = star_expr e0 InPure in
-      let branches = List.map (fun b ->
-        match open_branch b with
-        | pat, None, body ->
-            let body = star_expr body m in
-            close_branch (pat, None, body)
-        | _ ->
-            raise (Err ("No when clauses in the definition language"))
-      ) branches in
-      mk (Tm_match (e0, branches))
+      let t =
+        let binders = List.map (fun (bv, _) ->
+          S.mk_binder (S.null_bv bv.sort)
+        ) binders in
+        mk (Tm_arrow (binders, comp))
+      in
+      N t, mk (Tm_abs (binders, body, what))
 
   | Tm_app (head, args) ->
-      // [args] cannot be monadic computations, because one cannot write in the
-      // definition language a function that takes an [M t]... for [head], the
-      // type-checking rules of the definition language will disallow it
-      let head = star_expr head InPure in
-      let args = List.map (fun (arg, qual) -> star_expr arg InPure, qual) args in
-      let t = mk (Tm_app (head, args)) in
-      wrap_if m t
+      // TODO: hook up the lookup for already-defined combinators here
+      let head, t_head = check_n env head in
+      begin match (SS.compress t_head).n with
+      | Tm_arrow (binders, comp) ->
+          // TODO: check that there is actually no dependency of any kind here,
+          // no polymorphism whatsoever, and that I can actually return just the
+          // result type...
+          let args, t_args = List.split (List.map2 (fun ((bv, _), (arg, _)) ->
+            let _, arg = check env arg bv.sort in
+            arg, bv.sort
+          ) (binders, args)) in
+          nm_of_comp comp, mk (Tm_app (head, args))
+      | _ ->
+          failwith "Tm_app doesn't have Tm_arrow"
+      end
 
-  | Tm_bvar _
-  | Tm_name _
-  | Tm_fvar _ ->
-      wrap_if m e
+  | Tm_let ((false, [ binding ]), e2) ->
+      // Check that the continuation of the let is a monadic computation but
+      // infer the type
+      mk_let env binding e2 check_m
 
-  | Tm_uinst _ ->
-      failwith "TODO: Tm_uinst"
-  | Tm_constant _ ->
-      failwith "TODO: Tm_constant"
-  | Tm_type _ ->
-      failwith "TODO: Tm_type"
-  | Tm_arrow _ ->
-      failwith "TODO: Tm_arrow"
-  | Tm_refine _ ->
-      failwith "TODO: Tm_refine"
-  | Tm_uvar _ ->
-      failwith "TODO: Tm_uvar"
-  | Tm_meta _ ->
-      failwith "TODO: Tm_meta"
-  | Tm_unknown ->
-      failwith "TODO: Tm_unknown"
+  | Tm_match (e0, branches) ->
+      mk_match env e0 branches infer
 
-  | Tm_delayed _ ->
-      failwith "Impossible"
 
-let star_expression (e: term) (t: typ) =
-  // Actually, can't use [t] here, because the type-checking routine reduces the
-  // return type and the [M] disappears; instead, check the [Tm_abs] node which
-  // seems more reliable
-  match (SS.compress e).n with
-  | Tm_abs (_, _, what) ->
-      if is_monadic what then
-        star_expr e InPure
-      else
-        raise (Err (Util.format2 "The following effect combinator should return in [M]: %s; \
-          instead, it has type: %s\n" (Print.term_to_string e) (Print.term_to_string t)))
+and mk_match env e0 branches f =
+  let _, e0 = check_n env e0 in
+  let nms, branches = List.split (List.map (fun b ->
+    match open_branch b with
+    | pat, None, body ->
+        let nm, body = f env body
+        nm, body
+    | _ ->
+        raise (Err ("No when clauses in the definition language"))
+  ) branches) in
+  let t1 = match List.hd nms with M t1 | N t1 -> t1 in
+  let has_m = List.existsb (fun M _ -> true | _ -> false) nms in
+  let nms, branches = List.map2 (fun nm (pat, guard, body) ->
+    let check t t' =
+      if t.n <> Tm_unknown && not (Rel.is_trivial (Rel.teq env t' t)) then
+        raise (Err ("[infer]: branches do not have the same type"))
+    in
+    match nm, has_m with
+    | N t2, false
+    | M t2, true ->
+        check t2 t1;
+        nm, (pat, guard, body)
+    | N t2, true ->
+        check t2 t1;
+        M t2, (pat, guard, mk_return env t2 body)
+    | M _, false ->
+        failwith "impossible"
+  ) nms branches;
+  let branches = List.map close_branch branches in
+  (if has_m then M t1 else N t1), mk (Tm_match (e0, branches))
+
+
+and mk_let env binding e2 f =
+    let e1 = binding.lbdef in
+    // This is [let x = e1 in e2]. Open [x] in [e2].
+    let x = Util.left binding.lbname in
+    let x_binders = [ S.mk_binder x ] in
+    let x_binders, e2 = SS.open_term x_binders e2 in
+    begin match infer env e1 with
+    | N t1, e1 ->
+        // Simple case: just a regular let-binding. We defer checks to e2.
+        let nm_rec, e2 = infer env e2 in
+        nm_rec, mk (Tm_let ((false, [ { binding with lbdef = e1 } ]), SS.close x_binders e2))
+    | M t1, e1 ->
+        let t2, e2 = f env e2 in
+        // Now, generate the bind.
+        // p: A* -> Type
+        let p_type = mk_star_to_type env t2 in
+        let p = S.gen_bv "p" None p_type in
+        // e2* p
+        let e2 = mk (Tm_app (e2, [ mk (Tm_bvar p), S.as_implicit false ])) in
+        // fun x -> e2* p; this takes care of closing [x].
+        let e2 = U.abs x_binders e2 None in
+        // e1* (fun x -> e2* p)
+        let body = mk (Tm_app (e1, [ e2, S.as_implicit false ])) in
+        M t2, mk (U.abs [ S.mk_binder p ] body None)
+    end
+
+
+and check_n env e =
+  let mn = N (mk Tm_unknown None e.pos) in
+  match check env e mn with
+  | N t, e -> t, e
+  | _ -> failwith "[check_n]: impossible"
+
+and check_m env e =
+  let mn = M (mk Tm_unknown None e.pos) in
+  match check env e mn with
+  | M t, e -> t, e
+  | _ -> failwith "[check_m]: impossible"
+
+and comp_of_nm = function
+  | N t -> mk_Total t
+  | M t -> mk_M t
+
+and nm_of_comp = function
+  | Total t ->
+      N t
+  | Comp c when lid_equals c.effect_name Const.monadic_lid ->
+      M c.result_typ
   | _ ->
-      failwith "Not an arrow?!"
+      failwith "[nm_of_comp]: impossible"
+
+and mk_M t =
+  mk_Comp ({
+    effect_name = Const.monadic_lid;
+    result_typ = t;
+    effect_args = [ t ];
+    flags = []
+  })
+
+
+let star_expr_definition env t =
+  star_definition env t star_expr
