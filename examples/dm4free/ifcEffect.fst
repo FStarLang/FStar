@@ -78,7 +78,7 @@ assume val write : l:label -> b:bool ->
 (* dummy implementation works too
 let write l b = fun l0 -> if flows l0 l then (Some ((), l0)) else None *)
 
-new_effect {
+reifiable reflectable new_effect {
   ExnState : a:Type -> wp:wp a -> Effect
   with //repr is new; it's the reprentation of ST as a value type
        repr         = repr
@@ -118,15 +118,16 @@ effect S (a:Type) =
 (* Here is where the more interesting part starts *)
 
 val p : unit -> ExnSt unit (requires (fun l   -> True))
-                           (ensures  (fun l r -> True))
+                           (ensures  (fun l r -> r = None))
 let p () =
-  (* let b1, b2 = read Low, read Low in *)
-  let b1 = ExnState.read Low in ()
-
-(*
+  let b1 = ExnState.read Low in
   let b2 = ExnState.read Low in
   ExnState.write Low (b1 && b2);
   let b3 = ExnState.read High in
   ExnState.write High (b1 || b3);
   ExnState.write Low (xor b3 b3)
-*)
+
+(* [8:14:57 PM] Nik Swamy: I think for bonus points, in the ifc monad we could *)
+(* [8:15:33 PM] Nik Swamy: 1. add outputs, a list of Booleans, e.g., and have the write cons to it *)
+(* [8:15:48 PM] Nik Swamy: 2. add an input state so that read is not a constant *)
+(* [8:16:23 PM] Nik Swamy: 3. do a relational proof of the p program showing that despite the exception, the outputs would be the same in 2 runs *)
