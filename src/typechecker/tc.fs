@@ -2002,11 +2002,11 @@ let elaborate_and_star env0 ed =
   // Every combinator found in the effect declaration is parameterized over
   // [binders], then [a]. This is a variant of [open_effect_signature] where we
   // just extract the binder [a].
-  let a =
+  let a, effect_marker =
     // TODO: more stringent checks on the shape of the signature; better errors
     match (SS.compress signature).n with
-    | Tm_arrow ([(a, _)], _) ->
-        a
+    | Tm_arrow ([a, _], effect_marker) ->
+        a, effect_marker
     | _ ->
         failwith "bad shape for effect-for-free signature"
   in
@@ -2029,6 +2029,18 @@ let elaborate_and_star env0 ed =
   let dmff_env = DMFF.empty env in
   let dmff_env, wp_type = DMFF.star_type_definition dmff_env repr in
   recheck_debug "*" env wp_type;
+
+  // Building: a -> 
+  let effect_signature =
+    let mk x = mk x None signature.pos in
+    let wp_a = mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ])) in
+    let wp_a = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env wp_a in
+    let binders = [ (a, S.as_implicit false); S.null_binder wp_a ] in
+    let binders = close_binders binders in
+    mk (Tm_arrow (binders, effect_marker))
+  in
+  recheck_debug "turned into the effect signature" env effect_signature;
+
   // TODO: derive the effect signature of the form [a -> wp_a -> Effect] (and
   // figure out how to reuse the binder smartly). The [repr] field of the
   // effect definition does not need to change.

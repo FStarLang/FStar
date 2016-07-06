@@ -611,18 +611,18 @@ let rec is_C (t: typ): bool =
       let r = is_C (fst (List.hd args)) in
       if r then begin
         if not (List.for_all (fun (h, _) -> is_C h) args) then
-          failwith "not a C";
+          failwith "not a C (A * C)";
         true
       end else begin
         if not (List.for_all (fun (h, _) -> not (is_C h)) args) then
-          failwith "not a C";
+          failwith "not a C (C * A)";
         false
       end
   | Tm_arrow (binders, comp) ->
       begin match nm_of_comp comp.n with
       | M t ->
-          if (not (is_C t)) then
-            failwith "not a C";
+          if (is_C t) then
+            failwith "not a C (C -> C)";
           true
       | N t ->
           // assert (List.exists is_C binders) ==> is_C comp
