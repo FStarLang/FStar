@@ -438,12 +438,15 @@ type env = {
   definitions: list<(lid * typ)>;
   // The substitution from every [x: C] to its [x^w: C*].
   subst: list<subst_elt>;
+  // Hack to avoid a dependency
+  tc_const: sconst -> typ;
 }
 
-let empty env = {
+let empty env tc_const = {
   env = env;
   definitions = [];
-  subst = []
+  subst = [];
+  tc_const = tc_const
 }
 
 type env_ = env
@@ -685,6 +688,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   | Tm_name _
   | Tm_fvar _
   | Tm_abs _
+  | Tm_constant _
   | Tm_app _ ->
       return_if (infer env e)
 
@@ -716,8 +720,6 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 
   | Tm_let _ ->
       failwith (Util.format1 "[check]: Tm_let %s" (Print.term_to_string e))
-  | Tm_constant _ ->
-      failwith (Util.format1 "[check]: Tm_constant %s" (Print.term_to_string e))
   | Tm_type _ ->
       failwith "impossible (stratified)"
   | Tm_arrow _ ->
@@ -880,10 +882,11 @@ and infer (env: env) (e: term): nm * term * term =
   | Tm_ascribed (e, _, _) ->
       infer env e
 
+  | Tm_constant c ->
+      N (env.tc_const c), e, e
+
   | Tm_let _ ->
       failwith (Util.format1 "[infer]: Tm_let %s" (Print.term_to_string e))
-  | Tm_constant _ ->
-      failwith (Util.format1 "[infer]: Tm_constant %s" (Print.term_to_string e))
   | Tm_type _ ->
       failwith "impossible (stratified)"
   | Tm_arrow _ ->

@@ -2005,7 +2005,7 @@ let elaborate_and_star env0 ed =
   let a, effect_marker =
     // TODO: more stringent checks on the shape of the signature; better errors
     match (SS.compress signature).n with
-    | Tm_arrow ([a, _], effect_marker) ->
+    | Tm_arrow ([(a, _)], effect_marker) ->
         a, effect_marker
     | _ ->
         failwith "bad shape for effect-for-free signature"
@@ -2026,7 +2026,7 @@ let elaborate_and_star env0 ed =
   let repr, _comp = open_and_reduce ed.repr in
   Util.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
-  let dmff_env = DMFF.empty env in
+  let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
   let dmff_env, wp_type = DMFF.star_type_definition dmff_env repr in
   recheck_debug "*" env wp_type;
 
@@ -2040,10 +2040,6 @@ let elaborate_and_star env0 ed =
     mk (Tm_arrow (binders, effect_marker))
   in
   recheck_debug "turned into the effect signature" env effect_signature;
-
-  // TODO: derive the effect signature of the form [a -> wp_a -> Effect] (and
-  // figure out how to reuse the binder smartly). The [repr] field of the
-  // effect definition does not need to change.
 
   // TODO: we assume that reading the top-level definitions in the order that
   // they come in the effect definition is enough... probably not
@@ -2061,6 +2057,14 @@ let elaborate_and_star env0 ed =
 
   let dmff_env, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
   let dmff_env, return_wp, bind_elab = elaborate_and_star dmff_env ed.return_repr in
+
+  let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
+    let dmff_env, action_wp, action_elab =
+      elaborate_and_star dmff_env (action.action_univs, action.action_defn)
+    in
+    dmff_env, { action with action_defn = action_elab } :: actions
+  ) (dmff_env, []) ed.actions in
+  let actions = List.rev actions in
 
   failwith "not implemented"
 
