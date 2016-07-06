@@ -428,13 +428,21 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
 // Some helpers for... --------------------------------------------------------
 
 type env = {
+  // The type-checking environment which we abuse to store our DMFF-style types
+  // when entering a binder.
   env: FStar.TypeChecker.Env.env;
+  // The top-level definitions that have been checked so far, along with their
+  // type, represented as an F* type, but really, a type from the definition
+  // language.
   definitions: list<(lid * typ)>;
+  // The substitution from every [x: C] to its [x^w: C*].
+  subst: list<subst_elt>;
 }
 
 let empty env = {
   env = env;
-  definitions = []
+  definitions = [];
+  subst = []
 }
 
 type env_ = env
@@ -586,7 +594,7 @@ let is_monadic = function
       lid_equals lid Const.monadic_lid
 
 // This function assumes [e] has been starred already and returns:
-//   [fun (p: t* -> Type) -> p e
+//   [fun (p: t* -> Type) -> p e]
 let mk_return env (t: typ) (e: term) =
   let mk x = mk x None e.pos in
   let p_type = mk_star_to_type mk env t in
@@ -610,12 +618,12 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term =
         raise (Err (Util.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]"
           (Print.term_to_string e) (Print.term_to_string t1) (Print.term_to_string t2)))
     in
-    match rec_nm, e, context_nm with
-    | N t1, e, N t2
-    | M t1, e, M t2 ->
+    match rec_nm, context_nm with
+    | N t1, N t2
+    | M t1, M t2 ->
         check t1 t2;
         rec_nm, e
-    | N t1, e, M t2 ->
+    | N t1, M t2 ->
         check t1 t2;
         M t1, mk_return env t1 e
     | M _, _, N _ ->
