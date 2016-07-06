@@ -112,8 +112,9 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
     match (compress t).n with
     | Tm_arrow (bs, comp) ->
         let rest = match comp.n with
-                   | Total t -> t
-                   | _ -> failwith "wp_a contains non-Tot arrow" in
+          | Total t -> t
+          | _ -> failwith "wp_a contains non-Tot arrow"
+        in
         bs @ (collect_binders rest)
     | Tm_type _ ->
         []
@@ -126,14 +127,14 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
     (fun t -> U.arrow wp_binders (mk_Total t)),
     (fun t -> U.arrow wp_binders (mk_GTotal t)),
     (fun () -> List.map (fun (bv, _) ->
-          (* Note: just returning [wp_binders] here would be wrong, because the
-           * identity of binders relies on the _physical equality_ of the [bv]
-           * data structure. So, arguments passed to [mk_ctx] should never refer
-           * to [wp_binders]; one way to enforce that is to generate fresh
-           * binders whenever the client asks for it. *)
-          i := !i + 1;
-          S.gen_bv ("g" ^ string_of_int !i) None bv.sort
-        ) wp_binders)
+      (* Note: just returning [wp_binders] here would be wrong, because the
+       * identity of binders relies on equality of the [bv] data structure. So,
+       * arguments passed to [mk_ctx] should never refer to [wp_binders]; one
+       * way to enforce that is to generate fresh binders whenever the client
+       * asks for it. *)
+      i := !i + 1;
+      S.gen_bv ("g" ^ string_of_int !i) None bv.sort
+    ) wp_binders)
   in
 
   (* A variation where we can specify implicit parameters. *)
@@ -459,6 +460,10 @@ let nm_of_comp = function
   | _ ->
       failwith "[nm_of_comp]: impossible"
 
+let string_of_nm = function
+  | N t -> Util.format1 "N[%s]" (Print.term_to_string t)
+  | M t -> Util.format1 "M[%s]" (Print.term_to_string t)
+
 let is_monadic_arrow n =
   match n with
   | Tm_arrow (_, { n = n}) ->
@@ -466,6 +471,10 @@ let is_monadic_arrow n =
   | _ ->
       failwith "unexpected_argument: [is_monadic_arrow]"
 
+let is_monadic_comp c =
+  match nm_of_comp c.n with
+  | M _ -> true
+  | N _ -> false
 
 // ... the _ and * transformations from the definition language to F* ---------
 
@@ -593,6 +602,37 @@ let is_monadic = function
   | Some (Inl { eff_name = lid }) | Some (Inr lid) ->
       lid_equals lid Const.monadic_lid
 
+// TODO: this function implements a (partial) check for the well-formedness of
+// C-types...
+// This function expects its argument [t] to be normalized.
+let rec is_C (t: typ): bool =
+  match (SS.compress t).n with
+  | Tm_app (head, args) when Util.is_tuple_constructor head ->
+      let r = is_C (fst (List.hd args)) in
+      if r then begin
+        assert (List.for_all (fun (h, _) -> is_C h) args);
+        true
+      end else begin
+        assert (List.for_all (fun (h, _) -> not (is_C h)) args);
+        false
+      end
+  | Tm_arrow (binders, comp) ->
+      begin match nm_of_comp comp.n with
+      | M t ->
+          assert (not (is_C t));
+          true
+      | N t ->
+          // assert (List.exists is_C binders) ==> is_C comp
+          is_C t
+      end
+  | Tm_meta (t, _)
+  | Tm_uinst (t, _)
+  | Tm_ascribed (t, _, _) ->
+      is_C t
+  | _ ->
+      false
+
+
 // This function assumes [e] has been starred already and returns:
 //   [fun (p: t* -> Type) -> p e]
 let mk_return env (t: typ) (e: term) =
@@ -604,15 +644,21 @@ let mk_return env (t: typ) (e: term) =
 
 let is_unknown = function | Tm_unknown -> true | _ -> false
 
-// [check] ensures that the sub-term is of the desired effect (N or M) _and_
-// of the desired type. In case the type is [Tm_unknown], [check] skips the
-// latter check. It always returns the desired effect and the desired type or,
-// if it was unknown, the inferred type (pre star-transformation). Furthermore,
-// it returns a starred version of the (elaborated) term.
-let rec check (env: env) (e: term) (context_nm: nm): nm * term =
+// [check] takes four kinds of [nm].
+// - [N Tm_unknown] checks that the computation is pure and returns [N t] where
+//   [t] is the inferred type of the original term;
+// - [M Tm_unknown] checks that the computation is monadic and returns [N t]
+//   where [t] is the inferred type of the original term;
+// - [N T] checks that the computation is pure, has type T, and returns [N t];
+// - [M T] checks that the computation is monadic, has type T, and returns [M t];
+// [check] returns two terms:
+// - the first is [e*], the CPS'd version of [e]
+// - the second is [_e_], the elaborated version of [e]
+let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   Util.print1 "[debug]: check %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
-  let return_if (rec_nm, e) =
+  // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
+  let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
       if not (is_unknown t2.n) && not (Rel.is_trivial (Rel.teq env.env t1 t2)) then
         raise (Err (Util.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]"
@@ -622,11 +668,12 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term =
     | N t1, N t2
     | M t1, M t2 ->
         check t1 t2;
-        rec_nm, e
+        rec_nm, s_e, u_e
     | N t1, M t2 ->
         check t1 t2;
-        M t1, mk_return env t1 e
-    | M _, _, N _ ->
+        // no need to wrap [u_e] in an explicit [return]; F* will infer it later on
+        M t1, mk_return env t1 s_e, u_e
+    | M _,  N _ ->
         raise (Err ("[check]: got an effectful computation in lieu of a pure computation"))
   in
 
@@ -646,7 +693,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term =
         // the check on the continuation to ensure it is a monadic computation
         (fun env e2 ->
           let strip_m = function
-            | M t, e -> t, e
+            | M t, s_e, u_e -> t, s_e, u_e
             | _ -> failwith "impossible"
           in
           match context_nm with
@@ -682,7 +729,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term =
       failwith (Util.format1 "[check]: Tm_unknown %s" (Print.term_to_string e))
 
 
-and infer (env: env) (e: term): nm * term =
+and infer (env: env) (e: term): nm * term * term =
   Util.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
   let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env.env in
@@ -691,7 +738,7 @@ and infer (env: env) (e: term): nm * term =
       failwith "I failed to open a binder... boo"
 
   | Tm_name bv ->
-      N bv.sort, e
+      N bv.sort, e, e
 
   | Tm_abs (binders, body, what) ->
       let binders = SS.open_binders binders in
@@ -699,69 +746,125 @@ and infer (env: env) (e: term): nm * term =
       let body = SS.subst subst body in
       let env = { env with env = push_binders env.env binders } in
 
-      let binders = List.map (fun (bv, qual) ->
+      // For the *-translation, [x: t] becomes [x: t*].
+      let s_binders = List.map (fun (bv, qual) ->
         let sort = star_type env bv.sort in
         { bv with sort = sort }, qual
       ) binders in
-      let comp, body =
+
+      // For the _-translation, things are a little bit trickier. We need to
+      // update the substitution, and one binder may turn into two binders.
+      let env, u_binders = List.fold_left (fun (env, acc) (bv, qual) ->
+        let c = normalize bv.sort in
+        if is_C c then
+          let xw = S.gen_bv (bv.ppname.idText ^ "^w") None (star_type env c) in
+          let x = { bv with sort = trans_F env c (S.bv_to_name xw) } in
+          let env = { env with subst = NT (bv, S.bv_to_name xw) :: env.subst } in
+          env, S.mk_binder x :: S.mk_binder xw :: acc
+        else
+          let x = { bv with sort = star_type env bv.sort } in
+          env, S.mk_binder x :: acc
+      ) (env, []) binders in
+      let u_binders = List.rev u_binders in
+
+      let comp, s_body, u_body =
         let check_what = if is_monadic what then check_m else check_n in
-        let t, body = check_what env body in
-        comp_of_nm (if is_monadic what then M t else N t), body
+        let t, s_body, u_body = check_what env body in
+        comp_of_nm (if is_monadic what then M t else N t), s_body, u_body
       in
 
-      let body = close binders body in
+      // From [comp], the inferred computation type for the (original), return
+      // the inferred type for the original term.
       let t =
         let binders = List.map (fun (bv, _) ->
-          S.mk_binder (S.null_bv bv.sort)
+          S.mk_binder (S.null_bv (normalize bv.sort))
         ) binders in
         let binders = close_binders binders in
         mk (Tm_arrow (binders, comp))
       in
-      let binders = close_binders binders in
-      N t, mk (Tm_abs (binders, body, what))
+
+      let s_body = close s_binders s_body in
+      let s_binders = close_binders s_binders in
+      let s_term = mk (Tm_abs (s_binders, s_body, what)) in
+
+      let u_body = close u_binders u_body in
+      let u_binders = close_binders u_binders in
+      let u_term = mk (Tm_abs (u_binders, u_body, what)) in
+      N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->
       begin match List.find (fun (lid', _) -> lid_equals lid lid') env.definitions with
       | Some (_, t) ->
           Util.print2 "[debug]: lookup %s hit %s\n" (text_of_lid lid) (Print.term_to_string t);
-          N t, e
+          N t, e, e
       | None ->
           let _, t = Env.lookup_lid env.env lid in
           let txt = text_of_lid lid in
           let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None" ] in
           Util.print2 "[debug]: lookup %s miss %s\n" txt (Print.term_to_string t);
           if List.existsb (fun s -> Util.starts_with txt ("Prims." ^ s)) allowed_prefixes then
-            N t, e
+            N t, e, e
           else
             raise (Err (Util.format1 "The %s constructor has not been whitelisted for the definition language" txt))
       end
 
   | Tm_app (head, args) ->
-      let t_head, head = check_n env head in
+      let t_head, s_head, u_head = check_n env head in
       let t_head = normalize t_head in
+      let binders, comp = match (SS.compress t_head).n with
+        | Tm_arrow (binders, comp) -> binders, comp
+        | _ -> raise (Err (Util.format1 "%s: not a function type" (Print.term_to_string t_head)))
+      in
       Util.print1 "[debug] type of [head] is %s\n" (Print.term_to_string t_head);
-      begin match (SS.compress t_head).n with
-      | Tm_arrow (binders, comp) ->
-          let binders, comp = SS.open_comp binders comp in
-          // Return the starred argument (for elaboration) and a substitution to
-          // apply on the computation to get the original return type
-          let args, subst_elts = List.split (List.map2 (fun (bv, _) (arg, q) ->
-            // TODO: implement additional check that the arguments are T-free if
-            // head is [Tm_fvar ...] with [Mktuple], [Left], etc.
-            // Note: not enforcing the types of the arguments because 1) it has
-            // been enforced by the main F* type-checker and 2) it's a hassle with
-            // binders and stuff
-            let starred_arg = match (normalize (SS.compress bv.sort)).n with
-              | Tm_type _ -> normalize arg
-              | _ -> snd (check_n env arg)
-            in
-            (starred_arg, q), NT (bv, arg)
-          ) binders args) in
-          let comp = SS.subst_comp subst_elts comp in
-          nm_of_comp comp.n, mk (Tm_app (head, args))
-      | _ ->
-          raise (Err (Util.format1 "%s: not a function type" (Print.term_to_string t_head)))
-      end
+
+      // Making the assumption here that [Tm_arrow (..., Tm_arrow ...)]
+      // implies [is_M comp]. F* should be fixed if it's not the case.
+      let n = List.length binders in
+      let n' = List.length args in
+      if List.length binders < List.length args then
+        raise (Err (Util.format3 "The head of this application, after being applied to %s \
+          arguments, is an effectful computation (leaving %s arguments to be \
+          applied). Please let-bind the head applied to the %s first \
+          arguments." (string_of_int n) (string_of_int (n' - n)) (string_of_int n)));
+
+      let binders, comp = SS.open_comp binders comp in
+      let rec final_type subst (binders, comp) args =
+        match binders, args with
+        | [], [] ->
+            nm_of_comp (SS.subst_comp subst comp).n
+        | binders, [] ->
+            begin match (SS.compress (SS.subst subst (mk (Tm_arrow (binders, comp))))).n with
+            | Tm_arrow (binders, comp) -> N (mk (Tm_arrow (binders, close_comp binders comp)))
+            | _ -> failwith "wat?"
+            end
+        | [], _ :: _ ->
+            failwith "just checked that?!"
+        | (bv, _) :: binders, (arg, _) :: args ->
+            final_type (NT (bv, arg) :: subst) (binders, comp) args
+      in
+      let final_type = final_type [] (binders, comp) args in
+      Util.print1 "[debug]: final type of application is %s\n" (string_of_nm final_type);
+
+      let s_args, u_args = List.split (List.map2 (fun (bv, _) (arg, q) ->
+        // TODO: implement additional check that the arguments are T-free if
+        // head is [Tm_fvar ...] with [Mktuple], [Left], etc.
+        // Note: not enforcing the types of the arguments because 1) it has
+        // been enforced by the main F* type-checker and 2) it's a hassle with
+        // binders and stuff
+        match (SS.compress (normalize bv.sort)).n with
+        | Tm_type _ ->
+            let arg = normalize arg, q in
+            arg, [ arg ]
+        | _ ->
+            let _, s_arg, u_arg = check_n env arg in
+            (s_arg, S.as_implicit false), if is_C bv.sort then
+              [ SS.subst env.subst s_arg, S.as_implicit false; u_arg, S.as_implicit false ]
+            else
+              [ u_arg, S.as_implicit false ]
+      ) binders args) in
+      let u_args = List.flatten u_args in
+
+      final_type, mk (Tm_app (s_head, s_args)), mk (Tm_app (u_head, u_args))
 
   | Tm_let ((false, [ binding ]), e2) ->
       mk_let env binding e2 infer check_m
@@ -793,20 +896,20 @@ and infer (env: env) (e: term): nm * term =
 
 and mk_match env e0 branches f =
   let mk x = mk x None e0.pos in
-  // TODO: automatically [bind] when the scrutinee is monadic
-  let _, e0 = check_n env e0 in
+  // TODO: automatically [bind] when the scrutinee is monadic?
+  let _, s_e0, u_e0 = check_n env e0 in
   let nms, branches = List.split (List.map (fun b ->
     match open_branch b with
     | pat, None, body ->
         let env = { env with env = List.fold_left push_bv env.env (pat_bvs pat) } in
-        let nm, body = f env body in
-        nm, (pat, None, body)
+        let nm, s_body, u_body = f env body in
+        nm, (pat, None, (s_body, u_body))
     | _ ->
         raise (Err ("No when clauses in the definition language"))
   ) branches) in
   let t1 = match List.hd nms with | M t1 | N t1 -> t1 in
   let has_m = List.existsb (function | M _ -> true | _ -> false) nms in
-  let nms, branches = List.split (List.map2 (fun nm (pat, guard, body) ->
+  let nms, s_branches, u_branches = List.unzip3 (List.map2 (fun nm (pat, guard, (s_body, u_body)) ->
     let check t t' =
       if not (Rel.is_trivial (Rel.teq env.env t' t)) then
         raise (Err ("[infer]: branches do not have the same type"))
@@ -815,20 +918,21 @@ and mk_match env e0 branches f =
     | N t2, false
     | M t2, true ->
         check t2 t1;
-        nm, (pat, guard, body)
+        nm, (pat, guard, s_body), (pat, guard, u_body)
     | N t2, true ->
         check t2 t1;
-        M t2, (pat, guard, mk_return env t2 body)
+        M t2, (pat, guard, mk_return env t2 s_body), (pat, guard, u_body)
     | M _, false ->
         failwith "impossible"
   ) nms branches) in
-  let branches = List.map close_branch branches in
-  (if has_m then M t1 else N t1), mk (Tm_match (e0, branches))
+  let s_branches = List.map close_branch s_branches in
+  let u_branches = List.map close_branch u_branches in
+  (if has_m then M t1 else N t1), mk (Tm_match (s_e0, s_branches)), mk (Tm_match (u_e0, u_branches))
 
 
 and mk_let (env: env_) (binding: letbinding) (e2: term)
-    (proceed: env_ -> term -> nm * term)
-    (ensure_m: env_ -> term -> term * term) =
+    (proceed: env_ -> term -> nm * term * term)
+    (ensure_m: env_ -> term -> term * term * term) =
   let mk x = mk x None e2.pos in
   let e1 = binding.lbdef in
   // This is [let x = e1 in e2]. Open [x] in [e2].
@@ -836,38 +940,44 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
   let x_binders = [ S.mk_binder x ] in
   let x_binders, e2 = SS.open_term x_binders e2 in
   begin match infer env e1 with
-  | N t1, e1 ->
+  | N t1, s_e1, u_e1 ->
+      // Piggyback on the environment to carry our own special terms
       let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
       // Simple case: just a regular let-binding. We defer checks to e2.
-      let nm_rec, e2 = proceed env e2 in
-      nm_rec, mk (Tm_let ((false, [ { binding with lbdef = e1 } ]), SS.close x_binders e2))
-  | M t1, e1 ->
+      let nm_rec, s_e2, u_e2 = proceed env e2 in
+      nm_rec,
+      mk (Tm_let ((false, [ { binding with lbdef = s_e1 } ]), SS.close x_binders s_e2)),
+      mk (Tm_let ((false, [ { binding with lbdef = s_e1 } ]), SS.close x_binders u_e2))
+
+  | M t1, s_e1, u_e1 ->
       let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
-      let t2, e2 = ensure_m env e2 in
+      let t2, s_e2, u_e2 = ensure_m env e2 in
       // Now, generate the bind.
       // p: A* -> Type
       let p_type = mk_star_to_type mk env t2 in
       let p = S.gen_bv "p''" None p_type in
       // e2* p
-      let e2 = mk (Tm_app (e2, [ S.bv_to_name p, S.as_implicit false ])) in
-      // fun x -> e2* p; this takes care of closing [x].
-      let e2 = U.abs x_binders e2 None in
-      // e1* (fun x -> e2* p)
-      let body = mk (Tm_app (e1, [ e2, S.as_implicit false ])) in
-      M t2, U.abs [ S.mk_binder p ] body None
+      let s_e2 = mk (Tm_app (s_e2, [ S.bv_to_name p, S.as_implicit false ])) in
+      // fun x -> s_e2* p; this takes care of closing [x].
+      let s_e2 = U.abs x_binders s_e2 None in
+      // e1* (fun x -> s_e2* p)
+      let body = mk (Tm_app (s_e1, [ s_e2, S.as_implicit false ])) in
+      M t2,
+      U.abs [ S.mk_binder p ] body None,
+      mk (Tm_let ((false, [ { binding with lbdef = s_e1 } ]), SS.close x_binders u_e2))
   end
 
 
-and check_n (env: env_) (e: term): typ * term =
+and check_n (env: env_) (e: term): typ * term * term =
   let mn = N (mk Tm_unknown None e.pos) in
   match check env e mn with
-  | N t, e -> t, e
+  | N t, s_e, u_e -> t, s_e, u_e
   | _ -> failwith "[check_n]: impossible"
 
-and check_m (env: env_) (e: term): typ * term =
+and check_m (env: env_) (e: term): typ * term * term =
   let mn = M (mk Tm_unknown None e.pos) in
   match check env e mn with
-  | M t, e -> t, e
+  | M t, s_e, u_e -> t, s_e, u_e
   | _ -> failwith "[check_m]: impossible"
 
 and comp_of_nm (nm: nm_): comp =
@@ -883,6 +993,51 @@ and mk_M (t: typ): comp =
     flags = []
   })
 
+and type_of_comp t =
+  match t.n with
+  | Total t | GTotal t | Comp { result_typ = t } -> t
+
+// This function expects its argument [c] to be normalized and to satisfy [is_C c]
+and trans_F (env: env_) (c: typ) (wp: term): term =
+  assert (is_C c);
+  let mk x = mk x None c.pos in
+  match (SS.compress c).n with
+  | Tm_app (head, args) ->
+      // It's a product, the only form of [Tm_app] allowed.
+      let wp_head, wp_args = head_and_args wp in
+      assert (List.length wp_args = List.length args);
+      assert (is_constructor wp_head (mk_tuple_data_lid (List.length wp_args) Range.dummyRange));
+      mk (Tm_app (head, List.map2 (fun (arg, _) (wp_arg, _) ->
+        trans_F env arg wp_arg, S.as_implicit false)
+      args wp_args))
+  | Tm_arrow (binders, comp) ->
+      let binders = open_binders binders in
+      let binders, comp = open_comp binders comp in
+      let bvs, binders = List.split (List.map (fun (bv, q) ->
+        let h = bv.sort in
+        if is_C h then
+          let w' = S.gen_bv (bv.ppname.idText ^ "-w'") None (star_type env h) in
+          w', [ S.mk_binder w'; S.null_binder (trans_F env h (S.bv_to_name bv)) ]
+        else
+          let x = S.gen_bv (bv.ppname.idText ^ "-x") None (star_type env h) in
+          x, [ S.mk_binder x ]
+      ) binders) in
+      let binders = List.flatten binders in
+      let app = mk (Tm_app (wp, List.map (fun bv -> S.bv_to_name bv, S.as_implicit false) bvs)) in
+      let comp = trans_G env (type_of_comp comp) (is_monadic_comp comp) app in
+      let comp = close_comp binders (mk_Total comp) in
+      let binders = close_binders binders in
+      mk (Tm_arrow (binders, comp))
+  | _ ->
+      failwith "impossible trans_F"
+
+and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): term =
+  let mk x = mk x None h.pos in
+  if is_monadic then
+    mk (Tm_app (star_type env h, [ wp, S.as_implicit false ]))
+  else
+    trans_F env h wp
+
 
 let star_expr_definition env t =
-  star_definition env t check_n
+  star_definition env t (fun env e -> let t, s_e, s_u = check_n env e in t, (s_e, s_u))

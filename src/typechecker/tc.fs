@@ -2016,8 +2016,8 @@ let elaborate_and_star env0 ed =
     let t, comp, _ = tc_term env t in
     t, comp
   in
-  let recheck_debug env t =
-    Util.print1 "Term has been *-transformed to: %s\n" (Print.term_to_string t);
+  let recheck_debug s env t =
+    Util.print2 "Term has been %s-transformed to: %s\n" s (Print.term_to_string t);
     let t, _, _ = tc_term env t in
     Util.print1 "Re-checked; got: %s\n" (Print.term_to_string t)
   in
@@ -2028,7 +2028,7 @@ let elaborate_and_star env0 ed =
 
   let dmff_env = DMFF.empty env in
   let dmff_env, wp_type = DMFF.star_type_definition dmff_env repr in
-  recheck_debug env wp_type;
+  recheck_debug "*" env wp_type;
   // TODO: derive the effect signature of the form [a -> wp_a -> Effect] (and
   // figure out how to reuse the binder smartly). The [repr] field of the
   // effect definition does not need to change.
@@ -2041,13 +2041,14 @@ let elaborate_and_star env0 ed =
     let item, item_comp = open_and_reduce item in
     if not (Util.is_total_lcomp item_comp) then
       raise (Err ("Computation for [item] is not total!"));
-    let dmff_env, item_wp = DMFF.star_expr_definition dmff_env item in
-    recheck_debug env item_wp;
-    dmff_env, item_wp
+    let dmff_env, (item_wp, item_elab) = DMFF.star_expr_definition dmff_env item in
+    recheck_debug "*" env item_wp;
+    recheck_debug "_" env item_elab;
+    dmff_env, item_wp, item_elab
   in
 
-  let dmff_env, bind_wp = elaborate_and_star dmff_env ed.bind_repr in
-  let dmff_env, return_wp = elaborate_and_star dmff_env ed.return_repr in
+  let dmff_env, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
+  let dmff_env, return_wp, bind_elab = elaborate_and_star dmff_env ed.return_repr in
 
   failwith "not implemented"
 
