@@ -205,10 +205,17 @@ clean-boot-fs:
 # Testing
 # --------------------------------------------------------------------
 
-test:   all fsharp-regressions fstar-ocaml regressions
+test:
+	make clean
+	make clean -C ../ulib/ml
+	make all
+	make fsharp-regressions
+	make fstar-ocaml
+	make regressions
 
 utest:
 	make clean
+	make clean -C ../ulib/ml
 	make all
 	make fsharp-regressions
 	make fstar-ocaml
