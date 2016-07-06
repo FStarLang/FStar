@@ -128,7 +128,6 @@ let lookup_bvar env x =
 
 let rec unfold_effect_abbrev env comp =
   let c = comp_to_comp_typ comp in
-  Util.print1 "unfolding: %s\n" c.effect_name.str;
   match Env.lookup_effect_abbrev env (env.universe_of env c.result_typ) c.effect_name with
     | None -> c
     | Some (binders, cdef) ->

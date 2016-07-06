@@ -610,16 +610,19 @@ let rec is_C (t: typ): bool =
   | Tm_app (head, args) when Util.is_tuple_constructor head ->
       let r = is_C (fst (List.hd args)) in
       if r then begin
-        assert (List.for_all (fun (h, _) -> is_C h) args);
+        if not (List.for_all (fun (h, _) -> is_C h) args) then
+          failwith "not a C";
         true
       end else begin
-        assert (List.for_all (fun (h, _) -> not (is_C h)) args);
+        if not (List.for_all (fun (h, _) -> not (is_C h)) args) then
+          failwith "not a C";
         false
       end
   | Tm_arrow (binders, comp) ->
       begin match nm_of_comp comp.n with
       | M t ->
-          assert (not (is_C t));
+          if (not (is_C t)) then
+            failwith "not a C";
           true
       | N t ->
           // assert (List.exists is_C binders) ==> is_C comp
@@ -857,10 +860,10 @@ and infer (env: env) (e: term): nm * term * term =
             arg, [ arg ]
         | _ ->
             let _, s_arg, u_arg = check_n env arg in
-            (s_arg, S.as_implicit false), if is_C bv.sort then
+            (s_arg, S.as_implicit false), (if is_C bv.sort then
               [ SS.subst env.subst s_arg, S.as_implicit false; u_arg, S.as_implicit false ]
             else
-              [ u_arg, S.as_implicit false ]
+              [ u_arg, S.as_implicit false ])
       ) binders args) in
       let u_args = List.flatten u_args in
 
@@ -999,14 +1002,16 @@ and type_of_comp t =
 
 // This function expects its argument [c] to be normalized and to satisfy [is_C c]
 and trans_F (env: env_) (c: typ) (wp: term): term =
-  assert (is_C c);
+  if not (is_C c) then
+    failwith "not a C";
   let mk x = mk x None c.pos in
   match (SS.compress c).n with
   | Tm_app (head, args) ->
       // It's a product, the only form of [Tm_app] allowed.
       let wp_head, wp_args = head_and_args wp in
-      assert (List.length wp_args = List.length args);
-      assert (is_constructor wp_head (mk_tuple_data_lid (List.length wp_args) Range.dummyRange));
+      if not (List.length wp_args = List.length args) ||
+         not (is_constructor wp_head (mk_tuple_data_lid (List.length wp_args) Range.dummyRange)) then
+        failwith "mismatch";
       mk (Tm_app (head, List.map2 (fun (arg, _) (wp_arg, _) ->
         trans_F env arg wp_arg, S.as_implicit false)
       args wp_args))
