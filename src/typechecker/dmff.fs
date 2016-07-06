@@ -989,7 +989,7 @@ and mk_M (t: typ): comp =
   mk_Comp ({
     effect_name = Const.monadic_lid;
     result_typ = t;
-    effect_args = [ t, S.as_implicit false ];
+    effect_args = [];
     flags = []
   })
 
@@ -1025,18 +1025,23 @@ and trans_F (env: env_) (c: typ) (wp: term): term =
       let binders = List.flatten binders in
       let app = mk (Tm_app (wp, List.map (fun bv -> S.bv_to_name bv, S.as_implicit false) bvs)) in
       let comp = trans_G env (type_of_comp comp) (is_monadic_comp comp) app in
-      let comp = close_comp binders (mk_Total comp) in
+      let comp = close_comp binders comp in
       let binders = close_binders binders in
       mk (Tm_arrow (binders, comp))
   | _ ->
       failwith "impossible trans_F"
 
-and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): term =
+and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
   let mk x = mk x None h.pos in
   if is_monadic then
-    mk (Tm_app (star_type env h, [ wp, S.as_implicit false ]))
+    mk_Comp ({
+      effect_name = Const.effect_PURE_lid;
+      result_typ = star_type env h;
+      effect_args = [ wp, S.as_implicit false ];
+      flags = []
+    })
   else
-    trans_F env h wp
+    mk_Total (trans_F env h wp)
 
 
 let star_expr_definition env t =

@@ -2017,9 +2017,9 @@ let elaborate_and_star env0 ed =
     t, comp
   in
   let recheck_debug s env t =
-    Util.print2 "Term has been %s-transformed to: %s\n" s (Print.term_to_string t);
+    Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
     let t, _, _ = tc_term env t in
-    Util.print1 "Re-checked; got: %s\n" (Print.term_to_string t)
+    Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t)
   in
 
   // TODO: check that [_comp] is [Tot Type]
