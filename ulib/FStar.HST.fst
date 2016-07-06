@@ -71,13 +71,13 @@ assume val op_Bang: #a:Type -> r:stackref a -> STL a
 module G = FStar.Ghost
 
 // JK: Returns the current stack of heaps --- it should be erased
-assume val get: unit -> ST mem
+assume val get: unit -> STL mem
   (requires (fun m -> True))
   (ensures (fun m0 x m1 -> m0=x /\ m1=m0))
 
 // JK: Proper function, returning an erased stack of heaps 
 // YES, this is the proper one
-assume val eget: unit -> ST (G.erased mem)
+assume val eget: unit -> STL (G.erased mem)
   (requires (fun m -> True))
   (ensures (fun m0 x m1 -> m0=G.reveal x /\ m1=m0))
 
