@@ -767,7 +767,7 @@ and infer (env: env) (e: term): nm * term =
       infer env e
 
   | Tm_let _ ->
-      failwith (Util.format1 "[check]: Tm_let %s" (Print.term_to_string e))
+      failwith (Util.format1 "[infer]: Tm_let %s" (Print.term_to_string e))
   | Tm_constant _ ->
       failwith (Util.format1 "[infer]: Tm_constant %s" (Print.term_to_string e))
   | Tm_type _ ->
