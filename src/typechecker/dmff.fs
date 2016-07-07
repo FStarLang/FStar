@@ -927,6 +927,8 @@ and mk_match env e0 branches f =
         nm, (pat, guard, s_body), (pat, guard, u_body)
     | N t2, true ->
         check t2 t1;
+        // TODO: we could re-generate the body of the branch with [check_m] and
+        // have [return]s inserted at depth, rather than on the outside...
         M t2, (pat, guard, mk_return env t2 s_body), (pat, guard, u_body)
     | M _, false ->
         failwith "impossible"
@@ -953,7 +955,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       let nm_rec, s_e2, u_e2 = proceed env e2 in
       nm_rec,
       mk (Tm_let ((false, [ { binding with lbdef = s_e1 } ]), SS.close x_binders s_e2)),
-      mk (Tm_let ((false, [ { binding with lbdef = s_e1 } ]), SS.close x_binders u_e2))
+      mk (Tm_let ((false, [ { binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
 
   | M t1, s_e1, u_e1 ->
       let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
@@ -970,7 +972,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       let body = mk (Tm_app (s_e1, [ s_e2, S.as_implicit false ])) in
       M t2,
       U.abs [ S.mk_binder p ] body None,
-      mk (Tm_let ((false, [ { binding with lbdef = s_e1 } ]), SS.close x_binders u_e2))
+      mk (Tm_let ((false, [ { binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
   end
 
 

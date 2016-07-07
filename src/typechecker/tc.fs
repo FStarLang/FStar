@@ -2030,7 +2030,7 @@ let elaborate_and_star env0 ed =
   let dmff_env, wp_type = DMFF.star_type_definition dmff_env repr in
   recheck_debug "*" env wp_type;
 
-  // Building: a -> 
+  // Building: [a -> wp a -> Effect]
   let effect_signature =
     let mk x = mk x None signature.pos in
     let wp_a = mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ])) in
@@ -2056,7 +2056,7 @@ let elaborate_and_star env0 ed =
   in
 
   let dmff_env, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
-  let dmff_env, return_wp, bind_elab = elaborate_and_star dmff_env ed.return_repr in
+  let dmff_env, return_wp, return_elab = elaborate_and_star dmff_env ed.return_repr in
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     let dmff_env, action_wp, action_elab =
@@ -2066,7 +2066,23 @@ let elaborate_and_star env0 ed =
   ) (dmff_env, []) ed.actions in
   let actions = List.rev actions in
 
-  failwith "not implemented"
+  let c = close binders in
+
+  let ed = { ed with
+    signature = c effect_signature;
+    ret_wp = [], c return_wp;
+    bind_wp = [], c bind_wp;
+    return_repr = [], c return_elab;
+    bind_repr = [], c bind_elab;
+    actions = List.map (fun action -> {
+      action with action_defn = c action.action_defn
+    }) actions;
+    binders = close_binders binders
+  } in
+  if Env.debug env (Options.Other "ED") then
+    Util.print_string (Print.eff_decl_to_string ed);
+
+  ed
 
 
 let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
