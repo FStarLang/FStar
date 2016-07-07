@@ -44,6 +44,9 @@ inline let stronger (a:Type) (wp1:wp a) (wp2:wp a) =
 inline let null_wp (a:Type) (h:int) (p:post a) =
   (forall (x:a) (h:int). p (x,h))
 
+inline let trivial (a:Type) (wp:wp a) =
+  (forall h0. wp h0 (fun r -> True))
+
 reifiable reflectable new_effect_for_free {
   STInt: a:Type -> Effect
   with repr     = st
@@ -53,6 +56,8 @@ reifiable reflectable new_effect_for_free {
      ; ite_wp   = ite_wp
      ; stronger = stronger
      ; null_wp  = null_wp
+     // This one really should be auto-generated, we have the code, but it's buggy
+     ; trivial  = trivial
   and effect_actions
        get      = get
      ; put      = put

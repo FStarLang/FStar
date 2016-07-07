@@ -415,14 +415,16 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
     U.abs (S.binders_of_list [ a; wp ]) body ret_tot_type0
   in
   let wp_trivial = normalize_and_make_binders_explicit wp_trivial in
-  check "wp_trivial" (U.abs binders wp_trivial None);
+  // commented out -- buggy
+  // check "wp_trivial" (U.abs binders wp_trivial None);
 
   { ed with
     if_then_else = ([], wp_if_then_else);
     assert_p     = ([], wp_assert);
     assume_p     = ([], wp_assume);
     close_wp     = ([], wp_close);
-    trivial      = ([], wp_trivial)
+    // commented out -- buggy
+    // trivial      = ([], wp_trivial)
   }
 
 
