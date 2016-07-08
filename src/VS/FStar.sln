@@ -48,6 +48,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "typechecker", "..\typecheck
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "smtencoding", "..\smtencoding\smtencoding.fsproj", "{F6879027-A97F-4857-8F52-CC5641455652}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "leanencoding", "..\leanencoding\leanencoding.fsproj", "{4275B045-932B-4202-A914-89D1F808A95B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -102,6 +104,10 @@ Global
 		{F6879027-A97F-4857-8F52-CC5641455652}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F6879027-A97F-4857-8F52-CC5641455652}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F6879027-A97F-4857-8F52-CC5641455652}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4275B045-932B-4202-A914-89D1F808A95B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4275B045-932B-4202-A914-89D1F808A95B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4275B045-932B-4202-A914-89D1F808A95B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4275B045-932B-4202-A914-89D1F808A95B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
