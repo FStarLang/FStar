@@ -75,12 +75,12 @@ val fsum_index_lemma: h0:heap -> h1:heap -> h2:heap -> a:bigint_wide -> a_idx:na
      ))     
 let fsum_index_lemma h0 h1 h2 a a_idx b b_idx len ctr =
   //@@
-      no_upd_lemma h1 h2 b (only a);
+      (* no_upd_lemma_1 h1 h2 b (only a); *)
       cut(forall (i:nat). (i>=ctr+1 /\ i < len) ==> (v (get h2 a (i+a_idx)) = v (get h1 a (i+a_idx)) + v (get h1 b (i+b_idx)))); 
       let (f:(i:nat{i<>ctr/\i<length a-a_idx} -> GTot bool)) =  (fun i -> v (get h1 a (i+a_idx)) = v (get h0 a (i+a_idx))) in 
       (* FsumLemmas.auxiliary_lemma_3 a_idx ctr len (length a) f;  *)
       cut(forall (i:nat). (i>=ctr+1 /\ i < len) ==> v (get h1 a (i+a_idx)) = v (get h0 a (i+a_idx))); 
-      no_upd_lemma h0 h1 b (only a);
+      (* no_upd_lemma h0 h1 b (only a); *)
       cut(forall (i:nat). (i>=ctr+1 /\ i < len) ==> v (get h1 b (i+b_idx)) = v (get h0 b (i+b_idx))); 
       cut(forall (i:nat). (i>=ctr+1 /\ i < len) ==> (v (get h2 a (i+a_idx)) = v (get h0 a (i+a_idx)) + v (get h0 b (i+b_idx)))); 
       cut(forall (i:nat). ((i<ctr+1 \/ i >= len) /\ i<length a-a_idx) ==>  
@@ -93,8 +93,9 @@ let fsum_index_lemma h0 h1 h2 a a_idx b b_idx len ctr =
       (* FsumLemmas.auxiliary_lemma_4 len ctr g;  *)
       cut(forall (i:nat). (i>=ctr /\ i < len) ==> (v (get h2 a (i+a_idx)) = v (get h0 a (i+a_idx)) + v (get h0 b (i+b_idx))) ); 
       cut(forall (i:nat).((i<ctr \/ i >= len) /\ i<length a-a_idx) ==> (get h2 a (i+a_idx) == get h0 a (i+a_idx))); 
-      no_upd_lemma h0 h2 b (only a)
-
+      (* no_upd_lemma h0 h2 b (only a) *)
+      ()
+      
 (* #reset-options *)
 
 // Verified, try with big timeout
@@ -126,8 +127,8 @@ let rec fsum_index a a_idx b b_idx len ctr =
     let z = ai +^ bi in
     upd a (a_idx+|i) z; 
     let h1 = HST.get() in
-    upd_lemma h0 h1 a (i+|a_idx) z; 
-    no_upd_lemma h0 h1 b (only a); 
+    (* upd_lemma h0 h1 a (i+|a_idx) z;  *)
+    (* no_upd_lemma h0 h1 b (only a);  *)
     cut(True /\ live h1 a); 
     cut(True /\ live h1 b); 
     (* cut(U32.v a_idx+U32.v len <= length a /\ U32.v b_idx+len <= length b);  *)
@@ -136,7 +137,7 @@ let rec fsum_index a a_idx b b_idx len ctr =
     (* FsumLemmas.auxiliary_lemma_0 len ctr; *)
     fsum_index a a_idx b b_idx len (ctr+|1ul); 
     let h2 = HST.get() in
-    no_upd_lemma h1 h2 b (only a);      
+    (* no_upd_lemma h1 h2 b (only a);       *)
     (* cut (forall (i:nat). *)
     (*   (i<>ctr+a_idx /\ i < length a) ==> get h0 a (i) == get h1 a (i));  *)
     (* FsumLemmas.auxiliary_lemma_5 ctr (elength a) a_idx; *)
@@ -288,7 +289,7 @@ let fsum' a b =
   auxiliary_lemma_0 h0 a h0 b;
   fsum_index a 0ul b 0ul nlength 0ul;
   let h1 = HST.get() in
-  no_upd_lemma h0 h1 b (only a);
+  (* no_upd_lemma h0 h1 b (only a); *)
   auxiliary_lemma_1 h0 h1 b;
   auxiliary_lemma_3 h0 h1 a b;
   addition_lemma h0 h1 a b norm_length;

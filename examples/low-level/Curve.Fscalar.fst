@@ -124,8 +124,8 @@ val scalar_multiplication_tr_2:
        /\ (Seq.equal (sel h0 (a)) (sel h2 (a)))
      ))
 let scalar_multiplication_tr_2 h0 h1 h2 res a s ctr =
-  no_upd_lemma h0 h1 a (only res);
-  no_upd_lemma h1 h2 a (only res);
+  (* no_upd_lemma h0 h1 a (only res); *)
+  (* no_upd_lemma h1 h2 a (only res); *)
   ()
 
 (* Code *)
@@ -152,7 +152,7 @@ let rec scalar_multiplication_tr res a s ctr =
      (* FscalarLemmas.lemma_4 norm_length ctr;  *)
      scalar_multiplication_tr_1 res a s ctr; 
      let h1 = HST.get() in 
-     no_upd_lemma h0 h1 a (only res);
+     (* no_upd_lemma h0 h1 a (only res); *)
      scalar_multiplication_tr res a s (ctr+|1ul); 
      let h2 = HST.get() in
      scalar_multiplication_tr_2 h0 h1 h2 res a s (w ctr)
@@ -196,7 +196,7 @@ let scalar' res a s =
   auxiliary_lemma_0 h0 a s; 
   scalar_multiplication_tr res a s 0ul; 
   let h1 = HST.get() in
-  no_upd_lemma h0 h1 a (only res);
+  (* no_upd_lemma h0 h1 a (only res); *)
   auxiliary_lemma_1 h0 h1 a (res); 
   theorem_scalar_multiplication h0 h1 a s norm_length res; 
   ()

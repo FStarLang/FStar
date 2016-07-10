@@ -295,7 +295,7 @@ let rec freduce_degree' b ctr' =
     let bctr = bctr |+ b5ctr in 
     upd b 0ul bctr;
     let h1 = HST.get() in
-    upd_lemma h0 h1 b 0ul bctr;
+    (* upd_lemma h0 h1 b 0ul bctr; *)
     freduce_degree_lemma h0 h1 b 0;
     cut (True /\ eval_wide h0 b (norm_length+1+0) % reveal prime = eval_wide h1 b (norm_length+0) % reveal prime);
     cut (True /\ eval_wide h0 b (norm_length+1) % reveal prime = eval_wide h1 b (norm_length+0) % reveal prime)
@@ -308,7 +308,7 @@ let rec freduce_degree' b ctr' =
     let bctr = bctr |+ b5ctr in 
     upd b ctr bctr;
     let h1 = HST.get() in
-    upd_lemma h0 h1 b ctr bctr;
+    (* upd_lemma h0 h1 b ctr bctr; *)
     freduce_degree_lemma h0 h1 b (w ctr); 
     cut (True /\ eval_wide h0 b (norm_length+1+w ctr) % reveal prime = eval_wide h1 b (norm_length+w ctr) % reveal prime);
     cut(reducible' h1 b (w ctr-1)); 
@@ -471,7 +471,7 @@ let rec carry b i =
     assert(v ri < pow2 (templ (w i))); 
     upd b i ri; 
     let h1 = HST.get() in
-    upd_lemma h0 h1 b i ri; 
+    (* upd_lemma h0 h1 b i ri;  *)
     let c = (bi |>> 51ul) in
     // In the spec of >>
     admitP(True /\ v c < pow2 (platform_wide - 51)); 
@@ -482,7 +482,7 @@ let rec carry b i =
     let z = bip1 |+ c in
     upd b (i+|1ul) z;
     let h2 = HST.get() in
-    upd_lemma h1 h2 b (i+|1ul) z; 
+    (* upd_lemma h1 h2 b (i+|1ul) z;  *)
     eval_carry_lemma h0 b h2 b (w i); 
     cut (forall (j:nat). (j > w i+1 /\ j <= norm_length) ==> v (getValue h2 b j) < pow2 (platform_wide - 1));
     carry b (i+|1ul)
@@ -548,7 +548,7 @@ let rec carry2 b i =
     assert(v ri < pow2 (templ (w i))); 
     upd b i ri; 
     let h1 = HST.get() in
-    upd_lemma h0 h1 b i ri; 
+    (* upd_lemma h0 h1 b i ri;  *)
     let bip1 = index b (i+|1ul) in
     let c = (bi |>> 51ul) in 
     helper_lemma_21 bi;
@@ -566,7 +566,7 @@ let rec carry2 b i =
     cut (v z >= pow2 51 ==> v (getValue h1 b (w i)) < pow2 32); 
     upd b (i+|1ul) z;
     let h2 = HST.get() in
-    upd_lemma h1 h2 b (i+|1ul) z; 
+    (* upd_lemma h1 h2 b (i+|1ul) z;  *)
     cut (v z >= pow2 51 ==> v c = 1 /\ True); 
     eval_carry_lemma h0 b h2 b (w i);
     carry2 b (i+|1ul)
@@ -738,35 +738,35 @@ let add_big_zero_core b =
   Math.Lemmas.pow2_increases_1 platform_size 53; 
   upd b 0ul (U64.add b0 two52m38); 
   let h1 = HST.get() in
-  upd_lemma h0 h1 b 0ul (U64.add b0 two52m38); 
+  (* upd_lemma h0 h1 b 0ul (U64.add b0 two52m38);  *)
   let b1 = index b 1ul in
   cut (vv b1 = vv (getValue h0 b 1) /\ vv b1 < pow2 51 /\ vv two52m2 < pow2 52); 
   addition_lemma b1 51 two52m2 52;
   Math.Lemmas.pow2_increases_1 platform_size 53; 
   upd b 1ul (U64.add b1 two52m2);   
   let h2 = HST.get() in
-  upd_lemma h1 h2 b 1ul (U64.add b1 two52m2); 
+  (* upd_lemma h1 h2 b 1ul (U64.add b1 two52m2);  *)
   let b2 = index b 2ul in
   cut (vv b2 = vv (getValue h1 b 2) /\ vv (getValue h1 b 2) = vv (getValue h0 b 2) /\ vv b2 < pow2 51);
   addition_lemma b2 51 two52m2 52;
   Math.Lemmas.pow2_increases_1 platform_size 53; 
   upd b 2ul (U64.add b2 two52m2); 
   let h3 = HST.get() in
-  upd_lemma h2 h3 b 2ul (U64.add b2 two52m2); 
+  (* upd_lemma h2 h3 b 2ul (U64.add b2 two52m2);  *)
   let b3 = index b 3ul in
   cut (vv b3 = vv (getValue h2 b 3) /\ vv (getValue h2 b 3) = vv (getValue h1 b 3) /\ vv (getValue h1 b 3) = vv (getValue h0 b 3) /\ vv b3 < pow2 51);
   addition_lemma b3 51 two52m2 52;
   Math.Lemmas.pow2_increases_1 platform_size 53; 
   upd b 3ul (U64.add b3 two52m2);   
   let h4 = HST.get() in
-  upd_lemma h3 h4 b 3ul (U64.add b3 two52m2); 
+  (* upd_lemma h3 h4 b 3ul (U64.add b3 two52m2);  *)
   let b4 = index b 4ul in
   cut (vv b4 = vv (getValue h3 b 4) /\ vv (getValue h3 b 4) = vv (getValue h2 b 4) /\ vv (getValue h2 b 4) = vv (getValue h1 b 4) /\ vv (getValue h1 b 4) = vv (getValue h0 b 4) /\ vv b4 < pow2 51);
   addition_lemma b4 51 two52m2 52;
   Math.Lemmas.pow2_increases_1 platform_size 53; 
   upd b 4ul (U64.add b4 two52m2);
   let h5 = HST.get() in 
-  upd_lemma h4 h5 b 4ul (U64.add b4 two52m2);
+  (* upd_lemma h4 h5 b 4ul (U64.add b4 two52m2); *)
   cut (vv (getValue h5 b 0) = vv (getValue h0 b 0) + (pow2 52 - 38) /\ True); 
   cut (vv (getValue h5 b 1) = vv (getValue h0 b 1) + (pow2 52 - 2) /\ True); 
   cut (vv (getValue h5 b 2) = vv (getValue h0 b 2) + (pow2 52 - 2) /\ True); 

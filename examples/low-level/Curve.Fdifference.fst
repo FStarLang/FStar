@@ -52,8 +52,9 @@ let fdifference_aux_1 a b ctr =
   let z = bi -^ ai in 
   upd a i z;
   let h1 = HST.get() in
-  upd_lemma h0 h1 a i z;
-  no_upd_lemma h0 h1 b ((only a))
+  (* upd_lemma h0 h1 a i z; *)
+  (* no_upd_lemma h0 h1 b ((only a)); *)
+  ()
 
 val fdifference_aux_2_0: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b:bigint{disjoint a b} -> 
   ctr:nat{ctr < norm_length} -> Lemma (requires (
@@ -79,7 +80,7 @@ val fdifference_aux_2_0: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b:bigint{d
       
 let fdifference_aux_2_0 h0 h1 h2 a b ctr =
   //@@
-  no_upd_lemma h0 h1 b ((only a));
+  (* no_upd_lemma h0 h1 b ((only a)); *)
   assert(length a = length a);
   assert(forall (i:nat). (i>= ctr+1 /\ i<norm_length) ==>
 	  (v (getValue h2 a i) = v (getValue h1 b i) - v (getValue h1 a i)));  
@@ -183,7 +184,7 @@ let rec fdifference_aux a b ctr =
   else begin
       fdifference_aux_1 a b ctr; 
       let h1 = HST.get() in
-      no_upd_lemma h0 h1 b ((only a));
+      (* no_upd_lemma h0 h1 b ((only a)); *)
       fdifference_aux a b (ctr+|1ul); 
       let h2 = HST.get() in
       fdifference_aux_2 h0 h1 h2 a b (U32.v ctr)

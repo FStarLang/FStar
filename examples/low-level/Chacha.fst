@@ -251,9 +251,6 @@ let sum_matrixes m m0 =
   upd m 15ul (index m 15ul +%^ index m0 15ul);
   ()
 
-let s #t (b:buffer t) = Set.singleton (frameOf b)
-let op_Plus_Plus = Set.union
-
 val chacha20_block: output:bytes -> 
   state:uint32s{length state >= 32 /\ disjoint state output} ->
   key:bytes{length key = 32 /\ disjoint state key /\ disjoint output key} -> counter:u32 -> 
@@ -286,68 +283,7 @@ let chacha20_block output state key counter nonce len =
   (* Serialize the state into byte stream *)
   bytes_of_uint32s output m len
 
-(* val chacha20_block: output:bytes ->  *)
-(*   state:uint32s{length state = 16 /\ frameOf state <> frameOf output} -> *)
-(*   key:bytes{length key = 32 /\ disjoint state key /\ disjoint output key} -> counter:u32 ->  *)
-(*   nonce:bytes{length nonce = 12 /\ disjoint key nonce /\ disjoint state nonce /\ disjoint nonce output} ->  *)
-(*   len:u32{v len <= 64 /\ length output >= v len} -> *)
-(*   STL unit *)
-(*     (requires (fun h -> live h state /\ live h output /\ live h key /\ live h nonce)) *)
-(*     (ensures (fun h0 _ h1 -> live h1 output /\ live h1 state /\ modifies_2 output state h0 h1 )) *)
-(* let chacha20_block output m key counter nonce len = *)
-(*   (\* let h0 = HST.get() in *\) *)
-(*   push_frame (); *)
-(*   (\* Initialize internal state *\) *)
-(*   (\* let h0' = HST.get() in *\) *)
-(*   initialize_state m key counter nonce; *)
-(*   (\* let h1 = HST.get() in *\) *)
-(*   (\* cut(modifies_1 m h0' h1); *\) *)
-(*   (\* Initial state *\)  *)
-(*   let m0 = create 0ul 16ul in *)
-(*   (\* let h2 = HST.get() in *\) *)
-(*   (\* cut(modifies_0 h1 h2); *\) *)
-(*   blit m 0ul m0 0ul 16ul; *)
-(*   (\* let h3 = HST.get() in *\) *)
-(*   (\* cut(modifies_1 m0 h2 h3); *\) *)
-(*   (\* cut(live h3 output);  *\) *)
-(*   (\* cut(live h3 m);  *\) *)
-(*   (\* cut(live h3 m0); *\) *)
-(*   (\* 20 rounds *\) *)
-(*   column_round m; diagonal_round m;  *)
-(*   column_round m; diagonal_round m; *)
-(*   column_round m; diagonal_round m; *)
-(*   column_round m; diagonal_round m; *)
-(*   column_round m; diagonal_round m; *)
-(*   column_round m; diagonal_round m; *)
-(*   column_round m; diagonal_round m; *)
-(*   column_round m; diagonal_round m; *)
-(*   column_round m; diagonal_round m; *)
-(*   column_round m; diagonal_round m;  *)
-(*   (\* let h4 = HST.get() in *\) *)
-(*   (\* no_upd_lemma_1 h3 h4 m m0; *\) *)
-(*   (\* cut(modifies_1 m h3 h4);  *\) *)
-(*   (\* cut(live h4 m0);  *\) *)
-(*   (\* Sum the matrixes *\) *)
-(*   sum_matrixes m m0; *)
-(*   (\* let h5 = HST.get() in *\) *)
-(*   (\* cut(modifies_1 m h3 h5); *\) *)
-(*   (\* no_upd_lemma_1 h3 h5 m output; *\) *)
-(*   (\* Serialize the state into byte stream *\) *)
-(*   bytes_of_uint32s output m len; *)
-(*   (\* let h6 = HST.get() in *\) *)
-(*   (\* cut(modifies_1 output h5 h6); *\) *)
-(*   (\* cut(live h6 output /\ live h6 m); *\) *)
-(*   pop_frame () *)
-(*   (\* let h7 = HST.get() in *\) *)
-(*   (\* cut (live h0 m /\ live h0 output /\ fresh_frame h0 h0' /\ ~(contains h0' m0)); *\) *)
-(*   (\* cut (modifies_1 m h0' h1 /\ modifies_0 h1 h2 /\ modifies_1 m0 h2 h3 /\ modifies_1 m h3 h5); *\) *)
-(*   (\* cut ( modifies_1 output h5 h6 /\ popped h6 h7); *\) *)
-(*   (\* cut (frameOf m0 <> frameOf output /\ frameOf m <> frameOf m0);  *\) *)
-(*   (\* lemma_chacha20_block output m m0 h0 h0' h1 h2 h3 h5 h6 h7;  *\) *)
-(*   (\* cut (equal_domains h0 h7) *\) *)
-
 #reset-options "--z3timeout 100"
-//#set-options "--lax" // OK
 
 val chacha20_encrypt_loop: 
   state:uint32s{length state >= 32} -> key:bytes{length key = 32 /\ disjoint state key} -> 

@@ -116,10 +116,10 @@ let rec swap_conditional_aux' a b swap ctr =
     let h2 = HST.get() in
     upd b ctr bi'; 
     let h3 = HST.get() in 
-    upd_lemma h0 h2 a ctr ai'; 
-    no_upd_lemma h0 h2 b (only a); 
-    upd_lemma h2 h3 b ctr bi';  
-    no_upd_lemma h2 h3 a (only b); 
+    (* upd_lemma h0 h2 a ctr ai';  *)
+    (* no_upd_lemma h0 h2 b (only a);  *)
+    (* upd_lemma h2 h3 b ctr bi';   *)
+    (* no_upd_lemma h2 h3 a (only b);  *)
     swap_conditional_aux' a b swap (ctr+|1ul); 
     let h1 = HST.get() in
     admitP (forall (i:nat). (i >= w ctr + 1 /\ i < norm_length) ==> 
