@@ -423,6 +423,12 @@ let lemma_modifies_0_1 (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
   [SMTPat (modifies_0 h0 h1); SMTPat (modifies_1 b h1 h2)]
   = ()
 
+let lemma_modifies_0_1' (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
+  (requires (~(contains h0 b) /\ modifies_0 h0 h1 /\ live h1 b /\ modifies_1 b h1 h2))
+  (ensures  (modifies_0 h0 h2))
+  [SMTPat (modifies_0 h0 h1); SMTPat (modifies_1 b h1 h2)]
+  = ()
+
 #reset-options "--z3timeout 100"
 
 let lemma_modifies_1_1 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 : Lemma
@@ -777,6 +783,12 @@ let modifies_popped_1 (#t:Type) (a:buffer t) h0 h1 h2 h3 : Lemma
   (requires (live h0 a /\ fresh_frame h0 h1 /\ popped h2 h3 /\ modifies_2_1 a h1 h2))
   (ensures  (modifies_1 a h0 h3))
   [SMTPat (fresh_frame h0 h1); SMTPat (popped h2 h3); SMTPat (modifies_2_1 a h1 h2)]
+  = ()
+
+let modifies_popped_1' (#t:Type) (a:buffer t) h0 h1 h2 h3 : Lemma
+  (requires (live h0 a /\ fresh_frame h0 h1 /\ popped h2 h3 /\ modifies_1 a h1 h2))
+  (ensures  (modifies_1 a h0 h3))
+  [SMTPat (fresh_frame h0 h1); SMTPat (popped h2 h3); SMTPat (modifies_1 a h1 h2)]
   = ()
 
 let modifies_popped_0 h0 h1 h2 h3 : Lemma

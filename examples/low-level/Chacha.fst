@@ -322,7 +322,7 @@ val chacha20_encrypt:
     (ensures (fun h0 _ h1 -> live h1 ciphertext /\ modifies_1 ciphertext h0 h1))
 let chacha20_encrypt ciphertext key counter nonce plaintext len = 
   push_frame ();
-  let state = create 0ul 32ul  in
+  let state = create 0ul 32ul in
   (* Compute number of iterations *)
   let max = (len ^/ 64ul) in 
   let rem = len ^% 64ul in
