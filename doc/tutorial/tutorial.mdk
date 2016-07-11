@@ -359,7 +359,7 @@ type-checker knows that the `FileIO.read f` is safe.
 Write a function called `checkedWrite` that takes a filename `f` and a
 string `s` as argument, checks the policy to make sure the file `f` is
 writable, and only if that is the case writes `s` to `f`. If the file
-is not readable your `checkedWrite` should raise an exception. As for
+is not writable your `checkedWrite` should raise an exception. As for
 `checkedRead`, your `checkedRead` should have no preconditions.
 ~~ ExerciseFragment {exname=ex1a-safe-read-write}
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:CheckedWriteType]
