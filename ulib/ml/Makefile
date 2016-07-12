@@ -14,7 +14,7 @@ COMMON=FStar_Mul.ml FStar_Float.ml FStar_Char.ml \
 FILES=$(PRIMS) FStar_ST.ml $(COMMON)
 HYPERHEAP=$(PRIMS) ./hyperheap/FStar_ST.ml $(COMMON) ./hyperheap/FStar_HyperHeap.ml
 
-OCAMLOPT=ocamlfind opt -thread -package batteries,zarith -linkpkg -g $(INCLUDES)
+OCAMLOPT=ocamlfind opt -thread -package batteries,zarith,stdint -linkpkg -g $(INCLUDES)
 OCAMLDEP=ocamlfind dep
 OCAMLMKLIB=ocamlfind mklib
 
@@ -35,7 +35,7 @@ hyperheap: $(HH_OBJS)
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
 %.o: %.ml
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c -I $(PRIMS_DIR) -package stdint -linkpkg $<
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c -I $(PRIMS_DIR) -linkpkg $<
 
 depend:
 	$(OCAMLDEP) -I native_int -I hyperheap $(FILES) $(HYPERHEAP) > .depend
