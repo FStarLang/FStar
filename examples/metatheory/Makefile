@@ -23,5 +23,5 @@ HoareWeakestPrecondition:
 	$(SFSTAR) $(_STDLIB_) HoareWeakestPrecondition.fst --max_fuel 1 --max_ifuel 1
 
 # This takes forever to verify
-StlcCbvDbPntsubstLists:
-	make StlcCbvDbPntsubstLists.fulllib.ver OTHERFLAGS='--z3timeout 20'
+StlcCbvDbPntSubstLists:
+	$(FSTAR) StlcCbvDbPntSubstLists.fst --z3timeout 20
