@@ -105,7 +105,7 @@ type u = p:Type -> Tot (squash (pow p))
 (* NS: FAILS TO CHECK BEYOND HERE ... TODO, revisit *)
 
 (* Bijection between U and (pow U) *)
-val f : u -> Tot (squash (pow u))
+assume val f : u -> Tot (squash (pow u))
 #set-options "--print_universes"
 (* let f x = x u  *) //fails here without a means of denoting universes
 

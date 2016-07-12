@@ -1,6 +1,5 @@
 module Bug484
 
-
 (* With "Tot", works fine *)
 val ok : #a:Type
          -> p:(a -> GTot bool)
@@ -8,21 +7,33 @@ val ok : #a:Type
          -> l:list a
          -> acc:a
          -> Tot a
-let rec ok p f l a =
+let rec ok #a p f l acc =
     match l with
-        | [] -> a
-        | x::xs -> f (ok p f xs a)
+        | [] -> acc
+        | _::xs -> f (ok #a p f xs acc)
 
 
-(* Doesn't work if I replace "Tot" by "ML" (or any other effect) *)
-val bug : #a:Type
+(* Changing the effect to ML works when binding the result of the recursive call *)
+val also_ok : #a:Type
          -> p:(a -> GTot bool)
-         -> f:(d:a -> ML (r:a{p d ==> p r}))
+         -> f:(d:a -> Tot (r:a{p d ==> p r}))
          -> l:list a
          -> acc:a
          -> ML a
-let rec bug p f l a =
+let rec also_ok #a p f l acc =
     match l with
-        | [] -> a
-        | x::xs -> f (bug p f xs a)
+        | [] -> acc
+        | _::xs -> let u = also_ok #a p f xs acc in f u
 
+
+(* But it doesn't work otherwise *)
+val bug : #a:Type
+         -> p:(a -> GTot bool)
+         -> f:(d:a -> Tot (r:a{p d ==> p r}))
+         -> l:list a
+         -> acc:a
+         -> ML a
+let rec bug #a p f l acc =
+    match l with
+        | [] -> acc
+        | _::xs -> f (bug #a p f xs acc)

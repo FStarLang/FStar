@@ -15,55 +15,55 @@ include ../Makefile.include
 all: .all.crypto.ver merkle_tree mac mac3 rpc CntProtocol padding acls-cap statefulEnc sig
 
 .all.crypto.ver: $(VERFILES)
-	$(FSTAR) --z3timeout 20 $^
+	$(SFSTAR) --z3timeout 20 $^
 
 export CONTRIB=../../contrib
 
 mac: sha1.fst mac.fst
-	$(FSTAR) --z3timeout 10 --verify_module MAC --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1  \
+	$(SFSTAR) --z3timeout 10 --verify_module MAC --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1  \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
 		$^
 
 sig: sig.fst
-	$(FSTAR) \
+	$(SFSTAR) \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
 		$^
 
 padding: Padding.Pad.fst Padding.BMAC.fst Padding.MAC2.fst Padding.TMAC.fst
-	$(FSTAR) --z3timeout 20 --verify_module Padding.Pad --verify_module Padding.BMAC --verify_module Padding.MAC2 --verify_module Padding.TMAC --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
+	$(SFSTAR) --z3timeout 20 --verify_module Padding.Pad --verify_module Padding.BMAC --verify_module Padding.MAC2 --verify_module Padding.TMAC --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
 		$^
 
 mac3: mac3.fst
-	$(FSTAR) --z3timeout 10 --verify_module MAC3 --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
+	$(SFSTAR) --z3timeout 10 --verify_module MAC3 --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
 		$^
 
 merkle_tree: MerkleTree.fst
-	$(FSTAR) --verify_module MerkleTree \
+	$(SFSTAR) --verify_module MerkleTree \
 	--include $(FSTAR_HOME)/contrib/Platform/fst \
 	--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
 	$^
 
 acls-cap: sha1.fst mac.fst ../security/acls2.fst Cap.fst
-	$(FSTAR) --z3timeout 10 \
+	$(SFSTAR) --z3timeout 10 \
 	--verify_module ACLs2 --verify_module Cap \
 	--include $(FSTAR_HOME)/contrib/Platform/fst \
 	--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
 	$^
 
 rpc: formatting.fst sha1.fst mac.fst rpc.fst
-	$(FSTAR) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
+	$(SFSTAR) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst rpc.fst
 
 statefulEnc: StatefulEncryption.SingleInstance.fst StatefulEncryption.TwoLevelHeap.fst
-	$(FSTAR) --verify_module StatefulEncryption.SingleInstance StatefulEncryption.SingleInstance.fst
-	$(FSTAR) --verify_module StatefulEncryption.TwoLevelHeap StatefulEncryption.TwoLevelHeap.fst
+	$(SFSTAR) --verify_module StatefulEncryption.SingleInstance StatefulEncryption.SingleInstance.fst
+	$(SFSTAR) --verify_module StatefulEncryption.TwoLevelHeap StatefulEncryption.TwoLevelHeap.fst
 
 .PHONY: mllibs
 
@@ -72,7 +72,7 @@ mllibs:
 	$(MAKE) -C $(FSTAR_HOME)/contrib/CoreCrypto/ml clean all test
 
 RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
-	$(FSTAR_ALWAYS) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
+	$(FSTAR_ALWAYS) --stratified --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst rpc.fst \
 		--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --use_native_int
@@ -92,13 +92,13 @@ rpc-test: rpc.exe
 	$(EXTRA_PATH) ./rpc.exe
 
 CntProtocol: CntFormat.fst mac.fst sha1.fst CntProtocol.fst
-	$(FSTAR) --z3timeout 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
+	$(SFSTAR) --z3timeout 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst CntProtocol.fst
 
 CntProtocol.ml: CntFormat.fst mac.fst sha1.fst CntProtocol.fst
-	$(FSTAR_ALWAYS) --z3timeout 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
+	$(FSTAR_ALWAYS) --stratified --z3timeout 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst CntProtocol.fst \

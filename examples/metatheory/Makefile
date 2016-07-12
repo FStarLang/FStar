@@ -8,19 +8,19 @@ uall: ParSubst.univ.ver StlcCbvDbPntSubstNoLists.univ.ver StlcStrongDbParSubst.u
 _STDLIB_=FStar.Constructive.fst FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst 
 
 %.univ.ver: %.fst
-	$(FSTAR) --universes $^
+	$(FSTAR) $^
 
 LambdaOmega:
-	$(FSTAR) $(_STDLIB_) LambdaOmega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1
+	$(SFSTAR) $(_STDLIB_) LambdaOmega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1
 
 FOmega:
 	$(FSTAR) FOmega.fst
 
 MicroFStar:
-	$(FSTAR) MicroFStar.fst
+	$(SFSTAR) MicroFStar.fst
 
 HoareWeakestPrecondition:
-	$(FSTAR) $(_STDLIB_) HoareWeakestPrecondition.fst --max_fuel 1 --max_ifuel 1
+	$(SFSTAR) $(_STDLIB_) HoareWeakestPrecondition.fst --max_fuel 1 --max_ifuel 1
 
 # This takes forever to verify
 StlcCbvDbPntsubstLists:

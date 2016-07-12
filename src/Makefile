@@ -7,14 +7,14 @@ BIN=../bin
 # --------------------------------------------------------------------
 # Configuration of some platform-specific tools; eventually we will want a configure script
 
-UNAME	       = $(shell uname)
-
 ifeq ($(OS),Windows_NT)
   FSC     = fsc
   MSBUILD = $(shell cygpath -u \"$$(reg.exe query 'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0' /v MSBuildToolsPath | tail -n 2 | head -n 1 | sed 's/.*REG_SZ\s\+//g')\")/MSBuild.exe
+  UNAME   = Windows_NT
 else
   FSC     = fsharpc
   MSBUILD = xbuild
+  UNAME   = $(shell uname -s)
 endif
 
 MSBUILD := $(MSBUILD) /verbosity:normal /p:Configuration=Release
@@ -23,19 +23,15 @@ ifeq ($(UNAME),Darwin)
   HEAD=ghead
   SED=gsed
   FIND=gfind
+  RUNTIME = mono
 else
   HEAD=head
   SED=sed
   FIND=find
+  RUNTIME=
 endif
-
 
 # --------------------------------------------------------------------
-ifeq ($(OS),Windows_NT)
-RUNTIME =
-else
-RUNTIME = mono
-endif
 
 FSLYDIR := VS/packages/FsLexYacc.6.1.0
 FSYACC  := $(RUNTIME) $(FSLYDIR)/build/fsyacc.exe
@@ -158,7 +154,7 @@ clean_ocaml_prep:
 extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
-	$(RUNTIME) ../bin/fstar.exe --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app \
+	$(RUNTIME) ../bin/fstar.exe --stratified --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app \
 	  $(addprefix --no_extract ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
 
 ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml
@@ -209,10 +205,17 @@ clean-boot-fs:
 # Testing
 # --------------------------------------------------------------------
 
-test:   all fsharp-regressions fstar-ocaml regressions
+test:
+	make clean
+	make clean -C ../ulib/ml
+	make all
+	make fsharp-regressions
+	make fstar-ocaml
+	make regressions
 
 utest:
 	make clean
+	make clean -C ../ulib/ml
 	make all
 	make fsharp-regressions
 	make fstar-ocaml

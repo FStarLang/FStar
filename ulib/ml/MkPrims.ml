@@ -131,4 +131,6 @@ end) -> struct
 
   type ('a, 'b, 'c, 'd) dtuple4 =
     | Mkdtuple4 of 'a * 'b * 'c * 'd
+
+  let rec pow2 n = if n = parse_int "0" then (parse_int "1") else (parse_int "2") * pow2 (n-(parse_int "1"))
 end

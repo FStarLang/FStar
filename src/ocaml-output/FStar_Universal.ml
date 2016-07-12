@@ -408,33 +408,33 @@ in (all_mods, dsenv, env))
 end)))
 
 
-let batch_mode_tc : Prims.string Prims.list  ->  (FStar_Syntax_Syntax.modul Prims.list * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) = (fun filenames -> (
+let batch_mode_tc : FStar_Parser_Dep.verify_mode  ->  Prims.string Prims.list  ->  (FStar_Syntax_Syntax.modul Prims.list * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) = (fun verify_mode filenames -> (
 
-let _89_259 = (tc_prims ())
-in (match (_89_259) with
+let _89_260 = (tc_prims ())
+in (match (_89_260) with
 | (prims_mod, dsenv, env) -> begin
 (
 
-let filenames = (FStar_Dependences.find_deps_if_needed filenames)
+let filenames = (FStar_Dependences.find_deps_if_needed verify_mode filenames)
 in (
 
-let _89_265 = if ((not ((FStar_Options.explicit_deps ()))) && (FStar_Options.debug_any ())) then begin
+let _89_266 = if ((not ((FStar_Options.explicit_deps ()))) && (FStar_Options.debug_any ())) then begin
 (
 
-let _89_261 = (FStar_Util.print_endline "Auto-deps kicked in; here\'s some info.")
+let _89_262 = (FStar_Util.print_endline "Auto-deps kicked in; here\'s some info.")
 in (
 
-let _89_263 = (FStar_Util.print1 "Here\'s the list of filenames we will process: %s\n" (FStar_String.concat " " filenames))
-in (let _180_101 = (let _180_100 = (FStar_Options.verify_module ())
-in (FStar_String.concat " " _180_100))
-in (FStar_Util.print1 "Here\'s the list of modules we will verify: %s\n" _180_101))))
+let _89_264 = (FStar_Util.print1 "Here\'s the list of filenames we will process: %s\n" (FStar_String.concat " " filenames))
+in (let _180_103 = (let _180_102 = (FStar_Options.verify_module ())
+in (FStar_String.concat " " _180_102))
+in (FStar_Util.print1 "Here\'s the list of modules we will verify: %s\n" _180_103))))
 end else begin
 ()
 end
 in (
 
-let _89_270 = (batch_mode_tc_no_prims dsenv env filenames)
-in (match (_89_270) with
+let _89_271 = (batch_mode_tc_no_prims dsenv env filenames)
+in (match (_89_271) with
 | (all_mods, dsenv, env) -> begin
 ((prims_mod)::all_mods, dsenv, env)
 end))))

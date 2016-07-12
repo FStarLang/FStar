@@ -527,6 +527,7 @@ and tc_constant r (c:sconst) : typ =
 and tc_comp env c : comp                                      (* checked version of c                       *)
                   * universe                                  (* universe of c.result_typ                   *)
                   * guard_t =                                 (* logical guard for the well-formedness of c *)
+  let c0 = c in
   match c.n with
     | Total t ->
       let k, u = U.type_u () in
@@ -550,9 +551,17 @@ and tc_comp env c : comp                                      (* checked version
             let e, _, g = tc_tot_or_gtot_term env e in
             DECREASES e, g
         | f -> f, Rel.trivial_guard) |> List.unzip in
-      let u = match !(fst res).tk with //TODO:ugly
+
+      let u = match !(fst res).tk with //TODO:ugly. This code is brittle, see #567. We should have a better way to compute the universe of c
         | Some (Tm_type u) -> u
-        | tk -> failwith "Impossible" in
+        | Some t ->
+          let t = S.mk t None Range.dummyRange in
+          let t = N.normalize [N.Beta] env t in
+          begin match t.n with 
+          | Tm_type u -> u
+          | _ -> failwith "Impossible:Unexpected sort for computation"
+          end
+        | _ -> failwith "Impossible:Unexpected sort for computation" in
       mk_Comp ({c with
           result_typ=fst res;
           effect_args=args}),
@@ -2444,7 +2453,8 @@ let tc_inductive env ses quals lids =
         tcs, datas in
 
     let tys, datas = ses |> List.partition (function Sig_inductive_typ _ -> true | _ -> false) in
-
+    if datas |> Util.for_some (function Sig_datacon _ -> false | _ -> true)
+    then raise (Error("Mutually defined type contains a non-inductive element", Env.get_range env)); 
     let env0 = env in
 
     (* Check each tycon *)

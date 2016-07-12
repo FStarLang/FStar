@@ -129,9 +129,9 @@ inline let pure_return (a:Type) (x:a) (p:pure_post a) =
 inline let pure_bind_wp (r1:range) (a:Type) (b:Type)
                    (wp1:pure_wp a) (wp2: (a -> GTot (pure_wp b)))
                    (p : pure_post b) =
-     labeled r1 "push" unit 
+     labeled r1 "push" unit
      /\ wp1 (fun (x:a) -> 
-             labeled r1 "pop" unit 
+             labeled r1 "pop" unit
 	     /\ wp2 x p)
 inline let pure_if_then_else (a:Type) (p:Type) (wp_then:pure_wp a) (wp_else:pure_wp a) (post:pure_post a) =
      l_ITE p (wp_then post) (wp_else post)

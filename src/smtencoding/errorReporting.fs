@@ -35,7 +35,10 @@ let fresh_label : ranges -> term -> labels -> term * labels =
         let l = incr ctr; format1 "label_%s" (string_of_int !ctr) in
         let lvar = l, Bool_sort in
         let message, range = match rs with 
-            | [] -> t.hash, Range.dummyRange
+            | [] -> 
+              if Options.debug_any()
+              then  t.hash, Range.dummyRange
+              else "Z3 provided a counterexample, but, unfortunately, F* could not translate it back to something meaningful", Range.dummyRange
             | (Some reason, r)::_ -> reason, r
             | (None, r)::_ -> "failed to prove a pre-condition", r in
         let label = (lvar, message, range) in
@@ -50,7 +53,12 @@ let fresh_label : ranges -> term -> labels -> term * labels =
 
       Returns the labeled query and the label terms that were added
 *)
-let label_goals use_env_msg r q : term * labels * ranges = 
+let label_goals use_env_msg  //when present, provides an alternate error message, usually "could not check implicit argument", or something like that
+                r            //the source range in which this query was asked
+                q : term     //the query, decorated with labels
+                  * labels   //the labels themselves
+                  * ranges   //not-relevant at the top-level; recursively this range represents the stack of source locations being visited
+                  = 
     let flag, msg_prefix = match use_env_msg with 
         | None -> false, ""
         | Some f -> true, f() in

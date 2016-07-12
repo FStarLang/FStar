@@ -1,4 +1,4 @@
-module Bug
+module Bug399
 
 type foo = unit -> St unit
 

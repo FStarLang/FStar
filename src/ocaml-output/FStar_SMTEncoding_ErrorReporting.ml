@@ -47,7 +47,11 @@ in (
 
 let _83_49 = (match (rs) with
 | [] -> begin
+if (FStar_Options.debug_any ()) then begin
 (t.FStar_SMTEncoding_Term.hash, FStar_Range.dummyRange)
+end else begin
+("Z3 provided a counterexample, but, unfortunately, F* could not translate it back to something meaningful", FStar_Range.dummyRange)
+end
 end
 | ((Some (reason), r))::_83_35 -> begin
 (reason, r)

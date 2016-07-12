@@ -11,6 +11,7 @@ include MkPrims.Make(struct
   let ( > )     = Big_int_Z.gt_big_int
   let ( % )     = Big_int_Z.mod_big_int
   let op_Minus  = Big_int_Z.minus_big_int
+  let ( ~- )  = op_Minus
   let parse_int = Big_int_Z.big_int_of_string
   let to_string = Big_int_Z.string_of_big_int
 end)

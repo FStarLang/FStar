@@ -34,6 +34,18 @@ open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Ident
 
+(* In case the user passed [--verify_all], we record every single module name we
+ * found in the list of modules to be verified.
+ * In the [VerifyUserList] case, for every [--verify_module X], we check we
+ * indeed find a module [X].
+ * In the [VerifyFigureItOut] case, for every file that was on the command-line,
+ * we record its module name as one module to be verified.
+ *)
+type verify_mode =
+  | VerifyAll
+  | VerifyUserList
+  | VerifyFigureItOut
+
 type map = smap<(option<string>*option<string>)>
 
 let check_and_strip_suffix (f: string): option<string> =
@@ -107,6 +119,8 @@ let lowercase_module_name f =
 let build_map (filenames: list<string>): map =
   let include_directories = Options.include_path () in
   let include_directories = List.map normalize_file_path include_directories in
+  (* Note that [BatList.unique] keeps the last occurrence, that way one can
+   * always override the precedence order. *)
   let include_directories = List.unique include_directories in
   let cwd = normalize_file_path (getcwd ()) in
   let map = smap_create 41 in
@@ -187,7 +201,7 @@ exception Exit
 
 (** Parse a file, walk its AST, return a list of FStar lowercased module names
     it depends on. *)
-let collect_one (original_map: map) (filename: string): list<string> =
+let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_mode) (is_user_provided_filename: bool) (original_map: map) (filename: string): list<string> =
   let deps = ref [] in
   let add_dep d =
     if not (List.existsb (fun d' -> d' = d) !deps) then
@@ -247,6 +261,18 @@ let collect_one (original_map: map) (filename: string): list<string> =
     | Module (lid, decls)
     | Interface (lid, decls, _) ->
         check_module_declaration_against_filename lid filename;
+        begin match verify_mode with
+        | VerifyAll ->
+            Options.add_verify_module (string_of_lid lid true)
+        | VerifyFigureItOut ->
+            if is_user_provided_filename then
+              Options.add_verify_module (string_of_lid lid true)
+        | VerifyUserList ->
+            List.iter (fun (m, r) ->
+              if String.lowercase m = String.lowercase (string_of_lid lid true) then
+                r := true
+            ) verify_flags
+        end;
         collect_decls decls
 
   and collect_decls decls =
@@ -459,10 +485,14 @@ let print_graph graph =
   )
 
 (** Collect the dependencies for a list of given files. *)
-let collect (filenames: list<string>): _ =
+let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
   (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)
   let graph = smap_create 41 in
+
+  (* A bitmap that ensures every --verify_module X was matched by an existing X
+   * in our dependency graph. *)
+  let verify_flags = List.map (fun f -> f, ref false) (Options.verify_module ()) in
 
   (* A map from lowercase module names (e.g. [a.b.c]) to the corresponding
    * filenames (e.g. [/where/to/find/A.B.C.fst]). Consider this map
@@ -478,18 +508,28 @@ let collect (filenames: list<string>): _ =
     Util.print3 "%s: %s, %s\n" k (p intf) (p impl)
   ) (smap_keys m); *)
 
+  let collect_one = collect_one verify_flags verify_mode in
+
   (* This function takes a lowercase module name. *)
-  let rec discover_one key =
+  let rec discover_one is_user_provided_filename key =
     if smap_try_find graph key = None then
       (* Util.print1 "key: %s\n" key; *)
       let intf, impl = must (smap_try_find m key) in
-      let intf_deps = match intf with | None -> [] | Some intf -> collect_one m intf in
-      let impl_deps = match impl with | None -> [] | Some impl -> collect_one m impl in
+      let intf_deps =
+        match intf with
+        | None -> []
+        | Some intf -> collect_one is_user_provided_filename m intf
+      in
+      let impl_deps =
+        match impl with
+        | None -> []
+        | Some impl -> collect_one is_user_provided_filename m impl
+      in
       let deps = List.unique (impl_deps @ intf_deps) in
       smap_add graph key (deps, White);
-      List.iter discover_one deps
+      List.iter (discover_one false) deps
   in
-  List.iter discover_one (List.map lowercase_module_name filenames);
+  List.iter (discover_one true) (List.map lowercase_module_name filenames);
 
   (* At this point, we have the (immediate) dependency graph of all the files. *)
   let immediate_graph = smap_copy graph in
@@ -541,6 +581,12 @@ let collect (filenames: list<string>): _ =
     ) as_list
   ) (smap_keys graph) in
   let topologically_sorted = List.collect must_find_r !topologically_sorted in
+
+  List.iter (fun (m, r) ->
+    if not !r && not (Options.interactive ()) then
+      raise (Err (Util.format2 "You passed --verify_module %s but I found no \
+        file that contains [module %s] in the dependency graph\n" m m))
+  ) verify_flags;
 
   (* At this stage the list is kept in reverse to make sure the caller in
    * [dependencies.fs] can chop [prims.fst] off its head. So make sure we have

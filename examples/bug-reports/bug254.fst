@@ -1,5 +1,5 @@
 module Bug254
-open List
+open FStar.List
 
 val foo : list nat -> Tot bool
 let foo _ = true
