@@ -15,7 +15,7 @@ include ../Makefile.include
 all: .all.crypto.ver merkle_tree mac mac3 rpc CntProtocol padding acls-cap statefulEnc sig
 
 .all.crypto.ver: $(VERFILES)
-	$(SFSTAR) --z3timeout 20 $^
+	$(FSTAR) --z3timeout 20 $^
 
 export CONTRIB=../../contrib
 

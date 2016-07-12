@@ -10,11 +10,12 @@
 module CCA2.RSA
 
 open FStar.BaseTypes
+open FStar.List.Tot
 
 assume type pkey
 assume type skey
 type bytes = list byte
-type nbytes (n:nat) = b:bytes{List.length b == n}
+type nbytes (n:nat) = b:bytes{List.Tot.length b == n}
 assume val plainsize  : nat
 assume val ciphersize : nat
 type plain   = nbytes plainsize
