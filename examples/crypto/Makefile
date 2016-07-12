@@ -26,9 +26,9 @@ mac: sha1.fst mac.fst
 		$^
 
 sig: sig.fst
-	$(SFSTAR) \
-		--include $(FSTAR_HOME)/contrib/Platform/fst \
-		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
+	$(FSTAR) \
+		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
+		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 		$^
 
 padding: Padding.Pad.fst Padding.BMAC.fst Padding.MAC2.fst Padding.TMAC.fst
