@@ -38,16 +38,18 @@ module MAC3
 open FStar.Seq
 open FStar.SeqProperties
 open FStar.BaseTypes
+open FStar.List.Tot
 
-type bytes = seq byte (* concrete byte arrays *)
+type bytes = seq FStar.UInt8.byte (* concrete byte arrays *)
 type text  = bytes    (* a type abbreviation, for clarity *)
 
-type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
+type nbytes (n:nat) = b:bytes{Seq.length b = n} (* fixed-length bytes *)
 
 let keysize = 16 (* these are the sizes for SHA1 *)
 let macsize = 20
 type key = nbytes keysize
 type tag = nbytes macsize
+
 
 (* we rely on some external crypto library implementing HMAC-SHA1 *)
 
@@ -62,7 +64,7 @@ let sha1verify k txt tag = (sha1 k txt = tag)
    used as a pre-condition for MACing and
    a postcondition of MAC verification *)
 
-opaque type key_prop : key -> text -> Type
+(*opaque*) assume new unfoldable type key_prop : key -> text -> Type
 type pkey (p:(text -> Type)) = k:key{key_prop k == p}
 
 assume val leak: k:key { forall t. key_prop k t } -> bytes
@@ -94,13 +96,17 @@ let mac k t =
 
 let verify k text tag =
   let verified = sha1verify k text tag in
-  let found    = is_Some(List.find (function (Entry k' text' tag') -> k=k' && text=text' (*CTXT: && tag=tag' *) ) !log) in
+  let found    = is_Some(List.Tot.find (function (Entry k' text' tag') -> k=k' && text=text' (*CTXT: && tag=tag' *) ) !log) in
 
   (* plain, concrete implementation (ignoring the log) *)
 //verified
 
   (* ideal, error-correcting implementation *)
-  verified && (found || leaked k )
+  if verified
+  then if found
+       then true
+       else leaked k
+  else false
 
   (* error-detecting implementation for the INT-CMA-LEAK game *)
 //if verified && not (found || leaked k) then win:= Some(k,text,tag);
