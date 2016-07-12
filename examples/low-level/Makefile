@@ -14,7 +14,7 @@ OCAMLOPT := ocamlfind opt -package batteries,stdint,zarith -linkpkg -g -I $(ULIB
 	-I $(ULIB_ML)/hyperheap $(ULIB_ML)/fstarlib-hyperheap.cmxa -w -8-20-26
 
 REALIZED_MLI=
-REALIZED=FStar_Mul FStar_HyperStack FStar_HST FStar_Buffer
+REALIZED=FStar_HyperStack FStar_HST
 REALIZED_MODULE=$(subst _,., $(REALIZED))
 REALIZED_ML=$(addsuffix .mli,$(REALIZED_MLI)) $(addsuffix .ml,$(REALIZED_MLI) $(REALIZED))
 NO_CODEGEN=$(addprefix --no_extract , SInt $(REALIZED_MODULE))
