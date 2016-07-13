@@ -1760,15 +1760,10 @@ in (FStar_Util.format2 "%s%s" (imp_to_string imp) _149_1189))
 end)) args)
 in (FStar_Util.format2 "(%s %s)" l.FStar_Ident.str _149_1190))
 end
-| Abs (pats, t) when (x.level = Expr) -> begin
+| Abs (pats, t)  -> begin
 (let _149_1192 = (to_string_l " " pat_to_string pats)
 in (let _149_1191 = (FStar_All.pipe_right t term_to_string)
 in (FStar_Util.format2 "(fun %s -> %s)" _149_1192 _149_1191)))
-end
-| Abs (pats, t) when (x.level = Type) -> begin
-(let _149_1194 = (to_string_l " " pat_to_string pats)
-in (let _149_1193 = (FStar_All.pipe_right t term_to_string)
-in (FStar_Util.format2 "(fun %s => %s)" _149_1194 _149_1193)))
 end
 | App (t1, t2, imp) -> begin
 (let _149_1196 = (FStar_All.pipe_right t1 term_to_string)
@@ -1900,7 +1895,7 @@ in (let _149_1245 = (FStar_All.pipe_right t term_to_string)
 in (FStar_Util.format2 "Unidentified product: [%s] %s" _149_1246 _149_1245)))
 end
 | t -> begin
-(FStar_All.failwith "Missing case in term_to_string")
+"Missing case in term_to_string"
 end))
 and binder_to_string : binder  ->  Prims.string = (fun x -> (
 
