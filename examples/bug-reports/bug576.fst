@@ -7,7 +7,7 @@ type exp =
 val appears_free_in : e:exp -> Tot bool
 let rec appears_free_in e =
   match e with
-  | EVar -> false
+  | EVar -> true
   | ELam e1 -> appears_free_in e1
 
 let closed (e : exp) : Tot bool = not (appears_free_in e)
