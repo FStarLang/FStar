@@ -35,7 +35,7 @@ all-neg: $(NEGFILES)
 	@FAILC=`egrep "^Error: [0-9]* errors" -o fstar_log | egrep -o "[0-9]+"`; if [ "$$FAILC" != "$(NEGTESTS)" ]; then echo "Wrong failure count: $$FAILC (expected $(NEGTESTS))" && false; else echo "Success: $$FAILC failures were expected"; fi
 
 mac: mac.fst
-	$(SFSTAR) --explicit_deps $(STDLIB) FStar.Seq.fst mac.fst
+	$(FSTAR)  mac.fst
 
 inverse:
 	$(SFSTAR) --explicit_deps --max_fuel 0 --max_ifuel 3 --initial_ifuel 3 --initial_fuel 0 $(call add_stdlib_prefix, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Seq.fst) inverse.fst
