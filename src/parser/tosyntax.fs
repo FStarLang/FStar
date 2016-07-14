@@ -79,36 +79,6 @@ let rec unparen t = match t.tm with
 
 let tm_type_z r = mk_term (Name (lid_of_path ["Type0"] r)) r Kind
 let tm_type r = mk_term (Name (lid_of_path   [ "Type"] r)) r Kind
-
-let rec delta_qualifier t = 
-    let t = Subst.compress t in
-    match t.n with
-        | Tm_delayed _ -> failwith "Impossible"
-        | Tm_fvar fv -> fv.fv_delta 
-        | Tm_bvar _
-        | Tm_name _ 
-        | Tm_match _ 
-        | Tm_uvar _ 
-        | Tm_unknown -> Delta_equational
-        | Tm_type _
-        | Tm_constant _
-        | Tm_arrow _ -> Delta_constant
-        | Tm_uinst(t, _)
-        | Tm_refine({sort=t}, _)
-        | Tm_meta(t, _)
-        | Tm_ascribed(t, _, _)
-        | Tm_app(t, _) 
-        | Tm_abs(_, t, _) 
-        | Tm_let(_, t) -> delta_qualifier t
-
-let incr_delta_qualifier t = 
-    let d = delta_qualifier t in
-    let rec aux d = match d with
-        | Delta_equational -> d
-        | Delta_constant -> Delta_unfoldable 1
-        | Delta_unfoldable i -> Delta_unfoldable (i + 1)
-        | Delta_abstract d -> aux d in
-    aux d
  
 let compile_op arity s =
     let name_of_char = function

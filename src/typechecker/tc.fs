@@ -1729,7 +1729,7 @@ let open_effect_decl env ed =
              ; trivial     =op ed.trivial } in
    ed, a, wp
 
-let tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
+let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
   let binders_un, signature_un = SS.open_term ed.binders ed.signature in
   let binders, env, _ = tc_tparams env0 binders_un in
@@ -1755,10 +1755,13 @@ let tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     check_and_gen env t k in
 
   (* Override dummy fields with automatically-generated combinators, if needed. *)
-  let ed =
+  let env, ed =
     match is_for_free with
-    | NotForFree -> ed
-    | ForFree -> DMFF.gen_wps_for_free env binders a wp_a tc_term ed in
+    | NotForFree ->
+        env, ed
+    | ForFree ->
+        DMFF.gen_wps_for_free env binders a wp_a tc_decl tc_term ed
+  in
 
   let return_wp =
     let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
@@ -1991,7 +1994,7 @@ let tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   ed
 
 
-let elaborate_and_star env0 ed =
+and elaborate_and_star env0 ed =
   // Using [STInt: a:Type -> Effect] as an example...
   let binders_un, signature_un = SS.open_term ed.binders ed.signature in
   // [binders] is the empty list (for [ST (h: heap)], there would be one binder)
@@ -2086,13 +2089,13 @@ let elaborate_and_star env0 ed =
   ed
 
 
-let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
+and tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   let ed =
     (* If this is an "effect for free", then the effect declaration is
      * understood to be written in the "definition language"; we elaborate and
      * cps-transform these definitions to get a definition that is in the F*
      * language per se. The output of [elaborate_and_star] is still partial
-     * (i.e. some combinators are missing); [tc_real_eff_decl] will can
+     * (i.e. some combinators are missing); [tc_real_eff_decl] will call
      * [gen_wps_for_free] as needed. *)
     match is_for_free with
     | ForFree -> elaborate_and_star env0 ed
@@ -2100,7 +2103,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   in
   tc_real_eff_decl env0 ed is_for_free
 
-let tc_lex_t env ses quals lids =
+and tc_lex_t env ses quals lids =
     (* We specifically type lex_t as:
 
           type lex_t<u> : Type(u) =
@@ -2148,7 +2151,7 @@ let tc_lex_t env ses quals lids =
         failwith (Util.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (Sig_bundle(ses, [], lids, Range.dummyRange))))
     end
 
-let tc_inductive env ses quals lids =
+and tc_inductive env ses quals lids =
     (*  Consider this illustrative example:
 
          type T (a:Type) : (b:Type) -> Type =
@@ -2381,7 +2384,7 @@ let tc_inductive env ses quals lids =
     let tcs, datas = generalize_and_inst_within env0 g (List.map fst tcs) datas in
     Sig_bundle(tcs@datas, quals, lids, Env.get_range env0)
 
-let rec tc_decl env se = match se with
+and tc_decl env se = match se with
     | Sig_inductive_typ _
     | Sig_datacon _ ->
       failwith "Impossible bare data-constructor"

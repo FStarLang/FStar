@@ -36,64 +36,29 @@ module U  = FStar.Syntax.Util
 
 // Synthesis of WPs from a partial effect definition (in F*) ------------------
 
-let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.eff_decl =
+let gen_wps_for_free
+  env (binders: binders) (a: bv) (wp_a: term) tc_decl tc_term (ed: Syntax.eff_decl):
+  _ * Syntax.eff_decl
+=
   (* A series of macros and combinators to automatically build WP's. In these
    * definitions, both [binders] and [a] are opened. This means that macros
    * close over [binders] and [a], and this means that combinators do not expect
    * [binders] and [a] when applied. *)
-  let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env in
+  let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] in
 
   let d s = Util.print1 "\x1b[01;36m%s\x1b[00m\n" s in
-  let normalize_and_make_binders_explicit tm =
-    let tm = normalize tm in
-    let rec visit_term tm =
-      let n = match (SS.compress tm).n with
-        | Tm_arrow (binders, comp) ->
-            let comp = visit_comp comp in
-            let binders = List.map visit_binder binders in
-            Tm_arrow (binders, comp)
-        | Tm_abs (binders, term, comp) ->
-            let comp = visit_maybe_lcomp comp in
-            let term = visit_term term in
-            let binders = List.map visit_binder binders in
-            Tm_abs (binders, term, comp)
-        | _ ->
-            tm.n
-      in
-      { tm with n = n }
-    and visit_binder (bv, a) =
-      { bv with sort = visit_term bv.sort }, S.as_implicit false
-    and visit_maybe_lcomp lcomp =
-      match lcomp with
-      | Some (Inl lcomp) ->
-          Some (Inl (U.lcomp_of_comp (visit_comp (lcomp.comp ()))))
-      | comp ->
-          comp
-    and visit_comp comp =
-      let n = match comp.n with
-        | Total tm ->
-            Total (visit_term tm)
-        | GTotal tm ->
-            GTotal (visit_term tm)
-        | comp ->
-            comp
-      in
-      { comp with n = n }
-    and visit_args args =
-      List.map (fun (tm, q) -> visit_term tm, q) args
-    in
-    visit_term tm
-  in
+  d "Elaborating extra WP combinators";
+  Util.print1 "wp_a is: %s\n" (Print.term_to_string wp_a);
 
   (* A debug / sanity check. *)
-  let check str t =
+  let check env str t =
     if Env.debug env (Options.Other "ED") then begin
       Util.print2 "Generated term for %s: %s\n" str (Print.term_to_string t);
-      let t = normalize t in
-      let t = SS.compress t in
-      let e, { res_typ = res_typ }, _ = tc_term env t in
-      Util.print2 "Inferred type for %s: %s\n" str (Print.term_to_string (normalize res_typ));
-      Util.print2 "Elaborated term for %s: %s\n" str (Print.term_to_string (normalize e))
+      let t, { res_typ = res_typ }, _ = tc_term env t in
+      let t = normalize env t in
+      let res_typ = normalize env res_typ in
+      Util.print2 "Inferred type for %s: %s\n" str (Print.term_to_string res_typ);
+      Util.print2 "Elaborated term for %s: %s\n" str (Print.term_to_string t)
     end
   in
 
@@ -111,6 +76,7 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
   let rec collect_binders (t : term) =
     match (compress t).n with
     | Tm_arrow (bs, comp) ->
+        // TODO: dubious, assert no nested arrows
         let rest = match comp.n with
           | Total t -> t
           | _ -> failwith "wp_a contains non-Tot arrow"
@@ -121,28 +87,69 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
     | _ ->
         failwith "wp_a doesn't end in Type0" in
 
-  let mk_ctx, mk_gctx, mk_gamma =
-    let i = ref 0 in
-    let wp_binders = collect_binders (normalize wp_a) in
-    (fun t -> U.arrow wp_binders (mk_Total t)),
-    (fun t -> U.arrow wp_binders (mk_GTotal t)),
-    (fun () -> List.map (fun (bv, _) ->
-      (* Note: just returning [wp_binders] here would be wrong, because the
-       * identity of binders relies on equality of the [bv] data structure. So,
-       * arguments passed to [mk_ctx] should never refer to [wp_binders]; one
-       * way to enforce that is to generate fresh binders whenever the client
-       * asks for it. *)
-      i := !i + 1;
-      S.gen_bv ("g" ^ string_of_int !i) None bv.sort
-    ) wp_binders)
+  let mk_lid name: lident =
+    lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ name)) Range.dummyRange
+  in
+
+  let gamma = collect_binders (normalize env wp_a) in
+  let unknown = mk Tm_unknown None Range.dummyRange in
+  let register env lident def =
+    Util.print2 "Registering top-level definition: %s\n%s\n"
+      (text_of_lid lident) (Print.term_to_string def);
+    // Allocate a new top-level name.
+    let fv = S.lid_as_fv lident (incr_delta_qualifier def) None in
+    let lbname: lbname = Inr fv in
+    // Type-check the body, generalize universes, generate let-binding
+    let def, comp, _ = tc_term env def in
+    let comp = comp.comp () in
+    let univ_vars, def = Util.generalize_universes env def in
+    let lb: letbindings = false, [
+      Util.close_univs_and_mk_letbinding None lbname univ_vars
+        unknown (Util.comp_effect_name comp) def
+    ] in
+    // Re-check and push in the environment as a top-level let-binding
+    let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], []) in
+    // Options.set_option "debug_level" (Options.List [Options.String "Extreme"]);
+    // let env = { env with top_level = true } in
+    let se, env = tc_decl env sig_ctx in
+    begin match se with
+    | Sig_let ((_, [ { lbtyp = t } ]), _, _, _) ->
+        Util.print1 "Inferred type: %s\n" (Print.term_to_string t);
+    | _ ->
+        failwith "nope"
+    end;
+    env, fv
+  in
+
+  let env, mk_ctx, mk_gctx =
+    let mk x = mk x None Range.dummyRange in
+    let ctx_def, gctx_def =
+      let mk f: term =
+        let t = S.gen_bv "t" None Util.ktype0 in
+        let body = U.arrow gamma (f (S.bv_to_name t)) in
+        U.abs (binders @ [ S.mk_binder a; S.mk_binder t ]) body None
+      in
+      mk mk_Total,
+      mk mk_GTotal
+    in
+    // Register these two top-level bindings in the environment
+    let ctx_lid = mk_lid "ctx" in
+    let env, ctx_fv = register env ctx_lid ctx_def in
+
+    let gctx_lid = mk_lid "gctx" in
+    let env, gctx_fv = register env gctx_lid gctx_def in
+
+    env,
+    (fun t -> mk (Tm_app (mk (Tm_fvar ctx_fv), [ t, S.as_implicit false ]))),
+    (fun t -> mk (Tm_app (mk (Tm_fvar gctx_fv), [ t, S.as_implicit false ])))
   in
 
   (* A variation where we can specify implicit parameters. *)
   let binders_of_list = List.map (fun (t, b) -> t, S.as_implicit b) in
 
-  let implicit_binders_of_list = List.map (fun t -> t, S.as_implicit true) in
+  let mk_all_implicit = List.map (fun t -> fst t, S.as_implicit true) in
 
-  let args_of_bv = List.map (fun bv -> S.as_arg (S.bv_to_name bv)) in
+  let args_of_bv = List.map (fun bv -> S.as_arg (S.bv_to_name (fst bv))) in
 
   (* val st2_pure : #heap:Type -> #a:Type -> #t:Type -> x:t ->
        Tot (st2_ctx heap a t)
@@ -151,11 +158,10 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
     let t = S.gen_bv "t" None U.ktype in
     let x = S.gen_bv "x" None (S.bv_to_name t) in
     let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_ctx (S.bv_to_name t))))) in
-    let gamma = mk_gamma () in
-    let body = U.abs (implicit_binders_of_list gamma) (S.bv_to_name x) ret in
+    let body = U.abs (mk_all_implicit gamma) (S.bv_to_name x) ret in
     U.abs (binders_of_list [ t, true; x, false ]) body ret
   in
-  check "pure" (U.abs (binders @ [ S.mk_binder a ]) c_pure None);
+  check env "pure" (U.abs (binders @ [ a, S.as_implicit true ]) c_pure None);
 
   (* val st2_app : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                   l:st2_gctx heap a (t1 -> GTot t2) ->
@@ -171,18 +177,17 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
     let r = S.gen_bv "r" None (mk_gctx (S.bv_to_name t1)) in
     let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t2))))) in
     let outer_body =
-      let gamma = mk_gamma () in
       let gamma_as_args = args_of_bv gamma in
       let inner_body =
         U.mk_app
           (S.bv_to_name l)
           (gamma_as_args @ [ S.as_arg (U.mk_app (S.bv_to_name r) gamma_as_args)])
       in
-      U.abs (implicit_binders_of_list gamma) inner_body ret
+      U.abs (mk_all_implicit gamma) inner_body ret
     in
     U.abs (binders_of_list [ t1, true; t2, true; l, false; r, false ]) outer_body ret
   in
-  check "app" (U.abs (binders @ [ S.mk_binder a ]) c_app None);
+  check env "app" (U.abs (binders @ [ S.mk_binder a ]) c_app None);
 
   (* val st2_liftGA1 : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                        f : (t1 -> GTot t2) ->
@@ -191,7 +196,6 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
     let st2_liftGA1 #heap #a #t1 #t2 f a1 =
                     st2_app (st2_pure f) a1
   *)
-  let unknown = mk Tm_unknown None Range.dummyRange in
   let c_lift1 =
     let t1 = S.gen_bv "t1" None U.ktype in
     let t2 = S.gen_bv "t2" None U.ktype in
@@ -206,7 +210,7 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
         S.bv_to_name a1 ])
     ) ret
   in
-  check "lift1" (U.abs (binders @ [ S.mk_binder a ]) c_lift1 None);
+  check env "lift1" (U.abs (binders @ [ S.mk_binder a ]) c_lift1 None);
 
 
   (* val st2_liftGA2 : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type -> #t3:Type ->
@@ -239,7 +243,7 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
         S.bv_to_name a2 ])
     ) ret
   in
-  check "lift2" (U.abs (binders @ [ S.mk_binder a ]) c_lift2 None);
+  check env "lift2" (U.abs (binders @ [ S.mk_binder a ]) c_lift2 None);
 
   (* val st2_push : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                     f:(t1 -> Tot (st2_gctx heap a t2)) ->
@@ -257,13 +261,12 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
       U.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2)))))))
     in
     let e1 = S.gen_bv "e1" None (S.bv_to_name t1) in
-    let gamma = mk_gamma () in
-    let body = U.abs (S.binders_of_list gamma @ [ S.mk_binder e1 ]) (
+    let body = U.abs (gamma @ [ S.mk_binder e1 ]) (
       U.mk_app (S.bv_to_name f) (S.as_arg (S.bv_to_name e1) :: args_of_bv gamma)
     ) ret in
     U.abs (binders_of_list [ t1, true; t2, true; f, false ]) body ret
   in
-  check "push" (U.abs (binders @ [ S.mk_binder a ]) c_push None);
+  check env "push" (U.abs (binders @ [ S.mk_binder a ]) c_push None);
 
   let ret_tot_wp_a = Some (Inl (U.lcomp_of_comp (mk_Total wp_a))) in
 
@@ -285,8 +288,7 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
       ])
     ) ret_tot_wp_a
   in
-  let wp_if_then_else = normalize_and_make_binders_explicit wp_if_then_else in
-  check "wp_if_then_else" (U.abs binders wp_if_then_else None);
+  check env "wp_if_then_else" (U.abs binders wp_if_then_else None);
 
   (* val st2_assert_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
                        Tot (st2_wp heap a)
@@ -305,8 +307,7 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
     in
     U.abs (S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
   in
-  let wp_assert = normalize_and_make_binders_explicit wp_assert in
-  check "wp_assert" (U.abs binders wp_assert None);
+  check env "wp_assert" (U.abs binders wp_assert None);
 
   (* val st2_assume_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
                        Tot (st2_wp heap a)
@@ -325,8 +326,7 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
     in
     U.abs (S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
   in
-  let wp_assume = normalize_and_make_binders_explicit wp_assume in
-  check "wp_assume" (U.abs binders wp_assume None);
+  check env "wp_assume" (U.abs binders wp_assume None);
 
   let tforall = U.mk_app (S.mk_Tm_uinst U.tforall [ U_unknown ]) [ S.as_arg unknown ] in
 
@@ -350,8 +350,7 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
     in
     U.abs (S.binders_of_list [ a; b; f ]) body ret_tot_wp_a
   in
-  let wp_close = normalize_and_make_binders_explicit wp_close in
-  check "wp_close" (U.abs binders wp_close None);
+  check env "wp_close" (U.abs binders wp_close None);
 
   let ret_tot_type0 = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype0)) in
   let mk_forall (x: S.bv) (body: S.term): S.term =
@@ -367,7 +366,7 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
   *)
   (* Invariant: [x] and [y] have type [t] *)
   let rec mk_leq t x y =
-    match (normalize (SS.compress t)).n with
+    match (normalize env (SS.compress t)).n with
     | Tm_type _ ->
         (* Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
         U.mk_imp x y
@@ -400,7 +399,7 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
     let body = mk_leq wp_a (S.bv_to_name wp1) (S.bv_to_name wp2) in
     U.abs (S.binders_of_list [ wp1; wp2 ]) body ret_tot_type0
   in
-  check "stronger" (U.abs (binders @ [ S.mk_binder a ]) stronger None);
+  check env "stronger" (U.abs (binders @ [ S.mk_binder a ]) stronger None);
 
   let null_wp = snd ed.null_wp in
 
@@ -414,17 +413,14 @@ let gen_wps_for_free env binders a wp_a tc_term (ed: Syntax.eff_decl): Syntax.ef
     ]) in
     U.abs (S.binders_of_list [ a; wp ]) body ret_tot_type0
   in
-  let wp_trivial = normalize_and_make_binders_explicit wp_trivial in
-  // commented out -- buggy
-  // check "wp_trivial" (U.abs binders wp_trivial None);
+  check env "wp_trivial" (U.abs binders wp_trivial None);
 
-  { ed with
+  env, { ed with
     if_then_else = ([], wp_if_then_else);
     assert_p     = ([], wp_assert);
     assume_p     = ([], wp_assume);
     close_wp     = ([], wp_close);
-    // commented out -- buggy
-    // trivial      = ([], wp_trivial)
+    trivial      = ([], wp_trivial)
   }
 
 
@@ -486,7 +482,7 @@ let is_monadic_comp c =
 let rec mk_star_to_type mk env a =
   mk (Tm_arrow (
     [S.null_bv (star_type env a), S.as_implicit false],
-    mk_Total Util.ktype
+    mk_Total Util.ktype0
   ))
 
 
@@ -516,7 +512,7 @@ and star_type env t =
           //   (H_0  -> ... -> H_n  -t-> A)* = H_0* -> ... -> H_n* -> (A* -> Type) -> Type
           mk (Tm_arrow (
             binders @ [ S.null_bv (mk_star_to_type env a), S.as_implicit false ],
-            mk_Total Util.ktype))
+            mk_Total Util.ktype0))
       end
 
   | Tm_app (head, args) ->
