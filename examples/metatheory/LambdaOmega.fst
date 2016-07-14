@@ -652,8 +652,8 @@ let rec substitution #g1 #e #t s #g2 h1 hs =
               (* substitution esub_inc hgamma2 hs'' *)
               (* Failed to verify implicit argument: Subtyping check failed;
                  expected type LambdaOmega.var; got type Prims.int [2 times] *)
-              substitution #g2 #(s (y-1)) #(Some.v (lookup_evar g1 (y-1)))
-                esub_inc #(extend_evar g2 0 tlam) hgamma2 hs''
+              substitution #_ #(s (y-1)) #(Some.v (lookup_evar g1 (y-1)))
+                esub_inc #_ hgamma2 hs''
      in (esub_lam_hoist tlam ebody s;
          TyLam tlam (kinding_extensional hkind g2)
                (substitution (esub_lam s) hbody hs'))
@@ -862,18 +862,27 @@ let rec tred_diamond #s #t #u h1 h2 =
       ExIntro (tsubst_beta v2 v1) (Conj (subst_of_tred_tred 0 p2a p1a)
                                         (subst_of_tred_tred 0 p2b p1b))
     (* one TrBeta and other TrApp *)
+
+    (* CH: the following two cases are not as symmetric as one could expect
+           because the lexicographic termination argument gets in the way *)
+
     | MkLTup (TrBeta #s1 #s2 #t1' #t2' k h11 h12)
              (TrApp #s1' #s2' #lu1' #u2' h21 h22) ->
+     (* CH: a bit of proof context:
+        h1: (TApp (TLam k s1) s2) (tsubst_beta t2' t1')
+        h2: (TApp s1' s2') (TApp lu1' u2')
+        h11: tred s1 t1'
+        h12: tred s2 t2'
+        h21: tred s1' lu1'
+        h22: tred s2' u2'
+        s1' = (TLam k s1); s2' = s2 *)
     (* AR: does not work without this type annotation *)
       let h21:(tred (TLam.t s1') (TLam.t lu1')) =
         match h21 with
           | TrLam _ h' -> h'
           | TrRefl _ -> TrRefl (TLam.t s1') in
-      magic() (* XXX *)
-      (* let ExIntro v1 (Conj p1a p1b) = tred_diamond h11 h21 in *)
-      (* let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in *)
-      (* let v = tsubst_beta v2 v1 in *)
-      (* ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta k p1b p2b)) *)
+      (* magic() (\* XXX *\) *)
+      let ExIntro v1 (Conj p1a p1b) = tred_diamond #(TLam.t s1') #_ #(TLam.t lu1') h11 h21 in
         (* XXX: tred_diamond h11 h21 (#580)
            This used to work before universes but now fails:
            Failed to verify implicit argument: Subtyping check failed;
@@ -881,8 +890,9 @@ let rec tred_diamond #s #t #u h1 h2 =
            (uu___#3285:LambdaOmega.typ{(Prims.b2t (LambdaOmega.is_TLam uu___@0))}
            ); got type LambdaOmega.typ
         *)
-        (* tred_diamond #(TLam.t s1') #(TLam.t t1') #(TLam.t lu1') h11 h21 *)
-
+      let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
+      let v = tsubst_beta v2 v1 in
+      ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta #(TLam.t lu1') #_ #_ #_ k p1b p2b))
       (* XXX: TrBeta k p1b p2b:
         Failed to verify implicit argument: Subtyping check failed;
         expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
@@ -900,9 +910,9 @@ let rec tred_diamond #s #t #u h1 h2 =
         match p2 with
           | TrLam _ h' -> h'
           | TrRefl _ -> TrRefl t1' in
-      magic()
-      (* ExIntro (tsubst_beta v2 (TLam.t v1)) *)
-      (*         (Conj (TrBeta k h_body p3) (subst_of_tred_tred 0 p4 h_body2)) *)
+      ExIntro (tsubst_beta v2 (TLam.t v1))
+              (Conj (TrBeta #(TLam.t lu1') #_ #_ #_ k h_body p3)
+                    (subst_of_tred_tred 0 p4 h_body2))
       (* XXX (#580): (TrBeta k h_body p3) *)
       (* Failed to verify implicit argument: Subtyping check failed;
         expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
