@@ -17,7 +17,7 @@
 module Sig
 
 open FStar.Array
-open FStar.List
+open FStar.List.Tot
 open FStar.ST
 open Platform.Bytes
 
@@ -63,5 +63,5 @@ val verify: p:pk
          -> sig_t
          -> b:bool{b ==> key_prop p t}
 let verify p t m =
-  let found = List.find (function (Entry p' t' _) -> p=p' && t=t') !log in
+  let found = List.Tot.find (function (Entry p' t' _) -> p=p' && t=t') !log in
   is_Some found

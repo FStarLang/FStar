@@ -725,7 +725,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         encode_let x t1 e1 e2 env encode_term
 
       | Tm_let _ ->
-        Errors.warn t0.pos "Non-top-level recursive functions are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
+        Errors.diag t0.pos "Non-top-level recursive functions are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
         let e = varops.fresh "let-rec" in
         let decl_e = Term.DeclFun(e, [], Term_sort, None) in
         Term.mkFreeV(e, Term_sort), [decl_e]

@@ -255,11 +255,8 @@ let rec substitution_preserves_typing x #e #v #t_x #t #g h1 h2 =
       subst_gen_elam x v t_y e';
       TyLam t_y (substitution_preserves_typing (x+1) h1 h21'))
   | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 ->
-     (* CH: implicits don't work here, why? *)
-    (TyApp #g #(subst (sub_beta_gen x v) e1)
-              #(subst (sub_beta_gen x v) e2) #t11 #t12
-       (substitution_preserves_typing x h1 h21)
-       (substitution_preserves_typing x h1 h22))
+    (TyApp (substitution_preserves_typing x h1 h21)
+           (substitution_preserves_typing x h1 h22))
   | TyUnit -> TyUnit
 
 

@@ -1617,7 +1617,7 @@ end
 | FStar_Syntax_Syntax.Tm_let (_84_1090) -> begin
 (
 
-let _84_1092 = (FStar_TypeChecker_Errors.warn t0.FStar_Syntax_Syntax.pos "Non-top-level recursive functions are not yet fully encoded to the SMT solver; you may not be able to prove some facts")
+let _84_1092 = (FStar_TypeChecker_Errors.diag t0.FStar_Syntax_Syntax.pos "Non-top-level recursive functions are not yet fully encoded to the SMT solver; you may not be able to prove some facts")
 in (
 
 let e = (varops.fresh "let-rec")

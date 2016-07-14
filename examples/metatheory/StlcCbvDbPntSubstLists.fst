@@ -1,4 +1,4 @@
-module StlcCbvPntSubstLists
+module StlcCbvDbPntSubstLists
 
 (* de Bruijn indices based STLC *)
 
@@ -85,7 +85,7 @@ let rec step = function
 
 type env = list typ
 
-let lookup = List.total_nth
+let lookup = List.Tot.nth
 
 val typing: g:env -> e:exp -> Tot (option typ) (decreases e)
 let rec typing g e = match e with
@@ -101,9 +101,12 @@ let rec typing g e = match e with
 
 val progress: e:exp{is_Some (typing [] e)} ->
               Lemma (requires True) (ensures (is_value e \/ is_Some (step e)))
-let rec progress e = by_induction_on e progress
+let rec progress e =
+  match e with
+  | EApp e1 e2 -> progress e1; progress e2
+  | EAbs t e1 -> ()
 
-let len = List.length
+let len = List.Tot.length
 
 let app_len = ListProperties.append_length
 

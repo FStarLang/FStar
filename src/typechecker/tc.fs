@@ -301,10 +301,11 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     e, c, g
 
   | Tm_ascribed (e, Inr expected_c, _) ->
-    let expected_c, _, g = tc_comp env expected_c in
-    let e, c', g' = tc_term env e in
-    let e, expected_c, g'' = check_expected_effect env (Some expected_c) (e, c'.comp()) in
+    let env0, _ = Env.clear_expected_typ env in
+    let expected_c, _, g = tc_comp env0 expected_c in
     let t_res = Util.comp_result expected_c in
+    let e, c', g' = tc_term (Env.set_expected_typ env0 t_res) e in
+    let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, c'.comp()) in
     mk (Tm_ascribed(e, Inl t_res, Some (Util.comp_effect_name expected_c))) (Some t_res.n) top.pos,
     Util.lcomp_of_comp expected_c,
     Rel.conj_guard g (Rel.conj_guard g' g'')
