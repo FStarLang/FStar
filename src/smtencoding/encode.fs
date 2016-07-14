@@ -926,6 +926,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         (f phis, decls) in
 
     let eq_op : args -> (term * decls_t) = function
+        | [_; e1; e2]
         | [_;_;e1;e2] -> enc (bin_op mkEq) [e1;e2]
         | l ->  enc (bin_op mkEq) l in
 

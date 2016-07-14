@@ -2650,11 +2650,16 @@ let tc_inductive env ses quals lids =
             
         let phi = U.mk_imp guard cond in
 
-	    Util.print1 "Checking tc_trivial_guard for:\n\n%s\n\n" (PP.term_to_string phi); //(debug_lid.str); 
+	    //Util.print1 "Checking tc_trivial_guard for:\n\n%s\n\n" (PP.term_to_string phi); //(debug_lid.str); 
         let phi, _ = tc_trivial_guard env phi in
 
-        Util.print1 "Checking haseq soundness for:%s\n" (PP.term_to_string phi); //(debug_lid.str)
-        Rel.force_trivial_guard env (Rel.guard_of_guard_formula (NonTrivial phi));
+        //Util.print1 "Checking haseq soundness for:%s\n" (PP.term_to_string phi); //(debug_lid.str)
+        let _ =
+            //TODO: is this inline with verify_module ?
+            if Options.should_verify env.curmodule.str then
+                Rel.force_trivial_guard env (Rel.guard_of_guard_formula (NonTrivial phi))
+            else ()
+        in
 
         env.solver.pop "haseq";
 
@@ -2663,7 +2668,7 @@ let tc_inductive env ses quals lids =
         //TODO: don't add Sig_assume to the bundle, the code might assume it only contains tycon and datacons, instead modify tc interface to return list of sigelts
         let env = Env.push_univ_vars env0 us in
         let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
-            Util.print1 "Checking tc_assume for axiom:%s\n" (PP.term_to_string fml); //(lid.str)
+            //Util.print1 "Checking tc_assume for axiom:%s\n" (PP.term_to_string fml); //(lid.str)
             let se = tc_assume env lid fml [] dr in
             //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
             l @ [se] 

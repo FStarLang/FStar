@@ -761,8 +761,10 @@ let destruct_typ_as_formula f : option<connective> =
                             (Const.iff_lid, 2);
                             (Const.ite_lid, 3);
                             (Const.not_lid, 1);
-                            (Const.eq2_lid, 4);
-                            (Const.eq2_lid, 2)
+                            (Const.eq2_lid, 3);
+                            (Const.eq2_lid, 2);
+                            (Const.eq3_lid, 4);
+                            (Const.eq3_lid, 2)
                         ] in
         let rec aux f (lid, arity) =
             let t, args = head_and_args (unmeta_monadic f) in
