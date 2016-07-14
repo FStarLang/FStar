@@ -441,7 +441,7 @@ type typing : env -> exp -> typ -> Type =
 val is_value : exp -> Tot bool
 let is_value = is_ELam
 
-(* This should also work; filed at #579 *)
+(* XXX: This should also work; filed at #579 *)
 (* opaque val progress : #e:exp -> #t:typ -> h:typing empty e t -> *)
 (*                Pure (cexists (fun e' -> step e e')) *)
 (*                     (requires (b2t (not (is_value e)))) *)
@@ -458,7 +458,7 @@ let rec progress #e #t h =
                | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1')))
     (* | TyEqu h1 _ _ -> progress h1 -- used to work *)
     (* | TyEqu #g #e #t1 #t2 h1 _ _ -> progress #e #t1 h1
-       -- explicit annotation does't help*)
+       -- explicit annotation doesn't help with Pure annotation *)
        | TyEqu h1 _ _ -> progress #e h1
 
 val tappears_free_in : x:var -> t:typ -> Tot bool (decreases t)
@@ -635,20 +635,28 @@ let rec substitution #g1 #e #t s #g2 h1 hs =
   | TyVar x kind_normal -> hs x kind_normal
   | TyApp hfun harg -> TyApp (substitution s hfun hs) (substitution s harg hs)
   | TyLam #gtemp tlam #ebody #tfun hkind hbody ->
-     magic() (* XXX *)
-     (* let hs'' : subst_typing (esub_inc) (g2) (extend_evar g2 0 tlam) = *)
-     (*   fun (x:var) hkind -> *)
-     (*     TyVar (x+1) (kinding_extensional hkind (extend_evar g2 0 tlam)) in *)
-     (* let hs' : subst_typing (esub_lam s) (extend_evar g1 0 tlam) *)
-     (*                                     (extend_evar g2 0 tlam) = *)
-     (*   fun (y:var) hkindg1 -> *)
-     (*     if y = 0 *)
-     (*     then TyVar y (kinding_extensional hkindg1 (extend_evar g2 0 tlam)) *)
-     (*     else let hgamma2 = hs (y - 1) (kinding_extensional hkindg1 g1) in *)
-     (*          substitution esub_inc hgamma2 hs'' *)
-     (* in (esub_lam_hoist tlam ebody s; *)
-     (*     TyLam tlam (kinding_extensional hkind g2) *)
-     (*           (substitution (esub_lam s) hbody hs')) *)
+     let hs'' : subst_typing (esub_inc) (g2) (extend_evar g2 0 tlam) =
+       fun x hkind ->
+         TyVar (x+1) (kinding_extensional hkind (extend_evar g2 0 tlam)) in
+     let hs' : subst_typing (esub_lam s) (extend_evar g1 0 tlam)
+                                         (extend_evar g2 0 tlam) =
+       fun y hkindg1 ->
+         if y = 0
+         then TyVar y (kinding_extensional hkindg1 (extend_evar g2 0 tlam))
+         else let hgamma2
+             (* : typing g2 (s (y-1)) (Some.v (lookup_evar g1 (y-1)))
+                -- this annotation doesn't help fix inference problem below *)
+             = hs (y - 1) (kinding_extensional hkindg1 g1) in
+              (* XXX before universes this used to work without implicits
+                     filed this as #580 *)
+              (* substitution esub_inc hgamma2 hs'' *)
+              (* Failed to verify implicit argument: Subtyping check failed;
+                 expected type LambdaOmega.var; got type Prims.int [2 times] *)
+              substitution #g2 #(s (y-1)) #(Some.v (lookup_evar g1 (y-1)))
+                esub_inc #(extend_evar g2 0 tlam) hgamma2 hs''
+     in (esub_lam_hoist tlam ebody s;
+         TyLam tlam (kinding_extensional hkind g2)
+               (substitution (esub_lam s) hbody hs'))
   | TyEqu het1 hequiv hkind ->
      TyEqu (substitution s het1 hs) hequiv (kinding_extensional hkind g2)
 
@@ -866,6 +874,19 @@ let rec tred_diamond #s #t #u h1 h2 =
       (* let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in *)
       (* let v = tsubst_beta v2 v1 in *)
       (* ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta k p1b p2b)) *)
+        (* XXX: tred_diamond h11 h21 (#580)
+           This used to work before universes but now fails:
+           Failed to verify implicit argument: Subtyping check failed;
+           expected type
+           (uu___#3285:LambdaOmega.typ{(Prims.b2t (LambdaOmega.is_TLam uu___@0))}
+           ); got type LambdaOmega.typ
+        *)
+        (* tred_diamond #(TLam.t s1') #(TLam.t t1') #(TLam.t lu1') h11 h21 *)
+
+      (* XXX: TrBeta k p1b p2b:
+        Failed to verify implicit argument: Subtyping check failed;
+        expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
+        (LambdaOmega.is_TLam uu___@0))}); got type LambdaOmega.typ*)
 
     | MkLTup (TrApp #s1' #s2' #lu1' #u2' h21 h22)
              (TrBeta #s1 #s2 #t1' #t2' k h11 h12) ->
@@ -879,9 +900,13 @@ let rec tred_diamond #s #t #u h1 h2 =
         match p2 with
           | TrLam _ h' -> h'
           | TrRefl _ -> TrRefl t1' in
-      magic() (* XXX *)
+      magic()
       (* ExIntro (tsubst_beta v2 (TLam.t v1)) *)
       (*         (Conj (TrBeta k h_body p3) (subst_of_tred_tred 0 p4 h_body2)) *)
+      (* XXX (#580): (TrBeta k h_body p3) *)
+      (* Failed to verify implicit argument: Subtyping check failed;
+        expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
+        (LambdaOmega.is_TLam uu___@0))}); got type LambdaOmega.typ *)
 
 type tred_star: typ -> typ -> Type =
   | TsRefl : t:typ ->
