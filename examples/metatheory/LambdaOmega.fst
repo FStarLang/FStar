@@ -441,21 +441,25 @@ type typing : env -> exp -> typ -> Type =
 val is_value : exp -> Tot bool
 let is_value = is_ELam
 
-opaque val progress : #e:exp -> #t:typ -> h:typing empty e t ->
-               Pure (cexists (fun e' -> step e e'))
-                    (requires (b2t (not (is_value e))))
-                    (ensures (fun _ -> True)) (decreases h)
+(* This should also work; filed at #579 *)
+(* opaque val progress : #e:exp -> #t:typ -> h:typing empty e t -> *)
+(*                Pure (cexists (fun e' -> step e e')) *)
+(*                     (requires (b2t (not (is_value e)))) *)
+(*                     (ensures (fun _ -> True)) (decreases h) *)
+(* Workaround using refinements and explicit argument passing *)
+opaque val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
+               Tot (cexists (fun e' -> step e e')) (decreases h)
 let rec progress #e #t h =
   match h with
     | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
       (match e1 with
        | ELam t e1' -> ExIntro (esubst_beta e2 e1') (SBeta t e1' e2)
-       | _ -> (match progress h1 with
+       | _ -> (match progress #e1 h1 with
                | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1')))
     (* | TyEqu h1 _ _ -> progress h1 -- used to work *)
     (* | TyEqu #g #e #t1 #t2 h1 _ _ -> progress #e #t1 h1
        -- explicit annotation does't help*)
-       | TyEqu h1 _ _ -> magic() (* XXX; filed at #579 *)
+       | TyEqu h1 _ _ -> progress #e h1
 
 val tappears_free_in : x:var -> t:typ -> Tot bool (decreases t)
 let rec tappears_free_in x t =
