@@ -4,6 +4,8 @@ open FStar.TSet
 assume new type heap : Type0
 abstract type ref (a:Type) = 
   | MkRef of a //this implementation of ref is not realistic; it's just to get the universes right
+assume HasEq_ref: (forall (a:Type).{:pattern (hasEq (ref a))} hasEq (ref a))
+
 #reset-options
 noeq type aref =
   | Ref : #a:Type -> r:ref a -> aref

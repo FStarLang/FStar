@@ -29,6 +29,8 @@ abstract let root : rid = []
 
 abstract let rref (id:rid) (a:Type) = Heap.ref a
 
+assume HasEq_rref: forall (id:rid) (a:Type).{:pattern (hasEq (rref id a))} hasEq (rref id a)
+
 abstract val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
 let as_ref #a #id r = r
 
