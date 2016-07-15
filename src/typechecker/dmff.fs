@@ -56,10 +56,8 @@ let gen_wps_for_free
       d str;
       Util.print2 "Generated term for %s: %s\n" str (Print.term_to_string t);
       let t, { res_typ = res_typ }, _ = tc_term env t in
-      let t = normalize env t in
       let res_typ = normalize env res_typ in
-      Util.print2 "Inferred type for %s: %s\n" str (Print.term_to_string res_typ);
-      Util.print2 "Elaborated term for %s: %s\n" str (Print.term_to_string t)
+      Util.print2 "Inferred type for %s: %s\n" str (Print.term_to_string res_typ)
     end
   in
 
@@ -290,8 +288,11 @@ let gen_wps_for_free
       ])
     ) ret_tot_wp_a
   in
-  let env, wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
-  let wp_if_then_else = mk (Tm_app (wp_if_then_else, args_of_binders binders)) in
+  // Not registering this one at top-level... not strictly needed. We'll inline
+  // the definition. (Also: registering it at top-level triggers a universes
+  // issue.) Also, note that this term does _not_ abstract of [binders]. This is
+  // ok, because [tc_eff_decl] will close [binders].
+  check env "wp_if_then_else" (U.abs binders wp_if_then_else None);
 
   (* val st2_assert_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
                        Tot (st2_wp heap a)
@@ -327,8 +328,6 @@ let gen_wps_for_free
   in
   check env "wp_assume" (U.abs binders wp_assume None);
 
-  let tforall = U.mk_app (S.mk_Tm_uinst U.tforall [ U_unknown ]) [ S.as_arg unknown ] in
-
   (* val st2_close_wp : heap:Type -> a:Type -> b:Type ->
                         f:(b->Tot (st2_wp heap a)) ->
                         Tot (st2_wp heap a)
@@ -339,7 +338,7 @@ let gen_wps_for_free
     let f = S.gen_bv "f" None t_f in
     let body =
       U.mk_app c_app (List.map S.as_arg [
-        U.mk_app c_pure (List.map S.as_arg [ tforall ]);
+        U.mk_app c_pure (List.map S.as_arg [ U.tforall ]);
         U.mk_app c_push (List.map S.as_arg [ S.bv_to_name f ])])
     in
     U.abs (S.binders_of_list [ a; b; f ]) body ret_tot_wp_a
@@ -348,8 +347,7 @@ let gen_wps_for_free
 
   let ret_tot_type0 = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype0)) in
   let mk_forall (x: S.bv) (body: S.term): S.term =
-    let tforall = U.mk_app (S.mk_Tm_uinst U.tforall [ U_unknown ]) [ S.as_arg x.sort ] in
-    S.mk (Tm_app (tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type0)])) None Range.dummyRange
+    S.mk (Tm_app (U.tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type0)])) None Range.dummyRange
   in
 
   (* For each (target) type t, we define a binary relation in t called ≤_t.
@@ -391,9 +389,9 @@ let gen_wps_for_free
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
     let body = mk_leq wp_a (S.bv_to_name wp1) (S.bv_to_name wp2) in
-    U.abs (S.binders_of_list [ wp1; wp2 ]) body ret_tot_type0
+    U.abs (mk_all_implicit binders @ [ a, S.as_implicit true ] @ S.binders_of_list [ wp1; wp2 ]) body ret_tot_type0
   in
-  check env "stronger" (U.abs (binders @ [ S.mk_binder a ]) stronger None);
+  let env, stronger = register env (mk_lid "stronger") stronger in
 
   let null_wp = snd ed.null_wp in
 
