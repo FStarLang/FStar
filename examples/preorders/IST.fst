@@ -67,9 +67,9 @@ assume val get:     #state:Type ->
 
 assume val put:     #state:Type ->
 		    #rel:relation state{preorder rel} ->
-		    x:state ->
-		    IST state rel unit (fun s0 -> rel s0 x) 
-				       (fun s0 _ s1 -> s1 = x)
+		    s:state ->
+		    IST state rel unit (fun s0 -> rel s0 s) 
+				       (fun s0 _ s1 -> s1 = s)
 
 assume val witness: #state:Type ->
 		    #rel:relation state{preorder rel} ->

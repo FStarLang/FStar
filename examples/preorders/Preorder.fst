@@ -9,8 +9,5 @@ let predicate (a:Type) = a -> Type0
 type preorder (#a:Type) (rel:relation a) = 
   (forall x . rel x x) /\ (forall x y z . rel x y /\ rel y z ==> rel x z)
 
-//type stable_aux (#a:Type) (rel:relation a{preorder rel}) (p:predicate a) (x:a) (y:a) =
-//  p x /\ rel x y ==> p y
-
 type stable (#a:Type) (rel:relation a{preorder rel}) (p:predicate a) =
   forall x y . p x /\ rel x y ==> p y
