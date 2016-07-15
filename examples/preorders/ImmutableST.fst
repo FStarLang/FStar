@@ -88,7 +88,7 @@ assume val ist_recall :  p:predicate heap{stable heap_rel p} ->
 
 (* References, a refinement of references provided by NatHeap. *)
 
-abstract type ref (a:Type) = r:ref a{ist_witnessed (contains r)}
+type ref (a:Type) = r:ref a{ist_witnessed (contains r)}
 
 
 (* Pre- and postconditions for the immutable references instance of IST. *)

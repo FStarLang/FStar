@@ -87,7 +87,7 @@ assume val ist_recall :  p:predicate heap{stable heap_rel p} ->
 
 (* References. *)
 
-abstract type ref (a:Type) = r:ref a{ist_witnessed (contains r)}
+type ref (a:Type) = r:ref a{ist_witnessed (contains r)}
 
 
 (* Pre- and postconditions for the allocated references instance of IST. *)

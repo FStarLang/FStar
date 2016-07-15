@@ -90,7 +90,7 @@ let contains_lemma #a h r = ()
 (* Type of references that refines the standard notion of references by
    witnessing that the given reference is allocated in every future heap. *)
 
-abstract type ref a = r:FStar.Heap.ref a{ist_witnessed (contains r)}
+type ref a = r:FStar.Heap.ref a{ist_witnessed (contains r)}
 
 
 (* Assuming a source of freshness for references for a given heap. *)
