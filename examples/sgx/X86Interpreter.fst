@@ -17,3 +17,5 @@ let u8 = UInt8.t
 let uint32s = buffer u32
 let bytes = buffer u8
 
+let main =
+  IO.print_string "This a hello from F*\n"
