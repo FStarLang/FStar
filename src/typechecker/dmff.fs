@@ -389,9 +389,9 @@ let gen_wps_for_free
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
     let body = mk_leq wp_a (S.bv_to_name wp1) (S.bv_to_name wp2) in
-    U.abs (mk_all_implicit binders @ [ a, S.as_implicit true ] @ S.binders_of_list [ wp1; wp2 ]) body ret_tot_type0
+    U.abs (S.binders_of_list [ wp1; wp2 ]) body ret_tot_type0
   in
-  let env, stronger = register env (mk_lid "stronger") stronger in
+  check env "stronger" (U.abs (binders @ [ S.mk_binder a ]) stronger None);
 
   let null_wp = snd ed.null_wp in
 
