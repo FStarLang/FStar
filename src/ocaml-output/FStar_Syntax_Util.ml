@@ -1549,5 +1549,47 @@ in FStar_Syntax_Syntax.Tm_app (_130_549))
 in (FStar_Syntax_Syntax.mk _130_550 None t.FStar_Syntax_Syntax.pos))))
 
 
+let rec delta_qualifier : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.delta_depth = (fun t -> (
+
+let t = (FStar_Syntax_Subst.compress t)
+in (match (t.FStar_Syntax_Syntax.n) with
+| FStar_Syntax_Syntax.Tm_delayed (_38_1262) -> begin
+(FStar_All.failwith "Impossible")
+end
+| FStar_Syntax_Syntax.Tm_fvar (fv) -> begin
+fv.FStar_Syntax_Syntax.fv_delta
+end
+| (FStar_Syntax_Syntax.Tm_bvar (_)) | (FStar_Syntax_Syntax.Tm_name (_)) | (FStar_Syntax_Syntax.Tm_match (_)) | (FStar_Syntax_Syntax.Tm_uvar (_)) | (FStar_Syntax_Syntax.Tm_unknown) -> begin
+FStar_Syntax_Syntax.Delta_equational
+end
+| (FStar_Syntax_Syntax.Tm_type (_)) | (FStar_Syntax_Syntax.Tm_constant (_)) | (FStar_Syntax_Syntax.Tm_arrow (_)) -> begin
+FStar_Syntax_Syntax.Delta_constant
+end
+| (FStar_Syntax_Syntax.Tm_uinst (t, _)) | (FStar_Syntax_Syntax.Tm_refine ({FStar_Syntax_Syntax.ppname = _; FStar_Syntax_Syntax.index = _; FStar_Syntax_Syntax.sort = t}, _)) | (FStar_Syntax_Syntax.Tm_meta (t, _)) | (FStar_Syntax_Syntax.Tm_ascribed (t, _, _)) | (FStar_Syntax_Syntax.Tm_app (t, _)) | (FStar_Syntax_Syntax.Tm_abs (_, t, _)) | (FStar_Syntax_Syntax.Tm_let (_, t)) -> begin
+(delta_qualifier t)
+end)))
+
+
+let incr_delta_qualifier : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.delta_depth = (fun t -> (
+
+let d = (delta_qualifier t)
+in (
+
+let rec aux = (fun d -> (match (d) with
+| FStar_Syntax_Syntax.Delta_equational -> begin
+d
+end
+| FStar_Syntax_Syntax.Delta_constant -> begin
+FStar_Syntax_Syntax.Delta_unfoldable (1)
+end
+| FStar_Syntax_Syntax.Delta_unfoldable (i) -> begin
+FStar_Syntax_Syntax.Delta_unfoldable ((i + 1))
+end
+| FStar_Syntax_Syntax.Delta_abstract (d) -> begin
+(aux d)
+end))
+in (aux d))))
+
+
 
 

@@ -90,7 +90,7 @@ let gen_wps_for_free
     lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ name)) Range.dummyRange
   in
 
-  let gamma: binders = collect_binders (normalize env wp_a) in
+  let gamma = collect_binders (normalize env wp_a) in
   let unknown = mk Tm_unknown None Range.dummyRange in
   let mk x = mk x None Range.dummyRange in
   let register env lident def =
@@ -119,7 +119,7 @@ let gen_wps_for_free
     let se, env = tc_decl env sig_ctx in
     begin match se with
     | Sig_let ((_, [ { lbtyp = t } ]), _, _, _) ->
-        Util.print1 "Inferred type: %s\n" (Print.term_to_string t);
+        Util.print1 "Inferred type: %s\n" (Print.term_to_string t)
     | _ ->
         failwith "nope"
     end;
