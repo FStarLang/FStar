@@ -317,10 +317,8 @@ let rec term_to_string (x:term) = match x.tm with
   | Name l -> l.str
   | Construct (l, args) ->
     Util.format2 "(%s %s)" l.str (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
-  | Abs(pats, t) when (x.level = Expr) ->
+  | Abs(pats, t) ->
     Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
-  | Abs(pats, t) when (x.level = Type) ->
-    Util.format2 "(fun %s => %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
   | Let (Rec, lbs, body) ->
     Util.format2 "let rec %s in %s" (to_string_l " and " (fun (p,b) -> Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string)) lbs) (body|> term_to_string)
@@ -373,7 +371,7 @@ let rec term_to_string (x:term) = match x.tm with
   | Product(bs, t) ->
         Util.format2 "Unidentified product: [%s] %s"
           (bs |> List.map binder_to_string |> String.concat ",") (t|> term_to_string)
-  | t -> failwith "Missing case in term_to_string"
+  | t -> "_"
 
 and binder_to_string x =
   let s = match x.b with

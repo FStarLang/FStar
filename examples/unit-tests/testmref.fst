@@ -38,7 +38,7 @@ let test_frame_alloc_mref u =
   let h1 = get() in
   assert (MRef.contains h1 x);
   assert (Heap.contains h1 (MRef.as_ref x));
-  let _ = ref 0 in
+  let _ = alloc 0 in
   let h2 = get() in
   assert (MRef.contains h2 x);
   assert (Heap.contains h2 (MRef.as_ref x));

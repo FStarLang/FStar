@@ -1,7 +1,7 @@
 VERFILES=StlcCbvNamed.fst DbSubst.fst HereditarySubst.fst
 FSTAR_HOME=../..
 include ../Makefile.include
-all: .all.ver uall LambdaOmega FOmega.fst MicroFStar HoareWeakestPrecondition
+all: .all.ver uall LambdaOmega FOmega MicroFStar HoareWeakestPrecondition
 
 uall: ParSubst.univ.ver StlcCbvDbPntSubstNoLists.univ.ver StlcStrongDbParSubst.univ.ver StlcCbvDbParSubst.univ.ver
 
@@ -11,10 +11,10 @@ _STDLIB_=FStar.Constructive.fst FStar.Classical.fst FStar.FunctionalExtensionali
 	$(FSTAR) $^
 
 LambdaOmega:
-	$(SFSTAR) $(_STDLIB_) LambdaOmega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1
+	$(FSTAR) LambdaOmega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1
 
 FOmega:
-	$(FSTAR) FOmega.fst
+	$(SFSTAR) FOmega.fst
 
 MicroFStar:
 	$(SFSTAR) MicroFStar.fst

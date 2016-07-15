@@ -226,7 +226,7 @@ let xy_y x y = y
 val idl: l:list int -> Pure (list int) (requires True) (ensures (fun m -> l=m))
 let rec idl l = match l with
   | [] -> []
-  | hd::tl -> [(fun x -> xy_y hd x) hd] @ idl tl
+  | hd::tl -> List.append [(fun x -> xy_y hd x) hd] (idl tl)
 
 assume val st_id_wrap: x:int -> ST int (requires (fun h -> True)) (ensures (fun h0 y h1 -> x=y))
 val st_f: l:int -> ST int (requires (fun h -> True)) (ensures (fun h0 m h1 -> m = l))
