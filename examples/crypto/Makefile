@@ -15,7 +15,7 @@ include ../Makefile.include
 all: .all.crypto.ver merkle_tree mac mac3 rpc CntProtocol padding acls-cap statefulEnc sig
 
 .all.crypto.ver: $(VERFILES)
-	$(SFSTAR) --z3timeout 20 $^
+	$(FSTAR) --z3timeout 20 $^
 
 export CONTRIB=../../contrib
 
@@ -26,9 +26,9 @@ mac: sha1.fst mac.fst
 		$^
 
 sig: sig.fst
-	$(SFSTAR) \
-		--include $(FSTAR_HOME)/contrib/Platform/fst \
-		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
+	$(FSTAR) \
+		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
+		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 		$^
 
 padding: Padding.Pad.fst Padding.BMAC.fst Padding.MAC2.fst Padding.TMAC.fst
@@ -38,9 +38,9 @@ padding: Padding.Pad.fst Padding.BMAC.fst Padding.MAC2.fst Padding.TMAC.fst
 		$^
 
 mac3: mac3.fst
-	$(SFSTAR) --z3timeout 10 --verify_module MAC3 --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
-		--include $(FSTAR_HOME)/contrib/Platform/fst \
-		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
+	$(FSTAR) --z3timeout 10 --verify_module MAC3 --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
+		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
+		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 		$^
 
 merkle_tree: MerkleTree.fst

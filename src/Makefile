@@ -205,10 +205,13 @@ clean-boot-fs:
 # Testing
 # --------------------------------------------------------------------
 
-test:   all fsharp-regressions fstar-ocaml regressions
+test:
+	make all
+	make fsharp-regressions
+	make fstar-ocaml
+	make regressions
 
 utest:
-	make clean
 	make all
 	make fsharp-regressions
 	make fstar-ocaml
@@ -229,8 +232,7 @@ regressions:
 	make -C ../examples/wysteria a.out distclean
 
 # Getting parallelism from this target
-uregressions:
-	+make ulib uexamples
+uregressions: ulib uexamples
 
 ulib:
 	+make -C ../ulib

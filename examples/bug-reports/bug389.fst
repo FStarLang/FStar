@@ -1,17 +1,16 @@
-module Bug389OutOfMem
+module Bug389
 
 let a = alloc 0
 
-val compose_self : #wp:(unit -> STWP unit) ->
-                   #wlp:(unit -> STWP unit)
-                -> =c:(x:unit -> STATE unit (wp x) (wlp x))
+val compose_self: #wp:(unit -> Tot (st_wp unit))
+                -> $c:(x:unit -> STATE unit (wp x))
                 -> St unit
-let compose_self _ = ()
+let compose_self #wp c = ()
 
-
-val f : unit -> State unit (fun 'p h -> 'p () (Heap.upd h a 0))
+val f: unit -> STATE unit (fun 'p h -> 'p () (Heap.upd h a 0))
 let f () = a := 0
 
+val test': unit -> St unit
 let test' () = a := 0;
               a := 0;
               f ();
@@ -25,9 +24,10 @@ let test' () = a := 0;
               a := 0
 
 (* Adding some checkpoints to inference works *)
-val test2' : unit -> St unit
+val test2': unit -> St unit
 let test2' () = compose_self test'
 
+val test: unit -> St unit
 let test () = a := 0; 
               a := 0; 
               a := 0; 
@@ -38,11 +38,12 @@ let test () = a := 0;
               a := 0; 
               a := 0; 
               a := 0;
+              a := 0;
+              a := 0;
+              a := 0;
+              a := 0;
+              a := 0;
               a := 0
-
-(* Works when setting --eager_inference in build-config options *)
-(* This set-options apparently has no effect though *)
-#set-options "--eager_inference"
 
 val test2 : unit -> St unit
 let test2 () = compose_self test

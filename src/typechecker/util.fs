@@ -972,8 +972,13 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
                                  //invariant of a uvar always being resolved to a closed term ... need to be careful, see below
                   a, Some S.imp_tag) in
 
-          let e, c = match tvars with 
-            | [] -> //nothing generalized
+          let e, c = match tvars, gen_univs with
+            | [], [] -> //nothing generalized
+              e, c
+
+            | [], _ -> //only universes generalized, still need to compress out invariant-broken uvars
+              let c = N.normalize_comp [N.BetaUVars; N.WHNF; N.Inline] env c in
+              let e = N.normalize [N.BetaUVars; N.WHNF; N.Inline] env e in
               e, c
 
             | _ -> 

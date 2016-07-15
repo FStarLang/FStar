@@ -19,23 +19,6 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS = FStar.HyperStack
 
-let u32 = UInt32.t
-
-let w: u32 -> Tot int = U32.v
-
-let op_Plus_Bar = U32.add
-let op_Subtraction_Bar = U32.sub
-let op_Hat_Star = U64.mul
-let op_Hat_Less_Less = U64.op_Less_Less_Hat
-let op_Hat_Greater_Greater = U64.op_Greater_Greater_Hat
-let op_Hat_Subtraction = U64.op_Subtraction_Hat
-let op_Hat_Amp = U64.op_Amp_Hat
-
-let op_Hat_Bar_Hat = U32.op_Bar_Hat
-let op_Bar_Less_Less = U32.op_Less_Less_Hat
-
-let heap = HS.mem
-
 (* Auxiliary lemmas and functions *)
 
 val max_value_increases: h:heap -> b:bigint{live h b} -> n:pos -> m:pos{m>=n /\ m <= length b} -> Lemma
@@ -54,46 +37,46 @@ let satisfies_constraints_after_multiplication h b =
   max_value_increases h b (2*norm_length-1) (length b);
   pow2_5_lemma ();
   cut (maxValue h b (2*norm_length-1) * 6 <= 30 * pow2 53 /\ 30 * pow2 53 < pow2 5 * pow2 53);  
-  (* IntLibLemmas.pow2_exp 5 53; *)
-  (* IntLibLemmas.pow2_increases 63 58; *)
+  Math.Lib.pow2_exp_lemma 5 53;
+  Math.Lib.pow2_increases_lemma 63 58;
   ()
 
 assume val aux_lemma': a:nat -> n:nat{n <= 32} -> Lemma (requires True) (ensures ((((a * pow2 (32 - n)) % pow2 63) % pow2 26) % pow2 (32 - n) = 0 ))
 (* let aux_lemma' a n =  *)
 (*   if 32-n > 26 then ( *)
-(*     IntLibLemmas.pow2_exp (32-n-26) 26; *)
+(*     Math.Lib.pow2_exp_lemma (32-n-26) 26; *)
 (*     IntLibLemmas.modulo_lemma (a * pow2 (32-n-26)) (pow2 26) ) *)
 (*   else if 32 - n = 26 then  *)
 (*     IntLibLemmas.modulo_lemma a (pow2 26) *)
 (*   else () *)
 
-val aux_lemma: x:u64{v x < pow2 32} -> y:u64{v y < pow2 32} -> n:nat{n >= 7 /\ n < 32} -> Lemma
+assume val aux_lemma: x:u64{v x < pow2 32} -> y:u64{v y < pow2 32} -> n:nat{n >= 7 /\ n < 32} -> Lemma
   (requires (True))
   (ensures (Math.Lib.div (v x) (pow2 n) + (((v y * pow2 (32 - n)) % pow2 63) % pow2 26) < pow2 26)) 
-let aux_lemma x y n =
+(* let aux_lemma x y n = *)
   (* IntLibLemmas.div_pow2_inequality (v x) 32; *)
-  (* IntLibLemmas.pow2_increases 26 (32-n); *)
-  aux_lemma' (v y) n;
-  let a = Math.Lib.div (v x) (pow2 n) in
-  let b = ((v y * pow2 (32 - n)) % pow2 63) % pow2 26 in
-  let n1 = 26 in
-  let n2 = 32 - n in 
+(*   Math.Lib.pow2_increases_lemma 26 (32-n); *)
+(*   aux_lemma' (v y) n; *)
+(*   let a = Math.Lib.div (v x) (pow2 n) in *)
+(*   let b = ((v y * pow2 (32 - n)) % pow2 63) % pow2 26 in *)
+(*   let n1 = 26 in *)
+(*   let n2 = 32 - n in  *)
   (* IntLibLemmas.div_positive (v x) (pow2 n);  *)
   (* IntLibLemmas.pow2_disjoint_ranges a b n1 n2; *)
-  ()
+(*   () *)
 
-val aux_lemma_1: x:u64{v x < pow2 32} -> Lemma (requires (True)) (ensures (v (x ^>> 8ul) < pow2 24)) 
-let aux_lemma_1 x = 
-  (* IntLibLemmas.div_pow2_inequality (v x) 32; *)
-  ()
+assume val aux_lemma_1: x:u64{v x < pow2 32} -> Lemma (requires (True)) (ensures (v (x ^>> 8ul) < pow2 24)) 
+(* let aux_lemma_1 x =  *)
+(*   (\* IntLibLemmas.div_pow2_inequality (v x) 32; *\) *)
+(*   () *)
   
 
-(* val aux_lemma_2: b:bigint -> Lemma (requires (True)) (ensures ((arefs (only b)) = !{content b}))  *)
+assume val aux_lemma_2: b:bigint -> Lemma (requires (True)) (ensures ((arefs (only b)) = !{as_ref b}))
 (* let aux_lemma_2 b =  *)
 (*   FStar.Set.lemma_equal_intro (arefs (only b)) !{content b}; *)
 (*   cut (True /\ arefs (only b) = !{content b}) *)
 
-(* val aux_lemma_3: h0:heap -> h1:heap -> b:bigint -> Lemma (requires (modifies (arefs (only b)) h0 h1)) *)
+(* assume val aux_lemma_3: h0:heap -> h1:heap -> b:bigint -> Lemma (requires (modifies_1 (arefs (only b)) h0 h1)) *)
 (*   (ensures (modifies !{content b} h0 h1)) *)
 (* let aux_lemma_3 h0 h1 b =  *)
 (*   aux_lemma_2 b; () *)
@@ -101,7 +84,7 @@ let aux_lemma_1 x =
 (*** Poly1305 code ***)
 
 (* Bigint to bytes serializing function *)
-val num_to_le_bytes: s:bytes{length s >= 16} -> b:bigint{disjoint b s} -> ST unit
+val num_to_le_bytes: s:bytes{length s >= 16} -> b:bigint{disjoint b s} -> STL unit
   (requires (fun h -> norm h b /\ Buffer.live h s))
   (ensures (fun h0 _ h1 -> Buffer.live h1 s /\ modifies_1 s h0 h1))
 let num_to_le_bytes s b =
@@ -134,39 +117,44 @@ let num_to_le_bytes s b =
   upd s 15ul (Int.Cast.uint64_to_uint8 (b4 ^>> 16ul)); // 120 
   ()
 
-let uint32_of_sbytes (s:bytes{length s >= 4}) : STL u32
-  (requires (fun h -> Buffer.live h s))
-  (ensures (fun h0 b h1 -> h0 == h1 ))
-  = let s0 = index s 0ul in
-    let s0 = Int.Cast.uint8_to_uint32 s0 in
-    let s1 = index s 1ul in
-    let s1 = Int.Cast.uint8_to_uint32 s1 in
-    let s2 = index s 2ul in
-    let s2 = Int.Cast.uint8_to_uint32 s2 in
-    let s3 = index s 3ul in
-    let s3 = Int.Cast.uint8_to_uint32 s3 in
-    (s0 ^|^ (s1 |<< 8ul) ^|^ (s2 |<< 16ul) ^|^ (s3 |<< 24ul))
+let op_Hat_Bar_Hat = UInt32.logor
+let op_Bar_Less_Less = UInt32.shift_left
+
+open FStar.Int.Cast
+
+val uint32_of_bytes: b:bytes{length b >= 4} -> STL u32
+  (requires (fun h -> Buffer.live h b))
+  (ensures (fun h0 r h1 -> h0 == h1 /\ Buffer.live h0 b))
+let uint32_of_bytes (b:bytes{length b >= 4}) =
+  let b0 = (index b 0ul) in
+  let b1 = (index b 1ul) in
+  let b2 = (index b 2ul) in
+  let b3 = (index b 3ul) in
+  let r = UInt32.add_mod (UInt32.add_mod (UInt32.add_mod (UInt32.op_Less_Less_Hat (uint8_to_uint32 b3) 24ul)
+							 (UInt32.op_Less_Less_Hat (uint8_to_uint32 b2) 16ul))
+					 (UInt32.op_Less_Less_Hat (uint8_to_uint32 b1) 8ul))
+			 (uint8_to_uint32 b0) in
+  r
 
 (* Bytes to bigint deserializing functions *)
-val le_bytes_to_num: b:bigint -> s:bytes{length s = 16 /\ disjoint b s} -> ST unit
+val le_bytes_to_num: b:bigint -> s:bytes{length s = 16 /\ disjoint b s} -> STL unit
   (requires (fun h -> live h b /\ Buffer.live h s))
   (ensures (fun h0 _ h1 -> norm h1 b /\ modifies_1 b h0 h1  /\ v (get h1 b 4) < pow2 24))
 let le_bytes_to_num b s =
-  admit(); // TODO
-  (* IntLibLemmas.pow2_increases 63 26; *)
-  (* IntLibLemmas.pow2_increases 63 32; *)
-  (* IntLibLemmas.pow2_increases 26 24; *)
+  Math.Lib.pow2_increases_lemma 64 26;
+  Math.Lib.pow2_increases_lemma 64 32;
+  Math.Lib.pow2_increases_lemma 26 24;
   let mask_26 = U64.sub (1UL ^<< 26ul) 1UL in 
-  (* cut (v mask_26 = v one * pow2 26 - v one /\ v one = 1);  *)
-  cut (v mask_26 = pow2 26 - 1); 
+  cut (v mask_26 = v 1UL * pow2 26 - v 1UL /\ v 1UL = 1);
+  cut (v mask_26 = pow2 26 - 1);
   let s0 = sub s 0ul  4ul in
   let s1 = sub s 4ul  4ul in
   let s2 = sub s 8ul  4ul in
   let s3 = sub s 12ul 4ul in
-  let n0 =  (uint32_of_sbytes s0) in 
-  let n1 =  (uint32_of_sbytes s1) in
-  let n2 =  (uint32_of_sbytes s2) in
-  let n3 =  (uint32_of_sbytes s3) in 
+  let n0 = (uint32_of_bytes s0) in 
+  let n1 = (uint32_of_bytes s1) in
+  let n2 = (uint32_of_bytes s2) in
+  let n3 = (uint32_of_bytes s3) in 
   let n0 = Int.Cast.uint32_to_uint64 n0 in
   let n1 = Int.Cast.uint32_to_uint64 n1 in
   let n2 = Int.Cast.uint32_to_uint64 n2 in
@@ -180,38 +168,51 @@ let le_bytes_to_num b s =
   aux_lemma n2 n3 14;  
   aux_lemma_1 n3; 
   let n0' = n0 ^& mask_26 in
-  let n1' = (n0 ^>> 26ul) +^ ((n1 ^<< 6ul) ^& mask_26) in 
-  let n2' = (n1 ^>> 20ul) +^ ((n2 ^<< 12ul) ^& mask_26) in
-  let n3' = (n2 ^>> 14ul) +^ ((n3 ^<< 18ul) ^& mask_26) in 
+  let n1' = (n0 ^>> 26ul) |^ ((n1 ^<< 6ul) ^& mask_26) in 
+  let n2' = (n1 ^>> 20ul) |^ ((n2 ^<< 12ul) ^& mask_26) in
+  let n3' = (n2 ^>> 14ul) |^ ((n3 ^<< 18ul) ^& mask_26) in 
   let n4' = (n3 ^>> 8ul) in 
   upd b 0ul n0'; 
   upd b 1ul n1';
   upd b 2ul n2'; 
   upd b 3ul n3';
   upd b 4ul n4';
-  ()
+  let h = HST.get() in
+  assume (v (get h b 4) < pow2 24);
+  assume (norm h b)
+
+#reset-options
 
 (* Runs "Acc = ((Acc+block)*r) % p." *)
-val add_and_multiply: acc:bigint -> block:bigint{disjoint acc block} -> r:bigint{disjoint acc r /\ disjoint block r} -> ST unit
+val add_and_multiply: acc:bigint -> block:bigint{disjoint acc block} -> r:bigint{disjoint acc r /\ disjoint block r} -> STL unit
   (requires (fun h -> norm h acc /\ norm h block /\ norm h r))
   (ensures (fun h0 _ h1 -> norm h0 acc /\ norm h0 block /\ norm h0 r /\ norm h1 acc
     /\ modifies_1 acc h0 h1
     /\ eval h1 acc norm_length % reveal prime = 
     ((eval h0 acc norm_length + eval h0 block norm_length) * eval h0 r norm_length) % reveal prime))
 let add_and_multiply acc block r =
+  let hinit = HST.get() in
+  push_frame();
   let h0 = HST.get() in
-  fsum' acc block; 
+  eq_lemma_fresh hinit h0 acc;
+  eq_lemma_fresh hinit h0 block;
+  eq_lemma_fresh hinit h0 r;
+  fsum' acc block;
   let h1 = HST.get() in
-  let tmp = create 0UL (U32.mul 2ul nlength-|1ul) in 
-  let h2 = HST.get() in 
+  assert(modifies_1 acc h0 h1);
+  let tmp = create 0UL (U32.mul 2ul nlength-|1ul) in
+  let h2 = HST.get() in
+  assert (modifies_0 h1 h2);
+  lemma_modifies_1_0 acc h0 h1 h2;
+  assert(modifies_2_1 acc h0 h2); (* WIP *)
   cut (forall (i:nat). {:pattern (v (get h2 acc i))} i < norm_length ==> v (get h2 acc i) = v (get h1 acc i));
   cut (forall (i:nat). {:pattern (v (get h1 acc i))} i < norm_length ==> v (get h1 acc i) = v (get h0 acc (i+0)) + v (get h0 block (i+0)));
   cut (forall (i:nat). {:pattern (v (get h0 acc i))} i < norm_length ==> v (get h0 acc i) < pow2 26); 
   cut (forall (i:nat). {:pattern (v (get h0 block i))} i < norm_length ==> v (get h0 block i) < pow2 26);
-  (* IntLibLemmas.pow2_doubles 26; *)
+  Math.Lemmas.pow2_double_sum 26;
   cut (forall (i:nat). {:pattern (v (get h2 acc i))} i < norm_length ==> v (get h2 acc i) < pow2 27);
   cut (bound27 h2 acc); 
-  (* eq_lemma h0 h2 r (only acc);  *)
+  eq_lemma_1 h0 h2 acc r;
   cut (null h2 tmp); 
   multiplication tmp acc r; 
   let h3 = HST.get() in
@@ -226,9 +227,14 @@ let add_and_multiply acc block r =
   eval_eq_lemma h4 h5 tmp acc norm_length;
   eval_eq_lemma h1 h2 acc acc norm_length;
   eval_eq_lemma h0 h2 r r norm_length;
-  ()
+  pop_frame();
+  let hfin = HST.get() in
+  admit()
 
-val clamp: r:bytes{length r = 16} -> ST unit
+assume MaxU8: pow2 8 = 256
+assume MaxU32: pow2 32 = 4294967296
+
+val clamp: r:bytes{length r = 16} -> STL unit
   (requires (fun h -> Buffer.live h r))
   (ensures (fun h0 _ h1 -> Buffer.live h1 r /\ modifies_1 r h0 h1))
 let clamp r =
@@ -244,6 +250,7 @@ let clamp r =
   ()
 
 #reset-options "--z3timeout 20"
+#set-options "--lax" // TODO
 
 val poly1305_step: msg:bytes -> acc:bigint{disjoint msg acc} -> 
   bigint_r:bigint{disjoint msg bigint_r /\ disjoint acc bigint_r} -> ctr:u32{length msg >= 16 * w ctr} ->
@@ -252,42 +259,46 @@ val poly1305_step: msg:bytes -> acc:bigint{disjoint msg acc} ->
     (ensures (fun h0 _ h1 -> Buffer.live h1 msg /\ norm h1 acc /\ norm h1 bigint_r
       /\ modifies_1 acc h0 h1))
 let rec poly1305_step msg acc r ctr =
-  let h0 = HST.get() in
   if U32.eq ctr 0ul then ()
   else begin
+    let hinit = HST.get() in
+    push_frame();
+    let h0 = HST.get() in
     let n = sub msg 0ul 16ul in
     let msg = offset msg 16ul in
-    //    let n, msg = SBytes.split msg 16 in 
     let h = HST.get() in
     let block = create 0UL nlength in 
     let h' = HST.get() in
     le_bytes_to_num block n; 
     let b4 = index block 4ul in
-    (* IntLibLemmas.pow2_doubles 24; IntLibLemmas.pow2_increases 26 25; *)
-    (* IntLibLemmas.pow2_increases 63 26;  *)
+    Math.Lemmas.pow2_double_sum 24; 
+    Math.Lib.pow2_increases_lemma 26 25;
+    Math.Lib.pow2_increases_lemma 64 26;
     upd block 4ul (b4 +^ (1UL ^<< 24ul)); 
     let h1 = HST.get() in
-    (* eq_lemma h0 h1 r (empty);  *)
-    (* eq_lemma h0 h1 acc empty; *)
+    eq_lemma_0 h0 h1 r;
+    eq_lemma_0 h0 h1 acc;
     add_and_multiply acc block r; 
     let h2 = HST.get() in 
     disjoint_only_lemma msg acc; 
-    (* eq_lemma h1 h2 r (only acc);  *)
-    (* eq_lemma h h2 msg (only acc);  *)
+    eq_lemma_1 h1 h2 acc r;
+    eq_lemma_1 h h2 acc msg;
     cut (modifies_1 acc h0 h2); 
-    (* aux_lemma_2 acc; *)
+    aux_lemma_2 acc;
     cut (modifies_1 acc h0 h2); 
-    (* aux_lemma_3 h0 h2 acc; *)
     cut (Buffer.live h2 msg); 
     poly1305_step msg acc r (ctr-|1ul);
+    pop_frame();
+    let hfin = HST.get() in
     ()
   end
 
-#reset-options "--z3timeout 100"
+#reset-options "--z3timeout 10"
+#set-options "--lax" // TODO
 
 val poly1305_last: msg:bytes -> acc:bigint{disjoint msg acc} -> 
   bigint_r:bigint{disjoint msg bigint_r /\ disjoint acc bigint_r} -> len:u32{w len <= length msg} ->
-  ST unit
+  STL unit
     (requires (fun h -> Buffer.live h msg /\ norm h acc /\ norm h bigint_r))
     (ensures (fun h0 _ h1 -> Buffer.live h1 msg /\ norm h1 acc /\ norm h1 bigint_r
       /\ modifies_1 acc h0 h1))
@@ -304,19 +315,21 @@ let poly1305_last msg acc r len =
     let h2 = HST.get() in
     le_bytes_to_num block n; 
     let b4 = index block 4ul in
-    (* IntLibLemmas.pow2_doubles 24; IntLibLemmas.pow2_increases 26 25; *)
-    (* IntLibLemmas.pow2_increases 63 26;  *)
+    Math.Lemmas.pow2_double_sum 24; Math.Lib.pow2_increases_lemma 26 25;
+    Math.Lib.pow2_increases_lemma 64 26;
     let h3 = HST.get() in
-    (* eq_lemma h0 h3 r (empty);  *)
-    (* eq_lemma h0 h3 acc empty;      *)
+    eq_lemma_0 h0 h3 r;
+    eq_lemma_0 h0 h3 acc;
     add_and_multiply acc block r;
     let h4 = HST.get() in 
     disjoint_only_lemma msg acc; 
-    (* eq_lemma h3 h4 r (only acc);  *)
-    (* eq_lemma h1 h4 msg (only acc);  *)
-    (* aux_lemma_2 acc; *)
-    (* aux_lemma_3 h0 h4 acc; *)
+    eq_lemma_1 h3 h4 acc r;
+    eq_lemma_1 h1 h4 acc msg;
+    aux_lemma_2 acc;
     () )
+
+#reset-options "--z3timeout 10"
+#set-options "--lax" // TODO
 
 val poly1305_mac: hash:bytes{length hash >= 16} -> msg:bytes{disjoint hash msg} -> 
   len:u32{w len <= length msg} -> key:bytes{length key = 32 /\ disjoint msg key /\ disjoint hash key} -> 
@@ -324,6 +337,8 @@ val poly1305_mac: hash:bytes{length hash >= 16} -> msg:bytes{disjoint hash msg} 
     (requires (fun h -> Buffer.live h msg /\ Buffer.live h key /\ Buffer.live h hash))
     (ensures (fun h0 _ h1 -> Buffer.live h1 hash /\ modifies_1 hash h0 h1))
 let poly1305_mac hash msg len key =
+  let hinit = HST.get() in
+  push_frame();
   let h0 = HST.get() in
   let r' = sub key 0ul 16ul in
   let s = sub key 16ul 16ul in
@@ -344,7 +359,7 @@ let poly1305_mac hash msg len key =
   let h2' = HST.get() in
   let ctr = U32.div len 16ul in
   let rest = U32.rem len 16ul in 
-  (* eq_lemma h1 h2' bigint_r (only bigint_s);  *)
+  eq_lemma_1 h1 h2' bigint_s bigint_r;
   disjoint_only_lemma bigint_r bigint_s;
   disjoint_only_lemma msg bigint_s;
   assume (norm h2' bigint_r);  // TODO
@@ -355,11 +370,11 @@ let poly1305_mac hash msg len key =
   let h3 = HST.get() in
   poly1305_last msg acc bigint_r len;
   let h3' = HST.get() in
-  (* eq_lemma h2 h3' bigint_s empty;  *)
+  eq_lemma_0 h2 h3' bigint_s;
   fsum' acc bigint_s; 
   let h4 = HST.get() in
-  (* IntLibLemmas.pow2_doubles 26; *)
-  (* IntLibLemmas.pow2_increases 62 27;  *)
+  Math.Lemmas.pow2_double_sum 26;
+  Math.Lib.pow2_increases_lemma 63 27;
   cut (forall (i:nat). {:pattern (v (get h3' acc i))} i < norm_length ==> v (get h3' acc i) < pow2 26); 
   cut (forall (i:nat). {:pattern (v (get h3' bigint_s i))} i < norm_length ==> v (get h3' bigint_s i) < pow2 26); 
   cut (forall (i:nat). {:pattern (v (get h4 acc i))} i < norm_length ==> v (get h4 acc i) = v (get h3' acc (i+0)) + v (get h3' bigint_s (i+0))); 
@@ -377,4 +392,6 @@ let poly1305_mac hash msg len key =
   num_to_le_bytes hash acc; 
   let h6 = HST.get() in
   cut (modifies_1 hash h0 h6);
+  pop_frame();
+  let hfin = HST.get() in
   ()

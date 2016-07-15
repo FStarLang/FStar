@@ -750,6 +750,12 @@ type connective =
     | BaseConn of lident * args
 
 let destruct_typ_as_formula f : option<connective> =
+    let rec unmeta_monadic f = 
+      let f = Subst.compress f in
+      match f.n with 
+      | Tm_meta(t, Meta_monadic _)
+      | Tm_meta(t, Meta_monadic_lift _) -> unmeta_monadic t
+      | _ -> f in
     let destruct_base_conn f =
         let connectives = [ (Const.true_lid,  0);
                             (Const.false_lid, 0);
@@ -763,7 +769,7 @@ let destruct_typ_as_formula f : option<connective> =
                             (Const.eq2_lid, 2)
                         ] in
         let rec aux f (lid, arity) =
-            let t, args = head_and_args (unmeta f) in
+            let t, args = head_and_args (unmeta_monadic f) in
             let t = un_uinst t in
             if is_constructor t lid
             && List.length args = arity
@@ -804,7 +810,7 @@ let destruct_typ_as_formula f : option<connective> =
             | _ -> None in
         aux None [] t in
 
-    let phi = unmeta f in
+    let phi = unmeta_monadic f in
         match destruct_base_conn phi with
         | Some b -> Some b
         | None -> destruct_q_conn phi
