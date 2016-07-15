@@ -407,6 +407,8 @@ let gen_wps_for_free
   in
   check env "wp_trivial" (U.abs binders wp_trivial None);
 
+  d "End Dijkstra monads for free";
+
   env, { ed with
     if_then_else = ([], wp_if_then_else);
     assert_p     = ([], wp_assert);
