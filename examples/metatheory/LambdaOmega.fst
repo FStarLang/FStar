@@ -441,21 +441,25 @@ type typing : env -> exp -> typ -> Type =
 val is_value : exp -> Tot bool
 let is_value = is_ELam
 
-opaque val progress : #e:exp -> #t:typ -> h:typing empty e t ->
-               Pure (cexists (fun e' -> step e e'))
-                    (requires (b2t (not (is_value e))))
-                    (ensures (fun _ -> True)) (decreases h)
+(* XXX: This should also work; filed at #579 *)
+(* opaque val progress : #e:exp -> #t:typ -> h:typing empty e t -> *)
+(*                Pure (cexists (fun e' -> step e e')) *)
+(*                     (requires (b2t (not (is_value e)))) *)
+(*                     (ensures (fun _ -> True)) (decreases h) *)
+(* Workaround using refinements and explicit argument passing *)
+opaque val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
+               Tot (cexists (fun e' -> step e e')) (decreases h)
 let rec progress #e #t h =
   match h with
     | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
       (match e1 with
        | ELam t e1' -> ExIntro (esubst_beta e2 e1') (SBeta t e1' e2)
-       | _ -> (match progress h1 with
+       | _ -> (match progress #e1 h1 with
                | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1')))
     (* | TyEqu h1 _ _ -> progress h1 -- used to work *)
     (* | TyEqu #g #e #t1 #t2 h1 _ _ -> progress #e #t1 h1
-       -- explicit annotation does't help*)
-       | TyEqu h1 _ _ -> magic() (* XXX; filed at #579 *)
+       -- explicit annotation doesn't help with Pure annotation *)
+       | TyEqu h1 _ _ -> progress #e h1
 
 val tappears_free_in : x:var -> t:typ -> Tot bool (decreases t)
 let rec tappears_free_in x t =
@@ -631,20 +635,28 @@ let rec substitution #g1 #e #t s #g2 h1 hs =
   | TyVar x kind_normal -> hs x kind_normal
   | TyApp hfun harg -> TyApp (substitution s hfun hs) (substitution s harg hs)
   | TyLam #gtemp tlam #ebody #tfun hkind hbody ->
-     magic() (* XXX *)
-     (* let hs'' : subst_typing (esub_inc) (g2) (extend_evar g2 0 tlam) = *)
-     (*   fun (x:var) hkind -> *)
-     (*     TyVar (x+1) (kinding_extensional hkind (extend_evar g2 0 tlam)) in *)
-     (* let hs' : subst_typing (esub_lam s) (extend_evar g1 0 tlam) *)
-     (*                                     (extend_evar g2 0 tlam) = *)
-     (*   fun (y:var) hkindg1 -> *)
-     (*     if y = 0 *)
-     (*     then TyVar y (kinding_extensional hkindg1 (extend_evar g2 0 tlam)) *)
-     (*     else let hgamma2 = hs (y - 1) (kinding_extensional hkindg1 g1) in *)
-     (*          substitution esub_inc hgamma2 hs'' *)
-     (* in (esub_lam_hoist tlam ebody s; *)
-     (*     TyLam tlam (kinding_extensional hkind g2) *)
-     (*           (substitution (esub_lam s) hbody hs')) *)
+     let hs'' : subst_typing (esub_inc) (g2) (extend_evar g2 0 tlam) =
+       fun x hkind ->
+         TyVar (x+1) (kinding_extensional hkind (extend_evar g2 0 tlam)) in
+     let hs' : subst_typing (esub_lam s) (extend_evar g1 0 tlam)
+                                         (extend_evar g2 0 tlam) =
+       fun y hkindg1 ->
+         if y = 0
+         then TyVar y (kinding_extensional hkindg1 (extend_evar g2 0 tlam))
+         else let hgamma2
+             (* : typing g2 (s (y-1)) (Some.v (lookup_evar g1 (y-1)))
+                -- this annotation doesn't help fix inference problem below *)
+             = hs (y - 1) (kinding_extensional hkindg1 g1) in
+              (* XXX before universes this used to work without implicits
+                     filed this as #580 *)
+              (* substitution esub_inc hgamma2 hs'' *)
+              (* Failed to verify implicit argument: Subtyping check failed;
+                 expected type LambdaOmega.var; got type Prims.int [2 times] *)
+              substitution #_ #(s (y-1)) #(Some.v (lookup_evar g1 (y-1)))
+                esub_inc #_ hgamma2 hs''
+     in (esub_lam_hoist tlam ebody s;
+         TyLam tlam (kinding_extensional hkind g2)
+               (substitution (esub_lam s) hbody hs'))
   | TyEqu het1 hequiv hkind ->
      TyEqu (substitution s het1 hs) hequiv (kinding_extensional hkind g2)
 
@@ -850,18 +862,41 @@ let rec tred_diamond #s #t #u h1 h2 =
       ExIntro (tsubst_beta v2 v1) (Conj (subst_of_tred_tred 0 p2a p1a)
                                         (subst_of_tred_tred 0 p2b p1b))
     (* one TrBeta and other TrApp *)
+
+    (* CH: the following two cases are not as symmetric as one could expect
+           because the lexicographic termination argument gets in the way *)
+
     | MkLTup (TrBeta #s1 #s2 #t1' #t2' k h11 h12)
              (TrApp #s1' #s2' #lu1' #u2' h21 h22) ->
+     (* CH: a bit of proof context:
+        h1: (TApp (TLam k s1) s2) (tsubst_beta t2' t1')
+        h2: (TApp s1' s2') (TApp lu1' u2')
+        h11: tred s1 t1'
+        h12: tred s2 t2'
+        h21: tred s1' lu1'
+        h22: tred s2' u2'
+        s1' = (TLam k s1); s2' = s2 *)
     (* AR: does not work without this type annotation *)
       let h21:(tred (TLam.t s1') (TLam.t lu1')) =
         match h21 with
           | TrLam _ h' -> h'
           | TrRefl _ -> TrRefl (TLam.t s1') in
-      magic() (* XXX *)
-      (* let ExIntro v1 (Conj p1a p1b) = tred_diamond h11 h21 in *)
-      (* let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in *)
-      (* let v = tsubst_beta v2 v1 in *)
-      (* ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta k p1b p2b)) *)
+      (* magic() (\* XXX *\) *)
+      let ExIntro v1 (Conj p1a p1b) = tred_diamond #(TLam.t s1') #_ #(TLam.t lu1') h11 h21 in
+        (* XXX: tred_diamond h11 h21 (#580)
+           This used to work before universes but now fails:
+           Failed to verify implicit argument: Subtyping check failed;
+           expected type
+           (uu___#3285:LambdaOmega.typ{(Prims.b2t (LambdaOmega.is_TLam uu___@0))}
+           ); got type LambdaOmega.typ
+        *)
+      let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
+      let v = tsubst_beta v2 v1 in
+      ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta #(TLam.t lu1') #_ #_ #_ k p1b p2b))
+      (* XXX: TrBeta k p1b p2b:
+        Failed to verify implicit argument: Subtyping check failed;
+        expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
+        (LambdaOmega.is_TLam uu___@0))}); got type LambdaOmega.typ*)
 
     | MkLTup (TrApp #s1' #s2' #lu1' #u2' h21 h22)
              (TrBeta #s1 #s2 #t1' #t2' k h11 h12) ->
@@ -875,9 +910,13 @@ let rec tred_diamond #s #t #u h1 h2 =
         match p2 with
           | TrLam _ h' -> h'
           | TrRefl _ -> TrRefl t1' in
-      magic() (* XXX *)
-      (* ExIntro (tsubst_beta v2 (TLam.t v1)) *)
-      (*         (Conj (TrBeta k h_body p3) (subst_of_tred_tred 0 p4 h_body2)) *)
+      ExIntro (tsubst_beta v2 (TLam.t v1))
+              (Conj (TrBeta #(TLam.t lu1') #_ #_ #_ k h_body p3)
+                    (subst_of_tred_tred 0 p4 h_body2))
+      (* XXX (#580): (TrBeta k h_body p3) *)
+      (* Failed to verify implicit argument: Subtyping check failed;
+        expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
+        (LambdaOmega.is_TLam uu___@0))}); got type LambdaOmega.typ *)
 
 type tred_star: typ -> typ -> Type =
   | TsRefl : t:typ ->
@@ -1085,9 +1124,6 @@ let rec inversion_elam #g s1 e #s t1 t2 ht heq hnew = match ht with
     *)
 
     (* AR: implicits required *)
-    (*let ExIntro u1 pp = tred_tarr_preserved #s1 #s2 #u p1 in
-    let ExIntro u2 (Conj psu1 psu2) = pp in
-    *)
     let ExIntro u1 (ExIntro u2 (Conj psu1 psu2)) = tred_tarr_preserved #s1 #s2 #u p1 in
     (* NS:
        psu1: tred_star (TArr s1 s2) (TArr u1 u2)
@@ -1095,9 +1131,7 @@ let rec inversion_elam #g s1 e #s t1 t2 ht heq hnew = match ht with
     *)
 
     (* AR: implicits required *)
-    (* CH: can't merge these two matches (error: "Patterns are incomplete") *)
-    let ExIntro u1' p = tred_tarr_preserved #t1 #t2 #u p2 in
-    let ExIntro u2' (Conj ptu1 ptu2) = p in
+    let ExIntro u1' (ExIntro u2' (Conj ptu1 ptu2)) = tred_tarr_preserved #t1 #t2 #u p2 in
     (* NS:
         ptu1: tred_star (TArr s1 s2) (TArr u1' u2')
         ptu2: tred_star u (TArr u1' u2')

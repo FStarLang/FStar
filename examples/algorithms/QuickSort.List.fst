@@ -1,92 +1,89 @@
 module QuickSort.List
 
+#set-options "--initial_ifuel 1 --initial_fuel 1 --max_ifuel 1 --max_fuel 1"
+
 open FStar.List.Tot
-#set-options "--initial_ifuel 2 --initial_fuel 1 --max_ifuel 2 --max_fuel 1"
 
-(* Specification of sortedness according to some comparison function f *)
+(* Specification of sorted according to a comparison function f *)
 val sorted: ('a -> 'a -> Tot bool) -> list 'a -> Tot bool
-let rec sorted f l = match l with
-    | [] -> true
-    | [x] -> true
-    | x::y::xs -> f x y && sorted f (y::xs)
+let rec sorted f = function
+  | x::y::xs -> f x y && sorted f (y::xs)
+  | _ -> true
 
+type total_order (a:eqtype) =
+  f:(a -> a -> Tot bool) {
+      (forall a. f a a) // reflexive
+    /\ (forall a1 a2. f a1 a2 /\ f a2 a1 ==> a1 = a2) // anti-symmetric
+    /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3) // transitive
+    /\ (forall a1 a2. f a1 a2 \/ f a2 a1) // total
+  }
 
-type total_order (a:Type) (f: (a -> a -> Tot bool)) =
-    (forall a. f a a)                                           (* reflexivity   *)
-    /\ (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 == a2)       (* anti-symmetry *)
-    /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
-    /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                       (* totality      *)
-
-
-val count : #a:Type{hasEq a} -> a -> list a -> Tot nat
-let rec count (#a:Type{hasEq a}) (x:a) (l:list a) = match l with
-  | hd::tl -> (if hd=x then 1 else 0) + count x tl
+val count: #a:eqtype -> a -> list a -> Tot nat
+let rec count #a x = function
+  | hd::tl -> (if hd = x then 1 else 0) + count x tl
   | [] -> 0
 
 
-val mem_count : #a:Type{hasEq a} -> x:a -> l:list a ->
-      Lemma (requires True) (ensures (mem x l == (count x l > 0)))
-      [SMTPat (mem x l)] (decreases l)
-let rec mem_count #a x l = match l with
+val mem_count: #a:eqtype -> x:a -> l:list a ->
+  Lemma (requires True)
+	(ensures (mem x l = (count x l > 0)))
+	(decreases l)
+  [SMTPat (mem x l)]
+let rec mem_count #a x = function
   | [] -> ()
   | _::tl -> mem_count x tl
 
 
-val append_count: #a:Type{hasEq a} -> l:list a -> m:list a -> x:a
-               -> Lemma (requires True)
-                        (ensures (count x (append l m) = (count x l + count x m)))
-                        [SMTPat (count x (append l m))]
-let rec append_count #a l m x = match l with
+val append_count: #a:eqtype -> l:list a -> m:list a -> x:a ->
+  Lemma (requires True)
+        (ensures (count x (l @ m) = (count x l + count x m)))
+  [SMTPat (count x (l @ m))]
+let rec append_count #a l m x =
+  match l with
   | [] -> ()
   | hd::tl -> append_count tl m x
 
 
 val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
-let rec partition p = function
+let rec partition f = function
   | [] -> [], []
   | hd::tl ->
-     let l1, l2 = partition p tl in
-     if p hd
-     then hd::l1, l2
-     else l1, hd::l2
+    let l1, l2 = partition f tl in
+    if f hd then (hd::l1, l2) else (l1, hd::l2)
 
-(* this is used only to speed things up *)
-type trigger (#a:Type) (x:a) = True
 
-val partition_lemma: #a:Type{hasEq a} -> f:(a -> Tot bool) -> l:list a -> Lemma (requires True)
-      (ensures (forall hi lo. (hi, lo) = partition f l
-                ==>  (length l = length hi + length lo
-                 /\ (forall x.{:pattern (trigger x)}
-                              trigger x ==>
-                               (mem x hi ==> f x)
-                           /\  (mem x lo ==> not (f x))
-                           /\  (count x l = count x hi + count x lo)))))
-      [SMTPat (partition f l)]
+val partition_lemma: #a:eqtype -> f:(a -> Tot bool) -> l:list a ->
+  Lemma (requires True)
+        (ensures (let (hi, lo) = partition f l in
+                  length l = length hi + length lo
+                  /\ (forall x. (mem x hi ==>   f x)
+                        /\ (mem x lo ==> ~(f x))
+                        /\ (count x l = count x hi + count x lo))))
+  [SMTPat (partition f l)]
 let rec partition_lemma #a f l = match l with
-    | [] -> ()
-    | hd::tl -> cut (trigger hd); partition_lemma f tl
+  | [] -> ()
+  | hd::tl ->  partition_lemma f tl
 
 
-val sorted_app_lemma: #a:eqtype
-                      -> f:(a -> a -> Tot bool){total_order a f}
-                      -> l1:list a{sorted f l1}
-                      -> l2:list a{sorted f l2}
-                      -> pivot:a
-                      -> Lemma (requires ((forall y.{:pattern (trigger y)} trigger y ==>
-                                                        ((mem y l1 ==> not (f pivot y))
-                                                      /\ (mem y l2 ==> f pivot y)))))
-                               (ensures (sorted f (append l1 (pivot::l2))))
-                               [SMTPat (sorted f (append l1 (pivot::l2)))]
-let rec sorted_app_lemma #a f l1 l2 pivot = match l1 with
-    | [] -> if is_Cons l2 then cut (trigger (Cons.hd l2)) else ()
-    | hd::tl -> cut (trigger hd); sorted_app_lemma f tl l2 pivot
+val sorted_app_lemma: #a:eqtype -> f:total_order a
+  -> l1:list a{sorted f l1} -> l2:list a{sorted f l2} -> pivot:a
+  -> Lemma (requires (forall y. (mem y l1 ==> ~(f pivot y))
+		        /\ (mem y l2 ==>   f pivot y)))
+          (ensures (sorted f (l1 @ pivot :: l2)))
+  [SMTPat (sorted f (l1 @ pivot::l2))]
+let rec sorted_app_lemma #a f l1 l2 pivot =
+  match l1 with
+  | hd::tl -> sorted_app_lemma f tl l2 pivot
+  | _ -> ()
 
-val sort: #a:eqtype -> f:(a -> a -> Tot bool){total_order a f}
-       -> l:list a
-       -> Tot (m:list a{sorted f m /\ (forall i.{:pattern trigger i} trigger i ==> (count i l = count i m))})
-              (decreases (length l))
-let rec sort #a f = function
+type is_permutation (a:eqtype) (l:list a) (m:list a) =
+  forall x. count x l = count x m
+
+val quicksort: #a:eqtype -> f:total_order a -> l:list a ->
+  Tot (m:list a{sorted f m /\ is_permutation a l m})
+  (decreases (length l))
+let rec quicksort #a f = function
   | [] -> []
   | pivot::tl ->
     let hi, lo = partition (f pivot) tl in
-    append (sort f lo) (pivot::(sort f hi))
+    (quicksort f lo) @ pivot :: quicksort f hi

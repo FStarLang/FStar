@@ -184,14 +184,12 @@ val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pur
              /\ equal (index x 2) (slice s (i+1) j)
              /\ equal (index x 3) (slice s j (j + 1))
              /\ equal (index x 4) (slice s (j + 1) (length s)))))
-let split_5 #a s i j = admit()
-(* this often fails with Unknown assertion failed *)
-(* let split_5 s i j = *)
-(*   let frag_lo, rest  = split_eq s i in *)
-(*   let frag_i,  rest  = split_eq rest 1 in *)
-(*   let frag_mid,rest  = split_eq rest (j - (i + 1)) in *)
-(*   let frag_j,frag_hi = split_eq rest 1 in *)
-(*   upd (upd (upd (upd (create 5 frag_lo) 1 frag_i) 2 frag_mid) 3 frag_j) 4 frag_hi *)
+let split_5 #a s i j =
+  let frag_lo, rest  = split_eq s i in
+  let frag_i,  rest  = split_eq rest 1 in
+  let frag_mid,rest  = split_eq rest (j - (i + 1)) in
+  let frag_j,frag_hi = split_eq rest 1 in
+  upd (upd (upd (upd (create 5 frag_lo) 1 frag_i) 2 frag_mid) 3 frag_j) 4 frag_hi
 #reset-options
 
 val lemma_swap_permutes_aux_frag_eq: #a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s}
@@ -208,7 +206,8 @@ let lemma_swap_permutes_aux_frag_eq #a s i j i' j' =
   cut (equal (slice s i (i + 1))  (slice (swap s i j) j (j + 1)));
   cut (equal (slice s j (j + 1))  (slice (swap s i j) i (i + 1)))
 
-#set-options "--max_fuel 1 --initial_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+//#set-options "--max_fuel 1 --initial_fuel 1 --initial_ifuel 0 --max_ifuel 0 --z3timeout 10"
+#set-options "--z3timeout 10"
 val lemma_swap_permutes_aux: #a:eqtype -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> x:a -> Lemma
   (requires True)
   (ensures (count x s = count x (swap s i j)))
@@ -299,9 +298,7 @@ let swap_frame_hi #a s i j k hi = cut (equal (slice s k hi) (slice (swap s i j) 
 
 val lemma_swap_slice_commute  : #a:Type -> s:seq a -> start:nat -> i:nat{start <= i} -> j:nat{i <= j} -> len:nat{j < len && len <= length s}
     -> Lemma (ensures (slice (swap s i j) start len == (swap (slice s start len) (i - start) (j - start))))
-let lemma_swap_slice_commute #a s start i j len = admit()
-(* this often fails with "assertion failed" *)
-(* let lemma_swap_slice_commute s start i j len = cut (equal (slice (swap s i j) start len) (swap (slice s start len) (i - start) (j - start))) *)
+let lemma_swap_slice_commute #a s start i j len = cut (equal (slice (swap s i j) start len) (swap (slice s start len) (i - start) (j - start)))
 
 val lemma_swap_permutes_slice : #a:eqtype -> s:seq a -> start:nat -> i:nat{start <= i} -> j:nat{i <= j} -> len:nat{j < len && len <= length s}
    -> Lemma (ensures (permutation a (slice s start len) (slice (swap s i j) start len)))
@@ -413,7 +410,8 @@ val seq_find_aux : #a:Type -> f:(a -> Tot bool) -> l:seq a
                                         not (f (Seq.index l i) )))
                       (ensures (function 
                                   | None -> forall (i:nat{i < Seq.length l}).  not (f (Seq.index l i))
-                                  | Some x -> f x /\  (exists (i:nat{i < Seq.length l}). //{:pattern (found i)}
+                                  | Some x -> f x /\  (exists (i:nat{i < Seq.length l}). {:pattern (found i)}
+							    found i /\
                                                             x == Seq.index l i)))
 
 let rec seq_find_aux #a f l ctr =
@@ -435,7 +433,6 @@ val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
                                                           found i /\ x == Seq.index l i)))
 
 let seq_find #a f l =
-  admit ();
   seq_find_aux f l (Seq.length l)
 
 #set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 1 --max_fuel 1"
