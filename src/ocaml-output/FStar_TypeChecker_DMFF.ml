@@ -6,7 +6,7 @@ let gen_wps_for_free = (fun env binders a wp_a tc_decl tc_term ed -> (
 let normalize = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Inline)::(FStar_TypeChecker_Normalize.UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::[]))
 in (
 
-let d = (fun s -> (FStar_Util.print1 "\\x1b[01;36m%s\\x1b[00m\n" s))
+let d = (fun s -> (FStar_Util.print1 "[01;36m%s[00m\n" s))
 in (
 
 let _57_17 = (d "Elaborating extra WP combinators")

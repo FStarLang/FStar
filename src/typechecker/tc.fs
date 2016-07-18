@@ -2072,6 +2072,24 @@ and elaborate_and_star env0 ed =
   let dmff_env, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
   let dmff_env, return_wp, return_elab = elaborate_and_star dmff_env ed.return_repr in
 
+  let return_wp =
+    // TODO: fix [tc_eff_decl] to deal with currying
+    match (SS.compress return_wp).n with
+    | Tm_abs (b1 :: b2 :: bs, body, what) ->
+        U.abs [ b1; b2 ] (U.abs bs body what) (Some (Inr Const.effect_GTot_lid))
+    | _ ->
+        failwith "unexpected shape for return"
+  in
+  let bind_wp =
+    match (SS.compress bind_wp).n with
+    | Tm_abs (binders, body, what) ->
+        let r = S.lid_as_fv Const.range_lid (S.Delta_unfoldable 1) None in
+        U.abs (S.null_binder (mk (Tm_fvar r) None Range.dummyRange) :: binders) body what
+    | _ ->
+        failwith "unexpected shape for bind"
+  in
+
+
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     let dmff_env, action_wp, action_elab =
       elaborate_and_star dmff_env (action.action_univs, action.action_defn)
