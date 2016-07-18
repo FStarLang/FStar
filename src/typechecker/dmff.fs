@@ -280,8 +280,8 @@ let gen_wps_for_free
                             Tot (st2_wp heap a)
     let st2_if_then_else heap a c = st2_liftGA2 (l_ITE c) *)
   let wp_if_then_else =
-    let c = S.gen_bv "c" None U.ktype0 in
-    U.abs (binders @ S.binders_of_list [ a; c ]) (
+    let c = S.gen_bv "c" None U.ktype in
+    U.abs (S.binders_of_list [ a; c ]) (
       let l_ite = fvar Const.ite_lid (S.Delta_unfoldable 2) None in
       U.mk_app c_lift2 (List.map S.as_arg [
         U.mk_app l_ite [S.as_arg (S.bv_to_name c)]

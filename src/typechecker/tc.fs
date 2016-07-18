@@ -1787,7 +1787,6 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                  (S.mk_Total wp_b) in
     check_and_gen' env ed.bind_wp expected_k in
 
-  Options.set_option "debug_level" (Options.List [Options.String "Extreme"]);
   let if_then_else =
     let p = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
     let expected_k = Util.arrow [S.mk_binder a; S.mk_binder p;
