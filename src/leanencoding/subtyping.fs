@@ -7,12 +7,20 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module N = FStar.TypeChecker.Normalize
 
+//a cast between [t1] and [t2], 
+//where t1 and t2 are F* types 
+//and [t1] and [t2] are their corresponding lean translations.
 type cast = 
-    | Dummy
-    | NoCast
-    | EqCast
-    | Cast of Term.term
-     
+    | Dummy                //TODO: remove this
+    | NoCast               //[t1] is definitionally equal to [t2] in Lean
+    | EqCast               //[t1] is provably equal to [t2] Lean
+    | DropRefinement       //[t1] is castable to [t2], via elt_of
+    | AddRefinement        //[t1] is castable to [t2], via tag
+    | RepackRefinement     //[t1] is castable to [t2], via a tag . elt_of <-- this should be the only occurrence of transitivity?
+    | Arrow of cast * cast //[t1] is definitionally equal to a s1 -> s1', in Lean
+			   //[t2] is definitionally equal to a s2 -> s2', in Lean
+			   //given Arrow c c', s2  is castable to s1  via c
+  			   //                  s1' is castable to s2' via c'
 let cast t1 t2 = Dummy
 
 let rec univ_eq u1 u2 = 
@@ -24,6 +32,14 @@ let rec univ_eq u1 u2 =
   | _ -> false
 
 let const_eq c1 c2 = false
+
+(*
+   nat <: nat
+
+   x:int{x>=1} <: x:int{x>=0}
+
+
+*)
 
 (*  -- t1 and t2 are expected to already be well-typed terms, of type Type_i
     -- They are expected to be in strong normal form
