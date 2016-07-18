@@ -382,7 +382,7 @@ and formula_to_string phi = term_to_string phi
 
 let tscheme_to_string (us, t) = Util.format2 "<%s> %s" (univ_names_to_string us) (term_to_string t)
 
-let eff_decl_to_string ed = 
+let eff_decl_to_string for_free ed = 
     let actions_to_string actions =
         actions |> List.map (fun a -> 
           Util.format4 "%s<%s> : %s = %s"
@@ -391,7 +391,7 @@ let eff_decl_to_string ed =
             (term_to_string a.action_typ)
             (term_to_string a.action_defn))
         |> String.concat ",\n\t" in
-    Util.format "new_effect { %s<%s> %s : %s \n  \
+    Util.format "new_effect %s{ %s<%s> %s : %s \n  \
         ret         = %s\n\
       ; bind_wp     = %s\n\
       ; if_then_else= %s\n\
@@ -406,7 +406,8 @@ let eff_decl_to_string ed =
       ; bind_repr   = %s\n\
       ; return_repr = %s\n\
       ; actions     = \n\t%s\n}\n" 
-        [lid_to_string ed.mname;
+        [(if for_free then "for free " else "");
+         lid_to_string ed.mname;
          univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
          term_to_string ed.signature;
@@ -451,7 +452,8 @@ let rec sigelt_to_string x = match x with
   | Sig_let(lbs, _, _, qs) -> lbs_to_string qs lbs
   | Sig_main(e, _) -> Util.format1 "let _ = %s" (term_to_string e)
   | Sig_bundle(ses, _, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
-  | Sig_new_effect(ed, _) -> eff_decl_to_string ed
+  | Sig_new_effect(ed, _) -> eff_decl_to_string false ed
+  | Sig_new_effect_for_free (ed, _) -> eff_decl_to_string true ed
   | Sig_sub_effect (se, r) ->
     let us, t = Subst.open_univ_vars (fst se.lift_wp) (snd se.lift_wp) in
     Util.format4 "sub_effect %s ~> %s : <%s> %s" 
@@ -465,6 +467,7 @@ let rec sigelt_to_string x = match x with
             | _ -> failwith "impossible" in
          Util.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
     else Util.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 

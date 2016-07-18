@@ -1787,6 +1787,7 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                  (S.mk_Total wp_b) in
     check_and_gen' env ed.bind_wp expected_k in
 
+  Options.set_option "debug_level" (Options.List [Options.String "Extreme"]);
   let if_then_else =
     let p = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
     let expected_k = Util.arrow [S.mk_binder a; S.mk_binder p;
@@ -2000,7 +2001,7 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
 
   if Env.debug env Options.Low
   || Env.debug env <| Options.Other "EffDecl"
-  then Util.print_string (Print.eff_decl_to_string ed);
+  then Util.print_string (Print.eff_decl_to_string (match is_for_free with | ForFree -> true | NotForFree -> false) ed);
   ed
 
 
@@ -2111,8 +2112,9 @@ and elaborate_and_star env0 ed =
     }) actions;
     binders = close_binders binders
   } in
+
   if Env.debug env (Options.Other "ED") then
-    Util.print_string (Print.eff_decl_to_string ed);
+    Util.print_string (Print.eff_decl_to_string true ed);
 
   ed
 
