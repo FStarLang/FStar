@@ -10,77 +10,77 @@ open FStar.Constructive
 (* this file relies on a violation of the cardinality constraints of Type*)
 #set-options "--cardinality warn"
 
-type I : (Type -> Type) -> Type =
-| Mk : f:(Type->Type) -> I f
+type i : (Type -> Type) -> Type =
+| Mk : f:(Type->Type) -> i f
 
 val injI : x:(Type->Type) -> y:(Type->Type) ->
-           Lemma (requires (I x == I y)) (ensures (x == y))
+           Lemma (requires (i x == i y)) (ensures (x == y))
 let injI (x:Type->Type) (y:Type->Type) = ()
 
 // Another way to prove injectivity, that doesn't rely on
-// projectors for I in the SMT encoding, but does rely
+// projectors for i in the SMT encoding, but does rely
 // on inversion and "typing elimination" for Mk
-// Namely: that if x : I f then x = Mk e for some e
-//    and: that if Mk e : I f then e = f
+// Namely: that if x : i f then x = Mk e for some e
+//    and: that if Mk e : i f then e = f
 (*
-val injI_ : x:(Type->Type) -> y:(Type->Type) -> I x ->
-           Lemma (requires (I x == I y)) (ensures (x == y))
+val injI_ : x:(Type->Type) -> y:(Type->Type) -> i x ->
+           Lemma (requires (i x == i y)) (ensures (x == y))
 let injI_ (x:Type->Type) (y:Type->Type) ix = ()
 
 val injI : x:(Type->Type) -> y:(Type->Type) ->
-           Lemma (requires (I x == I y)) (ensures (x == y))
+           Lemma (requires (i x == i y)) (ensures (x == y))
 let injI (x:Type->Type) (y:Type->Type) = injI_ x y (Mk x)
 *)
 
 // P in SMT logic -- accepted but hard to use for the rest of the proof
 //                   (the SMT solver doesn't prove false_of_Pp automatically)
-// type P (x:Type) = (exists (a:Type->Type). I a == x /\ ~(a x))
+// type P (x:Type) = (exists (a:Type->Type). i a == x /\ ~(a x))
 
 // P in constructive logic -- not accepted, for no good reason (filed as #350)!
 type cexists_type_to_type : ((Type->Type) -> Type) -> Type =
   | ExTypeToTypeIntro : #p:((Type->Type) -> Type) -> t:(Type -> Type) ->
                          h:(p t) -> cexists_type_to_type p
 
-opaque val exInd : #p:((Type->Type) -> Type) -> p0:Type ->
+val exInd : #p:((Type->Type) -> Type) -> p0:Type ->
              (x:(Type->Type) -> p x -> Tot p0) -> cexists_type_to_type p -> Tot p0
 let exInd (#p:((Type->Type) -> Type)) (p0:Type) 
           (f: (x:(Type->Type) -> p x -> Tot p0)) (h:cexists_type_to_type p) = 
     match h with 
        | ExTypeToTypeIntro 'q 't h -> f 't h
 
-type P (x:Type) = (cexists_type_to_type (fun (a:Type->Type) ->
-                     cand (ceq_type (I a) x) (cnot (a x))))
+type r (x:Type) = (cexists_type_to_type (fun (a:Type->Type) ->
+                     cand (ceq_type (i a) x) (cnot (a x))))
 
-type p = I P
+type p = i r
 
-opaque val aux : h:P p ->
+val aux : h:r p ->
                  a:(Type->Type) ->
-                 h12:(cand (ceq_type (I a) p) (cnot (a p))) ->
+                 h12:(cand (ceq_type (i a) p) (cnot (a p))) ->
                    Tot cfalse
 let aux h (a:(Type->Type)) h12 =
   let Conj h1 h2 = h12 in
-  injI a P; // h2 h -- this should finish the proof but causes bogus error
+  injI a r; // h2 h -- this should finish the proof but causes bogus error
             // Subtyping check failed;
-            // expected type (a (I (fun x -> (cexists_type_to_type
-            // (fun a -> (cand (ceq_type (I a) x) ((a x) -> Tot cfalse)))))));
-            // got type (P p)
-  assert(a == P);
+            // expected type (a (i (fun x -> (cexists_type_to_type
+            // (fun a -> (cand (ceq_type (i a) x) ((a x) -> Tot cfalse)))))));
+            // got type (r p)
+  assert(a == r);
 //  let h2' : cnot (a p) = magic() in h2' h -- this does not work,
 //    F* doesn't seem to replace equals by equals in types (filed as #351)
-    let h2' : cnot (P p) = magic() in h2' h // this does work
+    let h2' : cnot (r p) = magic() in h2' h // this does work
 
-opaque val false_of_Pp : P p -> Tot cfalse
-let false_of_Pp h =
+val false_of_rp : r p -> Tot cfalse
+let false_of_rp h =
     // Using the match directly does not seem to work
     // match h with
     //     | ExTypeToTypeIntro 'p 'a h -> aux h 'a h
-  exInd // #(fun (a:Type->Type) -> cand (ceq_type (I a) p) (cnot (a p)))
+  exInd // #(fun (a:Type->Type) -> cand (ceq_type (i a) p) (cnot (a p)))
         cfalse
         (fun (a:(Type->Type)) -> aux h a) // needed an eta expansion
         h
 
-opaque val have_Pp : unit -> Tot (P p)
-let have_Pp () = ExTypeToTypeIntro P (Conj ReflType false_of_Pp)
+val have_rp : unit -> Tot (r p)
+let have_rp () = ExTypeToTypeIntro r (Conj ReflType false_of_rp)
 
-opaque val contradiction : unit -> Tot cfalse
-let contradiction () = false_of_Pp (have_Pp ())
+val contradiction : unit -> Tot cfalse
+let contradiction () = false_of_rp (have_rp ())

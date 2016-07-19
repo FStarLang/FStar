@@ -359,7 +359,7 @@ type-checker knows that the `FileIO.read f` is safe.
 Write a function called `checkedWrite` that takes a filename `f` and a
 string `s` as argument, checks the policy to make sure the file `f` is
 writable, and only if that is the case writes `s` to `f`. If the file
-is not readable your `checkedWrite` should raise an exception. As for
+is not writable your `checkedWrite` should raise an exception. As for
 `checkedRead`, your `checkedRead` should have no preconditions.
 ~~ ExerciseFragment {exname=ex1a-safe-read-write}
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:CheckedWriteType]
@@ -1009,6 +1009,7 @@ let rec fact_monotone n m =
 ~
 
 
+<!--
 ## Automatic induction { #auto-ind }
 
 Many of these proofs by induction are quite boring. You simply do case
@@ -1024,6 +1025,7 @@ Calling `by_induction_on` with `n` and `factorial_is_greater_than_arg` as argume
 causes F\* to encode the induction hypothesis as a quantified logical
 formula and feed it to Z3, which in simple examples can take care of
 the rest.
+-->
 
 ## Under the hood: `:bool` versus `:Type` { #sec-bool-versus-type }
 
@@ -2460,11 +2462,13 @@ hypothesis `(is_value e1 \/ (is_Some (step e1)))`.
 
 The intuitive proof of the `EIf` case is similar.
 
+<!--
 Using the _experimental_ support for automatic induction ([#auto-ind]),
 the proof above can be written as just:
 ```
 let rec progress e = by_induction_on e progress
 ```
+-->
 
 The **preservation** theorem (sometimes also called "subject reduction") states that
 when a well-typed expression takes a step, the result is a well-typed expression

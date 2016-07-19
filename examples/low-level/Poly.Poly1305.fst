@@ -181,6 +181,8 @@ let le_bytes_to_num b s =
   assume (v (get h b 4) < pow2 24);
   assume (norm h b)
 
+#reset-options
+
 (* Runs "Acc = ((Acc+block)*r) % p." *)
 val add_and_multiply: acc:bigint -> block:bigint{disjoint acc block} -> r:bigint{disjoint acc r /\ disjoint block r} -> STL unit
   (requires (fun h -> norm h acc /\ norm h block /\ norm h r))
@@ -189,22 +191,28 @@ val add_and_multiply: acc:bigint -> block:bigint{disjoint acc block} -> r:bigint
     /\ eval h1 acc norm_length % reveal prime = 
     ((eval h0 acc norm_length + eval h0 block norm_length) * eval h0 r norm_length) % reveal prime))
 let add_and_multiply acc block r =
-  admit();
   let hinit = HST.get() in
   push_frame();
   let h0 = HST.get() in
-  fsum' acc block; 
+  eq_lemma_fresh hinit h0 acc;
+  eq_lemma_fresh hinit h0 block;
+  eq_lemma_fresh hinit h0 r;
+  fsum' acc block;
   let h1 = HST.get() in
-  let tmp = create 0UL (U32.mul 2ul nlength-|1ul) in 
-  let h2 = HST.get() in 
+  assert(modifies_1 acc h0 h1);
+  let tmp = create 0UL (U32.mul 2ul nlength-|1ul) in
+  let h2 = HST.get() in
+  assert (modifies_0 h1 h2);
+  lemma_modifies_1_0 acc h0 h1 h2;
+  assert(modifies_2_1 acc h0 h2); (* WIP *)
   cut (forall (i:nat). {:pattern (v (get h2 acc i))} i < norm_length ==> v (get h2 acc i) = v (get h1 acc i));
   cut (forall (i:nat). {:pattern (v (get h1 acc i))} i < norm_length ==> v (get h1 acc i) = v (get h0 acc (i+0)) + v (get h0 block (i+0)));
   cut (forall (i:nat). {:pattern (v (get h0 acc i))} i < norm_length ==> v (get h0 acc i) < pow2 26); 
   cut (forall (i:nat). {:pattern (v (get h0 block i))} i < norm_length ==> v (get h0 block i) < pow2 26);
-  (* IntLibLemmas.pow2_doubles 26; *)
+  Math.Lemmas.pow2_double_sum 26;
   cut (forall (i:nat). {:pattern (v (get h2 acc i))} i < norm_length ==> v (get h2 acc i) < pow2 27);
   cut (bound27 h2 acc); 
-  (* eq_lemma h0 h2 r (only acc);  *)
+  eq_lemma_1 h0 h2 acc r;
   cut (null h2 tmp); 
   multiplication tmp acc r; 
   let h3 = HST.get() in
@@ -263,7 +271,8 @@ let rec poly1305_step msg acc r ctr =
     let h' = HST.get() in
     le_bytes_to_num block n; 
     let b4 = index block 4ul in
-    (* IntLibLemmas.pow2_doubles 24; Math.Lib.pow2_increases_lemma 26 25; *)
+    Math.Lemmas.pow2_double_sum 24; 
+    Math.Lib.pow2_increases_lemma 26 25;
     Math.Lib.pow2_increases_lemma 64 26;
     upd block 4ul (b4 +^ (1UL ^<< 24ul)); 
     let h1 = HST.get() in
@@ -306,7 +315,7 @@ let poly1305_last msg acc r len =
     let h2 = HST.get() in
     le_bytes_to_num block n; 
     let b4 = index block 4ul in
-    (* IntLibLemmas.pow2_doubles 24; Math.Lib.pow2_increases_lemma 26 25; *)
+    Math.Lemmas.pow2_double_sum 24; Math.Lib.pow2_increases_lemma 26 25;
     Math.Lib.pow2_increases_lemma 64 26;
     let h3 = HST.get() in
     eq_lemma_0 h0 h3 r;
@@ -364,7 +373,7 @@ let poly1305_mac hash msg len key =
   eq_lemma_0 h2 h3' bigint_s;
   fsum' acc bigint_s; 
   let h4 = HST.get() in
-  (* IntLibLemmas.pow2_doubles 26; *)
+  Math.Lemmas.pow2_double_sum 26;
   Math.Lib.pow2_increases_lemma 63 27;
   cut (forall (i:nat). {:pattern (v (get h3' acc i))} i < norm_length ==> v (get h3' acc i) < pow2 26); 
   cut (forall (i:nat). {:pattern (v (get h3' bigint_s i))} i < norm_length ==> v (get h3' bigint_s i) < pow2 26); 

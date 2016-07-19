@@ -20,5 +20,5 @@ if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
 fi
 
 .ci/corecryptotest_reduce_keysize.sh
-make -C src test OTHERFLAGS=--lax
+make -C src test utest OTHERFLAGS=--lax
 make -C examples/unit-tests

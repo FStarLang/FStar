@@ -1,8 +1,8 @@
-module Test
+module Bug281
 
 (* Test of substitution on big terms *)
 
-open Classical
+open FStar.Classical
 
 type exp =
 | EVar : nat -> exp
@@ -13,7 +13,7 @@ type sub = nat -> Tot (exp)
 
 type renaming (s:sub) = (forall x. is_EVar (s x))
 
-val is_renaming : s:sub -> Tot nat
+val is_renaming : s:sub -> GTot nat
 let is_renaming s =
   if (excluded_middle (renaming s)) then 0 else 1
 
@@ -46,18 +46,29 @@ val lemma : s:sub -> e:exp -> Lemma (esubst (sub_elam s) (eesh e)
                                    = eesh (esubst s e))
 let lemma s e = admit()
 
-(* Succeeds after ~2-6sec
-opaque val plouf1 : s:sub -> f:exp -> Tot unit
+(* Version without type : succeeds after a random time or fails *)
+let plouf0 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
+                lemma (sub_elam s) (eesh f);
+                lemma (s) (f);
+                assert(esubst (sub_elam (sub_elam (sub_elam s))) (test f) = test (esubst s f))
+
+(* Succeeds after ~2-6sec *)
+val plouf1 : s:sub -> f:exp -> Tot unit
 let plouf1 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
                 lemma (sub_elam s) (eesh f);
                 lemma (s) (f);
                 assert(esubst (sub_elam (sub_elam (sub_elam s))) (test f)
                      = test (esubst s f))
-*)
 
 (* This takes around ~60 seconds to fail, or sometimes to succeed *)
 val plouf2 : s:sub -> f :exp ->
   Lemma (esubst (sub_elam (sub_elam (sub_elam s))) (test f) = test (esubst s f))
 let plouf2 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
+                lemma (sub_elam s) (eesh f);
+                lemma (s) (f)
+
+(* another try, with raw encoding of the wp *)
+val plouf4 : s:sub -> f:exp -> PURE unit (fun (p:pure_post unit) -> (esubst (sub_elam (sub_elam (sub_elam s))) (test f) = test (esubst s f)) ==> p ())
+let plouf4 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
                 lemma (sub_elam s) (eesh f);
                 lemma (s) (f)

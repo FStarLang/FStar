@@ -1,7 +1,7 @@
 module FirstProofs
 
 val factorial: nat -> Tot nat
-let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
+let rec factorial n = if n = 0 then 1 else (op_Multiply n (factorial (n - 1)))
 
 val factorial_is_positive: x:nat -> Tot (u:unit{factorial x > 0})
 let rec factorial_is_positive = function
@@ -13,7 +13,7 @@ let rec factorial_is_increasing = function
   | 2 -> ()
   | x -> factorial_is_increasing (x - 1)
 
-val factorial_is_doubling: x:nat{x >= 3} -> Tot (u:unit{factorial x >= 2 * x})
+val factorial_is_doubling: x:nat{x >= 3} -> Tot (u:unit{factorial x >= (op_Multiply 2 x)})
 let rec factorial_is_doubling = function
   | 3 -> ()
   | x -> factorial_is_doubling (x - 1)

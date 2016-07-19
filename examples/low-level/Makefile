@@ -14,12 +14,10 @@ OCAMLOPT := ocamlfind opt -package batteries,stdint,zarith -linkpkg -g -I $(ULIB
 	-I $(ULIB_ML)/hyperheap $(ULIB_ML)/fstarlib-hyperheap.cmxa -w -8-20-26
 
 REALIZED_MLI=
-REALIZED=FStar_Mul FStar_HyperStack FStar_HST FStar_Buffer
+REALIZED=FStar_HyperStack FStar_HST Low_Bytes
 REALIZED_MODULE=$(subst _,., $(REALIZED))
 REALIZED_ML=$(addsuffix .mli,$(REALIZED_MLI)) $(addsuffix .ml,$(REALIZED_MLI) $(REALIZED))
 NO_CODEGEN=$(addprefix --no_extract , SInt $(REALIZED_MODULE))
-
-# CURVE_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Ghost.ml Axioms.ml Bignum_Parameters.ml Bignum_Bigint.ml Bignum_Fsum.ml Bignum_FsumWide.ml Bignum_Fdifference.ml Bignum_Fscalar.ml Bignum_Fproduct.ml Bignum_Modulo.ml Bignum_Core.ml Curve_Point.ml Curve_AddAndDouble.ml Curve_Ladder.ml
 
 CURVE_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Ghost.ml Math_Axioms.ml Math_Lib.ml Math_Definitions.ml Math_Field.ml Math_Curve.ml Curve_Parameters.ml Curve_Bigint.ml Curve_Fsum.ml Curve_FsumWide.ml Curve_Fdifference.ml Curve_Fscalar.ml Curve_Fproduct.ml Curve_Modulo.ml Curve_Bignum.ml Curve_Crecip.ml Curve_Point.ml Curve_AddAndDouble.ml Curve_Ladder.ml
 CHACHA_EXTRACTED=Chacha.ml
@@ -84,6 +82,15 @@ poly-compile:
 	$(OCAMLOPT) -I ml -I $(POLY_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
 	  $(addprefix $(POLY_ODIR)/,$(POLY_EXTRACTED)) ml/test_poly1305.ml -o test_poly.exe
 	./test_poly.exe
+
+wip:
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
+	mkdir -p $(CHACHA_ODIR)
+		$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) Chacha20.fst --odir $(CHACHA_ODIR) 
+	$(OCAMLOPT) -I ml -I $(CHACHA_ODIR) \
+	$(addprefix ml/,$(REALIZED_ML)) \
+	$(addprefix $(CHACHA_ODIR)/,Chacha20.ml) ml/test_chacha20.ml -o test_chacha.exe
+	./test_chacha.exe 
 
 # Cleaning
 clean:

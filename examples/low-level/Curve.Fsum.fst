@@ -56,7 +56,8 @@ let fsum_index_aux a b ctr =
   assert(v (get h1 a (U32.v ctr)) = v (get h0 a (U32.v ctr)) + v (get h0 b (U32.v ctr))); 
   assert(notModified h0 h1 a (U32.v ctr)); 
   assert(willNotOverflow h1 a b ((U32.v ctr)+1));
-  no_upd_lemma h0 h1 b (only a)
+  (* no_upd_lemma h0 h1 b (only a); *)
+  ()
 
 abstract let isSum (h0:heap) (h1:heap) (a:bigint{live h0 a /\ live h1 a /\ length a = length a}) 
 		  (b:bigint{live h0 b}) (ctr:nat) =
@@ -86,8 +87,8 @@ val fsum_index_lemma:
       /\ isSum h0 h2 a b ctr ))
 let fsum_index_lemma h0 h1 h2 a b ctr =
   //@@
-  no_upd_lemma h0 h1 b (only a);
-  no_upd_lemma h1 h2 b (only a);
+  (* no_upd_lemma h0 h1 b (only a); *)
+  (* no_upd_lemma h1 h2 b (only a); *)
   assert(isSum h1 h2 a b (ctr+1)); 
   assert(notModified2 h1 h2 a (ctr+1)); 
   assert(notModified h0 h1 a ctr); 
@@ -115,7 +116,7 @@ let rec fsum_index a b ctr =
   else (
     fsum_index_aux a b ctr; 
     let h1 = HST.get() in
-    no_upd_lemma h0 h1 b (only a); 
+    (* no_upd_lemma h0 h1 b (only a);  *)
     (* FsumLemmas.auxiliary_lemma_6 norm_length ctr;  *)
     fsum_index a b (U32.add ctr 1ul); 
     let h2 = HST.get() in
@@ -254,7 +255,7 @@ let fsum' a b =
   auxiliary_lemma_0 h0 a h0 b;
   fsum_index a b 0ul;
   let h1 = HST.get() in
-  no_upd_lemma h0 h1 b (only a);
+  (* no_upd_lemma h0 h1 b (only a); *)
   auxiliary_lemma_1 h0 h1 b;
   auxiliary_lemma_3 h0 h1 a b;
   addition_lemma h0 h1 a b norm_length;

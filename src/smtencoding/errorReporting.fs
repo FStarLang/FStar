@@ -53,7 +53,12 @@ let fresh_label : ranges -> term -> labels -> term * labels =
 
       Returns the labeled query and the label terms that were added
 *)
-let label_goals use_env_msg r q : term * labels * ranges = 
+let label_goals use_env_msg  //when present, provides an alternate error message, usually "could not check implicit argument", or something like that
+                r            //the source range in which this query was asked
+                q : term     //the query, decorated with labels
+                  * labels   //the labels themselves
+                  * ranges   //not-relevant at the top-level; recursively this range represents the stack of source locations being visited
+                  = 
     let flag, msg_prefix = match use_env_msg with 
         | None -> false, ""
         | Some f -> true, f() in

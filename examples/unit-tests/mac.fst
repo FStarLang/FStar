@@ -75,14 +75,18 @@ let mac k t =
 
 let verify k text tag =
   let verified = sha1verify k text tag in
-  let found    = is_Some(List.find (function (Entry k' text' tag') -> k=k' && text=text' (*CTXT: && tag=tag' *) ) !log) in
+  let found    = is_Some(List.Tot.find (function (Entry k' text' tag') -> k=k' && text=text' (*CTXT: && tag=tag' *) ) !log) in
 
   (* plain, concrete implementation (ignoring the log) *)
 //verified
 
   (* ideal, error-correcting implementation *)
-  verified && (found || leaked k )
-
+  //verified && (found || leaked k )
+  if verified then 
+    if found then
+      true
+    else leaked k
+  else false
   (* error-detecting implementation for the INT-CMA-LEAK game *)
 //if verified && not (found || leaked k) then win:= Some(k,text,tag);
 //verified
