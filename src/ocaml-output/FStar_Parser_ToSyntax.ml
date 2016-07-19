@@ -47,8 +47,8 @@ end
 | FStar_Parser_AST.Opaque -> begin
 (
 
-let _63_42 = (FStar_TypeChecker_Errors.warn r "The \'opaque\' qualifier is deprecated; use \'unfoldable\', which is also the default")
-in FStar_Syntax_Syntax.Unfoldable)
+let _63_42 = (FStar_TypeChecker_Errors.warn r "The \'opaque\' qualifier is deprecated; use \'irreducible\'")
+in FStar_Syntax_Syntax.Irreducible)
 end
 | FStar_Parser_AST.DefaultEffect -> begin
 (Prims.raise (FStar_Syntax_Syntax.Error (("The \'default\' qualifier on effects is no longer supported", r))))
