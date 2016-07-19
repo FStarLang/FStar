@@ -486,6 +486,18 @@ let lemma_modifies_1_2' (#t:Type) (#t':Type) (b:buffer t) (b':buffer t') h0 h1 h
   [SMTPat (modifies_1 b h0 h1); SMTPat (modifies_2 b' b h1 h2)]  
   = ()
 
+let lemma_modifies_1_2'' (#t:Type) (#t':Type) (b:buffer t) (b':buffer t') h0 h1 h2 : Lemma
+  (requires (live h0 b /\ live h0 b' /\ modifies_1 b h0 h1 /\ modifies_2 b b' h1 h2))
+  (ensures  (modifies_2 b b' h0 h2))
+  [SMTPat (modifies_1 b h0 h1); SMTPat (modifies_2 b b' h1 h2)]  
+  = ()
+
+let lemma_modifies_1_2''' (#t:Type) (#t':Type) (b:buffer t) (b':buffer t') h0 h1 h2 : Lemma
+  (requires (live h0 b /\ live h0 b' /\ modifies_1 b h0 h1 /\ modifies_2 b' b h1 h2))
+  (ensures  (modifies_2 b' b h0 h2))
+  [SMTPat (modifies_1 b h0 h1); SMTPat (modifies_2 b' b h1 h2)]  
+  = ()
+
 let lemma_modifies_1_1_prime (#t:Type) (#t':Type) (b:buffer t) (b':buffer t') h0 h1 h2 : Lemma
   (requires (live h0 b /\ modifies_1 b h0 h1 /\ ~(contains h0 b') /\ live h1 b' /\
     modifies_1 b' h1 h2 /\ frameOf b' = h0.tip))
@@ -566,7 +578,8 @@ val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> STL unit
     /\ modifies_1 b h0 h1
     /\ sel h1 b == Seq.upd (sel h0 b) (idx b + v n) z
     /\ get h1 b (v n) == z
-    /\ (forall (i:nat). {:pattern (get h1 b i)} (i < length b /\ i <> v n) ==> get h1 b i == get h0 b i) ))
+    /\ (forall (i:nat). {:pattern (get h1 b i)} (i < length b /\ i <> v n) ==> get h1 b i == get h0 b i)
+    ))
 let upd #a b n z =
   let s = !b.content in
   let s = Seq.upd s (v b.idx + v n) z in

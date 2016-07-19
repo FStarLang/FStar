@@ -55,7 +55,6 @@ type partition_post (a:eqtype) (f:tot_ord a) (start:nat) (len:nat{start <= len} 
 
 #reset-options
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
-#reset-options "--lax" //AR: flaky for me, verifies in the interactive mode, not from the command line
 val partition: #a:eqtype -> f:tot_ord a
                -> start:nat -> len:nat{start <= len}
                -> pivot:nat{start <= pivot /\ pivot < len}
