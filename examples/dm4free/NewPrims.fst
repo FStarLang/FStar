@@ -30,7 +30,7 @@ assume type eq2 : #a:Type -> #b:Type -> a -> b -> Type0
 assume new type bool : Type0
 
 (* bool-to-type coercion *)
-type b2t (b:bool) = (b == true)
+type b2t (b:bool) = (b === true)
 
 (* constructive conjunction *)
 type c_and  (p:Type) (q:Type) =
@@ -72,7 +72,7 @@ type squash (p:Type) = x:unit{p}
 type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
 
 (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
-type dtuple2 (a:Type)
+noeq type dtuple2 (a:Type)
              (b:(a -> GTot Type)) =
   | Mkdtuple2: _1:a
             -> _2:b _1
@@ -308,7 +308,7 @@ new_effect_for_free {
 }
 
 (* Ex *)
-type result (a:Type) =
+noeq type result (a:Type) =
   | V   : v:a -> result a
   | E   : e:exn -> result a
   | Err : msg:string -> result a
@@ -349,7 +349,7 @@ inline let ex2_bind_wp (r:range) (a:Type) (b:Type)
 		       (wp2:(a -> GTot (ex2_wp b))) = fun p ->
    (forall (rb:result b). p rb \/ wp1 (fun ra1 -> if is_V ra1
                                          then wp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
-                                         else ra1 =!= rb))
+                                         else ~ (ra1 === rb)))
    /\ wp1 (fun ra1 -> if is_V ra1
                    then wp2 (V.v ra1) (fun rb2 -> True)
                    else True)
