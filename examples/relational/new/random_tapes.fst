@@ -11,10 +11,10 @@ val sample : random_tape -> int -> Tot int
 let sample r i =  r i
 
   (* Working around some bug with projectors *)
-val left : r:(rel random_tape) -> Tot ( r':random_tape{R.l r = r'})
+val left : r:(rel random_tape) -> Tot ( r':random_tape{R.l r == r'})
 let left r = R.l r
 
-val right : r:(rel random_tape) -> Tot (r':random_tape{R.r r = r'})
+val right : r:(rel random_tape) -> Tot (r':random_tape{R.r r == r'})
 let right r = R.r r
 
   (*Just for testing purposes (use instead of bij for much faster verification) *)
@@ -49,7 +49,7 @@ let otp_rand x i = if i = 0 then
 
   (* otp perfectly hides input *)
 val otp_eq : x:(rel int) -> r:(rel_random_tape (otp_rand x)) ->
-            Lemma (b2t (r_eq(lift3 otp x r (R 0 0))))
+            Lemma (r_eq(lift3 otp x r (R 0 0)))
 let otp_eq x r = ()
 
   (* Same thing for a pair of values *)
@@ -64,5 +64,5 @@ let otp2_rand x y i =
   | _ -> id
 
 val otp2_eq : x:(rel int) -> y:(rel int) -> r:(rel_random_tape (otp2_rand x y)) ->
-            Lemma (b2t (r_eq(lift5 otp2 x y r (R 0 0) (R 1 1))))
+            Lemma (r_eq(lift5 otp2 x y r (R 0 0) (R 1 1)))
 let otp2_eq x y r = ()
