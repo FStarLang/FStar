@@ -36,7 +36,7 @@ let older_than_transitive ts0 ts1 ts2 = ()
 val older_than_antisymmetric : ts0:timestamp ->
                                ts1:timestamp ->
 	                       Lemma (requires (~(older_than ts0 ts1) /\ ~(older_than ts1 ts0)))
-	                             (ensures  (ts0 = ts1))
+	                             (ensures  (ts0 == ts1))
 			       [SMTPat (~(older_than ts0 ts1)); SMTPat (~(older_than ts1 ts0))]
 let older_than_antisymmetric ts0 ts1 = ()
 
@@ -80,7 +80,7 @@ effect TSST    (a:Type)
                                           (pre s0 /\ 
 					  state_rel (get_state s0) (get_state s1) /\ 
 					  (older_than (get_timestamp s0) (get_timestamp s1) \/ 
-					     get_timestamp s0 = get_timestamp s1) /\
+					     get_timestamp s0 == get_timestamp s1) /\
 					  post s0 x s1) 
 					  ==> 
 					  p x s1))
@@ -97,30 +97,30 @@ assume abstract type witnessed: ts:timestamp ->
 
 assume val get:     unit -> 
 		    TSST (timestamped_state state) (fun s0 -> True)
-		                                   (fun s0 s s1 -> s0 = s /\
-						                   s1 = s)
+		                                   (fun s0 s s1 -> s0 == s /\
+						                   s1 == s)
 
 
 assume val put:     s:state ->
 		    TSST unit (fun s0 -> state_rel (get_state s0) s) 
-			      (fun s0 _ s1 -> get_state s1 = s /\
+			      (fun s0 _ s1 -> get_state s1 == s /\
 					      older_than (get_timestamp s0) (get_timestamp s1))
 
 
 assume val witness: p:predicate state{stable state_rel p} ->
 		    TSST unit (fun s0 -> p (get_state s0)) 
-			      (fun s0 _ s1 -> get_state s0 = get_state s1 /\
-				              get_timestamp s0 = get_timestamp s1 /\
+			      (fun s0 _ s1 -> get_state s0 == get_state s1 /\
+				              get_timestamp s0 == get_timestamp s1 /\
 					      witnessed (get_timestamp s1) p)
 
 
 assume val recall:  p:predicate state{stable state_rel p} -> 
 		    TSST unit (fun s0 -> exists ts . 
 		                           (older_than ts (get_timestamp s0) \/ 
-					      ts = get_timestamp s0) /\
+					      ts == get_timestamp s0) /\
 		                              witnessed ts p) 
-			      (fun s0 _ s1 -> get_state s0 = get_state s1 /\ 
-					      get_timestamp s0 = get_timestamp s1 /\
+			      (fun s0 _ s1 -> get_state s0 == get_state s1 /\ 
+					      get_timestamp s0 == get_timestamp s1 /\
 					      p (get_state s1))
 
 
@@ -133,7 +133,7 @@ assume val reify : #a:Type ->
 		   s0:timestamped_state state ->
 		   Pure (a * timestamped_state state) (pre s0)
 		                                      (fun xs1 -> (older_than (get_timestamp s0) (get_timestamp (snd xs1)) \/
-						                     get_timestamp s0 = get_timestamp (snd xs1)) /\
+						                     get_timestamp s0 == get_timestamp (snd xs1)) /\
 						                  state_rel (get_state s0) (get_state (snd xs1)) /\
 						                  post s0 (fst xs1) (snd xs1))
 
@@ -158,7 +158,7 @@ let reify_recall_test _ =
 
   let v = reify #unit #(fun s0 -> exists ts . 
 		                    (older_than ts (get_timestamp s0) \/ 
-				       ts = get_timestamp s0) /\
+				       ts == get_timestamp s0) /\
 		                       witnessed ts (fun s -> s > 0)) 
 		      #(fun _ _ _ -> True) f in
 

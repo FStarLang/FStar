@@ -31,7 +31,7 @@ let test_reify_recall _ =
   let h1 = ist_get () in
 
   let f = fun (x:unit) -> witness m (fun h -> contains m h /\ sel h m > 0) in
-  let v = reify #unit #(fun h0 -> contains m h0 /\ sel h0 m > 0) #(fun h0 _ h1 -> h0 = h1 /\ ist_witnessed (fun h -> contains m h /\ sel h m > 0)) f in
+  let v = reify #unit #(fun h0 -> contains m h0 /\ sel h0 m > 0) #(fun h0 _ h1 -> h0 == h1 /\ ist_witnessed (fun h -> contains m h /\ sel h m > 0)) f in
 
   let f' = fun (x:unit) -> witness m (fun h -> contains m h /\ sel h m > 3) in
   let v' = reify #unit #(fun h0 -> contains m h0 /\ sel h0 m > 3) #(fun _ _ _ -> True) f' in
@@ -41,7 +41,7 @@ let test_reify_recall _ =
   //let _ = v' h1 in    //rejected, as expected  
 
   let g = fun (x:unit) -> recall m (fun h -> contains m h /\ sel h m > 0) in
-  let w = reify #unit #(fun h0 -> ist_witnessed (fun h -> contains m h /\ sel h m > 0)) #(fun h0 _ h1 -> h0 = h1 /\ contains m h1 /\ sel h1 m > 0) g in
+  let w = reify #unit #(fun h0 -> ist_witnessed (fun h -> contains m h /\ sel h m > 0)) #(fun h0 _ h1 -> h0 == h1 /\ contains m h1 /\ sel h1 m > 0) g in
 
   let h2 = ist_get () in
 

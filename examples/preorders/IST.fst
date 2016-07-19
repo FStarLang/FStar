@@ -68,25 +68,25 @@ assume abstract type witnessed: #state:Type ->
 assume val get:     #state:Type -> 
 		    #rel:relation state{preorder rel} -> 
 		    IST state rel state (fun s0 -> True) 
-					(fun s0 s s1 -> s0 = s /\ s = s1)
+					(fun s0 s s1 -> s0 == s /\ s == s1)
 
 assume val put:     #state:Type ->
 		    #rel:relation state{preorder rel} ->
 		    s:state ->
 		    IST state rel unit (fun s0 -> rel s0 s) 
-				       (fun s0 _ s1 -> s1 = s)
+				       (fun s0 _ s1 -> s1 == s)
 
 assume val witness: #state:Type ->
 		    #rel:relation state{preorder rel} ->
 		    p:predicate state{stable rel p} ->
 		    IST state rel unit (fun s0 -> p s0) 
-				       (fun s0 _ s1 -> s0 = s1 /\ witnessed #state #rel p)
+				       (fun s0 _ s1 -> s0 == s1 /\ witnessed #state #rel p)
 
 assume val recall:  #state:Type ->
 		    #rel:relation state{preorder rel} ->
 		    p:predicate state{stable rel p} -> 
 		    IST state rel unit (fun _ -> witnessed #state #rel p) 
-				       (fun s0 _ s1 -> s0 = s1 /\ p s1)
+				       (fun s0 _ s1 -> s0 == s1 /\ p s1)
 
 
 
