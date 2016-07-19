@@ -28,6 +28,7 @@ type step =
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | WHNF            //Only produce a weak head normal form
   | Inline
+  | NoInline
   | UnfoldUntil of delta_depth
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses

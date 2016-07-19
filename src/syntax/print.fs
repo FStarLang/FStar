@@ -258,8 +258,14 @@ let rec term_to_string x =
 
 and  pat_to_string x = match x.v with
     | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (fv_to_string l) (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
-    | Pat_dot_term (x, _) -> Util.format1 ".%s" (bv_to_string x)
-    | Pat_var x -> bv_to_string x
+    | Pat_dot_term (x, _) -> 
+      if Options.print_bound_var_types()
+      then Util.format2 ".%s:%s" (bv_to_string x) (term_to_string x.sort)
+      else Util.format1 ".%s" (bv_to_string x)
+    | Pat_var x -> 
+      if Options.print_bound_var_types()
+      then Util.format2 "%s:%s" (bv_to_string x) (term_to_string x.sort)
+      else bv_to_string x
     | Pat_constant c -> const_to_string c
     | Pat_wild x -> if (Options.print_real_names()) then "Pat_wild " ^ (bv_to_string x) else "_"
     | Pat_disj ps ->  Util.concat_l " | " (List.map pat_to_string ps) 
