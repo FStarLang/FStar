@@ -12,7 +12,7 @@ val give_proof : #p:Type -> squash p ->
   Pure unit (requires True) (ensures (fun _ -> p))
 
 val proof_irrelevance : p:Type -> x:squash p ->
-                                 y:squash p -> Tot (squash (x = y))
+                                 y:squash p -> Tot (squash (x == y))
 
 val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
   $f:(squash (x:a -> GTot (squash (p x)))) -> GTot (squash (x:a -> GTot (p x)))

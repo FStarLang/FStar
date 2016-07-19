@@ -50,6 +50,7 @@ let trans_qual r = function
   | AST.New  ->          S.New
   | AST.Abstract ->      S.Abstract
   | AST.Opaque ->        FStar.TypeChecker.Errors.warn r "The 'opaque' qualifier is deprecated; use 'irreducible'"; S.Irreducible
+  | AST.Noeq ->          S.Noeq
   | AST.DefaultEffect -> raise (Error("The 'default' qualifier on effects is no longer supported", r))
   
 let trans_pragma = function

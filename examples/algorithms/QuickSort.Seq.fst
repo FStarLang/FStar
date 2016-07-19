@@ -9,9 +9,9 @@ open FStar.SeqProperties
 (* CH: this is needed on my machine, intermittent failures otherwise *)
 #reset-options "--z3timeout 20"
 
-val partition: f:('a -> 'a -> Tot bool){total_order 'a f}
-    -> s:seq 'a -> pivot:nat{pivot < length s} -> back:nat{pivot <= back /\ back < length s} ->
-       Pure (seq 'a * seq 'a)
+val partition: #a:eqtype -> f:(a -> a -> Tot bool){total_order a f}
+    -> s:seq a -> pivot:nat{pivot < length s} -> back:nat{pivot <= back /\ back < length s} ->
+       Pure (seq a * seq a)
          (requires (forall (i:nat{i < length s}).
                                  ((i <= pivot ==> f (index s i) (index s pivot))
                                   /\ (back < i  ==> f (index s pivot) (index s i)))))
@@ -27,7 +27,7 @@ val partition: f:('a -> 'a -> Tot bool){total_order 'a f}
                      (snd res)
                      (index s pivot)))
          (decreases (back - pivot))
-let rec partition f s pivot back =
+let rec partition #a f s pivot back =
   if pivot=back
   then (lemma_count_slice s pivot;
         let lo = slice s 0 pivot in
@@ -49,11 +49,11 @@ let rec partition f s pivot back =
 #reset-options
 
 #set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
-val sort: f:('a -> 'a -> Tot bool){total_order 'a f}
-       -> s1:seq 'a
-       -> Tot (s2:seq 'a{sorted f s2 /\ permutation 'a s1 s2})
+val sort: #a:eqtype -> f:(a -> a -> Tot bool){total_order a f}
+       -> s1:seq a
+       -> Tot (s2:seq a{sorted f s2 /\ permutation a s1 s2})
               (decreases (length s1))
-let rec sort f s =
+let rec sort #a f s =
   if length s <= 1 then s
   else let lo, hi = partition f s 0 (length s - 1) in
        let pivot = head hi in

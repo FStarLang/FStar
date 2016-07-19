@@ -17,7 +17,7 @@
 (* A logical theory of integer-indexed arrays, from [0, n) *)
 module ArrayRealized
 
-type contents (a:Type) =
+noeq type contents (a:Type) =
   | Const : v:a -> contents a
   | Upd   : ix:int -> v:a -> tl:contents a -> contents a
   | Append : s1:seq a -> s2:seq a -> contents a

@@ -172,6 +172,8 @@ val fuel_2: term
 val fuel_100:term
 val n_fuel: int -> term
 
+val mk_haseq: term -> term
+
 val print_smt_term: term -> string
 val print_smt_term_list: list<term> -> string
 val print_smt_term_list_list: list<list<term>> -> string

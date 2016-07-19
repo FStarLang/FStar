@@ -65,7 +65,7 @@ val witness: #r:rid
           -> p:(t -> GTot Type0)
           -> ST unit
                 (requires (fun h0 -> p h0 /\ stable_on_t m p))
-                (ensures (fun h0 _ h1 -> h0=h1 /\ witnessed p))
+                (ensures (fun h0 _ h1 -> h0==h1 /\ witnessed p))
 let witness #r #a #b m p = ()
 
 assume val weaken_witness : p:(t -> GTot Type0) 
@@ -77,7 +77,7 @@ assume val weaken_witness : p:(t -> GTot Type0)
 val testify: p:(t -> GTot Type0)
           -> ST unit
                (requires (fun _ ->  witnessed p))
-               (ensures (fun h0 _ h1 -> h0=h1 /\ p h1))
+               (ensures (fun h0 _ h1 -> h0==h1 /\ p h1))
 let testify p = admit() //intentionally admitted
 
 
@@ -85,7 +85,7 @@ val testify_forall: #a:Type -> #p:(a -> t -> Type0)
        -> $s:squash (forall (x:a). witnessed (p x)) 
        -> ST unit
   (requires (fun h -> True))
-  (ensures (fun h0 _ h1 -> h0=h1 /\ (forall (x:a). p x h1)))
+  (ensures (fun h0 _ h1 -> h0==h1 /\ (forall (x:a). p x h1)))
 let testify_forall #a #p $s = admit() //intentionally admitted
 
 
@@ -93,7 +93,7 @@ val m_recall: #r:rid -> #a:Type -> #b:reln a
             -> m:m_rref r a b
 	    -> ST unit 
 	      (requires (fun h -> True))
-	      (ensures (fun h0 _ h1 -> h0=h1 /\ m_contains m h1))
+	      (ensures (fun h0 _ h1 -> h0==h1 /\ m_contains m h1))
 let m_recall #r #a #b m = FStar.ST.recall m
 
 
@@ -103,4 +103,4 @@ type ex_rid = r:rid{witnessed (rid_exists r)}
 
 assume val ex_rid_of_rid: r:rid -> ST ex_rid
   (fun h -> True)
-  (fun h0 r' h1 -> r=r' /\ h0=h1)
+  (fun h0 r' h1 -> r=r' /\ h0==h1)

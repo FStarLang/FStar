@@ -116,6 +116,7 @@ type tycon =
 type qualifier =
   | Private
   | Abstract
+  | Noeq
   | Assumption
   | DefaultEffect
   | TotalEffect
@@ -218,10 +219,10 @@ let mkApp t args r = match args with
       | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
 
 let mkRefSet r elts =
-  let empty = mk_term (Var(set_lid_range C.set_empty r)) r Expr in
+  let empty = mk_term (Var(set_lid_range C.tset_empty r)) r Expr in
   let ref_constr = mk_term (Var (set_lid_range C.heap_ref r)) r Expr in
-  let singleton = mk_term (Var (set_lid_range C.set_singleton r)) r Expr in
-  let union = mk_term (Var(set_lid_range C.set_union r)) r Expr in
+  let singleton = mk_term (Var (set_lid_range C.tset_singleton r)) r Expr in
+  let union = mk_term (Var(set_lid_range C.tset_union r)) r Expr in
   List.fold_right (fun e tl ->
     let e = mkApp ref_constr [(e, Nothing)] r in
     let single_e = mkApp singleton [(e, Nothing)] r in

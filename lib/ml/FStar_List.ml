@@ -59,6 +59,7 @@ let rec unzip3 l =
   | [] -> [],[],[]
   | (x,y,z)::t -> let u,v,w = unzip3 t in x::u,y::v,z::w
 let unique = BatList.unique
+let splitAt = BatList.split_at
 let map_flatten f l = flatten (map f l)
 let filter_map = BatList.filter_map
 let index f l =

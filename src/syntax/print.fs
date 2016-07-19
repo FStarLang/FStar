@@ -63,7 +63,8 @@ let infix_prim_ops = [
     (Const.imp_lid     , "==>");
     (Const.iff_lid     , "<==>");
     (Const.precedes_lid, "<<");
-    (Const.eq2_lid     , "==")
+    (Const.eq2_lid     , "==");
+    (Const.eq3_lid     , "===");
 ]
 
 let unary_prim_ops = [
@@ -188,6 +189,7 @@ let qual_to_string = function
   | Unfoldable            -> "unfoldable"
   | Irreducible           -> "irreducible"
   | Abstract              -> "abstract"
+  | Noeq                  -> "noeq"
   | Logic                 -> "logic"
   | TotalEffect           -> "total"
   | Discriminator l       -> Util.format1 "(Discriminator %s)" (lid_to_string l) 
@@ -217,7 +219,7 @@ let rec term_to_string x =
     Util.format2 "{:pattern %s} %s" pats (term_to_string t)
 
   | Tm_meta(t, _) ->    term_to_string t
-  | Tm_bvar x ->        db_to_string x  
+  | Tm_bvar x ->        db_to_string x
   | Tm_name x ->        nm_to_string x
   | Tm_fvar f ->        fv_to_string f
   | Tm_uvar (u, _) ->   uvar_to_string u

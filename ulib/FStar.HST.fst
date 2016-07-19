@@ -42,7 +42,7 @@ assume val push_frame: unit -> ST unit
 // JK: removes old frame from the stack
 assume val pop_frame: unit -> ST unit
   (requires (fun m -> poppable m))
-  (ensures (fun (m0:mem) _ (m1:mem) -> poppable m0 /\ m1=pop m0 /\ popped m0 m1))
+  (ensures (fun (m0:mem) _ (m1:mem) -> poppable m0 /\ m1==pop m0 /\ popped m0 m1))
 
 (* val call: #a:Type -> #b:Type -> #pre:st_pre -> #post:(t -> Tot (st_post t)) -> $(f:a -> STF b (requires (fun h -> pre h)) (fun h0 x h1 -> post h0 b h1)) -> ST b *)
 (*   (requires (fun h -> (forall h'. fresh_frame h h' ==> pre h'))) *)
@@ -52,34 +52,34 @@ assume val pop_frame: unit -> ST unit
 assume val salloc: #a:Type -> init:a -> ST (stackref a)
   (requires (fun m -> True))
   (ensures (fun m0 s m1 -> 
-      Map.domain m0.h = Map.domain m1.h
+      Map.domain m0.h == Map.domain m1.h
     /\ m0.tip = m1.tip
     /\ s.id   = m1.tip
     /\ HH.fresh_rref s.ref m0.h m1.h            //it's a fresh reference in the top frame
-    /\ m1=HyperStack.upd m0 s init))           //and it's been initialized
+    /\ m1==HyperStack.upd m0 s init))           //and it's been initialized
 
 // JK: assigns, provided that the reference is good
 assume val op_Colon_Equals: #a:Type -> r:stackref a -> v:a -> STL unit
   (requires (fun m -> contains m r))
-  (ensures (fun m0 _ m1 -> contains m0 r /\ m1 = HyperStack.upd m0 r v))
+  (ensures (fun m0 _ m1 -> contains m0 r /\ m1 == HyperStack.upd m0 r v))
 
 // JK: dereferences, provided that the reference is good
 assume val op_Bang: #a:Type -> r:stackref a -> STL a
   (requires (fun m -> HH.includes r.id m.tip))
-  (ensures (fun s0 v s1 -> s1=s0 /\ v=HyperStack.sel s0 r))
+  (ensures (fun s0 v s1 -> s1==s0 /\ v==HyperStack.sel s0 r))
 
 module G = FStar.Ghost
 
 // JK: Returns the current stack of heaps --- it should be erased
 assume val get: unit -> STL mem
   (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m0=x /\ m1=m0))
+  (ensures (fun m0 x m1 -> m0==x /\ m1==m0))
 
 // JK: Proper function, returning an erased stack of heaps 
 // YES, this is the proper one
 assume val eget: unit -> STL (G.erased mem)
   (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m0=G.reveal x /\ m1=m0))
+  (ensures (fun m0 x m1 -> m0==G.reveal x /\ m1==m0))
 
 //We don't have recall since regions and refs can be deallocated
 (* assume val recall: #a:Type -> r:ref a -> ST unit *)
@@ -140,7 +140,7 @@ val with_frame: #a:Type -> #pre:st_pre -> #post:(mem -> Tot (st_post a)) -> $f:(
 			         /\ poppable s0' 
 				 /\ post s0' x s1'
 				 /\ equal_domains s0' s1'
-				 /\ s1 = pop s1')
+				 /\ s1 == pop s1')
 let with_frame #a #pre #post f = 
   push_frame();
   let x = f() in
@@ -154,7 +154,7 @@ let test_with_frame (x:stackref int) (v:int)
 
 
 let as_requires (#a:Type) (wp:st_wp a) = wp (fun x s -> True)
-let as_ensures (#a:Type) (wp:st_wp a) = fun s0 x s1 -> wp (fun y s1' -> y<>x \/ s1<>s1') s0
+let as_ensures (#a:Type) (wp:st_wp a) = fun s0 x s1 -> wp (fun y s1' -> y=!=x \/ s1=!=s1') s0
 assume val as_stl: #a:Type -> #wp:st_wp a -> $f:(unit -> STATE a wp) -> 
 	   Pure (unit -> STL a (as_requires wp)
 			      (as_ensures wp))

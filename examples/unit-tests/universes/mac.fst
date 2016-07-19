@@ -37,7 +37,7 @@ assume val sha1: key -> text -> Tot tag
 (* to verify, we simply recompute & compare *)
 
 val sha1verify: key -> text -> tag -> Tot bool
-let sha1verify k txt tag = (sha1 k txt = tag)
+let sha1verify k txt tag = eq (sha1 k txt) tag
 
 (* we attach an authenticated properties to each key,
    used as a pre-condition for MACing and
@@ -60,7 +60,7 @@ val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
 
 (* the ideal implementation below uses a global log *)
 
-type entry =
+noeq type entry =
   | Entry : k:key
          -> t:text{key_prop k t}
          -> m:tag
@@ -75,7 +75,7 @@ let mac k t =
 
 let verify k text tag =
   let verified = sha1verify k text tag in
-  let found    = is_Some(List.Tot.find (function (Entry k' text' tag') -> k=k' && text=text' (*CTXT: && tag=tag' *) ) !log) in
+  let found    = is_Some(List.Tot.find (function (Entry k' text' tag') -> eq k k' && eq text text' (*CTXT: && tag=tag' *) ) !log) in
 
   (* plain, concrete implementation (ignoring the log) *)
 //verified

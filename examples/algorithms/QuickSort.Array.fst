@@ -22,11 +22,11 @@ open FStar.Heap
 open FStar.ST
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
 
-type partition_inv (a:Type) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) =
+type partition_inv (a:eqtype) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) =
            ((length hi) >= 0)
            /\ (forall y. (mem y hi ==> f pv y) /\ (mem y lo ==> f y pv))
 
-type partition_pre  (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
+type partition_pre  (a:eqtype) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
                     (pivot:nat{start <= pivot /\ pivot < len})
                     (back:nat{pivot <= back /\ back < len})
                     (x:array a) (h:heap) =
@@ -37,7 +37,7 @@ type partition_pre  (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
                                                        (slice s (back + 1) len)))
            (sel h x)))
 
-type partition_post (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
+type partition_post (a:eqtype) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
                     (pivot:nat{start <= pivot /\ pivot < len})
                     (back:nat{pivot <= back /\ back < len})
                     (x:array a) (h0:heap) (i:nat) (h1:heap) =
@@ -46,7 +46,7 @@ type partition_post (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
     /\ start <= i
     /\ i < len
     /\ (length (sel h1 x) = length (sel h0 x))
-    /\ (sel h1 x = splice (sel h0 x) start (sel h1 x) len)
+    /\ (sel h1 x == splice (sel h0 x) start (sel h1 x) len)
     /\ (permutation a (slice (sel h0 x) start len) (slice (sel h1 x) start len))
     /\ (partition_inv a f
                       (slice (sel h1 x) start i)
@@ -54,14 +54,14 @@ type partition_post (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
                       (slice (sel h1 x) i len)))
 
 #reset-options
-#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --z3timeout 10"
-val partition: #a:Type -> f:tot_ord a
+#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
+val partition: #a:eqtype -> f:tot_ord a
                -> start:nat -> len:nat{start <= len}
                -> pivot:nat{start <= pivot /\ pivot < len}
                -> back:nat{pivot <= back /\ back < len}
                -> x:array a -> ST nat
   (requires (partition_pre a f start len pivot back x))
-  (ensures (fun h0 n h1 -> partition_post a f start len pivot back x h0 n h1 /\ modifies !{x} h0 h1))
+  (ensures (fun h0 n h1 -> partition_post a f start len pivot back x h0 n h1 /\ modifies (TSet.singleton (Ref x)) h0 h1))
 let rec partition #a f start len pivot back x =
   let h0 = get() in
   let s = sel h0 x in
@@ -113,7 +113,7 @@ let rec partition #a f start len pivot back x =
           res
         end
     end
-
+#reset-options
 
 val lemma_slice_cons_pv: #a:Type -> s:seq a -> i:nat -> pivot:nat{i <= pivot} -> j:nat{pivot < j && j <= length s} -> pv:a
   -> Lemma
@@ -126,10 +126,10 @@ let lemma_slice_cons_pv #a s i pivot j pv =
 
 #reset-options
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
-val sort: #a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
+val sort: #a:eqtype -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
           -> ST unit
   (requires (fun h -> contains h x /\ j <= length (sel h x)))
-  (ensures (fun h0 u h1 -> (modifies !{x} h0 h1
+  (ensures (fun h0 u h1 -> (modifies (TSet.singleton (Ref x)) h0 h1
                             /\ j <= length (sel h0 x)                                      (* carrying this along from the requires clause *)
                             /\ contains h1 x                                            (* the array is still in the heap *)
                             /\ (length (sel h0 x) = length (sel h1 x))                  (* its length has not changed *)
@@ -171,9 +171,9 @@ let rec sort #a f i j x =
   end
 
 
-val qsort: #a:Type -> f:tot_ord a -> x:array a -> ST unit
+val qsort: #a:eqtype -> f:tot_ord a -> x:array a -> ST unit
   (requires (fun h -> contains h x))
-  (ensures (fun h0 u h1 -> modifies !{x} h0 h1
+  (ensures (fun h0 u h1 -> modifies (TSet.singleton (Ref x)) h0 h1
                         /\ contains h1 x /\ sorted f (sel h1 x) /\ permutation a (sel h0 x) (sel h1 x)))
 let qsort #a f x =
   let h0 = get() in

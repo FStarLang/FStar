@@ -8,6 +8,8 @@ open Platform.Error
 assume new type networkStream: Type0
 assume new type tcpListener: Type0
 
+assume HasEq_networkStream: hasEq networkStream
+
 (* This library is used by miTLS; for now we model external calls as
    stateful but with no effect on the heap; we could be more precise,
    e.g. specify that they modify some private network region, and that

@@ -198,8 +198,7 @@ type post_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') (r:rbtree') =
 	      ((c = B /\ Some.v(black_height r) = Some.v(black_height lt) + 1) \/
                (c = R /\ Some.v(black_height r) = Some.v(black_height lt)))) /\
 
-              
-	      (*
+              (*
 	       * returned tree either satisfies c_inv OR
 	       * if it doesn't, it must be the case that c (and hence T.col r) = R
 	       *)
@@ -217,7 +216,6 @@ type post_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') (r:rbtree') =
  * similar to pre_balance, post condition specifies invariants for
  * k_inv, h_inv, and c_inv
  *)
-
 val balance: c:color -> lt:rbtree' -> ky:nat -> rt:rbtree' ->
              Pure rbtree'
              (requires (pre_balance c lt ky rt))
@@ -261,8 +259,7 @@ val ins: t:rbtree' -> k:nat ->
 	   * and has same black height as the input tree
 	   * (the new node is introduced at color R, and no node is re-colored)
 	   *)
-          (h_inv r /\ black_height r = black_height t) /\
-          
+          (h_inv r /\ black_height r = black_height t) /\         
           
 	  (*
 	   * these are copied from post condition of balance
@@ -326,7 +323,7 @@ let insert t x =
 
 (* TODO: make rbtree polymorphic *)
 
-type rbtree =
+noeq type rbtree =
   | Mk: tr:rbtree'{balanced_rbtree' tr} -> rbtree
 
 val proj: rbtree -> Pure rbtree' (requires True) (ensures (fun r -> balanced_rbtree' r))

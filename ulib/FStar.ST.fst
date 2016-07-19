@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.ST
-open FStar.Set
+open FStar.TSet
 open FStar.Heap
 type ref (a:Type) = Heap.ref a
 // this intentionally does not preclude h' extending h with fresh refs
@@ -55,4 +55,4 @@ assume val op_Colon_Equals:  #a:Type -> r:ref a -> v:a -> ST unit
                                                  (fun h -> True)
                                                  (fun h0 x h1 -> h1==upd h0 r v)
 
-assume val get: unit -> ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h=h1)
+assume val get: unit -> ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1)

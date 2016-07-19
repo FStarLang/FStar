@@ -8,14 +8,14 @@ open FStar.Ghost
 let g x = reveal x    //type-error: Erased is not a sub-effect of pure
 
 //fine; having erased effects in specifications is ok
-val h: x:erased int -> Pure (erased int) (requires (b2t (reveal x >= 0))) (ensures (fun y -> x = y))
+val h: x:erased int -> Pure (erased int) (requires (b2t (reveal x >= 0))) (ensures (fun y -> x == y))
 let h x = x
 
 //fine; having erased effects in specifications is ok
-val i: x:erased int -> Pure int (requires (b2t (reveal x = 0))) (ensures (fun y -> x = hide y))
+val i: x:erased int -> Pure int (requires (b2t (reveal x = 0))) (ensures (fun y -> x == hide y))
 let i x = 0 //fine
 
 //fine; having erased effects in specifications is ok
 assume val j: x:erased int -> Pure int (requires (b2t (reveal x = 0)))
-                                   (ensures (fun y -> x = hide y))
+                                   (ensures (fun y -> x == hide y))
 //let j x = 1 -- logical failure

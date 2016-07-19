@@ -33,6 +33,7 @@ module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module U  = FStar.Syntax.Util
+module PP = FStar.Syntax.Print
 
 // VALS_HACK_HERE
 
@@ -2237,6 +2238,13 @@ let tc_lex_t env ses quals lids =
         failwith (Util.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (Sig_bundle(ses, [], lids, Range.dummyRange))))
     end
 
+let tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
+    let env = Env.set_range env r in
+    let k, _ = U.type_u() in
+    let phi = tc_check_trivial_guard env phi k |> norm env in
+    TcUtil.check_uvars r phi;
+    Sig_assume(lid, phi, quals, r)
+
 let tc_inductive env ses quals lids =
     (*  Consider this illustrative example:
 
@@ -2468,7 +2476,175 @@ let tc_inductive env ses quals lids =
         ([], g) in
 
     let tcs, datas = generalize_and_inst_within env0 g (List.map fst tcs) datas in
-    Sig_bundle(tcs@datas, quals, lids, Env.get_range env0)
+    let sig_bndle = Sig_bundle(tcs@datas, quals, lids, Env.get_range env0) in
+
+    //generate hasEq predicate for this inductive
+
+    let datacon_typ (data:sigelt) :term = match data with
+        | Sig_datacon (_, _, t, _, _, _, _, _) -> t
+        | _                                    -> failwith "Impossible!"
+    in
+
+    let dr = Range.dummyRange in
+
+    //tcs is the list of type constructors, datas is the list of data constructors
+
+    //this is the folding function for tcs
+    //usubst and us are the universe variables substitution and universe names, we open each type constructor type, and data constructor type with these
+    //in the type of the accumulator:
+      //list<lident * term> is the list of type constructor lidents and formulas of haseq axioms we are accumulating
+      //env is the environment in which the next two terms are well-formed (e.g. data constructors are dependent function types, so they may refer to their arguments)
+      //term is the lhs of the implication for soundness formula
+      //term is the soundness condition derived from all the data constructors of this type
+    let haseq_ty usubst us acc ty =
+        let lid, bs, t, d_lids =
+            match ty with
+                | Sig_inductive_typ (lid, _, bs, t, _, d_lids, _, _) -> lid, bs, t, d_lids
+                | _                                                  -> failwith "Impossible!"
+        in
+ 
+         //apply usubt to bs
+        let bs = SS.subst_binders usubst bs in
+        //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t together ?
+        let t = SS.subst (SS.shift_subst (List.length bs) usubst) t in
+        //open t with binders bs
+        let bs, t = SS.open_term bs t in
+        //get the index binders, if any
+        let ibs =
+            match (SS.compress t).n with
+                | Tm_arrow (ibs, _) -> ibs
+                | _                 -> []
+        in
+        //open the ibs binders
+        let ibs = SS.open_binders ibs in
+        //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
+        let ind = mk_Tm_uinst (S.fvar lid Delta_constant None) (List.map (fun u -> U_name u) us) in
+        //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
+        let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None dr in
+        //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
+        let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None dr in
+        //haseq of ind
+        let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None dr in
+        //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
+        //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
+        let bs' = List.filter (fun b ->
+            let _, en, _, _ = acc in
+            //false means don't use SMT solver
+            let opt = Rel.try_subtype' en (fst b).sort  (fst (type_u ())) false in
+            //is this criteria for success/failure ok ?
+            match opt with
+                | None   -> false
+                | Some _ -> true
+        ) bs in
+        let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None dr)) U.t_true bs' in
+        //implication
+        let fml = U.mk_imp haseq_bs haseq_ind in
+        //attach pattern -- is this the right place ?
+        let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
+        //fold right with ibs, close and add a forall b
+	    //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+        let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) ibs fml in
+        //fold right with bs, close and add a forall b
+	    //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+        let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) bs fml in
+        //so now fml is the haseq axiom we want to generate
+
+        //onto the soundness condition for the above axiom
+        //this is the soundness guard
+        let guard = U.mk_conj haseq_bs fml in
+
+        //now work on checking the soundness of this formula
+        //split acc
+        let l_axioms, env, guard', cond' = acc in
+
+        //push universe variables, bs, and ibs, universe variables are pushed at the top level below
+        let env = Env.push_binders env bs in
+        let env = Env.push_binders env ibs in
+
+        //now generate the soundness condition by iterating over the data constructors
+        //get the data constructors for this type
+        let t_datas = List.filter (fun s ->
+            match s with
+                | Sig_datacon (_, _, _, t_lid, _, _, _, _) -> t_lid = lid
+                | _                                        -> failwith "Impossible"
+        ) datas in
+
+
+        //folding function for t_datas
+        //in the accumulator:
+          //env is the updated env
+          //term is the soundness condition for this data constructor
+        let haseq_data acc data =
+            let dt = datacon_typ data in
+            //apply the universes substitution to dt
+            let dt = SS.subst usubst dt in
+            match (SS.compress dt).n with
+                | Tm_arrow (dbs, _) ->
+                    //filter out the inductive type parameters, dbs are the remaining binders
+                    let dbs = snd (List.splitAt (List.length bs) dbs) in
+                    //substitute bs into dbs
+                    let dbs = SS.subst_binders (SS.opening_of_binders bs) dbs in
+                    //open dbs
+                    let dbs = SS.open_binders dbs in
+                    //fold on dbs, add haseq of its sort to the guard
+                    let cond = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (fst b).sort] None dr)) U.t_true dbs in
+                    
+                    let env, cond' = acc in
+                    Env.push_binders env dbs, U.mk_conj cond' cond
+                | _                -> acc
+        in
+
+        //fold over t_datas
+        let env, cond = List.fold_left haseq_data (env, U.t_true) t_datas in
+
+        //return new accumulator
+        let axiom_lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))]) in
+        l_axioms @ [axiom_lid, fml], env, U.mk_conj guard' guard, U.mk_conj cond' cond
+    in
+
+    let is_noeq = List.existsb (fun q -> q = Noeq) quals in
+
+    //we need to check for List.length tcs because of the exception type, is there a better way ?
+    if ((not (lid_equals env.curmodule Const.prims_lid)) && (not (is_noeq)) && (List.length tcs > 0)) then
+        //we will open all tcs and datas with the same universe names
+        let us =
+            let ty = List.hd tcs in
+            match ty with
+                | Sig_inductive_typ (_, us, _, _, _, _, _, _) -> us
+                | _                                           -> failwith "Impossible!"
+        in
+        let usubst, us = SS.univ_var_opening us in
+
+        //we need the sigbundle for the inductive to be in the type environment
+        let env = Env.push_sigelt env0 sig_bndle in
+        env.solver.push "haseq";
+        env.solver.encode_sig env sig_bndle;
+        let env = Env.push_univ_vars env us in
+	
+        let axioms, env, guard, cond = List.fold_left (haseq_ty usubst us) ([], env, U.t_true, U.t_true) tcs in
+            
+        let phi = U.mk_imp guard cond in
+        let phi, _ = tc_trivial_guard env phi in
+        let _ =
+            //is this inline with verify_module ?
+            if Options.should_verify env.curmodule.str then
+                Rel.force_trivial_guard env (Rel.guard_of_guard_formula (NonTrivial phi))
+            else ()
+        in
+        env.solver.pop "haseq";
+
+        //create Sig_assume for the axioms
+        //add universe variables to env, no idea how to handle them ?
+        //TODO: don't add Sig_assume to the bundle, the code might assume it only contains tycon and datacons, instead modify tc interface to return list of sigelts
+        let env = Env.push_univ_vars env0 us in
+        let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
+            let se = tc_assume env lid fml [] dr in
+            //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
+            l @ [se] 
+        ) [] axioms in
+        //TODO: adding Sig_assumes to the sig_bundle is breaking invariant that the sig_bundle only contains tycons and datacons, fix it
+        (Sig_bundle(tcs@datas, quals, lids, Env.get_range env0))::ses
+    else [sig_bndle]
 
 let rec tc_decl env se = match se with
     | Sig_inductive_typ _
@@ -2485,12 +2661,13 @@ let rec tc_decl env se = match se with
       *)
       let env = Env.set_range env r in
       let se = tc_lex_t env ses quals lids  in
-      se, Env.push_sigelt env se
+      [se], Env.push_sigelt env se
 
     | Sig_bundle(ses, quals, lids, r) ->
       let env = Env.set_range env r in
-      let se = tc_inductive env ses quals lids  in
-      se, Env.push_sigelt env se
+      let ses = tc_inductive env ses quals lids  in
+      let env = List.fold_left (fun env' se -> Env.push_sigelt env' se) env ses in
+      ses, env
 
     | Sig_pragma(p, r) ->
        let set_options t s = match Options.set_options t s with
@@ -2500,14 +2677,14 @@ let rec tc_decl env se = match se with
         begin match p with
             | SetOptions o ->
                 set_options Options.Set o;
-                se, env
+                [se], env
             | ResetOptions sopt ->
                 Options.restore_cmd_line_options false |> ignore;
                 let _ = match sopt with
                     | None -> ()
                     | Some s -> set_options Options.Reset s in
                 env.solver.refresh();
-                se, env
+                [se], env
         end
 
     | Sig_new_effect_for_free(ne, r) ->
@@ -2515,13 +2692,13 @@ let rec tc_decl env se = match se with
       (* Fields have been synthesized by [tc_eff_decl] *)
       let se = Sig_new_effect(ne, r) in
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
     | Sig_new_effect(ne, r) ->
       let ne = tc_eff_decl env ne NotForFree in
       let se = Sig_new_effect(ne, r) in
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
     | Sig_sub_effect(sub, r) ->
       let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
@@ -2532,7 +2709,7 @@ let rec tc_decl env se = match se with
       let sub = {sub with lift=lift} in
       let se = Sig_sub_effect(sub, r) in
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
     | Sig_effect_abbrev(lid, uvs, tps, c, tags, r) ->
       assert (uvs = []);
@@ -2551,7 +2728,7 @@ let rec tc_decl env se = match se with
         | _ -> failwith "Impossible" in
       let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, r) in
       let env = Env.push_sigelt env0 se in
-      se, env
+      [se], env
 
     | Sig_declare_typ(lid, uvs, t, quals, r) -> //NS: No checks on the qualifiers?
       let env = Env.set_range env r in
@@ -2559,16 +2736,12 @@ let rec tc_decl env se = match se with
       let uvs, t = check_and_gen env t (fst (U.type_u())) in
       let se = Sig_declare_typ(lid, uvs, t, quals, r) in
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
     | Sig_assume(lid, phi, quals, r) ->
-      let env = Env.set_range env r in
-      let k, _ = U.type_u() in
-      let phi = tc_check_trivial_guard env phi k |> norm env in
-      TcUtil.check_uvars r phi;
-      let se = Sig_assume(lid, phi, quals, r) in
+      let se = tc_assume env lid phi quals r in
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
     | Sig_main(e, r) ->
       let env = Env.set_range env r in
@@ -2578,7 +2751,7 @@ let rec tc_decl env se = match se with
       Rel.force_trivial_guard env (Rel.conj_guard g1 g);
       let se = Sig_main(e, r) in
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
     | Sig_let(lbs, r, lids, quals) ->
       let env = Env.set_range env r in
@@ -2645,7 +2818,7 @@ let rec tc_decl env se = match se with
             else "") |> String.concat "\n");
 
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
 
 let for_export hidden se : list<sigelt> * list<lident> =
@@ -2740,17 +2913,17 @@ let tc_decls env ses =
           if Env.debug env Options.Low
           then Util.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
 
-          let se, env = tc_decl env se  in
+          let ses', env = tc_decl env se  in
 
           if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"
-          then Util.print1 "Checked: %s\n" (Print.sigelt_to_string se);
+          then Util.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ (Print.sigelt_to_string se) ^ "\n") "" ses');
 
-          env.solver.encode_sig env se;
+          List.iter (fun se -> env.solver.encode_sig env se) ses';
 
-          let exported, hidden = for_export hidden se in
-          se::ses, exported::exports, env, hidden)
+          let exported, hidden = List.fold_left (fun (le, lh) se -> let tup = for_export hidden se in List.rev_append (fst tup) le, List.rev_append (snd tup) lh) ([], []) ses' in
+          List.rev_append ses' ses, (List.rev_append exported [])::exports, env, hidden)
   ([], [], env, []) in
-  List.rev ses, List.rev exports |> List.flatten, env
+  List.rev_append ses [], (List.rev_append exports []) |> List.flatten, env
 
 let tc_partial_modul env modul =
   let name = Util.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
@@ -2800,5 +2973,3 @@ let check_module env m =
     if Options.dump_module m.name.str 
     then Util.print1 "%s\n" (Print.modul_to_string m);
     m, env
-
-

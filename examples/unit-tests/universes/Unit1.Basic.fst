@@ -72,16 +72,16 @@ let pure_id_annot x = x
 val ml_id_annot : 'a -> 'a
 let ml_id_annot x = x
 
-val tabs_id_pure_annot_eq : a:Type -> x:a -> Pure a True (fun y -> b2t (y=x))
-let tabs_id_pure_annot_eq (a:Type) x = x
+val tabs_id_pure_annot_eq : a:eqtype -> x:a -> Pure a True (fun y -> b2t (y=x))
+let tabs_id_pure_annot_eq a x = x
 
 let tabs_id (a:Type) (x:'a) = x
 
-val id_pure_annot_eq : x:'a -> Pure 'a True (fun y -> b2t (y=x))
-let id_pure_annot_eq x = x
+val id_pure_annot_eq : #a:eqtype -> x:a -> Pure a True (fun y -> b2t (y=x))
+let id_pure_annot_eq #a x = x
 
-val id_all_annot_eq: x:'a -> All 'a (fun h -> True) (fun h0 y h1 -> is_V y /\ h0=h1 /\ x=(V.v y))
-let id_all_annot_eq x = x
+val id_all_annot_eq: #a:eqtype -> x:a -> All a (fun h -> True) (fun h0 y h1 -> is_V y /\ h0==h1 /\ x=(V.v y))
+let id_all_annot_eq #a x = x
 
 val hd: list 'a -> 'a
 let hd = function
@@ -99,9 +99,9 @@ let hd_pure_alt = function
 val dup_pure: x:'a -> Tot ('a * 'a)
 let dup_pure x = (x,x)
 
-val dup_pure_eq: x:'a -> Pure ('a * 'a) True
+val dup_pure_eq: #a:eqtype -> x:a -> Pure (a * a) True
                               (fun y -> b2t (Mktuple2._1 y=Mktuple2._2 y))
-let dup_pure_eq x = (x,x)
+let dup_pure_eq #a x = (x,x)
 
 (* the programs below are equivalent---see the refinement of the result in tc.fs/Exp_app case. *)
 assume val get_0: unit -> ST int (fun _h -> True) (fun _h i _h' -> b2t (i=0))
@@ -148,7 +148,7 @@ let rec ackermann m n =
   else ackermann (m - 1) (ackermann m (n - 1))
 
 assume type contents : Type0 -> Type0
-type seq (a:Type0) =
+noeq type seq (a:Type0) =
   | Seq : c:contents a
           -> start_i:nat
           -> end_i:nat{end_i >= start_i}

@@ -1,10 +1,10 @@
 module TestHeap
-open FStar.Set
+open FStar.TSet
 open FStar.Heap
 assume val x : ref int
 assume val y : ref int
 assume val h : heap
-assume DistinctXY: x <> y
+assume DistinctXY: x =!= y
 
 let test0 _ = assert (sel (upd h x 0) x = 0)
 let test1 _ = assert (sel (upd (upd h x 0) y 1) x = 0)
@@ -13,7 +13,7 @@ let h1 = upd (upd h x 0) y 1
 let test5 _ = assert (equal h1 (upd (upd h y 1) x 0))
 
 (* val ys: set aref  ... required ... NS: Not anymore *)
-let ys = Set.singleton (Ref y)
+let ys = singleton (Ref y)
 
 let test6 _ = assert (equal h1 (concat h1 (restrict h1 (complement ys))))
 let test7 _ = assert (contains h1 x)

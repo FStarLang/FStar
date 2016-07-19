@@ -135,6 +135,9 @@ let set_lid       = p2l ["FStar"; "Set"]
 let set_empty     = p2l ["FStar"; "Set"; "empty"]
 let set_singleton = p2l ["FStar"; "Set"; "singleton"]
 let set_union     = p2l ["FStar"; "Set"; "union"]
+let tset_empty     = p2l ["FStar"; "TSet"; "empty"]
+let tset_singleton = p2l ["FStar"; "TSet"; "singleton"]
+let tset_union     = p2l ["FStar"; "TSet"; "union"]
 
 (* monad constants *)
 let effect_PURE_lid  = pconst "PURE"
