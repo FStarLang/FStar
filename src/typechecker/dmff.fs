@@ -116,7 +116,7 @@ let gen_wps_for_free
     let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], []) in
     // Options.set_option "debug_level" (Options.List [Options.String "Extreme"]);
     // let env = { env with top_level = true } in
-    let se, env = tc_decl env sig_ctx in
+    let [ se ], env = tc_decl env sig_ctx in
     begin match se with
     | Sig_let ((_, [ { lbtyp = t } ]), _, _, _) ->
         Util.print1 "Inferred type: %s\n" (Print.term_to_string t)
