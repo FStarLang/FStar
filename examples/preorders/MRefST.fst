@@ -21,7 +21,7 @@ let contains_lemma #a #r h m = ()
 
 (* Relating two heaps using the preorders associated with allocated monotonic references. *)
 
-abstract type heap_rel (h0:heap) (h1:heap) = 
+let heap_rel (h0:heap) (h1:heap) = 
   (forall a r (m:mref a r) . contains m h0  ==> contains m h1) /\  
   (forall a r (m:mref a r{contains m h0}) . r (sel h0 m) (sel h1 m))
 
@@ -206,4 +206,3 @@ val recall : #a:Type ->
 			                 p h1)
 let recall #a #r m p =
   ist_recall p
-
