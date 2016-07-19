@@ -120,4 +120,3 @@ val warn_cardinality            : unit    -> bool
 val warn_top_level_effects      : unit    -> bool
 val z3_exe                      : unit    -> string
 val z3_timeout                  : unit    -> int
-val nohaseq                     : unit    -> bool

@@ -2477,20 +2477,12 @@ let tc_inductive env ses quals lids =
 
     let tcs, datas = generalize_and_inst_within env0 g (List.map fst tcs) datas in
     let sig_bndle = Sig_bundle(tcs@datas, quals, lids, Env.get_range env0) in
-    
-    //Util.print1 "Sig bundle before:\n\n%s\n\n" (PP.sigelt_to_string sig_bndle);
 
     //generate hasEq predicate for this inductive
 
-    let split_arrow (t:term) :(binders * comp) =
-        match (SS.compress t).n with
-            | Tm_arrow (bs, c) -> bs, c
-            | _                -> failwith "Impossible!"
-    in
-
     let datacon_typ (data:sigelt) :term = match data with
         | Sig_datacon (_, _, t, _, _, _, _, _) -> t
-        | _ -> failwith "Impossible!"
+        | _                                    -> failwith "Impossible!"
     in
 
     let dr = Range.dummyRange in
@@ -2498,11 +2490,12 @@ let tc_inductive env ses quals lids =
     //tcs is the list of type constructors, datas is the list of data constructors
 
     //this is the folding function for tcs
-    //list<lident * term> is the list of lidents and formulas of haseq axioms we are accumulating
-    //env is the environment in which the next two terms are well-formed
-    //term is the lhs of the implication for soundness
-    //term is the soundness condition derived from all the data constructors of this type
-    //let haseq_ty (acc:(list<(lident * term)> * env * term * term)) (ty:sigelt) :list<(lident * term)> * env * term * term = //TODO: bootstrapping fails with this annot
+    //usubst and us are the universe variables substitution and universe names, we open each type constructor type, and data constructor type with these
+    //in the type of the accumulator:
+      //list<lident * term> is the list of type constructor lidents and formulas of haseq axioms we are accumulating
+      //env is the environment in which the next two terms are well-formed (e.g. data constructors are dependent function types, so they may refer to their arguments)
+      //term is the lhs of the implication for soundness formula
+      //term is the soundness condition derived from all the data constructors of this type
     let haseq_ty usubst us acc ty =
         let lid, bs, t, d_lids =
             match ty with
@@ -2510,9 +2503,9 @@ let tc_inductive env ses quals lids =
                 | _                                                  -> failwith "Impossible!"
         in
  
-        //apply usubt to bs
+         //apply usubt to bs
         let bs = SS.subst_binders usubst bs in
-        //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t altogether ?
+        //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t together ?
         let t = SS.subst (SS.shift_subst (List.length bs) usubst) t in
         //open t with binders bs
         let bs, t = SS.open_term bs t in
@@ -2522,9 +2515,6 @@ let tc_inductive env ses quals lids =
                 | Tm_arrow (ibs, _) -> ibs
                 | _                 -> []
         in
-        //the formula that we generate will mention these indexes too, and if they are _, typechecker assumes that they are not referenced later
-        //this breaks the typechecker invariant, hence if null bv, generate a fresh bv
-        let ibs = List.map (fun b -> if is_null_bv (fst b) then (gen_bv "_indexb_" None (fst b).sort, snd b) else b) ibs in
         //open the ibs binders
         let ibs = SS.open_binders ibs in
         //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
@@ -2557,17 +2547,17 @@ let tc_inductive env ses quals lids =
         //fold right with bs, close and add a forall b
 	    //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
         let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) bs fml in
-        //so now this is the haseq formula we want to generate, TODO: make it a Sig_assume, and generalize universe variables, TODO: how to add pattern in this forall
+        //so now fml is the haseq axiom we want to generate
 
-        //this is the soundness guard, we should not need to add haseq_ind
+        //onto the soundness condition for the above axiom
+        //this is the soundness guard
         let guard = U.mk_conj haseq_bs fml in
 
         //now work on checking the soundness of this formula
         //split acc
         let l_axioms, env, guard', cond' = acc in
 
-        //push universe variables, bs, and ibs
-        //let env = Env.push_univ_vars env us in
+        //push universe variables, bs, and ibs, universe variables are pushed at the top level below
         let env = Env.push_binders env bs in
         let env = Env.push_binders env ibs in
 
@@ -2581,8 +2571,9 @@ let tc_inductive env ses quals lids =
 
 
         //folding function for t_datas
-        //env is the updated env, term is the soundness condition for this data constructor
-        //let haseq_data (acc:(env * term)) (data:sigelt) :(env * term) = //TODO: bootstrapping fails with this annotation
+        //in the accumulator:
+          //env is the updated env
+          //term is the soundness condition for this data constructor
         let haseq_data acc data =
             let dt = datacon_typ data in
             //apply the universes substitution to dt
@@ -2611,36 +2602,20 @@ let tc_inductive env ses quals lids =
         l_axioms @ [axiom_lid, fml], env, U.mk_conj guard' guard, U.mk_conj cond' cond
     in
 
-    //if env.curmodule.ident.idText = "Test" then
-    //TODO: cannot do it for prims, since all formula use symbols from it
-
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in
 
-    let _ =
-        if List.length tcs > 0 then
-            let debug_lid =
-                match (List.hd tcs) with
-	                | Sig_inductive_typ (lid, _, _, _, _, _, _, _) -> lid
-                    | _                                            -> failwith "Impossible!"
-            in
-            let _ =
-                if is_noeq then Util.print1 "Skipping this type since noeq:%s\n" (debug_lid.str) else ()
-            in
-            ()
-        else ()
-    in
-
-    (* TODO: we need to check for List.length tcs because of exception type, is there a better way ? *)	  
-    if (not (Options.nohaseq ())) && (not (lid_equals env.curmodule Const.prims_lid)) && (not (is_noeq)) && (List.length tcs > 0) then
+    //we need to check for List.length tcs because of the exception type, is there a better way ?
+    if ((not (lid_equals env.curmodule Const.prims_lid)) && (not (is_noeq)) && (List.length tcs > 0)) then
         //we will open all tcs and datas with the same universe names
         let us =
             let ty = List.hd tcs in
             match ty with
                 | Sig_inductive_typ (_, us, _, _, _, _, _, _) -> us
-                | _                                           -> failwith "Impossible"
+                | _                                           -> failwith "Impossible!"
         in
         let usubst, us = SS.univ_var_opening us in
 
+        //we need the sigbundle for the inductive to be in the type environment
         let env = Env.push_sigelt env0 sig_bndle in
         env.solver.push "haseq";
         env.solver.encode_sig env sig_bndle;
@@ -2649,18 +2624,13 @@ let tc_inductive env ses quals lids =
         let axioms, env, guard, cond = List.fold_left (haseq_ty usubst us) ([], env, U.t_true, U.t_true) tcs in
             
         let phi = U.mk_imp guard cond in
-
-	    //Util.print1 "Checking tc_trivial_guard for:\n\n%s\n\n" (PP.term_to_string phi); //(debug_lid.str); 
         let phi, _ = tc_trivial_guard env phi in
-
-        //Util.print1 "Checking haseq soundness for:%s\n" (PP.term_to_string phi); //(debug_lid.str)
         let _ =
-            //TODO: is this inline with verify_module ?
+            //is this inline with verify_module ?
             if Options.should_verify env.curmodule.str then
                 Rel.force_trivial_guard env (Rel.guard_of_guard_formula (NonTrivial phi))
             else ()
         in
-
         env.solver.pop "haseq";
 
         //create Sig_assume for the axioms
@@ -2668,11 +2638,11 @@ let tc_inductive env ses quals lids =
         //TODO: don't add Sig_assume to the bundle, the code might assume it only contains tycon and datacons, instead modify tc interface to return list of sigelts
         let env = Env.push_univ_vars env0 us in
         let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
-            //Util.print1 "Checking tc_assume for axiom:%s\n" (PP.term_to_string fml); //(lid.str)
             let se = tc_assume env lid fml [] dr in
             //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
             l @ [se] 
         ) [] axioms in
+        //TODO: adding Sig_assumes to the sig_bundle is breaking invariant that the sig_bundle only contains tycons and datacons, fix it
         Sig_bundle(tcs@datas@ses, quals, lids, Env.get_range env0)   
     else sig_bndle
 
