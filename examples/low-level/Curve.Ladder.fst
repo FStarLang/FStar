@@ -30,10 +30,10 @@ let heap = HS.mem
 
 val op_Plus_Star: nat -> celem -> GTot celem
 let op_Plus_Star (n:nat) (x:celem) = smul n x
-let op_Plus_Plus_Plus a b = FStar.Set.union a b
+let op_Plus_Plus_Plus a b = FStar.TSet.union a b
 
-assume val op_Plus_Star_Plus: #a:Type -> x:erased (FStar.Set.set a) -> y:erased (FStar.Set.set a) ->
-  Tot (z:erased (FStar.Set.set a){reveal z = (reveal x +++ reveal y)})
+assume val op_Plus_Star_Plus: #a:Type -> x:erased (FStar.TSet.set a) -> y:erased (FStar.TSet.set a) ->
+  Tot (z:erased (FStar.TSet.set a){reveal z = (reveal x +++ reveal y)})
 
 // q has to be an element of the curve
 type nTimesQ (n:erased nat) (q:celem) (h:heap) (p:point) (p':point) =
@@ -85,7 +85,7 @@ let small_step_exit pp ppq p pq q n byte scalar =
   distinct_lemma q p; distinct_lemma q pq; distinct_lemma q pp; distinct_lemma q ppq;
   let s = (erefs pp +*+ erefs ppq +*+ erefs p +*+ erefs pq) in
   (* cut(modifies (reveal s) h0 h1); *)
-  admitP(True /\ FStar.Set.intersect (reveal s) (refs q) = !{});
+  admitP(True /\ FStar.TSet.intersect (reveal s) (refs q) = !{});
   on_curve_lemma h0 h1 q (erefs pp +*+ erefs ppq +*+ erefs p +*+ erefs pq);
   cut(onCurve h1 q); 
   cut(nTimesQ (hide (reveal scalar * pow2 8 + (U8.v byte / pow2 (8-8)))) (pointOf h0 q) h0 p pq); 
@@ -111,9 +111,9 @@ val small_step_core_lemma_1: h0:heap -> h1:heap -> pp:point -> ppq:point{distinc
   (ensures (live h1 pp /\ live h1 ppq /\ onCurve h1 q)) []
 let small_step_core_lemma_1 h0 h1 pp ppq p pq q =
   admit(); // OK
-  (* FStar.Set.lemma_equal_intro (FStar.Set.intersect (refs p +++ refs pq) (refs pp)) !{};   *)
-  (* FStar.Set.lemma_equal_intro (FStar.Set.intersect (refs p +++ refs pq) (refs ppq)) !{};  *)
-  (* FStar.Set.lemma_equal_intro (FStar.Set.intersect (refs p +++ refs pq) (refs q)) !{};  *)
+  (* FStar.TSet.lemma_equal_intro (FStar.TSet.intersect (refs p +++ refs pq) (refs pp)) !{};   *)
+  (* FStar.TSet.lemma_equal_intro (FStar.TSet.intersect (refs p +++ refs pq) (refs ppq)) !{};  *)
+  (* FStar.TSet.lemma_equal_intro (FStar.TSet.intersect (refs p +++ refs pq) (refs q)) !{};  *)
   (* live_lemma h0 h1 pp (hide (refs p +++ refs pq));  *)
   (* live_lemma h0 h1 ppq (hide ((refs p +++ refs pq))); *)
   (* on_curve_lemma h0 h1 q (hide (refs p +++ refs pq)) *)
@@ -248,7 +248,7 @@ val small_step_lemma_1 : h0:heap -> h1:heap -> h2:heap ->
 	       /\ pointOf h2 q = pointOf h0 q /\ pointOf h1 q = pointOf h0 q))
 let small_step_lemma_1 h0 h1 h2 pp ppq p pq q =
   admit(); // OK
-  FStar.Set.lemma_equal_intro (FStar.Set.intersect (refs pp +++ refs ppq +++ refs p +++ refs pq) (refs q)) !{}; 
+  FStar.TSet.lemma_equal_intro (FStar.TSet.intersect (refs pp +++ refs ppq +++ refs p +++ refs pq) (refs q)) !{}; 
   on_curve_lemma h0 h2 q (hide (refs pp +++ refs ppq +++ refs p +++ refs pq));
   on_curve_lemma h0 h1 q (hide (refs pp +++ refs ppq +++ refs p +++ refs pq))
 
@@ -267,7 +267,7 @@ val small_step_lemma_2 : h0:heap -> h1:heap -> h2:heap -> h3:heap ->
        ))
 let small_step_lemma_2 h0 h1 h2 h3 pp ppq p pq q =
   admit(); // OK
-  FStar.Set.lemma_equal_intro (FStar.Set.intersect (refs pp +++ refs ppq +++ refs p +++ refs pq) (refs q)) !{}; 
+  FStar.TSet.lemma_equal_intro (FStar.TSet.intersect (refs pp +++ refs ppq +++ refs p +++ refs pq) (refs q)) !{}; 
   (* cut (modifies (refs pp +++ refs ppq +++ refs p +++ refs pq) h0 h3); *)
   on_curve_lemma h0 h3 q (hide (refs pp +++ refs ppq +++ refs p +++ refs pq))
 
@@ -319,18 +319,18 @@ assume  val formula_4: h:heap -> n:bytes -> ctr:nat{ctr<=bytes_length} -> Tot (z
 
 #reset-options
 
-type distinct2 (n:bytes) (p:point) = (* b2t(not(FStar.Set.mem (Ref (getRef n)) (refs p))) *) True
+type distinct2 (n:bytes) (p:point) = (* b2t(not(FStar.TSet.mem (Ref (getRef n)) (refs p))) *) True
 
 #reset-options
 
-(* val serialized_lemma: h0:heap -> h1:heap -> n:bytes -> mods:FStar.Set.set aref{FStar.Set.intersect mods !{getRef n} = !{}} -> Lemma *)
+(* val serialized_lemma: h0:heap -> h1:heap -> n:bytes -> mods:FStar.TSet.set aref{FStar.TSet.intersect mods !{getRef n} = !{}} -> Lemma *)
 (*   (requires (modifies mods h0 h1)) *)
 (*   (ensures (valueOfBytes h1 n = valueOfBytes h0 n)) *)
 (* let serialized_lemma h0 h1 n mods = *)
 (*   admit(); // OK *)
-(*   FStar.Set.lemma_equal_intro !{getRef n} (FStar.Set.singleton (Ref (getRef n)));  *)
-(*   cut (True /\ FStar.Set.mem (Ref (getRef n)) !{getRef n});  *)
-(*   cut( not(FStar.Set.mem (Ref (getRef n)) mods) /\ True);  *)
+(*   FStar.TSet.lemma_equal_intro !{getRef n} (FStar.TSet.singleton (Ref (getRef n)));  *)
+(*   cut (True /\ FStar.TSet.mem (Ref (getRef n)) !{getRef n});  *)
+(*   cut( not(FStar.TSet.mem (Ref (getRef n)) mods) /\ True);  *)
 (*   no_upd_lemma h0 h1 n mods;  *)
 (*   assert(forall (i:nat). {:pattern (getValue h1 n i)} i < bytes_length ==> v (getValue h1 n i) = v (getValue h1 n i));   *)
 (*   Eval.eval_eq_lemma h0 h1 n n bytes_length *)
@@ -358,8 +358,8 @@ val big_step_lemma_1: h0:heap -> h1:heap ->
 let gbig_step_lemma_1 h0 h1 n pp ppq p pq q ctr b =
   admit(); // TODO
   let mods = (refs pp +++ refs ppq +++ refs p +++ refs pq) in
-  (* FStar.Set.lemma_equal_intro (FStar.Set.intersect mods !{getRef n}) !{};  *)
-  (* FStar.Set.lemma_equal_intro (FStar.Set.intersect mods (refs q)) !{};  *)
+  (* FStar.TSet.lemma_equal_intro (FStar.TSet.intersect mods !{getRef n}) !{};  *)
+  (* FStar.TSet.lemma_equal_intro (FStar.TSet.intersect mods (refs q)) !{};  *)
   (* serialized_lemma h0 h1 n mods;  *)
   on_curve_lemma h0 h1 q (hide mods);
   admitP(reveal (formula_4 h0 n (ctr+1)) = reveal (formula_0 (formula_4 h0 n ctr) b) /\ True)
@@ -392,8 +392,8 @@ val big_step_lemma_2: h0:heap -> h1:heap -> h2:heap ->
 let big_step_lemma_2 h0 h1 h2 n pp ppq p pq q ctr byte = 
   admit(); // TODO
   let mods = (refs pp +++ refs ppq +++ refs p +++ refs pq) in
-  (* FStar.Set.lemma_equal_intro (FStar.Set.intersect mods !{getRef n}) !{};  *)
-  (* FStar.Set.lemma_equal_intro (FStar.Set.intersect mods (refs q)) !{};  *)
+  (* FStar.TSet.lemma_equal_intro (FStar.TSet.intersect mods !{getRef n}) !{};  *)
+  (* FStar.TSet.lemma_equal_intro (FStar.TSet.intersect mods (refs q)) !{};  *)
   (* serialized_lemma h0 h1 n mods;  *)
   on_curve_lemma h0 h1 q (hide mods)
     
