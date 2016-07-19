@@ -58,22 +58,35 @@ let rec xor_seq_bytes s1 s2 len =
     Seq.append (xor_seq_bytes s1 s2 i) (Seq.create 1 (UInt8.logxor s1i s2i))
   end
 
+val f_seq: #a:Type -> f:(a -> a -> Tot a) -> s1:Seq.seq a -> s2:Seq.seq a -> len:nat -> Pure (Seq.seq a)
+  (requires (len <= Seq.length s1 /\ len <= Seq.length s2))
+  (ensures  (fun z -> Seq.length z = len))
+  (decreases len)
+let rec f_seq #a f s1 s2 len =
+  if len = 0 then Seq.createEmpty #a
+  else begin
+    let i = len - 1 in
+    let s1i = Seq.index s1 i in
+    let s2i = Seq.index s2 i in
+    Seq.append (f_seq f s1 s2 i) (Seq.create 1 (f s1i s2i))
+  end
+
 #set-options "--max_fuel 1 --initial_fuel 1"
 
-val xor_seq_bytes_lemma_0: s1:Seq.seq UInt8.t -> s2:Seq.seq UInt8.t -> s1':Seq.seq UInt8.t -> s2':Seq.seq UInt8.t -> len:nat -> Lemma
+val f_seq_lemma_0: #a:Type -> f:(a -> a -> Tot a) -> s1:Seq.seq a -> s2:Seq.seq a -> s1':Seq.seq a -> s2':Seq.seq a -> len:nat -> Lemma
   (requires (Seq.length s1 >= len /\ Seq.length s2 >= len /\ Seq.length s1' >= len /\ Seq.length s2' >= len
     /\ Seq.slice s1 0 len == Seq.slice s1' 0 len /\ Seq.slice s2 0 len == Seq.slice s2' 0 len))
   (ensures  (Seq.length s1 >= len /\ Seq.length s2 >= len /\ Seq.length s1' >= len /\ Seq.length s2' >= len
-    /\ xor_seq_bytes s1 s2 len == xor_seq_bytes s1' s2' len))
-let rec xor_seq_bytes_lemma_0 s1 s2 s1' s2' len =
+    /\ f_seq f s1 s2 len == f_seq f s1' s2' len))
+let rec f_seq_lemma_0 #a f s1 s2 s1' s2' len =
   match len with 
   | 0 -> ()
   | _ -> 
     lemma_slice_sub_2 s1 0 len 0 (len-1);
     lemma_slice_sub_2 s2 0 len 0 (len-1);
-    xor_seq_bytes_lemma_0 s1 s2 s1' s2' (len-1);
-    assert(Seq.index (Seq.slice s1 0 len) (len-1) = Seq.index (Seq.slice s1' 0 len) (len-1));
-    assert(Seq.index (Seq.slice s2 0 len) (len-1) = Seq.index (Seq.slice s2' 0 len) (len-1))
+    f_seq_lemma_0 #a f s1 s2 s1' s2' (len-1);
+    assert(Seq.index (Seq.slice s1 0 len) (len-1) == Seq.index (Seq.slice s1' 0 len) (len-1));
+    assert(Seq.index (Seq.slice s2 0 len) (len-1) == Seq.index (Seq.slice s2' 0 len) (len-1))
 
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
@@ -94,41 +107,73 @@ let lemma_seq_upd #a s s' s'' i oi =
 #reset-options "--z3timeout 20"
 #set-options "--max_fuel 1 --initial_fuel 1"
 
-val xor_bytes_inplace_lemma: h0:mem -> h1:mem -> h2:mem -> output:bytes -> in1:bytes -> i:nat -> oi:UInt8.t -> Lemma
+val f_seq_inplace_lemma: h0:mem -> h1:mem -> h2:mem -> output:bytes -> in1:bytes -> i:nat -> oi:UInt8.t -> f:(UInt8.t -> UInt8.t -> Tot UInt8.t) -> Lemma
   (requires (live h0 output /\ live h1 output /\ live h2 output /\ live h0 in1 /\ live h1 in1
     /\ length output >= i + 1 /\ length in1 >= i + 1
-    /\ oi = UInt8.logxor (Seq.index (to_seq8 h0 output) i) (Seq.index (to_seq8 h0 in1) i)
+    /\ oi = f (Seq.index (to_seq8 h0 output) i) (Seq.index (to_seq8 h0 in1) i)
     /\ to_seq8 h1 output == Seq.upd (to_seq8 h0 output) (i) (oi)
     /\ to_seq8 h1 in1 == to_seq8 h0 in1
-    /\ Seq.slice (to_seq8 h2 output) 0 (i) == xor_seq_bytes (to_seq8 h1 output) (to_seq8 h1 in1) (i)
+    /\ Seq.slice (to_seq8 h2 output) 0 (i) == f_seq f (to_seq8 h1 output) (to_seq8 h1 in1) (i)
     /\ Seq.slice (to_seq8 h2 output) (i) (length output) == 
 	Seq.slice (to_seq8 h1 output) (i) (length output) ))
   (ensures  (live h0 output /\ live h2 output /\ live h0 in1
     /\ length output >= i + 1 /\ length in1 >= i + 1
     /\ Seq.slice (to_seq8 h2 output) (i+1) (length output) == Seq.slice (to_seq8 h0 output) (i+1) (length output)
-    /\ Seq.slice (to_seq8 h2 output) 0 (i + 1) == xor_seq_bytes (to_seq8 h0 output) (to_seq8 h0 in1) (i+1) ))
-    //Seq.append (xor_seq_bytes (to_seq8 h0 output) (to_seq8 h0 in1) (i)) (Seq.create 1 oi) ))
-let xor_bytes_inplace_lemma h0 h1 h2 output in1 i oi =
+    /\ Seq.slice (to_seq8 h2 output) 0 (i + 1) == f_seq f (to_seq8 h0 output) (to_seq8 h0 in1) (i+1) ))
+
+let f_seq_inplace_lemma h0 h1 h2 output in1 i oi f =
   lemma_seq_upd (to_seq8 h0 output) (to_seq8 h1 output) (to_seq8 h2 output) i oi;
   assume (Seq.slice (to_seq8 h1 output) 0 i == Seq.slice (to_seq8 h0 output) 0 i);
-  xor_seq_bytes_lemma_0 (to_seq8 h1 output) (to_seq8 h1 in1) (to_seq8 h0 output) (to_seq8 h0 in1) i;
-  assert(Seq.slice (to_seq8 h2 output) 0 i == xor_seq_bytes (to_seq8 h0 output) (to_seq8 h0 in1) i);
+  f_seq_lemma_0 f (to_seq8 h1 output) (to_seq8 h1 in1) (to_seq8 h0 output) (to_seq8 h0 in1) i;
+  assert(Seq.slice (to_seq8 h2 output) 0 i == f_seq f (to_seq8 h0 output) (to_seq8 h0 in1) i);
   lemma_slice_append (to_seq8 h2 output) i;
-  assert(Seq.slice (to_seq8 h2 output) 0 (i+1) == Seq.append (xor_seq_bytes (to_seq8 h0 output) (to_seq8 h0 in1) i) (Seq.create 1 (Seq.index (to_seq8 h2 output) i)));
+  assert(Seq.slice (to_seq8 h2 output) 0 (i+1) == Seq.append (f_seq f (to_seq8 h0 output) (to_seq8 h0 in1) i) (Seq.create 1 (Seq.index (to_seq8 h2 output) i)));
   assert(Seq.index (Seq.slice (to_seq8 h1 output) i (length output)) 0 = oi);
   assert(Seq.index (Seq.slice (to_seq8 h2 output) i (length output)) 0 = oi);
   assert(Seq.index (to_seq8 h2 output) i = oi);
-  assert(Seq.append (xor_seq_bytes (to_seq8 h0 output) (to_seq8 h0 in1) i) (Seq.create 1 oi)
-		    == xor_seq_bytes (to_seq8 h0 output) (to_seq8 h0 in1) (i+1) )
+  assert(Seq.append (f_seq f (to_seq8 h0 output) (to_seq8 h0 in1) i) (Seq.create 1 oi)
+		    == f_seq f (to_seq8 h0 output) (to_seq8 h0 in1) (i+1) )
 
-#reset-options "--z3timeout 20"
+val f_seq_inplace_lemma': #a:Type -> #b:Type -> 
+  h0:mem -> h1:mem -> h2:mem -> output:b -> in1:b -> i:nat -> oi:a -> 
+  pre:(mem -> b -> Type) -> to_seq:(h:mem -> x:b{pre h x} -> GTot (Seq.seq a)) -> 
+  f:(a -> a -> Tot a) -> Lemma
+  (requires (pre h0 output /\ pre h0 output /\ pre h1 output /\ pre h2 output /\ pre h0 in1 /\ pre h1 in1
+    /\ Seq.length (to_seq h0 output) >= i + 1 /\ Seq.length (to_seq h0 in1) >= i + 1
+    /\ Seq.length (to_seq h1 output) = Seq.length (to_seq h0 output) /\ Seq.length (to_seq h1 in1) = Seq.length (to_seq h0 in1)
+    /\ Seq.length (to_seq h2 output) = Seq.length (to_seq h0 output)
+    /\ oi == f (Seq.index (to_seq h0 output) i) (Seq.index (to_seq h0 in1) i)
+    /\ to_seq h1 output == Seq.upd (to_seq h0 output) (i) (oi)
+    /\ to_seq h1 in1 == to_seq h0 in1
+    /\ Seq.slice (to_seq h2 output) 0 (i) == f_seq f (to_seq h1 output) (to_seq h1 in1) (i)
+    /\ Seq.slice (to_seq h2 output) (i) (Seq.length (to_seq h0 output)) == 
+	Seq.slice (to_seq h1 output) (i) (Seq.length (to_seq h0 output)) ))
+  (ensures  (pre h0 output /\ pre h2 output /\ pre h0 in1
+    /\ Seq.length (to_seq h0 output) >= i + 1 /\ Seq.length (to_seq h0 in1) >= i + 1
+    /\ Seq.length (to_seq h2 output) = Seq.length (to_seq h0 output)
+    /\ Seq.slice (to_seq h2 output) (i+1) (Seq.length (to_seq h2 output)) == Seq.slice (to_seq h0 output) (i+1) (Seq.length (to_seq h0 output))
+    /\ Seq.slice (to_seq h2 output) 0 (i + 1) == f_seq f (to_seq h0 output) (to_seq h0 in1) (i+1) ))
+let f_seq_inplace_lemma' #a #b h0 h1 h2 output in1 i oi pre to_seq f =
+  lemma_seq_upd (to_seq h0 output) (to_seq h1 output) (to_seq h2 output) i oi;
+  assume (Seq.slice (to_seq h1 output) 0 i == Seq.slice (to_seq h0 output) 0 i);
+  f_seq_lemma_0 f (to_seq h1 output) (to_seq h1 in1) (to_seq h0 output) (to_seq h0 in1) i;
+  assert(Seq.slice (to_seq h2 output) 0 i == f_seq f (to_seq h0 output) (to_seq h0 in1) i);
+  lemma_slice_append (to_seq h2 output) i;
+  assert(Seq.slice (to_seq h2 output) 0 (i+1) == Seq.append (f_seq f (to_seq h0 output) (to_seq h0 in1) i) (Seq.create 1 (Seq.index (to_seq h2 output) i)));
+  assert(Seq.index (Seq.slice (to_seq h1 output) i (Seq.length (to_seq h0 output))) 0 == oi);
+  assert(Seq.index (Seq.slice (to_seq h2 output) i (Seq.length (to_seq h0 output))) 0 == oi);
+  assert(Seq.index (to_seq h2 output) i == oi);
+  assert(Seq.append (f_seq f (to_seq h0 output) (to_seq h0 in1) i) (Seq.create 1 oi)
+		    == f_seq f (to_seq h0 output) (to_seq h0 in1) (i+1) )
+
+#reset-options "--z3timeout 100"
 
 val xor_bytes_inplace: output:bytes -> in1:bytes{disjoint in1 output} ->
   len:UInt32.t{UInt32.v len <= length output /\ UInt32.v len <= length in1} -> STL unit
   (requires (fun h -> live h output /\ live h in1))
   (ensures  (fun h0 _ h1 -> live h0 output /\ live h0 in1 /\ live h1 output /\ modifies_1 output h0 h1
     /\ Seq.slice (to_seq8 h1 output) 0 (UInt32.v len) ==
-      	xor_seq_bytes (to_seq8 h0 output) (to_seq8 h0 in1) (UInt32.v len)
+      	f_seq UInt8.logxor (to_seq8 h0 output) (to_seq8 h0 in1) (UInt32.v len)
     /\ Seq.slice (to_seq8 h1 output) (UInt32.v len) (length output) ==
 	Seq.slice (to_seq8 h0 output) (UInt32.v len) (length output) ))
 let rec xor_bytes_inplace output in1 len =
@@ -148,7 +193,39 @@ let rec xor_bytes_inplace output in1 len =
       cut(to_seq8 h1 in1 == to_seq8 h0 in1);
       xor_bytes_inplace output in1 i;
       let h2 = HST.get() in
-      cut(Seq.slice (to_seq8 h2 output) 0 (UInt32.v i) == xor_seq_bytes (to_seq8 h1 output) (to_seq8 h1 in1) (UInt32.v i));
-	cut(Seq.slice (to_seq8 h2 output) (UInt32.v i) (length output) == Seq.slice (to_seq8 h1 output) (UInt32.v i) (length output));
-      xor_bytes_inplace_lemma h0 h1 h2 output in1 (UInt32.v i) oi
+      cut(Seq.slice (to_seq8 h2 output) 0 (UInt32.v i) == f_seq UInt8.logxor (to_seq8 h1 output) (to_seq8 h1 in1) (UInt32.v i));
+      cut(Seq.slice (to_seq8 h2 output) (UInt32.v i) (length output) == Seq.slice (to_seq8 h1 output) (UInt32.v i) (length output));      
+      f_seq_inplace_lemma' h0 h1 h2 output in1 (UInt32.v i) oi (fun h b -> live h b) to_seq8 UInt8.logxor
+    end
+
+#reset-options "--z3timeout 100"
+
+val xor_u16s_inplace: output:u16s -> in1:u16s{disjoint in1 output} ->
+  len:UInt32.t{UInt32.v len <= length output /\ UInt32.v len <= length in1} -> STL unit
+  (requires (fun h -> live h output /\ live h in1))
+  (ensures  (fun h0 _ h1 -> live h0 output /\ live h0 in1 /\ live h1 output /\ modifies_1 output h0 h1
+    /\ Seq.slice (to_seq16 h1 output) 0 (UInt32.v len) ==
+      	f_seq UInt16.logxor (to_seq16 h0 output) (to_seq16 h0 in1) (UInt32.v len)
+    /\ Seq.slice (to_seq16 h1 output) (UInt32.v len) (length output) ==
+	Seq.slice (to_seq16 h0 output) (UInt32.v len) (length output) ))
+let rec xor_u16s_inplace output in1 len =
+  if UInt32.eq len 0ul then
+    let h = HST.get() in
+    Seq.lemma_eq_intro (Seq.slice (to_seq16 h output) 0 0) (Seq.createEmpty #UInt16.t)
+  else
+    begin
+      let h0 = HST.get() in
+      let i    = len -^ 1ul in
+      let in1i = read_16 in1 i in
+      let oi   = read_16 output i in
+      let oi   = UInt16.logxor oi in1i in
+      write_16 output i oi;
+      let h1 = HST.get() in
+      cut(to_seq16 h1 output == Seq.upd (to_seq16 h0 output) (UInt32.v i) (oi));
+      cut(to_seq16 h1 in1 == to_seq16 h0 in1);
+      xor_u16s_inplace output in1 i;
+      let h2 = HST.get() in
+      cut(Seq.slice (to_seq16 h2 output) 0 (UInt32.v i) == f_seq UInt16.logxor (to_seq16 h1 output) (to_seq16 h1 in1) (UInt32.v i));
+      cut(Seq.slice (to_seq16 h2 output) (UInt32.v i) (length output) == Seq.slice (to_seq16 h1 output) (UInt32.v i) (length output));
+      f_seq_inplace_lemma' h0 h1 h2 output in1 (UInt32.v i) oi (fun h b -> live h b) to_seq16 UInt16.logxor
     end

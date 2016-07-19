@@ -160,16 +160,20 @@ assume val to_seq64: h:mem -> b:u64s{live h b} -> GTot (s:Seq.seq UInt64.t{Seq.l
 (* Injectivity predicates *)
 assume val lemma_to_seq8_bij: h:mem -> b:bytes{live h b} -> h':mem -> b':bytes{live h' b'} -> Lemma
   (requires (True))
-  (ensures  (Seq.equal (to_seq8 h b) (to_seq8 h' b') <==> equal h b h' b'))
+  (ensures  ((to_seq8 h b == to_seq8 h' b') <==> equal h b h' b'))
+  [SMTPat (equal h b h' b')]
 assume val lemma_to_seq16_bij: h:mem -> b:u16s{live h b} -> h':mem -> b':u16s{live h' b'} -> Lemma
   (requires (True))
-  (ensures  (Seq.equal (to_seq16 h b) (to_seq16 h' b') <==> equal h b h' b'))
+  (ensures  ((to_seq16 h b == to_seq16 h' b') <==> equal h b h' b'))
+  [SMTPat (equal h b h' b')]
 assume val lemma_to_seq32_bij: h:mem -> b:u32s{live h b} -> h':mem -> b':u32s{live h' b'} -> Lemma
   (requires (True))
-  (ensures  (Seq.equal (to_seq32 h b) (to_seq32 h' b') <==> equal h b h' b'))
+  (ensures  ((to_seq32 h b == to_seq32 h' b') <==> equal h b h' b'))
+  [SMTPat (equal h b h' b')]
 assume val lemma_to_seq64_bij: h:mem -> b:u64s{live h b} -> h':mem -> b':u64s{live h' b'} -> Lemma
   (requires (True))
-  (ensures  (Seq.equal (to_seq64 h b) (to_seq64 h' b') <==> equal h b h' b'))
+  (ensures  ((to_seq64 h b == to_seq64 h' b') <==> equal h b h' b'))
+  [SMTPat (equal h b h' b')]
 
 assume val create_8: len:UInt32.t -> ST bytes
   (requires (fun h -> True))
