@@ -4,7 +4,7 @@ module Rel
 type rel (t:Type)  =
 | R : l:t -> r:t -> rel t
 
-type eq (t:Type) = v:(rel t){R.l v = R.r v}
+type eq (t:Type) = v:(rel t){R.l v == R.r v}
 
 val lift : #t:Type -> #t2:Type 
            -> f:(t -> Tot t2) -> rel t 
@@ -35,5 +35,5 @@ val lift5 : #t:Type -> #t2:Type -> #t3:Type -> #t4:Type -> #t5:Type -> #t6:Type
 let lift5 #t #t2 #t3 #t4 #t5 #t6 f (R x y) (R x2 y2) (R x3 y3) (R x4 y4) (R x5 y5) = 
     R (f x x2 x3 x4 x5) (f y y2 y3 y4 y5) 
 
-val r_eq : #t:Type -> rel t -> Tot bool
-let r_eq #t (R x y) = x = y
+val r_eq : #t:Type -> rel t -> Tot Type0
+let r_eq #t (R x y) = (x == y)
