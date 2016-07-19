@@ -46,6 +46,7 @@ type step =
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | WHNF            //Only produce a weak head normal form
   | Inline
+  | NoInline
   | UnfoldUntil of S.delta_depth
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
@@ -88,6 +89,7 @@ type stack_elt =
  | Abs      of env * binders * env * option<either<lcomp,Ident.lident>> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of term * aqual * Range.range
  | Meta     of S.metadata * Range.range
+ | Let      of env * binders * letbinding * Range.range
 
 type stack = list<stack_elt>
 
@@ -565,6 +567,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   log cfg  (fun () -> Util.print_string "\tSet memo\n");
                   norm cfg env stack t
 
+                | Let _ :: _
                 | App _ :: _ 
                 | Abs _ :: _
                 | [] -> 
@@ -623,14 +626,24 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_match(head, branches) -> 
             let stack = Match(env, branches, t.pos)::stack in 
             norm cfg env stack head
-
-          | Tm_let((false, [lb]), body) ->
-            let env = Clos(env, lb.lbdef, Util.mk_ref None, false)::env in 
-            norm cfg env stack body
-
+ 
           | Tm_let((_, {lbname=Inr _}::_), _) -> //this is a top-level let binding; nothing to normalize
             rebuild cfg env stack t
 
+          | Tm_let((false, [lb]), body) ->
+            let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
+            if not (cfg.steps |> List.contains NoInline)
+            && (Util.is_pure_effect n
+            || Util.is_ghost_effect n)
+            then let env = Clos(env, lb.lbdef, Util.mk_ref None, false)::env in 
+                 norm cfg env stack body
+            else let bs, body = Subst.open_term [lb.lbname |> Util.left |> S.mk_binder] body in
+                 let lb = {lb with lbname=List.hd bs |> fst |> Inl;
+                                   lbtyp=norm cfg env [] lb.lbtyp;
+                                   lbdef=norm cfg env [] lb.lbdef} in
+                 let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
+                 norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
+            
           | Tm_let(lbs, body) when List.contains (Exclude Zeta) cfg.steps -> //no fixpoint reduction allowed
             rebuild cfg env stack t
 
@@ -762,6 +775,11 @@ and rebuild : cfg -> env -> stack -> term -> term =
             | MemoLazy r::stack -> 
               set_memo r (env, t);
               rebuild cfg env stack t
+
+            | Let(env', bs, lb, r)::stack ->
+              let body = SS.close bs t in
+              let t = S.mk (Tm_let((false, [lb]), body)) None r in
+              rebuild cfg env' stack t
 
             | Abs (env', bs, env'', lopt, r)::stack ->
               let bs = norm_binders cfg env' bs in
