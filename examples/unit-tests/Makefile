@@ -3,12 +3,16 @@ SVERFILES=Unit1.Basic.fst                  Unit1.WPsAndTriples.fst \
 	     Unit1.RefinementInference.fst  Unit1.WPsAndTriples_ST.fst \
 	     unit2.fst \
 	     testghost.fst \
-	     inverse.fst
+	     inverse.fst \
+             testset.fst\
+             testheap.fst\
+             Unit1.Parser.fst\
+             mac.fst
 # These are ok under universes
 UVERFILES= \
-	FirstProofs.fst ShortCircuit.fst Unit1.Parser.fst \
+	FirstProofs.fst ShortCircuit.fst  \
  	Unit1.Projectors1.fst Unit1.Projectors2.fst Unit1.UnificationTests.fst  \
-	mac.fst testTwoLevelHeap.fst testheap.fst testmref.fst testset.fst
+	testTwoLevelHeap.fst testmref.fst
 	     		       
 FSTAR_HOME=../..
 include ../Makefile.include

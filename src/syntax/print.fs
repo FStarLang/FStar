@@ -63,7 +63,8 @@ let infix_prim_ops = [
     (Const.imp_lid     , "==>");
     (Const.iff_lid     , "<==>");
     (Const.precedes_lid, "<<");
-    (Const.eq2_lid     , "==")
+    (Const.eq2_lid     , "==");
+    (Const.eq3_lid     , "===");
 ]
 
 let unary_prim_ops = [
@@ -190,6 +191,7 @@ let qual_to_string = function
   | Unfoldable            -> "unfoldable"
   | Irreducible           -> "irreducible"
   | Abstract              -> "abstract"
+  | Noeq                  -> "noeq"
   | Logic                 -> "logic"
   | TotalEffect           -> "total"
   | Discriminator l       -> Util.format1 "(Discriminator %s)" (lid_to_string l) 
@@ -223,7 +225,7 @@ let rec term_to_string x =
   | Tm_meta(t, Meta_monadic m) -> Util.format3 ("(Monadic-%s{%s} %s )") (tag_of_term t) (sli m) (term_to_string t)
   | Tm_meta(t, Meta_monadic_lift(m0, m1)) -> Util.format4 ("(MonadicLift-%s{%s} %s )") (tag_of_term t) (sli m0) (sli m1) (term_to_string t)
   | Tm_meta(t, _) ->    term_to_string t
-  | Tm_bvar x ->        db_to_string x  
+  | Tm_bvar x ->        db_to_string x
   | Tm_name x ->        nm_to_string x
   | Tm_fvar f ->        fv_to_string f
   | Tm_uvar (u, _) ->   uvar_to_string u
@@ -262,8 +264,14 @@ let rec term_to_string x =
 
 and  pat_to_string x = match x.v with
     | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (fv_to_string l) (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
-    | Pat_dot_term (x, _) -> Util.format1 ".%s" (bv_to_string x)
-    | Pat_var x -> bv_to_string x
+    | Pat_dot_term (x, _) -> 
+      if Options.print_bound_var_types()
+      then Util.format2 ".%s:%s" (bv_to_string x) (term_to_string x.sort)
+      else Util.format1 ".%s" (bv_to_string x)
+    | Pat_var x -> 
+      if Options.print_bound_var_types()
+      then Util.format2 "%s:%s" (bv_to_string x) (term_to_string x.sort)
+      else bv_to_string x
     | Pat_constant c -> const_to_string c
     | Pat_wild x -> if (Options.print_real_names()) then "Pat_wild " ^ (bv_to_string x) else "_"
     | Pat_disj ps ->  Util.concat_l " | " (List.map pat_to_string ps) 

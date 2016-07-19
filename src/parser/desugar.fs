@@ -1490,7 +1490,8 @@ let trans_qual r = function
   | AST.Reflectable
   | AST.Reifiable
   | AST.Inline 
-  | AST.Irreducible 
+  | AST.Irreducible
+  | AST.Noeq
   | AST.Unfoldable -> raise (Error("This qualifier is supported only with the --universes option", r))
 
 let trans_pragma = function

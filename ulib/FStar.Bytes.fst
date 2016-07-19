@@ -4,6 +4,8 @@ type byte = FStar.UInt8.byte
 open FStar.All
 
 assume type bytes
+assume HasEq_bytes: hasEq bytes
+
 assume val length : bytes -> Tot int
 assume val get : b:bytes -> pos:nat{pos < length b} -> Tot byte
 assume val make : f:(nat -> Tot byte) -> len:nat -> Tot (b:bytes{length b = len})

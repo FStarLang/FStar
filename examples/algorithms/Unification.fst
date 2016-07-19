@@ -32,9 +32,9 @@ open FStar.List.Tot
 
 (* First, a missing lemma from the list library *)
 let op_At = append
-val lemma_shift_append: l:list 'a -> x:'a -> m:list 'a -> Lemma
+val lemma_shift_append: #a:eqtype -> l:list a -> x:a -> m:list a -> Lemma
   (ensures ( (l@(x::m)) = ((l@[x])@m)))
-let rec lemma_shift_append l x m = match l with
+let rec lemma_shift_append #a l x m = match l with
   | [] -> ()
   | hd::tl -> lemma_shift_append tl x m
 

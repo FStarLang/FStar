@@ -14,16 +14,30 @@
    limitations under the License.
 *)
 module Prims
+
+assume new type hasEq: Type -> GTot Type0
+type eqtype = a:Type{hasEq a}
+
+
 (* False is the empty inductive type *)
-type l_False =
+type c_False =
 
 (* True is the singleton inductive type *)
-type l_True =
+type c_True =
   | T
+
+(*
+ * These definitions are just so that we can generate their interpretations for now
+ * Fix encoding by generating interpretations for inductives so that these can be removed
+ *)
+type l_True = c_True
+
+type l_False = c_False
 
 (* another singleton type, with its only inhabitant written '()'
    we assume it is primitive, for convenient interop with other languages *)
 assume new type unit : Type0
+assume HasEq_unit: hasEq unit
 
 (* A coercion down to universe 0 *)
 type squash (p:Type) : Type0 = x:unit{p}
@@ -38,12 +52,20 @@ let inversion (a:Type) = True
    infix binary '==';
    proof irrelevant, heterogeneous equality in Type#0;
    primitive (TODO: make it an inductive?)
+
+  TODO: instead of hard-wiring the == syntax, 
+        we should just rename eq2 to op_Equals_Equals
+	and rename eq3 to op_Equals_Equals_Equals (instead of the indirection currently used)
 *)
-assume type eq2 : #a:Type -> #b:Type -> a -> b -> Type0
+assume type eq2 : #a:Type -> a -> a -> Type0
+
+assume type eq3 : #a:Type -> #b:Type -> a -> b -> Type0
+inline let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
 
 (* bool is a two element type with elements {'true', 'false'}
    we assume it is primitive, for convenient interop with other languages *)
 assume new type bool : Type0
+assume HasEq_bool: hasEq bool
 
 (* bool-to-type coercion *)
 type b2t (b:bool) = (b == true)
@@ -171,6 +193,9 @@ effect Ghost (a:Type) (pre:Type) (post:pure_post a) =
            (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
 
 assume new type int : Type0
+
+assume HasEq_int: hasEq int
+
 assume val op_AmpAmp             : bool -> bool -> Tot bool
 assume val op_BarBar             : bool -> bool -> Tot bool
 assume val op_Negation           : bool -> Tot bool
@@ -182,17 +207,19 @@ assume val op_LessThanOrEqual    : int -> int -> Tot bool
 assume val op_GreaterThan        : int -> int -> Tot bool
 assume val op_GreaterThanOrEqual : int -> int -> Tot bool
 assume val op_LessThan           : int -> int -> Tot bool
-(* Primitive (structural) equality.
-   This still allows functions ... TODO: disallow functions *)
-assume val op_Equality :    'a -> 'a -> Tot bool
-assume val op_disEquality : 'a -> 'a -> Tot bool
+assume val op_Equality :    #a:Type{hasEq a} -> a -> a -> Tot bool
+assume val op_disEquality : #a:Type{hasEq a} -> a -> a -> Tot bool
 assume new type exn : Type0
 assume new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
 
+assume HasEq_string: hasEq string
+
 type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
+
+assume HasEq_list: (forall (a:Type).{:pattern (hasEq (list a))} hasEq a ==> hasEq (list a))
 
 type pattern =
   | SMTPat   : #a:Type -> a -> pattern
@@ -215,9 +242,13 @@ type option (a:Type) =
   | None : option a
   | Some : v:a -> option a
 
+assume HasEq_option: (forall (a:Type).{:pattern (hasEq (option a))} hasEq a ==> hasEq (option a))
+
 type either 'a 'b =
   | Inl : v:'a -> either 'a 'b
   | Inr : v:'b -> either 'a 'b
+
+assume HasEq_either: (forall (a:Type) (b:Type).{:pattern (hasEq (either a b))} (hasEq a /\ hasEq b) ==> hasEq (either a b))
 
 type result (a:Type) =
   | V   : v:a -> result a
@@ -228,6 +259,8 @@ type result (a:Type) =
  * either as an alias for reasoning about the direct definitions, or as a marker
  * for places where a CPS transformation should happen. *)
 effect M (a:Type) = Tot a
+
+assume HasEq_result: (forall (a:Type).{:pattern (hasEq (result a))} hasEq a ==> hasEq (result a))
 
 new_effect DIV = PURE
 sub_effect PURE ~> DIV  = purewp_id
@@ -437,12 +470,16 @@ type tuple2 'a 'b =
            -> _2:'b
            -> tuple2 'a 'b
 
+assume HasEq_tuple2: (forall (a:Type) (b:Type).{:pattern (hasEq (tuple2 a b))} (hasEq a /\ hasEq b) ==> hasEq (tuple2 a b))
+
 (* 'a * 'b * 'c *)
 type tuple3 'a 'b 'c =
   | Mktuple3: _1:'a
            -> _2:'b
            -> _3:'c
           -> tuple3 'a 'b 'c
+
+assume HasEq_tuple3: (forall (a:Type) (b:Type) (c:Type).{:pattern (hasEq (tuple3 a b c))} (hasEq a /\ hasEq b /\ hasEq c) ==> hasEq (tuple3 a b c))
 
 (* 'a * 'b * 'c * 'd *)
 type tuple4 'a 'b 'c 'd =
@@ -452,6 +489,8 @@ type tuple4 'a 'b 'c 'd =
            -> _4:'d
            -> tuple4 'a 'b 'c 'd
 
+assume HasEq_tuple4: (forall (a:Type) (b:Type) (c:Type) (d:Type).{:pattern (hasEq (tuple4 a b c d))} (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d) ==> hasEq (tuple4 a b c d))
+
 (* 'a * 'b * 'c * 'd * 'e *)
 type tuple5 'a 'b 'c 'd 'e =
   | Mktuple5: _1:'a
@@ -460,6 +499,8 @@ type tuple5 'a 'b 'c 'd 'e =
            -> _4:'d
            -> _5:'e
            -> tuple5 'a 'b 'c 'd 'e
+
+assume HasEq_tuple5: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type).{:pattern (hasEq (tuple5 a b c d e))} (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e) ==> hasEq (tuple5 a b c d e))
 
 (* 'a * 'b * 'c * 'd * 'e * 'f *)
 type tuple6 'a 'b 'c 'd 'e 'f =
@@ -471,6 +512,7 @@ type tuple6 'a 'b 'c 'd 'e 'f =
            -> _6:'f
            -> tuple6 'a 'b 'c 'd 'e 'f
 
+assume HasEq_tuple6: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type) (f:Type).{:pattern (hasEq (tuple6 a b c d e f))} (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e /\ hasEq f) ==> hasEq (tuple6 a b c d e f))
 
 (* 'a * 'b * 'c * 'd * 'e * 'f * 'g *)
 type tuple7 'a 'b 'c 'd 'e 'f 'g =
@@ -483,6 +525,8 @@ type tuple7 'a 'b 'c 'd 'e 'f 'g =
            -> _7:'g
            -> tuple7 'a 'b 'c 'd 'e 'f 'g
 
+assume HasEq_tuple7: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type) (f:Type) (g:Type).{:pattern (hasEq (tuple7 a b c d e f g))} (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e /\ hasEq f /\ hasEq g) ==> hasEq (tuple7 a b c d e f g))
+
 (* 'a * 'b * 'c * 'd * 'e * 'f * 'g * 'h *)
 type tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
   | Mktuple8: _1:'a
@@ -494,6 +538,8 @@ type tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
            -> _7:'g
            -> _8:'h
            -> tuple8 'a 'b 'c 'd 'e 'f 'g 'h
+
+assume HasEq_tuple8: (forall (a:Type) (b:Type) (c:Type) (d:Type) (e:Type) (f:Type) (g:Type) (h:Type).{:pattern (hasEq (tuple8 a b c d e f g h))} (hasEq a /\ hasEq b /\ hasEq c /\ hasEq d /\ hasEq e /\ hasEq f /\ hasEq g /\ hasEq h) ==> hasEq (tuple8 a b c d e f g h))
 
 (* Concrete syntax (x:a & y:b x & c x y) *)
 type dtuple3 (a:Type)

@@ -48,7 +48,12 @@ effect IST    (state:Type)
 	      (pre:ist_pre state)
 	      (post:(state -> Tot (ist_post state a))) 
        =
-       ISTATE state rel a (fun p s0 -> pre s0 /\ (forall x s1 . (pre s0 /\ post s0 x s1) ==> p x s1))
+       ISTATE state rel a (fun p s0 -> pre s0 /\ (forall x s1 . 
+                                                    pre s0 /\ 
+						    rel s0 s1 /\ 
+						    post s0 x s1 
+						    ==> 
+						    p x s1))
 
 
 (* An abstract (box-style) modality for witnessed stable predicates. *)

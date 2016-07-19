@@ -82,6 +82,7 @@ let iff_lid    = pconst "l_iff"
 let ite_lid    = pconst "l_ITE"
 let exists_lid = pconst "l_Exists"
 let forall_lid = pconst "l_Forall"
+let haseq_lid  = pconst "hasEq"
 let b2t_lid    = pconst "b2t" (* coercion from boolean to type *)
 let admit_lid  = pconst "admit"
 let magic_lid  = pconst "magic"
@@ -89,6 +90,7 @@ let has_type_lid = pconst "has_type"
 
 (* Various equality predicates *)
 let eq2_lid    = pconst  "eq2"
+let eq3_lid    = pconst  "eq3"
 
 (* Some common term constructors *)
 let exp_true_bool   = mk (Tm_constant (Const_bool true))
@@ -138,6 +140,9 @@ let set_singleton = p2l ["FStar"; "Set"; "singleton"]
 let set_union     = p2l ["FStar"; "Set"; "union"]
 let fstar_hyperheap_lid = p2l ["FStar"; "HyperHeap"]
 let rref_lid      = p2l ["FStar"; "HyperHeap"; "rref"]
+let tset_empty     = p2l ["FStar"; "TSet"; "empty"]
+let tset_singleton = p2l ["FStar"; "TSet"; "singleton"]
+let tset_union     = p2l ["FStar"; "TSet"; "union"]
 
 (* monad constants *)
 let effect_PURE_lid  = pconst "PURE"

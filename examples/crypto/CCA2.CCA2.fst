@@ -13,7 +13,7 @@ open FStar.List.Tot
 open CCA2
 
 type cipher = RSA.cipher
-type entry =
+noeq type entry =
 (* indexing entry with ideal and pk triggers some bugs; meanwhile, using a simple type *)
   | Entry : ideal':bool
          -> pk':RSA.pkey

@@ -166,8 +166,14 @@ let new_term_constant (env:env_t) (x:bv) =
 let push_term_var (env:env_t) (x:bv) (t:term) =
     {env with bindings=Binding_var(x,t)::env.bindings}
 let lookup_term_var env a =
-    match lookup_binding env (function Binding_var(b, t) when Syntax.bv_eq b a -> Some (b,t) | _ -> None) with
-    | None -> failwith (format1 "Bound term variable not found: %s" (Print.bv_to_string a))
+    let aux a' = lookup_binding env (function Binding_var(b, t) when Syntax.bv_eq b a' -> Some (b,t) | _ -> None) in
+    match aux a with
+    | None ->
+        //AR: this is a temporary fix, use reserved u__ for mangling names
+        let a = unmangle a in
+        (match aux a with
+            | None -> failwith (format1 "Bound term variable not found (after unmangling): %s" (Print.bv_to_string a))
+            | Some (b,t) -> t)
     | Some (b,t) -> t
 
 (* Qualified term names *)
@@ -558,6 +564,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               let x_has_t = mk_HasTypeWithFuel (Some fterm) xtm t in
               let t_has_kind = mk_HasType t Term.mk_Term_type in
 
+              //add hasEq axiom for this refinement type
+              let t_haseq_base = mk_haseq base_t in
+              let t_haseq_ref = mk_haseq t in
+
+              let t_haseq = Assume (mkForall ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
+                                    Some ("haseq for " ^ tsym), Some ("haseq" ^ tsym)) in
+
               let t_kinding = Assume(mkForall([[t_has_kind]], cvars, t_has_kind),
                                      Some "refinement kinding",
                                      Some ("refinement_kinding_" ^tsym)) in //TODO: guard by typing of cvars?; not necessary since we have pattern-guarded
@@ -569,7 +582,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             @decls'
                             @[tdecl;
                               t_kinding;
-                              t_interp] in
+                              t_interp;t_haseq] in
               Util.smap_add env.cache tkey.hash (tsym, cvar_sorts, t_decls);
               t, t_decls
         end
@@ -931,6 +944,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         (f phis, decls) in
 
     let eq_op : args -> (term * decls_t) = function
+        | [_; e1; e2]
         | [_;_;e1;e2] -> enc (bin_op mkEq) [e1;e2]
         | l ->  enc (bin_op mkEq) l in
 
@@ -964,6 +978,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         (Const.ite_lid,   mk_ite);
         (Const.not_lid,   enc_prop_c <| un_op mkNot);
         (Const.eq2_lid,   eq_op);
+        (Const.eq3_lid,   eq_op);
         (Const.true_lid,  const_op mkTrue);
         (Const.false_lid, const_op mkFalse);
     ] in
@@ -1184,6 +1199,15 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkOr(valid_a, valid_b), valid)), Some "\/ interpretation", Some "l_or-interp")] in
     let mk_eq2_interp : env -> string -> term -> decls_t = fun env eq2 tt ->
         let aa = ("a", Term_sort) in
+        let xx = ("x", Term_sort) in
+        let yy = ("y", Term_sort) in
+        let a = mkFreeV aa in
+        let x = mkFreeV xx in
+        let y = mkFreeV yy in
+        let valid = Term.mkApp("Valid", [Term.mkApp(eq2, [a;x;y])]) in
+        [Term.Assume(mkForall([[valid]], [aa;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation", Some "eq2-interp")] in
+    let mk_eq3_interp : env -> string -> term -> decls_t = fun env eq3 tt ->
+        let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
         let xx = ("x", Term_sort) in
         let yy = ("y", Term_sort) in
@@ -1191,8 +1215,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let b = mkFreeV bb in
         let x = mkFreeV xx in
         let y = mkFreeV yy in
-        let valid = Term.mkApp("Valid", [Term.mkApp(eq2, [a;b;x;y])]) in
-        [Term.Assume(mkForall([[valid]], [aa;bb;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation", Some "eq2-interp")] in
+        let valid = Term.mkApp("Valid", [Term.mkApp(eq3, [a;b;x;y])]) in
+        [Term.Assume(mkForall([[valid]], [aa;bb;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq3 interpretation", Some "eq3-interp")] in
     let mk_imp_interp : env -> string -> term -> decls_t = fun env imp tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
@@ -1248,6 +1272,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.and_lid,    mk_and_interp);
                  (Const.or_lid,     mk_or_interp);
                  (Const.eq2_lid,    mk_eq2_interp);
+                 (Const.eq3_lid,    mk_eq3_interp);
                  (Const.imp_lid,    mk_imp_interp);
                  (Const.iff_lid,    mk_iff_interp);
                  (Const.forall_lid, mk_forall_interp);
@@ -1801,7 +1826,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             kindingAx
             @(inversion_axioms tapp vars)
             @[pretype_axiom tapp vars] in
-
+        
         let g = decls
                 @binder_decls
                 @aux in

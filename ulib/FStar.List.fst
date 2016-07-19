@@ -184,6 +184,16 @@ let rec sortWith f = function
      let hi, lo  = partition (fun x -> f pivot x > 0) tl in
      sortWith f lo@(pivot::sortWith f hi)
 
+val splitAt: nat -> list 'a -> (list 'a * list 'a)
+let rec splitAt n l =
+  if n = 0 then l, []
+  else
+    match l with
+      | []     -> failwith "splitAt index is more that list length"
+      | hd::tl ->
+	let l1, l2 = splitAt (n - 1) tl in
+	hd::l1, l2
+
 let filter_map f l =
   let rec filter_map acc l =
     match l with

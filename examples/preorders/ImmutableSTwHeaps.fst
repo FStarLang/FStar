@@ -48,7 +48,12 @@ effect IST    (a:Type)
               (pre:ist_pre heap) 
 	      (post:(heap -> Tot (ist_post heap a))) 
        =
-       ISTATE a (fun p s0 -> pre s0 /\ (forall x s1 . pre s0 /\ post s0 x s1 ==> p x s1))
+       ISTATE a (fun p s0 -> pre s0 /\ (forall x s1 . 
+                                          pre s0 /\ 
+                                          heap_rel s0 s1 /\
+                                          post s0 x s1 
+					  ==> 
+					  p x s1))
 
 
 (* A box-like modality for witnessed stable predicates for IST. *)

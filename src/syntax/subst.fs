@@ -178,10 +178,13 @@ let shift n s = match s with
 let shift_subst n s = List.map (shift n) s
 let shift_subst' n s = s |> List.map (shift_subst n)
 let subst_binder' s (x, imp) = {x with sort=subst' s x.sort}, imp
+
+
 let subst_binders' s bs = 
     bs |> List.mapi (fun i b -> 
         if i=0 then subst_binder' s b
         else subst_binder' (shift_subst' i s) b)
+let subst_binders s (bs:binders) = subst_binders' [s] bs
 let subst_arg' s (t, imp) = (subst' s t, imp)
 let subst_args' s = List.map (subst_arg' s)
 let subst_pat' s p : (pat * int) = 

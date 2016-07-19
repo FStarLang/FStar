@@ -46,49 +46,49 @@ val lemma_col_len: #a:Type -> m:nat -> n:nat -> x:matrix2 m n a -> j:nat{j<n} ->
 (* Lemmas about index *)
 val lemma_index_create: #a:Type -> m:nat -> n:nat -> v:a -> i:nat{i < m} -> j:nat{j < n} -> Lemma
   (requires True)
-  (ensures (index (create m n v) i j = v))
+  (ensures (index (create m n v) i j == v))
   [SMTPat (index (create m n v) i j)]
 
 val lemma_index_upd1: #a:Type -> m:nat -> n:nat -> x:matrix2 m n a -> i:nat{i<m} -> j:nat{j<n} -> v:a -> Lemma
   (requires True)
-  (ensures (index (upd x i j v) i j = v))
+  (ensures (index (upd x i j v) i j == v))
   [SMTPat (index (upd x i j v) i j)]
 
 val lemma_index_upd2: #a:Type -> m:nat -> n:nat -> x:matrix2 m n a -> i:nat{i<m} -> j:nat{j<n} -> i':nat{i'<m} -> j':nat{j'<n} -> v:a -> Lemma
   (requires (i<>i' \/ j<>j'))
-  (ensures (index (upd x i j v) i' j' = index x i' j'))
+  (ensures (index (upd x i j v) i' j' == index x i' j'))
   [SMTPat (index (upd x i j v) i' j')]
   
 val lemma_index_row: #a:Type -> m:nat -> n:nat -> x:matrix2 m n a -> i:nat{i<m} -> j:nat{j<n} -> Lemma 
   (requires (True))
-  (ensures (Seq.index (row x i) j = index x i j))
+  (ensures (Seq.index (row x i) j == index x i j))
   [SMTPat (Seq.index (row x i) j)]
 
 val lemma_index_col: #a:Type -> m:nat -> n:nat -> x:matrix2 m n a -> i:nat{i<m} -> j:nat{j<n} -> Lemma 
   (requires (True))
-  (ensures (Seq.index (col x j) i = index x i j))
+  (ensures (Seq.index (col x j) i == index x i j))
   [SMTPat (Seq.index (col x j) i)]
 
 val lemma_index_upd_row1: #a:Type -> m:nat -> n:nat -> x:matrix2 m n a -> s:seq a{Seq.length s = n} -> i:nat{i<m} -> j:nat{j<n} -> Lemma 
   (requires (True))
-  (ensures (index (upd_row x i s) i j = Seq.index s j))
+  (ensures (index (upd_row x i s) i j == Seq.index s j))
   [SMTPat (index (upd_row x i s) i j)]
 
 val lemma_index_upd_row2: #a:Type -> m:nat -> n:nat -> x:matrix2 m n a -> s:seq a{Seq.length s = n} -> i:nat{i<m} 
                           -> i':nat{i'<m /\ i<>i'} -> j:nat{j<n} -> Lemma 
   (requires (True))
-  (ensures (index (upd_row x i s) i' j = index x i' j))
+  (ensures (index (upd_row x i s) i' j == index x i' j))
   [SMTPat (index (upd_row x i s) i' j)]
 
 val lemma_index_upd_col1: #a:Type -> m:nat -> n:nat -> x:matrix2 m n a -> s:seq a{Seq.length s = m} -> j:nat{j<n} -> i:nat{i<m} -> Lemma 
   (requires (True))
-  (ensures (index (upd_col x j s) i j = Seq.index s i))
+  (ensures (index (upd_col x j s) i j == Seq.index s i))
   [SMTPat (index (upd_col x j s) i j)]
 
 val lemma_index_upd_col2: #a:Type -> m:nat -> n:nat -> x:matrix2 m n a -> s:seq a{Seq.length s = m} -> j:nat{j<n} 
                           -> i:nat{i<m} -> j':nat{j'<n /\ j'<>j} -> Lemma 
   (requires (True))
-  (ensures (index (upd_col x j s) i j' = index x i j'))
+  (ensures (index (upd_col x j s) i j' == index x i j'))
   [SMTPat (index (upd_col x j s) i j')]
 
 (* Extensionality *)
@@ -100,7 +100,7 @@ val lemma_eq_intro: #a:Type -> #m:nat -> #n:nat -> x1:matrix2 m n a -> x2:matrix
 
 val lemma_eq_elim: #a:Type -> #m:nat -> #n:nat -> x1:matrix2 m n a -> x2:matrix2 m n a -> Lemma
      (requires (eq x1 x2))
-     (ensures (x1=x2))
+     (ensures (x1==x2))
      [SMTPatT (eq x1 x2)]
 
 
