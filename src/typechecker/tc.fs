@@ -2589,7 +2589,7 @@ and tc_inductive env ses quals lids =
         (Sig_bundle(tcs@datas, quals, lids, Env.get_range env0))::ses
     else [sig_bndle]
 
-and tc_decl env se: 'a list * _ = match se with
+and tc_decl env se: list<sigelt> * _ = match se with
     | Sig_inductive_typ _
     | Sig_datacon _ ->
       failwith "Impossible bare data-constructor"

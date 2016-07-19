@@ -1312,6 +1312,9 @@ let lex_pair : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.fvar FStar_Syntax
 let tforall : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.forall_lid (FStar_Syntax_Syntax.Delta_unfoldable (1)) None)
 
 
+let t_haseq : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.haseq_lid FStar_Syntax_Syntax.Delta_constant None)
+
+
 let lcomp_of_comp : FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.lcomp = (fun c0 -> (
 
 let c = (comp_to_comp_typ c0)
@@ -1435,7 +1438,7 @@ in (
 
 let destruct_base_conn = (fun f -> (
 
-let connectives = (((FStar_Syntax_Const.true_lid), (0)))::(((FStar_Syntax_Const.false_lid), (0)))::(((FStar_Syntax_Const.and_lid), (2)))::(((FStar_Syntax_Const.or_lid), (2)))::(((FStar_Syntax_Const.imp_lid), (2)))::(((FStar_Syntax_Const.iff_lid), (2)))::(((FStar_Syntax_Const.ite_lid), (3)))::(((FStar_Syntax_Const.not_lid), (1)))::(((FStar_Syntax_Const.eq2_lid), (4)))::(((FStar_Syntax_Const.eq2_lid), (2)))::[]
+let connectives = (((FStar_Syntax_Const.true_lid), (0)))::(((FStar_Syntax_Const.false_lid), (0)))::(((FStar_Syntax_Const.and_lid), (2)))::(((FStar_Syntax_Const.or_lid), (2)))::(((FStar_Syntax_Const.imp_lid), (2)))::(((FStar_Syntax_Const.iff_lid), (2)))::(((FStar_Syntax_Const.ite_lid), (3)))::(((FStar_Syntax_Const.not_lid), (1)))::(((FStar_Syntax_Const.eq2_lid), (3)))::(((FStar_Syntax_Const.eq2_lid), (2)))::(((FStar_Syntax_Const.eq3_lid), (4)))::(((FStar_Syntax_Const.eq3_lid), (2)))::[]
 in (
 
 let rec aux = (fun f _38_1102 -> (match (_38_1102) with
