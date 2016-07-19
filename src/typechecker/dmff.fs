@@ -40,6 +40,7 @@ let gen_wps_for_free
   env (binders: binders) (a: bv) (wp_a: term) tc_decl tc_term (ed: Syntax.eff_decl):
   _ * Syntax.eff_decl
 =
+  let wp_a = N.normalize [N.Beta; N.EraseUniverses] env wp_a in
   (* A series of macros and combinators to automatically build WP's. In these
    * definitions, both [binders] and [a] are opened. This means that macros
    * close over [binders] and [a], and this means that combinators do not expect
@@ -91,7 +92,8 @@ let gen_wps_for_free
   in
 
   let gamma = collect_binders (normalize env wp_a) in
-  let unknown = mk Tm_unknown None Range.dummyRange in
+  d (Util.format1 "Gamma is %s\n" (Print.binders_to_string ", " gamma));
+  let unknown = S.tun in
   let mk x = mk x None Range.dummyRange in
   let register env lident def =
     // Debug
@@ -102,15 +104,21 @@ let gen_wps_for_free
     let fv = S.lid_as_fv lident (incr_delta_qualifier def) None in
     let lbname: lbname = Inr fv in
     // Type-check the body, generalize universes, generate let-binding
-    let def, comp, _ = tc_term env def in
-    let comp = comp.comp () in
-    let univ_vars, def = Util.generalize_universes env def in
-    let lb: letbindings = false, [
+//    let def, comp, _ = tc_term env def in
+//    let comp = comp.comp () in
+//    let univ_vars, def = Util.generalize_universes env def in
+    let lb: letbindings = false, [ {
+                lbname=lbname;
+                lbunivs=[];
+                lbtyp=S.tun;
+                lbdef=def;
+                lbeff=Const.effect_Tot_lid; //this will be recomputed correctly
+             }
       // NB: if universe generalization needs to happen, then [unknown] below
       // needs to be replaced by [Util.comp_result comp]; but! if we do that,
       // then the TODO in [env.fs] related to [universe_of] hits us.
-      Util.close_univs_and_mk_letbinding None lbname univ_vars
-        unknown (Util.comp_effect_name comp) def
+//      Util.close_univs_and_mk_letbinding None lbname univ_vars
+//        (Util.comp_result comp) (Util.comp_effect_name comp) def
     ] in
     // Re-check and push in the environment as a top-level let-binding
     let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], []) in
@@ -135,7 +143,7 @@ let gen_wps_for_free
     // Neither [ctx_def] or [gctx_def] take implicit arguments.
     let ctx_def, gctx_def =
       let mk f: term =
-        let t = S.gen_bv "t" None Util.ktype0 in
+        let t = S.gen_bv "t" None Util.ktype in
         let body = U.arrow gamma (f (S.bv_to_name t)) in
         U.abs (binders @ [ S.mk_binder a; S.mk_binder t ]) body None
       in
@@ -163,7 +171,7 @@ let gen_wps_for_free
        Tot (st2_ctx heap a t)
      let st2_pure #heap #a #t x = fun _post _h -> x *)
   let c_pure =
-    let t = S.gen_bv "t" None U.ktype0 in
+    let t = S.gen_bv "t" None U.ktype in
     let x = S.gen_bv "x" None (S.bv_to_name t) in
     let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_ctx (S.bv_to_name t))))) in
     let body = U.abs gamma (S.bv_to_name x) ret in
@@ -177,8 +185,8 @@ let gen_wps_for_free
                   Tot (st2_gctx heap a t2)
     let st2_app #heap #a #t1 #t2 l r = fun p h -> l p h (r p h) *)
   let c_app =
-    let t1 = S.gen_bv "t1" None U.ktype0 in
-    let t2 = S.gen_bv "t2" None U.ktype0 in
+    let t1 = S.gen_bv "t1" None U.ktype in
+    let t2 = S.gen_bv "t2" None U.ktype in
     let l = S.gen_bv "l" None (mk_gctx
       (U.arrow [ S.mk_binder (S.new_bv None (S.bv_to_name t1)) ] (S.mk_GTotal (S.bv_to_name t2))))
     in
@@ -205,8 +213,8 @@ let gen_wps_for_free
                     st2_app (st2_pure f) a1
   *)
   let c_lift1 =
-    let t1 = S.gen_bv "t1" None U.ktype0 in
-    let t2 = S.gen_bv "t2" None U.ktype0 in
+    let t1 = S.gen_bv "t1" None U.ktype in
+    let t2 = S.gen_bv "t2" None U.ktype in
     let t_f = U.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2)) in
     let f = S.gen_bv "f" None t_f in
     let a1 = S.gen_bv "a1" None (mk_gctx (S.bv_to_name t1)) in
@@ -229,9 +237,9 @@ let gen_wps_for_free
       st2_app (st2_app (st2_pure f) a1) a2
   *)
   let c_lift2 =
-    let t1 = S.gen_bv "t1" None U.ktype0 in
-    let t2 = S.gen_bv "t2" None U.ktype0 in
-    let t3 = S.gen_bv "t3" None U.ktype0 in
+    let t1 = S.gen_bv "t1" None U.ktype in
+    let t2 = S.gen_bv "t2" None U.ktype in
+    let t3 = S.gen_bv "t3" None U.ktype in
     let t_f = U.arrow
       [ S.null_binder (S.bv_to_name t1); S.null_binder (S.bv_to_name t2) ]
       (S.mk_GTotal (S.bv_to_name t3))
@@ -255,8 +263,8 @@ let gen_wps_for_free
                     Tot (st2_ctx heap a (t1->GTot t2))
     let st2_push #heap #a #t1 #t2 f = fun p h e1 -> f e1 p h *)
   let c_push =
-    let t1 = S.gen_bv "t1" None U.ktype0 in
-    let t2 = S.gen_bv "t2" None U.ktype0 in
+    let t1 = S.gen_bv "t1" None U.ktype in
+    let t2 = S.gen_bv "t2" None U.ktype in
     let t_f = U.arrow
       [ S.null_binder (S.bv_to_name t1) ]
       (S.mk_Total (mk_gctx (S.bv_to_name t2)))
@@ -298,7 +306,7 @@ let gen_wps_for_free
                        Tot (st2_wp heap a)
     let st2_assert_p heap a q wp = st2_app (st2_pure (l_and q)) wp *)
   let wp_assert =
-    let q = S.gen_bv "q" None U.ktype0 in
+    let q = S.gen_bv "q" None U.ktype in
     let wp = S.gen_bv "wp" None wp_a in
     let l_and = fvar Const.and_lid (S.Delta_unfoldable 1) None in
     let body =
@@ -315,7 +323,7 @@ let gen_wps_for_free
                        Tot (st2_wp heap a)
     let st2_assume_p heap a q wp = st2_app (st2_pure (l_imp q)) wp *)
   let wp_assume =
-    let q = S.gen_bv "q" None U.ktype0 in
+    let q = S.gen_bv "q" None U.ktype in
     let wp = S.gen_bv "wp" None wp_a in
     let l_imp = fvar Const.imp_lid (S.Delta_unfoldable 1) None in
     let body =
@@ -333,7 +341,7 @@ let gen_wps_for_free
                         Tot (st2_wp heap a)
     let st2_close_wp heap a b f = st2_app (st2_pure l_Forall) (st2_push f) *)
   let wp_close =
-    let b = S.gen_bv "b" None U.ktype0 in
+    let b = S.gen_bv "b" None U.ktype in
     let t_f = U.arrow [ S.null_binder (S.bv_to_name b) ] (S.mk_Total wp_a) in
     let f = S.gen_bv "f" None t_f in
     let body =
@@ -345,7 +353,7 @@ let gen_wps_for_free
   in
   check env "wp_close" (U.abs binders wp_close None);
 
-  let ret_tot_type0 = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype0)) in
+  let ret_tot_type0 = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype)) in
   let mk_forall (x: S.bv) (body: S.term): S.term =
     S.mk (Tm_app (U.tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type0)])) None Range.dummyRange
   in
@@ -476,7 +484,7 @@ let is_monadic_comp c =
 let rec mk_star_to_type mk env a =
   mk (Tm_arrow (
     [S.null_bv (star_type env a), S.as_implicit false],
-    mk_Total Util.ktype0
+    mk_Total Util.ktype
   ))
 
 
@@ -506,7 +514,7 @@ and star_type env t =
           //   (H_0  -> ... -> H_n  -t-> A)* = H_0* -> ... -> H_n* -> (A* -> Type) -> Type
           mk (Tm_arrow (
             binders @ [ S.null_bv (mk_star_to_type env a), S.as_implicit false ],
-            mk_Total Util.ktype0))
+            mk_Total Util.ktype))
       end
 
   | Tm_app (head, args) ->
@@ -569,6 +577,7 @@ and star_type env t =
 // Recording a new definition in our top-level environment --------------------
 
 let star_definition env t f =
+  let t = N.normalize [N.Beta; N.EraseUniverses] env.env t in
   match (SS.compress t).n with
   | Tm_fvar { fv_name = lid } ->
       Util.print1 "Recording definition of %s\n" (text_of_lid lid.v);

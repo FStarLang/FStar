@@ -131,7 +131,7 @@ let default_table_size = 200
 let new_sigtab () = Util.smap_create default_table_size
 let new_gamma_cache () = Util.smap_create 100
 
-let initial_env tc solver module_lid =
+let initial_env type_of universe_of solver module_lid =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -150,8 +150,8 @@ let initial_env tc solver module_lid =
     use_eq=false;
     is_iface=false;
     admit=false;
-    type_of=tc;
-    universe_of=(fun g e -> U_zero); //TODO: FIXME!
+    type_of=type_of;
+    universe_of=universe_of;
     use_bv_sorts=false;
   }
 
@@ -824,5 +824,6 @@ let dummy_solver = {
     refresh=(fun () -> ());
 }
 
-let no_solver_env tc = initial_env tc dummy_solver (lid_of_path ["dummy"] dummyRange)
+let no_solver_env tc = initial_env tc (fun _ _ -> U_zero) 
+                        dummy_solver (lid_of_path ["dummy"] dummyRange)
 (* </Move> *)

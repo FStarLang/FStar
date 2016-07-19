@@ -32,7 +32,7 @@ let parse_prims () =
 
 let init_once () : unit =
   let solver = SMT.dummy in
-  let env = TcEnv.initial_env Tc.type_of solver Const.prims_lid in
+  let env = TcEnv.initial_env Tc.type_of Tc.universe_of solver Const.prims_lid in
   env.solver.init env;
   let dsenv, prims_mod = parse_prims () in
   let prims_mod, env = Tc.check_module env prims_mod in

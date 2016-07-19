@@ -1636,7 +1636,6 @@ and tc_tot_or_gtot_term env e : term
   then e, c, g
   else let g = Rel.solve_deferred_constraints env g in
        let c = c.comp() in
-       let _ = if Env.debug env Options.High then Util.print1 "About to normalize %s\n" (Print.comp_to_string c) in
        let c = norm_c env c in
        let target_comp, allow_ghost =
             if TcUtil.is_pure_effect env (Util.comp_effect_name c)
@@ -2944,6 +2943,18 @@ let type_of env e =
     if Util.is_total_lcomp c
     then t, c.res_typ, g
     else raise (Error(Util.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e), Env.get_range env))
+
+let universe_of (env:Env.env) (e:term) = U_zero
+//    match !e.tk with 
+//    | Some tm -> 
+//      let t = U.unrefine (N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env (S.mk tm None e.pos)) in 
+//      begin match (SS.compress t).n with
+//        | Tm_type u -> u
+//        | _ -> raise (Error(Util.format1 "Expected a term of type 'Type u'; got %s" (Print.term_to_string t), e.pos))
+//      end
+//    | _ -> 
+//      //failwith "Not enough type info";
+//      U_zero //ARGH
 
 let check_module env m =
     if Options.debug_any()
