@@ -2643,8 +2643,8 @@ let tc_inductive env ses quals lids =
             l @ [se] 
         ) [] axioms in
         //TODO: adding Sig_assumes to the sig_bundle is breaking invariant that the sig_bundle only contains tycons and datacons, fix it
-        Sig_bundle(tcs@datas@ses, quals, lids, Env.get_range env0)   
-    else sig_bndle
+        (Sig_bundle(tcs@datas, quals, lids, Env.get_range env0))::ses
+    else [sig_bndle]
 
 let rec tc_decl env se = match se with
     | Sig_inductive_typ _
@@ -2661,12 +2661,13 @@ let rec tc_decl env se = match se with
       *)
       let env = Env.set_range env r in
       let se = tc_lex_t env ses quals lids  in
-      se, Env.push_sigelt env se
+      [se], Env.push_sigelt env se
 
     | Sig_bundle(ses, quals, lids, r) ->
       let env = Env.set_range env r in
-      let se = tc_inductive env ses quals lids  in
-      se, Env.push_sigelt env se
+      let ses = tc_inductive env ses quals lids  in
+      let env = List.fold_left (fun env' se -> Env.push_sigelt env' se) env ses in
+      ses, env
 
     | Sig_pragma(p, r) ->
        let set_options t s = match Options.set_options t s with
@@ -2676,14 +2677,14 @@ let rec tc_decl env se = match se with
         begin match p with
             | SetOptions o ->
                 set_options Options.Set o;
-                se, env
+                [se], env
             | ResetOptions sopt ->
                 Options.restore_cmd_line_options false |> ignore;
                 let _ = match sopt with
                     | None -> ()
                     | Some s -> set_options Options.Reset s in
                 env.solver.refresh();
-                se, env
+                [se], env
         end
 
     | Sig_new_effect_for_free(ne, r) ->
@@ -2691,13 +2692,13 @@ let rec tc_decl env se = match se with
       (* Fields have been synthesized by [tc_eff_decl] *)
       let se = Sig_new_effect(ne, r) in
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
     | Sig_new_effect(ne, r) ->
       let ne = tc_eff_decl env ne NotForFree in
       let se = Sig_new_effect(ne, r) in
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
     | Sig_sub_effect(sub, r) ->
       let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
@@ -2708,7 +2709,7 @@ let rec tc_decl env se = match se with
       let sub = {sub with lift=lift} in
       let se = Sig_sub_effect(sub, r) in
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
     | Sig_effect_abbrev(lid, uvs, tps, c, tags, r) ->
       assert (uvs = []);
@@ -2727,7 +2728,7 @@ let rec tc_decl env se = match se with
         | _ -> failwith "Impossible" in
       let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, r) in
       let env = Env.push_sigelt env0 se in
-      se, env
+      [se], env
 
     | Sig_declare_typ(lid, uvs, t, quals, r) -> //NS: No checks on the qualifiers?
       let env = Env.set_range env r in
@@ -2735,12 +2736,12 @@ let rec tc_decl env se = match se with
       let uvs, t = check_and_gen env t (fst (U.type_u())) in
       let se = Sig_declare_typ(lid, uvs, t, quals, r) in
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
     | Sig_assume(lid, phi, quals, r) ->
       let se = tc_assume env lid phi quals r in
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
     | Sig_main(e, r) ->
       let env = Env.set_range env r in
@@ -2750,7 +2751,7 @@ let rec tc_decl env se = match se with
       Rel.force_trivial_guard env (Rel.conj_guard g1 g);
       let se = Sig_main(e, r) in
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
     | Sig_let(lbs, r, lids, quals) ->
       let env = Env.set_range env r in
@@ -2817,7 +2818,7 @@ let rec tc_decl env se = match se with
             else "") |> String.concat "\n");
 
       let env = Env.push_sigelt env se in
-      se, env
+      [se], env
 
 
 let for_export hidden se : list<sigelt> * list<lident> =
@@ -2907,22 +2908,23 @@ let for_export hidden se : list<sigelt> * list<lident> =
       else [se], hidden
 
 let tc_decls env ses =
+ let rev l = List.rev_append l [] in
  let ses, exports, env, _ =
   ses |> List.fold_left (fun (ses, exports, env, hidden) se ->
           if Env.debug env Options.Low
           then Util.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
 
-          let se, env = tc_decl env se  in
+          let ses', env = tc_decl env se  in
 
           if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"
-          then Util.print1 "Checked: %s\n" (Print.sigelt_to_string se);
+          then Util.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ (Print.sigelt_to_string se) ^ "\n") "" ses');
 
-          env.solver.encode_sig env se;
+          List.iter (fun se -> env.solver.encode_sig env se) ses';
 
-          let exported, hidden = for_export hidden se in
-          se::ses, exported::exports, env, hidden)
+          let exported, hidden = List.fold_left (fun (le, lh) se -> let tup = for_export hidden se in List.rev_append (fst tup) le, List.rev_append (snd tup) lh) ([], []) ses' in
+          List.rev_append ses' ses, (rev exported)::exports, env, hidden)
   ([], [], env, []) in
-  List.rev ses, List.rev exports |> List.flatten, env
+  rev ses, rev exports |> List.flatten, env
 
 let tc_partial_modul env modul =
   let name = Util.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
