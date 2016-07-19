@@ -813,13 +813,34 @@ and rebuild : cfg -> env -> stack -> term -> term =
                     if whnf
                     then closure_as_term cfg env t
                     else norm cfg env [] t in
+                 let rec norm_pat env p = match p.v with 
+                    | Pat_constant _ -> p, env
+                    | Pat_disj [] -> failwith "Impossible"
+                    | Pat_disj (hd::tl) -> 
+                      let hd, env' = norm_pat env hd in 
+                      let tl = tl |> List.map (fun p -> fst (norm_pat env p)) in
+                      {p with v=Pat_disj(hd::tl)}, env'
+                    | Pat_cons(fv, pats) -> 
+                      let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) -> 
+                            let p, env = norm_pat env p in
+                            (p,b)::pats, env) ([], env) in
+                      {p with v=Pat_cons(fv, List.rev pats)}, env
+                    | Pat_var x -> 
+                      let x = {x with sort=norm_or_whnf env x.sort} in
+                      {p with v=Pat_var x}, Dummy::env 
+                    | Pat_wild x -> 
+                      let x = {x with sort=norm_or_whnf env x.sort} in
+                      {p with v=Pat_wild x}, Dummy::env 
+                    | Pat_dot_term(x, t) -> 
+                      let x = {x with sort=norm_or_whnf env x.sort} in
+                      let t = norm_or_whnf env t in
+                      {p with v=Pat_dot_term(x, t)}, env in
                 let branches = match env with 
                     | [] when whnf -> branches //nothing to close over
                     | _ -> branches |> List.map (fun branch -> 
-                     //Q: What about normalizing the sorts of each of bound variables in p?
                      let p, wopt, e = SS.open_branch branch in
-                     let env = S.pat_bvs p |> List.fold_left (fun env x -> 
-                        Dummy::env) env in
+                     //It's important to normalize all the sorts within the pat!
+                     let p, env = norm_pat env p in
                      let wopt = match wopt with 
                         | None -> None
                         | Some w -> Some (norm_or_whnf env w) in
