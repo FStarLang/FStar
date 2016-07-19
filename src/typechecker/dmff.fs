@@ -40,7 +40,10 @@ let gen_wps_for_free
   env (binders: binders) (a: bv) (wp_a: term) tc_decl tc_term (ed: Syntax.eff_decl):
   _ * Syntax.eff_decl
 =
+  // [wp_a] has been type-checked and contains universe unification variables;
+  // we want to re-use [wp_a] and make it re-generalize accordingly
   let wp_a = N.normalize [N.Beta; N.EraseUniverses] env wp_a in
+
   (* A series of macros and combinators to automatically build WP's. In these
    * definitions, both [binders] and [a] are opened. This means that macros
    * close over [binders] and [a], and this means that combinators do not expect
@@ -103,30 +106,18 @@ let gen_wps_for_free
     // Allocate a new top-level name.
     let fv = S.lid_as_fv lident (incr_delta_qualifier def) None in
     let lbname: lbname = Inr fv in
-    // Type-check the body, generalize universes, generate let-binding
-//    let def, comp, _ = tc_term env def in
-//    let comp = comp.comp () in
-//    let univ_vars, def = Util.generalize_universes env def in
-    let lb: letbindings = false, [ {
-                lbname=lbname;
-                lbunivs=[];
-                lbtyp=S.tun;
-                lbdef=def;
-                lbeff=Const.effect_Tot_lid; //this will be recomputed correctly
-             }
-      // NB: if universe generalization needs to happen, then [unknown] below
-      // needs to be replaced by [Util.comp_result comp]; but! if we do that,
-      // then the TODO in [env.fs] related to [universe_of] hits us.
-//      Util.close_univs_and_mk_letbinding None lbname univ_vars
-//        (Util.comp_result comp) (Util.comp_effect_name comp) def
-    ] in
-    // Re-check and push in the environment as a top-level let-binding
+    let lb: letbindings = false, [{
+       lbname = lbname;
+       lbunivs = [];
+       lbtyp = S.tun;
+       lbdef = def;
+       lbeff = Const.effect_Tot_lid; //this will be recomputed correctly
+    }] in
+    // Check and push in the environment as a top-level let-binding
     let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], []) in
-    // Options.set_option "debug_level" (Options.List [Options.String "Extreme"]);
-    // let env = { env with top_level = true } in
-    let [ se ], env = tc_decl env sig_ctx in
+    let se, env = tc_decl env sig_ctx in
     begin match se with
-    | Sig_let ((_, [ { lbtyp = t } ]), _, _, _) ->
+    | [ Sig_let ((_, [ { lbtyp = t } ]), _, _, _) ]->
         Util.print1 "Inferred type: %s\n" (Print.term_to_string t)
     | _ ->
         failwith "nope"
@@ -577,20 +568,13 @@ and star_type env t =
 // Recording a new definition in our top-level environment --------------------
 
 let star_definition env t f =
-  let t = N.normalize [N.Beta; N.EraseUniverses] env.env t in
-  match (SS.compress t).n with
+  // Making the assumption that the thing we're passed is a top-level name.
+  match (SS.compress (N.normalize [ N.EraseUniverses ] env.env t)).n with
   | Tm_fvar { fv_name = lid } ->
+      let t = N.normalize [ N.UnfoldUntil Delta_constant; N.NoInline ] env.env t in
       Util.print1 "Recording definition of %s\n" (text_of_lid lid.v);
-      let store, ret =
-        match lookup_definition (Unfold Delta_constant) env.env lid.v, lookup_lid env.env lid.v with
-        | Some ([], e), ([], t) ->
-            f env e
-        | _ ->
-            raise (Err ("Bad definition in [star_type_definition]"))
-      in
-      { env with definitions = (lid.v, store) :: env.definitions }, ret
-  | Tm_uinst _ ->
-      raise (Err "Ill-formed definition (hint: use Type0, not Type)")
+      let keep, ret = f env t in
+      { env with definitions = (lid.v, keep) :: env.definitions }, ret
   | _ ->
       raise (Err (Util.format1 "Ill-formed definition: %s" (Print.term_to_string t)))
 
@@ -680,8 +664,13 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
         check t1 t2;
         // no need to wrap [u_e] in an explicit [return]; F* will infer it later on
         M t1, mk_return env t1 s_e, u_e
-    | M _,  N _ ->
-        raise (Err ("[check]: got an effectful computation in lieu of a pure computation"))
+    | M t1,  N t2 ->
+        raise (Err (Util.format3
+          "[check %s]: got an effectful computation [%s] in lieu of a pure computation [%s]"
+          (Print.term_to_string e)
+          (Print.term_to_string t1)
+          (Print.term_to_string t2)))
+
   in
 
   match (SS.compress e).n with

@@ -1780,7 +1780,7 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   let bind_wp =
     let b, wp_b = get_effect_signature () in
     let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
-    let expected_k = Util.arrow [S.null_binder t_range; 
+    let expected_k = Util.arrow [S.null_binder t_range;
                                  S.mk_binder a; S.mk_binder b;
                                  S.null_binder wp_a;
                                  S.null_binder a_wp_b]
@@ -2024,7 +2024,7 @@ and elaborate_and_star env0 ed =
         failwith "bad shape for effect-for-free signature"
   in
   let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] in
-  let open_and_reduce t =
+  let open_and_check t =
     let subst = SS.opening_of_binders binders in
     let t = SS.subst subst t in
     let t, comp, _ = tc_term env t in
@@ -2037,7 +2037,7 @@ and elaborate_and_star env0 ed =
   in
 
   // TODO: check that [_comp] is [Tot Type]
-  let repr, _comp = open_and_reduce ed.repr in
+  let repr, _comp = open_and_check ed.repr in
   Util.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
   let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
@@ -2060,7 +2060,7 @@ and elaborate_and_star env0 ed =
   let elaborate_and_star dmff_env item =
     let u_item, item = item in
     // TODO: assert no universe polymorphism
-    let item, item_comp = open_and_reduce item in
+    let item, item_comp = open_and_check item in
     if not (Util.is_total_lcomp item_comp) then
       raise (Err ("Computation for [item] is not total!"));
     let dmff_env, (item_wp, item_elab) = DMFF.star_expr_definition dmff_env item in
