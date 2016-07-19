@@ -40,7 +40,8 @@ open FStar.SeqProperties
 open FStar.BaseTypes
 open FStar.List.Tot
 
-type bytes = seq FStar.UInt8.byte (* concrete byte arrays *)
+//AR: setting bytes to be Platform.Bytes, if it's undesirable, then = uses on it need to be fixed
+type bytes = Platform.Bytes.bytes //seq FStar.UInt8.byte (* concrete byte arrays *)
 type text  = bytes    (* a type abbreviation, for clarity *)
 
 type nbytes (n:nat) = b:bytes{Seq.length b = n} (* fixed-length bytes *)
