@@ -42,7 +42,7 @@ let gen_wps_for_free
 =
   // [wp_a] has been type-checked and contains universe unification variables;
   // we want to re-use [wp_a] and make it re-generalize accordingly
-  let wp_a = N.normalize [N.Beta; N.EraseUniverses] env wp_a in
+  // let wp_a = N.normalize [N.Beta; N.EraseUniverses] env wp_a in
   let a = { a with sort = N.normalize [ N.EraseUniverses ] env a.sort } in
 
   // Debugging
@@ -270,12 +270,17 @@ let gen_wps_for_free
     let x3 = S.gen_bv "ite3" None wp_a in
     let x4 = S.gen_bv "ite4" None wp_a in
     U.abs (binders @ S.binders_of_list [x1; x2; x3; x4]) (
-      U.mk_app wp_if_then_else (args_of_binders binders @ [
-        S.as_arg (S.bv_to_name x1);
-        S.as_arg (S.bv_to_name x2);
-        S.as_arg (S.bv_to_name x3);
-        S.as_arg (S.bv_to_name x4)
-    ])) ret_tot_wp_a
+      // The ascription avoids un-necessary implicit arguments, but...
+      // FStar.DM4F.Test.fst(44,0-45,33): Failed to resolve implicit argument of type 'Type(?11524)' introduced in (?12111 uu___#5707 a#8148 ite2#8149 ite3#8150 ite4#8151 a#8427 c#8428) because head of application is a uvar
+      // TODO figure this out
+      U.ascribe (
+        U.mk_app wp_if_then_else (args_of_binders binders @ [
+          S.as_arg (S.bv_to_name x1);
+          S.as_arg (S.bv_to_name x2);
+          S.as_arg (S.bv_to_name x3);
+          S.as_arg (S.bv_to_name x4)
+      ])) (Inr (mk_Total wp_a))
+  ) ret_tot_wp_a
   in
   let env, wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
   let wp_if_then_else = mk_generic_app wp_if_then_else in
@@ -463,7 +468,7 @@ let is_monadic_comp c =
 let rec mk_star_to_type mk env a =
   mk (Tm_arrow (
     [S.null_bv (star_type env a), S.as_implicit false],
-    mk_Total Util.ktype
+    mk_Total Util.ktype0
   ))
 
 
@@ -493,7 +498,7 @@ and star_type env t =
           //   (H_0  -> ... -> H_n  -t-> A)* = H_0* -> ... -> H_n* -> (A* -> Type) -> Type
           mk (Tm_arrow (
             binders @ [ S.null_bv (mk_star_to_type env a), S.as_implicit false ],
-            mk_Total Util.ktype))
+            mk_Total Util.ktype0))
       end
 
   | Tm_app (head, args) ->

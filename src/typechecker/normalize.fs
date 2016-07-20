@@ -1067,7 +1067,7 @@ let eta_expand (_:Env.env) (t:typ) : typ =
   | _, Tm_name x ->
       expand x.sort
   | _ ->
-    failwith (Util.format2 "NYI: eta_expand(%s) %s" (Print.tag_of_term t) (Print.term_to_string t))
+      failwith (Util.format2 "NYI: eta_expand(%s) %s" (Print.tag_of_term t) (Print.term_to_string t))
 
 //let eta_expand (env:Env.env) (t:typ) : typ =
 //    let _, ty, _ = env.type_of env t in
