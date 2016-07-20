@@ -555,9 +555,9 @@ let create #a (init:a) (len:UInt32.t) : ST (buffer a)
        /\ as_seq h1 b == Seq.create (v len) init
        ))
   = let content = salloc (Seq.create (v len) init) in
-    let h = HST.get() in
+    (* let h = HST.get() in *)
     let b = {content = content; idx = (uint_to_t 0); length = len} in
-    Seq.lemma_eq_intro (as_seq h b) (sel h b);
+    (* Seq.lemma_eq_intro (as_seq h b) (sel h b); *)
     b
 
 
@@ -589,11 +589,11 @@ val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> STL unit
 let upd #a b n z =
   let s0 = !b.content in
   let s = Seq.upd s0 (v b.idx + v n) z in
-  b.content := s;
-  let h = HST.get() in
-  Seq.lemma_eq_intro (as_seq h b) (Seq.slice s (idx b) (idx b + length b));
-  Seq.lemma_eq_intro (Seq.upd (Seq.slice s0 (idx b) (idx b + length b)) (v n) z)
-		     (Seq.slice (Seq.upd s0 (idx b + v n) z) (idx b) (idx b + length b))
+  b.content := s(* ; *)
+  (* let h = HST.get() in *)
+  (* Seq.lemma_eq_intro (as_seq h b) (Seq.slice s (idx b) (idx b + length b)); *)
+  (* Seq.lemma_eq_intro (Seq.upd (Seq.slice s0 (idx b) (idx b + length b)) (v n) z) *)
+  (* 		     (Seq.slice (Seq.upd s0 (idx b + v n) z) (idx b) (idx b + length b)) *)
 
 (* Could be made Total with a couple changes in the spec *)
 let sub #a (b:buffer a) (i:UInt32.t) (len:UInt32.t{v len <= length b /\ v i + v len <= length b}) : STL (buffer a)
@@ -602,8 +602,8 @@ let sub #a (b:buffer a) (i:UInt32.t) (len:UInt32.t{v len <= length b /\ v i + v 
        /\ h0 == h1 /\ includes b b' /\ live h1 b' /\ live h0 b
        /\ as_seq h1 b' == Seq.slice (as_seq h0 b) (v i) (v i + v len) ))
   = let b' = {content = b.content; idx = i +^ b.idx; length = len} in
-    let h = HST.get() in
-    Seq.lemma_eq_intro (as_seq h b') (Seq.slice (as_seq h b) (v i) (v i + v len));
+    (* let h = HST.get() in *)
+    (* Seq.lemma_eq_intro (as_seq h b') (Seq.slice (as_seq h b) (v i) (v i + v len)); *)
     b'
 
 let offset #a (b:buffer a) (i:UInt32.t{v i <= length b}) : STL (buffer a)
@@ -612,8 +612,8 @@ let offset #a (b:buffer a) (i:UInt32.t{v i <= length b}) : STL (buffer a)
     /\ h0 == h1 /\ includes b b' /\ live h1 b'
     /\ as_seq h1 b' == Seq.slice (as_seq h0 b) (v i) (length b) ))
   = let b' = {content = b.content; idx = i +^ b.idx; length = b.length -^ i} in
-    let h = HST.get() in
-    Seq.lemma_eq_intro (as_seq h b') (Seq.slice (as_seq h b) (v i) (length b));
+    (* let h = HST.get() in *)
+    (* Seq.lemma_eq_intro (as_seq h b') (Seq.slice (as_seq h b) (v i) (length b)); *)
     b'
 
 let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem): Lemma

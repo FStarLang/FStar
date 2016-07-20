@@ -17,7 +17,7 @@ REALIZED_MLI=
 REALIZED=FStar_HyperStack FStar_HST Low_Bytes
 REALIZED_MODULE=$(subst _,., $(REALIZED))
 REALIZED_ML=$(addsuffix .mli,$(REALIZED_MLI)) $(addsuffix .ml,$(REALIZED_MLI) $(REALIZED))
-NO_CODEGEN=$(addprefix --no_extract , SInt $(REALIZED_MODULE))
+NO_CODEGEN=$(addprefix --no_extract , FStar_Buffer SInt $(REALIZED_MODULE))
 
 CURVE_EXTRACTED=FStar_FunctionalExtensionality.ml FStar_Ghost.ml Math_Axioms.ml Math_Lib.ml Math_Definitions.ml Math_Field.ml Math_Curve.ml Curve_Parameters.ml Curve_Bigint.ml Curve_Fsum.ml Curve_FsumWide.ml Curve_Fdifference.ml Curve_Fscalar.ml Curve_Fproduct.ml Curve_Modulo.ml Curve_Bignum.ml Curve_Crecip.ml Curve_Point.ml Curve_AddAndDouble.ml Curve_Ladder.ml
 CHACHA_EXTRACTED=Chacha.ml

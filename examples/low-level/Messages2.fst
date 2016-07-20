@@ -52,6 +52,11 @@ assume FlattenU16: flatten #UInt16.t == (fun (x:UInt16.t) -> let s = Seq.create 
    Basically a buffer of bytes that must be interpreted as a buffer of type t *)
 type buffer (t:sized_type) = b:bytes{length b % sizeof t = 0}
 
+(* Function to cast pointers into other pointer types *)
+val ptr_cast: #t:sized_type -> t':sized_type -> b:buffer t{length b % sizeof t' = 0} -> Tot (b':buffer t')
+let ptr_cast #t t' b = 
+  let b':bytes = b in b'
+
 (* Another definition of the length of such buffers *)
 let length #t (b:buffer t) = Buffer.length b / sizeof t
 let idx #t (b:buffer t) = Buffer.idx b / sizeof t
