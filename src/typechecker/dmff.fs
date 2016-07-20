@@ -797,6 +797,7 @@ and infer (env: env) (e: term): nm * term * term =
       let t_head, s_head, u_head = check_n env head in
       let t_head = normalize t_head in
       let is_arrow t = match (SS.compress t).n with | Tm_arrow _ -> true | _ -> false in
+      // TODO: replace with Util.arrow_formals_comp
       let rec flatten t = match (SS.compress t).n with
         | Tm_arrow (binders, { n = Total t }) when is_arrow t ->
             let binders', comp = flatten t in

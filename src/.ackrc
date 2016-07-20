@@ -1,2 +1,3 @@
 --ignore-dir=ocaml-output
 --ignore-dir=boot_fsts
+--ignore-file=tags
