@@ -1,9 +1,5 @@
 module X86Interpreter
 
-open FStar.Mul
-open FStar.Ghost
-open FStar.HST
-open FStar.Int.Cast
 open FStar.UInt64
 open FStar.Buffer
 open FStar.List
