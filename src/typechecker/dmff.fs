@@ -43,6 +43,7 @@ let gen_wps_for_free
   // [wp_a] has been type-checked and contains universe unification variables;
   // we want to re-use [wp_a] and make it re-generalize accordingly
   let wp_a = N.normalize [N.Beta; N.EraseUniverses] env wp_a in
+  let a = { a with sort = N.normalize [ N.EraseUniverses ] env a.sort } in
 
   (* A series of macros and combinators to automatically build WP's. In these
    * definitions, both [binders] and [a] are opened. This means that macros
@@ -273,6 +274,12 @@ let gen_wps_for_free
   let env, c_push = register env (mk_lid "push") c_push in
 
   let ret_tot_wp_a = Some (Inl (U.lcomp_of_comp (mk_Total wp_a))) in
+  let mk_generic_app c =
+    if List.length binders > 0 then
+      mk (Tm_app (c, args_of_binders binders))
+    else
+      c
+  in
 
   (* val st2_if_then_else : heap:Type -> a:Type -> c:Type0 ->
                             st2_wp heap a -> st2_wp heap a ->
@@ -280,18 +287,15 @@ let gen_wps_for_free
     let st2_if_then_else heap a c = st2_liftGA2 (l_ITE c) *)
   let wp_if_then_else =
     let c = S.gen_bv "c" None U.ktype in
-    U.abs (S.binders_of_list [ a; c ]) (
+    U.abs (binders @ S.binders_of_list [ a; c ]) (
       let l_ite = fvar Const.ite_lid (S.Delta_unfoldable 2) None in
       U.mk_app c_lift2 (List.map S.as_arg [
         U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
       ])
     ) ret_tot_wp_a
   in
-  // Not registering this one at top-level... not strictly needed. We'll inline
-  // the definition. (Also: registering it at top-level triggers a universes
-  // issue.) Also, note that this term does _not_ abstract of [binders]. This is
-  // ok, because [tc_eff_decl] will close [binders].
-  check env "wp_if_then_else" (U.abs binders wp_if_then_else None);
+  let env, wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
+  let wp_if_then_else = mk_generic_app wp_if_then_else in
 
   (* val st2_assert_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
                        Tot (st2_wp heap a)
@@ -486,7 +490,7 @@ and star_type env t =
   let mk x = mk x None t.pos in
   let mk_star_to_type = mk_star_to_type mk in
   //Util.print1 "[debug]: star_type %s\n" (Print.term_to_string t);
-  let normalize = N.normalize [ (* N.Beta; N.Inline; *) N.UnfoldUntil S.Delta_constant ] env.env in
+  let normalize = N.normalize [ N.EraseUniverses; N.UnfoldUntil S.Delta_constant ] env.env in
   let t = normalize t in
   let t = SS.compress t in
   match t.n with
@@ -511,7 +515,7 @@ and star_type env t =
   | Tm_app (head, args) ->
       // Sums and products. TODO: re-use the cache in [env] to not recompute
       // (st a)* every time.
-      let rec is_valid_application head =
+      let is_valid_application head =
         match (SS.compress head).n with
         | Tm_fvar fv when (
           // TODO: implement a better check (non-dependent, user-defined data type)
@@ -520,8 +524,8 @@ and star_type env t =
           is_tuple_constructor (SS.compress head)
         ) ->
             true
-        | Tm_uinst (head, _) ->
-            is_valid_application head
+        | Tm_uinst _ ->
+            failwith "impossible"
         | _ ->
             false
       in
@@ -571,7 +575,9 @@ let star_definition env t f =
   // Making the assumption that the thing we're passed is a top-level name.
   match (SS.compress (N.normalize [ N.EraseUniverses ] env.env t)).n with
   | Tm_fvar { fv_name = lid } ->
-      let t = N.normalize [ N.UnfoldUntil Delta_constant; N.NoInline ] env.env t in
+      // Start back from the original [t]... can't re-normalize a term without
+      // universes (because it is now ill-typed)
+      let t = N.normalize [ N.UnfoldUntil Delta_constant; N.NoInline; N.EraseUniverses ] env.env t in
       Util.print1 "Recording definition of %s\n" (text_of_lid lid.v);
       let keep, ret = f env t in
       { env with definitions = (lid.v, keep) :: env.definitions }, ret
@@ -806,10 +812,17 @@ and infer (env: env) (e: term): nm * term * term =
   | Tm_app (head, args) ->
       let t_head, s_head, u_head = check_n env head in
       let t_head = normalize t_head in
-      let binders, comp = match (SS.compress t_head).n with
-        | Tm_arrow (binders, comp) -> binders, comp
-        | _ -> raise (Err (Util.format1 "%s: not a function type" (Print.term_to_string t_head)))
+      let is_arrow t = match (SS.compress t).n with | Tm_arrow _ -> true | _ -> false in
+      let rec flatten t = match (SS.compress t).n with
+        | Tm_arrow (binders, { n = Total t }) when is_arrow t ->
+            let binders', comp = flatten t in
+            binders @ binders', comp
+        | Tm_arrow (binders, comp) ->
+            binders, comp
+        | _ ->
+            raise (Err (Util.format1 "%s: not a function type" (Print.term_to_string t_head)))
       in
+      let binders, comp = flatten t_head in
       Util.print1 "[debug] type of [head] is %s\n" (Print.term_to_string t_head);
 
       // Making the assumption here that [Tm_arrow (..., Tm_arrow ...)]
