@@ -2,9 +2,10 @@
   open Ast
   open Printf
   open Lexing
+  open Helper
 %}
 
-%token <int> INTEGER
+%token <Ast.u64> INTEGER
 %token <string> VAR
 %token PLUS MINUS TIMES MODULO UNDERSCORE LPAREN RPAREN LCURLY RCURLY COMMA SEQ COLON NEQUALS EQUALS TRUE FALSE CALL
        IF THEN ELSE ENDIF EOF ASSIGN SKIP STORE LOAD

@@ -1,6 +1,7 @@
 {
 open Parser
 open Printf
+open Helper
 exception Eof
 exception Err
 let brace_depth = ref 0
@@ -64,7 +65,7 @@ rule token = parse
 | "load"  {LOAD}
 | "_"	  {UNDERSCORE}
 | id as v { VAR(v) }
-| digit+ as n  { INTEGER(int_of_string n) }
+| digit+ as n  { INTEGER(int_of_string n) } 
 | eof     { EOF }
 | "(#"
       { comment_depth := 1;

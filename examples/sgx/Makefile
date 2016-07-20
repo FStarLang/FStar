@@ -5,7 +5,7 @@ FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_DEFAULT_ARGS) # from the included Make
 OPTIONS_OCAML=--lax --codegen OCaml --no_location_info
 
 X86_ODIR=x86Interpreter
-X86_EXTRACTED=Ast.ml X86Interpreter.ml 
+X86_EXTRACTED=Helper.ml Ast.ml X86Interpreter.ml 
 
 # OCaml variables
 OCAMLOPT := $(OCAMLOPT_) -I $(ULIB_ML)/hyperheap $(ULIB_ML)/fstarlib-hyperheap.cmxa -w -8-20-26
