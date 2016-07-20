@@ -2033,7 +2033,8 @@ and elaborate_and_star env0 ed =
   let recheck_debug s env t =
     Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
     let t, _, _ = tc_term env t in
-    Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t)
+    Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t);
+    N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant; N.EraseUniverses ] env t
   in
 
   // TODO: check that [_comp] is [Tot Type]
@@ -2042,7 +2043,7 @@ and elaborate_and_star env0 ed =
 
   let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
   let dmff_env, wp_type = DMFF.star_type_definition dmff_env repr in
-  recheck_debug "*" env wp_type;
+  let wp_type = recheck_debug "*" env wp_type in
 
   // Building: [a -> wp a -> Effect]
   let effect_signature =
@@ -2053,7 +2054,7 @@ and elaborate_and_star env0 ed =
     let binders = close_binders binders in
     mk (Tm_arrow (binders, effect_marker))
   in
-  recheck_debug "turned into the effect signature" env effect_signature;
+  let effect_signature = recheck_debug "turned into the effect signature" env effect_signature in
 
   // TODO: we assume that reading the top-level definitions in the order that
   // they come in the effect definition is enough... probably not
@@ -2064,8 +2065,8 @@ and elaborate_and_star env0 ed =
     if not (Util.is_total_lcomp item_comp) then
       raise (Err ("Computation for [item] is not total!"));
     let dmff_env, (item_wp, item_elab) = DMFF.star_expr_definition dmff_env item in
-    recheck_debug "*" env item_wp;
-    recheck_debug "_" env item_elab;
+    let item_wp = recheck_debug "*" env item_wp in
+    let item_elab = recheck_debug "_" env item_elab in
     dmff_env, item_wp, item_elab
   in
 
