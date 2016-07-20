@@ -2033,10 +2033,9 @@ and elaborate_and_star env0 ed =
     Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
     // Note to self: it's ok to check something, but only if we erase the
     // universes afterwards
-    let t', _, _ = tc_term env t in
-    Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
-    // N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant; N.EraseUniverses ] env t
-    t
+    let t, _, _ = tc_term env t in
+    Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t);
+    N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant; N.EraseUniverses ] env t
   in
 
   // TODO: check that [_comp] is [Tot Type]

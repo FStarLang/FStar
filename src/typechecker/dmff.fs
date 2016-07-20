@@ -42,7 +42,7 @@ let gen_wps_for_free
 =
   // [wp_a] has been type-checked and contains universe unification variables;
   // we want to re-use [wp_a] and make it re-generalize accordingly
-  // let wp_a = N.normalize [N.Beta; N.EraseUniverses] env wp_a in
+  let wp_a = N.normalize [N.Beta; N.EraseUniverses] env wp_a in
   let a = { a with sort = N.normalize [ N.EraseUniverses ] env a.sort } in
 
   // Debugging
