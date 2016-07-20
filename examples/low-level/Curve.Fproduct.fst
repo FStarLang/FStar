@@ -832,7 +832,7 @@ let rec multiplication_aux a b ctr c tmp =
 
 val helper_lemma_13: h0:heap -> h1:heap -> a:bigint ->
   Lemma 
-    (requires ((norm h0 a) /\ modifies !{} h0 h1))
+    (requires ((norm h0 a) /\ modifies FStar.Set.empty h0 h1))
     (ensures (norm h0 a /\ norm h1 a
 	      /\ live h1 a /\ length a >= norm_length
 	      /\ maxValueNorm h0 a = maxValueNorm h1 a
@@ -846,7 +846,7 @@ let helper_lemma_13 h0 h1 a =
 
 val helper_lemma_15: h0:heap -> h1:heap -> c:bigint_wide ->
   Lemma
-    (requires (live h0 c /\ null_wide h0 c /\ length c >= 2 * norm_length - 1 /\ modifies !{} h0 h1))
+    (requires (live h0 c /\ null_wide h0 c /\ length c >= 2 * norm_length - 1 /\ modifies FStar.Set.empty h0 h1))
     (ensures (live h1 c /\ null_wide h1 c /\ maxValue_wide h1 c (length c) <= 0 /\ length c >= 2 * norm_length - 1 /\ eval_wide h1 c (2*norm_length-1) = 0))
 let helper_lemma_15 h0 h1 c =
   admit(); // OK
@@ -862,7 +862,7 @@ val multiplication_lemma_1: h0:heap -> h1:heap -> c:bigint_wide -> a:bigint{disj
      (requires (norm h0 a /\ norm h0 b /\ live h0 c /\ null_wide h0 c /\ length c >= 2*norm_length-1
 	/\ maxValueNorm h0 a < pow2 max_limb
 	/\ maxValueNorm h0 b < pow2 max_limb
-	/\ HyperStack.modifies !{} h0 h1
+	/\ HyperStack.modifies FStar.Set.empty h0 h1
 	/\ h0.tip = h1.tip))
      (ensures (norm h1 a /\ norm h1 b /\ live h1 c /\ null_wide h1 c /\ length c >= 2*norm_length-1
 	/\ maxValueNorm h1 a < pow2 max_limb
@@ -883,7 +883,7 @@ let multiplication_lemma_1 h0 h1 c a b =
 val helper_lemma_14: h0:heap -> h1:heap -> h2:heap -> c:bigint_wide -> tmp:bigint_wide{disjoint c tmp} ->
   Lemma
     (requires (live h0 c /\ live h2 c /\ ~(contains h0 (tmp))
-	       /\ modifies !{} h0 h1 /\ live h1 tmp /\ modifies_2 c tmp h1 h2))
+	       /\ modifies FStar.Set.empty h0 h1 /\ live h1 tmp /\ modifies_2 c tmp h1 h2))
     (ensures (modifies_1 c h0 h2))
 let helper_lemma_14 h0 h1 h2 c tmp =
   admit(); // OK
@@ -894,7 +894,7 @@ val multiplication_lemma_2: h0:heap -> h1:heap -> h2:heap -> c:bigint_wide ->  a
      (requires (norm h0 a /\ norm h0 b /\ live h0 c /\ null_wide h0 c /\ length c >= 2*norm_length-1
 	/\ maxValueNorm h0 a < pow2 max_limb
 	/\ maxValueNorm h0 b < pow2 max_limb
-	/\ HyperStack.modifies !{} h0 h1 /\ h0.tip = h1.tip 
+	/\ HyperStack.modifies FStar.Set.empty h0 h1 /\ h0.tip = h1.tip 
 	/\ ~(contains h0 (tmp)) /\ contains h1 (tmp)
 	/\ norm h1 a /\ norm h1 b /\ live h1 c /\ null_wide h1 c
 	/\ length c >= 2*norm_length-1
@@ -940,7 +940,7 @@ let multiplication c a b =
   let h0 = HST.get() in
   let tmp = create (UInt128.of_string "0") nlength in
   let h1 = HST.get() in
-  assert(modifies !{} h0 h1); 
+  assert(modifies FStar.Set.empty h0 h1); 
   multiplication_lemma_1 h0 h1 c a b; 
   cut(True /\ length tmp >= norm_length);
   (* constant_template_lemma c a;  *)

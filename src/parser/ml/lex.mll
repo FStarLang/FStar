@@ -36,6 +36,7 @@
 
   let () =
     Hashtbl.add keywords "abstract"      ABSTRACT    ;
+    Hashtbl.add keywords "noeq"          NOEQUALITY  ;
     Hashtbl.add keywords "and"           AND         ;
     Hashtbl.add keywords "as"            AS          ;
     Hashtbl.add keywords "assert"        ASSERT      ;

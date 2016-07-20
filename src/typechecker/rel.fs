@@ -142,10 +142,11 @@ let empty_worklist env = {
     defer_ok=true;
     smt_ok=true
 }
-let singleton env prob     = {empty_worklist env with attempting=[prob]}
-let wl_of_guard env g      = {empty_worklist env with defer_ok=false; attempting=List.map snd g}
-let defer reason prob wl   = {wl with wl_deferred=(wl.ctr, reason, prob)::wl.wl_deferred}
-let attempt probs wl       = {wl with attempting=probs@wl.attempting}
+let singleton' env prob smt_ok   = {empty_worklist env with attempting=[prob]; smt_ok = smt_ok}
+let singleton env prob           = singleton' env prob true
+let wl_of_guard env g            = {empty_worklist env with defer_ok=false; attempting=List.map snd g}
+let defer reason prob wl         = {wl with wl_deferred=(wl.ctr, reason, prob)::wl.wl_deferred}
+let attempt probs wl             = {wl with attempting=probs@wl.attempting}
 
 let giveup env reason prob =
     if debug env <| Options.Other "Rel"
@@ -2270,11 +2271,11 @@ let teq env t1 t2 : guard_t =
                         (guard_to_string env g);
       g
 
-let try_subtype env t1 t2 =
+let try_subtype' env t1 t2 smt_ok =
  if debug env <| Options.Other "Rel"
  then Util.print2 "try_subtype of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
  let prob, x = new_t_prob env t1 SUB t2 in
- let g = with_guard env prob <| solve_and_commit env (singleton env prob) (fun _ -> None) in
+ let g = with_guard env prob <| solve_and_commit env (singleton' env prob smt_ok) (fun _ -> None) in
  if debug env <| Options.Other "Rel"
     && Util.is_some g
  then Util.print3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n" 
@@ -2282,6 +2283,8 @@ let try_subtype env t1 t2 =
                     (N.term_to_string env t2) 
                     (guard_to_string env (Util.must g));
  abstract_guard x g
+
+let try_subtype env t1 t2 = try_subtype' env t1 t2 true
 
 let subtype_fail env t1 t2 =
     Errors.report (Env.get_range env) (Errors.basic_type_error env None t2 t1)

@@ -5,7 +5,7 @@ assume logic val a : elt
 assume logic val b : elt
 assume logic val c : elt
 assume AB_distinct: a=!=b
-open FStar.Set
+open FStar.TSet
 
 val should_fail1: unit -> Tot unit
 let should_fail1 u =

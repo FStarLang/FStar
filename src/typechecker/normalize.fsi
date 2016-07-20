@@ -28,8 +28,8 @@ type step =
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | WHNF            //Only produce a weak head normal form
   | Inline
+  | NoInline
   | UnfoldUntil of delta_depth
-  | BetaUVars       //only beta reduce applications of resolved uvars
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
   | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables

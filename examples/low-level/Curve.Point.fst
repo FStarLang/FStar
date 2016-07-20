@@ -59,10 +59,10 @@ type onCurve (h:heap) (p:point) =
 (* val refs: p:point -> GTot (Set.set abuffer) *)
 let refs p = (only (get_x p) ++ (get_y p) ++ (get_z p))
 
-(* val erefs: p:point -> Tot (FStar.Ghost.erased (FStar.Set.set FStar.Heap.aref)) *)
+(* val erefs: p:point -> Tot (FStar.Ghost.erased (FStar.TSet.set FStar.Heap.aref)) *)
 let erefs p = hide (refs p)
 
-let op_Plus_Plus_Plus a b = FStar.Set.union a b
+let op_Plus_Plus_Plus a b = FStar.TSet.union a b
 
 // Two distincts points from a memory point of view
 type distinct (a:point) (b:point) =
@@ -70,8 +70,8 @@ type distinct (a:point) (b:point) =
   /\ disjoint (get_y a) (get_x b) /\ disjoint (get_y a) (get_y b) /\ disjoint (get_y a) (get_z b)
   /\ disjoint (get_z a) (get_x b) /\ disjoint (get_z a) (get_y b) /\ disjoint (get_z a) (get_z b)
 
-assume val set_intersect_lemma: #a:Type -> x:FStar.Set.set a -> y:FStar.Set.set a -> Lemma
-  (FStar.Set.intersect x y = FStar.Set.intersect y x)
+assume val set_intersect_lemma: #a:Type -> x:FStar.TSet.set a -> y:FStar.TSet.set a -> Lemma
+  (FStar.TSet.intersect x y = FStar.TSet.intersect y x)
 
 val make: bigint -> bigint -> bigint -> Tot point
 let make x y z = Point x y z
@@ -168,8 +168,8 @@ let rec swap_conditional_aux a b swap ctr =
 
 #reset-options
 
-(* val norm_lemma: h0:heap -> h1:heap -> b:bigint{norm h0 b} -> mods:FStar.Set.set aref -> *)
-(*   Lemma (requires (modifies mods h0 h1 /\ not(FStar.Set.mem (Ref (getRef b)) mods))) *)
+(* val norm_lemma: h0:heap -> h1:heap -> b:bigint{norm h0 b} -> mods:FStar.TSet.set aref -> *)
+(*   Lemma (requires (modifies mods h0 h1 /\ not(FStar.TSet.mem (Ref (getRef b)) mods))) *)
 (* 	(ensures (norm h1 b /\ valueOf h1 b = valueOf h0 b)) *)
 (* let norm_lemma h0 h1 b mods = *)
 (*   admit(); // OK *)
@@ -177,8 +177,8 @@ let rec swap_conditional_aux a b swap ctr =
 
 (* open FStar.Ghost *)
 
-(* val enorm_lemma: h0:heap -> h1:heap -> b:bigint{norm h0 b} -> mods:erased (FStar.Set.set aref) -> *)
-(*   Lemma (requires (modifies (reveal mods) h0 h1 /\ not(FStar.Set.mem (Ref (getRef b)) (reveal mods)))) *)
+(* val enorm_lemma: h0:heap -> h1:heap -> b:bigint{norm h0 b} -> mods:erased (FStar.TSet.set aref) -> *)
+(*   Lemma (requires (modifies (reveal mods) h0 h1 /\ not(FStar.TSet.mem (Ref (getRef b)) (reveal mods)))) *)
 (* 	(ensures (norm h1 b /\ valueOf h1 b = valueOf h0 b)) *)
 (* let enorm_lemma h0 h1 b mods = *)
 (*   admit(); // OK *)
@@ -247,13 +247,13 @@ let swap_conditional_lemma h0 h1 h2 h3 a b is_swap =
   (* let set23 = !{getRef (get_z a), getRef (get_z b)} in *)
   (* let set03 = !{getRef (get_x a), getRef (get_x b), getRef (get_y a), getRef (get_y b), getRef (get_z a), getRef (get_z b)} in *)
   (* cut (modifies set03 h0 h3);  *)
-  (* FStar.Set.lemma_equal_intro set03 (refs a +++ refs b); *)
+  (* FStar.TSet.lemma_equal_intro set03 (refs a +++ refs b); *)
   (* cut (modifies set02 h0 h2); *)
   (* cut (modifies set13 h1 h3); *)
-  (* cut (not(FStar.Set.mem (Ref (getRef (get_x a))) set13) *)
-  (*      /\ not(FStar.Set.mem (Ref (getRef (get_x b))) set13));  *)
-  (* cut (not(FStar.Set.mem (Ref (getRef (get_z a))) set02) *)
-  (*      /\ not(FStar.Set.mem (Ref (getRef (get_z b))) set02));  *)
+  (* cut (not(FStar.TSet.mem (Ref (getRef (get_x a))) set13) *)
+  (*      /\ not(FStar.TSet.mem (Ref (getRef (get_x b))) set13));  *)
+  (* cut (not(FStar.TSet.mem (Ref (getRef (get_z a))) set02) *)
+  (*      /\ not(FStar.TSet.mem (Ref (getRef (get_z b))) set02));  *)
   (* norm_lemma h1 h3 (get_x a) set13; *)
   (* norm_lemma h1 h3 (get_x b) set13;  *)
   (* norm_lemma h0 h1 (get_y a) set01; *)
@@ -303,7 +303,7 @@ let swap_conditional a b is_swap =
   let h2 = HST.get() in
   (* let mods = (hide !{getRef (get_x a), getRef (get_x b), getRef (get_y a), getRef (get_y b)}) in *)
   (* cut(modifies (reveal mods) h0 h2);  *)
-  (* cut(not(FStar.Set.mem (Ref (getRef (get_z b))) (reveal mods)) /\ not(FStar.Set.mem (Ref (getRef (get_z a))) (reveal mods)));  *)
+  (* cut(not(FStar.TSet.mem (Ref (getRef (get_z b))) (reveal mods)) /\ not(FStar.TSet.mem (Ref (getRef (get_z a))) (reveal mods)));  *)
   (* enorm_lemma h0 h2 (get_z a) mods; *)
   (* enorm_lemma h0 h2 (get_z b) mods; *)
   swap_conditional_aux (get_z a) (get_z b) is_swap 0;
@@ -312,8 +312,8 @@ let swap_conditional a b is_swap =
 
 #reset-options
 
-(* val bignum_live_lemma: h0:heap -> h1:heap -> b:bigint{live h0 b} -> mods:FStar.Set.set aref -> *)
-(*   Lemma (requires (modifies mods h0 h1 /\ not(FStar.Set.mem (Ref (getRef b)) mods))) *)
+(* val bignum_live_lemma: h0:heap -> h1:heap -> b:bigint{live h0 b} -> mods:FStar.TSet.set aref -> *)
+(*   Lemma (requires (modifies mods h0 h1 /\ not(FStar.TSet.mem (Ref (getRef b)) mods))) *)
 (* 	(ensures (Bignum.live h1 b)) *)
 (* let bignum_live_lemma h0 h1 b mods = () *)
 
@@ -371,21 +371,21 @@ val swap:
     (requires (fun h -> onCurve h a /\ live h b))
     (ensures (fun h0 _ h1 -> onCurve h0 a /\ live h0 b /\ onCurve h1 b /\ live h1 a 
       /\ (pointOf h0 a) == (pointOf h1 b)
-      (* /\ modifies (FStar.Set.union (refs a) (refs b)) h0 h1)) *)
+      (* /\ modifies (FStar.TSet.union (refs a) (refs b)) h0 h1)) *)
       ))
 let swap a b = 
   copy b a
 
-val on_curve_lemma: h0:heap -> h1:heap -> a:point -> mods:Ghost.erased (Set.set abuffer) -> Lemma
+val on_curve_lemma: h0:heap -> h1:heap -> a:point -> mods:Ghost.erased (TSet.set abuffer) -> Lemma
   (requires (onCurve h0 a 
     (* /\ modifies (reveal mods) h0 h1  *)
-    /\ Set.intersect (reveal mods) (refs a) = !{}))
+    /\ TSet.intersect (reveal mods) (refs a) = !{}))
   (ensures (onCurve h0 a /\ onCurve h1 a /\ pointOf h1 a = pointOf h0 a))
 let on_curve_lemma h0 h1 a mods = 
   admit(); // OK
-  (* cut(True /\ FStar.Set.mem (Ref (getRef (get_x a))) (refs a)); *)
-  (* cut(True /\ FStar.Set.mem (Ref (getRef (get_y a))) (refs a)); *)
-  (* cut(True /\ FStar.Set.mem (Ref (getRef (get_z a))) (refs a)); *)
+  (* cut(True /\ FStar.TSet.mem (Ref (getRef (get_x a))) (refs a)); *)
+  (* cut(True /\ FStar.TSet.mem (Ref (getRef (get_y a))) (refs a)); *)
+  (* cut(True /\ FStar.TSet.mem (Ref (getRef (get_z a))) (refs a)); *)
   (* norm_lemma h0 h1 (get_x a) (reveal mods); *)
   (* norm_lemma h0 h1 (get_y a) (reveal mods); *)
   (* norm_lemma h0 h1 (get_z a) (reveal mods);  *)
@@ -393,20 +393,20 @@ let on_curve_lemma h0 h1 a mods =
   eval_eq_lemma h0 h1 (get_y a) (get_y a) norm_length;
   eval_eq_lemma h0 h1 (get_z a) (get_z a) norm_length
 
-(* val live_lemma: h0:heap -> h1:heap -> a:point -> mods:erased (FStar.Set.set aref) -> Lemma *)
-(*   (requires (live h0 a /\ modifies (reveal mods) h0 h1 /\ FStar.Set.intersect (reveal mods) (refs a) = !{})) *)
+(* val live_lemma: h0:heap -> h1:heap -> a:point -> mods:erased (FStar.TSet.set aref) -> Lemma *)
+(*   (requires (live h0 a /\ modifies (reveal mods) h0 h1 /\ FStar.TSet.intersect (reveal mods) (refs a) = !{})) *)
 (*   (ensures (live h1 a)) [] *)
 (* let live_lemma h0 h1 a mods =  *)
 (*   admit(); // OK *)
-(*   cut(True /\ FStar.Set.mem (Ref (getRef (get_x a))) (refs a)); *)
-(*   cut(True /\ FStar.Set.mem (Ref (getRef (get_y a))) (refs a)); *)
-(*   cut(True /\ FStar.Set.mem (Ref (getRef (get_z a))) (refs a)) *)
+(*   cut(True /\ FStar.TSet.mem (Ref (getRef (get_x a))) (refs a)); *)
+(*   cut(True /\ FStar.TSet.mem (Ref (getRef (get_y a))) (refs a)); *)
+(*   cut(True /\ FStar.TSet.mem (Ref (getRef (get_z a))) (refs a)) *)
 
 #reset-options
 
-val distinct_lemma: a:point -> b:point{distinct a b} -> Lemma (requires (True)) (ensures (FStar.Set.intersect (refs a) (refs b) = !{})) []
+val distinct_lemma: a:point -> b:point{distinct a b} -> Lemma (requires (True)) (ensures (FStar.TSet.intersect (refs a) (refs b) = !{})) []
 let distinct_lemma a b = 
-  FStar.Set.lemma_equal_intro (FStar.Set.intersect (refs a) (refs b)) !{}
+  FStar.TSet.lemma_equal_intro (FStar.TSet.intersect (refs a) (refs b)) !{}
 
 #reset-options
 
@@ -451,7 +451,7 @@ val copy2: p':point -> q':point{distinct p' q'} -> p:point{distinct p p' /\ dist
     (requires (fun h -> live h p' /\ live h q' /\ onCurve h p /\ onCurve h q ))
     (ensures (fun h0 _ h1 -> onCurve h1 p' /\ onCurve h1 q' /\ onCurve h1 p /\ onCurve h1 q 
       /\ onCurve h0 p /\ onCurve h0 q
-      (* /\ (modifies (FStar.Set.union (refs p') (refs q')) h0 h1) *)
+      (* /\ (modifies (FStar.TSet.union (refs p') (refs q')) h0 h1) *)
       /\ (pointOf h1 p' == pointOf h0 p)
       /\ (pointOf h1 q' == pointOf h0 q) ))
 let copy2 p' q' p q =

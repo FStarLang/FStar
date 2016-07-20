@@ -10,7 +10,7 @@ type cimp a b = a -> Tot b
 
 type ciff a b = cand (cimp a b) (cimp b a)
 
-type cexists (#a:Type) (p:a -> Type) =
+noeq type cexists (#a:Type) (p:a -> Type) = 
   | ExIntro : x:a -> h:p x -> cexists p
 
 // val ex_intro_x : #a:Type -> #p:(a -> Type) -> projectee:cexists p -> Tot a
@@ -26,7 +26,7 @@ type ceq_type a : Type -> Type =
 val eq_ind : #a:Type -> x:a -> p:(a -> Type) -> f:p x -> y:a -> e:ceq x y -> Tot (p y)
 let eq_ind #a x p f y _ = f
 
-val ceq_eq : #a:Type -> #x:a -> #y:a -> h:(ceq x y) -> Lemma (x = y)
+val ceq_eq : #a:Type{hasEq a} -> #x:a -> #y:a -> h:(ceq x y) -> Lemma (x = y)
 let ceq_eq #a #x #y h = ()
 
 val ceq_congruence : #a:Type -> #b:Type -> #x:a -> #y:a -> ceq x y ->

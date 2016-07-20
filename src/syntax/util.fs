@@ -711,6 +711,7 @@ let lex_t    = fvar_const Const.lex_t_lid
 let lex_top  = fvar Const.lextop_lid Delta_constant (Some Data_ctor) 
 let lex_pair = fvar Const.lexcons_lid Delta_constant (Some Data_ctor) 
 let tforall  = fvar Const.forall_lid (Delta_unfoldable 1) None
+let t_haseq   = fvar Const.haseq_lid Delta_constant None
 
 let lcomp_of_comp c0 =
     let c = comp_to_comp_typ c0 in
@@ -760,8 +761,10 @@ let destruct_typ_as_formula f : option<connective> =
                             (Const.iff_lid, 2);
                             (Const.ite_lid, 3);
                             (Const.not_lid, 1);
-                            (Const.eq2_lid, 4);
-                            (Const.eq2_lid, 2)
+                            (Const.eq2_lid, 3);
+                            (Const.eq2_lid, 2);
+                            (Const.eq3_lid, 4);
+                            (Const.eq3_lid, 2)
                         ] in
         let rec aux f (lid, arity) =
             let t, args = head_and_args (unmeta_monadic f) in

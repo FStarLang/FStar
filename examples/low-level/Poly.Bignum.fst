@@ -911,11 +911,11 @@ val helper_lemma_14: h0:heap -> h1:heap -> h2:heap -> c:bigint -> tmp:bigint{dis
     (requires (live h0 c /\ live h2 c /\ ~(contains h0 tmp) /\ modifies_0 h0 h1 /\ live h1 tmp /\ modifies_2 c tmp h1 h2))
     (ensures ((frameOf tmp = frameOf c /\ modifies_1 c h0 h2)
 	      \/ (frameOf tmp <> frameOf c /\ modifies_buf (frameOf c) (only c) h0 h2
-		  /\ modifies_buf (frameOf tmp) Set.empty h0 h2)))
+		  /\ modifies_buf (frameOf tmp) TSet.empty h0 h2)))
 let helper_lemma_14 h0 h1 h2 c tmp = 
   if frameOf tmp = frameOf c then begin
     let rid = frameOf tmp in
-    cut(modifies_buf rid Set.empty h0 h1);
+    cut(modifies_buf rid TSet.empty h0 h1);
     cut(modifies_buf rid (only c ++ tmp) h1 h2);
     cut(~(contains h0 tmp));
     cut(modifies_buf rid (only c) h0 h2)
@@ -941,7 +941,7 @@ val multiplication_lemma_2: h0:heap -> h1:heap -> h2:heap -> c:bigint{length c >
        /\ modifies_2_1 c h0 h2
        /\ ((frameOf tmp = frameOf c /\ modifies_1 c h0 h2)
 	      \/ (frameOf tmp <> frameOf c /\ modifies_buf (frameOf c) (only c) h0 h2
-		  /\ modifies_buf (frameOf tmp) Set.empty h0 h2))
+		  /\ modifies_buf (frameOf tmp) TSet.empty h0 h2))
        /\ eval h2 c (2*norm_length-1) = eval h0 a (norm_length) * eval h0 b (norm_length)
        /\ maxValue h2 c (length c) <= norm_length * pow2 53 ))
 let multiplication_lemma_2 h0 h1 h2 c a b tmp =

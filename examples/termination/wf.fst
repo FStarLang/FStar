@@ -20,7 +20,7 @@
 
 module Wf
 
-type acc (a:Type) (r:(a -> a -> Type)) (x:a) : Type =
+noeq type acc (a:Type) (r:(a -> a -> Type)) (x:a) : Type =
   | AccIntro : (y:a -> r y x -> Tot (acc a r y)) -> acc a r x
 
 type well_founded (a:Type) (r:(a -> a -> Type)) = x:a -> Tot (acc a r x)

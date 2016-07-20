@@ -311,7 +311,7 @@ let empty_a = fun _ -> None
 val empty_x: x_env
 let empty_x = fun _ -> None
 
-type env =
+noeq type env =
   | MkEnv: a:a_env -> x:x_env -> env
 
 val lookup_tvar: env -> nat -> Tot (option knd)
@@ -345,7 +345,7 @@ let extend_evar g n t =
 (* Kinding, type equivalence, and typing rules;
    first 3 kinding and typing rules are analogous *)
 
-type kinding : env -> typ -> knd -> Type =
+noeq type kinding : env -> typ -> knd -> Type =
   | KiVar : #g:env ->
              a:var{is_Some (lookup_tvar g a)} ->
              kinding g (TVar a) (Some.v (lookup_tvar g a))
@@ -407,7 +407,7 @@ type tequiv : typ -> typ -> Type =
             $he2:tequiv t2 t2' ->
                  tequiv (TArr t1 t2) (TArr t1' t2')
 
-type typing : env -> exp -> typ -> Type =
+noeq type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
              x:var{is_Some (lookup_evar g x)} ->
             $hk:kinding g (Some.v (lookup_evar g x)) KTyp ->

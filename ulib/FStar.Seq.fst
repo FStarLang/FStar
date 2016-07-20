@@ -19,7 +19,7 @@
 module FStar.Seq
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 
-abstract type seq (a:Type) =
+noeq abstract type seq (a:Type) =
 | MkSeq: length:nat -> contents:(n:nat{n<length} -> Tot a) -> seq a
 
 (* Destructors *)
@@ -79,43 +79,58 @@ let lemma_len_slice #a s i j  = ()
 (* Lemmas about index *)
 abstract val lemma_index_create: #a:Type -> n:nat -> v:a -> i:nat{i < n} -> Lemma
   (requires True)
-  (ensures (index (create n v) i = v))
+  (ensures (index (create n v) i == v))
   [SMTPat (index (create n v) i)]
 let lemma_index_create #a n v i  = ()
 
 abstract val lemma_index_upd1: #a:Type -> s:seq a -> n:nat{n < length s} -> v:a -> Lemma
   (requires True)
-  (ensures (index (upd s n v) n = v))
+  (ensures (index (upd s n v) n == v))
   [SMTPat (index (upd s n v) n)]
 let lemma_index_upd1 #a n v s    = ()
 
 abstract val lemma_index_upd2: #a:Type -> s:seq a -> n:nat{n < length s} -> v:a -> i:nat{i<>n /\ i < length s} -> Lemma
   (requires True)
-  (ensures (index (upd s n v) i = index s i))
+  (ensures (index (upd s n v) i == index s i))
   [SMTPat (index (upd s n v) i)]
 let lemma_index_upd2 #a n v s i  = ()
 
 abstract val lemma_index_app1: #a:Type -> s1:seq a -> s2:seq a -> i:nat{i < length s1} -> Lemma
   (requires True)
-  (ensures (index (append s1 s2) i = index s1 i))
+  (ensures (index (append s1 s2) i == index s1 i))
   [SMTPat (index (append s1 s2) i)]
 let lemma_index_app1 #a s1 s2 i  = ()
 
 abstract val lemma_index_app2: #a:Type -> s1:seq a -> s2:seq a -> i:nat{i < length s1 + length s2 /\ length s1 <= i} -> Lemma
   (requires True)
-  (ensures (index (append s1 s2) i = index s2 (i - length s1)))
+  (ensures (index (append s1 s2) i == index s2 (i - length s1)))
   [SMTPat (index (append s1 s2) i)]
 let lemma_index_app2 #a s2 s2 i  = ()
 
 abstract val lemma_index_slice: #a:Type -> s:seq a -> i:nat -> j:nat{i <= j /\ j <= length s} -> k:nat{k < j - i} -> Lemma
   (requires True)
-  (ensures (index (slice s i j) k = index s (k + i)))
+  (ensures (index (slice s i j) k == index s (k + i)))
   [SMTPat (index (slice s i j) k)]
 let lemma_index_slice #a s i j k = ()
 
 abstract type equal (#a:Type) (s1:seq a) (s2:seq a) =
   (length s1 = length s2
    /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i)))
+
+(* decidable equality *)
+private val eq_i:
+  #a:eqtype -> s1:seq a -> s2:seq a{length s1 = length s2}
+  -> i:nat{i <= length s1}
+  -> Tot (r:bool{r <==> (forall j. (j >= i /\ j < length s1) ==> (index s1 j = index s2 j))})
+    (decreases (length s1 - i))
+let rec eq_i #a s1 s2 i =
+  if i = length s1 then true
+  else
+    if index s1 i = index s2 i then eq_i s1 s2 (i + 1)
+    else false
+
+abstract val eq: #a:eqtype -> s1:seq a -> s2:seq a -> Tot (r:bool{r <==> equal s1 s2})
+let eq #a s1 s2 = if length s1 = length s2 then eq_i s1 s2 0 else false
 
 abstract val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (length s1 = length s2
@@ -125,16 +140,16 @@ abstract val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
 let lemma_eq_intro #a s1 s2 = ()
 
 abstract val lemma_eq_refl: #a:Type -> s1:seq a -> s2:seq a -> Lemma
-     (requires (s1 = s2))
+     (requires (s1 == s2))
      (ensures (equal s1 s2))
      [SMTPatT (equal s1 s2)]
 let lemma_eq_refl #a s1 s2  = ()
 
 (*TODO: Would be nice to to not have to assume this again and instead derive it from feq
   But, it doesn't work because in order to use feq, we need to show that s1.contents has type (efun e b) *)
-assume Extensionality: forall (a:Type) (s1:seq a) (s2:seq a).{:pattern (equal s1 s2)} equal s1 s2 <==> (s1=s2)
+assume Extensionality: forall (a:Type) (s1:seq a) (s2:seq a).{:pattern (equal s1 s2)} equal s1 s2 <==> (s1==s2)
 abstract val lemma_eq_elim: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (equal s1 s2))
-     (ensures (s1=s2))
+     (ensures (s1==s2))
      [SMTPatT (equal s1 s2)]
 let lemma_eq_elim #a s1 s2  = ()

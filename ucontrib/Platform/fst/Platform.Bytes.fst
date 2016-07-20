@@ -40,6 +40,9 @@ type byte = FStar.Char.char
 type cbytes = string
 (* abstract *) type bytes = Seq.seq byte
 
+(* AR: adding this *)
+assume HasEq_bytes: hasEq bytes
+
 val seq_of_bytes: b:bytes -> GTot (Seq.seq byte)
 let seq_of_bytes b = b
 

@@ -7,6 +7,22 @@ open FStar.HST
 
 val swap : int*int -> Tot (int*int)
 let swap (x, y) = (y, x)
+(*
+ promote (let r = new_region in 
+   let x = ralloc_pair 0 1 in 
+   let q = promote (let p : located (int * int) = demote swap x r in p) : Tot (located (int * int)) in
+   //  drop r; if you drop r here, then the deref at the next line fails
+   let ret = lfst q + lsnd q in 
+   drop r; ret) : Tot int
+
+Take 2: (useless)
+   promote (let q = demote swap (#locate (0, 1))  in
+	    lfst q + lsnd q)
+
+take 3: equivalent (provably?) to take 2, and so much nicer
+   let x, y = swap (0,1) in x + y
+
+*)
 
 (*abstract *)let located t = stackref t
 
@@ -61,7 +77,7 @@ val reify_tot : #a:Type0 -> $f:(unit -> StTot a) -> Tot (m0:mem -> Tot (a * mem)
 let reify_tot #a f = reify f
 
 assume val promote: #a:Type0
-		  -> f:(unit -> StTot (located a))
+		  -> f:(unit -> StTot a)//(located a))
 		  -> Pure a
 		         (requires (forall m0 m1. 
 				      let x0, m0' = reify f m0 in

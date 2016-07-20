@@ -25,7 +25,7 @@ type field =
   | F1
   | F2
 
-assume type abs_node : Type0
+assume type abs_node : a:Type0{hasEq a}
 assume val no_abs : abs_node
 let valid a = a <> no_abs
 type valid_node = a:abs_node{valid a}
@@ -48,7 +48,7 @@ type to_abs_inj (to_abs:abs_map) =
     /\ i1 <> i2
     ==> to_abs i1 <> to_abs i2
 
-type gc_state = { 
+noeq type gc_state = { 
   to_abs: abs_map;
   color: color_map;
   abs_fields: abs_field_map;
@@ -96,18 +96,18 @@ effect GCMut (res:Type) (req:gc_state -> Type0) (ens:gc_state -> Tot (gc_post re
        GC res (fun gc -> req gc /\ mutator_inv gc)
               (fun gc res gc' -> ens gc res gc' /\ mutator_inv gc')
 	      
-assume val get : unit -> GC gc_state (fun gc -> True) (fun gc res gc' -> gc=gc' /\ res=gc')
-assume val set : g:gc_state -> GC unit (fun gc -> True) (fun _ _ gc' -> b2t(g=gc'))
+assume val get : unit -> GC gc_state (fun gc -> True) (fun gc res gc' -> gc==gc' /\ res==gc')
+assume val set : g:gc_state -> GC unit (fun gc -> True) (fun _ _ gc' -> g==gc')
 
 type init_invariant (ptr:mem_addr) (gc:gc_state) =
   forall i. mem_lo <= i /\ i < ptr
         ==> not(valid (gc.to_abs i))
          /\ gc.color i = Unalloc
 
-val upd_map: #a:Type -> #b:Type -> (a -> Tot b) -> a -> b -> a -> Tot b
+val upd_map: #a:eqtype -> #b:Type -> (a -> Tot b) -> a -> b -> a -> Tot b
 let upd_map #a #b f i v = fun j -> if i=j then v else f j
 
-val upd_map2: #a:Type -> #b:Type -> #c:Type -> (a -> b -> Tot c) -> a -> b -> c -> a -> b -> Tot c
+val upd_map2: #a:eqtype -> #b:eqtype -> #c:Type -> (a -> b -> Tot c) -> a -> b -> c -> a -> b -> Tot c
 let upd_map2 #a #b #c m i f v = fun j g -> if (i,f)=(j,g) then v else m j g
 
 val initialize: unit -> GC unit
@@ -129,7 +129,7 @@ let initialize () =
 
 val read_field : ptr:mem_addr -> f:field -> GCMut mem_addr
   (requires (fun gc -> ptr_lifts_to gc ptr (gc.to_abs ptr)))
-  (ensures (fun gc i gc' -> gc=gc'
+  (ensures (fun gc i gc' -> gc==gc'
             /\ ptr_lifts_to gc' i (gc.abs_fields (gc.to_abs ptr, f))))
 let read_field ptr f =
   cut (trigger ptr);
@@ -138,7 +138,7 @@ let read_field ptr f =
 
 val write_field: ptr:mem_addr -> f:field -> v:mem_addr -> GCMut unit
   (requires (fun gc -> ptr_lifts gc ptr /\ ptr_lifts gc v))
-  (ensures (fun gc _ gc' -> gc'.color=gc.color))
+  (ensures (fun gc _ gc' -> gc'.color==gc.color))
 let write_field ptr f v =
   cut (trigger ptr /\ trigger v);
   let gc = get () in
@@ -156,7 +156,7 @@ val mark : ptr:mem_addr -> GC unit
                                    (gc'.color i <> Black
                                  ==> gc.color i = gc'.color i))
                         /\ gc'.color ptr <> White
-                        /\ (exists c. gc' = {gc with color=c})))
+                        /\ (exists c. gc' == {gc with color=c})))
 let rec mark ptr =
   let st = get () in
   if st.color ptr = White
@@ -172,7 +172,7 @@ let rec mark ptr =
 
  type sweep_aux_inv (old:gc_state) (ptr:int) (st:gc_state) =
   gc_inv old
-  /\ (st.fields = old.fields /\ st.abs_fields = old.abs_fields)
+  /\ (st.fields == old.fields /\ st.abs_fields == old.abs_fields)
   /\ to_abs_inj st.to_abs
   /\ (forall (i:mem_addr). {:pattern (trigger i)}
            trigger i
@@ -198,7 +198,7 @@ val sweep: unit -> GC unit
                     /\ (forall (i:mem_addr). {:pattern (trigger i)}
                              trigger i
                           ==> gc.color i <> Gray)))
-  (ensures (fun gc _ gc' -> (exists c a. gc' = {gc with color=c; to_abs=a}
+  (ensures (fun gc _ gc' -> (exists c a. gc' == {gc with color=c; to_abs=a}
                         /\ mutator_inv gc'
                         /\ (forall (i:mem_addr).{:pattern (trigger i)}
                                  trigger i
@@ -209,8 +209,8 @@ let sweep () =
   let rec sweep_aux : ptr:mem_addr -> GC unit
       (requires (fun gc -> sweep_aux_inv old ptr gc))
       (ensures (fun _ _ st ->
-                      (st.abs_fields = old.abs_fields
-                       /\ st.fields = old.fields
+                      (st.abs_fields == old.abs_fields
+                       /\ st.fields == old.fields
                        /\ mutator_inv st
                        /\ (forall (i:mem_addr).{:pattern (trigger i)}
                                trigger i
@@ -235,7 +235,7 @@ let sweep () =
 
 val gc: root:mem_addr -> GCMut unit
   (requires (fun gc -> root<>0 ==> ptr_lifts gc root))
-  (ensures (fun gc _ gc' -> (exists c a. gc' = {gc with color=c; to_abs=a})
+  (ensures (fun gc _ gc' -> (exists c a. gc' == {gc with color=c; to_abs=a})
                     /\ (root<>0 ==> ptr_lifts gc' root)
                     /\ (forall (i:mem_addr). {:pattern (trigger i)}
                                 trigger i ==> (ptr_lifts gc' i ==> gc.to_abs i = gc'.to_abs i))
@@ -262,7 +262,7 @@ val alloc: root:mem_addr -> abs:abs_node -> GCMut mem_addr
               /\ (forall (i:mem_addr). trigger i /\ ptr_lifts gc i ==> gc.to_abs i <> abs)))
   (ensures (fun gc ptr gc' -> (root <> 0 ==> ptr_lifts_to gc' root (gc.to_abs root))
                             /\ ptr_lifts gc' ptr
-                            /\ gc'.abs_fields = gc.abs_fields))
+                            /\ gc'.abs_fields == gc.abs_fields))
 let rec alloc root abs =
     let rec try_alloc_at_ptr : ptr:mem_addr -> abs:abs_node -> GCMut int
       (requires (fun gc ->
@@ -272,13 +272,13 @@ let rec alloc root abs =
                   gc.abs_fields (abs, F1) = abs /\
                   gc.abs_fields (abs, F2) = abs))
       (ensures (fun gc i gc' ->
-                gc'.abs_fields = gc.abs_fields
+                gc'.abs_fields == gc.abs_fields
                 /\ (is_mem_addr i \/ i=mem_hi)
                 /\ (is_mem_addr i ==>
                     ~(ptr_lifts gc i)
                     /\ ptr_lifts gc' i
                     /\ (forall (j:mem_addr). i <> j ==> gc'.to_abs j = gc.to_abs j))
-                /\ (i=mem_hi ==> gc=gc')))
+                /\ (i=mem_hi ==> gc==gc')))
       = fun ptr abs ->
           let gc = get () in
           if gc.color ptr = Unalloc
