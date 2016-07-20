@@ -15,5 +15,5 @@ let () =
       Format.printf "Syntax error at line %d\n" pos.Lexing.pos_lnum;
       exit 1 in
 	
-  let _ = interpret progstmt (fun _ ->(FStar_UInt64.uint_to_t  (Prims.parse_int "0"))) in
+  let _ = interpret progstmt (fun _ ->(FStar_UInt64.uint_to_t  (Prims.parse_int "0"))) (fun _ ->(FStar_UInt64.uint_to_t  (Prims.parse_int "0"))) in
   ()

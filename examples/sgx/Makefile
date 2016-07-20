@@ -5,7 +5,7 @@ FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_DEFAULT_ARGS) # from the included Make
 OPTIONS_OCAML=--lax --codegen OCaml --no_location_info
 
 X86_ODIR=x86Interpreter
-X86_EXTRACTED=Helper.ml Ast.ml X86Interpreter.ml 
+X86_EXTRACTED=Ast.ml Helper.ml LowInterpreter.ml X86Interpreter.ml 
 
 # OCaml variables
 OCAMLOPT := $(OCAMLOPT_) -I $(ULIB_ML)/hyperheap $(ULIB_ML)/fstarlib-hyperheap.cmxa -w -8-20-26
@@ -26,7 +26,7 @@ x86Interpreter-ml: lexer.ml parser.ml
 	mv lexer.ml ml/lexer.ml	
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
 	mkdir -p $(X86_ODIR)
-	$(FSTAR) $(OPTIONS_OCAML) X86Interpreter.fst Ast.fst  --odir $(X86_ODIR)
+	$(FSTAR) $(OPTIONS_OCAML) X86Interpreter.fst Ast.fst  Helper.fst LowInterpreter.fst --odir $(X86_ODIR)
 	$(MAKE) x86Interpreter-compile
 
 lexer.ml : lexer.mll
