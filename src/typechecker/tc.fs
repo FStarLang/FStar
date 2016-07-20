@@ -2023,7 +2023,6 @@ and elaborate_and_star env0 ed =
     | _ ->
         failwith "bad shape for effect-for-free signature"
   in
-  let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] in
   let open_and_check t =
     let subst = SS.opening_of_binders binders in
     let t = SS.subst subst t in
@@ -2032,6 +2031,8 @@ and elaborate_and_star env0 ed =
   in
   let recheck_debug s env t =
     Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
+    // Note to self: it's ok to check something, but only if we erase the
+    // universes afterwards
     let t, _, _ = tc_term env t in
     Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t);
     N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant; N.EraseUniverses ] env t
@@ -2049,7 +2050,6 @@ and elaborate_and_star env0 ed =
   let effect_signature =
     let mk x = mk x None signature.pos in
     let wp_a = mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ])) in
-    let wp_a = normalize env wp_a in
     let binders = [ (a, S.as_implicit false); S.null_binder wp_a ] in
     let binders = close_binders binders in
     mk (Tm_arrow (binders, effect_marker))

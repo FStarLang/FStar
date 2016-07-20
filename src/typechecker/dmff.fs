@@ -45,23 +45,17 @@ let gen_wps_for_free
   let wp_a = N.normalize [N.Beta; N.EraseUniverses] env wp_a in
   let a = { a with sort = N.normalize [ N.EraseUniverses ] env a.sort } in
 
-  (* A series of macros and combinators to automatically build WP's. In these
-   * definitions, both [binders] and [a] are opened. This means that macros
-   * close over [binders] and [a], and this means that combinators do not expect
-   * [binders] and [a] when applied. *)
-  let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] in
-
+  // Debugging
   let d s = Util.print1 "\x1b[01;36m%s\x1b[00m\n" s in
   d "Elaborating extra WP combinators";
   Util.print1 "wp_a is: %s\n" (Print.term_to_string wp_a);
 
-  (* A debug / sanity check. *)
   let check env str t =
     if Env.debug env (Options.Other "ED") then begin
       d str;
       Util.print2 "Generated term for %s: %s\n" str (Print.term_to_string t);
       let t, { res_typ = res_typ }, _ = tc_term env t in
-      let res_typ = normalize env res_typ in
+      let res_typ = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env res_typ in
       Util.print2 "Inferred type for %s: %s\n" str (Print.term_to_string res_typ)
     end
   in
@@ -95,7 +89,7 @@ let gen_wps_for_free
     lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ name)) Range.dummyRange
   in
 
-  let gamma = collect_binders (normalize env wp_a) in
+  let gamma = collect_binders wp_a in
   d (Util.format1 "Gamma is %s\n" (Print.binders_to_string ", " gamma));
   let unknown = S.tun in
   let mk x = mk x None Range.dummyRange in
@@ -269,20 +263,21 @@ let gen_wps_for_free
       ])
     ) ret_tot_wp_a
   in
-  let env, wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
+  // An adapter for curried vs uncurried
   let wp_if_then_else =
     let x1 = a in
     let x2 = S.gen_bv "ite2" None U.ktype in
     let x3 = S.gen_bv "ite3" None wp_a in
     let x4 = S.gen_bv "ite4" None wp_a in
-    U.abs (S.binders_of_list [x1; x2; x3; x4]) (
-      U.mk_app wp_if_then_else [
+    U.abs (binders @ S.binders_of_list [x1; x2; x3; x4]) (
+      U.mk_app wp_if_then_else (args_of_binders binders @ [
         S.as_arg (S.bv_to_name x1);
         S.as_arg (S.bv_to_name x2);
         S.as_arg (S.bv_to_name x3);
         S.as_arg (S.bv_to_name x4)
-    ]) ret_tot_wp_a
+    ])) ret_tot_wp_a
   in
+  let env, wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
   let wp_if_then_else = mk_generic_app wp_if_then_else in
 
   (* val st2_assert_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
@@ -349,7 +344,8 @@ let gen_wps_for_free
   *)
   (* Invariant: [x] and [y] have type [t] *)
   let rec mk_leq t x y =
-    match (normalize env (SS.compress t)).n with
+    let t = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env t in
+    match (SS.compress t).n with
     | Tm_type _ ->
         (* Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
         U.mk_imp x y
