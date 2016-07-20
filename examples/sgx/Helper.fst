@@ -83,5 +83,5 @@ let islowsgxoffsetinustack lowsgxoffset =
 	false
 
 	  
-(* Support for code section *)
+(* Support for callbitmap *)
 
