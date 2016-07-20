@@ -270,6 +270,19 @@ let gen_wps_for_free
     ) ret_tot_wp_a
   in
   let env, wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
+  let wp_if_then_else =
+    let x1 = a in
+    let x2 = S.gen_bv "ite2" None U.ktype in
+    let x3 = S.gen_bv "ite3" None wp_a in
+    let x4 = S.gen_bv "ite4" None wp_a in
+    U.abs (S.binders_of_list [x1; x2; x3; x4]) (
+      U.mk_app wp_if_then_else [
+        S.as_arg (S.bv_to_name x1);
+        S.as_arg (S.bv_to_name x2);
+        S.as_arg (S.bv_to_name x3);
+        S.as_arg (S.bv_to_name x4)
+    ]) ret_tot_wp_a
+  in
   let wp_if_then_else = mk_generic_app wp_if_then_else in
 
   (* val st2_assert_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
