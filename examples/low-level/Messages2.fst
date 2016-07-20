@@ -54,7 +54,7 @@ type buffer (t:sized_type) = b:bytes{length b % sizeof t = 0}
 
 (* Another definition of the length of such buffers *)
 let length #t (b:buffer t) = Buffer.length b / sizeof t
-let idxx #t (b:buffer t) = Buffer.idx b / sizeof t
+let idx #t (b:buffer t) = Buffer.idx b / sizeof t
 
 (* From a 'buffer t', returns a 'seq t', needed to define operations on buffers *)
 (* To seq is basically implemented using a sequence of inflated values *)
@@ -182,7 +182,8 @@ noeq type client_extension =
  | CE_earlyData
  | CE_keyShare of arraybuf_var 2 key_share
  | CE_preSharedKey of arraybuf_var 2 (buf_var 2 UInt8.t)
- | CE_server_names of arraybuf 2 (buf_var 2 UInt8.t) 128
+ | CE_server_names of arraybuf_var 2 (buf_var 2 UInt8.t)
+ (* | CE_server_names of arraybuf 2 (buf_var 2 UInt8.t) 128 *)
 
 let max x y = if x < y then y else x
 
