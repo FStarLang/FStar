@@ -99,32 +99,7 @@ let gen_wps_for_free
   d (Util.format1 "Gamma is %s\n" (Print.binders_to_string ", " gamma));
   let unknown = S.tun in
   let mk x = mk x None Range.dummyRange in
-  let register env lident def =
-    // Debug
-    d (text_of_lid lident);
-    Util.print2 "Registering top-level definition: %s\n%s\n"
-      (text_of_lid lident) (Print.term_to_string def);
-    // Allocate a new top-level name.
-    let fv = S.lid_as_fv lident (incr_delta_qualifier def) None in
-    let lbname: lbname = Inr fv in
-    let lb: letbindings = false, [{
-       lbname = lbname;
-       lbunivs = [];
-       lbtyp = S.tun;
-       lbdef = def;
-       lbeff = Const.effect_Tot_lid; //this will be recomputed correctly
-    }] in
-    // Check and push in the environment as a top-level let-binding
-    let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], []) in
-    let se, env = tc_decl env sig_ctx in
-    begin match se with
-    | [ Sig_let ((_, [ { lbtyp = t } ]), _, _, _) ]->
-        Util.print1 "Inferred type: %s\n" (Print.term_to_string t)
-    | _ ->
-        failwith "nope"
-    end;
-    env, mk (Tm_fvar fv)
-  in
+  let register env lident def = TcUtil.register_toplevel_definition env tc_decl lident def in
 
   (* Some helpers. *)
   let binders_of_list = List.map (fun (t, b) -> t, S.as_implicit b) in
@@ -392,9 +367,9 @@ let gen_wps_for_free
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
     let body = mk_leq wp_a (S.bv_to_name wp1) (S.bv_to_name wp2) in
-    U.abs (S.binders_of_list [ wp1; wp2 ]) body ret_tot_type0
+    U.abs (binders @ binders_of_list [ a, true; wp1, false; wp2, false ]) body ret_tot_type0
   in
-  check env "stronger" (U.abs (binders @ [ S.mk_binder a ]) stronger None);
+  let env, stronger = register env (mk_lid "stronger") stronger in
 
   let null_wp = snd ed.null_wp in
 
@@ -402,7 +377,7 @@ let gen_wps_for_free
     let st2_trivial heap a wp = st2_stronger heap a (st2_null_wp heap a) wp *)
   let wp_trivial =
     let wp = S.gen_bv "wp" None wp_a in
-    let body = U.mk_app stronger (List.map S.as_arg [
+    let body = U.mk_app stronger (args_of_binders binders @ List.map S.as_arg [
       U.mk_app null_wp [ S.as_arg (S.bv_to_name a) ];
       S.bv_to_name wp
     ]) in

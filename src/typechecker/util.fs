@@ -1179,3 +1179,31 @@ let reify_comp env c u_c : term =
           let res_typ, wp = c.result_typ, List.hd c.effect_args in
           let repr = Env.inst_effect_fun_with [u_c] env ed ([], ed.repr) in
           mk (Tm_app(repr, [as_arg res_typ; wp])) None (Env.get_range env)
+
+let d s = Util.print1 "\x1b[01;36m%s\x1b[00m\n" s
+
+let register_toplevel_definition (env: Env.env) (tc_decl: env -> sigelt -> (sigelts * env)) lident (def: term): env * typ =
+  // Debug
+  d (text_of_lid lident);
+  Util.print2 "Registering top-level definition: %s\n%s\n" (text_of_lid lident) (Print.term_to_string def);
+  // Allocate a new top-level name.
+  let fv = S.lid_as_fv lident (Syntax.Util.incr_delta_qualifier def) None in
+  let lbname: lbname = Inr fv in
+  let lb: letbindings = false, [{
+     lbname = lbname;
+     lbunivs = [];
+     lbtyp = S.tun;
+     lbdef = def;
+     lbeff = Const.effect_Tot_lid; //this will be recomputed correctly
+  }] in
+  // Check and push in the environment as a top-level let-binding. [Inline]
+  // triggers a "Impossible: locally nameless" error
+  let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], [ (* Inline *) ]) in
+  let se, env = tc_decl env sig_ctx in
+  begin match se with
+  | [ Sig_let ((_, [ { lbtyp = t } ]), _, _, _) ]->
+      Util.print1 "Inferred type: %s\n" (Print.term_to_string t)
+  | _ ->
+      failwith "nope"
+  end;
+  env, mk (Tm_fvar fv) None Range.dummyRange
