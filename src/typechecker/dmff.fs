@@ -258,29 +258,12 @@ let gen_wps_for_free
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
       let l_ite = fvar Const.ite_lid (S.Delta_unfoldable 2) None in
-      U.mk_app c_lift2 (List.map S.as_arg [
-        U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
-      ])
-    ) ret_tot_wp_a
-  in
-  // An adapter for curried vs uncurried
-  let wp_if_then_else =
-    let x1 = a in
-    let x2 = S.gen_bv "ite2" None U.ktype in
-    let x3 = S.gen_bv "ite3" None wp_a in
-    let x4 = S.gen_bv "ite4" None wp_a in
-    U.abs (binders @ S.binders_of_list [x1; x2; x3; x4]) (
-      // The ascription avoids un-necessary implicit arguments, but...
-      // FStar.DM4F.Test.fst(44,0-45,33): Failed to resolve implicit argument of type 'Type(?11524)' introduced in (?12111 uu___#5707 a#8148 ite2#8149 ite3#8150 ite4#8151 a#8427 c#8428) because head of application is a uvar
-      // TODO figure this out
       U.ascribe (
-        U.mk_app wp_if_then_else (args_of_binders binders @ [
-          S.as_arg (S.bv_to_name x1);
-          S.as_arg (S.bv_to_name x2);
-          S.as_arg (S.bv_to_name x3);
-          S.as_arg (S.bv_to_name x4)
-      ])) (Inr (mk_Total wp_a))
-  ) ret_tot_wp_a
+        U.mk_app c_lift2 (List.map S.as_arg [
+          U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
+        ])
+      ) (Inr (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))))
+    ) ret_tot_wp_a
   in
   let env, wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
   let wp_if_then_else = mk_generic_app wp_if_then_else in
