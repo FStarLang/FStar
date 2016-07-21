@@ -367,7 +367,7 @@ let gen_wps_for_free
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
     let body = mk_leq wp_a (S.bv_to_name wp1) (S.bv_to_name wp2) in
-    U.abs (binders @ binders_of_list [ a, true; wp1, false; wp2, false ]) body ret_tot_type
+    U.abs (binders @ binders_of_list [ a, false; wp1, false; wp2, false ]) body ret_tot_type
   in
   let env, stronger = register env (mk_lid "stronger") stronger in
   let stronger = mk_generic_app stronger in
@@ -379,6 +379,7 @@ let gen_wps_for_free
   let wp_trivial =
     let wp = S.gen_bv "wp" None wp_a in
     let body = U.mk_app stronger (List.map S.as_arg [
+      S.bv_to_name a;
       U.mk_app null_wp [ S.as_arg (S.bv_to_name a) ];
       S.bv_to_name wp
     ]) in
@@ -394,6 +395,7 @@ let gen_wps_for_free
     assert_p     = ([], wp_assert);
     assume_p     = ([], wp_assume);
     close_wp     = ([], wp_close);
+    stronger     = ([], stronger);
     trivial      = ([], wp_trivial)
   }
 

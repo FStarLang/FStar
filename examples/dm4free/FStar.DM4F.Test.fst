@@ -38,9 +38,6 @@ inline let ite_wp (a:Type) (wp:wp a) (h0:int) (q:post a) =
     (forall (x:a) (h:int).{:pattern (guard_free (k (x, h)))} k (x, h) <==> q (x, h))
     ==> wp h0 k
 
-inline let stronger (a:Type) (wp1:wp a) (wp2:wp a) =
-  (forall (p:post a) (h:int). wp1 h p ==> wp2 h p)
-
 inline let null_wp (a:Type) (h:int) (p:post a) =
   (forall (x:a) (h:int). p (x,h))
 
@@ -51,7 +48,6 @@ reifiable reflectable new_effect_for_free {
      ; return   = return_st
      // The three combinators below are meant to be automatically generated.
      ; ite_wp   = ite_wp
-     ; stronger = stronger
      ; null_wp  = null_wp
   and effect_actions
        get      = get
