@@ -83,7 +83,7 @@ val raise_ : a:Type -> Tot (ex_repr a (fun (_:unit) (p:ex_post a) -> p None))
 let raise_ a (_:unit) = None
 
 //You can also build a new action "on the fly" using reflect
-reifiable let raise (a:Type) : Exn a True (fun r -> r=None)
+reifiable let raise (a:Type) : Exn a True (fun r -> r==None)
   = EXN.reflect (raise_ a)
 
 val div_intrinsic : i:nat -> j:int -> Exn int

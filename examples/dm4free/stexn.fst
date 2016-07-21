@@ -3,7 +3,7 @@ let pre = int -> Type0
 let post (a:Type) = (option a * int) -> Type0
 let wp (a:Type) = int -> post a -> Type0
 inline let return_wp (a:Type) (x:a) (n0:int) (post:post a) = 
-  forall y. y=(Some x, n0) ==> post y
+  forall y. y==(Some x, n0) ==> post y
 
 //working around #517 by adding an explicit 'val'
 inline val bind_wp : r:range -> (a:Type) -> (b:Type) -> (f:wp a) -> (g:(a -> Tot (wp b))) -> Tot (wp b)
