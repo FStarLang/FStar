@@ -63,16 +63,16 @@ assume type ist_witnessed: p:predicate FStar.Heap.heap{stable heap_rel p} -> Typ
 
 (* Generic effects (operations) for IST. *)
 
-assume val ist_get :     unit -> IST FStar.Heap.heap (fun s0 -> True) (fun s0 s s1 -> s0 = s /\ s = s1)
+assume val ist_get :     unit -> IST FStar.Heap.heap (fun s0 -> True) (fun s0 s s1 -> s0 == s /\ s == s1)
 
 assume val ist_put :     x:FStar.Heap.heap ->
-		         IST unit (fun s0 -> heap_rel s0 x) (fun s0 _ s1 -> s1 = x)
+		         IST unit (fun s0 -> heap_rel s0 x) (fun s0 _ s1 -> s1 == x)
 
 assume val ist_witness : p:predicate FStar.Heap.heap{stable heap_rel p} ->
-		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 = s1 /\ ist_witnessed p)
+		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 == s1 /\ ist_witnessed p)
 
 assume val ist_recall :  p:predicate FStar.Heap.heap{stable heap_rel p} -> 
-		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 = s1 /\ p s1)
+		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 == s1 /\ p s1)
 
 (* *************************************************** *)
 
@@ -128,7 +128,7 @@ val alloc : #a:Type ->
 	    AllocST (ref a) (fun _ -> True)
                             (fun h0 r h1 -> ~(FStar.Heap.contains h0 r) /\
 					    FStar.Heap.contains h1 r /\
-				            h1 = FStar.Heap.upd h0 r x)
+				            h1 == FStar.Heap.upd h0 r x)
 let alloc #a x = 
   let h = ist_get () in
   let r = gen_ref h in
@@ -140,8 +140,8 @@ let alloc #a x =
 val read : #a:Type -> 
            r:ref a -> 
 	   AllocST a (fun _       -> True) 
-                     (fun h0 x h1 -> h0 = h1 /\ 
-		                     x = FStar.Heap.sel h1 r)
+                     (fun h0 x h1 -> h0 == h1 /\ 
+		                     x == FStar.Heap.sel h1 r)
 let read #a r = 
   let h = ist_get () in
   FStar.Heap.sel h r
@@ -151,7 +151,7 @@ val write : #a:Type ->
             r:ref a -> 
 	    x:a -> 
 	    AllocST unit (fun _       -> True)
-                         (fun h0 _ h1 -> h1 = FStar.Heap.upd h0 r x)
+                         (fun h0 _ h1 -> h1 == FStar.Heap.upd h0 r x)
 let write #a r x =
   let h = ist_get () in
   ist_put (FStar.Heap.upd h r x)
@@ -163,7 +163,7 @@ val precise_write : #a:Type ->
                     r:ref a -> 
 		    x:a -> 
 		    AllocST unit (fun h0      -> FStar.Heap.contains h0 r)
-                                 (fun h0 _ h1 -> h1 = FStar.Heap.upd h0 r x)
+                                 (fun h0 _ h1 -> h1 == FStar.Heap.upd h0 r x)
 let precise_write #a r x =
   let h = ist_get () in
   ist_put (FStar.Heap.upd h r x)
@@ -174,7 +174,7 @@ let precise_write #a r x =
 val recall : #a:Type -> 
              r:ref a -> 
 	     AllocST unit (fun h0      -> True) 
-			  (fun h0 _ h1 -> h0 = h1 /\ 
+			  (fun h0 _ h1 -> h0 == h1 /\ 
 			                  FStar.Heap.contains h1 r)
 let recall #a r = 
   ist_recall (contains r)

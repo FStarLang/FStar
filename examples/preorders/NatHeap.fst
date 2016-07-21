@@ -7,28 +7,28 @@ open Preorder
    references (represented as natural numbers) to types and values. *)
 
 abstract type heap = h:(nat * (nat -> Tot (option (dtuple2 Type0 (fun a -> a)))))
-		       {(forall (n:nat) . n < fst h ==> (exists v . snd h n = Some v)) /\ 
-			(forall (n:nat) . n >= fst h ==> snd h n = None)}
+		       {(forall (n:nat) . n < fst h ==> (exists v . snd h n == Some v)) /\ 
+			(forall (n:nat) . n >= fst h ==> snd h n == None)}
 
 
 (* Consistency of heaps. *)
 
 let consistent (h0:heap) (h1:heap) =
-  forall n x y . (snd h0 n = Some x /\ snd h1 n = Some y)  ==> dfst x = dfst y
+  forall n x y . (snd h0 n == Some x /\ snd h1 n == Some y)  ==> dfst x == dfst y
 
 
 (* References. *)
 
 abstract type ref (a:Type) = nat
 
-type aref =
-  | Ref : a:Type -> r:ref a -> aref
+//type aref =
+//  | Ref : a:Type -> r:ref a -> aref
 
 
 (* Containment predicate on heaps. *)
 
 let contains (#a:Type) (h:heap) (r:ref a) = 
-  exists x . snd h r = Some (| a , x |)
+  exists x . snd h r == Some (| a , x |)
 
 
 (* Select. *)
@@ -50,15 +50,15 @@ val alloc_ref : h0:heap ->
 		Tot (rh1:(ref a * heap)
 			 {~(contains h0 (fst rh1)) /\ 
 			  contains (snd rh1) (fst rh1) /\
-		          sel (snd rh1) (fst rh1) = x /\
+		          sel (snd rh1) (fst rh1) == x /\
 			  (forall b (r:ref b) .  
 			     contains h0 r 
 			     ==> 
 			     contains (snd rh1) r) /\
 			  (forall b (r:ref b{contains h0 r}) y . 
-			     sel #b h0 r = y 
+			     sel #b h0 r == y 
 		             ==> 
-			     sel #b (snd rh1) r = y)})
+			     sel #b (snd rh1) r == y)})
 let alloc_ref h0 a x = 
   (fst h0 , (fst h0 + 1 , (fun r -> if r = fst h0 then Some (| a , x |)
 					          else snd h0 r)))
@@ -71,15 +71,16 @@ val upd : #a:Type ->
           r:ref a{contains h0 r} -> 
           x:a -> 
           Tot (h1:heap{contains h1 r /\ 
-	               sel h1 r = x /\
+	               sel h1 r == x /\
 		       (forall b (r':ref b) .  
 			  contains h0 r' 
 			  ==> 
 			  contains h1 r') /\
-		       (forall b (r':ref b{contains h0 r'}) y . r' =!= r /\ 
-			  sel h0 r' = y 
+		       (forall b (r':ref b{contains h0 r'}) y . 
+		          ~(r === r') /\ 
+			  sel h0 r' == y 
 			  ==> 
-			  sel h1 r' = y)})
+			  sel h1 r' == y)})
 let upd #a h0 r x = 
   (fst h0 , (fun r' -> if r = r' then Some (| a , x |)
                                  else snd h0 r'))
@@ -159,7 +160,7 @@ let alloc_ref_consistent h a x = ()
 val contains_sel : h:heap -> 
                    a:Type -> 
 		   r:ref a{contains h r} -> 
-		   Lemma (exists x . sel h r = x)
+		   Lemma (exists x . sel h r == x)
 let contains_sel h a r = ()
 
 
@@ -190,7 +191,7 @@ val sel_upd1 : h:heap ->
 	       r:ref a{contains #a h r} -> 
 	       x:a -> 
 	       Lemma (requires (True))
-	             (ensures  (sel (upd h r x) r = x))
+	             (ensures  (sel (upd h r x) r == x))
 	       [SMTPat (sel (upd h r x) r)]
 let sel_upd1 h a r x = ()
 
@@ -201,8 +202,8 @@ val sel_upd2 : h:heap ->
 	       r:ref a{contains #a h r} -> 
 	       x:a -> 
 	       r':ref b{contains #b h r'} -> 
-	       Lemma (requires (r =!= r'))
-	             (ensures  (sel (upd h r x) r' = sel h r'))
+	       Lemma (requires (~(r === r')))
+	             (ensures  (sel (upd h r x) r' == sel h r'))
 	       [SMTPat (sel (upd h r x) r')]
 let sel_upd2 h a b r x r' = ()
 
@@ -231,7 +232,7 @@ let contains_concat1 h0 h1 a r =
   | Some v -> 
       (match snd h1 r with
        | None -> ()
-       | Some v' -> assert (dfst v = dfst v'))
+       | Some v' -> assert (dfst v == dfst v'))
 
 
 val contains_concat2 : h0:heap -> 
@@ -249,14 +250,14 @@ val sel_concat1 : h0:heap ->
 		  a:Type ->
 		  r:ref a{contains h0 r /\ ~(contains h1 r)} -> 
 		  Lemma (requires (True))
-		        (ensures  (sel (concat h0 h1) r = sel h0 r))
+		        (ensures  (sel (concat h0 h1) r == sel h0 r))
 	          [SMTPat (sel (concat h0 h1) r)]
 let sel_concat1 h0 h1 a r = 
   match snd h0 r with
   | Some v -> 
       match snd h1 r with
       | None -> ()
-      | Some v' -> assert (dfst v = dfst v')
+      | Some v' -> assert (dfst v == dfst v')
 
 
 val sel_concat2 : h0:heap -> 
@@ -264,7 +265,7 @@ val sel_concat2 : h0:heap ->
 		  a:Type ->
 		  r:ref a{contains h1 r} -> 
 		  Lemma (requires (True))
-		        (ensures  (sel (concat h0 h1) r = sel h1 r))
+		        (ensures  (sel (concat h0 h1) r == sel h1 r))
 	          [SMTPat (sel (concat h0 h1) r)]
 let sel_concat2 h0 h1 a r = ()
 

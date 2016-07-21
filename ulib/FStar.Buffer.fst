@@ -37,7 +37,7 @@ let as_aref #a (b:buffer a) : GTot Heap.aref = as_aref b.content
 let frameOf #a (b:buffer a) : GTot HH.rid = frameOf (content b)
 
 (* Liveness condition, necessary for any computation on the buffer *)
-abstract let live #a (h:mem) (b:buffer a) : GTot Type0 = 
+(* abstract *) let live #a (h:mem) (b:buffer a) : GTot Type0 = 
   contains h b /\ max_length h b >= length b + idx b
 
 let getValue #a h (b:buffer a{live h b}) (i:nat{i<max_length h b}) : GTot a = Seq.index (sel h b) i
@@ -46,7 +46,7 @@ let as_seq #a h (b:buffer a{live h b}) : GTot (seq a) = Seq.slice (sel h b) (idx
 
 (* Equality predicate between buffers without existential quantifiers *)
 let equal #a h (b:buffer a) h' (b':buffer a) : GTot Type0 =
-  live h b /\ live h' b' /\ Seq.equal (as_seq h b) (as_seq h' b')
+  live h b /\ live h' b' /\ as_seq h b == as_seq h' b'
 
 (* Equality predicate between buffers wih existential quantifiers *)
 val eq_lemma: #a:Type -> h:mem -> b:buffer a{live h b} -> h':mem -> b':buffer a{live h' b'} -> Lemma
@@ -89,7 +89,7 @@ let lemma_disjoint_sub' #a #a' (x:buffer a) (subx:buffer a) (y:buffer a') : Lemm
   [SMTPat (disjoint y subx); SMTPat (includes x subx)]
   = ()
 
-(* Abstraction of buffers of any type *)
+(* (* Abstract *)ion of buffers of any type *)
 #set-options "--__temp_no_proj SBuffer"
 noeq type abuffer = | Buff: #t:Type -> b:buffer t -> abuffer
 
@@ -297,26 +297,26 @@ let modifies_trans_4_4 rid b b' b'' b''' h0 h1 h2 :
 (* TODO: complete with specialized versions of every general lemma *)
 
 (* Modifies clauses that do not change the shape of the HyperStack (h1.tip = h0.tip) *)
-abstract let modifies_0 h0 h1 = 
+(* abstract *) let modifies_0 h0 h1 = 
   modifies_one h0.tip h0 h1 /\ modifies_buf_0 h0.tip h0 h1
 
-abstract let modifies_1 (#a:Type) (b:buffer a) h0 h1 =
+(* abstract *) let modifies_1 (#a:Type) (b:buffer a) h0 h1 =
   let rid = frameOf b in
   modifies_one rid h0 h1 /\ modifies_buf_1 rid b h0 h1
 
-abstract let modifies_2_1 (#a:Type) (b:buffer a) h0 h1 =
+(* abstract *) let modifies_2_1 (#a:Type) (b:buffer a) h0 h1 =
   let rid = frameOf b in
   ((rid = h0.tip /\ modifies_buf_1 rid b h0 h1 /\ modifies_one rid h0 h1)
   \/ (rid <> h0.tip /\ HH.modifies_just (Set.union (Set.singleton rid) (Set.singleton h0.tip)) h0.h h1.h  
       /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_0 h0.tip h0 h1 ))
 
-abstract let modifies_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 =
+(* abstract *) let modifies_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 =
   let rid = frameOf b in let rid' = frameOf b' in
   ((rid = rid' /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_one rid h0 h1)
   \/ (rid <> rid' /\ HH.modifies_just (Set.union (Set.singleton rid) (Set.singleton rid')) h0.h h1.h  
       /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 ))
 
-abstract let modifies_3 (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer a')  (b'':buffer a'') h0 h1 =
+(* abstract *) let modifies_3 (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer a')  (b'':buffer a'') h0 h1 =
   let rid = frameOf b in let rid' = frameOf b' in let rid'' = frameOf b'' in
   ((rid = rid' /\ rid' = rid'' /\ modifies_buf_3 rid b b' b'' h0 h1 /\ modifies_one rid h0 h1)
   \/ (rid = rid' /\ rid' <> rid'' /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_buf_1 rid'' b'' h0 h1
@@ -329,7 +329,7 @@ abstract let modifies_3 (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer
       /\ HH.modifies_just (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton rid'')) h0.h h1.h  
       /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_1 rid'' b'' h0 h1))
 
-abstract let modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 =
+(* abstract *) let modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 =
   let rid = frameOf b in let rid' = frameOf b' in
   ((rid = rid' /\ rid' = h0.tip /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_one rid h0 h1)
   \/ (rid = rid' /\ rid' <> h0.tip /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_buf_0 h0.tip h0 h1
@@ -342,7 +342,7 @@ abstract let modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1
       /\ HH.modifies_just (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton h0.tip)) h0.h h1.h  
       /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_0 h0.tip h0 h1))
 
-abstract let modifies_region rid bufs h0 h1 =
+(* abstract *) let modifies_region rid bufs h0 h1 =
   modifies_one rid h0 h1 /\ modifies_buf rid bufs h0 h1
 
 let lemma_stl_1 (#a:Type) (b:buffer a) h0 h1 h2 h3 : Lemma
@@ -446,7 +446,7 @@ let lemma_modifies_0_1 (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
 let lemma_modifies_0_1' (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
   (requires (~(contains h0 b) /\ modifies_0 h0 h1 /\ live h1 b /\ modifies_1 b h1 h2))
   (ensures  (modifies_0 h0 h2))
-  (* [SMTPat (modifies_0 h0 h1); SMTPat (modifies_1 b h1 h2)] *)
+  [SMTPat (modifies_0 h0 h1); SMTPat (modifies_1 b h1 h2)]
   = ()
 
 #reset-options "--z3timeout 100"
@@ -552,14 +552,19 @@ let create #a (init:a) (len:UInt32.t) : ST (buffer a)
      (ensures (fun (h0:mem) b h1 -> ~(contains h0 b) 
        /\ live h1 b /\ idx b = 0 /\ length b = v len /\ frameOf b = h0.tip
        /\ modifies_0 h0 h1
-       /\ sel h1 b == Seq.create (v len) init
+       /\ as_seq h1 b == Seq.create (v len) init
        ))
   = let content = salloc (Seq.create (v len) init) in
-    {content = content; idx = (uint_to_t 0); length = len}
+    let h = HST.get() in
+    let b = {content = content; idx = (uint_to_t 0); length = len} in
+    Seq.lemma_eq_intro (as_seq h b) (sel h b);
+    b
+
 
 let index #a (b:buffer a) (n:UInt32.t{v n<length b}) : STL a
      (requires (fun h -> live h b))
-     (ensures (fun h0 z h1 -> live h0 b /\ h1 == h0 /\ z == get h0 b (v n) ))
+     (ensures (fun h0 z h1 -> live h0 b /\ h1 == h0
+       /\ z == Seq.index (as_seq h0 b) (v n)))
   = let s = !b.content in
     Seq.index s (v b.idx+v n)
 
@@ -576,26 +581,39 @@ val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> STL unit
   (requires (fun h -> live h b /\ v n < length b))
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ v n < length b
     /\ modifies_1 b h0 h1
-    /\ sel h1 b == Seq.upd (sel h0 b) (idx b + v n) z
-    /\ get h1 b (v n) == z
-    /\ (forall (i:nat). {:pattern (get h1 b i)} (i < length b /\ i <> v n) ==> get h1 b i == get h0 b i)
-    ))
+    /\ as_seq h1 b == Seq.upd (as_seq h0 b) (v n) z ))
+    (* /\ get h1 b (v n) == z *)
+    (* /\ (forall (i:nat). {:pattern (get h1 b i)} (i < length b /\ i <> v n) ==> get h1 b i == get h0 b i) *)
 let upd #a b n z =
-  let s = !b.content in
-  let s = Seq.upd s (v b.idx + v n) z in
-  b.content := s
+  let s0 = !b.content in
+  let s = Seq.upd s0 (v b.idx + v n) z in
+  b.content := s;
+  let h = HST.get() in
+  Seq.lemma_eq_intro (as_seq h b) (Seq.slice s (idx b) (idx b + length b));
+  Seq.lemma_eq_intro (Seq.upd (Seq.slice s0 (idx b) (idx b + length b)) (v n) z)
+  		     (Seq.slice (Seq.upd s0 (idx b + v n) z) (idx b) (idx b + length b));
+  ()
 
 (* Could be made Total with a couple changes in the spec *)
 let sub #a (b:buffer a) (i:UInt32.t) (len:UInt32.t{v len <= length b /\ v i + v len <= length b}) : STL (buffer a)
      (requires (fun h -> live h b))
-     (ensures (fun h0 b' h1 -> content b == content b' /\ idx b' = idx b + v i /\ length b' = v len /\ (h0 == h1 /\ includes b b' /\ live h1 b')))
-  = {content = b.content; idx = i +^ b.idx; length = len}
+     (ensures (fun h0 b' h1 -> content b == content b' /\ idx b' = idx b + v i /\ length b' = v len 
+       /\ h0 == h1 /\ includes b b' /\ live h1 b' /\ live h0 b
+       /\ as_seq h1 b' == Seq.slice (as_seq h0 b) (v i) (v i + v len) ))
+  = let b' = {content = b.content; idx = i +^ b.idx; length = len} in
+    let h = HST.get() in
+    Seq.lemma_eq_intro (as_seq h b') (Seq.slice (as_seq h b) (v i) (v i + v len));
+    b'
 
 let offset #a (b:buffer a) (i:UInt32.t{v i <= length b}) : STL (buffer a)
   (requires (fun h -> live h b))
   (ensures (fun h0 b' h1 -> content b' == content b /\ idx b' = idx b + v i /\ length b' = length b - v i
-    /\ h0 == h1 /\ includes b b' /\ live h1 b'))
-  = {content = b.content; idx = i +^ b.idx; length = b.length -^ i}
+    /\ h0 == h1 /\ includes b b' /\ live h1 b'
+    /\ as_seq h1 b' == Seq.slice (as_seq h0 b) (v i) (length b) ))
+  = let b' = {content = b.content; idx = i +^ b.idx; length = b.length -^ i} in
+    let h = HST.get() in
+    Seq.lemma_eq_intro (as_seq h b') (Seq.slice (as_seq h b) (v i) (length b));
+    b'
 
 let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem): Lemma
   (requires (modifies_one (frameOf b) h0 h1 /\ modifies_one (frameOf b) h1 h2))
@@ -604,6 +622,7 @@ let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem)
   = ()
 
 #reset-options "--z3timeout 100"
+#set-options "--lax" // TODO: restore after switching to FStar.Seq-based specification
 
 private val blit_aux: #a:Type -> b:buffer a -> idx_b:UInt32.t -> 
   b':buffer a -> idx_b':UInt32.t -> len:UInt32.t{v idx_b+v len<=length b/\v idx_b'+v len<= length b'} -> 
@@ -628,23 +647,41 @@ let rec blit_aux #a b idx_b b' idx_b' len ctr =
   end
 
 #reset-options
+#set-options "--lax"
 
 val blit: #t:Type -> a:buffer t -> idx_a:UInt32.t{v idx_a <= length a} -> b:buffer t{disjoint a b} -> 
   idx_b:UInt32.t{v idx_b <= length b} -> len:UInt32.t{v idx_a+v len <= length a /\ v idx_b+v len <= length b} -> STL unit
     (requires (fun h -> live h a /\ live h b))
     (ensures (fun h0 _ h1 -> live h0 b /\ live h0 a /\ live h1 b /\ live h1 a
-      /\ (forall (i:nat). {:pattern (get h1 b (v idx_b+i))} i < v len ==> get h1 b (v idx_b+i) == get h0 a (v idx_a+i))
-      /\ (forall (i:nat). {:pattern (get h1 b i)} ((i >= v idx_b + v len /\ i < length b) \/ i < v idx_b) ==> get h1 b i == get h0 b i)
+      (* /\ (forall (i:nat). {:pattern (get h1 b (v idx_b+i))} i < v len ==> get h1 b (v idx_b+i) == get h0 a (v idx_a+i)) *)
+      (* /\ (forall (i:nat). {:pattern (get h1 b i)} ((i >= v idx_b + v len /\ i < length b) \/ i < v idx_b) ==> get h1 b i == get h0 b i) *)
+      /\ Seq.slice (as_seq h1 b) (v idx_b) (v idx_b+v len) == Seq.slice (as_seq h0 a) (v idx_a) (v idx_a+v len)
+      /\ Seq.slice (as_seq h1 b) 0 (v idx_b) == Seq.slice (as_seq h0 b) 0 (v idx_b)
+      /\ Seq.slice (as_seq h1 b) (v idx_b+v len) (length b) == Seq.slice (as_seq h0 b) (v idx_b+v len) (length b)
       /\ modifies_1 b h0 h1 ))
 let blit #t a idx_a b idx_b len = blit_aux a idx_a b idx_b len (uint_to_t 0)
+
+#reset-options
+
+assume val fill: #t:Type -> b:buffer t -> z:t -> len:UInt32.t{v len <= length b} -> STL unit
+  (requires (fun h -> live h b))
+  (ensures  (fun h0 _ h1 -> live h0 b /\ live h1 b /\ modifies_1 b h0 h1
+    /\ Seq.slice (as_seq h1 b) 0 (v len) == Seq.create (v len) z
+    /\ Seq.slice (as_seq h1 b) (v len) (length b) == Seq.slice (as_seq h0 b) (v len) (length b) ))
+
+#reset-options
 
 val split: #a:Type -> a:buffer t -> i:UInt32.t{v i <= length a} -> STL (buffer t * buffer t)
     (requires (fun h -> live h a))
     (ensures (fun h0 b h1 -> live h1 (fst b) /\ live h1 (snd b) /\ h1 == h0 /\ idx (fst b) = idx a 
       /\ idx (snd b) = idx a + v i /\ length (fst b) = v i /\ length (snd b) = length a - v i 
-      /\ disjoint (fst b) (snd b)  /\ content (fst b) == content a /\ content (snd b) == content a))
+      /\ disjoint (fst b) (snd b)  /\ content (fst b) == content a /\ content (snd b) == content a
+      /\ as_seq h1 (fst b) == Seq.slice (as_seq h0 a) 0 (v i)
+      /\ as_seq h1 (snd b) == Seq.slice (as_seq h0 a) (v i) (length a) ))
 let split #t a i = 
   let a1 = sub a (uint_to_t 0) i in let a2 = sub a i (a.length -^ i) in a1, a2
+
+#set-options "--lax" // TODO: FIX
 
 private val of_seq_aux: #a:Type -> s:bounded_seq a -> l:UInt32.t{v l = Seq.length s} -> ctr:UInt32.t{v ctr <= v l} -> b:buffer a{idx b = 0 /\ length b = v l} -> STL unit
     (requires (fun h -> live h b))
@@ -682,6 +719,8 @@ let clone #a b l =
   let (b':buffer a) = create init l in 
   blit b (uint_to_t 0) b' (uint_to_t 0) l; 
   b'
+
+#reset-options
 
 val no_upd_lemma_0: #t:Type -> h0:mem -> h1:mem -> b:buffer t -> Lemma
   (requires (live h0 b /\ modifies_0 h0 h1))
@@ -812,6 +851,12 @@ let modifies_subbuffer_2_prime (#t:Type) h0 h1 (sub1:buffer t) (sub2:buffer t) (
   [SMTPat (modifies_2 sub1 sub2 h0 h1); SMTPat (includes a sub1); SMTPat (includes a sub2)]
   = ()
 
+let modifies_popped_2 (#t:Type) #t' (a:buffer t) (b:buffer t') h0 h1 h2 h3 : Lemma
+  (requires (live h0 a /\ live h0 b /\ fresh_frame h0 h1 /\ popped h2 h3 /\ modifies_2 a b h1 h2))
+  (ensures  (modifies_2 a b h0 h3))
+  [SMTPat (fresh_frame h0 h1); SMTPat (popped h2 h3); SMTPat (modifies_2 a b h1 h2)]
+  = ()
+
 let modifies_popped_1 (#t:Type) (a:buffer t) h0 h1 h2 h3 : Lemma
   (requires (live h0 a /\ fresh_frame h0 h1 /\ popped h2 h3 /\ modifies_2_1 a h1 h2))
   (ensures  (modifies_1 a h0 h3))
@@ -847,6 +892,28 @@ let modifies_0_to_2_1_lemma (#t:Type) h0 h1 (b:buffer t) : Lemma
   (ensures  (modifies_2_1 b h0 h1))
   [SMTPat (modifies_2_1 b h0 h1); SMTPat (live h0 b) ]
   = ()
+
+let lemma_modifies_none_push_pop h0 h1 h2 : Lemma
+  (requires (fresh_frame h0 h1 /\ popped h1 h2))
+  (ensures  (h2 == h0))
+  = admit()
+
+let lemma_modifies_0_push_pop h0 h1 h2 h3 : Lemma
+  (requires (fresh_frame h0 h1 /\ modifies_0 h1 h2 /\ popped h2 h3))
+  (ensures  (h3 == h0))
+  = admit()
+
+let modifies_1_to_2_1_lemma (#t:Type) h0 h1 (b:buffer t) : Lemma
+  (requires (modifies_1 b h0 h1 /\ live h0 b))
+  (ensures  (modifies_2_1 b h0 h1))
+  [SMTPat (modifies_2_1 b h0 h1); SMTPat (live h0 b) ]
+  = ()
+
+(* let modifies_1_to_2_lemma (#t:Type) #t' h0 h1 (b:buffer t) (b':buffer t'): Lemma *)
+(*   (requires (modifies_1 b h0 h1 /\ live h0 b)) *)
+(*   (ensures  (modifies_2 b b' h0 h1)) *)
+(*   [SMTPat (modifies_2 b b' h0 h1); SMTPat (live h0 b) ] *)
+(*   = () *)
 
 let modifies_poppable_0 h0 h1 : Lemma
   (requires (modifies_0 h0 h1 /\ HS.poppable h0))

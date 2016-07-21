@@ -63,16 +63,16 @@ assume type ist_witnessed: p:predicate heap{stable heap_rel p} -> Type0
 
 (* Generic effects (operations) for IST. *)
 
-assume val ist_get :     unit -> IST heap (fun s0 -> True) (fun s0 s s1 -> s0 = s /\ s = s1)
+assume val ist_get :     unit -> IST heap (fun s0 -> True) (fun s0 s s1 -> s0 == s /\ s == s1)
 
 assume val ist_put :     x:heap ->
-		         IST unit (fun s0 -> heap_rel s0 x) (fun s0 _ s1 -> s1 = x)
+		         IST unit (fun s0 -> heap_rel s0 x) (fun s0 _ s1 -> s1 == x)
 
 assume val ist_witness : p:predicate heap{stable heap_rel p} ->
-		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 = s1 /\ ist_witnessed p)
+		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 == s1 /\ ist_witnessed p)
 
 assume val ist_recall :  p:predicate heap{stable heap_rel p} -> 
-		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 = s1 /\ p s1)
+		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 == s1 /\ p s1)
 
 (* *************************************************** *)
 
@@ -107,7 +107,7 @@ val alloc : #a:Type ->
 	    ImmutableST (ref a) (fun _ -> True)
                                 (fun h0 r h1 -> ~(contains h0 r) /\
 					        contains h1 r /\
-						h1 = upd h0 r x)
+						h1 == upd h0 r x)
 let alloc #a x = 
   let h = ist_get () in
   let r = gen_ref h in
@@ -118,8 +118,8 @@ let alloc #a x =
 val read : #a:Type -> 
            r:ref a -> 
 	   ImmutableST a (fun _       -> True) 
-                         (fun h0 x h1 -> h0 = h1 /\ 
-					 x = sel h1 r)
+                         (fun h0 x h1 -> h0 == h1 /\ 
+					 x == sel h1 r)
 let read #a r = 
   let h = ist_get () in
   sel h r
@@ -130,8 +130,8 @@ let read #a r =
 val write : #a:Type -> 
             r:ref a -> 
 	    x:a -> 
-	    ImmutableST unit (fun h0      -> sel h0 r = x)
-                             (fun h0 _ h1 -> h1 = upd h0 r x)
+	    ImmutableST unit (fun h0      -> sel h0 r == x)
+                             (fun h0 _ h1 -> h1 == upd h0 r x)
 let write #a r x =
   let h = ist_get () in
   ist_put (upd h r x)

@@ -15,10 +15,10 @@ open Preorder
 let snapshot_state (state:Type) = state * (option state)
 
 let snapshot_rel (#state:Type) (rel:relation state{preorder rel}) (s0:snapshot_state state) (s1:snapshot_state state) = 
-     ((snd s0 = None #state /\ snd s1 = None #state) ==> rel (fst s0) (fst s1))
-  /\ (forall s . (snd s0 = None #state /\ snd s1 = Some s) ==> rel (fst s0) s)
-  /\ (forall s . (snd s0 = Some s /\ snd s1 = None #state) ==> rel s (fst s1))
-  /\ (forall s s' . (snd s0 = Some s /\ snd s1 = Some s') ==> rel s s')  
+     ((snd s0 == None #state /\ snd s1 == None #state) ==> rel (fst s0) (fst s1))
+  /\ (forall s . (snd s0 == None #state /\ snd s1 == Some s) ==> rel (fst s0) s)
+  /\ (forall s . (snd s0 == Some s /\ snd s1 == None #state) ==> rel s (fst s1))
+  /\ (forall s s' . (snd s0 == Some s /\ snd s1 == Some s') ==> rel s s')  
 
 
 (* Proof that the relation of the snapshot instance of IST is associative. *)
@@ -57,8 +57,8 @@ let snapshot_rel_assoc #state rel s0 s1 s2 =
 (* Witnessing predicate for the snapshot instance of IST. *)
 
 let witnessing_predicate (#state:Type) (#rel:relation state{preorder rel}) (p:predicate state{stable rel p}) (s:snapshot_state state) =
-  (snd s = None ==> p (fst s)) /\ 
-  (forall s' . snd s = Some s' ==> p s')
+  (snd s == None ==> p (fst s)) /\ 
+  (forall s' . snd s == Some s' ==> p s')
 
 
 val witnessing_predicate_stable : #state:Type ->
@@ -129,16 +129,16 @@ assume type ist_witnessed: p:predicate (snapshot_state tmp_state){stable (snapsh
 
 (* Generic effects (operations) for IST. *)
 
-assume val ist_get :     unit -> IST (snapshot_state tmp_state) (fun s0 -> True) (fun s0 s s1 -> s0 = s /\ s = s1)
+assume val ist_get :     unit -> IST (snapshot_state tmp_state) (fun s0 -> True) (fun s0 s s1 -> s0 == s /\ s == s1)
 
 assume val ist_put :     x:snapshot_state tmp_state ->
-		         IST unit (fun s0 -> snapshot_rel tmp_rel s0 x) (fun s0 _ s1 -> s1 = x)
+		         IST unit (fun s0 -> snapshot_rel tmp_rel s0 x) (fun s0 _ s1 -> s1 == x)
 
 assume val ist_witness : p:predicate (snapshot_state tmp_state){stable (snapshot_rel tmp_rel) p} ->
-		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 = s1 /\ ist_witnessed p)
+		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 == s1 /\ ist_witnessed p)
 
 assume val ist_recall :  p:predicate (snapshot_state tmp_state){stable (snapshot_rel tmp_rel) p} -> 
-		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 = s1 /\ p s1)
+		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 == s1 /\ p s1)
 
 (* ************************************************************************************************** *)
 
@@ -169,9 +169,9 @@ let witnessed (p:predicate tmp_state{stable tmp_rel p}) =
 
 val read : unit -> 
            SnapshotST tmp_state (fun s0      -> True)
-				(fun s0 s s1 -> fst s0 = s /\ 
-				                s = fst s1 /\ 
-						snd s0 = snd s1)
+				(fun s0 s s1 -> fst s0 == s /\ 
+				                fst s1 == s /\ 
+						snd s0 == snd s1)
 let read _ = 
   let s = ist_get () in
   fst s
@@ -179,7 +179,7 @@ let read _ =
 
 val write : x:tmp_state -> 
             SnapshotST unit (fun s0      -> snapshot_rel tmp_rel s0 (x, snd s0))
-		            (fun s0 _ s1 -> s1 = (x, snd s0))
+		            (fun s0 _ s1 -> s1 == (x, snd s0))
 let write x = 
   let s = ist_get () in
   ist_put (x, snd s)
@@ -189,8 +189,8 @@ let write x =
 
 val witness : p:predicate tmp_state{stable tmp_rel p} -> 
               SnapshotST unit (fun s0      -> p (fst s0) /\ 
-	                                      snd s0 = None)
-			      (fun s0 _ s1 -> s0 = s1 /\ 
+	                                      snd s0 == None)
+			      (fun s0 _ s1 -> s0 == s1 /\ 
 			                      witnessed p)
 let witness p = 
   ist_witness (fun s -> witnessing_predicate #tmp_state #tmp_rel p s)
@@ -198,8 +198,8 @@ let witness p =
 
 val recall : p:predicate tmp_state{stable tmp_rel p} -> 
              SnapshotST unit (fun s0      -> witnessed p /\ 
-	                                     snd s0 = None)
-			     (fun s0 _ s1 -> s0 = s1 /\ 
+	                                     snd s0 == None)
+			     (fun s0 _ s1 -> s0 == s1 /\ 
 			                     p (fst s0))
 let recall p =
   ist_recall (fun s -> witnessing_predicate #tmp_state #tmp_rel p s)
@@ -208,9 +208,9 @@ let recall p =
 (* Operation for making a snapshot of the current "consistent" state, allowing the future state updates to temporarily invalidate the preorder. *)
 
 val make_snapshot : unit -> 
-                    SnapshotST unit (fun s0      -> snd s0 = None) 
-			            (fun s0 _ s1 -> fst s0 = fst s1 /\ 
-				                    snd s1 = Some (fst s0))
+                    SnapshotST unit (fun s0      -> snd s0 == None) 
+			            (fun s0 _ s1 -> fst s0 == fst s1 /\ 
+				                    snd s1 == Some (fst s0))
 let make_snapshot _ = 
   let s = ist_get () in 
   ist_put (fst s, Some (fst s))
@@ -220,10 +220,10 @@ let make_snapshot _ =
 
 val restore_consistency : unit -> 
                           SnapshotST unit (fun s0      -> exists s . 
-			                                    snd s0 = Some s /\ 
+			                                    snd s0 == Some s /\ 
 							    tmp_rel s (fst s0))
-                                          (fun s0 _ s1 -> fst s0 = fst s1 /\ 
-					                  snd s1 = None)
+                                          (fun s0 _ s1 -> fst s0 == fst s1 /\ 
+					                  snd s1 == None)
 let restore_consistency _ = 
   let s = ist_get () in
   ist_put (fst s, None)

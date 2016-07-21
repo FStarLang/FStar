@@ -21,7 +21,7 @@ let contains_lemma #a #r h m = ()
 
 (* Relating two heaps using the preorders associated with allocated monotonic references. *)
 
-abstract type heap_rel (h0:heap) (h1:heap) = 
+let heap_rel (h0:heap) (h1:heap) = 
   (forall a r (m:mref a r) . contains m h0  ==> contains m h1) /\  
   (forall a r (m:mref a r{contains m h0}) . r (sel h0 m) (sel h1 m))
 
@@ -78,16 +78,16 @@ assume type ist_witnessed : p:predicate heap{stable heap_rel p} -> Type0
 
 (* Generic effects (operations) for IST. *)
 
-assume val ist_get :     unit -> IST heap (fun s0 -> True) (fun s0 s s1 -> s0 = s /\ s = s1)
+assume val ist_get :     unit -> IST heap (fun s0 -> True) (fun s0 s s1 -> s0 == s /\ s == s1)
 
 assume val ist_put :     x:heap ->
-		         IST unit (fun s0 -> heap_rel s0 x) (fun s0 _ s1 -> s1 = x)
+		         IST unit (fun s0 -> heap_rel s0 x) (fun s0 _ s1 -> s1 == x)
 
 assume val ist_witness : p:predicate heap{stable heap_rel p} ->
-		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 = s1 /\ ist_witnessed p)
+		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 == s1 /\ ist_witnessed p)
 
 assume val ist_recall :  p:predicate heap{stable heap_rel p} -> 
-		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 = s1 /\ p s1)
+		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 == s1 /\ p s1)
 
 
 (* *************************************************** *)
@@ -120,8 +120,8 @@ val alloc : #a:Type ->
 	    x:a -> 
 	    MRefST (mref a r) (fun _       -> True)
                               (fun h0 m h1 -> ~(contains m h0) /\ 
-					      fst (alloc_ref h0 a r x) = m /\
-					      snd (alloc_ref h0 a r x) = h1)
+					      fst (alloc_ref h0 a r x) == m /\
+					      snd (alloc_ref h0 a r x) == h1)
 let alloc #a r x = 
   let h0 = ist_get () in
   let mh1 = alloc_ref h0 a r x in 
@@ -134,9 +134,9 @@ val read : #a:Type ->
            #r:relation a{preorder r} -> 
 	   m:mref a r -> 
 	   MRefST a (fun _      -> True) 
-                    (fun h0 x h1 -> h0 = h1 /\ 
+                    (fun h0 x h1 -> h0 == h1 /\ 
 		                    contains m h1 /\ 
-				    sel h1 m = x)
+				    sel h1 m == x)
 let read #a #r m =
   let h = ist_get () in
   ist_recall (contains m);    //recalling that the current heap must contain the given reference
@@ -150,7 +150,7 @@ val write : #a:Type ->
 	    MRefST unit (fun h0      -> contains m h0 /\ 
 	                                r (sel h0 m) x)
                         (fun h0 _ h1 -> contains m h0 /\ 
-			                h1 = upd h0 m x)
+			                h1 == upd h0 m x)
 let write #a #r m x = 
   let h0 = ist_get () in
   ist_recall (contains m);    //recalling that the current heap must contain the given reference
@@ -191,7 +191,7 @@ val witness : #a:Type ->
 	      m:mref a r ->
 	      p:predicate heap{stable_on_heap m p} -> 
 	      MRefST unit (fun h0      -> p h0)
-	                  (fun h0 _ h1 -> h0 = h1 /\ 
+	                  (fun h0 _ h1 -> h0 == h1 /\ 
 			                  ist_witnessed p)
 let witness #a #r m p =
   ist_witness p
@@ -202,8 +202,7 @@ val recall : #a:Type ->
 	     m:mref a r ->
 	     p:predicate heap{stable_on_heap m p} -> 
 	     MRefST unit (fun h0      -> ist_witnessed p)
-	                 (fun h0 _ h1 -> h0 = h1 /\ 
+	                 (fun h0 _ h1 -> h0 == h1 /\ 
 			                 p h1)
 let recall #a #r m p =
   ist_recall p
-

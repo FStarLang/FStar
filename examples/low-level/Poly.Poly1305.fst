@@ -182,6 +182,7 @@ let le_bytes_to_num b s =
   assume (norm h b)
 
 #reset-options
+#set-options "--lax"
 
 (* Runs "Acc = ((Acc+block)*r) % p." *)
 val add_and_multiply: acc:bigint -> block:bigint{disjoint acc block} -> r:bigint{disjoint acc r /\ disjoint block r} -> STL unit
@@ -395,3 +396,4 @@ let poly1305_mac hash msg len key =
   pop_frame();
   let hfin = HST.get() in
   ()
+

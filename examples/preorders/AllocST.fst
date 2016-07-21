@@ -76,16 +76,16 @@ assume type ist_witnessed : p:predicate heap{stable heap_rel p} -> Type0
 
 (* Generic effects (operations) for IST. *)
 
-assume val ist_get :     unit -> IST heap (fun s0 -> True) (fun s0 s s1 -> s0 = s /\ s = s1)
+assume val ist_get :     unit -> IST heap (fun s0 -> True) (fun s0 s s1 -> s0 == s /\ s == s1)
 
 assume val ist_put :     x:heap ->
-		         IST unit (fun s0 -> heap_rel s0 x) (fun s0 _ s1 -> s1 = x)
+		         IST unit (fun s0 -> heap_rel s0 x) (fun s0 _ s1 -> s1 == x)
 
 assume val ist_witness : p:predicate heap{stable heap_rel p} ->
-		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 = s1 /\ ist_witnessed p)
+		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 == s1 /\ ist_witnessed p)
 
 assume val ist_recall :  p:predicate heap{stable heap_rel p} -> 
-		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 = s1 /\ p s1)
+		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 == s1 /\ p s1)
 
 (* *************************************************** *)
 
@@ -117,8 +117,8 @@ val alloc : #a:Type ->
             x:a -> 
 	    AllocST (ref a) (fun _       -> True)
                             (fun h0 r h1 -> ~(contains r h0) /\ 
-					    fst (alloc_ref h0 a x) = r /\ 
-					    snd (alloc_ref h0 a x) = h1)
+					    fst (alloc_ref h0 a x) == r /\ 
+					    snd (alloc_ref h0 a x) == h1)
 let alloc #a x = 
   let h0 = ist_get () in
   let rh1 = alloc_ref h0 a x in 
@@ -130,9 +130,9 @@ let alloc #a x =
 val read : #a:Type -> 
            r:ref a -> 
 	   AllocST a (fun h0      -> True) 
-                     (fun h0 x h1 -> h0 = h1 /\ 
+                     (fun h0 x h1 -> h0 == h1 /\ 
 		                     contains r h1 /\ 
-				     sel h1 r = x)
+				     sel h1 r == x)
 let read #a r =
   let h = ist_get () in
   ist_recall (contains r);        //recalling that the current heap must contain the given reference
@@ -144,7 +144,7 @@ val write : #a:Type ->
 	    x:a -> 
 	    AllocST unit (fun h0      -> True)
                          (fun h0 _ h1 -> contains r h0 /\ 
-			                 h1 = upd h0 r x)
+			                 h1 == upd h0 r x)
 let write #a r x = 
   let h0 = ist_get () in
   ist_recall (contains r);        //recalling that the current heap must contain the given reference
@@ -155,7 +155,7 @@ let write #a r x =
 val recall : #a:Type -> 
              r:ref a -> 
 	     AllocST unit (fun h0      -> True) 
-                          (fun h0 _ h1 -> h0 = h1 /\ 
+                          (fun h0 _ h1 -> h0 == h1 /\ 
 			                  contains r h1)
 let recall #a r = 
   ist_recall (contains r)         //recalling that the current heap must contain the given reference

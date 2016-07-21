@@ -22,7 +22,8 @@ The situation is kind of complicated.
   into [boot_fsts] when *extracting* [lexhelp.fs] so that [lexhelp.fs] has
   something to type-check against; but, it is _not_ used when compiling the
   extracted OCaml code, because the token datatype is directly written out by
-  [ocamlyacc] into [parse.ml]
+  [ocamlyacc] into [parse.ml]; note: this file is checked in to support the
+  scenario where someone wants to bootstrap and recompile without an F# setup
 - [parsefstar.fsi]; old file that was under version control, no one was ever
   using it, I (JP) removed it
 - [parse.fsti]; previously used to serve the purpose of extracting [lexhelp.fs];

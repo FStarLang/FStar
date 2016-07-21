@@ -12,7 +12,6 @@ cache/
 /VS/packages
 
 /src/parser/parse.fs
-/src/parser/parse.fsi
 /src/parser/lex.fs
 /src/parser/parse.ml
 /src/parser/parse.mli
