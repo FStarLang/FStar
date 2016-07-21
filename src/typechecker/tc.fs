@@ -1773,12 +1773,10 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     | ForFree ->
         DMFF.gen_wps_for_free env binders a wp_a tc_decl tc_term ed
   in
-  Util.print2 "a is: %s:%s\n" (Print.term_to_string (S.bv_to_name a)) (Print.term_to_string a.sort);
 
   let return_wp =
     let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
     check_and_gen' env ed.ret_wp expected_k in
-  Util.print2 "a is: %s:%s\n" (Print.term_to_string (S.bv_to_name a)) (Print.term_to_string a.sort);
 
   let bind_wp =
     let b, wp_b = get_effect_signature () in
@@ -1844,9 +1842,6 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                  S.null_binder wp_a]
                                 (S.mk_GTotal t) in
     check_and_gen' env ed.trivial expected_k in
-
-  Util.print2 "a is: %s:%s\n" (Print.term_to_string (S.bv_to_name a)) (Print.term_to_string a.sort);
-  Util.print1 "\x1b[01;36m%s\x1b[00m\n" "done";
 
   let repr, bind_repr, return_repr, actions =
       if (ed.qualifiers |> List.contains Reifiable
