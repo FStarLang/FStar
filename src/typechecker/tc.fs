@@ -2019,6 +2019,7 @@ and elaborate_and_star env0 ed =
     // TODO: more stringent checks on the shape of the signature; better errors
     match (SS.compress signature).n with
     | Tm_arrow ([(a, _)], effect_marker) ->
+        let a = { a with sort = N.normalize [ N.EraseUniverses ] env a.sort } in
         a, effect_marker
     | _ ->
         failwith "bad shape for effect-for-free signature"
@@ -2033,9 +2034,12 @@ and elaborate_and_star env0 ed =
     Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
     // Note to self: it's ok to check something, but only if we erase the
     // universes afterwards
-    let t, _, _ = tc_term env t in
-    Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t);
-    N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant; N.EraseUniverses ] env t
+    let t', _, _ = tc_term env t in
+    Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
+    if true then
+      N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant; N.EraseUniverses ] env t'
+    else
+      t
   in
 
   // TODO: check that [_comp] is [Tot Type]
@@ -2102,7 +2106,7 @@ and elaborate_and_star env0 ed =
   let c = close binders in
 
   let ed = { ed with
-    signature = c effect_signature;
+    signature = effect_signature;
     ret_wp = [], c return_wp;
     bind_wp = [], c bind_wp;
     return_repr = [], c return_elab;
