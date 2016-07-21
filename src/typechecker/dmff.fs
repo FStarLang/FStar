@@ -281,9 +281,10 @@ let gen_wps_for_free
           U.mk_app l_and [S.as_arg (S.bv_to_name q)]]);
         S.bv_to_name wp])
     in
-    U.abs (S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
+    U.abs (binders @ S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
   in
-  check env "wp_assert" (U.abs binders wp_assert None);
+  let env, wp_assert = register env (mk_lid "wp_assert") wp_assert in
+  let wp_assert = mk_generic_app wp_assert in
 
   (* val st2_assume_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
                        Tot (st2_wp heap a)
@@ -298,9 +299,10 @@ let gen_wps_for_free
           U.mk_app l_imp [S.as_arg (S.bv_to_name q)]]);
         S.bv_to_name wp])
     in
-    U.abs (S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
+    U.abs (binders @ S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
   in
-  check env "wp_assume" (U.abs binders wp_assume None);
+  let env, wp_assume = register env (mk_lid "wp_assume") wp_assume in
+  let wp_assume = mk_generic_app wp_assume in
 
   (* val st2_close_wp : heap:Type -> a:Type -> b:Type ->
                         f:(b->Tot (st2_wp heap a)) ->
@@ -315,13 +317,14 @@ let gen_wps_for_free
         U.mk_app c_pure (List.map S.as_arg [ U.tforall ]);
         U.mk_app c_push (List.map S.as_arg [ S.bv_to_name f ])])
     in
-    U.abs (S.binders_of_list [ a; b; f ]) body ret_tot_wp_a
+    U.abs (binders @ S.binders_of_list [ a; b; f ]) body ret_tot_wp_a
   in
-  check env "wp_close" (U.abs binders wp_close None);
+  let env, wp_close = register env (mk_lid "wp_close") wp_close in
+  let wp_close = mk_generic_app wp_close in
 
-  let ret_tot_type0 = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype)) in
+  let ret_tot_type = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype)) in
   let mk_forall (x: S.bv) (body: S.term): S.term =
-    S.mk (Tm_app (U.tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type0)])) None Range.dummyRange
+    S.mk (Tm_app (U.tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type)])) None Range.dummyRange
   in
 
   (* For each (target) type t, we define a binary relation in t called ≤_t.
@@ -364,9 +367,10 @@ let gen_wps_for_free
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
     let body = mk_leq wp_a (S.bv_to_name wp1) (S.bv_to_name wp2) in
-    U.abs (binders @ binders_of_list [ a, true; wp1, false; wp2, false ]) body ret_tot_type0
+    U.abs (binders @ binders_of_list [ a, true; wp1, false; wp2, false ]) body ret_tot_type
   in
   let env, stronger = register env (mk_lid "stronger") stronger in
+  let stronger = mk_generic_app stronger in
 
   let null_wp = snd ed.null_wp in
 
@@ -374,13 +378,14 @@ let gen_wps_for_free
     let st2_trivial heap a wp = st2_stronger heap a (st2_null_wp heap a) wp *)
   let wp_trivial =
     let wp = S.gen_bv "wp" None wp_a in
-    let body = U.mk_app stronger (args_of_binders binders @ List.map S.as_arg [
+    let body = U.mk_app stronger (List.map S.as_arg [
       U.mk_app null_wp [ S.as_arg (S.bv_to_name a) ];
       S.bv_to_name wp
     ]) in
-    U.abs (S.binders_of_list [ a; wp ]) body ret_tot_type0
+    U.abs (binders @ S.binders_of_list [ a; wp ]) body ret_tot_type
   in
-  check env "wp_trivial" (U.abs binders wp_trivial None);
+  let env, wp_trivial = register env (mk_lid "wp_trivial") wp_trivial in
+  let wp_trivial = mk_generic_app wp_trivial in
 
   d "End Dijkstra monads for free";
 

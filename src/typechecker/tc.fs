@@ -1667,8 +1667,7 @@ let tc_check_trivial_guard env t k =
   t
 
 let check_and_gen env t k =
-    (* Util.print1 "Checking against expected type %s\n" (Print.term_to_string *)
-    (*   (N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env k)); *)
+    Util.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
     TcUtil.generalize_universes env (tc_check_trivial_guard env t k)
 
 let check_nogen env t k =
@@ -1841,6 +1840,8 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                  S.null_binder wp_a]
                                 (S.mk_GTotal t) in
     check_and_gen' env ed.trivial expected_k in
+
+  Util.print1 "\x1b[01;36m%s\x1b[00m\n" "done";
 
   let repr, bind_repr, return_repr, actions =
       if (ed.qualifiers |> List.contains Reifiable
@@ -2032,14 +2033,11 @@ and elaborate_and_star env0 ed =
   in
   let recheck_debug s env t =
     Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
-    // Note to self: it's ok to check something, but only if we erase the
-    // universes afterwards
     let t', _, _ = tc_term env t in
     Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
-    if true then
-      N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant; N.EraseUniverses ] env t'
-    else
-      t
+    // Return the original term (without universes unification variables);
+    // tc_eff_decl will take care of these
+    t
   in
 
   // TODO: check that [_comp] is [Tot Type]
