@@ -39,22 +39,22 @@ end
 val interpret: stmt -> (sgxmem->u64) -> (lowsgxmem->u64) ->((sgxmem->u64)*(lowsgxmem->u64))
 let rec interpret (progstmt:stmt) (sgxenv:sgxmem->u64) (lowsgxenv:lowsgxmem->u64) = begin match progstmt with
   | Skip -> (sgxenv, lowsgxenv)
-  | Store(ea, ed)-> let vea = interpret_exp ea sgxenv in
+  | Store(n, ea, ed)-> let vea = interpret_exp ea sgxenv in
 		    let ved = interpret_exp ed sgxenv  in
 		    let sgxenv' = extend sgxenv (Memory vea) ved  in
 
 		    let lea = translate_address vea in
 		    let led = translate_reg ed in
-		    let lowsgxenv' = low_interpret (LowStore (lea, led)) lowsgxenv in	
+		    let lowsgxenv' = low_interpret (LowStore (n, lea, led)) lowsgxenv in	
 		    (sgxenv', lowsgxenv')
-  | Load(r, ea)->   let vea = interpret_exp ea sgxenv in
+  | Load(r, n, ea)->   let vea = interpret_exp ea sgxenv in
 		    let v = lookup sgxenv (Memory vea) in
 		    let rs = get_register_string r in
 		    let sgxenv' = extend sgxenv (Register rs) v  in
 
 		    let lea = translate_address vea in
 		    let lr = translate_reg r in
-		    let lowsgxenv' = low_interpret (LowLoad (lr, lea)) lowsgxenv in	
+		    let lowsgxenv' = low_interpret (LowLoad (lr, n, lea)) lowsgxenv in	
 		    (sgxenv', lowsgxenv')
   | Seq(li) -> fold_left (fun envpair elem ->interpret elem (fst envpair) (snd envpair)) (sgxenv, lowsgxenv) li 
   | _   ->(sgxenv, lowsgxenv)

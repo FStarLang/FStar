@@ -1,5 +1,6 @@
 module Helper
 open FStar.UInt64
+open FStar.Mul
 open FStar.Buffer 
 
 let int_of_string s = of_string s
@@ -35,6 +36,7 @@ let issgxaddrinbitmap sgxaddr =
 	true
  else
 	false
+
 	  
 val issgxaddrinuheap: u64 -> bool
 let issgxaddrinuheap sgxaddr = 
@@ -68,6 +70,10 @@ let islowsgxoffsetinbitmap lowsgxoffset =
  else
 	false
 	  
+val get_bitmap_offset:u64->u64 
+let get_bitmap_offset lowsgxaddr =
+	(UInt64.sub lowsgxaddr lowsgxbitmapoffset)
+
 val islowsgxoffsetinuheap: u64 -> bool
 let islowsgxoffsetinuheap lowsgxoffset = 
  if (lt lowsgxoffset lowsgxustackoffset) && (gt lowsgxoffset lowsgxuheapoffset) then
@@ -83,5 +89,35 @@ let islowsgxoffsetinustack lowsgxoffset =
 	false
 
 	  
-(* Support for callbitmap *)
+(* Support for callbitmap? TBD *)
 
+(*
+  Bitmap layout
+	 	_____________________
+		| 8-bytes /64-bits   |
+		+____________________+
+bitmapstart->	|bbbbbbb.......bbbbb |
+		+____________________+
+bitmapoffset->	|bbbbbbb.......bbbbb |
+		|  |    	     |
+		|  idx    	     |
+		+____________________+
+
+ Each entry is a 8 bytes long and each bit represents if the corresponding 64-bytes at an 
+ address(computed by the formula below) is writable.
+Each offset represents the bit array for 64 64-bit addresses.
+ 
+ To obtain address represented index 'idx' at 'bitmapoffset' is given as:
+	address = ((bitmapoffset * 64) + idx) + enclave_start_address
+
+ To check if 'addr' is writable, compute the index 'idx' as follows:
+	bitmapoffset  = (addr - enclave_start_address) / 64
+	idx 	      = (addr - enclave_start_address) % 64
+*)
+val bitmap: u64->u64
+
+let get_address_represented_in_bitmap bitmapoffset idx  = 
+	let tmp = (mul bitmapoffset  64uL) in
+	let addroffsetinbitmap = (add tmp idx) in
+	let addroffset = (add addroffsetinbitmap lowsgxmemstart) in
+	 addroffset
