@@ -1755,10 +1755,12 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   let env = Env.push_bv env (S.new_bv None ed.signature) in
 
   if Env.debug env0 <| Options.Other "ED"
-  then Util.print3 "Checking effect signature: %s %s : %s\n"
+  then Util.print5 "Checking effect signature: %s %s : %s\n(a is %s:%s)\n"
                         (Print.lid_to_string ed.mname)
                         (Print.binders_to_string " " ed.binders)
-                        (Print.term_to_string ed.signature);
+                        (Print.term_to_string ed.signature)
+                        (Print.term_to_string (S.bv_to_name a))
+                        (Print.term_to_string a.sort);
 
   let check_and_gen' env (_,t) k =
     check_and_gen env t k in
@@ -1771,10 +1773,12 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     | ForFree ->
         DMFF.gen_wps_for_free env binders a wp_a tc_decl tc_term ed
   in
+  Util.print2 "a is: %s:%s\n" (Print.term_to_string (S.bv_to_name a)) (Print.term_to_string a.sort);
 
   let return_wp =
     let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
     check_and_gen' env ed.ret_wp expected_k in
+  Util.print2 "a is: %s:%s\n" (Print.term_to_string (S.bv_to_name a)) (Print.term_to_string a.sort);
 
   let bind_wp =
     let b, wp_b = get_effect_signature () in
@@ -1841,6 +1845,7 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                 (S.mk_GTotal t) in
     check_and_gen' env ed.trivial expected_k in
 
+  Util.print2 "a is: %s:%s\n" (Print.term_to_string (S.bv_to_name a)) (Print.term_to_string a.sort);
   Util.print1 "\x1b[01;36m%s\x1b[00m\n" "done";
 
   let repr, bind_repr, return_repr, actions =
@@ -1852,7 +1857,7 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
             let expected_k = Util.arrow [S.mk_binder a;
                                          S.null_binder wp_a]
                                          (S.mk_GTotal t) in
-            (* printfn "About to check repr=%s\n" (Print.term_to_string ed.repr); *)
+            printfn "About to check repr=%s\nat type %s\n" (Print.term_to_string ed.repr) (Print.term_to_string expected_k);
             tc_check_trivial_guard env ed.repr expected_k in
 
         let mk_repr' t wp =
@@ -1889,11 +1894,11 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                          S.null_binder (mk_repr a (S.bv_to_name wp_f));
                                          S.null_binder (Util.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))]
                                         (S.mk_Total res) in
+            printfn "About to check bind=%s\n\n, at type %s\n" 
+                    (Print.term_to_string (snd ed.bind_repr))
+                    (Print.term_to_string expected_k);
             let expected_k, _, _ = 
                 tc_tot_or_gtot_term env expected_k in
-            (* printfn "About to check bind=%s, at type %s\n" *) 
-            (*         (Print.term_to_string (snd ed.bind_repr)) *)
-            (*         (Print.term_to_string expected_k); *)
             let env = Env.set_range env (snd (ed.bind_repr)).pos in
             check_and_gen' env ed.bind_repr expected_k in
 
@@ -2021,11 +2026,14 @@ and elaborate_and_star env0 ed =
     // TODO: more stringent checks on the shape of the signature; better errors
     match (SS.compress signature).n with
     | Tm_arrow ([(a, _)], effect_marker) ->
-        let a = { a with sort = N.normalize [ N.EraseUniverses ] env a.sort } in
         a, effect_marker
     | _ ->
         failwith "bad shape for effect-for-free signature"
   in
+  // Don't generalize universe variables in [a]. Snapshot [gamma].
+  let env_gamma = env.gamma in
+  let env = Env.push_bv env (S.new_bv None ed.signature) in
+
   let open_and_check t =
     let subst = SS.opening_of_binders binders in
     let t = SS.subst subst t in
@@ -2127,11 +2135,11 @@ and elaborate_and_star env0 ed =
   if Env.debug env (Options.Other "ED") then
     Util.print_string (Print.eff_decl_to_string true ed);
 
-  ed
+  { env with gamma = env_gamma }, ed
 
 
 and tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
-  let ed =
+  let env0, ed =
     (* If this is an "effect for free", then the effect declaration is
      * understood to be written in the "definition language"; we elaborate and
      * cps-transform these definitions to get a definition that is in the F*
@@ -2140,7 +2148,7 @@ and tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
      * [gen_wps_for_free] as needed. *)
     match is_for_free with
     | ForFree -> elaborate_and_star env0 ed
-    | NotForFree -> ed
+    | NotForFree -> env0, ed
   in
   tc_real_eff_decl env0 ed is_for_free
 

@@ -782,7 +782,7 @@ let univ_vars env =
       | Binding_univ _ :: tl -> aux out tl
       | Binding_lid(_, (_, t))::tl
       | Binding_var({sort=t})::tl -> aux (ext out (Free.univs t)) tl
-      | Binding_sig _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
+      | Binding_sig _::tl -> aux out tl in (* this marks a top-level scope ...  no more uvars beyond this; Jonathan: no it doesn't anymore *)
     aux no_univs env.gamma
 
 let bound_vars_of_bindings bs = 

@@ -903,9 +903,15 @@ let maybe_instantiate (env:Env.env) e t =
 (**************************************************************************************)
 (* Generalizing types *)
 (**************************************************************************************)
+let string_of_univs univs =
+  Util.set_elements univs 
+  |> List.map (fun u -> Unionfind.uvar_id u |> string_of_int) |> String.concat ", "
+
 let gen_univs env (x:Util.set<universe_uvar>) : list<univ_name> = 
     if Util.set_is_empty x then []
     else let s = Util.set_difference x (Env.univ_vars env) |> Util.set_elements in
+         if Env.debug env <| Options.Other "Gen" then
+         Util.print1 "univ_vars in env: %s\n" (string_of_univs (Env.univ_vars env));
          let r = Some (Env.get_range env) in
          let u_names = s |> List.map (fun u -> 
             let u_name = Syntax.new_univ_name r in
@@ -919,9 +925,7 @@ let generalize_universes (env:env) (t:term) : tscheme =
     let t = N.normalize [N.Beta] env t in
     let univs = Free.univs t in 
     if Env.debug env <| Options.Other "Gen" 
-    then Util.print1 "univs to gen : %s\n" 
-                (Util.set_elements univs 
-                |> List.map (fun u -> Unionfind.uvar_id u |> string_of_int) |> String.concat ", ");
+    then Util.print1 "univs to gen : %s\n" (string_of_univs univs);
     let gen = gen_univs env univs in
     if Env.debug env <| Options.Other "Gen" 
     then Util.print1 "After generalization: %s\n"  (Print.term_to_string t);
