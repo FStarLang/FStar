@@ -1857,7 +1857,7 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
             let expected_k = Util.arrow [S.mk_binder a;
                                          S.null_binder wp_a]
                                          (S.mk_GTotal t) in
-            printfn "About to check repr=%s\nat type %s\n" (Print.term_to_string ed.repr) (Print.term_to_string expected_k);
+            (* printfn "About to check repr=%s\nat type %s\n" (Print.term_to_string ed.repr) (Print.term_to_string expected_k); *)
             tc_check_trivial_guard env ed.repr expected_k in
 
         let mk_repr' t wp =
@@ -1894,9 +1894,9 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
                                          S.null_binder (mk_repr a (S.bv_to_name wp_f));
                                          S.null_binder (Util.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))]
                                         (S.mk_Total res) in
-            printfn "About to check bind=%s\n\n, at type %s\n" 
-                    (Print.term_to_string (snd ed.bind_repr))
-                    (Print.term_to_string expected_k);
+            (* printfn "About to check bind=%s\n\n, at type %s\n" *) 
+            (*         (Print.term_to_string (snd ed.bind_repr)) *)
+            (*         (Print.term_to_string expected_k); *)
             let expected_k, _, _ = 
                 tc_tot_or_gtot_term env expected_k in
             let env = Env.set_range env (snd (ed.bind_repr)).pos in
@@ -1928,6 +1928,8 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
             let act_defn, c, g_a = 
                 tc_tot_or_gtot_term env act.action_defn in
             (* printfn "Inferred action %s has type %s\n" (Print.term_to_string act_defn) (Print.term_to_string c.res_typ); *)
+            // JP: this is very brittle and assumes explicit arrows have been
+            // inserted in actions in just the right place
             let expected_k, g_k = 
                 match (SS.compress c.res_typ).n with 
                 | Tm_arrow(bs, c) -> 
@@ -2100,6 +2102,7 @@ and elaborate_and_star env0 ed =
 
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
+    // We need to reverse-engineer what tc_eff_decl wants here...
     let dmff_env, action_wp, action_elab =
       elaborate_and_star dmff_env (action.action_univs, action.action_defn)
     in

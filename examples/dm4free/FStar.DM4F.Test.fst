@@ -25,7 +25,7 @@ let get u = fun s ->
 val put: int -> st unit
 let put s = fun _ -> (), s
 
-(* TODO: at this stage, not elaborating and generating the following three
+(* TODO: at this stage, not elaborating and generating the following two
  * combinators; so, the user has to write them in the "old style", by
  * _anticipating_ what the ouput of the *-translation and the _-elaboration will
  * be. *)
@@ -46,10 +46,10 @@ reifiable reflectable new_effect_for_free {
   with repr     = st
      ; bind     = bind_st
      ; return   = return_st
-     // The three combinators below are meant to be automatically generated.
+     // The two combinators below are meant to be automatically generated.
      ; ite_wp   = ite_wp
      ; null_wp  = null_wp
-  and effect_actions
+  (* and effect_actions
        get      = get
-     ; put      = put
+     ; put      = put *)
 }

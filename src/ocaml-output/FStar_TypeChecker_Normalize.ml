@@ -2405,11 +2405,11 @@ in (aux t))))
 let normalize_sigelt : steps  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.sigelt  ->  FStar_Syntax_Syntax.sigelt = (fun _53_1690 _53_1692 _53_1694 -> (FStar_All.failwith "NYI: normalize_sigelt"))
 
 
-let eta_expand : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun _53_1696 t -> (match (t.FStar_Syntax_Syntax.n) with
-| FStar_Syntax_Syntax.Tm_name (x) -> begin
-(
+let eta_expand : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun _53_1696 t -> (
 
-let _53_1703 = (FStar_Syntax_Util.arrow_formals_comp x.FStar_Syntax_Syntax.sort)
+let expand = (fun sort -> (
+
+let _53_1703 = (FStar_Syntax_Util.arrow_formals_comp sort)
 in (match (_53_1703) with
 | (binders, c) -> begin
 (match (binders) with
@@ -2422,20 +2422,28 @@ end
 let _53_1709 = (FStar_All.pipe_right binders FStar_Syntax_Util.args_of_binders)
 in (match (_53_1709) with
 | (binders, args) -> begin
-(let _145_710 = (FStar_Syntax_Syntax.mk_Tm_app t args None t.FStar_Syntax_Syntax.pos)
-in (let _145_709 = (let _145_708 = (FStar_All.pipe_right (FStar_Syntax_Util.lcomp_of_comp c) (fun _145_706 -> FStar_Util.Inl (_145_706)))
-in (FStar_All.pipe_right _145_708 (fun _145_707 -> Some (_145_707))))
-in (FStar_Syntax_Util.abs binders _145_710 _145_709)))
+(let _145_712 = (FStar_Syntax_Syntax.mk_Tm_app t args None t.FStar_Syntax_Syntax.pos)
+in (let _145_711 = (let _145_710 = (FStar_All.pipe_right (FStar_Syntax_Util.lcomp_of_comp c) (fun _145_708 -> FStar_Util.Inl (_145_708)))
+in (FStar_All.pipe_right _145_710 (fun _145_709 -> Some (_145_709))))
+in (FStar_Syntax_Util.abs binders _145_712 _145_711)))
 end))
 end)
-end))
+end)))
+in (match ((let _145_713 = (FStar_ST.read t.FStar_Syntax_Syntax.tk)
+in ((_145_713), (t.FStar_Syntax_Syntax.n)))) with
+| (Some (sort), _53_1713) -> begin
+(let _145_714 = (mk sort t.FStar_Syntax_Syntax.pos)
+in (expand _145_714))
 end
-| _53_1711 -> begin
-(let _145_713 = (let _145_712 = (FStar_Syntax_Print.tag_of_term t)
-in (let _145_711 = (FStar_Syntax_Print.term_to_string t)
-in (FStar_Util.format2 "NYI: eta_expand(%s) %s" _145_712 _145_711)))
-in (FStar_All.failwith _145_713))
-end))
+| (_53_1716, FStar_Syntax_Syntax.Tm_name (x)) -> begin
+(expand x.FStar_Syntax_Syntax.sort)
+end
+| _53_1721 -> begin
+(let _145_717 = (let _145_716 = (FStar_Syntax_Print.tag_of_term t)
+in (let _145_715 = (FStar_Syntax_Print.term_to_string t)
+in (FStar_Util.format2 "NYI: eta_expand(%s) %s" _145_716 _145_715)))
+in (FStar_All.failwith _145_717))
+end)))
 
 
 

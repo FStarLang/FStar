@@ -1186,7 +1186,7 @@ let reify_comp env c u_c : term =
 
 let d s = Util.print1 "\x1b[01;36m%s\x1b[00m\n" s
 
-let register_toplevel_definition (env: Env.env) (tc_decl: env -> sigelt -> (sigelts * env)) lident (def: term): env * typ =
+let register_toplevel_definition (env: env_t) (tc_decl: env_t -> sigelt -> (sigelts * env_t)) lident (def: term): env_t * typ =
   // Debug
   d (text_of_lid lident);
   Util.print2 "Registering top-level definition: %s\n%s\n" (text_of_lid lident) (Print.term_to_string def);

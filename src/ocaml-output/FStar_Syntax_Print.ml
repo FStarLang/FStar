@@ -426,10 +426,10 @@ in (FStar_Util.format3 "(Monadic-%s{%s} %s )" _131_129 _131_128 _131_127))))
 end
 | FStar_Syntax_Syntax.Tm_meta (t, FStar_Syntax_Syntax.Meta_monadic_lift (m0, m1)) -> begin
 (let _131_133 = (tag_of_term t)
-in (let _131_132 = (sli m0)
-in (let _131_131 = (sli m1)
-in (let _131_130 = (term_to_string t)
-in (FStar_Util.format4 "(MonadicLift-%s{%s} %s )" _131_133 _131_132 _131_131 _131_130)))))
+in (let _131_132 = (term_to_string t)
+in (let _131_131 = (sli m0)
+in (let _131_130 = (sli m1)
+in (FStar_Util.format4 "(MonadicLift-%s{%s} %s -> %s)" _131_133 _131_132 _131_131 _131_130)))))
 end
 | FStar_Syntax_Syntax.Tm_meta (t, _39_246) -> begin
 (term_to_string t)
