@@ -2030,9 +2030,6 @@ and elaborate_and_star env0 ed =
     | _ ->
         failwith "bad shape for effect-for-free signature"
   in
-  // Don't generalize universe variables in [a]. Snapshot [gamma].
-  let env_gamma = env.gamma in
-  let env = Env.push_bv env (S.new_bv None ed.signature) in
 
   let open_and_check t =
     let subst = SS.opening_of_binders binders in
@@ -2135,7 +2132,7 @@ and elaborate_and_star env0 ed =
   if Env.debug env (Options.Other "ED") then
     Util.print_string (Print.eff_decl_to_string true ed);
 
-  { env with gamma = env_gamma }, ed
+  env, ed
 
 
 and tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
