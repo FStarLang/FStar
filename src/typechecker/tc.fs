@@ -1969,6 +1969,7 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     | _, Tm_arrow(binders, c) -> binders, Util.comp_result c
     | _ -> failwith "Impossible" in
   let close n ts =
+    Util.print1 "Closing on %s\n" (Print.term_to_string (snd ts));
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
     if n >= 0 then assert (List.length (fst ts) = n);
     ts in
