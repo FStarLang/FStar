@@ -1971,7 +1971,8 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
   let close n ts =
     Util.print1 "Closing on %s\n" (Print.term_to_string (snd ts));
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
-    if n >= 0 then assert (List.length (fst ts) = n);
+    // JP: TODO: this assert is broken
+    // if n >= 0 then assert (List.length (fst ts) = n);
     ts in
   let close_action act = 
     let univs, defn = close (-1) (act.action_univs, act.action_defn) in
