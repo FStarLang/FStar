@@ -4,6 +4,7 @@
 *.fs* eol=lf
 *.ml* eol=lf
 Makefile eol=lf
+*.sh eol=lf
 
 /src/tools/* eol=lf
 
