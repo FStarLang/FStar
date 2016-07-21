@@ -2041,6 +2041,7 @@ and elaborate_and_star env0 ed =
     // tc_eff_decl will take care of these
     t
   in
+  let mk x = mk x None signature.pos in
 
   // TODO: check that [_comp] is [Tot Type]
   let repr, _comp = open_and_check ed.repr in
@@ -2049,11 +2050,10 @@ and elaborate_and_star env0 ed =
   let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
   let dmff_env, wp_type = DMFF.star_type_definition dmff_env repr in
   let wp_type = recheck_debug "*" env wp_type in
+  let wp_a = mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ])) in
 
   // Building: [a -> wp a -> Effect]
   let effect_signature =
-    let mk x = mk x None signature.pos in
-    let wp_a = mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ])) in
     let binders = [ (a, S.as_implicit false); S.null_binder wp_a ] in
     let binders = close_binders binders in
     mk (Tm_arrow (binders, effect_marker))
@@ -2089,7 +2089,7 @@ and elaborate_and_star env0 ed =
     match (SS.compress bind_wp).n with
     | Tm_abs (binders, body, what) ->
         let r = S.lid_as_fv Const.range_lid (S.Delta_unfoldable 1) None in
-        U.abs (S.null_binder (mk (Tm_fvar r) None Range.dummyRange) :: binders) body what
+        U.abs (S.null_binder (mk (Tm_fvar r)) :: binders) body what
     | _ ->
         failwith "unexpected shape for bind"
   in
@@ -2103,10 +2103,17 @@ and elaborate_and_star env0 ed =
   ) (dmff_env, []) ed.actions in
   let actions = List.rev actions in
 
+  let repr =
+    let wp = S.gen_bv "wp_a" None wp_a in
+    let binders = [ S.mk_binder a; S.mk_binder wp ] in
+    U.abs binders (DMFF.trans_FC dmff_env (mk (Tm_app (ed.repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
+  in
+
   let c = close binders in
 
   let ed = { ed with
     signature = effect_signature;
+    repr = c repr;
     ret_wp = [], c return_wp;
     bind_wp = [], c bind_wp;
     return_repr = [], c return_elab;

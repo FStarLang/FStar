@@ -1039,3 +1039,12 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
 
 let star_expr_definition env t =
   star_definition env t (fun env e -> let t, s_e, s_u = check_n env e in t, (s_e, s_u))
+
+// Same thing as [trans_F], but normalizes its argument, so that it can be
+// called from [tc.fs]. The name is different to make F# happy.
+let trans_FC (env: env_) (c: typ) (wp: term): term =
+  let n = N.normalize [ N.Beta; N.EraseUniverses; N.Inline; N.UnfoldUntil S.Delta_constant ] env.env in
+  let c = n c in
+  let wp = n wp in
+  trans_F env c wp
+
