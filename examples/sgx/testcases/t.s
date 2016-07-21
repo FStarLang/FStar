@@ -1,3 +1,3 @@
-load  rax, rad;
-store rad,  rax;
+load  rax, 1, rad;
+store 1, rad,  rax;
 

@@ -28,8 +28,8 @@ stmt : IF aexp THEN stmtlist ELSE stmtlist ENDIF SEQ 	{ If($2, $4, $6) }
      | SKIP  SEQ                                        { Skip }
      | exp ASSIGN exp SEQ		    		{ Assign($1, $3)}
      | CALL LPAREN exp RPAREN SEQ	    		{ Call($3) }
-     | LOAD exp COMMA exp SEQ                                 { Load($2, $4) }
-     | STORE exp COMMA exp SEQ                                { Store($2, $4) }
+     | LOAD exp COMMA INTEGER COMMA exp SEQ                                 { Load($2, $4, $6) }
+     | STORE INTEGER COMMA exp COMMA exp SEQ                                { Store($4, $2, $6) }
 
 exp : 
     | aexp 				{ $1 }

@@ -14,9 +14,9 @@ type exp =
  |ConstantExp of u64
 
 type stmt = 
- |Store of exp * exp
+ |Store of u64*exp * exp
  |Assign of exp * exp
- |Load of exp * exp
+ |Load of exp * u64* exp
  |Seq of (list stmt)
  |If of exp * (list stmt) * (list stmt)
  |Jump of exp
@@ -37,9 +37,9 @@ type lowexp =
  |LowMemExp of u64
 
 type lowstmt = 
- |LowStore of lowexp * lowexp
+ |LowStore of u64*lowexp * lowexp
  |LowAssign of lowexp * lowexp
- |LowLoad of lowexp * lowexp
+ |LowLoad of lowexp * u64*lowexp
  |LowSeq of (list lowstmt)
  |LowIf of lowexp * (list lowstmt) * (list lowstmt)
  |LowJump of lowexp
@@ -51,5 +51,13 @@ type lowprogram = lowstmt
 
 type lowsgxmem = 
 | LowRegister of string
-| LowMemory of u64
+(* Commenting this. Need more granularity to reason about invariants
+| LowMemory of u64 
+*)
+| BitMapRange of u64
+| UHeapRange of u64
+| UStackRange of u64
+(* Should we encode callbitmap here?
+| CallBitmap of u64
+*)
 
