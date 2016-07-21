@@ -5,3 +5,5 @@ fsharp-output
 
 [Bb]in/
 [Oo]bj/
+
+Makefile.local

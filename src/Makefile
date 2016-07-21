@@ -17,7 +17,10 @@ else
   UNAME   = $(shell uname -s)
 endif
 
-MSBUILD := $(MSBUILD) /verbosity:minimal /p:Configuration=Release
+CONFIGURATION=Release
+-include Makefile.local
+
+MSBUILD := $(MSBUILD) /verbosity:minimal /p:Configuration=$(CONFIGURATION)
 
 ifeq ($(UNAME),Darwin)
   HEAD=ghead
