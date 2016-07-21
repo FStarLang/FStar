@@ -1667,7 +1667,7 @@ let tc_check_trivial_guard env t k =
   t
 
 let check_and_gen env t k =
-    Util.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
+    // Util.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
     TcUtil.generalize_universes env (tc_check_trivial_guard env t k)
 
 let check_nogen env t k =
@@ -1969,7 +1969,6 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     | _, Tm_arrow(binders, c) -> binders, Util.comp_result c
     | _ -> failwith "Impossible" in
   let close n ts =
-    Util.print1 "Closing on %s\n" (Print.term_to_string (snd ts));
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
     // JP: TODO: this assert is broken
     // if n >= 0 then assert (List.length (fst ts) = n);
@@ -2038,7 +2037,7 @@ and elaborate_and_star env0 ed =
     let t', _, _ = tc_term env t in
     Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
     // Return the original term (without universes unification variables);
-    // tc_eff_decl will take care of these
+    // because [tc_eff_decl] will take care of these
     t
   in
   let mk x = mk x None signature.pos in
@@ -2108,6 +2107,7 @@ and elaborate_and_star env0 ed =
     let binders = [ S.mk_binder a; S.mk_binder wp ] in
     U.abs binders (DMFF.trans_FC dmff_env (mk (Tm_app (ed.repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
   in
+  let repr = recheck_debug "FC" env repr in
 
   let c = close binders in
 

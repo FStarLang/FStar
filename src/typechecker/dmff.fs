@@ -631,7 +631,7 @@ let is_unknown = function | Tm_unknown -> true | _ -> false
 // - the first is [e*], the CPS'd version of [e]
 // - the second is [_e_], the elaborated version of [e]
 let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
-  Util.print1 "[debug]: check %s\n" (Print.term_to_string e);
+  // Util.print1 "[debug]: check %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
   // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
   let return_if (rec_nm, s_e, u_e) =
@@ -710,7 +710,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 
 
 and infer (env: env) (e: term): nm * term * term =
-  Util.print1 "[debug]: infer %s\n" (Print.term_to_string e);
+  // Util.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
   let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env.env in
   match (SS.compress e).n with
@@ -775,13 +775,13 @@ and infer (env: env) (e: term): nm * term * term =
   | Tm_fvar { fv_name = { v = lid } } ->
       begin match List.find (fun (lid', _) -> lid_equals lid lid') env.definitions with
       | Some (_, t) ->
-          Util.print2 "[debug]: lookup %s hit %s\n" (text_of_lid lid) (Print.term_to_string t);
+          // Util.print2 "[debug]: lookup %s hit %s\n" (text_of_lid lid) (Print.term_to_string t);
           N t, e, e
       | None ->
           let _, t = Env.lookup_lid env.env lid in
           let txt = text_of_lid lid in
           let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None" ] in
-          Util.print2 "[debug]: lookup %s miss %s\n" txt (Print.term_to_string t);
+          // Util.print2 "[debug]: lookup %s miss %s\n" txt (Print.term_to_string t);
           if List.existsb (fun s -> Util.starts_with txt ("Prims." ^ s)) allowed_prefixes then
             N t, e, e
           else
@@ -803,7 +803,7 @@ and infer (env: env) (e: term): nm * term * term =
             raise (Err (Util.format1 "%s: not a function type" (Print.term_to_string t_head)))
       in
       let binders, comp = flatten t_head in
-      Util.print1 "[debug] type of [head] is %s\n" (Print.term_to_string t_head);
+      // Util.print1 "[debug] type of [head] is %s\n" (Print.term_to_string t_head);
 
       // Making the assumption here that [Tm_arrow (..., Tm_arrow ...)]
       // implies [is_M comp]. F* should be fixed if it's not the case.
@@ -831,7 +831,7 @@ and infer (env: env) (e: term): nm * term * term =
             final_type (NT (bv, arg) :: subst) (binders, comp) args
       in
       let final_type = final_type [] (binders, comp) args in
-      Util.print1 "[debug]: final type of application is %s\n" (string_of_nm final_type);
+      // Util.print1 "[debug]: final type of application is %s\n" (string_of_nm final_type);
 
       let s_args, u_args = List.split (List.map2 (fun (bv, _) (arg, q) ->
         // TODO: implement additional check that the arguments are T-free if
