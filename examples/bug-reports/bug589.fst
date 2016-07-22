@@ -1,4 +1,4 @@
-module M
+module Bug589
 
 //Extraction suceeds when using any of these annotations:
 //val f: list 'a -> unit
