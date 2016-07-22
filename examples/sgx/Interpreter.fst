@@ -12,8 +12,9 @@ exception Halt
 
 let u64 = UInt64.t
 
-val defensive: (array u64) -> (array u64) ->nat-> nat-> sgxstate
-let defensive regs buf base size = 
+
+val defensive: (array u64) -> (array u64) ->nat-> nat->nat->nat->nat->nat-> sgxstate
+let defensive regs buf base wbmapstart uheapstart ustackstart ucodestart size = 
   let read' (regname:string) = 
        (* What should regs structure be? *)
        0uL
@@ -25,7 +26,25 @@ let defensive regs buf base size =
        Array.index buf (addr-base) 
     in
   let store' (n:nat) (v:u64) (addr:nat) =
-        Array.upd buf (addr-base) v  
+     if addr > wbmapstart && addr < uheapstart then
+	(* addr is in write-bitmap, get the index
+	   i.e. bitmapindex represents the address whose permission
+	   is being toggled 
+	*)
+	let bitmapindex = get_address_represented_in_bitmap base wbmapstart addr in 
+	
+	(* Check that bitmapindex belongs to current stack frame. Steps:
+	  1. Read rbp register which contains current frame pointer
+	  2. Check that 'bitmapindex' is less than [|rbp |] 
+	*)
+	let currentframestart = cast_to_nat (read' "rbp") in
+	if (bitmapindex < currentframestart) then	
+        	Array.upd buf (addr-base) v
+	else
+		raise Halt
+    else if addr >uheapstart && addr < ustackstart then
+	(* In Progress: Do necessary checks here.. *)  
+	()
     in
    Mksgxstate read' write' load' store'
 	
@@ -63,8 +82,8 @@ let rec step (env:sgxstate) = function
 
 and steps (env:sgxstate) instr = List.iter (fun elem->step env elem ) instr  
 
-val ustar:(array u64)->(array u64) -> nat ->unit->unit
-let ustar regs buf base entry = 
+val ustar:(array u64)->(array u64)-> nat ->nat->nat->nat->nat->unit->unit
+let ustar regs buf base wbmapstart uheapstart ustackstart ucodestart entry = 
   let size = 1000 in
-  let mem = defensive regs buf base size in
+  let mem = defensive regs buf base wbmapstart uheapstart ustackstart ucodestart size in
   steps mem [(Store(1uL,(Register "rax"),(Register "rcx")))] 
