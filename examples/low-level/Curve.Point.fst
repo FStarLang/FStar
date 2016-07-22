@@ -57,7 +57,7 @@ type onCurve (h:heap) (p:point) =
   wellFormed h p /\ curvePoint (to_apoint h p)
 
 (* val refs: p:point -> GTot (Set.set abuffer) *)
-let refs p = (only (get_x p) ++ (get_y p) ++ (get_z p))
+let refs p : GTot (FStar.TSet.set abuffer) = (only (get_x p) ++ (get_y p) ++ (get_z p))
 
 (* val erefs: p:point -> Tot (FStar.Ghost.erased (FStar.TSet.set FStar.Heap.aref)) *)
 let erefs p = hide (refs p)
@@ -430,18 +430,18 @@ let swap_both a b c d =
   admit(); // OK
   let h0 = HST.get() in
   copy c a; 
-  let h1 = HST.get() in
-  let set01 = erefs c in 
-  distinct_lemma c b; 
-  distinct_lemma c d; 
-  on_curve_lemma h0 h1 b set01; 
+  (* let h1 = HST.get() in *)
+  (* let set01 = erefs c in  *)
+  (* distinct_lemma c b;  *)
+  (* distinct_lemma c d;  *)
+  (* on_curve_lemma h0 h1 b set01;  *)
   (* live_lemma h0 h1 d set01;  *)
   copy d b;
-  let h2 = HST.get() in
-  distinct_lemma d c; 
-  distinct_lemma d a;
-  distinct_lemma d b;
-  on_curve_lemma h1 h2 c (erefs d);
+  (* let h2 = HST.get() in *)
+  (* distinct_lemma d c;  *)
+  (* distinct_lemma d a; *)
+  (* distinct_lemma d b; *)
+  (* on_curve_lemma h1 h2 c (erefs d); *)
   (* live_lemma h1 h2 a (erefs d); *)
   (* live_lemma h1 h2 b (erefs d) *)
   ()
@@ -459,16 +459,17 @@ let copy2 p' q' p q =
   let h0 = HST.get() in
   copy p' p; 
   let h1 = HST.get() in
-  let set01 = (erefs p') in 
-  distinct_lemma p' q; 
-  distinct_lemma p' q'; 
-  on_curve_lemma h0 h1 q set01; 
+  (* let set01 = (erefs p') in  *)
+  (* distinct_lemma p' q;  *)
+  (* distinct_lemma p' q';  *)
+  (* on_curve_lemma h0 h1 q set01;  *)
   (* live_lemma h0 h1 q' set01;   *)
   copy q' q; 
   let h2 = HST.get() in
-  distinct_lemma q' p'; 
-  distinct_lemma q' p;
-  distinct_lemma q' q; 
-  on_curve_lemma h1 h2 p' (erefs q'); 
-  on_curve_lemma h1 h2 p (erefs q'); 
-  on_curve_lemma h1 h2 q (erefs q')
+  (* distinct_lemma q' p';  *)
+  (* distinct_lemma q' p; *)
+  (* distinct_lemma q' q;  *)
+  (* on_curve_lemma h1 h2 p' (erefs q');  *)
+  (* on_curve_lemma h1 h2 p (erefs q');  *)
+  (* on_curve_lemma h1 h2 q (erefs q') *)
+  ()

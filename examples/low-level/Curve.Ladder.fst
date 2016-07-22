@@ -81,14 +81,14 @@ let small_step_exit pp ppq p pq q n byte scalar =
   admit(); // OK
   let h0 = HST.get() in
   Curve.Point.copy2 pp ppq p pq;
-  let h1 = HST.get() in
-  distinct_lemma q p; distinct_lemma q pq; distinct_lemma q pp; distinct_lemma q ppq;
-  let s = (erefs pp +*+ erefs ppq +*+ erefs p +*+ erefs pq) in
+  (* let h1 = HST.get() in *)
+  (* distinct_lemma q p; distinct_lemma q pq; distinct_lemma q pp; distinct_lemma q ppq; *)
+  (* let s = (erefs pp +*+ erefs ppq +*+ erefs p +*+ erefs pq) in *)
   (* cut(modifies (reveal s) h0 h1); *)
-  admitP(True /\ FStar.TSet.intersect (reveal s) (refs q) = !{});
-  on_curve_lemma h0 h1 q (erefs pp +*+ erefs ppq +*+ erefs p +*+ erefs pq);
-  cut(onCurve h1 q); 
-  cut(nTimesQ (hide (reveal scalar * pow2 8 + (U8.v byte / pow2 (8-8)))) (pointOf h0 q) h0 p pq); 
+  (* admitP(True /\ FStar.TSet.intersect (reveal s) (refs q) = !{}); *)
+  (* on_curve_lemma h0 h1 q (erefs pp +*+ erefs ppq +*+ erefs p +*+ erefs pq); *)
+  (* cut(onCurve h1 q);  *)
+  (* cut(nTimesQ (hide (reveal scalar * pow2 8 + (U8.v byte / pow2 (8-8)))) (pointOf h0 q) h0 p pq);  *)
   ()
   (* helper_lemma_1 scalar byte *)
 
@@ -105,6 +105,7 @@ val double_and_add_lemma_1: q:Math.Curve.celem -> n:erased nat -> m:erased nat -
 	(ensures ((Math.Curve.add (reveal n +* q) (reveal m +* q)) = ((reveal n + reveal m) +* q) )) []
 let double_and_add_lemma_1 q n m = 
   Math.Curve.smul_lemma q (reveal n) (reveal m)
+
 
 val small_step_core_lemma_1: h0:heap -> h1:heap -> pp:point -> ppq:point{distinct pp ppq} -> p:point{distinct p pp /\ distinct p ppq} -> pq:point{distinct pq pp /\ distinct pq ppq /\ distinct pq p} -> q:point{distinct q pp /\ distinct q ppq /\ distinct q p /\ distinct q pq} -> Lemma
   (requires ((* modifies (refs p +++ refs pq) h0 h1 /\  *)onCurve h0 q /\ live h0 pp /\ live h0 ppq))
@@ -219,20 +220,21 @@ let small_step_core pp ppq p pq q n ctr b scalar =
   let h1 = HST.get() in
   assert ((live h2 p) /\ (live h2 pq) /\ (onCurve h2 q)); 
   assert (onCurve h1 pp /\ onCurve h1 ppq); 
-  let set2 = (erefs pp +*+ erefs ppq +*+ erefs p +*+ erefs pq) in
-  let set21 = (erefs pp +*+ erefs ppq) in
+  (* let set2 = (erefs pp +*+ erefs ppq +*+ erefs p +*+ erefs pq) in *)
+  (* let set21 = (erefs pp +*+ erefs ppq) in *)
   (* assert(modifies (reveal set21) h2 h1);  *)
   small_step_core_lemma_1 h2 h1 p pq pp ppq q; 
   (* small_step_core_lemma_2 h0 h h2 h1 pp ppq p pq q;  *)
-  cut ( bit = 0uy ==> ((pointOf h p) = (pointOf h0 p) /\ (pointOf h pq) = (pointOf h0 pq)) );
-  cut ( bit = 1uy ==> ((pointOf h pq) = (pointOf h0 p) /\ (pointOf h p) = (pointOf h0 pq)) );
-  cut ( ((pointOf h2 pp) = (Math.Curve.add (pointOf h p) (pointOf h p)) /\ (pointOf h2 ppq) = (Math.Curve.add (pointOf h p) (pointOf h pq))) );
-  cut (bit = 0uy ==> ((pointOf h1 pp) = (pointOf h2 pp) /\ (pointOf h1 ppq) = (pointOf h2 ppq)));
-  cut (bit = 1uy ==> ((pointOf h1 pp) = (pointOf h2 ppq) /\ (pointOf h1 ppq) = (pointOf h2 pp))); 
-  cut (nTimesQ n (pointOf h0 q) h0 p pq); 
+  (* cut ( bit = 0uy ==> ((pointOf h p) = (pointOf h0 p) /\ (pointOf h pq) = (pointOf h0 pq)) ); *)
+  (* cut ( bit = 1uy ==> ((pointOf h pq) = (pointOf h0 p) /\ (pointOf h p) = (pointOf h0 pq)) ); *)
+  (* cut ( ((pointOf h2 pp) = (Math.Curve.add (pointOf h p) (pointOf h p)) /\ (pointOf h2 ppq) = (Math.Curve.add (pointOf h p) (pointOf h pq))) ); *)
+  (* cut (bit = 0uy ==> ((pointOf h1 pp) = (pointOf h2 pp) /\ (pointOf h1 ppq) = (pointOf h2 ppq))); *)
+  (* cut (bit = 1uy ==> ((pointOf h1 pp) = (pointOf h2 ppq) /\ (pointOf h1 ppq) = (pointOf h2 pp)));  *)
+  (* cut (nTimesQ n (pointOf h0 q) h0 p pq);  *)
   (* small_step_core_lemma_3 h0 h h2 h1 pp ppq p pq q n ctr b scalar *)
   ()
-  
+
+
 #reset-options
 
 val small_step_lemma_1 : h0:heap -> h1:heap -> h2:heap ->
