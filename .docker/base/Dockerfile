@@ -1,6 +1,6 @@
 FROM ubuntu:xenial
 
-MAINTAINER Benjamin Beurdouche <benjamin.beurdouche@inria.fr>
+MAINTAINER Benjamin Beurdouche <benjamin.beurdouche@inria.fr>; Daniel Fabian <daniel.fabian@integral-it.ch>
 
 # Define versions of dependencies
 ENV opamv 4.03.0
@@ -44,4 +44,4 @@ RUN make ocaml -C FStar/src
 RUN opam config exec -- make -C FStar/src/ocaml-output
 
 # F* Testing
-RUN opam config exec -- make -C FStar/src regressions OTHERFLAGS=--lax
+RUN opam config exec -- make -C FStar/src regressions
