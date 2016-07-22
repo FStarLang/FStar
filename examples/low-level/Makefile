@@ -27,7 +27,7 @@ AEAD_EXTRACTED=Chacha_wip.ml FStar_Ghost.ml Poly_Parameters.ml Poly_Bigint.ml Po
 
 .PHONY: lib-ver curve-ver curve-ml chacha-ver chacha-ml
 
-all: chacha-ml poly-ml #curve-ml
+all: chacha-ml poly-ml aead-ml #curve-ml
 
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
@@ -58,7 +58,7 @@ chacha-ver:
 
 chacha-ml:chacha-extract chacha-compile
 poly-ml:poly-extract poly-compile
-aead-chacha-poly-ml:aead-extract aead-compile
+aead-ml:aead-extract aead-compile
 
 chacha-extract:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
