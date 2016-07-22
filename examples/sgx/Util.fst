@@ -8,8 +8,9 @@ val cast_to_nat: u64 -> nat
 let cast_to_nat  i = 0
 
 (*
-  Bitmap layout
-	 	_____________________
+   Bitmap layout
+  ==============
+	         ____________________
 		| 8-bytes /64-bits   |
 		+____________________+
 bitmapstart->	|bbbbbbb.......bbbbb |
@@ -29,6 +30,22 @@ Each offset represents the bit array for 64 64-bit addresses.
  To check if 'addr' is writable, compute the index 'idx' as follows:
 	bitmapoffset  = (addr - enclave_start_address) / 64
 	idx 	      = (addr - enclave_start_address) % 64
+
+ Stack Layout
+ ============
+	 	 ____________________
+		| 8-bytes /64-bits   |
+		+____________________+___
+framepointer->	|bbbbbbb.......bbbbb |   |
+		+____________________+   |
+		|bbbbbbb.......bbbbb |   |--> current stack frame
+		|____________________|   | stackpointer < framepointer
+		|bbbbbbb.......bbbbb |   |
+stackpointer->	+____________________+___|
+
+rbp = frame pointer
+rsp = stack pointer
+
 *)
 
 val get_address_represented_in_bitmap:nat->nat->nat->nat
