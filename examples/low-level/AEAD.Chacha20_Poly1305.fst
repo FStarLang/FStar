@@ -7,18 +7,19 @@ open Chacha_wip
 open Poly.Bigint
 open Poly.Poly1305_wip
 
+#set-options "--lax"
+
 val fill: b:bytes -> z:UInt8.t -> len:UInt32.t -> Stl unit
 let rec fill b z len = 
-  if UInt32.eq len 0ul then ()
+  if UInt32.eq len 16ul then ()
   else (
-    let i = len -^ 1ul in    
-    upd b i z;
-    fill b z i
+    upd b len z;
+    fill b z (len +^ 1ul)
   )
 
 val pad_16: b:bytes -> len:UInt32.t -> Stl unit
 let pad_16 b len =
-  fill b 0uy (16ul -^ len)
+  if UInt32.eq len 0ul then () else fill b 0uy len
 
 val length_bytes: b:bytes -> len:UInt32.t -> aad_len:UInt32.t -> Stl unit
 let length_bytes b len aad_len =
@@ -34,10 +35,10 @@ let length_bytes b len aad_len =
   upd b 1ul al1;
   upd b 2ul al2;
   upd b 3ul al3;
-  upd b 4ul l0;
-  upd b 5ul l1;
-  upd b 6ul l2;
-  upd b 7ul l3;
+  upd b 8ul l0;
+  upd b 9ul l1;
+  upd b 10ul l2;
+  upd b 11ul l3;
   ()
 
 val chacha20_aead_encrypt: ciphertext:bytes -> tag:bytes -> aad:bytes -> key:bytes -> iv:UInt64.t -> constant:UInt32.t -> plaintext:bytes -> len:UInt32.t -> aad_len:UInt32.t -> STL unit
@@ -47,7 +48,7 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   push_frame();
 
   (* Temporary buffers (to be improved) *)
-  let otk = create 0uy 64ul in   (* OTK for Chacha (to improve) *)
+  let otk = create 0uy 32ul in   (* OTK for Poly (to improve) *)
   let state = create 0ul 32ul in (* Chacha inner state *)
   let acc = create 0UL 5ul in (* Poly's accumulator *)
   let r = create 0UL 5ul in (* First half of poly's key, will be removed (merged with otk) *)
@@ -56,7 +57,7 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   (* Create OTK *)
   let counter = 0ul in
   chacha20_init state key counter iv constant;
-  bytes_of_uint32s otk state 64ul; // Unnecessary copy, will be removed with different encoding
+  chacha20_update otk state 32ul;
 
   (* Encrypt plaintext *)
   let counter = counter +^ 1ul in
@@ -70,7 +71,7 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   (* Padded blocks *)
   let padded_aad = create 0uy 16ul in
   let padded_ciphertext = create 0uy 16ul in
-  let len_bytes = create 0uy 8ul in
+  let len_bytes = create 0uy 16ul in
   blit ciphertext (UInt32.mul max 16ul) padded_ciphertext 0ul rem;
   blit aad (UInt32.mul max_aad 16ul) padded_aad 0ul rem_aad;
   pad_16 padded_ciphertext rem;
@@ -79,11 +80,11 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   poly1305_init acc r s otk;
   (* Update MAC *)
   poly1305_step aad acc r max_aad;
-  if not(UInt32.eq rem_aad 0ul) then poly1305_step padded_aad acc r 1ul;
+  if not(UInt32.eq rem_aad 0ul) then poly1305_update padded_aad acc r;
   poly1305_step ciphertext acc r max;
-  if not(UInt32.eq rem 0ul) then poly1305_step padded_ciphertext acc r 1ul;
+  if not(UInt32.eq rem 0ul) then poly1305_update padded_ciphertext acc r;
   length_bytes len_bytes len aad_len;
-  poly1305_last len_bytes acc r 8ul;
+  poly1305_update len_bytes acc r;
   (* Finish MAC *)
   poly1305_finish tag acc s;
   ()
