@@ -12,6 +12,11 @@ exception Halt
 
 let u64 = UInt64.t
 
+(*
+val STX.Halt: unit -> STX 'a 
+val STX.Load : unit -> buffer ... -> STX word
+val STX.Store: unit -> buffer ... -> STX unit
+*)
 
 val defensive: (array u64) -> (array u64) ->nat-> nat->nat->nat->nat->nat-> sgxstate
 let defensive regs buf base wbmapstart uheapstart ustackstart ucodestart size = 
