@@ -235,7 +235,7 @@ let one_debug_level_geq l1 l2 = match l1 with
 let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug_level_geq (dlevel l1) l2)
 
 let include_path_base_dirs =
-  ["/lib"; "/lib/fstar"; "/stdlib" ; "/stdlib/fstar"]
+  ["/lib"; "/lib/fstar"]
 
 let universe_include_path_base_dirs =
   ["/ulib"]
