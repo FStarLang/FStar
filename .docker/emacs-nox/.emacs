@@ -1,0 +1,5 @@
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+(package-initialize)
+(set-default 'fstar-executable "~/FStar/bin/fstar.exe")
+(global-flycheck-mode)
