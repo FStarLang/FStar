@@ -44,4 +44,4 @@ RUN make ocaml -C FStar/src
 RUN opam config exec -- make -C FStar/src/ocaml-output
 
 # F* Testing
-RUN opam config exec -- make -C FStar/src regressions
+RUN opam config exec -- make -C FStar/src regressions OTHERFLAGS=--lax
