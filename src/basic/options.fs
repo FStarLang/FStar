@@ -325,7 +325,8 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "detail_errors",
         ZeroArgs (fun () -> Bool true),
-         "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; incompatible with --stratified");
+         "Emit a detailed error report by asking the SMT solver many queries; will take longer;
+         implies n_cores=1; incompatible with --stratified");
 
        ( noshort,
         "dump_module",
@@ -346,9 +347,8 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "fs_typ_app",
         ZeroArgs (fun () -> Bool true),
-        "Allow the use of t<t1,
-       ...,
-       tn> syntax for type applications; brittle since it clashes with the integer less-than operator");
+        "Allow the use of t<t1,...,tn> syntax for type applications;
+        brittle since it clashes with the integer less-than operator");
 
        ( noshort,
         "fsi",
@@ -531,8 +531,7 @@ let rec specs () : list<Getopt.opt> =
         "smt",
         OneArg (String,
                  "[path]"),
-        "Path to the SMT solver (usually Z3,
-        but could be any SMT2-compatible solver)");
+        "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
 
        ( noshort,
         "split_cases",
@@ -573,7 +572,8 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "use_native_int",
         ZeroArgs (fun () -> Bool true),
-        "Extract the 'int' type to platform-specific native int (You will need to link the generated code with the appropriate version of the prims library)");
+        "Extract the 'int' type to platform-specific native int;
+        (You will need to link the generated code with the appropriate version of the prims library)");
 
        ( noshort,
         "verify_all",
@@ -600,8 +600,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "warn_top_level_effects",
         ZeroArgs (fun () -> Bool true),
-        "Top-level effects are ignored,
-        by default; turn this flag on to be warned when this happens");
+        "Top-level effects are ignored by default; turn this flag on to be warned when this happens");
 
        ( noshort,
         "z3timeout",
