@@ -292,20 +292,20 @@ let rec specs () : list<Getopt.opt> =
                "[off|warn|check]"),
        "Check cardinality constraints on inductive data types (default 'off')");
 
-     ( noshort, 
-       "codegen", 
-        OneArg ((fun s -> String (parse_codegen s)), 
-                 "[OCaml|FSharp|Kremlin]"), 
+     ( noshort,
+       "codegen",
+        OneArg ((fun s -> String (parse_codegen s)),
+                 "[OCaml|FSharp|Kremlin]"),
         "Generate code for execution");
 
-     ( noshort, 
-        "codegen-lib", 
-        OneArg ((fun s -> List (s::get_codegen_lib() |> List.map String)), 
-                 "[namespace]"), 
+     ( noshort,
+        "codegen-lib",
+        OneArg ((fun s -> List (s::get_codegen_lib() |> List.map String)),
+                 "[namespace]"),
         "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
-     
-     ( noshort, 
-        "debug", 
+
+     ( noshort,
+        "debug",
         OneArg ((fun x -> List (x::get_debug() |> List.map String)),
                  "[module name]"),
         "Print lots of debugging information while checking module");
