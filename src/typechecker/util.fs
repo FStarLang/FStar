@@ -553,7 +553,7 @@ let label reason r f : term =
 let label_opt env reason r f = match reason with
     | None -> f
     | Some reason ->
-        if not <| Options.should_verify env.curmodule.str
+        if not <| Env.should_verify env
         then f
         else label (reason()) r f
 
@@ -586,13 +586,12 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
 let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:lcomp) (g0:guard_t) : lcomp * guard_t =
     if Rel.is_trivial g0 
     then lc, g0
-    else
-        let _ = if Env.debug env <| Options.Extreme
-                then Util.print2 "+++++++++++++Strengthening pre-condition of term %s with guard %s\n" 
+    else let _ = if Env.debug env <| Options.Extreme
+                 then Util.print2 "+++++++++++++Strengthening pre-condition of term %s with guard %s\n" 
                                 (N.term_to_string env e)
                                 (Rel.guard_to_string env g0) in
-        let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
-        let strengthen () =
+         let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
+         let strengthen () =
             let c = lc.comp () in
             let g0 = Rel.simplify_guard env g0 in
             match guard_form g0 with
@@ -935,7 +934,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
      let norm c =
         if debug env Options.Medium 
         then Util.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
-         let c = if Options.should_verify env.curmodule.str
+         let c = if Env.should_verify env
                  then Normalize.normalize_comp [N.Beta; N.Inline; N.SNComp; N.Eta] env c
                  else Normalize.normalize_comp [N.Beta] env c in
          if debug env Options.Medium then 

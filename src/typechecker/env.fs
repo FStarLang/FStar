@@ -71,6 +71,7 @@ type env = {
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
+  lax            :bool;                         (* don't even generate VCs *)
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
@@ -101,6 +102,11 @@ type implicits = list<(env * uvar * term * typ * Range.range)>
 type sigtable = Util.smap<sigelt>
 
 // VALS_HACK_HERE
+
+let should_verify env = 
+    not env.lax
+    && not env.admit
+    && Options.should_verify env.curmodule.str
 
 let visible_at d q = match d, q with 
   | NoDelta,    _         
@@ -150,6 +156,7 @@ let initial_env tc solver module_lid =
     use_eq=false;
     is_iface=false;
     admit=false;
+    lax=false;
     type_of=tc;
     universe_of=(fun g e -> U_zero); //TODO: FIXME!
     use_bv_sorts=false;

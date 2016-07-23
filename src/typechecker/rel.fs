@@ -2399,7 +2399,7 @@ let rec solve_deferred_constraints env (g:guard_t) =
 
 let discharge_guard' use_env_range_msg env (g:guard_t) : guard_t =
    let g = solve_deferred_constraints env g in
-   (if not (Options.should_verify env.curmodule.str) then ()
+   (if not (Env.should_verify env) then ()
     else match g.guard_f with
     | Trivial -> ()
     | NonTrivial vc ->

@@ -52,7 +52,7 @@ let is_eq = function
     | Some Equality -> true
     | _ -> false
 let steps env =
-    if Options.should_verify env.curmodule.str
+    if Env.should_verify env
     then [N.Beta; N.Inline; N.SNComp]
     else [N.Beta; N.Inline]
 let unfold_whnf env t = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant; N.Beta] env t
@@ -97,9 +97,10 @@ let set_lcomp_result lc t =
 
 let value_check_expected_typ env e tlc guard : term * lcomp * guard_t =
   let lc = match tlc with
-    | Inl t -> U.lcomp_of_comp (if not (Util.is_pure_or_ghost_function t)
-                                      then mk_Total t
-                                      else TcUtil.return_value env t e)
+    | Inl t -> U.lcomp_of_comp (if not (Util.is_pure_or_ghost_function t) 
+                                || not (Env.should_verify env)
+                                then mk_Total t //don't add a return if we're not verifying; or if we're returnin a function
+                                else TcUtil.return_value env t e)
     | Inr lc -> lc in
   let t = lc.res_typ in
   let e, lc, g = match Env.expected_typ env with
@@ -186,6 +187,7 @@ let check_smt_pat env t bs c =
 (* guards the recursively bound names with a termination check                                              *)
 (************************************************************************************************************)
 let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
+    if not (Env.should_verify env) then env.letrecs else
     match env.letrecs with
     | [] -> []
     | letrecs ->
@@ -330,7 +332,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
     if Env.debug env Options.Extreme
     then Util.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
-    let c = if Options.should_verify env.curmodule.str
+    let c = if Env.should_verify env
             && not (Util.is_lcomp_partial_return c)
             && Util.is_pure_or_ghost_lcomp c //ADD_EQ_REFINEMENT for pure applications
             then TcUtil.maybe_assume_result_eq_pure_term env e c
@@ -401,7 +403,7 @@ and tc_value env (e:term) : term
   let check_instantiated_fvar env v dc e t =
     let e, t, implicits = TcUtil.maybe_instantiate env e t in
     //printfn "Instantiated type of %s to %s\n" (Print.term_to_string e) (Print.term_to_string t);
-    let tc = if Options.should_verify env.curmodule.str then Inl t else Inr (U.lcomp_of_comp <| mk_Total t) in
+    let tc = if Env.should_verify env then Inl t else Inr (U.lcomp_of_comp <| mk_Total t) in
     let is_data_ctor = function
         | Some Data_ctor
         | Some (Record_ctor _) -> true
@@ -437,7 +439,7 @@ and tc_value env (e:term) : term
     let t = if env.use_bv_sorts then x.sort else Env.lookup_bv env x in
     let e = S.bv_to_name ({x with sort=t}) in
     let e, t, implicits = TcUtil.maybe_instantiate env e t in
-    let tc = if Options.should_verify env.curmodule.str then Inl t else Inr (U.lcomp_of_comp <| mk_Total t) in
+    let tc = if Env.should_verify env then Inl t else Inr (U.lcomp_of_comp <| mk_Total t) in
     value_check_expected_typ env e tc implicits
 
   | Tm_uinst({n=Tm_fvar fv}, us) ->
@@ -729,7 +731,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                       (envbody, []) in
 
                  let envbody, bs, g, c = check_actuals_against_formals env bs bs_expected in
-                 let envbody, letrecs = if Options.should_verify env.curmodule.str then mk_letrec_env envbody bs c else envbody, [] in
+                 let envbody, letrecs = if Env.should_verify env then mk_letrec_env envbody bs c else envbody, [] in
                  let envbody = Env.set_expected_typ envbody (Util.comp_result c) in
                  Some (t, false), bs, letrecs, Some c, envbody, body, g
 
@@ -763,7 +765,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
     let body, cbody, guard = check_expected_effect ({envbody with use_eq=use_eq}) c_opt (body, cbody.comp()) in
     let guard = Rel.conj_guard guard_body guard in
-    let guard = if env.top_level || not(Options.should_verify env.curmodule.str)
+    let guard = if env.top_level || not(Env.should_verify env)
                 then Rel.discharge_guard envbody (Rel.conj_guard g guard)
                 else let guard = Rel.close_guard (bs@letrec_binders) guard in
                      Rel.conj_guard g guard in
@@ -1112,7 +1114,7 @@ and tc_eqn scrutinee env branch
   let when_clause, g_when = match when_clause with
     | None -> None, Rel.trivial_guard
     | Some e ->
-        if Options.should_verify (env.curmodule.str)
+        if Env.should_verify env
         then raise (Error("When clauses are not yet supported in --verify mode; they will be some day", e.pos))
         //             let e, c, g = no_logical_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env TcUtil.t_bool) e in
         //             Some e, g
@@ -1134,17 +1136,19 @@ and tc_eqn scrutinee env branch
   let c, g_when, g_branch =
 
     (* (a) eqs are equalities between the scrutinee and the pattern *)
-    let eqs = disj_exps |> List.fold_left (fun fopt e ->
-        let e = SS.compress e in
-        match e.n with
-            | Tm_uvar _
-            | Tm_constant _
-            | Tm_fvar _ -> fopt (* Equation for non-binding forms are handled with the discriminators below *)
-            | _ ->
-              let clause = Util.mk_eq pat_t pat_t scrutinee_tm e in
-              match fopt with
-                | None -> Some clause
-                | Some f -> Some <| Util.mk_disj clause f) None in
+    let eqs = 
+        if not (Env.should_verify env) then None else
+          disj_exps |> List.fold_left (fun fopt e ->
+                let e = SS.compress e in
+                match e.n with
+                    | Tm_uvar _
+                    | Tm_constant _
+                    | Tm_fvar _ -> fopt (* Equation for non-binding forms are handled with the discriminators below *)
+                    | _ ->
+                      let clause = Util.mk_eq pat_t pat_t scrutinee_tm e in
+                      match fopt with
+                        | None -> Some clause
+                        | Some f -> Some <| Util.mk_disj clause f) None in
 
     let c, g_branch = Util.strengthen_precondition None env branch_exp c g_branch in
     //g_branch is trivial, its logical content is now incorporated within c
@@ -1152,6 +1156,9 @@ and tc_eqn scrutinee env branch
     (* (b) *)
     let c_weak, g_when_weak =
      match eqs, when_condition with
+      | _ when not (Env.should_verify env) -> 
+        c, g_when
+
       | None, None ->
         c, g_when
 
@@ -1193,6 +1200,7 @@ and tc_eqn scrutinee env branch
   (*                                                                                                    *)
   (* (d) Strengthen 6 (c) with the when condition, if there is one                                      *)
   let branch_guard =
+      if not (Env.should_verify env) then Util.t_true else
       (* 6 (a) *)
       let rec build_branch_guard scrutinee_tm pat_exp : list<typ> =
         let discriminate scrutinee_tm f =
@@ -1243,7 +1251,7 @@ and tc_eqn scrutinee env branch
 
       (* 6 (b) *)
       let build_and_check_branch_guard scrutinee_tm pat =
-         if not (Options.should_verify env.curmodule.str)
+         if not (Env.should_verify env)
          then TcUtil.fvar_const env Const.true_lid //if we're not verifying, then don't even bother building it
          else let t = Util.mk_conj_l <| build_branch_guard scrutinee_tm pat in
               let k, _ = U.type_u() in
@@ -1290,7 +1298,7 @@ and check_top_level_let env e =
 
          (* Check that it doesn't have a top-level effect; warn if it does *)
          let e2, c1 =
-            if Options.should_verify env.curmodule.str
+            if Env.should_verify env
             then let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
                  if ok
                  then e2, c1
@@ -1447,7 +1455,7 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
                   Rel.force_trivial_guard env0 g;
                   norm env0 t) in
         let env = if Util.is_pure_or_ghost_function t //termination check is enabled
-                  && Options.should_verify env.curmodule.str (* store the let rec names separately for termination checks *)
+                  && Env.should_verify env (* store the let rec names separately for termination checks *)
                   then {env with letrecs=(lb.lbname,t)::env.letrecs}
                   else Env.push_let_binding env lb.lbname ([], t) in //no polymorphic recursion on universes
        let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
@@ -2627,7 +2635,7 @@ let tc_inductive env ses quals lids =
         let phi, _ = tc_trivial_guard env phi in
         let _ =
             //is this inline with verify_module ?
-            if Options.should_verify env.curmodule.str then
+            if Env.should_verify env then
                 Rel.force_trivial_guard env (Rel.guard_of_guard_formula (NonTrivial phi))
             else ()
         in
@@ -2928,7 +2936,8 @@ let tc_decls env ses =
 let tc_partial_modul env modul =
   let name = Util.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
   let msg = "Internals for " ^name in
-  let env = {env with Env.is_iface=modul.is_interface; admit=not (Options.should_verify modul.name.str)} in
+  let env = {env with Env.is_iface=modul.is_interface; 
+                      admit=not (Options.should_verify modul.name.str)} in
   if not (lid_equals modul.name Const.prims_lid) then env.solver.push msg;
   let env = Env.set_current_module env modul.name in
   let ses, exports, env = tc_decls env modul.declarations in
