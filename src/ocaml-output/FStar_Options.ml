@@ -716,7 +716,7 @@ let debug_level_geq : debug_level_t  ->  Prims.bool = (fun l2 -> (let _115_259 =
 in (FStar_All.pipe_right _115_259 (FStar_Util.for_some (fun l1 -> (one_debug_level_geq (dlevel l1) l2))))))
 
 
-let include_path_base_dirs : Prims.string Prims.list = ("/lib")::("/lib/fstar")::("/stdlib")::("/stdlib/fstar")::[]
+let include_path_base_dirs : Prims.string Prims.list = ("/lib")::("/lib/fstar")::[]
 
 
 let universe_include_path_base_dirs : Prims.string Prims.list = ("/ulib")::[]
@@ -833,7 +833,7 @@ end else begin
 end), "[make|graph]")), "Output the transitive closure of the dependency graph in a format suitable for the given tool"))::((FStar_Getopt.noshort, "detail_errors", FStar_Getopt.ZeroArgs ((fun _24_202 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; incompatible with --stratified"))::((FStar_Getopt.noshort, "dump_module", FStar_Getopt.OneArg (((fun x -> (let _115_347 = (let _115_345 = (let _115_343 = (get_dump_module ())
+end))), "Emit a detailed error report by asking the SMT solver many queries; will take longer;\n         implies n_cores=1; incompatible with --stratified"))::((FStar_Getopt.noshort, "dump_module", FStar_Getopt.OneArg (((fun x -> (let _115_347 = (let _115_345 = (let _115_343 = (get_dump_module ())
 in (x)::_115_343)
 in (FStar_All.pipe_right _115_345 (FStar_List.map (fun _115_344 -> String (_115_344)))))
 in (FStar_All.pipe_right _115_347 (fun _115_346 -> List (_115_346))))), "[module name]")), ""))::((FStar_Getopt.noshort, "eager_inference", FStar_Getopt.ZeroArgs ((fun _24_204 -> (match (()) with
@@ -845,7 +845,7 @@ Bool (true)
 end))), "Do not find dependencies automatically, the user provides them on the command-line"))::((FStar_Getopt.noshort, "fs_typ_app", FStar_Getopt.ZeroArgs ((fun _24_206 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Allow the use of t<t1,\n       ...,\n       tn> syntax for type applications; brittle since it clashes with the integer less-than operator"))::((FStar_Getopt.noshort, "fsi", FStar_Getopt.ZeroArgs ((fun _24_207 -> (match (()) with
+end))), "Allow the use of t<t1,...,tn> syntax for type applications;\n        brittle since it clashes with the integer less-than operator"))::((FStar_Getopt.noshort, "fsi", FStar_Getopt.ZeroArgs ((fun _24_207 -> (match (()) with
 | () -> begin
 Bool (true)
 end))), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode"))::((FStar_Getopt.noshort, "fstar_home", FStar_Getopt.OneArg (((fun _115_353 -> String (_115_353)), "[dir]")), "Set the FSTAR_HOME variable to [dir]"))::((FStar_Getopt.noshort, "hide_genident_nums", FStar_Getopt.ZeroArgs ((fun _24_208 -> (match (()) with
@@ -923,7 +923,7 @@ in (FStar_All.pipe_right _115_420 (FStar_List.map (fun _115_419 -> String (_115_
 in List (_115_421))), "[module name]")), "Show the checked signatures for all top-level symbols in the module"))::((FStar_Getopt.noshort, "silent", FStar_Getopt.ZeroArgs ((fun _24_236 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), " "))::((FStar_Getopt.noshort, "smt", FStar_Getopt.OneArg (((fun _115_424 -> String (_115_424)), "[path]")), "Path to the SMT solver (usually Z3,\n        but could be any SMT2-compatible solver)"))::((FStar_Getopt.noshort, "split_cases", FStar_Getopt.OneArg (((fun n -> (let _115_428 = (FStar_Util.int_of_string n)
+end))), " "))::((FStar_Getopt.noshort, "smt", FStar_Getopt.OneArg (((fun _115_424 -> String (_115_424)), "[path]")), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)"))::((FStar_Getopt.noshort, "split_cases", FStar_Getopt.OneArg (((fun n -> (let _115_428 = (FStar_Util.int_of_string n)
 in Int (_115_428))), "[positive integer]")), "Partition VC of a match into groups of [n] cases"))::((FStar_Getopt.noshort, "stratified", FStar_Getopt.ZeroArgs ((fun _24_238 -> (match (()) with
 | () -> begin
 Bool (true)
@@ -945,7 +945,7 @@ Bool (true)
 end))), "Use a previously recorded hints database for proof replay"))::((FStar_Getopt.noshort, "use_native_int", FStar_Getopt.ZeroArgs ((fun _24_244 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Extract the \'int\' type to platform-specific native int (You will need to link the generated code with the appropriate version of the prims library)"))::((FStar_Getopt.noshort, "verify_all", FStar_Getopt.ZeroArgs ((fun _24_245 -> (match (()) with
+end))), "Extract the \'int\' type to platform-specific native int;\n        (You will need to link the generated code with the appropriate version of the prims library)"))::((FStar_Getopt.noshort, "verify_all", FStar_Getopt.ZeroArgs ((fun _24_245 -> (match (()) with
 | () -> begin
 Bool (true)
 end))), "With automatic dependencies, verify all the dependencies, not just the files passed on the command-line."))::((FStar_Getopt.noshort, "verify_module", FStar_Getopt.OneArg ((cons_verify_module, "[module name]")), "Name of the module to verify"))::((FStar_Getopt.noshort, "__temp_no_proj", FStar_Getopt.OneArg (((fun x -> (let _115_444 = (let _115_443 = (let _115_441 = (get___temp_no_proj ())
@@ -957,7 +957,7 @@ let _24_249 = (display_version ())
 in (FStar_All.exit 0)))), "Display version number"))::((FStar_Getopt.noshort, "warn_top_level_effects", FStar_Getopt.ZeroArgs ((fun _24_251 -> (match (()) with
 | () -> begin
 Bool (true)
-end))), "Top-level effects are ignored,\n        by default; turn this flag on to be warned when this happens"))::((FStar_Getopt.noshort, "z3timeout", FStar_Getopt.OneArg (((fun s -> (let _115_450 = (FStar_Util.int_of_string s)
+end))), "Top-level effects are ignored by default; turn this flag on to be warned when this happens"))::((FStar_Getopt.noshort, "z3timeout", FStar_Getopt.OneArg (((fun s -> (let _115_450 = (FStar_Util.int_of_string s)
 in Int (_115_450))), "[positive integer]")), "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)"))::[]
 in (let _115_452 = (FStar_List.map mk_spec specs)
 in (('h', "help", FStar_Getopt.ZeroArgs ((fun x -> (
