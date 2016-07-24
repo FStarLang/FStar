@@ -180,7 +180,7 @@ let norm_universe cfg env u =
           | U_bvar x -> 
             begin 
                 try match List.nth env x with 
-                      | Univ u -> [u]
+                      | Univ u -> aux u
                       | Dummy -> [u]
                       | _ -> failwith "Impossible: universe variable bound to a term"
                 with _ -> if cfg.steps |> List.contains AllowUnboundUniverses

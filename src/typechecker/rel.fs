@@ -1638,7 +1638,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                         | _ -> u_abs k_uv (sn_binders env vars) t2 in
                     let wl = solve_prob orig None [TERM((uv,k_uv), sol)] wl in
                     solve env wl)
-            else if wl.defer_ok
+            else if wl.defer_ok && p_rel orig <> EQ
             then solve env (defer "flex pattern/rigid: occurs or freevar check" orig wl)
             else if check_head fvs1 t2
             then let _ = if debug env <| Options.Other "Rel"
@@ -1931,6 +1931,12 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | _, Tm_uvar _
       | _, Tm_app({n=Tm_uvar _}, _) when (problem.relation = EQ) ->
         solve_t env (invert problem) wl
+
+      (* flex-rigid: ?u _ <: Type _ *)
+      | Tm_uvar _, Tm_type _
+      | Tm_app({n=Tm_uvar _}, _), Tm_type _ -> 
+        //this case is so common, that even though we could delay, it is almost always ok to solve it immediately as an equality
+        solve_t' env ({problem with relation=EQ}) wl
 
       (* flex-rigid: subtyping *)
       | Tm_uvar _, _

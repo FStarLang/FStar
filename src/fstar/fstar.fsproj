@@ -26,7 +26,7 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>FStar.Tcp.fst</StartArguments>
+    <StartArguments>--explicit_deps test.fst --debug Test --debug_level Extreme --debug_level Rel --print_universes --print_implicits --print_bound_var_types</StartArguments>
     <StartAction>Project</StartAction>
     <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\ulib\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>

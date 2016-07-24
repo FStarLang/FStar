@@ -440,11 +440,14 @@ and tc_value env (e:term) : term
     value_check_expected_typ env e (Inl t1) g
 
   | Tm_unknown -> //only occurs where type annotations are missing in source programs
-    let k, u = U.type_u () in
     let r = Env.get_range env in 
-    let t, _, g0 = TcUtil.new_implicit_var "type of user-provided implicit term" r env k in
+    let t, _, g0 = 
+        match Env.expected_typ env with 
+        | None ->  let k, u = U.type_u () in
+                   TcUtil.new_implicit_var "type of user-provided implicit term" r env k
+        | Some t -> t, [], Rel.trivial_guard in 
     let e, _, g1 = TcUtil.new_implicit_var "user-provided implicit term" r env t in
-    value_check_expected_typ env e (Inl t) (Rel.conj_guard g0 g1)
+    e, S.mk_Total t |> Util.lcomp_of_comp, (Rel.conj_guard g0 g1)
 
   | Tm_name x ->
     let t = if env.use_bv_sorts then x.sort else Env.lookup_bv env x in
@@ -2989,17 +2992,33 @@ let type_of env e =
 let universe_of env e = 
     if not (Env.should_verify env) 
     then U_zero
-    else let env, _ = Env.clear_expected_typ env in 
+    else 
+         let _ = if Env.debug env Options.Extreme then Util.print1 "universe_of %s\n" (Print.tag_of_term e) in
+         let env, _ = Env.clear_expected_typ env in 
          let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
          let e = N.normalize [N.Beta; N.NoInline] env e in
+         let fail t = 
+              raise (Error(Util.format2 "Expected a term of type 'Type'; got %s : %s" (Print.term_to_string e) (Print.term_to_string t), Env.get_range env)) in
+         let ok u = 
+            let _ = if Env.debug env Options.Extreme 
+                    then Util.print2 "<end> universe_of %s is %s\n" (Print.tag_of_term e) (Print.univ_to_string u) in
+            u in
+         let universe_of_type t = 
+            match (Util.unrefine t).n with 
+            | Tm_type u -> ok u
+            | _ -> fail t in
 //         let _ = Printf.printf "%A:\nuniverse_of %s\n\n\n" (System.Diagnostics.StackTrace())
 //                                                           (Print.term_to_string e) in
-         let _, ({res_typ=t}), _ = tc_term env e in
-         let t = Util.unrefine <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t in 
-         match (SS.compress t).n with 
-         | Tm_type u -> u
-         | _ -> raise (Error(Util.format1 "Expected a term of type 'Type'; got %s" (Print.term_to_string t), Env.get_range env))
-
+         let head, args = Util.head_and_args e in
+         match (SS.compress head).n with 
+         | Tm_uvar(_, t) -> 
+           begin match (SS.compress t).n with
+           | Tm_arrow(_, t) -> universe_of_type (Util.comp_result t)
+           | _ -> universe_of_type t
+           end
+         | _ -> 
+             let _, ({res_typ=t}), _ = tc_term env e in
+             universe_of_type <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
 
 let check_module env m =
     if Options.debug_any()
