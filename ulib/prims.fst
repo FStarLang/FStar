@@ -186,7 +186,7 @@ sub_effect
 
 (* The primitive effect GTot is definitionally equal to an instance of GHOST *)
 effect GTot (a:Type) = GHOST a (pure_null_wp a)
-
+(* #set-options "--print_universes --print_implicits --print_bound_var_types --debug Prims --debug_level Extreme" *)
 effect Ghost (a:Type) (pre:Type) (post:pure_post a) =
        GHOST a
            (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))

@@ -96,10 +96,21 @@ let set_lcomp_result lc t =
     {lc with res_typ=t; comp=fun () -> Util.set_result_typ (lc.comp()) t}
 
 let value_check_expected_typ env e tlc guard : term * lcomp * guard_t =
+  let should_return t = 
+    match (SS.compress t).n with
+    | Tm_arrow(_, c) -> 
+      if Util.is_pure_or_ghost_effect env (Util.comp_effect_name c)
+      then let t = Util.unrefine <| (Util.comp_result c) in
+           match (SS.compress t).n with 
+           | Tm_fvar fv when (S.fv_eq_lid fv Const.unit_lid) -> false //uninformative function
+           | Tm_constant _ -> false
+           | _ -> true
+      else false //can't reason about effectful function definitions, so not worth returning this
+    | _ -> true in
   let lc = match tlc with
-    | Inl t -> U.lcomp_of_comp (if not (Util.is_pure_or_ghost_function t) 
+    | Inl t -> U.lcomp_of_comp (if not (should_return t)
                                 || not (Env.should_verify env)
-                                then mk_Total t //don't add a return if we're not verifying; or if we're returnin a function
+                                then mk_Total t //don't add a return if we're not verifying; or if we're returning a function
                                 else TcUtil.return_value env t e)
     | Inr lc -> lc in
   let t = lc.res_typ in
@@ -250,9 +261,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                                         * guard_t =             (* well-formedness condition                           *)
   let env = if e.pos=Range.dummyRange then env else Env.set_range env e.pos in
   if debug env Options.Low then Util.print2 "%s (%s)\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term e);
-  let top = e in
-  match e.n with
-  | Tm_delayed _ -> tc_term env (SS.compress e)
+  let top = SS.compress e in
+  match top.n with
+  | Tm_delayed _ -> failwith "Impossible"
 
   | Tm_uinst _
   | Tm_uvar _
@@ -507,7 +518,7 @@ and tc_value env (e:term) : term
     tc_abs env top bs body
 
   | _ ->
-    failwith (Util.format1 "Unexpected value: %s" (Print.term_to_string top))
+    failwith (Util.format2 "Unexpected value: %s (%s)" (Print.term_to_string top) (Print.tag_of_term top))
 
 and tc_constant r (c:sconst) : typ =
      match c with
@@ -2974,6 +2985,21 @@ let type_of env e =
     if Util.is_total_lcomp c
     then t, c.res_typ, g
     else raise (Error(Util.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e), Env.get_range env))
+
+let universe_of env e = 
+    if not (Env.should_verify env) 
+    then U_zero
+    else let env, _ = Env.clear_expected_typ env in 
+         let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
+         let e = N.normalize [N.Beta; N.NoInline] env e in
+//         let _ = Printf.printf "%A:\nuniverse_of %s\n\n\n" (System.Diagnostics.StackTrace())
+//                                                           (Print.term_to_string e) in
+         let _, ({res_typ=t}), _ = tc_term env e in
+         let t = Util.unrefine <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t in 
+         match (SS.compress t).n with 
+         | Tm_type u -> u
+         | _ -> raise (Error(Util.format1 "Expected a term of type 'Type'; got %s" (Print.term_to_string t), Env.get_range env))
+
 
 let check_module env m =
     if Options.debug_any()

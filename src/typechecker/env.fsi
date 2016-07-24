@@ -94,7 +94,9 @@ and guard_t = {
 
 type implicits = list<(env * uvar * term * typ * Range.range)>
 type env_t = env
-val initial_env : (env -> term -> term*typ*guard_t) -> solver_t -> lident -> env
+val initial_env : (env -> term -> term*typ*guard_t) 
+               -> (env -> term -> universe)
+               -> solver_t -> lident -> env
 
 (* Some utilities *)
 val should_verify: env -> bool
@@ -172,6 +174,3 @@ val wp_signature    : env -> lident -> (bv * term)
 
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders
-
-(* TODO: REMOVE *)
-val no_solver_env: (env -> term -> term*typ*guard_t) -> env
