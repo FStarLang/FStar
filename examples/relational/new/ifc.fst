@@ -196,6 +196,7 @@ let skip_com _ = ()
           env,pc:l |- while (e <> 0) do c
 *)
 
+(* This needs a high timeout *)
 val loop_com : env:label_fun -> e:exp -> c:com -> v:variant -> l:label -> h:(rel heap) -> 
   Lemma (requires (ni_exp env e l /\ ni_com env c l))
         (ensures  (ni_com' env (While e c v) l h)) 
