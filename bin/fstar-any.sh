@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 FSTAR=$(which fstar.exe)
 if (( $? != 0 )); then
   echo "fstar.exe not found"
