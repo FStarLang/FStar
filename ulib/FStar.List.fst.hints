@@ -1,0 +1,224 @@
+[
+  "Èz÷\t¨:‹aü\u000e·J?⁄˚\"",
+  [
+    [ 2, 1, [ "@query_2114" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2115", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2116", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2119", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2122", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2125", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2138", "binder_x__8454", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list_340",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2150", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2163", "binder_l__13643", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list_340",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2175", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2178" ], 0 ],
+    [ 2, 1, [ "@query_2181" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2184", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2187" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2190", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2193", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2196", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2199" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2202", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2205", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2208", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "disc_equation_Prims.V", "fuel_guarded_inversion_Prims.list_340",
+        "fuel_guarded_inversion_Prims.option_446",
+        "kinding_Prims.option@tok", "proj_equation_Prims.V_v",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_553", "typing_Prims.V.v"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2211", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "disc_equation_Prims.V", "fuel_guarded_inversion_Prims.list_340",
+        "fuel_guarded_inversion_Prims.option_446",
+        "kinding_Prims.option@tok", "proj_equation_Prims.V_v",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_553", "typing_Prims.V.v"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2214", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2215" ], 0 ],
+    [ 2, 1, [ "@query_2216" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2224", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2225", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.nat", "fuel_guarded_inversion_Prims.list_340",
+        "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "proj_equation_Prims.V_v",
+        "projection_inverse_BoxInt_proj_0", "projection_inverse_Prims.V_v",
+        "refinement_interpretation_Tm_refine_1110"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2226", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2229", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "disc_equation_Prims.V", "fuel_guarded_inversion_Prims.list_340",
+        "fuel_guarded_inversion_Prims.option_446",
+        "kinding_Prims.option@tok", "proj_equation_Prims.V_v",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_553", "typing_Prims.V.v"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2238", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list_340"
+      ],
+      0
+    ]
+  ]
+]

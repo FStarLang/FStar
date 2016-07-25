@@ -1,0 +1,139 @@
+[
+  "—ïÚ⁄\u0019\u0002—¡ (Æ÷ˆçˆ\u0006",
+  [
+    [ 0, 0, [ "@query_1480" ], 0 ],
+    [
+      0,
+      0,
+      [
+        "@query_1494", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [ 0, 0, [ "@query_1496" ], 0 ],
+    [
+      0,
+      0,
+      [
+        "@query_1507", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [ 0, 0, [ "@query_1509" ], 0 ],
+    [
+      0,
+      0,
+      [
+        "@query_1519", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [ 0, 0, [ "@query_1521" ], 0 ],
+    [
+      0,
+      0,
+      [
+        "@query_1524", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [ 0, 0, [ "@query_1526" ], 0 ],
+    [ 0, 0, [ "@query_1530" ], 0 ],
+    [ 0, 0, [ "@query_1535" ], 0 ],
+    [
+      0,
+      0,
+      [
+        "@query_1544", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110", "haseqTm_refine_1543"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_1551", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110", "haseqTm_refine_1550"
+      ],
+      0
+    ],
+    [ 0, 0, [ "@query_1564" ], 0 ],
+    [ 0, 0, [ "@query_1574", "lemma_FStar.Matrix2.lemma_row_len" ], 0 ],
+    [ 0, 0, [ "@query_1579", "lemma_FStar.Matrix2.lemma_col_len" ], 0 ],
+    [
+      0,
+      0,
+      [
+        "@query_1582", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [ "@query_1586", "refinement_interpretation_Tm_refine_1499" ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_1590", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_1593", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [ 0, 0, [ "@query_1601" ], 0 ],
+    [
+      0,
+      0,
+      [
+        "@query_1607", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [ "@query_1611", "refinement_interpretation_Tm_refine_1499" ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_1615", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_1619", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [ 0, 0, [ "@query_1628" ], 0 ],
+    [ 0, 0, [ "@query_1656" ], 0 ],
+    [ 0, 0, [ "@query_1659" ], 0 ]
+  ]
+]

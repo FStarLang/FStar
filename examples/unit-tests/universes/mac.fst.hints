@@ -1,0 +1,106 @@
+[
+  "Ô\rç¸À\u0007*fÚë=\"U◊\u0006#",
+  [
+    [ 2, 1, [ "@query_3714" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_3715", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_3720", "equation_MAC.keysize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_3721", "equation_MAC.macsize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_3724", "assumption_FStar.UInt8.t__haseq_3484",
+        "equation_FStar.UInt8.byte", "equation_FStar.UInt8.t"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_3735" ], 0 ],
+    [ 2, 1, [ "@query_3747" ], 0 ],
+    [ 2, 1, [ "@query_3748" ], 0 ],
+    [ 2, 1, [ "@query_3771" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_3782", "equation_MAC.bytes", "equation_MAC.text",
+        "proj_equation_MAC.Entry_k", "projection_inverse_MAC.Entry_k",
+        "refinement_interpretation_Tm_refine_3758"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_3786" ], 0 ],
+    [ 2, 1, [ "@query_3788" ], 0 ],
+    [
+      2,
+      2,
+      [
+        "@query_3809", "assumption_FStar.UInt8.t__haseq_3484",
+        "data_elim_MAC.Entry", "data_elim_Prims.Some",
+        "disc_equation_Prims.Some", "equation_FStar.UInt8.byte",
+        "equation_FStar.UInt8.t", "equation_MAC.bytes", "equation_MAC.key",
+        "equation_MAC.keysize", "equation_MAC.nbytes", "equation_MAC.text",
+        "equation_Prims.eqtype", "fuel_guarded_inversion_MAC.entry_3752",
+        "kinding_FStar.UInt8.t_@tok", "lemma_FStar.Seq.lemma_eq_elim",
+        "primitive_Prims.op_AmpAmp", "proj_equation_Prims.V_v",
+        "projection_inverse_BoxBool_proj_0", "projection_inverse_Prims.V_v",
+        "refinement_interpretation_Tm_refine_113",
+        "refinement_interpretation_Tm_refine_1445",
+        "refinement_interpretation_Tm_refine_3719",
+        "refinement_interpretation_Tm_refine_3758",
+        "refinement_interpretation_Tm_refine_3791", "typing_FStar.Seq.eq"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_3813", "assumption_FStar.UInt8.t__haseq_3484",
+        "equation_FStar.UInt8.byte", "equation_FStar.UInt8.t"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_3815", "assumption_FStar.UInt8.t__haseq_3484",
+        "equation_FStar.UInt8.byte", "equation_FStar.UInt8.t"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_3817", "assumption_FStar.UInt8.t__haseq_3484",
+        "equation_FStar.UInt8.byte", "equation_FStar.UInt8.t"
+      ],
+      0
+    ]
+  ]
+]

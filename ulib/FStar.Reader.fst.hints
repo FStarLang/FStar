@@ -1,0 +1,25 @@
+[
+  "œ¡y}^€³ªÒA\u0011\u000bHåç³",
+  [
+    [ 2, 1, [ "@query_1500" ], 0 ],
+    [ 2, 1, [ "@query_1501" ], 0 ],
+    [ 2, 1, [ "@query_1502" ], 0 ],
+    [ 2, 1, [ "@query_1503" ], 0 ],
+    [ 2, 1, [ "@query_1504" ], 0 ],
+    [ 2, 1, [ "@query_1505", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 2, 1, [ "@query_1506", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__317", "@query_1507",
+        "assumption_FStar.Heap.SelUpd1_1429", "equation_FStar.ST.ref",
+        "function_token_typing_Prims.int", "int_typing",
+        "primitive_Prims.op_Addition", "ref_inversion"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1508", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 2, 1, [ "@query_1509", "assumption_Prims.HasEq_int_320" ], 0 ]
+  ]
+]

@@ -1,0 +1,20 @@
+[
+  "°·Îât’Fš€\t%¹öÝ\u0002i",
+  [
+    [ 2, 1, [ "@query_1496" ], 0 ],
+    [ 2, 1, [ "@query_1505" ], 0 ],
+    [ 2, 1, [ "@query_1506" ], 0 ],
+    [ 2, 1, [ "@query_1510" ], 0 ],
+    [ 2, 1, [ "@query_1517" ], 0 ],
+    [ 2, 1, [ "@query_1518" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1519", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ]
+  ]
+]

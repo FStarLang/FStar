@@ -1,0 +1,51 @@
+[
+  "m-ˆ„zO8V~\u0001(Ž9ÄÄ\u0011",
+  [
+    [
+      2,
+      1,
+      [
+        "@query_6056", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_6075" ], 0 ],
+    [ 2, 1, [ "@query_6078" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_6094", "assumption_Prims.HasEq_bool_155",
+        "assumption_Prims.HasEq_int_320", "equation_Prims.nat",
+        "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_6113" ], 0 ],
+    [ 2, 1, [ "@query_6116" ], 0 ],
+    [ 2, 1, [ "@query_6117" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_6133", "assumption_FStar.Char.char__haseq_5691",
+        "assumption_Prims.HasEq_int_320", "equation_FStar.BaseTypes.char",
+        "equation_FStar.Char.char"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_6154" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_6170", "assumption_Prims.HasEq_int_320",
+        "equation_Prims.nat", "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_6189" ], 0 ],
+    [ 2, 1, [ "@query_6192" ], 0 ]
+  ]
+]

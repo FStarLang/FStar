@@ -1,0 +1,111 @@
+[
+  "ﬂ∆÷∂ËLÅæl'πPMióÉ",
+  [
+    [
+      2,
+      1,
+      [
+        "@pretyping__317", "@query_1501", "binder_n__41",
+        "equation_Prims.nat", "int_inversion", "int_typing",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1110",
+        "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1509", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__133", "@pretyping__317", "@query_1530",
+        "binder_uu___5__867", "equation_Prims.nat",
+        "equation_with_fuel_FirstProofs.factorial__1513",
+        "fuel_correspondence_FirstProofs.factorial__1513",
+        "fuel_irrelevance_FirstProofs.factorial__1513", "int_inversion",
+        "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1110",
+        "refinement_interpretation_Tm_refine_1528", "unit_typing",
+        "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [
+      4,
+      2,
+      [
+        "@pretyping__133", "@pretyping__317", "@query_1565",
+        "binder_uu___6__3551", "equation_Prims.nat",
+        "equation_with_fuel_FirstProofs.factorial__1513",
+        "fuel_correspondence_FirstProofs.factorial__1513",
+        "fuel_irrelevance_FirstProofs.factorial__1513", "int_inversion",
+        "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1110",
+        "refinement_interpretation_Tm_refine_1543",
+        "refinement_interpretation_Tm_refine_1563", "unit_inversion",
+        "unit_typing", "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [
+      4,
+      2,
+      [
+        "@pretyping__133", "@pretyping__317", "@query_1605",
+        "binder_uu___7__8206", "equation_Prims.nat",
+        "equation_with_fuel_FirstProofs.factorial__1513",
+        "fuel_correspondence_FirstProofs.factorial__1513",
+        "fuel_irrelevance_FirstProofs.factorial__1513", "int_inversion",
+        "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1110",
+        "refinement_interpretation_Tm_refine_1583",
+        "refinement_interpretation_Tm_refine_1603", "unit_typing",
+        "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__317", "@query_1629", "binder_uu___8__13087",
+        "equation_Prims.nat", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1110",
+        "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__317", "@query_1635", "binder_n__14184",
+        "equation_Prims.nat",
+        "equation_with_fuel_FirstProofs.fibonacci__1633",
+        "fuel_correspondence_FirstProofs.fibonacci__1633",
+        "fuel_irrelevance_FirstProofs.fibonacci__1633", "int_inversion",
+        "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1110",
+        "token_correspondence_FirstProofs.fibonacci__1633",
+        "typing_FirstProofs.fibonacci", "unit_typing",
+        "well-founded-ordering-on-nat"
+      ],
+      0
+    ]
+  ]
+]

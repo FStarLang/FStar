@@ -1,0 +1,88 @@
+[
+  "Ð&j\u000b{ø%\u0011Î9‹ÿ1Ó<ó",
+  [
+    [
+      2,
+      1,
+      [
+        "@query_1965", "binder_a__388", "binder_f__390", "binder_s__392",
+        "bool_inversion", "disc_equation_Prims.Some",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
+        "equation_Prims.nat", "lemma_FStar.OrdSet.choose_s",
+        "lemma_FStar.OrdSet.eq_remove", "lemma_FStar.OrdSet.mem_remove",
+        "lemma_FStar.OrdSet.mem_singleton", "lemma_FStar.OrdSet.mem_union",
+        "lemma_FStar.OrdSet.size_remove",
+        "lemma_FStar.OrdSet.size_singleton", "lemma_FStar.OrdSet.size_union",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "proj_equation_Prims.Some_v", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Some_v",
+        "refinement_interpretation_Tm_refine_1110",
+        "refinement_interpretation_Tm_refine_113",
+        "typing_FStar.OrdSet.choose", "typing_FStar.OrdSet.singleton",
+        "typing_FStar.OrdSet.size", "typing_Prims.is_Some",
+        "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1979", "binder_a__388", "binder_f__390",
+        "lemma_FStar.OrdSet.hasEq_ordset"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1993" ], 0 ],
+    [ 2, 1, [ "@query_2000", "assumption_Prims.HasEq_bool_155" ], 0 ],
+    [ 2, 1, [ "@query_2003" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2004", "binder_a__12736", "binder_f__12737",
+        "binder_s1__12738", "binder_s2__12739", "bool_inversion",
+        "disc_equation_Prims.Some", "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.OrdSetProps.insert",
+        "equation_FStar.OrdSetProps.union_", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_FStar.OrdSetProps.fold__1987",
+        "fuel_correspondence_FStar.OrdSetProps.fold__1987",
+        "fuel_irrelevance_FStar.OrdSetProps.fold__1987", "int_inversion",
+        "interpretation_Exp_abs_1996", "lemma_FStar.OrdSet.choose_s",
+        "lemma_FStar.OrdSet.eq_remove", "lemma_FStar.OrdSet.mem_empty",
+        "lemma_FStar.OrdSet.mem_remove", "lemma_FStar.OrdSet.mem_singleton",
+        "lemma_FStar.OrdSet.mem_union", "lemma_FStar.OrdSet.size_remove",
+        "lemma_FStar.OrdSet.size_singleton", "lemma_FStar.OrdSet.size_union",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Negation", "proj_equation_Prims.Some_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1110",
+        "refinement_interpretation_Tm_refine_113",
+        "typing_FStar.OrdSet.choose", "typing_FStar.OrdSet.mem",
+        "typing_FStar.OrdSet.singleton", "typing_FStar.OrdSet.size",
+        "typing_FStar.OrdSetProps.union_", "typing_Prims.is_Some",
+        "unit_typing", "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2005", "binder_a__12736", "binder_f__12737",
+        "lemma_FStar.OrdSet.hasEq_ordset"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2006", "lemma_FStar.OrdSet.hasEq_ordset" ], 0 ],
+    [ 2, 1, [ "@query_2007" ], 0 ],
+    [ 2, 1, [ "@query_2008", "equation_FStar.OrdSet.equal" ], 0 ]
+  ]
+]

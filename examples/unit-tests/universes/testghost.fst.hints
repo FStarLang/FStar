@@ -1,0 +1,21 @@
+[
+  "‰Ö\u0001šìãPÿGTðì“ƒ×\u0014",
+  [
+    [ 2, 1, [ "@query_1706" ], 0 ],
+    [ 2, 1, [ "@query_1709" ], 0 ],
+    [ 2, 1, [ "@query_1710" ], 0 ],
+    [ 2, 1, [ "@query_1718", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 2, 1, [ "@query_1719" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__317", "@query_1720", "equation_FStar.Ghost.hide",
+        "equation_FStar.Ghost.reveal", "int_typing"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1728", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 2, 1, [ "@query_1729" ], 0 ]
+  ]
+]

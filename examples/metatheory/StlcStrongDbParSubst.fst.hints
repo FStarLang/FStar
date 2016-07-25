@@ -1,0 +1,799 @@
+[
+  "8$kX)-\u001b·\u001b.ú\u0004!áó¼",
+  [
+    [ 2, 1, [ "@query_2005" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2037", "disc_equation_StlcStrongDbParSubst.TArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2030"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2043", "disc_equation_StlcStrongDbParSubst.TArr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2030"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2072", "assumption_Prims.HasEq_int_320",
+        "assumption_StlcStrongDbParSubst.typ_haseq_2022",
+        "equation_Prims.nat", "equation_StlcStrongDbParSubst.var",
+        "haseqTm_refine_1110"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2120", "disc_equation_StlcStrongDbParSubst.EVar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2113"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2129", "disc_equation_StlcStrongDbParSubst.EApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2122"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2135", "disc_equation_StlcStrongDbParSubst.EApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2122"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2144", "disc_equation_StlcStrongDbParSubst.ELam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2137"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2152", "disc_equation_StlcStrongDbParSubst.ELam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2137"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2156", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 2, 1, [ "@query_2157", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 2, 1, [ "@query_2158" ], 0 ],
+    [
+      2,
+      1,
+      [ "@query_2164", "refinement_interpretation_Tm_refine_2160" ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2172", "equation_Prims.nat",
+        "equation_StlcStrongDbParSubst.var", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1110"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2175", "constructor_distinct_StlcStrongDbParSubst.EVar",
+        "disc_equation_StlcStrongDbParSubst.EVar",
+        "equation_StlcStrongDbParSubst.renaming",
+        "equation_StlcStrongDbParSubst.sub_inc",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcStrongDbParSubst.EVar__0",
+        "token_correspondence_StlcStrongDbParSubst.sub_inc", "unit_typing"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2176" ], 0 ],
+    [ 2, 1, [ "@query_2179", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 2, 1, [ "@query_2181" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__153", "@pretyping__317", "@query_2200",
+        "binder_e__12114", "binder_s__12113", "bool_typing",
+        "constructor_distinct_StlcStrongDbParSubst.EUnit",
+        "constructor_distinct_StlcStrongDbParSubst.EVar",
+        "disc_equation_StlcStrongDbParSubst.EApp",
+        "disc_equation_StlcStrongDbParSubst.ELam",
+        "disc_equation_StlcStrongDbParSubst.EUnit",
+        "disc_equation_StlcStrongDbParSubst.EVar",
+        "equality_tok_Prims.LexTop@tok",
+        "equality_tok_StlcStrongDbParSubst.EUnit@tok", "equation_Prims.nat",
+        "equation_StlcStrongDbParSubst.is_renaming",
+        "equation_StlcStrongDbParSubst.is_var",
+        "equation_StlcStrongDbParSubst.renaming",
+        "equation_StlcStrongDbParSubst.sub",
+        "equation_StlcStrongDbParSubst.sub_inc",
+        "equation_StlcStrongDbParSubst.var",
+        "fuel_guarded_inversion_StlcStrongDbParSubst.exp_2076",
+        "function_token_typing_StlcStrongDbParSubst.sub_inc",
+        "int_inversion", "int_typing", "interpretation_Tm_arrow_2084",
+        "interpretation_Tm_arrow_2198", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_StlcStrongDbParSubst.EVar__0",
+        "refinement_interpretation_Tm_refine_1110",
+        "refinement_interpretation_Tm_refine_1176",
+        "refinement_interpretation_Tm_refine_2167",
+        "refinement_interpretation_Tm_refine_2193",
+        "subterm_ordering_StlcStrongDbParSubst.EApp",
+        "subterm_ordering_StlcStrongDbParSubst.ELam",
+        "token_correspondence_StlcStrongDbParSubst.sub_inc",
+        "typing_Exp_abs_2195", "typing_FStar.Classical.excluded_middle",
+        "typing_StlcStrongDbParSubst.is_renaming",
+        "typing_StlcStrongDbParSubst.is_var",
+        "typing_StlcStrongDbParSubst.renaming",
+        "typing_tok_StlcStrongDbParSubst.EUnit@tok",
+        "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2211", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2228", "equation_Prims.nat",
+        "equation_StlcStrongDbParSubst.var", "int_inversion",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1110"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2229", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2234", "equation_Prims.nat",
+        "equation_StlcStrongDbParSubst.var", "int_inversion",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1110"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2235", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 2, 1, [ "@query_2244" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2272", "assumption_StlcStrongDbParSubst.exp_haseq_2101",
+        "assumption_StlcStrongDbParSubst.typ_haseq_2022"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2309" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2318", "disc_equation_StlcStrongDbParSubst.SBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2311"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2319" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2327", "disc_equation_StlcStrongDbParSubst.SBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2311"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2328" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2334", "disc_equation_StlcStrongDbParSubst.SBeta",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2311"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2335" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2344", "disc_equation_StlcStrongDbParSubst.SApp1",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2337"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2345" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2351", "disc_equation_StlcStrongDbParSubst.SApp1",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2337"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2352" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2358", "disc_equation_StlcStrongDbParSubst.SApp1",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2337"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2360" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2368", "disc_equation_StlcStrongDbParSubst.SApp1",
+        "proj_equation_StlcStrongDbParSubst.SApp1_e1",
+        "proj_equation_StlcStrongDbParSubst.SApp1_e1_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcStrongDbParSubst.SApp1_e1",
+        "projection_inverse_StlcStrongDbParSubst.SApp1_e1_",
+        "refinement_interpretation_Tm_refine_2337"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2369" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2378", "disc_equation_StlcStrongDbParSubst.SApp2",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2371"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2379" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2385", "disc_equation_StlcStrongDbParSubst.SApp2",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2371"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2386" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2392", "disc_equation_StlcStrongDbParSubst.SApp2",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2371"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2394" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2402", "disc_equation_StlcStrongDbParSubst.SApp2",
+        "proj_equation_StlcStrongDbParSubst.SApp2_e2",
+        "proj_equation_StlcStrongDbParSubst.SApp2_e2_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcStrongDbParSubst.SApp2_e2",
+        "projection_inverse_StlcStrongDbParSubst.SApp2_e2_",
+        "refinement_interpretation_Tm_refine_2371"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2408", "equation_Prims.nat",
+        "equation_StlcStrongDbParSubst.var", "int_inversion",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1110"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2409", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2422", "equation_Prims.nat",
+        "equation_StlcStrongDbParSubst.var",
+        "refinement_interpretation_Tm_refine_2421"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2470" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2480", "disc_equation_StlcStrongDbParSubst.TyVar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2472"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2482" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__2013", "@query_2496", "disc_equation_Prims.Some",
+        "disc_equation_StlcStrongDbParSubst.TyVar", "equation_Prims.nat",
+        "equation_StlcStrongDbParSubst.var",
+        "proj_equation_StlcStrongDbParSubst.TyVar_g",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcStrongDbParSubst.TyVar_g",
+        "projection_inverse_StlcStrongDbParSubst.TyVar_x",
+        "refinement_interpretation_Tm_refine_2434",
+        "refinement_interpretation_Tm_refine_2472",
+        "token_correspondence_StlcStrongDbParSubst.TyVar.g"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2497" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2506", "disc_equation_StlcStrongDbParSubst.TyLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2499"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2507" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2515", "disc_equation_StlcStrongDbParSubst.TyLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2499"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2516" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2524", "disc_equation_StlcStrongDbParSubst.TyLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2499"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2525" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2531", "disc_equation_StlcStrongDbParSubst.TyLam",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2499"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2533" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2541", "disc_equation_StlcStrongDbParSubst.TyLam",
+        "proj_equation_StlcStrongDbParSubst.TyLam_e1",
+        "proj_equation_StlcStrongDbParSubst.TyLam_g",
+        "proj_equation_StlcStrongDbParSubst.TyLam_t",
+        "proj_equation_StlcStrongDbParSubst.TyLam_t_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcStrongDbParSubst.TyLam_e1",
+        "projection_inverse_StlcStrongDbParSubst.TyLam_g",
+        "projection_inverse_StlcStrongDbParSubst.TyLam_t",
+        "projection_inverse_StlcStrongDbParSubst.TyLam_t_",
+        "refinement_interpretation_Tm_refine_2499"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2542" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2551", "disc_equation_StlcStrongDbParSubst.TyApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2544"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2552" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2560", "disc_equation_StlcStrongDbParSubst.TyApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2544"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2561" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2567", "disc_equation_StlcStrongDbParSubst.TyApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2544"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2568" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2576", "disc_equation_StlcStrongDbParSubst.TyApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2544"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2577" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2583", "disc_equation_StlcStrongDbParSubst.TyApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2544"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2585" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2593", "disc_equation_StlcStrongDbParSubst.TyApp",
+        "proj_equation_StlcStrongDbParSubst.TyApp_e1",
+        "proj_equation_StlcStrongDbParSubst.TyApp_g",
+        "proj_equation_StlcStrongDbParSubst.TyApp_t11",
+        "proj_equation_StlcStrongDbParSubst.TyApp_t12",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_e1",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_g",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_t11",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_t12",
+        "refinement_interpretation_Tm_refine_2544"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2595" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2603", "disc_equation_StlcStrongDbParSubst.TyApp",
+        "proj_equation_StlcStrongDbParSubst.TyApp_e2",
+        "proj_equation_StlcStrongDbParSubst.TyApp_g",
+        "proj_equation_StlcStrongDbParSubst.TyApp_t11",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_e2",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_g",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_t11",
+        "refinement_interpretation_Tm_refine_2544"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2604" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2613", "disc_equation_StlcStrongDbParSubst.TyUnit",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2606"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2620" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__2013", "@query_2637", "binder_e__120055",
+        "binder_h__120057", "bool_inversion",
+        "constructor_distinct_Prims.None",
+        "constructor_distinct_StlcStrongDbParSubst.EApp",
+        "constructor_distinct_StlcStrongDbParSubst.ELam",
+        "constructor_distinct_StlcStrongDbParSubst.EUnit",
+        "constructor_distinct_StlcStrongDbParSubst.EVar",
+        "constructor_distinct_StlcStrongDbParSubst.TArr",
+        "constructor_distinct_StlcStrongDbParSubst.TUnit",
+        "data_elim_StlcStrongDbParSubst.TyApp",
+        "data_elim_StlcStrongDbParSubst.TyVar",
+        "data_typing_intro_StlcStrongDbParSubst.TUnit@tok",
+        "disc_equation_Prims.Some",
+        "disc_equation_StlcStrongDbParSubst.ELam",
+        "disc_equation_StlcStrongDbParSubst.EUnit",
+        "disc_equation_StlcStrongDbParSubst.TyApp",
+        "equality_tok_Prims.LexTop@tok",
+        "equality_tok_StlcStrongDbParSubst.EUnit@tok",
+        "equality_tok_StlcStrongDbParSubst.TUnit@tok", "equation_Prims.nat",
+        "equation_StlcStrongDbParSubst.empty",
+        "equation_StlcStrongDbParSubst.is_value",
+        "equation_StlcStrongDbParSubst.var",
+        "fuel_guarded_inversion_StlcStrongDbParSubst.typing_2427",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcStrongDbParSubst.ELam__0",
+        "projection_inverse_StlcStrongDbParSubst.ELam__1",
+        "refinement_interpretation_Tm_refine_2434",
+        "subterm_ordering_StlcStrongDbParSubst.TyApp",
+        "token_correspondence_StlcStrongDbParSubst.empty",
+        "typing_StlcStrongDbParSubst.is_ELam",
+        "typing_StlcStrongDbParSubst.is_value"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [ "@query_2654", "assumption_StlcStrongDbParSubst.exp_haseq_2101" ],
+      0
+    ],
+    [ 2, 1, [ "@query_2657" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__2080", "@query_2660",
+        "assumption_FStar.FunctionalExtensionality.Extensionality_1166",
+        "equation_FStar.FunctionalExtensionality.efun", "equation_Prims.nat",
+        "equation_StlcStrongDbParSubst.sub",
+        "equation_StlcStrongDbParSubst.var",
+        "function_token_typing_Prims.nat", "interpretation_Tm_arrow_2084",
+        "interpretation_Tm_arrow_228",
+        "kinding_StlcStrongDbParSubst.exp@tok",
+        "refinement_interpretation_Tm_refine_2659", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2664", "equation_Prims.nat",
+        "equation_StlcStrongDbParSubst.var",
+        "refinement_interpretation_Tm_refine_2434"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2673", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 2, 1, [ "@query_2675" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__2013", "@pretyping__2080", "@pretyping__317",
+        "@query_2705", "binder_e__151959", "binder_g2__151962",
+        "binder_h1__151963", "binder_s__151961", "bool_inversion",
+        "constructor_distinct_Prims.Some",
+        "constructor_distinct_StlcStrongDbParSubst.EApp",
+        "constructor_distinct_StlcStrongDbParSubst.ELam",
+        "constructor_distinct_StlcStrongDbParSubst.EUnit",
+        "constructor_distinct_StlcStrongDbParSubst.EVar",
+        "constructor_distinct_StlcStrongDbParSubst.TyLam",
+        "data_elim_StlcStrongDbParSubst.EVar",
+        "data_elim_StlcStrongDbParSubst.TyApp",
+        "data_elim_StlcStrongDbParSubst.TyLam",
+        "data_elim_StlcStrongDbParSubst.TyVar",
+        "data_typing_intro_StlcStrongDbParSubst.EUnit@tok",
+        "data_typing_intro_StlcStrongDbParSubst.TUnit@tok",
+        "disc_equation_Prims.Some",
+        "disc_equation_StlcStrongDbParSubst.EVar",
+        "disc_equation_StlcStrongDbParSubst.TyApp",
+        "disc_equation_StlcStrongDbParSubst.TyLam",
+        "disc_equation_StlcStrongDbParSubst.TyUnit",
+        "disc_equation_StlcStrongDbParSubst.TyVar",
+        "equality_tok_Prims.LexTop@tok",
+        "equality_tok_StlcStrongDbParSubst.EUnit@tok",
+        "equation_FStar.FunctionalExtensionality.feq", "equation_Prims.nat",
+        "equation_StlcStrongDbParSubst.env",
+        "equation_StlcStrongDbParSubst.extend",
+        "equation_StlcStrongDbParSubst.is_renaming",
+        "equation_StlcStrongDbParSubst.is_var",
+        "equation_StlcStrongDbParSubst.renaming",
+        "equation_StlcStrongDbParSubst.sub",
+        "equation_StlcStrongDbParSubst.sub_elam",
+        "equation_StlcStrongDbParSubst.sub_inc",
+        "equation_StlcStrongDbParSubst.var",
+        "equation_with_fuel_StlcStrongDbParSubst.subst__2220",
+        "fuel_correspondence_StlcStrongDbParSubst.subst__2220",
+        "fuel_guarded_inversion_Prims.option_446",
+        "fuel_guarded_inversion_StlcStrongDbParSubst.exp_2076",
+        "fuel_guarded_inversion_StlcStrongDbParSubst.typing_2427",
+        "fuel_irrelevance_StlcStrongDbParSubst.subst__2220",
+        "function_token_typing_StlcStrongDbParSubst.extend",
+        "function_token_typing_StlcStrongDbParSubst.sub_inc",
+        "int_inversion", "int_typing", "interpretation_Exp_abs_2222",
+        "interpretation_Exp_abs_2232", "interpretation_Exp_abs_2414",
+        "interpretation_Tm_arrow_2084", "interpretation_Tm_arrow_2226",
+        "interpretation_Tm_arrow_2404", "interpretation_Tm_arrow_2411",
+        "lemma_StlcStrongDbParSubst.subst_extensional",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
+        "projection_inverse_StlcStrongDbParSubst.EApp__0",
+        "projection_inverse_StlcStrongDbParSubst.EApp__1",
+        "projection_inverse_StlcStrongDbParSubst.ELam__0",
+        "projection_inverse_StlcStrongDbParSubst.ELam__1",
+        "projection_inverse_StlcStrongDbParSubst.EVar__0",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_e1",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_e2",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_g",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_h1",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_h2",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_t11",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_t12",
+        "projection_inverse_StlcStrongDbParSubst.TyLam_e1",
+        "projection_inverse_StlcStrongDbParSubst.TyLam_t",
+        "refinement_interpretation_Tm_refine_1110",
+        "refinement_interpretation_Tm_refine_2167",
+        "refinement_interpretation_Tm_refine_2214",
+        "refinement_interpretation_Tm_refine_2225",
+        "refinement_interpretation_Tm_refine_2434",
+        "refinement_interpretation_Tm_refine_2662",
+        "refinement_interpretation_Tm_refine_2685",
+        "refinement_interpretation_Tm_refine_2687",
+        "subterm_ordering_StlcStrongDbParSubst.EApp",
+        "subterm_ordering_StlcStrongDbParSubst.ELam",
+        "token_correspondence_StlcStrongDbParSubst.extend",
+        "token_correspondence_StlcStrongDbParSubst.sub_elam",
+        "token_correspondence_StlcStrongDbParSubst.sub_inc",
+        "typing_Exp_abs_2222", "typing_StlcStrongDbParSubst.extend",
+        "typing_StlcStrongDbParSubst.is_EVar",
+        "typing_StlcStrongDbParSubst.is_renaming",
+        "typing_StlcStrongDbParSubst.is_var",
+        "typing_StlcStrongDbParSubst.sub_elam",
+        "typing_StlcStrongDbParSubst.subst", "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2713" ], 0 ],
+    [ 2, 1, [ "@query_2721" ], 0 ],
+    [ 2, 1, [ "@query_2736", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 2, 1, [ "@query_2754" ], 0 ],
+    [ 2, 1, [ "@query_2775" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__2013", "@pretyping__2080", "@pretyping__317",
+        "@query_2792", "binder_g__273766", "binder_t_x__273764",
+        "binder_v__273763", "data_elim_StlcStrongDbParSubst.EVar",
+        "data_typing_intro_StlcStrongDbParSubst.EUnit@tok",
+        "data_typing_intro_StlcStrongDbParSubst.TUnit@tok",
+        "disc_equation_Prims.Some", "equation_Prims.nat",
+        "equation_StlcStrongDbParSubst.env",
+        "equation_StlcStrongDbParSubst.extend",
+        "equation_StlcStrongDbParSubst.sub",
+        "equation_StlcStrongDbParSubst.sub_beta",
+        "equation_StlcStrongDbParSubst.var", "int_inversion", "int_typing",
+        "interpretation_Exp_abs_2238", "interpretation_Exp_abs_2414",
+        "interpretation_Tm_arrow_2084", "interpretation_Tm_arrow_2404",
+        "proj_equation_Prims.Some_v", "projection_inverse_Prims.Some_v",
+        "refinement_interpretation_Tm_refine_1110",
+        "refinement_interpretation_Tm_refine_2784",
+        "token_correspondence_StlcStrongDbParSubst.extend",
+        "token_correspondence_StlcStrongDbParSubst.sub_beta",
+        "typing_StlcStrongDbParSubst.extend",
+        "typing_StlcStrongDbParSubst.sub_beta"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2802", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2824", "binder_hs__289060", "binder_ht__289059",
+        "constructor_distinct_StlcStrongDbParSubst.EApp",
+        "constructor_distinct_StlcStrongDbParSubst.ELam",
+        "constructor_distinct_StlcStrongDbParSubst.EUnit",
+        "constructor_distinct_StlcStrongDbParSubst.EVar",
+        "constructor_distinct_StlcStrongDbParSubst.SApp1",
+        "constructor_distinct_StlcStrongDbParSubst.SBeta",
+        "constructor_distinct_StlcStrongDbParSubst.TArr",
+        "constructor_distinct_StlcStrongDbParSubst.TUnit",
+        "disc_equation_StlcStrongDbParSubst.SApp1",
+        "disc_equation_StlcStrongDbParSubst.SApp2",
+        "disc_equation_StlcStrongDbParSubst.SBeta",
+        "disc_equation_StlcStrongDbParSubst.TyApp",
+        "disc_equation_StlcStrongDbParSubst.TyLam",
+        "equality_tok_Prims.LexTop@tok",
+        "equality_tok_StlcStrongDbParSubst.EUnit@tok",
+        "equality_tok_StlcStrongDbParSubst.TUnit@tok",
+        "fuel_guarded_inversion_StlcStrongDbParSubst.step_2277",
+        "fuel_guarded_inversion_StlcStrongDbParSubst.typing_2427",
+        "proj_equation_StlcStrongDbParSubst.TyLam_e1",
+        "proj_equation_StlcStrongDbParSubst.TyLam_g",
+        "proj_equation_StlcStrongDbParSubst.TyLam_t",
+        "proj_equation_StlcStrongDbParSubst.TyLam_t_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcStrongDbParSubst.EApp__0",
+        "projection_inverse_StlcStrongDbParSubst.EApp__1",
+        "projection_inverse_StlcStrongDbParSubst.ELam__1",
+        "projection_inverse_StlcStrongDbParSubst.SApp1_e1",
+        "projection_inverse_StlcStrongDbParSubst.SApp1_e1_",
+        "projection_inverse_StlcStrongDbParSubst.SApp2_e2",
+        "projection_inverse_StlcStrongDbParSubst.SApp2_e2_",
+        "projection_inverse_StlcStrongDbParSubst.SBeta_e1",
+        "projection_inverse_StlcStrongDbParSubst.TArr__0",
+        "projection_inverse_StlcStrongDbParSubst.TArr__1",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_e1",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_e2",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_g",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_h1",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_h2",
+        "projection_inverse_StlcStrongDbParSubst.TyApp_t12",
+        "subterm_ordering_StlcStrongDbParSubst.TyApp"
+      ],
+      0
+    ]
+  ]
+]
