@@ -42,7 +42,7 @@ FStar_SMTEncoding_Solver.solver
 end
 in (
 
-let env = (FStar_TypeChecker_Env.initial_env FStar_TypeChecker_Tc.type_of solver FStar_Syntax_Const.prims_lid)
+let env = (FStar_TypeChecker_Env.initial_env FStar_TypeChecker_Tc.type_of FStar_TypeChecker_Tc.universe_of solver FStar_Syntax_Const.prims_lid)
 in (
 
 let _89_29 = (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.init env)

@@ -547,7 +547,7 @@ try
 | () -> begin
 (match ((FStar_List.nth env x)) with
 | Univ (u) -> begin
-(u)::[]
+(aux u)
 end
 | Dummy -> begin
 (u)::[]

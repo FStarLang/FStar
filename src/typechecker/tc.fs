@@ -2996,29 +2996,30 @@ let universe_of env e =
          let _ = if Env.debug env Options.Extreme then Util.print1 "universe_of %s\n" (Print.tag_of_term e) in
          let env, _ = Env.clear_expected_typ env in 
          let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
-         let e = N.normalize [N.Beta; N.NoInline] env e in
-         let fail t = 
+         let fail e t = 
               raise (Error(Util.format2 "Expected a term of type 'Type'; got %s : %s" (Print.term_to_string e) (Print.term_to_string t), Env.get_range env)) in
          let ok u = 
             let _ = if Env.debug env Options.Extreme 
                     then Util.print2 "<end> universe_of %s is %s\n" (Print.tag_of_term e) (Print.univ_to_string u) in
             u in
-         let universe_of_type t = 
+         let universe_of_type e t = 
             match (Util.unrefine t).n with 
             | Tm_type u -> ok u
-            | _ -> fail t in
+            | _ -> fail e t in
 //         let _ = Printf.printf "%A:\nuniverse_of %s\n\n\n" (System.Diagnostics.StackTrace())
 //                                                           (Print.term_to_string e) in
          let head, args = Util.head_and_args e in
          match (SS.compress head).n with 
          | Tm_uvar(_, t) -> 
+           let t = N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t in
            begin match (SS.compress t).n with
-           | Tm_arrow(_, t) -> universe_of_type (Util.comp_result t)
-           | _ -> universe_of_type t
+           | Tm_arrow(_, t) -> universe_of_type e (Util.comp_result t)
+           | _ -> universe_of_type e t
            end
          | _ -> 
+             let e = N.normalize [N.Beta; N.NoInline] env e in
              let _, ({res_typ=t}), _ = tc_term env e in
-             universe_of_type <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
+             universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
 
 let check_module env m =
     if Options.debug_any()

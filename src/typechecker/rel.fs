@@ -696,9 +696,15 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     aux 0 t1 t2
 
 type tc =
- | T of term
+ | T of term * (binders -> Range.range -> term)
  | C of comp
 type tcs = list<tc>
+
+let generic_kind (binders:binders) r = 
+    let t, _ = U.type_u () in
+    fst (new_uvar r binders t)
+let kind_type (binders:binders) (r:Range.range) = 
+    U.type_u() |> fst
 
 let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<binder> * variance * tc)> =
     let t = Util.unmeta t in
@@ -709,12 +715,12 @@ let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<bin
         | Tm_app(hd, args) -> (* easy case: it's already in the form we want *)
             let rebuild args' =
             let args = List.map2 (fun x y -> match x, y with
-                | (_, imp), T t -> t, imp
+                | (_, imp), T (t, _) -> t, imp
                 | _ -> failwith "Bad reconstruction") args args' in
             mk (Tm_app(hd, args)) None t.pos in
 
             let tcs = //each argument in order, with empty binders
-            args |> List.map (fun (t, _) -> None, INVARIANT, T t) in
+            args |> List.map (fun (t, _) -> None, INVARIANT, T (t, generic_kind)) in
 
             rebuild, matches, tcs
 
@@ -724,7 +730,7 @@ let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<bin
 
             let rebuild tcs =
                 let rec aux out (bs:binders) tcs = match bs, tcs with
-                    | (x, imp)::bs, T t::tcs -> aux (({x with sort=t},imp)::out) bs tcs
+                    | (x, imp)::bs, T (t, _)::tcs -> aux (({x with sort=t},imp)::out) bs tcs
                     | [], [C c] -> U.arrow (List.rev out) c
                     | _ -> failwith "Bad reconstruction" in
                 aux [] bs tcs in
@@ -732,7 +738,7 @@ let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<bin
             let rec decompose out = function
                 | [] -> List.rev ((None, COVARIANT, C c)::out)
                 | hd::rest ->
-                  decompose ((Some hd, CONTRAVARIANT, T ((fst hd).sort))::out) rest in
+                  decompose ((Some hd, CONTRAVARIANT, T ((fst hd).sort, kind_type))::out) rest in
 
             rebuild, 
             matches, 
@@ -746,11 +752,11 @@ let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<bin
           rebuild, (fun t -> true), []
 
 let un_T = function
-    | T t -> t
+    | T (t, _) -> t
     | _ -> failwith "Impossible"
 
 let arg_of_tc = function
-    | T t -> as_arg t
+    | T (t, _) -> as_arg t
     | _ -> failwith "Impossible"
 
 let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * variance * tc)>) =
@@ -762,15 +768,13 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
     let rel = p_rel orig in
     let sub_prob scope args q =
         match q with
-        | _, variance, T ti ->
-            let k = 
-                let t, _ = U.type_u () in
-                fst (new_uvar r scope t) in
+        | _, variance, T (ti, mk_kind) ->
+            let k = mk_kind scope r in
             let gi_xs, gi = new_uvar r scope k in
             let gi_ps = match args with 
                 | [] -> gi
                 | _ -> mk (Tm_app(gi, args)) None r in
-            T gi_xs,
+            T (gi_xs, mk_kind),
             TProb <| mk_problem scope orig gi_ps (vary_rel rel variance) ti None "type subterm"
 
         | _, _, C _ -> failwith "impos" in
@@ -781,20 +785,20 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
             | q::qs ->
                 let tc, probs = match q with
                      | bopt, variance, C ({n=Total ti}) ->
-                       begin match sub_prob scope args (bopt, variance, T ti) with
-                            | T gi_xs, prob -> C <| mk_Total gi_xs, [prob]
+                       begin match sub_prob scope args (bopt, variance, T (ti, kind_type)) with
+                            | T (gi_xs, _), prob -> C <| mk_Total gi_xs, [prob]
                             | _ -> failwith "impossible"
                        end
 
                      | bopt, variance, C ({n=GTotal ti}) ->
-                       begin match sub_prob scope args (bopt, variance, T ti) with
-                            | T gi_xs, prob -> C <| mk_GTotal gi_xs, [prob]
+                       begin match sub_prob scope args (bopt, variance, T (ti, kind_type)) with
+                            | T (gi_xs, _), prob -> C <| mk_GTotal gi_xs, [prob]
                             | _ -> failwith "impossible"
                        end
 
                      |_, _, C ({n=Comp c}) ->
-                       let components = c.effect_args |> List.map (fun t -> (None, INVARIANT, T (fst t))) in
-                       let components = (None, COVARIANT, T c.result_typ)::components in
+                       let components = c.effect_args |> List.map (fun t -> (None, INVARIANT, T (fst t, generic_kind))) in
+                       let components = (None, COVARIANT, T (c.result_typ, kind_type))::components in
                        let tcs, sub_probs = List.map (sub_prob scope args) components |> List.unzip in
                        let gi_xs = mk_Comp <| {
                             effect_name=c.effect_name;
