@@ -47,8 +47,8 @@ end
 | FStar_Parser_AST.Opaque -> begin
 (
 
-let _63_42 = (FStar_TypeChecker_Errors.warn r "The \'opaque\' qualifier is deprecated; use \'irreducible\'")
-in FStar_Syntax_Syntax.Irreducible)
+let _63_42 = (FStar_TypeChecker_Errors.warn r "The \'opaque\' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given \'opaque val f : t\', the behavior was to exclude the definition of \'f\' to the SMT solver. This corresponds roughly to the new \'irreducible\' qualifier. (2) Given \'opaque type t = t\'\', the behavior was to provide the definition of \'t\' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of \'unfoldable\' (which is currently the default).")
+in FStar_Syntax_Syntax.Unfoldable)
 end
 | FStar_Parser_AST.Noeq -> begin
 FStar_Syntax_Syntax.Noeq
