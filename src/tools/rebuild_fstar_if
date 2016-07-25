@@ -5,6 +5,8 @@
 # file in the current directory is not the same as the HEAD revision of FStar.
 # The script updates [.last_fstar] after that.
 
+set -e
+
 LAST_FSTAR=$(cd $1 && git rev-parse HEAD)
 if [ -f .last_fstar ]; then
   CURRENT_FSTAR=$(cat .last_fstar)
