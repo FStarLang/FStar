@@ -17,7 +17,7 @@ else
   FSC     = fsharpc
   MSBUILD = xbuild
   UNAME   = $(shell uname -s)
-  FSTAR   = . ../bin/fstar-any.sh
+  FSTAR   = ../bin/fstar-any.sh
   RUNTIME = mono
 endif
 
