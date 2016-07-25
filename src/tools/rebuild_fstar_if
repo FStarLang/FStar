@@ -15,6 +15,7 @@ fi
 echo "Most recent FStar version available: $LAST_FSTAR (currently: $CURRENT_FSTAR)"
 
 if [ $CURRENT_FSTAR != $LAST_FSTAR ]; then
+  make -C $1 clean
   make -C $1/src/ocaml-output
 fi
 
