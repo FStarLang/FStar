@@ -6,12 +6,12 @@ type 'a opt' = char * string * 'a opt_variant * string
 type opt = unit opt'
 type parse_cmdline_res =
   | Help
-  | Die of string
-  | GoOn
+  | Error of string
+  | Success
 
 (* remark: doesn't work with files starting with -- *)
 let rec parse (opts:opt list) def ar ix max i =
-  if ix > max then GoOn
+  if ix > max then Success
   else
     let arg = ar.(ix) in
     let go_on () = let _ = def arg in parse opts def ar (ix + 1) max (i + 1) in
@@ -27,11 +27,11 @@ let rec parse (opts:opt list) def ar ix max i =
             | ZeroArgs f -> f (); parse opts def ar (ix + 1) max (i + 1)
             | OneArg (f, _) ->
                if ix + 1 > max
-               then Die ("last option '" ^ argtrim ^ "' takes an argument but has none\n")
+               then Error ("last option '" ^ argtrim ^ "' takes an argument but has none\n")
                else
                  (f (ar.(ix + 1));
                   parse opts def ar (ix + 2) max (i + 1)))
-        | None -> Die ("unrecognized option '" ^ arg ^ "'\n")
+        | None -> Error ("unrecognized option '" ^ arg ^ "'\n")
       else go_on ()
 
 let parse_cmdline specs others =

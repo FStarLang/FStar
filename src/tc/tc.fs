@@ -1506,9 +1506,9 @@ let rec tc_eff_decl env (m:Syntax.eff_decl)  =
 and tc_decl env se deserialized = match se with
     | Sig_pragma(p, r) ->
         let set_options t s = match Options.set_options t s with
-            | Getopt.GoOn -> ()
+            | Getopt.Success -> ()
             | Getopt.Help  -> raise (Error ("Failed to process pragma: use 'fstar --help' to see which options are available", r))
-            | Getopt.Die s -> raise (Error ("Failed to process pragma: " ^s, r)) in
+            | Getopt.Error s -> raise (Error ("Failed to process pragma: " ^s, r)) in
         begin match p with
             | SetOptions o ->
                 set_options Options.Set o;
