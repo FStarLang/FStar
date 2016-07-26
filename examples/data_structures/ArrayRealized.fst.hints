@@ -5,9 +5,9 @@
       2,
       1,
       [
-        "@query_1212", "disc_equation_ArrayRealized.Const",
+        "@query_1268", "disc_equation_ArrayRealized.Const",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1205"
+        "refinement_interpretation_Tm_refine_1261"
       ],
       0
     ],
@@ -15,9 +15,9 @@
       2,
       1,
       [
-        "@query_1221", "disc_equation_ArrayRealized.Upd",
+        "@query_1277", "disc_equation_ArrayRealized.Upd",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1214"
+        "refinement_interpretation_Tm_refine_1270"
       ],
       0
     ],
@@ -25,9 +25,9 @@
       2,
       1,
       [
-        "@query_1229", "disc_equation_ArrayRealized.Upd",
+        "@query_1285", "disc_equation_ArrayRealized.Upd",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1214"
+        "refinement_interpretation_Tm_refine_1270"
       ],
       0
     ],
@@ -35,9 +35,9 @@
       2,
       1,
       [
-        "@query_1237", "disc_equation_ArrayRealized.Upd",
+        "@query_1293", "disc_equation_ArrayRealized.Upd",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1214"
+        "refinement_interpretation_Tm_refine_1270"
       ],
       0
     ],
@@ -45,9 +45,9 @@
       2,
       1,
       [
-        "@query_1246", "disc_equation_ArrayRealized.Append",
+        "@query_1302", "disc_equation_ArrayRealized.Append",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1239"
+        "refinement_interpretation_Tm_refine_1295"
       ],
       0
     ],
@@ -55,22 +55,22 @@
       2,
       1,
       [
-        "@query_1252", "disc_equation_ArrayRealized.Append",
+        "@query_1308", "disc_equation_ArrayRealized.Append",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1239"
+        "refinement_interpretation_Tm_refine_1295"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1258" ], 0 ],
-    [ 2, 1, [ "@query_1264" ], 0 ],
+    [ 2, 1, [ "@query_1314" ], 0 ],
+    [ 2, 1, [ "@query_1320" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1275", "equation_Prims.nat",
+        "@query_1332", "equation_Prims.nat",
         "proj_equation_ArrayRealized.Seq_start_i",
         "projection_inverse_ArrayRealized.Seq_start_i",
-        "refinement_interpretation_Tm_refine_1188"
+        "refinement_interpretation_Tm_refine_1244"
       ],
       0
     ],
@@ -78,8 +78,8 @@
       2,
       1,
       [
-        "@query_1276", "equation_Prims.nat",
-        "refinement_interpretation_Tm_refine_1110"
+        "@query_1333", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_1165"
       ],
       0
     ],
@@ -87,12 +87,12 @@
       2,
       1,
       [
-        "@query_1281", "equation_Prims.nat",
-        "fuel_guarded_inversion_ArrayRealized.seq_1164",
+        "@query_1338", "equation_Prims.nat",
+        "fuel_guarded_inversion_ArrayRealized.seq_1220",
         "primitive_Prims.op_Subtraction",
         "proj_equation_ArrayRealized.Seq_end_i",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1267",
+        "refinement_interpretation_Tm_refine_1323",
         "typing_ArrayRealized.Seq.end_i"
       ],
       0
@@ -101,12 +101,12 @@
       2,
       1,
       [
-        "@query_1291", "binder_c__9530",
+        "@query_1350", "binder_c__9714",
         "disc_equation_ArrayRealized.Append",
         "disc_equation_ArrayRealized.Const",
         "disc_equation_ArrayRealized.Upd",
-        "fuel_guarded_inversion_ArrayRealized.contents_1155",
-        "fuel_guarded_inversion_ArrayRealized.seq_1164",
+        "fuel_guarded_inversion_ArrayRealized.contents_1211",
+        "fuel_guarded_inversion_ArrayRealized.seq_1220",
         "proj_equation_ArrayRealized.Seq_c",
         "subterm_ordering_ArrayRealized.Append",
         "subterm_ordering_ArrayRealized.Seq",
@@ -114,34 +114,34 @@
       ],
       0
     ],
-    [ 2, 1, [ "@query_1299", "assumption_Prims.HasEq_int_320" ], 0 ],
-    [ 2, 1, [ "@query_1310" ], 0 ],
+    [ 2, 1, [ "@query_1358", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [ 2, 1, [ "@query_1369" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1326", "binder_c__17776",
+        "@query_1388", "binder_c__18142",
         "disc_equation_ArrayRealized.Append",
         "disc_equation_ArrayRealized.Const",
         "disc_equation_ArrayRealized.Upd",
-        "fuel_guarded_inversion_ArrayRealized.contents_1155",
-        "fuel_guarded_inversion_ArrayRealized.seq_1164",
+        "fuel_guarded_inversion_ArrayRealized.contents_1211",
+        "fuel_guarded_inversion_ArrayRealized.seq_1220",
         "proj_equation_ArrayRealized.Seq_c",
         "subterm_ordering_ArrayRealized.Append",
         "subterm_ordering_ArrayRealized.Seq"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1336" ], 0 ],
+    [ 2, 1, [ "@query_1399" ], 0 ],
     [
       2,
       1,
       [
-        "@pretyping__317", "@query_1347", "equation_Prims.nat",
+        "@pretyping__322", "@query_1412", "equation_Prims.nat",
         "int_inversion", "primitive_Prims.op_Addition",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1345"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1408"
       ],
       0
     ],
@@ -149,8 +149,8 @@
       2,
       1,
       [
-        "@query_1358", "equation_Prims.nat",
-        "refinement_interpretation_Tm_refine_1357"
+        "@query_1425", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_1422"
       ],
       0
     ],
@@ -158,15 +158,15 @@
       2,
       1,
       [
-        "@pretyping__317", "@query_1367", "data_elim_ArrayRealized.Seq",
-        "equation_ArrayRealized.length", "equation_Prims.nat",
-        "fuel_guarded_inversion_ArrayRealized.seq_1164",
+        "@pretyping__322", "@query_1435", "equation_ArrayRealized.length",
+        "equation_Prims.nat",
+        "fuel_guarded_inversion_ArrayRealized.seq_1220",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
+        "refinement_interpretation_Tm_refine_1165",
         "typing_ArrayRealized.length"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1372" ], 0 ]
+    [ 2, 1, [ "@query_1443" ], 0 ]
   ]
 ]

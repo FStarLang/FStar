@@ -1,40 +1,40 @@
 [
   "êïı“#Ó(\u0004˚\u001f œùQç´",
   [
-    [ 2, 1, [ "@query_1153", "equation_FStar.Ghost.erased" ], 0 ],
-    [ 2, 1, [ "@query_1158", "equation_FStar.Ghost.erased" ], 0 ],
-    [ 2, 1, [ "@query_1163" ], 0 ],
+    [ 2, 1, [ "@query_1209", "equation_FStar.Ghost.erased" ], 0 ],
+    [ 2, 1, [ "@query_1214", "equation_FStar.Ghost.erased" ], 0 ],
+    [ 2, 1, [ "@query_1219" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1164", "equation_FStar.Ghost.hide",
+        "@query_1220", "equation_FStar.Ghost.hide",
         "equation_FStar.Ghost.reveal", "unit_typing"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1166" ], 0 ],
-    [
-      2,
-      1,
-      [
-        "@query_1168", "equation_FStar.Ghost.erased",
-        "equation_FStar.Ghost.reveal", "interpretation_Tm_arrow_228",
-        "unit_typing"
-      ],
-      0
-    ],
-    [ 2, 1, [ "@query_1180", "equation_FStar.Ghost.erased" ], 0 ],
-    [ 2, 1, [ "@query_1191", "equation_FStar.Ghost.erased" ], 0 ],
-    [ 2, 1, [ "@query_1204", "equation_FStar.Ghost.erased" ], 0 ],
-    [ 2, 1, [ "@query_1220" ], 0 ],
+    [ 2, 1, [ "@query_1227" ], 0 ],
     [
       2,
       1,
       [
         "@query_1229", "equation_FStar.Ghost.erased",
+        "equation_FStar.Ghost.reveal", "interpretation_Tm_arrow_228",
+        "unit_typing"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1241", "equation_FStar.Ghost.erased" ], 0 ],
+    [ 2, 1, [ "@query_1252", "equation_FStar.Ghost.erased" ], 0 ],
+    [ 2, 1, [ "@query_1265", "equation_FStar.Ghost.erased" ], 0 ],
+    [ 2, 1, [ "@query_1281" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1291", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal",
-        "refinement_interpretation_Tm_refine_1228"
+        "refinement_interpretation_Tm_refine_1289"
       ],
       0
     ],
@@ -42,9 +42,9 @@
       2,
       1,
       [
-        "@query_1261", "equation_FStar.Ghost.erased",
+        "@query_1329", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal",
-        "refinement_interpretation_Tm_refine_1260"
+        "refinement_interpretation_Tm_refine_1322"
       ],
       0
     ],
@@ -52,12 +52,12 @@
       2,
       1,
       [
-        "@query_1270", "equation_FStar.Ghost.erased",
+        "@query_1339", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal",
-        "refinement_interpretation_Tm_refine_1269"
+        "refinement_interpretation_Tm_refine_1337"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1295", "unit_typing" ], 0 ]
+    [ 2, 1, [ "@query_1364", "unit_typing" ], 0 ]
   ]
 ]

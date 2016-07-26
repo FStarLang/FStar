@@ -5,7 +5,7 @@
       2,
       1,
       [
-        "@query_1151", "equation_Prims.squash",
+        "@pretyping__133", "@query_1207", "equation_Prims.squash",
         "refinement_interpretation_Tm_refine_139", "unit_typing"
       ],
       0
@@ -14,27 +14,27 @@
       2,
       1,
       [
-        "@query_1159", "equation_Prims.squash",
+        "@query_1215", "equation_Prims.squash",
         "refinement_interpretation_Tm_refine_139", "unit_typing"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1168" ], 0 ],
+    [ 2, 1, [ "@query_1224" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1169", "equation_Prims.squash",
+        "@query_1225", "equation_Prims.squash",
         "refinement_interpretation_Tm_refine_139", "unit_inversion"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1182" ], 0 ],
-    [ 2, 1, [ "@query_1187" ], 0 ],
-    [ 2, 1, [ "@query_1206" ], 0 ],
-    [ 2, 1, [ "@query_1210" ], 0 ],
-    [ 2, 1, [ "@query_1220" ], 0 ],
-    [ 2, 1, [ "@query_1228" ], 0 ],
-    [ 2, 1, [ "@query_1239" ], 0 ]
+    [ 2, 1, [ "@query_1238" ], 0 ],
+    [ 2, 1, [ "@query_1244" ], 0 ],
+    [ 2, 1, [ "@query_1263" ], 0 ],
+    [ 2, 1, [ "@query_1267" ], 0 ],
+    [ 2, 1, [ "@query_1277" ], 0 ],
+    [ 2, 1, [ "@query_1285" ], 0 ],
+    [ 2, 1, [ "@query_1299" ], 0 ]
   ]
 ]

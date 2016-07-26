@@ -5,121 +5,28 @@
       0,
       0,
       [
-        "@query_1452", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_1508", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
     [
       0,
       0,
-      [ "@query_1456", "refinement_interpretation_Tm_refine_1454" ],
+      [ "@query_1514", "refinement_interpretation_Tm_refine_1510" ],
       0
     ],
     [
       0,
       0,
       [
-        "@pretyping__317", "@query_1460", "equation_Prims.nat",
-        "int_inversion", "lemma_FStar.Seq.lemma_eq_elim",
-        "lemma_FStar.Seq.lemma_index_app1",
+        "@pretyping__322", "@query_1522", "equation_Prims.nat",
+        "lemma_FStar.Seq.lemma_eq_elim", "lemma_FStar.Seq.lemma_index_app1",
         "lemma_FStar.Seq.lemma_len_append", "primitive_Prims.op_Addition",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1458",
-        "typing_FStar.Seq.append", "typing_FStar.Seq.length"
-      ],
-      0
-    ],
-    [
-      0,
-      0,
-      [
-        "@query_1461", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
-      ],
-      0
-    ],
-    [
-      0,
-      0,
-      [
-        "@query_1462", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
-      ],
-      0
-    ],
-    [
-      0,
-      0,
-      [ "@query_1466", "refinement_interpretation_Tm_refine_1464" ],
-      0
-    ],
-    [
-      0,
-      0,
-      [
-        "@pretyping__317", "@query_1470", "equation_Prims.nat",
-        "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
-        "lemma_FStar.Seq.lemma_index_app2",
-        "lemma_FStar.Seq.lemma_len_append", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1409",
-        "refinement_interpretation_Tm_refine_1468",
-        "typing_FStar.Seq.append", "typing_FStar.Seq.length"
-      ],
-      0
-    ],
-    [
-      0,
-      0,
-      [
-        "@query_1471", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
-      ],
-      0
-    ],
-    [
-      0,
-      0,
-      [
-        "@query_1472", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
-      ],
-      0
-    ],
-    [
-      0,
-      0,
-      [
-        "@query_1475", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
-      ],
-      0
-    ],
-    [
-      0,
-      0,
-      [
-        "@query_1478", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
-      ],
-      0
-    ],
-    [ 0, 0, [ "@query_1481" ], 0 ],
-    [
-      0,
-      0,
-      [
-        "@pretyping__317", "@query_1484", "equation_Prims.nat",
-        "int_inversion", "lemma_FStar.Seq.lemma_eq_elim",
-        "lemma_FStar.Seq.lemma_len_append", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1483",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1516",
         "typing_FStar.Seq.append", "typing_FStar.Seq.length",
         "unit_inversion", "unit_typing"
       ],
@@ -129,8 +36,8 @@
       0,
       0,
       [
-        "@query_1485", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_1523", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
@@ -138,18 +45,113 @@
       0,
       0,
       [
-        "@query_1486", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_1524", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
-    [ 0, 0, [ "@query_1487" ], 0 ],
+    [
+      0,
+      0,
+      [ "@query_1530", "refinement_interpretation_Tm_refine_1526" ],
+      0
+    ],
     [
       0,
       0,
       [
-        "@query_1532", "lemma_FStar.Seq.lemma_eq_intro",
-        "refinement_interpretation_Tm_refine_1489", "unit_inversion",
+        "@pretyping__322", "@query_1539", "equation_Prims.nat",
+        "int_inversion", "lemma_FStar.Seq.lemma_eq_elim",
+        "lemma_FStar.Seq.lemma_index_app2",
+        "lemma_FStar.Seq.lemma_len_append", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1532",
+        "refinement_interpretation_Tm_refine_1536",
+        "typing_FStar.Seq.append", "typing_FStar.Seq.length",
+        "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_1540", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_1541", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_1544", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_1547", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [ 0, 0, [ "@query_1550" ], 0 ],
+    [
+      0,
+      0,
+      [
+        "@pretyping__322", "@query_1553", "equation_Prims.nat",
+        "int_inversion", "lemma_FStar.Seq.lemma_eq_elim",
+        "lemma_FStar.Seq.lemma_len_append", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1552",
+        "typing_FStar.Seq.append", "typing_FStar.Seq.length",
+        "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_1554", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_1555", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [ 0, 0, [ "@query_1556" ], 0 ],
+    [
+      0,
+      0,
+      [
+        "@query_1626", "lemma_FStar.Seq.lemma_eq_intro",
+        "refinement_interpretation_Tm_refine_1558", "unit_inversion",
         "unit_typing"
       ],
       0
@@ -157,32 +159,32 @@
     [
       0,
       0,
-      [ "@query_1535", "refinement_interpretation_Tm_refine_1534" ],
+      [ "@query_1629", "refinement_interpretation_Tm_refine_1628" ],
       0
     ],
     [
       0,
       0,
       [
-        "@query_1545", "equation_Prims.nat", "int_inversion",
+        "@query_1641", "equation_Prims.nat", "int_inversion",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1537", "typing_FStar.Seq.length"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1631", "typing_FStar.Seq.length"
       ],
       0
     ],
-    [ 0, 0, [ "@query_1553", "projection_inverse_BoxInt_proj_0" ], 0 ],
+    [ 0, 0, [ "@query_1649", "projection_inverse_BoxInt_proj_0" ], 0 ],
     [
       0,
       0,
       [
-        "@pretyping__317", "@query_1560", "equation_Prims.nat",
+        "@pretyping__322", "@query_1658", "equation_Prims.nat",
         "int_inversion", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1559", "typing_FStar.Seq.length"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1655", "typing_FStar.Seq.length"
       ],
       0
     ],
@@ -190,8 +192,8 @@
       0,
       0,
       [
-        "@query_1570", "equation_Prims.nat",
-        "refinement_interpretation_Tm_refine_1562"
+        "@query_1670", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_1660"
       ],
       0
     ],
@@ -199,7 +201,7 @@
       0,
       0,
       [
-        "@pretyping__1325", "@pretyping__317", "@query_1572",
+        "@pretyping__1381", "@pretyping__322", "@query_1674",
         "equation_FStar.SeqProperties.split", "equation_Prims.fst",
         "equation_Prims.nat", "equation_Prims.snd", "int_inversion",
         "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
@@ -215,23 +217,23 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1562", "typing_FStar.Seq.length"
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1660", "typing_FStar.Seq.length"
       ],
       0
     ],
-    [ 0, 0, [ "@query_1574" ], 0 ],
+    [ 0, 0, [ "@query_1681" ], 0 ],
     [
       0,
       0,
       [
-        "@query_1576", "equation_Prims.nat",
-        "refinement_interpretation_Tm_refine_1562"
+        "@query_1685", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_1660"
       ],
       0
     ],
@@ -239,8 +241,8 @@
       0,
       0,
       [
-        "@pretyping__317", "@query_1594", "binder_a__64301",
-        "binder_s__64303", "equality_tok_Prims.LexTop@tok",
+        "@pretyping__322", "@query_1706", "binder_a__67447",
+        "binder_s__67449", "equality_tok_Prims.LexTop@tok",
         "equation_FStar.SeqProperties.tail", "equation_Prims.eqtype",
         "equation_Prims.nat", "int_inversion", "int_typing",
         "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
@@ -248,33 +250,31 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1393",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1449",
         "typing_FStar.Seq.length", "well-founded-ordering-on-nat"
       ],
       0
     ],
-    [ 0, 0, [ "@query_1602", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 0, 0, [ "@query_1714", "assumption_Prims.HasEq_int_325" ], 0 ],
     [
       0,
       0,
       [
-        "@query_1610", "binder_a__64301", "equation_Prims.eqtype",
+        "@query_1722", "binder_a__67447", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_113"
       ],
       0
     ],
-    [ 0, 0, [ "@query_1618" ], 0 ],
+    [ 0, 0, [ "@query_1730" ], 0 ],
     [
       0,
       0,
       [
-        "@query_1623", "equation_Prims.nat", "int_inversion",
-        "lemma_FStar.Seq.lemma_len_upd",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1400"
+        "@query_1739", "equation_Prims.nat", "lemma_FStar.Seq.lemma_len_upd",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1456"
       ],
       0
     ],
@@ -282,12 +282,12 @@
       0,
       0,
       [
-        "@query_1636", "equation_Prims.nat", "int_inversion",
-        "primitive_Prims.op_LessThanOrEqual",
+        "@pretyping__322", "@query_1754", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1635", "typing_FStar.Seq.length"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1751", "typing_FStar.Seq.length"
       ],
       0
     ],
@@ -295,7 +295,7 @@
       0,
       0,
       [
-        "@pretyping__317", "@query_1639", "equation_Prims.nat",
+        "@pretyping__322", "@query_1757", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_intro",
         "lemma_FStar.Seq.lemma_index_app1",
         "lemma_FStar.Seq.lemma_index_app2",
@@ -306,25 +306,25 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1638",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1756",
         "typing_FStar.Seq.append", "typing_FStar.Seq.length",
         "typing_FStar.Seq.slice", "unit_typing"
       ],
       0
     ],
-    [ 0, 0, [ "@query_1641" ], 0 ],
+    [ 0, 0, [ "@query_1761" ], 0 ],
     [
       0,
       0,
       [
-        "@pretyping__317", "@query_1644", "binder_a__79029",
-        "binder_s1__79030", "binder_s2__79031",
+        "@pretyping__322", "@query_1764", "binder_a__82676",
+        "binder_s1__82677", "binder_s2__82678",
         "equation_FStar.SeqProperties.cons",
         "equation_FStar.SeqProperties.head",
         "equation_FStar.SeqProperties.tail", "equation_Prims.nat",
@@ -339,19 +339,19 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1327",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1383",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1537",
-        "refinement_interpretation_Tm_refine_1643",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1631",
+        "refinement_interpretation_Tm_refine_1763",
         "typing_FStar.Seq.append", "typing_FStar.Seq.create",
         "typing_FStar.Seq.index", "typing_FStar.Seq.length",
-        "typing_FStar.SeqProperties.cons", "typing_FStar.SeqProperties.tail",
-        "unit_typing"
+        "typing_FStar.SeqProperties.cons", "typing_FStar.SeqProperties.head",
+        "typing_FStar.SeqProperties.tail", "unit_typing"
       ],
       0
     ],
@@ -359,12 +359,12 @@
       0,
       0,
       [
-        "@pretyping__317", "@query_1645",
+        "@pretyping__322", "@query_1766",
         "equation_FStar.SeqProperties.cons", "equation_Prims.nat",
         "int_typing", "lemma_FStar.Seq.lemma_create_len",
         "lemma_FStar.Seq.lemma_len_append", "primitive_Prims.op_Addition",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
+        "refinement_interpretation_Tm_refine_1165",
         "typing_FStar.Seq.create", "typing_FStar.Seq.length"
       ],
       0
@@ -373,7 +373,7 @@
       0,
       0,
       [
-        "@pretyping__317", "@query_1646",
+        "@pretyping__322", "@query_1767",
         "equation_FStar.SeqProperties.cons",
         "equation_FStar.SeqProperties.tail", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_create_len",
@@ -385,13 +385,13 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1537",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1631",
         "typing_FStar.Seq.create", "typing_FStar.Seq.length",
         "typing_FStar.SeqProperties.cons", "typing_FStar.SeqProperties.tail",
         "unit_typing"
@@ -402,36 +402,36 @@
       0,
       0,
       [
-        "@pretyping__317", "@query_1661", "binder_a__84989",
-        "binder_s__84991", "equality_tok_Prims.LexTop@tok",
+        "@pretyping__322", "@query_1785", "binder_a__88836",
+        "binder_s__88838", "equality_tok_Prims.LexTop@tok",
         "equation_FStar.SeqProperties.tail", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_len_slice",
         "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1393",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1449",
         "typing_FStar.Seq.length", "well-founded-ordering-on-nat"
       ],
       0
     ],
-    [ 1, 0, [ "@query_1675", "assumption_Prims.HasEq_int_320" ], 0 ],
-    [ 1, 0, [ "@query_1678" ], 0 ],
+    [ 1, 0, [ "@query_1799", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [ 1, 0, [ "@query_1803" ], 0 ],
     [
       1,
       0,
       [
-        "@pretyping__317", "@query_1679",
-        "assumption_FStar.Seq.Extensionality_1447", "binder_a__90616",
-        "binder_hi__90618", "binder_lo__90617",
+        "@pretyping__322", "@query_1804",
+        "assumption_FStar.Seq.Extensionality_1503", "binder_a__94762",
+        "binder_hi__94764", "binder_lo__94763",
         "equality_tok_Prims.LexTop@tok", "equation_FStar.SeqProperties.cons",
         "equation_FStar.SeqProperties.head",
         "equation_FStar.SeqProperties.tail", "equation_Prims.eqtype",
         "equation_Prims.nat",
-        "equation_with_fuel_FStar.SeqProperties.count__1616",
-        "fuel_correspondence_FStar.SeqProperties.count__1616",
-        "fuel_irrelevance_FStar.SeqProperties.count__1616", "int_inversion",
+        "equation_with_fuel_FStar.SeqProperties.count__1728",
+        "fuel_correspondence_FStar.SeqProperties.count__1728",
+        "fuel_irrelevance_FStar.SeqProperties.count__1728", "int_inversion",
         "int_typing", "lemma_FStar.Seq.lemma_create_len",
         "lemma_FStar.Seq.lemma_eq_elim", "lemma_FStar.Seq.lemma_eq_intro",
         "lemma_FStar.Seq.lemma_index_app1",
@@ -444,74 +444,74 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1327",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1383",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
         "typing_FStar.Seq.append", "typing_FStar.Seq.create",
-        "typing_FStar.Seq.index", "typing_FStar.Seq.length",
-        "typing_FStar.SeqProperties.count", "well-founded-ordering-on-nat"
+        "typing_FStar.Seq.length", "typing_FStar.SeqProperties.count",
+        "well-founded-ordering-on-nat"
       ],
       0
     ],
-    [ 1, 0, [ "@query_1680", "assumption_Prims.HasEq_int_320" ], 0 ],
-    [ 1, 0, [ "@query_1681", "assumption_Prims.HasEq_int_320" ], 0 ],
-    [ 1, 0, [ "@query_1682" ], 0 ],
-    [ 1, 0, [ "@query_1683" ], 0 ],
-    [ 1, 0, [ "@query_1685", "assumption_Prims.HasEq_bool_155" ], 0 ],
+    [ 1, 0, [ "@query_1805", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [ 1, 0, [ "@query_1806", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [ 1, 0, [ "@query_1807" ], 0 ],
+    [ 1, 0, [ "@query_1808" ], 0 ],
+    [ 1, 0, [ "@query_1810", "assumption_Prims.HasEq_bool_155" ], 0 ],
     [
       1,
       0,
       [
-        "@query_1687", "equation_Prims.eqtype",
+        "@query_1812", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_113"
       ],
       0
     ],
-    [ 1, 0, [ "@query_1691" ], 0 ],
+    [ 1, 0, [ "@query_1819" ], 0 ],
     [
       1,
       0,
       [
-        "@pretyping__317", "@query_1693", "bool_inversion", "bool_typing",
+        "@pretyping__322", "@query_1821", "bool_inversion", "bool_typing",
         "equation_FStar.SeqProperties.head",
         "equation_FStar.SeqProperties.mem",
         "equation_FStar.SeqProperties.tail", "equation_Prims.eqtype",
         "equation_Prims.nat",
-        "equation_with_fuel_FStar.SeqProperties.count__1616",
-        "fuel_correspondence_FStar.SeqProperties.count__1616",
-        "fuel_irrelevance_FStar.SeqProperties.count__1616", "int_typing",
+        "equation_with_fuel_FStar.SeqProperties.count__1728",
+        "fuel_correspondence_FStar.SeqProperties.count__1728",
+        "fuel_irrelevance_FStar.SeqProperties.count__1728", "int_typing",
         "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1537",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1631",
         "typing_FStar.SeqProperties.count", "typing_FStar.SeqProperties.mem",
         "typing_FStar.SeqProperties.tail", "unit_typing"
       ],
       0
     ],
-    [ 1, 0, [ "@query_1705" ], 0 ],
+    [ 1, 0, [ "@query_1838" ], 0 ],
     [
       1,
       0,
       [
-        "@pretyping__317", "@query_1728", "binder_a__105417",
-        "binder_f__105419", "binder_s__105418", "bool_inversion",
+        "@pretyping__322", "@query_1868", "binder_a__110365",
+        "binder_f__110367", "binder_s__110366", "bool_inversion",
         "equality_tok_Prims.LexTop@tok", "equation_FStar.SeqProperties.head",
         "equation_FStar.SeqProperties.mem",
         "equation_FStar.SeqProperties.tail", "equation_Prims.eqtype",
         "equation_Prims.nat",
-        "equation_with_fuel_FStar.SeqProperties.count__1616",
-        "fuel_correspondence_FStar.SeqProperties.count__1616",
-        "fuel_irrelevance_FStar.SeqProperties.count__1616", "int_inversion",
-        "int_typing", "interpretation_Tm_arrow_1707",
+        "equation_with_fuel_FStar.SeqProperties.count__1728",
+        "fuel_correspondence_FStar.SeqProperties.count__1728",
+        "fuel_irrelevance_FStar.SeqProperties.count__1728", "int_inversion",
+        "int_typing", "interpretation_Tm_arrow_1840",
         "lemma_FStar.Seq.lemma_index_slice",
         "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
@@ -519,40 +519,41 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1710",
-        "refinement_interpretation_Tm_refine_1726",
-        "typing_FStar.SeqProperties.mem", "unit_typing",
-        "well-founded-ordering-on-nat"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1631",
+        "refinement_interpretation_Tm_refine_1843",
+        "refinement_interpretation_Tm_refine_1847",
+        "typing_FStar.SeqProperties.head", "typing_FStar.SeqProperties.mem",
+        "unit_typing", "well-founded-ordering-on-nat"
       ],
       0
     ],
-    [ 1, 0, [ "@query_1732", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 1, 0, [ "@query_1872", "assumption_Prims.HasEq_int_325" ], 0 ],
     [
       1,
       0,
       [
-        "@query_1736", "binder_a__105417", "equation_Prims.eqtype",
+        "@query_1876", "binder_a__110365", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_113"
       ],
       0
     ],
-    [ 1, 0, [ "@query_1738", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 1, 0, [ "@query_1878", "assumption_Prims.HasEq_int_325" ], 0 ],
     [
       1,
       0,
       [
-        "@pretyping__317", "@query_1742", "equation_Prims.eqtype",
+        "@pretyping__322", "@query_1885", "equation_Prims.eqtype",
         "equation_Prims.nat", "int_inversion",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1421", "typing_FStar.Seq.length"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1477", "typing_FStar.Seq.length"
       ],
       0
     ],
@@ -560,8 +561,7 @@
       1,
       0,
       [
-        "@pretyping__317", "@query_1744",
-        "assumption_FStar.Seq.Extensionality_1447", "equation_Prims.eqtype",
+        "@pretyping__322", "@query_1891", "equation_Prims.eqtype",
         "equation_Prims.nat", "int_inversion", "int_typing",
         "lemma_FStar.Seq.lemma_eq_elim", "lemma_FStar.Seq.lemma_eq_intro",
         "lemma_FStar.Seq.lemma_index_app1",
@@ -573,48 +573,50 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1421", "typing_FStar.Seq.length"
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1477", "typing_FStar.Seq.length"
       ],
       0
     ],
-    [ 1, 0, [ "@query_1746" ], 0 ],
+    [ 1, 0, [ "@query_1911" ], 0 ],
     [
       1,
       0,
       [
-        "@query_1748", "equation_Prims.eqtype",
+        "@query_1913", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_113"
       ],
       0
     ],
-    [ 1, 0, [ "@query_1771" ], 0 ],
+    [ 1, 0, [ "@query_1943" ], 0 ],
     [
       1,
       0,
       [
-        "@pretyping__153", "@pretyping__317", "@query_1780",
-        "binder_a__130073", "binder_f__130074", "binder_hi__130077",
-        "binder_lo__130075", "binder_pivot__130076", "bool_inversion",
+        "@pretyping__153", "@pretyping__322", "@query_1962",
+        "assumption_FStar.Seq.Extensionality_1503", "binder_a__137236",
+        "binder_f__137237", "binder_hi__137240", "binder_lo__137238",
+        "binder_pivot__137239", "bool_inversion",
         "equality_tok_Prims.LexTop@tok", "equation_FStar.SeqProperties.cons",
         "equation_FStar.SeqProperties.head",
         "equation_FStar.SeqProperties.mem",
-        "equation_FStar.SeqProperties.tail", "equation_Prims.eqtype",
+        "equation_FStar.SeqProperties.tail",
+        "equation_FStar.SeqProperties.total_order", "equation_Prims.eqtype",
         "equation_Prims.nat",
-        "equation_with_fuel_FStar.SeqProperties.count__1616",
-        "equation_with_fuel_FStar.SeqProperties.sorted__1671",
-        "fuel_correspondence_FStar.SeqProperties.count__1616",
-        "fuel_correspondence_FStar.SeqProperties.sorted__1671",
-        "fuel_irrelevance_FStar.SeqProperties.count__1616",
-        "fuel_irrelevance_FStar.SeqProperties.sorted__1671", "int_inversion",
-        "int_typing", "interpretation_Tm_arrow_1663",
-        "interpretation_Tm_arrow_1773", "lemma_FStar.Seq.lemma_create_len",
+        "equation_with_fuel_FStar.SeqProperties.count__1728",
+        "equation_with_fuel_FStar.SeqProperties.sorted__1795",
+        "fuel_correspondence_FStar.SeqProperties.count__1728",
+        "fuel_correspondence_FStar.SeqProperties.sorted__1795",
+        "fuel_irrelevance_FStar.SeqProperties.count__1728",
+        "fuel_irrelevance_FStar.SeqProperties.sorted__1795", "int_inversion",
+        "int_typing", "interpretation_Tm_arrow_1787",
+        "interpretation_Tm_arrow_1945", "lemma_FStar.Seq.lemma_create_len",
         "lemma_FStar.Seq.lemma_eq_elim", "lemma_FStar.Seq.lemma_eq_intro",
         "lemma_FStar.Seq.lemma_index_app1",
         "lemma_FStar.Seq.lemma_index_app2",
@@ -628,40 +630,42 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1327",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1383",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1537",
-        "refinement_interpretation_Tm_refine_1776",
-        "refinement_interpretation_Tm_refine_1778",
-        "token_correspondence_FStar.SeqProperties.count__1616",
-        "token_correspondence_FStar.SeqProperties.sorted__1671",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1631",
+        "refinement_interpretation_Tm_refine_1948",
+        "refinement_interpretation_Tm_refine_1950",
+        "refinement_interpretation_Tm_refine_1953",
+        "token_correspondence_FStar.SeqProperties.count__1728",
+        "token_correspondence_FStar.SeqProperties.sorted__1795",
         "typing_FStar.Seq.append", "typing_FStar.Seq.create",
         "typing_FStar.Seq.index", "typing_FStar.Seq.length",
-        "typing_FStar.SeqProperties.cons", "typing_FStar.SeqProperties.mem",
+        "typing_FStar.SeqProperties.cons", "typing_FStar.SeqProperties.head",
+        "typing_FStar.SeqProperties.mem",
         "typing_FStar.SeqProperties.sorted",
         "typing_FStar.SeqProperties.tail", "well-founded-ordering-on-nat"
       ],
       0
     ],
-    [ 1, 0, [ "@query_1789", "assumption_Prims.HasEq_int_320" ], 0 ],
-    [ 1, 0, [ "@query_1792", "assumption_Prims.HasEq_int_320" ], 0 ],
+    [ 1, 0, [ "@query_1971", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [ 1, 0, [ "@query_1974", "assumption_Prims.HasEq_int_325" ], 0 ],
     [
       1,
       0,
       [
-        "@pretyping__317", "@query_1795", "equation_Prims.nat",
+        "@pretyping__322", "@query_1987", "equation_Prims.nat",
         "int_inversion", "primitive_Prims.op_Addition",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1794", "typing_FStar.Seq.length"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1976", "typing_FStar.Seq.length"
       ],
       0
     ],
@@ -669,13 +673,13 @@
       1,
       0,
       [
-        "@pretyping__1325", "@pretyping__317", "@query_1798",
+        "@pretyping__1381", "@pretyping__322", "@query_1991",
+        "assumption_FStar.Seq.Extensionality_1503",
         "equation_FStar.SeqProperties.split",
         "equation_FStar.SeqProperties.split_eq", "equation_Prims.fst",
         "equation_Prims.nat", "equation_Prims.snd", "int_inversion",
         "int_typing", "lemma_FStar.Seq.lemma_create_len",
-        "lemma_FStar.Seq.lemma_eq_intro", "lemma_FStar.Seq.lemma_eq_refl",
-        "lemma_FStar.Seq.lemma_index_app2",
+        "lemma_FStar.Seq.lemma_eq_intro", "lemma_FStar.Seq.lemma_index_app2",
         "lemma_FStar.Seq.lemma_index_create",
         "lemma_FStar.Seq.lemma_index_slice",
         "lemma_FStar.Seq.lemma_index_upd1",
@@ -690,16 +694,17 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1327",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_1406",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1383",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1797", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_1462",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1660",
+        "refinement_interpretation_Tm_refine_1989", "typing_FStar.Seq.index",
         "typing_FStar.Seq.length", "typing_FStar.Seq.seq",
         "typing_FStar.Seq.slice", "typing_Prims.fst", "typing_Prims.snd"
       ],
@@ -709,18 +714,18 @@
       2,
       1,
       [
-        "@pretyping__317", "@query_1815",
+        "@pretyping__322", "@query_2022",
         "equation_FStar.SeqProperties.swap", "equation_Prims.nat",
         "int_inversion", "lemma_FStar.Seq.lemma_len_upd",
         "primitive_Prims.op_Addition", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_1812",
-        "refinement_interpretation_Tm_refine_1814", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_2005",
+        "refinement_interpretation_Tm_refine_2007", "typing_FStar.Seq.index",
         "typing_FStar.Seq.length", "typing_FStar.Seq.upd"
       ],
       0
@@ -729,7 +734,7 @@
       2,
       1,
       [
-        "@pretyping__317", "@query_1821",
+        "@pretyping__322", "@query_2042",
         "equation_FStar.SeqProperties.swap", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
         "lemma_FStar.Seq.lemma_eq_intro",
@@ -742,15 +747,16 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_1406",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1818",
-        "refinement_interpretation_Tm_refine_1820", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_1462",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_2025",
+        "refinement_interpretation_Tm_refine_2027",
+        "refinement_interpretation_Tm_refine_2036", "typing_FStar.Seq.index",
         "typing_FStar.Seq.length", "typing_FStar.Seq.upd"
       ],
       0
@@ -759,8 +765,8 @@
       2,
       1,
       [
-        "@query_1825", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2046", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
@@ -768,27 +774,34 @@
       2,
       1,
       [
-        "@query_1829", "primitive_Prims.op_LessThan",
+        "@query_2052", "primitive_Prims.op_LessThan",
         "projection_inverse_BoxBool_proj_0"
       ],
       0
     ],
     [
       2,
-      1,
+      2,
       [
-        "@pretyping__1325", "@pretyping__133", "@pretyping__317",
-        "@query_1835", "constructor_distinct_FStar.Seq.seq",
+        "@pretyping__133", "@pretyping__1381", "@pretyping__322",
+        "@query_2076", "constructor_distinct_FStar.Seq.seq",
         "constructor_distinct_Prims.unit",
+        "equation_FStar.SeqProperties.head",
         "equation_FStar.SeqProperties.split",
         "equation_FStar.SeqProperties.split_5",
         "equation_FStar.SeqProperties.split_eq",
-        "equation_FStar.SeqProperties.swap", "equation_Prims.eqtype",
+        "equation_FStar.SeqProperties.swap",
+        "equation_FStar.SeqProperties.tail", "equation_Prims.eqtype",
         "equation_Prims.fst", "equation_Prims.nat", "equation_Prims.snd",
-        "fuel_correspondence_FStar.SeqProperties.count__1616",
-        "fuel_irrelevance_FStar.SeqProperties.count__1616", "int_inversion",
-        "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
-        "lemma_FStar.Seq.lemma_eq_intro", "lemma_FStar.Seq.lemma_index_upd1",
+        "equation_with_fuel_FStar.SeqProperties.count__1728",
+        "fuel_correspondence_FStar.SeqProperties.count__1728",
+        "fuel_irrelevance_FStar.SeqProperties.count__1728", "int_inversion",
+        "int_typing", "lemma_FStar.Seq.lemma_create_len",
+        "lemma_FStar.Seq.lemma_eq_elim", "lemma_FStar.Seq.lemma_eq_intro",
+        "lemma_FStar.Seq.lemma_index_app1",
+        "lemma_FStar.Seq.lemma_index_app2",
+        "lemma_FStar.Seq.lemma_index_slice",
+        "lemma_FStar.Seq.lemma_index_upd1",
         "lemma_FStar.Seq.lemma_index_upd2",
         "lemma_FStar.Seq.lemma_len_append",
         "lemma_FStar.Seq.lemma_len_slice", "lemma_FStar.Seq.lemma_len_upd",
@@ -805,18 +818,23 @@
         "projection_inverse_Prims.Mktuple5__3",
         "projection_inverse_Prims.Mktuple5__4",
         "projection_inverse_Prims.Mktuple5__5",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_1406",
-        "refinement_interpretation_Tm_refine_1562",
-        "refinement_interpretation_Tm_refine_1581",
-        "refinement_interpretation_Tm_refine_1832", "typing_FStar.Seq.index",
-        "typing_FStar.Seq.length", "typing_FStar.Seq.seq",
-        "typing_FStar.Seq.slice", "typing_FStar.Seq.upd",
-        "typing_FStar.SeqProperties.split",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_1462",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1660",
+        "refinement_interpretation_Tm_refine_1690",
+        "refinement_interpretation_Tm_refine_2055",
+        "token_correspondence_FStar.SeqProperties.count__1728",
+        "typing_FStar.Seq.append", "typing_FStar.Seq.create",
+        "typing_FStar.Seq.index", "typing_FStar.Seq.length",
+        "typing_FStar.Seq.seq", "typing_FStar.Seq.slice",
+        "typing_FStar.Seq.upd", "typing_FStar.SeqProperties.split",
         "typing_FStar.SeqProperties.split_eq", "typing_Prims.fst",
         "typing_Prims.snd", "unit_inversion"
       ],
@@ -826,18 +844,18 @@
       2,
       1,
       [
-        "@query_1841", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110", "haseqTm_refine_1840"
+        "@query_2082", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165", "haseqTm_refine_2081"
       ],
       0
     ],
-    [ 0, 1, [ "@query_1842" ], 0 ],
+    [ 0, 1, [ "@query_2086" ], 0 ],
     [
       0,
       1,
       [
-        "@query_1843", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2087", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
@@ -845,7 +863,7 @@
       0,
       1,
       [
-        "@query_1851", "primitive_Prims.op_LessThan",
+        "@query_2097", "primitive_Prims.op_LessThan",
         "projection_inverse_BoxBool_proj_0"
       ],
       0
@@ -854,10 +872,10 @@
       0,
       1,
       [
-        "@query_1872", "equation_FStar.SeqProperties.permutation",
+        "@query_2127", "equation_FStar.SeqProperties.permutation",
         "equation_Prims.nat", "primitive_Prims.op_LessThan",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1854"
+        "refinement_interpretation_Tm_refine_2100"
       ],
       0
     ],
@@ -865,57 +883,56 @@
       0,
       1,
       [
-        "@query_1876", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2131", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
-    [ 1, 1, [ "@query_1878" ], 0 ],
+    [ 1, 1, [ "@query_2135" ], 0 ],
     [
       1,
       1,
       [
-        "@pretyping__317", "@query_1880",
+        "@pretyping__322", "@query_2138",
         "equation_FStar.SeqProperties.cons",
         "equation_FStar.SeqProperties.head",
         "equation_FStar.SeqProperties.permutation",
         "equation_FStar.SeqProperties.tail", "equation_Prims.eqtype",
         "equation_Prims.nat",
-        "equation_with_fuel_FStar.SeqProperties.count__1616",
-        "fuel_correspondence_FStar.SeqProperties.count__1616",
-        "fuel_irrelevance_FStar.SeqProperties.count__1616", "int_inversion",
+        "equation_with_fuel_FStar.SeqProperties.count__1728",
+        "fuel_correspondence_FStar.SeqProperties.count__1728",
+        "fuel_irrelevance_FStar.SeqProperties.count__1728", "int_inversion",
         "int_typing", "lemma_FStar.Seq.lemma_create_len",
         "lemma_FStar.Seq.lemma_eq_elim", "lemma_FStar.Seq.lemma_index_app1",
         "lemma_FStar.Seq.lemma_index_create",
         "lemma_FStar.Seq.lemma_len_append", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1327",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1537",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1383",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1631",
         "typing_FStar.Seq.create", "typing_FStar.Seq.length",
-        "typing_FStar.SeqProperties.cons", "typing_FStar.SeqProperties.tail"
+        "typing_FStar.SeqProperties.cons", "typing_FStar.SeqProperties.tail",
+        "unit_inversion", "unit_typing"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1883" ], 0 ],
+    [ 2, 1, [ "@query_2142" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1884", "equation_FStar.SeqProperties.mem",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "fuel_correspondence_FStar.SeqProperties.count__1616",
-        "fuel_irrelevance_FStar.SeqProperties.count__1616", "int_inversion",
-        "int_typing", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_GreaterThan",
+        "@query_2143", "equation_FStar.SeqProperties.mem",
+        "equation_Prims.nat",
+        "fuel_correspondence_FStar.SeqProperties.count__1728",
+        "fuel_irrelevance_FStar.SeqProperties.count__1728",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_113", "typing_FStar.Seq.append",
-        "typing_FStar.SeqProperties.count"
+        "refinement_interpretation_Tm_refine_1165",
+        "typing_FStar.SeqProperties.count", "unit_inversion", "unit_typing"
       ],
       0
     ],
@@ -923,7 +940,7 @@
       2,
       1,
       [
-        "@query_1887", "equation_Prims.eqtype",
+        "@query_2146", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_113"
       ],
       0
@@ -932,13 +949,13 @@
       2,
       1,
       [
-        "@query_1892", "equation_Prims.nat", "int_inversion",
+        "@query_2154", "equation_Prims.nat", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1889"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_2148"
       ],
       0
     ],
@@ -946,197 +963,13 @@
       2,
       1,
       [
-        "@pretyping__317", "@query_1895",
-        "assumption_FStar.Seq.Extensionality_1447", "bool_inversion",
+        "@pretyping__322", "@query_2160",
         "equation_FStar.SeqProperties.head",
         "equation_FStar.SeqProperties.mem",
         "equation_FStar.SeqProperties.tail", "equation_Prims.eqtype",
         "equation_Prims.nat",
-        "equation_with_fuel_FStar.SeqProperties.count__1616",
-        "fuel_correspondence_FStar.SeqProperties.count__1616",
-        "fuel_irrelevance_FStar.SeqProperties.count__1616", "int_inversion",
-        "int_typing", "lemma_FStar.Seq.lemma_create_len",
-        "lemma_FStar.Seq.lemma_eq_elim", "lemma_FStar.Seq.lemma_eq_intro",
-        "lemma_FStar.Seq.lemma_index_app1",
-        "lemma_FStar.Seq.lemma_index_app2",
-        "lemma_FStar.Seq.lemma_index_create",
-        "lemma_FStar.Seq.lemma_index_slice",
-        "lemma_FStar.Seq.lemma_len_append",
-        "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1327",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
-        "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1537",
-        "refinement_interpretation_Tm_refine_1894",
-        "token_correspondence_FStar.SeqProperties.count__1616",
-        "typing_FStar.Seq.length", "typing_FStar.SeqProperties.count",
-        "typing_FStar.SeqProperties.mem", "typing_FStar.SeqProperties.tail"
-      ],
-      0
-    ],
-    [
-      2,
-      1,
-      [
-        "@query_1898", "equation_Prims.eqtype",
-        "refinement_interpretation_Tm_refine_113"
-      ],
-      0
-    ],
-    [
-      2,
-      1,
-      [
-        "@pretyping__317", "@query_1903", "equation_Prims.eqtype",
-        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_LessThan",
-        "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1900", "typing_FStar.Seq.length"
-      ],
-      0
-    ],
-    [
-      2,
-      1,
-      [
-        "@pretyping__317", "@query_1906",
-        "assumption_FStar.Seq.Extensionality_1447",
-        "equation_FStar.SeqProperties.head",
-        "equation_FStar.SeqProperties.mem",
-        "equation_FStar.SeqProperties.tail", "equation_Prims.eqtype",
-        "equation_Prims.nat",
-        "equation_with_fuel_FStar.SeqProperties.count__1616",
-        "fuel_correspondence_FStar.SeqProperties.count__1616",
-        "fuel_irrelevance_FStar.SeqProperties.count__1616", "int_inversion",
-        "int_typing", "lemma_FStar.Seq.lemma_create_len",
-        "lemma_FStar.Seq.lemma_eq_elim", "lemma_FStar.Seq.lemma_eq_intro",
-        "lemma_FStar.Seq.lemma_index_app1",
-        "lemma_FStar.Seq.lemma_index_app2",
-        "lemma_FStar.Seq.lemma_index_create",
-        "lemma_FStar.Seq.lemma_index_slice",
-        "lemma_FStar.Seq.lemma_len_append",
-        "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1327",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
-        "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1537",
-        "refinement_interpretation_Tm_refine_1905",
-        "token_correspondence_FStar.SeqProperties.count__1616",
-        "typing_FStar.Seq.length", "typing_FStar.SeqProperties.tail"
-      ],
-      0
-    ],
-    [
-      2,
-      1,
-      [
-        "@pretyping__317", "@query_1913", "equation_Prims.eqtype",
-        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1908", "typing_FStar.Seq.length"
-      ],
-      0
-    ],
-    [
-      2,
-      1,
-      [
-        "@pretyping__317", "@query_1916", "bool_inversion",
-        "equation_FStar.SeqProperties.head",
-        "equation_FStar.SeqProperties.mem",
-        "equation_FStar.SeqProperties.tail",
-        "equation_FStar.SeqProperties.tot_ord",
-        "equation_FStar.SeqProperties.total_order", "equation_Prims.eqtype",
-        "equation_Prims.nat",
-        "equation_with_fuel_FStar.SeqProperties.count__1616",
-        "fuel_correspondence_FStar.SeqProperties.count__1616",
-        "fuel_irrelevance_FStar.SeqProperties.count__1616", "int_inversion",
-        "int_typing", "lemma_FStar.Seq.lemma_create_len",
-        "lemma_FStar.Seq.lemma_eq_elim", "lemma_FStar.Seq.lemma_eq_intro",
-        "lemma_FStar.Seq.lemma_index_app1",
-        "lemma_FStar.Seq.lemma_index_app2",
-        "lemma_FStar.Seq.lemma_index_create",
-        "lemma_FStar.Seq.lemma_index_slice",
-        "lemma_FStar.Seq.lemma_len_append",
-        "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1327",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
-        "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1537",
-        "refinement_interpretation_Tm_refine_1760",
-        "refinement_interpretation_Tm_refine_1915",
-        "token_correspondence_FStar.SeqProperties.count__1616",
-        "typing_FStar.Seq.index", "typing_FStar.Seq.length",
-        "typing_FStar.SeqProperties.mem", "typing_FStar.SeqProperties.tail"
-      ],
-      0
-    ],
-    [
-      2,
-      1,
-      [
-        "@query_1923", "equation_Prims.nat", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThan",
-        "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1918"
-      ],
-      0
-    ],
-    [
-      2,
-      1,
-      [
-        "@pretyping__317", "@query_1926",
-        "assumption_FStar.Seq.Extensionality_1447",
-        "equation_FStar.SeqProperties.head",
-        "equation_FStar.SeqProperties.mem",
-        "equation_FStar.SeqProperties.tail",
-        "equation_FStar.SeqProperties.tot_ord",
-        "equation_FStar.SeqProperties.total_order", "equation_Prims.eqtype",
-        "equation_Prims.nat",
-        "equation_with_fuel_FStar.SeqProperties.count__1616",
-        "fuel_correspondence_FStar.SeqProperties.count__1616",
+        "equation_with_fuel_FStar.SeqProperties.count__1728",
+        "fuel_correspondence_FStar.SeqProperties.count__1728",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_create_len",
         "lemma_FStar.Seq.lemma_eq_elim", "lemma_FStar.Seq.lemma_eq_intro",
         "lemma_FStar.Seq.lemma_index_app1",
@@ -1150,16 +983,193 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1327",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1383",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1760",
-        "refinement_interpretation_Tm_refine_1925", "typing_FStar.Seq.length"
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1631",
+        "refinement_interpretation_Tm_refine_2156",
+        "token_correspondence_FStar.SeqProperties.count__1728",
+        "typing_FStar.Seq.index", "typing_FStar.Seq.length",
+        "typing_FStar.SeqProperties.count", "typing_FStar.SeqProperties.tail"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2163", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_113"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__322", "@query_2172", "equation_Prims.eqtype",
+        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_113",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_2165", "typing_FStar.Seq.length"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__322", "@query_2180",
+        "assumption_FStar.Seq.Extensionality_1503", "bool_inversion",
+        "bool_typing", "equation_FStar.SeqProperties.head",
+        "equation_FStar.SeqProperties.mem",
+        "equation_FStar.SeqProperties.tail", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_FStar.SeqProperties.count__1728",
+        "fuel_correspondence_FStar.SeqProperties.count__1728",
+        "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_create_len",
+        "lemma_FStar.Seq.lemma_eq_elim", "lemma_FStar.Seq.lemma_eq_intro",
+        "lemma_FStar.Seq.lemma_index_app1",
+        "lemma_FStar.Seq.lemma_index_app2",
+        "lemma_FStar.Seq.lemma_index_create",
+        "lemma_FStar.Seq.lemma_index_slice",
+        "lemma_FStar.Seq.lemma_len_append",
+        "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_113",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1383",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1631",
+        "refinement_interpretation_Tm_refine_2174",
+        "token_correspondence_FStar.SeqProperties.count__1728",
+        "typing_FStar.Seq.length", "typing_FStar.SeqProperties.count",
+        "typing_FStar.SeqProperties.mem", "typing_FStar.SeqProperties.tail"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__322", "@query_2192", "equation_Prims.eqtype",
+        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_113",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_2182", "typing_FStar.Seq.length"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__322", "@query_2200", "bool_inversion",
+        "equation_FStar.SeqProperties.head",
+        "equation_FStar.SeqProperties.mem",
+        "equation_FStar.SeqProperties.tail",
+        "equation_FStar.SeqProperties.tot_ord",
+        "equation_FStar.SeqProperties.total_order", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_FStar.SeqProperties.count__1728",
+        "fuel_correspondence_FStar.SeqProperties.count__1728",
+        "int_inversion", "int_typing", "interpretation_Tm_arrow_1787",
+        "lemma_FStar.Seq.lemma_create_len", "lemma_FStar.Seq.lemma_eq_elim",
+        "lemma_FStar.Seq.lemma_eq_intro", "lemma_FStar.Seq.lemma_index_app1",
+        "lemma_FStar.Seq.lemma_index_app2",
+        "lemma_FStar.Seq.lemma_index_create",
+        "lemma_FStar.Seq.lemma_index_slice",
+        "lemma_FStar.Seq.lemma_len_append",
+        "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_113",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1383",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1925",
+        "refinement_interpretation_Tm_refine_2194", "typing_FStar.Seq.length"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2211", "equation_Prims.nat", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_2202"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__322", "@query_2217", "bool_inversion",
+        "equation_FStar.SeqProperties.head",
+        "equation_FStar.SeqProperties.mem",
+        "equation_FStar.SeqProperties.tail",
+        "equation_FStar.SeqProperties.tot_ord",
+        "equation_FStar.SeqProperties.total_order", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "equation_with_fuel_FStar.SeqProperties.count__1728",
+        "fuel_correspondence_FStar.SeqProperties.count__1728",
+        "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_create_len",
+        "lemma_FStar.Seq.lemma_eq_elim", "lemma_FStar.Seq.lemma_eq_intro",
+        "lemma_FStar.Seq.lemma_index_app1",
+        "lemma_FStar.Seq.lemma_index_app2",
+        "lemma_FStar.Seq.lemma_index_create",
+        "lemma_FStar.Seq.lemma_index_slice",
+        "lemma_FStar.Seq.lemma_len_append",
+        "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_113",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1383",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1925",
+        "refinement_interpretation_Tm_refine_2213",
+        "typing_FStar.Seq.length", "typing_FStar.SeqProperties.mem"
       ],
       0
     ],
@@ -1167,16 +1177,16 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_1931",
+        "@pretyping__322", "@query_2226",
         "equation_FStar.SeqProperties.swap", "equation_Prims.nat",
         "int_inversion", "lemma_FStar.Seq.lemma_len_upd",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_1928",
-        "refinement_interpretation_Tm_refine_1930", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_2219",
+        "refinement_interpretation_Tm_refine_2221", "typing_FStar.Seq.index",
         "typing_FStar.Seq.length", "typing_FStar.Seq.upd"
       ],
       0
@@ -1185,7 +1195,7 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_1936",
+        "@pretyping__322", "@query_2235",
         "equation_FStar.SeqProperties.swap", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
         "lemma_FStar.Seq.lemma_eq_intro",
@@ -1197,15 +1207,15 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_1406",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1933",
-        "refinement_interpretation_Tm_refine_1935", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_1462",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_2228",
+        "refinement_interpretation_Tm_refine_2230", "typing_FStar.Seq.index",
         "typing_FStar.Seq.length", "typing_FStar.Seq.upd"
       ],
       0
@@ -1214,16 +1224,16 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_1942",
+        "@pretyping__322", "@query_2245",
         "equation_FStar.SeqProperties.swap", "equation_Prims.nat",
         "int_inversion", "lemma_FStar.Seq.lemma_len_upd",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_1938",
-        "refinement_interpretation_Tm_refine_1941", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_2237",
+        "refinement_interpretation_Tm_refine_2240", "typing_FStar.Seq.index",
         "typing_FStar.Seq.length", "typing_FStar.Seq.upd"
       ],
       0
@@ -1232,7 +1242,7 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_1948",
+        "@pretyping__322", "@query_2255",
         "equation_FStar.SeqProperties.swap", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
         "lemma_FStar.Seq.lemma_eq_intro",
@@ -1244,15 +1254,15 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_1406",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1944",
-        "refinement_interpretation_Tm_refine_1947", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_1462",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_2247",
+        "refinement_interpretation_Tm_refine_2250", "typing_FStar.Seq.index",
         "typing_FStar.Seq.length", "typing_FStar.Seq.upd"
       ],
       0
@@ -1261,17 +1271,17 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_1954",
+        "@pretyping__322", "@query_2264",
         "equation_FStar.SeqProperties.swap", "equation_Prims.nat",
         "int_inversion", "lemma_FStar.Seq.lemma_len_upd",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1400",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1950",
-        "refinement_interpretation_Tm_refine_1952", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_2257",
+        "refinement_interpretation_Tm_refine_2259", "typing_FStar.Seq.index",
         "typing_FStar.Seq.length", "typing_FStar.Seq.upd"
       ],
       0
@@ -1280,7 +1290,7 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_1960",
+        "@pretyping__322", "@query_2273",
         "equation_FStar.SeqProperties.swap", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
         "lemma_FStar.Seq.lemma_eq_intro",
@@ -1291,15 +1301,15 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_1406",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1956",
-        "refinement_interpretation_Tm_refine_1958", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_1462",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_2266",
+        "refinement_interpretation_Tm_refine_2268", "typing_FStar.Seq.index",
         "typing_FStar.Seq.length", "typing_FStar.Seq.upd"
       ],
       0
@@ -1308,19 +1318,19 @@
       0,
       1,
       [
-        "@query_1966", "equation_FStar.SeqProperties.swap",
+        "@query_2286", "equation_FStar.SeqProperties.swap",
         "equation_Prims.nat", "int_inversion",
         "lemma_FStar.Seq.lemma_len_slice", "lemma_FStar.Seq.lemma_len_upd",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_1962",
-        "refinement_interpretation_Tm_refine_1965", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_2275",
+        "refinement_interpretation_Tm_refine_2278", "typing_FStar.Seq.index",
         "typing_FStar.Seq.upd"
       ],
       0
@@ -1329,7 +1339,7 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_1972",
+        "@pretyping__322", "@query_2299",
         "equation_FStar.SeqProperties.swap", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
         "lemma_FStar.Seq.lemma_eq_intro",
@@ -1342,15 +1352,16 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_1406",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1968",
-        "refinement_interpretation_Tm_refine_1971", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_1462",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_2288",
+        "refinement_interpretation_Tm_refine_2291",
+        "refinement_interpretation_Tm_refine_2297", "typing_FStar.Seq.index",
         "typing_FStar.Seq.upd"
       ],
       0
@@ -1359,17 +1370,17 @@
       0,
       1,
       [
-        "@query_1978", "equation_FStar.SeqProperties.swap",
+        "@query_2309", "equation_FStar.SeqProperties.swap",
         "equation_Prims.eqtype", "equation_Prims.nat", "int_inversion",
         "lemma_FStar.Seq.lemma_len_upd", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_1974",
-        "refinement_interpretation_Tm_refine_1977", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_2301",
+        "refinement_interpretation_Tm_refine_2304", "typing_FStar.Seq.index",
         "typing_FStar.Seq.upd"
       ],
       0
@@ -1378,17 +1389,17 @@
       0,
       1,
       [
-        "@query_1984", "equation_Prims.eqtype", "equation_Prims.nat",
+        "@query_2323", "equation_Prims.eqtype", "equation_Prims.nat",
         "int_inversion", "lemma_FStar.Seq.lemma_len_slice",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1980",
-        "refinement_interpretation_Tm_refine_1983"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_2311",
+        "refinement_interpretation_Tm_refine_2314"
       ],
       0
     ],
@@ -1396,22 +1407,22 @@
       0,
       1,
       [
-        "@query_1985", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2324", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
-    [ 0, 1, [ "@query_1986" ], 0 ],
+    [ 0, 1, [ "@query_2325" ], 0 ],
     [
       0,
       1,
       [
-        "@query_1989", "equation_Prims.nat", "int_inversion",
-        "primitive_Prims.op_LessThanOrEqual",
+        "@pretyping__322", "@query_2330", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1419"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1475"
       ],
       0
     ],
@@ -1419,7 +1430,7 @@
       0,
       1,
       [
-        "@query_2001", "primitive_Prims.op_LessThanOrEqual",
+        "@query_2343", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0"
       ],
       0
@@ -1428,7 +1439,8 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_2003",
+        "@pretyping__322", "@query_2346",
+        "assumption_FStar.Seq.Extensionality_1503",
         "equation_FStar.SeqProperties.splice", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
         "lemma_FStar.Seq.lemma_eq_intro", "lemma_FStar.Seq.lemma_index_app1",
@@ -1440,12 +1452,12 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
         "typing_FStar.Seq.append", "typing_FStar.Seq.length",
         "typing_FStar.Seq.slice"
       ],
@@ -1455,16 +1467,16 @@
       0,
       1,
       [
-        "@query_2009", "equation_FStar.SeqProperties.swap",
+        "@query_2358", "equation_FStar.SeqProperties.swap",
         "equation_Prims.nat", "int_inversion",
         "lemma_FStar.Seq.lemma_len_upd", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_2005",
-        "refinement_interpretation_Tm_refine_2008", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_2348",
+        "refinement_interpretation_Tm_refine_2351", "typing_FStar.Seq.index",
         "typing_FStar.Seq.upd"
       ],
       0
@@ -1473,7 +1485,7 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_2015",
+        "@pretyping__322", "@query_2370",
         "equation_FStar.SeqProperties.splice",
         "equation_FStar.SeqProperties.swap", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
@@ -1488,19 +1500,19 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1400",
-        "refinement_interpretation_Tm_refine_1406",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_2011",
-        "refinement_interpretation_Tm_refine_2014",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1456",
+        "refinement_interpretation_Tm_refine_1462",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_2360",
+        "refinement_interpretation_Tm_refine_2363",
         "typing_FStar.Seq.append", "typing_FStar.Seq.index",
         "typing_FStar.Seq.length", "typing_FStar.Seq.slice",
-        "typing_FStar.Seq.upd"
+        "typing_FStar.Seq.upd", "unit_inversion", "unit_typing"
       ],
       0
     ],
@@ -1508,8 +1520,8 @@
       0,
       1,
       [
-        "@query_2016", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2371", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
@@ -1517,13 +1529,13 @@
       0,
       1,
       [
-        "@query_2023", "equation_Prims.nat", "int_inversion",
+        "@query_2383", "equation_Prims.nat", "int_inversion",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1419",
-        "refinement_interpretation_Tm_refine_2019",
-        "refinement_interpretation_Tm_refine_2022"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1475",
+        "refinement_interpretation_Tm_refine_2374",
+        "refinement_interpretation_Tm_refine_2377"
       ],
       0
     ],
@@ -1531,7 +1543,7 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_2030",
+        "@pretyping__322", "@query_2392",
         "equation_FStar.SeqProperties.splice", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
         "lemma_FStar.Seq.lemma_eq_intro", "lemma_FStar.Seq.lemma_index_app2",
@@ -1542,15 +1554,15 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1419",
-        "refinement_interpretation_Tm_refine_2026",
-        "refinement_interpretation_Tm_refine_2029",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1475",
+        "refinement_interpretation_Tm_refine_2386",
+        "refinement_interpretation_Tm_refine_2389",
         "typing_FStar.Seq.append", "typing_FStar.Seq.length",
         "typing_FStar.Seq.slice"
       ],
@@ -1560,8 +1572,8 @@
       0,
       1,
       [
-        "@query_2031", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2393", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
@@ -1569,14 +1581,14 @@
       0,
       1,
       [
-        "@query_2038", "equation_Prims.nat", "int_inversion",
+        "@query_2405", "equation_Prims.nat", "int_inversion",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1419",
-        "refinement_interpretation_Tm_refine_2034",
-        "refinement_interpretation_Tm_refine_2036"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1475",
+        "refinement_interpretation_Tm_refine_2396",
+        "refinement_interpretation_Tm_refine_2398"
       ],
       0
     ],
@@ -1584,24 +1596,25 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_2045",
+        "@pretyping__322", "@query_2414",
         "equation_FStar.SeqProperties.splice", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
         "lemma_FStar.Seq.lemma_eq_intro", "lemma_FStar.Seq.lemma_index_app1",
         "lemma_FStar.Seq.lemma_index_slice",
+        "lemma_FStar.Seq.lemma_len_append",
         "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
         "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1419",
-        "refinement_interpretation_Tm_refine_2041",
-        "refinement_interpretation_Tm_refine_2043",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1475",
+        "refinement_interpretation_Tm_refine_2408",
+        "refinement_interpretation_Tm_refine_2410",
         "typing_FStar.Seq.append", "typing_FStar.Seq.length",
         "typing_FStar.Seq.slice"
       ],
@@ -1611,15 +1624,15 @@
       0,
       1,
       [
-        "@query_2048", "equation_Prims.nat", "int_inversion",
+        "@query_2420", "equation_Prims.nat", "int_inversion",
         "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_2047"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_2416"
       ],
       0
     ],
@@ -1627,7 +1640,8 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_2051",
+        "@pretyping__322", "@query_2426",
+        "assumption_FStar.Seq.Extensionality_1503",
         "equation_FStar.SeqProperties.tail", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
         "lemma_FStar.Seq.lemma_eq_intro",
@@ -1637,12 +1651,13 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_2050", "typing_FStar.Seq.length"
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1631",
+        "refinement_interpretation_Tm_refine_2422", "typing_FStar.Seq.length"
       ],
       0
     ],
@@ -1650,8 +1665,8 @@
       0,
       1,
       [
-        "@query_2052", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2427", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
@@ -1659,11 +1674,11 @@
       0,
       1,
       [
-        "@query_2056", "equation_Prims.nat", "primitive_Prims.op_AmpAmp",
+        "@query_2432", "equation_Prims.nat", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1419",
-        "refinement_interpretation_Tm_refine_2055"
+        "refinement_interpretation_Tm_refine_1475",
+        "refinement_interpretation_Tm_refine_2430"
       ],
       0
     ],
@@ -1671,7 +1686,7 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_2060", "bool_inversion", "bool_typing",
+        "@pretyping__322", "@query_2437", "bool_inversion", "bool_typing",
         "equation_FStar.SeqProperties.splice", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
         "lemma_FStar.Seq.lemma_eq_intro", "lemma_FStar.Seq.lemma_index_app1",
@@ -1683,14 +1698,14 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1419",
-        "refinement_interpretation_Tm_refine_2059",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1475",
+        "refinement_interpretation_Tm_refine_2435",
         "typing_FStar.Seq.append", "typing_FStar.Seq.length",
         "typing_FStar.Seq.slice"
       ],
@@ -1700,8 +1715,8 @@
       0,
       1,
       [
-        "@query_2061", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2438", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
@@ -1709,11 +1724,11 @@
       0,
       1,
       [
-        "@query_2065", "equation_Prims.nat", "primitive_Prims.op_AmpAmp",
+        "@query_2444", "equation_Prims.nat", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1419",
-        "refinement_interpretation_Tm_refine_2064"
+        "refinement_interpretation_Tm_refine_1475",
+        "refinement_interpretation_Tm_refine_2441"
       ],
       0
     ],
@@ -1721,7 +1736,7 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_2069", "bool_inversion", "bool_typing",
+        "@pretyping__322", "@query_2449", "bool_inversion", "bool_typing",
         "equation_FStar.SeqProperties.splice", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
         "lemma_FStar.Seq.lemma_eq_intro", "lemma_FStar.Seq.lemma_index_app1",
@@ -1733,14 +1748,14 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1419",
-        "refinement_interpretation_Tm_refine_2068",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1475",
+        "refinement_interpretation_Tm_refine_2447",
         "typing_FStar.Seq.append", "typing_FStar.Seq.length",
         "typing_FStar.Seq.slice"
       ],
@@ -1750,8 +1765,8 @@
       0,
       1,
       [
-        "@query_2070", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2450", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
@@ -1759,8 +1774,8 @@
       0,
       1,
       [
-        "@query_2071", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2451", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
@@ -1768,11 +1783,11 @@
       0,
       1,
       [
-        "@query_2075", "equation_Prims.nat",
+        "@query_2458", "equation_Prims.nat",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_2073"
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_2453"
       ],
       0
     ],
@@ -1780,7 +1795,7 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_2079",
+        "@pretyping__322", "@query_2463",
         "equation_FStar.SeqProperties.splice", "equation_Prims.nat",
         "int_inversion", "int_typing", "lemma_FStar.Seq.lemma_eq_elim",
         "lemma_FStar.Seq.lemma_eq_intro", "lemma_FStar.Seq.lemma_index_app1",
@@ -1792,13 +1807,13 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_2077",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_2460",
         "typing_FStar.Seq.append", "typing_FStar.Seq.length",
         "typing_FStar.Seq.slice"
       ],
@@ -1808,8 +1823,8 @@
       0,
       1,
       [
-        "@query_2080", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2464", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
@@ -1817,12 +1832,12 @@
       0,
       1,
       [
-        "@query_2084", "equation_Prims.nat", "int_inversion",
+        "@query_2473", "equation_Prims.nat", "int_inversion",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1419",
-        "refinement_interpretation_Tm_refine_2083"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1475",
+        "refinement_interpretation_Tm_refine_2467"
       ],
       0
     ],
@@ -1830,7 +1845,8 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_2088",
+        "@pretyping__322", "@query_2483",
+        "assumption_FStar.Seq.Extensionality_1503",
         "equation_FStar.SeqProperties.permutation",
         "equation_FStar.SeqProperties.splice", "equation_Prims.eqtype",
         "equation_Prims.nat", "int_inversion", "int_typing",
@@ -1844,15 +1860,15 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1419",
-        "refinement_interpretation_Tm_refine_2087",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1475",
+        "refinement_interpretation_Tm_refine_2476",
         "typing_FStar.Seq.append", "typing_FStar.Seq.length",
         "typing_FStar.Seq.slice"
       ],
@@ -1862,8 +1878,8 @@
       0,
       1,
       [
-        "@query_2089", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2484", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
@@ -1871,12 +1887,12 @@
       0,
       1,
       [
-        "@query_2093", "equation_Prims.nat", "int_inversion",
+        "@query_2490", "equation_Prims.nat", "int_inversion",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1419",
-        "refinement_interpretation_Tm_refine_2092"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1475",
+        "refinement_interpretation_Tm_refine_2487"
       ],
       0
     ],
@@ -1884,7 +1900,8 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_2097",
+        "@pretyping__322", "@query_2500",
+        "assumption_FStar.Seq.Extensionality_1503",
         "equation_FStar.SeqProperties.permutation",
         "equation_FStar.SeqProperties.splice", "equation_Prims.eqtype",
         "equation_Prims.nat", "int_inversion", "int_typing",
@@ -1898,15 +1915,15 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1409",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1419",
-        "refinement_interpretation_Tm_refine_2096",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1465",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1475",
+        "refinement_interpretation_Tm_refine_2493",
         "typing_FStar.Seq.append", "typing_FStar.Seq.length",
         "typing_FStar.Seq.slice"
       ],
@@ -1916,8 +1933,8 @@
       0,
       1,
       [
-        "@query_2098", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2501", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
@@ -1925,8 +1942,8 @@
       0,
       1,
       [
-        "@query_2099", "assumption_Prims.HasEq_int_320",
-        "equation_Prims.nat", "haseqTm_refine_1110"
+        "@query_2502", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
@@ -1934,9 +1951,9 @@
       0,
       1,
       [
-        "@query_2103", "equation_Prims.nat",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_2101"
+        "@query_2512", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_2504"
       ],
       0
     ],
@@ -1944,52 +1961,51 @@
       0,
       1,
       [
-        "@query_2107", "equation_FStar.SeqProperties.permutation",
+        "@query_2516", "equation_FStar.SeqProperties.permutation",
         "unit_typing"
       ],
       0
     ],
-    [ 0, 1, [ "@query_2108", "projection_inverse_BoxInt_proj_0" ], 0 ],
+    [ 0, 1, [ "@query_2517", "projection_inverse_BoxInt_proj_0" ], 0 ],
     [
       2,
       1,
       [
-        "@query_2113", "equation_Prims.eqtype",
+        "@query_2522", "equation_Prims.eqtype",
         "refinement_interpretation_Tm_refine_113"
       ],
       0
     ],
-    [ 2, 1, [ "@query_2116" ], 0 ],
+    [ 2, 1, [ "@query_2526" ], 0 ],
     [
       2,
       1,
       [
-        "@pretyping__317", "@query_2117", "bool_inversion", "bool_typing",
+        "@pretyping__322", "@query_2527",
         "equation_FStar.SeqProperties.head",
         "equation_FStar.SeqProperties.mem",
         "equation_FStar.SeqProperties.snoc",
         "equation_FStar.SeqProperties.tail", "equation_Prims.eqtype",
         "equation_Prims.nat",
-        "equation_with_fuel_FStar.SeqProperties.count__1616",
-        "fuel_correspondence_FStar.SeqProperties.count__1616",
-        "fuel_irrelevance_FStar.SeqProperties.count__1616", "int_inversion",
-        "int_typing", "lemma_FStar.Seq.lemma_create_len",
+        "equation_with_fuel_FStar.SeqProperties.count__1728",
+        "fuel_correspondence_FStar.SeqProperties.count__1728",
+        "fuel_irrelevance_FStar.SeqProperties.count__1728",
+        "lemma_FStar.Seq.lemma_create_len",
         "lemma_FStar.Seq.lemma_index_create",
-        "lemma_FStar.Seq.lemma_len_append",
         "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1327",
-        "refinement_interpretation_Tm_refine_1393",
-        "refinement_interpretation_Tm_refine_1537",
-        "token_correspondence_FStar.SeqProperties.count__1616",
-        "typing_FStar.Seq.append", "typing_FStar.Seq.length",
-        "typing_FStar.SeqProperties.count", "typing_FStar.SeqProperties.tail"
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1383",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1631",
+        "token_correspondence_FStar.SeqProperties.count__1728",
+        "typing_FStar.Seq.length", "typing_FStar.SeqProperties.count",
+        "typing_FStar.SeqProperties.head", "typing_FStar.SeqProperties.tail"
       ],
       0
     ],
@@ -1997,8 +2013,8 @@
       0,
       1,
       [
-        "@query_2149", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "fuel_guarded_inversion_Prims.option_446"
+        "@query_2581", "disc_equation_Prims.None",
+        "disc_equation_Prims.Some", "fuel_guarded_inversion_Prims.option_452"
       ],
       0
     ],
@@ -2006,26 +2022,23 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_2185", "binder_a__864779",
-        "binder_ctr__864782", "binder_f__864780", "binder_l__864781",
+        "@pretyping__322", "@query_2618", "binder_a__897081",
+        "binder_ctr__897084", "binder_f__897082", "binder_l__897083",
         "bool_inversion", "constructor_distinct_Prims.None",
-        "constructor_distinct_Prims.Some",
-        "data_typing_intro_Prims.None@tok", "equality_tok_Prims.LexTop@tok",
+        "constructor_distinct_Prims.Some", "equality_tok_Prims.LexTop@tok",
         "equality_tok_Prims.T@tok", "equation_FStar.SeqProperties.found",
-        "equation_Prims.l_True", "equation_Prims.nat",
-        "fuel_guarded_inversion_Prims.option_446", "int_inversion",
-        "int_typing", "interpretation_Tm_arrow_2151",
-        "primitive_Prims.op_Subtraction",
+        "equation_Prims.l_True", "equation_Prims.nat", "int_inversion",
+        "interpretation_Tm_arrow_2583", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.None_a", "projection_inverse_Prims.Some_a",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_2154",
-        "refinement_interpretation_Tm_refine_2175",
-        "refinement_interpretation_Tm_refine_2178",
-        "refinement_interpretation_Tm_refine_2181", "typing_FStar.Seq.index",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1411",
+        "refinement_interpretation_Tm_refine_2586",
+        "refinement_interpretation_Tm_refine_2608",
+        "refinement_interpretation_Tm_refine_2611",
+        "refinement_interpretation_Tm_refine_2614", "typing_FStar.Seq.index",
         "typing_tok_Prims.T@tok", "well-founded-ordering-on-nat"
       ],
       0
@@ -2034,8 +2047,8 @@
       0,
       1,
       [
-        "@query_2230", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "fuel_guarded_inversion_Prims.option_446"
+        "@query_2681", "disc_equation_Prims.None",
+        "disc_equation_Prims.Some", "fuel_guarded_inversion_Prims.option_452"
       ],
       0
     ],
@@ -2043,27 +2056,25 @@
       0,
       1,
       [
-        "@pretyping__317", "@query_2239", "equation_Prims.nat",
-        "int_inversion", "refinement_interpretation_Tm_refine_1110",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_2233", "typing_FStar.Seq.length"
+        "@query_2692", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_2686"
       ],
       0
     ],
-    [ 1, 1, [ "@query_2254" ], 0 ],
+    [ 1, 1, [ "@query_2708" ], 0 ],
     [
       1,
       1,
       [
-        "@pretyping__317", "@query_2257", "binder_a__906784",
-        "binder_n__906786", "binder_s__906785",
+        "@pretyping__322", "@query_2714", "binder_a__940856",
+        "binder_n__940858", "binder_s__940857",
         "equality_tok_Prims.LexTop@tok", "equation_FStar.SeqProperties.head",
         "equation_FStar.SeqProperties.mem",
         "equation_FStar.SeqProperties.tail", "equation_Prims.eqtype",
         "equation_Prims.nat",
-        "equation_with_fuel_FStar.SeqProperties.count__1616",
-        "fuel_correspondence_FStar.SeqProperties.count__1616",
-        "fuel_irrelevance_FStar.SeqProperties.count__1616", "int_inversion",
+        "equation_with_fuel_FStar.SeqProperties.count__1728",
+        "fuel_correspondence_FStar.SeqProperties.count__1728",
+        "fuel_irrelevance_FStar.SeqProperties.count__1728", "int_inversion",
         "int_typing", "lemma_FStar.Seq.lemma_index_slice",
         "lemma_FStar.Seq.lemma_len_slice", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
@@ -2071,21 +2082,23 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1355",
-        "refinement_interpretation_Tm_refine_1393",
+        "refinement_interpretation_Tm_refine_1165",
         "refinement_interpretation_Tm_refine_1411",
-        "refinement_interpretation_Tm_refine_1413",
-        "refinement_interpretation_Tm_refine_1537",
-        "refinement_interpretation_Tm_refine_2256",
-        "token_correspondence_FStar.SeqProperties.count__1616",
+        "refinement_interpretation_Tm_refine_1449",
+        "refinement_interpretation_Tm_refine_1467",
+        "refinement_interpretation_Tm_refine_1469",
+        "refinement_interpretation_Tm_refine_1631",
+        "refinement_interpretation_Tm_refine_2710",
+        "refinement_interpretation_Tm_refine_2713",
+        "token_correspondence_FStar.SeqProperties.count__1728",
         "typing_FStar.Seq.index", "typing_FStar.Seq.length",
+        "typing_FStar.SeqProperties.count",
         "typing_FStar.SeqProperties.tail", "unit_typing",
         "well-founded-ordering-on-nat"
       ],
       0
     ],
-    [ 1, 1, [ "@query_2260", "assumption_Prims.HasEq_int_320" ], 0 ]
+    [ 1, 1, [ "@query_2717", "assumption_Prims.HasEq_int_325" ], 0 ]
   ]
 ]

@@ -5,27 +5,29 @@
       2,
       1,
       [
-        "@pretyping__317", "@query_2147", "binder_f__524", "binder_k__521",
+        "@pretyping__322", "@query_2206", "binder_f__524", "binder_k__521",
         "binder_m__526", "binder_v__522", "bool_inversion",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
         "disc_equation_Prims.Some", "equality_tok_Prims.LexTop@tok",
         "equation_Prims.eqtype", "equation_Prims.fst", "equation_Prims.nat",
-        "kinding_Prims.tuple2@tok", "lemma_FStar.OrdMap.choose_m",
-        "lemma_FStar.OrdMap.eq_lemma", "lemma_FStar.OrdMap.eq_remove",
-        "lemma_FStar.OrdMap.sel_rem1", "lemma_FStar.OrdMap.size_empty",
-        "lemma_FStar.OrdMap.size_remove", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Equality", "proj_equation_Prims.Mktuple2__1",
+        "equation_Prims.snd", "kinding_Prims.tuple2@tok",
+        "lemma_FStar.OrdMap.choose_m", "lemma_FStar.OrdMap.eq_lemma",
+        "lemma_FStar.OrdMap.eq_remove", "lemma_FStar.OrdMap.sel_rem1",
+        "lemma_FStar.OrdMap.size_empty", "lemma_FStar.OrdMap.size_remove",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
         "proj_equation_Prims.Some_v", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_1110",
         "refinement_interpretation_Tm_refine_113",
+        "refinement_interpretation_Tm_refine_1165",
         "typing_FStar.OrdMap.choose", "typing_FStar.OrdMap.empty",
-        "typing_FStar.OrdMap.size", "typing_Prims.is_Some",
-        "well-founded-ordering-on-nat"
+        "typing_FStar.OrdMap.size", "typing_FStar.OrdMap.update",
+        "typing_Prims.is_Some", "well-founded-ordering-on-nat"
       ],
       0
     ],
-    [ 2, 1, [ "@query_2162", "assumption_Prims.HasEq_int_320" ], 0 ]
+    [ 2, 1, [ "@query_2221", "assumption_Prims.HasEq_int_325" ], 0 ]
   ]
 ]

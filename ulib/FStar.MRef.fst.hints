@@ -1,64 +1,64 @@
 [
   "ƒÍ\u0015ûg¦Î›Š°Ï‹ Þ\u0003{",
   [
-    [ 2, 1, [ "@query_1491" ], 0 ],
-    [ 2, 1, [ "@query_1502" ], 0 ],
-    [ 2, 1, [ "@query_1507" ], 0 ],
-    [ 2, 1, [ "@query_1512" ], 0 ],
-    [ 2, 1, [ "@query_1531" ], 0 ],
-    [ 2, 1, [ "@query_1538" ], 0 ],
+    [ 2, 1, [ "@query_1571" ], 0 ],
+    [ 2, 1, [ "@query_1582" ], 0 ],
+    [ 2, 1, [ "@query_1587" ], 0 ],
+    [ 2, 1, [ "@query_1592" ], 0 ],
+    [ 2, 1, [ "@query_1611" ], 0 ],
+    [ 2, 1, [ "@query_1626" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1541", "equation_FStar.MRef.as_ref",
+        "@query_1630", "equation_FStar.MRef.as_ref",
         "equation_FStar.MRef.contains", "equation_FStar.MRef.fresh",
         "equation_FStar.MRef.mref", "equation_FStar.MRef.upd",
         "equation_FStar.ST.ref"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1542" ], 0 ],
+    [ 2, 1, [ "@query_1638" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1543", "equation_FStar.MRef.as_ref",
+        "@query_1639", "equation_FStar.MRef.as_ref",
         "equation_FStar.MRef.mref", "equation_FStar.MRef.sel",
         "equation_FStar.ST.ref", "ref_inversion", "typing_FStar.Heap.sel"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1544" ], 0 ],
+    [ 2, 1, [ "@query_1650" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1545", "equation_FStar.MRef.as_ref",
+        "@query_1651", "equation_FStar.MRef.as_ref",
         "equation_FStar.MRef.upd"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1547" ], 0 ],
-    [ 2, 1, [ "@query_1556" ], 0 ],
+    [ 2, 1, [ "@query_1659" ], 0 ],
+    [ 2, 1, [ "@query_1679" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1558", "equality_tok_Prims.T@tok",
+        "@query_1681", "equality_tok_Prims.T@tok",
         "equation_FStar.MRef.token", "equation_Prims.l_True",
         "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1560" ], 0 ],
-    [ 2, 1, [ "@query_1562" ], 0 ],
-    [ 2, 1, [ "@query_1571" ], 0 ],
+    [ 2, 1, [ "@query_1690" ], 0 ],
+    [ 2, 1, [ "@query_1698" ], 0 ],
+    [ 2, 1, [ "@query_1714" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1573", "equality_tok_Prims.T@tok",
+        "@query_1716", "equality_tok_Prims.T@tok",
         "equation_FStar.MRef.witnessed", "equation_Prims.l_True",
         "typing_tok_Prims.T@tok", "unit_typing"
       ],
