@@ -126,7 +126,7 @@ assume val recall:  p:predicate state{stable state_rel p} ->
 
 (* Signature of reify for TSST. *)
 
-assume val reify : #a:Type ->
+assume val reify_ : #a:Type ->
 		   #pre:tsst_pre state ->
 		   #post:(timestamped_state (state) -> Tot (tsst_post state a)) ->
 		   e:(unit -> TSST a pre post) ->
@@ -138,7 +138,7 @@ assume val reify : #a:Type ->
 						                  post s0 (fst xs1) (snd xs1))
 
 
-(* Example program demonstrating reify-recall interaction. *)
+(* Example program demonstrating reify_-recall interaction. *)
 
 val reify_recall_test : unit -> TSST unit (fun _ -> True) (fun _ _ _ -> True)
 let reify_recall_test _ = 
@@ -156,7 +156,7 @@ let reify_recall_test _ =
 
   let f = fun (x:unit) -> recall (fun s -> s > 0) in
 
-  let v = reify #unit #(fun s0 -> exists ts . 
+  let v = reify_ #unit #(fun s0 -> exists ts . 
 		                    (older_than ts (get_timestamp s0) \/ 
 				       ts == get_timestamp s0) /\
 		                       witnessed ts (fun s -> s > 0)) 
