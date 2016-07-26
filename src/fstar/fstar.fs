@@ -83,9 +83,9 @@ let go _ =
   match res with
     | Help ->
         Options.display_usage(); exit 0
-    | Die msg ->
+    | Error msg ->
         Util.print_string msg
-    | GoOn ->
+    | Success ->
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)
         else if (Options.interactive()) then //--in

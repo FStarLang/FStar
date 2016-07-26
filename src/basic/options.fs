@@ -756,12 +756,12 @@ let find_file filename =
 let prims () =
   match get_prims() with
   | None ->
-    let filen = "prims.fst" in
-    begin match find_file filen with
+    let filename = "prims.fst" in
+    begin match find_file filename with
           | Some result ->
             result
           | None ->
-            raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filen))
+            raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
     end
   | Some x -> x
 
