@@ -702,9 +702,34 @@ let build_lattice env se = match se with
 ////////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //
 ////////////////////////////////////////////////////////////    
-let push_sigelt env s = build_lattice ({env with gamma=Binding_sig(lids_of_sigelt s, s)::env.gamma}) s
 
-let push_sigelt_inst env s us = build_lattice ({env with gamma=Binding_sig_inst(lids_of_sigelt s,s,us)::env.gamma}) s
+// The environment maintains the invariant that gamma is of the form:
+//   l_1 ... l_n val_1 ... val_n
+// where l_i is a local binding and val_i is a top-level binding.
+//
+// This function assumes that, in the case that the environment contains local
+// bindings _and_ we push a top-level binding, then the top-level binding does
+// not capture any of the local bindings (duh).
+let push_in_gamma env s =
+  let rec push x rest =
+    match rest with
+    | Binding_sig _ :: _
+    | Binding_sig_inst _ :: _ ->
+        x :: rest
+    | [] ->
+        [ x ]
+    | local :: rest ->
+        local :: push x rest
+  in
+  { env with gamma = push s env.gamma }
+
+let push_sigelt env s =
+  let env = push_in_gamma env (Binding_sig(lids_of_sigelt s, s)) in
+  build_lattice env s
+
+let push_sigelt_inst env s us =
+  let env = push_in_gamma env (Binding_sig_inst(lids_of_sigelt s,s,us)) in
+  build_lattice env s
 
 let push_local_binding env b = {env with gamma=b::env.gamma}
 
@@ -782,7 +807,7 @@ let univ_vars env =
       | Binding_univ _ :: tl -> aux out tl
       | Binding_lid(_, (_, t))::tl
       | Binding_var({sort=t})::tl -> aux (ext out (Free.univs t)) tl
-      | Binding_sig _::tl -> aux out tl in (* this marks a top-level scope ...  no more uvars beyond this; Jonathan: no it doesn't anymore *)
+      | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more uvars beyond this *)
     aux no_univs env.gamma
 
 let bound_vars_of_bindings bs = 
