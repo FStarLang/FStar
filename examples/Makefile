@@ -32,8 +32,8 @@ all:
 #	make -C deriving-monads -- still some failing assertions + missing Makefile
 	make -C metatheory
 	make -C wysteria
-	make -C dm4free
 	make -C unit-tests
+# make -C dm4free -- stale code; removing it from the regression suite
 
 univ: u_algo u_data_structures u_metatheory u_unit-tests
 
