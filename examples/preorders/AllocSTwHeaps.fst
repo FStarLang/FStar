@@ -5,9 +5,13 @@ open Preorder
 
 (* The preorder on heaps for recalling that allocated 
    references remain allocated in all future heaps. *)
-
+   
+//NB: needed to restrict a:Type0, so that IST doesn't become
+//    too universe polymorphic. This restriction is probably ok in practice ...
+//    ... i don't imagine storing things beyond Type0 in the heap
+//    Besides, if we allow that, then we may need to account for non-termination
 let heap_rel (h0:FStar.Heap.heap) (h1:FStar.Heap.heap) = 
-  forall a (r:ref a) . FStar.Heap.contains h0 r ==> FStar.Heap.contains h1 r
+  forall (a:Type0) (r:ref a) . FStar.Heap.contains h0 r ==> FStar.Heap.contains h1 r
 
 
 (* *************************************************** *)
@@ -50,7 +54,7 @@ effect IST    (a:Type)
        =
        ISTATE a (fun p s0 -> pre s0 /\ (forall x s1 . 
                                           pre s0 /\ 
-					  heap_rel s0 s1 /\ 
+					  heap_rel s0 s1 /\
 					  post s0 x s1 
 					  ==> 
 					  p x s1))
