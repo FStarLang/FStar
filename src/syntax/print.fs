@@ -138,6 +138,8 @@ let const_to_string x = match x with
   | Const_int (x, _) -> x
   | Const_char c -> Util.string_of_char c
   | Const_range r -> Range.string_of_range r
+  | Const_reify -> "reify"
+  | Const_reflect l -> Util.format1 "[[%s.reflect]]" (sli l)
 
 let lbname_to_string = function
   | Inl l -> bv_to_string l
@@ -199,6 +201,8 @@ let qual_to_string = function
   | ExceptionConstructor  -> "ExceptionConstructor"
   | HasMaskedEffect       -> "HasMaskedEffect"
   | Effect                -> "Effect"
+  | Reifiable                 -> "reify"
+  | Reflectable               -> "reflect"
 let quals_to_string quals = match quals with 
     | [] -> ""
     | _ -> (quals |> List.map qual_to_string |> String.concat " ") ^ " "
@@ -218,6 +222,8 @@ let rec term_to_string x =
     let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
     Util.format2 "{:pattern %s} %s" pats (term_to_string t)
 
+  | Tm_meta(t, Meta_monadic m) -> Util.format3 ("(Monadic-%s{%s} %s )") (tag_of_term t) (sli m) (term_to_string t)
+  | Tm_meta(t, Meta_monadic_lift(m0, m1)) -> Util.format4 ("(MonadicLift-%s{%s} %s -> %s)") (tag_of_term t) (term_to_string t) (sli m0) (sli m1) 
   | Tm_meta(t, _) ->    term_to_string t
   | Tm_bvar x ->        db_to_string x
   | Tm_name x ->        nm_to_string x
@@ -231,7 +237,7 @@ let rec term_to_string x =
         | Some (Inl l) when (Options.print_implicits()) -> 
           Util.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| l.comp())
         | Some (Inr l) when (Options.print_implicits()) -> 
-          Util.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) l.str
+          Util.format3 "(fun %s -> (%s $$ (name only) %s))" (binders_to_string " " bs) (term_to_string t2) l.str
         | _ -> 
           Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
     end
@@ -384,8 +390,16 @@ and formula_to_string phi = term_to_string phi
 
 let tscheme_to_string (us, t) = Util.format2 "<%s> %s" (univ_names_to_string us) (term_to_string t)
 
-let eff_decl_to_string ed = 
-    Util.format "new_effect { %s<%s> %s : %s \n\t\
+let eff_decl_to_string for_free ed = 
+    let actions_to_string actions =
+        actions |> List.map (fun a -> 
+          Util.format4 "%s<%s> : %s = %s"
+            (sli a.action_name)
+            (univ_names_to_string a.action_univs)
+            (term_to_string a.action_typ)
+            (term_to_string a.action_defn))
+        |> String.concat ",\n\t" in
+    Util.format "new_effect %s{ %s<%s> %s : %s \n  \
         ret         = %s\n\
       ; bind_wp     = %s\n\
       ; if_then_else= %s\n\
@@ -395,12 +409,17 @@ let eff_decl_to_string ed =
       ; assert_p    = %s\n\
       ; assume_p    = %s\n\
       ; null_wp     = %s\n\
-      ; trivial     = %s}\n" 
-        [lid_to_string ed.mname;
+      ; trivial     = %s\n\
+      ; repr        = %s\n\
+      ; bind_repr   = %s\n\
+      ; return_repr = %s\n\
+      ; actions     = \n\t%s\n}\n" 
+        [(if for_free then "for free " else "");
+         lid_to_string ed.mname;
          univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
          term_to_string ed.signature;
-         tscheme_to_string ed.ret;
+         tscheme_to_string ed.ret_wp;
          tscheme_to_string ed.bind_wp;
          tscheme_to_string ed.if_then_else;
          tscheme_to_string ed.ite_wp;
@@ -409,7 +428,11 @@ let eff_decl_to_string ed =
          tscheme_to_string ed.assert_p;
          tscheme_to_string ed.assume_p;
          tscheme_to_string ed.null_wp;
-         tscheme_to_string ed.trivial]
+         tscheme_to_string ed.trivial;
+         term_to_string ed.repr;
+         tscheme_to_string ed.bind_repr;
+         tscheme_to_string ed.return_repr;
+         actions_to_string ed.actions]
 
 let rec sigelt_to_string x = match x with
   | Sig_pragma(ResetOptions None, _) -> "#reset-options"
@@ -437,9 +460,10 @@ let rec sigelt_to_string x = match x with
   | Sig_let(lbs, _, _, qs) -> lbs_to_string qs lbs
   | Sig_main(e, _) -> Util.format1 "let _ = %s" (term_to_string e)
   | Sig_bundle(ses, _, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
-  | Sig_new_effect(ed, _) -> eff_decl_to_string ed
+  | Sig_new_effect(ed, _) -> eff_decl_to_string false ed
+  | Sig_new_effect_for_free (ed, _) -> eff_decl_to_string true ed
   | Sig_sub_effect (se, r) ->
-    let us, t = Subst.open_univ_vars (fst se.lift) (snd se.lift) in
+    let us, t = Subst.open_univ_vars (fst se.lift_wp) (snd se.lift_wp) in
     Util.format4 "sub_effect %s ~> %s : <%s> %s" 
         (lid_to_string se.source) (lid_to_string se.target) 
         (univ_names_to_string us) (term_to_string t)
@@ -451,6 +475,7 @@ let rec sigelt_to_string x = match x with
             | _ -> failwith "impossible" in
          Util.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
     else Util.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 

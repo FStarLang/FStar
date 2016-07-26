@@ -18,15 +18,16 @@ The big headache with F# build and boostrapping
 -----------------------------------------------
 
 The situation is kind of complicated.
-- [parse.fsi]; is auto-generated from [parse.fsy] by [fsyacc]; it is sed-copied into [boot_fsts]
-  when *extracting* [lexhelp.fs] so that [lexhelp.fs] has something to type-check against; but, it
-  is _not_ used when compiling the extracted OCaml code, because the token datatype is directly
-  written out by [ocamlyacc] into [parse.ml]; note: this file is checked in to support the scenario
-  where someone wants to bootstrap and recompile without an F# setup
-- [parsefstar.fsi]; old file that was under version control, no one was ever using it, I (JP)
-  removed it
-- [parse.fsti]; previously used to serve the purpose of extracting [lexhelp.fs]; was WILDLY out of
-  date; I (JP) removed it
+- [parse.fsi]; is auto-generated from [parse.fsy] by [fsyacc]; it is sed-copied
+  into [boot_fsts] when *extracting* [lexhelp.fs] so that [lexhelp.fs] has
+  something to type-check against; but, it is _not_ used when compiling the
+  extracted OCaml code, because the token datatype is directly written out by
+  [ocamlyacc] into [parse.ml]; note: this file is checked in to support the
+  scenario where someone wants to bootstrap and recompile without an F# setup
+- [parsefstar.fsi]; old file that was under version control, no one was ever
+  using it, I (JP) removed it
+- [parse.fsti]; previously used to serve the purpose of extracting [lexhelp.fs];
+  was WILDLY out of date; I (JP) removed it
 
 If you're adding a new token, you need to edit:
 - [parse.fsy]

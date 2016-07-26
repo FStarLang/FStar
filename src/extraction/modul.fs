@@ -197,6 +197,49 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_datacon _ -> 
           extract_bundle g se
 
+        | Sig_new_effect(ed, _) when (ed.qualifiers |> List.contains Reifiable) ->
+          let extend_env g lid ml_name tm tysc = 
+            let mangled_name = snd ml_name in
+            let g = extend_fv' g (S.lid_as_fv lid Delta_equational None) ml_name tysc false false in
+            let lb = {
+                mllb_name=(mangled_name, 0);
+                mllb_tysc=None;
+                mllb_add_unit=false;
+                mllb_def=tm;
+                print_typ=false 
+              } in
+            g, MLM_Let(NoLetQualifier, [lb]) in
+    
+          let rec extract_fv tm = match (SS.compress tm).n with
+            | Tm_uinst (tm, _) -> extract_fv tm 
+            | Tm_fvar fv -> 
+              let mlp = mlpath_of_lident fv.fv_name.v in
+              let _, tysc, _ = Util.right <| UEnv.lookup_fv g fv in
+              with_ty MLTY_Top <| MLE_Name mlp, tysc 
+            | _ -> failwith "Not an fv" in
+
+          let extract_action g (a:S.action) =
+            let a_tm, ty_sc = extract_fv a.action_defn in
+            let a_nm, a_lid = action_name ed a in
+            extend_env g a_lid a_nm a_tm ty_sc in
+          
+          let g, return_decl = 
+            let return_tm, ty_sc = extract_fv (snd ed.return_repr) in
+            let return_nm, return_lid = monad_op_name ed "return" in
+            extend_env g return_lid return_nm return_tm ty_sc in
+          
+          let g, bind_decl = 
+            let bind_tm, ty_sc = extract_fv (snd ed.bind_repr) in
+            let bind_nm, bind_lid = monad_op_name ed "bind" in
+            extend_env g bind_lid bind_nm bind_tm ty_sc in
+
+          let g, actions = Util.fold_map extract_action g ed.actions in
+
+          g, [return_decl;bind_decl]@actions
+
+        | Sig_new_effect _ -> 
+          g, []
+        
         | Sig_declare_typ(lid, _, t, quals, _)  when (Term.level g t = Term.Kind_level) -> //lid is a type
           if quals |> Util.for_some (function Assumption -> true | _ -> false) |> not
           then g, []
@@ -261,7 +304,6 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
            failwith "impossible -- removed by tc.fs"
 
        | Sig_assume _ //not needed; purely logical
-       | Sig_new_effect _
        | Sig_sub_effect  _
        | Sig_effect_abbrev _  //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
        | Sig_pragma _ -> //pragmas are currently not relevant for codegen; they may be in the future

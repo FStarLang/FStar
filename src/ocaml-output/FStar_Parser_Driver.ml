@@ -38,14 +38,14 @@ end))
 
 
 let ___Modul____0 = (fun projectee -> (match (projectee) with
-| Modul (_67_4) -> begin
-_67_4
+| Modul (_68_4) -> begin
+_68_4
 end))
 
 
 let ___Decls____0 = (fun projectee -> (match (projectee) with
-| Decls (_67_7) -> begin
-_67_7
+| Decls (_68_7) -> begin
+_68_7
 end))
 
 
@@ -59,7 +59,7 @@ end
 | FStar_Util.Inl (FStar_Util.Inr (decls)) -> begin
 Decls (decls)
 end
-| FStar_Util.Inl (FStar_Util.Inl (_67_20)) -> begin
+| FStar_Util.Inl (FStar_Util.Inl (_68_20)) -> begin
 if (FStar_Options.universes ()) then begin
 (Prims.raise (FStar_Syntax_Syntax.Err ("Refusing to check more than one module at a time incrementally")))
 end else begin
@@ -68,9 +68,9 @@ end
 end
 | FStar_Util.Inr (msg, r) -> begin
 if (FStar_Options.universes ()) then begin
-(Prims.raise (FStar_Syntax_Syntax.Error ((msg, r))))
+(Prims.raise (FStar_Syntax_Syntax.Error (((msg), (r)))))
 end else begin
-(Prims.raise (FStar_Absyn_Syntax.Error ((msg, r))))
+(Prims.raise (FStar_Absyn_Syntax.Error (((msg), (r)))))
 end
 end))
 
@@ -79,7 +79,7 @@ let parse_file : Prims.string  ->  FStar_Parser_AST.modul Prims.list = (fun fn -
 | FStar_Util.Inl (FStar_Util.Inl (ast)) -> begin
 ast
 end
-| FStar_Util.Inl (FStar_Util.Inr (_67_32)) -> begin
+| FStar_Util.Inl (FStar_Util.Inr (_68_32)) -> begin
 (
 
 let msg = (FStar_Util.format1 "%s: expected a module\n" fn)
@@ -87,16 +87,16 @@ in (
 
 let r = FStar_Range.dummyRange
 in if (FStar_Options.universes ()) then begin
-(Prims.raise (FStar_Syntax_Syntax.Error ((msg, r))))
+(Prims.raise (FStar_Syntax_Syntax.Error (((msg), (r)))))
 end else begin
-(Prims.raise (FStar_Absyn_Syntax.Error ((msg, r))))
+(Prims.raise (FStar_Absyn_Syntax.Error (((msg), (r)))))
 end))
 end
 | FStar_Util.Inr (msg, r) -> begin
 if (FStar_Options.universes ()) then begin
-(Prims.raise (FStar_Syntax_Syntax.Error ((msg, r))))
+(Prims.raise (FStar_Syntax_Syntax.Error (((msg), (r)))))
 end else begin
-(Prims.raise (FStar_Absyn_Syntax.Error ((msg, r))))
+(Prims.raise (FStar_Absyn_Syntax.Error (((msg), (r)))))
 end
 end))
 

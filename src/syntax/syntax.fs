@@ -208,8 +208,10 @@ type qualifier =
   | Abstract                               //a symbol whose definition is only visible within the defining module
   | Noeq                                   //for this type, don't generate HasEq
   | TotalEffect                            //an effect that forbis non-termination
-  //the remaining qualifiers are internal: the programmer cannot write them
   | Logic                                  //a symbol whose intended usage is in the refinement logic
+  | Reifiable
+  | Reflectable
+  //the remaining qualifiers are internal: the programmer cannot write them
   | Discriminator of lident                //discriminator for a datacon l 
   | Projector of lident * ident            //projector for datacon l's argument x
   | RecordType of list<fieldname>          //record type whose unmangled field names are ...
@@ -227,15 +229,23 @@ type monad_abbrev = {
 type sub_eff = {
   source:lident;
   target:lident;
-  lift  :tscheme;
+  lift_wp:tscheme;
+  lift:option<tscheme>
  }
+
+type action = {
+    action_name:lident;
+    action_univs:univ_names;
+    action_defn:term;
+    action_typ: typ;
+}
 type eff_decl = {
     qualifiers  :list<qualifier>;
     mname       :lident;
     univs       :univ_names;
     binders     :binders;
     signature   :term;
-    ret         :tscheme;
+    ret_wp         :tscheme;
     bind_wp     :tscheme;
     if_then_else:tscheme;
     ite_wp      :tscheme;
@@ -245,6 +255,14 @@ type eff_decl = {
     assume_p    :tscheme;
     null_wp     :tscheme;
     trivial     :tscheme;
+    //NEW FIELDS
+    //representation of the effect as pure type
+    repr        :term;
+    //operations on the representation
+    return_repr :tscheme;
+    bind_repr   :tscheme;
+    //actions for the effect
+    actions     :list<action>
 }
 and sigelt =
   | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t 

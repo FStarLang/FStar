@@ -1,0 +1,142 @@
+module NatST
+
+//In prims0.fst is prims.fst until line 225, followed by:
+effect T (a:Type) = Tot a
+
+////////////////////////////////////////////////////////////////////////////////
+//Here's a sketch of the definition language, on one example
+////////////////////////////////////////////////////////////////////////////////
+
+let st (a:Type) = nat -> T (a * nat)
+let bind_st  = ...
+let return_st = ...
+let get_st = ...
+let put_st = ...
+
+val lemma_right_unit : ...
+...
+
+
+
+reifiable reflectable new_effect_for_free {
+  ST (a:Type) = nat -> T (a * nat)
+  with bind   = bind_st //(a:Type) (f:ST a) (g:a -> ST b) : ST b = ... 
+     ; return = return_st //(a:Type) (x:a) : ST a = ... 
+  and effect_actions
+       get    = get_st //
+     ; put    = put_st //
+}
+
+where right_unit = lemma_right_unit // : a:Type -> f:ST a -> Lemma (bind f (return a) = f) = ... proof ... 
+    ; left_unit  = lemma_left_unit  // : a:Type -> x:a -> f:(a -> ST b) -> Lemma (bind (return x) f = f x) = ... proof ...
+    ; assoc      = lemma_assoc // a:Type -> b:Type -> c:Type -> f:ST a -> g:(a -> ST b) -> h:(b -> ST c) -> Lemma
+
+sub_effect {
+   PURE ~> ST 
+   with lift (a:Type) (x:PURE a) : ST a = fun n -> x, n
+   where lift_return : a:Type -> x:PURE a -> Lemma (lift (PURE.return x) = ST.return x) = ... proof ...
+       ; lift_bind   : a:Type -> f:PURE a -> g:(a -> PURE b) -> 
+		       Lemma (lift (PURE.bind f g) = 
+			      ST.bind (lift f) (fun x -> lift (g x))) = ... proof ...
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//What follows is to be produced by a * and elaboration transformation of the definitions above
+////////////////////////////////////////////////////////////////////////////////
+reifiable reflectable new_effect { 
+  ST : a:Type -> wp:st_wp a -> Effect
+  with //repr is new; it's the reprentation of ST as a value type
+       repr (a:Type) (wp:pure_wp a) = n0:nat -> PURE (a * nat) (fun post -> wp (fun a n -> post (a, n)) n0)
+      //bind_wp is exactly as it is currently
+      //produced by the *-translation of bind above
+     ; bind_wp      = fun (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b) : st_wp b -> ...
+      //bind is new, it is the elaboration of the bind above
+     ; bind         = fun (a:Type) (b:Type) (wp1:st_wp a) (wp2:a -> st_wp b) 
+	                (f:repr a wp1)
+			(g:(x:a -> Tot (repr b (wp2 x)))) 
+			:  repr b (bind_wp wp1 wp2)
+			-> fun n0 -> let x, n1 = f n0 in g x n1
+      //return_wp is a renaming of the current return, it is the *-translation of the return above
+     ; return_wp    = fun (a:Type) (x:a) : st_wp a = ...
+      //return is new; it is the elaboration of the return above     
+     ; return       = fun (a:Type) (x:a) : repr a (return_wp x) -> fun n -> (x, n)
+     //the remaining are just as what we have now
+     ; if_then_else = ...
+     ; ite_wp       = ...
+     ; stronger     = ...
+     ; close_wp     = ...
+     ; assert_p     = ...
+     ; assume_p     = ...
+     ; null_wp      = ...
+     ; trivial      = ..
+  and actions
+    //these are new
+      get  = fun (_:unit) : repr nat (fun post n0 -> post (n0, n0)) -> fun n0 -> (n0, n0)
+    ; put  = fun (x:nat) : repr unit (fun post n0 -> post ((), x)) -> fun n0 -> ((), x)   
+}
+
+sub_effect PURE ~> STATE {
+  lift_wp: #a:Type -> #wp:pure_wp a -> st_wp a = ...
+  lift   : #a:Type -> #wp:pure_wp a -> f:PURE.repr a wp -> STATE.repr a (lift_star wp) = ...
+}  
+
+////////////////////////////////////////////////////////////////////////////////
+(* let repr_STATE (a:Type) (wp:st_wp a) =  *)
+(*   n0:nat -> PURE (a * nat) (fun post -> wp (fun a n -> post (a, n)) n0) *)
+
+
+
+new_effect STATE = STATE_h nat
+let st_pre = st_pre_h nat
+let st_post a = st_post_h nat a
+let st_wp a = st_wp_h nat a
+inline let lift_pure_state (a:Type) (wp:pure_wp a) (p:st_post a) (n:nat) = wp (fun a -> p a n)
+sub_effect PURE ~> STATE = lift_pure_state
+
+let reify_STATE (a:Type) = nat -> Tot (a * nat)
+let reify_return (#a:Type) (x:a) : reify_STATE a = fun n -> (x, n)
+let reify_bind (#a:Type) (#b:Type) (f:reify_STATE a) (g:(a -> Tot (reify_STATE b)) )
+  : reify_STATE b 
+  = fun n0 -> let x, n1 = f n0 in g x n1
+let reify_get () : reify_STATE nat = 
+  fun n -> n, n
+let reify_put (m:nat) : reify_STATE unit = 
+ fun _ -> (), m
+
+assume val get : unit -> STATE nat (fun post n -> post n n)
+assume val put : m:nat -> STATE unit (fun post n -> post () m)
+
+val incr : unit -> STATE unit (fun post n -> post () (n + 1))
+let incr () = 
+  let n = get () in 
+  put (n + 1)
+
+val incr2 : unit -> STATE unit (fun post n -> forall m. post () m)
+let incr2 () = 
+  let n = get () in 
+  put (n + 1)
+
+
+
+
+
+
+(* let repr_STATE (a:Type) (wp:st_wp a) =  *)
+(*   n0:nat -> PURE (a * nat) (fun post -> wp (fun a n -> post (a, n)) n0) *)
+
+(* inline let lift_pure_state (a:Type) (wp:pure_wp a) (p:st_post a) (n:nat) = wp (fun a -> p a n) *)
+(* sub_effect PURE ~> STATE = lift_pure_state *)
+(* assume val r : range *)
+
+(* val repr_bind: #a:Type -> #b:Type -> #wp1:st_wp a -> #wp2:(a -> GTot (st_wp b)) *)
+(* 	     -> repr_STATE a wp1 *)
+(* 	     -> (x:a -> Tot (repr_STATE b (wp2 x))) *)
+(* 	     -> Tot (repr_STATE b (st_bind_wp nat r a b wp1 wp2)) *)
+(* #reset-options "--log_queries"	      *)
+(* let repr_bind #a #b #wp1 #wp2 f g =  *)
+(*   fun n0 -> admit(); //the encoding to SMT isn't sufficiently smart to capture monotonicity *)
+(*          let x, n1 = f n0 in *)
+(*          g x n1 *)
+
+
+

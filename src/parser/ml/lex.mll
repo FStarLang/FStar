@@ -44,6 +44,7 @@
     Hashtbl.add keywords "begin"         BEGIN       ;
     Hashtbl.add keywords "default"       DEFAULT     ;
     Hashtbl.add keywords "effect"        EFFECT      ;
+    Hashtbl.add keywords "effect_actions" ACTIONS    ;
     Hashtbl.add keywords "else"          ELSE        ;
     Hashtbl.add keywords "end"           END         ;
     Hashtbl.add keywords "ensures"       ENSURES     ;
@@ -77,6 +78,9 @@
     Hashtbl.add keywords "private"       PRIVATE     ;
     Hashtbl.add keywords "public"        PUBLIC      ;
     Hashtbl.add keywords "rec"           REC         ;
+    Hashtbl.add keywords "reifiable"     REIFIABLE   ;
+    Hashtbl.add keywords "reify"         REIFY       ;
+    Hashtbl.add keywords "reflectable"   REFLECTABLE ;
     Hashtbl.add keywords "requires"      REQUIRES    ;
     Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
     Hashtbl.add keywords "then"          THEN        ;

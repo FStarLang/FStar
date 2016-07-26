@@ -78,8 +78,11 @@ val short_circuit: term -> args -> guard_formula
 val short_circuit_head: term -> bool
 val maybe_add_implicit_binders: env -> binders -> binders
 val fvar_const: env -> lident -> term
+val register_toplevel_definition: env -> (env -> sigelt -> (sigelts * env)) -> lident -> term -> (env * typ)
 
 //decorating terms with monadic operators
 val maybe_lift: env -> term -> lident -> lident -> term
 val maybe_monadic: env -> term -> lident -> term
    
+//reification
+val reify_comp: env -> lcomp -> universe -> term

@@ -51,6 +51,7 @@ type step =
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
   | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
+  | Reify
   //remove the rest?
   | DeltaComp       
   | SNComp
@@ -436,8 +437,6 @@ let maybe_simplify steps tm =
               else tm
             | _ -> tm
 
-
-
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
 (********************************************************************************************************************)
@@ -458,6 +457,59 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             rebuild cfg env stack t
      
+          | Tm_app({n=Tm_constant Const.Const_reify}, a1::a2::rest) ->
+            let hd, _ = Util.head_and_args t in
+            let t' = S.mk (Tm_app(hd, [a1])) None t.pos in
+            let t = S.mk(Tm_app(t', a2::rest)) None t.pos in
+            norm cfg env stack t
+
+          | Tm_app({n=Tm_constant Const.Const_reify}, [a])
+                when (cfg.steps |> List.contains Reify) ->
+            let reify_head, _ = Util.head_and_args t in
+            let a = SS.compress (fst a) in
+            // printfn "TRYING NORMALIZATION OF REIFY: %s ... %s" (Print.tag_of_term a) (Print.term_to_string a);
+            begin match a.n with 
+            | Tm_meta(e, Meta_monadic m) ->
+                begin match (SS.compress e).n with 
+                | Tm_let((false, [lb]), body) ->
+                    //this is M.bind
+                    //reify (M.bind e1 \x.e2) ~> M.bind_repr (reify e1) (\x. (reify e2))
+                    let ed = Env.get_effect_decl cfg.tcenv m in
+                    let _, bind_repr = ed.bind_repr in 
+                    begin match lb.lbname with 
+                    | Inl x -> 
+                      let head = U.mk_reify lb.lbdef in
+                      let body = S.mk (Tm_abs([S.mk_binder x], U.mk_reify body, None)) None body.pos in
+                      let reified = S.mk (Tm_app(bind_repr, [as_arg S.tun; as_arg S.tun; as_arg S.tun; 
+                                                             as_arg S.tun; as_arg head; as_arg body])) None t.pos in
+                      // printfn "Reified %s to %s\n" (Print.term_to_string t) (Print.term_to_string reified);
+                      norm cfg env stack reified
+                    | Inr _ -> failwith "Cannot reify a top-level let binding"
+                    end
+                | Tm_app _ ->
+                  //monadic application
+                  failwith "NYI: monadic application"
+                | _ -> 
+                  let stack = App(reify_head, None, t.pos)::stack in
+                  norm cfg env stack a
+                end
+
+            | Tm_app({n=Tm_constant (Const.Const_reflect _)}, [a]) -> 
+              //reify (reflect e) ~> e
+              norm cfg env stack (fst a)
+
+            | Tm_match(e, branches) -> 
+              //reify (match e with p -> e') ~> match (reify e) with p -> reify e'
+              let e = Util.mk_reify e in 
+              let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, Util.mk_reify tm) in
+              let tm = mk (Tm_match(e, branches)) t.pos in
+              norm cfg env stack tm
+
+            | _ ->
+              let stack = App(reify_head, None, t.pos)::stack in
+              norm cfg env stack a
+            end
+
           | Tm_type u -> 
             let u = norm_universe cfg env u in
             rebuild cfg env stack (mk (Tm_type u) t.pos)
@@ -470,6 +522,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  norm cfg env stack t'
      
           | Tm_fvar f -> 
+            let t0 = t in
             let should_delta = match cfg.delta_level with 
                 | NoDelta -> false
                 | OnlyInline -> true
@@ -479,7 +532,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
             then rebuild cfg env stack t
             else begin match Env.lookup_definition cfg.delta_level cfg.tcenv f.fv_name.v with 
                     | None -> rebuild cfg env stack t
-                    | Some (us, t) -> 
+                    | Some (us, t) ->
+                      log cfg (fun () -> Util.print2 ">>> Unfolded %s to %s\n" 
+                                    (Print.term_to_string t0) (Print.term_to_string t));
                       let n = List.length us in 
                       if n > 0 
                       then match stack with //universe beta reduction
@@ -548,6 +603,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                             | Some (Inl lc) when (Util.is_tot_or_gtot_lcomp lc) ->
                               log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
+                              norm cfg (c :: env) stack body 
+
+                            | _ when (cfg.steps |> List.contains Reify) ->
                               norm cfg (c :: env) stack body 
 
                             | _ -> //can't reduce, as it may not terminate
@@ -994,17 +1052,22 @@ let normalize_refinement steps env t0 =
 let normalize_sigelt (_:steps) (_:Env.env) (_:sigelt) : sigelt = failwith "NYI: normalize_sigelt"
 
 let eta_expand (_:Env.env) (t:typ) : typ =
-    match t.n with 
-        | Tm_name x -> 
-          let binders, c = Util.arrow_formals_comp x.sort in
-          begin match binders with 
-            | [] -> t
-            | _ -> 
-              let binders, args = binders |> Util.args_of_binders in
-              Util.abs binders (mk_Tm_app t args None t.pos) (Util.lcomp_of_comp c |> Inl |> Some)
-          end
-        | _ -> 
-          failwith (Util.format2 "NYI: eta_expand(%s) %s" (Print.tag_of_term t) (Print.term_to_string t))
+  let expand sort =
+    let binders, c = Util.arrow_formals_comp sort in
+    begin match binders with
+    | [] -> t
+    | _ ->
+        let binders, args = binders |> Util.args_of_binders in
+        Util.abs binders (mk_Tm_app t args None t.pos) (Util.lcomp_of_comp c |> Inl |> Some)
+    end
+  in
+  match !t.tk, t.n with
+  | Some sort, _ ->
+      expand (mk sort t.pos)
+  | _, Tm_name x ->
+      expand x.sort
+  | _ ->
+      failwith (Util.format2 "NYI: eta_expand(%s) %s" (Print.tag_of_term t) (Print.term_to_string t))
 
 //let eta_expand (env:Env.env) (t:typ) : typ =
 //    let _, ty, _ = env.type_of env t in

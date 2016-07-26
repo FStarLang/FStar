@@ -508,13 +508,18 @@ let rec abs_formals t = match (Subst.compress t).n with
       Subst.open_term (bs@bs') t
     | _ -> [], t 
 
-let abs bs t lopt = match bs with 
+let abs bs t lopt = 
+    let close_lopt lopt = match lopt with
+        | None
+        | Some (Inr _)  -> lopt
+        | Some (Inl lc) -> Some (Inl (close_lcomp bs lc)) in
+    match bs with 
     | [] -> t
     | _ -> 
     let body = compress (Subst.close bs t) in
     match body.n, lopt with 
         | Tm_abs(bs', t, lopt'), None -> 
-          mk (Tm_abs(close_binders bs@bs', t, lopt)) None t.pos
+          mk (Tm_abs(close_binders bs@bs', t, close_lopt lopt')) None t.pos
         | _ -> 
           let lopt = match lopt with 
             | None
@@ -812,3 +817,53 @@ let destruct_typ_as_formula f : option<connective> =
         match destruct_base_conn phi with
         | Some b -> Some b
         | None -> destruct_q_conn phi
+
+
+  let action_as_lb a = 
+        let lb = {
+            lbname=Inr (lid_as_fv a.action_name Delta_equational None);
+            lbunivs=a.action_univs;
+            lbtyp=a.action_typ;
+            lbdef=a.action_defn;
+            lbeff=Const.effect_Tot_lid
+        } in
+        Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [])
+    
+(* Some reification utilities *)
+let mk_reify t = 
+    let reify_ = mk (Tm_constant(FStar.Const.Const_reify)) None t.pos in
+    mk (Tm_app(reify_, [as_arg t])) None t.pos 
+
+(* Some utilities for clients who wish to build top-level bindings and keep
+ * their delta-qualifiers correct (e.g. dmff). *)
+
+let rec delta_qualifier t = 
+    let t = Subst.compress t in
+    match t.n with
+        | Tm_delayed _ -> failwith "Impossible"
+        | Tm_fvar fv -> fv.fv_delta 
+        | Tm_bvar _
+        | Tm_name _ 
+        | Tm_match _ 
+        | Tm_uvar _ 
+        | Tm_unknown -> Delta_equational
+        | Tm_type _
+        | Tm_constant _
+        | Tm_arrow _ -> Delta_constant
+        | Tm_uinst(t, _)
+        | Tm_refine({sort=t}, _)
+        | Tm_meta(t, _)
+        | Tm_ascribed(t, _, _)
+        | Tm_app(t, _) 
+        | Tm_abs(_, t, _) 
+        | Tm_let(_, t) -> delta_qualifier t
+
+let incr_delta_qualifier t = 
+    let d = delta_qualifier t in
+    let rec aux d = match d with
+        | Delta_equational -> d
+        | Delta_constant -> Delta_unfoldable 1
+        | Delta_unfoldable i -> Delta_unfoldable (i + 1)
+        | Delta_abstract d -> aux d in
+    aux d
+

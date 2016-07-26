@@ -460,7 +460,7 @@ let return_value env t v =
     else let m = must (Env.effect_decl_opt env Const.effect_PURE_lid) in //if Tot isn't fully defined in prims yet, then just return (Total t)
          let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
          let k = SS.subst [NT(a, t)] kwp in
-         let wp = N.normalize [N.Beta] env (mk_Tm_app (inst_effect_fun_with [env.universe_of env t] env m m.ret) [S.as_arg t; S.as_arg v] (Some k.n) v.pos) in
+         let wp = N.normalize [N.Beta] env (mk_Tm_app (inst_effect_fun_with [env.universe_of env t] env m m.ret_wp) [S.as_arg t; S.as_arg v] (Some k.n) v.pos) in
          mk_comp m t wp [RETURN] in
   if debug env <| Options.Other "Return"
   then Util.print3 "(%s) returning %s at comp type %s\n" 
@@ -634,7 +634,7 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let y = S.new_bv None res_t in
     let xexp, yexp = S.bv_to_name x, S.bv_to_name y in
     let us = [env.universe_of env res_t] in
-    let yret = mk_Tm_app (inst_effect_fun_with us env md_pure md_pure.ret) [S.as_arg res_t; S.as_arg yexp] None res_t.pos in
+    let yret = mk_Tm_app (inst_effect_fun_with us env md_pure md_pure.ret_wp) [S.as_arg res_t; S.as_arg yexp] None res_t.pos in
     let x_eq_y_yret = mk_Tm_app (inst_effect_fun_with us env md_pure md_pure.assume_p) [S.as_arg res_t; S.as_arg <| Util.mk_eq res_t res_t xexp yexp; S.as_arg <| yret] None res_t.pos in
     let forall_y_x_eq_y_yret = 
         mk_Tm_app (inst_effect_fun_with (us@us) env md_pure md_pure.close_wp) 
@@ -806,7 +806,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                         let x = S.new_bv (Some t.pos) t in
                         let xexp = S.bv_to_name x in
                         let us = [env.universe_of env t] in
-                        let wp = mk_Tm_app (inst_effect_fun_with us env md md.ret) [S.as_arg t; S.as_arg xexp] (Some k.n) xexp.pos in
+                        let wp = mk_Tm_app (inst_effect_fun_with us env md md.ret_wp) [S.as_arg t; S.as_arg xexp] (Some k.n) xexp.pos in
                         let cret = Util.lcomp_of_comp <| mk_comp md t wp [RETURN] in
                         let guard = if apply_guard then mk_Tm_app f [S.as_arg xexp] (Some U.ktype0.n) f.pos else f in
                         let eq_ret, _trivial_so_ok_to_discard =
@@ -902,9 +902,15 @@ let maybe_instantiate (env:Env.env) e t =
 (**************************************************************************************)
 (* Generalizing types *)
 (**************************************************************************************)
+let string_of_univs univs =
+  Util.set_elements univs 
+  |> List.map (fun u -> Unionfind.uvar_id u |> string_of_int) |> String.concat ", "
+
 let gen_univs env (x:Util.set<universe_uvar>) : list<univ_name> = 
     if Util.set_is_empty x then []
     else let s = Util.set_difference x (Env.univ_vars env) |> Util.set_elements in
+         if Env.debug env <| Options.Other "Gen" then
+         Util.print1 "univ_vars in env: %s\n" (string_of_univs (Env.univ_vars env));
          let r = Some (Env.get_range env) in
          let u_names = s |> List.map (fun u -> 
             let u_name = Syntax.new_univ_name r in
@@ -918,9 +924,7 @@ let generalize_universes (env:env) (t:term) : tscheme =
     let t = N.normalize [N.Beta] env t in
     let univs = Free.univs t in 
     if Env.debug env <| Options.Other "Gen" 
-    then Util.print1 "univs to gen : %s\n" 
-                (Util.set_elements univs 
-                |> List.map (fun u -> Unionfind.uvar_id u |> string_of_int) |> String.concat ", ");
+    then Util.print1 "univs to gen : %s\n" (string_of_univs univs);
     let gen = gen_univs env univs in
     if Env.debug env <| Options.Other "Gen" 
     then Util.print1 "After generalization: %s\n"  (Print.term_to_string t);
@@ -1154,6 +1158,7 @@ let maybe_lift env e c1 c2 =
     let m1 = Env.norm_eff_name env c1 in
     let m2 = Env.norm_eff_name env c2 in
     if Ident.lid_equals m1 m2
+    || Util.is_pure_effect c1
     then e
     else mk (Tm_meta(e, Meta_monadic_lift(m1, m2))) !e.tk e.pos
 
@@ -1164,3 +1169,44 @@ let maybe_monadic env e c =
     || Ident.lid_equals m Const.effect_GTot_lid //for the cases in prims where Pure is not yet defined
     then e
     else mk (Tm_meta(e, Meta_monadic m)) !e.tk e.pos
+
+let reify_comp env c u_c : term = 
+    let no_reify l = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, Env.get_range env)) in
+    match Env.effect_decl_opt env (Env.norm_eff_name env c.eff_name) with 
+    | None -> no_reify c.eff_name
+    | Some ed -> 
+        if not (ed.qualifiers |> List.contains Reifiable) then
+          no_reify c.eff_name
+        else
+          let c = N.unfold_effect_abbrev env (c.comp()) in
+          let res_typ, wp = c.result_typ, List.hd c.effect_args in
+          let repr = Env.inst_effect_fun_with [u_c] env ed ([], ed.repr) in
+          mk (Tm_app(repr, [as_arg res_typ; wp])) None (Env.get_range env)
+
+let d s = Util.print1 "\x1b[01;36m%s\x1b[00m\n" s
+
+let register_toplevel_definition (env: env_t) (tc_decl: env_t -> sigelt -> (sigelts * env_t)) lident (def: term): env_t * typ =
+  // Debug
+  d (text_of_lid lident);
+  Util.print2 "Registering top-level definition: %s\n%s\n" (text_of_lid lident) (Print.term_to_string def);
+  // Allocate a new top-level name.
+  let fv = S.lid_as_fv lident (Syntax.Util.incr_delta_qualifier def) None in
+  let lbname: lbname = Inr fv in
+  let lb: letbindings = false, [{
+     lbname = lbname;
+     lbunivs = [];
+     lbtyp = S.tun;
+     lbdef = def;
+     lbeff = Const.effect_Tot_lid; //this will be recomputed correctly
+  }] in
+  // Check and push in the environment as a top-level let-binding. [Inline]
+  // triggers a "Impossible: locally nameless" error
+  let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], [ (* Inline *) ]) in
+  let se, env = tc_decl env sig_ctx in
+  begin match se with
+  | [ Sig_let ((_, [ { lbtyp = t } ]), _, _, _) ]->
+      Util.print1 "Inferred type: %s\n" (Print.term_to_string t)
+  | _ ->
+      failwith "nope"
+  end;
+  env, mk (Tm_fvar fv) None Range.dummyRange

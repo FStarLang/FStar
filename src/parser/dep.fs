@@ -291,18 +291,24 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         collect_binders binders
     | Main t
     | Assume (_, _, t)
-    | SubEffect { lift_op = t }
+    | SubEffect { lift_op = NonReifiableLift t }
     | Val (_, _, t) ->
         collect_term t
+    | SubEffect { lift_op = ReifiableLift (t0, t1) } ->
+        collect_term t0; 
+        collect_term t1
     | Tycon (_, ts) ->
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term
-    | NewEffectForFree ed
+    | NewEffectForFree (_, ed)
     | NewEffect (_, ed) ->
         collect_effect_decl ed
     | Pragma _ ->
         ()
+    | TopLevelModule lid ->
+        raise (Err (Util.format1 "Automatic dependency analysis demands one \
+          module per file (module %s not supported)" (string_of_lid lid true)))
 
   and collect_tycon = function
     | TyconAbstract (_, binders, k) ->
@@ -322,10 +328,11 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         List.iter (fun (_, t, _) -> iter_opt t collect_term) identterms
 
   and collect_effect_decl = function
-    | DefineEffect (_, binders, t, decls) ->
+    | DefineEffect (_, binders, t, decls, actions) ->
         collect_binders binders;
         collect_term t;
-        collect_decls decls
+        collect_decls decls;
+        collect_decls actions
     | RedefineEffect (_, binders, t) ->
         collect_binders binders;
         collect_term t
