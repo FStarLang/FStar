@@ -1194,13 +1194,13 @@ let prims : Prims.unit  ->  Prims.string = (fun _24_378 -> (match (()) with
 | None -> begin
 (
 
-let filen = "prims.fst"
-in (match ((find_file filen)) with
+let filename = "prims.fst"
+in (match ((find_file filename)) with
 | Some (result) -> begin
 result
 end
 | None -> begin
-(let _116_511 = (let _116_510 = (FStar_Util.format1 "unable to find required file \"%s\" in the module search path.\n" filen)
+(let _116_511 = (let _116_510 = (FStar_Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
 in FStar_Util.Failure (_116_510))
 in (Prims.raise _116_511))
 end))

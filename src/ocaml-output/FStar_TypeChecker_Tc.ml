@@ -5862,13 +5862,13 @@ end
 (
 
 let set_options = (fun t s -> (match ((FStar_Options.set_options t s)) with
-| FStar_Getopt.GoOn -> begin
+| FStar_Getopt.Success -> begin
 ()
 end
 | FStar_Getopt.Help -> begin
 (Prims.raise (FStar_Syntax_Syntax.Error ((("Failed to process pragma: use \'fstar --help\' to see which options are available"), (r)))))
 end
-| FStar_Getopt.Die (s) -> begin
+| FStar_Getopt.Error (s) -> begin
 (Prims.raise (FStar_Syntax_Syntax.Error ((((Prims.strcat "Failed to process pragma: " s)), (r)))))
 end))
 in (match (p) with
