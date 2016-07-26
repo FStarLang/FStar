@@ -3034,14 +3034,11 @@ let universe_of env e =
            | _ -> universe_of_type e t
            end
          | _ -> 
-//           begin match !e.tk with 
-//           | Some t -> //use the memo-ized type, if there is one
-//             universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env (S.mk t None e.pos)
-//           | _ ->
             let e = N.normalize [N.Beta; N.NoInline] env e in
-            let _, ({res_typ=t}), _ = tc_term env e in
+            let _, ({res_typ=t}), g = tc_term env e in
+            let _ = Rel.solve_deferred_constraints env g in
             universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
-//           end
+
 let check_module env m =
     if Options.debug_any()
     then Util.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);

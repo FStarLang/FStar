@@ -6600,11 +6600,14 @@ end
 let e = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.NoInline)::[]) env e)
 in (
 
-let _57_3930 = (tc_term env e)
-in (match (_57_3930) with
-| (_57_3919, {FStar_Syntax_Syntax.eff_name = _57_3926; FStar_Syntax_Syntax.res_typ = t; FStar_Syntax_Syntax.cflags = _57_3923; FStar_Syntax_Syntax.comp = _57_3921}, _57_3929) -> begin
-(let _148_1731 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::[]) env t)
-in (FStar_All.pipe_left (universe_of_type e) _148_1731))
+let _57_3929 = (tc_term env e)
+in (match (_57_3929) with
+| (_57_3919, {FStar_Syntax_Syntax.eff_name = _57_3926; FStar_Syntax_Syntax.res_typ = t; FStar_Syntax_Syntax.cflags = _57_3923; FStar_Syntax_Syntax.comp = _57_3921}, g) -> begin
+(
+
+let _57_3930 = (FStar_TypeChecker_Rel.solve_deferred_constraints env g)
+in (let _148_1731 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::[]) env t)
+in (FStar_All.pipe_left (universe_of_type e) _148_1731)))
 end)))
 end)
 end))))))
@@ -6614,7 +6617,7 @@ end)
 
 let check_module : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.modul  ->  (FStar_Syntax_Syntax.modul * FStar_TypeChecker_Env.env) = (fun env m -> (
 
-let _57_3933 = if (FStar_Options.debug_any ()) then begin
+let _57_3934 = if (FStar_Options.debug_any ()) then begin
 (let _148_1736 = (FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name)
 in (FStar_Util.print2 "Checking %s: %s\n" (if m.FStar_Syntax_Syntax.is_interface then begin
 "i\'face"
@@ -6626,12 +6629,12 @@ end else begin
 end
 in (
 
-let _57_3937 = (tc_modul env m)
-in (match (_57_3937) with
+let _57_3938 = (tc_modul env m)
+in (match (_57_3938) with
 | (m, env) -> begin
 (
 
-let _57_3938 = if (FStar_Options.dump_module m.FStar_Syntax_Syntax.name.FStar_Ident.str) then begin
+let _57_3939 = if (FStar_Options.dump_module m.FStar_Syntax_Syntax.name.FStar_Ident.str) then begin
 (let _148_1737 = (FStar_Syntax_Print.modul_to_string m)
 in (FStar_Util.print1 "%s\n" _148_1737))
 end else begin
