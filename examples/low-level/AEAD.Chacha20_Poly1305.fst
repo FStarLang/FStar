@@ -87,4 +87,5 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   poly1305_update len_bytes acc r;
   (* Finish MAC *)
   poly1305_finish tag acc s;
-  ()
+
+  pop_frame()

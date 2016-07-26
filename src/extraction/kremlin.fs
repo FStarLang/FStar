@@ -63,7 +63,8 @@ and expr =
 and op =
   | Add | AddW | Sub | SubW | Div | Mult | Mod
   | BOr | BAnd | BXor | BShiftL | BShiftR
-  | Eq | Lt | Lte | Gt | Gte
+  | Eq | Neq | Lt | Lte | Gt | Gte
+  | And | Or | Xor | Not
 
 and branches =
   list<branch>
@@ -85,6 +86,7 @@ and width =
   | Int16
   | Int32
   | Int64
+  | Bool
 
 and constant = width * string
 
@@ -117,7 +119,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 5
+let current_version: version = 6
 
 type file = string * program
 type binary_format = version * list<file>
@@ -139,6 +141,25 @@ let mk_width = function
   | "Int32" -> Some Int32
   | "Int64" -> Some Int64
   | _ -> None
+
+let mk_bool_op = function
+  | "op_Negation" ->
+      Some Not
+  | "op_AmpAmp" ->
+      Some And
+  | "op_BarBar" ->
+      Some Or
+  | "op_Equality" ->
+      Some Eq
+  | "op_disEquality" ->
+      Some Neq
+  | "op_Negation" ->
+      Some Not
+  | _ ->
+      None
+
+let is_bool_op op =
+  mk_bool_op op <> None
 
 let mk_op = function
   | "add" | "op_Plus_Hat" ->
@@ -164,6 +185,8 @@ let mk_op = function
   | "shift_right" | "op_Greater_Greater_Hat" ->
       Some BShiftR
   | "shift_left" | "op_Less_Less_Hat" ->
+      Some BShiftL
+  | "op_Less_Less_Hat" ->
       Some BShiftL
   | "eq" | "op_Equals_Hat" ->
       Some Eq
@@ -383,6 +406,9 @@ and translate_expr env e: expr =
   | MLE_Name ([ "FStar"; m ], op) when (is_machine_int m && is_op op) ->
       EOp (must (mk_op op), must (mk_width m))
 
+  | MLE_Name ([ "Prims" ], op) when (is_bool_op op) ->
+      EOp (must (mk_bool_op op), Bool)
+
   | MLE_Name n ->
       EQualified n
 
@@ -444,6 +470,9 @@ and translate_expr env e: expr =
   // Operators from fixed-width integer modules, e.g. [FStar.Int32.addw].
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], op) }, args) when (is_machine_int m && is_op op) ->
       mk_op_app env (must (mk_width m)) (must (mk_op op)) args
+
+  | MLE_App ({ expr = MLE_Name ([ "Prims" ], op) }, args) when (is_bool_op op) ->
+      mk_op_app env Bool (must (mk_bool_op op)) args
 
   // Fixed-width literals are represented as calls to [FStar.Int32.uint_to_t]
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "uint_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when is_machine_int m ->
