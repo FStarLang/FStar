@@ -14,7 +14,7 @@ all:
 	make -C ../doc/tutorial/code/solutions
 	make -C relational
 	make -C voting
-	make -C low-level
+#	make -C low-level
 	make -C maths
 	make -C paradoxes
 	make -C printf

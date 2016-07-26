@@ -286,6 +286,7 @@ and free_type_vars env t = match (unparen t).tm with
   | Record _
   | Match _
   | TryWith _
+  | Assign _
   | Seq _ -> error "Unexpected type in free_type_vars computation" t t.range
 
 let head_and_args t =
@@ -1486,6 +1487,8 @@ let trans_qual r = function
   | AST.TotalEffect -> TotalEffect
   | AST.DefaultEffect -> DefaultEffect None
   | AST.Effect -> Effect
+  | AST.Reflectable
+  | AST.Reifiable
   | AST.Inline 
   | AST.Irreducible
   | AST.Noeq
@@ -1623,7 +1626,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     | _ -> raise (Error((Print.typ_to_string head) ^ " is not an effect", d.drange))
     end
 
-  | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
+  | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, _actions)) ->
     let env0 = env in
     let env = DesugarEnv.enter_monad_scope env eff_name in
     let env, binders = desugar_binders env eff_binders in
@@ -1665,7 +1668,10 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
         | Some l -> l in
     let src = lookup l.msource in
     let dst = lookup l.mdest in
-    let lift = desugar_typ env l.lift_op in
+    let non_reifiable = function 
+        | NonReifiableLift f -> f
+        | _ -> raise (Error("Unexpected reifiable sub-effect", d.drange)) in
+    let lift = desugar_typ env (non_reifiable l.lift_op) in
     let se = Sig_sub_effect({source=src; target=dst; lift=lift}, d.drange) in
     env, [se]
 

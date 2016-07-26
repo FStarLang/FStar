@@ -493,6 +493,7 @@ and mkPrelude z3options =
                 (declare-fun ConsTerm (Term Term) Term)\n\
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
                 (declare-fun Precedes (Term Term) Term)\n\
+                (define-fun Reify ((x Term)) Term x)\n\
                 (assert (forall ((t Term))\n\
                             (! (implies (exists ((e Term)) (HasType e t))\n\
                                         (Valid t))\n\

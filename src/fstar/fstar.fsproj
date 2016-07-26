@@ -26,9 +26,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--universes --lax --codegen Kremlin --include d:\cygwin\home\protz\code\fstar\examples\low-level\ulib\hyperstack d:\cygwin64\tmp\test.fst</StartArguments>
+    <StartArguments>--universes natST.fst --explicit_deps --codegen OCaml  --trace_error  --debug NatST --debug_level Extraction</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\cygwin\home\protz\code\fstar\src</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\FStar\examples\dm4free\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

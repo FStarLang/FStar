@@ -20,23 +20,24 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Const
 
-val db_to_string     : bv -> string
-val bv_to_string     : bv -> string
-val lid_to_string    : lid -> string
-val term_to_string   : term -> string
-val uvar_to_string   : FStar.Unionfind.uvar<'a> -> string
-val comp_to_string   : comp -> string
-val tag_of_term      : term -> string
-val lbname_to_string : lbname -> string
-val pat_to_string    : pat -> string
-val modul_to_string  : modul -> string
-val lcomp_to_string  : lcomp -> string
-val univ_to_string   : universe -> string
-val sigelt_to_string : sigelt -> string
-val binders_to_string: string -> binders ->string
-val args_to_string   : args -> string
-val eff_decl_to_string: eff_decl -> string
-val subst_to_string  : subst_t -> string
-val const_to_string  : sconst -> string
-val qual_to_string   : qualifier -> string
-val quals_to_string  : list<qualifier> -> string
+val db_to_string      : bv -> string
+val bv_to_string      : bv -> string
+val lid_to_string     : lid -> string
+val term_to_string    : term -> string
+val uvar_to_string    : FStar.Unionfind.uvar<'a> -> string
+val comp_to_string    : comp -> string
+val tag_of_term       : term -> string
+val lbname_to_string  : lbname -> string
+val pat_to_string     : pat -> string
+val modul_to_string   : modul -> string
+val lcomp_to_string   : lcomp -> string
+val univ_to_string    : universe -> string
+val sigelt_to_string  : sigelt -> string
+val binders_to_string : string -> binders ->string
+val args_to_string    : args -> string
+val eff_decl_to_string: bool -> eff_decl -> string
+val subst_to_string   : subst_t -> string
+val const_to_string   : sconst -> string
+val qual_to_string    : qualifier -> string
+val quals_to_string   : list<qualifier> -> string
+val tscheme_to_string : tscheme -> string

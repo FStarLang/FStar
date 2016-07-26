@@ -52,7 +52,7 @@ inline let reader_trivial       (heap:Type) (a:Type)
 
 new_effect {
   READER_h (heap:Type) : result:Type -> wp:reader_wp_h heap result -> Effect
-  with return       = reader_return heap
+  with return_wp    = reader_return heap
      ; bind_wp      = reader_bind_wp heap
      ; if_then_else = reader_if_then_else heap
      ; ite_wp       = reader_ite_wp heap

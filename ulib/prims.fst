@@ -117,6 +117,7 @@ type dtuple2 (a:Type)
 type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 
 assume new type range : Type0
+assume val range_0:range
 assume new type string : Type0
 irreducible let labeled (r:range) (msg:string) (b:Type) = b
 type range_of (#a:Type) (x:a) = range
@@ -129,7 +130,7 @@ let pure_wp   (a:Type) = pure_post a -> GTot pure_pre
 assume type guard_free: Type0 -> Type0
 
 inline let pure_return (a:Type) (x:a) (p:pure_post a) =
-     p x
+     forall (y:a). y==x ==> p y
 
 inline let pure_bind_wp (r1:range) (a:Type) (b:Type)
                    (wp1:pure_wp a) (wp2: (a -> GTot (pure_wp b)))
@@ -157,7 +158,7 @@ inline let pure_trivial  (a:Type) (wp:pure_wp a) = wp (fun (x:a) -> True)
 
 total new_effect { (* The definition of the PURE effect is fixed; no user should ever change this *)
   PURE : a:Type -> wp:pure_wp a -> Effect
-  with return       = pure_return
+  with return_wp       = pure_return
      ; bind_wp      = pure_bind_wp
      ; if_then_else = pure_if_then_else
      ; ite_wp       = pure_ite_wp
@@ -254,6 +255,11 @@ type result (a:Type) =
   | E   : e:exn -> result a
   | Err : msg:string -> result a
 
+(* This new bit for Dijkstra Monads for Free; it has a "double meaning",
+ * either as an alias for reasoning about the direct definitions, or as a marker
+ * for places where a CPS transformation should happen. *)
+effect M (a:Type) = Tot a
+
 assume HasEq_result: (forall (a:Type).{:pattern (hasEq (result a))} hasEq a ==> hasEq (result a))
 
 new_effect DIV = PURE
@@ -321,7 +327,7 @@ inline let st_trivial       (heap:Type) (a:Type)
 
 new_effect {
   STATE_h (heap:Type) : result:Type -> wp:st_wp_h heap result -> Effect
-  with return       = st_return heap
+  with return_wp      = st_return heap
      ; bind_wp      = st_bind_wp heap
      ; if_then_else = st_if_then_else heap
      ; ite_wp       = st_ite_wp heap
@@ -370,7 +376,7 @@ inline let ex_trivial (a:Type) (wp:ex_wp a) = wp (fun r -> True)
 new_effect {
   EXN : result:Type -> wp:ex_wp result -> Effect
   with
-    return       = ex_return
+    return_wp    = ex_return
   ; bind_wp      = ex_bind_wp
   ; if_then_else = ex_if_then_else
   ; ite_wp       = ex_ite_wp
@@ -438,7 +444,7 @@ inline let all_trivial (heap:Type) (a:Type) (wp:all_wp_h heap a) =
 new_effect {
   ALL_h (heap:Type) : a:Type -> wp:all_wp_h heap a -> Effect
   with
-    return       = all_return       heap
+    return_wp    = all_return       heap
   ; bind_wp      = all_bind_wp      heap
   ; if_then_else = all_if_then_else heap
   ; ite_wp       = all_ite_wp       heap

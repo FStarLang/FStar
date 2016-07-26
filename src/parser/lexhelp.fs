@@ -142,6 +142,7 @@ let keywords =
     ALWAYS, "begin"      ,BEGIN;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
+    ALWAYS, "effect_actions",ACTIONS;
     ALWAYS, "else"       ,ELSE;
     ALWAYS, "end"        ,END;
     ALWAYS, "ensures"    ,ENSURES;
@@ -175,6 +176,9 @@ let keywords =
     ALWAYS, "private"    ,PRIVATE;
     FSHARP, "public"     ,PUBLIC;
     ALWAYS, "rec"        ,REC;
+    ALWAYS, "reifiable"  ,REIFIABLE;
+    ALWAYS, "reify"      ,REIFY;
+    ALWAYS, "reflectable",REFLECTABLE;
     ALWAYS, "requires"   ,REQUIRES;
     ALWAYS, "sub_effect" ,SUB_EFFECT;
     ALWAYS, "then"       ,THEN;

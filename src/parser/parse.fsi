@@ -28,6 +28,9 @@ type token =
   | KIND
   | PUBLIC
   | PRIVATE
+  | REIFIABLE
+  | REFLECTABLE
+  | REIFY
   | LBRACE_COLON_PATTERN
   | PIPE_LEFT
   | PIPE_RIGHT
@@ -107,6 +110,7 @@ type token =
   | ELSE
   | END
   | DOT_DOT
+  | ACTIONS
   | BAR_BAR
   | LEQ
   | GEQ
@@ -186,6 +190,9 @@ type tokenId =
     | TOKEN_KIND
     | TOKEN_PUBLIC
     | TOKEN_PRIVATE
+    | TOKEN_REIFIABLE
+    | TOKEN_REFLECTABLE
+    | TOKEN_REIFY
     | TOKEN_LBRACE_COLON_PATTERN
     | TOKEN_PIPE_LEFT
     | TOKEN_PIPE_RIGHT
@@ -265,6 +272,7 @@ type tokenId =
     | TOKEN_ELSE
     | TOKEN_END
     | TOKEN_DOT_DOT
+    | TOKEN_ACTIONS
     | TOKEN_BAR_BAR
     | TOKEN_LEQ
     | TOKEN_GEQ
@@ -333,6 +341,8 @@ type nonTerminalId =
     | NONTERM_new_effect
     | NONTERM_effect_redefinition
     | NONTERM_effect_definition
+    | NONTERM_actions
+    | NONTERM_effect_decls
     | NONTERM_effect_decl
     | NONTERM_more_effect_decls
     | NONTERM_sub_effect

@@ -105,18 +105,18 @@ let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyschem
 
 let lookup_tyvar (g:env) (bt:bv) : mlty = lookup_ty_local g.gamma bt
 
-let lookup_fv_by_lid (g:env) (fv:lident) : ty_or_exp_b =
+let lookup_fv_by_lid (g:env) (lid:lident) : ty_or_exp_b =
     let x = Util.find_map g.gamma (function
-        | Fv (fv', x) when fv_eq_lid fv' fv -> Some x
+        | Fv (fv', x) when fv_eq_lid fv' lid -> Some x
         | _ -> None) in
     match x with
-        | None -> failwith (Util.format1 "free Variable %s not found\n" (fv.nsstr))
+        | None -> failwith (Util.format1 "free Variable %s not found\n" (lid.nsstr))
         | Some y -> y
 
 (*keep this in sync with lookup_fv_by_lid, or call it here. lid does not have position information*)
 let lookup_fv (g:env) (fv:fv) : ty_or_exp_b =
     let x = Util.find_map g.gamma (function
-        | Fv (fv', t) when fv_eq fv fv' -> Some (t)
+        | Fv (fv', t) when fv_eq fv fv' -> Some t
         | _ -> None) in
     match x with
         | None -> failwith (Util.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.fv_name.p) (Print.lid_to_string fv.fv_name.v))
@@ -230,4 +230,21 @@ let mkContext (e:TypeChecker.Env.env) : env =
    let env = { tcenv = e; gamma =[] ; tydefs =[]; currentModule = emptyMlPath} in
    let a = "'a", -1 in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
-   extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst
+   extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst    
+   
+let monad_op_name (ed:Syntax.eff_decl) nm =
+    let module_name, eff_name = ed.mname.ns, ed.mname.ident in
+    let mangled_name = Ident.reserved_prefix ^ eff_name.idText ^ "_" ^ nm in
+    let mangled_lid = Ident.lid_of_ids (module_name@[Ident.id_of_text mangled_name]) in
+    let ml_name = mlpath_of_lident mangled_lid in
+    let lid = Ident.ids_of_lid ed.mname @ [Ident.id_of_text nm] |> Ident.lid_of_ids in
+    ml_name, lid
+
+let action_name (ed:Syntax.eff_decl) (a:Syntax.action) = 
+    monad_op_name ed a.action_name.ident.idText
+
+let bind_name (ed:Syntax.eff_decl) =
+    monad_op_name ed "bind"
+
+let return_name (ed:Syntax.eff_decl) =
+    monad_op_name ed "return"

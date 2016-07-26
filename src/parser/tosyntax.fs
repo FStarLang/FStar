@@ -50,6 +50,8 @@ let trans_qual r = function
   | AST.New  ->          S.New
   | AST.Abstract ->      S.Abstract
   | AST.Opaque ->        FStar.TypeChecker.Errors.warn r "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."; S.Unfoldable
+  | AST.Reflectable ->   S.Reflectable
+  | AST.Reifiable ->     S.Reifiable
   | AST.Noeq ->          S.Noeq
   | AST.DefaultEffect -> raise (Error("The 'default' qualifier on effects is no longer supported", r))
   
@@ -78,36 +80,6 @@ let rec unparen t = match t.tm with
 
 let tm_type_z r = mk_term (Name (lid_of_path ["Type0"] r)) r Kind
 let tm_type r = mk_term (Name (lid_of_path   [ "Type"] r)) r Kind
-
-let rec delta_qualifier t = 
-    let t = Subst.compress t in
-    match t.n with
-        | Tm_delayed _ -> failwith "Impossible"
-        | Tm_fvar fv -> fv.fv_delta 
-        | Tm_bvar _
-        | Tm_name _ 
-        | Tm_match _ 
-        | Tm_uvar _ 
-        | Tm_unknown -> Delta_equational
-        | Tm_type _
-        | Tm_constant _
-        | Tm_arrow _ -> Delta_constant
-        | Tm_uinst(t, _)
-        | Tm_refine({sort=t}, _)
-        | Tm_meta(t, _)
-        | Tm_ascribed(t, _, _)
-        | Tm_app(t, _) 
-        | Tm_abs(_, t, _) 
-        | Tm_let(_, t) -> delta_qualifier t
-
-let incr_delta_qualifier t = 
-    let d = delta_qualifier t in
-    let rec aux d = match d with
-        | Delta_equational -> d
-        | Delta_constant -> Delta_unfoldable 1
-        | Delta_unfoldable i -> Delta_unfoldable (i + 1)
-        | Delta_abstract d -> aux d in
-    aux d
  
 let compile_op arity s =
     let name_of_char = function
@@ -1374,14 +1346,24 @@ let desugar_binders env binders =
       | _ -> raise (Error("Missing name in binder", b.brange))) (env, []) binders in
     env, List.rev binders
 
-let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind eff_decls mk =
+let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind eff_decls actions mk =
     let env0 = env in
-    let env = Env.enter_monad_scope env eff_name in
-    let env, binders = desugar_binders env eff_binders in
+    let monad_env = Env.enter_monad_scope env eff_name in
+    let env, binders = desugar_binders monad_env eff_binders in
     let eff_k = desugar_term (Env.default_total env) eff_kind in
     let env, decls = eff_decls |> List.fold_left (fun (env, out) decl ->
         let env, ses = desugar_decl env decl in
         env, List.hd ses::out) (env, []) in
+    let actions = actions |> List.collect (fun d -> match d.d with 
+        | Tycon(_, [TyconAbbrev(name, _, _, defn)]) -> 
+          let a = { 
+            action_name=Env.qualify env name;
+            action_univs=[];
+            action_defn=desugar_term env defn;
+            action_typ=S.tun
+          } in
+          [a]
+        | _ -> []) in
     let binders = Subst.close_binders binders in
     let eff_k = Subst.close binders eff_k in
     let lookup s =
@@ -1389,8 +1371,17 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
         [], Subst.close binders <| fail_or env (try_lookup_definition env) l in
     let mname       =qualify env0 eff_name in
     let qualifiers  =List.map (trans_qual d.drange) quals in
-    let se = mk mname qualifiers binders eff_k lookup in
+    let se = mk mname qualifiers binders eff_k lookup actions in
     let env = push_sigelt env0 se in
+    let env = actions |> List.fold_left (fun env a -> 
+        //printfn "Pushing action %s\n" a.action_name.str;
+        push_sigelt env (Util.action_as_lb a)) env in
+    let env = 
+        if quals |> List.contains Reflectable
+        then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
+             let refl_decl = S.Sig_declare_typ(reflect_lid, [], S.tun, [S.Assumption; S.Reflectable], d.drange) in
+             push_sigelt env refl_decl
+        else env in
     env, [se]
 
 and desugar_decl env (d:decl) : (env_t * sigelts) = 
@@ -1506,7 +1497,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
             univs       =[];
             binders     =binders;
             signature   =snd (sub ([], ed.signature));
-            ret         =sub ed.ret;
+            ret_wp      =sub ed.ret_wp;
             bind_wp     =sub ed.bind_wp;
             if_then_else=sub ed.if_then_else;
             ite_wp      =sub ed.ite_wp;
@@ -1515,19 +1506,24 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
             assert_p    =sub ed.assert_p;
             assume_p    =sub ed.assume_p;
             null_wp     =sub ed.null_wp;
-            trivial     =sub ed.trivial
+            trivial     =sub ed.trivial;
+
+            repr        = Syntax.tun;
+            bind_repr   = ([], Syntax.tun);
+            return_repr = ([], Syntax.tun);
+            actions     = [];
     } in
     let se = Sig_new_effect(ed, d.drange) in
     let env = push_sigelt env0 se in
     env, [se]
 
-  | NewEffectForFree (RedefineEffect _) ->
+  | NewEffectForFree (_, RedefineEffect _) ->
     failwith "impossible"
 
-  | NewEffectForFree (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
+  | NewEffectForFree (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
     desugar_effect
-      env d [] eff_name eff_binders eff_kind eff_decls
-      (fun mname qualifiers binders eff_k lookup ->
+      env d quals eff_name eff_binders eff_kind eff_decls actions
+      (fun mname qualifiers binders eff_k lookup actions ->
         let dummy_tscheme = [], mk Tm_unknown None Range.dummyRange in
         Sig_new_effect_for_free ({
           mname       = mname;
@@ -1535,29 +1531,36 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           univs       = [];
           binders     = binders;
           signature   = eff_k;
-          ret         = lookup "return";
-          bind_wp     = lookup "bind_wp";
+          ret_wp      = dummy_tscheme;
+          bind_wp     = dummy_tscheme;
           if_then_else= dummy_tscheme;
           ite_wp      = lookup "ite_wp";
-          stronger    = lookup "stronger";
+          stronger    = dummy_tscheme;
           close_wp    = dummy_tscheme;
           assert_p    = dummy_tscheme;
           assume_p    = dummy_tscheme;
           null_wp     = lookup "null_wp";
-          trivial     = dummy_tscheme
+          trivial     = dummy_tscheme;
+          repr        = snd (lookup "repr");
+          bind_repr   = lookup "bind";
+          return_repr = lookup "return";
+          actions     = actions;
       }, d.drange))
 
-  | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls)) ->
+  | NewEffect (quals, DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
     desugar_effect
-      env d quals eff_name eff_binders eff_kind eff_decls
-      (fun mname qualifiers binders eff_k lookup ->
+      env d quals eff_name eff_binders eff_kind eff_decls actions
+      (fun mname qualifiers binders eff_k lookup actions ->
+        let rr =  qualifiers |> List.contains S.Reifiable
+               || qualifiers |> List.contains S.Reflectable in
+        let un_ts = [], Syntax.tun in
         Sig_new_effect({
           mname       = mname;
           qualifiers  = qualifiers;
           univs       = [];
           binders     = binders;
           signature   = eff_k;
-          ret         = lookup "return";
+          ret_wp      = lookup "return_wp";
           bind_wp     = lookup "bind_wp";
           if_then_else= lookup "if_then_else";
           ite_wp      = lookup "ite_wp";
@@ -1566,7 +1569,11 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           assert_p    = lookup "assert_p";
           assume_p    = lookup "assume_p";
           null_wp     = lookup "null_wp";
-          trivial     = lookup "trivial"
+          trivial     = lookup "trivial";
+          repr        = (if rr then snd <| lookup "repr" else S.tun);
+          bind_repr   = (if rr then lookup "bind" else un_ts);
+          return_repr = (if rr then lookup "return" else un_ts);
+          actions     = actions;
       }, d.drange))
 
   | SubEffect l ->
@@ -1575,8 +1582,10 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
         | Some l -> l in
     let src = lookup l.msource in
     let dst = lookup l.mdest in
-    let lift = [],desugar_term env l.lift_op in
-    let se = Sig_sub_effect({source=src; target=dst; lift=lift}, d.drange) in
+    let lift_wp, lift = match l.lift_op with 
+        | NonReifiableLift t -> ([],desugar_term env t), None
+        | ReifiableLift (wp, t) -> ([],desugar_term env wp), Some([], desugar_term env t) in
+    let se = Sig_sub_effect({source=src; target=dst; lift_wp=lift_wp; lift=lift}, d.drange) in
     env, [se]
 
  let desugar_decls env decls =

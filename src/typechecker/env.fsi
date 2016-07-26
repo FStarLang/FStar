@@ -94,7 +94,7 @@ and guard_t = {
 
 type implicits = list<(env * uvar * term * typ * Range.range)>
 type env_t = env
-val initial_env : (env -> term -> term*typ*guard_t) -> solver_t -> lident -> env
+val initial_env : (env -> term -> (term*typ*guard_t)) -> (env -> term -> universe) -> solver_t -> lident -> env
 
 (* Some utilities *)
 val should_verify: env -> bool
@@ -137,6 +137,7 @@ val is_interpreted         : env -> term -> bool
 val is_type_constructor    : env -> lident -> bool
 
 (* Universe instantiation *)
+val new_u_univ             : unit -> universe
 val inst_tscheme           : tscheme -> universes * term 
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 

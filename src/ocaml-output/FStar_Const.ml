@@ -77,6 +77,8 @@ type sconst =
 | Const_bytearray of (FStar_BaseTypes.byte Prims.array * FStar_Range.range)
 | Const_string of (FStar_BaseTypes.byte Prims.array * FStar_Range.range)
 | Const_range of FStar_Range.range
+| Const_reify
+| Const_reflect of FStar_Ident.lid
 
 
 let is_Const_effect = (fun _discr_ -> (match (_discr_) with
@@ -160,6 +162,24 @@ false
 end))
 
 
+let is_Const_reify = (fun _discr_ -> (match (_discr_) with
+| Const_reify (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let is_Const_reflect = (fun _discr_ -> (match (_discr_) with
+| Const_reflect (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
 let ___Const_bool____0 = (fun projectee -> (match (projectee) with
 | Const_bool (_26_3) -> begin
 _26_3
@@ -199,6 +219,12 @@ end))
 let ___Const_range____0 = (fun projectee -> (match (projectee) with
 | Const_range (_26_21) -> begin
 _26_21
+end))
+
+
+let ___Const_reflect____0 = (fun projectee -> (match (projectee) with
+| Const_reflect (_26_24) -> begin
+_26_24
 end))
 
 

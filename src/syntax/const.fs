@@ -28,14 +28,16 @@ let prims_lid    = p2l ["Prims"]
 let fstar_ns_lid = p2l ["FStar"]
 
 (* Primitive types *)
-let bool_lid   = pconst  "bool"
-let unit_lid   = pconst  "unit"
-let string_lid = pconst  "string"
-let bytes_lid  = pconst  "bytes"
-let int_lid    = pconst  "int"
-let exn_lid    = pconst  "exn"
-let list_lid   = pconst  "list"
-let pattern_lid = pconst "pattern"
+let bool_lid     = pconst "bool"
+let unit_lid     = pconst "unit"
+let string_lid   = pconst "string"
+let bytes_lid    = pconst "bytes"
+let int_lid      = pconst "int"
+let exn_lid      = pconst "exn"
+let list_lid     = pconst "list"
+let option_lid   = pconst "option"
+let either_lid   = pconst "either"
+let pattern_lid  = pconst "pattern"
 let precedes_lid = pconst "precedes"
 let lex_t_lid    = pconst "lex_t"
 let lexcons_lid  = pconst "LexCons"
@@ -43,6 +45,7 @@ let lextop_lid   = pconst "LexTop"
 let smtpat_lid   = pconst "SMTPat"
 let smtpatT_lid  = pconst "SMTPatT"
 let smtpatOr_lid = pconst "SMTPatOr"
+let monadic_lid  = pconst "M"
 
 let int8_lid   = p2l ["FStar"; "Int8"; "t"]
 let uint8_lid  = p2l ["FStar"; "UInt8"; "t"]
@@ -166,3 +169,4 @@ let decreases_lid  = pconst "decreases"
 let range_lid      = pconst "range"
 let range_of_lid   = pconst "range_of"
 let labeled_lid    = pconst "labeled"
+let range_0        = pconst "range_0"
