@@ -464,7 +464,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let fsym = varops.fresh "f", Term_sort in
              let f = mkFreeV fsym in
              let app = mk_Apply f vars in
-             let pre_opt, res_t = Util.pure_or_ghost_pre_and_post env.tcenv res in
+             let pre_opt, res_t = Util.pure_or_ghost_pre_and_post ({env.tcenv with lax=true}) res in
              let res_pred, decls' = encode_term_pred None res_t env' app in
              let guards, guard_decls = match pre_opt with
                 | None -> mk_and_l guards, []
@@ -1714,7 +1714,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           let tm' = N.normalize [N.Beta; N.Reify; N.Inline; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv tm in
           let lb_typ = 
             let formals, comp = Util.arrow_formals_comp lb.lbtyp in
-            let reified_typ = FStar.TypeChecker.Util.reify_comp env.tcenv (Util.lcomp_of_comp comp) U_unknown in
+            let reified_typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) (Util.lcomp_of_comp comp) U_unknown in
             Util.arrow formals (S.mk_Total reified_typ) in
           let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in
           (* printfn "%s: Reified %s\nto %s\n" (Print.lbname_to_string lb.lbname) (Print.term_to_string tm) (Print.term_to_string tm'); *)
