@@ -113,7 +113,7 @@ let as_frag d ds =
 
 /* These are artificial */
 %token <string> LEX_FAILURE
-%token COMMENT WHITESPACE HASH_LINE HASH_LIGHT HASH_IF HASH_ELSE HASH_ENDIF INACTIVECODE LINE_COMMENT STRING_TEXT EOF
+%token EOF
 
 %nonassoc THEN
 %nonassoc ELSE
