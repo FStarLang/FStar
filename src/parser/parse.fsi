@@ -107,7 +107,7 @@ type token =
   | PRAGMA_RESET_OPTIONS
   | LET of (bool)
   | CHAR of (char)
-  | IEEE64 of (double)
+  | IEEE64 of (float)
   | UINT64 of (string)
   | UINT32 of (string)
   | UINT16 of (string)
