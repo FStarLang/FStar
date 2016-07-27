@@ -136,7 +136,6 @@ let keywords =
   [ ALWAYS, "abstract"   ,ABSTRACT;
     ALWAYS, "noeq"       ,NOEQUALITY;
     ALWAYS, "and"        ,AND;
-    ALWAYS, "as"         ,AS;
     ALWAYS, "assert"     ,ASSERT;
     ALWAYS, "assume"     ,ASSUME;
     ALWAYS, "begin"      ,BEGIN;
@@ -188,18 +187,6 @@ let keywords =
     ALWAYS, "with"       ,WITH;
     ALWAYS, "_"          ,UNDERSCORE;
   ]
-(*------- reserved keywords which are ml-compatibility ids *)
-  @ List.map (fun s -> (FSHARP,s,RESERVED))
-    [ "atomic"; "break";
-      "checked"; "component"; "constraint"; "constructor"; "continue";
-      "eager";
-      "fixed"; "functor"; "global";
-      "include";  (* "instance"; *)
-      "mixin";
-      (* "object";  *)
-      "parallel"; "process"; "protected"; "pure"; (* "pattern"; *)
-      "sealed"; "trait";  "tailcall";
-      "volatile" ]
 let stringKeywords = List.map (fun (_, w, _) -> w) keywords
 
 (*------------------------------------------------------------------------
@@ -214,8 +201,6 @@ let kwd_table =
     List.iter (fun (mode,keyword,token) -> Util.smap_add tab keyword token) keywords;
     tab
 let kwd s = Util.smap_try_find kwd_table s
-exception ReservedKeyword of string * range
-exception IndentationProblem of string * range
 
 type lexargs = {
   getSourceDirectory: (unit -> string);
@@ -230,13 +215,7 @@ let mkLexargs (srcdir,filename,(contents:string)) = {
 let kwd_or_id args (r:Range.range) s =
   match kwd s with
     | Some v ->
-      if v = RESERVED then
-        begin
-          Util.print_string (Util.format2 "The keyword '%s' is reserved for future use by F#. (%s)" s (string_of_range r));
-          (* This will give a proper syntax error at the right location for true F# files. *)
-          IDENT (intern_string(s))
-        end
-      else v
+      v
     | None ->
       match s with
         | "__SOURCE_DIRECTORY__" ->

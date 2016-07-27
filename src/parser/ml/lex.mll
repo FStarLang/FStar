@@ -184,11 +184,22 @@ let decimal    = (float | integer) ('m' | 'M')
 let xieee32    = xinteger 'l' 'f'
 let xieee64    = xinteger 'L' 'F'
 
+let op_prefix  = ['!' '~' '?']
+let op_infix0a = ['|'] (* left *)
+let op_infix0b = ['&'] (* left *)
+let op_infix0c = ['=' '<' '>'] (* left *)
+let op_infix0d = ['$'] (* left *)
+
+let op_infix0  = op_infix0a | op_infix0b | op_infix0c | op_infix0d
+let op_infix1  = ['@' '^'] (* right *)
+let op_infix2  = ['+' '-'] (* left *)
+let op_infix3  = ['*' '/' '%'] (* left *)
+let symbolchar = op_prefix | op_infix0 | op_infix1 | op_infix2 | op_infix3 | ['.' ':']
+
+
 (* -------------------------------------------------------------------- *)
 let escape_char = ('\\' ( '\\' | "\"" | '\'' | 'n' | 't' | 'b' | 'r'))
 let char        = [^'\\''\n''\r''\t''\b'] | escape_char
-let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'|'|'!'|'^'|'?'
-let custom_op = custom_op_char (custom_op_char | '>' | '*' | '%')*
 
 (* -------------------------------------------------------------------- *)
 let constructor_start_char = upper
@@ -285,6 +296,7 @@ rule token = parse
      { IDENT id }
 
  | "~"         { TILDE (L.lexeme lexbuf) }
+ | "-"         { MINUS }
  | "/\\"       { CONJUNCTION }
  | "\\/"       { DISJUNCTION }
  | "<:"        { SUBTYPE }
@@ -298,7 +310,6 @@ rule token = parse
  | "()"        { LPAREN_RPAREN }
  | '('         { LPAREN }
  | ')'         { RPAREN }
- | '*'         { STAR }
  | ','         { COMMA }
  | "~>"        { SQUIGGLY_RARROW }
  | "->"        { RARROW }
@@ -317,7 +328,7 @@ rule token = parse
  | "!{"        { BANG_LBRACE }
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
- | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else CUSTOM_OP("<")  }
+ | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else OP_INFIX0c("<")  }
  | ">"         { if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser lexbuf }
  | "]"         { RBRACK }
  | "|]"        { BAR_RBRACK }
@@ -327,16 +338,24 @@ rule token = parse
  | "!"         { BANG }
  | "$"         { DOLLAR }
  | "\\"        { BACKSLASH }
- | ('/' | '%') as op { DIV_MOD_OP    (String.of_char op) }
- | '+'         { PLUS_OP }
- | '-'         { MINUS_OP }
- | custom_op   {CUSTOM_OP (L.lexeme lexbuf) }
+
+ (* Operators. *)
+ | op_prefix  symbolchar* { OPPREFIX (L.lexeme lexbuf) }
+ | op_infix0a symbolchar* { OPINFIX0a (L.lexeme lexbuf) }
+ | op_infix0b symbolchar* { OPINFIX0b (L.lexeme lexbuf) }
+ | op_infix0c symbolchar* { OPINFIX0c (L.lexeme lexbuf) }
+ | op_infix0d symbolchar* { OPINFIX0d (L.lexeme lexbuf) }
+ | op_infix1  symbolchar* { OPINFIX1 (L.lexeme lexbuf) }
+ | op_infix2  symbolchar* { OPINFIX2 (L.lexeme lexbuf) }
+ | "**"       symbolchar* { OPINFIX4 (L.lexeme lexbuf) }
+ | op_infix3  symbolchar* { OPINFIX3 (L.lexeme lexbuf) }
+
 
  | _ { failwith "unexpected char" }
  | eof { lc := 1; EOF }
 
 and custom_op_parser = parse
- | custom_op_char * {CUSTOM_OP(">" ^  L.lexeme lexbuf)}
+ | symbolchar* { OPINFIX0c (">" ^ L.lexeme lexbuf)}
 
 and string buffer = parse
  |  '\\' (newline as x) anywhite*

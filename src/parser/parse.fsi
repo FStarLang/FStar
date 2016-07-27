@@ -2,9 +2,17 @@
 module FStar.Parser.Parse
 type token = 
   | EOF
-  | LEX_FAILURE of (string)
-  | PLUS_OP
-  | MINUS_OP
+  | OPPREFIX of (string)
+  | OPINFIX0a of (string)
+  | OPINFIX0b of (string)
+  | OPINFIX0c of (string)
+  | OPINFIX0d of (string)
+  | OPINFIX1 of (string)
+  | OPINFIX2 of (string)
+  | OPINFIX3 of (string)
+  | OPINFIX4 of (string)
+  | MINUS
+  | COLON_EQUALS
   | REQUIRES
   | ENSURES
   | NEW_EFFECT
@@ -18,12 +26,9 @@ type token =
   | REFLECTABLE
   | REIFY
   | LBRACE_COLON_PATTERN
-  | PIPE_LEFT
-  | PIPE_RIGHT
   | BAR
   | RBRACK
   | RBRACE
-  | MINUS
   | DOLLAR
   | BAR_RBRACK
   | UNDERSCORE
@@ -31,17 +36,14 @@ type token =
   | LENS_PAREN_RIGHT
   | SEMICOLON_SEMICOLON
   | EQUALS
-  | EQUALS_EQUALS
   | PERCENT_LBRACK
   | LBRACK
   | LBRACK_BAR
   | LBRACE
-  | BACKSLASH
   | BANG_LBRACE
   | DOT
   | COLON
   | COLON_COLON
-  | COLON_EQUALS
   | SEMICOLON
   | IFF
   | IMPLIES
@@ -51,11 +53,9 @@ type token =
   | WITH
   | HASH
   | AMP
-  | AMP_AMP
   | LPAREN
   | RPAREN
   | LPAREN_RPAREN
-  | STAR
   | COMMA
   | LARROW
   | RARROW
@@ -78,24 +78,16 @@ type token =
   | FUNCTION
   | IF
   | IN
-  | RESERVED
   | MODULE
   | DEFAULT
   | AND
-  | AS
   | ASSERT
   | BEGIN
   | ELSE
   | END
   | ACTIONS
-  | BAR_BAR
-  | LEQ
-  | GEQ
-  | LESS
-  | LESSLESS
   | TYP_APP_LESS
   | TYP_APP_GREATER
-  | LESSGREATER
   | SUBTYPE
   | SUBKIND
   | BANG
@@ -113,8 +105,6 @@ type token =
   | PRAGMALIGHT
   | PRAGMA_SET_OPTIONS
   | PRAGMA_RESET_OPTIONS
-  | LQUOTE of (string * bool)
-  | RQUOTE of (string * bool)
   | LET of (bool)
   | CHAR of (char)
   | IEEE64 of (double)
@@ -125,23 +115,27 @@ type token =
   | INT of (string * bool)
   | INT64 of (string * bool)
   | INT32 of (string * bool)
-  | INT32_DOT_DOT of (string * bool)
   | INT16 of (string * bool)
   | INT8 of (string * bool)
-  | CUSTOM_OP of (string)
   | TILDE of (string)
-  | DIV_MOD_OP of (string)
   | TVAR of (string)
   | NAME of (string)
-  | IDENT_LESS of (string)
   | IDENT of (string)
   | STRING of (bytes)
   | BYTEARRAY of (bytes)
 type tokenId = 
     | TOKEN_EOF
-    | TOKEN_LEX_FAILURE
-    | TOKEN_PLUS_OP
-    | TOKEN_MINUS_OP
+    | TOKEN_OPPREFIX
+    | TOKEN_OPINFIX0a
+    | TOKEN_OPINFIX0b
+    | TOKEN_OPINFIX0c
+    | TOKEN_OPINFIX0d
+    | TOKEN_OPINFIX1
+    | TOKEN_OPINFIX2
+    | TOKEN_OPINFIX3
+    | TOKEN_OPINFIX4
+    | TOKEN_MINUS
+    | TOKEN_COLON_EQUALS
     | TOKEN_REQUIRES
     | TOKEN_ENSURES
     | TOKEN_NEW_EFFECT
@@ -155,12 +149,9 @@ type tokenId =
     | TOKEN_REFLECTABLE
     | TOKEN_REIFY
     | TOKEN_LBRACE_COLON_PATTERN
-    | TOKEN_PIPE_LEFT
-    | TOKEN_PIPE_RIGHT
     | TOKEN_BAR
     | TOKEN_RBRACK
     | TOKEN_RBRACE
-    | TOKEN_MINUS
     | TOKEN_DOLLAR
     | TOKEN_BAR_RBRACK
     | TOKEN_UNDERSCORE
@@ -168,17 +159,14 @@ type tokenId =
     | TOKEN_LENS_PAREN_RIGHT
     | TOKEN_SEMICOLON_SEMICOLON
     | TOKEN_EQUALS
-    | TOKEN_EQUALS_EQUALS
     | TOKEN_PERCENT_LBRACK
     | TOKEN_LBRACK
     | TOKEN_LBRACK_BAR
     | TOKEN_LBRACE
-    | TOKEN_BACKSLASH
     | TOKEN_BANG_LBRACE
     | TOKEN_DOT
     | TOKEN_COLON
     | TOKEN_COLON_COLON
-    | TOKEN_COLON_EQUALS
     | TOKEN_SEMICOLON
     | TOKEN_IFF
     | TOKEN_IMPLIES
@@ -188,11 +176,9 @@ type tokenId =
     | TOKEN_WITH
     | TOKEN_HASH
     | TOKEN_AMP
-    | TOKEN_AMP_AMP
     | TOKEN_LPAREN
     | TOKEN_RPAREN
     | TOKEN_LPAREN_RPAREN
-    | TOKEN_STAR
     | TOKEN_COMMA
     | TOKEN_LARROW
     | TOKEN_RARROW
@@ -215,24 +201,16 @@ type tokenId =
     | TOKEN_FUNCTION
     | TOKEN_IF
     | TOKEN_IN
-    | TOKEN_RESERVED
     | TOKEN_MODULE
     | TOKEN_DEFAULT
     | TOKEN_AND
-    | TOKEN_AS
     | TOKEN_ASSERT
     | TOKEN_BEGIN
     | TOKEN_ELSE
     | TOKEN_END
     | TOKEN_ACTIONS
-    | TOKEN_BAR_BAR
-    | TOKEN_LEQ
-    | TOKEN_GEQ
-    | TOKEN_LESS
-    | TOKEN_LESSLESS
     | TOKEN_TYP_APP_LESS
     | TOKEN_TYP_APP_GREATER
-    | TOKEN_LESSGREATER
     | TOKEN_SUBTYPE
     | TOKEN_SUBKIND
     | TOKEN_BANG
@@ -250,8 +228,6 @@ type tokenId =
     | TOKEN_PRAGMALIGHT
     | TOKEN_PRAGMA_SET_OPTIONS
     | TOKEN_PRAGMA_RESET_OPTIONS
-    | TOKEN_LQUOTE
-    | TOKEN_RQUOTE
     | TOKEN_LET
     | TOKEN_CHAR
     | TOKEN_IEEE64
@@ -262,15 +238,11 @@ type tokenId =
     | TOKEN_INT
     | TOKEN_INT64
     | TOKEN_INT32
-    | TOKEN_INT32_DOT_DOT
     | TOKEN_INT16
     | TOKEN_INT8
-    | TOKEN_CUSTOM_OP
     | TOKEN_TILDE
-    | TOKEN_DIV_MOD_OP
     | TOKEN_TVAR
     | TOKEN_NAME
-    | TOKEN_IDENT_LESS
     | TOKEN_IDENT
     | TOKEN_STRING
     | TOKEN_BYTEARRAY
@@ -301,7 +273,6 @@ type nonTerminalId =
     | NONTERM_assumeTag
     | NONTERM_tyconDefinition
     | NONTERM_tyconDefinitions
-    | NONTERM_ident_opt
     | NONTERM_maybeFocus
     | NONTERM_letqualifier
     | NONTERM_letbindings
@@ -312,7 +283,6 @@ type nonTerminalId =
     | NONTERM_listPattern
     | NONTERM_consPattern
     | NONTERM_appPattern
-    | NONTERM_compositePattern
     | NONTERM_atomicPatterns
     | NONTERM_atomicPattern
     | NONTERM_atomicPattern2
@@ -371,18 +341,11 @@ type nonTerminalId =
     | NONTERM_tmConjunction
     | NONTERM_tmTuple
     | NONTERM_tmEq
-    | NONTERM_tmOr
-    | NONTERM_tmAnd
-    | NONTERM_cmpTerm
-    | NONTERM_comparisonOp
     | NONTERM_tmCons
     | NONTERM_product
     | NONTERM_productDomain
     | NONTERM_dtupleTerm
     | NONTERM_arithTerm
-    | NONTERM_plusOp
-    | NONTERM_minusOp
-    | NONTERM_starDivModTerm
     | NONTERM_refinementTerm
     | NONTERM_aqual
     | NONTERM_refineOpt
@@ -390,9 +353,6 @@ type nonTerminalId =
     | NONTERM_appTerm
     | NONTERM_formula
     | NONTERM_atomicTerm
-    | NONTERM_recdFieldTypes
-    | NONTERM_moreRecdFieldTypes
-    | NONTERM_recdFieldType
     | NONTERM_maybeFieldProjections
     | NONTERM_targs
     | NONTERM_maybeInsts
@@ -409,8 +369,6 @@ type nonTerminalId =
     | NONTERM_hasSort
     | NONTERM_maybeHash
     | NONTERM_hashAtomicTerms
-    | NONTERM_atomicTerms
-    | NONTERM_consTerm
     | NONTERM_tupleN
     | NONTERM_constant
 /// This function maps tokens to integer indexes

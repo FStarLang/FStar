@@ -93,6 +93,3 @@ let g (r:ref int) (s:ref int) : ST unit
   = let x = f r in
     let y = f s in
     r := x + y
-    
-
-
