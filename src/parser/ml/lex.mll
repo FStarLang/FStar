@@ -38,7 +38,6 @@
     Hashtbl.add keywords "abstract"      ABSTRACT    ;
     Hashtbl.add keywords "noeq"          NOEQUALITY  ;
     Hashtbl.add keywords "and"           AND         ;
-    Hashtbl.add keywords "as"            AS          ;
     Hashtbl.add keywords "assert"        ASSERT      ;
     Hashtbl.add keywords "assume"        ASSUME      ;
     Hashtbl.add keywords "begin"         BEGIN       ;
@@ -305,8 +304,6 @@ rule token = parse
  | "|)"        { LENS_PAREN_RIGHT }
  | '#'         { HASH }
  | "&"         { AMP }
- | "&&"        { AMP_AMP }
- | "||"        { BAR_BAR }
  | "()"        { LPAREN_RPAREN }
  | '('         { LPAREN }
  | ')'         { RPAREN }
@@ -328,7 +325,7 @@ rule token = parse
  | "!{"        { BANG_LBRACE }
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
- | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else OP_INFIX0c("<")  }
+ | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else OPINFIX0c("<")  }
  | ">"         { if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser lexbuf }
  | "]"         { RBRACK }
  | "|]"        { BAR_RBRACK }
@@ -337,7 +334,6 @@ rule token = parse
  | "}"         { RBRACE }
  | "!"         { BANG }
  | "$"         { DOLLAR }
- | "\\"        { BACKSLASH }
 
  (* Operators. *)
  | op_prefix  symbolchar* { OPPREFIX (L.lexeme lexbuf) }

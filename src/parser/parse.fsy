@@ -88,7 +88,7 @@ let as_frag d ds =
 %token <string> UINT16
 %token <string> UINT32
 %token <string> UINT64
-%token <double> IEEE64
+%token <float> IEEE64
 %token <char> CHAR
 %token <bool> LET
 %token FORALL EXISTS ASSUME NEW LOGIC IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT NOEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
@@ -118,7 +118,7 @@ let as_frag d ds =
 
 %nonassoc COLON_EQUALS
 %left     OPINFIX0a
-%left     OPINFIX0b AMP
+%left     OPINFIX0b
 %left     OPINFIX0c EQUALS
 %left     OPINFIX0d
 %right    OPINFIX1

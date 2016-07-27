@@ -30,7 +30,6 @@ let check_extension fn =
 
 let parse fn =
   FStar_Parser_Util.warningHandler := (function
-    | FStar_Parser_Lexhelp.ReservedKeyword(m,s) -> Printf.printf "%s:%s" (FStar_Range.string_of_range s) m
     | e -> Printf.printf "There was some warning (TODO)\n");
 
   let filename,lexbuf = match fn with

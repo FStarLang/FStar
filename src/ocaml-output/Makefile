@@ -4,7 +4,8 @@ FSTAR_HOME=../..
 
 OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28" -annot
 
-MENHIR=menhir --explain #--infer -la 1 --table
+#MENHIR=menhir --explain --infer -la 1 --table
+MENHIR=ocamlyacc
 OCAMLC=ocamlfind ocamlc $(OPTIONS)
 OCAMLOPT=ocamlfind ocamlopt $(OPTIONS)
 OCAMLDEP=ocamldep
@@ -61,10 +62,22 @@ all:
 prep: parser copy_lib_files depend version
 
 parser:
-	cp ../parser/parse.fsy parse.mly
-	# open FStar.Foo -> open FStar_Foo ; remove // comment and # comment
-	sed -i.bak -e '/^open/ s/\./_/g ; s/^\/\/.*//g ; s/^\#.*//g' parse.mly
+	cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
 	$(MENHIR) parse.mly
+	rm -f FStar_Parser_Parse.ml
+	echo "open Prims" > FStar_Parser_Parse.ml
+	echo "open FStar_List" >> FStar_Parser_Parse.ml
+	echo "open FStar_Util" >> FStar_Parser_Parse.ml
+	echo "open FStar_Range" >> FStar_Parser_Parse.ml
+	echo "open FStar_Options" >> FStar_Parser_Parse.ml
+	echo "open FStar_Absyn_Syntax" >> FStar_Parser_Parse.ml
+	echo "open FStar_Absyn_Const" >> FStar_Parser_Parse.ml
+	echo "open FStar_Absyn_Util" >> FStar_Parser_Parse.ml
+	echo "open FStar_Parser_AST" >> FStar_Parser_Parse.ml
+	echo "open FStar_Parser_Util" >> FStar_Parser_Parse.ml
+	echo "open FStar_Const" >> FStar_Parser_Parse.ml
+	echo "open FStar_Ident" >> FStar_Parser_Parse.ml
+	cat parse.ml >> FStar_Parser_Parse.ml
 	ocamllex ../parser/ml/lex.mll -o FStar_Parser_LexFStar.ml
 	cp ../parser/ml/parseit.ml FStar_Parser_ParseIt.ml
 
