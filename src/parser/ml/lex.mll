@@ -52,8 +52,6 @@
     Hashtbl.add keywords "exists"        EXISTS      ;
     Hashtbl.add keywords "false"         FALSE       ;
     Hashtbl.add keywords "False"         L_FALSE     ;
-    Hashtbl.add keywords "finally"       FINALLY     ;
-    Hashtbl.add keywords "for"           FOR         ;
     Hashtbl.add keywords "forall"        FORALL      ;
     Hashtbl.add keywords "fun"           FUN         ;
     Hashtbl.add keywords "function"      FUNCTION    ;
@@ -62,7 +60,6 @@
     Hashtbl.add keywords "in"            IN          ;
     Hashtbl.add keywords "inline"        INLINE      ;
     Hashtbl.add keywords "irreducible"   IRREDUCIBLE ;
-    Hashtbl.add keywords "lazy"          LAZY        ;
     Hashtbl.add keywords "let"           (LET false) ;
     Hashtbl.add keywords "logic"         LOGIC       ;
     Hashtbl.add keywords "match"         MATCH       ;
@@ -73,10 +70,8 @@
     Hashtbl.add keywords "new_effect_for_free" NEW_EFFECT_FOR_FREE  ;
     Hashtbl.add keywords "of"            OF          ;
     Hashtbl.add keywords "open"          OPEN        ;
-    Hashtbl.add keywords "or"            OR          ;
     Hashtbl.add keywords "opaque"        OPAQUE      ;
     Hashtbl.add keywords "private"       PRIVATE     ;
-    Hashtbl.add keywords "public"        PUBLIC      ;
     Hashtbl.add keywords "rec"           REC         ;
     Hashtbl.add keywords "reifiable"     REIFIABLE   ;
     Hashtbl.add keywords "reify"         REIFY       ;
@@ -84,7 +79,6 @@
     Hashtbl.add keywords "requires"      REQUIRES    ;
     Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
     Hashtbl.add keywords "then"          THEN        ;
-    Hashtbl.add keywords "to"            TO          ;
     Hashtbl.add keywords "total"         TOTAL       ;
     Hashtbl.add keywords "true"          TRUE        ;
     Hashtbl.add keywords "True"          L_TRUE      ;

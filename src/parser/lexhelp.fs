@@ -110,7 +110,7 @@ let unicodegraph_long s =
       let low = hexdigit (char_at s 4) * 4096 + hexdigit (char_at s 5) * 256 + hexdigit (char_at s 6) * 16 + hexdigit (char_at s 7) in
       if high = 0 then None, uint16_of_int low
       else
-      (* A surrogate pair - see http://www.unicode.org/unicode/uni2book/ch03.pdf, section 3.7 *)
+      // A surrogate pair - see http://www.unicode.org/unicode/uni2book/ch03.pdf, section 3.7
         Some (uint16_of_int (0xD800 + ((high * 0x10000 + low - 0x10000) / 0x400))),
         uint16_of_int (0xDF30 + ((high * 0x10000 + low - 0x10000) % 0x400))
 
@@ -150,8 +150,6 @@ let keywords =
     ALWAYS, "exists"     ,EXISTS;
     ALWAYS, "false"      ,FALSE;
     ALWAYS, "False"      ,L_FALSE;
-    ALWAYS, "finally"    ,FINALLY;
-    ALWAYS, "for"        ,FOR;
     ALWAYS, "forall"     ,FORALL;
     ALWAYS, "fun"        ,FUN;
     ALWAYS, "function"   ,FUNCTION;
@@ -160,7 +158,6 @@ let keywords =
     ALWAYS, "in"         ,IN;
     ALWAYS, "inline"     ,INLINE;
     ALWAYS, "irreducible",IRREDUCIBLE;
-    ALWAYS, "lazy"       ,LAZY;
     ALWAYS, "let"        ,LET(false);
     ALWAYS, "logic"      ,LOGIC;
     ALWAYS, "match"      ,MATCH;
@@ -171,10 +168,8 @@ let keywords =
     ALWAYS, "new_effect_for_free", NEW_EFFECT_FOR_FREE;
     ALWAYS, "of"         ,OF;
     ALWAYS, "open"       ,OPEN;
-    ALWAYS, "or"         ,OR;
     ALWAYS, "opaque"     ,OPAQUE;
     ALWAYS, "private"    ,PRIVATE;
-    FSHARP, "public"     ,PUBLIC;
     ALWAYS, "rec"        ,REC;
     ALWAYS, "reifiable"  ,REIFIABLE;
     ALWAYS, "reify"      ,REIFY;
@@ -182,7 +177,6 @@ let keywords =
     ALWAYS, "requires"   ,REQUIRES;
     ALWAYS, "sub_effect" ,SUB_EFFECT;
     ALWAYS, "then"       ,THEN;
-    ALWAYS, "to"         ,TO;
     ALWAYS, "total"      ,TOTAL;
     ALWAYS, "true"       ,TRUE;
     ALWAYS, "True"       ,L_TRUE;

@@ -13,11 +13,8 @@ type token =
   | STRING_TEXT
   | EOF
   | LEX_FAILURE of (string)
-  | BLAH
   | PLUS_OP
   | MINUS_OP
-  | BAR_FOCUS
-  | PRINT
   | REQUIRES
   | ENSURES
   | NEW_EFFECT
@@ -26,7 +23,6 @@ type token =
   | SQUIGGLY_RARROW
   | TOTAL
   | KIND
-  | PUBLIC
   | PRIVATE
   | REIFIABLE
   | REFLECTABLE
@@ -55,8 +51,6 @@ type token =
   | DOT
   | COLON
   | COLON_COLON
-  | ATSIGN
-  | HAT
   | COLON_EQUALS
   | SEMICOLON
   | IFF
@@ -68,7 +62,6 @@ type token =
   | HASH
   | AMP
   | AMP_AMP
-  | QUOTE
   | LPAREN
   | RPAREN
   | LPAREN_RPAREN
@@ -77,29 +70,24 @@ type token =
   | LARROW
   | RARROW
   | OPEN
-  | OR
   | REC
   | MUTABLE
   | THEN
-  | TO
   | TRUE
   | L_TRUE
   | TRY
   | TYPE
   | EFFECT
   | VAL
-  | LAZY
   | MATCH
   | OF
   | EXCEPTION
   | FALSE
   | L_FALSE
-  | FOR
   | FUN
   | FUNCTION
   | IF
   | IN
-  | FINALLY
   | RESERVED
   | MODULE
   | DEFAULT
@@ -109,7 +97,6 @@ type token =
   | BEGIN
   | ELSE
   | END
-  | DOT_DOT
   | ACTIONS
   | BAR_BAR
   | LEQ
@@ -126,8 +113,6 @@ type token =
   | EXISTS
   | ASSUME
   | NEW
-  | QUERY
-  | DEFINE
   | LOGIC
   | IRREDUCIBLE
   | UNFOLDABLE
@@ -175,11 +160,8 @@ type tokenId =
     | TOKEN_STRING_TEXT
     | TOKEN_EOF
     | TOKEN_LEX_FAILURE
-    | TOKEN_BLAH
     | TOKEN_PLUS_OP
     | TOKEN_MINUS_OP
-    | TOKEN_BAR_FOCUS
-    | TOKEN_PRINT
     | TOKEN_REQUIRES
     | TOKEN_ENSURES
     | TOKEN_NEW_EFFECT
@@ -188,7 +170,6 @@ type tokenId =
     | TOKEN_SQUIGGLY_RARROW
     | TOKEN_TOTAL
     | TOKEN_KIND
-    | TOKEN_PUBLIC
     | TOKEN_PRIVATE
     | TOKEN_REIFIABLE
     | TOKEN_REFLECTABLE
@@ -217,8 +198,6 @@ type tokenId =
     | TOKEN_DOT
     | TOKEN_COLON
     | TOKEN_COLON_COLON
-    | TOKEN_ATSIGN
-    | TOKEN_HAT
     | TOKEN_COLON_EQUALS
     | TOKEN_SEMICOLON
     | TOKEN_IFF
@@ -230,7 +209,6 @@ type tokenId =
     | TOKEN_HASH
     | TOKEN_AMP
     | TOKEN_AMP_AMP
-    | TOKEN_QUOTE
     | TOKEN_LPAREN
     | TOKEN_RPAREN
     | TOKEN_LPAREN_RPAREN
@@ -239,29 +217,24 @@ type tokenId =
     | TOKEN_LARROW
     | TOKEN_RARROW
     | TOKEN_OPEN
-    | TOKEN_OR
     | TOKEN_REC
     | TOKEN_MUTABLE
     | TOKEN_THEN
-    | TOKEN_TO
     | TOKEN_TRUE
     | TOKEN_L_TRUE
     | TOKEN_TRY
     | TOKEN_TYPE
     | TOKEN_EFFECT
     | TOKEN_VAL
-    | TOKEN_LAZY
     | TOKEN_MATCH
     | TOKEN_OF
     | TOKEN_EXCEPTION
     | TOKEN_FALSE
     | TOKEN_L_FALSE
-    | TOKEN_FOR
     | TOKEN_FUN
     | TOKEN_FUNCTION
     | TOKEN_IF
     | TOKEN_IN
-    | TOKEN_FINALLY
     | TOKEN_RESERVED
     | TOKEN_MODULE
     | TOKEN_DEFAULT
@@ -271,7 +244,6 @@ type tokenId =
     | TOKEN_BEGIN
     | TOKEN_ELSE
     | TOKEN_END
-    | TOKEN_DOT_DOT
     | TOKEN_ACTIONS
     | TOKEN_BAR_BAR
     | TOKEN_LEQ
@@ -288,8 +260,6 @@ type tokenId =
     | TOKEN_EXISTS
     | TOKEN_ASSUME
     | TOKEN_NEW
-    | TOKEN_QUERY
-    | TOKEN_DEFINE
     | TOKEN_LOGIC
     | TOKEN_IRREDUCIBLE
     | TOKEN_UNFOLDABLE

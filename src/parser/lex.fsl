@@ -341,7 +341,6 @@ rule token args = parse
  | "!" { BANG }
  | "&&" { AMP_AMP }
  | "||" { BAR_BAR }
- | '\'' { QUOTE }
  | "()" { LPAREN_RPAREN }
  | '(' { LPAREN }
  | ')' { RPAREN }
@@ -352,7 +351,6 @@ rule token args = parse
  | "<-" { LARROW }
  | "<==>" { IFF }
  | "==>" { IMPLIES }
- | ".." { DOT_DOT }
  | "." { DOT }
  | "{:pattern" { LBRACE_COLON_PATTERN }
  | ":" { COLON }
