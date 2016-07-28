@@ -4,10 +4,14 @@ all: bst uall
 
 uall: vector rbtree
 
-bst: binary_search_tree.fulllib.ver
+bst:
+	$(FSTAR) BinarySearchTree.fst
+	$(FSTAR) BinarySearchTree0.fst
+	$(FSTAR) BinarySearchTreeBasic.fst
+	$(FSTAR) BinarySearchTreeFirst.fst
 
 vector:
 	$(FSTAR) --explicit_deps ArrayRealized.fst Vector.fst
 
 rbtree:
-	$(FSTAR) rbtree.fst
+	$(FSTAR) RBTree.fst
