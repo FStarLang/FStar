@@ -187,6 +187,7 @@ let op_prefix  = ['!' '~' '?']
 let op_infix0a = ['|'] (* left *)
 let op_infix0b = ['&'] (* left *)
 let op_infix0c = ['=' '<' '>'] (* left *)
+let op_infix0c_nogt = ['=' '<'] (* left *)
 let op_infix0d = ['$'] (* left *)
 
 let op_infix0  = op_infix0a | op_infix0b | op_infix0c | op_infix0d
@@ -326,13 +327,7 @@ rule token = parse
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
  | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else OPINFIX0c("<")  }
- | ">" {  if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser 1 lexbuf }
- | ">>" { if is_typ_app_gt () && is_typ_app_gt () then
-              TYP_APP_nGREATER 2
-          else custom_op_parser 2 lexbuf }
- | ">>>" { if is_typ_app_gt () && is_typ_app_gt () && is_typ_app_gt () then
-              TYP_APP_nGREATER 3
-          else custom_op_parser 3 lexbuf }
+ | ">"         { if is_typ_app_gt () then TYP_APP_GREATER else symbolchar_parser lexbuf }
  | "|>"        { PIPE_RIGHT }
  | "]"         { RBRACK }
  | "|]"        { BAR_RBRACK }
@@ -345,7 +340,7 @@ rule token = parse
  | op_prefix  symbolchar* { OPPREFIX (L.lexeme lexbuf) }
  | op_infix0a symbolchar* { OPINFIX0a (L.lexeme lexbuf) }
  | op_infix0b symbolchar* { OPINFIX0b (L.lexeme lexbuf) }
- | op_infix0c symbolchar* { OPINFIX0c (L.lexeme lexbuf) }
+ | op_infix0c_nogt symbolchar* { OPINFIX0c (L.lexeme lexbuf) }
  | op_infix0d symbolchar* { OPINFIX0d (L.lexeme lexbuf) }
  | op_infix1  symbolchar* { OPINFIX1 (L.lexeme lexbuf) }
  | op_infix2  symbolchar* { OPINFIX2 (L.lexeme lexbuf) }
@@ -356,8 +351,8 @@ rule token = parse
  | _ { failwith "unexpected char" }
  | eof { lc := 1; EOF }
 
-and custom_op_parser n = parse
- | symbolchar* { OPINFIX0c (String.make n '>' ^  L.lexeme lexbuf) }
+and symbolchar_parser = parse
+ | symbolchar* { OPINFIX0c (">" ^  L.lexeme lexbuf) }
 
 and string buffer = parse
  |  '\\' (newline as x) anywhite*

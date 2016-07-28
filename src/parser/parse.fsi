@@ -91,7 +91,6 @@ type token =
   | TYP_APP_GREATER
   | SUBTYPE
   | SUBKIND
-  | BANG
   | FORALL
   | EXISTS
   | ASSUME
@@ -106,7 +105,6 @@ type token =
   | PRAGMALIGHT
   | PRAGMA_SET_OPTIONS
   | PRAGMA_RESET_OPTIONS
-  | TYP_APP_nGREATER of (int)
   | LET of (bool)
   | CHAR of (char)
   | IEEE64 of (float)
@@ -216,7 +214,6 @@ type tokenId =
     | TOKEN_TYP_APP_GREATER
     | TOKEN_SUBTYPE
     | TOKEN_SUBKIND
-    | TOKEN_BANG
     | TOKEN_FORALL
     | TOKEN_EXISTS
     | TOKEN_ASSUME
@@ -231,7 +228,6 @@ type tokenId =
     | TOKEN_PRAGMALIGHT
     | TOKEN_PRAGMA_SET_OPTIONS
     | TOKEN_PRAGMA_RESET_OPTIONS
-    | TOKEN_TYP_APP_nGREATER
     | TOKEN_LET
     | TOKEN_CHAR
     | TOKEN_IEEE64

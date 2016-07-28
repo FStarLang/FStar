@@ -29,14 +29,14 @@ in (FStar_Bytes.emit_bytes buf _158_24)))
 
 let add_int_char : FStar_Bytes.bytebuf  ->  Prims.int  ->  Prims.unit = (fun buf c -> (
 
-let _66_19 = (FStar_Bytes.emit_int_as_byte buf (c % 256))
+let _66_19 = (FStar_Bytes.emit_int_as_byte buf (c mod 256))
 in (FStar_Bytes.emit_int_as_byte buf (c / 256))))
 
 
 let add_unichar : FStar_Bytes.bytebuf  ->  Prims.int  ->  Prims.unit = (fun buf c -> (add_int_char buf c))
 
 
-let add_byte_char : FStar_Bytes.bytebuf  ->  FStar_BaseTypes.char  ->  Prims.unit = (fun buf c -> (add_int_char buf ((FStar_Util.int_of_char c) % 256)))
+let add_byte_char : FStar_Bytes.bytebuf  ->  FStar_BaseTypes.char  ->  Prims.unit = (fun buf c -> (add_int_char buf ((FStar_Util.int_of_char c) mod 256)))
 
 
 let stringbuf_as_bytes : FStar_Bytes.bytebuf  ->  FStar_Bytes.bytes = (fun buf -> (
@@ -139,7 +139,7 @@ in (hexdigit _158_78)))
 in if (high = 0) then begin
 ((None), ((FStar_Util.uint16_of_int low)))
 end else begin
-((Some ((FStar_Util.uint16_of_int (0xD800 + (((high * 0x10000) + (low - 0x10000)) / 0x400))))), ((FStar_Util.uint16_of_int (0xDF30 + (((high * 0x10000) + (low - 0x10000)) % 0x400)))))
+((Some ((FStar_Util.uint16_of_int (0xD800 + (((high * 0x10000) + (low - 0x10000)) / 0x400))))), ((FStar_Util.uint16_of_int (0xDF30 + (((high * 0x10000) + (low - 0x10000)) mod 0x400)))))
 end))
 end)
 
