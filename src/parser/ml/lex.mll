@@ -333,6 +333,7 @@ rule token = parse
  | ">>>" { if is_typ_app_gt () && is_typ_app_gt () && is_typ_app_gt () then
               TYP_APP_nGREATER 3
           else custom_op_parser 3 lexbuf }
+ | "|>"        { PIPE_RIGHT }
  | "]"         { RBRACK }
  | "|]"        { BAR_RBRACK }
  | "{"         { LBRACE }
