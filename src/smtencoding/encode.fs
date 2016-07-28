@@ -2070,12 +2070,14 @@ let encode_modul tcenv modul =
     let decls = caption decls in
     Z3.giveZ3 decls
 
+open FStar.SMTEncoding.Z3
 let encode_query use_env_msg tcenv q 
   : list<decl>  //prelude, translation of tcenv
-  * list<label> //labels in the query
+  * list<ErrorReporting.label> //labels in the query
   * decl        //the query itself
   * list<decl>  //suffix, evaluating labels in the model, etc.
-  = let env = get_env tcenv in
+  = Z3.query_logging.set_module_name (TypeChecker.Env.current_module tcenv).str;
+    let env = get_env tcenv in
     let bindings = Env.fold_env tcenv (fun bs b -> b::bs) [] in
     let q, bindings = 
         let rec aux bindings = match bindings with 

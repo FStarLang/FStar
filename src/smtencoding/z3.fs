@@ -107,38 +107,60 @@ type bgproc = {
     refresh:unit -> unit;
 }
 
+type query_log = {
+    set_module_name: string -> unit;
+    append_to_log:   string -> unit;
+    close_log:       unit -> unit;
+    log_file_name:   unit -> string
+}
 
-let queries_dot_smt2 : ref<option<file_handle>> = Util.mk_ref None
-
-let get_qfile =
-    let ctr = Util.mk_ref 0 in
-    fun fresh ->
-        if fresh
-        then (incr ctr;
-              Util.open_file_for_writing (Util.format1 "queries-%s.smt2" (Util.string_of_int !ctr)))
-        else match !queries_dot_smt2 with
-                | None -> let fh = Util.open_file_for_writing "queries-bg-0.smt2" in  queries_dot_smt2 := Some fh; fh
-                | Some fh -> fh
-
- let log_query fresh i =
-    let fh = get_qfile fresh in
-    Util.append_to_file fh i;
-    if fresh then Util.close_file fh
-
-let the_z3proc =
-  ref None
-
-let ctr = Util.mk_ref (-1)
-
-let new_proc () =
-  new_z3proc (Util.format1 "bg-%s" (incr ctr; !ctr |> string_of_int))
-
-let z3proc () =
-  if !the_z3proc = None then
-    the_z3proc := Some (new_proc ());
-  must (!the_z3proc)
+let query_logging = 
+    let log_file_opt : ref<option<file_handle>> = Util.mk_ref None in
+    let used_file_names : ref<list<(string * int)>> = Util.mk_ref [] in 
+    let current_module_name : ref<option<string>> = Util.mk_ref None in 
+    let current_file_name : ref<option<string>> = Util.mk_ref None in
+    let set_module_name n = current_module_name := Some n in 
+    let new_log_file () = 
+        match !current_module_name with 
+        | None -> failwith "current module not set"
+        | Some n -> 
+          let file_name = 
+              match List.tryFind (fun (m, _) -> n=m) !used_file_names with 
+              | None -> 
+                used_file_names := (n, 0)::!used_file_names;
+                n 
+              | Some (_, k) -> 
+                used_file_names := (n, k+1)::!used_file_names;
+                Util.format2 "%s-%s" n (Util.string_of_int (k+1)) in
+          let file_name = Util.format1 "queries-%s.smt2" file_name in
+          current_file_name := Some file_name;
+          let fh = Util.open_file_for_writing file_name in
+          log_file_opt := Some fh;
+          fh in
+    let get_log_file () = match !log_file_opt with 
+        | None -> new_log_file()
+        | Some fh -> fh in
+    let append_to_log str = Util.append_to_file (get_log_file()) str in
+    let close_log () = match !log_file_opt with 
+        | None -> ()
+        | Some fh -> Util.close_file fh; log_file_opt := None in
+    let log_file_name () = match !current_file_name with
+        | None -> failwith "no log file"
+        | Some n -> n in
+     {set_module_name=set_module_name;
+      append_to_log=append_to_log;
+      close_log=close_log;
+      log_file_name=log_file_name}
 
 let bg_z3_proc =
+    let the_z3proc = Util.mk_ref None in
+    let new_proc =
+        let ctr = Util.mk_ref (-1) in
+        fun () -> new_z3proc (Util.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) in
+    let z3proc () =
+      if !the_z3proc = None then
+        the_z3proc := Some (new_proc ());
+      must (!the_z3proc) in
     let x = [] in
     let grab () = Util.monitor_enter x; z3proc () in
     let release () = Util.monitor_exit(x) in
@@ -146,13 +168,7 @@ let bg_z3_proc =
         let proc = grab() in
         Util.kill_process proc;
         the_z3proc := Some (new_proc ());
-        begin match !queries_dot_smt2 with
-            | None -> ()
-            | Some fh ->
-                Util.close_file fh;
-                let fh = Util.open_file_for_writing (Util.format1 "queries-bg-%s.smt2" (!ctr |> string_of_int)) in
-                queries_dot_smt2 := Some fh
-        end;
+        query_logging.close_log();
         release() in
     {grab=grab;
      release=release;
@@ -325,7 +341,7 @@ let commit_mark msg =
         | _ -> failwith "Impossible"
     end
 
-let ask fresh (core:unsat_core) label_messages qry (cb: (either<unsat_core, error_labels> * int) -> unit) =
+let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, error_labels> * int) -> unit) =
   let filter_assertions theory = match core with 
     | None -> theory, false
     | Some core ->
@@ -347,6 +363,7 @@ let ask fresh (core:unsat_core) label_messages qry (cb: (either<unsat_core, erro
         let included = th |> List.collect (function Assume(_, _, Some nm) -> [nm] | _ -> []) |> String.concat ", " in
         Util.format2 "missed={%s}; included={%s}" missed included in
       if Options.hint_info ()
+      && Options.debug_any()
       then begin
            let n = List.length core in
            let missed = if n <> n_retained then missed_assertions theory' core else "" in
@@ -359,11 +376,8 @@ let ask fresh (core:unsat_core) label_messages qry (cb: (either<unsat_core, erro
                          (Util.string_of_int n_pruned)
       end;
       theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true in
-  let theory = bgtheory fresh in
-  let theory =
-    if fresh
-    then theory@qry
-    else theory@[Term.Push]@qry@[Term.Pop] in
+  let theory = bgtheory false in
+  let theory = theory@[Term.Push]@qry@[Term.Pop] in
   let theory, used_unsat_core = filter_assertions theory in
   let cb (uc_errs, time) = 
     if used_unsat_core
@@ -372,6 +386,6 @@ let ask fresh (core:unsat_core) label_messages qry (cb: (either<unsat_core, erro
          | Inr _ -> cb (Inr [], time) //if we filtered the theory, then the error message is unreliable
     else cb (uc_errs, time) in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
-  if Options.log_queries() then log_query fresh input;
-  enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
+  if Options.log_queries() then query_logging.append_to_log input;
+  enqueue false ({job=z3_job false label_messages input; callback=cb})
 
