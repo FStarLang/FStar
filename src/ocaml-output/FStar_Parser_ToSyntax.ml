@@ -1165,7 +1165,7 @@ let rec flatten = (fun t -> (match (t.FStar_Parser_AST.tm) with
 (
 
 let rest = (flatten t2)
-in (t1)::rest)
+in (flatten t1)@rest)
 end
 | _64_866 -> begin
 (t)::[]

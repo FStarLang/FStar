@@ -363,7 +363,13 @@ rule token args = parse
  | "[" { LBRACK }
  | "[|" { LBRACK_BAR }
  | "<" {  if is_typ_app args lexbuf then TYP_APP_LESS else OPINFIX0c("<")  }
- | ">" {  if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser args lexbuf }
+ | ">" {  if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser 1 args lexbuf }
+ | ">>" { if is_typ_app_gt () then
+            if is_typ_app_gt () then
+              TYP_APP_2GREATER
+            else
+              failwith ">> only for typ-app with --fs_typ_app"
+          else custom_op_parser 2 args lexbuf }
  | "]"  { RBRACK }
  | "|]" { BAR_RBRACK }
  | "{" { LBRACE }
@@ -385,8 +391,8 @@ rule token args = parse
  | _ { unexpected_char lexbuf }
  | eof { lc := 1; EOF }
 
-and custom_op_parser args = parse
- | symbolchar* { OPINFIX0c (">" ^  ulexeme lexbuf) }
+and custom_op_parser n args = parse
+ | symbolchar* { OPINFIX0c (String.make n '>' ^  ulexeme lexbuf) }
 
 and string sargs = parse
  |  '\\' newline anywhite*
