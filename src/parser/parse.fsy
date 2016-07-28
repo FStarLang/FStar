@@ -103,7 +103,7 @@ let as_frag d ds =
 %token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK LBRACK_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
-%token PRIVATE REIFIABLE REFLECTABLE REIFY LBRACE_COLON_PATTERN
+%token PRIVATE REIFIABLE REFLECTABLE REIFY LBRACE_COLON_PATTERN PIPE_RIGHT
 %token NEW_EFFECT NEW_EFFECT_FOR_FREE SUB_EFFECT SQUIGGLY_RARROW TOTAL KIND
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS
@@ -121,6 +121,7 @@ let as_frag d ds =
 %left     OPINFIX0b
 %left     OPINFIX0c EQUALS
 %left     OPINFIX0d
+%left     PIPE_RIGHT
 %right    OPINFIX1
 %left     OPINFIX2 MINUS
 %left     OPINFIX3
@@ -761,6 +762,8 @@ tmEq:
       { mk_term (Op(":=", [$1; $3])) (rhs2 parseState 1 3) Un}
   | tmEq OPINFIX0d tmEq
       { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
+  | tmEq PIPE_RIGHT tmEq
+      { mk_term (Op("|>", [$1; $3])) (rhs2 parseState 1 3) Un}
   | tmCons
       { $1 }
 

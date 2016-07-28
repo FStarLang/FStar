@@ -370,6 +370,7 @@ rule token args = parse
             else
               failwith ">> only for typ-app with --fs_typ_app"
           else custom_op_parser 2 args lexbuf }
+ | "|>" { PIPE_RIGHT }
  | "]"  { RBRACK }
  | "|]" { BAR_RBRACK }
  | "{" { LBRACE }
