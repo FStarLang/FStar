@@ -58,6 +58,7 @@ type term' =
   | Abs       of list<pattern> * term
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
   | Let       of let_qualifier * list<(pattern * term)> * term
+  | LetOpen   of lid * term
   | Seq       of term * term
   | If        of term * term * term
   | Match     of term * list<branch>

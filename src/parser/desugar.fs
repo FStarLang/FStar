@@ -280,6 +280,7 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Abs _  (* not closing implicitly over free vars in type-level functions *)
   | Let _
+  | LetOpen _
   | If _
   | QForall _
   | QExists _ -> [] (* not closing implicitly over free vars in formulas *)
@@ -654,6 +655,9 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
     | Seq(t1, t2) ->
       setpos <| mk_Exp_meta(Meta_desugared(desugar_exp env (mk_term (Let(NoLetQualifier, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr),
                               Sequence))
+
+    | LetOpen _ ->
+        failwith "let open in universes"
 
     | Let(is_rec, ((pat, _snd)::_tl), body) ->
       let is_rec = is_rec = Rec in

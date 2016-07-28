@@ -656,6 +656,9 @@ noSeqTerm:
         mk_term (Match($2, branches)) (rhs2 parseState 1 4) Expr
       }
 
+  | LET OPEN qname IN term
+      { mk_term (LetOpen($3, $5)) (rhs2 parseState 1 5) Expr }
+
   | LET letqualifier letbinding letbindings IN term
       {
         let r, focus = $2 in

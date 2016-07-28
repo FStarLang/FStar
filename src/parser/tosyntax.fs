@@ -208,6 +208,7 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Abs _  (* not closing implicitly over free vars in all these forms: TODO: Fixme! *)
   | Let _
+  | LetOpen _
   | If _
   | QForall _
   | QExists _  
@@ -678,6 +679,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Seq(t1, t2) ->
       mk (Tm_meta(desugar_term env (mk_term (Let(NoLetQualifier, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr), 
                   Meta_desugared Sequence))
+
+    | LetOpen (lid, e) ->
+      let env = Env.push_namespace env lid in
+      desugar_term_maybe_top top_level env e
 
     | Let(qual, ((pat, _snd)::_tl), body) ->
       let is_rec = qual = Rec in
