@@ -35,8 +35,9 @@ let init_once () : unit =
   let env = TcEnv.initial_env Tc.type_of Tc.universe_of solver Const.prims_lid in
   env.solver.init env;
   let dsenv, prims_mod = parse_prims () in
-  let prims_mod, env = Tc.check_module env prims_mod in
-  let env = TcEnv.set_current_module env test_lid in
+//  let env = 
+//  let prims_mod, env = Tc.check_module env prims_mod in
+//  let env = TcEnv.set_current_module env test_lid in
   tcenv_ref := Some env
 
 let rec init () = 
