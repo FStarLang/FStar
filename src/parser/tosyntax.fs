@@ -105,7 +105,10 @@ let compile_op arity s =
         if i = String.length s
         then []
         else name_of_char (Util.char_at s i) :: aux (i + 1) in
-    "op_"^ (String.concat "_" (aux 0))
+    match s with
+    | ".[]<-" -> "op_String_Assignment"
+    | ".()<-" -> "op_Array_Assignment"
+    | _ -> "op_"^ (String.concat "_" (aux 0))
 
 let compile_op_lid n s r = [mk_ident(compile_op n s, r)] |> lid_of_ids
 

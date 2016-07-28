@@ -315,6 +315,8 @@ rule token = parse
  | "<==>"      { IFF }
  | "==>"       { IMPLIES }
  | "."         { DOT }
+ | ".["        { DOT_LBRACK }
+ | ".("        { DOT_LPAREN }
  | "{:pattern" { LBRACE_COLON_PATTERN }
  | ":"         { COLON }
  | "::"        { COLON_COLON }
