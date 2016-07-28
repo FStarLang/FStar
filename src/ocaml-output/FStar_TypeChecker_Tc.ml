@@ -6500,8 +6500,8 @@ in (match (_58_4005) with
 
 let _58_4008 = if ((FStar_Options.log_types ()) || (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("LogTypes")))) then begin
 (let _150_1550 = (FStar_List.fold_left (fun s se -> (let _150_1549 = (let _150_1548 = (FStar_Syntax_Print.sigelt_to_string se)
-in (Prims.strcat s _150_1548))
-in (Prims.strcat _150_1549 "\n"))) "" ses')
+in (Prims.strcat _150_1548 "\n"))
+in (Prims.strcat s _150_1549))) "" ses')
 in (FStar_Util.print1 "Checked: %s\n" _150_1550))
 end else begin
 ()

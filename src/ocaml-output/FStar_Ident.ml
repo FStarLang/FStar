@@ -75,7 +75,7 @@ in (FStar_All.pipe_right _117_46 text_of_path))
 in {ns = ns; ident = id; nsstr = nsstr; str = if (nsstr = "") then begin
 id.idText
 end else begin
-(Prims.strcat (Prims.strcat nsstr ".") id.idText)
+(Prims.strcat nsstr (Prims.strcat "." id.idText))
 end})
 end)))
 

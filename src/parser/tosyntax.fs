@@ -503,10 +503,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | Op("*", [_;_]) when (op_as_term env 2 top.range "*" |> Option.isNone) -> //if op_Star has not been rebound, then it's reserved for tuples
       let rec flatten t = match t.tm with
-            | Op("*", [t1;t2]) ->
-              let rest = flatten t2 in
-              t1::rest
-            | _ -> [t] in
+        // * is left-associative
+        | Op("*", [t1;t2]) -> flatten t1 @ [ t2 ]
+        | _ -> [t] in
       let targs = flatten (unparen top) |> List.map (fun t -> as_arg (desugar_typ env t)) in
       let tup, _ = fail_or env (Env.try_lookup_lid env) (Util.mk_tuple_lid (List.length targs) top.range) in
       mk (Tm_app(tup, targs))

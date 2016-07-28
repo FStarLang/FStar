@@ -31,10 +31,11 @@
 *)
 
 // (c) Microsoft Corporation. All rights reserved
+open Prims
 open FStar.List
-open FStar.Options
-open FStar.Range
 open FStar.Util
+open FStar.Range
+open FStar.Options
 open FStar.Absyn.Syntax
 open FStar.Absyn.Const
 open FStar.Absyn.Util
@@ -71,18 +72,15 @@ let as_frag d ds =
 %token <bytes> BYTEARRAY
 %token <bytes> STRING
 %token <string> IDENT
-%token <string> IDENT_LESS
 %token <string> NAME
 %token <string> TVAR
-%token <string> DIV_MOD_OP
 %token <string> TILDE
-%token <string> CUSTOM_OP
 
 
 /* bool indicates if INT8 was 'bad' max_int+1, e.g. '128'  */
 %token <string * bool> INT8
 %token <string * bool> INT16
-%token <string * bool> INT32 INT32_DOT_DOT
+%token <string * bool> INT32
 %token <string * bool> INT64
 %token <string * bool> INT
 
@@ -90,34 +88,45 @@ let as_frag d ds =
 %token <string> UINT16
 %token <string> UINT32
 %token <string> UINT64
-%token <double> IEEE64
+%token <float> IEEE64
 %token <char> CHAR
 %token <bool> LET
-%token <string * bool> LQUOTE RQUOTE
-%token FORALL EXISTS ASSUME NEW QUERY DEFINE LOGIC IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT NOEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
-%token ACTIONS BAR_BAR LEQ GEQ LESS LESSLESS TYP_APP_LESS TYP_APP_GREATER LESSGREATER SUBTYPE SUBKIND BANG
-%token AND AS ASSERT BEGIN ELSE END DOT_DOT
-%token EXCEPTION FALSE L_FALSE FOR FUN FUNCTION IF IN FINALLY RESERVED MODULE DEFAULT
-%token LAZY MATCH OF
-%token OPEN OR REC MUTABLE THEN TO TRUE L_TRUE TRY TYPE EFFECT VAL
-%token WHEN WITH HASH AMP AMP_AMP QUOTE LPAREN RPAREN LPAREN_RPAREN STAR COMMA LARROW RARROW
+%token <int> TYP_APP_nGREATER
+%token FORALL EXISTS ASSUME NEW LOGIC IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT NOEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
+%token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BANG
+%token AND ASSERT BEGIN ELSE END
+%token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
+%token MATCH OF
+%token OPEN REC MUTABLE THEN TRUE L_TRUE TRY TYPE EFFECT VAL
+%token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
-%token DOT COLON COLON_COLON ATSIGN HAT COLON_EQUALS SEMICOLON
-%token SEMICOLON_SEMICOLON EQUALS EQUALS_EQUALS PERCENT_LBRACK LBRACK LBRACK_BAR LBRACE BACKSLASH BANG_LBRACE
+%token DOT COLON COLON_COLON SEMICOLON
+%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK LBRACK_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
-%token BAR RBRACK RBRACE MINUS DOLLAR
-%token PUBLIC PRIVATE REIFIABLE REFLECTABLE REIFY LBRACE_COLON_PATTERN PIPE_LEFT PIPE_RIGHT
+%token BAR RBRACK RBRACE DOLLAR
+%token PRIVATE REIFIABLE REFLECTABLE REIFY LBRACE_COLON_PATTERN PIPE_RIGHT
 %token NEW_EFFECT NEW_EFFECT_FOR_FREE SUB_EFFECT SQUIGGLY_RARROW TOTAL KIND
-%token PRINT REQUIRES ENSURES
-%token PLUS_OP MINUS_OP BAR_FOCUS
-%token BLAH
+%token REQUIRES ENSURES
+%token MINUS COLON_EQUALS
+
+%token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 
 /* These are artificial */
-%token <string> LEX_FAILURE
-%token COMMENT WHITESPACE HASH_LINE HASH_LIGHT HASH_IF HASH_ELSE HASH_ENDIF INACTIVECODE LINE_COMMENT STRING_TEXT EOF
+%token EOF
 
 %nonassoc THEN
 %nonassoc ELSE
+
+%nonassoc COLON_EQUALS
+%left     OPINFIX0a
+%left     OPINFIX0b
+%left     OPINFIX0c EQUALS
+%left     OPINFIX0d
+%left     PIPE_RIGHT
+%right    OPINFIX1
+%left     OPINFIX2 MINUS
+%left     OPINFIX3
+%right    OPINFIX4
 
 %start inputFragment
 %start term
@@ -301,10 +310,6 @@ tyconDefinitions:
   | AND tyconDefinition tyconDefinitions
       { $2::$3 }
 
-ident_opt:
-  |       { None }
-  | ident { Some $1 }
-
 maybeFocus:
   |  { false }
   | SQUIGGLY_RARROW { true }
@@ -371,14 +376,6 @@ appPattern:
           | [] -> hd
           | _ -> mk_pattern (PatApp(hd, $2)) (union_ranges r (rhs parseState 1))
       }
-
-compositePattern:
-  | atomicPattern atomicPattern atomicPatterns
-      {
-        let args = $2::$3 in
-          mk_pattern (PatApp($1, args)) (rhs2 parseState 1 3)
-      }
-  | tuplePattern { $1 }
 
 atomicPatterns:
   |    { [] }
@@ -752,38 +749,26 @@ tmTuple:
           | components -> mkTuple components (rhs2 parseState 1 1)
       }
 
+
 tmEq:
-  | tmEq COLON_EQUALS tmOr
-      {
-        mk_term (Op(":=", [$1; $3])) (rhs2 parseState 1 3) Un
-      }
-
-  | tmOr
-      { $1 }
-
-tmOr:
-  | tmOr BAR_BAR tmAnd
-      { mk_term (Op("||", [$1; $3])) (rhs2 parseState 1 3) Un}
-
-  | tmAnd
-      { $1 }
-
-tmAnd:
-  | tmAnd AMP_AMP cmpTerm
-      { mk_term (Op("&&", [$1;$3])) (rhs2 parseState 1 3) Un}
-
-  | cmpTerm
-      { $1 }
-
-cmpTerm:
-  | cmpTerm comparisonOp tmCons
-      { mk_term (Op($2, [$1;$3])) (rhs2 parseState 1 3) Expr }
+  | tmEq OPINFIX0a tmEq
+      { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
+  | tmEq OPINFIX0b tmEq
+      { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
+  | tmEq OPINFIX0c tmEq
+      { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
+  | tmEq EQUALS tmEq
+      { mk_term (Op("=", [$1; $3])) (rhs2 parseState 1 3) Un}
+  | tmEq COLON_EQUALS tmEq
+      { mk_term (Op(":=", [$1; $3])) (rhs2 parseState 1 3) Un}
+  | tmEq OPINFIX0d tmEq
+      { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
+  | tmEq PIPE_RIGHT tmEq
+      { mk_term (Op("|>", [$1; $3])) (rhs2 parseState 1 3) Un}
+  | tmEq OPINFIX1 tmEq
+      { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
   | tmCons
       { $1 }
-
-comparisonOp:
-  | CUSTOM_OP { $1 }
-  | EQUALS    { "=" }
 
 tmCons:
   | product COLON_COLON tmCons
@@ -828,37 +813,18 @@ dtupleTerm:
      { $1 }
 
 arithTerm:
-  | plusOp
-      { $1 }
-
-plusOp:
-  | minusOp PLUS_OP plusOp
-      { mk_term (Op("+", [$1;$3])) (rhs2 parseState 1 3) Un}
-
-  | minusOp
-      { $1 }
-
-minusOp:
-  | minusOp MINUS_OP starDivModTerm
-      { mk_term (Op("-", [$1;$3])) (rhs2 parseState 1 3) Un}
-
-  | starDivModTerm
-      { $1 }
-
-
-starDivModTerm:
-  | refinementTerm STAR starDivModTerm
-      {
-        mk_term (Op("*", [$1;$3])) (rhs2 parseState 1 3) Un
-      }
-
-  | unaryTerm DIV_MOD_OP starDivModTerm
-      { mk_term (Op($2, [$1;$3])) (rhs2 parseState 1 3) Un}
-
+  | arithTerm MINUS arithTerm
+      { mk_term (Op("-", [$1; $3])) (rhs2 parseState 1 3) Un}
+  | arithTerm OPINFIX2 arithTerm
+      { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
+  | arithTerm OPINFIX3 arithTerm
+      { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
+  | arithTerm OPINFIX4 arithTerm
+      { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
+  | MINUS arithTerm
+      { mk_term (Op("-", [$2])) (rhs2 parseState 1 3) Expr }
   | refinementTerm
-      {
-        $1
-      }
+      { $1 }
 
 refinementTerm:
   | ident COLON appTerm
@@ -890,14 +856,11 @@ refineOpt:
 
 
 unaryTerm:
-  | PLUS_OP atomicTerm
-      { mk_term (Op("+", [$2])) (rhs2 parseState 1 3) Expr }
-
-  | MINUS_OP atomicTerm
-      { mk_term (Op("-", [$2])) (rhs2 parseState 1 3) Expr }
-
   | TILDE atomicTerm
       { mk_term (Op($1, [$2])) (rhs2 parseState 1 3) Formula }
+
+  | OPPREFIX atomicTerm
+      { mk_term (Op($1, [$2])) (rhs2 parseState 1 3) Expr }
 
   | appTerm { $1 }
 
@@ -934,17 +897,6 @@ atomicTerm:
       { mk_term (Op("!", [$2])) (rhs2 parseState 1 2) Expr }
   | BEGIN term END
       { $2 }
-
-recdFieldTypes:
-  |  { [] }
-  | recdFieldType moreRecdFieldTypes { $1::$2 }
-
-moreRecdFieldTypes:
-  |  { [] }
-  | SEMICOLON recdFieldType moreRecdFieldTypes { $2::$3 }
-
-recdFieldType:
-  | ident COLON typ { ($1, $3) }
 
 maybeFieldProjections:
   |    { [] }
@@ -1056,19 +1008,6 @@ maybeHash:
 hashAtomicTerms:
   |        { [] }
   | maybeHash atomicTerm hashAtomicTerms { ($2, $1)::$3 }
-
-atomicTerms:
-  |        { [] }
-  | atomicTerm atomicTerms { $1::$2 }
-
-consTerm:
-  |       { None }
-  | COLON_COLON tmTuple consTerm
-      {
-        match $3 with
-          | None -> Some $2
-          | Some tl -> Some (consTerm (rhs2 parseState 2 3) $2 tl)
-      }
 
 tupleN:
   | tmEq                       { [$1] }

@@ -65,7 +65,7 @@ let as_option as_t = function
   | Unset -> None
   | v -> Some (as_t v)
 
-let fstar_options : ref<list<Util.smap<option_val>>> = Util.mk_ref []
+let fstar_options : ref<list<Util.smap<option_val>> > = Util.mk_ref []
 let peek () = List.hd !fstar_options
 let pop  () = match !fstar_options with
     | []
@@ -257,7 +257,7 @@ let display_usage_aux specs =
              else Util.print_string (Util.format3 "  --%s %s  %s\n" (Util.colorize_bold flag) (Util.colorize_bold argname) doc))
     specs
 
-let mk_spec (o:opt'<option_val>) : opt =
+let mk_spec o : opt =
     let ns, name, arg, desc = o in
     let arg =
         match arg with

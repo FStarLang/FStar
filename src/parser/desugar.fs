@@ -831,8 +831,7 @@ and desugar_typ env (top:term) : typ =
       if is_type env t1
       then let rec flatten t = match t.tm with
             | Op("*", [t1;t2]) ->
-              let rest = flatten t2 in
-              t1::rest
+              flatten t1 @ [ t2 ]
             | _ -> [t] in
           let targs = flatten top |> List.map (fun t -> targ (desugar_typ env t)) in
           let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_tuple_lid (List.length targs) top.range) in

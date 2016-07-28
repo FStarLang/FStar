@@ -2152,9 +2152,9 @@ end else begin
 tm
 end
 in if (FStar_Options.universes ()) then begin
-(Prims.raise (FStar_Syntax_Syntax.Error ((((Prims.strcat (Prims.strcat msg "\n") tm)), (r)))))
+(Prims.raise (FStar_Syntax_Syntax.Error ((((Prims.strcat msg (Prims.strcat "\n" tm))), (r)))))
 end else begin
-(Prims.raise (FStar_Absyn_Syntax.Error ((((Prims.strcat (Prims.strcat msg "\n") tm)), (r)))))
+(Prims.raise (FStar_Absyn_Syntax.Error ((((Prims.strcat msg (Prims.strcat "\n" tm))), (r)))))
 end)))
 
 

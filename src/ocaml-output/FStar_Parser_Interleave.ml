@@ -156,7 +156,7 @@ in (match (_63_154) with
 | (all_vals_for_defs, rest_iface) -> begin
 (
 
-let hoist = (FStar_List.append (FStar_List.append prefix all_vals_for_defs) ((let_x)::[]))
+let hoist = (FStar_List.append prefix (FStar_List.append all_vals_for_defs ((let_x)::[])))
 in (aux ((hoist)::out) rest_iface rest_impl))
 end))))
 end

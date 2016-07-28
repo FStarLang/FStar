@@ -59,7 +59,7 @@ let rec insert x t =
 
 (* This variant also works, previously filed as #155 *)
 val insert' : x:int -> t:tree -> Pure tree
-               (requires (is_bst t))
+               (requires (b2t (is_bst t)))
                (ensures (fun r -> is_bst r /\
                  (forall y. in_tree y r <==> (in_tree y t \/ x = y))))
 let rec insert' x t =
@@ -92,14 +92,14 @@ val ge : int -> int -> Tot bool
 let ge n1 n2 = n1 >= n2
 
 val find_max : t:tree{is_bst t /\ is_Node t} ->
-      Tot (x:int{all (ge x) t /\ in_tree x t})
+      Tot (x:int{b2t (all (ge x) t) /\ in_tree x t})
 let rec find_max (Node n _ t2) = if is_Leaf t2 then n else find_max t2
 
 val find_max' : t:tree{is_Node t}-> Tot int
 let rec find_max' (Node n _ t2) = if is_Leaf t2 then n else find_max' t2
 
 val find_max_lemma : t:tree{is_Node t /\ is_bst t} ->
-      Lemma (in_tree (find_max' t) t /\ all (ge (find_max' t)) t)
+      Lemma (in_tree (find_max' t) t /\ b2t (all (ge (find_max' t)) t))
 let rec find_max_lemma (Node _ _ t2) = if is_Node t2 then find_max_lemma t2
 
 val find_max_eq : t:tree{is_Node t /\ is_bst t} -> Lemma (find_max t = find_max' t)
@@ -134,8 +134,8 @@ let rec delete' x t = match t with
                          else Node n t1 (delete' x t2)
 
 val delete_lemma : x:int -> t:tree{is_bst t} ->
-      Lemma (is_bst (delete' x t) /\ not (in_tree x (delete' x t)) /\
-        (forall y. x <> y ==> (in_tree y (delete' x t) = in_tree y t)))
+      Lemma (ensures (is_bst (delete' x t) /\ not (in_tree x (delete' x t)) /\
+        (forall y. x <> y ==> (in_tree y (delete' x t) = in_tree y t))))
       (decreases t)
 let rec delete_lemma x t = match t with
   | Leaf -> ()

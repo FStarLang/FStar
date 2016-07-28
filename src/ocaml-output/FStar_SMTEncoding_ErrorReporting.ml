@@ -294,7 +294,7 @@ end
 | (hd)::tl -> begin
 (
 
-let _84_394 = (let _176_101 = (FStar_All.pipe_left elim (FStar_List.append (FStar_List.append eliminated errors) tl))
+let _84_394 = (let _176_101 = (FStar_All.pipe_left elim (FStar_List.append eliminated (FStar_List.append errors tl)))
 in (askZ3 _176_101))
 in (match (_84_394) with
 | (result, _84_393) -> begin
@@ -325,7 +325,7 @@ in (match (_84_409) with
 | (pfx, sfx) -> begin
 (
 
-let _84_413 = (let _176_108 = (elim (FStar_List.append (FStar_List.append eliminated potential_errors) sfx))
+let _84_413 = (let _176_108 = (elim (FStar_List.append eliminated (FStar_List.append potential_errors sfx)))
 in (askZ3 _176_108))
 in (match (_84_413) with
 | (result, _84_412) -> begin

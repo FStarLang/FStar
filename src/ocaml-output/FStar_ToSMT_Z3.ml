@@ -468,7 +468,7 @@ in (z3v_le _140_138 ((4), (3), (1)))) then begin
 end else begin
 ""
 end
-in (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "(set-option :global-decls false)\n" "(set-option :") mbqi) " false)\n") model_on_timeout)))
+in (Prims.strcat "(set-option :global-decls false)\n" (Prims.strcat "(set-option :" (Prims.strcat mbqi (Prims.strcat " false)\n" model_on_timeout))))))
 end))
 
 
@@ -792,7 +792,7 @@ in (
 let theory = if fresh then begin
 (FStar_List.append theory qry)
 end else begin
-(FStar_List.append (FStar_List.append (FStar_List.append theory ((FStar_ToSMT_Term.Push)::[])) qry) ((FStar_ToSMT_Term.Pop)::[]))
+(FStar_List.append theory (FStar_List.append ((FStar_ToSMT_Term.Push)::[]) (FStar_List.append qry ((FStar_ToSMT_Term.Pop)::[]))))
 end
 in (
 

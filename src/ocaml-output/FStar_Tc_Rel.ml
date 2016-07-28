@@ -5237,10 +5237,10 @@ in (
 let k = (fun t1 -> (match ((let _136_1876 = (FStar_Absyn_Util.compress_typ t1)
 in _136_1876.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Typ_const (x) -> begin
-(let _136_1880 = (let _136_1877 = (FStar_Absyn_Print.kind_to_string x.FStar_Absyn_Syntax.sort)
-in (Prims.strcat _136_1877 " ... "))
-in (let _136_1879 = (let _136_1878 = (FStar_ST.read t1.FStar_Absyn_Syntax.tk)
-in (kopt _136_1878))
+(let _136_1880 = (FStar_Absyn_Print.kind_to_string x.FStar_Absyn_Syntax.sort)
+in (let _136_1879 = (let _136_1878 = (let _136_1877 = (FStar_ST.read t1.FStar_Absyn_Syntax.tk)
+in (kopt _136_1877))
+in (Prims.strcat " ... " _136_1878))
 in (Prims.strcat _136_1880 _136_1879)))
 end
 | _44_3996 -> begin

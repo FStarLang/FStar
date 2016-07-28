@@ -204,7 +204,7 @@ in (
 
 let with_fuel = (fun label_assumptions p _86_96 -> (match (_86_96) with
 | (n, i, timeout_ms) -> begin
-(let _178_96 = (let _178_95 = (let _178_93 = (let _178_92 = (let _178_87 = (let _178_86 = (let _178_71 = (let _178_70 = (FStar_Util.string_of_int n)
+(let _178_96 = (let _178_86 = (let _178_71 = (let _178_70 = (FStar_Util.string_of_int n)
 in (let _178_69 = (FStar_Util.string_of_int i)
 in (FStar_Util.format2 "<fuel=\'%s\' ifuel=\'%s\'>" _178_70 _178_69)))
 in FStar_SMTEncoding_Term.Caption (_178_71))
@@ -223,20 +223,20 @@ in FStar_SMTEncoding_Term.Assume (_178_81))
 in (_178_82)::(p)::[])
 in (_178_84)::_178_83))
 in (_178_86)::_178_85))
-in (FStar_List.append _178_87 label_assumptions))
-in (let _178_91 = (let _178_90 = (let _178_89 = (let _178_88 = (FStar_Util.string_of_int timeout_ms)
-in (("timeout"), (_178_88)))
-in FStar_SMTEncoding_Term.SetOption (_178_89))
-in (_178_90)::[])
-in (FStar_List.append _178_92 _178_91)))
-in (FStar_List.append _178_93 ((FStar_SMTEncoding_Term.CheckSat)::[])))
-in (let _178_94 = if (FStar_Options.record_hints ()) then begin
+in (let _178_95 = (let _178_94 = (let _178_93 = (let _178_89 = (let _178_88 = (let _178_87 = (FStar_Util.string_of_int timeout_ms)
+in (("timeout"), (_178_87)))
+in FStar_SMTEncoding_Term.SetOption (_178_88))
+in (_178_89)::[])
+in (let _178_92 = (let _178_91 = (let _178_90 = if (FStar_Options.record_hints ()) then begin
 (FStar_SMTEncoding_Term.GetUnsatCore)::[]
 end else begin
 []
 end
-in (FStar_List.append _178_95 _178_94)))
-in (FStar_List.append _178_96 suffix))
+in (FStar_List.append _178_90 suffix))
+in (FStar_List.append ((FStar_SMTEncoding_Term.CheckSat)::[]) _178_91))
+in (FStar_List.append _178_93 _178_92)))
+in (FStar_List.append label_assumptions _178_94))
+in (FStar_List.append _178_96 _178_95)))
 end))
 in (
 

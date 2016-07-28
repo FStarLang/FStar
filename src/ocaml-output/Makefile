@@ -4,6 +4,8 @@ FSTAR_HOME=../..
 
 OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28" -annot
 
+#MENHIR=menhir --explain #--infer -la 1 --table
+MENHIR=ocamlyacc
 OCAMLC=ocamlfind ocamlc $(OPTIONS)
 OCAMLOPT=ocamlfind ocamlopt $(OPTIONS)
 OCAMLDEP=ocamldep
@@ -61,7 +63,7 @@ prep: parser copy_lib_files depend version
 
 parser:
 	cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
-	ocamlyacc parse.mly
+	$(MENHIR) parse.mly
 	rm -f FStar_Parser_Parse.ml
 	echo "open Prims" > FStar_Parser_Parse.ml
 	echo "open FStar_List" >> FStar_Parser_Parse.ml
