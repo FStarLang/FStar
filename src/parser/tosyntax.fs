@@ -517,8 +517,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       begin match op_as_term env (List.length args) top.range s with
         | None -> raise (Error("Unexpected operator: " ^ s, top.range))
         | Some op ->
-          let args = args |> List.map (fun t -> desugar_term env t, None) in
-          mk (Tm_app(op, args))
+            if List.length args > 0 then
+              let args = args |> List.map (fun t -> desugar_term env t, None) in
+              mk (Tm_app(op, args))
+            else
+              op
       end
 
     | Name {str="Type0"}  -> mk (Tm_type U_zero)

@@ -341,7 +341,6 @@ rule token args = parse
  | "=" { EQUALS }
  | '#' { HASH }
  | '&' { AMP }
- | "!" { BANG }
  | "()" { LPAREN_RPAREN }
  | '(' { LPAREN }
  | ')' { RPAREN }

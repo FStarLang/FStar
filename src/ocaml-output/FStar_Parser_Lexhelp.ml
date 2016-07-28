@@ -139,7 +139,7 @@ in (hexdigit _158_78)))
 in if (high = 0) then begin
 ((None), ((FStar_Util.uint16_of_int low)))
 end else begin
-((Some ((FStar_Util.uint16_of_int (0xD800 + ((((high * 0x10000) + low) - 0x10000) / 0x400))))), ((FStar_Util.uint16_of_int (0xDF30 + ((((high * 0x10000) + low) - 0x10000) % 0x400)))))
+((Some ((FStar_Util.uint16_of_int (0xD800 + (((high * 0x10000) + (low - 0x10000)) / 0x400))))), ((FStar_Util.uint16_of_int (0xDF30 + (((high * 0x10000) + (low - 0x10000)) % 0x400)))))
 end))
 end)
 

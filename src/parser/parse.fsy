@@ -93,7 +93,7 @@ let as_frag d ds =
 %token <bool> LET
 %token <int> TYP_APP_nGREATER
 %token FORALL EXISTS ASSUME NEW LOGIC IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT NOEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
-%token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BANG
+%token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
 %token AND ASSERT BEGIN ELSE END
 %token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
@@ -767,6 +767,8 @@ tmEq:
       { mk_term (Op("|>", [$1; $3])) (rhs2 parseState 1 3) Un}
   | tmEq OPINFIX1 tmEq
       { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
+  | tmEq OPINFIX2 tmEq
+      { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
   | tmCons
       { $1 }
 
@@ -815,8 +817,6 @@ dtupleTerm:
 arithTerm:
   | arithTerm MINUS arithTerm
       { mk_term (Op("-", [$1; $3])) (rhs2 parseState 1 3) Un}
-  | arithTerm OPINFIX2 arithTerm
-      { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
   | arithTerm OPINFIX3 arithTerm
       { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
   | arithTerm OPINFIX4 arithTerm
@@ -859,9 +859,6 @@ unaryTerm:
   | TILDE atomicTerm
       { mk_term (Op($1, [$2])) (rhs2 parseState 1 3) Formula }
 
-  | OPPREFIX atomicTerm
-      { mk_term (Op($1, [$2])) (rhs2 parseState 1 3) Expr }
-
   | appTerm { $1 }
 
 appTerm:
@@ -881,6 +878,28 @@ atomicTerm:
   | constant { mk_term (Const $1) (rhs parseState 1) Expr }
   | L_TRUE   { mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type }
   | L_FALSE   { mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type }
+
+  | OPPREFIX atomicTerm
+      { mk_term (Op($1, [$2])) (rhs2 parseState 1 3) Expr }
+
+  | LPAREN OPPREFIX RPAREN
+      { mk_term (Op($2, [])) (rhs2 parseState 1 3) Un }
+  | LPAREN OPINFIX0a RPAREN
+      { mk_term (Op($2, [])) (rhs2 parseState 1 3) Un }
+  | LPAREN OPINFIX0b RPAREN
+      { mk_term (Op($2, [])) (rhs2 parseState 1 3) Un }
+  | LPAREN OPINFIX0c RPAREN
+      { mk_term (Op($2, [])) (rhs2 parseState 1 3) Un }
+  | LPAREN OPINFIX0d RPAREN
+      { mk_term (Op($2, [])) (rhs2 parseState 1 3) Un }
+  | LPAREN OPINFIX1 RPAREN
+      { mk_term (Op($2, [])) (rhs2 parseState 1 3) Un }
+  | LPAREN OPINFIX2 RPAREN
+      { mk_term (Op($2, [])) (rhs2 parseState 1 3) Un }
+  | LPAREN OPINFIX3 RPAREN
+      { mk_term (Op($2, [])) (rhs2 parseState 1 3) Un }
+  | LPAREN OPINFIX4 RPAREN
+      { mk_term (Op($2, [])) (rhs2 parseState 1 3) Un }
   | LENS_PAREN_LEFT tupleN LENS_PAREN_RIGHT
       {
         match $2 with
@@ -893,8 +912,6 @@ atomicTerm:
                           mk_term (Project(e, lid_of_ids [f])) (rhs2 parseState 1 3) Expr )
           $1 $2
       }
-  | BANG atomicTerm
-      { mk_term (Op("!", [$2])) (rhs2 parseState 1 2) Expr }
   | BEGIN term END
       { $2 }
 

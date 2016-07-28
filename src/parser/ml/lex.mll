@@ -339,7 +339,6 @@ rule token = parse
  | "{"         { LBRACE }
  | "|"         { BAR }
  | "}"         { RBRACE }
- | "!"         { BANG }
  | "$"         { DOLLAR }
 
  (* Operators. *)

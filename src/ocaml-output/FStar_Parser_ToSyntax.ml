@@ -1194,11 +1194,15 @@ end
 (Prims.raise (FStar_Syntax_Syntax.Error ((((Prims.strcat "Unexpected operator: " s)), (top.FStar_Parser_AST.range)))))
 end
 | Some (op) -> begin
+if ((FStar_List.length args) > 0) then begin
 (
 
 let args = (FStar_All.pipe_right args (FStar_List.map (fun t -> (let _156_371 = (desugar_term env t)
 in ((_156_371), (None))))))
 in (mk (FStar_Syntax_Syntax.Tm_app (((op), (args))))))
+end else begin
+op
+end
 end)
 end
 | FStar_Parser_AST.Name ({FStar_Ident.ns = _64_889; FStar_Ident.ident = _64_887; FStar_Ident.nsstr = _64_885; FStar_Ident.str = "Type0"}) -> begin
