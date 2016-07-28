@@ -1,7 +1,7 @@
 %{
 #light "off"
 (*
- Known (intentional) ambiguitites: 6 s/r conflicts in total; resolved by shifting
+ Known (intentional) ambiguities: 6 s/r conflicts in total; resolved by shifting
    3 s/r conflicts on BAR
       match  with | P -> match with | Q -> _ | R -> _
       function ...
@@ -29,6 +29,13 @@
 
       Analogous ambiguities with -> and * as well.
 *)
+(* This parser should be switched to Menhir for the following reasons:
+   - spurious conflict reported by fsyacc (Menhir & Ocamlyacc only report 6
+     conflicts)
+   - there's a lot of copy/paste of identical productions for all the operators,
+     that would be solved with a %inline directive
+   - a lot of the productions would be simplified by the optional and
+     separated_list parameterized productions... *)
 
 // (c) Microsoft Corporation. All rights reserved
 open Prims
@@ -889,10 +896,18 @@ unaryTerm:
   | appTerm { $1 }
 
 appTerm:
-  | atomicTerm hashAtomicTerms
+  | indexingTerm hashIndexingTerms
       {
         mkApp $1 $2 (rhs2 parseState 1 2)
       }
+
+indexingTerm:
+  | atomicTerm DOT_LPAREN term RPAREN
+      { mk_term (Op(".()", [ $1; $3 ])) (rhs2 parseState 1 4) Expr }
+  | atomicTerm DOT_LBRACK term RPAREN
+      { mk_term (Op(".[]", [ $1; $3 ])) (rhs2 parseState 1 4) Expr }
+  | atomicTerm
+      { $1 }
 
 formula:
   | noSeqTerm
@@ -1049,9 +1064,9 @@ maybeHash:
   |      { Nothing }
   | HASH { Hash }
 
-hashAtomicTerms:
+hashIndexingTerms:
   |        { [] }
-  | maybeHash atomicTerm hashAtomicTerms { ($2, $1)::$3 }
+  | maybeHash indexingTerm hashIndexingTerms { ($2, $1)::$3 }
 
 tupleN:
   | tmEq                       { [$1] }

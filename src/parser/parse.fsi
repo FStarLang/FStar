@@ -356,6 +356,7 @@ type nonTerminalId =
     | NONTERM_refineOpt
     | NONTERM_unaryTerm
     | NONTERM_appTerm
+    | NONTERM_indexingTerm
     | NONTERM_formula
     | NONTERM_atomicTerm
     | NONTERM_maybeFieldProjections
@@ -373,7 +374,7 @@ type nonTerminalId =
     | NONTERM_maybeWithSort
     | NONTERM_hasSort
     | NONTERM_maybeHash
-    | NONTERM_hashAtomicTerms
+    | NONTERM_hashIndexingTerms
     | NONTERM_tupleN
     | NONTERM_constant
 /// This function maps tokens to integer indexes
