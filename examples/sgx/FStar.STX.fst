@@ -114,26 +114,15 @@ assume val throw : unit -> Sth unit
   (requires (fun _ _ -> True))
   (ensures (fun h0 b0 r b1 -> b0=b1 /\ r==None)) //state is reset; flag doesn't change
 
-assume val write: addr:sgxref a->value:nat -> Sth bool
+assume val store: addr:sgxref a->value:nat -> Sth bool
   (requires (fun h0 b0 -> not b0 /\ 		//can only write if we are not already in a "failed read/write" state 
 		isbitmapset h0 addr))		//and if the corresponding address is protected in bitmap 
   (ensures (fun h0 b0 r b1 -> 
 		 r==Some (b1, h0))) //the return value is the flag and the modified heap. FIXME: How to return modified heap 
 
-assume val read:  #a:Type -> x:ref a -> Sth a
+assume val load:  #a:Type -> x:ref a -> Sth a
    (requires (fun _ b0 -> not b0 		//can only read if we are not already in a "failed read/write" state
 		isbitmapset h0 addr))		//and if the corresponding address is protected in bitmap 
    (ensures (fun h0 b0 r b1 -> 
 	       r==Some (sel h0 x, h0)))
-
-assume val alloc:  #a:Type -> init:a -> Sth (ref a)
-  (requires (fun _ _ -> True)) //allocation effects are always permitted
-  (ensures (fun h0 b0 r b1 -> 
-	      b0=b1 /\ //the flag doesn't change
-	      (match r with 
- 	       | None -> False
-	       | Some (x, h1) -> 
-	  	  not(contains h0 x)  //the returned ref is fresh
-		/\ contains h1 x
-		/\ h1==upd h0 x init))) //and the sgxmem is updated appropriately
 
