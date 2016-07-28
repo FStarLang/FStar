@@ -441,8 +441,8 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     collect_pattern' p.pat
 
   and collect_pattern' = function
-    | PatWild ->
-        ()
+    | PatWild
+    | PatOp _
     | PatConst _ ->
         ()
     | PatApp (p, ps) ->

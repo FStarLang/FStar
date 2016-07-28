@@ -405,6 +405,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
     let pos q = Syntax.withinfo q None p.prange in
     let pos_r r q = Syntax.withinfo q  None r in
     match p.pat with
+      | PatOp _ -> failwith "let op not supported in stratified"
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
         let loc, env, var, p, _ = aux loc env p in

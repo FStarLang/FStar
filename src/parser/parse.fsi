@@ -279,6 +279,7 @@ type nonTerminalId =
     | NONTERM_letbinding
     | NONTERM_pattern
     | NONTERM_tuplePattern
+    | NONTERM_operatorPattern
     | NONTERM_patternListComma
     | NONTERM_listPattern
     | NONTERM_consPattern

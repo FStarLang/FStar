@@ -99,6 +99,7 @@ and pattern' =
   | PatRecord   of list<(lid * pattern)>
   | PatAscribed of pattern * term
   | PatOr       of list<pattern>
+  | PatOp       of string
 and pattern = {pat:pattern'; prange:range}
 
 and branch = (pattern * option<term> * term)
@@ -408,6 +409,7 @@ and pat_to_string x = match x.pat with
   | PatTuple (l, true) -> Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l)
   | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" (f.str) (e |> pat_to_string)) l)
   | PatOr l ->  to_string_l "|\n " pat_to_string l
+  | PatOp op ->  Util.format1 "(%s)" op
   | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
 
 let rec head_id_of_pat p = match p.pat with

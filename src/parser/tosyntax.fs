@@ -338,6 +338,8 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
     let pos q = Syntax.withinfo q tun.n p.prange in
     let pos_r r q = Syntax.withinfo q tun.n r in
     match p.pat with
+      | PatOp op ->
+          aux loc env ({ pat = PatVar (id_of_text (compile_op 0 op), None); prange = p.prange })
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
         let loc, env, var, p, _ = aux loc env p in
@@ -435,9 +437,11 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
   env, b, p
 
 and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * option<pat>) =
+  let mklet x = env, LetBinder(qualify env x, tun), None in
   if top
   then match p.pat with
-    | PatVar (x, _) -> (env, LetBinder(qualify env x, tun), None)
+    | PatOp x -> mklet (id_of_text (compile_op 0 x))
+    | PatVar (x, _) -> mklet x
     | PatAscribed({pat=PatVar (x, _)}, t) ->
       (env, LetBinder(qualify env x, desugar_term env t), None)
     | _ -> raise (Error("Unexpected pattern at the top-level", p.prange))
@@ -515,7 +519,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | Op(s, args) ->
       begin match op_as_term env (List.length args) top.range s with
-        | None -> raise (Error("Unexpected operator: " ^ s, top.range))
+        | None -> raise (Error("Unexpected or unbound operator: " ^ s, top.range))
         | Some op ->
             if List.length args > 0 then
               let args = args |> List.map (fun t -> desugar_term env t, None) in
