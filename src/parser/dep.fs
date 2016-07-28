@@ -364,7 +364,9 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         ()
     | Const c ->
         collect_constant c
-    | Op (_, ts) ->
+    | Op (s, ts) ->
+        if s = "@" then
+          collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.append") Range.dummyRange));
         List.iter collect_term ts
     | Tvar _ ->
         ()
