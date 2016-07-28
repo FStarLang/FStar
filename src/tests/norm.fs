@@ -118,7 +118,9 @@ let run_all () =
 //                                            aux x []" in
 //    let _ = Pars.pars_and_tc_fragment "let id_list (a:Type) (l:list a) = l" in
     Options.__set_unit_tests();
-    run 0 (app apply [id; nm n]) (nm n);
+    let pred_partial = pars "fun f x -> 0 (fun g h -> h (g f)) (fun y -> x) (fun y -> y)" in
+    run -2 (app apply [pred; Util.const_0]) pred_partial;
+    run -1 (app apply [id; nm n]) (nm n);
     run 0 (app apply [one; id; nm n]) (nm n);
     run 1 (app apply [tt; nm n; nm m]) (nm n);
     run 2 (app apply [ff; nm n; nm m]) (nm m);

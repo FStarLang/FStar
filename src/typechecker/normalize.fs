@@ -671,9 +671,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_arrow(bs, c) -> 
             if List.contains WHNF cfg.steps
             then rebuild cfg env stack (closure_as_term cfg env t)
-            else let bs, c = open_comp bs c in 
-                 let c = norm_comp cfg (bs |> List.fold_left (fun env _ -> Dummy::env) env) c in
-                 let t = arrow (norm_binders cfg env bs) c in
+            else let cfg, env, bs = norm_binders2 cfg env bs in 
+                 let c = norm_comp cfg env c in
+                 let t = S.mk (Tm_arrow(bs, c)) None t.pos in
                  rebuild cfg env stack t
           
           | Tm_ascribed(t1, tc, l) -> 
@@ -759,6 +759,16 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 rebuild cfg env stack t
             end
 
+and norm_binders2 cfg env bs = 
+    let cfg, env, bs = List.fold_left (fun (cfg, env, bs) (x, aq) -> 
+        let x = {x with sort=norm cfg env [] x.sort} in
+        let cfg = {cfg with index_level=cfg.index_level + 1} in
+        let env = Open(x, cfg.index_level)::env in
+        let bs = (x,aq)::bs in
+        cfg, env, bs) (cfg, env, []) bs in
+    let bs = List.rev bs in
+    cfg, env, bs
+
 and norm_pattern_args cfg env args = 
     args |> List.map (List.map (fun (a, imp) -> norm cfg env [] a, imp)) 
     
@@ -802,18 +812,6 @@ and ghost_to_pure_aux cfg env c =
         else c
     | _ -> c
 
-and norm_binder : cfg -> env -> binder -> binder = 
-    fun cfg env (x, imp) -> {x with sort=norm cfg env [] x.sort}, imp
-
-and norm_binders : cfg -> env -> binders -> binders = 
-    fun cfg env bs -> 
-        let nbs, _ = List.fold_left (fun (nbs', env) b -> 
-            let b = norm_binder cfg env b in
-            (b::nbs', Dummy::env) (* crossing a binder, so shift environment *)) 
-            ([], env)
-            bs in
-        List.rev nbs
-
 and norm_lcomp_opt : cfg -> env -> option<either<lcomp, Ident.lident>> -> option<either<lcomp, Ident.lident>> = 
     fun cfg env lopt -> 
         match lopt with
@@ -846,7 +844,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
             | Abs (_, bs, _, lopt, r)::stack ->
 //              let bs = norm_binders cfg env' bs in
 //              let lopt = norm_lcomp_opt cfg env'' lopt in
-              rebuild cfg env stack ({abs bs t lopt with pos=r})
+              rebuild cfg env stack (S.mk (Tm_abs(bs, t, lopt)) None r)
 
             | Arg (Univ _,  _, _)::_
             | Arg (Dummy,  _, _)::_  -> failwith "Impossible"

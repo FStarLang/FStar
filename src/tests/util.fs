@@ -12,11 +12,14 @@ module I = FStar.Ident
 open FStar.Ident
 open FStar.Range
 
+let w = gen_bv "w" None S.tun
 let x = gen_bv "x" None S.tun
 let y = gen_bv "y" None S.tun
+let z = gen_bv "z" None S.tun
 let n = gen_bv "n" None S.tun
 let h = gen_bv "h" None S.tun
 let m = gen_bv "m" None S.tun
+let const_0 : term = S.mk (S.Tm_constant Const.Const_unit) None dummyRange
 let tm t = mk t None dummyRange
 let nm x = bv_to_name x
 let app x ts = mk (Tm_app(x, List.map as_arg ts)) None dummyRange
