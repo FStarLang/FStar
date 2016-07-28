@@ -1,144 +1,153 @@
-module FStar.STX
-open FStar.SGX
+module FStar.SGX
+open FStar.Heap
 
-let st_pre = st_pre_h mem
-let st_post (a:Type) = st_post_h mem a
-let st_wp (a:Type) = st_wp_h mem a
+(* The basic idea is to define a combination of an exception and state monad, 
+   with an additional bit of boolean state to record when a send may have failed.
 
-new_effect STATE = STATE_h mem
+   If this were using the Dm4Free construction, we would have written the monad as:
 
-effect State (a:Type) (wp:st_wp a) =
-       STATE a wp
+   STX (a:Type) = h0:heap                 //the input state
+		-> send_failed:bool       //an input flag, recording whether or not a send has failed so far
+		-> Tot (option (a * heap) //the output state is an optional pair, because throwing an exception discards (and resets) the state
+		        * bool)           //the output flag, recording whether this computation has a failed send
 
-effect ST (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
-       STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
-  
-effect STX (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
-       ST a pre (fun m0 x m1 -> post m0 x m1 /\ fresh_frame m0 m1)
+   with
 
+   return (a:Type) (x:a) : STX a = 
+     fun h0 b0 -> Some (x, h0), b0
 
-(* Effect requiring that the top frame is fresh *)
-effect STL (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
-       ST a pre (fun m0 x m1 -> post m0 x m1 /\ fresh_frame m0 m1)
-
-sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:mem) -> wp (fun a -> p a h)
-
-// JK: pushes a new emtpy frame on the stack
-assume val push_frame: unit -> ST unit
-  (requires (fun m -> True))
-  (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
-
-// JK: removes old frame from the stack
-assume val pop_frame: unit -> ST unit
-  (requires (fun m -> poppable m))
-  (ensures (fun (m0:mem) _ (m1:mem) -> poppable m0 /\ m1==pop m0 /\ popped m0 m1))
-
-(* val call: #a:Type -> #b:Type -> #pre:st_pre -> #post:(t -> Tot (st_post t)) -> $(f:a -> STF b (requires (fun h -> pre h)) (fun h0 x h1 -> post h0 b h1)) -> ST b *)
-(*   (requires (fun h -> (forall h'. fresh_frame h h' ==> pre h'))) *)
-(*   (ensures (fun h0 x h1 -> stack h1 = stack h0)) *)
-  
-// JK: allocates on the top-most stack frame
-assume val salloc: #a:Type -> init:a -> ST (stackref a)
-  (requires (fun m -> True))
-  (ensures (fun m0 s m1 -> 
-      Map.domain m0.h == Map.domain m1.h
-    /\ m0.tip = m1.tip
-    /\ s.id   = m1.tip
-    /\ HH.fresh_rref s.ref m0.h m1.h            //it's a fresh reference in the top frame
-    /\ m1==HyperStack.upd m0 s init))           //and it's been initialized
-
-// JK: assigns, provided that the reference is good
-assume val op_Colon_Equals: #a:Type -> r:stackref a -> v:a -> STL unit
-  (requires (fun m -> contains m r))
-  (ensures (fun m0 _ m1 -> contains m0 r /\ m1 == HyperStack.upd m0 r v))
-
-// JK: dereferences, provided that the reference is good
-assume val op_Bang: #a:Type -> r:stackref a -> STL a
-  (requires (fun m -> HH.includes r.id m.tip))
-  (ensures (fun s0 v s1 -> s1==s0 /\ v==HyperStack.sel s0 r))
-
-module G = FStar.Ghost
-
-// JK: Returns the current stack of heaps --- it should be erased
-assume val get: unit -> STL mem
-  (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m0==x /\ m1==m0))
-
-// JK: Proper function, returning an erased stack of heaps 
-// YES, this is the proper one
-assume val eget: unit -> STL (G.erased mem)
-  (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m0==G.reveal x /\ m1==m0))
-
-(* Tests *)
-val test_do_nothing: int -> STL int
-  (requires (fun h -> True))
-  (ensures (fun h _ h1 -> True))
-let test_do_nothing x = 
-  push_frame();
-  pop_frame ();
-  x
-
-val test_do_something: s:stackref int -> STL int
-  (requires (fun h -> contains h s))
-  (ensures (fun h r h1 -> contains h s /\ r = sel h s))
-let test_do_something x = 
-  push_frame();
-  let res = !x in
-  pop_frame ();
-  res
-
-val test_do_something_else: s:stackref int -> v:int -> STL unit
-  (requires (fun h -> contains h s))
-  (ensures (fun h r h1 -> contains h1 s /\ v = sel h1 s))
-let test_do_something_else x v = 
-  push_frame();
-  x := v;
-  pop_frame ()
-  
-val test_allocate: unit -> Stl unit
-let test_allocate () =
-  push_frame();
-  let x = salloc 1 in
-  x := 2;
-  pop_frame ()
-
-val test_nested_stl: unit -> Stl unit
-let test_nested_stl () =
-  let x = test_do_nothing 0 in ()
-
-val test_nested_stl2: unit -> Stl unit
-let test_nested_stl2 () =
-  push_frame ();
-  let x = test_do_nothing 0 in 
-  pop_frame ()
-
-val with_frame: #a:Type -> #pre:st_pre -> #post:(mem -> Tot (st_post a)) -> $f:(unit -> STL a pre post) 
-	     -> STL a (fun s0 -> forall s1. fresh_frame s0 s1 ==> pre s1)
-		     (fun s0 x s1 -> 
-			exists s0' s1'. fresh_frame s0 s0' 
-			         /\ poppable s0' 
-				 /\ post s0' x s1'
-				 /\ equal_domains s0' s1'
-				 /\ s1 == pop s1')
-let with_frame #a #pre #post f = 
-  push_frame();
-  let x = f() in
-  pop_frame();
-  x
-
-let test_with_frame (x:stackref int) (v:int) 
-  : STL unit (requires (fun m -> contains m x))
-	     (ensures (fun m0 _ m1 -> modifies (Set.singleton x.id) m0 m1 /\ sel m1 x = v))
- = with_frame (fun _ -> x := v)
+   bind (a:Type) (b:Type) (f:STX a) (g:a -> STX b) : STX b = 
+     fun h0 b0 ->
+	 match f h0 b0 with
+	 | None, b1 -> None, b1 //if the first computation throws, the state is gone, but the flag remains
+	 | Some (x, h1), b1 -> g x h1 b1  //otherwise, we run the second computation with the new state and flag
 
 
-let as_requires (#a:Type) (wp:st_wp a) = wp (fun x s -> True)
-let as_ensures (#a:Type) (wp:st_wp a) = fun s0 x s1 -> wp (fun y s1' -> y=!=x \/ s1=!=s1') s0
-assume val as_stl: #a:Type -> #wp:st_wp a -> $f:(unit -> STATE a wp) -> 
-	   Pure (unit -> STL a (as_requires wp)
-			      (as_ensures wp))
-	        (requires (forall s0 x s1. as_ensures wp s0 x s1 ==> equal_domains s0 s1))
- 	        (ensures (fun x -> True))
+  Much of what follows is this basic idea, but it's a bit convoluted
+  because of the WP style. We should make this work with Dm4Free so
+  that we can really write what's above instead of the verbose stuff
+  that follows.
+
+  One wrinkle is that I define everything first generically over the
+  type of the state, and then instantiate the state to FStar.Heap.heap.
+  That should allow us to plug in whatever memory model you like, later.
+*)
+
+(* You can mostly skip reading from here ...
+   <skip> *)
+let stx_pre_h  (h:Type)           = h                //input state is pair of the state h 
+				  -> bool             //and a flag recording the status of the last send
+				  -> GTot Type0
+let stx_post_h (h:Type) (a:Type)  = option (a * h)   //an exceptional result and final state
+				  -> bool             //pair of final state and output flag
+				  -> GTot Type0
+let stx_wp_h   (h:Type) (a:Type)  = stx_post_h h a 
+				  -> Tot (est_pre_h h)
+
+inline let stx_ite_wp (heap:Type) (a:Type)
+                      (wp:est_wp_h heap a)
+                      (post:est_post_h heap a) (h0:heap) (b:bool) =
+    forall (k:est_post_h heap a).
+       (forall (x:option (a * heap)) (b:bool).{:pattern (guard_free (k x b))} k x b <==> post x b)
+       ==> wp k h0 b
+inline let stx_return  (heap:Type) (a:Type) (x:a) (p:est_post_h heap a) (h0:heap) (b:bool)= p (Some (x, h0)) b
+inline let stx_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
+                       (wp1:est_wp_h heap a)
+                       (wp2:(a -> GTot (est_wp_h heap b)))
+                       (p:est_post_h heap b) (h0:heap) (b0:bool) : GTot Type0 =
+   labeled r1 "push" unit
+   /\ wp1 (fun ra b1 ->
+       labeled r1 "pop" unit
+	 /\ (match ra with 
+	    | None -> p None b1 //if the 1st computation throws, then we don't run the 2nd one
+	    | Some (x, h1) -> wp2 x p h1 b1))
+     h0 b0
+inline let stx_if_then_else (heap:Type) (a:Type) (p:Type)
+                             (wp_then:est_wp_h heap a) (wp_else:est_wp_h heap a)
+                             (post:est_post_h heap a) (h0:heap) (b:bool) =
+   l_ITE p
+       (wp_then post h0 b)
+       (wp_else post h0 b)
+inline let stx_stronger (heap:Type) (a:Type) (wp1:est_wp_h heap a)
+                        (wp2:est_wp_h heap a) =
+    (forall (p:est_post_h heap a) (h:heap) (b:bool). wp1 p h b ==> wp2 p h b)
+
+inline let stx_close_wp (heap:Type) (a:Type) (b:Type)
+                        (wp:(b -> GTot (est_wp_h heap a)))
+                        (p:est_post_h heap a) (h:heap) (f:bool) =
+    (forall (b:b). wp b p h f)
+inline let stx_assert_p (heap:Type) (a:Type) (p:Type)
+                        (wp:est_wp_h heap a) (q:est_post_h heap a) (h:heap) (b:bool) =
+    p /\ wp q h b
+inline let stx_assume_p (heap:Type) (a:Type) (p:Type)
+                         (wp:est_wp_h heap a) (q:est_post_h heap a) (h:heap) (b:bool) =
+    p ==> wp q h b
+inline let stx_null_wp (heap:Type) (a:Type)
+                       (p:est_post_h heap a) (h0:heap) (b:bool) =
+    (forall (a:option (a * heap)) (b1:bool). p a b1)
+inline let stx_trivial (heap:Type) (a:Type) (wp:est_wp_h heap a) =
+    (forall (h0:heap) (b:bool). wp (fun r b -> True) h0 b)
+
+new_effect {
+  STX_h (heap:Type) : a:Type -> wp:est_wp_h heap a -> Effect
+  with
+    return_wp    = stx_return       heap
+  ; bind_wp      = stx_bind_wp      heap
+  ; if_then_else = stx_if_then_else heap
+  ; ite_wp       = stx_ite_wp       heap
+  ; stronger     = stx_stronger     heap
+  ; close_wp     = stx_close_wp     heap
+  ; assert_p     = stx_assert_p     heap
+  ; assume_p     = stx_assume_p     heap
+  ; null_wp      = stx_null_wp      heap
+  ; trivial      = stx_trivial      heap
+}
+(* </skip> until here *)
+////////////////////////////////////////////////////////////////////////////////
+open FStar.Heap 
+new_effect STX = STX_h heap //Define a instance of ES, specializing the memory to heaps
+
+(* Eth is our effect, in Hoare triple style with pre-conditions and post-conditions *)
+effect Eth (a:Type) 
+	   (pre:heap -> bool -> Type0)
+	   (post:heap -> bool -> option (a * heap) -> bool -> Type0)
+       = STX a (fun (q:option (a * heap) -> bool -> Type0) (h0:heap) (b0:bool) -> 
+		  pre h0 b0
+		  /\ (forall r b1. post h0 b0 r b1 ==> q r b1))
+	 
+
+(* operations for STX *)
+(* This is my best guess so far at the desired semantics of the operations.
+   We should discuss further to see if that matches reality *)
+assume val throw : unit -> Eth unit 
+  (requires (fun _ _ -> True))
+  (ensures (fun h0 b0 r b1 -> b0=b1 /\ r==None)) //state is reset; flag doesn't change
+
+assume val send: msg:nat -> Eth bool
+  (requires (fun _ b0 -> not b0))      //can only send if we are not already in a "failed send" state
+  (ensures (fun h0 b0 r b1 -> 
+		 r==Some (b1, h0))) //the return value is the flag and the heap doesn't change
+
+assume val alloc:  #a:Type -> init:a -> Eth (ref a)
+  (requires (fun _ _ -> True)) //allocation effects are always permitted
+  (ensures (fun h0 b0 r b1 -> 
+	      b0=b1 /\ //the flag doesn't change
+	      (match r with 
+ 	       | None -> False
+	       | Some (x, h1) -> 
+	  	  not(contains h0 x)  //the returned ref is fresh
+		/\ contains h1 x
+		/\ h1==upd h0 x init))) //and the heap is updated appropriately
+
+assume val recall:  #a:Type -> x:ref a -> Eth unit
+   (requires (fun h0 b0 -> True)) 
+   (ensures (fun h0 b0 r b1 ->  r == Some ((), h0)
+			  /\ b0 = b1
+			  /\ Heap.contains h0 x))
+
+assume val read:  #a:Type -> x:ref a -> Eth a
+   (requires (fun _ _ -> True)) //read effects are always permitted
+   (ensures (fun h0 b0 r b1 -> 
+	       b0=b1 /\ //the flag doesn't change
+	       r==Some (sel h0 x, h0)))
+
