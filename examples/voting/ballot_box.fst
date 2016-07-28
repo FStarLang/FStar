@@ -24,8 +24,8 @@ open Crypto_interface
 open Assumptions
 
 val ballotBox: pub_id_t -> priv_id_t
-	 -> ca:cipher{(FromAboth (fst ca) (snd ca)) /\ (exists (mLa:bytes) (mRa:bytes).((Encryptedboth mLa mRa (fst ca) (snd ca)) /\ (Marshboth (fst v1) (snd v2) mLa mRa)))}
-	 -> cb:cipher{(FromBboth (fst cb) (snd cb)) /\ (exists (mLb:bytes) (mRb:bytes).((Encryptedboth mLb mRb (fst cb) (snd cb)) /\ (Marshboth (fst v2) (snd v1) mLb mRb)))}
+	 -> ca:cipher{(FromAboth (fst ca) (snd ca)) /\ (exists (mLa:bytes) (mRa:bytes). ((Encryptedboth mLa mRa (fst ca) (snd ca)) /\ (Marshboth (fst v1) (snd v2) mLa mRa)))}
+	 -> cb:cipher{(FromBboth (fst cb) (snd cb)) /\ (exists (mLb:bytes) (mRb:bytes). ((Encryptedboth mLb mRb (fst cb) (snd cb)) /\ (Marshboth (fst v2) (snd v1) mLb mRb)))}
 	 -> co:cipher
 	 -> error
 	 -> result

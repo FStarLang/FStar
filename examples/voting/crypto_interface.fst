@@ -154,7 +154,7 @@ assume val unseal_fun: seal_both_ref_t -> unseal_fun_t
 (* Unseal function type for T(able) valid (used for validity checks) *)
 type unseal_val_fun_t = c:cipher -> b:bool{(b = true) ==> (
                         (Validboth (fst c) (snd c))
-						/\ (exists (m1:bytes) (m2:bytes) (z1:int) (z2:int).(
+						/\ (exists (m1:bytes) (m2:bytes) (z1:int) (z2:int). (
 							(Encryptedboth m1 m2 (fst c) (snd c)) /\ (Marshboth z1 z2 m1 m2)
 							/\ ( ( (FromAboth (fst c) (snd c)) )
 								\/ ( (FromBboth (fst c) (snd c)) )
@@ -164,10 +164,10 @@ assume val unseal_val_fun: seal_both_ref_t -> unseal_val_fun_t
 
 (* Reseal function type for homomorphic encryption *)
 type reseal_hom_fun_t = c1:cipher -> c2:cipher -> c:cipher{forall (mL1:bytes) (mL2:bytes) (mR1:bytes) (mR2:bytes)
-							(zL1:int) (zL2:int) (zR1:int) (zR2:int).(
+							(zL1:int) (zL2:int) (zR1:int) (zR2:int). (
 					( (Encryptedboth mL1 mR1 (fst c1) (snd c1)) /\ (Encryptedboth mL2 mR2 (fst c2) (snd c2))
 					/\ (Marshboth zL1 zR1 mL1 mR1) /\ (Marshboth zL2 zR2 mL2 mR2) )
-                    ==> (exists (mL:bytes) (mR:bytes).(
+                    ==> (exists (mL:bytes) (mR:bytes). (
 						(Encryptedboth mL mR (fst c) (snd c)) /\ (Marshboth (zL1 + zL2) (zR1 + zR2) mL mR))))}
 
 assume val reseal_hom_fun: seal_both_ref_t -> reseal_hom_fun_t

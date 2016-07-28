@@ -92,7 +92,7 @@ let fsum_index_lemma h0 h1 h2 a a_idx b b_idx len ctr =
 	(v (get h2 a (i+a_idx)) = v (get h0 a (i+a_idx)) + v (get h0 b (i+b_idx))) in
       (* FsumLemmas.auxiliary_lemma_4 len ctr g;  *)
       cut(forall (i:nat). (i>=ctr /\ i < len) ==> (v (get h2 a (i+a_idx)) = v (get h0 a (i+a_idx)) + v (get h0 b (i+b_idx))) ); 
-      cut(forall (i:nat).((i<ctr \/ i >= len) /\ i<length a-a_idx) ==> (get h2 a (i+a_idx) == get h0 a (i+a_idx))); 
+      cut(forall (i:nat). ((i<ctr \/ i >= len) /\ i<length a-a_idx) ==> (get h2 a (i+a_idx) == get h0 a (i+a_idx))); 
       (* no_upd_lemma h0 h2 b (only a) *)
       ()
       
