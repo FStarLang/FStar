@@ -342,13 +342,15 @@ type nonTerminalId =
     | NONTERM_funArrow
     | NONTERM_tmIff
     | NONTERM_tmImplies
+    | NONTERM_tmArrowNoEquals
+    | NONTERM_arrowDomainNoEquals
+    | NONTERM_tmArrow
+    | NONTERM_arrowDomain
     | NONTERM_tmDisjunction
     | NONTERM_tmConjunction
     | NONTERM_tmTuple
     | NONTERM_tmEq
     | NONTERM_tmCons
-    | NONTERM_product
-    | NONTERM_productDomain
     | NONTERM_dtupleTerm
     | NONTERM_arithTerm
     | NONTERM_refinementTerm

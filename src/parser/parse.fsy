@@ -513,7 +513,7 @@ constructors:
       { $1@[$2] }
 
 recordFieldDecl:
-  |  ident COLON tmTuple
+  |  ident COLON typ
       { ($1, $3) }
 
 constructorDecl:
@@ -577,14 +577,14 @@ idpath:
 
 ascribeTypOpt:
   |              { None }
-  | COLON product { Some $2 }
+  | COLON tmArrowNoEquals { Some $2 }
 
 ascribeKindOpt:
   |               { None }
   | COLON  kind { Some $2 }
 
 kind:
-  | product { {$1 with level=Kind} }
+  | tmArrowNoEquals { {$1 with level=Kind} }
 
 typ:
   | simpleTerm  { $1 }
@@ -753,13 +753,50 @@ tmIff:
       { $1 }
 
 tmImplies:
-  | tmDisjunction IMPLIES tmImplies
+  | tmArrow IMPLIES tmImplies
       {
         mk_term (Op("==>", [$1; $3])) (rhs2 parseState 1 3) Formula
       }
 
+  | tmArrow
+      { $1 }
+
+// FIXME once we switch to menhir (duplication)
+tmArrowNoEquals:
+  | arrowDomainNoEquals RARROW tmArrowNoEquals
+     {
+        let aq, tm = $1 in
+        let b = match extract_named_refinement tm with
+            | None -> mk_binder (NoName tm) (rhs parseState 1) Un aq
+            | Some (x, t, f) -> mkRefinedBinder x t f (rhs2 parseState 1 1) aq in
+        mk_term (Product([b], $3)) (rhs2 parseState 1 3)  Un
+    
+     }
+
+  | tmCons
+      { $1 }
+
+arrowDomainNoEquals:
+  | aqual tmCons { (Some $1, $2) }
+  | tmCons      { (None, $1)    }
+
+tmArrow:
+  | arrowDomain RARROW tmArrow
+     {
+        let aq, tm = $1 in
+        let b = match extract_named_refinement tm with
+            | None -> mk_binder (NoName tm) (rhs parseState 1) Un aq
+            | Some (x, t, f) -> mkRefinedBinder x t f (rhs2 parseState 1 1) aq in
+        mk_term (Product([b], $3)) (rhs2 parseState 1 3)  Un
+    
+     }
+
   | tmDisjunction
       { $1 }
+
+arrowDomain:
+  | aqual tmDisjunction { (Some $1, $2) }
+  | tmDisjunction      { (None, $1)    }
 
 tmDisjunction:
   | tmDisjunction DISJUNCTION tmConjunction
@@ -807,29 +844,11 @@ tmEq:
       { $1 }
 
 tmCons:
-  | product COLON_COLON tmCons
+  | dtupleTerm COLON_COLON tmCons
       { consTerm (rhs parseState 2) $1 $3 }
-
-  | product
-      { $1 }
-
-product:
-  | productDomain RARROW product
-     {
-        let aq, tm = $1 in
-        let b = match extract_named_refinement tm with
-            | None -> mk_binder (NoName tm) (rhs parseState 1) Un aq
-            | Some (x, t, f) -> mkRefinedBinder x t f (rhs2 parseState 1 1) aq in
-        mk_term (Product([b], $3)) (rhs2 parseState 1 3)  Un
-    
-     }
 
   | dtupleTerm
       { $1 }
-
-productDomain:
-  | aqual dtupleTerm { (Some $1, $2) }
-  | dtupleTerm      { (None, $1)    }
 
 dtupleTerm:
   | arithTerm AMP dtupleTerm

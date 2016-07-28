@@ -119,7 +119,7 @@ type seal_val_ref_entry_t =
      /\ (Validboth (fst (snd mc)) (snd (snd mc)) )
      /\ ((FromAboth (fst (snd mc)) (snd (snd mc))) \/ (FromBboth (fst (snd mc)) (snd (snd mc)))
 	                         \/ ((FromOboth (fst (snd mc)) (snd (snd mc))) /\ (fst (fst mc) = snd (fst mc))))
-     /\ (exists (zL:int) (zR:int).(Marshboth zL zR (fst (fst mc)) (snd (fst mc))))}
+     /\ (exists (zL:int) (zR:int). (Marshboth zL zR (fst (fst mc)) (snd (fst mc))))}
 (* Note: seal_fun_O_t will need to check that input is marsh of an int (v1 or v2). *)
 
 type seal_val_ref_list_t = list seal_val_ref_entry_t
