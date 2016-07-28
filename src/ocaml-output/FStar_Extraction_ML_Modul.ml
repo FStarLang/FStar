@@ -28,7 +28,7 @@ in (match (_79_16) with
 | (prefix, constrName) -> begin
 (
 
-let mangledName = (FStar_Ident.id_of_text (Prims.strcat (Prims.strcat (Prims.strcat "___" constrName.FStar_Ident.idText) "___") projecteeName.FStar_Ident.idText))
+let mangledName = (FStar_Ident.id_of_text (Prims.strcat "___" (Prims.strcat constrName.FStar_Ident.idText (Prims.strcat "___" projecteeName.FStar_Ident.idText))))
 in (FStar_Ident.lid_of_ids (FStar_List.append prefix ((mangledName)::[]))))
 end))))
 
@@ -115,9 +115,9 @@ let is_Mkinductive_family : inductive_family  ->  Prims.bool = (Obj.magic ((fun 
 let print_ifamily : inductive_family  ->  Prims.unit = (fun i -> (let _171_77 = (FStar_Syntax_Print.lid_to_string i.iname)
 in (let _171_76 = (FStar_Syntax_Print.binders_to_string " " i.iparams)
 in (let _171_75 = (FStar_Syntax_Print.term_to_string i.ityp)
-in (let _171_74 = (let _171_73 = (FStar_All.pipe_right i.idatas (FStar_List.map (fun d -> (let _171_72 = (let _171_70 = (FStar_Syntax_Print.lid_to_string d.dname)
-in (Prims.strcat _171_70 " : "))
-in (let _171_71 = (FStar_Syntax_Print.term_to_string d.dtyp)
+in (let _171_74 = (let _171_73 = (FStar_All.pipe_right i.idatas (FStar_List.map (fun d -> (let _171_72 = (FStar_Syntax_Print.lid_to_string d.dname)
+in (let _171_71 = (let _171_70 = (FStar_Syntax_Print.term_to_string d.dtyp)
+in (Prims.strcat " : " _171_70))
 in (Prims.strcat _171_72 _171_71))))))
 in (FStar_All.pipe_right _171_73 (FStar_String.concat "\n\t\t")))
 in (FStar_Util.print4 "\n\t%s %s : %s { %s }\n" _171_77 _171_76 _171_75 _171_74))))))

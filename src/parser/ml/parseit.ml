@@ -42,7 +42,21 @@ let parse fn =
       "<input>", Lexing.from_string s in
 
   resetLexbufPos filename lexbuf;
-  let lexer = FStar_Parser_LexFStar.token in
+
+  let buffered = ref 0 in
+  let lexer = fun x ->
+    if !buffered > 0 then begin
+      decr buffered;
+      FStar_Parser_Parse.TYP_APP_GREATER
+    end else match FStar_Parser_LexFStar.token x with
+    | FStar_Parser_Parse.TYP_APP_nGREATER n ->
+        if !buffered > 0 then
+          failwith "too many >s";
+        buffered := n - 1;
+        FStar_Parser_Parse.TYP_APP_GREATER
+    | tok ->
+        tok
+  in
 
   try
       let fileOrFragment = FStar_Parser_Parse.inputFragment lexer lexbuf in

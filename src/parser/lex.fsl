@@ -364,12 +364,12 @@ rule token args = parse
  | "[|" { LBRACK_BAR }
  | "<" {  if is_typ_app args lexbuf then TYP_APP_LESS else OPINFIX0c("<")  }
  | ">" {  if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser 1 args lexbuf }
- | ">>" { if is_typ_app_gt () then
-            if is_typ_app_gt () then
-              TYP_APP_2GREATER
-            else
-              failwith ">> only for typ-app with --fs_typ_app"
+ | ">>" { if is_typ_app_gt () && is_typ_app_gt () then
+              TYP_APP_nGREATER 2
           else custom_op_parser 2 args lexbuf }
+ | ">>>" { if is_typ_app_gt () && is_typ_app_gt () && is_typ_app_gt () then
+              TYP_APP_nGREATER 3
+          else custom_op_parser 3 args lexbuf }
  | "|>" { PIPE_RIGHT }
  | "]"  { RBRACK }
  | "|]" { BAR_RBRACK }

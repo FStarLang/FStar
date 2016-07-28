@@ -46,7 +46,7 @@ type verify_mode =
   | VerifyUserList
   | VerifyFigureItOut
 
-type map = smap<(option<string>*option<string>)>
+type map = smap<(option<string> * option<string>)>
 
 let check_and_strip_suffix (f: string): option<string> =
   let suffixes = [ ".fsti"; ".fst"; ".fsi"; ".fs" ] in

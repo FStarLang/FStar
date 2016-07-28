@@ -66,7 +66,7 @@ in (FStar_ST.read ok)))))
 let trigraph : FStar_BaseTypes.char  ->  FStar_BaseTypes.char  ->  FStar_BaseTypes.char  ->  FStar_BaseTypes.char = (fun c1 c2 c3 -> (
 
 let digit = (fun c -> ((FStar_Util.int_of_char c) - (FStar_Util.int_of_char '0')))
-in (FStar_Util.char_of_int (((digit c1) * 100) + (((digit c2) * 10) + (digit c3))))))
+in (FStar_Util.char_of_int ((((digit c1) * 100) + ((digit c2) * 10)) + (digit c3)))))
 
 
 let digit : FStar_BaseTypes.char  ->  Prims.int = (fun d -> (
@@ -100,11 +100,11 @@ end))
 let unicodegraph_short : Prims.string  ->  FStar_BaseTypes.uint16 = (fun s -> if ((FStar_String.length s) <> 4) then begin
 (FStar_All.failwith "unicodegraph")
 end else begin
-(let _158_63 = (((let _158_59 = (FStar_Util.char_at s 0)
-in (hexdigit _158_59)) * 4096) + (((let _158_60 = (FStar_Util.char_at s 1)
-in (hexdigit _158_60)) * 256) + (((let _158_61 = (FStar_Util.char_at s 2)
-in (hexdigit _158_61)) * 16) + (let _158_62 = (FStar_Util.char_at s 3)
-in (hexdigit _158_62)))))
+(let _158_63 = (((((let _158_59 = (FStar_Util.char_at s 0)
+in (hexdigit _158_59)) * 4096) + ((let _158_60 = (FStar_Util.char_at s 1)
+in (hexdigit _158_60)) * 256)) + ((let _158_61 = (FStar_Util.char_at s 2)
+in (hexdigit _158_61)) * 16)) + (let _158_62 = (FStar_Util.char_at s 3)
+in (hexdigit _158_62)))
 in (FStar_Util.uint16_of_int _158_63))
 end)
 
@@ -124,22 +124,22 @@ let unicodegraph_long : Prims.string  ->  (FStar_BaseTypes.uint16 Prims.option *
 end else begin
 (
 
-let high = (((let _158_71 = (FStar_Util.char_at s 0)
-in (hexdigit _158_71)) * 4096) + (((let _158_72 = (FStar_Util.char_at s 1)
-in (hexdigit _158_72)) * 256) + (((let _158_73 = (FStar_Util.char_at s 2)
-in (hexdigit _158_73)) * 16) + (let _158_74 = (FStar_Util.char_at s 3)
-in (hexdigit _158_74)))))
+let high = (((((let _158_71 = (FStar_Util.char_at s 0)
+in (hexdigit _158_71)) * 4096) + ((let _158_72 = (FStar_Util.char_at s 1)
+in (hexdigit _158_72)) * 256)) + ((let _158_73 = (FStar_Util.char_at s 2)
+in (hexdigit _158_73)) * 16)) + (let _158_74 = (FStar_Util.char_at s 3)
+in (hexdigit _158_74)))
 in (
 
-let low = (((let _158_75 = (FStar_Util.char_at s 4)
-in (hexdigit _158_75)) * 4096) + (((let _158_76 = (FStar_Util.char_at s 5)
-in (hexdigit _158_76)) * 256) + (((let _158_77 = (FStar_Util.char_at s 6)
-in (hexdigit _158_77)) * 16) + (let _158_78 = (FStar_Util.char_at s 7)
-in (hexdigit _158_78)))))
+let low = (((((let _158_75 = (FStar_Util.char_at s 4)
+in (hexdigit _158_75)) * 4096) + ((let _158_76 = (FStar_Util.char_at s 5)
+in (hexdigit _158_76)) * 256)) + ((let _158_77 = (FStar_Util.char_at s 6)
+in (hexdigit _158_77)) * 16)) + (let _158_78 = (FStar_Util.char_at s 7)
+in (hexdigit _158_78)))
 in if (high = 0) then begin
 ((None), ((FStar_Util.uint16_of_int low)))
 end else begin
-((Some ((FStar_Util.uint16_of_int (0xD800 + (((high * 0x10000) + (low - 0x10000)) / 0x400))))), ((FStar_Util.uint16_of_int (0xDF30 + (((high * 0x10000) + (low - 0x10000)) % 0x400)))))
+((Some ((FStar_Util.uint16_of_int (0xD800 + ((((high * 0x10000) + low) - 0x10000) / 0x400))))), ((FStar_Util.uint16_of_int (0xDF30 + ((((high * 0x10000) + low) - 0x10000) % 0x400)))))
 end))
 end)
 

@@ -43,7 +43,7 @@ let break1 : doc = (text " ")
 
 let enclose : doc  ->  doc  ->  doc  ->  doc = (fun _27_7 _27_9 _27_11 -> (match (((_27_7), (_27_9), (_27_11))) with
 | (Doc (l), Doc (r), Doc (x)) -> begin
-Doc ((Prims.strcat (Prims.strcat l x) r))
+Doc ((Prims.strcat l (Prims.strcat x r)))
 end))
 
 

@@ -326,7 +326,13 @@ rule token = parse
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
  | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else OPINFIX0c("<")  }
- | ">"         { if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser lexbuf }
+ | ">" {  if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser 1 lexbuf }
+ | ">>" { if is_typ_app_gt () && is_typ_app_gt () then
+              TYP_APP_nGREATER 2
+          else custom_op_parser 2 lexbuf }
+ | ">>>" { if is_typ_app_gt () && is_typ_app_gt () && is_typ_app_gt () then
+              TYP_APP_nGREATER 3
+          else custom_op_parser 3 lexbuf }
  | "]"         { RBRACK }
  | "|]"        { BAR_RBRACK }
  | "{"         { LBRACE }
@@ -350,8 +356,8 @@ rule token = parse
  | _ { failwith "unexpected char" }
  | eof { lc := 1; EOF }
 
-and custom_op_parser = parse
- | symbolchar* { OPINFIX0c (">" ^ L.lexeme lexbuf)}
+and custom_op_parser n = parse
+ | symbolchar* { OPINFIX0c (String.make n '>' ^  L.lexeme lexbuf) }
 
 and string buffer = parse
  |  '\\' (newline as x) anywhite*

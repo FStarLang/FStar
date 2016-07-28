@@ -4,7 +4,7 @@ FSTAR_HOME=../..
 
 OPTIONS=-thread -package batteries,zarith,yojson -linkpkg -g -w "-28" -annot
 
-#MENHIR=menhir --explain --infer -la 1 --table
+#MENHIR=menhir --explain #--infer -la 1 --table
 MENHIR=ocamlyacc
 OCAMLC=ocamlfind ocamlc $(OPTIONS)
 OCAMLOPT=ocamlfind ocamlopt $(OPTIONS)

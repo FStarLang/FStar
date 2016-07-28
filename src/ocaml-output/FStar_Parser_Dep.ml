@@ -787,8 +787,8 @@ in (
 let r = (fun s -> (FStar_Util.replace_char s '.' '_'))
 in (FStar_List.map (fun dep -> (FStar_Util.format2 "  %s -> %s" (r k) (r dep))) deps)))) _161_175))
 in (FStar_String.concat "\n" _161_176))
-in (Prims.strcat "digraph {\n" _161_177))
-in (Prims.strcat _161_178 "\n}\n"))
+in (Prims.strcat _161_177 "\n}\n"))
+in (Prims.strcat "digraph {\n" _161_178))
 in (FStar_Util.write_file "dep.graph" _161_179))))))
 
 

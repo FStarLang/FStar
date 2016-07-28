@@ -66,17 +66,17 @@ let parse fn =
   resetLexbufPos filename lexbuf;
   try
       let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
-      let buffered = ref false in
+      let buffered = ref 0 in
       let lexer = fun x ->
         // Disgusting. I know.
-        if !buffered then begin
-          buffered := false;
+        if !buffered > 0 then begin
+          decr buffered;
           Parse.TYP_APP_GREATER
         end else match LexFStar.token lexargs x with
-        | Parse.TYP_APP_2GREATER ->
-            if !buffered then
+        | Parse.TYP_APP_nGREATER n ->
+            if !buffered > 0 then
               failwith "too many >s";
-            buffered := true;
+            buffered := n - 1;
             Parse.TYP_APP_GREATER
         | tok ->
             tok

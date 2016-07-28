@@ -91,9 +91,10 @@ let as_frag d ds =
 %token <float> IEEE64
 %token <char> CHAR
 %token <bool> LET
+%token <int> TYP_APP_nGREATER
 %token FORALL EXISTS ASSUME NEW LOGIC IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT NOEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
-%token ACTIONS TYP_APP_LESS TYP_APP_GREATER TYP_APP_2GREATER SUBTYPE SUBKIND BANG
-%token AND ASSERT BEGIN ELSE END 
+%token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BANG
+%token AND ASSERT BEGIN ELSE END
 %token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
 %token OPEN REC MUTABLE THEN TRUE L_TRUE TRY TYPE EFFECT VAL
@@ -764,6 +765,8 @@ tmEq:
       { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
   | tmEq PIPE_RIGHT tmEq
       { mk_term (Op("|>", [$1; $3])) (rhs2 parseState 1 3) Un}
+  | tmEq OPINFIX1 tmEq
+      { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
   | tmCons
       { $1 }
 
@@ -810,8 +813,6 @@ dtupleTerm:
      { $1 }
 
 arithTerm:
-  | arithTerm OPINFIX1 arithTerm
-      { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
   | arithTerm MINUS arithTerm
       { mk_term (Op("-", [$1; $3])) (rhs2 parseState 1 3) Un}
   | arithTerm OPINFIX2 arithTerm
