@@ -19,7 +19,16 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS = FStar.HyperStack
 
-(* Auxiliary lemmas and functions *)
+(****************************************)
+(*    Auxiliary lemmas and functions    *)
+(****************************************)
+let op_Hat_Bar_Hat = UInt32.logor
+let op_Bar_Less_Less = UInt32.shift_left
+
+open FStar.Int.Cast
+
+assume MaxU8: pow2 8 = 256
+assume MaxU32: pow2 32 = 4294967296
 
 val max_value_increases: h:heap -> b:bigint{live h b} -> n:pos -> m:pos{m>=n /\ m <= length b} -> Lemma
   (maxValue h b n <= maxValue h b m)
@@ -81,7 +90,26 @@ assume val aux_lemma_2: b:bigint -> Lemma (requires (True)) (ensures ((arefs (on
 (* let aux_lemma_3 h0 h1 b =  *)
 (*   aux_lemma_2 b; () *)
 
-(*** Poly1305 code ***)
+
+val uint32_of_bytes: b:bytes{length b >= 4} -> STL u32
+  (requires (fun h -> Buffer.live h b))
+  (ensures (fun h0 r h1 -> h0 == h1 /\ Buffer.live h0 b))
+let uint32_of_bytes (b:bytes{length b >= 4}) =
+  let b0 = (index b 0ul) in
+  let b1 = (index b 1ul) in
+  let b2 = (index b 2ul) in
+  let b3 = (index b 3ul) in
+  let r = UInt32.add_mod (UInt32.add_mod (UInt32.add_mod (UInt32.op_Less_Less_Hat (uint8_to_uint32 b3) 24ul)
+							 (UInt32.op_Less_Less_Hat (uint8_to_uint32 b2) 16ul))
+					 (UInt32.op_Less_Less_Hat (uint8_to_uint32 b1) 8ul))
+			 (uint8_to_uint32 b0) in
+  r
+(****************************************)
+
+
+(** ************************************ **)
+(**             Poly1305 code            **)
+(** ************************************ **)
 
 (* Bigint to bytes serializing function *)
 val num_to_le_bytes: s:bytes{length s >= 16} -> b:bigint{disjoint b s} -> STL unit
@@ -116,25 +144,6 @@ let num_to_le_bytes s b =
   upd s 14ul (Int.Cast.uint64_to_uint8 (b4 ^>> 8ul)); // 112 
   upd s 15ul (Int.Cast.uint64_to_uint8 (b4 ^>> 16ul)); // 120 
   ()
-
-let op_Hat_Bar_Hat = UInt32.logor
-let op_Bar_Less_Less = UInt32.shift_left
-
-open FStar.Int.Cast
-
-val uint32_of_bytes: b:bytes{length b >= 4} -> STL u32
-  (requires (fun h -> Buffer.live h b))
-  (ensures (fun h0 r h1 -> h0 == h1 /\ Buffer.live h0 b))
-let uint32_of_bytes (b:bytes{length b >= 4}) =
-  let b0 = (index b 0ul) in
-  let b1 = (index b 1ul) in
-  let b2 = (index b 2ul) in
-  let b3 = (index b 3ul) in
-  let r = UInt32.add_mod (UInt32.add_mod (UInt32.add_mod (UInt32.op_Less_Less_Hat (uint8_to_uint32 b3) 24ul)
-							 (UInt32.op_Less_Less_Hat (uint8_to_uint32 b2) 16ul))
-					 (UInt32.op_Less_Less_Hat (uint8_to_uint32 b1) 8ul))
-			 (uint8_to_uint32 b0) in
-  r
 
 (* Bytes to bigint deserializing functions *)
 val le_bytes_to_num: b:bigint -> s:bytes{length s = 16 /\ disjoint b s} -> STL unit
@@ -181,10 +190,24 @@ let le_bytes_to_num b s =
   assume (v (get h b 4) < pow2 24);
   assume (norm h b)
 
-#reset-options
-#set-options "--lax"
+(* Clamps the key, see RFC *)
+val clamp: r:bytes{length r = 16} -> STL unit
+  (requires (fun h -> Buffer.live h r))
+  (ensures (fun h0 _ h1 -> Buffer.live h1 r /\ modifies_1 r h0 h1))
+let clamp r =
+  let mask_15 = 15uy in
+  let mask_252 = 252uy in
+  upd r 3ul  (U8.op_Amp_Hat (index r 3ul ) mask_15);
+  upd r 7ul  (U8.op_Amp_Hat (index r 7ul ) mask_15);
+  upd r 11ul (U8.op_Amp_Hat (index r 11ul) mask_15);
+  upd r 15ul (U8.op_Amp_Hat (index r 15ul) mask_15);
+  upd r 4ul  (U8.op_Amp_Hat (index r 4ul ) mask_252);
+  upd r 8ul  (U8.op_Amp_Hat (index r 8ul ) mask_252);
+  upd r 12ul (U8.op_Amp_Hat (index r 12ul) mask_252);
+  ()
 
-(* Runs "Acc = ((Acc+block)*r) % p." *)
+(* Runs "Acc = ((Acc+block)*r) % p." on the accumulator, the well formatted block of the message 
+   and the clamped part of the key *)
 val add_and_multiply: acc:bigint -> block:bigint{disjoint acc block} -> r:bigint{disjoint acc r /\ disjoint block r} -> STL unit
   (requires (fun h -> norm h acc /\ norm h block /\ norm h r))
   (ensures (fun h0 _ h1 -> norm h0 acc /\ norm h0 block /\ norm h0 r /\ norm h1 acc
@@ -232,27 +255,35 @@ let add_and_multiply acc block r =
   let hfin = HST.get() in
   admit()
 
-assume MaxU8: pow2 8 = 256
-assume MaxU32: pow2 32 = 4294967296
 
-val clamp: r:bytes{length r = 16} -> STL unit
-  (requires (fun h -> Buffer.live h r))
-  (ensures (fun h0 _ h1 -> Buffer.live h1 r /\ modifies_1 r h0 h1))
-let clamp r =
-  let mask_15 = 15uy in
-  let mask_252 = 252uy in
-  upd r 3ul  (U8.op_Amp_Hat (index r 3ul ) mask_15);
-  upd r 7ul  (U8.op_Amp_Hat (index r 7ul ) mask_15);
-  upd r 11ul (U8.op_Amp_Hat (index r 11ul) mask_15);
-  upd r 15ul (U8.op_Amp_Hat (index r 15ul) mask_15);
-  upd r 4ul  (U8.op_Amp_Hat (index r 4ul ) mask_252);
-  upd r 8ul  (U8.op_Amp_Hat (index r 8ul ) mask_252);
-  upd r 12ul (U8.op_Amp_Hat (index r 12ul) mask_252);
-  ()
+(* Initialization function:
+   - zeros the accumulator
+   - clamp the first half of the key
+   - stores the key well formatted in 'r' and 's' *)
+val poly1305_init: acc:bigint -> bigint_r:bigint -> bigint_s:bigint -> key:bytes -> STL unit
+  (requires (fun h -> True))
+  (ensures  (fun h0 _ h1 -> True))
+let poly1305_init acc bigint_r bigint_s key =
+  push_frame();
+  (* Zero the accumulator *)
+  upd acc 0ul 0UL;
+  upd acc 1ul 0UL;
+  upd acc 2ul 0UL;
+  upd acc 3ul 0UL;
+  upd acc 4ul 0UL;
+  (* Format the keys *)
+  let r' = sub key 0ul 16ul in
+  let s = sub key 16ul 16ul in
+  let r = create 0uy 16ul in // Needs to be done on bigint_r instead to avoid copies
+  blit r' 0ul r 0ul 16ul;
+  clamp r; 
+  le_bytes_to_num bigint_r r;
+  le_bytes_to_num bigint_s s;
+  pop_frame()
 
-#reset-options "--z3timeout 20"
-#set-options "--lax" // TODO
-
+(* Update function:
+   - takes a message block, appends '1' to it and formats it to bigint format    
+   - runs acc = ((acc*block)+r) % p *)
 val poly1305_update: msg:bytes -> acc:bigint{disjoint msg acc} -> 
   bigint_r:bigint{disjoint msg bigint_r /\ disjoint acc bigint_r} -> STL unit
     (requires (fun h -> Buffer.live h msg /\ norm h acc /\ norm h bigint_r))
@@ -289,6 +320,7 @@ let poly1305_update msg acc r =
   let hfin = HST.get() in
   ()
 
+(* Loop over Poly1305_upadte *)
 val poly1305_step: msg:bytes -> acc:bigint{disjoint msg acc} -> 
   bigint_r:bigint{disjoint msg bigint_r /\ disjoint acc bigint_r} -> ctr:u32{length msg >= 16 * w ctr} ->
   STL unit
@@ -303,9 +335,7 @@ let rec poly1305_step msg acc r ctr =
     poly1305_step msg acc r (ctr-|1ul)
   end
 
-#reset-options "--z3timeout 10"
-#set-options "--lax" // TODO
-
+(* Performs the last step if there is an incomplete block *)
 val poly1305_last: msg:bytes -> acc:bigint{disjoint msg acc} -> 
   bigint_r:bigint{disjoint msg bigint_r /\ disjoint acc bigint_r} -> len:u32{w len <= length msg} ->
   STL unit
@@ -338,30 +368,7 @@ let poly1305_last msg acc r len =
     aux_lemma_2 acc;
     () )
 
-#reset-options "--z3timeout 10"
-#set-options "--lax" // TODO
-
-val poly1305_init: acc:bigint -> bigint_r:bigint -> bigint_s:bigint -> key:bytes -> STL unit
-  (requires (fun h -> True))
-  (ensures  (fun h0 _ h1 -> True))
-let poly1305_init acc bigint_r bigint_s key =
-  push_frame();
-  (* Zero the accumulator *)
-  upd acc 0ul 0UL;
-  upd acc 1ul 0UL;
-  upd acc 2ul 0UL;
-  upd acc 3ul 0UL;
-  upd acc 4ul 0UL;
-  (* Format the keys *)
-  let r' = sub key 0ul 16ul in
-  let s = sub key 16ul 16ul in
-  let r = create 0uy 16ul in // Needs to be done on bigint_r instead to avoid copies
-  blit r' 0ul r 0ul 16ul;
-  clamp r; 
-  le_bytes_to_num bigint_r r;
-  le_bytes_to_num bigint_s s;
-  pop_frame()
-
+(* Finish function, with final accumulator value *)
 val poly1305_finish: hash:bytes -> acc:bigint -> bigint_s:bigint -> STL unit
   (requires (fun h -> Buffer.live h hash /\ live h acc /\ live h bigint_s 
     /\ disjoint hash acc /\ disjoint hash bigint_s /\ disjoint acc bigint_s))
@@ -379,13 +386,18 @@ val poly1305_mac: hash:bytes{length hash >= 16} -> msg:bytes{disjoint hash msg} 
     (ensures (fun h0 _ h1 -> Buffer.live h1 hash /\ modifies_1 hash h0 h1))
 let poly1305_mac hash msg len key =
   push_frame();
+  (* Create buffers for the 2 parts of the key and the accumulator *)
   let bigint_r = create 0UL nlength in
   let bigint_s = create 0UL nlength in 
-  let acc      = create 0UL nlength in 
+  let acc      = create 0UL nlength in
+  (* Initializes the accumulator and the keys values *)
   poly1305_init acc bigint_r bigint_s key;
+  (* Compute the number of 'plain' blocks *)
   let ctr = U32.div len 16ul in
   let rest = U32.rem len 16ul in 
-  poly1305_step msg acc bigint_r ctr; 
-  poly1305_last msg acc bigint_r len;
+  (* Run the poly1305_update function ctr times *)
+  poly1305_step msg acc bigint_r ctr;
+  poly1305_last msg acc bigint_r rest;
+  (* Finish *)
   poly1305_finish hash acc bigint_s;
   pop_frame()

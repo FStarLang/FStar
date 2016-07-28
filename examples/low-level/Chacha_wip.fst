@@ -17,7 +17,10 @@ let u8 = UInt8.t
 let uint32s = buffer u32
 let bytes = buffer u8
 
+
+(****************************************)
 (** Infix operators and helping lemmas **)
+(****************************************)
 // TODO: Needs to be instanciated differently
 assume MaxUint32: FStar.UInt.max_int 32 = 4294967295
 
@@ -29,48 +32,44 @@ let op_Less_Less_Less (a:u32) (s:u32{v s <= 32}) =
   let (m:u32{v m = 32}) = 32ul in  
   (op_Less_Less_Hat a s) |^ (op_Greater_Greater_Hat a (m -^ s))
 
-(* Chacha 20 code *)
-val quarter_round: m:uint32s{length m = 16} -> 
-  a:u32{v a < 16} -> b:u32{v b<16} -> c:u32{v c<16} -> d:u32{v d<16} -> STL unit 
-  (requires (fun h -> live h m)) 
-  (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1))
-let quarter_round m a b c d =
-  upd m a (index m a +%^ index m b);
-  upd m d (index m d ^^ index m a);
-  let (tmp:u32) = index m d in 
-  upd m d (tmp <<< UInt32.uint_to_t 16); 
-  upd m c (index m c +%^ index m d); 
-  upd m b (index m b ^^ index m c); 
-  let tmp = index m b in
-  upd m b (tmp <<< UInt32.uint_to_t 12);
-  upd m a (index m a +%^ index m b); 
-  upd m d (index m d ^^ index m a); 
-  let tmp = index m d in
-  upd m d (tmp <<< UInt32.uint_to_t 8);
-  upd m c (index m c +%^ index m d); 
-  upd m b (index m b ^^ index m c); 
-  let tmp = index m b in
-  upd m b (tmp <<< UInt32.uint_to_t 7)
+let op_Hat_Greater_Greater (a: u32) (b: u32): Pure u32
+  (requires True)
+  (ensures (fun c -> v c = (v a / (pow2 (v b))))) =
+  op_Greater_Greater_Hat a b
 
-(* Chacha20 block function *)
-val column_round: m:uint32s{length m = 16} -> STL unit
-    (requires (fun h -> live h m))
-    (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1 ))
-let column_round m =
-  quarter_round m 0ul 4ul 8ul 12ul;
-  quarter_round m 1ul 5ul 9ul 13ul;
-  quarter_round m 2ul 6ul 10ul 14ul;
-  quarter_round m 3ul 7ul 11ul 15ul
+let op_Hat_Star (a: u32) (b: u32): Pure u32
+  (requires (FStar.UInt.size (v a * v b) 32))
+  (ensures (fun c -> v a * v b = v c)) =
+  op_Star_Hat a b
 
-val diagonal_round: m:uint32s{length m = 16} -> STL unit
-    (requires (fun h -> live h m))
-    (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1 ))
-let diagonal_round m =
-  quarter_round m 0ul 5ul 10ul 15ul;
-  quarter_round m 1ul 6ul 11ul 12ul;
-  quarter_round m 2ul 7ul 8ul 13ul;
-  quarter_round m 3ul 4ul 9ul 14ul
+let op_Hat_Slash a b = op_Slash_Hat a b
+let op_Hat_Percent a b = op_Percent_Hat a b
+(****************************************)
 
+
+(****************************************)
+(** Utility functions should go in a    **)
+(**  'utils' module                    **)
+(****************************************)
+val xor_bytes_2: output:bytes -> in1:bytes{disjoint in1 output} -> 
+  len:u32{v len <= length output /\ v len <= length in1} -> STL unit
+  (requires (fun h -> live h output /\ live h in1))
+  (ensures  (fun h0 _ h1 -> live h0 output /\ live h0 in1 /\ live h1 output /\ live h1 in1
+    /\ modifies_1 output h0 h1 ))
+let rec xor_bytes_2 output in1 len =
+  if len =^ 0ul then ()
+  else
+    begin
+      let i    = len -^ 1ul in
+      let in1i = index in1 i in
+      let oi   = index output i in
+      let oi   = UInt8.logxor in1i oi in
+      upd output i oi;
+      xor_bytes_2 output in1 i
+    end
+
+
+(* Read an unsigned int32 out of 4 bytes *)
 val uint32_of_bytes: b:bytes{length b >= 4} -> STL u32
   (requires (fun h -> live h b))
   (ensures (fun h0 r h1 -> h0 == h1 /\ live h0 b))
@@ -85,19 +84,7 @@ let uint32_of_bytes (b:bytes{length b >= 4}) =
 	+%^ uint8_to_uint32 b0 in
   r
 
-let op_Hat_Greater_Greater (a: u32) (b: u32): Pure u32
-  (requires True)
-  (ensures (fun c -> v c = (v a / (pow2 (v b))))) =
-  op_Greater_Greater_Hat a b
-
-let op_Hat_Star (a: u32) (b: u32): Pure u32
-  (requires (FStar.UInt.size (v a * v b) 32))
-  (ensures (fun c -> v a * v b = v c)) =
-  op_Star_Hat a b
-
-let op_Hat_Slash a b = op_Slash_Hat a b
-let op_Hat_Percent a b = op_Percent_Hat a b
-
+(* Stores the content of a byte buffer into a unsigned int32 buffer *)
 val bytes_of_uint32s: output:bytes -> m:uint32s{disjoint output m} -> len:u32{v len <=length output /\ v len<=op_Multiply 4 (length m)} -> STL unit
   (requires (fun h -> live h output /\ live h m))
   (ensures (fun h0 _ h1 -> live h0 output /\ live h0 m /\ live h1 output /\ live h1 m
@@ -141,23 +128,52 @@ let rec bytes_of_uint32s output m l =
       bytes_of_uint32s output m l
       end
     end
+(****************************************)
 
-val xor_bytes_2: output:bytes -> in1:bytes{disjoint in1 output} -> 
-  len:u32{v len <= length output /\ v len <= length in1} -> STL unit
-  (requires (fun h -> live h output /\ live h in1))
-  (ensures  (fun h0 _ h1 -> live h0 output /\ live h0 in1 /\ live h1 output /\ live h1 in1
-    /\ modifies_1 output h0 h1 ))
-let rec xor_bytes_2 output in1 len =
-  if len =^ 0ul then ()
-  else
-    begin
-      let i    = len -^ 1ul in
-      let in1i = index in1 i in
-      let oi   = index output i in
-      let oi   = UInt8.logxor in1i oi in
-      upd output i oi;
-      xor_bytes_2 output in1 i
-    end
+
+
+(****************************************)
+(*             Chacha 20 code           *)
+(****************************************)
+val quarter_round: m:uint32s{length m = 16} -> 
+  a:u32{v a < 16} -> b:u32{v b<16} -> c:u32{v c<16} -> d:u32{v d<16} -> STL unit 
+  (requires (fun h -> live h m)) 
+  (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1))
+let quarter_round m a b c d =
+  upd m a (index m a +%^ index m b);
+  upd m d (index m d ^^ index m a);
+  let (tmp:u32) = index m d in 
+  upd m d (tmp <<< UInt32.uint_to_t 16); 
+  upd m c (index m c +%^ index m d); 
+  upd m b (index m b ^^ index m c); 
+  let tmp = index m b in
+  upd m b (tmp <<< UInt32.uint_to_t 12);
+  upd m a (index m a +%^ index m b); 
+  upd m d (index m d ^^ index m a); 
+  let tmp = index m d in
+  upd m d (tmp <<< UInt32.uint_to_t 8);
+  upd m c (index m c +%^ index m d); 
+  upd m b (index m b ^^ index m c); 
+  let tmp = index m b in
+  upd m b (tmp <<< UInt32.uint_to_t 7)
+
+val column_round: m:uint32s{length m = 16} -> STL unit
+    (requires (fun h -> live h m))
+    (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1 ))
+let column_round m =
+  quarter_round m 0ul 4ul 8ul 12ul;
+  quarter_round m 1ul 5ul 9ul 13ul;
+  quarter_round m 2ul 6ul 10ul 14ul;
+  quarter_round m 3ul 7ul 11ul 15ul
+
+val diagonal_round: m:uint32s{length m = 16} -> STL unit
+    (requires (fun h -> live h m))
+    (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1 ))
+let diagonal_round m =
+  quarter_round m 0ul 5ul 10ul 15ul;
+  quarter_round m 1ul 6ul 11ul 12ul;
+  quarter_round m 2ul 7ul 8ul 13ul;
+  quarter_round m 3ul 4ul 9ul 14ul
 
 val chacha20_init: state:uint32s{length state >= 16} -> 
   key:bytes{length key = 32 /\ disjoint state key} -> counter:u32 -> iv:UInt64.t -> 
@@ -206,7 +222,8 @@ let chacha20_init state key counter iv constant =
   upd state 14ul (n0);
   upd state 15ul (n1)
 
-val sum_matrixes: new_state:uint32s{length new_state >= 16} -> old_state:uint32s{length old_state >= 16 /\ disjoint new_state old_state} -> STL unit
+val sum_matrixes: new_state:uint32s{length new_state >= 16} -> 
+  old_state:uint32s{length old_state >= 16 /\ disjoint new_state old_state} -> STL unit
   (requires (fun h -> live h new_state /\ live h old_state))
   (ensures (fun h0 _ h1 -> live h1 new_state /\ modifies_1 new_state h0 h1))
 let sum_matrixes m m0 =
@@ -253,6 +270,7 @@ let chacha20_update output state len =
   (* Serialize the state into byte stream *)
   bytes_of_uint32s output m len
 
+(* Loop over the Chacha20_update function *)
 val chacha20_loop:
   state:uint32s{length state >= 32} -> key:bytes{length key = 32 /\ disjoint state key} -> 
   counter:u32 -> 
@@ -290,13 +308,16 @@ val chacha20_encrypt_body: state:uint32s{length state = 32} ->
     (requires (fun h -> live h state /\ live h ciphertext /\ live h key /\ live h plaintext))
     (ensures (fun h0 _ h1 -> live h1 ciphertext /\ live h1 state /\ modifies_2 ciphertext state h0 h1))
 let chacha20_encrypt_body state ciphertext key counter iv constant plaintext len =
+  (* Compute the number of 'plain' blocks, the length is assumed to be a public value *)
   let max = (len ^/ 64ul) in
   let rem = len ^% 64ul in
-  (* Apply Chacha20 max times **)  
+  (* Apply Chacha20 max times *)
   chacha20_loop state key counter iv constant plaintext ciphertext 0ul max;
+  (* If complete, return *)
   if rem =^ 0ul then ()
-  else 
-    begin 
+  (* Else compute one more block *)
+  else
+    begin
       let cipher_block = sub ciphertext (UInt32.mul 64ul max) rem in 
       let plain_block = sub plaintext (UInt32.mul 64ul max) rem in 
       chacha20_init state key (counter +^ max) iv constant;
@@ -313,7 +334,8 @@ val chacha20_encrypt:
     (ensures (fun h0 _ h1 -> live h1 ciphertext /\ modifies_1 ciphertext h0 h1))
 let chacha20_encrypt ciphertext key counter iv constant plaintext len = 
   push_frame ();
+  (* Create the internal state buffer *)
   let state = create 0ul 32ul in
-  (* Compute number of iterations *)
+  (* Apply Chacha20 on plaintext and store the result in the 'ciphertext' buffer *)
   chacha20_encrypt_body state ciphertext key counter iv constant plaintext len;
   pop_frame()
