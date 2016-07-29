@@ -84,9 +84,22 @@ let rec step (env:sgxstate) = function
        let fentry = eval env e in
 	(* Convert this to sequence of instructions *)
 	steps env (decode fentry)
+  | If (e, truli, falsli) ->
+	let boolval = eval env e in
+	if boolval then
+		steps env truli
+	else
+		steps env falsli 
+  |Assign (reg, e) ->
+	let value = eval env e in
+        let regname = get_register_name reg in
+        env.write regname value
 
 and steps (env:sgxstate) instr = List.iter (fun elem->step env elem ) instr  
 
+(* Should the following function have a type that uses effects associated with hyperstack ? 
+   Is buf supposed to be a hyperstack?
+*)
 val ustar:(array u64)->(array u64)-> nat ->nat->nat->nat->nat->unit->unit
 let ustar regs buf base wbmapstart uheapstart ustackstart ucodestart entry = 
   let size = 1000 in
