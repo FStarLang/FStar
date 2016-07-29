@@ -312,7 +312,7 @@ let _run : Prims.unit = (clear ())
 let lookup_opt = (fun s c -> (match ((let _116_129 = (peek ())
 in (FStar_Util.smap_try_find _116_129 s))) with
 | None -> begin
-(FStar_All.failwith (Prims.strcat (Prims.strcat "Impossible: option " s) " not found"))
+(FStar_All.failwith (Prims.strcat "Impossible: option " (Prims.strcat s " not found")))
 end
 | Some (s) -> begin
 (c s)
@@ -762,7 +762,7 @@ end)
 end)) specs)))
 
 
-let mk_spec : (FStar_BaseTypes.char * Prims.string * option_val FStar_Getopt.opt_variant * Prims.string)  ->  FStar_Getopt.opt = (fun o -> (
+let mk_spec : (FStar_Char.char * Prims.string * option_val FStar_Getopt.opt_variant * Prims.string)  ->  FStar_Getopt.opt = (fun o -> (
 
 let _24_180 = o
 in (match (_24_180) with
@@ -1159,11 +1159,11 @@ universe_include_path_base_dirs
 end else begin
 include_path_base_dirs
 end
-in (let _116_502 = (let _116_501 = (let _116_499 = (FStar_All.pipe_right defs (FStar_List.map (fun x -> (Prims.strcat h x))))
+in (let _116_502 = (let _116_499 = (FStar_All.pipe_right defs (FStar_List.map (fun x -> (Prims.strcat h x))))
 in (FStar_All.pipe_right _116_499 (FStar_List.filter FStar_Util.file_exists)))
-in (let _116_500 = (get_include ())
-in (FStar_List.append _116_501 _116_500)))
-in (FStar_List.append _116_502 ((".")::[])))))
+in (let _116_501 = (let _116_500 = (get_include ())
+in (FStar_List.append _116_500 ((".")::[])))
+in (FStar_List.append _116_502 _116_501)))))
 end
 end))
 
@@ -1216,7 +1216,7 @@ let prepend_output_dir : Prims.string  ->  Prims.string = (fun fname -> (match (
 fname
 end
 | Some (x) -> begin
-(Prims.strcat (Prims.strcat x "/") fname)
+(Prims.strcat x (Prims.strcat "/" fname))
 end))
 
 

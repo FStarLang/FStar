@@ -1751,7 +1751,7 @@ in (FStar_All.pipe_right _120_1285 text_of_path))
 in {FStar_Ident.ns = ns; FStar_Ident.ident = id; FStar_Ident.nsstr = nsstr; FStar_Ident.str = if (nsstr = "") then begin
 id.FStar_Ident.idText
 end else begin
-(Prims.strcat (Prims.strcat nsstr ".") id.FStar_Ident.idText)
+(Prims.strcat nsstr (Prims.strcat "." id.FStar_Ident.idText))
 end})
 end)))
 

@@ -1,112 +1,142 @@
 module FStar.SGX
-open FStar.HyperHeap
-module HH = FStar.HyperHeap
 
-let is_above r1 r2 = HH.includes r1 r2
-let is_below r1 r2 = HH.extends r1 r2
+open FStar.Heap
 
-let is_tip (tip:HH.rid) (h:HH.t) = 
-  Map.contains h tip                                          //the tip is active
-  /\ (forall r. Map.contains h r ==> is_above r tip)             //any other activation is a parent of the tip
-  /\ (forall r. is_below r tip \/ HH.disjoint r tip ==> not (Map.contains h r))        //nothing beyond or disjoint from the tip is active
+(* SGXRegMemory type (In Progress)
 
-noeq type mem =
-  | HS : h:HH.t{Map.contains h HH.root /\ HH.map_invariant h} //the memory itself, always contains the root region  
-       -> tip:HH.rid{is_tip tip h}                             //the id of the current top-most stack frame
-       -> mem
+ Basic Idea: 
+	1. An 8-byte array of 7 different memory regions. Additionally also includes the set of registers (rax, rbx,..rbp, rsp)
+		a. Read/Write Bitmap
+		b. U Stack
+		c. U Heap
+		d. U Code
+		e. V Stack
+		f. V Heap
+		g. V code
+		h. Register set
 
-noeq type stackref (a:Type) =
-  | MkStacked : id:rid -> ref:HH.rref id a -> stackref a
+		Memory Sketch
+				 ____________________
+				| 8-bytes /64-bits   |
+				+____________________+
+		bitmapstart->	|bbbbbbb.......bbbbb |
+				|		     |
+				+____________________+
+		U Heap start->	|bbbbbbb.......bbbbb |
+				|  	    	     |
+				+____________________+
+		U Stack	start->	|bbbbbbb.......bbbbb |
+				|  	    	     |
+				+____________________+
+		U Code start->	|bbbbbbb.......bbbbb |
+				|  	    	     |
+				+____________________+
+		V Heap start->	|bbbbbbb.......bbbbb |
+				|  	    	     |
+				+____________________+
+		V Stack start->	|bbbbbbb.......bbbbb |
+				|  	    	     |
+				+____________________+
+		V Code start->	|bbbbbbb.......bbbbb |
+				|  	    	     |
+				+____________________+
 
-let contains (#a:Type) (m:mem) (s:stackref a) = 
-  is_above s.id m.tip
-  /\ Map.contains m.h s.id
-  /\ HH.contains_ref s.ref m.h
+	2. Bitmap and Stack layout as shown below
+	
+			   Bitmap layout
+			  ==============
+					 ____________________
+					| 8-bytes /64-bits   |
+					+____________________+
+			bitmapstart->	|bbbbbbb.......bbbbb |
+					+____________________+
+			bitmapoffset->	|bbbbbbb.......bbbbb |
+					|  |    	     |
+					|  idx    	     |
+					+____________________+
 
-let upd (#a:Type) (m:mem) (s:stackref a{is_above s.id m.tip}) (v:a) 
-  : Tot mem 
-  = HS (HH.upd m.h s.ref v) m.tip
+			 Each entry is 8 bytes long and each bit represents if the corresponding 64-bytes at an 
+			 address(computed by the formula below) is writable.
+			Each offset represents the bit array for 64 64-bit addresses.
+			 
+			 To obtain address represented index 'idx' at 'bitmapoffset' is given as:
+				address = ((bitmapoffset * 64) + idx) + enclave_start_address
 
-let sel (#a:Type) (m:mem) (s:stackref a)
-  : Tot a 
-  = HH.sel m.h s.ref
+			 To check if 'addr' is writable, compute the index 'idx' as follows:
+				bitmapoffset  = (addr - enclave_start_address) / 64
+				idx 	      = (addr - enclave_start_address) % 64
 
-let equal_domains (m0:mem) (m1:mem) = 
-  m0.tip = m1.tip
-  /\ Set.equal (Map.domain m0.h) (Map.domain m1.h)
-  /\ (forall r. Map.contains m0.h r ==> TSet.equal (Heap.domain (Map.sel m0.h r)) (Heap.domain (Map.sel m1.h r)))
+			 Stack Layout
+			 ============
+					 ____________________
+					| 8-bytes /64-bits   |
+					+____________________+___
+			framepointer->	|bbbbbbb.......bbbbb |   |
+					+____________________+   |
+					|bbbbbbb.......bbbbb |   |--> current stack frame
+					|____________________|   | stackpointer < framepointer
+					|bbbbbbb.......bbbbb |   |
+			stackpointer->	+____________________+___|
 
-let lemma_equal_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
-  (requires (equal_domains m0 m1 /\ equal_domains m1 m2))
-  (ensures  (equal_domains m0 m2))
-  [SMTPat (equal_domains m0 m1); SMTPat (equal_domains m1 m2)]
-  = ()
+			rbp = frame pointer
+			rsp = stack pointer
 
-let top_frame (m:mem) = Map.sel m.h m.tip
 
-let fresh_frame (m0:mem) (m1:mem) = 
-  not (Map.contains m0.h m1.tip)
-  /\ HH.parent m1.tip = m0.tip
-  /\ m1.h == Map.upd m0.h m1.tip Heap.emp
+	3. Invariant to be maintained: 'U code' can read/write to only U stack or heap  /\ any such read/write is protected by bitmap
+*)
 
-let poppable m = m.tip <> HH.root
 
-let remove_elt (#a:eqtype) (s:Set.set a) (x:a) = Set.intersect s (Set.complement (Set.singleton x))
+(* Very sketchy framework. Does not type check, fill in the details 
+   The idea to construct sgxmem as an inductive type containing the sub-memories
+   instead of using hyperheaps.
 
-let popped m0 m1 = 
-  poppable m0
-  /\ HH.parent m0.tip = m1.tip
-  /\ Set.equal (Map.domain m1.h) (remove_elt (Map.domain m0.h) m0.tip)
-  /\ Map.equal m1.h (Map.restrict (Map.domain m1.h) m0.h)
+   Skipping code sections for now. Add later if required
+*)
 
-let pop (m0:mem{poppable m0}) : Tot mem =
-  let dom = remove_elt (Map.domain m0.h) m0.tip in
-  let h1 = Map.restrict dom m0.h in
-  let tip0 = m0.tip in
-  let tip1 = HH.parent tip0 in
-  assert (forall r. is_above r tip0 ==> r=tip0 \/ is_above r tip1);
-  HS h1 tip1
+noeq type bitmapmem
+ | MkBitmapmem: ? -> bitmapmem
 
-let lemma_pop_is_popped (m0:mem{poppable m0})
-  : Lemma (popped m0 (pop m0))
-  = let m1 = pop m0 in 
-    assert (Set.equal (Map.domain m1.h) (remove_elt (Map.domain m0.h) m0.tip))
+noeq type uheapmem
+ | MkUheapmem: ? -> uheapmem
 
-type s_ref (i:rid) (a:Type) = s:stackref a{s.id = i}
+noeq type ustackmem
+ | MkUstackmem: ? -> ustackmem
 
-let frameOf #a (s:stackref a) = s.id
+noeq type vheapmem
+ | MkVheapmem: ? -> vheapmem
 
-let modifies (s:Set.set rid) (m0:mem) (m1:mem) =
-  HH.modifies s m0.h m1.h
-  /\ m0.tip=m1.tip
+noeq type vstackmem
+ | MkVstackmem: ? -> vstackmem
 
-let as_ref #a (x:stackref a) : Tot (Heap.ref a) = HH.as_ref #a #x.id x.ref
-let as_aref #a (x:stackref a) : Tot Heap.aref = Heap.Ref (HH.as_ref #a #x.id x.ref)
-let modifies_one id h0 h1 = HH.modifies_one id h0.h h1.h
-let modifies_ref (id:rid) (s:TSet.set Heap.aref) (h0:mem) (h1:mem) =
-  HH.modifies_rref id s h0.h h1.h /\ h1.tip=h0.tip
 
-let lemma_upd_1 #a (h:mem) (x:stackref a) (v:a) : Lemma
-  (requires (contains h x))
-  (ensures (contains h x
-	    /\ modifies_one (frameOf x) h (upd h x v)
-	    /\ modifies_ref (frameOf x) (TSet.singleton (as_aref x)) h (upd h x v)
-	    /\ sel (upd h x v) x == v ))
-  [SMTPat (upd h x v); SMTPatT (contains h x)]
-  = ()
+(* Construct a sgxmem type. It contains all sub-memories *)
+noeq type sgxmem =
+  | MkSGXMem :  bitmapmem -> uheapmem -> ustackmem -> vheapmem -> vstackmem-> sgxmem
 
-let lemma_upd_2 #a (h:mem) (x:stackref a) (v:a) : Lemma
-  (requires (~(contains h x) /\ frameOf x = h.tip))
-  (ensures (~(contains h x)
-	    /\ frameOf x = h.tip
-	    /\ modifies_one h.tip h (upd h x v)
-	    /\ modifies_ref h.tip TSet.empty h (upd h x v)
-	    /\ sel (upd h x v) x == v ))
-  [SMTPat (upd h x v); SMTPatT (~(contains h x))]
-  = ()
+(* Construct a reference to sgxmem
+   It should contain the subregion it belongs to. How??
 
-assume val lemma_live_1: #a:Type ->  #a':Type -> h:mem -> x:stackref a -> x':stackref a' -> Lemma
-  (requires (contains h x /\ ~(contains h x')))
-  (ensures  (Heap.Ref (as_ref x) =!= Heap.Ref (as_ref x')))
-  [SMTPat (contains h x); SMTPatT (~(contains h x'))]
+  One idea is to assign rids as follows:
+
+  rid  memory
+  ===========
+  0   bitmapmem
+  1   uheapmem
+  2   ustackmem
+  3   vheapmem
+  4   vstackmem
+  ...
+  Below code  borrowed from HyperHeaps
+*)
+abstract let rid = list int
+abstract let rref (id:rid) (a:Type) = Heap.ref a
+
+noeq type sgxref (a:Type) =
+  | MkSGXRef : id:rid -> ref:rref id a -> sgxref a
+
+
+////////////////////////////////////////////////////////////////
+
+//if the corresponding address is protected in bitmap 
+assume	val isbitmapset:#a:Type-> h0:sgxmem->addr:sgxref a->bool	
 

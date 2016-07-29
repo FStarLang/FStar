@@ -1,4 +1,5 @@
 module FStar.Int31
+(* This module generated automatically using [mk_int.sh] *)
 
 let n = 31
 
@@ -87,11 +88,11 @@ let div_underspec a b =
   Mk (div_underspec (v a) (v b))
 
 (* Modulo primitives *)
-val mod: a:t -> b:t{v b <> 0} -> Pure t
+val rem: a:t -> b:t{v b <> 0} -> Pure t
   (requires True)
   (ensures (fun c ->
     v a - ((v a / v b) * v b) = v c))
-let mod a b = Mk (mod (v a) (v b))
+let rem a b = Mk (mod (v a) (v b))
 
 (* Bitwise operators *)
 val logand: t -> t -> Tot t
@@ -106,18 +107,18 @@ let lognot a = Mk (lognot (v a))
 val int_to_t: x:(int_t n) -> Pure t
   (requires True)
   (ensures (fun y -> v y = x))
-let int_to_t x = Mk (to_int_t n x)
+let int_to_t x = Mk x
 
 (* Shift operators *)
-val shift_right: a:t -> s:nat -> Pure t
+val shift_right: a:t -> s:UInt32.t -> Pure t
   (requires True)
-  (ensures (fun c -> v c = (v a /% (pow2 s))))
-let shift_right a s = Mk (shift_right (v a) s)
+  (ensures (fun c -> UInt32.v s < n ==> v c = (v a /% (pow2 (UInt32.v s)))))
+let shift_right a s = Mk (shift_right (v a) (UInt32.v s))
 
-val shift_left: a:t -> s:nat -> Pure t
+val shift_left: a:t -> s:UInt32.t -> Pure t
   (requires True)
-  (ensures (fun c -> v c = ((v a * pow2 s) @% pow2 n)))
-let shift_left a s = Mk (shift_left (v a) s)
+  (ensures (fun c -> UInt32.v s < n ==> v c = ((v a * pow2 (UInt32.v s)) @% pow2 n)))
+let shift_left a s = Mk (shift_left (v a) (UInt32.v s))
 
 (* Comparison operators *)
 let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
@@ -137,14 +138,18 @@ let op_Star_Hat = mul
 let op_Star_Question_Hat = mul_underspec
 let op_Star_Percent_Hat = mul_mod
 let op_Slash_Hat = div
-let op_Percent_Hat = mod
+let op_Percent_Hat = rem
 let op_Hat_Hat = logxor  
 let op_Amp_Hat = logand
 let op_Bar_Hat = logor
 let op_Less_Less_Hat = shift_left
 let op_Greater_Greater_Hat = shift_right
-let op_Equal_Hat = eq
+let op_Equals_Hat = eq
 let op_Greater_Hat = gt
-let op_Greater_Equal_Hat = gte
-let op_Less_Hat = gt
-let op_Less_Equal_Hat = gte
+let op_Greater_Equals_Hat = gte
+let op_Less_Hat = lt
+let op_Less_Equals_Hat = lte
+
+(* To input / output constants *)
+assume val to_string: t -> Tot string
+assume val of_string: string -> Tot t

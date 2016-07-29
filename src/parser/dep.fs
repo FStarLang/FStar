@@ -46,7 +46,7 @@ type verify_mode =
   | VerifyUserList
   | VerifyFigureItOut
 
-type map = smap<(option<string>*option<string>)>
+type map = smap<(option<string> * option<string>)>
 
 let check_and_strip_suffix (f: string): option<string> =
   let suffixes = [ ".fsti"; ".fst"; ".fsi"; ".fs" ] in
@@ -209,16 +209,20 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
   in
   let working_map = smap_copy original_map in
 
-  let record_open lid =
+  let record_open let_open lid =
     let key = lowercase_join_longident lid true in
     begin match smap_try_find original_map key with
     | Some pair ->
         List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
     | None ->
         let r = enter_namespace original_map working_map key in
-        if not r then
-          Util.fprint stderr "Warning: no modules in namespace %s and no file with \
-            that name either\n" [string_of_lid lid true]
+        if not r then begin
+          if let_open then
+            raise (Err ("let-open only supported for modules, not namespaces"))
+          else
+            Util.fprint stderr "Warning: no modules in namespace %s and no file with \
+              that name either\n" [string_of_lid lid true]
+        end
     end
   in
   let record_module_alias ident lid =
@@ -242,7 +246,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     else
       [ Const.fstar_ns_lid; Const.prims_lid; Const.st_lid; Const.all_lid ]
   in
-  List.iter record_open auto_open;
+  List.iter (record_open false) auto_open;
 
   let rec collect_fragment = function
     | Inl file ->
@@ -280,7 +284,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
 
   and collect_decl = function
     | Open lid ->
-        record_open lid
+        record_open false lid
     | ModuleAbbrev (ident, lid) ->
         add_dep (lowercase_join_longident lid true);
         record_module_alias ident lid
@@ -364,7 +368,9 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         ()
     | Const c ->
         collect_constant c
-    | Op (_, ts) ->
+    | Op (s, ts) ->
+        if s = "@" then
+          collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.append") Range.dummyRange));
         List.iter collect_term ts
     | Tvar _ ->
         ()
@@ -390,6 +396,9 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         collect_term t2
     | Let (_, patterms, t) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms;
+        collect_term t
+    | LetOpen (lid, t) ->
+        record_open true lid;
         collect_term t
     | Seq (t1, t2) ->
         collect_term t1;
@@ -439,8 +448,8 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     collect_pattern' p.pat
 
   and collect_pattern' = function
-    | PatWild ->
-        ()
+    | PatWild
+    | PatOp _
     | PatConst _ ->
         ()
     | PatApp (p, ps) ->

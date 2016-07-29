@@ -49,7 +49,6 @@ let check_extension fn =
           
 let parse fn =
   Parser.Util.warningHandler := (function
-    | Lexhelp.ReservedKeyword(m,s) -> Printf.printf "%s:%s" (Range.string_of_range s) m
     | e -> Printf.printf "Warning: %A\n" e);
 
   Parser.Util.errorHandler := (function

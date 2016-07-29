@@ -1130,7 +1130,7 @@ in (
 let body = (translate_expr env body)
 in (
 
-let name = (Prims.strcat (Prims.strcat env.module_name "_") name)
+let name = (Prims.strcat env.module_name (Prims.strcat "_" name))
 in Some (DFunction (((t), (name), (binders), (body)))))))))))
 end)
 with
@@ -1157,7 +1157,7 @@ in (
 let expr = (translate_expr env expr)
 in (
 
-let name = (Prims.strcat (Prims.strcat env.module_name "_") name)
+let name = (Prims.strcat env.module_name (Prims.strcat "_" name))
 in Some (DGlobal (((name), (t), (expr)))))))
 end)
 with
@@ -1184,7 +1184,7 @@ end
 | FStar_Extraction_ML_Syntax.MLM_Ty (((name, [], Some (FStar_Extraction_ML_Syntax.MLTD_Abbrev (t))))::[]) -> begin
 (
 
-let name = (Prims.strcat (Prims.strcat env.module_name "_") name)
+let name = (Prims.strcat env.module_name (Prims.strcat "_" name))
 in (let _172_536 = (let _172_535 = (let _172_534 = (translate_type env t)
 in ((name), (_172_534)))
 in DTypeAlias (_172_535))

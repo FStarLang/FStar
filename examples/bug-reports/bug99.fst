@@ -45,9 +45,9 @@ let lemma_is_equal_equivalence (a:Type) () =
       in
       qintro #(t a) #(fun m3 -> (is_equal m1 m2 /\ is_equal m2 m3) ==> is_equal m1 m3) transitive3
     in
-    qintro #(t a) #(fun m2 -> forall (m3:t a).((is_equal m1 m2 /\ is_equal m2 m3) ==> is_equal m1 m3)) transitive2
+    qintro #(t a) #(fun m2 -> forall (m3:t a). ((is_equal m1 m2 /\ is_equal m2 m3) ==> is_equal m1 m3)) transitive2
   in
 
   qintro #(t a) #(fun m -> is_equal m m == true) reflex;
   qintro #(t a) #(fun m1 -> forall m2. (is_equal m1 m2 = is_equal m2 m1)) symmetric1;
-  qintro #(t a) #(fun m1 -> forall (m2:t a) (m3:t a).((is_equal m1 m2 /\ is_equal m2 m3) ==> is_equal m1 m3)) transitive1
+  qintro #(t a) #(fun m1 -> forall (m2:t a) (m3:t a). ((is_equal m1 m2 /\ is_equal m2 m3) ==> is_equal m1 m3)) transitive1

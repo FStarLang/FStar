@@ -26,7 +26,7 @@ in (match (_77_11) with
 | (prefix, constrName) -> begin
 (
 
-let mangledName = (FStar_Absyn_Syntax.id_of_text (Prims.strcat (Prims.strcat (Prims.strcat "___" constrName.FStar_Ident.idText) "___") projecteeName.FStar_Ident.idText))
+let mangledName = (FStar_Absyn_Syntax.id_of_text (Prims.strcat "___" (Prims.strcat constrName.FStar_Ident.idText (Prims.strcat "___" projecteeName.FStar_Ident.idText))))
 in (FStar_Ident.lid_of_ids (FStar_List.append prefix ((mangledName)::[]))))
 end))))
 

@@ -275,7 +275,7 @@ in (FStar_String.concat "." (FStar_List.append p ((s)::[]))))
 end)))
 
 
-let infix_prim_ops : (Prims.string * (Prims.int * fixity) * Prims.string) Prims.list = ((("op_Addition"), (e_bin_prio_op1), ("+")))::((("op_Subtraction"), (e_bin_prio_op1), ("-")))::((("op_Multiply"), (e_bin_prio_op1), ("*")))::((("op_Division"), (e_bin_prio_op1), ("/")))::((("op_Equality"), (e_bin_prio_eq), ("=")))::((("op_ColonEquals"), (e_bin_prio_eq), (":=")))::((("op_disEquality"), (e_bin_prio_eq), ("<>")))::((("op_AmpAmp"), (e_bin_prio_and), ("&&")))::((("op_BarBar"), (e_bin_prio_or), ("||")))::((("op_LessThanOrEqual"), (e_bin_prio_order), ("<=")))::((("op_GreaterThanOrEqual"), (e_bin_prio_order), (">=")))::((("op_LessThan"), (e_bin_prio_order), ("<")))::((("op_GreaterThan"), (e_bin_prio_order), (">")))::((("op_Modulus"), (e_bin_prio_order), ("%")))::[]
+let infix_prim_ops : (Prims.string * (Prims.int * fixity) * Prims.string) Prims.list = ((("op_Addition"), (e_bin_prio_op1), ("+")))::((("op_Subtraction"), (e_bin_prio_op1), ("-")))::((("op_Multiply"), (e_bin_prio_op1), ("*")))::((("op_Division"), (e_bin_prio_op1), ("/")))::((("op_Equality"), (e_bin_prio_eq), ("=")))::((("op_ColonEquals"), (e_bin_prio_eq), (":=")))::((("op_disEquality"), (e_bin_prio_eq), ("<>")))::((("op_AmpAmp"), (e_bin_prio_and), ("&&")))::((("op_BarBar"), (e_bin_prio_or), ("||")))::((("op_LessThanOrEqual"), (e_bin_prio_order), ("<=")))::((("op_GreaterThanOrEqual"), (e_bin_prio_order), (">=")))::((("op_LessThan"), (e_bin_prio_order), ("<")))::((("op_GreaterThan"), (e_bin_prio_order), (">")))::((("op_Modulus"), (e_bin_prio_order), ("mod")))::[]
 
 
 let prim_uni_ops : (Prims.string * Prims.string) Prims.list = ((("op_Negation"), ("not")))::((("op_Minus"), ("-")))::((("op_Bang"), ("Support.ST.read")))::[]
@@ -460,8 +460,8 @@ end
 end
 | FStar_Extraction_ML_Syntax.MLC_Char (c) -> begin
 (let _166_101 = (let _166_100 = (escape_or escape_char_hex c)
-in (Prims.strcat "\'" _166_100))
-in (Prims.strcat _166_101 "\'"))
+in (Prims.strcat _166_100 "\'"))
+in (Prims.strcat "\'" _166_101))
 end
 | FStar_Extraction_ML_Syntax.MLC_Int (s, Some (FStar_Const.Signed, FStar_Const.Int32)) -> begin
 (Prims.strcat s "l")
@@ -476,7 +476,7 @@ end
 if (FStar_Options.use_native_int ()) then begin
 s
 end else begin
-(Prims.strcat (Prims.strcat "(Prims.parse_int \"" s) "\")")
+(Prims.strcat "(Prims.parse_int \"" (Prims.strcat s "\")"))
 end
 end
 | FStar_Extraction_ML_Syntax.MLC_Float (d) -> begin
@@ -484,13 +484,13 @@ end
 end
 | FStar_Extraction_ML_Syntax.MLC_Bytes (bytes) -> begin
 (let _166_103 = (let _166_102 = (FStar_Bytes.f_encode escape_byte_hex bytes)
-in (Prims.strcat "\"" _166_102))
-in (Prims.strcat _166_103 "\""))
+in (Prims.strcat _166_102 "\""))
+in (Prims.strcat "\"" _166_103))
 end
 | FStar_Extraction_ML_Syntax.MLC_String (chars) -> begin
 (let _166_105 = (let _166_104 = (FStar_String.collect (escape_or FStar_Util.string_of_char) chars)
-in (Prims.strcat "\"" _166_104))
-in (Prims.strcat _166_105 "\""))
+in (Prims.strcat _166_104 "\""))
+in (Prims.strcat "\"" _166_105))
 end
 | _74_203 -> begin
 (FStar_All.failwith "TODO: extract integer constants properly into OCaml")
@@ -1101,7 +1101,7 @@ end else begin
 (
 
 let file = (FStar_Util.basename file)
-in (FStar_Format.reduce1 (((FStar_Format.text "#"))::((FStar_Format.num lineno))::((FStar_Format.text (Prims.strcat (Prims.strcat "\"" file) "\"")))::[])))
+in (FStar_Format.reduce1 (((FStar_Format.text "#"))::((FStar_Format.num lineno))::((FStar_Format.text (Prims.strcat "\"" (Prims.strcat file "\""))))::[])))
 end
 end))
 

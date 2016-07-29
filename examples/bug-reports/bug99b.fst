@@ -38,10 +38,10 @@ val transitive2: a:Type -> m1:t a -> m2:t a -> Lemma (forall (m3:t a). ((is_equa
 let transitive2 (a:Type) m1 m2 = qintro #(t a) #(fun m3 -> (is_equal m1 m2 /\ is_equal m2 m3) ==> is_equal m1 m3) (transitive3 a m1 m2)
 
 val transitive1: a:Type -> m1:t a -> Lemma (forall (m2:t a) (m3:t a). ((is_equal m1 m2 /\ is_equal m2 m3) ==> is_equal m1 m3))
-let transitive1 (a:Type) m1 = qintro #(t a) #(fun m2 -> forall (m3:t a).((is_equal m1 m2 /\ is_equal m2 m3) ==> is_equal m1 m3)) (transitive2 a m1)
+let transitive1 (a:Type) m1 = qintro #(t a) #(fun m2 -> forall (m3:t a). ((is_equal m1 m2 /\ is_equal m2 m3) ==> is_equal m1 m3)) (transitive2 a m1)
 
 val lemma_is_equal_equivalence: a:Type -> unit -> Lemma (equivalence (t a) is_equal)
 let lemma_is_equal_equivalence (a:Type) () =
   qintro #(t a) #(fun m -> is_equal m m == true) (reflex a);
   qintro #(t a) #(fun m1 -> forall m2. (is_equal m1 m2 = is_equal m2 m1)) (symmetric1 a);
-  qintro #(t a) #(fun m1 -> forall (m2:t a) (m3:t a).((is_equal m1 m2 /\ is_equal m2 m3) ==> is_equal m1 m3)) (transitive1 a)
+  qintro #(t a) #(fun m1 -> forall (m2:t a) (m3:t a). ((is_equal m1 m2 /\ is_equal m2 m3) ==> is_equal m1 m3)) (transitive1 a)

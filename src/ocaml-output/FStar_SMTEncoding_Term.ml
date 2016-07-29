@@ -840,32 +840,35 @@ end
 in (Prims.strcat "@" _173_314))
 end
 | FreeV (x) -> begin
-(let _173_315 = (strSort (Prims.snd x))
-in (Prims.strcat (Prims.strcat (Prims.fst x) ":") _173_315))
+(let _173_316 = (let _173_315 = (strSort (Prims.snd x))
+in (Prims.strcat ":" _173_315))
+in (Prims.strcat (Prims.fst x) _173_316))
 end
 | App (op, tms) -> begin
-(let _173_319 = (let _173_318 = (let _173_317 = (FStar_List.map (fun t -> t.hash) tms)
-in (FStar_All.pipe_right _173_317 (FStar_String.concat " ")))
-in (Prims.strcat (Prims.strcat "(" (op_to_string op)) _173_318))
+(let _173_321 = (let _173_320 = (let _173_319 = (let _173_318 = (FStar_List.map (fun t -> t.hash) tms)
+in (FStar_All.pipe_right _173_318 (FStar_String.concat " ")))
 in (Prims.strcat _173_319 ")"))
+in (Prims.strcat (op_to_string op) _173_320))
+in (Prims.strcat "(" _173_321))
 end
 | Labeled (t, r1, r2) -> begin
-(let _173_320 = (FStar_Range.string_of_range r2)
-in (Prims.strcat (Prims.strcat t.hash r1) _173_320))
+(let _173_323 = (let _173_322 = (FStar_Range.string_of_range r2)
+in (Prims.strcat r1 _173_322))
+in (Prims.strcat t.hash _173_323))
 end
 | Quant (qop, pats, wopt, sorts, body) -> begin
-(let _173_328 = (let _173_321 = (FStar_List.map strSort sorts)
-in (FStar_All.pipe_right _173_321 (FStar_String.concat " ")))
-in (let _173_327 = (weightToSmt wopt)
-in (let _173_326 = (let _173_325 = (FStar_All.pipe_right pats (FStar_List.map (fun pats -> (let _173_324 = (FStar_List.map (fun p -> p.hash) pats)
-in (FStar_All.pipe_right _173_324 (FStar_String.concat " "))))))
-in (FStar_All.pipe_right _173_325 (FStar_String.concat "; ")))
-in (FStar_Util.format5 "(%s (%s)(! %s %s %s))" (qop_to_string qop) _173_328 body.hash _173_327 _173_326))))
+(let _173_331 = (let _173_324 = (FStar_List.map strSort sorts)
+in (FStar_All.pipe_right _173_324 (FStar_String.concat " ")))
+in (let _173_330 = (weightToSmt wopt)
+in (let _173_329 = (let _173_328 = (FStar_All.pipe_right pats (FStar_List.map (fun pats -> (let _173_327 = (FStar_List.map (fun p -> p.hash) pats)
+in (FStar_All.pipe_right _173_327 (FStar_String.concat " "))))))
+in (FStar_All.pipe_right _173_328 (FStar_String.concat "; ")))
+in (FStar_Util.format5 "(%s (%s)(! %s %s %s))" (qop_to_string qop) _173_331 body.hash _173_330 _173_329))))
 end))
 
 
-let __all_terms : term FStar_Util.smap FStar_ST.ref = (let _173_329 = (FStar_Util.smap_create 10000)
-in (FStar_ST.alloc _173_329))
+let __all_terms : term FStar_Util.smap FStar_ST.ref = (let _173_332 = (FStar_Util.smap_create 10000)
+in (FStar_ST.alloc _173_332))
 
 
 let all_terms : Prims.unit  ->  term FStar_Util.smap = (fun _81_205 -> (match (()) with
@@ -877,20 +880,20 @@ end))
 let mk : term'  ->  term = (fun t -> (
 
 let key = (hash_of_term' t)
-in (match ((let _173_334 = (all_terms ())
-in (FStar_Util.smap_try_find _173_334 key))) with
+in (match ((let _173_337 = (all_terms ())
+in (FStar_Util.smap_try_find _173_337 key))) with
 | Some (tm) -> begin
 tm
 end
 | None -> begin
 (
 
-let tm = (let _173_335 = (FStar_Util.mk_ref None)
-in {tm = t; hash = key; freevars = _173_335})
+let tm = (let _173_338 = (FStar_Util.mk_ref None)
+in {tm = t; hash = key; freevars = _173_338})
 in (
 
-let _81_212 = (let _173_336 = (all_terms ())
-in (FStar_Util.smap_add _173_336 key tm))
+let _81_212 = (let _173_339 = (all_terms ())
+in (FStar_Util.smap_add _173_339 key tm))
 in tm))
 end)))
 
@@ -901,13 +904,13 @@ let mkTrue : term = (mk (App (((True), ([])))))
 let mkFalse : term = (mk (App (((False), ([])))))
 
 
-let mkInteger : Prims.string  ->  term = (fun i -> (let _173_340 = (let _173_339 = (FStar_Util.ensure_decimal i)
-in Integer (_173_339))
-in (mk _173_340)))
+let mkInteger : Prims.string  ->  term = (fun i -> (let _173_343 = (let _173_342 = (FStar_Util.ensure_decimal i)
+in Integer (_173_342))
+in (mk _173_343)))
 
 
-let mkInteger' : Prims.int  ->  term = (fun i -> (let _173_343 = (FStar_Util.string_of_int i)
-in (mkInteger _173_343)))
+let mkInteger' : Prims.int  ->  term = (fun i -> (let _173_346 = (FStar_Util.string_of_int i)
+in (mkInteger _173_346)))
 
 
 let mkBoundV : Prims.int  ->  term = (fun i -> (mk (BoundV (i))))
@@ -1001,10 +1004,10 @@ end
 t2
 end
 | (_81_383, App (Imp, (t1')::(t2')::[])) -> begin
-(let _173_362 = (let _173_361 = (let _173_360 = (mkAnd ((t1), (t1')))
-in (_173_360)::(t2')::[])
-in ((Imp), (_173_361)))
-in (mkApp' _173_362))
+(let _173_365 = (let _173_364 = (let _173_363 = (mkAnd ((t1), (t1')))
+in (_173_363)::(t2')::[])
+in ((Imp), (_173_364)))
+in (mkApp' _173_365))
 end
 | _81_392 -> begin
 (mkApp' ((Imp), ((t1)::(t2)::[])))
@@ -1061,9 +1064,9 @@ let mkITE : (term * term * term)  ->  term = (fun _81_401 -> (match (_81_401) wi
 mkTrue
 end
 | (App (True, _81_415), _81_419) -> begin
-(let _173_383 = (let _173_382 = (mkNot t1)
-in ((_173_382), (t3)))
-in (mkImp _173_383))
+(let _173_386 = (let _173_385 = (mkNot t1)
+in ((_173_385), (t3)))
+in (mkImp _173_386))
 end
 | (_81_422, App (True, _81_425)) -> begin
 (mkImp ((t1), (t2)))
@@ -1132,24 +1135,24 @@ end
 end)
 end
 | App (op, tms) -> begin
-(let _173_401 = (let _173_400 = (FStar_List.map (aux ix) tms)
-in ((op), (_173_400)))
-in (mkApp' _173_401))
+(let _173_404 = (let _173_403 = (FStar_List.map (aux ix) tms)
+in ((op), (_173_403)))
+in (mkApp' _173_404))
 end
 | Labeled (t, r1, r2) -> begin
-(let _173_404 = (let _173_403 = (let _173_402 = (aux ix t)
-in ((_173_402), (r1), (r2)))
-in Labeled (_173_403))
-in (mk _173_404))
+(let _173_407 = (let _173_406 = (let _173_405 = (aux ix t)
+in ((_173_405), (r1), (r2)))
+in Labeled (_173_406))
+in (mk _173_407))
 end
 | Quant (qop, pats, wopt, vars, body) -> begin
 (
 
 let n = (FStar_List.length vars)
-in (let _173_407 = (let _173_406 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (aux (ix + n)))))
-in (let _173_405 = (aux (ix + n) body)
-in ((qop), (_173_406), (wopt), (vars), (_173_405))))
-in (mkQuant _173_407)))
+in (let _173_410 = (let _173_409 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (aux (ix + n)))))
+in (let _173_408 = (aux (ix + n) body)
+in ((qop), (_173_409), (wopt), (vars), (_173_408))))
+in (mkQuant _173_410)))
 end)
 end))
 in (aux 0 t)))))
@@ -1172,15 +1175,15 @@ t
 end
 end
 | App (op, tms) -> begin
-(let _173_417 = (let _173_416 = (FStar_List.map (aux shift) tms)
-in ((op), (_173_416)))
-in (mkApp' _173_417))
+(let _173_420 = (let _173_419 = (FStar_List.map (aux shift) tms)
+in ((op), (_173_419)))
+in (mkApp' _173_420))
 end
 | Labeled (t, r1, r2) -> begin
-(let _173_420 = (let _173_419 = (let _173_418 = (aux shift t)
-in ((_173_418), (r1), (r2)))
-in Labeled (_173_419))
-in (mk _173_420))
+(let _173_423 = (let _173_422 = (let _173_421 = (aux shift t)
+in ((_173_421), (r1), (r2)))
+in Labeled (_173_422))
+in (mk _173_423))
 end
 | Quant (qop, pats, wopt, vars, body) -> begin
 (
@@ -1189,21 +1192,21 @@ let m = (FStar_List.length vars)
 in (
 
 let shift = (shift + m)
-in (let _173_423 = (let _173_422 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (aux shift))))
-in (let _173_421 = (aux shift body)
-in ((qop), (_173_422), (wopt), (vars), (_173_421))))
-in (mkQuant _173_423))))
+in (let _173_426 = (let _173_425 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (aux shift))))
+in (let _173_424 = (aux shift body)
+in ((qop), (_173_425), (wopt), (vars), (_173_424))))
+in (mkQuant _173_426))))
 end))
 in (aux 0 t))))
 
 
 let mkQuant' : (qop * term Prims.list Prims.list * Prims.int Prims.option * fv Prims.list * term)  ->  term = (fun _81_534 -> (match (_81_534) with
 | (qop, pats, wopt, vars, body) -> begin
-(let _173_429 = (let _173_428 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (abstr vars))))
-in (let _173_427 = (FStar_List.map fv_sort vars)
-in (let _173_426 = (abstr vars body)
-in ((qop), (_173_428), (wopt), (_173_427), (_173_426)))))
-in (mkQuant _173_429))
+(let _173_432 = (let _173_431 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (abstr vars))))
+in (let _173_430 = (FStar_List.map fv_sort vars)
+in (let _173_429 = (abstr vars body)
+in ((qop), (_173_431), (wopt), (_173_430), (_173_429)))))
+in (mkQuant _173_432))
 end))
 
 
@@ -1233,15 +1236,15 @@ end))
 
 let mkDefineFun : (Prims.string * (Prims.string * sort) Prims.list * sort * term * caption)  ->  decl = (fun _81_558 -> (match (_81_558) with
 | (nm, vars, s, tm, c) -> begin
-(let _173_442 = (let _173_441 = (FStar_List.map fv_sort vars)
-in (let _173_440 = (abstr vars tm)
-in ((nm), (_173_441), (s), (_173_440), (c))))
-in DefineFun (_173_442))
+(let _173_445 = (let _173_444 = (FStar_List.map fv_sort vars)
+in (let _173_443 = (abstr vars tm)
+in ((nm), (_173_444), (s), (_173_443), (c))))
+in DefineFun (_173_445))
 end))
 
 
-let constr_id_of_sort : sort  ->  Prims.string = (fun sort -> (let _173_445 = (strSort sort)
-in (FStar_Util.format1 "%s_constr_id" _173_445)))
+let constr_id_of_sort : sort  ->  Prims.string = (fun sort -> (let _173_448 = (strSort sort)
+in (FStar_Util.format1 "%s_constr_id" _173_448)))
 
 
 let fresh_token : (Prims.string * sort)  ->  Prims.int  ->  decl = (fun _81_562 id -> (match (_81_562) with
@@ -1249,16 +1252,16 @@ let fresh_token : (Prims.string * sort)  ->  Prims.int  ->  decl = (fun _81_562 
 (
 
 let a_name = (Prims.strcat "fresh_token_" tok_name)
-in (let _173_458 = (let _173_457 = (let _173_456 = (let _173_455 = (mkInteger' id)
-in (let _173_454 = (let _173_453 = (let _173_452 = (constr_id_of_sort sort)
-in (let _173_451 = (let _173_450 = (mkApp ((tok_name), ([])))
-in (_173_450)::[])
-in ((_173_452), (_173_451))))
-in (mkApp _173_453))
+in (let _173_461 = (let _173_460 = (let _173_459 = (let _173_458 = (mkInteger' id)
+in (let _173_457 = (let _173_456 = (let _173_455 = (constr_id_of_sort sort)
+in (let _173_454 = (let _173_453 = (mkApp ((tok_name), ([])))
+in (_173_453)::[])
 in ((_173_455), (_173_454))))
-in (mkEq _173_456))
-in ((_173_457), (Some ("fresh token")), (Some (a_name))))
-in Assume (_173_458)))
+in (mkApp _173_456))
+in ((_173_458), (_173_457))))
+in (mkEq _173_459))
+in ((_173_460), (Some ("fresh token")), (Some (a_name))))
+in Assume (_173_461)))
 end))
 
 
@@ -1269,10 +1272,10 @@ let fresh_constructor : (Prims.string * sort Prims.list * sort * Prims.int)  -> 
 let id = (FStar_Util.string_of_int id)
 in (
 
-let bvars = (FStar_All.pipe_right arg_sorts (FStar_List.mapi (fun i s -> (let _173_465 = (let _173_464 = (let _173_463 = (FStar_Util.string_of_int i)
-in (Prims.strcat "x_" _173_463))
-in ((_173_464), (s)))
-in (mkFreeV _173_465)))))
+let bvars = (FStar_All.pipe_right arg_sorts (FStar_List.mapi (fun i s -> (let _173_468 = (let _173_467 = (let _173_466 = (FStar_Util.string_of_int i)
+in (Prims.strcat "x_" _173_466))
+in ((_173_467), (s)))
+in (mkFreeV _173_468)))))
 in (
 
 let bvar_names = (FStar_List.map fv_of_term bvars)
@@ -1281,19 +1284,19 @@ in (
 let capp = (mkApp ((name), (bvars)))
 in (
 
-let cid_app = (let _173_467 = (let _173_466 = (constr_id_of_sort sort)
-in ((_173_466), ((capp)::[])))
-in (mkApp _173_467))
+let cid_app = (let _173_470 = (let _173_469 = (constr_id_of_sort sort)
+in ((_173_469), ((capp)::[])))
+in (mkApp _173_470))
 in (
 
 let a_name = (Prims.strcat "constructor_distinct_" name)
-in (let _173_473 = (let _173_472 = (let _173_471 = (let _173_470 = (let _173_469 = (let _173_468 = (mkInteger id)
-in ((_173_468), (cid_app)))
-in (mkEq _173_469))
-in ((((capp)::[])::[]), (bvar_names), (_173_470)))
-in (mkForall _173_471))
-in ((_173_472), (Some ("Constructor distinct")), (Some (a_name))))
-in Assume (_173_473))))))))
+in (let _173_476 = (let _173_475 = (let _173_474 = (let _173_473 = (let _173_472 = (let _173_471 = (mkInteger id)
+in ((_173_471), (cid_app)))
+in (mkEq _173_472))
+in ((((capp)::[])::[]), (bvar_names), (_173_473)))
+in (mkForall _173_474))
+in ((_173_475), (Some ("Constructor distinct")), (Some (a_name))))
+in Assume (_173_476))))))))
 end))
 
 
@@ -1304,16 +1307,16 @@ let injective_constructor : (Prims.string * (Prims.string * sort) Prims.list * s
 let n_bvars = (FStar_List.length projectors)
 in (
 
-let bvar_name = (fun i -> (let _173_478 = (FStar_Util.string_of_int i)
-in (Prims.strcat "x_" _173_478)))
+let bvar_name = (fun i -> (let _173_481 = (FStar_Util.string_of_int i)
+in (Prims.strcat "x_" _173_481)))
 in (
 
 let bvar_index = (fun i -> (n_bvars - (i + 1)))
 in (
 
-let bvar = (fun i s -> (let _173_486 = (let _173_485 = (bvar_name i)
-in ((_173_485), (s)))
-in (mkFreeV _173_486)))
+let bvar = (fun i s -> (let _173_489 = (let _173_488 = (bvar_name i)
+in ((_173_488), (s)))
+in (mkFreeV _173_489)))
 in (
 
 let bvars = (FStar_All.pipe_right projectors (FStar_List.mapi (fun i _81_594 -> (match (_81_594) with
@@ -1326,7 +1329,7 @@ let bvar_names = (FStar_List.map fv_of_term bvars)
 in (
 
 let capp = (mkApp ((name), (bvars)))
-in (let _173_499 = (FStar_All.pipe_right projectors (FStar_List.mapi (fun i _81_601 -> (match (_81_601) with
+in (let _173_502 = (FStar_All.pipe_right projectors (FStar_List.mapi (fun i _81_601 -> (match (_81_601) with
 | (name, s) -> begin
 (
 
@@ -1337,17 +1340,17 @@ let proj_name = DeclFun (((name), ((sort)::[]), (s), (Some ("Projector"))))
 in (
 
 let a_name = (Prims.strcat "projection_inverse_" name)
-in (let _173_498 = (let _173_497 = (let _173_496 = (let _173_495 = (let _173_494 = (let _173_493 = (let _173_492 = (let _173_491 = (bvar i s)
-in ((cproj_app), (_173_491)))
-in (mkEq _173_492))
-in ((((capp)::[])::[]), (bvar_names), (_173_493)))
-in (mkForall _173_494))
-in ((_173_495), (Some ("Projection inverse")), (Some (a_name))))
-in Assume (_173_496))
-in (_173_497)::[])
-in (proj_name)::_173_498))))
+in (let _173_501 = (let _173_500 = (let _173_499 = (let _173_498 = (let _173_497 = (let _173_496 = (let _173_495 = (let _173_494 = (bvar i s)
+in ((cproj_app), (_173_494)))
+in (mkEq _173_495))
+in ((((capp)::[])::[]), (bvar_names), (_173_496)))
+in (mkForall _173_497))
+in ((_173_498), (Some ("Projection inverse")), (Some (a_name))))
+in Assume (_173_499))
+in (_173_500)::[])
+in (proj_name)::_173_501))))
 end))))
-in (FStar_All.pipe_right _173_499 FStar_List.flatten)))))))))
+in (FStar_All.pipe_right _173_502 FStar_List.flatten)))))))))
 end))
 
 
@@ -1358,14 +1361,14 @@ let constructor_to_decl : constructor_t  ->  decls_t = (fun _81_610 -> (match (_
 let injective = (injective || true)
 in (
 
-let cdecl = (let _173_503 = (let _173_502 = (FStar_All.pipe_right projectors (FStar_List.map Prims.snd))
-in ((name), (_173_502), (sort), (Some ("Constructor"))))
-in DeclFun (_173_503))
+let cdecl = (let _173_506 = (let _173_505 = (FStar_All.pipe_right projectors (FStar_List.map Prims.snd))
+in ((name), (_173_505), (sort), (Some ("Constructor"))))
+in DeclFun (_173_506))
 in (
 
-let cid = (let _173_505 = (let _173_504 = (FStar_All.pipe_right projectors (FStar_List.map Prims.snd))
-in ((name), (_173_504), (sort), (id)))
-in (fresh_constructor _173_505))
+let cid = (let _173_508 = (let _173_507 = (FStar_All.pipe_right projectors (FStar_List.map Prims.snd))
+in ((name), (_173_507), (sort), (id)))
+in (fresh_constructor _173_508))
 in (
 
 let disc = (
@@ -1379,13 +1382,13 @@ in (
 let xx = (mkFreeV xfv)
 in (
 
-let disc_eq = (let _173_511 = (let _173_510 = (let _173_507 = (let _173_506 = (constr_id_of_sort sort)
-in ((_173_506), ((xx)::[])))
-in (mkApp _173_507))
-in (let _173_509 = (let _173_508 = (FStar_Util.string_of_int id)
-in (mkInteger _173_508))
-in ((_173_510), (_173_509))))
-in (mkEq _173_511))
+let disc_eq = (let _173_514 = (let _173_513 = (let _173_510 = (let _173_509 = (constr_id_of_sort sort)
+in ((_173_509), ((xx)::[])))
+in (mkApp _173_510))
+in (let _173_512 = (let _173_511 = (FStar_Util.string_of_int id)
+in (mkInteger _173_511))
+in ((_173_513), (_173_512))))
+in (mkEq _173_514))
 in (
 
 let proj_terms = (FStar_All.pipe_right projectors (FStar_List.map (fun _81_620 -> (match (_81_620) with
@@ -1394,9 +1397,9 @@ let proj_terms = (FStar_All.pipe_right projectors (FStar_List.map (fun _81_620 -
 end))))
 in (
 
-let disc_inv_body = (let _173_514 = (let _173_513 = (mkApp ((name), (proj_terms)))
-in ((xx), (_173_513)))
-in (mkEq _173_514))
+let disc_inv_body = (let _173_517 = (let _173_516 = (mkApp ((name), (proj_terms)))
+in ((xx), (_173_516)))
+in (mkEq _173_517))
 in (
 
 let disc_ax = (mkAnd ((disc_eq), (disc_inv_body)))
@@ -1408,14 +1411,14 @@ let projs = if injective then begin
 end else begin
 []
 end
-in (let _173_521 = (let _173_517 = (let _173_516 = (let _173_515 = (FStar_Util.format1 "<start constructor %s>" name)
-in Caption (_173_515))
-in (_173_516)::(cdecl)::(cid)::projs)
-in (FStar_List.append _173_517 ((disc)::[])))
-in (let _173_520 = (let _173_519 = (let _173_518 = (FStar_Util.format1 "</end constructor %s>" name)
+in (let _173_524 = (let _173_519 = (let _173_518 = (FStar_Util.format1 "<start constructor %s>" name)
 in Caption (_173_518))
-in (_173_519)::[])
-in (FStar_List.append _173_521 _173_520))))))))
+in (_173_519)::(cdecl)::(cid)::projs)
+in (let _173_523 = (let _173_522 = (let _173_521 = (let _173_520 = (FStar_Util.format1 "</end constructor %s>" name)
+in Caption (_173_520))
+in (_173_521)::[])
+in (FStar_List.append ((disc)::[]) _173_522))
+in (FStar_List.append _173_524 _173_523))))))))
 end))
 
 
@@ -1434,15 +1437,15 @@ end
 end)
 in (
 
-let nm = (let _173_530 = (FStar_Util.string_of_int n)
-in (Prims.strcat prefix _173_530))
+let nm = (let _173_533 = (FStar_Util.string_of_int n)
+in (Prims.strcat prefix _173_533))
 in (
 
 let names = (((nm), (s)))::names
 in (
 
-let b = (let _173_531 = (strSort s)
-in (FStar_Util.format2 "(%s %s)" nm _173_531))
+let b = (let _173_534 = (strSort s)
+in (FStar_Util.format2 "(%s %s)" nm _173_534))
 in ((names), ((b)::binders), ((n + 1)))))))
 end)) ((outer_names), ([]), (start))))
 in (match (_81_644) with
@@ -1467,8 +1470,8 @@ let rec aux = (fun n names t -> (match (t.tm) with
 i
 end
 | BoundV (i) -> begin
-(let _173_542 = (FStar_List.nth names i)
-in (FStar_All.pipe_right _173_542 Prims.fst))
+(let _173_545 = (FStar_List.nth names i)
+in (FStar_All.pipe_right _173_545 Prims.fst))
 end
 | FreeV (x) -> begin
 (Prims.fst x)
@@ -1477,9 +1480,9 @@ end
 (op_to_string op)
 end
 | App (op, tms) -> begin
-(let _173_544 = (let _173_543 = (FStar_List.map (aux n names) tms)
-in (FStar_All.pipe_right _173_543 (FStar_String.concat "\n")))
-in (FStar_Util.format2 "(%s %s)" (op_to_string op) _173_544))
+(let _173_547 = (let _173_546 = (FStar_List.map (aux n names) tms)
+in (FStar_All.pipe_right _173_546 (FStar_String.concat "\n")))
+in (FStar_Util.format2 "(%s %s)" (op_to_string op) _173_547))
 end
 | Labeled (t, _81_671, _81_673) -> begin
 (aux n names t)
@@ -1500,21 +1503,21 @@ let pats_str = (match (pats) with
 ""
 end
 | _81_692 -> begin
-(let _173_550 = (FStar_All.pipe_right pats (FStar_List.map (fun pats -> (let _173_549 = (let _173_548 = (FStar_List.map (fun p -> (let _173_547 = (aux n names p)
-in (FStar_Util.format1 "%s" _173_547))) pats)
-in (FStar_String.concat " " _173_548))
-in (FStar_Util.format1 "\n:pattern (%s)" _173_549)))))
-in (FStar_All.pipe_right _173_550 (FStar_String.concat "\n")))
+(let _173_553 = (FStar_All.pipe_right pats (FStar_List.map (fun pats -> (let _173_552 = (let _173_551 = (FStar_List.map (fun p -> (let _173_550 = (aux n names p)
+in (FStar_Util.format1 "%s" _173_550))) pats)
+in (FStar_String.concat " " _173_551))
+in (FStar_Util.format1 "\n:pattern (%s)" _173_552)))))
+in (FStar_All.pipe_right _173_553 (FStar_String.concat "\n")))
 end)
 in (match (((pats), (wopt))) with
 | ((([])::[], None)) | (([], None)) -> begin
-(let _173_551 = (aux n names body)
-in (FStar_Util.format3 "(%s (%s)\n %s);;no pats\n" (qop_to_string qop) binders _173_551))
+(let _173_554 = (aux n names body)
+in (FStar_Util.format3 "(%s (%s)\n %s);;no pats\n" (qop_to_string qop) binders _173_554))
 end
 | _81_704 -> begin
-(let _173_553 = (aux n names body)
-in (let _173_552 = (weightToSmt wopt)
-in (FStar_Util.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders _173_553 _173_552 pats_str)))
+(let _173_556 = (aux n names body)
+in (let _173_555 = (weightToSmt wopt)
+in (FStar_Util.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders _173_556 _173_555 pats_str)))
 end)))
 end))
 end))
@@ -1553,22 +1556,22 @@ in (match (decl) with
 (mkPrelude z3options)
 end
 | Caption (c) -> begin
-(let _173_564 = (FStar_All.pipe_right (FStar_Util.splitlines c) (fun _81_7 -> (match (_81_7) with
+(let _173_567 = (FStar_All.pipe_right (FStar_Util.splitlines c) (fun _81_7 -> (match (_81_7) with
 | [] -> begin
 ""
 end
 | (h)::t -> begin
 h
 end)))
-in (FStar_Util.format1 "\n; %s" _173_564))
+in (FStar_Util.format1 "\n; %s" _173_567))
 end
 | DeclFun (f, argsorts, retsort, c) -> begin
 (
 
 let l = (FStar_List.map strSort argsorts)
-in (let _173_566 = (caption_to_string c)
-in (let _173_565 = (strSort retsort)
-in (FStar_Util.format4 "%s(declare-fun %s (%s) %s)" _173_566 f (FStar_String.concat " " l) _173_565))))
+in (let _173_569 = (caption_to_string c)
+in (let _173_568 = (strSort retsort)
+in (FStar_Util.format4 "%s(declare-fun %s (%s) %s)" _173_569 f (FStar_String.concat " " l) _173_568))))
 end
 | DefineFun (f, arg_sorts, retsort, body, c) -> begin
 (
@@ -1578,27 +1581,27 @@ in (match (_81_747) with
 | (names, binders) -> begin
 (
 
-let body = (let _173_567 = (FStar_List.map mkFreeV names)
-in (inst _173_567 body))
-in (let _173_570 = (caption_to_string c)
-in (let _173_569 = (strSort retsort)
-in (let _173_568 = (termToSmt body)
-in (FStar_Util.format5 "%s(define-fun %s (%s) %s\n %s)" _173_570 f (FStar_String.concat " " binders) _173_569 _173_568)))))
+let body = (let _173_570 = (FStar_List.map mkFreeV names)
+in (inst _173_570 body))
+in (let _173_573 = (caption_to_string c)
+in (let _173_572 = (strSort retsort)
+in (let _173_571 = (termToSmt body)
+in (FStar_Util.format5 "%s(define-fun %s (%s) %s\n %s)" _173_573 f (FStar_String.concat " " binders) _173_572 _173_571)))))
 end))
 end
 | Assume (t, c, Some (n)) -> begin
-(let _173_572 = (caption_to_string c)
-in (let _173_571 = (termToSmt t)
-in (FStar_Util.format3 "%s(assert (!\n%s\n:named %s))" _173_572 _173_571 (escape n))))
+(let _173_575 = (caption_to_string c)
+in (let _173_574 = (termToSmt t)
+in (FStar_Util.format3 "%s(assert (!\n%s\n:named %s))" _173_575 _173_574 (escape n))))
 end
 | Assume (t, c, None) -> begin
-(let _173_574 = (caption_to_string c)
-in (let _173_573 = (termToSmt t)
-in (FStar_Util.format2 "%s(assert %s)" _173_574 _173_573)))
+(let _173_577 = (caption_to_string c)
+in (let _173_576 = (termToSmt t)
+in (FStar_Util.format2 "%s(assert %s)" _173_577 _173_576)))
 end
 | Eval (t) -> begin
-(let _173_575 = (termToSmt t)
-in (FStar_Util.format1 "(eval %s)" _173_575))
+(let _173_578 = (termToSmt t)
+in (FStar_Util.format1 "(eval %s)" _173_578))
 end
 | Echo (s) -> begin
 (FStar_Util.format1 "(echo \"%s\")" s)
@@ -1626,13 +1629,13 @@ in (
 let constrs = ((("String_const"), (((("String_const_proj_0"), (Int_sort)))::[]), (String_sort), (0), (true)))::((("Tm_type"), ([]), (Term_sort), (2), (true)))::((("Tm_arrow"), (((("Tm_arrow_id"), (Int_sort)))::[]), (Term_sort), (3), (false)))::((("Tm_uvar"), (((("Tm_uvar_fst"), (Int_sort)))::[]), (Term_sort), (5), (true)))::((("Tm_unit"), ([]), (Term_sort), (6), (true)))::((("BoxInt"), (((("BoxInt_proj_0"), (Int_sort)))::[]), (Term_sort), (7), (true)))::((("BoxBool"), (((("BoxBool_proj_0"), (Bool_sort)))::[]), (Term_sort), (8), (true)))::((("BoxString"), (((("BoxString_proj_0"), (String_sort)))::[]), (Term_sort), (9), (true)))::((("BoxRef"), (((("BoxRef_proj_0"), (Ref_sort)))::[]), (Term_sort), (10), (true)))::((("LexCons"), (((("LexCons_0"), (Term_sort)))::((("LexCons_1"), (Term_sort)))::[]), (Term_sort), (11), (true)))::[]
 in (
 
-let bcons = (let _173_578 = (let _173_577 = (FStar_All.pipe_right constrs (FStar_List.collect constructor_to_decl))
-in (FStar_All.pipe_right _173_577 (FStar_List.map (declToSmt z3options))))
-in (FStar_All.pipe_right _173_578 (FStar_String.concat "\n")))
+let bcons = (let _173_581 = (let _173_580 = (FStar_All.pipe_right constrs (FStar_List.collect constructor_to_decl))
+in (FStar_All.pipe_right _173_580 (FStar_List.map (declToSmt z3options))))
+in (FStar_All.pipe_right _173_581 (FStar_String.concat "\n")))
 in (
 
 let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n(is-LexCons t))\n(assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n(iff (Valid (Precedes (LexCons x1 x2) (LexCons y1 y2)))\n(or (Valid (Precedes x1 y1))\n(and (= x1 y1)\n(Valid (Precedes x2 y2)))))))\n"
-in (Prims.strcat (Prims.strcat basic bcons) lex_ordering))))))
+in (Prims.strcat basic (Prims.strcat bcons lex_ordering)))))))
 
 
 let mk_Range_const : term = (mkApp (("Range_const"), ([])))
@@ -1644,10 +1647,10 @@ let mk_Term_type : term = (mkApp (("Tm_type"), ([])))
 let mk_Term_app : term  ->  term  ->  term = (fun t1 t2 -> (mkApp (("Tm_app"), ((t1)::(t2)::[]))))
 
 
-let mk_Term_uvar : Prims.int  ->  term = (fun i -> (let _173_587 = (let _173_586 = (let _173_585 = (mkInteger' i)
-in (_173_585)::[])
-in (("Tm_uvar"), (_173_586)))
-in (mkApp _173_587)))
+let mk_Term_uvar : Prims.int  ->  term = (fun i -> (let _173_590 = (let _173_589 = (let _173_588 = (mkInteger' i)
+in (_173_588)::[])
+in (("Tm_uvar"), (_173_589)))
+in (mkApp _173_590)))
 
 
 let mk_Term_unit : term = (mkApp (("Tm_unit"), ([])))
@@ -1721,48 +1724,48 @@ let mk_Valid : term  ->  term = (fun t -> (match (t.tm) with
 (mkEq ((t1), (t2)))
 end
 | App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_disEquality"), (_81_836)::(t1)::(t2)::[]); hash = _81_830; freevars = _81_828})::[]) -> begin
-(let _173_616 = (mkEq ((t1), (t2)))
-in (mkNot _173_616))
+(let _173_619 = (mkEq ((t1), (t2)))
+in (mkNot _173_619))
 end
 | App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_LessThanOrEqual"), (t1)::(t2)::[]); hash = _81_849; freevars = _81_847})::[]) -> begin
-(let _173_619 = (let _173_618 = (unboxInt t1)
-in (let _173_617 = (unboxInt t2)
-in ((_173_618), (_173_617))))
-in (mkLTE _173_619))
-end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_LessThan"), (t1)::(t2)::[]); hash = _81_866; freevars = _81_864})::[]) -> begin
 (let _173_622 = (let _173_621 = (unboxInt t1)
 in (let _173_620 = (unboxInt t2)
 in ((_173_621), (_173_620))))
-in (mkLT _173_622))
+in (mkLTE _173_622))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThanOrEqual"), (t1)::(t2)::[]); hash = _81_883; freevars = _81_881})::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_LessThan"), (t1)::(t2)::[]); hash = _81_866; freevars = _81_864})::[]) -> begin
 (let _173_625 = (let _173_624 = (unboxInt t1)
 in (let _173_623 = (unboxInt t2)
 in ((_173_624), (_173_623))))
-in (mkGTE _173_625))
+in (mkLT _173_625))
 end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThan"), (t1)::(t2)::[]); hash = _81_900; freevars = _81_898})::[]) -> begin
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThanOrEqual"), (t1)::(t2)::[]); hash = _81_883; freevars = _81_881})::[]) -> begin
 (let _173_628 = (let _173_627 = (unboxInt t1)
 in (let _173_626 = (unboxInt t2)
 in ((_173_627), (_173_626))))
-in (mkGT _173_628))
+in (mkGTE _173_628))
+end
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_GreaterThan"), (t1)::(t2)::[]); hash = _81_900; freevars = _81_898})::[]) -> begin
+(let _173_631 = (let _173_630 = (unboxInt t1)
+in (let _173_629 = (unboxInt t2)
+in ((_173_630), (_173_629))))
+in (mkGT _173_631))
 end
 | App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_AmpAmp"), (t1)::(t2)::[]); hash = _81_917; freevars = _81_915})::[]) -> begin
-(let _173_631 = (let _173_630 = (unboxBool t1)
-in (let _173_629 = (unboxBool t2)
-in ((_173_630), (_173_629))))
-in (mkAnd _173_631))
-end
-| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_BarBar"), (t1)::(t2)::[]); hash = _81_934; freevars = _81_932})::[]) -> begin
 (let _173_634 = (let _173_633 = (unboxBool t1)
 in (let _173_632 = (unboxBool t2)
 in ((_173_633), (_173_632))))
-in (mkOr _173_634))
+in (mkAnd _173_634))
+end
+| App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_BarBar"), (t1)::(t2)::[]); hash = _81_934; freevars = _81_932})::[]) -> begin
+(let _173_637 = (let _173_636 = (unboxBool t1)
+in (let _173_635 = (unboxBool t2)
+in ((_173_636), (_173_635))))
+in (mkOr _173_637))
 end
 | App (Var ("Prims.b2t"), ({tm = App (Var ("Prims.op_Negation"), (t)::[]); hash = _81_951; freevars = _81_949})::[]) -> begin
-(let _173_635 = (unboxBool t)
-in (mkNot _173_635))
+(let _173_638 = (unboxBool t)
+in (mkNot _173_638))
 end
 | App (Var ("Prims.b2t"), (t)::[]) -> begin
 (unboxBool t)
@@ -1812,14 +1815,14 @@ let mk_ApplyTF : term  ->  term  ->  term = (fun t t' -> (mkApp (("ApplyTF"), ((
 let mk_ApplyTT : term  ->  term  ->  term = (fun t t' -> (mkApp (("ApplyTT"), ((t)::(t')::[]))))
 
 
-let mk_String_const : Prims.int  ->  term = (fun i -> (let _173_678 = (let _173_677 = (let _173_676 = (mkInteger' i)
-in (_173_676)::[])
-in (("String_const"), (_173_677)))
-in (mkApp _173_678)))
+let mk_String_const : Prims.int  ->  term = (fun i -> (let _173_681 = (let _173_680 = (let _173_679 = (mkInteger' i)
+in (_173_679)::[])
+in (("String_const"), (_173_680)))
+in (mkApp _173_681)))
 
 
-let mk_Precedes : term  ->  term  ->  term = (fun x1 x2 -> (let _173_683 = (mkApp (("Precedes"), ((x1)::(x2)::[])))
-in (FStar_All.pipe_right _173_683 mk_Valid)))
+let mk_Precedes : term  ->  term  ->  term = (fun x1 x2 -> (let _173_686 = (mkApp (("Precedes"), ((x1)::(x2)::[])))
+in (FStar_All.pipe_right _173_686 mk_Valid)))
 
 
 let mk_LexCons : term  ->  term  ->  term = (fun x1 x2 -> (mkApp (("LexCons"), ((x1)::(x2)::[]))))
@@ -1828,10 +1831,10 @@ let mk_LexCons : term  ->  term  ->  term = (fun x1 x2 -> (mkApp (("LexCons"), (
 let rec n_fuel : Prims.int  ->  term = (fun n -> if (n = 0) then begin
 (mkApp (("ZFuel"), ([])))
 end else begin
-(let _173_692 = (let _173_691 = (let _173_690 = (n_fuel (n - 1))
-in (_173_690)::[])
-in (("SFuel"), (_173_691)))
-in (mkApp _173_692))
+(let _173_695 = (let _173_694 = (let _173_693 = (n_fuel (n - 1))
+in (_173_693)::[])
+in (("SFuel"), (_173_694)))
+in (mkApp _173_695))
 end)
 
 
@@ -1843,8 +1846,8 @@ let fuel_100 : term = (n_fuel 100)
 
 let mk_and_opt : term Prims.option  ->  term Prims.option  ->  term Prims.option = (fun p1 p2 -> (match (((p1), (p2))) with
 | (Some (p1), Some (p2)) -> begin
-(let _173_697 = (mkAnd ((p1), (p2)))
-in Some (_173_697))
+(let _173_700 = (mkAnd ((p1), (p2)))
+in Some (_173_700))
 end
 | ((Some (p), None)) | ((None, Some (p))) -> begin
 Some (p)
@@ -1875,8 +1878,8 @@ end
 end))
 
 
-let mk_haseq : term  ->  term = (fun t -> (let _173_712 = (mkApp (("Prims.hasEq"), ((t)::[])))
-in (mk_Valid _173_712)))
+let mk_haseq : term  ->  term = (fun t -> (let _173_715 = (mkApp (("Prims.hasEq"), ((t)::[])))
+in (mk_Valid _173_715)))
 
 
 let rec print_smt_term : term  ->  Prims.string = (fun t -> (match (t.tm) with
@@ -1884,30 +1887,31 @@ let rec print_smt_term : term  ->  Prims.string = (fun t -> (match (t.tm) with
 (FStar_Util.format1 "(Integer %s)" n)
 end
 | BoundV (n) -> begin
-(let _173_717 = (FStar_Util.string_of_int n)
-in (FStar_Util.format1 "(BoundV %s)" _173_717))
+(let _173_720 = (FStar_Util.string_of_int n)
+in (FStar_Util.format1 "(BoundV %s)" _173_720))
 end
 | FreeV (fv) -> begin
 (FStar_Util.format1 "(FreeV %s)" (Prims.fst fv))
 end
 | App (op, l) -> begin
-(let _173_718 = (print_smt_term_list l)
-in (FStar_Util.format2 "(%s %s)" (op_to_string op) _173_718))
+(let _173_721 = (print_smt_term_list l)
+in (FStar_Util.format2 "(%s %s)" (op_to_string op) _173_721))
 end
 | Labeled (t, r1, r2) -> begin
-(let _173_719 = (print_smt_term t)
-in (FStar_Util.format2 "(Labeled \'%s\' %s)" r1 _173_719))
+(let _173_722 = (print_smt_term t)
+in (FStar_Util.format2 "(Labeled \'%s\' %s)" r1 _173_722))
 end
 | Quant (qop, l, _81_1052, _81_1054, t) -> begin
-(let _173_721 = (print_smt_term_list_list l)
-in (let _173_720 = (print_smt_term t)
-in (FStar_Util.format3 "(%s %s %s)" (qop_to_string qop) _173_721 _173_720)))
+(let _173_724 = (print_smt_term_list_list l)
+in (let _173_723 = (print_smt_term t)
+in (FStar_Util.format3 "(%s %s %s)" (qop_to_string qop) _173_724 _173_723)))
 end))
-and print_smt_term_list : term Prims.list  ->  Prims.string = (fun l -> (let _173_723 = (FStar_List.map print_smt_term l)
-in (FStar_All.pipe_right _173_723 (FStar_String.concat " "))))
-and print_smt_term_list_list : term Prims.list Prims.list  ->  Prims.string = (fun l -> (FStar_List.fold_left (fun s l -> (let _173_728 = (let _173_727 = (print_smt_term_list l)
-in (Prims.strcat (Prims.strcat s "; [ ") _173_727))
-in (Prims.strcat _173_728 " ] "))) "" l))
+and print_smt_term_list : term Prims.list  ->  Prims.string = (fun l -> (let _173_726 = (FStar_List.map print_smt_term l)
+in (FStar_All.pipe_right _173_726 (FStar_String.concat " "))))
+and print_smt_term_list_list : term Prims.list Prims.list  ->  Prims.string = (fun l -> (FStar_List.fold_left (fun s l -> (let _173_732 = (let _173_731 = (let _173_730 = (print_smt_term_list l)
+in (Prims.strcat _173_730 " ] "))
+in (Prims.strcat "; [ " _173_731))
+in (Prims.strcat s _173_732))) "" l))
 
 
 

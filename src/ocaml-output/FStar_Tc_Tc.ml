@@ -4972,7 +4972,7 @@ in (
 let _46_3098 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.pop msg)
 in (
 
-let se = FStar_Absyn_Syntax.Sig_bundle ((((FStar_List.append (FStar_List.append tycons abbrevs) rest)), (quals), (lids), (r)))
+let se = FStar_Absyn_Syntax.Sig_bundle ((((FStar_List.append tycons (FStar_List.append abbrevs rest))), (quals), (lids), (r)))
 in (
 
 let env = (FStar_Tc_Env.push_sigelt env se)

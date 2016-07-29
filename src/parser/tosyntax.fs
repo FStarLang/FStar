@@ -105,7 +105,12 @@ let compile_op arity s =
         if i = String.length s
         then []
         else name_of_char (Util.char_at s i) :: aux (i + 1) in
-    "op_"^ (String.concat "_" (aux 0))
+    match s with
+    | ".[]<-" -> "op_String_Assignment"
+    | ".()<-" -> "op_Array_Assignment"
+    | ".[]" -> "op_String_Access"
+    | ".()" -> "op_Array_Access"
+    | _ -> "op_"^ (String.concat "_" (aux 0))
 
 let compile_op_lid n s r = [mk_ident(compile_op n s, r)] |> lid_of_ids
 
@@ -203,6 +208,7 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Abs _  (* not closing implicitly over free vars in all these forms: TODO: Fixme! *)
   | Let _
+  | LetOpen _
   | If _
   | QForall _
   | QExists _  
@@ -338,6 +344,8 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
     let pos q = Syntax.withinfo q tun.n p.prange in
     let pos_r r q = Syntax.withinfo q tun.n r in
     match p.pat with
+      | PatOp op ->
+          aux loc env ({ pat = PatVar (id_of_text (compile_op 0 op), None); prange = p.prange })
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
         let loc, env, var, p, _ = aux loc env p in
@@ -435,9 +443,11 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
   env, b, p
 
 and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * option<pat>) =
+  let mklet x = env, LetBinder(qualify env x, tun), None in
   if top
   then match p.pat with
-    | PatVar (x, _) -> (env, LetBinder(qualify env x, tun), None)
+    | PatOp x -> mklet (id_of_text (compile_op 0 x))
+    | PatVar (x, _) -> mklet x
     | PatAscribed({pat=PatVar (x, _)}, t) ->
       (env, LetBinder(qualify env x, desugar_term env t), None)
     | _ -> raise (Error("Unexpected pattern at the top-level", p.prange))
@@ -503,10 +513,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | Op("*", [_;_]) when (op_as_term env 2 top.range "*" |> Option.isNone) -> //if op_Star has not been rebound, then it's reserved for tuples
       let rec flatten t = match t.tm with
-            | Op("*", [t1;t2]) ->
-              let rest = flatten t2 in
-              t1::rest
-            | _ -> [t] in
+        // * is left-associative
+        | Op("*", [t1;t2]) -> flatten t1 @ [ t2 ]
+        | _ -> [t] in
       let targs = flatten (unparen top) |> List.map (fun t -> as_arg (desugar_typ env t)) in
       let tup, _ = fail_or env (Env.try_lookup_lid env) (Util.mk_tuple_lid (List.length targs) top.range) in
       mk (Tm_app(tup, targs))
@@ -516,10 +525,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | Op(s, args) ->
       begin match op_as_term env (List.length args) top.range s with
-        | None -> raise (Error("Unexpected operator: " ^ s, top.range))
+        | None -> raise (Error("Unexpected or unbound operator: " ^ s, top.range))
         | Some op ->
-          let args = args |> List.map (fun t -> desugar_term env t, None) in
-          mk (Tm_app(op, args))
+            if List.length args > 0 then
+              let args = args |> List.map (fun t -> desugar_term env t, None) in
+              mk (Tm_app(op, args))
+            else
+              op
       end
 
     | Name {str="Type0"}  -> mk (Tm_type U_zero)
@@ -667,6 +679,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Seq(t1, t2) ->
       mk (Tm_meta(desugar_term env (mk_term (Let(NoLetQualifier, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr), 
                   Meta_desugared Sequence))
+
+    | LetOpen (lid, e) ->
+      let env = Env.push_namespace env lid in
+      desugar_term_maybe_top top_level env e
 
     | Let(qual, ((pat, _snd)::_tl), body) ->
       let is_rec = qual = Rec in

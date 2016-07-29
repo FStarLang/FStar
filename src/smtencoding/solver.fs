@@ -17,6 +17,7 @@
 
 module FStar.SMTEncoding.Solver
 open FStar
+open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding.Term
 open FStar.BaseTypes
 open FStar.Util
@@ -132,8 +133,7 @@ let record_hint_stat (h:option<hint>) (res:z3_result) (time:int) (r:Range.range)
 (***********************************************************************************)
 (* Invoking the SMT solver and extracting an error report from the model, if any   *)
 (***********************************************************************************)
-
-let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffix = 
+let ask_and_report_errors env all_labels prefix query suffix = 
     Z3.giveZ3 prefix;
     let minimum_workable_fuel = Util.mk_ref None in
     let set_minimum_workable_fuel f = function 
@@ -182,7 +182,7 @@ let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffi
                                 | None -> (Options.min_fuel(), 1, default_timeout), errs in
                             let ask_z3 label_assumptions = 
                                 let res = Util.mk_ref None in
-                                Z3.ask use_fresh_z3_context None all_labels (with_fuel label_assumptions p min_fuel) (fun r -> res := Some r);
+                                Z3.ask None all_labels (with_fuel label_assumptions p min_fuel) (fun r -> res := Some r);
                                 Option.get (!res) in
                             detail_errors all_labels errs ask_z3
                        else errs in
@@ -198,7 +198,7 @@ let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffi
                     (Options.max_fuel()  |> Util.string_of_int)
                     (Options.max_ifuel() |> Util.string_of_int);
             Errors.add_errors env (errs |> List.map (fun (_, x, y) -> x, y));
-            if (Options.detail_errors())
+            if Options.detail_errors()
             then raise (FStar.Syntax.Syntax.Err("Detailed error report follows\n")) in
 
         let use_errors errs result = 
@@ -212,17 +212,21 @@ let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffi
             | [] -> report p errs
             | [mi] -> //we're down to our last config; last ditch effort to get a counterexample with very low fuel
                 begin match errs with
-                | [] -> Z3.ask use_fresh_z3_context None all_labels (with_fuel [] p mi) (cb false mi p [])
+                | [] -> Z3.ask None all_labels (with_fuel [] p mi) (cb false mi p [])
                 | _ -> set_minimum_workable_fuel prev_f errs;
                        report p errs
                 end
 
             | mi::tl ->
-                Z3.ask use_fresh_z3_context None all_labels (with_fuel [] p mi) 
+                Z3.ask None all_labels (with_fuel [] p mi) 
                     (fun (result, elapsed_time) -> cb false mi p tl (use_errors errs result, elapsed_time))
 
         and cb used_hint (prev_fuel, prev_ifuel, timeout) (p:decl) alt (result, elapsed_time) =
             if used_hint then (Z3.refresh(); record_hint_stat hint_opt result elapsed_time (Env.get_range env));
+            let at_log_file () = 
+                if Options.log_queries() 
+                then "@" ^ (Z3.query_logging.log_file_name())
+                else "" in
             match result with 
             | Inl unsat_core ->
                 let hint = { fuel=prev_fuel;
@@ -231,23 +235,26 @@ let ask_and_report_errors env use_fresh_z3_context all_labels prefix query suffi
                              unsat_core=unsat_core } in
                 record_hint (Some hint);
                 if Options.print_fuels()
-                then Util.print4 "(%s) Query succeeded in %s milliseconds with fuel %s and ifuel %s\n"
+                || Options.hint_info()
+                then Util.print5 "(%s%s) Query succeeded in %s milliseconds with fuel %s and ifuel %s\n"
                                 (Range.string_of_range (Env.get_range env))
+                                (at_log_file())
                                 (Util.string_of_int elapsed_time)
                                 (Util.string_of_int prev_fuel)
                                 (Util.string_of_int prev_ifuel)
             | Inr errs -> 
                  if Options.print_fuels()
-                 then Util.print4 "(%s) Query failed in %s milliseconds with fuel %s and ifuel %s ... retrying \n"
+                 || Options.hint_info()
+                 then Util.print5 "(%s%s) Query failed in %s milliseconds with fuel %s and ifuel %s ... retrying \n"
                        (Range.string_of_range (Env.get_range env))
+                       (at_log_file())
                        (Util.string_of_int elapsed_time)
                        (Util.string_of_int prev_fuel)
                        (Util.string_of_int prev_ifuel);
                  try_alt_configs (prev_fuel, prev_ifuel, timeout) p errs alt in
 
         if Option.isSome unsat_core then Z3.refresh();
-        Z3.ask use_fresh_z3_context  //only relevant if we're running with n_cores > 1
-               unsat_core
+        Z3.ask unsat_core
                all_labels 
                (with_fuel [] p initial_config)
                (cb (Option.isSome unsat_core) initial_config p alt_configs)  in
@@ -270,7 +277,7 @@ let solve use_env_msg tcenv q : unit =
     | Assume({tm=App(False, _)}, _, _) -> pop(); ()
     | _ when tcenv.admit -> pop(); ()
     | Assume(q, _, _) ->
-        ask_and_report_errors tcenv false labels prefix qry suffix;
+        ask_and_report_errors tcenv labels prefix qry suffix;
         pop ()
 
     | _ -> failwith "Impossible"

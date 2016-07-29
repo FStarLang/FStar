@@ -227,7 +227,7 @@ end
 (FStar_Util.string_of_float x)
 end
 | FStar_Const.Const_char (x) -> begin
-(Prims.strcat (Prims.strcat "\'" (FStar_Util.string_of_char x)) "\'")
+(Prims.strcat "\'" (Prims.strcat (FStar_Util.string_of_char x) "\'"))
 end
 | FStar_Const.Const_string (bytes, _32_151) -> begin
 (FStar_Util.format1 "\"%s\"" (FStar_Util.string_of_bytes bytes))
@@ -525,9 +525,9 @@ if ((not (is_arrow)) && (not ((FStar_Options.print_implicits ())))) then begin
 (let _124_172 = (strBvd a.FStar_Absyn_Syntax.v)
 in (imp_to_string _124_172 imp))
 end else begin
-(let _124_176 = (let _124_175 = (let _124_173 = (strBvd a.FStar_Absyn_Syntax.v)
-in (Prims.strcat _124_173 ":"))
-in (let _124_174 = (kind_to_string a.FStar_Absyn_Syntax.sort)
+(let _124_176 = (let _124_175 = (strBvd a.FStar_Absyn_Syntax.v)
+in (let _124_174 = (let _124_173 = (kind_to_string a.FStar_Absyn_Syntax.sort)
+in (Prims.strcat ":" _124_173))
 in (Prims.strcat _124_175 _124_174)))
 in (imp_to_string _124_176 imp))
 end
@@ -542,9 +542,9 @@ if ((not (is_arrow)) && (not ((FStar_Options.print_implicits ())))) then begin
 (let _124_178 = (strBvd x.FStar_Absyn_Syntax.v)
 in (imp_to_string _124_178 imp))
 end else begin
-(let _124_182 = (let _124_181 = (let _124_179 = (strBvd x.FStar_Absyn_Syntax.v)
-in (Prims.strcat _124_179 ":"))
-in (let _124_180 = (typ_to_string x.FStar_Absyn_Syntax.sort)
+(let _124_182 = (let _124_181 = (strBvd x.FStar_Absyn_Syntax.v)
+in (let _124_180 = (let _124_179 = (typ_to_string x.FStar_Absyn_Syntax.sort)
+in (Prims.strcat ":" _124_179))
 in (Prims.strcat _124_181 _124_180)))
 in (imp_to_string _124_182 imp))
 end
@@ -802,8 +802,8 @@ in (match (lex) with
 | Some (es) -> begin
 (let _124_317 = (let _124_316 = (let _124_315 = (FStar_List.map exp_to_string es)
 in (FStar_String.concat "; " _124_315))
-in (Prims.strcat "%[" _124_316))
-in (Prims.strcat _124_317 "]"))
+in (Prims.strcat _124_316 "]"))
+in (Prims.strcat "%[" _124_317))
 end
 | None -> begin
 (

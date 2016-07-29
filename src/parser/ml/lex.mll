@@ -38,7 +38,6 @@
     Hashtbl.add keywords "abstract"      ABSTRACT    ;
     Hashtbl.add keywords "noeq"          NOEQUALITY  ;
     Hashtbl.add keywords "and"           AND         ;
-    Hashtbl.add keywords "as"            AS          ;
     Hashtbl.add keywords "assert"        ASSERT      ;
     Hashtbl.add keywords "assume"        ASSUME      ;
     Hashtbl.add keywords "begin"         BEGIN       ;
@@ -52,8 +51,6 @@
     Hashtbl.add keywords "exists"        EXISTS      ;
     Hashtbl.add keywords "false"         FALSE       ;
     Hashtbl.add keywords "False"         L_FALSE     ;
-    Hashtbl.add keywords "finally"       FINALLY     ;
-    Hashtbl.add keywords "for"           FOR         ;
     Hashtbl.add keywords "forall"        FORALL      ;
     Hashtbl.add keywords "fun"           FUN         ;
     Hashtbl.add keywords "function"      FUNCTION    ;
@@ -62,7 +59,6 @@
     Hashtbl.add keywords "in"            IN          ;
     Hashtbl.add keywords "inline"        INLINE      ;
     Hashtbl.add keywords "irreducible"   IRREDUCIBLE ;
-    Hashtbl.add keywords "lazy"          LAZY        ;
     Hashtbl.add keywords "let"           (LET false) ;
     Hashtbl.add keywords "logic"         LOGIC       ;
     Hashtbl.add keywords "match"         MATCH       ;
@@ -73,10 +69,8 @@
     Hashtbl.add keywords "new_effect_for_free" NEW_EFFECT_FOR_FREE  ;
     Hashtbl.add keywords "of"            OF          ;
     Hashtbl.add keywords "open"          OPEN        ;
-    Hashtbl.add keywords "or"            OR          ;
     Hashtbl.add keywords "opaque"        OPAQUE      ;
     Hashtbl.add keywords "private"       PRIVATE     ;
-    Hashtbl.add keywords "public"        PUBLIC      ;
     Hashtbl.add keywords "rec"           REC         ;
     Hashtbl.add keywords "reifiable"     REIFIABLE   ;
     Hashtbl.add keywords "reify"         REIFY       ;
@@ -84,7 +78,6 @@
     Hashtbl.add keywords "requires"      REQUIRES    ;
     Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
     Hashtbl.add keywords "then"          THEN        ;
-    Hashtbl.add keywords "to"            TO          ;
     Hashtbl.add keywords "total"         TOTAL       ;
     Hashtbl.add keywords "true"          TRUE        ;
     Hashtbl.add keywords "True"          L_TRUE      ;
@@ -190,11 +183,23 @@ let decimal    = (float | integer) ('m' | 'M')
 let xieee32    = xinteger 'l' 'f'
 let xieee64    = xinteger 'L' 'F'
 
+let op_prefix  = ['!' '~' '?']
+let op_infix0a = ['|'] (* left *)
+let op_infix0b = ['&'] (* left *)
+let op_infix0c = ['=' '<' '>'] (* left *)
+let op_infix0c_nogt = ['=' '<'] (* left *)
+let op_infix0d = ['$'] (* left *)
+
+let op_infix0  = op_infix0a | op_infix0b | op_infix0c | op_infix0d
+let op_infix1  = ['@' '^'] (* right *)
+let op_infix2  = ['+' '-'] (* left *)
+let op_infix3  = ['*' '/' '%'] (* left *)
+let symbolchar = op_prefix | op_infix0 | op_infix1 | op_infix2 | op_infix3 | ['.' ':']
+
+
 (* -------------------------------------------------------------------- *)
 let escape_char = ('\\' ( '\\' | "\"" | '\'' | 'n' | 't' | 'b' | 'r'))
 let char        = [^'\\''\n''\r''\t''\b'] | escape_char
-let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'|'|'!'|'^'|'?'
-let custom_op = custom_op_char (custom_op_char | '>' | '*' | '%')*
 
 (* -------------------------------------------------------------------- *)
 let constructor_start_char = upper
@@ -291,6 +296,7 @@ rule token = parse
      { IDENT id }
 
  | "~"         { TILDE (L.lexeme lexbuf) }
+ | "-"         { MINUS }
  | "/\\"       { CONJUNCTION }
  | "\\/"       { DISJUNCTION }
  | "<:"        { SUBTYPE }
@@ -299,12 +305,9 @@ rule token = parse
  | "|)"        { LENS_PAREN_RIGHT }
  | '#'         { HASH }
  | "&"         { AMP }
- | "&&"        { AMP_AMP }
- | "||"        { BAR_BAR }
  | "()"        { LPAREN_RPAREN }
  | '('         { LPAREN }
  | ')'         { RPAREN }
- | '*'         { STAR }
  | ','         { COMMA }
  | "~>"        { SQUIGGLY_RARROW }
  | "->"        { RARROW }
@@ -312,6 +315,8 @@ rule token = parse
  | "<==>"      { IFF }
  | "==>"       { IMPLIES }
  | "."         { DOT }
+ | ".["        { DOT_LBRACK }
+ | ".("        { DOT_LPAREN }
  | "{:pattern" { LBRACE_COLON_PATTERN }
  | ":"         { COLON }
  | "::"        { COLON_COLON }
@@ -323,26 +328,33 @@ rule token = parse
  | "!{"        { BANG_LBRACE }
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
- | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else CUSTOM_OP("<")  }
- | ">"         { if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser lexbuf }
+ | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else OPINFIX0c("<")  }
+ | ">"         { if is_typ_app_gt () then TYP_APP_GREATER else symbolchar_parser lexbuf }
+ | "|>"        { PIPE_RIGHT }
  | "]"         { RBRACK }
  | "|]"        { BAR_RBRACK }
  | "{"         { LBRACE }
  | "|"         { BAR }
  | "}"         { RBRACE }
- | "!"         { BANG }
  | "$"         { DOLLAR }
- | "\\"        { BACKSLASH }
- | ('/' | '%') as op { DIV_MOD_OP    (String.of_char op) }
- | '+'         { PLUS_OP }
- | '-'         { MINUS_OP }
- | custom_op   {CUSTOM_OP (L.lexeme lexbuf) }
+
+ (* Operators. *)
+ | op_prefix  symbolchar* { OPPREFIX (L.lexeme lexbuf) }
+ | op_infix0a symbolchar* { OPINFIX0a (L.lexeme lexbuf) }
+ | op_infix0b symbolchar* { OPINFIX0b (L.lexeme lexbuf) }
+ | op_infix0c_nogt symbolchar* { OPINFIX0c (L.lexeme lexbuf) }
+ | op_infix0d symbolchar* { OPINFIX0d (L.lexeme lexbuf) }
+ | op_infix1  symbolchar* { OPINFIX1 (L.lexeme lexbuf) }
+ | op_infix2  symbolchar* { OPINFIX2 (L.lexeme lexbuf) }
+ | "**"       symbolchar* { OPINFIX4 (L.lexeme lexbuf) }
+ | op_infix3  symbolchar* { OPINFIX3 (L.lexeme lexbuf) }
+
 
  | _ { failwith "unexpected char" }
  | eof { lc := 1; EOF }
 
-and custom_op_parser = parse
- | custom_op_char * {CUSTOM_OP(">" ^  L.lexeme lexbuf)}
+and symbolchar_parser = parse
+ | symbolchar* { OPINFIX0c (">" ^  L.lexeme lexbuf) }
 
 and string buffer = parse
  |  '\\' (newline as x) anywhite*

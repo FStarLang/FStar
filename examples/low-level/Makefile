@@ -25,9 +25,11 @@ CHACHA_EXTRACTED=Chacha.ml
 POLY_EXTRACTED=FStar_Ghost.ml Poly_Parameters.ml Poly_Bigint.ml Poly_Bignum.ml Poly_Poly1305.ml
 AEAD_EXTRACTED=Chacha_wip.ml FStar_Ghost.ml Poly_Parameters.ml Poly_Bigint.ml Poly_Bignum.ml Poly_Poly1305_wip.ml AEAD_Chacha20_Poly1305.ml
 
+P_EXTRACTED=FStar_Ghost.ml FStar_Seq.ml Poly1305_Parameters.ml Poly1305_Bigint.ml Poly1305_Arithmetic.ml Poly1305.ml
+
 .PHONY: lib-ver curve-ver curve-ml chacha-ver chacha-ml
 
-all: chacha-ml poly-ml aead-ml curve-ml
+all: chacha-ml poly-ml aead-ml #curve-ml
 
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
@@ -89,6 +91,14 @@ aead-compile:
 	$(OCAMLOPT) -I ml -I $(AEAD_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
 	  $(addprefix $(AEAD_ODIR)/,$(AEAD_EXTRACTED)) ml/test_aead.ml -o test_aead.exe
 	./test_aead.exe
+
+test:
+	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
+	mkdir -p $(POLY_ODIR)
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) Poly1305.fst --odir $(POLY_ODIR) #2> /dev/null
+	$(OCAMLOPT) -I ml -I $(POLY_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
+	  $(addprefix $(POLY_ODIR)/,$(P_EXTRACTED)) ml/test_poly_wip.ml -o test_poly.exe
+	./test_poly.exe
 
 wip:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap

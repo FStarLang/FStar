@@ -34,7 +34,7 @@ let find_seq a f s = find_seq' #a f s 0
 *)
 
 assume val seq_map: #a:Type -> #b:Type -> f:(a -> Tot b) -> s:seq a ->
-  Tot (t:seq b { Seq.length t = Seq.length s /\ (forall (i:nat{i < Seq.length s}).(Seq.index t i = f (Seq.index s i))) })
+  Tot (t:seq b { Seq.length t = Seq.length s /\ (forall (i:nat{i < Seq.length s}). (Seq.index t i = f (Seq.index s i))) })
 
 
 

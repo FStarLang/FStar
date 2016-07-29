@@ -181,11 +181,22 @@ let hexgraph_short = '\\' 'x' hex hex
 let unicodegraph_short = '\\' 'u' hex hex hex hex
 let unicodegraph_long =  '\\' 'U' hex hex hex hex hex hex hex hex
 let newline = ('\n' | '\r' '\n')
-let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'|'|'^'|'?'
-let custom_op = custom_op_char (custom_op_char | '>' | '!' | '*' | '%' )*
 let connecting_char = '\Pc'
 let combining_char = '\Mn' | '\Mc'
 let formatting_char = '\Cf'
+
+let op_prefix  = ['!' '~' '?']
+let op_infix0a = ['|'] (* left *)
+let op_infix0b = ['&'] (* left *)
+let op_infix0c = ['=' '<' '>'] (* left *)
+let op_infix0c_nogt = ['=' '<'] (* left *)
+let op_infix0d = ['$'] (* left *)
+
+let op_infix0  = op_infix0a | op_infix0b | op_infix0c | op_infix0d
+let op_infix1  = ['@' '^'] (* right *)
+let op_infix2  = ['+' '-'] (* left *)
+let op_infix3  = ['*' '/' '%'] (* left *)
+let symbolchar = op_prefix | op_infix0 | op_infix1 | op_infix2 | op_infix3 | ['.' ':']
 
 let constructor_start_char = ['A'-'Z']
 
@@ -248,14 +259,6 @@ rule token args = parse
  | uint64
   { UINT64 (trim_and_check_range_u lexbuf uint64 "64-bit unsigned integer") }
 
- | any_integer '.' '.'
-     { let s = trim_right lexbuf 2 in
-       if s = "2147483648" then INT32_DOT_DOT(s,true) else
-       INT32_DOT_DOT((
-         try ignore (int32 s); s
-         with _ -> fail lexbuf "This number is outside the allowable range for 32-bit signed integers" "0"
-       ), false)
-     }
  | any_integer
      {
        let s = ulexeme lexbuf in INT(s, false)
@@ -289,11 +292,12 @@ rule token args = parse
        CHAR (Lexhelp.trigraph s.[2] s.[3] s.[4]) }
 
  | "~"     { TILDE(ulexeme lexbuf) }
+ | "-"     { MINUS }
  | "/\\"   { CONJUNCTION }
  | "\\/"   { DISJUNCTION }
  | '\'' hexgraph_short '\'' { CHAR (char (int32 (Lexhelp.hexgraph_short (trim_both lexbuf 3 1)))) }
  | '\'' unicodegraph_short '\'' { CHAR (char (int32 (Lexhelp.unicodegraph_short (trim_both lexbuf 3 1)))) }
- | '\'' unicodegraph_long '\''  { LEX_FAILURE "This unicode encoding is only valid in string literals" }
+ | '\'' unicodegraph_long '\''  { failwith "This unicode encoding is only valid in string literals" }
  | "<:"             { SUBTYPE }
  | "<@"             { SUBKIND }
 
@@ -338,22 +342,18 @@ rule token args = parse
  | "=" { EQUALS }
  | '#' { HASH }
  | '&' { AMP }
- | "!" { BANG }
- | "&&" { AMP_AMP }
- | "||" { BAR_BAR }
- | '\'' { QUOTE }
  | "()" { LPAREN_RPAREN }
  | '(' { LPAREN }
  | ')' { RPAREN }
- | '*' { STAR }
  | ',' { COMMA }
  | "~>" { SQUIGGLY_RARROW }
  | "->" { RARROW }
  | "<-" { LARROW }
  | "<==>" { IFF }
  | "==>" { IMPLIES }
- | ".." { DOT_DOT }
  | "." { DOT }
+ | ".[" { DOT_LBRACK }
+ | ".(" { DOT_LPAREN }
  | "{:pattern" { LBRACE_COLON_PATTERN }
  | ":" { COLON }
  | "::" { COLON_COLON }
@@ -364,26 +364,32 @@ rule token args = parse
  | "!{" { BANG_LBRACE }
  | "[" { LBRACK }
  | "[|" { LBRACK_BAR }
- | "<" {  if is_typ_app args lexbuf then TYP_APP_LESS else CUSTOM_OP("<")  }
- | ">" {  if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser args lexbuf }
+ | "<" {  if is_typ_app args lexbuf then TYP_APP_LESS else OPINFIX0c("<")  }
+ | ">" {  if is_typ_app_gt () then TYP_APP_GREATER else symbolchar_parser args lexbuf }
+ | "|>" { PIPE_RIGHT }
  | "]"  { RBRACK }
  | "|]" { BAR_RBRACK }
  | "{" { LBRACE }
  | "|" { BAR }
  | "}" { RBRACE }
  | "$" { DOLLAR }
- | "~" { RESERVED }
- | "`" { RESERVED }
- | "\\" { BACKSLASH }
- | ('/' | '%')                                               { DIV_MOD_OP(ulexeme lexbuf) }
- | '+'                                                       { PLUS_OP }
- | '-'                                                       { MINUS_OP }
- | custom_op                         { CUSTOM_OP (ulexeme lexbuf) }
+
+ // Operators.
+ | op_prefix  symbolchar* { OPPREFIX (ulexeme lexbuf) }
+ | op_infix0a symbolchar* { OPINFIX0a (ulexeme lexbuf) }
+ | op_infix0b symbolchar* { OPINFIX0b (ulexeme lexbuf) }
+ | op_infix0c_nogt symbolchar* { OPINFIX0c (ulexeme lexbuf) }
+ | op_infix0d symbolchar* { OPINFIX0d (ulexeme lexbuf) }
+ | op_infix1  symbolchar* { OPINFIX1 (ulexeme lexbuf) }
+ | op_infix2  symbolchar* { OPINFIX2 (ulexeme lexbuf) }
+ | "**"       symbolchar* { OPINFIX4 (ulexeme lexbuf) }
+ | op_infix3  symbolchar* { OPINFIX3 (ulexeme lexbuf) }
+
  | _ { unexpected_char lexbuf }
  | eof { lc := 1; EOF }
 
-and custom_op_parser args = parse
- | custom_op_char * {CUSTOM_OP(">" ^  ulexeme lexbuf)}
+and symbolchar_parser args = parse
+ | symbolchar* { OPINFIX0c (">" ^  ulexeme lexbuf) }
 
 and string sargs = parse
  |  '\\' newline anywhite*

@@ -280,6 +280,7 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Abs _  (* not closing implicitly over free vars in type-level functions *)
   | Let _
+  | LetOpen _
   | If _
   | QForall _
   | QExists _ -> [] (* not closing implicitly over free vars in formulas *)
@@ -405,6 +406,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
     let pos q = Syntax.withinfo q None p.prange in
     let pos_r r q = Syntax.withinfo q  None r in
     match p.pat with
+      | PatOp _ -> failwith "let op not supported in stratified"
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
         let loc, env, var, p, _ = aux loc env p in
@@ -654,6 +656,9 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       setpos <| mk_Exp_meta(Meta_desugared(desugar_exp env (mk_term (Let(NoLetQualifier, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr),
                               Sequence))
 
+    | LetOpen _ ->
+        failwith "let open in universes"
+
     | Let(is_rec, ((pat, _snd)::_tl), body) ->
       let is_rec = is_rec = Rec in
       let ds_let_rec () =
@@ -831,8 +836,7 @@ and desugar_typ env (top:term) : typ =
       if is_type env t1
       then let rec flatten t = match t.tm with
             | Op("*", [t1;t2]) ->
-              let rest = flatten t2 in
-              t1::rest
+              flatten t1 @ [ t2 ]
             | _ -> [t] in
           let targs = flatten top |> List.map (fun t -> targ (desugar_typ env t)) in
           let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_tuple_lid (List.length targs) top.range) in

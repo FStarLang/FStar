@@ -1,7 +1,7 @@
-module FStar.Int32
+module FStar.Int128
 (* This module generated automatically using [mk_int.sh] *)
 
-let n = 32
+let n = 128
 
 open FStar.Int
 open FStar.Mul
@@ -153,3 +153,10 @@ let op_Less_Equals_Hat = lte
 (* To input / output constants *)
 assume val to_string: t -> Tot string
 assume val of_string: string -> Tot t
+
+val mul_wide: a:Int64.t -> b:Int64.t -> Pure t
+  (requires True)
+  (ensures (fun c -> v c = Int64.v a * Int64.v b))
+let mul_wide a b = 
+  assume (size (Int64.v a * Int64.v b) n);
+  Mk ((Int64.v a) * (Int64.v b))
