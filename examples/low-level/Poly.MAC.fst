@@ -1,12 +1,15 @@
 module Poly.MAC
 
+open FStar
+open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.HST
 open FStar.Ghost
 open FStar.UInt64
 open FStar.Buffer
+open FStar.ST
 
-module MR = FStar.Monotonic.RRef
+module MR = FStar.HST.Monotonic
 module HH = FStar.HyperHeap
 
 // In AEAD_ChaCha20: id * nonce

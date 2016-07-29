@@ -3,7 +3,7 @@ module FStar.HST.Monotonic
 open FStar
 open FStar.HyperHeap
 open FStar.HST
-open FStar.ST
+open FStar.STH
 
 let reln (a:Type) = a -> a -> Type
 
@@ -98,7 +98,7 @@ val m_recall: #r:rid -> #a:Type -> #b:reln a
 	    -> STH unit 
 	      (requires (fun h -> True))
 	      (ensures (fun h0 _ h1 -> h0==h1 /\ m_contains m h1))
-let m_recall #r #a #b m = FStar.ST.recall m
+let m_recall #r #a #b m = recall m
 
 
 let rid_exists (r:rid) (h:t) = b2t(Map.contains h r)
