@@ -1,6 +1,5 @@
 module Poly.MAC
 
-open FStar
 open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.HST
@@ -97,8 +96,8 @@ let mac (#i:id) (st:state i) (m:msg)
     if authId i then
       random 16
     else
-      let tag = create 0uy 16ul in
-      let Message len contents = msg in
+      let tag = Buffer.create 0uy 16ul in
+      let Message len contents = m in
       let () = Poly.Poly1305_wip.poly1305_mac tag contents len st.key in
       tag
     in
@@ -106,10 +105,39 @@ let mac (#i:id) (st:state i) (m:msg)
   MR.witness st.log (invoked #i st);
   tag
 
+val bytes_cmp_: b:bytes -> b':bytes -> len:UInt32.t{UInt32.v len <= length b /\ UInt32.v len <= length b'} -> tmp:bool -> STL bool
+  (requires (fun h -> live h b /\ live h b'))
+  (ensures  (fun h0 z h1 -> live h0 b /\ live h0 b'
+    /\ (b2t(z) <==> Seq.slice (as_seq h0 b) 0 (UInt32.v len) == Seq.slice (as_seq h0 b') 0 (UInt32.v len)) ))
+let rec bytes_cmp_ b b' len tmp =
+  let open FStar.UInt32 in
+  if len =^ 0ul then tmp
+  else 
+    let i = len -^ 1ul in
+    let bi = index b i in
+    let bi' = index b' i in
+    let open FStar.UInt8 in
+    let tmp' = tmp && (bi =^ bi') in
+    bytes_cmp_ b b' i tmp'
+
+assume val bytes_cmp: b:bytes -> b':bytes -> len:UInt32.t{UInt32.v len <= length b /\ UInt32.v len <= length b'} -> STL bool
+  (requires (fun h -> live h b /\ live h b'))
+  (ensures  (fun h0 z h1 -> live h0 b /\ live h0 b'
+    /\ (b2t(z) <==> Seq.slice (as_seq h0 b) 0 (UInt32.v len) == Seq.slice (as_seq h0 b') 0 (UInt32.v len)) ))
+
 let verify (#i:id) (st:state i) (m:msg) (t:tag)
   : STH bool
   (requires (fun h0 -> True))
   (ensures (fun h0 valid h1 -> h0 == h1))
-  =
-  false
-
+  = 
+    if authId i then
+      begin
+	let log = MR.m_read st.log in
+	match log with
+	| None -> false
+	| Some (m', t') -> m' = m && t' = t
+      end
+    else
+      let tag = Buffer.create 0uy 16ul in
+      let () = Poly.Poly1305_wip.poly1305_mac tag m.contents m.len st.key in
+      bytes_cmp tag t 16ul
