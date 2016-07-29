@@ -1,14 +1,14 @@
 [
   "\u0002Ë\u001e û\u000bXg$×Ýë™Ã#‹",
   [
-    [ 2, 1, [ "@query_1621" ], 0 ],
-    [ 2, 1, [ "@query_1640" ], 0 ],
-    [ 2, 1, [ "@query_1643" ], 0 ],
+    [ 2, 1, [ "@query_1622" ], 0 ],
+    [ 2, 1, [ "@query_1641" ], 0 ],
+    [ 2, 1, [ "@query_1644" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1670", "assumption_ParSubst.ty_haseq_1635",
+        "@query_1671", "assumption_ParSubst.ty_haseq_1636",
         "assumption_Prims.HasEq_int_325", "equation_ParSubst.var",
         "equation_Prims.nat", "haseqTm_refine_1165"
       ],
@@ -18,9 +18,9 @@
       2,
       1,
       [
-        "@query_1714", "disc_equation_ParSubst.EVar",
+        "@query_1715", "disc_equation_ParSubst.EVar",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1707"
+        "refinement_interpretation_Tm_refine_1708"
       ],
       0
     ],
@@ -28,9 +28,9 @@
       2,
       1,
       [
-        "@query_1723", "disc_equation_ParSubst.EApp",
+        "@query_1724", "disc_equation_ParSubst.EApp",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1716"
+        "refinement_interpretation_Tm_refine_1717"
       ],
       0
     ],
@@ -38,9 +38,9 @@
       2,
       1,
       [
-        "@query_1729", "disc_equation_ParSubst.EApp",
+        "@query_1730", "disc_equation_ParSubst.EApp",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1716"
+        "refinement_interpretation_Tm_refine_1717"
       ],
       0
     ],
@@ -48,9 +48,9 @@
       2,
       1,
       [
-        "@query_1738", "disc_equation_ParSubst.EAbs",
+        "@query_1739", "disc_equation_ParSubst.EAbs",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1731"
+        "refinement_interpretation_Tm_refine_1732"
       ],
       0
     ],
@@ -58,20 +58,20 @@
       2,
       1,
       [
-        "@query_1746", "disc_equation_ParSubst.EAbs",
+        "@query_1747", "disc_equation_ParSubst.EAbs",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1731"
+        "refinement_interpretation_Tm_refine_1732"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1752", "assumption_Prims.HasEq_int_325" ], 0 ],
     [ 2, 1, [ "@query_1753", "assumption_Prims.HasEq_int_325" ], 0 ],
-    [ 2, 1, [ "@query_1754" ], 0 ],
+    [ 2, 1, [ "@query_1754", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [ 2, 1, [ "@query_1755" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1762", "equation_ParSubst.var", "equation_Prims.nat",
+        "@query_1763", "equation_ParSubst.var", "equation_Prims.nat",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_1165"
       ],
@@ -81,7 +81,7 @@
       2,
       1,
       [
-        "@query_1765", "constructor_distinct_ParSubst.EVar",
+        "@query_1766", "constructor_distinct_ParSubst.EVar",
         "disc_equation_ParSubst.EVar", "equation_ParSubst.renaming",
         "equation_ParSubst.sub_inc", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_ParSubst.EVar__0",
@@ -89,33 +89,31 @@
       ],
       0
     ],
-    [ 2, 1, [ "@query_1766" ], 0 ],
-    [ 2, 1, [ "@query_1769", "assumption_Prims.HasEq_int_325" ], 0 ],
-    [ 2, 1, [ "@query_1772" ], 0 ],
+    [ 2, 1, [ "@query_1767" ], 0 ],
+    [ 2, 1, [ "@query_1770", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [ 2, 1, [ "@query_1773" ], 0 ],
     [
       2,
       1,
       [
-        "@pretyping__322", "@query_1798", "binder_e__8254", "binder_s__8255",
+        "@pretyping__322", "@query_1799", "binder_e__8254", "binder_s__8255",
         "bool_inversion", "constructor_distinct_ParSubst.EVar",
         "disc_equation_ParSubst.EAbs", "disc_equation_ParSubst.EApp",
         "disc_equation_ParSubst.EVar", "equality_tok_Prims.LexTop@tok",
         "equation_ParSubst.is_var", "equation_ParSubst.renaming",
         "equation_ParSubst.sub", "equation_ParSubst.sub_inc",
         "equation_ParSubst.var", "equation_Prims.nat",
-        "fuel_guarded_inversion_ParSubst.exp_1674",
+        "fuel_guarded_inversion_ParSubst.exp_1675",
         "function_token_typing_ParSubst.sub_inc", "int_inversion",
-        "int_typing", "interpretation_Exp_abs_1795",
-        "interpretation_Tm_arrow_1682", "interpretation_Tm_arrow_1791",
+        "int_typing", "interpretation_Exp_abs_1796",
+        "interpretation_Tm_arrow_1683", "interpretation_Tm_arrow_1792",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_ParSubst.EApp__0",
-        "projection_inverse_ParSubst.EApp__1",
         "projection_inverse_ParSubst.EVar__0",
         "refinement_interpretation_Tm_refine_1165",
-        "refinement_interpretation_Tm_refine_1757",
-        "refinement_interpretation_Tm_refine_1784",
+        "refinement_interpretation_Tm_refine_1758",
+        "refinement_interpretation_Tm_refine_1785",
         "subterm_ordering_ParSubst.EAbs", "subterm_ordering_ParSubst.EApp",
         "token_correspondence_ParSubst.sub_inc", "typing_ParSubst.is_EVar",
         "typing_ParSubst.is_renaming", "typing_ParSubst.is_var",
@@ -123,33 +121,33 @@
       ],
       0
     ],
-    [ 2, 1, [ "@query_1809", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [ 2, 1, [ "@query_1810", "assumption_Prims.HasEq_int_325" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1826", "equation_ParSubst.var", "equation_Prims.nat",
+        "@query_1827", "equation_ParSubst.var", "equation_Prims.nat",
         "int_inversion", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_1165"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1827", "assumption_Prims.HasEq_int_325" ], 0 ],
-    [ 2, 1, [ "@query_1834", "assumption_ParSubst.exp_haseq_1697" ], 0 ],
-    [ 2, 1, [ "@query_1837" ], 0 ],
+    [ 2, 1, [ "@query_1828", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [ 2, 1, [ "@query_1835", "assumption_ParSubst.exp_haseq_1698" ], 0 ],
+    [ 2, 1, [ "@query_1838" ], 0 ],
     [
       2,
       1,
       [
-        "@pretyping__1678", "@query_1840",
-        "assumption_FStar.FunctionalExtensionality.Extensionality_1607",
+        "@pretyping__1679", "@query_1841",
+        "assumption_FStar.FunctionalExtensionality.Extensionality_1608",
         "equation_FStar.FunctionalExtensionality.efun",
         "equation_ParSubst.sub", "equation_ParSubst.var",
         "equation_Prims.nat", "function_token_typing_Prims.nat",
-        "interpretation_Tm_arrow_1682", "interpretation_Tm_arrow_228",
+        "interpretation_Tm_arrow_1683", "interpretation_Tm_arrow_228",
         "kinding_ParSubst.exp@tok",
-        "refinement_interpretation_Tm_refine_1839", "unit_typing"
+        "refinement_interpretation_Tm_refine_1840", "unit_typing"
       ],
       0
     ],
@@ -157,26 +155,26 @@
       2,
       1,
       [
-        "@pretyping__1678", "@pretyping__322", "@query_1843",
+        "@pretyping__1679", "@pretyping__322", "@query_1844",
         "constructor_distinct_ParSubst.EAbs",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_ParSubst.sub", "equation_ParSubst.subst_eabs",
         "equation_ParSubst.var", "equation_Prims.nat",
-        "equation_with_fuel_ParSubst.subst__1818",
-        "fuel_correspondence_ParSubst.subst__1818",
-        "fuel_irrelevance_ParSubst.subst__1818", "int_inversion",
-        "interpretation_Exp_abs_1820", "interpretation_Exp_abs_1830",
-        "interpretation_Tm_arrow_1682", "interpretation_Tm_arrow_1824",
+        "equation_with_fuel_ParSubst.subst__1819",
+        "fuel_correspondence_ParSubst.subst__1819",
+        "fuel_irrelevance_ParSubst.subst__1819", "int_inversion",
+        "interpretation_Exp_abs_1821", "interpretation_Exp_abs_1831",
+        "interpretation_Tm_arrow_1683", "interpretation_Tm_arrow_1825",
         "lemma_ParSubst.subst_extensional",
         "projection_inverse_ParSubst.EAbs__0",
         "projection_inverse_ParSubst.EAbs__1",
         "refinement_interpretation_Tm_refine_1165",
-        "refinement_interpretation_Tm_refine_1823",
-        "refinement_interpretation_Tm_refine_1842", "typing_Exp_abs_1820",
+        "refinement_interpretation_Tm_refine_1824",
+        "refinement_interpretation_Tm_refine_1843", "typing_Exp_abs_1821",
         "typing_ParSubst.subst_eabs"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1844", "assumption_ParSubst.exp_haseq_1697" ], 0 ]
+    [ 2, 1, [ "@query_1845", "assumption_ParSubst.exp_haseq_1698" ], 0 ]
   ]
 ]

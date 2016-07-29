@@ -88,7 +88,7 @@
     [ 2, 1, [ "@query_1989", "unit_typing" ], 0 ],
     [ 2, 1, [ "@query_1990", "assumption_Prims.HasEq_int_319" ], 0 ],
     [ 2, 1, [ "@query_2000" ], 0 ],
-    [ 2, 1, [ "@query_2001" ], 0 ],
+    [ 2, 1, [ "@query_2001", "unit_inversion", "unit_typing" ], 0 ],
     [ 2, 1, [ "@query_2002", "assumption_Prims.HasEq_int_319" ], 0 ],
     [ 2, 1, [ "@query_2006" ], 0 ],
     [ 2, 1, [ "@query_2007", "unit_typing" ], 0 ],
@@ -140,10 +140,11 @@
       2,
       1,
       [
-        "@pretyping__316", "@query_2091", "equation_BinarySearch.bsearch",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "int_inversion", "primitive_Prims.op_Minus",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "@pretyping__316", "@query_2091", "disc_equation_Prims.None",
+        "equation_BinarySearch.bsearch", "equation_Prims.nat",
+        "function_token_typing_Prims.int", "int_inversion",
+        "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_1040", "typing_FStar.Seq.length"
       ],
       0

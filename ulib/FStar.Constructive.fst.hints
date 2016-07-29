@@ -1,17 +1,17 @@
 [
   "é0:ÛþIkÚ?%\u007fIÄ£Ôn",
   [
-    [ 2, 1, [ "@query_1221" ], 0 ],
-    [ 2, 1, [ "@query_1241" ], 0 ],
-    [ 2, 1, [ "@query_1246" ], 0 ],
-    [ 2, 1, [ "@query_1268" ], 0 ],
+    [ 2, 1, [ "@query_1222" ], 0 ],
+    [ 2, 1, [ "@query_1242" ], 0 ],
+    [ 2, 1, [ "@query_1247" ], 0 ],
+    [ 2, 1, [ "@query_1269" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1305", "disc_equation_FStar.Constructive.IntroL",
+        "@query_1306", "disc_equation_FStar.Constructive.IntroL",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1298"
+        "refinement_interpretation_Tm_refine_1299"
       ],
       0
     ],
@@ -19,73 +19,73 @@
       2,
       1,
       [
-        "@query_1314", "disc_equation_FStar.Constructive.IntroR",
+        "@query_1315", "disc_equation_FStar.Constructive.IntroR",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1307"
+        "refinement_interpretation_Tm_refine_1308"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1315" ], 0 ],
-    [ 2, 1, [ "@query_1319" ], 0 ],
-    [ 2, 1, [ "@query_1330" ], 0 ],
-    [ 2, 1, [ "@query_1356" ], 0 ],
+    [ 2, 1, [ "@query_1316" ], 0 ],
+    [ 2, 1, [ "@query_1320" ], 0 ],
+    [ 2, 1, [ "@query_1331" ], 0 ],
+    [ 2, 1, [ "@query_1357" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1364", "proj_equation_FStar.Constructive.ExIntro_x",
+        "@query_1365", "proj_equation_FStar.Constructive.ExIntro_x",
         "projection_inverse_FStar.Constructive.ExIntro_x"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1367" ], 0 ],
-    [ 2, 1, [ "@query_1428" ], 0 ],
+    [ 2, 1, [ "@query_1368" ], 0 ],
+    [ 2, 1, [ "@query_1429" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1430", "fuel_guarded_inversion_FStar.Constructive.ceq_1386",
+        "@query_1431", "fuel_guarded_inversion_FStar.Constructive.ceq_1387",
         "token_correspondence_FStar.Constructive.ceq@tok"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1439" ], 0 ],
-    [ 2, 1, [ "@query_1443" ], 0 ],
+    [ 2, 1, [ "@query_1440" ], 0 ],
+    [ 2, 1, [ "@query_1444" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1445", "fuel_guarded_inversion_FStar.Constructive.ceq_1386",
+        "@query_1446", "fuel_guarded_inversion_FStar.Constructive.ceq_1387",
         "token_correspondence_FStar.Constructive.ceq@tok", "unit_typing"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1449" ], 0 ],
+    [ 2, 1, [ "@query_1450" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1451", "fuel_guarded_inversion_FStar.Constructive.ceq_1386",
+        "@query_1452", "fuel_guarded_inversion_FStar.Constructive.ceq_1387",
         "token_correspondence_FStar.Constructive.ceq@tok"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1461" ], 0 ],
+    [ 2, 1, [ "@query_1462" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1462", "fuel_guarded_inversion_FStar.Constructive.ceq_1386",
+        "@query_1463", "fuel_guarded_inversion_FStar.Constructive.ceq_1387",
         "token_correspondence_FStar.Constructive.ceq@tok"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1470" ], 0 ],
+    [ 2, 1, [ "@query_1471" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1471", "fuel_guarded_inversion_FStar.Constructive.ceq_1386",
+        "@query_1472", "fuel_guarded_inversion_FStar.Constructive.ceq_1387",
         "token_correspondence_FStar.Constructive.ceq@tok"
       ],
       0
@@ -94,8 +94,8 @@
       2,
       1,
       [
-        "@query_1510",
-        "fuel_guarded_inversion_FStar.Constructive.cfalse_1505"
+        "@query_1511",
+        "fuel_guarded_inversion_FStar.Constructive.cfalse_1506"
       ],
       0
     ],
@@ -104,7 +104,7 @@
       1,
       [
         "binder_x__19112",
-        "fuel_guarded_inversion_FStar.Constructive.cfalse_1505"
+        "fuel_guarded_inversion_FStar.Constructive.cfalse_1506"
       ],
       0
     ],
@@ -113,7 +113,7 @@
       1,
       [
         "binder_uu_____19515", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1529"
+        "refinement_interpretation_Tm_refine_1530"
       ],
       0
     ]

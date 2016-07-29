@@ -5,28 +5,28 @@
       2,
       1,
       [
-        "@query_1898", "assumption_Prims.HasEq_int_325",
+        "@query_1899", "assumption_Prims.HasEq_int_325",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1899", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [ 2, 1, [ "@query_1900", "assumption_Prims.HasEq_int_325" ], 0 ],
     [
       2,
       1,
       [
-        "@query_1900", "assumption_Prims.HasEq_int_325",
+        "@query_1901", "assumption_Prims.HasEq_int_325",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1908" ], 0 ],
+    [ 2, 1, [ "@query_1909" ], 0 ],
     [
       2,
       1,
       [
-        "@pretyping__1419", "@query_1909",
-        "assumption_FStar.Heap.SelUpd1_1485",
+        "@pretyping__1420", "@query_1910",
+        "assumption_FStar.Heap.SelUpd1_1486",
         "assumption_Prims.HasEq_int_325", "bool_inversion", "bool_typing",
         "equation_FStar.TwoLevelHeap.as_ref",
         "equation_FStar.TwoLevelHeap.modifies",
