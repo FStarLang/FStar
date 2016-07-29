@@ -158,6 +158,7 @@ type term' =
 | Abs of (pattern Prims.list * term)
 | App of (term * term * imp)
 | Let of (let_qualifier * (pattern * term) Prims.list * term)
+| LetOpen of (FStar_Ident.lid * term)
 | Seq of (term * term)
 | If of (term * term * term)
 | Match of (term * branch Prims.list)
@@ -288,6 +289,15 @@ end))
 
 let is_Let = (fun _discr_ -> (match (_discr_) with
 | Let (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let is_LetOpen = (fun _discr_ -> (match (_discr_) with
+| LetOpen (_) -> begin
 true
 end
 | _ -> begin
@@ -673,207 +683,213 @@ _59_40
 end))
 
 
-let ___Seq____0 = (fun projectee -> (match (projectee) with
-| Seq (_59_43) -> begin
+let ___LetOpen____0 = (fun projectee -> (match (projectee) with
+| LetOpen (_59_43) -> begin
 _59_43
 end))
 
 
-let ___If____0 = (fun projectee -> (match (projectee) with
-| If (_59_46) -> begin
+let ___Seq____0 = (fun projectee -> (match (projectee) with
+| Seq (_59_46) -> begin
 _59_46
 end))
 
 
-let ___Match____0 = (fun projectee -> (match (projectee) with
-| Match (_59_49) -> begin
+let ___If____0 = (fun projectee -> (match (projectee) with
+| If (_59_49) -> begin
 _59_49
 end))
 
 
-let ___TryWith____0 = (fun projectee -> (match (projectee) with
-| TryWith (_59_52) -> begin
+let ___Match____0 = (fun projectee -> (match (projectee) with
+| Match (_59_52) -> begin
 _59_52
 end))
 
 
-let ___Ascribed____0 = (fun projectee -> (match (projectee) with
-| Ascribed (_59_55) -> begin
+let ___TryWith____0 = (fun projectee -> (match (projectee) with
+| TryWith (_59_55) -> begin
 _59_55
 end))
 
 
-let ___Record____0 = (fun projectee -> (match (projectee) with
-| Record (_59_58) -> begin
+let ___Ascribed____0 = (fun projectee -> (match (projectee) with
+| Ascribed (_59_58) -> begin
 _59_58
 end))
 
 
-let ___Project____0 = (fun projectee -> (match (projectee) with
-| Project (_59_61) -> begin
+let ___Record____0 = (fun projectee -> (match (projectee) with
+| Record (_59_61) -> begin
 _59_61
 end))
 
 
-let ___Product____0 = (fun projectee -> (match (projectee) with
-| Product (_59_64) -> begin
+let ___Project____0 = (fun projectee -> (match (projectee) with
+| Project (_59_64) -> begin
 _59_64
 end))
 
 
-let ___Sum____0 = (fun projectee -> (match (projectee) with
-| Sum (_59_67) -> begin
+let ___Product____0 = (fun projectee -> (match (projectee) with
+| Product (_59_67) -> begin
 _59_67
 end))
 
 
-let ___QForall____0 = (fun projectee -> (match (projectee) with
-| QForall (_59_70) -> begin
+let ___Sum____0 = (fun projectee -> (match (projectee) with
+| Sum (_59_70) -> begin
 _59_70
 end))
 
 
-let ___QExists____0 = (fun projectee -> (match (projectee) with
-| QExists (_59_73) -> begin
+let ___QForall____0 = (fun projectee -> (match (projectee) with
+| QForall (_59_73) -> begin
 _59_73
 end))
 
 
-let ___Refine____0 = (fun projectee -> (match (projectee) with
-| Refine (_59_76) -> begin
+let ___QExists____0 = (fun projectee -> (match (projectee) with
+| QExists (_59_76) -> begin
 _59_76
 end))
 
 
-let ___NamedTyp____0 = (fun projectee -> (match (projectee) with
-| NamedTyp (_59_79) -> begin
+let ___Refine____0 = (fun projectee -> (match (projectee) with
+| Refine (_59_79) -> begin
 _59_79
 end))
 
 
-let ___Paren____0 = (fun projectee -> (match (projectee) with
-| Paren (_59_82) -> begin
+let ___NamedTyp____0 = (fun projectee -> (match (projectee) with
+| NamedTyp (_59_82) -> begin
 _59_82
 end))
 
 
-let ___Requires____0 = (fun projectee -> (match (projectee) with
-| Requires (_59_85) -> begin
+let ___Paren____0 = (fun projectee -> (match (projectee) with
+| Paren (_59_85) -> begin
 _59_85
 end))
 
 
-let ___Ensures____0 = (fun projectee -> (match (projectee) with
-| Ensures (_59_88) -> begin
+let ___Requires____0 = (fun projectee -> (match (projectee) with
+| Requires (_59_88) -> begin
 _59_88
 end))
 
 
-let ___Labeled____0 = (fun projectee -> (match (projectee) with
-| Labeled (_59_91) -> begin
+let ___Ensures____0 = (fun projectee -> (match (projectee) with
+| Ensures (_59_91) -> begin
 _59_91
 end))
 
 
-let ___Assign____0 = (fun projectee -> (match (projectee) with
-| Assign (_59_94) -> begin
+let ___Labeled____0 = (fun projectee -> (match (projectee) with
+| Labeled (_59_94) -> begin
 _59_94
 end))
 
 
-let ___Variable____0 = (fun projectee -> (match (projectee) with
-| Variable (_59_98) -> begin
-_59_98
+let ___Assign____0 = (fun projectee -> (match (projectee) with
+| Assign (_59_97) -> begin
+_59_97
 end))
 
 
-let ___TVariable____0 = (fun projectee -> (match (projectee) with
-| TVariable (_59_101) -> begin
+let ___Variable____0 = (fun projectee -> (match (projectee) with
+| Variable (_59_101) -> begin
 _59_101
 end))
 
 
-let ___Annotated____0 = (fun projectee -> (match (projectee) with
-| Annotated (_59_104) -> begin
+let ___TVariable____0 = (fun projectee -> (match (projectee) with
+| TVariable (_59_104) -> begin
 _59_104
 end))
 
 
-let ___TAnnotated____0 = (fun projectee -> (match (projectee) with
-| TAnnotated (_59_107) -> begin
+let ___Annotated____0 = (fun projectee -> (match (projectee) with
+| Annotated (_59_107) -> begin
 _59_107
 end))
 
 
-let ___NoName____0 = (fun projectee -> (match (projectee) with
-| NoName (_59_110) -> begin
+let ___TAnnotated____0 = (fun projectee -> (match (projectee) with
+| TAnnotated (_59_110) -> begin
 _59_110
 end))
 
 
-let ___PatConst____0 = (fun projectee -> (match (projectee) with
-| PatConst (_59_114) -> begin
-_59_114
+let ___NoName____0 = (fun projectee -> (match (projectee) with
+| NoName (_59_113) -> begin
+_59_113
 end))
 
 
-let ___PatApp____0 = (fun projectee -> (match (projectee) with
-| PatApp (_59_117) -> begin
+let ___PatConst____0 = (fun projectee -> (match (projectee) with
+| PatConst (_59_117) -> begin
 _59_117
 end))
 
 
-let ___PatVar____0 = (fun projectee -> (match (projectee) with
-| PatVar (_59_120) -> begin
+let ___PatApp____0 = (fun projectee -> (match (projectee) with
+| PatApp (_59_120) -> begin
 _59_120
 end))
 
 
-let ___PatName____0 = (fun projectee -> (match (projectee) with
-| PatName (_59_123) -> begin
+let ___PatVar____0 = (fun projectee -> (match (projectee) with
+| PatVar (_59_123) -> begin
 _59_123
 end))
 
 
-let ___PatTvar____0 = (fun projectee -> (match (projectee) with
-| PatTvar (_59_126) -> begin
+let ___PatName____0 = (fun projectee -> (match (projectee) with
+| PatName (_59_126) -> begin
 _59_126
 end))
 
 
-let ___PatList____0 = (fun projectee -> (match (projectee) with
-| PatList (_59_129) -> begin
+let ___PatTvar____0 = (fun projectee -> (match (projectee) with
+| PatTvar (_59_129) -> begin
 _59_129
 end))
 
 
-let ___PatTuple____0 = (fun projectee -> (match (projectee) with
-| PatTuple (_59_132) -> begin
+let ___PatList____0 = (fun projectee -> (match (projectee) with
+| PatList (_59_132) -> begin
 _59_132
 end))
 
 
-let ___PatRecord____0 = (fun projectee -> (match (projectee) with
-| PatRecord (_59_135) -> begin
+let ___PatTuple____0 = (fun projectee -> (match (projectee) with
+| PatTuple (_59_135) -> begin
 _59_135
 end))
 
 
-let ___PatAscribed____0 = (fun projectee -> (match (projectee) with
-| PatAscribed (_59_138) -> begin
+let ___PatRecord____0 = (fun projectee -> (match (projectee) with
+| PatRecord (_59_138) -> begin
 _59_138
 end))
 
 
-let ___PatOr____0 = (fun projectee -> (match (projectee) with
-| PatOr (_59_141) -> begin
+let ___PatAscribed____0 = (fun projectee -> (match (projectee) with
+| PatAscribed (_59_141) -> begin
 _59_141
 end))
 
 
-let ___PatOp____0 = (fun projectee -> (match (projectee) with
-| PatOp (_59_144) -> begin
+let ___PatOr____0 = (fun projectee -> (match (projectee) with
+| PatOr (_59_144) -> begin
 _59_144
+end))
+
+
+let ___PatOp____0 = (fun projectee -> (match (projectee) with
+| PatOp (_59_147) -> begin
+_59_147
 end))
 
 
@@ -933,26 +949,26 @@ end))
 
 
 let ___TyconAbstract____0 = (fun projectee -> (match (projectee) with
-| TyconAbstract (_59_148) -> begin
-_59_148
-end))
-
-
-let ___TyconAbbrev____0 = (fun projectee -> (match (projectee) with
-| TyconAbbrev (_59_151) -> begin
+| TyconAbstract (_59_151) -> begin
 _59_151
 end))
 
 
-let ___TyconRecord____0 = (fun projectee -> (match (projectee) with
-| TyconRecord (_59_154) -> begin
+let ___TyconAbbrev____0 = (fun projectee -> (match (projectee) with
+| TyconAbbrev (_59_154) -> begin
 _59_154
 end))
 
 
-let ___TyconVariant____0 = (fun projectee -> (match (projectee) with
-| TyconVariant (_59_157) -> begin
+let ___TyconRecord____0 = (fun projectee -> (match (projectee) with
+| TyconRecord (_59_157) -> begin
 _59_157
+end))
+
+
+let ___TyconVariant____0 = (fun projectee -> (match (projectee) with
+| TyconVariant (_59_160) -> begin
+_59_160
 end))
 
 
@@ -1137,14 +1153,14 @@ end))
 
 
 let ___NonReifiableLift____0 = (fun projectee -> (match (projectee) with
-| NonReifiableLift (_59_160) -> begin
-_59_160
+| NonReifiableLift (_59_163) -> begin
+_59_163
 end))
 
 
 let ___ReifiableLift____0 = (fun projectee -> (match (projectee) with
-| ReifiableLift (_59_163) -> begin
-_59_163
+| ReifiableLift (_59_166) -> begin
+_59_166
 end))
 
 
@@ -1179,14 +1195,14 @@ end))
 
 
 let ___SetOptions____0 = (fun projectee -> (match (projectee) with
-| SetOptions (_59_170) -> begin
-_59_170
+| SetOptions (_59_173) -> begin
+_59_173
 end))
 
 
 let ___ResetOptions____0 = (fun projectee -> (match (projectee) with
-| ResetOptions (_59_173) -> begin
-_59_173
+| ResetOptions (_59_176) -> begin
+_59_176
 end))
 
 
@@ -1360,98 +1376,98 @@ end))
 
 
 let ___TopLevelModule____0 = (fun projectee -> (match (projectee) with
-| TopLevelModule (_59_178) -> begin
-_59_178
-end))
-
-
-let ___Open____0 = (fun projectee -> (match (projectee) with
-| Open (_59_181) -> begin
+| TopLevelModule (_59_181) -> begin
 _59_181
 end))
 
 
-let ___ModuleAbbrev____0 = (fun projectee -> (match (projectee) with
-| ModuleAbbrev (_59_184) -> begin
+let ___Open____0 = (fun projectee -> (match (projectee) with
+| Open (_59_184) -> begin
 _59_184
 end))
 
 
-let ___KindAbbrev____0 = (fun projectee -> (match (projectee) with
-| KindAbbrev (_59_187) -> begin
+let ___ModuleAbbrev____0 = (fun projectee -> (match (projectee) with
+| ModuleAbbrev (_59_187) -> begin
 _59_187
 end))
 
 
-let ___ToplevelLet____0 = (fun projectee -> (match (projectee) with
-| ToplevelLet (_59_190) -> begin
+let ___KindAbbrev____0 = (fun projectee -> (match (projectee) with
+| KindAbbrev (_59_190) -> begin
 _59_190
 end))
 
 
-let ___Main____0 = (fun projectee -> (match (projectee) with
-| Main (_59_193) -> begin
+let ___ToplevelLet____0 = (fun projectee -> (match (projectee) with
+| ToplevelLet (_59_193) -> begin
 _59_193
 end))
 
 
-let ___Assume____0 = (fun projectee -> (match (projectee) with
-| Assume (_59_196) -> begin
+let ___Main____0 = (fun projectee -> (match (projectee) with
+| Main (_59_196) -> begin
 _59_196
 end))
 
 
-let ___Tycon____0 = (fun projectee -> (match (projectee) with
-| Tycon (_59_199) -> begin
+let ___Assume____0 = (fun projectee -> (match (projectee) with
+| Assume (_59_199) -> begin
 _59_199
 end))
 
 
-let ___Val____0 = (fun projectee -> (match (projectee) with
-| Val (_59_202) -> begin
+let ___Tycon____0 = (fun projectee -> (match (projectee) with
+| Tycon (_59_202) -> begin
 _59_202
 end))
 
 
-let ___Exception____0 = (fun projectee -> (match (projectee) with
-| Exception (_59_205) -> begin
+let ___Val____0 = (fun projectee -> (match (projectee) with
+| Val (_59_205) -> begin
 _59_205
 end))
 
 
-let ___NewEffect____0 = (fun projectee -> (match (projectee) with
-| NewEffect (_59_208) -> begin
+let ___Exception____0 = (fun projectee -> (match (projectee) with
+| Exception (_59_208) -> begin
 _59_208
 end))
 
 
-let ___NewEffectForFree____0 = (fun projectee -> (match (projectee) with
-| NewEffectForFree (_59_211) -> begin
+let ___NewEffect____0 = (fun projectee -> (match (projectee) with
+| NewEffect (_59_211) -> begin
 _59_211
 end))
 
 
-let ___SubEffect____0 = (fun projectee -> (match (projectee) with
-| SubEffect (_59_214) -> begin
+let ___NewEffectForFree____0 = (fun projectee -> (match (projectee) with
+| NewEffectForFree (_59_214) -> begin
 _59_214
 end))
 
 
-let ___Pragma____0 = (fun projectee -> (match (projectee) with
-| Pragma (_59_217) -> begin
+let ___SubEffect____0 = (fun projectee -> (match (projectee) with
+| SubEffect (_59_217) -> begin
 _59_217
 end))
 
 
+let ___Pragma____0 = (fun projectee -> (match (projectee) with
+| Pragma (_59_220) -> begin
+_59_220
+end))
+
+
 let ___DefineEffect____0 = (fun projectee -> (match (projectee) with
-| DefineEffect (_59_221) -> begin
-_59_221
+| DefineEffect (_59_224) -> begin
+_59_224
 end))
 
 
 let ___RedefineEffect____0 = (fun projectee -> (match (projectee) with
-| RedefineEffect (_59_224) -> begin
-_59_224
+| RedefineEffect (_59_227) -> begin
+_59_227
 end))
 
 
@@ -1479,14 +1495,14 @@ end))
 
 
 let ___Module____0 = (fun projectee -> (match (projectee) with
-| Module (_59_227) -> begin
-_59_227
+| Module (_59_230) -> begin
+_59_230
 end))
 
 
 let ___Interface____0 = (fun projectee -> (match (projectee) with
-| Interface (_59_230) -> begin
-_59_230
+| Interface (_59_233) -> begin
+_59_233
 end))
 
 
@@ -1505,10 +1521,10 @@ let first_char = (FStar_String.substring id.FStar_Ident.idText 0 1)
 in if ((FStar_String.lowercase first_char) = first_char) then begin
 ()
 end else begin
-(let _151_1048 = (let _151_1047 = (let _151_1046 = (FStar_Util.format1 "Invalid identifer \'%s\'; expected a symbol that begins with a lower-case character" id.FStar_Ident.idText)
-in ((_151_1046), (id.FStar_Ident.idRange)))
-in FStar_Syntax_Syntax.Error (_151_1047))
-in (Prims.raise _151_1048))
+(let _151_1062 = (let _151_1061 = (let _151_1060 = (FStar_Util.format1 "Invalid identifer \'%s\'; expected a symbol that begins with a lower-case character" id.FStar_Ident.idText)
+in ((_151_1060), (id.FStar_Ident.idRange)))
+in FStar_Syntax_Syntax.Error (_151_1061))
+in (Prims.raise _151_1062))
 end)
 end else begin
 ()
@@ -1531,7 +1547,7 @@ let un_curry_abs : pattern Prims.list  ->  term  ->  term' = (fun ps body -> (ma
 | Abs (p', body') -> begin
 Abs ((((FStar_List.append ps p')), (body')))
 end
-| _59_251 -> begin
+| _59_254 -> begin
 Abs (((ps), (body)))
 end))
 
@@ -1546,28 +1562,28 @@ in (FStar_Ident.gen r1))
 end else begin
 (FStar_Absyn_Util.genident (Some (r1)))
 end
-in (let _151_1088 = (let _151_1087 = (let _151_1086 = (let _151_1085 = (let _151_1084 = (let _151_1083 = (let _151_1082 = (let _151_1081 = (FStar_Ident.lid_of_ids ((x)::[]))
-in Var (_151_1081))
-in (mk_term _151_1082 r1 Expr))
-in ((_151_1083), (branches)))
-in Match (_151_1084))
-in (mk_term _151_1085 r2 Expr))
-in ((((mk_pattern (PatVar (((x), (None)))) r1))::[]), (_151_1086)))
-in Abs (_151_1087))
-in (mk_term _151_1088 r2 Expr))))
+in (let _151_1102 = (let _151_1101 = (let _151_1100 = (let _151_1099 = (let _151_1098 = (let _151_1097 = (let _151_1096 = (let _151_1095 = (FStar_Ident.lid_of_ids ((x)::[]))
+in Var (_151_1095))
+in (mk_term _151_1096 r1 Expr))
+in ((_151_1097), (branches)))
+in Match (_151_1098))
+in (mk_term _151_1099 r2 Expr))
+in ((((mk_pattern (PatVar (((x), (None)))) r1))::[]), (_151_1100)))
+in Abs (_151_1101))
+in (mk_term _151_1102 r2 Expr))))
 
 
 let un_function : pattern  ->  term  ->  (pattern * term) Prims.option = (fun p tm -> (match (((p.pat), (tm.tm))) with
-| (PatVar (_59_260), Abs (pats, body)) -> begin
+| (PatVar (_59_263), Abs (pats, body)) -> begin
 Some ((((mk_pattern (PatApp (((p), (pats)))) p.prange)), (body)))
 end
-| _59_268 -> begin
+| _59_271 -> begin
 None
 end))
 
 
-let lid_with_range : FStar_Ident.lident  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun lid r -> (let _151_1097 = (FStar_Ident.path_of_lid lid)
-in (FStar_Ident.lid_of_path _151_1097 r)))
+let lid_with_range : FStar_Ident.lident  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun lid r -> (let _151_1111 = (FStar_Ident.path_of_lid lid)
+in (FStar_Ident.lid_of_path _151_1111 r)))
 
 
 let consPat : FStar_Range.range  ->  pattern  ->  pattern  ->  pattern' = (fun r hd tl -> PatApp ((((mk_pattern (PatName (FStar_Absyn_Const.cons_lid)) r)), ((hd)::(tl)::[]))))
@@ -1595,13 +1611,13 @@ let mkApp : term  ->  (term * imp) Prims.list  ->  FStar_Range.range  ->  term =
 | [] -> begin
 t
 end
-| _59_295 -> begin
+| _59_298 -> begin
 (match (t.tm) with
 | Name (s) -> begin
 (mk_term (Construct (((s), (args)))) r Un)
 end
-| _59_299 -> begin
-(FStar_List.fold_left (fun t _59_303 -> (match (_59_303) with
+| _59_302 -> begin
+(FStar_List.fold_left (fun t _59_306 -> (match (_59_306) with
 | (a, imp) -> begin
 (mk_term (App (((t), (a), (imp)))) r Un)
 end)) t args)
@@ -1614,33 +1630,33 @@ let mkRefSet : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts ->
 let univs = (FStar_Options.universes ())
 in (
 
-let _59_310 = if univs then begin
+let _59_313 = if univs then begin
 ((FStar_Absyn_Const.tset_empty), (FStar_Absyn_Const.tset_singleton), (FStar_Absyn_Const.tset_union))
 end else begin
 ((FStar_Absyn_Const.set_empty), (FStar_Absyn_Const.set_singleton), (FStar_Absyn_Const.set_union))
 end
-in (match (_59_310) with
+in (match (_59_313) with
 | (empty_lid, singleton_lid, union_lid) -> begin
 (
 
-let empty = (let _151_1141 = (let _151_1140 = (FStar_Ident.set_lid_range empty_lid r)
-in Var (_151_1140))
-in (mk_term _151_1141 r Expr))
+let empty = (let _151_1155 = (let _151_1154 = (FStar_Ident.set_lid_range empty_lid r)
+in Var (_151_1154))
+in (mk_term _151_1155 r Expr))
 in (
 
-let ref_constr = (let _151_1143 = (let _151_1142 = (FStar_Ident.set_lid_range FStar_Absyn_Const.heap_ref r)
-in Var (_151_1142))
-in (mk_term _151_1143 r Expr))
+let ref_constr = (let _151_1157 = (let _151_1156 = (FStar_Ident.set_lid_range FStar_Absyn_Const.heap_ref r)
+in Var (_151_1156))
+in (mk_term _151_1157 r Expr))
 in (
 
-let singleton = (let _151_1145 = (let _151_1144 = (FStar_Ident.set_lid_range singleton_lid r)
-in Var (_151_1144))
-in (mk_term _151_1145 r Expr))
+let singleton = (let _151_1159 = (let _151_1158 = (FStar_Ident.set_lid_range singleton_lid r)
+in Var (_151_1158))
+in (mk_term _151_1159 r Expr))
 in (
 
-let union = (let _151_1147 = (let _151_1146 = (FStar_Ident.set_lid_range union_lid r)
-in Var (_151_1146))
-in (mk_term _151_1147 r Expr))
+let union = (let _151_1161 = (let _151_1160 = (FStar_Ident.set_lid_range union_lid r)
+in Var (_151_1160))
+in (mk_term _151_1161 r Expr))
 in (FStar_List.fold_right (fun e tl -> (
 
 let e = (mkApp ref_constr ((((e), (Nothing)))::[]) r)
@@ -1655,15 +1671,15 @@ let mkExplicitApp : term  ->  term Prims.list  ->  FStar_Range.range  ->  term =
 | [] -> begin
 t
 end
-| _59_324 -> begin
+| _59_327 -> begin
 (match (t.tm) with
 | Name (s) -> begin
-(let _151_1159 = (let _151_1158 = (let _151_1157 = (FStar_List.map (fun a -> ((a), (Nothing))) args)
-in ((s), (_151_1157)))
-in Construct (_151_1158))
-in (mk_term _151_1159 r Un))
+(let _151_1173 = (let _151_1172 = (let _151_1171 = (FStar_List.map (fun a -> ((a), (Nothing))) args)
+in ((s), (_151_1171)))
+in Construct (_151_1172))
+in (mk_term _151_1173 r Un))
 end
-| _59_329 -> begin
+| _59_332 -> begin
 (FStar_List.fold_left (fun t a -> (mk_term (App (((t), (a), (Nothing)))) r Un)) t args)
 end)
 end))
@@ -1676,17 +1692,17 @@ in (
 
 let admit = (
 
-let admit_name = (let _151_1165 = (let _151_1164 = (FStar_Ident.set_lid_range FStar_Absyn_Const.admit_lid r)
-in Var (_151_1164))
-in (mk_term _151_1165 r Expr))
+let admit_name = (let _151_1179 = (let _151_1178 = (FStar_Ident.set_lid_range FStar_Absyn_Const.admit_lid r)
+in Var (_151_1178))
+in (mk_term _151_1179 r Expr))
 in (mkExplicitApp admit_name ((unit_const)::[]) r))
 in (
 
 let magic = (
 
-let magic_name = (let _151_1167 = (let _151_1166 = (FStar_Ident.set_lid_range FStar_Absyn_Const.magic_lid r)
-in Var (_151_1166))
-in (mk_term _151_1167 r Expr))
+let magic_name = (let _151_1181 = (let _151_1180 = (FStar_Ident.set_lid_range FStar_Absyn_Const.magic_lid r)
+in Var (_151_1180))
+in (mk_term _151_1181 r Expr))
 in (mkExplicitApp magic_name ((unit_const)::[]) r))
 in (
 
@@ -1694,8 +1710,8 @@ let admit_magic = (mk_term (Seq (((admit), (magic)))) r Expr)
 in admit_magic)))))
 
 
-let mkWildAdmitMagic = (fun r -> (let _151_1169 = (mkAdmitMagic r)
-in (((mk_pattern PatWild r)), (None), (_151_1169))))
+let mkWildAdmitMagic = (fun r -> (let _151_1183 = (mkAdmitMagic r)
+in (((mk_pattern PatWild r)), (None), (_151_1183))))
 
 
 let focusBranches = (fun branches r -> (
@@ -1704,14 +1720,14 @@ let should_filter = (FStar_Util.for_some Prims.fst branches)
 in if should_filter then begin
 (
 
-let _59_343 = (FStar_Tc_Errors.warn r "Focusing on only some cases")
+let _59_346 = (FStar_Tc_Errors.warn r "Focusing on only some cases")
 in (
 
-let focussed = (let _151_1172 = (FStar_List.filter Prims.fst branches)
-in (FStar_All.pipe_right _151_1172 (FStar_List.map Prims.snd)))
-in (let _151_1174 = (let _151_1173 = (mkWildAdmitMagic r)
-in (_151_1173)::[])
-in (FStar_List.append focussed _151_1174))))
+let focussed = (let _151_1186 = (FStar_List.filter Prims.fst branches)
+in (FStar_All.pipe_right _151_1186 (FStar_List.map Prims.snd)))
+in (let _151_1188 = (let _151_1187 = (mkWildAdmitMagic r)
+in (_151_1187)::[])
+in (FStar_List.append focussed _151_1188))))
 end else begin
 (FStar_All.pipe_right branches (FStar_List.map Prims.snd))
 end))
@@ -1723,14 +1739,14 @@ let should_filter = (FStar_Util.for_some Prims.fst lbs)
 in if should_filter then begin
 (
 
-let _59_349 = (FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
-in (FStar_List.map (fun _59_353 -> (match (_59_353) with
+let _59_352 = (FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
+in (FStar_List.map (fun _59_356 -> (match (_59_356) with
 | (f, lb) -> begin
 if f then begin
 lb
 end else begin
-(let _151_1178 = (mkAdmitMagic r)
-in (((Prims.fst lb)), (_151_1178)))
+(let _151_1192 = (mkAdmitMagic r)
+in (((Prims.fst lb)), (_151_1192)))
 end
 end)) lbs))
 end else begin
@@ -1738,8 +1754,8 @@ end else begin
 end))
 
 
-let mkFsTypApp : term  ->  term Prims.list  ->  FStar_Range.range  ->  term = (fun t args r -> (let _151_1186 = (FStar_List.map (fun a -> ((a), (FsTypApp))) args)
-in (mkApp t _151_1186 r)))
+let mkFsTypApp : term  ->  term Prims.list  ->  FStar_Range.range  ->  term = (fun t args r -> (let _151_1200 = (FStar_List.map (fun a -> ((a), (FsTypApp))) args)
+in (mkApp t _151_1200 r)))
 
 
 let mkTuple : term Prims.list  ->  FStar_Range.range  ->  term = (fun args r -> (
@@ -1749,8 +1765,8 @@ let cons = if (FStar_Options.universes ()) then begin
 end else begin
 (FStar_Absyn_Util.mk_tuple_data_lid (FStar_List.length args) r)
 end
-in (let _151_1192 = (FStar_List.map (fun x -> ((x), (Nothing))) args)
-in (mkApp (mk_term (Name (cons)) r Expr) _151_1192 r))))
+in (let _151_1206 = (FStar_List.map (fun x -> ((x), (Nothing))) args)
+in (mkApp (mk_term (Name (cons)) r Expr) _151_1206 r))))
 
 
 let mkDTuple : term Prims.list  ->  FStar_Range.range  ->  term = (fun args r -> (
@@ -1760,8 +1776,8 @@ let cons = if (FStar_Options.universes ()) then begin
 end else begin
 (FStar_Absyn_Util.mk_dtuple_data_lid (FStar_List.length args) r)
 end
-in (let _151_1198 = (FStar_List.map (fun x -> ((x), (Nothing))) args)
-in (mkApp (mk_term (Name (cons)) r Expr) _151_1198 r))))
+in (let _151_1212 = (FStar_List.map (fun x -> ((x), (Nothing))) args)
+in (mkApp (mk_term (Name (cons)) r Expr) _151_1212 r))))
 
 
 let mkRefinedBinder : FStar_Ident.ident  ->  term  ->  term Prims.option  ->  FStar_Range.range  ->  aqual  ->  binder = (fun id t refopt m implicit -> (
@@ -1780,13 +1796,13 @@ let rec extract_named_refinement : term  ->  (FStar_Ident.ident * term * term Pr
 | NamedTyp (x, t) -> begin
 Some (((x), (t), (None)))
 end
-| Refine ({b = Annotated (x, t); brange = _59_385; blevel = _59_383; aqual = _59_381}, t') -> begin
+| Refine ({b = Annotated (x, t); brange = _59_388; blevel = _59_386; aqual = _59_384}, t') -> begin
 Some (((x), (t), (Some (t'))))
 end
 | Paren (t) -> begin
 (extract_named_refinement t)
 end
-| _59_397 -> begin
+| _59_400 -> begin
 None
 end))
 
@@ -1803,15 +1819,15 @@ end
 end))
 
 
-let to_string_l = (fun sep f l -> (let _151_1219 = (FStar_List.map f l)
-in (FStar_String.concat sep _151_1219)))
+let to_string_l = (fun sep f l -> (let _151_1233 = (FStar_List.map f l)
+in (FStar_String.concat sep _151_1233)))
 
 
 let imp_to_string : imp  ->  Prims.string = (fun _59_2 -> (match (_59_2) with
 | Hash -> begin
 "#"
 end
-| _59_408 -> begin
+| _59_411 -> begin
 ""
 end))
 
@@ -1820,25 +1836,25 @@ let rec term_to_string : term  ->  Prims.string = (fun x -> (match (x.tm) with
 | Wild -> begin
 "_"
 end
-| Requires (t, _59_413) -> begin
-(let _151_1227 = (term_to_string t)
-in (FStar_Util.format1 "(requires %s)" _151_1227))
+| Requires (t, _59_416) -> begin
+(let _151_1241 = (term_to_string t)
+in (FStar_Util.format1 "(requires %s)" _151_1241))
 end
-| Ensures (t, _59_418) -> begin
-(let _151_1228 = (term_to_string t)
-in (FStar_Util.format1 "(ensures %s)" _151_1228))
+| Ensures (t, _59_421) -> begin
+(let _151_1242 = (term_to_string t)
+in (FStar_Util.format1 "(ensures %s)" _151_1242))
 end
-| Labeled (t, l, _59_424) -> begin
-(let _151_1229 = (term_to_string t)
-in (FStar_Util.format2 "(labeled %s %s)" l _151_1229))
+| Labeled (t, l, _59_427) -> begin
+(let _151_1243 = (term_to_string t)
+in (FStar_Util.format2 "(labeled %s %s)" l _151_1243))
 end
 | Const (c) -> begin
 (FStar_Absyn_Print.const_to_string c)
 end
 | Op (s, xs) -> begin
-(let _151_1232 = (let _151_1231 = (FStar_List.map (fun x -> (FStar_All.pipe_right x term_to_string)) xs)
-in (FStar_String.concat ", " _151_1231))
-in (FStar_Util.format2 "%s(%s)" s _151_1232))
+(let _151_1246 = (let _151_1245 = (FStar_List.map (fun x -> (FStar_All.pipe_right x term_to_string)) xs)
+in (FStar_String.concat ", " _151_1245))
+in (FStar_Util.format2 "%s(%s)" s _151_1246))
 end
 | Tvar (id) -> begin
 id.FStar_Ident.idText
@@ -1847,93 +1863,93 @@ end
 l.FStar_Ident.str
 end
 | Construct (l, args) -> begin
-(let _151_1235 = (to_string_l " " (fun _59_445 -> (match (_59_445) with
+(let _151_1249 = (to_string_l " " (fun _59_448 -> (match (_59_448) with
 | (a, imp) -> begin
-(let _151_1234 = (term_to_string a)
-in (FStar_Util.format2 "%s%s" (imp_to_string imp) _151_1234))
+(let _151_1248 = (term_to_string a)
+in (FStar_Util.format2 "%s%s" (imp_to_string imp) _151_1248))
 end)) args)
-in (FStar_Util.format2 "(%s %s)" l.FStar_Ident.str _151_1235))
+in (FStar_Util.format2 "(%s %s)" l.FStar_Ident.str _151_1249))
 end
 | Abs (pats, t) -> begin
-(let _151_1237 = (to_string_l " " pat_to_string pats)
-in (let _151_1236 = (FStar_All.pipe_right t term_to_string)
-in (FStar_Util.format2 "(fun %s -> %s)" _151_1237 _151_1236)))
+(let _151_1251 = (to_string_l " " pat_to_string pats)
+in (let _151_1250 = (FStar_All.pipe_right t term_to_string)
+in (FStar_Util.format2 "(fun %s -> %s)" _151_1251 _151_1250)))
 end
 | App (t1, t2, imp) -> begin
-(let _151_1239 = (FStar_All.pipe_right t1 term_to_string)
-in (let _151_1238 = (FStar_All.pipe_right t2 term_to_string)
-in (FStar_Util.format3 "%s %s%s" _151_1239 (imp_to_string imp) _151_1238)))
+(let _151_1253 = (FStar_All.pipe_right t1 term_to_string)
+in (let _151_1252 = (FStar_All.pipe_right t2 term_to_string)
+in (FStar_Util.format3 "%s %s%s" _151_1253 (imp_to_string imp) _151_1252)))
 end
 | Let (Rec, lbs, body) -> begin
-(let _151_1244 = (to_string_l " and " (fun _59_462 -> (match (_59_462) with
+(let _151_1258 = (to_string_l " and " (fun _59_465 -> (match (_59_465) with
 | (p, b) -> begin
-(let _151_1242 = (FStar_All.pipe_right p pat_to_string)
-in (let _151_1241 = (FStar_All.pipe_right b term_to_string)
-in (FStar_Util.format2 "%s=%s" _151_1242 _151_1241)))
+(let _151_1256 = (FStar_All.pipe_right p pat_to_string)
+in (let _151_1255 = (FStar_All.pipe_right b term_to_string)
+in (FStar_Util.format2 "%s=%s" _151_1256 _151_1255)))
 end)) lbs)
-in (let _151_1243 = (FStar_All.pipe_right body term_to_string)
-in (FStar_Util.format2 "let rec %s in %s" _151_1244 _151_1243)))
+in (let _151_1257 = (FStar_All.pipe_right body term_to_string)
+in (FStar_Util.format2 "let rec %s in %s" _151_1258 _151_1257)))
 end
 | Let (q, ((pat, tm))::[], body) -> begin
-(let _151_1247 = (FStar_All.pipe_right pat pat_to_string)
-in (let _151_1246 = (FStar_All.pipe_right tm term_to_string)
-in (let _151_1245 = (FStar_All.pipe_right body term_to_string)
-in (FStar_Util.format4 "let %s %s = %s in %s" (string_of_let_qualifier q) _151_1247 _151_1246 _151_1245))))
+(let _151_1261 = (FStar_All.pipe_right pat pat_to_string)
+in (let _151_1260 = (FStar_All.pipe_right tm term_to_string)
+in (let _151_1259 = (FStar_All.pipe_right body term_to_string)
+in (FStar_Util.format4 "let %s %s = %s in %s" (string_of_let_qualifier q) _151_1261 _151_1260 _151_1259))))
 end
 | Seq (t1, t2) -> begin
-(let _151_1249 = (FStar_All.pipe_right t1 term_to_string)
-in (let _151_1248 = (FStar_All.pipe_right t2 term_to_string)
-in (FStar_Util.format2 "%s; %s" _151_1249 _151_1248)))
+(let _151_1263 = (FStar_All.pipe_right t1 term_to_string)
+in (let _151_1262 = (FStar_All.pipe_right t2 term_to_string)
+in (FStar_Util.format2 "%s; %s" _151_1263 _151_1262)))
 end
 | If (t1, t2, t3) -> begin
-(let _151_1252 = (FStar_All.pipe_right t1 term_to_string)
-in (let _151_1251 = (FStar_All.pipe_right t2 term_to_string)
-in (let _151_1250 = (FStar_All.pipe_right t3 term_to_string)
-in (FStar_Util.format3 "if %s then %s else %s" _151_1252 _151_1251 _151_1250))))
+(let _151_1266 = (FStar_All.pipe_right t1 term_to_string)
+in (let _151_1265 = (FStar_All.pipe_right t2 term_to_string)
+in (let _151_1264 = (FStar_All.pipe_right t3 term_to_string)
+in (FStar_Util.format3 "if %s then %s else %s" _151_1266 _151_1265 _151_1264))))
 end
 | Match (t, branches) -> begin
-(let _151_1259 = (FStar_All.pipe_right t term_to_string)
-in (let _151_1258 = (to_string_l " | " (fun _59_487 -> (match (_59_487) with
+(let _151_1273 = (FStar_All.pipe_right t term_to_string)
+in (let _151_1272 = (to_string_l " | " (fun _59_490 -> (match (_59_490) with
 | (p, w, e) -> begin
-(let _151_1257 = (FStar_All.pipe_right p pat_to_string)
-in (let _151_1256 = (match (w) with
+(let _151_1271 = (FStar_All.pipe_right p pat_to_string)
+in (let _151_1270 = (match (w) with
 | None -> begin
 ""
 end
 | Some (e) -> begin
-(let _151_1254 = (term_to_string e)
-in (FStar_Util.format1 "when %s" _151_1254))
+(let _151_1268 = (term_to_string e)
+in (FStar_Util.format1 "when %s" _151_1268))
 end)
-in (let _151_1255 = (FStar_All.pipe_right e term_to_string)
-in (FStar_Util.format3 "%s %s -> %s" _151_1257 _151_1256 _151_1255))))
+in (let _151_1269 = (FStar_All.pipe_right e term_to_string)
+in (FStar_Util.format3 "%s %s -> %s" _151_1271 _151_1270 _151_1269))))
 end)) branches)
-in (FStar_Util.format2 "match %s with %s" _151_1259 _151_1258)))
+in (FStar_Util.format2 "match %s with %s" _151_1273 _151_1272)))
 end
 | Ascribed (t1, t2) -> begin
-(let _151_1261 = (FStar_All.pipe_right t1 term_to_string)
-in (let _151_1260 = (FStar_All.pipe_right t2 term_to_string)
-in (FStar_Util.format2 "(%s : %s)" _151_1261 _151_1260)))
+(let _151_1275 = (FStar_All.pipe_right t1 term_to_string)
+in (let _151_1274 = (FStar_All.pipe_right t2 term_to_string)
+in (FStar_Util.format2 "(%s : %s)" _151_1275 _151_1274)))
 end
 | Record (Some (e), fields) -> begin
-(let _151_1265 = (FStar_All.pipe_right e term_to_string)
-in (let _151_1264 = (to_string_l " " (fun _59_502 -> (match (_59_502) with
+(let _151_1279 = (FStar_All.pipe_right e term_to_string)
+in (let _151_1278 = (to_string_l " " (fun _59_505 -> (match (_59_505) with
 | (l, e) -> begin
-(let _151_1263 = (FStar_All.pipe_right e term_to_string)
-in (FStar_Util.format2 "%s=%s" l.FStar_Ident.str _151_1263))
+(let _151_1277 = (FStar_All.pipe_right e term_to_string)
+in (FStar_Util.format2 "%s=%s" l.FStar_Ident.str _151_1277))
 end)) fields)
-in (FStar_Util.format2 "{%s with %s}" _151_1265 _151_1264)))
+in (FStar_Util.format2 "{%s with %s}" _151_1279 _151_1278)))
 end
 | Record (None, fields) -> begin
-(let _151_1268 = (to_string_l " " (fun _59_509 -> (match (_59_509) with
+(let _151_1282 = (to_string_l " " (fun _59_512 -> (match (_59_512) with
 | (l, e) -> begin
-(let _151_1267 = (FStar_All.pipe_right e term_to_string)
-in (FStar_Util.format2 "%s=%s" l.FStar_Ident.str _151_1267))
+(let _151_1281 = (FStar_All.pipe_right e term_to_string)
+in (FStar_Util.format2 "%s=%s" l.FStar_Ident.str _151_1281))
 end)) fields)
-in (FStar_Util.format1 "{%s}" _151_1268))
+in (FStar_Util.format1 "{%s}" _151_1282))
 end
 | Project (e, l) -> begin
-(let _151_1269 = (FStar_All.pipe_right e term_to_string)
-in (FStar_Util.format2 "%s.%s" _151_1269 l.FStar_Ident.str))
+(let _151_1283 = (FStar_All.pipe_right e term_to_string)
+in (FStar_Util.format2 "%s.%s" _151_1283 l.FStar_Ident.str))
 end
 | Product ([], t) -> begin
 (term_to_string t)
@@ -1942,51 +1958,51 @@ end
 (term_to_string (mk_term (Product ((((b)::[]), ((mk_term (Product ((((hd)::tl), (t)))) x.range x.level))))) x.range x.level))
 end
 | Product ((b)::[], t) when (x.level = Type) -> begin
-(let _151_1271 = (FStar_All.pipe_right b binder_to_string)
-in (let _151_1270 = (FStar_All.pipe_right t term_to_string)
-in (FStar_Util.format2 "%s -> %s" _151_1271 _151_1270)))
+(let _151_1285 = (FStar_All.pipe_right b binder_to_string)
+in (let _151_1284 = (FStar_All.pipe_right t term_to_string)
+in (FStar_Util.format2 "%s -> %s" _151_1285 _151_1284)))
 end
 | Product ((b)::[], t) when (x.level = Kind) -> begin
-(let _151_1273 = (FStar_All.pipe_right b binder_to_string)
-in (let _151_1272 = (FStar_All.pipe_right t term_to_string)
-in (FStar_Util.format2 "%s => %s" _151_1273 _151_1272)))
+(let _151_1287 = (FStar_All.pipe_right b binder_to_string)
+in (let _151_1286 = (FStar_All.pipe_right t term_to_string)
+in (FStar_Util.format2 "%s => %s" _151_1287 _151_1286)))
 end
 | Sum (binders, t) -> begin
-(let _151_1276 = (let _151_1274 = (FStar_All.pipe_right binders (FStar_List.map binder_to_string))
-in (FStar_All.pipe_right _151_1274 (FStar_String.concat " * ")))
-in (let _151_1275 = (FStar_All.pipe_right t term_to_string)
-in (FStar_Util.format2 "%s * %s" _151_1276 _151_1275)))
+(let _151_1290 = (let _151_1288 = (FStar_All.pipe_right binders (FStar_List.map binder_to_string))
+in (FStar_All.pipe_right _151_1288 (FStar_String.concat " * ")))
+in (let _151_1289 = (FStar_All.pipe_right t term_to_string)
+in (FStar_Util.format2 "%s * %s" _151_1290 _151_1289)))
 end
 | QForall (bs, pats, t) -> begin
-(let _151_1279 = (to_string_l " " binder_to_string bs)
-in (let _151_1278 = (to_string_l " \\/ " (to_string_l "; " term_to_string) pats)
-in (let _151_1277 = (FStar_All.pipe_right t term_to_string)
-in (FStar_Util.format3 "forall %s.{:pattern %s} %s" _151_1279 _151_1278 _151_1277))))
+(let _151_1293 = (to_string_l " " binder_to_string bs)
+in (let _151_1292 = (to_string_l " \\/ " (to_string_l "; " term_to_string) pats)
+in (let _151_1291 = (FStar_All.pipe_right t term_to_string)
+in (FStar_Util.format3 "forall %s.{:pattern %s} %s" _151_1293 _151_1292 _151_1291))))
 end
 | QExists (bs, pats, t) -> begin
-(let _151_1282 = (to_string_l " " binder_to_string bs)
-in (let _151_1281 = (to_string_l " \\/ " (to_string_l "; " term_to_string) pats)
-in (let _151_1280 = (FStar_All.pipe_right t term_to_string)
-in (FStar_Util.format3 "exists %s.{:pattern %s} %s" _151_1282 _151_1281 _151_1280))))
+(let _151_1296 = (to_string_l " " binder_to_string bs)
+in (let _151_1295 = (to_string_l " \\/ " (to_string_l "; " term_to_string) pats)
+in (let _151_1294 = (FStar_All.pipe_right t term_to_string)
+in (FStar_Util.format3 "exists %s.{:pattern %s} %s" _151_1296 _151_1295 _151_1294))))
 end
 | Refine (b, t) -> begin
-(let _151_1284 = (FStar_All.pipe_right b binder_to_string)
-in (let _151_1283 = (FStar_All.pipe_right t term_to_string)
-in (FStar_Util.format2 "%s:{%s}" _151_1284 _151_1283)))
+(let _151_1298 = (FStar_All.pipe_right b binder_to_string)
+in (let _151_1297 = (FStar_All.pipe_right t term_to_string)
+in (FStar_Util.format2 "%s:{%s}" _151_1298 _151_1297)))
 end
 | NamedTyp (x, t) -> begin
-(let _151_1285 = (FStar_All.pipe_right t term_to_string)
-in (FStar_Util.format2 "%s:%s" x.FStar_Ident.idText _151_1285))
+(let _151_1299 = (FStar_All.pipe_right t term_to_string)
+in (FStar_Util.format2 "%s:%s" x.FStar_Ident.idText _151_1299))
 end
 | Paren (t) -> begin
-(let _151_1286 = (FStar_All.pipe_right t term_to_string)
-in (FStar_Util.format1 "(%s)" _151_1286))
+(let _151_1300 = (FStar_All.pipe_right t term_to_string)
+in (FStar_Util.format1 "(%s)" _151_1300))
 end
 | Product (bs, t) -> begin
-(let _151_1289 = (let _151_1287 = (FStar_All.pipe_right bs (FStar_List.map binder_to_string))
-in (FStar_All.pipe_right _151_1287 (FStar_String.concat ",")))
-in (let _151_1288 = (FStar_All.pipe_right t term_to_string)
-in (FStar_Util.format2 "Unidentified product: [%s] %s" _151_1289 _151_1288)))
+(let _151_1303 = (let _151_1301 = (FStar_All.pipe_right bs (FStar_List.map binder_to_string))
+in (FStar_All.pipe_right _151_1301 (FStar_String.concat ",")))
+in (let _151_1302 = (FStar_All.pipe_right t term_to_string)
+in (FStar_Util.format2 "Unidentified product: [%s] %s" _151_1303 _151_1302)))
 end
 | t -> begin
 "_"
@@ -2001,14 +2017,14 @@ end
 (FStar_Util.format1 "%s:_" i.FStar_Ident.idText)
 end
 | (TAnnotated (i, t)) | (Annotated (i, t)) -> begin
-(let _151_1291 = (FStar_All.pipe_right t term_to_string)
-in (FStar_Util.format2 "%s:%s" i.FStar_Ident.idText _151_1291))
+(let _151_1305 = (FStar_All.pipe_right t term_to_string)
+in (FStar_Util.format2 "%s:%s" i.FStar_Ident.idText _151_1305))
 end
 | NoName (t) -> begin
 (FStar_All.pipe_right t term_to_string)
 end)
-in (let _151_1292 = (aqual_to_string x.aqual)
-in (FStar_Util.format2 "%s%s" _151_1292 s))))
+in (let _151_1306 = (aqual_to_string x.aqual)
+in (FStar_Util.format2 "%s%s" _151_1306 s))))
 and aqual_to_string : aqual  ->  Prims.string = (fun _59_3 -> (match (_59_3) with
 | Some (Equality) -> begin
 "$"
@@ -2016,7 +2032,7 @@ end
 | Some (Implicit) -> begin
 "#"
 end
-| _59_585 -> begin
+| _59_588 -> begin
 ""
 end))
 and pat_to_string : pattern  ->  Prims.string = (fun x -> (match (x.pat) with
@@ -2027,36 +2043,36 @@ end
 (FStar_Absyn_Print.const_to_string c)
 end
 | PatApp (p, ps) -> begin
-(let _151_1296 = (FStar_All.pipe_right p pat_to_string)
-in (let _151_1295 = (to_string_l " " pat_to_string ps)
-in (FStar_Util.format2 "(%s %s)" _151_1296 _151_1295)))
+(let _151_1310 = (FStar_All.pipe_right p pat_to_string)
+in (let _151_1309 = (to_string_l " " pat_to_string ps)
+in (FStar_Util.format2 "(%s %s)" _151_1310 _151_1309)))
 end
 | (PatTvar (i, aq)) | (PatVar (i, aq)) -> begin
-(let _151_1297 = (aqual_to_string aq)
-in (FStar_Util.format2 "%s%s" _151_1297 i.FStar_Ident.idText))
+(let _151_1311 = (aqual_to_string aq)
+in (FStar_Util.format2 "%s%s" _151_1311 i.FStar_Ident.idText))
 end
 | PatName (l) -> begin
 l.FStar_Ident.str
 end
 | PatList (l) -> begin
-(let _151_1298 = (to_string_l "; " pat_to_string l)
-in (FStar_Util.format1 "[%s]" _151_1298))
+(let _151_1312 = (to_string_l "; " pat_to_string l)
+in (FStar_Util.format1 "[%s]" _151_1312))
 end
 | PatTuple (l, false) -> begin
-(let _151_1299 = (to_string_l ", " pat_to_string l)
-in (FStar_Util.format1 "(%s)" _151_1299))
+(let _151_1313 = (to_string_l ", " pat_to_string l)
+in (FStar_Util.format1 "(%s)" _151_1313))
 end
 | PatTuple (l, true) -> begin
-(let _151_1300 = (to_string_l ", " pat_to_string l)
-in (FStar_Util.format1 "(|%s|)" _151_1300))
+(let _151_1314 = (to_string_l ", " pat_to_string l)
+in (FStar_Util.format1 "(|%s|)" _151_1314))
 end
 | PatRecord (l) -> begin
-(let _151_1303 = (to_string_l "; " (fun _59_616 -> (match (_59_616) with
+(let _151_1317 = (to_string_l "; " (fun _59_619 -> (match (_59_619) with
 | (f, e) -> begin
-(let _151_1302 = (FStar_All.pipe_right e pat_to_string)
-in (FStar_Util.format2 "%s=%s" f.FStar_Ident.str _151_1302))
+(let _151_1316 = (FStar_All.pipe_right e pat_to_string)
+in (FStar_Util.format2 "%s=%s" f.FStar_Ident.str _151_1316))
 end)) l)
-in (FStar_Util.format1 "{%s}" _151_1303))
+in (FStar_Util.format1 "{%s}" _151_1317))
 end
 | PatOr (l) -> begin
 (to_string_l "|\n " pat_to_string l)
@@ -2065,9 +2081,9 @@ end
 (FStar_Util.format1 "(%s)" op)
 end
 | PatAscribed (p, t) -> begin
-(let _151_1305 = (FStar_All.pipe_right p pat_to_string)
-in (let _151_1304 = (FStar_All.pipe_right t term_to_string)
-in (FStar_Util.format2 "(%s:%s)" _151_1305 _151_1304)))
+(let _151_1319 = (FStar_All.pipe_right p pat_to_string)
+in (let _151_1318 = (FStar_All.pipe_right t term_to_string)
+in (FStar_Util.format2 "(%s:%s)" _151_1319 _151_1318)))
 end))
 
 
@@ -2075,23 +2091,23 @@ let rec head_id_of_pat : pattern  ->  FStar_Ident.lid Prims.list = (fun p -> (ma
 | PatName (l) -> begin
 (l)::[]
 end
-| PatVar (i, _59_630) -> begin
-(let _151_1308 = (FStar_Ident.lid_of_ids ((i)::[]))
-in (_151_1308)::[])
+| PatVar (i, _59_633) -> begin
+(let _151_1322 = (FStar_Ident.lid_of_ids ((i)::[]))
+in (_151_1322)::[])
 end
-| PatApp (p, _59_635) -> begin
+| PatApp (p, _59_638) -> begin
 (head_id_of_pat p)
 end
-| PatAscribed (p, _59_640) -> begin
+| PatAscribed (p, _59_643) -> begin
 (head_id_of_pat p)
 end
-| _59_644 -> begin
+| _59_647 -> begin
 []
 end))
 
 
-let lids_of_let = (fun defs -> (FStar_All.pipe_right defs (FStar_List.collect (fun _59_649 -> (match (_59_649) with
-| (p, _59_648) -> begin
+let lids_of_let = (fun defs -> (FStar_All.pipe_right defs (FStar_List.collect (fun _59_652 -> (match (_59_652) with
+| (p, _59_651) -> begin
 (head_id_of_pat p)
 end)))))
 
@@ -2112,30 +2128,30 @@ end
 | ModuleAbbrev (i, l) -> begin
 (FStar_Util.format2 "module %s = %s" i.FStar_Ident.idText l.FStar_Ident.str)
 end
-| KindAbbrev (i, _59_693, _59_695) -> begin
+| KindAbbrev (i, _59_696, _59_698) -> begin
 (Prims.strcat "kind " i.FStar_Ident.idText)
 end
-| ToplevelLet (_59_699, _59_701, pats) -> begin
-(let _151_1318 = (let _151_1317 = (let _151_1316 = (lids_of_let pats)
-in (FStar_All.pipe_right _151_1316 (FStar_List.map (fun l -> l.FStar_Ident.str))))
-in (FStar_All.pipe_right _151_1317 (FStar_String.concat ", ")))
-in (Prims.strcat "let " _151_1318))
+| ToplevelLet (_59_702, _59_704, pats) -> begin
+(let _151_1332 = (let _151_1331 = (let _151_1330 = (lids_of_let pats)
+in (FStar_All.pipe_right _151_1330 (FStar_List.map (fun l -> l.FStar_Ident.str))))
+in (FStar_All.pipe_right _151_1331 (FStar_String.concat ", ")))
+in (Prims.strcat "let " _151_1332))
 end
-| Main (_59_707) -> begin
+| Main (_59_710) -> begin
 "main ..."
 end
-| Assume (_59_710, i, _59_713) -> begin
+| Assume (_59_713, i, _59_716) -> begin
 (Prims.strcat "assume " i.FStar_Ident.idText)
 end
-| Tycon (_59_717, tys) -> begin
-(let _151_1320 = (let _151_1319 = (FStar_All.pipe_right tys (FStar_List.map id_of_tycon))
-in (FStar_All.pipe_right _151_1319 (FStar_String.concat ", ")))
-in (Prims.strcat "type " _151_1320))
+| Tycon (_59_720, tys) -> begin
+(let _151_1334 = (let _151_1333 = (FStar_All.pipe_right tys (FStar_List.map id_of_tycon))
+in (FStar_All.pipe_right _151_1333 (FStar_String.concat ", ")))
+in (Prims.strcat "type " _151_1334))
 end
-| Val (_59_722, i, _59_725) -> begin
+| Val (_59_725, i, _59_728) -> begin
 (Prims.strcat "val " i.FStar_Ident.idText)
 end
-| Exception (i, _59_730) -> begin
+| Exception (i, _59_733) -> begin
 (Prims.strcat "exception " i.FStar_Ident.idText)
 end
 | (NewEffect (_, DefineEffect (i, _, _, _, _))) | (NewEffect (_, RedefineEffect (i, _, _))) -> begin
@@ -2144,18 +2160,18 @@ end
 | (NewEffectForFree (_, DefineEffect (i, _, _, _, _))) | (NewEffectForFree (_, RedefineEffect (i, _, _))) -> begin
 (Prims.strcat "new_effect_for_free " i.FStar_Ident.idText)
 end
-| SubEffect (_59_784) -> begin
+| SubEffect (_59_787) -> begin
 "sub_effect"
 end
-| Pragma (_59_787) -> begin
+| Pragma (_59_790) -> begin
 "pragma"
 end))
 
 
 let modul_to_string : modul  ->  Prims.string = (fun m -> (match (m) with
 | (Module (_, decls)) | (Interface (_, decls, _)) -> begin
-(let _151_1323 = (FStar_All.pipe_right decls (FStar_List.map decl_to_string))
-in (FStar_All.pipe_right _151_1323 (FStar_String.concat "\n")))
+(let _151_1337 = (FStar_All.pipe_right decls (FStar_List.map decl_to_string))
+in (FStar_All.pipe_right _151_1337 (FStar_String.concat "\n")))
 end))
 
 
@@ -2165,8 +2181,8 @@ let tm = (FStar_All.pipe_right tm term_to_string)
 in (
 
 let tm = if ((FStar_String.length tm) >= 80) then begin
-(let _151_1327 = (FStar_Util.substring tm 0 77)
-in (Prims.strcat _151_1327 "..."))
+(let _151_1341 = (FStar_Util.substring tm 0 77)
+in (Prims.strcat _151_1341 "..."))
 end else begin
 tm
 end
