@@ -28,6 +28,10 @@ effect St (a:Type) =
 effect STF (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        ST a pre (fun m0 x m1 -> post m0 x m1 /\ fresh_frame m0 m1)
 
+effect STH (a:Type) (pre:st_pre_h HyperHeap.t) (post: HyperHeap.t -> Tot (st_post_h HyperHeap.t a)) =
+       STATE a
+             (fun (p:st_post a) (h:mem) -> pre h.h /\ (forall a h1. (post h.h a h1.h /\ equal_domains h h1) ==> p a h1))
+
 sub_effect
   DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:mem) -> wp (fun a -> p a h)
 
