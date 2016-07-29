@@ -29,8 +29,7 @@ assume val random: n:nat -> lbytes n
 let log_cmp (a:log) (b:log) =
   match a,b with
   | None, None
-  | None, Some _
-  | Some (a,b), Some (a',b') -> (a=a' && b=b')
+  | None, Some _ -> True
   | _ -> False
 
 val opt_bool_monotonic: unit -> Lemma (MR.monotonic log log_cmp)
@@ -44,12 +43,12 @@ type state (i:id) =
       log : MR.m_rref rid log log_cmp ->
       state i
 
-let create (i:id) (r:rid) : HST (state i) =
+let create (i:id) (r:rid) : STH (state i) =
   let key = random 32 in
   let log = MR.m_alloc #log #log_cmp r None in
   State #i r key log
 
-let coerce (i:id) (r:rid) (key:lbytes 32) : HST (state i) =
+let coerce (i:id) (r:rid) (key:lbytes 32) : STH (state i) =
   assume(~(authId i));
   let log = MR.m_alloc #log #log_cmp r None in
   State #i r key log
