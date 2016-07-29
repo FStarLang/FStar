@@ -77,7 +77,7 @@ type s_ref (i:rid) (a:Type) = s:stackref a{s.id = i}
 let frameOf #a (s:stackref a) = s.id
 
 let modifies (s:Set.set rid) (m0:mem) (m1:mem) =
-  HH.modifies s m0.h m1.h
+  HH.modifies_just s m0.h m1.h
   /\ m0.tip=m1.tip
 
 let as_ref #a (x:stackref a) : Tot (Heap.ref a) = HH.as_ref #a #x.id x.ref
