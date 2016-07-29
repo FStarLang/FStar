@@ -235,6 +235,23 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | None ->
         raise (Err (Util.format1 "module not found in search path: %s\n" alias))
   in
+  let record_lid is_constructor lid =
+    let try_key key =
+      begin match smap_try_find working_map key with
+      | Some pair ->
+          List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
+      | None ->
+          if List.length lid.ns > 0 && Options.debug_any() then
+            Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
+      end
+    in
+    // Option.Some x
+    try_key (lowercase_join_longident lid false);
+    // FStar.List (flatten (map (...)))
+    if is_constructor then
+      try_key (lowercase_join_longident lid true)
+  in
+
 
   (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
    * auto-generated. With universes, there's some copy/pasta in [env.fs] too. *)
@@ -376,17 +393,10 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         ()
     | Var lid
     | Name lid ->
-        (* XXX this is where stuff happens *)
-        let key = lowercase_join_longident lid false in
-        begin match smap_try_find working_map key with
-        | Some pair ->
-            List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
-        | None ->
-            if List.length lid.ns > 0 && Options.debug_any() then
-              Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
-        end
-
-    | Construct (_, termimps) ->
+        record_lid false lid
+    | Construct (lid, termimps) ->
+        if List.length termimps = 1 && Options.universes () then
+          record_lid true lid;
         List.iter (fun (t, _) -> collect_term t) termimps
     | Abs (pats, t) ->
         collect_patterns pats;

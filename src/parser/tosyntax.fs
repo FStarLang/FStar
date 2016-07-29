@@ -555,20 +555,28 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       else tm
 
     | Construct(l, args) ->
-      let head, is_data = match Env.try_lookup_datacon env l with 
-        | None -> fst <| fail_or env (Env.try_lookup_lid env) l, false
-        | Some head -> mk (Tm_fvar head), true in
-      begin match args with
-        | [] -> head
-        | _ ->
-          let args = List.map (fun (t, imp) ->
-            let te = desugar_term env t in
-            arg_withimp_e imp te) args in
-          let app = mk (Tm_app(head, args)) in
-          if is_data 
-          then mk (Tm_meta(app, Meta_desugared Data_app))
-          else app
-      end
+        begin match Env.try_lookup_datacon env l with
+        | Some head ->
+            let head, is_data = mk (Tm_fvar head), true in
+            begin match args with
+              | [] -> head
+              | _ ->
+                let args = List.map (fun (t, imp) ->
+                  let te = desugar_term env t in
+                  arg_withimp_e imp te) args in
+                let app = mk (Tm_app(head, args)) in
+                if is_data 
+                then mk (Tm_meta(app, Meta_desugared Data_app))
+                else app
+            end
+        | None ->
+            let env = Env.push_namespace env l in
+            match args with
+            | [ (e, _) ] ->
+                desugar_term_maybe_top top_level env e
+            | _ ->
+                raise (Error("The Foo.Bar (...) local open takes exactly one argument", top.range))
+        end
 
     | Sum(binders, t) ->
       let env, _, targs = List.fold_left (fun (env, tparams, typs) b ->
