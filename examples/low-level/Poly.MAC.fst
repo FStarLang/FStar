@@ -97,7 +97,10 @@ let mac (#i:id) (st:state i) (m:msg)
     if authId i then
       random 16
     else
-      random 16
+      let tag = create 0uy 16ul in
+      let Message len contents = msg in
+      let () = Poly.Poly1305_wip.poly1305_mac tag contents len st.key in
+      tag
     in
   MR.m_write st.log (Some (m, tag));
   MR.witness st.log (invoked #i st);
