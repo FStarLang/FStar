@@ -7,7 +7,7 @@ open FStar.HST
 open FStar.Ghost
 open FStar.UInt64
 open FStar.Buffer
-open FStar.ST
+open FStar.STH
 
 module MR = FStar.HST.Monotonic
 module HH = FStar.HyperHeap
@@ -21,7 +21,7 @@ type lbytes (n:nat) = b:bytes{length b = n}
 
 type tag = lbytes 16
 type msg =
-  | Message: len:(UInt32.t) -> contents:bytes{length contents >= Uint32.v len} -> msg
+  | Message: len:(UInt32.t) -> contents:bytes{length contents >= UInt32.v len} -> msg
 type log = option (msg * tag)
 
 assume val random: n:nat -> lbytes n
