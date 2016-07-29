@@ -3,45 +3,48 @@ module AEAD.Chacha20_Poly1305
 open FStar.HST
 open FStar.Buffer
 open FStar.UInt32
+open Buffer.Utils
 open Chacha_wip
 open Poly.Bigint
 open Poly.Poly1305_wip
 
-#set-options "--lax"
-
-(* A form of memset, could go into some "Utils" functions module *)
-val fill: b:bytes -> z:UInt8.t -> len:UInt32.t -> Stl unit
-let rec fill b z len = 
-  if UInt32.eq len 16ul then ()
-  else (
-    upd b len z;
-    fill b z (len +^ 1ul)
-  )
-
 (* If the length is not a multipile of 16, pad to 16 *)
-val pad_16: b:bytes -> len:UInt32.t -> Stl unit
+val pad_16: b:bytes -> len:UInt32.t -> STL unit
+  (requires (fun h -> live h b /\ length b >= 16 /\ v len < 16))
+  (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))
 let pad_16 b len =
-  if UInt32.eq len 0ul then () else fill b 0uy len
+  if len =^ 0ul then ()
+  else memset (offset b len) 0uy (16ul -^ len)
 
 (* Serializes the length into the appropriate format *)
-val length_bytes: b:bytes -> len:UInt32.t -> aad_len:UInt32.t -> Stl unit
+val length_bytes: b:bytes -> len:UInt32.t -> aad_len:UInt32.t -> STL unit
+  (requires (fun h -> live h b /\ length b >= 16))
+  (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))
 let length_bytes b len aad_len =
   let l0 = Int.Cast.uint32_to_uint8 len in
-  let l1 = Int.Cast.uint32_to_uint8 (len ^>> 8ul) in
-  let l2 = Int.Cast.uint32_to_uint8 (len ^>> 16ul) in
-  let l3 = Int.Cast.uint32_to_uint8 (len ^>> 24ul) in
+  let l1 = Int.Cast.uint32_to_uint8 (len >>^ 8ul) in
+  let l2 = Int.Cast.uint32_to_uint8 (len >>^ 16ul) in
+  let l3 = Int.Cast.uint32_to_uint8 (len >>^ 24ul) in
   let al0 = Int.Cast.uint32_to_uint8 aad_len in
-  let al1 = Int.Cast.uint32_to_uint8 (aad_len ^>> 8ul) in
-  let al2 = Int.Cast.uint32_to_uint8 (aad_len ^>> 16ul) in
-  let al3 = Int.Cast.uint32_to_uint8 (aad_len ^>> 24ul) in
+  let al1 = Int.Cast.uint32_to_uint8 (aad_len >>^ 8ul) in
+  let al2 = Int.Cast.uint32_to_uint8 (aad_len >>^ 16ul) in
+  let al3 = Int.Cast.uint32_to_uint8 (aad_len >>^ 24ul) in
   upd b 0ul al0;
   upd b 1ul al1;
   upd b 2ul al2;
   upd b 3ul al3;
+  upd b 4ul 0uy;
+  upd b 5ul 0uy;
+  upd b 6ul 0uy;
+  upd b 7ul 0uy;
   upd b 8ul l0;
   upd b 9ul l1;
   upd b 10ul l2;
   upd b 11ul l3;
+  upd b 12ul 0uy;
+  upd b 13ul 0uy;
+  upd b 14ul 0uy;
+  upd b 15ul 0uy;
   ()
 
 (* AEAD-encrypt for Chacha20-Poly1305. Takes:
@@ -56,14 +59,22 @@ let length_bytes b len aad_len =
    *)
    
 val chacha20_aead_encrypt: ciphertext:bytes -> tag:bytes -> aad:bytes -> key:bytes -> iv:UInt64.t -> constant:UInt32.t -> plaintext:bytes -> len:UInt32.t -> aad_len:UInt32.t -> STL unit
-  (requires (fun h -> live h ciphertext /\ live h tag /\ live h aad /\ live h key /\ live h plaintext))
-  (ensures (fun h0 _ h1 -> True))
+  (requires (fun h -> 
+    live h ciphertext /\ live h tag /\ live h aad /\ live h key /\ live h plaintext
+    /\ length ciphertext >= v len
+    /\ length tag >= 16
+    /\ length aad >= v aad_len
+    /\ length key >= 32
+    /\ length plaintext >= v len
+  ))
+  (ensures (fun h0 _ h1 -> live h1 ciphertext /\ live h1 tag /\ modifies_2 ciphertext tag h0 h1 ))
 let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_len =
   push_frame();
 
   (* Temporary buffers (to be improved) *)
   let otk = create 0uy 32ul in   (* OTK for Poly (to improve) *)
   let state = create 0ul 32ul in (* Chacha inner state *)
+  let block = create 0ul 32ul in (* Chacha inner state *)
   let acc = create 0UL 5ul in (* Poly's accumulator *)
   let r = create 0UL 5ul in (* First half of poly's key, will be removed (merged with otk) *)
   let s = create 0UL 5ul in (* Second half of poly's key, will be removed (merged with otk) *)
@@ -74,8 +85,16 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   chacha20_update otk state 32ul;
 
   (** Encryption of the plaintext, using Chacha20, counter at 1 *)
-  let counter = counter +^ 1ul in
+  let counter = 1ul in
   chacha20_encrypt ciphertext key counter iv constant plaintext len;
+
+  (* TODO : split the computation that way ? *)
+  (* let rec chacha_loop ctr = *)
+  (*   if UInt32.eq ctr  *)
+  (*   chacha20_init state key (counter +^ ctr) iv constant; *)
+  (*   chacha20_update block state 32ul; *)
+  (*   xor (offset ciphertext) block plaintext lenght; *)
+  (*   chacha_loop ctr++ *)    
 
   (** MACing of the additional data, the ciphertext and the padding *)
   (* Compute the padding lengths *)
