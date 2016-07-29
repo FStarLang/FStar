@@ -3,12 +3,13 @@ module SGXState
 
 open FStar.UInt64
 
-let u64 = UInt64.t
+let word = UInt64.t
 
 type sgxstate =
- |Mksgxstate: read:(string -> u64) ->
-  	      write:(string -> u64 -> unit)->
-  	      load: (nat -> nat -> u64) ->
-  	      store:(nat -> u64-> nat-> unit)->sgxstate 
+ |Mksgxstate: read:(string -> word) ->
+  	      write:(string -> word -> unit)->
+  	      load: (nat -> nat -> word) ->
+  	      store:(nat -> word-> nat-> unit)->
+	      iscallableaddress:(nat->unit)->sgxstate 
 
 
