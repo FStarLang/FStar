@@ -35,6 +35,7 @@ module UntrustedClientCode
 // END: UntrustedClientCode
 
 // BEGIN: StaticChecking
+  val staticChecking : unit -> unit
   let staticChecking () =
     let v1 = read tmp in
     let v2 = read readme in
