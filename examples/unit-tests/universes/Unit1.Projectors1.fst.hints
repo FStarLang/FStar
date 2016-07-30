@@ -5,47 +5,47 @@
       2,
       1,
       [
-        "@query_6154", "assumption_Prims.HasEq_int_325",
+        "@query_6295", "assumption_Prims.HasEq_int_325",
         "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
-    [ 2, 1, [ "@query_6173" ], 0 ],
-    [ 2, 1, [ "@query_6176" ], 0 ],
+    [ 2, 1, [ "@query_6314" ], 0 ],
+    [ 2, 1, [ "@query_6317" ], 0 ],
     [
       2,
       1,
       [
-        "@query_6192", "assumption_Prims.HasEq_bool_155",
+        "@query_6333", "assumption_Prims.HasEq_bool_155",
         "assumption_Prims.HasEq_int_325", "equation_Prims.nat",
         "haseqTm_refine_1165"
       ],
       0
     ],
-    [ 2, 1, [ "@query_6211" ], 0 ],
-    [ 2, 1, [ "@query_6214" ], 0 ],
-    [ 2, 1, [ "@query_6215" ], 0 ],
+    [ 2, 1, [ "@query_6352" ], 0 ],
+    [ 2, 1, [ "@query_6355" ], 0 ],
+    [ 2, 1, [ "@query_6356" ], 0 ],
     [
       2,
       1,
       [
-        "@query_6231", "assumption_FStar.Char.char__haseq_5747",
+        "@query_6372", "assumption_FStar.Char.char__haseq_5888",
         "assumption_Prims.HasEq_int_325", "equation_FStar.BaseTypes.char",
         "equation_FStar.Char.char"
       ],
       0
     ],
-    [ 2, 1, [ "@query_6252" ], 0 ],
+    [ 2, 1, [ "@query_6393" ], 0 ],
     [
       2,
       1,
       [
-        "@query_6268", "assumption_Prims.HasEq_int_325",
+        "@query_6409", "assumption_Prims.HasEq_int_325",
         "equation_Prims.nat", "haseqTm_refine_1165"
       ],
       0
     ],
-    [ 2, 1, [ "@query_6287" ], 0 ],
-    [ 2, 1, [ "@query_6290" ], 0 ]
+    [ 2, 1, [ "@query_6428" ], 0 ],
+    [ 2, 1, [ "@query_6431" ], 0 ]
   ]
 ]

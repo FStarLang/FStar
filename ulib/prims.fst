@@ -237,7 +237,6 @@ assume type decreases : #a:Type -> a -> Type0
 effect Lemma (a:Type) (pre:Type) (post:Type) (pats:list pattern) =
        Pure a pre (fun r -> post)
 
-
 type option (a:Type) =
   | None : option a
   | Some : v:a -> option a
@@ -597,9 +596,17 @@ type nat = i:int{i >= 0}
 type pos = i:int{i > 0}
 type nonzero = i:int{i<>0}
 
-let allow_inversion (a:Type) 
+let allow_inversion (a:Type)
   : Pure unit (requires True) (ensures (fun x -> inversion a))
   = ()
+
+//allowing inverting option without having to globally increase the fuel just for this
+val invertOption : a:Type -> Lemma 
+  (requires True)
+  (ensures (forall (x:option a). is_None x \/ is_Some x))
+  [SMTPatT (option a)]
+let invertOption a = allow_inversion (option a)
+
 
 (*    For the moment we require not just that the divisor is non-zero, *)
 (*    but also that the dividend is natural. This works around a *)

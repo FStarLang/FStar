@@ -7,6 +7,13 @@ type optResult 'a 'b =
     | Error of 'a
     | Correct of 'b
 
+//allowing inverting optResult without having to globally increase the fuel just for this
+val invertOptResult : a:Type -> b:Type -> Lemma 
+  (requires True)
+  (ensures (forall (x:optResult a b). is_Error x \/ is_Correct x))
+  [SMTPatT (optResult a b)]
+let invertOptResult a b = allow_inversion (optResult a b)
+
 assume val perror: string -> int -> string -> Tot string
 
 //assume val correct: #a:Type -> #b:Type -> x:a -> Tot (y:(optResult b a){y = Correct(x)})
