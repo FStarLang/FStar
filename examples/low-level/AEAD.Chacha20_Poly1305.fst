@@ -3,10 +3,13 @@ module AEAD.Chacha20_Poly1305
 open FStar.HST
 open FStar.Buffer
 open FStar.UInt32
+open FStar.Ghost
 open Buffer.Utils
 open Chacha_wip
 open Poly.Bigint
 open Poly.Poly1305_wip
+
+#set-options "--lax"
 
 (* If the length is not a multipile of 16, pad to 16 *)
 val pad_16: b:bytes -> len:UInt32.t -> STL unit
@@ -77,7 +80,7 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   let block = create 0ul 32ul in (* Chacha inner state *)
   let acc = create 0UL 5ul in (* Poly's accumulator *)
   let r = create 0UL 5ul in (* First half of poly's key, will be removed (merged with otk) *)
-  let s = create 0UL 5ul in (* Second half of poly's key, will be removed (merged with otk) *)
+  (* let s = create 0UL 5ul in (\* Second half of poly's key, will be removed (merged with otk) *\) *)
 
   (** Create OTK, using round '0' of Chacha20 *)
   let counter = 0ul in
@@ -87,14 +90,6 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   (** Encryption of the plaintext, using Chacha20, counter at 1 *)
   let counter = 1ul in
   chacha20_encrypt ciphertext key counter iv constant plaintext len;
-
-  (* TODO : split the computation that way ? *)
-  (* let rec chacha_loop ctr = *)
-  (*   if UInt32.eq ctr  *)
-  (*   chacha20_init state key (counter +^ ctr) iv constant; *)
-  (*   chacha20_update block state 32ul; *)
-  (*   xor (offset ciphertext) block plaintext lenght; *)
-  (*   chacha_loop ctr++ *)    
 
   (** MACing of the additional data, the ciphertext and the padding *)
   (* Compute the padding lengths *)
@@ -111,20 +106,23 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   pad_16 padded_ciphertext rem;
   pad_16 padded_aad rem_aad;
   (* Initlialize MAC algorithm with one time key *)
-  poly1305_init acc r s otk;
+  let log = poly1305_init acc r otk in
   (* Update MAC with
      - padded additional data
      - padded ciphertext
      - formatted length *)
-  poly1305_step aad acc r max_aad;
-  (* This is not length-constant time, the lengths are assumed to 
-     be public data *)
-  if not(UInt32.eq rem_aad 0ul) then poly1305_update padded_aad acc r;
-  poly1305_step ciphertext acc r max;
-  if not(UInt32.eq rem 0ul) then poly1305_update padded_ciphertext acc r;
+  let aad_log = 
+    let log = poly1305_step log aad acc r max_aad in
+    (* This is not length-constant time, the lengths are assumed to 
+       be public data *)  
+    if not(UInt32.eq rem_aad 0ul) then poly1305_update log padded_aad acc r
+    else log in
+  let aad_ciphertext_log = 
+    let log = poly1305_step aad_log ciphertext acc r max in
+    if not(UInt32.eq rem 0ul) then poly1305_update log padded_ciphertext acc r
+    else log in
   length_bytes len_bytes len aad_len;
-  poly1305_update len_bytes acc r;
+  let full_log = poly1305_update aad_ciphertext_log len_bytes acc r in
   (* Finish MAC *)
-  poly1305_finish tag acc s;
-
+  poly1305_finish tag acc (Buffer.sub otk 16ul 16ul);
   pop_frame()

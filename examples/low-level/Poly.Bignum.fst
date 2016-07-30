@@ -38,9 +38,6 @@ let heap = HS.mem
 val prime: p:erased pos{reveal p = pow2 130 - 5}
 let prime = hide (pow2 130 - 5)
 
-(* Predicate for 'usable' bigintegers *)
-let live (h:heap) (b:bigint) : GTot Type0 = live h b /\ length b >= norm_length
-
 (* Useful lemmas to cut verification time *)
 val distributivity_add_right: a:int -> b:int -> c:int -> Lemma (a*(b+c) = a * b + a * c)
 let distributivity_add_right a b c = ()

@@ -103,6 +103,21 @@ let rec bytes_of_uint32s output m l =
       end
     end
 
+(* Stores the content of a byte buffer into a unsigned int32 buffer *)
+val bytes_of_uint32: output:bytes{length output >= 4} -> m:u32 -> STL unit
+  (requires (fun h -> live h output))
+  (ensures (fun h0 _ h1 -> live h1 output
+    /\ modifies_1 output h0 h1 ))
+let rec bytes_of_uint32 output x =
+  let b0 = uint32_to_uint8 (x &^ 255ul) in
+  let b1 = uint32_to_uint8 ((x >>^ 8ul) &^ 255ul) in
+  let b2 = uint32_to_uint8 ((x >>^ 16ul) &^ 255ul) in
+  let b3 = uint32_to_uint8 ((x >>^ 24ul) &^ 255ul) in
+  upd output 0ul b0;
+  upd output 1ul b1;
+  upd output 2ul b2;
+  upd output 3ul b3
+
 (* A form of memset, could go into some "Utils" functions module *)
 val memset: b:bytes -> z:u8 -> len:u32 -> STL unit
   (requires (fun h -> live h b /\ v len <= length b))

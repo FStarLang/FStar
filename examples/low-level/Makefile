@@ -23,7 +23,7 @@ NO_CODEGEN=$(addprefix --no_extract , FStar.Buffer SInt $(REALIZED_MODULE))
 CURVE_EXTRACTED=FStar_TSet.ml FStar_FunctionalExtensionality.ml FStar_Ghost.ml Math_Axioms.ml Math_Lib.ml Math_Definitions.ml Math_Field.ml Math_Curve.ml Curve_Parameters.ml Curve_Bigint.ml Curve_Fsum.ml Curve_FsumWide.ml Curve_Fdifference.ml Curve_Fscalar.ml Curve_Fproduct.ml Curve_Modulo.ml Curve_Bignum.ml Curve_Crecip.ml Curve_Point.ml Curve_AddAndDouble.ml Curve_Ladder.ml
 CHACHA_EXTRACTED=Chacha.ml
 POLY_EXTRACTED=FStar_Ghost.ml Poly_Parameters.ml Poly_Bigint.ml Poly_Bignum.ml Poly_Poly1305.ml
-AEAD_EXTRACTED=Buffer_Utils.ml Chacha_wip.ml FStar_Ghost.ml Poly_Parameters.ml Poly_Bigint.ml Poly_Bignum.ml Poly_Poly1305_wip_Lemmas.ml Poly_Poly1305_wip.ml AEAD_Chacha20_Poly1305.ml
+AEAD_EXTRACTED= FStar_Seq.ml Buffer_Utils.ml Chacha_wip.ml FStar_Ghost.ml Poly_Parameters.ml Poly_Bigint.ml Poly_Bignum.ml Poly_Poly1305_wip_Lemmas.ml Poly_Poly1305_wip.ml AEAD_Chacha20_Poly1305.ml
 
 P_EXTRACTED=FStar_Ghost.ml FStar_Seq.ml Poly1305_Parameters.ml Poly1305_Bigint.ml Poly1305_Arithmetic.ml Poly1305.ml
 
@@ -86,6 +86,7 @@ aead-extract:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
 	mkdir -p $(AEAD_ODIR)
 	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) AEAD.Chacha20_Poly1305.fst --odir $(AEAD_ODIR) #2> /dev/null
+	@sed -i.bak 's/Obj.magic ((fun log msg/ ((fun log msg/g' $(AEAD_ODIR)/Poly_Poly1305_wip.ml
 
 aead-compile:
 	$(OCAMLOPT) -I ml -I $(AEAD_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
