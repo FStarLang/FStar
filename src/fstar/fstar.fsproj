@@ -26,9 +26,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--log_queries test.fst</StartArguments>
+    <StartArguments>FStar.UInt.fst --explicit_deps --debug FStar.UInt --debug_level Extreme --debug_level Rel --debug_level RelCheck</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\workspace\FStar\examples\test\</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\ulib\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

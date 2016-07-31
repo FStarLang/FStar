@@ -102,21 +102,21 @@ let debug_run i r expected =
     
 let run_all () = 
     Printf.printf "Testing the normalizer\n";
-//    let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
-//                                           match x with \
-//                                            | [] -> []  \
-//                                            | hd::tl -> hd::copy tl" in
-//    let _ = Pars.pars_and_tc_fragment "let recons (x:list int) : Tot (list int) = \
-//                                           match x with \
-//                                            | [] -> []  \
-//                                            | hd::tl -> hd::tl" in
-//    let _ = Pars.pars_and_tc_fragment "let rev (x:list int) : Tot (list int) = \
-//                                            let rec aux (x:list int) (out:list int) : Tot (list int) = \
-//                                                match x with \
-//                                                | [] -> out \
-//                                                | hd::tl -> aux tl (hd::out) in \
-//                                            aux x []" in
-//    let _ = Pars.pars_and_tc_fragment "let id_list (a:Type) (l:list a) = l" in
+    let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
+                                           match x with \
+                                            | [] -> []  \
+                                            | hd::tl -> hd::copy tl" in
+    let _ = Pars.pars_and_tc_fragment "let recons (x:list int) : Tot (list int) = \
+                                           match x with \
+                                            | [] -> []  \
+                                            | hd::tl -> hd::tl" in
+    let _ = Pars.pars_and_tc_fragment "let rev (x:list int) : Tot (list int) = \
+                                            let rec aux (x:list int) (out:list int) : Tot (list int) = \
+                                                match x with \
+                                                | [] -> out \
+                                                | hd::tl -> aux tl (hd::out) in \
+                                            aux x []" in
+    let _ = Pars.pars_and_tc_fragment "let id_list (a:Type) (l:list a) = l" in
     Options.__set_unit_tests();
     let pred_partial = pars "fun f x -> 0 (fun g h -> h (g f)) (fun y -> x) (fun y -> y)" in
     run -2 (app apply [pred; Util.const_0]) pred_partial;
@@ -150,10 +150,10 @@ let run_all () =
     run 20 (minus_nat (encode_nat 10) (encode_nat 10)) znat;
     run 21 (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat; //this one takes about 30 sec and ~3.5GB of memory
     Options.__clear_unit_tests();
-//    run 21 (tc "recons [0;1]") (tc "[0;1]");
-//    run 22 (tc "copy [0;1]") (tc "[0;1]");
-//    run 23 (tc "rev [0;1;2;3;4;5;6;7;8;9;10]") (tc "[10;9;8;7;6;5;4;3;2;1;0]");
-//    run 24 (tc "id_list nat") (tc "fun (l:list nat) -> l");
+    run 21 (tc "recons [0;1]") (tc "[0;1]");
+    run 22 (tc "copy [0;1]") (tc "[0;1]");
+    run 23 (tc "rev [0;1;2;3;4;5;6;7;8;9;10]") (tc "[10;9;8;7;6;5;4;3;2;1;0]");
+    run 24 (tc "id_list nat") (tc "fun (l:list nat) -> l");
     //try debug_run for #24 with --print_bound_var_types to observe that 
     //the sort of l in the result is not properly normalized
     Printf.printf "Normalizer ok\n"

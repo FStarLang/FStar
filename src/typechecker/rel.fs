@@ -1173,13 +1173,14 @@ and solve_rigid_flex_meet env tp wl =
                       let prev = if i > 1
                                  then Delta_unfoldable (i - 1)
                                  else Delta_constant in
-                      let t1 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t1 in
-                      let t2 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t2 in
-                      disjoin t1 t2
+                      let t1' = N.normalize [N.WHNF; N.UnfoldUntil prev] env t1 in
+                      let t2' = N.normalize [N.WHNF; N.UnfoldUntil prev] env t2 in
+                      disjoin t1' t2'
                     | _ ->  //head matches but no way to take the meet; TODO, generalize to handle function types, constructed types, etc.
                       None
                   end
-               end in
+              end 
+   in //end disjoin
 
    let tt = u in//compress env wl u in
     match tt.n with
