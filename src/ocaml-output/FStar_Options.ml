@@ -1255,7 +1255,7 @@ let debug_any : Prims.unit  ->  Prims.bool = (fun _24_396 -> (match (()) with
 end))
 
 
-let debug_at_level : Prims.string  ->  debug_level_t  ->  Prims.bool = (fun modul level -> (((modul = "") || (let _116_533 = (get_debug ())
+let debug_at_level : Prims.string  ->  debug_level_t  ->  Prims.bool = (fun modul level -> ((((modul = "") || (FStar_ST.read __unit_tests__)) || (let _116_533 = (get_debug ())
 in (FStar_All.pipe_right _116_533 (FStar_List.contains modul)))) && (debug_level_geq level)))
 
 

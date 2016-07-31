@@ -808,7 +808,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
                             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
                           end
                         | Pat_cons(fv, arg_pats) -> 
-                          let rec matches_args out (a:args) (p:list<(pat * bool)>) : either<list<term>, bool> = 
+                          let rec matches_args out (a:S.args) (p:list<(pat * bool)>) : either<list<term>, bool> = 
                                 match a, p with 
                                 | [], [] -> Inl out
                                 | (t, _)::rest_a, (p, _)::rest_p -> 
