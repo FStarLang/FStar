@@ -2011,8 +2011,7 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     | _ -> failwith "Impossible" in
   let close n ts =
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
-    // JP: TODO: this assert is broken
-    // if n >= 0 then assert (List.length (fst ts) = n);
+    if n >= 0 then assert (List.length (fst ts) = n);
     ts in
   let close_action act = 
     let univs, defn = close (-1) (act.action_univs, act.action_defn) in
