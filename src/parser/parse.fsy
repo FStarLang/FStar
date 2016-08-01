@@ -741,7 +741,7 @@ disjunctivePattern:
 
 maybeWhen:
   |             { None }
-  | WHEN appTerm { Some $2 }
+  | WHEN tmDisjunction { Some $2 }
 
 funArrow:
   | RARROW { fun t r -> mk_term t r Un }
