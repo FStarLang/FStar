@@ -76,7 +76,7 @@ assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
   (ensures (assign_post r v))
 
 inline let deref_post (#a:Type) (#i:rid) (r:rref i a) m0 x m1 =
-  m1==m0 /\ x==(m0.[r])
+  m1==m0 /\ x==m0.[r]
 
 assume val op_Bang: #a:Type -> #i:rid -> r:rref i a -> ST a
   (requires (fun m -> True))
