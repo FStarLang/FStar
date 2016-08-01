@@ -560,7 +560,7 @@ in ML-like languages.)
 If we provide explicit annotations we can give these functions more
 precise types:
 
-    val hello_incr i : int -> IO int
+    val hello_incr : int -> ML int
     let hello_incr i = IO.print_string "hello"; i + 1
 
     val loop : int -> Dv int
