@@ -226,6 +226,8 @@ let tvar_alt = constructor_start_char+
 rule token args = parse
  | ident
      { Lexhelp.kwd_or_id args (getLexerRange lexbuf) (ulexeme lexbuf) }
+ | '`'
+     { BACKTICK }
  | constructor
      { NAME(ulexeme lexbuf) }
  | tvar
