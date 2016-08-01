@@ -125,7 +125,6 @@ let as_frag d ds =
 %nonassoc ELSE
 
 %nonassoc COLON_EQUALS
-%left     BACKTICK
 %left     OPINFIX0a
 %left     OPINFIX0b
 %left     OPINFIX0c EQUALS
@@ -134,6 +133,7 @@ let as_frag d ds =
 %right    OPINFIX1
 %left     OPINFIX2 MINUS
 %left     OPINFIX3
+%left     BACKTICK
 %right    OPINFIX4
 
 %start inputFragment
