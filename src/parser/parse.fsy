@@ -114,7 +114,7 @@ let as_frag d ds =
 %token NEW_EFFECT NEW_EFFECT_FOR_FREE SUB_EFFECT SQUIGGLY_RARROW TOTAL KIND
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS
-%token <string> INFIX_APP
+%token BACKTICK
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 
@@ -125,7 +125,7 @@ let as_frag d ds =
 %nonassoc ELSE
 
 %nonassoc COLON_EQUALS
-%left     INFIX_APP
+%left     BACKTICK
 %left     OPINFIX0a
 %left     OPINFIX0b
 %left     OPINFIX0c EQUALS
@@ -827,8 +827,8 @@ tmTuple:
 
 
 tmEq:
-  | tmEq INFIX_APP tmEq
-      { mkApp (mk_term (Var (lid_of_ids [ mk_ident($2, rhs parseState 2) ])) (rhs parseState 2) Un) [ $1, Nothing; $3, Nothing ] (rhs2 parseState 1 3) }
+  | tmEq BACKTICK lid BACKTICK tmEq
+      { mkApp (mk_term (Var $3) (rhs2 parseState 2 4) Un) [ $1, Nothing; $5, Nothing ] (rhs2 parseState 1 5) }
   | tmEq OPINFIX0a tmEq
       { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
   | tmEq OPINFIX0b tmEq
