@@ -131,11 +131,11 @@ val eval: cpuregstate -> exp -> dword
 let eval (env:cpuregstate) = function
  | Register r ->  let rec search_reg regname = function
 		  |[] -> raise Halt
-		  |(MkReg (regname', value))::tail -> if regname' = regname then
+		  |(MkReg regname' value)::tail -> if regname' = regname then
 								value
 							else
 								search_reg regname tail
-		in search_reg r env
+		in search_reg r (get_reg_list env)
  | Constant n -> n
 
 
