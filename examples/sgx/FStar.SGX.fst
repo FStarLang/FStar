@@ -22,13 +22,13 @@ open FStar.Heap
 		bitmapstart->	|bbbbbbb.......bbbbb |
 				|		     |
 				+____________________+
-		U Heap start->	|bbbbbbb.......bbbbb |
+		U Code start->	|bbbbbbb.......bbbbb |
 				|  	    	     |
 				+____________________+
 		U Stack	start->	|bbbbbbb.......bbbbb |
 				|  	    	     |
 				+____________________+
-		U Code start->	|bbbbbbb.......bbbbb |
+		U Heap start->	|bbbbbbb.......bbbbb |
 				|  	    	     |
 				+____________________+
 		V Heap start->	|bbbbbbb.......bbbbb |

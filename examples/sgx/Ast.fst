@@ -21,6 +21,8 @@ type stmt =
  |Call of exp
  |Skip 
  |Assert
+ |Return
 
-type program = stmt
+type lambda = string * stmt
+type program = list lambda
 

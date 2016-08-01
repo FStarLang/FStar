@@ -1,12 +1,16 @@
 
 module Util
 open FStar.UInt64
+open FStar.Buffer
+open Ast
 
-let u64 = UInt64.t
+let address = UInt64.t
+let dword = UInt64.t
+let word = UInt32.t
 
-val cast_to_nat: u64 -> nat
-let cast_to_nat  i = 0
 
+val cast_to_word: address -> word
+let cast_to_word  _ = 0ul
 (*
    Bitmap layout
   ==============
@@ -48,12 +52,18 @@ rsp = stack pointer
 
 *)
 
-val get_address_represented_in_bitmap:nat->nat->nat->nat
+val get_address_represented_in_bitmap:address->address->address->address
 let get_address_represented_in_bitmap base bitmapstart addr = 
-	let bitmapoffset = (addr - bitmapstart) in
-	let tmp = (op_Multiply bitmapoffset 64) in
+	let bitmapoffset = (UInt64.sub addr bitmapstart) in
+	let tmp = (UInt64.mul bitmapoffset 64uL) in
 	(* Not including index, since a store can operate only on 8byte granularity
 	  Optimize it later to get precise address
 	*)
-	let addroffset = (tmp+base) in
+	let addroffset = (UInt64.add tmp base) in
 	 addroffset
+
+val get_bitmap_set :address->address->address->bool
+let get_bitmap_set base bitmapstart addr = true
+
+val get_func_name :(buffer dword) -> address->string
+val get_stmt_list : string->program->(list stmt) 
