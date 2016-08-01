@@ -11,6 +11,7 @@ type token =
   | OPINFIX2 of (string)
   | OPINFIX3 of (string)
   | OPINFIX4 of (string)
+  | INFIX_APP of (string)
   | MINUS
   | COLON_EQUALS
   | REQUIRES
@@ -136,6 +137,7 @@ type tokenId =
     | TOKEN_OPINFIX2
     | TOKEN_OPINFIX3
     | TOKEN_OPINFIX4
+    | TOKEN_INFIX_APP
     | TOKEN_MINUS
     | TOKEN_COLON_EQUALS
     | TOKEN_REQUIRES

@@ -235,6 +235,8 @@ rule token = parse
          | '\\' -> char_of_ec c.[1]
          | _    -> c.[0]
      in CHAR c }
+ | '`' (ident as i) '`'
+    { INFIX_APP i }
  | ident as id
      { id |> Hashtbl.find_option keywords |> Option.default (IDENT id) }
  | constructor as id
