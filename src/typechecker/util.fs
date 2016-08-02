@@ -1205,5 +1205,5 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
      lbeff = Const.effect_Tot_lid; //this will be recomputed correctly
   }] in
   // [Inline] triggers a "Impossible: locally nameless" error
-  let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], [ (* Inline *) ]) in
+  let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], [ Inline ]) in
   sig_ctx, mk (Tm_fvar fv) None Range.dummyRange

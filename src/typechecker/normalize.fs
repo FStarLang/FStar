@@ -769,7 +769,7 @@ and norm_comp : cfg -> env -> comp -> comp =
 *)
 and ghost_to_pure_aux cfg env c =
     let norm t = 
-        norm ({cfg with steps=[Inline; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses]}) env [] t in
+        norm ({cfg with steps=[Inline; UnfoldUntil Delta_constant; AllowUnboundUniverses]}) env [] t in
     let non_info t = non_informative (norm t) in
     match c.n with
     | Total _ -> c
@@ -1043,8 +1043,6 @@ let normalize_refinement steps env t0 =
          end
        | _ -> t in
    aux t
-
-let normalize_sigelt (_:steps) (_:Env.env) (_:sigelt) : sigelt = failwith "NYI: normalize_sigelt"
 
 let eta_expand (_:Env.env) (t:typ) : typ =
   let expand sort =
