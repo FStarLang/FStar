@@ -1186,10 +1186,14 @@ let reify_comp env c u_c : term =
 
 let d s = Util.print1 "\x1b[01;36m%s\x1b[00m\n" s
 
-let register_toplevel_definition (env: env_t) (tc_decl: env_t -> sigelt -> (sigelts * env_t)) lident (def: term): env_t * typ =
+// Takes care of creating the [fv], generating the top-level let-binding, and
+// return a term that's a suitable reference (a [Tm_fv]) to the definition
+let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   // Debug
-  d (text_of_lid lident);
-  Util.print2 "Registering top-level definition: %s\n%s\n" (text_of_lid lident) (Print.term_to_string def);
+  if Env.debug env (Options.Other "ED") then begin
+    d (text_of_lid lident);
+    Util.print2 "Registering top-level definition: %s\n%s\n" (text_of_lid lident) (Print.term_to_string def)
+  end;
   // Allocate a new top-level name.
   let fv = S.lid_as_fv lident (Syntax.Util.incr_delta_qualifier def) None in
   let lbname: lbname = Inr fv in
@@ -1200,14 +1204,6 @@ let register_toplevel_definition (env: env_t) (tc_decl: env_t -> sigelt -> (sige
      lbdef = def;
      lbeff = Const.effect_Tot_lid; //this will be recomputed correctly
   }] in
-  // Check and push in the environment as a top-level let-binding. [Inline]
-  // triggers a "Impossible: locally nameless" error
+  // [Inline] triggers a "Impossible: locally nameless" error
   let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], [ (* Inline *) ]) in
-  let se, env = tc_decl env sig_ctx in
-  begin match se with
-  | [ Sig_let ((_, [ { lbtyp = t } ]), _, _, _) ]->
-      Util.print1 "Inferred type: %s\n" (Print.term_to_string t)
-  | _ ->
-      failwith "nope"
-  end;
-  env, mk (Tm_fvar fv) None Range.dummyRange
+  sig_ctx, mk (Tm_fvar fv) None Range.dummyRange
