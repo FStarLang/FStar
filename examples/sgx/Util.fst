@@ -4,12 +4,8 @@ open FStar.UInt64
 open FStar.Buffer
 open Ast
 
-let address = UInt64.t
-let dword = UInt64.t
-let word = UInt32.t
 
-
-val cast_to_word: address -> word
+val cast_to_word: address -> Tot word
 let cast_to_word  _ = 0ul
 (*
    Bitmap layout
@@ -52,7 +48,7 @@ rsp = stack pointer
 
 *)
 
-val get_address_represented_in_bitmap:address->address->address->address
+val get_address_represented_in_bitmap:address->address->address->Tot address
 let get_address_represented_in_bitmap base bitmapstart addr = 
 	let bitmapoffset = (UInt64.sub addr bitmapstart) in
 	let tmp = (UInt64.mul bitmapoffset 64uL) in
@@ -62,8 +58,14 @@ let get_address_represented_in_bitmap base bitmapstart addr =
 	let addroffset = (UInt64.add tmp base) in
 	 addroffset
 
-val get_bitmap_set :address->address->address->bool
+val get_bitmap_set :address->address->address->Tot bool
 let get_bitmap_set base bitmapstart addr = true
 
-val get_func_name :(buffer dword) -> address->string
-val get_stmt_list : string->program->(list stmt) 
+val get_func_name :(buffer dword) -> address->Tot string
+let get_func_name calltable instraddr = "dummy"
+
+val get_stmt_list : string->program->Tot (list stmt) 
+let get_stmt_list funcname myprogram = []
+
+val search_func: (buffer dword) -> address -> Tot bool
+let search_func calltable instraddr = true

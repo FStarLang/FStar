@@ -2,8 +2,8 @@
 module SGXState
 
 open FStar.UInt64
+open Ast
 
-let dword = UInt64.t
 
 type register =
  | MkReg: string -> dword -> register
@@ -11,6 +11,7 @@ type register =
 type cpuregstate =
  | Mkcpuregstate: (list register) -> cpuregstate
 
+val get_reg_list: cpuregstate -> Tot (list register)
 let get_reg_list = function
  |Mkcpuregstate li -> li
 
