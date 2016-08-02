@@ -34,13 +34,7 @@ type step =
   | EraseUniverses
   | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
   | Reify
-  //remove the rest?
-  | DeltaComp       
-  | SNComp
-  | Eta             
-  | EtaArgs         
-  | Unmeta
-  | Unlabel
+  | CompressUvars
 and steps = list<step>
 
 val eta_expand:           Env.env -> term -> term

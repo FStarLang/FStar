@@ -828,7 +828,7 @@ let pure_or_ghost_pre_and_post env comp =
     let mk_post_type res_t ens =
         let x = S.new_bv None res_t in 
         U.refine x (S.mk_Tm_app ens [S.as_arg (S.bv_to_name x)] None res_t.pos) in
-    let norm t = Normalize.normalize [N.Beta;N.Inline;N.Unlabel;N.EraseUniverses] env t in
+    let norm t = Normalize.normalize [N.Beta;N.Inline;N.EraseUniverses] env t in
     if Util.is_tot_or_gtot_comp comp
     then None, Util.comp_result comp
     else begin match comp.n with
@@ -939,7 +939,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
         if debug env Options.Medium 
         then Util.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
          let c = if Env.should_verify env
-                 then Normalize.normalize_comp [N.Beta; N.Inline; N.SNComp; N.Eta] env c
+                 then Normalize.normalize_comp [N.Beta; N.Inline] env c
                  else Normalize.normalize_comp [N.Beta] env c in
          if debug env Options.Medium then 
             Util.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
@@ -987,8 +987,8 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
             | _ -> 
               //before we manipulate the term further, we must normalize it to get rid of the invariant-broken uvars
               let e0, c0 = e, c in 
-              let c = N.normalize_comp [N.Beta; N.NoInline] env c in
-              let e = N.normalize [N.Beta; N.NoInline] env e in
+              let c = N.normalize_comp [N.Beta; N.NoInline; N.CompressUvars] env c in
+              let e = N.normalize [N.Beta; N.NoInline; N.CompressUvars] env e in
               //now, with the uvars gone, we can close over the newly introduced type names
               let t = match (SS.compress (U.comp_result c)).n with 
                     | Tm_arrow(bs, cod) -> 
@@ -1011,10 +1011,11 @@ let generalize env (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*te
     | Some ecs ->
       List.map2 (fun (l, _, _) (us, e, c) ->
          if debug env Options.Medium 
-         then Util.print3 "(%s) Generalized %s to %s\n" 
+         then Util.print4 "(%s) Generalized %s at type %s\n%s\n" 
                     (Range.string_of_range e.pos) 
                     (Print.lbname_to_string l) 
-                    (Print.term_to_string (Util.comp_result c));
+                    (Print.term_to_string (Util.comp_result c))
+                    (Print.term_to_string e);
       (l, us, e, c)) lecs ecs
 
 (************************************************************************)
@@ -1056,7 +1057,7 @@ let check_top_level env g lc : (bool * comp) =
   if Util.is_total_lcomp lc
   then discharge g, lc.comp()   
   else let c = lc.comp() in
-       let steps = [Normalize.Beta; Normalize.SNComp; Normalize.DeltaComp] in
+       let steps = [Normalize.Beta] in
        let c = Normalize.unfold_effect_abbrev env c 
               |> S.mk_Comp
               |> Normalize.normalize_comp steps env 

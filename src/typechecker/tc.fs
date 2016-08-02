@@ -53,7 +53,7 @@ let is_eq = function
     | _ -> false
 let steps env =
     if Env.should_verify env
-    then [N.Beta; N.Inline; N.SNComp]
+    then [N.Beta; N.Inline]
     else [N.Beta; N.Inline]
 let unfold_whnf env t = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant; N.Beta] env t
 let norm   env t = N.normalize (steps env) env t
