@@ -2000,7 +2000,9 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     | _ -> failwith "Impossible" in
   let close n ts =
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
-    if n >= 0 then assert (List.length (fst ts) = n);
+    // We always close [bind_repr], even though it may be [Tm_unknown]
+    // (non-reifiable, non-reflectable effect)
+    if n >= 0 then assert (is_unknown (snd ts) || List.length (fst ts) = n);
     ts in
   let close_action act = 
     let univs, defn = close (-1) (act.action_univs, act.action_defn) in

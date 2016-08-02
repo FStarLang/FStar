@@ -867,3 +867,4 @@ let incr_delta_qualifier t =
         | Delta_abstract d -> aux d in
     aux d
 
+let is_unknown = function | { n = Tm_unknown } -> true | _ -> false
