@@ -298,7 +298,9 @@ let modifies_trans_4_4 rid b b' b'' b''' h0 h1 h2 :
 
 (* Modifies clauses that do not change the shape of the HyperStack (h1.tip = h0.tip) *)
 (* abstract *) let modifies_0 h0 h1 = 
-  modifies_one h0.tip h0 h1 /\ modifies_buf_0 h0.tip h0 h1
+  modifies_one h0.tip h0 h1 
+  /\ modifies_buf_0 h0.tip h0 h1
+  /\ h0.tip=h1.tip
 
 (* abstract *) let modifies_1 (#a:Type) (b:buffer a) h0 h1 =
   let rid = frameOf b in
@@ -548,7 +550,7 @@ let lemma_modifies_fresh_2 #t #t' a b h0 h1 = ()
 
 (** Concrete getters and setters **)
 let create #a (init:a) (len:UInt32.t) : ST (buffer a)
-     (requires (fun h -> True))
+     (requires (fun h -> is_stack_region h.tip))
      (ensures (fun (h0:mem) b h1 -> ~(contains h0 b) 
        /\ live h1 b /\ idx b = 0 /\ length b = v len /\ frameOf b = h0.tip
        /\ modifies_0 h0 h1
@@ -709,7 +711,7 @@ let of_seq #a s l =
   {content = s'; idx = 0ul; length = l}
 
 val clone: #a:Type ->  b:buffer a -> l:UInt32.t{length b >= v l /\ v l > 0} -> ST (buffer a)
-  (requires (fun h -> live h b))
+  (requires (fun h -> live h b /\ is_stack_region h.tip))
   (ensures (fun h0 b' h1 -> ~(contains h0 b') /\ live h0 b /\ live h1 b' /\ idx b' = 0 /\ length b' = v l
     /\ (forall (i:nat). {:pattern (get h1 b' i)} i < v l ==> get h1 b' i == get h0 b i)
     /\ modifies_0 h0 h1
@@ -956,8 +958,15 @@ let lemma_equal_domains_popped h0 h1 h2 h3 : Lemma
   (ensures  (equal_domains h2 h3))  
   = ()
 
-let lemma_equal_domains h0 h1 h2 h3 h4 : Lemma
-  (requires (fresh_frame h0 h1 /\ modifies_0 h1 h2 /\ equal_domains h2 h3 /\ popped h3 h4))
-  (ensures  (equal_domains h0 h4))
-  [SMTPat (fresh_frame h0 h1); SMTPat (modifies_0 h1 h2); SMTPat (popped h3 h4)]
+let lemma_equal_domains h0 h1 h2 h3 : Lemma
+  (requires (fresh_frame h0 h1 /\ equal_domains h1 h2 /\ popped h2 h3))
+  (ensures  (equal_domains h0 h3))
+  [SMTPat (fresh_frame h0 h1); SMTPat (equal_domains h1 h2); SMTPat (popped h2 h3)]
   = ()
+
+(* //THIS IS NOT TRUE, unless we know that h1 and h2 have equal domains also *)
+(* let lemma_equal_domains h0 h1 h2 h3 h4 : Lemma *)
+(*   (requires (fresh_frame h0 h1 /\ modifies_0 h1 h2 /\ equal_domains h2 h3 /\ popped h3 h4)) *)
+(*   (ensures  (equal_domains h0 h4)) *)
+(*   [SMTPat (fresh_frame h0 h1); SMTPat (modifies_0 h1 h2); SMTPat (popped h3 h4)] *)
+(*   = () *)

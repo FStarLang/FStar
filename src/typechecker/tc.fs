@@ -37,8 +37,6 @@ module PP = FStar.Syntax.Print
 
 // VALS_HACK_HERE
 
-type effect_cost = | ForFree | NotForFree
-
 let log env = (Options.log_types()) && not(lid_equals Const.prims_lid (Env.current_module env))
 let rng env = Env.get_range env
 let instantiate_both env = {env with Env.instantiate_imp=true}
@@ -53,7 +51,7 @@ let is_eq = function
     | _ -> false
 let steps env =
     if Env.should_verify env
-    then [N.Beta; N.Inline; N.SNComp]
+    then [N.Beta; N.Inline]
     else [N.Beta; N.Inline]
 let unfold_whnf env t = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant; N.Beta] env t
 let norm   env t = N.normalize (steps env) env t
@@ -1777,7 +1775,7 @@ let open_effect_decl env ed =
              ; trivial     =op ed.trivial } in
    ed, a, wp
 
-let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
+let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
   let binders_un, signature_un = SS.open_term ed.binders ed.signature in
   let binders, env, _ = tc_tparams env0 binders_un in
@@ -1803,15 +1801,6 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
 
   let check_and_gen' env (_,t) k =
     check_and_gen env t k in
-
-  (* Override dummy fields with automatically-generated combinators, if needed. *)
-  let env, ed =
-    match is_for_free with
-    | NotForFree ->
-        env, ed
-    | ForFree ->
-        DMFF.gen_wps_for_free env binders a wp_a tc_decl tc_term ed
-  in
 
   let return_wp =
     let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
@@ -2011,8 +2000,7 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
     | _ -> failwith "Impossible" in
   let close n ts =
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
-    // JP: TODO: this assert is broken
-    // if n >= 0 then assert (List.length (fst ts) = n);
+    if n >= 0 then assert (List.length (fst ts) = n);
     ts in
   let close_action act = 
     let univs, defn = close (-1) (act.action_univs, act.action_defn) in
@@ -2043,15 +2031,15 @@ let rec tc_real_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
 
   if Env.debug env Options.Low
   || Env.debug env <| Options.Other "EffDecl"
-  then Util.print_string (Print.eff_decl_to_string (match is_for_free with | ForFree -> true | NotForFree -> false) ed);
+  then Util.print_string (Print.eff_decl_to_string false ed);
   ed
 
 
-and elaborate_and_star env0 ed =
+and dijkstra_ftw env ed =
   // Using [STInt: a:Type -> Effect] as an example...
   let binders_un, signature_un = SS.open_term ed.binders ed.signature in
   // [binders] is the empty list (for [ST (h: heap)], there would be one binder)
-  let binders, env, _ = tc_tparams env0 binders_un in
+  let binders, env, _ = tc_tparams env binders_un in
   // [signature] is a:Type -> effect
   let signature, _ = tc_trivial_guard env signature_un in
 
@@ -2169,22 +2157,8 @@ and elaborate_and_star env0 ed =
   if Env.debug env (Options.Other "ED") then
     Util.print_string (Print.eff_decl_to_string true ed);
 
-  env, ed
-
-
-and tc_eff_decl env0 (ed:Syntax.eff_decl) is_for_free =
-  let env0, ed =
-    (* If this is an "effect for free", then the effect declaration is
-     * understood to be written in the "definition language"; we elaborate and
-     * cps-transform these definitions to get a definition that is in the F*
-     * language per se. The output of [elaborate_and_star] is still partial
-     * (i.e. some combinators are missing); [tc_real_eff_decl] will call
-     * [gen_wps_for_free] as needed. *)
-    match is_for_free with
-    | ForFree -> elaborate_and_star env0 ed
-    | NotForFree -> env0, ed
-  in
-  tc_real_eff_decl env0 ed is_for_free
+  // Generate the missing combinators.
+  DMFF.gen_wps_for_free env binders a wp_a ed
 
 and tc_lex_t env ses quals lids =
     (* We specifically type lex_t as:
@@ -2683,15 +2657,12 @@ and tc_decl env se: list<sigelt> * _ = match se with
                 [se], env
         end
 
-    | Sig_new_effect_for_free(ne, r) ->
-      let ne = tc_eff_decl env ne ForFree in
-      (* Fields have been synthesized by [tc_eff_decl] *)
-      let se = Sig_new_effect(ne, r) in
-      let env = Env.push_sigelt env se in
-      [se], env
+
+    | Sig_new_effect_for_free _ ->
+        failwith "impossible"
 
     | Sig_new_effect(ne, r) ->
-      let ne = tc_eff_decl env ne NotForFree in
+      let ne = tc_eff_decl env ne in
       let se = Sig_new_effect(ne, r) in
       let env = Env.push_sigelt env se in
       let env, ses = ne.actions |> List.fold_left (fun (env, ses) a -> 
@@ -2940,21 +2911,34 @@ let for_export hidden se : list<sigelt> * list<lident> =
       else [se], hidden
 
 let tc_decls env ses =
- let ses, exports, env, _ =
-  ses |> List.fold_left (fun (ses, exports, env, hidden) se ->
-          if Env.debug env Options.Low
-          then Util.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
+  let process_one_decl (ses, exports, env, hidden) se =
+    if Env.debug env Options.Low
+    then Util.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
 
-          let ses', env = tc_decl env se  in
+    let ses', env = tc_decl env se  in
 
-          if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"
-          then Util.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ (Print.sigelt_to_string se) ^ "\n") "" ses');
+    if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"
+    then Util.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ (Print.sigelt_to_string se) ^ "\n") "" ses');
 
-          List.iter (fun se -> env.solver.encode_sig env se) ses';
+    List.iter (fun se -> env.solver.encode_sig env se) ses';
 
-          let exported, hidden = List.fold_left (fun (le, lh) se -> let tup = for_export hidden se in List.rev_append (fst tup) le, List.rev_append (snd tup) lh) ([], []) ses' in
-          List.rev_append ses' ses, (List.rev_append exported [])::exports, env, hidden)
-  ([], [], env, []) in
+    let exported, hidden = List.fold_left (fun (le, lh) se -> let tup = for_export hidden se in List.rev_append (fst tup) le, List.rev_append (snd tup) lh) ([], []) ses' in
+    List.rev_append ses' ses, (List.rev_append exported [])::exports, env, hidden
+  in
+  let ses, exports, env, _ =
+    List.fold_left (fun acc se ->
+      match se with
+      | Sig_new_effect_for_free(ne, r) ->
+          // Let the power of Dijkstra generate everything "for free", then defer
+          // the rest of the job to [tc_decl].
+          let _, _, env, _ = acc in
+          let ses, ne = dijkstra_ftw env ne in
+          let ses = ses @ [ Sig_new_effect (ne, r) ] in
+          List.fold_left process_one_decl acc ses
+      | _ ->
+          process_one_decl acc se
+    ) ([], [], env, []) ses
+  in
   List.rev_append ses [], (List.rev_append exports []) |> List.flatten, env
 
 let tc_partial_modul env modul =

@@ -128,6 +128,17 @@ let resolve_in_open_namespaces' env lid (finder:lident -> option<'a>) : option<'
                 finder full_name) in
   aux (current_module env::env.open_namespaces)
 
+let expand_module_abbrev env lid =
+  match lid.ns with
+  | _ :: _ ->
+      // Already of the form Foo.Bar. Can't be a module abbreviation.
+      lid
+  | [] ->
+      let id = lid.ident in
+      match List.tryFind (fun (id', _) -> id.idText = id'.idText) env.modul_abbrevs with
+      | None -> lid
+      | Some (_, lid') -> lid'
+
 let expand_module_abbrevs env lid = 
     match lid.ns with 
         | id::rest ->

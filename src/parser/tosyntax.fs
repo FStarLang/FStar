@@ -570,6 +570,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 else app
             end
         | None ->
+            let l = Env.expand_module_abbrev env l in
             let env = Env.push_namespace env l in
             match args with
             | [ (e, _) ] ->
@@ -689,6 +690,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                   Meta_desugared Sequence))
 
     | LetOpen (lid, e) ->
+      let lid = Env.expand_module_abbrev env lid in
       let env = Env.push_namespace env lid in
       desugar_term_maybe_top top_level env e
 

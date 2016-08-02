@@ -5005,7 +5005,7 @@ end
 | FStar_TypeChecker_Common.NonTrivial (vc) -> begin
 (
 
-let vc = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Inline)::(FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Eta)::(FStar_TypeChecker_Normalize.Simplify)::[]) env vc)
+let vc = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Inline)::(FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Simplify)::[]) env vc)
 in (match ((check_trivial vc)) with
 | FStar_TypeChecker_Common.Trivial -> begin
 ()

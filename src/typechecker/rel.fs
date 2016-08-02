@@ -2456,7 +2456,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) : guard_t =
     else match g.guard_f with
     | Trivial -> ()
     | NonTrivial vc ->
-        let vc = N.normalize [N.Inline; N.Beta; N.Eta; N.Simplify] env vc in
+        let vc = N.normalize [N.Inline; N.Beta; N.Simplify] env vc in
         begin match check_trivial vc with
             | Trivial -> ()
             | NonTrivial vc ->
