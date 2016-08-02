@@ -988,7 +988,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
               //before we manipulate the term further, we must normalize it to get rid of the invariant-broken uvars
               let e0, c0 = e, c in 
               let c = N.normalize_comp [N.Beta; N.NoInline; N.CompressUvars] env c in
-              let e = N.normalize [N.Beta; N.NoInline; N.CompressUvars] env e in
+              let e = N.normalize [N.Beta; N.NoInline; N.CompressUvars; N.Exclude N.Zeta; N.Exclude N.Iota] env e in
               //now, with the uvars gone, we can close over the newly introduced type names
               let t = match (SS.compress (U.comp_result c)).n with 
                     | Tm_arrow(bs, cod) -> 
