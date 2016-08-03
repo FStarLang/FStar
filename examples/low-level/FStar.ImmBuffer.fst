@@ -71,12 +71,12 @@ let of_string (s:string{String.length s < pow2 32}) : Tot bytes =
   {content = of_string' s; start = 0ul; length = uint_to_t (String.length s)}
 
 (** **************************************************************** **)
-(**                    Defining serializable types                   **)
+(**           Defining serializable types of fixed length            **)
 (** **************************************************************** **)
 
 open FStar.Mul
 
-type result 'a =
+type result 'a : Type0 =
   | Correct of 'a
   | Error of string
 
