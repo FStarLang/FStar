@@ -225,7 +225,8 @@ let main _ =
   let buf = Buffer.create 0uL 500ul in
   let calltable = Buffer.create 0uL 100ul in
   let myprogram = [("main", Seq [(Load ((Register "rax"), 4uL, (Register "rbx")))])] in
-  ustar buf calltable base wbmapstart uheapstart ustackstart ucodestart entry myprogram
+  ustar buf calltable base wbmapstart uheapstart ustackstart ucodestart entry myprogram 
+  
 
 (* Place holder for parsing manifest and getting the start addresses and  
   calltable
