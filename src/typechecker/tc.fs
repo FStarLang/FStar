@@ -49,10 +49,7 @@ let mk_lex_list vs =
 let is_eq = function
     | Some Equality -> true
     | _ -> false
-let steps env =
-    if Env.should_verify env
-    then [N.Beta; N.Inline]
-    else [N.Beta; N.Inline]
+let steps env = [N.Beta; N.Inline]
 let unfold_whnf env t = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant; N.Beta] env t
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
@@ -863,8 +860,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let guard = Rel.conj_guard guard_body guard in
     let guard = if env.top_level || not(Env.should_verify env)
                 then Rel.discharge_guard envbody (Rel.conj_guard g guard)
-                else let guard = Rel.close_guard (bs@letrec_binders) guard in
-                     Rel.conj_guard g guard in
+                else let guard = Rel.close_guard (bs@letrec_binders) (Rel.conj_guard g guard) in
+                     guard in
 
     let tfun_computed = Util.arrow bs cbody in
     let e = Util.abs bs body (Some (Util.lcomp_of_comp cbody |> Inl)) in
@@ -1913,8 +1910,8 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
             let expected_k = Util.arrow [S.mk_binder a; 
                                          S.mk_binder b;
                                          S.mk_binder wp_f;
-                                         S.mk_binder wp_g;
                                          S.null_binder (mk_repr a (S.bv_to_name wp_f));
+                                         S.mk_binder wp_g;
                                          S.null_binder (Util.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))]
                                         (S.mk_Total res) in
             (* printfn "About to check bind=%s\n\n, at type %s\n" *) 
@@ -1923,6 +1920,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
             let expected_k, _, _ = 
                 tc_tot_or_gtot_term env expected_k in
             let env = Env.set_range env (snd (ed.bind_repr)).pos in
+            let env = {env with lax=true} in //we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
             check_and_gen' env ed.bind_repr expected_k in
 
         let return_repr = 
@@ -2052,7 +2050,7 @@ and dijkstra_ftw env ed =
     // TODO: more stringent checks on the shape of the signature; better errors
     match (SS.compress signature).n with
     | Tm_arrow ([(a, _)], effect_marker) ->
-        a, effect_marker
+        S.new_bv (Some (S.range_of_bv a)) a.sort, effect_marker
     | _ ->
         failwith "bad shape for effect-for-free signature"
   in
@@ -2084,7 +2082,7 @@ and dijkstra_ftw env ed =
 
   // Building: [a -> wp a -> Effect]
   let effect_signature =
-    let binders = [ (a, S.as_implicit false); S.null_binder wp_a ] in
+    let binders = [ (a, S.as_implicit false); S.gen_bv "dijkstra_wp" None wp_a |> S.mk_binder ] in
     let binders = close_binders binders in
     mk (Tm_arrow (binders, effect_marker))
   in

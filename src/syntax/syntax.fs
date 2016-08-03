@@ -454,7 +454,6 @@ let gen_reset =
     gen, reset
 let next_id = fst gen_reset
 let reset_gensym = snd gen_reset
-let freshen_bv bv = {bv with index=next_id()}
 let range_of_ropt = function 
     | None -> dummyRange
     | Some r -> r
@@ -462,6 +461,10 @@ let gen_bv : string -> option<Range.range> -> typ -> bv = fun s r t ->
   let id = mk_ident(s, range_of_ropt r) in
   {ppname=id; index=next_id(); sort=t}
 let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
+let freshen_bv bv =
+    if is_null_bv bv
+    then new_bv (Some (range_of_bv bv)) bv.sort
+    else {bv with index=next_id()}
 let new_univ_name ropt = 
     let id = next_id() in 
     mk_ident (Util.string_of_int id, range_of_ropt ropt)

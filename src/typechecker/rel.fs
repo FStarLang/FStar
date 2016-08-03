@@ -2194,6 +2194,7 @@ let guard_to_string (env:env) g =
           | NonTrivial f ->
               if debug env <| Options.Other "Rel"
               || debug env <| Options.Other "Implicits"
+              || debug env <| Options.Extreme
               then N.term_to_string env f
               else "non-trivial" in
       let carry = List.map (fun (_, x) -> prob_to_string env x) g.deferred |> String.concat ",\n" in

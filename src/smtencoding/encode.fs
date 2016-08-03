@@ -1958,7 +1958,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
         | Env.Binding_var x -> 
             let xxsym, xx, env' = new_term_constant env x in
             let t1 = N.normalize [N.Beta; N.Inline; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
-            if Env.debug env.tcenv <| Options.Other "Encoding"
+            if Env.debug env.tcenv <| Options.Other "SMTEncoding"
             then (Util.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
             let t, decls' = encode_term_pred None t1 env xx in
             let caption =

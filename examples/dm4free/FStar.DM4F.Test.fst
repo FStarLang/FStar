@@ -41,6 +41,7 @@ inline let ite_wp (a:Type) (wp:wp a) (h0:int) (q:post a) =
 inline let null_wp (a:Type) (h:int) (p:post a) =
   (forall (x:a) (h:int). p (x,h))
 
+(* #set-options "--debug FStar.DM4F.Test --debug_level Extreme --print_implicits --debug_level SMTEncoding --debug_level Simplification --print_effect_args" *)
 reifiable reflectable new_effect_for_free {
   STInt: a:Type -> Effect
   with repr     = st
@@ -53,3 +54,12 @@ reifiable reflectable new_effect_for_free {
        get      = get
      ; put      = put *)
 }
+
+(* //You can also build a new action "on the fly" using reflect *)
+(* reifiable let gett (_:unit) : STInt int (fun z post -> post (z, z)) *)
+(*   = STInt.reflect (get ()) *)
+
+(* reifiable val incr2 : unit -> St unit *)
+(* let incr2 u = *)
+(*     let n = STATE.get() in *)
+(*     STATE.put (n + 1) *)

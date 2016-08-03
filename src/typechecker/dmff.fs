@@ -79,7 +79,7 @@ let gen_wps_for_free
     lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ name)) Range.dummyRange
   in
 
-  let gamma = collect_binders wp_a in
+  let gamma = collect_binders wp_a |> U.name_binders in
   d (Util.format1 "Gamma is %s\n" (Print.binders_to_string ", " gamma));
   let unknown = S.tun in
   let mk x = mk x None Range.dummyRange in
@@ -339,7 +339,7 @@ let gen_wps_for_free
         (* Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
         U.mk_imp x y
     | Tm_arrow ([ binder ], { n = GTotal b })
-    | Tm_arrow ([ binder ], { n = Total b }) when S.is_null_binder binder ->
+    | Tm_arrow ([ binder ], { n = Total b }) ->
         let a = (fst binder).sort in
         (* Util.print2 "arrow, a=%s, b=%s\n" (Print.term_to_string a) (Print.term_to_string b); *)
         let a1 = S.gen_bv "a1" None a in
@@ -351,7 +351,7 @@ let gen_wps_for_free
             (U.mk_app y [ S.as_arg (S.bv_to_name a2) ]))
         in
         mk_forall a1 (mk_forall a2 body)
-    | Tm_arrow (binder :: binders, comp) ->
+    | Tm_arrow (binder :: binders, comp) -> //TODO: a bit confusing, since binders may be []
         let t = { t with n = Tm_arrow ([ binder ], S.mk_Total (U.arrow binders comp)) } in
         mk_leq t x y
     | Tm_arrow _ ->
@@ -1002,6 +1002,7 @@ and trans_F (env: env_) (c: typ) (wp: term): term =
         trans_F env arg wp_arg, S.as_implicit false)
       args wp_args))
   | Tm_arrow (binders, comp) ->
+      let binders = U.name_binders binders in
       let binders = open_binders binders in
       let binders, comp = open_comp binders comp in
       let bvs, binders = List.split (List.map (fun (bv, q) ->

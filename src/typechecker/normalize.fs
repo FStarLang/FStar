@@ -474,8 +474,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Inl x -> 
                       let head = U.mk_reify lb.lbdef in
                       let body = S.mk (Tm_abs([S.mk_binder x], U.mk_reify body, None)) None body.pos in
-                      let reified = S.mk (Tm_app(bind_repr, [as_arg S.tun; as_arg S.tun; as_arg S.tun; 
-                                                             as_arg S.tun; as_arg head; as_arg body])) None t.pos in
+                      let reified = S.mk (Tm_app(bind_repr, [as_arg S.tun; as_arg S.tun;  //a, b
+                                                             as_arg S.tun; as_arg head;   //wp_head, head
+                                                             as_arg S.tun; as_arg body])) //wp_body, body
+                                                             None t.pos in
                       // printfn "Reified %s to %s\n" (Print.term_to_string t) (Print.term_to_string reified);
                       norm cfg env stack reified
                     | Inr _ -> failwith "Cannot reify a top-level let binding"
@@ -617,7 +619,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                 | MemoLazy r :: stack -> 
                   set_memo r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
-                  log cfg  (fun () -> Util.print_string "\tSet memo\n");
+                  log cfg  (fun () -> Util.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
                 | Let _ :: _
@@ -827,6 +829,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
 
             | MemoLazy r::stack -> 
               set_memo r (env, t);
+              log cfg  (fun () -> Util.print1 "\tSet memo %s\n" (Print.term_to_string t));
               rebuild cfg env stack t
 
             | Let(env', bs, lb, r)::stack ->
