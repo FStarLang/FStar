@@ -23,7 +23,6 @@ assume val search: (buffer dword)->(addr:address)-> bool
 type memaccess =
  |MkMemAccess: 
 	      read: (string->cpuregstate -> dword) -> (* Helper function to read registers, used by store *)
-  	      (* load: (word -> address -> STL dword  ) -> *)
   	      load: (word -> address -> STL dword (requires (fun h -> true)) (ensures (fun h0 r h1 -> true))) -> 
   	      store:(word -> address-> dword -> cpuregstate ->STL unit (requires (fun h -> true)) (ensures (fun h0 r h1 -> true))) ->
 	      decode:(program ->address->Tot (list stmt))->memaccess
@@ -32,9 +31,8 @@ val defensive: (buffer dword)->(buffer dword) ->address-> address->address->addr
 									(requires (fun h -> true)) 
 									(ensures (fun h0 r h1 -> true)) 
 let defensive buf calltable base wbmapstart ucodestart uheapstart ustackstart = 
-  let read' (regname:string) (env:cpuregstate) =
-	(*
- 	let rec search_reg regname = function
+  let read' (regname:string) (env:cpuregstate) :(Tot dword)  =
+ 	let rec search_reg (regname:string) (reglist:list register) :(Tot dword) = match reglist with
 		  |[] -> (* raise Halt *) 0uL
 		  |(MkReg regname' value)::tail -> if regname' = regname then
 								value
@@ -42,8 +40,6 @@ let defensive buf calltable base wbmapstart ucodestart uheapstart ustackstart =
 								search_reg regname tail
 	in
 	search_reg regname (get_reg_list env)
-	*)
-	0uL
   in
   let load'(n:word) (addr:address): STL dword
 	(requires (fun h -> true))
