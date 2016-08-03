@@ -9,14 +9,14 @@ assume HasEq_ref: (forall (a:Type).{:pattern (hasEq (ref a))} hasEq (ref a))
 #reset-options
 noeq type aref =
   | Ref : #a:Type -> r:ref a -> aref
-assume val sel :       #a:Type -> heap -> ref a -> Tot a
-assume val upd :       #a:Type -> heap -> ref a -> a -> Tot heap
+assume val sel :       #a:Type -> heap -> ref a -> GTot a
+assume val upd :       #a:Type -> heap -> ref a -> a -> GTot heap
 assume val emp :       heap
-assume val contains :  #a:Type -> heap -> ref a -> Tot bool
-assume val equal:      heap -> heap -> Tot bool
-assume val restrict:   heap -> set aref -> Tot heap
-assume val concat:     heap -> heap -> Tot heap
-assume val domain:     heap -> Tot (set aref)
+assume val contains :  #a:Type -> heap -> ref a -> GTot bool
+assume val equal:      heap -> heap -> GTot bool
+assume val restrict:   heap -> set aref -> GTot heap
+assume val concat:     heap -> heap -> GTot heap
+assume val domain:     heap -> GTot (set aref)
 
 assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).            {:pattern (sel (upd h r v) r)}
                       sel (upd h r v) r == v
