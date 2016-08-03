@@ -1,10 +1,3 @@
-DISCLAIMER
-----------
-
-This branch has been merged into master and will be deleted soon. Nothing new
-will happen here! For the latest developments of Dijkstra Monads for Free,
-please check out this very directory in the master branch.
-
 Dijkstra Monads for Free
 ------------------------
 
