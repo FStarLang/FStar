@@ -22,8 +22,9 @@ val get: unit -> st int
 let get u = fun s ->
   s, s
 
-val put: int -> st unit
-let put s = fun z -> (), s
+val put: int -> Tot (st unit)
+let put s = fun z ->
+  (), s
 
 (* TODO: at this stage, not elaborating and generating the following two
  * combinators; so, the user has to write them in the "old style", by
@@ -42,13 +43,12 @@ inline let ite_wp (a:Type) (wp:wp a) (h0:int) (q:post a) =
 inline let null_wp (a:Type) (h:int) (p:post a) =
   (forall (x:a) (h:int). p (x,h))
 
-(* #set-options "--debug FStar.DM4F.Test --debug_level Extreme --print_implicits --debug_level SMTEncoding --debug_level Simplification --print_effect_args" *)
 reifiable reflectable new_effect_for_free {
-  STInt: a:Type -> Effect
+  STINT: a:Type -> Effect
   with repr     = st
      ; bind     = bind_st
      ; return   = return_st
-     // The two combinators below are meant to be automatically generated.
+     // The two combinators below are meant to be automatically generated, eventually.
      ; ite_wp   = ite_wp
      ; null_wp  = null_wp
   (* and effect_actions
@@ -57,19 +57,16 @@ reifiable reflectable new_effect_for_free {
 }
 
 inline let lift_pure_stint (a:Type) (wp:pure_wp a) (n:int) (p:post a) = wp (fun a -> p (a, n))
-sub_effect PURE ~> STInt = lift_pure_stint
+sub_effect PURE ~> STINT = lift_pure_stint
 
-effect ST (a:Type) (pre: pre) (post: (int -> a -> int -> GTot Type0)) =
-       STInt a (fun n0 p -> pre n0 /\ (forall a n1. pre n0 /\ post n0 a n1 ==> p (a, n1)))
+effect StInt (a:Type) (pre: pre) (post: (int -> a -> int -> GTot Type0)) =
+       STINT a (fun n0 p -> pre n0 /\ (forall a n1. pre n0 /\ post n0 a n1 ==> p (a, n1)))
 
 // From the definition language to the effectful world with WPs
-reifiable let get' (): STInt int (fun z post -> post (z, z)) =
-  STInt.reflect (get ())
+reifiable let get' (): STINT int (fun z post -> post (z, z)) =
+  STINT.reflect (get ())
 
-reifiable let put' (x: int): STInt unit (fun z post -> post ((), x)) =
-  STInt.reflect (put x)
-
-reifiable let put'' (x: int): ST unit
-  (requires (fun n -> True))
-  (ensures (fun n0 _ n1 -> n1 = x)) =
-    STInt.reflect (put x)
+#set-options "--lax"
+val put': x:int -> STINT unit (fun z post -> post ((), x))
+let put' x =
+  STINT.reflect (put x)

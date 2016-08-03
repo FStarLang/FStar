@@ -2066,9 +2066,11 @@ and dijkstra_ftw env ed =
     t, comp
   in
   let recheck_debug s env t =
-    Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
+    if Env.debug env (Options.Other "ED") then
+      Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
     let t', _, _ = tc_term env t in
-    Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
+    if Env.debug env (Options.Other "ED") then
+      Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
     // Return the original term (without universes unification variables);
     // because [tc_eff_decl] will take care of these
     t
@@ -2077,7 +2079,8 @@ and dijkstra_ftw env ed =
 
   // TODO: check that [_comp] is [Tot Type]
   let repr, _comp = open_and_check ed.repr in
-  Util.print1 "Representation is: %s\n" (Print.term_to_string repr);
+  if Env.debug env (Options.Other "ED") then
+    Util.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
   let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
   let dmff_env, wp_type = DMFF.star_type_definition dmff_env repr in
