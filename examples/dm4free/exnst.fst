@@ -48,11 +48,12 @@ inline let trivial       (a:Type)
 let repr (a:Type) (wp:wp a) =
     n0:int -> PURE (option (a * int)) (wp n0)
 
-inline val bind: (a:Type) -> (b:Type) -> (wp0:wp a) -> (wp1:(a -> Tot (wp b))) 
+inline val bind: (a:Type) -> (b:Type) -> (wp0:wp a)
 		 -> (f:repr a wp0)
+		 -> (wp1:(a -> Tot (wp b))) 
 		 -> (g:(x:a -> Tot (repr b (wp1 x)))) 
 		 -> Tot (repr b (bind_wp range_0 a b wp0 wp1))
-let bind a b wp0 wp1 f g  
+let bind a b wp0 f wp1 g  
   = fun n0 -> admit(); match f n0 with 
 		    | None -> None
 		    | Some (x, n1) -> g x n1
