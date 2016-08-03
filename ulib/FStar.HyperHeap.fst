@@ -26,10 +26,12 @@ abstract let color (x:rid): GTot int =
 
 let t = Map.t rid heap
 
-assume HasEq_rid: hasEq rid //TODO: this is provable, but need to expose it as an argument-free SMT lemma
+let has_eq_rid (u:unit) : 
+  Lemma (requires True)
+        (ensures hasEq rid)
+  = ()	
 
-(* val hasEq_rid_lemma: unit -> Lemma (requires (True)) (ensures (hasEq rid)) [SMTPatT (hasEq rid)] *)
-(* let hasEq_rid_lemma _ = () *)
+assume HasEq_rid: hasEq rid //TODO: we just proved this above, but we need to expose it as an argument-free SMT lemma, which isn't supported yet
 
 abstract let root : rid = []
 
@@ -38,7 +40,11 @@ let root_has_color_zero (u:unit) : Lemma (color root = 0) = ()
 
 abstract let rref (id:rid) (a:Type) = Heap.ref a
 
-assume HasEq_rref: forall (id:rid) (a:Type).{:pattern (hasEq (rref id a))} hasEq (rref id a)//TODO: this is provable, but need to expose it as an argument-free SMT lemma
+let has_eq_rref (id:rid) (a:Type) :
+  Lemma (requires True)
+        (ensures hasEq (rref id a))
+	[SMTPat (hasEq (rref id a))]
+  = ()	
 
 abstract val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
 let as_ref #a #id r = r
@@ -91,7 +97,7 @@ let rec lemma_disjoint_includes i j k =
 abstract val extends: rid -> rid -> GTot bool
 let extends r0 r1 = is_Cons r0 && Cons.tl r0 = r1
 
-abstract val parent: r:rid{r<>root} -> GTot rid
+abstract val parent: r:rid{r<>root} -> Tot rid
 let parent r = Cons.tl r
 
 abstract val lemma_includes_refl: i:rid
