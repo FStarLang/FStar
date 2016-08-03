@@ -80,6 +80,8 @@ type result 'a =
   | Correct of 'a
   | Error of string
 
+let correct (#a:Type) (r:result a{is_Correct r}) : Tot a = match r with | Correct x -> x
+
 assume type hasSize (t:Type0) : Type0
 type sizeof_t = t:Type0{hasSize t}
 assume val sizeof: t:sizeof_t -> Tot (z:UInt.uint_t n{z > 0})
@@ -109,8 +111,11 @@ type parser (#t:sizeof_t) ($f:serializer t) =
   seq byte -> Tot (result t)
 
 (* Type of F* types that can be serialized into sequences of bytes *)
-type serializable t:sizeof_t =
-| Serializable: $f:serializer t -> $g:parser f -> serializable t
+type inverse (#t:sizeof_t) ($f:serializer t) ($g:parser f) =
+  (forall (x:t). g (f x) == Correct x) /\ (forall (y:seq byte). is_Correct (g y) ==>  (f (Correct._0 (g y))) == y)
+
+noeq type serializable (t:sizeof_t) : Type0 =
+| Serializable: $f:serializer t -> $g:parser f{inverse f g} -> serializable t
 
 assume val lemma_aux_0: x:nat -> y:pos -> Lemma
   (requires (x > 0 /\ x % y = 0))
@@ -142,9 +147,13 @@ let rec to_seq_bytes #t #ty s =
   else Seq.append (serialize (Seq.index s 0)) (to_seq_bytes (Seq.slice s 1 (Seq.length s)))
 
 (* Buffer of serializable types *)
+(* It is a "flat" representation of some structures in memory *)
 type buffer (#t:sizeof_t) (ty:serializable t) =
   b:bytes{bytes_length b % sizeof t = 0
    /\  is_Correct (of_seq_bytes #t #ty (as_seq_bytes b))}
+
+assume BufferHasSize: forall (#ty:sizeof_t) (t:serializable ty).
+  hasSize (buffer t) /\ sizeof (buffer t) = sizeof (bytes)
 
 let length (#t:sizeof_t) (#ty:serializable t) (b:buffer ty) = bytes_length b / sizeof t
 
@@ -172,45 +181,110 @@ let read #t #ty b i =
   Seq.index (as_seq #t #ty b) (v i)
 
 val sub: #t':sizeof_t -> #ty:serializable t' -> 
-  b:buffer ty -> i:t -> j:t{v i + v j <= length b} -> Tot (buffer ty)
+  b:buffer ty -> i:t -> j:t{v i + v j <= length b} -> 
+  Tot (b':buffer ty{length b' = v j /\ as_seq b' == Seq.slice (as_seq b) (v i) (v i + v j)})
 let sub #t #ty b i j =
   admit(); // TODO
   sub_bytes b (uint_to_t (sizeof t) *^ i) (uint_to_t (sizeof t) *^ j)
 
 val offset: #t':sizeof_t -> #ty:serializable t' -> 
-  b:buffer ty -> i:t{v i <= length b} -> Tot (buffer ty)
+  b:buffer ty -> i:t{v i <= length b} -> 
+  Tot (b':buffer ty{length b' = length b - v i /\ as_seq b' == Seq.slice (as_seq b) (v i) (length b)})
 let offset #t #ty b i =
   admit(); // TODO
   offset_bytes b (uint_to_t (sizeof t) *^ i)
 
-noeq type buffer_tuple =  {
-    fst: bytes;
-    snd: bytes
+noeq type buffer_tuple (#t':sizeof_t) (ty:serializable t') =  {
+    fst: buffer ty;
+    snd: buffer ty
   }
 
+(* There should be a "sizeof" calculus to compute that automatically on record types *)
+assume BufferTupleHasSize: forall (t':sizeof_t) (ty:serializable t'). 
+  hasSize (buffer_tuple ty) /\ sizeof (buffer_tuple ty) = sizeof (buffer ty) + sizeof (buffer ty)
+
+val split: #t':sizeof_t -> #ty:serializable t' -> 
+  b:buffer ty -> i:t{v i <= length b} -> Tot (buffer_tuple ty)
+let split #t #ty b i =
+  let fst = sub b 0ul i in
+  let snd = offset b i in
+  {fst = fst; snd = snd}
+
+(* Cast a "buffer type" to its unrefined "bytes" type *)
 let to_bytes (#t:sizeof_t) (#ty:serializable t) (b:buffer ty)
   : Tot bytes
   = b
 
-val split: #t':sizeof_t -> #ty:serializable t' -> 
-  b:buffer ty -> i:t{v i <= length b} -> Tot buffer_tuple
-let split #t #ty b i =
-  let fst:bytes = sub b 0ul i in
-  let snd:bytes = offset b i in
-  {fst = fst; snd = snd}
+(* Cast an appropriate "bytes" object to the corresponding "buffer " type *)
+let to_buffer (#t:sizeof_t) (ty:serializable t) (b:bytes{bytes_length b % sizeof t = 0
+  /\ is_Correct (of_seq_bytes #t #ty (as_seq_bytes b))})
+  : Tot (buffer ty)
+  = b
+
+(* Generic cast function to cast pointers of one type into pointers of another type *)
+(* Mostly for casts between native low level types (machine ints and pointers*)
+let cast (#t:sizeof_t) (ty:serializable t) (#t':sizeof_t) (#ty':serializable t') 
+  (b:buffer ty'{bytes_length (to_bytes b) % sizeof t = 0
+   /\ is_Correct (of_seq_bytes #t #ty (as_seq_bytes b))})
+  : Tot (b':buffer ty) = to_buffer #t ty (to_bytes b)
+
+val le_uint8_serializer: serializer byte
+let le_uint8_serializer =
+  let f:b:byte -> Tot (s:seq byte{Seq.length s = sizeof byte}) = 
+    (fun s -> Seq.create 1 s) in
+  assume(injective f); 
+  f
+
+val le_uint8_parser: parser le_uint8_serializer
+let le_uint8_parser =
+  let f: s:seq byte -> Tot (result byte) =
+    fun s -> if Seq.length s = 1 then Correct (index s 0)
+		       else Error "Too long or too short" in
+  f
+
+val le_uint16_serializer: serializer UInt16.t
+let le_uint16_serializer =
+  let f:b:UInt16.t -> Tot (s:seq byte{Seq.length s = sizeof UInt16.t}) =
+    fun s ->
+      let open FStar.UInt16 in
+      let s0 = uint16_to_uint8 s in
+      let s1 = uint16_to_uint8 (s >>^ 8ul)  in
+      (Seq.create 1 s0) @| (Seq.create 1 s1) in
+   assume (injective f);
+   f
+
+val le_uint16_parser : (* p: *)(parser #UInt16.t (le_uint16_serializer))(* {inverse le_uint16_serializer p} *)
+let le_uint16_parser =
+  fun (s:seq byte) ->
+    if Seq.length s = 2 then Correct (
+      let open FStar.UInt16 in
+      uint8_to_uint16 (Seq.index s 0) +^ (uint8_to_uint16 (Seq.index s 1)) <<^  8ul
+    )
+    else Error "Too short"
+
+assume val le_uint8_lemma:  unit -> Lemma
+  (inverse #UInt8.t le_uint8_serializer le_uint8_parser)
+assume val le_uint16_lemma:  unit -> Lemma
+  (inverse #UInt16.t le_uint16_serializer le_uint16_parser)
+
+assume val ptr_serializer: serializer bytes
+assume val ptr_parser: p:parser ptr_serializer{inverse ptr_serializer p}
+
+val le_uint8_parser': p:(parser #UInt8.t (le_uint8_serializer)){inverse le_uint8_serializer p}
+let le_uint8_parser' = le_uint8_lemma (); le_uint8_parser
+
+val le_uint16_parser': p:(parser #UInt16.t (le_uint16_serializer)){inverse le_uint16_serializer p}
+let le_uint16_parser' = le_uint16_lemma (); le_uint16_parser
+
+let u8  : serializable byte     = Serializable le_uint8_serializer  le_uint8_parser'
+let u16 : serializable UInt16.t = Serializable le_uint16_serializer le_uint16_parser'
+
+let ptr = Serializable ptr_serializer ptr_parser
 
 
-assume val le_uint16_serializer: serializer UInt16.t
-(* let le_uint16_serializer = admit(); *)
-(*   fun s -> let open FStar.UInt16 in *)
-(* 	 let s0 = uint16_to_uint8 s in *)
-(* 	 let s1 = uint16_to_uint8 (s >>^ 8ul)  in *)
-(* 	 (Seq.create 1 s0) @| (Seq.create 1 s1) *)
+(* let uint16s = buffer #UInt16.t #le_uint16_serializer uint16 *)
 
-let uint16 : serializable UInt16.t (le_uint16_serializer) = UInt16.t
-let uint16s = buffer #UInt16.t #le_uint16_serializer uint16
-
-assume val le_uint32_serializer: serializer UInt32.t
+(* assume val le_uint32_serializer: serializer UInt32.t *)
 (* let le_uint32_serializer = *)
 (*   admit(); *)
 (*   fun s -> let open FStar.UInt32 in *)
