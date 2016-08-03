@@ -32,8 +32,6 @@ sub_effect
   DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:t) -> wp (fun a -> p a h)
 
 
-assume val color : rid -> GTot int
-
 assume val new_region: r0:rid -> ST rid
       (requires (fun m -> True))
       (ensures (fun (m0:t) (r1:rid) (m1:t) ->
