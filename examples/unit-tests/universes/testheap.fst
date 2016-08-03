@@ -9,14 +9,19 @@ assume DistinctXY: x =!= y
 let test0 _ = assert (sel (upd h x 0) x = 0)
 let test1 _ = assert (sel (upd (upd h x 0) y 1) x = 0)
 let test3 _ = assert (sel (upd (upd h x 0) y 1) y = 1)
-let h1 = upd (upd h x 0) y 1
-let test5 _ = assert (equal h1 (upd (upd h y 1) x 0))
 
-(* val ys: set aref  ... required ... NS: Not anymore *)
+let test5 _ = 
+  let h1 = upd (upd h x 0) y 1 in
+  assert (equal h1 (upd (upd h y 1) x 0))
+
 let ys = singleton (Ref y)
 
-let test6 _ = assert (equal h1 (concat h1 (restrict h1 (complement ys))))
-let test7 _ = assert (contains h1 x)
+let test6 _ = 
+  let h1 = upd (upd h x 0) y 1 in
+  assert (equal h1 (concat h1 (restrict h1 (complement ys))))
+let test7 _ = 
+  let h1 = upd (upd h x 0) y 1 in
+  assert (contains h1 x)
 let test8 _ = assert (contains h y ==> contains (upd h x 0) y)
 let test9 (x:ref int) =
   assume (not (contains h x));

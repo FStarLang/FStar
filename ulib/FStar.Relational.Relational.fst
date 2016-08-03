@@ -22,8 +22,14 @@ let rel_map2Teq #a #b #c f (R x1 x2) (R y1 y2) = R (f x1 y1) (f x2 y2)
 val rel_map2T : ('a -> 'b -> Tot 'c) -> (double 'a) -> (double 'b) -> Tot (double 'c)
 let rel_map2T f (R x1 x2) (R y1 y2) = R (f x1 y1) (f x2 y2)
 
+val rel_map2G : ('a -> 'b -> GTot 'c) -> (double 'a) -> (double 'b) -> GTot (double 'c)
+let rel_map2G f (R x1 x2) (R y1 y2) = R (f x1 y1) (f x2 y2)
+
 val rel_map3T : ('a -> 'b -> 'c -> Tot 'd) -> (double 'a) -> (double 'b) -> (double 'c) -> Tot (double 'd)
 let rel_map3T f (R x1 x2) (R y1 y2) (R z1 z2) = R (f x1 y1 z1) (f x2 y2 z2)
+
+val rel_map3G : ('a -> 'b -> 'c -> GTot 'd) -> (double 'a) -> (double 'b) -> (double 'c) -> GTot (double 'd)
+let rel_map3G f (R x1 x2) (R y1 y2) (R z1 z2) = R (f x1 y1 z1) (f x2 y2 z2)
 
 (* Some convenient arithmetic functions *)
 let op_Hat_Plus = rel_map2T (fun x y -> x + y)
@@ -53,6 +59,6 @@ let eq_irel (#t:eqtype) (x:(rel t t)) = match x with
   | R a b -> a = b
 
 (* Some convenient functions on heap (for specification) *)
-let sel_rel1 h r  = rel_map2T sel h (twice r)
-let sel_rel2 = rel_map2T sel
-let upd_rel = rel_map3T upd
+let sel_rel1 h r  = rel_map2G sel h (twice r)
+let sel_rel2 = rel_map2G sel
+let upd_rel = rel_map3G upd
