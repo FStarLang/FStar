@@ -1920,7 +1920,6 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
             let expected_k, _, _ = 
                 tc_tot_or_gtot_term env expected_k in
             let env = Env.set_range env (snd (ed.bind_repr)).pos in
-            let env = {env with lax=true} in //we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
             check_and_gen' env ed.bind_repr expected_k in
 
         let return_repr = 
@@ -2139,8 +2138,12 @@ and dijkstra_ftw env ed =
   in
   let return_wp = register "return_wp" return_wp in
   let return_elab = register "return_elab" return_elab in
+
+  // we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
   let bind_wp = register "bind_wp" bind_wp in
+  sigelts := Sig_pragma (SetOptions "--admit_smt_queries true", Range.dummyRange) :: !sigelts;
   let bind_elab = register "bind_elab" bind_elab in
+  sigelts := Sig_pragma (SetOptions "--admit_smt_queries false", Range.dummyRange) :: !sigelts;
 
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->

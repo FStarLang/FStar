@@ -139,3 +139,8 @@ let g u =
 let top =
   let _, one = reify (incr2 ()) 0 in
   FStar.IO.print_string ("incr2 returned: " ^ string_of_int one)
+
+reifiable let put' (x: int): ST unit
+  (requires (fun n -> True))
+  (ensures (fun n0 _ n1 -> n1 = x)) =
+    STATE.reflect (put x)

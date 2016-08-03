@@ -23,7 +23,7 @@ let get u = fun s ->
   s, s
 
 val put: int -> st unit
-let put s = fun _ -> (), s
+let put s = fun z -> (), s
 
 (* TODO: at this stage, not elaborating and generating the following two
  * combinators; so, the user has to write them in the "old style", by
@@ -31,6 +31,7 @@ let put s = fun _ -> (), s
  * be. *)
 
 let post (a:Type) = (a * int) -> Type0
+let pre = int -> Type0
 let wp (a:Type) = int -> post a -> Type0
 
 inline let ite_wp (a:Type) (wp:wp a) (h0:int) (q:post a) =
@@ -55,13 +56,20 @@ reifiable reflectable new_effect_for_free {
      ; put      = put *)
 }
 
+inline let lift_pure_stint (a:Type) (wp:pure_wp a) (n:int) (p:post a) = wp (fun a -> p (a, n))
+sub_effect PURE ~> STInt = lift_pure_stint
+
+effect ST (a:Type) (pre: pre) (post: (int -> a -> int -> GTot Type0)) =
+       STInt a (fun n0 p -> pre n0 /\ (forall a n1. pre n0 /\ post n0 a n1 ==> p (a, n1)))
+
 // From the definition language to the effectful world with WPs
 reifiable let get' (): STInt int (fun z post -> post (z, z)) =
   STInt.reflect (get ())
 
-// From the effectful world with WPs back to the functional monadic semantics
-let get'' (): st int =
-  reify (get' ())
+reifiable let put' (x: int): STInt unit (fun z post -> post ((), x)) =
+  STInt.reflect (put x)
 
-let sanity_get =
-  assert (forall (s: nat). get () s = get'' () s)
+reifiable let put'' (x: int): ST unit
+  (requires (fun n -> True))
+  (ensures (fun n0 _ n1 -> n1 = x)) =
+    STInt.reflect (put x)
