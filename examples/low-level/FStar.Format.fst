@@ -7,13 +7,15 @@ open FStar.Int.Cast
 open FStar.Seq
 open FStar.ImmBuffer
 
+assume val lemma_buffer_length: b:buffer u8 -> Lemma
+  (requires (True))
+  (ensures  (length b = Seq.length (as_seq_bytes b)))
+  [SMTPat (length b)]
+
 type lsize = n:int{n = 1 \/ n = 2 \/ n = 3}
 type csize = n:t{v n = 1 \/ v n = 2 \/ v n = 3}
 
-val read_length: 
-  b:buffer u8 -> 
-  n:csize{v n <= length b} -> 
-  Tot UInt32.t
+val read_length: b:buffer u8 -> n:csize{v n <= length b} -> Tot UInt32.t
 let read_length b n =
   if n = 1ul then (
     let b0 = read b 0ul in
@@ -34,197 +36,129 @@ let read_length b n =
     b0 |^ (b1 <<^ 8ul) |^ (b2 <<^ 16ul)
   )
 
-let vlbytes (n:lsize) = b:buffer u8{length b >= n /\ length b = n + v (read_length b (uint_to_t n))}
-
-val vlparse: b:buffer u8 -> n:csize -> len:UInt32.t{v len < length b} -> Tot (result (vlbytes (v n)))
-let vlparse b n len =
-  if n >^ len then Error "Too short"
-  else 
-    let l = read_length b n in
-    if length b < v n + v l then Error "Wrong vlbytes format"
-    else (
-      let b' = sub b 0ul (n +^ l) in
-      Correct b'
-    )
-
 #set-options "--lax"
 
-val vlsplit: b:buffer u8 -> n:csize -> len:UInt32.t{v len < length b} ->
-  Tot (result (vlbytes (v n) * buffer u8))
-let vlsplit b n len =
-  if n >^ len then Error "Too short"
-  else 
-    let l = read_length b n in
-    assume (v l + v n < pow2 32);
-    if len <^ n +^ l then Error "Wrong vlbytes format"
+// Type of buffers for which a lower bound on the length is known
+let lbytes = (|len:UInt32.t & b:buffer u8{length b >= v len} |)
+
+let mk_lbytes (b:buffer u8) (len:UInt32.t{v len <= length b}) = (| len, b |)
+let lb_length (b:lbytes) = dfst b
+let lb_bytes  (b:lbytes) = dsnd b
+let loffset   (b:lbytes) (i:UInt32.t{v i <= v (lb_length b)}) : Tot lbytes =
+  (|lb_length b -^ i,  offset (lb_bytes b) i|)
+let lsub   (b:lbytes) (i:UInt32.t) (j:UInt32.t{v i + v j <= v (lb_length b)}) : Tot lbytes =
+  (|lb_length b -^ i -^ j,  sub (lb_bytes b) i j|)
+
+
+type lserializer (t:Type0) = f:(t -> Tot  lbytes)
+// The parser return the number of bytes read
+type lparser (#t:Type0) ($f:lserializer t) = 
+  b:lbytes -> Tot (r:result (t * UInt32.t){is_Correct r ==> v (snd (correct r)) <= v (lb_length b)})
+
+type inverse (#t:Type0) ($f:lserializer t  ) ($g:lparser f) =
+  (forall (x:t). g (f x) == Correct (x, lb_length (f x)))
+    /\ (forall (y:lbytes). is_Correct (g y) ==>  (f (fst (Correct._0 (g y))) == y))
+
+noeq type lserializable (t:Type0) : Type0 =
+  | VLSerializable: $f:lserializer t   -> $g:lparser f{inverse f g} -> lserializable t
+
+// Type of buffer prefixes by their length (on 1, 2 or 3 bytes)
+let vlbytes (n:lsize) = b:buffer u8{length b >= n /\ length b = n + v (read_length b (uint_to_t n))}
+let vlb_length (n:csize) (b:vlbytes (v n)) : Tot UInt32.t = read_length (sub b 0ul n) n
+
+let vlb_content (n:csize) (b:vlbytes (v n)) : Tot (buffer u8) =
+  let len = vlb_length n b in
+  cut (length b >= v n + v len);
+  sub b n (n +^ len)
+
+val vlserialize: n:csize -> Tot (lserializer (vlbytes (v n)))//b:vlbytes (v n) -> Tot (seq byte)
+let vlserialize n = fun b -> (| read_length b n, b |)
+
+let vlparse n : lparser (vlserialize n) = 
+  fun (b:lbytes) ->
+    let len = lb_length b in
+    let bytes = lb_bytes b in
+    if n >^ len then Error "Too short"
     else (
-      let b' = sub b 0ul (n +^ l) in
-      let b'' = offset b (n +^ l) in
-      Correct (b', b'') 
+      let l = read_length bytes n in
+      if len <^ n +^ l then Error "Wrong vlbytes format"
+      else Correct (sub bytes 0ul (n +^ l), n +^ l)
     )
 
-val lemma_vlsplit: b:buffer u8 -> n:csize -> len:UInt32.t{v len < length b} ->
-  Lemma 
-    (requires (is_Correct (vlsplit b n len)))
-    (ensures  (let t = vlsplit b n len in 
-      (is_Correct t /\ (let t = correct t in 
-	Seq.append (as_seq (fst t)) (as_seq (snd t)) == as_seq b))))
-let lemma_vlsplit b n = admit() // TODO
+let rec valid_seq (#t:Type0) (ty:lserializable t) (b:lbytes) : Tot bool =  
+  let len = lb_length b in
+  let bytes = lb_bytes b in
+  if len =^ 0ul then true
+  else (
+    let blob  = ty.g b in
+    match blob with
+    | Correct (blob, blob_len) -> valid_seq ty (loffset b blob_len)
+    | Error z -> false
+  )
 
-type buf (#ty:sizeof_t) (t:serializable ty) (n:lsize) = b:buffer t{length b = n}
+type vlbuffer (#t:Type0) (n:lsize) (ty:lserializable t) = b:buffer u8{
+  length b >= n /\ valid_seq ty (mk_lbytes b (read_length b (uint_to_t n))) }
 
-(* let vlbuf (#ty:sizeof_t) (n:lsize) (t:serializable t) = *)
-(*   (l:buffer u8{length l = n} &  b:buffer t{length b = v (read_length l (uint_to_t n))}) *)
+val vlbuffer_serialize: #t:Type0 -> ty:lserializable t -> n:csize -> Tot (lserializer (vlbuffer (v n) ty))
+let vlbuffer_serialize #t ty n = fun b -> (| read_length b n, b |)
 
-let vlbuf (#ty:sizeof_t) (n:lsize) (t:serializable ty) =
-  b:buffer u8{length b >= n
-    /\ (let content = Seq.slice (as_seq_bytes b) n (bytes_length b) in
-      
-      Seq.length content % sizeof ty = 0 /\ is_Correct (of_seq_bytes #ty #t content))}
-
-assume val vlbuf_parse: #ty:sizeof_t -> t:serializable ty -> b:buffer u8 -> n:csize{length b >= v n} -> 
-  Tot (result (vlbuf (v n) t))
-
-assume val vlbuf_split: #ty:sizeof_t -> t:serializable ty -> b:buffer u8 -> n:csize{length b >= v n} -> 
-  Tot (result (vlbuf (v n) t * buffer u8))
-
-assume BufHasSize: forall (#ty:sizeof_t) (t:serializable ty) (n:lsize).
-  hasSize (buf #ty t n) /\ sizeof (buf #ty t n) = sizeof (buffer t)
-
-assume VlbytesHasSize: forall (n:lsize).
-  hasSize (vlbytes n) /\ sizeof (vlbytes n) = sizeof (buffer u8)
-
-assume VlbufHasSize: forall (#ty:sizeof_t) (t:serializable ty) (n:lsize).
-  hasSize (vlbuf #ty n t) /\ sizeof (vlbuf #ty n t) = sizeof (buffer t)
-
-assume val serialize_ptr: serializer bytes
-assume val parse_ptr: parser serialize_ptr
+let vlbuffer_parse (#t:Type0) (ty:lserializable t) (n:csize) : lparser (vlbuffer_serialize ty n) 
+  = fun b ->
+    let len = lb_length b in
+    let bytes = lb_bytes b in
+    if len <^ n then Error "Too short"
+    else (
+      let l = read_length bytes n in
+      if l +^ n >^ len then Error "Too short"
+      else (
+	let b' = mk_lbytes (sub bytes n (n+^l)) l in
+	if valid_seq ty b' then Correct (bytes, n+^ l)
+	else Error "Ill-formated data"
+      )
+    )
 
 noeq type key_share = {
-  ks_group_name: buf u16 1;
+  ks_group_name: UInt16.t;
   ks_public_key: vlbytes 2
 }
 
 assume KeyShareHasSize: 
-  hasSize key_share /\ sizeof key_share = sizeof (buf u16 1) + sizeof (vlbytes 2)
+  hasSize key_share /\ sizeof key_share = sizeof UInt16.t + sizeof (vlbytes 2)
 
-let serialize_key_share: serializer key_share =
-  admit();
-  fun (ks:key_share) ->
-    serialize_ptr ks.ks_group_name @| serialize_ptr ks.ks_public_key
+assume val concat_buf: #t:sizeof_t -> #ty:serializable t -> 
+  #t':sizeof_t -> #ty':serializable t -> a:buffer ty -> b:buffer ty' -> Tot (buffer u8)
 
-#set-options "--lax"
+assume val u16_to_buf: UInt16.t -> Tot (buffer u8)
 
-let parse_key_share_bytes (b:bytes) (len:UInt32.t) : Tot (result key_share) =
+// Cannot really write it since the whole point of immutable buffers is that they are not writable
+// This is an ugly dummy
+let vlserialize_key_share: lserializer key_share =
+  fun ks -> (| 2ul +^ read_length ks.ks_public_key 2ul, 
+    concat_buf #byte #u8 #byte #u8 (u16_to_buf ks.ks_group_name) (ks.ks_public_key) |)
+
+(* val vlparse_key_share: b:lbytes -> Tot (result (key_share)) *)
+let vlparse_key_share: lparser (vlserialize_key_share) =
+  fun b ->
+  let len = lb_length b in
+  let bytes = lb_bytes b in
   if len <^ 4ul then Error "Too short"
-  else let ks_group_name = cast u16 u8 (sub (to_buffer u8 b) 0ul 2ul) in
-       let ks_public_key = offset (to_buffer u8 b) 2ul in       
-       match vlparse ks_public_key 2ul (len -^ 2ul) with
-       | Correct x ->
-	 Correct ({ks_group_name = ks_group_name; ks_public_key = x})
-       | Error z -> Error z
-
-let parse_key_share: parser serialize_key_share = fun s ->
-  if Seq.length <> sizeof key_share then Error "Wrong pointer value"
   else (
-    match parse_ptr with
-    | Correct x ->  
-    | Error z
+    let gn = sub bytes 0ul 2ul in
+    let gn = cast u16 gn in
+    let gn = read gn 0ul in
+    let pk_bytes = loffset b 2ul in
+    match vlparse 2ul pk_bytes with
+    | Correct (blob,l) -> Correct ({ks_group_name = gn; ks_public_key = blob}, 2ul +^ l)
+    | Error z -> Error z
   )
 
-let key_share_bytes (ks:key_share) : Tot (seq byte) =
-  as_seq_bytes (to_bytes ks.ks_group_name) @| as_seq_bytes (to_bytes ks.ks_public_key)
+let key_share' : lserializable key_share = VLSerializable vlserialize_key_share vlparse_key_share
 
-let key_share' = Serializable key_share seri
+type key_shares = vlbuffer 2 key_share'
 
-let key_share_ext = vlbuf 2 key_share
+// I do not know how this will be handed out by the application
+// In a buffer of key_shares ? In something already contiguous ?
+assume val vlserialize_key_shares : lserializer key_shares
 
-let parse_key_share_ext_bytes (kse:key_share_ext) =
-  let 
-
-noeq type client_extension =
- | CE_extended_ms
- | CE_secure_renegotiation of buf_var 1 u8
- | CE_supported_groups of buf_var 2 u16
- | CE_supported_point_formats of buf_var 1 u8
- | CE_signature_algorithms of buf_var 2 u16
- | CE_earlyData
- | CE_keyShare of arraybuf_var 2 key_share
- | CE_preSharedKey of arraybuf_var 2 (buf_var 2 u8)
- | CE_server_names of arraybuf_var 2 (buf_var 2 u8)
-
-type ch =  {
-  ch_protocol_version:buf u16 1;
-  ch_client_random:buf u8 32;
-  ch_sessionID:buf_var 1 u8;
-  ch_cipher_suites:buf_var 2 u16;
-  ch_compressions:buf_var 1 u8;
-  ch_extensions:arraybuf_var 2 client_extension;
-}
-
-
-(* type c_extensions = { *)
-(*   ce_extended_ms: byte; *)
-(*   ce_secure_renegotiation: buf_var 1 1; *)
-(*   ce_supported_groups: buf_var 2 2; *)
-(*   ce_supported_point_formats: buf_var 1 1; *)
-(*   ce_signature_algorithms: buf_var 2 2; *)
-(*   ce_earlyData: byte; *)
-(*   ce_keyShare: key_share *)
-(*   ce_preSharedKey: arraybuf_var 2 (buf_var 2 1) *)
-(*   ce_server_names: arraybuf_var 2 (buf_var 2 1) *)
-(* } *)
-
-(* type c_hello = { *)
-(*   c_protocol_version:buf 2 1; *)
-(*   c_client_random:buf 1 32; *)
-(*   ch_sessionID:buf_var 1 1; *)
-(*   ch_cipher_suites:buf_var 2 2; *)
-(*   ch_compressions:buf_var 1 1; *)
-(*   ch_extensions:arraybuf_var 2 client_extension; *)
-(* } *)
-
-(*
-let clientHelloBytes ch buf = ...
-  
-  *)
-
-type server_extension =
- | SE_extended_ms
- | SE_secure_renegotiation of buf_var 1 u8
- | SE_supported_point_formats of buf_var 1 u8
- | SE_earlyData
- | SE_keyShare of key_share
- | SE_preSharedKey of buf_var 2 u8
- | SE_server_names
-
-type sh =  {
-  sh_protocol_version:buf u16 1;
-  sh_client_random:buf u8 32;
-  sh_sessionID:option (buf_var 1 u8);
-  sh_cipher_suites:buf_var 2 u16;
-  sh_compressions:option (buf_var 1 u8);
-  sh_extensions:arraybuf_var 2 server_extension;
-}
-
-(*
-struct
-{ version : buf 1 short;
-  random:   buf 32 short;
-  sessionid: buf_var 1 byte;
-  ciphersuites: buf_var 2 short;
-  compressions: buf_var 1 byte;
-  extensions:   buf_var 2
-    struct {
-      name: buf 1 short;
-      payload: buf_var 2
-         union {
-  	   empty;
-	   buf_var 1 bytte;
-	   |
-      list <struct [buf 2 1; buf_var 2 1]>
-            
-    >
-   >
-  ]
-*)
+let vlparse_key_shares : lparser vlserialize_key_shares =
+  fun b -> vlbuffer_parse key_share' 2ul b
