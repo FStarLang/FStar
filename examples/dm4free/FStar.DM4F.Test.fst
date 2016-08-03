@@ -18,14 +18,6 @@ let bind_st a b f g = fun s0 ->
   let x, s1 = tmp in
   g x s1
 
-val get: unit -> st int
-let get u = fun s ->
-  s, s
-
-val put: int -> Tot (st unit)
-let put s = fun z ->
-  (), s
-
 (* TODO: at this stage, not elaborating and generating the following two
  * combinators; so, the user has to write them in the "old style", by
  * _anticipating_ what the ouput of the *-translation and the _-elaboration will
@@ -63,10 +55,14 @@ effect StInt (a:Type) (pre: pre) (post: (int -> a -> int -> GTot Type0)) =
        STINT a (fun n0 p -> pre n0 /\ (forall a n1. pre n0 /\ post n0 a n1 ==> p (a, n1)))
 
 // From the definition language to the effectful world with WPs
-reifiable let get' (): STINT int (fun z post -> post (z, z)) =
-  STINT.reflect (get ())
+val action_get: input:int -> PURE (int * int) (fun post -> post (input, input))
+let action_get i = (i, i)
 
-#set-options "--lax"
-val put': x:int -> STINT unit (fun z post -> post ((), x))
-let put' x =
-  STINT.reflect (put x)
+val action_put: x:int -> input:int -> PURE (unit * int) (fun post -> post ((), x))
+let action_put x i = ((), x)
+
+reifiable val get : unit -> STINT int (fun z post -> post (z, z))
+let get () = STINT.reflect action_get
+
+reifiable val put: x:int -> STINT unit (fun z post -> post ((), x))
+let put x = STINT.reflect (action_put x)
