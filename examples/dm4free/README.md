@@ -1,10 +1,16 @@
 Dijkstra Monads for Free
 ------------------------
 
-Run it with:
+The (boring) example:
 
 ```
-fstar --trace_error --debug_level ED --debug FStar.DM4F.Test FStar.DM4F.Test.fst --prn --print_implicits --print_universes --lax --print_bound_var_types
+fstar FStar.DM4F.Test.Fst
+```
+
+To see more debug output, and see the generated combinators:
+
+```
+fstar --trace_error --debug_level ED --debug FStar.DM4F.Test FStar.DM4F.Test.fst --prn --print_implicits --print_universes --print_bound_var_types
 ```
 
 Current status:
@@ -35,10 +41,7 @@ Items left:
 - generate the missing WP combinators (`ite_wp`, `null_wp`)
 - try out more things in the definition language; try out with a parameterized
   `STATE (h: heap)` effect; etc
-- re-instate the optimization in [env.fs] when checking for universe variables
-  in [gamma]
 - figure out how to properly type-check actions (right now, the code is
   suboptimal);
-- figure out why the commented out assert in [tc_eff_decl] is failing;
 - write get and put in direct style, reify them, then copy the things from intST
   into the test file.
