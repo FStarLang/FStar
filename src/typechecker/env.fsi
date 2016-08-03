@@ -66,6 +66,7 @@ type env = {
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
+  lax            :bool;                         (* don't even generate VCs *)
   type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
@@ -93,7 +94,10 @@ and guard_t = {
 
 type implicits = list<(env * uvar * term * typ * Range.range)>
 type env_t = env
-val initial_env : (env -> term -> (term*typ*guard_t)) -> (env -> term -> universe) -> solver_t -> lident -> env
+val initial_env : (env -> term -> term*typ*guard_t) -> (env -> term -> universe) -> solver_t -> lident -> env
+
+(* Some utilities *)
+val should_verify: env -> bool
 
 (* Marking and resetting the environment, for the interactive mode *)
 val push        : env -> string -> env
@@ -169,6 +173,3 @@ val wp_signature    : env -> lident -> (bv * term)
 
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders
-
-(* TODO: REMOVE *)
-val no_solver_env: (env -> term -> term*typ*guard_t) -> env

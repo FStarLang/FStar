@@ -14,7 +14,7 @@ all:
 	make -C ../doc/tutorial/code/solutions
 	make -C relational
 	make -C voting
-#	make -C low-level
+	make -C low-level
 	make -C maths
 	make -C paradoxes
 	make -C printf
@@ -32,10 +32,15 @@ all:
 #	make -C deriving-monads -- still some failing assertions + missing Makefile
 	make -C metatheory
 	make -C wysteria
-	make -C dm4free
 	make -C unit-tests
 
-univ: u_algo u_data_structures u_metatheory u_unit-tests
+univ: u_algo u_data_structures u_metatheory u_dm4free u_unit-tests u_preorders
+
+u_preorders:
+	+make -C preorders
+
+u_dm4free:
+	+make -C dm4free
 
 u_algo:
 	+make -C algorithms uall

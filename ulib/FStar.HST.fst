@@ -1,7 +1,6 @@
 module FStar.HST
 open FStar.HyperStack
 module HH = FStar.HyperHeap
-
 let st_pre = st_pre_h mem
 let st_post (a:Type) = st_post_h mem a
 let st_wp (a:Type) = st_wp_h mem a
@@ -28,67 +27,100 @@ effect St (a:Type) =
 effect STF (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        ST a pre (fun m0 x m1 -> post m0 x m1 /\ fresh_frame m0 m1)
 
+effect STH (a:Type) (pre:st_pre_h HyperHeap.t) (post: HyperHeap.t -> Tot (st_post_h HyperHeap.t a)) =
+       STATE a
+             (fun (p:st_post a) (h:mem) -> pre h.h /\ (forall a h1. (post h.h a h1.h /\ equal_domains h h1) ==> p a h1))
+
 sub_effect
   DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:mem) -> wp (fun a -> p a h)
 
-// JK: old located references
-(* let ref (t:Type) : Type0 = stacked t *)
-
-// JK: pushes a new emtpy frame on the stack
+//  pushes a new empty frame on the stack
 assume val push_frame: unit -> ST unit
   (requires (fun m -> True))
   (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
 
-// JK: removes old frame from the stack
+//  removes old frame from the stack
 assume val pop_frame: unit -> ST unit
   (requires (fun m -> poppable m))
   (ensures (fun (m0:mem) _ (m1:mem) -> poppable m0 /\ m1==pop m0 /\ popped m0 m1))
 
-(* val call: #a:Type -> #b:Type -> #pre:st_pre -> #post:(t -> Tot (st_post t)) -> $(f:a -> STF b (requires (fun h -> pre h)) (fun h0 x h1 -> post h0 b h1)) -> ST b *)
-(*   (requires (fun h -> (forall h'. fresh_frame h h' ==> pre h'))) *)
-(*   (ensures (fun h0 x h1 -> stack h1 = stack h0)) *)
-  
-// JK: allocates on the top-most stack frame
+//  allocates on the top-most stack frame
 assume val salloc: #a:Type -> init:a -> ST (stackref a)
-  (requires (fun m -> True))
+  (requires (fun m -> is_stack_region m.tip))
   (ensures (fun m0 s m1 -> 
-      Map.domain m0.h == Map.domain m1.h
+      is_stack_region m0.tip
+    /\ Map.domain m0.h == Map.domain m1.h
     /\ m0.tip = m1.tip
     /\ s.id   = m1.tip
     /\ HH.fresh_rref s.ref m0.h m1.h            //it's a fresh reference in the top frame
     /\ m1==HyperStack.upd m0 s init))           //and it's been initialized
 
-// JK: assigns, provided that the reference is good
-assume val op_Colon_Equals: #a:Type -> r:stackref a -> v:a -> STL unit
-  (requires (fun m -> contains m r))
-  (ensures (fun m0 _ m1 -> contains m0 r /\ m1 == HyperStack.upd m0 r v))
+let fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
+  not (r `is_in` m0.h)
+  /\ r `is_in` m1.h
 
-// JK: dereferences, provided that the reference is good
-assume val op_Bang: #a:Type -> r:stackref a -> STL a
-  (requires (fun m -> HH.includes r.id m.tip))
+assume val new_region: r0:HH.rid -> ST HH.rid
+      (requires (fun m -> is_eternal_region r0))
+      (ensures (fun (m0:mem) (r1:HH.rid) (m1:mem) ->
+                           r1 `HH.extends` r0
+                        /\ HH.fresh_region r1 m0.h m1.h
+			/\ HH.color r1 = HH.color r0))
+
+let is_eternal_color c = c <= 0
+
+assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
+      (requires (fun m -> is_eternal_color c))
+      (ensures (fun (m0:mem) (r1:HH.rid) (m1:mem) ->
+                           r1 `HH.extends` r0
+                        /\ HH.fresh_region r1 m0.h m1.h
+			/\ HH.color r1 = c))
+
+inline let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:ref a) (m1:mem) = 
+    let region_i = Map.sel m0.h i in
+    not (Heap.contains region_i (HH.as_ref x.ref))
+  /\ i `is_in` m0.h
+  /\ i = x.id
+  /\ m1 == upd m0 x init
+
+assume val ralloc: #a:Type -> i:HH.rid -> init:a -> ST (ref a)
+    (requires (fun m -> is_eternal_region i))
+    (ensures (ralloc_post i init))
+
+// assigns, provided that the reference exists
+assume val op_Colon_Equals: #a:Type -> r:reference a -> v:a -> STL unit
+  (requires (fun m -> m `contains` r))
+  (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == HyperStack.upd m0 r v))
+
+// dereferences, provided that the reference exists
+assume val op_Bang: #a:Type -> r:reference a -> STL a
+  (requires (fun m -> m `contains` r))
   (ensures (fun s0 v s1 -> s1==s0 /\ v==HyperStack.sel s0 r))
 
 module G = FStar.Ghost
 
-// JK: Returns the current stack of heaps --- it should be erased
+// Returns the current stack of heaps --- it should be erased
+//   NS: This version is just fine; all the operation on mem are ghost
+//       and we can rig it so that mem just get erased at the end
 assume val get: unit -> STL mem
   (requires (fun m -> True))
   (ensures (fun m0 x m1 -> m0==x /\ m1==m0))
 
 // JK: Proper function, returning an erased stack of heaps 
 // YES, this is the proper one
+// NS: This seems unnecessary
 assume val eget: unit -> STL (G.erased mem)
   (requires (fun m -> True))
   (ensures (fun m0 x m1 -> m0==G.reveal x /\ m1==m0))
 
-//We don't have recall since regions and refs can be deallocated
-(* assume val recall: #a:Type -> r:ref a -> ST unit *)
-(*   (requires (fun m -> True)) *)
-(*   (ensures (fun m0 _ m1 -> m0=m1 /\ contains m1 r)) *)
+//We can only recall refs, not stack refs
+assume val recall: #a:Type -> r:ref a -> ST unit
+  (requires (fun m -> True))
+  (ensures (fun m0 _ m1 -> m0==m1 /\ m1 `contains` r))
 
-(* assume val recall_region: i:rid -> ST unit *)
-(*   (requires (fun m -> True)) *)
-(*   (ensures (fun m0 _ m1 -> m0=m1 /\ contains_frame m1 i)) *)
+//We can only recall eternal regions, not stack regions
+assume val recall_region: i:HH.rid{is_eternal_region i} -> ST unit
+  (requires (fun m -> True))
+  (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
 
 (* Tests *)
 val test_do_nothing: int -> STL int

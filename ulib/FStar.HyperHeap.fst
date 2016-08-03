@@ -17,19 +17,28 @@ module FStar.HyperHeap
 open FStar.Map
 open FStar.Heap
 
-abstract let rid = list int
+abstract let rid = list (int * int)
+
+abstract let color (x:rid): GTot int = 
+  match x with 
+  | [] -> 0
+  | (c, _)::_ -> c
+
 let t = Map.t rid heap
 
-assume HasEq_rid: hasEq rid
+assume HasEq_rid: hasEq rid //TODO: this is provable, but need to expose it as an argument-free SMT lemma
 
 (* val hasEq_rid_lemma: unit -> Lemma (requires (True)) (ensures (hasEq rid)) [SMTPatT (hasEq rid)] *)
 (* let hasEq_rid_lemma _ = () *)
 
 abstract let root : rid = []
 
+//expose this so that no-one should assume otheriwse
+let root_has_color_zero (u:unit) : Lemma (color root = 0) = ()
+
 abstract let rref (id:rid) (a:Type) = Heap.ref a
 
-assume HasEq_rref: forall (id:rid) (a:Type).{:pattern (hasEq (rref id a))} hasEq (rref id a)
+assume HasEq_rref: forall (id:rid) (a:Type).{:pattern (hasEq (rref id a))} hasEq (rref id a)//TODO: this is provable, but need to expose it as an argument-free SMT lemma
 
 abstract val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
 let as_ref #a #id r = r
@@ -43,14 +52,14 @@ val lemma_as_ref_inj: #a:Type -> #i:rid -> r:rref i a
        [SMTPat (as_ref r)]
 let lemma_as_ref_inj #a #i r = ()
 
-abstract val includes : rid -> rid -> Tot bool
+abstract val includes : rid -> rid -> GTot bool
 let rec includes r1 r2 =
   if r1=r2 then true
   else if List.Tot.length r2 > List.Tot.length r1
   then includes r1 (Cons.tl r2)
   else false
 
-let disjoint (i:rid) (j:rid) =
+let disjoint (i:rid) (j:rid) : GTot bool =
   not (includes i j) && not (includes j i)
 
 private val lemma_aux: k:rid -> i:rid
@@ -79,10 +88,10 @@ let rec lemma_disjoint_includes i j k =
               then lemma_aux k i
               else ()))
 
-abstract val extends: rid -> rid -> Tot bool
+abstract val extends: rid -> rid -> GTot bool
 let extends r0 r1 = is_Cons r0 && Cons.tl r0 = r1
 
-abstract val parent: r:rid{r<>root} -> Tot rid
+abstract val parent: r:rid{r<>root} -> GTot rid
 let parent r = Cons.tl r
 
 abstract val lemma_includes_refl: i:rid
@@ -97,6 +106,12 @@ abstract val lemma_extends_includes: i:rid -> j:rid ->
         [SMTPat (extends j i)]
 let lemma_extends_includes i j = ()
 
+let lemma_includes_anti_symmetric (i:rid) (j:rid) :
+  Lemma (requires (includes i j /\ i <> j))
+        (ensures (not (includes j i)))
+	[SMTPat (includes i j)]
+  = ()
+  
 abstract val lemma_extends_disjoint: i:rid -> j:rid -> k:rid ->
     Lemma (requires (extends j i /\ extends k i /\ j<>k))
           (ensures (disjoint j k))
@@ -120,16 +135,18 @@ abstract val lemma_extends_only_parent: i:rid -> j:rid{extends j i} ->
         [SMTPat (extends j i)]
 let lemma_extends_only_parent i j = ()
 
-
-private let test0 = assert (includes [1;0] [2;1;0])
-private let test1 (r1:rid) (r2:rid{includes r1 r2}) = assert (includes r1 (0::r2))
+private let test0 = assert (includes [(0, 1) ; (1, 0)] [(2, 2); (0, 1); (1, 0)])
+private let test1 (r1:rid) (r2:rid{includes r1 r2}) = assert (includes r1 ((0,0)::r2))
 
 let fresh_region (i:rid) (m0:t) (m1:t) =
  (forall j. includes i j ==> not (Map.contains m0 j))
  /\ Map.contains m1 i
 
-let sel (#a:Type) (#i:rid) (m:t) (r:rref i a) = Heap.sel (Map.sel m i) (as_ref r)
-let upd (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a) = Map.upd m i (Heap.upd (Map.sel m i) (as_ref r) v)
+let sel (#a:Type) (#i:rid) (m:t) (r:rref i a) : GTot a = Heap.sel (Map.sel m i) (as_ref r)
+inline let op_String_Access (#a:Type) (#i:rid) (m:t) (r:rref i a) = sel m r
+
+let upd (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a) : GTot t = Map.upd m i (Heap.upd (Map.sel m i) (as_ref r) v)
+inline let op_String_Assignment (#a:Type) (#i:rid) (m:t) (r:rref i a) v = upd m r v
 
 open FStar.Set
 
@@ -197,14 +214,15 @@ abstract val lemma_disjoint_parents: pr:rid -> r:rid -> ps:rid -> s:rid -> Lemma
   [SMTPat (extends r pr); SMTPat (extends s ps); SMTPat (disjoint pr ps)]
 let lemma_disjoint_parents pr r ps s = ()
 
-let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) =
+let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) : GTot bool =
     Map.contains m i && Heap.contains (Map.sel m i) (as_ref r)
 
 let fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
   not (Heap.contains (Map.sel m0 i) (as_ref r))
   /\  (Heap.contains (Map.sel m1 i) (as_ref r))
 
-let modifies_rref (r:rid) (s:TSet.set aref) h0 h1 = Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
+let modifies_rref (r:rid) (s:TSet.set aref) h0 h1 = 
+  Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
 
 abstract val lemma_include_cons: i:rid -> j:rid -> Lemma
   (requires (i<>j /\ includes i j))
@@ -246,3 +264,9 @@ let includes_child (tip:rid{tip<>root}) (r:rid)
 	  (includes r tip ==> r=tip \/ includes r (parent tip))
 	  [SMTPat (includes r (parent tip))]
   = ()
+
+let root_is_root (s:rid)
+  : Lemma (requires (includes s root))
+	  (ensures (s = root))
+	  [SMTPat (includes s root)]
+  = ()	  

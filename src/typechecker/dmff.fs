@@ -37,8 +37,8 @@ module U  = FStar.Syntax.Util
 // Synthesis of WPs from a partial effect definition (in F*) ------------------
 
 let gen_wps_for_free
-  env (binders: binders) (a: bv) (wp_a: term) tc_decl tc_term (ed: Syntax.eff_decl):
-  _ * Syntax.eff_decl
+  env (binders: binders) (a: bv) (wp_a: term) (ed: Syntax.eff_decl):
+  Syntax.sigelts * Syntax.eff_decl
 =
   // [wp_a] has been type-checked and contains universe unification variables;
   // we want to re-use [wp_a] and make it re-generalize accordingly
@@ -49,16 +49,6 @@ let gen_wps_for_free
   let d s = Util.print1 "\x1b[01;36m%s\x1b[00m\n" s in
   d "Elaborating extra WP combinators";
   Util.print1 "wp_a is: %s\n" (Print.term_to_string wp_a);
-
-  let check env str t =
-    if Env.debug env (Options.Other "ED") then begin
-      d str;
-      Util.print2 "Generated term for %s: %s\n" str (Print.term_to_string t);
-      let t, { res_typ = res_typ }, _ = tc_term env t in
-      let res_typ = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env res_typ in
-      Util.print2 "Inferred type for %s: %s\n" str (Print.term_to_string res_typ)
-    end
-  in
 
   (* Consider the predicate transformer st_wp:
    *   let st_pre_h  (heap:Type)          = heap -> GTot Type0
@@ -89,11 +79,19 @@ let gen_wps_for_free
     lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ name)) Range.dummyRange
   in
 
-  let gamma = collect_binders wp_a in
+  let gamma = collect_binders wp_a |> U.name_binders in
   d (Util.format1 "Gamma is %s\n" (Print.binders_to_string ", " gamma));
   let unknown = S.tun in
   let mk x = mk x None Range.dummyRange in
-  let register env lident def = TcUtil.register_toplevel_definition env tc_decl lident def in
+
+  // The [register] function accumulates the top-level definitions that are
+  // generated in the course of producing WP combinators
+  let sigelts = ref [] in
+  let register env lident def =
+    let sigelt, fv = TcUtil.mk_toplevel_definition env lident def in
+    sigelts := sigelt :: !sigelts;
+    fv
+  in
 
   (* Some helpers. *)
   let binders_of_list = List.map (fun (t, b) -> t, S.as_implicit b) in
@@ -113,10 +111,10 @@ let gen_wps_for_free
     in
     // Register these two top-level bindings in the environment
     let ctx_lid = mk_lid "ctx" in
-    let env, ctx_fv = register env ctx_lid ctx_def in
+    let ctx_fv = register env ctx_lid ctx_def in
 
     let gctx_lid = mk_lid "gctx" in
-    let env, gctx_fv = register env gctx_lid gctx_def in
+    let gctx_fv = register env gctx_lid gctx_def in
 
     let mk_app fv t =
       // The [mk_ctx] and [mk_gctx] helpers therefore do not use implicits either
@@ -138,7 +136,7 @@ let gen_wps_for_free
     let body = U.abs gamma (S.bv_to_name x) ret in
     U.abs (mk_all_implicit binders @ binders_of_list [ a, true; t, true; x, false ]) body ret
   in
-  let env, c_pure = register env (mk_lid "pure") c_pure in
+  let c_pure = register env (mk_lid "pure") c_pure in
 
   (* val st2_app : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                   l:st2_gctx heap a (t1 -> GTot t2) ->
@@ -164,7 +162,7 @@ let gen_wps_for_free
     in
     U.abs (mk_all_implicit binders @ binders_of_list [ a, true; t1, true; t2, true; l, false; r, false ]) outer_body ret
   in
-  let env, c_app = register env (mk_lid "app") c_app in
+  let c_app = register env (mk_lid "app") c_app in
 
   (* val st2_liftGA1 : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                        f : (t1 -> GTot t2) ->
@@ -186,7 +184,7 @@ let gen_wps_for_free
         S.bv_to_name a1 ])
     ) ret
   in
-  let env, c_lift1 = register env (mk_lid "lift1") c_lift1 in
+  let c_lift1 = register env (mk_lid "lift1") c_lift1 in
 
 
   (* val st2_liftGA2 : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type -> #t3:Type ->
@@ -217,7 +215,7 @@ let gen_wps_for_free
         S.bv_to_name a2 ])
     ) ret
   in
-  let env, c_lift2 = register env (mk_lid "lift2") c_lift2 in
+  let c_lift2 = register env (mk_lid "lift2") c_lift2 in
 
   (* val st2_push : #heap:Type -> #a:Type -> #t1:Type -> #t2:Type ->
                     f:(t1 -> Tot (st2_gctx heap a t2)) ->
@@ -240,7 +238,7 @@ let gen_wps_for_free
     ) ret in
     U.abs (mk_all_implicit binders @ binders_of_list [ a, true; t1, true; t2, true; f, false ]) body ret
   in
-  let env, c_push = register env (mk_lid "push") c_push in
+  let c_push = register env (mk_lid "push") c_push in
 
   let ret_tot_wp_a = Some (Inl (U.lcomp_of_comp (mk_Total wp_a))) in
   let mk_generic_app c =
@@ -265,7 +263,7 @@ let gen_wps_for_free
       ) (Inr (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))))
     ) ret_tot_wp_a
   in
-  let env, wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
+  let wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
   let wp_if_then_else = mk_generic_app wp_if_then_else in
 
   (* val st2_assert_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
@@ -283,7 +281,7 @@ let gen_wps_for_free
     in
     U.abs (binders @ S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
   in
-  let env, wp_assert = register env (mk_lid "wp_assert") wp_assert in
+  let wp_assert = register env (mk_lid "wp_assert") wp_assert in
   let wp_assert = mk_generic_app wp_assert in
 
   (* val st2_assume_p : heap:Type ->a:Type -> q:Type0 -> st2_wp heap a ->
@@ -301,7 +299,7 @@ let gen_wps_for_free
     in
     U.abs (binders @ S.binders_of_list [ a; q; wp ]) body ret_tot_wp_a
   in
-  let env, wp_assume = register env (mk_lid "wp_assume") wp_assume in
+  let wp_assume = register env (mk_lid "wp_assume") wp_assume in
   let wp_assume = mk_generic_app wp_assume in
 
   (* val st2_close_wp : heap:Type -> a:Type -> b:Type ->
@@ -319,7 +317,7 @@ let gen_wps_for_free
     in
     U.abs (binders @ S.binders_of_list [ a; b; f ]) body ret_tot_wp_a
   in
-  let env, wp_close = register env (mk_lid "wp_close") wp_close in
+  let wp_close = register env (mk_lid "wp_close") wp_close in
   let wp_close = mk_generic_app wp_close in
 
   let ret_tot_type = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype)) in
@@ -341,7 +339,7 @@ let gen_wps_for_free
         (* Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
         U.mk_imp x y
     | Tm_arrow ([ binder ], { n = GTotal b })
-    | Tm_arrow ([ binder ], { n = Total b }) when S.is_null_binder binder ->
+    | Tm_arrow ([ binder ], { n = Total b }) ->
         let a = (fst binder).sort in
         (* Util.print2 "arrow, a=%s, b=%s\n" (Print.term_to_string a) (Print.term_to_string b); *)
         let a1 = S.gen_bv "a1" None a in
@@ -353,7 +351,7 @@ let gen_wps_for_free
             (U.mk_app y [ S.as_arg (S.bv_to_name a2) ]))
         in
         mk_forall a1 (mk_forall a2 body)
-    | Tm_arrow (binder :: binders, comp) ->
+    | Tm_arrow (binder :: binders, comp) -> //TODO: a bit confusing, since binders may be []
         let t = { t with n = Tm_arrow ([ binder ], S.mk_Total (U.arrow binders comp)) } in
         mk_leq t x y
     | Tm_arrow _ ->
@@ -369,7 +367,7 @@ let gen_wps_for_free
     let body = mk_leq wp_a (S.bv_to_name wp1) (S.bv_to_name wp2) in
     U.abs (binders @ binders_of_list [ a, false; wp1, false; wp2, false ]) body ret_tot_type
   in
-  let env, stronger = register env (mk_lid "stronger") stronger in
+  let stronger = register env (mk_lid "stronger") stronger in
   let stronger = mk_generic_app stronger in
 
   let null_wp = snd ed.null_wp in
@@ -385,12 +383,12 @@ let gen_wps_for_free
     ]) in
     U.abs (binders @ S.binders_of_list [ a; wp ]) body ret_tot_type
   in
-  let env, wp_trivial = register env (mk_lid "wp_trivial") wp_trivial in
+  let wp_trivial = register env (mk_lid "wp_trivial") wp_trivial in
   let wp_trivial = mk_generic_app wp_trivial in
 
   d "End Dijkstra monads for free";
 
-  env, { ed with
+  List.rev !sigelts, { ed with
     if_then_else = ([], wp_if_then_else);
     assert_p     = ([], wp_assert);
     assume_p     = ([], wp_assume);
@@ -1004,6 +1002,7 @@ and trans_F (env: env_) (c: typ) (wp: term): term =
         trans_F env arg wp_arg, S.as_implicit false)
       args wp_args))
   | Tm_arrow (binders, comp) ->
+      let binders = U.name_binders binders in
       let binders = open_binders binders in
       let binders, comp = open_comp binders comp in
       let bvs, binders = List.split (List.map (fun (bv, q) ->

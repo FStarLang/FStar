@@ -464,7 +464,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let fsym = varops.fresh "f", Term_sort in
              let f = mkFreeV fsym in
              let app = mk_Apply f vars in
-             let pre_opt, res_t = Util.pure_or_ghost_pre_and_post env.tcenv res in
+             let pre_opt, res_t = Util.pure_or_ghost_pre_and_post ({env.tcenv with lax=true}) res in
              let res_pred, decls' = encode_term_pred None res_t env' app in
              let guards, guard_decls = match pre_opt with
                 | None -> mk_and_l guards, []
@@ -1714,7 +1714,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           let tm' = N.normalize [N.Beta; N.Reify; N.Inline; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv tm in
           let lb_typ = 
             let formals, comp = Util.arrow_formals_comp lb.lbtyp in
-            let reified_typ = FStar.TypeChecker.Util.reify_comp env.tcenv (Util.lcomp_of_comp comp) U_unknown in
+            let reified_typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) (Util.lcomp_of_comp comp) U_unknown in
             Util.arrow formals (S.mk_Total reified_typ) in
           let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in
           (* printfn "%s: Reified %s\nto %s\n" (Print.lbname_to_string lb.lbname) (Print.term_to_string tm) (Print.term_to_string tm'); *)
@@ -1958,7 +1958,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
         | Env.Binding_var x -> 
             let xxsym, xx, env' = new_term_constant env x in
             let t1 = N.normalize [N.Beta; N.Inline; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
-            if Env.debug env.tcenv <| Options.Other "Encoding"
+            if Env.debug env.tcenv <| Options.Other "SMTEncoding"
             then (Util.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
             let t, decls' = encode_term_pred None t1 env xx in
             let caption =
@@ -2070,12 +2070,14 @@ let encode_modul tcenv modul =
     let decls = caption decls in
     Z3.giveZ3 decls
 
+open FStar.SMTEncoding.Z3
 let encode_query use_env_msg tcenv q 
   : list<decl>  //prelude, translation of tcenv
-  * list<label> //labels in the query
+  * list<ErrorReporting.label> //labels in the query
   * decl        //the query itself
   * list<decl>  //suffix, evaluating labels in the model, etc.
-  = let env = get_env tcenv in
+  = Z3.query_logging.set_module_name (TypeChecker.Env.current_module tcenv).str;
+    let env = get_env tcenv in
     let bindings = Env.fold_env tcenv (fun bs b -> b::bs) [] in
     let q, bindings = 
         let rec aux bindings = match bindings with 

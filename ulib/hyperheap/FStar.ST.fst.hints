@@ -1,0 +1,84 @@
+[
+  "§m\u0012}A—≥(=sr\u0001è6d\r",
+  [
+    [ 2, 1, [ "@query_2879" ], 0 ],
+    [ 2, 1, [ "@query_2880" ], 0 ],
+    [ 2, 1, [ "@query_2883", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [
+      2,
+      1,
+      [ "@query_2884", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      0
+    ],
+    [ 2, 1, [ "@query_2892" ], 0 ],
+    [ 2, 1, [ "@query_2893", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [
+      2,
+      1,
+      [ "@query_2894", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      0
+    ],
+    [ 2, 1, [ "@query_2902" ], 0 ],
+    [ 2, 1, [ "@query_2903" ], 0 ],
+    [
+      2,
+      1,
+      [ "@query_2904", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      0
+    ],
+    [ 2, 1, [ "@query_2915" ], 0 ],
+    [ 2, 1, [ "@query_2916" ], 0 ],
+    [
+      2,
+      1,
+      [ "@query_2917", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      0
+    ],
+    [
+      2,
+      1,
+      [ "@query_2918", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      0
+    ],
+    [
+      2,
+      1,
+      [ "@query_2919", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      0
+    ],
+    [ 2, 1, [ "@query_2930" ], 0 ],
+    [ 2, 1, [ "@query_2931" ], 0 ],
+    [
+      2,
+      1,
+      [ "@query_2932", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      0
+    ],
+    [
+      2,
+      1,
+      [ "@query_2933", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      0
+    ],
+    [ 2, 1, [ "@query_2938" ], 0 ],
+    [ 2, 1, [ "@query_2950" ], 0 ],
+    [
+      2,
+      1,
+      [ "@query_2951", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      0
+    ],
+    [
+      2,
+      1,
+      [ "@query_2952", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      0
+    ],
+    [
+      2,
+      1,
+      [ "@query_2953", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      0
+    ]
+  ]
+]

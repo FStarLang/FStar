@@ -25,11 +25,11 @@ let minus_fp x y = add_fp x (mod_p (-y))
 assume val div_fp : a:fp -> b:fp -> Tot (r:fp{mul_fp b r = a})
 
 (*
-let mod_laws1 = assume(forall a b.((a % p) + b) % p = (a + b) %p)
-let mod_laws2 = assume(forall a b.(a + (b % p)) % p = (a + b) %p)
-let mod_laws3 = assume(forall a b.((a % p) * b) % p = (a * b) %p)
-let mod_laws4 = assume(forall a b.(a * (b % p)) % p = (a * b) %p)
-let mod_laws5 = assume(forall a b.((a % p) - b) % p = (a - b) %p)
-let mod_laws6 = assume(forall a b.(a - (b % p)) % p = (a - b) %p)
+let mod_laws1 = assume(forall a b. ((a % p) + b) % p = (a + b) %p)
+let mod_laws2 = assume(forall a b. (a + (b % p)) % p = (a + b) %p)
+let mod_laws3 = assume(forall a b. ((a % p) * b) % p = (a * b) %p)
+let mod_laws4 = assume(forall a b. (a * (b % p)) % p = (a * b) %p)
+let mod_laws5 = assume(forall a b. ((a % p) - b) % p = (a - b) %p)
+let mod_laws6 = assume(forall a b. (a - (b % p)) % p = (a - b) %p)
 *)
 

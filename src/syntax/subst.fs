@@ -120,6 +120,7 @@ let rec subst' (s:subst_ts) t = match s with
   | _ ->
     let t0 = force_delayed_thunk t in 
     match t0.n with
+        | Tm_unknown
         | Tm_constant _      //a constant cannot be substituted
         | Tm_fvar _          //fvars are never subject to substitution
         | Tm_uvar _ -> t0    //uvars are always resolved to closed terms

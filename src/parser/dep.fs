@@ -46,7 +46,7 @@ type verify_mode =
   | VerifyUserList
   | VerifyFigureItOut
 
-type map = smap<(option<string>*option<string>)>
+type map = smap<(option<string> * option<string>)>
 
 let check_and_strip_suffix (f: string): option<string> =
   let suffixes = [ ".fsti"; ".fst"; ".fsi"; ".fs" ] in
@@ -209,16 +209,20 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
   in
   let working_map = smap_copy original_map in
 
-  let record_open lid =
+  let record_open let_open lid =
     let key = lowercase_join_longident lid true in
     begin match smap_try_find original_map key with
     | Some pair ->
         List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
     | None ->
         let r = enter_namespace original_map working_map key in
-        if not r then
-          Util.fprint stderr "Warning: no modules in namespace %s and no file with \
-            that name either\n" [string_of_lid lid true]
+        if not r then begin
+          if let_open then
+            raise (Err ("let-open only supported for modules, not namespaces"))
+          else
+            Util.fprint stderr "Warning: no modules in namespace %s and no file with \
+              that name either\n" [string_of_lid lid true]
+        end
     end
   in
   let record_module_alias ident lid =
@@ -231,6 +235,23 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | None ->
         raise (Err (Util.format1 "module not found in search path: %s\n" alias))
   in
+  let record_lid is_constructor lid =
+    let try_key key =
+      begin match smap_try_find working_map key with
+      | Some pair ->
+          List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
+      | None ->
+          if List.length lid.ns > 0 && Options.debug_any() then
+            Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
+      end
+    in
+    // Option.Some x
+    try_key (lowercase_join_longident lid false);
+    // FStar.List (flatten (map (...)))
+    if is_constructor then
+      try_key (lowercase_join_longident lid true)
+  in
+
 
   (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
    * auto-generated. With universes, there's some copy/pasta in [env.fs] too. *)
@@ -242,7 +263,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     else
       [ Const.fstar_ns_lid; Const.prims_lid; Const.st_lid; Const.all_lid ]
   in
-  List.iter record_open auto_open;
+  List.iter (record_open false) auto_open;
 
   let rec collect_fragment = function
     | Inl file ->
@@ -280,7 +301,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
 
   and collect_decl = function
     | Open lid ->
-        record_open lid
+        record_open false lid
     | ModuleAbbrev (ident, lid) ->
         add_dep (lowercase_join_longident lid true);
         record_module_alias ident lid
@@ -364,23 +385,18 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         ()
     | Const c ->
         collect_constant c
-    | Op (_, ts) ->
+    | Op (s, ts) ->
+        if s = "@" then
+          collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.append") Range.dummyRange));
         List.iter collect_term ts
     | Tvar _ ->
         ()
     | Var lid
     | Name lid ->
-        (* XXX this is where stuff happens *)
-        let key = lowercase_join_longident lid false in
-        begin match smap_try_find working_map key with
-        | Some pair ->
-            List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
-        | None ->
-            if List.length lid.ns > 0 && Options.debug_any() then
-              Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
-        end
-
-    | Construct (_, termimps) ->
+        record_lid false lid
+    | Construct (lid, termimps) ->
+        if List.length termimps = 1 && Options.universes () then
+          record_lid true lid;
         List.iter (fun (t, _) -> collect_term t) termimps
     | Abs (pats, t) ->
         collect_patterns pats;
@@ -390,6 +406,9 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         collect_term t2
     | Let (_, patterms, t) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms;
+        collect_term t
+    | LetOpen (lid, t) ->
+        record_open true lid;
         collect_term t
     | Seq (t1, t2) ->
         collect_term t1;
@@ -439,8 +458,8 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     collect_pattern' p.pat
 
   and collect_pattern' = function
-    | PatWild ->
-        ()
+    | PatWild
+    | PatOp _
     | PatConst _ ->
         ()
     | PatApp (p, ps) ->

@@ -194,20 +194,21 @@ let rec splitAt n l =
 	let l1, l2 = splitAt (n - 1) tl in
 	hd::l1, l2
 
-let filter_map f l =
-  let rec filter_map acc l =
+let filter_map (f:'a -> option 'b) (l:list 'a) =
+  let rec filter_map_acc (acc:list 'b) (l:list 'a) : list 'b =
     match l with
     | [] ->
         rev acc
     | hd :: tl ->
         match f hd with
         | Some hd ->
-            filter_map (hd :: acc) tl
+            filter_map_acc (hd :: acc) tl
         | None ->
-            filter_map acc tl
+            filter_map_acc acc tl
   in
-  filter_map [] l
+  filter_map_acc [] l
 
+val index: ('a -> bool) -> list 'a -> int
 let index f l =
   let rec index f l i =
     match l with

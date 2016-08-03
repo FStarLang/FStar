@@ -446,7 +446,7 @@ in (match (_72_247) with
 | (module_name, eff_name) -> begin
 (
 
-let mangled_name = (Prims.strcat (Prims.strcat (Prims.strcat FStar_Ident.reserved_prefix eff_name.FStar_Ident.idText) "_") nm)
+let mangled_name = (Prims.strcat FStar_Ident.reserved_prefix (Prims.strcat eff_name.FStar_Ident.idText (Prims.strcat "_" nm)))
 in (
 
 let mangled_lid = (FStar_Ident.lid_of_ids (FStar_List.append module_name (((FStar_Ident.id_of_text mangled_name))::[])))

@@ -4195,13 +4195,13 @@ and tc_decl : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.sigelt  ->  Prims.bool  -
 (
 
 let set_options = (fun t s -> (match ((FStar_Options.set_options t s)) with
-| FStar_Getopt.GoOn -> begin
+| FStar_Getopt.Success -> begin
 ()
 end
 | FStar_Getopt.Help -> begin
 (Prims.raise (FStar_Absyn_Syntax.Error ((("Failed to process pragma: use \'fstar --help\' to see which options are available"), (r)))))
 end
-| FStar_Getopt.Die (s) -> begin
+| FStar_Getopt.Error (s) -> begin
 (Prims.raise (FStar_Absyn_Syntax.Error ((((Prims.strcat "Failed to process pragma: " s)), (r)))))
 end))
 in (match (p) with
@@ -4972,7 +4972,7 @@ in (
 let _46_3098 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.pop msg)
 in (
 
-let se = FStar_Absyn_Syntax.Sig_bundle ((((FStar_List.append (FStar_List.append tycons abbrevs) rest)), (quals), (lids), (r)))
+let se = FStar_Absyn_Syntax.Sig_bundle ((((FStar_List.append tycons (FStar_List.append abbrevs rest))), (quals), (lids), (r)))
 in (
 
 let env = (FStar_Tc_Env.push_sigelt env se)

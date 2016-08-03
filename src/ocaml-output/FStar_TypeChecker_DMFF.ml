@@ -13,7 +13,7 @@ in (let _149_20 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Nor
 in {FStar_Syntax_Syntax.ppname = _57_15.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _57_15.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _149_20}))
 in (
 
-let d = (fun s -> (FStar_Util.print1 "\\x1b[01;36m%s\\x1b[00m\n" s))
+let d = (fun s -> (FStar_Util.print1 "[01;36m%s[00m\n" s))
 in (
 
 let _57_20 = (d "Elaborating extra WP combinators")
@@ -70,7 +70,7 @@ end
 end))
 in (
 
-let mk_lid = (fun name -> (FStar_Ident.lid_of_path (FStar_Ident.path_of_text (Prims.strcat (Prims.strcat (FStar_Ident.text_of_lid ed.FStar_Syntax_Syntax.mname) "_") name)) FStar_Range.dummyRange))
+let mk_lid = (fun name -> (FStar_Ident.lid_of_path (FStar_Ident.path_of_text (Prims.strcat (FStar_Ident.text_of_lid ed.FStar_Syntax_Syntax.mname) (Prims.strcat "_" name))) FStar_Range.dummyRange))
 in (
 
 let gamma = (collect_binders wp_a)

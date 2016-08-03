@@ -40,16 +40,16 @@ in (
 let n_resets = (FStar_Util.mk_ref 0)
 in {gensym = (fun _70_13 -> (match (()) with
 | () -> begin
-(let _162_31 = (let _162_30 = (let _162_27 = (let _162_26 = (let _162_25 = (FStar_ST.read n_resets)
+(let _162_31 = (let _162_30 = (let _162_29 = (let _162_25 = (FStar_ST.read n_resets)
 in (FStar_Util.string_of_int _162_25))
-in (Prims.strcat "_" _162_26))
-in (Prims.strcat _162_27 "_"))
-in (let _162_29 = (let _162_28 = (
+in (let _162_28 = (let _162_27 = (let _162_26 = (
 
 let _70_14 = (FStar_Util.incr ctr)
 in (FStar_ST.read ctr))
-in (FStar_Util.string_of_int _162_28))
-in (Prims.strcat _162_30 _162_29)))
+in (FStar_Util.string_of_int _162_26))
+in (Prims.strcat "_" _162_27))
+in (Prims.strcat _162_29 _162_28)))
+in (Prims.strcat "_" _162_30))
 in ((_162_31), (0)))
 end)); reset = (fun _70_16 -> (match (()) with
 | () -> begin
@@ -1002,9 +1002,10 @@ in (with_ty_loc MLTY_Top (MLE_App (((obj_repr), ((x)::[])))) x.loc)))
 
 
 let bv_as_mlident : FStar_Syntax_Syntax.bv  ->  (Prims.string * Prims.int) = (fun x -> if ((FStar_Util.starts_with x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText FStar_Ident.reserved_prefix) || (FStar_Syntax_Syntax.is_null_bv x)) then begin
-(let _162_720 = (let _162_719 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
-in (Prims.strcat (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText "_") _162_719))
-in ((_162_720), (0)))
+(let _162_721 = (let _162_720 = (let _162_719 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
+in (Prims.strcat "_" _162_719))
+in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _162_720))
+in ((_162_721), (0)))
 end else begin
 ((x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText), (0))
 end)

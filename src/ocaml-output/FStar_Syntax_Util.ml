@@ -168,8 +168,11 @@ in (match (_38_115) with
 ((k), ((n + 1)))
 end))
 end
-| (FStar_Syntax_Syntax.U_max (_)) | (FStar_Syntax_Syntax.U_bvar (_)) -> begin
-(FStar_All.failwith "Imposible")
+| FStar_Syntax_Syntax.U_max (_38_117) -> begin
+(FStar_All.failwith "Imposible: univ_kernel (U_max _)")
+end
+| FStar_Syntax_Syntax.U_bvar (_38_120) -> begin
+(FStar_All.failwith "Imposible: univ_kernel (U_bvar _)")
 end))
 
 

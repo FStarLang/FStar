@@ -3,9 +3,14 @@ module Ast
 open FStar.UInt32
 open FStar.UInt64
 
-exception Halt
 let u32 = UInt32.t
 let u64 = UInt64.t
+
+let address = UInt64.t
+let dword = UInt64.t
+let word = UInt32.t
+let offset = UInt64.t
+
 
 type exp =
  |Register of string
@@ -21,6 +26,8 @@ type stmt =
  |Call of exp
  |Skip 
  |Assert
+ |Return
 
-type program = stmt
+type lambda = string * stmt
+type program = list lambda
 

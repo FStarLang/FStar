@@ -122,8 +122,8 @@ let rec univ_kernel u = match u with
     | U_unif _
     | U_zero -> u, 0
     | U_succ u -> let k, n = univ_kernel u in k, n+1
-    | U_max _
-    | U_bvar _ -> failwith "Imposible" 
+    | U_max _  -> failwith "Imposible: univ_kernel (U_max _)" 
+    | U_bvar _ -> failwith "Imposible: univ_kernel (U_bvar _)" 
 
 //requires: kernel u = U_zero, n
 //returns: n
@@ -726,7 +726,8 @@ let lcomp_of_comp c0 =
      comp = fun() -> c0}
 
 let mk_forall (x:bv) (body:typ) : typ =
-  mk (Tm_app(tforall, [as_arg (abs [mk_binder x] body (Some (Inl (lcomp_of_comp <| mk_Total ktype0))))])) None dummyRange
+  mk (Tm_app(tforall, [ iarg (x.sort);
+                        as_arg (abs [mk_binder x] body (Some (Inl (lcomp_of_comp <| mk_Total ktype0))))])) None dummyRange
 
 let rec close_forall bs f =
   List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall (fst b) f) bs f
@@ -867,3 +868,4 @@ let incr_delta_qualifier t =
         | Delta_abstract d -> aux d in
     aux d
 
+let is_unknown = function | { n = Tm_unknown } -> true | _ -> false

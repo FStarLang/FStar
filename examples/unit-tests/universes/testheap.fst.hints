@@ -1,0 +1,149 @@
+[
+  "\u007fÄ\u0013\u001b}N\u0016ÌCøTe\\\u000ew\u0006",
+  [
+    [ 2, 1, [ "@query_1593" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1596", "assumption_FStar.Heap.SelUpd1_1486",
+        "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.h",
+        "function_token_typing_TestHeap.x"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1598", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__322", "@query_1602",
+        "assumption_FStar.Heap.SelUpd1_1486",
+        "assumption_FStar.Heap.SelUpd2_1487",
+        "assumption_TestHeap.DistinctXY_1594",
+        "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.h",
+        "function_token_typing_TestHeap.x",
+        "function_token_typing_TestHeap.y", "int_typing", "ref_inversion",
+        "typing_FStar.Heap.upd"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1604", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1608", "assumption_FStar.Heap.SelUpd1_1486",
+        "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.h",
+        "function_token_typing_TestHeap.x",
+        "function_token_typing_TestHeap.y", "int_typing",
+        "typing_FStar.Heap.upd"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1610", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__1426", "@pretyping__322", "@query_1614",
+        "assumption_FStar.Heap.Equals_1490",
+        "assumption_FStar.Heap.SelUpd1_1486",
+        "assumption_FStar.Heap.SelUpd2_1487",
+        "assumption_TestHeap.DistinctXY_1594", "equation_TestHeap.h1",
+        "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.h",
+        "function_token_typing_TestHeap.h1",
+        "function_token_typing_TestHeap.x",
+        "function_token_typing_TestHeap.y", "int_typing", "ref_injectivity",
+        "ref_inversion", "typing_FStar.Heap.upd"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1617" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1619", "assumption_FStar.Heap.DomContains_1497",
+        "assumption_FStar.Heap.DomRestrict_1494",
+        "assumption_FStar.Heap.Equals_1490",
+        "assumption_FStar.Heap.RestrictSel_1491",
+        "assumption_FStar.Heap.SelConcat_1492",
+        "data_typing_intro_FStar.Heap.Ref@tok", "equation_TestHeap.h1",
+        "equation_TestHeap.ys", "function_token_typing_TestHeap.h1",
+        "function_token_typing_TestHeap.ys", "kinding_FStar.Heap.aref@tok",
+        "l_and-interp", "lemma_FStar.TSet.mem_intersect",
+        "projection_inverse_BoxBool_proj_0", "ref_inversion",
+        "typing_FStar.Heap.concat", "typing_FStar.Heap.domain",
+        "typing_FStar.Heap.restrict", "typing_FStar.TSet.complement"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1623", "assumption_FStar.Heap.DomContains_1497",
+        "assumption_FStar.Heap.DomUpd_1493",
+        "data_typing_intro_FStar.Heap.Ref@tok", "equation_TestHeap.h1",
+        "equation_TestHeap.ys", "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.h",
+        "function_token_typing_TestHeap.h1",
+        "function_token_typing_TestHeap.x",
+        "function_token_typing_TestHeap.y",
+        "function_token_typing_TestHeap.ys", "int_typing",
+        "kinding_FStar.Heap.aref@tok", "l_or-interp",
+        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_union",
+        "ref_inversion", "typing_FStar.Heap.domain", "typing_FStar.Heap.upd",
+        "typing_FStar.TSet.singleton"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1627", "assumption_FStar.Heap.DomContains_1497",
+        "assumption_FStar.Heap.DomUpd_1493",
+        "data_typing_intro_FStar.Heap.Ref@tok",
+        "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.h",
+        "function_token_typing_TestHeap.x",
+        "function_token_typing_TestHeap.y", "int_typing",
+        "kinding_FStar.Heap.aref@tok", "l_or-interp",
+        "lemma_FStar.TSet.mem_union", "ref_inversion",
+        "typing_FStar.Heap.domain", "typing_FStar.Heap.upd",
+        "typing_FStar.TSet.singleton"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__1426", "@query_1630",
+        "assumption_FStar.Heap.DomContains_1497",
+        "assumption_FStar.Heap.DomRestrict_1494",
+        "assumption_FStar.Heap.Equals_1490",
+        "assumption_FStar.Heap.RestrictSel_1491",
+        "assumption_FStar.Heap.SelConcat_1492",
+        "assumption_FStar.Heap.SelUpd2_1487",
+        "data_typing_intro_FStar.Heap.Ref@tok",
+        "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.h", "int_typing",
+        "kinding_FStar.Heap.aref@tok", "l_and-interp",
+        "lemma_FStar.TSet.mem_intersect",
+        "projection_inverse_BoxBool_proj_0", "ref_injectivity",
+        "ref_inversion", "typing_FStar.Heap.concat",
+        "typing_FStar.Heap.domain", "typing_FStar.Heap.restrict",
+        "typing_FStar.Heap.upd", "typing_FStar.TSet.complement",
+        "typing_FStar.TSet.empty"
+      ],
+      0
+    ]
+  ]
+]

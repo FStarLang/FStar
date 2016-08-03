@@ -1,3 +1,23 @@
+## Table of Contents ##
+
+  * [Online editor](#online-editor)
+  * [Binary releases](#binary-releases)
+    * [Testing a binary package](#testing-a-binary-package)
+    * [OPAM package](#opam-package)
+    * [Homebrew formula for Mac OS X](#homebrew-formula-for-mac-os-x)
+  * [Building F* from sources](#building-f-from-sources)
+    * [Step 1. Building F* from sources using the F# compiler](#step-1-building-f-from-sources-using-the-f-compiler)
+      * [On Windows 7/8/10](#on-windows-7810)
+      * [On Linux or Mac OS X using Mono](#on-linux-or-mac-os-x-using-mono)
+    * [Prerequisite for steps 2 and 3: Working OCaml setup](#prerequisite-for-steps-2-and-3-working-ocaml-setup)
+      * [Instructions for Windows](#instructions-for-windows)
+      * [Instructions for Linux and Mac OS X](#instructions-for-linux-and-mac-os-x)
+      * [Instructions for all OSes](#instructions-for-all-oses)
+    * [Step 2. Extracting the sources of F* itself to OCaml](#step-2-extracting-the-sources-of-f-itself-to-ocaml)
+    * [Step 3. Building F* from the OCaml snapshot](#step-3-building-f-from-the-ocaml-snapshot)
+  * [Runtime dependency: Z3 SMT solver](#runtime-dependency-z3-smt-solver)
+
+
 ## Online editor ##
 
 The easiest way to try out F\* quickly is directly in your browser by using

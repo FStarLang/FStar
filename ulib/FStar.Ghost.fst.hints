@@ -1,0 +1,63 @@
+[
+  "êïı“#Ó(\u0004˚\u001f œùQç´",
+  [
+    [ 2, 1, [ "@query_1210", "equation_FStar.Ghost.erased" ], 0 ],
+    [ 2, 1, [ "@query_1215", "equation_FStar.Ghost.erased" ], 0 ],
+    [ 2, 1, [ "@query_1220" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1221", "equation_FStar.Ghost.hide",
+        "equation_FStar.Ghost.reveal", "unit_typing"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1228" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1230", "equation_FStar.Ghost.erased",
+        "equation_FStar.Ghost.reveal", "interpretation_Tm_arrow_228",
+        "unit_typing"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1242", "equation_FStar.Ghost.erased" ], 0 ],
+    [ 2, 1, [ "@query_1253", "equation_FStar.Ghost.erased" ], 0 ],
+    [ 2, 1, [ "@query_1266", "equation_FStar.Ghost.erased" ], 0 ],
+    [ 2, 1, [ "@query_1282" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1292", "equation_FStar.Ghost.erased",
+        "equation_FStar.Ghost.reveal",
+        "refinement_interpretation_Tm_refine_1290"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1330", "equation_FStar.Ghost.erased",
+        "equation_FStar.Ghost.reveal",
+        "refinement_interpretation_Tm_refine_1323"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1340", "equation_FStar.Ghost.erased",
+        "equation_FStar.Ghost.reveal",
+        "refinement_interpretation_Tm_refine_1338"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1365", "unit_typing" ], 0 ]
+  ]
+]

@@ -6,12 +6,14 @@ open Preorder
    reference to be allocated) and a mapping of allocated raw 
    references (represented as natural numbers) to types and values. *)
 
+(* NB: (a:Type0 & a) instead of dtuple2 is better notation *)
+
 abstract type heap = h:(nat * (nat -> Tot (option (dtuple2 Type0 (fun a -> a)))))
 		       {(forall (n:nat) . n < fst h ==> (exists v . snd h n == Some v)) /\ 
 			(forall (n:nat) . n >= fst h ==> snd h n == None)}
 
 
-(* Consistency of heaps. *)
+(* Consistency of heaps. aka, no strong updates *)
 
 let consistent (h0:heap) (h1:heap) =
   forall n x y . (snd h0 n == Some x /\ snd h1 n == Some y)  ==> dfst x == dfst y
@@ -27,9 +29,15 @@ abstract type ref (a:Type) = nat
 
 (* Containment predicate on heaps. *)
 
-let contains (#a:Type) (h:heap) (r:ref a) = 
+abstract let contains (#a:Type) (h:heap) (r:ref a) =
   exists x . snd h r == Some (| a , x |)
+//NB: is_Some (snd h r), would avoid the existential, but would not capture the type equality
 
+//NB: match snd h r with | Some (| b, _ |) -> a == b | _ -> False
+//    this style would avoid the existential
+
+//NB: Although, it appears that the existential variable actually seems to help in this case
+//    would be good to understand why (at some point)
 
 (* Select. *)
 
@@ -51,14 +59,12 @@ val alloc_ref : h0:heap ->
 			 {~(contains h0 (fst rh1)) /\ 
 			  contains (snd rh1) (fst rh1) /\
 		          sel (snd rh1) (fst rh1) == x /\
-			  (forall b (r:ref b) .  
+			  (forall b (r:ref b) .{:pattern (contains h0 r)}
 			     contains h0 r 
 			     ==> 
 			     contains (snd rh1) r) /\
-			  (forall b (r:ref b{contains h0 r}) y . 
-			     sel #b h0 r == y 
-		             ==> 
-			     sel #b (snd rh1) r == y)})
+			  (forall b (r:ref b{contains h0 r}) . {:pattern sel #b h0 r}
+			     sel #b h0 r == sel #b (snd rh1) r)})
 let alloc_ref h0 a x = 
   (fst h0 , (fst h0 + 1 , (fun r -> if r = fst h0 then Some (| a , x |)
 					          else snd h0 r)))
@@ -72,15 +78,13 @@ val upd : #a:Type ->
           x:a -> 
           Tot (h1:heap{contains h1 r /\ 
 	               sel h1 r == x /\
-		       (forall b (r':ref b) .  
+		       (forall b (r':ref b) . {:pattern (contains h0 r')}
 			  contains h0 r' 
 			  ==> 
 			  contains h1 r') /\
-		       (forall b (r':ref b{contains h0 r'}) y . 
-		          ~(r === r') /\ 
-			  sel h0 r' == y 
-			  ==> 
-			  sel h1 r' == y)})
+		       (forall b (r':ref b{contains h0 r'}) . {:pattern sel h0 r'}
+		          ~(r === r') ==>
+			  sel h0 r' == sel h1 r')})
 let upd #a h0 r x = 
   (fst h0 , (fun r' -> if r = r' then Some (| a , x |)
                                  else snd h0 r'))

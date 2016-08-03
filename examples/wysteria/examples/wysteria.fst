@@ -215,7 +215,7 @@ val w_concat_helper:
   -> w1:Wire a eps1 -> w2:Wire a eps2{forall p. w_contains #a #eps1 p w1 ==> not (w_contains #a #eps2 p w2)}
   -> ps:eprins{forall p. mem p ps ==> OrdMap.contains p w1}
   -> Tot (w:Wire a (union ps eps2)
-          {forall p.(mem p ps ==> (w_contains #a #(union ps eps2) p w /\
+          {forall p. (mem p ps ==> (w_contains #a #(union ps eps2) p w /\
                                    w_select #a #(union ps eps2) p w = w_select #a #eps1 p w1)) /\
                     (w_contains #a #eps2 p w2 ==> (w_contains #a #(union ps eps2) p w /\
                                                    w_select #a #(union ps eps2) p w = w_select #a #eps2 p w2)) /\

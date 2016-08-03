@@ -17,7 +17,7 @@ assume HasEq_networkStream: hasEq networkStream
 
 effect EXT (a:Type) = ST a
   (requires (fun _ -> True)) 
-  (ensures (fun h0 _ h1 -> HyperHeap.modifies Set.empty h0 h1))
+  (ensures (fun h0 _ h1 -> h0==h1))
 
 (* Server side *)
 

@@ -1,0 +1,129 @@
+[
+  "mi&äá\u007fåðÕ{G+Üz—\n",
+  [
+    [
+      2,
+      1,
+      [
+        "@pretyping__322", "@query_1633", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165",
+        "refinement_interpretation_Tm_refine_1165"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1696", "disc_equation_Unit1.RecursiveTypeFunctions.T",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1689"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1705", "disc_equation_Unit1.RecursiveTypeFunctions.TofS",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1698"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1714", "disc_equation_Unit1.RecursiveTypeFunctions.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1707"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1723", "disc_equation_Unit1.RecursiveTypeFunctions.SofT",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1716"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1740", "binder_p__2199",
+        "disc_equation_Unit1.RecursiveTypeFunctions.T",
+        "disc_equation_Unit1.RecursiveTypeFunctions.TofS",
+        "fuel_guarded_inversion_Unit1.RecursiveTypeFunctions.pre_t_1637",
+        "projection_inverse_Unit1.RecursiveTypeFunctions.TofS__0",
+        "subterm_ordering_Unit1.RecursiveTypeFunctions.TofS"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1755", "binder_s__2963",
+        "disc_equation_Unit1.RecursiveTypeFunctions.S",
+        "disc_equation_Unit1.RecursiveTypeFunctions.SofT",
+        "fuel_guarded_inversion_Unit1.RecursiveTypeFunctions.pre_s_1645",
+        "projection_inverse_Unit1.RecursiveTypeFunctions.SofT__0",
+        "subterm_ordering_Unit1.RecursiveTypeFunctions.SofT"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1797", "b2t_def", "binder_x__4017",
+        "constructor_distinct_Unit1.RecursiveTypeFunctions.T",
+        "disc_equation_Unit1.RecursiveTypeFunctions.T",
+        "disc_equation_Unit1.RecursiveTypeFunctions.TofS",
+        "equation_Prims.nat", "equation_Unit1.RecursiveTypeFunctions.t",
+        "equation_with_fuel_Unit1.RecursiveTypeFunctions.good_t__1765",
+        "fuel_correspondence_Unit1.RecursiveTypeFunctions.good_s__1767",
+        "fuel_correspondence_Unit1.RecursiveTypeFunctions.good_t__1765",
+        "fuel_guarded_inversion_Unit1.RecursiveTypeFunctions.pre_t_1637",
+        "fuel_irrelevance_Unit1.RecursiveTypeFunctions.good_s__1767",
+        "l_and-interp", "primitive_Prims.op_GreaterThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Unit1.RecursiveTypeFunctions.T__0",
+        "projection_inverse_Unit1.RecursiveTypeFunctions.TofS__0",
+        "refinement_interpretation_Tm_refine_1770",
+        "refinement_interpretation_Tm_refine_1778",
+        "subterm_ordering_Unit1.RecursiveTypeFunctions.TofS"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1822", "b2t_def", "binder_x__6801",
+        "constructor_distinct_Unit1.RecursiveTypeFunctions.S",
+        "disc_equation_Unit1.RecursiveTypeFunctions.S",
+        "disc_equation_Unit1.RecursiveTypeFunctions.SofT",
+        "equation_Unit1.RecursiveTypeFunctions.s",
+        "equation_with_fuel_Unit1.RecursiveTypeFunctions.good_s__1767",
+        "fuel_correspondence_Unit1.RecursiveTypeFunctions.good_s__1767",
+        "fuel_correspondence_Unit1.RecursiveTypeFunctions.good_t__1765",
+        "fuel_guarded_inversion_Unit1.RecursiveTypeFunctions.pre_s_1645",
+        "fuel_irrelevance_Unit1.RecursiveTypeFunctions.good_t__1765",
+        "l_and-interp", "primitive_Prims.op_GreaterThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Unit1.RecursiveTypeFunctions.S__0",
+        "projection_inverse_Unit1.RecursiveTypeFunctions.SofT__0",
+        "refinement_interpretation_Tm_refine_1772",
+        "subterm_ordering_Unit1.RecursiveTypeFunctions.SofT"
+      ],
+      0
+    ]
+  ]
+]

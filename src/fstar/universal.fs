@@ -69,8 +69,8 @@ let tc_prims () : Syntax.modul
   let solver = if Options.lax() then SMT.dummy else SMT.solver in
   let env = TcEnv.initial_env Tc.type_of Tc.universe_of solver Const.prims_lid in
   env.solver.init env;
-  let p = Options.prims () in
-  let dsenv, prims_mod = parse (DsEnv.empty_env ()) None p in
+  let prims_filename = Options.prims () in
+  let dsenv, prims_mod = parse (DsEnv.empty_env ()) None prims_filename in
   let prims_mod, env = Tc.check_module env (List.hd prims_mod) in
   prims_mod, dsenv, env
 

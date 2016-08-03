@@ -1,0 +1,40 @@
+[
+  " ÀOÅ'A8\u0000siZ\u0004ßèS8",
+  [
+    [
+      2,
+      1,
+      [
+        "@pretyping__133", "@query_1208", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_139", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1216", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_139", "unit_typing"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1225" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1226", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_139", "unit_inversion"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1239" ], 0 ],
+    [ 2, 1, [ "@query_1245" ], 0 ],
+    [ 2, 1, [ "@query_1264" ], 0 ],
+    [ 2, 1, [ "@query_1268" ], 0 ],
+    [ 2, 1, [ "@query_1278" ], 0 ],
+    [ 2, 1, [ "@query_1286" ], 0 ],
+    [ 2, 1, [ "@query_1300" ], 0 ]
+  ]
+]

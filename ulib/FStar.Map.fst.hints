@@ -1,0 +1,255 @@
+[
+  "m\u007f@÷\u007fÊ¿¸ƒ\u0019ÂbÕƒ\u000e…",
+  [
+    [ 2, 1, [ "@query_2259" ], 0 ],
+    [ 2, 1, [ "@query_2266" ], 0 ],
+    [ 2, 1, [ "@query_2278" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2279", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_113"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2293" ], 0 ],
+    [ 2, 1, [ "@query_2300" ], 0 ],
+    [ 2, 1, [ "@query_2307" ], 0 ],
+    [ 2, 1, [ "@query_2314" ], 0 ],
+    [ 2, 1, [ "@query_2315" ], 0 ],
+    [ 2, 1, [ "@query_2316" ], 0 ],
+    [ 2, 1, [ "@query_2317" ], 0 ],
+    [ 2, 1, [ "@query_2318" ], 0 ],
+    [ 2, 1, [ "@query_2319" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2320", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_113"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2321" ], 0 ],
+    [ 2, 1, [ "@query_2322" ], 0 ],
+    [ 2, 1, [ "@query_2323" ], 0 ],
+    [ 2, 1, [ "@query_2324" ], 0 ],
+    [ 2, 1, [ "@query_2325" ], 0 ],
+    [ 2, 1, [ "@query_2326", "assumption_Prims.HasEq_bool_155" ], 0 ],
+    [ 2, 1, [ "@query_2327" ], 0 ],
+    [ 2, 1, [ "@query_2328" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2329", "equation_FStar.Map.sel", "equation_FStar.Map.upd",
+        "fuel_guarded_inversion_FStar.Map.t_2246",
+        "interpretation_Exp_abs_2284", "primitive_Prims.op_Equality",
+        "proj_equation_FStar.Map.Mkt_mappings",
+        "projection_inverse_FStar.Map.Mkt_mappings", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2330", "equation_FStar.Map.sel", "equation_FStar.Map.upd",
+        "fuel_guarded_inversion_FStar.Map.t_2246",
+        "interpretation_Exp_abs_2284", "primitive_Prims.op_Equality",
+        "proj_equation_FStar.Map.Mkt_mappings",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Map.Mkt_mappings", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2331", "equation_FStar.Map.const", "equation_FStar.Map.sel",
+        "interpretation_Exp_abs_1108",
+        "proj_equation_FStar.Map.Mkt_mappings",
+        "projection_inverse_FStar.Map.Mkt_mappings", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2332", "equation_FStar.Map.restrict",
+        "equation_FStar.Map.sel", "fuel_guarded_inversion_FStar.Map.t_2246",
+        "proj_equation_FStar.Map.Mkt_mappings",
+        "projection_inverse_FStar.Map.Mkt_mappings", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2333", "bool_inversion", "equation_FStar.Map.concat",
+        "equation_FStar.Map.contains", "equation_FStar.Map.sel",
+        "fuel_guarded_inversion_FStar.Map.t_2246",
+        "interpretation_Exp_abs_2298",
+        "proj_equation_FStar.Map.Mkt_mappings",
+        "projection_inverse_FStar.Map.Mkt_mappings",
+        "typing_FStar.Map.contains", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2334", "equation_FStar.Map.concat",
+        "equation_FStar.Map.contains", "equation_FStar.Map.sel",
+        "fuel_guarded_inversion_FStar.Map.t_2246",
+        "interpretation_Exp_abs_2298",
+        "proj_equation_FStar.Map.Mkt_mappings",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Map.Mkt_mappings", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2335", "bool_inversion", "bool_typing",
+        "equation_FStar.Map.contains", "equation_FStar.Map.upd",
+        "fuel_guarded_inversion_FStar.Map.t_2246",
+        "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "proj_equation_FStar.Map.Mkt_domain",
+        "projection_inverse_FStar.Map.Mkt_domain",
+        "typing_FStar.Map.Mkt.domain", "typing_FStar.Map.contains",
+        "typing_FStar.Set.singleton", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2336", "bool_inversion", "equation_FStar.Map.contains",
+        "fuel_guarded_inversion_FStar.Map.t_2246",
+        "lemma_FStar.Map.lemma_InDomUpd1", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Map.contains", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2337", "equation_FStar.Map.const",
+        "equation_FStar.Map.contains", "lemma_FStar.Set.mem_complement",
+        "lemma_FStar.Set.mem_empty", "primitive_Prims.op_Negation",
+        "proj_equation_FStar.Map.Mkt_domain",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Map.Mkt_domain", "typing_FStar.Set.empty",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2338", "equation_FStar.Map.concat",
+        "equation_FStar.Map.contains",
+        "fuel_guarded_inversion_FStar.Map.t_2246",
+        "lemma_FStar.Set.mem_union", "proj_equation_FStar.Map.Mkt_domain",
+        "projection_inverse_FStar.Map.Mkt_domain",
+        "typing_FStar.Map.Mkt.domain", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2339", "equation_FStar.Map.contains",
+        "equation_FStar.Map.restrict",
+        "fuel_guarded_inversion_FStar.Map.t_2246",
+        "lemma_FStar.Set.mem_intersect",
+        "proj_equation_FStar.Map.Mkt_domain",
+        "projection_inverse_FStar.Map.Mkt_domain",
+        "typing_FStar.Map.Mkt.domain", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2340", "equation_FStar.Map.contains",
+        "equation_FStar.Map.domain",
+        "fuel_guarded_inversion_FStar.Map.t_2246", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2341", "equation_FStar.Map.domain", "equation_FStar.Map.upd",
+        "fuel_guarded_inversion_FStar.Map.t_2246",
+        "lemma_FStar.Set.lemma_equal_refl",
+        "proj_equation_FStar.Map.Mkt_domain",
+        "projection_inverse_FStar.Map.Mkt_domain",
+        "typing_FStar.Map.Mkt.domain", "typing_FStar.Set.singleton",
+        "typing_FStar.Set.union", "unit_typing"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2346" ], 0 ],
+    [ 2, 1, [ "@query_2351", "assumption_Prims.HasEq_bool_155" ], 0 ],
+    [ 2, 1, [ "@query_2355" ], 0 ],
+    [ 2, 1, [ "@query_2356" ], 0 ],
+    [ 2, 1, [ "@query_2357" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2358", "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.Map.contains", "equation_FStar.Map.equal",
+        "equation_FStar.Map.sel", "fuel_guarded_inversion_FStar.Map.t_2246",
+        "lemma_FStar.Set.lemma_equal_intro", "typing_FStar.Map.Mkt.domain",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2359",
+        "assumption_FStar.FunctionalExtensionality.Extensionality_1306",
+        "equation_FStar.FunctionalExtensionality.efun",
+        "equation_FStar.Map.equal", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Map.t_2246",
+        "lemma_FStar.Set.lemma_equal_elim",
+        "proj_equation_FStar.Map.Mkt_domain",
+        "proj_equation_FStar.Map.Mkt_mappings",
+        "refinement_interpretation_Tm_refine_113",
+        "typing_FStar.Map.Mkt.domain", "typing_FStar.Map.Mkt.mappings",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [ "@query_2360", "lemma_FStar.Map.lemma_equal_intro", "unit_typing" ],
+      0
+    ],
+    [ 2, 1, [ "@query_2361" ], 0 ],
+    [ 2, 1, [ "@query_2369" ], 0 ],
+    [ 2, 1, [ "@query_2375" ], 0 ]
+  ]
+]

@@ -87,6 +87,7 @@ val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env
 val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
 val push_module_abbrev : env -> ident -> lident -> env
+val expand_module_abbrev: env -> lident -> lident
 
 val pop: env -> env
 val push: env -> env

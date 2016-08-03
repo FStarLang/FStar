@@ -1,0 +1,700 @@
+[
+  "HÍæ'o˜\u001c\u0003gr§{«^»ð",
+  [
+    [ 2, 1, [ "@query_1606" ], 0 ],
+    [ 2, 1, [ "@query_1625" ], 0 ],
+    [ 2, 1, [ "@query_1628" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1655", "assumption_Prims.HasEq_int_325",
+        "assumption_StlcCbvDbPntSubstNoLists.ty_haseq_1620",
+        "equation_Prims.nat", "equation_StlcCbvDbPntSubstNoLists.var",
+        "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1699", "disc_equation_StlcCbvDbPntSubstNoLists.EVar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1692"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1708", "disc_equation_StlcCbvDbPntSubstNoLists.EApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1701"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1714", "disc_equation_StlcCbvDbPntSubstNoLists.EApp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1701"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1723", "disc_equation_StlcCbvDbPntSubstNoLists.EAbs",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1716"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1731", "disc_equation_StlcCbvDbPntSubstNoLists.EAbs",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1716"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__322", "@query_1741", "binder_e__3391", "binder_x__3389",
+        "disc_equation_StlcCbvDbPntSubstNoLists.EAbs",
+        "disc_equation_StlcCbvDbPntSubstNoLists.EApp",
+        "disc_equation_StlcCbvDbPntSubstNoLists.EVar",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "equation_StlcCbvDbPntSubstNoLists.var",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.exp_1659",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EApp__0",
+        "refinement_interpretation_Tm_refine_1165",
+        "subterm_ordering_StlcCbvDbPntSubstNoLists.EAbs",
+        "subterm_ordering_StlcCbvDbPntSubstNoLists.EApp"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1749", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "equation_StlcCbvDbPntSubstNoLists.var",
+        "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1764", "binder_e__6980", "bool_inversion",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "equation_StlcCbvDbPntSubstNoLists.is_value",
+        "kinding_StlcCbvDbPntSubstNoLists.exp@tok",
+        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
+        "subterm_ordering_StlcCbvDbPntSubstNoLists.EApp",
+        "typing_Prims.is_Some"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1777", "equation_Prims.nat",
+        "equation_StlcCbvDbPntSubstNoLists.var", "int_inversion",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1165"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1778", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "equation_StlcCbvDbPntSubstNoLists.var",
+        "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1789" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1798", "equation_Prims.nat",
+        "equation_StlcCbvDbPntSubstNoLists.var",
+        "refinement_interpretation_Tm_refine_1795"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1838" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1848", "disc_equation_StlcCbvDbPntSubstNoLists.TyVar",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1840"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1851" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__1613", "@query_1866", "disc_equation_Prims.Some",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyVar", "equation_Prims.nat",
+        "equation_StlcCbvDbPntSubstNoLists.var",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "proj_equation_StlcCbvDbPntSubstNoLists.TyVar_g",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyVar_g",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyVar_x",
+        "refinement_interpretation_Tm_refine_1810",
+        "refinement_interpretation_Tm_refine_1840",
+        "token_correspondence_StlcCbvDbPntSubstNoLists.TyVar.g"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1867" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1876", "disc_equation_StlcCbvDbPntSubstNoLists.TyAbs",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1869"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1877" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1885", "disc_equation_StlcCbvDbPntSubstNoLists.TyAbs",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1869"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1886" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1894", "disc_equation_StlcCbvDbPntSubstNoLists.TyAbs",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1869"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1895" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1901", "disc_equation_StlcCbvDbPntSubstNoLists.TyAbs",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1869"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1907" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1915", "disc_equation_StlcCbvDbPntSubstNoLists.TyAbs",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "proj_equation_StlcCbvDbPntSubstNoLists.TyAbs_e1",
+        "proj_equation_StlcCbvDbPntSubstNoLists.TyAbs_g",
+        "proj_equation_StlcCbvDbPntSubstNoLists.TyAbs_t",
+        "proj_equation_StlcCbvDbPntSubstNoLists.TyAbs_t_",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_e1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_g",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_t",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_t_",
+        "refinement_interpretation_Tm_refine_1869"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1916" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1925", "disc_equation_StlcCbvDbPntSubstNoLists.TyApp",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1918"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1926" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1934", "disc_equation_StlcCbvDbPntSubstNoLists.TyApp",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1918"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1935" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1941", "disc_equation_StlcCbvDbPntSubstNoLists.TyApp",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1918"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1942" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1950", "disc_equation_StlcCbvDbPntSubstNoLists.TyApp",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1918"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1951" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1957", "disc_equation_StlcCbvDbPntSubstNoLists.TyApp",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1918"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1963" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1971", "disc_equation_StlcCbvDbPntSubstNoLists.TyApp",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "proj_equation_StlcCbvDbPntSubstNoLists.TyApp_e1",
+        "proj_equation_StlcCbvDbPntSubstNoLists.TyApp_g",
+        "proj_equation_StlcCbvDbPntSubstNoLists.TyApp_t11",
+        "proj_equation_StlcCbvDbPntSubstNoLists.TyApp_t12",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_e1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_g",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_t11",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_t12",
+        "refinement_interpretation_Tm_refine_1918"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1976" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1984", "disc_equation_StlcCbvDbPntSubstNoLists.TyApp",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.ty_1610",
+        "proj_equation_StlcCbvDbPntSubstNoLists.TyApp_e2",
+        "proj_equation_StlcCbvDbPntSubstNoLists.TyApp_g",
+        "proj_equation_StlcCbvDbPntSubstNoLists.TyApp_t11",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_e2",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_g",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_t11",
+        "refinement_interpretation_Tm_refine_1918"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__1613", "@pretyping__1663", "@query_1986",
+        "binder_e__57488", "binder_h__57490", "binder_t__57489",
+        "bool_inversion", "constructor_distinct_Prims.None",
+        "constructor_distinct_Prims.Some",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EAbs",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EApp",
+        "constructor_distinct_Tm_unit", "data_elim_Prims.None",
+        "data_elim_StlcCbvDbPntSubstNoLists.TyAbs",
+        "data_elim_StlcCbvDbPntSubstNoLists.TyApp",
+        "data_elim_StlcCbvDbPntSubstNoLists.TyVar",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "disc_equation_StlcCbvDbPntSubstNoLists.EAbs",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyAbs",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyApp",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyVar",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "equation_StlcCbvDbPntSubstNoLists.empty",
+        "equation_StlcCbvDbPntSubstNoLists.is_value",
+        "equation_StlcCbvDbPntSubstNoLists.var",
+        "equation_with_fuel_StlcCbvDbPntSubstNoLists.step__1770",
+        "fuel_correspondence_StlcCbvDbPntSubstNoLists.step__1770",
+        "fuel_guarded_inversion_Prims.option_452",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.rtyping_1803",
+        "fuel_irrelevance_StlcCbvDbPntSubstNoLists.step__1770",
+        "kinding_StlcCbvDbPntSubstNoLists.exp@tok",
+        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EAbs__0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EAbs__1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EApp__0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EApp__1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_e1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_t",
+        "refinement_interpretation_Tm_refine_1810",
+        "subterm_ordering_StlcCbvDbPntSubstNoLists.TyApp",
+        "token_correspondence_StlcCbvDbPntSubstNoLists.empty",
+        "token_correspondence_StlcCbvDbPntSubstNoLists.step__1770",
+        "typing_StlcCbvDbPntSubstNoLists.is_value",
+        "typing_StlcCbvDbPntSubstNoLists.step", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_1994", "binder_e__63679", "binder_x__63678",
+        "disc_equation_StlcCbvDbPntSubstNoLists.EAbs",
+        "disc_equation_StlcCbvDbPntSubstNoLists.EApp",
+        "disc_equation_StlcCbvDbPntSubstNoLists.EVar",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "equation_StlcCbvDbPntSubstNoLists.var",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.exp_1659",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1165",
+        "subterm_ordering_StlcCbvDbPntSubstNoLists.EAbs",
+        "subterm_ordering_StlcCbvDbPntSubstNoLists.EApp"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2002", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "equation_StlcCbvDbPntSubstNoLists.var",
+        "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__1613", "@query_2011", "binder_e__66651",
+        "binder_h__66654", "binder_t__66653", "binder_x__66650",
+        "bool_inversion",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EAbs",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EApp",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EVar",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.TyApp",
+        "data_elim_StlcCbvDbPntSubstNoLists.TyAbs",
+        "data_elim_StlcCbvDbPntSubstNoLists.TyApp",
+        "data_elim_StlcCbvDbPntSubstNoLists.TyVar",
+        "disc_equation_Prims.Some",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyAbs",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyApp",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyVar",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "equation_StlcCbvDbPntSubstNoLists.extend",
+        "equation_StlcCbvDbPntSubstNoLists.var",
+        "equation_with_fuel_StlcCbvDbPntSubstNoLists.appears_free_in__2008",
+        "fuel_correspondence_StlcCbvDbPntSubstNoLists.appears_free_in__2008",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.rtyping_1803",
+        "fuel_irrelevance_StlcCbvDbPntSubstNoLists.appears_free_in__2008",
+        "int_inversion", "interpretation_Exp_abs_1783",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EAbs__0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EAbs__1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EApp__0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EApp__1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EVar__0",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1810",
+        "subterm_ordering_StlcCbvDbPntSubstNoLists.TyAbs",
+        "subterm_ordering_StlcCbvDbPntSubstNoLists.TyApp",
+        "token_correspondence_StlcCbvDbPntSubstNoLists.appears_free_in__2008",
+        "token_correspondence_StlcCbvDbPntSubstNoLists.extend",
+        "typing_StlcCbvDbPntSubstNoLists.appears_free_in", "unit_typing"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2012" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__1613", "@query_2013", "constructor_distinct_Prims.None",
+        "disc_equation_Prims.Some",
+        "equation_StlcCbvDbPntSubstNoLists.empty",
+        "projection_inverse_BoxBool_proj_0", "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2014" ], 0 ],
+    [ 2, 1, [ "@query_2018" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2019", "assumption_Prims.HasEq_option_482",
+        "assumption_StlcCbvDbPntSubstNoLists.ty_haseq_1620",
+        "kinding_StlcCbvDbPntSubstNoLists.ty@tok"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2027" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2028", "assumption_Prims.HasEq_option_482",
+        "assumption_StlcCbvDbPntSubstNoLists.ty_haseq_1620",
+        "kinding_StlcCbvDbPntSubstNoLists.ty@tok"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__1613", "@pretyping__322", "@query_2048",
+        "binder_g___78345", "binder_h__78344", "binder_t__78343",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EAbs",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EApp",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EVar",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.TyAbs",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.TyVar",
+        "data_elim_StlcCbvDbPntSubstNoLists.TyApp",
+        "data_elim_StlcCbvDbPntSubstNoLists.TyVar",
+        "disc_equation_Prims.Some",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyAbs",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyApp",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyVar",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "equation_StlcCbvDbPntSubstNoLists.env",
+        "equation_StlcCbvDbPntSubstNoLists.equalE",
+        "equation_StlcCbvDbPntSubstNoLists.extend",
+        "equation_StlcCbvDbPntSubstNoLists.var",
+        "equation_with_fuel_StlcCbvDbPntSubstNoLists.appears_free_in__2008",
+        "fuel_correspondence_StlcCbvDbPntSubstNoLists.appears_free_in__2008",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.rtyping_1803",
+        "fuel_irrelevance_StlcCbvDbPntSubstNoLists.appears_free_in__2008",
+        "int_inversion", "int_typing", "interpretation_Exp_abs_1783",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EAbs__0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EAbs__1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EApp__0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EApp__1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EVar__0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs__4",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_e1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_g",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_t",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_t_",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_e1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_e2",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyVar_g",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyVar_x",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1810",
+        "refinement_interpretation_Tm_refine_2034",
+        "subterm_ordering_StlcCbvDbPntSubstNoLists.TyAbs",
+        "subterm_ordering_StlcCbvDbPntSubstNoLists.TyApp"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2058" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2074", "equation_StlcCbvDbPntSubstNoLists.equal",
+        "equation_StlcCbvDbPntSubstNoLists.equalE"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__1613", "@pretyping__322", "@query_2096",
+        "binder_e__106244", "binder_h2__106250", "binder_t_x__106246",
+        "binder_v__106245", "binder_x__106243", "bool_inversion",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EAbs",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EApp",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EVar",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.TyAbs",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.TyVar",
+        "data_elim_StlcCbvDbPntSubstNoLists.EVar",
+        "data_elim_StlcCbvDbPntSubstNoLists.TyAbs",
+        "data_elim_StlcCbvDbPntSubstNoLists.TyVar",
+        "disc_equation_Prims.Some",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyAbs",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyApp",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyVar",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "equation_StlcCbvDbPntSubstNoLists.equal",
+        "equation_StlcCbvDbPntSubstNoLists.equalE",
+        "equation_StlcCbvDbPntSubstNoLists.extend",
+        "equation_StlcCbvDbPntSubstNoLists.var",
+        "equation_with_fuel_StlcCbvDbPntSubstNoLists.appears_free_in__2008",
+        "equation_with_fuel_StlcCbvDbPntSubstNoLists.subst_beta__1755",
+        "fuel_correspondence_StlcCbvDbPntSubstNoLists.appears_free_in__2008",
+        "fuel_correspondence_StlcCbvDbPntSubstNoLists.subst_beta__1755",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.exp_1659",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.rtyping_1803",
+        "fuel_irrelevance_StlcCbvDbPntSubstNoLists.subst_beta__1755",
+        "int_inversion", "int_typing", "interpretation_Exp_abs_1783",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_Subtraction",
+        "proj_equation_Prims.Some_v", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Some_v",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EAbs__0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EAbs__1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EApp__0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EApp__1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EVar__0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_e1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_g",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_t",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_t_",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_e1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_e2",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_g",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_t12",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyVar_g",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyVar_x",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1810",
+        "subterm_ordering_StlcCbvDbPntSubstNoLists.EAbs",
+        "subterm_ordering_StlcCbvDbPntSubstNoLists.EApp",
+        "typing_StlcCbvDbPntSubstNoLists.appears_free_in",
+        "typing_StlcCbvDbPntSubstNoLists.subst_beta"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2105", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "equation_StlcCbvDbPntSubstNoLists.var",
+        "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2113" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2121", "binder_x__106243", "equation_Prims.nat",
+        "equation_StlcCbvDbPntSubstNoLists.var",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1165"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2129" ], 0 ],
+    [
+      2,
+      1,
+      [ "@query_2141", "refinement_interpretation_Tm_refine_2138" ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__1613", "@query_2154", "binder_e__157522",
+        "binder_h__157524", "binder_t__157523",
+        "constructor_distinct_Prims.None",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EAbs",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EApp",
+        "constructor_distinct_StlcCbvDbPntSubstNoLists.EVar",
+        "constructor_distinct_Tm_unit",
+        "data_elim_StlcCbvDbPntSubstNoLists.TyAbs",
+        "data_elim_StlcCbvDbPntSubstNoLists.TyVar",
+        "disc_equation_Prims.Some",
+        "disc_equation_StlcCbvDbPntSubstNoLists.EAbs",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyAbs",
+        "disc_equation_StlcCbvDbPntSubstNoLists.TyApp",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "equation_StlcCbvDbPntSubstNoLists.empty",
+        "equation_StlcCbvDbPntSubstNoLists.is_value",
+        "equation_StlcCbvDbPntSubstNoLists.var",
+        "equation_with_fuel_StlcCbvDbPntSubstNoLists.step__1770",
+        "fuel_correspondence_StlcCbvDbPntSubstNoLists.step__1770",
+        "fuel_guarded_inversion_StlcCbvDbPntSubstNoLists.rtyping_1803",
+        "fuel_irrelevance_StlcCbvDbPntSubstNoLists.step__1770",
+        "proj_equation_Prims.Some_v", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Some_v",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EAbs__1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EApp__0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EApp__1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.EVar__0",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TArrow_t1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TArrow_t2",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_e1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_t",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyAbs_t_",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_e1",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_e2",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_g",
+        "projection_inverse_StlcCbvDbPntSubstNoLists.TyApp_t12",
+        "refinement_interpretation_Tm_refine_1810",
+        "refinement_interpretation_Tm_refine_2143",
+        "subterm_ordering_StlcCbvDbPntSubstNoLists.EApp",
+        "token_correspondence_StlcCbvDbPntSubstNoLists.empty"
+      ],
+      0
+    ]
+  ]
+]

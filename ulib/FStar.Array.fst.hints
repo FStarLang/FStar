@@ -1,0 +1,286 @@
+[
+  "mcÆõ*£Ü\u0019üôöó‚‹Ï’",
+  [
+    [ 0, 0, [ "@query_2205" ], 0 ],
+    [ 0, 0, [ "@query_2213" ], 0 ],
+    [ 0, 0, [ "@query_2221" ], 0 ],
+    [ 0, 0, [ "@query_2229" ], 0 ],
+    [ 0, 0, [ "@query_2237" ], 0 ],
+    [
+      0,
+      0,
+      [
+        "@query_2238", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [ 0, 0, [ "@query_2246" ], 0 ],
+    [ 0, 0, [ "@query_2257" ], 0 ],
+    [
+      0,
+      0,
+      [
+        "@query_2268", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_2259"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@pretyping__1723", "@query_2271",
+        "assumption_FStar.Heap.Equals_1787",
+        "assumption_FStar.Heap.Extensional_1786",
+        "assumption_FStar.Heap.SelUpd1_1783",
+        "assumption_FStar.Heap.SelUpd2_1784", "equation_FStar.Array.array",
+        "equation_FStar.SeqProperties.swap", "equation_Prims.nat",
+        "int_inversion", "lemma_FStar.Seq.lemma_len_upd", "ref_injectivity",
+        "ref_inversion", "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1412",
+        "refinement_interpretation_Tm_refine_1457",
+        "refinement_interpretation_Tm_refine_2270", "typing_FStar.Heap.sel",
+        "typing_FStar.Heap.upd", "typing_FStar.Seq.seq",
+        "typing_FStar.Seq.upd"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_2272", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [ 0, 0, [ "@query_2286" ], 0 ],
+    [
+      0,
+      0,
+      [
+        "@pretyping__1723", "@pretyping__322", "@query_2287",
+        "assumption_FStar.Heap.DomContains_1794",
+        "assumption_FStar.Heap.DomRestrict_1791",
+        "assumption_FStar.Heap.DomUpd_1790",
+        "assumption_FStar.Heap.Equals_1787",
+        "assumption_FStar.Heap.Extensional_1786",
+        "assumption_FStar.Heap.RestrictSel_1788",
+        "assumption_FStar.Heap.SelConcat_1789",
+        "assumption_FStar.Heap.SelUpd1_1783",
+        "assumption_FStar.Heap.SelUpd2_1784", "bool_inversion",
+        "data_typing_intro_FStar.Heap.Ref@tok", "equation_FStar.Array.array",
+        "equation_FStar.Heap.modifies", "equation_FStar.TSet.subset",
+        "equation_Prims.l_not", "equation_Prims.nat", "int_inversion",
+        "kinding_FStar.Heap.aref@tok", "l_and-interp", "l_or-interp",
+        "lemma_FStar.Seq.lemma_eq_intro", "lemma_FStar.Seq.lemma_index_upd1",
+        "lemma_FStar.Seq.lemma_index_upd2", "lemma_FStar.Seq.lemma_len_upd",
+        "lemma_FStar.TSet.mem_complement", "lemma_FStar.TSet.mem_intersect",
+        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_union",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0", "ref_injectivity",
+        "ref_inversion", "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1412",
+        "refinement_interpretation_Tm_refine_1457",
+        "refinement_interpretation_Tm_refine_1463",
+        "typing_FStar.Heap.concat", "typing_FStar.Heap.contains",
+        "typing_FStar.Heap.domain", "typing_FStar.Heap.restrict",
+        "typing_FStar.Heap.sel", "typing_FStar.Seq.seq",
+        "typing_FStar.Seq.upd", "typing_FStar.TSet.complement",
+        "typing_FStar.TSet.singleton", "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@pretyping__322", "@query_2288",
+        "assumption_FStar.Heap.DomConcat_1792",
+        "assumption_FStar.Heap.DomContains_1794",
+        "assumption_FStar.Heap.DomRestrict_1791",
+        "assumption_FStar.Heap.Equals_1787",
+        "assumption_FStar.Heap.Extensional_1786",
+        "assumption_FStar.Heap.RestrictSel_1788",
+        "assumption_FStar.Heap.SelConcat_1789",
+        "assumption_FStar.Seq.Extensionality_1504", "bool_inversion",
+        "data_typing_intro_FStar.Heap.Ref@tok", "equation_FStar.Array.array",
+        "equation_FStar.Heap.modifies", "equation_FStar.TSet.subset",
+        "equation_Prims.l_not", "equation_Prims.nat",
+        "kinding_FStar.Heap.aref@tok", "l_and-interp",
+        "lemma_FStar.Seq.lemma_create_len", "lemma_FStar.Seq.lemma_eq_elim",
+        "lemma_FStar.TSet.mem_complement", "lemma_FStar.TSet.mem_empty",
+        "lemma_FStar.TSet.mem_intersect", "lemma_FStar.TSet.mem_singleton",
+        "lemma_FStar.TSet.mem_subset", "lemma_FStar.TSet.mem_union",
+        "lemma_FStar.TSet.subset_mem", "projection_inverse_FStar.Heap.Ref_r",
+        "ref_inversion", "refinement_interpretation_Tm_refine_1165",
+        "typing_FStar.Heap.concat", "typing_FStar.Heap.contains",
+        "typing_FStar.Heap.domain", "typing_FStar.Heap.restrict",
+        "typing_FStar.Heap.sel", "typing_FStar.Seq.seq",
+        "typing_FStar.TSet.complement", "typing_FStar.TSet.empty",
+        "typing_FStar.TSet.singleton"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_2289", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_2290", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@pretyping__322", "@query_2313", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1165"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@pretyping__1723", "@pretyping__1742", "@pretyping__322",
+        "@query_2314", "assumption_FStar.Heap.DomConcat_1792",
+        "assumption_FStar.Heap.DomContains_1794",
+        "assumption_FStar.Heap.DomRestrict_1791",
+        "assumption_FStar.Heap.DomUpd_1790",
+        "assumption_FStar.Heap.Equals_1787",
+        "assumption_FStar.Heap.Extensional_1786",
+        "assumption_FStar.Heap.RestrictSel_1788",
+        "assumption_FStar.Heap.SelConcat_1789",
+        "assumption_FStar.Heap.SelUpd1_1783",
+        "assumption_FStar.Heap.SelUpd2_1784", "bool_inversion",
+        "data_typing_intro_FStar.Heap.Ref@tok", "equation_FStar.Array.array",
+        "equation_FStar.Heap.modifies", "equation_FStar.TSet.subset",
+        "equation_Prims.l_not", "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Heap.aref_1739", "int_inversion",
+        "int_typing", "kinding_FStar.Heap.aref@tok", "l_and-interp",
+        "l_or-interp", "lemma_FStar.Seq.lemma_index_upd1",
+        "lemma_FStar.Seq.lemma_index_upd2", "lemma_FStar.Seq.lemma_len_upd",
+        "lemma_FStar.TSet.mem_complement", "lemma_FStar.TSet.mem_intersect",
+        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_subset",
+        "lemma_FStar.TSet.mem_union", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "ref_injectivity", "ref_inversion",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1412",
+        "refinement_interpretation_Tm_refine_1457",
+        "refinement_interpretation_Tm_refine_1463",
+        "typing_FStar.Heap.concat", "typing_FStar.Heap.contains",
+        "typing_FStar.Heap.domain", "typing_FStar.Heap.restrict",
+        "typing_FStar.Heap.sel", "typing_FStar.Seq.seq",
+        "typing_FStar.Seq.upd", "typing_FStar.TSet.complement",
+        "typing_FStar.TSet.singleton", "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_2315", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_2316", "assumption_Prims.HasEq_int_325",
+        "equation_Prims.nat", "haseqTm_refine_1165"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@pretyping__322", "@query_2336", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1165"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@pretyping__322", "@query_2337", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_1165"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@query_2347", "equation_FStar.Array.array", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_1165", "typing_FStar.Heap.sel",
+        "typing_FStar.Seq.length", "typing_FStar.Seq.seq"
+      ],
+      0
+    ],
+    [
+      0,
+      0,
+      [
+        "@pretyping__322", "@query_2348",
+        "assumption_FStar.Heap.DomConcat_1792",
+        "assumption_FStar.Heap.DomContains_1794",
+        "assumption_FStar.Heap.DomRestrict_1791",
+        "assumption_FStar.Heap.Equals_1787",
+        "assumption_FStar.Heap.Extensional_1786",
+        "assumption_FStar.Heap.RestrictSel_1788",
+        "assumption_FStar.Heap.SelConcat_1789", "bool_inversion",
+        "data_typing_intro_FStar.Heap.Ref@tok", "equation_FStar.Array.array",
+        "equation_FStar.Heap.modifies", "equation_FStar.TSet.subset",
+        "equation_Prims.l_not", "equation_Prims.nat", "int_inversion",
+        "int_typing", "kinding_FStar.Heap.aref@tok", "l_and-interp",
+        "lemma_FStar.Seq.lemma_create_len", "lemma_FStar.Seq.lemma_eq_intro",
+        "lemma_FStar.Seq.lemma_index_slice",
+        "lemma_FStar.Seq.lemma_len_slice", "lemma_FStar.TSet.mem_complement",
+        "lemma_FStar.TSet.mem_empty", "lemma_FStar.TSet.mem_intersect",
+        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_subset",
+        "lemma_FStar.TSet.mem_union", "lemma_FStar.TSet.subset_mem",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Heap.Ref_r", "ref_inversion",
+        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_1412",
+        "refinement_interpretation_Tm_refine_1450",
+        "refinement_interpretation_Tm_refine_1468",
+        "refinement_interpretation_Tm_refine_1470",
+        "typing_FStar.Heap.concat", "typing_FStar.Heap.contains",
+        "typing_FStar.Heap.domain", "typing_FStar.Heap.restrict",
+        "typing_FStar.Heap.sel", "typing_FStar.Seq.length",
+        "typing_FStar.Seq.seq", "typing_FStar.Seq.slice",
+        "typing_FStar.TSet.complement", "typing_FStar.TSet.empty",
+        "typing_FStar.TSet.singleton"
+      ],
+      0
+    ]
+  ]
+]

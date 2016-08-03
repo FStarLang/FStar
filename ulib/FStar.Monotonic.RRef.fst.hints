@@ -1,0 +1,67 @@
+[
+  "Û‚â=S\u001aèxExË\u001bwEEå",
+  [
+    [ 2, 1, [ "@query_2997" ], 0 ],
+    [ 2, 1, [ "@query_3011" ], 0 ],
+    [ 2, 1, [ "@query_3016" ], 0 ],
+    [ 2, 1, [ "@query_3021" ], 0 ],
+    [ 2, 1, [ "@query_3026" ], 0 ],
+    [ 2, 1, [ "@query_3038" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_3039", "equation_FStar.Monotonic.RRef.as_rref",
+        "equation_FStar.Monotonic.RRef.m_rref"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_3046" ], 0 ],
+    [ 2, 1, [ "@query_3047", "equation_FStar.Monotonic.RRef.as_rref" ], 0 ],
+    [ 2, 1, [ "@query_3057" ], 0 ],
+    [ 2, 1, [ "@query_3058", "equation_FStar.Monotonic.RRef.as_rref" ], 0 ],
+    [ 2, 1, [ "@query_3066" ], 0 ],
+    [ 2, 1, [ "@query_3089" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_3091", "equality_tok_Prims.T@tok",
+        "equation_FStar.Monotonic.RRef.witnessed", "equation_Prims.l_True",
+        "typing_tok_Prims.T@tok", "unit_typing"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_3097" ], 0 ],
+    [ 2, 1, [ "@query_3106" ], 0 ],
+    [ 2, 1, [ "@query_3108" ], 0 ],
+    [ 2, 1, [ "@query_3123" ], 0 ],
+    [ 2, 1, [ "@query_3129" ], 0 ],
+    [ 2, 1, [ "@query_3137" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_3138", "equation_FStar.HyperHeap.contains_ref",
+        "equation_FStar.Monotonic.RRef.as_rref",
+        "equation_FStar.Monotonic.RRef.m_contains",
+        "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [ "@query_3139", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      0
+    ],
+    [
+      2,
+      1,
+      [ "@query_3146", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      0
+    ],
+    [ 2, 1, [ "@query_3154" ], 0 ]
+  ]
+]

@@ -2743,7 +2743,7 @@ end)))
 let check_uvars : FStar_Range.range  ->  FStar_Absyn_Syntax.typ  ->  Prims.unit = (fun r t -> (
 
 let uvt = (FStar_Absyn_Util.uvars_in_typ t)
-in if (((FStar_Util.set_count uvt.FStar_Absyn_Syntax.uvars_e) + ((FStar_Util.set_count uvt.FStar_Absyn_Syntax.uvars_t) + (FStar_Util.set_count uvt.FStar_Absyn_Syntax.uvars_k))) > 0) then begin
+in if ((((FStar_Util.set_count uvt.FStar_Absyn_Syntax.uvars_e) + (FStar_Util.set_count uvt.FStar_Absyn_Syntax.uvars_t)) + (FStar_Util.set_count uvt.FStar_Absyn_Syntax.uvars_k)) > 0) then begin
 (
 
 let ue = (let _137_1011 = (FStar_Util.set_elements uvt.FStar_Absyn_Syntax.uvars_e)
@@ -2758,7 +2758,7 @@ let uk = (let _137_1013 = (FStar_Util.set_elements uvt.FStar_Absyn_Syntax.uvars_
 in (FStar_List.map FStar_Absyn_Print.uvar_k_to_string _137_1013))
 in (
 
-let union = (FStar_String.concat "," (FStar_List.append (FStar_List.append ue ut) uk))
+let union = (FStar_String.concat "," (FStar_List.append ue (FStar_List.append ut uk)))
 in (
 
 let hide_uvar_nums_saved = (FStar_Options.hide_uvar_nums ())

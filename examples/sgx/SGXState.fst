@@ -2,13 +2,18 @@
 module SGXState
 
 open FStar.UInt64
+open Ast
 
-let u64 = UInt64.t
 
-type sgxstate =
- |Mksgxstate: read:(string -> u64) ->
-  	      write:(string -> u64 -> unit)->
-  	      load: (nat -> nat -> u64) ->
-  	      store:(nat -> u64-> nat-> unit)->sgxstate 
+type register =
+ | MkReg: string -> dword -> register
 
+type cpuregstate =
+ | Mkcpuregstate: (list register) -> cpuregstate
+
+val get_reg_list: cpuregstate -> Tot (list register)
+let get_reg_list = function
+ |Mkcpuregstate li -> li
+
+ 
 

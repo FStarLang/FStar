@@ -1,0 +1,114 @@
+[
+  "iÍ8S…‡\u0014\u001dbç\u0013Ë#ep÷",
+  [
+    [ 2, 1, [ "@query_1921" ], 0 ],
+    [ 2, 1, [ "@query_1937" ], 0 ],
+    [ 2, 1, [ "@query_1969" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_1973", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or_186",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_1991" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__133", "@query_2062", "bool_inversion",
+        "equation_FStar.SquashProperties.join_squash",
+        "equation_Prims.l_not", "equation_Prims.l_or",
+        "equation_Prims.squash", "kinding_Prims.c_or@tok", "l_or-interp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_139",
+        "refinement_interpretation_Tm_refine_1400",
+        "refinement_interpretation_Tm_refine_1994",
+        "typing_FStar.Squash.get_proof",
+        "typing_FStar.SquashProperties.join_squash", "typing_Prims.l_not",
+        "typing_Prims.l_or", "unit_typing"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@pretyping__190", "@query_2094", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "equation_Prims.l_or",
+        "equation_Prims.squash", "fuel_guarded_inversion_Prims.c_or_186",
+        "refinement_interpretation_Tm_refine_139", "unit_inversion"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2122" ], 0 ],
+    [ 2, 1, [ "@query_2160" ], 0 ],
+    [ 2, 1, [ "@query_2173" ], 0 ],
+    [ 2, 1, [ "@query_2175" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2190", "proj_equation_FStar.SquashProperties.MkR_i",
+        "proj_equation_FStar.SquashProperties.MkR_j",
+        "projection_inverse_FStar.SquashProperties.MkR_i",
+        "projection_inverse_FStar.SquashProperties.MkR_j",
+        "token_correspondence_FStar.SquashProperties.MkR.i",
+        "token_correspondence_FStar.SquashProperties.MkR.j"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2207" ], 0 ],
+    [ 2, 1, [ "@query_2245" ], 0 ],
+    [ 2, 1, [ "@query_2258" ], 0 ],
+    [ 2, 1, [ "@query_2260" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2275", "proj_equation_FStar.SquashProperties.MkC_i2",
+        "proj_equation_FStar.SquashProperties.MkC_j2",
+        "projection_inverse_FStar.SquashProperties.MkC_i2",
+        "projection_inverse_FStar.SquashProperties.MkC_j2",
+        "token_correspondence_FStar.SquashProperties.MkC.i2",
+        "token_correspondence_FStar.SquashProperties.MkC.j2"
+      ],
+      0
+    ],
+    [ 2, 1, [ "@query_2277" ], 0 ],
+    [
+      2,
+      1,
+      [
+        "@query_2284", "proj_equation_FStar.SquashProperties.MkC_i2",
+        "proj_equation_FStar.SquashProperties.MkC_j2",
+        "projection_inverse_FStar.SquashProperties.MkC_i2",
+        "projection_inverse_FStar.SquashProperties.MkC_j2",
+        "token_correspondence_FStar.SquashProperties.MkC.i2",
+        "token_correspondence_FStar.SquashProperties.MkC.j2"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2289", "equation_Prims.l_False",
+        "fuel_guarded_inversion_Prims.c_False_117"
+      ],
+      0
+    ],
+    [
+      2,
+      1,
+      [
+        "@query_2348", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or_186"
+      ],
+      0
+    ]
+  ]
+]

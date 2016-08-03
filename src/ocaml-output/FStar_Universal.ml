@@ -48,11 +48,11 @@ in (
 let _90_29 = (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.init env)
 in (
 
-let p = (FStar_Options.prims ())
+let prims_filename = (FStar_Options.prims ())
 in (
 
 let _90_34 = (let _182_14 = (FStar_Parser_Env.empty_env ())
-in (parse _182_14 None p))
+in (parse _182_14 None prims_filename))
 in (match (_90_34) with
 | (dsenv, prims_mod) -> begin
 (

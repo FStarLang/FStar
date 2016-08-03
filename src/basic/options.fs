@@ -65,7 +65,7 @@ let as_option as_t = function
   | Unset -> None
   | v -> Some (as_t v)
 
-let fstar_options : ref<list<Util.smap<option_val>>> = Util.mk_ref []
+let fstar_options : ref<list<Util.smap<option_val>> > = Util.mk_ref []
 let peek () = List.hd !fstar_options
 let pop  () = match !fstar_options with
     | []
@@ -235,7 +235,7 @@ let one_debug_level_geq l1 l2 = match l1 with
 let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug_level_geq (dlevel l1) l2)
 
 let include_path_base_dirs =
-  ["/lib"; "/lib/fstar"; "/stdlib" ; "/stdlib/fstar"]
+  ["/lib"; "/lib/fstar"]
 
 let universe_include_path_base_dirs =
   ["/ulib"]
@@ -257,7 +257,7 @@ let display_usage_aux specs =
              else Util.print_string (Util.format3 "  --%s %s  %s\n" (Util.colorize_bold flag) (Util.colorize_bold argname) doc))
     specs
 
-let mk_spec (o:opt'<option_val>) : opt =
+let mk_spec o : opt =
     let ns, name, arg, desc = o in
     let arg =
         match arg with
@@ -292,20 +292,20 @@ let rec specs () : list<Getopt.opt> =
                "[off|warn|check]"),
        "Check cardinality constraints on inductive data types (default 'off')");
 
-     ( noshort, 
-       "codegen", 
-        OneArg ((fun s -> String (parse_codegen s)), 
-                 "[OCaml|FSharp|Kremlin]"), 
+     ( noshort,
+       "codegen",
+        OneArg ((fun s -> String (parse_codegen s)),
+                 "[OCaml|FSharp|Kremlin]"),
         "Generate code for execution");
 
-     ( noshort, 
-        "codegen-lib", 
-        OneArg ((fun s -> List (s::get_codegen_lib() |> List.map String)), 
-                 "[namespace]"), 
+     ( noshort,
+        "codegen-lib",
+        OneArg ((fun s -> List (s::get_codegen_lib() |> List.map String)),
+                 "[namespace]"),
         "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
-     
-     ( noshort, 
-        "debug", 
+
+     ( noshort,
+        "debug",
         OneArg ((fun x -> List (x::get_debug() |> List.map String)),
                  "[module name]"),
         "Print lots of debugging information while checking module");
@@ -325,7 +325,8 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "detail_errors",
         ZeroArgs (fun () -> Bool true),
-         "Emit a detailed error report by asking the SMT solver many queries; will take longer; implies n_cores=1; incompatible with --stratified");
+         "Emit a detailed error report by asking the SMT solver many queries; will take longer;
+         implies n_cores=1; incompatible with --stratified");
 
        ( noshort,
         "dump_module",
@@ -346,9 +347,8 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "fs_typ_app",
         ZeroArgs (fun () -> Bool true),
-        "Allow the use of t<t1,
-       ...,
-       tn> syntax for type applications; brittle since it clashes with the integer less-than operator");
+        "Allow the use of t<t1,...,tn> syntax for type applications;
+        brittle since it clashes with the integer less-than operator");
 
        ( noshort,
         "fsi",
@@ -531,8 +531,7 @@ let rec specs () : list<Getopt.opt> =
         "smt",
         OneArg (String,
                  "[path]"),
-        "Path to the SMT solver (usually Z3,
-        but could be any SMT2-compatible solver)");
+        "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
 
        ( noshort,
         "split_cases",
@@ -573,7 +572,8 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "use_native_int",
         ZeroArgs (fun () -> Bool true),
-        "Extract the 'int' type to platform-specific native int (You will need to link the generated code with the appropriate version of the prims library)");
+        "Extract the 'int' type to platform-specific native int;
+        (You will need to link the generated code with the appropriate version of the prims library)");
 
        ( noshort,
         "verify_all",
@@ -600,8 +600,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "warn_top_level_effects",
         ZeroArgs (fun () -> Bool true),
-        "Top-level effects are ignored,
-        by default; turn this flag on to be warned when this happens");
+        "Top-level effects are ignored by default; turn this flag on to be warned when this happens");
 
        ( noshort,
         "z3timeout",
@@ -757,12 +756,12 @@ let find_file filename =
 let prims () =
   match get_prims() with
   | None ->
-    let filen = "prims.fst" in
-    begin match find_file filen with
+    let filename = "prims.fst" in
+    begin match find_file filename with
           | Some result ->
             result
           | None ->
-            raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filen))
+            raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
     end
   | Some x -> x
 

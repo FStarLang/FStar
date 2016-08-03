@@ -26,9 +26,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--universes natST.fst --explicit_deps --codegen OCaml  --trace_error  --debug NatST --debug_level Extraction</StartArguments>
+    <StartArguments>--log_queries test.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\workspace\FStar\examples\dm4free\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\FStar\examples\test\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

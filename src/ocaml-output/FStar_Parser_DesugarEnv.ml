@@ -236,7 +236,7 @@ in (qual _152_235 id)))
 let qualify_lid : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident = (fun env lid -> (
 
 let cur = (current_module env)
-in (let _152_240 = (FStar_Ident.lid_of_ids (FStar_List.append (FStar_List.append (FStar_List.append cur.FStar_Ident.ns ((cur.FStar_Ident.ident)::[])) lid.FStar_Ident.ns) ((lid.FStar_Ident.ident)::[])))
+in (let _152_240 = (FStar_Ident.lid_of_ids (FStar_List.append cur.FStar_Ident.ns (FStar_List.append ((cur.FStar_Ident.ident)::[]) (FStar_List.append lid.FStar_Ident.ns ((lid.FStar_Ident.ident)::[])))))
 in (FStar_Ident.set_lid_range _152_240 (FStar_Ident.range_of_lid lid)))))
 
 
@@ -933,7 +933,7 @@ in (match (_60_692) with
 let constrname = recd.constrname.FStar_Ident.ident
 in (
 
-let fname = (FStar_Ident.lid_of_ids (FStar_List.append (FStar_List.append ns ((constrname)::[])) ((fieldname)::[])))
+let fname = (FStar_Ident.lid_of_ids (FStar_List.append ns (FStar_List.append ((constrname)::[]) ((fieldname)::[]))))
 in (FStar_Util.find_map recd.fields (fun _60_698 -> (match (_60_698) with
 | (f, _60_697) -> begin
 if (FStar_Ident.lid_equals fname f) then begin
@@ -1456,7 +1456,7 @@ end))
 
 let fail_or2 = (fun lookup id -> (match ((lookup id)) with
 | None -> begin
-(Prims.raise (FStar_Absyn_Syntax.Error ((((Prims.strcat (Prims.strcat "Identifier not found [" id.FStar_Ident.idText) "]")), (id.FStar_Ident.idRange)))))
+(Prims.raise (FStar_Absyn_Syntax.Error ((((Prims.strcat "Identifier not found [" (Prims.strcat id.FStar_Ident.idText "]"))), (id.FStar_Ident.idRange)))))
 end
 | Some (r) -> begin
 r

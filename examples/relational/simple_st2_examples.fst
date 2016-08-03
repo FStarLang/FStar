@@ -53,7 +53,7 @@ val equiv6: x:double (ref int)
                 (ensures (fun _ _ h2' -> eq_irel (sel_rel2 h2' x))) //their contents are equal afterwards
 let equiv6 x = compose2 f6 g6 x
 
-let f7 x = x := 2*!x
+let f7 x = x := 2 * !x
 let g7 x = let y = (fun a -> a + a) !x in x := y
 val equiv7: x:double (ref int)
          -> ST2 (rel unit unit)
@@ -170,7 +170,7 @@ let equiv_gauss x = compose2 (fun x -> gauss_rec x 0) (fun x -> gauss x) (twice 
 val gauss_imp : x:ref nat -> ST nat
                     (requires (fun h -> True))
                     (ensures  (fun h0 r h1 -> r = gauss (sel h0 x)))
-let gauss_imp x = (!x*!x + !x)/2
+let gauss_imp x = (!x * !x + !x)/2
 
 val gauss_imp_rec : p:((ref nat) * (ref nat)) -> ST nat
                     (requires (fun h -> fst p <> snd p))

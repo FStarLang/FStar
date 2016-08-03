@@ -1,12 +1,18 @@
 module FStar.UInt32
+(* This module generated automatically using [mk_int.sh] *)
 
 let n = 32
 
 open FStar.UInt
 open FStar.Mul
 
-(* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
+(* NOTE: anything that you fix/update here should be reflected in [FStar.IntN.fstp], which is mostly
  * a copy-paste of this module. *)
+
+(* This is really the same thing as [FStar.IntN.fstp], with:
+ * - every occurrence of [int_t] has been replaced with [uint_t]
+ * - every occurrence of [@%] has been replaced with [%].
+ *)
 
 private type t' = | Mk: v:uint_t n -> t'
 type t = t'
@@ -111,12 +117,12 @@ let uint_to_t x = Mk x
 (* Shift operators *)
 val shift_right: a:t -> s:t -> Pure t
   (requires True)
-  (ensures (fun c -> v c = (v a / (pow2 (v s)))))
+  (ensures (fun c -> v s < n ==> v c = (v a / (pow2 (v s)))))
 let shift_right a s = Mk (shift_right (v a) (v s))
 
 val shift_left: a:t -> s:t -> Pure t
   (requires True)
-  (ensures (fun c -> v c = ((v a * pow2 (v s)) % pow2 n)))
+  (ensures (fun c -> v s < n ==> v c = ((v a * pow2 (v s)) % pow2 n)))
 let shift_left a s = Mk (shift_left (v a) (v s))
 
 (* Comparison operators *)
@@ -125,6 +131,9 @@ let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
 let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
 let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
 let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
+
+assume val eq_mask: a:t -> b:t -> Tot (c:t{(v a = v b ==> v c = pow2 n - 1) /\ (v a <> v b ==> v c = 0)})
+assume val gte_mask: a:t -> b:t -> Tot (c:t{(v a >= v b ==> v c = pow2 n - 1) /\ (v a < v b ==> v c = 0)})
 
 (* Infix notations *)
 let op_Plus_Hat = add
@@ -138,17 +147,17 @@ let op_Star_Question_Hat = mul_underspec
 let op_Star_Percent_Hat = mul_mod
 let op_Slash_Hat = div
 let op_Percent_Hat = rem
-let op_Hat_Hat = logxor  
+let op_Hat_Hat = logxor
 let op_Amp_Hat = logand
 let op_Bar_Hat = logor
 let op_Less_Less_Hat = shift_left
 let op_Greater_Greater_Hat = shift_right
 let op_Equals_Hat = eq
 let op_Greater_Hat = gt
-let op_Greater_Equal_Hat = gte
+let op_Greater_Equals_Hat = gte
 let op_Less_Hat = lt
-let op_Less_Equal_Hat = lte
+let op_Less_Equals_Hat = lte
 
-let to_int (x:t) : Tot int = v x
+(* To input / output constants *)
 assume val to_string: t -> Tot string
-assume val of_string: string -> Tot t // The function should actually not be Tot
+assume val of_string: string -> Tot t

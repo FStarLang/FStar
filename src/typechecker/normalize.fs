@@ -52,13 +52,7 @@ type step =
   | EraseUniverses
   | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
   | Reify
-  //remove the rest?
-  | DeltaComp       
-  | SNComp
-  | Eta             
-  | EtaArgs         
-  | Unmeta
-  | Unlabel
+  | CompressUvars
 and steps = list<step>
 
 
@@ -181,7 +175,7 @@ let norm_universe cfg env u =
           | U_bvar x -> 
             begin 
                 try match List.nth env x with 
-                      | Univ u -> [u]
+                      | Univ u -> aux u
                       | Dummy -> [u]
                       | _ -> failwith "Impossible: universe variable bound to a term"
                 with _ -> if cfg.steps |> List.contains AllowUnboundUniverses
@@ -217,7 +211,7 @@ let norm_universe cfg env u =
 let rec closure_as_term cfg env t =
     log cfg  (fun () -> Util.print2 ">>> %s Closure_as_term %s\n" (Print.tag_of_term t) (Print.term_to_string t));
     match env with
-        | [] -> t
+        | [] when not <| List.contains CompressUvars cfg.steps -> t
         | _ -> 
         let t = compress t in 
         match t.n with 
@@ -337,13 +331,13 @@ let rec closure_as_term cfg env t =
        
 and closure_as_term_delayed cfg env t = 
     match env with 
-        | [] -> t
+        | [] when not <| List.contains CompressUvars cfg.steps -> t
         | _ -> closure_as_term cfg env t
 //            mk_Tm_delayed (Inr (fun () -> closure_as_term cfg env t)) t.pos  
  
 and closures_as_args_delayed cfg env args =
     match env with 
-        | [] -> args
+        | [] when not <| List.contains CompressUvars cfg.steps -> args
         | _ -> List.map (fun (x, imp) -> closure_as_term_delayed cfg env x, imp) args 
 
 and closures_as_binders_delayed cfg env bs = 
@@ -355,7 +349,7 @@ and closures_as_binders_delayed cfg env bs =
 
 and close_comp cfg env c = 
     match env with
-        | [] -> c
+        | [] when not <| List.contains CompressUvars cfg.steps -> c
         | _ -> 
         match c.n with 
             | Total t -> mk_Total (closure_as_term_delayed cfg env t)
@@ -480,8 +474,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Inl x -> 
                       let head = U.mk_reify lb.lbdef in
                       let body = S.mk (Tm_abs([S.mk_binder x], U.mk_reify body, None)) None body.pos in
-                      let reified = S.mk (Tm_app(bind_repr, [as_arg S.tun; as_arg S.tun; as_arg S.tun; 
-                                                             as_arg S.tun; as_arg head; as_arg body])) None t.pos in
+                      let reified = S.mk (Tm_app(bind_repr, [as_arg S.tun; as_arg S.tun;  //a, b
+                                                             as_arg S.tun; as_arg head;   //wp_head, head
+                                                             as_arg S.tun; as_arg body])) //wp_body, body
+                                                             None t.pos in
                       // printfn "Reified %s to %s\n" (Print.term_to_string t) (Print.term_to_string reified);
                       norm cfg env stack reified
                     | Inr _ -> failwith "Cannot reify a top-level let binding"
@@ -577,10 +573,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | Match _::_ -> 
                   failwith "Ill-typed term: cannot pattern match an abstraction"
 
-                | Arg(c, _, _)::stack -> 
+                | Arg(c, _, _)::stack_rest -> 
                   begin match c with 
                     | Univ _ -> //universe variables do not have explicit binders
-                      norm cfg (c::env) stack t
+                      norm cfg (c::env) stack_rest t
 
                     | _ -> 
                      (* Note: we peel off one application at a time. 
@@ -593,36 +589,37 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           begin match lopt with 
                             | None when (Options.__unit_tests()) -> 
                               log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
-                              norm cfg (c :: env) stack body 
+                              norm cfg (c :: env) stack_rest body 
 
                             | Some (Inr l) 
                                 when (Ident.lid_equals l Const.effect_Tot_lid
                                       || Ident.lid_equals l Const.effect_GTot_lid) ->
                               log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
-                              norm cfg (c :: env) stack body 
+                              norm cfg (c :: env) stack_rest body 
 
                             | Some (Inl lc) when (Util.is_tot_or_gtot_lcomp lc) ->
                               log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
-                              norm cfg (c :: env) stack body 
+                              norm cfg (c :: env) stack_rest body 
 
                             | _ when (cfg.steps |> List.contains Reify) ->
-                              norm cfg (c :: env) stack body 
+                              norm cfg (c :: env) stack_rest body 
 
                             | _ -> //can't reduce, as it may not terminate
-                              //printfn "REFUSING TO NORMALIZE APPLICATION BECAUSE IT MAY BE IMPURE: %s" (Print.term_to_string t);
-                              let cfg = {cfg with steps=WHNF::cfg.steps} in
+//                              printfn "REFUSING TO NORMALIZE APPLICATION BECAUSE IT MAY BE IMPURE: %s" (Print.term_to_string t);
+//                              printfn "Stack has %d elements" (List.length stack_rest);;
+                              let cfg = {cfg with steps=WHNF::Exclude Iota::Exclude Zeta::cfg.steps} in
                               rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
                           end
                         | _::tl -> 
                           log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
                           let body = mk (Tm_abs(tl, body, lopt)) t.pos in
-                          norm cfg (c :: env) stack body 
+                          norm cfg (c :: env) stack_rest body 
                       end
                   end
 
                 | MemoLazy r :: stack -> 
                   set_memo r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
-                  log cfg  (fun () -> Util.print_string "\tSet memo\n");
+                  log cfg  (fun () -> Util.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
                 | Let _ :: _
@@ -703,7 +700,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
             
           | Tm_let(lbs, body) when List.contains (Exclude Zeta) cfg.steps -> //no fixpoint reduction allowed
-            rebuild cfg env stack t
+            rebuild cfg env stack (closure_as_term cfg env t)
 
           | Tm_let(lbs, body) -> 
             //let rec: The basic idea is to reduce the body in an environment that includes recursive bindings for the lbs
@@ -774,7 +771,7 @@ and norm_comp : cfg -> env -> comp -> comp =
 *)
 and ghost_to_pure_aux cfg env c =
     let norm t = 
-        norm ({cfg with steps=[Inline; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses]}) env [] t in
+        norm ({cfg with steps=[Inline; UnfoldUntil Delta_constant; AllowUnboundUniverses]}) env [] t in
     let non_info t = non_informative (norm t) in
     match c.n with
     | Total _ -> c
@@ -832,6 +829,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
 
             | MemoLazy r::stack -> 
               set_memo r (env, t);
+              log cfg  (fun () -> Util.print1 "\tSet memo %s\n" (Print.term_to_string t));
               rebuild cfg env stack t
 
             | Let(env', bs, lb, r)::stack ->
@@ -1048,8 +1046,6 @@ let normalize_refinement steps env t0 =
          end
        | _ -> t in
    aux t
-
-let normalize_sigelt (_:steps) (_:Env.env) (_:sigelt) : sigelt = failwith "NYI: normalize_sigelt"
 
 let eta_expand (_:Env.env) (t:typ) : typ =
   let expand sort =
