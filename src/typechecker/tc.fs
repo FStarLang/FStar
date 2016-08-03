@@ -1920,6 +1920,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
             let expected_k, _, _ = 
                 tc_tot_or_gtot_term env expected_k in
             let env = Env.set_range env (snd (ed.bind_repr)).pos in
+            let env = {env with lax=true} in //we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
             check_and_gen' env ed.bind_repr expected_k in
 
         let return_repr = 
