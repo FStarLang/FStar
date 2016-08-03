@@ -1,5 +1,5 @@
 #!/bin/bash
-FSTAR=$(dirname $(readlink -f $0))/fstar.exe
+FSTAR=$(dirname $(stat -f $0))/fstar.exe
 if (( $? != 0 )); then
   echo "fstar.exe not found"
   exit 1
