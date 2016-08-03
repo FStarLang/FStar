@@ -736,7 +736,7 @@ and infer (env: env) (e: term): nm * term * term =
         let c = normalize bv.sort in
         if is_C c then
           let xw = S.gen_bv (bv.ppname.idText ^ "^w") None (star_type env c) in
-          let x = { bv with sort = trans_F env c (S.bv_to_name xw) } in
+          let x = { bv with sort = trans_F_ env c (S.bv_to_name xw) } in
           let env = { env with subst = NT (bv, S.bv_to_name xw) :: env.subst } in
           env, S.mk_binder x :: S.mk_binder xw :: acc
         else
@@ -987,7 +987,7 @@ and type_of_comp t =
   | Total t | GTotal t | Comp { result_typ = t } -> t
 
 // This function expects its argument [c] to be normalized and to satisfy [is_C c]
-and trans_F (env: env_) (c: typ) (wp: term): term =
+and trans_F_ (env: env_) (c: typ) (wp: term): term =
   if not (is_C c) then
     failwith "not a C";
   let mk x = mk x None c.pos in
@@ -999,7 +999,7 @@ and trans_F (env: env_) (c: typ) (wp: term): term =
          not (is_constructor wp_head (mk_tuple_data_lid (List.length wp_args) Range.dummyRange)) then
         failwith "mismatch";
       mk (Tm_app (head, List.map2 (fun (arg, _) (wp_arg, _) ->
-        trans_F env arg wp_arg, S.as_implicit false)
+        trans_F_ env arg wp_arg, S.as_implicit false)
       args wp_args))
   | Tm_arrow (binders, comp) ->
       let binders = U.name_binders binders in
@@ -1009,7 +1009,7 @@ and trans_F (env: env_) (c: typ) (wp: term): term =
         let h = bv.sort in
         if is_C h then
           let w' = S.gen_bv (bv.ppname.idText ^ "-w'") None (star_type env h) in
-          w', [ S.mk_binder w'; S.null_binder (trans_F env h (S.bv_to_name bv)) ]
+          w', [ S.mk_binder w'; S.null_binder (trans_F_ env h (S.bv_to_name bv)) ]
         else
           let x = S.gen_bv (bv.ppname.idText ^ "-x") None (star_type env h) in
           x, [ S.mk_binder x ]
@@ -1021,7 +1021,7 @@ and trans_F (env: env_) (c: typ) (wp: term): term =
       let binders = close_binders binders in
       mk (Tm_arrow (binders, comp))
   | _ ->
-      failwith "impossible trans_F"
+      failwith "impossible trans_F_"
 
 and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
   let mk x = mk x None h.pos in
@@ -1033,17 +1033,17 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
       flags = []
     })
   else
-    mk_Total (trans_F env h wp)
+    mk_Total (trans_F_ env h wp)
 
 
 let star_expr_definition env t =
   star_definition env t (fun env e -> let t, s_e, s_u = check_n env e in t, (s_e, s_u))
 
-// Same thing as [trans_F], but normalizes its argument, so that it can be
+// Same thing as [trans_F_], but normalizes its argument, so that it can be
 // called from [tc.fs]. The name is different to make F# happy.
-let trans_FC (env: env_) (c: typ) (wp: term): term =
+let trans_F (env: env_) (c: typ) (wp: term): term =
   let n = N.normalize [ N.Beta; N.EraseUniverses; N.Inline; N.UnfoldUntil S.Delta_constant ] env.env in
   let c = n c in
   let wp = n wp in
-  trans_F env c wp
+  trans_F_ env c wp
 

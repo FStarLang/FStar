@@ -2000,7 +2000,11 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
     // We always close [bind_repr], even though it may be [Tm_unknown]
     // (non-reifiable, non-reflectable effect)
-    if n >= 0 then assert (is_unknown (snd ts) || List.length (fst ts) = n);
+    if n > 0 && not (is_unknown (snd ts)) && List.length (fst ts) <> n then
+        failwith (Util.format2
+          "The effect combinator is not universe-polymorphic enough (n=%s) (%s)"
+          (string_of_int n)
+          (Print.tscheme_to_string ts));
     ts in
   let close_action act = 
     let univs, defn = close (-1) (act.action_univs, act.action_defn) in
@@ -2010,6 +2014,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
         action_univs=univs;
         action_defn=defn;
         action_typ=typ; } in
+  assert (List.length binders > 0 || List.length univs = 1);
   let ed = { ed with
       univs       = univs
     ; binders     = binders
@@ -2048,9 +2053,9 @@ and dijkstra_ftw env ed =
   // just extract the binder [a].
   let a, effect_marker =
     // TODO: more stringent checks on the shape of the signature; better errors
-    match (SS.compress signature).n with
+    match (SS.compress signature_un).n with
     | Tm_arrow ([(a, _)], effect_marker) ->
-        S.new_bv (Some (S.range_of_bv a)) a.sort, effect_marker
+        a, effect_marker
     | _ ->
         failwith "bad shape for effect-for-free signature"
   in
@@ -2088,6 +2093,11 @@ and dijkstra_ftw env ed =
   in
   let effect_signature = recheck_debug "turned into the effect signature" env effect_signature in
 
+  let sigelts = ref [] in
+  let mk_lid name: lident =
+    lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ name)) Range.dummyRange
+  in
+
   // TODO: we assume that reading the top-level definitions in the order that
   // they come in the effect definition is enough... probably not
   let elaborate_and_star dmff_env item =
@@ -2122,12 +2132,25 @@ and dijkstra_ftw env ed =
         failwith "unexpected shape for bind"
   in
 
+  let register name item =
+    let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) item in
+    sigelts := sigelt :: !sigelts;
+    fv
+  in
+  let return_wp = register "return_wp" return_wp in
+  let return_elab = register "return_elab" return_elab in
+  let bind_wp = register "bind_wp" bind_wp in
+  let bind_elab = register "bind_elab" bind_elab in
+
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     // We need to reverse-engineer what tc_eff_decl wants here...
     let dmff_env, action_wp, action_elab =
       elaborate_and_star dmff_env (action.action_univs, action.action_defn)
     in
+    let name = action.action_name.ident.idText in
+    let action_wp = register (name ^ "_wp") action_wp in
+    let action_elab = register (name ^ "_elab") action_elab in
     dmff_env, { action with action_defn = action_elab } :: actions
   ) (dmff_env, []) ed.actions in
   let actions = List.rev actions in
@@ -2135,9 +2158,10 @@ and dijkstra_ftw env ed =
   let repr =
     let wp = S.gen_bv "wp_a" None wp_a in
     let binders = [ S.mk_binder a; S.mk_binder wp ] in
-    U.abs binders (DMFF.trans_FC dmff_env (mk (Tm_app (ed.repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
+    U.abs binders (DMFF.trans_F dmff_env (mk (Tm_app (ed.repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
   in
   let repr = recheck_debug "FC" env repr in
+  let repr = register "repr" repr in
 
   let c = close binders in
 
@@ -2158,7 +2182,9 @@ and dijkstra_ftw env ed =
     Util.print_string (Print.eff_decl_to_string true ed);
 
   // Generate the missing combinators.
-  DMFF.gen_wps_for_free env binders a wp_a ed
+  let sigelts', ed = DMFF.gen_wps_for_free env binders a wp_a ed in
+  List.rev !sigelts @ sigelts', ed
+
 
 and tc_lex_t env ses quals lids =
     (* We specifically type lex_t as:

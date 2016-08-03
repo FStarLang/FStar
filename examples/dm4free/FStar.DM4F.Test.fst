@@ -56,17 +56,12 @@ reifiable reflectable new_effect_for_free {
 }
 
 // From the definition language to the effectful world with WPs
-reifiable let get' (): Pure int (fun z post -> post (z, z)) =
+reifiable let get' (): STInt int (fun z post -> post (z, z)) =
   STInt.reflect (get ())
 
 // From the effectful world with WPs back to the functional monadic semantics
 let get'' (): st int =
   reify (get' ())
 
-let sanity =
+let sanity_get =
   assert (forall (s: nat). get () s = get'' () s)
-
-(* reifiable val incr2 : unit -> St unit *)
-(* let incr2 u = *)
-(*     let n = STATE.get() in *)
-(*     STATE.put (n + 1) *)
