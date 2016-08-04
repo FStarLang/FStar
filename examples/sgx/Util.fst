@@ -8,6 +8,7 @@ open Ast
 
 val cast_to_word: address -> Tot word
 let cast_to_word  _ = 0ul
+
 (*
    Bitmap layout
   ==============
@@ -72,6 +73,8 @@ let invert_stmt s = match s with
 let rec print_stmt (stli:list stmt) :Tot bool = match stli with
   | [] -> debug_print_string "end-of-stament-list\n" 
   | (Skip iaddr)::tail -> let _ = debug_print_string "skip\n" in print_stmt tail
+  | (Add(iaddr,_, _,_))::tail -> let _ = debug_print_string "add\n" in print_stmt tail
+  | (Cmp(iaddr,_, _,_))::tail -> let _ = debug_print_string "cmp\n" in print_stmt tail
   | (Store(iaddr, _, _, _))::tail-> let _ = debug_print_string "store\n" in print_stmt tail
   | (Load (iaddr, _, _, _))::tail-> let _ = debug_print_string "load\n" in print_stmt tail
   | (Call (iaddr, _))::tail-> let _ = debug_print_string "call\n" in print_stmt tail
@@ -104,6 +107,8 @@ let get_function_given_address (instraddr:address) (myprogram:program) =
 		let rec search_ins (stli:list stmt):Tot bool = begin match stli with 
 			  | [] -> false
 			  | (Skip iaddr)::tail 
+			  | (Add(iaddr,_,  _, _))::tail
+			  | (Cmp(iaddr,_,  _, _))::tail
 			  | (Store(iaddr, _, _, _))::tail
 			  | (Load (iaddr, _, _, _))::tail
 			  | (Call (iaddr, _))::tail
@@ -126,6 +131,8 @@ let get_stmt_list_in_current_function instraddr myprogram =
 	let rec search_ins (stli:list stmt):Tot (list stmt) = begin match stli with 
 		  | [] -> []
 		  | (Skip iaddr)::tail 
+		  | (Add(iaddr,_, _, _))::tail
+		  | (Cmp(iaddr,_, _, _))::tail
 		  | (Store(iaddr, _, _, _))::tail
 		  | (Load (iaddr, _, _, _))::tail
 		  | (Call (iaddr, _))::tail

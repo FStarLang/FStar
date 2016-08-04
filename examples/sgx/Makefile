@@ -22,7 +22,7 @@ x86Interpreter-ml:
 	$(MAKE) x86Interpreter-compile
 
 x86Interpreter-compile:
-	$(OCAMLCOPT) -I ml -I $(X86_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
+	$(OCAMLOPT) -I ml -I $(X86_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
 	  $(FSTAR_HOME)/ulib/ml/FStar_UInt32.ml \
 	  $(X86_ODIR)/FStar_List_Tot.ml \
 	  $(addprefix $(X86_ODIR)/,$(X86_EXTRACTED)) ml/main.ml -o test.exe
