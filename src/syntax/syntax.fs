@@ -113,8 +113,8 @@ and comp_typ = {
   flags:list<cflags>
 }
 and comp' =
-  | Total  of typ
-  | GTotal of typ
+  | Total  of typ * option<universe>
+  | GTotal of typ * option<universe>
   | Comp   of comp_typ
 and term = syntax<term',term'>
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
@@ -398,8 +398,10 @@ let extend_app_n t args' kopt r = match t.n with
     | _ -> mk_Tm_app t args' kopt r
 let extend_app t arg kopt r = extend_app_n t [arg] kopt r
 let mk_Tm_delayed lr pos : term = mk (Tm_delayed(lr, Util.mk_ref None)) None pos
-let mk_Total t : comp  = mk (Total t) None t.pos
-let mk_GTotal t : comp = mk (GTotal t) None t.pos
+let mk_Total' t  u: comp  = mk (Total(t, u)) None t.pos
+let mk_GTotal' t u: comp = mk (GTotal(t, u)) None t.pos
+let mk_Total t = mk_Total' t None
+let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
 let mk_subst (s:subst_t)   = s

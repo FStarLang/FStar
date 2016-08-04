@@ -341,12 +341,12 @@ and args_to_string args =
 
 and comp_to_string c = 
   match c.n with
-    | Total t -> 
+    | Total (t, _) -> 
       begin match (compress t).n with 
         | Tm_type _ when not (Options.print_implicits()) -> term_to_string t 
         | _ -> Util.format1 "Tot %s" (term_to_string t)
       end
-    | GTotal t -> 
+    | GTotal (t, _) -> 
       begin match (compress t).n with 
         | Tm_type _ when not (Options.print_implicits()) -> term_to_string t 
         | _ -> Util.format1 "GTot %s" (term_to_string t)

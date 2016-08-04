@@ -220,8 +220,18 @@ let comp_effect_name c = match c.n with
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
     | Comp c -> c
-    | Total t ->  {comp_univs=[]; effect_name=Const.effect_Tot_lid; result_typ=t; effect_args=[]; flags=[TOTAL]}
-    | GTotal t -> {comp_univs=[]; effect_name=Const.effect_GTot_lid; result_typ=t; effect_args=[]; flags=[SOMETRIVIAL]}
+    | Total (t, uopt) ->  
+      {comp_univs=Option.toList uopt; 
+       effect_name=Const.effect_Tot_lid; 
+       result_typ=t; 
+       effect_args=[]; 
+       flags=[TOTAL]}
+    | GTotal(t, uopt) -> 
+      {comp_univs=Option.toList uopt; 
+       effect_name=Const.effect_GTot_lid; 
+       result_typ=t; 
+       effect_args=[]; 
+       flags=[SOMETRIVIAL]}
 
 let is_total_comp c =
     comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
@@ -317,8 +327,8 @@ let is_ml_comp c = match c.n with
   | _ -> false
 
 let comp_result c = match c.n with
-  | Total t  
-  | GTotal t -> t
+  | Total (t, _)  
+  | GTotal (t, _) -> t
   | Comp ct -> ct.result_typ
 
 let set_result_typ c t = match c.n with

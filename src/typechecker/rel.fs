@@ -789,15 +789,15 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
             | [] -> [], [], Util.t_true
             | q::qs ->
                 let tc, probs = match q with
-                     | bopt, variance, C ({n=Total ti}) ->
+                     | bopt, variance, C ({n=Total (ti, uopt)}) ->
                        begin match sub_prob scope args (bopt, variance, T (ti, kind_type)) with
-                            | T (gi_xs, _), prob -> C <| mk_Total gi_xs, [prob]
+                            | T (gi_xs, _), prob -> C <| mk_Total' gi_xs uopt, [prob]
                             | _ -> failwith "impossible"
                        end
 
-                     | bopt, variance, C ({n=GTotal ti}) ->
+                     | bopt, variance, C ({n=GTotal(ti, uopt)}) ->
                        begin match sub_prob scope args (bopt, variance, T (ti, kind_type)) with
-                            | T (gi_xs, _), prob -> C <| mk_GTotal gi_xs, [prob]
+                            | T (gi_xs, _), prob -> C <| mk_GTotal' gi_xs uopt, [prob]
                             | _ -> failwith "impossible"
                        end
 
@@ -2137,15 +2137,15 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                     (Print.comp_to_string c2) in
          let c1, c2 = N.ghost_to_pure env c1, N.ghost_to_pure env c2 in
          match c1.n, c2.n with
-               | GTotal t1, Total t2 when (Util.non_informative t2) ->
+               | GTotal (t1, _), Total (t2, _) when (Util.non_informative t2) ->
                  solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
                
                | GTotal _, Total _ ->
                  giveup env "incompatible monad ordering: GTot </: Tot"  orig
 
-               | Total t1, Total t2 
-               | GTotal t1, GTotal t2
-               | Total t1, GTotal t2 -> //rigid-rigid 1
+               | Total  (t1, _), Total  (t2, _)
+               | GTotal (t1, _), GTotal (t2, _)
+               | Total  (t1, _), GTotal (t2, _) -> //rigid-rigid 1
                  solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
                | GTotal _, Comp _

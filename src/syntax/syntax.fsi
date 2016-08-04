@@ -112,8 +112,8 @@ and comp_typ = {
   flags:list<cflags>
 }
 and comp' =
-  | Total  of typ
-  | GTotal of typ
+  | Total  of typ * option<universe>
+  | GTotal of typ * option<universe>
   | Comp   of comp_typ
 and term = syntax<term',term'>
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
@@ -346,6 +346,8 @@ val extend_app_n:   term -> args -> Tot<mk_t>
 val mk_Tm_delayed:  either<(term * subst_ts), (unit -> term)> -> Range.range -> term
 val mk_Total:       typ -> comp
 val mk_GTotal:      typ -> comp
+val mk_Total':      typ -> option<universe> -> comp
+val mk_GTotal':     typ -> option<universe> -> comp
 val mk_Comp:        comp_typ -> comp
 val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term

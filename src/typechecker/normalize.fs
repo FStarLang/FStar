@@ -352,15 +352,20 @@ and close_comp cfg env c =
         | [] when not <| List.contains CompressUvars cfg.steps -> c
         | _ -> 
         match c.n with 
-            | Total t -> mk_Total (closure_as_term_delayed cfg env t)
-            | GTotal t -> mk_GTotal (closure_as_term_delayed cfg env t)
+            | Total (t, uopt) -> 
+              mk_Total' (closure_as_term_delayed cfg env t) 
+                        (Option.map (norm_universe cfg env) uopt)
+            | GTotal (t, uopt) ->
+              mk_GTotal' (closure_as_term_delayed cfg env t) 
+                         (Option.map (norm_universe cfg env) uopt)
             | Comp c -> 
               let rt = closure_as_term_delayed cfg env c.result_typ in
               let args = closures_as_args_delayed cfg env c.effect_args in 
               let flags = c.flags |> List.map (function 
                 | DECREASES t -> DECREASES (closure_as_term_delayed cfg env t)
                 | f -> f) in
-              mk_Comp ({c with result_typ=rt;
+              mk_Comp ({c with comp_univs=List.map (norm_universe cfg env) c.comp_univs;
+                               result_typ=rt;
                                effect_args=args;
                                flags=flags})  
 
@@ -753,15 +758,16 @@ and norm_comp : cfg -> env -> comp -> comp =
     fun cfg env comp -> 
         let comp = ghost_to_pure_aux cfg env comp in
         match comp.n with 
-            | Total t -> 
-              {comp with n=Total (norm cfg env [] t)}
+            | Total (t, uopt) -> 
+              {comp with n=Total (norm cfg env [] t, Option.map (norm_universe cfg env) uopt)}
 
-            | GTotal t -> 
-              {comp with n=GTotal (norm cfg env [] t)}
+            | GTotal (t, uopt) -> 
+              {comp with n=GTotal (norm cfg env [] t, Option.map (norm_universe cfg env) uopt)}
 
             | Comp ct -> 
               let norm_args args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
-              {comp with n=Comp ({ct with result_typ=norm cfg env [] ct.result_typ;
+              {comp with n=Comp ({ct with comp_univs=List.map (norm_universe cfg env) ct.comp_univs;
+                                          result_typ=norm cfg env [] ct.result_typ;
                                           effect_args=norm_args ct.effect_args})}
 
 (* Promotes Ghost T, when T is not informative to Pure T
@@ -773,7 +779,7 @@ and ghost_to_pure_aux cfg env c =
     let non_info t = non_informative (norm t) in
     match c.n with
     | Total _ -> c
-    | GTotal t when non_info t -> {c with n=Total t}
+    | GTotal(t,uopt) when non_info t -> {c with n=Total(t, uopt)}
     | Comp ct ->
         let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
         if Util.is_ghost_effect l

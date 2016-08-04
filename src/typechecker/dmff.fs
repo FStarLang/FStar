@@ -66,7 +66,7 @@ let gen_wps_for_free
     | Tm_arrow (bs, comp) ->
         // TODO: dubious, assert no nested arrows
         let rest = match comp.n with
-          | Total t -> t
+          | Total (t, _) -> t
           | _ -> failwith "wp_a contains non-Tot arrow"
         in
         bs @ (collect_binders rest)
@@ -338,8 +338,8 @@ let gen_wps_for_free
     | Tm_type _ ->
         (* Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
         U.mk_imp x y
-    | Tm_arrow ([ binder ], { n = GTotal b })
-    | Tm_arrow ([ binder ], { n = Total b }) when S.is_null_binder binder ->
+    | Tm_arrow ([ binder ], { n = GTotal (b, _) })
+    | Tm_arrow ([ binder ], { n = Total (b, _) }) when S.is_null_binder binder ->
         let a = (fst binder).sort in
         (* Util.print2 "arrow, a=%s, b=%s\n" (Print.term_to_string a) (Print.term_to_string b); *)
         let a1 = S.gen_bv "a1" None a in
@@ -428,7 +428,7 @@ type nm = | N of typ | M of typ
 type nm_ = nm
 
 let nm_of_comp = function
-  | Total t ->
+  | Total (t, _) ->
       N t
   | Comp c when lid_equals c.effect_name Const.monadic_lid ->
       M c.result_typ
@@ -792,7 +792,7 @@ and infer (env: env) (e: term): nm * term * term =
       let is_arrow t = match (SS.compress t).n with | Tm_arrow _ -> true | _ -> false in
       // TODO: replace with Util.arrow_formals_comp
       let rec flatten t = match (SS.compress t).n with
-        | Tm_arrow (binders, { n = Total t }) when is_arrow t ->
+        | Tm_arrow (binders, { n = Total (t, _) }) when is_arrow t ->
             let binders', comp = flatten t in
             binders @ binders', comp
         | Tm_arrow (binders, comp) ->
@@ -983,9 +983,7 @@ and mk_M (t: typ): comp =
     flags = []
   })
 
-and type_of_comp t =
-  match t.n with
-  | Total t | GTotal t | Comp { result_typ = t } -> t
+and type_of_comp t = Util.comp_result t
 
 // This function expects its argument [c] to be normalized and to satisfy [is_C c]
 and trans_F (env: env_) (c: typ) (wp: term): term =

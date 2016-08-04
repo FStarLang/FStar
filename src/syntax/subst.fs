@@ -165,8 +165,8 @@ and subst_comp' s t = match s with
   | [[]] -> t
   | _ ->
     match t.n with
-      | Total t -> mk_Total (subst' s t)
-      | GTotal t -> mk_GTotal (subst' s t)
+      | Total (t, uopt) -> mk_Total' (subst' s t) (Option.map (subst_univ s) uopt)
+      | GTotal (t, uopt) -> mk_GTotal' (subst' s t) (Option.map (subst_univ s) uopt)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
 and compose_subst (s1:subst_ts) (s2:subst_ts) = s1@s2

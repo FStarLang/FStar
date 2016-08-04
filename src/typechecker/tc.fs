@@ -629,15 +629,15 @@ and tc_comp env c : comp                                      (* checked version
                   * guard_t =                                 (* logical guard for the well-formedness of c *)
   let c0 = c in
   match c.n with
-    | Total t ->
+    | Total (t, _) ->
       let k, u = U.type_u () in
       let t, _, g = tc_check_tot_or_gtot_term env t k in
-      mk_Total t, u, g
+      mk_Total' t (Some u), u, g
 
-    | GTotal t ->
+    | GTotal (t, _) ->
       let k, u = U.type_u () in
       let t, _, g = tc_check_tot_or_gtot_term env t k in
-      mk_GTotal t, u, g
+      mk_GTotal' t (Some u), u, g
 
     | Comp c ->
       let head = S.fvar c.effect_name Delta_constant None in
