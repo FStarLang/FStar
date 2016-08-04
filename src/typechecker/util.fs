@@ -1163,13 +1163,13 @@ let maybe_lift env e c1 c2 =
     then e
     else mk (Tm_meta(e, Meta_monadic_lift(m1, m2))) !e.tk e.pos
 
-let maybe_monadic env e c = 
+let maybe_monadic env e c t = 
     let m = Env.norm_eff_name env c in
     if is_pure_or_ghost_effect env m
     || Ident.lid_equals m Const.effect_Tot_lid
     || Ident.lid_equals m Const.effect_GTot_lid //for the cases in prims where Pure is not yet defined
     then e
-    else mk (Tm_meta(e, Meta_monadic m)) !e.tk e.pos
+    else mk (Tm_meta(e, Meta_monadic (m, t))) !e.tk e.pos
 
 let reify_comp env c u_c : term = 
     let no_reify l = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, Env.get_range env)) in

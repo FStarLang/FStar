@@ -268,6 +268,9 @@ let rec closure_as_term cfg env t =
              mk (Tm_meta(closure_as_term_delayed cfg env t',
                          Meta_pattern (args |> List.map (closures_as_args_delayed cfg env)))) t.pos
 
+           | Tm_meta(t', Meta_monadic(m, tbody)) -> //other metadata's do not have any embedded closures
+             mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic(m, closure_as_term_delayed cfg env tbody))) t.pos
+
            | Tm_meta(t', m) -> //other metadata's do not have any embedded closures
              mk (Tm_meta(closure_as_term_delayed cfg env t', m)) t.pos
        
@@ -463,7 +466,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let a = SS.compress (fst a) in
             // printfn "TRYING NORMALIZATION OF REIFY: %s ... %s" (Print.tag_of_term a) (Print.term_to_string a);
             begin match a.n with 
-            | Tm_meta(e, Meta_monadic m) ->
+            | Tm_meta(e, Meta_monadic (m, t_body)) ->
                 begin match (SS.compress e).n with 
                 | Tm_let((false, [lb]), body) ->
                     //this is M.bind
@@ -474,9 +477,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Inl x -> 
                       let head = U.mk_reify lb.lbdef in
                       let body = S.mk (Tm_abs([S.mk_binder x], U.mk_reify body, None)) None body.pos in
-                      let reified = S.mk (Tm_app(bind_repr, [as_arg S.tun; as_arg S.tun;  //a, b
-                                                             as_arg S.tun; as_arg head;   //wp_head, head
-                                                             as_arg S.tun; as_arg body])) //wp_body, body
+                      let reified = S.mk (Tm_app(bind_repr, [as_arg lb.lbtyp; as_arg t_body;  //a, b
+                                                             as_arg S.tun; as_arg head;   //wp_head, head--the term shouldn't depend on wp_head
+                                                             as_arg S.tun; as_arg body])) //wp_body, body--the term shouldn't depend on wp_body
                                                              None t.pos in
                       // printfn "Reified %s to %s\n" (Print.term_to_string t) (Print.term_to_string reified);
                       norm cfg env stack reified
@@ -734,6 +737,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Meta_pattern args -> 
                       let args = norm_pattern_args cfg env args in
                       norm cfg env (Meta(Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+
+                    | Meta_monadic (m, t) ->
+                      let t = norm cfg env [] t in
+                      norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
                     | _ -> 
                       norm cfg env stack head //meta doesn't block reduction

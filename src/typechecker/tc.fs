@@ -303,6 +303,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           e, c, g
     end
 
+  | Tm_meta(e, Meta_monadic _) ->
+    tc_term env e
+
   | Tm_meta(e, m) ->
     let e, c, g = tc_term env e in
     let e = mk (Tm_meta(e, m)) (Some c.res_typ.n) top.pos in
@@ -967,12 +970,12 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         let out_c = 
                             TcUtil.bind e.pos env None  //proving (Some e) here instead of None causes significant Z3 overhead
                                         c (x, out_c) in
-                        let e = TcUtil.maybe_monadic env e c.eff_name in
+                        let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in
                         let e = TcUtil.maybe_lift env e c.eff_name out_c.eff_name in
                         (e, q)::args, out_c, monadic) ([], cres, false) arg_comps_rev in
         let comp = TcUtil.bind head.pos env None chead (None, comp) in
         let app =  mk_Tm_app head args (Some comp.res_typ.n) r in
-        let app = if monadic then TypeChecker.Util.maybe_monadic env app comp.eff_name else app in
+        let app = if monadic then TypeChecker.Util.maybe_monadic env app comp.eff_name comp.res_typ else app in
         let comp, g = TcUtil.strengthen_precondition None env app comp guard in //Each conjunct in g is already labeled
         app, comp, g 
     in
@@ -1441,7 +1444,7 @@ and check_inner_let env e =
        let e1 = TypeChecker.Util.maybe_lift env e1 c1.eff_name cres.eff_name in
        let e2 = TypeChecker.Util.maybe_lift env e2 c2.eff_name cres.eff_name in
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) (Some cres.res_typ.n) e.pos in
-       let e = TypeChecker.Util.maybe_monadic env e cres.eff_name in
+       let e = TypeChecker.Util.maybe_monadic env e cres.eff_name cres.res_typ in
        let x_eq_e1 = NonTrivial <| Util.mk_eq c1.res_typ c1.res_typ (S.bv_to_name x) e1 in
        let g2 = Rel.close_guard xb
                       (Rel.imp_guard (Rel.guard_of_guard_formula x_eq_e1) g2) in

@@ -82,7 +82,7 @@ val mk_toplevel_definition: env -> lident -> term -> sigelt * term
 
 //decorating terms with monadic operators
 val maybe_lift: env -> term -> lident -> lident -> term
-val maybe_monadic: env -> term -> lident -> term
+val maybe_monadic: env -> term -> lident -> typ -> term
    
 //reification
 val reify_comp: env -> lcomp -> universe -> term

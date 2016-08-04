@@ -297,6 +297,9 @@ let push_subst s t =
         | Tm_meta(t0, Meta_pattern ps) -> 
           mk (Tm_meta(subst' s t0, Meta_pattern (ps |> List.map (subst_args' s)))) None t.pos
 
+        | Tm_meta(t0, Meta_monadic (m, t)) -> 
+          mk (Tm_meta(subst' s t0, Meta_monadic(m, subst' s t))) None t.pos
+
         | Tm_meta(t, m) -> 
           mk (Tm_meta(subst' s t,  m)) None t.pos 
 

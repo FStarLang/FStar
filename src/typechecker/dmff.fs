@@ -332,6 +332,11 @@ let gen_wps_for_free
       x ≤_{a->b} y       =def=   ∀a1 a2, a1 ≤_a a2 ==> x a1 ≤_b y a2
   *)
   (* Invariant: [x] and [y] have type [t] *)
+  let is_zero_order t = match (SS.compress t).n with 
+    | Tm_type _
+    | Tm_arrow _ -> false
+    | _ -> true 
+  in
   let rec mk_leq t x y =
     let t = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env t in
     match (SS.compress t).n with
@@ -341,16 +346,23 @@ let gen_wps_for_free
     | Tm_arrow ([ binder ], { n = GTotal b })
     | Tm_arrow ([ binder ], { n = Total b }) ->
         let a = (fst binder).sort in
-        (* Util.print2 "arrow, a=%s, b=%s\n" (Print.term_to_string a) (Print.term_to_string b); *)
-        let a1 = S.gen_bv "a1" None a in
-        let a2 = S.gen_bv "a2" None a in
-        let body = U.mk_imp
-          (mk_leq a (S.bv_to_name a1) (S.bv_to_name a2))
-          (mk_leq b
-            (U.mk_app x [ S.as_arg (S.bv_to_name a1) ])
-            (U.mk_app y [ S.as_arg (S.bv_to_name a2) ]))
-        in
-        mk_forall a1 (mk_forall a2 body)
+        if is_zero_order a  //this is an important special case; most monads have zero-order results
+        then let a1 = S.gen_bv "a1" None a in
+             let body = mk_leq b
+                            (U.mk_app x [ S.as_arg (S.bv_to_name a1) ])
+                            (U.mk_app y [ S.as_arg (S.bv_to_name a1) ]) in
+             mk_forall a1 body
+        else
+            (* Util.print2 "arrow, a=%s, b=%s\n" (Print.term_to_string a) (Print.term_to_string b); *)
+            let a1 = S.gen_bv "a1" None a in
+            let a2 = S.gen_bv "a2" None a in
+            let body = U.mk_imp
+              (mk_leq a (S.bv_to_name a1) (S.bv_to_name a2))
+              (mk_leq b
+                (U.mk_app x [ S.as_arg (S.bv_to_name a1) ])
+                (U.mk_app y [ S.as_arg (S.bv_to_name a2) ]))
+            in
+            mk_forall a1 (mk_forall a2 body)
     | Tm_arrow (binder :: binders, comp) -> //TODO: a bit confusing, since binders may be []
         let t = { t with n = Tm_arrow ([ binder ], S.mk_Total (U.arrow binders comp)) } in
         mk_leq t x y

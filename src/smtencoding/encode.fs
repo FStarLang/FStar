@@ -1717,7 +1717,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let reified_typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) (Util.lcomp_of_comp comp) U_unknown in
             Util.arrow formals (S.mk_Total reified_typ) in
           let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in
-          (* printfn "%s: Reified %s\nto %s\n" (Print.lbname_to_string lb.lbname) (Print.term_to_string tm) (Print.term_to_string tm'); *)
+          (* printfn "%s: Reified %s\nto %s\n"  *)
+          (*       (Print.lbname_to_string lb.lbname)  *)
+          (*       (Print.term_to_string tm)  *)
+          (*       (Print.term_to_string tm');  *)
           encode_top_level_let env (false, [lb]) quals
         | _ -> [], env
       end
