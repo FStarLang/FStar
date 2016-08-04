@@ -382,5 +382,8 @@ let labeled_lid : FStar_Ident.lident = (pconst "labeled")
 let range_0 : FStar_Ident.lident = (pconst "range_0")
 
 
+let guard_free : FStar_Ident.lident = (pconst "guard_free")
+
+
 
 

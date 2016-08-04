@@ -4372,7 +4372,7 @@ let form = (match (g.FStar_TypeChecker_Env.guard_f) with
 "trivial"
 end
 | FStar_TypeChecker_Common.NonTrivial (f) -> begin
-if ((FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) || (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Implicits")))) then begin
+if (((FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) || (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Implicits")))) || (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) FStar_Options.Extreme)) then begin
 (FStar_TypeChecker_Normalize.term_to_string env f)
 end else begin
 "non-trivial"
