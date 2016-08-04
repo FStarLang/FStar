@@ -7,7 +7,15 @@ A basic, complete example:
 fstar FStar.DM4F.Test.Fst
 ```
 
-To see more debug output, and see the generated combinators:
+To see the generated combinators (look for top-level definitions starting with
+`FStar.DM4F.Test.STINT_`):
+
+```
+fstar --dump_module FStar.DM4F.Test FStar.DM4F.Test.fst
+```
+
+To see more debug output related to the DMFF elaboration and star
+transformations:
 
 ```
 fstar --trace_error --debug_level ED --debug FStar.DM4F.Test FStar.DM4F.Test.fst --prn --print_implicits --print_universes --print_bound_var_types
@@ -15,7 +23,8 @@ fstar --trace_error --debug_level ED --debug FStar.DM4F.Test FStar.DM4F.Test.fst
 
 Current status:
 - `repr`, `bind` and `return` are *-transformed and _-elaborated;
-- same goes for the actions.
+- same goes for the actions;
+- all the remaining combinators are generated.
 
 The code is in `src/tc/dmff.fs`.
 - `star_type_definition` is the *-transformation from the paper for types;
@@ -38,7 +47,6 @@ effect checking code.
 Items left:
 - fill out various TODOs in `dmff.fs` to faithfully check everything (right now,
   most checks are fairly lax);
-- generate the missing WP combinators (`ite_wp`, `null_wp`)
 - try out more things in the definition language; try out with a parameterized
   `STATE (h: heap)` effect; etc
 - figure out how to properly type-check actions (right now, the code is
