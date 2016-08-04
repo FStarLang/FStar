@@ -2819,17 +2819,21 @@ end)))
 let d : Prims.string  ->  Prims.unit = (fun s -> (FStar_Util.print1 "[01;36m%s[00m\n" s))
 
 
-let register_toplevel_definition : FStar_TypeChecker_Env.env  ->  (FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.sigelt  ->  (FStar_Syntax_Syntax.sigelts * FStar_TypeChecker_Env.env))  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term  ->  (FStar_TypeChecker_Env.env * FStar_Syntax_Syntax.typ) = (fun env tc_decl lident def -> (
+let mk_toplevel_definition : FStar_TypeChecker_Env.env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.term) = (fun env lident def -> (
 
-let _56_1614 = (d (FStar_Ident.text_of_lid lident))
+let _56_1615 = if (FStar_TypeChecker_Env.debug env (FStar_Options.Other ("ED"))) then begin
+(
+
+let _56_1613 = (d (FStar_Ident.text_of_lid lident))
+in (let _148_1017 = (FStar_Syntax_Print.term_to_string def)
+in (FStar_Util.print2 "Registering top-level definition: %s\n%s\n" (FStar_Ident.text_of_lid lident) _148_1017)))
+end else begin
+()
+end
 in (
 
-let _56_1616 = (let _148_1029 = (FStar_Syntax_Print.term_to_string def)
-in (FStar_Util.print2 "Registering top-level definition: %s\n%s\n" (FStar_Ident.text_of_lid lident) _148_1029))
-in (
-
-let fv = (let _148_1030 = (FStar_Syntax_Util.incr_delta_qualifier def)
-in (FStar_Syntax_Syntax.lid_as_fv lident _148_1030 None))
+let fv = (let _148_1018 = (FStar_Syntax_Util.incr_delta_qualifier def)
+in (FStar_Syntax_Syntax.lid_as_fv lident _148_1018 None))
 in (
 
 let lbname = FStar_Util.Inr (fv)
@@ -2839,24 +2843,8 @@ let lb = ((false), (({FStar_Syntax_Syntax.lbname = lbname; FStar_Syntax_Syntax.l
 in (
 
 let sig_ctx = FStar_Syntax_Syntax.Sig_let (((lb), (FStar_Range.dummyRange), ((lident)::[]), ([])))
-in (
-
-let _56_1624 = (tc_decl env sig_ctx)
-in (match (_56_1624) with
-| (se, env) -> begin
-(
-
-let _56_1650 = (match (se) with
-| (FStar_Syntax_Syntax.Sig_let ((_56_1626, ({FStar_Syntax_Syntax.lbname = _56_1635; FStar_Syntax_Syntax.lbunivs = _56_1633; FStar_Syntax_Syntax.lbtyp = t; FStar_Syntax_Syntax.lbeff = _56_1630; FStar_Syntax_Syntax.lbdef = _56_1628})::[]), _56_1640, _56_1642, _56_1644))::[] -> begin
-(let _148_1031 = (FStar_Syntax_Print.term_to_string t)
-in (FStar_Util.print1 "Inferred type: %s\n" _148_1031))
-end
-| _56_1649 -> begin
-(FStar_All.failwith "nope")
-end)
-in (let _148_1032 = (FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar (fv)) None FStar_Range.dummyRange)
-in ((env), (_148_1032))))
-end)))))))))
+in (let _148_1019 = (FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_fvar (fv)) None FStar_Range.dummyRange)
+in ((sig_ctx), (_148_1019)))))))))
 
 
 
