@@ -412,7 +412,14 @@ let gen_wps_for_free
   in
   let wp_ite = register env (mk_lid "wp_ite") wp_ite in
 
-  let null_wp = snd ed.null_wp in
+  let null_wp = 
+    let wp = S.gen_bv "wp" None wp_a in
+    let wp_args, post = Util.prefix gamma in
+    let x = S.gen_bv "x" None S.tun in 
+    let body = U.mk_forall x (U.mk_app (S.bv_to_name <| fst post) [as_arg (S.bv_to_name x)]) in
+    U.abs (binders @ S.binders_of_list [ a ] @ gamma) body ret_gtot_type in
+
+  let null_wp = register env (mk_lid "null_wp") null_wp in
 
   (* val st2_trivial : heap:Type ->a:Type -> st2_wp heap a -> Tot Type0
     let st2_trivial heap a wp = st2_stronger heap a (st2_null_wp heap a) wp *)
@@ -437,7 +444,8 @@ let gen_wps_for_free
     close_wp     = ([], wp_close);
     stronger     = ([], stronger);
     trivial      = ([], wp_trivial);
-    ite_wp       = ([], wp_ite)
+    ite_wp       = ([], wp_ite);
+    null_wp      = ([], null_wp)
   }
 
 

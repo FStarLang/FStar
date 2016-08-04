@@ -6,9 +6,6 @@ module FStar.DM4F.Test
 let st (a: Type) =
   int -> M (a * int)
 
-let exnst (a: Type) =
-  int -> M (option (a * int))
-
 val return_st : a:Type -> x:a -> st a
 let return_st a x = fun s -> x, s
 
@@ -18,29 +15,19 @@ let bind_st a b f g = fun s0 ->
   let x, s1 = tmp in
   g x s1
 
-(* TODO: at this stage, not elaborating and generating the last 
- * combinators; so, the user has to write them in the "old style", by
- * _anticipating_ what the ouput of the *-translation and the _-elaboration will
- * be. *)
-
-let post (a:Type) = (a * int) -> Type0
-let pre = int -> Type0
-let wp (a:Type) = int -> post a -> Type0
-
-inline let null_wp (a:Type) (h:int) (p:post a) =
-  (forall (x:a) (h:int). p (x,h))
-
 reifiable reflectable new_effect_for_free {
   STINT: a:Type -> Effect
   with repr     = st
      ; bind     = bind_st
      ; return   = return_st
-     // The two combinators below are meant to be automatically generated, eventually.
-     ; null_wp  = null_wp
   (* and effect_actions
        get      = get
      ; put      = put *)
 }
+
+let post (a:Type) = (a * int) -> Type0
+let pre = int -> Type0
+let wp (a:Type) = int -> post a -> Type0
 
 inline let lift_pure_stint (a:Type) (wp:pure_wp a) (n:int) (p:post a) = wp (fun a -> p (a, n))
 sub_effect PURE ~> STINT = lift_pure_stint
