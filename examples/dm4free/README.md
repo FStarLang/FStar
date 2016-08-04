@@ -1,7 +1,7 @@
 Dijkstra Monads for Free
 ------------------------
 
-The (boring) example:
+A basic, complete example:
 
 ```
 fstar FStar.DM4F.Test.Fst
@@ -43,5 +43,8 @@ Items left:
   `STATE (h: heap)` effect; etc
 - figure out how to properly type-check actions (right now, the code is
   suboptimal);
-- write get and put in direct style, reify them, then copy the things from intST
-  into the test file.
+- * and elaboration of lifts
+- inserting "return" on the fly when reflecting Tot computations
+- more examples!
+- figure out the impact of freshen_bv and merge this back into master
+- extraction!
