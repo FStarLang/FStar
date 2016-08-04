@@ -1,4 +1,4 @@
-module Curried
+module Bug375
 
 val foo : unit -> unit -> unit
 let foo a b = ()
