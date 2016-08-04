@@ -53,11 +53,11 @@ let gen_wps_for_free
   (* Consider the predicate transformer st_wp:
    *   let st_pre_h  (heap:Type)          = heap -> GTot Type0
    *   let st_post_h (heap:Type) (a:Type) = a -> heap -> GTot Type0
-   *   let st_wp_h   (heap:Type) (a:Type) = st_post_h heap a -> Tot (st_pre_h heap)
+   *   let st_wp_h   (heap:Type) (a:Type) = heap -> st_post_h heap a -> GTot Type0
    * after reduction we get:
-   *   let st_wp_h (heap: Type) (a: Type) = (a -> heap -> GTot Type0) -> heap -> GTot Type0
+   *   let st_wp_h (heap: Type) (a: Type) = heap -> (a -> heap -> GTot Type0) -> GTot Type0
    * we want:
-   *   type st2_gctx (heap: Type) (a:Type) (t:Type) = (a -> heap -> GTot Type0) -> heap -> GTot t
+   *   type st2_gctx (heap: Type) (a:Type) (t:Type) = heap -> (a -> heap -> GTot Type0) -> GTot t
    * we thus generate macros parameterized over [e] that build the right
    * context. [gamma] is the series of binders the precede the return type of
    * the context. *)
@@ -321,6 +321,7 @@ let gen_wps_for_free
   let wp_close = mk_generic_app wp_close in
 
   let ret_tot_type = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype)) in
+  let ret_gtot_type = Some (Inl (U.lcomp_of_comp <| S.mk_GTotal U.ktype)) in
   let mk_forall (x: S.bv) (body: S.term): S.term =
     S.mk (Tm_app (U.tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type)])) None Range.dummyRange
   in
@@ -337,18 +338,19 @@ let gen_wps_for_free
     | Tm_arrow _ -> false
     | _ -> true 
   in
-  let rec mk_leq t x y =
+  let rec mk_rel rel t x y =
+    let mk_rel = mk_rel rel in
     let t = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env t in
     match (SS.compress t).n with
     | Tm_type _ ->
         (* Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
-        U.mk_imp x y
+        rel x y
     | Tm_arrow ([ binder ], { n = GTotal b })
     | Tm_arrow ([ binder ], { n = Total b }) ->
         let a = (fst binder).sort in
         if is_zero_order a  //this is an important special case; most monads have zero-order results
         then let a1 = S.gen_bv "a1" None a in
-             let body = mk_leq b
+             let body = mk_rel b
                             (U.mk_app x [ S.as_arg (S.bv_to_name a1) ])
                             (U.mk_app y [ S.as_arg (S.bv_to_name a1) ]) in
              mk_forall a1 body
@@ -357,15 +359,15 @@ let gen_wps_for_free
             let a1 = S.gen_bv "a1" None a in
             let a2 = S.gen_bv "a2" None a in
             let body = U.mk_imp
-              (mk_leq a (S.bv_to_name a1) (S.bv_to_name a2))
-              (mk_leq b
+              (mk_rel a (S.bv_to_name a1) (S.bv_to_name a2))
+              (mk_rel b
                 (U.mk_app x [ S.as_arg (S.bv_to_name a1) ])
                 (U.mk_app y [ S.as_arg (S.bv_to_name a2) ]))
             in
             mk_forall a1 (mk_forall a2 body)
     | Tm_arrow (binder :: binders, comp) -> //TODO: a bit confusing, since binders may be []
         let t = { t with n = Tm_arrow ([ binder ], S.mk_Total (U.arrow binders comp)) } in
-        mk_leq t x y
+        mk_rel t x y
     | Tm_arrow _ ->
         failwith "unhandled arrow"
     | _ ->
@@ -376,11 +378,39 @@ let gen_wps_for_free
   let stronger =
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
-    let body = mk_leq wp_a (S.bv_to_name wp1) (S.bv_to_name wp2) in
+    let body = mk_rel Util.mk_imp wp_a (S.bv_to_name wp1) (S.bv_to_name wp2) in
     U.abs (binders @ binders_of_list [ a, false; wp1, false; wp2, false ]) body ret_tot_type
   in
   let stronger = register env (mk_lid "stronger") stronger in
   let stronger = mk_generic_app stronger in
+
+  let wp_ite = 
+    let wp = S.gen_bv "wp" None wp_a in
+    let wp_args, post = Util.prefix gamma in
+    // forall k: post a
+    let k = S.gen_bv "k" None (fst post).sort in
+    let equiv = 
+        let k_tm = S.bv_to_name k in
+        let eq = mk_rel Util.mk_iff k.sort
+                          k_tm 
+                          (S.bv_to_name (fst post)) in
+        match Util.destruct_typ_as_formula eq with
+        | Some (QAll (binders, [], body)) ->
+          let k_app = U.mk_app k_tm (args_of_binders binders) in
+          let guard_free =  S.fv_to_tm (S.lid_as_fv Const.guard_free Delta_constant None) in
+          let pat = U.mk_app guard_free [as_arg k_app] in
+          let pattern_guarded_body = mk (Tm_meta (body, Meta_pattern [[as_arg pat]])) in
+          Util.close_forall binders pattern_guarded_body
+        | _ -> failwith "Impossible: Expected the equivalence to be a quantified formula" 
+    in
+    let body  = U.abs gamma (
+      U.mk_forall k (U.mk_imp
+        equiv
+        (U.mk_app (S.bv_to_name wp) (args_of_binders wp_args @ [ S.as_arg (S.bv_to_name k) ])))
+    ) ret_gtot_type in
+    U.abs (binders @ S.binders_of_list [ a; wp ]) body ret_gtot_type
+  in
+  let wp_ite = register env (mk_lid "wp_ite") wp_ite in
 
   let null_wp = snd ed.null_wp in
 
@@ -406,7 +436,8 @@ let gen_wps_for_free
     assume_p     = ([], wp_assume);
     close_wp     = ([], wp_close);
     stronger     = ([], stronger);
-    trivial      = ([], wp_trivial)
+    trivial      = ([], wp_trivial);
+    ite_wp       = ([], wp_ite)
   }
 
 
