@@ -220,18 +220,19 @@ let comp_effect_name c = match c.n with
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
     | Comp c -> c
-    | Total (t, uopt) ->  
-      {comp_univs=Option.toList uopt; 
+    | Total (t, Some u) ->  
+      {comp_univs=[u];
        effect_name=Const.effect_Tot_lid; 
        result_typ=t; 
        effect_args=[]; 
        flags=[TOTAL]}
-    | GTotal(t, uopt) -> 
-      {comp_univs=Option.toList uopt; 
+    | GTotal(t, Some u) -> 
+      {comp_univs=[u];
        effect_name=Const.effect_GTot_lid; 
        result_typ=t; 
        effect_args=[]; 
        flags=[SOMETRIVIAL]}
+    | _ -> failwith "Assertion failed: Computation type without universe"
 
 let is_total_comp c =
     comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
@@ -730,10 +731,14 @@ let tforall  = fvar Const.forall_lid (Delta_unfoldable 1) None
 let t_haseq   = fvar Const.haseq_lid Delta_constant None
 
 let lcomp_of_comp c0 =
-    let c = comp_to_comp_typ c0 in
-    {eff_name = c.effect_name;
-     res_typ = c.result_typ;
-     cflags = c.flags;
+    let eff_name, flags = 
+        match c0.n with 
+        | Total _ -> Const.effect_Tot_lid, [TOTAL]
+        | GTotal _ -> Const.effect_GTot_lid, [SOMETRIVIAL]
+        | Comp c -> c.effect_name, c.flags in
+    {eff_name = eff_name;
+     res_typ = comp_result c0;
+     cflags = flags;
      comp = fun() -> c0}
 
 let mk_forall (x:bv) (body:typ) : typ =

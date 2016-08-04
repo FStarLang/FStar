@@ -683,7 +683,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
             mk_comp md u_res_t res_t (ifthenelse md res_t g wp_then wp_else)  []) lcases default_case in
         if (Options.split_cases()) > 0
         then add_equality_to_post_condition env comp res_t
-        else let comp = U.comp_to_comp_typ comp in
+        else let comp = N.comp_to_comp_typ env comp in
              let md = Env.get_effect_decl env comp.effect_name in
              let _, _, wp = destruct_comp comp in
              let wp = mk_Tm_app  (inst_effect_fun_with [u_res_t] env md md.ite_wp)  [S.as_arg res_t; S.as_arg wp] None wp.pos in
@@ -947,7 +947,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
      let univs, uvars = ecs |> List.map (fun (e, c) ->
           let t = Util.comp_result c |> SS.compress in
           let c = norm c in
-          let ct = U.comp_to_comp_typ c in
+          let ct = N.comp_to_comp_typ env c in
           let t = ct.result_typ in
           let univs = Free.univs t in
           let uvt = Free.uvars t in
@@ -1059,7 +1059,7 @@ let check_top_level env g lc : (bool * comp) =
        let c = Normalize.unfold_effect_abbrev env c 
               |> S.mk_Comp
               |> Normalize.normalize_comp steps env 
-              |> Util.comp_to_comp_typ in
+              |> N.comp_to_comp_typ env in
        let md = Env.get_effect_decl env c.effect_name in
        let u_t, t, wp = destruct_comp c in
        let vc = mk_Tm_app (inst_effect_fun_with [u_t] env md md.trivial) [S.as_arg t; S.as_arg wp] (Some U.ktype0.n) (Env.get_range env) in

@@ -218,7 +218,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
                 match head.n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
                     | Tm_fvar fv when S.fv_eq_lid fv Const.lexcons_lid -> dec
                     | _ -> mk_lex_list [dec] in
-          let ct = Util.comp_to_comp_typ c in
+          let ct = N.comp_to_comp_typ env c in
           match ct.flags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
                 | Some (DECREASES dec) -> as_lex_list dec
                 | _ ->
@@ -3022,12 +3022,13 @@ let universe_of env e =
          | _ -> 
             let t =
                 match !e.tk with 
-                | Some t -> S.mk t None e.pos 
-                | _ -> 
+                | None
+                | Some Tm_unknown ->
                   let e = N.normalize [N.Beta; N.NoInline] env e in
                   let _, ({res_typ=t}), g = tc_term env e in
                   let _ = Rel.solve_deferred_constraints env g in
-                  t in
+                  t
+                | Some t -> S.mk t None e.pos in
             universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
 
 let check_module env m =

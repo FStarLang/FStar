@@ -2150,18 +2150,18 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
 
                | GTotal _, Comp _
                | Total _,  Comp _ ->
-                 solve_c env ({problem with lhs=mk_Comp <| U.comp_to_comp_typ c1}) wl
+                 solve_c env ({problem with lhs=mk_Comp <| N.comp_to_comp_typ env c1}) wl
 
                | Comp _, GTotal _ 
                | Comp _, Total _ ->
-                 solve_c env ({problem with rhs=mk_Comp <| U.comp_to_comp_typ c2}) wl
+                 solve_c env ({problem with rhs=mk_Comp <| N.comp_to_comp_typ env c2}) wl
 
                | Comp _, Comp _ ->
                  if (Util.is_ml_comp c1 && Util.is_ml_comp c2)
                     || (Util.is_total_comp c1 && (Util.is_total_comp c2 || Util.is_ml_comp c2))
                  then solve_t env (problem_using_guard orig (Util.comp_result c1) problem.relation (Util.comp_result c2) None "result type") wl
-                 else let c1_comp = Util.comp_to_comp_typ c1 in
-                      let c2_comp = Util.comp_to_comp_typ c2 in
+                 else let c1_comp = N.comp_to_comp_typ env c1 in
+                      let c2_comp = N.comp_to_comp_typ env c2 in
                       if problem.relation=EQ && lid_equals c1_comp.effect_name c2_comp.effect_name
                       then solve_eq c1_comp c2_comp
                       else
