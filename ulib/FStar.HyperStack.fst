@@ -141,8 +141,8 @@ let frameOf #a (s:reference a) = s.id
 let modifies (s:Set.set rid) (m0:mem) (m1:mem) =
   HH.modifies_just s m0.h m1.h
   /\ m0.tip=m1.tip
-let as_ref #a (x:reference a) : Tot (Heap.ref a) = HH.as_ref #a #x.id x.ref
-let as_aref #a (x:reference a) : Tot Heap.aref = Heap.Ref (HH.as_ref #a #x.id x.ref)
+let as_ref #a (x:reference a)  : GTot (Heap.ref a) = HH.as_ref #a #x.id x.ref
+let as_aref #a (x:reference a) : GTot Heap.aref = Heap.Ref (HH.as_ref #a #x.id x.ref)
 let modifies_one id h0 h1 = HH.modifies_one id h0.h h1.h
 let modifies_ref (id:rid) (s:TSet.set Heap.aref) (h0:mem) (h1:mem) =
   HH.modifies_rref id s h0.h h1.h /\ h1.tip=h0.tip

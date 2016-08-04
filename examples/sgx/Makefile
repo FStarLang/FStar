@@ -23,7 +23,8 @@ x86Interpreter-ml:
 x86Interpreter-compile:
 	$(OCAMLOPT) -I ml -I $(X86_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
 	  $(FSTAR_HOME)/ulib/ml/FStar_UInt32.ml \
-	  $(addprefix $(X86_ODIR)/,$(X86_EXTRACTED)) -o test.exe
+	  $(X86_ODIR)/FStar_List_Tot.ml \
+	  $(addprefix $(X86_ODIR)/,$(X86_EXTRACTED)) ml/main.ml -o test.exe
 	./test.exe testcases/t.s
 
 # Cleaning

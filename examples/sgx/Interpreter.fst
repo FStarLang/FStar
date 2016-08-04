@@ -23,7 +23,6 @@ assume val search: (buffer dword)->(addr:address)-> bool
 type memaccess =
  |MkMemAccess: 
 	      read: (string->cpuregstate -> dword) -> (* Helper function to read registers, used by store *)
-  	      (* load: (word -> address -> STL dword  ) -> *)
   	      load: (word -> address -> STL dword (requires (fun h -> true)) (ensures (fun h0 r h1 -> true))) -> 
   	      store:(word -> address-> dword -> cpuregstate ->STL unit (requires (fun h -> true)) (ensures (fun h0 r h1 -> true))) ->
 	      decode:(program ->address->Tot (list stmt))->memaccess
@@ -32,9 +31,8 @@ val defensive: (buffer dword)->(buffer dword) ->address-> address->address->addr
 									(requires (fun h -> true)) 
 									(ensures (fun h0 r h1 -> true)) 
 let defensive buf calltable base wbmapstart ucodestart uheapstart ustackstart = 
-  let read' (regname:string) (env:cpuregstate) =
-	(*
- 	let rec search_reg regname = function
+  let read' (regname:string) (env:cpuregstate) :(Tot dword)  =
+ 	let rec search_reg (regname:string) (reglist:list register) :(Tot dword) = match reglist with
 		  |[] -> (* raise Halt *) 0uL
 		  |(MkReg regname' value)::tail -> if regname' = regname then
 								value
@@ -42,8 +40,6 @@ let defensive buf calltable base wbmapstart ucodestart uheapstart ustackstart =
 								search_reg regname tail
 	in
 	search_reg regname (get_reg_list env)
-	*)
-	0uL
   in
   let load'(n:word) (addr:address): STL dword
 	(requires (fun h -> true))
@@ -216,6 +212,21 @@ let ustar buf calltable base wbmapstart uheapstart ustackstart ucodestart entry 
   let stmtlist = mem.decode myprogram entry in
   steps (Mkcpuregstate regslist) mem  myprogram stmtlist
 
+val main:unit -> STL cpuregstate
+	(requires (fun h-> True))
+	(ensures (fun h0 r h1 -> True))
+let main _ = 
+  let base = 1000uL in
+  let wbmapstart = 1100uL in
+  let ucodestart = 1200uL in
+  let ustackstart = 1300uL in
+  let uheapstart = 1400uL in
+  let entry = 1200uL in 
+  let buf = Buffer.create 0uL 500ul in
+  let calltable = Buffer.create 0uL 100ul in
+  let myprogram = [("main", Seq [(Load ((Register "rax"), 4uL, (Register "rbx")))])] in
+  ustar buf calltable base wbmapstart uheapstart ustackstart ucodestart entry myprogram 
+  
 
 (* Place holder for parsing manifest and getting the start addresses and  
   calltable

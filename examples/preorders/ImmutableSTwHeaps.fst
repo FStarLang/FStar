@@ -3,6 +3,9 @@ module ImmutableSTwHeaps
 open FStar.Heap
 open Preorder
 
+//giving ourselves two non-ghost versions of the heap sel/upd functions
+assume val sel: h:heap -> r:ref 'a -> Tot (x:'a{x == Heap.sel h r})
+assume val upd: h:heap -> r:ref 'a -> v:'a -> Tot (h':heap{h' == Heap.upd h r v})
 
 (* Two heaps are related if the latter differs from the former only by new 
    allocated references and all existing content is preserved unchanged. *)
