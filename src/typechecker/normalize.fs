@@ -1046,7 +1046,7 @@ let normalize_refinement steps env t0 =
 
 let normalize_sigelt (_:steps) (_:Env.env) (_:sigelt) : sigelt = failwith "NYI: normalize_sigelt"
 
-let eta_expand (_:Env.env) (t:typ) : typ =
+let eta_expand (env:Env.env) (t:typ) : typ =
   let expand sort =
     let binders, c = Util.arrow_formals_comp sort in
     begin match binders with
@@ -1062,14 +1062,5 @@ let eta_expand (_:Env.env) (t:typ) : typ =
   | _, Tm_name x ->
       expand x.sort
   | _ ->
-      failwith (Util.format2 "NYI: eta_expand(%s) %s" (Print.tag_of_term t) (Print.term_to_string t))
-
-//let eta_expand (env:Env.env) (t:typ) : typ =
-//    let _, ty, _ = env.type_of env t in
-//    let binders, c = Util.arrow_formals_comp ty in
-//    match binders with 
-//        | [] -> t
-//        | _ -> 
-//          let binders, args = binders |> Util.args_of_binders in
-//          Util.abs binders (mk_Tm_app t args None t.pos) (Util.lcomp_of_comp c |> Some)
-//    
+      let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
+      expand ty
