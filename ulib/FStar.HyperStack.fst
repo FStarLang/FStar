@@ -122,6 +122,27 @@ let lemma_equal_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
   [SMTPat (equal_domains m0 m1); SMTPat (equal_domains m1 m2)]
   = ()
 
+let equal_stack_domains (m0:mem) (m1:mem) =
+  m0.tip = m1.tip
+  /\ (forall r. (is_stack_region r /\ r <> m0.tip /\ r `is_above` m0.tip) ==> TSet.equal (Heap.domain (Map.sel m0.h r)) (Heap.domain (Map.sel m1.h r)))
+
+let lemma_equal_stack_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
+  (requires (equal_stack_domains m0 m1 /\ equal_stack_domains m1 m2))
+  (ensures  (equal_stack_domains m0 m2))
+  [SMTPat (equal_stack_domains m0 m1); SMTPat (equal_stack_domains m1 m2)]
+  = ()
+
+let modifies (s:Set.set rid) (m0:mem) (m1:mem) =
+  HH.modifies_just s m0.h m1.h
+  /\ m0.tip=m1.tip
+
+let modifies_transitively (s:Set.set rid) (m0:mem) (m1:mem) =
+  HH.modifies s m0.h m1.h
+  /\ m0.tip=m1.tip
+
+let heap_only (m0:mem) =
+  m0.tip = HH.root
+
 let top_frame (m:mem) = Map.sel m.h m.tip
   
 let fresh_frame (m0:mem) (m1:mem) =
@@ -138,9 +159,6 @@ type s_ref (i:rid) (a:Type) = s:reference a{s.id = i}
 
 let frameOf #a (s:reference a) = s.id
 
-let modifies (s:Set.set rid) (m0:mem) (m1:mem) =
-  HH.modifies_just s m0.h m1.h
-  /\ m0.tip=m1.tip
 let as_ref #a (x:reference a)  : GTot (Heap.ref a) = HH.as_ref #a #x.id x.ref
 let as_aref #a (x:reference a) : GTot Heap.aref = Heap.Ref (HH.as_ref #a #x.id x.ref)
 let modifies_one id h0 h1 = HH.modifies_one id h0.h h1.h
