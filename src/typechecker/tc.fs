@@ -386,6 +386,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                         e, Rel.conj_guard g g0
               | Some g' -> e, Rel.conj_guard g' (Rel.conj_guard g g0) in
         let c = S.mk_Comp ({
+              comp_univs=[env.universe_of env res_typ];
               effect_name = ed.mname;
               result_typ=res_typ;
               effect_args=[as_arg wp];
@@ -642,7 +643,10 @@ and tc_comp env c : comp                                      (* checked version
       let head = S.fvar c.effect_name Delta_constant None in
       let tc = mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) None c.result_typ.pos in
       let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff in
-      let _, args = Util.head_and_args tc in
+      let head, args = Util.head_and_args tc in
+      let comp_univs = match (SS.compress head).n with 
+        | Tm_uinst(_, us) -> us
+        | _ -> [] in
       let res, args = List.hd args, List.tl args in
       let flags, guards = c.flags |> List.map (function
         | DECREASES e ->
@@ -650,21 +654,12 @@ and tc_comp env c : comp                                      (* checked version
             let e, _, g = tc_tot_or_gtot_term env e in
             DECREASES e, g
         | f -> f, Rel.trivial_guard) |> List.unzip in
-
-      let u = match !(fst res).tk with //TODO:ugly. This code is brittle, see #567. We should have a better way to compute the universe of c
-        | Some (Tm_type u) -> u
-        | Some t ->
-          let t = S.mk t None Range.dummyRange in
-          let t = N.normalize [N.Beta] env t in
-          begin match t.n with 
-          | Tm_type u -> u
-          | _ -> failwith "Impossible:Unexpected sort for computation"
-          end
-        | _ -> failwith "Impossible:Unexpected sort for computation" in
+      let u = env.universe_of env (fst res) in
       mk_Comp ({c with
+          comp_univs=comp_univs;
           result_typ=fst res;
           effect_args=args}),
-      u,
+      u, //TODO: The universe should really be computed as the universe of the representation of c
       List.fold_left Rel.conj_guard f guards
 
 and tc_universe env u : universe =
@@ -1970,6 +1965,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
                   let bs, c = SS.open_comp bs c in
                   let a, wp = destruct_repr (Util.comp_result c) in
                   let c = {
+                    comp_univs=[env.universe_of env a];
                     effect_name = ed.mname;
                     result_typ = a;
                     effect_args = [as_arg wp];
@@ -3015,8 +3011,6 @@ let universe_of env e =
             match (Util.unrefine t).n with 
             | Tm_type u -> ok u
             | _ -> fail e t in
-//         let _ = Printf.printf "%A:\nuniverse_of %s\n\n\n" (System.Diagnostics.StackTrace())
-//                                                           (Print.term_to_string e) in
          let head, args = Util.head_and_args e in
          match (SS.compress head).n with 
          | Tm_uvar(_, t) ->  //it's a uvar, so just read its type, rather than type-checking it
@@ -3026,9 +3020,14 @@ let universe_of env e =
            | _ -> universe_of_type e t
            end
          | _ -> 
-            let e = N.normalize [N.Beta; N.NoInline] env e in
-            let _, ({res_typ=t}), g = tc_term env e in
-            let _ = Rel.solve_deferred_constraints env g in
+            let t =
+                match !e.tk with 
+                | Some t -> S.mk t None e.pos 
+                | _ -> 
+                  let e = N.normalize [N.Beta; N.NoInline] env e in
+                  let _, ({res_typ=t}), g = tc_term env e in
+                  let _ = Rel.solve_deferred_constraints env g in
+                  t in
             universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
 
 let check_module env m =

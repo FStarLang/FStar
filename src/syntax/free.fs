@@ -159,7 +159,8 @@ and free_names_and_uvars_comp c =
             | Total t -> 
               free_names_and_uvars t
             | Comp ct -> 
-              free_names_and_uvars_args ct.effect_args (free_names_and_uvars ct.result_typ) in
+              let us = free_names_and_uvars_args ct.effect_args (free_names_and_uvars ct.result_typ) in
+              List.fold_left (fun us u -> union us (free_univs u)) us ct.comp_univs in
          c.vars := Some n;
          n
 

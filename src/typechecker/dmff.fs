@@ -976,6 +976,7 @@ and comp_of_nm (nm: nm_): comp =
 
 and mk_M (t: typ): comp =
   mk_Comp ({
+    comp_univs=[U_unknown];
     effect_name = Const.monadic_lid;
     result_typ = t;
     effect_args = [];
@@ -1026,6 +1027,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
   let mk x = mk x None h.pos in
   if is_monadic then
     mk_Comp ({
+      comp_univs = [U_unknown];
       effect_name = Const.effect_PURE_lid;
       result_typ = star_type env h;
       effect_args = [ wp, S.as_implicit false ];

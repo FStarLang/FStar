@@ -186,10 +186,11 @@ let eq_univs u1 u2 = compare_univs u1 u2 = 0
 (********************************************************************************)
 
 let ml_comp t r =
-  mk_Comp ({effect_name=set_lid_range Const.effect_ML_lid r;
-         result_typ=t;
-         effect_args=[];
-         flags=[MLEFFECT]})
+  mk_Comp ({comp_univs=[U_unknown];
+            effect_name=set_lid_range Const.effect_ML_lid r;
+            result_typ=t;
+            effect_args=[];
+            flags=[MLEFFECT]})
 
 //let total_comp t r = mk_Total t
 
@@ -219,8 +220,8 @@ let comp_effect_name c = match c.n with
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
     | Comp c -> c
-    | Total t -> {effect_name=Const.effect_Tot_lid; result_typ=t; effect_args=[]; flags=[TOTAL]}
-    | GTotal t -> {effect_name=Const.effect_GTot_lid; result_typ=t; effect_args=[]; flags=[SOMETRIVIAL]}
+    | Total t ->  {comp_univs=[]; effect_name=Const.effect_Tot_lid; result_typ=t; effect_args=[]; flags=[TOTAL]}
+    | GTotal t -> {comp_univs=[]; effect_name=Const.effect_GTot_lid; result_typ=t; effect_args=[]; flags=[SOMETRIVIAL]}
 
 let is_total_comp c =
     comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)

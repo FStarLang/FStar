@@ -806,6 +806,7 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
                        let components = (None, COVARIANT, T (c.result_typ, kind_type))::components in
                        let tcs, sub_probs = List.map (sub_prob scope args) components |> List.unzip in
                        let gi_xs = mk_Comp <| {
+                            comp_univs=c.comp_univs;
                             effect_name=c.effect_name;
                             result_typ=List.hd tcs |> un_T;
                             effect_args=List.tl tcs |> List.map arg_of_tc;
@@ -2098,6 +2099,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                       | [(wp1,_)] -> wp1
                       | _ -> failwith (Util.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
              let c1 = {
+                comp_univs=c1.comp_univs;
                 effect_name=c2.effect_name;
                 result_typ=c1.result_typ;
                 effect_args=[as_arg (edge.mlift c1.result_typ wp)];
