@@ -32,21 +32,6 @@ open Ast
 
   let mylambda = [
 		 ("main", 
-		 Seq (1200uL, [ 
-				
-				(Assign (1200uL, (Register "rbp"), (Register "rsp")));
-				(Call (1201uL, (Constant 1210uL)));
-				(Return 1204uL)
-				]));
-		("counter", 
-		 Seq (1210uL, [ (Push (1210uL, (Register "rbp")));
-				(Pop (1211uL, (Register "rax")));
-				(Return 1212uL)
-				]))
-		]
-  (*
-  let mylambda = [
-		 ("main", 
 		 Seq (1200uL, [(Assign (1200uL, (Register "rbp"), (Constant 1000uL)));(Push (1200uL, (Register "rbp")));
 				(Assign (1201uL, (Register "rbp"), (Register "rsp")));
 				(Assign (1202uL, (Register "rbx"), (Constant 1402uL)));
@@ -76,7 +61,6 @@ open Ast
 				(Return 1220uL)
 				]))
 		]
-*)
 let testprogram = mylambda 
 let make_callentry = [(MkCallentry 1200uL "main" [] Public);(MkCallentry 1210uL "counter" [Mkintarg;Mkintarg] Public)]
 let make_calltable = 

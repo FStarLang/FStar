@@ -86,7 +86,7 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 	       let idx = (sub addr base) in
 	       let wordidx = (cast_to_word idx) in
 	       let _ = if debugflag then 
-				let _ =  debug_print_string "Updating bitmap" in
+				let _ =  debug_print_string "Updating bitmap: " in
 				let _ = debug_print_string (UInt32.to_string wordidx) in
 				debug_print_string "\n"
 			 else true in
@@ -103,7 +103,7 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 	       let idx = (sub addr base) in
 	       let wordidx = (cast_to_word idx) in
 	       let _ = if debugflag then 
-				let _ =  debug_print_string "Updating heap" in
+				let _ =  debug_print_string "Updating heap: " in
 				let _ = debug_print_string (UInt32.to_string wordidx) in
 				debug_print_string "\n"
 			 else true in
@@ -121,7 +121,7 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 	       let idx = (sub addr base) in
 	       let wordidx = (cast_to_word idx) in
 	       let _ = if debugflag then 
-				let _ =  debug_print_string "Updating older stack frame" in
+				let _ =  debug_print_string "Updating older stack frame: " in
 				let _ = debug_print_string (UInt32.to_string wordidx) in
 				debug_print_string "\n"
 			 else true in
@@ -132,12 +132,12 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 		let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt" else true in
 		()
 
-    else if (gte addr (read' "rbp" env)) && (lte addr (read' "rsp" env))  then
+    else if (lte addr (read' "rbp" env)) && (gte addr (read' "rsp" env))  then
 	(* Address belongs to current stack frames *)  
 	       let idx = (sub addr base) in
 	       let wordidx = (cast_to_word idx) in
 	       let _ = if debugflag then 
-				let _ =  debug_print_string "Updating current stack frame" in
+				let _ =  debug_print_string "Updating current stack frame: " in
 				let _ = debug_print_string (UInt32.to_string wordidx) in
 				debug_print_string "\n"
 			 else true in
@@ -165,7 +165,8 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 			let _ = debug_print_string (to_string ustackstart) in
 			debug_print_string "\n" 
 		else true in
-		()
+	let _ = 1 + 2 in
+        ()	
     in
   let decode' iscalltarget myprogram instraddr env = 
 	
@@ -325,7 +326,6 @@ let rec step (debugflag:bool) (env:cpuregstate) (defensivememop:memaccess) (mypr
   | Push(iaddr, reg)-> 
        let addr = eval env (Register "rsp") in
        let v = eval env reg in 
-       let _ = defensivememop.store 1ul  addr v env in
        let _ = if debugflag then
 			let _ = debug_print_string (to_string iaddr) in
 			let _ = debug_print_string ":" in
@@ -335,6 +335,7 @@ let rec step (debugflag:bool) (env:cpuregstate) (defensivememop:memaccess) (mypr
 			let _ = debug_print_string (to_string v) in
 			debug_print_string ";\n"
        		else true in
+       let _ = defensivememop.store 1ul  addr v env in
        let env' = update "rsp" (sub addr 1uL) env in
        env'
   | Pop (iaddr, reg) ->
@@ -380,13 +381,11 @@ let rec step (debugflag:bool) (env:cpuregstate) (defensivememop:memaccess) (mypr
        let t = if debugflag then
 		let _ = debug_print_string (to_string iaddr) in
 		let _ = debug_print_string ":" in
-		let _ = debug_print_string "Call {\n " in
+		let _ = debug_print_string "Call  " in
 		let _ = debug_print_string (to_string fentry) in
 		let _ = debug_print_string " " in
 		let _ = debug_print_string "Return address pushed: " in
 		let _ = debug_print_string (to_string (add iaddr 1uL)) in
-		let _ = debug_print_string "address updated: " in
-		let _ = debug_print_string (to_string addr) in
 		let _ = debug_print_string "Current rsp: " in
 		let _ = debug_print_string (to_string (eval env' (Register "rsp"))) in
 		debug_print_string "}\n"
@@ -445,9 +444,6 @@ let rec step (debugflag:bool) (env:cpuregstate) (defensivememop:memaccess) (mypr
              let  stmtlist = defensivememop.decode false myprogram retaddr env' in
 	     (* pop the return address *)
 	     let t =  if debugflag then
-			let _ = debug_print_string "Statement list begin \n" in
-			let _ = print_stmt stmtlist in
-			let _ = debug_print_string "Statement list end \n" in
 			let _ = debug_print_string (to_string iaddr) in
 			let _ = debug_print_string ":" in
 			let _ = debug_print_string "Return " in
