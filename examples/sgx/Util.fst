@@ -6,9 +6,14 @@ open FStar.Buffer
 open Ast
 
 
-val cast_to_word: address -> Tot word
-let cast_to_word  _ = 0ul
 
+val cast_to_word: m:address{UInt.fits (UInt64.v m) 32} -> Tot word
+let cast_to_word  m = 
+	let n: x:int{UInt.size x 32} = UInt64.v m in
+        UInt32.uint_to_t n
+
+val cast_to_nat: address -> Tot nat
+let cast_to_nat _ = 0
 (*
    Bitmap layout
   ==============
@@ -63,8 +68,52 @@ let get_address_represented_in_bitmap base bitmapstart addr =
 val get_bitmap_set :address->address->address->Tot bool
 let get_bitmap_set base bitmapstart addr = true
 
-val get_func_name :(buffer dword) -> address->Tot string
-let get_func_name calltable instraddr = "main"
+val get_callentries: calltable -> Tot (list callentry)
+let get_callentries calltab = match calltab with
+ |(MkCalltable li) -> li
+
+val get_arguments_number:calltable -> string->Tot nat
+let get_arguments_number calltab func_name = 
+	let callentries = (get_callentries calltab) in
+	let rec search_func_name (callentries:list callentry): Tot nat = match callentries with
+		|[] -> 0 (* raise Halt *)
+		|(MkCallentry entry fname arglist access)::tail -> if (fname = func_name) then
+									List.Tot.length arglist
+								   else
+									search_func_name tail
+	in search_func_name callentries
+val get_func_name :calltable -> address->Tot string
+let get_func_name calltab instraddr = 
+	let callentries = (get_callentries calltab) in
+	let rec search_func_name (callentries:list callentry): Tot string = match callentries with
+		|[] -> "" (* raise Halt *)
+		|(MkCallentry entry fname arglist access)::tail -> if (eq entry instraddr) then
+									fname
+								   else
+									search_func_name tail
+	in search_func_name callentries
+
+val search_func: calltable -> address -> Tot bool
+let search_func calltab instraddr = 
+	let callentries = (get_callentries calltab) in
+	let rec search_func_name (callentries:list callentry): Tot bool= match callentries with
+		|[] -> false
+		|(MkCallentry entry fname arglist access)::tail -> if (eq entry instraddr) then
+									true
+								   else
+									search_func_name tail
+	in search_func_name callentries
+
+val get_func_attributes:calltable -> string->Tot accesstype
+let get_func_attributes calltab func_name = 
+	let callentries = (get_callentries calltab) in
+	let rec search_func_name (callentries:list callentry): Tot accesstype = match callentries with
+		|[] -> Private (* raise Halt *)
+		|(MkCallentry entry fname arglist access)::tail -> if (fname = func_name) then
+									access
+								   else
+									search_func_name tail
+	in search_func_name callentries
 
 let invert_stmt s = match s with
  |Seq(_, li) -> li
@@ -75,6 +124,8 @@ let rec print_stmt (stli:list stmt) :Tot bool = match stli with
   | (Skip iaddr)::tail -> let _ = debug_print_string "skip\n" in print_stmt tail
   | (Add(iaddr,_, _,_))::tail -> let _ = debug_print_string "add\n" in print_stmt tail
   | (Cmp(iaddr,_, _,_))::tail -> let _ = debug_print_string "cmp\n" in print_stmt tail
+  | (Push(iaddr,_))::tail -> let _ = debug_print_string "push\n" in print_stmt tail
+  | (Pop(iaddr,_))::tail -> let _ = debug_print_string "pop\n" in print_stmt tail
   | (Store(iaddr, _, _, _))::tail-> let _ = debug_print_string "store\n" in print_stmt tail
   | (Load (iaddr, _, _, _))::tail-> let _ = debug_print_string "load\n" in print_stmt tail
   | (Call (iaddr, _))::tail-> let _ = debug_print_string "call\n" in print_stmt tail
@@ -111,6 +162,8 @@ let get_function_given_address (instraddr:address) (myprogram:program) =
 			  | (Cmp(iaddr,_,  _, _))::tail
 			  | (Store(iaddr, _, _, _))::tail
 			  | (Load (iaddr, _, _, _))::tail
+			  | (Push(iaddr, _))::tail
+			  | (Pop(iaddr, _))::tail
 			  | (Call (iaddr, _))::tail
 			  | (If (iaddr, _, _, _))::tail 
 			  | (Assign (iaddr, _, _))::tail
@@ -135,6 +188,8 @@ let get_stmt_list_in_current_function instraddr myprogram =
 		  | (Cmp(iaddr,_, _, _))::tail
 		  | (Store(iaddr, _, _, _))::tail
 		  | (Load (iaddr, _, _, _))::tail
+		  | (Push(iaddr, _))::tail
+		  | (Pop(iaddr, _))::tail
 		  | (Call (iaddr, _))::tail
 		  | (If (iaddr, _, _, _))::tail 
 		  | (Assign (iaddr, _, _))::tail
@@ -143,5 +198,3 @@ let get_stmt_list_in_current_function instraddr myprogram =
 		end
 	in search_ins stli 
 
-val search_func: (buffer dword) -> address -> Tot bool
-let search_func calltable instraddr = true
