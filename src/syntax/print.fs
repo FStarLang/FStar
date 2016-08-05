@@ -364,11 +364,15 @@ and comp_to_string c =
                && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
           then Util.format1 "ALL %s" (term_to_string c.result_typ)
           else if (Options.print_effect_args())
-          then Util.format3 "%s (%s) %s"
+          then Util.format4 "%s%s(%s) %s"
                     (sli c.effect_name) 
+                    (c.effect_params |> List.map arg_to_string |> String.concat " ")
                     (term_to_string c.result_typ) 
                     (c.effect_args |> List.map arg_to_string |> String.concat ", ")
-          else Util.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
+          else Util.format3 "%s%s(%s)" 
+                        (sli c.effect_name)
+                        (c.effect_params |> List.map arg_to_string |> String.concat " ")
+                        (term_to_string c.result_typ) in
       let dec = c.flags |> List.collect (function DECREASES e -> [Util.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
       Util.format2 "%s%s" basic dec
 

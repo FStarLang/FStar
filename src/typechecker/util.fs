@@ -395,19 +395,21 @@ let decorate_pattern env p exps =
 (*********************************************************************************************)
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
-let destruct_comp c : (universe * typ * typ) =
+let destruct_comp c : (universes * typ * typ) =
   let wp = match c.effect_args with
     | [(wp, _)] -> wp
     | _ -> failwith (Util.format2 "Impossible: Got a computation %s with effect args [%s]" c.effect_name.str
       (List.map (fun (x, _) -> Print.term_to_string x) c.effect_args |> String.concat ", ")) in
-  List.hd c.comp_univs, c.result_typ, wp
+  c.comp_univs, c.result_typ, wp
 
 let lift_comp c m lift =
-  let u, _, wp = destruct_comp c in
-  {comp_univs=[u];
+  let us, _, wp = destruct_comp c in
+  let lifted_params, lifted_wp = lift (c.effect_params, c.result_typ, wp) in
+  {comp_univs=us;
    effect_name=m;
+   effect_params=lifted_params;
    result_typ=c.result_typ;
-   effect_args=[as_arg (lift c.result_typ wp)];
+   effect_args=[as_arg lifted_wp];
    flags=[]}
 
 let join_effects env l1 l2 =
@@ -439,9 +441,10 @@ let is_pure_or_ghost_effect env l =
   lid_equals l Const.effect_PURE_lid
   || lid_equals l Const.effect_GHOST_lid
 
-let mk_comp md u_result result wp flags =
+let mk_comp md parms u_result result wp flags =
   mk_Comp ({ comp_univs=[u_result];
              effect_name=md.mname;
+             effect_params=parms;
              result_typ=result;
              effect_args=[S.as_arg wp];
              flags=flags})
@@ -464,7 +467,7 @@ let return_value env t v =
          let k = SS.subst [NT(a, t)] kwp in
          let u_t = env.universe_of env t in
          let wp = N.normalize [N.Beta] env (mk_Tm_app (inst_effect_fun_with [u_t] env m m.ret_wp) [S.as_arg t; S.as_arg v] (Some k.n) v.pos) in
-         mk_comp m u_t t wp [RETURN] in
+         mk_comp m [] u_t t wp [RETURN] in //no params, this is PURE
   if debug env <| Options.Other "Return"
   then Util.print3 "(%s) returning %s at comp type %s\n" 
                     (Range.string_of_range v.pos)  (P.term_to_string v) (N.comp_to_string env c);

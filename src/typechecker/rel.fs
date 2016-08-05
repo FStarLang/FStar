@@ -802,14 +802,17 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
                        end
 
                      |_, _, C ({n=Comp c}) ->
-                       let components = c.effect_args |> List.map (fun t -> (None, INVARIANT, T (fst t, generic_kind))) in
+                       let components = c.effect_params@c.effect_args |> List.map (fun t -> (None, INVARIANT, T (fst t, generic_kind))) in
                        let components = (None, COVARIANT, T (c.result_typ, kind_type))::components in
                        let tcs, sub_probs = List.map (sub_prob scope args) components |> List.unzip in
+                       let result_typ = List.hd tcs |> un_T in
+                       let effect_params, effect_args = Util.first_N (List.length c.effect_params) (List.tl tcs) in
                        let gi_xs = mk_Comp <| {
                             comp_univs=c.comp_univs;
                             effect_name=c.effect_name;
+                            effect_params=effect_params |> List.map arg_of_tc;
                             result_typ=List.hd tcs |> un_T;
-                            effect_args=List.tl tcs |> List.map arg_of_tc;
+                            effect_args=effect_args |> List.map arg_of_tc;
                             flags=c.flags
                         }  in
                         C gi_xs, sub_probs
@@ -2098,11 +2101,14 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
         then let wp = match c1.effect_args with
                       | [(wp1,_)] -> wp1
                       | _ -> failwith (Util.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
+             let effect_params, wp = 
+                edge.mlift (c1.effect_params, c1.result_typ, wp) in
              let c1 = {
                 comp_univs=c1.comp_univs;
                 effect_name=c2.effect_name;
+                effect_params=effect_params;
                 result_typ=c1.result_typ;
-                effect_args=[as_arg (edge.mlift c1.result_typ wp)];
+                effect_args=[as_arg wp];
                 flags=c1.flags
              } in
              solve_eq c1 c2
@@ -2116,13 +2122,14 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
              else let c2_decl = Env.get_effect_decl env c2.effect_name in
                   let g =
+                     let lifted_params, lifted_wp = edge.mlift (c1.effect_params, c1.result_typ, wpc1) in
                      if is_null_wp_2
                      then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
                           mk (Tm_app(inst_effect_fun_with [env.universe_of env c1.result_typ] env c2_decl c2_decl.trivial, 
-                                    [as_arg c1.result_typ; as_arg <| edge.mlift c1.result_typ wpc1])) 
+                                     lifted_params@[as_arg c1.result_typ; as_arg lifted_wp])) 
                              (Some U.ktype0.n) r
                      else mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.stronger,
-                                        [as_arg c2.result_typ; as_arg wpc2; as_arg <| edge.mlift c1.result_typ wpc1])) (Some U.ktype0.n) r  in
+                                     lifted_params@[as_arg c2.result_typ; as_arg wpc2; as_arg lifted_wp])) (Some U.ktype0.n) r  in
                   let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
                   let wl = solve_prob orig (Some <| Util.mk_conj (p_guard base_prob |> fst) g) [] wl in
                   solve env (attempt [base_prob] wl) 
@@ -2173,7 +2180,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                              if Util.is_ghost_effect c1.effect_name
                              && Util.is_pure_effect c2.effect_name
                              && Util.non_informative (N.normalize [N.Inline;N.UnfoldUntil Delta_constant] env c2.result_typ)
-                             then let edge = {msource=c1.effect_name; mtarget=c2.effect_name; mlift=fun r t -> t} in
+                             then let edge = {msource=c1.effect_name; mtarget=c2.effect_name; mlift=fun (a, r, t) -> a,t} in
                                   solve_sub c1 edge c2
                              else giveup env (Util.format2 "incompatible monad ordering: %s </: %s" 
                                              (Print.lid_to_string c1.effect_name) 

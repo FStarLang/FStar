@@ -39,12 +39,12 @@ type delta_level =
   | OnlyInline
   | Unfold of delta_depth
 
-type mlift = typ -> typ -> typ
+type mlift = (args * typ * typ) -> (args * typ)
 
-type edge = {
+type edge = { //M ~> N :  a1...an -> res:Type -> wp:M.wp a1..an res -> (b1...bn * N.wp b1..bn res)
   msource :lident;
   mtarget :lident;
-  mlift   :typ -> typ -> typ;
+  mlift   :mlift;
 }
 type effects = {
   decls :list<eff_decl>;
@@ -492,33 +492,34 @@ let try_lookup_val_decl env lid =
     | Some (Inr (Sig_declare_typ(_, uvs, t, q, _), None)) -> Some ((uvs,t),q)
     | _ -> None
 
-let lookup_effect_abbrev env (univ:universe) lid =
+let lookup_effect_abbrev env uopt lid =
   match lookup_qname env lid with
     | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _), None)) ->
       if quals |> Util.for_some (function Irreducible -> true | _ -> false)
       then None
-      else let insts = if Ident.lid_equals lid Const.effect_Lemma_lid //TODO: Lemma is a hack! It is more universe polymorphic than expected, because of the SMTPats ... which should be irrelevant, but unfortunately are not 
-                       then univ::[U_zero]
-                       else [univ] in
-           begin match binders, univs with
-             | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
-             | _, _::_::_ when not (Ident.lid_equals lid Const.effect_Lemma_lid) -> 
-                failwith (Util.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
-                           (Print.lid_to_string lid) (string_of_int <| List.length univs))
-             | _ -> let _, t = inst_tscheme_with (univs, Util.arrow binders c) insts in 
-                    begin match (Subst.compress t).n with 
-                        | Tm_arrow(binders, c) -> 
-                          Some (binders, c)
-                        | _ -> failwith "Impossible"
-                    end
-          end
+      else let insts = match uopt with 
+            | None -> univs |> List.map (fun _ -> U_unknown) 
+            | Some us -> 
+              if List.length us <> List.length univs
+              then failwith (Util.format3 "Unexpected effect abbreviation %s; expected %s universes, got %s"
+                                   (Print.lid_to_string lid) 
+                                   (string_of_int <| List.length us)
+                                   (string_of_int <| List.length univs))
+              else us 
+           in
+           let _, t = inst_tscheme_with (univs, Util.arrow binders c) insts in 
+           begin match (Subst.compress t).n with 
+                | Tm_arrow(binders, c) -> 
+                    Some (binders, c)
+               | _ -> failwith "Impossible"
+           end
     | _ -> None
 
 let norm_eff_name =
    let cache = Util.smap_create 20 in
    fun env (l:lident) ->
        let rec find l =
-           match lookup_effect_abbrev env U_unknown l with //universe doesn't matter here; we're just normalizing the name
+           match lookup_effect_abbrev env None l with //universe doesn't matter here; we're just normalizing the name
             | None -> None
             | Some (_, c) ->
                 let l = Util.comp_effect_name c in
@@ -597,12 +598,13 @@ let get_effect_decl env l =
     | None -> raise (Error(name_not_found l, range_of_lid l))
     | Some md -> md
 
-let join env l1 l2 : (lident * (typ -> typ -> typ) * (typ -> typ -> typ)) =
+let join env l1 l2 : (lident * mlift * mlift) =
+  let id_lift = fun (a, t, wp) -> a, wp in
   if lid_equals l1 l2
-  then l1, (fun t wp -> wp), (fun t wp -> wp)
+  then l1, id_lift, id_lift
   else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
        || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
-  then Const.effect_GTot_lid, (fun t wp -> wp), (fun t wp -> wp)
+  then Const.effect_GTot_lid, id_lift, id_lift
   else match env.effects.joins |> Util.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
         | None -> raise (Error(Util.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2), env.range))
         | Some (_, _, m3, j1, j2) -> m3, j1, j2
@@ -610,7 +612,7 @@ let join env l1 l2 : (lident * (typ -> typ -> typ) * (typ -> typ -> typ)) =
 let monad_leq env l1 l2 : option<edge> =
   if lid_equals l1 l2
   || (lid_equals l1 Const.effect_Tot_lid && lid_equals l2 Const.effect_GTot_lid)
-  then Some ({msource=l1; mtarget=l2; mlift=(fun t wp -> wp)})
+  then Some ({msource=l1; mtarget=l2; mlift=(fun (a, t, wp) -> a, wp)})
   else env.effects.order |> Util.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
 
 let wp_sig_aux decls m =
@@ -634,11 +636,14 @@ let build_lattice env se = match se with
     let compose_edges e1 e2 : edge =
        {msource=e1.msource;
         mtarget=e2.mtarget;
-        mlift=(fun r wp1 -> e2.mlift r (e1.mlift r wp1))} in
+        mlift=(fun (a, r, wp1) -> 
+                let b, wp2 = e1.mlift(a, r, wp1) in 
+                e2.mlift (b, r, wp2))} in
 
-    let mk_lift lift_t r wp1 = 
+    let mk_lift lift_t (args, r, wp1) = 
         let _, lift_t = inst_tscheme lift_t in
-        mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos in
+        [], //TODO: output args?
+        mk (Tm_app(lift_t, args@[as_arg r; as_arg wp1])) None wp1.pos in
 
     let edge =
       {msource=sub.source;
@@ -647,7 +652,7 @@ let build_lattice env se = match se with
     let id_edge l = {
        msource=sub.source;
        mtarget=sub.target;
-       mlift=(fun t wp -> wp)
+       mlift=(fun (a, t, wp) -> a,wp)
     } in
     let print_mlift l =
         let arg = lid_as_fv (lid_of_path ["ARG"] dummyRange) Delta_constant None in

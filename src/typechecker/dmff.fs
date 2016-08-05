@@ -978,6 +978,7 @@ and mk_M (t: typ): comp =
   mk_Comp ({
     comp_univs=[U_unknown];
     effect_name = Const.monadic_lid;
+    effect_params = [];
     result_typ = t;
     effect_args = [];
     flags = []
@@ -1027,6 +1028,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
     mk_Comp ({
       comp_univs = [U_unknown];
       effect_name = Const.effect_PURE_lid;
+      effect_params = [];
       result_typ = star_type env h;
       effect_args = [ wp, S.as_implicit false ];
       flags = []

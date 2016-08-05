@@ -105,10 +105,11 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbdef  :term             //e
 }
 and comp_typ = {
-  comp_univs:universes;
-  effect_name:lident;
-  result_typ:typ;
-  effect_args:args;
+  effect_name:lident;       //STATE
+  comp_univs:universes;     //<1, 0>
+  effect_params:args;       //FStar.Heap.heap : Type 1
+  result_typ:typ;           //nat             : Type 0
+  effect_args:args;         //wp
   flags:list<cflags>
 }
 and comp' =
@@ -187,10 +188,11 @@ and free_vars = {
     free_univs:set<universe_uvar>;
 }
 and lcomp = {
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list<cflags>;
-    comp: unit -> comp //a lazy computation
+    eff_name:   lident;        //STATE
+    eff_params: args;          //FStar.Heap.heap
+    res_typ:    typ;           //nat
+    cflags:     list<cflags>;  
+    comp:       unit -> comp   //a lazy computation
 }
 
 type tscheme = list<univ_name> * typ

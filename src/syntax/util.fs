@@ -188,6 +188,7 @@ let eq_univs u1 u2 = compare_univs u1 u2 = 0
 let ml_comp t r =
   mk_Comp ({comp_univs=[U_unknown];
             effect_name=set_lid_range Const.effect_ML_lid r;
+            effect_params=[];
             result_typ=t;
             effect_args=[];
             flags=[MLEFFECT]})
@@ -224,6 +225,7 @@ let comp_to_comp_typ (c:comp) : comp_typ =
     | GTotal(t, Some u) -> 
       {comp_univs=[u];
        effect_name=comp_effect_name c; 
+       effect_params=[];
        result_typ=t; 
        effect_args=[]; 
        flags=comp_flags c}
@@ -726,12 +728,13 @@ let tforall  = fvar Const.forall_lid (Delta_unfoldable 1) None
 let t_haseq   = fvar Const.haseq_lid Delta_constant None
 
 let lcomp_of_comp c0 =
-    let eff_name, flags = 
+    let eff_name, parms, flags = 
         match c0.n with 
-        | Total _ -> Const.effect_Tot_lid, [TOTAL]
-        | GTotal _ -> Const.effect_GTot_lid, [SOMETRIVIAL]
-        | Comp c -> c.effect_name, c.flags in
+        | Total _ -> Const.effect_Tot_lid, [], [TOTAL]
+        | GTotal _ -> Const.effect_GTot_lid, [], [SOMETRIVIAL]
+        | Comp c -> c.effect_name, c.effect_params, c.flags in
     {eff_name = eff_name;
+     eff_params=parms;
      res_typ = comp_result c0;
      cflags = flags;
      comp = fun() -> c0}

@@ -34,12 +34,12 @@ type delta_level =
 (* greatest lower bound of two delta_levels *)
 val glb_delta : delta_level -> delta_level -> delta_level
 
-type mlift = typ -> typ -> typ
+type mlift = (args * typ * typ) -> (args * typ)
 
-type edge = {
+type edge = { //M ~> N :  a1...an -> res:Type -> wp:M.wp a1..an res -> (b1...bn * N.wp b1..bn res)
   msource :lident;
   mtarget :lident;
-  mlift   :typ -> typ -> typ;
+  mlift   :mlift;
 }
 type effects = {
   decls :list<eff_decl>;
@@ -126,7 +126,7 @@ val lookup_definition      : delta_level -> env -> lident -> option<(univ_names 
 
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
-val lookup_effect_abbrev   : env -> universe -> lident -> option<(binders * comp)>
+val lookup_effect_abbrev   : env -> option<universes> -> lident -> option<(binders * comp)>
 val norm_eff_name          : (env -> lident -> lident)
 val lookup_projector       : env -> lident -> int -> lident
 val current_module         : env -> lident

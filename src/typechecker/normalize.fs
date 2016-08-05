@@ -136,7 +136,7 @@ let comp_to_comp_typ (env:Env.env) c =
  
 let rec unfold_effect_abbrev env comp =
   let c = comp_to_comp_typ env comp in
-  match Env.lookup_effect_abbrev env (List.hd c.comp_univs) c.effect_name with
+  match Env.lookup_effect_abbrev env (Some c.comp_univs) c.effect_name with
     | None -> c
     | Some (binders, cdef) ->
       let binders, cdef = SS.open_comp binders cdef in 

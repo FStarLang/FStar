@@ -91,7 +91,7 @@ let effect_as_etag =
         match Util.smap_try_find cache l.str with
             | Some l -> l
             | None ->
-                let res = match TypeChecker.Env.lookup_effect_abbrev g.tcenv S.U_zero l with
+                let res = match TypeChecker.Env.lookup_effect_abbrev g.tcenv None l with
                 | None -> l
                 | Some (_, c) -> delta_norm_eff g (U.comp_effect_name c) in
                 Util.smap_add cache l.str res;

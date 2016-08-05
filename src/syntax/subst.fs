@@ -156,9 +156,10 @@ and subst_comp_typ' s t = match s with
   | [[]] -> t
   | _ ->
     {t with comp_univs=List.map (subst_univ s) t.comp_univs;
+            effect_params=subst_args s t.effect_params;
             result_typ=subst' s t.result_typ;
             flags=subst_flags' s t.flags;
-            effect_args=List.map (fun (t, imp) -> subst' s t, imp) t.effect_args}
+            effect_args=subst_args s t.effect_args}
 
 and subst_comp' s t = match s with
   | []
@@ -170,6 +171,8 @@ and subst_comp' s t = match s with
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
 and compose_subst (s1:subst_ts) (s2:subst_ts) = s1@s2
+
+and subst_args s args = List.map (fun (t, imp) -> subst' s t, imp) args
 
 let shift n s = match s with 
     | DB(i, t) -> DB(i+n, t)

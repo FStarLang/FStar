@@ -357,7 +357,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e, c, g' = comp_check_expected_typ env e c in
     e, c, Rel.conj_guard g g'
       
-  | Tm_app({n=Tm_constant (Const_reflect l)}, [(e, aqual)])->
+  | Tm_app({n=Tm_constant (Const_reflect l)}, [(e, aqual)]) -> //TODO: Handle effect params to reflect
     if Option.isSome aqual
     then Errors.warn e.pos "Qualifier on argument to reflect is irrelevant and will be ignored";
     let no_reflect () = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, e.pos)) in
@@ -388,6 +388,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         let c = S.mk_Comp ({
               comp_univs=[env.universe_of env res_typ];
               effect_name = ed.mname;
+              effect_params=[];
               result_typ=res_typ;
               effect_args=[as_arg wp];
               flags=[]
@@ -1970,6 +1971,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
                   let c = {
                     comp_univs=[env.universe_of env a];
                     effect_name = ed.mname;
+                    effect_params = []; //TODO effect params
                     result_typ = a;
                     effect_args = [as_arg wp];
                     flags = [] 
