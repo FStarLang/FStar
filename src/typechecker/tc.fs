@@ -218,8 +218,8 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
                 match head.n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
                     | Tm_fvar fv when S.fv_eq_lid fv Const.lexcons_lid -> dec
                     | _ -> mk_lex_list [dec] in
-          let ct = N.comp_to_comp_typ env c in
-          match ct.flags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
+          let cflags = Util.comp_flags c in
+          match cflags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
                 | Some (DECREASES dec) -> as_lex_list dec
                 | _ ->
                     let xs = bs |> filter_types_and_functions in
@@ -641,6 +641,9 @@ and tc_comp env c : comp                                      (* checked version
 
     | Comp c ->
       let head = S.fvar c.effect_name Delta_constant None in
+      let head = match c.comp_univs with 
+        | [] -> head
+        | us -> S.mk (Tm_uinst(head, us)) None c0.pos in
       let tc = mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) None c.result_typ.pos in
       let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff in
       let head, args = Util.head_and_args tc in

@@ -122,6 +122,8 @@ let lookup_bvar env x =
     with _ -> failwith (Util.format1 "Failed to find %s\n" (Print.db_to_string x))
 
 let comp_to_comp_typ (env:Env.env) c =
+//    let debug () = if Env.debug env <| Options.Extreme
+//                   then printfn "###############comp to comp_typ: %s" (Print.comp_to_string c) in
     let c = match c.n with 
             | Total (t, None) -> 
               let u = env.universe_of env t in

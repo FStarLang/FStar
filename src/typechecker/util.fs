@@ -947,8 +947,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
      let univs, uvars = ecs |> List.map (fun (e, c) ->
           let t = Util.comp_result c |> SS.compress in
           let c = norm c in
-          let ct = N.comp_to_comp_typ env c in
-          let t = ct.result_typ in
+          let t = Util.comp_result c in
           let univs = Free.univs t in
           let uvt = Free.uvars t in
           let uvs = gen_uvars uvt in

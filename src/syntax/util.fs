@@ -220,18 +220,13 @@ let comp_effect_name c = match c.n with
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
     | Comp c -> c
-    | Total (t, Some u) ->  
-      {comp_univs=[u];
-       effect_name=Const.effect_Tot_lid; 
-       result_typ=t; 
-       effect_args=[]; 
-       flags=[TOTAL]}
+    | Total (t, Some u)  
     | GTotal(t, Some u) -> 
       {comp_univs=[u];
-       effect_name=Const.effect_GTot_lid; 
+       effect_name=comp_effect_name c; 
        result_typ=t; 
        effect_args=[]; 
-       flags=[SOMETRIVIAL]}
+       flags=comp_flags c}
     | _ -> failwith "Assertion failed: Computation type without universe"
 
 let is_total_comp c =
