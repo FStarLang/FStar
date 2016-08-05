@@ -1,4 +1,4 @@
-module Ex
+module Exceptions
 
 let ex_pre = Type0
 let ex_post (a:Type) = option a -> Type0

@@ -61,12 +61,8 @@ let return (a:Type) (x:a)
   : repr a (return_wp a x)
   = fun n0 -> (x, n0)
 
-let get_wp = fun n0 post -> post (n0, n0)
-
 let get (u:unit) : repr int (fun n0 post -> post (n0, n0))
   = fun n0 -> n0, n0
-
-let put_wp = fun n0 post -> post ((), n)
 
 let put (n:int) : repr unit (fun n0 post -> post ((), n))
   = fun x -> (), n
@@ -97,8 +93,8 @@ reifiable reflectable new_effect {
      ; trivial      = trivial
   and effect_actions
     //these are new
-      get  = get, get_wp
-    ; put  = put, put_wp
+      get  = get
+    ; put  = put
 }
 inline let lift_pure_state (a:Type) (wp:pure_wp a) (n:int) (p:post a) = wp (fun a -> p (a, n))
 sub_effect PURE ~> STATE = lift_pure_state

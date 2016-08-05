@@ -601,7 +601,7 @@ and star_type env t =
 
 let star_definition env t f =
   // Making the assumption that the thing we're passed is a top-level name.
-  match (SS.compress (N.normalize [ N.EraseUniverses ] env.env t)).n with
+  match (U.un_uinst t).n with
   | Tm_fvar { fv_name = lid } ->
       // Start back from the original [t]... can't re-normalize a term without
       // universes (because it is now ill-typed)
@@ -610,7 +610,7 @@ let star_definition env t f =
       let keep, ret = f env t in
       { env with definitions = (lid.v, keep) :: env.definitions }, ret
   | _ ->
-      raise (Err (Util.format1 "Ill-formed definition: %s" (Print.term_to_string t)))
+      raise (Err (Util.format2 "Ill-formed definition: %s (%s)" (Print.term_to_string t) (Print.tag_of_term t)))
 
 let star_type_definition env t =
   star_definition env t (fun env e -> let t = star_type env e in t, t)
@@ -949,19 +949,11 @@ and mk_match env e0 branches f =
   let t1 = match List.hd nms with | M t1 | N t1 -> t1 in
   let has_m = List.existsb (function | M _ -> true | _ -> false) nms in
   let nms, s_branches, u_branches = List.unzip3 (List.map2 (fun nm (pat, guard, (s_body, u_body)) ->
-    let check t t' =
-      // TODO: this is not really what we want... F* expects t' and t to be in
-      // Type(i)
-      if not (Rel.is_trivial (Rel.teq env.env t' t)) then
-        raise (Err ("[infer]: branches do not have the same type"))
-    in
     match nm, has_m with
     | N t2, false
     | M t2, true ->
-        check t2 t1;
         nm, (pat, guard, s_body), (pat, guard, u_body)
     | N t2, true ->
-        check t2 t1;
         // TODO: we could re-generate the body of the branch with [check_m] and
         // have [return]s inserted at depth, rather than on the outside...
         M t2, (pat, guard, mk_return env t2 s_body), (pat, guard, u_body)

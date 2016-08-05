@@ -991,7 +991,9 @@ let rec solve_universe_eq orig wl u1 u2 =
         | U_bvar _, _
         | U_unknown, _
         | _, U_bvar _ 
-        | _, U_unknown -> failwith "Impossible: locally nameless"
+        | _, U_unknown -> failwith (Util.format2 "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
+                                        (Print.univ_to_string u1) 
+                                        (Print.univ_to_string u2))
 
         | U_name x, U_name y ->
           if x.idText = y.idText

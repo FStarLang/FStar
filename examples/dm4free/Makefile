@@ -2,7 +2,10 @@ FSTAR_HOME=../..
 OTHERFLAGS=
 include ../Makefile.include
 
-all: FStar.DM4F.Test.uver intST.uver Exceptions.uver stexn.uver stexn.handle.uver exnst.uver
+all: FStar.DM4F.IntST.uver FStar.DM4F.Exceptions.uver stexn.uver stexn.handle.uver exnst.uver old
+
+# we retain these "hand-written" versions just for reference
+old: intST.uver Exceptions.uver
 
 ulib-cmxa:
 	$(MAKE) -C ../../ulib/ml
