@@ -13,19 +13,41 @@ effect State (a:Type) (wp:st_wp a) =
 effect ST (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        STATE a
              (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
-  
+
 effect STL (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        STATE a
              (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (post h a h1 /\ equal_domains h h1) ==> p a h1)) (* WP *)
+
+(* 
+   Effect of stacked based code: the 'equal_domains' clause enforces that
+   - both mem have the same tip
+   - both mem reference the same heaps (their map: rid -> heap have the same domain)
+   - in each region id, the corresponding heaps contain the same references on both sides
+ *)
+effect STStack (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
+       STATE a
+             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_domains h h1) ==> p a h1)) (* WP *)
+
+(* 
+   Effect of heap-based code, which can call to STStack and STStackLax code, but must
+   respect the push/pop discipline
+*)
+effect STHeap (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
+       STATE a
+             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ h.tip = HH.root /\ h1.tip = HH.root ) ==> p a h1)) (* WP *)
+
+(*
+  Effect of 'relaxed' code, which maintains the allocation invariant for the stack
+  but allows allocation on the heap 
+*)
+effect STLax (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
+       STATE a
+             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_stack_domains h h1) ==> p a h1)) (* WP *)
 
 effect Stl (a:Type) = STL a (fun h -> True) (fun h0 r h1 -> True)
 
 effect St (a:Type) =
        ST a (fun h -> True) (fun h0 r h1 -> True)
-
-(* Effect requiring that the top frame is fresh *)
-effect STF (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
-       ST a pre (fun m0 x m1 -> post m0 x m1 /\ fresh_frame m0 m1)
 
 effect STH (a:Type) (pre:st_pre_h HyperHeap.t) (post: HyperHeap.t -> Tot (st_post_h HyperHeap.t a)) =
        STATE a
@@ -64,16 +86,22 @@ assume val new_region: r0:HH.rid -> ST HH.rid
       (ensures (fun (m0:mem) (r1:HH.rid) (m1:mem) ->
                            r1 `HH.extends` r0
                         /\ HH.fresh_region r1 m0.h m1.h
-			/\ HH.color r1 = HH.color r0))
+			/\ HH.color r1 = HH.color r0
+			/\ m1.h == Map.upd m0.h r1 Heap.emp
+			/\ m1.tip = m0.tip
+			))
 
 let is_eternal_color c = c <= 0
 
-assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
-      (requires (fun m -> is_eternal_color c))
+assume val new_colored_region: r0:HH.rid -> c:int -> STLax HH.rid
+      (requires (fun m -> is_eternal_color c /\ is_eternal_region r0))
       (ensures (fun (m0:mem) (r1:HH.rid) (m1:mem) ->
                            r1 `HH.extends` r0
                         /\ HH.fresh_region r1 m0.h m1.h
-			/\ HH.color r1 = c))
+			/\ HH.color r1 = c
+			/\ m1.h == Map.upd m0.h r1 Heap.emp
+			/\ m1.tip = m0.tip
+			))
 
 inline let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:ref a) (m1:mem) = 
     let region_i = Map.sel m0.h i in
@@ -164,6 +192,64 @@ let test_nested_stl2 () =
   push_frame ();
   let x = test_do_nothing 0 in 
   pop_frame ()
+
+(* Testing mix of heap and stack code *)
+val test_stack: int -> STStack int
+  (requires (fun h -> True))
+  (ensures (fun h _ h1 -> modifies Set.empty h h1))
+let test_stack x = 
+  push_frame();
+  let s = salloc x in
+  s := (1 + x);
+  pop_frame ();
+  x
+
+val test_stack_with_long_lived: s:reference int -> STStack unit
+  (requires (fun h -> contains h s))
+  (ensures  (fun h0 _ h1 -> contains h1 s /\ sel h1 s = (sel h0 s) + 1
+    /\ modifies (Set.singleton s.id) h0 h1))
+let test_stack_with_long_lived s =
+  push_frame();
+  let _ = test_stack !s in
+  s := !s + 1;
+  pop_frame()
+
+val test_heap_code_with_stack_calls: unit -> STHeap unit
+  (requires (fun h -> heap_only h))
+  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton h0.tip) h0 h1 ))
+let test_heap_code_with_stack_calls () =
+  let h = get () in
+  // How is the following not known ?
+  HH.root_has_color_zero ();
+  let s = ralloc h.tip 0 in
+  test_stack_with_long_lived s;
+  s := 1;
+  ()
+
+val test_heap_code_with_stack_calls_and_regions: unit -> STHeap unit
+  (requires (fun h -> heap_only h))
+  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton h0.tip) h0 h1 ))
+let test_heap_code_with_stack_calls_and_regions () =
+  let h = get() in
+  let color = 0 in
+  HH.root_has_color_zero ();
+  let new_region = new_colored_region h.tip color in
+  let s = ralloc new_region 1 in
+  test_stack_with_long_lived s; // STStack call
+  test_heap_code_with_stack_calls (); // STHeap call
+  ()
+
+val test_lax_code_with_stack_calls_and_regions: unit -> STLax unit
+  (requires (fun h -> True))
+  (ensures  (fun h0 _ h1 -> modifies_transitively (Set.singleton HH.root) h0 h1 ))
+let test_lax_code_with_stack_calls_and_regions () =
+  push_frame();
+  let color = 0 in
+  HH.root_has_color_zero ();
+  let new_region = new_colored_region HH.root color in
+  let s = ralloc new_region 1 in
+  test_stack_with_long_lived s; // STStack call
+  pop_frame()
 
 val with_frame: #a:Type -> #pre:st_pre -> #post:(mem -> Tot (st_post a)) -> $f:(unit -> STL a pre post) 
 	     -> STL a (fun s0 -> forall s1. fresh_frame s0 s1 ==> pre s1)

@@ -1,12 +1,14 @@
 
 module Util
 open FStar.UInt64
+open FStar.IO
 open FStar.Buffer
 open Ast
 
 
 val cast_to_word: address -> Tot word
 let cast_to_word  _ = 0ul
+
 (*
    Bitmap layout
   ==============
@@ -62,10 +64,84 @@ val get_bitmap_set :address->address->address->Tot bool
 let get_bitmap_set base bitmapstart addr = true
 
 val get_func_name :(buffer dword) -> address->Tot string
-let get_func_name calltable instraddr = "dummy"
+let get_func_name calltable instraddr = "main"
+
+let invert_stmt s = match s with
+ |Seq(_, li) -> li
+ | _ -> [s]
+
+let rec print_stmt (stli:list stmt) :Tot bool = match stli with
+  | [] -> debug_print_string "end-of-stament-list\n" 
+  | (Skip iaddr)::tail -> let _ = debug_print_string "skip\n" in print_stmt tail
+  | (Add(iaddr,_, _,_))::tail -> let _ = debug_print_string "add\n" in print_stmt tail
+  | (Cmp(iaddr,_, _,_))::tail -> let _ = debug_print_string "cmp\n" in print_stmt tail
+  | (Store(iaddr, _, _, _))::tail-> let _ = debug_print_string "store\n" in print_stmt tail
+  | (Load (iaddr, _, _, _))::tail-> let _ = debug_print_string "load\n" in print_stmt tail
+  | (Call (iaddr, _))::tail-> let _ = debug_print_string "call\n" in print_stmt tail
+  | (If (iaddr, _, _, _))::tail -> let _ = debug_print_string "if\n" in print_stmt tail
+  | (Assign (iaddr, _, _))::tail-> let _ = debug_print_string "assign\n" in print_stmt tail
+  | (Jump (iaddr, _))::tail -> let _ = debug_print_string "jump\n" in print_stmt tail
+  | (Return iaddr)::tail -> let _ = debug_print_string "return\n" in print_stmt tail
+ 
+let rec print_prog (myprogram:program): Tot bool = match myprogram with
+ |[] -> debug_print_string "end-of-program\n" 
+ |(fname, stli)::tail -> let _ = debug_print_string "FUNCTION: \n" in
+			 let _ = print_stmt (invert_stmt stli) in
+			 print_prog tail
 
 val get_stmt_list : string->program->Tot (list stmt) 
-let get_stmt_list funcname myprogram = []
+let get_stmt_list funcname myprogram =
+	let rec loop (fli:program): Tot (list stmt) = begin match fli with
+	 |[] -> let _ = debug_print_string funcname in [] (* Ideally throw error *)
+	 |(fname, stli)::tail -> if fname = funcname then (invert_stmt stli) else loop tail
+	end in
+	let stli = loop myprogram in
+	stli
+
+
+(* Returns the name of the function corresponding to this address *)
+let get_function_given_address (instraddr:address) (myprogram:program) =
+	let rec loop (fli:program): Tot string = begin match fli with
+	 |[] -> "" (* Ideally throw error *)
+	 |(fname, stli)::tail -> 
+		let rec search_ins (stli:list stmt):Tot bool = begin match stli with 
+			  | [] -> false
+			  | (Skip iaddr)::tail 
+			  | (Add(iaddr,_,  _, _))::tail
+			  | (Cmp(iaddr,_,  _, _))::tail
+			  | (Store(iaddr, _, _, _))::tail
+			  | (Load (iaddr, _, _, _))::tail
+			  | (Call (iaddr, _))::tail
+			  | (If (iaddr, _, _, _))::tail 
+			  | (Assign (iaddr, _, _))::tail
+			  | (Jump (iaddr, _))::tail 
+			  | (Return iaddr)::tail -> if (eq instraddr iaddr) then true else search_ins tail
+			end
+		in 
+		let instrexists = search_ins (invert_stmt stli) in
+		if instrexists then fname else loop tail
+	end in
+	loop myprogram 
+
+(* Returns the list of stmt from the given address to end of current function *)
+val get_stmt_list_in_current_function : address ->program->Tot (list stmt) 
+let get_stmt_list_in_current_function instraddr myprogram =
+	let funcname = get_function_given_address instraddr myprogram in
+	let stli = get_stmt_list funcname myprogram in
+	let rec search_ins (stli:list stmt):Tot (list stmt) = begin match stli with 
+		  | [] -> []
+		  | (Skip iaddr)::tail 
+		  | (Add(iaddr,_, _, _))::tail
+		  | (Cmp(iaddr,_, _, _))::tail
+		  | (Store(iaddr, _, _, _))::tail
+		  | (Load (iaddr, _, _, _))::tail
+		  | (Call (iaddr, _))::tail
+		  | (If (iaddr, _, _, _))::tail 
+		  | (Assign (iaddr, _, _))::tail
+		  | (Jump (iaddr, _))::tail 
+		  | (Return iaddr)::tail -> if (eq instraddr iaddr) then stli else search_ins tail
+		end
+	in search_ins stli 
 
 val search_func: (buffer dword) -> address -> Tot bool
 let search_func calltable instraddr = true

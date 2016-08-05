@@ -2,6 +2,10 @@ module AllocSTwHeaps
 
 open Preorder
 
+//giving ourselves two non-ghost versions of the heap sel/upd functions
+assume val sel: h:FStar.Heap.heap -> r:ref 'a -> Tot (x:'a{x == FStar.Heap.sel h r})
+assume val upd: h:FStar.Heap.heap -> r:ref 'a -> v:'a -> Tot (h':FStar.Heap.heap{h' == FStar.Heap.upd h r v})
+
 
 (* The preorder on heaps for recalling that allocated 
    references remain allocated in all future heaps. *)
@@ -136,7 +140,7 @@ val alloc : #a:Type ->
 let alloc #a x = 
   let h = ist_get () in
   let r = gen_ref h in
-  ist_put (FStar.Heap.upd h r x);
+  ist_put (upd h r x);
   ist_witness (contains r);
   r                          
 
@@ -148,7 +152,7 @@ val read : #a:Type ->
 		                     x == FStar.Heap.sel h1 r)
 let read #a r = 
   let h = ist_get () in
-  FStar.Heap.sel h r
+  sel h r
 
 
 val write : #a:Type -> 
@@ -158,7 +162,7 @@ val write : #a:Type ->
                          (fun h0 _ h1 -> h1 == FStar.Heap.upd h0 r x)
 let write #a r x =
   let h = ist_get () in
-  ist_put (FStar.Heap.upd h r x)
+  ist_put (upd h r x)
 
 
 (* Write operation with a more precise type. *)
@@ -170,7 +174,7 @@ val precise_write : #a:Type ->
                                  (fun h0 _ h1 -> h1 == FStar.Heap.upd h0 r x)
 let precise_write #a r x =
   let h = ist_get () in
-  ist_put (FStar.Heap.upd h r x)
+  ist_put (upd h r x)
 
 
 (* Operation for recalling that the current heap contains any reference we can apply this operation to. *)
