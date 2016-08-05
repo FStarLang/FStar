@@ -4667,7 +4667,7 @@ end)))
 end))
 end))
 end))))
-and dijkstra_ftw : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.eff_decl  ->  (FStar_Syntax_Syntax.sigelt Prims.list * FStar_Syntax_Syntax.eff_decl) = (fun env ed -> (
+and cps_and_elaborate : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.eff_decl  ->  (FStar_Syntax_Syntax.sigelt Prims.list * FStar_Syntax_Syntax.eff_decl) = (fun env ed -> (
 
 let _58_2749 = (FStar_Syntax_Subst.open_term ed.FStar_Syntax_Syntax.binders ed.FStar_Syntax_Syntax.signature)
 in (match (_58_2749) with
@@ -6566,7 +6566,7 @@ in (match (_58_4054) with
 | (_58_4048, _58_4050, env, _58_4053) -> begin
 (
 
-let _58_4057 = (dijkstra_ftw env ne)
+let _58_4057 = (cps_and_elaborate env ne)
 in (match (_58_4057) with
 | (ses, ne) -> begin
 (

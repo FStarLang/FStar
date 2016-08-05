@@ -1,4 +1,4 @@
-module ExnSt
+module ExceptionsWithState
 let pre = int -> Type0
 let post (a:Type) = option (a * int) -> Type0
 let wp (a:Type) = int -> post a -> Type0
