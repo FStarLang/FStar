@@ -935,6 +935,18 @@ and infer (env: env) (e: term): nm * term * term =
 
 and mk_match env e0 branches f =
   let mk x = mk x None e0.pos in
+  let rec strip_implicits (pat:S.pat) = match pat.v with
+    | Pat_wild _
+    | Pat_var _
+    | Pat_constant _ -> Some pat
+    | Pat_disj pats -> Some ({pat with v=List.filter_map strip_implicits pats |> Pat_disj})
+    | Pat_cons(fv, args) -> 
+        let args = args |> List.filter_map (fun (p, b) -> 
+            if b then None
+            else strip_implicits p |> Option.map (fun x -> x, b)) in
+       Some ({pat with v = Pat_cons(fv, args)})
+    | Pat_dot_term _ -> None in
+
   // TODO: automatically [bind] when the scrutinee is monadic?
   let _, s_e0, u_e0 = check_n env e0 in
   let nms, branches = List.split (List.map (fun b ->
@@ -942,7 +954,7 @@ and mk_match env e0 branches f =
     | pat, None, body ->
         let env = { env with env = List.fold_left push_bv env.env (pat_bvs pat) } in
         let nm, s_body, u_body = f env body in
-        nm, (pat, None, (s_body, u_body))
+        nm, (Util.must <| strip_implicits pat, None, (s_body, u_body))
     | _ ->
         raise (Err ("No when clauses in the definition language"))
   ) branches) in
