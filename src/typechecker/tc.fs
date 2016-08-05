@@ -2043,7 +2043,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
   ed
 
 
-and dijkstra_ftw env ed =
+and cps_and_elaborate env ed =
   // Using [STInt: a:Type -> Effect] as an example...
   let binders_un, signature_un = SS.open_term ed.binders ed.signature in
   // [binders] is the empty list (for [ST (h: heap)], there would be one binder)
@@ -2132,6 +2132,7 @@ and dijkstra_ftw env ed =
   let bind_wp =
     match (SS.compress bind_wp).n with
     | Tm_abs (binders, body, what) ->
+        // TODO: figure out how to deal with ranges
         let r = S.lid_as_fv Const.range_lid (S.Delta_unfoldable 1) None in
         U.abs (S.null_binder (mk (Tm_fvar r)) :: binders) body what
     | _ ->
@@ -2968,7 +2969,7 @@ let tc_decls env ses =
           // Let the power of Dijkstra generate everything "for free", then defer
           // the rest of the job to [tc_decl].
           let _, _, env, _ = acc in
-          let ses, ne = dijkstra_ftw env ne in
+          let ses, ne = cps_and_elaborate env ne in
           let ses = ses @ [ Sig_new_effect (ne, r) ] in
           List.fold_left process_one_decl acc ses
       | _ ->

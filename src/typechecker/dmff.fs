@@ -629,6 +629,7 @@ let is_monadic = function
 // This function expects its argument [t] to be normalized.
 let rec is_C (t: typ): bool =
   match (SS.compress t).n with
+  // TODO: deal with more than tuples?
   | Tm_app (head, args) when Util.is_tuple_constructor head ->
       let r = is_C (fst (List.hd args)) in
       if r then begin
@@ -728,7 +729,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
             | _ -> failwith "impossible"
           in
           match context_nm with
-          | N t -> strip_m (check env e2 (M t))
+          | N t -> strip_m (check env e2 (M t)) // TODO: this should be an error?
           | M _ -> strip_m (check env e2 context_nm))
 
   | Tm_match (e0, branches) ->
@@ -949,6 +950,8 @@ and mk_match env e0 branches f =
   let has_m = List.existsb (function | M _ -> true | _ -> false) nms in
   let nms, s_branches, u_branches = List.unzip3 (List.map2 (fun nm (pat, guard, (s_body, u_body)) ->
     let check t t' =
+      // TODO: this is not really what we want... F* expects t' and t to be in
+      // Type(i)
       if not (Rel.is_trivial (Rel.teq env.env t' t)) then
         raise (Err ("[infer]: branches do not have the same type"))
     in
@@ -1097,4 +1100,5 @@ let trans_F (env: env_) (c: typ) (wp: term): term =
   let c = n c in
   let wp = n wp in
   trans_F_ env c wp
+
 
