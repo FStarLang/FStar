@@ -74,6 +74,7 @@ end) -> struct
   let unsafe_coerce x = Obj.magic x
   let op_Negation x = not x
 
+  let op_Addition x y = x + y
   let op_Equality x y = x = y
   let op_disEquality x y = x<>y
   let op_AmpAmp x y = x && y
