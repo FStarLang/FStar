@@ -3,11 +3,11 @@ OTHERFLAGS=
 include ../Makefile.include
 
 all: uall sall
-uall: FStar.DM4F.IntST.uver FStar.DM4F.Exceptions.uver FStar.DM4F.ExnSt.uver FStar.DM4F.StExn.uver stexn.handle.uver old
+uall: FStar.DM4F.IntST.uver FStar.DM4F.Exceptions.uver FStar.DM4F.ExnSt.uver FStar.DM4F.StExn.uver old
 sall:
 
 # we retain these "hand-written" versions just for reference
-old: intST.uver Exceptions.uver ExnSt.uver stexn.uver
+old: intST.uver Exceptions.uver ExnSt.uver StExn.uver StExn.Handle.uver 
 
 ulib-cmxa:
 	$(MAKE) -C ../../ulib/ml
