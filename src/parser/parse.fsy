@@ -453,11 +453,11 @@ ascriptionOrPattern:
 
 patternListSemiColon:
   |   { [] }
-  | appPattern patternListSemiColonRest { $1::$2 }
+  | pattern patternListSemiColonRest { $1::$2 }
 
 patternListSemiColonRest:
   |  { [] }
-  | SEMICOLON appPattern patternListSemiColonRest { $2::$3 }
+  | SEMICOLON pattern patternListSemiColonRest { $2::$3 }
 
 
 recordPattern:
