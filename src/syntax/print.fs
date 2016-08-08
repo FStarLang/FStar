@@ -222,7 +222,7 @@ let rec term_to_string x =
     let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
     Util.format2 "{:pattern %s} %s" pats (term_to_string t)
 
-  | Tm_meta(t, Meta_monadic m) -> Util.format3 ("(Monadic-%s{%s} %s )") (tag_of_term t) (sli m) (term_to_string t)
+  | Tm_meta(t, Meta_monadic (m, t')) -> Util.format4 ("(Monadic-%s{%s %s} %s )") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
   | Tm_meta(t, Meta_monadic_lift(m0, m1)) -> Util.format4 ("(MonadicLift-%s{%s} %s -> %s)") (tag_of_term t) (term_to_string t) (sli m0) (sli m1) 
   | Tm_meta(t, _) ->    term_to_string t
   | Tm_bvar x ->        db_to_string x

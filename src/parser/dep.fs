@@ -236,20 +236,21 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         raise (Err (Util.format1 "module not found in search path: %s\n" alias))
   in
   let record_lid is_constructor lid =
-    let try_key key =
-      begin match smap_try_find working_map key with
-      | Some pair ->
-          List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
-      | None ->
-          if List.length lid.ns > 0 && Options.debug_any() then
-            Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
-      end
-    in
-    // Option.Some x
-    try_key (lowercase_join_longident lid false);
-    // FStar.List (flatten (map (...)))
-    if is_constructor then
-      try_key (lowercase_join_longident lid true)
+    if lid.ident.idText <> "reflect" then
+      let try_key key =
+        begin match smap_try_find working_map key with
+        | Some pair ->
+            List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
+        | None ->
+            if List.length lid.ns > 0 && Options.debug_any() then
+              Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
+        end
+      in
+      // Option.Some x
+      try_key (lowercase_join_longident lid false);
+      // FStar.List (flatten (map (...)))
+      if is_constructor then
+        try_key (lowercase_join_longident lid true)
   in
 
 

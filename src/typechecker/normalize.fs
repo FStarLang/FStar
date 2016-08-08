@@ -268,6 +268,9 @@ let rec closure_as_term cfg env t =
              mk (Tm_meta(closure_as_term_delayed cfg env t',
                          Meta_pattern (args |> List.map (closures_as_args_delayed cfg env)))) t.pos
 
+           | Tm_meta(t', Meta_monadic(m, tbody)) -> //other metadata's do not have any embedded closures
+             mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic(m, closure_as_term_delayed cfg env tbody))) t.pos
+
            | Tm_meta(t', m) -> //other metadata's do not have any embedded closures
              mk (Tm_meta(closure_as_term_delayed cfg env t', m)) t.pos
        
@@ -463,7 +466,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let a = SS.compress (fst a) in
             // printfn "TRYING NORMALIZATION OF REIFY: %s ... %s" (Print.tag_of_term a) (Print.term_to_string a);
             begin match a.n with 
-            | Tm_meta(e, Meta_monadic m) ->
+            | Tm_meta(e, Meta_monadic (m, t_body)) ->
                 begin match (SS.compress e).n with 
                 | Tm_let((false, [lb]), body) ->
                     //this is M.bind
@@ -474,8 +477,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Inl x -> 
                       let head = U.mk_reify lb.lbdef in
                       let body = S.mk (Tm_abs([S.mk_binder x], U.mk_reify body, None)) None body.pos in
-                      let reified = S.mk (Tm_app(bind_repr, [as_arg S.tun; as_arg S.tun; as_arg S.tun; 
-                                                             as_arg S.tun; as_arg head; as_arg body])) None t.pos in
+                      let reified = S.mk (Tm_app(bind_repr, [as_arg lb.lbtyp; as_arg t_body;  //a, b
+                                                             as_arg S.tun; as_arg head;   //wp_head, head--the term shouldn't depend on wp_head
+                                                             as_arg S.tun; as_arg body])) //wp_body, body--the term shouldn't depend on wp_body
+                                                             None t.pos in
                       // printfn "Reified %s to %s\n" (Print.term_to_string t) (Print.term_to_string reified);
                       norm cfg env stack reified
                     | Inr _ -> failwith "Cannot reify a top-level let binding"
@@ -617,7 +622,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                 | MemoLazy r :: stack -> 
                   set_memo r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
-                  log cfg  (fun () -> Util.print_string "\tSet memo\n");
+                  log cfg  (fun () -> Util.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
                 | Let _ :: _
@@ -733,6 +738,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       let args = norm_pattern_args cfg env args in
                       norm cfg env (Meta(Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
+                    | Meta_monadic (m, t) ->
+                      let t = norm cfg env [] t in
+                      norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+
                     | _ -> 
                       norm cfg env stack head //meta doesn't block reduction
                   end  
@@ -769,7 +778,7 @@ and norm_comp : cfg -> env -> comp -> comp =
 *)
 and ghost_to_pure_aux cfg env c =
     let norm t = 
-        norm ({cfg with steps=[Inline; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses]}) env [] t in
+        norm ({cfg with steps=[Inline; UnfoldUntil Delta_constant; AllowUnboundUniverses]}) env [] t in
     let non_info t = non_informative (norm t) in
     match c.n with
     | Total _ -> c
@@ -827,6 +836,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
 
             | MemoLazy r::stack -> 
               set_memo r (env, t);
+              log cfg  (fun () -> Util.print1 "\tSet memo %s\n" (Print.term_to_string t));
               rebuild cfg env stack t
 
             | Let(env', bs, lb, r)::stack ->
@@ -1043,8 +1053,6 @@ let normalize_refinement steps env t0 =
          end
        | _ -> t in
    aux t
-
-let normalize_sigelt (_:steps) (_:Env.env) (_:sigelt) : sigelt = failwith "NYI: normalize_sigelt"
 
 let eta_expand (env:Env.env) (t:typ) : typ =
   let expand sort =

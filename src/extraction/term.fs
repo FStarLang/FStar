@@ -735,7 +735,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                 failwith "impossible"
             end
 
-        | Tm_meta(t, Meta_monadic m) -> 
+        | Tm_meta(t, Meta_monadic (m, _)) -> 
           let t = SS.compress t in
           begin match t.n with 
             | Tm_let((false, [lb]), body) when (Util.is_left lb.lbname) -> 

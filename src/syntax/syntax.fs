@@ -137,7 +137,7 @@ and metadata =
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
-  | Meta_monadic       of monad_name                             (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
+  | Meta_monadic       of monad_name * typ                       (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
   | Meta_monadic_lift  of monad_name * monad_name                (* Sub-effecting: a lift from m1 to m2 *)
 and uvar_basis<'a> =
   | Uvar
@@ -454,7 +454,6 @@ let gen_reset =
     gen, reset
 let next_id = fst gen_reset
 let reset_gensym = snd gen_reset
-let freshen_bv bv = {bv with index=next_id()}
 let range_of_ropt = function 
     | None -> dummyRange
     | Some r -> r
@@ -462,6 +461,10 @@ let gen_bv : string -> option<Range.range> -> typ -> bv = fun s r t ->
   let id = mk_ident(s, range_of_ropt r) in
   {ppname=id; index=next_id(); sort=t}
 let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
+let freshen_bv bv =
+    if is_null_bv bv
+    then new_bv (Some (range_of_bv bv)) bv.sort
+    else {bv with index=next_id()}
 let new_univ_name ropt = 
     let id = next_id() in 
     mk_ident (Util.string_of_int id, range_of_ropt ropt)

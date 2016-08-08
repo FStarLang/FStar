@@ -3,16 +3,17 @@ OTHERFLAGS=
 include ../Makefile.include
 
 all: uall sall
-
-uall: test-elab intST.uver Exceptions.uver StExn.uver StExn.Handle.uver ExnSt.uver
-
+uall: FStar.DM4F.IntST.uver FStar.DM4F.Exceptions.uver FStar.DM4F.ExnSt.uver FStar.DM4F.StExn.uver stexn.handle.uver old
 sall:
+
+# we retain these "hand-written" versions just for reference
+old: intST.uver Exceptions.uver ExnSt.uver stexn.uver
 
 ulib-cmxa:
 	$(MAKE) -C ../../ulib/ml
 
-test-elab: FStar.DM4F.Test.fst
-	$(FSTAR) --lax $<
+%.uver: %.fst
+	$(FSTAR) $^
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
