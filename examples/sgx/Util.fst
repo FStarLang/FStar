@@ -77,7 +77,7 @@ let get_arguments_number calltab func_name =
 	let callentries = (get_callentries calltab) in
 	let rec search_func_name (callentries:list callentry): Tot nat = match callentries with
 		|[] -> 0 (* raise Halt *)
-		|(MkCallentry entry fname arglist access)::tail -> if (fname = func_name) then
+		|(MkCallentry entry fname arglist access iswrapper)::tail -> if (fname = func_name) then
 									List.Tot.length arglist
 								   else
 									search_func_name tail
@@ -87,7 +87,7 @@ let get_func_name calltab instraddr =
 	let callentries = (get_callentries calltab) in
 	let rec search_func_name (callentries:list callentry): Tot string = match callentries with
 		|[] -> "" (* raise Halt *)
-		|(MkCallentry entry fname arglist access)::tail -> if (eq entry instraddr) then
+		|(MkCallentry entry fname arglist access iswrapper)::tail -> if (eq entry instraddr) then
 									fname
 								   else
 									search_func_name tail
@@ -98,7 +98,7 @@ let search_func calltab instraddr =
 	let callentries = (get_callentries calltab) in
 	let rec search_func_name (callentries:list callentry): Tot bool= match callentries with
 		|[] -> false
-		|(MkCallentry entry fname arglist access)::tail -> if (eq entry instraddr) then
+		|(MkCallentry entry fname arglist access iswrapper)::tail -> if (eq entry instraddr) then
 									true
 								   else
 									search_func_name tail
@@ -109,7 +109,7 @@ let get_func_attributes calltab func_name =
 	let callentries = (get_callentries calltab) in
 	let rec search_func_name (callentries:list callentry): Tot accesstype = match callentries with
 		|[] -> Private (* raise Halt *)
-		|(MkCallentry entry fname arglist access)::tail -> if (fname = func_name) then
+		|(MkCallentry entry fname arglist access iswrapper)::tail -> if (fname = func_name) then
 									access
 								   else
 									search_func_name tail

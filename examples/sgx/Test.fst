@@ -62,7 +62,7 @@ open Ast
 				]))
 		]
 let testprogram = mylambda 
-let make_callentry = [(MkCallentry 1200uL "main" [] Public);(MkCallentry 1210uL "counter" [Mkintarg;Mkintarg] Public)]
+let make_callentry = [(MkCallentry 1200uL "main" [] Public false);(MkCallentry 1210uL "counter" [Mkintarg;Mkintarg] Public false)]
 let make_calltable = 
 		   let calltabentry = make_callentry in
 			(MkCalltable calltabentry)

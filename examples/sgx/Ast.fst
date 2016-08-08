@@ -44,9 +44,9 @@ type argument =
 | Mkintarg 
 | Mkstringarg
  
-(* 0x1000  foo [int;int..] public  *)
+(* 0x1000  foo [int;int..] public iswrapper? *)
 type callentry =
- | MkCallentry : address -> string -> (list argument) -> accesstype -> callentry
+ | MkCallentry : address -> string -> (list argument) -> accesstype ->bool-> callentry
 
 type calltable =
  | MkCalltable : (list callentry) -> calltable 
