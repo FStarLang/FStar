@@ -30,3 +30,4 @@ verify-%: __force__
 	$(SFSTAR) $*.fst
 
 verify-security: verify-ex9a-acls-cap verify-ex9bc-format verify-ex9bc-mac verify-ex9bc-rpc verify-ex9defgh-padding
+

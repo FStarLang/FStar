@@ -1,19 +1,4 @@
 # These only verify under --stratified
-SVERFILES=Unit1.Basic.fst                  Unit1.WPsAndTriples.fst \
-	     Unit1.RefinementInference.fst  Unit1.WPsAndTriples_ST.fst \
-	     unit2.fst \
-	     testghost.fst \
-	     inverse.fst \
-             testset.fst\
-             testheap.fst\
-             Unit1.Parser.fst\
-             mac.fst
-# These are ok under universes
-UVERFILES= \
-	FirstProofs.fst ShortCircuit.fst  \
- 	Unit1.Projectors1.fst Unit1.Projectors2.fst Unit1.UnificationTests.fst  \
-	testTwoLevelHeap.fst testmref.fst
-	     		       
 FSTAR_HOME=../..
 include ../Makefile.include
 
@@ -29,16 +14,16 @@ else
 NEGTESTS=1
 endif
 
-all: uall-pos all-pos all-neg
+all: sall uall
+
+uall: uall-pos
 	+make -C universes
 
+sall: sall-pos sall-neg
 
+uall-pos: FirstProofs.uver ShortCircuit.uver Unit1.Projectors1.uver Unit1.Projectors2.uver Unit1.UnificationTests.uver TestTwoLevelHeap.uver TestMRef.uver
 
-uall-pos:
-	$(FSTAR) $(UVERFILES)
-
-all-pos: 
-	$(SFSTAR) $(SVERFILES)
+sall-pos: Unit1.Basic.sver-nolib Unit1.WPsAndTriples.sver-nolib Unit1.RefinementInference.sver-nolib  Unit1.WPsAndTriples_ST.sver-nolib unit2.sver-nolib testghost.sver-nolib inverse.sver-nolib testset.sver-nolib testheap.sver-nolib Unit1.Parser.sver-nolib mac.sver-nolib
 
 ubasictests: $(UVERFILES)
 	$(FSTAR) $^
@@ -46,7 +31,7 @@ ubasictests: $(UVERFILES)
 basictests: $(SVERFILES)
 	$(SFSTAR) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^
 
-all-neg: $(NEGFILES)
+sall-neg: $(NEGFILES)
 	-$(SFSTAR) --explicit_deps $(STDLIB) --split_cases 1 $^ 2>&1 | tee fstar_log
 	@FAILC=`egrep "^Error: [0-9]* errors" -o fstar_log | egrep -o "[0-9]+"`; if [ "$$FAILC" != "$(NEGTESTS)" ]; then echo "Wrong failure count: $$FAILC (expected $(NEGTESTS))" && false; else echo "Success: $$FAILC failures were expected"; fi
 

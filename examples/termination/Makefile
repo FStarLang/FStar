@@ -6,10 +6,9 @@ ALLFILES=wf.fst
 FSTAR_HOME=../..
 include ../Makefile.include
 
-both:uall all
+all: uall sall
 
-uall:$(SALLFILES)
+uall: wf.uver
+
+sall:$(SALLFILES)
 	$(SFSTAR) $^
-
-all:$(ALLFILES)
-	$(FSTAR) $^
