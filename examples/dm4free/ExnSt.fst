@@ -65,6 +65,8 @@ let return (a:Type) (x:a)
 val raise : a:Type0 -> Tot (repr a (fun h0 (p:post a) -> p None))
 let raise a (h:int) = None
 
+let raise_cps_type = a:Type0 -> Tot (repr a (fun h0 (p:post a) -> p None))
+
 reifiable reflectable new_effect {
   ExnState : a:Type -> wp:wp a -> Effect
   with //repr is new; it's the reprentation of ST as a value type
@@ -88,7 +90,7 @@ reifiable reflectable new_effect {
      ; null_wp      = null_wp
      ; trivial      = trivial
   and effect_actions
-      raise = raise
+      raise = (fun _ _ -> None), raise_cps_type
 }
 
 inline let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:post a) = wp (fun a -> p (Some (a, h0)))

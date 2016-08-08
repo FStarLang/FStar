@@ -1949,44 +1949,68 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
       let actions = 
         let check_action act = 
-            let act_defn, c, g_a = 
-                tc_tot_or_gtot_term env act.action_defn in
-            (* printfn "Inferred action %s has type %s\n" (Print.term_to_string act_defn) (Print.term_to_string c.res_typ); *)
-            // JP: this is very brittle and assumes explicit arrows have been
-            // inserted in actions in just the right place
-            let expected_k, g_k = 
-                match (SS.compress c.res_typ).n with 
-                | Tm_arrow(bs, c) -> 
-                  let bs, _ = SS.open_comp bs c in
-                  let res = mk_repr' S.tun S.tun in
-                  let k = Util.arrow bs (S.mk_Total res) in
-                  let k, _, g = tc_tot_or_gtot_term env k in
-                  k, g
-                | _ -> raise (Error("Actions must have function types", act_defn.pos)) in
-            (* printfn "Checking against expected type %s\n" (Print.term_to_string expected_k); *)
-            let g = Rel.teq env c.res_typ expected_k in
-            Rel.force_trivial_guard env (Rel.conj_guard g_a (Rel.conj_guard g_k g));
-            let act_ty = match (SS.compress expected_k).n with 
-                | Tm_arrow(bs, c) -> 
-                  let bs, c = SS.open_comp bs c in
-                  let a, wp = destruct_repr (Util.comp_result c) in
-                  let c = {
-                    effect_name = ed.mname;
-                    result_typ = a;
-                    effect_args = [as_arg wp];
-                    flags = [] 
-                  } in
-                  Util.arrow bs (S.mk_Comp c)
-                | _ -> failwith "" in
-            (* printfn "Checked action %s against type %s\n" *) 
-            (*         (Print.term_to_string act_defn) *) 
-            (*         (Print.term_to_string (N.normalize [N.Beta] env act_ty)); *)
-            let univs, act_defn = TcUtil.generalize_universes env act_defn in
-            let act_ty = N.normalize [N.Beta] env act_ty in
-            {act with 
-                action_univs=univs;
-                action_defn=act_defn;
-                action_typ =act_ty } in
+          // 0) The action definition has a (possibly) useless type; the
+          // action cps'd type contains the "good" wp that tells us EVERYTHING
+          // about what this action does. Please note that this "good" wp is
+          // of the form [binders -> repr ...], i.e. is it properly curried.
+          let act_typ, _, g_t = tc_tot_or_gtot_term env act.action_typ in
+
+          // 1) Check action definition, setting its expected type to
+          //    [action_typ]
+          let env' = Env.set_expected_typ env act_typ in
+          let act_defn = N.normalize [ N.UnfoldUntil S.Delta_constant ] env act.action_defn in
+          let act_defn, c, g_a = tc_tot_or_gtot_term env' act_defn in
+
+          let act_typ = N.normalize [ N.UnfoldUntil S.Delta_constant; N.Inline; N.Beta ] env act_typ in
+          if Env.debug env (Options.Other "ED") then
+            Util.print3 "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
+              (text_of_lid act.action_name) (Print.term_to_string act_defn)
+              (Print.term_to_string act_typ);
+
+          // 2) This implies that [action_typ] has Type(k): good for us!
+
+          // 3) Unify [action_typ] against [expected_k], because we also need
+          // to check that the action typ is of the form [binders -> repr ...]
+          let expected_k, g_k = 
+            let act_typ = SS.compress act_typ in
+            match act_typ.n with 
+            | Tm_arrow(bs, c) -> 
+              let bs, _ = SS.open_comp bs c in
+              let res = mk_repr' S.tun S.tun in
+              let k = Util.arrow bs (S.mk_Total res) in
+              let k, _, g = tc_tot_or_gtot_term env k in
+              k, g
+            | _ -> raise (Error(Util.format2
+              "Actions must have function types (not: %s, a.k.a. %s)"
+                (Print.term_to_string act_typ) (Print.tag_of_term act_typ), act_defn.pos))
+          in
+          let g = Rel.teq env act_typ expected_k in
+          Rel.force_trivial_guard env (Rel.conj_guard g_a (Rel.conj_guard g_k (Rel.conj_guard g_t g)));
+
+          // 4) Do a bunch of plumbing to assign a type in the new monad to
+          //    the action
+          let act_typ = match (SS.compress expected_k).n with 
+              | Tm_arrow(bs, c) -> 
+                let bs, c = SS.open_comp bs c in
+                let a, wp = destruct_repr (Util.comp_result c) in
+                let c = {
+                  effect_name = ed.mname;
+                  result_typ = a;
+                  effect_args = [as_arg wp];
+                  flags = [] 
+                } in
+                Util.arrow bs (S.mk_Comp c)
+              | _ -> failwith "" in
+
+          (* printfn "Checked action %s against type %s\n" *) 
+          (*         (Print.term_to_string act_defn) *) 
+          (*         (Print.term_to_string (N.normalize [N.Beta] env act_typ)); *)
+          let univs, act_defn = TcUtil.generalize_universes env act_defn in
+          let act_typ = N.normalize [N.Beta] env act_typ in
+          {act with 
+              action_univs=univs;
+              action_defn=act_defn;
+              action_typ =act_typ } in
         ed.actions |> List.map check_action in
       repr, bind_repr, return_repr, actions
       end 
@@ -2162,7 +2186,7 @@ and cps_and_elaborate env ed =
     let name = action.action_name.ident.idText in
     let action_wp = register (name ^ "_wp") action_wp in
     let action_elab = register (name ^ "_elab") action_elab in
-    dmff_env, { action with action_defn = action_elab } :: actions
+    dmff_env, { action with action_defn = action_elab; action_typ = action_wp } :: actions
   ) (dmff_env, []) ed.actions in
   let actions = List.rev actions in
 

@@ -1,5 +1,10 @@
 module IntST
 
+(* Note: this module implements a very explicit style of defining new monads; in
+ * a sense, it's the output of the DMFF-translation done by hand, fed into the
+ * existing effect checking code. DMFF performs this step automatically. See
+ * FStar.DM4F.IntSt.fst for the easy, lightweight version of this. *)
+
 let pre = int -> Type0
 let post (a:Type) = (a * int) -> Type0
 let wp (a:Type) = int -> post a -> Type0
@@ -61,11 +66,29 @@ let return (a:Type) (x:a)
   : repr a (return_wp a x)
   = fun n0 -> (x, n0)
 
+// The user may choose to provide definitions for actions in any of these two
+// styles, as long as it's properly curried (i.e. the repr type is the return
+// type)
 let get (u:unit) : repr int (fun n0 post -> post (n0, n0))
   = fun n0 -> n0, n0
 
+let get_unfolded (_: unit): (n0: int -> PURE (int * int) (fun post -> post (n0, n0)))
+  = fun n0 -> n0, n0
+
+// Note: the Tot is important, otherwise, this is desugared as an n-ary arrow
+// and we're no longer encoding the number of arguments that belong to the action
+// vs. the number of arguments that belong to the effect
+let get_cps_type = unit -> Tot (repr int (fun n0 post -> post (n0, n0)))
+let get_cps_type_unfolded = unit -> Tot (n0: int -> PURE (int * int) (fun post -> post (n0, n0)))
+
 let put (n:int) : repr unit (fun n0 post -> post ((), n))
   = fun x -> (), n
+
+let put_unfolded (n: int): (n0: int -> PURE (unit * int) (fun post -> post ((), n)))
+  = fun x -> (), n
+
+let put_cps_type = n:int -> Tot (repr unit (fun n0 post -> post ((), n)))
+let put_cps_type_unfolded = n:int -> Tot (n0: int -> PURE (unit * int) (fun post -> post ((), n)))
 
 (* #reset-options "--debug NatST --debug_level SMTEncoding" *)
 
@@ -92,9 +115,9 @@ reifiable reflectable new_effect {
      ; null_wp      = null_wp
      ; trivial      = trivial
   and effect_actions
-    //these are new
-      get  = get
-    ; put  = put
+    //these are new; both the regular and unfolded versions work
+      get  = (fun _ x -> x, x), get_cps_type
+    ; put  = (fun x _ -> (), x), put_cps_type
 }
 inline let lift_pure_state (a:Type) (wp:pure_wp a) (n:int) (p:post a) = wp (fun a -> p (a, n))
 sub_effect PURE ~> STATE = lift_pure_state

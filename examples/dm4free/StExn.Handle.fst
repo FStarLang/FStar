@@ -68,6 +68,10 @@ let get (u:unit) : repr int (fun n0 post -> post (Some n0, n0))
 val raise : a:Type0 -> Tot (repr a (fun h0 (p:post a) -> p (None, h0 + 1)))
 let raise a (h:int) = None, h + 1
 
+let get_cps_type = (u: unit) -> Tot (repr int (fun n0 post -> post (Some n0, n0)))
+let raise_cps_type = a:Type0 -> Tot (repr a (fun h0 (p:post a) -> p (None, h0 + 1)))
+
+
 //adding a reflect do define a handler below, 
 //but want to restrict it so that it is private to this module
 //although we don't have syntax for that yet ...
@@ -95,8 +99,8 @@ reifiable reflectable new_effect {
      ; trivial      = trivial
   and effect_actions
     //these are new
-      get  = get
-    ; raise = raise
+      get  = (fun _ n0 -> Some n0, n0), get_cps_type
+    ; raise = (fun _ h -> None, h + 1), raise_cps_type
 }
 
 inline let lift_pure_stexn (a:Type) (wp:pure_wp a) (h0:int) (p:post a) = wp (fun a -> p (Some a, h0))

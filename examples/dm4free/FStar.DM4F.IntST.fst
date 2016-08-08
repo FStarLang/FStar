@@ -26,9 +26,9 @@ reifiable reflectable new_effect_for_free {
   with repr     = st
      ; bind     = bind_st
      ; return   = return_st
-  and effect_actions
-       get      = get'
-     ; put      = put'
+  (* and effect_actions *)
+  (*      get      = get' *)
+  (*    ; put      = put' *)
 }
 
 let post (a:Type) = (a * int) -> Type0
