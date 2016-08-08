@@ -2136,14 +2136,14 @@ and cps_and_elaborate env ed =
     let item, item_comp = open_and_check item in
     if not (Util.is_total_lcomp item_comp) then
       raise (Err ("Computation for [item] is not total!"));
-    let dmff_env, (item_wp, item_elab) = DMFF.star_expr_definition dmff_env item in
+    let dmff_env, (item_t, item_wp, item_elab) = DMFF.star_expr_definition dmff_env item in
     let item_wp = recheck_debug "*" env item_wp in
     let item_elab = recheck_debug "_" env item_elab in
-    dmff_env, item_wp, item_elab
+    dmff_env, item_t, item_wp, item_elab
   in
 
-  let dmff_env, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
-  let dmff_env, return_wp, return_elab = elaborate_and_star dmff_env ed.return_repr in
+  let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
+  let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env ed.return_repr in
 
   let return_wp =
     // TODO: fix [tc_eff_decl] to deal with currying
@@ -2180,57 +2180,14 @@ and cps_and_elaborate env ed =
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     // We need to reverse-engineer what tc_eff_decl wants here...
-    let dmff_env, action_wp, action_elab =
+    let dmff_env, action_t, action_wp, action_elab =
       elaborate_and_star dmff_env (action.action_univs, action.action_defn)
     in
-    let n_binders =
-      match (SS.compress (N.normalize [ N.UnfoldUntil S.Delta_constant ] env action.action_defn)).n with
-      | Tm_abs (binders, _, _) ->
-          List.fold_left (+) 0 (List.map (fun (b, _) ->
-            if DMFF.is_C (N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env b.sort) then
-              2
-            else
-              1
-          ) binders)
-      | _ ->
-          failwith (Util.format2 "Impossible [n_binders]: %s\n%s\n"
-            (Print.tag_of_term action.action_defn)
-            (Print.term_to_string action.action_defn))
-    in
     let name = action.action_name.ident.idText in
-    if Env.debug env (Options.Other "ED") then
-      Util.print2 "Action %s has %s action parameters\n" name (string_of_int n_binders);
-    let action_wp =
-      match (SS.compress action_wp).n with
-      | Tm_abs (binders, body, what)->
-          let rec split acc n xs =
-            if n = 0 then
-              List.rev acc, xs
-            else match xs with
-              | x :: xs ->
-                  split (x :: acc) (n - 1) xs
-              | [] ->
-                  failwith "invalid argument: split"
-          in
-          let split = split [] in
-          if List.length binders <> n_binders then begin
-            if Env.debug env (Options.Other "ED") then
-              Util.print2 "Re-currying %s (had %s binders)\n" name (string_of_int (List.length binders));
-            let action_binders, effect_binders = split n_binders binders in
-            U.abs action_binders (U.abs effect_binders body None) None
-          end else begin
-            if Env.debug env (Options.Other "ED") then
-              Util.print1 "Not re-currying %s\n" name;
-            action_wp
-          end
-      | _ ->
-          failwith (Util.format2 "Impossible [action_wp]: %s\n%s\n"
-            (Print.tag_of_term action_wp)
-            (Print.term_to_string action_wp))
-    in
     let action_elab = register (name ^ "_elab") action_elab in
+    let action_typ_with_wp = DMFF.trans_F dmff_env action_t action_wp in
     let action_wp = register (name ^ "_wp") action_wp in
-    dmff_env, { action with action_defn = action_elab; action_typ = action_wp } :: actions
+    dmff_env, { action with action_defn = action_elab; action_typ = action_typ_with_wp } :: actions
   ) (dmff_env, []) ed.actions in
   let actions = List.rev actions in
 

@@ -15,10 +15,10 @@ let bind_st a b f g = fun s0 ->
   let x, s1 = tmp in
   g x s1
 
-let get' (_:unit): st int =
+let get (_:unit): st int =
   fun x -> x, x
 
-let put' x: st unit =
+let put x: st unit =
   fun _ -> (), x
 
 reifiable reflectable new_effect_for_free {
@@ -26,9 +26,9 @@ reifiable reflectable new_effect_for_free {
   with repr     = st
      ; bind     = bind_st
      ; return   = return_st
-  (* and effect_actions *)
-  (*      get      = get' *)
-  (*    ; put      = put' *)
+  and effect_actions
+       get      = get
+     ; put      = put
 }
 
 let post (a:Type) = (a * int) -> Type0
@@ -42,12 +42,11 @@ effect StInt (a:Type) (pre: pre) (post: (int -> a -> int -> GTot Type0)) =
        STINT a (fun n0 p -> pre n0 /\ (forall a n1. pre n0 /\ post n0 a n1 ==> p (a, n1)))
 
 effect St (a:Type) =
-       STINT a
-             (fun n0 p -> forall x. p x)
+       STINT a (fun n0 p -> forall x. p x)
 
 let repr (a:Type) (w:wp a) = x:int -> PURE (a * int) (w x)
 
-//Although we have STINT.get' and STINT.put' now as actions, 
+//Although we have STINT.get and STINT.put now as actions, 
 //we can also "rederive" them using reflection
 
 // From the definition language to the effectful world with WPs
@@ -57,44 +56,44 @@ let action_get () i = (i, i)
 val action_put: x:int -> repr unit (fun n post -> post ((), x))
 let action_put x i = ((), x)
 
-reifiable val get : unit -> STINT int (fun z post -> post (z, z))
-let get () = STINT.reflect (action_get ())
+reifiable val get' : unit -> STINT int (fun z post -> post (z, z))
+let get' () = STINT.reflect (action_get ())
 
-reifiable val put: x:int -> STINT unit (fun z post -> post ((), x))
-let put x = STINT.reflect (action_put x)
+reifiable val put': x:int -> STINT unit (fun z post -> post ((), x))
+let put' x = STINT.reflect (action_put x)
 
 
 val incr : unit -> StInt unit (requires (fun n -> True))
                              (ensures (fun n0 _ n1 -> n1 = n0 + 1))
 let incr u =
-  let n = get () in
-  put (n + 1)
+  let n = STINT.get () in
+  STINT.put (n + 1)
 
 reifiable val incr2 : unit -> St unit 
 let incr2 u =
-    let n = get() in
-    put (n + 1)
+    let n = STINT.get() in
+    STINT.put (n + 1)
 
 let assert_after_reify (_:unit) : St unit =
-    let n0 = get() in
+    let n0 = STINT.get() in
     let _, n1 = reify (incr2 ()) n0 in
     assert (n1 = n0 + 1);
-    put n1
+    STINT.put n1
 
 val assert_after_reflect : unit -> St int
 let assert_after_reflect u =
-    let n0 = get () in
+    let n0 = STINT.get () in
     STINT.reflect (action_put (n0 + 2));
-    let n1 = get () in
+    let n1 = STINT.get () in
     assert (n0 + 2 = n1);
     n1
 
 val reflect_on_the_fly : unit -> St int
 let reflect_on_the_fly u =
-    let n0 = get () in
+    let n0 = STINT.get () in
     let add_two : repr unit (fun n post -> post ((), n + 2)) = //need this annotation, since reflect doesn't insert a M.return; but it should
       fun n0 -> (), n0+2 in
     STINT.reflect add_two;
-    let n1 = get () in
+    let n1 = STINT.get () in
     assert (n0 + 2 = n1);
     n1

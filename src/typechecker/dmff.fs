@@ -1095,7 +1095,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
 
 
 let star_expr_definition env t =
-  star_definition env t (fun env e -> let t, s_e, s_u = check_n env e in t, (s_e, s_u))
+  star_definition env t (fun env e -> let t, s_e, s_u = check_n env e in t, (t, s_e, s_u))
 
 // Same thing as [trans_F_], but normalizes its argument, so that it can be
 // called from [tc.fs]. The name is different to make F# happy.
