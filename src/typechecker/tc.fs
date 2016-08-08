@@ -1947,8 +1947,8 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
             | [] -> [], repr
             | _ -> raise (Error("Unexpected universe-polymorphic return for effect", repr.pos)) in
 
-      let actions = 
-        let check_action act = 
+      let actions =
+        let check_action act =
           // 0) The action definition has a (possibly) useless type; the
           // action cps'd type contains the "good" wp that tells us EVERYTHING
           // about what this action does. Please note that this "good" wp is
@@ -1959,13 +1959,13 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
           //    [action_typ]
           let env' = Env.set_expected_typ env act_typ in
           let act_defn = N.normalize [ N.UnfoldUntil S.Delta_constant ] env act.action_defn in
-          let act_defn, c, g_a = tc_tot_or_gtot_term env' act_defn in
-
-          let act_typ = N.normalize [ N.UnfoldUntil S.Delta_constant; N.Inline; N.Beta ] env act_typ in
           if Env.debug env (Options.Other "ED") then
             Util.print3 "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
               (text_of_lid act.action_name) (Print.term_to_string act_defn)
               (Print.term_to_string act_typ);
+          let act_defn, c, g_a = tc_tot_or_gtot_term env' act_defn in
+
+          let act_typ = N.normalize [ N.UnfoldUntil S.Delta_constant; N.Inline; N.Beta ] env act_typ in
 
           // 2) This implies that [action_typ] has Type(k): good for us!
 
@@ -2183,9 +2183,53 @@ and cps_and_elaborate env ed =
     let dmff_env, action_wp, action_elab =
       elaborate_and_star dmff_env (action.action_univs, action.action_defn)
     in
+    let n_binders =
+      match (SS.compress (N.normalize [ N.UnfoldUntil S.Delta_constant ] env action.action_defn)).n with
+      | Tm_abs (binders, _, _) ->
+          List.fold_left (+) 0 (List.map (fun (b, _) ->
+            if DMFF.is_C (N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env b.sort) then
+              2
+            else
+              1
+          ) binders)
+      | _ ->
+          failwith (Util.format2 "Impossible [n_binders]: %s\n%s\n"
+            (Print.tag_of_term action.action_defn)
+            (Print.term_to_string action.action_defn))
+    in
     let name = action.action_name.ident.idText in
-    let action_wp = register (name ^ "_wp") action_wp in
+    if Env.debug env (Options.Other "ED") then
+      Util.print2 "Action %s has %s action parameters\n" name (string_of_int n_binders);
+    let action_wp =
+      match (SS.compress action_wp).n with
+      | Tm_abs (binders, body, what)->
+          let rec split acc n xs =
+            if n = 0 then
+              List.rev acc, xs
+            else match xs with
+              | x :: xs ->
+                  split (x :: acc) (n - 1) xs
+              | [] ->
+                  failwith "invalid argument: split"
+          in
+          let split = split [] in
+          if List.length binders <> n_binders then begin
+            if Env.debug env (Options.Other "ED") then
+              Util.print2 "Re-currying %s (had %s binders)\n" name (string_of_int (List.length binders));
+            let action_binders, effect_binders = split n_binders binders in
+            U.abs action_binders (U.abs effect_binders body None) None
+          end else begin
+            if Env.debug env (Options.Other "ED") then
+              Util.print1 "Not re-currying %s\n" name;
+            action_wp
+          end
+      | _ ->
+          failwith (Util.format2 "Impossible [action_wp]: %s\n%s\n"
+            (Print.tag_of_term action_wp)
+            (Print.term_to_string action_wp))
+    in
     let action_elab = register (name ^ "_elab") action_elab in
+    let action_wp = register (name ^ "_wp") action_wp in
     dmff_env, { action with action_defn = action_elab; action_typ = action_wp } :: actions
   ) (dmff_env, []) ed.actions in
   let actions = List.rev actions in
