@@ -1070,5 +1070,15 @@ let eta_expand (env:Env.env) (t:typ) : typ =
   | _, Tm_name x ->
       expand x.sort
   | _ ->
-      let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
-      expand ty
+      let head, args = Util.head_and_args t in
+      begin match (SS.compress head).n with 
+      | Tm_uvar(_, thead) -> 
+        let formals, tres = Util.arrow_formals thead in
+        if List.length formals = List.length args
+        then t 
+        else let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
+             expand ty
+      | _ ->
+        let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
+        expand ty
+      end

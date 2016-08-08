@@ -522,6 +522,11 @@ let rec pat_vars env seen args : option<binders> = match args with
             | Some x -> pat_vars env (x::seen) rest
         end
 
+let is_flex t = match (SS.compress t).n with 
+    | Tm_uvar _
+    | Tm_app({n=Tm_uvar _}, _) -> true
+    | _ -> false
+
 let destruct_flex_t t = match t.n with
     | Tm_uvar(uv, k) -> (t, uv, k, [])
     | Tm_app({n=Tm_uvar(uv, k)}, args) -> (t, uv, k, args)
@@ -1536,7 +1541,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     (* </project_t> *)
 
     (* <flex-rigid> *)
-    let solve_t_flex_rigid orig (lhs:(flex_t * option<binders>)) (t2:typ) (wl:worklist) =
+    let solve_t_flex_rigid patterns_only orig (lhs:(flex_t * option<binders>)) (t2:typ) (wl:worklist) =
         let (t1, uv, k_uv, args_lhs), maybe_pat_vars = lhs in
         let subterms ps : option<im_or_proj_t> =
             let xs, c = Util.arrow_formals_comp k_uv in
@@ -1636,7 +1641,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             if not occurs_ok
             then giveup_or_defer orig ("occurs-check failed: " ^ (Option.get msg))
             else if Util.set_is_subset_of fvs2 fvs1
-            then (if Util.is_function_typ t2 && p_rel orig <> EQ //function types have structural subtyping and have to be imitated
+            then (if not patterns_only 
+                  && Util.is_function_typ t2 
+                  && p_rel orig <> EQ //function types have structural subtyping and have to be imitated
                   then imitate' orig env wl (subterms args_lhs)
                   else //fast solution, pattern equality
                     let _  = if debug env <| Options.Other "Rel"
@@ -1649,9 +1656,12 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                         | _ -> u_abs k_uv (sn_binders env vars) t2 in
                     let wl = solve_prob orig None [TERM((uv,k_uv), sol)] wl in
                     solve env wl)
-            else if wl.defer_ok && p_rel orig <> EQ
+            else if not patterns_only 
+                 && wl.defer_ok 
+                 && p_rel orig <> EQ
             then solve env (defer "flex pattern/rigid: occurs or freevar check" orig wl)
-            else if check_head fvs1 t2
+            else if not patterns_only 
+                 && check_head fvs1 t2
             then let _ = if debug env <| Options.Other "Rel"
                             then Util.print3 "Pattern %s with fvars=%s failed fvar check: %s ... imitating\n"
                                             (Print.term_to_string t1) 
@@ -1659,6 +1669,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                             (names_to_string fvs2) in
                     imitate_or_project (List.length args_lhs) (subterms args_lhs) (-1)
             else giveup env "free-variable check failed on a non-redex" orig
+
+          | None when patterns_only ->
+                giveup env "not a pattern" orig
 
           | None ->
                 if wl.defer_ok
@@ -1927,6 +1940,29 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                            problem.relation 
                                            (Subst.subst subst tbody2) None "lambda co-domain")
 
+      | Tm_abs _, _
+      | _, Tm_abs _ ->
+        let is_abs t = match t.n with
+            | Tm_abs _ -> true
+            | _ -> false in
+        let maybe_eta t =
+            if is_abs t then Inl t
+            else let t = N.eta_expand wl.tcenv t in
+                 if is_abs t then Inl t else Inr t in
+        begin match maybe_eta t1, maybe_eta t2 with 
+            | Inl t1, Inl t2 ->
+              solve_t env ({problem with lhs=t1; rhs=t2}) wl
+            | Inl t_abs, Inr not_abs
+            | Inr not_abs, Inl t_abs ->
+              //we lack the type information to eta-expand properly
+              //so, this is going to fail, except if one last shot succeeds
+              if is_flex not_abs //if it's a pattern and the free var check succeeds, then unify it with the abstraction in one step
+              && p_rel orig = EQ
+              then solve_t_flex_rigid true orig (destruct_flex_pattern env not_abs) t_abs wl
+              else giveup env "head tag mismatch: RHS is an abstraction" orig
+            | _ -> failwith "Impossible: at least one side is an abstraction"
+        end
+
       | Tm_refine _, Tm_refine _ ->
         let x1, phi1 = as_refinement env wl t1 in
         let x2, phi2 = as_refinement env wl t2 in
@@ -1967,7 +2003,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       (* flex-rigid equalities *)
       | Tm_uvar _, _
       | Tm_app({n=Tm_uvar _}, _), _ when (problem.relation=EQ) -> (* just imitate/project ... no slack *)
-        solve_t_flex_rigid orig (destruct_flex_pattern env t1) t2 wl
+        solve_t_flex_rigid false orig (destruct_flex_pattern env t1) t2 wl
 
       (* rigid-flex: reorient if it is an equality constraint *)
       | _, Tm_uvar _
@@ -1993,11 +2029,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         else
             let new_rel = problem.relation in
             if not <| is_top_level_prob orig //If it's not top-level and t2 is refined, then we should not try to prove that t2's refinement is saturated
-            then solve_t_flex_rigid (TProb <| {problem with relation=new_rel}) (destruct_flex_pattern env t1) t2 wl
+            then solve_t_flex_rigid false (TProb <| {problem with relation=new_rel}) (destruct_flex_pattern env t1) t2 wl
             else let t_base, ref_opt = base_and_refinement env wl t2 in
                  begin match ref_opt with
                         | None -> //no useful refinement on the RHS, so just equate and solve
-                          solve_t_flex_rigid (TProb <| {problem with relation=new_rel}) (destruct_flex_pattern env t1) t_base wl
+                          solve_t_flex_rigid false (TProb <| {problem with relation=new_rel}) (destruct_flex_pattern env t1) t_base wl
 
                         | Some (y, phi) ->
                           let y' = {y with sort = t1} in
@@ -2024,13 +2060,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | _, Tm_refine _ ->
         let t1 = force_refinement <| base_and_refinement env wl t1 in
         solve_t env ({problem with lhs=t1}) wl
-
-      | Tm_abs _, _
-      | _, Tm_abs _ ->
-        let maybe_eta t = match t.n with 
-            | Tm_abs _ -> t
-            | _ -> N.eta_expand wl.tcenv t in
-        solve_t env ({problem with lhs=maybe_eta t1; rhs=maybe_eta t2}) wl
 
       | Tm_match _, _
       | Tm_uinst _, _

@@ -1,6 +1,28 @@
 FSTAR_HOME=..
 include Makefile.include
 
+ALL_EXAMPLE_DIRS=\
+bug-reports \
+data_structures \
+algorithms \
+crypto \
+security \
+termination \
+software_foundations \
+../doc/tutorial/code/solutions \
+relational \
+voting \
+low-level \
+maths \
+paradoxes \
+printf \
+verifythis \
+metatheory \
+wysteria \
+preorders \
+dm4free \
+unit-tests 
+
 # #	make -C bignum  -- big timeout (30) + failing asserts (even with 50)
 # #	make -C stateful_bignum  -- huge timeout (50) + code duplication (prims)
 # #                                 + unfound identifiers in multiplication
@@ -17,56 +39,21 @@ include Makefile.include
 # binary; in particular it shouldn't depend on OCaml, F#, git, etc.
 all: uall sall
 
-uall:
-	+make -C bug-reports uall
-	+make -C data_structures uall
-	+make -C algorithms uall
-	+make -C crypto uall
-	+make -C security uall
-	+make -C termination uall
-	+make -C software_foundations uall
-	+make -C ../doc/tutorial/code/solutions uall
-	+make -C relational uall
-	+make -C voting uall
-	+make -C low-level uall
-	+make -C maths uall
-	+make -C paradoxes uall
-	+make -C printf uall
-	+make -C verifythis uall
-	+make -C metatheory uall
-	+make -C wysteria uall
-	+make -C preorders uall
-	+make -C dm4free uall
-	+make -C unit-tests uall
+%.uall: %
+	+make -C $^ uall
 
-sall:
-	+make -C bug-reports sall
-	+make -C data_structures sall
-	+make -C algorithms sall
-	+make -C crypto sall
-	+make -C security sall
-	+make -C termination sall
-	+make -C software_foundations sall
-	+make -C ../doc/tutorial/code/solutions sall
-	+make -C relational sall
-	+make -C voting sall
-	+make -C low-level sall
-	+make -C maths sall
-	+make -C paradoxes sall
-	+make -C printf sall
-	+make -C verifythis sall
-	+make -C metatheory sall
-	+make -C wysteria sall
-	+make -C preorders sall
-	+make -C dm4free sall
-	+make -C unit-tests sall
+%.sall: %
+	+make -C $^ sall
+
+uall: $(addsuffix .uall, $(ALL_EXAMPLE_DIRS))
+
+sall: $(addsuffix .sall, $(ALL_EXAMPLE_DIRS))
 
 test: all
 
 stdlib: $(addprefix ../lib/, FStar.List.fst FStar.String.fsti partialmap.fst FStar.ST.fst FStar.ListProperties.fst)
 	mkdir -p ../cache
 	$(FSTAR) $^ --serialize_mods
-
 
 clean:
 	rm ../cache/*.cache
