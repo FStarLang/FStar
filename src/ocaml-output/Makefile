@@ -55,9 +55,9 @@ endif
 # FIXME this target is always rebuilt, regardless of whether the sources have
 # changed or not
 all:
-	$(MAKE) -C $(FSTAR_HOME)/lib/ml PRIMS_DIR=native_int
+	$(MAKE) -j 1 -C $(FSTAR_HOME)/lib/ml PRIMS_DIR=native_int
 	$(MAKE) prep
-	$(MAKE) -j 8 fstar.exe
+	$(MAKE) fstar.exe
 
 prep: parser copy_lib_files depend version
 
