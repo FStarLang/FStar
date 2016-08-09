@@ -91,24 +91,25 @@ let go _ =
     | Success ->
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)
-        else if (Options.interactive()) then //--in
-          let filenames =
-            if (Options.explicit_deps()) then begin
+        else if Options.interactive() then //--in
+          let main_buffer_filename_opt, filenames =
+            if Options.explicit_deps() then begin
               if List.length filenames = 0 then
                 Util.print_error "--explicit_deps was provided without a file list!\n";
-                filenames
+                None, filenames
               end
             else begin
               if List.length filenames > 0 then
                 Util.print_warning "ignoring the file list (no --explicit_deps)\n";
-                detect_dependencies_with_first_interactive_chunk ()
+                let fn, deps = detect_dependencies_with_first_interactive_chunk () in
+                Some fn, deps
               end
           in
           if Options.universes()
           then let fmods, dsenv, env = Universal.batch_mode_tc Parser.Dep.VerifyUserList filenames in //check all the dependences in batch mode
-               interactive_mode (dsenv, env) None Universal.interactive_tc //and then start checking chunks from the current buffer
+               interactive_mode main_buffer_filename_opt (dsenv, env) None Universal.interactive_tc //and then start checking chunks from the current buffer
           else let fmods, dsenv, env = Stratified.batch_mode_tc Parser.Dep.VerifyUserList filenames in //check all the dependences in batch mode
-               interactive_mode (dsenv, env) None Stratified.interactive_tc //and then start checking chunks from the current buffer
+               interactive_mode None (dsenv, env) None Stratified.interactive_tc //and then start checking chunks from the current buffer
 
         else if List.length filenames >= 1 then begin //normal batch mode
           let verify_mode =
