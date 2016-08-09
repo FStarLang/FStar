@@ -368,7 +368,7 @@ type term' =
 | Meta_named of FStar_Ident.lident
 | Meta_labeled of (Prims.string * FStar_Range.range * Prims.bool)
 | Meta_desugared of meta_source_info
-| Meta_monadic of monad_name
+| Meta_monadic of (monad_name * typ)
 | Meta_monadic_lift of (monad_name * monad_name) 
  and 'a uvar_basis =
 | Uvar
@@ -2006,13 +2006,6 @@ let next_id : Prims.unit  ->  Prims.int = (Prims.fst gen_reset)
 let reset_gensym : Prims.unit  ->  Prims.unit = (Prims.snd gen_reset)
 
 
-let freshen_bv : bv  ->  bv = (fun bv -> (
-
-let _33_493 = bv
-in (let _125_1391 = (next_id ())
-in {ppname = _33_493.ppname; index = _125_1391; sort = _33_493.sort})))
-
-
 let range_of_ropt : FStar_Range.range Prims.option  ->  FStar_Range.range = (fun _33_5 -> (match (_33_5) with
 | None -> begin
 FStar_Range.dummyRange
@@ -2025,19 +2018,32 @@ end))
 let gen_bv : Prims.string  ->  FStar_Range.range Prims.option  ->  typ  ->  bv = (fun s r t -> (
 
 let id = (FStar_Ident.mk_ident ((s), ((range_of_ropt r))))
-in (let _125_1400 = (next_id ())
-in {ppname = id; index = _125_1400; sort = t})))
+in (let _125_1397 = (next_id ())
+in {ppname = id; index = _125_1397; sort = t})))
 
 
 let new_bv : FStar_Range.range Prims.option  ->  typ  ->  bv = (fun ropt t -> (gen_bv FStar_Ident.reserved_prefix ropt t))
 
 
+let freshen_bv : bv  ->  bv = (fun bv -> if (is_null_bv bv) then begin
+(let _125_1405 = (let _125_1404 = (range_of_bv bv)
+in Some (_125_1404))
+in (new_bv _125_1405 bv.sort))
+end else begin
+(
+
+let _33_503 = bv
+in (let _125_1406 = (next_id ())
+in {ppname = _33_503.ppname; index = _125_1406; sort = _33_503.sort}))
+end)
+
+
 let new_univ_name : FStar_Range.range Prims.option  ->  univ_name = (fun ropt -> (
 
 let id = (next_id ())
-in (let _125_1408 = (let _125_1407 = (FStar_Util.string_of_int id)
-in ((_125_1407), ((range_of_ropt ropt))))
-in (FStar_Ident.mk_ident _125_1408))))
+in (let _125_1410 = (let _125_1409 = (FStar_Util.string_of_int id)
+in ((_125_1409), ((range_of_ropt ropt))))
+in (FStar_Ident.mk_ident _125_1410))))
 
 
 let mkbv : FStar_Ident.ident  ->  Prims.int  ->  term  ->  bv = (fun x y t -> {ppname = x; index = y; sort = t})
@@ -2067,15 +2073,15 @@ let _33_530 = bv
 in {ppname = (FStar_Ident.mk_ident ((bv.ppname.FStar_Ident.idText), (r))); index = _33_530.index; sort = _33_530.sort}))
 
 
-let lid_as_fv : FStar_Ident.lident  ->  delta_depth  ->  fv_qual Prims.option  ->  fv = (fun l dd dq -> (let _125_1437 = (withinfo l tun (FStar_Ident.range_of_lid l))
-in {fv_name = _125_1437; fv_delta = dd; fv_qual = dq}))
+let lid_as_fv : FStar_Ident.lident  ->  delta_depth  ->  fv_qual Prims.option  ->  fv = (fun l dd dq -> (let _125_1439 = (withinfo l tun (FStar_Ident.range_of_lid l))
+in {fv_name = _125_1439; fv_delta = dd; fv_qual = dq}))
 
 
 let fv_to_tm : fv  ->  term = (fun fv -> (mk (Tm_fvar (fv)) None (FStar_Ident.range_of_lid fv.fv_name.v)))
 
 
-let fvar : FStar_Ident.lident  ->  delta_depth  ->  fv_qual Prims.option  ->  term = (fun l dd dq -> (let _125_1446 = (lid_as_fv l dd dq)
-in (fv_to_tm _125_1446)))
+let fvar : FStar_Ident.lident  ->  delta_depth  ->  fv_qual Prims.option  ->  term = (fun l dd dq -> (let _125_1448 = (lid_as_fv l dd dq)
+in (fv_to_tm _125_1448)))
 
 
 

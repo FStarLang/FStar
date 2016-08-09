@@ -1,65 +1,59 @@
 FSTAR_HOME=..
 include Makefile.include
 
+ALL_EXAMPLE_DIRS=\
+bug-reports \
+data_structures \
+algorithms \
+crypto \
+security \
+termination \
+software_foundations \
+../doc/tutorial/code/solutions \
+relational \
+voting \
+low-level \
+maths \
+paradoxes \
+printf \
+verifythis \
+metatheory \
+wysteria \
+preorders \
+dm4free \
+unit-tests 
+
+# #	make -C bignum  -- big timeout (30) + failing asserts (even with 50)
+# #	make -C stateful_bignum  -- huge timeout (50) + code duplication (prims)
+# #                                 + unfound identifiers in multiplication
+# #	make -C extraction -- missing Makefile -- might move to unit-tests?
+# # CH: how about moving the rest to an "experimental" dir/sub-dir?
+# #	make -C circuitcompiler  -- doesn't seem ready for this yet
+# #	make -C jsbackend -- no JavaScript backend yet
+# #	make -C low-star -- doesn't build and needs OCaml, so maybe in make test
+# #	make -C monads -- just an experiment, not fully working
+# #	make -C test -- just an experiment, trying to optimize SMT encoding
+# #	make -C deriving-monads -- still some failing assertions + missing Makefile
+
 # WARNING: this target shouldn't depend on anything other than the F*
 # binary; in particular it shouldn't depend on OCaml, F#, git, etc.
-all:
-	make -C bug-reports
-	make -C data_structures
-	make -C algorithms
-	make -C crypto
-	make -C security
-	make -C termination
-	make -C software_foundations
-	make -C ../doc/tutorial/code/solutions
-	make -C relational
-	make -C voting
-	make -C low-level
-	make -C maths
-	make -C paradoxes
-	make -C printf
-	make -C verifythis
-#	make -C bignum  -- big timeout (30) + failing asserts (even with 50)
-#	make -C stateful_bignum  -- huge timeout (50) + code duplication (prims)
-#                                 + unfound identifiers in multiplication
-#	make -C extraction -- missing Makefile -- might move to unit-tests?
-# CH: how about moving the rest to an "experimental" dir/sub-dir?
-#	make -C circuitcompiler  -- doesn't seem ready for this yet
-#	make -C jsbackend -- no JavaScript backend yet
-#	make -C low-star -- doesn't build and needs OCaml, so maybe in make test
-#	make -C monads -- just an experiment, not fully working
-#	make -C test -- just an experiment, trying to optimize SMT encoding
-#	make -C deriving-monads -- still some failing assertions + missing Makefile
-	make -C metatheory
-	make -C wysteria
-	make -C unit-tests
+all: uall sall
 
-univ: u_algo u_data_structures u_metatheory u_dm4free u_unit-tests u_preorders
+%.uall: %
+	+make -C $^ uall
 
-u_preorders:
-	+make -C preorders
+%.sall: %
+	+make -C $^ sall
 
-u_dm4free:
-	+make -C dm4free
+uall: $(addsuffix .uall, $(ALL_EXAMPLE_DIRS))
 
-u_algo:
-	+make -C algorithms uall
-
-u_data_structures:
-	+make -C data_structures uall
-
-u_metatheory:
-	+make -C metatheory uall
-
-u_unit-tests:
-	+make -C unit-tests/universes
+sall: $(addsuffix .sall, $(ALL_EXAMPLE_DIRS))
 
 test: all
 
 stdlib: $(addprefix ../lib/, FStar.List.fst FStar.String.fsti partialmap.fst FStar.ST.fst FStar.ListProperties.fst)
 	mkdir -p ../cache
 	$(FSTAR) $^ --serialize_mods
-
 
 clean:
 	rm ../cache/*.cache

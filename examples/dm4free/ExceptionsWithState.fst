@@ -1,4 +1,4 @@
-module ExnSt
+module ExceptionsWithState
 let pre = int -> Type0
 let post (a:Type) = option (a * int) -> Type0
 let wp (a:Type) = int -> post a -> Type0
@@ -48,11 +48,12 @@ inline let trivial       (a:Type)
 let repr (a:Type) (wp:wp a) =
     n0:int -> PURE (option (a * int)) (wp n0)
 
-inline val bind: (a:Type) -> (b:Type) -> (wp0:wp a) -> (wp1:(a -> Tot (wp b))) 
+inline val bind: (a:Type) -> (b:Type) -> (wp0:wp a)
 		 -> (f:repr a wp0)
+		 -> (wp1:(a -> Tot (wp b))) 
 		 -> (g:(x:a -> Tot (repr b (wp1 x)))) 
 		 -> Tot (repr b (bind_wp range_0 a b wp0 wp1))
-let bind a b wp0 wp1 f g  
+let bind a b wp0 f wp1 g  
   = fun n0 -> admit(); match f n0 with 
 		    | None -> None
 		    | Some (x, n1) -> g x n1
@@ -63,6 +64,8 @@ let return (a:Type) (x:a)
 //Just raise; get and put are just lifted from IntST.STATE
 val raise : a:Type0 -> Tot (repr a (fun h0 (p:post a) -> p None))
 let raise a (h:int) = None
+
+let raise_cps_type = a:Type0 -> Tot (repr a (fun h0 (p:post a) -> p None))
 
 reifiable reflectable new_effect {
   ExnState : a:Type -> wp:wp a -> Effect
@@ -87,7 +90,7 @@ reifiable reflectable new_effect {
      ; null_wp      = null_wp
      ; trivial      = trivial
   and effect_actions
-      raise = raise
+      raise = (fun _ _ -> None), raise_cps_type
 }
 
 inline let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:post a) = wp (fun a -> p (Some (a, h0)))

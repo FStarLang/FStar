@@ -167,7 +167,7 @@ ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml
 fstar-ocaml: ocaml boot-ocaml
 
 boot-ocaml:
-	make -C ocaml-output
+	make -C ocaml-output clean all
 
 # --------------------------------------------------------------------
 # Bootstrapping in F#
@@ -243,7 +243,7 @@ ulib:
 	+make -C ../ulib
 
 uexamples:
-	+make -C ../examples univ
+	+make -C ../examples uall
 
 wc-boot:
 	wc -l $(BOOT_ALL)

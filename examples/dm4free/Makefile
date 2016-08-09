@@ -2,17 +2,18 @@ FSTAR_HOME=../..
 OTHERFLAGS=
 include ../Makefile.include
 
-all: test-elab intST.uver Exceptions.uver stexn.uver stexn.handle.uver exnst.uver
+all: uall sall
+uall: FStar.DM4F.IntST.uver FStar.DM4F.Exceptions.uver FStar.DM4F.ExnSt.uver FStar.DM4F.StExn.uver old
+sall:
+
+# we retain these "hand-written" versions just for reference
+old: intST.uver Exceptions.uver ExceptionsWithState.uver StExn.uver StExn.Handle.uver 
 
 ulib-cmxa:
 	$(MAKE) -C ../../ulib/ml
 
-test-elab: FStar.DM4F.Test.fst
-	$(FSTAR) --lax $<
-
 %.uver: %.fst
 	$(FSTAR) $^
-
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 

@@ -1,5 +1,10 @@
 module IntST
 
+(* Note: this module implements a very explicit style of defining new monads; in
+ * a sense, it's the output of the DMFF-translation done by hand, fed into the
+ * existing effect checking code. DMFF performs this step automatically. See
+ * FStar.DM4F.IntSt.fst for the easy, lightweight version of this. *)
+
 let pre = int -> Type0
 let post (a:Type) = (a * int) -> Type0
 let wp (a:Type) = int -> post a -> Type0
@@ -50,21 +55,40 @@ inline let trivial       (a:Type)
 let repr (a:Type) (wp:wp a) =
     n0:int -> PURE (a * int) (wp n0)
 
-inline val bind: (a:Type) -> (b:Type) -> (wp0:wp a) -> (wp1:(a -> Tot (wp b)))
+inline val bind: (a:Type) -> (b:Type) -> (wp0:wp a)
                  -> (f:repr a wp0)
+		 -> (wp1:(a -> Tot (wp b)))
                  -> (g:(x:a -> Tot (repr b (wp1 x))))
                  -> Tot (repr b (bind_wp r0 a b wp0 wp1))
-let bind a b wp0 wp1 f g
+let bind a b wp0 f wp1 g
   = fun n0 -> admit(); let (x,n1) = f n0 in g x n1
 let return (a:Type) (x:a)
   : repr a (return_wp a x)
   = fun n0 -> (x, n0)
 
+// The user may choose to provide definitions for actions in any of these two
+// styles, as long as it's properly curried (i.e. the repr type is the return
+// type)
 let get (u:unit) : repr int (fun n0 post -> post (n0, n0))
   = fun n0 -> n0, n0
 
+let get_unfolded (_: unit): (n0: int -> PURE (int * int) (fun post -> post (n0, n0)))
+  = fun n0 -> n0, n0
+
+// Note: the Tot is important, otherwise, this is desugared as an n-ary arrow
+// and we're no longer encoding the number of arguments that belong to the action
+// vs. the number of arguments that belong to the effect
+let get_cps_type = unit -> Tot (repr int (fun n0 post -> post (n0, n0)))
+let get_cps_type_unfolded = unit -> Tot (n0: int -> PURE (int * int) (fun post -> post (n0, n0)))
+
 let put (n:int) : repr unit (fun n0 post -> post ((), n))
   = fun x -> (), n
+
+let put_unfolded (n: int): (n0: int -> PURE (unit * int) (fun post -> post ((), n)))
+  = fun x -> (), n
+
+let put_cps_type = n:int -> Tot (repr unit (fun n0 post -> post ((), n)))
+let put_cps_type_unfolded = n:int -> Tot (n0: int -> PURE (unit * int) (fun post -> post ((), n)))
 
 (* #reset-options "--debug NatST --debug_level SMTEncoding" *)
 
@@ -91,9 +115,9 @@ reifiable reflectable new_effect {
      ; null_wp      = null_wp
      ; trivial      = trivial
   and effect_actions
-    //these are new
-      get  = get
-    ; put  = put
+    //these are new; both the regular and unfolded versions work
+      get  = (fun _ x -> x, x), get_cps_type
+    ; put  = (fun x _ -> (), x), put_cps_type
 }
 inline let lift_pure_state (a:Type) (wp:pure_wp a) (n:int) (p:post a) = wp (fun a -> p (a, n))
 sub_effect PURE ~> STATE = lift_pure_state
@@ -139,68 +163,7 @@ let top =
   let _, one = reify (incr2 ()) 0 in
   FStar.IO.print_string ("incr2 returned: " ^ string_of_int one)
 
-(* (\* sub_effect PURE ~> STATE { *\) *)
-(* (\*   lift_wp: #a:Type -> #wp:pure_wp a -> wp a = ... *\) *)
-(* (\*   lift   : #a:Type -> #wp:pure_wp a -> f:PURE.repr a wp -> STATE.repr a (lift_star wp) = ... *\) *)
-(* (\* }   *\) *)
-
-(* (\* //////////////////////////////////////////////////////////////////////////////// *\) *)
-(* (\* (\\* let repr_STATE (a:Type) (wp:wp a) =  *\\) *\) *)
-(* (\* (\\*   n0:nat -> PURE (a * nat) (fun post -> wp (fun a n -> post (a, n)) n0) *\\) *\) *)
-
-
-
-(* (\* new_effect STATE = STATE_h nat *\) *)
-(* (\* let pre = pre_h nat *\) *)
-(* (\* let post a = poh nat a *\) *)
-(* (\* let wp a = wp_h nat a *\) *)
-(* (\* inline let lift_pure_state (a:Type) (wp:pure_wp a) (p:post a) (n:nat) = wp (fun a -> p a n) *\) *)
-(* (\* sub_effect PURE ~> STATE = lift_pure_state *\) *)
-
-(* (\* let reify_STATE (a:Type) = nat -> Tot (a * nat) *\) *)
-(* (\* let reify_return (#a:Type) (x:a) : reify_STATE a = fun n -> (x, n) *\) *)
-(* (\* let reify_bind (#a:Type) (#b:Type) (f:reify_STATE a) (g:(a -> Tot (reify_STATE b)) ) *\) *)
-(* (\*   : reify_STATE b  *\) *)
-(* (\*   = fun n0 -> let x, n1 = f n0 in g x n1 *\) *)
-(* (\* let reify_get () : reify_STATE nat =  *\) *)
-(* (\*   fun n -> n, n *\) *)
-(* (\* let reify_put (m:nat) : reify_STATE unit =  *\) *)
-(* (\*  fun _ -> (), m *\) *)
-
-(* (\* assume val get : unit -> STATE nat (fun post n -> post n n) *\) *)
-(* (\* assume val put : m:nat -> STATE unit (fun post n -> post () m) *\) *)
-
-(* (\* val incr : unit -> STATE unit (fun post n -> post () (n + 1)) *\) *)
-(* (\* let incr () =  *\) *)
-(* (\*   let n = get () in  *\) *)
-(* (\*   put (n + 1) *\) *)
-
-(* (\* val incr2 : unit -> STATE unit (fun post n -> forall m. post () m) *\) *)
-(* (\* let incr2 () =  *\) *)
-(* (\*   let n = get () in  *\) *)
-(* (\*   put (n + 1) *\) *)
-
-
-
-
-
-
-(* (\* (\\* let repr_STATE (a:Type) (wp:wp a) =  *\\) *\) *)
-(* (\* (\\*   n0:nat -> PURE (a * nat) (fun post -> wp (fun a n -> post (a, n)) n0) *\\) *\) *)
-
-(* (\* (\\* inline let lift_pure_state (a:Type) (wp:pure_wp a) (p:post a) (n:nat) = wp (fun a -> p a n) *\\) *\) *)
-(* (\* (\\* sub_effect PURE ~> STATE = lift_pure_state *\\) *\) *)
-(* (\* (\\* assume val r : range *\\) *\) *)
-
-(* (\* (\\* val repr_bind: #a:Type -> #b:Type -> #wp1:wp a -> #wp2:(a -> GTot (wp b)) *\\) *\) *)
-(* (\* (\\*          -> repr_STATE a wp1 *\\) *\) *)
-(* (\* (\\*          -> (x:a -> Tot (repr_STATE b (wp2 x))) *\\) *\) *)
-(* (\* (\\*          -> Tot (repr_STATE b (bind_wp nat r a b wp1 wp2)) *\\) *\) *)
-(* (\* (\\* #reset-options "--log_queries"            *\\) *\) *)
-(* (\* (\\* let repr_bind #a #b #wp1 #wp2 f g =  *\\) *\) *)
-(* (\* (\\*   fun n0 -> admit(); //the encoding to SMT isn't sufficiently smart to capture monotonicity *\\) *\) *)
-(* (\* (\\*          let x, n1 = f n0 in *\\) *\) *)
-(* (\* (\\*          g x n1 *\\) *\) *)
-
-
-
+reifiable let put' (x: int): ST unit
+  (requires (fun n -> True))
+  (ensures (fun n0 _ n1 -> n1 = x)) =
+    STATE.reflect (put x)

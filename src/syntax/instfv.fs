@@ -87,6 +87,9 @@ let rec inst (s:inst_t) t =
       | Tm_meta(t, Meta_pattern args) -> 
         mk (Tm_meta(inst s t, Meta_pattern (args |> List.map (inst_args s))))
 
+      | Tm_meta(t, Meta_monadic (m, t')) -> 
+        mk (Tm_meta(inst s t, Meta_monadic(m, inst s t')))
+
       | Tm_meta(t, tag) -> 
         mk (Tm_meta(inst s t, tag))
 

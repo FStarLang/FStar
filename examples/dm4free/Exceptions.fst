@@ -1,4 +1,4 @@
-module Ex
+module Exceptions
 
 let ex_pre = Type0
 let ex_post (a:Type) = option a -> Type0
@@ -36,11 +36,12 @@ inline let ex_trivial (a:Type) (wp:ex_wp a) = wp () (fun r -> True)
 let ex_repr (a:Type) (wp:ex_wp a) =
     unit -> PURE (option a) (wp ())
 
-inline val ex_bind: (a:Type) -> (b:Type) -> (wp0:ex_wp a) -> (wp1:(a -> Tot (ex_wp b))) 
+inline val ex_bind: (a:Type) -> (b:Type) -> (wp0:ex_wp a) 
 		 -> (f:ex_repr a wp0)
+		 -> (wp1:(a -> Tot (ex_wp b))) 
 		 -> (g:(x:a -> Tot (ex_repr b (wp1 x)))) 
 		 -> Tot (ex_repr b (ex_bind_wp range_0 a b wp0 wp1))
-let ex_bind a b wp0 wp1 f g  
+let ex_bind a b wp0 f wp1 g  
   = fun _ -> admit(); match f () with 
 		   | None -> None
 		   | Some x -> g x ()

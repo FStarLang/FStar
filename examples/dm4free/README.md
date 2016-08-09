@@ -1,15 +1,30 @@
 Dijkstra Monads for Free
 ------------------------
 
-Run it with:
+A basic, complete example:
 
 ```
-fstar --trace_error --debug_level ED --debug FStar.DM4F.Test FStar.DM4F.Test.fst --prn --print_implicits --print_universes --lax --print_bound_var_types
+fstar.exe FStar.DM4F.IntSt.Fst
+```
+
+To see the generated combinators (look for top-level definitions starting with
+`FStar.DM4F.Test.STINT_`):
+
+```
+fstar.exe --dump_module FStar.DM4F.IntST FStar.DM4F.IntST.fst
+```
+
+To see more debug output related to the DMFF elaboration and star
+transformations:
+
+```
+fstar.exe --trace_error --debug_level ED --debug FStar.DM4F.IntST FStar.DM4F.IntST.fst --prn --print_implicits --print_universes --print_bound_var_types
 ```
 
 Current status:
 - `repr`, `bind` and `return` are *-transformed and _-elaborated;
-- same goes for the actions.
+- same goes for the actions;
+- all the remaining combinators are generated.
 
 The code is in `src/tc/dmff.fs`.
 - `star_type_definition` is the *-transformation from the paper for types;
@@ -32,13 +47,19 @@ effect checking code.
 Items left:
 - fill out various TODOs in `dmff.fs` to faithfully check everything (right now,
   most checks are fairly lax);
-- generate the missing WP combinators (`ite_wp`, `null_wp`)
 - try out more things in the definition language; try out with a parameterized
   `STATE (h: heap)` effect; etc
-- re-instate the optimization in [env.fs] when checking for universe variables
-  in [gamma]
-- figure out how to properly type-check actions (right now, the code is
-  suboptimal);
-- figure out why the commented out assert in [tc_eff_decl] is failing;
-- write get and put in direct style, reify them, then copy the things from intST
-  into the test file.
+- * and elaboration of lifts
+- inserting "return" on the fly when reflecting Tot computations
+- more examples!
+- extraction!
+
+- it would be good to have a generic way of noticing that a WP
+  combinator contains a branching construct within it and that it may
+  lead to exponential blowup. In such a case, we should wrap the WP
+  with a "name_continuation" combinator, which is currently called
+  "wp_ite" and should be renamed. This is particularly important for
+  the exceptions monad, where every bind contains a branch.
+
+- dreaming: can we also generate abbreviations for the "triples" form
+  of an effect?

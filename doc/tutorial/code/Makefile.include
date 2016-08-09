@@ -40,4 +40,8 @@ EXERCISES =\
 #  ex6b-sort-poly\
    ex6d-no-discard\
 
-all: $(EXERCISES:%=verify-%)
+all: uall sall
+
+uall:
+
+sall: $(EXERCISES:%=verify-%)

@@ -7,7 +7,11 @@
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all:
+all: uall sall
+
+uall:
+
+sall:
 	make api
 ifneq ($(shell $(FSTAR_HOME)/bin/fstar.exe --version | grep platform= | cut -c10-),Windows_x86)
 # This runs out of memory with 32bit Windows binaries

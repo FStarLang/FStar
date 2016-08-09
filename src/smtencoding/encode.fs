@@ -1035,7 +1035,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
            p, List.flatten decls) |> List.unzip in
         let body, decls'' = encode_formula body env in
     let guards = match pats with
-	  | [[{tm=App(Var "Prims.guard_free", [p])}]] -> []
+	  | [[{tm=App(Var gf, [p])}]] when Ident.text_of_lid Const.guard_free = gf -> []
 	  | _ -> guards in
         vars, pats, mk_and_l guards, body, decls@List.flatten decls'@decls'' in
 
@@ -1717,7 +1717,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let reified_typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) (Util.lcomp_of_comp comp) U_unknown in
             Util.arrow formals (S.mk_Total reified_typ) in
           let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in
-          (* printfn "%s: Reified %s\nto %s\n" (Print.lbname_to_string lb.lbname) (Print.term_to_string tm) (Print.term_to_string tm'); *)
+          (* printfn "%s: Reified %s\nto %s\n"  *)
+          (*       (Print.lbname_to_string lb.lbname)  *)
+          (*       (Print.term_to_string tm)  *)
+          (*       (Print.term_to_string tm');  *)
           encode_top_level_let env (false, [lb]) quals
         | _ -> [], env
       end
@@ -1958,7 +1961,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
         | Env.Binding_var x -> 
             let xxsym, xx, env' = new_term_constant env x in
             let t1 = N.normalize [N.Beta; N.Inline; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
-            if Env.debug env.tcenv <| Options.Other "Encoding"
+            if Env.debug env.tcenv <| Options.Other "SMTEncoding"
             then (Util.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
             let t, decls' = encode_term_pred None t1 env xx in
             let caption =

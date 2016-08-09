@@ -125,6 +125,9 @@ let rec free_names_and_uvs' tm : free_vars =
       | Tm_meta(t, Meta_pattern args) -> 
         List.fold_right free_names_and_uvars_args args (free_names_and_uvars t)
 
+      | Tm_meta(t, Meta_monadic(_, t')) -> 
+        union (free_names_and_uvars t) (free_names_and_uvars t')
+
       | Tm_meta(t, _) -> 
         free_names_and_uvars t
 

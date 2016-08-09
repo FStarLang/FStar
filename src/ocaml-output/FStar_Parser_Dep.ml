@@ -333,7 +333,8 @@ in (Prims.raise _161_108))
 end))))
 in (
 
-let record_lid = (fun is_constructor lid -> (
+let record_lid = (fun is_constructor lid -> if (lid.FStar_Ident.ident.FStar_Ident.idText <> "reflect") then begin
+(
 
 let try_key = (fun key -> (match ((FStar_Util.smap_try_find working_map key)) with
 | Some (pair) -> begin
@@ -358,7 +359,10 @@ in if is_constructor then begin
 in (try_key _161_120))
 end else begin
 ()
-end)))
+end))
+end else begin
+()
+end)
 in (
 
 let auto_open = if ((FStar_Util.basename filename) = "prims.fst") then begin

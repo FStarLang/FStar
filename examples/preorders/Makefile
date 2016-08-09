@@ -1,8 +1,9 @@
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all: $(patsubst %.fst,%.fst-ver,$(wildcard *.fst))
+all: uall sall
 
-%.fst-ver:%.fst
-	$(FSTAR) $^
+uall: $(patsubst %.fst,%.uver,$(wildcard *.fst))
+
+sall:
 

@@ -29,7 +29,11 @@ P_EXTRACTED=FStar_Ghost.ml FStar_Seq.ml Poly1305_Parameters.ml Poly1305_Bigint.m
 
 .PHONY: lib-ver curve-ver curve-ml chacha-ver chacha-ml
 
-all: chacha-ml poly-ml aead-ml #curve-ml
+all: uall sall
+
+uall: chacha-ml poly-ml aead-ml #curve-ml
+
+sall:
 
 # Verification target for the low-level libraries of F* in universes
 lib-ver:

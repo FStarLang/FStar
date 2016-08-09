@@ -1,9 +1,4 @@
-VERFILES=Unit1.Basic.fst        Unit1.Projectors2.fst          Unit1.WPsAndTriples.fst \
-	 Unit1.Parser.fst       Unit1.RefinementInference.fst  Unit1.WPsAndTriples_ST.fst \
-	 Unit1.Projectors1.fst  Unit1.UnificationTests.fst     Unit1.RecursiveTypeFunctions.fst \
-	 unit2.fst              testset.fst 		       testheap.fst 		       ShortCircuit.fst \
-	 FirstProofs.fst 	              	 	       testmref.fst \
-	 testTwoLevelHeap.fst   mac.fst 		       testghost.fst 
+VERFILES=
 	 #inverse.fst
 
 FSTAR_HOME=../../..
@@ -21,12 +16,13 @@ else
 NEGTESTS=3
 endif
 
-all: all-pos all-neg
+all: uall sall
 
-all-pos: $(addsuffix -ver, $(VERFILES))
+uall: all-pos all-neg
 
-%.fst-ver: %.fst
-	$(FSTAR) $^
+sall:
+
+all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.Parser.uver Unit1.RefinementInference.uver Unit1.WPsAndTriples_ST.uver Unit1.Projectors1.uver Unit1.UnificationTests.uver Unit1.RecursiveTypeFunctions.uver Unit2.uver TestSet.uver TestHeap.uver ShortCircuit.uver FirstProofs.uver TestMRef.uver TestTwoLevelHeap.uver Mac.uver TestGhost.uver
 
 basictests: $(VERFILES)
 	$(FSTAR) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^

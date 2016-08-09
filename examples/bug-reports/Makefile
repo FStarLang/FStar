@@ -13,7 +13,11 @@ VERFILES=bug015.fst bug019.fst\
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all: .all.ver
+all: uall sall
+
+uall:
+
+sall: .all.ver
 
 bug194: bug194.fst
 	$(FSTAR) --explicit_deps ../../lib/FStar.Classical.fst ../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Constructive.fst ../metatheory/stlc_strong_db_parsubst.fst bug194.fst

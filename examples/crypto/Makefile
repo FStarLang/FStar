@@ -12,7 +12,11 @@ endif
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all: .all.crypto.ver merkle_tree mac mac3 rpc CntProtocol padding acls-cap statefulEnc sig
+all: uall sall
+
+uall: .all.crypto.ver mac3 sig
+
+sall: merkle_tree mac rpc CntProtocol padding acls-cap statefulEnc
 
 .all.crypto.ver: $(VERFILES)
 	$(FSTAR) --z3timeout 20 $^

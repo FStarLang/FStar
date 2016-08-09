@@ -201,7 +201,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                          Some (Term_name (refl_const, false))
                     else Some (Term_name(fvar lid dd (fv_qual_of_se se), false))
             else None
-          | Sig_new_effect(ne, _) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid lid)))
+          | Sig_new_effect_for_free (ne, _) | Sig_new_effect(ne, _) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid lid)))
           | Sig_effect_abbrev _ ->   Some (Eff_name(se, lid))
           | _ -> None
         end in
@@ -233,6 +233,7 @@ let try_lookup_effect_name env l =
 let try_lookup_effect_defn env l =
     match try_lookup_effect_name' (not env.iface) env l with
         | Some (Sig_new_effect(ne, _), _) -> Some ne
+        | Some (Sig_new_effect_for_free(ne, _), _) -> Some ne
         | _ -> None
 let is_effect_name env lid =
     match try_lookup_effect_name env lid with

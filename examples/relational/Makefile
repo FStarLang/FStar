@@ -7,7 +7,11 @@ FSTAR_HOME=../..
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
-all: noninterference\
+all: uall sall
+
+uall:
+
+sall: noninterference\
 		 sample_examples\
 		 ro_single\
 		 simple_st2_examples\

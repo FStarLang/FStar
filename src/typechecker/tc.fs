@@ -49,10 +49,7 @@ let mk_lex_list vs =
 let is_eq = function
     | Some Equality -> true
     | _ -> false
-let steps env =
-    if Env.should_verify env
-    then [N.Beta; N.Inline]
-    else [N.Beta; N.Inline]
+let steps env = [N.Beta; N.Inline]
 let unfold_whnf env t = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant; N.Beta] env t
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
@@ -305,6 +302,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           let e = mk (Tm_meta(e, Meta_desugared Sequence)) (Some c.res_typ.n) top.pos in
           e, c, g
     end
+
+  | Tm_meta(e, Meta_monadic _) ->
+    tc_term env e
 
   | Tm_meta(e, m) ->
     let e, c, g = tc_term env e in
@@ -863,8 +863,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let guard = Rel.conj_guard guard_body guard in
     let guard = if env.top_level || not(Env.should_verify env)
                 then Rel.discharge_guard envbody (Rel.conj_guard g guard)
-                else let guard = Rel.close_guard (bs@letrec_binders) guard in
-                     Rel.conj_guard g guard in
+                else let guard = Rel.close_guard (bs@letrec_binders) (Rel.conj_guard g guard) in
+                     guard in
 
     let tfun_computed = Util.arrow bs cbody in
     let e = Util.abs bs body (Some (Util.lcomp_of_comp cbody |> Inl)) in
@@ -970,12 +970,12 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         let out_c = 
                             TcUtil.bind e.pos env None  //proving (Some e) here instead of None causes significant Z3 overhead
                                         c (x, out_c) in
-                        let e = TcUtil.maybe_monadic env e c.eff_name in
+                        let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in
                         let e = TcUtil.maybe_lift env e c.eff_name out_c.eff_name in
                         (e, q)::args, out_c, monadic) ([], cres, false) arg_comps_rev in
         let comp = TcUtil.bind head.pos env None chead (None, comp) in
         let app =  mk_Tm_app head args (Some comp.res_typ.n) r in
-        let app = if monadic then TypeChecker.Util.maybe_monadic env app comp.eff_name else app in
+        let app = if monadic then TypeChecker.Util.maybe_monadic env app comp.eff_name comp.res_typ else app in
         let comp, g = TcUtil.strengthen_precondition None env app comp guard in //Each conjunct in g is already labeled
         app, comp, g 
     in
@@ -1444,7 +1444,7 @@ and check_inner_let env e =
        let e1 = TypeChecker.Util.maybe_lift env e1 c1.eff_name cres.eff_name in
        let e2 = TypeChecker.Util.maybe_lift env e2 c2.eff_name cres.eff_name in
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) (Some cres.res_typ.n) e.pos in
-       let e = TypeChecker.Util.maybe_monadic env e cres.eff_name in
+       let e = TypeChecker.Util.maybe_monadic env e cres.eff_name cres.res_typ in
        let x_eq_e1 = NonTrivial <| Util.mk_eq c1.res_typ c1.res_typ (S.bv_to_name x) e1 in
        let g2 = Rel.close_guard xb
                       (Rel.imp_guard (Rel.guard_of_guard_formula x_eq_e1) g2) in
@@ -1913,8 +1913,8 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
             let expected_k = Util.arrow [S.mk_binder a; 
                                          S.mk_binder b;
                                          S.mk_binder wp_f;
-                                         S.mk_binder wp_g;
                                          S.null_binder (mk_repr a (S.bv_to_name wp_f));
+                                         S.mk_binder wp_g;
                                          S.null_binder (Util.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))]
                                         (S.mk_Total res) in
             (* printfn "About to check bind=%s\n\n, at type %s\n" *) 
@@ -1923,6 +1923,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
             let expected_k, _, _ = 
                 tc_tot_or_gtot_term env expected_k in
             let env = Env.set_range env (snd (ed.bind_repr)).pos in
+            let env = {env with lax=true} in //we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
             check_and_gen' env ed.bind_repr expected_k in
 
         let return_repr = 
@@ -1946,46 +1947,70 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
             | [] -> [], repr
             | _ -> raise (Error("Unexpected universe-polymorphic return for effect", repr.pos)) in
 
-      let actions = 
-        let check_action act = 
-            let act_defn, c, g_a = 
-                tc_tot_or_gtot_term env act.action_defn in
-            (* printfn "Inferred action %s has type %s\n" (Print.term_to_string act_defn) (Print.term_to_string c.res_typ); *)
-            // JP: this is very brittle and assumes explicit arrows have been
-            // inserted in actions in just the right place
-            let expected_k, g_k = 
-                match (SS.compress c.res_typ).n with 
-                | Tm_arrow(bs, c) -> 
-                  let bs, _ = SS.open_comp bs c in
-                  let res = mk_repr' S.tun S.tun in
-                  let k = Util.arrow bs (S.mk_Total res) in
-                  let k, _, g = tc_tot_or_gtot_term env k in
-                  k, g
-                | _ -> raise (Error("Actions must have function types", act_defn.pos)) in
-            (* printfn "Checking against expected type %s\n" (Print.term_to_string expected_k); *)
-            let g = Rel.teq env c.res_typ expected_k in
-            Rel.force_trivial_guard env (Rel.conj_guard g_a (Rel.conj_guard g_k g));
-            let act_ty = match (SS.compress expected_k).n with 
-                | Tm_arrow(bs, c) -> 
-                  let bs, c = SS.open_comp bs c in
-                  let a, wp = destruct_repr (Util.comp_result c) in
-                  let c = {
-                    effect_name = ed.mname;
-                    result_typ = a;
-                    effect_args = [as_arg wp];
-                    flags = [] 
-                  } in
-                  Util.arrow bs (S.mk_Comp c)
-                | _ -> failwith "" in
-            (* printfn "Checked action %s against type %s\n" *) 
-            (*         (Print.term_to_string act_defn) *) 
-            (*         (Print.term_to_string (N.normalize [N.Beta] env act_ty)); *)
-            let univs, act_defn = TcUtil.generalize_universes env act_defn in
-            let act_ty = N.normalize [N.Beta] env act_ty in
-            {act with 
-                action_univs=univs;
-                action_defn=act_defn;
-                action_typ =act_ty } in
+      let actions =
+        let check_action act =
+          // 0) The action definition has a (possibly) useless type; the
+          // action cps'd type contains the "good" wp that tells us EVERYTHING
+          // about what this action does. Please note that this "good" wp is
+          // of the form [binders -> repr ...], i.e. is it properly curried.
+          let act_typ, _, g_t = tc_tot_or_gtot_term env act.action_typ in
+
+          // 1) Check action definition, setting its expected type to
+          //    [action_typ]
+          let env' = Env.set_expected_typ env act_typ in
+          let act_defn = N.normalize [ N.UnfoldUntil S.Delta_constant ] env act.action_defn in
+          if Env.debug env (Options.Other "ED") then
+            Util.print3 "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
+              (text_of_lid act.action_name) (Print.term_to_string act_defn)
+              (Print.term_to_string act_typ);
+          let act_defn, c, g_a = tc_tot_or_gtot_term env' act_defn in
+
+          let act_typ = N.normalize [ N.UnfoldUntil S.Delta_constant; N.Inline; N.Beta ] env act_typ in
+
+          // 2) This implies that [action_typ] has Type(k): good for us!
+
+          // 3) Unify [action_typ] against [expected_k], because we also need
+          // to check that the action typ is of the form [binders -> repr ...]
+          let expected_k, g_k = 
+            let act_typ = SS.compress act_typ in
+            match act_typ.n with 
+            | Tm_arrow(bs, c) -> 
+              let bs, _ = SS.open_comp bs c in
+              let res = mk_repr' S.tun S.tun in
+              let k = Util.arrow bs (S.mk_Total res) in
+              let k, _, g = tc_tot_or_gtot_term env k in
+              k, g
+            | _ -> raise (Error(Util.format2
+              "Actions must have function types (not: %s, a.k.a. %s)"
+                (Print.term_to_string act_typ) (Print.tag_of_term act_typ), act_defn.pos))
+          in
+          let g = Rel.teq env act_typ expected_k in
+          Rel.force_trivial_guard env (Rel.conj_guard g_a (Rel.conj_guard g_k (Rel.conj_guard g_t g)));
+
+          // 4) Do a bunch of plumbing to assign a type in the new monad to
+          //    the action
+          let act_typ = match (SS.compress expected_k).n with 
+              | Tm_arrow(bs, c) -> 
+                let bs, c = SS.open_comp bs c in
+                let a, wp = destruct_repr (Util.comp_result c) in
+                let c = {
+                  effect_name = ed.mname;
+                  result_typ = a;
+                  effect_args = [as_arg wp];
+                  flags = [] 
+                } in
+                Util.arrow bs (S.mk_Comp c)
+              | _ -> failwith "" in
+
+          (* printfn "Checked action %s against type %s\n" *) 
+          (*         (Print.term_to_string act_defn) *) 
+          (*         (Print.term_to_string (N.normalize [N.Beta] env act_typ)); *)
+          let univs, act_defn = TcUtil.generalize_universes env act_defn in
+          let act_typ = N.normalize [N.Beta] env act_typ in
+          {act with 
+              action_univs=univs;
+              action_defn=act_defn;
+              action_typ =act_typ } in
         ed.actions |> List.map check_action in
       repr, bind_repr, return_repr, actions
       end 
@@ -2002,7 +2027,11 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
     // We always close [bind_repr], even though it may be [Tm_unknown]
     // (non-reifiable, non-reflectable effect)
-    if n >= 0 then assert (is_unknown (snd ts) || List.length (fst ts) = n);
+    if n > 0 && not (is_unknown (snd ts)) && List.length (fst ts) <> n then
+        failwith (Util.format2
+          "The effect combinator is not universe-polymorphic enough (n=%s) (%s)"
+          (string_of_int n)
+          (Print.tscheme_to_string ts));
     ts in
   let close_action act = 
     let univs, defn = close (-1) (act.action_univs, act.action_defn) in
@@ -2012,6 +2041,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
         action_univs=univs;
         action_defn=defn;
         action_typ=typ; } in
+  assert (List.length binders > 0 || List.length univs = 1);
   let ed = { ed with
       univs       = univs
     ; binders     = binders
@@ -2037,7 +2067,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
   ed
 
 
-and dijkstra_ftw env ed =
+and cps_and_elaborate env ed =
   // Using [STInt: a:Type -> Effect] as an example...
   let binders_un, signature_un = SS.open_term ed.binders ed.signature in
   // [binders] is the empty list (for [ST (h: heap)], there would be one binder)
@@ -2050,7 +2080,7 @@ and dijkstra_ftw env ed =
   // just extract the binder [a].
   let a, effect_marker =
     // TODO: more stringent checks on the shape of the signature; better errors
-    match (SS.compress signature).n with
+    match (SS.compress signature_un).n with
     | Tm_arrow ([(a, _)], effect_marker) ->
         a, effect_marker
     | _ ->
@@ -2064,9 +2094,11 @@ and dijkstra_ftw env ed =
     t, comp
   in
   let recheck_debug s env t =
-    Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
+    if Env.debug env (Options.Other "ED") then
+      Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
     let t', _, _ = tc_term env t in
-    Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
+    if Env.debug env (Options.Other "ED") then
+      Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
     // Return the original term (without universes unification variables);
     // because [tc_eff_decl] will take care of these
     t
@@ -2075,7 +2107,8 @@ and dijkstra_ftw env ed =
 
   // TODO: check that [_comp] is [Tot Type]
   let repr, _comp = open_and_check ed.repr in
-  Util.print1 "Representation is: %s\n" (Print.term_to_string repr);
+  if Env.debug env (Options.Other "ED") then
+    Util.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
   let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
   let dmff_env, wp_type = DMFF.star_type_definition dmff_env repr in
@@ -2084,11 +2117,16 @@ and dijkstra_ftw env ed =
 
   // Building: [a -> wp a -> Effect]
   let effect_signature =
-    let binders = [ (a, S.as_implicit false); S.null_binder wp_a ] in
+    let binders = [ (a, S.as_implicit false); S.gen_bv "dijkstra_wp" None wp_a |> S.mk_binder ] in
     let binders = close_binders binders in
     mk (Tm_arrow (binders, effect_marker))
   in
   let effect_signature = recheck_debug "turned into the effect signature" env effect_signature in
+
+  let sigelts = ref [] in
+  let mk_lid name: lident =
+    lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ name)) Range.dummyRange
+  in
 
   // TODO: we assume that reading the top-level definitions in the order that
   // they come in the effect definition is enough... probably not
@@ -2098,14 +2136,14 @@ and dijkstra_ftw env ed =
     let item, item_comp = open_and_check item in
     if not (Util.is_total_lcomp item_comp) then
       raise (Err ("Computation for [item] is not total!"));
-    let dmff_env, (item_wp, item_elab) = DMFF.star_expr_definition dmff_env item in
+    let dmff_env, (item_t, item_wp, item_elab) = DMFF.star_expr_definition dmff_env item in
     let item_wp = recheck_debug "*" env item_wp in
     let item_elab = recheck_debug "_" env item_elab in
-    dmff_env, item_wp, item_elab
+    dmff_env, item_t, item_wp, item_elab
   in
 
-  let dmff_env, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
-  let dmff_env, return_wp, return_elab = elaborate_and_star dmff_env ed.return_repr in
+  let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
+  let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env ed.return_repr in
 
   let return_wp =
     // TODO: fix [tc_eff_decl] to deal with currying
@@ -2118,28 +2156,75 @@ and dijkstra_ftw env ed =
   let bind_wp =
     match (SS.compress bind_wp).n with
     | Tm_abs (binders, body, what) ->
+        // TODO: figure out how to deal with ranges
         let r = S.lid_as_fv Const.range_lid (S.Delta_unfoldable 1) None in
         U.abs (S.null_binder (mk (Tm_fvar r)) :: binders) body what
     | _ ->
         failwith "unexpected shape for bind"
   in
 
+  let register name item =
+    let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) item in
+    sigelts := sigelt :: !sigelts;
+    fv
+  in
+  let return_wp = register "return_wp" return_wp in
+  let return_elab = register "return_elab" return_elab in
+
+  // we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
+  let bind_wp = register "bind_wp" bind_wp in
+  sigelts := Sig_pragma (SetOptions "--admit_smt_queries true", Range.dummyRange) :: !sigelts;
+  let bind_elab = register "bind_elab" bind_elab in
+  sigelts := Sig_pragma (SetOptions "--admit_smt_queries false", Range.dummyRange) :: !sigelts;
+
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     // We need to reverse-engineer what tc_eff_decl wants here...
-    let dmff_env, action_wp, action_elab =
+    let dmff_env, action_t, action_wp, action_elab =
       elaborate_and_star dmff_env (action.action_univs, action.action_defn)
     in
-    dmff_env, { action with action_defn = action_elab } :: actions
+    let name = action.action_name.ident.idText in
+    let action_elab = register (name ^ "_elab") action_elab in
+    let action_typ_with_wp = DMFF.trans_F dmff_env action_t action_wp in
+    let action_wp = register (name ^ "_wp") action_wp in
+    dmff_env, { action with action_defn = action_elab; action_typ = action_typ_with_wp } :: actions
   ) (dmff_env, []) ed.actions in
   let actions = List.rev actions in
 
   let repr =
     let wp = S.gen_bv "wp_a" None wp_a in
     let binders = [ S.mk_binder a; S.mk_binder wp ] in
-    U.abs binders (DMFF.trans_FC dmff_env (mk (Tm_app (ed.repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
+    U.abs binders (DMFF.trans_F dmff_env (mk (Tm_app (ed.repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
   in
   let repr = recheck_debug "FC" env repr in
+  let repr = register "repr (applied to binders)" repr in
+
+  let pre, post =
+    Util.print1 "wp_type is: %s\n" (Print.term_to_string wp_type);
+    match (SS.compress wp_type).n with
+    | Tm_abs (effect_param, arrow, _) ->
+        Util.print1 "arrow is: %s\n" (Print.term_to_string arrow);
+        let effect_param, arrow = SS.open_term effect_param arrow in
+        begin match (SS.compress arrow).n with
+        | Tm_arrow (wp_binders, c) ->
+            let wp_binders, c = SS.open_comp wp_binders c in
+            let pre_args, post = Util.prefix wp_binders in
+            // Pre-condition does not mention the return type; don't close over it
+            U.arrow pre_args c,
+            // Post-condition does, however!
+            U.abs (binders @ effect_param) (fst post).sort None
+        | _ ->
+            failwith (Util.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow))
+        end
+    | _ ->
+        failwith (Util.format1 "Impossible: pre/post abs %s" (Print.term_to_string wp_type))
+  in
+  // Desugaring is aware of these names and generates references to them when
+  // the user writes something such as [STINT.repr]
+  ignore (register "pre" pre);
+  ignore (register "post" post);
+  ignore (register "repr" (U.abs binders repr None));
+  ignore (register "wp" (U.abs binders wp_type None));
 
   let c = close binders in
 
@@ -2160,7 +2245,9 @@ and dijkstra_ftw env ed =
     Util.print_string (Print.eff_decl_to_string true ed);
 
   // Generate the missing combinators.
-  DMFF.gen_wps_for_free env binders a wp_a ed
+  let sigelts', ed = DMFF.gen_wps_for_free env binders a wp_a ed in
+  List.rev !sigelts @ sigelts', ed
+
 
 and tc_lex_t env ses quals lids =
     (* We specifically type lex_t as:
@@ -2934,7 +3021,7 @@ let tc_decls env ses =
           // Let the power of Dijkstra generate everything "for free", then defer
           // the rest of the job to [tc_decl].
           let _, _, env, _ = acc in
-          let ses, ne = dijkstra_ftw env ne in
+          let ses, ne = cps_and_elaborate env ne in
           let ses = ses @ [ Sig_new_effect (ne, r) ] in
           List.fold_left process_one_decl acc ses
       | _ ->
