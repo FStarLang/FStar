@@ -1,6 +1,8 @@
 chacha
 curve
 poly
+aead
 test_chacha.exe
 test_curve.exe
 test_poly.exe
+test_aead.exe
