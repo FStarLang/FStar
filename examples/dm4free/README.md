@@ -1,7 +1,9 @@
 Dijkstra Monads for Free
 ------------------------
 
-A basic, complete example:
+Any `FStar.DM4F.*` file successfully verifies.
+
+To try out a basic, complete example:
 
 ```
 fstar.exe FStar.DM4F.IntSt.Fst
@@ -36,8 +38,7 @@ The code is in `src/tc/dmff.fs`.
   paper
 - `gen_wps_for_free` uses "stronger than" to generate more combinators;
   specifically, it generates `if_then_else`, `assert`, `assume`, `close`; it
-  also generates `trivial` but the term is (at the time of this writing)
-  ill-formed.
+  also generates `trivial`.
 
 The output of the *-transformation and the _-elaboration is re-checked (the
 generated terms are well-formed in F*); the effect definition is lifted from DM
