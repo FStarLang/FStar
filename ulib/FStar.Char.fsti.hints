@@ -1,7 +1,14 @@
 [
   "LŽèù8Œ\u0019û°pá|¯$h\u0003",
   [
-    [ 2, 1, [ "@query_1221", "assumption_Prims.HasEq_int_325" ], 0 ],
-    [ 2, 1, [ "@query_1240" ], 0 ]
+    [
+      "FStar.Char.char'",
+      1,
+      2,
+      1,
+      [ "@query_1021", "assumption_Prims.HasEq_int_285" ],
+      0
+    ],
+    [ "FStar.Char.Char._0", 1, 2, 1, [ "@query_1037" ], 0 ]
   ]
 ]

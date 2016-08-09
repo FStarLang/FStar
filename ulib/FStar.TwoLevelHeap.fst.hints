@@ -2,226 +2,278 @@
   "RÙ¨œ\u0006<×ãP¯±fÒ½­u",
   [
     [
+      "FStar.TwoLevelHeap.t",
+      1,
       2,
       1,
       [
-        "@query_1757", "assumption_Prims.HasEq_int_325",
+        "@query_1449", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1776" ], 0 ],
-    [ 2, 1, [ "@query_1777" ], 0 ],
-    [ 2, 1, [ "@query_1788" ], 0 ],
+    [ "FStar.TwoLevelHeap.ST", 1, 2, 1, [ "@query_1463" ], 0 ],
+    [ "FStar.TwoLevelHeap.10775", 1, 2, 1, [ "@query_1464" ], 0 ],
+    [ "FStar.TwoLevelHeap.lemma_as_ref_inj", 1, 2, 1, [ "@query_1473" ], 0 ],
     [
+      "FStar.TwoLevelHeap.lemma_as_ref_inj",
+      2,
       2,
       1,
       [
-        "@query_1789", "equation_FStar.TwoLevelHeap.as_ref",
+        "@query_1474", "equation_FStar.TwoLevelHeap.as_ref",
         "equation_FStar.TwoLevelHeap.ref_as_rref",
         "equation_FStar.TwoLevelHeap.rid", "int_inversion", "unit_typing"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.new_region",
+      1,
       2,
       1,
       [
-        "@query_1790", "assumption_Prims.HasEq_int_325",
+        "@query_1475", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.new_region",
+      2,
       2,
       1,
       [
-        "@query_1791", "assumption_Prims.HasEq_int_325",
+        "@query_1476", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1802" ], 0 ],
+    [ "FStar.TwoLevelHeap.new_region", 3, 2, 1, [ "@query_1483" ], 0 ],
+    [ "FStar.TwoLevelHeap.sel", 1, 2, 1, [ "@query_1484" ], 0 ],
     [
+      "FStar.TwoLevelHeap.sel",
+      2,
       2,
       1,
       [
-        "@query_1803", "assumption_Prims.HasEq_int_325",
+        "@query_1485", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
+    [ "FStar.TwoLevelHeap.upd", 1, 2, 1, [ "@query_1489" ], 0 ],
     [
+      "FStar.TwoLevelHeap.upd",
+      2,
       2,
       1,
       [
-        "@query_1808", "assumption_Prims.HasEq_int_325",
-        "equation_FStar.TwoLevelHeap.rid"
-      ],
-      0
-    ],
-    [
-      2,
-      1,
-      [
-        "@query_1809", "assumption_Prims.HasEq_int_325",
-        "equation_FStar.TwoLevelHeap.rid"
-      ],
-      0
-    ],
-    [
-      2,
-      1,
-      [
-        "@query_1814", "assumption_Prims.HasEq_int_325",
+        "@query_1490", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.upd",
+      3,
       2,
       1,
       [
-        "@query_1815", "assumption_Prims.HasEq_int_325",
+        "@query_1491", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.ralloc",
+      1,
       2,
       1,
       [
-        "@query_1816", "assumption_Prims.HasEq_int_325",
-        "equation_FStar.TwoLevelHeap.rid"
-      ],
-      0
-    ],
-    [ 2, 1, [ "@query_1824" ], 0 ],
-    [
-      2,
-      1,
-      [
-        "@query_1825", "assumption_Prims.HasEq_int_325",
+        "@query_1495", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.ralloc",
+      2,
       2,
       1,
       [
-        "@query_1826", "assumption_Prims.HasEq_int_325",
-        "equation_FStar.TwoLevelHeap.rid"
-      ],
-      0
-    ],
-    [ 2, 1, [ "@query_1834" ], 0 ],
-    [
-      2,
-      1,
-      [
-        "@query_1835", "assumption_Prims.HasEq_int_325",
-        "equation_FStar.TwoLevelHeap.rid"
-      ],
-      0
-    ],
-    [ 2, 1, [ "@query_1843" ], 0 ],
-    [ 2, 1, [ "@query_1851" ], 0 ],
-    [
-      2,
-      1,
-      [
-        "@query_1852", "assumption_Prims.HasEq_int_325",
+        "@query_1496", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.ralloc",
+      3,
       2,
       1,
       [
-        "@query_1853", "assumption_Prims.HasEq_int_325",
+        "@query_1497", "assumption_Prims.HasEq_int_285",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0
+    ],
+    [ "FStar.TwoLevelHeap.ralloc", 4, 2, 1, [ "@query_1502" ], 0 ],
+    [
+      "FStar.TwoLevelHeap.op_Colon_Equals",
+      1,
+      2,
+      1,
+      [
+        "@query_1503", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.op_Colon_Equals",
+      2,
       2,
       1,
       [
-        "@query_1854", "assumption_Prims.HasEq_int_325",
+        "@query_1504", "assumption_Prims.HasEq_int_285",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0
+    ],
+    [ "FStar.TwoLevelHeap.op_Colon_Equals", 3, 2, 1, [ "@query_1509" ], 0 ],
+    [
+      "FStar.TwoLevelHeap.op_Bang",
+      1,
+      2,
+      1,
+      [
+        "@query_1510", "assumption_Prims.HasEq_int_285",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0
+    ],
+    [ "FStar.TwoLevelHeap.op_Bang", 2, 2, 1, [ "@query_1515" ], 0 ],
+    [ "FStar.TwoLevelHeap.get", 1, 2, 1, [ "@query_1520" ], 0 ],
+    [
+      "FStar.TwoLevelHeap.modifies",
+      1,
+      2,
+      1,
+      [
+        "@query_1521", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.modifies",
+      2,
       2,
       1,
       [
-        "@query_1855", "assumption_Prims.HasEq_int_325",
+        "@query_1522", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.modifies",
+      3,
       2,
       1,
       [
-        "@query_1856", "assumption_Prims.HasEq_int_325",
+        "@query_1523", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.modifies",
+      4,
       2,
       1,
       [
-        "@query_1861", "assumption_Prims.HasEq_int_325",
+        "@query_1524", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.modifies",
+      5,
       2,
       1,
       [
-        "@query_1862", "assumption_Prims.HasEq_int_325",
+        "@query_1525", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.fresh_region",
+      1,
       2,
       1,
       [
-        "@query_1867", "assumption_Prims.HasEq_int_325",
+        "@query_1529", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.fresh_region",
+      2,
       2,
       1,
       [
-        "@query_1868", "assumption_Prims.HasEq_int_325",
+        "@query_1530", "assumption_Prims.HasEq_int_285",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0
+    ],
+    [ "FStar.TwoLevelHeap.contains_ref", 1, 2, 1, [ "@query_1534" ], 0 ],
+    [
+      "FStar.TwoLevelHeap.contains_ref",
+      2,
+      2,
+      1,
+      [
+        "@query_1535", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.contains_ref",
+      3,
       2,
       1,
       [
-        "@query_1873", "assumption_Prims.HasEq_int_325",
+        "@query_1536", "assumption_Prims.HasEq_int_285",
+        "equation_FStar.TwoLevelHeap.rid"
+      ],
+      0
+    ],
+    [ "FStar.TwoLevelHeap.fresh_rref", 1, 2, 1, [ "@query_1540" ], 0 ],
+    [
+      "FStar.TwoLevelHeap.fresh_rref",
+      2,
+      2,
+      1,
+      [
+        "@query_1541", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
     [
+      "FStar.TwoLevelHeap.fresh_rref",
+      3,
       2,
       1,
       [
-        "@query_1874", "assumption_Prims.HasEq_int_325",
+        "@query_1542", "assumption_Prims.HasEq_int_285",
         "equation_FStar.TwoLevelHeap.rid"
       ],
       0

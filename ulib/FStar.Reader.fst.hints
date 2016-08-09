@@ -1,25 +1,55 @@
 [
   "¶¹‡>¢“ƒìV;äÝ×ô\fd",
   [
-    [ 2, 1, [ "@query_1598" ], 0 ],
-    [ 2, 1, [ "@query_1619" ], 0 ],
-    [ 2, 1, [ "@query_1627" ], 0 ],
-    [ 2, 1, [ "@query_1632" ], 0 ],
-    [ 2, 1, [ "@query_1641" ], 0 ],
-    [ 2, 1, [ "@query_1642", "assumption_Prims.HasEq_int_325" ], 0 ],
-    [ 2, 1, [ "@query_1643", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [ "FStar.Reader.reader_close_wp", 1, 2, 1, [ "@query_1327" ], 0 ],
+    [ "FStar.Reader.reader_trivial", 1, 2, 1, [ "@query_1344" ], 0 ],
+    [ "FStar.Reader.read", 1, 2, 1, [ "@query_1350" ], 0 ],
+    [ "FStar.Reader.lift_div_reader", 1, 2, 1, [ "@query_1354" ], 0 ],
+    [ "FStar.Reader.f", 1, 2, 1, [ "@query_1361" ], 0 ],
     [
+      "FStar.Reader.f",
+      2,
+      2,
+      1,
+      [ "@query_1362", "assumption_Prims.HasEq_int_285" ],
+      0
+    ],
+    [
+      "FStar.Reader.f",
+      3,
+      2,
+      1,
+      [ "@query_1363", "assumption_Prims.HasEq_int_285" ],
+      0
+    ],
+    [
+      "FStar.Reader.g",
+      1,
       2,
       1,
       [
-        "@pretyping__322", "@query_1652",
-        "assumption_FStar.Heap.SelUpd1_1486", "equation_FStar.ST.ref",
-        "function_token_typing_Prims.int", "int_typing",
+        "@query_1369", "assumption_FStar.Heap.SelUpd1_1234",
+        "equation_FStar.ST.ref", "function_token_typing_Prims.int",
+        "int_typing", "pretyping_ae567c2fb75be05905677af440075565",
         "primitive_Prims.op_Addition", "ref_inversion"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1653", "assumption_Prims.HasEq_int_325" ], 0 ],
-    [ 2, 1, [ "@query_1654", "assumption_Prims.HasEq_int_325" ], 0 ]
+    [
+      "FStar.Reader.g",
+      2,
+      2,
+      1,
+      [ "@query_1370", "assumption_Prims.HasEq_int_285" ],
+      0
+    ],
+    [
+      "FStar.Reader.g",
+      3,
+      2,
+      1,
+      [ "@query_1371", "assumption_Prims.HasEq_int_285" ],
+      0
+    ]
   ]
 ]

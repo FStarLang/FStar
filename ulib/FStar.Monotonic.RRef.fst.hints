@@ -1,48 +1,68 @@
 [
   "Û‚â=S\u001aèxExË\u001bwEEå",
   [
-    [ 2, 1, [ "@query_2997" ], 0 ],
-    [ 2, 1, [ "@query_3011" ], 0 ],
-    [ 2, 1, [ "@query_3016" ], 0 ],
-    [ 2, 1, [ "@query_3021" ], 0 ],
-    [ 2, 1, [ "@query_3026" ], 0 ],
-    [ 2, 1, [ "@query_3038" ], 0 ],
+    [ "FStar.Monotonic.RRef.monotonic", 1, 2, 1, [ "@query_2543" ], 0 ],
+    [ "FStar.Monotonic.RRef.m_contains", 1, 2, 1, [ "@query_2554" ], 0 ],
+    [ "FStar.Monotonic.RRef.m_fresh", 1, 2, 1, [ "@query_2558" ], 0 ],
+    [ "FStar.Monotonic.RRef.m_sel", 1, 2, 1, [ "@query_2562" ], 0 ],
+    [ "FStar.Monotonic.RRef.m_upd", 1, 2, 1, [ "@query_2566" ], 0 ],
+    [ "FStar.Monotonic.RRef.m_alloc", 1, 2, 1, [ "@query_2574" ], 0 ],
     [
+      "FStar.Monotonic.RRef.m_alloc",
+      2,
       2,
       1,
       [
-        "@query_3039", "equation_FStar.Monotonic.RRef.as_rref",
+        "@query_2575", "equation_FStar.Monotonic.RRef.as_rref",
         "equation_FStar.Monotonic.RRef.m_rref"
       ],
       0
     ],
-    [ 2, 1, [ "@query_3046" ], 0 ],
-    [ 2, 1, [ "@query_3047", "equation_FStar.Monotonic.RRef.as_rref" ], 0 ],
-    [ 2, 1, [ "@query_3057" ], 0 ],
-    [ 2, 1, [ "@query_3058", "equation_FStar.Monotonic.RRef.as_rref" ], 0 ],
-    [ 2, 1, [ "@query_3066" ], 0 ],
-    [ 2, 1, [ "@query_3089" ], 0 ],
+    [ "FStar.Monotonic.RRef.m_read", 1, 2, 1, [ "@query_2580" ], 0 ],
     [
+      "FStar.Monotonic.RRef.m_read",
+      2,
+      2,
+      1,
+      [ "@query_2581", "equation_FStar.Monotonic.RRef.as_rref" ],
+      0
+    ],
+    [ "FStar.Monotonic.RRef.m_write", 1, 2, 1, [ "@query_2588" ], 0 ],
+    [
+      "FStar.Monotonic.RRef.m_write",
+      2,
+      2,
+      1,
+      [ "@query_2589", "equation_FStar.Monotonic.RRef.as_rref" ],
+      0
+    ],
+    [ "FStar.Monotonic.RRef.stable_on_t", 1, 2, 1, [ "@query_2595" ], 0 ],
+    [ "FStar.Monotonic.RRef.witness", 1, 2, 1, [ "@query_2613" ], 0 ],
+    [
+      "FStar.Monotonic.RRef.witness",
+      2,
       2,
       1,
       [
-        "@query_3091", "equality_tok_Prims.T@tok",
+        "@query_2615", "equality_tok_Prims.T@tok",
         "equation_FStar.Monotonic.RRef.witnessed", "equation_Prims.l_True",
         "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0
     ],
-    [ 2, 1, [ "@query_3097" ], 0 ],
-    [ 2, 1, [ "@query_3106" ], 0 ],
-    [ 2, 1, [ "@query_3108" ], 0 ],
-    [ 2, 1, [ "@query_3123" ], 0 ],
-    [ 2, 1, [ "@query_3129" ], 0 ],
-    [ 2, 1, [ "@query_3137" ], 0 ],
+    [ "FStar.Monotonic.RRef.weaken_witness", 1, 2, 1, [ "@query_2620" ], 0 ],
+    [ "FStar.Monotonic.RRef.testify", 1, 2, 1, [ "@query_2626" ], 0 ],
+    [ "FStar.Monotonic.RRef.testify", 2, 2, 1, [ "@query_2628" ], 0 ],
+    [ "FStar.Monotonic.RRef.testify_forall", 1, 2, 1, [ "@query_2637" ], 0 ],
+    [ "FStar.Monotonic.RRef.testify_forall", 2, 2, 1, [ "@query_2641" ], 0 ],
+    [ "FStar.Monotonic.RRef.m_recall", 1, 2, 1, [ "@query_2646" ], 0 ],
     [
+      "FStar.Monotonic.RRef.m_recall",
+      2,
       2,
       1,
       [
-        "@query_3138", "equation_FStar.HyperHeap.contains_ref",
+        "@query_2647", "equation_FStar.HyperHeap.contains_ref",
         "equation_FStar.Monotonic.RRef.as_rref",
         "equation_FStar.Monotonic.RRef.m_contains",
         "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
@@ -51,17 +71,21 @@
       0
     ],
     [
+      "FStar.Monotonic.RRef.rid_exists",
+      1,
       2,
       1,
-      [ "@query_3139", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      [ "@query_2648", "assumption_FStar.HyperHeap.HasEq_rid_2365" ],
       0
     ],
     [
+      "FStar.Monotonic.RRef.ex_rid_of_rid",
+      1,
       2,
       1,
-      [ "@query_3146", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      [ "@query_2653", "assumption_FStar.HyperHeap.HasEq_rid_2365" ],
       0
     ],
-    [ 2, 1, [ "@query_3154" ], 0 ]
+    [ "FStar.Monotonic.RRef.ex_rid_of_rid", 2, 2, 1, [ "@query_2658" ], 0 ]
   ]
 ]
