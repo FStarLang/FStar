@@ -45,6 +45,8 @@ to F*; missing WPs are generated, and everything is sent off to the "regular"
 effect checking code.
 
 Items left:
+- change the elaboration of the match to push the return _inside_ the branches
+  instead of wrapping the whole branch on the outside (better for Z3)
 - fill out various TODOs in `dmff.fs` to faithfully check everything (right now,
   most checks are fairly lax);
 - try out more things in the definition language; try out with a parameterized
