@@ -7,7 +7,7 @@ uall: FStar.DM4F.IntST.uver FStar.DM4F.Exceptions.uver FStar.DM4F.ExnSt.uver FSt
 sall:
 
 # we retain these "hand-written" versions just for reference
-old: intST.uver Exceptions.uver ExceptionsWithState.uver stexn.uver stexn.handle.uver 
+old: intST.uver Exceptions.uver ExceptionsWithState.uver StExn.uver StExn.Handle.uver
 
 ulib-cmxa:
 	$(MAKE) -C ../../ulib/ml
