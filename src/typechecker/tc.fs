@@ -2705,7 +2705,16 @@ and tc_inductive env ses quals lids =
         (Sig_bundle(tcs@datas, quals, lids, Env.get_range env0))::ses
     else [sig_bndle]
 
-and tc_decl env se: list<sigelt> * _ = match se with
+and tc_decl env se: list<sigelt> * _ = 
+    let lids = Util.lids_of_sigelt se in
+    let env = 
+        let lid = match lids with 
+            | [] -> let l = Env.current_module env in
+                    let p = Ident.path_of_lid l @ [S.next_id () |> Util.string_of_int] in
+                    Ident.lid_of_path p Range.dummyRange
+            | l::_ -> l in
+        {env with qname_and_index=Some (lid, 0)} in //set the name of the query so that we can correlate hints to source program fragments
+    match se with
     | Sig_inductive_typ _
     | Sig_datacon _ ->
       failwith "Impossible bare data-constructor"

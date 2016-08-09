@@ -75,6 +75,7 @@ type env = {
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
+  qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -107,6 +108,21 @@ let should_verify env =
     not env.lax
     && not env.admit
     && Options.should_verify env.curmodule.str
+
+let incr_query_index =
+    let next_index_state = Util.mk_ref [] in
+    fun env -> match env.qname_and_index with 
+      | None -> env
+      | Some (l, n) -> 
+        match !next_index_state |> List.tryFind (fun (m, _) -> Ident.lid_equals l m) with 
+        | None -> 
+          let next = n + 1 in 
+          next_index_state := (l, next)::!next_index_state;
+          {env with qname_and_index=Some (l, next)}
+        | Some (_, m) -> 
+          let next = m + 1 in 
+          next_index_state := (l, next)::!next_index_state;
+          {env with qname_and_index=Some (l, next)}
 
 let visible_at d q = match d, q with 
   | NoDelta,    _         
@@ -160,6 +176,7 @@ let initial_env type_of universe_of solver module_lid =
     type_of=type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
+    qname_and_index=None
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
