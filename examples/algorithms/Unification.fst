@@ -349,6 +349,7 @@ val unify_correct_aux: l:list subst -> e:eqns -> Pure (list subst)
 		  l' = (m @ l)
 		 /\ solved (lsubst_eqns l' e)))
  (decreases %[n_evars e; efuns e; n_flex_rhs e])
+#set-options "--z3timeout 20" //making it more robust for CI
 let rec unify_correct_aux l = function
   | [] -> []
   | hd::tl ->
