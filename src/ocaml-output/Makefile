@@ -55,11 +55,12 @@ endif
 # FIXME this target is always rebuilt, regardless of whether the sources have
 # changed or not
 all:
-	$(MAKE) -j 1 -C $(FSTAR_HOME)/lib/ml PRIMS_DIR=native_int
+	make -j 1 -C $(FSTAR_HOME)/lib/ml PRIMS_DIR=native_int
 	$(MAKE) prep
+	$(MAKE) depend
 	$(MAKE) fstar.exe
 
-prep: parser copy_lib_files depend version
+prep: parser copy_lib_files version
 
 parser:
 	cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
