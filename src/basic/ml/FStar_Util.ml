@@ -280,7 +280,7 @@ let print3 a b c d = print_string (format3 a b c d)
 let print4 a b c d e = print_string (format4 a b c d e)
 let print5 a b c d e f = print_string (format5 a b c d e f)
 let print6 a b c d e f g = print_string (format6 a b c d e f g)
-let printn fmt args = print_string (format fmt args)
+let print fmt args = print_string (format fmt args)
 
 let stdout_isatty () = Some (Unix.isatty Unix.stdout)
 

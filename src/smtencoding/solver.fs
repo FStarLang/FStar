@@ -231,6 +231,17 @@ let ask_and_report_errors env all_labels prefix query suffix =
                 if Options.log_queries() 
                 then "@" ^ (Z3.query_logging.log_file_name())
                 else "" in
+            let query_info tag = 
+                 Util.print "(%s%s) Query (%s, %s) %s in %s milliseconds with fuel %s and ifuel %s\n"
+                                [Range.string_of_range (Env.get_range env);
+                                 at_log_file();
+                                 query_name;
+                                 Util.string_of_int query_index;
+                                 tag;
+                                 Util.string_of_int elapsed_time;
+                                 Util.string_of_int prev_fuel;
+                                 Util.string_of_int prev_ifuel] 
+            in
             match result with 
             | Inl unsat_core ->
                 let hint = { hint_name=query_name;
@@ -242,21 +253,11 @@ let ask_and_report_errors env all_labels prefix query suffix =
                 record_hint (Some hint);
                 if Options.print_fuels()
                 || Options.hint_info()
-                then Util.print5 "(%s%s) Query succeeded in %s milliseconds with fuel %s and ifuel %s\n"
-                                (Range.string_of_range (Env.get_range env))
-                                (at_log_file())
-                                (Util.string_of_int elapsed_time)
-                                (Util.string_of_int prev_fuel)
-                                (Util.string_of_int prev_ifuel)
+                then query_info "succeeded"
             | Inr errs -> 
                  if Options.print_fuels()
                  || Options.hint_info()
-                 then Util.print5 "(%s%s) Query failed in %s milliseconds with fuel %s and ifuel %s ... retrying \n"
-                       (Range.string_of_range (Env.get_range env))
-                       (at_log_file())
-                       (Util.string_of_int elapsed_time)
-                       (Util.string_of_int prev_fuel)
-                       (Util.string_of_int prev_ifuel);
+                 then query_info "failed";
                  try_alt_configs (prev_fuel, prev_ifuel, timeout) p errs alt in
 
         if Option.isSome unsat_core then Z3.refresh();
