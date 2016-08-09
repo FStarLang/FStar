@@ -299,6 +299,10 @@ let mk_ref_assign t1 t2 pos =
     [ t1, S.as_implicit false; t2, S.as_implicit false ]) in
   S.mk tm None pos
 
+let is_special_effect_combinator = function
+  | "repr" | "post" | "pre" | "wp" -> true
+  | _ -> false
+
 
 let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
   let check_linear_pattern_variables (p:Syntax.pat) = 
@@ -539,6 +543,14 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Name {str="Effect"} -> mk (Tm_constant Const_effect)
     | Name {str="True"}   -> S.fvar (Ident.set_lid_range Const.true_lid top.range) Delta_constant None
     | Name {str="False"}   -> S.fvar (Ident.set_lid_range Const.false_lid top.range) Delta_constant None
+    | Var {ident={idText = txt}; ns = eff :: rest }
+      when is_special_effect_combinator txt && Env.is_effect_name env (lid_of_ids (eff :: rest)) ->
+        begin match try_lookup_effect_defn env (lid_of_ids (eff :: rest)) with
+        | Some ed ->
+            S.fvar (lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ txt)) Range.dummyRange) (Delta_unfoldable 1) None
+        | None ->
+            failwith "immpossible special_effect_combinator"
+        end
 
     | Assign (ident, t2) ->
       let t2 = desugar_term env t2 in

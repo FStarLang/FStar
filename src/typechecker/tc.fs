@@ -2224,6 +2224,7 @@ and cps_and_elaborate env ed =
   ignore (register "pre" pre);
   ignore (register "post" post);
   ignore (register "repr" (U.abs binders repr None));
+  ignore (register "wp" (U.abs binders wp_type None));
 
   let c = close binders in
 

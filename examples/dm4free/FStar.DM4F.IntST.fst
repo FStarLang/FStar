@@ -31,9 +31,9 @@ reifiable reflectable new_effect_for_free {
      ; put      = put
 }
 
-let post (a:Type) = (a * int) -> Type0
-let pre = int -> Type0
-let wp (a:Type) = int -> post a -> Type0
+let post = STINT.post
+let pre = STINT.pre
+let wp = STINT.wp
 
 inline let lift_pure_stint (a:Type) (wp:pure_wp a) (n:int) (p:post a) = wp (fun a -> p (a, n))
 sub_effect PURE ~> STINT = lift_pure_stint
@@ -44,7 +44,7 @@ effect StInt (a:Type) (pre: pre) (post: (int -> a -> int -> GTot Type0)) =
 effect St (a:Type) =
        STINT a (fun n0 p -> forall x. p x)
 
-let repr (a:Type) (w:wp a) = x:int -> PURE (a * int) (w x)
+let repr = STINT.repr
 
 //Although we have STINT.get and STINT.put now as actions, 
 //we can also "rederive" them using reflection
