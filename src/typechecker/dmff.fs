@@ -974,7 +974,13 @@ and mk_match env e0 branches f =
   ) nms branches) in
   let s_branches = List.map close_branch s_branches in
   let u_branches = List.map close_branch u_branches in
-  (if has_m then M t1 else N t1), mk (Tm_match (s_e0, s_branches)), mk (Tm_match (u_e0, u_branches))
+  let t1_star = 
+    if has_m 
+    then U.arrow [S.mk_binder <| S.new_bv None (mk_star_to_type mk env t1)] (S.mk_Total U.ktype0)
+    else t1 in
+  (if has_m then M t1 else N t1), 
+  mk (Tm_ascribed (mk (Tm_match (s_e0, s_branches)), Inl t1_star, None)),
+  mk (Tm_match (u_e0, u_branches))
 
 
 and mk_let (env: env_) (binding: letbinding) (e2: term)

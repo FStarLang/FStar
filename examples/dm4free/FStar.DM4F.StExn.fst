@@ -14,34 +14,12 @@ let bind (a: Type) (b: Type) (f: stexn a) (g: a -> stexn b): stexn b =
     | None, s1_fail -> None, s1_fail
     | Some r, s1_proceed -> g r s1_proceed
 
-(* module Test2 *)
-let pre = int -> Type0
-let post (a:Type) = (option a * int) -> Type0
-let wp (a:Type) = int -> post a -> Type0
-(* inline let bind_wp_works (r: Prims.range) (a: Type) (b: Type) (f: wp a) (g: a -> wp b): wp b = *)
-(*   fun s0 -> fun p'' -> *)
-(*     f s0 (fun tmp -> *)
-(*       (match tmp with *)
-(*       | Mktuple2 #uu1 #uu2 (Prims.None #uu3) s1 -> p'' (None, s1) *)
-(*       | Mktuple2 #uu1 #uu2 (Prims.Some #uu3 r) s1 -> *)
-(*           g r s1 p'')) *)
-//#set-options "--debug FStar.DM4F.StExn --debug_level Extreme --debug_level ED --debug_level SMTEncoding"
-inline let bind_wp (r: Prims.range) (a: Type) (b: Type) (f: wp a) (g: a -> wp b) = //: wp b =
-  fun s0 -> fun p'' ->
-    f s0 (fun tmp ->
-      (match tmp with
-      | Mktuple2 #uu1 #uu2 (Prims.None #uu3) s1_fail_ok -> (fun (p': post b) -> p' (None, s1_fail_ok))
-      | Mktuple2 #uu1 #uu2 (Prims.Some #uu3 r) s1_proceed_ok ->
-          g r s1_proceed_ok)
-      p''
-    )
-
-(* reifiable reflectable new_effect_for_free { *)
-(*   STEXN: a:Type -> Effect with *)
-(*     repr = stexn; *)
-(*     return = return; *)
-(*     bind = bind *)
-(* } *)
+reifiable reflectable new_effect_for_free {
+  STEXN: a:Type -> Effect with
+    repr = stexn;
+    return = return;
+    bind = bind
+}
 
 (* let pre = int -> Type0 *)
 (* let post (a:Type) = (option a * int) -> Type0 *)
