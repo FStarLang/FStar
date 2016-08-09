@@ -2,7 +2,7 @@ module Bug577
 
 type step : int -> Type =
 
-type multi (r:int -> Type) : int -> Type =
+noeq type multi (r:int -> Type) : int -> Type =
 | Multi_step : x:int -> r x -> multi r x
 
 val aux : e:int -> step e -> Tot bool
