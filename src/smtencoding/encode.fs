@@ -73,6 +73,7 @@ type varops_t = {
     fresh:string -> string;
     string_const:string -> term;
     next_id: unit -> int;
+    mk_unique:string -> string;
 }
 let varops =
     let initial_ctr = 100 in
@@ -117,7 +118,8 @@ let varops =
      new_fvar=new_fvar;
      fresh=fresh;
      string_const=string_const;
-     next_id=next_id}
+     next_id=next_id;
+     mk_unique=mk_unique}
 
  let unmangle (x:bv) : bv = {x with ppname=Util.unmangle_field_name x.ppname}
 (* ---------------------------------------------------- *)
@@ -483,7 +485,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   Term.mkApp(t', cvars |> List.map mkFreeV), []
 
                 | None ->
-                  let tsym = varops.fresh "Tm_arrow" in
+                  let tsym = varops.mk_unique ("Tm_arrow_" ^ (Util.digest_of_string tkey.hash)) in
                   let cvar_sorts = List.map snd cvars in
                   let caption =
                     if Options.log_queries()
@@ -556,7 +558,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               Term.mkApp(t, cvars |> List.map mkFreeV), []
 
             | None ->
-              let tsym = varops.fresh "Tm_refine" in
+              let tsym = varops.mk_unique ("Tm_refine_" ^ (Util.digest_of_string tkey.hash)) in
               let cvar_sorts = List.map snd cvars in
               let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, None) in
               let t = Term.mkApp(tsym, List.map mkFreeV cvars) in
@@ -590,7 +592,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_uvar (uv, k) ->
         let ttm = Term.mk_Term_uvar (Unionfind.uvar_id uv) in
         let t_has_k, decls = encode_term_pred None k env ttm in //TODO: skip encoding this if it has already been encoded before
-        let d = Term.Assume(t_has_k, Some "Uvar typing", Some (varops.fresh (Util.format1 "@uvar_typing_%s" (Util.string_of_int <| Unionfind.uvar_id uv)))) in
+        let d = Term.Assume(t_has_k, Some "Uvar typing", Some (varops.mk_unique (Util.format1 "uvar_typing_%s" (Util.string_of_int <| Unionfind.uvar_id uv)))) in
         ttm, decls@[d]
 
       | Tm_app _ ->
@@ -635,7 +637,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                         let cvars = Term.free_variables has_type in
                         let e_typing = Term.Assume(Term.mkForall([[has_type]], cvars, has_type), 
                                                    Some "Partial app typing", 
-                                                   Some (varops.fresh "@partial_app_typing_")) in 
+                                                   Some (varops.mk_unique ("partial_app_typing_" ^ (Util.digest_of_string app_tm.hash)))) in
                         app_tm, decls@decls'@decls''@[e_typing]
                 end in
 
@@ -716,7 +718,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                      | Some t -> t, []
                      | None ->
                         let cvar_sorts = List.map snd cvars in
-                        let fsym = varops.fresh "Exp_abs" in
+                        let fsym = varops.mk_unique ("Tm_abs_" ^ (Util.digest_of_string tkey.hash)) in
                         let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
                         let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
                         let app = mk_Apply f vars in
@@ -1121,7 +1123,7 @@ let pretype_axiom tapp vars =
     let ffsym, ff = fresh_fvar "f" Fuel_sort in
     let xx_has_type = mk_HasTypeFuel ff xx tapp in
     Term.Assume(mkForall([[xx_has_type]], (xxsym, Term_sort)::(ffsym, Fuel_sort)::vars,
-                         mkImp(xx_has_type, mkEq(tapp, mkApp("PreType", [xx])))), Some "pretyping", Some (varops.fresh "@pretyping_"))
+                         mkImp(xx_has_type, mkEq(tapp, mkApp("PreType", [xx])))), Some "pretyping", Some (varops.mk_unique ("pretyping_" ^ (Util.digest_of_string tapp.hash))))
 
 let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
     let xx = ("x", Term_sort) in
