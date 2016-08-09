@@ -672,7 +672,7 @@ let digest_of_file (fname:string) =
   BatDigest.file fname
   
 let digest_of_string (s:string) =
-  BatDigest.string s
+  BatDigest.to_hex (BatDigest.string s)
 
 let ensure_decimal s = Z.to_string (Z.of_string s)
 
