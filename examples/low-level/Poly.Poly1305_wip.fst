@@ -87,12 +87,12 @@ let rec little_endian (b:word) : GTot (n:nat{n < pow2 128}) (decreases (Seq.leng
 val poly: vs:seq (w:word{Seq.length w = 16}) -> r:elem -> GTot (a:elem)
 let rec poly vs r =
   if Seq.length vs = 0 then 0
-  else (pow2 128 + little_endian (Seq.index vs 0)) +@ poly (Seq.slice vs 1 (Seq.length vs)) r 
+  else (pow2 128 +@ little_endian (Seq.index vs 0)) *@ r +@ poly (Seq.slice vs 1 (Seq.length vs)) r 
 (* Second possible definition *)
 val poly': vs:seq (w:word{Seq.length w = 16}) -> r:elem -> GTot (a:elem)
 let rec poly' vs r =
   if Seq.length vs = 0 then 0
-  else (little_endian (Seq.index vs 0 @| (Seq.create 1 1uy))) +@ poly (Seq.slice vs 1 (Seq.length vs)) r 
+  else (little_endian (Seq.index vs 0 @| (Seq.create 1 1uy))) *@ r +@ poly' (Seq.slice vs 1 (Seq.length vs)) r
 
 (** *********************************************)
 (**            Encoding functions               *)
