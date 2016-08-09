@@ -6,7 +6,7 @@
       1,
       2,
       1,
-      [ "@query_1207", "assumption_Prims.HasEq_bool_145" ],
+      [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
     [
@@ -15,7 +15,7 @@
       2,
       1,
       [
-        "@query_1208", "primitive_Prims.op_BarBar",
+        "@query", "primitive_Prims.op_BarBar",
         "projection_inverse_BoxBool_proj_0"
       ],
       0
@@ -25,7 +25,7 @@
       1,
       2,
       1,
-      [ "@query_1209", "assumption_Prims.HasEq_bool_145" ],
+      [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
     [
@@ -34,7 +34,7 @@
       2,
       1,
       [
-        "@query_1210", "primitive_Prims.op_BarBar",
+        "@query", "primitive_Prims.op_BarBar",
         "projection_inverse_BoxBool_proj_0"
       ],
       0
@@ -44,7 +44,7 @@
       1,
       2,
       1,
-      [ "@query_1211", "assumption_Prims.HasEq_bool_145" ],
+      [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
     [
@@ -53,7 +53,7 @@
       2,
       1,
       [
-        "@query_1212", "primitive_Prims.op_BarBar",
+        "@query", "primitive_Prims.op_BarBar",
         "projection_inverse_BoxBool_proj_0"
       ],
       0
@@ -63,7 +63,7 @@
       1,
       2,
       1,
-      [ "@query_1213", "assumption_Prims.HasEq_bool_145" ],
+      [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
     [
@@ -72,7 +72,7 @@
       2,
       1,
       [
-        "@query_1214", "primitive_Prims.op_BarBar",
+        "@query", "primitive_Prims.op_BarBar",
         "projection_inverse_BoxBool_proj_0"
       ],
       0
@@ -82,7 +82,7 @@
       1,
       2,
       1,
-      [ "@query_1215", "assumption_Prims.HasEq_bool_145" ],
+      [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
     [
@@ -91,7 +91,7 @@
       2,
       1,
       [
-        "@query_1216", "primitive_Prims.op_AmpAmp",
+        "@query", "primitive_Prims.op_AmpAmp",
         "projection_inverse_BoxBool_proj_0"
       ],
       0
@@ -101,7 +101,7 @@
       1,
       2,
       1,
-      [ "@query_1217", "assumption_Prims.HasEq_bool_145" ],
+      [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
     [
@@ -110,7 +110,7 @@
       2,
       1,
       [
-        "@query_1218", "primitive_Prims.op_AmpAmp",
+        "@query", "primitive_Prims.op_AmpAmp",
         "projection_inverse_BoxBool_proj_0"
       ],
       0
@@ -120,7 +120,7 @@
       1,
       2,
       1,
-      [ "@query_1219", "assumption_Prims.HasEq_bool_145" ],
+      [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
     [
@@ -129,7 +129,7 @@
       2,
       1,
       [
-        "@query_1220", "primitive_Prims.op_AmpAmp",
+        "@query", "primitive_Prims.op_AmpAmp",
         "projection_inverse_BoxBool_proj_0"
       ],
       0
@@ -139,7 +139,7 @@
       1,
       2,
       1,
-      [ "@query_1221", "assumption_Prims.HasEq_bool_145" ],
+      [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
     [
@@ -148,7 +148,7 @@
       2,
       1,
       [
-        "@query_1222", "primitive_Prims.op_AmpAmp",
+        "@query", "primitive_Prims.op_AmpAmp",
         "projection_inverse_BoxBool_proj_0"
       ],
       0

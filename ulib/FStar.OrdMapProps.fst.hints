@@ -7,13 +7,16 @@
       2,
       1,
       [
-        "@query_1859", "binder_f__524", "binder_k__521", "binder_m__526",
-        "binder_v__522", "bool_inversion", "disc_equation_Prims.Some",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
-        "equation_Prims.fst", "equation_Prims.nat", "equation_Prims.snd",
-        "kinding_Prims.tuple2@tok", "lemma_FStar.OrdMap.choose_m",
-        "lemma_FStar.OrdMap.contains_upd1", "lemma_FStar.OrdMap.eq_lemma",
-        "lemma_FStar.OrdMap.size_empty", "lemma_FStar.OrdMap.size_remove",
+        "@query", "binder_f_d3c0197b587e7c853654bbb6b15ea840",
+        "binder_k_273c0cb114efbc10b99731f088b17ae0",
+        "binder_m_6662f8e33785c7837b9823113e47a368",
+        "binder_v_273c0cb114efbc10b99731f088b17ae0", "bool_inversion",
+        "disc_equation_Prims.Some", "equality_tok_Prims.LexTop@tok",
+        "equation_Prims.eqtype", "equation_Prims.fst", "equation_Prims.nat",
+        "equation_Prims.snd", "kinding_Prims.tuple2@tok",
+        "lemma_FStar.OrdMap.choose_m", "lemma_FStar.OrdMap.contains_upd1",
+        "lemma_FStar.OrdMap.eq_lemma", "lemma_FStar.OrdMap.size_empty",
+        "lemma_FStar.OrdMap.size_remove",
         "pretyping_ae567c2fb75be05905677af440075565",
         "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality", "proj_equation_Prims.Mktuple2__1",
@@ -36,7 +39,7 @@
       2,
       2,
       1,
-      [ "@query_1870", "assumption_Prims.HasEq_int_285" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ]
   ]

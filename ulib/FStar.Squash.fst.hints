@@ -7,7 +7,7 @@
       2,
       1,
       [
-        "@query_1010", "equation_Prims.squash",
+        "@query", "equation_Prims.squash",
         "pretyping_f8666440faa91836cc5a13998af863fc",
         "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
         "unit_typing"
@@ -20,31 +20,31 @@
       2,
       1,
       [
-        "@query_1016", "equation_Prims.squash",
+        "@query", "equation_Prims.squash",
         "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
         "unit_typing"
       ],
       0
     ],
-    [ "FStar.Squash.proof_irrelevance", 1, 2, 1, [ "@query_1023" ], 0 ],
+    [ "FStar.Squash.proof_irrelevance", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Squash.proof_irrelevance",
       2,
       2,
       1,
       [
-        "@query_1024", "equation_Prims.squash",
+        "@query", "equation_Prims.squash",
         "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
         "unit_inversion"
       ],
       0
     ],
-    [ "FStar.Squash.squash_double_arrow", 1, 2, 1, [ "@query_1034" ], 0 ],
-    [ "FStar.Squash.squash_double_arrow", 2, 2, 1, [ "@query_1039" ], 0 ],
-    [ "FStar.Squash.squash_double_sum", 1, 2, 1, [ "@query_1055" ], 0 ],
-    [ "FStar.Squash.squash_double_sum", 2, 2, 1, [ "@query_1058" ], 0 ],
-    [ "FStar.Squash.return_squash", 1, 2, 1, [ "@query_1066" ], 0 ],
-    [ "FStar.Squash.bind_squash", 1, 2, 1, [ "@query_1072" ], 0 ],
-    [ "FStar.Squash.map_squash", 1, 2, 1, [ "@query_1083" ], 0 ]
+    [ "FStar.Squash.squash_double_arrow", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Squash.squash_double_arrow", 2, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Squash.squash_double_sum", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Squash.squash_double_sum", 2, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Squash.return_squash", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Squash.bind_squash", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Squash.map_squash", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

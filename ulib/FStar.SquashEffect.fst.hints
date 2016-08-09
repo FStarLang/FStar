@@ -1,19 +1,12 @@
 [
   "π‘\u0003#å\u0000Ù>IV¥\u0010Æk÷h",
   [
-    [ "FStar.SquashEffect.Squash", 1, 2, 1, [ "@query_1014" ], 0 ],
-    [ "FStar.SquashEffect.Sq", 1, 2, 1, [ "@query_1017" ], 0 ],
-    [ "FStar.SquashEffect.2058", 1, 2, 1, [ "@query_1018" ], 0 ],
-    [ "FStar.SquashEffect.resquash'", 1, 2, 1, [ "@query_1031" ], 0 ],
-    [ "FStar.SquashEffect.return_squash", 1, 2, 1, [ "@query_1044" ], 0 ],
-    [ "FStar.SquashEffect.bind_squash", 1, 2, 1, [ "@query_1054" ], 0 ],
-    [
-      "FStar.SquashEffect.at_most_one_inhabitant",
-      1,
-      2,
-      1,
-      [ "@query_1099" ],
-      0
-    ]
+    [ "FStar.SquashEffect.Squash", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.SquashEffect.Sq", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.SquashEffect.2058", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.SquashEffect.resquash'", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.SquashEffect.return_squash", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.SquashEffect.bind_squash", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.SquashEffect.at_most_one_inhabitant", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

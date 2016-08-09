@@ -6,7 +6,7 @@
       1,
       2,
       1,
-      [ "@query_1012", "equation_FStar.Ghost.erased" ],
+      [ "@query", "equation_FStar.Ghost.erased" ],
       0
     ],
     [
@@ -14,29 +14,29 @@
       1,
       2,
       1,
-      [ "@query_1016", "equation_FStar.Ghost.erased" ],
+      [ "@query", "equation_FStar.Ghost.erased" ],
       0
     ],
-    [ "FStar.Ghost.lemma_hide_reveal", 1, 2, 1, [ "@query_1020" ], 0 ],
+    [ "FStar.Ghost.lemma_hide_reveal", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Ghost.lemma_hide_reveal",
       2,
       2,
       1,
       [
-        "@query_1021", "equation_FStar.Ghost.hide",
-        "equation_FStar.Ghost.reveal", "unit_typing"
+        "@query", "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
+        "unit_typing"
       ],
       0
     ],
-    [ "FStar.Ghost.as_ghost", 1, 2, 1, [ "@query_1026" ], 0 ],
+    [ "FStar.Ghost.as_ghost", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Ghost.as_ghost",
       2,
       2,
       1,
       [
-        "@query_1028", "equation_FStar.Ghost.erased",
+        "@query", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal",
         "interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "unit_typing"
@@ -48,7 +48,7 @@
       1,
       2,
       1,
-      [ "@query_1038", "equation_FStar.Ghost.erased" ],
+      [ "@query", "equation_FStar.Ghost.erased" ],
       0
     ],
     [
@@ -56,7 +56,7 @@
       1,
       2,
       1,
-      [ "@query_1047", "equation_FStar.Ghost.erased" ],
+      [ "@query", "equation_FStar.Ghost.erased" ],
       0
     ],
     [
@@ -64,17 +64,17 @@
       1,
       2,
       1,
-      [ "@query_1057", "equation_FStar.Ghost.erased" ],
+      [ "@query", "equation_FStar.Ghost.erased" ],
       0
     ],
-    [ "FStar.Ghost.elift1_p", 1, 2, 1, [ "@query_1069" ], 0 ],
+    [ "FStar.Ghost.elift1_p", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Ghost.elift1_p",
       2,
       2,
       1,
       [
-        "@query_1076", "equation_FStar.Ghost.erased",
+        "@query", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal",
         "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8"
       ],
@@ -86,7 +86,7 @@
       2,
       1,
       [
-        "@query_1105", "equation_FStar.Ghost.erased",
+        "@query", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal",
         "refinement_interpretation_Tm_refine_fe92ca5f59249712e3a29569cd813153"
       ],
@@ -98,12 +98,12 @@
       2,
       1,
       [
-        "@query_1112", "equation_FStar.Ghost.erased",
+        "@query", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal",
         "refinement_interpretation_Tm_refine_fe92ca5f59249712e3a29569cd813153"
       ],
       0
     ],
-    [ "FStar.Ghost.gcut", 1, 2, 1, [ "@query_1132", "unit_typing" ], 0 ]
+    [ "FStar.Ghost.gcut", 1, 2, 1, [ "@query", "unit_typing" ], 0 ]
   ]
 ]

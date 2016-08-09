@@ -165,6 +165,10 @@ let new_term_constant (env:env_t) (x:bv) =
     let ysym = varops.new_var x.ppname x.index in
     let y = mkApp(ysym, []) in
     ysym, y, {env with bindings=Binding_var(x, y)::env.bindings}
+let new_term_constant_from_string (env:env_t) (x:bv) str =
+    let ysym = varops.mk_unique str in
+    let y = mkApp(ysym, []) in
+    ysym, y, {env with bindings=Binding_var(x, y)::env.bindings}
 let push_term_var (env:env_t) (x:bv) (t:term) =
     {env with bindings=Binding_var(x,t)::env.bindings}
 let lookup_term_var env a =
@@ -1263,7 +1267,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                      Some "exists-interp")] in
    let mk_range_interp : env -> string -> term -> decls_t = fun env range tt ->
         let range_ty = Term.mkApp(range, []) in
-        [Term.Assume(mk_HasTypeZ Term.mk_Range_const range_ty, Some "Range_const typing", Some (varops.fresh "typing_range_const"))] in
+        [Term.Assume(mk_HasTypeZ Term.mk_Range_const range_ty, Some "Range_const typing", Some (varops.mk_unique "typing_range_const"))] in
 
    let prims = [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
@@ -1661,7 +1665,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
      | Sig_assume(l, f, _, _) ->
         let f, decls = encode_formula f env in
-        let g = [Term.Assume(f, Some (format1 "Assumption: %s" (Print.lid_to_string l)), Some (varops.fresh ("assumption_"^l.str)))] in
+        let g = [Term.Assume(f, Some (format1 "Assumption: %s" (Print.lid_to_string l)), Some (varops.mk_unique ("assumption_"^l.str)))] in
         decls@g, env
 
      | Sig_let(lbs, r, _, quals) when (quals |> List.contains S.Irreducible) ->
@@ -1776,7 +1780,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     Term.Assume(mkForall([[xx_has_type_sfuel]], add_fuel (ffsym, Fuel_sort) ((xxsym, Term_sort)::vars),
                                         mkImp(xx_has_type_sfuel, data_ax)), 
                                 Some "inversion axiom", //this name matters! see Sig_bundle case near line 1493
-                                Some (varops.fresh ("fuel_guarded_inversion_"^t.str))) in
+                                Some (varops.mk_unique ("fuel_guarded_inversion_"^t.str))) in
                 let pattern_guarded_inversion = 
                     if contains_name env "Prims.inversion"
                     && List.length datas > 1 //no point emitting this if there's only 1 constructor; it's already covered by the previous inversion
@@ -1785,7 +1789,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                          [Term.Assume(mkForall([[xx_has_type_fuel; pattern_guard]], add_fuel (ffsym, Fuel_sort) ((xxsym, Term_sort)::vars),
                                              mkImp(xx_has_type_fuel, data_ax)), 
                                       Some "inversion axiom",  //this name matters! see Sig_bundle case near line 1493 
-                                      Some (varops.fresh ("pattern_guarded_inversion_"^t.str)))]
+                                      Some (varops.mk_unique ("pattern_guarded_inversion_"^t.str)))]
                     else [] in
                 decls
                 @[fuel_guarded_inversion]
@@ -1893,7 +1897,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                          let xtm = mkFreeV x in
                          Term.Assume(mkForall([[Term.mk_Precedes xtm dapp]], [x], mkImp(mk_tester "LexCons" xtm, Term.mk_Precedes xtm dapp)), 
                                      Some "lextop is top", 
-                                     Some (varops.fresh "lextop"))
+                                     Some (varops.mk_unique "lextop"))
                     else (* subterm ordering *)
                         let prec = vars |> List.collect (fun v -> match snd v with
                             | Fuel_sort -> []
@@ -1961,11 +1965,14 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
           [], env
         
         | Env.Binding_var x -> 
-            let xxsym, xx, env' = new_term_constant env x in
             let t1 = N.normalize [N.Beta; N.Inline; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
             if Env.debug env.tcenv <| Options.Other "SMTEncoding"
             then (Util.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
-            let t, decls' = encode_term_pred None t1 env xx in
+            let t, decls' = encode_term t1 env in
+            let xxsym, xx, env' = 
+                new_term_constant_from_string env x 
+                    (x.ppname.idText ^ "_" ^ Util.digest_of_string t.hash) in
+            let t = mk_HasTypeWithFuel None xx t in
             let caption =
                 if Options.log_queries()
                 then Some (Util.format3 "%s : %s (%s)" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1))
@@ -2106,7 +2113,7 @@ let encode_query use_env_msg tcenv q
         env_decls
         @label_prefix
         @qdecls in
-    let qry = Term.Assume(mkNot phi, Some "query", Some (varops.fresh "@query")) in
+    let qry = Term.Assume(mkNot phi, Some "query", Some (varops.mk_unique "@query")) in
     let suffix = label_suffix@[Term.Echo "Done!"]  in
     query_prelude, labels, qry, suffix 
 

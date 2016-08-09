@@ -6,9 +6,9 @@
       1,
       2,
       1,
-      [ "@query_1021", "assumption_Prims.HasEq_int_285" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.Char.Char._0", 1, 2, 1, [ "@query_1037" ], 0 ]
+    [ "FStar.Char.Char._0", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

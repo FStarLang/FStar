@@ -1,17 +1,17 @@
 [
   "é0:ÛþIkÚ?%\u007fIÄ£Ôn",
   [
-    [ "FStar.Constructive.cand", 1, 2, 1, [ "@query_1022" ], 0 ],
-    [ "FStar.Constructive.Conj.h1", 1, 2, 1, [ "@query_1039" ], 0 ],
-    [ "FStar.Constructive.Conj.h2", 1, 2, 1, [ "@query_1043" ], 0 ],
-    [ "FStar.Constructive.cor", 1, 2, 1, [ "@query_1062" ], 0 ],
+    [ "FStar.Constructive.cand", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Constructive.Conj.h1", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Constructive.Conj.h2", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Constructive.cor", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.IntroL.h",
       1,
       2,
       1,
       [
-        "@query_1093", "disc_equation_FStar.Constructive.IntroL",
+        "@query", "disc_equation_FStar.Constructive.IntroL",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_9ff01248601143beb3d8870b74a98d2a"
       ],
@@ -23,85 +23,85 @@
       2,
       1,
       [
-        "@query_1100", "disc_equation_FStar.Constructive.IntroR",
+        "@query", "disc_equation_FStar.Constructive.IntroR",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_6debde9cbf4e6e0d3d6c92515bcd9dbc"
       ],
       0
     ],
-    [ "FStar.Constructive.cimp", 1, 2, 1, [ "@query_1101" ], 0 ],
-    [ "FStar.Constructive.ciff", 1, 2, 1, [ "@query_1105" ], 0 ],
-    [ "FStar.Constructive.cexists", 1, 2, 1, [ "@query_1115" ], 0 ],
-    [ "FStar.Constructive.ExIntro.x", 1, 2, 1, [ "@query_1138" ], 0 ],
+    [ "FStar.Constructive.cimp", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Constructive.ciff", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Constructive.cexists", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Constructive.ExIntro.x", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.ExIntro.h",
       1,
       2,
       1,
       [
-        "@query_1145", "proj_equation_FStar.Constructive.ExIntro_x",
+        "@query", "proj_equation_FStar.Constructive.ExIntro_x",
         "projection_inverse_FStar.Constructive.ExIntro_x"
       ],
       0
     ],
-    [ "FStar.Constructive.ceq", 1, 2, 1, [ "@query_1148" ], 0 ],
-    [ "FStar.Constructive.eq_ind", 1, 2, 1, [ "@query_1201" ], 0 ],
+    [ "FStar.Constructive.ceq", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Constructive.eq_ind", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.eq_ind",
       2,
       2,
       1,
       [
-        "@query_1203", "fuel_guarded_inversion_FStar.Constructive.ceq_1165",
+        "@query", "fuel_guarded_inversion_FStar.Constructive.ceq",
         "token_correspondence_FStar.Constructive.ceq@tok"
       ],
       0
     ],
-    [ "FStar.Constructive.ceq_eq", 1, 2, 1, [ "@query_1211" ], 0 ],
-    [ "FStar.Constructive.ceq_eq", 2, 2, 1, [ "@query_1215" ], 0 ],
+    [ "FStar.Constructive.ceq_eq", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Constructive.ceq_eq", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.ceq_eq",
       3,
       2,
       1,
       [
-        "@query_1217", "fuel_guarded_inversion_FStar.Constructive.ceq_1165",
+        "@query", "fuel_guarded_inversion_FStar.Constructive.ceq",
         "token_correspondence_FStar.Constructive.ceq@tok", "unit_typing"
       ],
       0
     ],
-    [ "FStar.Constructive.ceq_congruence", 1, 2, 1, [ "@query_1221" ], 0 ],
+    [ "FStar.Constructive.ceq_congruence", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.ceq_congruence",
       2,
       2,
       1,
       [
-        "@query_1223", "fuel_guarded_inversion_FStar.Constructive.ceq_1165",
+        "@query", "fuel_guarded_inversion_FStar.Constructive.ceq",
         "token_correspondence_FStar.Constructive.ceq@tok"
       ],
       0
     ],
-    [ "FStar.Constructive.ceq_symm", 1, 2, 1, [ "@query_1232" ], 0 ],
+    [ "FStar.Constructive.ceq_symm", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.ceq_symm",
       2,
       2,
       1,
       [
-        "@query_1233", "fuel_guarded_inversion_FStar.Constructive.ceq_1165",
+        "@query", "fuel_guarded_inversion_FStar.Constructive.ceq",
         "token_correspondence_FStar.Constructive.ceq@tok"
       ],
       0
     ],
-    [ "FStar.Constructive.ceq_trans", 1, 2, 1, [ "@query_1240" ], 0 ],
+    [ "FStar.Constructive.ceq_trans", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.ceq_trans",
       2,
       2,
       1,
       [
-        "@query_1241", "fuel_guarded_inversion_FStar.Constructive.ceq_1165",
+        "@query", "fuel_guarded_inversion_FStar.Constructive.ceq",
         "token_correspondence_FStar.Constructive.ceq@tok"
       ],
       0
@@ -111,10 +111,7 @@
       1,
       2,
       1,
-      [
-        "@query_1275",
-        "fuel_guarded_inversion_FStar.Constructive.cfalse_1271"
-      ],
+      [ "@query", "fuel_guarded_inversion_FStar.Constructive.cfalse" ],
       0
     ],
     [
@@ -123,8 +120,8 @@
       2,
       1,
       [
-        "binder_x__19198",
-        "fuel_guarded_inversion_FStar.Constructive.cfalse_1271"
+        "binder_x_611e56218f4c28201d355e496e09caa7",
+        "fuel_guarded_inversion_FStar.Constructive.cfalse"
       ],
       0
     ],
@@ -134,7 +131,8 @@
       2,
       1,
       [
-        "binder_uu_____19600", "projection_inverse_BoxBool_proj_0",
+        "binder_uu____c711cf3155d70c8a28818acaff9c5da1",
+        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_16d7dda25a162db0722685f27f707102"
       ],
       0

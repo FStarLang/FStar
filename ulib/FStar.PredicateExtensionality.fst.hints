@@ -1,13 +1,13 @@
 [
   "µ\tV\u00185üÅ/èi”±Û\u001bB\u001a",
   [
-    [ "FStar.PredicateExtensionality.peq", 1, 0, 0, [ "@query_1015" ], 0 ],
+    [ "FStar.PredicateExtensionality.peq", 1, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.PredicateExtensionality.predicateExtensionality",
       1,
       0,
       0,
-      [ "@query_1019" ],
+      [ "@query" ],
       0
     ]
   ]

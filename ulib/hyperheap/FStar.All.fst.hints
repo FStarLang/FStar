@@ -1,9 +1,9 @@
 [
   "+Žû\u0016ëtš`;Ca1\u0018VÓ•",
   [
-    [ "FStar.All.lift_state_all", 1, 2, 1, [ "@query_2709" ], 0 ],
-    [ "FStar.All.lift_exn_all", 1, 2, 1, [ "@query_2716" ], 0 ],
-    [ "FStar.All.All", 1, 2, 1, [ "@query_2730" ], 0 ],
-    [ "FStar.All.failwith", 1, 2, 1, [ "@query_2735" ], 0 ]
+    [ "FStar.All.lift_state_all", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.All.lift_exn_all", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.All.All", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.All.failwith", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

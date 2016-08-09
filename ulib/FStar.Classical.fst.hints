@@ -6,7 +6,7 @@
       1,
       0,
       0,
-      [ "@query_1010", "unit_typing" ],
+      [ "@query", "unit_typing" ],
       0
     ],
     [
@@ -14,9 +14,9 @@
       1,
       0,
       0,
-      [ "@query_1011", "assumption_Prims.HasEq_bool_145" ],
+      [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [ "FStar.Classical.excluded_middle", 2, 0, 0, [ "@query_1012" ], 0 ]
+    [ "FStar.Classical.excluded_middle", 2, 0, 0, [ "@query" ], 0 ]
   ]
 ]

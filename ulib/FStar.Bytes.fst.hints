@@ -6,27 +6,27 @@
       1,
       2,
       1,
-      [ "@query_2477", "assumption_Prims.HasEq_int_285" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.Bytes.make", 2, 2, 1, [ "@query_2479" ], 0 ],
+    [ "FStar.Bytes.make", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Bytes.zero_create",
       1,
       2,
       1,
-      [ "@query_2487", "assumption_Prims.HasEq_int_285" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.Bytes.zero_create", 2, 2, 1, [ "@query_2488" ], 0 ],
+    [ "FStar.Bytes.zero_create", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Bytes.sub",
       1,
       2,
       1,
-      [ "@query_2496", "assumption_Prims.HasEq_int_285" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.Bytes.sub", 2, 2, 1, [ "@query_2499" ], 0 ]
+    [ "FStar.Bytes.sub", 2, 2, 1, [ "@query" ], 0 ]
   ]
 ]

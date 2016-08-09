@@ -1,26 +1,26 @@
 [
   "&+\u0001Ëðu†U¦çU‚?o‡©",
   [
-    [ "FStar.Axiomatic.Array.LengthConst", 1, 2, 1, [ "@query_1309" ], 0 ],
-    [ "FStar.Axiomatic.Array.IndexConst", 1, 2, 1, [ "@query_1319" ], 0 ],
-    [ "FStar.Axiomatic.Array.LengthUpdate", 1, 2, 1, [ "@query_1330" ], 0 ],
+    [ "FStar.Axiomatic.Array.LengthConst", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Axiomatic.Array.IndexConst", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Axiomatic.Array.LengthUpdate", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Axiomatic.Array.IndexUpdate",
       1,
       2,
       1,
-      [ "@query_1332", "assumption_Prims.HasEq_int_285" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "FStar.Axiomatic.Array.IndexUpdate", 2, 2, 1, [ "@query_1344" ], 0 ],
-    [ "FStar.Axiomatic.Array.LengthSlice", 1, 2, 1, [ "@query_1355" ], 0 ],
-    [ "FStar.Axiomatic.Array.IndexSlice", 1, 2, 1, [ "@query_1368" ], 0 ],
-    [ "FStar.Axiomatic.Array.LengthAppend", 1, 2, 1, [ "@query_1377" ], 0 ],
-    [ "FStar.Axiomatic.Array.IndexAppend", 1, 2, 1, [ "@query_1388" ], 0 ],
-    [ "FStar.Axiomatic.Array.SeqEquals", 1, 2, 1, [ "@query_1399" ], 0 ],
-    [ "FStar.Axiomatic.Array.Extensional", 1, 2, 1, [ "@query_1408" ], 0 ],
-    [ "FStar.Axiomatic.Array.ProjEmp", 1, 2, 1, [ "@query_1412" ], 0 ],
-    [ "FStar.Axiomatic.Array.ProjLen", 1, 2, 1, [ "@query_1419" ], 0 ],
-    [ "FStar.Axiomatic.Array.EmpConst", 1, 2, 1, [ "@query_1426" ], 0 ]
+    [ "FStar.Axiomatic.Array.IndexUpdate", 2, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Axiomatic.Array.LengthSlice", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Axiomatic.Array.IndexSlice", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Axiomatic.Array.LengthAppend", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Axiomatic.Array.IndexAppend", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Axiomatic.Array.SeqEquals", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Axiomatic.Array.Extensional", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Axiomatic.Array.ProjEmp", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Axiomatic.Array.ProjLen", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Axiomatic.Array.EmpConst", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

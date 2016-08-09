@@ -1,16 +1,16 @@
 [
   "Å-IkÇ-‘€¨‹\u001f¿ˆ\fñ‘",
   [
-    [ "Unit2.test1", 1, 2, 1, [ "@query_1208" ], 0 ],
-    [ "Unit2.test1", 2, 2, 1, [ "@query_1212" ], 0 ],
-    [ "Unit2.test2", 1, 2, 1, [ "@query_1230" ], 0 ],
-    [ "Unit2.test3", 1, 2, 1, [ "@query_1240", "equation_Prims.nat" ], 0 ],
+    [ "Unit2.test1", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit2.test1", 2, 2, 1, [ "@query" ], 0 ],
+    [ "Unit2.test2", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit2.test3", 1, 2, 1, [ "@query", "equation_Prims.nat" ], 0 ],
     [
       "Unit2.test5",
       1,
       2,
       1,
-      [ "@query_1248", "equation_Prims.nat", "equation_Unit2.zat" ],
+      [ "@query", "equation_Prims.nat", "equation_Unit2.zat" ],
       0
     ],
     [
@@ -18,7 +18,7 @@
       1,
       2,
       1,
-      [ "@query_1259", "equation_Prims.nat", "equation_Unit2.zat" ],
+      [ "@query", "equation_Prims.nat", "equation_Unit2.zat" ],
       0
     ],
     [
@@ -27,8 +27,7 @@
       2,
       1,
       [
-        "@query_1281", "assumption_Prims.HasEq_bool_145",
-        "assumption_Prims.HasEq_int_281"
+        "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
       ],
       0
     ],
@@ -38,7 +37,7 @@
       2,
       1,
       [
-        "@query_1311", "disc_equation_Unit2.Int",
+        "@query", "disc_equation_Unit2.Int",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_3e7adc4cc6fc6abd3c373ce468e1d7a8"
       ],
@@ -50,7 +49,7 @@
       2,
       1,
       [
-        "@query_1318", "disc_equation_Unit2.Bool",
+        "@query", "disc_equation_Unit2.Bool",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_669c4930731d237bd9d76805131af713"
       ],
@@ -62,38 +61,31 @@
       2,
       1,
       [
-        "@query_1319", "bool_typing", "constructor_distinct_Unit2.Int",
+        "@query", "bool_typing", "constructor_distinct_Unit2.Int",
         "disc_equation_Unit2.Bool", "disc_equation_Unit2.Int",
-        "fuel_guarded_inversion_Unit2.t_1286", "int_typing",
+        "fuel_guarded_inversion_Unit2.t", "int_typing",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Negation"
       ],
       0
     ],
-    [ "Unit2.f1", 1, 2, 1, [ "@query_1323" ], 0 ],
-    [ "Unit2.f2", 1, 2, 1, [ "@query_1327" ], 0 ],
-    [
-      "Unit2.f2",
-      2,
-      2,
-      1,
-      [ "@query_1328", "assumption_Prims.HasEq_int_281" ],
-      0
-    ],
+    [ "Unit2.f1", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit2.f2", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit2.f2", 2, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
     [
       "Unit2.f3",
       1,
       2,
       1,
-      [ "@query_1332", "projection_inverse_BoxInt_proj_0" ],
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0
     ],
-    [ "Unit2.eta_f4", 1, 2, 1, [ "@query_1335" ], 0 ],
+    [ "Unit2.eta_f4", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit2.eta_f4'",
       1,
       2,
       1,
-      [ "@query_1344", "projection_inverse_BoxInt_proj_0" ],
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0
     ],
     [
@@ -102,7 +94,7 @@
       2,
       1,
       [
-        "@query_1345", "primitive_Prims.op_GreaterThanOrEqual",
+        "@query", "primitive_Prims.op_GreaterThanOrEqual",
         "projection_inverse_BoxBool_proj_0"
       ],
       0

@@ -1,14 +1,14 @@
 [
   "Φ\n\t[<?ήκ/•μ)Ζ <8",
   [
-    [ "FStar.ST.modifies", 1, 2, 1, [ "@query_1271" ], 0 ],
-    [ "FStar.ST.lift_div_state", 1, 2, 1, [ "@query_1278" ], 0 ],
-    [ "FStar.ST.ST", 1, 2, 1, [ "@query_1292" ], 0 ],
-    [ "FStar.ST.recall", 1, 2, 1, [ "@query_1296" ], 0 ],
-    [ "FStar.ST.alloc", 1, 2, 1, [ "@query_1301" ], 0 ],
-    [ "FStar.ST.read", 1, 2, 1, [ "@query_1305" ], 0 ],
-    [ "FStar.ST.write", 1, 2, 1, [ "@query_1310" ], 0 ],
-    [ "FStar.ST.op_Colon_Equals", 1, 2, 1, [ "@query_1315" ], 0 ],
-    [ "FStar.ST.get", 1, 2, 1, [ "@query_1320" ], 0 ]
+    [ "FStar.ST.modifies", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.ST.lift_div_state", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.ST.ST", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.ST.recall", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.ST.alloc", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.ST.read", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.ST.write", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.ST.op_Colon_Equals", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.ST.get", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

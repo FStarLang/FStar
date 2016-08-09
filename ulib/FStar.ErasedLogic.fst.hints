@@ -1,9 +1,9 @@
 [
   "\u001aõ\\··å\rÀh.üÔqx-†",
   [
-    [ "FStar.ErasedLogic.exists_proj1", 1, 2, 1, [ "@query_1192" ], 0 ],
-    [ "FStar.ErasedLogic.mkexists", 1, 2, 1, [ "@query_1200" ], 0 ],
-    [ "FStar.ErasedLogic.ex_proj1", 1, 2, 1, [ "@query_1210" ], 0 ],
-    [ "FStar.ErasedLogic.gex_proj1", 1, 2, 1, [ "@query_1220" ], 0 ]
+    [ "FStar.ErasedLogic.exists_proj1", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.ErasedLogic.mkexists", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.ErasedLogic.ex_proj1", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.ErasedLogic.gex_proj1", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

@@ -1,16 +1,16 @@
 [
   "L£ƒj{Õ³½ \b-]ªºý\u0003",
   [
-    [ "FStar.Relational.Comp.ST2", 1, 2, 1, [ "@query_1616" ], 0 ],
-    [ "FStar.Relational.Comp.10530", 1, 2, 1, [ "@query_1617" ], 0 ],
-    [ "FStar.Relational.Comp.comp", 1, 2, 1, [ "@query_1622" ], 0 ],
-    [ "FStar.Relational.Comp.Monotone_comp", 1, 2, 1, [ "@query_1679" ], 0 ],
-    [ "FStar.Relational.Comp.compose2", 1, 2, 1, [ "@query_1691" ], 0 ],
-    [ "FStar.Relational.Comp.compose2_self", 1, 2, 1, [ "@query_1696" ], 0 ],
-    [ "FStar.Relational.Comp.cross", 1, 2, 1, [ "@query_1723" ], 0 ],
-    [ "FStar.Relational.Comp.decomp_l", 1, 2, 1, [ "@query_1731" ], 0 ],
-    [ "FStar.Relational.Comp.decomp_r", 1, 2, 1, [ "@query_1750" ], 0 ],
-    [ "FStar.Relational.Comp.project_l", 1, 2, 1, [ "@query_1766" ], 0 ],
-    [ "FStar.Relational.Comp.project_r", 1, 2, 1, [ "@query_1772" ], 0 ]
+    [ "FStar.Relational.Comp.ST2", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Relational.Comp.10530", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Relational.Comp.comp", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Relational.Comp.Monotone_comp", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Relational.Comp.compose2", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Relational.Comp.compose2_self", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Relational.Comp.cross", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Relational.Comp.decomp_l", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Relational.Comp.decomp_r", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Relational.Comp.project_l", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Relational.Comp.project_r", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]
