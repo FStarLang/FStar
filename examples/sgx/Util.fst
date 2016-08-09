@@ -55,9 +55,17 @@ rsp = stack pointer
 
 *)
 
-(* Given an address, this function returns the offset in rwbitmap *)
+(* Given a bitmap offset, this function returns the address of the memory that is being toggled*)
 val get_address_represented_in_bitmap:address->address->address->Tot address
 let get_address_represented_in_bitmap heapstart bitmapstart addr = 
+ 	let bitmapoffset = (UInt64.sub addr bitmapstart) in
+	let tmp = (UInt64.mul bitmapoffset 64uL) in
+	(UInt64.add heapstart tmp)
+	
+
+(* Given an address, this function returns the offset in rwbitmap *)
+val get_bitmap_offset: address->address->address->Tot address
+let get_bitmap_offset heapstart bitmapstart addr =
  let bitmapoffset = (UInt64.sub addr heapstart) in
        let tmp = (UInt64.mul bitmapoffset 64uL) in
        (* Not including index, since a store can operate only on 8byte granularity

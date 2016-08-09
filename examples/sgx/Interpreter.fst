@@ -72,7 +72,7 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 	 In Progress
 	*)
    let get_bitmap_set addr = 
-		let bitmapoffset = get_address_represented_in_bitmap uheapstart wbmapstart addr in 
+		let bitmapoffset = get_bitmap_offset uheapstart wbmapstart addr in 
 		let value = load' 1ul bitmapoffset in
 		let index = get_bitmap_index uheapstart addr in
 		let mask = shift_left 1uL (cast_to_word index) (* prepare mask *) in
@@ -81,12 +81,12 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
   let store' (n:word) (addr:address) (v:dword) (env:cpuregstate): STL bool
 	(requires (fun h -> true))
 	(ensures (fun h0 r h1 -> true)) =
-     if (gte addr  wbmapstart) && (lt addr  ucodestart) then
+     if (gte addr  wbmapstart) && (lt addr  uheapstart) then
 	(* addr is in write-bitmap, get the index
 	   i.e. bitmapindex represents the address whose permission
 	   is being toggled 
 	*)
-	let bitmapoffset = get_address_represented_in_bitmap uheapstart wbmapstart addr in 
+	let address_toggled = get_address_represented_in_bitmap uheapstart wbmapstart addr in 
 	
 	(* Check that bitmapindex belongs to current stack frame. Steps:
 	  1. Read rbp register which contains current frame pointer
@@ -94,19 +94,42 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 	*)
 	let currentframestart = (read' "rbp" env) in
 
-	if (lte bitmapoffset currentframestart) then
+	if (lte address_toggled currentframestart) then
 	       let idx = (sub addr base) in
 	       let wordidx = (cast_to_word idx) in
 	       let _ = if debugflag then 
-				let _ =  debug_print_string "Updating bitmap: " in
-				let _ = debug_print_string (UInt32.to_string wordidx) in
+				let _ =  debug_print_string "Current frame start: " in
+				let _ = debug_print_string (to_string currentframestart) in
+				let _ =  debug_print_string "\n Toggling bitmap for address: " in
+				let _ = debug_print_string (to_string address_toggled) in
 				debug_print_string "\n"
 			 else true in
         	let _ = Buffer.upd buf wordidx v in
 		true
 	else
 		(* raise Halt *)
-		let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt" else true in
+		let _ = if debugflag then 
+					let _ = debug_print_string "Unauthorized bitmap update: Raise Halt\n" in
+					let _ =  debug_print_string "Address being written to: " in
+					let _ = debug_print_string (to_string addr) in
+					let _ = debug_print_string "\n" in
+					let _ =  debug_print_string "Frame Pointer: " in
+					let _ = debug_print_string (to_string (read' "rbp" env)) in
+					let _ = debug_print_string "\n" in
+					let _ =  debug_print_string "Stack Pointer: " in
+					let _ = debug_print_string (to_string (read' "rsp" env)) in
+					let _ = debug_print_string "\n" in
+					let _ =  debug_print_string "Bitmap Start: " in
+					let _ = debug_print_string (to_string wbmapstart) in
+					let _ = debug_print_string "\n" in
+					let _ =  debug_print_string "Heap Start: " in
+					let _ = debug_print_string (to_string uheapstart) in
+					let _ = debug_print_string "\n" in
+					let _ =  debug_print_string "Stack Start: " in
+					let _ = debug_print_string (to_string ustackstart) in
+					let _ =  debug_print_string "\nEnd-of-Dump\n" in
+					debug_print_string "====================\n" 
+			else true in
 		false
     else if (gte addr uheapstart) && (lt addr  (add uheapstart uheapsize)) then
 	(* Address is in UHeap... Check that bitmap is set *)  
@@ -123,7 +146,7 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 		true
 	else
 		(* raise Halt *)
-		let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt" else true in
+		let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt\n" else true in
 		false
  
     else if  (lte addr ustackstart) && (gt addr (read' "rbp" env))  then
@@ -141,7 +164,7 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 		true
 	else
 		(* raise Halt *)
-		let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt" else true in
+		let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt\n" else true in
 		false
     else if (lte addr (read' "rbp" env)) && (gte addr (read' "rsp" env))  then
 	(* Address belongs to current stack frames *)  
@@ -169,12 +192,19 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 			let _ =  debug_print_string "Base Address: " in
 			let _ = debug_print_string (to_string base) in
 			let _ = debug_print_string "\n" in
+			let _ =  debug_print_string "Code Start: " in
+			let _ = debug_print_string (to_string ucodestart) in
+			let _ = debug_print_string "\n" in
+			let _ =  debug_print_string "Bitmap Start: " in
+			let _ = debug_print_string (to_string wbmapstart) in
+			let _ = debug_print_string "\n" in
 			let _ =  debug_print_string "Heap Start: " in
 			let _ = debug_print_string (to_string uheapstart) in
 			let _ = debug_print_string "\n" in
 			let _ =  debug_print_string "Stack Start: " in
 			let _ = debug_print_string (to_string ustackstart) in
-			debug_print_string "\n" 
+			let _ =  debug_print_string "\nEnd-of-Dump\n" in
+			debug_print_string "====================\n" 
 		else true in
         false	
     in
@@ -200,7 +230,7 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 				let framesize = (sub framestart stacktop) in
 				if  ((cast_to_nat framesize) <  (numberargs - 4)) then
 					(* raise Halt *)
-					let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt" else true in
+					let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt\n" else true in
 					[]
 				else
 					(* Fetches instructions from start to end *)
@@ -254,9 +284,20 @@ let eval (env:cpuregstate) = function
 		in search_reg r (get_reg_list env)
  | Constant n -> n
 
+val invariant: cpuregstate -> Tot bool
+let invariant env = 
+	let reglist = get_reg_list env in
+	let rec search_reg (li:list register) :(Tot bool) = begin match li with
+		|[] -> false
+		|(MkReg regname' value)::tail -> if regname' = "rsp" then false else
+						search_reg tail
+		end
+	in
+	search_reg reglist   
+
 val step : bool -> cpuregstate  ->memaccess-> program -> stmt -> STL cpuregstate 
 			(requires (fun h -> true))
-			(ensures (fun h0 r h1 -> true))
+			(ensures (fun h0 r h1 -> invariant r))
 val steps : bool-> cpuregstate ->memaccess-> program -> (list stmt) -> STL cpuregstate
 			(requires (fun h -> true))
 			(ensures (fun h0 r h1 -> true))
@@ -599,8 +640,8 @@ val main:bool -> STL cpuregstate
 	(ensures (fun h0 r h1 -> True))
 let main debugflag = 
   let base = 1000uL in
-  let wbmapstart = 1100uL in
-  let ucodestart = 1200uL in
+  let ucodestart = 1100uL in
+  let wbmapstart = 1200uL in
   let uheapstart = 1300uL in
   let uheapsize = 400uL in
   let ustacksize = 400uL in
