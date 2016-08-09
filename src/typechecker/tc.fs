@@ -2197,7 +2197,33 @@ and cps_and_elaborate env ed =
     U.abs binders (DMFF.trans_F dmff_env (mk (Tm_app (ed.repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
   in
   let repr = recheck_debug "FC" env repr in
-  let repr = register "repr" repr in
+  let repr = register "repr (applied to binders)" repr in
+
+  let pre, post =
+    Util.print1 "wp_type is: %s\n" (Print.term_to_string wp_type);
+    match (SS.compress wp_type).n with
+    | Tm_abs (effect_param, arrow, _) ->
+        Util.print1 "arrow is: %s\n" (Print.term_to_string arrow);
+        let effect_param, arrow = SS.open_term effect_param arrow in
+        begin match (SS.compress arrow).n with
+        | Tm_arrow (wp_binders, c) ->
+            let wp_binders, c = SS.open_comp wp_binders c in
+            let pre_args, post = Util.prefix wp_binders in
+            // Pre-condition does not mention the return type; don't close over it
+            U.arrow pre_args c,
+            // Post-condition does, however!
+            U.abs (binders @ effect_param) (fst post).sort None
+        | _ ->
+            failwith (Util.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow))
+        end
+    | _ ->
+        failwith (Util.format1 "Impossible: pre/post abs %s" (Print.term_to_string wp_type))
+  in
+  // Desugaring is aware of these names and generates references to them when
+  // the user writes something such as [STINT.repr]
+  ignore (register "pre" pre);
+  ignore (register "post" post);
+  ignore (register "repr" (U.abs binders repr None));
 
   let c = close binders in
 

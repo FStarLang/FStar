@@ -573,12 +573,10 @@ and star_type env t =
   | Tm_abs (binders, repr, something) ->
       // For parameterized data types... TODO: check that this only appears at
       // top-level
-      let subst = SS.opening_of_binders binders in
-      let repr = SS.subst subst repr in
+      let binders, repr = SS.open_term binders repr in
       let env = { env with env = push_binders env.env binders } in
       let repr = star_type env repr in
-      let repr = SS.close binders repr in
-      mk (Tm_abs (binders, repr, something))
+      U.abs binders repr something
 
   | Tm_abs _
   | Tm_uinst _

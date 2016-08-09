@@ -4,21 +4,21 @@ Dijkstra Monads for Free
 A basic, complete example:
 
 ```
-fstar FStar.DM4F.Test.Fst
+fstar FStar.DM4F.IntSt.Fst
 ```
 
 To see the generated combinators (look for top-level definitions starting with
 `FStar.DM4F.Test.STINT_`):
 
 ```
-fstar --dump_module FStar.DM4F.Test FStar.DM4F.Test.fst
+fstar --dump_module FStar.DM4F.IntST FStar.DM4F.IntST.fst
 ```
 
 To see more debug output related to the DMFF elaboration and star
 transformations:
 
 ```
-fstar --trace_error --debug_level ED --debug FStar.DM4F.Test FStar.DM4F.Test.fst --prn --print_implicits --print_universes --print_bound_var_types
+fstar --trace_error --debug_level ED --debug FStar.DM4F.IntST FStar.DM4F.IntST.fst --prn --print_implicits --print_universes --print_bound_var_types
 ```
 
 Current status:
@@ -49,12 +49,9 @@ Items left:
   most checks are fairly lax);
 - try out more things in the definition language; try out with a parameterized
   `STATE (h: heap)` effect; etc
-- figure out how to properly type-check actions (right now, the code is
-  suboptimal);
 - * and elaboration of lifts
 - inserting "return" on the fly when reflecting Tot computations
 - more examples!
-- figure out the impact of freshen_bv and merge this back into master
 - extraction!
 
 - it would be good to have a generic way of noticing that a WP
