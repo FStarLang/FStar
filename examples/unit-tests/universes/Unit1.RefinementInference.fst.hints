@@ -1,8 +1,22 @@
 [
   "\u0002ï¶‰|©Ášíÿ2\u0016¤ª§û",
   [
-    [ 2, 1, [ "@query_1609" ], 0 ],
-    [ 2, 1, [ "@query_1626" ], 0 ],
-    [ 2, 1, [ "@query_1630" ], 0 ]
+    [ "Unit1.RefinementInference.elift1_p", 1, 2, 1, [ "@query_1220" ], 0 ],
+    [
+      "Unit1.RefinementInference.ghostConsHd",
+      1,
+      2,
+      1,
+      [ "@query_1233" ],
+      0
+    ],
+    [
+      "Unit1.RefinementInference.ghostConsHd",
+      2,
+      2,
+      1,
+      [ "@query_1236" ],
+      0
+    ]
   ]
 ]

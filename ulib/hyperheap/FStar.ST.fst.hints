@@ -1,83 +1,88 @@
 [
-  "§m\u0012}A—≥(=sr\u0001è6d\r",
+  "ç\u0003åa˙\u0006_\u0014˚∑k&\u0011u•\u0005",
   [
-    [ 2, 1, [ "@query_2879" ], 0 ],
-    [ 2, 1, [ "@query_2880" ], 0 ],
-    [ 2, 1, [ "@query_2883", "assumption_Prims.HasEq_int_325" ], 0 ],
+    [ "FStar.ST.ST", 1, 2, 1, [ "@query_2455" ], 0 ],
+    [ "FStar.ST.11923", 1, 2, 1, [ "@query_2456" ], 0 ],
     [
+      "FStar.ST.new_region",
+      1,
       2,
       1,
-      [ "@query_2884", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
-      0
-    ],
-    [ 2, 1, [ "@query_2892" ], 0 ],
-    [ 2, 1, [ "@query_2893", "assumption_Prims.HasEq_int_325" ], 0 ],
-    [
-      2,
-      1,
-      [ "@query_2894", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
-      0
-    ],
-    [ 2, 1, [ "@query_2902" ], 0 ],
-    [ 2, 1, [ "@query_2903" ], 0 ],
-    [
-      2,
-      1,
-      [ "@query_2904", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
-      0
-    ],
-    [ 2, 1, [ "@query_2915" ], 0 ],
-    [ 2, 1, [ "@query_2916" ], 0 ],
-    [
-      2,
-      1,
-      [ "@query_2917", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      [ "@query_2457", "assumption_Prims.HasEq_int_285" ],
       0
     ],
     [
+      "FStar.ST.new_region",
+      2,
       2,
       1,
-      [ "@query_2918", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      [ "@query_2458", "assumption_FStar.HyperHeap.HasEq_rid_2365" ],
+      0
+    ],
+    [ "FStar.ST.new_region", 3, 2, 1, [ "@query_2463" ], 0 ],
+    [
+      "FStar.ST.new_colored_region",
+      1,
+      2,
+      1,
+      [ "@query_2464", "assumption_Prims.HasEq_int_285" ],
       0
     ],
     [
+      "FStar.ST.new_colored_region",
+      2,
       2,
       1,
-      [ "@query_2919", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      [ "@query_2465", "assumption_FStar.HyperHeap.HasEq_rid_2365" ],
       0
     ],
-    [ 2, 1, [ "@query_2930" ], 0 ],
-    [ 2, 1, [ "@query_2931" ], 0 ],
+    [ "FStar.ST.new_colored_region", 3, 2, 1, [ "@query_2470" ], 0 ],
+    [ "FStar.ST.ralloc_post", 1, 2, 1, [ "@query_2471" ], 0 ],
     [
+      "FStar.ST.ralloc_post",
+      2,
       2,
       1,
-      [ "@query_2932", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      [ "@query_2472", "assumption_FStar.HyperHeap.HasEq_rid_2365" ],
+      0
+    ],
+    [ "FStar.ST.ralloc", 1, 2, 1, [ "@query_2480" ], 0 ],
+    [ "FStar.ST.alloc_post", 1, 2, 1, [ "@query_2481" ], 0 ],
+    [
+      "FStar.ST.alloc_post",
+      2,
+      2,
+      1,
+      [ "@query_2482", "assumption_FStar.HyperHeap.HasEq_rid_2365" ],
+      0
+    ],
+    [ "FStar.ST.alloc", 1, 2, 1, [ "@query_2490" ], 0 ],
+    [ "FStar.ST.assign_post", 1, 2, 1, [ "@query_2491" ], 0 ],
+    [ "FStar.ST.deref_post", 1, 2, 1, [ "@query_2495" ], 0 ],
+    [ "FStar.ST.get", 1, 2, 1, [ "@query_2503" ], 0 ],
+    [
+      "FStar.ST.recall",
+      1,
+      2,
+      1,
+      [ "@query_2504", "assumption_FStar.HyperHeap.HasEq_rid_2365" ],
       0
     ],
     [
+      "FStar.ST.recall",
+      2,
       2,
       1,
-      [ "@query_2933", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      [ "@query_2505", "assumption_FStar.HyperHeap.HasEq_rid_2365" ],
       0
     ],
-    [ 2, 1, [ "@query_2938" ], 0 ],
-    [ 2, 1, [ "@query_2950" ], 0 ],
+    [ "FStar.ST.recall", 3, 2, 1, [ "@query_2509" ], 0 ],
     [
+      "FStar.ST.recall_region",
+      1,
       2,
       1,
-      [ "@query_2951", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
-      0
-    ],
-    [
-      2,
-      1,
-      [ "@query_2952", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
-      0
-    ],
-    [
-      2,
-      1,
-      [ "@query_2953", "assumption_FStar.HyperHeap.HasEq_rid_2766" ],
+      [ "@query_2510", "assumption_FStar.HyperHeap.HasEq_rid_2365" ],
       0
     ]
   ]

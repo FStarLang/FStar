@@ -672,13 +672,15 @@ let digest_of_file (fname:string) =
   BatDigest.file fname
   
 let digest_of_string (s:string) =
-  BatDigest.string s
+  BatDigest.to_hex (BatDigest.string s)
 
 let ensure_decimal s = Z.to_string (Z.of_string s)
 
 
 (** Hints. *)
 type hint = {
+    hint_name: string;
+    hint_index: int;
     fuel:int;
     ifuel:int;
     unsat_core: string list option;
@@ -697,8 +699,10 @@ let write_hints (filename: string) (hints: hints_db): unit =
     `String hints.module_digest;
     `List (List.map (function
       | None -> `Null
-      | Some { fuel; ifuel; unsat_core; query_elapsed_time } ->
+      | Some { hint_name; hint_index; fuel; ifuel; unsat_core; query_elapsed_time } ->
           `List [
+	    `String hint_name;
+	    `Int hint_index;
             `Int fuel;
             `Int ifuel;
             (match unsat_core with
@@ -724,12 +728,16 @@ let read_hints (filename: string): hints_db option =
           hints = List.map (function
             | `Null -> None
             | `List [
+		`String hint_name;
+		`Int hint_index;
                 `Int fuel;
                 `Int ifuel;
                 unsat_core;
                 `Int query_elapsed_time
               ] ->
                 Some {
+		  hint_name;
+		  hint_index;
                   fuel;
                   ifuel;
                   unsat_core = begin match unsat_core with

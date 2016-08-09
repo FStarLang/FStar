@@ -19,7 +19,13 @@ type exp =
 (* All stmt have their corresponding address as first argument *)
 type stmt = 
  |Add of u64 * exp * exp *exp
+ |Sub of u64 * exp * exp *exp
  |Cmp of u64 * exp * exp * exp
+ |Div	of u64 * exp * exp * exp
+ |Mod of u64 * exp * exp * exp
+ |Mul of u64 * exp * exp * exp
+ |Lsr of u64 * exp * exp * exp
+ |Lor of u64 * exp * exp * exp
  |Store of u64 * u64*exp * exp
  |Assign of  u64 * exp * exp
  |Push of  u64 * exp 

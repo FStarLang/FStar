@@ -13,7 +13,7 @@ in (let _149_11 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Nor
 in {FStar_Syntax_Syntax.ppname = _57_13.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _57_13.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _149_11}))
 in (
 
-let d = (fun s -> (FStar_Util.print1 "[01;36m%s[00m\n" s))
+let d = (fun s -> (FStar_Util.print1 "\\x1b[01;36m%s\\x1b[00m\n" s))
 in (
 
 let _57_18 = (d "Elaborating extra WP combinators")
@@ -1028,24 +1028,21 @@ end
 | FStar_Syntax_Syntax.Tm_abs (binders, repr, something) -> begin
 (
 
-let subst = (FStar_Syntax_Subst.opening_of_binders binders)
-in (
-
-let repr = (FStar_Syntax_Subst.subst subst repr)
-in (
+let _57_381 = (FStar_Syntax_Subst.open_term binders repr)
+in (match (_57_381) with
+| (binders, repr) -> begin
+(
 
 let env = (
 
-let _57_381 = env
+let _57_382 = env
 in (let _149_525 = (FStar_TypeChecker_Env.push_binders env.env binders)
-in {env = _149_525; definitions = _57_381.definitions; subst = _57_381.subst; tc_const = _57_381.tc_const}))
+in {env = _149_525; definitions = _57_382.definitions; subst = _57_382.subst; tc_const = _57_382.tc_const}))
 in (
 
 let repr = (star_type env repr)
-in (
-
-let repr = (FStar_Syntax_Subst.close binders repr)
-in (mk (FStar_Syntax_Syntax.Tm_abs (((binders), (repr), (something))))))))))
+in (FStar_Syntax_Util.abs binders repr something)))
+end))
 end
 | (FStar_Syntax_Syntax.Tm_abs (_)) | (FStar_Syntax_Syntax.Tm_uinst (_)) | (FStar_Syntax_Syntax.Tm_constant (_)) | (FStar_Syntax_Syntax.Tm_refine (_)) | (FStar_Syntax_Syntax.Tm_match (_)) | (FStar_Syntax_Syntax.Tm_ascribed (_)) | (FStar_Syntax_Syntax.Tm_let (_)) | (FStar_Syntax_Syntax.Tm_uvar (_)) | (FStar_Syntax_Syntax.Tm_meta (_)) | (FStar_Syntax_Syntax.Tm_unknown) -> begin
 (let _149_528 = (let _149_527 = (let _149_526 = (FStar_Syntax_Print.term_to_string t)

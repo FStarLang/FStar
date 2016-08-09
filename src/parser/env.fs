@@ -233,6 +233,7 @@ let try_lookup_effect_name env l =
 let try_lookup_effect_defn env l =
     match try_lookup_effect_name' (not env.iface) env l with
         | Some (Sig_new_effect(ne, _), _) -> Some ne
+        | Some (Sig_new_effect_for_free(ne, _), _) -> Some ne
         | _ -> None
 let is_effect_name env lid =
     match try_lookup_effect_name env lid with

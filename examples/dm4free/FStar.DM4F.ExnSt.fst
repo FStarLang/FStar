@@ -1,6 +1,6 @@
 module FStar.DM4F.ExnSt
 
-open FStar.DM4F
+module IntST = FStar.DM4F.IntST
 
 let stexn a = int -> M (option (a * int))
 
@@ -21,12 +21,10 @@ reifiable reflectable new_effect_for_free {
     return = return
 }
 
-let pre = int -> Type0
-let post (a:Type) = option (a * int) -> Type0
-let wp (a:Type) = int -> post a -> Type0
-
-let repr (a:Type) (wp:wp a) =
-    n0:int -> PURE (option (a * int)) (wp n0)
+let pre = EXNST.pre
+let post = EXNST.post
+let wp = EXNST.wp
+let repr = EXNST.repr
 
 inline let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:post a) = wp (fun a -> p (Some (a, h0)))
 sub_effect PURE ~> EXNST = lift_pure_exnst

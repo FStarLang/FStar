@@ -1,19 +1,26 @@
 [
   "&+\u0001Ëðu†U¦çU‚?o‡©",
   [
-    [ 2, 1, [ "@query_1580" ], 0 ],
-    [ 2, 1, [ "@query_1594" ], 0 ],
-    [ 2, 1, [ "@query_1610" ], 0 ],
-    [ 2, 1, [ "@query_1612", "assumption_Prims.HasEq_int_325" ], 0 ],
-    [ 2, 1, [ "@query_1630" ], 0 ],
-    [ 2, 1, [ "@query_1646" ], 0 ],
-    [ 2, 1, [ "@query_1665" ], 0 ],
-    [ 2, 1, [ "@query_1678" ], 0 ],
-    [ 2, 1, [ "@query_1694" ], 0 ],
-    [ 2, 1, [ "@query_1710" ], 0 ],
-    [ 2, 1, [ "@query_1723" ], 0 ],
-    [ 2, 1, [ "@query_1728" ], 0 ],
-    [ 2, 1, [ "@query_1738" ], 0 ],
-    [ 2, 1, [ "@query_1748" ], 0 ]
+    [ "FStar.Axiomatic.Array.LengthConst", 1, 2, 1, [ "@query_1309" ], 0 ],
+    [ "FStar.Axiomatic.Array.IndexConst", 1, 2, 1, [ "@query_1319" ], 0 ],
+    [ "FStar.Axiomatic.Array.LengthUpdate", 1, 2, 1, [ "@query_1330" ], 0 ],
+    [
+      "FStar.Axiomatic.Array.IndexUpdate",
+      1,
+      2,
+      1,
+      [ "@query_1332", "assumption_Prims.HasEq_int_285" ],
+      0
+    ],
+    [ "FStar.Axiomatic.Array.IndexUpdate", 2, 2, 1, [ "@query_1344" ], 0 ],
+    [ "FStar.Axiomatic.Array.LengthSlice", 1, 2, 1, [ "@query_1355" ], 0 ],
+    [ "FStar.Axiomatic.Array.IndexSlice", 1, 2, 1, [ "@query_1368" ], 0 ],
+    [ "FStar.Axiomatic.Array.LengthAppend", 1, 2, 1, [ "@query_1377" ], 0 ],
+    [ "FStar.Axiomatic.Array.IndexAppend", 1, 2, 1, [ "@query_1388" ], 0 ],
+    [ "FStar.Axiomatic.Array.SeqEquals", 1, 2, 1, [ "@query_1399" ], 0 ],
+    [ "FStar.Axiomatic.Array.Extensional", 1, 2, 1, [ "@query_1408" ], 0 ],
+    [ "FStar.Axiomatic.Array.ProjEmp", 1, 2, 1, [ "@query_1412" ], 0 ],
+    [ "FStar.Axiomatic.Array.ProjLen", 1, 2, 1, [ "@query_1419" ], 0 ],
+    [ "FStar.Axiomatic.Array.EmpConst", 1, 2, 1, [ "@query_1426" ], 0 ]
   ]
 ]

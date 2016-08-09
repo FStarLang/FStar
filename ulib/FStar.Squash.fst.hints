@@ -2,39 +2,49 @@
   " ÀOÅ'A8\u0000siZ\u0004ßèS8",
   [
     [
+      "FStar.Squash.get_proof",
+      1,
       2,
       1,
       [
-        "@pretyping__133", "@query_1208", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_139", "unit_typing"
+        "@query_1010", "equation_Prims.squash",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "unit_typing"
       ],
       0
     ],
     [
+      "FStar.Squash.give_proof",
+      1,
       2,
       1,
       [
-        "@query_1216", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_139", "unit_typing"
+        "@query_1016", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "unit_typing"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1225" ], 0 ],
+    [ "FStar.Squash.proof_irrelevance", 1, 2, 1, [ "@query_1023" ], 0 ],
     [
+      "FStar.Squash.proof_irrelevance",
+      2,
       2,
       1,
       [
-        "@query_1226", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_139", "unit_inversion"
+        "@query_1024", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "unit_inversion"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1239" ], 0 ],
-    [ 2, 1, [ "@query_1245" ], 0 ],
-    [ 2, 1, [ "@query_1264" ], 0 ],
-    [ 2, 1, [ "@query_1268" ], 0 ],
-    [ 2, 1, [ "@query_1278" ], 0 ],
-    [ 2, 1, [ "@query_1286" ], 0 ],
-    [ 2, 1, [ "@query_1300" ], 0 ]
+    [ "FStar.Squash.squash_double_arrow", 1, 2, 1, [ "@query_1034" ], 0 ],
+    [ "FStar.Squash.squash_double_arrow", 2, 2, 1, [ "@query_1039" ], 0 ],
+    [ "FStar.Squash.squash_double_sum", 1, 2, 1, [ "@query_1055" ], 0 ],
+    [ "FStar.Squash.squash_double_sum", 2, 2, 1, [ "@query_1058" ], 0 ],
+    [ "FStar.Squash.return_squash", 1, 2, 1, [ "@query_1066" ], 0 ],
+    [ "FStar.Squash.bind_squash", 1, 2, 1, [ "@query_1072" ], 0 ],
+    [ "FStar.Squash.map_squash", 1, 2, 1, [ "@query_1083" ], 0 ]
   ]
 ]

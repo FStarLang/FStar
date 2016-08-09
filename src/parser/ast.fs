@@ -52,8 +52,8 @@ type term' =
   | Const     of sconst
   | Op        of string * list<term>
   | Tvar      of ident
-  | Var       of lid
-  | Name      of lid
+  | Var       of lid // a qualified identifier that starts with a lowercase (Foo.Bar.baz)
+  | Name      of lid // a qualified identifier that starts with an uppercase (Foo.Bar.Baz)
   | Construct of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
   | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)

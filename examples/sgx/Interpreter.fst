@@ -34,7 +34,8 @@ type memaccess =
  |MkMemAccess: 
 	      read: (string->cpuregstate -> dword) -> (* Helper function to read registers, used by store *)
   	      load: (word -> address -> STL dword (requires (fun h -> true)) (ensures (fun h0 r h1 -> true))) -> 
-  	      store:(word -> address-> dword -> cpuregstate ->STL unit (requires (fun h -> true)) (ensures (fun h0 r h1 -> true))) ->
+  	      store:(word -> address-> dword -> cpuregstate ->STL bool (requires (fun h -> true)) (ensures (fun h0 r h1 -> true))) ->
+ 	      get_bitmap_set:(address->STL bool (requires (fun h -> true)) (ensures (fun h0 r h1 -> true)) )  ->
 	      decode:(bool->program ->address-> cpuregstate->Tot (list stmt))->memaccess
 
 val defensive: bool -> (buffer dword)->calltable ->address-> address->address->address->address->address->STL memaccess
@@ -66,15 +67,26 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
        Buffer.index buf wordidx 
        )
     in
-  let store' (n:word) (addr:address) (v:dword) (env:cpuregstate): STL unit
+	(*
+	 Given an address, this function returns if it is read/writable 
+	 In Progress
+	*)
+   let get_bitmap_set addr = 
+		let bitmapoffset = get_bitmap_offset uheapstart wbmapstart addr in 
+		let value = load' 1ul bitmapoffset in
+		let index = get_bitmap_index uheapstart addr in
+		let mask = shift_left 1uL (cast_to_word index) (* prepare mask *) in
+		if (eq (UInt64.logand value  mask) 1uL) then true else false
+    in
+  let store' (n:word) (addr:address) (v:dword) (env:cpuregstate): STL bool
 	(requires (fun h -> true))
 	(ensures (fun h0 r h1 -> true)) =
-     if (gte addr  wbmapstart) && (lt addr  ucodestart) then
+     if (gte addr  wbmapstart) && (lt addr  uheapstart) then
 	(* addr is in write-bitmap, get the index
 	   i.e. bitmapindex represents the address whose permission
 	   is being toggled 
 	*)
-	let bitmapindex = get_address_represented_in_bitmap base wbmapstart addr in 
+	let address_toggled = get_address_represented_in_bitmap uheapstart wbmapstart addr in 
 	
 	(* Check that bitmapindex belongs to current stack frame. Steps:
 	  1. Read rbp register which contains current frame pointer
@@ -82,23 +94,46 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 	*)
 	let currentframestart = (read' "rbp" env) in
 
-	if (lte bitmapindex currentframestart) then
+	if (lte address_toggled currentframestart) then
 	       let idx = (sub addr base) in
 	       let wordidx = (cast_to_word idx) in
 	       let _ = if debugflag then 
-				let _ =  debug_print_string "Updating bitmap: " in
-				let _ = debug_print_string (UInt32.to_string wordidx) in
+				let _ =  debug_print_string "Current frame start: " in
+				let _ = debug_print_string (to_string currentframestart) in
+				let _ =  debug_print_string "\n Toggling bitmap for address: " in
+				let _ = debug_print_string (to_string address_toggled) in
 				debug_print_string "\n"
 			 else true in
         	let _ = Buffer.upd buf wordidx v in
-		()
+		true
 	else
 		(* raise Halt *)
-		let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt" else true in
-		()
+		let _ = if debugflag then 
+					let _ = debug_print_string "Unauthorized bitmap update: Raise Halt\n" in
+					let _ =  debug_print_string "Address being written to: " in
+					let _ = debug_print_string (to_string addr) in
+					let _ = debug_print_string "\n" in
+					let _ =  debug_print_string "Frame Pointer: " in
+					let _ = debug_print_string (to_string (read' "rbp" env)) in
+					let _ = debug_print_string "\n" in
+					let _ =  debug_print_string "Stack Pointer: " in
+					let _ = debug_print_string (to_string (read' "rsp" env)) in
+					let _ = debug_print_string "\n" in
+					let _ =  debug_print_string "Bitmap Start: " in
+					let _ = debug_print_string (to_string wbmapstart) in
+					let _ = debug_print_string "\n" in
+					let _ =  debug_print_string "Heap Start: " in
+					let _ = debug_print_string (to_string uheapstart) in
+					let _ = debug_print_string "\n" in
+					let _ =  debug_print_string "Stack Start: " in
+					let _ = debug_print_string (to_string ustackstart) in
+					let _ =  debug_print_string "\nEnd-of-Dump\n" in
+					debug_print_string "====================\n" 
+			else true in
+		false
     else if (gte addr uheapstart) && (lt addr  (add uheapstart uheapsize)) then
 	(* Address is in UHeap... Check that bitmap is set *)  
-	let isbitmapset = get_bitmap_set base wbmapstart addr in
+	let isbitmapset = get_bitmap_set addr in
 	if isbitmapset then
 	       let idx = (sub addr base) in
 	       let wordidx = (cast_to_word idx) in
@@ -108,15 +143,15 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 				debug_print_string "\n"
 			 else true in
         	let _ = Buffer.upd buf wordidx v in
-		()
+		true
 	else
 		(* raise Halt *)
-		let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt" else true in
-		()
+		let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt\n" else true in
+		false
  
     else if  (lte addr ustackstart) && (gt addr (read' "rbp" env))  then
 	(* Address belongs to older stack frames *)  
-	let isbitmapset = get_bitmap_set base wbmapstart addr in
+	let isbitmapset = get_bitmap_set addr in
 	if isbitmapset then
 	       let idx = (sub addr base) in
 	       let wordidx = (cast_to_word idx) in
@@ -126,12 +161,11 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 				debug_print_string "\n"
 			 else true in
          	let _ = Buffer.upd buf wordidx v in
-		()
+		true
 	else
 		(* raise Halt *)
-		let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt" else true in
-		()
-
+		let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt\n" else true in
+		false
     else if (lte addr (read' "rbp" env)) && (gte addr (read' "rsp" env))  then
 	(* Address belongs to current stack frames *)  
 	       let idx = (sub addr base) in
@@ -142,7 +176,7 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 				debug_print_string "\n"
 			 else true in
                let _ = Buffer.upd buf wordidx v in
-	       ()
+	       true
     else
 	let _ = if debugflag then 
 			let _ = debug_print_string "Something went wrong. Dump as follows:\n" in
@@ -158,15 +192,21 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 			let _ =  debug_print_string "Base Address: " in
 			let _ = debug_print_string (to_string base) in
 			let _ = debug_print_string "\n" in
+			let _ =  debug_print_string "Code Start: " in
+			let _ = debug_print_string (to_string ucodestart) in
+			let _ = debug_print_string "\n" in
+			let _ =  debug_print_string "Bitmap Start: " in
+			let _ = debug_print_string (to_string wbmapstart) in
+			let _ = debug_print_string "\n" in
 			let _ =  debug_print_string "Heap Start: " in
 			let _ = debug_print_string (to_string uheapstart) in
 			let _ = debug_print_string "\n" in
 			let _ =  debug_print_string "Stack Start: " in
 			let _ = debug_print_string (to_string ustackstart) in
-			debug_print_string "\n" 
+			let _ =  debug_print_string "\nEnd-of-Dump\n" in
+			debug_print_string "====================\n" 
 		else true in
-	let _ = 1 + 2 in
-        ()	
+        false	
     in
   let decode' iscalltarget myprogram instraddr env = 
 	
@@ -190,7 +230,7 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 				let framesize = (sub framestart stacktop) in
 				if  ((cast_to_nat framesize) <  (numberargs - 4)) then
 					(* raise Halt *)
-					let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt" else true in
+					let _ = if debugflag then debug_print_string "Bitmap not set: Raise Halt\n" else true in
 					[]
 				else
 					(* Fetches instructions from start to end *)
@@ -215,7 +255,7 @@ let defensive debugflag buf calltab base wbmapstart ucodestart uheapstart uheaps
 			stlist
     in	
 
-   MkMemAccess read' load' store' decode'
+   MkMemAccess read' load' store' get_bitmap_set decode'
 	
 let get_register_name = function
  | Register r -> r
@@ -244,9 +284,20 @@ let eval (env:cpuregstate) = function
 		in search_reg r (get_reg_list env)
  | Constant n -> n
 
+val invariant: cpuregstate -> Tot bool
+let invariant env = 
+	let reglist = get_reg_list env in
+	let rec search_reg (li:list register) :(Tot bool) = begin match li with
+		|[] -> false
+		|(MkReg regname' value)::tail -> if regname' = "rsp" then false else
+						search_reg tail
+		end
+	in
+	search_reg reglist   
+
 val step : bool -> cpuregstate  ->memaccess-> program -> stmt -> STL cpuregstate 
 			(requires (fun h -> true))
-			(ensures (fun h0 r h1 -> true))
+			(ensures (fun h0 r h1 -> invariant r))
 val steps : bool-> cpuregstate ->memaccess-> program -> (list stmt) -> STL cpuregstate
 			(requires (fun h -> true))
 			(ensures (fun h0 r h1 -> true))
@@ -274,6 +325,24 @@ let rec step (debugflag:bool) (env:cpuregstate) (defensivememop:memaccess) (mypr
 		debug_print_string ";\n"
        		else true  in
 	 env'
+  | Sub (iaddr, ed, ea, eb) -> 
+        let op1 = eval env ea in
+        let op2 = eval env eb in 
+	let value = (sub op1 op2) in
+        let regname = get_register_name ed in
+        let env' = update regname value env in
+        let t = if debugflag then
+		let _ = debug_print_string (to_string iaddr) in
+		let _ = debug_print_string ":" in
+		let _ = debug_print_string "Sub " in
+		let _ = debug_print_string regname in
+		let _ = debug_print_string " " in
+		let _ = debug_print_string (to_string op1) in
+		let _ = debug_print_string " " in
+		let _ = debug_print_string (to_string op2) in
+		debug_print_string ";\n"
+       		else true  in
+	 env'
   | Cmp (iaddr, ed, ea, eb) -> 
         let op1 = eval env ea in
         let op2 = eval env eb in 
@@ -284,6 +353,96 @@ let rec step (debugflag:bool) (env:cpuregstate) (defensivememop:memaccess) (mypr
 		let _ = debug_print_string (to_string iaddr) in
 		let _ = debug_print_string ":" in
 		let _ = debug_print_string "Cmp " in
+		let _ = debug_print_string regname in
+		let _ = debug_print_string " " in
+		let _ = debug_print_string (to_string op1) in
+		let _ = debug_print_string " " in
+		let _ = debug_print_string (to_string op2) in
+		debug_print_string ";\n"
+       		else true  in
+	 env'
+  | Mul (iaddr, ed, ea, eb) -> 
+        let op1 = eval env ea in
+        let op2 = eval env eb in 
+	let value = (mul op1 op2) in
+        let regname = get_register_name ed in
+        let env' = update regname value env in
+        let t = if debugflag then
+		let _ = debug_print_string (to_string iaddr) in
+		let _ = debug_print_string ":" in
+		let _ = debug_print_string "Mul " in
+		let _ = debug_print_string regname in
+		let _ = debug_print_string " " in
+		let _ = debug_print_string (to_string op1) in
+		let _ = debug_print_string " " in
+		let _ = debug_print_string (to_string op2) in
+		debug_print_string ";\n"
+       		else true  in
+	 env'
+  | Div (iaddr, ed, ea, eb) -> 
+        let op1 = eval env ea in
+        let op2 = eval env eb in 
+	let value = (div op1 op2) in
+        let regname = get_register_name ed in
+        let env' = update regname value env in
+        let t = if debugflag then
+		let _ = debug_print_string (to_string iaddr) in
+		let _ = debug_print_string ":" in
+		let _ = debug_print_string "Div " in
+		let _ = debug_print_string regname in
+		let _ = debug_print_string " " in
+		let _ = debug_print_string (to_string op1) in
+		let _ = debug_print_string " " in
+		let _ = debug_print_string (to_string op2) in
+		debug_print_string ";\n"
+       		else true  in
+	 env'
+  | Mod (iaddr, ed, ea, eb) -> 
+        let op1 = eval env ea in
+        let op2 = eval env eb in 
+	let value = (rem op1 op2) in
+        let regname = get_register_name ed in
+        let env' = update regname value env in
+        let t = if debugflag then
+		let _ = debug_print_string (to_string iaddr) in
+		let _ = debug_print_string ":" in
+		let _ = debug_print_string "Mod " in
+		let _ = debug_print_string regname in
+		let _ = debug_print_string " " in
+		let _ = debug_print_string (to_string op1) in
+		let _ = debug_print_string " " in
+		let _ = debug_print_string (to_string op2) in
+		debug_print_string ";\n"
+       		else true  in
+	 env'
+  | Lsr (iaddr, ed, ea, eb) -> 
+        let op1 = eval env ea in
+        let op2 = eval env eb in 
+	let value = (shift_left op1 (cast_to_word op2)) in
+        let regname = get_register_name ed in
+        let env' = update regname value env in
+        let t = if debugflag then
+		let _ = debug_print_string (to_string iaddr) in
+		let _ = debug_print_string ":" in
+		let _ = debug_print_string "Lsr " in
+		let _ = debug_print_string regname in
+		let _ = debug_print_string " " in
+		let _ = debug_print_string (to_string op1) in
+		let _ = debug_print_string " " in
+		let _ = debug_print_string (to_string op2) in
+		debug_print_string ";\n"
+       		else true  in
+	 env'
+  | Lor (iaddr, ed, ea, eb) -> 
+        let op1 = eval env ea in
+        let op2 = eval env eb in 
+	let value = (logor op1 op2) in
+        let regname = get_register_name ed in
+        let env' = update regname value env in
+        let t = if debugflag then
+		let _ = debug_print_string (to_string iaddr) in
+		let _ = debug_print_string ":" in
+		let _ = debug_print_string "Lor " in
 		let _ = debug_print_string regname in
 		let _ = debug_print_string " " in
 		let _ = debug_print_string (to_string op1) in
@@ -481,14 +640,14 @@ val main:bool -> STL cpuregstate
 	(ensures (fun h0 r h1 -> True))
 let main debugflag = 
   let base = 1000uL in
-  let wbmapstart = 1100uL in
-  let ucodestart = 1200uL in
+  let ucodestart = 1100uL in
+  let wbmapstart = 1200uL in
   let uheapstart = 1300uL in
   let uheapsize = 400uL in
   let ustacksize = 400uL in
   let ustackstart = (add (add uheapstart uheapsize) ustacksize) in
   let entry = 1200uL in 
-  let bufsize = add (sub ustackstart base) 1uL in 
+  let bufsize = add (sub ustackstart base) 2uL in 
   let buf = Buffer.create 0uL (cast_to_word bufsize) in
   let calltab = parse_manifest () in
   let myprogram = testprogram in 

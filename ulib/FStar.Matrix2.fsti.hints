@@ -1,139 +1,201 @@
 [
   "—ïÚ⁄\u0019\u0002—¡ (Æ÷ˆçˆ\u0006",
   [
-    [ 0, 0, [ "@query_1537" ], 0 ],
+    [ "FStar.Matrix2.emp", 1, 0, 0, [ "@query_1260" ], 0 ],
     [
+      "FStar.Matrix2.upd_row",
+      1,
       0,
       0,
       [
-        "@query_1551", "assumption_Prims.HasEq_int_325",
-        "equation_Prims.nat", "haseqTm_refine_1165"
+        "@query_1272", "assumption_Prims.HasEq_int_285",
+        "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
-    [ 0, 0, [ "@query_1553" ], 0 ],
+    [ "FStar.Matrix2.upd_row", 2, 0, 0, [ "@query_1274" ], 0 ],
     [
+      "FStar.Matrix2.upd_col",
+      1,
       0,
       0,
       [
-        "@query_1564", "assumption_Prims.HasEq_int_325",
-        "equation_Prims.nat", "haseqTm_refine_1165"
+        "@query_1283", "assumption_Prims.HasEq_int_285",
+        "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
-    [ 0, 0, [ "@query_1566" ], 0 ],
+    [ "FStar.Matrix2.upd_col", 2, 0, 0, [ "@query_1285" ], 0 ],
     [
+      "FStar.Matrix2.lemma_row_len",
+      1,
       0,
       0,
       [
-        "@query_1576", "assumption_Prims.HasEq_int_325",
-        "equation_Prims.nat", "haseqTm_refine_1165"
+        "@query_1294", "assumption_Prims.HasEq_int_285",
+        "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
-    [ 0, 0, [ "@query_1579" ], 0 ],
+    [ "FStar.Matrix2.lemma_row_len", 2, 0, 0, [ "@query_1297" ], 0 ],
     [
+      "FStar.Matrix2.lemma_col_len",
+      1,
       0,
       0,
       [
-        "@query_1582", "assumption_Prims.HasEq_int_325",
-        "equation_Prims.nat", "haseqTm_refine_1165"
+        "@query_1300", "assumption_Prims.HasEq_int_285",
+        "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
-    [ 0, 0, [ "@query_1585" ], 0 ],
-    [ 0, 0, [ "@query_1591" ], 0 ],
-    [ 0, 0, [ "@query_1600" ], 0 ],
+    [ "FStar.Matrix2.lemma_col_len", 2, 0, 0, [ "@query_1303" ], 0 ],
+    [ "FStar.Matrix2.lemma_index_create", 1, 0, 0, [ "@query_1309" ], 0 ],
+    [ "FStar.Matrix2.lemma_index_upd1", 1, 0, 0, [ "@query_1318" ], 0 ],
     [
+      "FStar.Matrix2.lemma_index_upd2",
+      1,
       0,
       0,
       [
-        "@query_1609", "assumption_Prims.HasEq_int_325",
-        "equation_Prims.nat", "haseqTm_refine_1165", "haseqTm_refine_1608"
-      ],
-      0
-    ],
-    [
-      0,
-      0,
-      [
-        "@query_1616", "assumption_Prims.HasEq_int_325",
-        "equation_Prims.nat", "haseqTm_refine_1165", "haseqTm_refine_1615"
-      ],
-      0
-    ],
-    [ 0, 0, [ "@query_1639" ], 0 ],
-    [ 0, 0, [ "@query_1653", "lemma_FStar.Matrix2.lemma_row_len" ], 0 ],
-    [ 0, 0, [ "@query_1662", "lemma_FStar.Matrix2.lemma_col_len" ], 0 ],
-    [
-      0,
-      0,
-      [
-        "@query_1665", "assumption_Prims.HasEq_int_325",
-        "equation_Prims.nat", "haseqTm_refine_1165"
+        "@query_1326", "assumption_Prims.HasEq_int_285",
+        "equation_Prims.nat",
+        "haseqTm_refine_4364b7fdf0322fcb18c11f8ea48cdbd9",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
     [
-      0,
-      0,
-      [ "@query_1674", "refinement_interpretation_Tm_refine_1556" ],
-      0
-    ],
-    [
+      "FStar.Matrix2.lemma_index_upd2",
+      2,
       0,
       0,
       [
-        "@query_1678", "assumption_Prims.HasEq_int_325",
-        "equation_Prims.nat", "haseqTm_refine_1165"
+        "@query_1332", "assumption_Prims.HasEq_int_285",
+        "equation_Prims.nat",
+        "haseqTm_refine_4364b7fdf0322fcb18c11f8ea48cdbd9",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [ "FStar.Matrix2.lemma_index_upd2", 3, 0, 0, [ "@query_1354" ], 0 ],
+    [
+      "FStar.Matrix2.lemma_index_row",
+      1,
+      0,
+      0,
+      [ "@query_1367", "lemma_FStar.Matrix2.lemma_row_len" ],
+      0
+    ],
+    [
+      "FStar.Matrix2.lemma_index_col",
+      1,
+      0,
+      0,
+      [ "@query_1376", "lemma_FStar.Matrix2.lemma_col_len" ],
+      0
+    ],
+    [
+      "FStar.Matrix2.lemma_index_upd_row1",
+      1,
+      0,
+      0,
+      [
+        "@query_1379", "assumption_Prims.HasEq_int_285",
+        "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
     [
+      "FStar.Matrix2.lemma_index_upd_row1",
+      2,
       0,
       0,
       [
-        "@query_1681", "assumption_Prims.HasEq_int_325",
-        "equation_Prims.nat", "haseqTm_refine_1165"
-      ],
-      0
-    ],
-    [ 0, 0, [ "@query_1696" ], 0 ],
-    [
-      0,
-      0,
-      [
-        "@query_1702", "assumption_Prims.HasEq_int_325",
-        "equation_Prims.nat", "haseqTm_refine_1165"
+        "@query_1388",
+        "refinement_interpretation_Tm_refine_48f24197874ec0c162e3bf5cbdf022f1"
       ],
       0
     ],
     [
-      0,
-      0,
-      [ "@query_1711", "refinement_interpretation_Tm_refine_1556" ],
-      0
-    ],
-    [
+      "FStar.Matrix2.lemma_index_upd_row2",
+      1,
       0,
       0,
       [
-        "@query_1715", "assumption_Prims.HasEq_int_325",
-        "equation_Prims.nat", "haseqTm_refine_1165"
+        "@query_1392", "assumption_Prims.HasEq_int_285",
+        "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
     [
+      "FStar.Matrix2.lemma_index_upd_row2",
+      2,
       0,
       0,
       [
-        "@query_1719", "assumption_Prims.HasEq_int_325",
-        "equation_Prims.nat", "haseqTm_refine_1165"
+        "@query_1395", "assumption_Prims.HasEq_int_285",
+        "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
-    [ 0, 0, [ "@query_1735" ], 0 ],
-    [ 0, 0, [ "@query_1775" ], 0 ],
-    [ 0, 0, [ "@query_1778" ], 0 ]
+    [ "FStar.Matrix2.lemma_index_upd_row2", 3, 0, 0, [ "@query_1409" ], 0 ],
+    [
+      "FStar.Matrix2.lemma_index_upd_col1",
+      1,
+      0,
+      0,
+      [
+        "@query_1414", "assumption_Prims.HasEq_int_285",
+        "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "FStar.Matrix2.lemma_index_upd_col1",
+      2,
+      0,
+      0,
+      [
+        "@query_1423",
+        "refinement_interpretation_Tm_refine_48f24197874ec0c162e3bf5cbdf022f1"
+      ],
+      0
+    ],
+    [
+      "FStar.Matrix2.lemma_index_upd_col2",
+      1,
+      0,
+      0,
+      [
+        "@query_1427", "assumption_Prims.HasEq_int_285",
+        "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "FStar.Matrix2.lemma_index_upd_col2",
+      2,
+      0,
+      0,
+      [
+        "@query_1431", "assumption_Prims.HasEq_int_285",
+        "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [ "FStar.Matrix2.lemma_index_upd_col2", 3, 0, 0, [ "@query_1446" ], 0 ],
+    [ "FStar.Matrix2.lemma_eq_intro", 1, 0, 0, [ "@query_1480" ], 0 ],
+    [ "FStar.Matrix2.lemma_eq_elim", 1, 0, 0, [ "@query_1483" ], 0 ]
   ]
 ]

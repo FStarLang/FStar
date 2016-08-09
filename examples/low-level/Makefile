@@ -27,13 +27,16 @@ AEAD_EXTRACTED= FStar_Seq.ml Buffer_Utils.ml Chacha_wip.ml FStar_Ghost.ml Poly_P
 
 P_EXTRACTED=FStar_Ghost.ml FStar_Seq.ml Poly1305_Parameters.ml Poly1305_Bigint.ml Poly1305_Arithmetic.ml Poly1305.ml
 
-.PHONY: lib-ver curve-ver curve-ml chacha-ver chacha-ml
+.PHONY: lib-ver curve-ver curve-ml chacha-ver chacha-ml ulib
 
 all: uall sall
 
-uall: chacha-ml poly-ml aead-ml #curve-ml
+uall: chacha-test poly-test aead-test # curve-test
 
 sall:
+
+ulib:
+	make -C $(FSTAR_HOME)/ulib/ml clean hyperheap
 
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
@@ -44,57 +47,54 @@ curve-lax:
 	$(FSTAR) Curve.Crecip.fst Curve.Ladder.fst --lax
 
 # Curve25519 extraction to OCaml
-curve-ml:
-	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
+curve-extract: ulib
 	mkdir -p $(CURVE_ODIR)
 	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) Curve.Crecip.fst Curve.Ladder.fst --odir $(CURVE_ODIR) #2> /dev/null
 	@sed -i.bak 's/(Obj.magic ((fun pp ppq p pq q n ctr b scalar/(((fun pp ppq p pq q n ctr b scalar/g' $(CURVE_ODIR)/Curve_Ladder.ml
-	$(OCAMLOPT) -I ml -I $(CURVE_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
-	  $(addprefix $(CURVE_ODIR)/,$(CURVE_EXTRACTED)) ml/test_curve.ml -o test_curve.exe
-	./test_curve.exe
 
-curve-compile:
+curve-compile: curve-extract
 	$(OCAMLOPT) -I ml -I $(CURVE_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
 	  $(addprefix $(CURVE_ODIR)/,$(CURVE_EXTRACTED)) ml/test_curve.ml -o test_curve.exe
+
+curve-test: curve-compile
 	./test_curve.exe
 
 # AES targets
 chacha-ver:
 	$(FSTAR) Chacha.fst 
 
-chacha-ml:chacha-extract chacha-compile
-poly-ml:poly-extract poly-compile
-aead-ml:aead-extract aead-compile
-
-chacha-extract:
-	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
+chacha-extract: ulib
 	mkdir -p $(CHACHA_ODIR)
 	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) Chacha.fst --odir $(CHACHA_ODIR) 
 
-chacha-compile:
+chacha-compile: chacha-extract
 	$(OCAMLOPT) -I ml -I $(CHACHA_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
 	  $(addprefix $(CHACHA_ODIR)/,$(CHACHA_EXTRACTED)) ml/test_chacha.ml -o test_chacha.exe
+
+chacha-test: chacha-compile
 	./test_chacha.exe
 
-poly-extract:
-	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
+poly-extract: ulib
 	mkdir -p $(POLY_ODIR)
 	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) Poly.Poly1305.fst --odir $(POLY_ODIR) #2> /dev/null
 
-poly-compile:
+poly-compile: poly-extract
 	$(OCAMLOPT) -I ml -I $(POLY_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
 	  $(addprefix $(POLY_ODIR)/,$(POLY_EXTRACTED)) ml/test_poly1305.ml -o test_poly.exe
+
+poly-test: poly-compile
 	./test_poly.exe
 
-aead-extract:
-	$(MAKE) -C $(FSTAR_HOME)/ulib/ml hyperheap
+aead-extract: ulib
 	mkdir -p $(AEAD_ODIR)
 	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) AEAD.Chacha20_Poly1305.fst --odir $(AEAD_ODIR) #2> /dev/null
 	@sed -i.bak 's/Obj.magic ((fun log msg/ ((fun log msg/g' $(AEAD_ODIR)/Poly_Poly1305_wip.ml
 
-aead-compile:
+aead-compile: aead-extract
 	$(OCAMLOPT) -I ml -I $(AEAD_ODIR) $(addprefix ml/,$(REALIZED_ML)) \
 	  $(addprefix $(AEAD_ODIR)/,$(AEAD_EXTRACTED)) ml/test_aead.ml -o test_aead.exe
+
+aead-test: aead-compile
 	./test_aead.exe
 
 test:

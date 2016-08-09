@@ -32,11 +32,11 @@ bitmapoffset->	|bbbbbbb.......bbbbb |
 Each offset represents the bit array for 64 64-bit addresses.
  
  To obtain address represented index 'idx' at 'bitmapoffset' is given as:
-	address = ((bitmapoffset * 64) + idx) + enclave_start_address
+	address = ((bitmapoffset * 64) + idx) + heap_start_address 
 
  To check if 'addr' is writable, compute the index 'idx' as follows:
-	bitmapoffset  = (addr - enclave_start_address) / 64
-	idx 	      = (addr - enclave_start_address) % 64
+	bitmapoffset  = (addr - heap_start_address) / 64 + bitmapstart
+	idx 	      = (addr - heap_start_address) % 64
 
  Stack Layout
  ============
@@ -55,18 +55,31 @@ rsp = stack pointer
 
 *)
 
+(* Given a bitmap offset, this function returns the address of the memory that is being toggled*)
 val get_address_represented_in_bitmap:address->address->address->Tot address
-let get_address_represented_in_bitmap base bitmapstart addr = 
-	let bitmapoffset = (UInt64.sub addr bitmapstart) in
+let get_address_represented_in_bitmap heapstart bitmapstart addr = 
+ 	let bitmapoffset = (UInt64.sub addr bitmapstart) in
 	let tmp = (UInt64.mul bitmapoffset 64uL) in
-	(* Not including index, since a store can operate only on 8byte granularity
-	  Optimize it later to get precise address
-	*)
-	let addroffset = (UInt64.add tmp base) in
-	 addroffset
+	(UInt64.add heapstart tmp)
+	
 
-val get_bitmap_set :address->address->address->Tot bool
-let get_bitmap_set base bitmapstart addr = true
+(* Given an address, this function returns the offset in rwbitmap *)
+val get_bitmap_offset: address->address->address->Tot address
+let get_bitmap_offset heapstart bitmapstart addr =
+ let bitmapoffset = (UInt64.sub addr heapstart) in
+       let tmp = (UInt64.mul bitmapoffset 64uL) in
+       (* Not including index, since a store can operate only on 8byte granularity
+         Optimize it later to get precise address
+       *)
+       let addroffset = (UInt64.add tmp heapstart) in
+        addroffset
+
+
+(* Given an address, this function returns the index in rwbitmap *)
+val get_bitmap_index:address->address->Tot address
+let get_bitmap_index heapstart addr = 
+	let index = (UInt64.sub addr heapstart) in
+	(UInt64.rem index 64uL)
 
 val get_callentries: calltable -> Tot (list callentry)
 let get_callentries calltab = match calltab with
@@ -123,7 +136,13 @@ let rec print_stmt (stli:list stmt) :Tot bool = match stli with
   | [] -> debug_print_string "end-of-stament-list\n" 
   | (Skip iaddr)::tail -> let _ = debug_print_string "skip\n" in print_stmt tail
   | (Add(iaddr,_, _,_))::tail -> let _ = debug_print_string "add\n" in print_stmt tail
+  | (Sub(iaddr,_, _,_))::tail -> let _ = debug_print_string "sub\n" in print_stmt tail
   | (Cmp(iaddr,_, _,_))::tail -> let _ = debug_print_string "cmp\n" in print_stmt tail
+  | (Div(iaddr,_, _,_))::tail -> let _ = debug_print_string "div\n" in print_stmt tail
+  | (Mul(iaddr,_, _,_))::tail -> let _ = debug_print_string "mul\n" in print_stmt tail
+  | (Mod(iaddr,_, _,_))::tail -> let _ = debug_print_string "mod\n" in print_stmt tail
+  | (Lor(iaddr,_, _,_))::tail -> let _ = debug_print_string "lor\n" in print_stmt tail
+  | (Lsr(iaddr,_, _,_))::tail -> let _ = debug_print_string "lsr\n" in print_stmt tail
   | (Push(iaddr,_))::tail -> let _ = debug_print_string "push\n" in print_stmt tail
   | (Pop(iaddr,_))::tail -> let _ = debug_print_string "pop\n" in print_stmt tail
   | (Store(iaddr, _, _, _))::tail-> let _ = debug_print_string "store\n" in print_stmt tail
@@ -159,7 +178,13 @@ let get_function_given_address (instraddr:address) (myprogram:program) =
 			  | [] -> false
 			  | (Skip iaddr)::tail 
 			  | (Add(iaddr,_,  _, _))::tail
+			  | (Sub(iaddr,_,  _, _))::tail
 			  | (Cmp(iaddr,_,  _, _))::tail
+			  | (Div(iaddr,_,  _, _))::tail
+			  | (Mul(iaddr,_,  _, _))::tail
+			  | (Mod(iaddr,_,  _, _))::tail
+			  | (Lsr(iaddr,_,  _, _))::tail
+			  | (Lor(iaddr,_,  _, _))::tail
 			  | (Store(iaddr, _, _, _))::tail
 			  | (Load (iaddr, _, _, _))::tail
 			  | (Push(iaddr, _))::tail
@@ -185,7 +210,13 @@ let get_stmt_list_in_current_function instraddr myprogram =
 		  | [] -> []
 		  | (Skip iaddr)::tail 
 		  | (Add(iaddr,_, _, _))::tail
+		  | (Sub(iaddr,_, _, _))::tail
 		  | (Cmp(iaddr,_, _, _))::tail
+		  | (Div(iaddr,_, _, _))::tail
+		  | (Mul(iaddr,_, _, _))::tail
+		  | (Mod(iaddr,_, _, _))::tail
+		  | (Lsr(iaddr,_,  _, _))::tail
+		  | (Lor(iaddr,_,  _, _))::tail
 		  | (Store(iaddr, _, _, _))::tail
 		  | (Load (iaddr, _, _, _))::tail
 		  | (Push(iaddr, _))::tail

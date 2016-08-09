@@ -106,11 +106,12 @@ let with_hints_db fname f =
     finalize_hints_db fname;
     result
 
-let next_hint () = 
+let next_hint qname qindex = 
     match !replaying_hints with 
-    | Some (hd::tl) -> 
-      replaying_hints := Some tl;
-      hd
+    | Some hints ->
+      Util.find_map hints (function 
+        | Some hint when hint.hint_name=qname && hint.hint_index=qindex -> Some hint
+        | _ -> None)
     | _ -> None
 
 let record_hint hint = 
@@ -135,6 +136,9 @@ let record_hint_stat (h:option<hint>) (res:z3_result) (time:int) (r:Range.range)
 (***********************************************************************************)
 let ask_and_report_errors env all_labels prefix query suffix = 
     Z3.giveZ3 prefix;
+    let query_name, query_index = match env.qname_and_index with 
+        | None -> failwith "No query name set!"
+        | Some (q, n) -> Ident.text_of_lid q, n in
     let minimum_workable_fuel = Util.mk_ref None in
     let set_minimum_workable_fuel f = function 
         | [] -> ()
@@ -156,7 +160,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
     let check (p:decl) =
         let default_timeout = Options.z3_timeout () * 1000 in
         let default_initial_config = Options.initial_fuel(), Options.initial_ifuel(), default_timeout in
-        let hint_opt = next_hint() in
+        let hint_opt = next_hint query_name query_index in
         let unsat_core, initial_config =
             match hint_opt with
             | None -> None, default_initial_config 
@@ -229,7 +233,9 @@ let ask_and_report_errors env all_labels prefix query suffix =
                 else "" in
             match result with 
             | Inl unsat_core ->
-                let hint = { fuel=prev_fuel;
+                let hint = { hint_name=query_name;
+                             hint_index=query_index;
+                             fuel=prev_fuel;
                              ifuel=prev_ifuel;
                              query_elapsed_time=elapsed_time;
                              unsat_core=unsat_core } in
@@ -271,6 +277,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
 let solve use_env_msg tcenv q : unit =
     Encode.push (Util.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
+    let tcenv = incr_query_index tcenv in
     let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
     let pop () = Encode.pop (Util.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     match qry with

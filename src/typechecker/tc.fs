@@ -2197,7 +2197,34 @@ and cps_and_elaborate env ed =
     U.abs binders (DMFF.trans_F dmff_env (mk (Tm_app (ed.repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
   in
   let repr = recheck_debug "FC" env repr in
-  let repr = register "repr" repr in
+  let repr = register "repr (applied to binders)" repr in
+
+  let pre, post =
+    Util.print1 "wp_type is: %s\n" (Print.term_to_string wp_type);
+    match (SS.compress wp_type).n with
+    | Tm_abs (effect_param, arrow, _) ->
+        Util.print1 "arrow is: %s\n" (Print.term_to_string arrow);
+        let effect_param, arrow = SS.open_term effect_param arrow in
+        begin match (SS.compress arrow).n with
+        | Tm_arrow (wp_binders, c) ->
+            let wp_binders, c = SS.open_comp wp_binders c in
+            let pre_args, post = Util.prefix wp_binders in
+            // Pre-condition does not mention the return type; don't close over it
+            U.arrow pre_args c,
+            // Post-condition does, however!
+            U.abs (binders @ effect_param) (fst post).sort None
+        | _ ->
+            failwith (Util.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow))
+        end
+    | _ ->
+        failwith (Util.format1 "Impossible: pre/post abs %s" (Print.term_to_string wp_type))
+  in
+  // Desugaring is aware of these names and generates references to them when
+  // the user writes something such as [STINT.repr]
+  ignore (register "pre" pre);
+  ignore (register "post" post);
+  ignore (register "repr" (U.abs binders repr None));
+  ignore (register "wp" (U.abs binders wp_type None));
 
   let c = close binders in
 
@@ -2678,7 +2705,16 @@ and tc_inductive env ses quals lids =
         (Sig_bundle(tcs@datas, quals, lids, Env.get_range env0))::ses
     else [sig_bndle]
 
-and tc_decl env se: list<sigelt> * _ = match se with
+and tc_decl env se: list<sigelt> * _ = 
+    let lids = Util.lids_of_sigelt se in
+    let env = 
+        let lid = match lids with 
+            | [] -> let l = Env.current_module env in
+                    let p = Ident.path_of_lid l @ [S.next_id () |> Util.string_of_int] in
+                    Ident.lid_of_path p Range.dummyRange
+            | l::_ -> l in
+        {env with qname_and_index=Some (lid, 0)} in //set the name of the query so that we can correlate hints to source program fragments
+    match se with
     | Sig_inductive_typ _
     | Sig_datacon _ ->
       failwith "Impossible bare data-constructor"

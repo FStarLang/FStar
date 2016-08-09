@@ -144,7 +144,9 @@ let find_initial_module_name () =
 
 module U_Syntax = FStar.Syntax.Syntax
 module F_Syntax = FStar.Absyn.Syntax
-let detect_dependencies_with_first_interactive_chunk () =
+let detect_dependencies_with_first_interactive_chunk () : string         //the filename of the buffer being checked, if any
+                                                        * list<string>   //all its dependences 
+  =
   let failr msg r =
     if Options.universes()
     then FStar.TypeChecker.Errors.warn r msg
@@ -168,7 +170,7 @@ let detect_dependencies_with_first_interactive_chunk () =
           | Some (Some filename, None) ->
               Options.add_verify_module module_name;
               let _, all_filenames, _ = Parser.Dep.collect Parser.Dep.VerifyUserList [ filename ] in
-              List.rev (List.tl all_filenames)
+              filename, List.rev (List.tl all_filenames)
           | Some (Some _, Some _) ->
              fail (Util.format1 "The combination of split interfaces and \
                interactive verification is not supported for: %s\n" module_name)
@@ -187,9 +189,9 @@ let detect_dependencies_with_first_interactive_chunk () =
 (******************************************************************************************)
 (* The main interactive loop *)
 (******************************************************************************************)
-let interactive_mode (env:'env) (initial_mod:'modul) (tc:interactive_tc<'env,'modul>) =
-  if Option.isSome (Options.codegen()) then
-    (Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag");
+let interactive_mode filename (env:'env) (initial_mod:'modul) (tc:interactive_tc<'env,'modul>) =
+    if Option.isSome (Options.codegen()) 
+    then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
     let rec go (stack:stack<'env,'modul>) (curmod:'modul) (env:'env) = begin
       match shift_chunk () with
       | Pop msg ->
@@ -225,4 +227,9 @@ let interactive_mode (env:'env) (initial_mod:'modul) (tc:interactive_tc<'env,'mo
             | _ -> fail curmod env_mark
             end
     end in
-    go [] initial_mod env
+    if Options.universes()
+    && (FStar.Options.record_hints() //and if we're recording or using hints
+    || FStar.Options.use_hints())
+    && Option.isSome filename
+    then FStar.SMTEncoding.Solver.with_hints_db (Option.get filename) (fun () -> go [] initial_mod env)
+    else go [] initial_mod env
