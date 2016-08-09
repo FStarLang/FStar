@@ -35,8 +35,10 @@ uall: chacha-test poly-test aead-test # curve-test
 
 sall:
 
-ulib:
-	make -C $(FSTAR_HOME)/ulib/ml clean hyperheap
+ulib: $(FSTAR_HOME)/ulib/ml/fstar-hyperlib.cmxa
+
+$(FSTAR_HOME)/ulib/ml/fstar-hyperlib.cmxa:
+	make -j 1 -C $(FSTAR_HOME)/ulib/ml clean hyperheap
 
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
