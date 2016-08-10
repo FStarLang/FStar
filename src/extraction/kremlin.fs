@@ -44,7 +44,7 @@ and expr =
   | EUnit
   | EApp of expr * list<expr>
   | ELet of binder * expr * expr
-  | EIfThenElse of expr * expr * expr
+  | EIfThenElse of expr * expr * expr * typ
   | ESequence of list<expr>
   | EAssign of expr * expr
     (** left expression can only be a EBound of EOpen *)
@@ -53,7 +53,7 @@ and expr =
   | EBufWrite of expr * expr * expr
   | EBufSub of expr * expr
   | EBufBlit of expr * expr * expr * expr * expr
-  | EMatch of expr * branches
+  | EMatch of expr * branches * typ
   | EOp of op * width
   | ECast of expr * typ
   | EPushFrame
@@ -98,7 +98,11 @@ and binder = {
   typ: typ;
   mut: bool;
   mark: int;
+  meta: option<meta>;
 }
+
+and meta =
+  | MetaSequence
 
 and ident =
   string (** for pretty-printing *)
@@ -119,7 +123,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 6
+let current_version: version = 7
 
 type file = string * program
 type binary_format = version * list<file>
@@ -402,7 +406,7 @@ and translate_binders env args =
   List.map (translate_binder env) args
 
 and translate_binder env ((name, _), typ) =
-  { name = name; typ = translate_type env typ; mut = false; mark = 0 }
+  { name = name; typ = translate_type env typ; mut = false; mark = 0; meta = None }
 
 and translate_expr env e: expr =
   match e.expr with
@@ -444,7 +448,7 @@ and translate_expr env e: expr =
           typ, body
       in
       let is_mut = flavor = Mutable in
-      let binder = { name = name; typ = translate_type env typ; mut = is_mut; mark = 0 } in
+      let binder = { name = name; typ = translate_type env typ; mut = is_mut; mark = 0; meta = None } in
       let body = translate_expr env body in
       let env = extend env name is_mut in
       let continuation = translate_expr env continuation in
@@ -452,7 +456,7 @@ and translate_expr env e: expr =
 
   | MLE_Match (expr, branches) ->
       let t = expr.mlty in
-      EMatch (translate_expr env expr, translate_branches env t branches)
+      EMatch (translate_expr env expr, translate_branches env t branches, translate_type env t)
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Kremlin constructs
@@ -488,6 +492,7 @@ and translate_expr env e: expr =
       mk_op_app env Bool (must (mk_bool_op op)) args
 
   // Fixed-width literals are represented as calls to [FStar.Int32.uint_to_t]
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "int_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }])
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "uint_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when is_machine_int m ->
       EConstant (must (mk_width m), c)
 
@@ -562,7 +567,7 @@ and translate_pat env t p =
       env, PBool b
   | MLP_Var (name, _) ->
       let env = extend env name false in
-      env, PVar ({ name = name; typ = translate_type env t; mut = false; mark = 0 })
+      env, PVar ({ name = name; typ = translate_type env t; mut = false; mark = 0; meta = None })
   | MLP_Wild ->
       failwith "todo: translate_pat [MLP_Wild]"
   | MLP_Const _ ->
