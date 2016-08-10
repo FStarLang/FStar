@@ -276,38 +276,36 @@ and translate_decl env d: option<decl> =
   | MLM_Let (flavor, [ {
       mllb_name = name, _;
       mllb_tysc = Some ([], MLTY_Fun (_, _, t));
-      mllb_def = { expr = fun_body }
+      mllb_def = { expr = MLE_Fun (args, body) }
+    } ])
+  | MLM_Let (flavor, [ {
+      mllb_name = name, _;
+      mllb_tysc = Some ([], MLTY_Fun (_, _, t));
+      mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
     } ]) ->
-      begin match fun_body with
-        | MLE_Fun (args, body)
-        | MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) ->
-            assert (flavor <> Mutable);
-            begin try
-              let env = if flavor = Rec then extend env name false else env in
-              let rec find_return_type = function
-                | MLTY_Fun (_, _, t) ->
-                    find_return_type t
-                | t ->
-                    t
-              in
-              let t = translate_type env (find_return_type t) in
-              let binders = translate_binders env args in
-              let env = add_binders env args in
-              let body =
-                if flavor = Assumed then
-                  EAbort
-                else
-                  translate_expr env body
-              in
-              let name = env.module_name ^ "_" ^ name in
-              Some (DFunction (t, name, binders, body))
-            with e ->
-              Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
-              None
-            end
-        |  _ ->
-            Util.print_string "Unexpected body for a function type\n";
-            None
+      assert (flavor <> Mutable);
+      begin try
+        let env = if flavor = Rec then extend env name false else env in
+        let rec find_return_type = function
+          | MLTY_Fun (_, _, t) ->
+              find_return_type t
+          | t ->
+              t
+        in
+        let t = translate_type env (find_return_type t) in
+        let binders = translate_binders env args in
+        let env = add_binders env args in
+        let body =
+          if flavor = Assumed then
+            EAbort
+          else
+            translate_expr env body
+        in
+        let name = env.module_name ^ "_" ^ name in
+        Some (DFunction (t, name, binders, body))
+      with e ->
+        Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
+        None
       end
 
   | MLM_Let (flavor, [ {
