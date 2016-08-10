@@ -101,6 +101,7 @@ val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool
 val push                        : unit    -> unit
 val record_hints                : unit    -> bool
+val reuse_hint_for              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
 val set_options                 : options -> string -> parse_cmdline_res
 val should_print_message        : string  -> bool
