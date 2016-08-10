@@ -265,7 +265,13 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                     else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                  g, ml_lb::ml_lbs)
               (g, []) (snd ml_lbs) (snd lbs) in
-              g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (fst ml_lbs, List.rev ml_lbs')]
+              let qual =
+                if Util.for_some (function Assumption -> true | _ -> false) quals then
+                  Assumed
+                else
+                  fst ml_lbs
+              in
+              g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (qual, List.rev ml_lbs')]
 
             | _ -> 
               failwith (Util.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))

@@ -59,6 +59,7 @@ and expr =
   | EPushFrame
   | EPopFrame
   | EBool of bool
+  | EAbort
 
 and op =
   | Add | AddW | Sub | SubW | Div | Mult | Mod
@@ -291,7 +292,12 @@ and translate_decl env d: option<decl> =
               let t = translate_type env (find_return_type t) in
               let binders = translate_binders env args in
               let env = add_binders env args in
-              let body = translate_expr env body in
+              let body =
+                if flavor = Assumed then
+                  EAbort
+                else
+                  translate_expr env body
+              in
               let name = env.module_name ^ "_" ^ name in
               Some (DFunction (t, name, binders, body))
             with e ->
