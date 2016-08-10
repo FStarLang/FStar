@@ -59,6 +59,7 @@ and expr =
   | EPushFrame
   | EPopFrame
   | EBool of bool
+  | EAny
   | EAbort
 
 and op =
