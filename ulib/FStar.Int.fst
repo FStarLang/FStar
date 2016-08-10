@@ -1,6 +1,23 @@
 module FStar.Int
 open FStar.Mul
 
+val pow2_values: x:nat -> Lemma 
+  (requires True)
+  (ensures (let p = pow2 x in 
+   match x with 
+   | 0  -> p=1
+   | 1  -> p=2
+   | 8  -> p=256
+   | 16 -> p=65536
+   | 31 -> p=2147483648
+   | 32 -> p=4294967296
+   | 63 -> p=9223372036854775808
+   | 64 -> p=18446744073709551616
+   | _  -> True))
+  [SMTPat (pow2 x)]
+#reset-options "--initial_fuel 100 --z3timeout 200 --max_fuel 100 --initial_ifuel 0 --max_ifuel 0"
+let pow2_values x = ()
+#reset-options
 (* NOTE: anything that you fix/update here should be reflected in [FStar.UInt.fst], which is mostly
  * a copy-paste of this module. *)
 

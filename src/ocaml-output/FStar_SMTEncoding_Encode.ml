@@ -3957,8 +3957,8 @@ in (match (_85_2430) with
 (
 
 let eqn_g = (let _177_2009 = (let _177_2008 = (let _177_2005 = (let _177_2004 = (FStar_SMTEncoding_Term.mkEq ((gsapp), (body_tm)))
-in ((((gsapp)::[])::[]), ((fuel)::vars), (_177_2004)))
-in (FStar_SMTEncoding_Term.mkForall _177_2005))
+in ((((gsapp)::[])::[]), (Some (0)), ((fuel)::vars), (_177_2004)))
+in (FStar_SMTEncoding_Term.mkForall' _177_2005))
 in (let _177_2007 = (let _177_2006 = (FStar_Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.FStar_Ident.str)
 in Some (_177_2006))
 in ((_177_2008), (_177_2007), (Some ((Prims.strcat "equation_with_fuel_" g))))))
