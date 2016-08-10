@@ -625,13 +625,6 @@ assume val op_Division           : nat -> nonzero -> Tot int
 let rec pow2 (x:nat) : Tot pos =
   match x with
   | 0  -> 1
-  | 1  -> 2
-  | 8  -> 256
-  | 16 -> 65536
-  | 31 -> 2147483648
-  | 32 -> 4294967296
-  | 63 -> 9223372036854775808
-  | 64 -> 18446744073709551616
   | _  -> 2 `op_Multiply` (pow2 (x-1))
 
 let abs (x:int) : Tot int = if x >= 0 then x else -x
