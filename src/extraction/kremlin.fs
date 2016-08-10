@@ -270,26 +270,33 @@ and translate_decl env d: option<decl> =
   | MLM_Let (flavor, [ {
       mllb_name = name, _;
       mllb_tysc = Some ([], MLTY_Fun (_, _, t));
-      mllb_def = { expr = MLE_Fun (args, body) }
+      mllb_def = { expr = fun_body }
     } ]) ->
-      assert (flavor <> Mutable);
-      begin try
-        let env = if flavor = Rec then extend env name false else env in
-        let rec find_return_type = function
-          | MLTY_Fun (_, _, t) ->
-              find_return_type t
-          | t ->
-              t
-        in
-        let t = translate_type env (find_return_type t) in
-        let binders = translate_binders env args in
-        let env = add_binders env args in
-        let body = translate_expr env body in
-        let name = env.module_name ^ "_" ^ name in
-        Some (DFunction (t, name, binders, body))
-      with e ->
-        Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
-        None
+      begin match fun_body with
+        | MLE_Fun (args, body)
+        | MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) ->
+            assert (flavor <> Mutable);
+            begin try
+              let env = if flavor = Rec then extend env name false else env in
+              let rec find_return_type = function
+                | MLTY_Fun (_, _, t) ->
+                    find_return_type t
+                | t ->
+                    t
+              in
+              let t = translate_type env (find_return_type t) in
+              let binders = translate_binders env args in
+              let env = add_binders env args in
+              let body = translate_expr env body in
+              let name = env.module_name ^ "_" ^ name in
+              Some (DFunction (t, name, binders, body))
+            with e ->
+              Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
+              None
+            end
+        |  _ ->
+            Util.print_string "Unexpected body for a function type\n";
+            None
       end
 
   | MLM_Let (flavor, [ {
@@ -308,11 +315,19 @@ and translate_decl env d: option<decl> =
         None
       end
 
-  | MLM_Let (_, { mllb_name = name, _ } :: _) ->
+  | MLM_Let (_, { mllb_name = name, _; mllb_tysc = ts } :: _) ->
       (* Things we currently do not translate:
        * - polymorphic functions (lemmas do count, sadly)
        *)
       Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
+      begin match ts with
+      | Some (idents, t) ->
+          Util.print2 "Type scheme is: forall %s. %s\n"
+            (String.concat ", " (List.map fst idents))
+            (ML.Code.string_of_mlty ([], "") t)
+      | None ->
+          ()
+      end;
       None
 
   | MLM_Let _ ->
