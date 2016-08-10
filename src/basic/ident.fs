@@ -43,3 +43,6 @@ let range_of_lid (lid:lid) = lid.ident.idRange
 let set_lid_range l r =
   let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
   lid_of_ids ids
+let lid_add_suffix l s = 
+    let path = path_of_lid l in
+    lid_of_path (path@[s]) (range_of_lid l)
