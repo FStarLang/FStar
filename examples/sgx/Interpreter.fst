@@ -30,7 +30,7 @@ let rec fold_left f x y = match y with
   | hd::tl -> fold_left f (f x hd) tl					
 
 
-type memaccess =
+noeq type memaccess =
  |MkMemAccess: 
 	      read: (string->cpuregstate -> dword) -> (* Helper function to read registers, used by store *)
   	      load: (word -> address -> STL dword (requires (fun h -> true)) (ensures (fun h0 r h1 -> true))) -> 
@@ -297,7 +297,7 @@ let invariant env =
 
 val step : bool -> cpuregstate  ->memaccess-> program -> stmt -> STL cpuregstate 
 			(requires (fun h -> true))
-			(ensures (fun h0 r h1 -> invariant r))
+			(ensures (fun h0 r h1 -> true))
 val steps : bool-> cpuregstate ->memaccess-> program -> (list stmt) -> STL cpuregstate
 			(requires (fun h -> true))
 			(ensures (fun h0 r h1 -> true))
