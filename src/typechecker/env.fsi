@@ -70,6 +70,7 @@ type env = {
   type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
+  qname_and_index:option<(lident*int)>;           (* the top-level term we're currently processing and the nth query for it *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -97,7 +98,8 @@ type env_t = env
 val initial_env : (env -> term -> term*typ*guard_t) -> (env -> term -> universe) -> solver_t -> lident -> env
 
 (* Some utilities *)
-val should_verify: env -> bool
+val should_verify   : env -> bool
+val incr_query_index: env -> env
 
 (* Marking and resetting the environment, for the interactive mode *)
 val push        : env -> string -> env

@@ -219,6 +219,7 @@ test:
 utest:
 	make all
 	make fsharp-regressions
+	+make -C ocaml-output
 	make fstar-ocaml
 	+make uregressions
 

@@ -2,32 +2,45 @@
   "\u0017C\u000ft=Ä÷Ós\u0001’æ-åBp",
   [
     [
+      "FStar.OrdMapProps.fold",
+      1,
       2,
       1,
       [
-        "@pretyping__322", "@query_2207", "binder_f__524", "binder_k__521",
-        "binder_m__526", "binder_v__522", "bool_inversion",
+        "@query", "binder_f_d3c0197b587e7c853654bbb6b15ea840",
+        "binder_k_273c0cb114efbc10b99731f088b17ae0",
+        "binder_m_6662f8e33785c7837b9823113e47a368",
+        "binder_v_273c0cb114efbc10b99731f088b17ae0", "bool_inversion",
         "disc_equation_Prims.Some", "equality_tok_Prims.LexTop@tok",
         "equation_Prims.eqtype", "equation_Prims.fst", "equation_Prims.nat",
         "equation_Prims.snd", "kinding_Prims.tuple2@tok",
         "lemma_FStar.OrdMap.choose_m", "lemma_FStar.OrdMap.contains_upd1",
         "lemma_FStar.OrdMap.eq_lemma", "lemma_FStar.OrdMap.size_empty",
-        "lemma_FStar.OrdMap.size_remove", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
-        "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
-        "proj_equation_Prims.Some_v", "projection_inverse_BoxBool_proj_0",
+        "lemma_FStar.OrdMap.size_remove",
+        "pretyping_ae567c2fb75be05905677af440075565",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "proj_equation_Prims.Mktuple2__1",
+        "proj_equation_Prims.Mktuple2__2", "proj_equation_Prims.Some_v",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_113",
-        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.OrdMap.choose", "typing_FStar.OrdMap.empty",
         "typing_FStar.OrdMap.size", "typing_FStar.OrdMap.update",
         "typing_Prims.is_Some", "well-founded-ordering-on-nat"
       ],
       0
     ],
-    [ 2, 1, [ "@query_2222", "assumption_Prims.HasEq_int_325" ], 0 ]
+    [
+      "FStar.OrdMapProps.fold",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ]
   ]
 ]

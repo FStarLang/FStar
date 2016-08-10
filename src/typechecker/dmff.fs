@@ -706,6 +706,17 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 
   in
 
+  let ensure_m (env: env_) (e2: term): term * term * term =
+    let strip_m = function
+      | M t, s_e, u_e -> t, s_e, u_e
+      | _ -> failwith "impossible"
+    in
+    match context_nm with
+    | N t -> raise (Error ("let-bound monadic body has a non-monadic continuation \
+        or a branch of a match is monadic and the others aren't", e2.pos))
+    | M _ -> strip_m (check env e2 context_nm)
+  in
+
   match (SS.compress e).n with
   | Tm_bvar _
   | Tm_name _
@@ -721,14 +732,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
         (fun env e2 -> check env e2 context_nm)
         // Body of the let is monadic: this is a bind, and we must strengthen
         // the check on the continuation to ensure it is a monadic computation
-        (fun env e2 ->
-          let strip_m = function
-            | M t, s_e, u_e -> t, s_e, u_e
-            | _ -> failwith "impossible"
-          in
-          match context_nm with
-          | N t -> strip_m (check env e2 (M t)) // TODO: this should be an error?
-          | M _ -> strip_m (check env e2 context_nm))
+        ensure_m
 
   | Tm_match (e0, branches) ->
       // This is similar to the [let] case above. The [match] checks that the
@@ -933,17 +937,6 @@ and infer (env: env) (e: term): nm * term * term =
 
 and mk_match env e0 branches f =
   let mk x = mk x None e0.pos in
-  let rec strip_implicits (pat:S.pat) = match pat.v with
-    | Pat_wild _
-    | Pat_var _
-    | Pat_constant _ -> Some pat
-    | Pat_disj pats -> Some ({pat with v=List.filter_map strip_implicits pats |> Pat_disj})
-    | Pat_cons(fv, args) -> 
-        let args = args |> List.filter_map (fun (p, b) -> 
-            if b then None
-            else strip_implicits p |> Option.map (fun x -> x, b)) in
-       Some ({pat with v = Pat_cons(fv, args)})
-    | Pat_dot_term _ -> None in
 
   // TODO: automatically [bind] when the scrutinee is monadic?
   let _, s_e0, u_e0 = check_n env e0 in
@@ -952,30 +945,35 @@ and mk_match env e0 branches f =
     | pat, None, body ->
         let env = { env with env = List.fold_left push_bv env.env (pat_bvs pat) } in
         let nm, s_body, u_body = f env body in
-        nm, (Util.must <| strip_implicits pat, None, (s_body, u_body))
+        nm, (pat, None, (s_body, u_body, body))
     | _ ->
         raise (Err ("No when clauses in the definition language"))
   ) branches) in
   let t1 = match List.hd nms with | M t1 | N t1 -> t1 in
   let has_m = List.existsb (function | M _ -> true | _ -> false) nms in
-  let nms, s_branches, u_branches = List.unzip3 (List.map2 (fun nm (pat, guard, (s_body, u_body)) ->
+  let nms, s_branches, u_branches = List.unzip3 (List.map2 (fun nm (pat, guard, (s_body, u_body, original_body)) ->
     match nm, has_m with
     | N t2, false
     | M t2, true ->
         nm, (pat, guard, s_body), (pat, guard, u_body)
     | N t2, true ->
-        // TODO: we could re-generate the body of the branch with [check_m] and
-        // have [return]s inserted at depth, rather than on the outside...
-        M t2, (pat, guard, mk_return env t2 s_body), (pat, guard, u_body)
+        // In checking mode, all the branches are run through "check"... meaning
+        // that they're either all N or all M... the lift from N to M can only
+        // occur in infer mode... instead of calling [mk_return s_body],
+        // re-check_m everything and get code that's better for z3
+        let _, s_body, u_body = check env original_body (M t2) in
+        M t2, (pat, guard, s_body), (pat, guard, u_body)
     | M _, false ->
         failwith "impossible"
   ) nms branches) in
   let s_branches = List.map close_branch s_branches in
   let u_branches = List.map close_branch u_branches in
-  let t1_star = 
-    if has_m 
-    then U.arrow [S.mk_binder <| S.new_bv None (mk_star_to_type mk env t1)] (S.mk_Total U.ktype0)
-    else t1 in
+  let t1_star =
+    if has_m then
+      U.arrow [S.mk_binder <| S.new_bv None (mk_star_to_type mk env t1)] (S.mk_Total U.ktype0)
+    else
+      t1
+  in
   (if has_m then M t1 else N t1), 
   mk (Tm_ascribed (mk (Tm_match (s_e0, s_branches)), Inl t1_star, None)),
   mk (Tm_match (u_e0, u_branches))

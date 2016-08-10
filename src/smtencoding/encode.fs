@@ -73,6 +73,7 @@ type varops_t = {
     fresh:string -> string;
     string_const:string -> term;
     next_id: unit -> int;
+    mk_unique:string -> string;
 }
 let varops =
     let initial_ctr = 100 in
@@ -117,7 +118,8 @@ let varops =
      new_fvar=new_fvar;
      fresh=fresh;
      string_const=string_const;
-     next_id=next_id}
+     next_id=next_id;
+     mk_unique=mk_unique}
 
  let unmangle (x:bv) : bv = {x with ppname=Util.unmangle_field_name x.ppname}
 (* ---------------------------------------------------- *)
@@ -161,6 +163,10 @@ let gen_term_var (env:env_t) (x:bv) =
     ysym, y, {env with bindings=Binding_var(x, y)::env.bindings; depth=env.depth + 1}
 let new_term_constant (env:env_t) (x:bv) =
     let ysym = varops.new_var x.ppname x.index in
+    let y = mkApp(ysym, []) in
+    ysym, y, {env with bindings=Binding_var(x, y)::env.bindings}
+let new_term_constant_from_string (env:env_t) (x:bv) str =
+    let ysym = varops.mk_unique str in
     let y = mkApp(ysym, []) in
     ysym, y, {env with bindings=Binding_var(x, y)::env.bindings}
 let push_term_var (env:env_t) (x:bv) (t:term) =
@@ -483,7 +489,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   Term.mkApp(t', cvars |> List.map mkFreeV), []
 
                 | None ->
-                  let tsym = varops.fresh "Tm_arrow" in
+                  let tsym = varops.mk_unique ("Tm_arrow_" ^ (Util.digest_of_string tkey.hash)) in
                   let cvar_sorts = List.map snd cvars in
                   let caption =
                     if Options.log_queries()
@@ -556,7 +562,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               Term.mkApp(t, cvars |> List.map mkFreeV), []
 
             | None ->
-              let tsym = varops.fresh "Tm_refine" in
+              let tsym = varops.mk_unique ("Tm_refine_" ^ (Util.digest_of_string tkey.hash)) in
               let cvar_sorts = List.map snd cvars in
               let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, None) in
               let t = Term.mkApp(tsym, List.map mkFreeV cvars) in
@@ -590,7 +596,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_uvar (uv, k) ->
         let ttm = Term.mk_Term_uvar (Unionfind.uvar_id uv) in
         let t_has_k, decls = encode_term_pred None k env ttm in //TODO: skip encoding this if it has already been encoded before
-        let d = Term.Assume(t_has_k, Some "Uvar typing", Some (varops.fresh (Util.format1 "@uvar_typing_%s" (Util.string_of_int <| Unionfind.uvar_id uv)))) in
+        let d = Term.Assume(t_has_k, Some "Uvar typing", Some (varops.mk_unique (Util.format1 "uvar_typing_%s" (Util.string_of_int <| Unionfind.uvar_id uv)))) in
         ttm, decls@[d]
 
       | Tm_app _ ->
@@ -635,7 +641,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                         let cvars = Term.free_variables has_type in
                         let e_typing = Term.Assume(Term.mkForall([[has_type]], cvars, has_type), 
                                                    Some "Partial app typing", 
-                                                   Some (varops.fresh "@partial_app_typing_")) in 
+                                                   Some (varops.mk_unique ("partial_app_typing_" ^ (Util.digest_of_string app_tm.hash)))) in
                         app_tm, decls@decls'@decls''@[e_typing]
                 end in
 
@@ -716,7 +722,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                      | Some t -> t, []
                      | None ->
                         let cvar_sorts = List.map snd cvars in
-                        let fsym = varops.fresh "Exp_abs" in
+                        let fsym = varops.mk_unique ("Tm_abs_" ^ (Util.digest_of_string tkey.hash)) in
                         let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
                         let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
                         let app = mk_Apply f vars in
@@ -1121,7 +1127,7 @@ let pretype_axiom tapp vars =
     let ffsym, ff = fresh_fvar "f" Fuel_sort in
     let xx_has_type = mk_HasTypeFuel ff xx tapp in
     Term.Assume(mkForall([[xx_has_type]], (xxsym, Term_sort)::(ffsym, Fuel_sort)::vars,
-                         mkImp(xx_has_type, mkEq(tapp, mkApp("PreType", [xx])))), Some "pretyping", Some (varops.fresh "@pretyping_"))
+                         mkImp(xx_has_type, mkEq(tapp, mkApp("PreType", [xx])))), Some "pretyping", Some (varops.mk_unique ("pretyping_" ^ (Util.digest_of_string tapp.hash))))
 
 let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
     let xx = ("x", Term_sort) in
@@ -1261,7 +1267,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                      Some "exists-interp")] in
    let mk_range_interp : env -> string -> term -> decls_t = fun env range tt ->
         let range_ty = Term.mkApp(range, []) in
-        [Term.Assume(mk_HasTypeZ Term.mk_Range_const range_ty, Some "Range_const typing", Some (varops.fresh "typing_range_const"))] in
+        [Term.Assume(mk_HasTypeZ Term.mk_Range_const range_ty, Some "Range_const typing", Some (varops.mk_unique "typing_range_const"))] in
 
    let prims = [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
@@ -1659,7 +1665,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
      | Sig_assume(l, f, _, _) ->
         let f, decls = encode_formula f env in
-        let g = [Term.Assume(f, Some (format1 "Assumption: %s" (Print.lid_to_string l)), Some (varops.fresh ("assumption_"^l.str)))] in
+        let g = [Term.Assume(f, Some (format1 "Assumption: %s" (Print.lid_to_string l)), Some (varops.mk_unique ("assumption_"^l.str)))] in
         decls@g, env
 
      | Sig_let(lbs, r, _, quals) when (quals |> List.contains S.Irreducible) ->
@@ -1774,7 +1780,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     Term.Assume(mkForall([[xx_has_type_sfuel]], add_fuel (ffsym, Fuel_sort) ((xxsym, Term_sort)::vars),
                                         mkImp(xx_has_type_sfuel, data_ax)), 
                                 Some "inversion axiom", //this name matters! see Sig_bundle case near line 1493
-                                Some (varops.fresh ("fuel_guarded_inversion_"^t.str))) in
+                                Some (varops.mk_unique ("fuel_guarded_inversion_"^t.str))) in
                 let pattern_guarded_inversion = 
                     if contains_name env "Prims.inversion"
                     && List.length datas > 1 //no point emitting this if there's only 1 constructor; it's already covered by the previous inversion
@@ -1783,7 +1789,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                          [Term.Assume(mkForall([[xx_has_type_fuel; pattern_guard]], add_fuel (ffsym, Fuel_sort) ((xxsym, Term_sort)::vars),
                                              mkImp(xx_has_type_fuel, data_ax)), 
                                       Some "inversion axiom",  //this name matters! see Sig_bundle case near line 1493 
-                                      Some (varops.fresh ("pattern_guarded_inversion_"^t.str)))]
+                                      Some (varops.mk_unique ("pattern_guarded_inversion_"^t.str)))]
                     else [] in
                 decls
                 @[fuel_guarded_inversion]
@@ -1891,7 +1897,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                          let xtm = mkFreeV x in
                          Term.Assume(mkForall([[Term.mk_Precedes xtm dapp]], [x], mkImp(mk_tester "LexCons" xtm, Term.mk_Precedes xtm dapp)), 
                                      Some "lextop is top", 
-                                     Some (varops.fresh "lextop"))
+                                     Some (varops.mk_unique "lextop"))
                     else (* subterm ordering *)
                         let prec = vars |> List.collect (fun v -> match snd v with
                             | Fuel_sort -> []
@@ -1959,11 +1965,14 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
           [], env
         
         | Env.Binding_var x -> 
-            let xxsym, xx, env' = new_term_constant env x in
             let t1 = N.normalize [N.Beta; N.Inline; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
             if Env.debug env.tcenv <| Options.Other "SMTEncoding"
             then (Util.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
-            let t, decls' = encode_term_pred None t1 env xx in
+            let t, decls' = encode_term t1 env in
+            let xxsym, xx, env' = 
+                new_term_constant_from_string env x 
+                    (x.ppname.idText ^ "_" ^ Util.digest_of_string t.hash) in
+            let t = mk_HasTypeWithFuel None xx t in
             let caption =
                 if Options.log_queries()
                 then Some (Util.format3 "%s : %s (%s)" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1))
@@ -2104,7 +2113,7 @@ let encode_query use_env_msg tcenv q
         env_decls
         @label_prefix
         @qdecls in
-    let qry = Term.Assume(mkNot phi, Some "query", Some (varops.fresh "@query")) in
+    let qry = Term.Assume(mkNot phi, Some "query", Some (varops.mk_unique "@query")) in
     let suffix = label_suffix@[Term.Echo "Done!"]  in
     query_prelude, labels, qry, suffix 
 

@@ -298,6 +298,8 @@ val ensure_decimal: string -> string
 
 (** Hints. *)
 type hint = {
+    hint_name: string; //name associated to the top-level term in the source program
+    hint_index: int;   //the nth query associated with that top-level term
     fuel:int;  //fuel for unrolling recursive functions
     ifuel:int; //fuel for inverting inductive datatypes
     unsat_core:option<(list<string>)>; //unsat core, if requested

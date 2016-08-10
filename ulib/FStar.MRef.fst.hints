@@ -1,64 +1,70 @@
 [
   "ƒÍ\u0015ûg¦Î›Š°Ï‹ Þ\u0003{",
   [
-    [ 2, 1, [ "@query_1572" ], 0 ],
-    [ 2, 1, [ "@query_1583" ], 0 ],
-    [ 2, 1, [ "@query_1588" ], 0 ],
-    [ 2, 1, [ "@query_1593" ], 0 ],
-    [ 2, 1, [ "@query_1612" ], 0 ],
-    [ 2, 1, [ "@query_1627" ], 0 ],
+    [ "FStar.MRef.monotonic", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.MRef.contains", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.MRef.sel", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.MRef.upd", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.MRef.fresh", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.MRef.alloc", 1, 2, 1, [ "@query" ], 0 ],
     [
+      "FStar.MRef.alloc",
+      2,
       2,
       1,
       [
-        "@query_1631", "equation_FStar.MRef.as_ref",
+        "@query", "equation_FStar.MRef.as_ref",
         "equation_FStar.MRef.contains", "equation_FStar.MRef.fresh",
         "equation_FStar.MRef.mref", "equation_FStar.MRef.upd",
         "equation_FStar.ST.ref"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1639" ], 0 ],
+    [ "FStar.MRef.read", 1, 2, 1, [ "@query" ], 0 ],
     [
+      "FStar.MRef.read",
+      2,
       2,
       1,
       [
-        "@query_1640", "equation_FStar.MRef.as_ref",
-        "equation_FStar.MRef.mref", "equation_FStar.MRef.sel",
-        "equation_FStar.ST.ref", "ref_inversion", "typing_FStar.Heap.sel"
+        "@query", "equation_FStar.MRef.as_ref", "equation_FStar.MRef.mref",
+        "equation_FStar.MRef.sel", "equation_FStar.ST.ref", "ref_inversion",
+        "typing_FStar.Heap.sel"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1651" ], 0 ],
+    [ "FStar.MRef.write", 1, 2, 1, [ "@query" ], 0 ],
     [
+      "FStar.MRef.write",
+      2,
+      2,
+      1,
+      [ "@query", "equation_FStar.MRef.as_ref", "equation_FStar.MRef.upd" ],
+      0
+    ],
+    [ "FStar.MRef.stable", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.MRef.take_token", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.MRef.take_token",
+      2,
       2,
       1,
       [
-        "@query_1652", "equation_FStar.MRef.as_ref",
-        "equation_FStar.MRef.upd"
+        "@query", "equality_tok_Prims.T@tok", "equation_FStar.MRef.token",
+        "equation_Prims.l_True", "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1660" ], 0 ],
-    [ 2, 1, [ "@query_1680" ], 0 ],
+    [ "FStar.MRef.recall_token", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.MRef.stable_on_heap", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.MRef.witness", 1, 2, 1, [ "@query" ], 0 ],
     [
+      "FStar.MRef.witness",
+      2,
       2,
       1,
       [
-        "@query_1682", "equality_tok_Prims.T@tok",
-        "equation_FStar.MRef.token", "equation_Prims.l_True",
-        "typing_tok_Prims.T@tok", "unit_typing"
-      ],
-      0
-    ],
-    [ 2, 1, [ "@query_1691" ], 0 ],
-    [ 2, 1, [ "@query_1699" ], 0 ],
-    [ 2, 1, [ "@query_1715" ], 0 ],
-    [
-      2,
-      1,
-      [
-        "@query_1717", "equality_tok_Prims.T@tok",
+        "@query", "equality_tok_Prims.T@tok",
         "equation_FStar.MRef.witnessed", "equation_Prims.l_True",
         "typing_tok_Prims.T@tok", "unit_typing"
       ],

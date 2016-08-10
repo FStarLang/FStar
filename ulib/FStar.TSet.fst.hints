@@ -1,96 +1,117 @@
 [
   "Ód\u0018z{öâ\u0011Ü!¹¸ÌÈñ³",
   [
-    [ 0, 0, [ "@query_1222" ], 0 ],
-    [ 0, 0, [ "@query_1226" ], 0 ],
-    [ 0, 0, [ "@query_1239" ], 0 ],
-    [ 0, 0, [ "@query_1265" ], 0 ],
-    [ 0, 0, [ "@query_1268" ], 0 ],
-    [ 0, 0, [ "@query_1269" ], 0 ],
-    [ 0, 0, [ "@query_1270" ], 0 ],
-    [ 0, 0, [ "@query_1271" ], 0 ],
-    [ 0, 0, [ "@query_1272" ], 0 ],
-    [ 0, 0, [ "@query_1276" ], 0 ],
-    [ 0, 0, [ "@query_1280" ], 0 ],
+    [ "FStar.TSet.set", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.TSet.equal", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.TSet.singleton", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.TSet.subset", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.TSet.mem_empty", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.TSet.mem_singleton", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.TSet.mem_union", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.TSet.mem_intersect", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.TSet.mem_complement", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.TSet.mem_subset", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.TSet.subset_mem", 1, 0, 0, [ "@query" ], 0 ],
     [
+      "FStar.TSet.mem_empty",
+      2,
       0,
       0,
       [
-        "@query_1281", "equation_FStar.TSet.empty",
-        "equation_FStar.TSet.mem", "equation_Prims.l_False", "false_interp",
-        "interpretation_Exp_abs_1108", "unit_typing"
-      ],
-      0
-    ],
-    [
-      0,
-      0,
-      [
-        "@query_1282", "eq2-interp", "equation_FStar.TSet.mem",
-        "equation_FStar.TSet.singleton", "interpretation_Exp_abs_1244",
+        "@query", "equation_FStar.TSet.empty", "equation_FStar.TSet.mem",
+        "equation_Prims.l_False", "false_interp",
+        "interpretation_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
         "unit_typing"
       ],
       0
     ],
     [
+      "FStar.TSet.mem_singleton",
+      2,
       0,
       0,
       [
-        "@query_1283", "equation_FStar.TSet.mem",
-        "equation_FStar.TSet.union", "interpretation_Exp_abs_1250",
+        "@query", "eq2-interp", "equation_FStar.TSet.mem",
+        "equation_FStar.TSet.singleton",
+        "interpretation_Tm_abs_13caedc89029acfa66f26657769a6146",
         "unit_typing"
       ],
       0
     ],
     [
+      "FStar.TSet.mem_union",
+      2,
       0,
       0,
       [
-        "@query_1284", "equation_FStar.TSet.intersect",
-        "equation_FStar.TSet.mem", "interpretation_Exp_abs_1254",
+        "@query", "equation_FStar.TSet.mem", "equation_FStar.TSet.union",
+        "interpretation_Tm_abs_009685910fdc14e49dd768fe741df7f6",
         "unit_typing"
       ],
       0
     ],
     [
+      "FStar.TSet.mem_intersect",
+      2,
       0,
       0,
       [
-        "@query_1285", "equation_FStar.TSet.complement",
-        "equation_FStar.TSet.mem", "interpretation_Exp_abs_1260",
+        "@query", "equation_FStar.TSet.intersect", "equation_FStar.TSet.mem",
+        "interpretation_Tm_abs_0662f02c672d9437f8a8527cd25f52f1",
         "unit_typing"
       ],
       0
     ],
     [
-      0,
-      0,
-      [ "@query_1286", "equation_FStar.TSet.subset", "unit_typing" ],
-      0
-    ],
-    [
-      0,
-      0,
-      [ "@query_1287", "equation_FStar.TSet.subset", "unit_typing" ],
-      0
-    ],
-    [ 0, 0, [ "@query_1291" ], 0 ],
-    [ 0, 0, [ "@query_1292" ], 0 ],
-    [ 0, 0, [ "@query_1293" ], 0 ],
-    [
+      "FStar.TSet.mem_complement",
+      2,
       0,
       0,
       [
-        "@query_1294", "equation_FStar.PredicateExtensionality.peq",
+        "@query", "equation_FStar.TSet.complement",
+        "equation_FStar.TSet.mem",
+        "interpretation_Tm_abs_cb223a150ca7d4bb39ced5d7ab008682",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.TSet.subset_mem",
+      2,
+      0,
+      0,
+      [ "@query", "equation_FStar.TSet.subset", "unit_typing" ],
+      0
+    ],
+    [
+      "FStar.TSet.mem_subset",
+      2,
+      0,
+      0,
+      [ "@query", "equation_FStar.TSet.subset", "unit_typing" ],
+      0
+    ],
+    [ "FStar.TSet.lemma_equal_intro", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.TSet.lemma_equal_elim", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.TSet.lemma_equal_refl", 1, 0, 0, [ "@query" ], 0 ],
+    [
+      "FStar.TSet.lemma_equal_intro",
+      2,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.PredicateExtensionality.peq",
         "equation_FStar.TSet.equal", "equation_FStar.TSet.mem", "unit_typing"
       ],
       0
     ],
     [
+      "FStar.TSet.lemma_equal_elim",
+      2,
       0,
       0,
       [
-        "@query_1295", "equation_FStar.PredicateExtensionality.predicate",
+        "@query", "equation_FStar.PredicateExtensionality.predicate",
         "equation_FStar.TSet.equal", "equation_FStar.TSet.set",
         "lemma_FStar.PredicateExtensionality.predicateExtensionality",
         "unit_typing"
@@ -98,9 +119,11 @@
       0
     ],
     [
+      "FStar.TSet.lemma_equal_refl",
+      2,
       0,
       0,
-      [ "@query_1296", "lemma_FStar.TSet.lemma_equal_intro", "unit_typing" ],
+      [ "@query", "lemma_FStar.TSet.lemma_equal_intro", "unit_typing" ],
       0
     ]
   ]

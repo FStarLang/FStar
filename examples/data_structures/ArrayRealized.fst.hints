@@ -2,111 +2,131 @@
   "%Ædÿv\u0004\u000eË≠Ù+è(\u0019.•",
   [
     [
+      "ArrayRealized.Const.v",
+      1,
       2,
       1,
       [
-        "@query_1269", "disc_equation_ArrayRealized.Const",
+        "@query", "disc_equation_ArrayRealized.Const",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1262"
+        "refinement_interpretation_Tm_refine_81c6ba08807619303d6b7bf3cec11ee3"
       ],
       0
     ],
     [
+      "ArrayRealized.Upd.ix",
+      1,
       2,
       1,
       [
-        "@query_1278", "disc_equation_ArrayRealized.Upd",
+        "@query", "disc_equation_ArrayRealized.Upd",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1271"
+        "refinement_interpretation_Tm_refine_ee5805f136c8ef6dba18dae39a0ab480"
       ],
       0
     ],
     [
+      "ArrayRealized.Upd.v",
+      1,
       2,
       1,
       [
-        "@query_1286", "disc_equation_ArrayRealized.Upd",
+        "@query", "disc_equation_ArrayRealized.Upd",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1271"
+        "refinement_interpretation_Tm_refine_ee5805f136c8ef6dba18dae39a0ab480"
       ],
       0
     ],
     [
+      "ArrayRealized.Upd.tl",
+      1,
       2,
       1,
       [
-        "@query_1294", "disc_equation_ArrayRealized.Upd",
+        "@query", "disc_equation_ArrayRealized.Upd",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1271"
+        "refinement_interpretation_Tm_refine_ee5805f136c8ef6dba18dae39a0ab480"
       ],
       0
     ],
     [
+      "ArrayRealized.Append.s1",
+      1,
       2,
       1,
       [
-        "@query_1303", "disc_equation_ArrayRealized.Append",
+        "@query", "disc_equation_ArrayRealized.Append",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1296"
+        "refinement_interpretation_Tm_refine_6478a1cdf9eab3314b3b7a4dc337074e"
       ],
       0
     ],
     [
+      "ArrayRealized.Append.s2",
+      1,
       2,
       1,
       [
-        "@query_1309", "disc_equation_ArrayRealized.Append",
+        "@query", "disc_equation_ArrayRealized.Append",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1296"
+        "refinement_interpretation_Tm_refine_6478a1cdf9eab3314b3b7a4dc337074e"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1315" ], 0 ],
-    [ 2, 1, [ "@query_1321" ], 0 ],
+    [ "ArrayRealized.Seq.c", 1, 2, 1, [ "@query" ], 0 ],
+    [ "ArrayRealized.Seq.start_i", 1, 2, 1, [ "@query" ], 0 ],
     [
+      "ArrayRealized.Seq.end_i",
+      1,
       2,
       1,
       [
-        "@query_1333", "equation_Prims.nat",
+        "@query", "equation_Prims.nat",
         "proj_equation_ArrayRealized.Seq_start_i",
         "projection_inverse_ArrayRealized.Seq_start_i",
-        "refinement_interpretation_Tm_refine_1245"
+        "refinement_interpretation_Tm_refine_c98d64f66bc1b384aab766348c37364a"
       ],
       0
     ],
     [
+      "ArrayRealized.create",
+      1,
       2,
       1,
       [
-        "@query_1334", "equation_Prims.nat",
-        "refinement_interpretation_Tm_refine_1165"
+        "@query", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
     [
+      "ArrayRealized.length",
+      1,
       2,
       1,
       [
-        "@query_1339", "equation_Prims.nat",
-        "fuel_guarded_inversion_ArrayRealized.seq_1221",
+        "@query", "equation_Prims.nat",
+        "fuel_guarded_inversion_ArrayRealized.seq",
         "primitive_Prims.op_Subtraction",
         "proj_equation_ArrayRealized.Seq_end_i",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1324",
+        "refinement_interpretation_Tm_refine_f179656cf9685127a9cf26ccdb87300d",
         "typing_ArrayRealized.Seq.end_i"
       ],
       0
     ],
     [
+      "ArrayRealized.__index__",
+      1,
       2,
       1,
       [
-        "@query_1351", "binder_c__9714",
+        "@query", "binder_c_2f6e2a5780ae13482a29e575bf1b2640",
         "disc_equation_ArrayRealized.Append",
         "disc_equation_ArrayRealized.Const",
         "disc_equation_ArrayRealized.Upd",
-        "fuel_guarded_inversion_ArrayRealized.contents_1212",
-        "fuel_guarded_inversion_ArrayRealized.seq_1221",
+        "fuel_guarded_inversion_ArrayRealized.contents",
+        "fuel_guarded_inversion_ArrayRealized.seq",
         "proj_equation_ArrayRealized.Seq_c",
         "subterm_ordering_ArrayRealized.Append",
         "subterm_ordering_ArrayRealized.Seq",
@@ -114,59 +134,75 @@
       ],
       0
     ],
-    [ 2, 1, [ "@query_1359", "assumption_Prims.HasEq_int_325" ], 0 ],
-    [ 2, 1, [ "@query_1370" ], 0 ],
     [
+      "ArrayRealized.__index__",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [ "ArrayRealized.index", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ArrayRealized.__update__",
+      1,
       2,
       1,
       [
-        "@query_1389", "binder_c__18142",
+        "@query", "binder_c_2f6e2a5780ae13482a29e575bf1b2640",
         "disc_equation_ArrayRealized.Append",
         "disc_equation_ArrayRealized.Const",
         "disc_equation_ArrayRealized.Upd",
-        "fuel_guarded_inversion_ArrayRealized.contents_1212",
-        "fuel_guarded_inversion_ArrayRealized.seq_1221",
+        "fuel_guarded_inversion_ArrayRealized.contents",
+        "fuel_guarded_inversion_ArrayRealized.seq",
         "proj_equation_ArrayRealized.Seq_c",
+        "projection_inverse_ArrayRealized.Append_s1",
         "subterm_ordering_ArrayRealized.Append",
         "subterm_ordering_ArrayRealized.Seq"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1400" ], 0 ],
+    [ "ArrayRealized.update", 1, 2, 1, [ "@query" ], 0 ],
     [
+      "ArrayRealized.slice",
+      1,
       2,
       1,
       [
-        "@pretyping__322", "@query_1413", "equation_Prims.nat",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1165",
-        "refinement_interpretation_Tm_refine_1409"
-      ],
-      0
-    ],
-    [
-      2,
-      1,
-      [
-        "@query_1426", "equation_Prims.nat",
-        "refinement_interpretation_Tm_refine_1423"
-      ],
-      0
-    ],
-    [
-      2,
-      1,
-      [
-        "@pretyping__322", "@query_1436", "equation_ArrayRealized.length",
-        "equation_Prims.nat",
-        "fuel_guarded_inversion_ArrayRealized.seq_1221",
+        "@query", "equation_Prims.nat", "int_inversion",
+        "pretyping_ae567c2fb75be05905677af440075565",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1165",
+        "refinement_interpretation_Tm_refine_29ffccf4c4e1a0cd9d0dd9ee5b446033",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "ArrayRealized.split",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.nat",
+        "refinement_interpretation_Tm_refine_e59f54a588e6b4284fbd778e414fd39b"
+      ],
+      0
+    ],
+    [
+      "ArrayRealized.append",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_ArrayRealized.length", "equation_Prims.nat",
+        "fuel_guarded_inversion_ArrayRealized.seq",
+        "pretyping_ae567c2fb75be05905677af440075565",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_ArrayRealized.length"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1444" ], 0 ]
+    [ "ArrayRealized.equal", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

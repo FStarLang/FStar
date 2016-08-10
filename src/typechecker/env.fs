@@ -75,6 +75,7 @@ type env = {
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
+  qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -160,6 +161,7 @@ let initial_env type_of universe_of solver module_lid =
     type_of=type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
+    qname_and_index=None
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -170,31 +172,66 @@ type env_stack_ops = {
     es_mark: env -> env;
     es_reset_mark: env -> env;
     es_commit_mark: env -> env;
-    es_pop:env -> env
+    es_pop:env -> env;
+    es_incr_query_index:env -> env
 }
 
 let stack_ops = 
+    let query_indices = Util.mk_ref [[]] in
+    let push_query_indices () = match !query_indices with 
+        | [] -> failwith "Empty query indices!"
+        | _ -> query_indices := (List.hd !query_indices)::!query_indices 
+    in
+    let pop_query_indices () = match !query_indices with 
+        | [] -> failwith "Empty query indices!"
+        | _::tl -> query_indices := tl 
+    in
+    let add_query_index (l, n) = match !query_indices with 
+        | hd::tl -> query_indices := ((l,n)::hd)::tl
+        | _ -> failwith "Empty query indices" 
+    in
+    let peek_query_indices () = List.hd !query_indices in
     let stack = Util.mk_ref [] in 
     let push env = 
+        push_query_indices();
         stack := env::!stack;
         {env with sigtab=Util.smap_copy (sigtab env);
-                  gamma_cache=Util.smap_copy (gamma_cache env)} in
-    let pop env = match !stack with 
+                  gamma_cache=Util.smap_copy (gamma_cache env)} 
+    in
+    let pop env = 
+        pop_query_indices();
+        match !stack with 
         | env::tl -> 
-         stack := tl;
-         env
-        | _ -> failwith "Impossible: Too many pops" in
-    let mark env = 
-        push env in
-    let commit_mark env = 
-        ignore (pop env); env in
-    let reset_mark env =
-        pop env in
+          stack := tl;
+          env
+        | _ -> failwith "Impossible: Too many pops" 
+    in
+    let mark env = push env in
+    let commit_mark env = ignore (pop env); env in
+    let reset_mark env = pop env in
+    let incr_query_index env =
+        let qix = peek_query_indices () in
+        match env.qname_and_index with 
+        | None -> env
+        | Some (l, n) -> 
+        match qix |> List.tryFind (fun (m, _) -> Ident.lid_equals l m) with 
+        | None -> 
+            let next = n + 1 in 
+            add_query_index (l, next);
+            {env with qname_and_index=Some (l, next)}
+        | Some (_, m) -> 
+            let next = m + 1 in 
+            add_query_index (l, next);
+            {env with qname_and_index=Some (l, next)} 
+    in
     { es_push=push; 
       es_pop=pop;
       es_mark=push;
       es_reset_mark=pop;
-      es_commit_mark=commit_mark; }
+      es_commit_mark=commit_mark; 
+      es_incr_query_index=incr_query_index }
+
+
 
 let push env msg =
     env.solver.push msg;
@@ -211,7 +248,8 @@ let reset_mark env =
 let pop env msg =
     env.solver.pop msg;
     stack_ops.es_pop env
-
+let incr_query_index env = 
+    stack_ops.es_incr_query_index env
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
 ////////////////////////////////////////////////////////////

@@ -1,222 +1,280 @@
 [
   "Èz÷\t¨:‹aü\u000e·J?⁄˚\"",
   [
-    [ 2, 1, [ "@query_2213" ], 0 ],
+    [ "FStar.List.hd", 1, 2, 1, [ "@query" ], 0 ],
     [
+      "FStar.List.nth",
+      1,
       2,
       1,
       [
-        "@query_2214", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
-      ],
-      0
-    ],
-    [ 2, 1, [ "@query_2215", "assumption_Prims.HasEq_int_325" ], 0 ],
-    [
-      2,
-      1,
-      [
-        "@query_2218", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
       ],
       0
     ],
     [
+      "FStar.List.nth",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "FStar.List.iter",
+      1,
       2,
       1,
       [
-        "@query_2221", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
       ],
       0
     ],
     [
+      "FStar.List.iteri_aux",
+      1,
       2,
       1,
       [
-        "@query_2224", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
       ],
       0
     ],
     [
+      "FStar.List.map",
+      1,
       2,
       1,
       [
-        "@query_2238", "binder_x__8583", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list_345",
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
+      ],
+      0
+    ],
+    [
+      "FStar.List.mapT",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_9395c543cfb1ba9420cf09aef2654a71",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
     ],
     [
+      "FStar.List.mapi_init",
+      1,
       2,
       1,
       [
-        "@query_2250", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
       ],
       0
     ],
     [
+      "FStar.List.mapi_initT",
+      1,
       2,
       1,
       [
-        "@query_2265", "binder_l__13858", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list_345",
-        "subterm_ordering_Prims.Cons"
+        "@query", "binder_l_9395c543cfb1ba9420cf09aef2654a71",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0
     ],
     [
+      "FStar.List.concatMap",
+      1,
       2,
       1,
       [
-        "@query_2277", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
       ],
       0
     ],
-    [ 2, 1, [ "@query_2280" ], 0 ],
-    [ 2, 1, [ "@query_2283" ], 0 ],
+    [ "FStar.List.map2", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.List.map3", 1, 2, 1, [ "@query" ], 0 ],
     [
+      "FStar.List.fold_left",
+      1,
       2,
       1,
       [
-        "@query_2286", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
       ],
       0
     ],
-    [ 2, 1, [ "@query_2289" ], 0 ],
+    [ "FStar.List.fold_left2", 1, 2, 1, [ "@query" ], 0 ],
     [
+      "FStar.List.fold_right",
+      1,
       2,
       1,
       [
-        "@query_2292", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
-      ],
-      0
-    ],
-    [
-      2,
-      1,
-      [
-        "@query_2295", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
-      ],
-      0
-    ],
-    [
-      2,
-      1,
-      [
-        "@query_2298", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
-      ],
-      0
-    ],
-    [ 2, 1, [ "@query_2301" ], 0 ],
-    [
-      2,
-      1,
-      [
-        "@query_2304", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
       ],
       0
     ],
     [
+      "FStar.List.filter",
+      1,
       2,
       1,
       [
-        "@query_2307", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
       ],
       0
     ],
     [
+      "FStar.List.for_all",
+      1,
       2,
       1,
       [
-        "@query_2310", "bool_inversion", "bool_typing",
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
+      ],
+      0
+    ],
+    [ "FStar.List.forall2", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.List.collect",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
+      ],
+      0
+    ],
+    [
+      "FStar.List.tryFind",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
+      ],
+      0
+    ],
+    [
+      "FStar.List.tryPick",
+      1,
+      2,
+      1,
+      [
+        "@query", "bool_inversion", "bool_typing",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "disc_equation_Prims.V", "fuel_guarded_inversion_Prims.list_345",
+        "disc_equation_Prims.V", "fuel_guarded_inversion_Prims.list",
         "kinding_Prims.option@tok", "lemma_Prims.invertOption",
         "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_559", "typing_Prims.V.v"
+        "refinement_interpretation_Tm_refine_4c6ebfa415384bc16f78df7e5ba5eba9",
+        "typing_Prims.V.v"
       ],
       0
     ],
     [
+      "FStar.List.choose",
+      1,
       2,
       1,
       [
-        "@query_2313", "bool_inversion", "disc_equation_Prims.Cons",
+        "@query", "bool_inversion", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "disc_equation_Prims.Some",
-        "disc_equation_Prims.V", "fuel_guarded_inversion_Prims.list_345",
+        "disc_equation_Prims.V", "fuel_guarded_inversion_Prims.list",
         "kinding_Prims.option@tok", "lemma_Prims.invertOption",
         "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_559", "typing_Prims.V.v",
-        "typing_Prims.is_None"
+        "refinement_interpretation_Tm_refine_4c6ebfa415384bc16f78df7e5ba5eba9",
+        "typing_Prims.V.v", "typing_Prims.is_None"
       ],
       0
     ],
     [
+      "FStar.List.partition",
+      1,
       2,
       1,
       [
-        "@query_2316", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
       ],
       0
     ],
-    [ 2, 1, [ "@query_2317" ], 0 ],
-    [ 2, 1, [ "@query_2318" ], 0 ],
+    [ "FStar.List.zip", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.List.zip", 2, 2, 1, [ "@query" ], 0 ],
     [
+      "FStar.List.sortWith",
+      1,
       2,
       1,
       [
-        "@query_2328", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
       ],
       0
     ],
     [
+      "FStar.List.splitAt",
+      1,
       2,
       1,
       [
-        "@pretyping__153", "@query_2329", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equation_Prims.nat",
-        "fuel_guarded_inversion_Prims.list_345", "int_inversion",
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.nat", "fuel_guarded_inversion_Prims.list",
+        "int_inversion", "pretyping_f537159ed795b314b4e58c260361ae86",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "proj_equation_Prims.V_v", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.V_v",
-        "refinement_interpretation_Tm_refine_1165"
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
-    [ 2, 1, [ "@query_2330", "assumption_Prims.HasEq_int_325" ], 0 ],
     [
+      "FStar.List.splitAt",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "FStar.List.filter_map",
+      1,
       2,
       1,
       [
-        "@query_2333", "bool_inversion", "bool_typing", "data_elim_Prims.V",
+        "@query", "bool_inversion", "bool_typing", "data_elim_Prims.V",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "disc_equation_Prims.Some", "disc_equation_Prims.V",
-        "fuel_guarded_inversion_Prims.list_345", "lemma_Prims.invertOption",
+        "fuel_guarded_inversion_Prims.list", "lemma_Prims.invertOption",
         "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0",
         "typing_Prims.is_None"
       ],
       0
     ],
     [
+      "FStar.List.index",
+      1,
       2,
       1,
       [
-        "@query_2344", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list_345"
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
       ],
       0
     ]

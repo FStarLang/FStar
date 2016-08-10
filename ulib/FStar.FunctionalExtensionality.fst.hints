@@ -1,8 +1,15 @@
 [
   "f≤XL¿‘SÅ&˙Ú%5—◊1",
   [
-    [ 0, 0, [ "@query_1208" ], 0 ],
-    [ 0, 0, [ "@query_1215" ], 0 ],
-    [ 0, 0, [ "@query_1234" ], 0 ]
+    [ "FStar.FunctionalExtensionality.efun", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.FunctionalExtensionality.feq", 1, 0, 0, [ "@query" ], 0 ],
+    [
+      "FStar.FunctionalExtensionality.Extensionality",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0
+    ]
   ]
 ]

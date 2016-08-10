@@ -153,8 +153,6 @@ let mk_bool_op = function
       Some Eq
   | "op_disEquality" ->
       Some Neq
-  | "op_Negation" ->
-      Some Not
   | _ ->
       None
 
@@ -185,8 +183,6 @@ let mk_op = function
   | "shift_right" | "op_Greater_Greater_Hat" ->
       Some BShiftR
   | "shift_left" | "op_Less_Less_Hat" ->
-      Some BShiftL
-  | "op_Less_Less_Hat" ->
       Some BShiftL
   | "eq" | "op_Equals_Hat" ->
       Some Eq
@@ -333,6 +329,10 @@ and translate_decl env d: option<decl> =
       Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
       None
 
+  | MLM_Ty [] ->
+      Util.print_string "Impossible!! Empty block of mutually recursive type declarations";
+      None
+
   | MLM_Top _ ->
       failwith "todo: translate_decl [MLM_Top]"
 
@@ -377,11 +377,9 @@ and translate_type env t: typ =
       TAny
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
-  | MLTY_Named ([], (path, type_name)) ->
+  | MLTY_Named (_, (path, type_name)) ->
+      // Generate an unbound reference... to be filled in later by glue code.
       TQualified (path, type_name)
-  | MLTY_Named (_, p) ->
-      failwith (Util.format2 "todo: translate_type [MLTY_Named] %s (module_name = %s)"
-        (Syntax.string_of_mlpath p) env.module_name)
   | MLTY_Tuple _ ->
       failwith "todo: translate_type [MLTY_Tuple]"
 
@@ -501,8 +499,8 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_Name (path, function_name) }, args) ->
       EApp (EQualified (path, function_name), List.map (translate_expr env) args)
 
-  | MLE_Coerce ({ expr = MLE_Const MLC_Unit }, t_from, t_to) ->
-      ECast (EUnit, translate_type env t_to)
+  | MLE_Coerce (e, t_from, t_to) ->
+      ECast (translate_expr env e, translate_type env t_to)
 
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
@@ -528,6 +526,8 @@ and translate_expr env e: expr =
       failwith "todo: translate_expr [MLE_Raise]"
   | MLE_Try _ ->
       failwith "todo: translate_expr [MLE_Try]"
+  | MLE_Coerce _ ->
+      failwith "todo: translate_expr [MLE_Coerce]"
 
 and translate_branches env t branches =
   List.map (translate_branch env t) branches
@@ -577,6 +577,8 @@ and translate_constant c: expr =
       failwith "todo: translate_expr [MLC_String]"
   | MLC_Bytes _ ->
       failwith "todo: translate_expr [MLC_Bytes]"
+  | MLC_Int (_, None) ->
+      failwith "todo: translate_expr [MLC_Int]"
 
 (* Helper functions **********************************************************)
 

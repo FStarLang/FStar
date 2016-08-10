@@ -1,21 +1,23 @@
 [
   "‰Ö\u0001šìãPÿGTðì“ƒ×\u0014",
   [
-    [ 2, 1, [ "@query_1805" ], 0 ],
-    [ 2, 1, [ "@query_1813" ], 0 ],
-    [ 2, 1, [ "@query_1814" ], 0 ],
-    [ 2, 1, [ "@query_1822", "assumption_Prims.HasEq_int_325" ], 0 ],
-    [ 2, 1, [ "@query_1826" ], 0 ],
+    [ "TestGhost.g", 1, 2, 1, [ "@query" ], 0 ],
+    [ "TestGhost.h", 1, 2, 1, [ "@query" ], 0 ],
+    [ "TestGhost.h", 2, 2, 1, [ "@query" ], 0 ],
+    [ "TestGhost.i", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
+    [ "TestGhost.i", 2, 2, 1, [ "@query" ], 0 ],
     [
+      "TestGhost.i",
+      3,
       2,
       1,
       [
-        "@pretyping__322", "@query_1827", "equation_FStar.Ghost.hide",
-        "equation_FStar.Ghost.reveal"
+        "@query", "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
+        "pretyping_ae567c2fb75be05905677af440075565"
       ],
       0
     ],
-    [ 2, 1, [ "@query_1835", "assumption_Prims.HasEq_int_325" ], 0 ],
-    [ 2, 1, [ "@query_1839" ], 0 ]
+    [ "TestGhost.j", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
+    [ "TestGhost.j", 2, 2, 1, [ "@query" ], 0 ]
   ]
 ]

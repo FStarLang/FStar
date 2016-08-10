@@ -1,12 +1,14 @@
 [
   "×j\u0007ç§Ážúk?ëŽ\u0019N¼ž",
   [
-    [ 2, 1, [ "@query_1593" ], 0 ],
+    [ "TestSet.AB_distinct", 1, 2, 1, [ "@query" ], 0 ],
     [
+      "TestSet.should_succeed",
+      1,
       2,
       1,
       [
-        "@query_1595", "function_token_typing_TestSet.a",
+        "@query", "function_token_typing_TestSet.a",
         "function_token_typing_TestSet.b",
         "function_token_typing_TestSet.elt", "l_or-interp",
         "lemma_FStar.TSet.lemma_equal_intro",

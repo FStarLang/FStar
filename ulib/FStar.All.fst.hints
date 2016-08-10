@@ -1,9 +1,9 @@
 [
   "éÍîüÞ0¦GÕ™×rµ>”<",
   [
-    [ 2, 1, [ "@query_1566" ], 0 ],
-    [ 2, 1, [ "@query_1576" ], 0 ],
-    [ 2, 1, [ "@query_1597" ], 0 ],
-    [ 2, 1, [ "@query_1605" ], 0 ]
+    [ "FStar.All.lift_state_all", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.All.lift_exn_all", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.All.All", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.All.failwith", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

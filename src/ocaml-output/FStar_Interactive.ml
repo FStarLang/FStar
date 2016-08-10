@@ -275,7 +275,7 @@ end))
 end))
 
 
-let detect_dependencies_with_first_interactive_chunk : Prims.unit  ->  Prims.string Prims.list = (fun _88_116 -> (match (()) with
+let detect_dependencies_with_first_interactive_chunk : Prims.unit  ->  (Prims.string * Prims.string Prims.list) = (fun _88_116 -> (match (()) with
 | () -> begin
 (
 
@@ -321,13 +321,14 @@ in (
 let _88_161 = (FStar_Parser_Dep.collect FStar_Parser_Dep.VerifyUserList ((filename)::[]))
 in (match (_88_161) with
 | (_88_157, all_filenames, _88_160) -> begin
-(let _180_185 = (FStar_List.tl all_filenames)
+(let _180_186 = (let _180_185 = (FStar_List.tl all_filenames)
 in (FStar_List.rev _180_185))
+in ((filename), (_180_186)))
 end)))
 end
 | Some (Some (_88_163), Some (_88_166)) -> begin
-(let _180_186 = (FStar_Util.format1 "The combination of split interfaces and interactive verification is not supported for: %s\n" module_name)
-in (fail _180_186))
+(let _180_187 = (FStar_Util.format1 "The combination of split interfaces and interactive verification is not supported for: %s\n" module_name)
+in (fail _180_187))
 end
 | Some (None, None) -> begin
 (FStar_All.failwith "impossible")
@@ -344,10 +345,10 @@ end)))
 end))
 
 
-let interactive_mode = (fun env initial_mod tc -> (
+let interactive_mode = (fun filename env initial_mod tc -> (
 
-let _88_179 = if (let _180_191 = (FStar_Options.codegen ())
-in (FStar_Option.isSome _180_191)) then begin
+let _88_180 = if (let _180_193 = (FStar_Options.codegen ())
+in (FStar_Option.isSome _180_193)) then begin
 (FStar_Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag")
 end else begin
 ()
@@ -358,20 +359,20 @@ let rec go = (fun stack curmod env -> (match ((shift_chunk ())) with
 | Pop (msg) -> begin
 (
 
-let _88_187 = (tc.pop env msg)
+let _88_188 = (tc.pop env msg)
 in (
 
-let _88_199 = (match (stack) with
+let _88_200 = (match (stack) with
 | [] -> begin
 (
 
-let _88_190 = (FStar_Util.print_error "too many pops")
+let _88_191 = (FStar_Util.print_error "too many pops")
 in (FStar_All.exit 1))
 end
 | (hd)::tl -> begin
 ((hd), (tl))
 end)
-in (match (_88_199) with
+in (match (_88_200) with
 | ((env, curmod), stack) -> begin
 (go stack curmod env)
 end)))
@@ -390,10 +391,10 @@ end
 
 let fail = (fun curmod env_mark -> (
 
-let _88_213 = (tc.report_fail ())
+let _88_214 = (tc.report_fail ())
 in (
 
-let _88_215 = (FStar_Util.print1 "%s\n" fail)
+let _88_216 = (FStar_Util.print1 "%s\n" fail)
 in (
 
 let env = (tc.reset_mark env_mark)
@@ -409,7 +410,7 @@ in (match (res) with
 if (n_errs = 0) then begin
 (
 
-let _88_225 = (FStar_Util.print1 "\n%s\n" ok)
+let _88_226 = (FStar_Util.print1 "\n%s\n" ok)
 in (
 
 let env = (tc.commit_mark env)
@@ -418,11 +419,19 @@ end else begin
 (fail curmod env_mark)
 end
 end
-| _88_229 -> begin
+| _88_230 -> begin
 (fail curmod env_mark)
 end))))
 end))
-in (go [] initial_mod env))))
+in if (((FStar_Options.universes ()) && ((FStar_Options.record_hints ()) || (FStar_Options.use_hints ()))) && (FStar_Option.isSome filename)) then begin
+(let _180_205 = (FStar_Option.get filename)
+in (FStar_SMTEncoding_Solver.with_hints_db _180_205 (fun _88_231 -> (match (()) with
+| () -> begin
+(go [] initial_mod env)
+end))))
+end else begin
+(go [] initial_mod env)
+end)))
 
 
 
