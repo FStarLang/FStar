@@ -1394,7 +1394,7 @@ end
 | FStar_Extraction_ML_Syntax.MLE_Match (expr, branches) -> begin
 (
 
-let t = expr.FStar_Extraction_ML_Syntax.mlty
+let t = e.FStar_Extraction_ML_Syntax.mlty
 in (let _172_571 = (let _172_570 = (translate_expr env expr)
 in (let _172_569 = (translate_branches env t branches)
 in (let _172_568 = (translate_type env t)

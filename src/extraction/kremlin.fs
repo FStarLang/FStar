@@ -460,7 +460,7 @@ and translate_expr env e: expr =
       ELet (binder, body, continuation)
 
   | MLE_Match (expr, branches) ->
-      let t = expr.mlty in
+      let t = e.mlty in
       EMatch (translate_expr env expr, translate_branches env t branches, translate_type env t)
 
   // We recognize certain distinguished names from [FStar.HST] and other
