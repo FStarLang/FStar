@@ -726,6 +726,7 @@ let doc_of_mod (currentModule : mlsymbol) (m : mlmodule) =
 (* -------------------------------------------------------------------- *)
 let rec doc_of_mllib_r (MLLib mllib) =
     let rec for1_sig (x, sigmod, MLLib sub) =
+        let x = Util.flatten_mlpath x in
         let head = reduce1 [text "module"; text x; text ":"; text "sig"] in
         let tail = reduce1 [text "end"] in
         let doc  = Option.map (fun (s, _) -> doc_of_sig x s) sigmod in
@@ -741,6 +742,7 @@ let rec doc_of_mllib_r (MLLib mllib) =
             cat tail hardline;
         ]
     and for1_mod istop (x, sigmod, MLLib sub) =
+        let x = Util.flatten_mlpath x in
         let head = reduce1 (if Util.codegen_fsharp()
                             then [text "module";  text x]
                             else if not istop
@@ -768,7 +770,8 @@ let rec doc_of_mllib_r (MLLib mllib) =
 
     in
 
-    let docs = List.map (fun (x,s,m) -> (x,for1_mod true (x,s,m))) mllib in
+    let docs = List.map (fun (x,s,m) ->
+      (Util.flatten_mlpath x,for1_mod true (x,s,m))) mllib in
     docs
 
 (* -------------------------------------------------------------------- *)

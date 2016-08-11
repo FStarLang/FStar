@@ -113,5 +113,5 @@ let rec extract (g:env) (m:modul) : env * list<mllib> =
          g, [] //MLLib([Util.flatten_mlpath name, None, MLLib []])
     else let g, sigs = Util.fold_map extract_sig g m.declarations in
          let mlm : mlmodule = List.flatten sigs in
-         g, [MLLib ([Util.flatten_mlpath name, Some ([], mlm), (MLLib [])])]
+         g, [MLLib ([name, Some ([], mlm), (MLLib [])])]
 
