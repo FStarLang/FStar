@@ -162,13 +162,18 @@ extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
 	$(FSTAR) --stratified --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app \
 	  $(addprefix --no_extract ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
 
-ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml
+ocaml:
+	+make clean_ocaml_prep
+	+make extract_ocaml_prep
+	+make extract_ocaml
 
-fstar-ocaml: ocaml boot-ocaml
+fstar-ocaml:
+	+make ocaml
+	+make boot-ocaml
 
 boot-ocaml:
-	make -C ocaml-output clean
-	make -C ocaml-output all
+	+make -C ocaml-output clean
+	+make -C ocaml-output all
 
 # --------------------------------------------------------------------
 # Bootstrapping in F#

@@ -22,6 +22,9 @@ let bool_lid : FStar_Ident.lident = (pconst "bool")
 let unit_lid : FStar_Ident.lident = (pconst "unit")
 
 
+let squash_lid : FStar_Ident.lident = (pconst "squash")
+
+
 let string_lid : FStar_Ident.lident = (pconst "string")
 
 
@@ -317,6 +320,9 @@ let tset_singleton : FStar_Ident.lident = (p2l (("FStar")::("TSet")::("singleton
 
 
 let tset_union : FStar_Ident.lident = (p2l (("FStar")::("TSet")::("union")::[]))
+
+
+let erased_lid : FStar_Ident.lident = (p2l (("FStar")::("Ghost")::("erased")::[]))
 
 
 let effect_PURE_lid : FStar_Ident.lident = (pconst "PURE")
