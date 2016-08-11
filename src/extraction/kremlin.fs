@@ -376,8 +376,6 @@ and translate_type env t: typ =
       TUnit
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.bool") ->
       TBool
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.int") ->
-      failwith "todo: translate_type [Prims.int]"
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt8.t") ->
       TInt UInt8
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt16.t") ->
@@ -396,9 +394,6 @@ and translate_type env t: typ =
       TInt Int64
   | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Buffer.buffer") ->
       TBuf (translate_type env arg)
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.HyperStack.mem") ->
-      // HACK ALERT HACK ALERT we shouldn't even be extracting this!
-      TAny
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
   | MLTY_Named (_, (path, type_name)) ->
