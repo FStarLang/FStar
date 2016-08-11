@@ -75,12 +75,11 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   push_frame();
 
   (* Temporary buffers (to be improved) *)
-  let otk = create 0uy 32ul in   (* OTK for Poly (to improve) *)
+  let otk   = create 0uy 32ul in (* OTK for Poly (to improve) *)
   let state = create 0ul 32ul in (* Chacha inner state *)
-  let block = create 0ul 32ul in (* Chacha inner state *)
-  let acc = create 0UL 5ul in (* Poly's accumulator *)
-  let r = create 0UL 5ul in (* First half of poly's key, will be removed (merged with otk) *)
-  (* let s = create 0UL 5ul in (\* Second half of poly's key, will be removed (merged with otk) *\) *)
+  let acc   = create 0UL 5ul  in (* Poly's accumulator *)
+  let r     = create 0UL 5ul  in (* First half of poly's key, will be removed (merged with otk) *)
+(*  let s     = create 0UL 5ul  in (\* Second half of poly's key, will be removed (merged with otk) *\) *)
 
   (** Create OTK, using round '0' of Chacha20 *)
   let counter = 0ul in

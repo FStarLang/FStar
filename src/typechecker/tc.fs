@@ -37,6 +37,21 @@ module PP = FStar.Syntax.Print
 
 // VALS_HACK_HERE
 
+//set the name of the query so that we can correlate hints to source program fragments
+let set_hint_correlator env se =
+    match Options.reuse_hint_for () with 
+    | Some l -> 
+      let lid = Ident.lid_add_suffix (Env.current_module env) l in
+      {env with qname_and_index=Some (lid, 0)}
+
+    | None -> 
+      let lids = Util.lids_of_sigelt se in
+      let lid = match lids with 
+            | [] -> Ident.lid_add_suffix (Env.current_module env) 
+                                         (S.next_id () |> Util.string_of_int) 
+            | l::_ -> l in
+      {env with qname_and_index=Some (lid, 0)}
+
 let log env = (Options.log_types()) && not(lid_equals Const.prims_lid (Env.current_module env))
 let rng env = Env.get_range env
 let instantiate_both env = {env with Env.instantiate_imp=true}
@@ -2706,14 +2721,7 @@ and tc_inductive env ses quals lids =
     else [sig_bndle]
 
 and tc_decl env se: list<sigelt> * _ = 
-    let lids = Util.lids_of_sigelt se in
-    let env = 
-        let lid = match lids with 
-            | [] -> let l = Env.current_module env in
-                    let p = Ident.path_of_lid l @ [S.next_id () |> Util.string_of_int] in
-                    Ident.lid_of_path p Range.dummyRange
-            | l::_ -> l in
-        {env with qname_and_index=Some (lid, 0)} in //set the name of the query so that we can correlate hints to source program fragments
+    let env = set_hint_correlator env se in
     match se with
     | Sig_inductive_typ _
     | Sig_datacon _ ->

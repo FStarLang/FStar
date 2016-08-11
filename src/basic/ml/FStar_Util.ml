@@ -764,8 +764,8 @@ let read_hints (filename: string): hints_db option =
     )
   with
    | Exit ->
-      Printf.eprintf "Malformed JSON hints file: %s\n" filename;
+      Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
       None
    | Sys_error _ -> 
-      Printf.eprintf "Unable to open hints file: %s\n" filename;
+      Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
       None

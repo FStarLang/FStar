@@ -127,6 +127,7 @@ let init () =
         ("print_universes"              , Bool false);
         ("prn"                          , Bool false);
         ("record_hints"                 , Bool false);
+        ("reuse_hint_for"               , Unset);
         ("show_signatures"              , List []);
         ("silent"                       , Bool false);
         ("smt"                          , Unset);
@@ -202,6 +203,7 @@ let get_print_implicits         ()      = lookup_opt "print_implicits"          
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
+let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
 let get_show_signatures         ()      = lookup_opt "show_signatures"          (as_list as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
@@ -517,6 +519,11 @@ let rec specs () : list<Getopt.opt> =
         "Record a database of hints for efficient proof replay");
 
        ( noshort,
+        "reuse_hint_for",
+        OneArg (String, "top-level name in the current module"),
+        "Optimistically, attempt using the recorded hint for 'f' when trying to verify some other term 'g'");
+
+       ( noshort,
         "show_signatures",
         OneArg((fun x -> List (x::get_show_signatures() |> List.map String)),
                 "[module name]"),
@@ -812,6 +819,7 @@ let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn                         ()
 let print_universes              () = get_print_universes             ()
 let record_hints                 () = get_record_hints                ()
+let reuse_hint_for               () = get_reuse_hint_for              ()
 let silent                       () = get_silent                      ()
 let split_cases                  () = get_split_cases                 ()
 let timing                       () = get_timing                      ()

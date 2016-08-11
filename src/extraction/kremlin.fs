@@ -44,7 +44,7 @@ and expr =
   | EUnit
   | EApp of expr * list<expr>
   | ELet of binder * expr * expr
-  | EIfThenElse of expr * expr * expr
+  | EIfThenElse of expr * expr * expr * typ
   | ESequence of list<expr>
   | EAssign of expr * expr
     (** left expression can only be a EBound of EOpen *)
@@ -53,12 +53,14 @@ and expr =
   | EBufWrite of expr * expr * expr
   | EBufSub of expr * expr
   | EBufBlit of expr * expr * expr * expr * expr
-  | EMatch of expr * branches
+  | EMatch of expr * branches * typ
   | EOp of op * width
   | ECast of expr * typ
   | EPushFrame
   | EPopFrame
   | EBool of bool
+  | EAny
+  | EAbort
 
 and op =
   | Add | AddW | Sub | SubW | Div | Mult | Mod
@@ -98,7 +100,11 @@ and binder = {
   typ: typ;
   mut: bool;
   mark: int;
+  meta: option<meta>;
 }
+
+and meta =
+  | MetaSequence
 
 and ident =
   string (** for pretty-printing *)
@@ -119,7 +125,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 6
+let current_version: version = 7
 
 type file = string * program
 type binary_format = version * list<file>
@@ -153,8 +159,6 @@ let mk_bool_op = function
       Some Eq
   | "op_disEquality" ->
       Some Neq
-  | "op_Negation" ->
-      Some Not
   | _ ->
       None
 
@@ -185,8 +189,6 @@ let mk_op = function
   | "shift_right" | "op_Greater_Greater_Hat" ->
       Some BShiftR
   | "shift_left" | "op_Less_Less_Hat" ->
-      Some BShiftL
-  | "op_Less_Less_Hat" ->
       Some BShiftL
   | "eq" | "op_Equals_Hat" ->
       Some Eq
@@ -275,6 +277,11 @@ and translate_decl env d: option<decl> =
       mllb_name = name, _;
       mllb_tysc = Some ([], MLTY_Fun (_, _, t));
       mllb_def = { expr = MLE_Fun (args, body) }
+    } ])
+  | MLM_Let (flavor, [ {
+      mllb_name = name, _;
+      mllb_tysc = Some ([], MLTY_Fun (_, _, t));
+      mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
     } ]) ->
       assert (flavor <> Mutable);
       begin try
@@ -288,7 +295,12 @@ and translate_decl env d: option<decl> =
         let t = translate_type env (find_return_type t) in
         let binders = translate_binders env args in
         let env = add_binders env args in
-        let body = translate_expr env body in
+        let body =
+          if flavor = Assumed then
+            EAbort
+          else
+            translate_expr env body
+        in
         let name = env.module_name ^ "_" ^ name in
         Some (DFunction (t, name, binders, body))
       with e ->
@@ -312,11 +324,19 @@ and translate_decl env d: option<decl> =
         None
       end
 
-  | MLM_Let (_, { mllb_name = name, _ } :: _) ->
+  | MLM_Let (_, { mllb_name = name, _; mllb_tysc = ts } :: _) ->
       (* Things we currently do not translate:
        * - polymorphic functions (lemmas do count, sadly)
        *)
       Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
+      begin match ts with
+      | Some (idents, t) ->
+          Util.print2 "Type scheme is: forall %s. %s\n"
+            (String.concat ", " (List.map fst idents))
+            (ML.Code.string_of_mlty ([], "") t)
+      | None ->
+          ()
+      end;
       None
 
   | MLM_Let _ ->
@@ -331,6 +351,10 @@ and translate_decl env d: option<decl> =
 
   | MLM_Ty ((name, _, _) :: _) ->
       Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
+      None
+
+  | MLM_Ty [] ->
+      Util.print_string "Impossible!! Empty block of mutually recursive type declarations";
       None
 
   | MLM_Top _ ->
@@ -377,11 +401,9 @@ and translate_type env t: typ =
       TAny
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
-  | MLTY_Named ([], (path, type_name)) ->
+  | MLTY_Named (_, (path, type_name)) ->
+      // Generate an unbound reference... to be filled in later by glue code.
       TQualified (path, type_name)
-  | MLTY_Named (_, p) ->
-      failwith (Util.format2 "todo: translate_type [MLTY_Named] %s (module_name = %s)"
-        (Syntax.string_of_mlpath p) env.module_name)
   | MLTY_Tuple _ ->
       failwith "todo: translate_type [MLTY_Tuple]"
 
@@ -389,7 +411,7 @@ and translate_binders env args =
   List.map (translate_binder env) args
 
 and translate_binder env ((name, _), typ) =
-  { name = name; typ = translate_type env typ; mut = false; mark = 0 }
+  { name = name; typ = translate_type env typ; mut = false; mark = 0; meta = None }
 
 and translate_expr env e: expr =
   match e.expr with
@@ -431,7 +453,7 @@ and translate_expr env e: expr =
           typ, body
       in
       let is_mut = flavor = Mutable in
-      let binder = { name = name; typ = translate_type env typ; mut = is_mut; mark = 0 } in
+      let binder = { name = name; typ = translate_type env typ; mut = is_mut; mark = 0; meta = None } in
       let body = translate_expr env body in
       let env = extend env name is_mut in
       let continuation = translate_expr env continuation in
@@ -439,7 +461,7 @@ and translate_expr env e: expr =
 
   | MLE_Match (expr, branches) ->
       let t = expr.mlty in
-      EMatch (translate_expr env expr, translate_branches env t branches)
+      EMatch (translate_expr env expr, translate_branches env t branches, translate_type env t)
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Kremlin constructs
@@ -475,6 +497,7 @@ and translate_expr env e: expr =
       mk_op_app env Bool (must (mk_bool_op op)) args
 
   // Fixed-width literals are represented as calls to [FStar.Int32.uint_to_t]
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "int_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }])
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "uint_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when is_machine_int m ->
       EConstant (must (mk_width m), c)
 
@@ -501,8 +524,8 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_Name (path, function_name) }, args) ->
       EApp (EQualified (path, function_name), List.map (translate_expr env) args)
 
-  | MLE_Coerce ({ expr = MLE_Const MLC_Unit }, t_from, t_to) ->
-      ECast (EUnit, translate_type env t_to)
+  | MLE_Coerce (e, t_from, t_to) ->
+      ECast (translate_expr env e, translate_type env t_to)
 
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
@@ -528,6 +551,8 @@ and translate_expr env e: expr =
       failwith "todo: translate_expr [MLE_Raise]"
   | MLE_Try _ ->
       failwith "todo: translate_expr [MLE_Try]"
+  | MLE_Coerce _ ->
+      failwith "todo: translate_expr [MLE_Coerce]"
 
 and translate_branches env t branches =
   List.map (translate_branch env t) branches
@@ -547,7 +572,7 @@ and translate_pat env t p =
       env, PBool b
   | MLP_Var (name, _) ->
       let env = extend env name false in
-      env, PVar ({ name = name; typ = translate_type env t; mut = false; mark = 0 })
+      env, PVar ({ name = name; typ = translate_type env t; mut = false; mark = 0; meta = None })
   | MLP_Wild ->
       failwith "todo: translate_pat [MLP_Wild]"
   | MLP_Const _ ->
@@ -577,6 +602,8 @@ and translate_constant c: expr =
       failwith "todo: translate_expr [MLC_String]"
   | MLC_Bytes _ ->
       failwith "todo: translate_expr [MLC_Bytes]"
+  | MLC_Int (_, None) ->
+      failwith "todo: translate_expr [MLC_Int]"
 
 (* Helper functions **********************************************************)
 

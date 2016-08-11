@@ -184,31 +184,51 @@ let stack_ops =
     in
     let pop_query_indices () = match !query_indices with 
         | [] -> failwith "Empty query indices!"
-        | _::tl -> query_indices := tl 
+        | hd::tl -> query_indices := tl
     in
     let add_query_index (l, n) = match !query_indices with 
         | hd::tl -> query_indices := ((l,n)::hd)::tl
         | _ -> failwith "Empty query indices" 
     in
     let peek_query_indices () = List.hd !query_indices in
+    let commit_query_index_mark () = match !query_indices with 
+        | hd::_::tl -> query_indices := hd::tl
+        | _ -> failwith "Unmarked query index stack"
+    in
     let stack = Util.mk_ref [] in 
-    let push env = 
-        push_query_indices();
+    let push_stack env = 
         stack := env::!stack;
         {env with sigtab=Util.smap_copy (sigtab env);
                   gamma_cache=Util.smap_copy (gamma_cache env)} 
     in
-    let pop env = 
-        pop_query_indices();
+    let pop_stack env =                
         match !stack with 
         | env::tl -> 
           stack := tl;
           env
         | _ -> failwith "Impossible: Too many pops" 
     in
-    let mark env = push env in
-    let commit_mark env = ignore (pop env); env in
-    let reset_mark env = pop env in
+    let push env = 
+        push_query_indices();
+        push_stack env
+    in
+    let pop env = 
+        pop_query_indices();
+        pop_stack env
+    in
+    let mark env = 
+        push_query_indices();
+        push_stack env 
+    in
+    let commit_mark env = 
+        commit_query_index_mark();
+        ignore (pop_stack env); 
+        env 
+    in
+    let reset_mark env = 
+        pop_query_indices();
+        pop_stack env
+    in
     let incr_query_index env =
         let qix = peek_query_indices () in
         match env.qname_and_index with 

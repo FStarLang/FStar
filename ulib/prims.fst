@@ -622,7 +622,11 @@ let invertOption a = allow_inversion (option a)
 assume val op_Modulus            : int -> nonzero -> Tot int
 assume val op_Division           : nat -> nonzero -> Tot int
 
-let rec pow2 (x:nat) : Tot pos = if x = 0 then 1 else op_Multiply 2 (pow2 (x-1))
+let rec pow2 (x:nat) : Tot pos =
+  match x with
+  | 0  -> 1
+  | _  -> 2 `op_Multiply` (pow2 (x-1))
+
 let abs (x:int) : Tot int = if x >= 0 then x else -x
 
 assume val string_of_bool: bool -> Tot string

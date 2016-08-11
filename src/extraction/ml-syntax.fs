@@ -142,6 +142,7 @@ and mlletbinding = mlletflavor * list<mllb>
 and mlletflavor =
   | Rec
   | Mutable // C backend only
+  | Assumed // C backend only
   | NoLetQualifier
 
 type mltybody =

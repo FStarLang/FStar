@@ -1520,7 +1520,8 @@ let encode_top_level_let env (is_rec, bindings) quals =
                     let body_tm, decls2 = encode_term body env' in
                     //NS 05.25: This used to be  mkImp(mk_and_l guards, mkEq(gsapp, body_tm)
                     //But, the pattern ensures that this only applies to well-typed terms
-                    let eqn_g = Term.Assume(mkForall([[gsapp]], fuel::vars,  mkEq(gsapp, body_tm)),
+                    //NS 08/10: Setting the weight of this quantifier to 0, since its instantiations are controlled by F* fuel
+                    let eqn_g = Term.Assume(mkForall'([[gsapp]], Some 0, fuel::vars, mkEq(gsapp, body_tm)),
                                             Some (Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.str),
                                             Some ("equation_with_fuel_" ^g)) in
                     let eqn_f = Term.Assume(mkForall([[app]], vars, mkEq(app, gmax)), 
