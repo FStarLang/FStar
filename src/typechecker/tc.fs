@@ -37,6 +37,21 @@ module PP = FStar.Syntax.Print
 
 // VALS_HACK_HERE
 
+//set the name of the query so that we can correlate hints to source program fragments
+let set_hint_correlator env se =
+    match Options.reuse_hint_for () with 
+    | Some l -> 
+      let lid = Ident.lid_add_suffix (Env.current_module env) l in
+      {env with qname_and_index=Some (lid, 0)}
+
+    | None -> 
+      let lids = Util.lids_of_sigelt se in
+      let lid = match lids with 
+            | [] -> Ident.lid_add_suffix (Env.current_module env) 
+                                         (S.next_id () |> Util.string_of_int) 
+            | l::_ -> l in
+      {env with qname_and_index=Some (lid, 0)}
+
 let log env = (Options.log_types()) && not(lid_equals Const.prims_lid (Env.current_module env))
 let rng env = Env.get_range env
 let instantiate_both env = {env with Env.instantiate_imp=true}
@@ -2706,14 +2721,7 @@ and tc_inductive env ses quals lids =
     else [sig_bndle]
 
 and tc_decl env se: list<sigelt> * _ = 
-    let lids = Util.lids_of_sigelt se in
-    let env = 
-        let lid = match lids with 
-            | [] -> let l = Env.current_module env in
-                    let p = Ident.path_of_lid l @ [S.next_id () |> Util.string_of_int] in
-                    Ident.lid_of_path p Range.dummyRange
-            | l::_ -> l in
-        {env with qname_and_index=Some (lid, 0)} in //set the name of the query so that we can correlate hints to source program fragments
+    let env = set_hint_correlator env se in
     match se with
     | Sig_inductive_typ _
     | Sig_datacon _ ->
@@ -3044,7 +3052,7 @@ let tc_partial_modul env modul =
   let msg = "Internals for " ^name in
   let env = {env with Env.is_iface=modul.is_interface; 
                       admit=not (Options.should_verify modul.name.str)} in
-  if not (lid_equals modul.name Const.prims_lid) then env.solver.push msg;
+  env.solver.push msg;
   let env = Env.set_current_module env modul.name in
   let ses, exports, env = tc_decls env modul.declarations in
   {modul with declarations=ses}, exports, env
@@ -3057,13 +3065,10 @@ let tc_more_partial_modul env modul decls =
 let finish_partial_modul env modul exports =
   let modul = {modul with exports=exports; is_interface=modul.is_interface} in
   let env = Env.finish_module env modul in
-  if not (lid_equals modul.name Const.prims_lid)
-  then begin
-    env.solver.pop ("Ending modul " ^ modul.name.str);
-    env.solver.encode_modul env modul;
-    env.solver.refresh();
-    Options.restore_cmd_line_options true |> ignore
-  end;
+  env.solver.pop ("Ending modul " ^ modul.name.str);
+  env.solver.encode_modul env modul;
+  env.solver.refresh();
+  Options.restore_cmd_line_options true |> ignore;
   modul, env
 
 let tc_modul env modul =

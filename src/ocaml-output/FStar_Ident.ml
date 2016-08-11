@@ -113,5 +113,11 @@ let ids = (FStar_All.pipe_right (FStar_List.append l.ns ((l.ident)::[])) (FStar_
 in (lid_of_ids ids)))
 
 
+let lid_add_suffix : lident  ->  Prims.string  ->  lident = (fun l s -> (
+
+let path = (path_of_lid l)
+in (lid_of_path (FStar_List.append path ((s)::[])) (range_of_lid l))))
+
+
 
 

@@ -461,6 +461,7 @@ type mlexpr' =
  and mlletflavor =
 | Rec
 | Mutable
+| Assumed
 | NoLetQualifier 
  and mlbranch =
 (mlpattern * mlexpr Prims.option * mlexpr) 
@@ -629,6 +630,15 @@ end))
 
 let is_Mutable = (fun _discr_ -> (match (_discr_) with
 | Mutable (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let is_Assumed = (fun _discr_ -> (match (_discr_) with
+| Assumed (_) -> begin
 true
 end
 | _ -> begin
@@ -1002,10 +1012,10 @@ in (with_ty_loc MLTY_Top (MLE_App (((obj_repr), ((x)::[])))) x.loc)))
 
 
 let bv_as_mlident : FStar_Syntax_Syntax.bv  ->  (Prims.string * Prims.int) = (fun x -> if ((FStar_Util.starts_with x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText FStar_Ident.reserved_prefix) || (FStar_Syntax_Syntax.is_null_bv x)) then begin
-(let _162_721 = (let _162_720 = (let _162_719 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
-in (Prims.strcat "_" _162_719))
-in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _162_720))
-in ((_162_721), (0)))
+(let _162_722 = (let _162_721 = (let _162_720 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
+in (Prims.strcat "_" _162_720))
+in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _162_721))
+in ((_162_722), (0)))
 end else begin
 ((x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText), (0))
 end)

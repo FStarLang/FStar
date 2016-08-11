@@ -12,6 +12,11 @@ module I = FStar.Ident
 open FStar.Ident
 open FStar.Range
 
+let always id b =
+    if b 
+    then ()
+    else raise (Error(Printf.sprintf "Assertion failed: test %d" id, Range.dummyRange))
+
 let x = gen_bv "x" None S.tun
 let y = gen_bv "y" None S.tun
 let n = gen_bv "n" None S.tun
@@ -56,6 +61,13 @@ let rec term_eq' t1 t2 =
              term_eq' t1 t2
       | Tm_arrow(xs, c), Tm_arrow(ys, d) -> binders_eq xs ys && comp_eq c d
       | Tm_refine(x, t), Tm_refine(y, u) -> term_eq x.sort y.sort && term_eq t u
+      | Tm_app({n=Tm_fvar fv_eq_1}, [(_, Some (Implicit _)); t1; t2]),
+        Tm_app({n=Tm_fvar fv_eq_2}, [s1; s2])
+      | Tm_app({n=Tm_fvar fv_eq_2}, [s1; s2]),
+        Tm_app({n=Tm_fvar fv_eq_1}, [(_, Some (Implicit _)); t1; t2]) 
+            when S.fv_eq_lid fv_eq_1 Const.eq2_lid
+              && S.fv_eq_lid fv_eq_2 Const.eq2_lid -> //Unification produces equality applications that miss their implicit arguments
+        args_eq [s1;s2] [t1;t2]
       | Tm_app(t, args), Tm_app(s, args') -> term_eq t s && args_eq args args'
       | Tm_match(t, pats), Tm_match(t', pats') -> 
         List.length pats = List.length pats'

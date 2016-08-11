@@ -36,7 +36,7 @@ let minus m n = app n [pred; m]
 let let_ x e e' : term = app (U.abs [b x] e' None) [e]
 let mk_let x e e' : term = 
     let e' = FStar.Syntax.Subst.subst [NM(x, 0)] e' in
-    mk (Tm_let((false, [{lbname=Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=lid_of_path ["Pure"] dummyRange}]), e')) 
+    mk (Tm_let((false, [{lbname=Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=FStar.Syntax.Const.effect_Tot_lid}]), e')) 
                            None dummyRange
 
 let lid x = lid_of_path [x] dummyRange                           
@@ -87,7 +87,7 @@ let run i r expected =
     Options.init(); //reset them
 //    Printf.printf "result = %s\n" (P.term_to_string x);
 //    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
-    assert (Util.term_eq (U.unascribe x) expected)
+    Util.always i (Util.term_eq (U.unascribe x) expected)
     
 let run_all () = 
     Printf.printf "Testing the normalizer\n";
@@ -119,7 +119,8 @@ let run_all () =
     run 10 (app mul [app succ [one]; one]) two;
     run 11 (minus (encode 10) (encode 10)) z;
     run 12 (minus (encode 100) (encode 100)) z;
-    run 13 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes 
+    run 13 (let_ x (encode 100) (minus (nm x) (nm x))) z; 
+//    run 13 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes ~10s; wasteful for CI
     run 14 (let_ x (app succ [one])
             (let_ y (app mul [nm x; nm x])
                 (let_ h (app mul [nm y; nm y]) 

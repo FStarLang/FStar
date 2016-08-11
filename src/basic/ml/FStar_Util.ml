@@ -716,8 +716,10 @@ let write_hints (filename: string) (hints: hints_db): unit =
   Yojson.Safe.pretty_to_channel (open_out filename) json
 
 let read_hints (filename: string): hints_db option =
-  try
-    let json = Yojson.Safe.from_channel (open_in filename) in
+    try
+    let chan = open_in filename in
+    let json = Yojson.Safe.from_channel chan in
+    close_in chan;
     Some (match json with
     | `List [
         `String module_digest;
@@ -762,8 +764,8 @@ let read_hints (filename: string): hints_db option =
     )
   with
    | Exit ->
-      Printf.eprintf "Malformed JSON hints file: %s\n" filename;
+      Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
       None
    | Sys_error _ -> 
-      Printf.eprintf "Unable to open hints file: %s\n" filename;
+      Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
       None

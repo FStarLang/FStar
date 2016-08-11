@@ -1502,8 +1502,8 @@ let encode_top_level_let env (is_rec, bindings) quals =
                 let env0 = env in
                 let gtoks, env = toks |> List.fold_left (fun (gtoks, env) (flid_fv, (f, ftok)) ->
                     let flid = flid_fv.fv_name.v in
-                    let g = varops.new_fvar flid in
-                    let gtok = varops.new_fvar flid in
+                    let g = varops.new_fvar (Ident.lid_add_suffix flid "fuel_instrumented") in
+                    let gtok = varops.new_fvar (Ident.lid_add_suffix flid "fuel_instrumented_token") in
                     let env = push_free_var env flid gtok (Some <| Term.mkApp(g, [fuel_tm])) in
                     (flid, f, ftok, g, gtok)::gtoks, env) ([], env) in
                 let gtoks = List.rev gtoks in
@@ -1520,7 +1520,8 @@ let encode_top_level_let env (is_rec, bindings) quals =
                     let body_tm, decls2 = encode_term body env' in
                     //NS 05.25: This used to be  mkImp(mk_and_l guards, mkEq(gsapp, body_tm)
                     //But, the pattern ensures that this only applies to well-typed terms
-                    let eqn_g = Term.Assume(mkForall([[gsapp]], fuel::vars,  mkEq(gsapp, body_tm)),
+                    //NS 08/10: Setting the weight of this quantifier to 0, since its instantiations are controlled by F* fuel
+                    let eqn_g = Term.Assume(mkForall'([[gsapp]], Some 0, fuel::vars, mkEq(gsapp, body_tm)),
                                             Some (Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.str),
                                             Some ("equation_with_fuel_" ^g)) in
                     let eqn_f = Term.Assume(mkForall([[app]], vars, mkEq(app, gmax)), 
@@ -1537,7 +1538,7 @@ let encode_top_level_let env (is_rec, bindings) quals =
                         let tok_app = mk_Apply (Term.mkFreeV (gtok, Term_sort)) (fuel::vars) in
                         Term.Assume(mkForall([[tok_app]], fuel::vars, mkEq(tok_app, gapp)), 
                                     Some "Fuel token correspondence", 
-                                    Some ("fuel_tokem_correspondence_"^gtok)) in
+                                    Some ("fuel_token_correspondence_"^gtok)) in
                     let aux_decls, typing_corr =
                         let g_typing, d3 = encode_term_pred None tres env gapp in
                         d3, [Term.Assume(mkForall([[gapp]], fuel::vars, mkImp(Term.mk_and_l v_guards, g_typing)), 
@@ -1960,9 +1961,9 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
                   thus demoting them to free variables subject to closure. 
                   
     *)
-    let encode_binding b (decls, env) = match b with
+    let encode_binding b (i, decls, env) = match b with
         | Binding_univ _ -> 
-          [], env
+          i+1, [], env
         
         | Env.Binding_var x -> 
             let t1 = N.normalize [N.Beta; N.Inline; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
@@ -1971,7 +1972,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
             let t, decls' = encode_term t1 env in
             let xxsym, xx, env' = 
                 new_term_constant_from_string env x 
-                    (x.ppname.idText ^ "_" ^ Util.digest_of_string t.hash) in
+                    ("x_" ^ Util.digest_of_string t.hash ^ "_" ^ (string_of_int i)) in
             let t = mk_HasTypeWithFuel None xx t in
             let caption =
                 if Options.log_queries()
@@ -1983,21 +1984,22 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
             let g = [Term.DeclFun(xxsym, [], Term_sort, caption)]
                     @decls'
                     @[ax] in
-            decls@g, env'
+            i+1, decls@g, env'
 
         | Env.Binding_lid(x, (_, t)) ->
             let t_norm = whnf env t in
             let fv = S.lid_as_fv x Delta_constant None in
 //            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
             let g, env' = encode_free_var env fv t t_norm [] in
-            decls@g, env'
+            i+1, decls@g, env'
         
         | Env.Binding_sig_inst(_, se, _)
         | Env.Binding_sig (_, se) ->
             let g, env' = encode_sigelt env se in
-            decls@g, env' in
+            i+1, decls@g, env' in
 
-    List.fold_right encode_binding bindings ([], env)
+    let _, decls, env = List.fold_right encode_binding bindings (0, [], env) in
+    decls, env
 
 let encode_labels labs =
     let prefix = labs |> List.map (fun (l, _, _) -> Term.DeclFun(fst l, [], Bool_sort, None)) in
