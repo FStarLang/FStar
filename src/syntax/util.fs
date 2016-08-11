@@ -328,14 +328,6 @@ let set_result_typ c t = match c.n with
 let is_trivial_wp c =
   comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let rec non_informative t =
-    match (Subst.compress t).n with
-    | Tm_type _ -> true
-    | Tm_fvar fv -> fv_eq_lid fv Const.unit_lid
-    | Tm_arrow(_, c) ->
-        is_tot_or_gtot_comp c
-        && non_informative (comp_result c)
-    | _ -> false
 (********************************************************************************)
 (****************Simple utils on the local structure of a term ******************)
 (********************************************************************************)
@@ -374,9 +366,23 @@ let rec ascribe t k = match t.n with
 let rec unrefine t =
   let t = compress t in
   match t.n with
-      | Tm_refine(x, _) -> unrefine x.sort
-      | Tm_ascribed(t, _, _) -> unrefine t
-      | _ -> t
+  | Tm_refine(x, _) -> unrefine x.sort
+  | Tm_ascribed(t, _, _) -> unrefine t
+  | _ -> t
+
+let rec non_informative t =
+    match (unrefine t).n with
+    | Tm_type _ -> true
+    | Tm_fvar fv ->
+      fv_eq_lid fv Const.unit_lid
+      || fv_eq_lid fv Const.squash_lid
+      || fv_eq_lid fv Const.erased_lid
+    | Tm_app(head, _) -> non_informative head
+    | Tm_uinst (t, _) -> non_informative t
+    | Tm_arrow(_, c) ->
+      is_tot_or_gtot_comp c
+      && non_informative (comp_result c)
+    | _ -> false
 
 let is_fun e = match (compress e).n with
   | Tm_abs _ -> true
