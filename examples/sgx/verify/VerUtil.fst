@@ -3,7 +3,7 @@
     options:--z3timeout 60 --max_fuel 60;
     other-files: ../Ast.fst ../Test.fst ../SGXState.fst
 *)
-module Helper
+module VerUtil
 open FStar.Int.Cast
 open FStar.UInt64
 open FStar.IO
@@ -73,24 +73,39 @@ rsp = stack pointer
 
 *)
 
+let lastaddr_less_than_stackaddress (wbmapsize:word) (uheapstart:address) (ustackstart:address) : Pure address
+	(requires  (
+			(gte ustackstart uheapstart)
+			/\ (UInt.fits (UInt32.v wbmapsize) UInt16.n)
+			(* heapstart fits in 32 bits...just to make life easier for satisfying mul pre-conditions *)
+		 	/\ (Int.size (UInt64.v uheapstart) UInt32.n)  
+			(* bitmapsize *)
+			/\ (UInt32.v wbmapsize) < (UInt64.v (div (UInt64.sub ustackstart uheapstart) 64uL))
+		   )
+	)
+	(ensures (fun r -> (lte r ustackstart)))=
+	let tmp = (Int.Cast.uint32_to_uint64 (UInt32.mul wbmapsize 64ul)) in
+    	 (UInt64.add uheapstart tmp) 
+
 (* Given a bitmap offset, this function returns the address of the memory that is being toggled*)
 let get_address_represented_in_bitmap (addr:address) (base:address) (heapstart:address) (bitmapstart:address) (bitmapsize:word) (stackstart:address) : Pure address
 	(requires	( 
-			  (gte heapstart addr) 
+			  (lt addr heapstart) 
+			 /\ (gte addr bitmapstart)
 			 /\ (gte bitmapstart base)
 			 /\ (gte heapstart bitmapstart)
-			 /\ (gte addr bitmapstart)
-			 /\ (lte addr stackstart)
+			 /\ (gte stackstart heapstart)
 			 /\ (UInt.fits (UInt32.v bitmapsize) UInt16.n)
 			 /\ (Int.size (UInt64.v heapstart) UInt32.n)  
 			 /\ (UInt.size (UInt64.v (UInt64.sub stackstart base)) UInt32.n)
+			    (* bitmapsize *)
+			 /\ (UInt32.v bitmapsize) < (UInt64.v (div (UInt64.sub stackstart heapstart) 64uL))
 			   (* requires that addr lies within bitmap region *)
 			 /\ (lte (UInt64.sub addr bitmapstart) (Int.Cast.uint32_to_uint64 bitmapsize)) 
 			   (* requires that last address represented by bitmap is less than stackstart *)
-			 /\ (let tmp = (Int.Cast.uint32_to_uint64 (UInt32.mul bitmapsize 64ul)) in
-			     let lastaddr = (UInt64.add heapstart tmp) in
-				(lte lastaddr stackstart) && (UInt.fits (UInt64.v tmp) UInt32.n)
-			    )  
+			 /\ (let lastaddr = lastaddr_less_than_stackaddress bitmapsize heapstart stackstart in
+				(lte lastaddr stackstart) 
+			    )
 	))
 	(ensures 	(fun r ->  (UInt64.lte r stackstart) 
 				(* /\ (let idx = (UInt64.sub r base) in  (Int.size (UInt64.v idx) UInt32.n))	*)
@@ -101,10 +116,16 @@ let get_address_represented_in_bitmap (addr:address) (base:address) (heapstart:a
 	
 
 (* Given an address, this function returns the offset in rwbitmap *)
-val get_bitmap_offset:address->address->address->address->Tot address
-let get_bitmap_offset addr base bitmapstart heapstart =
- let bitmapoffset = (UInt64.sub addr heapstart) in
-       let tmp = (UInt64.mul bitmapoffset 64uL) in
+let get_bitmap_offset (addr:address) (base:address) (bitmapstart:address) (heapstart:address) (stackstart:address): Pure address
+	(requires	(
+			 (gte stackstart addr)
+			/\ (gte addr heapstart)
+			 /\ (gte bitmapstart base)
+			 /\ (gte heapstart bitmapstart)
+	))
+	(ensures	(fun r -> (lte r stackstart)))=
+       let bitmapoffset = (UInt64.sub addr heapstart) in
+       let tmp = (UInt64.div bitmapoffset 64uL) in
        (* Not including index, since a store can operate only on 8byte granularity
          Optimize it later to get precise address
        *)
@@ -113,8 +134,14 @@ let get_bitmap_offset addr base bitmapstart heapstart =
 
 
 (* Given an address, this function returns the index in rwbitmap *)
-val get_bitmap_index:address->address->Tot address
-let get_bitmap_index heapstart addr = 
+let get_bitmap_index (addr:address) (base:address) (bitmapstart:address) (heapstart:address) (stackstart:address): Pure address
+	(requires	(
+			 (gte stackstart addr)
+			/\ (gte addr heapstart)
+			 /\ (gte bitmapstart base)
+			 /\ (gte heapstart bitmapstart)
+	))
+	(ensures	(fun r -> (lte r 64uL)))=
 	let index = (UInt64.sub addr heapstart) in
 	(UInt64.rem index 64uL)
 
