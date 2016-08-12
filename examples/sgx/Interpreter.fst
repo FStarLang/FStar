@@ -622,7 +622,6 @@ and helperfunc  (debugflag:bool) (defensivememop:memaccess) (myprogram:program) 
 
 and steps (debugflag:bool) (env:cpuregstate) (defensivememop:memaccess) myprogram instrlist = fold_left (helperfunc debugflag defensivememop myprogram) env  instrlist 
 
-(* Should the following function have a type that uses effects associated with effect ST ?  *)
 val ustar:bool->(buffer dword)->calltable->address ->address->address->address->address->address->address->program->STL cpuregstate
 	(requires (fun h-> True))
 	(ensures (fun h0 r h1 -> True))

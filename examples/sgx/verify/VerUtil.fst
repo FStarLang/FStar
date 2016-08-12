@@ -8,7 +8,7 @@ open FStar.Int.Cast
 open FStar.UInt64
 open FStar.IO
 open FStar.Buffer
-open Ast
+open VerAst
 
 
 
