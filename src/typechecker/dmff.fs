@@ -414,6 +414,7 @@ let gen_wps_for_free
     U.abs (binders @ S.binders_of_list [ a; wp ]) body ret_gtot_type
   in
   let wp_ite = register env (mk_lid "wp_ite") wp_ite in
+  let wp_ite = mk_generic_app wp_ite in
 
   let null_wp = 
     let wp = S.gen_bv "wp" None wp_a in
@@ -423,6 +424,7 @@ let gen_wps_for_free
     U.abs (binders @ S.binders_of_list [ a ] @ gamma) body ret_gtot_type in
 
   let null_wp = register env (mk_lid "null_wp") null_wp in
+  let null_wp = mk_generic_app null_wp in
 
   (* val st2_trivial : heap:Type ->a:Type -> st2_wp heap a -> Tot Type0
     let st2_trivial heap a wp = st2_stronger heap a (st2_null_wp heap a) wp *)
@@ -441,15 +443,16 @@ let gen_wps_for_free
   if Env.debug env (Options.Other "ED") then
     d "End Dijkstra monads for free";
 
+  let c = close binders in
   List.rev !sigelts, { ed with
-    if_then_else = ([], wp_if_then_else);
-    assert_p     = ([], wp_assert);
-    assume_p     = ([], wp_assume);
-    close_wp     = ([], wp_close);
-    stronger     = ([], stronger);
-    trivial      = ([], wp_trivial);
-    ite_wp       = ([], wp_ite);
-    null_wp      = ([], null_wp)
+    if_then_else = ([], c wp_if_then_else);
+    assert_p     = ([], c wp_assert);
+    assume_p     = ([], c wp_assume);
+    close_wp     = ([], c wp_close);
+    stronger     = ([], c stronger);
+    trivial      = ([], c wp_trivial);
+    ite_wp       = ([], c wp_ite);
+    null_wp      = ([], c null_wp)
   }
 
 

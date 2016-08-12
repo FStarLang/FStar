@@ -2142,7 +2142,7 @@ and cps_and_elaborate env ed =
   let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
   let wp_type = DMFF.star_type dmff_env repr in
   let wp_type = recheck_debug "*" env wp_type in
-  let wp_a = mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ])) in
+  let wp_a = N.normalize [ N.Beta ] env (mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ]))) in
 
   // Building: [a -> wp a -> Effect]
   let effect_signature =
@@ -2258,7 +2258,7 @@ and cps_and_elaborate env ed =
   ignore (register "wp" wp_type);
 
   let ed = { ed with
-    signature = effect_signature;
+    signature = close effect_binders effect_signature;
     repr = apply_close repr;
     ret_wp = [], apply_close return_wp;
     bind_wp = [], apply_close bind_wp;
@@ -2268,11 +2268,11 @@ and cps_and_elaborate env ed =
     binders = close_binders effect_binders
   } in
 
+  // Generate the missing combinators.
+  let sigelts', ed = DMFF.gen_wps_for_free env effect_binders a wp_a ed in
   if Env.debug env (Options.Other "ED") then
     Util.print_string (Print.eff_decl_to_string true ed);
 
-  // Generate the missing combinators.
-  let sigelts', ed = DMFF.gen_wps_for_free env effect_binders a wp_a ed in
   List.rev !sigelts @ sigelts', ed
 
 
