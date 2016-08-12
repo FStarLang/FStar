@@ -482,7 +482,7 @@ in (_178_182)::_178_181))
 in (query_name)::_178_183)
 in (_178_185)::_178_184))
 in (_178_187)::_178_186))
-in (FStar_Util.print "(%s%s)\n\tQuery (%s, %s)\t%s in %s%s milliseconds with fuel %s and ifuel %s\n" _178_188)))
+in (FStar_Util.print "(%s%s)\n\tQuery (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s\n" _178_188)))
 in (match (result) with
 | FStar_Util.Inl (unsat_core) -> begin
 (
