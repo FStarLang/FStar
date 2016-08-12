@@ -1080,7 +1080,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
 (* ----------------------------------------------------------------------------------------------- *)
 
 type prims_t = {
-    mk:lident -> string -> list<decl>;
+    mk:lident -> string -> term * list<decl>;
     is:lident -> bool;
 }
 
@@ -1090,12 +1090,14 @@ let prims =
     let xsym, x = fresh_fvar "x" Term_sort in
     let ysym, y = fresh_fvar "y" Term_sort in
     let deffun vars body x = [Term.DefineFun(x, vars, Term_sort, body, None)] in
-    let quant vars body : string -> list<decl> = fun x ->
+    let quant vars body : string -> term * list<decl> = fun x ->
         let xname_decl = Term.DeclFun(x, vars |> List.map snd, Term_sort, None) in
         let xtok = x ^ "@tok" in
         let xtok_decl = Term.DeclFun(xtok, [], Term_sort, None) in
         let xapp = Term.mkApp(x, List.map Term.mkFreeV vars) in
-        let xtok_app = mk_Apply (mkApp(xtok, [])) vars in
+        let xtok = mkApp(xtok, []) in
+        let xtok_app = mk_Apply xtok vars in
+        xtok,
         [xname_decl;
          xtok_decl;
          Term.Assume(mkForall([[xapp]], vars, mkEq(xapp, body)), None, Some ("primitive_" ^x));
@@ -1123,8 +1125,8 @@ let prims =
         (Const.op_Or,          (quant xy  (boxBool <| mkOr(unboxBool x, unboxBool y))));
         (Const.op_Negation,    (quant qx  (boxBool <| mkNot(unboxBool x))));
         ] in
-    let mk : lident -> string -> list<decl> =
-        fun l v -> prims |> List.filter (fun (l', _) -> lid_equals l l') |> List.collect (fun (_, b) -> b v) in
+    let mk : lident -> string -> term * list<decl> =
+        fun l v -> prims |> List.find (fun (l', _) -> lid_equals l l') |> Option.map (fun (_, b) -> b v) |> Option.get in
     let is : lident -> bool =
         fun l -> prims |> Util.for_some (fun (l', _) -> lid_equals l l') in
     {mk=mk;
@@ -1316,8 +1318,8 @@ let encode_free_var env fv tt t_norm quals =
          [d;dd], env
     else if prims.is lid
          then let vname = varops.new_fvar lid in
-              let definition = prims.mk lid vname in
-              let env = push_free_var env lid vname None in
+              let tok, definition = prims.mk lid vname in
+              let env = push_free_var env lid vname (Some tok) in
               definition, env
          else let encode_non_total_function_typ = lid.nsstr <> "Prims" in
               let formals, (pre_opt, res_t) = 
