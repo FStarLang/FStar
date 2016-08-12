@@ -18,16 +18,12 @@ type rel_random_tape (b:(int -> Tot bla)) = r:(rel random_tape){forall i. b i (R
 val id : bla #int #int 
 let id x = x 
 
-  (* Working around a bug *)
-val add' : int -> int -> Tot int
-let add' x y = y + x
-
-val minus' : int -> int -> Tot int
-let minus' x y = y - x
+val minus : int -> int -> Tot int
+let minus x y = y - x
 
   (* Proving the function used is a blaection *)
 val add : int -> Tot (bla #int #int)
-let add x = cut (inverses (add' x) (minus' x)); add' x 
+let add x = cut (inverses (op_Addition x) (minus x)); op_Addition x 
 
   (* Definition of a simple one time pad *)
 val otp : int -> random_tape -> int -> Tot int
