@@ -1983,13 +1983,13 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
           // 1) Check action definition, setting its expected type to
           //    [action_typ]
           let env' = Env.set_expected_typ env act_typ in
-          let act_defn = N.normalize [ N.UnfoldUntil S.Delta_constant ] env act.action_defn in
           if Env.debug env (Options.Other "ED") then
             Util.print3 "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
-              (text_of_lid act.action_name) (Print.term_to_string act_defn)
+              (text_of_lid act.action_name) (Print.term_to_string act.action_defn)
               (Print.term_to_string act_typ);
-          let act_defn, c, g_a = tc_tot_or_gtot_term env' act_defn in
+          let act_defn, _, g_a = tc_tot_or_gtot_term env' act.action_defn in
 
+          let act_defn = N.normalize [ N.UnfoldUntil S.Delta_constant ] env act_defn in
           let act_typ = N.normalize [ N.UnfoldUntil S.Delta_constant; N.Inline; N.Beta ] env act_typ in
 
           // 2) This implies that [action_typ] has Type(k): good for us!
