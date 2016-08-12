@@ -2126,7 +2126,7 @@ and cps_and_elaborate env ed =
     Util.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
   let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
-  let dmff_env, wp_type = DMFF.star_type_definition dmff_env repr in
+  let wp_type = DMFF.star_type dmff_env repr in
   let wp_type = recheck_debug "*" env wp_type in
   let wp_a = mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ])) in
 
@@ -2151,7 +2151,7 @@ and cps_and_elaborate env ed =
     let item, item_comp = open_and_check item in
     if not (Util.is_total_lcomp item_comp) then
       raise (Err ("Computation for [item] is not total!"));
-    let dmff_env, (item_t, item_wp, item_elab) = DMFF.star_expr_definition dmff_env item in
+    let item_t, item_wp, item_elab = DMFF.star_expr dmff_env item in
     let item_wp = recheck_debug "*" env item_wp in
     let item_elab = recheck_debug "_" env item_elab in
     dmff_env, item_t, item_wp, item_elab
@@ -2215,10 +2215,8 @@ and cps_and_elaborate env ed =
   let repr = register "repr (applied to binders)" repr in
 
   let pre, post =
-    Util.print1 "wp_type is: %s\n" (Print.term_to_string wp_type);
     match (SS.compress wp_type).n with
     | Tm_abs (effect_param, arrow, _) ->
-        Util.print1 "arrow is: %s\n" (Print.term_to_string arrow);
         let effect_param, arrow = SS.open_term effect_param arrow in
         begin match (SS.compress arrow).n with
         | Tm_arrow (wp_binders, c) ->
