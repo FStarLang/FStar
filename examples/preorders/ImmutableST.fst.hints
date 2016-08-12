@@ -1,0 +1,180 @@
+[
+  "½Ε~σω@Jό\u0002¥°9Ε\u0016",
+  [
+    [
+      "ImmutableST.contains_lemma",
+      1,
+      2,
+      1,
+      [ "@query", "equation_ImmutableST.contains", "unit_typing" ],
+      0
+    ],
+    [
+      "ImmutableST.heap_rel",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_ImmutableST.contains",
+        "lemma_ImmutableST.contains_lemma",
+        "refinement_interpretation_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833"
+      ],
+      0
+    ],
+    [ "ImmutableST.lift_div_istate", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ImmutableST.9428",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_ImmutableST.heap_rel",
+        "equation_Preorder.preorder",
+        "refinement_interpretation_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "token_correspondence_ImmutableST.heap_rel"
+      ],
+      0
+    ],
+    [ "ImmutableST.IST", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ImmutableST.ist_witnessed",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_ImmutableST.heap_rel",
+        "equation_Preorder.preorder",
+        "refinement_interpretation_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "token_correspondence_ImmutableST.heap_rel"
+      ],
+      0
+    ],
+    [ "ImmutableST.ist_get", 1, 2, 1, [ "@query" ], 0 ],
+    [ "ImmutableST.ist_put", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ImmutableST.ist_witness",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_ImmutableST.heap_rel",
+        "equation_Preorder.preorder",
+        "refinement_interpretation_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "token_correspondence_ImmutableST.heap_rel"
+      ],
+      0
+    ],
+    [
+      "ImmutableST.ist_recall",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_ImmutableST.heap_rel",
+        "equation_Preorder.preorder",
+        "refinement_interpretation_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "token_correspondence_ImmutableST.heap_rel"
+      ],
+      0
+    ],
+    [
+      "ImmutableST.ref",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_ImmutableST.heap_rel",
+        "equation_Preorder.stable",
+        "token_correspondence_ImmutableST.contains",
+        "token_correspondence_ImmutableST.heap_rel"
+      ],
+      0
+    ],
+    [ "ImmutableST.alloc", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ImmutableST.alloc",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_ImmutableST.contains",
+        "equation_ImmutableST.heap_rel", "equation_NatHeap.alloc_ref",
+        "equation_Preorder.stable", "equation_Prims.fst",
+        "equation_Prims.snd", "function_token_typing_NatHeap.heap",
+        "lemma_ImmutableST.contains_lemma",
+        "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
+        "projection_inverse_Prims.Mktuple2__1",
+        "refinement_interpretation_Tm_refine_2d642eaad3f6e1c69a279efd7fe135d5",
+        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882",
+        "refinement_interpretation_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "token_correspondence_ImmutableST.contains",
+        "token_correspondence_ImmutableST.heap_rel",
+        "typing_NatHeap.alloc_ref", "typing_NatHeap.ref", "typing_Prims.fst"
+      ],
+      0
+    ],
+    [
+      "ImmutableST.read",
+      1,
+      2,
+      1,
+      [ "@query", "equation_ImmutableST.contains" ],
+      0
+    ],
+    [
+      "ImmutableST.read",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_ImmutableST.contains",
+        "equation_ImmutableST.heap_rel", "equation_ImmutableST.ref",
+        "equation_Preorder.stable",
+        "refinement_interpretation_Tm_refine_3b96159e2f11c189d5827512307ee48c",
+        "token_correspondence_ImmutableST.contains",
+        "token_correspondence_ImmutableST.heap_rel"
+      ],
+      0
+    ],
+    [
+      "ImmutableST.write",
+      1,
+      2,
+      1,
+      [ "@query", "equation_ImmutableST.contains" ],
+      0
+    ],
+    [ "ImmutableST.write", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "ImmutableST.write_nop",
+      1,
+      2,
+      1,
+      [ "@query", "equation_ImmutableST.contains" ],
+      0
+    ],
+    [
+      "ImmutableST.write_nop",
+      2,
+      2,
+      1,
+      [ "@query", "equation_ImmutableST.heap_rel", "unit_typing" ],
+      0
+    ],
+    [ "ImmutableST.recall", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ImmutableST.recall",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_ImmutableST.heap_rel",
+        "equation_ImmutableST.ref", "equation_Preorder.stable",
+        "refinement_interpretation_Tm_refine_3b96159e2f11c189d5827512307ee48c",
+        "token_correspondence_ImmutableST.contains",
+        "token_correspondence_ImmutableST.heap_rel"
+      ],
+      0
+    ]
+  ]
+]
