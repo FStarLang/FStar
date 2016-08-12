@@ -23,7 +23,7 @@ type exp =
 | AVar : id -> exp 
 | AOp  : binop -> exp -> exp -> exp 
 
-val interpret_exp : h:heap -> e:exp -> Tot int
+val interpret_exp : h:heap -> e:exp -> GTot int
 let rec interpret_exp h e = 
   match e with
   | AInt i -> i
@@ -45,7 +45,7 @@ type com =
 
 
 (* function used for the decreases clause *)
-val decr : heap -> com -> Tot int 
+val decr : heap -> com -> GTot int 
 let decr h c = 
   match c with 
   | While c b v ->
@@ -54,9 +54,9 @@ let decr h c =
 
 (* Returns Some heap if the variant is correct *)
 val interpret_while : h:heap -> c:com{is_While c}
-  -> Tot (option heap) (decreases %[c; decr h c; 0])
+  -> GTot (option heap) (decreases %[c; decr h c; 0])
 
-val interpret_com : h:heap -> c:com -> Tot (option heap) (decreases %[c; decr h c; 1])
+val interpret_com : h:heap -> c:com -> GTot (option heap) (decreases %[c; decr h c; 1])
 
 let rec interpret_while h (While e body v) =
   if interpret_exp h e = 0 then
