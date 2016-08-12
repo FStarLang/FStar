@@ -1,0 +1,147 @@
+[
+  "2meÖ+Æ/£*8nMÃ\u001b„\n",
+  [
+    [
+      "AllocST.contains_lemma",
+      1,
+      2,
+      1,
+      [ "@query", "equation_AllocST.contains", "unit_typing" ],
+      0
+    ],
+    [ "AllocST.lift_div_istate", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "AllocST.6271",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_AllocST.heap_rel", "equation_Preorder.preorder",
+        "token_correspondence_AllocST.heap_rel"
+      ],
+      0
+    ],
+    [ "AllocST.IST", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "AllocST.ist_witnessed",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_AllocST.heap_rel", "equation_Preorder.preorder",
+        "token_correspondence_AllocST.heap_rel"
+      ],
+      0
+    ],
+    [ "AllocST.ist_get", 1, 2, 1, [ "@query" ], 0 ],
+    [ "AllocST.ist_put", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "AllocST.ist_witness",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_AllocST.heap_rel", "equation_Preorder.preorder",
+        "token_correspondence_AllocST.heap_rel"
+      ],
+      0
+    ],
+    [
+      "AllocST.ist_recall",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_AllocST.heap_rel", "equation_Preorder.preorder",
+        "token_correspondence_AllocST.heap_rel"
+      ],
+      0
+    ],
+    [
+      "AllocST.ref",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_AllocST.heap_rel", "equation_Preorder.stable",
+        "token_correspondence_AllocST.contains",
+        "token_correspondence_AllocST.heap_rel"
+      ],
+      0
+    ],
+    [ "AllocST.alloc", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "AllocST.alloc",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_AllocST.contains", "equation_AllocST.heap_rel",
+        "equation_NatHeap.alloc_ref", "equation_Preorder.stable",
+        "equation_Prims.fst", "equation_Prims.snd",
+        "function_token_typing_NatHeap.heap", "lemma_AllocST.contains_lemma",
+        "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
+        "projection_inverse_Prims.Mktuple2__1",
+        "refinement_interpretation_Tm_refine_2d642eaad3f6e1c69a279efd7fe135d5",
+        "token_correspondence_AllocST.contains",
+        "token_correspondence_AllocST.heap_rel", "typing_NatHeap.alloc_ref",
+        "typing_NatHeap.ref", "typing_Prims.fst"
+      ],
+      0
+    ],
+    [ "AllocST.read", 1, 2, 1, [ "@query", "equation_AllocST.contains" ], 0 ],
+    [
+      "AllocST.read",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_AllocST.contains", "equation_AllocST.heap_rel",
+        "equation_AllocST.ref", "equation_Preorder.stable",
+        "refinement_interpretation_Tm_refine_a8458d0cd2385c727af0fa1002df0eb2",
+        "token_correspondence_AllocST.contains",
+        "token_correspondence_AllocST.heap_rel"
+      ],
+      0
+    ],
+    [
+      "AllocST.write",
+      1,
+      2,
+      1,
+      [ "@query", "equation_AllocST.contains" ],
+      0
+    ],
+    [
+      "AllocST.write",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_AllocST.contains", "equation_AllocST.heap_rel",
+        "equation_AllocST.ref", "equation_Preorder.stable",
+        "lemma_AllocST.contains_lemma",
+        "refinement_interpretation_Tm_refine_346945d79ac9022141439348a8351567",
+        "refinement_interpretation_Tm_refine_a8458d0cd2385c727af0fa1002df0eb2",
+        "token_correspondence_AllocST.contains",
+        "token_correspondence_AllocST.heap_rel"
+      ],
+      0
+    ],
+    [ "AllocST.recall", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "AllocST.recall",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_AllocST.heap_rel", "equation_AllocST.ref",
+        "equation_Preorder.stable",
+        "refinement_interpretation_Tm_refine_a8458d0cd2385c727af0fa1002df0eb2",
+        "token_correspondence_AllocST.contains",
+        "token_correspondence_AllocST.heap_rel"
+      ],
+      0
+    ]
+  ]
+]

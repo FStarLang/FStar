@@ -10,31 +10,20 @@ type random_tape = int -> Tot int
 val sample : random_tape -> int -> Tot int
 let sample r i =  r i
 
-  (* Working around some bug with projectors *)
-val left : r:(rel random_tape) -> Tot ( r':random_tape{R.l r == r'})
-let left r = R.l r
-
-val right : r:(rel random_tape) -> Tot (r':random_tape{R.r r == r'})
-let right r = R.r r
-
   (*Just for testing purposes (use instead of bij for much faster verification) *)
 type bla (#a:Type) (#b:Type) = a -> Tot b
 
-type rel_random_tape (b:(int -> Tot bla)) = r:(rel random_tape){forall i. b i (left r i) = right r i}
+type rel_random_tape (b:(int -> Tot bla)) = r:(rel random_tape){forall i. b i (R.l r i) = R.r r i}
 
 val id : bla #int #int 
 let id x = x 
 
-  (* Working around a bug *)
-val add' : int -> int -> Tot int
-let add' x y = y + x
-
-val minus' : int -> int -> Tot int
-let minus' x y = y - x
+val minus : int -> int -> Tot int
+let minus x y = y - x
 
   (* Proving the function used is a blaection *)
 val add : int -> Tot (bla #int #int)
-let add x = cut (inverses (add' x) (minus' x)); add' x 
+let add x = cut (inverses (op_Addition x) (minus x)); op_Addition x 
 
   (* Definition of a simple one time pad *)
 val otp : int -> random_tape -> int -> Tot int

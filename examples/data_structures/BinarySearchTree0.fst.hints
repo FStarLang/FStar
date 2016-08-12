@@ -1,0 +1,91 @@
+[
+  "Fûvt°ÃM®|$\u001e \u000b\u001bÛS",
+  [
+    [
+      "BinarySearchTree0.tree",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "BinarySearchTree0.Node._0",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_BinarySearchTree0.Node",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_4b193e4a2eabbd6bef3db8a93298d58d"
+      ],
+      0
+    ],
+    [
+      "BinarySearchTree0.Node._1",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_BinarySearchTree0.Node",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_4b193e4a2eabbd6bef3db8a93298d58d"
+      ],
+      0
+    ],
+    [
+      "BinarySearchTree0.Node._2",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_BinarySearchTree0.Node",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_4b193e4a2eabbd6bef3db8a93298d58d"
+      ],
+      0
+    ],
+    [
+      "BinarySearchTree0.search",
+      1,
+      2,
+      1,
+      [
+        "@query", "bool_typing", "disc_equation_BinarySearchTree0.Leaf",
+        "disc_equation_BinarySearchTree0.Node",
+        "fuel_guarded_inversion_BinarySearchTree0.tree",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "proj_equation_Prims.V_v", "projection_inverse_Prims.V_v"
+      ],
+      0
+    ],
+    [
+      "BinarySearchTree0.search",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "BinarySearchTree0.insert",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_BinarySearchTree0.Leaf",
+        "disc_equation_BinarySearchTree0.Node",
+        "fuel_guarded_inversion_BinarySearchTree0.tree"
+      ],
+      0
+    ],
+    [
+      "BinarySearchTree0.insert",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ]
+  ]
+]

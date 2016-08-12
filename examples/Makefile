@@ -11,6 +11,7 @@ termination \
 software_foundations \
 ../doc/tutorial/code/solutions \
 relational \
+relational/new \
 voting \
 low-level \
 maths \
