@@ -526,7 +526,7 @@ and tc_value env (e:term) : term
   let top = SS.compress e in
   match top.n with
   | Tm_bvar x ->
-    failwith "Impossible: Violation of locally nameless convention"
+    failwith (Util.format1 "Impossible: Violation of locally nameless convention: %s" (Print.term_to_string top))
 
   | Tm_uvar(u, t1) -> //the type of a uvar is given directly with it; we do not recheck the type
     let g = match (SS.compress t1).n with
@@ -1778,6 +1778,8 @@ let open_effect_binders env ed =
       { ed with
             ret_wp      =op ed.ret_wp
           ; bind_wp     =op ed.bind_wp
+          ; return_repr =op ed.return_repr
+          ; bind_repr   =op ed.bind_repr
           ; if_then_else=op ed.if_then_else
           ; ite_wp      =op ed.ite_wp
           ; stronger    =op ed.stronger
@@ -2098,7 +2100,6 @@ and cps_and_elaborate env ed =
   // [signature] is a:Type -> effect
   let signature, _ = tc_trivial_guard env signature_un in
   // We will open binders through [open_and_check]
-  let env = Env.push_binders env effect_binders in
 
   let effect_binders = List.map (fun (bv, qual) ->
     { bv with sort = N.normalize [ N.EraseUniverses ] env bv.sort }, qual
