@@ -515,6 +515,9 @@ let rec abs_formals t = match (Subst.compress t).n with
     | _ -> [], t 
 
 let abs bs t lopt = 
+  if List.length bs = 0 then
+    t
+  else
     let close_lopt lopt = match lopt with
         | None
         | Some (Inr _)  -> lopt

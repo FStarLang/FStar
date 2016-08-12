@@ -1766,28 +1766,36 @@ let open_effect_signature env mname signature =
         end
       | _ -> fail signature
 
+let open_effect_binders env ed =
+  match ed.binders with
+  | [] -> ed
+  | _ ->
+      let opening = SS.opening_of_binders ed.binders in
+      let op ts =
+        assert (fst ts = []);
+        let t1 = SS.subst opening (snd ts) in
+        ([], t1) in
+      { ed with
+            ret_wp      =op ed.ret_wp
+          ; bind_wp     =op ed.bind_wp
+          ; if_then_else=op ed.if_then_else
+          ; ite_wp      =op ed.ite_wp
+          ; stronger    =op ed.stronger
+          ; close_wp    =op ed.close_wp
+          ; assert_p    =op ed.assert_p
+          ; assume_p    =op ed.assume_p
+          ; null_wp     =op ed.null_wp
+          ; trivial     =op ed.trivial
+          ; repr        = snd (op ([], ed.repr))
+          ; actions     = List.map (fun a ->
+            { a with
+             action_defn = snd (op ([], a.action_defn));
+             action_typ = snd (op ([], a.action_typ)) }) ed.actions
+      }
+
 let open_effect_decl env ed =
    let a, wp = open_effect_signature env ed.mname ed.signature in
-   let ed =
-    match ed.binders with
-      | [] -> ed
-      | _ ->
-       let opening = SS.opening_of_binders ed.binders in
-       let op ts =
-            assert (fst ts = []);
-            let t1 = SS.subst opening (snd ts) in
-            ([], t1) in
-         { ed with
-               ret_wp         =op ed.ret_wp
-             ; bind_wp     =op ed.bind_wp
-             ; if_then_else=op ed.if_then_else
-             ; ite_wp      =op ed.ite_wp
-             ; stronger    =op ed.stronger
-             ; close_wp    =op ed.close_wp
-             ; assert_p    =op ed.assert_p
-             ; assume_p    =op ed.assume_p
-             ; null_wp     =op ed.null_wp
-             ; trivial     =op ed.trivial } in
+   let ed = open_effect_binders env ed in
    ed, a, wp
 
 let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
@@ -2084,11 +2092,13 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
 and cps_and_elaborate env ed =
   // Using [STInt: a:Type -> Effect] as an example...
-  let binders_un, signature_un = SS.open_term ed.binders ed.signature in
+  let effect_binders_un, signature_un = SS.open_term ed.binders ed.signature in
   // [binders] is the empty list (for [ST (h: heap)], there would be one binder)
-  let binders, env, _ = tc_tparams env binders_un in
+  let effect_binders, env, _ = tc_tparams env effect_binders_un in
   // [signature] is a:Type -> effect
   let signature, _ = tc_trivial_guard env signature_un in
+  // We will open binders through [open_and_check]
+  let env = Env.push_binders env effect_binders in
 
   // Every combinator found in the effect declaration is parameterized over
   // [binders], then [a]. This is a variant of [open_effect_signature] where we
@@ -2103,7 +2113,7 @@ and cps_and_elaborate env ed =
   in
 
   let open_and_check t =
-    let subst = SS.opening_of_binders binders in
+    let subst = SS.opening_of_binders effect_binders in
     let t = SS.subst subst t in
     let t, comp, _ = tc_term env t in
     t, comp
@@ -2164,7 +2174,7 @@ and cps_and_elaborate env ed =
     // TODO: fix [tc_eff_decl] to deal with currying
     match (SS.compress return_wp).n with
     | Tm_abs (b1 :: b2 :: bs, body, what) ->
-        U.abs [ b1; b2 ] (U.abs bs body what) (Some (Inr Const.effect_GTot_lid))
+        U.abs ([ b1; b2 ]) (U.abs bs body what) (Some (Inr Const.effect_GTot_lid))
     | _ ->
         failwith "unexpected shape for return"
   in
@@ -2173,13 +2183,19 @@ and cps_and_elaborate env ed =
     | Tm_abs (binders, body, what) ->
         // TODO: figure out how to deal with ranges
         let r = S.lid_as_fv Const.range_lid (S.Delta_unfoldable 1) None in
-        U.abs (S.null_binder (mk (Tm_fvar r)) :: binders) body what
+        U.abs ([ S.null_binder (mk (Tm_fvar r)) ] @ binders) body what
     | _ ->
         failwith "unexpected shape for bind"
   in
 
+  let apply_close t =
+    if List.length effect_binders = 0 then
+      t
+    else
+      close effect_binders (mk (Tm_app (t, snd (U.args_of_binders effect_binders))))
+  in
   let register name item =
-    let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) item in
+    let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
     sigelts := sigelt :: !sigelts;
     fv
   in
@@ -2192,27 +2208,26 @@ and cps_and_elaborate env ed =
   let bind_elab = register "bind_elab" bind_elab in
   sigelts := Sig_pragma (SetOptions "--admit_smt_queries false", Range.dummyRange) :: !sigelts;
 
-
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     // We need to reverse-engineer what tc_eff_decl wants here...
     let dmff_env, action_t, action_wp, action_elab =
       elaborate_and_star dmff_env (action.action_univs, action.action_defn)
     in
     let name = action.action_name.ident.idText in
-    let action_elab = register (name ^ "_elab") action_elab in
     let action_typ_with_wp = DMFF.trans_F dmff_env action_t action_wp in
-    let action_wp = register (name ^ "_wp") action_wp in
-    dmff_env, { action with action_defn = action_elab; action_typ = action_typ_with_wp } :: actions
+    let action_elab = register (name ^ "_elab") action_elab in
+    let action_typ_with_wp = register (name ^ "_complete_type") action_typ_with_wp in
+    dmff_env, { action with action_defn = apply_close action_elab; action_typ = apply_close action_typ_with_wp } :: actions
   ) (dmff_env, []) ed.actions in
   let actions = List.rev actions in
 
   let repr =
     let wp = S.gen_bv "wp_a" None wp_a in
     let binders = [ S.mk_binder a; S.mk_binder wp ] in
-    U.abs binders (DMFF.trans_F dmff_env (mk (Tm_app (ed.repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
+    U.abs binders (DMFF.trans_F dmff_env (mk (Tm_app (repr, [ S.bv_to_name a, S.as_implicit false ]))) (S.bv_to_name wp)) None
   in
   let repr = recheck_debug "FC" env repr in
-  let repr = register "repr (applied to binders)" repr in
+  let repr = register "repr" repr in
 
   let pre, post =
     match (SS.compress wp_type).n with
@@ -2225,7 +2240,7 @@ and cps_and_elaborate env ed =
             // Pre-condition does not mention the return type; don't close over it
             U.arrow pre_args c,
             // Post-condition does, however!
-            U.abs (binders @ effect_param) (fst post).sort None
+            U.abs effect_param (fst post).sort None
         | _ ->
             failwith (Util.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow))
         end
@@ -2236,29 +2251,24 @@ and cps_and_elaborate env ed =
   // the user writes something such as [STINT.repr]
   ignore (register "pre" pre);
   ignore (register "post" post);
-  ignore (register "repr" (U.abs binders repr None));
-  ignore (register "wp" (U.abs binders wp_type None));
-
-  let c = close binders in
+  ignore (register "wp" wp_type);
 
   let ed = { ed with
     signature = effect_signature;
-    repr = c repr;
-    ret_wp = [], c return_wp;
-    bind_wp = [], c bind_wp;
-    return_repr = [], c return_elab;
-    bind_repr = [], c bind_elab;
-    actions = List.map (fun action -> {
-      action with action_defn = c action.action_defn
-    }) actions;
-    binders = close_binders binders
+    repr = apply_close repr;
+    ret_wp = [], apply_close return_wp;
+    bind_wp = [], apply_close bind_wp;
+    return_repr = [], apply_close return_elab;
+    bind_repr = [], apply_close bind_elab;
+    actions = actions; // already went through apply_close
+    binders = close_binders effect_binders
   } in
 
   if Env.debug env (Options.Other "ED") then
     Util.print_string (Print.eff_decl_to_string true ed);
 
   // Generate the missing combinators.
-  let sigelts', ed = DMFF.gen_wps_for_free env binders a wp_a ed in
+  let sigelts', ed = DMFF.gen_wps_for_free env effect_binders a wp_a ed in
   List.rev !sigelts @ sigelts', ed
 
 

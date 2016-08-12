@@ -879,7 +879,10 @@ end
 end))
 
 
-let abs : FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.lcomp, FStar_Ident.lident) FStar_Util.either Prims.option  ->  FStar_Syntax_Syntax.term = (fun bs t lopt -> (
+let abs : (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.lcomp, FStar_Ident.lident) FStar_Util.either Prims.option  ->  FStar_Syntax_Syntax.term = (fun bs t lopt -> if ((FStar_List.length bs) = 0) then begin
+t
+end else begin
+(
 
 let close_lopt = (fun lopt -> (match (lopt) with
 | (None) | (Some (FStar_Util.Inr (_))) -> begin
@@ -925,7 +928,8 @@ in ((_130_242), (body), (lopt)))
 in FStar_Syntax_Syntax.Tm_abs (_130_243))
 in (FStar_Syntax_Syntax.mk _130_244 None t.FStar_Syntax_Syntax.pos)))
 end))
-end)))
+end))
+end)
 
 
 let arrow : (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list  ->  (FStar_Syntax_Syntax.comp', Prims.unit) FStar_Syntax_Syntax.syntax  ->  FStar_Syntax_Syntax.typ = (fun bs c -> (match (bs) with
