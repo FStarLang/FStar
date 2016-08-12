@@ -179,7 +179,7 @@ let with_ty t e = with_ty_loc t e dummy_loc
 
 (* -------------------------------------------------------------------- *)
 type mllib =
-  | MLLib of list<(mlsymbol * option<(mlsig * mlmodule)> * mllib)>
+  | MLLib of list<(mlpath * option<(mlsig * mlmodule)> * mllib)>
 
 (* -------------------------------------------------------------------- *)
 // do NOT remove Prims, because all mentions of unit/bool in F* are actually Prims.unit/bool.

@@ -647,12 +647,7 @@ in (match (_79_494) with
 (
 
 let mlm = (FStar_List.flatten sigs)
-in (let _171_215 = (let _171_214 = (let _171_213 = (let _171_212 = (let _171_211 = (FStar_Extraction_ML_Util.flatten_mlpath name)
-in ((_171_211), (Some ((([]), (mlm)))), (FStar_Extraction_ML_Syntax.MLLib ([]))))
-in (_171_212)::[])
-in FStar_Extraction_ML_Syntax.MLLib (_171_213))
-in (_171_214)::[])
-in ((g), (_171_215))))
+in ((g), ((FStar_Extraction_ML_Syntax.MLLib ((((name), (Some ((([]), (mlm)))), (FStar_Extraction_ML_Syntax.MLLib ([]))))::[]))::[])))
 end)))
 end))))
 

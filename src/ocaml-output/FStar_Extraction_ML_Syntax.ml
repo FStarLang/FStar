@@ -969,7 +969,7 @@ let with_ty : mlty  ->  mlexpr'  ->  mlexpr = (fun t e -> (with_ty_loc t e dummy
 
 
 type mllib =
-| MLLib of (mlsymbol * (mlsig * mlmodule) Prims.option * mllib) Prims.list
+| MLLib of (mlpath * (mlsig * mlmodule) Prims.option * mllib) Prims.list
 
 
 let is_MLLib = (fun _discr_ -> (match (_discr_) with

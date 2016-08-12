@@ -32,9 +32,9 @@ type program =
   list<decl>
 
 and decl =
-  | DFunction of typ * ident * list<binder> * expr
-  | DTypeAlias of ident * typ
-  | DGlobal of ident * typ * expr
+  | DFunction of typ * lident * list<binder> * expr
+  | DTypeAlias of lident * typ
+  | DGlobal of lident * typ * expr
 
 and expr =
   | EBound of var
@@ -125,7 +125,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 7
+let current_version: version = 8
 
 type file = string * program
 type binary_format = version * list<file>
@@ -213,7 +213,7 @@ let is_machine_int m =
 
 type env = {
   names: list<name>;
-  module_name: string;
+  module_name: list<string>;
 }
 
 and name = {
@@ -252,24 +252,29 @@ let add_binders env binders =
 
 let rec translate (MLLib modules): list<file> =
   List.filter_map (fun m ->
+    let m_name =
+      let (prefix, final), _, _ = m in
+      String.concat "." (prefix @ [ final ])
+    in
     try
-      Util.print1 "Attempting to translate module %s\n" (fst3 m);
+      Util.print1 "Attempting to translate module %s\n" m_name;
       Some (translate_module m)
     with
     | e ->
         Util.print2 "Unable to translate module: %s because:\n  %s\n"
-          (fst3 m) (Util.print_exn e);
+          m_name (Util.print_exn e);
         None
   ) modules
 
 and translate_module (module_name, modul, _): file =
+  let module_name = fst module_name @ [ snd module_name ] in
   let program = match modul with
     | Some (_signature, decls) ->
         List.filter_map (translate_decl (empty module_name)) decls
     | _ ->
         failwith "Unexpected standalone interface or nested modules"
   in
-  module_name, program
+  (String.concat "_" module_name), program
 
 and translate_decl env d: option<decl> =
   match d with
@@ -301,7 +306,7 @@ and translate_decl env d: option<decl> =
           else
             translate_expr env body
         in
-        let name = env.module_name ^ "_" ^ name in
+        let name = env.module_name, name in
         Some (DFunction (t, name, binders, body))
       with e ->
         Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
@@ -317,7 +322,7 @@ and translate_decl env d: option<decl> =
       begin try
         let t = translate_type env t in
         let expr = translate_expr env expr in
-        let name = env.module_name ^ "_" ^ name in
+        let name = env.module_name, name in
         Some (DGlobal (name, t, expr))
       with e ->
         Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
@@ -346,7 +351,7 @@ and translate_decl env d: option<decl> =
       None
 
   | MLM_Ty [ (name, [], Some (MLTD_Abbrev t)) ] ->
-      let name = env.module_name ^ "_" ^ name in
+      let name = env.module_name, name in
       Some (DTypeAlias (name, translate_type env t))
 
   | MLM_Ty ((name, _, _) :: _) ->
@@ -376,8 +381,6 @@ and translate_type env t: typ =
       TUnit
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.bool") ->
       TBool
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.int") ->
-      failwith "todo: translate_type [Prims.int]"
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt8.t") ->
       TInt UInt8
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.UInt16.t") ->
@@ -396,9 +399,6 @@ and translate_type env t: typ =
       TInt Int64
   | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Buffer.buffer") ->
       TBuf (translate_type env arg)
-  | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.HyperStack.mem") ->
-      // HACK ALERT HACK ALERT we shouldn't even be extracting this!
-      TAny
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
   | MLTY_Named (_, (path, type_name)) ->
@@ -460,7 +460,7 @@ and translate_expr env e: expr =
       ELet (binder, body, continuation)
 
   | MLE_Match (expr, branches) ->
-      let t = expr.mlty in
+      let t = e.mlty in
       EMatch (translate_expr env expr, translate_branches env t branches, translate_type env t)
 
   // We recognize certain distinguished names from [FStar.HST] and other

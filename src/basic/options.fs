@@ -677,7 +677,8 @@ let settable = function
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
     | "__temp_no_proj"
-    | "warn_top_level_effects" -> true
+    | "warn_top_level_effects"
+    | "reuse_hint_for" -> true
     | _ -> false
 
 let resettable s = settable s || s="z3timeout"

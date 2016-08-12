@@ -30,6 +30,7 @@ let fstar_ns_lid = p2l ["FStar"]
 (* Primitive types *)
 let bool_lid     = pconst "bool"
 let unit_lid     = pconst "unit"
+let squash_lid   = pconst "squash"
 let string_lid   = pconst "string"
 let bytes_lid    = pconst "bytes"
 let int_lid      = pconst "int"
@@ -143,6 +144,9 @@ let rref_lid      = p2l ["FStar"; "HyperHeap"; "rref"]
 let tset_empty     = p2l ["FStar"; "TSet"; "empty"]
 let tset_singleton = p2l ["FStar"; "TSet"; "singleton"]
 let tset_union     = p2l ["FStar"; "TSet"; "union"]
+
+(* Other special constants *)
+let erased_lid    = p2l ["FStar"; "Ghost"; "erased"]
 
 (* monad constants *)
 let effect_PURE_lid  = pconst "PURE"

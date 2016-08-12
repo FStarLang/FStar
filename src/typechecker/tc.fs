@@ -2661,7 +2661,16 @@ and tc_inductive env ses quals lids =
                     //open dbs
                     let dbs = SS.open_binders dbs in
                     //fold on dbs, add haseq of its sort to the guard
-                    let cond = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (fst b).sort] None dr)) U.t_true dbs in
+                    let cond = List.fold_left (fun (t:term) (b:binder) ->
+                        let haseq_b = mk_Tm_app U.t_haseq [S.as_arg (fst b).sort] None dr in
+                        //label the haseq predicate so that we get a proper error message if the assertion fails
+                        let sort_range = (fst b).sort.pos in
+                        let haseq_b = Util.label
+                            (Util.format1 "Failed to prove that the type '%s' supports decidable equality because of this argument; add the 'noeq' qualifier"
+                                  (Print.term_to_string ind))
+                            sort_range
+                            haseq_b in
+                        U.mk_conj t haseq_b) U.t_true dbs in
                     
                     let env, cond' = acc in
                     Env.push_binders env dbs, U.mk_conj cond' cond

@@ -1309,14 +1309,17 @@ let rec for1_sig = (fun _74_719 -> (match (_74_719) with
 | (x, sigmod, FStar_Extraction_ML_Syntax.MLLib (sub)) -> begin
 (
 
+let x = (FStar_Extraction_ML_Util.flatten_mlpath x)
+in (
+
 let head = (FStar_Format.reduce1 (((FStar_Format.text "module"))::((FStar_Format.text x))::((FStar_Format.text ":"))::((FStar_Format.text "sig"))::[]))
 in (
 
 let tail = (FStar_Format.reduce1 (((FStar_Format.text "end"))::[]))
 in (
 
-let doc = (FStar_Option.map (fun _74_725 -> (match (_74_725) with
-| (s, _74_724) -> begin
+let doc = (FStar_Option.map (fun _74_726 -> (match (_74_726) with
+| (s, _74_725) -> begin
 (doc_of_sig x s)
 end)) sigmod)
 in (
@@ -1335,11 +1338,14 @@ end
 (FStar_Format.cat s FStar_Format.hardline)
 end))::_166_365)
 in ((FStar_Format.cat head FStar_Format.hardline))::_166_366)
-in (FStar_Format.reduce _166_367)))))))
+in (FStar_Format.reduce _166_367))))))))
 end))
-and for1_mod = (fun istop _74_738 -> (match (_74_738) with
+and for1_mod = (fun istop _74_739 -> (match (_74_739) with
 | (x, sigmod, FStar_Extraction_ML_Syntax.MLLib (sub)) -> begin
 (
+
+let x = (FStar_Extraction_ML_Util.flatten_mlpath x)
+in (
 
 let head = (let _166_370 = if (FStar_Extraction_ML_Util.codegen_fsharp ()) then begin
 ((FStar_Format.text "module"))::((FStar_Format.text x))::[]
@@ -1360,8 +1366,8 @@ end else begin
 end
 in (
 
-let doc = (FStar_Option.map (fun _74_744 -> (match (_74_744) with
-| (_74_742, m) -> begin
+let doc = (FStar_Option.map (fun _74_746 -> (match (_74_746) with
+| (_74_744, m) -> begin
 (doc_of_mod x m)
 end)) sigmod)
 in (
@@ -1391,14 +1397,15 @@ in ((FStar_Format.text "open Prims"))::_166_376)
 in (FStar_Format.hardline)::_166_377)
 in (head)::_166_378)
 in (FStar_List.append prefix _166_379))
-in (FStar_All.pipe_left FStar_Format.reduce _166_380))))))))
+in (FStar_All.pipe_left FStar_Format.reduce _166_380)))))))))
 end))
 in (
 
-let docs = (FStar_List.map (fun _74_756 -> (match (_74_756) with
+let docs = (FStar_List.map (fun _74_758 -> (match (_74_758) with
 | (x, s, m) -> begin
-(let _166_382 = (for1_mod true ((x), (s), (m)))
-in ((x), (_166_382)))
+(let _166_383 = (FStar_Extraction_ML_Util.flatten_mlpath x)
+in (let _166_382 = (for1_mod true ((x), (s), (m)))
+in ((_166_383), (_166_382))))
 end)) mllib)
 in docs))
 end))
@@ -1409,15 +1416,15 @@ let doc_of_mllib : FStar_Extraction_ML_Syntax.mllib  ->  (Prims.string * FStar_F
 
 let string_of_mlexpr : FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  Prims.string = (fun cmod e -> (
 
-let doc = (let _166_389 = (FStar_Extraction_ML_Util.flatten_mlpath cmod)
-in (doc_of_expr _166_389 ((min_op_prec), (NonAssoc)) e))
+let doc = (let _166_390 = (FStar_Extraction_ML_Util.flatten_mlpath cmod)
+in (doc_of_expr _166_390 ((min_op_prec), (NonAssoc)) e))
 in (FStar_Format.pretty 0 doc)))
 
 
 let string_of_mlty : FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlty  ->  Prims.string = (fun cmod e -> (
 
-let doc = (let _166_394 = (FStar_Extraction_ML_Util.flatten_mlpath cmod)
-in (doc_of_mltype _166_394 ((min_op_prec), (NonAssoc)) e))
+let doc = (let _166_395 = (FStar_Extraction_ML_Util.flatten_mlpath cmod)
+in (doc_of_mltype _166_395 ((min_op_prec), (NonAssoc)) e))
 in (FStar_Format.pretty 0 doc)))
 
 

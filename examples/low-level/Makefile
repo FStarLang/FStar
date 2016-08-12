@@ -31,7 +31,9 @@ P_EXTRACTED=FStar_Ghost.ml FStar_Seq.ml Poly1305_Parameters.ml Poly1305_Bigint.m
 
 all: uall sall
 
-uall: chacha-test poly-test aead-test # curve-test
+uall:
+	+make clean
+	+make chacha-test poly-test aead-test # curve-test
 
 sall:
 
