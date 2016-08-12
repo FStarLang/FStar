@@ -1909,7 +1909,8 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
             tc_check_trivial_guard env ed.repr expected_k in
 
         let mk_repr' t wp =
-            mk (Tm_app(Util.un_uinst repr, [as_arg t; as_arg wp])) None Range.dummyRange in
+            let repr = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env repr in
+            mk (Tm_app(repr, [as_arg t; as_arg wp])) None Range.dummyRange in
 
         let mk_repr a wp = 
             mk_repr' (S.bv_to_name a) wp in
@@ -1942,14 +1943,18 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
                                          S.mk_binder wp_g;
                                          S.null_binder (Util.arrow [S.mk_binder x_a] (S.mk_Total <| mk_repr b (wp_g_x)))]
                                         (S.mk_Total res) in
-            (* printfn "About to check bind=%s\n\n, at type %s\n" *) 
-            (*         (Print.term_to_string (snd ed.bind_repr)) *)
-            (*         (Print.term_to_string expected_k); *)
+//            printfn "About to check expected_k %s\n" 
+//                     (Print.term_to_string expected_k);
             let expected_k, _, _ = 
                 tc_tot_or_gtot_term env expected_k in
+//            printfn "About to check bind=%s\n\n, at type %s\n" 
+//                     (Print.term_to_string (snd ed.bind_repr)) 
+//                     (Print.term_to_string expected_k); 
             let env = Env.set_range env (snd (ed.bind_repr)).pos in
             let env = {env with lax=true} in //we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
-            check_and_gen' env ed.bind_repr expected_k in
+            let br = check_and_gen' env ed.bind_repr expected_k in
+//            let _ = printfn "After checking bind_repr is %s\nexpected_k is %s\n" (Print.tscheme_to_string br) (Print.term_to_string expected_k) in
+            br in
 
         let return_repr = 
             let x_a = S.gen_bv "x_a" None (S.bv_to_name a) in
