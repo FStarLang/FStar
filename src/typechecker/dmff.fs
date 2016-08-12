@@ -210,7 +210,7 @@ let gen_wps_for_free
     let a1 = S.gen_bv "a1" None (mk_gctx (S.bv_to_name t1)) in
     let a2 = S.gen_bv "a2" None (mk_gctx (S.bv_to_name t2)) in
     let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t3))))) in
-    U.abs (binders @ binders_of_list [ a, true; t1, true; t2, true; t3, true; f, false; a1, false; a2, false ]) (
+    U.abs (mk_all_implicit binders @ binders_of_list [ a, true; t1, true; t2, true; t3, true; f, false; a1, false; a2, false ]) (
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_app (List.map S.as_arg [
           U.mk_app c_pure (List.map S.as_arg [ S.bv_to_name f ]);
