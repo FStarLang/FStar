@@ -39,7 +39,7 @@ assume val debugflag:bool
 (* pre-condition: idx fits the size of UInt32
    		  idx is less than length of the buffer
  *)
-let load (n:word) (addr:address) (buf: buffer dword) (base:address): ST dword
+let load (n:word) (addr:address) (buf: buffer dword) (base:address): STL dword
 	(requires (fun h -> (gte addr base) /\ (let idx =(sub addr base) in (Int.size (UInt64.v idx) UInt32.n))
 				/\ (let idx = (sub addr base) in ((UInt64.v idx) < (Buffer.length buf)))
 				/\ live h buf)
@@ -134,26 +134,45 @@ let get_bitmap_set_pure (h:HyperStack.mem) (addr:address) (buf:buffer dword{live
 				/\ ( let stackend = (add ustackstart  ustacksize) in
 					(gte env.rbp stackend) && (lte env.rbp ustackstart) && (gte env.rsp stackend) && (lte env.rsp ustackstart) 
 				   )
+				 (* rbp >= rsp *)
+				/\ ((gte env.rbp env.rsp) == true)
 				/\ live h buf)
 	)
 	(ensures (fun h0 r h1 ->live h0 buf /\ live h1 buf /\ modifies_1 buf h0 h1 
 				/\ (gte addr base) 
+				/\ (gte ucodestart base)
+				/\ (gte wbmapstart ucodestart)
 				/\ (gte ustackstart uheapstart)
 				/\ (gte uheapstart wbmapstart) 
-				/\ (gte wbmapstart base)
 				/\ (gte ustackstart addr)
 				/\ (let idx =(sub addr base) in (Int.size (UInt64.v idx) UInt32.n))
 				/\ ((UInt64.v (sub ustackstart base)) < (Buffer.length buf)) 
 				(*
-				(* if address is stack or heap, then it should be writable *)
+				(* if address is stack or heap and the store is successful, then it should be writable *)
 				/\ (if (heap_or_active_stack addr uheapstart ustackstart ) && r then 
 					((get_bitmap_set_pure h0 addr buf base wbmapstart uheapstart ustackstart) == true)
 				   else True
 				   )
 				*)
+				/\ (if (gte addr ucodestart) && (lte addr wbmapstart) then
+						(r==false)
+				    else True
+				   )
+				(* rbp and rsp are always in stack ranges *)
+				/\ (Int.size (UInt64.v ustackstart) UInt32.n)  
+				/\ (Int.size (UInt64.v ustacksize) UInt32.n)  
+				/\ ( let stackend = (add ustackstart  ustacksize) in
+					(gte env.rbp stackend) && (lte env.rbp ustackstart) && (gte env.rsp stackend) && (lte env.rsp ustackstart) 
+				   )
+				 (* rbp >= rsp *)
+				/\ ((gte env.rbp env.rsp) == true)
 		 )
 	) =
-     if (gte addr  wbmapstart) && (lt addr  uheapstart)&& (lte (UInt64.sub addr wbmapstart) (Int.Cast.uint32_to_uint64 wbmapsize)) then
+	
+      (* Code section is not writable *)
+     if	(gte addr ucodestart) && (lte addr wbmapstart) then
+	false
+     else if (gte addr  wbmapstart) && (lt addr  uheapstart)&& (lte (UInt64.sub addr wbmapstart) (Int.Cast.uint32_to_uint64 wbmapsize)) then
 	(* addr is in write-bitmap, get the index
 	   i.e. bitmapindex represents the address whose permission
 	   is being toggled 
@@ -279,3 +298,70 @@ let get_bitmap_set_pure (h:HyperStack.mem) (addr:address) (buf:buffer dword{live
 			debug_print_string "====================\n" 
 		else true in
         false	
+
+ (* post-condition:
+	A call is successfull only if it is present in calltable
+	A jump is successfull only if it belongs to current function
+ *)
+  let decode (iscalltarget:bool) (myprogram:program) (currentaddr:address) (targetaddr:address) (env:cpuregstate) (calltab:calltable): Pure (bool * (list stmt)) 
+		(requires ((gte env.rbp env.rsp) == true) )
+		(ensures (fun r -> if (iscalltarget && (fst r)) then 
+					((search_func calltab targetaddr) == true)
+				  else if ((not iscalltarget)&& (fst r)) then
+					let funcname = get_function_given_address currentaddr myprogram in
+					let funcname' = get_function_given_address currentaddr myprogram in
+					(funcname = funcname')
+				  else  True
+			 )
+	        ) = 
+	let iscallable = search_func calltab targetaddr in
+	if  iscallable && iscalltarget then
+		let func_name = get_func_name calltab targetaddr in
+		let func_attr = get_func_attributes calltab func_name in
+		
+		let ispublic = begin match func_attr with
+				| Public -> true
+				| Private -> false
+				end in
+		if ispublic then
+			(* If number of arguments is more than 4, 
+			  check that stack is atleast the size of remaining arguments
+			 *)	
+			let numberargs = get_arguments_number calltab func_name in 
+			if (numberargs > 4 ) then
+				let framestart = read "rbp" env in
+				let stacktop  = read "rsp" env in
+				let framesize = (sub framestart stacktop) in
+				if  ((cast_to_nat framesize) <  (numberargs - 4)) then
+					(* raise Halt *)
+					let _ = if debugflag then debug_print_string "Insufficient arguments: Raise Halt\n" else true in
+					(false, [])
+				else
+					(* Fetches instructions from start to end *)
+					let stlist = get_stmt_list func_name myprogram in
+						(true, stlist)
+			else
+				
+					(* Fetches instructions from start to end *)
+					let stlist = get_stmt_list func_name myprogram in
+						(true, stlist)
+		(* private functions. We ignore the calling convention *)
+		else
+		(* Fetches instructions from start to end *)
+		let stlist = get_stmt_list func_name myprogram in
+			(true, stlist)
+	else if (not iscallable) && iscalltarget then
+		(* raise Halt *)
+		let _ = if debugflag then debug_print_string "Illegal Call: Raise Halt" else true in
+			(false, [])
+	else (* jump target *)
+		let funcname = get_function_given_address currentaddr myprogram in
+		let funcname' = get_function_given_address currentaddr myprogram in
+		if (funcname = funcname') then
+			let stlist = get_stmt_list_in_current_function targetaddr myprogram in
+			(true, stlist)
+		else
+			(* raise Halt *)
+			let _ = if debugflag then debug_print_string "invalid jump target: Raise Halt\n" else true in
+			(false, [])
+			
