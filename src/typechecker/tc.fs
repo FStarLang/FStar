@@ -2100,6 +2100,10 @@ and cps_and_elaborate env ed =
   // We will open binders through [open_and_check]
   let env = Env.push_binders env effect_binders in
 
+  let effect_binders = List.map (fun (bv, qual) ->
+    { bv with sort = N.normalize [ N.EraseUniverses ] env bv.sort }, qual
+  ) effect_binders in
+
   // Every combinator found in the effect declaration is parameterized over
   // [binders], then [a]. This is a variant of [open_effect_signature] where we
   // just extract the binder [a].
