@@ -3,9 +3,10 @@ FLAGS=--z3timeout 30
 
 OTHERFLAGS+=$(FLAGS) $(LIB)
 FSTAR_HOME=../../..
-include $(FSTAR_HOME)/src/gmake/fstar.mk
-include $(FSTAR_HOME)/src/gmake/nubuild.mk
+include ../../Makefile.include
 
+uall: all
+sall:
 
 all: ifc\
 		 random_tapes\
