@@ -218,6 +218,12 @@ let rec partition_length f l = match l with
 val bool_of_compare : ('a -> 'a -> Tot int) -> 'a -> 'a -> Tot bool
 let bool_of_compare f x y = f x y >= 0
 
+val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> a -> a -> Tot int
+let compare_of_bool #a rel x y =
+  if x `rel` y  then 1 
+  else if x = y then 0
+  else -1
+  
 val sortWith: ('a -> 'a -> Tot int) -> l:list 'a -> Tot (list 'a) (decreases (length l))
 let rec sortWith f = function
   | [] -> []
@@ -225,3 +231,6 @@ let rec sortWith f = function
      let hi, lo  = partition (bool_of_compare f pivot) tl in
      partition_length (bool_of_compare f pivot) tl;
      append (sortWith f lo) (pivot::sortWith f hi)
+
+#set-options "--initial_fuel 4 --initial_ifuel 4"
+let test_sort = assert (sortWith (compare_of_bool (<)) [3; 2; 1] = [1; 2; 3])
