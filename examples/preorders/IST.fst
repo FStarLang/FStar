@@ -28,9 +28,9 @@ let ist_wp   (state:Type) (a:Type) = ist_post state a -> Tot (ist_pre state)
 
 (* A WP-style preorder-indexed state monad. *)
 
-effect  ISTATE (state:Type0)
+effect  ISTATE (state:Type)
 	       (rel:relation state{preorder rel})
-	       (a:Type0)
+	       (a:Type)
 	       (wp: ist_wp state a)
        =
        STATE_h state a wp
