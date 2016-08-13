@@ -1755,63 +1755,58 @@ let open_univ_vars uvs binders c =
             | Tm_arrow(binders, c) -> uvs, binders, c
             | _ -> failwith "Impossible"
 
-let open_effect_signature env mname signature =
-   let fail t = raise (Error(Errors.unexpected_signature_for_monad env mname t, range_of_lid mname)) in
-   match (SS.compress signature).n with
-      | Tm_arrow(bs, c) ->
-        let bs = SS.open_binders bs in
-        begin match bs with
-            | [(a, _);(wp, _)] -> a, wp.sort
-            | _ -> fail signature
-        end
-      | _ -> fail signature
-
-let open_effect_binders env ed =
-  match ed.binders with
-  | [] -> ed
-  | _ ->
-      let opening = SS.opening_of_binders ed.binders in
-      let op ts =
-        assert (fst ts = []);
-        let t1 = SS.subst opening (snd ts) in
-        ([], t1) in
-      { ed with
-            ret_wp      =op ed.ret_wp
-          ; bind_wp     =op ed.bind_wp
-          ; return_repr =op ed.return_repr
-          ; bind_repr   =op ed.bind_repr
-          ; if_then_else=op ed.if_then_else
-          ; ite_wp      =op ed.ite_wp
-          ; stronger    =op ed.stronger
-          ; close_wp    =op ed.close_wp
-          ; assert_p    =op ed.assert_p
-          ; assume_p    =op ed.assume_p
-          ; null_wp     =op ed.null_wp
-          ; trivial     =op ed.trivial
-          ; repr        = snd (op ([], ed.repr))
-          ; actions     = List.map (fun a ->
-            { a with
-             action_defn = snd (op ([], a.action_defn));
-             action_typ = snd (op ([], a.action_typ)) }) ed.actions
-      }
-
-let open_effect_decl env ed =
-   let a, wp = open_effect_signature env ed.mname ed.signature in
-   let ed = open_effect_binders env ed in
-   ed, a, wp
-
 let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
-  let binders_un, signature_un = SS.open_term ed.binders ed.signature in
-  let binders, env, _ = tc_tparams env0 binders_un in
+  let effect_params_un, signature_un, opening = SS.open_term' ed.binders ed.signature in
+  let effect_params, env, _ = tc_tparams env0 effect_params_un in
   let signature, _    = tc_trivial_guard env signature_un in
-  let ed = {ed with binders=binders;
+  let ed = {ed with binders=effect_params;
                     signature=signature} in
-
-  let ed, a, wp_a = open_effect_decl env ed in
-  let get_effect_signature ()  =
+  //open ed's operations with respect to the effect parameters that are already in scope
+  let ed = match effect_params with
+    | [] -> ed
+    | _ ->
+        let op ts =
+            assert (fst ts = []);
+            let t1 = SS.subst opening (snd ts) in
+            ([], t1) in
+        { ed with
+            ret_wp        =op ed.ret_wp
+            ; bind_wp     =op ed.bind_wp
+            ; return_repr =op ed.return_repr
+            ; bind_repr   =op ed.bind_repr
+            ; if_then_else=op ed.if_then_else
+            ; ite_wp      =op ed.ite_wp
+            ; stronger    =op ed.stronger
+            ; close_wp    =op ed.close_wp
+            ; assert_p    =op ed.assert_p
+            ; assume_p    =op ed.assume_p
+            ; null_wp     =op ed.null_wp
+            ; trivial     =op ed.trivial
+            ; repr        = snd (op ([], ed.repr))
+            ; actions     = List.map (fun a ->
+            { a with
+                action_defn = snd (op ([], a.action_defn));
+                action_typ = snd (op ([], a.action_typ)) }) ed.actions
+        }
+  in
+   //Returns (a:Type) and M.WP a, for a fresh name a
+  let wp_with_fresh_result_type env mname signature =
+       let fail t = raise (Error(Errors.unexpected_signature_for_monad env mname t, range_of_lid mname)) in
+       match (SS.compress signature).n with
+          | Tm_arrow(bs, c) ->
+            let bs = SS.open_binders bs in
+            begin match bs with
+                | [(a, _);(wp, _)] -> a, wp.sort
+                | _ -> fail signature
+            end
+          | _ -> fail signature
+  in
+  let a, wp_a = wp_with_fresh_result_type env ed.mname ed.signature in
+  let fresh_effect_signature ()  =
+    //we type-check the signature_un again, because we want a fresh universe
     let signature, _ = tc_trivial_guard env signature_un in
-    open_effect_signature env ed.mname signature in
+    wp_with_fresh_result_type env ed.mname signature in
 
   //put the signature in the environment to prevent generalizing its free universe variables until we're done
   let env = Env.push_bv env (S.new_bv None ed.signature) in
@@ -1832,7 +1827,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     check_and_gen' env ed.ret_wp expected_k in
 
   let bind_wp =
-    let b, wp_b = get_effect_signature () in
+    let b, wp_b = fresh_effect_signature () in
     let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
     let expected_k = Util.arrow [S.null_binder t_range;
                                  S.mk_binder a; S.mk_binder b;
@@ -1922,7 +1917,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
         let bind_repr = 
             let r = S.lid_as_fv FStar.Syntax.Const.range_0 Delta_constant None |> S.fv_to_tm in
-            let b, wp_b = get_effect_signature () in
+            let b, wp_b = fresh_effect_signature () in
             let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
             let wp_f = S.gen_bv "wp_f" None wp_a in
             let wp_g = S.gen_bv "wp_g" None a_wp_b in
@@ -2049,12 +2044,12 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
   //generalize and close
   let t = U.arrow ed.binders (S.mk_Total ed.signature) in
   let (univs, t) = TcUtil.generalize_universes env0 t in
-  let binders, signature = match binders, (SS.compress t).n with
-    | [], _ -> [], t
-    | _, Tm_arrow(binders, c) -> binders, Util.comp_result c
+  let signature = match effect_params, (SS.compress t).n with
+    | [], _ -> t
+    | _, Tm_arrow(_, c) -> Util.comp_result c
     | _ -> failwith "Impossible" in
   let close n ts =
-    let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme binders ts) in
+    let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme effect_params ts) in
     // We always close [bind_repr], even though it may be [Tm_unknown]
     // (non-reifiable, non-reflectable effect)
     if n > 0 && not (is_unknown (snd ts)) && List.length (fst ts) <> n then
@@ -2071,10 +2066,10 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
         action_univs=univs;
         action_defn=defn;
         action_typ=typ; } in
-  assert (List.length binders > 0 || List.length univs = 1);
+  assert (List.length effect_params > 0 || List.length univs = 1);
   let ed = { ed with
       univs       = univs
-    ; binders     = binders
+    ; binders     = effect_params
     ; signature   = signature
     ; ret_wp      = close 0 return_wp
     ; bind_wp     = close 1 bind_wp
@@ -2092,7 +2087,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     ; actions     = List.map close_action actions} in
 
   if Env.debug env Options.Low
-  || Env.debug env <| Options.Other "EffDecl"
+  || Env.debug env <| Options.Other "ED"
   then Util.print_string (Print.eff_decl_to_string false ed);
   ed
 

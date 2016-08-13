@@ -4165,7 +4165,7 @@ end
 end
 | FStar_Syntax_Syntax.Sig_new_effect (ed, _85_2521) -> begin
 if ((let _177_2090 = (FStar_All.pipe_right ed.FStar_Syntax_Syntax.qualifiers (FStar_List.contains FStar_Syntax_Syntax.Reifiable))
-in (FStar_All.pipe_right _177_2090 Prims.op_Negation)) || true) then begin
+in (FStar_All.pipe_right _177_2090 Prims.op_Negation))) then begin
 (([]), (env))
 end else begin
 (
