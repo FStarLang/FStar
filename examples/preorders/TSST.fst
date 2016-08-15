@@ -83,6 +83,8 @@ effect TSST    (state:Type)
 	       (pre:tsst_pre state)
 	       (post:(timestamped_state (state) -> Tot (tsst_post state a))) 
        =
+       TSSTATE state rel a (fun p s0 -> pre s0 /\ (forall x s1 . pre s0 /\ post s0 x s1 ==> p x s1))
+(*
        TSSTATE state rel a (fun p s0 -> pre s0 /\ (forall x s1 . 
                                                      (pre s0 /\ 
 					             rel (get_state s0) (get_state s1) /\ 
@@ -91,6 +93,7 @@ effect TSST    (state:Type)
 						     post s0 x s1) 
 						     ==> 
 						     p x s1))
+*)
 
 
 (* An abstract (box-style) modality for witnessed stable predicates. *)

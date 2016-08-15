@@ -28,16 +28,11 @@ let ist_wp   (state:Type) (a:Type) = ist_post state a -> Tot (ist_pre state)
 
 (* A WP-style preorder-indexed state monad. *)
 
-effect  ISTATE (state:Type)
-	       (rel:relation state{preorder rel})
-	       (a:Type)
-	       (wp: ist_wp state a)
-       =
-       STATE_h state a wp
+new_effect  ISTATE (state:Type) (rel:relation state{preorder rel}) = STATE_h state
 
 
-(* Currently not possible, but at this point one would like to show 
-   that DIV is a sub-effect of ISTATE, for all states and relations. *)
+(* Currently not possible, but at this point one would like to show that 
+   PURE and DIV are sub-effects of ISTATE, for all states and relations. *)
 
 
 (*A pre- and postcondition style preorder-indexed state monad. *)
@@ -48,12 +43,7 @@ effect IST    (state:Type)
 	      (pre:ist_pre state)
 	      (post:(state -> Tot (ist_post state a))) 
        =
-       ISTATE state rel a (fun p s0 -> pre s0 /\ (forall x s1 . 
-                                                    pre s0 /\ 
-						    rel s0 s1 /\ 
-						    post s0 x s1 
-						    ==> 
-						    p x s1))
+       ISTATE state rel a (fun p s0 -> pre s0 /\ (forall x s1 . pre s0 /\ rel s0 s1 ==> p x s1))
 
 
 (* An abstract (box-style) modality for witnessed stable predicates. *)
