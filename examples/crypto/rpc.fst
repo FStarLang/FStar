@@ -6,7 +6,6 @@ open FStar.All
 open FStar.String
 open FStar.IO
 
-
 let init_print = print_string "\ninitializing...\n\n"
 
 open Platform.Bytes
@@ -15,11 +14,6 @@ open SeqProperties*)
 open SHA1
 open Formatting
 open MAC
-
-//does it verify for trivial reasons, like a bug in the build-config?
-(*let testme () =
-   assert False*)
-   
 
 (* some basic, untrusted network controlled by the adversary *)
 
@@ -40,14 +34,14 @@ let rec recv call = if length !msg_buffer > 0
 
 (* two events, recording genuine requests and responses *)
 
-logic type Request : string -> Type
-logic type Response : string -> string -> Type
+assume new logic type pRequest : string -> Type
+assume new logic type pResponse : string -> string -> Type
 
 (* the meaning of MACs, as used in RPC *)
 
 type reqresp (msg:message) = 
-    (exists s.   msg = Formatting.request s    /\ Request s)
-  \/ (exists s t. msg = Formatting.response s t /\ Response s t)
+     (exists s.   msg = Formatting.request  s   /\ pRequest s)
+  \/ (exists s t. msg = Formatting.response s t /\ pResponse s t)
 
 (* FIXME: this type annotation is a workaround for #486 *)
 val k: k:key{key_prop k == reqresp}
@@ -55,14 +49,21 @@ let k = print_string "generating shared key...\n";
   keygen reqresp
 
 
+val client_send : string16 -> ML unit
 let client_send (s:string16) =
-  assume (Request s);
+  assume (pRequest s);
   print_string "\nclient send:";
   print_string s;
 
+  (* admit(); (\* XXXX *\) *)
+  assert(reqresp (Formatting.request s)); (* this works *)
+  assert(key_prop k == reqresp);          (* this also works *)
+  assert(key_prop k (Formatting.request s) == reqresp (Formatting.request s));
+  (*assert(key_prop k (Formatting.request s)); -- this fails *)
   send ( (utf8 s) @| (mac k (Formatting.request s)))
 
 
+val client_recv : string16 -> ML unit
 let client_recv (s:string16) =
   recv (fun msg ->
     if length msg < macsize then failwith "Too short"
@@ -71,17 +72,17 @@ let client_recv (s:string16) =
       let t = iutf8 v in
       if verify k (Formatting.response s t) m'
       then (
-        assert (Response s t);
+        admit(); (* XXXX *)
+        assert (pResponse s t);
         print_string "\nclient verified:";
         print_string t ))
 
+val client : string16 -> ML unit
 let client (s:string16) =
   client_send s;
   client_recv s
 
-
-
-
+val server : unit -> ML unit
 let server () =
   recv (fun msg ->
     if length msg < macsize then failwith "Too short"
@@ -92,17 +93,19 @@ let server () =
         let s = iutf8 v in
         if verify k (Formatting.request s) m
         then
-          ( assert (Request s);
+          ( 
+            admit(); (* XXXX *)
+            assert (pRequest s);
             print_string "\nserver verified:";
             print_string s;
             let t = "42" in
-            assume (Response s t);
+            assume (pResponse s t);
             print_string "\nserver sent:";
             print_string t;
             send ( (utf8 t) @| (mac k (Formatting.response s t))))
         else failwith "Invalid MAC" )
 
-
+val test : unit -> ML unit
 let test () =
   let query = "4 + 2" in
   if length (utf8 query) > 65535 then failwith "Too long"
@@ -112,5 +115,6 @@ let test () =
     client_recv query;
     print_string "\n\n"
 
+val run : unit
 let run = test ()
 (* check_marker *)

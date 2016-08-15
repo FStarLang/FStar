@@ -29,7 +29,7 @@ open FStar.IO
    used as a pre-condition for MACing and
    a postcondition of MAC verification *)
 
-opaque type key_prop : key -> text -> Type
+assume new type key_prop : key -> text -> Type
 type pkey (p:(text -> Type)) = k:key{key_prop k == p}
 
 (* to model authentication, we log all genuine calls
@@ -47,27 +47,6 @@ let log = ST.alloc #(list entry) []
 val keygen: p:(text -> Type) -> pkey p
 val mac:    k:key -> t:text{key_prop k t} -> ST tag (requires (fun h -> True)) (ensures (fun h x h' -> modifies !{ log } h h'))
 val verify: k:key -> t:text -> tag -> ST (b:bool{b ==> key_prop k t}) (requires (fun h -> True)) (ensures (fun h x h' -> modifies !{} h h'))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 (* ---- implementation *)
 
@@ -87,7 +66,7 @@ let verify k text tag =
   let verified = (Platform.Bytes.equalBytes m tag) in
   let found =
     is_Some
-      (List.find
+      (List.Tot.find
         (fun (Entry k' text' tag') -> Platform.Bytes.equalBytes k k' && Platform.Bytes.equalBytes text text')
         !log) in
 
@@ -101,21 +80,6 @@ let verify k text tag =
   (* error-detecting implementation for the INT-CMA game *)
 //(if verified && not found then win := Some(k,text,tag));
 //verified
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 (* VARIANT CTXT vs CPA: is the tag authenticated?
    otherwise do not include m:tag in the entry *)
