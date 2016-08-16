@@ -378,6 +378,11 @@ type nonTerminalId =
     | NONTERM_disjunctivePattern
     | NONTERM_maybeWhen
     | NONTERM_funArrow
+    | NONTERM_topSeparator
+    | NONTERM_topSeparators
+    | NONTERM_opt_topSeparators
+    | NONTERM_seps
+    | NONTERM_opt_OBLOCKSEP
     | NONTERM_tmIff
     | NONTERM_tmImplies
     | NONTERM_tmArrowNoEquals
