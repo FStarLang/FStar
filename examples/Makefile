@@ -10,6 +10,7 @@ security \
 termination \
 software_foundations \
 ../doc/tutorial/code/solutions \
+../doc/tutorial/code/solutions_universes \
 relational \
 relational/new \
 voting \
