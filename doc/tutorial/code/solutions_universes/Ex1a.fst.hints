@@ -1,0 +1,31 @@
+[
+  "2<\u0006N\u0005±õs¸bØ[öcÞ\u0000",
+  [
+    [ "Ex1a.canWrite", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex1a.canRead", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex1a.canRead",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0
+    ],
+    [
+      "Ex1a.checkedRead",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0
+    ],
+    [
+      "Ex1a.checkedWrite",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0
+    ]
+  ]
+]

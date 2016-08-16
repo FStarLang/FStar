@@ -1,0 +1,75 @@
+[
+  "Ÿ?W8§èÂ¹\u00194'­R3Nã",
+  [
+    [ "Ex4e.option", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex4e.Some._0",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Ex4e.Some",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_a82c025181a0f0c2c3223434f723fafa"
+      ],
+      0
+    ],
+    [
+      "Ex4e.find",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    [
+      "Ex4e.find'",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    null,
+    [
+      "Ex4e.find_some",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ],
+    [ "Ex4e.find_some", 3, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex4e.find_some",
+      4,
+      2,
+      1,
+      [
+        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "constructor_distinct_Ex4e.None", "constructor_distinct_Ex4e.Some",
+        "constructor_distinct_Prims.Nil", "constructor_distinct_Tm_unit",
+        "disc_equation_Prims.Cons",
+        "equation_with_fuel_Ex4e.find_.fuel_instrumented",
+        "fuel_correspondence_Ex4e.find_.fuel_instrumented",
+        "fuel_irrelevance_Ex4e.find_.fuel_instrumented",
+        "projection_inverse_Ex4e.Some__0",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons", "unit_typing"
+      ],
+      0
+    ]
+  ]
+]
