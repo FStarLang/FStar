@@ -18,10 +18,10 @@
       A.B ^ .C
 
    1 s/r conflict on LBRACE
-    
+
       Consider:
           let f (x: y:int & z:vector y{z=z /\ y=0}) = 0
-    
+
       This is parsed as:
         let f (x: (y:int & z:vector y{z=z /\ y=0})) = 0
       rather than:
@@ -120,6 +120,46 @@ let as_frag d ds =
 
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 
+
+/* for offside rule, copied from F# */
+%token <bool> OLET      /* LexFilter #light converts 'LET' tokens to 'OLET' when starting (CtxtLetDecl(blockLet=true)) */
+%token OTHEN            /* LexFilter #light converts 'THEN' tokens to 'OTHEN' */
+%token OELSE            /* LexFilter #light converts 'ELSE' tokens to 'OELSE' except if immeditely followed by 'if', when they become 'ELIF' */
+%token OWITH            /* LexFilter #light converts SOME (but not all) 'WITH' tokens to 'OWITH' */
+%token OFUNCTION        /* LexFilter #light converts 'FUNCTION' tokens to 'OFUNCTION' */
+%token OFUN             /* LexFilter #light converts 'FUN' tokens to 'OFUN' */
+
+%token ORESET           /* LexFilter uses internally to force a complete reset on a ';;' */
+
+%token OBLOCKBEGIN      /* LexFilter #light inserts for:
+                                  - just after first '=' or ':' when in 'CtxtModuleHead', i.e. after 'module' and sequence of dot/identifier/access tokens
+                                  - just after first '=' when in 'CtxtMemberHead'
+                                  - just after first '=' when in 'CtxtType'
+                                  - just after 'do' in any context (when opening CtxtDo)
+                                  - just after 'finally' in any context
+                                  - just after 'with' (when opening CtxtWithAsAugment)
+                                  - just after 'else' (when opening CtxtElse)
+                                  - just after 'then' (when opening CtxtThen)
+                                  - just after 'interface' (when pushing CtxtParen(INTERFACE), i.e. next token is DEFAULT | OVERRIDE | INTERFACE | NEW | TYPE | STATIC | END | MEMBER | ABSTRACT  | INHERIT | LBRACK_LESS)
+                                  - just after 'class' (when pushing CtxtParen(CLASS)
+                                  - just after 'class'
+                           But not when opening these CtxtSeqBlocks:
+                                  - just after first non-dot/identifier token past 'namespace'
+                                  - just after first '=' when in 'CtxtLetDecl' or 'CtxtWithAsLet'
+                                  - just after 'lazy' in any context
+                                  - just after '->' in any context
+                                  - when opening CtxtNamespaceHead, CtxtModuleHead
+                        */
+%token OBLOCKSEP        /* LexFilter #light inserts when transforming CtxtSeqBlock(NotFirstInSeqBlock,_,AddBlockEnd) to CtxtSeqBlock(FirstInSeqBlock,_,AddBlockEnd) on exact alignment */
+
+/*    REVIEW: merge OEND, ODECLEND, OBLOCKEND and ORIGHT_BLOCK_END into one token */
+%token OEND             /* LexFilter #light inserts when closing CtxtFun, CtxtMatchClauses, CtxtWithAsLet _        */
+%token ODECLEND         /* LexFilter #light inserts when closing CtxtDo and CtxtLetDecl(block) */
+%token ORIGHT_BLOCK_END /* LexFilter #light inserts when closing CtxtSeqBlock(_,_,AddOneSidedBlockEnd) */
+%token OBLOCKEND        /* LexFilter #light inserts when closing CtxtSeqBlock(_,_,AddBlockEnd) */
+
+%token <token> ODUMMY
+
 /* These are artificial */
 %token EOF
 
@@ -177,7 +217,7 @@ decls:
       { [mk_decl (Main $3) (rhs2 parseState 1 3) $2] }
   | decl decls
       { ($1::$2) }
-    
+
 decl:
   | FSDOC decl2 { mk_decl $2 (rhs parseState 2) (Some $1) }
   | decl2       { mk_decl $1 (rhs parseState 1) None }
@@ -194,6 +234,13 @@ decl2:
   | tycon
       { $1 }
   | qualifiers LET letqualifier letbinding letbindings
+      {
+        let r, focus = $3 in
+        let lbs = focusLetBindings ((focus, $4)::$5) (rhs2 parseState 1 5) in
+        ToplevelLet($1, r, lbs)
+      }
+  /* #light syntax */
+  | qualifiers OLET letqualifier letbinding letbindings ODECLEND
       {
         let r, focus = $3 in
         let lbs = focusLetBindings ((focus, $4)::$5) (rhs2 parseState 1 5) in
@@ -256,7 +303,7 @@ actions:
 effect_decls:
  |				 { []     }
  | effect_decl more_effect_decls { $1::$2 }
- 
+
 effect_decl:
   | ident EQUALS simpleTerm
     {
@@ -279,7 +326,7 @@ sub_effect:
       }
   | qname SQUIGGLY_RARROW qname
     LBRACE
-       ident EQUALS simpleTerm SEMICOLON 
+       ident EQUALS simpleTerm SEMICOLON
        ident EQUALS simpleTerm
     RBRACE {
     	let id1, tm1 = $5.idText, $7 in
@@ -294,7 +341,7 @@ sub_effect:
           lift_op=ReifiableLift(lift_wp, lift)
         }
     }
-  
+
 qualifier:
   | ASSUME        { Assumption }
   | INLINE        { Inline }
@@ -640,7 +687,7 @@ noSeqTerm:
         mk_term (Requires($2, None)) pos Type
      }
 
-    
+
   | ENSURES typ
      {
         let pos = rhs2 parseState 1 3 in
@@ -665,7 +712,7 @@ noSeqTerm:
       }
 
   | MATCH term WITH patternBranches
-      { 
+      {
         let branches = focusBranches $4 (rhs2 parseState 1 4) in
         mk_term (Match($2, branches)) (rhs2 parseState 1 4) Expr
       }
@@ -674,6 +721,18 @@ noSeqTerm:
       { mk_term (LetOpen($3, $5)) (rhs2 parseState 1 5) Expr }
 
   | LET letqualifier letbinding letbindings IN term
+      {
+        let r, focus = $2 in
+        let lbs = focusLetBindings ((focus,$3)::$4) (rhs2 parseState 2 4) in
+        mk_term (Let(r, lbs, $6)) (rhs2 parseState 1 6) Expr
+      }
+
+  /* #light syntax */
+  | OLET OPEN qname ODECLEND term
+      { mk_term (LetOpen($3, $5)) (rhs2 parseState 1 5) Expr }
+
+  /* #light syntax */
+  | OLET letqualifier letbinding letbindings ODECLEND term
       {
         let r, focus = $2 in
         let lbs = focusLetBindings ((focus,$3)::$4) (rhs2 parseState 2 4) in
@@ -787,7 +846,7 @@ tmArrowNoEquals:
             | None -> mk_binder (NoName tm) (rhs parseState 1) Un aq
             | Some (x, t, f) -> mkRefinedBinder x t f (rhs2 parseState 1 1) aq in
         mk_term (Product([b], $3)) (rhs2 parseState 1 3)  Un
-    
+
      }
 
   | tmCons
@@ -805,7 +864,7 @@ tmArrow:
             | None -> mk_binder (NoName tm) (rhs parseState 1) Un aq
             | Some (x, t, f) -> mkRefinedBinder x t f (rhs2 parseState 1 1) aq in
         mk_term (Product([b], $3)) (rhs2 parseState 1 3)  Un
-    
+
      }
 
   | tmDisjunction
@@ -903,13 +962,13 @@ refinementTerm:
       {
         mk_term (NamedTyp($1, $3)) (rhs2 parseState 1 3) Type
       }
-    
+
   | ident COLON appTerm LBRACE formula RBRACE
       {
         mk_term (Refine(mk_binder (Annotated($1, $3)) (rhs2 parseState 1 3) Type None, $5))
         (rhs2 parseState 1 6) Type
       }
-    
+
   | LBRACE recordExp RBRACE { $2 }
 
   | unaryTerm { $1 }
@@ -995,6 +1054,9 @@ atomicTerm:
   | BEGIN term END
       { $2 }
 
+  | OBLOCKBEGIN term OBLOCKEND
+      { $2 }
+
 maybeFieldProjections:
   |    { [] }
   | maybeFieldProjections DOT ident
@@ -1039,7 +1101,7 @@ projectionLHS:
       {
         mkRefSet (rhs2 parseState 1 3) $2
       }
-    
+
 commaTermList:
   |  { [] }
   | appTerm moreCommaTerms
