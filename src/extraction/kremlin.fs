@@ -63,7 +63,7 @@ and expr =
   | EAny
   | EAbort
   | EReturn of expr
-  | EFlat of lident * expr list
+  | EFlat of lident * list<expr>
 
 and op =
   | Add | AddW | Sub | SubW | Div | Mult | Mod
