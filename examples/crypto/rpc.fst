@@ -55,7 +55,7 @@ let client_send (s:string16) =
   print_string "\nclient send:";
   print_string s;
 
-  (* admit(); (\* XXXX *\) *)
+  admit(); (* XXXX *) 
   assert(reqresp (Formatting.request s)); (* this works *)
   assert(key_prop k == reqresp);          (* this also works *)
   assert(key_prop k (Formatting.request s) == reqresp (Formatting.request s));
