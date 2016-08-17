@@ -35,6 +35,7 @@ and decl =
   | DFunction of typ * lident * list<binder> * expr
   | DTypeAlias of lident * typ
   | DGlobal of lident * typ * expr
+  | DTypeFlat of lident * list<(option<ident> * typ)>
 
 and expr =
   | EBound of var
@@ -61,6 +62,8 @@ and expr =
   | EBool of bool
   | EAny
   | EAbort
+  | EReturn of expr
+  | EFlat of lident * expr list
 
 and op =
   | Add | AddW | Sub | SubW | Div | Mult | Mod
@@ -125,7 +128,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 8
+let current_version: version = 9
 
 type file = string * program
 type binary_format = version * list<file>
