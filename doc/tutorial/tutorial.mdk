@@ -4834,38 +4834,25 @@ let mk_counter_2 _ =
 
 # Cryptography examples
 
+Cryptographic reasoning is inherently modular reasoning. We want to show 
+that using some cryptographic primitive we can secure some application goal.
+We will formalize both the guarantees afforded by the cryptographic module, 
+as well as the goals of the application using types. 
+
 ## MAC
 
-We begin with our cryptographic library.
+We begin with our cryptographic library for message authentication codes (MACs) in `module MAC`.
 
-```
-module MAC
-open Array
-open SHA1
-```
+MACs provide integrity protection using shared key cryptography, often using
+keyed cryptographic hashes.
 
-Message authentication codes
-(MACs) provide integrity protection based on keyed cryptographic hashes.
-We define an F* module that implements this functionality.
-
-We attach an authenticated property to each key
-used as a pre-condition for MACing and a postcondition of MAC verification.
-
-```
-opaque type key_prop : key -> text -> Type
-type pkey (p:(text -> Type)) = k:key{key_prop k == p}
-```
-
-(In the RPC example below we will use a key of type `pkey reqresp` where
-```
-opaque logic type reqresp (msg:text) =
-    (exists s. msg = request s /\ Request s)
- \/ (exists s t. msg = response s t /\ Response s t)
-```
-)
-
-Next, we define the types of functions that a MAC library is supposed to
-provide:
+A MAC scheme typically consists of three algorithms, a `keygen` 
+algorithm for generating the shared `key`,
+a `mac` function for generating a MAC `tag` on `text` using `key`, and
+a `verify` function for verifying that `tag` is a valid MAC for `text` and `key`.
+  
+  
+We define an interface for an F* module implementing this functionality.
 
 ```
 val keygen: p:(text -> Type) -> pkey p
@@ -4873,10 +4860,30 @@ val mac:    k:key -> t:text{key_prop k t} -> tag
 val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
 ```
 
+This interface is unsurprising except for `pkey p` and `key_prop k t`.
+
+We attach an authenticated property to each key and `pkey p` is the type of a key with property `p`.
+
+The application specific function `key_prop k t` maps each key to such 
+an authentication property: `assume type key_prop : key -> text -> Type`. 
+
+It is used as a pre-condition for MACing and a postcondition of MAC verification.
+
+In the RPC example below ([#sec-secure-rpc]) we will use a key of type `pkey reqresp` where
+```
+type reqresp (msg:text) =
+    (exists s. msg = request s /\ Request s)
+ \/ (exists s t. msg = response s t /\ Response s t)
+```
+which states that messages that verify with that key are either 
+`Request`s or `Respone`s.
+
+
+
 ## Cryptographic Capabilities for Accessing Files
 
-We extend the acls2.fst example with cryptographic capabilities, so
-that our trusted ACLs library can now issue and accept HMACSHA1 tags
+We extend the access control example ([#sec-policy]) with cryptographic capabilities, so
+that our trusted ACLs library can now issue and accept MAC tags
 as evidence that a given file is readable.
 
 What is the advantage of capabilities over the refinements already
@@ -4885,7 +4892,7 @@ provided in acls2.fst?
 ~ Exercise
 Relying on acls2.fst and mac.fst, implement a pair of functions with
 the following specification, and verify them by typing under the
-security assumption that HMACSHA1 is INT-CPA.
+security assumption that HMACSHA1 is INT-CMA.
 
 ~~ CodeFragment {filename=exercises/acls-cap.fst name=ex12a-acls-cap}
 val issue:  f:file{ canRead f } -> SHA1.tag
