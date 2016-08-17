@@ -1,5 +1,5 @@
 [
-  "’ú \u0018€í€Ûµ­,a¢;rë",
+  "WÂ¹±³ÿ\u007f7ùÈ†\u0012™)ß•",
   [
     [
       "Ex5a.append",
@@ -38,7 +38,17 @@
       ],
       0
     ],
-    null,
+    [
+      "Ex5a.append_assoc",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0
+    ],
     [ "Ex5a.append_assoc", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex5a.append_assoc",
@@ -46,26 +56,34 @@
       2,
       1,
       [
-        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
-        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
+        "@query", "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
+        "binder_x_63893f6163361bb7b4db46296cfdfc01_2",
+        "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "constructor_distinct_Prims.list", "constructor_distinct_Prims.unit",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.eqtype",
         "equation_with_fuel_Ex5a.append.fuel_instrumented",
         "fuel_correspondence_Ex5a.append.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "fuel_irrelevance_Ex5a.append.fuel_instrumented",
-        "pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
-        "pretyping_f8666440faa91836cc5a13998af863fc",
-        "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "subterm_ordering_Prims.Cons", "typing_Ex5a.append", "unit_typing"
       ],
       0
     ],
-    null,
+    [
+      "Ex5a.rev_is_ok_aux",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0
+    ],
     [ "Ex5a.rev_is_ok_aux", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex5a.rev_is_ok_aux",
@@ -73,27 +91,41 @@
       2,
       1,
       [
-        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "@query", "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
+        "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "constructor_distinct_Prims.list", "constructor_distinct_Prims.unit",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
         "equation_with_fuel_Ex5a.append.fuel_instrumented",
         "equation_with_fuel_Ex5a.rev.fuel_instrumented",
         "equation_with_fuel_Ex5a.reverse.fuel_instrumented",
         "fuel_correspondence_Ex5a.append.fuel_instrumented",
         "fuel_correspondence_Ex5a.rev.fuel_instrumented",
         "fuel_correspondence_Ex5a.reverse.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
         "fuel_irrelevance_Ex5a.rev.fuel_instrumented",
         "fuel_irrelevance_Ex5a.reverse.fuel_instrumented",
+        "pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons", "unit_typing"
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "subterm_ordering_Prims.Cons", "typing_Ex5a.reverse", "unit_typing"
       ],
       0
     ],
-    null,
+    [
+      "Ex5a.append_nil",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0
+    ],
     [ "Ex5a.append_nil", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex5a.append_nil",
@@ -101,9 +133,10 @@
       2,
       1,
       [
-        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "@query", "binder_x_63893f6163361bb7b4db46296cfdfc01_2",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok",
         "equation_with_fuel_Ex5a.append.fuel_instrumented",
         "fuel_correspondence_Ex5a.append.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
@@ -115,7 +148,17 @@
       ],
       0
     ],
-    null,
+    [
+      "Ex5a.rev_is_ok",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_list", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0
+    ],
     [ "Ex5a.rev_is_ok", 2, 2, 1, [ "@query" ], 0 ],
     [ "Ex5a.rev_is_ok", 3, 2, 1, [ "@query" ], 0 ]
   ]
