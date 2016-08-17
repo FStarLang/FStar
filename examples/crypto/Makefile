@@ -90,7 +90,7 @@ $(CONTRIB_LIBS):
 	$(MAKE) -C $(FSTAR_HOME)/contrib/
 
 rpc.exe: RPC.ml $(CONTRIB_LIBS)
-	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
+	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml FStar_List_Tot.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 rpc-test: rpc.exe
 	$(EXTRA_PATH) ./rpc.exe
