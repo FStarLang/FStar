@@ -31,4 +31,6 @@ verify-%: __force__
 
 all: uall
 
+sall:
+
 uall: $(VERFILES:%=verify-%)
