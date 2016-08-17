@@ -1,5 +1,5 @@
 [
-  "?W8ง่ยน\u00194'ญR3Nใ",
+  "Fh”\u0003r๔นF\t\u001b<\u0011|",
   [
     [ "Ex4e.option", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -34,14 +34,24 @@
       2,
       1,
       [
-        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "@query", "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
+        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
     ],
-    null,
+    [
+      "Ex4e.find_some",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Ex4e.option_haseq", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0
+    ],
     [
       "Ex4e.find_some",
       2,
@@ -57,7 +67,7 @@
       2,
       1,
       [
-        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "@query", "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
         "constructor_distinct_Ex4e.None", "constructor_distinct_Ex4e.Some",
         "constructor_distinct_Prims.Nil", "constructor_distinct_Tm_unit",
         "disc_equation_Prims.Cons",
