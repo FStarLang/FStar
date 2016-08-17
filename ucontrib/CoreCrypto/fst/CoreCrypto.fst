@@ -4,7 +4,7 @@ open Platform.Bytes
 
 effect EXT (a:Type) = ST a
   (requires (fun _ -> True)) 
-  (ensures (fun h0 _ h -> modifies Set.empty h0 h))
+  (ensures (fun h0 _ h -> modifies_none h0 h))
 
 type hash_alg = | MD5 | SHA1 | SHA224 | SHA256 | SHA384 | SHA512
 type sig_alg = | RSASIG | DSA | ECDSA | RSAPSS
