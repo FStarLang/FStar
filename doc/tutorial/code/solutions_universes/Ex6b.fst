@@ -1,8 +1,8 @@
 module Ex6b
 
 
-val mem: 'a -> list 'a -> Tot bool
-let rec mem a l = match l with
+val mem: #t:eqtype -> t -> list t -> Tot bool
+let rec mem #t a l = match l with
   | [] -> false
   | hd::tl -> hd=a || mem a tl
 
@@ -13,12 +13,13 @@ let rec append l1 l2 = match l1 with
   | hd :: tl -> hd :: append tl l2
 
 
-val append_mem:  l1:list 'a
-              -> l2:list 'a
+val append_mem: #t:eqtype 
+	      -> l1:list t
+              -> l2:list t
               -> Lemma (requires True)
                        (ensures (forall a. mem a (append l1 l2) = (mem a l1 || mem a l2)))
                        [SMTPat (append l1 l2)]
-let rec append_mem l1 l2 = match l1 with
+let rec append_mem #t l1 l2 = match l1 with
   | [] -> ()
   | hd::tl -> append_mem tl l2
 
@@ -47,8 +48,8 @@ let rec partition f = function
      else l1, hd::l2
 
 
-val partition_lemma: f:('a -> Tot bool)
-   -> l:list 'a
+val partition_lemma: #t:eqtype -> f:(t -> Tot bool)
+   -> l:list t
    -> Lemma (requires True)
             (ensures ((length (fst (partition f l))
                      + length (snd (partition f l)) = length l
@@ -57,36 +58,38 @@ val partition_lemma: f:('a -> Tot bool)
                   /\ (forall x. mem x l = (mem x (fst (partition f l))
                                         || mem x (snd (partition f l)))))))
             [SMTPat (partition f l)]
-let rec partition_lemma f l = match l with
+let rec partition_lemma #t f l = match l with
     | [] -> ()
     | hd::tl -> partition_lemma f tl
 
 
 (* Defining a new predicate symbol *)
-type total_order (a:Type) (f: (a -> a -> Tot bool)) =
+type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
     (forall a. f a a)                                           (* reflexivity   *)
     /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
 
-val sorted_concat_lemma: f:('a -> 'a -> Tot bool)
-                      -> l1:list 'a{sorted f l1}
-                      -> l2:list 'a{sorted f l2}
-                      -> pivot:'a
-                      -> Lemma (requires (total_order 'a f
+
+val sorted_concat_lemma: #t:eqtype 
+		      -> f:(t -> t -> Tot bool)
+                      -> l1:list t{sorted f l1}
+                      -> l2:list t{sorted f l2}
+                      -> pivot:t
+                      -> Lemma (requires (total_order t f
                                        /\ (forall y. mem y l1 ==> not (f pivot y))
                                        /\ (forall y. mem y l2 ==> f pivot y)))
                                (ensures (sorted f (append l1 (pivot::l2))))
                                [SMTPat (sorted f (append l1 (pivot::l2)))]
-let rec sorted_concat_lemma f l1 l2 pivot = match l1 with
+let rec sorted_concat_lemma #t f l1 l2 pivot = match l1 with
     | [] -> ()
     | hd::tl -> sorted_concat_lemma f tl l2 pivot
 
 
-val sort: f:('a -> 'a -> Tot bool){total_order 'a f}
-       -> l:list 'a
-       -> Tot (m:list 'a{sorted f m /\ (forall i. mem i l = mem i m)})
+val sort: #t:eqtype -> f:(t -> t -> Tot bool){total_order t f}
+       -> l:list t
+       -> Tot (m:list t{sorted f m /\ (forall i. mem i l = mem i m)})
               (decreases (length l))
-let rec sort f l = match l with
+let rec sort #t f l = match l with
   | [] -> []
   | pivot::tl ->
     let hi, lo = partition (f pivot) tl in
