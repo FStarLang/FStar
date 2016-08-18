@@ -1,4 +1,4 @@
-module Ex1a
+module Ex01a
 
 type filename = string
 
@@ -38,6 +38,7 @@ assume val write : f:filename{canWrite f} -> string -> unit
   let checkedWrite f s =
     if canWrite f then write f s else raise InvalidWrite
 // END: CheckedWrite
+
 
   let dynamicChecking () =
     let v1 = checkedRead tmp in

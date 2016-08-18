@@ -1,4 +1,4 @@
-module Ex6d
+module Ex06d
 
 
 (* Instead of a Boolean check that an element belongs to a list, count

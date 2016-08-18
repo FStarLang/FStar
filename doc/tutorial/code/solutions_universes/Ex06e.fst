@@ -1,4 +1,4 @@
-module Ex6e
+module Ex06e
 
 (* Check that a list is sorted *)
 val sorted: list int -> Tot bool

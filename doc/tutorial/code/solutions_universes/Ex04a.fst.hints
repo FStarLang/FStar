@@ -1,8 +1,8 @@
 [
-  "ÝìùÓÃÃPJÚ‚6Šä\b‡$",
+  "\u0005\\xQc„\f-Š\u000b¥Ô4^²¥",
   [
     [
-      "Ex4a.length",
+      "Ex04a.length",
       1,
       2,
       1,
@@ -17,10 +17,17 @@
       ],
       0
     ],
-    [ "Ex4a.append", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "Ex4a.append", 2, 2, 1, [ "@query" ], 0 ],
     [
-      "Ex4a.append",
+      "Ex04a.append",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [ "Ex04a.append", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex04a.append",
       3,
       2,
       1,
@@ -31,17 +38,17 @@
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Prims.nat",
-        "equation_with_fuel_Ex4a.length.fuel_instrumented",
-        "fuel_correspondence_Ex4a.length.fuel_instrumented",
+        "equation_with_fuel_Ex04a.length.fuel_instrumented",
+        "fuel_correspondence_Ex04a.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
-        "fuel_irrelevance_Ex4a.length.fuel_instrumented", "int_inversion",
+        "fuel_irrelevance_Ex04a.length.fuel_instrumented", "int_inversion",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
-        "refinement_interpretation_Tm_refine_b834ee38cb3350a9d494d30cb50d89bd",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "subterm_ordering_Prims.Cons", "typing_Ex4a.length"
+        "refinement_interpretation_Tm_refine_f7ae3e24edd91fe95e599becd45a5cc6",
+        "subterm_ordering_Prims.Cons", "typing_Ex04a.length"
       ],
       0
     ]

@@ -1,8 +1,8 @@
 [
-  "œïJHþøM›Ö­Ð\rÍB^\u0015",
+  "¼csÎò‘³QŒ:Tˆð,›\r",
   [
     [
-      "Ex4c.append",
+      "Ex04c.append",
       1,
       2,
       1,
@@ -14,7 +14,7 @@
       0
     ],
     [
-      "Ex4c.mem",
+      "Ex04c.mem",
       1,
       2,
       1,
@@ -26,14 +26,14 @@
       ],
       0
     ],
-    [ "Ex4c.mem", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Ex4c.mem", 3, 2, 1, [ "@query" ], 0 ],
-    [ "Ex4c.append_mem", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex4c.append_mem", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Ex4c.append_mem", 3, 2, 1, [ "@query" ], 0 ],
-    [ "Ex4c.append_mem", 4, 2, 1, [ "@query" ], 0 ],
+    [ "Ex04c.mem", 2, 2, 1, [ "@query" ], 0 ],
+    [ "Ex04c.mem", 3, 2, 1, [ "@query" ], 0 ],
+    [ "Ex04c.append_mem", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex04c.append_mem", 2, 2, 1, [ "@query" ], 0 ],
+    [ "Ex04c.append_mem", 3, 2, 1, [ "@query" ], 0 ],
+    [ "Ex04c.append_mem", 4, 2, 1, [ "@query" ], 0 ],
     [
-      "Ex4c.append_mem",
+      "Ex04c.append_mem",
       5,
       2,
       1,
@@ -45,13 +45,13 @@
         "bool_typing", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil",
-        "equation_with_fuel_Ex4c.append.fuel_instrumented",
-        "equation_with_fuel_Ex4c.mem.fuel_instrumented",
-        "fuel_correspondence_Ex4c.append.fuel_instrumented",
-        "fuel_correspondence_Ex4c.mem.fuel_instrumented",
+        "equation_with_fuel_Ex04c.append.fuel_instrumented",
+        "equation_with_fuel_Ex04c.mem.fuel_instrumented",
+        "fuel_correspondence_Ex04c.append.fuel_instrumented",
+        "fuel_correspondence_Ex04c.mem.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
-        "fuel_irrelevance_Ex4c.append.fuel_instrumented",
-        "fuel_irrelevance_Ex4c.mem.fuel_instrumented",
+        "fuel_irrelevance_Ex04c.append.fuel_instrumented",
+        "fuel_irrelevance_Ex04c.mem.fuel_instrumented",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Cons_a",
@@ -59,11 +59,11 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "subterm_ordering_Prims.Cons",
-        "token_correspondence_Ex4c.mem.fuel_instrumented",
-        "typing_Ex4c.append", "typing_Ex4c.mem", "unit_typing"
+        "token_correspondence_Ex04c.mem.fuel_instrumented",
+        "typing_Ex04c.append", "typing_Ex04c.mem", "unit_typing"
       ],
       0
     ],
-    [ "Ex4c.append_mem", 6, 2, 1, [ "@query" ], 0 ]
+    [ "Ex04c.append_mem", 6, 2, 1, [ "@query" ], 0 ]
   ]
 ]
