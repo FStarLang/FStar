@@ -1,4 +1,4 @@
-module Ex3b
+module Ex03b
 
 (* val fibonacci : nat -> Tot nat *)
 (* val fibonacci : int -> int *)

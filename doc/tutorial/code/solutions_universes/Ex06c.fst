@@ -1,4 +1,4 @@
-module Ex6c
+module Ex06c
 
 
 val mem: #t:eqtype-> t -> list t -> Tot bool

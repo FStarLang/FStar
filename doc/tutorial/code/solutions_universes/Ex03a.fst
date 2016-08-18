@@ -1,4 +1,4 @@
-module Ex3a
+module Ex03a
 
 (* Here are some other types for factorial:
     val factorial: nat -> Tot nat
