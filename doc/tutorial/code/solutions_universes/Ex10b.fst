@@ -1,4 +1,5 @@
 module Ex10b
+
 open FStar.Heap
 open FStar.ST
 
@@ -8,13 +9,13 @@ type point =
 val new_point: x:int -> y:int -> ST point
   (requires (fun h -> True))
   (ensures (fun h0 p h1 ->
-                modifies Set.empty h0 h1
+                modifies TSet.empty h0 h1
                 /\ fresh (Point.x p ^+^ Point.y p) h0 h1
                 /\ Heap.sel h1 (Point.x p) = x
                 /\ Heap.sel h1 (Point.y p) = y))
 let new_point x y =
-  let x = ref x in
-  let y = ref y in
+  let x = alloc x in
+  let y = alloc y in
   Point x y
 
 val shift: p:point -> ST unit
@@ -41,7 +42,10 @@ let shift_p1 p1 p2 =
 
 val test: unit -> St unit
 let test () =
-  let x = new_point 0 0 in
-  let y = new_point 0 1 in
-  (*shift_p1 x x;*)
-  shift_p1 x y
+  let p1 = new_point 0 0 in
+  recall (Point.x p1);
+  recall (Point.y p1);
+  let p2 = new_point 0 1 in
+  recall (Point.x p2);
+  recall (Point.y p2);
+  shift_p1 p1 p2
