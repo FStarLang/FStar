@@ -26,7 +26,7 @@ HH_CMX=$(HYPERHEAP:.ml=.cmx)
 # Note: because of the way we either prepend the regular ST or the hyperheap ST,
 # you must always clean before running either "make" or "make hyperheap".
 all: $(OBJS)
-	ocamlopt -a $(CMX) -o fstarlib.cmxa
+	ocamlopt -a $(CMX) -o $(PRIMS_DIR)/fstarlib.cmxa
 
 hyperheap: $(HH_OBJS)
 	ocamlopt -a $(HH_CMX) -o fstarlib-hyperheap.cmxa
