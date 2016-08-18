@@ -1,27 +1,28 @@
-VERFILES=Ex1a.fst \
-Ex2a.fst \
-Ex3a.fst \
-Ex3b.fst \
-Ex3c.fst \
-Ex4a.fst \
-Ex4b.fst \
-Ex4c.fst \
-Ex4e.fst \
-Ex4f.fst \
-Ex4g.fst \
-Ex4h.fst \
-Ex5a.fst \
-Ex6a.fst \
-Ex6b.fst \
-Ex6c.fst \
-Ex6d.fst \
-Ex6e.fst \
-Ex7a.fst \
-Ex7b.fst \
-Ex7c.fst \
-Ex7d.fst \
+VERFILES=Ex01a.fst \
+Ex02a.fst \
+Ex03a.fst \
+Ex03b.fst \
+Ex03c.fst \
+Ex04a.fst \
+Ex04b.fst \
+Ex04c.fst \
+Ex04e.fst \
+Ex04f.fst \
+Ex04g.fst \
+Ex04h.fst \
+Ex05a.fst \
+Ex06a.fst \
+Ex06b.fst \
+Ex06c.fst \
+Ex06d.fst \
+Ex06e.fst \
+Ex07a.fst \
+Ex07b.fst \
+Ex07c.fst \
+Ex07d.fst \
+Ex10a.fst \
 #currently failing \
-Ex5b.fst \
+Ex05b.fst \
 
 
 FSTAR_HOME=../../../../
