@@ -33,7 +33,7 @@ all: uall sall
 
 uall:
 	+make clean
-	+make chacha-test poly-test aead-test # curve-test
+	+make chacha-test # poly-test aead-test # curve-test
 
 sall:
 
