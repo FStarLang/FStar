@@ -76,14 +76,14 @@ mllibs:
 	$(MAKE) -C $(FSTAR_HOME)/contrib/CoreCrypto/ml clean all test
 
 RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
-	$(FSTAR_ALWAYS) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
+	$(FSTAR_ALWAYS) --no_location_info --lax \
 		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst rpc.fst \
-		--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --use_native_int
+		--codegen-lib Platform --codegen-lib CoreCrypto --codegen-lib SeqProperties --codegen OCaml --use_native_int 
 
-OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
+OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/ulib/ml/native_int $(FSTAR_HOME)/ulib/ml)
 OCAMLC=ocamlfind ocamlopt -ccopt -L$(LIB) -package batteries -linkpkg -g -thread
-SUPPORT_LIBS=$(addprefix $(FSTAR_HOME)/lib/ml/, MkPrims.ml native_int/prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_Char.ml FStar_String.ml FStar_IO.ml)
+SUPPORT_LIBS=$(addprefix $(FSTAR_HOME)/ulib/ml/, MkPrims.ml native_int/prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_Char.ml FStar_String.ml FStar_IO.ml)
 CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, CoreCrypto/ml/CoreCrypto.cmxa)
 
 $(CONTRIB_LIBS):
@@ -109,7 +109,7 @@ CntProtocol.ml: CntFormat.fst mac.fst sha1.fst CntProtocol.fst
 		--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml
 
 CntProtocol.exe: CntProtocol.ml $(CONTRIB_LIBS)
-	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml ../../lib/ml/FStar_Set.ml FStar_SeqProperties.ml SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
+	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml ../../ulib/ml/FStar_Set.ml FStar_SeqProperties.ml SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
 
 cnt-test: CntProtocol.exe
 	$(EXTRA_PATH) ./CntProtocol.exe
