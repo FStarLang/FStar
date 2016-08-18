@@ -119,6 +119,7 @@ type qualifier =
   | Private
   | Abstract
   | Noeq
+  | Unopteq
   | Assumption
   | DefaultEffect
   | TotalEffect

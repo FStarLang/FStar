@@ -113,6 +113,11 @@ type dtuple2 (a:Type)
             -> _2:b _1
             -> dtuple2 a b
 
+//for dtuple2, optimized hasEq scheme is imprecise,
+//so we use the unoptimized hasEq scheme
+assume HasEq_dtuple2: forall (a:Type) (b:a -> GTot Type).{:pattern (hasEq (dtuple2 a b))}
+		      ((forall (_1:a). hasEq a /\ hasEq (b _1)) ==> hasEq (dtuple2 a b))
+
 (* exists (x:a). p x : specialized to Type#0 *)
 type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 
