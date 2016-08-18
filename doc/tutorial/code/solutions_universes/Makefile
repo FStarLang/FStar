@@ -21,18 +21,22 @@ Ex07b.fst \
 Ex07c.fst \
 Ex07d.fst \
 Ex10a.fst \
+Ex10b.fst
 #currently failing \
 Ex05b.fst \
 
+VERFILES_HH=Ex11a.fst
 
 FSTAR_HOME=../../../../
+HINTS_ENABLED=--use_hints --record_hints
 include ../Makefile.include
 
+HYPERHEAP=$(FSTAR_HOME)/ulib/hyperheap
+
 verify-%: __force__
-	$(FSTAR) --record_hints $*
+	$(FSTAR) $*
 
-all: uall
+verify_hh-%: __force__
+	$(FSTAR) --include $(HYPERHEAP) $*
 
-sall:
-
-uall: $(VERFILES:%=verify-%)
+all: $(VERFILES:%=verify-%) $(VERFILES_HH:%=verify-%)
