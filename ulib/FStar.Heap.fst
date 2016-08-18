@@ -69,10 +69,10 @@ let lemma_modifies_trans m1 m2 m3 s1 s2 = ()
 let only x = singleton (Ref x)
 
 (* val op_Hat_Plus_Plus<u> : #a:Type(u) -> r:ref a -> set (aref<u>) -> Tot (set (aref<u>)) *)
-let op_Hat_Plus_Plus (#a:Type) r s = union (singleton (Ref r)) s
+let op_Hat_Plus_Plus (#a:Type) (r:ref a) s = union (singleton (Ref r)) s
 
 (* val op_Plus_Plus_Hat<u> : #a:Type(u) -> set (aref<u>) -> r:ref a -> Tot (set (aref<u>)) *)
-let op_Plus_Plus_Hat (#a:Type) s r = union s (singleton (Ref r))
+let op_Plus_Plus_Hat (#a:Type) s (r:ref a) = union s (singleton (Ref r))
 
 (* val op_Hat_Plus_Hat<u> : #a:Type(u) -> #b:Type(u) -> ref a -> ref b -> Tot (set (aref<u>)) *)
-let op_Hat_Plus_Hat (#a:Type) (#b:Type) r1 r2 = union (singleton (Ref r1)) (singleton (Ref r2))
+let op_Hat_Plus_Hat (#a:Type) (#b:Type) (r1:ref a) (r2:ref b) = union (singleton (Ref r1)) (singleton (Ref r2))
