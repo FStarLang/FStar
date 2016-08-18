@@ -97,7 +97,7 @@ let parse fn =
     | Syntax.Syntax.Error(msg, r) ->
       Inr (msg, r)
     | e ->
-      printfn "%A" e.Message;
+      printfn "%A:\n%A" e.Message e;
       let p0 =
         let p = lexbuf.StartPos in
         Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol + 1) in

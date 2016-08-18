@@ -135,16 +135,10 @@ let as_frag d ds =
                                   - just after first '=' or ':' when in 'CtxtModuleHead', i.e. after 'module' and sequence of dot/identifier/access tokens
                                   - just after first '=' when in 'CtxtMemberHead'
                                   - just after first '=' when in 'CtxtType'
-                                  - just after 'do' in any context (when opening CtxtDo)
-                                  - just after 'finally' in any context
                                   - just after 'with' (when opening CtxtWithAsAugment)
                                   - just after 'else' (when opening CtxtElse)
                                   - just after 'then' (when opening CtxtThen)
-                                  - just after 'interface' (when pushing CtxtParen(INTERFACE), i.e. next token is DEFAULT | OVERRIDE | INTERFACE | NEW | TYPE | STATIC | END | MEMBER | ABSTRACT  | INHERIT | LBRACK_LESS)
-                                  - just after 'class' (when pushing CtxtParen(CLASS)
-                                  - just after 'class'
                            But not when opening these CtxtSeqBlocks:
-                                  - just after first non-dot/identifier token past 'namespace'
                                   - just after first '=' when in 'CtxtLetDecl' or 'CtxtWithAsLet'
                                   - just after 'lazy' in any context
                                   - just after '->' in any context
@@ -558,6 +552,10 @@ tyconDefn:
   | EQUALS LBRACE recordFieldDecl recordFields RBRACE { (fun id binders kopt eff -> if not eff then check_id id; TyconRecord(id, binders, kopt, $3::$4)) }
   | EQUALS constructors { (fun id binders kopt eff -> if not eff then check_id id; TyconVariant(id, binders, kopt, $2)) }
 
+  | EQUALS OBLOCKBEGIN typ OBLOCKEND { (fun id binders kopt eff -> if not eff then check_id id; TyconAbbrev(id, binders, kopt, $3)) }
+  | EQUALS OBLOCKBEGIN LBRACE recordFieldDecl recordFields RBRACE OBLOCKEND { (fun id binders kopt eff -> if not eff then check_id id; TyconRecord(id, binders, kopt, $4::$5)) }
+  | EQUALS OBLOCKBEGIN constructors OBLOCKEND { (fun id binders kopt eff -> if not eff then check_id id; TyconVariant(id, binders, kopt, $3)) }
+
 
 recordFields:
   | SEMICOLON recordFieldDecl recordFields
@@ -671,6 +669,15 @@ term:
   | noSeqTerm seps term
       { mk_term (Seq($1, $3)) (rhs2 parseState 1 3) Expr }
 
+  | OBLOCKBEGIN noSeqTerm OBLOCKEND
+      { $2 }
+
+  | noSeqTerm ORIGHT_BLOCK_END
+      { $1 }
+
+  | OBLOCKBEGIN noSeqTerm seps term OBLOCKEND
+      { mk_term (Seq($2, $4)) (rhs2 parseState 2 4) Expr }
+
 noSeqTerm:
   | typ  { $1 }
 
@@ -698,10 +705,23 @@ noSeqTerm:
         mk_term (If($2, $4, $6)) (rhs2 parseState 1 6) Expr
       }
 
+  /* #light syntax */
+  | IF noSeqTerm OTHEN OBLOCKBEGIN noSeqTerm OBLOCKEND OELSE OBLOCKBEGIN noSeqTerm OBLOCKEND
+      {
+        mk_term (If($2, $5, $9)) (rhs2 parseState 1 9) Expr
+      }
+
   | IF noSeqTerm THEN noSeqTerm
       {
         let e = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
         mk_term (If($2, $4, e)) (rhs2 parseState 1 4) Expr
+      }
+
+  /* #light syntax */
+  | IF noSeqTerm OTHEN OBLOCKBEGIN noSeqTerm OBLOCKEND
+      {
+        let e = mk_term (Const Const_unit) (rhs2 parseState 5 5) Expr in
+        mk_term (If($2, $5, e)) (rhs2 parseState 1 5) Expr
       }
 
   | TRY term WITH firstPatternBranch patternBranches
@@ -711,6 +731,12 @@ noSeqTerm:
       }
 
   | MATCH term WITH patternBranches
+      {
+        let branches = focusBranches $4 (rhs2 parseState 1 4) in
+        mk_term (Match($2, branches)) (rhs2 parseState 1 4) Expr
+      }
+
+  | MATCH term OWITH patternBranches OEND
       {
         let branches = focusBranches $4 (rhs2 parseState 1 4) in
         mk_term (Match($2, branches)) (rhs2 parseState 1 4) Expr
@@ -728,17 +754,23 @@ noSeqTerm:
 
   /* #light syntax */
   | OLET OPEN qname ODECLEND opt_OBLOCKSEP term
-      { mk_term (LetOpen($3, $6)) (rhs2 parseState 1 5) Expr }
+      { mk_term (LetOpen($3, $6)) (rhs2 parseState 1 6) Expr }
 
   /* #light syntax */
   | OLET letqualifier letbinding letbindings ODECLEND opt_OBLOCKSEP term
       {
         let r, focus = $2 in
         let lbs = focusLetBindings ((focus,$3)::$4) (rhs2 parseState 2 4) in
-        mk_term (Let(r, lbs, $7)) (rhs2 parseState 1 6) Expr
+        mk_term (Let(r, lbs, $7)) (rhs2 parseState 1 7) Expr
       }
 
   | FUNCTION firstPatternBranch patternBranches
+      {
+        let branches = focusBranches ($2::$3) (rhs2 parseState 1 3) in
+        mk_function branches (lhs parseState) (rhs2 parseState 1 3)
+      }
+
+  | OFUNCTION firstPatternBranch patternBranches OEND
       {
         let branches = focusBranches ($2::$3) (rhs2 parseState 1 3) in
         mk_function branches (lhs parseState) (rhs2 parseState 1 3)
@@ -772,6 +804,11 @@ simpleTerm:
   | tmIff { $1 }
 
   | FUN atomicPattern atomicPatterns funArrow term
+      {
+        $4 (Abs($2::$3, $5)) (rhs2 parseState 1 5)
+      }
+
+  | OFUN atomicPattern atomicPatterns funArrow term OEND
       {
         $4 (Abs($2::$3, $5)) (rhs2 parseState 1 5)
       }

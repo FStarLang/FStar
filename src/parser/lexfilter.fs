@@ -83,8 +83,8 @@ and FirstInSequence = FirstInSeqBlock | NotFirstInSeqBlock
 let isInfix token =
     match token with
     | COMMA
-//    | BAR_BAR
-//    | AMP_AMP
+    | OPINFIX0a "||" // BAR_BAR
+    | OPINFIX0b "&&" // AMP_AMP
     | AMP
 //    | OR
 //    | INFIX_BAR_OP _
@@ -102,8 +102,8 @@ let isInfix token =
     //                   a + x)
     // LESS | GREATER | EQUALS
 
-//    | INFIX_AT_HAT_OP _
-//    | PLUS_MINUS_OP _
+    | OPINFIX1 _ // INFIX_AT_HAT_OP:'@', '^'
+    | OPINFIX2 _ // INFIX_AT_HAT_OP: + or -
     | COLON_COLON
 //    | COLON_GREATER
 //    | COLON_QMARK_GREATER
@@ -133,16 +133,18 @@ let infixTokenLength token =
 //    | GREATER false -> 1
     | EQUALS -> 1
 //    | QMARK_QMARK -> 2
-//    | COLON_GREATER -> 2
+//    | COLON_GREATER
     | COLON_COLON -> 2
     | COLON_EQUALS -> 2
 //    | BAR_BAR -> 2
 //    | AMP_AMP -> 2
+    | OPINFIX0a d            // ||
+    | OPINFIX0b d            // &&
 //    | INFIX_BAR_OP d
 //    | INFIX_AMP_OP d
 //    | INFIX_COMPARE_OP d
-//    | INFIX_AT_HAT_OP d
-//    | PLUS_MINUS_OP d
+    | OPINFIX1 d             // '@', '^'
+    | OPINFIX2 d -> d.Length // + or -
 //    | INFIX_STAR_DIV_MOD_OP d
 //    | INFIX_STAR_STAR_OP d -> d.Length
 //    | COLON_QMARK_GREATER -> 3
@@ -533,6 +535,31 @@ let tokenizer lexer (lexbuf: LexBuffer) =
             //              i <- -1
             //        );
 
+            // PERMITTED UNDENTATION: Inner construct (then,with,else,do) that dangle, places no limit until we hit the corresponding leading construct CtxtIf, CtxtFor, CtxtWhile, CtxtVanilla etc... *)
+            //    e.g.   if ... then ...
+            //              expr
+            //           else
+            //              expr
+            //    rather than forcing
+            //           if ...
+            //           then expr
+            //           else expr
+            //   Also  ...... with
+            //           ...           <-- this is before the "with"
+            //         end
+
+            | _,(((*CtxtWithAsAugment _ |*) CtxtThen _ | CtxtElse _ (*| CtxtDo _ *))  :: rest)
+                      -> unindentationLimit false rest
+
+            // Permit unindentation via parentheses (or begin/end) following a 'then', 'else' or 'do':
+            //        if nr > 0 then (
+            //              nr <- nr - 1;
+            //              acc <- d;
+            //              i <- i - 1
+            //        ) else (
+            //              i <- -1
+            //        );
+
             // '... (function ->' places no limit until we hit a CtxtLetDecl etc....  (Recursive)
             //
             //   e.g.
@@ -740,8 +767,11 @@ let tokenizer lexer (lexbuf: LexBuffer) =
             | CtxtLetDecl (true,_) ->
                 Some ODECLEND
 
-            | CtxtSeqBlock(_,_,(AddBlockEnd | AddOneSidedBlockEnd)) ->
+            | CtxtSeqBlock(_,_,AddBlockEnd) ->
                 Some OBLOCKEND
+
+            | CtxtSeqBlock(_,_,AddOneSidedBlockEnd) ->
+                Some ORIGHT_BLOCK_END
 
             | _ ->
                 None
@@ -910,15 +940,15 @@ let tokenizer lexer (lexbuf: LexBuffer) =
                             //    | B of int
                         | BAR, (CtxtTypeDefns _ :: _) -> 2
 
-//                            // This ensures we close a type context seq block when the '|' marks
-//                            // of a type definition are aligned with the 'type' token.
-//                            //
-//                            //  type x =
-//                            //  | A
-//                            //  | B
-//                            //
-//                            //  <TOKEN>    <-- close the type context sequence block here *)
-//                        | _, (CtxtTypeDefns posType :: _) when offsidePos.Column = posType.Column && not (isTypeSeqBlockElementContinuator token) -> -1
+                            // This ensures we close a type context seq block when the '|' marks
+                            // of a type definition are aligned with the 'type' token.
+                            //
+                            //  type x =
+                            //  | A
+                            //  | B
+                            //
+                            //  <TOKEN>    <-- close the type context sequence block here *)
+                        | _, (CtxtTypeDefns posType :: _) when offsidePos.Column = posType.Column && not (isTypeSeqBlockElementContinuator token) -> -1
 
                         // todo: can be replaced to module body to allow sequence of modules
 //                            // This ensures we close a namespace body when we see the next namespace definition
@@ -1079,22 +1109,22 @@ let tokenizer lexer (lexbuf: LexBuffer) =
             popCtxt()
             reprocess()
 
-//        | _, (CtxtFun offsidePos :: _)
-//                    when isSemiSemi || tokenStartCol <= offsidePos.Column ->
-//            if debug then printf "offside from CtxtFun\n"
-//            popCtxt()
-//            insertToken OEND
+        | _, (CtxtFun offsidePos :: _)
+                    when isSemiSemi || tokenStartCol <= offsidePos.Column ->
+            if debug then printf "offside from CtxtFun\n"
+            popCtxt()
+            insertToken OEND
 
         | _, (CtxtFunction offsidePos :: _)
                     when isSemiSemi || tokenStartCol <= offsidePos.Column ->
             popCtxt()
             reprocess()
 
-//        | _, (CtxtTry offsidePos :: _)
-//                    when isSemiSemi || (if isTryBlockContinuator token then  tokenStartCol + 1 else tokenStartCol) <= offsidePos.Column ->
-//            if debug then printf "offside from CtxtTry\n"
-//            popCtxt()
-//            reprocess()
+        | _, (CtxtTry offsidePos :: _)
+                    when isSemiSemi || (if isTryBlockContinuator token then  tokenStartCol + 1 else tokenStartCol) <= offsidePos.Column ->
+            if debug then printf "offside from CtxtTry\n"
+            popCtxt()
+            reprocess()
 
         //  then
         //     ...
@@ -1116,23 +1146,23 @@ let tokenizer lexer (lexbuf: LexBuffer) =
             reprocess()
 
 //        // leadingBar=false permits match patterns without an initial '|'
-//        | _, (CtxtMatchClauses (leadingBar,offsidePos) :: _)
-//                  when (isSemiSemi ||
-//                        (match token with
-//                            // BAR occurs in pattern matching 'with' blocks
-//                            | BAR ->
-//                                let cond1 = tokenStartCol + (if leadingBar then 0 else 2)  < offsidePos.Column
-//                                let cond2 = tokenStartCol + (if leadingBar then 1 else 2)  < offsidePos.Column
-//                                if (cond1 <> cond2) then
-////                                    errorR(Lexhelp.IndentationProblem(FSComp.SR.lexfltSeparatorTokensOfPatternMatchMisaligned(),mkSynRange (startPosOfTokenTup tokenTup) tokenTup.LexbufState.EndPos))
-//                                    printfn "Error"
+        | _, (CtxtMatchClauses (leadingBar,offsidePos) :: _)
+                  when (isSemiSemi ||
+                        (match token with
+                            // BAR occurs in pattern matching 'with' blocks
+                            | BAR ->
+                                let cond1 = tokenStartCol + (if leadingBar then 0 else 2)  < offsidePos.Column
+                                let cond2 = tokenStartCol + (if leadingBar then 1 else 2)  < offsidePos.Column
+                                if (cond1 <> cond2) then
+//                                    errorR(Lexhelp.IndentationProblem(FSComp.SR.lexfltSeparatorTokensOfPatternMatchMisaligned(),mkSynRange (startPosOfTokenTup tokenTup) tokenTup.LexbufState.EndPos))
+                                    printfn "Error"
 //                                    failwith "qwerty"
-//                                cond1
-//                            | END -> tokenStartCol + (if leadingBar then -1 else 1) < offsidePos.Column
-//                            | _   -> tokenStartCol + (if leadingBar then -1 else 1) < offsidePos.Column)) ->
-//            if debug then printf "offside from WITH, tokenStartCol = %d, offsidePos = %a, delaying token, returning OEND\n" tokenStartCol outputPos offsidePos
-//            popCtxt()
-//            insertToken OEND
+                                cond1
+                            | END -> tokenStartCol + (if leadingBar then -1 else 1) < offsidePos.Column
+                            | _   -> tokenStartCol + (if leadingBar then -1 else 1) < offsidePos.Column)) ->
+            if debug then printf "offside from WITH, tokenStartCol = %d, offsidePos = %a, delaying token, returning OEND\n" tokenStartCol outputPos offsidePos
+            popCtxt()
+            insertToken OEND
 
         //  module ... ~~~> CtxtModuleHead
         |  MODULE,(_ :: _) ->
@@ -1161,10 +1191,10 @@ let tokenizer lexer (lexbuf: LexBuffer) =
             pushCtxtSeqBlock(true,AddBlockEnd)
             returnToken tokenLexbufState token
 
-//        | EQUALS, (CtxtTypeDefns _ :: _) ->
-//            if debug then dprintf "CtxType: EQUALS, pushing CtxtSeqBlock\n"
-//            pushCtxtSeqBlock(true,AddBlockEnd)
-//            returnToken tokenLexbufState token
+        | EQUALS, (CtxtTypeDefns _ :: _) ->
+            if debug then printf "CtxType: EQUALS, pushing CtxtSeqBlock\n"
+            pushCtxtSeqBlock(true,AddBlockEnd)
+            returnToken tokenLexbufState token
 //
 //        | (LAZY | ASSERT), _ ->
 //            if isControlFlowOrNotSameLine() then
@@ -1414,11 +1444,12 @@ let tokenizer lexer (lexbuf: LexBuffer) =
             pushCtxt tokenTup (CtxtFun (tokenStartPos))
             returnToken tokenLexbufState OFUN
 
-//        | TYPE, _   ->
+        | TYPE, _   ->
 //            insertComingSoonTokens("TYPE", TYPE_COMING_SOON, TYPE_IS_HERE)
-//            if debug then dprintf "TYPE, pushing CtxtTypeDefns(%a)\n" outputPos tokenStartPos
-//            pushCtxt tokenTup (CtxtTypeDefns(tokenStartPos))
-//            hwTokenFetch(useBlockRule)
+            if debug then printf "TYPE, pushing CtxtTypeDefns(%a)\n" outputPos tokenStartPos
+            pushCtxt tokenTup (CtxtTypeDefns(tokenStartPos))
+            delayTokenNoProcessing tokenTup
+            hwTokenFetch(useBlockRule)
 
         | TRY, _   ->
             if debug then printf "Try, pushing CtxtTry(%a)\n" outputPos tokenStartPos
@@ -1445,7 +1476,6 @@ let tokenizer lexer (lexbuf: LexBuffer) =
             returnToken tokenLexbufState token
 
         |  _ ->
-            if token = EOF then printfn "%A" offsideStack
             returnToken tokenLexbufState token
 
 
