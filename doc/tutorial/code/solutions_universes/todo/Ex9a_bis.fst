@@ -2,13 +2,16 @@
 
 module Ex9a_bis (* capabilities *) 
 open FStar.Array
-open Ex9a_quar
-open Ex9a_ter
-open Ex9bc
+open FStar.Bytes
+open FStar.Seq
+//open Ex9a_quar
+//open Ex9a_ter
+//open Ex9bc
 
-module ACLs = Ex9a
-module SHA1 = Ex9a_quar
-module MAC = Ex9bc
+
+module ACLs = Ex09a
+//module SHA1 = Ex9a_quar
+//module MAC = Ex9bc
 
 assume val utf8: s:string  -> Tot (seq byte) 
 

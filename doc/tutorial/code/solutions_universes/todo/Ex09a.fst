@@ -1,10 +1,11 @@
-module Ex9a
+module Ex09a
 open FStar.String
 open FStar.List
 
-type canRead : string -> Type0 // read access permission
-type canWrite : string -> Type0   // write access permission
-type publicFile : string -> Type0 // some file attribute
+
+assume type canRead : string -> Type0 // read access permission
+assume type canWrite : string -> Type0   // write access permission
+assume type publicFile : string -> Type0 // some file attribute
 
 (* sample policy: writable files are also readable *)
 
@@ -86,10 +87,10 @@ let readable file =
   | Some(Writable f) -> if file = f then () else failwith "unreasable"
   | _ -> failwith "unreadable"
 
-
+val test_acls: unit -> unit
 let test_acls() = 
   insert acls tmp (Writable(tmp)); (* ok *)
-//insert acls tmp (Readable(pwd)); (* type error *)
+  //insert acls tmp (Readable(pwd)); (* type error *)
   insert acls pwd (Nothing);       (* ok *)
   let v6 = safe_read pwd in           (* fails dynamically *)
   let v7 = readable tmp; read tmp in  (* ok *)
