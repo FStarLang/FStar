@@ -1,4 +1,4 @@
-module Ex5b
+module Ex05b
 
 val fibonacci : nat -> Tot nat
 let rec fibonacci n =

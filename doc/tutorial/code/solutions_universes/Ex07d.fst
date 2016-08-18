@@ -1,4 +1,4 @@
-module Ex7d
+module Ex07d
 
 type ty =
   | TBool  : ty

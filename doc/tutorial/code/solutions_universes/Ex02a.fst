@@ -1,4 +1,4 @@
-module Ex2a
+module Ex02a
 
   type filename = string
 
