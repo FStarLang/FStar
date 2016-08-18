@@ -2723,18 +2723,15 @@ and tc_inductive env ses quals lids =
                 Rel.force_trivial_guard env (Rel.guard_of_guard_formula (NonTrivial phi))
             else ()
         in
-        env.solver.pop "haseq";
 
         //create Sig_assume for the axioms
-        //add universe variables to env, no idea how to handle them ?
-        //TODO: don't add Sig_assume to the bundle, the code might assume it only contains tycon and datacons, instead modify tc interface to return list of sigelts
-        let env = Env.push_univ_vars env0 us in
         let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
             let se = tc_assume env lid fml [] dr in
             //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
             l @ [se] 
         ) [] axioms in
-        //TODO: adding Sig_assumes to the sig_bundle is breaking invariant that the sig_bundle only contains tycons and datacons, fix it
+
+        env.solver.pop "haseq";
         ses
     in
     

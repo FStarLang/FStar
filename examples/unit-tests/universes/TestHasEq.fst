@@ -29,3 +29,8 @@ type t1 (a:Type) =
 let test3 = assert (hasEq (t1 bool))
 
 let test4 = assert (hasEq (dtuple2 nat (fun x -> y:nat{y > x})))
+
+assume type tp (t:Type0) : Type0
+
+type t2 (t:Type0{tp t}) =
+  | Bad: t2 t
