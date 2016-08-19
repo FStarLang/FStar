@@ -232,25 +232,28 @@ let ask_and_report_errors env all_labels prefix query suffix =
                 then "@" ^ (Z3.query_logging.log_file_name())
                 else "" in
             let query_info tag = 
-                 Util.print "(%s%s) Query (%s, %s) %s in %s milliseconds with fuel %s and ifuel %s\n"
+                 Util.print "(%s%s)\n\tQuery (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s\n"
                                 [Range.string_of_range (Env.get_range env);
                                  at_log_file();
                                  query_name;
                                  Util.string_of_int query_index;
                                  tag;
+                                 (if used_hint then " (with hint)" else "");
                                  Util.string_of_int elapsed_time;
                                  Util.string_of_int prev_fuel;
                                  Util.string_of_int prev_ifuel] 
             in
             match result with 
             | Inl unsat_core ->
-                let hint = { hint_name=query_name;
-                             hint_index=query_index;
-                             fuel=prev_fuel;
-                             ifuel=prev_ifuel;
-                             query_elapsed_time=elapsed_time;
-                             unsat_core=unsat_core } in
-                record_hint (Some hint);
+                if not used_hint
+                then let hint = { hint_name=query_name;
+                                  hint_index=query_index;
+                                  fuel=prev_fuel;
+                                  ifuel=prev_ifuel;
+                                  query_elapsed_time=elapsed_time;
+                                  unsat_core=unsat_core } in
+                     record_hint (Some hint)
+                else record_hint hint_opt;
                 if Options.print_fuels()
                 || Options.hint_info()
                 then query_info "succeeded"

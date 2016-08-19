@@ -47,8 +47,10 @@ let gen_wps_for_free
 
   // Debugging
   let d s = Util.print1 "\x1b[01;36m%s\x1b[00m\n" s in
-  d "Elaborating extra WP combinators";
-  Util.print1 "wp_a is: %s\n" (Print.term_to_string wp_a);
+  if Env.debug env (Options.Other "ED") then begin
+    d "Elaborating extra WP combinators";
+    Util.print1 "wp_a is: %s\n" (Print.term_to_string wp_a)
+  end;
 
   (* Consider the predicate transformer st_wp:
    *   let st_pre_h  (heap:Type)          = heap -> GTot Type0
@@ -80,7 +82,8 @@ let gen_wps_for_free
   in
 
   let gamma = collect_binders wp_a |> U.name_binders in
-  d (Util.format1 "Gamma is %s\n" (Print.binders_to_string ", " gamma));
+  if Env.debug env (Options.Other "ED") then
+    d (Util.format1 "Gamma is %s\n" (Print.binders_to_string ", " gamma));
   let unknown = S.tun in
   let mk x = mk x None Range.dummyRange in
 
@@ -207,7 +210,7 @@ let gen_wps_for_free
     let a1 = S.gen_bv "a1" None (mk_gctx (S.bv_to_name t1)) in
     let a2 = S.gen_bv "a2" None (mk_gctx (S.bv_to_name t2)) in
     let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t3))))) in
-    U.abs (binders @ binders_of_list [ a, true; t1, true; t2, true; t3, true; f, false; a1, false; a2, false ]) (
+    U.abs (mk_all_implicit binders @ binders_of_list [ a, true; t1, true; t2, true; t3, true; f, false; a1, false; a2, false ]) (
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_app (List.map S.as_arg [
           U.mk_app c_pure (List.map S.as_arg [ S.bv_to_name f ]);
@@ -411,6 +414,7 @@ let gen_wps_for_free
     U.abs (binders @ S.binders_of_list [ a; wp ]) body ret_gtot_type
   in
   let wp_ite = register env (mk_lid "wp_ite") wp_ite in
+  let wp_ite = mk_generic_app wp_ite in
 
   let null_wp = 
     let wp = S.gen_bv "wp" None wp_a in
@@ -420,6 +424,7 @@ let gen_wps_for_free
     U.abs (binders @ S.binders_of_list [ a ] @ gamma) body ret_gtot_type in
 
   let null_wp = register env (mk_lid "null_wp") null_wp in
+  let null_wp = mk_generic_app null_wp in
 
   (* val st2_trivial : heap:Type ->a:Type -> st2_wp heap a -> Tot Type0
     let st2_trivial heap a wp = st2_stronger heap a (st2_null_wp heap a) wp *)
@@ -435,17 +440,19 @@ let gen_wps_for_free
   let wp_trivial = register env (mk_lid "wp_trivial") wp_trivial in
   let wp_trivial = mk_generic_app wp_trivial in
 
-  d "End Dijkstra monads for free";
+  if Env.debug env (Options.Other "ED") then
+    d "End Dijkstra monads for free";
 
+  let c = close binders in
   List.rev !sigelts, { ed with
-    if_then_else = ([], wp_if_then_else);
-    assert_p     = ([], wp_assert);
-    assume_p     = ([], wp_assume);
-    close_wp     = ([], wp_close);
-    stronger     = ([], stronger);
-    trivial      = ([], wp_trivial);
-    ite_wp       = ([], wp_ite);
-    null_wp      = ([], null_wp)
+    if_then_else = ([], c wp_if_then_else);
+    assert_p     = ([], c wp_assert);
+    assume_p     = ([], c wp_assume);
+    close_wp     = ([], c wp_close);
+    stronger     = ([], c stronger);
+    trivial      = ([], c wp_trivial);
+    ite_wp       = ([], c wp_ite);
+    null_wp      = ([], c null_wp)
   }
 
 
@@ -455,10 +462,6 @@ type env = {
   // The type-checking environment which we abuse to store our DMFF-style types
   // when entering a binder.
   env: FStar.TypeChecker.Env.env;
-  // The top-level definitions that have been checked so far, along with their
-  // type, represented as an F* type, but really, a type from the definition
-  // language.
-  definitions: list<(lid * typ)>;
   // The substitution from every [x: C] to its [x^w: C*].
   subst: list<subst_elt>;
   // Hack to avoid a dependency
@@ -467,7 +470,6 @@ type env = {
 
 let empty env tc_const = {
   env = env;
-  definitions = [];
   subst = [];
   tc_const = tc_const
 }
@@ -506,7 +508,7 @@ let is_monadic_comp c =
 
 let rec mk_star_to_type mk env a =
   mk (Tm_arrow (
-    [S.null_bv (star_type env a), S.as_implicit false],
+    [S.null_bv (star_type' env a), S.as_implicit false],
     mk_Total Util.ktype0
   ))
 
@@ -514,24 +516,22 @@ let rec mk_star_to_type mk env a =
 // The *-transformation for types, purely syntactic. Has been enriched with the
 // [Tm_abs] case to account for parameterized types
 
-and star_type env t =
+and star_type' env t =
   let mk x = mk x None t.pos in
   let mk_star_to_type = mk_star_to_type mk in
-  //Util.print1 "[debug]: star_type %s\n" (Print.term_to_string t);
-  let normalize = N.normalize [ N.EraseUniverses; N.UnfoldUntil S.Delta_constant ] env.env in
-  let t = normalize t in
+  //Util.print1 "[debug]: star_type' %s\n" (Print.term_to_string t);
   let t = SS.compress t in
   match t.n with
   | Tm_arrow (binders, _) ->
       // TODO: check that this is not a dependent arrow.
       let binders = List.map (fun (bv, aqual) ->
-        { bv with sort = star_type env bv.sort }, aqual
+        { bv with sort = star_type' env bv.sort }, aqual
       ) binders in
       begin match is_monadic_arrow t.n with
       | N hn ->
           // Simple case:
           //   (H_0  -> ... -> H_n)* = H_0* -> ... -> H_n*
-          mk (Tm_arrow (binders, mk_Total (star_type env hn)))
+          mk (Tm_arrow (binders, mk_Total (star_type' env hn)))
       | M a ->
           // F*'s arrows are n-ary (and the intermediary arrows are pure), so the rule is:
           //   (H_0  -> ... -> H_n  -t-> A)* = H_0* -> ... -> H_n* -> (A* -> Type) -> Type
@@ -553,12 +553,12 @@ and star_type env t =
         ) ->
             true
         | Tm_uinst _ ->
-            failwith "impossible"
+            failwith "impossible (Tm_uinst)"
         | _ ->
             false
       in
       if is_valid_application head then
-        mk (Tm_app (head, List.map (fun (t, qual) -> star_type env t, qual) args))
+        mk (Tm_app (head, List.map (fun (t, qual) -> star_type' env t, qual) args))
       else
         raise (Err (Util.format1 "For now, only [either] and [option] are \
           supported in the definition language (got: %s)"
@@ -575,7 +575,7 @@ and star_type env t =
       // top-level
       let binders, repr = SS.open_term binders repr in
       let env = { env with env = push_binders env.env binders } in
-      let repr = star_type env repr in
+      let repr = star_type' env repr in
       U.abs binders repr something
 
   | Tm_abs _
@@ -593,25 +593,6 @@ and star_type env t =
 
   | Tm_delayed _ ->
       failwith "impossible"
-
-
-// Recording a new definition in our top-level environment --------------------
-
-let star_definition env t f =
-  // Making the assumption that the thing we're passed is a top-level name.
-  match (U.un_uinst t).n with
-  | Tm_fvar { fv_name = lid } ->
-      // Start back from the original [t]... can't re-normalize a term without
-      // universes (because it is now ill-typed)
-      let t = N.normalize [ N.UnfoldUntil Delta_constant; N.NoInline; N.EraseUniverses ] env.env t in
-      Util.print1 "Recording definition of %s\n" (text_of_lid lid.v);
-      let keep, ret = f env t in
-      { env with definitions = (lid.v, keep) :: env.definitions }, ret
-  | _ ->
-      raise (Err (Util.format2 "Ill-formed definition: %s (%s)" (Print.term_to_string t) (Print.tag_of_term t)))
-
-let star_type_definition env t =
-  star_definition env t (fun env e -> let t = star_type env e in t, t)
 
 
 // The bi-directional *-transformation and checker for expressions ------------
@@ -764,7 +745,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 and infer (env: env) (e: term): nm * term * term =
   // Util.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x None e.pos in
-  let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant ] env.env in
+  let normalize = N.normalize [ N.Beta; N.Inline; N.UnfoldUntil S.Delta_constant; N.EraseUniverses ] env.env in
   match (SS.compress e).n with
   | Tm_bvar bv ->
       failwith "I failed to open a binder... boo"
@@ -780,21 +761,21 @@ and infer (env: env) (e: term): nm * term * term =
 
       // For the *-translation, [x: t] becomes [x: t*].
       let s_binders = List.map (fun (bv, qual) ->
-        let sort = star_type env bv.sort in
+        let sort = star_type' env bv.sort in
         { bv with sort = sort }, qual
       ) binders in
 
       // For the _-translation, things are a little bit trickier. We need to
       // update the substitution, and one binder may turn into two binders.
       let env, u_binders = List.fold_left (fun (env, acc) (bv, qual) ->
-        let c = normalize bv.sort in
+        let c = bv.sort in
         if is_C c then
-          let xw = S.gen_bv (bv.ppname.idText ^ "^w") None (star_type env c) in
+          let xw = S.gen_bv (bv.ppname.idText ^ "^w") None (star_type' env c) in
           let x = { bv with sort = trans_F_ env c (S.bv_to_name xw) } in
           let env = { env with subst = NT (bv, S.bv_to_name xw) :: env.subst } in
           env, S.mk_binder x :: S.mk_binder xw :: acc
         else
-          let x = { bv with sort = star_type env bv.sort } in
+          let x = { bv with sort = star_type' env bv.sort } in
           env, S.mk_binder x :: acc
       ) (env, []) binders in
       let u_binders = List.rev u_binders in
@@ -809,7 +790,7 @@ and infer (env: env) (e: term): nm * term * term =
       // the inferred type for the original term.
       let t =
         let binders = List.map (fun (bv, _) ->
-          S.mk_binder (S.null_bv (normalize bv.sort))
+          S.mk_binder (S.null_bv bv.sort)
         ) binders in
         let binders = close_binders binders in
         mk (Tm_arrow (binders, comp))
@@ -825,24 +806,20 @@ and infer (env: env) (e: term): nm * term * term =
       N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->
-      begin match List.find (fun (lid', _) -> lid_equals lid lid') env.definitions with
-      | Some (_, t) ->
-          // Util.print2 "[debug]: lookup %s hit %s\n" (text_of_lid lid) (Print.term_to_string t);
-          N t, e, e
-      | None ->
-          let _, t = Env.lookup_lid env.env lid in
-          let txt = text_of_lid lid in
-          let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None" ] in
-          // Util.print2 "[debug]: lookup %s miss %s\n" txt (Print.term_to_string t);
-          if List.existsb (fun s -> Util.starts_with txt ("Prims." ^ s)) allowed_prefixes then
-            N t, e, e
-          else
-            raise (Err (Util.format1 "The %s constructor has not been whitelisted for the definition language" txt))
-      end
+      let _, t = Env.lookup_lid env.env lid in
+      let txt = text_of_lid lid in
+      let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None" ] in
+      // Util.print2 "[debug]: lookup %s miss %s\n" txt (Print.term_to_string t);
+      if List.existsb (fun s -> Util.starts_with txt ("Prims." ^ s)) allowed_prefixes then
+        // Need to erase universes here! This is an F* type that is fully annotated.
+        N (normalize t), e, e
+      else
+        raise (Err (Util.format1 "The %s constructor has not been whitelisted \
+          for the definition language; if this is a function application, \
+          consider using [inline]" txt))
 
   | Tm_app (head, args) ->
       let t_head, s_head, u_head = check_n env head in
-      let t_head = normalize t_head in
       let is_arrow t = match (SS.compress t).n with | Tm_arrow _ -> true | _ -> false in
       // TODO: replace with Util.arrow_formals_comp
       let rec flatten t = match (SS.compress t).n with
@@ -891,9 +868,9 @@ and infer (env: env) (e: term): nm * term * term =
         // Note: not enforcing the types of the arguments because 1) it has
         // been enforced by the main F* type-checker and 2) it's a hassle with
         // binders and stuff
-        match (SS.compress (normalize bv.sort)).n with
+        match (SS.compress bv.sort).n with
         | Tm_type _ ->
-            let arg = normalize arg, q in
+            let arg = arg, q in
             arg, [ arg ]
         | _ ->
             let _, s_arg, u_arg = check_n env arg in
@@ -1068,10 +1045,10 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       let bvs, binders = List.split (List.map (fun (bv, q) ->
         let h = bv.sort in
         if is_C h then
-          let w' = S.gen_bv (bv.ppname.idText ^ "-w'") None (star_type env h) in
+          let w' = S.gen_bv (bv.ppname.idText ^ "-w'") None (star_type' env h) in
           w', [ S.mk_binder w'; S.null_binder (trans_F_ env h (S.bv_to_name bv)) ]
         else
-          let x = S.gen_bv (bv.ppname.idText ^ "-x") None (star_type env h) in
+          let x = S.gen_bv (bv.ppname.idText ^ "-x") None (star_type' env h) in
           x, [ S.mk_binder x ]
       ) binders) in
       let binders = List.flatten binders in
@@ -1088,23 +1065,24 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
   if is_monadic then
     mk_Comp ({
       effect_name = Const.effect_PURE_lid;
-      result_typ = star_type env h;
+      result_typ = star_type' env h;
       effect_args = [ wp, S.as_implicit false ];
       flags = []
     })
   else
     mk_Total (trans_F_ env h wp)
 
+// A helper --------------------------------------------------------------------
 
-let star_expr_definition env t =
-  star_definition env t (fun env e -> let t, s_e, s_u = check_n env e in t, (t, s_e, s_u))
+let n = N.normalize [ N.Beta; N.UnfoldUntil Delta_constant; N.NoInline; N.Inline; N.EraseUniverses ]
 
-// Same thing as [trans_F_], but normalizes its argument, so that it can be
-// called from [tc.fs]. The name is different to make F# happy.
+// Exported definitions -------------------------------------------------------
+
+let star_type env t =
+  star_type' env (n env.env t)
+
+let star_expr env t =
+  check_n env (n env.env t)
+
 let trans_F (env: env_) (c: typ) (wp: term): term =
-  let n = N.normalize [ N.Beta; N.EraseUniverses; N.Inline; N.UnfoldUntil S.Delta_constant ] env.env in
-  let c = n c in
-  let wp = n wp in
-  trans_F_ env c wp
-
-
+  trans_F_ env (n env.env c) (n env.env wp)

@@ -53,6 +53,7 @@ let trans_qual r = function
   | AST.Reflectable ->   S.Reflectable
   | AST.Reifiable ->     S.Reifiable
   | AST.Noeq ->          S.Noeq
+  | AST.Unopteq ->       S.Unopteq
   | AST.DefaultEffect -> raise (Error("The 'default' qualifier on effects is no longer supported", r))
   
 let trans_pragma = function
@@ -1392,6 +1393,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
     let env, decls = eff_decls |> List.fold_left (fun (env, out) decl ->
         let env, ses = desugar_decl env decl in
         env, List.hd ses::out) (env, []) in
+    let binders = Subst.close_binders binders in
     let actions = actions |> List.map (fun d -> match d.d with 
         | Tycon(_, [TyconAbbrev(name, _, _, { tm = Construct (_, [ def, _; cps_type, _ ])})]) when not for_free ->
             // When the effect is not for free, user has to provide a pair of
@@ -1399,8 +1401,8 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
             {
               action_name=Env.qualify env name;
               action_univs=[];
-              action_defn=desugar_term env def;
-              action_typ=desugar_typ env cps_type
+              action_defn=Subst.close binders (desugar_term env def);
+              action_typ=Subst.close binders (desugar_typ env cps_type)
             }
         | Tycon(_, [TyconAbbrev(name, _, _, defn)]) when for_free -> 
             // When for free, the user just provides the definition and the rest
@@ -1408,7 +1410,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
             {
               action_name=Env.qualify env name;
               action_univs=[];
-              action_defn=desugar_term env defn;
+              action_defn=Subst.close binders (desugar_term env defn);
               action_typ=S.tun
             }
         | _ ->
@@ -1418,7 +1420,6 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
               and its cps-type with arrows inserted in the right place (see \
               examples).", d.drange))
     ) in
-    let binders = Subst.close_binders binders in
     let eff_k = Subst.close binders eff_k in
     let lookup s =
         let l = Env.qualify env (mk_ident(s, d.drange)) in

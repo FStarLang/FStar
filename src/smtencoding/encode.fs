@@ -1610,31 +1610,16 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     3. For each action, a : x1:n -> ... -> xn:tn -> st_repr t wp = fun x1..xn -> e
                         encode forall x1..xn. Reify (Apply a x1 ... xn) = [[e]]
             *)
-            let encode_monad_op tm name env = 
-                let repr_name ed = 
-                    Ident.lid_of_ids (Ident.ids_of_lid ed.mname @ [Ident.id_of_text (name ^ "_repr")]) in
-                let br_name, _, env = new_term_constant_and_tok_from_lid env (repr_name ed) in
-                let tm, decls = encode_term (snd tm) env in
-                let xs = 
-                    if name = "bind"
-                    then  [("@x0", Term_sort); ("@x1", Term_sort); 
-                           ("@x2", Term_sort); ("@x3", Term_sort); 
-                           ("@x4", Term_sort); ("@x5", Term_sort)] 
-                    else  [("@x0", Term_sort); ("@x1", Term_sort); ("@x2", Term_sort)] in
-                let m_decl = 
-                    Term.DeclFun(br_name, xs |> List.map snd, Term_sort, Some name) in
-                let eqn = 
-                    let app = Term.mk (Term.App(Var br_name, xs |> List.map Term.mkFreeV)) in
-                    Term.Assume(Term.mkForall([[app]], xs, Term.mkEq(app, mk_Apply tm xs)), 
-                                         Some (name  ^" equality"), 
-                                         Some (br_name ^"_equality")) in
-                 env, [m_decl; eqn] 
+            let close_effect_params tm = 
+                match ed.binders with
+                | [] -> tm
+                | _ -> S.mk (Tm_abs(ed.binders, tm, Some <| Inr Const.effect_Tot_lid)) None tm.pos 
             in
-
+            
             let encode_action env (a:S.action) = 
                 let aname, atok, env = new_term_constant_and_tok_from_lid env a.action_name in
                 let formals, _ = Util.arrow_formals_comp a.action_typ in 
-                let tm, decls = encode_term a.action_defn env in
+                let tm, decls = encode_term (close_effect_params a.action_defn) env in
                 let a_decls = 
                     [Term.DeclFun(aname, formals |> List.map (fun _ -> Term_sort), Term_sort, Some "Action");
                      Term.DeclFun(atok, [], Term_sort, Some "Action token")] in
@@ -1651,10 +1636,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 env, decls@a_decls@[a_eq; tok_correspondence] 
             in
 
-            let env, decls0 = encode_monad_op ed.bind_repr "bind" env in
-            let env, decls1 = encode_monad_op ed.return_repr "return" env in
             let env, decls2 = Util.fold_map encode_action env ed.actions in
-            decls0@decls1@List.flatten decls2, env
+            List.flatten decls2, env
 
      | Sig_declare_typ(lid, _, _, _, _) when (lid_equals lid Const.precedes_lid) ->
         let tname, ttok, env = new_term_constant_and_tok_from_lid env lid in

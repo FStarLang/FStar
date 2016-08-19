@@ -35,6 +35,7 @@ and decl =
   | DFunction of typ * lident * list<binder> * expr
   | DTypeAlias of lident * typ
   | DGlobal of lident * typ * expr
+  | DTypeFlat of lident * list<(ident * typ)>
 
 and expr =
   | EBound of var
@@ -61,6 +62,9 @@ and expr =
   | EBool of bool
   | EAny
   | EAbort
+  | EReturn of expr
+  | EFlat of lident * list<(ident * expr)>
+  | EField of lident * expr * ident
 
 and op =
   | Add | AddW | Sub | SubW | Div | Mult | Mod
@@ -125,7 +129,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 8
+let current_version: version = 9
 
 type file = string * program
 type binary_format = version * list<file>
@@ -354,6 +358,11 @@ and translate_decl env d: option<decl> =
       let name = env.module_name, name in
       Some (DTypeAlias (name, translate_type env t))
 
+  | MLM_Ty [ (name, [], Some (MLTD_Record fields)) ] ->
+      let name = env.module_name, name in
+      Some (DTypeFlat (name, List.map (fun (f, t) ->
+        f, translate_type env t) fields))
+
   | MLM_Ty ((name, _, _) :: _) ->
       Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
       None
@@ -527,6 +536,13 @@ and translate_expr env e: expr =
   | MLE_Coerce (e, t_from, t_to) ->
       ECast (translate_expr env e, translate_type env t_to)
 
+  | MLE_Record (_, fields) ->
+      EFlat (assert_lid e.mlty, List.map (fun (field, expr) ->
+        field, translate_expr env expr) fields)
+
+  | MLE_Proj (e, path) ->
+      EField (assert_lid e.mlty, translate_expr env e, snd path)
+
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
        * supported, and quantified type schemes are not supported either *)
@@ -541,10 +557,7 @@ and translate_expr env e: expr =
       ESequence (List.map (translate_expr env) seqs)
   | MLE_Tuple _ ->
       failwith "todo: translate_expr [MLE_Tuple]"
-  | MLE_Record _ ->
-      failwith "todo: translate_expr [MLE_Record]"
-  | MLE_Proj _ ->
-      failwith "todo: translate_expr [MLE_Proj]"
+
   | MLE_If _ ->
       failwith "todo: translate_expr [MLE_If]"
   | MLE_Raise _ ->
@@ -553,6 +566,11 @@ and translate_expr env e: expr =
       failwith "todo: translate_expr [MLE_Try]"
   | MLE_Coerce _ ->
       failwith "todo: translate_expr [MLE_Coerce]"
+
+and assert_lid t =
+  match t with
+  | MLTY_Named ([], lid) -> lid
+  | _ -> failwith "invalid argument: assert_lid"
 
 and translate_branches env t branches =
   List.map (translate_branch env t) branches
