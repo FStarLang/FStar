@@ -34,15 +34,15 @@ let fib_inner_aux n =
    nested recursive aux function.
    Here's one way to do it. *)
 
-#reset-options "--z3timeout 10"
+#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 
-val fib_inner_aux_2 : n:nat -> Tot (f:nat{f=fibonacci n})
+val fib_inner_aux_2: n:nat -> Tot (f:nat{f = fibonacci n})
 let fib_inner_aux_2 n =
-  let rec aux : a:nat -> b:nat -> n:nat
-             -> Pure nat (requires True)
-                       (ensures (fun m -> forall (k:nat{n <= k}). {:pattern (fibonacci k)} a=fibonacci (k - n) /\ b=fibonacci (k - n + 1) ==> m=fibonacci k))
-                       (decreases n) =
-    fun a b n -> match n with
-      | 0 -> a
-      | _ -> aux b (a + b) (n - 1) in
+  let rec aux: a:nat -> b:nat -> k:nat{k <= n} -> Tot
+    (m:nat{a = fibonacci (n - k) /\ b = fibonacci (n - k + 1) ==> m = fibonacci n})
+    (decreases k) =
+  fun a b -> function
+  | 0 -> a
+  | k -> aux b (a + b) (k - 1)
+  in
   aux 1 1 n

@@ -11,6 +11,7 @@ Ex04f.fst \
 Ex04g.fst \
 Ex04h.fst \
 Ex05a.fst \
+Ex05b.fst \
 Ex06a.fst \
 Ex06b.fst \
 Ex06c.fst \
@@ -22,8 +23,6 @@ Ex07c.fst \
 Ex07d.fst \
 Ex10a.fst \
 Ex10b.fst
-#currently failing \
-Ex05b.fst \
 
 VERFILES_HH=Ex11a.fst
 
