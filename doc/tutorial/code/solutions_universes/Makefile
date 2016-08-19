@@ -27,7 +27,7 @@ Ex10b.fst
 VERFILES_HH=Ex11a.fst
 
 FSTAR_HOME=../../../../
-HINTS_ENABLED=--use_hints --record_hints
+HINTS_ENABLED=--use_hints 
 include ../Makefile.include
 
 HYPERHEAP=$(FSTAR_HOME)/ulib/hyperheap

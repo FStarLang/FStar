@@ -30,7 +30,7 @@ EXERCISES =\
    ex6d-no-discard\
 
 verify-%: __force__
-	$(SFSTAR) $*.fst
+	$(FSTAR) --stratified $*.fst
 
 all: uall sall
 
