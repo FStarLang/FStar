@@ -592,7 +592,9 @@ let lemma_modifies_2_1' (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h
 let create #a (init:a) (len:UInt32.t) : ST (buffer a)
      (requires (fun h -> is_stack_region h.tip))
      (ensures (fun (h0:mem) b h1 -> ~(contains h0 b)
-       /\ live h1 b /\ idx b = 0 /\ length b = v len /\ frameOf b = h0.tip
+       /\ live h1 b /\ idx b = 0 /\ length b = v len
+       /\ frameOf b = h0.tip
+       /\ Map.domain h1.h == Map.domain h0.h
        /\ modifies_0 h0 h1
        /\ as_seq h1 b == Seq.create (v len) init
        ))
@@ -600,6 +602,32 @@ let create #a (init:a) (len:UInt32.t) : ST (buffer a)
     let h = HST.get() in
     let b = {content = content; idx = (uint_to_t 0); length = len} in
     Seq.lemma_eq_intro (as_seq h b) (sel h b);
+    b
+
+let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h x.id}) (v:a) : Lemma
+  (requires (True))
+  (ensures  (Map.domain h.h == Map.domain (upd h x v).h))
+  = let m = h.h in
+    let m' = Map.upd m x.id (Heap.upd (Map.sel m x.id) (HH.as_ref x.ref) v) in
+    Set.lemma_equal_intro (Map.domain m) (Map.domain m')
+
+let rcreate #a (r:HH.rid) (init:a) (len:UInt32.t) : ST (buffer a)
+     (requires (fun h -> is_eternal_region r))
+     (ensures (fun (h0:mem) b h1 -> ~(contains h0 b)
+       /\ live h1 b /\ idx b = 0 /\ length b = v len
+       /\ Map.domain h1.h == Map.domain h0.h
+       /\ h1.tip = h0.tip
+       /\ modifies (Set.singleton r) h0 h1
+       /\ modifies_ref r TSet.empty h0 h1
+       /\ as_seq h1 b == Seq.create (v len) init
+       ))
+  = let h = HST.get() in
+    let s = Seq.create (v len) init in
+    let content = ralloc r s in
+    let h' = HST.get() in
+    let b = {content = content; idx = (uint_to_t 0); length = len} in
+    Seq.lemma_eq_intro (as_seq h' b) (sel h' b);
+    lemma_upd h content s;
     b
 
 let index #a (b:buffer a) (n:UInt32.t{v n<length b}) : STL a
