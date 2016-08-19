@@ -18,7 +18,7 @@
    hashes, namely HMAC-SHA1, and their idealization under the INT-CMA
    computational assumption *)
 
-module Ex9bc
+module Ex9bc_MAC
 open FStar.Array
 open FStar.Seq
 

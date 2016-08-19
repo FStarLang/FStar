@@ -1,4 +1,4 @@
-module Format
+module Ex09bc_Format
 open Prims.PURE
 open String
 open Array

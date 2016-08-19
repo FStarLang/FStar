@@ -11,7 +11,7 @@ open FStar.Seq
 open FStar.SeqProperties
 
 
-(*-------core algorithms *)
+(*-------CORE algorithms *)
 
 type bytes = seq byte (* concrete byte arrays *) 
 type text  = bytes    (* a type abbreviation, for clarity *)
@@ -33,10 +33,11 @@ assume val sha1: key -> text -> Tot tag
 
 (* to verify, we simply recompute & compare *) 
 
+assume HasEq_bytes: hasEq bytes
 
-assume val sha1verify: key -> text -> tag -> Tot bool
-(* let sha1verify k txt tag = *)
-(*   (sha1 k txt = tag) *)
+val sha1verify: key -> text -> tag -> Tot bool
+let sha1verify k txt tag =
+  (sha1 k txt = tag)
 
 
 
@@ -65,11 +66,12 @@ let keygen (p: (text -> Type)) =
    to MACs; the ideal implementation below uses the 
    log to correct errors. *)
 
-noeq type entry = 
+type entry = 
   | Entry : k:key 
          -> t:text{key_prop k t}
          -> m:tag
          -> entry
+
 
 let log = ST.alloc #(list entry) [] 
 
@@ -77,12 +79,13 @@ let mac k t =
   let m = sha1 k t in
   log := Entry k t m :: !log;
   m
+  
 
 let verify k text tag =
   let verified = sha1verify k text tag in 
   let found =
     is_Some 
-      (List.tryFind 
+      (List.Tot.find 
         (fun (Entry k' text' tag') -> k=k' && text=text')
         !log) in 
 
@@ -95,7 +98,6 @@ let verify k text tag =
   (* error-detecting implementation for the INT-CMA game *)
 //(if verified && not found then win := Some(k,text,tag)); 
 //verified
-
 
 
 

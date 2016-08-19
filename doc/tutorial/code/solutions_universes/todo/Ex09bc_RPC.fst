@@ -1,6 +1,6 @@
 (* Copyright (c) Microsoft Corporation.  All rights reserved.  *)
 
-module RPC
+module Ex09bc_RPC
 open Array
 open SHA1
 open Format
