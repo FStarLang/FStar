@@ -98,7 +98,7 @@ let as_frag d ds =
 %token <float> IEEE64
 %token <char> CHAR
 %token <bool> LET
-%token FORALL EXISTS ASSUME NEW LOGIC IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT NOEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
+%token FORALL EXISTS ASSUME NEW LOGIC IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
 %token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
 %token AND ASSERT BEGIN ELSE END
 %token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
@@ -287,20 +287,21 @@ sub_effect:
     }
   
 qualifier:
-  | ASSUME       { Assumption }
-  | INLINE       { Inline }
-  | UNFOLDABLE   { Unfoldable }
-  | IRREDUCIBLE  { Irreducible }
-  | DEFAULT      { DefaultEffect }
-  | TOTAL        { TotalEffect }
-  | PRIVATE      { Private }
-  | ABSTRACT     { Abstract }
-  | NOEQUALITY   { Noeq }
-  | NEW          { New }
-  | LOGIC        { Logic }
-  | OPAQUE       { Opaque }
-  | REIFIABLE    { Reifiable }
-  | REFLECTABLE  { Reflectable }
+  | ASSUME        { Assumption }
+  | INLINE        { Inline }
+  | UNFOLDABLE    { Unfoldable }
+  | IRREDUCIBLE   { Irreducible }
+  | DEFAULT       { DefaultEffect }
+  | TOTAL         { TotalEffect }
+  | PRIVATE       { Private }
+  | ABSTRACT      { Abstract }
+  | NOEQUALITY    { Noeq }
+  | UNOPTEQUALITY { Unopteq }
+  | NEW           { New }
+  | LOGIC         { Logic }
+  | OPAQUE        { Opaque }
+  | REIFIABLE     { Reifiable }
+  | REFLECTABLE   { Reflectable }
 
 qualifiers:
   |                      { [] }
@@ -882,7 +883,7 @@ arithTerm:
   | arithTerm OPINFIX4 arithTerm
       { mk_term (Op($2, [$1; $3])) (rhs2 parseState 1 3) Un}
   | MINUS arithTerm
-      { mk_term (Op("-", [$2])) (rhs2 parseState 1 3) Expr }
+      { mk_uminus $2 (rhs2 parseState 1 3) Expr }
   | refinementTerm
       { $1 }
 

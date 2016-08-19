@@ -1496,6 +1496,7 @@ let trans_qual r = function
   | AST.Inline 
   | AST.Irreducible
   | AST.Noeq
+  | AST.Unopteq
   | AST.Unfoldable -> raise (Error("This qualifier is supported only with the --universes option", r))
 
 let trans_pragma = function

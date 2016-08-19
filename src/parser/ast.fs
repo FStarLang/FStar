@@ -119,6 +119,7 @@ type qualifier =
   | Private
   | Abstract
   | Noeq
+  | Unopteq
   | Assumption
   | DefaultEffect
   | TotalEffect
@@ -189,6 +190,16 @@ let check_id id =
 let mk_decl d r = {d=d; drange=r}
 let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
 let mk_term t r l = {tm=t; range=r; level=l}
+let mk_uminus t r l =
+  let t =
+    match t.tm with
+    | Const (Const_int (s, Some (Signed, width))) ->
+        Const (Const_int ("-" ^ s, Some (Signed, width)))
+    | _ ->
+        Op("-", [t])
+  in
+  mk_term t r l
+
 let mk_pattern p r = {pat=p; prange=r}
 let un_curry_abs ps body = match body.tm with
     | Abs(p', body') -> Abs(ps@p', body')

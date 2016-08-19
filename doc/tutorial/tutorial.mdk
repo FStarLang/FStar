@@ -3057,12 +3057,12 @@ families, or [GADTs]. For example, here is one definition of a
 `vector`, a length-indexed list.
 
 ```
-type vector : Type -> nat -> Type =
-   | Nil :  vector 'a 0
-   | Cons : hd:'a -> n:nat -> tl:vector 'a n -> vector 'a (n + 1)
+type vector (a:Type) : nat -> Type =
+   | Nil :  vector a 0
+   | Cons : hd:a -> n:nat -> tl:vector a n -> vector a (n + 1)
 ```
 
-Here, we define a type constructor `vector : Type -> nat -> Type`,
+Here, we define a type constructor `vector (a:Type) : nat -> Type`,
 which takes two arguments: it produces a `Type` when applied first to
 a `Type` and then to a `nat`.
 
@@ -3095,30 +3095,26 @@ automatically. To view what F\* inferred, you can provide the
 implicitly inferred arguments to be shown in any message from the
 compiler. Alternatively, you can write `reverse_vector #t #m v`
 yourself to force the choice of implicit arguments manually.
-
-When you write a type like `'a -> M t wp` (note the "ticked" variable
-`'a`), this is simply syntactic sugar for `#a:Type -> a -> M t wp`,
-with every occurrence of `'a` replaced by `a` in `M t wp`---in other
-words, the "ticked" type variable is an implicit type argument. With
-this in mind, the definition of `vector` is desugared to:
+Applying this to the `Cons` constructor's `n` argument we get:
 
 ```
-type vector : Type -> nat -> Type =
-   | Nil :  #a:Type -> vector a 0
-   | Cons : #a:Type -> hd:a -> n:nat -> tl:vector a n -> vector a (n + 1)
-```
-
-One could go further and also define the `Cons` constructor's `n`
-argument to be implicit, like so:
-
-```
-type vector : Type -> nat -> Type =
-   | Nil :  #a:Type -> vector a 0
-   | Cons : #a:Type -> hd:a -> #n:nat -> tl:vector a n -> vector a (n + 1)
+type vector (a:Type) : nat -> Type =
+   | Nil :  vector a 0
+   | Cons : hd:a -> #n:nat -> tl:vector a n -> vector a (n + 1)
 ```
 
 With this, given `v: vector int m`, we can write `Cons 0 v` to build a
 `vector int (m + 1)`.
+
+When you write a type like `'a -> M t wp` (note the "ticked" variable
+`'a`), this is simply syntactic sugar for `#a:Type -> a -> M t wp`,
+with every occurrence of `'a` replaced by `a` in `M t wp`---in other
+words, the "ticked" type variable is an implicit type argument.
+So the signature below is equivalent to the previous one.
+
+```
+val reverse_vector' : #n:nat -> vector 'a n -> Tot (vector 'a n)
+```
 
 ## Dependent kind arrows and type function
 

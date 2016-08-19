@@ -207,6 +207,7 @@ type qualifier =
   | Irreducible                            //a definition that can never be unfolded by the normalizer
   | Abstract                               //a symbol whose definition is only visible within the defining module
   | Noeq                                   //for this type, don't generate HasEq
+  | Unopteq                                //for this type, use the unoptimized HasEq scheme
   | TotalEffect                            //an effect that forbis non-termination
   | Logic                                  //a symbol whose intended usage is in the refinement logic
   | Reifiable

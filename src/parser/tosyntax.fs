@@ -53,6 +53,7 @@ let trans_qual r = function
   | AST.Reflectable ->   S.Reflectable
   | AST.Reifiable ->     S.Reifiable
   | AST.Noeq ->          S.Noeq
+  | AST.Unopteq ->       S.Unopteq
   | AST.DefaultEffect -> raise (Error("The 'default' qualifier on effects is no longer supported", r))
   
 let trans_pragma = function

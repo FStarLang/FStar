@@ -4,7 +4,7 @@ module Make = functor (X: sig
   val ( - ): int -> int -> int
   val ( * ): int -> int -> int
   val ( / ): int -> int -> int
-  val ( % ): int -> int -> int
+  val ( mod ): int -> int -> int
   val ( <= ): int -> int -> bool
   val ( >= ): int -> int -> bool
   val ( < ): int -> int -> bool
