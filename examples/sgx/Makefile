@@ -2,7 +2,7 @@
 FSTAR_HOME=../..
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_DEFAULT_ARGS) # from the included Makefile
-OPTIONS_OCAML=--codegen OCaml --no_location_info
+OPTIONS_OCAML=--llax --codegen OCaml --no_location_info
 
 X86_ODIR=Interpreter
 X86_EXTRACTED=Ast.ml Test.ml Util.ml SGXState.ml Interpreter.ml 
