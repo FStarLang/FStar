@@ -5,7 +5,6 @@ Encrypt_SymEnc.fst\
 Encrypt_Sample.fst \
 SHA1.fst \
 MAC.fst \
-mac3.fst \
 Sig.fst \
 CCA2.RSA.fst \
 CCA2.Plain.fst \
@@ -31,7 +30,7 @@ verify-%: __force__
 
 all: uall sall
 
-uall: $(VERFILES:%=verify-%) mac3
+uall: $(VERFILES:%=verify-%)
 
 sall: merkle_tree rpc CntProtocol padding acls-cap statefulEnc
 
@@ -51,17 +50,17 @@ merkle_tree: MerkleTree.fst
 	--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
 	$^
 
-acls-cap: sha1.fst mac.fst ../security/acls2.fst Cap.fst
+acls-cap: SHA1.fst MAC.fst ../security/acls2.fst Cap.fst
 	$(SFSTAR) --z3timeout 10 \
 	--verify_module ACLs2 --verify_module Cap \
 	--include $(FSTAR_HOME)/contrib/Platform/fst \
 	--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
 	$^
 
-rpc: formatting.fst sha1.fst mac.fst rpc.fst
+rpc: Formatting.fst SHA1.fst MAC.fst RPC.fst
 	$(FSTAR) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
 		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
-		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst rpc.fst
+		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst RPC.fst
 
 statefulEnc: StatefulEncryption.SingleInstance.fst StatefulEncryption.TwoLevelHeap.fst
 	$(SFSTAR) --verify_module StatefulEncryption.SingleInstance StatefulEncryption.SingleInstance.fst
@@ -73,10 +72,10 @@ mllibs:
 	$(MAKE) -C $(FSTAR_HOME)/contrib/Platform/ml clean all
 	$(MAKE) -C $(FSTAR_HOME)/contrib/CoreCrypto/ml clean all test
 
-RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
+RPC.ml: SHA1.fst MAC.fst Formatting.fst RPC.fst
 	$(FSTAR_ALWAYS) --no_location_info --lax \
 		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
-		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst rpc.fst \
+		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst RPC.fst \
 		--codegen-lib Platform --codegen-lib CoreCrypto --codegen-lib SeqProperties --codegen OCaml --use_native_int 
 
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/ulib/ml/native_int $(FSTAR_HOME)/ulib/ml)
@@ -87,19 +86,19 @@ CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, CoreCrypto/ml/CoreCrypto.cmxa)
 $(CONTRIB_LIBS):
 	$(MAKE) -C $(FSTAR_HOME)/contrib/
 
-rpc.exe: RPC.ml $(CONTRIB_LIBS)
+RPC.exe: RPC.ml $(CONTRIB_LIBS)
 	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml FStar_List_Tot.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
-rpc-test: rpc.exe
-	$(EXTRA_PATH) ./rpc.exe
+rpc-test: RPC.exe
+	$(EXTRA_PATH) ./RPC.exe
 
-CntProtocol: CntFormat.fst mac.fst sha1.fst CntProtocol.fst
+CntProtocol: CntFormat.fst MAC.fst SHA1.fst CntProtocol.fst
 	$(SFSTAR) --z3timeout 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst CntProtocol.fst
 
-CntProtocol.ml: CntFormat.fst mac.fst sha1.fst CntProtocol.fst
+CntProtocol.ml: CntFormat.fst MAC.fst SHA1.fst CntProtocol.fst
 	$(FSTAR_ALWAYS) --stratified --z3timeout 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
@@ -113,4 +112,4 @@ cnt-test: CntProtocol.exe
 	$(EXTRA_PATH) ./CntProtocol.exe
 
 clean:
-	rm -fr rpc *.ml *.cmi *.cmx *.o *.exe *~
+	rm -fr RPC *.ml *.cmi *.cmx *.o *.exe *~
