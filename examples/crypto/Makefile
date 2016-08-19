@@ -1,4 +1,15 @@
-VERFILES=CCA2.RSA.fst CCA2.Plain.fst CCA2.CCA2.fst
+.PHONY: all verify-% __force__
+
+VERFILES=AES.fst \
+Encrypt_SymEnc.fst\
+Encrypt_Sample.fst \
+SHA1.fst \
+MAC.fst \
+mac3.fst \
+Sig.fst \
+CCA2.RSA.fst \
+CCA2.Plain.fst \
+CCA2.CCA2.fst 
 
 LIB = ../../contrib/CoreCrypto/ml
 
@@ -12,40 +23,27 @@ endif
 FSTAR_HOME=../..
 include ../Makefile.include
 
+
+verify-%: __force__
+	$(FSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst \
+		 --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
+		 --z3timeout 20 $*
+
 all: uall sall
 
-uall: .all.crypto.ver mac3 sig
+uall: $(VERFILES:%=verify-%) mac3
 
-sall: merkle_tree mac rpc CntProtocol padding acls-cap statefulEnc
+sall: merkle_tree rpc CntProtocol padding acls-cap statefulEnc
 
-.all.crypto.ver: $(VERFILES)
-	$(FSTAR) --z3timeout 20 $^
 
 export CONTRIB=../../contrib
 
-mac: sha1.fst mac.fst
-	$(FSTAR) --z3timeout 10 --verify_module MAC --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1  \
-		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
-		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
-		$^
-
-sig: sig.fst
-	$(FSTAR) \
-		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
-		$^
-#		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 
 padding: Padding.Pad.fst Padding.BMAC.fst Padding.MAC2.fst Padding.TMAC.fst
 	$(SFSTAR) --z3timeout 20 --verify_module Padding.Pad --verify_module Padding.BMAC --verify_module Padding.MAC2 --verify_module Padding.TMAC --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
 		$^
-
-mac3: mac3.fst
-	$(FSTAR) --z3timeout 10 --verify_module MAC3 --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
-		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
-		$^
-#		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 
 merkle_tree: MerkleTree.fst
 	$(SFSTAR) --verify_module MerkleTree \
