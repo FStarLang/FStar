@@ -106,6 +106,7 @@ let init () =
         ("initial_ifuel"                , Int 1);
         ("inline_arith"                 , Bool false);
         ("lax"                          , Bool false);
+        ("light"                        , Bool false);
         ("log_queries"                  , Bool false);
         ("log_types"                    , Bool false);
         ("max_fuel"                     , Int 8);
@@ -215,6 +216,7 @@ let get_trace_error             ()      = lookup_opt "trace_error"              
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
+let get_use_light               ()      = lookup_opt "light"                    as_bool
 let get_verify_all              ()      = lookup_opt "verify_all"               as_bool
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
@@ -831,6 +833,7 @@ let universes                    () = (not (get_stratified()))
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
+let use_light                    () = get_use_light                   ()
 let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
 let warn_cardinality             () = get_cardinality() = "warn"

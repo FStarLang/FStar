@@ -183,9 +183,16 @@ inputFragment:
     { as_frag $2 $4 }
 
 maybe_pragma_light:
-  |     {}
+  | {}
   | PRAGMALIGHT STRING
-        {}
+    {
+      // todo: check for other options
+      let use_light = (string_of_bytes $2) = "on" in
+      if use_light then begin
+        set_option "light" (Bool (true));
+        printfn "Using #light"
+      end
+    }
 
 pragma:
   | PRAGMA_SET_OPTIONS STRING

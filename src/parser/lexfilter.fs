@@ -1,12 +1,13 @@
 ﻿module FStar.Parser.LexFilter
 
 open Parse
+open FStar.Options
 
 type Position = Microsoft.FSharp.Text.Lexing.Position
 type LexBuffer = Microsoft.FSharp.Text.Lexing.LexBuffer<char>
 
 let debug = true
-let print_tokens = true
+let print_tokens = false
 
 let stringOfPos (p:Position) = sprintf "(%d:%d)" p.Line p.Column            // replaced OriginalLine with Line
 let outputPos os (p:Position) = Printf.fprintf os "(%d:%d)" p.Line p.Column // the same here
@@ -354,6 +355,10 @@ type PositionWithColumn =
 
 
 let tokenizer lexer (lexbuf: LexBuffer) =
+    // Turn off #light syntax until '#light "on"' is met
+    set_option "light" (Bool false)
+
+
     //----------------------------------------------------------------------------
     // Part I. Building a new lex stream from an old
     //
@@ -1490,11 +1495,12 @@ let tokenizer lexer (lexbuf: LexBuffer) =
 
 
     fun _ ->
-        if not initialized then
+        // todo: check #light before parsing to avoid Options look up on each token
+        if use_light () && not initialized then
             let _firstTokenTup = peekInitial()
             ()
 
-        let tok = hwTokenFetch (true) //todo: rewrite
+        let tok = if use_light () then hwTokenFetch true else lexer lexbuf
         if print_tokens then printfn "%A" tok
         tok
 

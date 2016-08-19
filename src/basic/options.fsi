@@ -29,13 +29,13 @@ type debug_level_t =
   | Other of string
 
 type option_val =
-  | Bool of bool 
+  | Bool of bool
   | String of string
   | Int of int
   | List of list<option_val>
   | Unset
 
-type options = 
+type options =
     | Set
     | Reset
     | Restore
@@ -115,6 +115,7 @@ val universes                   : unit    -> bool
 val unthrottle_inductives       : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
+val use_light                   : unit    -> bool
 val verify_all                  : unit    -> bool
 val verify_module               : unit    -> list<string>
 val warn_cardinality            : unit    -> bool

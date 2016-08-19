@@ -67,20 +67,7 @@ let parse fn =
   try
       let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
       let lexer = LexFStar.token lexargs in
-
-      let light = LexFilter.tokenizer lexer lexbuf in
-
-      let debug_print_tokens = true in
-      let print_tokens =
-          fun _ ->
-              let tok = lexer lexbuf in
-              printfn "%A" tok;
-              tok in
-
-      let tokenize = if filename.Contains("light-syntax") // todo: replace with #light param check
-                     then (printfn "Using #light"; light)
-                     else (if debug_print_tokens && not <| filename.Contains("ulib") then print_tokens else (fun _ -> lexer lexbuf)) in
-
+      let tokenize = LexFilter.tokenizer lexer lexbuf in
       let fileOrFragment = Parse.inputFragment tokenize lexbuf in
       let frags = match fileOrFragment with
         | Inl mods ->
