@@ -1,13 +1,13 @@
-module AEAD.Chacha20_Poly1305
+module Crypto.AEAD.Chacha20Poly1305
 
 open FStar.HST
 open FStar.Buffer
 open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
-open Chacha_wip
-open Poly.Bigint
-open Poly.Poly1305_wip
+open Crypto.Symmetric.Chacha20
+open Crypto.Symmetric.Poly1305.Bigint
+open Crypto.Symmetric.Poly1305
 
 #set-options "--lax"
 
@@ -111,13 +111,13 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
      - padded ciphertext
      - formatted length *)
   let aad_log = 
-    let log = poly1305_step log aad acc r max_aad in
+    let log = poly1305_loop log aad acc r max_aad in
     (* This is not length-constant time, the lengths are assumed to 
        be public data *)  
     if not(UInt32.eq rem_aad 0ul) then poly1305_update log padded_aad acc r
     else log in
   let aad_ciphertext_log = 
-    let log = poly1305_step aad_log ciphertext acc r max in
+    let log = poly1305_loop aad_log ciphertext acc r max in
     if not(UInt32.eq rem 0ul) then poly1305_update log padded_ciphertext acc r
     else log in
   length_bytes len_bytes len aad_len;

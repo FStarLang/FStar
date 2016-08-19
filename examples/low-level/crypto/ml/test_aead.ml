@@ -1,7 +1,7 @@
-open AEAD_Chacha20_Poly1305
+open Crypto_AEAD_Chacha20Poly1305
 open Char
 open FStar_Buffer
-open Poly_Bigint
+open Crypto_Symmetric_Poly1305_Bigint
        
 let from_string s : bytes =
   let b = create 0 (String.length s) in

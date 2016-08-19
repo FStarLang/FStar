@@ -334,7 +334,7 @@ type distinct2 (n:bytes) (p:point) = (* b2t(not(FStar.TSet.mem (Ref (getRef n)) 
 (*   cut (True /\ FStar.TSet.mem (Ref (getRef n)) !{getRef n});  *)
 (*   cut( not(FStar.TSet.mem (Ref (getRef n)) mods) /\ True);  *)
 (*   no_upd_lemma h0 h1 n mods;  *)
-(*   assert(forall (i:nat). {:pattern (getValue h1 n i)} i < bytes_length ==> v (getValue h1 n i) = v (getValue h1 n i));   *)
+(*   assert(forall (i:nat). {:pattern (get h1 n i)} i < bytes_length ==> v (get h1 n i) = v (get h1 n i));   *)
 (*   Eval.eval_eq_lemma h0 h1 n n bytes_length *)
   
 (* #reset-options *)
@@ -350,7 +350,7 @@ val big_step_lemma_1: h0:heap -> h1:heap ->
       /\ (nTimesQ (formula_4 h0 n ctr) (pointOf h0 q) h0 p pq)
       (* /\ modifies (refs pp +++ refs ppq +++ refs p +++ refs pq) h0 h1 *)
       /\ onCurve h1 p /\ onCurve h1 pq /\ onCurve h1 q /\ live h1 pp /\ live h1 ppq
-      /\ b = getValue h0 n (bytes_length-1-ctr)
+      /\ b = get h0 n (bytes_length-1-ctr)
       /\ nTimesQ (formula_0 (formula_4 h0 n ctr) b) (pointOf h0 q) h1 p pq
     ))
     (ensures (
@@ -376,7 +376,7 @@ val big_step_lemma_2: h0:heap -> h1:heap -> h2:heap ->
       /\ (nTimesQ (formula_4 h0 n ctr) (pointOf h0 q) h0 p pq)
       (* /\ modifies (refs pp +++ refs ppq +++ refs p +++ refs pq) h0 h1 *)
       /\ onCurve h1 p /\ onCurve h1 pq /\ onCurve h1 q /\ live h1 pp /\ live h1 ppq
-      /\ b = getValue h0 n (bytes_length-1-ctr)
+      /\ b = get h0 n (bytes_length-1-ctr)
       /\ nTimesQ (formula_0 (formula_4 h0 n ctr) b) (pointOf h0 q) h1 p pq
       /\ (live h1 pp) /\ (live h1 ppq) /\ (onCurve h1 p) /\ (onCurve h1 pq) /\ (onCurve h1 q)
       /\ (onCurve h2 p) /\ (onCurve h2 pq)

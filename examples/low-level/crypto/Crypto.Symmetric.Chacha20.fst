@@ -1,12 +1,15 @@
-module Chacha_wip
+module Crypto.Symmetric.Chacha20
 
 open FStar.Mul
 open FStar.Ghost
-open FStar.HyperStack
-open FStar.HST
-open FStar.Int.Cast
+(** Machine integers *)
 open FStar.UInt8
 open FStar.UInt32
+open FStar.Int.Cast
+(** Effects and memory layout *)
+open FStar.HyperStack
+open FStar.HST
+(** Buffers *)
 open FStar.Buffer
 open Buffer.Utils
 
@@ -213,10 +216,9 @@ val chacha20_encrypt:
   len:u32{length ciphertext >= v len /\ length plaintext >= v len /\ v counter + v len / 64 < pow2 32} -> STL unit
     (requires (fun h -> live h ciphertext /\ live h key /\ live h plaintext))
     (ensures (fun h0 _ h1 -> live h1 ciphertext /\ modifies_1 ciphertext h0 h1))
-let chacha20_encrypt ciphertext key counter iv constant plaintext len = 
+let chacha20_encrypt ciphertext key counter iv constant plaintext len =
   push_frame ();
-  (* Create the internal state buffer *)
   let state = create 0ul 32ul in
   (* Apply Chacha20 on plaintext and store the result in the 'ciphertext' buffer *)
   chacha20_encrypt_body state ciphertext key counter iv constant plaintext len;
-  pop_frame()
+  pop_frame ()
