@@ -39,4 +39,9 @@ verify-%: __force__
 verify_hh-%: __force__
 	$(FSTAR) --include $(HYPERHEAP) $*
 
-all: $(VERFILES:%=verify-%) $(VERFILES_HH:%=verify_hh-%)
+
+all: uall sall
+
+sall:
+
+uall: $(VERFILES:%=verify-%) $(VERFILES_HH:%=verify_hh-%)
