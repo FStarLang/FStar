@@ -19,11 +19,14 @@ maths \
 paradoxes \
 printf \
 verifythis \
-metatheory \
-wysteria \
 preorders \
 dm4free \
-unit-tests 
+unit-tests
+
+#metatheory\
+wysteria \
+after verifythis
+
 
 # #	make -C bignum  -- big timeout (30) + failing asserts (even with 50)
 # #	make -C stateful_bignum  -- huge timeout (50) + code duplication (prims)
