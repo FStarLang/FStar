@@ -27,7 +27,7 @@ Ex10b.fst
 VERFILES_HH=Ex11a.fst
 
 FSTAR_HOME=../../../../
-HINTS_ENABLED=--use_hints 
+HINTS_ENABLED=--use_hints  # CH: seems like overkill to me
 include ../Makefile.include
 
 HYPERHEAP=$(FSTAR_HOME)/ulib/hyperheap
@@ -39,8 +39,22 @@ verify_hh-%: __force__
 	$(FSTAR) --include $(HYPERHEAP) $*
 
 
-all: uall sall
+all: uall sall Ex01a-ocaml
 
 sall:
 
 uall: $(VERFILES:%=verify-%) $(VERFILES_HH:%=verify_hh-%)
+
+
+# Importing targets for simplified extraction to Ocaml
+
+include $(FSTAR_HOME)/ulib/ml/Makefile.include
+
+out:
+	mkdir -p out
+
+Ex01a-ocaml: out Ex01a.fst
+	$(MAKE) -C $(ULIB_ML)
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Ex01a.fst
+	$(OCAMLOPT) out/Ex01a.ml -o Ex01a.exe
+	-./Ex01a.exe
