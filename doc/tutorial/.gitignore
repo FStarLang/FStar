@@ -13,6 +13,8 @@ tutorial-math-dvi.out.ps
 *math-pdf.tex
 *math-dvi.final.tex
 *math-pdf.final.tex
+*math-full.tex
+*math-plain.tex
 *.aux
 *.dim
 *.dvi
@@ -27,3 +29,5 @@ tutorial-math-dvi.out.ps
 *.upb
 *.bbl
 *.blg
+*.xdv
+*.exe

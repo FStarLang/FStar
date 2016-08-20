@@ -29,7 +29,7 @@ Package       : fullpage
                 replace=/([a-zA-Z])_([\dnm])\b/\(\1_\2|\1~\2~\)/g
                 replace=/_n1\b/\(_n1|~n-1~\)/g
 
-~Fragment     : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[Load in editor](&link;){float=right}[&link;]{font-style: italic; color: Gray}&br;&nl;"
+~Fragment     : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[&link;]{float=left; font-style: italic; color: Gray}[Load in editor](&link;){float=right}&br;&nl;"
 .pre-fragment : margin-bottom=0pt .framed padding=0.5ex
 
 ~ExerciseFragment : replace="~Begin Fragment {link=code/exercises/&exname;.fst}&nl;&source;&nl;~End Fragment&nl;"
