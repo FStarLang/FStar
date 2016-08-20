@@ -20,7 +20,7 @@ Package       : fullpage
                 margin-left=1em
                 before="[**Exercise &label;: **]{margin-left=-1em}&br;"
 
-~Answer       : replace="[answer]{.answer-link}&br;~Begin AnswerContent&nl;&source;&nl;~End AnswerContent&nl;"
+~Answer       : replace="[exercise answer]{.answer-link}&br;~Begin AnswerContent&nl;&source;&nl;~End AnswerContent&nl;"
                 margin-top=-1em tight
 ~AnswerContent: border-style=solid border-width=1px border-color=black padding=0.5ex
 
@@ -29,7 +29,7 @@ Package       : fullpage
                 replace=/([a-zA-Z])_([\dnm])\b/\(\1_\2|\1~\2~\)/g
                 replace=/_n1\b/\(_n1|~n-1~\)/g
 
-~Fragment     : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[Load in editor](&link;){float=right}&br;&nl;"
+~Fragment     : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[Load in editor](&link;){float=right}[&link;]{font-style: italic; color: Gray}&br;&nl;"
 .pre-fragment : margin-bottom=0pt .framed padding=0.5ex
 
 ~ExerciseFragment : replace="~Begin Fragment {link=code/exercises/&exname;.fst}&nl;&source;&nl;~End Fragment&nl;"
