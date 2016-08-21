@@ -3,7 +3,7 @@ OTHERFLAGS=
 include ../Makefile.include
 
 all: uall sall
-uall: FStar.DM4F.IntST.uver FStar.DM4F.Exceptions.uver FStar.DM4F.ExnSt.uver FStar.DM4F.StExn.uver FStar.DM4F.ST.uver old
+uall: Effects.Def.uver FStar.DM4F.IntST.uver FStar.DM4F.Exceptions.uver FStar.DM4F.ExnSt.uver FStar.DM4F.StExn.uver FStar.DM4F.ST.uver old
 sall:
 
 # we retain these "hand-written" versions just for reference
