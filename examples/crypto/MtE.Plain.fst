@@ -6,7 +6,7 @@ open Platform.Bytes
 type plain = AES.plain
 
 val ind_cpa : bool
-let ind_cpa = false
+let ind_cpa = true
 
 assume val repr: p:plain{ind_cpa == false} -> Tot (AES.plain)
 
