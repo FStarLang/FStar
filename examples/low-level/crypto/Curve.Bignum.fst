@@ -206,8 +206,8 @@ let rec erase_wide b idx len ctr =
 
 let modifies_2 c tmp h0 h1 =
   HyperHeap.modifies_just (Set.union (Set.singleton (frameOf c)) (Set.singleton (frameOf tmp))) h0.h h1.h
-  /\ modifies_buf (frameOf c) (only c ++ tmp) h0 h1
-  /\ modifies_buf (frameOf tmp) (only c ++ tmp) h0 h1
+  /\ modifies_bufs (frameOf c) (only c ++ only tmp) h0 h1
+  /\ modifies_bufs (frameOf tmp) (only c ++ only tmp) h0 h1
   /\ h0.tip = h1.tip
 
 val modulo: output:bigint -> input:bigint_wide{disjoint input output} -> STL unit

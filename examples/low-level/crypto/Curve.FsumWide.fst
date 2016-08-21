@@ -25,7 +25,7 @@ abstract let willNotOverflow
   (h:heap) (a_idx:nat) (b_idx:nat) (len:nat) (ctr:nat)
   (a:bigint_wide{live h a /\ length a >= a_idx+len})
   (b:bigint_wide{live h b /\ length b >= b_idx+len}) = 
-    (forall (i:nat). {:pattern (v (getValue h a (i+a_idx)))}
+    (forall (i:nat). {:pattern (v (get h a (i+a_idx)))}
       (i >= ctr /\ i < len) ==>
 	(v (get h a (i+a_idx)) + v (get h b (i+b_idx)) < pow2 platform_wide))
 

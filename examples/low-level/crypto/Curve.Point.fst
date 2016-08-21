@@ -57,7 +57,7 @@ type onCurve (h:heap) (p:point) =
   wellFormed h p /\ curvePoint (to_apoint h p)
 
 (* val refs: p:point -> GTot (Set.set abuffer) *)
-let refs p : GTot (FStar.TSet.set abuffer) = (only (get_x p) ++ (get_y p) ++ (get_z p))
+let refs p : GTot (FStar.TSet.set abuffer) = (only (get_x p) ++ only (get_y p) ++ only (get_z p))
 
 (* val erefs: p:point -> Tot (FStar.Ghost.erased (FStar.TSet.set FStar.Heap.aref)) *)
 let erefs p = hide (refs p)
@@ -83,11 +83,11 @@ let pointOf h p = to_apoint h p
 abstract type partialSwap (h0:heap) (h1:heap) (is_swap:u64) (ctr:nat{ctr<=norm_length})
   (a:bigint) (b:bigint{disjoint a b}) =
   norm h0 a /\ norm h0 b /\ norm h1 a /\ norm h1 b 
-  /\ (forall (i:nat). {:pattern (getValue h1 a i) \/ (getValue h1 b i)} (i >= ctr /\ i < norm_length) ==>
-      ((v is_swap = 0 ==> (v (getValue h1 a i) = v (getValue h0 a i) 
-		         /\ v (getValue h1 b i) = v (getValue h0 b i)))
-       /\ (v is_swap = pow2 platform_size - 1 ==> (v (getValue h1 a i) = v (getValue h0 b i) 
-						       /\ v (getValue h1 b i) = v (getValue h0 a i)))))
+  /\ (forall (i:nat). {:pattern (get h1 a i) \/ (get h1 b i)} (i >= ctr /\ i < norm_length) ==>
+      ((v is_swap = 0 ==> (v (get h1 a i) = v (get h0 a i) 
+		         /\ v (get h1 b i) = v (get h0 b i)))
+       /\ (v is_swap = pow2 platform_size - 1 ==> (v (get h1 a i) = v (get h0 b i) 
+						       /\ v (get h1 b i) = v (get h0 a i)))))
 
 val swap_conditional_aux': a:bigint -> b:bigint{disjoint a b} ->  
   is_swap:u64{v is_swap = pow2 platform_size -1 \/ v is_swap = 0} ->
@@ -123,13 +123,13 @@ let rec swap_conditional_aux' a b swap ctr =
     swap_conditional_aux' a b swap (ctr+|1ul); 
     let h1 = HST.get() in
     admitP (forall (i:nat). (i >= w ctr + 1 /\ i < norm_length) ==> 
-      ((v swap = 0 ==> (v (getValue h1 a i) = v (getValue h0 a i) 
-	         /\ v (getValue h1 b i) = v (getValue h0 b i)))
-       /\ (v swap = pow2 platform_size - 1 ==> (v (getValue h1 a i) = v (getValue h0 b i) 
-					       /\ v (getValue h1 b i) = v (getValue h0 a i)))));
-    admitP (forall (i:nat). {:pattern (getValue h1 a i) \/ (getValue h1 b i)} 0+i = i); 
-    cut (forall (i:nat). {:pattern (getValue h1 a i)} i < w ctr ==> v (getValue h1 a i) = v (getValue h3 a i)); 
-    cut (forall (i:nat). {:pattern (getValue h1 b i)} i < w ctr ==> v (getValue h1 b i) = v (getValue h3 b i));
+      ((v swap = 0 ==> (v (get h1 a i) = v (get h0 a i) 
+	         /\ v (get h1 b i) = v (get h0 b i)))
+       /\ (v swap = pow2 platform_size - 1 ==> (v (get h1 a i) = v (get h0 b i) 
+					       /\ v (get h1 b i) = v (get h0 a i)))));
+    admitP (forall (i:nat). {:pattern (get h1 a i) \/ (get h1 b i)} 0+i = i); 
+    cut (forall (i:nat). {:pattern (get h1 a i)} i < w ctr ==> v (get h1 a i) = v (get h3 a i)); 
+    cut (forall (i:nat). {:pattern (get h1 b i)} i < w ctr ==> v (get h1 b i) = v (get h3 b i));
     ()
  end
 #reset-options
@@ -324,8 +324,8 @@ let swap_conditional a b is_swap =
 (*   (ensures (norm h1 b)) *)
 (* let norm_lemma_2 h0 h1 a b =  *)
 (*   admit(); // OK *)
-(*   cut(forall (i:nat). {:pattern (getValue h1 b i)} 0+i = i);  *)
-(*   cut (forall (i:nat). i < norm_length ==> v (getValue h1 b i) = v (getValue h0 a i)) *)
+(*   cut(forall (i:nat). {:pattern (get h1 b i)} 0+i = i);  *)
+(*   cut (forall (i:nat). i < norm_length ==> v (get h1 b i) = v (get h0 a i)) *)
 
 val copy:
   a:point -> b:point{distinct a b} -> 

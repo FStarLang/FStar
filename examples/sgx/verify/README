@@ -1,0 +1,21 @@
+How to run
+---------
+$./run.sh  
+
+The above script verifies the file VerInterpreter.fst
+
+
+Status
+-----
+
+Interpreter supports following instructions:
+  Skip 
+  Add 
+  Sub 
+  Cmp 
+  Mul 
+  Div 
+  Mod 
+  Lsr 
+  Lor 
+  Store

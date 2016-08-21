@@ -1,35 +1,33 @@
-module Poly.Bignum
+module Crypto.Symmetric.Poly1305.Bignum
 
 open FStar.Mul
+open FStar.Ghost
+(** Machine integers *)
+open FStar.UInt64
+(** Effects and memory layout *)
 open FStar.HyperStack
 open FStar.HST
-open FStar.Ghost
+(** Buffers *)
+open FStar.Buffer
+(** Mathematical definitions *)
 open Math.Axioms
 open Math.Lib
 open Math.Lemmas
-open FStar.UInt64
-open FStar.Buffer
-open Poly.Bigint
-open Poly.Parameters
+
+open Crypto.Symmetric.Poly1305.Parameters
+open Crypto.Symmetric.Poly1305.Bigint
 
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS = FStar.HyperStack
 
-let u32 = UInt32.t
+let u32 = FStar.UInt32.t
 
 let w: u32 -> Tot int = U32.v
 
 (* U32 operators, use `|` *)
 let op_Plus_Bar = U32.add
 let op_Subtraction_Bar = U32.sub
-
-(* U64 operators, use `^` *)
-let op_Hat_Less_Less = U64.op_Less_Less_Hat
-let op_Hat_Greater_Greater = U64.op_Greater_Greater_Hat
-let op_Hat_Subtraction = U64.op_Subtraction_Hat
-let op_Hat_Amp = U64.op_Amp_Hat
-let op_Hat_Star = U64.op_Star_Hat
 
 (* Renaming for convenience *)
 let heap = HS.mem
@@ -250,7 +248,7 @@ let rec scalar_multiplication_aux res a s ctr =
   else begin 
     let i = ctr -| 1ul in
     let ai = index a i in
-    let resi = ai ^* s in
+    let resi = ai *^ s in
     upd res i resi; 
     let h1 = HST.get() in
     eq_lemma_1 h0 h1 res a;
@@ -907,15 +905,15 @@ val helper_lemma_14: h0:heap -> h1:heap -> h2:heap -> c:bigint -> tmp:bigint{dis
   Lemma
     (requires (live h0 c /\ live h2 c /\ ~(contains h0 tmp) /\ modifies_0 h0 h1 /\ live h1 tmp /\ modifies_2 c tmp h1 h2))
     (ensures ((frameOf tmp = frameOf c /\ modifies_1 c h0 h2)
-	      \/ (frameOf tmp <> frameOf c /\ modifies_buf (frameOf c) (only c) h0 h2
-		  /\ modifies_buf (frameOf tmp) TSet.empty h0 h2)))
+	      \/ (frameOf tmp <> frameOf c /\ modifies_bufs (frameOf c) (only c) h0 h2
+		  /\ modifies_bufs (frameOf tmp) TSet.empty h0 h2)))
 let helper_lemma_14 h0 h1 h2 c tmp = 
   if frameOf tmp = frameOf c then begin
     let rid = frameOf tmp in
-    cut(modifies_buf rid TSet.empty h0 h1);
-    cut(modifies_buf rid (only c ++ tmp) h1 h2);
+    cut(modifies_bufs rid TSet.empty h0 h1);
+    cut(modifies_bufs rid (only c ++ only tmp) h1 h2);
     cut(~(contains h0 tmp));
-    cut(modifies_buf rid (only c) h0 h2)
+    cut(modifies_bufs rid (only c) h0 h2)
   end
   else ()
 
@@ -937,8 +935,8 @@ val multiplication_lemma_2: h0:heap -> h1:heap -> h2:heap -> c:bigint{length c >
      (ensures (bound27 h0 a /\ norm h0 b /\ live h0 c /\ bound27 h2 a /\ norm h2 b /\ live h2 c
        /\ modifies_2_1 c h0 h2
        /\ ((frameOf tmp = frameOf c /\ modifies_1 c h0 h2)
-	      \/ (frameOf tmp <> frameOf c /\ modifies_buf (frameOf c) (only c) h0 h2
-		  /\ modifies_buf (frameOf tmp) TSet.empty h0 h2))
+	      \/ (frameOf tmp <> frameOf c /\ modifies_bufs (frameOf c) (only c) h0 h2
+		  /\ modifies_bufs (frameOf tmp) TSet.empty h0 h2))
        /\ eval h2 c (2*norm_length-1) = eval h0 a (norm_length) * eval h0 b (norm_length)
        /\ maxValue h2 c (length c) <= norm_length * pow2 53 ))
 let multiplication_lemma_2 h0 h1 h2 c a b tmp =
@@ -1017,7 +1015,7 @@ let satisfiesModuloConstraints (h:heap) (b:bigint) : GTot Type0 =
 
 val times_5: x:u64{5 * v x < pow2 64} -> Tot (y:u64{v y = 5 * v x})
 let times_5 x = 
-  let z = x ^<< 2ul in
+  let z = x <<^ 2ul in
   x +^ z
   
 let reducible (h:heap) (b:bigint) (ctr:nat{ctr < norm_length-1}) : GTot Type0 =
@@ -1330,7 +1328,7 @@ assume MaxUint32: FStar.UInt.max_int 32 = 4294967295
 val mod2_26: a:u64 -> Tot (b:u64{v b = v a % pow2 26})
 let mod2_26 a = 
   admit(); // TODO
-  let mask = shift_left 1uL 26ul in
+  let mask = 1uL <<^ 26ul in
   Math.Lib.pow2_increases_lemma 64 26;
   let mask = mask -^ 1uL in
   let res = a &^ mask in
@@ -1374,7 +1372,7 @@ let rec carry b i =
     let ri = mod2_26 bi in
     upd b i ri;
     let h1 = HST.get() in
-    let c = (bi ^>> 26ul) in
+    let c = (bi >>^ 26ul) in
     cut (v c = (v bi) / (pow2 26));
     Math.Lib.pow2_div_lemma 64 26;
     (* TODO *)
@@ -1449,7 +1447,7 @@ let rec carry2_aux b i =
     cut (v ri < pow2 (templ (w i))); 
     upd b i ri; 
     let h1 = HST.get() in
-    let c = (bi ^>> 26ul) in
+    let c = (bi >>^ 26ul) in
     // In the spec of >>, TODO
     assume(v c < 2); 
     let bip1 = index b (i+|1ul) in
@@ -1502,7 +1500,7 @@ let rec carry2 b =
   cut (v ri < pow2 26); 
   upd b 0ul ri; 
   let h3 = HST.get() in
-  let c = (bi ^>> 26ul) in
+  let c = (bi >>^ 26ul) in
   cut (v bi < pow2 42); 
   // In the spec of >>, TODO
   assume (v c < pow2 16); 
@@ -1550,7 +1548,7 @@ let last_carry b =
 //  assert(v ri < pow2 26); 
   upd b 0ul ri; 
   let h3 = HST.get() in
-  let c = (bi ^>> 26ul) in
+  let c = (bi >>^ 26ul) in
   cut (v bi < pow2 26 + 5); 
   cut (v bi >= pow2 26 ==> v (get h3 b 1) < pow2 16); 
   // In the spec of >>, TODO
@@ -1638,21 +1636,21 @@ val finalize: b:bigint -> ST unit
     /\ modifies_1 b h0 h1
     /\ eval h1 b norm_length = eval h0 b norm_length % reveal prime))
 let finalize b =
-  let mask_26 = U64.sub (1UL ^<< 26ul) 1UL in
-  let mask2_26m5 = U64.sub mask_26 (1UL ^<< 2ul) in
+  let mask_26 = U64.sub (1UL <<^ 26ul) 1UL in
+  let mask2_26m5 = U64.sub mask_26 (1UL <<^ 2ul) in
   let b0 = index b 0ul in
   let b1 = index b 1ul in
   let b2 = index b 2ul in
   let b3 = index b 3ul in
   let b4 = index b 4ul in
   let mask = U64.eq_mask b4 mask_26 in
-  let mask = U64.eq_mask b3 mask_26 ^& mask in 
-  let mask = U64.eq_mask b2 mask_26 ^& mask in 
-  let mask = U64.eq_mask b1 mask_26 ^& mask in 
-  let mask = U64.gte_mask b0 mask2_26m5 ^& mask in 
-  upd b 0ul (b0 ^- (mask ^& mask2_26m5));
-  upd b 1ul (b1 ^- (b1 ^& mask));
-  upd b 2ul (b2 ^- (b2 ^& mask));
-  upd b 3ul (b3 ^- (b3 ^& mask));
-  upd b 4ul (b4 ^- (b4 ^& mask));
+  let mask = U64.eq_mask b3 mask_26 &^ mask in 
+  let mask = U64.eq_mask b2 mask_26 &^ mask in 
+  let mask = U64.eq_mask b1 mask_26 &^ mask in 
+  let mask = U64.gte_mask b0 mask2_26m5 &^ mask in 
+  upd b 0ul (b0 -^ (mask &^ mask2_26m5));
+  upd b 1ul (b1 -^ (b1 &^ mask));
+  upd b 2ul (b2 -^ (b2 &^ mask));
+  upd b 3ul (b3 -^ (b3 &^ mask));
+  upd b 4ul (b4 -^ (b4 &^ mask));
   ()

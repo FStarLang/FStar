@@ -1,14 +1,12 @@
-open Chacha
+open Crypto_Symmetric_Chacha20
 open Char
 open FStar_Buffer
        
 let key = {content = Array.init 32 (fun x -> x); idx = 0; length = 32 }
 
-let nonce =
-  let n = create FStar_UInt8.zero 12 in
-  upd n 7 0x4a;
-  n
-
+let iv = FStar_UInt64.of_string "0x0000004a000000"
+let constant = FStar_UInt32.of_string "0x00"
+                                
 let counter = FStar_UInt32.one
 
 let from_string s =
@@ -17,8 +15,8 @@ let from_string s =
     upd b i (code (String.get s i))
   done;
   b
-                
-let print (b:bytes) =
+
+let print (b:int buffer) =
   let s = ref "" in
   for i = 0 to b.length - 1 do
     let s' = Printf.sprintf "%X" ((index b i))  in
@@ -63,15 +61,9 @@ let time f x s =
 
 let _ =
   let ciphertext = create 0 114 in
-  time (fun () -> for i = 0 to 0 do chacha20_encrypt ciphertext key counter nonce plaintext 114 done) () "10.000 chacha iterations";
-  print_string "Test key:\n";
-  print_bytes key;
-  print_string "Test nonce:\n";
-  print_bytes nonce;
+  time (fun () -> for i = 0 to 0 do chacha20_encrypt ciphertext key counter iv constant plaintext 114 done) () "10.000 chacha iterations";
   print_string "Expected ciphertext:\n";
   print_string (String.concat "" (List.map (fun i -> Printf.sprintf "%02X" i) expected));
-  print_string "\nPlaintext:\n";
-  print_bytes plaintext;
   print_string "Got ciphertext:\n";
   print_bytes ciphertext;
   List.iteri (fun i c ->

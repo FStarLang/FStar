@@ -57,16 +57,16 @@ let auxiliary_lemma_1 t a b =
 abstract type partialEquality (ha:heap) (a:bigint_wide{live ha a})
 			    (hb:heap) (b:bigint_wide{live hb b}) 
 			    (len:nat{len <= length a /\ len <= length b}) =
-  (forall (i:nat). {:pattern (v (getValue ha a i))}
-    i < len ==> v (getValue ha a i) = v (getValue hb b i))
+  (forall (i:nat). {:pattern (v (get ha a i))}
+    i < len ==> v (get ha a i) = v (get hb b i))
 
 abstract type storesSum (hc:heap) (c:bigint_wide{live hc c})
 		      (ha:heap) (a:bigint_wide{live ha a})
 		      (hb:heap) (b:bigint_wide{live hb b})
 		      (a_idx:nat)
 		      (len:nat{a_idx+len <= length a /\ len <= length b /\ a_idx+len <= length c}) =
- (forall (i:nat). {:pattern (v (getValue hc c (i+a_idx)))}
-   (i < len ==> v (getValue hc c (i+a_idx)) = v (getValue ha a (i+a_idx)) + v (getValue hb b i)))
+ (forall (i:nat). {:pattern (v (get hc c (i+a_idx)))}
+   (i < len ==> v (get hc c (i+a_idx)) = v (get ha a (i+a_idx)) + v (get hb b i)))
 			      
 val multiplication_step_lemma_1: h0:heap -> h1:heap -> a:bigint_wide{live h0 a} -> 
   b:bigint_wide{live h0 b} -> c:bigint_wide{live h1 c} ->
@@ -77,52 +77,52 @@ val multiplication_step_lemma_1: h0:heap -> h1:heap -> a:bigint_wide{live h0 a} 
       /\ eval_wide h1 c (len-1+idx) = eval_wide h0 a (len-1+idx) + pow2 (bitweight (templ) idx) * eval_wide h0 b (len-1)))
     (ensures (eval_wide h1 c (len+idx) = eval_wide h0 a (len+idx) +  
 		          pow2 (bitweight (templ) idx) * eval_wide h0 b (len-1)  +	        
-			  pow2 (bitweight (templ) (len-1+idx)) * v (getValue h0 b (len-1))))
+			  pow2 (bitweight (templ) (len-1+idx)) * v (get h0 b (len-1))))
 let multiplication_step_lemma_1 h0 h1 a b c idx len = ()
   (* admit(); // OK *)
   (* let t = templ in *)
   (* (\* FproductLemmas.auxiliary_lemma_0 len idx 1;  *\) *)
   (* eval_wide_def h1 c (len+idx);  *)
   (* (\* FproductLemmas.auxiliary_lemma_00 len idx 1;    *\) *)
-  (* cut (v (getValue h1 c (len+idx-1)) = v (getValue h0 a (len+idx-1)) + v (getValue h0 b (len-1)) /\ True);  *)
-  (* cut (True /\ eval h1 c (len+idx) = pow2 (bitweight t (len+idx-1)) * v (getValue h1 c (len+idx-1)) + eval h1 c (len+idx-1));  *)
-  (* cut (eval h1 c (len+idx) = eval h1 c (len+idx-1) + pow2 (bitweight t (len+idx-1)) * v (getValue h1 c (len+idx-1)) /\ True ); *)
+  (* cut (v (get h1 c (len+idx-1)) = v (get h0 a (len+idx-1)) + v (get h0 b (len-1)) /\ True);  *)
+  (* cut (True /\ eval h1 c (len+idx) = pow2 (bitweight t (len+idx-1)) * v (get h1 c (len+idx-1)) + eval h1 c (len+idx-1));  *)
+  (* cut (eval h1 c (len+idx) = eval h1 c (len+idx-1) + pow2 (bitweight t (len+idx-1)) * v (get h1 c (len+idx-1)) /\ True ); *)
   (* cut (eval h1 c (len+idx-1) = eval h0 a (len+idx-1) + (pow2 (bitweight t idx)) * eval h0 b (len-1) /\ True);  *)
-  (* cut (v (getValue h1 c (len+idx-1)) = v (getValue h0 a (len+idx-1)) + v (getValue h0 b (len-1)) /\ True);  *)
+  (* cut (v (get h1 c (len+idx-1)) = v (get h0 a (len+idx-1)) + v (get h0 b (len-1)) /\ True);  *)
   (* cut (eval h1 c (len+idx) =  *)
   (* 	(eval h0 a (len+idx-1) + (pow2 (bitweight t idx)) * eval h0 b (len-1)) *)
-  (* 	+ pow2 (bitweight t (len-1+idx)) * (v (getValue h0 a (len+idx-1)) + v (getValue h0 b (len-1))) /\ True);  *)
-  (* Math.Axioms.distributivity_add_right (pow2 (bitweight t (len-1+idx))) (v (getValue h0 a (len+idx-1))) (v (getValue h0 b (len-1)));  *)
+  (* 	+ pow2 (bitweight t (len-1+idx)) * (v (get h0 a (len+idx-1)) + v (get h0 b (len-1))) /\ True);  *)
+  (* Math.Axioms.distributivity_add_right (pow2 (bitweight t (len-1+idx))) (v (get h0 a (len+idx-1))) (v (get h0 b (len-1)));  *)
   (* cut (True /\ eval h1 c (len+idx) =  *)
   (* 	(eval h0 a (len+idx-1) + (pow2 (bitweight t idx)) * eval h0 b (len-1)) *)
-  (* 	+ (pow2 (bitweight t (len-1+idx)) * v (getValue h0 a (len+idx-1)) *)
-  (*       + pow2 (bitweight t (len-1+idx)) * v (getValue h0 b (len-1))));  *)
-  (* (\* FproductLemmas.remove_paren_lemma (eval h0 a (len+idx-1)) ((pow2 (bitweight t idx)) * eval h0 b (len-1)) ((pow2 (bitweight t (len-1+idx)) * v (getValue h0 a (len+idx-1)) + pow2 (bitweight t (len-1+idx)) * v (getValue h0 b (len-1))));  *\) *)
+  (* 	+ (pow2 (bitweight t (len-1+idx)) * v (get h0 a (len+idx-1)) *)
+  (*       + pow2 (bitweight t (len-1+idx)) * v (get h0 b (len-1))));  *)
+  (* (\* FproductLemmas.remove_paren_lemma (eval h0 a (len+idx-1)) ((pow2 (bitweight t idx)) * eval h0 b (len-1)) ((pow2 (bitweight t (len-1+idx)) * v (get h0 a (len+idx-1)) + pow2 (bitweight t (len-1+idx)) * v (get h0 b (len-1))));  *\) *)
   (* cut (True /\ eval h1 c (len+idx) =  *)
   (* 	eval h0 a (len+idx-1) + (pow2 (bitweight t idx)) * eval h0 b (len-1) *)
-  (* 	+ (pow2 (bitweight t (len-1+idx)) * v (getValue h0 a (len+idx-1)) *)
-  (*       + pow2 (bitweight t (len-1+idx)) * v (getValue h0 b (len-1)))); *)
+  (* 	+ (pow2 (bitweight t (len-1+idx)) * v (get h0 a (len+idx-1)) *)
+  (*       + pow2 (bitweight t (len-1+idx)) * v (get h0 b (len-1)))); *)
   (* (\* FproductLemmas.remove_paren_lemma (eval h0 a (len+idx-1) + (pow2 (bitweight t idx)) * eval h0 b (len-1))  *\) *)
-  (* (\* 		     (pow2 (bitweight t (len-1+idx)) * v (getValue h0 a (len+idx-1))) *\) *)
-  (* (\* 		     (pow2 (bitweight t (len-1+idx)) * v (getValue h0 b (len-1)));  *\) *)
+  (* (\* 		     (pow2 (bitweight t (len-1+idx)) * v (get h0 a (len+idx-1))) *\) *)
+  (* (\* 		     (pow2 (bitweight t (len-1+idx)) * v (get h0 b (len-1)));  *\) *)
   (* cut (True /\ eval h1 c (len+idx) =  *)
   (* 	eval h0 a (len+idx-1) + pow2 (bitweight t idx) * eval h0 b (len-1)  + *)
-  (* 	pow2 (bitweight t (len-1+idx)) * v (getValue h0 a (len+idx-1)) +    	         *)
-  (*         pow2 (bitweight t (len-1+idx)) * v (getValue h0 b (len-1)));  *)
+  (* 	pow2 (bitweight t (len-1+idx)) * v (get h0 a (len+idx-1)) +    	         *)
+  (*         pow2 (bitweight t (len-1+idx)) * v (get h0 b (len-1)));  *)
   (* (\* FproductLemmas.auxiliary_lemma_6 (eval h0 a (len+idx-1))  *\) *)
   (* (\* 				  (pow2 (bitweight t idx) * eval h0 b (len-1)) *\) *)
-  (* (\* 				  (pow2 (bitweight t (len-1+idx)) * v (getValue h0 a (len+idx-1)))     *\) *)
-  (* (\* 				  (pow2 (bitweight t (len-1+idx)) * v (getValue h0 b (len-1))); *\) *)
+  (* (\* 				  (pow2 (bitweight t (len-1+idx)) * v (get h0 a (len+idx-1)))     *\) *)
+  (* (\* 				  (pow2 (bitweight t (len-1+idx)) * v (get h0 b (len-1))); *\) *)
   (* cut (True /\ eval h1 c (len+idx) =  *)
-  (* 	pow2 (bitweight t (len-1+idx)) * v (getValue h0 a (len+idx-1)) + eval h0 a (len+idx-1) +  *)
+  (* 	pow2 (bitweight t (len-1+idx)) * v (get h0 a (len+idx-1)) + eval h0 a (len+idx-1) +  *)
   (*         pow2 (bitweight t idx) * eval h0 b (len-1)  +	         *)
-  (*         pow2 (bitweight t (len-1+idx)) * v (getValue h0 b (len-1)));  *)
+  (*         pow2 (bitweight t (len-1+idx)) * v (get h0 b (len-1)));  *)
   (* eval_wide_def h0 a (len+idx); *)
-  (* cut (True /\ eval h0 a (len+idx) = pow2 (bitweight t (len+idx-1)) * v (getValue h0 a (len+idx-1)) + eval h0 a (len+idx-1));  *)
+  (* cut (True /\ eval h0 a (len+idx) = pow2 (bitweight t (len+idx-1)) * v (get h0 a (len+idx-1)) + eval h0 a (len+idx-1));  *)
   (* cut (True /\ eval h1 c (len+idx) =  *)
   (* 		eval h0 a (len+idx)  *)
   (* 		+ pow2 (bitweight t idx) * eval h0 b (len-1)   *)
-  (* 		+ pow2 (bitweight t (len-1+idx)) * v (getValue h0 b (len-1))) *)
+  (* 		+ pow2 (bitweight t (len-1+idx)) * v (get h0 b (len-1))) *)
 
 (* #reset-options *)
 
@@ -133,7 +133,7 @@ val multiplication_step_lemma_2: h0:heap -> h1:heap -> a:bigint_wide{live h0 a }
     (requires (
 	 eval_wide h1 c (len+idx) = eval_wide h0 a (len+idx) +  
                           pow2 (bitweight (templ) idx) * eval_wide h0 b (len-1)  +	        
-			  pow2 (bitweight (templ) (len-1+idx)) * v (getValue h0 b (len-1))
+			  pow2 (bitweight (templ) (len-1+idx)) * v (get h0 b (len-1))
     ))
     (ensures (eval_wide h1 c (len+idx) = eval_wide h0 a (len+idx) + pow2 (bitweight (templ) idx) * eval_wide h0 b len))
 let multiplication_step_lemma_2 h0 h1 a b c idx len = 
@@ -143,15 +143,15 @@ let multiplication_step_lemma_2 h0 h1 a b c idx len =
   (* FproductLemmas.auxiliary_lemma_00 len (-1) idx; *)
   (* FproductLemmas.auxiliary_lemma_01 (len-1) idx;  *)
   cut (True /\ pow2 (bitweight (templ) (len-1+idx)) = pow2 (bitweight (templ) idx) * pow2 (bitweight (templ) (len-1)) ); 
-  Math.Axioms.paren_mul_left (pow2 (bitweight (templ) idx)) (pow2 (bitweight (templ) (len-1))) (v (getValue h0 b (len-1))); 
+  Math.Axioms.paren_mul_left (pow2 (bitweight (templ) idx)) (pow2 (bitweight (templ) (len-1))) (v (get h0 b (len-1))); 
   cut (eval_wide h1 c (len+idx) = eval_wide h0 a (len+idx) 
 			     + pow2 (bitweight (templ) idx) * eval_wide h0 b (len-1)
-			     + pow2 (bitweight (templ) idx) * pow2 (bitweight (templ) (len-1)) * v (getValue h0 b (len-1)) /\ True); 
-  Math.Axioms.distributivity_add_right (pow2 (bitweight (templ) idx)) (eval_wide h0 b (len-1)) (pow2 (bitweight (templ) (len-1)) * v (getValue h0 b (len-1)));  
+			     + pow2 (bitweight (templ) idx) * pow2 (bitweight (templ) (len-1)) * v (get h0 b (len-1)) /\ True); 
+  Math.Axioms.distributivity_add_right (pow2 (bitweight (templ) idx)) (eval_wide h0 b (len-1)) (pow2 (bitweight (templ) (len-1)) * v (get h0 b (len-1)));  
   eval_wide_def h0 b len; 
-  cut (True /\ eval_wide h0 b len = eval_wide h0 b (len-1) + (pow2 (bitweight (templ) (len-1))) * v (getValue h0 b (len-1)) );  
-  cut (True /\ pow2 (bitweight (templ) (len-1+idx)) * v (getValue h0 b (len-1)) =
-        pow2 (bitweight (templ) idx) * pow2 (bitweight (templ) (len-1)) * v (getValue h0 b (len-1))); 
+  cut (True /\ eval_wide h0 b len = eval_wide h0 b (len-1) + (pow2 (bitweight (templ) (len-1))) * v (get h0 b (len-1)) );  
+  cut (True /\ pow2 (bitweight (templ) (len-1+idx)) * v (get h0 b (len-1)) =
+        pow2 (bitweight (templ) idx) * pow2 (bitweight (templ) (len-1)) * v (get h0 b (len-1))); 
   cut ( True /\ eval_wide h1 c (len+idx) = eval_wide h0 a (len+idx) + pow2 (bitweight (templ) idx) * eval_wide h0 b len) 
 
 (* #reset-options *)
@@ -168,7 +168,7 @@ let rec multiplication_step_lemma h0 h1 a b c idx len =
   admit(); // OK
   match len with
   | 0 ->
-    cut (forall (i:nat). i < idx ==> v (getValue h1 c i) = v (getValue h0 a i)); 
+    cut (forall (i:nat). i < idx ==> v (get h1 c i) = v (get h0 a i)); 
     (* eval_eq_lemma h0 h1 a c idx;  *)
     (* FproductLemmas.auxiliary_lemma_02 len idx; *)
     cut (True /\ len+idx = idx); 
@@ -189,11 +189,11 @@ let (max_limb:nat) = parameters_lemma_1 (); (platform_wide - log_2 norm_length -
 let (max_wide:nat) = 2 * max_limb
 
 abstract type fitsMaxLimbSize (h:heap) (a:bigint{live h a}) =
-  (forall (i:nat). {:pattern (U64.v (getValue h a i))} i < norm_length ==> U64.v (getValue h a i) < pow2 max_limb)
+  (forall (i:nat). {:pattern (U64.v (get h a i))} i < norm_length ==> U64.v (get h a i) < pow2 max_limb)
   
 (* Lemma *)
 val auxiliary_lemma_2: h0:heap -> h1:heap -> h2:heap -> a:bigint{live h0 a /\ fitsMaxLimbSize h0 a } ->
-  b:bigint{live h1 b /\ (forall (i:nat). i < norm_length ==> U64.v (getValue h1 b i) < pow2 max_limb)} ->
+  b:bigint{live h1 b /\ (forall (i:nat). i < norm_length ==> U64.v (get h1 b i) < pow2 max_limb)} ->
   ctr:nat{(ctr <= norm_length)} -> c:bigint{live h2 c /\ maxValue h2 c (length c) <= ctr * (maxValueNorm h0 a * maxValueNorm h1 b)} -> Lemma ((maxValueNorm h0 a <= pow2 max_limb) /\ (maxValueNorm h1 b <= pow2 max_limb))
 let auxiliary_lemma_2 h0 h1 h2 a b ctr c = 
   admit(); // OK
@@ -227,8 +227,8 @@ abstract type partialEquality2 (ha:heap) (a:bigint_wide{live ha a})
 			       (hb:heap) (b:bigint_wide{live hb b}) 
 			       (len:nat)
 			       (len2:nat{len2 >= len /\ len2 <= length a /\ len2 <= length b}) =
-  (forall (i:nat). {:pattern (v (getValue ha a i))}
-    (i < len2 /\ i >= len) ==> v (getValue ha a i) = v (getValue hb b i))
+  (forall (i:nat). {:pattern (v (get ha a i))}
+    (i < len2 /\ i >= len) ==> v (get ha a i) = v (get hb b i))
 
 (* Lemma : extends the "eval" property to the total length if apporpriate *)
 val auxiliary_lemma_5: h0:heap -> h1:heap -> a:bigint_wide{live h0 a } -> b:bigint_wide{live h1 b} ->
@@ -247,10 +247,10 @@ let rec auxiliary_lemma_5 h0 h1 a b c len len2 =
      auxiliary_lemma_5 h0 h1 a b c len (len2-1); 
      cut (True /\ eval_wide h1 b (len2-1) = eval_wide h0 a (len2-1) + c); 
      eval_wide_def h1 b len2; 
-     cut (True /\ eval_wide h1 b len2 = eval_wide h1 b (len2-1) + (pow2 (bitweight t (len2-1))) * v (getValue h1 b (len2-1))); 
-     cut (v (getValue h1 b (len2-1)) = v (getValue h0 a (len2-1)) /\ True); 
-     cut (True /\ eval_wide h1 b len2 = (eval_wide h0 a (len2-1) + c) + (pow2 (bitweight t (len2-1))) * v (getValue h0 a (len2-1))); 
-     (* FproductLemmas.auxiliary_lemma_04 (eval_wide h0 a (len2-1)) c ((pow2 (bitweight t (len2-1))) * v (getValue h0 a (len2-1)));   *)
+     cut (True /\ eval_wide h1 b len2 = eval_wide h1 b (len2-1) + (pow2 (bitweight t (len2-1))) * v (get h1 b (len2-1))); 
+     cut (v (get h1 b (len2-1)) = v (get h0 a (len2-1)) /\ True); 
+     cut (True /\ eval_wide h1 b len2 = (eval_wide h0 a (len2-1) + c) + (pow2 (bitweight t (len2-1))) * v (get h0 a (len2-1))); 
+     (* FproductLemmas.auxiliary_lemma_04 (eval_wide h0 a (len2-1)) c ((pow2 (bitweight t (len2-1))) * v (get h0 a (len2-1)));   *)
      eval_wide_def h0 a len2;
      cut (True /\ eval_wide h1 b len2 = eval_wide h0 a len2 + c)
 
@@ -259,8 +259,8 @@ let rec auxiliary_lemma_5 h0 h1 a b c len len2 =
 abstract type isScalarProduct 
   (hc:heap) (c:bigint_wide{live hc c /\ length c >= norm_length})
   (ha:heap) (a:bigint{live ha a /\ length a >= norm_length}) (s:u64) =
-    (forall (i:nat). {:pattern (v (getValue hc c i))}
-      (i<norm_length) ==> v (getValue hc c i) = U64.v (getValue ha a i) * U64.v s)  
+    (forall (i:nat). {:pattern (v (get hc c i))}
+      (i<norm_length) ==> v (get hc c i) = U64.v (get ha a i) * U64.v s)  
   
 val max_limb_lemma: a:nat -> b:nat -> 
   Lemma
@@ -276,10 +276,10 @@ let max_limb_lemma a b =
   Math.Lemmas.pow2_increases_1 platform_wide max_wide
 
 val max_limb_lemma2: h:heap -> a:bigint{live h a} -> b:bigint{live h b} -> i:nat{i < length a} -> ctr:nat{ctr < length b} -> Lemma
-    (requires (U64.v (getValue h a i) < pow2 max_limb /\ U64.v (getValue h b ctr) < pow2 max_limb))
-    (ensures (U64.v (getValue h a i) * U64.v (getValue h b ctr) < pow2 platform_wide))
+    (requires (U64.v (get h a i) < pow2 max_limb /\ U64.v (get h b ctr) < pow2 max_limb))
+    (ensures (U64.v (get h a i) * U64.v (get h b ctr) < pow2 platform_wide))
 let max_limb_lemma2 h a b i ctr =
-  max_limb_lemma (U64.v (getValue h a i)) (U64.v (getValue h b ctr))
+  max_limb_lemma (U64.v (get h a i)) (U64.v (get h b ctr))
 
 (* #reset-options *)
 
@@ -304,22 +304,22 @@ val multiplication_step_0: a:bigint -> b:bigint -> ctr:u32{w ctr<norm_length/\w 
        /\ live h0 tmp /\ length tmp = length tmp
        /\ length c >= 2*norm_length-1 /\ length tmp >= norm_length
        /\ modifies_1 tmp h0 h1
-       /\ isScalarProduct h1 tmp h0 a (getValue h0 b (w ctr))
-       /\ eval_wide h1 tmp norm_length = eval h0 a norm_length * vv (getValue h0 b (w ctr)) ))
+       /\ isScalarProduct h1 tmp h0 a (get h0 b (w ctr))
+       /\ eval_wide h1 tmp norm_length = eval h0 a norm_length * vv (get h0 b (w ctr)) ))
 let multiplication_step_0 a b ctr c tmp = 
   admit(); // OK
   let h0 = HST.get() in
   let s = index b ctr in 
-  assert(forall (n:nat). {:pattern (vv (getValue h0 b n))} n < norm_length ==> vv (getValue h0 b n) <= pow2 max_limb); 
+  assert(forall (n:nat). {:pattern (vv (get h0 b n))} n < norm_length ==> vv (get h0 b n) <= pow2 max_limb); 
   assert(forall (n:nat). n = w ctr ==> n < norm_length); 
   assert(True /\ vv s < pow2 max_limb); 
-  assert(forall (i:nat). {:pattern (vv  (getValue h0 a i))} 
-	   i < norm_length ==> vv (getValue h0 a i) < pow2 max_limb);
+  assert(forall (i:nat). {:pattern (vv  (get h0 a i))} 
+	   i < norm_length ==> vv (get h0 a i) < pow2 max_limb);
   assert(vv s < pow2 max_limb); 
-  cut(forall (i:nat). (i < norm_length) ==> vv (getValue h0 a i) * vv s < pow2 platform_wide); 
+  cut(forall (i:nat). (i < norm_length) ==> vv (get h0 a i) * vv s < pow2 platform_wide); 
   Curve.Fscalar.scalar_multiplication_tr tmp a s 0ul; 
   let h1 = HST.get() in
-  cut(True /\ vv s = vv (getValue h0 b (w ctr))); 
+  cut(True /\ vv s = vv (get h0 b (w ctr))); 
   assert(Fscalar.isScalarProduct h0 h1 0 norm_length a s tmp); 
   is_scalar_product_lemma h0 h1 a s tmp;
   Curve.Fscalar.theorem_scalar_multiplication h0 h1 a s norm_length tmp
@@ -332,9 +332,9 @@ val std_lemma: h0:heap -> h1:heap -> a:bigint -> tmp:bigint_wide{disjoint a tmp}
 let std_lemma h0 h1 a tmp = 
   admit(); // OK
   (* no_upd_lemma h0 h1 a (only tmp);  *)
-  cut(forall (i:nat). {:pattern (vv (getValue h1 a i))} i < norm_length ==> vv (getValue h1 a i) = vv (getValue h0 a i)); 
+  cut(forall (i:nat). {:pattern (vv (get h1 a i))} i < norm_length ==> vv (get h1 a i) = vv (get h0 a i)); 
   cut(True /\ live h1 a); cut(True /\ length a >= norm_length); cut (True /\ templ = templ); 
-  cut(forall (i:nat). {:pattern (norm h1 a)} i < norm_length ==> vv (getValue h1 a i) < pow2 (templ i)); 
+  cut(forall (i:nat). {:pattern (norm h1 a)} i < norm_length ==> vv (get h1 a i) < pow2 (templ i)); 
   cut(norm h1 a)
  
 assume val max_wide_lemma:
@@ -366,10 +366,10 @@ val multiplication_step_lemma_0010:  h0:heap -> h1:heap -> a:bigint -> b:bigint 
        /\ maxValueNorm h0 a < pow2 max_limb /\ maxValueNorm h0 b < pow2 max_limb
        /\ maxValue_wide h0 c (length c) <= ctr * maxValueNorm h0 a * maxValueNorm h0 b
        /\ modifies_1 tmp h0 h1
-       /\ isScalarProduct h1 tmp h0 a (getValue h0 b ctr) ))
+       /\ isScalarProduct h1 tmp h0 a (get h0 b ctr) ))
      (ensures (live h1 tmp /\ norm h0 a /\ norm h0 b
        /\ length tmp >= norm_length
-       /\ (forall (i:nat). {:pattern (v (getValue h1 tmp i))} i < norm_length ==> v (getValue h1 tmp i) <= maxValueNorm h0 a * maxValueNorm h0 b) ))
+       /\ (forall (i:nat). {:pattern (v (get h1 tmp i))} i < norm_length ==> v (get h1 tmp i) <= maxValueNorm h0 a * maxValueNorm h0 b) ))
 let multiplication_step_lemma_0010 h0 h1 a b ctr c tmp = 
   admit(); // OK
   lemma_helper_00 ()
@@ -384,17 +384,17 @@ val multiplication_step_lemma_001: h0:heap -> h1:heap -> a:bigint -> b:bigint ->
        /\ (maxValueNorm h0 a < pow2 max_limb) /\ (maxValueNorm h0 b < pow2 max_limb)
        /\ (maxValue_wide h0 c (length c)  <= ctr * maxValueNorm h0 a * maxValueNorm h0 b)
        /\ modifies_1 tmp h0 h1
-       /\ isScalarProduct h1 tmp h0 a (getValue h0 b ctr) ))
+       /\ isScalarProduct h1 tmp h0 a (get h0 b ctr) ))
      (ensures (live h1 c /\ live h1 tmp /\ ctr+norm_length <= length c
        /\ Curve.FsumWide.willNotOverflow h1 ctr 0 norm_length 0 c tmp ))
 let multiplication_step_lemma_001 h0 h1 a b ctr c tmp =
   admit(); // OK
   multiplication_step_lemma_0010 h0 h1 a b ctr c tmp;
   Math.Axioms.distributivity_add_left ctr 1 (maxValueNorm h0 a * maxValueNorm h0 b);
-  cut(forall (i:nat). {:pattern (v (getValue h1 c i))} i < norm_length ==> v (getValue h1 c (i+ctr)) <= ctr * maxValueNorm h0 a * maxValueNorm h0 b);
+  cut(forall (i:nat). {:pattern (v (get h1 c i))} i < norm_length ==> v (get h1 c (i+ctr)) <= ctr * maxValueNorm h0 a * maxValueNorm h0 b);
   cut (True /\ ctr * maxValueNorm h0 a * maxValueNorm h0 b + maxValueNorm h0 a * maxValueNorm h0 b
     = (ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b) );
-  cut (forall (i:nat). {:pattern (v (getValue h1 c (i+ctr)) + v (getValue h1 tmp i))} i < norm_length ==> v (getValue h1 c (i+ctr)) + v (getValue h1 tmp i) <= (ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b));
+  cut (forall (i:nat). {:pattern (v (get h1 c (i+ctr)) + v (get h1 tmp i))} i < norm_length ==> v (get h1 c (i+ctr)) + v (get h1 tmp i) <= (ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b));
   auxiliary_lemma_3 h0 h0 h1 a b ctr c;
   assert ((maxValueNorm h0 a * maxValueNorm h0 b) <= pow2 max_wide);
   lemma_helper_02 (ctr+1) (maxValueNorm h0 a * maxValueNorm h0 b) (pow2 max_wide);
@@ -406,8 +406,8 @@ let multiplication_step_lemma_001 h0 h1 a b ctr c tmp =
   (* FproductLemmas.helper_lemma_4 (ctr+1) (pow2 max_wide); *)
   (* FproductLemmas.ineq_lemma_2 ((ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b)) ((ctr+1) * pow2 max_wide) (pow2 platform_wide); *)
   assert ((ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b) < pow2 platform_wide);
-  assert(forall (i:nat). i < norm_length ==> v (getValue h1 c (i+ctr)) + v (getValue h1 tmp i) <= (ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b) ==> v (getValue h1 c (i+ctr)) + v (getValue h1 tmp i) < pow2 platform_wide); 
-  cut(forall (i:nat). i < norm_length ==> v (getValue h1 c (i+ctr)) + v (getValue h1 tmp i) < pow2 platform_wide); 
+  assert(forall (i:nat). i < norm_length ==> v (get h1 c (i+ctr)) + v (get h1 tmp i) <= (ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b) ==> v (get h1 c (i+ctr)) + v (get h1 tmp i) < pow2 platform_wide); 
+  cut(forall (i:nat). i < norm_length ==> v (get h1 c (i+ctr)) + v (get h1 tmp i) < pow2 platform_wide); 
   assert(FsumWide.willNotOverflow h1 ctr 0 norm_length 0 c tmp)
 
 val multiplication_step_lemma_01: h0:heap -> h1:heap -> a:bigint -> b:bigint ->
@@ -419,7 +419,7 @@ val multiplication_step_lemma_01: h0:heap -> h1:heap -> a:bigint -> b:bigint ->
 	/\ (maxValueNorm h0 a < pow2 max_limb) /\ (maxValueNorm h0 b < pow2 max_limb)
 	/\ (maxValue_wide h0 c (length c) <= ctr * maxValueNorm h0 a * maxValueNorm h0 b)
 	/\ modifies_1 tmp h0 h1
-	/\ isScalarProduct h1 tmp h0 a (getValue h0 b ctr) ))
+	/\ isScalarProduct h1 tmp h0 a (get h0 b ctr) ))
      (ensures (
        (live h1 c) /\ (live h1 tmp) /\ (ctr+norm_length <= length c) 
        /\ (norm h1 a) /\ (norm h1 b)
@@ -457,52 +457,52 @@ val max_value_lemma_1: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b:bigint ->
       /\ length c >= 2 * norm_length - 1
       /\ modifies_1 tmp h0 h1
       /\ maxValue_wide h0 c (length c) <= ctr * maxValueNorm h0 a * maxValueNorm h0 b
-      /\ (forall (i:nat). {:pattern (v (getValue h2 c (i+ctr)))} 
-	  i < norm_length ==> v (getValue h2 c (i+ctr)) = v (getValue h0 c (i+ctr)) + (vv (getValue h0 a i) * vv (getValue h0 b ctr)))
-      /\ (forall (i:nat). {:pattern (v (getValue h2 c i))} ((i < ctr \/ i >= norm_length + ctr) /\ i < length c) ==> v (getValue h2 c i) = v (getValue h0 c i))
+      /\ (forall (i:nat). {:pattern (v (get h2 c (i+ctr)))} 
+	  i < norm_length ==> v (get h2 c (i+ctr)) = v (get h0 c (i+ctr)) + (vv (get h0 a i) * vv (get h0 b ctr)))
+      /\ (forall (i:nat). {:pattern (v (get h2 c i))} ((i < ctr \/ i >= norm_length + ctr) /\ i < length c) ==> v (get h2 c i) = v (get h0 c i))
     ))
     (ensures ( norm h0 a /\ norm h0 b /\ live h2 c
        /\ (maxValue_wide h2 c (length c) <= (ctr+1) * maxValueNorm h0 a * maxValueNorm h0 b)))
 let max_value_lemma_1 h0 h1 h2 a b ctr c tmp =
   admit(); // OK
-  cut(forall (i:nat). {:pattern (vv (getValue h0 a i))} 
-    i < norm_length ==> vv (getValue h0 a i) <= maxValueNorm h0 a);
-  cut(forall (i:nat). {:pattern (vv (getValue h0 b i))} 
-	   i < norm_length ==> vv (getValue h0 b i) <= maxValueNorm h0 b);
-  cut(forall (i:nat). {:pattern (v (getValue h0 c i))} i < length c ==> v (getValue h0 c i) <= maxValue_wide h0 c (length c));
-  cut(forall (i:nat). {:pattern (v (getValue h0 c (i+ctr)))} 
-	   i < norm_length ==> v (getValue h0 c (i+ctr)) <= maxValue_wide h0 c (length c));
+  cut(forall (i:nat). {:pattern (vv (get h0 a i))} 
+    i < norm_length ==> vv (get h0 a i) <= maxValueNorm h0 a);
+  cut(forall (i:nat). {:pattern (vv (get h0 b i))} 
+	   i < norm_length ==> vv (get h0 b i) <= maxValueNorm h0 b);
+  cut(forall (i:nat). {:pattern (v (get h0 c i))} i < length c ==> v (get h0 c i) <= maxValue_wide h0 c (length c));
+  cut(forall (i:nat). {:pattern (v (get h0 c (i+ctr)))} 
+	   i < norm_length ==> v (get h0 c (i+ctr)) <= maxValue_wide h0 c (length c));
   (* FproductLemmas.ineq_lemma (); *)
-  assert(forall (a:nat) (b':nat) (c:nat) (d:nat). {:pattern (vv (getValue h0 b ctr))} a <= c /\ b' <= d ==> a * b' <= c * d);
-  assert(vv (getValue h0 b ctr) <= maxValueNorm h0 b);
-  cut(forall (i:nat). {:pattern (vv (getValue h0 a i) * vv (getValue h0 b ctr))} i < norm_length ==>
-    (vv (getValue h0 a i)) <= maxValueNorm h0 a /\ vv (getValue h0 b ctr) <= maxValueNorm h0 b); 
-  cut(forall (i:nat). {:pattern (vv (getValue h0 a i) * vv (getValue h0 b ctr))} i < norm_length ==>
-    (vv (getValue h0 a i) * vv (getValue h0 b ctr)) <= maxValueNorm h0 a * maxValueNorm h0 b);
+  assert(forall (a:nat) (b':nat) (c:nat) (d:nat). {:pattern (vv (get h0 b ctr))} a <= c /\ b' <= d ==> a * b' <= c * d);
+  assert(vv (get h0 b ctr) <= maxValueNorm h0 b);
+  cut(forall (i:nat). {:pattern (vv (get h0 a i) * vv (get h0 b ctr))} i < norm_length ==>
+    (vv (get h0 a i)) <= maxValueNorm h0 a /\ vv (get h0 b ctr) <= maxValueNorm h0 b); 
+  cut(forall (i:nat). {:pattern (vv (get h0 a i) * vv (get h0 b ctr))} i < norm_length ==>
+    (vv (get h0 a i) * vv (get h0 b ctr)) <= maxValueNorm h0 a * maxValueNorm h0 b);
   assert(forall (a':nat) (b':nat) (c':nat) (d:nat). {:pattern (maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b))} a' <= c' /\ b' <= d ==> a' + b' <= c' + d); 
-  cut(forall (i:nat). {:pattern (v (getValue h0 c (i+ctr)) + (vv (getValue h0 a i) * vv (getValue h0 b ctr)))} i < norm_length ==> v (getValue h0 c (i+ctr)) + (vv (getValue h0 a i) * vv (getValue h0 b ctr)) <= maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b)); 
-  assert(forall (i:nat). i < norm_length ==> v (getValue h2 c (i+ctr)) <= maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b)); 
+  cut(forall (i:nat). {:pattern (v (get h0 c (i+ctr)) + (vv (get h0 a i) * vv (get h0 b ctr)))} i < norm_length ==> v (get h0 c (i+ctr)) + (vv (get h0 a i) * vv (get h0 b ctr)) <= maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b)); 
+  assert(forall (i:nat). i < norm_length ==> v (get h2 c (i+ctr)) <= maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b)); 
   assert(forall (i:nat). {:pattern (i < length c)} i < length c ==>
 	   ((i >= ctr /\ i < norm_length+ctr) \/ ((i < ctr \/ i >= norm_length + ctr) /\ i < length c))); 
   cut(forall (i:nat). (i>=ctr /\ i<norm_length+ctr) ==> (i-ctr>=0 /\ i-ctr < norm_length /\ ((i-ctr)+ctr) = i)); 
-  cut(forall (i:nat). {:pattern (i >= ctr /\ i < norm_length+ctr)} (i >= ctr /\ i < norm_length+ctr) ==> v (getValue h2 c i) <= maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b));
+  cut(forall (i:nat). {:pattern (i >= ctr /\ i < norm_length+ctr)} (i >= ctr /\ i < norm_length+ctr) ==> v (get h2 c i) <= maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b));
   assert(forall (i:nat). {:pattern ((i < ctr \/ i >= norm_length + ctr) /\ i < length c)} 
-    ((i < ctr \/ i >= norm_length + ctr) /\ i < length c) ==> v (getValue h2 c i) <= maxValue_wide h0 c (length c)); 
+    ((i < ctr \/ i >= norm_length + ctr) /\ i < length c) ==> v (get h2 c i) <= maxValue_wide h0 c (length c)); 
     lemma_helper_10 (maxValue_wide h0 c (length c)) (maxValueNorm h0 a) (maxValueNorm h0 b); 
   cut(True /\ maxValue_wide h0 c (length c) <= maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b)); 
-  assert(forall (i:nat).  ((i < ctr \/ i >= norm_length + ctr) /\ i < length c) ==> v (getValue h2 c i) <= maxValue_wide h0 c (length c)); 
-  assert(forall (i:nat). {:pattern (v (getValue h2 c i))} ((i < ctr \/ i >= norm_length + ctr) /\ i < length c) ==> v (getValue h2 c i) <= maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b)); 
+  assert(forall (i:nat).  ((i < ctr \/ i >= norm_length + ctr) /\ i < length c) ==> v (get h2 c i) <= maxValue_wide h0 c (length c)); 
+  assert(forall (i:nat). {:pattern (v (get h2 c i))} ((i < ctr \/ i >= norm_length + ctr) /\ i < length c) ==> v (get h2 c i) <= maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b)); 
   cut(forall (i:nat). {:pattern(maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b))}
     i < length c ==> 
       ((i >= ctr /\ i < norm_length+ctr) \/ ((i < ctr \/ i >= norm_length + ctr) /\ i < length c)) ==>
-	v (getValue h2 c i) <= maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b)); 
+	v (get h2 c i) <= maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b)); 
   Math.Axioms.paren_mul_right ctr (maxValueNorm h0 a) (maxValueNorm h0 b); 
   cut(True /\ maxValue_wide h0 c (length c) <= ctr * (maxValueNorm h0 a * maxValueNorm h0 b)); 
   (* FproductLemmas.factorise_lemma (maxValueNorm h0 a * maxValueNorm h0 b) ctr; *)
   assert(True /\ maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b) <= (ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b)); 
   assert(forall (i:nat). 
     i < length c ==> 
-	v (getValue h2 c i) <= (ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b)); 
+	v (get h2 c i) <= (ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b)); 
   assert(maxValue_wide h2 c (length c) <= (ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b))
 
 val max_value_lemma: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b:bigint -> 
@@ -514,28 +514,28 @@ val max_value_lemma: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b:bigint ->
       /\ modifies_1 tmp h0 h1
       /\ length c >= 2 * norm_length - 1
       /\ (maxValue_wide h0 c (length c) <= ctr * maxValueNorm h0 a * maxValueNorm h0 b)
-      /\ isScalarProduct h1 tmp h0 a (getValue h0 b ctr)
+      /\ isScalarProduct h1 tmp h0 a (get h0 b ctr)
       /\ FsumWide.isSum h1 h2 ctr 0 norm_length 0 c tmp
       /\ FsumWide.isNotModified h1 h2 ctr norm_length 0 c))
     (ensures (norm h0 a /\ norm h0 b /\ live h2 c
        /\ maxValue_wide h2 c (length c) <= (ctr+1) * maxValueNorm h0 a * maxValueNorm h0 b))
 let max_value_lemma h0 h1 h2 a b ctr c tmp =
   admit(); // OK
-  cut(forall (i:nat). {:pattern (v (getValue h1 tmp i))} i < norm_length ==> v (getValue h1 tmp i) = vv (getValue h0 a i) * vv (getValue h0 b ctr)); 
-  cut(forall (i:nat). {:pattern (v (getValue h2 c (i+ctr)))} i < norm_length ==> v (getValue h2 c (i+ctr)) = v (getValue h1 c (i+ctr)) + v (getValue h1 tmp i)); 
-  cut(forall (i:nat). {:pattern (v (getValue h2 c i))} 
-    ((i < ctr \/ i >= norm_length + ctr) /\ i < length c) ==> v (getValue h2 c i) = v (getValue h1 c i)); 
+  cut(forall (i:nat). {:pattern (v (get h1 tmp i))} i < norm_length ==> v (get h1 tmp i) = vv (get h0 a i) * vv (get h0 b ctr)); 
+  cut(forall (i:nat). {:pattern (v (get h2 c (i+ctr)))} i < norm_length ==> v (get h2 c (i+ctr)) = v (get h1 c (i+ctr)) + v (get h1 tmp i)); 
+  cut(forall (i:nat). {:pattern (v (get h2 c i))} 
+    ((i < ctr \/ i >= norm_length + ctr) /\ i < length c) ==> v (get h2 c i) = v (get h1 c i)); 
   (* no_upd_lemma h0 h1 c (only tmp); *)
-  cut(forall (i:nat). {:pattern (v (getValue h1 c i))} i < length c ==> v (getValue h1 c i) = v (getValue h0 c i)); 
-  cut(forall (i:nat). {:pattern (v (getValue h1 tmp i))}
-    i < norm_length ==> v (getValue h1 tmp i) = vv (getValue h0 a i) * vv (getValue h0 b ctr)); 
-  cut(forall (i:nat). i < norm_length ==> v (getValue h2 c (i+ctr)) = v (getValue h0 c (i+ctr)) + (vv (getValue h0 a i) * vv (getValue h0 b ctr))); 
+  cut(forall (i:nat). {:pattern (v (get h1 c i))} i < length c ==> v (get h1 c i) = v (get h0 c i)); 
+  cut(forall (i:nat). {:pattern (v (get h1 tmp i))}
+    i < norm_length ==> v (get h1 tmp i) = vv (get h0 a i) * vv (get h0 b ctr)); 
+  cut(forall (i:nat). i < norm_length ==> v (get h2 c (i+ctr)) = v (get h0 c (i+ctr)) + (vv (get h0 a i) * vv (get h0 b ctr))); 
   max_value_lemma_1 h0 h1 h2 a b ctr c tmp
 
 let modifies_2 c tmp h0 h1 =
   HyperHeap.modifies_just (Set.union (Set.singleton (frameOf c)) (Set.singleton (frameOf tmp))) h0.h h1.h
-  /\ modifies_buf (frameOf c) (only c ++ tmp) h0 h1
-  /\ modifies_buf (frameOf tmp) (only c ++ tmp) h0 h1
+  /\ modifies_bufs (frameOf c) (only c ++ only tmp) h0 h1
+  /\ modifies_bufs (frameOf tmp) (only c ++ only tmp) h0 h1
   /\ h0.tip = h1.tip
 
 val standardized_lemma: h0:heap -> h1:heap -> h2:heap -> a:bigint -> c:bigint_wide{disjoint a c} -> 
@@ -550,9 +550,9 @@ let standardized_lemma h0 h1 h2 a c tmp =
   (* cut(modifies !{getRef c,getRef tmp} h0 h2);  *)
   (* no_upd_lemma h0 h2 a (only c ++ tmp); *)
   (* no_upd_lemma h1 h2 tmp (only c); *)
-  cut(forall (i:nat). {:pattern (vv (getValue h2 a i))} i < norm_length ==> vv (getValue h2 a i) = vv (getValue h0 a i));
+  cut(forall (i:nat). {:pattern (vv (get h2 a i))} i < norm_length ==> vv (get h2 a i) = vv (get h0 a i));
   cut(True /\ live h2 a); cut(True /\ length a >= norm_length); cut (True /\ templ = templ); 
-  cut(forall (i:nat). {:pattern (norm h2 a)} i < norm_length ==> vv (getValue h2 a i) < pow2 (templ i)); 
+  cut(forall (i:nat). {:pattern (norm h2 a)} i < norm_length ==> vv (get h2 a i) < pow2 (templ i)); 
   cut(norm h2 a)
 
 val length_lemma: h0:heap -> h1:heap -> h2:heap -> c:bigint_wide -> ctr:nat{ctr < norm_length} ->
@@ -592,8 +592,8 @@ val multiplication_step_lemma_02: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b
 	/\ maxValue_wide h0 c (length c) <= w ctr * maxValueNorm h0 a * maxValueNorm h0 b
 	// After fscalar
 	/\ modifies_1 tmp h0 h1
-	/\ isScalarProduct h1 tmp h0 a (getValue h0 b (w ctr))
-        /\ eval_wide h1 tmp norm_length = eval h0 a norm_length * vv (getValue h0 b (w ctr))
+	/\ isScalarProduct h1 tmp h0 a (get h0 b (w ctr))
+        /\ eval_wide h1 tmp norm_length = eval h0 a norm_length * vv (get h0 b (w ctr))
  	// After fsum
 	/\ live h2 c /\ live h2 tmp
 	/\ w ctr+norm_length <= length c
@@ -607,26 +607,26 @@ val multiplication_step_lemma_02: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b
        /\ maxValueNorm h0 b < pow2 max_limb
        /\ maxValue_wide h0 c (length c) <= w ctr * maxValueNorm h0 a * maxValueNorm h0 b
        /\ maxValue_wide h2 c (length c) <= (w ctr+1) * maxValueNorm h0 a * maxValueNorm h0 b
-       /\ eval_wide h2 c (2*norm_length-1) = eval_wide h0 c (2*norm_length-1) + pow2 (bitweight (templ) (w ctr)) * eval h0 a norm_length * vv (getValue h0 b (w ctr)) ))
+       /\ eval_wide h2 c (2*norm_length-1) = eval_wide h0 c (2*norm_length-1) + pow2 (bitweight (templ) (w ctr)) * eval h0 a norm_length * vv (get h0 b (w ctr)) ))
 let multiplication_step_lemma_02 h0 h1 h2 a b ctr c tmp =
   admit(); // OK timeout 50
   assert(forall (i:nat). (i >= norm_length + w ctr /\ i < 2 * norm_length - 1) ==>
-  	   v (getValue h2 c i) = v (getValue h1 c i));
+  	   v (get h2 c i) = v (get h1 c i));
   (* eval_partial_eq_lemma h1 h2 c c (norm_length+ctr) (2*norm_length-1);  *)
   (* no_upd_lemma h0 h1 c (only tmp); *)
-  (* cut(forall (i:nat). i < length c ==> v (getValue h0 c i) = v (getValue h1 c i));  *)
+  (* cut(forall (i:nat). i < length c ==> v (get h0 c i) = v (get h1 c i));  *)
   (* eval_eq_lemma h0 h1 c c (2*norm_length-1); *)
   (* eval_eq_lemma h0 h1 c c (norm_length+ctr); *)
   cut(True /\ eval_wide h2 c (2*norm_length-1) - eval_wide h2 c (norm_length+w ctr) = eval_wide h0 c (2*norm_length-1) - eval_wide h0 c (norm_length+w ctr)); 
-  (* cut (True /\ eval h1 tmp norm_length = eval h0 a norm_length * v (getValue h0 b ctr));  *)
+  (* cut (True /\ eval h1 tmp norm_length = eval h0 a norm_length * v (get h0 b ctr));  *)
   lemma_helper_20 h0 h1 h2 a b (w ctr) c tmp;
   (* cut (storesSum h2 c h1 c h1 tmp ctr norm_length); admit() *)
   partial_equality_lemma h1 h2 c (w ctr); 
   cut (partialEquality h2 c h1 c (w ctr)); 
   multiplication_step_lemma h1 h2 c tmp c (w ctr) norm_length; 
-  cut (True /\ eval_wide h2 c (norm_length+w ctr) = eval_wide h1 c (norm_length+w ctr) + pow2 (bitweight (templ) (w ctr)) * eval h0 a norm_length * vv (getValue h0 b (w ctr)));
-  cut (True /\ eval_wide h2 c (norm_length+w ctr) = eval_wide h0 c (norm_length+w ctr) + pow2 (bitweight (templ) (w ctr)) * eval h0 a norm_length * vv (getValue h0 b (w ctr)));
-  cut (True /\ eval_wide h2 c (2*norm_length-1) = eval_wide h0 c (2*norm_length-1) + pow2 (bitweight (templ) (w ctr)) * eval h0 a norm_length * vv (getValue h0 b (w ctr)));
+  cut (True /\ eval_wide h2 c (norm_length+w ctr) = eval_wide h1 c (norm_length+w ctr) + pow2 (bitweight (templ) (w ctr)) * eval h0 a norm_length * vv (get h0 b (w ctr)));
+  cut (True /\ eval_wide h2 c (norm_length+w ctr) = eval_wide h0 c (norm_length+w ctr) + pow2 (bitweight (templ) (w ctr)) * eval h0 a norm_length * vv (get h0 b (w ctr)));
+  cut (True /\ eval_wide h2 c (2*norm_length-1) = eval_wide h0 c (2*norm_length-1) + pow2 (bitweight (templ) (w ctr)) * eval h0 a norm_length * vv (get h0 b (w ctr)));
   max_value_lemma h0 h1 h2 a b (w ctr) c tmp; 
   Math.Axioms.paren_mul_right (w ctr+1) (maxValueNorm h0 a) (maxValueNorm h0 b);
   (* assert(maxValue_wid h2 c <= (ctr+1) * maxValueNorm h0 a * maxValueNorm h0 b);  *)
@@ -653,7 +653,7 @@ val multiplication_step_p1: a:bigint -> b:bigint -> ctr:u32{w ctr<norm_length} -
        /\ maxValue_wide h0 c (length c) <= w ctr * maxValueNorm h0 a * maxValueNorm h0 b
        /\ maxValue_wide h1 c (length c) <= (w ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b)
        /\ eval_wide h0 c (2*norm_length-1) = eval h0 a (norm_length) * eval h0 b (w ctr)
-       /\ (eval_wide h1 c (2*norm_length-1) = eval_wide h0 c (2*norm_length-1) + pow2 (bitweight (templ) (w ctr)) * eval h0 a norm_length * vv (getValue h0 b (w ctr)))
+       /\ (eval_wide h1 c (2*norm_length-1) = eval_wide h0 c (2*norm_length-1) + pow2 (bitweight (templ) (w ctr)) * eval h0 a norm_length * vv (get h0 b (w ctr)))
      ))
 let multiplication_step_p1 a b ctr c tmp =
   admit(); // OK
@@ -670,9 +670,9 @@ val helper_lemma_6: h0:heap -> h1:heap -> a:bigint -> b:bigint -> ctr:nat{ctr < 
   tmp:bigint_wide{disjoint a tmp /\ disjoint b tmp /\ disjoint c tmp} -> Lemma
      (requires (norm h0 a /\ norm h0 b /\ live h0 c /\ length c >= 2 * norm_length - 1))
     (ensures (norm h0 a /\ norm h0 b /\ live h0 c /\ length c >= 2 * norm_length - 1
-       /\ eval_wide h0 c (2*norm_length-1) + pow2 (bitweight (templ) ctr) * eval h0 a (norm_length) * vv (getValue h0 b ctr)  = eval h0 a (norm_length) * vv (getValue h0 b ctr) * pow2 (bitweight (templ) ctr) + eval_wide h0 c (2*norm_length-1) ))
+       /\ eval_wide h0 c (2*norm_length-1) + pow2 (bitweight (templ) ctr) * eval h0 a (norm_length) * vv (get h0 b ctr)  = eval h0 a (norm_length) * vv (get h0 b ctr) * pow2 (bitweight (templ) ctr) + eval_wide h0 c (2*norm_length-1) ))
 let helper_lemma_6 h0 h1 a b ctr c tmp = ()
-  (* FproductLemmas.helper_lemma_5 (eval h0 c (2*norm_length-1)) (pow2 (bitweight (templ) ctr)) (eval h0 a norm_length) (v (getValue h0 b ctr)) *)
+  (* FproductLemmas.helper_lemma_5 (eval h0 c (2*norm_length-1)) (pow2 (bitweight (templ) ctr)) (eval h0 a norm_length) (v (get h0 b ctr)) *)
 
 (* Code : does 1 step of the multiplication (1 scalar multiplication), 
    and infers the appropriate properties on sizes, values and evaluated
@@ -695,7 +695,7 @@ val multiplication_step: a:bigint -> b:bigint -> ctr:u32{w ctr < norm_length} ->
        /\ maxValue_wide h0 c (length c) <= w ctr * maxValueNorm h0 a * maxValueNorm h0 b
        /\ maxValue_wide h1 c (length c) <= (w ctr+1) * maxValueNorm h0 a * maxValueNorm h0 b
        /\ eval_wide h0 c (2*norm_length-1) = eval h0 a (norm_length) * eval h0 b (w ctr)
-       /\ eval_wide h1 c (2*norm_length-1) = eval h0 a (norm_length) * vv (getValue h0 b (w ctr)) * pow2 (bitweight (templ) (w ctr)) + eval_wide h0 c (2*norm_length-1)
+       /\ eval_wide h1 c (2*norm_length-1) = eval h0 a (norm_length) * vv (get h0 b (w ctr)) * pow2 (bitweight (templ) (w ctr)) + eval_wide h0 c (2*norm_length-1)
      ))
 let multiplication_step a b ctr c tmp =
   let h0 = HST.get() in
@@ -706,17 +706,17 @@ let multiplication_step a b ctr c tmp =
 (* Lemma : factorizes "eval" equation *)
 val multiplication_step_lemma_03: h0:heap -> h1:heap -> a:bigint{norm h0 a} -> b:bigint{norm h0 b} ->
   ctr:pos{ctr <= norm_length} -> c:bigint_wide{live h1 c /\ length c >= 2*norm_length-1} -> Lemma
-    (requires (eval_wide h1 c (2*norm_length-1) = (eval h0 a (norm_length) * vv (getValue h0 b (norm_length - ctr))) * pow2 (bitweight (templ) (norm_length - ctr)) + eval h0 a (norm_length) * eval h0 b (norm_length - ctr) ))
+    (requires (eval_wide h1 c (2*norm_length-1) = (eval h0 a (norm_length) * vv (get h0 b (norm_length - ctr))) * pow2 (bitweight (templ) (norm_length - ctr)) + eval h0 a (norm_length) * eval h0 b (norm_length - ctr) ))
     (ensures (eval_wide h1 c (2*norm_length-1) = eval h0 a (norm_length) * eval h0 b (norm_length - ctr + 1)))
 let multiplication_step_lemma_03 h0 h1 a b ctr c =
   admit(); // OK
   let t = templ in 
-  Math.Axioms.paren_mul_left (eval h0 a norm_length) (vv (getValue h0 b (norm_length - ctr))) (pow2 (bitweight t (norm_length - ctr))); 
-  cut (True /\ eval_wide h1 c (2*norm_length-1) = eval h0 a norm_length * vv (getValue h0 b (norm_length - ctr)) * pow2 (bitweight t (norm_length - ctr)) + eval h0 a norm_length * eval h0 b (norm_length - ctr) ); 
-  Math.Axioms.swap_mul (vv (getValue h0 b (norm_length - ctr))) (pow2 (bitweight t (norm_length - ctr))); 
-  cut (True /\ eval_wide h1 c (2*norm_length-1) = eval h0 a norm_length * pow2 (bitweight t (norm_length - ctr)) * vv (getValue h0 b (norm_length - ctr)) + eval h0 a norm_length * eval h0 b (norm_length - ctr) ) ; 
-  Math.Axioms.distributivity_add_right (eval h0 a norm_length) (pow2 (bitweight t (norm_length - ctr)) * vv (getValue h0 b (norm_length - ctr))) (eval h0 b (norm_length - ctr)); 
-  cut (True /\ eval_wide h1 c (2*norm_length-1) = eval h0 a norm_length * (pow2 (bitweight t (norm_length - ctr)) * vv (getValue h0 b (norm_length - ctr)) + eval h0 b (norm_length - ctr))); 
+  Math.Axioms.paren_mul_left (eval h0 a norm_length) (vv (get h0 b (norm_length - ctr))) (pow2 (bitweight t (norm_length - ctr))); 
+  cut (True /\ eval_wide h1 c (2*norm_length-1) = eval h0 a norm_length * vv (get h0 b (norm_length - ctr)) * pow2 (bitweight t (norm_length - ctr)) + eval h0 a norm_length * eval h0 b (norm_length - ctr) ); 
+  Math.Axioms.swap_mul (vv (get h0 b (norm_length - ctr))) (pow2 (bitweight t (norm_length - ctr))); 
+  cut (True /\ eval_wide h1 c (2*norm_length-1) = eval h0 a norm_length * pow2 (bitweight t (norm_length - ctr)) * vv (get h0 b (norm_length - ctr)) + eval h0 a norm_length * eval h0 b (norm_length - ctr) ) ; 
+  Math.Axioms.distributivity_add_right (eval h0 a norm_length) (pow2 (bitweight t (norm_length - ctr)) * vv (get h0 b (norm_length - ctr))) (eval h0 b (norm_length - ctr)); 
+  cut (True /\ eval_wide h1 c (2*norm_length-1) = eval h0 a norm_length * (pow2 (bitweight t (norm_length - ctr)) * vv (get h0 b (norm_length - ctr)) + eval h0 b (norm_length - ctr))); 
   eval_def h0 b (norm_length-ctr+1)
 
 val helper_lemma_7: ctr:pos{ctr < norm_length} -> Lemma 
@@ -739,7 +739,7 @@ val multiplication_aux_lemma: h0:heap -> h1:heap -> a:bigint -> b:bigint ->
        /\ maxValue_wide h0 c (length c) <= (norm_length - ctr) * maxValueNorm h0 a * maxValueNorm h0 b
        /\ maxValue_wide h1 c (length c) <= ((norm_length - ctr)+1) * maxValueNorm h0 a * maxValueNorm h0 b
        /\ eval_wide h0 c (2*norm_length-1) = eval h0 a (norm_length) * eval h0 b (norm_length - ctr)
-       /\ eval_wide h1 c (2*norm_length-1) = eval h0 a (norm_length) * vv (getValue h0 b (norm_length - ctr)) * pow2 (bitweight (templ) (norm_length - ctr)) + eval_wide h0 c (2*norm_length-1) ))
+       /\ eval_wide h1 c (2*norm_length-1) = eval h0 a (norm_length) * vv (get h0 b (norm_length - ctr)) * pow2 (bitweight (templ) (norm_length - ctr)) + eval_wide h0 c (2*norm_length-1) ))
     (ensures (norm h1 a /\ norm h1 b /\ live h1 c /\ live h1 tmp /\ (length c >= 2 * norm_length - 1)
 	/\ maxValueNorm h1 a < pow2 max_limb
 	/\ maxValueNorm h1 b < pow2 max_limb
@@ -757,14 +757,14 @@ let multiplication_aux_lemma h0 h1 a b ctr c tmp =
   cut((maxValueNorm h1 a = maxValueNorm h0 a)
        /\ (maxValueNorm h1 b = maxValueNorm h0 b)); 
   cut((norm_length - ctr)+1 = norm_length - ctr + 1 /\ True);
-  cut(eval h0 a norm_length = eval h1 a norm_length /\ eval h0 b (norm_length-ctr) = eval h1 b (norm_length - ctr) /\ eval h0 b (norm_length - ctr + 1) = eval h1 b (norm_length - ctr + 1) /\ vv (getValue h0 b (norm_length - ctr)) = vv (getValue h1 b (norm_length - ctr)));
+  cut(eval h0 a norm_length = eval h1 a norm_length /\ eval h0 b (norm_length-ctr) = eval h1 b (norm_length - ctr) /\ eval h0 b (norm_length - ctr + 1) = eval h1 b (norm_length - ctr + 1) /\ vv (get h0 b (norm_length - ctr)) = vv (get h1 b (norm_length - ctr)));
   Math.Axioms.paren_mul_right (norm_length - ctr + 1) (maxValueNorm h1 a) (maxValueNorm h1 b);
   cut(norm_length - ctr + 1 > 0 /\ length b >= norm_length - ctr + 1);
   eval_def h0 b (norm_length - ctr + 1); 
   assert (eval_wide h0 c (2*norm_length-1) = eval h0 a (norm_length) * eval h0 b (norm_length - ctr));
-  assert (eval_wide h1 c (2*norm_length-1) = eval h0 a (norm_length) * vv (getValue h0 b (norm_length - ctr)) * pow2 (bitweight (templ) (norm_length - ctr)) + eval_wide h0 c (2*norm_length-1));
-  assert (eval_wide h1 c (2*norm_length-1) = eval h0 a (norm_length) * vv (getValue h0 b (norm_length - ctr)) * pow2 (bitweight (templ) (norm_length - ctr)) + (eval h0 a (norm_length) * eval h0 b (norm_length - ctr))); 
-  (* FproductLemmas.helper_lemma_12 (eval h0 a norm_length) (v (getValue h0 b (norm_length - ctr))) (pow2 (bitweight (templ) (norm_length - ctr))) (eval h0 b (norm_length - ctr)) *)
+  assert (eval_wide h1 c (2*norm_length-1) = eval h0 a (norm_length) * vv (get h0 b (norm_length - ctr)) * pow2 (bitweight (templ) (norm_length - ctr)) + eval_wide h0 c (2*norm_length-1));
+  assert (eval_wide h1 c (2*norm_length-1) = eval h0 a (norm_length) * vv (get h0 b (norm_length - ctr)) * pow2 (bitweight (templ) (norm_length - ctr)) + (eval h0 a (norm_length) * eval h0 b (norm_length - ctr))); 
+  (* FproductLemmas.helper_lemma_12 (eval h0 a norm_length) (v (get h0 b (norm_length - ctr))) (pow2 (bitweight (templ) (norm_length - ctr))) (eval h0 b (norm_length - ctr)) *)
   ()
   
 val multiplication_aux_lemma_2: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b:bigint -> 

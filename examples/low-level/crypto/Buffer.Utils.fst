@@ -9,8 +9,8 @@ open FStar.UInt8
 open FStar.UInt32
 open FStar.Buffer
 
-let u32 = UInt32.t
-let u8 = UInt8.t
+let u32 = FStar.UInt32.t
+let u8 = FStar.UInt8.t
 let uint32s = buffer u32
 let bytes = buffer u8
 
@@ -18,7 +18,7 @@ let bytes = buffer u8
 assume MaxUint8: FStar.UInt.max_int 8 = 255
 assume MaxUint32: FStar.UInt.max_int 32 = 4294967295
 
-(* Rotate operators on UInt32.t *)
+(** Rotate operators on UInt32.t *)
 let op_Greater_Greater_Greater (a:u32) (s:u32{v s <= 32}) =
   let (m:u32{v m = 32}) = 32ul in
   (op_Greater_Greater_Hat a s) |^ (a <<^ (m -^ s))
@@ -26,6 +26,8 @@ let op_Less_Less_Less (a:u32) (s:u32{v s <= 32}) =
   let (m:u32{v m = 32}) = 32ul in  
   (op_Less_Less_Hat a s) |^ (op_Greater_Greater_Hat a (m -^ s))
 
+(** Inplace xor operation on bytes *)
+(* TODO: add functional spec *)
 val xor_bytes_inplace: output:bytes -> in1:bytes{disjoint in1 output} -> 
   len:u32{v len <= length output /\ v len <= length in1} -> STL unit
   (requires (fun h -> live h output /\ live h in1))
@@ -43,7 +45,8 @@ let rec xor_bytes_inplace output in1 len =
       xor_bytes_inplace output in1 i
     end
 
-(* Read an unsigned int32 out of 4 bytes *)
+(** Reads an unsigned int32 out of 4 bytes *)
+(* TODO: add functional spec *)
 val uint32_of_bytes: b:bytes{length b >= 4} -> STL u32
   (requires (fun h -> live h b))
   (ensures (fun h0 r h1 -> h0 == h1 /\ live h0 b))
@@ -58,7 +61,10 @@ let uint32_of_bytes (b:bytes{length b >= 4}) =
 	+%^ uint8_to_uint32 b0 in
   r
 
-(* Stores the content of a byte buffer into a unsigned int32 buffer *)
+#reset-options "--z3timeout 20"
+
+(** Stores the content of a byte buffer into a unsigned int32 buffer *)
+(* TODO: add functional spec *)
 val bytes_of_uint32s: output:bytes -> m:uint32s{disjoint output m} -> len:u32{v len <=length output /\ v len<=op_Multiply 4 (length m)} -> STL unit
   (requires (fun h -> live h output /\ live h m))
   (ensures (fun h0 _ h1 -> live h0 output /\ live h0 m /\ live h1 output /\ live h1 m
@@ -103,7 +109,10 @@ let rec bytes_of_uint32s output m l =
       end
     end
 
-(* Stores the content of a byte buffer into a unsigned int32 buffer *)
+#reset-options
+
+(** Stores the content of a byte buffer into a unsigned int32 buffer *)
+(* TODO: add functional spec *)
 val bytes_of_uint32: output:bytes{length output >= 4} -> m:u32 -> STL unit
   (requires (fun h -> live h output))
   (ensures (fun h0 _ h1 -> live h1 output
@@ -119,6 +128,7 @@ let rec bytes_of_uint32 output x =
   upd output 3ul b3
 
 (* A form of memset, could go into some "Utils" functions module *)
+(* TODO: add functional spec *)
 val memset: b:bytes -> z:u8 -> len:u32 -> STL unit
   (requires (fun h -> live h b /\ v len <= length b))
   (ensures  (fun h0 _ h1 -> modifies_1 b h0 h1 /\ live h1 b

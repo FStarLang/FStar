@@ -22,7 +22,7 @@ uall: all-pos all-neg
 
 sall:
 
-all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.Parser.uver Unit1.RefinementInference.uver Unit1.WPsAndTriples_ST.uver Unit1.Projectors1.uver Unit1.UnificationTests.uver Unit1.RecursiveTypeFunctions.uver Unit2.uver TestSet.uver TestHeap.uver ShortCircuit.uver FirstProofs.uver TestMRef.uver TestTwoLevelHeap.uver Mac.uver TestGhost.uver
+all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.Parser.uver Unit1.RefinementInference.uver Unit1.WPsAndTriples_ST.uver Unit1.Projectors1.uver Unit1.UnificationTests.uver Unit1.RecursiveTypeFunctions.uver Unit2.uver TestSet.uver TestHeap.uver ShortCircuit.uver FirstProofs.uver TestMRef.uver TestTwoLevelHeap.uver Mac.uver TestGhost.uver TestHasEq.uver
 
 basictests: $(VERFILES)
 	$(FSTAR) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^

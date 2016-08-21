@@ -28,23 +28,23 @@ let op_Plus_Subtraction = U32.sub
 abstract type willNotOverflow (h:heap) 
 		     (a:bigint{live h a /\ length a >= norm_length}) 
 		     (s:u64) (ctr:nat) =
-  (forall (i:nat). {:pattern (v (getValue h a i))}
-    (i >= ctr /\ i < norm_length) ==> v (getValue h a i) * v s < pow2 platform_wide)
+  (forall (i:nat). {:pattern (v (get h a i))}
+    (i >= ctr /\ i < norm_length) ==> v (get h a i) * v s < pow2 platform_wide)
 
 abstract type isScalarProduct (h0:heap) (h1:heap) (ctr:nat) (len:nat)
 		  (a:bigint{live h0 a /\ length a >= len}) 
 		  (s:u64)
 		  (res:bigint_wide{live h1 res /\ length res >= len}) =
-  (forall (i:nat). {:pattern (U128.v (getValue h1 res i))}
-    (i>= ctr /\ i < len) ==> U128.v (getValue h1 res i) = v (getValue h0 a i) * v s)
+  (forall (i:nat). {:pattern (U128.v (get h1 res i))}
+    (i>= ctr /\ i < len) ==> U128.v (get h1 res i) = v (get h0 a i) * v s)
 
 abstract type isNotModified (h0:heap) (h1:heap) 
 		   (res:bigint_wide{live h0 res /\ live h1 res /\ length res >= norm_length
 		     /\ length res = length res})
 		   (ctr:nat) =
-  (forall (i:nat). {:pattern (getValue h1 res i)}
+  (forall (i:nat). {:pattern (get h1 res i)}
     (i < length res /\ (i < ctr \/ i >= norm_length)) ==>
-      (getValue h1 res i == getValue h0 res i))
+      (get h1 res i == get h0 res i))
 
 #reset-options
 
@@ -53,12 +53,12 @@ val scalar_multiplication_lemma_aux: h0:heap -> h1:heap -> a:bigint{live h0 a} -
   b:bigint_wide{live h1 b} -> s:int -> len:pos{ (len <= length a)  /\ (len <= length b) } ->
   Lemma
     (requires ( (eval h0 a (len-1) * s = eval_wide h1 b (len-1))
-		/\ (v (getValue h0 a (len-1)) * s = U128.v (getValue h1 b (len-1)))))
+		/\ (v (get h0 a (len-1)) * s = U128.v (get h1 b (len-1)))))
     (ensures ( eval h0 a len * s = eval_wide h1 b len ))
 let scalar_multiplication_lemma_aux h0 h1 a b s len =
 //  admit();
-  Math.Axioms.paren_mul_left (pow2 (bitweight (templ) (len-1))) (v (getValue h0 a (len-1))) s;
-  Math.Axioms.distributivity_add_left ((pow2 (bitweight (templ) (len-1))) * (v (getValue h0 a (len-1)))) (eval h0 a (len-1)) s
+  Math.Axioms.paren_mul_left (pow2 (bitweight (templ) (len-1))) (v (get h0 a (len-1))) s;
+  Math.Axioms.distributivity_add_left ((pow2 (bitweight (templ) (len-1))) * (v (get h0 a (len-1)))) (eval h0 a (len-1)) s
 
 #reset-options
 
@@ -66,7 +66,7 @@ let scalar_multiplication_lemma_aux h0 h1 a b s len =
 val scalar_multiplication_lemma: h0:heap -> h1:heap -> a:bigint{live h0 a} -> 
   b:bigint_wide{live h1 b} -> s:int -> len:nat{len <= length a /\ len <= length b} ->
   Lemma
-    (requires (forall (i:nat). i < len ==> v (getValue h0 a i) * s = U128.v (getValue h1 b i)))
+    (requires (forall (i:nat). i < len ==> v (get h0 a i) * s = U128.v (get h1 b i)))
     (ensures (eval h0 a len * s = eval_wide h1 b len))
 let rec scalar_multiplication_lemma h0 h1 a b s len =
 //  admit();
@@ -83,14 +83,14 @@ val scalar_multiplication_tr_1: res:bigint_wide -> a:bigint{disjoint res a} -> s
   ctr:u32{w ctr<norm_length} -> STL unit
      (requires (fun h -> 
        (live h res) /\ (live h a) /\ (length a >= norm_length) /\ (length res >= norm_length)
-       /\ (forall (i:nat). (i >= w ctr /\ i < norm_length) ==> v (getValue h a i) * v s < pow2 platform_wide)))
+       /\ (forall (i:nat). (i >= w ctr /\ i < norm_length) ==> v (get h a i) * v s < pow2 platform_wide)))
      (ensures (fun h0 u h1 -> 
        (live h0 res) /\ (live h1 res) /\ (live h0 a) /\ (live h1 a)
        /\ (length res >= norm_length) /\ (length res = length res)
        /\ (modifies_1 res h0 h1) /\ (length a >= norm_length)
-       /\ (forall (i:nat). (i >= w ctr+1 /\ i < norm_length) ==> v (getValue h0 a i) * v s < pow2 platform_wide) 
-       /\ (forall (i:nat). (i < length res /\ i <> w ctr) ==> (getValue h1 res i == getValue h0 res i))
-       /\ (U128.v (getValue h1 res (w ctr)) = v (getValue h0 a (w ctr)) * v s)
+       /\ (forall (i:nat). (i >= w ctr+1 /\ i < norm_length) ==> v (get h0 a i) * v s < pow2 platform_wide) 
+       /\ (forall (i:nat). (i < length res /\ i <> w ctr) ==> (get h1 res i == get h0 res i))
+       /\ (U128.v (get h1 res (w ctr)) = v (get h0 a (w ctr)) * v s)
      ))
 let rec scalar_multiplication_tr_1 res a s ctr =
     let ai = index a ctr in
@@ -104,23 +104,23 @@ val scalar_multiplication_tr_2:
        (live h1 res) /\ (live h2 res) /\ (live h1 a) /\ (live h2 a) /\ live h0 a /\ live h0 res
        /\ modifies_1 res h0 h1
        /\ (modifies_1 res h1 h2) /\ (length a >= norm_length)
-       /\ (forall (i:nat). {:pattern (getValue h1 a i)} (i >= ctr+1 /\ i < norm_length) ==> v (getValue h1 a i) * v s < pow2 platform_wide)
+       /\ (forall (i:nat). {:pattern (get h1 a i)} (i >= ctr+1 /\ i < norm_length) ==> v (get h1 a i) * v s < pow2 platform_wide)
        /\ (length res >= norm_length) /\ (length res = length res)
        /\ length res = length res
-       /\ (forall (i:nat). {:pattern (getValue h1 res i)} (i < length res /\ i <> ctr) ==> getValue h1 res i == getValue h0 res i)
-       /\ vv (getValue h1 res ctr) = v (getValue h0 a ctr) * v s
-       /\ (forall (i:nat{(i>= ctr+1 /\ i < norm_length)}). {:pattern (getValue h2 res i)} vv (getValue h2 res i) = v (getValue h1 a i) * v s)
-       /\ (forall (i:nat{(i < length res /\ (i < ctr+1 \/ i >= norm_length))}). {:pattern (getValue h2 res i)}
-	   (getValue h2 res i == getValue h1 res i))
+       /\ (forall (i:nat). {:pattern (get h1 res i)} (i < length res /\ i <> ctr) ==> get h1 res i == get h0 res i)
+       /\ vv (get h1 res ctr) = v (get h0 a ctr) * v s
+       /\ (forall (i:nat{(i>= ctr+1 /\ i < norm_length)}). {:pattern (get h2 res i)} vv (get h2 res i) = v (get h1 a i) * v s)
+       /\ (forall (i:nat{(i < length res /\ (i < ctr+1 \/ i >= norm_length))}). {:pattern (get h2 res i)}
+	   (get h2 res i == get h1 res i))
        /\ (Seq.equal (sel h1 (a)) (sel h2 (a))) ))
      (ensures (
        (live h0 res) /\ (live h2 res) /\ (live h0 a) /\ (live h2 a)
        /\ (modifies_1 res h0 h2) /\ (length a >= norm_length)
-       /\ (forall (i:nat). (i >= ctr /\ i < norm_length) ==> v (getValue h0 a i) * v s < pow2 platform_wide)
+       /\ (forall (i:nat). (i >= ctr /\ i < norm_length) ==> v (get h0 a i) * v s < pow2 platform_wide)
        /\ (length res >= norm_length) /\ (length res = length res)
-       /\ (forall (i:nat{(i>= ctr /\ i < norm_length)}). vv (getValue h2 res i) = v (getValue h0 a i) * v s)
+       /\ (forall (i:nat{(i>= ctr /\ i < norm_length)}). vv (get h2 res i) = v (get h0 a i) * v s)
        /\ (forall (i:nat{(i < length res /\ (i < ctr \/ i >= norm_length))}). 
-	   (getValue h2 res i == getValue h0 res i))
+	   (get h2 res i == get h0 res i))
        /\ (Seq.equal (sel h0 (a)) (sel h2 (a)))
      ))
 let scalar_multiplication_tr_2 h0 h1 h2 res a s ctr =
@@ -133,15 +133,15 @@ let scalar_multiplication_tr_2 h0 h1 h2 res a s ctr =
 val scalar_multiplication_tr: res:bigint_wide -> a:bigint{disjoint res a} -> s:u64 -> ctr:u32{w ctr<=norm_length} -> STL unit
      (requires (fun h -> 
        (live h res) /\ (live h a) /\ (length a >= norm_length) /\ (length res >= norm_length)
-       /\ (forall (i:nat). (i >= w ctr /\ i < norm_length) ==> v (getValue h a i) * v s < pow2 platform_wide)))
+       /\ (forall (i:nat). (i >= w ctr /\ i < norm_length) ==> v (get h a i) * v s < pow2 platform_wide)))
      (ensures (fun h0 u h1 -> 
        (live h0 res) /\ (live h1 res) /\ (live h0 a) /\ (live h1 a)
        /\ (modifies_1 res h0 h1) /\ (length a >= norm_length)
-       /\ (forall (i:nat). (i >= w ctr /\ i < norm_length) ==> v (getValue h0 a i) * v s < pow2 platform_wide)
+       /\ (forall (i:nat). (i >= w ctr /\ i < norm_length) ==> v (get h0 a i) * v s < pow2 platform_wide)
        /\ (length res >= norm_length) /\ (length res = length res)
-       /\ (forall (i:nat{(i>= w ctr /\ i < norm_length)}). vv (getValue h1 res i) = v (getValue h0 a i) * v s)
+       /\ (forall (i:nat{(i>= w ctr /\ i < norm_length)}). vv (get h1 res i) = v (get h0 a i) * v s)
        /\ (forall (i:nat{(i < length res /\ (i < w ctr \/ i >= norm_length))}). 
-	   (getValue h1 res i == getValue h0 res i))
+	   (get h1 res i == get h0 res i))
        /\ (Seq.equal (sel h0 (a)) (sel h1 (a)))  ))
 let rec scalar_multiplication_tr res a s ctr =
   //admit();
@@ -161,7 +161,7 @@ let rec scalar_multiplication_tr res a s ctr =
 (* Lemma *)   	 
 val theorem_scalar_multiplication: h0:heap -> h1:heap -> a:bigint{live h0 a} -> s:u64 -> 
   len:nat{len <= length a} -> b:bigint_wide{live h1 b /\ len <= length b} -> Lemma
-    (requires (forall (i:nat). i < len ==> vv (getValue h1 b i) = v (getValue h0 a i) * v s))
+    (requires (forall (i:nat). i < len ==> vv (get h1 b i) = v (get h0 a i) * v s))
     (ensures ((eval_wide h1 b len) = (eval h0 a len) * v s))
 let theorem_scalar_multiplication h0 h1 a s len b = 
   scalar_multiplication_lemma h0 h1 a b (v s) len; ()
@@ -170,15 +170,15 @@ let theorem_scalar_multiplication h0 h1 a s len b =
 
 val auxiliary_lemma_2: ha:heap -> a:bigint{norm ha a} -> s:u64 -> i:nat{ i < norm_length} -> Lemma
     (requires (True))
-    (ensures (v (getValue ha a i) * v s < pow2 (platform_wide)))
+    (ensures (v (get ha a i) * v s < pow2 (platform_wide)))
 let auxiliary_lemma_2 ha a s i =
-  (* UInt.mul_lemma #(templ i) (v (getValue ha a i)) #platform_size (v s); *)
+  (* UInt.mul_lemma #(templ i) (v (get ha a i)) #platform_size (v s); *)
   Curve.Parameters.parameters_lemma_0 ();
   (* Math.Lib.pow2_increases_2 platform_wide (templ i + platform_size) *)
   ()
   
 val auxiliary_lemma_0: ha:heap -> a:bigint{norm ha a} -> s:u64 -> Lemma
-  (forall (i:nat). i < norm_length ==> v (getValue ha a i) * v s < pow2 platform_wide)
+  (forall (i:nat). i < norm_length ==> v (get ha a i) * v s < pow2 platform_wide)
 let auxiliary_lemma_0 ha a s = ()
 
 val auxiliary_lemma_1: h0:heap -> h1:heap -> b:bigint{norm h0 b} -> #t:Type -> b':buffer t ->

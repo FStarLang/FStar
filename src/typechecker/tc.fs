@@ -2576,133 +2576,129 @@ and tc_inductive env ses quals lids =
 
     //tcs is the list of type constructors, datas is the list of data constructors
 
-    //this is the folding function for tcs
-    //usubst and us are the universe variables substitution and universe names, we open each type constructor type, and data constructor type with these
-    //in the type of the accumulator:
-      //list<lident * term> is the list of type constructor lidents and formulas of haseq axioms we are accumulating
-      //env is the environment in which the next two terms are well-formed (e.g. data constructors are dependent function types, so they may refer to their arguments)
-      //term is the lhs of the implication for soundness formula
-      //term is the soundness condition derived from all the data constructors of this type
-    let haseq_ty usubst us acc ty =
-        let lid, bs, t, d_lids =
-            match ty with
-                | Sig_inductive_typ (lid, _, bs, t, _, d_lids, _, _) -> lid, bs, t, d_lids
-                | _                                                  -> failwith "Impossible!"
-        in
+    let optimized_haseq_scheme (_:unit) :list<sigelt> =
+        //this is the folding function for tcs
+        //usubst and us are the universe variables substitution and universe names, we open each type constructor type, and data constructor type with these
+        //in the type of the accumulator:
+          //list<lident * term> is the list of type constructor lidents and formulas of haseq axioms we are accumulating
+          //env is the environment in which the next two terms are well-formed (e.g. data constructors are dependent function types, so they may refer to their arguments)
+          //term is the lhs of the implication for soundness formula
+          //term is the soundness condition derived from all the data constructors of this type
+        let haseq_ty usubst us acc ty =
+            let lid, bs, t, d_lids =
+                match ty with
+                    | Sig_inductive_typ (lid, _, bs, t, _, d_lids, _, _) -> lid, bs, t, d_lids
+                    | _                                                  -> failwith "Impossible!"
+            in
  
-         //apply usubt to bs
-        let bs = SS.subst_binders usubst bs in
-        //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t together ?
-        let t = SS.subst (SS.shift_subst (List.length bs) usubst) t in
-        //open t with binders bs
-        let bs, t = SS.open_term bs t in
-        //get the index binders, if any
-        let ibs =
-            match (SS.compress t).n with
-                | Tm_arrow (ibs, _) -> ibs
-                | _                 -> []
-        in
-        //open the ibs binders
-        let ibs = SS.open_binders ibs in
-        //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
-        let ind = mk_Tm_uinst (S.fvar lid Delta_constant None) (List.map (fun u -> U_name u) us) in
-        //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-        let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None dr in
-        //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-        let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None dr in
-        //haseq of ind
-        let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None dr in
-        //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
-        //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
-        let bs' = List.filter (fun b ->
-            let _, en, _, _ = acc in
-            //false means don't use SMT solver
-            let opt = Rel.try_subtype' en (fst b).sort  (fst (type_u ())) false in
-            //is this criteria for success/failure ok ?
-            match opt with
-                | None   -> false
-                | Some _ -> true
-        ) bs in
-        let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None dr)) U.t_true bs' in
-        //implication
-        let fml = U.mk_imp haseq_bs haseq_ind in
-        //attach pattern -- is this the right place ?
-        let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
-        //fold right with ibs, close and add a forall b
-	    //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-        let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) ibs fml in
-        //fold right with bs, close and add a forall b
-	    //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-        let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) bs fml in
-        //so now fml is the haseq axiom we want to generate
+             //apply usubt to bs
+            let bs = SS.subst_binders usubst bs in
+            //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t together ?
+            let t = SS.subst (SS.shift_subst (List.length bs) usubst) t in
+            //open t with binders bs
+            let bs, t = SS.open_term bs t in
+            //get the index binders, if any
+            let ibs =
+                match (SS.compress t).n with
+                    | Tm_arrow (ibs, _) -> ibs
+                    | _                 -> []
+            in
+            //open the ibs binders
+            let ibs = SS.open_binders ibs in
+            //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
+            let ind = mk_Tm_uinst (S.fvar lid Delta_constant None) (List.map (fun u -> U_name u) us) in
+            //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
+            let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None dr in
+            //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
+            let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None dr in
+            //haseq of ind
+            let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None dr in
+            //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
+            //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
+            let bs' = List.filter (fun b ->
+                let _, en, _, _ = acc in
+                //false means don't use SMT solver
+                let opt = Rel.try_subtype' en (fst b).sort  (fst (type_u ())) false in
+                //is this criteria for success/failure ok ?
+                match opt with
+                    | None   -> false
+                    | Some _ -> true
+            ) bs in
+            let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None dr)) U.t_true bs' in
+            //implication
+            let fml = U.mk_imp haseq_bs haseq_ind in
+            //attach pattern -- is this the right place ?
+            let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
+            //fold right with ibs, close and add a forall b
+	        //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+            let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) ibs fml in
+            //fold right with bs, close and add a forall b
+	        //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+            let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) bs fml in
+            //so now fml is the haseq axiom we want to generate
 
-        //onto the soundness condition for the above axiom
-        //this is the soundness guard
-        let guard = U.mk_conj haseq_bs fml in
+            //onto the soundness condition for the above axiom
+            //this is the soundness guard
+            let guard = U.mk_conj haseq_bs fml in
 
-        //now work on checking the soundness of this formula
-        //split acc
-        let l_axioms, env, guard', cond' = acc in
+            //now work on checking the soundness of this formula
+            //split acc
+            let l_axioms, env, guard', cond' = acc in
 
-        //push universe variables, bs, and ibs, universe variables are pushed at the top level below
-        let env = Env.push_binders env bs in
-        let env = Env.push_binders env ibs in
+            //push universe variables, bs, and ibs, universe variables are pushed at the top level below
+            let env = Env.push_binders env bs in
+            let env = Env.push_binders env ibs in
 
-        //now generate the soundness condition by iterating over the data constructors
-        //get the data constructors for this type
-        let t_datas = List.filter (fun s ->
-            match s with
-                | Sig_datacon (_, _, _, t_lid, _, _, _, _) -> t_lid = lid
-                | _                                        -> failwith "Impossible"
-        ) datas in
+            //now generate the soundness condition by iterating over the data constructors
+            //get the data constructors for this type
+            let t_datas = List.filter (fun s ->
+                match s with
+                    | Sig_datacon (_, _, _, t_lid, _, _, _, _) -> t_lid = lid
+                    | _                                        -> failwith "Impossible"
+            ) datas in
 
 
-        //folding function for t_datas
-        //in the accumulator:
-          //env is the updated env
-          //term is the soundness condition for this data constructor
-        let haseq_data acc data =
-            let dt = datacon_typ data in
-            //apply the universes substitution to dt
-            let dt = SS.subst usubst dt in
-            match (SS.compress dt).n with
-                | Tm_arrow (dbs, _) ->
-                    //filter out the inductive type parameters, dbs are the remaining binders
-                    let dbs = snd (List.splitAt (List.length bs) dbs) in
-                    //substitute bs into dbs
-                    let dbs = SS.subst_binders (SS.opening_of_binders bs) dbs in
-                    //open dbs
-                    let dbs = SS.open_binders dbs in
-                    //fold on dbs, add haseq of its sort to the guard
-                    let cond = List.fold_left (fun (t:term) (b:binder) ->
-                        let haseq_b = mk_Tm_app U.t_haseq [S.as_arg (fst b).sort] None dr in
-                        //label the haseq predicate so that we get a proper error message if the assertion fails
-                        let sort_range = (fst b).sort.pos in
-                        let haseq_b = Util.label
-                            (Util.format1 "Failed to prove that the type '%s' supports decidable equality because of this argument; add the 'noeq' qualifier"
-                                  (Print.term_to_string ind))
-                            sort_range
-                            haseq_b in
-                        U.mk_conj t haseq_b) U.t_true dbs in
+            //folding function for t_datas
+            //in the accumulator:
+              //env is the updated env
+              //term is the soundness condition for this data constructor
+            let haseq_data acc data =
+                let dt = datacon_typ data in
+                //apply the universes substitution to dt
+                let dt = SS.subst usubst dt in
+                match (SS.compress dt).n with
+                    | Tm_arrow (dbs, _) ->
+                        //filter out the inductive type parameters, dbs are the remaining binders
+                        let dbs = snd (List.splitAt (List.length bs) dbs) in
+                        //substitute bs into dbs
+                        let dbs = SS.subst_binders (SS.opening_of_binders bs) dbs in
+                        //open dbs
+                        let dbs = SS.open_binders dbs in
+                        //fold on dbs, add haseq of its sort to the guard
+                        let cond = List.fold_left (fun (t:term) (b:binder) ->
+                            let haseq_b = mk_Tm_app U.t_haseq [S.as_arg (fst b).sort] None dr in
+                            //label the haseq predicate so that we get a proper error message if the assertion fails
+                            let sort_range = (fst b).sort.pos in
+                            let haseq_b = Util.label
+                                (Util.format1 "Failed to prove that the type '%s' supports decidable equality because of this argument; add the 'noeq' qualifier"
+                                      (Print.term_to_string ind))
+                                sort_range
+                                haseq_b in
+                            U.mk_conj t haseq_b) U.t_true dbs in
                     
-                    let env, cond' = acc in
-                    Env.push_binders env dbs, U.mk_conj cond' cond
-                | _                -> acc
+                        let env, cond' = acc in
+                        Env.push_binders env dbs, U.mk_conj cond' cond
+                    | _                -> acc
+            in
+
+            //fold over t_datas
+            let env, cond = List.fold_left haseq_data (env, U.t_true) t_datas in
+
+            //return new accumulator
+            let axiom_lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))]) in
+            l_axioms @ [axiom_lid, fml], env, U.mk_conj guard' guard, U.mk_conj cond' cond
         in
 
-        //fold over t_datas
-        let env, cond = List.fold_left haseq_data (env, U.t_true) t_datas in
-
-        //return new accumulator
-        let axiom_lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))]) in
-        l_axioms @ [axiom_lid, fml], env, U.mk_conj guard' guard, U.mk_conj cond' cond
-    in
-
-    let is_noeq = List.existsb (fun q -> q = Noeq) quals in
-
-    //we need to check for List.length tcs because of the exception type, is there a better way ?
-    if ((not (lid_equals env.curmodule Const.prims_lid)) && (not (is_noeq)) && (List.length tcs > 0)) then
-        //we will open all tcs and datas with the same universe names
         let us =
             let ty = List.hd tcs in
             match ty with
@@ -2727,20 +2723,160 @@ and tc_inductive env ses quals lids =
                 Rel.force_trivial_guard env (Rel.guard_of_guard_formula (NonTrivial phi))
             else ()
         in
-        env.solver.pop "haseq";
 
         //create Sig_assume for the axioms
-        //add universe variables to env, no idea how to handle them ?
-        //TODO: don't add Sig_assume to the bundle, the code might assume it only contains tycon and datacons, instead modify tc interface to return list of sigelts
-        let env = Env.push_univ_vars env0 us in
         let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
             let se = tc_assume env lid fml [] dr in
             //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
             l @ [se] 
         ) [] axioms in
-        //TODO: adding Sig_assumes to the sig_bundle is breaking invariant that the sig_bundle only contains tycons and datacons, fix it
+
+        env.solver.pop "haseq";
+        ses
+    in
+    
+    let unoptimized_haseq_scheme (_:unit) :list<sigelt> =
+        //TODO: perhaps make it a map ?
+        let mutuals = List.map (fun ty ->
+            match ty with
+                | Sig_inductive_typ (lid, _, _, _, _, _, _, _) -> lid
+                | _                                            -> failwith "Impossible!") tcs
+        in
+
+        //tcs is the list of type constructors, datas is the list of data constructors
+
+        //this is the folding function for tcs
+        //usubst and us are the universe variables substitution and universe names, we open each type constructor type, and data constructor type with these
+        //the accumulator is the formula that we are building, for each type constructor, we add a conjunct to it
+        let haseq_ty usubst us acc ty =
+            let lid, bs, t, d_lids =
+                match ty with
+                    | Sig_inductive_typ (lid, _, bs, t, _, d_lids, _, _) -> lid, bs, t, d_lids
+                    | _                                                  -> failwith "Impossible!"
+            in
+ 
+             //apply usubt to bs
+            let bs = SS.subst_binders usubst bs in
+            //apply usubst to t, but first shift usubst -- is there a way to apply usubst to bs and t together ?
+            let t = SS.subst (SS.shift_subst (List.length bs) usubst) t in
+            //open t with binders bs
+            let bs, t = SS.open_term bs t in
+            //get the index binders, if any
+            let ibs =
+                match (SS.compress t).n with
+                    | Tm_arrow (ibs, _) -> ibs
+                    | _                 -> []
+            in
+            //open the ibs binders
+            let ibs = SS.open_binders ibs in
+            //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
+            let ind = mk_Tm_uinst (S.fvar lid Delta_constant None) (List.map (fun u -> U_name u) us) in
+            //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
+            let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None dr in
+            //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
+            let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None dr in
+            //haseq of ind applied to all bs and ibs
+            let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None dr in
+            
+            //identify if the type t is a mutually defined type
+            let rec is_mutual t =  //TODO: this should handle more cases
+                match (SS.compress t).n with
+                    | Tm_fvar fv         -> List.existsb (fun lid -> lid_equals lid fv.fv_name.v) mutuals
+                    | Tm_uinst (t', _)   -> is_mutual t'
+                    | Tm_refine (bv, t') -> is_mutual bv.sort
+                    | Tm_app (t', args)  -> if is_mutual t' then true else exists_mutual (List.map fst args)
+                    | Tm_meta (t', _)    -> is_mutual t'
+                    | _                  -> false
+            
+            and exists_mutual = function
+                | [] -> false
+                | hd::tl -> is_mutual hd || exists_mutual tl
+            in
+
+            //folding function for t_datas
+            let haseq_data acc data =
+                let dt = datacon_typ data in
+                //apply the universes substitution to dt
+                let dt = SS.subst usubst dt in
+                match (SS.compress dt).n with
+                    | Tm_arrow (dbs, _) ->
+                        //filter out the inductive type parameters, dbs are the remaining binders
+                        let dbs = snd (List.splitAt (List.length bs) dbs) in
+                        //substitute bs into dbs
+                        let dbs = SS.subst_binders (SS.opening_of_binders bs) dbs in
+                        //open dbs
+                        let dbs = SS.open_binders dbs in
+                        //fold on dbs, add haseq of its sort to the guard
+                        //if the sort is a mutual, guard its hasEq with the hasEq of the current type constructor
+                        //cond is the conjunct of the hasEq of all the data constructor arguments
+                        let cond = List.fold_left (fun (t:term) (b:binder) ->
+                            let sort = (fst b).sort in
+                            let haseq_sort = mk_Tm_app U.t_haseq [S.as_arg (fst b).sort] None dr in
+                            let haseq_sort = if is_mutual sort then U.mk_imp haseq_ind haseq_sort else haseq_sort in
+                            U.mk_conj t haseq_sort) U.t_true dbs
+                        in
+
+                        //fold right with dbs, close and add a forall b
+	                    //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+                        let cond = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) dbs cond in
+                    
+                        //new accumulator is old one /\ cond
+                        U.mk_conj acc cond
+                    | _                -> acc
+            in
+
+            //filter out data constructors for this type constructor
+            let t_datas = List.filter (fun s ->
+                match s with
+                    | Sig_datacon (_, _, _, t_lid, _, _, _, _) -> t_lid = lid
+                    | _                                        -> failwith "Impossible"
+            ) datas in
+
+            //fold over t_datas
+            let data_cond = List.fold_left haseq_data U.t_true t_datas in
+
+            //make the implication
+            let fml = U.mk_imp data_cond haseq_ind in
+
+            //attach pattern -- is this the right place ?
+            let fml = { fml with n = Tm_meta (fml, Meta_pattern [[S.as_arg haseq_ind]]) } in
+
+            //fold right with ibs, close and add a forall b
+	        //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+            let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) ibs fml in
+            //fold right with bs, close and add a forall b
+	        //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
+            let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) bs fml in
+
+            //new accumulator is old accumulator /\ fml
+            U.mk_conj acc fml
+        in
+
+        let lid, us =
+            let ty = List.hd tcs in
+            match ty with
+                | Sig_inductive_typ (lid, us, _, _, _, _, _, _) -> lid, us
+                | _                                           -> failwith "Impossible!"
+        in
+        let usubst, us = SS.univ_var_opening us in
+
+        let fml = List.fold_left (haseq_ty usubst us) U.t_true tcs in
+
+        let env = Env.push_sigelt env0 sig_bndle in
+        env.solver.push "haseq";
+        env.solver.encode_sig env sig_bndle;
+        let env = Env.push_univ_vars env us in
+        let se = tc_assume env (lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))])) fml [] dr in
+        [se]
+    in
+
+    let is_noeq = List.existsb (fun q -> q = Noeq) quals in
+    
+    if ((lid_equals env.curmodule Const.prims_lid) || is_noeq || (List.length tcs = 0)) then [sig_bndle]
+    else
+        let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
+        let ses = if is_unopteq then unoptimized_haseq_scheme () else optimized_haseq_scheme () in
         (Sig_bundle(tcs@datas, quals, lids, Env.get_range env0))::ses
-    else [sig_bndle]
 
 and tc_decl env se: list<sigelt> * _ = 
     let env = set_hint_correlator env se in

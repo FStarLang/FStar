@@ -1,23 +1,29 @@
 (* Implementation of Poly1305 based on the rfc7539 *)
-module Poly.Poly1305_wip
+module Crypto.Symmetric.Poly1305
 
 open FStar.Mul
-open FStar.HyperStack
-open FStar.HST
 open FStar.Ghost
-open Math.Axioms
-open Math.Lib
-open Math.Lemmas
+open FStar.Seq
+(** Machine integers *)
 open FStar.UInt8
 open FStar.UInt64
 open FStar.Int.Cast
-open FStar.Seq
+(** Effects and memory layout *)
+open FStar.HyperStack
+open FStar.HST
+(** Buffers *)
 open FStar.Buffer
+(** Mathematical definitions *)
+open Math.Axioms
+open Math.Lib
+open Math.Lemmas
+(** Helper functions for buffers *)
 open Buffer.Utils
-open Poly.Bigint
-open Poly.Parameters
-open Poly.Bignum
-open Poly.Poly1305_wip.Lemmas
+
+open Crypto.Symmetric.Poly1305.Parameters
+open Crypto.Symmetric.Poly1305.Bigint
+open Crypto.Symmetric.Poly1305.Bignum
+open Crypto.Symmetric.Poly1305.Lemmas
 
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
@@ -189,7 +195,7 @@ let toGroup_plus_2_128 b s =
   let n1' = (n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26) in 
   let n2' = (n1 >>^ 20ul) |^ ((n2 <<^ 12ul) &^ mask_26) in
   let n3' = (n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26) in 
-  let n4' = (n3 >>^ 8ul) +^ (1uL ^<< 24ul) in 
+  let n4' = (n3 >>^ 8ul) +^ (1uL <<^ 24ul) in 
   upd b 0ul n0'; 
   upd b 1ul n1';
   upd b 2ul n2'; 
@@ -407,21 +413,21 @@ let poly1305_update log msg acc r =
   pop_frame();
   updated_log
 
-(* Loop over Poly1305_upadte *)
-val poly1305_step: current_log:erased log -> msg:bytes -> acc:elemB{disjoint msg acc} -> 
+(* Loop over Poly1305_update *)
+val poly1305_loop: current_log:erased log -> msg:bytes -> acc:elemB{disjoint msg acc} -> 
   r:elemB{disjoint msg r /\ disjoint acc r} -> ctr:u32{length msg >= 16 * w ctr} ->
   STL (erased log)
     (requires (fun h -> live h msg /\ norm h acc /\ norm h r))
     (ensures (fun h0 _ h1 -> live h1 msg /\ norm h1 acc /\ norm h1 r
       /\ modifies_1 acc h0 h1))
-let rec poly1305_step log msg acc r ctr =
+let rec poly1305_loop log msg acc r ctr =
   if U32.eq ctr 0ul then log
   else begin
     let updated_log = poly1305_update log msg acc r in
     let msg = offset msg 16ul in
     let h = HST.get() in
     let word = esel_word h msg in
-    poly1305_step (update_log log word) msg acc r (ctr-|1ul)
+    poly1305_loop (update_log log word) msg acc r (ctr-|1ul)
   end
 
 (* Performs the last step if there is an incomplete block *)
@@ -434,29 +440,14 @@ val poly1305_last: msg:wordB -> acc:elemB{disjoint msg acc} ->
 let poly1305_last msg acc r len =
   push_frame();
   let h0 = HST.get() in
-  let l = U32.rem len 16ul in
-  if U32.eq l 0ul then ()
+  if U32.eq len 0ul then ()
   else (    
     let n = create 0uy 16ul in
-    blit msg (len -| l) n 0ul l;
-    upd n l 1uy;
-    (* let h1 = HST.get() in *)
+    blit msg 0ul n 0ul len;
+    upd n len 1uy;
     let block = create 0UL nlength in
-    (* let h2 = HST.get() in *)
-    toGroup block msg; 
-    (* let b4 = index block 4ul in *)
-    (* Math.Lemmas.pow2_double_sum 24; Math.Lib.pow2_increases_lemma 26 25; *)
-    (* Math.Lib.pow2_increases_lemma 64 26; *)
-    (* let h3 = HST.get() in *)
-    (* eq_lemma_0 h0 h3 r; *)
-    (* eq_lemma_0 h0 h3 acc; *)
+    toGroup block n;
     add_and_multiply acc block r);
-    (* let h4 = HST.get() in  *)
-    (* disjoint_only_lemma msg acc;  *)
-    (* eq_lemma_1 h3 h4 acc r; *)
-    (* eq_lemma_1 h1 h4 acc msg; *)
-    (* aux_lemma_2 acc; *)
-    (* () ); *)
   pop_frame()
 
 (* TODO: certainly a more efficient, better implementation of that *)
@@ -515,8 +506,10 @@ let poly1305_mac tag msg len key =
   let ctr = U32.div len 16ul in
   let rest = U32.rem len 16ul in 
   (* Run the poly1305_update function ctr times *)
-  let _ = poly1305_step log msg acc r ctr in
-  poly1305_last msg acc r rest;
+  let _ = poly1305_loop log msg acc r ctr in
+  (* Run the poly1305_update function one more time on the incomplete block *)
+  let last_block = sub msg (FStar.UInt32 (ctr *^ 16ul)) rest in
+  poly1305_last last_block acc r rest;
   (* Finish *)
-  poly1305_finish tag acc (sub key 0ul 16ul);
+  poly1305_finish tag acc (sub key 16ul 16ul);
   pop_frame()
