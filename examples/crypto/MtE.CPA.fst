@@ -24,7 +24,7 @@ let ideal_log : ref (seq entry) = alloc (createEmpty #entry)
 
 abstract type key = AES.key
 
-assume type encrypted: key -> bytes -> Type
+assume type encrypted: key -> cipher -> Type
 
 let keysize = 16
 

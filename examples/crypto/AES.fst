@@ -24,4 +24,8 @@ assume val generated : key -> Tot bool
 
 assume val gen: unit -> key 
 assume val dec: key -> cipher -> Tot plain                    (* this function is pure & complete *)  
-assume val enc: k:key -> p:plain -> Tot (c:cipher { dec k c = p })  (* this function is not pure (IV); the refinement captures functional correctness *) 
+assume val enc: k:key -> p:plain -> ST (c:cipher { dec k c = p })
+  (requires (fun _ -> True)) 
+  (ensures (fun h0 _ h -> modifies_none h0 h))
+
+(* this function is not pure (IV); the refinement captures functional correctness *) 

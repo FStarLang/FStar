@@ -5,7 +5,7 @@ module CPA = MtE.CPA
 
 noeq type key = 
   | Key:  ke:CPA.key -> mk:MAC.pkey (CPA.encrypted ke) -> key 
-  (* currently needs flag --__temp_no_proj Encrypt_MtE *)
+  (* currently needs flag --__temp_no_proj MtE.AE *)
 
 type cipher = (AES.cipher * SHA1.tag) //define abbreviation in MAC.fst
 
