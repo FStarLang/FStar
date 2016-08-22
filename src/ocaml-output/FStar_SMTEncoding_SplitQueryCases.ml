@@ -1,6 +1,6 @@
 
 open Prims
-
+# 22 "FStar.SMTEncoding.SplitQueryCases.fst"
 let rec get_next_n_ite : Prims.int  ->  FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term)  ->  (Prims.bool * FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) = (fun n t negs f -> if (n <= 0) then begin
 (let _175_14 = (f FStar_SMTEncoding_Term.mkTrue)
 in ((true), (_175_14), (negs), (t)))
@@ -22,7 +22,7 @@ end
 end)
 end)
 
-
+# 34 "FStar.SMTEncoding.SplitQueryCases.fst"
 let rec is_ite_all_the_way : Prims.int  ->  FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term Prims.list  ->  (Prims.bool * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term) = (fun n t negs l -> if (n <= 0) then begin
 (Prims.raise FStar_Util.Impos)
 end else begin
@@ -35,7 +35,7 @@ in ((true), (l), (_175_31)))
 end
 | _83_30 -> begin
 (
-
+# 44 "FStar.SMTEncoding.SplitQueryCases.fst"
 let _83_36 = (get_next_n_ite n t negs (fun x -> x))
 in (match (_83_36) with
 | (b, t, negs', rest) -> begin
@@ -50,7 +50,7 @@ end))
 end)
 end)
 
-
+# 48 "FStar.SMTEncoding.SplitQueryCases.fst"
 let rec parse_query_for_split_cases : Prims.int  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term)  ->  (Prims.bool * ((FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term) * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term)) = (fun n t f -> (match (t.FStar_SMTEncoding_Term.tm) with
 | FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, l, opt, l', t) -> begin
 (parse_query_for_split_cases n t (fun x -> (let _175_61 = (FStar_SMTEncoding_Term.mkForall'' ((l), (opt), (l'), (x)))
@@ -58,7 +58,7 @@ in (f _175_61))))
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Imp, (t1)::(t2)::_83_50) -> begin
 (
-
+# 56 "FStar.SMTEncoding.SplitQueryCases.fst"
 let r = (match (t2.FStar_SMTEncoding_Term.tm) with
 | FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, _83_59, _83_61, _83_63, _83_65) -> begin
 (parse_query_for_split_cases n t2 (fun x -> (let _175_69 = (FStar_SMTEncoding_Term.mkImp ((t1), (x)))
@@ -66,7 +66,7 @@ in (f _175_69))))
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.ITE, _83_71) -> begin
 (
-
+# 62 "FStar.SMTEncoding.SplitQueryCases.fst"
 let _83_77 = (is_ite_all_the_way n t2 FStar_SMTEncoding_Term.mkTrue [])
 in (match (_83_77) with
 | (b, l, negs) -> begin
@@ -81,7 +81,7 @@ in r)
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.ITE, _83_86) -> begin
 (
-
+# 70 "FStar.SMTEncoding.SplitQueryCases.fst"
 let _83_92 = (is_ite_all_the_way n t FStar_SMTEncoding_Term.mkTrue [])
 in (match (_83_92) with
 | (b, l, negs) -> begin
@@ -92,7 +92,7 @@ end
 ((false), ((((fun _83_95 -> FStar_SMTEncoding_Term.mkFalse)), ([]), (FStar_SMTEncoding_Term.mkFalse))))
 end))
 
-
+# 73 "FStar.SMTEncoding.SplitQueryCases.fst"
 let strip_not : FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term = (fun t -> (match (t.FStar_SMTEncoding_Term.tm) with
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Not, (hd)::_83_100) -> begin
 hd
@@ -101,14 +101,14 @@ end
 t
 end))
 
-
+# 77 "FStar.SMTEncoding.SplitQueryCases.fst"
 let rec check_split_cases : (FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term Prims.list  ->  (FStar_SMTEncoding_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun f l check -> (FStar_List.iter (fun t -> (let _175_117 = (let _175_116 = (let _175_115 = (let _175_114 = (f t)
 in (FStar_SMTEncoding_Term.mkNot _175_114))
 in ((_175_115), (None), (None)))
 in FStar_SMTEncoding_Term.Assume (_175_116))
 in (check _175_117))) (FStar_List.rev l)))
 
-
+# 80 "FStar.SMTEncoding.SplitQueryCases.fst"
 let check_exhaustiveness : (FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun f negs check -> (let _175_138 = (let _175_137 = (let _175_136 = (let _175_135 = (let _175_134 = (FStar_SMTEncoding_Term.mkNot negs)
 in (f _175_134))
 in (FStar_SMTEncoding_Term.mkNot _175_135))
@@ -116,7 +116,7 @@ in ((_175_136), (None), (None)))
 in FStar_SMTEncoding_Term.Assume (_175_137))
 in (check _175_138)))
 
-
+# 83 "FStar.SMTEncoding.SplitQueryCases.fst"
 let can_handle_query : Prims.int  ->  FStar_SMTEncoding_Term.decl  ->  (Prims.bool * ((FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term) * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term)) = (fun n q -> (match (q) with
 | FStar_SMTEncoding_Term.Assume (q', _83_118, _83_120) -> begin
 (parse_query_for_split_cases n (strip_not q') (fun x -> x))
@@ -125,11 +125,11 @@ end
 ((false), ((((fun x -> x)), ([]), (FStar_SMTEncoding_Term.mkFalse))))
 end))
 
-
+# 88 "FStar.SMTEncoding.SplitQueryCases.fst"
 let handle_query : ((FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term) * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term)  ->  (FStar_SMTEncoding_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun _83_130 check -> (match (_83_130) with
 | (f, l, negs) -> begin
 (
-
+# 91 "FStar.SMTEncoding.SplitQueryCases.fst"
 let l = (check_split_cases f l check)
 in (check_exhaustiveness f negs check))
 end))

@@ -717,8 +717,20 @@ let offset #a (b:buffer a) (i:UInt32.t{v i <= length b}) : STL (buffer a)
     Defining operators for buffer accesses as specified at
     https://github.com/FStarLang/FStar/wiki/Parsing-and-operator-precedence
    *)
-let op_Array_Access = index
-let op_Array_Assignment = upd
+(** JP: if the [val] is not specified, there's an issue with these functions
+ * taking an extra unification parameter at extraction-time... *)
+val op_Array_Access: #a:Type -> b:buffer a -> n:UInt32.t{v n<length b} -> STL a
+     (requires (fun h -> live h b))
+     (ensures (fun h0 z h1 -> live h0 b /\ h1 == h0
+       /\ z == Seq.index (as_seq h0 b) (v n)))
+let op_Array_Access #a b n = index #a b n
+
+val op_Array_Assignment: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> STL unit
+  (requires (fun h -> live h b /\ v n < length b))
+  (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ v n < length b
+    /\ modifies_1 b h0 h1
+    /\ as_seq h1 b == Seq.upd (as_seq h0 b) (v n) z ))
+let op_Array_Assignment #a b n z = upd #a b n z
 
 let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem): Lemma
   (requires (modifies_one (frameOf b) h0 h1 /\ modifies_one (frameOf b) h1 h2))

@@ -1,11 +1,11 @@
 
 open Prims
-
+# 24 "FStar.Parser.Interleave.fst"
 let interleave : FStar_Parser_AST.decl Prims.list  ->  FStar_Parser_AST.decl Prims.list  ->  FStar_Parser_AST.decl Prims.list = (fun iface impl -> (
-
+# 95 "FStar.Parser.Interleave.fst"
 let id_eq_lid = (fun i l -> (i.FStar_Ident.idText = l.FStar_Ident.ident.FStar_Ident.idText))
 in (
-
+# 97 "FStar.Parser.Interleave.fst"
 let is_val = (fun x d -> (match (d.FStar_Parser_AST.d) with
 | FStar_Parser_AST.Val (_63_12, y, _63_15) -> begin
 (x.FStar_Ident.idText = y.FStar_Ident.idText)
@@ -14,7 +14,7 @@ end
 false
 end))
 in (
-
+# 101 "FStar.Parser.Interleave.fst"
 let is_type = (fun x d -> (match (d.FStar_Parser_AST.d) with
 | FStar_Parser_AST.Tycon (_63_24, tys) -> begin
 (FStar_All.pipe_right tys (FStar_Util.for_some (fun t -> ((FStar_Parser_AST.id_of_tycon t) = x.FStar_Ident.idText))))
@@ -23,7 +23,7 @@ end
 false
 end))
 in (
-
+# 107 "FStar.Parser.Interleave.fst"
 let is_let = (fun x d -> (match (d.FStar_Parser_AST.d) with
 | FStar_Parser_AST.ToplevelLet (_63_35, _63_37, defs) -> begin
 (let _155_22 = (FStar_Parser_AST.lids_of_let defs)
@@ -42,10 +42,10 @@ end
 false
 end))
 in (
-
+# 117 "FStar.Parser.Interleave.fst"
 let prefix_until_let = (fun x ds -> (FStar_All.pipe_right ds (FStar_Util.prefix_until (is_let x))))
 in (
-
+# 119 "FStar.Parser.Interleave.fst"
 let rec aux = (fun out iface impl -> (match (iface) with
 | [] -> begin
 (let _155_34 = (FStar_All.pipe_right (FStar_List.rev out) FStar_List.flatten)
@@ -64,7 +64,7 @@ end)))) -> begin
 end
 | FStar_Parser_AST.Val (qs, x, t) -> begin
 (
-
+# 128 "FStar.Parser.Interleave.fst"
 let _63_97 = (match ((FStar_All.pipe_right impl (FStar_List.tryFind (fun d -> ((is_val x d) || (is_type x d)))))) with
 | None -> begin
 ()
@@ -92,7 +92,7 @@ in (Prims.raise _155_47))
 end
 | None -> begin
 (
-
+# 135 "FStar.Parser.Interleave.fst"
 let lopt = (prefix_until_let x impl)
 in (match (lopt) with
 | None -> begin
@@ -111,7 +111,7 @@ in FStar_Syntax_Syntax.Error (_155_50))
 in (Prims.raise _155_51))
 end else begin
 (
-
+# 147 "FStar.Parser.Interleave.fst"
 let remaining_iface_vals = (FStar_All.pipe_right ds (FStar_List.collect (fun d -> (match (d.FStar_Parser_AST.d) with
 | FStar_Parser_AST.Val (_63_112, x, _63_115) -> begin
 (x)::[]
@@ -132,10 +132,10 @@ end
 (match (let_x.FStar_Parser_AST.d) with
 | FStar_Parser_AST.ToplevelLet (_63_128, _63_130, defs) -> begin
 (
-
+# 156 "FStar.Parser.Interleave.fst"
 let def_lids = (FStar_Parser_AST.lids_of_let defs)
 in (
-
+# 157 "FStar.Parser.Interleave.fst"
 let iface_prefix_opt = (FStar_All.pipe_right iface (FStar_Util.prefix_until (fun d -> (match (d.FStar_Parser_AST.d) with
 | FStar_Parser_AST.Val (_63_137, y, _63_140) -> begin
 (not ((FStar_All.pipe_right def_lids (FStar_Util.for_some (id_eq_lid y)))))
@@ -144,7 +144,7 @@ end
 true
 end))))
 in (
-
+# 163 "FStar.Parser.Interleave.fst"
 let _63_154 = (match (iface_prefix_opt) with
 | None -> begin
 ((iface), ([]))
@@ -155,7 +155,7 @@ end)
 in (match (_63_154) with
 | (all_vals_for_defs, rest_iface) -> begin
 (
-
+# 170 "FStar.Parser.Interleave.fst"
 let hoist = (FStar_List.append prefix (FStar_List.append all_vals_for_defs ((let_x)::[])))
 in (aux ((hoist)::out) rest_iface rest_impl))
 end))))

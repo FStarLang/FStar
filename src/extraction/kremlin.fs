@@ -476,7 +476,8 @@ and translate_expr env e: expr =
       EBound (find env v)
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var (v, _) }; e ]) when (string_of_mlpath p = "FStar.HST.op_Colon_Equals" && is_mutable env v) ->
       EAssign (EBound (find env v), translate_expr env e)
-  | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.index") ->
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ])
+    when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.create") ->
       EBufCreate (translate_expr env e1, translate_expr env e2)
@@ -496,7 +497,8 @@ and translate_expr env e: expr =
       EBufSub (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
-  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.upd") ->
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ])
+    when string_of_mlpath p = "FStar.Buffer.upd" || string_of_mlpath p = "FStar.Buffer.op_Array_Assignment" ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HST.push_frame") ->
       EPushFrame
@@ -557,8 +559,9 @@ and translate_expr env e: expr =
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
        * supported, and quantified type schemes are not supported either *)
       failwith "todo: translate_expr [MLE_Let]"
-  | MLE_App _ ->
-      failwith "todo: translate_expr [MLE_App]"
+  | MLE_App (head, _) ->
+      failwith (Util.format1 "todo: translate_expr [MLE_App] (head is: %s)"
+        (ML.Code.string_of_mlexpr ([], "") head))
   | MLE_Fun _ ->
       failwith "todo: translate_expr [MLE_Fun]"
   | MLE_CTor _ ->
