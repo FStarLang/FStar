@@ -114,7 +114,7 @@ let init () =
         ("n_cores"                      , Int 1);
         ("no_default_includes"          , Bool false);
         ("no_extract"                   , List []);
-        ("no_location_info"             , Bool true);
+        ("no_location_info"             , Bool false);
         ("odir"                         , Unset);
         ("prims"                        , Unset);
         ("pretype"                      , Bool true);
