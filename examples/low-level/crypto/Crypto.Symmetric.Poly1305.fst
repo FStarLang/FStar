@@ -19,6 +19,7 @@ open Math.Lib
 open Math.Lemmas
 (** Helper functions for buffers *)
 open Buffer.Utils
+open FStar.Buffer.Quantifiers
 
 open Crypto.Symmetric.Poly1305.Parameters
 open Crypto.Symmetric.Poly1305.Bigint
@@ -30,11 +31,8 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS = FStar.HyperStack
 
-#set-options "--lax"
-
 (* Poly1305 prime *)
 let p_1305 () = reveal prime
-
 
 (** *********************************************)
 (**            Type definitions                 *)
@@ -42,7 +40,7 @@ let p_1305 () = reveal prime
 type elem = n:nat{n < p_1305()} // Element of the group Z/p_1305.Z
 type elemB = bigint        // Mutable big integer representation (5 64-bit limbs)
 
-type word = b:seq byte{Seq.length b <= 16} // Pure representation of the 16-bit words on which 
+type word = b:seq byte{Seq.length b <= 16} // Pure representation of the 16-bit words on which
 					  // poly1305 computation is run
 type wordB = b:bytes{length b <= 16}  // Concrete (mutable) representation of those words
 
@@ -67,148 +65,288 @@ let op_Star_At = group_mul
 (* From the current memory state, returns the word corresponding to a wordB *)
 let sel_word (h:mem) (b:wordB{live h b}) : GTot word
   = as_seq h b
-assume val esel_word:h:mem -> b:wordB{live h b} -> Tot (erased word)
+val esel_word:h:mem -> b:wordB{live h b} -> Tot (erased word)
+let esel_word h b = hide (sel_word h b)
 
 (* From the current memory state, returns the group element corresponding to a elemB *)
 let sel_elem (h:mem) (b:elemB{live h b}) : GTot elem
   = eval h b norm_length % p_1305 ()
 
-(* From the current memory state, returns the integer corresponding to a elemB, (before 
+(* From the current memory state, returns the integer corresponding to a elemB, (before
    computing the modulo) *)
-let sel_int (h:mem) (b:elemB{live h b}) : GTot elem
+let sel_int (h:mem) (b:elemB{live h b}) : GTot nat
   = eval h b norm_length
 
 (* Little endian integer value of a sequence of bytes *)
-let rec little_endian (b:word) : GTot (n:nat{n < pow2 128}) (decreases (Seq.length b))
+let rec little_endian (b:word) : GTot (n:nat) (decreases (Seq.length b))
   = if Seq.length b = 0 then 0
-    else U8.v (Seq.index b (Seq.length b - 1)) + 
+    else U8.v (Seq.index b 0) +
 	 pow2 8 * little_endian (Seq.slice b 1 (Seq.length b))
 
+val lemma_euclidian_division: a:nat -> b:nat -> Lemma
+  (requires (a < pow2 8))
+  (ensures  (a + pow2 8 * b < pow2 8 * (b+1)))
+let lemma_euclidian_division a b = ()
+
+val lemma_factorise: a:nat -> b:nat -> Lemma
+  (requires (True))
+  (ensures  (a + a * b = a * (b + 1)))
+let lemma_factorise a b = ()
+
+#reset-options "--z3timeout 100"
+#set-options "--lax" // OK, but long timeout
+
+val lemma_little_endian_is_bounded: b:word -> Lemma
+  (requires (True))
+  (ensures  (little_endian b < pow2 (8*(Seq.length b))))
+  (decreases (Seq.length b))
+let rec lemma_little_endian_is_bounded b =
+  if Seq.length b = 0 then ()
+  else (
+    let s = Seq.slice b 1 (Seq.length b) in
+    assert(Seq.length s = Seq.length b - 1);
+    lemma_little_endian_is_bounded s;
+    assert(U8.v (Seq.index b 0) < pow2 8);
+    assert(little_endian s < pow2 (8 * Seq.length s));
+    assert(little_endian b < pow2 8 + pow2 8 * pow2 (8 * (Seq.length b - 1)));
+    lemma_euclidian_division (U8.v (Seq.index b 0)) (little_endian s);
+    assert(little_endian b <= pow2 8 * (little_endian s + 1));
+    assert(little_endian b <= pow2 8 * pow2 (8 * (Seq.length b - 1)));
+    Math.Lemmas.pow2_exp_1 8 (pow2 (8 * (Seq.length b - 1)));
+    lemma_factorise 8 (Seq.length b - 1)
+  )
+
+#reset-options
+
+val lemma_little_endian_lt_2_128: b:word -> Lemma
+  (requires (True))
+  (ensures  (little_endian b < pow2 128))
+  [SMTPat (little_endian b)]
+let lemma_little_endian_lt_2_128 b =
+  lemma_little_endian_is_bounded b;
+  if Seq.length b = 16 then ()
+  else Math.Lib.pow2_increases_lemma 128 (8 * Seq.length b)
 
 (** *********************************************)
 (**        Poly1305 functional invariant        *)
 (** *********************************************)
-(* TODO: chose a definition *)
-(* First possible definition *)
-val poly: vs:seq (w:word{Seq.length w = 16}) -> r:elem -> GTot (a:elem)
+
+#reset-options "--initial_fuel 4 --max_fuel 4"
+
+let lemma_prime_is_greater_than_2_128 (u:unit) : Lemma
+  (requires True)
+  (ensures  (p_1305 () > pow2 128))
+  = cut (pow2 3 = 8);
+    Math.Lib.pow2_increases_lemma 130 129;
+    Math.Lib.pow2_increases_lemma 129 128;
+    Math.Lib.pow2_increases_lemma 128 3
+
+#reset-options
+
+val poly: vs:seq (w:word{Seq.length w = 16}) -> r:elem -> GTot (a:elem) (decreases (Seq.length vs))
 let rec poly vs r =
   if Seq.length vs = 0 then 0
-  else (pow2 128 +@ little_endian (Seq.index vs 0)) *@ r +@ poly (Seq.slice vs 1 (Seq.length vs)) r 
+  else (
+    lemma_prime_is_greater_than_2_128 ();
+    pow2 128 +@ little_endian (Seq.index vs 0) *@ r +@ poly (Seq.slice vs 1 (Seq.length vs)) r
+  )
+
 (* Second possible definition *)
-val poly': vs:seq (w:word{Seq.length w = 16}) -> r:elem -> GTot (a:elem)
-let rec poly' vs r =
-  if Seq.length vs = 0 then 0
-  else (little_endian (Seq.index vs 0 @| (Seq.create 1 1uy))) *@ r +@ poly' (Seq.slice vs 1 (Seq.length vs)) r
+(* NB: doesn't typecheck as is because a word is defined as a 16 bytes as most and not 17 *)
+(* val poly': vs:seq (w:word{Seq.length w = 16}) -> r:elem -> GTot (a:elem) *)
+(* let rec poly' vs r = *)
+(*   if Seq.length vs = 0 then 0 *)
+(*   else (little_endian (Seq.index vs 0 @| (Seq.create 1 1uy))) *@ r +@ poly' (Seq.slice vs 1 (Seq.length vs)) r *)
 
 (** *********************************************)
 (**            Encoding functions               *)
 (** *********************************************)
+let mk_mask (nbits:FStar.UInt32.t{FStar.UInt32.v nbits < 64}) :
+  Tot (z:U64.t{v z = pow2 (FStar.UInt32.v nbits) - 1})
+  = Math.Lib.pow2_increases_lemma 64 (FStar.UInt32.v nbits);
+    U64 ((1uL <<^ nbits) -^ 1uL)
+
 (* Formats a wordB into an elemB *)
 val toGroup: a:elemB -> b:wordB{length b = 16 /\ disjoint a b} -> STL unit
-  (requires (fun h -> live h a /\ live h b))
-  (ensures  (fun h0 _ h1 -> 
+  (requires (fun h -> live h a /\ live h b /\ disjoint a b))
+  (ensures  (fun h0 _ h1 ->
     live h0 b /\ // Initial post condition
     norm h1 a /\ // the elemB 'a' is in a 'workable' state
     modifies_1 a h0 h1 /\ // Only a was modified
-    sel_int h1 a = little_endian (sel_word h0 b)
+    sel_int h1 a = little_endian (sel_word h0 b) /\ // Functional correctness
+    v (get h1 a 4) < pow2 24 // Necesary to be allowed to add 2^128
     ))
 let toGroup b s =
-  (* Math.Lib.pow2_increases_lemma 64 26; *)
-  (* Math.Lib.pow2_increases_lemma 64 32; *)
-  (* Math.Lib.pow2_increases_lemma 26 24; *)
-  let mask_26 = U64.sub (1UL <<^ 26ul) 1UL in 
-  (* cut (v mask_26 = v 1UL * pow2 26 - v 1UL /\ v 1UL = 1); *)
-  (* cut (v mask_26 = pow2 26 - 1); *)
+  let h0 = HST.get() in
+  let mask_26 = mk_mask 26ul in
   let s0 = sub s 0ul  4ul in
   let s1 = sub s 4ul  4ul in
   let s2 = sub s 8ul  4ul in
   let s3 = sub s 12ul 4ul in
-  let n0 = (uint32_of_bytes s0) in 
+  let n0 = (uint32_of_bytes s0) in
   let n1 = (uint32_of_bytes s1) in
   let n2 = (uint32_of_bytes s2) in
-  let n3 = (uint32_of_bytes s3) in 
+  let n3 = (uint32_of_bytes s3) in
   let n0 = Int.Cast.uint32_to_uint64 n0 in
   let n1 = Int.Cast.uint32_to_uint64 n1 in
   let n2 = Int.Cast.uint32_to_uint64 n2 in
   let n3 = Int.Cast.uint32_to_uint64 n3 in
-  (* ulogand_lemma_4 #63 n0 26 mask_26; *)
-  (* ulogand_lemma_4 #63 (n1 <<^ 6) 26 mask_26;  *)
-  (* ulogand_lemma_4 #63 (n2 <<^ 12) 26 mask_26;  *)
-  (* ulogand_lemma_4 #63 (n3 <<^ 18) 26 mask_26;   *)
-  (* aux_lemma n0 n1 26;  *)
-  (* aux_lemma n1 n2 20; *)
-  (* aux_lemma n2 n3 14;   *)
-  (* aux_lemma_1 n3;  *)
+  (* TODO *)
+  assume (v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 = little_endian (sel_word h0 s));
   let n0' = n0 &^ mask_26 in
-  let n1' = (n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26) in 
+  let n1' = (n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26) in
   let n2' = (n1 >>^ 20ul) |^ ((n2 <<^ 12ul) &^ mask_26) in
-  let n3' = (n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26) in 
-  let n4' = (n3 >>^ 8ul) in 
-  upd b 0ul n0'; 
+  let n3' = (n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26) in
+  let n4' = (n3 >>^ 8ul) in
+  (* TODO *)
+  assume (v n0' + pow2 26 * v n1' + pow2 52 * v n2' + pow2 78 * v n3' + pow2 104 * v n4'
+    = little_endian (sel_word h0 s));
+  upd b 0ul n0';
   upd b 1ul n1';
-  upd b 2ul n2'; 
+  upd b 2ul n2';
   upd b 3ul n3';
-  upd b 4ul n4'(* ; *)
-  (* let h = HST.get() in *)
-  (* assume (v (get h b 4) < pow2 24); *)
-  (* assume (norm h b) *)
+  upd b 4ul n4';
+  let h1 = HST.get() in
+  (* TODO *)
+  assume (sel_int h1 b = little_endian (sel_word h0 s));
+  assume (v (get h1 b 4) < pow2 24);
+  assume (norm h1 b)
+
+(* (\* Formats a wordB into an elemB *\) *)
+(* val toGroup: a:elemB -> b:wordB{length b = 16 /\ disjoint a b} -> STL unit *)
+(*   (requires (fun h -> live h a /\ live h b)) *)
+(*   (ensures  (fun h0 _ h1 -> *)
+(*     live h0 b /\ // Initial post condition *)
+(*     norm h1 a /\ // the elemB 'a' is in a 'workable' state *)
+(*     modifies_1 a h0 h1 /\ // Only a was modified *)
+(*     sel_int h1 a = little_endian (sel_word h0 b) /\ // Functional correctness *)
+(*     v (get h1 a 4) < pow2 24 // Necesary to be allowed to add 2^128 *)
+(*     )) *)
+(* let toGroup b s = *)
+(*   admit(); // TODO *)
+(*   let h0 = HST.get() in *)
+(*   (\* Math.Lib.pow2_increases_lemma 64 26; *\) *)
+(*   (\* Math.Lib.pow2_increases_lemma 64 32; *\) *)
+(*   (\* Math.Lib.pow2_increases_lemma 26 24; *\) *)
+(*   let mask_26 = U64.sub (1UL <<^ 26ul) 1UL in *)
+(*   (\* cut (v mask_26 = v 1UL * pow2 26 - v 1UL /\ v 1UL = 1); *\) *)
+(*   (\* cut (v mask_26 = pow2 26 - 1); *\) *)
+(*   let s0 = sub s 0ul  4ul in *)
+(*   let s1 = sub s 4ul  4ul in *)
+(*   let s2 = sub s 8ul  4ul in *)
+(*   let s3 = sub s 12ul 4ul in *)
+(*   let n0 = (uint32_of_bytes s0) in *)
+(*   let n1 = (uint32_of_bytes s1) in *)
+(*   let n2 = (uint32_of_bytes s2) in *)
+(*   let n3 = (uint32_of_bytes s3) in *)
+(*   let n0 = Int.Cast.uint32_to_uint64 n0 in *)
+(*   let n1 = Int.Cast.uint32_to_uint64 n1 in *)
+(*   let n2 = Int.Cast.uint32_to_uint64 n2 in *)
+(*   let n3 = Int.Cast.uint32_to_uint64 n3 in *)
+(*   (\* ulogand_lemma_4 #63 n0 26 mask_26; *\) *)
+(*   (\* ulogand_lemma_4 #63 (n1 <<^ 6) 26 mask_26; *\) *)
+(*   (\* ulogand_lemma_4 #63 (n2 <<^ 12) 26 mask_26; *\) *)
+(*   (\* ulogand_lemma_4 #63 (n3 <<^ 18) 26 mask_26; *\) *)
+(*   (\* aux_lemma n0 n1 26; *\) *)
+(*   (\* aux_lemma n1 n2 20; *\) *)
+(*   (\* aux_lemma n2 n3 14; *\) *)
+(*   (\* aux_lemma_1 n3; *\) *)
+(*   let n0' = n0 &^ mask_26 in *)
+(*   let n1' = (n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26) in *)
+(*   let n2' = (n1 >>^ 20ul) |^ ((n2 <<^ 12ul) &^ mask_26) in *)
+(*   let n3' = (n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26) in *)
+(*   let n4' = (n3 >>^ 8ul) in *)
+(*   upd b 0ul n0'; *)
+(*   upd b 1ul n1'; *)
+(*   upd b 2ul n2'; *)
+(*   upd b 3ul n3'; *)
+(*   upd b 4ul n4'; *)
+(*   let h1 = HST.get() in *)
+(*   () *)
+(*   (\* assume (v (get h b 4) < pow2 24); *\) *)
+(*   (\* assume (norm h b) *\) *)
+
+#reset-options "--initial_fuel 6 --max_fuel 6"
+
+let lemma_bitweight_values (u:unit) : Lemma (bitweight templ 0 = 0 /\ bitweight templ 1 = 26
+  /\ bitweight templ 2 = 52 /\ bitweight templ 3 = 78 /\ bitweight templ 4 = 104)
+  = ()
+
+#reset-options "--initial_fuel 1 --max_fuel 1"
+
+val lemma_toGroup_plus_2_128_0: ha:mem -> a:elemB{live ha a} -> Lemma
+  (requires (True))
+  (ensures  (sel_int ha a =
+    v (get ha a 0) + pow2 26 * v (get ha a 1) + pow2 52 * v (get ha a 2) + pow2 78 * v (get ha a 3)
+    + pow2 104 * v (get ha a 4)))
+let lemma_toGroup_plus_2_128_0 ha a =
+  lemma_bitweight_values ();
+  assert(sel_int ha a = pow2 104 * v (get ha a 4) + eval ha a 4);
+  assert(eval ha a 4 = pow2 78 * v (get ha a 3) + eval ha a 3);
+  assert(eval ha a 3 = pow2 52 * v (get ha a 2) + eval ha a 2);
+  assert(eval ha a 2 = pow2 26 * v (get ha a 1) + eval ha a 1);
+  assert(eval ha a 1 = pow2 0 * v (get ha a 0) + eval ha a 0);
+  assert(pow2 0 * v (get ha a 0) = v (get ha a 0) /\ eval ha a 0 = 0)
+
+val lemma_toGroup_plus_2_128_1: unit -> Lemma
+  (ensures  (v (1uL <<^ 24ul) = pow2 24))
+let lemma_toGroup_plus_2_128_1 () =
+  Math.Lib.pow2_increases_lemma 64 24
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
+val lemma_toGroup_plus_2_128: ha:mem -> a:elemB -> hb:mem -> b:elemB -> Lemma
+  (requires (norm ha a /\ norm hb b /\ v (get hb b 4) < pow2 24
+    /\ v (get ha a 4) = v (get hb b 4) + pow2 24
+    /\ v (get ha a 3) = v (get hb b 3) /\ v (get ha a 2) = v (get hb b 2)
+    /\ v (get ha a 1) = v (get hb b 1) /\ v (get ha a 0) = v (get hb b 0)
+    ))
+  (ensures  (norm ha a /\ norm hb b /\ sel_int ha a = pow2 128 + sel_int hb b))
+let lemma_toGroup_plus_2_128 ha a hb b =
+  Math.Lib.pow2_increases_lemma 26 25;
+  Math.Lib.pow2_increases_lemma 25 24;
+  lemma_toGroup_plus_2_128_0 ha a;
+  lemma_toGroup_plus_2_128_0 hb b;
+  Math.Lemmas.distributivity_add_right (pow2 104) (v (get hb b 4)) (pow2 24);
+  Math.Lib.pow2_exp_lemma 104 24;
+  ()
+
+#reset-options "--initial_fuel 0 --max_fuel 0"
+
+let add_2_24 (x:t{v x < pow2 24}) : Tot (z:t{v z = v x + pow2 24 /\ v z < pow2 26})
+  = lemma_toGroup_plus_2_128_1 ();
+    Math.Lemmas.pow2_double_sum 24;
+    Math.Lemmas.pow2_double_sum 25;
+    Math.Lib.pow2_increases_lemma 64 24;
+    Math.Lib.pow2_increases_lemma 64 25;
+    x +^ (1uL <<^ 24ul)
+
+#reset-options "--z3timeout 50"
 
 (* Formats a wordB into an elemB *)
 val toGroup_plus_2_128: a:elemB -> b:wordB{length b = 16 /\ disjoint a b} -> STL unit
-  (requires (fun h -> live h a /\ live h b))
-  (ensures  (fun h0 _ h1 -> 
+  (requires (fun h -> live h a /\ live h b /\ disjoint a b))
+  (ensures  (fun h0 _ h1 ->
     live h0 b /\ // Initial post condition
     norm h1 a /\ // the elemB 'a' is in a 'workable' state
     modifies_1 a h0 h1 /\ // Only a was modified
-    (* TODO: Choose between the following 2 (equivalent) formulations *)
-    sel_int h1 a = little_endian (sel_word h0 b @| Seq.create 1 1uy) /\ // Expressed with sequences
     sel_int h1 a = pow2 128 + little_endian (sel_word h0 b) // Expressed arithmetically
     ))
 let toGroup_plus_2_128 b s =
-  (* Math.Lib.pow2_increases_lemma 64 26; *)
-  (* Math.Lib.pow2_increases_lemma 64 32; *)
-  (* Math.Lib.pow2_increases_lemma 26 24; *)
-  let mask_26 = U64.sub (1UL <<^ 26ul) 1UL in 
-  (* cut (v mask_26 = v 1UL * pow2 26 - v 1UL /\ v 1UL = 1); *)
-  (* cut (v mask_26 = pow2 26 - 1); *)
-  let s0 = sub s 0ul  4ul in
-  let s1 = sub s 4ul  4ul in
-  let s2 = sub s 8ul  4ul in
-  let s3 = sub s 12ul 4ul in
-  let n0 = (uint32_of_bytes s0) in 
-  let n1 = (uint32_of_bytes s1) in
-  let n2 = (uint32_of_bytes s2) in
-  let n3 = (uint32_of_bytes s3) in 
-  let n0 = Int.Cast.uint32_to_uint64 n0 in
-  let n1 = Int.Cast.uint32_to_uint64 n1 in
-  let n2 = Int.Cast.uint32_to_uint64 n2 in
-  let n3 = Int.Cast.uint32_to_uint64 n3 in
-  (* ulogand_lemma_4 #63 n0 26 mask_26; *)
-  (* ulogand_lemma_4 #63 (n1 <<^ 6) 26 mask_26;  *)
-  (* ulogand_lemma_4 #63 (n2 <<^ 12) 26 mask_26;  *)
-  (* ulogand_lemma_4 #63 (n3 <<^ 18) 26 mask_26;   *)
-  (* aux_lemma n0 n1 26;  *)
-  (* aux_lemma n1 n2 20; *)
-  (* aux_lemma n2 n3 14;   *)
-  (* aux_lemma_1 n3;  *)
-  let n0' = n0 &^ mask_26 in
-  let n1' = (n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26) in 
-  let n2' = (n1 >>^ 20ul) |^ ((n2 <<^ 12ul) &^ mask_26) in
-  let n3' = (n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26) in 
-  let n4' = (n3 >>^ 8ul) +^ (1uL <<^ 24ul) in 
-  upd b 0ul n0'; 
-  upd b 1ul n1';
-  upd b 2ul n2'; 
-  upd b 3ul n3';
-  upd b 4ul n4'(* ; *)
-  (* let h = HST.get() in *)
-  (* assume (v (get h b 4) < pow2 24); *)
-  (* assume (norm h b) *)
+  toGroup b s;
+  let h0 = HST.get() in
+  let b4 = b.(4ul) in
+  let b4' = add_2_24 b4 in
+  b.(4ul) <- b4';
+  let h1 = HST.get() in
+  lemma_upd_quantifiers h0 h1 b 4ul b4';
+  lemma_toGroup_plus_2_128 h1 b h0 b
+
+#reset-options
 
 val trunc1305: a:elemB -> b:wordB{disjoint a b} -> STL unit
-  (requires (fun h -> norm h a /\ live h b))
-  (ensures  (fun h0 _ h1 -> live h1 b /\ norm h0 a
-    /\ modifies_1 b h0 h1
+  (requires (fun h -> norm h a /\ live h b /\ disjoint a b))
+  (ensures  (fun h0 _ h1 -> live h1 b /\ norm h0 a /\ modifies_1 b h0 h1
     /\ sel_elem h0 a % pow2 128 = little_endian (sel_word h1 b) ))
 let trunc1305 b s =
   let h0 = HST.get() in
@@ -216,33 +354,50 @@ let trunc1305 b s =
      - before finalization sel_int h b < pow2 130
      - alfter finalization sel_int h b = sel_elem h b *)
   finalize b;
+  let h1 = HST.get() in
+  (* TODO *)
+  assume (sel_elem h1 b = sel_elem h0 b /\ sel_elem h1 b = sel_int h1 b);
   (* Copy of the 128 first bits of b into s *)
   let b0 = index b 0ul in
   let b1 = index b 1ul in
   let b2 = index b 2ul in
   let b3 = index b 3ul in
   let b4 = index b 4ul in
-  upd s 0ul (Int.Cast.uint64_to_uint8 b0);  // 0 
-  upd s 1ul (Int.Cast.uint64_to_uint8 (b0 >>^ 8ul)); //8
-  upd s 2ul (Int.Cast.uint64_to_uint8 (b0 >>^ 16ul)); //16
-  upd s 3ul (U8.add_mod (Int.Cast.uint64_to_uint8 (b0 >>^ 24ul)) // 24 
-			       (Int.Cast.uint64_to_uint8 (b1 <<^ 2ul))); 
-  upd s 4ul (Int.Cast.uint64_to_uint8 (b1 >>^ 6ul)); // 32
-  upd s 5ul (Int.Cast.uint64_to_uint8 (b1 >>^ 14ul)); // 40
-  upd s 6ul (U8.add_mod (Int.Cast.uint64_to_uint8 (b1 >>^ 22ul)) 
-			       (Int.Cast.uint64_to_uint8 (b2 <<^ 4ul))); // 48
-  upd s 7ul (Int.Cast.uint64_to_uint8 (b2 >>^ 4ul)); // 56
-  upd s 8ul (Int.Cast.uint64_to_uint8 (b2 >>^ 12ul)); // 64
-  upd s 9ul (U8.add_mod (Int.Cast.uint64_to_uint8 (b2 >>^ 20ul)) 
-			       (Int.Cast.uint64_to_uint8 (b3 <<^ 6ul))); // 72
-  upd s 10ul (Int.Cast.uint64_to_uint8 (b3 >>^ 2ul)); // 80 
-  upd s 11ul (Int.Cast.uint64_to_uint8 (b3 >>^ 10ul)); // 88
-  let h = HST.get() in
-  cut (live h s /\ modifies_1 s h0 h); 
-  upd s 12ul (Int.Cast.uint64_to_uint8 (b3 >>^ 18ul)); // 96
-  upd s 13ul (Int.Cast.uint64_to_uint8 (b4)); // 104
-  upd s 14ul (Int.Cast.uint64_to_uint8 (b4 >>^ 8ul)); // 112 
-  upd s 15ul (Int.Cast.uint64_to_uint8 (b4 >>^ 16ul)); // 120 
+  (* JK: some bitvector theory would simplify a lot the rest of the proof *)
+  admit(); // TODO
+  let s0 = uint64_to_uint8 b0 in
+  let s1 = uint64_to_uint8 (b0 >>^ 8ul) in
+  let s2 = uint64_to_uint8 (b0 >>^ 16ul) in
+  let s3 = uint64_to_uint8 ((b0 >>^ 24ul) +^ (b1 <<^ 2ul)) in
+  let s4 = uint64_to_uint8 (b1 >>^ 6ul) in
+  let s5 = uint64_to_uint8 (b1 >>^ 14ul) in
+  let s6 = uint64_to_uint8 ((b1 >>^ 22ul) +^ (b2 <<^ 4ul)) in
+  let s7 = uint64_to_uint8 (b2 >>^ 4ul) in
+  let s8 = uint64_to_uint8 (b2 >>^ 12ul) in
+  let s9 = uint64_to_uint8 ((b2 >>^ 20ul) +^ (b3 <<^ 6ul)) in
+  let s10 = uint64_to_uint8 (b3 >>^ 2ul) in
+  let s11 = uint64_to_uint8 (b3 >>^ 10ul) in
+  let s12 = uint64_to_uint8 (b3 >>^ 18ul) in
+  let s13 = uint64_to_uint8 (b4) in
+  let s14 = uint64_to_uint8 (b4 >>^ 8ul) in
+  let s15 = uint64_to_uint8 (b4 >>^ 16ul) in
+  (* * *)
+  upd s 0ul s0;
+  upd s 1ul s1;
+  upd s 2ul s2;
+  upd s 3ul s3;
+  upd s 4ul s4;
+  upd s 5ul s5;
+  upd s 6ul s6;
+  upd s 7ul s7;
+  upd s 8ul s8;
+  upd s 9ul s9;
+  upd s 10ul s10;
+  upd s 11ul s11;
+  upd s 12ul s12;
+  upd s 13ul s13;
+  upd s 14ul s14;
+  upd s 15ul s15;
   ()
 
 (* Clamps the key, see RFC *)
@@ -252,25 +407,131 @@ val clamp: r:wordB{length r = 16} -> STL unit
 let clamp r =
   let mask_15 = 15uy in
   let mask_252 = 252uy in
-  upd r 3ul  (U8.op_Amp_Hat (index r 3ul ) mask_15);
-  upd r 7ul  (U8.op_Amp_Hat (index r 7ul ) mask_15);
-  upd r 11ul (U8.op_Amp_Hat (index r 11ul) mask_15);
-  upd r 15ul (U8.op_Amp_Hat (index r 15ul) mask_15);
-  upd r 4ul  (U8.op_Amp_Hat (index r 4ul ) mask_252);
-  upd r 8ul  (U8.op_Amp_Hat (index r 8ul ) mask_252);
-  upd r 12ul (U8.op_Amp_Hat (index r 12ul) mask_252);
+  upd r 3ul  (U8 (index r 3ul &^ mask_15));
+  upd r 7ul  (U8 (index r 7ul &^ mask_15));
+  upd r 11ul (U8 (index r 11ul &^ mask_15));
+  upd r 15ul (U8 (index r 15ul &^ mask_15));
+  upd r 4ul  (U8 (index r 4ul &^ mask_252));
+  upd r 8ul  (U8 (index r 8ul &^ mask_252));
+  upd r 12ul (U8 (index r 12ul &^ mask_252));
   ()
 
 
 (** *********************************************)
 (**          Encoding-related lemmas            *)
 (** *********************************************)
-val lemma_little_endian_is_injective: b:word -> b':word -> Lemma
-  (requires (little_endian b = little_endian b'))
-  (ensures  (b == b'))
-let lemma_little_endian_is_injective b b' =
-  (* TODO *)
+
+let lemma_little_endian_is_injective_0 (b:word{Seq.length b > 0}) : Lemma
+  (requires (True))
+  (ensures  (little_endian b = U8.v (Seq.index b 0) + pow2 8 * little_endian (Seq.slice b 1 (Seq.length b)) ))
+  = ()
+
+#reset-options "--initial_fuel 0 --max_fuel 0"
+
+(* Lemma unknown to F*, should go into core libraries *)
+assume val lemma_modulo: a:nat -> b:nat -> c:pos -> Lemma
+  (requires (True))
+  (ensures   ((a + b * c) % c = a))
+
+let lemma_little_endian_is_injective_1 (b:pos) (q:nat) (r:nat) (q':nat) (r':nat) : Lemma
+  (requires (r < b /\ r' < b /\ r + b * q = r' + b * q'))
+  (ensures  (r = r' /\ q = q'))
+  = lemma_modulo r q b;
+    lemma_modulo r' q' b
+
+#reset-options
+
+val lemma_little_endian_is_injective_2: b:word -> len:pos{len <= Seq.length b} -> Lemma
+  (requires (True))
+  (ensures  (
+    let s = Seq.slice b (Seq.length b - len) (Seq.length b) in
+    let s' = Seq.slice s 1 (Seq.length s) in
+    let s'' = Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) in
+    s'' == s'))
+let lemma_little_endian_is_injective_2 b len =
+  let s = Seq.slice b (Seq.length b - len) (Seq.length b) in
+  let s' = Seq.slice s 1 (Seq.length s) in
+  let s'' = Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) in
+  Seq.lemma_eq_intro s' s''
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
+val lemma_little_endian_is_injective_3: b:word -> b':word  -> len:pos{len <= Seq.length b /\ len <= Seq.length b'} -> Lemma
+  (requires (Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) == Seq.slice b' (Seq.length b' - (len-1)) (Seq.length b')
+    /\ Seq.index b (Seq.length b - len) = Seq.index b' (Seq.length b' - len)))
+  (ensures  (Seq.slice b (Seq.length b - len) (Seq.length b) == Seq.slice b' (Seq.length b' - len) (Seq.length b')))
+let lemma_little_endian_is_injective_3 b b' len =
+  Seq.lemma_eq_intro (Seq.slice b' (Seq.length b' - len) (Seq.length b'))
+		     (Seq.append (Seq.create 1 (Seq.index b' (Seq.length b' - len))) (Seq.slice b' (Seq.length b' - (len-1)) (Seq.length b')));
+  Seq.lemma_eq_intro (Seq.slice b (Seq.length b - len) (Seq.length b))
+		     (Seq.append (Seq.create 1 (Seq.index b (Seq.length b - len))) (Seq.slice b (Seq.length b - (len-1)) (Seq.length b)))
+
+#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 50"
+
+val lemma_little_endian_is_injective: b:word -> b':word ->
+  len:nat{Seq.length b >= len /\ Seq.length b' >= len} -> Lemma
+    (requires (little_endian (Seq.slice b (Seq.length b - len) (Seq.length b))
+      = little_endian (Seq.slice b' (Seq.length b' - len) (Seq.length b')) ))
+    (ensures  (Seq.slice b (Seq.length b - len) (Seq.length b)
+	      == Seq.slice b' (Seq.length b' - len) (Seq.length b')))
+let rec lemma_little_endian_is_injective b b' len =
+  if len = 0 then (
+    Seq.lemma_eq_intro (Seq.slice b (Seq.length b - len) (Seq.length b))
+		       (Seq.slice b' (Seq.length b' - len) (Seq.length b'))
+  )
+  else (
+    let s = Seq.slice b (Seq.length b - len) (Seq.length b) in
+    let s' = Seq.slice b' (Seq.length b' - len) (Seq.length b') in
+    assert(Seq.length s = len /\ Seq.length s' = len);
+    lemma_little_endian_is_injective_0 s; lemma_little_endian_is_injective_0 s';
+    lemma_little_endian_is_injective_1 (pow2 8)
+				      (little_endian (Seq.slice s 1 (Seq.length s)))
+				      (U8.v (Seq.index s 0))
+				      (little_endian (Seq.slice s' 1 (Seq.length s')))
+				      (U8.v (Seq.index s' 0));
+    lemma_little_endian_is_injective_2 b len;
+    lemma_little_endian_is_injective_2 b' len;
+    lemma_little_endian_is_injective b b' (len - 1);
+    lemma_little_endian_is_injective_3 b b' len
+  )
+
+#reset-options "--initial_fuel 0 --max_fuel 0"
+
+val lemma_eucl_div_bound: a:nat -> b:nat -> q:pos -> Lemma
+  (requires (a < q))
+  (ensures  (a + q * b < q * (b+1)))
+let lemma_eucl_div_bound a b q = ()
+
+#reset-options "--initial_fuel 1 --max_fuel 1"
+
+val lemma_eval_norm_is_bounded: ha:mem -> a:elemB -> len:pos{len <= norm_length} -> Lemma
+  (requires (norm ha a))
+  (ensures  (norm ha a /\ eval ha a len < pow2 (26 * len) ))
+let rec lemma_eval_norm_is_bounded ha a len =
+  if len = 1 then (
+    eval_def ha a len
+  )
+  else (
+    (* WIP *)
+    admit();
+    eval_def ha a len;
+    lemma_bitweight_values ();
+    lemma_eval_norm_is_bounded ha a (len-1);
+    lemma_eucl_div_bound (v (get ha a (len-1))) (eval ha a (len-1)) (pow2 (bitweight templ (len-1)))
+  )
+
+val lemma_toGroup_is_injective_0: ha:mem -> hb:mem -> a:elemB -> b:elemB -> len:nat{len <= norm_length} -> Lemma
+  (requires (norm ha a /\ norm hb b /\ eval ha a len = eval hb b len))
+  (ensures  (norm ha a /\ norm hb b
+    /\ Seq.length (as_seq ha a) >= len /\ Seq.length (as_seq hb b) >= len
+    /\ Seq.slice (as_seq ha a) 0 len == Seq.slice (as_seq hb b) 0 len))
+let rec lemma_toGroup_is_injective_0 ha hb a b len =
   admit()
+  (* if len = 0 then Seq.lemma_eq_intro (Seq.slice (as_seq ha a) 0 len) (Seq.slice (as_seq hb b) 0 len) *)
+  (* else ( *)
+  (*   eval_def ha a len; eval_def hb b len; *)
+  (*   lemma_little_endian_is_injective_1 (pow2 (bitweight n-1)) *)
+  (* ) *)
 
 val lemma_toGroup_is_injective: ha:mem -> hb:mem -> a:elemB -> b:elemB ->
   Lemma (requires (norm ha a /\ norm hb b /\ sel_int ha a = sel_int hb b))
@@ -283,11 +544,11 @@ let lemma_toGroup_is_injective ha hb a b =
 (** *********************************************)
 (**        Polynomial computation step          *)
 (** *********************************************)
-(* Runs "Acc = ((Acc+block)*r) % p." on the accumulator, the well formatted block of the message 
+(* Runs "Acc = ((Acc+block)*r) % p." on the accumulator, the well formatted block of the message
    and the clamped part of the key *)
 val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block} -> r:elemB{disjoint acc r /\ disjoint block r} -> STL unit
   (requires (fun h -> norm h acc /\ norm h block /\ norm h r))
-  (ensures (fun h0 _ h1 -> norm h0 acc /\ norm h0 block /\ norm h0 r 
+  (ensures (fun h0 _ h1 -> norm h0 acc /\ norm h0 block /\ norm h0 r
     /\ norm h1 acc // the accumulation is back in a workable states
     /\ modifies_1 acc h0 h1 // It was the only thing modified
     /\ sel_elem h1 acc = (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r // Functional
@@ -317,10 +578,10 @@ let add_and_multiply acc block r =
   (* cut (bound27 h2 acc);  *)
   (* eq_lemma_1 h0 h2 acc r; *)
   (* cut (null h2 tmp);  *)
-  multiplication tmp acc r; 
+  multiplication tmp acc r;
   (* let h3 = HST.get() in *)
   (* satisfies_constraints_after_multiplication h3 tmp; *)
-  modulo tmp; 
+  modulo tmp;
   (* let h4 = HST.get() in *)
   blit tmp 0ul acc 0ul nlength;
   (* let h5 = HST.get() in *)
@@ -337,7 +598,7 @@ let add_and_multiply acc block r =
 (* Sets the accumulator to the value '0' *)
 val zeroB: a:elemB -> STL unit
   (requires (fun h -> live h a))
-  (ensures  (fun h0 _ h1 -> norm h1 a /\ modifies_1 a h0 h1 
+  (ensures  (fun h0 _ h1 -> norm h1 a /\ modifies_1 a h0 h1
     /\ sel_elem h1 a = 0 ))
 let zeroB a =
   upd a 0ul 0UL;
@@ -375,24 +636,24 @@ let poly1305_init acc r key =
   pop_frame();
   hide (Seq.createEmpty #word)
 
-val update_log: 
-  l:erased log -> 
-  msg:erased word{Seq.length (reveal msg) = 16} -> 
-  Tot (l':erased log{reveal l' == (reveal l @| Seq.create 1 (reveal msg))})
-let update_log l msg =
-  elift2 (fun l msg ->  (l @| Seq.create 1 msg)) l msg
+val update_log:
+  l:(* erased  *)log ->
+  msg:(* erased  *)word{Seq.length ((* reveal  *)msg) = 16} ->
+  Tot (l':(* erased  *)log{(* reveal  *)l' == ((* reveal  *)l @| Seq.create 1 ((* reveal  *)msg))})
+let update_log l msg = (l @| Seq.create 1 msg)
+  (* elift2 (fun l msg ->  (l @| Seq.create 1 msg)) l msg *)
 
 (* Update function:
    - takes a ghost log
-   - takes a message block, appends '1' to it and formats it to bigint format    
+   - takes a message block, appends '1' to it and formats it to bigint format
    - runs acc = ((acc*block)+r) % p *)
-val poly1305_update: 
-  current_log:erased log -> 
+val poly1305_update:
+  current_log:erased log ->
   msg:wordB ->
-  acc:elemB{disjoint msg acc} -> 
+  acc:elemB{disjoint msg acc} ->
   r:elemB{disjoint msg r /\ disjoint acc r} -> STL (erased log)
     (requires (fun h -> live h msg /\ norm h acc /\ norm h r
-      /\ poly (reveal current_log) (sel_elem h r) = sel_elem h acc // Incremental step of poly 
+      /\ poly (reveal current_log) (sel_elem h r) = sel_elem h acc // Incremental step of poly
       ))
     (ensures (fun h0 updated_log h1 -> norm h1 acc /\ norm h0 r
       /\ modifies_1 acc h0 h1
@@ -401,20 +662,20 @@ val poly1305_update:
 let poly1305_update log msg acc r =
   push_frame();
   let n = sub msg 0ul 16ul in // Select the message to update
-  (* TODO: pass the buffer for the block rather that create a fresh one to avoid 
+  (* TODO: pass the buffer for the block rather that create a fresh one to avoid
      too many copies *)
-  let block = create 0UL nlength in 
+  let block = create 0UL nlength in
   (* let h' = HST.get() in *)
   toGroup_plus_2_128 block n;
   add_and_multiply acc block r;
   let h = HST.get() in
   let msg = esel_word h msg in
-  let updated_log = update_log log msg in
+  let updated_log = Ghost.elift2 (fun log msg -> update_log log msg) log msg in
   pop_frame();
   updated_log
 
 (* Loop over Poly1305_update *)
-val poly1305_loop: current_log:erased log -> msg:bytes -> acc:elemB{disjoint msg acc} -> 
+val poly1305_loop: current_log:erased log -> msg:bytes -> acc:elemB{disjoint msg acc} ->
   r:elemB{disjoint msg r /\ disjoint acc r} -> ctr:u32{length msg >= 16 * w ctr} ->
   STL (erased log)
     (requires (fun h -> live h msg /\ norm h acc /\ norm h r))
@@ -427,11 +688,11 @@ let rec poly1305_loop log msg acc r ctr =
     let msg = offset msg 16ul in
     let h = HST.get() in
     let word = esel_word h msg in
-    poly1305_loop (update_log log word) msg acc r (ctr-|1ul)
+    poly1305_loop (Ghost.elift2 update_log log word) msg acc r (ctr-|1ul)
   end
 
 (* Performs the last step if there is an incomplete block *)
-val poly1305_last: msg:wordB -> acc:elemB{disjoint msg acc} -> 
+val poly1305_last: msg:wordB -> acc:elemB{disjoint msg acc} ->
   r:elemB{disjoint msg r /\ disjoint acc r} -> len:u32{w len <= length msg} ->
   STL unit
     (requires (fun h -> live h msg /\ norm h acc /\ norm h r))
@@ -441,7 +702,7 @@ let poly1305_last msg acc r len =
   push_frame();
   let h0 = HST.get() in
   if U32.eq len 0ul then ()
-  else (    
+  else (
     let n = create 0uy 16ul in
     blit msg 0ul n 0ul len;
     upd n len 1uy;
@@ -454,7 +715,7 @@ let poly1305_last msg acc r len =
 val add_word: a:wordB{length a = 16} -> b:wordB{length b = 16} -> STL unit
   (requires (fun h -> live h a /\ live h b))
   (ensures  (fun h0 _ h1 -> live h1 a /\ modifies_1 a h0 h1
-    /\ little_endian (sel_word h1 a) = 
+    /\ little_endian (sel_word h1 a) =
 	(little_endian (sel_word h0 a) + little_endian (sel_word h0 b)) % pow2 128 ))
 let add_word a b =
   let carry = 0ul in

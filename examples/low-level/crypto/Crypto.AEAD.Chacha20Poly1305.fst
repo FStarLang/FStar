@@ -9,7 +9,7 @@ open Crypto.Symmetric.Chacha20
 open Crypto.Symmetric.Poly1305.Bigint
 open Crypto.Symmetric.Poly1305
 
-#set-options "--lax"
+//#set-options "--lax"
 
 (* If the length is not a multipile of 16, pad to 16 *)
 val pad_16: b:bytes -> len:UInt32.t -> STL unit
