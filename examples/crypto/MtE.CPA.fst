@@ -1,83 +1,77 @@
 module MtE.CPA
 
-open FStar.Heap
-(* open FStar.HyperHeap *)
 open FStar.Seq
 open FStar.SeqProperties
-(* open FStar.Monotonic.RRef *)
+open FStar.Monotonic.RRef
+open FStar.HyperHeap
+open MonotoneSeq
 
 open Platform.Bytes
 open CoreCrypto
-
 open MtE.Plain
 
+type ivsize = blockSize AES_128_CBC
+type keysize = 16
+type aes_key = lbytes keysize
+type msg = plain
+type cipher = lbytes ivsize * bytes
 
-type cipher = AES.cipher
+type log_t (r:rid) = MonotoneSeq.log_t r (msg * cipher)
 
+noeq type key =
+  | Key: #region:rid -> raw:aes_key -> log:log_t region -> key
 
+let genPost parent m0 (k:key) m1 =
+    modifies Set.empty m0 m1
+  /\ extends k.region parent
+  /\ fresh_region k.region m0 m1
+  /\ m_contains k.log m1
+  /\ m_sel m1 k.log == createEmpty
 
-type entry = // records that c is an encryption of p with ad
-  | Entry: p:plain -> c:cipher -> entry
+val gen: parent:rid -> ST key
+  (requires (fun _ -> True))
+  (ensures  (genPost parent))
 
-let ideal_log : ref (seq entry) = alloc (createEmpty #entry)
+let gen parent =
+  let raw = random keysize in
+  let region = new_region parent in
+  let log = alloc_mref_seq region createEmpty in
+  Key #region raw log
 
+val encrypt: k:key -> m:msg -> ST cipher
+  (requires (fun _ -> True))
+  (ensures  (fun m0 c m1 ->
+    (let ilog = m_sel m0 k.log in
+     let n = Seq.length ilog in
+       modifies_one k.region m0 m1
+     /\ m_contains k.log m1
+     /\ m_sel m1 k.log == snoc ilog (m, c)
+     /\ witnessed (at_least n (m, c) k.log))))
 
-abstract type key = AES.key
+let encrypt k m =
+  m_recall k.log;
+  let iv = random ivsize in
+  let ilog = m_read k.log in
+  let text = if ind_cpa then createBytes (length m) 0z else repr m in
+  let c = CoreCrypto.block_encrypt AES_128_CBC k.raw iv text in
+  write_at_end k.log (m,(iv,c));
+  (iv,c)
 
-assume type encrypted: key -> cipher -> Type
+val decrypt: k:key -> c:cipher -> ST msg
+  (requires (fun h0 ->
+    (let log = m_sel h0 k.log in
+     is_Some (seq_find (fun mc -> snd mc = c) log))))
+  (ensures  (fun m0 res m1 ->
+    ind_cpa ==>
+     (let log = m_sel m0 k.log in
+      let found = seq_find (fun mc -> snd mc = c) log in
+      is_Some found ==> (let Some mc = found in res = fst mc))))
 
-let keysize = 16
-
-val keygen: unit -> key
-let keygen () =
-  AES.gen ()
-
-
-val encrypt: (k:key) -> (p:plain) -> ST (c:cipher{encrypted k c})
-  (requires (fun h -> true))
-  (ensures (fun h0 c h1 -> ind_cpa ==> (let s = (Heap.sel h1 ideal_log) in is_Some (seq_find (function Entry c' p' -> c=c') s))))
-
-  (* (ensures (fun h0 c h2 -> true)) *)
-
-(* Playing with the stateful specification style: *)
-  (* (ensures (fun h0 c h2 -> ind_cpa ==> (let log = (Heap.sel h2 ideal_log) in exists (i:nat{i < Seq.length log}).  Seq.index log i == Entry p c)) ) *)
-
- 
-let encrypt k p =
-  let text = if ind_cpa then createBytes AES.psize 0z else repr p in
-  let c = (AES.enc k text) in
+let decrypt k c =
   if ind_cpa then
-    ideal_log := snoc !ideal_log (Entry p c);
-  assume(encrypted k c);
-  admit();
-  c
-  
-
-val decrypt: (k:key) -> (c:cipher{encrypted k c}) -> ST (p:plain)
-  (* (requires (fun h -> true)) *)
-  (requires (fun h -> (let s = (Heap.sel h ideal_log) in is_Some (seq_find (function Entry c' p -> c=c') s))) )
-
-  (ensures (fun h0 c h2 -> true))
-
-(* Playing with the stateful specification style: *)
-(*   (requires (fun h -> (let s = (Heap.sel h ideal_log) in is_Some (seq_find (function Entry c' p -> c=c') s))) ) *)
-
-(*   (requires (fun h -> (let log = (Heap.sel h ideal_log) in exists (i:nat{i < Seq.length log}). exists (p:plain).  Seq.index log i = Entry c p) )) *)
-
-
-let decrypt k c=
-  if ind_cpa then 
-  begin
-    let s = !ideal_log in
-    match seq_find (function Entry c' p -> c=c') s with
-    | Some e -> (Entry.p e )
-  end
+    let log = m_read k.log in
+    match seq_find (fun mc -> snd mc = c) log with
+    | Some mc -> fst mc
   else
-    AES.dec k c
-
-let test =
-  let p = createBytes 1 0z in
-  let k = keygen () in
-  let c = (encrypt k (createBytes 32 0z)) in
-  assert (encrypted k c);
-  ignore (decrypt k c)
+    let iv,c' = c in
+    coerce (CoreCrypto.block_decrypt AES_128_CBC k.raw iv c')

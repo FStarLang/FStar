@@ -1,15 +1,19 @@
 module MtE.Plain
 
 open Platform.Bytes
+open CoreCrypto
 
+abstract type plain = bytes
 
-type plain = AES.plain
+assume Plain_hasEq: hasEq plain
 
-val ind_cpa : bool
-let ind_cpa = true
+assume val ind_cpa: bool
 
-assume val repr: p:plain{ind_cpa == false} -> Tot (AES.plain)
+val repr: p:plain{~ind_cpa} -> Tot bytes
+let repr p = p
 
+val coerce: r:bytes{~ind_cpa} -> Tot plain
+let coerce r = r
 
-assume val mk_plain: r:bytes{ind_cpa == false} -> Tot (plain)
-
+val length: plain -> Tot nat
+let length p = length p
