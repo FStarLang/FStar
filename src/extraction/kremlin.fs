@@ -65,6 +65,8 @@ and expr =
   | EReturn of expr
   | EFlat of lident * list<(ident * expr)>
   | EField of lident * expr * ident
+  | EWhile of expr * expr
+  | EBufCreateL of list<expr>
 
 and op =
   | Add | AddW | Sub | SubW | Div | Mult | Mod
@@ -84,15 +86,10 @@ and pattern =
   | PVar of binder
 
 and width =
-  | UInt8
-  | UInt16
-  | UInt32
-  | UInt64
-  | Int8
-  | Int16
-  | Int32
-  | Int64
+  | UInt8 | UInt16 | UInt32 | UInt64
+  | Int8 | Int16 | Int32 | Int64
   | Bool
+  | Int | UInt
 
 and constant = width * string
 

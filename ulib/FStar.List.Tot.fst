@@ -40,6 +40,13 @@ let rec nth l n = match l with
   | []     -> None
   | hd::tl -> if n = 0 then Some hd else nth tl (n - 1)
 
+val index: #a:Type -> l:list a -> i:nat{i < length l} -> a
+let rec index #a (l: list a) (i:nat{i < length l}): a =
+  if i = 0 then
+    hd l
+  else
+    index (tl l) (i - 1)
+
 val count: #a:eqtype -> a -> list a -> Tot nat
 let rec count #a x = function
   | [] -> 0

@@ -604,6 +604,33 @@ let create #a (init:a) (len:UInt32.t) : ST (buffer a)
     Seq.lemma_eq_intro (as_seq h b) (sel h b);
     b
 
+module L = FStar.List.Tot
+
+(** Concrete getters and setters *)
+let createL #a (init:list a) : ST (buffer a)
+     (requires (fun h -> is_stack_region h.tip /\ L.length init > 0 /\ L.length init < UInt.max_int 32))
+     (ensures (fun (h0:mem) b h1 ->
+       let len = L.length init in
+       len > 0 /\ (
+       ~(contains h0 b)
+       /\ live h1 b /\ idx b = 0 /\ length b = len
+       /\ frameOf b = h0.tip
+       /\ Map.domain h1.h == Map.domain h0.h
+       /\ modifies_0 h0 h1
+       /\ as_seq h1 b == Seq.of_list init
+       )))
+  =
+    let len = UInt32.uint_to_t (L.length init) in
+    let s = Seq.of_list init in
+    lemma_of_list_length s init;
+    assert (Seq.length s < UInt.max_int 32);
+    let content = salloc (Seq.of_list init) in
+    let h = HST.get() in
+    let b = {content = content; idx = (uint_to_t 0); length = len} in
+    Seq.lemma_eq_intro (as_seq h b) (sel h b);
+    b
+
+
 let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h x.id}) (v:a) : Lemma
   (requires (True))
   (ensures  (Map.domain h.h == Map.domain (upd h x v).h))
