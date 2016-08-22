@@ -1,10 +1,12 @@
-﻿module FStar.Parser.LexFilter
+﻿#light "on"
+module FStar.Parser.LexFilter
 
 open Parse
 open FStar.Options
+open Lexing
 
-type Position = Microsoft.FSharp.Text.Lexing.Position
-type LexBuffer = Microsoft.FSharp.Text.Lexing.LexBuffer<char>
+//type Position = Microsoft.FSharp.Text.Lexing.Position
+//type LexBuffer = Microsoft.FSharp.Text.Lexing.LexBuffer<char>
 
 let debug = false
 let print_tokens = false
@@ -46,40 +48,18 @@ type Context =
     // first bool indicates "was this 'with' followed immediately by a '|'"?
     | CtxtMatchClauses of bool * Position
 
-    member c.StartPos =
-        match c with
-        | CtxtModuleHead (p,_) | CtxtModuleBody (p,_)
-        | CtxtLetDecl (_,p) | CtxtTypeDefns p | CtxtParen (_,p)
-        | CtxtWithAsLet p
-        | CtxtMatchClauses (_,p) | CtxtIf p | CtxtMatch p | CtxtWhen p | CtxtFunction p | CtxtFun p | CtxtTry p | CtxtThen p | CtxtElse p | CtxtVanilla (p,_)
-        | CtxtSeqBlock (_,p,_) -> p
-
-    member c.StartCol = c.StartPos.Column
-
-    override c.ToString() =
-        match c with
-        | CtxtModuleHead _ -> "modhead"
-        | CtxtModuleBody _ -> "modbody"
-        | CtxtLetDecl(b,p) -> sprintf "let(%b,%s)" b (stringOfPos p)
-        | CtxtWithAsLet p -> sprintf "withlet(%s)" (stringOfPos p)
-        | CtxtTypeDefns _ -> "type"
-        | CtxtParen _ -> "paren"
-        | CtxtSeqBlock (b,p,_addBlockEnd) -> sprintf "seqblock(%s,%s)" (match b with FirstInSeqBlock -> "first" | NotFirstInSeqBlock -> "subsequent") (stringOfPos p)
-        | CtxtMatchClauses _ -> "matching"
-
-        | CtxtIf _ -> "if"
-        | CtxtMatch _ -> "match"
-        | CtxtWhen _ -> "when"
-        | CtxtTry _ -> "try"
-        | CtxtFun _ -> "fun"
-        | CtxtFunction _ -> "function"
-
-        | CtxtThen _ -> "then"
-        | CtxtElse p -> sprintf "else(%s)" (stringOfPos p)
-        | CtxtVanilla (p,_) -> sprintf "vanilla(%s)" (stringOfPos p)
 
 and AddBlockEnd = AddBlockEnd | NoAddBlockEnd | AddOneSidedBlockEnd
 and FirstInSequence = FirstInSeqBlock | NotFirstInSeqBlock
+
+let start_pos = function
+    | CtxtModuleHead (p,_) | CtxtModuleBody (p,_)
+    | CtxtLetDecl (_,p) | CtxtTypeDefns p | CtxtParen (_,p)
+    | CtxtWithAsLet p
+    | CtxtMatchClauses (_,p) | CtxtIf p | CtxtMatch p | CtxtWhen p | CtxtFunction p | CtxtFun p | CtxtTry p | CtxtThen p | CtxtElse p | CtxtVanilla (p,_)
+    | CtxtSeqBlock (_,p,_) -> p
+
+let start_col ctxt = (start_pos ctxt).Column
 
 let isInfix token =
     match token with
@@ -295,58 +275,66 @@ let parenTokensBalance t1 t2 =
 
 
 /// Used to save some aspects of the lexbuffer state
-[<Struct>]
-type LexbufState(startPos: Position,
-                 endPos  : Position,
-                 pastEOF : bool) =
-    member x.StartPos = startPos
-    member x.EndPos = endPos
-    member x.PastEOF = pastEOF
+type LexbufState =
+    {
+        StartPos: Position;
+        EndPos  : Position;
+        PastEOF : bool
+    }
 
-[<Struct>]
 type PositionTuple =
-    val X: Position
-    val Y: Position
-    new (x: Position, y: Position) = { X = x; Y = y }
+    {
+        X: Position;
+        Y: Position
+    }
 
 /// Used to save the state related to a token
-[<Class>]
 type TokenTup =
-    val Token : token
-    val LexbufState : LexbufState
-    val LastTokenPos: PositionTuple
-    new (token,state,lastTokenPos) = { Token=token; LexbufState=state;LastTokenPos=lastTokenPos }
+    {
+        Token: token;
+        LexbufState: LexbufState;
+        LastTokenPos: PositionTuple
+    }
 
-    /// Returns starting position of the token
-    member x.StartPos = x.LexbufState.StartPos
-    /// Returns end position of the token
-    member x.EndPos = x.LexbufState.EndPos
+/// Returns starting position of the token
+let StartPos (t: TokenTup) = t.LexbufState.StartPos
+/// Returns end position of the token
+let EndPos (t: TokenTup)   = t.LexbufState.EndPos
 
-    /// Returns a token 'tok' with the same position as this token
-    member x.UseLocation(tok) =
-        let tokState = x.LexbufState
-        TokenTup(tok,LexbufState(tokState.StartPos, tokState.EndPos,false),x.LastTokenPos)
+/// Returns a token 'tok' with the same position as this token
+let UseLocation (t: TokenTup) tok =
+    {
+        Token = tok;
+        LexbufState = {StartPos = t.LexbufState.StartPos; EndPos = t.LexbufState.EndPos; PastEOF = false};
+        LastTokenPos = t.LastTokenPos
+    }
 
-    /// Returns a token 'tok' with the same position as this token, except that
-    /// it is shifted by specified number of characters from the left and from the right
-    /// Note: positive value means shift to the right in both cases
-    member x.UseShiftedLocation(tok, shiftLeft, shiftRight) =
-        let tokState = x.LexbufState
-        TokenTup(tok,LexbufState(tokState.StartPos.ShiftColumnBy(shiftLeft),
-                                 tokState.EndPos.ShiftColumnBy(shiftRight),false),x.LastTokenPos)
+/// Returns a token 'tok' with the same position as this token, except that
+/// it is shifted by specified number of characters from the left and from the right
+/// Note: positive value means shift to the right in both cases
+let UseShiftedLocation (t: TokenTup) tok shiftLeft shiftRight =
+    {
+        Token = tok;
+        LexbufState =
+            {
+                StartPos = t.LexbufState.StartPos.ShiftColumnBy(shiftLeft);
+                EndPos   = t.LexbufState.EndPos.ShiftColumnBy(shiftRight);
+                PastEOF  = false
+            };
+        LastTokenPos = t.LastTokenPos
+    }
 
 //----------------------------------------------------------------------------
 // Utilities for the tokenizer that are needed in other places
 //--------------------------------------------------------------------------*)
 
-[<Struct>]
 type PositionWithColumn =
-    val Position: Position
-    val Column: int
-    new (position: Position, column: int) = { Position = position; Column = column }
+    {
+        Position: Position;
+        Column: int
+    }
 
-
-let tokenizer lexer (lexbuf: LexBuffer) =
+let tokenizer lexer (lexbuf: LexBuffer<char>) =
     // Turn off #light syntax until '#light "on"' is met
     set_option "light" (Bool false)
 
@@ -375,11 +363,19 @@ let tokenizer lexer (lexbuf: LexBuffer) =
 
     // Make sure we don't report 'eof' when inserting a token, and set the positions to the
     // last reported token position
-    let lexbufStateForInsertedDummyTokens (lastTokenStartPos,lastTokenEndPos) =
-        new LexbufState(lastTokenStartPos,lastTokenEndPos,false)
+    let lexbufStateForInsertedDummyTokens (lastTokenStartPos, lastTokenEndPos) =
+        {
+            StartPos = lastTokenStartPos;
+            EndPos   = lastTokenEndPos;
+            PastEOF  = false
+        }
 
     let getLexbufState() =
-        new LexbufState(lexbuf.StartPos, lexbuf.EndPos, lexbuf.IsPastEndOfStream)
+        {
+            StartPos = lexbuf.StartPos;
+            EndPos   = lexbuf.EndPos;
+            PastEOF  = lexbuf.IsPastEndOfStream
+        }
 
     let setLexbufState (p:LexbufState) =
         // if debug then dprintf "SET lex state to; %a\n" output_any p;
@@ -402,10 +398,10 @@ let tokenizer lexer (lexbuf: LexBuffer) =
 
     // Ok, we're going to the wrapped lexbuf.  Set the lexstate back so that the lexbuf
     // appears consistent and correct for the wrapped lexer function.
-    let mutable savedLexbufState = Unchecked.defaultof<LexbufState>
-    let mutable haveLexbufState = false
+    let savedLexbufState = ref {StartPos = lexbuf.StartPos; EndPos = lexbuf.EndPos; PastEOF = false}
+    let haveLexbufState = ref false
     let runWrappedLexerInConsistentLexbufState() =
-        let state = if haveLexbufState then savedLexbufState else getLexbufState()
+        let state = if !haveLexbufState then !savedLexbufState else getLexbufState()
         setLexbufState state
         let lastTokenStart = state.StartPos
         let lastTokenEnd = state.EndPos
@@ -413,23 +409,25 @@ let tokenizer lexer (lexbuf: LexBuffer) =
         // Now we've got the token, remember the lexbuf state, associating it with the token
         // and remembering it as the last observed lexbuf state for the wrapped lexer function.
         let tokenLexbufState = getLexbufState()
-        savedLexbufState <- tokenLexbufState
-        haveLexbufState <- true
-        TokenTup(token,tokenLexbufState,PositionTuple(lastTokenStart,lastTokenEnd))
+        savedLexbufState := tokenLexbufState
+        haveLexbufState := true
+        {Token = token; LexbufState = tokenLexbufState; LastTokenPos = {X = lastTokenStart; Y = lastTokenEnd}}
 
     //----------------------------------------------------------------------------
     // Fetch a raw token, either from the old lexer or from our delayedStack
     //--------------------------------------------------------------------------
 
-    let delayedStack = System.Collections.Generic.Stack<TokenTup>()
-    let mutable tokensThatNeedNoProcessingCount = 0
+    let delayedStack = ref [] // System.Collections.Generic.Stack<TokenTup>()
+    let tokensThatNeedNoProcessingCount = ref 0
 
-    let delayToken tokenTup = delayedStack.Push tokenTup
-    let delayTokenNoProcessing tokenTup = delayToken tokenTup; tokensThatNeedNoProcessingCount <- tokensThatNeedNoProcessingCount + 1
+    let delayToken tokenTup =
+        delayedStack := tokenTup :: !delayedStack
+    let delayTokenNoProcessing tokenTup = delayToken tokenTup; tokensThatNeedNoProcessingCount := !tokensThatNeedNoProcessingCount + 1
 
     let popNextTokenTup() =
-        if delayedStack.Count > 0 then
-            let tokenTup = delayedStack.Pop()
+        if List.length !delayedStack > 0 then
+            let tokenTup = List.head !delayedStack
+            delayedStack := List.tail !delayedStack
             if debug then printf "popNextTokenTup: delayed token, tokenStartPos = %a, token = %A\n" outputPos (startPosOfTokenTup tokenTup) tokenTup.Token
             tokenTup
         else
@@ -442,16 +440,16 @@ let tokenizer lexer (lexbuf: LexBuffer) =
     // here.
     //--------------------------------------------------------------------------
 
-    let mutable initialized = false
-    let mutable offsideStack = []
-    let mutable prevWasAtomicEnd = false
+    let initialized = ref false
+    let offsideStack = ref []
+    let prevWasAtomicEnd = ref false
 
     let peekInitial() =
         let initialLookaheadTokenTup  = popNextTokenTup()
 
         delayToken initialLookaheadTokenTup
-        initialized <- true
-        offsideStack <- (CtxtSeqBlock(FirstInSeqBlock,startPosOfTokenTup initialLookaheadTokenTup,NoAddBlockEnd)) :: offsideStack
+        initialized := true
+        offsideStack := (CtxtSeqBlock(FirstInSeqBlock,startPosOfTokenTup initialLookaheadTokenTup,NoAddBlockEnd)) :: !offsideStack
         initialLookaheadTokenTup
 
     //----------------------------------------------------------------------------
@@ -464,7 +462,7 @@ let tokenizer lexer (lexbuf: LexBuffer) =
     let pushCtxt tokenTup (newCtxt:Context) =
         let rec unindentationLimit strict stack =
             match newCtxt,stack with
-            | _, [] -> PositionWithColumn(newCtxt.StartPos, -1)
+            | _, [] -> {Position = start_pos newCtxt;  Column = -1}
 
             // ignore Vanilla because a SeqBlock is always coming
             | _, (CtxtVanilla _ :: rest) -> unindentationLimit strict rest
@@ -475,9 +473,9 @@ let tokenizer lexer (lexbuf: LexBuffer) =
             // 'begin match' limited by minimum of two
             // '(match' limited by minimum of two
             | _,(((CtxtMatch _) as ctxt1) :: CtxtSeqBlock _ :: (CtxtParen ((BEGIN | LPAREN),_) as ctxt2) :: _rest)
-                        -> if ctxt1.StartCol <= ctxt2.StartCol
-                            then PositionWithColumn(ctxt1.StartPos,ctxt1.StartCol)
-                            else PositionWithColumn(ctxt2.StartPos,ctxt2.StartCol)
+                        -> if start_col ctxt1 <= start_col ctxt2
+                            then {Position = start_pos ctxt1; Column = start_col ctxt1}
+                            else {Position = start_pos ctxt2; Column = start_col ctxt2}
 
                 // 'let ... = function' limited by 'let', precisely
                 // This covers the common form
@@ -486,7 +484,7 @@ let tokenizer lexer (lexbuf: LexBuffer) =
                 //     | Case1 -> ...
                 //     | Case2 -> ...
             | (CtxtMatchClauses _), (CtxtFunction _ :: CtxtSeqBlock _ :: (CtxtLetDecl  _ as limitCtxt) :: _rest)
-                        -> PositionWithColumn(limitCtxt.StartPos,limitCtxt.StartCol)
+                        -> {Position = start_pos limitCtxt; Column = start_col limitCtxt}
 
             // Otherwise 'function ...' places no limit until we hit a CtxtLetDecl etc...  (Recursive)
             | (CtxtMatchClauses _), (CtxtFunction _ :: rest)
@@ -494,7 +492,7 @@ let tokenizer lexer (lexbuf: LexBuffer) =
 
             // 'try ... with'  limited by 'try'
             | _,(CtxtMatchClauses _ :: (CtxtTry _ as limitCtxt) :: _rest)
-                        -> PositionWithColumn(limitCtxt.StartPos,limitCtxt.StartCol)
+                        -> {Position = start_pos limitCtxt; Column = start_col limitCtxt}
 
             // 'fun ->' places no limit until we hit a CtxtLetDecl etc...  (Recursive)
             | _,(CtxtFun _ :: rest)
@@ -513,7 +511,7 @@ let tokenizer lexer (lexbuf: LexBuffer) =
             // This is a serious thing to allow, but is required since there is no "return" in this language.
             // Without it there is no way of escaping special cases in large bits of code without indenting the main case.
             | CtxtSeqBlock _, (CtxtElse _  :: (CtxtIf _ as limitCtxt) :: _rest)
-                        -> PositionWithColumn(limitCtxt.StartPos,limitCtxt.StartCol)
+                        -> {Position = start_pos limitCtxt; Column = start_col limitCtxt}
 
             // Permit unindentation via parentheses (or begin/end) following a 'then', 'else' or 'do':
             //        if nr > 0 then (
@@ -591,7 +589,7 @@ let tokenizer lexer (lexbuf: LexBuffer) =
             // REVIEW: document these
             | _,(CtxtSeqBlock _ :: CtxtParen((BEGIN | LPAREN | LBRACK | LBRACK_BAR),_) :: CtxtVanilla _ :: (CtxtSeqBlock _ as limitCtxt) :: _)
             | (CtxtSeqBlock _),(CtxtParen ((BEGIN | LPAREN | LBRACE | LBRACK | LBRACK_BAR)      ,_) :: CtxtSeqBlock _ :: ((CtxtTypeDefns _ | CtxtLetDecl _ | CtxtWithAsLet _) as limitCtxt) ::  _)
-                        -> PositionWithColumn(limitCtxt.StartPos,limitCtxt.StartCol + 1)
+                        -> {Position = start_pos limitCtxt; Column = start_col limitCtxt + 1}
 
             // Permitted inner-construct (e.g. "then" block and "else" block in overall
             // "if-then-else" block ) block alighnment:
@@ -600,34 +598,34 @@ let tokenizer lexer (lexbuf: LexBuffer) =
             //           elif expr
             //           else expr
             | (CtxtIf   _ | CtxtElse _ | CtxtThen _), (CtxtIf _ as limitCtxt) :: _rest
-                        -> PositionWithColumn(limitCtxt.StartPos,limitCtxt.StartCol)
+                        -> {Position = start_pos limitCtxt; Column = start_col limitCtxt}
 
             // These contexts all require indentation by at least one space
             | _,((CtxtModuleHead _ (*| CtxtException _ *)| CtxtModuleBody (_,false) | CtxtIf _ | CtxtWithAsLet _ | CtxtLetDecl _) as limitCtxt :: _)
-                        -> PositionWithColumn(limitCtxt.StartPos,limitCtxt.StartCol + 1)
+                        -> {Position = start_pos limitCtxt; Column = start_col limitCtxt + 1}
 
             // These contexts can have their contents exactly aligning
             | _,((CtxtParen _ | CtxtWhen _ | CtxtTypeDefns _ | CtxtMatch _  | CtxtModuleBody (_,true) | CtxtTry _ | CtxtMatchClauses _ | CtxtSeqBlock _) as limitCtxt :: _)
-                        -> PositionWithColumn(limitCtxt.StartPos,limitCtxt.StartCol)
+                        -> {Position = start_pos limitCtxt; Column = start_col limitCtxt}
 
         match newCtxt with
         // Don't bother to check pushes of Vanilla blocks since we've
         // always already pushed a SeqBlock at this position.
         | CtxtVanilla _ -> ()
         | _ ->
-            let p1 = unindentationLimit true offsideStack
-            let c2 = newCtxt.StartCol
+            let p1 = unindentationLimit true !offsideStack
+            let c2 = start_col newCtxt
             if c2 < p1.Column then
 //                warn tokenTup
-                if debug then (printf "possible incorrect indentation: this token is offside of context at position %s, newCtxt = %A, stack = %A, newCtxtPos = %s, c1 = %d, c2 = %d" (warningStringOfPos p1.Position) newCtxt offsideStack (stringOfPos (newCtxt.StartPos)) p1.Column c2)
-        offsideStack <- newCtxt :: offsideStack
+                if debug then (printf "possible incorrect indentation: this token is offside of context at position %s, newCtxt = %A, stack = %A, newCtxtPos = %s, c1 = %d, c2 = %d" (warningStringOfPos p1.Position) newCtxt offsideStack (stringOfPos (start_pos newCtxt)) p1.Column c2)
+        offsideStack := newCtxt :: !offsideStack
 
     let popCtxt() =
-        match offsideStack with
+        match !offsideStack with
         | [] -> ()
         | h :: rest ->
 //            if debug then printf "<-- popping Context(%A),\n stack = %A\n" h rest
-            offsideStack <- rest
+            offsideStack := rest
 
     let replaceCtxt p ctxt =
         popCtxt()
@@ -651,7 +649,7 @@ let tokenizer lexer (lexbuf: LexBuffer) =
 
     let returnToken (tokenLexbufState:LexbufState) tok =
         setLexbufState(tokenLexbufState)
-        prevWasAtomicEnd <- isAtomicExprEndToken(tok)
+        prevWasAtomicEnd := isAtomicExprEndToken(tok)
         tok
 
     //----------------------------------------------------------------------------
@@ -808,15 +806,15 @@ let tokenizer lexer (lexbuf: LexBuffer) =
             | _ -> false
 
 
-        match token,offsideStack with
+        match token, !offsideStack with
         // inserted faux tokens need no other processing
-        | _ when tokensThatNeedNoProcessingCount > 0 ->
-            tokensThatNeedNoProcessingCount <- tokensThatNeedNoProcessingCount - 1
+        | _ when !tokensThatNeedNoProcessingCount > 0 ->
+            tokensThatNeedNoProcessingCount := !tokensThatNeedNoProcessingCount - 1
             returnToken tokenLexbufState token
 
-        |  _  when tokenForcesHeadContextClosure token offsideStack ->
-            let ctxt = offsideStack.Head
-            if debug then printf "IN/ELSE/ELIF/DONE/RPAREN/RBRACE/END at %a terminates context at position %a\n" outputPos tokenStartPos outputPos ctxt.StartPos
+        |  _  when tokenForcesHeadContextClosure token !offsideStack ->
+            let ctxt = List.head !offsideStack
+            if debug then printf "IN/ELSE/ELIF/DONE/RPAREN/RBRACE/END at %a terminates context at position %a\n" outputPos tokenStartPos outputPos (start_pos ctxt)
             popCtxt()
             match endTokenForACtxt ctxt with
             | Some tok ->
@@ -845,7 +843,7 @@ let tokenizer lexer (lexbuf: LexBuffer) =
 //            if tokenStartCol < offsidePos.Column then warn tokenTup (FSComp.SR.lexfltIncorrentIndentationOfIn())
             popCtxt()
             // Make sure we queue a dummy token at this position to check if any other pop rules apply
-            delayToken(tokenTup.UseLocation(ODUMMY(token)))
+            delayToken(UseLocation tokenTup (ODUMMY token))
             returnToken tokenLexbufState (if blockLet then ODECLEND else token)
 
         // Balancing rule. Encountering a ')' or '}' balances with a '(' or '{', even if not offside
@@ -854,7 +852,7 @@ let tokenizer lexer (lexbuf: LexBuffer) =
             if debug then printf "RPAREN/RBRACE/RBRACK/BAR_RBRACK/RQUOTE/END at %a terminates CtxtParen()\n" outputPos tokenStartPos
             popCtxt()
             // Queue a dummy token at this position to check if any closing rules apply
-            delayToken(tokenTup.UseLocation(ODUMMY(token)))
+            delayToken(UseLocation tokenTup (ODUMMY token))
             returnToken tokenLexbufState token
 
         //  Transition rule. CtxtModuleHead ~~~> push CtxtModuleBody; push CtxtSeqBlock
@@ -1427,13 +1425,14 @@ let tokenizer lexer (lexbuf: LexBuffer) =
     and pushCtxtSeqBlockAt(p:TokenTup,addBlockBegin,addBlockEnd) =
          if addBlockBegin then
             if debug then printf "--> insert 'OBLOCKBEGIN' \n"
-            delayToken(p.UseLocation(OBLOCKBEGIN))
+            delayToken(UseLocation p OBLOCKBEGIN)
+
 
          pushCtxt p (CtxtSeqBlock(FirstInSeqBlock, startPosOfTokenTup p,addBlockEnd))
 
     fun _ ->
         // todo: check #light before parsing to avoid Options look up on each token
-        if use_light () && not initialized then
+        if use_light () && not !initialized then
             let _firstTokenTup = peekInitial()
             ()
 

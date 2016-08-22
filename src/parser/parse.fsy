@@ -184,13 +184,12 @@ inputFragment:
 
 maybe_pragma_light:
   | {}
-  | PRAGMALIGHT STRING
+  | PRAGMALIGHT STRING /* todo: check for other options */
     {
-      // todo: check for other options
       let use_light = (string_of_bytes $2) = "on" in
       if use_light then begin
         set_option "light" (Bool (true));
-        printfn "Using #light"
+        print_string "Using #light\n" (* todo: remove this *)
       end
     }
 
