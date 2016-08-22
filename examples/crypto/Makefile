@@ -33,7 +33,7 @@ verify-%: __force__
 		 --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 		 --z3timeout 20 $*
 
-verify-hh-%: __force__
+verify_hh-%: __force__
 	$(FSTAR) --include $(FSTAR_HOME)/ulib/hyperheap \
 		 --include $(FSTAR_HOME)/ucontrib/Platform/fst \
 		 --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
@@ -41,7 +41,7 @@ verify-hh-%: __force__
 
 all: uall sall
 
-uall: $(VERFILES:%=verify-%) $(HH_VERFILES:%=verify-hh-%)
+uall: $(VERFILES:%=verify-%) $(HH_VERFILES:%=verify_hh-%)
 
 sall: merkle_tree rpc CntProtocol padding acls-cap statefulEnc
 
