@@ -13,10 +13,10 @@ all: ifc\
 		 recursive
 
 ifc:
-	$(FSTAR) whilelanguage.fst ifc.fst ifcExample.fst
+	$(FSTAR) rel.fst whilelanguage.fst ifc.fst ifcExample.fst
 
 random_tapes:
-	$(FSTAR) random_tapes.fst
+	$(FSTAR) bijection.fst random_tapes.fst
 
 recursive:
 	$(FSTAR) recursive.fst
