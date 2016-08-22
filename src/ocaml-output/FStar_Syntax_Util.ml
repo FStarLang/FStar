@@ -1631,5 +1631,29 @@ false
 end))
 
 
+let rec list_elements : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term Prims.list Prims.option = (fun e -> (
+
+let _38_1369 = (let _130_569 = (unmeta e)
+in (head_and_args _130_569))
+in (match (_38_1369) with
+| (head, args) -> begin
+(match ((let _130_571 = (let _130_570 = (un_uinst head)
+in _130_570.FStar_Syntax_Syntax.n)
+in ((_130_571), (args)))) with
+| (FStar_Syntax_Syntax.Tm_fvar (fv), _38_1373) when (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.nil_lid) -> begin
+Some ([])
+end
+| (FStar_Syntax_Syntax.Tm_fvar (fv), (_38_1386)::((hd, _38_1383))::((tl, _38_1379))::[]) when (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.cons_lid) -> begin
+(let _130_574 = (let _130_573 = (let _130_572 = (list_elements tl)
+in (FStar_Util.must _130_572))
+in (hd)::_130_573)
+in Some (_130_574))
+end
+| _38_1390 -> begin
+None
+end)
+end)))
+
+
 
 

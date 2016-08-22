@@ -878,3 +878,13 @@ let incr_delta_qualifier t =
     aux d
 
 let is_unknown t = match (Subst.compress t).n with | Tm_unknown -> true | _ -> false
+
+let rec list_elements (e:term) : option<list<term>> = 
+  let head, args = head_and_args (unmeta e) in
+  match (un_uinst head).n, args with
+  | Tm_fvar fv, _ when fv_eq_lid fv Const.nil_lid ->
+      Some []
+  | Tm_fvar fv, [_; (hd, _); (tl, _)] when fv_eq_lid fv Const.cons_lid ->
+      Some (hd::must (list_elements tl))
+  | _ ->
+      None

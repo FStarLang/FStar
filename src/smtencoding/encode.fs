@@ -849,13 +849,10 @@ and encode_args l env : (list<term> * decls_t)  =
 
 (* this assumes t is a Lemma *)
 and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option<S.term>) (t:typ) (env:env_t) : term * decls_t =
-    let rec list_elements (e:S.term) : list<S.term> = 
-        let head, args = Util.head_and_args (Util.unmeta e) in
-        match (Util.un_uinst head).n, args with
-        | Tm_fvar fv, _ when S.fv_eq_lid fv Const.nil_lid -> []
-        | Tm_fvar fv, [_; (hd, _); (tl, _)] when S.fv_eq_lid fv Const.cons_lid -> 
-          hd::list_elements tl
-        | _ -> Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
+    let list_elements (e:S.term) : list<S.term> = 
+      match Syntax.Util.list_elements e with
+      | Some l -> l
+      | None -> Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
 
     let one_pat p = 
         let head, args = Util.unmeta p |> Util.head_and_args in

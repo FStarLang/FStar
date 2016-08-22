@@ -480,6 +480,18 @@ and translate_expr env e: expr =
       EBufRead (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.create") ->
       EBufCreate (translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_Name p }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.createL") ->
+      let rec list_elements acc e2 =
+        match e2.expr with
+        | MLE_CTor (([ "Prims" ], "Cons" ), [ hd; tl ]) ->
+            list_elements (hd :: acc) tl
+        | MLE_CTor (([ "Prims" ], "Nil" ), []) ->
+            List.rev acc
+        | _ ->
+            failwith "Argument of FStar.Buffer.createL is not a string literal!"
+      in
+      let list_elements = list_elements [] in
+      EBufCreateL (List.map (translate_expr env) (list_elements e2))
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset") ->
