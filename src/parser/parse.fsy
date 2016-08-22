@@ -98,6 +98,9 @@ let as_frag d ds =
 %token <float> IEEE64
 %token <char> CHAR
 %token <bool> LET
+%token <FStar.Parser.AST.fsdoc> FSDOC
+%token <FStar.Parser.AST.fsdoc> FSDOC_STANDALONE
+
 %token FORALL EXISTS ASSUME NEW LOGIC IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
 %token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
 %token AND ASSERT BEGIN ELSE END
@@ -165,15 +168,19 @@ maybeOptions:
   |         { None    }
   | STRING  { Some (string_of_bytes $1) }
 
+maybeDoc:
+  |  { None }
+  | FSDOC { Some $1 }
+
 decls:
   |   { [] }
-  | SEMICOLON_SEMICOLON term
-      { [mk_decl (Main $2) (rhs2 parseState 1 2)] }
+  | SEMICOLON_SEMICOLON maybeDoc term
+      { [mk_decl (Main $3) (rhs2 parseState 1 3) $2] }
   | decl decls
       { ($1::$2) }
     
 decl:
-  | decl2 { mk_decl $1 (rhs parseState 1) }
+  | maybeDoc decl2 { mk_decl $2 (rhs parseState 2) $1 }
 
 decl2:
   | OPEN qname
@@ -206,6 +213,8 @@ decl2:
       { NewEffectForFree ($1, $3) }
   | pragma
       { Pragma $1 }
+  | FSDOC_STANDALONE
+      { Fsdoc $1 }
 
 tycon:
   | qualifiers TYPE tyconDefinition tyconDefinitions
@@ -251,7 +260,7 @@ effect_decls:
 effect_decl:
   | ident EQUALS simpleTerm
     {
-        mk_decl (Tycon ([], [TyconAbbrev($1, [], None, $3)])) (rhs2 parseState 1 3)
+        mk_decl (Tycon ([], [TyconAbbrev($1, [], None, $3)])) (rhs2 parseState 1 3) None
     }
 
 more_effect_decls:
@@ -517,13 +526,13 @@ constructors:
 
 recordFieldDecl:
   |  ident COLON typ
-      { ($1, $3) }
+      { ($1, $3, None) }
 
 constructorDecl:
-  | BAR name COLON typ
-      { ($2,Some $4,false) }
-  | BAR name of_typ
-      { ($2,$3,true) }
+  | maybeDoc BAR name COLON typ
+      { ($3,Some $5,$1,false) }
+  | maybeDoc BAR name of_typ
+      { ($3,$4,$1,true) }
 
 of_typ:
   |        {  None }

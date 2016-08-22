@@ -109,11 +109,17 @@ type knd = term
 type typ = term
 type expr = term
 
+// Documentation comment. May appear appear as follows:
+//  - Immediately before a top-level declaration
+//  - Immediately after a type constructor or record field
+//  - In the middle of a file, as a standalone documentation declaration
+type fsdoc = string * list<(string * string)> // comment + keywords (name, arguments)
+
 type tycon =
   | TyconAbstract of ident * list<binder> * option<knd>
   | TyconAbbrev   of ident * list<binder> * option<knd> * term
-  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term)>
-  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * bool)> (* using 'of' notion *)
+  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term * option<fsdoc>)>
+  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * option<fsdoc> * bool)> (* using 'of' notion *)
 
 type qualifier =
   | Private
@@ -167,7 +173,8 @@ type decl' =
   | NewEffectForFree of qualifiers * effect_decl (* always a [DefineEffect] *)
   | SubEffect of lift
   | Pragma of pragma
-and decl = {d:decl'; drange:range}
+  | Fsdoc of fsdoc
+and decl = {d:decl'; drange:range; doc:option<fsdoc>;}
 and effect_decl =
   | DefineEffect   of ident * list<binder> * term * list<decl> * list<decl>
   | RedefineEffect of ident * list<binder> * term
@@ -187,7 +194,7 @@ let check_id id =
          else raise (FStar.Syntax.Syntax.Error(Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText, id.idRange))
     else ()
 
-let mk_decl d r = {d=d; drange=r}
+let mk_decl d r doc = {d=d; drange=r; doc=doc}
 let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
 let mk_term t r l = {tm=t; range=r; level=l}
 let mk_uminus t r l =
@@ -456,7 +463,7 @@ let decl_to_string (d:decl) = match d.d with
   | NewEffectForFree(_, RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
-
+  | Fsdoc _ -> "fsdoc"
 
 let modul_to_string (m:modul) = match m with
     | Module (_, decls)

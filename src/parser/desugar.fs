@@ -1343,11 +1343,11 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, fields) ->
       let constrName = mk_ident("Mk" ^ id.idText, id.idRange) in
-      let mfields = List.map (fun (x,t) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr None) fields in
+      let mfields = List.map (fun (x,t,_) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr None) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) parms in
       let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type in
       //let _ = Util.print_string (Util.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in
-      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false)]), fields |> List.map (fun (x, _) -> DesugarEnv.qualify env x)
+      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, None, false)]), fields |> List.map (fun (x, _, _) -> DesugarEnv.qualify env x)
     | _ -> failwith "impossible" in
   let desugar_abstract_tc quals _env mutuals = function
     | TyconAbstract(id, binders, kopt) ->
@@ -1437,7 +1437,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
           let tycon = (tname, tpars, k) in
           let env_tps = push_tparams env tpars in
           let constrNames, constrs = List.split <|
-              (constrs |> List.map (fun (id, topt, of_notation) ->
+              (constrs |> List.map (fun (id, topt, _, of_notation) ->
                 let t =
                   if of_notation
                   then match topt with
@@ -1508,6 +1508,7 @@ let trans_quals r = List.map (trans_qual r)
 let rec desugar_decl env (d:decl) : (env_t * sigelts) =
   let trans_quals = trans_quals d.drange in 
   match d.d with
+  | Fsdoc _ -> env, []
   | Pragma p ->
     let se = Sig_pragma(trans_pragma p, d.drange) in
     env, [se]
@@ -1693,9 +1694,9 @@ let open_prims_all =
    Keeps track of the name of variables and so on (in the context)
  *)
 let desugar_modul_common (curmod:option<modul>) env (m:AST.modul) : env_t * Syntax.modul * bool =
-  let open_ns (mname:lident) d =
+  let open_ns (mname:lident) (d:list<decl>) =
     let d = if List.length mname.ns <> 0
-            then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname))  :: d
+            then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname) None) :: d
             else d in
     d in
   let env = match curmod with

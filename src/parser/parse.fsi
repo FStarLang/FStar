@@ -109,6 +109,8 @@ type token =
   | PRAGMALIGHT
   | PRAGMA_SET_OPTIONS
   | PRAGMA_RESET_OPTIONS
+  | FSDOC_STANDALONE of (FStar.Parser.AST.fsdoc)
+  | FSDOC of (FStar.Parser.AST.fsdoc)
   | LET of (bool)
   | CHAR of (char)
   | IEEE64 of (float)
@@ -236,6 +238,8 @@ type tokenId =
     | TOKEN_PRAGMALIGHT
     | TOKEN_PRAGMA_SET_OPTIONS
     | TOKEN_PRAGMA_RESET_OPTIONS
+    | TOKEN_FSDOC_STANDALONE
+    | TOKEN_FSDOC
     | TOKEN_LET
     | TOKEN_CHAR
     | TOKEN_IEEE64
@@ -263,6 +267,7 @@ type nonTerminalId =
     | NONTERM_maybe_pragma_light
     | NONTERM_pragma
     | NONTERM_maybeOptions
+    | NONTERM_maybeDoc
     | NONTERM_decls
     | NONTERM_decl
     | NONTERM_decl2

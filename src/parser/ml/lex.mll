@@ -404,6 +404,57 @@ and comment inner = parse
  | eof
      { lc := 1; EOF }
 
+and fsdoc cargs = parse
+ | '(' '*'
+    { let n,doc,kw = cargs in
+      fsdoc (n+1,doc^"(*",kw) lexbuf }
+
+ | "*)" newline newline
+    { let n,doc,kw = cargs in
+	  mknewline 2 lexbuf;
+      if n > 1 then fsdoc (n-1,doc^(L.lexeme lexbuf),kw) lexbuf
+      else FSDOC_STANDALONE(doc,kw) }
+
+ | "*)" newline
+    { let n,doc,kw = cargs in
+	  mknewline 1 lexbuf;
+      if n > 1 then fsdoc (n-1,doc^(L.lexeme lexbuf),kw) lexbuf
+      else FSDOC(doc,kw) }
+
+ | newline "\\@"
+    { let n,doc,kw = cargs in
+	  mknewline 1 lexbuf;
+	  let nl = trim_right lexbuf 2 in
+	  fsdoc(n,doc^nl^"@",kw) lexbuf}
+
+ | newline "@"
+	 { let n,doc,kw = cargs in
+	   mknewline 1 lexbuf;
+	   fsdoc_kw (n,doc,kw) lexbuf}
+
+ | newline
+    { let n,doc,kw = cargs in
+      mknewline 1 lexbuf;
+      fsdoc (n,doc^(L.lexeme lexbuf),kw) lexbuf }
+
+ | _ { let n,doc,kw = cargs in
+       fsdoc(n,doc^(L.lexeme lexbuf),kw) lexbuf }
+
+and fsdoc_kw cargs = parse
+ | anywhite*
+     {fsdoc_kw cargs lexbuf}
+ | ['a'-'z' 'A'-'Z']+
+     { let n,doc,kw = cargs in
+	   fsdoc_kw_arg(n,doc,kw,L.lexeme lexbuf,"") lexbuf }
+ | _ { fail lexbuf "Invalid FSDoc keyword" EOF }
+
+and fsdoc_kw_arg cargs = parse
+ | newline
+     { let n,doc,kw,kwn,kwa = cargs in
+	   fsdoc(n,doc^(L.lexeme lexbuf),(kwn,kwa)::kw) lexbuf}
+ | _ { let n,doc,kw,kwn,kwa = cargs in
+       fsdoc_kw_arg(n,doc,kw,kwn,kwa^(L.lexeme lexbuf)) lexbuf }
+
 and cpp_filename = parse
  | ' ' '"' [^ '"']+ '"'
      { let s = trim_both lexbuf 2 1 in
