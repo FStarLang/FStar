@@ -2,7 +2,7 @@ module MAC
 
 open FStar.Seq
 open FStar.SeqProperties
-open FStar.Monotonic.RRef
+open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open MonotoneSeq
 
@@ -11,7 +11,7 @@ open CoreCrypto
 
 type text = bytes
 
-let keysize   = 16
+let keysize   = 1
 let blocksize = keysize
 let macsize   = hashSize SHA1
 

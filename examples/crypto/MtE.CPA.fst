@@ -2,7 +2,7 @@ module MtE.CPA
 
 open FStar.Seq
 open FStar.SeqProperties
-open FStar.Monotonic.RRef
+open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open MonotoneSeq
 
