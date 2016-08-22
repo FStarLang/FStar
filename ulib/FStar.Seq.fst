@@ -35,7 +35,7 @@ module L = FStar.List.Tot
 
 abstract val of_list: #a:Type -> list a -> Tot (seq a)
 let of_list #a l =
-  MkSeq (L.length l) (fun eta -> L.index l eta)
+  MkSeq (L.length l) (L.index l)
 
 abstract val lemma_of_list_length: #a:Type -> s:seq a -> l:list a -> Lemma
   (requires (s == of_list #a l))
