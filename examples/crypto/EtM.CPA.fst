@@ -1,22 +1,26 @@
-module MtE.CPA
+module EtM.CPA
 
 open FStar.Seq
 open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
-open MonotoneSeq
+open FStar.Monotonic.RRef
+
 
 open Platform.Bytes
 open CoreCrypto
-open MtE.Plain
+
+module B = Platform.Bytes
+
+open EtM.Plain
 
 type ivsize = blockSize AES_128_CBC
 type keysize = 16
 type aes_key = lbytes keysize
 type msg = plain
-type cipher = lbytes ivsize * bytes
+type cipher = l:bytes{B.length l >= ivsize}
 
-type log_t (r:rid) = MonotoneSeq.log_t r (msg * cipher)
+type log_t (r:rid) = Monotonic.Seq.log_t r (msg * cipher)
 
 noeq type key =
   | Key: #region:rid -> raw:aes_key -> log:log_t region -> key
@@ -48,14 +52,18 @@ val encrypt: k:key -> m:msg -> ST cipher
      /\ m_sel m1 k.log == snoc ilog (m, c)
      /\ witnessed (at_least n (m, c) k.log))))
 
+
 let encrypt k m =
   m_recall k.log;
   let iv = random ivsize in
   let ilog = m_read k.log in
   let text = if ind_cpa then createBytes (length m) 0z else repr m in
   let c = CoreCrypto.block_encrypt AES_128_CBC k.raw iv text in
-  write_at_end k.log (m,(iv,c));
-  (iv,c)
+  let c = iv@|c in
+  assert(B.length c >= ivsize);
+  write_at_end k.log (m,c);
+  c
+  
 
 val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->
@@ -73,5 +81,5 @@ let decrypt k c =
     match seq_find (fun mc -> snd mc = c) log with
     | Some mc -> fst mc
   else
-    let iv,c' = c in
+    let iv,c' = split c ivsize in
     coerce (CoreCrypto.block_decrypt AES_128_CBC k.raw iv c')

@@ -1,10 +1,11 @@
-module MAC
+module EtM.MAC
 
 open FStar.Seq
 open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
-open MonotoneSeq
+open FStar.Monotonic.RRef
+
 
 open Platform.Bytes
 open CoreCrypto
@@ -36,10 +37,10 @@ type property = text -> Type0
 
 type msg = text
 
-type log_t (r:rid) = MonotoneSeq.log_t r (msg * tag)
+type log_t (r:rid) = Monotonic.Seq.log_t r (msg * tag)
 
 noeq type key =
-  | Key: #region:rid -> raw:SHA1.key -> log:log_t region -> key
+  | Key: #region:rid -> raw:sha1_key -> log:log_t region -> key
 
 
 let genPost parent m0 (k:key) m1 =
@@ -71,7 +72,7 @@ val mac: k:key -> m:msg -> ST tag
 
 let mac k m =
   let ilog = m_read k.log in
-  let t = SHA1.hmac_sha1 k.raw m in
+  let t = hmac_sha1 k.raw m in
   write_at_end k.log (m,t);
   t
 
@@ -84,7 +85,7 @@ val verify: k:key -> m:msg -> t:tag -> ST bool
       (uf_cma /\ b) ==> is_Some (seq_find (fun mt -> mt = (m,t)) log))))
 
 let verify k m t =
-  let t' = SHA1.hmac_sha1 k.raw m in
+  let t' = hmac_sha1 k.raw m in
   let verified = (t = t') in
   let log = m_read k.log in
   let found = is_Some (seq_find (fun mt -> mt = (m,t)) log) in

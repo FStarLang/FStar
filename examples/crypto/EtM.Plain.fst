@@ -1,4 +1,4 @@
-module MtE.Plain
+module EtM.Plain
 
 open Platform.Bytes
 open CoreCrypto

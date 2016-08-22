@@ -1,10 +1,10 @@
-module Encrypt_MtE 
+module Encrypt_EtM 
 
 module SymEnc = Encrypt_SymEnc
 
 noeq type key (p:Type0) (r:Type) = 
   | Key:  ke:SymEnc.key p r -> MAC.pkey (SymEnc.encrypted ke) -> key p r 
-  (* currently needs flag --__temp_no_proj Encrypt_MtE *)
+  (* currently needs flag --__temp_no_proj Encrypt_EtM *)
 
 type cipher = (AES.cipher * SHA1.tag) //define abbreviation in MAC.fst
 
