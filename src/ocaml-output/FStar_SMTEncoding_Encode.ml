@@ -3487,7 +3487,7 @@ in (FStar_SMTEncoding_Term.fresh_token ((vtok), (FStar_SMTEncoding_Term.Term_sor
 in (
 # 1369 "FStar.SMTEncoding.Encode.fst"
 let name_tok_corr = (let _177_1878 = (let _177_1877 = (let _177_1876 = (let _177_1875 = (FStar_SMTEncoding_Term.mkEq ((vtok_app), (vapp)))
-in ((((vtok_app)::[])::[]), (vars), (_177_1875)))
+in ((((vtok_app)::[])::((vapp)::[])::[]), (vars), (_177_1875)))
 in (FStar_SMTEncoding_Term.mkForall _177_1876))
 in ((_177_1877), (Some ("Name-token correspondence")), (Some ((Prims.strcat "token_correspondence_" vname)))))
 in FStar_SMTEncoding_Term.Assume (_177_1878))
