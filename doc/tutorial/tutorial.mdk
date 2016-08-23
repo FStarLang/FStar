@@ -4863,7 +4863,7 @@ We define an interface for an F* module implementing this functionality
 and expressing the cryptographic guarantees.
 
 ```
-[INCLUDE=code/exercises/solutions/Ex12.MAC.fst:MacSpec]
+[INCLUDE=code/exercises/exercises/Ex12.MAC.fst:MacSpec]
 ```
 
 This interface is unsurprising except for `pkey p` and `key_prop k t`.
@@ -4877,7 +4877,7 @@ It is used as a pre-condition for MACing and a postcondition of MAC verification
 
 In the RPC example below ([#sec-secure-rpc]) we will use a key of type `pkey reqresp` where
 ```
-[INCLUDE=code/exercises/solutions/Ex12b.RPC.fst:MsgProperty]
+[INCLUDE=code/exercises/exercises/Ex12b.RPC.fst:MsgProperty]
 ```
 which states that messages that verify with that key are either 
 `Request`s or `Respone`s.
