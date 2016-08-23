@@ -229,7 +229,7 @@ val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> a -> a -> Tot int
 let compare_of_bool #a rel x y =
   if x `rel` y  then 1 
   else if x = y then 0
-  else -1
+  else 0-1
   
 val sortWith: ('a -> 'a -> Tot int) -> l:list 'a -> Tot (list 'a) (decreases (length l))
 let rec sortWith f = function
