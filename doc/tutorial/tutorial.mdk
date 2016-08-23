@@ -1303,6 +1303,7 @@ the proof. As usual, when structuring proofs, lemmas are your friends!
 
 ## Higher-order functions on lists
 
+
 ### Mapping
 
 We can write higher-order functions on lists,
