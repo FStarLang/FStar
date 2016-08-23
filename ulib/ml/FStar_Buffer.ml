@@ -44,5 +44,5 @@ type ('a, 'b, 'c, 'd) modifies_buf = ()
 let op_Plus_Plus a b = BatSet.empty
 let only a = BatSet.empty
 
-let op_Array_Access () b n = index b n
-let op_Array_Assignment () b n v = upd b n v
+let op_Array_Access b n = index b n
+let op_Array_Assignment b n v = upd b n v
