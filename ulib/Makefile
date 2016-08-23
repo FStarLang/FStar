@@ -4,7 +4,7 @@ include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
 FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
 
-HYPERHEAP=FStar.Monotonic.RRef.fst
+HYPERHEAP=FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst
 
 ALL=$(filter-out $(FLAKY) $(HYPERHEAP),$(wildcard FStar.*.fst FStar.*.fsti))
 
