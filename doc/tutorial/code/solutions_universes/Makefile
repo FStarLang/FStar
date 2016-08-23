@@ -23,7 +23,8 @@ Ex07c.fst \
 Ex07d.fst \
 Ex10a.fst \
 Ex10b.fst \
-Ex12a.fst 
+Ex12a.Cap.fst \
+Ex12b.RPC.fst
 
 VERFILES_HH=Ex11a.fst
 
@@ -34,7 +35,7 @@ include ../Makefile.include
 HYPERHEAP=$(FSTAR_HOME)/ulib/hyperheap
 
 verify-%: __force__
-	$(FSTAR) $*
+	$(FSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst $*
 
 verify_hh-%: __force__
 	$(FSTAR) --include $(HYPERHEAP) $*

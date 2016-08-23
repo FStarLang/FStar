@@ -1,4 +1,5 @@
 module Ex03a
+//factorial-types
 
 (* Here are some other types for factorial:
     val factorial: nat -> Tot nat

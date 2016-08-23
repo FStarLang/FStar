@@ -1,4 +1,5 @@
 module Ex05b
+//fibonacci-is-ok
 
 val fibonacci : nat -> Tot nat
 let rec fibonacci n =

@@ -1,4 +1,5 @@
 module Ex06a
+//partition
 
 (* Exercise: Write the partition function and prove it total.  *)
 // BEGIN: Partition

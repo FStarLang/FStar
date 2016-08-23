@@ -1,4 +1,5 @@
 module Ex07d
+//stlc-eval
 
 type ty =
   | TBool  : ty

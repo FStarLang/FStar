@@ -1,12 +1,7 @@
-module Ex01a 
+module Ex01a
 //safe-read-write
 
-// CH: Are we sure we want to get rid of all modules here
-//     (as opposed to split this between some files)?
-
-// CH: I tried to hook this up so that at least it prints something
-//     every time read or write are executed
-
+// BEGIN: ACLs
 type filename = string
 
 (* canWrite is a function specifying whether or not a file f can be written *)
@@ -35,37 +30,38 @@ let readme  = "demo/README"
 let tmp     = "demo/tempfile"
 // END: UntrustedClientCode
 
-
+// BEGIN: StaticChecking
+val staticChecking : unit -> unit
 let staticChecking () =
   let v1 = read tmp in
   let v2 = read readme in
   (* let v3 = read passwd in -- invalid read, fails type-checking *)
   write tmp "hello!"
   (* ; write passwd "junk" -- invalid write , fails type-checking *)
+// END: StaticChecking
 
-
-
+// BEGIN: CheckedRead
 exception InvalidRead
 val checkedRead : filename -> string
 let checkedRead f =
   if canRead f then read f else raise InvalidRead
+// END: CheckedRead
 
+// BEGIN: CheckedWriteType
+assume val checkedWrite : filename -> string -> unit
+// END: CheckedWriteType
 
+// solution here
+//
+//
 
-val checkedWrite : filename -> string -> unit
-// BEGIN: CheckedWrite
-
-exception InvalidWrite
-let checkedWrite f s =
-  if canWrite f then write f s else raise InvalidWrite
-// END: CheckedWrite
-
-
+// BEGIN: DynamicChecking
 let dynamicChecking () =
   let v1 = checkedRead tmp in
   let v2 = checkedRead readme in
   let v3 = checkedRead passwd in (* this raises exception *)
   checkedWrite tmp "hello!";
   checkedWrite passwd "junk" (* this raises exception *)
+// END: DynamicChecking
 
 let main = staticChecking (); dynamicChecking ()

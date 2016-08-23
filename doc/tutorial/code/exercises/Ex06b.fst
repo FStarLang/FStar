@@ -30,12 +30,11 @@ let rec length l = match l with
   | _ :: tl -> 1 + length tl
 
 
-(* Specification of sortedness according to some comparison function f *)
-val sorted: ('a -> 'a -> Tot bool) -> list 'a -> Tot bool
-let rec sorted f l = match l with
+val sorted: list int -> Tot bool
+let rec sorted l = match l with
     | [] -> true
     | [x] -> true
-    | x::y::xs -> f x y && sorted f (y::xs)
+    | x::y::xs -> x <= y && sorted (y::xs)
 
 
 val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
@@ -63,34 +62,22 @@ let rec partition_lemma #t f l = match l with
     | hd::tl -> partition_lemma f tl
 
 
-(* Defining a new predicate symbol *)
-type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
-    (forall a. f a a)                                           (* reflexivity   *)
-    /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
-    /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
-
-
-val sorted_concat_lemma: #t:eqtype 
-		      -> f:(t -> t -> Tot bool)
-                      -> l1:list t{sorted f l1}
-                      -> l2:list t{sorted f l2}
-                      -> pivot:t
-                      -> Lemma (requires (total_order t f
-                                       /\ (forall y. mem y l1 ==> not (f pivot y))
-                                       /\ (forall y. mem y l2 ==> f pivot y)))
-                               (ensures (sorted f (append l1 (pivot::l2))))
-                               [SMTPat (sorted f (append l1 (pivot::l2)))]
-let rec sorted_concat_lemma #t f l1 l2 pivot = match l1 with
+val sorted_concat_lemma: l1:list int{sorted l1}
+                      -> l2:list int{sorted l2}
+                      -> pivot:int
+                      -> Lemma (requires ((forall y. mem y l1 ==> not (pivot <= y))
+                                       /\ (forall y. mem y l2 ==> pivot <= y)))
+                               (ensures (sorted (append l1 (pivot::l2))))
+                               [SMTPat (sorted (append l1 (pivot::l2)))]
+let rec sorted_concat_lemma l1 l2 pivot = match l1 with
     | [] -> ()
-    | hd::tl -> sorted_concat_lemma f tl l2 pivot
+    | hd::tl -> sorted_concat_lemma tl l2 pivot
 
 
-val sort: #t:eqtype -> f:(t -> t -> Tot bool){total_order t f}
-       -> l:list t
-       -> Tot (m:list t{sorted f m /\ (forall i. mem i l = mem i m)})
-              (decreases (length l))
-let rec sort #t f l = match l with
+val sort: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l = mem i m)})
+                            (decreases (length l))
+let rec sort l = match l with
   | [] -> []
   | pivot::tl ->
-    let hi, lo = partition (f pivot) tl in
-    append (sort f lo) (pivot::sort f hi)
+    let hi, lo = partition (fun j -> pivot <= j) tl in
+    append (sort lo) (pivot::sort hi)

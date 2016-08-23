@@ -31,15 +31,11 @@ let acls = alloc []
    further authentication mechanism to ensure that an attacker cannot
    alter the access control list
 
-   We give predicate transformer semantics for them.
+   F* infers a fully precise predicate transformer semantics for them.
 *)
 
-val grant : e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> sel h' acls == e::sel h acls))
 let grant e = ST.write acls (e::ST.read acls)
 
-val revoke: e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> not(mem e (sel h' acls))))
 let revoke e =
   let db = filter (fun e' -> e<>e') (ST.read acls) in
   ST.write acls db

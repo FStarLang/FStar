@@ -1,2 +1,0 @@
-
-UntrustedClientCode.dynamicChecking()

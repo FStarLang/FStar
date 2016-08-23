@@ -1,4 +1,5 @@
 module Ex07c
+//stlc-let
 
 type ty =
   | TBool  : ty

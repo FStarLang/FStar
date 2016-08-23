@@ -3,13 +3,13 @@ module Ex02a
 
 type filename = string
 
-val canWrite : filename -> Tot bool
+//val canWrite : unit (* write a correct and precise type here *)
 let canWrite (f:filename) =
   match f with 
     | "demo/tempfile" -> true
     | _ -> false
 
-val canRead : filename -> Tot bool
+//val canRead : unit (* write correct and precise type here *)
 let canRead (f:filename) =
   canWrite f               (* writeable files are also readable *)
   || f="demo/README"       (* and so is this file *)

@@ -1,0 +1,75 @@
+(* This file implements message authentication codes based on keyed
+   hashes, namely HMAC-SHA1, and their idealization under the INT-CMA
+   computational assumption *)
+
+module Ex12.MAC
+
+open Ex12.SHA1
+open FStar.IO
+
+(* ---- specification *)
+
+(* we attach an authenticated properties to each key,
+   used as a pre-condition for MACing and
+   a postcondition of MAC verification *)
+
+assume type key_prop : key -> text -> Type0
+type pkey (p:(text -> Type)) = k:key{key_prop k == p}
+
+(* to model authentication, we log all genuine calls
+   to MACs; the ideal implementation below uses the
+   log to correct errors. *)
+
+type tag = SHA1.tag
+
+type entry =
+  | Entry : k:key
+         -> t:text{key_prop k t}
+         -> m:tag
+         -> entry
+
+let log = ST.alloc #(list entry) []
+
+// BEGIN: MacSpec
+val keygen: p:(text -> Type) -> pkey p
+val mac:    k:key -> t:text{key_prop k t} -> ST tag (requires (fun h -> True)) (ensures (fun h x h' -> modifies !{ log } h h'))
+val verify: k:key -> t:text -> tag -> ST (b:bool{b ==> key_prop k t}) (requires (fun h -> True)) (ensures (fun h x h' -> modifies !{} h h'))
+// END: MacSpec
+
+(* ---- implementation *)
+
+let keygen (p: (text -> Type)) =
+  let k = sample keysize in
+  assume (key_prop k == p);
+  k
+
+let mac k t =
+  let m = hmac_sha1 k t in
+  log := Entry k t m :: !log;
+  m
+
+let verify k text tag =
+  (* to verify, we simply recompute & compare *)
+  let m= hmac_sha1 k text in
+  let verified = (Platform.Bytes.equalBytes m tag) in
+  let found =
+    is_Some
+      (List.Tot.find
+        (fun (Entry k' text' tag') -> Platform.Bytes.equalBytes k k' && Platform.Bytes.equalBytes text text')
+        !log) in
+
+  (* plain, concrete implementation (ignoring the log) *)
+//verified
+
+  (* ideal, error-correcting implementation *)
+  verified && found
+//  found
+
+  (* error-detecting implementation for the INT-CMA game *)
+//(if verified && not found then win := Some(k,text,tag));
+//verified
+
+(* VARIANT CTXT vs CPA: is the tag authenticated?
+   otherwise do not include m:tag in the entry *)
+
+//      (fun (Entry k' text' tag') -> k=k' && text=text' && tag=tag')
