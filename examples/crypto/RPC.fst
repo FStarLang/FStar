@@ -34,8 +34,8 @@ let rec recv call = if length !msg_buffer > 0
 
 (* two events, recording genuine requests and responses *)
 
-assume new logic type pRequest : string -> Type
-assume new logic type pResponse : string -> string -> Type
+assume type pRequest : string -> Type0
+assume type pResponse : string -> string -> Type0
 
 (* the meaning of MACs, as used in RPC *)
 

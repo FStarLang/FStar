@@ -29,7 +29,7 @@ open FStar.IO
    used as a pre-condition for MACing and
    a postcondition of MAC verification *)
 
-assume new type key_prop : key -> text -> Type
+assume type key_prop : key -> text -> Type0
 type pkey (p:(text -> Type)) = k:key{key_prop k == p}
 
 (* to model authentication, we log all genuine calls
