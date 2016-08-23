@@ -93,7 +93,7 @@ and width =
 
 and constant = width * string
 
-(** a De Bruijn index *)
+(* a De Bruijn index *)
 and var = int 
 
 and binder = {
