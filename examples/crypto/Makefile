@@ -104,10 +104,9 @@ rpc-test: RPC.exe
 	$(EXTRA_PATH) ./RPC.exe
 
 CntProtocol: CntFormat.fst MAC.fst SHA1.fst CntProtocol.fst
-	$(SFSTAR) --z3timeout 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
-	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
-		--include $(FSTAR_HOME)/contrib/Platform/fst \
-		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst CntProtocol.fst
+	$(FSTAR) --z3timeout 10 --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
+		--include $(FSTAR_HOME)/ucontrib/Platform/fst \
+		--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst CntProtocol.fst
 
 CntProtocol.ml: CntFormat.fst MAC.fst SHA1.fst CntProtocol.fst
 	$(FSTAR_ALWAYS) --stratified --z3timeout 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
