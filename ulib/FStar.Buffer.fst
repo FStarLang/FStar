@@ -717,8 +717,8 @@ let offset #a (b:buffer a) (i:UInt32.t{v i <= length b}) : STL (buffer a)
     Defining operators for buffer accesses as specified at
     https://github.com/FStarLang/FStar/wiki/Parsing-and-operator-precedence
    *)
-(** JP: if the [val] is not specified, there's an issue with these functions
- * taking an extra unification parameter at extraction-time... *)
+(* (\** JP: if the [val] is not specified, there's an issue with these functions *)
+(*  * taking an extra unification parameter at extraction-time... *\) *)
 val op_Array_Access: #a:Type -> b:buffer a -> n:UInt32.t{v n<length b} -> STL a
      (requires (fun h -> live h b))
      (ensures (fun h0 z h1 -> live h0 b /\ h1 == h0
