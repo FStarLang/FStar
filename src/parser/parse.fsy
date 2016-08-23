@@ -525,8 +525,10 @@ constructors:
       { $1@[$2] }
 
 recordFieldDecl:
-  |  maybeDoc ident COLON typ
-      { ($2, $4, $1) }
+  |  FSDOC ident COLON typ 
+      { ($2, $4, Some $1) } 
+  |  ident COLON typ 
+      { ($1, $3, None) } 
 
 constructorDecl:
   | BAR maybeDoc name COLON typ
