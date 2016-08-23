@@ -116,11 +116,11 @@ let rec recv _ = if length !msg_buffer > 0
 
 (* two events, recording genuine requests and responses *)
 
-assume logic type signal : uint32 -> uint16 -> Type
+assume type signal : uint32 -> uint16 -> Type
 
 (* the meaning of MACs, as used in RPC *)
 
-assume logic type req (msg:message) =
+type req (msg:message) =
     (exists s c.   msg = CntFormat.signal s c /\ signal s c)
 
 val k: k:key{key_prop k == req}
@@ -133,7 +133,7 @@ val client : uint32 -> ST (option string)
  			  (ensures (fun h x h' -> invariant h'))
 let client (s: uint32) =
   let c = next_cnt () in
-  admitP (signal s c);
+  assume (signal s c); //a protocol event
   let t = CntFormat.signal s c in
   let m = mac k t in
   send (t @| m);
