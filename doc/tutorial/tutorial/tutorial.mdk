@@ -682,7 +682,8 @@ We can assert and automatically check a more general property about `max`. For e
 
 Let's take a look at the factorial function:
 
-    let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
+    let rec factorial n = 
+      if n = 0 then 1 else Prims.op_Multiply n factorial (n - 1)
 
 As we said earlier, without further annotation, F\* infers `:int -> int`
 as the type of this function, which is a shorthand for
@@ -1051,6 +1052,9 @@ can almost ignore the distinction between the two. However, when you
 start to write refinement formulas with quantifiers, the distinction
 between the two will become apparent.
 
+<!--
+q:Type. True in universes too? 
+-->
 Both the universal quantifier `forall`, and the existential quantifier
 `exists`, are only available in `:Type`. When you mix refinements that
 include boolean function and the quantifiers, you need to use the
