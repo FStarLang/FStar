@@ -592,7 +592,9 @@ let lemma_modifies_2_1' (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h
 let create #a (init:a) (len:UInt32.t) : ST (buffer a)
      (requires (fun h -> is_stack_region h.tip))
      (ensures (fun (h0:mem) b h1 -> ~(contains h0 b)
-       /\ live h1 b /\ idx b = 0 /\ length b = v len /\ frameOf b = h0.tip
+       /\ live h1 b /\ idx b = 0 /\ length b = v len
+       /\ frameOf b = h0.tip
+       /\ Map.domain h1.h == Map.domain h0.h
        /\ modifies_0 h0 h1
        /\ as_seq h1 b == Seq.create (v len) init
        ))
@@ -600,6 +602,59 @@ let create #a (init:a) (len:UInt32.t) : ST (buffer a)
     let h = HST.get() in
     let b = {content = content; idx = (uint_to_t 0); length = len} in
     Seq.lemma_eq_intro (as_seq h b) (sel h b);
+    b
+
+module L = FStar.List.Tot
+
+(** Concrete getters and setters *)
+let createL #a (init:list a) : ST (buffer a)
+     (requires (fun h -> is_stack_region h.tip /\ L.length init > 0 /\ L.length init < UInt.max_int 32))
+     (ensures (fun (h0:mem) b h1 ->
+       let len = L.length init in
+       len > 0 /\ (
+       ~(contains h0 b)
+       /\ live h1 b /\ idx b = 0 /\ length b = len
+       /\ frameOf b = h0.tip
+       /\ Map.domain h1.h == Map.domain h0.h
+       /\ modifies_0 h0 h1
+       /\ as_seq h1 b == Seq.of_list init
+       )))
+  =
+    let len = UInt32.uint_to_t (L.length init) in
+    let s = Seq.of_list init in
+    lemma_of_list_length s init;
+    assert (Seq.length s < UInt.max_int 32);
+    let content = salloc (Seq.of_list init) in
+    let h = HST.get() in
+    let b = {content = content; idx = (uint_to_t 0); length = len} in
+    Seq.lemma_eq_intro (as_seq h b) (sel h b);
+    b
+
+
+let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h x.id}) (v:a) : Lemma
+  (requires (True))
+  (ensures  (Map.domain h.h == Map.domain (upd h x v).h))
+  = let m = h.h in
+    let m' = Map.upd m x.id (Heap.upd (Map.sel m x.id) (HH.as_ref x.ref) v) in
+    Set.lemma_equal_intro (Map.domain m) (Map.domain m')
+
+let rcreate #a (r:HH.rid) (init:a) (len:UInt32.t) : ST (buffer a)
+     (requires (fun h -> is_eternal_region r))
+     (ensures (fun (h0:mem) b h1 -> ~(contains h0 b)
+       /\ live h1 b /\ idx b = 0 /\ length b = v len
+       /\ Map.domain h1.h == Map.domain h0.h
+       /\ h1.tip = h0.tip
+       /\ modifies (Set.singleton r) h0 h1
+       /\ modifies_ref r TSet.empty h0 h1
+       /\ as_seq h1 b == Seq.create (v len) init
+       ))
+  = let h = HST.get() in
+    let s = Seq.create (v len) init in
+    let content = ralloc r s in
+    let h' = HST.get() in
+    let b = {content = content; idx = (uint_to_t 0); length = len} in
+    Seq.lemma_eq_intro (as_seq h' b) (sel h' b);
+    lemma_upd h content s;
     b
 
 let index #a (b:buffer a) (n:UInt32.t{v n<length b}) : STL a
@@ -662,8 +717,20 @@ let offset #a (b:buffer a) (i:UInt32.t{v i <= length b}) : STL (buffer a)
     Defining operators for buffer accesses as specified at
     https://github.com/FStarLang/FStar/wiki/Parsing-and-operator-precedence
    *)
-let op_Array_Access = index
-let op_Array_Assignment = upd
+(* (\** JP: if the [val] is not specified, there's an issue with these functions *)
+(*  * taking an extra unification parameter at extraction-time... *\) *)
+val op_Array_Access: #a:Type -> b:buffer a -> n:UInt32.t{v n<length b} -> STL a
+     (requires (fun h -> live h b))
+     (ensures (fun h0 z h1 -> live h0 b /\ h1 == h0
+       /\ z == Seq.index (as_seq h0 b) (v n)))
+let op_Array_Access #a b n = index #a b n
+
+val op_Array_Assignment: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> STL unit
+  (requires (fun h -> live h b /\ v n < length b))
+  (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ v n < length b
+    /\ modifies_1 b h0 h1
+    /\ as_seq h1 b == Seq.upd (as_seq h0 b) (v n) z ))
+let op_Array_Assignment #a b n z = upd #a b n z
 
 let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem): Lemma
   (requires (modifies_one (frameOf b) h0 h1 /\ modifies_one (frameOf b) h1 h2))

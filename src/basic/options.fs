@@ -89,6 +89,7 @@ let init () =
         ("debug_level"                  , List []);
         ("dep"                          , Unset);
         ("detail_errors"                , Bool false);
+        ("doc"                          , Bool false);
         ("dump_module"                  , List []);
         ("eager_inference"              , Bool false);
         ("explicit_deps"                , Bool false);
@@ -114,7 +115,7 @@ let init () =
         ("n_cores"                      , Int 1);
         ("no_default_includes"          , Bool false);
         ("no_extract"                   , List []);
-        ("no_location_info"             , Bool true);
+        ("no_location_info"             , Bool false);
         ("odir"                         , Unset);
         ("prims"                        , Unset);
         ("pretype"                      , Bool true);
@@ -168,6 +169,7 @@ let get_debug                   ()      = lookup_opt "debug"                    
 let get_debug_level             ()      = lookup_opt "debug_level"              (as_list as_string)
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
+let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
 let get_explicit_deps           ()      = lookup_opt "explicit_deps"            as_bool
@@ -329,6 +331,11 @@ let rec specs () : list<Getopt.opt> =
         ZeroArgs (fun () -> Bool true),
          "Emit a detailed error report by asking the SMT solver many queries; will take longer;
          implies n_cores=1; incompatible with --stratified");
+
+       ( noshort,
+        "doc",
+        ZeroArgs (fun () -> Bool true),
+         "Extract Markdown documentation files for the input modules, as well as an index. Output is written to --odir directory.");
 
        ( noshort,
         "dump_module",
@@ -787,6 +794,7 @@ let debug_any                    () = get_debug () <> []
 let debug_at_level      modul level = (modul = "" || get_debug () |> List.contains modul) && debug_level_geq level
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
+let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
 let explicit_deps                () = get_explicit_deps               ()

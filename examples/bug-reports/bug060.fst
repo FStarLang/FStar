@@ -1,4 +1,4 @@
-(************************
+(* **********************
 ***       Types       ***
 *************************)
 
@@ -20,18 +20,18 @@ and term =
   | Func : (symbol * list term) -> term
   | Name : string -> term
 
-(******* List ******)
+(* ***** List ******)
 
 val length: list 'a -> Tot nat
 let rec length l = match l with
   | [] -> 0
   | _::q -> 1 + (length q)
 
-(*********************************
+(* *******************************
 ***        Predicates          ***
 **********************************)
 
-(** Arity and arguments **)
+(*  Arity and arguments **)
 
 type good_symbol = s:symbol{ match s.cat with
   | Tuple  -> true
@@ -46,7 +46,7 @@ let a:good_symbol =
   let x = { name = "enc" ; arity = 2; cat = Constructor [n;n] n } in
   x
 
-(** Does not type check *)
+(*  Does not type check *)
 let a':good_symbol = { name = "enc" ; arity = 2; cat = Constructor [n;n] n }
 (* *)
 

@@ -1228,11 +1228,11 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, fields) ->
       let constrName = mk_ident("Mk" ^ id.idText, id.idRange) in
-      let mfields = List.map (fun (x,t) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr None) fields in
+      let mfields = List.map (fun (x,t,_) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr None) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) parms in
       let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type in
       //let _ = Util.print_string (Util.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in
-      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false)]), fields |> List.map (fun (x, _) -> Env.qualify env x)
+      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, None, false)]), fields |> List.map (fun (x, _, _) -> Env.qualify env x)
     | _ -> failwith "impossible" in
   let desugar_abstract_tc quals _env mutuals = function
     | TyconAbstract(id, binders, kopt) ->
@@ -1339,7 +1339,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
           let env_tps, tps = push_tparams env tpars in
           let data_tpars = List.map (fun (x, _) -> (x, Some (S.Implicit true))) tps in
           let constrNames, constrs = List.split <|
-              (constrs |> List.map (fun (id, topt, of_notation) ->
+              (constrs |> List.map (fun (id, topt, _, of_notation) ->
                 let t =
                   if of_notation
                   then match topt with
@@ -1395,7 +1395,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
         env, List.hd ses::out) (env, []) in
     let binders = Subst.close_binders binders in
     let actions = actions |> List.map (fun d -> match d.d with 
-        | Tycon(_, [TyconAbbrev(name, _, _, { tm = Construct (_, [ def, _; cps_type, _ ])})]) when not for_free ->
+        | Tycon(_, [TyconAbbrev(name, _, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), _]) when not for_free ->
             // When the effect is not for free, user has to provide a pair of
             // the definition and it's cps'd type.
             {
@@ -1404,7 +1404,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
               action_defn=Subst.close binders (desugar_term env def);
               action_typ=Subst.close binders (desugar_typ env cps_type)
             }
-        | Tycon(_, [TyconAbbrev(name, _, _, defn)]) when for_free -> 
+        | Tycon(_, [TyconAbbrev(name, _, _, defn), _]) when for_free -> 
             // When for free, the user just provides the definition and the rest
             // is elaborated
             {
@@ -1495,6 +1495,8 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let se = Sig_pragma(trans_pragma p, d.drange) in
     env, [se]
 
+  | Fsdoc _ -> env, []
+
   | TopLevelModule _ -> 
     raise (Error("Multiple modules in a file are no longer supported", d.drange)) //the parser desugars this away with a warning
 
@@ -1506,6 +1508,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     Env.push_module_abbrev env x l, []
 
   | Tycon(qual, tcs) ->
+    let tcs = List.map (fun (x,_) -> x) tcs in
     desugar_tycon env d.drange (List.map trans_qual qual) tcs
 
   | ToplevelLet(quals, isrec, lets) ->

@@ -48,8 +48,8 @@ and expr =
   | EIfThenElse of expr * expr * expr * typ
   | ESequence of list<expr>
   | EAssign of expr * expr
-    (** left expression can only be a EBound of EOpen *)
-  | EBufCreate of expr * expr
+  | (** left expression can only be a EBound of EOpen *)
+    EBufCreate of expr * expr
   | EBufRead of expr * expr
   | EBufWrite of expr * expr * expr
   | EBufSub of expr * expr
@@ -65,6 +65,8 @@ and expr =
   | EReturn of expr
   | EFlat of lident * list<(ident * expr)>
   | EField of lident * expr * ident
+  | EWhile of expr * expr
+  | EBufCreateL of list<expr>
 
 and op =
   | Add | AddW | Sub | SubW | Div | Mult | Mod
@@ -84,34 +86,30 @@ and pattern =
   | PVar of binder
 
 and width =
-  | UInt8
-  | UInt16
-  | UInt32
-  | UInt64
-  | Int8
-  | Int16
-  | Int32
-  | Int64
+  | UInt8 | UInt16 | UInt32 | UInt64
+  | Int8 | Int16 | Int32 | Int64
   | Bool
+  | Int | UInt
 
 and constant = width * string
 
-and var =
-  int (** a De Bruijn index *)
+(** a De Bruijn index *)
+and var = int 
 
 and binder = {
   name: ident;
   typ: typ;
   mut: bool;
-  mark: int;
+  mark: ref<int>;
   meta: option<meta>;
+  atom: ref<unit>;
 }
 
 and meta =
   | MetaSequence
 
-and ident =
-  string (** for pretty-printing *)
+(* for pretty-printing *)
+and ident = string
 
 and lident =
   list<ident> * ident
@@ -129,7 +127,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 9
+let current_version: version = 10
 
 type file = string * program
 type binary_format = version * list<file>
@@ -420,7 +418,7 @@ and translate_binders env args =
   List.map (translate_binder env) args
 
 and translate_binder env ((name, _), typ) =
-  { name = name; typ = translate_type env typ; mut = false; mark = 0; meta = None }
+  { name = name; typ = translate_type env typ; mut = false; mark = ref 0; meta = None; atom = ref () }
 
 and translate_expr env e: expr =
   match e.expr with
@@ -462,7 +460,7 @@ and translate_expr env e: expr =
           typ, body
       in
       let is_mut = flavor = Mutable in
-      let binder = { name = name; typ = translate_type env typ; mut = is_mut; mark = 0; meta = None } in
+      let binder = { name = name; typ = translate_type env typ; mut = is_mut; mark = ref 0; meta = None; atom = ref () } in
       let body = translate_expr env body in
       let env = extend env name is_mut in
       let continuation = translate_expr env continuation in
@@ -478,15 +476,29 @@ and translate_expr env e: expr =
       EBound (find env v)
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var (v, _) }; e ]) when (string_of_mlpath p = "FStar.HST.op_Colon_Equals" && is_mutable env v) ->
       EAssign (EBound (find env v), translate_expr env e)
-  | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.index") ->
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ])
+    when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.create") ->
       EBufCreate (translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_Name p }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.createL") ->
+      let rec list_elements acc e2 =
+        match e2.expr with
+        | MLE_CTor (([ "Prims" ], "Cons" ), [ hd; tl ]) ->
+            list_elements (hd :: acc) tl
+        | MLE_CTor (([ "Prims" ], "Nil" ), []) ->
+            List.rev acc
+        | _ ->
+            failwith "Argument of FStar.Buffer.createL is not a string literal!"
+      in
+      let list_elements = list_elements [] in
+      EBufCreateL (List.map (translate_expr env) (list_elements e2))
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
-  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.upd") ->
+  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ])
+    when string_of_mlpath p = "FStar.Buffer.upd" || string_of_mlpath p = "FStar.Buffer.op_Array_Assignment" ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HST.push_frame") ->
       EPushFrame
@@ -547,8 +559,9 @@ and translate_expr env e: expr =
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
        * supported, and quantified type schemes are not supported either *)
       failwith "todo: translate_expr [MLE_Let]"
-  | MLE_App _ ->
-      failwith "todo: translate_expr [MLE_App]"
+  | MLE_App (head, _) ->
+      failwith (Util.format1 "todo: translate_expr [MLE_App] (head is: %s)"
+        (ML.Code.string_of_mlexpr ([], "") head))
   | MLE_Fun _ ->
       failwith "todo: translate_expr [MLE_Fun]"
   | MLE_CTor _ ->
@@ -590,7 +603,7 @@ and translate_pat env t p =
       env, PBool b
   | MLP_Var (name, _) ->
       let env = extend env name false in
-      env, PVar ({ name = name; typ = translate_type env t; mut = false; mark = 0; meta = None })
+      env, PVar ({ name = name; typ = translate_type env t; mut = false; mark = ref 0; meta = None; atom = ref () })
   | MLP_Wild ->
       failwith "todo: translate_pat [MLP_Wild]"
   | MLP_Const _ ->

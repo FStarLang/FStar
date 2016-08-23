@@ -13,14 +13,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+#light "off"
 
 (** This module provides an ocamldep-like tool for F*, invoked with [fstar --dep].
     Unlike ocamldep, it outputs the transitive closure of the dependency graph
     of a given file. The dependencies that are output are *compilation units*
     (not module names).
 *)
-
-#light "off"
 module FStar.Parser.Dep
 
 open FStar
@@ -320,12 +319,14 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         collect_term t0; 
         collect_term t1
     | Tycon (_, ts) ->
+        let ts = List.map (fun (x,doc) -> x) ts in
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term
     | NewEffectForFree (_, ed)
     | NewEffect (_, ed) ->
         collect_effect_decl ed
+    | Fsdoc _
     | Pragma _ ->
         ()
     | TopLevelModule lid ->
@@ -343,11 +344,11 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | TyconRecord (_, binders, k, identterms) ->
         collect_binders binders;
         iter_opt k collect_term;
-        List.iter (fun (_, t) -> collect_term t) identterms
+        List.iter (fun (_, t, _) -> collect_term t) identterms
     | TyconVariant (_, binders, k, identterms) ->
         collect_binders binders;
         iter_opt k collect_term;
-        List.iter (fun (_, t, _) -> iter_opt t collect_term) identterms
+        List.iter (fun (_, t, _, _) -> iter_opt t collect_term) identterms
 
   and collect_effect_decl = function
     | DefineEffect (_, binders, t, decls, actions) ->

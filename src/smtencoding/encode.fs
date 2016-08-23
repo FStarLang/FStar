@@ -849,13 +849,10 @@ and encode_args l env : (list<term> * decls_t)  =
 
 (* this assumes t is a Lemma *)
 and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option<S.term>) (t:typ) (env:env_t) : term * decls_t =
-    let rec list_elements (e:S.term) : list<S.term> = 
-        let head, args = Util.head_and_args (Util.unmeta e) in
-        match (Util.un_uinst head).n, args with
-        | Tm_fvar fv, _ when S.fv_eq_lid fv Const.nil_lid -> []
-        | Tm_fvar fv, [_; (hd, _); (tl, _)] when S.fv_eq_lid fv Const.cons_lid -> 
-          hd::list_elements tl
-        | _ -> Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
+    let list_elements (e:S.term) : list<S.term> = 
+      match Syntax.Util.list_elements e with
+      | Some l -> l
+      | None -> Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
 
     let one_pat p = 
         let head, args = Util.unmeta p |> Util.head_and_args in
@@ -1369,7 +1366,7 @@ let encode_free_var env fv tt t_norm quals =
                         | _ ->  (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                                 let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
                                 let vtok_fresh = Term.fresh_token (vtok, Term_sort) (varops.next_id()) in
-                                let name_tok_corr = Term.Assume(mkForall([[vtok_app]], vars, mkEq(vtok_app, vapp)), 
+                                let name_tok_corr = Term.Assume(mkForall([[vtok_app]; [vapp]], vars, mkEq(vtok_app, vapp)),
                                                                 Some "Name-token correspondence", 
                                                                 Some ("token_correspondence_"^vname)) in
                                 decls2@[vtok_decl;vtok_fresh;name_tok_corr;tok_typing], env in

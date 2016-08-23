@@ -1,7 +1,6 @@
 [
   "iÍ8S…‡\u0014\u001dbç\u0013Ë#ep÷",
   [
-    [ "FStar.SquashProperties.join_squash", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.SquashProperties.squash_arrow", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.SquashProperties.forall_intro", 1, 2, 1, [ "@query" ], 0 ],
     [

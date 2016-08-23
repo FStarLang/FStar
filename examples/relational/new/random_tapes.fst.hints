@@ -1,7 +1,6 @@
 [
-  "@í'r7Ü}™iÀ#ˆm\u0018œê",
+  "L˝‹¬˙\fÇ-ÃÕlSî≈\u001e\n",
   [
-    [ "Random_Tapes.bla", 1, 2, 1, [ "@query" ], 0 ],
     [ "Random_Tapes.rel_random_tape", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Random_Tapes.rel_random_tape",
@@ -12,13 +11,29 @@
       0
     ],
     [
+      "Random_Tapes.id",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Bijection.bijection",
+        "equation_Bijection.injection", "equation_Bijection.surjection",
+        "int_typing",
+        "interpretation_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da",
+        "pretyping_ae567c2fb75be05905677af440075565"
+      ],
+      0
+    ],
+    [
       "Random_Tapes.add",
       1,
       2,
       1,
       [
-        "@query", "equation_Bijection.inverses",
-        "equation_Random_Tapes.minus", "int_inversion",
+        "@query", "equation_Bijection.bijection",
+        "equation_Bijection.injection", "equation_Bijection.inverses",
+        "equation_Bijection.surjection", "equation_Random_Tapes.minus",
+        "int_inversion",
         "interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
         "pretyping_ae567c2fb75be05905677af440075565",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
@@ -28,7 +43,17 @@
       ],
       0
     ],
-    [ "Random_Tapes.otp_rand", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Random_Tapes.otp_rand",
+      1,
+      2,
+      1,
+      [
+        "@query", "function_token_typing_Random_Tapes.id",
+        "refinement_interpretation_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
+      ],
+      0
+    ],
     [
       "Random_Tapes.otp_rand",
       2,
@@ -44,8 +69,7 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Rel.R",
-        "constructor_distinct_Tm_unit", "data_elim_Rel.R",
+        "@query", "constructor_distinct_Tm_unit", "data_elim_Rel.R",
         "data_typing_intro_Rel.R@tok", "eq2-interp",
         "equation_Random_Tapes.add", "equation_Random_Tapes.otp",
         "equation_Random_Tapes.otp_rand",
@@ -65,7 +89,7 @@
         "projection_inverse_Prims.Mktuple3__1",
         "projection_inverse_Prims.Mktuple3__2",
         "projection_inverse_Prims.Mktuple3__3", "projection_inverse_Rel.R_l",
-        "projection_inverse_Rel.R_r", "projection_inverse_Rel.R_t",
+        "projection_inverse_Rel.R_r",
         "refinement_interpretation_Tm_refine_ccaf8d7d310178aed1b1e846b71d7cf5",
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_Random_Tapes.otp",
@@ -75,7 +99,17 @@
       0
     ],
     [ "Random_Tapes.otp2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Random_Tapes.otp2_rand", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Random_Tapes.otp2_rand",
+      1,
+      2,
+      1,
+      [
+        "@query", "function_token_typing_Random_Tapes.id",
+        "refinement_interpretation_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
+      ],
+      0
+    ],
     [ "Random_Tapes.otp2_eq", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Random_Tapes.otp2_eq",
@@ -110,8 +144,8 @@
         "refinement_interpretation_Tm_refine_ccaf8d7d310178aed1b1e846b71d7cf5",
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_Random_Tapes.otp2",
-        "token_correspondence_Random_Tapes.otp2_rand", "typing_Rel.R.l",
-        "typing_Rel.R.r", "typing_Rel.lift5", "unit_typing"
+        "token_correspondence_Random_Tapes.otp2_rand", "typing_Rel.R.r",
+        "typing_Rel.lift5", "unit_typing"
       ],
       0
     ]

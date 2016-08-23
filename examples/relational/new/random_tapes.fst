@@ -10,19 +10,16 @@ type random_tape = int -> Tot int
 val sample : random_tape -> int -> Tot int
 let sample r i =  r i
 
-  (*Just for testing purposes (use instead of bij for much faster verification) *)
-type bla (#a:Type) (#b:Type) = a -> Tot b
+type rel_random_tape (b:(int -> Tot bij)) = r:(rel random_tape){forall i. b i (R.l r i) = R.r r i}
 
-type rel_random_tape (b:(int -> Tot bla)) = r:(rel random_tape){forall i. b i (R.l r i) = R.r r i}
-
-val id : bla #int #int 
+val id : bij #int #int 
 let id x = x 
 
 val minus : int -> int -> Tot int
 let minus x y = y - x
 
-  (* Proving the function used is a blaection *)
-val add : int -> Tot (bla #int #int)
+  (* Proving the function used is a bijection *)
+val add : int -> Tot (bij #int #int)
 let add x = cut (inverses (op_Addition x) (minus x)); op_Addition x 
 
   (* Definition of a simple one time pad *)
@@ -30,7 +27,7 @@ val otp : int -> random_tape -> int -> Tot int
 let otp n r i = n + r i
 
   (* Random tape used for relational verification *)
-val otp_rand : x:(rel int) -> int -> Tot (bla #int #int)
+val otp_rand : x:(rel int) -> int -> Tot (bij #int #int)
 let otp_rand x i = if i = 0 then 
                      add (R.l x - R.r x)
                    else 
@@ -45,7 +42,7 @@ let otp_eq x r = ()
 val otp2 : int -> int -> random_tape -> int -> int -> Tot (int * int)
 let otp2 n m r i j = (n + r i, m + r j)
 
-val otp2_rand : x:(rel int) -> y:(rel int) -> int -> Tot (bla #int #int)
+val otp2_rand : x:(rel int) -> y:(rel int) -> int -> Tot (bij #int #int)
 let otp2_rand x y i = 
   match i with
   | 0 -> add (R.l x - R.r x)

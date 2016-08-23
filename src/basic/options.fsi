@@ -60,6 +60,7 @@ val debug_at_level              : string  -> debug_level_t -> bool
 val dep                         : unit    -> option<string>
 val detail_errors               : unit    -> bool
 val display_usage               : unit    -> unit
+val doc                         : unit    -> bool
 val dont_gen_projectors         : string  -> bool
 val dump_module                 : string  -> bool
 val eager_inference             : unit    -> bool

@@ -40,6 +40,13 @@ let rec nth l n = match l with
   | []     -> None
   | hd::tl -> if n = 0 then Some hd else nth tl (n - 1)
 
+val index: #a:Type -> l:list a -> i:nat{i < length l} -> Tot a
+let rec index #a (l: list a) (i:nat{i < length l}): Tot a =
+  if i = 0 then
+    hd l
+  else
+    index (tl l) (i - 1)
+
 val count: #a:eqtype -> a -> list a -> Tot nat
 let rec count #a x = function
   | [] -> 0
@@ -222,7 +229,7 @@ val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> a -> a -> Tot int
 let compare_of_bool #a rel x y =
   if x `rel` y  then 1 
   else if x = y then 0
-  else -1
+  else 0-1
   
 val sortWith: ('a -> 'a -> Tot int) -> l:list 'a -> Tot (list 'a) (decreases (length l))
 let rec sortWith f = function

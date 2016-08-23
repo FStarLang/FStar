@@ -1,5 +1,5 @@
 [
-  "•õÒ#î(\u0004û\u001f ÏQ«",
+  "Ğ÷Jzˆ[ûÇDñR2\"\u001eR”",
   [
     [
       "FStar.Ghost.reveal",
@@ -103,7 +103,6 @@
         "refinement_interpretation_Tm_refine_fe92ca5f59249712e3a29569cd813153"
       ],
       0
-    ],
-    [ "FStar.Ghost.gcut", 1, 2, 1, [ "@query", "unit_typing" ], 0 ]
+    ]
   ]
 ]

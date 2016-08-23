@@ -110,7 +110,8 @@ let go _ =
                interactive_mode main_buffer_filename_opt (dsenv, env) None Universal.interactive_tc //and then start checking chunks from the current buffer
           else let fmods, dsenv, env = Stratified.batch_mode_tc Parser.Dep.VerifyUserList filenames in //check all the dependences in batch mode
                interactive_mode None (dsenv, env) None Stratified.interactive_tc //and then start checking chunks from the current buffer
-
+        else if Options.doc() then // --doc Generate Markdown documentation files
+          FStar.Fsdoc.Generator.generate filenames
         else if List.length filenames >= 1 then begin //normal batch mode
           let verify_mode =
             if Options.verify_all () then begin

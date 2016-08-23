@@ -352,7 +352,7 @@ let sstep_sec_slice_lemma c c' h = match h with
   | C_combsh_beta c c'     -> Conj () (C_combsh_beta (slice_c_sps c) (slice_c_sps c'))
 
 #reset-options
-(**********)
+(* ********)
 
 val slice_emp_en': p:prin
                   -> Lemma (slice_en p empty_env = empty_env)
@@ -470,7 +470,7 @@ let rec slice_c p (Conf Source (Mode as_m ps) s en t tr) =
   in
   Conf Target (Mode Par (singleton p)) (slice_s p (Mode as_m ps) s) en' t' tr'
 
-(**********)
+(* ********)
 
 open FStar.Classical
 
@@ -1192,7 +1192,7 @@ let sstep_par_slice_lemma c c' h p =
     | C_combsh_beta _ _ -> IntroL ()
 
 #reset-options
-(**********)
+(* ********)
 
 val is_empty_eqm: tsec -> Tot bool
 let is_empty_eqm m = (m = mempty #prins #tconfig_sec #ps_cmp)
@@ -1501,7 +1501,7 @@ val not_contains_lemma: #ps:prins -> pi:tpar ps
                         -> Lemma (requires (True)) (ensures (forall p. not (mem p ps) ==> select p pi = None))
 let not_contains_lemma #ps pi = ()
 
-(**********)
+(* ********)
 (*assume val cand_intro: #a:Type -> #b:Type -> =h:(a /\ b) -> Tot (cand a b)
 assume val cand_elim : #a:Type -> #b:Type -> =h:cand a b -> Lemma (a /\ b)
 
@@ -1522,7 +1522,7 @@ assume val t_elim : #a:Type -> =h:a -> Lemma (a)
 
 assume val rewrite : #a:Type -> #p:(a -> Type) -> #x:a -> #y:a -> =h:ceq x y -> =h':p x -> Tot (p y)
 assume val ceq_symm: #a:Type -> #x:a -> #y:a -> =h:ceq x y -> Tot (ceq y x)*)
-(**********)
+(* ********)
 
 (*opaque val slice_c_ps_cons:
   ps:prins -> c:sconfig -> pi:protocol ps{pi = slice_c_ps ps c}
@@ -2707,7 +2707,7 @@ let s_terminating_run_implies_p_terminates_in #c #c' ht ps =
 // 	  pterminates_confluence #ps pi2' pi1 n1' p pi2 n2' ht2
 //     )
 
-(**********)
+(* ********)
 
 assume val v_cmp: varname -> varname -> Tot bool
 
@@ -3018,4 +3018,4 @@ val composable_compose_lemma:
 		    (is_V_emp (D_v.v dv1) /\ is_V_emp (D_v.v dv2))))
 let composable_compose_lemma dv1 dv2 = ()
 
-(**********)
+(* ********)

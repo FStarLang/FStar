@@ -33,7 +33,8 @@ let rec interpret_exp h e =
     let b = interpret_exp h e2 in 
     interpret_binop o a b
 
-type variant = e:exp{forall h. 0 <= interpret_exp h e}
+type variant = exp
+//type variant = e:exp{forall h. 0 <= interpret_exp h e}
 
 (* Commands -- loops are annotated with variants *)
 type com =
@@ -49,7 +50,8 @@ val decr : heap -> com -> GTot int
 let decr h c = 
   match c with 
   | While c b v ->
-    interpret_exp h v
+    let tmp = interpret_exp h v in 
+    if tmp < 0 then 0 else tmp
   | _ ->   0
 
 (* Returns Some heap if the variant is correct *)
@@ -64,8 +66,8 @@ let rec interpret_while h (While e body v) =
   else
     match interpret_com h body with
     | Some h' ->
-      if interpret_exp h' v < interpret_exp h v then 
-        interpret_com h' (While e body v)
+      if interpret_exp h' v < interpret_exp h v && interpret_exp h' v >= 0 then
+        interpret_while h' (While e body v)
       else
         None
     | None -> None

@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 
-
 (* A logical theory of sequences indexed by natural numbers in [0, n) *)
 module FStar.Seq
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
@@ -31,6 +30,25 @@ let index #a s i = MkSeq.contents s i
 
 abstract val create: #a:Type -> nat -> a -> Tot (seq a)
 let create #a len v =  MkSeq len (fun i -> v)
+
+module L = FStar.List.Tot
+
+abstract val of_list: #a:Type -> list a -> Tot (seq a)
+let of_list #a l =
+  MkSeq (L.length l) (L.index l)
+
+abstract val lemma_of_list_length: #a:Type -> s:seq a -> l:list a -> Lemma
+  (requires (s == of_list #a l))
+  (ensures (length s = L.length l))
+  [SMTPat (length s = L.length l)]
+let lemma_of_list_length #a s l  = ()
+
+abstract val lemma_of_list: #a:Type -> s:seq a -> l:list a -> i:nat{i < length s} -> Lemma
+  (requires (s == of_list l))
+  (ensures (s == of_list l /\ L.length l = length s /\ index s i == L.index l i))
+  [SMTPat (index s i == L.index l i)]
+let lemma_of_list #a s l i =
+  ()
 
 private val exFalso0 : a:Type -> n:nat{n<0} -> Tot a
 let exFalso0 a n = ()
