@@ -22,7 +22,8 @@ Ex07b.fst \
 Ex07c.fst \
 Ex07d.fst \
 Ex10a.fst \
-Ex10b.fst
+Ex10b.fst \
+Ex12a.fst 
 
 VERFILES_HH=Ex11a.fst
 

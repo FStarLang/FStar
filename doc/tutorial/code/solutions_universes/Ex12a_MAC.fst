@@ -3,7 +3,7 @@
    computational assumption *)
 
 
-module Ex09a_MAC 
+module Ex12a_MAC 
 
 open FStar.Array
 open FStar.Bytes
