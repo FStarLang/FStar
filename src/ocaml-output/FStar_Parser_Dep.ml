@@ -1,6 +1,6 @@
 
 open Prims
-# 43 "FStar.Parser.Dep.fst"
+# 34 "FStar.Parser.Dep.fst"
 type verify_mode =
 | VerifyAll
 | VerifyUserList
@@ -33,11 +33,11 @@ end
 false
 end))
 
-# 48 "FStar.Parser.Dep.fst"
+# 46 "FStar.Parser.Dep.fst"
 type map =
 (Prims.string Prims.option * Prims.string Prims.option) FStar_Util.smap
 
-# 50 "FStar.Parser.Dep.fst"
+# 48 "FStar.Parser.Dep.fst"
 let check_and_strip_suffix : Prims.string  ->  Prims.string Prims.option = (fun f -> (
 # 51 "FStar.Parser.Dep.fst"
 let suffixes = (".fsti")::(".fst")::(".fsi")::(".fs")::[]
@@ -63,13 +63,13 @@ end
 None
 end))))
 
-# 67 "FStar.Parser.Dep.fst"
+# 64 "FStar.Parser.Dep.fst"
 let is_interface : Prims.string  ->  Prims.bool = (fun f -> ((FStar_String.get f ((FStar_String.length f) - 1)) = 'i'))
 
-# 70 "FStar.Parser.Dep.fst"
+# 68 "FStar.Parser.Dep.fst"
 let is_implementation : Prims.string  ->  Prims.bool = (fun f -> (not ((is_interface f))))
 
-# 73 "FStar.Parser.Dep.fst"
+# 71 "FStar.Parser.Dep.fst"
 let list_of_option = (fun _69_1 -> (match (_69_1) with
 | Some (x) -> begin
 (x)::[]
@@ -78,13 +78,13 @@ end
 []
 end))
 
-# 75 "FStar.Parser.Dep.fst"
+# 73 "FStar.Parser.Dep.fst"
 let list_of_pair = (fun _69_33 -> (match (_69_33) with
 | (intf, impl) -> begin
 (FStar_List.append (list_of_option intf) (list_of_option impl))
 end))
 
-# 80 "FStar.Parser.Dep.fst"
+# 76 "FStar.Parser.Dep.fst"
 let must_find_stratified = (fun m k -> (match ((let _162_16 = (FStar_Util.smap_try_find m k)
 in (FStar_Util.must _162_16))) with
 | (Some (intf), _69_39) -> begin
@@ -97,25 +97,25 @@ end
 []
 end))
 
-# 89 "FStar.Parser.Dep.fst"
+# 87 "FStar.Parser.Dep.fst"
 let must_find_universes = (fun m k -> (let _162_20 = (let _162_19 = (FStar_Util.smap_try_find m k)
 in (FStar_Util.must _162_19))
 in (list_of_pair _162_20)))
 
-# 92 "FStar.Parser.Dep.fst"
+# 90 "FStar.Parser.Dep.fst"
 let must_find = (fun m k -> if (FStar_Options.universes ()) then begin
 (must_find_universes m k)
 end else begin
 (must_find_stratified m k)
 end)
 
-# 98 "FStar.Parser.Dep.fst"
+# 96 "FStar.Parser.Dep.fst"
 let print_map : map  ->  Prims.unit = (fun m -> (let _162_29 = (let _162_28 = (FStar_Util.smap_keys m)
 in (FStar_List.unique _162_28))
 in (FStar_List.iter (fun k -> (let _162_27 = (must_find m k)
 in (FStar_List.iter (fun f -> (FStar_Util.print2 "%s: %s\n" k f)) _162_27))) _162_29)))
 
-# 106 "FStar.Parser.Dep.fst"
+# 103 "FStar.Parser.Dep.fst"
 let lowercase_module_name : Prims.string  ->  Prims.string = (fun f -> (match ((let _162_32 = (FStar_Util.basename f)
 in (check_and_strip_suffix _162_32))) with
 | Some (longname) -> begin
@@ -226,7 +226,7 @@ end else begin
 end) _162_57))
 in (FStar_ST.read found)))))
 
-# 180 "FStar.Parser.Dep.fst"
+# 177 "FStar.Parser.Dep.fst"
 let string_of_lid : FStar_Ident.lident  ->  Prims.bool  ->  Prims.string = (fun l last -> (
 # 181 "FStar.Parser.Dep.fst"
 let suffix = if last then begin
@@ -244,7 +244,7 @@ in (FStar_String.concat "." names))))
 let lowercase_join_longident : FStar_Ident.lident  ->  Prims.bool  ->  Prims.string = (fun l last -> (let _162_68 = (string_of_lid l last)
 in (FStar_String.lowercase _162_68)))
 
-# 192 "FStar.Parser.Dep.fst"
+# 189 "FStar.Parser.Dep.fst"
 let check_module_declaration_against_filename : FStar_Ident.lident  ->  Prims.string  ->  Prims.unit = (fun lid filename -> (
 # 193 "FStar.Parser.Dep.fst"
 let k' = (lowercase_join_longident lid true)
@@ -777,7 +777,7 @@ in (
 let _69_634 = (collect_file ast)
 in (FStar_ST.read deps)))))))))))))
 
-# 499 "FStar.Parser.Dep.fst"
+# 497 "FStar.Parser.Dep.fst"
 type color =
 | White
 | Gray
@@ -810,7 +810,7 @@ end
 false
 end))
 
-# 501 "FStar.Parser.Dep.fst"
+# 499 "FStar.Parser.Dep.fst"
 let print_graph = (fun graph -> (
 # 502 "FStar.Parser.Dep.fst"
 let _69_637 = (FStar_Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph")
@@ -1015,7 +1015,7 @@ let deps = (FStar_List.map (fun s -> (FStar_Util.replace_string s " " "\\ ")) de
 in (FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps)))
 end)) deps))
 
-# 633 "FStar.Parser.Dep.fst"
+# 631 "FStar.Parser.Dep.fst"
 let print = (fun _69_731 -> (match (_69_731) with
 | (make_deps, _69_729, graph) -> begin
 (match ((FStar_Options.dep ())) with

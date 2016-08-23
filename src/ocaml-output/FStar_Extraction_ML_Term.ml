@@ -12,19 +12,19 @@ end
 false
 end))
 
-# 51 "FStar.Extraction.ML.Term.fst"
+# 37 "FStar.Extraction.ML.Term.fst"
 let type_leq : FStar_Extraction_ML_UEnv.env  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlty  ->  Prims.bool = (fun g t1 t2 -> (FStar_Extraction_ML_Util.type_leq (FStar_Extraction_ML_Util.udelta_unfold g) t1 t2))
 
-# 52 "FStar.Extraction.ML.Term.fst"
+# 51 "FStar.Extraction.ML.Term.fst"
 let type_leq_c : FStar_Extraction_ML_UEnv.env  ->  FStar_Extraction_ML_Syntax.mlexpr Prims.option  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlty  ->  (Prims.bool * FStar_Extraction_ML_Syntax.mlexpr Prims.option) = (fun g t1 t2 -> (FStar_Extraction_ML_Util.type_leq_c (FStar_Extraction_ML_Util.udelta_unfold g) t1 t2))
 
-# 53 "FStar.Extraction.ML.Term.fst"
+# 52 "FStar.Extraction.ML.Term.fst"
 let erasableType : FStar_Extraction_ML_UEnv.env  ->  FStar_Extraction_ML_Syntax.mlty  ->  Prims.bool = (fun g t -> (FStar_Extraction_ML_Util.erasableType (FStar_Extraction_ML_Util.udelta_unfold g) t))
 
-# 54 "FStar.Extraction.ML.Term.fst"
+# 53 "FStar.Extraction.ML.Term.fst"
 let eraseTypeDeep : FStar_Extraction_ML_UEnv.env  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlty = (fun g t -> (FStar_Extraction_ML_Util.eraseTypeDeep (FStar_Extraction_ML_Util.udelta_unfold g) t))
 
-# 61 "FStar.Extraction.ML.Term.fst"
+# 56 "FStar.Extraction.ML.Term.fst"
 let fail = (fun r msg -> (
 # 62 "FStar.Extraction.ML.Term.fst"
 let _78_17 = (let _171_29 = (let _171_28 = (FStar_Range.string_of_range r)
@@ -32,7 +32,7 @@ in (FStar_Util.format2 "%s: %s\n" _171_28 msg))
 in (FStar_All.pipe_left FStar_Util.print_string _171_29))
 in (FStar_All.failwith msg)))
 
-# 65 "FStar.Extraction.ML.Term.fst"
+# 63 "FStar.Extraction.ML.Term.fst"
 let err_uninst = (fun env t _78_23 -> (match (_78_23) with
 | (vars, ty) -> begin
 (let _171_37 = (let _171_36 = (FStar_Syntax_Print.term_to_string t)
@@ -43,7 +43,7 @@ in (FStar_Util.format3 "Variable %s has a polymorphic type (forall %s. %s); expe
 in (fail t.FStar_Syntax_Syntax.pos _171_37))
 end))
 
-# 71 "FStar.Extraction.ML.Term.fst"
+# 69 "FStar.Extraction.ML.Term.fst"
 let err_ill_typed_application = (fun env t args ty -> (let _171_47 = (let _171_46 = (FStar_Syntax_Print.term_to_string t)
 in (let _171_45 = (let _171_43 = (FStar_All.pipe_right args (FStar_List.map (fun _78_31 -> (match (_78_31) with
 | (x, _78_30) -> begin
@@ -54,18 +54,18 @@ in (let _171_44 = (FStar_Extraction_ML_Code.string_of_mlty env.FStar_Extraction_
 in (FStar_Util.format3 "Ill-typed application: application is %s \n remaining args are %s\nml type of head is %s\n" _171_46 _171_45 _171_44))))
 in (fail t.FStar_Syntax_Syntax.pos _171_47)))
 
-# 78 "FStar.Extraction.ML.Term.fst"
+# 75 "FStar.Extraction.ML.Term.fst"
 let err_value_restriction = (fun t -> (let _171_51 = (let _171_50 = (FStar_Syntax_Print.tag_of_term t)
 in (let _171_49 = (FStar_Syntax_Print.term_to_string t)
 in (FStar_Util.format2 "Refusing to generalize because of the value restriction: (%s) %s" _171_50 _171_49)))
 in (fail t.FStar_Syntax_Syntax.pos _171_51)))
 
-# 82 "FStar.Extraction.ML.Term.fst"
+# 80 "FStar.Extraction.ML.Term.fst"
 let err_unexpected_eff = (fun t f0 f1 -> (let _171_56 = (let _171_55 = (FStar_Syntax_Print.term_to_string t)
 in (FStar_Util.format3 "for expression %s, Expected effect %s; got effect %s" _171_55 (FStar_Extraction_ML_Util.eff_to_string f0) (FStar_Extraction_ML_Util.eff_to_string f1)))
 in (fail t.FStar_Syntax_Syntax.pos _171_56)))
 
-# 88 "FStar.Extraction.ML.Term.fst"
+# 83 "FStar.Extraction.ML.Term.fst"
 let effect_as_etag : FStar_Extraction_ML_UEnv.env  ->  FStar_Ident.lident  ->  FStar_Extraction_ML_Syntax.e_tag = (
 # 89 "FStar.Extraction.ML.Term.fst"
 let cache = (FStar_Util.smap_create 20)
@@ -103,7 +103,7 @@ FStar_Extraction_ML_Syntax.E_IMPURE
 end
 end))))
 
-# 111 "FStar.Extraction.ML.Term.fst"
+# 105 "FStar.Extraction.ML.Term.fst"
 type level_t =
 | Term_level
 | Type_level
@@ -136,7 +136,7 @@ end
 false
 end))
 
-# 116 "FStar.Extraction.ML.Term.fst"
+# 114 "FStar.Extraction.ML.Term.fst"
 let predecessor = (fun t _78_1 -> (match (_78_1) with
 | Term_level -> begin
 Term_level
@@ -148,7 +148,7 @@ end
 Type_level
 end))
 
-# 124 "FStar.Extraction.ML.Term.fst"
+# 119 "FStar.Extraction.ML.Term.fst"
 let rec level : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.term  ->  level_t = (fun env t -> (
 # 125 "FStar.Extraction.ML.Term.fst"
 let predecessor = (fun l -> (predecessor t l))
@@ -247,7 +247,7 @@ end
 (level env head)
 end)))))
 
-# 195 "FStar.Extraction.ML.Term.fst"
+# 191 "FStar.Extraction.ML.Term.fst"
 let is_type : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.term  ->  Prims.bool = (fun env t -> (match ((level env t)) with
 | Term_level -> begin
 false
@@ -256,7 +256,7 @@ end
 true
 end))
 
-# 199 "FStar.Extraction.ML.Term.fst"
+# 197 "FStar.Extraction.ML.Term.fst"
 let is_type_binder = (fun env x -> (match ((level env (Prims.fst x).FStar_Syntax_Syntax.sort)) with
 | Term_level -> begin
 (FStar_All.failwith "Impossible: Binder is a term")
@@ -268,7 +268,7 @@ end
 true
 end))
 
-# 205 "FStar.Extraction.ML.Term.fst"
+# 203 "FStar.Extraction.ML.Term.fst"
 let is_constructor : FStar_Syntax_Syntax.term  ->  Prims.bool = (fun t -> (match ((let _171_97 = (FStar_Syntax_Subst.compress t)
 in _171_97.FStar_Syntax_Syntax.n)) with
 | (FStar_Syntax_Syntax.Tm_fvar ({FStar_Syntax_Syntax.fv_name = _; FStar_Syntax_Syntax.fv_delta = _; FStar_Syntax_Syntax.fv_qual = Some (FStar_Syntax_Syntax.Data_ctor)})) | (FStar_Syntax_Syntax.Tm_fvar ({FStar_Syntax_Syntax.fv_name = _; FStar_Syntax_Syntax.fv_delta = _; FStar_Syntax_Syntax.fv_qual = Some (FStar_Syntax_Syntax.Record_ctor (_))})) -> begin
@@ -278,7 +278,7 @@ end
 false
 end))
 
-# 212 "FStar.Extraction.ML.Term.fst"
+# 208 "FStar.Extraction.ML.Term.fst"
 let rec is_fstar_value : FStar_Syntax_Syntax.term  ->  Prims.bool = (fun t -> (match ((let _171_100 = (FStar_Syntax_Subst.compress t)
 in _171_100.FStar_Syntax_Syntax.n)) with
 | (FStar_Syntax_Syntax.Tm_constant (_)) | (FStar_Syntax_Syntax.Tm_bvar (_)) | (FStar_Syntax_Syntax.Tm_fvar (_)) | (FStar_Syntax_Syntax.Tm_abs (_)) -> begin
@@ -301,7 +301,7 @@ end
 false
 end))
 
-# 237 "FStar.Extraction.ML.Term.fst"
+# 235 "FStar.Extraction.ML.Term.fst"
 let rec is_ml_value : FStar_Extraction_ML_Syntax.mlexpr  ->  Prims.bool = (fun e -> (match (e.FStar_Extraction_ML_Syntax.expr) with
 | (FStar_Extraction_ML_Syntax.MLE_Const (_)) | (FStar_Extraction_ML_Syntax.MLE_Var (_)) | (FStar_Extraction_ML_Syntax.MLE_Name (_)) | (FStar_Extraction_ML_Syntax.MLE_Fun (_)) -> begin
 true
@@ -319,7 +319,7 @@ end
 false
 end))
 
-# 250 "FStar.Extraction.ML.Term.fst"
+# 246 "FStar.Extraction.ML.Term.fst"
 let normalize_abs : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun t0 -> (
 # 251 "FStar.Extraction.ML.Term.fst"
 let rec aux = (fun bs t copt -> (
@@ -341,11 +341,11 @@ end)
 end)))
 in (aux [] t0 None)))
 
-# 262 "FStar.Extraction.ML.Term.fst"
+# 260 "FStar.Extraction.ML.Term.fst"
 let unit_binder : FStar_Syntax_Syntax.binder = (let _171_113 = (FStar_Syntax_Syntax.new_bv None FStar_TypeChecker_Common.t_unit)
 in (FStar_All.pipe_left FStar_Syntax_Syntax.mk_binder _171_113))
 
-# 266 "FStar.Extraction.ML.Term.fst"
+# 262 "FStar.Extraction.ML.Term.fst"
 let check_pats_for_ite : (FStar_Syntax_Syntax.pat * FStar_Syntax_Syntax.term Prims.option * FStar_Syntax_Syntax.term) Prims.list  ->  (Prims.bool * FStar_Syntax_Syntax.term Prims.option * FStar_Syntax_Syntax.term Prims.option) = (fun l -> (
 # 269 "FStar.Extraction.ML.Term.fst"
 let def = ((false), (None), (None))
@@ -377,13 +377,13 @@ end))
 end))
 end))
 
-# 303 "FStar.Extraction.ML.Term.fst"
+# 282 "FStar.Extraction.ML.Term.fst"
 let instantiate : FStar_Extraction_ML_Syntax.mltyscheme  ->  FStar_Extraction_ML_Syntax.mlty Prims.list  ->  FStar_Extraction_ML_Syntax.mlty = (fun s args -> (FStar_Extraction_ML_Util.subst s args))
 
-# 308 "FStar.Extraction.ML.Term.fst"
+# 303 "FStar.Extraction.ML.Term.fst"
 let erasable : FStar_Extraction_ML_UEnv.env  ->  FStar_Extraction_ML_Syntax.e_tag  ->  FStar_Extraction_ML_Syntax.mlty  ->  Prims.bool = (fun g f t -> ((f = FStar_Extraction_ML_Syntax.E_GHOST) || ((f = FStar_Extraction_ML_Syntax.E_PURE) && (erasableType g t))))
 
-# 313 "FStar.Extraction.ML.Term.fst"
+# 309 "FStar.Extraction.ML.Term.fst"
 let erase : FStar_Extraction_ML_UEnv.env  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.e_tag  ->  (FStar_Extraction_ML_Syntax.mlexpr * FStar_Extraction_ML_Syntax.e_tag * FStar_Extraction_ML_Syntax.mlty) = (fun g e ty f -> (
 # 314 "FStar.Extraction.ML.Term.fst"
 let e = if (erasable g f ty) then begin
@@ -397,7 +397,7 @@ e
 end
 in ((e), (f), (ty))))
 
-# 322 "FStar.Extraction.ML.Term.fst"
+# 318 "FStar.Extraction.ML.Term.fst"
 let maybe_coerce : FStar_Extraction_ML_UEnv.env  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlexpr = (fun g e ty expect -> (
 # 323 "FStar.Extraction.ML.Term.fst"
 let ty = (eraseTypeDeep g ty)
@@ -418,7 +418,7 @@ end)))
 in (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty expect) (FStar_Extraction_ML_Syntax.MLE_Coerce (((e), (ty), (expect))))))
 end)))
 
-# 336 "FStar.Extraction.ML.Term.fst"
+# 331 "FStar.Extraction.ML.Term.fst"
 let bv_as_mlty : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.bv  ->  FStar_Extraction_ML_Syntax.mlty = (fun g bv -> (match ((FStar_Extraction_ML_UEnv.lookup_bv g bv)) with
 | FStar_Util.Inl (_78_339, t) -> begin
 t
@@ -427,7 +427,7 @@ end
 FStar_Extraction_ML_Syntax.MLTY_Top
 end))
 
-# 355 "FStar.Extraction.ML.Term.fst"
+# 339 "FStar.Extraction.ML.Term.fst"
 let rec term_as_mlty : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Extraction_ML_Syntax.mlty = (fun g t -> (
 # 356 "FStar.Extraction.ML.Term.fst"
 let t = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Iota)::(FStar_TypeChecker_Normalize.Zeta)::(FStar_TypeChecker_Normalize.EraseUniverses)::(FStar_TypeChecker_Normalize.AllowUnboundUniverses)::[]) g.FStar_Extraction_ML_UEnv.tcenv t)
@@ -612,7 +612,7 @@ in (match (_78_490) with
 (((FStar_List.rev ml_bs)), (env))
 end)))
 
-# 469 "FStar.Extraction.ML.Term.fst"
+# 460 "FStar.Extraction.ML.Term.fst"
 let mk_MLE_Seq : FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Extraction_ML_Syntax.mlexpr' = (fun e1 e2 -> (match (((e1.FStar_Extraction_ML_Syntax.expr), (e2.FStar_Extraction_ML_Syntax.expr))) with
 | (FStar_Extraction_ML_Syntax.MLE_Seq (es1), FStar_Extraction_ML_Syntax.MLE_Seq (es2)) -> begin
 FStar_Extraction_ML_Syntax.MLE_Seq ((FStar_List.append es1 es2))
@@ -627,7 +627,7 @@ end
 FStar_Extraction_ML_Syntax.MLE_Seq ((e1)::(e2)::[])
 end))
 
-# 482 "FStar.Extraction.ML.Term.fst"
+# 473 "FStar.Extraction.ML.Term.fst"
 let mk_MLE_Let : Prims.bool  ->  FStar_Extraction_ML_Syntax.mlletbinding  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Extraction_ML_Syntax.mlexpr' = (fun top_level lbs body -> (match (lbs) with
 | (FStar_Extraction_ML_Syntax.NoLetQualifier, (lb)::[]) when (not (top_level)) -> begin
 (match (lb.FStar_Extraction_ML_Syntax.mllb_tysc) with
@@ -655,7 +655,7 @@ end
 FStar_Extraction_ML_Syntax.MLE_Let (((lbs), (body)))
 end))
 
-# 496 "FStar.Extraction.ML.Term.fst"
+# 494 "FStar.Extraction.ML.Term.fst"
 let resugar_pat : FStar_Syntax_Syntax.fv_qual Prims.option  ->  FStar_Extraction_ML_Syntax.mlpattern  ->  FStar_Extraction_ML_Syntax.mlpattern = (fun q p -> (match (p) with
 | FStar_Extraction_ML_Syntax.MLP_CTor (d, pats) -> begin
 (match ((FStar_Extraction_ML_Util.is_xtuple d)) with
@@ -682,7 +682,7 @@ end
 p
 end))
 
-# 514 "FStar.Extraction.ML.Term.fst"
+# 508 "FStar.Extraction.ML.Term.fst"
 let extract_pat : FStar_Extraction_ML_UEnv.env  ->  (FStar_Syntax_Syntax.pat', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.withinfo_t  ->  FStar_Extraction_ML_Syntax.mlty  ->  (FStar_Extraction_ML_UEnv.env * (FStar_Extraction_ML_Syntax.mlpattern * FStar_Extraction_ML_Syntax.mlexpr Prims.option) Prims.list * Prims.bool) = (fun g p expected_t -> (
 # 515 "FStar.Extraction.ML.Term.fst"
 let rec extract_one_pat = (fun disjunctive_pat imp g p expected_topt -> (
@@ -970,7 +970,7 @@ in ((g), ((((p), (when_clause)))::[]), (b)))
 end))
 end)))))
 
-# 631 "FStar.Extraction.ML.Term.fst"
+# 613 "FStar.Extraction.ML.Term.fst"
 let maybe_eta_data_and_project_record : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.fv_qual Prims.option  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  FStar_Extraction_ML_Syntax.mlexpr = (fun g qual residualType mlAppExpr -> (
 # 632 "FStar.Extraction.ML.Term.fst"
 let rec eta_args = (fun more_args t -> (match (t) with
@@ -1073,14 +1073,14 @@ end
 mlAppExpr
 end)))))
 
-# 680 "FStar.Extraction.ML.Term.fst"
+# 678 "FStar.Extraction.ML.Term.fst"
 let maybe_downgrade_eff : FStar_Extraction_ML_UEnv.env  ->  FStar_Extraction_ML_Syntax.e_tag  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.e_tag = (fun g f t -> if ((f = FStar_Extraction_ML_Syntax.E_GHOST) && (type_leq g t FStar_Extraction_ML_Syntax.ml_unit_ty)) then begin
 FStar_Extraction_ML_Syntax.E_PURE
 end else begin
 f
 end)
 
-# 687 "FStar.Extraction.ML.Term.fst"
+# 684 "FStar.Extraction.ML.Term.fst"
 let rec term_as_mlexpr : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.term  ->  (FStar_Extraction_ML_Syntax.mlexpr * FStar_Extraction_ML_Syntax.e_tag * FStar_Extraction_ML_Syntax.mlty) = (fun g t -> (
 # 688 "FStar.Extraction.ML.Term.fst"
 let _78_879 = (term_as_mlexpr' g t)
@@ -2022,7 +2022,7 @@ end))
 end))
 end))))
 
-# 1156 "FStar.Extraction.ML.Term.fst"
+# 1152 "FStar.Extraction.ML.Term.fst"
 let fresh : Prims.string  ->  (Prims.string * Prims.int) = (
 # 1156 "FStar.Extraction.ML.Term.fst"
 let c = (FStar_Util.mk_ref 0)
@@ -2032,7 +2032,7 @@ let _78_1637 = (FStar_Util.incr c)
 in (let _171_490 = (FStar_ST.read c)
 in ((x), (_171_490))))))
 
-# 1159 "FStar.Extraction.ML.Term.fst"
+# 1157 "FStar.Extraction.ML.Term.fst"
 let ind_discriminator_body : FStar_Extraction_ML_UEnv.env  ->  FStar_Ident.lident  ->  FStar_Ident.lident  ->  FStar_Extraction_ML_Syntax.mlmodule1 = (fun env discName constrName -> (
 # 1161 "FStar.Extraction.ML.Term.fst"
 let _78_1645 = (FStar_TypeChecker_Env.lookup_lid env.FStar_Extraction_ML_UEnv.tcenv discName)

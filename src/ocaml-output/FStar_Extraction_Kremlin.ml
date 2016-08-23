@@ -1,6 +1,6 @@
 
 open Prims
-# 31 "FStar.Extraction.Kremlin.fst"
+# 27 "FStar.Extraction.Kremlin.fst"
 type decl =
 | DFunction of (typ * lident * binder Prims.list * expr)
 | DTypeAlias of (lident * typ)
@@ -1000,36 +1000,36 @@ end))
 type version =
 Prims.int
 
-# 130 "FStar.Extraction.Kremlin.fst"
+# 129 "FStar.Extraction.Kremlin.fst"
 let current_version : version = 10
 
-# 132 "FStar.Extraction.Kremlin.fst"
+# 130 "FStar.Extraction.Kremlin.fst"
 type file =
 (Prims.string * program)
 
-# 133 "FStar.Extraction.Kremlin.fst"
+# 132 "FStar.Extraction.Kremlin.fst"
 type binary_format =
 (version * file Prims.list)
 
-# 138 "FStar.Extraction.Kremlin.fst"
+# 133 "FStar.Extraction.Kremlin.fst"
 let fst3 = (fun _80_116 -> (match (_80_116) with
 | (x, _80_113, _80_115) -> begin
 x
 end))
 
-# 139 "FStar.Extraction.Kremlin.fst"
+# 138 "FStar.Extraction.Kremlin.fst"
 let snd3 = (fun _80_122 -> (match (_80_122) with
 | (_80_118, x, _80_121) -> begin
 x
 end))
 
-# 140 "FStar.Extraction.Kremlin.fst"
+# 139 "FStar.Extraction.Kremlin.fst"
 let thd3 = (fun _80_128 -> (match (_80_128) with
 | (_80_124, _80_126, x) -> begin
 x
 end))
 
-# 142 "FStar.Extraction.Kremlin.fst"
+# 140 "FStar.Extraction.Kremlin.fst"
 let mk_width : Prims.string  ->  width Prims.option = (fun _80_1 -> (match (_80_1) with
 | "UInt8" -> begin
 Some (UInt8)
@@ -1059,7 +1059,7 @@ end
 None
 end))
 
-# 153 "FStar.Extraction.Kremlin.fst"
+# 151 "FStar.Extraction.Kremlin.fst"
 let mk_bool_op : Prims.string  ->  op Prims.option = (fun _80_2 -> (match (_80_2) with
 | "op_Negation" -> begin
 Some (Not)
@@ -1080,10 +1080,10 @@ end
 None
 end))
 
-# 167 "FStar.Extraction.Kremlin.fst"
+# 165 "FStar.Extraction.Kremlin.fst"
 let is_bool_op : Prims.string  ->  Prims.bool = (fun op -> ((mk_bool_op op) <> None))
 
-# 170 "FStar.Extraction.Kremlin.fst"
+# 168 "FStar.Extraction.Kremlin.fst"
 let mk_op : Prims.string  ->  op Prims.option = (fun _80_3 -> (match (_80_3) with
 | ("add") | ("op_Plus_Hat") -> begin
 Some (Add)
@@ -1140,13 +1140,13 @@ end
 None
 end))
 
-# 208 "FStar.Extraction.Kremlin.fst"
+# 206 "FStar.Extraction.Kremlin.fst"
 let is_op : Prims.string  ->  Prims.bool = (fun op -> ((mk_op op) <> None))
 
-# 211 "FStar.Extraction.Kremlin.fst"
+# 209 "FStar.Extraction.Kremlin.fst"
 let is_machine_int : Prims.string  ->  Prims.bool = (fun m -> ((mk_width m) <> None))
 
-# 216 "FStar.Extraction.Kremlin.fst"
+# 212 "FStar.Extraction.Kremlin.fst"
 type env =
 {names : name Prims.list; module_name : Prims.string Prims.list} 
  and name =
@@ -1158,16 +1158,16 @@ let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "
 # 221 "FStar.Extraction.Kremlin.fst"
 let is_Mkname : name  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkname"))))
 
-# 226 "FStar.Extraction.Kremlin.fst"
+# 224 "FStar.Extraction.Kremlin.fst"
 let empty : Prims.string Prims.list  ->  env = (fun module_name -> {names = []; module_name = module_name})
 
-# 231 "FStar.Extraction.Kremlin.fst"
+# 229 "FStar.Extraction.Kremlin.fst"
 let extend : env  ->  Prims.string  ->  Prims.bool  ->  env = (fun env x is_mut -> (
 # 232 "FStar.Extraction.Kremlin.fst"
 let _80_198 = env
 in {names = ({pretty = x; mut = is_mut})::env.names; module_name = _80_198.module_name}))
 
-# 234 "FStar.Extraction.Kremlin.fst"
+# 232 "FStar.Extraction.Kremlin.fst"
 let find_name : env  ->  Prims.string  ->  name = (fun env x -> (match ((FStar_List.tryFind (fun name -> (name.pretty = x)) env.names)) with
 | Some (name) -> begin
 name
@@ -1176,11 +1176,11 @@ end
 (FStar_All.failwith "internal error: name not found")
 end))
 
-# 241 "FStar.Extraction.Kremlin.fst"
+# 239 "FStar.Extraction.Kremlin.fst"
 let is_mutable : env  ->  Prims.string  ->  Prims.bool = (fun env x -> (let _173_572 = (find_name env x)
 in _173_572.mut))
 
-# 244 "FStar.Extraction.Kremlin.fst"
+# 242 "FStar.Extraction.Kremlin.fst"
 let find : env  ->  Prims.string  ->  Prims.int = (fun env x -> try
 (match (()) with
 | () -> begin
@@ -1192,13 +1192,13 @@ with
 in (FStar_All.failwith _173_580))
 end)
 
-# 250 "FStar.Extraction.Kremlin.fst"
+# 248 "FStar.Extraction.Kremlin.fst"
 let add_binders = (fun env binders -> (FStar_List.fold_left (fun env _80_227 -> (match (_80_227) with
 | ((name, _80_223), _80_226) -> begin
 (extend env name false)
 end)) env binders))
 
-# 255 "FStar.Extraction.Kremlin.fst"
+# 251 "FStar.Extraction.Kremlin.fst"
 let rec translate : FStar_Extraction_ML_Syntax.mllib  ->  file Prims.list = (fun _80_229 -> (match (_80_229) with
 | FStar_Extraction_ML_Syntax.MLLib (modules) -> begin
 (FStar_List.filter_map (fun m -> (

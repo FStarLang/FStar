@@ -1,33 +1,33 @@
 
 open Prims
-# 36 "FStar.SMTEncoding.Solver.fst"
+# 27 "FStar.SMTEncoding.Solver.fst"
 type z3_result =
 (FStar_SMTEncoding_Z3.unsat_core, FStar_SMTEncoding_Term.error_labels) FStar_Util.either
 
-# 37 "FStar.SMTEncoding.Solver.fst"
+# 36 "FStar.SMTEncoding.Solver.fst"
 type hint_stat =
 {hint : FStar_Util.hint Prims.option; replay_result : z3_result; elapsed_time : Prims.int; source_location : FStar_Range.range}
 
 # 37 "FStar.SMTEncoding.Solver.fst"
 let is_Mkhint_stat : hint_stat  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkhint_stat"))))
 
-# 43 "FStar.SMTEncoding.Solver.fst"
+# 42 "FStar.SMTEncoding.Solver.fst"
 type hint_stats_t =
 hint_stat Prims.list
 
-# 44 "FStar.SMTEncoding.Solver.fst"
+# 43 "FStar.SMTEncoding.Solver.fst"
 let recorded_hints : FStar_Util.hints Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 45 "FStar.SMTEncoding.Solver.fst"
+# 44 "FStar.SMTEncoding.Solver.fst"
 let replaying_hints : FStar_Util.hints Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 46 "FStar.SMTEncoding.Solver.fst"
+# 45 "FStar.SMTEncoding.Solver.fst"
 let hint_stats : hint_stat Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 48 "FStar.SMTEncoding.Solver.fst"
+# 46 "FStar.SMTEncoding.Solver.fst"
 let format_hints_file_name : Prims.string  ->  Prims.string = (fun src_filename -> (FStar_Util.format1 "%s.hints" src_filename))
 
-# 54 "FStar.SMTEncoding.Solver.fst"
+# 49 "FStar.SMTEncoding.Solver.fst"
 let initialize_hints_db = (fun src_filename force_record -> (
 # 55 "FStar.SMTEncoding.Solver.fst"
 let _87_11 = (FStar_ST.op_Colon_Equals hint_stats [])
@@ -74,7 +74,7 @@ end else begin
 ()
 end)))
 
-# 75 "FStar.SMTEncoding.Solver.fst"
+# 73 "FStar.SMTEncoding.Solver.fst"
 let finalize_hints_db : Prims.string  ->  Prims.unit = (fun src_filename -> (
 # 76 "FStar.SMTEncoding.Solver.fst"
 let _87_27 = if (FStar_Options.record_hints ()) then begin
@@ -122,7 +122,7 @@ in (
 let _87_39 = (FStar_ST.op_Colon_Equals replaying_hints None)
 in (FStar_ST.op_Colon_Equals hint_stats []))))))
 
-# 101 "FStar.SMTEncoding.Solver.fst"
+# 99 "FStar.SMTEncoding.Solver.fst"
 let with_hints_db = (fun fname f -> (
 # 102 "FStar.SMTEncoding.Solver.fst"
 let _87_43 = (initialize_hints_db fname false)
@@ -134,7 +134,7 @@ in (
 let _87_46 = (finalize_hints_db fname)
 in result))))
 
-# 109 "FStar.SMTEncoding.Solver.fst"
+# 107 "FStar.SMTEncoding.Solver.fst"
 let next_hint : Prims.string  ->  Prims.int  ->  FStar_Util.hint Prims.option = (fun qname qindex -> (match ((FStar_ST.read replaying_hints)) with
 | Some (hints) -> begin
 (FStar_Util.find_map hints (fun _87_1 -> (match (_87_1) with
@@ -149,7 +149,7 @@ end
 None
 end))
 
-# 117 "FStar.SMTEncoding.Solver.fst"
+# 115 "FStar.SMTEncoding.Solver.fst"
 let record_hint : FStar_Util.hint Prims.option  ->  Prims.unit = (fun hint -> (
 # 118 "FStar.SMTEncoding.Solver.fst"
 let hint = (match (hint) with
@@ -170,7 +170,7 @@ end
 ()
 end)))
 
-# 125 "FStar.SMTEncoding.Solver.fst"
+# 123 "FStar.SMTEncoding.Solver.fst"
 let record_hint_stat : FStar_Util.hint Prims.option  ->  z3_result  ->  Prims.int  ->  FStar_Range.range  ->  Prims.unit = (fun h res time r -> (
 # 126 "FStar.SMTEncoding.Solver.fst"
 let s = {hint = h; replay_result = res; elapsed_time = time; source_location = r}
@@ -178,7 +178,7 @@ in (let _180_49 = (let _180_48 = (FStar_ST.read hint_stats)
 in (s)::_180_48)
 in (FStar_ST.op_Colon_Equals hint_stats _180_49))))
 
-# 137 "FStar.SMTEncoding.Solver.fst"
+# 132 "FStar.SMTEncoding.Solver.fst"
 let ask_and_report_errors : FStar_TypeChecker_Env.env  ->  ((FStar_SMTEncoding_Z3.label * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Int64.int64) Prims.list  ->  FStar_SMTEncoding_Term.decl Prims.list  ->  FStar_SMTEncoding_Term.decl  ->  FStar_SMTEncoding_Term.decl Prims.list  ->  Prims.unit = (fun env all_labels prefix query suffix -> (
 # 138 "FStar.SMTEncoding.Solver.fst"
 let _87_80 = (FStar_SMTEncoding_Z3.giveZ3 prefix)
@@ -549,7 +549,7 @@ end else begin
 end)))))
 end))))
 
-# 282 "FStar.SMTEncoding.Solver.fst"
+# 279 "FStar.SMTEncoding.Solver.fst"
 let solve : (Prims.unit  ->  Prims.string) Prims.option  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  Prims.unit = (fun use_env_msg tcenv q -> (
 # 283 "FStar.SMTEncoding.Solver.fst"
 let _87_233 = (let _180_216 = (let _180_215 = (let _180_214 = (FStar_TypeChecker_Env.get_range tcenv)
@@ -597,10 +597,10 @@ end
 end))
 end)))))
 
-# 299 "FStar.SMTEncoding.Solver.fst"
+# 294 "FStar.SMTEncoding.Solver.fst"
 let solver : FStar_TypeChecker_Env.solver_t = {FStar_TypeChecker_Env.init = FStar_SMTEncoding_Encode.init; FStar_TypeChecker_Env.push = FStar_SMTEncoding_Encode.push; FStar_TypeChecker_Env.pop = FStar_SMTEncoding_Encode.pop; FStar_TypeChecker_Env.mark = FStar_SMTEncoding_Encode.mark; FStar_TypeChecker_Env.reset_mark = FStar_SMTEncoding_Encode.reset_mark; FStar_TypeChecker_Env.commit_mark = FStar_SMTEncoding_Encode.commit_mark; FStar_TypeChecker_Env.encode_modul = FStar_SMTEncoding_Encode.encode_modul; FStar_TypeChecker_Env.encode_sig = FStar_SMTEncoding_Encode.encode_sig; FStar_TypeChecker_Env.solve = solve; FStar_TypeChecker_Env.is_trivial = FStar_SMTEncoding_Encode.is_trivial; FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish; FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh}
 
-# 313 "FStar.SMTEncoding.Solver.fst"
+# 312 "FStar.SMTEncoding.Solver.fst"
 let dummy : FStar_TypeChecker_Env.solver_t = {FStar_TypeChecker_Env.init = (fun _87_276 -> ()); FStar_TypeChecker_Env.push = (fun _87_278 -> ()); FStar_TypeChecker_Env.pop = (fun _87_280 -> ()); FStar_TypeChecker_Env.mark = (fun _87_282 -> ()); FStar_TypeChecker_Env.reset_mark = (fun _87_284 -> ()); FStar_TypeChecker_Env.commit_mark = (fun _87_286 -> ()); FStar_TypeChecker_Env.encode_modul = (fun _87_288 _87_290 -> ()); FStar_TypeChecker_Env.encode_sig = (fun _87_292 _87_294 -> ()); FStar_TypeChecker_Env.solve = (fun _87_296 _87_298 _87_300 -> ()); FStar_TypeChecker_Env.is_trivial = (fun _87_302 _87_304 -> false); FStar_TypeChecker_Env.finish = (fun _87_306 -> ()); FStar_TypeChecker_Env.refresh = (fun _87_307 -> ())}
 
 

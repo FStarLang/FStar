@@ -1,6 +1,6 @@
 
 open Prims
-# 6 "FStar.Const.fst"
+# 4 "FStar.Const.fst"
 type signedness =
 | Unsigned
 | Signed
@@ -23,7 +23,7 @@ end
 false
 end))
 
-# 7 "FStar.Const.fst"
+# 6 "FStar.Const.fst"
 type width =
 | Int8
 | Int16
@@ -66,7 +66,7 @@ end
 false
 end))
 
-# 9 "FStar.Const.fst"
+# 7 "FStar.Const.fst"
 type sconst =
 | Const_effect
 | Const_unit

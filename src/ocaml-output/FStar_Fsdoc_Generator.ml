@@ -1,6 +1,6 @@
 
 open Prims
-# 31 "FStar.Fsdoc.Generator.fst"
+# 28 "FStar.Fsdoc.Generator.fst"
 type mforest =
 | Leaf of (Prims.string * Prims.string)
 | Branch of mforest FStar_Util.smap
@@ -35,14 +35,14 @@ let ___Branch____0 = (fun projectee -> (match (projectee) with
 _81_7
 end))
 
-# 35 "FStar.Fsdoc.Generator.fst"
+# 33 "FStar.Fsdoc.Generator.fst"
 let htree : mforest FStar_Util.smap = (FStar_Util.smap_create 50)
 
-# 37 "FStar.Fsdoc.Generator.fst"
+# 35 "FStar.Fsdoc.Generator.fst"
 let parse_file : Prims.string  ->  Prims.string  ->  Prims.unit = (fun fn -> (let _174_35 = (FStar_Options.prepend_output_dir ".mk")
 in (FStar_Util.write_file _174_35)))
 
-# 40 "FStar.Fsdoc.Generator.fst"
+# 38 "FStar.Fsdoc.Generator.fst"
 let document_decl : (Prims.string  ->  Prims.unit)  ->  FStar_Parser_AST.decl  ->  Prims.unit = (fun w d -> (
 # 41 "FStar.Fsdoc.Generator.fst"
 let _81_15 = d
@@ -79,7 +79,7 @@ in (w "```\n")))
 end))
 end)))
 
-# 55 "FStar.Fsdoc.Generator.fst"
+# 53 "FStar.Fsdoc.Generator.fst"
 let document_module : FStar_Parser_AST.modul  ->  Prims.unit = (fun m -> (
 # 56 "FStar.Fsdoc.Generator.fst"
 let _81_63 = (match (m) with
@@ -158,7 +158,7 @@ in (FStar_Util.close_file fd)))))))
 end)))
 end)))
 
-# 76 "FStar.Fsdoc.Generator.fst"
+# 74 "FStar.Fsdoc.Generator.fst"
 let generate : Prims.string Prims.list  ->  Prims.unit = (fun files -> (
 # 77 "FStar.Fsdoc.Generator.fst"
 let modules = (FStar_List.collect (fun fn -> (FStar_Parser_Driver.parse_file fn)) files)

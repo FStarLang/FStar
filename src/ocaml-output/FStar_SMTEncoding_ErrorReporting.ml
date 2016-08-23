@@ -1,34 +1,34 @@
 
 open Prims
-# 25 "FStar.SMTEncoding.ErrorReporting.fst"
+# 23 "FStar.SMTEncoding.ErrorReporting.fst"
 type label =
 FStar_SMTEncoding_Term.error_label
 
-# 26 "FStar.SMTEncoding.ErrorReporting.fst"
+# 25 "FStar.SMTEncoding.ErrorReporting.fst"
 type labels =
 FStar_SMTEncoding_Term.error_labels
 
-# 27 "FStar.SMTEncoding.ErrorReporting.fst"
+# 26 "FStar.SMTEncoding.ErrorReporting.fst"
 let sort_labels : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun l -> (FStar_List.sortWith (fun _85_7 _85_13 -> (match (((_85_7), (_85_13))) with
 | ((_85_3, _85_5, r1), (_85_9, _85_11, r2)) -> begin
 (FStar_Range.compare r1 r2)
 end)) l))
 
-# 28 "FStar.SMTEncoding.ErrorReporting.fst"
+# 27 "FStar.SMTEncoding.ErrorReporting.fst"
 let remove_dups : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Int64.int64) Prims.list = (fun l -> (FStar_Util.remove_dups (fun _85_19 _85_24 -> (match (((_85_19), (_85_24))) with
 | ((_85_16, m1, r1), (_85_21, m2, r2)) -> begin
 ((r1 = r2) && (m1 = m2))
 end)) l))
 
-# 29 "FStar.SMTEncoding.ErrorReporting.fst"
+# 28 "FStar.SMTEncoding.ErrorReporting.fst"
 type msg =
 (Prims.string * FStar_Range.range)
 
-# 30 "FStar.SMTEncoding.ErrorReporting.fst"
+# 29 "FStar.SMTEncoding.ErrorReporting.fst"
 type ranges =
 (Prims.string Prims.option * FStar_Range.range) Prims.list
 
-# 32 "FStar.SMTEncoding.ErrorReporting.fst"
+# 30 "FStar.SMTEncoding.ErrorReporting.fst"
 let fresh_label : ranges  ->  FStar_SMTEncoding_Term.term  ->  labels  ->  (FStar_SMTEncoding_Term.term * labels) = (
 # 33 "FStar.SMTEncoding.ErrorReporting.fst"
 let ctr = (FStar_ST.alloc 0)
@@ -73,7 +73,7 @@ let lt = (FStar_SMTEncoding_Term.mkOr ((lterm), (t)))
 in ((lt), ((label)::labs)))))
 end))))))
 
-# 56 "FStar.SMTEncoding.ErrorReporting.fst"
+# 47 "FStar.SMTEncoding.ErrorReporting.fst"
 let label_goals : (Prims.unit  ->  Prims.string) Prims.option  ->  FStar_Int64.int64  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.term * labels * ranges) = (fun use_env_msg r q -> (
 # 62 "FStar.SMTEncoding.ErrorReporting.fst"
 let _85_61 = (match (use_env_msg) with
@@ -245,7 +245,7 @@ end))
 in (aux [] q [])))
 end)))
 
-# 162 "FStar.SMTEncoding.ErrorReporting.fst"
+# 150 "FStar.SMTEncoding.ErrorReporting.fst"
 let detail_errors : labels  ->  labels  ->  (FStar_SMTEncoding_Term.decls_t  ->  ((FStar_SMTEncoding_Z3.unsat_core, FStar_SMTEncoding_Term.error_labels) FStar_Util.either * Prims.int))  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun all_labels potential_errors askZ3 -> (
 # 163 "FStar.SMTEncoding.ErrorReporting.fst"
 let ctr = (FStar_Util.mk_ref 0)

@@ -1,6 +1,6 @@
 
 open Prims
-# 29 "FStar.Dependences.fst"
+# 24 "FStar.Dependences.fst"
 let find_deps_if_needed : FStar_Parser_Dep.verify_mode  ->  Prims.string Prims.list  ->  Prims.string Prims.list = (fun verify_mode files -> if (FStar_Options.explicit_deps ()) then begin
 files
 end else begin

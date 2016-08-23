@@ -147,7 +147,7 @@ let ___UnfoldUntil____0 = (fun projectee -> (match (projectee) with
 _53_11
 end))
 
-# 59 "FStar.TypeChecker.Normalize.fst"
+# 56 "FStar.TypeChecker.Normalize.fst"
 type closure =
 | Clos of (env * FStar_Syntax_Syntax.term * (env * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo * Prims.bool)
 | Univ of FStar_Syntax_Syntax.universe
@@ -194,7 +194,7 @@ let ___Univ____0 = (fun projectee -> (match (projectee) with
 _53_17
 end))
 
-# 65 "FStar.TypeChecker.Normalize.fst"
+# 63 "FStar.TypeChecker.Normalize.fst"
 let closure_to_string : closure  ->  Prims.string = (fun _53_1 -> (match (_53_1) with
 | Clos (_53_20, t, _53_23, _53_25) -> begin
 (FStar_Syntax_Print.term_to_string t)
@@ -203,22 +203,22 @@ end
 "dummy"
 end))
 
-# 69 "FStar.TypeChecker.Normalize.fst"
+# 67 "FStar.TypeChecker.Normalize.fst"
 type cfg =
 {steps : steps; tcenv : FStar_TypeChecker_Env.env; delta_level : FStar_TypeChecker_Env.delta_level}
 
 # 69 "FStar.TypeChecker.Normalize.fst"
 let is_Mkcfg : cfg  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkcfg"))))
 
-# 75 "FStar.TypeChecker.Normalize.fst"
+# 73 "FStar.TypeChecker.Normalize.fst"
 type branches =
 (FStar_Syntax_Syntax.pat * FStar_Syntax_Syntax.term Prims.option * FStar_Syntax_Syntax.term) Prims.list
 
-# 77 "FStar.TypeChecker.Normalize.fst"
+# 75 "FStar.TypeChecker.Normalize.fst"
 type subst_t =
 FStar_Syntax_Syntax.subst_elt Prims.list
 
-# 79 "FStar.TypeChecker.Normalize.fst"
+# 77 "FStar.TypeChecker.Normalize.fst"
 type stack_elt =
 | Arg of (closure * FStar_Syntax_Syntax.aqual * FStar_Range.range)
 | UnivArgs of (FStar_Syntax_Syntax.universe Prims.list * FStar_Range.range)
@@ -349,14 +349,14 @@ let ___Let____0 = (fun projectee -> (match (projectee) with
 _53_57
 end))
 
-# 89 "FStar.TypeChecker.Normalize.fst"
+# 87 "FStar.TypeChecker.Normalize.fst"
 type stack =
 stack_elt Prims.list
 
-# 102 "FStar.TypeChecker.Normalize.fst"
+# 100 "FStar.TypeChecker.Normalize.fst"
 let mk = (fun t r -> (FStar_Syntax_Syntax.mk t None r))
 
-# 103 "FStar.TypeChecker.Normalize.fst"
+# 102 "FStar.TypeChecker.Normalize.fst"
 let set_memo = (fun r t -> (match ((FStar_ST.read r)) with
 | Some (_53_63) -> begin
 (FStar_All.failwith "Unexpected set_memo: thunk already evaluated")
@@ -365,11 +365,11 @@ end
 (FStar_ST.op_Colon_Equals r (Some (t)))
 end))
 
-# 108 "FStar.TypeChecker.Normalize.fst"
+# 106 "FStar.TypeChecker.Normalize.fst"
 let env_to_string : closure Prims.list  ->  Prims.string = (fun env -> (let _146_199 = (FStar_List.map closure_to_string env)
 in (FStar_All.pipe_right _146_199 (FStar_String.concat "; "))))
 
-# 111 "FStar.TypeChecker.Normalize.fst"
+# 109 "FStar.TypeChecker.Normalize.fst"
 let stack_elt_to_string : stack_elt  ->  Prims.string = (fun _53_2 -> (match (_53_2) with
 | Arg (c, _53_70, _53_72) -> begin
 (closure_to_string c)
@@ -385,18 +385,18 @@ end
 "Match"
 end))
 
-# 117 "FStar.TypeChecker.Normalize.fst"
+# 115 "FStar.TypeChecker.Normalize.fst"
 let stack_to_string : stack_elt Prims.list  ->  Prims.string = (fun s -> (let _146_205 = (FStar_List.map stack_elt_to_string s)
 in (FStar_All.pipe_right _146_205 (FStar_String.concat "; "))))
 
-# 120 "FStar.TypeChecker.Normalize.fst"
+# 118 "FStar.TypeChecker.Normalize.fst"
 let log : cfg  ->  (Prims.unit  ->  Prims.unit)  ->  Prims.unit = (fun cfg f -> if (FStar_TypeChecker_Env.debug cfg.tcenv (FStar_Options.Other ("Norm"))) then begin
 (f ())
 end else begin
 ()
 end)
 
-# 125 "FStar.TypeChecker.Normalize.fst"
+# 123 "FStar.TypeChecker.Normalize.fst"
 let is_empty = (fun _53_3 -> (match (_53_3) with
 | [] -> begin
 true
@@ -405,7 +405,7 @@ end
 false
 end))
 
-# 129 "FStar.TypeChecker.Normalize.fst"
+# 127 "FStar.TypeChecker.Normalize.fst"
 let lookup_bvar = (fun env x -> try
 (match (()) with
 | () -> begin
@@ -418,7 +418,7 @@ in (FStar_Util.format1 "Failed to find %s\n" _146_220))
 in (FStar_All.failwith _146_221))
 end)
 
-# 133 "FStar.TypeChecker.Normalize.fst"
+# 131 "FStar.TypeChecker.Normalize.fst"
 let rec unfold_effect_abbrev : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp_typ = (fun env comp -> (
 # 134 "FStar.TypeChecker.Normalize.fst"
 let c = (FStar_Syntax_Util.comp_to_comp_typ comp)
@@ -454,7 +454,7 @@ in (unfold_effect_abbrev env c))))
 end))
 end)))
 
-# 144 "FStar.TypeChecker.Normalize.fst"
+# 142 "FStar.TypeChecker.Normalize.fst"
 let downgrade_ghost_effect_name : FStar_Ident.lident  ->  FStar_Ident.lident Prims.option = (fun l -> if (FStar_Ident.lid_equals l FStar_Syntax_Const.effect_Ghost_lid) then begin
 Some (FStar_Syntax_Const.effect_Pure_lid)
 end else begin
@@ -469,7 +469,7 @@ end
 end
 end)
 
-# 161 "FStar.TypeChecker.Normalize.fst"
+# 151 "FStar.TypeChecker.Normalize.fst"
 let norm_universe : cfg  ->  closure Prims.list  ->  FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe = (fun cfg env u -> (
 # 162 "FStar.TypeChecker.Normalize.fst"
 let norm_univs = (fun us -> (
@@ -560,7 +560,7 @@ FStar_Syntax_Syntax.U_max (us)
 end)
 end)))
 
-# 220 "FStar.TypeChecker.Normalize.fst"
+# 210 "FStar.TypeChecker.Normalize.fst"
 let rec closure_as_term : cfg  ->  closure Prims.list  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun cfg env t -> (
 # 221 "FStar.TypeChecker.Normalize.fst"
 let _53_198 = (log cfg (fun _53_197 -> (match (()) with
@@ -975,7 +975,7 @@ end
 lopt
 end))
 
-# 392 "FStar.TypeChecker.Normalize.fst"
+# 386 "FStar.TypeChecker.Normalize.fst"
 let maybe_simplify : step Prims.list  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun steps tm -> (
 # 393 "FStar.TypeChecker.Normalize.fst"
 let w = (fun t -> (
@@ -1087,7 +1087,7 @@ tm
 end)
 end))))
 
-# 449 "FStar.TypeChecker.Normalize.fst"
+# 444 "FStar.TypeChecker.Normalize.fst"
 let rec norm : cfg  ->  env  ->  stack  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun cfg env stack t -> (
 # 451 "FStar.TypeChecker.Normalize.fst"
 let t = (FStar_Syntax_Subst.compress t)
@@ -2271,7 +2271,7 @@ end else begin
 end))))))
 end))
 
-# 1022 "FStar.TypeChecker.Normalize.fst"
+# 1020 "FStar.TypeChecker.Normalize.fst"
 let config : step Prims.list  ->  FStar_TypeChecker_Env.env  ->  cfg = (fun s e -> (
 # 1023 "FStar.TypeChecker.Normalize.fst"
 let d = (match ((FStar_Util.find_map s (fun _53_5 -> (match (_53_5) with
@@ -2293,23 +2293,23 @@ end
 end)
 in {steps = s; tcenv = e; delta_level = d}))
 
-# 1030 "FStar.TypeChecker.Normalize.fst"
+# 1028 "FStar.TypeChecker.Normalize.fst"
 let normalize : steps  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun s e t -> (let _146_652 = (config s e)
 in (norm _146_652 [] [] t)))
 
-# 1031 "FStar.TypeChecker.Normalize.fst"
+# 1030 "FStar.TypeChecker.Normalize.fst"
 let normalize_comp : steps  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp = (fun s e t -> (let _146_659 = (config s e)
 in (norm_comp _146_659 [] t)))
 
-# 1032 "FStar.TypeChecker.Normalize.fst"
+# 1031 "FStar.TypeChecker.Normalize.fst"
 let normalize_universe : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe = (fun env u -> (let _146_664 = (config [] env)
 in (norm_universe _146_664 [] u)))
 
-# 1033 "FStar.TypeChecker.Normalize.fst"
+# 1032 "FStar.TypeChecker.Normalize.fst"
 let ghost_to_pure : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp = (fun env c -> (let _146_669 = (config [] env)
 in (ghost_to_pure_aux _146_669 [] c)))
 
-# 1035 "FStar.TypeChecker.Normalize.fst"
+# 1033 "FStar.TypeChecker.Normalize.fst"
 let ghost_to_pure_lcomp : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.lcomp  ->  FStar_Syntax_Syntax.lcomp = (fun env lc -> (
 # 1036 "FStar.TypeChecker.Normalize.fst"
 let cfg = (config ((Inline)::(UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::(EraseUniverses)::(AllowUnboundUniverses)::[]) env)
@@ -2336,16 +2336,16 @@ end else begin
 lc
 end)))
 
-# 1048 "FStar.TypeChecker.Normalize.fst"
+# 1046 "FStar.TypeChecker.Normalize.fst"
 let term_to_string : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env t -> (let _146_683 = (normalize ((AllowUnboundUniverses)::[]) env t)
 in (FStar_Syntax_Print.term_to_string _146_683)))
 
-# 1049 "FStar.TypeChecker.Normalize.fst"
+# 1048 "FStar.TypeChecker.Normalize.fst"
 let comp_to_string : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->  Prims.string = (fun env c -> (let _146_689 = (let _146_688 = (config ((AllowUnboundUniverses)::[]) env)
 in (norm_comp _146_688 [] c))
 in (FStar_Syntax_Print.comp_to_string _146_689)))
 
-# 1051 "FStar.TypeChecker.Normalize.fst"
+# 1049 "FStar.TypeChecker.Normalize.fst"
 let normalize_refinement : steps  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.typ = (fun steps env t0 -> (
 # 1052 "FStar.TypeChecker.Normalize.fst"
 let t = (normalize (FStar_List.append steps ((Beta)::[])) env t0)
@@ -2375,7 +2375,7 @@ t
 end)))
 in (aux t))))
 
-# 1066 "FStar.TypeChecker.Normalize.fst"
+# 1064 "FStar.TypeChecker.Normalize.fst"
 let eta_expand : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun env t -> (
 # 1067 "FStar.TypeChecker.Normalize.fst"
 let expand = (fun sort -> (
