@@ -15,11 +15,11 @@
 *)
 
 
-(*************************************************************)
-(*** A simple CPS function: adding the elements of a list. ***)
-(*************************************************************)
+(* ***********************************************************)
+(* * A simple CPS function: adding the elements of a list. ***)
+(* ***********************************************************)
 
-(** Standard implementation **)
+(*  Standard implementation **)
 module CPS.Simple
 open List
 
@@ -35,7 +35,7 @@ let add l = add_cps l (fun x -> x)
 
 
 
-(** We have to be careful when λ-lifting not to delay the strictly decreasing recursive call **)
+(*  We have to be careful when λ-lifting not to delay the strictly decreasing recursive call **)
 (* module DoubleCPSLambdaLifting3 *)
 
 (* open Expr *)
@@ -58,7 +58,7 @@ let add l = add_cps l (fun x -> x)
 
 
 
-(** Second try with λ-lifting: I would not expect F* to be able to infer termination anyway, but actually I get another strange error message **)
+(*  Second try with λ-lifting: I would not expect F* to be able to infer termination anyway, but actually I get another strange error message **)
 (* module DoubleCPSDefunLambdaLifting *)
 
 (* open Expr *)
@@ -87,7 +87,7 @@ let add l = add_cps l (fun x -> x)
 
 
 
-(** Trying to go further by putting the ghost expression into the environment: F* raises two strange errors **)
+(*  Trying to go further by putting the ghost expression into the environment: F* raises two strange errors **)
 (* module DoubleCPSCCEnv *)
 
 (* open Expr *)

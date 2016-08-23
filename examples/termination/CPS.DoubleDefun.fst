@@ -1,8 +1,8 @@
-(*******************************************************************************)
-(*** Proving termination of its defunctionalized version is known to be hard ***)
-(*******************************************************************************)
+(* *****************************************************************************)
+(* * Proving termination of its defunctionalized version is known to be hard ***)
+(* *****************************************************************************)
 
-(** First standard try: to prove termination, I augment << with an
+(*  First standard try: to prove termination, I augment << with an
     ordering on call stacks **)
 module CPS.DoubleDefun
 
