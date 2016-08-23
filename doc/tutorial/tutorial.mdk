@@ -235,8 +235,8 @@ expression.
 Here are two modules: one called `FileName` and the other one called
 `ACLs` (for Access-Control Lists):
 
-~ Fragment {link="code/exercises/ex1a-safe-read-write.fst"}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:ACLs]
+~ Fragment {link="code/exercises/ex01a-safe-read-write.fst"}
+[INCLUDE=code/exercises/ex01a-safe-read-write.fst:ACLs]
 ~
 
 The `FileName` module defines a type synonym: we'll use `:string`s to
@@ -265,8 +265,8 @@ input/output are implemented by the operating system and made available
 to F\* programs via the underlying framework, e.g., .NET or OCaml. We can
 describe a simple interface provided by the framework as follows:
 
-~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:FileIO]
+~ Fragment {link=code/exercises/ex01a-safe-read-write.fst}
+[INCLUDE=code/exercises/ex01a-safe-read-write.fst:FileIO]
 ~
 
 Here, we've defined an *interface* called `FileIO`, which uses the
@@ -311,10 +311,10 @@ Here's some simple, untrusted client code. It uses `FileIO`,
 defines some common file names, and then a function called
 `staticChecking`, which tries to read and write a few files.
 
-~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:UntrustedClientCode]
+~ Fragment {link=code/exercises/ex01a-safe-read-write.fst}
+[INCLUDE=code/exercises/ex01a-safe-read-write.fst:UntrustedClientCode]
 
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:StaticChecking]
+[INCLUDE=code/exercises/ex01a-safe-read-write.fst:StaticChecking]
 ~
 
 The type-checker ensures statically that this untrusted code complies
@@ -326,7 +326,7 @@ that the `passwd` file does not have the type
 `:f:filename{canRead f}`, respectively `:f:filename{canWrite f}`.
 For instance, if we uncomment the `write` we get the following error message:
 
-<!-- fstar.exe code/exercises/ex1a-safe-read-write.fst -->
+<!-- fstar.exe code/exercises/ex01a-safe-read-write.fst -->
 ``` {language=""}
 Error ex1a-safe-read-write.fst(38,2-47,5): The following problems were found:
 	Subtyping check failed; expected type f:filename{(canWrite f)};
@@ -348,8 +348,8 @@ that the dynamic checks added by the programmer are taken into account
 by the type system. In particular we implement a `checkedRead` function
 that consults the policy and only performs the `read` if the policy
 allows it, otherwise it raises an exception.
-~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:CheckedRead]
+~ Fragment {link=code/exercises/ex01a-safe-read-write.fst}
+[INCLUDE=code/exercises/ex01a-safe-read-write.fst:CheckedRead]
 ~
 Please note that the type of `checkRead` imposes no condition on the
 the input file `f`. When the `ACLs.canRead f` check succeeds the
@@ -361,20 +361,20 @@ string `s` as argument, checks the policy to make sure the file `f` is
 writable, and only if that is the case writes `s` to `f`. If the file
 is not writable your `checkedWrite` should raise an exception. As for
 `checkedRead`, your `checkedRead` should have no preconditions.
-~~ ExerciseFragment {exname=ex1a-safe-read-write}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:CheckedWriteType]
+~~ ExerciseFragment {exname=ex01a-safe-read-write}
+[INCLUDE=code/exercises/ex01a-safe-read-write.fst:CheckedWriteType]
 ~~
 ~~ Answer
-~~~ SolutionFragment {exname=ex1a-safe-read-write}
-[INCLUDE=code/solutions/ex1a-safe-read-write.fst:CheckedWrite]
+~~~ SolutionFragment {exname=ex01a-safe-read-write}
+[INCLUDE=code/solutions/ex01a-safe-read-write.fst:CheckedWrite]
 ~~~
 ~~
 ~
 You can use `checkedRead` and your `checkedWrite` to replace `read`
 and `write` in `staticChecking`, so that now even
 the accesses to `passwd` are well-typed.
-~ ExerciseFragment {exname=ex1a-safe-read-write}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:DynamicChecking]
+~ ExerciseFragment {exname=ex01a-safe-read-write}
+[INCLUDE=code/exercises/ex01a-safe-read-write.fst:DynamicChecking]
 ~
 This is secure because `checkedRead` and `checkedWrite` defer to
 runtime the same checks that were previously performed at compile time
@@ -535,11 +535,11 @@ effect, as explained above.
 As you could see above, we use `val` to ask F\* to check that a
 definition has a certain expected type.  Write down the expected types
 for `canRead` and `canWrite` from [#sec-policy] and ask F\* to check it for you.
-~~ ExerciseFragment {exname=ex2a-can-read-write-types}
-[INCLUDE=code/exercises/ex2a-can-read-write-types.fst]
+~~ ExerciseFragment {exname=ex02a-can-read-write-types}
+[INCLUDE=code/exercises/ex02a-can-read-write-types.fst]
 ~~
 
-~~ AnswerFragment {exname=ex2a-can-read-write-types}
+~~ AnswerFragment {exname=ex02a-can-read-write-types}
 val canRead: filename -> Tot bool
 val canWrite: filename -> Tot bool
 ~~
@@ -741,12 +741,12 @@ this for you in its standard prelude).
 What are some other correct types you can give to `factorial`? Try
 writing them and see if F\* agrees with you.
 Try describing in words what each of those types mean.
-~~ ExerciseFragment {exname=ex3a-factorial-types}
-[INCLUDE=code/exercises/ex3a-factorial-types.fst:FactorialTypes]
+~~ ExerciseFragment {exname=ex03a-factorial-types}
+[INCLUDE=code/exercises/ex03a-factorial-types.fst:FactorialTypes]
 ~~
 ~~ Answer
 There are many possible correct types for `factorial`. Here are a few:
-~~~ SolutionFragment {exname=ex3a-factorial-types}
+~~~ SolutionFragment {exname=ex03a-factorial-types}
 val factorial: int -> int                     (* inferred by default *)
 val factorial: int -> ML int                  (* same as above *)
 val factorial: nat -> Tot int                 (* total function on nat inputs *)
@@ -777,12 +777,12 @@ uncomparable.  So no, subtyping is not a total order.
 
 ~ Exercise
 Give several types for the fibonacci function.
-~~ ExerciseFragment {exname=ex3b-fibonacci}
+~~ ExerciseFragment {exname=ex03b-fibonacci}
 let rec fibonacci n =
   if n <= 1 then 1 else fibonacci (n - 1) + fibonacci (n - 2)
 ~~
-~~ AnswerFragment {exname=ex3b-fibonacci}
-[INCLUDE=code/solutions/ex3b-fibonacci.fst]
+~~ AnswerFragment {exname=ex03b-fibonacci}
+[INCLUDE=code/solutions/ex03b-fibonacci.fst]
 ~~
 ~
 
@@ -950,11 +950,11 @@ from our use of the induction hypothesis: again, Z3 proves this easily.
 
 ~ Exercise
 Prove the following property for the fibonacci function:
-~~ ExerciseFragment {exname=ex3c-fibonacci}
-[INCLUDE=code/exercises/ex3c-fibonacci.fst:FibonacciGreaterThanArg]
+~~ ExerciseFragment {exname=ex03c-fibonacci}
+[INCLUDE=code/exercises/ex03c-fibonacci.fst:FibonacciGreaterThanArg]
 ~~
-~~ AnswerFragment {exname=ex3c-fibonacci}
-[INCLUDE=code/solutions/ex3c-fibonacci.fst:FibonacciGreaterThanArgProof]
+~~ AnswerFragment {exname=ex03c-fibonacci}
+[INCLUDE=code/solutions/ex03c-fibonacci.fst:FibonacciGreaterThanArgProof]
 ~~
 ~
 
@@ -1171,7 +1171,7 @@ I don't understand either, it is certainly wrong
 
 ~ Exercise
 Here's the `append` function that concatenates two lists.
-~~ ExerciseFragment {exname=ex4a-append-intrinsic}
+~~ ExerciseFragment {exname=ex04a-append-intrinsic}
 let rec append l1 l2 = match l1 with
   | [] -> l2
   | hd :: tl -> hd :: append tl l2
@@ -1179,7 +1179,7 @@ let rec append l1 l2 = match l1 with
 Give `append` a type that proves it always returns a list
 whose length is the sum of the lengths of its arguments.
 
-~~ AnswerFragment {exname=ex4a-append-intrinsic}
+~~ AnswerFragment {exname=ex04a-append-intrinsic}
     l1:list 'a -> l2:list 'a -> Tot (l:list 'a{length l = length l1 + length l2})
 ~~
 ~
@@ -1187,10 +1187,10 @@ whose length is the sum of the lengths of its arguments.
 ~ Exercise
 Give `append` the weak type below,
 then prove the same property as in the previous exercise using a lemma.
-~~ ExerciseFragment {exname=ex4b-append-extrinsic}
+~~ ExerciseFragment {exname=ex04b-append-extrinsic}
 val append:list 'a -> list 'a -> Tot (list 'a)
 ~~
-~~ AnswerFragment {exname=ex4b-append-extrinsic}
+~~ AnswerFragment {exname=ex04b-append-extrinsic}
 val append_len: l1:list 'a -> l2:list 'a
              -> Lemma (requires True)
                       (ensures (length (append l1 l2) = length l1 + length l2)))
@@ -1204,11 +1204,11 @@ let rec append_len l1 l2 = match l1 with
 Define a function `mem: x:'a -> l:list 'a -> Tot bool` that
 decides whether `x` is present in the `l` or not, then prove it satisfies the
 following property:
-~~ ExerciseFragment {exname=ex4c-mem}
+~~ ExerciseFragment {exname=ex04c-mem}
 val append_mem:  l1:list 'a -> l2:list 'a -> a:'a
         -> Lemma (ensures (mem a (append l1 l2)  <==>  mem a l1 || mem a l2))
 ~~
-~~ AnswerFragment {exname=ex4c-mem}
+~~ AnswerFragment {exname=ex04c-mem}
 
 val mem: 'a -> list 'a -> Tot bool
 let rec mem a l = match l with
@@ -1280,17 +1280,17 @@ the induction hypothesis but also the `snoc_cons` lemma we proved above.
 
 ~Exercise
 Prove that reverse is injective, i.e.,
-~~ ExerciseFragment {exname=ex4d-reverse}
-[INCLUDE=code/exercises/ex4d-reverse.fst:RevInjective]
+~~ ExerciseFragment {exname=ex04d-reverse}
+[INCLUDE=code/exercises/ex04d-reverse.fst:RevInjective]
 ~~
 ~~ Answer
 Perhaps you did it like this:
-~~~ SolutionFragment {exname=ex4d-reverse}
-[INCLUDE=code/solutions/ex4d-reverse.fst:RevInjective1]
+~~~ SolutionFragment {exname=ex04d-reverse}
+[INCLUDE=code/solutions/ex04d-reverse.fst:RevInjective1]
 ~~~
 That's quite a tedious proof, isn't it. Here's a simpler proof.
-~~~ SolutionFragment {exname=ex4d-reverse}
-[INCLUDE=code/solutions/ex4d-reverse.fst:RevInjective2]
+~~~ SolutionFragment {exname=ex04d-reverse}
+[INCLUDE=code/solutions/ex04d-reverse.fst:RevInjective2]
 ~~~
 The `rev_injective_2` proof is based on the idea that every involutive
 function is injective. We've already proven that `reverse` is
@@ -1349,7 +1349,7 @@ We define a `find` function that given a boolean function `f` and a list
 is found `find` returns `None`; for this we use the usual `:option` type (shown
 below and available in F\*'s standard prelude).
 
-~~ ExerciseFragment {exname=ex4e-find}
+~~ ExerciseFragment {exname=ex04e-find}
     type option 'a =
        | None : option 'a
        | Some : 'a -> option 'a
@@ -1362,8 +1362,8 @@ below and available in F\*'s standard prelude).
 Prove that if `find` returns `Some x` then `f x = true`.
 Is it better to do this intrinsically or extrinsically? Do it both ways.
 
-~~ AnswerFragment {exname=ex4e-find}
-[INCLUDE=code/solutions/ex4e-find.fst]
+~~ AnswerFragment {exname=ex04e-find}
+[INCLUDE=code/solutions/ex04e-find.fst]
 ~~
 ~
 
@@ -1374,12 +1374,12 @@ Define the `fold_left` function on lists, so that
 
 Prove that `(fold_left Cons l [] = reverse l)`.
 (The proof is a level harder from what we've done so far)
-~~ ExerciseFragment {exname=ex4f-fold-left}
+~~ ExerciseFragment {exname=ex04f-fold-left}
 val fold_left_cons_is_reverse: l:list 'a -> l':list 'a ->
       Lemma (fold_left Cons l l' = append (reverse l) l')
 ~~
-~~ AnswerFragment {exname=ex4f-fold-left}
-[INCLUDE=code/solutions/ex4f-fold-left.fst:FoldLeftInteresting]
+~~ AnswerFragment {exname=ex04f-fold-left}
+[INCLUDE=code/solutions/ex04f-fold-left.fst:FoldLeftInteresting]
 ~~
 ~
 
@@ -1452,11 +1452,11 @@ signatures---we will see this in the section on indexed types
 ~Exercise
 Write functions (call them `hd` and `tl`) whose types match
 those of `Cons.hd` and `Cons.tl`.
-~~ ExerciseFragment {exname=ex4g-hd-tl}
-[INCLUDE=code/exercises/ex4g-hd-tl.fst]
+~~ ExerciseFragment {exname=ex04g-hd-tl}
+[INCLUDE=code/exercises/ex04g-hd-tl.fst]
 ~~
 ~~Answer
-~~~ SolutionFragment {exname=ex4g-hd-tl}
+~~~ SolutionFragment {exname=ex04g-hd-tl}
 val hd : l:list 'a{is_Cons l} -> Tot 'a
 let hd l =
   match l with
@@ -1479,10 +1479,10 @@ when we have an automatic way ;)
 ~Exercise
 Write a function that returns the `n`th element of a list. Give a
 type that ensures it is total.
-~~ ExerciseFragment {exname=ex4h-nth}
+~~ ExerciseFragment {exname=ex04h-nth}
 (* Write your code here *)
 ~~
-~~ AnswerFragment {exname=ex4h-nth}
+~~ AnswerFragment {exname=ex04h-nth}
 val nth : l:list 'a -> n:nat{n < length l} -> 'a
 let rec nth l n =
   match l with
@@ -1737,7 +1737,7 @@ total. Also, prove that it is functionally equivalent to `factorial`.
 ~Exercise
 Here is a more efficient (tail-recursive) variant of the list
 reverse function.
-~~ ExerciseFragment {exname=ex5a-rev}
+~~ ExerciseFragment {exname=ex05a-rev}
 val rev : l1:list 'a -> l2:list 'a -> Tot (list 'a) (decreases l2)
 let rec rev l1 l2 =
   match l2 with
@@ -1747,10 +1747,10 @@ let rec rev l1 l2 =
 Prove the following lemma showing the correctness of this
 efficient implementation with respect to the previous simple
 implementation:
-~~ ExerciseFragment {exname=ex5a-rev}
+~~ ExerciseFragment {exname=ex05a-rev}
 val rev_is_ok : l:list 'a -> Lemma (rev [] l = reverse l)
 ~~
-~~ AnswerFragment {exname=ex5a-rev}
+~~ AnswerFragment {exname=ex05a-rev}
 val append_assoc : xs:list 'a -> ys:list 'a -> zs:list 'a -> Lemma
       (ensures (append (append xs ys) zs = append xs (append ys zs)))
 let rec append_assoc xs ys zs =
@@ -1780,7 +1780,7 @@ let rev_is_ok l = rev_is_ok_aux [] l; append_nil (reverse l)
 ~Exercise
 (**Challenge!**) Here is a more efficient (tail-recursive)
 variant of the Fibonacci function.
-~~ ExerciseFragment {exname=ex5b-fib}
+~~ ExerciseFragment {exname=ex05b-fib}
 val fib : nat -> nat -> n:nat -> Tot nat (decreases n)
 let rec fib a b n =
   match n with
@@ -1790,10 +1790,10 @@ let rec fib a b n =
 Prove the following lemma showing the correctness of this
 efficient implementation with respect to the previous simple
 implementation:
-~~ ExerciseFragment {exname=ex5b-fib}
+~~ ExerciseFragment {exname=ex05b-fib}
 val fib_is_ok : n:nat -> Lemma (fib 1 1 n = fibonacci n)
 ~~
-~~ AnswerFragment {exname=ex5b-fib}
+~~ AnswerFragment {exname=ex05b-fib}
 val fib_is_ok_aux : i:nat -> n:nat{i<=n} ->
       Tot (u:unit{fib (fibonacci i) (fibonacci (i+1)) (n-i) = fibonacci n})
       (decreases (n-i))
@@ -1892,17 +1892,17 @@ pivot in the middle before returning.
 
 ~Exercise
 Write the partition function and prove it total.
-~~ExerciseFragment {exname=ex6a-partition}
+~~ExerciseFragment {exname=ex06a-partition}
 val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
 ~~
 ~~Answer
 
 The following definition is included in F\*'s list library.
-~~~ SolutionFragment {exname=ex6a-partition}
-[INCLUDE=code/solutions/ex6a-partition.fst:Partition]
+~~~ SolutionFragment {exname=ex06a-partition}
+[INCLUDE=code/solutions/ex06a-partition.fst:Partition]
 ~~~
 
-<!-- ~~~ SolutionFragment {exname=ex6a-partition} -->
+<!-- ~~~ SolutionFragment {exname=ex06a-partition} -->
 <!-- val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a) -->
 <!-- let rec partition f = function  -->
 <!--   | [] -> [], [] -->
@@ -2137,20 +2137,20 @@ the same as for Exercide 6b, and would thus duplicate code.
 Starting from this implementation (given below), generalize `sort` so
 that it works on lists with an arbitrary element type, instead of just
 lists of integers. Prove it correct.
-~~ ExerciseFragment {exname=ex6b-sort-poly}
+~~ ExerciseFragment {exname=ex06b-sort-poly}
 (* Start from the code in the "Load in editor" link *)
 ~~
 
-~~ AnswerFragment {exname=ex6b-sort-poly}
-[INCLUDE=code/solutions/ex6b-sort-poly.fst]
+~~ AnswerFragment {exname=ex06b-sort-poly}
+[INCLUDE=code/solutions/ex06b-sort-poly.fst]
 ~~
 ~
 
-~Exercise {exname=ex6c-break-sort-spec}
+~Exercise {exname=ex06c-break-sort-spec}
 Our specification for `sort` is incomplete. Why? Can you write a
 variation of `sort` that has the same specification as the one above,
 but discards some elements of the list?
-~~ ExerciseFragment {exname=ex6b-sort-poly}
+~~ ExerciseFragment {exname=ex06b-sort-poly}
 (* Start from the code in the "Load in editor" link *)
 ~~
 
@@ -2158,8 +2158,8 @@ but discards some elements of the list?
 The specification does not ensure that the resulting list is a
 permutation of the initial list: it could discard or repeat some
 elements.
-~~~ SolutionFragment {exname=ex6c-break-sort-spec}
-[INCLUDE=code/solutions/ex6c-break-sort-spec.fst]
+~~~ SolutionFragment {exname=ex06c-break-sort-spec}
+[INCLUDE=code/solutions/ex06c-break-sort-spec.fst]
 ~~~
 ~~
 ~
@@ -2167,21 +2167,21 @@ elements.
 ~ Exercise
 Fix the specification to ensure that `sort` cannot discard any
 elements in the list. Prove that `sort` meets the specification.
-~~ ExerciseFragment {exname=ex6b-sort-poly}
+~~ ExerciseFragment {exname=ex06b-sort-poly}
 (* Start from either the problem or the solution of exercise 6b *)
 ~~
-~~ AnswerFragment {exname=ex6d-no-discard}
-[INCLUDE=code/solutions/ex6d-no-discard.fst]
+~~ AnswerFragment {exname=ex06d-no-discard}
+[INCLUDE=code/solutions/ex06d-no-discard.fst]
 ~~
 ~
 
 ~ Exercise
 Implement insertion sort and prove the same properties.
-~~ ExerciseFragment {exname=ex6e-insertion-sort}
+~~ ExerciseFragment {exname=ex06e-insertion-sort}
 val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x m)})
 ~~
-~~ AnswerFragment {exname=ex6e-insertion-sort}
-[INCLUDE=code/solutions/ex6e-insertion-sort.fst]
+~~ AnswerFragment {exname=ex06e-insertion-sort}
+[INCLUDE=code/solutions/ex06e-insertion-sort.fst]
 ~~
 ~
 
@@ -2721,12 +2721,12 @@ well-typed expression `e` that is not a value and
 produces the expression to which `e` steps. Give `typed_step`
 the following strong type
 (basically this type captures both progress and preservation):
-~~ ExerciseFragment {exname=ex7a-stlc-typed-step}
+~~ ExerciseFragment {exname=ex07a-stlc-typed-step}
   val typed_step : e:exp{is_Some (typing empty e) /\ not(is_value e)} ->
                    Tot (e':exp{typing empty e' = typing empty e})
 ~~
 (Hint: the most direct solution to this exercise fits on one line)
-~~ AnswerFragment {exname=ex7a-stlc-typed-step}
+~~ AnswerFragment {exname=ex07a-stlc-typed-step}
     let typed_step e = progress e; preservation e; Some.v (step e)
 ~~
 ~
@@ -2734,7 +2734,7 @@ the following strong type
 ~ Exercise
 To add pairs to this formal development we add the following to the
 definition of types, expressions, values, substitution, and step:
-~~ ExerciseFragment {exname=ex7b-stlc-pairs}
+~~ ExerciseFragment {exname=ex07b-stlc-pairs}
 type ty =
   ...
   | TPair : ty -> ty -> ty
@@ -2746,7 +2746,7 @@ type exp =
   | ESnd   : exp -> exp
 ~~
 (note the extra rec in `is_value` below!)
-~~ ExerciseFragment {exname=ex7b-stlc-pairs}
+~~ ExerciseFragment {exname=ex07b-stlc-pairs}
 let rec is_value e =
   match e with
   ...
@@ -2796,7 +2796,7 @@ Add cases to `typing` for the new constructs and fix all the proofs.
 ~~ Answer
 We extend the `typing` and `appears_free_in` functions with cases
 for `EPair`, `EFst`, and `ESnd`:
-~~~ SolutionFragment {exname=ex7b-stlc-pairs}
+~~~ SolutionFragment {exname=ex07b-stlc-pairs}
 val typing : env -> exp -> Tot (option ty)
 let rec typing g e =
 ...
@@ -2821,7 +2821,7 @@ val appears_free_in : x:int -> e:exp -> Tot bool
 ~~~
 The proofs of the lemmas are also easy to extend by just calling
 the induction hypothesis:
-~~~ SolutionFragment {exname=ex7b-stlc-pairs}
+~~~ SolutionFragment {exname=ex07b-stlc-pairs}
 val free_in_context : x:int -> e:exp -> g:env -> Lemma
       (requires (is_Some (typing g e)))
       (ensures (appears_free_in x e ==> is_Some (g x)))
@@ -2866,7 +2866,7 @@ then it further evaluates, so we apply the induction hypothesis to
 it must be the case that `e2` is not a value and further evaluates, so
 we apply the induction hypothesis to it. The cases for `EFst` and
 `ESnd` are similar.
-~~~ SolutionFragment {exname=ex7b-stlc-pairs}
+~~~ SolutionFragment {exname=ex07b-stlc-pairs}
 val preservation : e:exp{is_Some (typing empty e) /\ is_Some (step e)} ->
       Tot (u:unit{typing empty (Some.v (step e)) == typing empty e})
 let rec preservation e =
@@ -2911,14 +2911,14 @@ None of them is very interesting from a proof point of view.)
 ~ Exercise
 We want to add a let construct to this formal development.
 We add the following to the definition of expressions:
-~~ ExerciseFragment {exname=ex7c-stlc-let}
+~~ ExerciseFragment {exname=ex07c-stlc-let}
 type exp =
   ...
   | ELet  : int -> exp -> exp -> exp
 ~~
 Add cases for `ELet` to all definitions and proofs.
 
-[Load answer in editor](code/solutions/ex7c-stlc-let.fst)
+[Load answer in editor](code/solutions/ex07c-stlc-let.fst)
 ~~ CH
 Make the prev kind of link a macro of some sorts. It doesn't have a
 proper body so it's not an environment, but what is it? Entity?
@@ -2932,7 +2932,7 @@ either produces the well-typed value `v` to which `e` evaluates
 or it diverges if the evaluation of `e` loops. Give `eval` the following
 strong type ensuring that `v` has the same type as `e`
 (basically this type captures both progress and preservation):
-~~ ExerciseFragment {exname=ex7d-stlc-eval}
+~~ ExerciseFragment {exname=ex07d-stlc-eval}
   val eval : e:exp{is_Some (typing empty e)} ->
              Dv (v:exp{is_value v && typing empty v = typing empty e})
 ~~
@@ -2942,7 +2942,7 @@ and it is hard to prove that well-typed ones don't, while defining an
 interpreter.
 ~~Answer
 Here is a solution that only uses `typed_step` (suggested by Santiago Zanella):
-~~~ SolutionFragment {exname=ex7d-stlc-eval}
+~~~ SolutionFragment {exname=ex07d-stlc-eval}
 val eval : e:exp{is_Some (typing empty e)} ->
            Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval e =
@@ -2959,7 +2959,7 @@ let rec eval e = match step e with
   | Some e' -> preservation e; eval e'
 ```
 Here is another solution that only uses the substitution lemma:
-~~~ SolutionFragment {exname=ex7d-stlc-eval}
+~~~ SolutionFragment {exname=ex07d-stlc-eval}
 val eval' : e:exp{is_Some (typing empty e)} ->
             Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval' e =
@@ -4127,6 +4127,7 @@ much as possible.
 Now, we have all the machinery we need to give `shift_p1` a sufficiently
 strong type to prove that its assertion will never fail (if its pre-condition is met).
 
+<!-- [INCLUDE=code/solutions/ex10-shift.fst:ShiftP1Spec] -->
 ```
 val shift_p1: p1:point
            -> p2:point{   Point.x p2 <> Point.x p1
@@ -4154,12 +4155,12 @@ Change `shift_x` to the function `shift` below that moves both the `x` and `y` c
 of its argument by some amount. Prove that calling this function in
 `shift_p1` does not change `p2`.
 
-~~ CodeFragment {filename=exercises/ex10-shift.fst name=ex10b-shift}
+~~ ExerciseFragment {exname=ex10b-shift.fst}
 let shift p = Point.x p := 17; Point.y p := 18
 ~~
 
 ~~Answer
-~~~ CodeFragment {filename=solutions/ex10-shift.fst name=so10b-shift}
+~~~ SolutionFragment {exname=ex10b-shift.fst}
 let shift p = Point.x p := 17; Point.y p := 18
 ~~~
 ~~
@@ -4638,7 +4639,7 @@ let fly_robots b0 b1 =
 Extend this example by adding a function which takes a list of robots,
 each in a region disjoint from all others, and fly all of them.
 
-~~ CodeFragment {filename=exercises/robot2.fst name=ex11a-robot}
+~~ ExerciseFragment {exname=ex11a-robot}
 val fly_robot_army: ...
 ~~
 
@@ -4901,7 +4902,7 @@ Relying on acls2.fst and mac.fst, implement a pair of functions with
 the following specification, and verify them by typing under the
 security assumption that HMACSHA1 is INT-CMA.
 
-~~ CodeFragment {filename=exercises/acls-cap.fst name=ex12a-acls-cap}
+~~ ExerciseFragment {exname=ex12a-acls-cap}
 val issue:  f:file{ canRead f } -> SHA1.tag
 val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
 ~~
