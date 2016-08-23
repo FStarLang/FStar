@@ -4,20 +4,20 @@ module Crypto.Symmetric.Poly1305
 open FStar.Mul
 open FStar.Ghost
 open FStar.Seq
-(*  Machine integers *)
+(** Machine integers *)
 open FStar.UInt8
 open FStar.UInt64
 open FStar.Int.Cast
-(*  Effects and memory layout *)
+(** Effects and memory layout *)
 open FStar.HyperStack
 open FStar.HST
-(*  Buffers *)
+(** Buffers *)
 open FStar.Buffer
-(*  Mathematical definitions *)
+(** Mathematical definitions *)
 open Math.Axioms
 open Math.Lib
 open Math.Lemmas
-(*  Helper functions for buffers *)
+(** Helper functions for buffers *)
 open Buffer.Utils
 open FStar.Buffer.Quantifiers
 
@@ -31,25 +31,28 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS = FStar.HyperStack
 
+#set-options "--lax"
+
 (* Poly1305 prime *)
 let p_1305 () = reveal prime
 
-(* *********************************************)
-(*            Type definitions                 *)
-(* *********************************************)
+(* * *********************************************)
+(* *            Type definitions                 *)
+(* * *********************************************)
 type elem = n:nat{n < p_1305()} // Element of the group Z/p_1305.Z
 type elemB = bigint        // Mutable big integer representation (5 64-bit limbs)
 
 type word = b:seq byte{Seq.length b <= 16} // Pure representation of the 16-bit words on which
 					  // poly1305 computation is run
+type word_16 = w:word{Seq.length w = 16}
 type wordB = b:bytes{length b <= 16}  // Concrete (mutable) representation of those words
 
-type log = seq (w:word{Seq.length w = 16})
+type log = seq word_16
 
 
-(*  *********************************************)
-(*             Group operators                  *)
-(*  *********************************************)
+(* * *********************************************)
+(* *            Group operators                  *)
+(* * *********************************************)
 val group_add: elem -> elem -> GTot elem
 let group_add a b = (a + b) % p_1305 ()
 val group_mul: elem -> elem -> GTot elem
@@ -59,9 +62,9 @@ let op_Plus_At = group_add
 let op_Star_At = group_mul
 
 
-(*  *********************************************)
-(*   Mappings from stateful types to pure types *)
-(*  *********************************************)
+(* * *********************************************)
+(* *  Mappings from stateful types to pure types *)
+(* * *********************************************)
 (* From the current memory state, returns the word corresponding to a wordB *)
 let sel_word (h:mem) (b:wordB{live h b}) : GTot word
   = as_seq h b
@@ -93,8 +96,8 @@ val lemma_factorise: a:nat -> b:nat -> Lemma
   (ensures  (a + a * b = a * (b + 1)))
 let lemma_factorise a b = ()
 
-#reset-options "--z3timeout 100"
-#set-options "--lax" // OK, but long timeout
+//TMP#reset-options "--z3timeout 100"
+//TMP#set-options "--lax" // OK, but long timeout
 
 val lemma_little_endian_is_bounded: b:word -> Lemma
   (requires (True))
@@ -116,7 +119,7 @@ let rec lemma_little_endian_is_bounded b =
     lemma_factorise 8 (Seq.length b - 1)
   )
 
-#reset-options
+//TMP#reset-options
 
 val lemma_little_endian_lt_2_128: b:word -> Lemma
   (requires (True))
@@ -127,11 +130,11 @@ let lemma_little_endian_lt_2_128 b =
   if Seq.length b = 16 then ()
   else Math.Lib.pow2_increases_lemma 128 (8 * Seq.length b)
 
-(* *********************************************)
-(*        Poly1305 functional invariant        *)
-(* *********************************************)
+(* * *********************************************)
+(* *        Poly1305 functional invariant        *)
+(* * *********************************************)
 
-#reset-options "--initial_fuel 4 --max_fuel 4"
+//TMP#reset-options "--initial_fuel 4 --max_fuel 4"
 
 let lemma_prime_is_greater_than_2_128 (u:unit) : Lemma
   (requires True)
@@ -141,9 +144,9 @@ let lemma_prime_is_greater_than_2_128 (u:unit) : Lemma
     Math.Lib.pow2_increases_lemma 129 128;
     Math.Lib.pow2_increases_lemma 128 3
 
-#reset-options
+//TMP#reset-options
 
-val poly: vs:seq (w:word{Seq.length w = 16}) -> r:elem -> GTot (a:elem) (decreases (Seq.length vs))
+val poly: vs:seq (w:word_16) -> r:elem -> GTot (a:elem) (decreases (Seq.length vs))
 let rec poly vs r =
   if Seq.length vs = 0 then 0
   else (
@@ -158,9 +161,9 @@ let rec poly vs r =
 (*   if Seq.length vs = 0 then 0 *)
 (*   else (little_endian (Seq.index vs 0 @| (Seq.create 1 1uy))) *@ r +@ poly' (Seq.slice vs 1 (Seq.length vs)) r *)
 
-(* *********************************************)
-(*            Encoding functions               *)
-(* *********************************************)
+(* * *********************************************)
+(* *            Encoding functions               *)
+(* * *********************************************)
 let mk_mask (nbits:FStar.UInt32.t{FStar.UInt32.v nbits < 64}) :
   Tot (z:U64.t{v z = pow2 (FStar.UInt32.v nbits) - 1})
   = Math.Lib.pow2_increases_lemma 64 (FStar.UInt32.v nbits);
@@ -266,13 +269,13 @@ let toGroup b s =
 (*   (\* assume (v (get h b 4) < pow2 24); *\) *)
 (*   (\* assume (norm h b) *\) *)
 
-#reset-options "--initial_fuel 6 --max_fuel 6"
+//TMP#reset-options "--initial_fuel 6 --max_fuel 6"
 
 let lemma_bitweight_values (u:unit) : Lemma (bitweight templ 0 = 0 /\ bitweight templ 1 = 26
   /\ bitweight templ 2 = 52 /\ bitweight templ 3 = 78 /\ bitweight templ 4 = 104)
   = ()
 
-#reset-options "--initial_fuel 1 --max_fuel 1"
+//TMP#reset-options "--initial_fuel 1 --max_fuel 1"
 
 val lemma_toGroup_plus_2_128_0: ha:mem -> a:elemB{live ha a} -> Lemma
   (requires (True))
@@ -293,7 +296,7 @@ val lemma_toGroup_plus_2_128_1: unit -> Lemma
 let lemma_toGroup_plus_2_128_1 () =
   Math.Lib.pow2_increases_lemma 64 24
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+//TMP#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 val lemma_toGroup_plus_2_128: ha:mem -> a:elemB -> hb:mem -> b:elemB -> Lemma
   (requires (norm ha a /\ norm hb b /\ v (get hb b 4) < pow2 24
@@ -311,7 +314,7 @@ let lemma_toGroup_plus_2_128 ha a hb b =
   Math.Lib.pow2_exp_lemma 104 24;
   ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+//TMP#reset-options "--initial_fuel 0 --max_fuel 0"
 
 let add_2_24 (x:t{v x < pow2 24}) : Tot (z:t{v z = v x + pow2 24 /\ v z < pow2 26})
   = lemma_toGroup_plus_2_128_1 ();
@@ -321,7 +324,7 @@ let add_2_24 (x:t{v x < pow2 24}) : Tot (z:t{v z = v x + pow2 24 /\ v z < pow2 2
     Math.Lib.pow2_increases_lemma 64 25;
     x +^ (1uL <<^ 24ul)
 
-#reset-options "--z3timeout 50"
+//TMP#reset-options "--z3timeout 50"
 
 (* Formats a wordB into an elemB *)
 val toGroup_plus_2_128: a:elemB -> b:wordB{length b = 16 /\ disjoint a b} -> STL unit
@@ -342,7 +345,7 @@ let toGroup_plus_2_128 b s =
   lemma_upd_quantifiers h0 h1 b 4ul b4';
   lemma_toGroup_plus_2_128 h1 b h0 b
 
-#reset-options
+//TMP#reset-options
 
 val trunc1305: a:elemB -> b:wordB{disjoint a b} -> STL unit
   (requires (fun h -> norm h a /\ live h b /\ disjoint a b))
@@ -417,16 +420,16 @@ let clamp r =
   ()
 
 
-(* *********************************************)
-(*          Encoding-related lemmas            *)
-(* *********************************************)
+(* * *********************************************)
+(* *          Encoding-related lemmas            *)
+(* * *********************************************)
 
 let lemma_little_endian_is_injective_0 (b:word{Seq.length b > 0}) : Lemma
   (requires (True))
   (ensures  (little_endian b = U8.v (Seq.index b 0) + pow2 8 * little_endian (Seq.slice b 1 (Seq.length b)) ))
   = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+//TMP#reset-options "--initial_fuel 0 --max_fuel 0"
 
 (* Lemma unknown to F*, should go into core libraries *)
 assume val lemma_modulo: a:nat -> b:nat -> c:pos -> Lemma
@@ -439,7 +442,7 @@ let lemma_little_endian_is_injective_1 (b:pos) (q:nat) (r:nat) (q':nat) (r':nat)
   = lemma_modulo r q b;
     lemma_modulo r' q' b
 
-#reset-options
+//TMP#reset-options
 
 val lemma_little_endian_is_injective_2: b:word -> len:pos{len <= Seq.length b} -> Lemma
   (requires (True))
@@ -454,7 +457,7 @@ let lemma_little_endian_is_injective_2 b len =
   let s'' = Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) in
   Seq.lemma_eq_intro s' s''
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+//TMP#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 val lemma_little_endian_is_injective_3: b:word -> b':word  -> len:pos{len <= Seq.length b /\ len <= Seq.length b'} -> Lemma
   (requires (Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) == Seq.slice b' (Seq.length b' - (len-1)) (Seq.length b')
@@ -466,7 +469,7 @@ let lemma_little_endian_is_injective_3 b b' len =
   Seq.lemma_eq_intro (Seq.slice b (Seq.length b - len) (Seq.length b))
 		     (Seq.append (Seq.create 1 (Seq.index b (Seq.length b - len))) (Seq.slice b (Seq.length b - (len-1)) (Seq.length b)))
 
-#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 50"
+//TMP#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 50"
 
 val lemma_little_endian_is_injective: b:word -> b':word ->
   len:nat{Seq.length b >= len /\ Seq.length b' >= len} -> Lemma
@@ -495,30 +498,65 @@ let rec lemma_little_endian_is_injective b b' len =
     lemma_little_endian_is_injective_3 b b' len
   )
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+//TMP#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_eucl_div_bound: a:nat -> b:nat -> q:pos -> Lemma
   (requires (a < q))
   (ensures  (a + q * b < q * (b+1)))
 let lemma_eucl_div_bound a b q = ()
 
-#reset-options "--initial_fuel 1 --max_fuel 1"
+//TMP#reset-options "--initial_fuel 1 --max_fuel 1"
 
-val lemma_eval_norm_is_bounded: ha:mem -> a:elemB -> len:pos{len <= norm_length} -> Lemma
+val lemma_bitweight_templ_values: n:nat -> Lemma
+  (requires (True))
+  (ensures  (bitweight templ n = 26 * n))
+let rec lemma_bitweight_templ_values n =
+  if n = 0 then ()
+  else lemma_bitweight_templ_values (n-1)
+
+//TPM#reset-options "--initial_fuel 0 --max_fuel 0"
+
+val lemma_mult_ineq: a:pos -> b:pos -> c:pos -> Lemma
+  (requires (b <= c))
+  (ensures  (a * b <= a * c))
+let lemma_mult_ineq a b c = ()
+
+//TMP#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 50"
+
+val lemma_eval_norm_is_bounded: ha:mem -> a:elemB -> len:nat{len <= norm_length} -> Lemma
   (requires (norm ha a))
   (ensures  (norm ha a /\ eval ha a len < pow2 (26 * len) ))
 let rec lemma_eval_norm_is_bounded ha a len =
-  if len = 1 then (
+  if len = 0 then (
     eval_def ha a len
   )
   else (
-    (* WIP *)
-    admit();
+    cut (len >= 1);
     eval_def ha a len;
-    lemma_bitweight_values ();
+    lemma_bitweight_templ_values (len-1);
     lemma_eval_norm_is_bounded ha a (len-1);
-    lemma_eucl_div_bound (v (get ha a (len-1))) (eval ha a (len-1)) (pow2 (bitweight templ (len-1)))
-  )
+    assert(eval ha a (len-1) < pow2 (26 * (len-1)));
+    assert(pow2 (bitweight templ (len-1)) = pow2 (26 * (len-1)));
+    lemma_eucl_div_bound (eval ha a (len-1)) (v (get ha a (len-1))) (pow2 (bitweight templ (len-1)));
+    assert(eval ha a len < pow2 (26 * (len-1)) * (v (get ha a (len-1)) + 1));
+    lemma_mult_ineq (pow2 (26 * (len-1))) (v (get ha a (len-1))+1) (pow2 26);
+    assert(eval ha a len < pow2 (26 * (len-1)) * pow2 26);
+    Math.Lib.pow2_exp_lemma (26 * (len-1)) 26)
+
+//TMP#reset-options "--initial_fuel 1 --max_fuel 1"
+
+val lemma_elemB_equality: ha:mem -> hb:mem -> a:elemB -> b:elemB -> len:pos{len<=norm_length} -> Lemma
+  (requires (live ha a /\ live hb b
+    /\ Seq.slice (as_seq ha a) 0 (len-1) == Seq.slice (as_seq hb b) 0 (len-1)
+    /\ get ha a (len-1) = get hb b (len-1)))
+  (ensures  (live ha a /\ live hb b /\ Seq.slice (as_seq ha a) 0 len == Seq.slice (as_seq hb b) 0 len))
+let lemma_elemB_equality ha hb a b len =
+  Seq.lemma_eq_intro (Seq.slice (as_seq ha a) 0 len) 
+		     ((Seq.slice (as_seq ha a) 0 (len-1)) @| Seq.create 1 (get ha a (len-1)));
+  Seq.lemma_eq_intro (Seq.slice (as_seq hb b) 0 len) 
+		     ((Seq.slice (as_seq hb b) 0 (len-1)) @| Seq.create 1 (get hb b (len-1)))
+
+//TMP#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 20"
 
 val lemma_toGroup_is_injective_0: ha:mem -> hb:mem -> a:elemB -> b:elemB -> len:nat{len <= norm_length} -> Lemma
   (requires (norm ha a /\ norm hb b /\ eval ha a len = eval hb b len))
@@ -526,76 +564,97 @@ val lemma_toGroup_is_injective_0: ha:mem -> hb:mem -> a:elemB -> b:elemB -> len:
     /\ Seq.length (as_seq ha a) >= len /\ Seq.length (as_seq hb b) >= len
     /\ Seq.slice (as_seq ha a) 0 len == Seq.slice (as_seq hb b) 0 len))
 let rec lemma_toGroup_is_injective_0 ha hb a b len =
-  admit()
-  (* if len = 0 then Seq.lemma_eq_intro (Seq.slice (as_seq ha a) 0 len) (Seq.slice (as_seq hb b) 0 len) *)
-  (* else ( *)
-  (*   eval_def ha a len; eval_def hb b len; *)
-  (*   lemma_little_endian_is_injective_1 (pow2 (bitweight n-1)) *)
-  (* ) *)
+  if len = 0 then (
+    admit();
+    Seq.lemma_eq_intro (Seq.slice (as_seq ha a) 0 len) (Seq.slice (as_seq hb b) 0 len)
+  )
+  else (
+    eval_def ha a len; eval_def hb b len;
+    lemma_eval_norm_is_bounded ha a (len-1);
+    lemma_eval_norm_is_bounded hb b (len-1);
+    let z = pow2 (26 * (len-1)) in
+    let r = eval ha a (len-1) in
+    let r' = eval hb b (len-1) in
+    let q = v (get ha a (len-1)) in
+    let q' = v (get hb b (len-1)) in
+    lemma_bitweight_templ_values (len-1);
+    lemma_little_endian_is_injective_1 z q r q' r';
+    assert(r = r' /\ q = q');
+    assert(get ha a (len-1) = get hb b (len-1));
+    lemma_toGroup_is_injective_0 ha hb a b (len-1);
+    lemma_elemB_equality ha hb a b len)
+
+//TMP#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_toGroup_is_injective: ha:mem -> hb:mem -> a:elemB -> b:elemB ->
-  Lemma (requires (norm ha a /\ norm hb b /\ sel_int ha a = sel_int hb b))
-	(ensures  (as_seq ha a == as_seq hb b))
+  Lemma (requires (norm ha a /\ norm hb b /\ sel_int ha a = sel_int hb b
+    /\ length a = norm_length /\ length b = norm_length ))
+	(ensures  (norm ha a /\ norm hb b /\ as_seq ha a == as_seq hb b))
 let lemma_toGroup_is_injective ha hb a b =
-  (* TODO *)
-  admit()
+  lemma_toGroup_is_injective_0 ha hb a b norm_length;
+  assert(Seq.length (as_seq ha a) = norm_length);
+  assert(Seq.length (as_seq hb b) = norm_length);
+  Seq.lemma_eq_intro (Seq.slice (as_seq ha a) 0 norm_length) (as_seq ha a);
+  Seq.lemma_eq_intro (Seq.slice (as_seq hb b) 0 norm_length) (as_seq hb b)
 
 
-(* *********************************************)
-(*        Polynomial computation step          *)
-(* *********************************************)
-(* Runs "Acc = ((Acc+block)*r) % p." on the accumulator, the well formatted block of the message
-   and the clamped part of the key *)
+(* * ******************************************** *)
+(* *        Polynomial computation step           *)
+(* * ******************************************** *)
+
+//TMP#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
+(** 
+    Runs "Acc = ((Acc+block)*r) % p." on the accumulator, the well formatted block of the message
+    and the clamped part of the key 
+    *)
 val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block} -> r:elemB{disjoint acc r /\ disjoint block r} -> STL unit
   (requires (fun h -> norm h acc /\ norm h block /\ norm h r))
   (ensures (fun h0 _ h1 -> norm h0 acc /\ norm h0 block /\ norm h0 r
     /\ norm h1 acc // the accumulation is back in a workable states
     /\ modifies_1 acc h0 h1 // It was the only thing modified
     /\ sel_elem h1 acc = (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r // Functional
-						// specification of the operation at that step
+    						// specification of the operation at that step
     ))
 let add_and_multiply acc block r =
-  (* let hinit = HST.get() in *)
+  let hinit = HST.get() in
   push_frame();
-  (* let h0 = HST.get() in *)
-  (* eq_lemma_fresh hinit h0 acc; *)
-  (* eq_lemma_fresh hinit h0 block; *)
-  (* eq_lemma_fresh hinit h0 r; *)
-  fsum' acc block;
-  (* let h1 = HST.get() in *)
-  (* assert(modifies_1 acc h0 h1); *)
+  let h0 = HST.get() in
   let tmp = create 0UL (U32.mul 2ul nlength-|1ul) in
-  (* let h2 = HST.get() in *)
-  (* assert (modifies_0 h1 h2); *)
-  (* lemma_modifies_1_0 acc h0 h1 h2; *)
-  (* assert(modifies_2_1 acc h0 h2); (\* WIP *\) *)
-  (* cut (forall (i:nat). {:pattern (v (get h2 acc i))} i < norm_length ==> v (get h2 acc i) = v (get h1 acc i)); *)
-  (* cut (forall (i:nat). {:pattern (v (get h1 acc i))} i < norm_length ==> v (get h1 acc i) = v (get h0 acc (i+0)) + v (get h0 block (i+0))); *)
-  (* cut (forall (i:nat). {:pattern (v (get h0 acc i))} i < norm_length ==> v (get h0 acc i) < pow2 26);  *)
-  (* cut (forall (i:nat). {:pattern (v (get h0 block i))} i < norm_length ==> v (get h0 block i) < pow2 26); *)
-  (* Math.Lemmas.pow2_double_sum 26; *)
-  (* cut (forall (i:nat). {:pattern (v (get h2 acc i))} i < norm_length ==> v (get h2 acc i) < pow2 27); *)
-  (* cut (bound27 h2 acc);  *)
-  (* eq_lemma_1 h0 h2 acc r; *)
-  (* cut (null h2 tmp);  *)
+  let h1 = HST.get() in
+  assert(modifies_0 h0 h1);
+     (* TODO *)
+     assume (norm h1 acc /\ norm h1 block);
+  fsum' acc block;
+  let h2 = HST.get() in
+  assert(modifies_2_1 acc h0 h2);
+    (* TODO *)
+    assume (norm h2 r);
+    assume (bound27 h2 acc);
   multiplication tmp acc r;
-  (* let h3 = HST.get() in *)
-  (* satisfies_constraints_after_multiplication h3 tmp; *)
+  let h3 = HST.get() in
+  assert(modifies_2_1 acc h0 h3);
+    (* TODO *)
+    assume (live h3 tmp /\ satisfiesModuloConstraints h3 tmp);
   modulo tmp;
-  (* let h4 = HST.get() in *)
+  let h4 = HST.get() in
+  assert(modifies_2_1 acc h0 h4);
+    (* TODO *)
+    assume (live h4 tmp /\ live h4 acc);
   blit tmp 0ul acc 0ul nlength;
-  (* let h5 = HST.get() in *)
-  (* cut (modifies_1 acc h0 h5);  *)
-  (* cut (forall (i:nat). {:pattern (v (get h5 acc i))} i < norm_length ==> v (get h5 acc (0+i)) = v (get h4 tmp (0+i)));  *)
-  (* cut (norm h5 acc);  *)
-  (* eval_eq_lemma h4 h5 tmp acc norm_length; *)
-  (* eval_eq_lemma h1 h2 acc acc norm_length; *)
-  (* eval_eq_lemma h0 h2 r r norm_length; *)
-  pop_frame()(* ; *)
-  (* let hfin = HST.get() in *)
-  (* admit() *)
+  let h5 = HST.get() in
+  pop_frame();
+  let hfin = HST.get() in
+  assert(modifies_1 acc hinit hfin);
+    (* TODO *)
+    assume (norm hfin acc);
+    assume (sel_elem hfin acc = (sel_elem hinit acc +@ sel_elem hinit block) *@ sel_elem hinit r)
 
-(* Sets the accumulator to the value '0' *)
+//TMP#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
+(**
+   Sets the accumulator to the value '0' 
+   *)
 val zeroB: a:elemB -> STL unit
   (requires (fun h -> live h a))
   (ensures  (fun h0 _ h1 -> norm h1 a /\ modifies_1 a h0 h1
@@ -605,7 +664,11 @@ let zeroB a =
   upd a 1ul 0UL;
   upd a 2ul 0UL;
   upd a 3ul 0UL;
-  upd a 4ul 0UL
+  upd a 4ul 0UL;
+  let h = HST.get() in
+  Crypto.Symmetric.Poly1305.Bigint.eval_null h a norm_length
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 (* Initialization function:
    - zeros the accumulator
@@ -617,10 +680,11 @@ val poly1305_init: acc:elemB -> // Accumulator
   STL (erased log)
   (requires (fun h -> live h acc /\ live h r /\ live h key))
   (ensures  (fun h0 log h1 -> norm h1 acc /\ norm h1 r /\ modifies_2 acc r h0 h1
-    /\ reveal log = (Seq.createEmpty #word)
+    /\ reveal log == (Seq.createEmpty #word_16)
     /\ sel_elem h1 acc = poly (reveal log) (sel_elem h1 r) // Poly invariant
     ))
 let poly1305_init acc r key =
+  let hinit = HST.get() in
   push_frame();
   (* Zero the accumulator *)
   zeroB acc;
@@ -634,19 +698,33 @@ let poly1305_init acc r key =
   (* Format r to elemB *)
   toGroup r r'';
   pop_frame();
-  hide (Seq.createEmpty #word)
+  let hfin = HST.get() in
+  let log = hide (Seq.createEmpty #word_16) in
+  assert(reveal log == Seq.createEmpty #word_16);
+    (* TODO *)
+    assume (norm hfin r);
+    assume (norm hfin acc);
+    assume (sel_elem hfin acc = poly (reveal log) (sel_elem hfin r));
+    assume (modifies_2 acc r hinit hfin);
+    assume (equal_domains hinit hfin);
+  log
+
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val update_log:
-  l:(* erased  *)log ->
-  msg:(* erased  *)word{Seq.length ((* reveal  *)msg) = 16} ->
-  Tot (l':(* erased  *)log{(* reveal  *)l' == ((* reveal  *)l @| Seq.create 1 ((* reveal  *)msg))})
+  l:log ->
+  msg:word{Seq.length (msg) = 16} ->
+  Tot (l':log{l' == (l @| Seq.create 1 (msg))})
 let update_log l msg = (l @| Seq.create 1 msg)
-  (* elift2 (fun l msg ->  (l @| Seq.create 1 msg)) l msg *)
 
-(* Update function:
+(* WIP *)
+
+(**
+   Update function:
    - takes a ghost log
    - takes a message block, appends '1' to it and formats it to bigint format
-   - runs acc = ((acc*block)+r) % p *)
+   - runs acc = ((acc*block)+r) % p 
+   *)
 val poly1305_update:
   current_log:erased log ->
   msg:wordB ->
