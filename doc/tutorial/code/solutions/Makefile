@@ -2,32 +2,32 @@ FSTAR_HOME=../../../..
 include ../Makefile.include
 
 EXERCISES =\
-  ex1a-safe-read-write\
-  ex2a-can-read-write-types\
-  ex3a-factorial-types\
-  ex3b-fibonacci\
-  ex3c-fibonacci\
-  ex4a-append-intrinsic\
-  ex4b-append-extrinsic\
-  ex4c-mem\
-  ex4d-reverse\
-  ex4e-find\
-  ex4f-fold-left\
-  ex4g-hd-tl\
-  ex4h-nth\
-  ex5a-rev\
-  ex5b-fib\
-  ex6a-partition\
-  ex6e-insertion-sort\
-  ex7a-stlc-typed-step\
-  ex7b-stlc-pairs\
-  ex7c-stlc-let\
-  ex7d-stlc-eval\
+  ex01a-safe-read-write\
+  ex02a-can-read-write-types\
+  ex03a-factorial-types\
+  ex03b-fibonacci\
+  ex03c-fibonacci\
+  ex04a-append-intrinsic\
+  ex04b-append-extrinsic\
+  ex04c-mem\
+  ex04d-reverse\
+  ex04e-find\
+  ex04f-fold-left\
+  ex04g-hd-tl\
+  ex04h-nth\
+  ex05a-rev\
+  ex05b-fib\
+  ex06a-partition\
+  ex06e-insertion-sort\
+  ex07a-stlc-typed-step\
+  ex07b-stlc-pairs\
+  ex07c-stlc-let\
+  ex07d-stlc-eval\
   ex10a-acls\
   ex10-shift\
 # Files currently not compiling
-#  ex6b-sort-poly\
-   ex6d-no-discard\
+#  ex06b-sort-poly\
+   ex06d-no-discard\
 
 verify-%: __force__
 	$(FSTAR) --stratified $*.fst
