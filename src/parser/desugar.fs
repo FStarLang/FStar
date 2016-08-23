@@ -1524,6 +1524,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     DesugarEnv.push_module_abbrev env x l, []
 
   | Tycon(qual, tcs) ->
+    let tcs = List.map (fun (x,_) -> x) tcs in
     desugar_tycon env d.drange (trans_quals qual) tcs
 
   | ToplevelLet(quals, isrec, lets) ->

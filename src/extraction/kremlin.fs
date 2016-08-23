@@ -48,8 +48,8 @@ and expr =
   | EIfThenElse of expr * expr * expr * typ
   | ESequence of list<expr>
   | EAssign of expr * expr
-    (** left expression can only be a EBound of EOpen *)
-  | EBufCreate of expr * expr
+  | (** left expression can only be a EBound of EOpen *)
+    EBufCreate of expr * expr
   | EBufRead of expr * expr
   | EBufWrite of expr * expr * expr
   | EBufSub of expr * expr
@@ -93,8 +93,8 @@ and width =
 
 and constant = width * string
 
-and var =
-  int (** a De Bruijn index *)
+(** a De Bruijn index *)
+and var = int 
 
 and binder = {
   name: ident;
@@ -108,8 +108,8 @@ and binder = {
 and meta =
   | MetaSequence
 
-and ident =
-  string (** for pretty-printing *)
+(* for pretty-printing *)
+and ident = string
 
 and lident =
   list<ident> * ident

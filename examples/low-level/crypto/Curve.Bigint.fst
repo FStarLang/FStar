@@ -17,7 +17,7 @@ let u64  = UInt64.t
 let u128 = UInt128.t
 let heap = HyperStack.mem
 
-(*** Types ***) 
+(* * Types ***) 
 
 (* Maps the index of the integer data to the theoretic bit size of the cell *)
 let template : Type = (nat -> Tot pos)

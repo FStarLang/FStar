@@ -4,20 +4,20 @@ module Crypto.Symmetric.Poly1305
 open FStar.Mul
 open FStar.Ghost
 open FStar.Seq
-(** Machine integers *)
+(*  Machine integers *)
 open FStar.UInt8
 open FStar.UInt64
 open FStar.Int.Cast
-(** Effects and memory layout *)
+(*  Effects and memory layout *)
 open FStar.HyperStack
 open FStar.HST
-(** Buffers *)
+(*  Buffers *)
 open FStar.Buffer
-(** Mathematical definitions *)
+(*  Mathematical definitions *)
 open Math.Axioms
 open Math.Lib
 open Math.Lemmas
-(** Helper functions for buffers *)
+(*  Helper functions for buffers *)
 open Buffer.Utils
 open FStar.Buffer.Quantifiers
 
@@ -34,9 +34,9 @@ module HS = FStar.HyperStack
 (* Poly1305 prime *)
 let p_1305 () = reveal prime
 
-(** *********************************************)
-(**            Type definitions                 *)
-(** *********************************************)
+(* *********************************************)
+(*            Type definitions                 *)
+(* *********************************************)
 type elem = n:nat{n < p_1305()} // Element of the group Z/p_1305.Z
 type elemB = bigint        // Mutable big integer representation (5 64-bit limbs)
 
@@ -47,9 +47,9 @@ type wordB = b:bytes{length b <= 16}  // Concrete (mutable) representation of th
 type log = seq (w:word{Seq.length w = 16})
 
 
-(** *********************************************)
-(**            Group operators                  *)
-(** *********************************************)
+(*  *********************************************)
+(*             Group operators                  *)
+(*  *********************************************)
 val group_add: elem -> elem -> GTot elem
 let group_add a b = (a + b) % p_1305 ()
 val group_mul: elem -> elem -> GTot elem
@@ -59,9 +59,9 @@ let op_Plus_At = group_add
 let op_Star_At = group_mul
 
 
-(** *********************************************)
-(**  Mappings from stateful types to pure types *)
-(** *********************************************)
+(*  *********************************************)
+(*   Mappings from stateful types to pure types *)
+(*  *********************************************)
 (* From the current memory state, returns the word corresponding to a wordB *)
 let sel_word (h:mem) (b:wordB{live h b}) : GTot word
   = as_seq h b
@@ -127,9 +127,9 @@ let lemma_little_endian_lt_2_128 b =
   if Seq.length b = 16 then ()
   else Math.Lib.pow2_increases_lemma 128 (8 * Seq.length b)
 
-(** *********************************************)
-(**        Poly1305 functional invariant        *)
-(** *********************************************)
+(* *********************************************)
+(*        Poly1305 functional invariant        *)
+(* *********************************************)
 
 #reset-options "--initial_fuel 4 --max_fuel 4"
 
@@ -158,9 +158,9 @@ let rec poly vs r =
 (*   if Seq.length vs = 0 then 0 *)
 (*   else (little_endian (Seq.index vs 0 @| (Seq.create 1 1uy))) *@ r +@ poly' (Seq.slice vs 1 (Seq.length vs)) r *)
 
-(** *********************************************)
-(**            Encoding functions               *)
-(** *********************************************)
+(* *********************************************)
+(*            Encoding functions               *)
+(* *********************************************)
 let mk_mask (nbits:FStar.UInt32.t{FStar.UInt32.v nbits < 64}) :
   Tot (z:U64.t{v z = pow2 (FStar.UInt32.v nbits) - 1})
   = Math.Lib.pow2_increases_lemma 64 (FStar.UInt32.v nbits);
@@ -417,9 +417,9 @@ let clamp r =
   ()
 
 
-(** *********************************************)
-(**          Encoding-related lemmas            *)
-(** *********************************************)
+(* *********************************************)
+(*          Encoding-related lemmas            *)
+(* *********************************************)
 
 let lemma_little_endian_is_injective_0 (b:word{Seq.length b > 0}) : Lemma
   (requires (True))
@@ -541,9 +541,9 @@ let lemma_toGroup_is_injective ha hb a b =
   admit()
 
 
-(** *********************************************)
-(**        Polynomial computation step          *)
-(** *********************************************)
+(* *********************************************)
+(*        Polynomial computation step          *)
+(* *********************************************)
 (* Runs "Acc = ((Acc+block)*r) % p." on the accumulator, the well formatted block of the message
    and the clamped part of the key *)
 val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block} -> r:elemB{disjoint acc r /\ disjoint block r} -> STL unit

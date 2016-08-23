@@ -81,16 +81,16 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   let r     = create 0UL 5ul  in (* First half of poly's key, will be removed (merged with otk) *)
 (*  let s     = create 0UL 5ul  in (\* Second half of poly's key, will be removed (merged with otk) *\) *)
 
-  (** Create OTK, using round '0' of Chacha20 *)
+  (*  Create OTK, using round '0' of Chacha20 *)
   let counter = 0ul in
   chacha20_init state key counter iv constant;
   chacha20_update otk state 32ul;
 
-  (** Encryption of the plaintext, using Chacha20, counter at 1 *)
+  (*  Encryption of the plaintext, using Chacha20, counter at 1 *)
   let counter = 1ul in
   chacha20_encrypt ciphertext key counter iv constant plaintext len;
 
-  (** MACing of the additional data, the ciphertext and the padding *)
+  (*  MACing of the additional data, the ciphertext and the padding *)
   (* Compute the padding lengths *)
   let max = UInt32.div len 16ul in
   let rem = UInt32.rem len 16ul in

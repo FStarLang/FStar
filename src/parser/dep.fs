@@ -319,6 +319,7 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
         collect_term t0; 
         collect_term t1
     | Tycon (_, ts) ->
+        let ts = List.map (fun (x,doc) -> x) ts in
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term

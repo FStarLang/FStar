@@ -22,9 +22,9 @@ module HS = FStar.HyperStack
 
 //#set-options "--lax"
 
-(****************************************)
+(* **************************************)
 (*    Auxiliary lemmas and functions    *)
-(****************************************)
+(* **************************************)
 val max_value_increases: h:heap -> b:bigint{live h b} -> n:pos -> m:pos{m>=n /\ m <= length b} -> Lemma
   (maxValue h b n <= maxValue h b m)
 let rec max_value_increases h b n m =

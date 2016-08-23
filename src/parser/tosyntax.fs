@@ -1395,7 +1395,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
         env, List.hd ses::out) (env, []) in
     let binders = Subst.close_binders binders in
     let actions = actions |> List.map (fun d -> match d.d with 
-        | Tycon(_, [TyconAbbrev(name, _, _, { tm = Construct (_, [ def, _; cps_type, _ ])})]) when not for_free ->
+        | Tycon(_, [TyconAbbrev(name, _, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), _]) when not for_free ->
             // When the effect is not for free, user has to provide a pair of
             // the definition and it's cps'd type.
             {
@@ -1404,7 +1404,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
               action_defn=Subst.close binders (desugar_term env def);
               action_typ=Subst.close binders (desugar_typ env cps_type)
             }
-        | Tycon(_, [TyconAbbrev(name, _, _, defn)]) when for_free -> 
+        | Tycon(_, [TyconAbbrev(name, _, _, defn), _]) when for_free -> 
             // When for free, the user just provides the definition and the rest
             // is elaborated
             {
@@ -1508,6 +1508,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     Env.push_module_abbrev env x l, []
 
   | Tycon(qual, tcs) ->
+    let tcs = List.map (fun (x,_) -> x) tcs in
     desugar_tycon env d.drange (List.map trans_qual qual) tcs
 
   | ToplevelLet(quals, isrec, lets) ->

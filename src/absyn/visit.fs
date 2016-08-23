@@ -86,9 +86,9 @@ let right ext benv bvv = match ext benv (Inr bvv) with
   | benv, Inr bvd -> benv, bvd
   | _ -> failwith "impossible"
 
-(*************************************************************************************)
+(* ************************************************************************************)
 (* A general way of reducing types. *)
-(*************************************************************************************)
+(* ************************************************************************************)
 type boundvar = either<btvdef, bvvdef>
 type boundvars = list<boundvar>
 type imap<'env, 'm> = 'env -> boundvars -> 'm -> ('m * 'env)

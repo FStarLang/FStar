@@ -275,6 +275,12 @@ rule token = parse
  | (integer | xinteger | float) ident_char+
      { failwith "This is not a valid numeric literal." }
 
+ | "(*" '*'* "*)"
+     { token lexbuf }
+
+ | "(**"
+     { fsdoc (1,"",[]) lexbuf}
+
  | "(*"
      { comment false lexbuf }
 
@@ -446,7 +452,7 @@ and fsdoc_kw cargs = parse
  | ['a'-'z' 'A'-'Z']+
      { let n,doc,kw = cargs in
 	   fsdoc_kw_arg(n,doc,kw,L.lexeme lexbuf,"") lexbuf }
- | _ { fail lexbuf "Invalid FSDoc keyword" EOF }
+ | _ { failwith "Invalid FSDoc keyword, use \\@ if a line starts with an @ sign" }
 
 and fsdoc_kw_arg cargs = parse
  | newline

@@ -48,7 +48,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "typechecker", "..\typecheck
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "smtencoding", "..\smtencoding\smtencoding.fsproj", "{F6879027-A97F-4857-8F52-CC5641455652}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fsdoc", "fsdoc\fsdoc.fsproj", "{A2300238-CC63-4651-922E-88E7C0201BC9}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fsdoc", "..\fsdoc\fsdoc.fsproj", "{A2300238-CC63-4651-922E-88E7C0201BC9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

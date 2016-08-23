@@ -14,7 +14,7 @@
     <Name>parser</Name>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\VS\</SolutionDir>
-    <RestorePackages>false</RestorePackages>
+    <RestorePackages>true</RestorePackages>
     <NuGetPackageImportStamp>7fc78bb6</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -71,7 +71,7 @@
   <Import Project="$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets" Condition="Exists('$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets')" />
   <ItemGroup>
     <FsYacc Include="parse.fsy">
-      <OtherFlags>--module FStar.Parser.Parse</OtherFlags>
+      <OtherFlags>--module FStar.Parser.Parse --open FStar.Parser.AST</OtherFlags>
     </FsYacc>
     <FsLex Include="lex.fsl">
       <OtherFlags>--unicode</OtherFlags>

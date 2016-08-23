@@ -166,7 +166,7 @@ type decl' =
   | ToplevelLet of qualifiers * let_qualifier * list<(pattern * term)>
   | Main of term
   | Assume of qualifiers * ident * term
-  | Tycon of qualifiers * list<tycon>
+  | Tycon of qualifiers * list<(tycon * option<fsdoc>)>
   | Val of qualifiers * ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
   | NewEffect of qualifiers * effect_decl
@@ -454,7 +454,7 @@ let decl_to_string (d:decl) = match d.d with
   | ToplevelLet(_, _, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
   | Main _ -> "main ..."
   | Assume(_, i, _) -> "assume " ^ i.idText
-  | Tycon(_, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
+  | Tycon(_, tys) -> "type " ^ (tys |> List.map (fun (x,_)->id_of_tycon x) |> String.concat ", ")
   | Val(_, i, _) -> "val " ^ i.idText
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(_, DefineEffect(i, _, _, _, _))

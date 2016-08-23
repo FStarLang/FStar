@@ -2,23 +2,23 @@ module Crypto.Symmetric.Chacha20
 
 open FStar.Mul
 open FStar.Ghost
-(** Machine integers *)
+(*  Machine integers *)
 open FStar.UInt8
 open FStar.UInt32
 open FStar.Int.Cast
-(** Effects and memory layout *)
+(*  Effects and memory layout *)
 open FStar.HyperStack
 open FStar.HST
-(** Buffers *)
+(*  Buffers *)
 open FStar.Buffer
 open Buffer.Utils
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-(****************************************)
-(*             Chacha 20 code           *)
-(****************************************)
+(* ************************************* *)
+(*             Chacha 20 code            *)
+(* ************************************* *)
 val quarter_round: m:uint32s{length m = 16} -> 
   a:u32{v a < 16} -> b:u32{v b<16} -> c:u32{v c<16} -> d:u32{v d<16} -> STL unit 
   (requires (fun h -> live h m)) 

@@ -100,7 +100,7 @@ let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
 
     let is_type x d = match d.d with 
         | Tycon(_, tys) -> 
-          tys |> Util.for_some (fun t -> id_of_tycon t = x.idText)
+          tys |> Util.for_some (fun (t,_) -> id_of_tycon t = x.idText)
         | _ -> false in
 
     //is d of of the form 'let x = ...' or 'type x = ...'
@@ -108,7 +108,8 @@ let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
         | ToplevelLet(_, _, defs) -> 
           lids_of_let defs |> Util.for_some (id_eq_lid x)
         | Tycon(_, tys) ->
-          tys |> Util.for_some (function 
+          tys |> List.map (fun (x,_) -> x)
+            |> Util.for_some (function 
             | TyconAbbrev(id', _, _, _) -> x.idText = id'.idText
             | _ -> false) 
         | _ -> false in
@@ -121,7 +122,7 @@ let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
             | [] -> (List.rev out |> List.flatten) @ impl
             | d::ds -> 
               match d.d with
-                | Tycon(_, tys) when (tys |> Util.for_some (function TyconAbstract _  -> true | _ -> false)) -> 
+                | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) -> 
                   raise (Error("Interface contains an abstract 'type' declaration; use 'val' instead", d.drange))
 
                 | Val(qs, x, t) ->  //we have a 'val x' in the interface
