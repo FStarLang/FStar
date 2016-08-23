@@ -1611,12 +1611,15 @@ in (let _173_699 = (translate_expr env e5)
 in ((_173_703), (_173_702), (_173_701), (_173_700), (_173_699)))))))
 in EBufBlit (_173_704))
 end
-| FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (("FStar")::(m)::[], op); FStar_Extraction_ML_Syntax.mlty = _80_806; FStar_Extraction_ML_Syntax.loc = _80_804}, args) when ((is_machine_int m) && (is_op op)) -> begin
+| FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (p); FStar_Extraction_ML_Syntax.mlty = _80_806; FStar_Extraction_ML_Syntax.loc = _80_804}, (_80_811)::[]) when ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.HST.get") -> begin
+ECast (((EConstant (((UInt8), ("0")))), (TAny)))
+end
+| FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (("FStar")::(m)::[], op); FStar_Extraction_ML_Syntax.mlty = _80_818; FStar_Extraction_ML_Syntax.loc = _80_816}, args) when ((is_machine_int m) && (is_op op)) -> begin
 (let _173_706 = (FStar_Util.must (mk_width m))
 in (let _173_705 = (FStar_Util.must (mk_op op))
 in (mk_op_app env _173_706 _173_705 args)))
 end
-| FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (("Prims")::[], op); FStar_Extraction_ML_Syntax.mlty = _80_820; FStar_Extraction_ML_Syntax.loc = _80_818}, args) when (is_bool_op op) -> begin
+| FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (("Prims")::[], op); FStar_Extraction_ML_Syntax.mlty = _80_832; FStar_Extraction_ML_Syntax.loc = _80_830}, args) when (is_bool_op op) -> begin
 (let _173_707 = (FStar_Util.must (mk_bool_op op))
 in (mk_op_app env Bool _173_707 args))
 end
@@ -1625,7 +1628,7 @@ end
 in ((_173_708), (c)))
 in EConstant (_173_709))
 end
-| FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (("FStar")::("Int")::("Cast")::[], c); FStar_Extraction_ML_Syntax.mlty = _80_879; FStar_Extraction_ML_Syntax.loc = _80_877}, (arg)::[]) -> begin
+| FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (("FStar")::("Int")::("Cast")::[], c); FStar_Extraction_ML_Syntax.mlty = _80_891; FStar_Extraction_ML_Syntax.loc = _80_889}, (arg)::[]) -> begin
 if (FStar_Util.ends_with c "uint64") then begin
 (let _173_711 = (let _173_710 = (translate_expr env arg)
 in ((_173_710), (TInt (UInt64))))
@@ -1677,7 +1680,7 @@ end
 end
 end
 end
-| FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (path, function_name); FStar_Extraction_ML_Syntax.mlty = _80_895; FStar_Extraction_ML_Syntax.loc = _80_893}, args) -> begin
+| FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (path, function_name); FStar_Extraction_ML_Syntax.mlty = _80_907; FStar_Extraction_ML_Syntax.loc = _80_905}, args) -> begin
 (let _173_728 = (let _173_727 = (FStar_List.map (translate_expr env) args)
 in ((EQualified (((path), (function_name)))), (_173_727)))
 in EApp (_173_728))
@@ -1688,9 +1691,9 @@ in (let _173_729 = (translate_type env t_to)
 in ((_173_730), (_173_729))))
 in ECast (_173_731))
 end
-| FStar_Extraction_ML_Syntax.MLE_Record (_80_910, fields) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Record (_80_922, fields) -> begin
 (let _173_736 = (let _173_735 = (assert_lid e.FStar_Extraction_ML_Syntax.mlty)
-in (let _173_734 = (FStar_List.map (fun _80_916 -> (match (_80_916) with
+in (let _173_734 = (FStar_List.map (fun _80_928 -> (match (_80_928) with
 | (field, expr) -> begin
 (let _173_733 = (translate_expr env expr)
 in ((field), (_173_733)))
@@ -1704,54 +1707,54 @@ in (let _173_737 = (translate_expr env e)
 in ((_173_738), (_173_737), ((Prims.snd path)))))
 in EField (_173_739))
 end
-| FStar_Extraction_ML_Syntax.MLE_Let (_80_922) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Let (_80_934) -> begin
 (FStar_All.failwith "todo: translate_expr [MLE_Let]")
 end
-| FStar_Extraction_ML_Syntax.MLE_App (head, _80_926) -> begin
+| FStar_Extraction_ML_Syntax.MLE_App (head, _80_938) -> begin
 (let _173_741 = (let _173_740 = (FStar_Extraction_ML_Code.string_of_mlexpr (([]), ("")) head)
 in (FStar_Util.format1 "todo: translate_expr [MLE_App] (head is: %s)" _173_740))
 in (FStar_All.failwith _173_741))
 end
-| FStar_Extraction_ML_Syntax.MLE_Fun (_80_930) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Fun (_80_942) -> begin
 (FStar_All.failwith "todo: translate_expr [MLE_Fun]")
 end
-| FStar_Extraction_ML_Syntax.MLE_CTor (_80_933) -> begin
+| FStar_Extraction_ML_Syntax.MLE_CTor (_80_945) -> begin
 (FStar_All.failwith "todo: translate_expr [MLE_CTor]")
 end
 | FStar_Extraction_ML_Syntax.MLE_Seq (seqs) -> begin
 (let _173_742 = (FStar_List.map (translate_expr env) seqs)
 in ESequence (_173_742))
 end
-| FStar_Extraction_ML_Syntax.MLE_Tuple (_80_938) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Tuple (_80_950) -> begin
 (FStar_All.failwith "todo: translate_expr [MLE_Tuple]")
 end
-| FStar_Extraction_ML_Syntax.MLE_If (_80_941) -> begin
+| FStar_Extraction_ML_Syntax.MLE_If (_80_953) -> begin
 (FStar_All.failwith "todo: translate_expr [MLE_If]")
 end
-| FStar_Extraction_ML_Syntax.MLE_Raise (_80_944) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Raise (_80_956) -> begin
 (FStar_All.failwith "todo: translate_expr [MLE_Raise]")
 end
-| FStar_Extraction_ML_Syntax.MLE_Try (_80_947) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Try (_80_959) -> begin
 (FStar_All.failwith "todo: translate_expr [MLE_Try]")
 end
-| FStar_Extraction_ML_Syntax.MLE_Coerce (_80_950) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Coerce (_80_962) -> begin
 (FStar_All.failwith "todo: translate_expr [MLE_Coerce]")
 end))
 and assert_lid : FStar_Extraction_ML_Syntax.mlty  ->  lident = (fun t -> (match (t) with
 | FStar_Extraction_ML_Syntax.MLTY_Named ([], lid) -> begin
 lid
 end
-| _80_958 -> begin
+| _80_970 -> begin
 (FStar_All.failwith "invalid argument: assert_lid")
 end))
 and translate_branches : env  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlbranch Prims.list  ->  branches = (fun env t_scrut branches -> (FStar_List.map (translate_branch env t_scrut) branches))
-and translate_branch : env  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlbranch  ->  (pattern * expr) = (fun env t_scrut _80_967 -> (match (_80_967) with
+and translate_branch : env  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlbranch  ->  (pattern * expr) = (fun env t_scrut _80_979 -> (match (_80_979) with
 | (pat, guard, expr) -> begin
 if (guard = None) then begin
 (
-# 590 "FStar.Extraction.Kremlin.fst"
-let _80_970 = (translate_pat env t_scrut pat)
-in (match (_80_970) with
+# 597 "FStar.Extraction.Kremlin.fst"
+let _80_982 = (translate_pat env t_scrut pat)
+in (match (_80_982) with
 | (env, pat) -> begin
 (let _173_750 = (translate_expr env expr)
 in ((pat), (_173_750)))
@@ -1767,9 +1770,9 @@ end
 | FStar_Extraction_ML_Syntax.MLP_Const (FStar_Extraction_ML_Syntax.MLC_Bool (b)) -> begin
 ((env), (PBool (b)))
 end
-| FStar_Extraction_ML_Syntax.MLP_Var (name, _80_981) -> begin
+| FStar_Extraction_ML_Syntax.MLP_Var (name, _80_993) -> begin
 (
-# 602 "FStar.Extraction.Kremlin.fst"
+# 609 "FStar.Extraction.Kremlin.fst"
 let env = (extend env name false)
 in (let _173_758 = (let _173_757 = (let _173_756 = (translate_type env t)
 in (let _173_755 = (FStar_ST.alloc 0)
@@ -1781,19 +1784,19 @@ end
 | FStar_Extraction_ML_Syntax.MLP_Wild -> begin
 (FStar_All.failwith "todo: translate_pat [MLP_Wild]")
 end
-| FStar_Extraction_ML_Syntax.MLP_Const (_80_987) -> begin
+| FStar_Extraction_ML_Syntax.MLP_Const (_80_999) -> begin
 (FStar_All.failwith "todo: translate_pat [MLP_Const]")
 end
-| FStar_Extraction_ML_Syntax.MLP_CTor (_80_990) -> begin
+| FStar_Extraction_ML_Syntax.MLP_CTor (_80_1002) -> begin
 (FStar_All.failwith "todo: translate_pat [MLP_CTor]")
 end
-| FStar_Extraction_ML_Syntax.MLP_Branch (_80_993) -> begin
+| FStar_Extraction_ML_Syntax.MLP_Branch (_80_1005) -> begin
 (FStar_All.failwith "todo: translate_pat [MLP_Branch]")
 end
-| FStar_Extraction_ML_Syntax.MLP_Record (_80_996) -> begin
+| FStar_Extraction_ML_Syntax.MLP_Record (_80_1008) -> begin
 (FStar_All.failwith "todo: translate_pat [MLP_Record]")
 end
-| FStar_Extraction_ML_Syntax.MLP_Tuple (_80_999) -> begin
+| FStar_Extraction_ML_Syntax.MLP_Tuple (_80_1011) -> begin
 (FStar_All.failwith "todo: translate_pat [MLP_Tuple]")
 end))
 and translate_constant : FStar_Extraction_ML_Syntax.mlconstant  ->  expr = (fun c -> (match (c) with
@@ -1803,22 +1806,22 @@ end
 | FStar_Extraction_ML_Syntax.MLC_Bool (b) -> begin
 EBool (b)
 end
-| FStar_Extraction_ML_Syntax.MLC_Int (s, Some (_80_1007)) -> begin
+| FStar_Extraction_ML_Syntax.MLC_Int (s, Some (_80_1019)) -> begin
 (FStar_All.failwith "impossible: machine integer not desugared to a function call")
 end
-| FStar_Extraction_ML_Syntax.MLC_Float (_80_1012) -> begin
+| FStar_Extraction_ML_Syntax.MLC_Float (_80_1024) -> begin
 (FStar_All.failwith "todo: translate_expr [MLC_Float]")
 end
-| FStar_Extraction_ML_Syntax.MLC_Char (_80_1015) -> begin
+| FStar_Extraction_ML_Syntax.MLC_Char (_80_1027) -> begin
 (FStar_All.failwith "todo: translate_expr [MLC_Char]")
 end
-| FStar_Extraction_ML_Syntax.MLC_String (_80_1018) -> begin
+| FStar_Extraction_ML_Syntax.MLC_String (_80_1030) -> begin
 (FStar_All.failwith "todo: translate_expr [MLC_String]")
 end
-| FStar_Extraction_ML_Syntax.MLC_Bytes (_80_1021) -> begin
+| FStar_Extraction_ML_Syntax.MLC_Bytes (_80_1033) -> begin
 (FStar_All.failwith "todo: translate_expr [MLC_Bytes]")
 end
-| FStar_Extraction_ML_Syntax.MLC_Int (_80_1024, None) -> begin
+| FStar_Extraction_ML_Syntax.MLC_Int (_80_1036, None) -> begin
 (FStar_All.failwith "todo: translate_expr [MLC_Int]")
 end))
 and mk_op_app : env  ->  width  ->  op  ->  FStar_Extraction_ML_Syntax.mlexpr Prims.list  ->  expr = (fun env w op args -> (let _173_765 = (let _173_764 = (FStar_List.map (translate_expr env) args)
