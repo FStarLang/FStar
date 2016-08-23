@@ -166,7 +166,7 @@ extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
 	  $(addprefix --no_extract ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
 
 # Fastest way to refresh the snapshot (if it works)
-complete-boot-ocaml:
+ocaml-fstar-ocaml:
 	+make boot-ocaml
 	+make ocaml
 	+make -C ocaml-output
