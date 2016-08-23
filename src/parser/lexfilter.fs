@@ -3,10 +3,10 @@ module FStar.Parser.LexFilter
 
 open Parse
 open FStar.Options
-open Lexing
+//open Lexing
 
-//type Position = Microsoft.FSharp.Text.Lexing.Position
-//type LexBuffer = Microsoft.FSharp.Text.Lexing.LexBuffer<char>
+type Position = Microsoft.FSharp.Text.Lexing.Position
+type LexBuffer = Microsoft.FSharp.Text.Lexing.LexBuffer<char>
 
 let debug = false
 let print_tokens = false
@@ -334,7 +334,7 @@ type PositionWithColumn =
         Column: int
     }
 
-let tokenizer lexer (lexbuf: LexBuffer<char>) =
+let tokenizer lexer (lexbuf: LexBuffer) =
     // Turn off #light syntax until '#light "on"' is met
     set_option "light" (Bool false);
 

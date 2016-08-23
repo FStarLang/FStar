@@ -14,7 +14,7 @@ let find_file filename =
   match FStar_Options.find_file filename with
     | Some s ->
       s
-    | None -> 
+    | None ->
       raise(Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
 
 let read_file (filename:string) =
@@ -44,9 +44,9 @@ let parse fn =
   resetLexbufPos filename lexbuf;
 
   let lexer = FStar_Parser_LexFStar.token in
-
+  let tokenize = FStar_Parser_LexFilter.tokenizer lexer lexbuf in
   try
-      let fileOrFragment = FStar_Parser_Parse.inputFragment lexer lexbuf in
+      let fileOrFragment = FStar_Parser_Parse.inputFragment tokenize lexbuf in
       let frags = match fileOrFragment with
           | Inl mods ->
              if FStar_Util.ends_with filename ".fsti"
