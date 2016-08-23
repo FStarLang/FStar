@@ -55,7 +55,6 @@ let client_send (s:string16) =
   print_string "\nclient send:";
   print_string s;
 
-  admit(); (* XXXX *) 
   assert(reqresp (Formatting.request s)); (* this works *)
   assert(key_prop k == reqresp);          (* this also works *)
   assert(key_prop k (Formatting.request s) == reqresp (Formatting.request s));
@@ -72,7 +71,6 @@ let client_recv (s:string16) =
       let t = iutf8 v in
       if verify k (Formatting.response s t) m'
       then (
-        admit(); (* XXXX *)
         assert (pResponse s t);
         print_string "\nclient verified:";
         print_string t ))
@@ -94,7 +92,6 @@ let server () =
         if verify k (Formatting.request s) m
         then
           ( 
-            admit(); (* XXXX *)
             assert (pRequest s);
             print_string "\nserver verified:";
             print_string s;
