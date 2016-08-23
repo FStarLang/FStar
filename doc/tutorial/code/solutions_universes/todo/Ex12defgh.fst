@@ -1,4 +1,4 @@
-module Pad
+module Ex12defgh
 open Array
 
 (* a coercion; avoid it? *)
