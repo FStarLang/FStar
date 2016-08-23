@@ -7,6 +7,8 @@ open FStar.Ghost
 open FStar.HST
 open FStar.Buffer
 
+#reset-options "--initial_fuel 0 --max_fuel 0"
+
 val lemma_create_quantifiers: #a:Type -> h:mem -> b:buffer a -> init:a -> len:FStar.UInt32.t -> Lemma
   (requires (live h b /\ as_seq h b == Seq.create (v len) init))
   (ensures  (live h b /\ length b = v len
@@ -24,6 +26,8 @@ val lemma_upd_quantifiers: #a:Type -> h0:mem -> h1:mem -> b:buffer a -> n:FStar.
   [SMTPat (as_seq h1 b); SMTPat (Seq.upd (as_seq h0 b) (v n) z)]
 let lemma_upd_quantifiers #a h0 h1 b n z =
   assert(forall (i:nat). i < length b ==> get h1 b i == Seq.index (as_seq h1 b) i)
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 val lemma_sub_quantifiers: #a:Type -> h:mem -> b:buffer a -> b':buffer a -> i:FStar.UInt32.t -> len:FStar.UInt32.t{v len <= length b /\ v i + v len <= length b} -> Lemma
   (requires (live h b /\ live h b' /\ Seq.slice (as_seq h b) (v i) (v i + v len) == as_seq h b'))
