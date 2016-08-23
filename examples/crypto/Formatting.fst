@@ -17,12 +17,15 @@
 module Formatting
 
 open FStar.String
-open FStar.Seq
+open Platform.Bytes         //This shadows length, index etc. from FStar.Seq, for no good reason?
+open FStar.Seq              //It's really important for FStar.Seq.index to have precedence for proper use of the lemmas in FStar.Seq and FStar.SeqProperties
 open FStar.SeqProperties
-open Platform.Bytes
+open FStar.Classical
+
 
 type message = bytes
 type msg (l:nat) = lbytes l
+
 
 (* ----- a lemma on array append *)
 val append_inj_lemma: b1:message -> b2:message
@@ -30,11 +33,17 @@ val append_inj_lemma: b1:message -> b2:message
                    -> Lemma (requires (length b1==length c1 /\ b2t (Seq.eq (b1 @| b2) (c1 @| c2))))
                             (ensures (b2t (Seq.eq b1 c1) /\ b2t (Seq.eq b2 c2)))
                             [SMTPat (b1 @| b2); SMTPat (c1 @| c2)] (* given to the SMT solver *)
-let rec append_inj_lemma b1 b2 c1 c2 =
-  lemma_append_len_disj b1 b2 c1 c2; admit() (* XXXX *)
-  (* Classical.forall_intro (lemma_append_inj_l b1 b2 c1 c2); *)
-  (* Classical.forall_intro (lemma_append_inj_r b1 b2 c1 c2) *)
+let append_inj_lemma b1 b2 c1 c2 =
+  lemma_append_len_disj b1 b2 c1 c2;
+  Classical.forall_intro #_ #(fun (x:(i:nat{i < length b1})) -> index b1 x == index c1 x) (lemma_append_inj_l b1 b2 c1 c2); //sadly, the 2nd implicit argument has to be provided explicitly
+  Classical.forall_intro #_ #(fun (x:(i:nat{i < length b2})) -> index b2 x == index c2 x) (lemma_append_inj_r b1 b2 c1 c2)  //should fix this soon (NS)
 
+abstract val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
+     (requires (Seq.length s1 = Seq.length s2
+               /\ (forall (i:nat{i < Seq.length s1}).{:pattern (Seq.index s1 i); (Seq.index s2 i)} (Seq.index s1 i == Seq.index s2 i))))
+     (ensures (Seq.equal s1 s2))
+     [SMTPatT (Seq.equal s1 s2)]
+let lemma_eq_intro #a s1 s2 = ()
 
 (* ----- from strings to bytestring and back *)
 
@@ -93,16 +102,13 @@ let response s t =
 val req_resp_distinct:
   s:string -> s':string16 -> t':string ->
   Lemma (requires True)
-        (ensures (not( (request s) = (response s' t'))))
+        (ensures (request s <> response s' t'))
         [SMTPat (request s); SMTPat (response s' t')]
-let req_resp_distinct s s' t' = admit()
-(* XXXX
+let req_resp_distinct s s' t' = 
   lemma_repr_bytes_values (length (utf8 s));
   lemma_repr_bytes_values (length (utf8 s'));
-  (*lemma_repr_bytes_values (length (utf8 t'));*)
-  assert (Seq.index tag0 0 == Char.char_of_int 0);
-  assert (Seq.index tag1 0 == Char.char_of_int 1)
-*)
+  assert (Seq.index (request s) 0 == Char.char_of_int 0);
+  assert (Seq.index (response s' t') 0 == Char.char_of_int 1)
 
 val req_components_corr:
   s0:string -> s1:string ->
