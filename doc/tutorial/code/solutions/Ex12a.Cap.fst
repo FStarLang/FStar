@@ -1,8 +1,6 @@
-(* to be used with mac.fst and acls2.fst *)
+(* to be used with Ex12.MAC.fst and Ex12a.ACLs.fst *)
 
 module Ex12a.Cap (* capabilities *) 
-open FStar.Array
-open FStar.Bytes
 open Platform.Bytes
 
 
@@ -21,10 +19,10 @@ type capRead (msg:bytes) = (forall f. msg = utf8 f ==> ACLs.canRead f)
 
 let k = MAC.keygen capRead
 
-// BEGIN: 
+// BEGIN: CapType
 val issue: f:string{ ACLs.canRead f } -> MAC.tag
 val redeem: f:string -> m:MAC.tag -> u:unit{ ACLs.canRead f }
-
+// End: CapType
 
 let issue f = 
   assert(ACLs.canRead f);
