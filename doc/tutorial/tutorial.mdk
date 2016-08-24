@@ -4919,7 +4919,7 @@ bytes, with the following specification:
 ```
 ~~
 
-How would we extend it to also cover CanWrite access?
+How would we extend it to also cover write access?
 ~
 
 ## Secure RPC
