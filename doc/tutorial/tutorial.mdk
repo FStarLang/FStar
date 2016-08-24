@@ -5294,6 +5294,7 @@ What about MAC schemes for texts of arbitrary lengths?
 Hint: have a look e.g. at the HMAC construction.
 ~
 
+<!-- deactivating this example for now until we can replace it with Encrypt-then-MAC
 
 # Advanced cryptographic examples
 
@@ -5619,6 +5620,8 @@ let test() =
   (* let p'' = decrypt k1 c in     // this rightfully triggers an error *)
   ()
 ```
+
+-->
 
 [Title          A]: http://Title_A.com "Title          A title"
 
