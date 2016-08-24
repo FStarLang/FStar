@@ -21,19 +21,15 @@ let canRead (f:filename) =
   || f="demo/README"       (* and so is this file *)
 // END: ACLs
 
-// BEGIN: FileIO
 val read  : f:filename{canRead f}  -> string
 let read f  = FStar.IO.print_string ("Dummy read of file " ^ f ^ "\n"); f
 
 val write : f:filename{canWrite f} -> string -> unit
 let write f s = FStar.IO.print_string ("Dummy write of string " ^ s ^ " to file " ^ f ^ "\n")
-// END: FileIO
 
-// BEGIN: UntrustedClientCode
 let passwd  = "demo/password"
 let readme  = "demo/README"
 let tmp     = "demo/tempfile"
-// END: UntrustedClientCode
 
 
 let staticChecking () =
