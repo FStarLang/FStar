@@ -40,7 +40,7 @@ mref:
 	$(FSTAR) FStar.MRef.fst
 
 m_rref:
-	$(FSTAR) FStar.Map.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst hyperheap/FStar.All.fst FStar.Monotonic.RRef.fst 
+	$(FSTAR) FStar.Map.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst hyperheap/FStar.All.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst
 
 twolevelheap:
 	$(FSTAR) FStar.TwoLevelHeap.fst
