@@ -1,5 +1,12 @@
 module Ex12defgh
-open Array
+open FStar.Array
+open FStar.UInt8
+open FStar.Seq
+open FStar.SeqProperties
+
+module Array = FStar.Array
+
+type uint8 = FStar.UInt8.t
 
 (* a coercion; avoid it? *)
 assume val n2b: n:nat {( n < 256 )} -> Tot uint8
@@ -23,8 +30,8 @@ let pad n =
 val encode: a: text -> Tot block 
 let encode a = append a (pad (blocksize - length a))
 
-val inj: a: text -> b: text -> Lemma (requires (Array.Equal (encode a) (encode b)))
-                                     (ensures (Array.Equal a b))
+val inj: a: text -> b: text -> Lemma (requires (Array.equal (encode a) (encode b)))
+                                     (ensures (Array.equal a b))
                                      [SMTPat (encode a); SMTPat (encode b)]
 let inj a b = ()
 

@@ -19,10 +19,10 @@ type capRead (msg:bytes) = (forall f. msg = utf8 f ==> ACLs.canRead f)
 
 let k = MAC.keygen capRead
 
-// BEGIN: CapImplementation
+// BEGIN: CapType
 val issue: f:string{ ACLs.canRead f } -> MAC.tag
 val redeem: f:string -> m:MAC.tag -> u:unit{ ACLs.canRead f }
-// END: CapImplementation
+// END: CapType
 
 let issue f = failwith "Implement this function"
 let redeem f t = failwith "Implement this function"

@@ -19,10 +19,9 @@ type capRead (msg:bytes) = (forall f. msg = utf8 f ==> ACLs.canRead f)
 
 let k = MAC.keygen capRead
 
-// BEGIN: CapType
+// BEGIN: CapImplementation
 val issue: f:string{ ACLs.canRead f } -> MAC.tag
 val redeem: f:string -> m:MAC.tag -> u:unit{ ACLs.canRead f }
-// End: CapType
 
 let issue f = 
   assert(ACLs.canRead f);
@@ -37,4 +36,4 @@ let redeem f t =
     ()
   else 
     failwith "bad capability"
-    
+// END: CapImplementation
