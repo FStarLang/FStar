@@ -1527,10 +1527,10 @@ end
 | FStar_Extraction_ML_Syntax.MLE_Match (expr, branches) -> begin
 (
 # 470 "FStar.Extraction.Kremlin.fst"
-let t = e.FStar_Extraction_ML_Syntax.mlty
+let t_scrut = expr.FStar_Extraction_ML_Syntax.mlty
 in (let _173_670 = (let _173_669 = (translate_expr env expr)
-in (let _173_668 = (translate_branches env t branches)
-in (let _173_667 = (translate_type env t)
+in (let _173_668 = (translate_branches env t_scrut branches)
+in (let _173_667 = (translate_type env e.FStar_Extraction_ML_Syntax.mlty)
 in ((_173_669), (_173_668), (_173_667)))))
 in EMatch (_173_670)))
 end
@@ -1612,7 +1612,7 @@ in ((_173_703), (_173_702), (_173_701), (_173_700), (_173_699)))))))
 in EBufBlit (_173_704))
 end
 | FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (p); FStar_Extraction_ML_Syntax.mlty = _80_806; FStar_Extraction_ML_Syntax.loc = _80_804}, (_80_811)::[]) when ((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "FStar.HST.get") -> begin
-EConstant (((UInt8), ("0")))
+ECast (((EConstant (((UInt8), ("0")))), (TAny)))
 end
 | FStar_Extraction_ML_Syntax.MLE_App ({FStar_Extraction_ML_Syntax.expr = FStar_Extraction_ML_Syntax.MLE_Name (("FStar")::(m)::[], op); FStar_Extraction_ML_Syntax.mlty = _80_818; FStar_Extraction_ML_Syntax.loc = _80_816}, args) when ((is_machine_int m) && (is_op op)) -> begin
 (let _173_706 = (FStar_Util.must (mk_width m))
@@ -1747,13 +1747,13 @@ end
 | _80_970 -> begin
 (FStar_All.failwith "invalid argument: assert_lid")
 end))
-and translate_branches : env  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlbranch Prims.list  ->  branches = (fun env t branches -> (FStar_List.map (translate_branch env t) branches))
-and translate_branch : env  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlbranch  ->  (pattern * expr) = (fun env t _80_979 -> (match (_80_979) with
+and translate_branches : env  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlbranch Prims.list  ->  branches = (fun env t_scrut branches -> (FStar_List.map (translate_branch env t_scrut) branches))
+and translate_branch : env  ->  FStar_Extraction_ML_Syntax.mlty  ->  FStar_Extraction_ML_Syntax.mlbranch  ->  (pattern * expr) = (fun env t_scrut _80_979 -> (match (_80_979) with
 | (pat, guard, expr) -> begin
 if (guard = None) then begin
 (
-# 593 "FStar.Extraction.Kremlin.fst"
-let _80_982 = (translate_pat env t pat)
+# 597 "FStar.Extraction.Kremlin.fst"
+let _80_982 = (translate_pat env t_scrut pat)
 in (match (_80_982) with
 | (env, pat) -> begin
 (let _173_750 = (translate_expr env expr)
@@ -1772,7 +1772,7 @@ end
 end
 | FStar_Extraction_ML_Syntax.MLP_Var (name, _80_993) -> begin
 (
-# 605 "FStar.Extraction.Kremlin.fst"
+# 609 "FStar.Extraction.Kremlin.fst"
 let env = (extend env name false)
 in (let _173_758 = (let _173_757 = (let _173_756 = (translate_type env t)
 in (let _173_755 = (FStar_ST.alloc 0)

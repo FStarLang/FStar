@@ -2,7 +2,7 @@ FSTAR_HOME=..
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
-FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst FStar.Buffer.Quantifiers.fst
+FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
 
 HYPERHEAP=FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst
 
@@ -40,7 +40,7 @@ mref:
 	$(FSTAR) FStar.MRef.fst
 
 m_rref:
-	$(FSTAR) FStar.Map.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst hyperheap/FStar.All.fst FStar.Monotonic.RRef.fst
+	$(FSTAR) FStar.Map.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst hyperheap/FStar.All.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst
 
 twolevelheap:
 	$(FSTAR) FStar.TwoLevelHeap.fst

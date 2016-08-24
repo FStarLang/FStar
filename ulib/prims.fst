@@ -586,11 +586,10 @@ assume val magic   : #a:Type -> unit -> Tot a
 irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
 let unsafe_coerce #a #b x = admit(); x
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
-assume val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> True))
-assume val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
-assume val qintro  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
-assume val ghost_lemma: #a:Type -> #p:(a -> GTot Type) -> #q:(a -> unit -> GTot Type) ->
-  $f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
+val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> True))
+let _assert p () = ()
+val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
+let cut p = ()
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
 
 

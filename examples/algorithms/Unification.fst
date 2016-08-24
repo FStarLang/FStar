@@ -306,7 +306,7 @@ type not_solveable s =
 val lemma_occurs_not_solveable: x:nat -> t:term -> Lemma
   (requires (occurs x t /\ not (is_V t)))
   (ensures (not_solveable (V x, t)))
-let lemma_occurs_not_solveable x t = qintro (lemma_occurs_not_solveable_aux x t)
+let lemma_occurs_not_solveable x t = FStar.Classical.forall_intro (lemma_occurs_not_solveable_aux x t)
  
 val lemma_subst_idem: l:list subst -> x:nat -> t:term -> t':term -> Lemma
   (requires (lsubst_term l (V x) = lsubst_term l t))

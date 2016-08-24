@@ -179,7 +179,8 @@ decls:
       { ($1::$2) }
     
 decl:
-  | maybeDoc decl2 { mk_decl $2 (rhs parseState 2) $1 }
+  | FSDOC decl2 { mk_decl $2 (rhs parseState 2) (Some $1) }
+  | decl2       { mk_decl $1 (rhs parseState 1) None }
 
 decl2:
   | OPEN qname
@@ -324,10 +325,8 @@ tyconDefinition:
 
 tyconDefinitions:
   |   { [] }
-  | FSDOC AND tyconDefinition tyconDefinitions
-      { ($3,Some $1)::$4 }
-  | AND tyconDefinition tyconDefinitions
-      { ($2,None)::$3 }
+  | AND maybeDoc tyconDefinition tyconDefinitions
+      { ($3,$2)::$4 }
 
 maybeFocus:
   |  { false }
@@ -526,20 +525,16 @@ constructors:
       { $1@[$2] }
 
 recordFieldDecl:
-  |  FSDOC ident COLON typ
-      { ($2, $4, Some $1) }
-  |  ident COLON typ
-      { ($1, $3, None) }
+  |  FSDOC ident COLON typ 
+      { ($2, $4, Some $1) } 
+  |  ident COLON typ 
+      { ($1, $3, None) } 
 
 constructorDecl:
-  | BAR FSDOC name COLON typ
-      { ($3,Some $5,Some $2,false) }
-  | BAR name COLON typ
-      { ($2,Some $4,None,false) }
-  | BAR FSDOC name of_typ
-      { ($3,$4,Some $2,true) }
-  | BAR name of_typ
-      { ($2,$3,None,true) }
+  | BAR maybeDoc name COLON typ
+      { ($3,Some $5,$2,false) }
+  | BAR maybeDoc name of_typ
+      { ($3,$4,$2,true) }
 
 of_typ:
   |        {  None }
