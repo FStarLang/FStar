@@ -8,7 +8,7 @@ module SeqP = FStar.SeqProperties
 
 let forall_intro (#a:Type) (#p:(x:a -> GTot Type0)) ($f:(x:a -> Lemma (p x)))
   : Lemma (forall (x:a). p x)
-  = qintro f
+  = FStar.Classical.forall_intro f
 
 (* Some basic stuff, should be moved to FStar.Squash, probably *)
 let forall_intro_2 (#a:Type) (#b:(a -> Type)) (#p:(x:a -> b x -> GTot Type0))
@@ -340,10 +340,6 @@ let map_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 //Collecting monotone sequences
 ////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
-//Collecting monotone sequences
-////////////////////////////////////////////////////////////////////////////////
-
 val collect: ('a -> Tot (seq 'b)) -> s:seq 'a -> Tot (seq 'b)
     (decreases (Seq.length s))
 let rec collect f s =
@@ -446,15 +442,14 @@ let at_most_log_len (#l:rid) (#a:Type) (x:nat) (log:log_t l a)
     : HyperHeap.t -> GTot Type0
     = fun h -> x <= Seq.length (m_sel h log)
 
-open Platform.Bytes
 //Note: we may want int counters, instead of nat counters
 //because the handshake uses an initial value of -1
-type counter_val (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (repr_max:nat) =
-     (x:nat{repr_bytes x <= repr_max /\ witnessed (at_most_log_len x log)}) //never more than the length of the log
+type counter_val (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
+     (x:nat{x <= max /\ witnessed (at_most_log_len x log)}) //never more than the length of the log
 	 
-type counter (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (repr_max:nat) =
+type counter (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
   m_rref i  //counter in region i
-         (counter_val i log repr_max) //never more than the length of the log
+         (counter_val i log max) //never more than the length of the log
 	 increases //increasing
 
 let monotonic_increases (x:unit)
@@ -467,11 +462,11 @@ let at_most_log_len_stable (#l:rid) (#a:Type) (x:nat) (l:log_t l a)
 
 (* assume val gcut : f:(unit -> GTot Type){f ()} -> Tot unit *)
 
-let new_counter (#l:rid) (#a:Type) (#repr_max:nat)
+let new_counter (#l:rid) (#a:Type) (#max:nat)
 		(i:rid) (init:nat) (log:log_t l a)
-  : ST (counter i log repr_max)
+  : ST (counter i log max)
        (requires (fun h ->
-	   repr_bytes init <= repr_max /\
+	   init <= max /\
 	   init <= Seq.length (m_sel h log)))
        (ensures (fun h0 c h1 ->
 		   modifies_one i h0 h1 /\
@@ -484,14 +479,14 @@ let new_counter (#l:rid) (#a:Type) (#repr_max:nat)
     witness log (at_most_log_len init log);
     m_alloc i init
 
-let increment_counter (#l:rid) (#a:Type) (#repr_max:nat)
-		      (#i:rid) (#log:log_t l a) ($c:counter i log repr_max)
+let increment_counter (#l:rid) (#a:Type) (#max:nat)
+		      (#i:rid) (#log:log_t l a) ($c:counter i log max)
   : ST unit
        (requires (fun h ->
 	  let log = m_sel h log in
 	  let n = m_sel h c in
 	  n < Seq.length log  /\
-	  repr_bytes (n + 1) <= repr_max))
+	  n + 1 <= max))
        (ensures (fun h0 _ h1 ->
 	  modifies_one i h0 h1 /\
 	  modifies_rref i !{as_ref (as_rref c)} h0 h1 /\
@@ -501,7 +496,7 @@ let increment_counter (#l:rid) (#a:Type) (#repr_max:nat)
     witness log (at_most_log_len n log);
     m_write c n
 
-let testify_counter (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#repr_max:nat) (ctr:counter i log repr_max)
+let testify_counter (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ctr:counter i log max)
   : ST unit
        (requires (fun h -> True))
        (ensures (fun h0 _ h1 ->

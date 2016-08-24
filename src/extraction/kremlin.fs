@@ -93,7 +93,7 @@ and width =
 
 and constant = width * string
 
-(** a De Bruijn index *)
+(* a De Bruijn index *)
 and var = int 
 
 and binder = {
@@ -467,8 +467,8 @@ and translate_expr env e: expr =
       ELet (binder, body, continuation)
 
   | MLE_Match (expr, branches) ->
-      let t = e.mlty in
-      EMatch (translate_expr env expr, translate_branches env t branches, translate_type env t)
+      let t_scrut = expr.mlty in
+      EMatch (translate_expr env expr, translate_branches env t_scrut branches, translate_type env e.mlty)
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Kremlin constructs
@@ -507,8 +507,12 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3; e4; e5 ]) when (string_of_mlpath p = "FStar.Buffer.blit") ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HST.get") ->
-      // HACK ALERT HACK ALERT we shouldn't even be extracting this!
-      EConstant (UInt8, "0")
+      // We need to reveal to Kremlin that FStar.HST.get is equivalent to
+      // (void*)0 so that it can get rid of ghost calls to HST.get at the
+      // beginning of functions, which is needed to enforce the push/pop
+      // structure.
+      ECast (EConstant (UInt8, "0"), TAny)
+
 
   // Operators from fixed-width integer modules, e.g. [FStar.Int32.addw].
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], op) }, args) when (is_machine_int m && is_op op) ->
@@ -585,12 +589,12 @@ and assert_lid t =
   | MLTY_Named ([], lid) -> lid
   | _ -> failwith "invalid argument: assert_lid"
 
-and translate_branches env t branches =
-  List.map (translate_branch env t) branches
+and translate_branches env t_scrut branches =
+  List.map (translate_branch env t_scrut) branches
 
-and translate_branch env t (pat, guard, expr) =
+and translate_branch env t_scrut (pat, guard, expr) =
   if guard = None then
-    let env, pat = translate_pat env t pat in
+    let env, pat = translate_pat env t_scrut pat in
     pat, translate_expr env expr
   else
     failwith "todo: translate_branch"
