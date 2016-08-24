@@ -1,4 +1,4 @@
-module ACLs2
+module ACLs_simplified
 
 open FStar.String
 open FStar.List

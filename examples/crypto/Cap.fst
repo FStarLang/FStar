@@ -4,7 +4,7 @@ module Cap (* capabilities *)
 
 open FStar.Seq
 open FStar.SeqProperties
-open ACLs2
+open ACLs_simplified
 open MAC
 open FStar.BaseTypes
 
@@ -20,10 +20,10 @@ assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
     (utf8 s0) == (utf8 s1) ==> s0==s1
 
-opaque logic type CapRead (msg:seq byte) =
+opaque logic type capRead (msg:seq byte) =
     (forall f. msg = utf8 f ==> canRead f)
 
-let k = keygen CapRead
+let k = keygen capRead
 
 val issue: f:file{ canRead f } -> SHA1.tag
 val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }

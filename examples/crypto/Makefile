@@ -43,7 +43,7 @@ all: uall sall
 
 uall: $(VERFILES:%=verify-%) $(HH_VERFILES:%=verify_hh-%)
 
-sall: merkle_tree rpc CntProtocol padding acls-cap statefulEnc
+sall: merkle_tree rpc CntProtocol padding statefulEnc
 
 
 export CONTRIB=../../contrib
@@ -61,11 +61,11 @@ merkle_tree: MerkleTree.fst
 	--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
 	$^
 
-acls-cap: SHA1.fst MAC.fst ../security/acls2.fst Cap.fst
-	$(SFSTAR) --z3timeout 10 \
-	--verify_module ACLs2 --verify_module Cap \
-	--include $(FSTAR_HOME)/contrib/Platform/fst \
-	--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
+acls-cap: SHA1.fst MAC.fst ../security/ACLs_simplified.fst Cap.fst
+	$(FSTAR) --z3timeout 10 \
+	--verify_module ACLs_simplified --verify_module Cap \
+	--include $(FSTAR_HOME)/ucontrib/Platform/fst \
+	--include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
 	$^
 
 rpc: Formatting.fst SHA1.fst MAC.fst RPC.fst

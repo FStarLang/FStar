@@ -15,9 +15,7 @@ module MAC = EtM.MAC
 
 type log_t (r:rid) = Monotonic.Seq.log_t r (CPA.msg * CPA.cipher * MAC.tag)
 
-val mac_log: r:rid -> log_t r -> MAC.log_t r
-
-
+//val mac_log: r:rid -> log_t r -> MAC.log_t r
 
 noeq type key = 
   | Key:  #region:rid -> ke:CPA.key { extends (CPA.Key.region ke) region  } -> km:MAC.key { extends (MAC.Key.region km) region /\  (CPA.Key.region ke) <>(MAC.Key.region km) } -> log:log_t region -> key 
@@ -95,15 +93,15 @@ let encrypt k plain =
   m_recall (CPA.Key.log k.ke);
   let h = ST.get () in
   cut (Seq.index (get_mac_log h k) (Seq.length (get_mac_log h k)-1) = (c,t));
+  admit();
   cut (Seq.length (get_mac_log h k) = Seq.length (get_cpa_log h k));
-  admit()
   write_at_end k.log (plain,c,t);
   (* lemma_slice_snoc (get_log h k) 0 (Seq.length (get_log h k));  *)
   (* lemma_slice_snoc (get_mac_log h k) 0 (Seq.length (get_mac_log h k)); *)
   (* lemma_slice_snoc (get_cpa_log h k) 0 (Seq.length (get_cpa_log h k)); *)
   let h = ST.get () in
   assert (Seq.index (get_log h k) (Seq.length (get_log h k)-1) = (plain,c,t)); 
-  admit()
+  admit();
   (c, t)
    
   
@@ -111,6 +109,7 @@ val decrypt: k:key -> c:cipher -> option EtM.Plain.plain
 let decrypt k (c,tag) =
   if MAC.verify k.km c tag
   then (
+  admit();
   Some(CPA.decrypt k.ke c) 
   )
   else None
