@@ -163,7 +163,7 @@ the [source code on github] using these [instructions].
 [source code on github]: http://github.com/FStarLang/FStar
 [instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
 
-You can edit F\* code using your favourite text editor, but [Emacs],
+You can edit F\* code using your favorite text editor, but [Emacs],
 [Atom], and [Vim] have extensions that add special support for F\*,
 including syntax highlighting and interactive development. More
 details on [editor support] on the [F\* wiki].
@@ -751,8 +751,8 @@ val factorial: nat -> Tot (y:int{y>=1})       (* even stronger result type *)
 ~
 
 <!-- CH: This is causing too much unnecessary pain too early on
-  The problem is that to give the following uncomparable type for factorial:
-val factorial: x:int{x>=2} -> Tot (y:int{y>=2}) (* uncomparable to prev type *)
+  The problem is that to give the following incomparable type for factorial:
+val factorial: x:int{x>=2} -> Tot (y:int{y>=2}) (* incomparable to prev type *)
   One needs to unroll it as follows:
 let rec factorial n =
   if n = 0 then 1
@@ -765,7 +765,7 @@ in order of increasing precision. Is it a total order?
 ~~ Answer
 The types in the solution above are listed in increasing order of
 precision, with the exception of the last two ones which are
-uncomparable.  So no, subtyping is not a total order.
+incomparable.  So no, subtyping is not a total order.
 ~~
 -->
 
@@ -1250,7 +1250,7 @@ This signature doesn't work:
 append.fst(21,0-27,0) : Error
 Expected a term of type "f:(_:(list 'a) -> Tot (list 'a)){(forall (l:(list 'a)). ((l = (f (f l))) == true))}";
 got a function "(fun _682:<UNKNOWN> -> (match _682 with (Nil )  -> Nil
-	(Cons hd tl)  -> (append (reverse tl) (Cons hd Nil))))" (More arguments than annotated type (Typ_refine))
+	(Cons hd tl)  -> (append (reverse tl) (Cons hd Nil))))" (More arguments than annotated type (Type_refine))
 ~
 
 However, F\* refuses to accept this as a valid type for `reverse`:
@@ -2127,7 +2127,7 @@ Exercise files still missing.
 
 ~CK
 I do not write an exercise file Exercises 6c and 6d since it is exactly
-the same as for Exercide 6b, and would thus duplicate code.
+the same as for Exercise 6b, and would thus duplicate code.
 ~
 
 ~Exercise
@@ -2185,7 +2185,7 @@ val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x
 
 # Case study: simply-typed lambda-calculus
 
-<!-- (CH: Any way I could have imported the exising code here without duplicating it? -->
+<!-- (CH: Any way I could have imported the existing code here without duplicating it? -->
 <!--   Without a way to do this maintaining this document and keeping it consistent -->
 <!--   will be a nightmare.) -->
 
@@ -3125,7 +3125,7 @@ the type `x:int{phi(x)}` as the application of a type constructor
 `phi(x)` is itself a `Type`. Thus, the kind of the `refinement`
 constructor is `a:Type -> (a -> Type) -> Type`, meaning it takes two
 arguments; first, a type `a`; then a second argument, a predicate on
-`a` (whose kind depends on `a`); and then bulids a `Type`.
+`a` (whose kind depends on `a`); and then builds a `Type`.
 
 The type `fun x -> phi(x)` is type function, a lambda abstraction at
 the level of types, which when applied to a particular value, say,
@@ -3217,7 +3217,7 @@ failures, then its result satisfies `P`; in contrast, the `WP e P` is
 sufficient to guarantee both that `e`'s internal assertions succeed and
 that its result satisfies `P`.
 
-Here's the definition of `WLP` for our small example langauge.
+Here's the definition of `WLP` for our small example language.
 
 ```
 WLP b P                      = P b
@@ -3329,7 +3329,7 @@ forms are derived from these.
 For example, the computation type constructor `PURE` is a more
 primitive version of `Pure`, which we have used earlier in this
 tutorial. By the end of this chapter, you will see how `Pure`, `Tot`,
-etc. are expressed in terms of `PURE`. Likewiwse `STATE` is the
+etc. are expressed in terms of `PURE`. Likewise `STATE` is the
 primitive form of `ST`; `EXN` is the primitive form of `Exn`; etc.
 
 ~
@@ -3349,7 +3349,7 @@ fragment of it here.
 
 The type of pure computations is `PURE t wp wlp` where
 `wp, wlp : (t -> Type) -> Type`. This means that pure computations produce
-`t`-typed results and are decribed by predicate transformers that
+`t`-typed results and are described by predicate transformers that
 transform result predicates (post-conditions of kind `t -> Type`) to
 pre-conditions, which are propositions of kind `Type`.
 
@@ -3455,7 +3455,7 @@ assume val as_Pure: #a:Type -> #b:(a -> Type)
  will try to prove that the type of `g` is a subtype of the expected
  type of `f`. In cases like this, where an argument mentions several
  implicit arguments that need to be inferred (`a, b, wp, wlp`, in this
- case), the equality constraint produces better inference resutls.
+ case), the equality constraint produces better inference results.
 
 ~
 
@@ -3760,7 +3760,7 @@ sub_effect
                     wp (fun a -> p a h)
 ```
 
-This says that in order to lift a `PURE` compuataion to `STATE`, we
+This says that in order to lift a `PURE` computation to `STATE`, we
 lift its `wp:PureWP a` (equivalently for its `wlp`) to a `StateWP a`
 that says that that pure computation leaves the state unmodified.
 
