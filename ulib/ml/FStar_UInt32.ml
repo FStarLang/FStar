@@ -61,9 +61,9 @@ let op_Less_Less_Hat = shift_left
 let op_Greater_Greater_Hat = shift_right
 let op_Equals_Hat = eq
 let op_Greater_Hat = gt
-let op_Greater_Equal_Hat = gte
-let op_Less_Hat = gt
-let op_Less_Equal_Hat_Hat = gte
+let op_Greater_Equals_Hat = gte
+let op_Less_Hat = lt
+let op_Less_Equals_Hat = lte
 
 let of_string s = int_of_string s
 let to_string s = string_of_int s
