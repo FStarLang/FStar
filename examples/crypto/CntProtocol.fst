@@ -48,7 +48,7 @@ val max_list: s:uint32 -> c:uint16 -> l:list event ->
 let max_list s c l = ()
 
 val max_lemma: s:uint32 -> c:uint16 -> (l:list event{c > server_max l}) ->
-  Lemma(forall e . List.mem e l ==> e <> (Recv s c))
+  Lemma(forall e . List.Tot.mem e l ==> e <> (Recv s c))
 let rec max_lemma s c l =
   match l with
   | [] -> ()
@@ -56,33 +56,38 @@ let rec max_lemma s c l =
      max_list s' c' l';
      max_lemma s c l'
 
-logic type Invariant h =
+let invariant h =
   server_max (Heap.sel h log_prot) = Heap.sel h server_cnt &&
     Heap.contains h server_cnt && Heap.contains h client_cnt &&
       Heap.contains h log_prot && server_cnt <> client_cnt
 
+
 let fresh_cnt x =
   let y = !server_cnt in
   (y < x)
+
 
 let next_cnt () =
   let c  = !client_cnt in
   client_cnt := c+1;
   c
 
+
 let update_cnt x =
   let y = !server_cnt in
   server_cnt := max x y
+
 
 let log_event e =
   let l = !log_prot in
   log_prot := e::l
 
+
 val log_and_update: s: uint32 -> c: uint16 -> ST (unit)
-    (requires (fun h -> Invariant h /\
-                        (forall e . List.mem e (sel h log_prot) ==> e <> (Recv s c)) /\
+    (requires (fun h -> invariant h /\
+                        (forall e . List.Tot.mem e (sel h log_prot) ==> e <> (Recv s c)) /\
                         (c > server_max (sel h log_prot))))
-    (ensures (fun h x h' -> Invariant h' /\ c = sel h' server_cnt /\
+    (ensures (fun h x h' -> invariant h' /\ c = sel h' server_cnt /\
                             (sel h' log_prot = Recv s c::sel h log_prot)
                             /\ modifies (!{log_prot, server_cnt}) h h'))
 let log_and_update s c =
@@ -111,31 +116,33 @@ let rec recv _ = if length !msg_buffer > 0
 
 (* two events, recording genuine requests and responses *)
 
-logic type Signal : uint32 -> uint16 -> Type
+assume type signal : uint32 -> uint16 -> Type
 
 (* the meaning of MACs, as used in RPC *)
 
-opaque logic type req (msg:message) =
-    (exists s c.   msg = CntFormat.signal s c /\ Signal s c)
+type req (msg:message) =
+    (exists s c.   msg = CntFormat.signal s c /\ signal s c)
 
 val k: k:key{key_prop k == req}
 let k = keygen req
 
+
 val client : uint32 -> ST (option string)
- 			  (requires (fun h -> Invariant h /\
+ 			  (requires (fun h -> invariant h /\
 				     repr_bytes ((sel h client_cnt) + 1) <= 2 ))
- 			  (ensures (fun h x h' -> Invariant h'))
+ 			  (ensures (fun h x h' -> invariant h'))
 let client (s: uint32) =
   let c = next_cnt () in
-  admitP (Signal s c);
+  assume (signal s c); //a protocol event
   let t = CntFormat.signal s c in
   let m = mac k t in
   send (t @| m);
   None
 
+
 val server : unit -> ST (option string)
-			(requires (fun h -> Invariant h))
-			(ensures (fun h x h' -> Invariant h' /\ modifies (!{log_prot, server_cnt, msg_buffer}) h h'))
+			(requires (fun h -> invariant h))
+			(ensures (fun h x h' -> invariant h' /\ modifies (!{log_prot, server_cnt, msg_buffer}) h h'))
 let server () =
   let msg = recv () in (
     if length msg = signal_size + macsize then (
@@ -143,7 +150,7 @@ let server () =
       let (s, c) = CntFormat.signal_split t in
         if fresh_cnt c then(
           if verify k t m then (
-	    assert(Signal s c);
+	    assert(signal s c);
 	    None
 	  ) else Some "MAC failed"
 	) else Some "Counter already used"

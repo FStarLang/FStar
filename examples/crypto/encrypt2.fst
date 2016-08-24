@@ -1,30 +1,3 @@
-
-module AES (* concrete implementation of a one-block symmetric cipher *)
-open Array
-
-type bytes = seq byte 
-type nbytes (n:nat) = b:bytes{length b == n}
-
-let blocksize = 32 (* 256 bits *)
-
-type plain  = nbytes blocksize
-
-let ciphersize = 2 * blocksize  (* including IV *)
-
-type cipher = nbytes ciphersize
-let keysize = 16 (* 128 bits *)
-type key = nbytes keysize 
-
-assume val dummy: plain
-
-assume val generated : key -> Tot bool
-
-assume val gen: unit -> key 
-assume val dec: key -> cipher -> Tot plain                    (* this function is pure & complete *)  
-assume val enc: k:key -> p:plain -> c:cipher { dec k c = p }  (* this function is not pure (IV); the refinement captures functional correctness *) 
-
-
-
 module SymEnc (* a multi-key symmetric variant; for simplicity, we fix (p, r, plain, repr) and use AES above *)
 open Array
 

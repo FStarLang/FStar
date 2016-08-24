@@ -1,11 +1,14 @@
 module FStar.Char
 
+let char_code = n:nat{n <= 255}
+
 private type char' =
-  | Char : int -> char'
+  | Char : char_code -> char'
 
 type char = char'
 
 val lowercase: char -> Tot char
 val uppercase: char -> Tot char
-val int_of_char: char -> Tot int
-val char_of_int: int -> Tot char // Cannot be total and inverse of int_of_char/injective
+val int_of_char: char -> Tot char_code
+val char_of_int: code:char_code -> Tot (c:char{int_of_char c = code})
+
