@@ -8,7 +8,7 @@ module SeqP = FStar.SeqProperties
 
 let forall_intro (#a:Type) (#p:(x:a -> GTot Type0)) ($f:(x:a -> Lemma (p x)))
   : Lemma (forall (x:a). p x)
-  = qintro f
+  = FStar.Classical.forall_intro f
 
 (* Some basic stuff, should be moved to FStar.Squash, probably *)
 let forall_intro_2 (#a:Type) (#b:(a -> Type)) (#p:(x:a -> b x -> GTot Type0))
