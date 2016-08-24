@@ -4910,7 +4910,7 @@ To this end, assume given a UTF8 encoding function from strings to
 bytes, with the following specification:
 
 ```
-[INCLUDE=code/exercises/Ex12a.Cap.fst:ITF8Inj]
+[INCLUDE=code/exercises/Ex12a.Cap.fst:UTF8Inj]
 ```
 
 ~~ Answer

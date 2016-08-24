@@ -118,7 +118,7 @@ val resp_components_corr:
   Lemma (requires (b2t (Seq.eq (response s0 t0) (response s1 t1))))
         (ensures  (s0==s1 /\ t0==t1))
         [SMTPat (response s0 t0); SMTPat (response s1 t1)]
-// End: FormatLemmas
+// END: FormatLemmas
 
 // BEGIN: FormatProofs
 let req_resp_distinct s s' t' = 
