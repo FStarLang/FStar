@@ -80,6 +80,10 @@ install the latest F\* release and required dependencies (except for
 Z3) using the opam package:
 
         $ opam install fstar
+        
+Right now, the opam package is version 0.9.2 which is almost a year old... Please consider getting the latest development version of F*! Here's the opam magic:
+
+        $ opam install zarith stdint yojson && opam pin add fstar --dev-repo
 
 ### Homebrew formula for Mac OS X ###
 
