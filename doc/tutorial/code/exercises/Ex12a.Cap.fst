@@ -22,7 +22,7 @@ let k = MAC.keygen capRead
 // BEGIN: CapType
 val issue: f:string{ ACLs.canRead f } -> MAC.tag
 val redeem: f:string -> m:MAC.tag -> u:unit{ ACLs.canRead f }
-// End: CapType
+// END: CapType
 
 let issue f = failwith "Implement this function"
 let redeem f t = failwith "Implement this function"
