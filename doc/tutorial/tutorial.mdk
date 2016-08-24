@@ -227,25 +227,20 @@ sections) proceeds in three easy steps.
 ### Defining a policy { #sec-policy }
 
 The syntax of F\* is based closely on the OCaml syntax and the non-light
-syntax of F\#. An F\* program is composed of several modules. Each module
-begins with a `module` declaration, defining the name of the module. Its
-body includes a number of definitions, and optionally includes a 'main'
-expression.
+syntax of F\#. Our F\* program is made up of one module per file, and the
+body of the module contains a number of definitions, and optionally 
+includes a 'main' expression.
 
-Here are two modules: one called `FileName` and the other one called
-`ACLs` (for Access-Control Lists):
+Here are the first three definitions from the program:
 
 ~ Fragment {link="code/exercises/Ex01a.fst"}
 [INCLUDE=code/exercises/Ex01a.fst:ACLs]
 ~
 
-The `FileName` module defines a type synonym: we'll use `:string`s to
-model `:filename`s.  The `ACLs` module first `open`s the `FileName`
-module, so the type synonym there can now be used directly (otherwise
-it could only be called by a longer fully-qualified name:
-`:FileName.filename`).
+The first definition defines a type synonym: we'll use `:string`s to
+model `:filename`s.  
 
-Afterwards `ACLs` defines our security policy as two boolean functions:
+After that, we define two boolean functions:
 `canWrite` and `canRead`:
 The `canWrite` function inspects its argument `f`
 using a *pattern matching expression*: it returns the boolean `true`
@@ -269,12 +264,10 @@ describe a simple interface provided by the framework as follows:
 [INCLUDE=code/exercises/Ex01a.fst:FileIO]
 ~
 
-Here, we've defined an *interface* called `FileIO`, which uses the
-`ACLs` module. More importantly,
-`FileIO` provides two functions, `read` and `write`, which
+This interface provides two functions, `read` and `write`, which
 presumably implement the corresponding operations on files.
 
-By using the `assume val` notation, we *declare* that `FileIO` provides
+By using the `assume val` notation, we *declare* that this module provides
 the `read` and `write` operations (they are *values*), but that we are
 *_not_ defining* those values here---they will be provided by an external
 module. Our use of `assume val` is much like the
@@ -307,9 +300,9 @@ guarded by a security check, how can we make sure that each check is
 adequate? We can use F\*'s type-checker to automate this kind of code
 review.
 
-Here's some simple, untrusted client code. It uses `FileIO`,
-defines some common file names, and then a function called
-`staticChecking`, which tries to read and write a few files.
+Here's some simple, untrusted client code. It defines some common file names, 
+and then a function called `staticChecking`, 
+which tries to read and write a few files.
 
 ~ Fragment {link=code/exercises/Ex01a.fst}
 [INCLUDE=code/exercises/Ex01a.fst:UntrustedClientCode]
@@ -392,7 +385,7 @@ already seen two uses of this feature, e.g, the type
 `:f:filename{canRead f}` is a *refinement* of the type `:filename`. It's
 a refinement because only a subset of the `:filename` values have this
 type, namely those that satisfy the `canRead` predicate. The
-refinement in the type of `FileIO.write` is similar. In traditional
+refinement in the type of `write` is similar. In traditional
 ML-like languages, such types are inexpressible.
 
 In general, a refinement type in F\* has the form `:x:t{phi(x)}`, a
@@ -429,7 +422,7 @@ without entering an infinite loop; reading or writing the program's
 state; throwing exceptions; performing input or output; or, having any
 other effect whatsoever.
 
-On the other hand, an expression like `(FileIO.read "foo.txt")` is
+On the other hand, an expression like `(read "foo.txt")` is
 inferred to have type-and-effect `:ML string`, meaning that this term
 may have arbitrary effects (it may loop, do IO, throw exceptions,
 mutate the heap, etc.), but if it returns, it always returns a
@@ -689,7 +682,8 @@ We can assert and automatically check a more general property about `max`. For e
 
 Let's take a look at the factorial function:
 
-    let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
+    let rec factorial n = 
+      if n = 0 then 1 else Prims.op_Multiply n factorial (n - 1)
 
 As we said earlier, without further annotation, F\* infers `:int -> int`
 as the type of this function, which is a shorthand for
@@ -1058,6 +1052,9 @@ can almost ignore the distinction between the two. However, when you
 start to write refinement formulas with quantifiers, the distinction
 between the two will become apparent.
 
+<!--
+q:Type. True in universes too? 
+-->
 Both the universal quantifier `forall`, and the existential quantifier
 `exists`, are only available in `:Type`. When you mix refinements that
 include boolean function and the quantifiers, you need to use the
@@ -1302,7 +1299,6 @@ the proof. As usual, when structuring proofs, lemmas are your friends!
 ~
 
 ## Higher-order functions on lists
-
 
 ### Mapping
 
