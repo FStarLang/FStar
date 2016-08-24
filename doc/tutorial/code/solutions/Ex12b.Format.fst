@@ -22,10 +22,10 @@ open FStar.Seq              //It's really important for FStar.Seq.index to have 
 open FStar.SeqProperties
 open FStar.Classical
 
-
+// BEGIN: FormatMsg
 type message = bytes
 type msg (l:nat) = lbytes l
-
+// END: FormatMsg
 
 (* ----- a lemma on array append *)
 val append_inj_lemma: b1:message -> b2:message
@@ -73,6 +73,7 @@ type string16 = s:string{uInt16 (length (utf8 s))} (* up to 65K *)
 
 (* =============== the formatting we use for authenticated RPCs *)
 
+// BEGIN: FormatReqRes
 val request : string -> Tot message
 val response: string16 -> string -> Tot message
 
@@ -87,7 +88,7 @@ let response s t =
   lemma_repr_bytes_values (length (utf8 s));
   let lb = uint16_to_bytes (length (utf8 s)) in
   tag1 @| (lb @| ( (utf8 s) @| (utf8 t)))
-
+// END: FormatReqRes
 
 (* ------- 3 lemmas on message formats:
 
@@ -99,29 +100,36 @@ let response s t =
    functions---they just return messages---so these three lemmas are
    sufficient *)
 
+// BEGIN: FormatLemmas
 val req_resp_distinct:
   s:string -> s':string16 -> t':string ->
   Lemma (requires True)
         (ensures (request s <> response s' t'))
         [SMTPat (request s); SMTPat (response s' t')]
-let req_resp_distinct s s' t' = 
-  lemma_repr_bytes_values (length (utf8 s));
-  lemma_repr_bytes_values (length (utf8 s'));
-  assert (Seq.index (request s) 0 == Char.char_of_int 0);
-  assert (Seq.index (response s' t') 0 == Char.char_of_int 1)
 
 val req_components_corr:
   s0:string -> s1:string ->
   Lemma (requires (b2t (Seq.eq (request s0) (request s1))))
         (ensures  (s0==s1))
         (*[SMTPat (request s0); SMTPat (request s1)]*)
-let req_components_corr s0 s1 = ()
 
 val resp_components_corr:
   s0:string16 -> t0:string -> s1:string16 -> t1:string ->
   Lemma (requires (b2t (Seq.eq (response s0 t0) (response s1 t1))))
         (ensures  (s0==s1 /\ t0==t1))
         [SMTPat (response s0 t0); SMTPat (response s1 t1)]
+// End: FormatLemmas
+
+// BEGIN: FormatProofs
+let req_resp_distinct s s' t' = 
+  lemma_repr_bytes_values (length (utf8 s));
+  lemma_repr_bytes_values (length (utf8 s'));
+  assert (Seq.index (request s) 0 == Char.char_of_int 0);
+  assert (Seq.index (response s' t') 0 == Char.char_of_int 1)
+
+let req_components_corr s0 s1 = ()
+
 let resp_components_corr s0 t0 s1 t1 =
   lemma_repr_bytes_values (length (utf8 s0));
   lemma_repr_bytes_values (length (utf8 s1))
+// END: FormatProofs

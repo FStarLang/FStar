@@ -22,9 +22,12 @@ module Formatting = Ex12b.Format
 val msg_buffer: ref message
 let msg_buffer = ST.alloc (empty_bytes)
 
+// BEGIN: Network
 val send: message -> unit
-let send m = msg_buffer := m
 val recv: (message -> unit) -> unit
+// END: Network
+
+let send m = msg_buffer := m
 let rec recv call = if length !msg_buffer > 0
                 then (
                   let msg = !msg_buffer in
@@ -34,8 +37,10 @@ let rec recv call = if length !msg_buffer > 0
 
 (* two events, recording genuine requests and responses *)
 
+// BEGIN: RpcPredicates
 assume type pRequest : string -> Type0
 assume type pResponse : string -> string -> Type0
+// END: RpcPredicates
 
 (* the meaning of MACs, as used in RPC *)
 
@@ -77,6 +82,7 @@ let client_recv (s:string16) =
         print_string "\nclient verified:";
         print_string t ))
 
+// BEGIN: RpcProtocol
 val client : string16 -> ML unit
 let client (s:string16) =
   client_send s;
@@ -103,6 +109,7 @@ let server () =
             print_string t;
             send ( (utf8 t) @| (mac k (Formatting.response s t))))
         else failwith "Invalid MAC" )
+// END: RpcProtocol
 
 val test : unit -> ML unit
 let test () =
