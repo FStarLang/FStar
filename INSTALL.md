@@ -279,7 +279,7 @@ that's over there (it's optimized for F*).
 Once you have a working OCaml setup (see above)
 just run the following command:
 
-        $ make -C src/ocaml-output
+        $ make -C src/ocaml-output -j 15
 
 **Note:** On Windows this generates a native F* binary, that is, a binary that
 does *not* depend on `cygwin1.dll`, since the installer above uses a
@@ -290,6 +290,12 @@ needs to use the *correct* mingw libraries and *not* the Cygwin ones. OCaml uses
 special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 `examples/crypto` for examples.
 
+### Convenience Makefile targets
+
+- To run steps 2 and 3, do `make -j 15 fstar-ocaml`.
+- To run steps 3, 2 and 3 again, do: `make -j 15 ocaml-fstar-ocaml`.
+
+The latter step is not always guaranteed to work but almost always does, and is a tiny bit faster than extracting F* using the F# version.
 
 ## Runtime dependency: Z3 SMT solver ##
 
