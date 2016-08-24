@@ -9,7 +9,7 @@ module Make = functor (X: sig
   val ( >= ): int -> int -> bool
   val ( < ): int -> int -> bool
   val ( < ): int -> int -> bool
-  val op_Minus: int -> int
+  val ( ~- ): int -> int
   val parse_int: string -> int
 end) -> struct
   include X

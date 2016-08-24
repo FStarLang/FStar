@@ -9,7 +9,9 @@ module Make = functor (X: sig
   val ( >= ): int -> int -> bool
   val ( < ): int -> int -> bool
   val ( < ): int -> int -> bool
-  val op_Minus: int -> int
+  (** The unary minus operator... with a tilde because there's no way to
+   * override the unary - in OCaml. *)
+  val ( ~- ): int -> int
   val parse_int: string -> int
   val to_string: int -> string
 end) -> struct

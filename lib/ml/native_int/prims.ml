@@ -10,7 +10,7 @@ include MkPrims.Make(struct
   let ( < ) = ( < )
   let ( > ) = ( > )
   let ( % ) = ( mod )
-  let op_Minus x = - x
+  let ( ~- ) x = - x
   let parse_int  = int_of_string
 
 end)
