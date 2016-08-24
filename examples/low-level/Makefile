@@ -11,8 +11,7 @@ POLY_ODIR=poly
 AEAD_ODIR=aead
 
 # OCaml variables
-OCAMLOPT := ocamlfind opt -package batteries,stdint,zarith -linkpkg -g -I $(ULIB_ML) \
-	-I $(ULIB_ML)/hyperheap $(ULIB_ML)/fstarlib-hyperheap.cmxa -w -8-20-26
+OCAMLOPT := $(OCAMLOPT) -w -8-20-26
 
 REALIZED_MLI=
 REALIZED=FStar_HyperStack FStar_HST Low_Bytes
@@ -35,10 +34,10 @@ uall:
 
 sall:
 
-ulib: $(FSTAR_HOME)/ulib/ml/fstar-hyperlib.cmxa
+ulib: $(FSTAR_HOME)/ulib/ml/fstarlib.cmxa
 
-$(FSTAR_HOME)/ulib/ml/fstar-hyperlib.cmxa:
-	make -j 1 -C $(FSTAR_HOME)/ulib/ml clean hyperheap
+$(FSTAR_HOME)/ulib/ml/fstarlib.cmxa:
+	make -j 1 -C $(FSTAR_HOME)/ulib/ml clean all
 
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
