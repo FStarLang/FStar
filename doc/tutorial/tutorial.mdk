@@ -4915,7 +4915,7 @@ bytes, with the following specification:
 
 ~~ Answer
 ```
-[INCLUDE=code/solution/Ex12a.Cap.fst:CapImplementation]
+[INCLUDE=code/solutions/Ex12a.Cap.fst:CapImplementation]
 ```
 ~~
 
@@ -4962,7 +4962,7 @@ Below we give an implementation of the protocol using these functions,
 the functions of the 'MAC' module, and networking functions
 
 ```
-[INCLUDE=code/solution/Ex12b.RPC.fst:Network]
+[INCLUDE=code/solutions/Ex12b.RPC.fst:Network]
 ```
 
 These functions model an untrusted network controlled by the adversary, who decides
@@ -4970,12 +4970,12 @@ through their implementation when to deliver messages.
 
 Two events, record genuine requests and responses
 ```
-[INCLUDE=code/solution/Ex12b.RPC.fst:RpcPredicates]
+[INCLUDE=code/solutions/Ex12b.RPC.fst:RpcPredicates]
 ```
 in the following protocol
 
 ```
-[INCLUDE=code/solution/Ex12b.RPC.fst:RpcProtocol]
+[INCLUDE=code/solutions/Ex12b.RPC.fst:RpcProtocol]
 ```
 For simplicity we initially elide the client code which is similar.
 
@@ -4987,9 +4987,9 @@ The Format module used by the protocol implementation
 exports among others the following types and functions.
 
 ```
-[INCLUDE=code/solution/Ex12b.Format.fst:FormatMsg]
+[INCLUDE=code/solutions/Ex12b.Format.fst:FormatMsg]
 
-[INCLUDE=code/solution/Ex12b.Format.fst:FormatReqRes]
+[INCLUDE=code/solutions/Ex12b.Format.fst:FormatReqRes]
 ```
 
 We require 3 lemmas on message formats:
@@ -5008,7 +5008,7 @@ Try to state this formally as three lemmas.
 
 ~~Answer
 ```
-[INCLUDE=code/solution/Ex12b.Format.fst:FormatLemmas]
+[INCLUDE=code/solutions/Ex12b.Format.fst:FormatLemmas]
 ```
 ~~
 ~
@@ -5019,7 +5019,7 @@ Prove these three lemmas.
 
 ~~ Answer
 ```
-[INCLUDE=code/solution/Ex12b.Format.fst:FormatProofs]
+[INCLUDE=code/solutions/Ex12b.Format.fst:FormatProofs]
 ```
 ~~
 
