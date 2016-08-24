@@ -3807,7 +3807,7 @@ previous chapter, you should be ok---we'll explain what's needed about
 the `ST` monad as we go along, although, eventually, you'll probably
 want to refer to the previous chapter for more details.
 
-## Stateful access control
+## Stateful access control { #sec-stateful-access-control }
 
 We'll start with a simple example, based on the access control example
 from [#sec-access-control]. A restriction of that example was that the
@@ -4864,7 +4864,7 @@ We define an interface for an F* module implementing this functionality
 and expressing the cryptographic guarantees.
 
 ```
-[INCLUDE=code/exercises/exercises/Ex12.MAC.fst:MacSpec]
+[INCLUDE=code/solutions/Ex12.MAC.fst:MacSpec]
 ```
 
 This interface is unsurprising except for `pkey p` and `key_prop k t`.
@@ -4878,7 +4878,7 @@ It is used as a pre-condition for MACing and a postcondition of MAC verification
 
 In the RPC example below ([#sec-secure-rpc]) we will use a key of type `pkey reqresp` where
 ```
-[INCLUDE=code/exercises/exercises/Ex12b.RPC.fst:MsgProperty]
+[INCLUDE=code/solutions/Ex12b.RPC.fst:MsgProperty]
 ```
 which states that messages that verify with that key are either 
 `Request`s or `Respone`s.
@@ -4888,43 +4888,38 @@ which states that messages that verify with that key are either
 ## Cryptographic Capabilities for Accessing Files
 
 We extend the access control example ([#sec-policy]) with cryptographic capabilities, so
-that our trusted ACLs library can now issue and accept MAC tags
-as evidence that a given file is readable.
+that our trusted `ACLs` library can now issue and accept MAC tags
+as evidence that a given file is readable. Recall that in that exercise employed 
+predicates `ACLS.canRead f` and `ACLS.canWrite f` on filenames that determined whether 
+a file could bre read or written.
 
-What is the advantage of capabilities over the refinements already
-provided in acls2.fst?
+We now attach these predicates to unforgeable cryptographic tokens also called capabilities.
+
+*What is the advantage of capabilities over the dynamic access control based on state of Section [#sec-stateful-access-control]?*
+
+Capabilities need to be kept secret, as everyone knowing the capabilities is granted access to 
+the corresponding files, however, parties no longer need to keep a synchroniced access control database. 
+In order to verify capabilities, they only need to store the cryptographic key used to generate the capability.
 
 ~ Exercise
-Relying on acls2.fst and mac.fst, implement a pair of functions with
+Relying on `ACLS` and `MAC`, implement a pair of functions with
 the following specification, and verify them by typing under the
 security assumption that HMACSHA1 is INT-CMA.
 
-~~ ExerciseFragment {exname=ex12a-acls-cap}
-val issue:  f:file{ canRead f } -> SHA1.tag
-val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
+~~ ExerciseFragment {exname=Ex12a.Cap}
+[INCLUDE=code/exercises/Ex12a.Cap.fst:CapType]
 ~~
 
 To this end, assume given a UTF8 encoding function from strings to
 bytes, with the following specification:
 
 ```
-assume val utf8: s:string  -> Tot (seq byte)
-
-assume UTF8_inj:
-  forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
-    equal (utf8 s0) (utf8 s1) ==> s0==s1
-
-
+[INCLUDE=code/exercises/Ex12a.Cap.fst:ITF8Inj]
 ```
 
 ~~ Answer
 ```
-val issue: f:file{ canRead f } -> SHA1.tag
-val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
-
-let issue f = MAC.mac k (utf8 f)
-let redeem f t = if MAC.verify k (utf8 f) t then () else failwith "bad capability"
-
+[INCLUDE=code/solution/Ex12a.Cap.fst:CapImplementation]
 ```
 ~~
 
