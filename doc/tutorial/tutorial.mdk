@@ -4929,7 +4929,7 @@ How would we extend it to also cover CanWrite access?
 ## Secure RPC
 
 We describe a simple secure RPC implementation, which consists of three
-modules: `Mac`, our library for MACs, `Format`, a module for message
+modules: `MAC`, our library for MACs, `Format`, a module for message
 formatting, and `RPC`, a module for the rest of the protocol code.
 (Placing the formatting functions request and response in a separate
 module is convenient to illustrate modular programming and verification.)
@@ -4963,11 +4963,10 @@ instance be implemented as tagged concatenations of their utf8-encoded
 arguments. These functions will be detailed in the `Format` module.
 
 Below we give an implementation of the protocol using these functions,
-the functions of the 'Mac' module, and networking functions
+the functions of the 'MAC' module, and networking functions
 
 ```
-assume val send: message -> unit
-assume val recv: (message -> unit) -> unit
+[INCLUDE=code/solution/Ex12b.RPC.fst:Network]
 ```
 
 These functions model an untrusted network controlled by the adversary, who decides
@@ -4975,38 +4974,14 @@ through their implementation when to deliver messages.
 
 Two events, record genuine requests and responses
 ```
-logic type Request : string -> Type
-logic type Response : string -> string -> Type
+[INCLUDE=code/solution/Ex12b.RPC.fst:RpcPredicates]
 ```
 in the following protocol
 
 ```
-let client (s:string16) =
-  assume (Request s);
-  send (append (utf8 s) (mac k (request s)));
-  recv (fun msg ->
-    if length msg < macsize then failwith "Too short"
-    else
-      let (v, m') = split msg (length msg - macsize) in
-      let t = iutf8 v in
-      if verify k (response s t) m'
-      then assert (Response s t))
-
-let server () =
-  recv (fun msg ->
-    if length msg < macsize then failwith "Too short"
-    else
-      let (v,m) = split msg (length msg - macsize) in
-      if length v > 65535 then failwith "Too long"
-      else
-        let s = iutf8 v in
-        if verify k (request s) m
-        then
-          ( assert (Request s);
-            let t = "22" in
-            assume (Response s t);
-            send (append (utf8 t) (mac k (response s t)))))
+[INCLUDE=code/solution/Ex12b.RPC.fst:RpcProtocol]
 ```
+For simplicity we initially elide the client code which is similar.
 
 The `assert` guarantee that messages that are received by a party have been sent by its peer.
 
@@ -5016,16 +4991,9 @@ The Format module used by the protocol implementation
 exports among others the following types and functions.
 
 ```
-type message = seq byte
-type msg (l:nat) = m:message{length m==l}
+[INCLUDE=code/solution/Ex12b.Format.fst:FormatMsg]
 
-val request : string -> Tot message
-let request s = append tag0 (utf8 s)
-
-val response: string16 -> string -> Tot message
-let response s t =
-  let lb = uint16_to_bytes (length (utf8 s)) in
-  append tag1 (append lb (append (utf8 s) (utf8 t)))
+[INCLUDE=code/solution/Ex12b.Format.fst:FormatReqRes]
 ```
 
 We require 3 lemmas on message formats:
@@ -5044,21 +5012,7 @@ Try to state this formally as three lemmas.
 
 ~~Answer
 ```
-val req_resp_distinct:
-  s:string -> s':string16 -> t':string ->
-  Lemma (requires True)
-        (ensures (request s <> response s' t'))
-        [SMTPat (request s); SMTPat (response s' t')]
-
-val req_components_corr:
-  s0:string -> s1:string ->
-  Lemma (requires (request s0 == request s1))
-        (ensures  (s0==s1))
-
-val resp_components_corr:
-  s0:string16 -> t0:string -> s1:string16 -> t1:string ->
-  Lemma (requires (response s0 t0 == response s1 t1))
-        (ensures  (s0==s1 /\ t0==t1))
+[INCLUDE=code/solution/Ex12b.Format.fst:FormatLemmas]
 ```
 ~~
 ~
@@ -5069,10 +5023,7 @@ Prove these three lemmas.
 
 ~~ Answer
 ```
-let req_resp_distinct s s' t' =
-  assert (Array.index (request s) 0 <> Array.index (response s' t') 0)
-let req_components_corr s0 s1 = ()
-let resp_components_corr s0 t0 s1 t1 = ()
+[INCLUDE=code/solution/Ex12b.Format.fst:FormatProofs]
 ```
 ~~
 
@@ -5113,13 +5064,13 @@ let rec append_inj_lemma b1 b2 c1 c2 =
 ~ Remark
 In the lecture we also saw an extended protocol where we have a
 population of principals, represented as concrete strings ranged over
-by a and b, that intend to perform various remote procedure calls
+by `a` and `b`, that intend to perform various remote procedure calls
 (RPCs) over a public network.
 The RPCs consist of requests and responses, both also represented as strings.
-The security goals of our RPC protocol are that (1) whenever a principal b accepts a
-request message s from a, principal a has indeed sent the message to b and, conversely,
-(2) whenever a accepts a response message t from b, principal b has indeed sent the
-message in response to a matching request from a.
+The security goals of our RPC protocol are that (1) whenever a principal `b` accepts a
+request message `s` from `a`, principal `a` has indeed sent the message to `b` and, conversely,
+(2) whenever `a` accepts a response message `t` from `b`, principal `b` has indeed sent the
+message in response to a matching request from `a`.
 ~
 
 <!--
