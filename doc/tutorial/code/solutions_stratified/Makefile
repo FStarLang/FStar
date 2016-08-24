@@ -24,7 +24,7 @@ EXERCISES =\
   ex07c-stlc-let\
   ex07d-stlc-eval\
   ex10a-acls\
-  ex10-shift\
+  ex10b-shift\
 # Files currently not compiling
 #  ex06b-sort-poly\
    ex06d-no-discard\
