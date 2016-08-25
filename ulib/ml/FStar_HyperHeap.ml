@@ -1,6 +1,6 @@
 type t = unit
 type rid = unit
-type ('a, 'b) rref = 'b ref
+type ('a, 'b) rref = 'b FStar_ST.ref
 let root = ()
 type ('a, 'b, 'c) fresh_region = unit
 let extends a b = true

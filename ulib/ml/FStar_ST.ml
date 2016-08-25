@@ -7,7 +7,7 @@ type 'a ref = {
 let read x =
   x.contents
 
-let op_Colon_Equals x y =
+let op_Colon_Equals i x y =
   x.contents <- y
 
 let uid = ref 0
@@ -18,11 +18,15 @@ let alloc contents =
   Obj.(set_tag (repr r) object_tag);
   r
 
-let op_Bang = read
+let op_Bang i x =
+  x.contents
 
 let new_region = (fun r0 -> ())
 let new_colored_region = (fun r0 c -> ())
-let ralloc = (fun i x -> ref x)
+
+let ralloc i contents =
+  alloc contents
+
 let recall = (fun i r -> ())
 let recall_region = (fun r -> ())
 let get () = ()

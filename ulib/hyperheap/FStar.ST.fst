@@ -15,7 +15,7 @@
 *)
 module FStar.ST
 open FStar.HyperHeap
-let modifies = HyperHeap.modifies
+let modifies s h0 h1 = HyperHeap.modifies s h0 h1
 let modifies_none h0 h1 = modifies Set.empty h0 h1
 let ref (t:Type) = rref root t
 let st_pre = st_pre_h t
