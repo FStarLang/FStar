@@ -3015,7 +3015,7 @@ in (
 let rec imitate_or_project = (fun n st i -> if (i >= n) then begin
 (giveup env "flex-rigid case failed all backtracking attempts" orig)
 end else begin
-if (i = (- (1))) then begin
+if (i = (~- (1))) then begin
 (match ((imitate_t orig env wl st)) with
 | Failed (_44_2299) -> begin
 (imitate_or_project n st (i + 1))
@@ -3071,7 +3071,7 @@ let fvs_hd = (let _137_1212 = (let _137_1211 = (FStar_Absyn_Util.head_and_args t
 in (FStar_All.pipe_right _137_1211 Prims.fst))
 in (FStar_All.pipe_right _137_1212 FStar_Absyn_Util.freevars_typ))
 in if (FStar_Util.set_is_empty fvs_hd.FStar_Absyn_Syntax.ftvs) then begin
-(- (1))
+(~- (1))
 end else begin
 0
 end))
@@ -3146,7 +3146,7 @@ end else begin
 ()
 end
 in (let _137_1224 = (subterms args_lhs)
-in (imitate_or_project (FStar_List.length args_lhs) _137_1224 (- (1)))))
+in (imitate_or_project (FStar_List.length args_lhs) _137_1224 (~- (1)))))
 end else begin
 (giveup env "free-variable check failed on a non-redex" orig)
 end

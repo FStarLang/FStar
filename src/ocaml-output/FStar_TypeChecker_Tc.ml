@@ -4681,12 +4681,12 @@ in (
 
 let close_action = (fun act -> (
 
-let _58_2759 = (close (- (1)) ((act.FStar_Syntax_Syntax.action_univs), (act.FStar_Syntax_Syntax.action_defn)))
+let _58_2759 = (close (~- (1)) ((act.FStar_Syntax_Syntax.action_univs), (act.FStar_Syntax_Syntax.action_defn)))
 in (match (_58_2759) with
 | (univs, defn) -> begin
 (
 
-let _58_2762 = (close (- (1)) ((act.FStar_Syntax_Syntax.action_univs), (act.FStar_Syntax_Syntax.action_typ)))
+let _58_2762 = (close (~- (1)) ((act.FStar_Syntax_Syntax.action_univs), (act.FStar_Syntax_Syntax.action_typ)))
 in (match (_58_2762) with
 | (univs', typ) -> begin
 (

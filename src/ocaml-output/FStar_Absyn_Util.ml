@@ -237,7 +237,7 @@ let ftv : FStar_Ident.lid  ->  (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn
 
 let order_bvd = (fun x y -> (match (((x), (y))) with
 | (FStar_Util.Inl (_31_160), FStar_Util.Inr (_31_163)) -> begin
-(- (1))
+(~- (1))
 end
 | (FStar_Util.Inr (_31_167), FStar_Util.Inl (_31_170)) -> begin
 1

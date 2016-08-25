@@ -393,7 +393,7 @@ in (
 
 let new_proc = (
 
-let ctr = (FStar_Util.mk_ref (- (1)))
+let ctr = (FStar_Util.mk_ref (~- (1)))
 in (fun _83_169 -> (match (()) with
 | () -> begin
 (let _176_212 = (let _176_211 = (

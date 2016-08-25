@@ -469,7 +469,7 @@ let rec eta_args = (fun more_args t -> (match (t) with
 (
 
 let x = (let _169_182 = (FStar_Absyn_Util.gensym ())
-in ((_169_182), ((- (1)))))
+in ((_169_182), ((~- (1)))))
 in (let _169_185 = (let _169_184 = (let _169_183 = (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty t0) (FStar_Extraction_ML_Syntax.MLE_Var (x)))
 in ((((x), (t0))), (_169_183)))
 in (_169_184)::more_args)
@@ -708,7 +708,7 @@ end else begin
 (
 
 let x = (let _169_251 = (FStar_Absyn_Util.gensym ())
-in ((_169_251), ((- (1)))))
+in ((_169_251), ((~- (1)))))
 in (let _169_253 = (let _169_252 = (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty arg.FStar_Extraction_ML_Syntax.mlty) (FStar_Extraction_ML_Syntax.MLE_Var (x)))
 in (_169_252)::out_args)
 in (((((x), (arg)))::lbs), (_169_253))))

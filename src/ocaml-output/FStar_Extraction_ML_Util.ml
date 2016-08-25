@@ -90,7 +90,7 @@ end))
 let subst : FStar_Extraction_ML_Syntax.mltyscheme  ->  FStar_Extraction_ML_Syntax.mlty Prims.list  ->  FStar_Extraction_ML_Syntax.mlty = (fun _73_78 args -> (match (_73_78) with
 | (formals, t) -> begin
 if ((FStar_List.length formals) <> (FStar_List.length args)) then begin
-(FStar_All.failwith "Substitution must be fully applied")
+(FStar_All.failwith "Substitution must be fully applied (see GitHub issue #490)")
 end else begin
 (let _166_30 = (FStar_List.zip formals args)
 in (subst_aux _166_30 t))

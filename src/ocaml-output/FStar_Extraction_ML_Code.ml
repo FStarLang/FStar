@@ -152,7 +152,7 @@ let e_bin_prio_seq : (Prims.int * fixity) = ((100), (Infix (Left)))
 let e_app_prio : (Prims.int * fixity) = ((10000), (Infix (Left)))
 
 
-let min_op_prec : (Prims.int * fixity) = (((- (1))), (Infix (NonAssoc)))
+let min_op_prec : (Prims.int * fixity) = (((~- (1))), (Infix (NonAssoc)))
 
 
 let max_op_prec : (Prims.int * fixity) = ((FStar_Util.max_int), (Infix (NonAssoc)))

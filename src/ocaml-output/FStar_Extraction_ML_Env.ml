@@ -428,7 +428,7 @@ let mkContext : FStar_Tc_Env.env  ->  env = (fun e -> (
 let env = {tcenv = e; gamma = []; tydefs = []; currentModule = emptyMlPath}
 in (
 
-let a = (("\'a"), ((- (1))))
+let a = (("\'a"), ((~- (1))))
 in (
 
 let failwith_ty = (((a)::[]), (FStar_Extraction_ML_Syntax.MLTY_Fun (((FStar_Extraction_ML_Syntax.MLTY_Named ((([]), (((("Prims")::[]), ("string")))))), (FStar_Extraction_ML_Syntax.E_IMPURE), (FStar_Extraction_ML_Syntax.MLTY_Var (a))))))

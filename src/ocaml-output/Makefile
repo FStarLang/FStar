@@ -55,6 +55,7 @@ endif
 
 # FIXME this target is always rebuilt, regardless of whether the sources have
 # changed or not
+# NOTE: once we move to ulib, the -j 1 can disappear.
 all:
 	make -j 1 -C $(FSTAR_HOME)/lib/ml PRIMS_DIR=native_int
 	$(MAKE) prep

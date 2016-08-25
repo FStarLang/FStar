@@ -3127,7 +3127,7 @@ let st = (FStar_Option.get stopt)
 in (
 
 let tx = (FStar_Unionfind.new_transaction ())
-in if (i = (- (1))) then begin
+in if (i = (~- (1))) then begin
 (match ((imitate orig env wl st)) with
 | Failed (_55_2282) -> begin
 (
@@ -3189,7 +3189,7 @@ let fvs_hd = (let _148_1278 = (let _148_1277 = (FStar_Syntax_Util.head_and_args 
 in (FStar_All.pipe_right _148_1277 Prims.fst))
 in (FStar_All.pipe_right _148_1278 FStar_Syntax_Free.names))
 in if (FStar_Util.set_is_empty fvs_hd) then begin
-(- (1))
+(~- (1))
 end else begin
 0
 end))
@@ -3263,7 +3263,7 @@ end else begin
 ()
 end
 in (let _148_1289 = (subterms args_lhs)
-in (imitate_or_project (FStar_List.length args_lhs) _148_1289 (- (1)))))
+in (imitate_or_project (FStar_List.length args_lhs) _148_1289 (~- (1)))))
 end else begin
 (giveup env "free-variable check failed on a non-redex" orig)
 end
@@ -4901,7 +4901,7 @@ in (match (u1) with
 ()
 end
 | _55_3585 -> begin
-(match ((solve_universe_eq (- (1)) wl u1 u2)) with
+(match ((solve_universe_eq (~- (1)) wl u1 u2)) with
 | (UDeferred (_)) | (UFailed (_)) -> begin
 (
 
@@ -4967,7 +4967,7 @@ let rec solve_all_groups = (fun wl groups -> (match (groups) with
 ()
 end
 | ((u, lower_bounds))::groups -> begin
-(match ((solve_universe_eq (- (1)) wl (FStar_Syntax_Syntax.U_max (lower_bounds)) (FStar_Syntax_Syntax.U_unif (u)))) with
+(match ((solve_universe_eq (~- (1)) wl (FStar_Syntax_Syntax.U_max (lower_bounds)) (FStar_Syntax_Syntax.U_unif (u)))) with
 | USolved (wl) -> begin
 (solve_all_groups wl groups)
 end

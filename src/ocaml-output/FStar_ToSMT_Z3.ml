@@ -284,7 +284,7 @@ end)))
 let the_z3proc : FStar_Util.proc Prims.option FStar_ST.ref = (FStar_ST.alloc None)
 
 
-let ctr : Prims.int FStar_ST.ref = (FStar_Util.mk_ref (- (1)))
+let ctr : Prims.int FStar_ST.ref = (FStar_Util.mk_ref (~- (1)))
 
 
 let new_proc : Prims.unit  ->  FStar_Util.proc = (fun _48_99 -> (match (()) with

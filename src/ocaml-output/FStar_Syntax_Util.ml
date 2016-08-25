@@ -188,7 +188,7 @@ end
 0
 end
 | (FStar_Syntax_Syntax.U_unknown, _38_142) -> begin
-(- (1))
+(~- (1))
 end
 | (_38_145, FStar_Syntax_Syntax.U_unknown) -> begin
 1
@@ -197,7 +197,7 @@ end
 0
 end
 | (FStar_Syntax_Syntax.U_zero, _38_153) -> begin
-(- (1))
+(~- (1))
 end
 | (_38_156, FStar_Syntax_Syntax.U_zero) -> begin
 1
@@ -206,7 +206,7 @@ end
 (FStar_String.compare u1.FStar_Ident.idText u2.FStar_Ident.idText)
 end
 | (FStar_Syntax_Syntax.U_name (_38_165), FStar_Syntax_Syntax.U_unif (_38_168)) -> begin
-(- (1))
+(~- (1))
 end
 | (FStar_Syntax_Syntax.U_unif (_38_172), FStar_Syntax_Syntax.U_name (_38_175)) -> begin
 1
@@ -248,7 +248,7 @@ end))
 end))
 end
 | (FStar_Syntax_Syntax.U_max (_38_199), _38_202) -> begin
-(- (1))
+(~- (1))
 end
 | (_38_205, FStar_Syntax_Syntax.U_max (_38_207)) -> begin
 1
