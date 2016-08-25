@@ -1,9 +1,10 @@
-module Ex12d.MAC
+module Ex12g.TMAC2
 
 open FStar.Seq
-open Ex12d.Pad 
+open Ex12.Pad 
 
-module BMAC = Ex12d.BMAC
+module BMAC = Ex12.BMAC
+
 
 type text2 = b:bytes { length b <=  blocksize } 
 

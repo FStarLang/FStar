@@ -18,17 +18,18 @@ let blocksize = 32
 type block = nbytes blocksize
 type text = b:bytes {(length b < blocksize)}
 
-val pad: n:nat { 1 <= n /\ n <= blocksize } -> Tot (nbytes n)
-
+(* fill in type here and remove the assumption*)
 let pad n = 
+  assume (1 <= n /\ n < 256);
   Seq.create n (n2b (n-1))  
 
 (* pad 1 = [| 0 |]; pad 2 = [| 1; 1 |]; ... *)
 
-val encode: a: text -> Tot block 
+(* fill in type here *)
 let encode a = append a (pad (blocksize - length a))
 
-val decode: b:block -> option (t:text { equal b (encode t) })
+
+(* fill in type here *)
 let decode (b:block) = 
   let padsize = b2n(index b (blocksize - 1)) + 1 in
   if op_LessThan padsize blocksize then 

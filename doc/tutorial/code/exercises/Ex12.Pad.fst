@@ -1,5 +1,11 @@
-module Pad
-open Array
+module Ex12.Pad
+
+open FStar.UInt8
+open FStar.Seq
+open FStar.SeqProperties
+
+
+type uint8 = FStar.UInt8.t
 
 (* a coercion; avoid it? *)
 assume val n2b: n:nat {( n < 256 )} -> Tot uint8
@@ -12,23 +18,30 @@ let blocksize = 32
 type block = nbytes blocksize
 type text = b:bytes {(length b < blocksize)}
 
-(* fill in type here *)
+val pad: n:nat { 1 <= n /\ n <= blocksize } -> Tot (nbytes n)
+
 let pad n = 
-  Array.create n (n2b (n-1))  
+  Seq.create n (n2b (n-1))  
 
 (* pad 1 = [| 0 |]; pad 2 = [| 1; 1 |]; ... *)
 
-(* fill in type here *)
+val encode: a: text -> Tot block 
 let encode a = append a (pad (blocksize - length a))
 
-(* fill in type here *)
+val inj: a: text -> b: text -> Lemma (requires (equal (encode a) (encode b)))
+                                     (ensures (equal a b))
+                                     [SMTPat (encode a); SMTPat (encode b)]
+
+
+let inj a b = admit()
+
+
+val decode: b:block -> option (t:text { equal b (encode t) })
 let decode (b:block) = 
   let padsize = b2n(index b (blocksize - 1)) + 1 in
   if op_LessThan padsize blocksize then 
     let (plain,padding) = split b (blocksize - padsize) in
-    if padding = pad padsize
+    if  Seq.eq padding (pad padsize)
     then Some plain
     else None   
   else None
-
-

@@ -1,4 +1,4 @@
-module Ex12d.Pad
+module Ex12e.Pad
 
 open FStar.UInt8
 open FStar.Seq
@@ -27,6 +27,14 @@ let pad n =
 
 val encode: a: text -> Tot block 
 let encode a = append a (pad (blocksize - length a))
+
+val inj: a: text -> b: text -> Lemma (requires (equal (encode a) (encode b)))
+                                     (ensures (equal a b))
+                                     [SMTPat (encode a); SMTPat (encode b)]
+
+
+let inj a b = admit()
+
 
 val decode: b:block -> option (t:text { equal b (encode t) })
 let decode (b:block) = 

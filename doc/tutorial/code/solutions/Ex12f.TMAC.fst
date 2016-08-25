@@ -1,10 +1,10 @@
-module Ex12d.TMAC
+module Ex12f.TMAC
 
 open FStar.Seq
 
-open Ex12d.Pad 
+open Ex12.Pad 
 
-module BMAC = Ex12d.BMAC
+module BMAC = Ex12.BMAC
 
 
 let keysize = BMAC.keysize

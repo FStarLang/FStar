@@ -1,97 +1,56 @@
-module Ex12a.ACLs
-open FStar.String
-open FStar.List
+module Ex12a.ACLs 
+//this file is the same as Ex01a minus the tutorial code labels
+
+type filename = string
+
+(* canWrite is a function specifying whether or not a file f can be written *)
+let canWrite (f:filename) = 
+  match f with 
+    | "demo/tempfile" -> true
+    | _ -> false
+
+(* canRead is also a function ... *)
+let canRead (f:filename) = 
+  canWrite f               (* writeable files are also readable *)
+  || f="demo/README"       (* and so is this file *)
+// END: ACLs
+
+val read  : f:filename{canRead f}  -> string
+let read f  = FStar.IO.print_string ("Dummy read of file " ^ f ^ "\n"); f
+
+val write : f:filename{canWrite f} -> string -> unit
+let write f s = FStar.IO.print_string ("Dummy write of string " ^ s ^ " to file " ^ f ^ "\n")
+
+let passwd  = "demo/password"
+let readme  = "demo/README"
+let tmp     = "demo/tempfile"
 
 
-assume type canRead : string -> Type0 // read access permission
-assume type canWrite : string -> Type0   // write access permission
-assume type publicFile : string -> Type0 // some file attribute
+let staticChecking () =
+  let v1 = read tmp in
+  let v2 = read readme in
+  (* let v3 = read passwd in -- invalid read, fails type-checking *)
+  write tmp "hello!"
+  (* ; write passwd "junk" -- invalid write , fails type-checking *)
 
-(* sample policy: writable files are also readable *)
 
-assume Policy: forall x. canWrite x ==> canRead x
+exception InvalidRead
+val checkedRead : filename -> string
+let checkedRead f =
+  if canRead f then read f else raise InvalidRead
 
-(* two dangerous primitives *)
+val checkedWrite : filename -> string -> unit
 
-val read: file:string{canRead file} -> string
-val delete: file:string{canWrite file} -> unit
+exception InvalidWrite
+let checkedWrite f s =
+  if canWrite f then write f s else raise InvalidWrite
 
-let read file = assert(canRead file); "data"
-let delete file = assert(canWrite file)
 
-(* some sample files, one of them writable *)
+let dynamicChecking () =
+  let v1 = checkedRead tmp in
+  let v2 = checkedRead readme in
+  let v3 = checkedRead passwd in (* this raises exception *)
+  checkedWrite tmp "hello!";
+  checkedWrite passwd "junk" (* this raises exception *)
 
-let pwd = "C:/etc/password"
-let readme = "C:/public/README"
-let tmp = "C:/temp/tempfile"
-
-assume WritableTmp: canWrite tmp
-
-(* sample dynamic validation function *)
-(* "all files in the public directory are readable" *)
-
-val publicfile: f:string -> u:unit{ publicFile f } //CF can we omit u: ?
-
-let publicfile f = 
-  if f = "C:/public/README" then assume (publicFile f)
-  else failwith "not a public file"
-
-assume ReadablePublic: forall x. publicFile x ==> canRead x //NS: ==> is implication
-
-let test() = 
-  delete tmp; (* ok *)
-//delete pwd; (* type error *)
-  let v1 = read tmp in (* ok, using 1st logical rule *)
-//let v2 = read readme in (* type error *)
-  publicfile readme;
-  let v3 = read readme in (* ok *)   //CF this should succeed
-  () 
-
-(* some higher-order code *)
-
-val rc: file:string{canRead(file)} -> unit -> string  
-
-let rc file : unit -> string = fun () -> read file
-
-val test_higher_order: unit -> unit
-let test_higher_order() =
-  let reader = 
-    (publicfile readme; (fun () -> read readme)) in
-//let v4 = read readme in (* type error *)
-  let v5 = reader () in   (* ok *)
-  ()
-
-(* using dynamic ACLs in some database *)
-
-type entry = 
-  | Readable of x:string{canRead x}
-  | Writable of x:string{canWrite x}
-  | Nothing
-
-type db = list (string * entry)
-assume val acls: db
-assume val insert: db -> string -> entry -> unit
-
-val safe_read: string -> string
-let safe_read file = 
-  match List.Tot.assoc file acls with
-  | Some(Readable file) -> read file 
-  | Some(Writable file) -> read file 
-  | _ -> failwith "unreadable"
-
-val readable: file:string -> u:unit{ canRead(file) }
-
-let readable file = 
-  match List.Tot.assoc file acls with
-  | Some(Readable f) -> if file = f then () else failwith "unreadable"
-  | Some(Writable f) -> if file = f then () else failwith "unreasable"
-  | _ -> failwith "unreadable"
-
-val test_acls: unit -> unit
-let test_acls() = 
-  insert acls tmp (Writable(tmp)); (* ok *)
-  //insert acls tmp (Readable(pwd)); (* type error *)
-  insert acls pwd (Nothing);       (* ok *)
-  let v6 = safe_read pwd in           (* fails dynamically *)
-  let v7 = readable tmp; read tmp in  (* ok *)
-  ()
+let main = staticChecking (); dynamicChecking ()

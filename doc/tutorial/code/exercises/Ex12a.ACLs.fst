@@ -1,40 +1,56 @@
-module Ex12a.ACLs
-open FStar.String
-open FStar.List
+module Ex12a.ACLs 
+//this file is the same as Ex01a minus the tutorial code labels
 
-let canWrite = function
-  | "C:/temp/tempfile" -> true
-  | _ -> false
+type filename = string
 
-let publicFile = function 
-  | "C:/public/README" -> true
-  | _ -> false
-  
-let canRead (file:string) = 
-  canWrite file           (* 1. writeable files are also readable *)
-  || publicFile file      (* 2. public files are readable *)
-  || file="C:/acls2.fst"  (* and so is this file *)
+(* canWrite is a function specifying whether or not a file f can be written *)
+let canWrite (f:filename) = 
+  match f with 
+    | "demo/tempfile" -> true
+    | _ -> false
 
-(* two dangerous primitives *)
-assume val read:   file:string{canRead file} -> string
-assume val delete: file:string{canWrite file} -> unit
+(* canRead is also a function ... *)
+let canRead (f:filename) = 
+  canWrite f               (* writeable files are also readable *)
+  || f="demo/README"       (* and so is this file *)
+// END: ACLs
 
-(* some sample files, one of them writable *)
-let pwd    = "C:/etc/password"
-let readme = "C:/public/README"
-let tmp    = "C:/temp/tempfile"
+val read  : f:filename{canRead f}  -> string
+let read f  = FStar.IO.print_string ("Dummy read of file " ^ f ^ "\n"); f
 
-let test () = 
-  delete tmp; (* ok *)
-//delete pwd; (* type error *)
-  let v1 = read tmp in    (* ok, rule 1. *)
-  let v2 = read readme in (* ok, rule 2. *)
-  () 
+val write : f:filename{canWrite f} -> string -> unit
+let write f s = FStar.IO.print_string ("Dummy write of string " ^ s ^ " to file " ^ f ^ "\n")
 
-(* some higher-order code *)
-val rc: string -> ML (unit -> string)
-let rc file = 
-  if canRead file 
-  then (fun () -> read file)
-  else failwith "Can't read"
+let passwd  = "demo/password"
+let readme  = "demo/README"
+let tmp     = "demo/tempfile"
 
+
+let staticChecking () =
+  let v1 = read tmp in
+  let v2 = read readme in
+  (* let v3 = read passwd in -- invalid read, fails type-checking *)
+  write tmp "hello!"
+  (* ; write passwd "junk" -- invalid write , fails type-checking *)
+
+
+exception InvalidRead
+val checkedRead : filename -> string
+let checkedRead f =
+  if canRead f then read f else raise InvalidRead
+
+val checkedWrite : filename -> string -> unit
+
+exception InvalidWrite
+let checkedWrite f s =
+  if canWrite f then write f s else raise InvalidWrite
+
+
+let dynamicChecking () =
+  let v1 = checkedRead tmp in
+  let v2 = checkedRead readme in
+  let v3 = checkedRead passwd in (* this raises exception *)
+  checkedWrite tmp "hello!";
+  checkedWrite passwd "junk" (* this raises exception *)
+
+let main = staticChecking (); dynamicChecking ()

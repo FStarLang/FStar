@@ -1,6 +1,6 @@
-module Ex12d.BMAC
+module Ex12.BMAC
 
-open Ex12d.Pad 
+open Ex12.Pad 
 
 let keysize = 16 (* these are the sizes for SHA1 *) 
 let macsize = 20  

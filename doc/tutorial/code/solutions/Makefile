@@ -25,8 +25,10 @@ Ex10a.fst \
 Ex10b.fst \
 Ex12a.Cap.fst \
 Ex12b.RPC.fst \
-Ex12d.MAC.fst \
-Ex12d.TMAC.fst
+Ex12d.Pad.fst \
+Ex12e.Pad.fst \
+Ex12f.TMAC.fst \
+Ex12g.TMAC2.fst
 
 VERFILES_HH=Ex11a.fst
 
