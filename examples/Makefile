@@ -11,7 +11,6 @@ termination \
 software_foundations \
 ../doc/tutorial/code/exercises \
 ../doc/tutorial/code/solutions \
-../doc/tutorial/code/solutions_stratified \
 relational \
 relational/new \
 voting \
