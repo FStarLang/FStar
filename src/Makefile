@@ -251,7 +251,7 @@ regressions:
 	make -C ../examples/hello ocaml
 	make -C ../ucontrib/CoreCrypto/ml/ test
 	make -C ../examples/crypto clean #rpc-test cnt-test #removed until we can add it in uregressions
-#make -C ../examples/wysteria a.out distclean
+	make -C ../examples/wysteria a.out distclean
 
 # Getting parallelism from this target
 uregressions: ulib uexamples

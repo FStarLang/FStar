@@ -20,12 +20,12 @@ maths \
 paradoxes \
 printf \
 verifythis \
+wysteria \
 preorders \
 dm4free \
 unit-tests
 
 #metatheory\
-#wysteria \
 after verifythis
 
 
