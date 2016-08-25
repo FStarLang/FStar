@@ -162,7 +162,7 @@ clean_ocaml_prep:
 extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
-	time $(FSTAR) --stratified --explicit_deps --eager_inference \
+	$(FSTAR) --stratified --explicit_deps --eager_inference \
 	  --lax --fs_typ_app --no_location_info $(addprefix --no_extract \
 	  ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
 
