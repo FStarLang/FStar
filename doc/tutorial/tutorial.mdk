@@ -5064,9 +5064,9 @@ fixed-sized algorithms, such as those that operate on 256-bit blocks, such as AE
 To this end, we use the following classic PKCS#7 padding scheme (used for instance in TLS).
 
 ```
-[INCLUDE=code/solutions/Ex12.Pad.fst:CreatePadding]
-[INCLUDE=code/solutions/Ex12.Pad.fst:EncodePadding]
-[INCLUDE=code/solutions/Ex12.Pad.fst:DecodePadding]
+[INCLUDE=code/exercises/Ex12.Pad.fst:CreatePadding]
+[INCLUDE=code/exercises/Ex12.Pad.fst:EncodePadding]
+[INCLUDE=code/exercises/Ex12.Pad.fst:DecodePadding]
 ```
 
 The function `n2b` converts numbers less than 256 into a byte; `pad` 
