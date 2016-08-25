@@ -5061,39 +5061,21 @@ signing email messages and verifying their signatures.
 We intend to MAC and/or encrypt plaintexts of variable sizes using
 fixed-sized algorithms, such as those that operate on 256-bit blocks, such as AES.
 
-To this end, we use the following classic padding scheme (used for instance in TLS).
+To this end, we use the following classic PKCS#7 padding scheme (used for instance in TLS).
 
 ```
-module Pad
-open Array
-
-(* two coercions from uint8 <--> n:int { 0 <= n < 255 } *)
-assume val n2b: n:nat {( n < 256 )} -> Tot uint8
-assume val b2n: b:uint8 -> Tot (n:nat { (n < 256) /\ n2b n = b })
-
-type bytes = seq byte (* concrete byte arrays *)
-type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
-
-let blocksize = 32
-type block = nbytes blocksize
-type text = b:bytes {(length b < blocksize)}
-
-let pad n = Array.create n (n2b (n-1))
-
-let encode (a:text) = append a (pad (blocksize - length a))
-
-let decode (b:block) =
-  let padsize = b2n(index b (blocksize - 1)) + 1 in
-  if op_LessThan padsize blocksize then
-    let (plain,padding) = split b (blocksize - padsize) in
-    if padding = pad padsize
-    then Some plain
-    else None
-  else None
+[INCLUDE=code/solutions/Ex12.Pad.fst:CreatePadding]
+[INCLUDE=code/solutions/Ex12.Pad.fst:EncodePadding]
+[INCLUDE=code/solutions/Ex12.Pad.fst:DecodePadding]
 ```
+
+The function `n2b` converts numbers less than 256 into a byte; `pad` 
+creates creates `bytes` consisting of `n` bytes encoding the number `n`;
+`encode` filles up `bytes` smaller than a block to a full block using such pads; and 
+`decode` removes pads.
 
 ~ Exercise
-What do these function do? Write as precise as possible
+What do these function do? Write a
 typed specifications for these functions. In particular
 show that decoding cancels out encoding.
 
@@ -5150,7 +5132,7 @@ using the MAC interface below, which only supports messages of type
 `block`.
 
 To this end, we assume given an implementation of the following module
-(adapted from `mac.fst`)
+(adapted from the `MAC` module)
 
 ```
 module BMAC
@@ -5170,9 +5152,9 @@ assume val verify: k:key -> t:block -> tag -> b:bool{b ==> key_prop k t}
 ```
 
 Write a similar module that accepts texts instead of blocks:
-first the implementations for keygen, mac, and verify,
+first the implementations for `keygen`, `mac`, and `verify`,
 then type annotations to derive their authentication property
-(on texts) from the one of BMAC (on blocks).
+(on `texts`) from the one of `BMAC` (on `blocks`).
 
 ~~ Answer
 ```
