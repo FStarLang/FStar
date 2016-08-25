@@ -238,11 +238,13 @@ let one_debug_level_geq l1 l2 = match l1 with
    | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
 let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug_level_geq (dlevel l1) l2)
 
+// Note: the "lib/fstar" is for the case where package is installed in the
+// standard "unix" way (e.g. opam) and the lib directory is $PREFIX/lib/fstar
 let include_path_base_dirs =
   ["/lib"; "/lib/fstar"]
 
 let universe_include_path_base_dirs =
-  ["/ulib"]
+  ["/ulib"; "/lib/fstar"]
 
 let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
