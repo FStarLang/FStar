@@ -1,7 +1,7 @@
 
 open Prims
 
-let rec get_next_n_ite : Prims.int  ->  FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term)  ->  (Prims.bool * FStar_ToSMT_Term.term * FStar_ToSMT_Term.term * FStar_ToSMT_Term.term) = (fun n t negs f -> if (n <= 0) then begin
+let rec get_next_n_ite : Prims.int  ->  FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term)  ->  (Prims.bool * FStar_ToSMT_Term.term * FStar_ToSMT_Term.term * FStar_ToSMT_Term.term) = (fun n t negs f -> if (n <= (Prims.parse_int "0")) then begin
 (let _142_14 = (f FStar_ToSMT_Term.mkTrue)
 in ((true), (_142_14), (negs), (t)))
 end else begin
@@ -10,7 +10,7 @@ end else begin
 (let _142_19 = (let _142_16 = (let _142_15 = (FStar_ToSMT_Term.mkNot g)
 in ((negs), (_142_15)))
 in (FStar_ToSMT_Term.mkAnd _142_16))
-in (get_next_n_ite (n - 1) e _142_19 (fun x -> (let _142_18 = (FStar_ToSMT_Term.mkITE ((g), (t), (x)))
+in (get_next_n_ite (n - (Prims.parse_int "1")) e _142_19 (fun x -> (let _142_18 = (FStar_ToSMT_Term.mkITE ((g), (t), (x)))
 in (f _142_18)))))
 end
 | FStar_ToSMT_Term.FreeV (_49_18) -> begin
@@ -23,7 +23,7 @@ end)
 end)
 
 
-let rec is_ite_all_the_way : Prims.int  ->  FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term Prims.list  ->  (Prims.bool * FStar_ToSMT_Term.term Prims.list * FStar_ToSMT_Term.term) = (fun n t negs l -> if (n <= 0) then begin
+let rec is_ite_all_the_way : Prims.int  ->  FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term Prims.list  ->  (Prims.bool * FStar_ToSMT_Term.term Prims.list * FStar_ToSMT_Term.term) = (fun n t negs l -> if (n <= (Prims.parse_int "0")) then begin
 (Prims.raise FStar_Util.Impos)
 end else begin
 (match (t.FStar_ToSMT_Term.tm) with

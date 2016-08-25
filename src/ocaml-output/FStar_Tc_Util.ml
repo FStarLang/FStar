@@ -1341,7 +1341,7 @@ end)))
 
 let norm_eff_name : FStar_Tc_Env.env  ->  FStar_Ident.lident  ->  FStar_Ident.lident = (
 
-let cache = (FStar_Util.smap_create 20)
+let cache = (FStar_Util.smap_create (Prims.parse_int "20"))
 in (fun env l -> (
 
 let rec find = (fun l -> (match ((FStar_Tc_Env.lookup_effect_abbrev env l)) with
@@ -2110,7 +2110,7 @@ let wp = (ifthenelse md res_t guard wp_then wp_else)
 in (
 
 let wlp = (ifthenelse md res_t guard wlp_then wlp_else)
-in if ((FStar_Options.split_cases ()) > 0) then begin
+in if ((FStar_Options.split_cases ()) > (Prims.parse_int "0")) then begin
 (
 
 let comp = (mk_comp md res_t wp wlp [])
@@ -2225,7 +2225,7 @@ in (let _138_853 = (ifthenelse md res_t g wlp_then wlp_else)
 in (mk_comp md res_t _138_854 _138_853 [])))
 end))
 end)) lcases default_case)
-in if ((FStar_Options.split_cases ()) > 0) then begin
+in if ((FStar_Options.split_cases ()) > (Prims.parse_int "0")) then begin
 (add_equality_to_post_condition env comp res_t)
 end else begin
 (
@@ -2743,7 +2743,7 @@ end)))
 let check_uvars : FStar_Range.range  ->  FStar_Absyn_Syntax.typ  ->  Prims.unit = (fun r t -> (
 
 let uvt = (FStar_Absyn_Util.uvars_in_typ t)
-in if ((((FStar_Util.set_count uvt.FStar_Absyn_Syntax.uvars_e) + (FStar_Util.set_count uvt.FStar_Absyn_Syntax.uvars_t)) + (FStar_Util.set_count uvt.FStar_Absyn_Syntax.uvars_k)) > 0) then begin
+in if ((((FStar_Util.set_count uvt.FStar_Absyn_Syntax.uvars_e) + (FStar_Util.set_count uvt.FStar_Absyn_Syntax.uvars_t)) + (FStar_Util.set_count uvt.FStar_Absyn_Syntax.uvars_k)) > (Prims.parse_int "0")) then begin
 (
 
 let ue = (let _138_1011 = (FStar_Util.set_elements uvt.FStar_Absyn_Syntax.uvars_e)

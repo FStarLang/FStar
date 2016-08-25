@@ -29,7 +29,7 @@ end else begin
 (
 
 let _88_15 = (FStar_Util.print_error "dependency analysis did not find prims.fst?!")
-in (FStar_All.exit 1))
+in (FStar_All.exit (Prims.parse_int "1")))
 end
 in deps))
 end)

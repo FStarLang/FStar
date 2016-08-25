@@ -283,7 +283,7 @@ let init : Prims.unit  ->  Prims.unit = (fun _24_67 -> (match (()) with
 | () -> begin
 (
 
-let vals = ((("__temp_no_proj"), (List ([]))))::((("_fstar_home"), (String (""))))::((("_include_path"), (List ([]))))::((("admit_smt_queries"), (Bool (false))))::((("cardinality"), (String ("off"))))::((("codegen"), (Unset)))::((("codegen-lib"), (List ([]))))::((("debug"), (List ([]))))::((("debug_level"), (List ([]))))::((("dep"), (Unset)))::((("detail_errors"), (Bool (false))))::((("doc"), (Bool (false))))::((("dump_module"), (List ([]))))::((("eager_inference"), (Bool (false))))::((("explicit_deps"), (Bool (false))))::((("fs_typ_app"), (Bool (false))))::((("fsi"), (Bool (false))))::((("fstar_home"), (Unset)))::((("full_context_dependency"), (Bool (true))))::((("hide_genident_nums"), (Bool (false))))::((("hide_uvar_nums"), (Bool (false))))::((("hint_info"), (Bool (false))))::((("in"), (Bool (false))))::((("include"), (List ([]))))::((("initial_fuel"), (Int (2))))::((("initial_ifuel"), (Int (1))))::((("inline_arith"), (Bool (false))))::((("lax"), (Bool (false))))::((("log_queries"), (Bool (false))))::((("log_types"), (Bool (false))))::((("max_fuel"), (Int (8))))::((("max_ifuel"), (Int (2))))::((("min_fuel"), (Int (1))))::((("MLish"), (Bool (false))))::((("n_cores"), (Int (1))))::((("no_default_includes"), (Bool (false))))::((("no_extract"), (List ([]))))::((("no_location_info"), (Bool (false))))::((("odir"), (Unset)))::((("prims"), (Unset)))::((("pretype"), (Bool (true))))::((("prims_ref"), (Unset)))::((("print_before_norm"), (Bool (false))))::((("print_bound_var_types"), (Bool (false))))::((("print_effect_args"), (Bool (false))))::((("print_fuels"), (Bool (false))))::((("print_implicits"), (Bool (false))))::((("print_universes"), (Bool (false))))::((("prn"), (Bool (false))))::((("record_hints"), (Bool (false))))::((("reuse_hint_for"), (Unset)))::((("show_signatures"), (List ([]))))::((("silent"), (Bool (false))))::((("smt"), (Unset)))::((("split_cases"), (Int (0))))::((("stratified"), (Bool (false))))::((("timing"), (Bool (false))))::((("trace_error"), (Bool (false))))::((("unthrottle_inductives"), (Bool (false))))::((("use_eq_at_higher_order"), (Bool (false))))::((("use_hints"), (Bool (false))))::((("use_native_int"), (Bool (false))))::((("verify"), (Bool (true))))::((("verify_all"), (Bool (false))))::((("verify_module"), (List ([]))))::((("warn_top_level_effects"), (Bool (false))))::((("z3timeout"), (Int (5))))::[]
+let vals = ((("__temp_no_proj"), (List ([]))))::((("_fstar_home"), (String (""))))::((("_include_path"), (List ([]))))::((("admit_smt_queries"), (Bool (false))))::((("cardinality"), (String ("off"))))::((("codegen"), (Unset)))::((("codegen-lib"), (List ([]))))::((("debug"), (List ([]))))::((("debug_level"), (List ([]))))::((("dep"), (Unset)))::((("detail_errors"), (Bool (false))))::((("doc"), (Bool (false))))::((("dump_module"), (List ([]))))::((("eager_inference"), (Bool (false))))::((("explicit_deps"), (Bool (false))))::((("fs_typ_app"), (Bool (false))))::((("fsi"), (Bool (false))))::((("fstar_home"), (Unset)))::((("full_context_dependency"), (Bool (true))))::((("hide_genident_nums"), (Bool (false))))::((("hide_uvar_nums"), (Bool (false))))::((("hint_info"), (Bool (false))))::((("in"), (Bool (false))))::((("include"), (List ([]))))::((("initial_fuel"), (Int ((Prims.parse_int "2")))))::((("initial_ifuel"), (Int ((Prims.parse_int "1")))))::((("inline_arith"), (Bool (false))))::((("lax"), (Bool (false))))::((("log_queries"), (Bool (false))))::((("log_types"), (Bool (false))))::((("max_fuel"), (Int ((Prims.parse_int "8")))))::((("max_ifuel"), (Int ((Prims.parse_int "2")))))::((("min_fuel"), (Int ((Prims.parse_int "1")))))::((("MLish"), (Bool (false))))::((("n_cores"), (Int ((Prims.parse_int "1")))))::((("no_default_includes"), (Bool (false))))::((("no_extract"), (List ([]))))::((("no_location_info"), (Bool (false))))::((("odir"), (Unset)))::((("prims"), (Unset)))::((("pretype"), (Bool (true))))::((("prims_ref"), (Unset)))::((("print_before_norm"), (Bool (false))))::((("print_bound_var_types"), (Bool (false))))::((("print_effect_args"), (Bool (false))))::((("print_fuels"), (Bool (false))))::((("print_implicits"), (Bool (false))))::((("print_universes"), (Bool (false))))::((("prn"), (Bool (false))))::((("record_hints"), (Bool (false))))::((("reuse_hint_for"), (Unset)))::((("show_signatures"), (List ([]))))::((("silent"), (Bool (false))))::((("smt"), (Unset)))::((("split_cases"), (Int ((Prims.parse_int "0")))))::((("stratified"), (Bool (false))))::((("timing"), (Bool (false))))::((("trace_error"), (Bool (false))))::((("unthrottle_inductives"), (Bool (false))))::((("use_eq_at_higher_order"), (Bool (false))))::((("use_hints"), (Bool (false))))::((("use_native_int"), (Bool (false))))::((("verify"), (Bool (true))))::((("verify_all"), (Bool (false))))::((("verify_module"), (List ([]))))::((("warn_top_level_effects"), (Bool (false))))::((("z3timeout"), (Int ((Prims.parse_int "5")))))::[]
 in (
 
 let o = (peek ())
@@ -298,7 +298,7 @@ let clear : Prims.unit  ->  Prims.unit = (fun _24_72 -> (match (()) with
 | () -> begin
 (
 
-let o = (FStar_Util.smap_create 50)
+let o = (FStar_Util.smap_create (Prims.parse_int "50"))
 in (
 
 let _24_74 = (FStar_ST.op_Colon_Equals fstar_options ((o)::[]))
@@ -969,7 +969,7 @@ in (FStar_All.pipe_right _117_450 (FStar_List.map (fun _117_449 -> String (_117_
 in List (_117_451)))), ("[module name]")))), ("Don\'t generate projectors for this module")))::((('v'), ("version"), (FStar_Getopt.ZeroArgs ((fun _24_250 -> (
 
 let _24_252 = (display_version ())
-in (FStar_All.exit 0))))), ("Display version number")))::(((FStar_Getopt.noshort), ("warn_top_level_effects"), (FStar_Getopt.ZeroArgs ((fun _24_254 -> (match (()) with
+in (FStar_All.exit (Prims.parse_int "0")))))), ("Display version number")))::(((FStar_Getopt.noshort), ("warn_top_level_effects"), (FStar_Getopt.ZeroArgs ((fun _24_254 -> (match (()) with
 | () -> begin
 Bool (true)
 end)))), ("Top-level effects are ignored by default; turn this flag on to be warned when this happens")))::(((FStar_Getopt.noshort), ("z3timeout"), (FStar_Getopt.OneArg ((((fun s -> (let _117_457 = (FStar_Util.int_of_string s)
@@ -978,7 +978,7 @@ in (let _117_459 = (FStar_List.map mk_spec specs)
 in ((('h'), ("help"), (FStar_Getopt.ZeroArgs ((fun x -> (
 
 let _24_258 = (display_usage_aux specs)
-in (FStar_All.exit 0))))), ("Display this information")))::_117_459))
+in (FStar_All.exit (Prims.parse_int "0")))))), ("Display this information")))::_117_459))
 end))
 and parse_codegen : Prims.string  ->  Prims.string = (fun s -> (match (s) with
 | ("Kremlin") | ("OCaml") | ("FSharp") -> begin
@@ -992,7 +992,7 @@ in (
 
 let _24_268 = (let _117_461 = (specs ())
 in (display_usage_aux _117_461))
-in (FStar_All.exit 1)))
+in (FStar_All.exit (Prims.parse_int "1"))))
 end))
 and validate_cardinality : Prims.string  ->  Prims.string = (fun x -> (match (x) with
 | ("warn") | ("check") | ("off") -> begin
@@ -1006,7 +1006,7 @@ in (
 
 let _24_278 = (let _117_463 = (specs ())
 in (display_usage_aux _117_463))
-in (FStar_All.exit 1)))
+in (FStar_All.exit (Prims.parse_int "1"))))
 end))
 and set_interactive_fsi = (fun _24_280 -> if (get_in ()) then begin
 (set_option' (("fsi"), (Bool (true))))
@@ -1018,7 +1018,7 @@ in (
 
 let _24_284 = (let _117_464 = (specs ())
 in (display_usage_aux _117_464))
-in (FStar_All.exit 1)))
+in (FStar_All.exit (Prims.parse_int "1"))))
 end)
 
 

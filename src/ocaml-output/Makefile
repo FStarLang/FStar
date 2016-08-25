@@ -9,7 +9,7 @@ MENHIR=ocamlyacc
 OCAMLC=ocamlfind ocamlc $(OPTIONS)
 OCAMLOPT=ocamlfind ocamlopt $(OPTIONS)
 OCAMLDEP=ocamldep
-INCLUDES=-I $(FSTAR_HOME)/lib/ml/native_int -I $(FSTAR_HOME)/lib/ml/ # all relevant -I options here
+INCLUDES=-I $(FSTAR_HOME)/lib/ml/ # all relevant -I options here
 OCAMLFLAGS=$(INCLUDES)    -w -8  # add other options for ocamlc here
 OCAMLOPTFLAGS=$(INCLUDES) -w -8  # add other options for ocamlopt here
 
@@ -57,7 +57,7 @@ endif
 # changed or not
 # NOTE: once we move to ulib, the -j 1 can disappear.
 all:
-	make -j 1 -C $(FSTAR_HOME)/lib/ml PRIMS_DIR=native_int
+	make -j 1 -C $(FSTAR_HOME)/lib/ml
 	$(MAKE) prep
 	$(MAKE) depend
 	$(MAKE) fstar.exe

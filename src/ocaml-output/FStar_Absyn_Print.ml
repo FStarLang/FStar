@@ -109,11 +109,11 @@ end
 | (FStar_Util.Inr (x), _32_95) -> begin
 x
 end)) args)
-in if ((is_lex_cons f) && ((FStar_List.length exps) = 2)) then begin
-(match ((let _125_31 = (FStar_List.nth exps 1)
+in if ((is_lex_cons f) && ((FStar_List.length exps) = (Prims.parse_int "2"))) then begin
+(match ((let _125_31 = (FStar_List.nth exps (Prims.parse_int "1"))
 in (reconstruct_lex _125_31))) with
 | Some (xs) -> begin
-(let _125_33 = (let _125_32 = (FStar_List.nth exps 0)
+(let _125_33 = (let _125_32 = (FStar_List.nth exps (Prims.parse_int "0"))
 in (_125_32)::xs)
 in Some (_125_33))
 end
@@ -186,7 +186,7 @@ try
 | () -> begin
 (
 
-let _32_127 = (let _125_62 = (FStar_Util.substring_from bvd.FStar_Absyn_Syntax.ppname.FStar_Ident.idText 1)
+let _32_127 = (let _125_62 = (FStar_Util.substring_from bvd.FStar_Absyn_Syntax.ppname.FStar_Ident.idText (Prims.parse_int "1"))
 in (FStar_Util.int_of_string _125_62))
 in "_?")
 end)
@@ -414,38 +414,38 @@ args
 end else begin
 (filter_imp args)
 end
-in if ((is_ite t) && ((FStar_List.length args) = 3)) then begin
-(let _125_140 = (let _125_135 = (FStar_List.nth args 0)
+in if ((is_ite t) && ((FStar_List.length args) = (Prims.parse_int "3"))) then begin
+(let _125_140 = (let _125_135 = (FStar_List.nth args (Prims.parse_int "0"))
 in (arg_to_string _125_135))
-in (let _125_139 = (let _125_136 = (FStar_List.nth args 1)
+in (let _125_139 = (let _125_136 = (FStar_List.nth args (Prims.parse_int "1"))
 in (arg_to_string _125_136))
-in (let _125_138 = (let _125_137 = (FStar_List.nth args 2)
+in (let _125_138 = (let _125_137 = (FStar_List.nth args (Prims.parse_int "2"))
 in (arg_to_string _125_137))
 in (FStar_Util.format3 "if %s then %s else %s" _125_140 _125_139 _125_138))))
 end else begin
-if ((is_b2t t) && ((FStar_List.length args) = 1)) then begin
-(let _125_141 = (FStar_List.nth args 0)
+if ((is_b2t t) && ((FStar_List.length args) = (Prims.parse_int "1"))) then begin
+(let _125_141 = (FStar_List.nth args (Prims.parse_int "0"))
 in (FStar_All.pipe_right _125_141 arg_to_string))
 end else begin
-if ((is_quant t) && ((FStar_List.length args) <= 2)) then begin
+if ((is_quant t) && ((FStar_List.length args) <= (Prims.parse_int "2"))) then begin
 (let _125_146 = (quant_to_string t)
-in (let _125_145 = (let _125_142 = (FStar_List.nth args' 0)
+in (let _125_145 = (let _125_142 = (FStar_List.nth args' (Prims.parse_int "0"))
 in (qbinder_to_string _125_142))
-in (let _125_144 = (let _125_143 = (FStar_List.nth args' 0)
+in (let _125_144 = (let _125_143 = (FStar_List.nth args' (Prims.parse_int "0"))
 in (qbody_to_string _125_143))
 in (FStar_Util.format3 "(%s (%s). %s)" _125_146 _125_145 _125_144))))
 end else begin
-if ((is_infix_type_op t) && ((FStar_List.length args') = 2)) then begin
-(let _125_151 = (let _125_147 = (FStar_List.nth args' 0)
+if ((is_infix_type_op t) && ((FStar_List.length args') = (Prims.parse_int "2"))) then begin
+(let _125_151 = (let _125_147 = (FStar_List.nth args' (Prims.parse_int "0"))
 in (FStar_All.pipe_right _125_147 arg_to_string))
 in (let _125_150 = (FStar_All.pipe_right t infix_type_op_to_string)
-in (let _125_149 = (let _125_148 = (FStar_List.nth args' 1)
+in (let _125_149 = (let _125_148 = (FStar_List.nth args' (Prims.parse_int "1"))
 in (FStar_All.pipe_right _125_148 arg_to_string))
 in (FStar_Util.format3 "(%s %s %s)" _125_151 _125_150 _125_149))))
 end else begin
-if ((is_unary_type_op t) && ((FStar_List.length args') = 1)) then begin
+if ((is_unary_type_op t) && ((FStar_List.length args') = (Prims.parse_int "1"))) then begin
 (let _125_154 = (FStar_All.pipe_right t unary_type_op_to_string)
-in (let _125_153 = (let _125_152 = (FStar_List.nth args' 0)
+in (let _125_153 = (let _125_152 = (FStar_List.nth args' (Prims.parse_int "0"))
 in (FStar_All.pipe_right _125_152 arg_to_string))
 in (FStar_Util.format2 "(%s %s)" _125_154 _125_153)))
 end else begin
@@ -816,17 +816,17 @@ end
 | _32_598 -> begin
 false
 end)))))
-in if ((is_infix_prim_op e) && ((FStar_List.length args') = 2)) then begin
-(let _125_324 = (let _125_320 = (FStar_List.nth args' 0)
+in if ((is_infix_prim_op e) && ((FStar_List.length args') = (Prims.parse_int "2"))) then begin
+(let _125_324 = (let _125_320 = (FStar_List.nth args' (Prims.parse_int "0"))
 in (FStar_All.pipe_right _125_320 arg_to_string))
 in (let _125_323 = (FStar_All.pipe_right e infix_prim_op_to_string)
-in (let _125_322 = (let _125_321 = (FStar_List.nth args' 1)
+in (let _125_322 = (let _125_321 = (FStar_List.nth args' (Prims.parse_int "1"))
 in (FStar_All.pipe_right _125_321 arg_to_string))
 in (FStar_Util.format3 "(%s %s %s)" _125_324 _125_323 _125_322))))
 end else begin
-if ((is_unary_prim_op e) && ((FStar_List.length args') = 1)) then begin
+if ((is_unary_prim_op e) && ((FStar_List.length args') = (Prims.parse_int "1"))) then begin
 (let _125_327 = (FStar_All.pipe_right e unary_prim_op_to_string)
-in (let _125_326 = (let _125_325 = (FStar_List.nth args' 0)
+in (let _125_326 = (let _125_325 = (FStar_List.nth args' (Prims.parse_int "0"))
 in (FStar_All.pipe_right _125_325 arg_to_string))
 in (FStar_Util.format2 "(%s %s)" _125_327 _125_326)))
 end else begin

@@ -381,25 +381,25 @@ if (ns = ("Prims")::[]) then begin
 if (FStar_Options.universes ()) then begin
 (match (n) with
 | "Mktuple2" -> begin
-Some (2)
+Some ((Prims.parse_int "2"))
 end
 | "Mktuple3" -> begin
-Some (3)
+Some ((Prims.parse_int "3"))
 end
 | "Mktuple4" -> begin
-Some (4)
+Some ((Prims.parse_int "4"))
 end
 | "Mktuple5" -> begin
-Some (5)
+Some ((Prims.parse_int "5"))
 end
 | "Mktuple6" -> begin
-Some (6)
+Some ((Prims.parse_int "6"))
 end
 | "Mktuple7" -> begin
-Some (7)
+Some ((Prims.parse_int "7"))
 end
 | "Mktuple8" -> begin
-Some (8)
+Some ((Prims.parse_int "8"))
 end
 | _73_309 -> begin
 None
@@ -407,25 +407,25 @@ end)
 end else begin
 (match (n) with
 | "MkTuple2" -> begin
-Some (2)
+Some ((Prims.parse_int "2"))
 end
 | "MkTuple3" -> begin
-Some (3)
+Some ((Prims.parse_int "3"))
 end
 | "MkTuple4" -> begin
-Some (4)
+Some ((Prims.parse_int "4"))
 end
 | "MkTuple5" -> begin
-Some (5)
+Some ((Prims.parse_int "5"))
 end
 | "MkTuple6" -> begin
-Some (6)
+Some ((Prims.parse_int "6"))
 end
 | "MkTuple7" -> begin
-Some (7)
+Some ((Prims.parse_int "7"))
 end
 | "MkTuple8" -> begin
-Some (8)
+Some ((Prims.parse_int "8"))
 end
 | _73_318 -> begin
 None
@@ -503,25 +503,25 @@ if (ns = ("Prims")::[]) then begin
 if (FStar_Options.universes ()) then begin
 (match (n) with
 | "tuple2" -> begin
-Some (2)
+Some ((Prims.parse_int "2"))
 end
 | "tuple3" -> begin
-Some (3)
+Some ((Prims.parse_int "3"))
 end
 | "tuple4" -> begin
-Some (4)
+Some ((Prims.parse_int "4"))
 end
 | "tuple5" -> begin
-Some (5)
+Some ((Prims.parse_int "5"))
 end
 | "tuple6" -> begin
-Some (6)
+Some ((Prims.parse_int "6"))
 end
 | "tuple7" -> begin
-Some (7)
+Some ((Prims.parse_int "7"))
 end
 | "tuple8" -> begin
-Some (8)
+Some ((Prims.parse_int "8"))
 end
 | _73_379 -> begin
 None
@@ -529,25 +529,25 @@ end)
 end else begin
 (match (n) with
 | "Tuple2" -> begin
-Some (2)
+Some ((Prims.parse_int "2"))
 end
 | "Tuple3" -> begin
-Some (3)
+Some ((Prims.parse_int "3"))
 end
 | "Tuple4" -> begin
-Some (4)
+Some ((Prims.parse_int "4"))
 end
 | "Tuple5" -> begin
-Some (5)
+Some ((Prims.parse_int "5"))
 end
 | "Tuple6" -> begin
-Some (6)
+Some ((Prims.parse_int "6"))
 end
 | "Tuple7" -> begin
-Some (7)
+Some ((Prims.parse_int "7"))
 end
 | "Tuple8" -> begin
-Some (8)
+Some ((Prims.parse_int "8"))
 end
 | _73_388 -> begin
 None
@@ -647,7 +647,7 @@ end))
 let prims_op_equality : FStar_Extraction_ML_Syntax.mlexpr = (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_Syntax.MLTY_Top) (FStar_Extraction_ML_Syntax.MLE_Name (((("Prims")::[]), ("op_Equality")))))
 
 
-let prims_op_amp_amp : FStar_Extraction_ML_Syntax.mlexpr = (let _166_151 = (let _166_150 = ((mk_ty_fun ()) (((((("x"), (0))), (FStar_Extraction_ML_Syntax.ml_bool_ty)))::((((("y"), (0))), (FStar_Extraction_ML_Syntax.ml_bool_ty)))::[]) FStar_Extraction_ML_Syntax.ml_bool_ty)
+let prims_op_amp_amp : FStar_Extraction_ML_Syntax.mlexpr = (let _166_151 = (let _166_150 = ((mk_ty_fun ()) (((((("x"), ((Prims.parse_int "0")))), (FStar_Extraction_ML_Syntax.ml_bool_ty)))::((((("y"), ((Prims.parse_int "0")))), (FStar_Extraction_ML_Syntax.ml_bool_ty)))::[]) FStar_Extraction_ML_Syntax.ml_bool_ty)
 in (FStar_Extraction_ML_Syntax.with_ty _166_150))
 in (FStar_All.pipe_left _166_151 (FStar_Extraction_ML_Syntax.MLE_Name (((("Prims")::[]), ("op_AmpAmp"))))))
 

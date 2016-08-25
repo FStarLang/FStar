@@ -36,7 +36,7 @@ _81_7
 end))
 
 
-let htree : mforest FStar_Util.smap = (FStar_Util.smap_create 50)
+let htree : mforest FStar_Util.smap = (FStar_Util.smap_create (Prims.parse_int "50"))
 
 
 let parse_file : Prims.string  ->  Prims.string  ->  Prims.unit = (fun fn -> (let _174_35 = (FStar_Options.prepend_output_dir ".mk")

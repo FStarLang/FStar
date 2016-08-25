@@ -1,7 +1,7 @@
 
 open Prims
 
-let rec get_next_n_ite : Prims.int  ->  FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term)  ->  (Prims.bool * FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) = (fun n t negs f -> if (n <= 0) then begin
+let rec get_next_n_ite : Prims.int  ->  FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term)  ->  (Prims.bool * FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) = (fun n t negs f -> if (n <= (Prims.parse_int "0")) then begin
 (let _177_14 = (f FStar_SMTEncoding_Term.mkTrue)
 in ((true), (_177_14), (negs), (t)))
 end else begin
@@ -10,7 +10,7 @@ end else begin
 (let _177_19 = (let _177_16 = (let _177_15 = (FStar_SMTEncoding_Term.mkNot g)
 in ((negs), (_177_15)))
 in (FStar_SMTEncoding_Term.mkAnd _177_16))
-in (get_next_n_ite (n - 1) e _177_19 (fun x -> (let _177_18 = (FStar_SMTEncoding_Term.mkITE ((g), (t), (x)))
+in (get_next_n_ite (n - (Prims.parse_int "1")) e _177_19 (fun x -> (let _177_18 = (FStar_SMTEncoding_Term.mkITE ((g), (t), (x)))
 in (f _177_18)))))
 end
 | FStar_SMTEncoding_Term.FreeV (_84_18) -> begin
@@ -23,7 +23,7 @@ end)
 end)
 
 
-let rec is_ite_all_the_way : Prims.int  ->  FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term Prims.list  ->  (Prims.bool * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term) = (fun n t negs l -> if (n <= 0) then begin
+let rec is_ite_all_the_way : Prims.int  ->  FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term Prims.list  ->  (Prims.bool * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term) = (fun n t negs l -> if (n <= (Prims.parse_int "0")) then begin
 (Prims.raise FStar_Util.Impos)
 end else begin
 (match (t.FStar_SMTEncoding_Term.tm) with

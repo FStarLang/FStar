@@ -101,58 +101,58 @@ type level =
 (opprec * assoc)
 
 
-let t_prio_fun : (Prims.int * fixity) = ((10), (Infix (Right)))
+let t_prio_fun : (Prims.int * fixity) = (((Prims.parse_int "10")), (Infix (Right)))
 
 
-let t_prio_tpl : (Prims.int * fixity) = ((20), (Infix (NonAssoc)))
+let t_prio_tpl : (Prims.int * fixity) = (((Prims.parse_int "20")), (Infix (NonAssoc)))
 
 
-let t_prio_name : (Prims.int * fixity) = ((30), (Postfix))
+let t_prio_name : (Prims.int * fixity) = (((Prims.parse_int "30")), (Postfix))
 
 
-let e_bin_prio_lambda : (Prims.int * fixity) = ((5), (Prefix))
+let e_bin_prio_lambda : (Prims.int * fixity) = (((Prims.parse_int "5")), (Prefix))
 
 
-let e_bin_prio_if : (Prims.int * fixity) = ((15), (Prefix))
+let e_bin_prio_if : (Prims.int * fixity) = (((Prims.parse_int "15")), (Prefix))
 
 
-let e_bin_prio_letin : (Prims.int * fixity) = ((19), (Prefix))
+let e_bin_prio_letin : (Prims.int * fixity) = (((Prims.parse_int "19")), (Prefix))
 
 
-let e_bin_prio_or : (Prims.int * fixity) = ((20), (Infix (Left)))
+let e_bin_prio_or : (Prims.int * fixity) = (((Prims.parse_int "20")), (Infix (Left)))
 
 
-let e_bin_prio_and : (Prims.int * fixity) = ((25), (Infix (Left)))
+let e_bin_prio_and : (Prims.int * fixity) = (((Prims.parse_int "25")), (Infix (Left)))
 
 
-let e_bin_prio_eq : (Prims.int * fixity) = ((27), (Infix (NonAssoc)))
+let e_bin_prio_eq : (Prims.int * fixity) = (((Prims.parse_int "27")), (Infix (NonAssoc)))
 
 
-let e_bin_prio_order : (Prims.int * fixity) = ((29), (Infix (NonAssoc)))
+let e_bin_prio_order : (Prims.int * fixity) = (((Prims.parse_int "29")), (Infix (NonAssoc)))
 
 
-let e_bin_prio_op1 : (Prims.int * fixity) = ((30), (Infix (Left)))
+let e_bin_prio_op1 : (Prims.int * fixity) = (((Prims.parse_int "30")), (Infix (Left)))
 
 
-let e_bin_prio_op2 : (Prims.int * fixity) = ((40), (Infix (Left)))
+let e_bin_prio_op2 : (Prims.int * fixity) = (((Prims.parse_int "40")), (Infix (Left)))
 
 
-let e_bin_prio_op3 : (Prims.int * fixity) = ((50), (Infix (Left)))
+let e_bin_prio_op3 : (Prims.int * fixity) = (((Prims.parse_int "50")), (Infix (Left)))
 
 
-let e_bin_prio_op4 : (Prims.int * fixity) = ((60), (Infix (Left)))
+let e_bin_prio_op4 : (Prims.int * fixity) = (((Prims.parse_int "60")), (Infix (Left)))
 
 
-let e_bin_prio_comb : (Prims.int * fixity) = ((70), (Infix (Left)))
+let e_bin_prio_comb : (Prims.int * fixity) = (((Prims.parse_int "70")), (Infix (Left)))
 
 
-let e_bin_prio_seq : (Prims.int * fixity) = ((100), (Infix (Left)))
+let e_bin_prio_seq : (Prims.int * fixity) = (((Prims.parse_int "100")), (Infix (Left)))
 
 
-let e_app_prio : (Prims.int * fixity) = ((10000), (Infix (Left)))
+let e_app_prio : (Prims.int * fixity) = (((Prims.parse_int "10000")), (Infix (Left)))
 
 
-let min_op_prec : (Prims.int * fixity) = (((~- (1))), (Infix (NonAssoc)))
+let min_op_prec : (Prims.int * fixity) = (((~- ((Prims.parse_int "1")))), (Infix (NonAssoc)))
 
 
 let max_op_prec : (Prims.int * fixity) = ((FStar_Util.max_int), (Infix (NonAssoc)))
@@ -234,8 +234,8 @@ end))
 end))
 
 
-let ptsym_of_symbol : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlsymbol = (fun s -> if ((let _167_39 = (FStar_String.get s 0)
-in (FStar_Char.lowercase _167_39)) <> (FStar_String.get s 0)) then begin
+let ptsym_of_symbol : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlsymbol = (fun s -> if ((let _167_39 = (FStar_String.get s (Prims.parse_int "0"))
+in (FStar_Char.lowercase _167_39)) <> (FStar_String.get s (Prims.parse_int "0"))) then begin
 (Prims.strcat "l__" s)
 end else begin
 s
@@ -265,8 +265,8 @@ in (match (_74_56) with
 | (p, s) -> begin
 (
 
-let s = if ((let _167_51 = (FStar_String.get s 0)
-in (FStar_Char.uppercase _167_51)) <> (FStar_String.get s 0)) then begin
+let s = if ((let _167_51 = (FStar_String.get s (Prims.parse_int "0"))
+in (FStar_Char.uppercase _167_51)) <> (FStar_String.get s (Prims.parse_int "0"))) then begin
 (Prims.strcat "U__" s)
 end else begin
 s
@@ -1086,7 +1086,7 @@ in (
 let lets = (FStar_List.map for1 lets)
 in (
 
-let lets = (FStar_List.mapi (fun i doc -> (FStar_Format.reduce1 ((if (i = 0) then begin
+let lets = (FStar_List.mapi (fun i doc -> (FStar_Format.reduce1 ((if (i = (Prims.parse_int "0")) then begin
 letdoc
 end else begin
 (FStar_Format.text "and")
@@ -1201,7 +1201,7 @@ in (
 let doc = (FStar_List.map for1 decls)
 in (
 
-let doc = if ((FStar_List.length doc) > 0) then begin
+let doc = if ((FStar_List.length doc) > (Prims.parse_int "0")) then begin
 (let _167_324 = (let _167_323 = (let _167_322 = (FStar_Format.combine (FStar_Format.text " \n and ") doc)
 in (_167_322)::[])
 in ((FStar_Format.text "type"))::_167_323)
@@ -1418,14 +1418,14 @@ let string_of_mlexpr : FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_M
 
 let doc = (let _167_390 = (FStar_Extraction_ML_Util.flatten_mlpath cmod)
 in (doc_of_expr _167_390 ((min_op_prec), (NonAssoc)) e))
-in (FStar_Format.pretty 0 doc)))
+in (FStar_Format.pretty (Prims.parse_int "0") doc)))
 
 
 let string_of_mlty : FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlty  ->  Prims.string = (fun cmod e -> (
 
 let doc = (let _167_395 = (FStar_Extraction_ML_Util.flatten_mlpath cmod)
 in (doc_of_mltype _167_395 ((min_op_prec), (NonAssoc)) e))
-in (FStar_Format.pretty 0 doc)))
+in (FStar_Format.pretty (Prims.parse_int "0") doc)))
 
 
 

@@ -197,3 +197,8 @@ let compare r1 r2 =
        then col_of_pos start1 - col_of_pos start2
        else lcomp
   else fcomp
+
+let compare r1 r2 = Z.of_int (compare r1 r2)
+
+let mk_range f b e = mk_range f (Z.to_int b) (Z.to_int e)
+let line_of_pos p = Z.of_int (line_of_pos p)

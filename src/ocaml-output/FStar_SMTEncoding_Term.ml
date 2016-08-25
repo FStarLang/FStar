@@ -867,7 +867,7 @@ in (FStar_Util.format5 "(%s (%s)(! %s %s %s))" (qop_to_string qop) _175_331 body
 end))
 
 
-let __all_terms : term FStar_Util.smap FStar_ST.ref = (let _175_332 = (FStar_Util.smap_create 10000)
+let __all_terms : term FStar_Util.smap FStar_ST.ref = (let _175_332 = (FStar_Util.smap_create (Prims.parse_int "10000"))
 in (FStar_ST.alloc _175_332))
 
 
@@ -1088,7 +1088,7 @@ end))
 
 let mkQuant : (qop * pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)  ->  term = (fun _82_446 -> (match (_82_446) with
 | (qop, pats, wopt, vars, body) -> begin
-if ((FStar_List.length vars) = 0) then begin
+if ((FStar_List.length vars) = (Prims.parse_int "0")) then begin
 body
 end else begin
 (match (body.tm) with
@@ -1112,7 +1112,7 @@ let index_of = (fun fv -> (match ((FStar_Util.try_find_index (fv_eq fv) fvs)) wi
 None
 end
 | Some (i) -> begin
-Some ((nvars - (i + 1)))
+Some ((nvars - (i + (Prims.parse_int "1"))))
 end))
 in (
 
@@ -1155,7 +1155,7 @@ in ((qop), (_175_409), (wopt), (vars), (_175_408))))
 in (mkQuant _175_410)))
 end)
 end))
-in (aux 0 t)))))
+in (aux (Prims.parse_int "0") t)))))
 
 
 let inst : term Prims.list  ->  term  ->  term = (fun tms t -> (
@@ -1168,7 +1168,7 @@ let rec aux = (fun shift t -> (match (t.tm) with
 t
 end
 | BoundV (i) -> begin
-if ((0 <= (i - shift)) && ((i - shift) < n)) then begin
+if (((Prims.parse_int "0") <= (i - shift)) && ((i - shift) < n)) then begin
 (FStar_List.nth tms (i - shift))
 end else begin
 t
@@ -1197,7 +1197,7 @@ in (let _175_424 = (aux shift body)
 in ((qop), (_175_425), (wopt), (vars), (_175_424))))
 in (mkQuant _175_426))))
 end))
-in (aux 0 t))))
+in (aux (Prims.parse_int "0") t))))
 
 
 let mkQuant' : (qop * term Prims.list Prims.list * Prims.int Prims.option * fv Prims.list * term)  ->  term = (fun _82_534 -> (match (_82_534) with
@@ -1311,7 +1311,7 @@ let bvar_name = (fun i -> (let _175_481 = (FStar_Util.string_of_int i)
 in (Prims.strcat "x_" _175_481)))
 in (
 
-let bvar_index = (fun i -> (n_bvars - (i + 1)))
+let bvar_index = (fun i -> (n_bvars - (i + (Prims.parse_int "1"))))
 in (
 
 let bvar = (fun i s -> (let _175_489 = (let _175_488 = (bvar_name i)
@@ -1446,7 +1446,7 @@ in (
 
 let b = (let _175_534 = (strSort s)
 in (FStar_Util.format2 "(%s %s)" nm _175_534))
-in ((names), ((b)::binders), ((n + 1)))))))
+in ((names), ((b)::binders), ((n + (Prims.parse_int "1"))))))))
 end)) ((outer_names), ([]), (start))))
 in (match (_82_644) with
 | (names, binders, n) -> begin
@@ -1456,7 +1456,7 @@ end)))
 
 let name_binders : sort Prims.list  ->  ((Prims.string * sort) Prims.list * Prims.string Prims.list) = (fun sorts -> (
 
-let _82_649 = (name_binders_inner [] 0 sorts)
+let _82_649 = (name_binders_inner [] (Prims.parse_int "0") sorts)
 in (match (_82_649) with
 | (names, binders, n) -> begin
 (((FStar_List.rev names)), (binders))
@@ -1521,7 +1521,7 @@ in (FStar_Util.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders 
 end)))
 end))
 end))
-in (aux 0 [] t)))
+in (aux (Prims.parse_int "0") [] t)))
 
 
 let caption_to_string : Prims.string Prims.option  ->  Prims.string = (fun _82_6 -> (match (_82_6) with
@@ -1626,7 +1626,7 @@ and mkPrelude : Prims.string  ->  Prims.string = (fun z3options -> (
 let basic = (Prims.strcat z3options "(declare-sort Ref)\n(declare-fun Ref_constr_id (Ref) Int)\n\n(declare-sort String)\n(declare-fun String_constr_id (String) Int)\n\n(declare-sort Term)\n(declare-fun Term_constr_id (Term) Int)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreType (Term) Term)\n(declare-fun Valid (Term) Bool)\n(declare-fun HasTypeFuel (Fuel Term Term) Bool)\n(define-fun HasTypeZ ((x Term) (t Term)) Bool\n(HasTypeFuel ZFuel x t))\n(define-fun HasType ((x Term) (t Term)) Bool\n(HasTypeFuel MaxIFuel x t))\n;;fuel irrelevance\n(assert (forall ((f Fuel) (x Term) (t Term))\n(! (= (HasTypeFuel (SFuel f) x t)\n(HasTypeZ x t))\n:pattern ((HasTypeFuel (SFuel f) x t)))))\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Term)) (HasTypeZ x t)))\n(declare-fun ApplyTF (Term Fuel) Term)\n(declare-fun ApplyTT (Term Term) Term)\n(declare-fun Rank (Term) Int)\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Precedes (Term Term) Term)\n(define-fun Reify ((x Term)) Term x)\n(assert (forall ((t Term))\n(! (implies (exists ((e Term)) (HasType e t))\n(Valid t))\n:pattern ((Valid t)))))\n(assert (forall ((t1 Term) (t2 Term))\n(! (iff (Valid (Precedes t1 t2)) \n(< (Rank t1) (Rank t2)))\n:pattern ((Precedes t1 t2)))))\n(define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n(Precedes t1 t2))\n(declare-fun Range_const () Term)\n")
 in (
 
-let constrs = ((("String_const"), (((("String_const_proj_0"), (Int_sort)))::[]), (String_sort), (0), (true)))::((("Tm_type"), ([]), (Term_sort), (2), (true)))::((("Tm_arrow"), (((("Tm_arrow_id"), (Int_sort)))::[]), (Term_sort), (3), (false)))::((("Tm_uvar"), (((("Tm_uvar_fst"), (Int_sort)))::[]), (Term_sort), (5), (true)))::((("Tm_unit"), ([]), (Term_sort), (6), (true)))::((("BoxInt"), (((("BoxInt_proj_0"), (Int_sort)))::[]), (Term_sort), (7), (true)))::((("BoxBool"), (((("BoxBool_proj_0"), (Bool_sort)))::[]), (Term_sort), (8), (true)))::((("BoxString"), (((("BoxString_proj_0"), (String_sort)))::[]), (Term_sort), (9), (true)))::((("BoxRef"), (((("BoxRef_proj_0"), (Ref_sort)))::[]), (Term_sort), (10), (true)))::((("LexCons"), (((("LexCons_0"), (Term_sort)))::((("LexCons_1"), (Term_sort)))::[]), (Term_sort), (11), (true)))::[]
+let constrs = ((("String_const"), (((("String_const_proj_0"), (Int_sort)))::[]), (String_sort), ((Prims.parse_int "0")), (true)))::((("Tm_type"), ([]), (Term_sort), ((Prims.parse_int "2")), (true)))::((("Tm_arrow"), (((("Tm_arrow_id"), (Int_sort)))::[]), (Term_sort), ((Prims.parse_int "3")), (false)))::((("Tm_uvar"), (((("Tm_uvar_fst"), (Int_sort)))::[]), (Term_sort), ((Prims.parse_int "5")), (true)))::((("Tm_unit"), ([]), (Term_sort), ((Prims.parse_int "6")), (true)))::((("BoxInt"), (((("BoxInt_proj_0"), (Int_sort)))::[]), (Term_sort), ((Prims.parse_int "7")), (true)))::((("BoxBool"), (((("BoxBool_proj_0"), (Bool_sort)))::[]), (Term_sort), ((Prims.parse_int "8")), (true)))::((("BoxString"), (((("BoxString_proj_0"), (String_sort)))::[]), (Term_sort), ((Prims.parse_int "9")), (true)))::((("BoxRef"), (((("BoxRef_proj_0"), (Ref_sort)))::[]), (Term_sort), ((Prims.parse_int "10")), (true)))::((("LexCons"), (((("LexCons_0"), (Term_sort)))::((("LexCons_1"), (Term_sort)))::[]), (Term_sort), ((Prims.parse_int "11")), (true)))::[]
 in (
 
 let bcons = (let _175_581 = (let _175_580 = (FStar_All.pipe_right constrs (FStar_List.collect constructor_to_decl))
@@ -1828,20 +1828,20 @@ in (FStar_All.pipe_right _175_686 mk_Valid)))
 let mk_LexCons : term  ->  term  ->  term = (fun x1 x2 -> (mkApp (("LexCons"), ((x1)::(x2)::[]))))
 
 
-let rec n_fuel : Prims.int  ->  term = (fun n -> if (n = 0) then begin
+let rec n_fuel : Prims.int  ->  term = (fun n -> if (n = (Prims.parse_int "0")) then begin
 (mkApp (("ZFuel"), ([])))
 end else begin
-(let _175_695 = (let _175_694 = (let _175_693 = (n_fuel (n - 1))
+(let _175_695 = (let _175_694 = (let _175_693 = (n_fuel (n - (Prims.parse_int "1")))
 in (_175_693)::[])
 in (("SFuel"), (_175_694)))
 in (mkApp _175_695))
 end)
 
 
-let fuel_2 : term = (n_fuel 2)
+let fuel_2 : term = (n_fuel (Prims.parse_int "2"))
 
 
-let fuel_100 : term = (n_fuel 100)
+let fuel_100 : term = (n_fuel (Prims.parse_int "100"))
 
 
 let mk_and_opt : term Prims.option  ->  term Prims.option  ->  term Prims.option = (fun p1 p2 -> (match (((p1), (p2))) with

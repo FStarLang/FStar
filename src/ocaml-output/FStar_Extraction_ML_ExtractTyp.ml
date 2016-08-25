@@ -38,7 +38,7 @@ end)
 
 let delta_norm_eff : FStar_Extraction_ML_Env.env  ->  FStar_Ident.lident  ->  FStar_Ident.lident = (
 
-let cache = (FStar_Util.smap_create 20)
+let cache = (FStar_Util.smap_create (Prims.parse_int "20"))
 in (
 
 let rec delta_norm_eff = (fun g l -> (match ((FStar_Util.smap_try_find cache l.FStar_Ident.str)) with
@@ -502,8 +502,8 @@ in ((_168_219), (_168_218))))))))))
 end)))
 
 
-let rec firstNNats : Prims.int  ->  Prims.int Prims.list = (fun n -> if (0 < n) then begin
-(let _168_222 = (firstNNats (n - 1))
+let rec firstNNats : Prims.int  ->  Prims.int Prims.list = (fun n -> if ((Prims.parse_int "0") < n) then begin
+(let _168_222 = (firstNNats (n - (Prims.parse_int "1")))
 in (n)::_168_222)
 end else begin
 []
@@ -512,7 +512,7 @@ end)
 
 let dummyIdent : Prims.int  ->  (Prims.string * Prims.int) = (fun n -> (let _168_226 = (let _168_225 = (FStar_Util.string_of_int n)
 in (Prims.strcat "\'dummyV" _168_225))
-in ((_168_226), (0))))
+in ((_168_226), ((Prims.parse_int "0")))))
 
 
 let dummyIndexIdents : Prims.int  ->  (Prims.string * Prims.int) Prims.list = (fun n -> (let _168_229 = (firstNNats n)

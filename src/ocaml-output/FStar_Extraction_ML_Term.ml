@@ -68,7 +68,7 @@ in (fail t.FStar_Syntax_Syntax.pos _171_56)))
 
 let effect_as_etag : FStar_Extraction_ML_UEnv.env  ->  FStar_Ident.lident  ->  FStar_Extraction_ML_Syntax.e_tag = (
 
-let cache = (FStar_Util.smap_create 20)
+let cache = (FStar_Util.smap_create (Prims.parse_int "20"))
 in (
 
 let rec delta_norm_eff = (fun g l -> (match ((FStar_Util.smap_try_find cache l.FStar_Ident.str)) with
@@ -349,7 +349,7 @@ in (FStar_All.pipe_left FStar_Syntax_Syntax.mk_binder _171_113))
 let check_pats_for_ite : (FStar_Syntax_Syntax.pat * FStar_Syntax_Syntax.term Prims.option * FStar_Syntax_Syntax.term) Prims.list  ->  (Prims.bool * FStar_Syntax_Syntax.term Prims.option * FStar_Syntax_Syntax.term Prims.option) = (fun l -> (
 
 let def = ((false), (None), (None))
-in if ((FStar_List.length l) <> 2) then begin
+in if ((FStar_List.length l) <> (Prims.parse_int "2")) then begin
 def
 end else begin
 (
@@ -1320,7 +1320,7 @@ let rec extract_app = (fun is_data _78_1115 _78_1118 restArgs -> (match (((_78_1
 | ([], _78_1122) -> begin
 (
 
-let evaluation_order_guaranteed = ((((FStar_List.length mlargs_f) = 1) || (FStar_Extraction_ML_Util.codegen_fsharp ())) || (match (head.FStar_Syntax_Syntax.n) with
+let evaluation_order_guaranteed = ((((FStar_List.length mlargs_f) = (Prims.parse_int "1")) || (FStar_Extraction_ML_Util.codegen_fsharp ())) || (match (head.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_fvar ({FStar_Syntax_Syntax.fv_name = {FStar_Syntax_Syntax.v = v; FStar_Syntax_Syntax.ty = _78_1131; FStar_Syntax_Syntax.p = _78_1129}; FStar_Syntax_Syntax.fv_delta = _78_1127; FStar_Syntax_Syntax.fv_qual = _78_1125}) -> begin
 ((v = FStar_Syntax_Const.op_And) || (v = FStar_Syntax_Const.op_Or))
 end
@@ -1584,7 +1584,7 @@ let _78_1339 = lb
 in {FStar_Syntax_Syntax.lbname = FStar_Util.Inl (x); FStar_Syntax_Syntax.lbunivs = _78_1339.FStar_Syntax_Syntax.lbunivs; FStar_Syntax_Syntax.lbtyp = _78_1339.FStar_Syntax_Syntax.lbtyp; FStar_Syntax_Syntax.lbeff = _78_1339.FStar_Syntax_Syntax.lbeff; FStar_Syntax_Syntax.lbdef = _78_1339.FStar_Syntax_Syntax.lbdef})
 in (
 
-let e' = (FStar_Syntax_Subst.subst ((FStar_Syntax_Syntax.DB (((0), (x))))::[]) e')
+let e' = (FStar_Syntax_Subst.subst ((FStar_Syntax_Syntax.DB ((((Prims.parse_int "0")), (x))))::[]) e')
 in (((lb)::[]), (e'))))))
 end
 end
@@ -2025,7 +2025,7 @@ end))))
 
 let fresh : Prims.string  ->  (Prims.string * Prims.int) = (
 
-let c = (FStar_Util.mk_ref 0)
+let c = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in (fun x -> (
 
 let _78_1637 = (FStar_Util.incr c)

@@ -1773,10 +1773,10 @@ let bvd_eq = (fun bvd1 bvd2 -> (bvd1.realname.FStar_Ident.idText = bvd2.realname
 
 let order_bvd = (fun x y -> (match (((x), (y))) with
 | (FStar_Util.Inl (_28_361), FStar_Util.Inr (_28_364)) -> begin
-(~- (1))
+(~- ((Prims.parse_int "1")))
 end
 | (FStar_Util.Inr (_28_368), FStar_Util.Inl (_28_371)) -> begin
-1
+(Prims.parse_int "1")
 end
 | (FStar_Util.Inl (x), FStar_Util.Inl (y)) -> begin
 (FStar_String.compare x.realname.FStar_Ident.idText y.realname.FStar_Ident.idText)

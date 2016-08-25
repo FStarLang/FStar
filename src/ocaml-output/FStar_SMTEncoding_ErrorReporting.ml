@@ -31,7 +31,7 @@ type ranges =
 
 let fresh_label : ranges  ->  FStar_SMTEncoding_Term.term  ->  labels  ->  (FStar_SMTEncoding_Term.term * labels) = (
 
-let ctr = (FStar_ST.alloc 0)
+let ctr = (FStar_ST.alloc (Prims.parse_int "0"))
 in (fun rs t labs -> (
 
 let l = (
@@ -155,7 +155,7 @@ in (match (_85_161) with
 (
 
 let q = (let _178_51 = (let _178_50 = (let _178_49 = (FStar_SMTEncoding_Term.mk (FStar_SMTEncoding_Term.App (((FStar_SMTEncoding_Term.Iff), ((l)::(r)::[])))))
-in ((FStar_SMTEncoding_Term.Forall), (((p)::[])::[]), (Some (0)), (sorts), (_178_49)))
+in ((FStar_SMTEncoding_Term.Forall), (((p)::[])::[]), (Some ((Prims.parse_int "0"))), (sorts), (_178_49)))
 in FStar_SMTEncoding_Term.Quant (_178_50))
 in (FStar_All.pipe_left FStar_SMTEncoding_Term.mk _178_51))
 in ((((labs), (rs))), (q)))
@@ -248,7 +248,7 @@ end)))
 
 let detail_errors : labels  ->  labels  ->  (FStar_SMTEncoding_Term.decls_t  ->  ((FStar_SMTEncoding_Z3.unsat_core, FStar_SMTEncoding_Term.error_labels) FStar_Util.either * Prims.int))  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun all_labels potential_errors askZ3 -> (
 
-let ctr = (FStar_Util.mk_ref 0)
+let ctr = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in (
 
 let elim = (fun labs -> (
@@ -319,7 +319,7 @@ let _85_409 = (match (active) with
 ((active), ([]))
 end
 | _85_406 -> begin
-(FStar_Util.first_N ((FStar_List.length active) / 2) active)
+(FStar_Util.first_N ((FStar_List.length active) / (Prims.parse_int "2")) active)
 end)
 in (match (_85_409) with
 | (pfx, sfx) -> begin

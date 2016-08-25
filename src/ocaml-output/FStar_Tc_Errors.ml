@@ -27,7 +27,7 @@ in (_136_23)::[])
 in (FStar_Util.fprint FStar_Util.stderr "%s" _136_24)))
 
 
-let num_errs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 0)
+let num_errs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref (Prims.parse_int "0"))
 
 
 let verification_errs : (FStar_Range.range * Prims.string) Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])

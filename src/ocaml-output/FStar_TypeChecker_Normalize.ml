@@ -1274,7 +1274,7 @@ end)))
 in (
 
 let n = (FStar_List.length us)
-in if (n > 0) then begin
+in if (n > (Prims.parse_int "0")) then begin
 (match (stack) with
 | (UnivArgs (us', _53_881))::stack -> begin
 (
@@ -1656,8 +1656,8 @@ let memo = (FStar_Util.mk_ref None)
 in (
 
 let rec_env = (Clos (((env), (fix_f_i), (memo), (true))))::rec_env
-in ((rec_env), ((memo)::memos), ((i + 1)))))))
-end)) (Prims.snd lbs) ((env), ([]), (0)))
+in ((rec_env), ((memo)::memos), ((i + (Prims.parse_int "1"))))))))
+end)) (Prims.snd lbs) ((env), ([]), ((Prims.parse_int "0"))))
 in (match (_53_1182) with
 | (rec_env, memos, _53_1181) -> begin
 (

@@ -77,7 +77,7 @@ let find x =
         | _ -> failwith "impossible"
 
 let uvar_id uv = match (rep uv).contents with
-  | Data (_, id) -> id
+  | Data (_, id) -> Z.of_int id
   | _ -> failwith "impossible"
 
 let union x y =

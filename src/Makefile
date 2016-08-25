@@ -162,7 +162,7 @@ clean_ocaml_prep:
 extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
-	$(FSTAR) --stratified --explicit_deps --use_native_int --eager_inference \
+	time $(FSTAR) --stratified --explicit_deps --eager_inference \
 	  --lax --fs_typ_app --no_location_info $(addprefix --no_extract \
 	  ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
 
@@ -207,7 +207,7 @@ fsharp-output/fstar.exe: $(addprefix ../lib/fs/, $(FS_SUPPORT_LIBS)) $(addprefix
 	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(FSCOTHERFLAGS) $^
 
 fs: $(BOOT_ALL)
-	$(FSTAR) --explicit_deps --use_native_int --eager_inference --MLish --lax --fs_typ_app \
+	$(FSTAR) --explicit_deps --eager_inference --MLish --lax --fs_typ_app \
 	  --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
 
 fsharp-output: nuget-restore

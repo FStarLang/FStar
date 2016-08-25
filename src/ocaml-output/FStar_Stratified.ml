@@ -89,7 +89,7 @@ in (match (_90_50) with
 | (all_mods, dsenv, env) -> begin
 (
 
-let _90_51 = if ((FStar_Options.interactive ()) && ((FStar_Tc_Errors.get_err_count ()) = 0)) then begin
+let _90_51 = if ((FStar_Options.interactive ()) && ((FStar_Tc_Errors.get_err_count ()) = (Prims.parse_int "0"))) then begin
 (env.FStar_Tc_Env.solver.FStar_Tc_Env.refresh ())
 end else begin
 (env.FStar_Tc_Env.solver.FStar_Tc_Env.finish ())
@@ -158,7 +158,7 @@ in (match (_90_102) with
 (
 
 let _90_104 = (FStar_Util.print_error "fragment without an enclosing module")
-in (FStar_All.exit 1))
+in (FStar_All.exit (Prims.parse_int "1")))
 end
 | Some (modul) -> begin
 (
@@ -286,7 +286,7 @@ let report_fail = (fun _90_167 -> (match (()) with
 
 let _90_168 = (let _183_67 = (FStar_Tc_Errors.report_all ())
 in (FStar_All.pipe_right _183_67 Prims.ignore))
-in (FStar_ST.op_Colon_Equals FStar_Tc_Errors.num_errs 0))
+in (FStar_ST.op_Colon_Equals FStar_Tc_Errors.num_errs (Prims.parse_int "0")))
 end))
 in {FStar_Interactive.pop = pop; FStar_Interactive.push = push; FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail})))))))
 

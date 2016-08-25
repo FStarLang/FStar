@@ -10,8 +10,8 @@ type bytes = int array
 
 let f_encode f (b:bytes) = String.concat "" (Array.to_list (Array.map f b))
 let length (b:bytes) = BatArray.length b
-let get (b:bytes) n = BatArray.get b n
-let make (f : _ -> int) n = BatArray.init n f
+let get (b:bytes) n = Z.of_int (BatArray.get b (Z.to_int n))
+let make (f : _ -> Z.t) n = BatArray.init (Z.to_int n) (fun i -> Z.to_int (f (Z.of_int i)))
 let zero_create n : bytes = BatArray.create n 0
 
 let sub ( b:bytes) s l = BatArray.sub b s l
@@ -100,11 +100,12 @@ module Bytebuf = struct
 
   let length bb = bb.bbCurrent
   let position bb = bb.bbCurrent
+
 end
 
 let create i = Bytebuf.create i
 let close t = Bytebuf.close t
-let emit_int_as_byte t i = Bytebuf.emit_int_as_byte t i
+let emit_int_as_byte t i = Bytebuf.emit_int_as_byte t (Z.to_int i)
 let emit_bytes t b = Bytebuf.emit_bytes t b
 
-
+let length x = Z.of_int (length x)

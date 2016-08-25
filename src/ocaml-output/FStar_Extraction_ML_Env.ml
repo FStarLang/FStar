@@ -66,7 +66,7 @@ end else begin
 end)
 
 
-let mkFvvar : FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ  ->  (FStar_Ident.lident, FStar_Absyn_Syntax.typ) FStar_Absyn_Syntax.withinfo_t = (fun l t -> (let _164_69 = (FStar_Range.mk_range "" 0 0)
+let mkFvvar : FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ  ->  (FStar_Ident.lident, FStar_Absyn_Syntax.typ) FStar_Absyn_Syntax.withinfo_t = (fun l t -> (let _164_69 = (FStar_Range.mk_range "" (Prims.parse_int "0") (Prims.parse_int "0"))
 in {FStar_Absyn_Syntax.v = l; FStar_Absyn_Syntax.sort = t; FStar_Absyn_Syntax.p = _164_69}))
 
 
@@ -102,7 +102,7 @@ end))
 let removeTick = (fun _71_39 -> (match (_71_39) with
 | (x, n) -> begin
 if (FStar_Util.starts_with x "\'") then begin
-(let _164_74 = (FStar_Util.substring_from x 1)
+(let _164_74 = (FStar_Util.substring_from x (Prims.parse_int "1"))
 in ((_164_74), (n)))
 end else begin
 ((x), (n))
@@ -110,7 +110,7 @@ end
 end))
 
 
-let convRange : FStar_Range.range  ->  Prims.int = (fun r -> 0)
+let convRange : FStar_Range.range  ->  Prims.int = (fun r -> (Prims.parse_int "0"))
 
 
 let convIdent : FStar_Ident.ident  ->  (Prims.string * Prims.int) = (fun id -> ((id.FStar_Ident.idText), ((convRange id.FStar_Ident.idRange))))
@@ -406,7 +406,7 @@ let _71_233 = (FStar_Extraction_ML_Syntax.mlpath_of_lident f)
 in (match (_71_233) with
 | (p, y) -> begin
 (let _164_193 = (extend_fv' g (FStar_Absyn_Util.fvvar_of_lid f t) ((p), (y)) t_x add_unit is_rec)
-in ((_164_193), (((y), (0)))))
+in ((_164_193), (((y), ((Prims.parse_int "0"))))))
 end))
 end))
 
@@ -428,7 +428,7 @@ let mkContext : FStar_Tc_Env.env  ->  env = (fun e -> (
 let env = {tcenv = e; gamma = []; tydefs = []; currentModule = emptyMlPath}
 in (
 
-let a = (("\'a"), ((~- (1))))
+let a = (("\'a"), ((~- ((Prims.parse_int "1")))))
 in (
 
 let failwith_ty = (((a)::[]), (FStar_Extraction_ML_Syntax.MLTY_Fun (((FStar_Extraction_ML_Syntax.MLTY_Named ((([]), (((("Prims")::[]), ("string")))))), (FStar_Extraction_ML_Syntax.E_IMPURE), (FStar_Extraction_ML_Syntax.MLTY_Var (a))))))

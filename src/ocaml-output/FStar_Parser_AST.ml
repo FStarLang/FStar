@@ -1547,7 +1547,7 @@ type inputFragment =
 let check_id : FStar_Ident.ident  ->  Prims.unit = (fun id -> if (FStar_Options.universes ()) then begin
 (
 
-let first_char = (FStar_String.substring id.FStar_Ident.idText 0 1)
+let first_char = (FStar_String.substring id.FStar_Ident.idText (Prims.parse_int "0") (Prims.parse_int "1"))
 in if ((FStar_String.lowercase first_char) = first_char) then begin
 ()
 end else begin
@@ -2228,8 +2228,8 @@ let error = (fun msg tm r -> (
 let tm = (FStar_All.pipe_right tm term_to_string)
 in (
 
-let tm = if ((FStar_String.length tm) >= 80) then begin
-(let _152_1368 = (FStar_Util.substring tm 0 77)
+let tm = if ((FStar_String.length tm) >= (Prims.parse_int "80")) then begin
+(let _152_1368 = (FStar_Util.substring tm (Prims.parse_int "0") (Prims.parse_int "77"))
 in (Prims.strcat _152_1368 "..."))
 end else begin
 tm

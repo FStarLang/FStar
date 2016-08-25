@@ -103,11 +103,11 @@ let args = (filter_imp args)
 in (
 
 let exps = (FStar_List.map Prims.fst args)
-in if ((is_lex_cons f) && ((FStar_List.length exps) = 2)) then begin
-(match ((let _132_38 = (FStar_List.nth exps 1)
+in if ((is_lex_cons f) && ((FStar_List.length exps) = (Prims.parse_int "2"))) then begin
+(match ((let _132_38 = (FStar_List.nth exps (Prims.parse_int "1"))
 in (reconstruct_lex _132_38))) with
 | Some (xs) -> begin
-(let _132_40 = (let _132_39 = (FStar_List.nth exps 0)
+(let _132_40 = (let _132_39 = (FStar_List.nth exps (Prims.parse_int "0"))
 in (_132_39)::xs)
 in Some (_132_40))
 end

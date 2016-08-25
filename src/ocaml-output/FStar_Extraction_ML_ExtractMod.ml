@@ -90,7 +90,7 @@ in {FStar_Extraction_ML_Syntax.mllb_name = _77_71.FStar_Extraction_ML_Syntax.mll
 in ((env), ((
 
 let _77_74 = ml_lb
-in {FStar_Extraction_ML_Syntax.mllb_name = (((Prims.snd mname)), (0)); FStar_Extraction_ML_Syntax.mllb_tysc = _77_74.FStar_Extraction_ML_Syntax.mllb_tysc; FStar_Extraction_ML_Syntax.mllb_add_unit = _77_74.FStar_Extraction_ML_Syntax.mllb_add_unit; FStar_Extraction_ML_Syntax.mllb_def = _77_74.FStar_Extraction_ML_Syntax.mllb_def; FStar_Extraction_ML_Syntax.print_typ = _77_74.FStar_Extraction_ML_Syntax.print_typ}))))))
+in {FStar_Extraction_ML_Syntax.mllb_name = (((Prims.snd mname)), ((Prims.parse_int "0"))); FStar_Extraction_ML_Syntax.mllb_tysc = _77_74.FStar_Extraction_ML_Syntax.mllb_tysc; FStar_Extraction_ML_Syntax.mllb_add_unit = _77_74.FStar_Extraction_ML_Syntax.mllb_add_unit; FStar_Extraction_ML_Syntax.mllb_def = _77_74.FStar_Extraction_ML_Syntax.mllb_def; FStar_Extraction_ML_Syntax.print_typ = _77_74.FStar_Extraction_ML_Syntax.print_typ}))))))
 end else begin
 (let _170_37 = (let _170_36 = (let _170_35 = (FStar_Util.must ml_lb.FStar_Extraction_ML_Syntax.mllb_tysc)
 in (FStar_Extraction_ML_Env.extend_lb env lbname t _170_35 ml_lb.FStar_Extraction_ML_Syntax.mllb_add_unit false))

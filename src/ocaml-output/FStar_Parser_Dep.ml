@@ -50,7 +50,7 @@ in (
 
 let l = (FStar_String.length f)
 in if ((l > lext) && ((FStar_String.substring f (l - lext) lext) = ext)) then begin
-(let _162_7 = (FStar_String.substring f 0 (l - lext))
+(let _162_7 = (FStar_String.substring f (Prims.parse_int "0") (l - lext))
 in Some (_162_7))
 end else begin
 None
@@ -64,7 +64,7 @@ None
 end))))
 
 
-let is_interface : Prims.string  ->  Prims.bool = (fun f -> ((FStar_String.get f ((FStar_String.length f) - 1)) = 'i'))
+let is_interface : Prims.string  ->  Prims.bool = (fun f -> ((FStar_String.get f ((FStar_String.length f) - (Prims.parse_int "1"))) = 'i'))
 
 
 let is_implementation : Prims.string  ->  Prims.bool = (fun f -> (not ((is_interface f))))
@@ -143,7 +143,7 @@ let cwd = (let _162_37 = (FStar_Util.getcwd ())
 in (FStar_Util.normalize_file_path _162_37))
 in (
 
-let map = (FStar_Util.smap_create 41)
+let map = (FStar_Util.smap_create (Prims.parse_int "41"))
 in (
 
 let add_entry = (fun key full_path -> (match ((FStar_Util.smap_try_find map key)) with
@@ -342,7 +342,7 @@ let try_key = (fun key -> (match ((FStar_Util.smap_try_find working_map key)) wi
 in (add_dep _162_116))) (list_of_pair pair))
 end
 | None -> begin
-if (((FStar_List.length lid.FStar_Ident.ns) > 0) && (FStar_Options.debug_any ())) then begin
+if (((FStar_List.length lid.FStar_Ident.ns) > (Prims.parse_int "0")) && (FStar_Options.debug_any ())) then begin
 (let _162_118 = (let _162_117 = (string_of_lid lid false)
 in (_162_117)::[])
 in (FStar_Util.fprint FStar_Util.stderr "Warning: unbound module reference %s\n" _162_118))
@@ -619,7 +619,7 @@ end
 | FStar_Parser_AST.Construct (lid, termimps) -> begin
 (
 
-let _69_446 = if (((FStar_List.length termimps) = 1) && (FStar_Options.universes ())) then begin
+let _69_446 = if (((FStar_List.length termimps) = (Prims.parse_int "1")) && (FStar_Options.universes ())) then begin
 (record_lid true lid)
 end else begin
 ()
@@ -839,7 +839,7 @@ in (FStar_Util.write_file "dep.graph" _162_192))))))
 
 let collect : verify_mode  ->  Prims.string Prims.list  ->  ((Prims.string * Prims.string Prims.list) Prims.list * Prims.string Prims.list * (Prims.string Prims.list * color) FStar_Util.smap) = (fun verify_mode filenames -> (
 
-let graph = (FStar_Util.smap_create 41)
+let graph = (FStar_Util.smap_create (Prims.parse_int "41"))
 in (
 
 let verify_flags = (let _162_199 = (FStar_Options.verify_module ())
@@ -921,7 +921,7 @@ let _69_687 = (print_graph immediate_graph)
 in (
 
 let _69_689 = (FStar_Util.print_string "\n")
-in (FStar_All.exit 1)))))
+in (FStar_All.exit (Prims.parse_int "1"))))))
 end
 | Black -> begin
 direct_deps
@@ -965,7 +965,7 @@ in (FStar_List.collect (fun k -> (
 let as_list = (must_find k)
 in (
 
-let is_interleaved = ((FStar_List.length as_list) = 2)
+let is_interleaved = ((FStar_List.length as_list) = (Prims.parse_int "2"))
 in (FStar_List.map (fun f -> (
 
 let should_append_fsti = ((is_implementation f) && is_interleaved)

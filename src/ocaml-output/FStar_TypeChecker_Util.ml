@@ -1503,7 +1503,7 @@ in (FStar_Syntax_Syntax.mk_Tm_app _149_541 _149_540 None _149_539)))))
 in (
 
 let wp = (ifthenelse md res_t guard wp_then wp_else)
-in if ((FStar_Options.split_cases ()) > 0) then begin
+in if ((FStar_Options.split_cases ()) > (Prims.parse_int "0")) then begin
 (
 
 let comp = (mk_comp md res_t wp [])
@@ -1601,7 +1601,7 @@ in (match (_56_952) with
 in (mk_comp md res_t _149_600 []))
 end))
 end)) lcases default_case)
-in if ((FStar_Options.split_cases ()) > 0) then begin
+in if ((FStar_Options.split_cases ()) > (Prims.parse_int "0")) then begin
 (add_equality_to_post_condition env comp res_t)
 end else begin
 (
@@ -1782,7 +1782,7 @@ let _56_1021 = (FStar_TypeChecker_Env.lookup_lid env FStar_Syntax_Const.b2t_lid)
 in (
 
 let b2t = (let _149_673 = (FStar_Ident.set_lid_range FStar_Syntax_Const.b2t_lid e.FStar_Syntax_Syntax.pos)
-in (FStar_Syntax_Syntax.fvar _149_673 (FStar_Syntax_Syntax.Delta_unfoldable (1)) None))
+in (FStar_Syntax_Syntax.fvar _149_673 (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))) None))
 in (
 
 let lc = (let _149_676 = (let _149_675 = (let _149_674 = (FStar_Syntax_Syntax.mk_Total FStar_Syntax_Util.ktype0)

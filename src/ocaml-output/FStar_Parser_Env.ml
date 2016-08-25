@@ -79,7 +79,7 @@ in (FStar_Ident.set_lid_range _155_100 (FStar_Ident.range_of_lid lid)))))
 
 let new_sigmap = (fun _62_52 -> (match (()) with
 | () -> begin
-(FStar_Util.smap_create 100)
+(FStar_Util.smap_create (Prims.parse_int "100"))
 end))
 
 
@@ -1203,7 +1203,7 @@ end
 end
 in (
 
-let open_ns = if ((FStar_List.length mname.FStar_Ident.ns) <> 0) then begin
+let open_ns = if ((FStar_List.length mname.FStar_Ident.ns) <> (Prims.parse_int "0")) then begin
 (
 
 let ns = (FStar_Ident.lid_of_ids mname.FStar_Ident.ns)

@@ -35,7 +35,7 @@ let num : Prims.int  ->  doc = (fun i -> Doc ((Prims.string_of_int i)))
 let break_ : Prims.int  ->  doc = (fun i -> Doc (""))
 
 
-let break0 : doc = (break_ 0)
+let break0 : doc = (break_ (Prims.parse_int "0"))
 
 
 let break1 : doc = (text " ")

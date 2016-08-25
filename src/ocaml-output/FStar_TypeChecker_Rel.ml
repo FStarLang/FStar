@@ -248,7 +248,7 @@ end))))
 in (FStar_All.pipe_right _148_137 (FStar_String.concat " "))))
 
 
-let empty_worklist : FStar_TypeChecker_Env.env  ->  worklist = (fun env -> {attempting = []; wl_deferred = []; ctr = 0; defer_ok = true; smt_ok = true; tcenv = env})
+let empty_worklist : FStar_TypeChecker_Env.env  ->  worklist = (fun env -> {attempting = []; wl_deferred = []; ctr = (Prims.parse_int "0"); defer_ok = true; smt_ok = true; tcenv = env})
 
 
 let singleton' : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Common.prob  ->  Prims.bool  ->  worklist = (fun env prob smt_ok -> (
@@ -399,12 +399,12 @@ end
 end))
 
 
-let is_top_level_prob : FStar_TypeChecker_Common.prob  ->  Prims.bool = (fun p -> ((FStar_All.pipe_right (p_reason p) FStar_List.length) = 1))
+let is_top_level_prob : FStar_TypeChecker_Common.prob  ->  Prims.bool = (fun p -> ((FStar_All.pipe_right (p_reason p) FStar_List.length) = (Prims.parse_int "1")))
 
 
 let next_pid : Prims.unit  ->  Prims.int = (
 
-let ctr = (FStar_ST.alloc 0)
+let ctr = (FStar_ST.alloc (Prims.parse_int "0"))
 in (fun _55_198 -> (match (()) with
 | () -> begin
 (
@@ -777,7 +777,7 @@ let _55_468 = (commit uvis)
 in (
 
 let _55_470 = wl
-in {attempting = _55_470.attempting; wl_deferred = _55_470.wl_deferred; ctr = (wl.ctr + 1); defer_ok = _55_470.defer_ok; smt_ok = _55_470.smt_ok; tcenv = _55_470.tcenv})))
+in {attempting = _55_470.attempting; wl_deferred = _55_470.wl_deferred; ctr = (wl.ctr + (Prims.parse_int "1")); defer_ok = _55_470.defer_ok; smt_ok = _55_470.smt_ok; tcenv = _55_470.tcenv})))
 end))))
 
 
@@ -797,7 +797,7 @@ let _55_477 = (commit sol)
 in (
 
 let _55_479 = wl
-in {attempting = _55_479.attempting; wl_deferred = _55_479.wl_deferred; ctr = (wl.ctr + 1); defer_ok = _55_479.defer_ok; smt_ok = _55_479.smt_ok; tcenv = _55_479.tcenv}))))
+in {attempting = _55_479.attempting; wl_deferred = _55_479.wl_deferred; ctr = (wl.ctr + (Prims.parse_int "1")); defer_ok = _55_479.defer_ok; smt_ok = _55_479.smt_ok; tcenv = _55_479.tcenv}))))
 
 
 let solve_prob : FStar_TypeChecker_Common.prob  ->  FStar_Syntax_Syntax.term Prims.option  ->  uvi Prims.list  ->  worklist  ->  worklist = (fun prob logical_guard uvis wl -> (
@@ -1137,7 +1137,7 @@ end))))
 
 let head_matches_delta = (fun env wl t1 t2 -> (
 
-let success = (fun d r t1 t2 -> ((r), (if (d > 0) then begin
+let success = (fun d r t1 t2 -> ((r), (if (d > (Prims.parse_int "0")) then begin
 Some (((t1), (t2)))
 end else begin
 None
@@ -1163,7 +1163,7 @@ let t1 = (normalize_refinement ((FStar_TypeChecker_Normalize.UnfoldUntil (d))::(
 in (
 
 let t2 = (normalize_refinement ((FStar_TypeChecker_Normalize.UnfoldUntil (d))::(FStar_TypeChecker_Normalize.WHNF)::[]) env wl t2)
-in (aux (n_delta + 1) t1 t2)))
+in (aux (n_delta + (Prims.parse_int "1")) t1 t2)))
 end)
 end
 | (MisMatch (Some (FStar_Syntax_Syntax.Delta_equational), _)) | (MisMatch (_, Some (FStar_Syntax_Syntax.Delta_equational))) -> begin
@@ -1189,7 +1189,7 @@ in ((t1), (_148_507))))
 end
 in (match (_55_870) with
 | (t1, t2) -> begin
-(aux (n_delta + 1) t1 t2)
+(aux (n_delta + (Prims.parse_int "1")) t1 t2)
 end)))
 end
 | MisMatch (_55_872) -> begin
@@ -1198,7 +1198,7 @@ end
 | _55_875 -> begin
 (success n_delta r t1 t2)
 end)))
-in (aux 0 t1 t2)))))
+in (aux (Prims.parse_int "0") t1 t2)))))
 
 
 type tc =
@@ -1544,28 +1544,28 @@ type im_or_proj_t =
 (((FStar_Syntax_Syntax.uvar * FStar_Syntax_Syntax.typ) * FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.comp) * FStar_Syntax_Syntax.arg Prims.list * ((tc Prims.list  ->  FStar_Syntax_Syntax.typ) * (FStar_Syntax_Syntax.typ  ->  Prims.bool) * (FStar_Syntax_Syntax.binder Prims.option * variance * tc) Prims.list))
 
 
-let rigid_rigid : Prims.int = 0
+let rigid_rigid : Prims.int = (Prims.parse_int "0")
 
 
-let flex_rigid_eq : Prims.int = 1
+let flex_rigid_eq : Prims.int = (Prims.parse_int "1")
 
 
-let flex_refine_inner : Prims.int = 2
+let flex_refine_inner : Prims.int = (Prims.parse_int "2")
 
 
-let flex_refine : Prims.int = 3
+let flex_refine : Prims.int = (Prims.parse_int "3")
 
 
-let flex_rigid : Prims.int = 4
+let flex_rigid : Prims.int = (Prims.parse_int "4")
 
 
-let rigid_flex : Prims.int = 5
+let rigid_flex : Prims.int = (Prims.parse_int "5")
 
 
-let refine_flex : Prims.int = 6
+let refine_flex : Prims.int = (Prims.parse_int "6")
 
 
-let flex_flex : Prims.int = 7
+let flex_flex : Prims.int = (Prims.parse_int "7")
 
 
 let compress_tprob = (fun wl p -> (
@@ -1719,7 +1719,7 @@ end
 end))
 end)
 end))
-in (aux (((flex_flex + 1)), (None), ([])) wl.attempting)))
+in (aux (((flex_flex + (Prims.parse_int "1"))), (None), ([])) wl.attempting)))
 
 
 let is_flex_rigid : Prims.int  ->  Prims.bool = (fun rank -> ((flex_refine_inner <= rank) && (rank <= flex_rigid)))
@@ -2155,8 +2155,8 @@ in _148_958.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_fvar ({FStar_Syntax_Syntax.fv_name = _55_1673; FStar_Syntax_Syntax.fv_delta = FStar_Syntax_Syntax.Delta_unfoldable (i); FStar_Syntax_Syntax.fv_qual = _55_1669}) -> begin
 (
 
-let prev = if (i > 1) then begin
-FStar_Syntax_Syntax.Delta_unfoldable ((i - 1))
+let prev = if (i > (Prims.parse_int "1")) then begin
+FStar_Syntax_Syntax.Delta_unfoldable ((i - (Prims.parse_int "1")))
 end else begin
 FStar_Syntax_Syntax.Delta_constant
 end
@@ -2308,7 +2308,7 @@ in (match (_55_1764) with
 | (u, args) -> begin
 (
 
-let _55_1770 = ((0), (1), (2), (3), (4))
+let _55_1770 = (((Prims.parse_int "0")), ((Prims.parse_int "1")), ((Prims.parse_int "2")), ((Prims.parse_int "3")), ((Prims.parse_int "4")))
 in (match (_55_1770) with
 | (ok, head_match, partial_match, fallback, failed_match) -> begin
 (
@@ -2333,7 +2333,7 @@ in (match (_55_1783) with
 (match (((h1.FStar_Syntax_Syntax.n), (h2.FStar_Syntax_Syntax.n))) with
 | (FStar_Syntax_Syntax.Tm_fvar (tc1), FStar_Syntax_Syntax.Tm_fvar (tc2)) -> begin
 if (FStar_Syntax_Syntax.fv_eq tc1 tc2) then begin
-if ((FStar_List.length args1) = 0) then begin
+if ((FStar_List.length args1) = (Prims.parse_int "0")) then begin
 Some ([])
 end else begin
 (let _148_986 = (let _148_985 = (let _148_984 = (new_problem env t1 FStar_TypeChecker_Common.EQ t2 None t1.FStar_Syntax_Syntax.pos "joining refinements")
@@ -2347,7 +2347,7 @@ end
 end
 | (FStar_Syntax_Syntax.Tm_name (a), FStar_Syntax_Syntax.Tm_name (b)) -> begin
 if (FStar_Syntax_Syntax.bv_eq a b) then begin
-if ((FStar_List.length args1) = 0) then begin
+if ((FStar_List.length args1) = (Prims.parse_int "0")) then begin
 Some ([])
 end else begin
 (let _148_990 = (let _148_989 = (let _148_988 = (new_problem env t1 FStar_TypeChecker_Common.EQ t2 None t1.FStar_Syntax_Syntax.pos "joining refinements")
@@ -2381,7 +2381,7 @@ end
 let x = (FStar_Syntax_Syntax.freshen_bv x)
 in (
 
-let subst = (FStar_Syntax_Syntax.DB (((0), (x))))::[]
+let subst = (FStar_Syntax_Syntax.DB ((((Prims.parse_int "0")), (x))))::[]
 in (
 
 let phi1 = (FStar_Syntax_Subst.subst subst phi1)
@@ -2593,8 +2593,8 @@ in (
 let hd1 = (FStar_Syntax_Syntax.freshen_bv hd1)
 in (
 
-let subst = (let _148_1041 = (FStar_Syntax_Subst.shift_subst 1 subst)
-in (FStar_Syntax_Syntax.DB (((0), (hd1))))::_148_1041)
+let subst = (let _148_1041 = (FStar_Syntax_Subst.shift_subst (Prims.parse_int "1") subst)
+in (FStar_Syntax_Syntax.DB ((((Prims.parse_int "0")), (hd1))))::_148_1041)
 in (
 
 let env = (FStar_TypeChecker_Env.push_bv env hd1)
@@ -2733,7 +2733,7 @@ in (let _148_1084 = (args_to_string args2)
 in (FStar_Util.format4 "unequal number of arguments: %s[%s] and %s[%s]" _148_1087 _148_1086 _148_1085 _148_1084)))))
 in (giveup env _148_1088 orig))
 end else begin
-if ((nargs = 0) || (eq_args args1 args2)) then begin
+if ((nargs = (Prims.parse_int "0")) || (eq_args args1 args2)) then begin
 (match ((solve_maybe_uinsts env orig head1 head2 wl)) with
 | USolved (wl) -> begin
 (let _148_1089 = (solve_prob orig None [] wl)
@@ -3127,13 +3127,13 @@ let st = (FStar_Option.get stopt)
 in (
 
 let tx = (FStar_Unionfind.new_transaction ())
-in if (i = (~- (1))) then begin
+in if (i = (~- ((Prims.parse_int "1")))) then begin
 (match ((imitate orig env wl st)) with
 | Failed (_55_2282) -> begin
 (
 
 let _55_2284 = (FStar_Unionfind.rollback tx)
-in (imitate_or_project n stopt (i + 1)))
+in (imitate_or_project n stopt (i + (Prims.parse_int "1"))))
 end
 | sol -> begin
 sol
@@ -3144,7 +3144,7 @@ end else begin
 (
 
 let _55_2292 = (FStar_Unionfind.rollback tx)
-in (imitate_or_project n stopt (i + 1)))
+in (imitate_or_project n stopt (i + (Prims.parse_int "1"))))
 end
 | Some (sol) -> begin
 sol
@@ -3189,9 +3189,9 @@ let fvs_hd = (let _148_1278 = (let _148_1277 = (FStar_Syntax_Util.head_and_args 
 in (FStar_All.pipe_right _148_1277 Prims.fst))
 in (FStar_All.pipe_right _148_1278 FStar_Syntax_Free.names))
 in if (FStar_Util.set_is_empty fvs_hd) then begin
-(~- (1))
+(~- ((Prims.parse_int "1")))
 end else begin
-0
+(Prims.parse_int "0")
 end))
 in (match (maybe_pat_vars) with
 | Some (vars) -> begin
@@ -3263,7 +3263,7 @@ end else begin
 ()
 end
 in (let _148_1289 = (subterms args_lhs)
-in (imitate_or_project (FStar_List.length args_lhs) _148_1289 (~- (1)))))
+in (imitate_or_project (FStar_List.length args_lhs) _148_1289 (~- ((Prims.parse_int "1"))))))
 end else begin
 (giveup env "free-variable check failed on a non-redex" orig)
 end
@@ -3288,7 +3288,7 @@ in (
 
 let _55_2341 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _148_1291 = (FStar_Syntax_Print.term_to_string t1)
-in (FStar_Util.print2 "Not a pattern (%s) ... %s\n" _148_1291 (if (im_ok < 0) then begin
+in (FStar_Util.print2 "Not a pattern (%s) ... %s\n" _148_1291 (if (im_ok < (Prims.parse_int "0")) then begin
 "imitating"
 end else begin
 "projecting"
@@ -3915,7 +3915,7 @@ in (
 let x1 = (FStar_Syntax_Syntax.freshen_bv x1)
 in (
 
-let subst = (FStar_Syntax_Syntax.DB (((0), (x1))))::[]
+let subst = (FStar_Syntax_Syntax.DB ((((Prims.parse_int "0")), (x1))))::[]
 in (
 
 let phi1 = (FStar_Syntax_Subst.subst subst phi1)
@@ -3978,7 +3978,7 @@ in (
 let wl = (
 
 let _55_2748 = wl
-in {attempting = _55_2748.attempting; wl_deferred = _55_2748.wl_deferred; ctr = (wl.ctr + 1); defer_ok = _55_2748.defer_ok; smt_ok = _55_2748.smt_ok; tcenv = _55_2748.tcenv})
+in {attempting = _55_2748.attempting; wl_deferred = _55_2748.wl_deferred; ctr = (wl.ctr + (Prims.parse_int "1")); defer_ok = _55_2748.defer_ok; smt_ok = _55_2748.smt_ok; tcenv = _55_2748.tcenv})
 in (solve env (attempt ((base_prob)::[]) wl)))))
 end))
 end else begin
@@ -4901,7 +4901,7 @@ in (match (u1) with
 ()
 end
 | _55_3585 -> begin
-(match ((solve_universe_eq (~- (1)) wl u1 u2)) with
+(match ((solve_universe_eq (~- ((Prims.parse_int "1"))) wl u1 u2)) with
 | (UDeferred (_)) | (UFailed (_)) -> begin
 (
 
@@ -4967,7 +4967,7 @@ let rec solve_all_groups = (fun wl groups -> (match (groups) with
 ()
 end
 | ((u, lower_bounds))::groups -> begin
-(match ((solve_universe_eq (~- (1)) wl (FStar_Syntax_Syntax.U_max (lower_bounds)) (FStar_Syntax_Syntax.U_unif (u)))) with
+(match ((solve_universe_eq (~- ((Prims.parse_int "1"))) wl (FStar_Syntax_Syntax.U_max (lower_bounds)) (FStar_Syntax_Syntax.U_unif (u)))) with
 | USolved (wl) -> begin
 (solve_all_groups wl groups)
 end

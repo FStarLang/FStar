@@ -118,7 +118,7 @@ in (FStar_All.pipe_right _139_75 (FStar_List.map (fun x -> (FStar_Absyn_Print.st
 in (FStar_All.pipe_right _139_76 (FStar_String.concat ", ")))
 in (
 
-let msg = if ((FStar_Util.set_count a) > 1) then begin
+let msg = if ((FStar_Util.set_count a) > (Prims.parse_int "1")) then begin
 (let _139_77 = (FStar_Tc_Normalize.exp_norm_to_string env head)
 in (FStar_Util.format2 "Bound variables \'{%s}\' in the type of \'%s\' escape because of impure applications; add explicit let-bindings" escaping _139_77))
 end else begin
@@ -2387,7 +2387,7 @@ let aux = (fun _46_1580 -> (match (()) with
 
 let n_args = (FStar_List.length args)
 in (match (head.FStar_Absyn_Syntax.n) with
-| FStar_Absyn_Syntax.Exp_fvar (fv, _46_1584) when (((FStar_Ident.lid_equals fv.FStar_Absyn_Syntax.v FStar_Absyn_Const.op_And) || (FStar_Ident.lid_equals fv.FStar_Absyn_Syntax.v FStar_Absyn_Const.op_Or)) && (n_args = 2)) -> begin
+| FStar_Absyn_Syntax.Exp_fvar (fv, _46_1584) when (((FStar_Ident.lid_equals fv.FStar_Absyn_Syntax.v FStar_Absyn_Const.op_And) || (FStar_Ident.lid_equals fv.FStar_Absyn_Syntax.v FStar_Absyn_Const.op_Or)) && (n_args = (Prims.parse_int "2"))) -> begin
 (
 
 let env = (FStar_Tc_Env.set_expected_typ env FStar_Absyn_Util.t_bool)

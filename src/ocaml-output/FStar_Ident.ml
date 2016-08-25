@@ -30,10 +30,10 @@ let reserved_prefix : Prims.string = "uu___"
 
 let gen : FStar_Range.range  ->  ident = (
 
-let x = (FStar_Util.mk_ref 0)
+let x = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in (fun r -> (
 
-let _25_14 = (let _118_25 = ((FStar_ST.read x) + 1)
+let _25_14 = (let _118_25 = ((FStar_ST.read x) + (Prims.parse_int "1"))
 in (FStar_ST.op_Colon_Equals x _118_25))
 in (let _118_29 = (let _118_28 = (let _118_27 = (let _118_26 = (FStar_ST.read x)
 in (Prims.string_of_int _118_26))

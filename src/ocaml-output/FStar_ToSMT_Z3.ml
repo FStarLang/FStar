@@ -55,7 +55,7 @@ let z3v_le : z3version  ->  (Prims.int * Prims.int * Prims.int)  ->  Prims.bool 
 false
 end
 | Some (i) -> begin
-(i >= 0)
+(i >= (Prims.parse_int "0"))
 end))
 
 
@@ -85,7 +85,7 @@ with
 (
 
 let _48_31 = (FStar_Util.print_string "Error: No z3 executable was found\n")
-in (FStar_All.exit 1))
+in (FStar_All.exit (Prims.parse_int "1")))
 end
 in (match (_48_40) with
 | (_48_36, out, _48_39) -> begin
@@ -133,10 +133,10 @@ let ini_params : Prims.unit  ->  Prims.string = (fun _48_65 -> (match (()) with
 (
 
 let t = if (let _141_34 = (get_z3version ())
-in (z3v_le _141_34 ((4), (3), (1)))) then begin
+in (z3v_le _141_34 (((Prims.parse_int "4")), ((Prims.parse_int "3")), ((Prims.parse_int "1"))))) then begin
 (FStar_Options.z3_timeout ())
 end else begin
-((FStar_Options.z3_timeout ()) * 1000)
+((FStar_Options.z3_timeout ()) * (Prims.parse_int "1000"))
 end
 in (
 
@@ -145,7 +145,7 @@ in (FStar_Util.format1 "-t:%s" _141_35))
 in (
 
 let relevancy = if (let _141_36 = (get_z3version ())
-in (z3v_le _141_36 ((4), (3), (1)))) then begin
+in (z3v_le _141_36 (((Prims.parse_int "4")), ((Prims.parse_int "3")), ((Prims.parse_int "1"))))) then begin
 "RELEVANCY"
 end else begin
 "SMT.RELEVANCY"
@@ -242,7 +242,7 @@ let queries_dot_smt2 : FStar_Util.file_handle Prims.option FStar_ST.ref = (FStar
 
 let get_qfile : Prims.bool  ->  FStar_Util.file_handle = (
 
-let ctr = (FStar_Util.mk_ref 0)
+let ctr = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in (fun fresh -> if fresh then begin
 (
 
@@ -284,7 +284,7 @@ end)))
 let the_z3proc : FStar_Util.proc Prims.option FStar_ST.ref = (FStar_ST.alloc None)
 
 
-let ctr : Prims.int FStar_ST.ref = (FStar_Util.mk_ref (~- (1)))
+let ctr : Prims.int FStar_ST.ref = (FStar_Util.mk_ref (~- ((Prims.parse_int "1"))))
 
 
 let new_proc : Prims.unit  ->  FStar_Util.proc = (fun _48_99 -> (match (()) with
@@ -424,7 +424,7 @@ in (parse (FStar_Util.trim_string stdout)))))
 
 let doZ3Exe : Prims.bool  ->  Prims.string  ->  (z3status * Prims.string Prims.list) = (
 
-let ctr = (FStar_Util.mk_ref 0)
+let ctr = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in (fun fresh input -> (
 
 let z3proc = if fresh then begin
@@ -455,7 +455,7 @@ let z3_options : Prims.unit  ->  Prims.string = (fun _48_178 -> (match (()) with
 (
 
 let mbqi = if (let _141_137 = (get_z3version ())
-in (z3v_le _141_137 ((4), (3), (1)))) then begin
+in (z3v_le _141_137 (((Prims.parse_int "4")), ((Prims.parse_int "3")), ((Prims.parse_int "1"))))) then begin
 "mbqi"
 end else begin
 "smt.mbqi"
@@ -463,7 +463,7 @@ end
 in (
 
 let model_on_timeout = if (let _141_138 = (get_z3version ())
-in (z3v_le _141_138 ((4), (3), (1)))) then begin
+in (z3v_le _141_138 (((Prims.parse_int "4")), ((Prims.parse_int "3")), ((Prims.parse_int "1"))))) then begin
 "(set-option :model-on-timeout true)\n"
 end else begin
 ""
@@ -487,7 +487,7 @@ let job_queue : z3job Prims.list FStar_ST.ref = (
 
 let x = (FStar_Util.mk_ref (({job = (fun _48_185 -> (match (()) with
 | () -> begin
-(let _141_162 = (let _141_161 = (let _141_160 = (FStar_Range.mk_range "" 0 0)
+(let _141_162 = (let _141_161 = (let _141_160 = (FStar_Range.mk_range "" (Prims.parse_int "0") (Prims.parse_int "0"))
 in ((""), (_141_160)))
 in (_141_161)::[])
 in ((false), (_141_162)))
@@ -498,7 +498,7 @@ let _48_188 = (FStar_ST.op_Colon_Equals x [])
 in x))
 
 
-let pending_jobs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 0)
+let pending_jobs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref (Prims.parse_int "0"))
 
 
 let with_monitor = (fun m f -> (
@@ -618,16 +618,16 @@ let init : Prims.unit  ->  Prims.unit = (fun _48_255 -> (match (()) with
 | () -> begin
 (
 
-let n_runners = ((FStar_Options.n_cores ()) - 1)
+let n_runners = ((FStar_Options.n_cores ()) - (Prims.parse_int "1"))
 in (
 
-let rec aux = (fun n -> if (n = 0) then begin
+let rec aux = (fun n -> if (n = (Prims.parse_int "0")) then begin
 ()
 end else begin
 (
 
 let _48_259 = (FStar_Util.spawn dequeue)
-in (aux (n - 1)))
+in (aux (n - (Prims.parse_int "1"))))
 end)
 in (aux n_runners)))
 end))
@@ -677,13 +677,13 @@ in ((_141_203), (_141_202))))
 end)))
 in (match (_48_280) with
 | (n, m) -> begin
-if ((n + m) = 0) then begin
+if ((n + m) = (Prims.parse_int "0")) then begin
 (let _141_204 = (FStar_Tc_Errors.report_all ())
 in (FStar_All.pipe_right _141_204 Prims.ignore))
 end else begin
 (
 
-let _48_281 = (FStar_Util.sleep 500)
+let _48_281 = (FStar_Util.sleep (Prims.parse_int "500"))
 in (aux ()))
 end
 end))
@@ -783,7 +783,7 @@ end))
 
 let ask = (fun fresh label_messages qry cb -> (
 
-let fresh = (fresh && ((FStar_Options.n_cores ()) > 1))
+let fresh = (fresh && ((FStar_Options.n_cores ()) > (Prims.parse_int "1")))
 in (
 
 let theory = (bgtheory fresh)

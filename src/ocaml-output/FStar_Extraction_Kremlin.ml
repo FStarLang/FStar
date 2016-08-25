@@ -1001,7 +1001,7 @@ type version =
 Prims.int
 
 
-let current_version : version = 10
+let current_version : version = (Prims.parse_int "10")
 
 
 type file =
@@ -1450,7 +1450,7 @@ and translate_binders : env  ->  (FStar_Extraction_ML_Syntax.mlident * FStar_Ext
 and translate_binder : env  ->  (FStar_Extraction_ML_Syntax.mlident * FStar_Extraction_ML_Syntax.mlty)  ->  binder = (fun env _80_552 -> (match (_80_552) with
 | ((name, _80_549), typ) -> begin
 (let _173_653 = (translate_type env typ)
-in (let _173_652 = (FStar_ST.alloc 0)
+in (let _173_652 = (FStar_ST.alloc (Prims.parse_int "0"))
 in (let _173_651 = (FStar_ST.alloc ())
 in {name = name; typ = _173_653; mut = false; mark = _173_652; meta = None; atom = _173_651})))
 end))
@@ -1509,7 +1509,7 @@ let is_mut = (flavor = FStar_Extraction_ML_Syntax.Mutable)
 in (
 
 let binder = (let _173_666 = (translate_type env typ)
-in (let _173_665 = (FStar_ST.alloc 0)
+in (let _173_665 = (FStar_ST.alloc (Prims.parse_int "0"))
 in (let _173_664 = (FStar_ST.alloc ())
 in {name = name; typ = _173_666; mut = is_mut; mark = _173_665; meta = None; atom = _173_664})))
 in (
@@ -1775,7 +1775,7 @@ end
 
 let env = (extend env name false)
 in (let _173_758 = (let _173_757 = (let _173_756 = (translate_type env t)
-in (let _173_755 = (FStar_ST.alloc 0)
+in (let _173_755 = (FStar_ST.alloc (Prims.parse_int "0"))
 in (let _173_754 = (FStar_ST.alloc ())
 in {name = name; typ = _173_756; mut = false; mark = _173_755; meta = None; atom = _173_754})))
 in PVar (_173_757))

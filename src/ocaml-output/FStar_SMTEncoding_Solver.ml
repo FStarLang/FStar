@@ -160,7 +160,7 @@ end
 Some ((
 
 let _87_63 = h
-in {FStar_Util.hint_name = _87_63.FStar_Util.hint_name; FStar_Util.hint_index = _87_63.FStar_Util.hint_index; FStar_Util.fuel = _87_63.FStar_Util.fuel; FStar_Util.ifuel = _87_63.FStar_Util.ifuel; FStar_Util.unsat_core = _87_63.FStar_Util.unsat_core; FStar_Util.query_elapsed_time = 0}))
+in {FStar_Util.hint_name = _87_63.FStar_Util.hint_name; FStar_Util.hint_index = _87_63.FStar_Util.hint_index; FStar_Util.fuel = _87_63.FStar_Util.fuel; FStar_Util.ifuel = _87_63.FStar_Util.ifuel; FStar_Util.unsat_core = _87_63.FStar_Util.unsat_core; FStar_Util.query_elapsed_time = (Prims.parse_int "0")}))
 end)
 in (match ((FStar_ST.read recorded_hints)) with
 | Some (l) -> begin
@@ -253,7 +253,7 @@ in (
 
 let check = (fun p -> (
 
-let default_timeout = ((FStar_Options.z3_timeout ()) * 1000)
+let default_timeout = ((FStar_Options.z3_timeout ()) * (Prims.parse_int "1000"))
 in (
 
 let default_initial_config = (let _180_101 = (FStar_Options.initial_fuel ())
@@ -274,7 +274,7 @@ end
 let _87_117 = if (FStar_Option.isSome hint.FStar_Util.unsat_core) then begin
 ((hint.FStar_Util.unsat_core), (default_timeout))
 end else begin
-((None), ((60 * 1000)))
+((None), (((Prims.parse_int "60") * (Prims.parse_int "1000"))))
 end
 in (match (_87_117) with
 | (core, timeout) -> begin
@@ -298,8 +298,8 @@ in (_180_104)::[])
 end else begin
 []
 end
-in (let _180_118 = (let _180_117 = if (((FStar_Options.max_fuel ()) / 2) > (FStar_Options.initial_fuel ())) then begin
-(let _180_107 = (let _180_106 = ((FStar_Options.max_fuel ()) / 2)
+in (let _180_118 = (let _180_117 = if (((FStar_Options.max_fuel ()) / (Prims.parse_int "2")) > (FStar_Options.initial_fuel ())) then begin
+(let _180_107 = (let _180_106 = ((FStar_Options.max_fuel ()) / (Prims.parse_int "2"))
 in (let _180_105 = (FStar_Options.max_ifuel ())
 in ((_180_106), (_180_105), (default_timeout))))
 in (_180_107)::[])
@@ -316,7 +316,7 @@ end else begin
 end
 in (let _180_114 = (let _180_113 = if ((FStar_Options.min_fuel ()) < (FStar_Options.initial_fuel ())) then begin
 (let _180_112 = (let _180_111 = (FStar_Options.min_fuel ())
-in ((_180_111), (1), (default_timeout)))
+in ((_180_111), ((Prims.parse_int "1")), (default_timeout)))
 in (_180_112)::[])
 end else begin
 []
@@ -331,7 +331,7 @@ in (
 
 let report = (fun p errs -> (
 
-let errs = if ((FStar_Options.detail_errors ()) && ((FStar_Options.n_cores ()) = 1)) then begin
+let errs = if ((FStar_Options.detail_errors ()) && ((FStar_Options.n_cores ()) = (Prims.parse_int "1"))) then begin
 (
 
 let _87_132 = (match ((FStar_ST.read minimum_workable_fuel)) with
@@ -340,7 +340,7 @@ let _87_132 = (match ((FStar_ST.read minimum_workable_fuel)) with
 end
 | None -> begin
 (let _180_128 = (let _180_127 = (FStar_Options.min_fuel ())
-in ((_180_127), (1), (default_timeout)))
+in ((_180_127), ((Prims.parse_int "1")), (default_timeout)))
 in ((_180_128), (errs)))
 end)
 in (match (_87_132) with
@@ -526,7 +526,7 @@ in (FStar_SMTEncoding_Z3.ask unsat_core all_labels _180_191 _180_190))))))))
 end))))))
 in (
 
-let process_query = (fun q -> if ((FStar_Options.split_cases ()) > 0) then begin
+let process_query = (fun q -> if ((FStar_Options.split_cases ()) > (Prims.parse_int "0")) then begin
 (
 
 let _87_229 = (let _180_197 = (FStar_Options.split_cases ())

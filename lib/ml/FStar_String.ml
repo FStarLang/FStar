@@ -7,12 +7,12 @@ let split seps s =
        let l = BatList.flatten (BatList.map (fun x -> BatString.nsplit x (BatString.make 1 sep)) acc) in
        repeat_split l seps in
   repeat_split [s] seps
-let compare x y = BatString.compare x y
+let compare x y = Z.of_int (BatString.compare x y)
 let concat = BatString.concat
-let length = BatString.length
-let sub s i j = BatString.slice ~first:i ~last:j s
+let length s = Z.of_int (BatString.length s)
+let sub s i j = BatString.slice ~first:(Z.to_int i) ~last:(Z.to_int j) s
 let get s i = FStar_List.nth (BatString.to_list s) i
 let collect = BatString.replace_chars
 let lowercase = String.lowercase
 
-let substring = String.sub
+let substring s i j= String.sub s (Z.to_int i) (Z.to_int j)

@@ -1705,7 +1705,7 @@ let bv_eq : bv  ->  bv  ->  Prims.bool = (fun bv1 bv2 -> ((bv1.ppname.FStar_Iden
 let order_bv : bv  ->  bv  ->  Prims.int = (fun x y -> (
 
 let i = (FStar_String.compare x.ppname.FStar_Ident.idText y.ppname.FStar_Ident.idText)
-in if (i = 0) then begin
+in if (i = (Prims.parse_int "0")) then begin
 (x.index - y.index)
 end else begin
 i
@@ -1899,7 +1899,7 @@ end))
 let null_id : FStar_Ident.ident = (FStar_Ident.mk_ident (("_"), (FStar_Range.dummyRange)))
 
 
-let null_bv : term  ->  bv = (fun k -> {ppname = null_id; index = 0; sort = k})
+let null_bv : term  ->  bv = (fun k -> {ppname = null_id; index = (Prims.parse_int "0"); sort = k})
 
 
 let mk_binder : bv  ->  binder = (fun a -> ((a), (None)))
@@ -1991,7 +1991,7 @@ in (FStar_All.pipe_left FStar_List.rev _126_1373))))
 
 let gen_reset : ((Prims.unit  ->  Prims.int) * (Prims.unit  ->  Prims.unit)) = (
 
-let x = (FStar_ST.alloc 0)
+let x = (FStar_ST.alloc (Prims.parse_int "0"))
 in (
 
 let gen = (fun _33_487 -> (match (()) with
@@ -2005,7 +2005,7 @@ in (
 
 let reset = (fun _33_491 -> (match (()) with
 | () -> begin
-(FStar_ST.op_Colon_Equals x 0)
+(FStar_ST.op_Colon_Equals x (Prims.parse_int "0"))
 end))
 in ((gen), (reset)))))
 

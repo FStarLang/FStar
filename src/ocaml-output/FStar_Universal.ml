@@ -109,7 +109,7 @@ in (match (_91_78) with
 (
 
 let _91_80 = (FStar_Util.print_error "fragment without an enclosing module")
-in (FStar_All.exit 1))
+in (FStar_All.exit (Prims.parse_int "1")))
 end
 | Some (modul) -> begin
 (
@@ -272,7 +272,7 @@ let report_fail = (fun _91_169 -> (match (()) with
 
 let _91_170 = (let _184_65 = (FStar_TypeChecker_Errors.report_all ())
 in (FStar_All.pipe_right _184_65 Prims.ignore))
-in (FStar_ST.op_Colon_Equals FStar_TypeChecker_Errors.num_errs 0))
+in (FStar_ST.op_Colon_Equals FStar_TypeChecker_Errors.num_errs (Prims.parse_int "0")))
 end))
 in {FStar_Interactive.pop = pop; FStar_Interactive.push = push; FStar_Interactive.mark = mark; FStar_Interactive.reset_mark = reset_mark; FStar_Interactive.commit_mark = commit_mark; FStar_Interactive.check_frag = check_frag; FStar_Interactive.report_fail = report_fail})))))))
 
@@ -399,7 +399,7 @@ in (match (_91_252) with
 | (all_mods, dsenv, env) -> begin
 (
 
-let _91_253 = if ((FStar_Options.interactive ()) && ((FStar_TypeChecker_Errors.get_err_count ()) = 0)) then begin
+let _91_253 = if ((FStar_Options.interactive ()) && ((FStar_TypeChecker_Errors.get_err_count ()) = (Prims.parse_int "0"))) then begin
 (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.refresh ())
 end else begin
 (env.FStar_TypeChecker_Env.solver.FStar_TypeChecker_Env.finish ())

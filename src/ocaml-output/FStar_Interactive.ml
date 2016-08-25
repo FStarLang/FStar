@@ -126,7 +126,7 @@ in (
 
 let line = (match ((FStar_Util.read_line stdin)) with
 | None -> begin
-(FStar_All.exit 0)
+(FStar_All.exit (Prims.parse_int "0"))
 end
 | Some (l) -> begin
 l
@@ -168,7 +168,7 @@ let _89_69 = (FStar_Util.clear_string_builder s.chunk)
 in Push (l))
 end else begin
 if (l = "#finish") then begin
-(FStar_All.exit 0)
+(FStar_All.exit (Prims.parse_int "0"))
 end else begin
 (
 
@@ -254,10 +254,10 @@ let lines = (FStar_Util.split code "\n")
 in (FStar_List.iter (fun line -> (
 
 let line = (FStar_Util.trim_string line)
-in if (((FStar_String.length line) > 7) && ((FStar_Util.substring line 0 6) = "module")) then begin
+in if (((FStar_String.length line) > (Prims.parse_int "7")) && ((FStar_Util.substring line (Prims.parse_int "0") (Prims.parse_int "6")) = "module")) then begin
 (
 
-let module_name = (FStar_Util.substring line 7 ((FStar_String.length line) - 7))
+let module_name = (FStar_Util.substring line (Prims.parse_int "7") ((FStar_String.length line) - (Prims.parse_int "7")))
 in (Prims.raise (Found (module_name))))
 end else begin
 ()
@@ -286,7 +286,7 @@ let _89_120 = if (FStar_Options.universes ()) then begin
 end else begin
 (FStar_Tc_Errors.warn r msg)
 end
-in (FStar_All.exit 1)))
+in (FStar_All.exit (Prims.parse_int "1"))))
 in (
 
 let fail = (fun msg -> (failr msg FStar_Range.dummyRange))
@@ -367,7 +367,7 @@ let _89_200 = (match (stack) with
 (
 
 let _89_191 = (FStar_Util.print_error "too many pops")
-in (FStar_All.exit 1))
+in (FStar_All.exit (Prims.parse_int "1")))
 end
 | (hd)::tl -> begin
 ((hd), (tl))
@@ -407,7 +407,7 @@ in (
 let res = (tc.check_frag env_mark curmod text)
 in (match (res) with
 | Some (curmod, env, n_errs) -> begin
-if (n_errs = 0) then begin
+if (n_errs = (Prims.parse_int "0")) then begin
 (
 
 let _89_226 = (FStar_Util.print1 "\n%s\n" ok)

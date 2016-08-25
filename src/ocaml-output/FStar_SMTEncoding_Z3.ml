@@ -73,7 +73,7 @@ let z3v_le : z3version  ->  (Prims.int * Prims.int * Prims.int)  ->  Prims.bool 
 false
 end
 | Some (i) -> begin
-(i >= 0)
+(i >= (Prims.parse_int "0"))
 end))
 
 
@@ -143,7 +143,7 @@ let z3_v = (get_z3version ())
 in (
 
 let _83_74 = if (let _176_50 = (get_z3version ())
-in (z3v_le _176_50 ((4), (4), (0)))) then begin
+in (z3v_le _176_50 (((Prims.parse_int "4")), ((Prims.parse_int "4")), ((Prims.parse_int "0"))))) then begin
 (let _176_53 = (let _176_52 = (let _176_51 = (z3version_as_string z3_v)
 in (FStar_Util.format1 "Z3 v4.4.1 is required; got %s\n" _176_51))
 in FStar_Util.Failure (_176_52))
@@ -312,7 +312,7 @@ end)) _176_193))) with
 (
 
 let _83_132 = (let _176_195 = (let _176_194 = (FStar_ST.read used_file_names)
-in (((n), (0)))::_176_194)
+in (((n), ((Prims.parse_int "0"))))::_176_194)
 in (FStar_ST.op_Colon_Equals used_file_names _176_195))
 in n)
 end
@@ -320,9 +320,9 @@ end
 (
 
 let _83_139 = (let _176_197 = (let _176_196 = (FStar_ST.read used_file_names)
-in (((n), ((k + 1))))::_176_196)
+in (((n), ((k + (Prims.parse_int "1")))))::_176_196)
 in (FStar_ST.op_Colon_Equals used_file_names _176_197))
-in (let _176_198 = (FStar_Util.string_of_int (k + 1))
+in (let _176_198 = (FStar_Util.string_of_int (k + (Prims.parse_int "1")))
 in (FStar_Util.format2 "%s-%s" n _176_198)))
 end)
 in (
@@ -393,7 +393,7 @@ in (
 
 let new_proc = (
 
-let ctr = (FStar_Util.mk_ref (~- (1)))
+let ctr = (FStar_Util.mk_ref (~- ((Prims.parse_int "1"))))
 in (fun _83_169 -> (match (()) with
 | () -> begin
 (let _176_212 = (let _176_211 = (
@@ -475,7 +475,7 @@ let parse_core = (fun s -> (
 let s = (FStar_Util.trim_string s)
 in (
 
-let s = (FStar_Util.substring s 1 ((FStar_String.length s) - 2))
+let s = (FStar_Util.substring s (Prims.parse_int "1") ((FStar_String.length s) - (Prims.parse_int "2")))
 in if (FStar_Util.starts_with s "error") then begin
 None
 end else begin
@@ -552,7 +552,7 @@ in (parse (FStar_Util.trim_string stdout)))))
 
 let doZ3Exe : Prims.bool  ->  Prims.string  ->  z3status = (
 
-let ctr = (FStar_Util.mk_ref 0)
+let ctr = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in (fun fresh input -> (
 
 let z3proc = if fresh then begin
@@ -598,7 +598,7 @@ type z3job =
 let job_queue : z3job Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
 
-let pending_jobs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 0)
+let pending_jobs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref (Prims.parse_int "0"))
 
 
 let with_monitor = (fun m f -> (
@@ -725,16 +725,16 @@ let init : Prims.unit  ->  Prims.unit = (fun _83_339 -> (match (()) with
 | () -> begin
 (
 
-let n_runners = ((FStar_Options.n_cores ()) - 1)
+let n_runners = ((FStar_Options.n_cores ()) - (Prims.parse_int "1"))
 in (
 
-let rec aux = (fun n -> if (n = 0) then begin
+let rec aux = (fun n -> if (n = (Prims.parse_int "0")) then begin
 ()
 end else begin
 (
 
 let _83_343 = (FStar_Util.spawn dequeue)
-in (aux (n - 1)))
+in (aux (n - (Prims.parse_int "1"))))
 end)
 in (aux n_runners)))
 end))
@@ -784,13 +784,13 @@ in ((_176_329), (_176_328))))
 end)))
 in (match (_83_364) with
 | (n, m) -> begin
-if ((n + m) = 0) then begin
+if ((n + m) = (Prims.parse_int "0")) then begin
 (let _176_330 = (FStar_TypeChecker_Errors.report_all ())
 in (FStar_All.pipe_right _176_330 Prims.ignore))
 end else begin
 (
 
-let _83_365 = (FStar_Util.sleep 500)
+let _83_365 = (FStar_Util.sleep (Prims.parse_int "500"))
 in (aux ()))
 end
 end))
@@ -902,19 +902,19 @@ let _83_428 = (FStar_List.fold_right (fun d _83_414 -> (match (_83_414) with
 (match (d) with
 | FStar_SMTEncoding_Term.Assume (_83_416, _83_418, Some (name)) -> begin
 if (FStar_List.contains name core) then begin
-(((d)::theory), ((n_retained + 1)), (n_pruned))
+(((d)::theory), ((n_retained + (Prims.parse_int "1"))), (n_pruned))
 end else begin
 if (FStar_Util.starts_with name "@") then begin
 (((d)::theory), (n_retained), (n_pruned))
 end else begin
-((theory), (n_retained), ((n_pruned + 1)))
+((theory), (n_retained), ((n_pruned + (Prims.parse_int "1"))))
 end
 end
 end
 | _83_424 -> begin
 (((d)::theory), (n_retained), (n_pruned))
 end)
-end)) theory (([]), (0), (0)))
+end)) theory (([]), ((Prims.parse_int "0")), ((Prims.parse_int "0"))))
 in (match (_83_428) with
 | (theory', n_retained, n_pruned) -> begin
 (

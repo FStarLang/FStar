@@ -425,7 +425,7 @@ in FStar_Util.Inl (_150_216))
 in Some (_150_217))
 in (
 
-let mk_generic_app = (fun c -> if ((FStar_List.length binders) > 0) then begin
+let mk_generic_app = (fun c -> if ((FStar_List.length binders) > (Prims.parse_int "0")) then begin
 (let _150_222 = (let _150_221 = (let _150_220 = (args_of_binders binders)
 in ((c), (_150_220)))
 in FStar_Syntax_Syntax.Tm_app (_150_221))
@@ -442,7 +442,7 @@ in (let _150_240 = (let _150_223 = (FStar_Syntax_Syntax.binders_of_list ((a)::(c
 in (FStar_List.append binders _150_223))
 in (let _150_239 = (
 
-let l_ite = (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.ite_lid (FStar_Syntax_Syntax.Delta_unfoldable (2)) None)
+let l_ite = (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.ite_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "2"))) None)
 in (let _150_238 = (let _150_229 = (let _150_228 = (let _150_227 = (let _150_226 = (let _150_225 = (let _150_224 = (FStar_Syntax_Syntax.bv_to_name c)
 in (FStar_Syntax_Syntax.as_arg _150_224))
 in (_150_225)::[])
@@ -477,7 +477,7 @@ in (
 let wp = (FStar_Syntax_Syntax.gen_bv "wp" None wp_a)
 in (
 
-let l_and = (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.and_lid (FStar_Syntax_Syntax.Delta_unfoldable (1)) None)
+let l_and = (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.and_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))) None)
 in (
 
 let body = (let _150_252 = (let _150_251 = (let _150_250 = (let _150_247 = (let _150_246 = (let _150_245 = (let _150_244 = (let _150_243 = (let _150_242 = (FStar_Syntax_Syntax.bv_to_name q)
@@ -512,7 +512,7 @@ in (
 let wp = (FStar_Syntax_Syntax.gen_bv "wp" None wp_a)
 in (
 
-let l_imp = (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.imp_lid (FStar_Syntax_Syntax.Delta_unfoldable (1)) None)
+let l_imp = (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.imp_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))) None)
 in (
 
 let body = (let _150_266 = (let _150_265 = (let _150_264 = (let _150_261 = (let _150_260 = (let _150_259 = (let _150_258 = (let _150_257 = (let _150_256 = (FStar_Syntax_Syntax.bv_to_name q)

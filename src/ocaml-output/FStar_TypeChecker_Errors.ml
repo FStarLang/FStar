@@ -29,7 +29,7 @@ in (FStar_Util.format2 "%s (Warning): %s\n" _147_21 msg))
 in (FStar_Util.print_string _147_22)))
 
 
-let num_errs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 0)
+let num_errs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref (Prims.parse_int "0"))
 
 
 let verification_errs : (FStar_Range.range * Prims.string) Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])

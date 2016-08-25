@@ -213,7 +213,7 @@ in (match (_79_140) with
 
 let ml_params = (let _172_111 = (FStar_All.pipe_right indices (FStar_List.mapi (fun i _79_142 -> (let _172_110 = (let _172_109 = (FStar_Util.string_of_int i)
 in (Prims.strcat "\'dummyV" _172_109))
-in ((_172_110), (0))))))
+in ((_172_110), ((Prims.parse_int "0")))))))
 in (FStar_List.append vars _172_111))
 in (
 
@@ -336,7 +336,7 @@ let g = (let _172_150 = (FStar_Syntax_Syntax.lid_as_fv lid FStar_Syntax_Syntax.D
 in (FStar_Extraction_ML_UEnv.extend_fv' g _172_150 ml_name tysc false false))
 in (
 
-let lb = {FStar_Extraction_ML_Syntax.mllb_name = ((mangled_name), (0)); FStar_Extraction_ML_Syntax.mllb_tysc = None; FStar_Extraction_ML_Syntax.mllb_add_unit = false; FStar_Extraction_ML_Syntax.mllb_def = tm; FStar_Extraction_ML_Syntax.print_typ = false}
+let lb = {FStar_Extraction_ML_Syntax.mllb_name = ((mangled_name), ((Prims.parse_int "0"))); FStar_Extraction_ML_Syntax.mllb_tysc = None; FStar_Extraction_ML_Syntax.mllb_add_unit = false; FStar_Extraction_ML_Syntax.mllb_def = tm; FStar_Extraction_ML_Syntax.print_typ = false}
 in ((g), (FStar_Extraction_ML_Syntax.MLM_Let (((FStar_Extraction_ML_Syntax.NoLetQualifier), ((lb)::[])))))))))
 in (
 
@@ -492,7 +492,7 @@ in (FStar_Extraction_ML_UEnv.extend_fv' env _172_174 mname _172_173 ml_lb.FStar_
 in ((env), ((
 
 let _79_398 = ml_lb
-in {FStar_Extraction_ML_Syntax.mllb_name = (((Prims.snd mname)), (0)); FStar_Extraction_ML_Syntax.mllb_tysc = _79_398.FStar_Extraction_ML_Syntax.mllb_tysc; FStar_Extraction_ML_Syntax.mllb_add_unit = _79_398.FStar_Extraction_ML_Syntax.mllb_add_unit; FStar_Extraction_ML_Syntax.mllb_def = _79_398.FStar_Extraction_ML_Syntax.mllb_def; FStar_Extraction_ML_Syntax.print_typ = _79_398.FStar_Extraction_ML_Syntax.print_typ})))))
+in {FStar_Extraction_ML_Syntax.mllb_name = (((Prims.snd mname)), ((Prims.parse_int "0"))); FStar_Extraction_ML_Syntax.mllb_tysc = _79_398.FStar_Extraction_ML_Syntax.mllb_tysc; FStar_Extraction_ML_Syntax.mllb_add_unit = _79_398.FStar_Extraction_ML_Syntax.mllb_add_unit; FStar_Extraction_ML_Syntax.mllb_def = _79_398.FStar_Extraction_ML_Syntax.mllb_def; FStar_Extraction_ML_Syntax.print_typ = _79_398.FStar_Extraction_ML_Syntax.print_typ})))))
 end else begin
 (let _172_177 = (let _172_176 = (let _172_175 = (FStar_Util.must ml_lb.FStar_Extraction_ML_Syntax.mllb_tysc)
 in (FStar_Extraction_ML_UEnv.extend_lb env lbname t _172_175 ml_lb.FStar_Extraction_ML_Syntax.mllb_add_unit false))

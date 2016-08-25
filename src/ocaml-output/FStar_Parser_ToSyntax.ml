@@ -137,7 +137,7 @@ end
 | '+' -> begin
 "Plus"
 end
-| '-' when (arity = 1) -> begin
+| '-' when (arity = (Prims.parse_int "1")) -> begin
 "Minus"
 end
 | '-' -> begin
@@ -189,7 +189,7 @@ let rec aux = (fun i -> if (i = (FStar_String.length s)) then begin
 end else begin
 (let _157_38 = (let _157_36 = (FStar_Util.char_at s i)
 in (name_of_char _157_36))
-in (let _157_37 = (aux (i + 1))
+in (let _157_37 = (aux (i + (Prims.parse_int "1")))
 in (_157_38)::_157_37))
 end)
 in (match (s) with
@@ -206,7 +206,7 @@ end
 "op_Array_Access"
 end
 | _64_110 -> begin
-(let _157_40 = (let _157_39 = (aux 0)
+(let _157_40 = (let _157_39 = (aux (Prims.parse_int "0"))
 in (FStar_String.concat "_" _157_39))
 in (Prims.strcat "op_" _157_40))
 end))))
@@ -257,7 +257,7 @@ end
 | "+" -> begin
 (r FStar_Syntax_Const.op_Addition FStar_Syntax_Syntax.Delta_equational)
 end
-| "-" when (arity = 1) -> begin
+| "-" when (arity = (Prims.parse_int "1")) -> begin
 (r FStar_Syntax_Const.op_Minus FStar_Syntax_Syntax.Delta_equational)
 end
 | "-" -> begin
@@ -288,7 +288,7 @@ end
 (r FStar_Syntax_Const.op_notEq FStar_Syntax_Syntax.Delta_equational)
 end
 | "~" -> begin
-(r FStar_Syntax_Const.not_lid (FStar_Syntax_Syntax.Delta_unfoldable (2)))
+(r FStar_Syntax_Const.not_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "2"))))
 end
 | "==" -> begin
 (r FStar_Syntax_Const.eq2_lid FStar_Syntax_Syntax.Delta_constant)
@@ -297,16 +297,16 @@ end
 (r FStar_Syntax_Const.precedes_lid FStar_Syntax_Syntax.Delta_constant)
 end
 | "/\\" -> begin
-(r FStar_Syntax_Const.and_lid (FStar_Syntax_Syntax.Delta_unfoldable (1)))
+(r FStar_Syntax_Const.and_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))))
 end
 | "\\/" -> begin
-(r FStar_Syntax_Const.or_lid (FStar_Syntax_Syntax.Delta_unfoldable (1)))
+(r FStar_Syntax_Const.or_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))))
 end
 | "==>" -> begin
-(r FStar_Syntax_Const.imp_lid (FStar_Syntax_Syntax.Delta_unfoldable (1)))
+(r FStar_Syntax_Const.imp_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))))
 end
 | "<==>" -> begin
-(r FStar_Syntax_Const.iff_lid (FStar_Syntax_Syntax.Delta_unfoldable (2)))
+(r FStar_Syntax_Const.iff_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "2"))))
 end
 | _64_150 -> begin
 None
@@ -447,7 +447,7 @@ let close : FStar_Parser_Env.env  ->  FStar_Parser_AST.term  ->  FStar_Parser_AS
 
 let ftv = (let _157_105 = (free_type_vars env t)
 in (FStar_All.pipe_left sort_ftv _157_105))
-in if ((FStar_List.length ftv) = 0) then begin
+in if ((FStar_List.length ftv) = (Prims.parse_int "0")) then begin
 t
 end else begin
 (
@@ -467,7 +467,7 @@ let close_fun : FStar_Parser_Env.env  ->  FStar_Parser_AST.term  ->  FStar_Parse
 
 let ftv = (let _157_114 = (free_type_vars env t)
 in (FStar_All.pipe_left sort_ftv _157_114))
-in if ((FStar_List.length ftv) = 0) then begin
+in if ((FStar_List.length ftv) = (Prims.parse_int "0")) then begin
 t
 end else begin
 (
@@ -756,7 +756,7 @@ in (
 let pos_r = (fun r q -> (FStar_Syntax_Syntax.withinfo q FStar_Syntax_Syntax.tun.FStar_Syntax_Syntax.n r))
 in (match (p.FStar_Parser_AST.pat) with
 | FStar_Parser_AST.PatOp (op) -> begin
-(let _157_287 = (let _157_286 = (let _157_285 = (let _157_284 = (let _157_283 = (compile_op 0 op)
+(let _157_287 = (let _157_286 = (let _157_285 = (let _157_284 = (let _157_283 = (compile_op (Prims.parse_int "0") op)
 in (FStar_Ident.id_of_text _157_283))
 in ((_157_284), (None)))
 in FStar_Parser_AST.PatVar (_157_285))
@@ -1057,7 +1057,7 @@ in ((env), (_157_334), (None))))
 in if top then begin
 (match (p.FStar_Parser_AST.pat) with
 | FStar_Parser_AST.PatOp (x) -> begin
-(let _157_336 = (let _157_335 = (compile_op 0 x)
+(let _157_336 = (let _157_335 = (compile_op (Prims.parse_int "0") x)
 in (FStar_Ident.id_of_text _157_335))
 in (mklet _157_336))
 end
@@ -1199,7 +1199,7 @@ end
 | FStar_Parser_AST.Op ("=!=", args) -> begin
 (desugar_term env (FStar_Parser_AST.mk_term (FStar_Parser_AST.Op ((("~"), (((FStar_Parser_AST.mk_term (FStar_Parser_AST.Op ((("=="), (args)))) top.FStar_Parser_AST.range top.FStar_Parser_AST.level))::[])))) top.FStar_Parser_AST.range top.FStar_Parser_AST.level))
 end
-| FStar_Parser_AST.Op ("*", (_64_876)::(_64_874)::[]) when (let _157_370 = (op_as_term env 2 top.FStar_Parser_AST.range "*")
+| FStar_Parser_AST.Op ("*", (_64_876)::(_64_874)::[]) when (let _157_370 = (op_as_term env (Prims.parse_int "2") top.FStar_Parser_AST.range "*")
 in (FStar_All.pipe_right _157_370 FStar_Option.isNone)) -> begin
 (
 
@@ -1237,7 +1237,7 @@ end
 (Prims.raise (FStar_Syntax_Syntax.Error ((((Prims.strcat "Unexpected or unbound operator: " s)), (top.FStar_Parser_AST.range)))))
 end
 | Some (op) -> begin
-if ((FStar_List.length args) > 0) then begin
+if ((FStar_List.length args) > (Prims.parse_int "0")) then begin
 (
 
 let args = (FStar_All.pipe_right args (FStar_List.map (fun t -> (let _157_382 = (desugar_term env t)
@@ -1271,7 +1271,7 @@ in (FStar_Parser_Env.is_effect_name env _157_385))) -> begin
 in (FStar_Parser_Env.try_lookup_effect_defn env _157_386))) with
 | Some (ed) -> begin
 (let _157_387 = (FStar_Ident.lid_of_path (FStar_Ident.path_of_text (Prims.strcat (FStar_Ident.text_of_lid ed.FStar_Syntax_Syntax.mname) (Prims.strcat "_" txt))) FStar_Range.dummyRange)
-in (FStar_Syntax_Syntax.fvar _157_387 (FStar_Syntax_Syntax.Delta_unfoldable (1)) None))
+in (FStar_Syntax_Syntax.fvar _157_387 (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))) None))
 end
 | None -> begin
 (FStar_All.failwith "immpossible special_effect_combinator")
@@ -1540,7 +1540,7 @@ end
 | (FStar_Syntax_Syntax.Tm_name (_64_1145), _64_1148) -> begin
 (
 
-let tup2 = (let _157_428 = (FStar_Syntax_Util.mk_tuple_data_lid 2 top.FStar_Parser_AST.range)
+let tup2 = (let _157_428 = (FStar_Syntax_Util.mk_tuple_data_lid (Prims.parse_int "2") top.FStar_Parser_AST.range)
 in (FStar_Syntax_Syntax.lid_as_fv _157_428 FStar_Syntax_Syntax.Delta_constant (Some (FStar_Syntax_Syntax.Data_ctor))))
 in (
 
@@ -1562,7 +1562,7 @@ end
 | (FStar_Syntax_Syntax.Tm_app (_64_1154, args), FStar_Syntax_Syntax.Pat_cons (_64_1159, pats)) -> begin
 (
 
-let tupn = (let _157_438 = (FStar_Syntax_Util.mk_tuple_data_lid (1 + (FStar_List.length args)) top.FStar_Parser_AST.range)
+let tupn = (let _157_438 = (FStar_Syntax_Util.mk_tuple_data_lid ((Prims.parse_int "1") + (FStar_List.length args)) top.FStar_Parser_AST.range)
 in (FStar_Syntax_Syntax.lid_as_fv _157_438 FStar_Syntax_Syntax.Delta_constant (Some (FStar_Syntax_Syntax.Data_ctor))))
 in (
 
@@ -2226,7 +2226,7 @@ in (match (_64_1583) with
 | (eff, args) -> begin
 (
 
-let _64_1584 = if ((FStar_List.length args) = 0) then begin
+let _64_1584 = if ((FStar_List.length args) = (Prims.parse_int "0")) then begin
 (let _157_599 = (let _157_598 = (FStar_Syntax_Print.lid_to_string eff)
 in (FStar_Util.format1 "Not enough args to effect %s" _157_598))
 in (fail _157_599))
@@ -2274,7 +2274,7 @@ end)
 end))))
 in (
 
-let no_additional_args = (((FStar_List.length decreases_clause) = 0) && ((FStar_List.length rest) = 0))
+let no_additional_args = (((FStar_List.length decreases_clause) = (Prims.parse_int "0")) && ((FStar_List.length rest) = (Prims.parse_int "0")))
 in if (no_additional_args && (FStar_Ident.lid_equals eff FStar_Syntax_Const.effect_Tot_lid)) then begin
 (FStar_Syntax_Syntax.mk_Total result_typ)
 end else begin
@@ -2420,7 +2420,7 @@ in (_157_645)::[])
 in (no_annot_abs _157_646 body))
 in (FStar_All.pipe_left setpos _157_647))
 in (let _157_653 = (let _157_652 = (let _157_651 = (let _157_648 = (FStar_Ident.set_lid_range q b.FStar_Parser_AST.brange)
-in (FStar_Syntax_Syntax.fvar _157_648 (FStar_Syntax_Syntax.Delta_unfoldable (1)) None))
+in (FStar_Syntax_Syntax.fvar _157_648 (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))) None))
 in (let _157_650 = (let _157_649 = (FStar_Syntax_Syntax.as_arg body)
 in (_157_649)::[])
 in ((_157_651), (_157_650))))
@@ -2847,7 +2847,7 @@ false
 end else begin
 (match ((FStar_Parser_Env.find_all_datacons env l)) with
 | Some (l) -> begin
-((FStar_List.length l) > 1)
+((FStar_List.length l) > (Prims.parse_int "1"))
 end
 | _64_2033 -> begin
 true
@@ -3378,7 +3378,7 @@ let data_ops = (FStar_All.pipe_right tps_sigelts (FStar_List.collect (mk_data_pr
 in (
 
 let discs = (FStar_All.pipe_right sigelts (FStar_List.collect (fun _64_21 -> (match (_64_21) with
-| FStar_Syntax_Syntax.Sig_inductive_typ (tname, _64_2420, tps, k, _64_2424, constrs, quals, _64_2428) when ((FStar_List.length constrs) > 1) -> begin
+| FStar_Syntax_Syntax.Sig_inductive_typ (tname, _64_2420, tps, k, _64_2424, constrs, quals, _64_2428) when ((FStar_List.length constrs) > (Prims.parse_int "1")) -> begin
 (
 
 let quals = if (FStar_List.contains FStar_Syntax_Syntax.Abstract quals) then begin
@@ -3732,7 +3732,7 @@ in (match (_64_2669) with
 let l = (FStar_Parser_Env.qualify env id)
 in (
 
-let se = FStar_Syntax_Syntax.Sig_datacon (((l), ([]), (t), (FStar_Syntax_Const.exn_lid), (0), ((FStar_Syntax_Syntax.ExceptionConstructor)::[]), ((FStar_Syntax_Const.exn_lid)::[]), (d.FStar_Parser_AST.drange)))
+let se = FStar_Syntax_Syntax.Sig_datacon (((l), ([]), (t), (FStar_Syntax_Const.exn_lid), ((Prims.parse_int "0")), ((FStar_Syntax_Syntax.ExceptionConstructor)::[]), ((FStar_Syntax_Const.exn_lid)::[]), (d.FStar_Parser_AST.drange)))
 in (
 
 let se' = FStar_Syntax_Syntax.Sig_bundle ((((se)::[]), ((FStar_Syntax_Syntax.ExceptionConstructor)::[]), ((l)::[]), (d.FStar_Parser_AST.drange)))
@@ -3768,7 +3768,7 @@ in (
 let l = (FStar_Parser_Env.qualify env id)
 in (
 
-let se = FStar_Syntax_Syntax.Sig_datacon (((l), ([]), (t), (FStar_Syntax_Const.exn_lid), (0), ((FStar_Syntax_Syntax.ExceptionConstructor)::[]), ((FStar_Syntax_Const.exn_lid)::[]), (d.FStar_Parser_AST.drange)))
+let se = FStar_Syntax_Syntax.Sig_datacon (((l), ([]), (t), (FStar_Syntax_Const.exn_lid), ((Prims.parse_int "0")), ((FStar_Syntax_Syntax.ExceptionConstructor)::[]), ((FStar_Syntax_Const.exn_lid)::[]), (d.FStar_Parser_AST.drange)))
 in (
 
 let se' = FStar_Syntax_Syntax.Sig_bundle ((((se)::[]), ((FStar_Syntax_Syntax.ExceptionConstructor)::[]), ((l)::[]), (d.FStar_Parser_AST.drange)))

@@ -22,12 +22,12 @@ let errs = if (FStar_Options.universes ()) then begin
 end else begin
 (FStar_Tc_Errors.get_err_count ())
 end
-in if (errs > 0) then begin
+in if (errs > (Prims.parse_int "0")) then begin
 (
 
 let _92_5 = (let _185_7 = (FStar_Util.string_of_int errs)
 in (FStar_Util.print1_error "%s errors were reported (see above)\n" _185_7))
-in (FStar_All.exit 1))
+in (FStar_All.exit (Prims.parse_int "1")))
 end else begin
 ()
 end)
@@ -104,7 +104,7 @@ let newDocs = (FStar_List.collect FStar_Extraction_ML_Code.doc_of_mllib mllibs)
 in (FStar_List.iter (fun _92_42 -> (match (_92_42) with
 | (n, d) -> begin
 (let _185_21 = (FStar_Options.prepend_output_dir (Prims.strcat n ext))
-in (FStar_Util.write_file _185_21 (FStar_Format.pretty 120 d)))
+in (FStar_Util.write_file _185_21 (FStar_Format.pretty (Prims.parse_int "120") d)))
 end)) newDocs))
 end
 | Some ("Kremlin") -> begin
@@ -135,7 +135,7 @@ in (match (_92_53) with
 (
 
 let _92_55 = (FStar_Options.display_usage ())
-in (FStar_All.exit 0))
+in (FStar_All.exit (Prims.parse_int "0")))
 end
 | FStar_Getopt.Error (msg) -> begin
 (FStar_Util.print_string msg)
@@ -151,7 +151,7 @@ if (FStar_Options.interactive ()) then begin
 let _92_69 = if (FStar_Options.explicit_deps ()) then begin
 (
 
-let _92_60 = if ((FStar_List.length filenames) = 0) then begin
+let _92_60 = if ((FStar_List.length filenames) = (Prims.parse_int "0")) then begin
 (FStar_Util.print_error "--explicit_deps was provided without a file list!\n")
 end else begin
 ()
@@ -160,7 +160,7 @@ in ((None), (filenames)))
 end else begin
 (
 
-let _92_62 = if ((FStar_List.length filenames) > 0) then begin
+let _92_62 = if ((FStar_List.length filenames) > (Prims.parse_int "0")) then begin
 (FStar_Util.print_warning "ignoring the file list (no --explicit_deps)\n")
 end else begin
 ()
@@ -197,7 +197,7 @@ end else begin
 if (FStar_Options.doc ()) then begin
 (FStar_Fsdoc_Generator.generate filenames)
 end else begin
-if ((FStar_List.length filenames) >= 1) then begin
+if ((FStar_List.length filenames) >= (Prims.parse_int "1")) then begin
 (
 
 let verify_mode = if (FStar_Options.verify_all ()) then begin
@@ -207,7 +207,7 @@ let _92_80 = if ((FStar_Options.verify_module ()) <> []) then begin
 (
 
 let _92_78 = (FStar_Util.print_error "--verify_module is incompatible with --verify_all")
-in (FStar_All.exit 1))
+in (FStar_All.exit (Prims.parse_int "1")))
 end else begin
 ()
 end
@@ -271,7 +271,7 @@ let _92_118 = (go ())
 in (
 
 let _92_120 = (cleanup ())
-in (FStar_All.exit 0)))
+in (FStar_All.exit (Prims.parse_int "0"))))
 end)
 with
 | e -> begin
@@ -313,7 +313,7 @@ in (FStar_All.pipe_right _185_33 Prims.ignore))
 in (
 
 let _92_114 = (report_errors ())
-in (FStar_All.exit 1)))))
+in (FStar_All.exit (Prims.parse_int "1"))))))
 end
 end))
 

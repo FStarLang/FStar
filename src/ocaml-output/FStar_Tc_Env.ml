@@ -72,7 +72,7 @@ type sigtable =
 FStar_Absyn_Syntax.sigelt FStar_Util.smap
 
 
-let default_table_size : Prims.int = 200
+let default_table_size : Prims.int = (Prims.parse_int "200")
 
 
 let strlid_of_sigelt : FStar_Absyn_Syntax.sigelt  ->  Prims.string Prims.option = (fun se -> (match ((FStar_Absyn_Util.lid_of_sigelt se)) with
@@ -731,7 +731,7 @@ let t = (lookup_datacon env lid)
 in (match ((let _133_593 = (FStar_Absyn_Util.compress_typ t)
 in _133_593.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Typ_fun (binders, _40_513) -> begin
-if ((i < 0) || (i >= (FStar_List.length binders))) then begin
+if ((i < (Prims.parse_int "0")) || (i >= (FStar_List.length binders))) then begin
 (fail ())
 end else begin
 (

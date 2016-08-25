@@ -72,7 +72,7 @@ end
 | '+' -> begin
 "Plus"
 end
-| '-' when (arity = 1) -> begin
+| '-' when (arity = (Prims.parse_int "1")) -> begin
 "Minus"
 end
 | '-' -> begin
@@ -124,10 +124,10 @@ let rec aux = (fun i -> if (i = (FStar_String.length s)) then begin
 end else begin
 (let _154_28 = (let _154_26 = (FStar_Util.char_at s i)
 in (name_of_char _154_26))
-in (let _154_27 = (aux (i + 1))
+in (let _154_27 = (aux (i + (Prims.parse_int "1")))
 in (_154_28)::_154_27))
 end)
-in (let _154_30 = (let _154_29 = (aux 0)
+in (let _154_30 = (let _154_29 = (aux (Prims.parse_int "0"))
 in (FStar_String.concat "_" _154_29))
 in (Prims.strcat "op_" _154_30)))))
 
@@ -178,7 +178,7 @@ end
 | "+" -> begin
 (r FStar_Absyn_Const.op_Addition)
 end
-| "-" when (arity = 1) -> begin
+| "-" when (arity = (Prims.parse_int "1")) -> begin
 (r FStar_Absyn_Const.op_Minus)
 end
 | "-" -> begin
@@ -292,7 +292,7 @@ end
 | (FStar_Parser_AST.QForall (_)) | (FStar_Parser_AST.QExists (_)) | (FStar_Parser_AST.Sum (_)) | (FStar_Parser_AST.Refine (_)) | (FStar_Parser_AST.Tvar (_)) | (FStar_Parser_AST.NamedTyp (_)) -> begin
 true
 end
-| (FStar_Parser_AST.Var (l)) | (FStar_Parser_AST.Name (l)) when ((FStar_List.length l.FStar_Ident.ns) = 0) -> begin
+| (FStar_Parser_AST.Var (l)) | (FStar_Parser_AST.Name (l)) when ((FStar_List.length l.FStar_Ident.ns) = (Prims.parse_int "0")) -> begin
 (match ((FStar_Parser_DesugarEnv.try_lookup_typ_var env l.FStar_Ident.ident)) with
 | Some (_61_255) -> begin
 true
@@ -549,7 +549,7 @@ let close : FStar_Parser_DesugarEnv.env  ->  FStar_Parser_AST.term  ->  FStar_Pa
 
 let ftv = (let _154_122 = (free_type_vars env t)
 in (FStar_All.pipe_left sort_ftv _154_122))
-in if ((FStar_List.length ftv) = 0) then begin
+in if ((FStar_List.length ftv) = (Prims.parse_int "0")) then begin
 t
 end else begin
 (
@@ -569,7 +569,7 @@ let close_fun : FStar_Parser_DesugarEnv.env  ->  FStar_Parser_AST.term  ->  FSta
 
 let ftv = (let _154_131 = (free_type_vars env t)
 in (FStar_All.pipe_left sort_ftv _154_131))
-in if ((FStar_List.length ftv) = 0) then begin
+in if ((FStar_List.length ftv) = (Prims.parse_int "0")) then begin
 t
 end else begin
 (
@@ -1399,7 +1399,7 @@ end
 | (FStar_Absyn_Syntax.Exp_bvar (_61_1275), _61_1278) -> begin
 (
 
-let tup = (FStar_Absyn_Util.mk_tuple_data_lid 2 top.FStar_Parser_AST.range)
+let tup = (FStar_Absyn_Util.mk_tuple_data_lid (Prims.parse_int "2") top.FStar_Parser_AST.range)
 in (
 
 let sc = (let _154_423 = (let _154_422 = (FStar_Absyn_Util.fvar (Some (FStar_Absyn_Syntax.Data_ctor)) tup top.FStar_Parser_AST.range)
@@ -1419,7 +1419,7 @@ end
 | (FStar_Absyn_Syntax.Exp_app (_61_1284, args), FStar_Absyn_Syntax.Pat_cons (_61_1289, _61_1291, pats)) -> begin
 (
 
-let tup = (FStar_Absyn_Util.mk_tuple_data_lid (1 + (FStar_List.length args)) top.FStar_Parser_AST.range)
+let tup = (FStar_Absyn_Util.mk_tuple_data_lid ((Prims.parse_int "1") + (FStar_List.length args)) top.FStar_Parser_AST.range)
 in (
 
 let sc = (let _154_430 = (let _154_429 = (FStar_Absyn_Util.fvar (Some (FStar_Absyn_Syntax.Data_ctor)) tup top.FStar_Parser_AST.range)
@@ -1983,7 +1983,7 @@ end
 (let _154_596 = (FStar_Parser_DesugarEnv.fail_or2 (FStar_Parser_DesugarEnv.try_lookup_typ_var env) a)
 in (FStar_All.pipe_left setpos _154_596))
 end
-| (FStar_Parser_AST.Var (l)) | (FStar_Parser_AST.Name (l)) when ((FStar_List.length l.FStar_Ident.ns) = 0) -> begin
+| (FStar_Parser_AST.Var (l)) | (FStar_Parser_AST.Name (l)) when ((FStar_List.length l.FStar_Ident.ns) = (Prims.parse_int "0")) -> begin
 (match ((FStar_Parser_DesugarEnv.try_lookup_typ_var env l.FStar_Ident.ident)) with
 | Some (t) -> begin
 (setpos t)
@@ -2321,7 +2321,7 @@ end
 (FStar_All.failwith "impos")
 end))))
 in if ((FStar_Parser_DesugarEnv.is_effect_name env eff.FStar_Absyn_Syntax.v) || (FStar_Ident.lid_equals eff.FStar_Absyn_Syntax.v FStar_Absyn_Const.effect_Tot_lid)) then begin
-if ((FStar_Ident.lid_equals eff.FStar_Absyn_Syntax.v FStar_Absyn_Const.effect_Tot_lid) && ((FStar_List.length decreases_clause) = 0)) then begin
+if ((FStar_Ident.lid_equals eff.FStar_Absyn_Syntax.v FStar_Absyn_Const.effect_Tot_lid) && ((FStar_List.length decreases_clause) = (Prims.parse_int "0"))) then begin
 (FStar_Absyn_Syntax.mk_Total result_typ)
 end else begin
 (
@@ -3081,7 +3081,7 @@ in (match (_61_2434) with
 | (l, _61_2431, _61_2433) -> begin
 (match ((FStar_Parser_DesugarEnv.find_all_datacons env l)) with
 | Some (l) -> begin
-((FStar_List.length l) > 1)
+((FStar_List.length l) > (Prims.parse_int "1"))
 end
 | _61_2438 -> begin
 true
@@ -4021,7 +4021,7 @@ let desugar_modul_common : FStar_Absyn_Syntax.modul Prims.option  ->  FStar_Pars
 
 let open_ns = (fun mname d -> (
 
-let d = if ((FStar_List.length mname.FStar_Ident.ns) <> 0) then begin
+let d = if ((FStar_List.length mname.FStar_Ident.ns) <> (Prims.parse_int "0")) then begin
 (let _154_1141 = (let _154_1140 = (let _154_1138 = (FStar_Absyn_Syntax.lid_of_ids mname.FStar_Ident.ns)
 in FStar_Parser_AST.Open (_154_1138))
 in (let _154_1139 = (FStar_Absyn_Syntax.range_of_lid mname)

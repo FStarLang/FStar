@@ -420,11 +420,11 @@ in (aux [] e0)))
 
 let ffi_mltuple_mlp : Prims.int  ->  (Prims.string Prims.list * Prims.string) = (fun n -> (
 
-let name = if ((2 < n) && (n < 6)) then begin
+let name = if (((Prims.parse_int "2") < n) && (n < (Prims.parse_int "6"))) then begin
 (let _169_162 = (FStar_Util.string_of_int n)
 in (Prims.strcat "mktuple" _169_162))
 end else begin
-if (n = 2) then begin
+if (n = (Prims.parse_int "2")) then begin
 "mkpair"
 end else begin
 (FStar_All.failwith "NYI in runtime/allocator/camlstack.mli")
@@ -469,7 +469,7 @@ let rec eta_args = (fun more_args t -> (match (t) with
 (
 
 let x = (let _169_182 = (FStar_Absyn_Util.gensym ())
-in ((_169_182), ((~- (1)))))
+in ((_169_182), ((~- ((Prims.parse_int "1"))))))
 in (let _169_185 = (let _169_184 = (let _169_183 = (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty t0) (FStar_Extraction_ML_Syntax.MLE_Var (x)))
 in ((((x), (t0))), (_169_183)))
 in (_169_184)::more_args)
@@ -578,7 +578,7 @@ end)))))
 let check_pats_for_ite : (FStar_Absyn_Syntax.pat * FStar_Absyn_Syntax.exp Prims.option * FStar_Absyn_Syntax.exp) Prims.list  ->  (Prims.bool * FStar_Absyn_Syntax.exp Prims.option * FStar_Absyn_Syntax.exp Prims.option) = (fun l -> (
 
 let def = ((false), (None), (None))
-in if ((FStar_List.length l) <> 2) then begin
+in if ((FStar_List.length l) <> (Prims.parse_int "2")) then begin
 def
 end else begin
 (
@@ -708,7 +708,7 @@ end else begin
 (
 
 let x = (let _169_251 = (FStar_Absyn_Util.gensym ())
-in ((_169_251), ((~- (1)))))
+in ((_169_251), ((~- ((Prims.parse_int "1"))))))
 in (let _169_253 = (let _169_252 = (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty arg.FStar_Extraction_ML_Syntax.mlty) (FStar_Extraction_ML_Syntax.MLE_Var (x)))
 in (_169_252)::out_args)
 in (((((x), (arg)))::lbs), (_169_253))))
@@ -1314,7 +1314,7 @@ end)))
 
 let fresh : Prims.string  ->  (Prims.string * Prims.int) = (
 
-let c = (FStar_Util.mk_ref 0)
+let c = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in (fun x -> (
 
 let _76_1070 = (FStar_Util.incr c)

@@ -65,5 +65,5 @@ let parse fn =
     | e ->
       let pos = lexbuf.lex_curr_p in
       let p = FStar_Range.mk_pos pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) in
-      let r = FStar_Range.mk_range filename p p in
+      let r = FStar_Range.mk_range filename (Z.of_int p) (Z.of_int p) in
       Inr ("Syntax error: " ^ (Printexc.to_string e), r)

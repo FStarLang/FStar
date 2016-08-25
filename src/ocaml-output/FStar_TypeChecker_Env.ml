@@ -224,7 +224,7 @@ in Unfold (_145_395)))
 end))
 
 
-let default_table_size : Prims.int = 200
+let default_table_size : Prims.int = (Prims.parse_int "200")
 
 
 let new_sigtab = (fun _52_159 -> (match (()) with
@@ -235,7 +235,7 @@ end))
 
 let new_gamma_cache = (fun _52_160 -> (match (()) with
 | () -> begin
-(FStar_Util.smap_create 100)
+(FStar_Util.smap_create (Prims.parse_int "100"))
 end))
 
 
@@ -398,7 +398,7 @@ end))))) with
 | None -> begin
 (
 
-let next = (n + 1)
+let next = (n + (Prims.parse_int "1"))
 in (
 
 let _52_259 = (add_query_index ((l), (next)))
@@ -410,7 +410,7 @@ end
 | Some (_52_264, m) -> begin
 (
 
-let next = (m + 1)
+let next = (m + (Prims.parse_int "1"))
 in (
 
 let _52_269 = (add_query_index ((l), (next)))
@@ -514,7 +514,7 @@ end
 let _52_325 = ()
 in (
 
-let n = ((FStar_List.length formals) - 1)
+let n = ((FStar_List.length formals) - (Prims.parse_int "1"))
 in (
 
 let vs = (FStar_All.pipe_right us (FStar_List.mapi (fun i u -> FStar_Syntax_Syntax.UN ((((n - i)), (u))))))
@@ -1029,7 +1029,7 @@ in (match (_52_759) with
 (match ((let _145_760 = (FStar_Syntax_Subst.compress t)
 in _145_760.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_arrow (binders, _52_762) -> begin
-if ((i < 0) || (i >= (FStar_List.length binders))) then begin
+if ((i < (Prims.parse_int "0")) || (i >= (FStar_List.length binders))) then begin
 (fail ())
 end else begin
 (
@@ -1109,7 +1109,7 @@ end))
 
 let norm_eff_name : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident = (
 
-let cache = (FStar_Util.smap_create 20)
+let cache = (FStar_Util.smap_create (Prims.parse_int "20"))
 in (fun env l -> (
 
 let rec find = (fun l -> (match ((lookup_effect_abbrev env FStar_Syntax_Syntax.U_unknown l)) with

@@ -122,7 +122,7 @@ in FStar_Syntax_Syntax.Tm_fvar (_144_82))
 in (FStar_Syntax_Syntax.mk _144_83 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
 
 
-let tabbrev : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _144_87 = (let _144_86 = (FStar_Syntax_Syntax.lid_as_fv l (FStar_Syntax_Syntax.Delta_unfoldable (1)) None)
+let tabbrev : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _144_87 = (let _144_86 = (FStar_Syntax_Syntax.lid_as_fv l (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))) None)
 in FStar_Syntax_Syntax.Tm_fvar (_144_86))
 in (FStar_Syntax_Syntax.mk _144_87 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
 
@@ -176,11 +176,11 @@ let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syn
 | (FStar_Syntax_Syntax.Delta_constant) | (FStar_Syntax_Syntax.Delta_equational) -> begin
 None
 end
-| FStar_Syntax_Syntax.Delta_unfoldable (1) -> begin
+| FStar_Syntax_Syntax.Delta_unfoldable (_144_94) when (_144_94 = (Prims.parse_int "1")) -> begin
 Some (FStar_Syntax_Syntax.Delta_constant)
 end
 | FStar_Syntax_Syntax.Delta_unfoldable (i) -> begin
-Some (FStar_Syntax_Syntax.Delta_unfoldable ((i - 1)))
+Some (FStar_Syntax_Syntax.Delta_unfoldable ((i - (Prims.parse_int "1"))))
 end
 | FStar_Syntax_Syntax.Delta_abstract (d) -> begin
 (decr_delta_depth d)
