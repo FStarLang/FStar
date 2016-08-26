@@ -1,5 +1,3 @@
-(* Copyright (c) Microsoft Corporation.  All rights reserved.  *)
-
 module Ex12b.RPC
 
 open FStar.All

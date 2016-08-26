@@ -46,7 +46,7 @@ val decode: b:block -> option (t:text { equal b (encode t) })
 // BEGIN: DecodePadding
 let decode (b:block) = 
   let padsize = b2n(index b (blocksize - 1)) + 1 in
-  if op_LessThan padsize blocksize then 
+  if padsize <= blocksize then 
     let (plain,padding) = split b (blocksize - padsize) in
     if  Seq.eq padding (pad padsize)
     then Some plain
