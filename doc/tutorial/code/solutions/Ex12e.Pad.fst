@@ -7,9 +7,8 @@ open FStar.SeqProperties
 
 type uint8 = FStar.UInt8.t
 
-(* a coercion; avoid it? *)
-assume val n2b: n:nat {( n < 256 )} -> Tot uint8
-assume val b2n: b:uint8 -> Tot (n:nat { (n < 256) /\ n2b n = b })
+let n2b = uint_to_t
+let b2n = v
 
 type bytes = seq byte (* concrete byte arrays *) 
 type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
@@ -28,18 +27,26 @@ let pad n =
 val encode: a: text -> Tot block 
 let encode a = append a (pad (blocksize - length a))
 
+// BEGIN: PaddingInj
 val inj: a: text -> b: text -> Lemma (requires (equal (encode a) (encode b)))
                                      (ensures (equal a b))
                                      [SMTPat (encode a); SMTPat (encode b)]
 
+val lemma_append_inj: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a {length s1 = length t1 \/ length s2 = length t2}
+  -> Lemma (requires (equal (append s1 s2) (append t1 t2)))
+           (ensures (equal s1 t1 /\ equal s2 t2))
+	   [SMTPat (append s1 s2); SMTPat (append t1 t2)]
+	   //good example to explain patterns.
+let lemma_append_inj #a s1 s2 t1 t2 = SeqProperties.lemma_append_inj #a s1 s2 t1 t2
 
 let inj a b = 
   if length a = length b
-  then admit()
+  then () //lemma_append_inj a (pad (blocksize - length a)) b  (pad (blocksize - length a))
   else let aa = encode a in
        let bb = encode b in
-       admit();
        cut (index aa 31 <> index bb 31)
+// END: PaddingInj
+
        
 val decode: b:block -> option (t:text { equal b (encode t) })
 let decode (b:block) = 
