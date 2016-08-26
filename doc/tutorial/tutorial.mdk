@@ -5083,9 +5083,9 @@ show that decoding cancels out encoding.
 ~~ Answer
 
 ```
-[INCLUDE=code/solution/Ex12d.Pad.fst:CreatePaddingT]
-[INCLUDE=code/solution/Ex12d.Pad.fst:EncodePaddingT]
-[INCLUDE=code/solution/Ex12d.Pad.fst:DecodePaddingT]
+[INCLUDE=code/solutions/Ex12d.Pad.fst:CreatePaddingT]
+[INCLUDE=code/solutions/Ex12d.Pad.fst:EncodePaddingT]
+[INCLUDE=code/solutions/Ex12d.Pad.fst:DecodePaddingT]
 
 ```
 ~~
@@ -5106,16 +5106,7 @@ we require it to be injective, so that authenticating a padded text
 unambiguously authenticate the text before padding. For instance:
 
 ```
-val inj: a: text -> b: text -> Lemma (requires (Array.equal (encode a) (encode b)))
-                                     (ensures (Array.equal a b))
-                                     [SMTPat (encode a); SMTPat (encode b)]
-                                     (decreases (length a))
-let inj a b =
-  if length a = length b
-  then ()
-  else let aa = encode a in
-       let bb = encode b in
-       cut (Array.index aa 31 =!= Array.index bb 31)
+[INCLUDE=code/solutions/Ex12e.Pad.fst:PaddingInj]
 ```
 
 In this context, another good padding scheme is to append a 1 then
@@ -5191,7 +5182,7 @@ val keygen: p:(text2 -> Type) -> pkey p
 val mac:    p:(text2 -> Type) -> k:pkey p -> t:text2{p  t} -> tag
 val verify: p:(text2 -> Type) -> k:pkey p -> t:text2 -> tag -> b:bool{b ==> p t}
 
-[INCLUDE=code/solutions/Ex12.gTMAC2.fst:TMAC2]
+[INCLUDE=code/solutions/Ex12g.TMAC2.fst:TMAC2]
 ```
 ~~
 
