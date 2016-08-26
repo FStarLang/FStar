@@ -6,12 +6,12 @@ let memT = mem
 let hd = BatList.hd
 let tl = BatList.tl
 let tail = BatList.tl
-let nth = BatList.nth
-let length = BatList.length
+let nth l i = BatList.nth l (Z.to_int i)
+let length l = Z.of_int (BatList.length l)
 let rev = BatList.rev
 let map = BatList.map
 let mapT = map
-let mapi = BatList.mapi
+let mapi f l = BatList.mapi (fun i x -> f (Z.of_int i) x) l
 let map2 = BatList.map2
 let rec map3 f l1 l2 l3 =
   match l1, l2, l3 with
@@ -19,7 +19,7 @@ let rec map3 f l1 l2 l3 =
   | x::xs, y::ys, z::zs -> (f x y z)::(map3 f xs ys zs)
   | _, _, _ -> failwith "The lists do not have the same length"
 let iter = BatList.iter
-let iteri = BatList.iteri
+let iteri f l = BatList.iteri (fun i x -> f (Z.of_int i) x) l
 let partition = BatList.partition
 let append = BatList.append
 let rev_append = BatList.rev_append
@@ -34,7 +34,7 @@ let rec unzip3 = function
      let (xs,ys,zs) = unzip3 xyzs in
      (x::xs,y::ys,z::zs)
 let filter = BatList.filter
-let sortWith = BatList.sort
+let sortWith f l = BatList.sort (fun x y -> Z.to_int (f x y)) l
 let for_all = BatList.for_all
 let forall2 = BatList.for_all2
 let tryFind f l = try Some (BatList.find f l) with | Not_found -> None
@@ -56,7 +56,7 @@ let rec unzip3 l =
   | [] -> [],[],[]
   | (x,y,z)::t -> let u,v,w = unzip3 t in x::u,y::v,z::w
 let unique = BatList.unique
-let splitAt = BatList.split_at
+let splitAt x l = BatList.split_at (Z.to_int x) l
 let filter_map = BatList.filter_map
 let index f l =
-  fst (BatList.findi (fun _ x -> f x) l)
+  Z.of_int (fst (BatList.findi (fun _ x -> f x) l))
