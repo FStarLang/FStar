@@ -7,9 +7,8 @@ open FStar.SeqProperties
 
 type uint8 = FStar.UInt8.t
 
-(* a coercion; avoid it? *)
-assume val n2b: n:nat {( n < 256 )} -> Tot uint8
-assume val b2n: b:uint8 -> Tot (n:nat { (n < 256) /\ n2b n = b })
+let n2b = uint_to_t
+let b2n = v
 
 type bytes = seq byte (* concrete byte arrays *) 
 type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
@@ -33,7 +32,12 @@ val inj: a: text -> b: text -> Lemma (requires (equal (encode a) (encode b)))
                                      [SMTPat (encode a); SMTPat (encode b)]
 
 
-let inj a b = admit()
+let inj a b = 
+  if length a = length b
+  then lemma_append_inj a (pad (blocksize - length a)) b  (pad (blocksize - length a))
+  else let aa = encode a in
+       let bb = encode b in
+       cut (index aa 31 <> index bb 31)
 
 
 val decode: b:block -> option (t:text { equal b (encode t) })
