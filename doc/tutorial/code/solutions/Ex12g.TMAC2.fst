@@ -30,7 +30,7 @@ val keygen: p:(text2 -> Type) -> pkey p
 val mac:    p:(text2 -> Type) -> k:pkey p -> t:text2{p  t} -> tag
 val verify: p:(text2 -> Type) -> k:pkey p -> t:text2 -> tag -> b:bool{b ==> p t}
 
-(* not verified yet: *)
+// BEGIN: TMAC2
 let keygen (spec: text2 -> Type) = 
   let k0 = BMAC.keygen (bspec0 spec) in
   let k1 = BMAC.keygen (bspec1 spec) in
@@ -50,3 +50,4 @@ let verify p (Keys k0 k1) t tag =
   if length t < blocksize
   then BMAC.verify k0 (encode t) tag
   else BMAC.verify k1 t tag
+// END: TMAC2

@@ -33,9 +33,14 @@ val inj: a: text -> b: text -> Lemma (requires (equal (encode a) (encode b)))
                                      [SMTPat (encode a); SMTPat (encode b)]
 
 
-let inj a b = admit()
-
-
+let inj a b = 
+  if length a = length b
+  then admit()
+  else let aa = encode a in
+       let bb = encode b in
+       admit();
+       cut (index aa 31 <> index bb 31)
+       
 val decode: b:block -> option (t:text { equal b (encode t) })
 let decode (b:block) = 
   let padsize = b2n(index b (blocksize - 1)) + 1 in
