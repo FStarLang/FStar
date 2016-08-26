@@ -37,13 +37,14 @@ val lemma_append_inj: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a
   -> Lemma (requires (equal (append s1 s2) (append t1 t2)))
            (ensures (equal s1 t1 /\ equal s2 t2))
            [SMTPat (append s1 s2); SMTPat (append t1 t2)]
-	   //good example to explain patterns.
+           //good example to explain patterns.
 let lemma_append_inj #a s1 s2 t1 t2 = SeqProperties.lemma_append_inj #a s1 s2 t1 t2
 
 let inj a b = 
   if length a = length b
   then () 
        //lemma_append_inj a (pad (blocksize - length a)) b  (pad (blocksize - length a))
+       //no longer needed because of pattern
   else let aa = encode a in
        let bb = encode b in
        cut (index aa 31 <> index bb 31)
