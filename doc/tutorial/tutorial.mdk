@@ -5065,7 +5065,9 @@ To this end, we use the following classic PKCS#7 padding scheme (used for instan
 
 ```
 [INCLUDE=code/exercises/Ex12.Pad.fst:CreatePadding]
+
 [INCLUDE=code/exercises/Ex12.Pad.fst:EncodePadding]
+
 [INCLUDE=code/exercises/Ex12.Pad.fst:DecodePadding]
 ```
 
@@ -5075,16 +5077,16 @@ creates creates `bytes` consisting of `n` bytes encoding the number `n`;
 `decode` removes pads.
 
 ~ Exercise
-What do these function do? Write a
-typed specifications for these functions. In particular
+Write a typed specifications for these functions. In particular
 show that decoding cancels out encoding.
 
 ~~ Answer
 
 ```
-val pad: n:nat { 1 <= n /\ n <= blocksize } -> Tot (nbytes n)
-val encode: a: text -> Tot block
-val decode: b:block -> Tot (option (t:text { Array.equal b (encode t)}))
+[INCLUDE=code/solution/Ex12d.Pad.fst:CreatePaddingT]
+[INCLUDE=code/solution/Ex12d.Pad.fst:EncodePaddingT]
+[INCLUDE=code/solution/Ex12d.Pad.fst:DecodePaddingT]
+
 ```
 ~~
 ~
@@ -5135,20 +5137,7 @@ To this end, we assume given an implementation of the following module
 (adapted from the `MAC` module)
 
 ```
-module BMAC
-open Pad
-
-let keysize = 16 (* these are the sizes for SHA1 *)
-let macsize = 20
-type key = nbytes keysize
-type tag = nbytes macsize
-
-opaque type key_prop : key -> block -> Type
-type pkey (p:(block -> Type)) = k:key{key_prop k == p}
-
-assume val keygen: p:(block -> Type) -> pkey p
-assume val mac:    k:key -> t:block{key_prop k t} -> tag
-assume val verify: k:key -> t:block -> tag -> b:bool{b ==> key_prop k t}
+[INCLUDE=code/exercises/Ex12.BMAC.fst]
 ```
 
 Write a similar module that accepts texts instead of blocks:
@@ -5158,32 +5147,7 @@ then type annotations to derive their authentication property
 
 ~~ Answer
 ```
-module TMAC
-open Pad
-
-let keysize = BMAC.keysize
-let macsize = BMAC.macsize
-type key = BMAC.key
-type tag = BMAC.tag
-
-opaque type bspec (spec: (text -> Type)) (b:block) =
-  (forall (t:text). b = encode t ==> spec t)
-
-opaque type key_prop : key -> text -> Type
-type pkey (p:(text -> Type)) =
-  k:key{key_prop k == p /\ BMAC.key_prop k == bspec p}
-
-val keygen: p:(text -> Type) -> pkey p
-val mac:    p:(text -> Type) -> k:pkey p -> t:text{p t} -> tag
-val verify: p:(text -> Type) -> k:pkey p -> t:text -> tag -> b:bool{b ==> p t}
-
-let keygen (spec: text -> Type) =
-  let k = BMAC.keygen (bspec spec) in
-  assume (key_prop k == spec);
-  k
-
-let mac (p:text -> Type) k t = BMAC.mac k (encode t)
-let verify k t tag = BMAC.verify k (encode t) tag
+[INCLUDE=code/solutions/Ex12f.TMAC.fst:TMAC]
 ```
 ~~
 ~
@@ -5227,25 +5191,7 @@ val keygen: p:(text2 -> Type) -> pkey p
 val mac:    p:(text2 -> Type) -> k:pkey p -> t:text2{p  t} -> tag
 val verify: p:(text2 -> Type) -> k:pkey p -> t:text2 -> tag -> b:bool{b ==> p t}
 
-let keygen (spec: text2 -> Type) =
-  let k0 = BMAC.keygen (bspec0 spec) in
-  let k1 = BMAC.keygen (bspec1 spec) in
-  let k = Keys k0 k1 in
-  assert (BMAC.key_prop k0 == bspec0 spec);
-  assert (BMAC.key_prop k1 == bspec1 spec);
-  assume (key_prop k == spec);
-  k
-
-let mac (Keys k0 k1) t =
-  if length t < blocksize
-  then BMAC.mac k0 (encode t)
-  else BMAC.mac k1 t
-
-let verify (Keys k0 k1) t tag =
-  if length t < blocksize
-  then BMAC.verify k0 (encode t) tag
-  else BMAC.verify k1 t tag
-
+[INCLUDE=code/solutions/Ex12.gTMAC2.fst:TMAC2]
 ```
 ~~
 
