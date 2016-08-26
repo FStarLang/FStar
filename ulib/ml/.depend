@@ -1,11 +1,9 @@
-MkPrims.cmo :
-MkPrims.cmx :
-./prims.cmo : MkPrims.cmo
-./prims.cmx : MkPrims.cmx
+prims.cmo :
+prims.cmx :
 FStar_ST.cmo :
 FStar_ST.cmx :
-FStar_HyperHeap.cmo :
-FStar_HyperHeap.cmx :
+FStar_HyperHeap.cmo : FStar_ST.cmo
+FStar_HyperHeap.cmx : FStar_ST.cmx
 FStar_Mul.cmo : prims.cmo
 FStar_Mul.cmx : prims.cmx
 FStar_Float.cmo :
