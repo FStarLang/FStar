@@ -5199,11 +5199,94 @@ Hint: have a look e.g. at the HMAC construction.
 ~
 
 
+#  Some theoretical background on compositional automated verification
+Those unfamiliar with functional programming may appreciate the
+following [security centered look]](https://arxiv.org/abs/1201.5728) at the differences between a functional
+and an imperative programming style.
+
+We use a [cryptographic verification by typing approach](http://research.microsoft.com/en-us/um/people/fournet/comp-f7/)
+adapted to make use of new F\* features. We follow their notation
+and recall them briefly.
+*a) F\* Types:* A program is a sequential composition of modules,
+written $A_1 \cdot A_2 \cdot \dots \cdot A_n$. A module $A$ depends on types, values,
+and functions being available in its environment and exports types,
+values, and functions in its own interface $I$.
+A module is well typed, written $I_1 ,\dots ,I_\ell \vdash A \leadsto I$ if it correctly
+implements I using modules with interfaces $I_1 ,\dots,I_\ell$. The simplest
+well typed program is an expression $A$ that has type $t$ in typing
+environment $I$, written $I \perp A : t$. A program is closed if it is well
+typed in the empty environment $\emptyset$.
+A program is *safe* if, in every run of the program, all runtime
+values satisfy their type. A key property of a type system is that
+well-typed programs are always safe.
+
+[link]: http://link.com "link title"
+
+**Theorem 1 (Safety by Typing):** If $\emptyset \vdash A : t$, then $A$ is safe.
+
+Two expressions $A_0$ and $A_1$ are equivalent, written $A_0 \approx A_1$,
+when they return the same distribution of values.
+
+An interface can declare a type as abstract, e.g. `abstract type key = bytes`, and keep its representation private. This guarantees
+that modules using this interface will treat key values as opaque and
+guarantees their integrity and secrecy.
+
+As in the example above, one use of abstract types is to protect
+keys from being leaked by programming mistakes. Another use of
+abstract types is to verify simple equivalences for programs $P \cdot A$
+written such that operations on secrets are performed by a pure
+(side-effect free) module $P$ that exports a restricted interface $I_\alpha$
+with an abstract type $\alpha$ for secrets. The rest of the program can
+be passed secrets and can pass them back to $P$ but cannot access the
+representation of secrets. For instance, it can never branch on secrets.
+
+**Theorem 2 (Equivalence by Typing):** If $\emptyset \vdash P_b \leadsto I_\alpha$ for $b = 0,1$
+and $I_α \vdash A : bool$, then $P_0 \cdot A ≈ P_1 \cdot A$.
+
+*b) $\epsilon$-Safety and $\epsilon$-Equivalence:* Instead of relying on 
+the asymptotic safety and equivalence notions of [10] we use a concrete $\epsilon$ loss
+term. A module A is $\epsilon$-safe if the probability of an assertion failing
+in $A$ is $\epsilon$.
+Two closed boolean expressions $A_0$ and $A_1$ are $\epsilon$-equivalent when
+the statistical distance
+$\frace{1}{2} \sum_{M=true,false} |Pr[A_0 \Downarrow M]−Pr[A_1 \Downarrow M]|$
+is $\epsilon$.
+
+*c) Keyed module:* Keyed modules export `gen` , `leak` , and `coerce`
+functions and provide some cryptographic functionality modeled
+using idealization for honest keys and strong algorithms. To this
+end keys are associated with a unique index upon generation. Keyed
+modules enforce that `gen` is called at most once per index. The index
+describes the context the key was created in and the algorithms it is
+to be used with.
+
+*d) Plain module:* To define confidentiality using types, consider a
+module $P$ that is typeable using an interface $IP$ of the form
+
+```
+type repr = b:bytes{Length(b)=plainsize}
+private type plain = repr
+val repr: plain{¬(ideal)} →repr
+```
+
+The type repr gives the representation of plaintext, whereas the
+type plain is `abstract`, with functions `repr` and `plain` converting between
+them. If `ideal` is `true`, the function `repr` cannot be called, intuitively
+making the interface parametric in type `plain`, so that we can apply *Theorem 2*
+
+**Definition 1 (Interface-based secrecy):** Let $IP$ be the interface
+of $P$ and $IC$ be the interface of module $C$. $C$ protects the secrecy
+of `plain` , if `ideal=true`, $IP \vdash C \leadsto IC$ and for all modules $P$ with
+`ideal=false`, $P \leadsto IP$, `ideal=true`, $P \leadsto IP$ and $A$ with $IP,IC \vdash A$ 
+we have `ideal=false`, $P \cdot C \cdot A \approx_{\epsilon(A,P)}$ `ideal=true`, $P \cdot C \cdot A$
+
+The function $\epsilon(.,.)$ is called the advantage function of $P,A$.
+
 # A note on this document 
 
 This document was created using Dan Liejen's <https://madoko.net> markdown processor. 
 
-If you find any errors in it, or would like to improve it in any way,
+If` you find any errors in it, or would like to improve it in any way,
 this is how you do it: 
 
 1. Point your browser at <https://madoko.net>
