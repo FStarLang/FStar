@@ -3857,10 +3857,7 @@ type point =
 Allocating a new point is straightforward:
 
 ```
-let new_point x y =
-  let x = ST.alloc x in
-  let y = ST.alloc y in
-  Point x y
+[INCLUDE=code/solutions/Ex10b.fst:NewPoint]
 ```
 
 As is moving a point by a unit along the `x`-axis.
@@ -3942,9 +3939,7 @@ val shift_x : p:point -> ST unit
 Another, less precise but more idiomatic type for it is:
 
 ```
-val shift_x : p:point -> ST unit
-  (requires (fun h -> True))
-  (ensures (fun h0 _ h1 -> modifies (only (Point.x p)) h0 h1))
+[INCLUDE=code/solutions/Ex10b.fst:ShiftXType]
 ```
 
 Informally, `ensures`-clause above says that the heap after calling this
@@ -4017,17 +4012,9 @@ Here's a precise type for `new_point`, with its definition reproduced
 for convenience.
 
 ```
-val new_point: x:int -> y:int -> ST point
-  (requires (fun h -> True))
-  (ensures (fun h0 p h1 ->
-                modifies Set.empty h0 h1
-                /\ fresh (Point.x p ^+^ Point.y p) h0 h1
-                /\ Heap.sel h1 (Point.x p) = x
-                /\ Heap.sel h1 (Point.y p) = y))
-let new_point x y =
-  let x = ST.alloc x in
-  let y = ST.alloc y in
-  Point x y
+[INCLUDE=code/solutions/Ex10b.fst:NewPointType]
+
+[INCLUDE=code/solutions/Ex10b.fst:NewPoint]
 ```
 
 The `modifies` clause says the function modifies no existing
@@ -5199,7 +5186,7 @@ Hint: have a look e.g. at the HMAC construction.
 ~
 
 
-#  Some theoretical background on compositional automated verification
+#  Theoretical background on crypto verification in F\*
 Those unfamiliar with functional programming may appreciate the
 following [security centered look](https://arxiv.org/abs/1201.5728) at the differences between a functional
 and an imperative programming style.
