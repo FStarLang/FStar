@@ -5201,7 +5201,7 @@ Hint: have a look e.g. at the HMAC construction.
 
 #  Some theoretical background on compositional automated verification
 Those unfamiliar with functional programming may appreciate the
-following [security centered look]](https://arxiv.org/abs/1201.5728) at the differences between a functional
+following [security centered look](https://arxiv.org/abs/1201.5728) at the differences between a functional
 and an imperative programming style.
 
 We use a [cryptographic verification by typing approach](http://research.microsoft.com/en-us/um/people/fournet/comp-f7/)
