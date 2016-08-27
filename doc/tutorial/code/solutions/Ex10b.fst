@@ -8,6 +8,7 @@ open FStar.ST
 type point =
   | Point : x:ref int -> y:ref int{y<>x} -> point
 
+// BEGIN: NewPointType
 val new_point: x:int -> y:int -> ST point
   (requires (fun h -> True))
   (ensures (fun h0 p h1 ->
@@ -15,17 +16,45 @@ val new_point: x:int -> y:int -> ST point
                 /\ fresh (Point.x p ^+^ Point.y p) h0 h1
                 /\ Heap.sel h1 (Point.x p) = x
                 /\ Heap.sel h1 (Point.y p) = y))
+// END: NewPointType
+// BEGIN: NewPoint
 let new_point x y =
-  let x = alloc x in
-  let y = alloc y in
+  let x = ST.alloc x in
+  let y = ST.alloc y in
   Point x y
+// END: NewPoint
 
-val shift: p:point -> ST unit
+// BEGIN: ShiftXType
+val shift_x: p:point -> ST unit
   (requires (fun h -> True))
-  (ensures (fun h0 x h1 -> modifies (Point.x p ^+^ Point.y p) h0 h1))
+  (ensures (fun h0 x h1 -> modifies (only (Point.x p)) h0 h1))
+// END: ShiftXType
+let shift_x p =
+  Point.x p := !(Point.x p) + 1
+
+// BEGIN: ShiftP1Spec
+val shift_x_p1: p1:point
+             -> p2:point{   Point.x p2 <> Point.x p1
+                          /\ Point.y p2 <> Point.x p1
+                          /\ Point.x p2 <> Point.y p1
+                          /\ Point.y p2 <> Point.y p1 }
+           -> ST unit
+    (requires (fun h -> Heap.contains h (Point.x p2)
+                    /\  Heap.contains h (Point.y p2)))
+    (ensures (fun h0 _ h1 -> modifies (only (Point.x p1)) h0 h1))
+// END: ShiftP1Spec
+
+let shift_x_p1 p1 p2 =
+    let p2_0 = !(Point.x p2), !(Point.y p2)  in //p2 is initially p2_0
+    shift_x p1;
+    let p2_1 = !(Point.x p2), !(Point.y p2) in
+    assert (p2_0 = p2_1)                        //p2 is unchanged
+
 let shift p =
   Point.x p := !(Point.x p) + 1;
-  Point.y p := 17
+  Point.y p := !(Point.y p) + 1
+
+
 
 // BEGIN: ShiftP1Spec
 val shift_p1: p1:point

@@ -3,7 +3,6 @@ module Ex10b
 
 open FStar.Heap
 open FStar.ST
-open FStar.TSet
 
 type point =
   | Point : x:ref int -> y:ref int{y<>x} -> point
@@ -20,9 +19,8 @@ let new_point x y =
   let y = alloc y in
   Point x y
 
-let shift p =
-  Point.x p := !(Point.x p) + 1;
-  Point.y p := 17
+let shift_x p =
+  Point.x p := !(Point.x p) + 1
 
 val shift_p1: p1:point
            -> p2:point{   Point.x p2 <> Point.x p1
@@ -35,7 +33,7 @@ val shift_p1: p1:point
 
 let shift_p1 p1 p2 =
     let p2_0 = !(Point.x p2), !(Point.y p2)  in //p2 is initially p2_0
-    shift p1;
+    shift_x p1;
     let p2_1 = !(Point.x p2), !(Point.y p2) in
     admit(); //fix the precondition and remove the admit
     assert (p2_0 = p2_1)                         //p2 is unchanged
