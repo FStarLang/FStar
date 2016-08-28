@@ -19,7 +19,7 @@ type bounded_seq (t:Type) = s:seq t{length s <= UInt.max_int n}
 (* Buffer general type, fully implemented on FStar's arrays *)
 noeq private type buffer' (a:Type) = {
   content:reference (bounded_seq a);
-  // The following fiels are machine integers in order to be extracted to OCaml if needed
+  // The following fields are machine integers in order to be extracted to OCaml if needed
   idx:UInt32.t;
   length:UInt32.t;
 }
@@ -51,7 +51,7 @@ let as_seq #a h (b:buffer a{live h b}) : GTot (seq a) = Seq.slice (sel h b) (idx
 let equal #a h (b:buffer a) h' (b':buffer a) : GTot Type0 =
   live h b /\ live h' b' /\ as_seq h b == as_seq h' b'
 
-(* Equality predicate between buffers wih quantifiers *)
+(* Equality predicate on buffer contents, with quantifiers *)
 val eq_lemma: #a:Type -> h:mem -> b:buffer a{live h b} -> h':mem -> b':buffer a{live h' b'} -> Lemma
   (requires (equal h b h' b'))
   (ensures  (length b = length b' /\ (forall (i:nat). i < length b ==> get h b i == get h' b' i)))
@@ -74,8 +74,8 @@ let disjoint #a #a' (x:buffer a) (y:buffer a') : GTot Type0 =
   frameOf x <> frameOf y \/ as_aref x =!= as_aref y
   \/ (as_aref x == as_aref y /\ frameOf x = frameOf y /\ (idx x + length x <= idx y \/ idx y + length y <= idx x))
 
-(* Disjointness is reflexive *)
-let lemma_disjoint_refl #a #a' (x:buffer a) (y:buffer a') : Lemma
+(* Disjointness is symmetric *)
+let lemma_disjoint_sym #a #a' (x:buffer a) (y:buffer a') : Lemma
   (requires (True))
   (ensures (disjoint x y <==> disjoint y x))
   [SMTPat (disjoint x y)]
