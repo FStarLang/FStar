@@ -15,7 +15,9 @@ val new_point: x:int -> y:int -> ST point
                 modifies TSet.empty h0 h1
                 /\ fresh (Point.x p ^+^ Point.y p) h0 h1
                 /\ Heap.sel h1 (Point.x p) = x
-                /\ Heap.sel h1 (Point.y p) = y))
+                /\ Heap.sel h1 (Point.y p) = y
+		/\ Heap.contains h1 (Point.x p)
+                /\ Heap.contains h1 (Point.y p)))
 // END: NewPointType
 // BEGIN: NewPoint
 let new_point x y =
@@ -52,6 +54,28 @@ let shift_x_p1 p1 p2 =
     assert (p2_0 = p2_1)                        //p2 is unchanged
 // END: ShiftXP1
 
+
+ (*
+//The following wont typecheck
+// BEGIN: Test0
+val test0: unit -> St unit
+let test0 () =
+  let p1 = new_point 0 0 in
+  recall (Point.x p1);
+  recall (Point.y p1);
+  shift_x_p1 p1 p1
+// END: Test0
+*)
+
+// BEGIN: Test1
+val test1: unit -> St unit
+let test1 () =
+  let p1 = new_point 0 0 in
+  let p2 = new_point 0 0 in
+  shift_x_p1 p1 p2
+// END: Test1
+
+
 let shift p =
   Point.x p := !(Point.x p) + 1;
   Point.y p := !(Point.y p) + 1
@@ -76,12 +100,10 @@ let shift_p1 p1 p2 =
     let p2_1 = !(Point.x p2), !(Point.y p2) in
     assert (p2_0 = p2_1)                        //p2 is unchanged
 
+
+
 val test: unit -> St unit
 let test () =
   let p1 = new_point 0 0 in
-  recall (Point.x p1);
-  recall (Point.y p1);
   let p2 = new_point 0 1 in
-  recall (Point.x p2);
-  recall (Point.y p2);
   shift_p1 p1 p2
