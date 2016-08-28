@@ -22,16 +22,17 @@ let new_point x y =
 let shift_x p =
   Point.x p := !(Point.x p) + 1
 
-val shift_p1: p1:point
+// BEGIN: ShiftXP1Spec
+val shift_x_p1: p1:point
            -> p2:point{   Point.x p2 <> Point.x p1
                        /\ Point.y p2 <> Point.x p1 }
            -> ST unit
     (requires (fun h -> Heap.contains h (Point.x p2)
                     /\  Heap.contains h (Point.y p2)))
-    (ensures (fun h0 _ h1 -> modifies (Point.x p1 ^+^ Point.y p1) h0 h1))
+    (ensures (fun h0 _ h1 -> modifies (only (Point.x p1)) h0 h1))
+// END: ShiftP1Spec
 
-
-let shift_p1 p1 p2 =
+let shift_x_p1 p1 p2 =
     let p2_0 = !(Point.x p2), !(Point.y p2)  in //p2 is initially p2_0
     shift_x p1;
     let p2_1 = !(Point.x p2), !(Point.y p2) in
@@ -47,4 +48,4 @@ let test () =
   let p2 = new_point 0 1 in
   recall (Point.x p2);
   recall (Point.y p2);
-  shift_p1 p1 p2
+  shift_x_p1 p1 p2

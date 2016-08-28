@@ -32,7 +32,7 @@ val shift_x: p:point -> ST unit
 let shift_x p =
   Point.x p := !(Point.x p) + 1
 
-// BEGIN: ShiftP1Spec
+// BEGIN: ShiftXP1Spec
 val shift_x_p1: p1:point
              -> p2:point{   Point.x p2 <> Point.x p1
                           /\ Point.y p2 <> Point.x p1
@@ -42,13 +42,15 @@ val shift_x_p1: p1:point
     (requires (fun h -> Heap.contains h (Point.x p2)
                     /\  Heap.contains h (Point.y p2)))
     (ensures (fun h0 _ h1 -> modifies (only (Point.x p1)) h0 h1))
-// END: ShiftP1Spec
+// END: ShiftXP1Spec
 
+// BEGIN: ShiftXP1
 let shift_x_p1 p1 p2 =
     let p2_0 = !(Point.x p2), !(Point.y p2)  in //p2 is initially p2_0
     shift_x p1;
     let p2_1 = !(Point.x p2), !(Point.y p2) in
     assert (p2_0 = p2_1)                        //p2 is unchanged
+// END: ShiftXP1
 
 let shift p =
   Point.x p := !(Point.x p) + 1;
@@ -56,7 +58,7 @@ let shift p =
 
 
 
-// BEGIN: ShiftP1Spec
+// BEGIN: ShiftP1SpecSolution
 val shift_p1: p1:point
            -> p2:point{   Point.x p2 <> Point.x p1
                        /\ Point.y p2 <> Point.x p1
@@ -66,7 +68,7 @@ val shift_p1: p1:point
     (requires (fun h -> Heap.contains h (Point.x p2)
                     /\  Heap.contains h (Point.y p2)))
     (ensures (fun h0 _ h1 -> modifies (Point.x p1 ^+^ Point.y p1) h0 h1))
-// END: ShiftP1Spec
+// END: ShiftP1SpecSolution
 
 let shift_p1 p1 p2 =
     let p2_0 = !(Point.x p2), !(Point.y p2)  in //p2 is initially p2_0
