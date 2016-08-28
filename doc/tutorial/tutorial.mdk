@@ -3872,49 +3872,38 @@ to identify some conditions that are sufficient to prove that
 the assertion in the program below always succeeds.
 
 ```
-let shift_p1 (p1:point) (p2:point) =
-    let p2_0 = !(Point.x p2), !(Point.y p2)  in //p2 is initially p2_0
-    shift_x p1;
-    let p2_1 = !(Point.x p2), !(Point.y p2) in
-    assert (p2_0 = p2_1)                        //p2 is unchanged
+[INCLUDE=code/solutions/Ex10b.fst:ShiftXP1]
 ```
 
 If you give this program (reproduced in its entirety below) to F\*, it
 will report no errors. This may surprise you: after all, if you call
-`shift_p1 p p` the assertion will indeed fail. What's going on here is that
+`shift_x_p1 p p` the assertion will indeed fail. What's going on here is that
 for functions in the `ST` effect, F\* infers a most precise type for it,
 and if the programmer did not write down any other specification, this
 precise inferred type is what F\* will use. This means that without an
-annotation on `shift_p1`, F\* does not check that the assertion will succeed
-on every invocation of `shift_p1`; instead, using the inferred type it will
+annotation on `shift_x_p1`, F\* does not check that the assertion will succeed
+on every invocation of `shift_x_p1`; instead, using the inferred type it will
 aim to prove that the assertion will succeed whenever the function is
 called. Let's try:
 
 ```
-val test0: unit -> St unit
-let test0 () =
-  let x = new_point 0 0 in
-  shift_p1 x x
+[INCLUDE=code/solutions/Ex10b.fst:Test0]
 ```
 
 Here, we wrote a specification for `test0`, asking it to have trivial
 pre-condition. When we ask F\* to check this, it complains at the call to
-`shift_p1 x x`, saying that the assertion failed.
+`shift_x_p1 x x`, saying that the assertion failed.
 
-If we try calling `shift_p1` with two distinct points, as below, then we
+If we try calling `shift_x_p1` with two distinct points, as below, then we
 can prove that the assertion succeeds.
 
 ```
-val test1: unit -> St unit
-let test1 () =
-  let x = new_point 0 0 in
-  let y = new_point 0 0
-  shift_p1 x y
+[INCLUDE=code/solutions/Ex10b.fst:Test1]
 ```
 
 In simple code like our example above, it is a reasonable trade-off to let F\* infer
 the most precise type of a function, and to have it check later, at each call site, that
-the those calls are safe.
+those calls are safe.
 
 As you write larger programs, it's a good idea to write down the types
 you expect, at least for tricky top-level functions. To see what these
@@ -3995,13 +3984,13 @@ then `sel h1 r = sel h0 r`, i.e., it hasn't changed. Otherwise,
 We define the following infix operators to build sets of heterogenous references.
 
 ```
-let op_Hat_Plus_Plus (#a:Type) (r:ref a) (s:set aref) =
+let op_Hat_Plus_Plus (#a:Type) (r:ref a) (s:set aref) = // ^++
     Set.union (Set.singleton (Ref r)) s
 
-let op_Plus_Plus_Hat (#a:Type) (s:set aref) (r:ref a) =
+let op_Plus_Plus_Hat (#a:Type) (s:set aref) (r:ref a) = // ++^
     Set.union s (Set.singleton (Ref r))
 
-let op_Hat_Plus_Hat (#a:Type) (#b:Type) (r1:ref a) (r2:ref b) =
+let op_Hat_Plus_Hat (#a:Type) (#b:Type) (r1:ref a) (r2:ref b) = // ^+^
     Set.union (Set.singleton (Ref r1)) (Set.singleton (Ref r2))
 ```
 ~
@@ -4036,8 +4025,8 @@ val alloc:  #a:Type -> init:a -> ST (ref a)
     (ensures (fun h0 r h1 -> fresh (only r) h0 h1 /\ h1==upd h0 r init))
 
 type fresh (refs:set aref) (h0:heap) (h1:heap) =
-  forall (a:Type) (r:ref a). mem (Ref r) refs
-                         ==> not(contains h0 a) /\ contains h1 a
+  (forall (a:Type) (r:ref a). mem (Ref r) refs
+                         ==> not(contains h0 r) /\ contains h1 r)
 ```
 
 
@@ -4054,9 +4043,7 @@ reason.
 
 
 ```
-let p = new_point () in
-let z = ST.alloc 0 in
-assert (Point.x p <> z)
+[INCLUDE=code/solutions/Ex10b.fst:Test2]
 ```
 
 On the other hand, since the `ST` library we are working with provides no
@@ -4091,8 +4078,10 @@ much as possible.
 Now, we have all the machinery we need to give `shift_p1` a sufficiently
 strong type to prove that its assertion will never fail (if its pre-condition is met).
 
-<!-- [INCLUDE=code/solutions/Ex10b.fst:ShiftP1Spec] -->
+
 ```
+[INCLUDE=code/exercises/Ex10b.fst:ShiftXP1Spec]
+  
 val shift_p1: p1:point
            -> p2:point{   Point.x p2 <> Point.x p1
                        /\ Point.y p2 <> Point.x p1 }
