@@ -89,6 +89,7 @@ let shift p =
   Point.y p := !(Point.y p) + 1
 
 
+// BEGIN: ShiftP1SpecSolution
 val shift_p1: p1:point
            -> p2:point{   Point.x p2 <> Point.x p1
                        /\ Point.y p2 <> Point.x p1
@@ -98,13 +99,13 @@ val shift_p1: p1:point
     (requires (fun h -> Heap.contains h (Point.x p2)
                     /\  Heap.contains h (Point.y p2)))
     (ensures (fun h0 _ h1 -> modifies (Point.x p1 ^+^ Point.y p1) h0 h1))
+// END: ShiftP1SpecSolution
 
 let shift_p1 p1 p2 =
     let p2_0 = !(Point.x p2), !(Point.y p2)  in //p2 is initially p2_0
     shift p1;
     let p2_1 = !(Point.x p2), !(Point.y p2) in
     assert (p2_0 = p2_1)                        //p2 is unchanged
-// END: ShiftP1Solution
 
 
 
