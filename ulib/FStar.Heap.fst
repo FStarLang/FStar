@@ -55,7 +55,7 @@ assume DomContains:   forall (a:Type) (h:heap) (r:ref a).                  {:pat
 
 type on (r:set aref) (p:(heap -> Type)) (h:heap) = p (restrict h r)
 type fresh (refs:set aref) (h0:heap) (h1:heap) =
-  (forall (a:Type) (a:ref a).{:pattern (contains h0 a)} mem (Ref a) refs ==> not(contains h0 a) /\ contains h1 a)
+  (forall (a:Type) (r:ref a).{:pattern (contains h0 r)} mem (Ref r) refs ==> not(contains h0 r) /\ contains h1 r)
 type modifies (mods:set aref) (h:heap) (h':heap) =
     equal h' (concat h' (restrict h (complement mods)))
     /\ subset (domain h) (domain h')

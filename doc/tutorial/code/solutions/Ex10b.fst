@@ -13,10 +13,10 @@ val new_point: x:int -> y:int -> ST point
   (requires (fun h -> True))
   (ensures (fun h0 p h1 ->
                 modifies TSet.empty h0 h1
-                /\ fresh (Point.x p ^+^ Point.y p) h0 h1
+                /\ Heap.fresh (Point.x p ^+^ Point.y p) h0 h1
                 /\ Heap.sel h1 (Point.x p) = x
                 /\ Heap.sel h1 (Point.y p) = y
-		/\ Heap.contains h1 (Point.x p)
+                /\ Heap.contains h1 (Point.x p) //these two lines should be captures by fresh
                 /\ Heap.contains h1 (Point.y p)))
 // END: NewPointType
 // BEGIN: NewPoint
@@ -61,8 +61,6 @@ let shift_x_p1 p1 p2 =
 val test0: unit -> St unit
 let test0 () =
   let p1 = new_point 0 0 in
-  recall (Point.x p1);
-  recall (Point.y p1);
   shift_x_p1 p1 p1
 // END: Test0
 *)
@@ -74,6 +72,14 @@ let test1 () =
   let p2 = new_point 0 0 in
   shift_x_p1 p1 p2
 // END: Test1
+
+// BEGIN Test2
+val test2: unit -> St unit
+let test2 () =
+  let p = new_point 0 0 in
+  let z = ST.alloc 0 in
+  assert (Point.x p <> z)
+// END Test2
 
 
 let shift p =
