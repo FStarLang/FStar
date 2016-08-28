@@ -73,13 +73,13 @@ let test1 () =
   shift_x_p1 p1 p2
 // END: Test1
 
-// BEGIN Test2
+// BEGIN: Test2
 val test2: unit -> St unit
 let test2 () =
   let p = new_point 0 0 in
   let z = ST.alloc 0 in
   assert (Point.x p <> z)
-// END Test2
+// END: Test2
 
 
 let shift p =
