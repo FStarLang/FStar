@@ -134,9 +134,9 @@ install: all
         # Install the binary
 	$(INSTALL_EXEC) -m 755 -D -T fstar.exe $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
-	$(call install_dir,lib,lib/fstar)
+	$(call install_dir,ulib,lib/fstar)
 	$(call install_dir,examples,share/fstar/examples)
-	$(call install_dir,contrib,share/fstar/contrib)
+	$(call install_dir,ucontrib,share/fstar/contrib)
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial first
 	$(MAKE) -C ../../doc/tutorial
