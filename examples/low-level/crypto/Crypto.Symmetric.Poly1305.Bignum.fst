@@ -33,8 +33,8 @@ let op_Subtraction_Bar = U32.sub
 let heap = HS.mem
 
 (* Prime value *)
-val prime: p:erased pos{reveal p = pow2 130 - 5}
-let prime = hide (pow2 130 - 5)
+val prime: p:erased pos{reveal p = Crypto.Symmetric.Poly1305.Spec.p_1305}
+let prime = hide (Crypto.Symmetric.Poly1305.Spec.p_1305)
 
 (* Useful lemmas to cut verification time *)
 val distributivity_add_right: a:int -> b:int -> c:int -> Lemma (a*(b+c) = a * b + a * c)
@@ -1654,3 +1654,6 @@ let finalize b =
   upd b 3ul (b3 -^ (b3 &^ mask));
   upd b 4ul (b4 -^ (b4 &^ mask));
   ()
+
+
+

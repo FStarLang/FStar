@@ -6,8 +6,9 @@ open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
 open Crypto.Symmetric.Chacha20
-open Crypto.Symmetric.Poly1305.Bigint
-open Crypto.Symmetric.Poly1305
+
+// now hiding the 1-time MAC state & implementation
+module MAC = Crypto.Symmetric.Poly1305.MAC
 
 //#set-options "--lax"
 
@@ -19,36 +20,33 @@ let pad_16 b len =
   if len =^ 0ul then ()
   else memset (offset b len) 0uy (16ul -^ len)
 
-(* Serializes the length into the appropriate format *)
+let uint32_bytes v : Tot (u8 * u8 * u8 * u8)= 
+  Int.Cast.uint32_to_uint8 v,
+  Int.Cast.uint32_to_uint8 (v >>^ 8ul),
+  Int.Cast.uint32_to_uint8 (v >>^ 16ul),
+  Int.Cast.uint32_to_uint8 (v >>^ 24ul)
+
+let upd_uint32 b x : STL unit
+  (requires (fun h -> live h b /\ length b >= 4))
+  (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1)) =
+
+  let v0,v1,v2,v3 = uint32_bytes x in 
+  upd b 0ul v0;
+  upd b 1ul v1;
+  upd b 2ul v2;
+  upd b 3ul v3
+
+
+(* Serializes the lengths into the appropriate format *)
 val length_bytes: b:bytes -> len:UInt32.t -> aad_len:UInt32.t -> STL unit
   (requires (fun h -> live h b /\ length b >= 16))
   (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))
 let length_bytes b len aad_len =
-  let l0 = Int.Cast.uint32_to_uint8 len in
-  let l1 = Int.Cast.uint32_to_uint8 (len >>^ 8ul) in
-  let l2 = Int.Cast.uint32_to_uint8 (len >>^ 16ul) in
-  let l3 = Int.Cast.uint32_to_uint8 (len >>^ 24ul) in
-  let al0 = Int.Cast.uint32_to_uint8 aad_len in
-  let al1 = Int.Cast.uint32_to_uint8 (aad_len >>^ 8ul) in
-  let al2 = Int.Cast.uint32_to_uint8 (aad_len >>^ 16ul) in
-  let al3 = Int.Cast.uint32_to_uint8 (aad_len >>^ 24ul) in
-  upd b 0ul al0;
-  upd b 1ul al1;
-  upd b 2ul al2;
-  upd b 3ul al3;
-  upd b 4ul 0uy;
-  upd b 5ul 0uy;
-  upd b 6ul 0uy;
-  upd b 7ul 0uy;
-  upd b 8ul l0;
-  upd b 9ul l1;
-  upd b 10ul l2;
-  upd b 11ul l3;
-  upd b 12ul 0uy;
-  upd b 13ul 0uy;
-  upd b 14ul 0uy;
-  upd b 15ul 0uy;
-  ()
+  upd_uint32 (offset b  0ul) len;
+  upd_uint32 (offset b  4ul) 0ul;
+  upd_uint32 (offset b  8ul) aad_len;
+  upd_uint32 (offset b 12ul) 0ul
+  
 
 (* AEAD-encrypt for Chacha20-Poly1305. Takes:
    - the additional data (aad)
@@ -75,15 +73,12 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   push_frame();
 
   (* Temporary buffers (to be improved) *)
-  let otk   = create 0uy 32ul in (* OTK for Poly (to improve) *)
   let state = create 0ul 32ul in (* Chacha inner state *)
-  let acc   = create 0UL 5ul  in (* Poly's accumulator *)
-  let r     = create 0UL 5ul  in (* First half of poly's key, will be removed (merged with otk) *)
-(*  let s     = create 0UL 5ul  in (\* Second half of poly's key, will be removed (merged with otk) *\) *)
+  chacha20_init state key counter iv constant;
 
   (*  Create OTK, using round '0' of Chacha20 *)
   let counter = 0ul in
-  chacha20_init state key counter iv constant;
+  let otk   = create 0uy 32ul in (* OTK for Poly (to improve) *)
   chacha20_update otk state 32ul;
 
   (*  Encryption of the plaintext, using Chacha20, counter at 1 *)
@@ -101,17 +96,23 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   let padded_ciphertext = create 0uy 16ul in
   let len_bytes = create 0uy 16ul in
   blit ciphertext (UInt32.mul max 16ul) padded_ciphertext 0ul rem;
+  pad_16 padded_ciphertext rem; // not needed, unless buffer reuse
   blit aad (UInt32.mul max_aad 16ul) padded_aad 0ul rem_aad;
-  pad_16 padded_ciphertext rem;
-  pad_16 padded_aad rem_aad;
-  (* Initlialize MAC algorithm with one time key *)
-  let log = poly1305_init acc r otk in
+  pad_16 padded_aad rem_aad;    // not needed, unless buffer reuse
+
+  (* Initialize MAC algorithm with one time key *)
+  (* encapsulate (r,s) and a; we should probably clear otk *)
+  let ak = MAC.coerce root otk in 
+  let acc = MAC.start ak in
+
+  (* the log is a sequence of abstract elements that encode the message *)
+
   (* Update MAC with
      - padded additional data
      - padded ciphertext
      - formatted length *)
-  let aad_log = 
-    let log = poly1305_loop log aad acc r max_aad in
+  let log = 
+    let log = MAC.loop MAC.log_0 aad acc r max_aad in
     (* This is not length-constant time, the lengths are assumed to 
        be public data *)  
     if not(UInt32.eq rem_aad 0ul) then poly1305_update log padded_aad acc r
@@ -125,3 +126,5 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   (* Finish MAC *)
   poly1305_finish tag acc (Buffer.sub otk 16ul 16ul);
   pop_frame()
+
+  
