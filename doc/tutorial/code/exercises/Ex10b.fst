@@ -30,7 +30,7 @@ val shift_x_p1: p1:point
     (requires (fun h -> Heap.contains h (Point.x p2)
                     /\  Heap.contains h (Point.y p2)))
     (ensures (fun h0 _ h1 -> modifies (only (Point.x p1)) h0 h1))
-// END: ShiftP1Spec
+// END: ShiftXP1Spec
 
 let shift_x_p1 p1 p2 =
     let p2_0 = !(Point.x p2), !(Point.y p2)  in //p2 is initially p2_0
