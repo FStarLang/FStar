@@ -56,7 +56,7 @@ let shift_x_p1 p1 p2 =
 
 
  (*
-//The following wont typecheck
+//The following won't typecheck
 // BEGIN: Test0
 val test0: unit -> St unit
 let test0 () =
@@ -82,13 +82,13 @@ let test2 () =
 // END: Test2
 
 
+
+// BEGIN: ShiftP1Solution
 let shift p =
   Point.x p := !(Point.x p) + 1;
   Point.y p := !(Point.y p) + 1
 
 
-
-// BEGIN: ShiftP1Solution
 val shift_p1: p1:point
            -> p2:point{   Point.x p2 <> Point.x p1
                        /\ Point.y p2 <> Point.x p1
