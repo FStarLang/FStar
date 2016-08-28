@@ -4121,9 +4121,6 @@ we look at an alternative way of proving stateful programs correct by making use
 a more structured representation of memory that we call a "HyperHeap". First, we illustrate
 the problem of scaling up the approach of the previous chapter to even slightly larger examples
 
-```
-  type a = b
-  ```
 
 ## Flying robots
 
@@ -4189,20 +4186,20 @@ refs in b.left.arm `disjoint` refs in b.right.arm
 As you can see, what started out as a bit of fun programming is now a
 painful exercise in managing anti-aliasing invariants. Worse, even if we
 state all these invariants, proving that they are preserved involves
-reasoning about a quadratic number of inequalities between the all the
+reasoning about a quadratic number of inequalities between all the
 references in each robot, as well as a further quadratic inequalities
 among the references of each bot.
 
 F\*'s effect mechanism provides an alternative to this tedium. Instead of
 working with the primitive `ST` effect (and its flat model of memory via
-the `heap` type) that we have been working with so far, we can define
+the `heap` type) that we have been working with so far, we can
 easily define a different, more structured view of memory as a new effect.
 One such alternative is the HyperHeap, a model of memory which provides a
 convenient built-in notion of disjoint sets of references.
 
 [johnnysokko]: johnnysokko.jpg "Johnny Sokko" { width=300px }
 [flying]: flying.gif "Flying Bot" { width=200px }
-[heap]: heap.jpg "A flat heap" {width=300px}
+[heap]: heap.jpg "A flat heap" {width=400px}
 [hyperheap]: hyperheap.jpg "A hyper-heap" {width=500px}
 
 ## Hyper-heaps
@@ -4234,8 +4231,7 @@ of type `ref a`---meaning that hyper-heaps are in 1-1 correspondence with
 the underlying heap, except, as we will see, the additional structure
 provided helps with stating and proving memory invariants.
 
-The module `HyperHeap` defines (see `lib/hyperheap.fsi`, for its abstract
-specification):
+The module `HyperHeap` defines:
 
 ```
 type t = Map.t rid heap
@@ -4248,7 +4244,7 @@ effect ST (a:Type) (pre:t -> Type) (post:t -> a -> t -> Type) =
 That is `HyperHeap.STATE` and `HyperHeap.ST` are just like the `STATE`
 and `ST` we've been working with, except that instead of the type of
 memory being a flat `heap`, the memory has type `HyperHeap.t`, a map from
-region ids `rid` to `heaps`.
+region ids `rid` to `heap`s.
 
 ### The type of region identifiers, `rid`
 
@@ -4376,7 +4372,7 @@ val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
 ### Framing conditions for hyper-heaps: `modifies` revised
 
 Finally, we redefine `modifies` clauses to work with hyper-heaps instead
-of heaps. Crucially, given a region ids `r1, ..., rn`, we intend to write
+of heaps. Crucially, given region ids `r1, ..., rn`, we intend to write
 `modifies (r1 ^++ ... ++^ rn) h0 h1` to mean that `h1` may differ from
 `h0` in all regions _rooted at some region_ in the set `{r1, ..., rn}`
 (and, as before, any other regions that are newly allocated in `h1`). As
@@ -4387,7 +4383,7 @@ and for better automation.
 
 ```
 type modifies (s:Set.set rid) (m0:t) (m1:t) =
-  Map.Equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
+  Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
 
 where
 val mod_set : Set.set rid -> GTot (Set.set rid)
@@ -4396,7 +4392,7 @@ and forall (x:rid) (s:Set.set rid).
 ```
 
 ~Remark
-The interpretation of `Map.restrict, Map.concat` and `Map.Equal` is
+The interpretation of `Map.restrict, Map.concat` and `Map.equal` is
 analogous to the counterparts for `Heap` discussed in the previous
 section.
 
