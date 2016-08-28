@@ -63,18 +63,22 @@ let gen parent =
 val mac: k:key -> m:msg -> ST tag
   (requires (fun m0 -> True))
   (ensures  (fun m0 t m1 ->
-    (let ilog = m_sel m0 k.log in
-     let n = Seq.length ilog in
+    (let log0 = m_sel m0 k.log in
+     let log1 = m_sel m1 k.log in
+     let n = Seq.length log0 in
        modifies_one k.region m0 m1
      /\ m_contains k.log m1
-     /\ m_sel m1 k.log == snoc ilog (m, t)
-     /\ witnessed (at_least n (m, t) k.log))))
+     /\ log1 == snoc log0 (m, t)
+     /\ witnessed (at_least n (m, t) k.log)
+     /\ Seq.length log1 == Seq.length log0 + 1
+     )))
 
 let mac k m =
   let ilog = m_read k.log in
   let t = hmac_sha1 k.raw m in
   write_at_end k.log (m,t);
   t
+
 
 assume val uf_cma : bool
 
