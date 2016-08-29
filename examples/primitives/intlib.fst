@@ -2,7 +2,7 @@ module IntLib
 
 open Axioms
 
-(** Mathematical useful fonctions **)
+(** Mathematical useful functions **)
 (* Function : power of 2 *)
 val pow2: n:nat -> GTot pos
 let rec pow2 n =
