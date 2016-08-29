@@ -1,5 +1,7 @@
 #light "on"
-module Fold
+module TutorialFold
+
+(* This example shows compatibility with existing F* code if ML part is indented properly. *)
 
 val fold_left: f:('b -> 'a -> Tot 'a) -> l:list 'b -> 'a -> Tot 'a
 let rec fold_left f l a = match l with

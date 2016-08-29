@@ -179,7 +179,7 @@ let as_frag d ds =
 
 %%
 inputFragment:
-  | maybe_pragma_light decl opt_topSeparators decls EOF
+  | maybe_pragma_light decl opt_OBLOCKSEP decls EOF
     { as_frag $2 $4 }
 
 maybe_pragma_light:
@@ -215,7 +215,7 @@ decls:
   |   { [] }
   | SEMICOLON_SEMICOLON maybeDoc term
       { [mk_decl (Main $3) (rhs2 parseState 1 3) $2] }
-  | decl opt_topSeparators decls
+  | decl opt_OBLOCKSEP decls
       { ($1::$3) }
 
 decl:

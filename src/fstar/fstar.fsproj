@@ -28,10 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>..\examples\light-syntax\match.fst</StartArguments>
+    <StartArguments>--log_queries test.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>
-    </StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\FStar\examples\test\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -45,6 +44,10 @@
     <DocumentationFile>bin\Release\fstar.XML</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
+    <StartArguments>
+    </StartArguments>
+    <StartWorkingDirectory>
+    </StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
