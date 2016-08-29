@@ -139,7 +139,6 @@ let init () =
         ("unthrottle_inductives"        , Bool false);
         ("use_eq_at_higher_order"       , Bool false);
         ("use_hints"                    , Bool false);
-        ("use_native_int"               , Bool false);
         ("verify"                       , Bool true);
         ("verify_all"                   , Bool false);
         ("verify_module"                , List []);
@@ -216,7 +215,6 @@ let get_trace_error             ()      = lookup_opt "trace_error"              
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
-let get_use_native_int          ()      = lookup_opt "use_native_int"           as_bool
 let get_verify_all              ()      = lookup_opt "verify_all"               as_bool
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
@@ -586,12 +584,6 @@ let rec specs () : list<Getopt.opt> =
         "Use a previously recorded hints database for proof replay");
 
        ( noshort,
-        "use_native_int",
-        ZeroArgs (fun () -> Bool true),
-        "Extract the 'int' type to platform-specific native int;
-        (You will need to link the generated code with the appropriate version of the prims library)");
-
-       ( noshort,
         "verify_all",
         ZeroArgs (fun () -> Bool true),
         "With automatic dependencies, verify all the dependencies, not just the files passed on the command-line.");
@@ -839,7 +831,6 @@ let universes                    () = (not (get_stratified()))
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
-let use_native_int               () = get_use_native_int              ()
 let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
 let warn_cardinality             () = get_cardinality() = "warn"

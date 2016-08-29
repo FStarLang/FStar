@@ -473,11 +473,7 @@ end
 s
 end
 | FStar_Extraction_ML_Syntax.MLC_Int (s, None) -> begin
-if (FStar_Options.use_native_int ()) then begin
-s
-end else begin
 (Prims.strcat "(Prims.parse_int \"" (Prims.strcat s "\")"))
-end
 end
 | FStar_Extraction_ML_Syntax.MLC_Float (d) -> begin
 (FStar_Util.string_of_float d)
