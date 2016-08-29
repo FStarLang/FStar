@@ -219,7 +219,8 @@ let rec tc_fold_interleave acc remaining =
           tc_one_file dsenv env intf impl
 
         | Some iname -> 
-          FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
+          if Options.debug_any () then
+            FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
           let caption = "interface: " ^ iname in
           //push a new solving context, so that we can blow away implementation details below
           let dsenv', env' = push_context (dsenv, env) caption in
