@@ -733,9 +733,10 @@ val poly1305_update:
     (requires (fun h -> live h msg /\ norm h acc /\ norm h r
       /\ poly (reveal current_log) (sel_elem h r) = sel_elem h acc // Incremental step of poly
       ))
-    (ensures (fun h0 updated_log h1 -> norm h1 acc /\ norm h0 r
+    (ensures (fun h0 updated_log h1 -> norm h1 acc /\ norm h0 r /\ live h0 msg
       /\ modifies_1 acc h0 h1
-      /\ reveal updated_log = (reveal current_log) @| Seq.create 1 (sel_word h1 msg)
+      /\ Seq.length (sel_word h0 msg) = 16 // Required in the 'log' invariant
+      /\ reveal updated_log == (reveal current_log) @| Seq.create 1 (sel_word h0 msg)
       /\ sel_elem h1 acc = poly (reveal updated_log) (sel_elem h0 r) ))
 let poly1305_update log msg acc r =
   push_frame();
@@ -769,7 +770,11 @@ let rec poly1305_loop log msg acc r ctr =
     poly1305_loop (Ghost.elift2 update_log log word) msg acc r (ctr-|1ul)
   end
 
-(* Performs the last step if there is an incomplete block *)
+(**
+   Performs the last step if there is an incomplete block 
+   NB: Not relevant for AEAD-ChachaPoly which only uses complete blocks of 16 bytes, hence
+       only the 'update' and 'loop' functions are necessary there
+   *)
 val poly1305_last: msg:wordB -> acc:elemB{disjoint msg acc} ->
   r:elemB{disjoint msg r /\ disjoint acc r} -> len:u32{w len <= length msg} ->
   STL unit
@@ -828,6 +833,9 @@ let poly1305_finish tag acc s =
   trunc1305 acc tag;
   add_word tag s
 
+(**
+   Computes the poly1305 mac function on a buffer
+   *)
 val poly1305_mac: tag:wordB{length tag >= 16} -> msg:bytes{disjoint tag msg} ->
   len:u32{w len <= length msg} -> key:bytes{length key = 32 /\ disjoint msg key /\ disjoint tag key} ->
   STL unit

@@ -8,6 +8,8 @@ open FStar.HST
 open FStar.Buffer
 open FStar.Classical
 
+#set-options "--initial_fuel 0 --max_fuel 0"
+
 val lemma_sub_quantifiers: #a:Type -> h:mem -> b:buffer a -> b':buffer a -> i:FStar.UInt32.t -> len:FStar.UInt32.t{v len <= length b /\ v i + v len <= length b} -> Lemma
   (requires (live h b /\ live h b' /\ Seq.slice (as_seq h b) (v i) (v i + v len) == as_seq h b'))
   (ensures  (live h b /\ live h b' /\ Seq.slice (as_seq h b) (v i) (v i + v len) == as_seq h b'
@@ -51,3 +53,45 @@ val lemma_upd_quantifiers: #a:Type -> h0:mem -> h1:mem -> b:buffer a -> n:FStar.
   [SMTPat (as_seq h1 b); SMTPat (Seq.upd (as_seq h0 b) (v n) z)]
 let lemma_upd_quantifiers #a h0 h1 b n z =
   assert(forall (i:nat). i < length b ==> get h1 b i == Seq.index (as_seq h1 b) i)
+
+val lemma_blit_quantifiers: #a:Type -> h0:mem -> h1:mem -> b:buffer a -> bi:UInt32.t{v bi <= length b} ->
+  b':buffer a{disjoint b b'} -> bi':UInt32.t{v bi' <= length b'} -> len:UInt32.t{v bi+v len <= length b /\ v bi'+v len <= length b'} -> Lemma
+    (requires (live h0 b /\ live h0 b' /\ live h1 b'
+      /\ Seq.slice (as_seq h1 b') (v bi') (v bi'+v len) == Seq.slice (as_seq h0 b) (v bi) (v bi+v len)
+      /\ Seq.slice (as_seq h1 b') 0 (v bi') == Seq.slice (as_seq h0 b') 0 (v bi')
+      /\ Seq.slice (as_seq h1 b') (v bi'+v len) (length b') == Seq.slice (as_seq h0 b') (v bi'+v len) (length b')
+    ))
+    (ensures  (live h0 b /\ live h0 b' /\ live h1 b'
+      /\ (forall (i:nat). {:pattern (get h1 b' (v bi'+i))} i < v len ==> get h1 b' (v bi'+i) == get h0 b (v bi+i))
+      /\ (forall (i:nat). {:pattern (get h1 b' i)} ((i >= v bi' + v len /\ i < length b') \/ i < v bi') ==> get h1 b' i == get h0 b' i)
+))
+let lemma_blit_quantifiers #a h0 h1 b bi b' bi' len =  
+  let lemma_post_1 (j:nat) = j < v len ==> get h1 b' (v bi'+j) == get h0 b (v bi+j) in
+  let qj_1 : j:nat -> Lemma (lemma_post_1 j)
+    = fun j -> assert (j < v len ==> Seq.index (Seq.slice (as_seq h1 b') (v bi') (v bi'+v len)) j
+  	== Seq.index (Seq.slice (as_seq h0 b) (v bi) (v bi+v len)) j) in
+  let lemma_post_2 (j:nat) = ((j >= v bi' + v len /\ j < length b') \/ j < v bi') 
+    ==> get h1 b' j == get h0 b' j in
+  let qj_2 : j:nat -> Lemma (lemma_post_2 j)
+    = fun j -> assert (j < v bi' ==> Seq.index (Seq.slice (as_seq h1 b') 0 (v bi')) j
+	== Seq.index (Seq.slice (as_seq h0 b') 0 (v bi')) j);
+	assert ((j >= v bi' + v len /\ j < length b') 
+	  ==> Seq.index (Seq.slice (as_seq h1 b') (v bi'+v len) (length b')) (j - (v bi'+v len))
+	      == Seq.index (Seq.slice (as_seq h0 b') (v bi'+v len) (length b')) (j - (v bi'+v len)))
+	in
+  Classical.forall_intro #_ #lemma_post_1 qj_1;
+  Classical.forall_intro #_ #lemma_post_2 qj_2
+  
+
+(* Equality predicate between buffers wih quantifiers *)
+val eq_lemma: #a:Type -> h:mem -> b:buffer a{live h b} -> h':mem -> b':buffer a{live h' b'} -> Lemma
+  (requires (equal h b h' b'))
+  (ensures  (length b = length b' /\ (forall (i:nat). {:pattern (get h b i)} 
+    i < length b ==> get h b i == get h' b' i)))
+  [SMTPat (equal h b h' b')]
+let eq_lemma #a h b h' b' =
+  assert(Seq.length (as_seq h b) = Seq.length (as_seq h' b')); 
+  let lemma_post (j:nat) = j < length b ==> get h b j == get h' b' j in
+  let qj : j:nat -> Lemma (lemma_post j) = fun j ->
+    assert(j < length b ==> Seq.index (as_seq h b) j == Seq.index (as_seq h' b') j) in
+  Classical.forall_intro #_ #lemma_post qj

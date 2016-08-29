@@ -88,10 +88,10 @@ let rec fsum_index a a_idx b b_idx len ctr =
       let z = ai +^ bi in
       upd a (a_idx+|i) z; 
       let h1 = HST.get() in
-      eq_lemma_1 h0 h1 a b; 
+      (* eq_lemma_1 h0 h1 a b;  *)
       fsum_index a a_idx b b_idx len (ctr+|1ul);
       let h2 = HST.get() in
-      eq_lemma_1 h1 h2 a b;
+      (* eq_lemma_1 h1 h2 a b; *)
       assert(isSum h1 h2 (w a_idx) (w b_idx) (w len) (w ctr + 1) a b);
       assert(isSum h0 h2 (w a_idx) (w b_idx) (w len) (w ctr + 1) a b); 
       assert(v (get h2 a (w a_idx + w ctr)) = v (get h0 a (w a_idx + w ctr)) + v (get h0 b (w b_idx + w ctr)) );
@@ -251,10 +251,10 @@ let rec scalar_multiplication_aux res a s ctr =
     let resi = ai *^ s in
     upd res i resi; 
     let h1 = HST.get() in
-    eq_lemma_1 h0 h1 res a;
+    (* eq_lemma_1 h0 h1 res a; *)
     scalar_multiplication_aux res a s i;
     let h2 = HST.get() in
-    eq_lemma_1 h1 h2 res a;
+    (* eq_lemma_1 h1 h2 res a; *)
     lemma_helper_03 h0 h1 h2 res a s ctr 
   end
 
@@ -446,14 +446,14 @@ val norm_lemma: h0:heap -> h1:heap -> a:bigint -> tmp:bigint{disjoint a tmp} -> 
     (requires (norm h0 a /\ live h0 tmp /\ modifies_1 tmp h0 h1))
     (ensures (norm h1 a))
 let norm_lemma h0 h1 a tmp = 
-  eq_lemma_1 h0 h1 tmp a;
+  (* eq_lemma_1 h0 h1 tmp a; *)
   ()
 
 val bound27_lemma: h0:heap -> h1:heap -> a:bigint -> tmp:bigint{disjoint a tmp} -> Lemma
     (requires (bound27 h0 a /\ live h0 tmp /\ modifies_1 tmp h0 h1))
     (ensures (bound27 h1 a))
 let bound27_lemma h0 h1 a tmp = 
-  eq_lemma_1 h0 h1 tmp a;
+  (* eq_lemma_1 h0 h1 tmp a; *)
   ()
   
 val aux_lemma_4: unit -> Lemma (pow2 3 = 8)
@@ -509,7 +509,7 @@ val multiplication_step_lemma_001: h0:heap -> h1:heap -> a:bigint -> b:bigint ->
      (ensures ( (live h1 c) /\ (live h1 tmp) /\ (ctr+norm_length <= length c)
        /\ willNotOverflow h1 ctr 0 norm_length 0 c tmp ))
 let multiplication_step_lemma_001 h0 h1 a b ctr c tmp = 
-  eq_lemma_1 h0 h1 tmp c;
+  (* eq_lemma_1 h0 h1 tmp c; *)
   cut (live h1 c /\ v (get h0 b ctr) < pow2 (templ 0)); 
   cut (forall (i:nat). {:pattern (get h1 c)} i < norm_length ==> i+ctr < length c); 
   cut (forall (i:nat). {:pattern (v (get h0 a i))} i < norm_length ==> (v (get h0 a i) < pow2 27));
@@ -597,7 +597,7 @@ let max_value_lemma h0 h1 h2 a b ctr c tmp =
   cut(forall (i:nat). {:pattern (v (get h2 c (i+ctr)))} i < norm_length ==> v (get h2 c (i+ctr)) = v (get h1 c (i+ctr)) + v (get h1 tmp i));
   cut (forall (i:nat). {:pattern (v (get h2 c i))} i < ctr ==> v (get h2 c (0+i)) = v (get h1 c (0+i)));
   cut (forall (i:nat). {:pattern (v (get h2 c i))} i < length c - norm_length - ctr ==> v (get h2 c ((norm_length+ctr)+i)) = v (get h1 c ((norm_length+ctr)+i)));
-  eq_lemma_1 h0 h1 tmp c;
+  (* eq_lemma_1 h0 h1 tmp c; *)
   cut (forall (i:nat). {:pattern (v (get h1 c i))} i < length c ==> v (get h1 c i) = v (get h0 c i));
   cut (forall (i:nat). {:pattern (v (get h1 tmp i))}
     i < norm_length ==> v (get h1 tmp i) = v (get h0 a i) * v (get h0 b ctr));
@@ -622,12 +622,12 @@ val standardized_lemma: h0:heap -> h1:heap -> h2:heap -> a:bigint -> c:bigint{di
      (ensures (bound27 h0 a /\ bound27 h2 a /\ live h0 c /\ live h1 tmp /\ live h2 tmp
        /\ modifies_2 c tmp h0 h2))
 let standardized_lemma h0 h1 h2 a c tmp = 
-  eq_lemma_1 h1 h2 c tmp; 
-  eq_lemma_1 h0 h1 tmp c;
+  (* eq_lemma_1 h1 h2 c tmp;  *)
+  (* eq_lemma_1 h0 h1 tmp c; *)
   lemma_modifies_1_1 tmp c h0 h1 h2;
   lemma_modifies_2_refl tmp c h0 h2;
   assert(modifies_2 tmp c h0 h2);
-  eq_lemma_2 h0 h2 c tmp a;
+  (* eq_lemma_2 h0 h2 c tmp a; *)
   ()
 
 val standardized_lemma2: h0:heap -> h1:heap -> h2:heap -> a:bigint -> c:bigint{disjoint a c} -> 
@@ -637,12 +637,12 @@ val standardized_lemma2: h0:heap -> h1:heap -> h2:heap -> a:bigint -> c:bigint{d
      (ensures (norm h0 a /\ norm h2 a /\ live h0 c /\ live h1 tmp /\ live h2 tmp
        /\ modifies_2 c tmp h0 h2))
 let standardized_lemma2 h0 h1 h2 a c tmp = 
-  eq_lemma_1 h1 h2 c tmp; 
-  eq_lemma_1 h0 h1 tmp c;
+  (* eq_lemma_1 h1 h2 c tmp;  *)
+  (* eq_lemma_1 h0 h1 tmp c; *)
   lemma_modifies_1_1 tmp c h0 h1 h2;
   lemma_modifies_2_refl tmp c h0 h2;
   assert(modifies_2 tmp c h0 h2);
-  eq_lemma_2 h0 h2 c tmp a;
+  (* eq_lemma_2 h0 h2 c tmp a; *)
   ()
 
 #reset-options "--z3timeout 500"
@@ -674,7 +674,7 @@ let multiplication_step_lemma_02 h0 h1 h2 a b ctr c tmp =
   cut (forall (i:nat). i < ctr ==> v (get h1 c (0+i)) = v (get h2 c (0+i)));
   cut (forall (i:nat). i < length c - norm_length - ctr ==> v (get h1 c ((norm_length+ctr)+i)) = v (get h2 c ((norm_length+ctr)+i)));
   eval_partial_eq_lemma h1 h2 c c (norm_length+ctr) (2*norm_length-1);
-  eq_lemma_1 h0 h1 tmp c;
+  (* eq_lemma_1 h0 h1 tmp c; *)
   cut (forall (i:nat). i < 2*norm_length-1 ==> get h1 c i = get h0 c i);
   eval_eq_lemma h0 h1 c c (2*norm_length-1);
   eval_eq_lemma h0 h1 c c (norm_length+ctr); 
@@ -716,15 +716,15 @@ let multiplication_step_p1 a b ctr c tmp =
   let h0 = HST.get() in
   multiplication_step_0 a b ctr c tmp;
   let h1 = HST.get() in
-  eq_lemma_1 h0 h1 tmp a;
-  eq_lemma_1 h0 h1 tmp b;  
-  eq_lemma_1 h0 h1 tmp c;  
+  (* eq_lemma_1 h0 h1 tmp a; *)
+  (* eq_lemma_1 h0 h1 tmp b;   *)
+  (* eq_lemma_1 h0 h1 tmp c;   *)
   multiplication_step_lemma_001 h0 h1 a b (w ctr) c tmp; 
   fsum_index c ctr tmp 0ul nlength 0ul;
   let h2 = HST.get() in 
-  eq_lemma_1 h1 h2 c a;
-  eq_lemma_1 h1 h2 c b;
-  eq_lemma_1 h1 h2 c tmp;
+  (* eq_lemma_1 h1 h2 c a; *)
+  (* eq_lemma_1 h1 h2 c b; *)
+  (* eq_lemma_1 h1 h2 c tmp; *)
   lemma_helper_70 h1 h2 ctr c;
   multiplication_step_lemma_02 h0 h1 h2 a b (w ctr) c tmp
 
@@ -799,8 +799,8 @@ val multiplication_aux_lemma: h0:heap -> h1:heap -> a:bigint -> b:bigint ->
 	/\ maxValue h1 c (length c) <= (norm_length - ctr + 1) * pow2 53
 	/\ eval h1 c (2*norm_length-1) = eval h1 a (norm_length) * eval h1 b (norm_length - ctr + 1) ))
 let multiplication_aux_lemma h0 h1 a b ctr c tmp =
-  eq_lemma_2 h0 h1 c tmp a;
-  eq_lemma_2 h0 h1 c tmp b;
+  (* eq_lemma_2 h0 h1 c tmp a; *)
+  (* eq_lemma_2 h0 h1 c tmp b; *)
   eval_eq_lemma h0 h1 a a norm_length;
   eval_eq_lemma h0 h1 b b norm_length;
   eval_eq_lemma h0 h1 b b (norm_length - ctr);
@@ -828,8 +828,8 @@ val multiplication_aux_lemma_2: h0:heap -> h1:heap -> h2:heap -> a:bigint -> b:b
        /\ eval h2 c (2*norm_length-1) = eval h0 a (norm_length) * eval h0 b (norm_length) ))
 let multiplication_aux_lemma_2 h0 h1 h2 a b ctr c tmp =
   lemma_modifies_2_trans c tmp h0 h1 h2;
-  eq_lemma_2 h0 h1 c tmp a;
-  eq_lemma_2 h0 h1 c tmp b;
+  (* eq_lemma_2 h0 h1 c tmp a; *)
+  (* eq_lemma_2 h0 h1 c tmp b; *)
   eval_eq_lemma h0 h1 a a norm_length; 
   eval_eq_lemma h0 h1 b b norm_length
 
@@ -866,7 +866,7 @@ val helper_lemma_13: h0:heap -> h1:heap -> a:bigint ->
     (requires (bound27 h0 a /\ modifies_0 h0 h1))
     (ensures (bound27 h0 a /\ bound27 h1 a /\ live h1 a /\ eval h0 a norm_length = eval h1 a norm_length))
 let helper_lemma_13 h0 h1 a =  
-  eq_lemma_0 h0 h1 a;
+  (* eq_lemma_0 h0 h1 a; *)
   eval_eq_lemma h0 h1 a a norm_length;
   ()
 
@@ -875,7 +875,7 @@ val helper_lemma_131: h0:heap -> h1:heap -> a:bigint ->
     (requires (norm h0 a /\ modifies_0 h0 h1))
     (ensures (norm h0 a /\ norm h1 a /\ live h1 a /\ eval h0 a norm_length = eval h1 a norm_length))
 let helper_lemma_131 h0 h1 a =  
-  eq_lemma_0 h0 h1 a;
+  (* eq_lemma_0 h0 h1 a; *)
   eval_eq_lemma h0 h1 a a norm_length;
   ()
 
@@ -883,7 +883,7 @@ val helper_lemma_15: h0:heap -> h1:heap -> c:bigint{length c >= 2*norm_length-1}
     (requires (live h0 c /\ null h0 c /\ modifies_0 h0 h1))
     (ensures (live h1 c /\ null h1 c /\ maxValue h1 c (length c) = 0 /\ eval h1 c (2*norm_length-1) = 0))
 let helper_lemma_15 h0 h1 c =
-  eq_lemma_0 h0 h1 c;
+  (* eq_lemma_0 h0 h1 c; *)
   eval_null h1 c (2*norm_length - 1); 
   max_value_of_null_lemma h1 c (length c)
 	 
@@ -948,17 +948,17 @@ let multiplication_lemma_2 h0 h1 h2 c a b tmp =
 let lemma_mult_0 h0 h1 (a:bigint) (c:bigint) : Lemma
   (requires (bound27 h0 a /\ disjoint a c /\ modifies_1 c h0 h1 /\ live h0 c))
   (ensures  (bound27 h1 a))
-  = eq_lemma_1 h0 h1 c a
+  = ()(* eq_lemma_1 h0 h1 c a *)
 
 let lemma_mult_1 h0 h1 (a:bigint) (c:bigint) : Lemma
   (requires (norm h0 a /\ disjoint a c /\ modifies_1 c h0 h1 /\ live h0 c))
   (ensures  (norm h1 a))
-  = eq_lemma_1 h0 h1 c a
+  = () (* eq_lemma_1 h0 h1 c a *)
 
 let lemma_mult_2 h0 h1 (c:bigint{length c >= 2*norm_length-1}) : Lemma
   (requires (live h0 c /\ frameOf c <> h0.tip /\ popped h0 h1))
   (ensures  (live h0 c /\ live h1 c /\ maxValue h1 c (length c) = maxValue h0 c (length c) /\ eval h1 c (2*norm_length-1) = eval h0 c (2*norm_length-1) ))
-  = eq_lemma_popped h0 h1 c; 
+  = (* eq_lemma_popped h0 h1 c;  *)
     eval_eq_lemma h0 h1 c c (2*norm_length-1);
     maxValue_eq_lemma h0 h1 c c (length c)
 
@@ -977,16 +977,16 @@ let multiplication c a b =
   let hinit = HST.get() in
   push_frame ();
   let h0 = HST.get() in
-  eq_lemma_fresh hinit h0 a;
-  eq_lemma_fresh hinit h0 b;
-  eq_lemma_fresh hinit h0 c;
+  (* eq_lemma_fresh hinit h0 a; *)
+  (* eq_lemma_fresh hinit h0 b; *)
+  (* eq_lemma_fresh hinit h0 c; *)
   eval_eq_lemma hinit h0 a a norm_length;
   eval_eq_lemma hinit h0 b b norm_length;
   let tmp = create 0UL nlength in 
   let h1 = HST.get() in
-  eq_lemma_0 h0 h1 a; 
-  eq_lemma_0 h0 h1 b; 
-  eq_lemma_0 h0 h1 c;
+  (* eq_lemma_0 h0 h1 a;  *)
+  (* eq_lemma_0 h0 h1 b;  *)
+  (* eq_lemma_0 h0 h1 c; *)
   multiplication_lemma_1 h0 h1 c a b;
   multiplication_aux a b nlength c tmp; 
   let h2 = HST.get() in 
@@ -994,7 +994,7 @@ let multiplication c a b =
   pop_frame ();
   let hfin = HST.get() in
   modifies_popped_1 c hinit h0 h2 hfin;  
-  eq_lemma_popped h2 hfin c;
+  (* eq_lemma_popped h2 hfin c; *)
   lemma_mult_0 hinit hfin a c;
   lemma_mult_1 hinit hfin b c;
   lemma_mult_2 h2 hfin c
@@ -1601,10 +1601,10 @@ let freduce_coefficients b =
   let hinit = HST.get() in
   push_frame();
   let h0 = HST.get() in
-  eq_lemma_fresh hinit h0 b;
+  (* eq_lemma_fresh hinit h0 b; *)
   let tmp = create 0UL (U32.mul 2ul nlength-|1ul) in
   let h1 = HST.get() in
-  eq_lemma_0 h0 h1 b;
+  (* eq_lemma_0 h0 h1 b; *)
   eval_eq_lemma h0 h1 b b norm_length;
   blit b 0ul tmp 0ul nlength;
   let h2 = HST.get() in
@@ -1623,7 +1623,7 @@ let freduce_coefficients b =
   pop_frame();
   let hfin = HST.get() in
   modifies_popped_1 b hinit h0 h' hfin;
-  eq_lemma_popped h' hfin b;
+  (* eq_lemma_popped h' hfin b; *)
   ()
 
 (*** Finalization ***)
