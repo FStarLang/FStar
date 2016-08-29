@@ -281,6 +281,8 @@ just run the following command:
 
         $ make -C src/ocaml-output -j 15
 
+The option `-j 15` controls the number of cores to be used in parallel build. This is a relatively standard unix feature.
+
 **Note:** On Windows this generates a native F* binary, that is, a binary that
 does *not* depend on `cygwin1.dll`, since the installer above uses a
 *native* Windows port of OCaml.  Cygwin is just there to provide `make` and
