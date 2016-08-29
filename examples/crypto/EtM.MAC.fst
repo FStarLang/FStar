@@ -10,7 +10,7 @@ open FStar.Monotonic.RRef
 open Platform.Bytes
 open CoreCrypto
 
-type text = bytes
+type text = EtM.CPA.cipher 
 
 let keysize   = 1
 let blocksize = keysize
@@ -83,8 +83,9 @@ let mac k m =
 assume val uf_cma : bool
 
 val verify: k:key -> m:msg -> t:tag -> ST bool
-  (requires (fun _ -> True))
+  (requires (fun h ->  Map.contains h k.region ))
   (ensures  (fun m0 b m1 ->
+     modifies_none m0 m1 /\
      (let log = m_sel m0 k.log in
       (uf_cma /\ b) ==> is_Some (seq_find (fun mt -> mt = (m,t)) log))))
 
