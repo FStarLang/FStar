@@ -2,7 +2,6 @@ module Crypto.Symmetric.Poly1305.MAC
 
 (* Provides idealization layer for multiplicative MACs; 
    could use the same code for both POLY1305 and GCM.
-   
 *)
 
 open FStar.HyperHeap
@@ -11,31 +10,28 @@ open FStar.HST
 open FStar.Ghost
 open FStar.UInt64
 open FStar.Buffer
-
-// not working?
-//open FStar.HST.Monotonic.RRef
+open FStar.HST.Monotonic.RRef
 
 open Crypto.Symmetric.Poly1305.Spec
 open Crypto.Symmetric.Poly1305 
 // avoid?
 
+module HH = FStar.HyperHeap
+
 let norm = Crypto.Symmetric.Poly1305.Bigint.norm 
 
-// also used in miTLS ('model' may be better than 'idea'); could be loaded from another module.
+// also used in miTLS ('model' may be better than 'ideal'); could be loaded from another module.
 // this flag enables conditional idealization by keeping additional data,
 // - this should not affect the code behavior
 // - this may cause the code not to compile to Kremlin/C.
 let ideal = true 
-
-
-module HH = FStar.HyperHeap
 
 // to be rewired. 
 // In AEAD_ChaCha20: id * nonce
 assume new abstract type id
 assume val authId: id -> Tot bool
 
-type bytes = buffer (UInt8.t)
+type bytes = buffer UInt8.t
 
 type lbytes (n:nat) = b:bytes{length b = n}
 
@@ -60,14 +56,13 @@ type log_2 = // only when ideal
 
 assume val random: n:nat -> Tot (lbytes n)
 
-type log = option(Seq.seq msg * word_16)
+type log = option (Seq.seq elem * word_16)
 
-(* TODO: restore monotonicity 
 let log_cmp (a:log) (b:log) =
   match a,b with
-  | Some (l,t) , Some (l',t') -> Seq.eq l l' && t = t'
-  | None, _                   -> true
-  | _                         -> false
+  | Some (l,t) , Some (l',t') -> l == l' /\ t == t'
+  | None, _                   -> True
+  | _                         -> False
 
 val log_cmp_reflexive: (a:log) -> Lemma
   (requires True)
@@ -83,13 +78,11 @@ let log_cmp_transitive a b c = ()
 val log_cmp_monotonic: unit -> Lemma (monotonic log log_cmp)
 let log_cmp_monotonic _ = ()
 
-type slog rid = (if ideal then m_rref rid log log_cmp else unit)
-*) 
-type slog rid = (if ideal then rref rid log else unit)
+let slog rid : Type0 = if ideal then m_rref rid log log_cmp else unit
 
 // the sequence of hashed elements is conditional, but not ghost
 // this will require changing e.g. the type of poly1305_add
-let ilog : Type0 = if ideal then Seq.seq msg else unit
+let ilog : Type0 = if ideal then Seq.seq elem else unit
 
 assume val log_0: ilog
 //let log_0 : ilog = if ideal then let l:ilog = Seq.createEmpty #elem in l else ()

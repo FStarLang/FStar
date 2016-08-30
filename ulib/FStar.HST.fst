@@ -114,15 +114,21 @@ assume val ralloc: #a:Type -> i:HH.rid -> init:a -> ST (ref a)
     (requires (fun m -> is_eternal_region i))
     (ensures (ralloc_post i init))
 
+inline let assign_post (#a:Type) (r:reference a) (v:a) m0 (_u:unit) m1 =
+  m0 `contains` r /\ m1 == HyperStack.upd m0 r v
+
 // assigns, provided that the reference exists
 assume val op_Colon_Equals: #a:Type -> r:reference a -> v:a -> STL unit
   (requires (fun m -> m `contains` r))
-  (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == HyperStack.upd m0 r v))
+  (ensures (assign_post r v))
+
+inline let deref_post (#a:Type) (r:reference a) m0 x m1 =
+  m1==m0 /\ x==HyperStack.sel m0 r
 
 // dereferences, provided that the reference exists
 assume val op_Bang: #a:Type -> r:reference a -> STL a
   (requires (fun m -> m `contains` r))
-  (ensures (fun s0 v s1 -> s1==s0 /\ v==HyperStack.sel s0 r))
+  (ensures (deref_post r))
 
 module G = FStar.Ghost
 
