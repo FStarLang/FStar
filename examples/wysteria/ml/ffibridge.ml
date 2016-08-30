@@ -30,7 +30,8 @@ let compose_v_opaques m1 m2 v1 v2 = match (v1, v2) with
   | V_opaque (t1, v1', m1, s1, c1, sps1), V_opaque (_, v2', _, _, _, _) ->
     D_v (compose_opaque_meta m1 m2, (V_opaque (t1, (cast c1) (cast v1') (cast v2'), compose_opaque_meta m1 m2, s1, c1, sps1)))
     
-let exec_ffi (n:int) (ffi_fn:Obj.t) (l:dvalue list) (ffi_inj:Obj.t) :dvalue =
+let exec_ffi (n:Z.t) (ffi_fn:Obj.t) (l:dvalue list) (ffi_inj:Obj.t) :dvalue =
+  let n = Z.to_int n in
   let f = cast ffi_fn in
   let l = process_list l in
   let ffi_ret =

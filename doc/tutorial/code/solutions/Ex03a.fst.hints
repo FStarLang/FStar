@@ -1,0 +1,27 @@
+[
+  "Âõœ›t U\u0014ý_G™êl¸+",
+  [
+    [
+      "Ex03a.factorial",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_83752f706b2a3b6e453989c3c43318d8_0",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [
+      "Ex03a.factorial",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ]
+  ]
+]

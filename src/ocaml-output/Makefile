@@ -9,7 +9,7 @@ MENHIR=ocamlyacc
 OCAMLC=ocamlfind ocamlc $(OPTIONS)
 OCAMLOPT=ocamlfind ocamlopt $(OPTIONS)
 OCAMLDEP=ocamldep
-INCLUDES=-I $(FSTAR_HOME)/lib/ml/native_int -I $(FSTAR_HOME)/lib/ml/ # all relevant -I options here
+INCLUDES=-I $(FSTAR_HOME)/lib/ml/ # all relevant -I options here
 OCAMLFLAGS=$(INCLUDES)    -w -8  # add other options for ocamlc here
 OCAMLOPTFLAGS=$(INCLUDES) -w -8  # add other options for ocamlopt here
 
@@ -55,8 +55,9 @@ endif
 
 # FIXME this target is always rebuilt, regardless of whether the sources have
 # changed or not
+# NOTE: once we move to ulib, the -j 1 can disappear.
 all:
-	make -j 1 -C $(FSTAR_HOME)/lib/ml PRIMS_DIR=native_int
+	make -j 1 -C $(FSTAR_HOME)/lib/ml
 	$(MAKE) prep
 	$(MAKE) depend
 	$(MAKE) fstar.exe
@@ -133,9 +134,9 @@ install: all
         # Install the binary
 	$(INSTALL_EXEC) -m 755 -D -T fstar.exe $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
-	$(call install_dir,lib,lib/fstar)
+	$(call install_dir,ulib,lib/fstar)
 	$(call install_dir,examples,share/fstar/examples)
-	$(call install_dir,contrib,share/fstar/contrib)
+	$(call install_dir,ucontrib,share/fstar/contrib)
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial first
 	$(MAKE) -C ../../doc/tutorial

@@ -1,108 +1,63 @@
-FSTAR_HOME=../../../..
+VERFILES=Ex01a.fst \
+Ex02a.fst \
+Ex03a.fst \
+Ex03b.fst \
+Ex03c.fst \
+Ex04a.fst \
+Ex04b.fst \
+Ex04c.fst \
+Ex04e.fst \
+Ex04f.fst \
+Ex04g.fst \
+Ex04h.fst \
+Ex05a.fst \
+Ex05b.fst \
+Ex06a.fst \
+Ex06b.fst \
+Ex06e.fst \
+Ex07a.fst \
+Ex07b.fst \
+Ex07c.fst \
+Ex07d.fst \
+Ex10a.fst \
+Ex10b.fst \
+Ex12a.Cap.fst \
+Ex12d.Pad.fst \
+Ex12e.Pad.fst \
+Ex12f.TMAC.fst \
+Ex12g.TMAC2.fst 
+
+VERFILES_HH=Ex11a.fst
+
+FSTAR_HOME=../../../../
+HINTS_ENABLED=--use_hints  # CH: seems like overkill to me
 include ../Makefile.include
 
-verify-ex8a-acls:  ex8a-acls.fst 
-	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fsti partialmap.fst FStar.ST.fst FStar.List.fst ) $^
-
-verify-ex9a-acls-cap: ../solutions/ex9a-mac.fst ../solutions/ex9a-acls2.fst ex9a-acls-cap.fst
-	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fsti partialmap.fst FStar.ST.fst array-realized.fst ) ../../../examples/unit-tests/FStar.List.fst $^
-
-verify-ex9b-format: ex9b-format.fst
-	$(FSTAR) $(SECLIB) $^
-
-verify-ex9c-format: ex9c-format.fst
-	$(FSTAR) $(SECLIB) $^
-
-verify-ex9d-padding: ex9d-padding.fst
-	$(FSTAR) $(SECLIB) $^
-
-verify-ex9e-padding: ex9e-padding.fst
-	$(FSTAR) $(SECLIB) $^
-
-verify-ex9f-padding: ex9f-padding.fst
-	$(FSTAR) $(SECLIB) $^
-
-verify-ex9g-padding: ex9g-padding.fst
-	$(FSTAR) $(SECLIB) $^
-
-verify-ex10a-acls: ex10a-acls.fst
-	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst)  $^
+HYPERHEAP=$(FSTAR_HOME)/ulib/hyperheap
 
 verify-%: __force__
-	$(FSTAR) $*.fst
+	$(FSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst $*
 
-verify-security: verify-ex9b-format verify-ex9c-format verify-ex9d-padding verify-ex9e-padding verify-ex9f-padding verify-ex9g-padding
+verify_hh-%: __force__
+	$(FSTAR) --include $(HYPERHEAP) $*
 
-## Extracting and compiling the ACL example using OCaml -- the simple way ##
 
-SUPPORT_FILES=prims.ml FStar_All.ml
+all: uall sall Ex01a-ocaml
 
-SUPPORT=$(addprefix $(FSTAR_HOME)/lib/ml/, $(SUPPORT_FILES))
+sall:
 
-extract-acl:
-	fstar.exe  --codegen OCaml ex1a-safe-read-write.fst
-	cp $(SUPPORT) .    # copying these things just to make ocamlfind happy
+uall: $(VERFILES:%=verify-%) $(VERFILES_HH:%=verify_hh-%)
 
-GEN_ML_FILES = FileName.ml ACLs.ml UntrustedClientCode.ml
-ML_FILES = FileIO.ml $(GEN_ML_FILES)
 
-OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g -w -26
+# Importing targets for simplified extraction to Ocaml
 
-acls-ocaml.exe: demo
-	make clean-acl
-	make extract-acl
-	$(OCAMLOPT) -o acls-ocaml.exe $(SUPPORT_FILES) $(ML_FILES) main.ml
+include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
-## Extracting and compiling the ACL example using OCaml -- the hard/better way ##
+out:
+	mkdir -p out
 
-OCAMLDEP=ocamldep
-
-deps-acl:
-	$(OCAMLDEP) *.ml > .depend
-
-acls.exe: $(SUPPORT_FILES:.ml=.cmx) $(ML_FILES:.ml=.cmx) main.ml
-	$(OCAMLOPT) -o acls.exe $^
-
-.SUFFIXES: .ml .cmx
-
-%.cmx: %.ml
-	$(OCAMLOPT) -c $<
-
-hard-acl: 
-	make clean-acl
-	make extract-acl
-	make deps-acl
-	make demo
-	make acls.exe
-
-## Extracting and compiling the ACL example using F#
-SUPPORT_FS_FILES=prims.fs all.fs
-LIB=$(FSTAR_HOME)/lib
-BIN=$(FSTAR_HOME)/bin
-
-ifeq ($(OS),Windows_NT)
-FSC     = fsc --mlcompatibility $(addprefix -r , $(FS_LIBS))
-else
-FSC     = fsharpc --mlcompatibility $(addprefix -r , $(FS_LIBS))
-endif
-
-FS_LIBS=$(BIN)/FSharp.PowerPack.dll
-SUPPORT_FS=$(addprefix $(FSTAR_HOME)/lib/fs/, $(SUPPORT_FS_FILES))
-GEN_FS_FILES = FileName.fs ACLs.fs UntrustedClientCode.fs
-FS_FILES=FileIO.fs $(GEN_FS_FILES)
-
-acls-fs.exe: demo ex1a-safe-read-write.fst
-	fstar.exe --codegen FSharp  ex1a-safe-read-write.fst
-	$(FSC) -o $@ $(SUPPORT_FS) $(FS_FILES) main.fs
-
-clean-acl:
-	rm -f $(GEN_FS_FILES) $(GEN_ML_FILES) *.cmi *.cmx *.o *~ acl acls-fs.exe acls-ocaml.exe acls.exe
-	rm -rf demo
-
-demo:__force__
-	mkdir -p demo
-	echo "demo tempfile" > demo/tempfile
-	echo "demo secret" > demo/passwd
-	echo "demo readme" > demo/README
-
--include .depend
+Ex01a-ocaml: out Ex01a.fst
+	$(MAKE) -C $(ULIB_ML)
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Ex01a.fst
+	$(OCAMLOPT) out/Ex01a.ml -o Ex01a.exe
+	-./Ex01a.exe

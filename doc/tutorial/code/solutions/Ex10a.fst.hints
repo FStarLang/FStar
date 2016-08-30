@@ -1,0 +1,166 @@
+[
+  "ÌNæ¿S(…ìr,Œ‡û$m\u0019",
+  [
+    [
+      "Ex10a.entry",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0
+    ],
+    [
+      "Ex10a.Readable._0",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Ex10a.Readable",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1055b8b6d0025865fa0d156d9b79fe21"
+      ],
+      0
+    ],
+    [
+      "Ex10a.Writable._0",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Ex10a.Writable",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9aab09198fcdb3c046533d1b6470083a"
+      ],
+      0
+    ],
+    [ "Ex10a.canWrite", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex10a.canWrite",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0
+    ],
+    [
+      "Ex10a.canRead",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Ex10a.Readable",
+        "disc_equation_Ex10a.Writable", "fuel_guarded_inversion_Ex10a.entry"
+      ],
+      0
+    ],
+    [
+      "Ex10a.canRead",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0
+    ],
+    [ "Ex10a.canRead_t", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex10a.canWrite_t", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex10a.grant", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex10a.grant",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Heap.SelUpd1", "equation_Ex10a.db",
+        "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
+        "ref_inversion"
+      ],
+      0
+    ],
+    [
+      "Ex10a.revoke",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Ex10a.entry_haseq" ],
+      0
+    ],
+    [ "Ex10a.revoke", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex10a.revoke",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Heap.SelUpd1", "equation_Ex10a.db",
+        "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
+        "ref_inversion",
+        "refinement_interpretation_Tm_refine_61824f39f1a5b2f9359cc4429f47ee80"
+      ],
+      0
+    ],
+    [
+      "Ex10a.revoke",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Ex10a.entry_haseq" ],
+      0
+    ],
+    [
+      "Ex10a.revoke",
+      5,
+      2,
+      1,
+      [ "@query", "assumption_Ex10a.entry_haseq" ],
+      0
+    ],
+    [
+      "Ex10a.safe_delete",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Heap.Equals",
+        "assumption_FStar.Heap.RestrictSel",
+        "assumption_FStar.Heap.SelConcat", "b2t_def",
+        "data_typing_intro_FStar.Heap.Ref@tok",
+        "data_typing_intro_Prims.V@tok", "eq2-interp",
+        "equation_Ex10a.canWrite_t", "equation_Ex10a.file",
+        "equation_FStar.List.Tot.test_sort", "equation_FStar.ST.modifies",
+        "equation_FStar.ST.modifies_none", "equation_Prims.l_not",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "function_token_typing_Prims.unit", "kinding_FStar.Heap.aref@tok",
+        "lemma_FStar.TSet.mem_complement", "lemma_FStar.TSet.mem_empty",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "proj_equation_Prims.V_v", "projection_inverse_Prims.V_v",
+        "ref_inversion", "string_inversion", "typing_FStar.Heap.concat",
+        "typing_FStar.Heap.restrict", "typing_FStar.TSet.complement",
+        "typing_FStar.TSet.empty", "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "Ex10a.test_acls",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_Ex10a.Readable",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Some",
+        "disc_equation_Prims.Some", "eq2-interp", "equation_Ex10a.canRead",
+        "equation_Ex10a.canRead_t",
+        "equation_with_fuel_FStar.List.Tot.tryFind.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.tryFind.fuel_instrumented",
+        "interpretation_Tm_abs_80a1794b5fbb6422b5f4d011b6357843",
+        "primitive_Prims.op_Equality",
+        "projection_inverse_Ex10a.Readable__0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v"
+      ],
+      0
+    ]
+  ]
+]

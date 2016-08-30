@@ -162,8 +162,9 @@ clean_ocaml_prep:
 extract_ocaml_prep: all_boot_fsts
 
 extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
-	$(FSTAR) --stratified --explicit_deps --use_native_int --eager_inference --lax --fs_typ_app \
-	  $(addprefix --no_extract ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
+	$(FSTAR) --stratified --explicit_deps --eager_inference \
+	  --lax --fs_typ_app --no_location_info $(addprefix --no_extract \
+	  ,$(NUM)) --odir ocaml-output --MLish $(FSTAROPTS) --codegen OCaml $^
 
 # Fastest way to refresh the snapshot (if it works)
 ocaml-fstar-ocaml:
@@ -206,7 +207,7 @@ fsharp-output/fstar.exe: $(addprefix ../lib/fs/, $(FS_SUPPORT_LIBS)) $(addprefix
 	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(FSCOTHERFLAGS) $^
 
 fs: $(BOOT_ALL)
-	$(FSTAR) --explicit_deps --use_native_int --eager_inference --MLish --lax --fs_typ_app \
+	$(FSTAR) --explicit_deps --eager_inference --MLish --lax --fs_typ_app \
 	  --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
 
 fsharp-output: nuget-restore
@@ -250,7 +251,7 @@ regressions:
 	+make -C ../examples
 	make -C ../examples/hello ocaml
 	make -C ../ucontrib/CoreCrypto/ml/ test
-	make -C ../examples/crypto clean rpc-test cnt-test
+	make -C ../examples/crypto clean #rpc-test cnt-test #removed until we can add it in uregressions
 	make -C ../examples/wysteria a.out distclean
 
 # Getting parallelism from this target

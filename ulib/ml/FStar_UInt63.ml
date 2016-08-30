@@ -62,9 +62,9 @@ let op_Less_Less_Hat = shift_left
 let op_Greater_Greater_Hat = shift_right
 let op_Equals_Hat = eq
 let op_Greater_Hat = gt
-let op_Greater_Equal_Hat = gte
-let op_Less_Hat = gt
-let op_Less_Equal_Hat = gte
+let op_Greater_Equals_Hat = gte
+let op_Less_Hat = lt
+let op_Less_Equals_Hat = lte
 
 let to_string s = Int64.to_string (Int64.logand (Int64.of_int s) (Int64.of_string "0x7fffffffffffffff"))
 let uint_to_t s = int_to_uint63 s

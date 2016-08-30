@@ -57,11 +57,11 @@ let op_Amp_Hat = logand
 let op_Bar_Hat = logor
 let op_Less_Less_Hat = shift_left
 let op_Greater_Greater_Hat = shift_right
-let op_Equal_Hat = eq
+let op_Equals_Hat = eq
 let op_Greater_Hat = gt
-let op_Greater_Equal_Hat = gte
-let op_Less_Hat = gt
-let op_Less_Equal_Hat = gte
+let op_Greater_Equals_Hat = gte
+let op_Less_Hat = lt
+let op_Less_Equals_Hat = lte
 
 let to_string = string_of_int
 let int_to_t s = s

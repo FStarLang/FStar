@@ -21,6 +21,8 @@ type ref (a:Type) = Heap.ref a
 type modifies (mods:set aref) (h:heap) (h':heap) =
     b2t (Heap.equal h' (concat h' (restrict h (complement mods))))
 
+type modifies_none (h0:heap) (h1:heap) = modifies TSet.empty h0 h1
+
 let st_pre = st_pre_h heap
 let st_post a = st_post_h heap a
 let st_wp a = st_wp_h heap a

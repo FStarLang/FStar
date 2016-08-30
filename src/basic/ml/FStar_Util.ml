@@ -1,9 +1,10 @@
-let max_int = max_int
+let max_int = Z.of_int max_int
 let is_letter_or_digit c = (BatChar.is_digit c) || (BatChar.is_letter c)
 let is_symbol c = BatChar.is_symbol c
 
 (* Modeled after: Char.IsPunctuation in .NET
-   (http://www.dotnetperls.com/char-ispunctuation) *)
+   (http://www.dotnetperls.com/char-ispunctuation)
+*)
 let is_punctuation c = (
     c = '!' ||
     c = '"' ||
@@ -34,10 +35,10 @@ let return_all x = x
 
 type time = float
 let now () = Unix.gettimeofday ()
-let time_diff (t1:time) (t2:time) : float * int =
+let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
   n, 
-  int_of_float (n *. 1000.0)
+  Z.of_float (n *. 1000.0)
 
 exception Impos
 exception NYI of string
@@ -53,13 +54,13 @@ let all_procs : (proc list) ref = ref []
 
 let lock () = ()
 let release () = ()
-let sleep n = Thread.delay ((float_of_int n) /. 1000.)
+let sleep n = Thread.delay ((Z.to_float n) /. 1000.)
 
 let monitor_enter _ = ()
 let monitor_exit _ = ()
 let monitor_wait _ = ()
 let monitor_pulse _ = ()
-let current_tid _ = 0
+let current_tid _ = Z.zero
 
 let atomically =
   (* let mutex = Mutex.create () in *)
@@ -158,8 +159,8 @@ let set_is_empty ((s, _):'a set) =
   | [] -> true
   | _ -> false
 
-let new_set (cmp:'a -> 'a -> int) (hash:'a -> int) : 'a set =
-  ([], fun x y -> cmp x y = 0)
+let new_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a set =
+  ([], fun x y -> cmp x y = Z.zero)
 
 let set_elements ((s1, eq):'a set) : 'a list =
   let rec aux out = function
@@ -179,16 +180,16 @@ let set_intersect ((s1, eq):'a set) ((s2, _):'a set) =
   (BatList.filter (fun y -> BatList.exists (eq y) s2) s1, eq)
 let set_is_subset_of ((s1, eq):'a set) ((s2, _):'a set) =
   BatList.for_all (fun y -> BatList.exists (eq y) s2) s1
-let set_count ((s1, _):'a set) = BatList.length s1
+let set_count ((s1, _):'a set) = Z.of_int (BatList.length s1)
 let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
   (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
 
 type 'value smap = (string, 'value) BatHashtbl.t
-let smap_create (i:int) : 'value smap = BatHashtbl.create i
+let smap_create (i:Z.t) : 'value smap = BatHashtbl.create (Z.to_int i)
 let smap_clear (s:('value smap)) = BatHashtbl.clear s
 let smap_add (m:'value smap) k (v:'value) = BatHashtbl.add m k v
 let smap_of_list (l: (string * 'value) list) =
-  let s = smap_create (FStar_List.length l) in
+  let s = BatHashtbl.create (BatList.length l) in
   FStar_List.iter (fun (x,y) -> smap_add s x y) l;
   s
 let smap_try_find (m:'value smap) k = BatHashtbl.find_option m k
@@ -215,22 +216,22 @@ let unicode_of_string (string:string) =
   BatUTF8.iter (fun c -> t.(!i) <- BatUChar.code c; incr i) string;
   t
 
-let char_of_int = char_of_int
-let int_of_string = int_of_string
-let int_of_char = int_of_char
+let char_of_int i = char_of_int (Z.to_int i)
+let int_of_string = Z.of_string
+let int_of_char x= Z.of_int (Char.code x)
 let int_of_byte x = x
 let int_of_uint8 = int_of_char
-let uint16_of_int (i:int) = i
+let uint16_of_int i = Z.to_int i
 let byte_of_char (c:char) = Char.code c
 
-let float_of_byte b = float_of_int (int_of_char b)
+let float_of_byte b = float_of_int (Char.code b)
 let float_of_int32 = float_of_int
 let float_of_int64 = BatInt64.to_float
 
 let int_of_int32 i = i
 let int32_of_int i = BatInt32.of_int i
 
-let string_of_int = string_of_int
+let string_of_int = Z.to_string
 let string_of_int32 = BatInt32.to_string
 let string_of_int64 = BatInt64.to_string
 let string_of_float = string_of_float
@@ -243,16 +244,16 @@ let string_of_bytes = string_of_unicode
 let starts_with = BatString.starts_with
 let trim_string = BatString.trim
 let ends_with = BatString.ends_with
-let char_at = BatString.get
+let char_at s index = BatString.get s (Z.to_int index)
 let is_upper (c:char) = 'A' <= c && c <= 'Z'
-let substring_from = BatString.tail
-let substring = BatString.sub
+let substring_from s index = BatString.tail s (Z.to_int index)
+let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
 let replace_char (s:string) (c1:char) (c2:char) =
   BatString.map (fun c -> if c = c1 then c2 else c) s
 let replace_string (s:string) (s1:string) (s2:string) =
   BatString.rev (BatString.nreplace ~str:(BatString.rev s) ~sub:s1 ~by:s2)
-let hashcode s = BatHashtbl.hash s
-let compare s1 s2 = BatString.compare s1 s2
+let hashcode s = Z.of_int (BatHashtbl.hash s)
+let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let splitlines s = BatString.nsplit s "\n"
 let split s sep = BatString.nsplit s sep
 
@@ -262,7 +263,7 @@ let foi = float_of_int
 let format (fmt:string) (args:string list) =
   let frags = BatString.nsplit fmt "%s" in
   if BatList.length frags <> BatList.length args + 1 then
-    failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (string_of_int (BatList.length frags)) ^ " got [" ^ (BatString.concat ", " args) ^ "] frags are [" ^ (BatString.concat ", " frags) ^ "]")
+    failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (Pervasives.string_of_int (BatList.length frags)) ^ " got [" ^ (BatString.concat ", " args) ^ "] frags are [" ^ (BatString.concat ", " frags) ^ "]")
   else
     let args = args@[""] in
     BatList.fold_left2 (fun out frag arg -> out ^ frag ^ arg) "" frags args
@@ -379,12 +380,13 @@ let find_opt f l =
     | hd::tl -> if f hd then Some hd else aux tl in
   aux l
 
-let sort_with = BatList.sort
+(* JP: why so many duplicates? :'( *)
+let sort_with = FStar_List.sortWith
 
-let set_eq f l1 l2 =
+let set_eq (f: 'a -> 'a -> Z.t) (l1: 'a list) (l2: 'a list) =
   let l1 = sort_with f l1 in
   let l2 = sort_with f l2 in
-  BatList.for_all2 (fun l1 l2 -> f l1 l2 = 0) l1 l2
+  BatList.for_all2 (fun l1 l2 -> f l1 l2 = Z.zero) l1 l2
 
 let bind_opt opt f =
   match opt with
@@ -410,7 +412,7 @@ let rec find_map l f =
 let try_find_index f l =
   let rec aux i = function
     | [] -> None
-    | hd::tl -> if f hd then Some i else aux (i+1) tl in
+    | hd::tl -> if f hd then Some (Z.of_int i) else aux (i+1) tl in
   aux 0 l
 
 let fold_map f state s =
@@ -441,6 +443,7 @@ let add_unique f x l =
     x::l
 
 let first_N n l =
+  let n = Z.to_int n in
   let rec f acc i l =
     if i = n then BatList.rev acc,l else
       match l with
@@ -470,9 +473,6 @@ let string_to_ascii_bytes (s:string) : char array =
 let ascii_bytes_to_string (b:char array) : string =
   BatString.implode (BatArray.to_list b)
 let mk_ref a = ref a
-
-let incr = Pervasives.incr
-let decr = Pervasives.decr
 
 (* A simple state monad *)
 type ('s,'a) state = 's -> ('a*'s)
@@ -530,11 +530,13 @@ let write_file (fn:string) s =
 let flush_file (fh:file_handle) = flush fh
 
 let for_range lo hi f =
-  for i = lo to hi do
-    f i
+  for i = Z.to_int lo to Z.to_int hi do
+    f (Z.of_int i)
   done
 
-let incr r = r := !r + 1
+
+let incr r = Z.(r := !r + one)
+let decr r = Z.(r := !r - one)
 let geq (i:int) (j:int) = i >= j
 
 let get_exec_dir () = Filename.dirname (Sys.executable_name)
@@ -680,11 +682,11 @@ let ensure_decimal s = Z.to_string (Z.of_string s)
 (** Hints. *)
 type hint = {
     hint_name: string;
-    hint_index: int;
-    fuel:int;
-    ifuel:int;
+    hint_index: Z.t;
+    fuel:Z.t;
+    ifuel:Z.t;
     unsat_core: string list option;
-    query_elapsed_time:int
+    query_elapsed_time:Z.t
 }
 
 type hints = hint option list
@@ -702,14 +704,14 @@ let write_hints (filename: string) (hints: hints_db): unit =
       | Some { hint_name; hint_index; fuel; ifuel; unsat_core; query_elapsed_time } ->
           `List [
 	    `String hint_name;
-	    `Int hint_index;
-            `Int fuel;
-            `Int ifuel;
+	    `Int (Z.to_int hint_index);
+            `Int (Z.to_int fuel);
+            `Int (Z.to_int ifuel);
             (match unsat_core with
             | None -> `Null
             | Some strings ->
                 `List (List.map (fun s -> `String s) strings));
-            `Int query_elapsed_time
+            `Int (Z.to_int query_elapsed_time)
           ]
     ) hints.hints)
   ] in
@@ -739,9 +741,9 @@ let read_hints (filename: string): hints_db option =
               ] ->
                 Some {
 		  hint_name;
-		  hint_index;
-                  fuel;
-                  ifuel;
+		  hint_index = Z.of_int hint_index;
+                  fuel = Z.of_int fuel;
+                  ifuel = Z.of_int ifuel;
                   unsat_core = begin match unsat_core with
                     | `Null ->
                         None
@@ -753,7 +755,7 @@ let read_hints (filename: string): hints_db option =
                     |  _ ->
                         raise Exit
                   end;
-                  query_elapsed_time
+                  query_elapsed_time = Z.of_int query_elapsed_time
                 }
               | _ ->
                  raise Exit 

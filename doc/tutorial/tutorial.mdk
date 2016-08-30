@@ -20,7 +20,7 @@ Package       : fullpage
                 margin-left=1em
                 before="[**Exercise &label;: **]{margin-left=-1em}&br;"
 
-~Answer       : replace="[answer]{.answer-link}&br;~Begin AnswerContent&nl;&source;&nl;~End AnswerContent&nl;"
+~Answer       : replace="[exercise answer]{.answer-link}&br;~Begin AnswerContent&nl;&source;&nl;~End AnswerContent&nl;"
                 margin-top=-1em tight
 ~AnswerContent: border-style=solid border-width=1px border-color=black padding=0.5ex
 
@@ -29,7 +29,7 @@ Package       : fullpage
                 replace=/([a-zA-Z])_([\dnm])\b/\(\1_\2|\1~\2~\)/g
                 replace=/_n1\b/\(_n1|~n-1~\)/g
 
-~Fragment     : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[Load in editor](&link;){float=right}&br;&nl;"
+~Fragment     : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[&link;]{float=left; font-style: italic; color: Gray}[Load in editor](&link;){float=right}&br;&nl;"
 .pre-fragment : margin-bottom=0pt .framed padding=0.5ex
 
 ~ExerciseFragment : replace="~Begin Fragment {link=code/exercises/&exname;.fst}&nl;&source;&nl;~End Fragment&nl;"
@@ -80,26 +80,6 @@ CatalinComment : replace="Can't understand why this doesn't work (it eats up the
 .fstar .token.type.keyword.operator { color: teal; }
 </style>
 
-<!-- How to edit this document:
-     1. Go to madoko.net in a web browser
-     2. Select the folder icon in the top-left corner, then "Open ... (Alt-O)"
-     3. Select the "GitHub" icon
-     4. Authorize the Madoko application to access your GitHub repositories
-     5. Open <github>/FStarLang/FStar/doc/tutorial/tutorial.mdk and start editing.
-     6. Ctrl+S (or Synchronize from the folder tab) will bring up a dialog to
-        commit and push this file to GitHub after merging with the latest changes there.
-
-     For included code snippets:
-     -- The snippets must be derived from files that are stored in the same subtree of the git repo
-        i.e, all the samples should be in sub-directories of FStarLang/FStar/doc/tutorial/code
-
-     Note: in this mode (i.e., github instead of dropbox), the document will not live update
-           with the changes that anyone else may be making to the document concurrently. You
-           will only see others' changes when you synchronize with github.
-
-     If you use Emacs to edit this you can use the markdown-mode
-     (http://jblevins.org/projects/markdown-mode/) for syntax highlighting.
--->
 
 <!-- Daan's hints: -->
 <!-- * Refer to Section [#sec-getstarted]. -->
@@ -163,7 +143,7 @@ the [source code on github] using these [instructions].
 [source code on github]: http://github.com/FStarLang/FStar
 [instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
 
-You can edit F\* code using your favourite text editor, but [Emacs],
+You can edit F\* code using your favorite text editor, but [Emacs],
 [Atom], and [Vim] have extensions that add special support for F\*,
 including syntax highlighting and interactive development. More
 details on [editor support] on the [F\* wiki].
@@ -227,25 +207,20 @@ sections) proceeds in three easy steps.
 ### Defining a policy { #sec-policy }
 
 The syntax of F\* is based closely on the OCaml syntax and the non-light
-syntax of F\#. An F\* program is composed of several modules. Each module
-begins with a `module` declaration, defining the name of the module. Its
-body includes a number of definitions, and optionally includes a 'main'
-expression.
+syntax of F\#. Our F\* program is made up of one module per file, and the
+body of the module contains a number of definitions, and optionally 
+includes a 'main' expression.
 
-Here are two modules: one called `FileName` and the other one called
-`ACLs` (for Access-Control Lists):
+Here are the first three definitions from the program:
 
-~ Fragment {link="code/exercises/ex1a-safe-read-write.fst"}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:ACLs]
+~ Fragment {link="code/exercises/Ex01a.fst"}
+[INCLUDE=code/exercises/Ex01a.fst:ACLs]
 ~
 
-The `FileName` module defines a type synonym: we'll use `:string`s to
-model `:filename`s.  The `ACLs` module first `open`s the `FileName`
-module, so the type synonym there can now be used directly (otherwise
-it could only be called by a longer fully-qualified name:
-`:FileName.filename`).
+The first definition defines a type synonym: we'll use `:string`s to
+model `:filename`s.  
 
-Afterwards `ACLs` defines our security policy as two boolean functions:
+After that, we define two boolean functions:
 `canWrite` and `canRead`:
 The `canWrite` function inspects its argument `f`
 using a *pattern matching expression*: it returns the boolean `true`
@@ -265,16 +240,14 @@ input/output are implemented by the operating system and made available
 to F\* programs via the underlying framework, e.g., .NET or OCaml. We can
 describe a simple interface provided by the framework as follows:
 
-~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:FileIO]
+~ Fragment {link=code/exercises/Ex01a.fst}
+[INCLUDE=code/exercises/Ex01a.fst:FileIO]
 ~
 
-Here, we've defined an *interface* called `FileIO`, which uses the
-`ACLs` module. More importantly,
-`FileIO` provides two functions, `read` and `write`, which
+This interface provides two functions, `read` and `write`, which
 presumably implement the corresponding operations on files.
 
-By using the `assume val` notation, we *declare* that `FileIO` provides
+By using the `assume val` notation, we *declare* that this module provides
 the `read` and `write` operations (they are *values*), but that we are
 *_not_ defining* those values here---they will be provided by an external
 module. Our use of `assume val` is much like the
@@ -307,14 +280,14 @@ guarded by a security check, how can we make sure that each check is
 adequate? We can use F\*'s type-checker to automate this kind of code
 review.
 
-Here's some simple, untrusted client code. It uses `FileIO`,
-defines some common file names, and then a function called
-`staticChecking`, which tries to read and write a few files.
+Here's some simple, untrusted client code. It defines some common file names, 
+and then a function called `staticChecking`, 
+which tries to read and write a few files.
 
-~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:UntrustedClientCode]
+~ Fragment {link=code/exercises/Ex01a.fst}
+[INCLUDE=code/exercises/Ex01a.fst:UntrustedClientCode]
 
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:StaticChecking]
+[INCLUDE=code/exercises/Ex01a.fst:StaticChecking]
 ~
 
 The type-checker ensures statically that this untrusted code complies
@@ -326,11 +299,11 @@ that the `passwd` file does not have the type
 `:f:filename{canRead f}`, respectively `:f:filename{canWrite f}`.
 For instance, if we uncomment the `write` we get the following error message:
 
-<!-- fstar.exe code/exercises/ex1a-safe-read-write.fst -->
+<!-- fstar.exe code/exercises/Ex01a.fst -->
 ``` {language=""}
-Error ex1a-safe-read-write.fst(38,2-47,5): The following problems were found:
-	Subtyping check failed; expected type f:filename{(canWrite f)};
-    got type string (ex1a-safe-read-write.fst(43,17-43,23))
+.\Ex01a.fst(40,10-40,16): Subtyping check failed; 
+expected type (f:Ex01a.filename{(Prims.b2t (Ex01a.canWrite f))}); 
+got type Prims.string
 ```
 <!-- CH: It would be nice if at some point such error messages were
      "real", coming directly from the type-checker without being
@@ -348,8 +321,8 @@ that the dynamic checks added by the programmer are taken into account
 by the type system. In particular we implement a `checkedRead` function
 that consults the policy and only performs the `read` if the policy
 allows it, otherwise it raises an exception.
-~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:CheckedRead]
+~ Fragment {link=code/exercises/Ex01a.fst}
+[INCLUDE=code/exercises/Ex01a.fst:CheckedRead]
 ~
 Please note that the type of `checkRead` imposes no condition on the
 the input file `f`. When the `ACLs.canRead f` check succeeds the
@@ -361,20 +334,20 @@ string `s` as argument, checks the policy to make sure the file `f` is
 writable, and only if that is the case writes `s` to `f`. If the file
 is not writable your `checkedWrite` should raise an exception. As for
 `checkedRead`, your `checkedRead` should have no preconditions.
-~~ ExerciseFragment {exname=ex1a-safe-read-write}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:CheckedWriteType]
+~~ ExerciseFragment {exname=Ex01a}
+[INCLUDE=code/exercises/Ex01a.fst:CheckedWriteType]
 ~~
 ~~ Answer
-~~~ SolutionFragment {exname=ex1a-safe-read-write}
-[INCLUDE=code/solutions/ex1a-safe-read-write.fst:CheckedWrite]
+~~~ SolutionFragment {exname=Ex01a}
+[INCLUDE=code/solutions/Ex01a.fst:CheckedWrite]
 ~~~
 ~~
 ~
 You can use `checkedRead` and your `checkedWrite` to replace `read`
 and `write` in `staticChecking`, so that now even
 the accesses to `passwd` are well-typed.
-~ ExerciseFragment {exname=ex1a-safe-read-write}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:DynamicChecking]
+~ ExerciseFragment {exname=Ex01a}
+[INCLUDE=code/exercises/Ex01a.fst:DynamicChecking]
 ~
 This is secure because `checkedRead` and `checkedWrite` defer to
 runtime the same checks that were previously performed at compile time
@@ -392,7 +365,7 @@ already seen two uses of this feature, e.g, the type
 `:f:filename{canRead f}` is a *refinement* of the type `:filename`. It's
 a refinement because only a subset of the `:filename` values have this
 type, namely those that satisfy the `canRead` predicate. The
-refinement in the type of `FileIO.write` is similar. In traditional
+refinement in the type of `write` is similar. In traditional
 ML-like languages, such types are inexpressible.
 
 In general, a refinement type in F\* has the form `:x:t{phi(x)}`, a
@@ -429,7 +402,7 @@ without entering an infinite loop; reading or writing the program's
 state; throwing exceptions; performing input or output; or, having any
 other effect whatsoever.
 
-On the other hand, an expression like `(FileIO.read "foo.txt")` is
+On the other hand, an expression like `(read "foo.txt")` is
 inferred to have type-and-effect `:ML string`, meaning that this term
 may have arbitrary effects (it may loop, do IO, throw exceptions,
 mutate the heap, etc.), but if it returns, it always returns a
@@ -535,11 +508,11 @@ effect, as explained above.
 As you could see above, we use `val` to ask F\* to check that a
 definition has a certain expected type.  Write down the expected types
 for `canRead` and `canWrite` from [#sec-policy] and ask F\* to check it for you.
-~~ ExerciseFragment {exname=ex2a-can-read-write-types}
-[INCLUDE=code/exercises/ex2a-can-read-write-types.fst]
+~~ ExerciseFragment {exname=Ex02a}
+[INCLUDE=code/exercises/Ex02a.fst]
 ~~
 
-~~ AnswerFragment {exname=ex2a-can-read-write-types}
+~~ AnswerFragment {exname=Ex02a}
 val canRead: filename -> Tot bool
 val canWrite: filename -> Tot bool
 ~~
@@ -689,7 +662,8 @@ We can assert and automatically check a more general property about `max`. For e
 
 Let's take a look at the factorial function:
 
-    let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
+    let rec factorial n = 
+      if n = 0 then 1 else Prims.op_Multiply n factorial (n - 1)
 
 As we said earlier, without further annotation, F\* infers `:int -> int`
 as the type of this function, which is a shorthand for
@@ -741,12 +715,12 @@ this for you in its standard prelude).
 What are some other correct types you can give to `factorial`? Try
 writing them and see if F\* agrees with you.
 Try describing in words what each of those types mean.
-~~ ExerciseFragment {exname=ex3a-factorial-types}
-[INCLUDE=code/exercises/ex3a-factorial-types.fst:FactorialTypes]
+~~ ExerciseFragment {exname=Ex03a}
+[INCLUDE=code/exercises/Ex03a.fst:FactorialTypes]
 ~~
 ~~ Answer
 There are many possible correct types for `factorial`. Here are a few:
-~~~ SolutionFragment {exname=ex3a-factorial-types}
+~~~ SolutionFragment {exname=Ex03a}
 val factorial: int -> int                     (* inferred by default *)
 val factorial: int -> ML int                  (* same as above *)
 val factorial: nat -> Tot int                 (* total function on nat inputs *)
@@ -757,8 +731,8 @@ val factorial: nat -> Tot (y:int{y>=1})       (* even stronger result type *)
 ~
 
 <!-- CH: This is causing too much unnecessary pain too early on
-  The problem is that to give the following uncomparable type for factorial:
-val factorial: x:int{x>=2} -> Tot (y:int{y>=2}) (* uncomparable to prev type *)
+  The problem is that to give the following incomparable type for factorial:
+val factorial: x:int{x>=2} -> Tot (y:int{y>=2}) (* incomparable to prev type *)
   One needs to unroll it as follows:
 let rec factorial n =
   if n = 0 then 1
@@ -771,18 +745,18 @@ in order of increasing precision. Is it a total order?
 ~~ Answer
 The types in the solution above are listed in increasing order of
 precision, with the exception of the last two ones which are
-uncomparable.  So no, subtyping is not a total order.
+incomparable.  So no, subtyping is not a total order.
 ~~
 -->
 
 ~ Exercise
 Give several types for the fibonacci function.
-~~ ExerciseFragment {exname=ex3b-fibonacci}
+~~ ExerciseFragment {exname=Ex03b}
 let rec fibonacci n =
   if n <= 1 then 1 else fibonacci (n - 1) + fibonacci (n - 2)
 ~~
-~~ AnswerFragment {exname=ex3b-fibonacci}
-[INCLUDE=code/solutions/ex3b-fibonacci.fst]
+~~ AnswerFragment {exname=Ex03b}
+[INCLUDE=code/solutions/Ex03b.fst]
 ~~
 ~
 
@@ -950,11 +924,11 @@ from our use of the induction hypothesis: again, Z3 proves this easily.
 
 ~ Exercise
 Prove the following property for the fibonacci function:
-~~ ExerciseFragment {exname=ex3c-fibonacci}
-[INCLUDE=code/exercises/ex3c-fibonacci.fst:FibonacciGreaterThanArg]
+~~ ExerciseFragment {exname=Ex03c}
+[INCLUDE=code/exercises/Ex03c.fst:FibonacciGreaterThanArg]
 ~~
-~~ AnswerFragment {exname=ex3c-fibonacci}
-[INCLUDE=code/solutions/ex3c-fibonacci.fst:FibonacciGreaterThanArgProof]
+~~ AnswerFragment {exname=Ex03c}
+[INCLUDE=code/solutions/Ex03c.fst:FibonacciGreaterThanArgProof]
 ~~
 ~
 
@@ -1058,6 +1032,9 @@ can almost ignore the distinction between the two. However, when you
 start to write refinement formulas with quantifiers, the distinction
 between the two will become apparent.
 
+<!--
+q:Type. True in universes too? 
+-->
 Both the universal quantifier `forall`, and the existential quantifier
 `exists`, are only available in `:Type`. When you mix refinements that
 include boolean function and the quantifiers, you need to use the
@@ -1171,7 +1148,7 @@ I don't understand either, it is certainly wrong
 
 ~ Exercise
 Here's the `append` function that concatenates two lists.
-~~ ExerciseFragment {exname=ex4a-append-intrinsic}
+~~ ExerciseFragment {exname=Ex04a}
 let rec append l1 l2 = match l1 with
   | [] -> l2
   | hd :: tl -> hd :: append tl l2
@@ -1179,7 +1156,7 @@ let rec append l1 l2 = match l1 with
 Give `append` a type that proves it always returns a list
 whose length is the sum of the lengths of its arguments.
 
-~~ AnswerFragment {exname=ex4a-append-intrinsic}
+~~ AnswerFragment {exname=Ex04a}
     l1:list 'a -> l2:list 'a -> Tot (l:list 'a{length l = length l1 + length l2})
 ~~
 ~
@@ -1187,10 +1164,10 @@ whose length is the sum of the lengths of its arguments.
 ~ Exercise
 Give `append` the weak type below,
 then prove the same property as in the previous exercise using a lemma.
-~~ ExerciseFragment {exname=ex4b-append-extrinsic}
+~~ ExerciseFragment {exname=Ex04b}
 val append:list 'a -> list 'a -> Tot (list 'a)
 ~~
-~~ AnswerFragment {exname=ex4b-append-extrinsic}
+~~ AnswerFragment {exname=Ex04b}
 val append_len: l1:list 'a -> l2:list 'a
              -> Lemma (requires True)
                       (ensures (length (append l1 l2) = length l1 + length l2)))
@@ -1204,11 +1181,11 @@ let rec append_len l1 l2 = match l1 with
 Define a function `mem: x:'a -> l:list 'a -> Tot bool` that
 decides whether `x` is present in the `l` or not, then prove it satisfies the
 following property:
-~~ ExerciseFragment {exname=ex4c-mem}
+~~ ExerciseFragment {exname=Ex04c}
 val append_mem:  l1:list 'a -> l2:list 'a -> a:'a
         -> Lemma (ensures (mem a (append l1 l2)  <==>  mem a l1 || mem a l2))
 ~~
-~~ AnswerFragment {exname=ex4c-mem}
+~~ AnswerFragment {exname=Ex04c}
 
 val mem: 'a -> list 'a -> Tot bool
 let rec mem a l = match l with
@@ -1253,7 +1230,7 @@ This signature doesn't work:
 append.fst(21,0-27,0) : Error
 Expected a term of type "f:(_:(list 'a) -> Tot (list 'a)){(forall (l:(list 'a)). ((l = (f (f l))) == true))}";
 got a function "(fun _682:<UNKNOWN> -> (match _682 with (Nil )  -> Nil
-	(Cons hd tl)  -> (append (reverse tl) (Cons hd Nil))))" (More arguments than annotated type (Typ_refine))
+	(Cons hd tl)  -> (append (reverse tl) (Cons hd Nil))))" (More arguments than annotated type (Type_refine))
 ~
 
 However, F\* refuses to accept this as a valid type for `reverse`:
@@ -1280,17 +1257,17 @@ the induction hypothesis but also the `snoc_cons` lemma we proved above.
 
 ~Exercise
 Prove that reverse is injective, i.e.,
-~~ ExerciseFragment {exname=ex4d-reverse}
-[INCLUDE=code/exercises/ex4d-reverse.fst:RevInjective]
+~~ ExerciseFragment {exname=Ex04d}
+[INCLUDE=code/exercises/Ex04d.fst:RevInjective]
 ~~
 ~~ Answer
 Perhaps you did it like this:
-~~~ SolutionFragment {exname=ex4d-reverse}
-[INCLUDE=code/solutions/ex4d-reverse.fst:RevInjective1]
+~~~ SolutionFragment {exname=Ex04d}
+[INCLUDE=code/solutions/Ex04d.fst:RevInjective1]
 ~~~
 That's quite a tedious proof, isn't it. Here's a simpler proof.
-~~~ SolutionFragment {exname=ex4d-reverse}
-[INCLUDE=code/solutions/ex4d-reverse.fst:RevInjective2]
+~~~ SolutionFragment {exname=Ex04d}
+[INCLUDE=code/solutions/Ex04d.fst:RevInjective2]
 ~~~
 The `rev_injective_2` proof is based on the idea that every involutive
 function is injective. We've already proven that `reverse` is
@@ -1349,7 +1326,7 @@ We define a `find` function that given a boolean function `f` and a list
 is found `find` returns `None`; for this we use the usual `:option` type (shown
 below and available in F\*'s standard prelude).
 
-~~ ExerciseFragment {exname=ex4e-find}
+~~ ExerciseFragment {exname=Ex04e}
     type option 'a =
        | None : option 'a
        | Some : 'a -> option 'a
@@ -1362,8 +1339,8 @@ below and available in F\*'s standard prelude).
 Prove that if `find` returns `Some x` then `f x = true`.
 Is it better to do this intrinsically or extrinsically? Do it both ways.
 
-~~ AnswerFragment {exname=ex4e-find}
-[INCLUDE=code/solutions/ex4e-find.fst]
+~~ AnswerFragment {exname=Ex04e}
+[INCLUDE=code/solutions/Ex04e.fst]
 ~~
 ~
 
@@ -1374,12 +1351,12 @@ Define the `fold_left` function on lists, so that
 
 Prove that `(fold_left Cons l [] = reverse l)`.
 (The proof is a level harder from what we've done so far)
-~~ ExerciseFragment {exname=ex4f-fold-left}
+~~ ExerciseFragment {exname=Ex04f}
 val fold_left_cons_is_reverse: l:list 'a -> l':list 'a ->
       Lemma (fold_left Cons l l' = append (reverse l) l')
 ~~
-~~ AnswerFragment {exname=ex4f-fold-left}
-[INCLUDE=code/solutions/ex4f-fold-left.fst:FoldLeftInteresting]
+~~ AnswerFragment {exname=Ex04f}
+[INCLUDE=code/solutions/Ex04f.fst:FoldLeftInteresting]
 ~~
 ~
 
@@ -1452,11 +1429,11 @@ signatures---we will see this in the section on indexed types
 ~Exercise
 Write functions (call them `hd` and `tl`) whose types match
 those of `Cons.hd` and `Cons.tl`.
-~~ ExerciseFragment {exname=ex4g-hd-tl}
-[INCLUDE=code/exercises/ex4g-hd-tl.fst]
+~~ ExerciseFragment {exname=Ex04g}
+[INCLUDE=code/exercises/Ex04g.fst]
 ~~
 ~~Answer
-~~~ SolutionFragment {exname=ex4g-hd-tl}
+~~~ SolutionFragment {exname=Ex04g}
 val hd : l:list 'a{is_Cons l} -> Tot 'a
 let hd l =
   match l with
@@ -1479,10 +1456,10 @@ when we have an automatic way ;)
 ~Exercise
 Write a function that returns the `n`th element of a list. Give a
 type that ensures it is total.
-~~ ExerciseFragment {exname=ex4h-nth}
+~~ ExerciseFragment {exname=Ex04h}
 (* Write your code here *)
 ~~
-~~ AnswerFragment {exname=ex4h-nth}
+~~ AnswerFragment {exname=Ex04h}
 val nth : l:list 'a -> n:nat{n < length l} -> 'a
 let rec nth l n =
   match l with
@@ -1737,7 +1714,7 @@ total. Also, prove that it is functionally equivalent to `factorial`.
 ~Exercise
 Here is a more efficient (tail-recursive) variant of the list
 reverse function.
-~~ ExerciseFragment {exname=ex5a-rev}
+~~ ExerciseFragment {exname=Ex05a}
 val rev : l1:list 'a -> l2:list 'a -> Tot (list 'a) (decreases l2)
 let rec rev l1 l2 =
   match l2 with
@@ -1747,10 +1724,10 @@ let rec rev l1 l2 =
 Prove the following lemma showing the correctness of this
 efficient implementation with respect to the previous simple
 implementation:
-~~ ExerciseFragment {exname=ex5a-rev}
+~~ ExerciseFragment {exname=Ex05a}
 val rev_is_ok : l:list 'a -> Lemma (rev [] l = reverse l)
 ~~
-~~ AnswerFragment {exname=ex5a-rev}
+~~ AnswerFragment {exname=Ex05a}
 val append_assoc : xs:list 'a -> ys:list 'a -> zs:list 'a -> Lemma
       (ensures (append (append xs ys) zs = append xs (append ys zs)))
 let rec append_assoc xs ys zs =
@@ -1780,7 +1757,7 @@ let rev_is_ok l = rev_is_ok_aux [] l; append_nil (reverse l)
 ~Exercise
 (**Challenge!**) Here is a more efficient (tail-recursive)
 variant of the Fibonacci function.
-~~ ExerciseFragment {exname=ex5b-fib}
+~~ ExerciseFragment {exname=Ex05b}
 val fib : nat -> nat -> n:nat -> Tot nat (decreases n)
 let rec fib a b n =
   match n with
@@ -1790,10 +1767,10 @@ let rec fib a b n =
 Prove the following lemma showing the correctness of this
 efficient implementation with respect to the previous simple
 implementation:
-~~ ExerciseFragment {exname=ex5b-fib}
+~~ ExerciseFragment {exname=Ex05b}
 val fib_is_ok : n:nat -> Lemma (fib 1 1 n = fibonacci n)
 ~~
-~~ AnswerFragment {exname=ex5b-fib}
+~~ AnswerFragment {exname=Ex05b}
 val fib_is_ok_aux : i:nat -> n:nat{i<=n} ->
       Tot (u:unit{fib (fibonacci i) (fibonacci (i+1)) (n-i) = fibonacci n})
       (decreases (n-i))
@@ -1892,17 +1869,17 @@ pivot in the middle before returning.
 
 ~Exercise
 Write the partition function and prove it total.
-~~ExerciseFragment {exname=ex6a-partition}
+~~ExerciseFragment {exname=Ex06a}
 val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
 ~~
 ~~Answer
 
 The following definition is included in F\*'s list library.
-~~~ SolutionFragment {exname=ex6a-partition}
-[INCLUDE=code/solutions/ex6a-partition.fst:Partition]
+~~~ SolutionFragment {exname=Ex06a}
+[INCLUDE=code/solutions/Ex06a.fst:Partition]
 ~~~
 
-<!-- ~~~ SolutionFragment {exname=ex6a-partition} -->
+<!-- ~~~ SolutionFragment {exname=Ex06a} -->
 <!-- val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a) -->
 <!-- let rec partition f = function  -->
 <!--   | [] -> [], [] -->
@@ -2130,27 +2107,27 @@ Exercise files still missing.
 
 ~CK
 I do not write an exercise file Exercises 6c and 6d since it is exactly
-the same as for Exercide 6b, and would thus duplicate code.
+the same as for Exercise 6b, and would thus duplicate code.
 ~
 
 ~Exercise
 Starting from this implementation (given below), generalize `sort` so
 that it works on lists with an arbitrary element type, instead of just
 lists of integers. Prove it correct.
-~~ ExerciseFragment {exname=ex6b-sort-poly}
+~~ ExerciseFragment {exname=Ex06b}
 (* Start from the code in the "Load in editor" link *)
 ~~
 
-~~ AnswerFragment {exname=ex6b-sort-poly}
-[INCLUDE=code/solutions/ex6b-sort-poly.fst]
+~~ AnswerFragment {exname=Ex06b}
+[INCLUDE=code/solutions/Ex06b.fst]
 ~~
 ~
 
-~Exercise {exname=ex6c-break-sort-spec}
+~Exercise {exname=Ex06c}
 Our specification for `sort` is incomplete. Why? Can you write a
 variation of `sort` that has the same specification as the one above,
 but discards some elements of the list?
-~~ ExerciseFragment {exname=ex6b-sort-poly}
+~~ ExerciseFragment {exname=Ex06b}
 (* Start from the code in the "Load in editor" link *)
 ~~
 
@@ -2158,8 +2135,8 @@ but discards some elements of the list?
 The specification does not ensure that the resulting list is a
 permutation of the initial list: it could discard or repeat some
 elements.
-~~~ SolutionFragment {exname=ex6c-break-sort-spec}
-[INCLUDE=code/solutions/ex6c-break-sort-spec.fst]
+~~~ SolutionFragment {exname=Ex06c}
+[INCLUDE=code/solutions/Ex06c.fst]
 ~~~
 ~~
 ~
@@ -2167,28 +2144,28 @@ elements.
 ~ Exercise
 Fix the specification to ensure that `sort` cannot discard any
 elements in the list. Prove that `sort` meets the specification.
-~~ ExerciseFragment {exname=ex6b-sort-poly}
+~~ ExerciseFragment {exname=Ex06b}
 (* Start from either the problem or the solution of exercise 6b *)
 ~~
-~~ AnswerFragment {exname=ex6d-no-discard}
-[INCLUDE=code/solutions/ex6d-no-discard.fst]
+~~ AnswerFragment {exname=Ex06d}
+[INCLUDE=code/solutions/Ex06d.fst]
 ~~
 ~
 
 ~ Exercise
 Implement insertion sort and prove the same properties.
-~~ ExerciseFragment {exname=ex6e-insertion-sort}
+~~ ExerciseFragment {exname=Ex06e}
 val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x m)})
 ~~
-~~ AnswerFragment {exname=ex6e-insertion-sort}
-[INCLUDE=code/solutions/ex6e-insertion-sort.fst]
+~~ AnswerFragment {exname=Ex06e}
+[INCLUDE=code/solutions/Ex06e.fst]
 ~~
 ~
 
 
 # Case study: simply-typed lambda-calculus
 
-<!-- (CH: Any way I could have imported the exising code here without duplicating it? -->
+<!-- (CH: Any way I could have imported the existing code here without duplicating it? -->
 <!--   Without a way to do this maintaining this document and keeping it consistent -->
 <!--   will be a nightmare.) -->
 
@@ -2721,12 +2698,12 @@ well-typed expression `e` that is not a value and
 produces the expression to which `e` steps. Give `typed_step`
 the following strong type
 (basically this type captures both progress and preservation):
-~~ ExerciseFragment {exname=ex7a-stlc-typed-step}
+~~ ExerciseFragment {exname=Ex07a}
   val typed_step : e:exp{is_Some (typing empty e) /\ not(is_value e)} ->
                    Tot (e':exp{typing empty e' = typing empty e})
 ~~
 (Hint: the most direct solution to this exercise fits on one line)
-~~ AnswerFragment {exname=ex7a-stlc-typed-step}
+~~ AnswerFragment {exname=Ex07a}
     let typed_step e = progress e; preservation e; Some.v (step e)
 ~~
 ~
@@ -2734,7 +2711,7 @@ the following strong type
 ~ Exercise
 To add pairs to this formal development we add the following to the
 definition of types, expressions, values, substitution, and step:
-~~ ExerciseFragment {exname=ex7b-stlc-pairs}
+~~ ExerciseFragment {exname=Ex07b}
 type ty =
   ...
   | TPair : ty -> ty -> ty
@@ -2746,7 +2723,7 @@ type exp =
   | ESnd   : exp -> exp
 ~~
 (note the extra rec in `is_value` below!)
-~~ ExerciseFragment {exname=ex7b-stlc-pairs}
+~~ ExerciseFragment {exname=Ex07b}
 let rec is_value e =
   match e with
   ...
@@ -2796,7 +2773,7 @@ Add cases to `typing` for the new constructs and fix all the proofs.
 ~~ Answer
 We extend the `typing` and `appears_free_in` functions with cases
 for `EPair`, `EFst`, and `ESnd`:
-~~~ SolutionFragment {exname=ex7b-stlc-pairs}
+~~~ SolutionFragment {exname=Ex07b}
 val typing : env -> exp -> Tot (option ty)
 let rec typing g e =
 ...
@@ -2821,7 +2798,7 @@ val appears_free_in : x:int -> e:exp -> Tot bool
 ~~~
 The proofs of the lemmas are also easy to extend by just calling
 the induction hypothesis:
-~~~ SolutionFragment {exname=ex7b-stlc-pairs}
+~~~ SolutionFragment {exname=Ex07b}
 val free_in_context : x:int -> e:exp -> g:env -> Lemma
       (requires (is_Some (typing g e)))
       (ensures (appears_free_in x e ==> is_Some (g x)))
@@ -2866,7 +2843,7 @@ then it further evaluates, so we apply the induction hypothesis to
 it must be the case that `e2` is not a value and further evaluates, so
 we apply the induction hypothesis to it. The cases for `EFst` and
 `ESnd` are similar.
-~~~ SolutionFragment {exname=ex7b-stlc-pairs}
+~~~ SolutionFragment {exname=Ex07b}
 val preservation : e:exp{is_Some (typing empty e) /\ is_Some (step e)} ->
       Tot (u:unit{typing empty (Some.v (step e)) == typing empty e})
 let rec preservation e =
@@ -2911,14 +2888,14 @@ None of them is very interesting from a proof point of view.)
 ~ Exercise
 We want to add a let construct to this formal development.
 We add the following to the definition of expressions:
-~~ ExerciseFragment {exname=ex7c-stlc-let}
+~~ ExerciseFragment {exname=Ex07c}
 type exp =
   ...
   | ELet  : int -> exp -> exp -> exp
 ~~
 Add cases for `ELet` to all definitions and proofs.
 
-[Load answer in editor](code/solutions/ex7c-stlc-let.fst)
+[Load answer in editor](code/solutions/Ex07c.fst)
 ~~ CH
 Make the prev kind of link a macro of some sorts. It doesn't have a
 proper body so it's not an environment, but what is it? Entity?
@@ -2932,7 +2909,7 @@ either produces the well-typed value `v` to which `e` evaluates
 or it diverges if the evaluation of `e` loops. Give `eval` the following
 strong type ensuring that `v` has the same type as `e`
 (basically this type captures both progress and preservation):
-~~ ExerciseFragment {exname=ex7d-stlc-eval}
+~~ ExerciseFragment {exname=Ex07d}
   val eval : e:exp{is_Some (typing empty e)} ->
              Dv (v:exp{is_value v && typing empty v = typing empty e})
 ~~
@@ -2942,7 +2919,7 @@ and it is hard to prove that well-typed ones don't, while defining an
 interpreter.
 ~~Answer
 Here is a solution that only uses `typed_step` (suggested by Santiago Zanella):
-~~~ SolutionFragment {exname=ex7d-stlc-eval}
+~~~ SolutionFragment {exname=Ex07d}
 val eval : e:exp{is_Some (typing empty e)} ->
            Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval e =
@@ -2959,7 +2936,7 @@ let rec eval e = match step e with
   | Some e' -> preservation e; eval e'
 ```
 Here is another solution that only uses the substitution lemma:
-~~~ SolutionFragment {exname=ex7d-stlc-eval}
+~~~ SolutionFragment {exname=Ex07d}
 val eval' : e:exp{is_Some (typing empty e)} ->
             Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval' e =
@@ -3128,7 +3105,7 @@ the type `x:int{phi(x)}` as the application of a type constructor
 `phi(x)` is itself a `Type`. Thus, the kind of the `refinement`
 constructor is `a:Type -> (a -> Type) -> Type`, meaning it takes two
 arguments; first, a type `a`; then a second argument, a predicate on
-`a` (whose kind depends on `a`); and then bulids a `Type`.
+`a` (whose kind depends on `a`); and then builds a `Type`.
 
 The type `fun x -> phi(x)` is type function, a lambda abstraction at
 the level of types, which when applied to a particular value, say,
@@ -3220,7 +3197,7 @@ failures, then its result satisfies `P`; in contrast, the `WP e P` is
 sufficient to guarantee both that `e`'s internal assertions succeed and
 that its result satisfies `P`.
 
-Here's the definition of `WLP` for our small example langauge.
+Here's the definition of `WLP` for our small example language.
 
 ```
 WLP b P                      = P b
@@ -3332,7 +3309,7 @@ forms are derived from these.
 For example, the computation type constructor `PURE` is a more
 primitive version of `Pure`, which we have used earlier in this
 tutorial. By the end of this chapter, you will see how `Pure`, `Tot`,
-etc. are expressed in terms of `PURE`. Likewiwse `STATE` is the
+etc. are expressed in terms of `PURE`. Likewise `STATE` is the
 primitive form of `ST`; `EXN` is the primitive form of `Exn`; etc.
 
 ~
@@ -3352,7 +3329,7 @@ fragment of it here.
 
 The type of pure computations is `PURE t wp wlp` where
 `wp, wlp : (t -> Type) -> Type`. This means that pure computations produce
-`t`-typed results and are decribed by predicate transformers that
+`t`-typed results and are described by predicate transformers that
 transform result predicates (post-conditions of kind `t -> Type`) to
 pre-conditions, which are propositions of kind `Type`.
 
@@ -3458,7 +3435,7 @@ assume val as_Pure: #a:Type -> #b:(a -> Type)
  will try to prove that the type of `g` is a subtype of the expected
  type of `f`. In cases like this, where an argument mentions several
  implicit arguments that need to be inferred (`a, b, wp, wlp`, in this
- case), the equality constraint produces better inference resutls.
+ case), the equality constraint produces better inference results.
 
 ~
 
@@ -3763,7 +3740,7 @@ sub_effect
                     wp (fun a -> p a h)
 ```
 
-This says that in order to lift a `PURE` compuataion to `STATE`, we
+This says that in order to lift a `PURE` computation to `STATE`, we
 lift its `wp:PureWP a` (equivalently for its `wlp`) to a `StateWP a`
 that says that that pure computation leaves the state unmodified.
 
@@ -3806,7 +3783,7 @@ previous chapter, you should be ok---we'll explain what's needed about
 the `ST` monad as we go along, although, eventually, you'll probably
 want to refer to the previous chapter for more details.
 
-## Stateful access control
+## Stateful access control { #sec-stateful-access-control }
 
 We'll start with a simple example, based on the access control example
 from [#sec-access-control]. A restriction of that example was that the
@@ -3823,14 +3800,14 @@ current state contains the appropriate permission.
 Here's how it goes:
 
 ```
-[INCLUDE=code/exercises/ex10a-acls-variant.fst]
+[INCLUDE=code/exercises/Ex10a.fst]
 ```
 
 ~Exercise
 Write down some types for `grant` and `revoke` that are sufficiently
 precise to allow the program to continue to type-check.
 
-~~ ExerciseFragment {exname=ex10a-acls}
+~~ ExerciseFragment {exname=Ex10a}
 val grant : e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> True))
 let grant e = ST.write acls (e::ST.read acls)
@@ -3843,7 +3820,7 @@ let revoke e =
 ~~
 
 ~~Answer
-~~~ SolutionFragment {exname=ex10a-acls}
+~~~ SolutionFragment {exname=Ex10a}
 val grant : e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> sel h' acls = e::sel h acls))
 let grant e = ST.write acls (e::ST.read acls)
@@ -3880,10 +3857,7 @@ type point =
 Allocating a new point is straightforward:
 
 ```
-let new_point x y =
-  let x = ST.alloc x in
-  let y = ST.alloc y in
-  Point x y
+[INCLUDE=code/solutions/Ex10b.fst:NewPoint]
 ```
 
 As is moving a point by a unit along the `x`-axis.
@@ -3898,49 +3872,38 @@ to identify some conditions that are sufficient to prove that
 the assertion in the program below always succeeds.
 
 ```
-let shift_p1 (p1:point) (p2:point) =
-    let p2_0 = !(Point.x p2), !(Point.y p2)  in //p2 is initially p2_0
-    shift_x p1;
-    let p2_1 = !(Point.x p2), !(Point.y p2) in
-    assert (p2_0 = p2_1)                        //p2 is unchanged
+[INCLUDE=code/solutions/Ex10b.fst:ShiftXP1]
 ```
 
 If you give this program (reproduced in its entirety below) to F\*, it
 will report no errors. This may surprise you: after all, if you call
-`shift_p1 p p` the assertion will indeed fail. What's going on here is that
+`shift_x_p1 p p` the assertion will indeed fail. What's going on here is that
 for functions in the `ST` effect, F\* infers a most precise type for it,
 and if the programmer did not write down any other specification, this
 precise inferred type is what F\* will use. This means that without an
-annotation on `shift_p1`, F\* does not check that the assertion will succeed
-on every invocation of `shift_p1`; instead, using the inferred type it will
+annotation on `shift_x_p1`, F\* does not check that the assertion will succeed
+on every invocation of `shift_x_p1`; instead, using the inferred type it will
 aim to prove that the assertion will succeed whenever the function is
 called. Let's try:
 
 ```
-val test0: unit -> St unit
-let test0 () =
-  let x = new_point 0 0 in
-  shift_p1 x x
+[INCLUDE=code/solutions/Ex10b.fst:Test0]
 ```
 
 Here, we wrote a specification for `test0`, asking it to have trivial
 pre-condition. When we ask F\* to check this, it complains at the call to
-`shift_p1 x x`, saying that the assertion failed.
+`shift_x_p1 x x`, saying that the assertion failed.
 
-If we try calling `shift_p1` with two distinct points, as below, then we
+If we try calling `shift_x_p1` with two distinct points, as below, then we
 can prove that the assertion succeeds.
 
 ```
-val test1: unit -> St unit
-let test1 () =
-  let x = new_point 0 0 in
-  let y = new_point 0 0
-  shift_p1 x y
+[INCLUDE=code/solutions/Ex10b.fst:Test1]
 ```
 
 In simple code like our example above, it is a reasonable trade-off to let F\* infer
 the most precise type of a function, and to have it check later, at each call site, that
-the those calls are safe.
+those calls are safe.
 
 As you write larger programs, it's a good idea to write down the types
 you expect, at least for tricky top-level functions. To see what these
@@ -3965,9 +3928,7 @@ val shift_x : p:point -> ST unit
 Another, less precise but more idiomatic type for it is:
 
 ```
-val shift_x : p:point -> ST unit
-  (requires (fun h -> True))
-  (ensures (fun h0 _ h1 -> modifies (only (Point.x p)) h0 h1))
+[INCLUDE=code/solutions/Ex10b.fst:ShiftXType]
 ```
 
 Informally, `ensures`-clause above says that the heap after calling this
@@ -4023,13 +3984,13 @@ then `sel h1 r = sel h0 r`, i.e., it hasn't changed. Otherwise,
 We define the following infix operators to build sets of heterogenous references.
 
 ```
-let op_Hat_Plus_Plus (#a:Type) (r:ref a) (s:set aref) =
+let op_Hat_Plus_Plus (#a:Type) (r:ref a) (s:set aref) = // ^++
     Set.union (Set.singleton (Ref r)) s
 
-let op_Plus_Plus_Hat (#a:Type) (s:set aref) (r:ref a) =
+let op_Plus_Plus_Hat (#a:Type) (s:set aref) (r:ref a) = // ++^
     Set.union s (Set.singleton (Ref r))
 
-let op_Hat_Plus_Hat (#a:Type) (#b:Type) (r1:ref a) (r2:ref b) =
+let op_Hat_Plus_Hat (#a:Type) (#b:Type) (r1:ref a) (r2:ref b) = // ^+^
     Set.union (Set.singleton (Ref r1)) (Set.singleton (Ref r2))
 ```
 ~
@@ -4040,17 +4001,9 @@ Here's a precise type for `new_point`, with its definition reproduced
 for convenience.
 
 ```
-val new_point: x:int -> y:int -> ST point
-  (requires (fun h -> True))
-  (ensures (fun h0 p h1 ->
-                modifies Set.empty h0 h1
-                /\ fresh (Point.x p ^+^ Point.y p) h0 h1
-                /\ Heap.sel h1 (Point.x p) = x
-                /\ Heap.sel h1 (Point.y p) = y))
-let new_point x y =
-  let x = ST.alloc x in
-  let y = ST.alloc y in
-  Point x y
+[INCLUDE=code/solutions/Ex10b.fst:NewPointType]
+
+[INCLUDE=code/solutions/Ex10b.fst:NewPoint]
 ```
 
 The `modifies` clause says the function modifies no existing
@@ -4072,8 +4025,8 @@ val alloc:  #a:Type -> init:a -> ST (ref a)
     (ensures (fun h0 r h1 -> fresh (only r) h0 h1 /\ h1==upd h0 r init))
 
 type fresh (refs:set aref) (h0:heap) (h1:heap) =
-  forall (a:Type) (r:ref a). mem (Ref r) refs
-                         ==> not(contains h0 a) /\ contains h1 a
+  (forall (a:Type) (r:ref a). mem (Ref r) refs
+                         ==> not(contains h0 r) /\ contains h1 r)
 ```
 
 
@@ -4090,9 +4043,7 @@ reason.
 
 
 ```
-let p = new_point () in
-let z = ST.alloc 0 in
-assert (Point.x p <> z)
+[INCLUDE=code/solutions/Ex10b.fst:Test2]
 ```
 
 On the other hand, since the `ST` library we are working with provides no
@@ -4122,18 +4073,14 @@ As a matter of style, we prefer to keep the use of `recall` to a minimum,
 and instead carry `Heap.contains` predicates in our specifications, as
 much as possible.
 
-### A type for `shift_p1`
+### A type for `shift_x_p1`
 
-Now, we have all the machinery we need to give `shift_p1` a sufficiently
+Now, we have all the machinery we need to give `shift_x_p1` a sufficiently
 strong type to prove that its assertion will never fail (if its pre-condition is met).
 
+
 ```
-val shift_p1: p1:point
-           -> p2:point{   Point.x p2 <> Point.x p1
-                       /\ Point.y p2 <> Point.x p1 }
-           -> ST unit
-    (requires (fun h -> True))
-    (ensures (fun h0 _ h1 -> modifies (only (Point.x p1)) h0 h1))
+[INCLUDE=code/exercises/Ex10b.fst:ShiftXP1Spec]
 ```
 
 In order to prove that the assignment to `Point.x p1` did not change
@@ -4151,16 +4098,16 @@ explicit.
 
 ~Exercise
 Change `shift_x` to the function `shift` below that moves both the `x` and `y` components
-of its argument by some amount. Prove that calling this function in
-`shift_p1` does not change `p2`.
+of its argument by some amount. Prove that calling this function in a
+function like `shift_p1` does not change `p2`.
 
-~~ CodeFragment {filename=exercises/ex10-shift.fst name=ex10b-shift}
-let shift p = Point.x p := 17; Point.y p := 18
+~~ ExerciseFragment {exname=Ex10b}
+let shift p = Point.x p := ...; Point.y p := ...
 ~~
 
 ~~Answer
-~~~ CodeFragment {filename=solutions/ex10-shift.fst name=so10b-shift}
-let shift p = Point.x p := 17; Point.y p := 18
+~~~ SolutionFragment {exname=Ex10b}
+[INCLUDE=code/solutions/Ex10b.fst:ShiftP1Solution]
 ~~~
 ~~
 ~
@@ -4174,9 +4121,6 @@ we look at an alternative way of proving stateful programs correct by making use
 a more structured representation of memory that we call a "HyperHeap". First, we illustrate
 the problem of scaling up the approach of the previous chapter to even slightly larger examples
 
-```
-  type a = b
-  ```
 
 ## Flying robots
 
@@ -4242,20 +4186,20 @@ refs in b.left.arm `disjoint` refs in b.right.arm
 As you can see, what started out as a bit of fun programming is now a
 painful exercise in managing anti-aliasing invariants. Worse, even if we
 state all these invariants, proving that they are preserved involves
-reasoning about a quadratic number of inequalities between the all the
+reasoning about a quadratic number of inequalities between all the
 references in each robot, as well as a further quadratic inequalities
 among the references of each bot.
 
 F\*'s effect mechanism provides an alternative to this tedium. Instead of
 working with the primitive `ST` effect (and its flat model of memory via
-the `heap` type) that we have been working with so far, we can define
+the `heap` type) that we have been working with so far, we can
 easily define a different, more structured view of memory as a new effect.
 One such alternative is the HyperHeap, a model of memory which provides a
 convenient built-in notion of disjoint sets of references.
 
 [johnnysokko]: johnnysokko.jpg "Johnny Sokko" { width=300px }
 [flying]: flying.gif "Flying Bot" { width=200px }
-[heap]: heap.jpg "A flat heap" {width=300px}
+[heap]: heap.jpg "A flat heap" {width=400px}
 [hyperheap]: hyperheap.jpg "A hyper-heap" {width=500px}
 
 ## Hyper-heaps
@@ -4287,8 +4231,7 @@ of type `ref a`---meaning that hyper-heaps are in 1-1 correspondence with
 the underlying heap, except, as we will see, the additional structure
 provided helps with stating and proving memory invariants.
 
-The module `HyperHeap` defines (see `lib/hyperheap.fsi`, for its abstract
-specification):
+The module `HyperHeap` defines:
 
 ```
 type t = Map.t rid heap
@@ -4301,7 +4244,7 @@ effect ST (a:Type) (pre:t -> Type) (post:t -> a -> t -> Type) =
 That is `HyperHeap.STATE` and `HyperHeap.ST` are just like the `STATE`
 and `ST` we've been working with, except that instead of the type of
 memory being a flat `heap`, the memory has type `HyperHeap.t`, a map from
-region ids `rid` to `heaps`.
+region ids `rid` to `heap`s.
 
 ### The type of region identifiers, `rid`
 
@@ -4429,7 +4372,7 @@ val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
 ### Framing conditions for hyper-heaps: `modifies` revised
 
 Finally, we redefine `modifies` clauses to work with hyper-heaps instead
-of heaps. Crucially, given a region ids `r1, ..., rn`, we intend to write
+of heaps. Crucially, given region ids `r1, ..., rn`, we intend to write
 `modifies (r1 ^++ ... ++^ rn) h0 h1` to mean that `h1` may differ from
 `h0` in all regions _rooted at some region_ in the set `{r1, ..., rn}`
 (and, as before, any other regions that are newly allocated in `h1`). As
@@ -4440,7 +4383,7 @@ and for better automation.
 
 ```
 type modifies (s:Set.set rid) (m0:t) (m1:t) =
-  Map.Equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
+  Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
 
 where
 val mod_set : Set.set rid -> GTot (Set.set rid)
@@ -4449,7 +4392,7 @@ and forall (x:rid) (s:Set.set rid).
 ```
 
 ~Remark
-The interpretation of `Map.restrict, Map.concat` and `Map.Equal` is
+The interpretation of `Map.restrict, Map.concat` and `Map.equal` is
 analogous to the counterparts for `Heap` discussed in the previous
 section.
 
@@ -4489,32 +4432,11 @@ many regions they used.)
 
 ```
 module Robot
-open Util
-open Heap
-open HyperHeap
+open FStar.Heap
+open FStar.HyperHeap
+open FStar.Set
 
-type point =
-  | Point : #r:rid
-          -> x:rref r int
-          -> y:rref r int
-          -> z:rref r int{x<>y /\ y<>z /\ x<>z}
-          -> point
-
-type arm =
-  | Arm : #r:rid
-       -> polar:rref r int
-       -> azim:rref r int{polar <> azim}
-       -> arm
-
-type bot =
-  | Bot : #r:rid
-       -> pos  :point{includes r (Point.r pos)}
-       -> left :arm  {includes r (Arm.r left)}
-       -> right:arm  {includes r (Arm.r right)
-                        /\ disjoint (Point.r pos) (Arm.r left)
-                        /\ disjoint (Point.r pos) (Arm.r right)
-                        /\ disjoint (Arm.r left)  (Arm.r right)}
-       -> bot
+[INCLUDE=code/solutions/Ex11a.fst:Types]
 ```
 
 Next, we define our robot invariant: whenever it is flying, its arms are
@@ -4525,71 +4447,20 @@ omitted the `contains` predicates in our invariant, and resorted to
 whenever we need that property.
 
 ```
-let flying (b:bot) (h:HyperHeap.t) =
-    sel h (Point.z (Bot.pos b)) > 0
-
-let arms_up (b:bot) (h:HyperHeap.t) =
-    sel h (Arm.polar (Bot.right b)) = 0
-    && sel h (Arm.polar (Bot.left b)) = 0
-
-type robot_inv (b:bot) (h:HyperHeap.t) =
-  Map.contains h (Bot.r b)
-  /\ Map.contains h (Point.r (Bot.pos b))
-  /\ Map.contains h (Arm.r (Bot.left b))
-  /\ Map.contains h (Arm.r (Bot.right b))
-  /\ (flying b h ==> arms_up b h)
+[INCLUDE=code/solutions/Ex11a.fst:Invariant]
 ```
 
 Now, we come to the code that builds new points, arms, and robots. In
 each case, the caller specifies `r0`, the region within which the object
 is to be allocated. We create a new sub-region of `r0`, allocate the
-object within in, prove that the region is fresh (meaning the initial
+object within, prove that the region is fresh (meaning the initial
 heap does not contain that region, while the final heap does), and that
-the object is initialized as expected. Inthe case of `new_robot`, we also
+the object is initialized as expected. In the case of `new_robot`, we also
 prove that the the returned `bot` satisfies the robot invariant.
 
 
 ```
-val new_point: r0:rid -> x:int -> y:int -> z:int -> ST point
-    (requires (fun h0 -> True))
-    (ensures (fun h0 p h1 ->
-          modifies Set.empty h0 h1
-          /\ extends (Point.r p) r0
-          /\ fresh_region (Point.r p) h0 h1
-          /\ sel h1 (Point.x p) = x
-          /\ sel h1 (Point.y p) = y
-          /\ sel h1 (Point.z p) = z))
-let new_point r0 x y z=
-  let r = new_region r0 in
-  let x = ralloc r x in
-  let y = ralloc r y in
-  let z = ralloc r z in
-  Point x y z
-
-val new_arm: r0:rid -> ST arm
-    (requires (fun h0 -> True))
-    (ensures (fun h0 x h1 ->
-          modifies Set.empty h0 h1
-          /\ extends (Arm.r x) r0
-          /\ fresh_region (Arm.r x) h0 h1))
-let new_arm r0 =
-  let r = new_region r0 in
-  let p = ralloc r 0 in
-  let a = ralloc r 0 in
-  Arm p a
-
-val new_robot: r0:rid -> ST bot (requires (fun h0 -> True))
-                                (ensures (fun h0 x h1 ->
-                                      modifies Set.empty h0 h1
-                                      /\ extends (Bot.r x) r0
-                                      /\ fresh_region (Bot.r x) h0 h1
-                                      /\ robot_inv x h1))
-let new_robot r0 =
-  let r = new_region r0 in
-  let p = new_point r 0 0 0 in
-  let left = new_arm r in
-  let right = new_arm r in
-  Bot #r p left right
+[INCLUDE=code/solutions/Ex11a.fst:Build]
 ```
 
 Next, we write our function `fly`, which sets the robots arms up, and
@@ -4599,17 +4470,7 @@ invariant suffice to prove that this assignment does not mess with the
 robot invariant.
 
 ```
-val fly: b:bot -> ST unit
-  (requires (robot_inv b))
-  (ensures (fun h0 _u h1 ->
-              modifies (only (Bot.r b)) h0 h1
-              /\ robot_inv b h1
-              /\ flying b h1))
-let fly b =
-  Arm.polar (Bot.left b)  := 0;
-  Arm.polar (Bot.right b) := 0;
-  Point.z (Bot.pos b)     := 100
-  Arm.azim (Bot.right b)  := 17;
+[INCLUDE=code/solutions/Ex11a.fst:Fly]
 ```
 
 Finally, if we're given two robots, `b0` and `b1`, we know that they are
@@ -4618,19 +4479,7 @@ can fly one, not impact the invariant of the other; then fly the other,
 and have both of them flying at the end.
 
 ```
-val fly_robots: b0:bot
-             -> b1:bot{disjoint (Bot.r b0) (Bot.r b1)}
-             -> ST unit
-    (requires (fun h -> robot_inv b0 h /\ robot_inv b1 h))
-    (ensures (fun h0 x h1 ->
-              modifies (Bot.r b0 ^+^ Bot.r b1) h0 h1
-              /\ robot_inv b0 h1
-              /\ robot_inv b1 h1
-              /\ flying b0 h1
-              /\ flying b1 h1))
-let fly_robots b0 b1 =
-  fly b0;
-  fly b1
+[INCLUDE=code/solutions/Ex11a.fst:FlyBoth]
 ```
 
 
@@ -4638,12 +4487,12 @@ let fly_robots b0 b1 =
 Extend this example by adding a function which takes a list of robots,
 each in a region disjoint from all others, and fly all of them.
 
-~~ CodeFragment {filename=exercises/robot2.fst name=ex11a-robot}
+~~ ExerciseFragment {exname=Ex11a}
 val fly_robot_army: ...
 ~~
 
 ~~Answer
-~~~ CodeFragment {filename=solutions/robot2.fst name=so11a-robot}
+~~~ SolutionFragment {exname=Ex11a}
 val fly_robot_army:  #rs:Set.set rid
         -> bs:bots rs
         -> ST unit
@@ -4809,7 +4658,7 @@ let mk_counter_2 _ =
 ~Exercise
 Fix this example.
 
-~~ ExerciseFragment {exname=ex10b-evens}
+~~ ExerciseFragment {exname=Ex10c}
 val mk_counter_2: unit
                -> ST t (requires (fun h -> True))
                        (ensures  (fun h v h' ->
@@ -4830,95 +4679,109 @@ let mk_counter_2 _ =
 
 # Cryptography examples
 
-## MAC
+Cryptographic reasoning is inherently modular reasoning. We want to show 
+that using some cryptographic primitive we can secure some application goal.
+We will formalize both the guarantees afforded by the cryptographic module, 
+as well as the goals of the application employing the module using types. 
 
-We begin with our cryptographic library.
+## Message authentication codes (MAC)
 
-```
-module MAC
-open Array
-open SHA1
-```
+We begin with  a simple cryptographic library for message authentication codes (MAC) in `module MAC`.
 
-Message authentication codes
-(MACs) provide integrity protection based on keyed cryptographic hashes.
-We define an F* module that implements this functionality.
+MACs provide integrity protection using shared key cryptography, often using
+keyed cryptographic hashes.
 
-We attach an authenticated property to each key
-used as a pre-condition for MACing and a postcondition of MAC verification.
+A MAC scheme typically consists of three algorithms, a `keygen` 
+algorithm for generating the shared `key`,
+a `mac` function for generating a MAC `tag` on `text` using `key`, and
+a `verify` function for verifying that `tag` is a valid MAC for `text` and `key`.
 
-```
-opaque type key_prop : key -> text -> Type
-type pkey (p:(text -> Type)) = k:key{key_prop k == p}
-```
+### The message authentication experiment { - }
 
-(In the RPC example below we will use a key of type `pkey reqresp` where
-```
-opaque logic type reqresp (msg:text) =
-    (exists s. msg = request s /\ Request s)
- \/ (exists s t. msg = response s t /\ Response s t)
-```
-)
+A MAC scheme $\Pi=($`keygen`,`mac`,`verify`$)$ is secure if the success probability of all adversaries 
+$A$ in the following probabilistic experiment is small:
 
-Next, we define the types of functions that a MAC library is supposed to
-provide:
+ * A key `k` is generated by running `keygen`.
+ * The adversary $A$ is given oracle access to `mac k`. The key is hidden but he can provide messages to learn tags. 
+   The adversary eventually outputs `(m,t)`. Let $Q$ denote the set of all queries that $A$ asked its oracle.
+ * The adversary succeeds if and only if (1) `verify k t m = true` and (2) `m` $\notin Q$.
+
+### The MAC type interface { - } 
+We define an interface for an F* module implementing this functionality 
+and expressing the cryptographic guarantees.
 
 ```
-val keygen: p:(text -> Type) -> pkey p
-val mac:    k:key -> t:text{key_prop k t} -> tag
-val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
+[INCLUDE=code/solutions/Ex12.MAC.fst:MacSpec]
 ```
+
+This interface is unsurprising except for `pkey p` and `key_prop k t`.
+
+We attach an authenticated property to each key and `pkey p` is the type of a key with property `p`.
+
+The application specific function `key_prop k t` maps each key to such 
+an authentication property: `assume type key_prop : key -> text -> Type`. 
+
+It is used as a pre-condition for MACing and a postcondition of MAC verification.
+
+In the RPC example below ([#sec-secure-rpc]) we will use a key of type `pkey reqresp` where
+```
+[INCLUDE=code/solutions/Ex12b.RPC.fst:MsgProperty]
+```
+which states that messages that verify with that key are either 
+`Request`s or `Respone`s. The types `message` and `text` are both abbreviations for `bytes`, 
+and the formatting functions use tags to disambiguate between requests and responses. 
+
+
 
 ## Cryptographic Capabilities for Accessing Files
 
-We extend the acls2.fst example with cryptographic capabilities, so
-that our trusted ACLs library can now issue and accept HMACSHA1 tags
-as evidence that a given file is readable.
+We extend the access control example ([#sec-policy]) with cryptographic capabilities, so
+that our trusted `ACLs` library can now issue and accept MAC tags
+as evidence that a given file is readable. Recall that this exercise employed 
+predicates `ACLS.canRead f` and `ACLS.canWrite f` on filenames that determined whether 
+a file could be read or written.
 
-What is the advantage of capabilities over the refinements already
-provided in acls2.fst?
+We now attach these predicates to unforgeable cryptographic tokens also called capabilities.
+
+*What is the advantage of capabilities over the dynamic access control based on state of Section [#sec-stateful-access-control]?*
+
+Capabilities need to be kept secret, as everyone knowing the capabilities is granted access to 
+the corresponding files, however, parties no longer need to keep a synchroniced access control database. 
+In order to verify capabilities, they only need to store the cryptographic key used to generate the capability.
 
 ~ Exercise
-Relying on acls2.fst and mac.fst, implement a pair of functions with
+Relying on `ACLs` and `MAC`, implement a pair of functions with
 the following specification, and verify them by typing under the
-security assumption that HMACSHA1 is INT-CPA.
+security assumption that HMACSHA1 is INT-CMA.
 
-~~ CodeFragment {filename=exercises/acls-cap.fst name=ex12a-acls-cap}
-val issue:  f:file{ canRead f } -> SHA1.tag
-val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
+~~ ExerciseFragment {exname=Ex12a.Cap}
+[INCLUDE=code/exercises/Ex12a.Cap.fst:CapType]
 ~~
 
 To this end, assume given a UTF8 encoding function from strings to
 bytes, with the following specification:
 
 ```
-assume val utf8: s:string  -> Tot (seq byte)
-
-assume UTF8_inj:
-  forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
-    equal (utf8 s0) (utf8 s1) ==> s0==s1
-
-
+[INCLUDE=code/exercises/Ex12a.Cap.fst:UTF8Inj]
 ```
+
+This says that if two `utf_8` encodings are equal, then so are the values that were encoded. 
+The patterns instructs the SMT solver to associate the injectivity axiom only with very specific terms.
+
 
 ~~ Answer
 ```
-val issue: f:file{ canRead f } -> SHA1.tag
-val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
-
-let issue f = MAC.mac k (utf8 f)
-let redeem f t = if MAC.verify k (utf8 f) t then () else failwith "bad capability"
-
+[INCLUDE=code/solutions/Ex12a.Cap.fst:CapImplementation]
 ```
 ~~
 
-How would we extend it to also cover CanWrite access?
+How would we extend it to also cover write access?
 ~
 
 ## Secure RPC
 
 We describe a simple secure RPC implementation, which consists of three
-modules: `Mac`, our library for MACs, `Format`, a module for message
+modules: `MAC`, our library for MACs, `Format`, a module for message
 formatting, and `RPC`, a module for the rest of the protocol code.
 (Placing the formatting functions request and response in a separate
 module is convenient to illustrate modular programming and verification.)
@@ -4952,11 +4815,10 @@ instance be implemented as tagged concatenations of their utf8-encoded
 arguments. These functions will be detailed in the `Format` module.
 
 Below we give an implementation of the protocol using these functions,
-the functions of the 'Mac' module, and networking functions
+the functions of the 'MAC' module, and networking functions
 
 ```
-assume val send: message -> unit
-assume val recv: (message -> unit) -> unit
+[INCLUDE=code/solutions/Ex12b.RPC.fst:Network]
 ```
 
 These functions model an untrusted network controlled by the adversary, who decides
@@ -4964,38 +4826,14 @@ through their implementation when to deliver messages.
 
 Two events, record genuine requests and responses
 ```
-logic type Request : string -> Type
-logic type Response : string -> string -> Type
+[INCLUDE=code/solutions/Ex12b.RPC.fst:RpcPredicates]
 ```
 in the following protocol
 
 ```
-let client (s:string16) =
-  assume (Request s);
-  send (append (utf8 s) (mac k (request s)));
-  recv (fun msg ->
-    if length msg < macsize then failwith "Too short"
-    else
-      let (v, m') = split msg (length msg - macsize) in
-      let t = iutf8 v in
-      if verify k (response s t) m'
-      then assert (Response s t))
-
-let server () =
-  recv (fun msg ->
-    if length msg < macsize then failwith "Too short"
-    else
-      let (v,m) = split msg (length msg - macsize) in
-      if length v > 65535 then failwith "Too long"
-      else
-        let s = iutf8 v in
-        if verify k (request s) m
-        then
-          ( assert (Request s);
-            let t = "22" in
-            assume (Response s t);
-            send (append (utf8 t) (mac k (response s t)))))
+[INCLUDE=code/solutions/Ex12b.RPC.fst:RpcProtocol]
 ```
+For simplicity we initially elide the client code which is similar.
 
 The `assert` guarantee that messages that are received by a party have been sent by its peer.
 
@@ -5005,16 +4843,9 @@ The Format module used by the protocol implementation
 exports among others the following types and functions.
 
 ```
-type message = seq byte
-type msg (l:nat) = m:message{length m==l}
+[INCLUDE=code/solutions/Ex12b.Format.fst:FormatMsg]
 
-val request : string -> Tot message
-let request s = append tag0 (utf8 s)
-
-val response: string16 -> string -> Tot message
-let response s t =
-  let lb = uint16_to_bytes (length (utf8 s)) in
-  append tag1 (append lb (append (utf8 s) (utf8 t)))
+[INCLUDE=code/solutions/Ex12b.Format.fst:FormatReqRes]
 ```
 
 We require 3 lemmas on message formats:
@@ -5033,21 +4864,7 @@ Try to state this formally as three lemmas.
 
 ~~Answer
 ```
-val req_resp_distinct:
-  s:string -> s':string16 -> t':string ->
-  Lemma (requires True)
-        (ensures (request s <> response s' t'))
-        [SMTPat (request s); SMTPat (response s' t')]
-
-val req_components_corr:
-  s0:string -> s1:string ->
-  Lemma (requires (request s0 == request s1))
-        (ensures  (s0==s1))
-
-val resp_components_corr:
-  s0:string16 -> t0:string -> s1:string16 -> t1:string ->
-  Lemma (requires (response s0 t0 == response s1 t1))
-        (ensures  (s0==s1 /\ t0==t1))
+[INCLUDE=code/solutions/Ex12b.Format.fst:FormatLemmas]
 ```
 ~~
 ~
@@ -5058,10 +4875,7 @@ Prove these three lemmas.
 
 ~~ Answer
 ```
-let req_resp_distinct s s' t' =
-  assert (Array.index (request s) 0 <> Array.index (response s' t') 0)
-let req_components_corr s0 s1 = ()
-let resp_components_corr s0 t0 s1 t1 = ()
+[INCLUDE=code/solutions/Ex12b.Format.fst:FormatProofs]
 ```
 ~~
 
@@ -5102,13 +4916,13 @@ let rec append_inj_lemma b1 b2 c1 c2 =
 ~ Remark
 In the lecture we also saw an extended protocol where we have a
 population of principals, represented as concrete strings ranged over
-by a and b, that intend to perform various remote procedure calls
+by `a` and `b`, that intend to perform various remote procedure calls
 (RPCs) over a public network.
 The RPCs consist of requests and responses, both also represented as strings.
-The security goals of our RPC protocol are that (1) whenever a principal b accepts a
-request message s from a, principal a has indeed sent the message to b and, conversely,
-(2) whenever a accepts a response message t from b, principal b has indeed sent the
-message in response to a matching request from a.
+The security goals of our RPC protocol are that (1) whenever a principal `b` accepts a
+request message `s` from `a`, principal `a` has indeed sent the message to `b` and, conversely,
+(2) whenever `a` accepts a response message `t` from `b`, principal `b` has indeed sent the
+message in response to a matching request from `a`.
 ~
 
 <!--
@@ -5123,48 +4937,32 @@ signing email messages and verifying their signatures.
 We intend to MAC and/or encrypt plaintexts of variable sizes using
 fixed-sized algorithms, such as those that operate on 256-bit blocks, such as AES.
 
-To this end, we use the following classic padding scheme (used for instance in TLS).
+To this end, we use the following classic PKCS#7 padding scheme (used for instance in TLS).
 
 ```
-module Pad
-open Array
+[INCLUDE=code/exercises/Ex12.Pad.fst:CreatePadding]
 
-(* two coercions from uint8 <--> n:int { 0 <= n < 255 } *)
-assume val n2b: n:nat {( n < 256 )} -> Tot uint8
-assume val b2n: b:uint8 -> Tot (n:nat { (n < 256) /\ n2b n = b })
+[INCLUDE=code/exercises/Ex12.Pad.fst:EncodePadding]
 
-type bytes = seq byte (* concrete byte arrays *)
-type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
-
-let blocksize = 32
-type block = nbytes blocksize
-type text = b:bytes {(length b < blocksize)}
-
-let pad n = Array.create n (n2b (n-1))
-
-let encode (a:text) = append a (pad (blocksize - length a))
-
-let decode (b:block) =
-  let padsize = b2n(index b (blocksize - 1)) + 1 in
-  if op_LessThan padsize blocksize then
-    let (plain,padding) = split b (blocksize - padsize) in
-    if padding = pad padsize
-    then Some plain
-    else None
-  else None
+[INCLUDE=code/exercises/Ex12.Pad.fst:DecodePadding]
 ```
+
+The function `n2b` converts numbers less than 256 into a byte; `pad` 
+creates creates `bytes` consisting of `n` bytes encoding the number `n`;
+`encode` filles up `bytes` smaller than a block to a full block using such pads; and 
+`decode` removes pads.
 
 ~ Exercise
-What do these function do? Write as precise as possible
-typed specifications for these functions. In particular
+Write a typed specifications for these functions. In particular
 show that decoding cancels out encoding.
 
 ~~ Answer
 
 ```
-val pad: n:nat { 1 <= n /\ n <= blocksize } -> Tot (nbytes n)
-val encode: a: text -> Tot block
-val decode: b:block -> Tot (option (t:text { Array.equal b (encode t)}))
+[INCLUDE=code/solutions/Ex12d.Pad.fst:CreatePaddingT]
+[INCLUDE=code/solutions/Ex12d.Pad.fst:EncodePaddingT]
+[INCLUDE=code/solutions/Ex12d.Pad.fst:DecodePaddingT]
+
 ```
 ~~
 ~
@@ -5184,16 +4982,7 @@ we require it to be injective, so that authenticating a padded text
 unambiguously authenticate the text before padding. For instance:
 
 ```
-val inj: a: text -> b: text -> Lemma (requires (Array.equal (encode a) (encode b)))
-                                     (ensures (Array.equal a b))
-                                     [SMTPat (encode a); SMTPat (encode b)]
-                                     (decreases (length a))
-let inj a b =
-  if length a = length b
-  then ()
-  else let aa = encode a in
-       let bb = encode b in
-       cut (Array.index aa 31 =!= Array.index bb 31)
+[INCLUDE=code/solutions/Ex12e.Pad.fst:PaddingInj]
 ```
 
 In this context, another good padding scheme is to append a 1 then
@@ -5212,58 +5001,20 @@ using the MAC interface below, which only supports messages of type
 `block`.
 
 To this end, we assume given an implementation of the following module
-(adapted from `mac.fst`)
+(adapted from the `MAC` module)
 
 ```
-module BMAC
-open Pad
-
-let keysize = 16 (* these are the sizes for SHA1 *)
-let macsize = 20
-type key = nbytes keysize
-type tag = nbytes macsize
-
-opaque type key_prop : key -> block -> Type
-type pkey (p:(block -> Type)) = k:key{key_prop k == p}
-
-assume val keygen: p:(block -> Type) -> pkey p
-assume val mac:    k:key -> t:block{key_prop k t} -> tag
-assume val verify: k:key -> t:block -> tag -> b:bool{b ==> key_prop k t}
+[INCLUDE=code/exercises/Ex12.BMAC.fst]
 ```
 
 Write a similar module that accepts texts instead of blocks:
-first the implementations for keygen, mac, and verify,
+first the implementations for `keygen`, `mac`, and `verify`,
 then type annotations to derive their authentication property
-(on texts) from the one of BMAC (on blocks).
+(on `texts`) from the one of `BMAC` (on `blocks`).
 
 ~~ Answer
 ```
-module TMAC
-open Pad
-
-let keysize = BMAC.keysize
-let macsize = BMAC.macsize
-type key = BMAC.key
-type tag = BMAC.tag
-
-opaque type bspec (spec: (text -> Type)) (b:block) =
-  (forall (t:text). b = encode t ==> spec t)
-
-opaque type key_prop : key -> text -> Type
-type pkey (p:(text -> Type)) =
-  k:key{key_prop k == p /\ BMAC.key_prop k == bspec p}
-
-val keygen: p:(text -> Type) -> pkey p
-val mac:    p:(text -> Type) -> k:pkey p -> t:text{p t} -> tag
-val verify: p:(text -> Type) -> k:pkey p -> t:text -> tag -> b:bool{b ==> p t}
-
-let keygen (spec: text -> Type) =
-  let k = BMAC.keygen (bspec spec) in
-  assume (key_prop k == spec);
-  k
-
-let mac (p:text -> Type) k t = BMAC.mac k (encode t)
-let verify k t tag = BMAC.verify k (encode t) tag
+[INCLUDE=code/solutions/Ex12f.TMAC.fst:TMAC]
 ```
 ~~
 ~
@@ -5307,25 +5058,7 @@ val keygen: p:(text2 -> Type) -> pkey p
 val mac:    p:(text2 -> Type) -> k:pkey p -> t:text2{p  t} -> tag
 val verify: p:(text2 -> Type) -> k:pkey p -> t:text2 -> tag -> b:bool{b ==> p t}
 
-let keygen (spec: text2 -> Type) =
-  let k0 = BMAC.keygen (bspec0 spec) in
-  let k1 = BMAC.keygen (bspec1 spec) in
-  let k = Keys k0 k1 in
-  assert (BMAC.key_prop k0 == bspec0 spec);
-  assert (BMAC.key_prop k1 == bspec1 spec);
-  assume (key_prop k == spec);
-  k
-
-let mac (Keys k0 k1) t =
-  if length t < blocksize
-  then BMAC.mac k0 (encode t)
-  else BMAC.mac k1 t
-
-let verify (Keys k0 k1) t tag =
-  if length t < blocksize
-  then BMAC.verify k0 (encode t) tag
-  else BMAC.verify k1 t tag
-
+[INCLUDE=code/solutions/Ex12g.TMAC2.fst:TMAC2]
 ```
 ~~
 
@@ -5336,6 +5069,120 @@ What about MAC schemes for texts of arbitrary lengths?
 Hint: have a look e.g. at the HMAC construction.
 ~
 
+
+#  Theoretical background on crypto verification in F\*
+Those unfamiliar with functional programming may appreciate the
+following [security centered look](https://arxiv.org/abs/1201.5728) at the differences between a functional
+and an imperative programming style.
+
+We use a [cryptographic verification by typing approach](http://research.microsoft.com/en-us/um/people/fournet/comp-f7/)
+adapted to make use of new F\* features. We follow their notation
+and recall them briefly.
+*a) F\* Types:* A program is a sequential composition of modules,
+written $A_1 \cdot A_2 \cdot \dots \cdot A_n$. A module $A$ depends on types, values,
+and functions being available in its environment and exports types,
+values, and functions in its own interface $I$.
+A module is well typed, written $I_1 ,\dots ,I_\ell \vdash A \leadsto I$ if it correctly
+implements I using modules with interfaces $I_1 ,\dots,I_\ell$. The simplest
+well typed program is an expression $A$ that has type $t$ in typing
+environment $I$, written $I \perp A : t$. A program is closed if it is well
+typed in the empty environment $\emptyset$.
+A program is *safe* if, in every run of the program, all runtime
+values satisfy their type. A key property of a type system is that
+well-typed programs are always safe.
+
+[link]: http://link.com "link title"
+
+**Theorem 1 (Safety by Typing):** If $\emptyset \vdash A : t$, then $A$ is safe.
+
+Two expressions $A_0$ and $A_1$ are equivalent, written $A_0 \approx A_1$,
+when they return the same distribution of values.
+
+An interface can declare a type as abstract, e.g. `abstract type key = bytes`, and keep its representation private. This guarantees
+that modules using this interface will treat key values as opaque and
+guarantees their integrity and secrecy.
+
+As in the example above, one use of abstract types is to protect
+keys from being leaked by programming mistakes. Another use of
+abstract types is to verify simple equivalences for programs $P \cdot A$
+written such that operations on secrets are performed by a pure
+(side-effect free) module $P$ that exports a restricted interface $I_\alpha$
+with an abstract type $\alpha$ for secrets. The rest of the program can
+be passed secrets and can pass them back to $P$ but cannot access the
+representation of secrets. For instance, it can never branch on secrets.
+
+**Theorem 2 (Equivalence by Typing):** If $\emptyset \vdash P_b \leadsto I_\alpha$ for $b = 0,1$
+and $I_α \vdash A : bool$, then $P_0 \cdot A ≈ P_1 \cdot A$.
+
+*b) $\epsilon$-Safety and $\epsilon$-Equivalence:* Instead of relying on 
+the asymptotic safety and equivalence notions of [10] we use a concrete $\epsilon$ loss
+term. A module A is $\epsilon$-safe if the probability of an assertion failing
+in $A$ is $\epsilon$.
+Two closed boolean expressions $A_0$ and $A_1$ are $\epsilon$-equivalent when
+the statistical distance
+$\frac{1}{2} \sum_{M=true,false} |Pr[A_0 \Downarrow M]−Pr[A_1 \Downarrow M]|$
+is $\epsilon$.
+
+*c) Keyed module:* Keyed modules export `gen` , `leak` , and `coerce`
+functions and provide some cryptographic functionality modeled
+using idealization for honest keys and strong algorithms. To this
+end keys are associated with a unique index upon generation. Keyed
+modules enforce that `gen` is called at most once per index. The index
+describes the context the key was created in and the algorithms it is
+to be used with.
+
+*d) Plain module:* To define confidentiality using types, consider a
+module $P$ that is typeable using an interface $IP$ of the form
+
+```
+type repr = b:bytes{Length(b)=plainsize}
+private type plain = repr
+val repr: plain{¬(ideal)} →repr
+```
+
+The type repr gives the representation of plaintext, whereas the
+type plain is `abstract`, with functions `repr` and `plain` converting between
+them. If `ideal` is `true`, the function `repr` cannot be called, intuitively
+making the interface parametric in type `plain`, so that we can apply *Theorem 2*
+
+**Definition 1 (Interface-based secrecy):** Let $IP$ be the interface
+of $P$ and $IC$ be the interface of module $C$. $C$ protects the secrecy
+of `plain` , if `ideal=true`, $IP \vdash C \leadsto IC$ and for all modules $P$ with
+`ideal=false`, $P \leadsto IP$, `ideal=true`, $P \leadsto IP$ and $A$ with $IP,IC \vdash A$ 
+we have `ideal=false`, $P \cdot C \cdot A \approx_{\epsilon(A,P)}$ `ideal=true`, $P \cdot C \cdot A$
+
+The function $\epsilon(.,.)$ is called the advantage function of $P,A$.
+
+# A note on this document 
+
+This document was created using Dan Liejen's <https://madoko.net> markdown processor. 
+
+If` you find any errors in it, or would like to improve it in any way,
+this is how you do it: 
+
+1. Point your browser at <https://madoko.net>
+2. Select the folder icon in the top-left corner, then "Open ... (Alt-O)"
+3. Select the "GitHub" icon
+4. Authorize the Madoko application to access your GitHub repositories
+5. Open <github>/FStarLang/FStar/doc/tutorial/tutorial.mdk, or your fork of the FStar repo
+   if you don't have access, and start editing.
+6. Ctrl+S (or Synchronize from the folder tab) will bring up a dialog to
+   commit and push this file to GitHub after merging with the latest changes there.
+
+     For included code snippets:
+     -- The snippets must be derived from files that are stored in the same subtree of the git repo
+        i.e, all the samples should be in sub-directories of FStarLang/FStar/doc/tutorial/code
+
+     Note: in this mode (i.e., github instead of dropbox), the document will not live update
+           with the changes that anyone else may be making to the document concurrently. You
+           will only see others' changes when you synchronize with github.
+
+     If you use Emacs to edit this you can use the markdown-mode
+     <http://jblevins.org/projects/markdown-mode/> for syntax highlighting.
+
+
+
+<!-- deactivating this example for now until we can replace it with Encrypt-then-MAC
 
 # Advanced cryptographic examples
 
@@ -5661,6 +5508,8 @@ let test() =
   (* let p'' = decrypt k1 c in     // this rightfully triggers an error *)
   ()
 ```
+
+-->
 
 [Title          A]: http://Title_A.com "Title          A title"
 

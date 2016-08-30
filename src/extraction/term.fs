@@ -520,7 +520,7 @@ let extract_pat (g:env) p (expected_t:mlty) : (env * list<(mlpattern * option<ml
         match p.v with
           | Pat_disj _ -> failwith "Impossible: Nested disjunctive pattern"
 
-          | Pat_constant (Const_int (c, None)) when (not (Options.use_native_int())) ->
+          | Pat_constant (Const_int (c, None))  ->
             // note: as-patterns are not valid F* and "let Pat_constant i = p.v"
             // is not valid F# ?!!
             let i = Const_int (c, None) in

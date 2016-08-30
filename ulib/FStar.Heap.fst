@@ -55,7 +55,7 @@ assume DomContains:   forall (a:Type) (h:heap) (r:ref a).                  {:pat
 
 type on (r:set aref) (p:(heap -> Type)) (h:heap) = p (restrict h r)
 type fresh (refs:set aref) (h0:heap) (h1:heap) =
-  (forall (a:Type) (a:ref a).{:pattern (contains h0 a)} mem (Ref a) refs ==> not(contains h0 a) /\ contains h1 a)
+  (forall (a:Type) (r:ref a).{:pattern (contains h0 r)} mem (Ref r) refs ==> not(contains h0 r) /\ contains h1 r)
 type modifies (mods:set aref) (h:heap) (h':heap) =
     equal h' (concat h' (restrict h (complement mods)))
     /\ subset (domain h) (domain h')
@@ -69,10 +69,10 @@ let lemma_modifies_trans m1 m2 m3 s1 s2 = ()
 let only x = singleton (Ref x)
 
 (* val op_Hat_Plus_Plus<u> : #a:Type(u) -> r:ref a -> set (aref<u>) -> Tot (set (aref<u>)) *)
-let op_Hat_Plus_Plus (#a:Type) r s = union (singleton (Ref r)) s
+let op_Hat_Plus_Plus (#a:Type) (r:ref a) s = union (singleton (Ref r)) s
 
 (* val op_Plus_Plus_Hat<u> : #a:Type(u) -> set (aref<u>) -> r:ref a -> Tot (set (aref<u>)) *)
-let op_Plus_Plus_Hat (#a:Type) s r = union s (singleton (Ref r))
+let op_Plus_Plus_Hat (#a:Type) s (r:ref a) = union s (singleton (Ref r))
 
 (* val op_Hat_Plus_Hat<u> : #a:Type(u) -> #b:Type(u) -> ref a -> ref b -> Tot (set (aref<u>)) *)
-let op_Hat_Plus_Hat (#a:Type) (#b:Type) r1 r2 = union (singleton (Ref r1)) (singleton (Ref r2))
+let op_Hat_Plus_Hat (#a:Type) (#b:Type) (r1:ref a) (r2:ref b) = union (singleton (Ref r1)) (singleton (Ref r2))

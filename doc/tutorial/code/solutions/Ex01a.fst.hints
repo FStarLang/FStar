@@ -1,0 +1,31 @@
+[
+  "èƒ©H‡7ï¯È∂˚å5#¢ô",
+  [
+    [ "Ex01a.canWrite", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex01a.canRead", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex01a.canRead",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0
+    ],
+    [
+      "Ex01a.checkedRead",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0
+    ],
+    [
+      "Ex01a.checkedWrite",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0
+    ]
+  ]
+]

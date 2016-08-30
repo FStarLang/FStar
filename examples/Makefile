@@ -9,6 +9,7 @@ crypto \
 security \
 termination \
 software_foundations \
+../doc/tutorial/code/exercises \
 ../doc/tutorial/code/solutions \
 relational \
 relational/new \
@@ -18,11 +19,14 @@ maths \
 paradoxes \
 printf \
 verifythis \
-metatheory \
 wysteria \
 preorders \
 dm4free \
-unit-tests 
+unit-tests
+
+#metatheory\
+after verifythis
+
 
 # #	make -C bignum  -- big timeout (30) + failing asserts (even with 50)
 # #	make -C stateful_bignum  -- huge timeout (50) + code duplication (prims)

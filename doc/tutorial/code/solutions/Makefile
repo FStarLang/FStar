@@ -1,33 +1,66 @@
-FSTAR_HOME=../../../..
+VERFILES=Ex01a.fst \
+Ex02a.fst \
+Ex03a.fst \
+Ex03b.fst \
+Ex03c.fst \
+Ex04a.fst \
+Ex04b.fst \
+Ex04c.fst \
+Ex04e.fst \
+Ex04f.fst \
+Ex04g.fst \
+Ex04h.fst \
+Ex05a.fst \
+Ex05b.fst \
+Ex06a.fst \
+Ex06b.fst \
+Ex06c.fst \
+Ex06d.fst \
+Ex06e.fst \
+Ex07a.fst \
+Ex07b.fst \
+Ex07c.fst \
+Ex07d.fst \
+Ex10a.fst \
+Ex10b.fst \
+Ex12a.Cap.fst \
+Ex12b.RPC.fst \
+Ex12d.Pad.fst \
+Ex12e.Pad.fst \
+Ex12f.TMAC.fst \
+Ex12g.TMAC2.fst
+
+VERFILES_HH=Ex11a.fst
+
+FSTAR_HOME=../../../../
+HINTS_ENABLED=--use_hints  # CH: seems like overkill to me
 include ../Makefile.include
 
-verify-ex8a-acls:  ex8a-acls.fst
-	$(SFSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fsti partialmap.fst FStar.ST.fst FStar.List.fst ) $^
-
-verify-ex9a-acls-cap: ../solutions/ex9a-mac.fst ../solutions/ex9a-acls2.fst ex9a-acls-cap.fst
-	$(SFSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fsti partialmap.fst FStar.ST.fst FStar.List.fst ) $^
-
-verify-ex9bc-format: ex9bc-format.fst
-	$(SFSTAR) $(SECLIB) $^
-
-verify-ex9bc-mac: ex9bc-mac.fst
-	$(SFSTAR) $(SECLIB) $^
-
-verify-ex9bc-rpc: ex9bc-format.fst ex9bc-mac.fst ex9bc-rpc.fst
-	$(SFSTAR) $(SECLIB) $^
-
-verify-ex9defgh-padding: ex9defgh-padding.fst
-	$(SFSTAR) $(SECLIB) $^
-
-verify-ex10-shift: ex10-shift.fst
-	$(SFSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst)  $^
-
-verify-robots:
-	$(SFSTAR) robot.fst
-	$(SFSTAR) robot2.fst
+HYPERHEAP=$(FSTAR_HOME)/ulib/hyperheap
 
 verify-%: __force__
-	$(SFSTAR) $*.fst
+	$(FSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst $*
 
-verify-security: verify-ex9a-acls-cap verify-ex9bc-format verify-ex9bc-mac verify-ex9bc-rpc verify-ex9defgh-padding
+verify_hh-%: __force__
+	$(FSTAR) --include $(HYPERHEAP) $*
 
+
+all: uall sall Ex01a-ocaml
+
+sall:
+
+uall: $(VERFILES:%=verify-%) $(VERFILES_HH:%=verify_hh-%)
+
+
+# Importing targets for simplified extraction to Ocaml
+
+include $(FSTAR_HOME)/ulib/ml/Makefile.include
+
+out:
+	mkdir -p out
+
+Ex01a-ocaml: out Ex01a.fst
+	$(MAKE) -C $(ULIB_ML)
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Ex01a.fst
+	$(OCAMLOPT) out/Ex01a.ml -o Ex01a.exe
+	-./Ex01a.exe

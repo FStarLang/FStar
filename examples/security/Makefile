@@ -1,4 +1,4 @@
-VERFILES=acls.fst acls2.fst
+VERFILES=ACLs.fst ACLs_simplified.fst
 FSTAR_HOME=../..
 include ../Makefile.include
 all: uall sall
@@ -6,6 +6,3 @@ all: uall sall
 uall:
 
 sall: .all.ver
-
-#statefulEnc-single.vv statefulEnc-multi.vv statefulEnc-multi-hyperheap.vv
-# statefulEnc-multi-frame.vv

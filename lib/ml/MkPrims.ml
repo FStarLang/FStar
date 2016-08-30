@@ -4,12 +4,12 @@ module Make = functor (X: sig
   val ( - ): int -> int -> int
   val ( * ): int -> int -> int
   val ( / ): int -> int -> int
-  val ( % ): int -> int -> int
+  val ( mod ): int -> int -> int
   val ( <= ): int -> int -> bool
   val ( >= ): int -> int -> bool
   val ( < ): int -> int -> bool
   val ( < ): int -> int -> bool
-  val op_Minus: int -> int
+  val ( ~- ): int -> int
   val parse_int: string -> int
 end) -> struct
   include X
@@ -111,7 +111,7 @@ end) -> struct
     | _     -> failwith "impossible"
 
   let string_of_bool = string_of_bool
-  let string_of_int = string_of_int
+  let string_of_int = Z.to_string
 
   type ('a, 'b) l__DTuple2 =
     | MkDTuple2 of unit * unit * 'a * 'b

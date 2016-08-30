@@ -65,7 +65,7 @@ let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty)  : mlty =
 
 let subst ((formals, t):mltyscheme) (args:list<mlty>) : mlty =
     if List.length formals <> List.length args
-    then failwith "Substitution must be fully applied"
+    then failwith "Substitution must be fully applied (see GitHub issue #490)"
     else subst_aux (List.zip formals args) t
 
 let delta_unfold g = function
