@@ -1655,6 +1655,8 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
 
 and tc_binder env (x, imp) =
     let tu, u = U.type_u () in
+    if Env.debug env Options.Extreme
+    then Util.print3 "Checking binders %s:%s at type %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string tu);
     let t, _, g = tc_check_tot_or_gtot_term env x.sort tu in //ghost effect ok in the types of binders
     let x = {x with sort=t}, imp in
     if Env.debug env Options.High
@@ -3127,7 +3129,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
       if is_abstract quals
       then List.fold_right (fun se (out, hidden) -> match se with
             | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) ->
-              let dec = Sig_declare_typ(l, us, mk (Tm_arrow(bs, S.mk_Total t)) None r, Assumption::New::quals, r) in
+              let dec = Sig_declare_typ(l, us, U.arrow bs (S.mk_Total t), Assumption::New::quals, r) in
               dec::out, hidden
             | Sig_datacon(l, us, t, _, _, _, _, r) -> //logically, each constructor just becomes an uninterpreted function
               let dec = Sig_declare_typ(l, us, t, [Assumption], r) in
