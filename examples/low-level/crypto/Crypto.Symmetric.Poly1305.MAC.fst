@@ -294,8 +294,8 @@ let verify #i st m t =
 *)
 
 
-// this code is not involved in the idealization;
-// it could go elsewhere, e.g. in AEAD
+// The code below is not involved in the idealization;
+// it could go elsewhere, e.g. in AEAD.
 
 // adapted from Poly1305.poly1305_update
 val add:
@@ -323,13 +323,46 @@ let add #i st l0 a w =
   pop_frame();
   l1
 
-let sel_bytes (h:mem) (b:bytes{live h b}) : GTot (Seq.seq UInt8.t)
-  = as_seq h b
+let sel_bytes (h:mem) (b:bytes{live h b}) : GTot (Seq.seq UInt8.t) = as_seq h b
 
-(*
-assume val encode_pad: Seq.seq UInt8.t -> Tot (Seq.seq elem)
 
-val loop:
+// a spec for encoding and padding, convenient for injectivity proof
+
+let pad_0 b l = Seq.append b (Seq.create l 0uy)
+
+val encode_pad: Seq.seq elem -> Seq.seq UInt8.t -> GTot (Seq.seq elem)
+
+let rec encode_pad prefix txt = 
+  let l = Seq.length txt in
+  if l = 0 then prefix
+  else if l < 16 then 
+    begin
+      let w = pad_0 txt (16 - l) in
+      SeqProperties.snoc prefix (encode_16 w)
+    end
+  else 
+    begin
+      let w = Seq.slice txt 0 16 in
+      let txt = Seq.slice txt 16 l in 
+      let prefix = SeqProperties.snoc prefix (encode_16 w) in
+      encode_pad prefix txt 
+    end
+
+
+val lemma_encode_pad_injective: p0:_ -> t0:_ -> p1:_ -> t1:_ -> Lemma
+  (requires 
+     p0 = p1 /\
+     Seq.length t0 = Seq.length t1 /\
+     encode_pad p0 t0 = encode_pad p1 t1) 
+  (ensures t0 = t1)
+
+let lemma_encode_pad_injective p0 t0 p1 t1 = 
+  let l = Seq.length t0 in 
+  if l = 0 then assume false else
+  if l < 16 then assume false //TODO
+  else assume false
+  
+assume val loop:
   #i:id ->
   st: state i ->
   l0: ilog -> 
@@ -340,9 +373,10 @@ val loop:
   (ensures (fun h0 l1 h1 -> 
     modifies_1 a h0 h1 /\ 
     live h1 txt /\ live h1 a /\ norm h1 a /\ 
-    (ideal ==> l1 = Seq.append l0 (encode_pad (sel_bytes h0 txt)) /\
+    (ideal ==> l1 = encode_pad l0 (sel_bytes h0 txt) /\
              sel_elem h1 a = poly l1 (sel_elem h0 st.r))))
 
+(*
 let rec loop #i st l0 a txt ctr =
   if ctr = 0 then l0 else 
   begin
