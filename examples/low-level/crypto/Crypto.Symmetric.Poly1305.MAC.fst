@@ -213,7 +213,10 @@ verify i st received recomputed
 // we use state-passing in the spec (to be reviewed)
 // not sure what to record for separation.
 
-abstract type accB (i:id) = elemB
+// should be abstract, but then we need to duplicate more elemB code
+type accB (i:id) = elemB
+
+let sel_elem = sel_elem
 
 let accB_inv (#i:id) (st:state i) (l: ilog) a h = 
   let r = sel_elem h st.r in 
@@ -294,6 +297,7 @@ let verify #i st m t =
 *)
 
 
+
 // The code below is not involved in the idealization;
 // it could go elsewhere, e.g. in AEAD.
 
@@ -362,27 +366,3 @@ let lemma_encode_pad_injective p0 t0 p1 t1 =
   if l < 16 then assume false //TODO
   else assume false
   
-assume val loop:
-  #i:id ->
-  st: state i ->
-  l0: ilog -> 
-  a: accB i ->
-  txt:bytes -> STL ilog
-  (requires (fun h -> live h txt /\ live h a /\ norm h a /\ norm h st.r
-    /\ (ideal ==> sel_elem h a = poly l0 (sel_elem h st.r))))
-  (ensures (fun h0 l1 h1 -> 
-    modifies_1 a h0 h1 /\ 
-    live h1 txt /\ live h1 a /\ norm h1 a /\ 
-    (ideal ==> l1 = encode_pad l0 (sel_bytes h0 txt) /\
-             sel_elem h1 a = poly l1 (sel_elem h0 st.r))))
-
-(*
-let rec loop #i st l0 a txt ctr =
-  if ctr = 0 then l0 else 
-  begin
-    let w = sub txt 0ul 16ul in
-    let l1 = add st l0 a w in 
-    let txt1 = offset txt 16ul in
-    loop st l1 a txt1 (ctr - 1)
-  end
-*)

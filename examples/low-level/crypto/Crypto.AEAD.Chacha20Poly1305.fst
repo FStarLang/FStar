@@ -8,6 +8,7 @@ open Buffer.Utils
 open Crypto.Symmetric.Chacha20
 
 // now hiding the 1-time MAC state & implementation
+module Spec = Crypto.Symmetric.Poly1305.Spec
 module MAC = Crypto.Symmetric.Poly1305.MAC
 
 //#set-options "--lax"
@@ -58,7 +59,46 @@ let length_bytes b len aad_len =
    - ciphertext for the Chacha20 ciphertext, using the key (key), the iv and the nonce   
    - the Poly1305 tag on the ciphertext and the additional data
    *)
-   
+
+(*
+val mac_inv 
+  #i: MAC.id ->
+  st: MAC.state i ->
+  l0: MAC.ilog -> 
+  a : MAC.accB i -> Type
+
+let mac_inv #i st l0 a h = 
+  let r = MAC.State.r st in 
+  live h a /\ 
+  MAC.norm h a /\ 
+  MAC.norm h r /\
+  (MAC.ideal ==> MAC.sel_elem h a = Spec.poly l0 (MAC.sel_elem h r))))
+
+val mac_bytes:
+  #i: MAC.id ->
+  st: MAC.state i ->
+  l0: MAC.ilog -> 
+  a : MAC.accB i ->
+  txt:bytes -> STL MAC.ilog
+  (requires (fun h -> 
+    live h txt /\ mac_inv sst l0 a h))
+  (ensures (fun h0 l1 h1 -> 
+    modifies_1 a h0 h1 /\ 
+    live h1 txt /\ mac_inv st l0 a h1live h1 a /\ MAC.norm h1 a /\ 
+    (MAC.ideal ==> l1 = MAC.encode_pad l0 (MAC.sel_bytes h0 txt) /\
+             MAC.sel_elem h1 a = Spec.poly l1 (MAC.sel_elem h0 r))))
+
+let rec loop #i st l0 a txt ctr =
+  if ctr = 0 then l0 else 
+  begin
+    let w = sub txt 0ul 16ul in
+    let l1 = add st l0 a w in 
+    let txt1 = offset txt 16ul in
+    loop st l1 a txt1 (ctr - 1)
+  end
+*)
+
+
 val chacha20_aead_encrypt: ciphertext:bytes -> tag:bytes -> aad:bytes -> key:bytes -> iv:UInt64.t -> constant:UInt32.t -> plaintext:bytes -> len:UInt32.t -> aad_len:UInt32.t -> STL unit
   (requires (fun h -> 
     live h ciphertext /\ live h tag /\ live h aad /\ live h key /\ live h plaintext
