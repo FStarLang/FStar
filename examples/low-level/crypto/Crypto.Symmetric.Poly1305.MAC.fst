@@ -31,24 +31,23 @@ assume val ideal: bool
 // In AEAD_ChaCha20: id * nonce
 assume new abstract type id
 assume val authId: id -> Tot bool
+assume val someId: id
 
 type bytes = buffer UInt8.t
-
 type lbytes (n:nat) = b:bytes{length b = n}
-
-type tag = wordB_16
-
+type tagB = wordB_16
+type wordB_16 = wordB_16 
 (*
 // TODO: extend the model with dynamic compromises.
 type log_1 = 
   | Init 
-  | MACed: msg -> tag -> log 
+  | MACed: msg -> Spec.log > log 
   | Corrupt
 
 type log_2 = // only when ideal
-//  | MACing: seq elem -> log 
+//  | MACing: text -> log 
   | Init
-  | MACed: seq elem -> tag -> log
+  | MACed: text -> Spec.log -> log
   | Corrupt
 *)
 
@@ -63,7 +62,7 @@ assume val random: r:rid -> len:UInt32.t -> ST (lbytes n)
        /\ modifies (Set.singleton r) h0 h1
        /\ modifies_ref r TSet.empty h0 h1))
 
-type log = option (Seq.seq elem * word_16)
+type log = option (text * tag)
 
 let log_cmp (a:log) (b:log) =
   match a,b with
@@ -93,10 +92,9 @@ let i_log (#r:rid) (l:log_ref r{ideal}) : Tot (ideal_log r) = l
 
 // the sequence of hashed elements is conditional, but not ghost
 // this will require changing e.g. the type of poly1305_add
-let ilog : Type0 = if ideal then Seq.seq elem else unit
+let itext : Type0 = if ideal then text else unit
 
-assume val log_0: ilog
-//let log_0 : ilog = if ideal then let l:ilog = Seq.createEmpty #elem in l else ()
+let text_0: itext = if ideal then Seq.createEmpty #elem else ()
 
 noeq type state (i:id) =
   | State:
@@ -130,7 +128,6 @@ let alloc i region key =
     State #i #region r s log
   else
     State #i #region r s ()
-
 
 val gen: i:id
   -> region:rid{is_eternal_region region}
@@ -187,27 +184,24 @@ let mac #i st buf m =
   tag
 *)
 
-val bytes_cmp_: b:bytes -> b':bytes -> len:UInt32.t{UInt32.v len <= length b /\ UInt32.v len <= length b'} -> tmp:bool -> STL bool
+
+// should this be elsewhere? 
+val bytes_cmp: b:bytes -> b':bytes -> len:UInt32.t{UInt32.v len <= length b /\ UInt32.v len <= length b'} -> STL bool
   (requires (fun h -> live h b /\ live h b'))
   (ensures  (fun h0 z h1 -> live h0 b /\ live h0 b'
-    /\ (b2t(z) <==> Seq.slice (as_seq h0 b) 0 (UInt32.v len) == Seq.slice (as_seq h0 b') 0 (UInt32.v len)) ))
-let rec bytes_cmp_ b b' len tmp =
+    /\ (b2t z <==> Seq.slice (as_seq h0 b) 0 (UInt32.v len) == Seq.slice (as_seq h0 b') 0 (UInt32.v len)) ))
+
+let rec bytes_cmp b b' len =
+  assume false; //TODO
   let open FStar.UInt32 in
-  if len =^ 0ul then tmp
+  if len =^ 0ul then true
   else 
     let i = len -^ 1ul in
     let bi = index b i in
     let bi' = index b' i in
     let open FStar.UInt8 in
-    let tmp' = tmp && (bi =^ bi') in
-    bytes_cmp_ b b' i tmp'
-
-assume val bytes_cmp: b:bytes -> b':bytes -> len:UInt32.t{UInt32.v len <= length b /\ UInt32.v len <= length b'} -> STL bool
-  (requires (fun h -> live h b /\ live h b'))
-  (ensures  (fun h0 z h1 -> live h0 b /\ live h0 b'
-    /\ (b2t(z) <==> Seq.slice (as_seq h0 b) 0 (UInt32.v len) == Seq.slice (as_seq h0 b') 0 (UInt32.v len)) ))
-
-
+    if bi =^ bi' then bytes_cmp b b' i
+    else false
 
 (* in the concrete code... 
 
@@ -232,45 +226,55 @@ type accB (i:id) = elemB
 
 let sel_elem = sel_elem
 
-let accB_inv (#i:id) (st:state i) (l: ilog) a h = 
-  let r = sel_elem h st.r in 
-  let a = sel_elem h a in 
-  (ideal ==> a = poly l r)
+let acc_inv (#i:id) (st:state i) (l: itext) (a:accB i) h = 
+  live h st.r /\ live h a /\ disjoint st.r a /\   
+  norm h st.r /\ norm h a /\
+  ( let r = sel_elem h st.r in 
+    let a = sel_elem h a in
+    ideal ==> a = poly l r )
 
 // not framed, as we allocate private state on the caller stack
 val start: #i:id -> st:state i -> STL (accB i)
   (requires (fun h0 -> True))
   (ensures (fun h0 a h1 -> 
     // allocated, and... 
-    accB_inv st (Seq.createEmpty #elem) a h1
+    acc_inv st text_0 a h1
   ))
+let start #i st = 
+  assume false; // this function allocates on the caller's frame!
+  let a = Buffer.create 0UL 5ul in
+  poly1305_start a;
+  a
 
-val update: #i:id -> st:state i -> l:ilog -> computed:accB i -> v:elemB -> ST unit
+val update: #i:id -> st:state i -> l:itext -> a:accB i -> v:elemB -> ST itext
   (requires (fun h0 -> // "liveness" /\ 
-    accB_inv st log computed h0))
-  (ensures (fun h0 () h1 -> 
-    // "liveness" /\ "modifies computed" /\
-    accB_inv st (FStar.SeqProperties.snoc l (sel_elem h1 v)) computed h1))
+    acc_inv st l a h0))
+  (ensures (fun h0 l1 h1 -> 
+    modifies_1 a h0 h1 /\
+//?    (ideal ==> l1 = FStar.SeqProperties.snoc l (sel_elem h1 v)) /\
+    acc_inv st l1 a h1 ))
+    
 let update #i st vs a v = 
+  assume false; //TODO
   add_and_multiply a v st.r 
 
 
-val mac: #i:id -> st:state i -> l:ilog -> computed:accB i -> tag: wordB -> ST unit
+val mac: #i:id -> st:state i -> l:itext -> computed:accB i -> tag: tagB -> ST unit
   (requires (fun h0 -> ideal ==> 
-    sel_elem h0 computed = poly l (sel_elem h0 st.r)  /\
+    sel_elem h0 l = poly l (sel_elem h0 st.r)  /\
     HyperStack.sel h0 st.log = None #log))
   (ensures (fun h0 _ h1 -> 
     // modifies h0 h1 "the tag buffer and st.log" /\ 
     let s: word_16 = sel_word h0 st.s in 
     let mac = mac_1305 l (sel_elem h0 st.r) s in
     mac = little_endian (sel_word h1 tag) /\
-    (authId i ==> HyperStack.sel h1 st.log = Some (l,mac))))
+    (ideal /\ authId i ==> HyperStack.sel h1 st.log = Some (l,mac))))
 
 let mac #i st vs acc tag = 
   poly1305_finish tag acc st.s;
   if ideal then st.log := (Some (vs,read_word tag))
 
-val verify: #i:id -> st:state i -> l:ilog -> computed:accB i -> tag:wordB_16 -> 
+val verify: #i:id -> st:state i -> l:itext -> computed:accB i -> tag: tagB -> 
   ST bool
   (requires (fun h0 -> ideal ==> 
     sel_elem h0 computed = poly l (sel_elem h0 st.r)))
@@ -287,7 +291,7 @@ let verify #i st l acc received =
   let verified = bytes_cmp tag received 16ul in 
   if ideal && authId i then 
     let st = !st.log in 
-    let correct = st = Some(l,read_word tag) in
+    let correct = (st = Some(l,read_word tag)) in
     verified && correct
   else  
     verified
@@ -319,9 +323,9 @@ let verify #i st m t =
 val add:
   #i:id ->
   st: state i ->
-  l0: ilog -> 
+  l0: itext -> 
   a: accB i ->
-  w:wordB_16 -> STL ilog
+  w:wordB_16 -> STL itext
   (requires (fun h -> live h w /\ live h a /\ norm h a /\ norm h st.r
     /\ (ideal ==> sel_elem h a = poly l0 (sel_elem h st.r))))
   (ensures (fun h0 l1 h1 -> 
@@ -337,7 +341,7 @@ let add #i st l0 a w =
   update st l0 a e;
   let h = HST.get() in
   let msg = esel_word h w in
-  let l1 = Ghost.elift2 (fun log msg -> update_log log (encode_16 msg)) l0 msg in
+  let l1 = Ghost.elift2 (fun log msg -> SeqProperties.snoc log (encode_16 msg)) l0 msg in
   pop_frame();
   l1
 
@@ -374,9 +378,10 @@ val lemma_encode_pad_injective: p0:_ -> t0:_ -> p1:_ -> t1:_ -> Lemma
      encode_pad p0 t0 = encode_pad p1 t1) 
   (ensures t0 = t1)
 
+//TODO
 let lemma_encode_pad_injective p0 t0 p1 t1 = 
   let l = Seq.length t0 in 
   if l = 0 then assume false else
-  if l < 16 then assume false //TODO
+  if l < 16 then assume false
   else assume false
   

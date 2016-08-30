@@ -34,7 +34,8 @@ type word = b: seq byte {Seq.length b <= 16}
 type word_16 = b:seq byte {Seq.length b = 16} 
 // we only use full words for AEAD
 
-type log = seq elem // not word_16
+type text = seq elem // not word_16
+type tag = word_16 
 
 (* * *********************************************)
 (* *            Field operations                 *)
@@ -211,13 +212,6 @@ let rec poly vs r =
 (* let rec poly' vs r = *)
 (*   if Seq.length vs = 0 then 0 *)
 (*   else (little_endian (Seq.index vs 0 @| (Seq.create 1 1uy))) *@ r +@ poly' (Seq.slice vs 1 (Seq.length vs)) r *)
-
-
-val update_log:
-  l:log ->
-  msg:elem ->
-  Tot (l':log{l' == (l @| Seq.create 1 msg)})
-let update_log l msg = (l @| Seq.create 1 msg)
 
 
 let fix (r:word_16) (i:nat {i < 16}) m : word_16 = Seq.upd r i (U8 (Seq.index r i &^ m)) 

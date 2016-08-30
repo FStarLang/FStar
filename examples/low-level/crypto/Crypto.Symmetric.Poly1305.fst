@@ -51,10 +51,13 @@ type wordB_16 = b:bytes{length b = 16}  // Concrete (mutable) representation of 
 (* * *********************************************)
 
 (* From the current memory state, returns the word corresponding to a wordB *)
-let sel_word (h:mem) (b:wordB{live h b}) : GTot word
-  = as_seq h b
+let sel_word (h:mem) (b:wordB{live h b}) : GTot word = as_seq h b
 val esel_word:h:mem -> b:wordB{live h b} -> Tot (erased word)
 let esel_word h b = hide (sel_word h b)
+
+val esel_word_16:h:mem -> b:wordB_16{live h b} -> Tot (erased word_16)
+let esel_word_16 h b = hide (sel_word h b)
+
 
 // when ideal, we use the actual contents
 assume val read_word: b:wordB_16 -> ST word_16 
@@ -77,7 +80,6 @@ let sel_int (h:mem) (b:elemB{live h b}) : GTot nat
 (* *        Polynomial computation step           *)
 (* * ******************************************** *)
 
-#set-options "--lax"
 (** 
     Runs "Acc = ((Acc+block)*r) % p." on the accumulator, the well formatted block of the message
     and the clamped part of the key 
@@ -124,7 +126,7 @@ let add_and_multiply acc block r =
     assume (norm hfin acc);
     assume (sel_elem hfin acc = (sel_elem hinit acc +@ sel_elem hinit block) *@ sel_elem hinit r)
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+//#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 (**
    Sets an element to the value '0' 
@@ -253,7 +255,6 @@ let toField b s =
 (*   (\* assume (v (get h b 4) < pow2 24); *\) *)
 (*   (\* assume (norm h b) *\) *)
 
-#set-options "--lax" 
 
 //TMP#reset-options "--initial_fuel 6 --max_fuel 6"
 
@@ -282,7 +283,7 @@ val lemma_toField_plus_2_128_1: unit -> Lemma
 let lemma_toField_plus_2_128_1 () =
   Math.Lib.pow2_increases_lemma 64 24
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+//TMP#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 val lemma_toField_plus_2_128: ha:mem -> a:elemB -> hb:mem -> b:elemB -> Lemma
   (requires (norm ha a /\ norm hb b /\ v (get hb b 4) < pow2 24
@@ -419,8 +420,6 @@ let lemma_eucl_div_bound a b q = ()
 
 //TMP#reset-options "--initial_fuel 1 --max_fuel 1"
 
-#set-options "--lax" 
-
 val lemma_bitweight_templ_values: n:nat -> Lemma
   (requires (True))
   (ensures  (bitweight templ n = 26 * n))
@@ -428,7 +427,7 @@ let rec lemma_bitweight_templ_values n =
   if n = 0 then ()
   else lemma_bitweight_templ_values (n-1)
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+//TMP#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_mult_ineq: a:pos -> b:pos -> c:pos -> Lemma
   (requires (b <= c))
@@ -458,7 +457,6 @@ let rec lemma_eval_norm_is_bounded ha a len =
     Math.Lib.pow2_exp_lemma (26 * (len-1)) 26)
 
 //#reset-options "--initial_fuel 1 --max_fuel 1"
-#set-options "--lax" 
 
 val lemma_elemB_equality: ha:mem -> hb:mem -> a:elemB -> b:elemB -> len:pos{len<=norm_length} -> Lemma
   (requires (live ha a /\ live hb b
@@ -471,7 +469,7 @@ let lemma_elemB_equality ha hb a b len =
   Seq.lemma_eq_intro (Seq.slice (as_seq hb b) 0 len) 
 		     ((Seq.slice (as_seq hb b) 0 (len-1)) @| Seq.create 1 (get hb b (len-1)))
 
-#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 20"
+//TMP#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 20"
 
 val lemma_toField_is_injective_0: ha:mem -> hb:mem -> a:elemB -> b:elemB -> len:nat{len <= norm_length} -> Lemma
   (requires (norm ha a /\ norm hb b /\ eval ha a len = eval hb b len))
@@ -513,7 +511,7 @@ let lemma_toField_is_injective ha hb a b =
   Seq.lemma_eq_intro (Seq.slice (as_seq hb b) 0 norm_length) (as_seq hb b)
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+//TMP#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 (* Initialization function:
    - clamps the first half of the key
@@ -573,15 +571,14 @@ let poly1305_start a = zeroB a
    *)
 
 //CF note the log now consists of eleme
-//CF we'll need a simpler, field-only update. 
+//CF we'll need a simpler, field-only update---not the one below.
 
-#set-options "--lax" 
-
+(*
 val poly1305_update:
-  current_log:erased log ->
-  msg:wordB ->
+  current_log:erased text ->
+  msg:wordB_16 ->
   acc:elemB{disjoint msg acc} ->
-  r:elemB{disjoint msg r /\ disjoint acc r} -> STL (erased log)
+  r:elemB{disjoint msg r /\ disjoint acc r} -> STL (erased text)
     (requires (fun h -> live h msg /\ norm h acc /\ norm h r
       /\ poly (reveal current_log) (sel_elem h r) = sel_elem h acc // Incremental step of poly
       ))
@@ -599,15 +596,15 @@ let poly1305_update log msg acc r =
   toField_plus_2_128 block n;
   add_and_multiply acc block r;
   let h = HST.get() in
-  let msg = esel_word h msg in
-  let updated_log = Ghost.elift2 (fun log msg -> update_log log (encode_16 msg)) log msg in
+  let msg = esel_word_16 h msg in
+  let updated_log = SeqProperties.snoc log (encode_16 msg) in
   pop_frame();
   updated_log
 
-(* Loop over Poly1305_update *)
-val poly1305_loop: current_log:erased log -> msg:bytes -> acc:elemB{disjoint msg acc} ->
+(* Loop over Poly1305_update; could go below MAC *)
+val poly1305_loop: current_log:erased text -> msg:bytes -> acc:elemB{disjoint msg acc} ->
   r:elemB{disjoint msg r /\ disjoint acc r} -> ctr:u32{length msg >= 16 * w ctr} ->
-  STL (erased log)
+  STL (erased text)
     (requires (fun h -> live h msg /\ norm h acc /\ norm h r))
     (ensures (fun h0 _ h1 -> live h1 msg /\ norm h1 acc /\ norm h1 r
       /\ modifies_1 acc h0 h1))
@@ -640,6 +637,7 @@ let poly1305_last msg acc r len =
     toField block n;
     add_and_multiply acc block r);
   pop_frame()
+*)
 
 (* TODO: certainly a more efficient, better implementation of that *)
 private val add_word: a:wordB_16 -> b:wordB_16 -> STL unit
@@ -667,6 +665,7 @@ let add_word a b =
   bytes_of_uint32 (Buffer.sub a 8ul 4ul) (uint64_to_uint32 z2);
   bytes_of_uint32 (Buffer.sub a 12ul 4ul) (uint64_to_uint32 z3)
 
+
 (* Finish function, with final accumulator value *)
 val poly1305_finish: 
   tag:wordB_16 -> acc:elemB -> s:wordB_16 -> STL unit
@@ -679,7 +678,7 @@ let poly1305_finish tag acc s =
   trunc1305 acc tag;
   add_word tag s
 
-
+(*
 // the whole MACing process, mostly for testing
 val poly1305_mac: tag:wordB{length tag >= 16} -> msg:bytes{disjoint tag msg} ->
   len:u32{w len <= length msg} -> key:bytes{length key = 32 /\ disjoint msg key /\ disjoint tag key} ->
@@ -708,3 +707,4 @@ let poly1305_mac tag msg len key =
   (* Finish *)
   poly1305_finish tag acc (sub key 16ul 16ul);
   pop_frame()
+*)
