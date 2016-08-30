@@ -55,7 +55,6 @@ type step =
   | CompressUvars
 and steps = list<step>
 
-
 type closure = 
   | Clos of env * term * memo<(env * term)> * bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint 
   | Univ of universe                               //universe terms do not have free variables
@@ -69,7 +68,7 @@ let closure_to_string = function
 type cfg = {
     steps: steps;
     tcenv: Env.env;
-    delta_level: Env.delta_level  //?
+    delta_level: Env.delta_level  // Controls how much unfolding of definitions should be performed
 }
 
 type branches = list<(pat * option<term> * term)> 
@@ -85,6 +84,7 @@ type stack_elt =
  | App      of term * aqual * Range.range
  | Meta     of S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
+ | Steps    of steps * Env.delta_level
 
 type stack = list<stack_elt>
 
@@ -120,6 +120,25 @@ let is_empty = function
 let lookup_bvar env x = 
     try List.nth env x.index
     with _ -> failwith (Util.format1 "Failed to find %s\n" (Print.db_to_string x))
+
+let decode_steps steps = 
+    let decode_step s = match (SS.compress s).n with 
+        | Tm_fvar fv ->
+          if S.fv_eq_lid fv Syntax.Const.step_beta
+          then Beta
+          else if S.fv_eq_lid fv Syntax.Const.step_delta
+          then UnfoldUntil Delta_constant
+          else if S.fv_eq_lid fv Syntax.Const.step_iota
+          then Iota
+          else if S.fv_eq_lid fv Syntax.Const.step_zeta
+          then Zeta
+          else raise Not_found
+        | _ -> raise Not_found in
+    match Syntax.Util.list_elements steps with 
+    | Some steps -> 
+      (try steps |> List.map decode_step 
+       with Not_found -> [])
+    | None -> []
 
 let rec unfold_effect_abbrev env comp =
   let c = comp_to_comp_typ comp in
@@ -454,6 +473,15 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             rebuild cfg env stack t
      
+          | Tm_app({n=Tm_fvar fv}, [(steps, _); (tm, _)]) 
+            when S.fv_eq_lid fv Syntax.Const.normalize_ty
+              && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
+            let s = [Beta; UnfoldUntil Delta_constant; Zeta; Iota] in
+            let cfg' = {cfg with steps=s; delta_level=Unfold Delta_constant} in
+            let stack' = Steps (cfg.steps, cfg.delta_level)::stack in
+            log cfg (fun () -> printfn "Removing normalize_ty for %s" (Print.term_to_string tm));
+            norm cfg' env stack' tm
+
           | Tm_app({n=Tm_constant Const.Const_reify}, a1::a2::rest) ->
             let hd, _ = Util.head_and_args t in
             let t' = S.mk (Tm_app(hd, [a1])) None t.pos in
@@ -619,6 +647,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           norm cfg (c :: env) stack_rest body 
                       end
                   end
+
+                | Steps (s, dl) :: stack -> 
+                  norm ({cfg with steps=s; delta_level=dl}) env stack t
 
                 | MemoLazy r :: stack -> 
                   set_memo r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
@@ -829,6 +860,9 @@ and rebuild : cfg -> env -> stack -> term -> term =
                       In either case, it has no free de Bruijn indices *)
         match stack with 
             | [] -> t
+
+            | Steps (s, dl) :: stack -> 
+              rebuild ({cfg with steps=s; delta_level=dl}) env stack t
 
             | Meta(m, r)::stack -> 
               let t = mk (Tm_meta(t, m)) r in

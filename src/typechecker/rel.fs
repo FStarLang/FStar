@@ -2488,6 +2488,9 @@ let discharge_guard' use_env_range_msg env (g:guard_t) : guard_t =
     else match g.guard_f with
     | Trivial -> ()
     | NonTrivial vc ->
+        if Env.debug env <| Options.Other "Norm" 
+        then Errors.diag (Env.get_range env) 
+                            (Util.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
         let vc = N.normalize [N.Inline; N.Beta; N.Simplify] env vc in
         begin match check_trivial vc with
             | Trivial -> ()

@@ -635,3 +635,34 @@ let abs (x:int) : Tot int = if x >= 0 then x else -x
 
 assume val string_of_bool: bool -> Tot string
 assume val string_of_int: int -> Tot string
+
+(*********************************************************************************)
+(* Marking terms for normalization *)
+(*********************************************************************************)
+type step = 
+  | Beta   //applications
+  | Delta  //unfolding definitions
+  | Zeta   //fixpoints
+  | Iota   //match
+let steps = list step
+let normalize_tm (a:Type) (s:steps) (x:a) : a = x
+assume val normalize_ty : steps -> a:Type0 -> Tot Type0
+(* abstract let normalize_ty (s:steps) (a:Type0) : Type0 = a *)
+
+assume val assert_norm : s:steps -> p:Type -> Pure unit (requires (normalize_ty s p)) (ensures (fun _ -> p))
+(* let assert_norm s p = () *)
+
+
+(*
+  assert_norm [Delta; Beta] (List.length [1;2;3] = 3) : /\p. normalize_ty [Delta; Beta; Zeta; Iota] (List.length [1;2;3] = 3)
+							     /\ (List.length [1;2;3] = 3 ==> p ())
+
+
+                                                        /\p. (1 + 1 + 1)=3 /\ (List.length [1;2;3] = 3 ==> p ())
+
+
+
+  (normalize [Delta; Beta] (List.length [1;2;3] = 3)) ==> 
+    List.length [1;2;3] = 3
+*)
+
