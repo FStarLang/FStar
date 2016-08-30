@@ -121,24 +121,24 @@ let lookup_bvar env x =
     try List.nth env x.index
     with _ -> failwith (Util.format1 "Failed to find %s\n" (Print.db_to_string x))
 
-let decode_steps steps = 
-    let decode_step s = match (SS.compress s).n with 
-        | Tm_fvar fv ->
-          if S.fv_eq_lid fv Syntax.Const.step_beta
-          then Beta
-          else if S.fv_eq_lid fv Syntax.Const.step_delta
-          then UnfoldUntil Delta_constant
-          else if S.fv_eq_lid fv Syntax.Const.step_iota
-          then Iota
-          else if S.fv_eq_lid fv Syntax.Const.step_zeta
-          then Zeta
-          else raise Not_found
-        | _ -> raise Not_found in
-    match Syntax.Util.list_elements steps with 
-    | Some steps -> 
-      (try steps |> List.map decode_step 
-       with Not_found -> [])
-    | None -> []
+// let decode_steps steps = 
+//     let decode_step s = match (SS.compress s).n with 
+//         | Tm_fvar fv ->
+//           if S.fv_eq_lid fv Syntax.Const.step_beta
+//           then Beta
+//           else if S.fv_eq_lid fv Syntax.Const.step_delta
+//           then UnfoldUntil Delta_constant
+//           else if S.fv_eq_lid fv Syntax.Const.step_iota
+//           then Iota
+//           else if S.fv_eq_lid fv Syntax.Const.step_zeta
+//           then Zeta
+//           else raise Not_found
+//         | _ -> raise Not_found in
+//     match Syntax.Util.list_elements steps with 
+//     | Some steps -> 
+//       (try steps |> List.map decode_step 
+//        with Not_found -> [])
+//     | None -> []
 
 let rec unfold_effect_abbrev env comp =
   let c = comp_to_comp_typ comp in
@@ -479,7 +479,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let s = [Beta; UnfoldUntil Delta_constant; Zeta; Iota] in
             let cfg' = {cfg with steps=s; delta_level=Unfold Delta_constant} in
             let stack' = Steps (cfg.steps, cfg.delta_level)::stack in
-            log cfg (fun () -> printfn "Removing normalize_ty for %s" (Print.term_to_string tm));
             norm cfg' env stack' tm
 
           | Tm_app({n=Tm_constant Const.Const_reify}, a1::a2::rest) ->
