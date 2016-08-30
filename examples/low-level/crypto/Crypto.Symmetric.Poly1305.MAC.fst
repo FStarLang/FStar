@@ -24,7 +24,8 @@ let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 // this flag enables conditional idealization by keeping additional data,
 // - this should not affect the code behavior
 // - this may cause the code not to compile to Kremlin/C.
-let ideal = true 
+assume val ideal: bool
+//let ideal = true
 
 // to be rewired. 
 // In AEAD_ChaCha20: id * nonce
@@ -36,9 +37,6 @@ type bytes = buffer UInt8.t
 type lbytes (n:nat) = b:bytes{length b = n}
 
 type tag = wordB_16
-
-noeq type msg =
-  | Message: len:UInt32.t -> contents:bytes{length contents >= UInt32.v len} -> msg
 
 (*
 // TODO: extend the model with dynamic compromises.
@@ -54,7 +52,16 @@ type log_2 = // only when ideal
   | Corrupt
 *)
 
-assume val random: n:nat -> Tot (lbytes n)
+
+assume val random: r:rid -> len:UInt32.t -> ST (lbytes n)
+     (requires (fun h -> is_eternal_region r))
+     (ensures (fun (h0:mem) b h1 ->
+	 ~(contains h0 b)
+       /\ live h1 b /\ idx b = 0 /\ length b = UInt32.v len
+       /\ Map.domain h1.h == Map.domain h0.h
+       /\ h1.tip = h0.tip
+       /\ modifies (Set.singleton r) h0 h1
+       /\ modifies_ref r TSet.empty h0 h1))
 
 type log = option (Seq.seq elem * word_16)
 
@@ -78,7 +85,11 @@ let log_cmp_transitive a b c = ()
 val log_cmp_monotonic: unit -> Lemma (monotonic log log_cmp)
 let log_cmp_monotonic _ = ()
 
-let slog rid : Type0 = if ideal then m_rref rid log log_cmp else unit
+let ideal_log (r:rid) = m_rref r log log_cmp
+
+let log_ref (r:rid) = if ideal then ideal_log r else unit
+
+let i_log (#r:rid) (l:log_ref r{ideal}) : Tot (ideal_log r) = l
 
 // the sequence of hashed elements is conditional, but not ghost
 // this will require changing e.g. the type of poly1305_add
@@ -89,55 +100,65 @@ assume val log_0: ilog
 
 noeq type state (i:id) =
   | State:
-      rid: rid ->
-      r  : elemB ->
-      s  : wordB_16 ->
-      log: slog rid ->
+      #region: rid ->
+      r: elemB ->
+      s: wordB_16 ->
+      log: log_ref region ->
       state i
 
-val alloc: i:id -> r:rid{is_eternal_region r} -> key:bytes {length key >= 32} -> st0: log -> ST (state i)
+
+val alloc: i:id
+  -> region:rid{is_eternal_region region}
+  -> key:bytes{length key >= 32}
+  -> ST (state i)
   (requires (fun m0 -> live m0 key))
   (ensures  (fun m0 st m1 ->
-    modifies (Set.singleton r) m0 m1
-    // todo: /\ r and s are fresh, as specified in poly1305_init 
-    // /\ m_contains st.log m1
-    // /\ is_None (m_sel m1 st.log)
+    ~(contains m0 st.r) /\
+    ~(contains m0 st.s) /\
+    //modifies (Set.singleton region) m0 m1 /\ // Can't prove this
+    st.region == region /\
+    (ideal ==> m_contains (i_log st.log) m1 /\ m_sel m1 (i_log st.log) == None)
   ))
 
-#set-options "--lax" 
-let alloc i rid key st0 = 
-  let r = FStar.Buffer.rcreate rid 0UL 5ul in
-  let s = FStar.Buffer.rcreate rid 0uy 16ul in  
-  let _ = poly1305_init r s key in 
-  //let log = m_alloc #log #log_cmp rid st0 in
-  let log = ralloc #log rid st0 in
-  State #i rid r s log
+let alloc i region key =
+  let r = FStar.Buffer.rcreate region 0UL 5ul in
+  let s = FStar.Buffer.rcreate region 0uy 16ul in
+  cut (disjoint r key /\ disjoint s key);
+  poly1305_init r s key;
+  if ideal then
+    let log = m_alloc #log #log_cmp region None in
+    State #i #region r s log
+  else
+    State #i #region r s ()
 
-(*
-val create: i:id -> r:rid -> ST (state i)
+
+val gen: i:id
+  -> region:rid{is_eternal_region region}
+  -> ST (state i)
   (requires (fun m0 -> True))
   (ensures  (fun m0 st m1 ->
-    modifies (Set.singleton r) m0 m1
-    /\ m_contains st.log m1
-    /\ is_None (m_sel m1 st.log)
-  ))
-*)
-let create i rid =
-  let key = random 32 in
-  alloc i rid key None
+    ~(contains m0 st.r) /\
+    ~(contains m0 st.s) /\
+    //modifies (Set.singleton r) m0 m1
+    st.region == region /\
+    (ideal ==> m_contains (i_log st.log) m1 /\ m_sel m1 (i_log st.log) == None)))
 
-(*
-val coerce: i:id -> r:rid -> key:lbytes 32 -> ST (state i)
-  (requires (fun m0 -> True))
+let gen i region =
+  let key = random region 32ul in
+  alloc i region key
+
+
+val coerce: i:id{~(authId i)} -> r:rid -> key:lbytes 32 -> ST (state i)
+  (requires (fun m0 -> live m0 key))
   (ensures  (fun m0 st m1 ->
-    modifies (Set.singleton r) m0 m1
-    /\ m_contains st.log m1
-    /\ is_None (m_sel m1 st.log)
-    /\ ~(authId i)))
-*)    
-let coerce i rid key =
-  assume(~(authId i));
-  alloc i rid key None
+    //modifies (Set.singleton r) m0 m1 /\
+    (ideal ==> m_contains (i_log st.log) m1 /\ m_sel m1 (i_log st.log) == None)))
+
+let coerce i region key =
+  alloc i region key
+
+// Type checks up to this point
+
 
 (*
 type invoked (#i:id) (st:state i) (m:mem) : Type =
