@@ -391,22 +391,7 @@ let range_0 : FStar_Ident.lident = (pconst "range_0")
 let guard_free : FStar_Ident.lident = (pconst "guard_free")
 
 
-let normalize_ty : FStar_Ident.lident = (pconst "normalize_ty")
-
-
-let normalize_tm : FStar_Ident.lident = (pconst "normalize_tm")
-
-
-let step_beta : FStar_Ident.lident = (pconst "Beta")
-
-
-let step_delta : FStar_Ident.lident = (pconst "Delta")
-
-
-let step_iota : FStar_Ident.lident = (pconst "Iota")
-
-
-let step_zeta : FStar_Ident.lident = (pconst "Zeta")
+let normalize : FStar_Ident.lident = (pconst "normalize")
 
 
 
