@@ -23,6 +23,13 @@ type cipher = l:bytes{B.length l >= ivsize}
 
 type log_t (r:rid) = Monotonic.Seq.log_t r (msg * cipher)
 
+type corruption_state =
+  | Coerced
+  | Leaked
+  | Open
+  | Private
+
+
 noeq type key =
   | Key: #region:rid -> raw:aes_key -> log:log_t region -> key
 
@@ -48,13 +55,13 @@ val encrypt: k:key -> m:msg -> ST cipher
   (ensures  (fun m0 c m1 ->
     (let ilog = m_sel m0 k.log in
      let n = Seq.length ilog in
-       modifies_one k.region m0 m1
-     /\ m_contains k.log m1
+      modifies_one k.region m0 m1 /\
+      m_contains k.log m1
      /\ m_sel m1 k.log == snoc ilog (m, c)
      /\ witnessed (at_least n (m, c) k.log))))
 
 
-let encrypt k m =
+let encrypt k m : cipher =
   m_recall k.log;
   let iv = random ivsize in
   let ilog = m_read k.log in
@@ -70,18 +77,18 @@ val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->
     Map.contains h0 k.region /\
     (let log = m_sel h0 k.log in
-      (b2t uf_cma) ==> is_Some (seq_find (fun mc -> snd mc = c) log))))
+      (b2t ind_cpa_rest_adv) ==> is_Some (seq_find (fun mc -> snd mc = c) log))))
   (ensures  (fun h0 res h1 ->
     modifies_none h0 h1 /\
-    ( (b2t uf_cma) ==>
+    ( (b2t ind_cpa_rest_adv) ==>
      (let log = m_sel h0 k.log in
       let found = seq_find (fun mc -> snd mc = c) log in
-      is_Some found ==> (let Some mc = found in res = fst mc)))
+      is_Some found /\ (let Some mc = found in (res,c) = mc)))
     )
   )
     
 let decrypt k c =
-  if uf_cma then
+  if ind_cpa_rest_adv then
     let log = m_read k.log in
     match seq_find (fun mc -> snd mc = c) log with
     | Some mc -> fst mc
