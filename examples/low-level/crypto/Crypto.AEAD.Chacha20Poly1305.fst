@@ -106,13 +106,12 @@ let chacha20_aead_encrypt ciphertext tag aad key iv constant plaintext len aad_l
   assume false; //TODO
   push_frame();
 
+  (* Create OTK, using round '0' of Chacha20 *)
   (* Temporary buffers (to be improved) *)
   let state = create 0ul 32ul in (* Chacha inner state *)
-  chacha20_init state key 0ul iv constant;
-
-  (*  Create OTK, using round '0' of Chacha20 *)
   let counter = 0ul in
-  let otk   = create 0uy 32ul in (* OTK for Poly (to improve) *)
+  chacha20_init state key counter iv constant;
+  let otk  = create 0uy 32ul in (* OTK for Poly (to improve) *)
   chacha20_update otk state 32ul;
 
   (*  Encryption of the plaintext, using Chacha20, counter at 1 *)
