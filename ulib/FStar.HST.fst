@@ -113,7 +113,7 @@ assume val pop_frame: unit -> Unsafe unit
 (**
      Allocates on the top-most stack frame
      *)
-assume val salloc: #a:Type -> init:a -> Unsafe (stackref a)
+assume val salloc: #a:Type -> init:a -> StackInline (stackref a)
   (requires (fun m -> is_stack_region m.tip))
   (ensures (fun m0 s m1 ->
       is_stack_region m0.tip
