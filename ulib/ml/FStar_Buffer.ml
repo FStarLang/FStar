@@ -30,6 +30,7 @@ type u64 = FStar_UInt64.t
 type u128 = FStar_UInt128.t
 
 let create init len = {content = Array.make len init; idx = 0; length = len}
+let rcreate r init len = create init len
 let index b n = Array.get b.content (n+b.idx)
 let upd (b:'a buffer) (n:int) (v:'a) = Array.set b.content (n+b.idx) v
 let sub b i len = {content = b.content; idx = b.idx+i; length = len}
