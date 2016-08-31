@@ -635,7 +635,7 @@ let lemma_modifies_2_1'' (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
 (** Concrete getters and setters *)
-let create #a (init:a) (len:UInt32.t) : ST (buffer a)
+let create #a (init:a) (len:UInt32.t) : Unsafe (buffer a)
      (requires (fun h -> is_stack_region h.tip))
      (ensures (fun (h0:mem) b h1 -> ~(contains h0 b)
        /\ live h1 b /\ idx b = 0 /\ length b = v len
@@ -653,7 +653,7 @@ let create #a (init:a) (len:UInt32.t) : ST (buffer a)
 module L = FStar.List.Tot
 
 (** Concrete getters and setters *)
-let createL #a (init:list a) : ST (buffer a)
+let createL #a (init:list a) : Unsafe (buffer a)
      (requires (fun h -> is_stack_region h.tip /\ L.length init > 0 /\ L.length init < UInt.max_int 32))
      (ensures (fun (h0:mem) b h1 ->
        let len = L.length init in

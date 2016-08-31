@@ -124,7 +124,7 @@ let lemma_equal_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
 
 let equal_stack_domains (m0:mem) (m1:mem) =
   m0.tip = m1.tip
-  /\ (forall r. (is_stack_region r /\ r <> m0.tip /\ r `is_above` m0.tip) ==> TSet.equal (Heap.domain (Map.sel m0.h r)) (Heap.domain (Map.sel m1.h r)))
+  /\ (forall r. (is_stack_region r /\ r `is_above` m0.tip) ==> TSet.equal (Heap.domain (Map.sel m0.h r)) (Heap.domain (Map.sel m1.h r)))
 
 let lemma_equal_stack_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
   (requires (equal_stack_domains m0 m1 /\ equal_stack_domains m1 m2))
