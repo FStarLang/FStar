@@ -7,10 +7,12 @@ open FStar.HyperHeap
 open FStar.Monotonic.RRef
 
 
+
+
 open Platform.Bytes
 open CoreCrypto
 
-type text = bytes
+type text = EtM.CPA.cipher 
 
 let keysize   = 1
 let blocksize = keysize
@@ -18,6 +20,9 @@ let macsize   = hashSize SHA1
 
 type sha1_key = lbytes keysize
 type tag = lbytes macsize
+
+
+
 
 val sha1: bytes -> Tot (h:bytes{length h = 20})
 let sha1 b = hash SHA1 b
@@ -63,12 +68,15 @@ let gen parent =
 val mac: k:key -> m:msg -> ST tag
   (requires (fun m0 -> True))
   (ensures  (fun m0 t m1 ->
-    (let ilog = m_sel m0 k.log in
-     let n = Seq.length ilog in
+    (let log0 = m_sel m0 k.log in
+     let log1 = m_sel m1 k.log in
+     let n = Seq.length log0 in
        modifies_one k.region m0 m1
      /\ m_contains k.log m1
-     /\ m_sel m1 k.log == snoc ilog (m, t)
-     /\ witnessed (at_least n (m, t) k.log))))
+     /\ log1 == snoc log0 (m, t)
+     /\ witnessed (at_least n (m, t) k.log)
+     /\ Seq.length log1 == Seq.length log0 + 1
+     )))
 
 let mac k m =
   let ilog = m_read k.log in
@@ -76,20 +84,21 @@ let mac k m =
   write_at_end k.log (m,t);
   t
 
-assume val uf_cma : bool
 
 val verify: k:key -> m:msg -> t:tag -> ST bool
-  (requires (fun _ -> True))
+  (requires (fun h ->  Map.contains h k.region ))
   (ensures  (fun m0 b m1 ->
+     modifies_none m0 m1 /\
      (let log = m_sel m0 k.log in
-      (uf_cma /\ b) ==> is_Some (seq_find (fun mt -> mt = (m,t)) log))))
+      ( (b2t Ideal.uf_cma) /\ b) ==> is_Some (seq_find (fun mt -> mt = (m,t)) log))))
 
 let verify k m t =
   let t' = hmac_sha1 k.raw m in
   let verified = (t = t') in
   let log = m_read k.log in
   let found = is_Some (seq_find (fun mt -> mt = (m,t)) log) in
-  if uf_cma then
+  if Ideal.uf_cma then
     verified && found
   else
     verified
+

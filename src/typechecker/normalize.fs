@@ -45,6 +45,7 @@ type step =
   | Zeta            //fixed points
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | WHNF            //Only produce a weak head normal form
+  | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Inline
   | NoInline
   | UnfoldUntil of S.delta_depth
@@ -54,7 +55,6 @@ type step =
   | Reify
   | CompressUvars
 and steps = list<step>
-
 
 type closure = 
   | Clos of env * term * memo<(env * term)> * bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint 
@@ -69,7 +69,7 @@ let closure_to_string = function
 type cfg = {
     steps: steps;
     tcenv: Env.env;
-    delta_level: Env.delta_level  //?
+    delta_level: Env.delta_level  // Controls how much unfolding of definitions should be performed
 }
 
 type branches = list<(pat * option<term> * term)> 
@@ -85,6 +85,7 @@ type stack_elt =
  | App      of term * aqual * Range.range
  | Meta     of S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
+ | Steps    of steps * Env.delta_level
 
 type stack = list<stack_elt>
 
@@ -120,6 +121,25 @@ let is_empty = function
 let lookup_bvar env x = 
     try List.nth env x.index
     with _ -> failwith (Util.format1 "Failed to find %s\n" (Print.db_to_string x))
+
+// let decode_steps steps = 
+//     let decode_step s = match (SS.compress s).n with 
+//         | Tm_fvar fv ->
+//           if S.fv_eq_lid fv Syntax.Const.step_beta
+//           then Beta
+//           else if S.fv_eq_lid fv Syntax.Const.step_delta
+//           then UnfoldUntil Delta_constant
+//           else if S.fv_eq_lid fv Syntax.Const.step_iota
+//           then Iota
+//           else if S.fv_eq_lid fv Syntax.Const.step_zeta
+//           then Zeta
+//           else raise Not_found
+//         | _ -> raise Not_found in
+//     match Syntax.Util.list_elements steps with 
+//     | Some steps -> 
+//       (try steps |> List.map decode_step 
+//        with Not_found -> [])
+//     | None -> []
 
 let rec unfold_effect_abbrev env comp =
   let c = comp_to_comp_typ comp in
@@ -380,6 +400,39 @@ and close_lcomp_opt cfg env lopt = match lopt with
 (* Simplification steps are not part of definitional equality      *)
 (* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
 (*******************************************************************)
+let arith_ops =
+    let int_as_const  : int -> Const.sconst = fun i -> Const.Const_int (Util.string_of_int i, None) in
+    let bool_as_const : bool -> Const.sconst = fun b -> Const.Const_bool b in
+    [(Const.op_Addition,    (fun x y -> int_as_const (x + y)));
+     (Const.op_Subtraction, (fun x y -> int_as_const (x - y)));
+     (Const.op_Multiply,    (fun x y -> int_as_const (x * y)));
+     (Const.op_Division,    (fun x y -> int_as_const (x / y)));
+     (Const.op_LT,          (fun x y -> bool_as_const (x < y)));
+     (Const.op_LTE,         (fun x y -> bool_as_const (x <= y)));
+     (Const.op_GT,          (fun x y -> bool_as_const (x > y)));
+     (Const.op_GTE,         (fun x y -> bool_as_const (x >= y)));
+     (Const.op_Modulus,     (fun x y -> int_as_const (x % y)))]
+    
+let reduce_primops steps tm = 
+    let arith_op fv = match fv.n with 
+        | Tm_fvar fv -> List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) arith_ops
+        | _ -> None in
+    if not <| List.contains Primops steps
+    then tm
+    else match tm.n with
+         | Tm_app(fv, [(a1, _); (a2, _)]) ->
+            begin match arith_op fv with 
+            | None -> tm
+            | Some (_, op) -> 
+              begin match (SS.compress a1).n, (SS.compress a2).n with
+                | Tm_constant (Const.Const_int(i, None)), Tm_constant (Const.Const_int(j, None)) -> 
+                  let c = op (Util.int_of_string i) (Util.int_of_string j) in
+                  mk (Tm_constant c) tm.pos
+                | _ -> tm
+              end
+            end
+         | _ -> tm
+
 let maybe_simplify steps tm =
     let w t = {t with pos=tm.pos} in
     let simp_t t = match t.n with
@@ -388,7 +441,7 @@ let maybe_simplify steps tm =
         | _ -> None in
     let simplify arg = (simp_t (fst arg), arg) in
     if not <| List.contains Simplify steps
-    then tm
+    then reduce_primops steps tm
     else match tm.n with
             | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
             | Tm_app({n=Tm_fvar fv}, args) -> 
@@ -454,6 +507,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             rebuild cfg env stack t
      
+          | Tm_app({n=Tm_fvar fv}, [(tm, _)])   //User-requested full normalization on tm
+            when S.fv_eq_lid fv Syntax.Const.normalize
+              && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
+            let s = [Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
+            let cfg' = {cfg with steps=s; delta_level=Unfold Delta_constant} in
+            let stack' = Steps (cfg.steps, cfg.delta_level)::stack in
+            norm cfg' env stack' tm
+
           | Tm_app({n=Tm_constant Const.Const_reify}, a1::a2::rest) ->
             let hd, _ = Util.head_and_args t in
             let t' = S.mk (Tm_app(hd, [a1])) None t.pos in
@@ -619,6 +680,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           norm cfg (c :: env) stack_rest body 
                       end
                   end
+
+                | Steps (s, dl) :: stack -> 
+                  norm ({cfg with steps=s; delta_level=dl}) env stack t
 
                 | MemoLazy r :: stack -> 
                   set_memo r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
@@ -829,6 +893,9 @@ and rebuild : cfg -> env -> stack -> term -> term =
                       In either case, it has no free de Bruijn indices *)
         match stack with 
             | [] -> t
+
+            | Steps (s, dl) :: stack -> 
+              rebuild ({cfg with steps=s; delta_level=dl}) env stack t
 
             | Meta(m, r)::stack -> 
               let t = mk (Tm_meta(t, m)) r in

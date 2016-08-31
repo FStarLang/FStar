@@ -1,11 +1,11 @@
 FSTAR_HOME=../../..
 
-OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
+OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml)
 
-OCAMLC=ocamlfind ocamlopt -package batteries -linkpkg -g -thread
+OCAMLC=ocamlfind ocamlopt -package batteries,zarith -linkpkg -g -thread
 
 a.out:
-	$(MAKE) -C $(FSTAR_HOME)/lib/ml PRIMS_DIR=native_int
+	$(MAKE) -C $(FSTAR_HOME)/lib/ml
 	$(MAKE) -C $(FSTAR_HOME)/contrib/
 	cp ../ml/ffibridge.ml .
 	cp ../ml/runtime.ml .

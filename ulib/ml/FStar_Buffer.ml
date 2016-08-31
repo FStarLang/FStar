@@ -9,7 +9,7 @@ let modifies_fresh_lemma h0 h1 mods size b = ()
 type ('a, 'b, 'c, 'd) disjoint = unit
 type ('a, 'b, 'c) live = unit
 
-type abuffer = unit
+type abuffer = | Buff of (unit * unit)
 
 type 'a buffer = {
     content:'a array;

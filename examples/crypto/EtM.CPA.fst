@@ -5,6 +5,7 @@ open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.Monotonic.RRef
+open EtM.Ideal
 
 
 open Platform.Bytes
@@ -67,16 +68,20 @@ let encrypt k m =
 
 val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->
+    Map.contains h0 k.region /\
     (let log = m_sel h0 k.log in
-     is_Some (seq_find (fun mc -> snd mc = c) log))))
-  (ensures  (fun m0 res m1 ->
-    ind_cpa ==>
-     (let log = m_sel m0 k.log in
+      (b2t uf_cma) ==> is_Some (seq_find (fun mc -> snd mc = c) log))))
+  (ensures  (fun h0 res h1 ->
+    modifies_none h0 h1 /\
+    ( (b2t uf_cma) ==>
+     (let log = m_sel h0 k.log in
       let found = seq_find (fun mc -> snd mc = c) log in
-      is_Some found ==> (let Some mc = found in res = fst mc))))
-
+      is_Some found ==> (let Some mc = found in res = fst mc)))
+    )
+  )
+    
 let decrypt k c =
-  if ind_cpa then
+  if uf_cma then
     let log = m_read k.log in
     match seq_find (fun mc -> snd mc = c) log with
     | Some mc -> fst mc
