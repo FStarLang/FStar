@@ -391,5 +391,8 @@ let range_0 : FStar_Ident.lident = (pconst "range_0")
 let guard_free : FStar_Ident.lident = (pconst "guard_free")
 
 
+let normalize : FStar_Ident.lident = (pconst "normalize")
+
+
 
 

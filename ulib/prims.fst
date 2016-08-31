@@ -635,3 +635,11 @@ let abs (x:int) : Tot int = if x >= 0 then x else -x
 
 assume val string_of_bool: bool -> Tot string
 assume val string_of_int: int -> Tot string
+
+(*********************************************************************************)
+(* Marking terms for normalization *)
+(*********************************************************************************)
+abstract let normalize (a:Type0) : Type0 = a
+
+val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
+let assert_norm p = ()

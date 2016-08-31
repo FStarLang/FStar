@@ -7,13 +7,11 @@ open Platform.Bytes
 module ACLs = Ex12a.ACLs
 module MAC = Ex12.MAC
 
-assume val utf8: s:string  -> Tot bytes 
-
+// In Platform.Bytes: val utf8: s:string  -> Tot bytes
 
 assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
      b2t (equalBytes (utf8 s0) (utf8 s1)) ==> s0==s1
-
 
 type capRead (msg:bytes) = (forall f. msg = utf8 f ==> ACLs.canRead f)
 
@@ -29,8 +27,7 @@ let issue f =
   assert(capRead bs);
   MAC.mac k bs
 
-
-let redeem f t = 
+let redeem f t =
   let bs = (utf8 f) in
   if MAC.verify k bs t then 
     ()
