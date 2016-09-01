@@ -6,13 +6,10 @@ open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.Monotonic.RRef
 
+open EtM
 
 open Platform.Bytes
 open CoreCrypto
-
-module CPA = EtM.CPA
-module MAC = EtM.MAC
-module P   = EtM.Plain
 
 type log_t (r:rid) = Monotonic.Seq.log_t r (CPA.msg * CPA.cipher * MAC.tag)
 
@@ -74,7 +71,7 @@ let keygen parent =
   Key #region ke ka log
 
 
-val encrypt: k:key -> m:EtM.Plain.plain -> ST cipher
+val encrypt: k:key -> m:Plain.plain -> ST cipher
   (requires (fun h0 -> invariant h0 k))
   (ensures  (fun h0 c h1 ->
     (let log0 = get_log h0 k in
@@ -114,22 +111,44 @@ let encrypt k plain =
   (c, t)
   
 
-assume AE_needs_CMA: (MAC.uf_cma <==> P.ind_cpa)
+//assume AE_needs_CMA: ((b2t Ideal.uf_cma) <==> Ideal.ind_cpa)
 
-val decrypt: k:key -> c:cipher -> ST (option EtM.Plain.plain)
+val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
   (requires (fun h0 -> invariant h0 k))
   (ensures (fun h0 p h1 -> 
     modifies_none h0 h1 /\ 
-    (invariant h0 k ==> invariant h1 k)
+    (invariant h0 k ==> (invariant h1 k /\
+      ( (b2t Ideal.uf_cma /\ is_Some p) ==>
+        ( let log = get_log h0 k in
+          let found = seq_find 
+            (
+              fun (_,c',tag') -> 
+            	  c'= fst c && tag' = snd c
+            ) log in
+          is_Some found /\ 
+          (* ( let Some (p',_,_) = found  in *)
+   	  (*   p = Some(p')  *)
+	  (* ) /\ *)
+	  True
+        )
+      )
+    ))
   ))
+
+
 let decrypt k (c,tag) =
   if MAC.verify k.km c tag
   then (
-    if (MAC.uf_cma) then 
+    if (Ideal.uf_cma) then 
       (
-      (* let h = ST.get () in *)
-      (* assert ( is_Some (seq_find (fun mt -> mt = (c,tag)) (get_mac_log h k) ) ); *)
-      Some(CPA.decrypt k.ke c)
+      let h = ST.get () in
+      assert ( is_Some (seq_find (fun mt -> mt = (c,tag)) (get_mac_log h k) ) );
+
+      let p = CPA.decrypt k.ke c in
+      assert ( is_Some (seq_find (fun (p',c') -> (p',c') = (p,c)) (get_cpa_log h k) ) );
+      //assert ( is_Some (seq_find (fun (p',c',tag') -> (p',c',tag') = (p,c,tag)) (get_log h k) ) );
+      (* admit(); *)
+      Some(p)
       )
     else 
       (
