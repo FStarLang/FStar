@@ -80,6 +80,16 @@ let sel_int (h:mem) (b:elemB{live h b}) : GTot nat
 (* *        Polynomial computation step           *)
 (* * ******************************************** *)
 
+
+let rec print_elem (e:elemB) (i:UInt32.t{UInt32.v i < length e}) (len:UInt32.t{UInt32.v len <= length e}) : ST bool (requires (fun _ -> True)) (ensures (fun h0 _ h1 -> h0 == h1))
+ =
+  let open FStar.UInt32 in
+  if v i < v len then
+    let _ = IO.debug_print_string (UInt64.to_string (index e i) ^ ":") in
+    print_elem e (i +^ 1ul) len
+  else
+    IO.debug_print_string "\n"
+
 (** 
     Runs "Acc = ((Acc+block)*r) % p." on the accumulator, the well formatted block of the message
     and the clamped part of the key 
@@ -119,6 +129,9 @@ let add_and_multiply acc block r =
     assume (live h4 tmp /\ live h4 acc);
   blit tmp 0ul acc 0ul nlength;
   let h5 = HST.get() in
+
+  //DEBUG: let _ = print_elem acc 0ul 5ul in
+  
   pop_frame();
   let hfin = HST.get() in
   assert(modifies_1 acc hinit hfin);
@@ -175,7 +188,7 @@ let rec print_bytes (s:bytes) (i:UInt32.t{UInt32.v i < length s}) (len:UInt32.t{
     IO.debug_print_string "\n"
 
 let toField b s =
-  let _ = print_bytes s 0ul 16ul in
+  //DEBUG: let _ = print_bytes s 0ul 16ul in
   let h0 = HST.get() in
   let mask_26 = mk_mask 26ul in
   let s0 = sub s 0ul  4ul in
