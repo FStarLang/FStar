@@ -46,8 +46,8 @@ let frameOf #a (b:buffer a) : GTot HH.rid = frameOf (content b)
   contains h b /\ max_length h b >= length b + idx b
 
 (* Ghostly access an element of the array, or the full underlying sequence *)
-let get #a h (b:buffer a{live h b}) (i:nat{i < length b}) : GTot a = Seq.index (sel h b) (idx b + i)
 let as_seq #a h (b:buffer a{live h b}) : GTot (seq a) = Seq.slice (sel h b) (idx b) (idx b + length b)
+let get #a h (b:buffer a{live h b}) (i:nat{i < length b}) : GTot a = Seq.index (as_seq h b) i
 
 (* Equality predicate on buffer contents, without quantifiers *)
 let equal #a h (b:buffer a) h' (b':buffer a) : GTot Type0 =
