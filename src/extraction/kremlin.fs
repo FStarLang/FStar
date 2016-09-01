@@ -39,13 +39,12 @@ and decl =
 
 and expr =
   | EBound of var
-  | EOpen of binder
   | EQualified of lident
   | EConstant of constant
   | EUnit
   | EApp of expr * list<expr>
   | ELet of binder * expr * expr
-  | EIfThenElse of expr * expr * expr * typ
+  | EIfThenElse of expr * expr * expr
   | ESequence of list<expr>
   | EAssign of expr * expr
   | (** left expression can only be a EBound of EOpen *)
@@ -54,7 +53,7 @@ and expr =
   | EBufWrite of expr * expr * expr
   | EBufSub of expr * expr
   | EBufBlit of expr * expr * expr * expr * expr
-  | EMatch of expr * branches * typ
+  | EMatch of expr * branches
   | EOp of op * width
   | ECast of expr * typ
   | EPushFrame
@@ -94,19 +93,13 @@ and width =
 and constant = width * string
 
 (* a De Bruijn index *)
-and var = int 
+and var = int
 
 and binder = {
   name: ident;
   typ: typ;
   mut: bool;
-  mark: ref<int>;
-  meta: option<meta>;
-  atom: ref<unit>;
 }
-
-and meta =
-  | MetaSequence
 
 (* for pretty-printing *)
 and ident = string
@@ -127,7 +120,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 10
+let current_version: version = 11
 
 type file = string * program
 type binary_format = version * list<file>
@@ -418,7 +411,7 @@ and translate_binders env args =
   List.map (translate_binder env) args
 
 and translate_binder env ((name, _), typ) =
-  { name = name; typ = translate_type env typ; mut = false; mark = ref 0; meta = None; atom = ref () }
+  { name = name; typ = translate_type env typ; mut = false }
 
 and translate_expr env e: expr =
   match e.expr with
@@ -468,7 +461,7 @@ and translate_expr env e: expr =
 
   | MLE_Match (expr, branches) ->
       let t_scrut = expr.mlty in
-      EMatch (translate_expr env expr, translate_branches env t_scrut branches, translate_type env e.mlty)
+      EMatch (translate_expr env expr, translate_branches env t_scrut branches)
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Kremlin constructs
