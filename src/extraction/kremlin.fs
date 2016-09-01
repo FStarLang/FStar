@@ -453,7 +453,7 @@ and translate_expr env e: expr =
           typ, body
       in
       let is_mut = flavor = Mutable in
-      let binder = { name = name; typ = translate_type env typ; mut = is_mut; mark = ref 0; meta = None; atom = ref () } in
+      let binder = { name = name; typ = translate_type env typ; mut = is_mut } in
       let body = translate_expr env body in
       let env = extend env name is_mut in
       let continuation = translate_expr env continuation in
@@ -600,7 +600,7 @@ and translate_pat env t p =
       env, PBool b
   | MLP_Var (name, _) ->
       let env = extend env name false in
-      env, PVar ({ name = name; typ = translate_type env t; mut = false; mark = ref 0; meta = None; atom = ref () })
+      env, PVar ({ name = name; typ = translate_type env t; mut = false })
   | MLP_Wild ->
       failwith "todo: translate_pat [MLP_Wild]"
   | MLP_Const _ ->
