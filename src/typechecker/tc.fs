@@ -2660,11 +2660,8 @@ and tc_inductive env ses quals lids =
             ) datas in
 
 
-            //folding function for t_datas
-            //in the accumulator:
-              //env is the updated env
-              //term is the soundness condition for this data constructor
-            let haseq_data acc data =
+            //soundness condition for this data constructor
+            let haseq_data data =
                 let dt = datacon_typ data in
                 //apply the universes substitution to dt
                 let dt = SS.subst usubst dt in
@@ -2687,14 +2684,14 @@ and tc_inductive env ses quals lids =
                                 sort_range
                                 haseq_b in
                             U.mk_conj t haseq_b) U.t_true dbs in
-                    
-                        let env, cond' = acc in
-                        Env.push_binders env dbs, U.mk_conj cond' cond
-                    | _                -> acc
+
+            	        //fold right over dbs and add a forall for each binder in dbs
+                        List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) dbs cond
+                    | _                -> U.t_true
             in
 
             //fold over t_datas
-            let env, cond = List.fold_left haseq_data (env, U.t_true) t_datas in
+            let cond = List.fold_left (fun acc d -> U.mk_conj acc (haseq_data d)) U.t_true t_datas in
 
             //return new accumulator
             let axiom_lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))]) in
