@@ -165,7 +165,17 @@ private let mk_mask (nbits:FStar.UInt32.t{FStar.UInt32.v nbits < 64}) :
   = Math.Lib.pow2_increases_lemma 64 (FStar.UInt32.v nbits);
     U64 ((1uL <<^ nbits) -^ 1uL)
 
+let rec print_bytes (s:bytes) (i:UInt32.t{UInt32.v i < length s}) (len:UInt32.t{UInt32.v len <= length s}) : ST bool (requires (fun _ -> True)) (ensures (fun h0 _ h1 -> h0 == h1))
+ =
+  let open FStar.UInt32 in
+  if v i < v len then
+    let _ = IO.debug_print_string (UInt8.to_string (index s i) ^ ":") in
+    print_bytes s (i +^ 1ul) len
+  else
+    IO.debug_print_string "\n"
+
 let toField b s =
+  let _ = print_bytes s 0ul 16ul in
   let h0 = HST.get() in
   let mask_26 = mk_mask 26ul in
   let s0 = sub s 0ul  4ul in
@@ -700,7 +710,7 @@ let poly1305_mac tag msg len key =
   let s   = create 0uy 16ul in 
   (* Initializes the accumulator and the keys values *)
   let () = poly1305_init r s key in
-  let _ = poly1305_start acc in
+  let _ = poly1305_start acc in // zeroes acc redundantly
   (* Compute the number of 'plain' blocks *)
   let ctr = U32.div len 16ul in
   let rest = U32.rem len 16ul in 
