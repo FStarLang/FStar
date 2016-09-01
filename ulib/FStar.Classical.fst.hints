@@ -1,6 +1,45 @@
 [
-  "V¥Bæ|\u001a–Ä:Î\u0005„\u000f~ƒ\f",
+  "Ž@„\u0000²\t¬´V9²k×g<",
   [
+    [ "FStar.Classical.forall_intro_gtot", 1, 0, 0, [ "@query" ], 0 ],
+    [
+      "FStar.Classical.lemma_forall_intro_gtot",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Prims.l_Forall", "equation_Prims.squash",
+        "forall-interp",
+        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30"
+      ],
+      0
+    ],
+    [ "FStar.Classical.gtot_to_lemma", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.Classical.lemma_to_squash_gtot", 1, 0, 0, [ "@query" ], 0 ],
+    [ "FStar.Classical.forall_intro_squash_gtot", 1, 0, 0, [ "@query" ], 0 ],
+    [
+      "FStar.Classical.forall_intro",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Prims.l_Forall", "equation_Prims.squash",
+        "forall-interp",
+        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30"
+      ],
+      0
+    ],
+    [
+      "FStar.Classical.give_proof",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30"
+      ],
+      0
+    ],
     [
       "FStar.Classical.excluded_middle'",
       1,
@@ -17,6 +56,18 @@
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [ "FStar.Classical.excluded_middle", 2, 0, 0, [ "@query" ], 0 ]
+    [ "FStar.Classical.excluded_middle", 2, 0, 0, [ "@query" ], 0 ],
+    [
+      "FStar.Classical.ghost_lemma",
+      1,
+      0,
+      0,
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_340fcf9110ec0348a1e1a4e799da8db3",
+        "unit_inversion", "unit_typing"
+      ],
+      0
+    ]
   ]
 ]
