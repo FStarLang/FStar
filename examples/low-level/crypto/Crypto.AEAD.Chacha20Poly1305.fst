@@ -41,9 +41,9 @@ private val length_bytes: b:bytes -> len:UInt32.t -> aad_len:UInt32.t -> STL uni
   (requires (fun h -> live h b /\ length b >= 16))
   (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))
 let length_bytes b len aad_len =
-  upd_uint32 (offset b  0ul) len;
+  upd_uint32 (offset b  0ul) aad_len;
   upd_uint32 (offset b  4ul) 0ul;
-  upd_uint32 (offset b  8ul) aad_len;
+  upd_uint32 (offset b  8ul) len;
   upd_uint32 (offset b 12ul) 0ul
 
 
