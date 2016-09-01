@@ -65,7 +65,7 @@ OUTPUT_DIR=./ocaml-output
 
 CONTRIB=$(FSTAR_HOME)/contrib
 
-CODEGEN_FLAGS=   --no_location_info --use_native_int \
+CODEGEN_FLAGS=   --no_location_info \
                  --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --odir $(OUTPUT_DIR)\
                  --__temp_no_proj PSemantics --__temp_no_proj SecServer
 

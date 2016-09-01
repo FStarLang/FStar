@@ -21,8 +21,9 @@ printf \
 verifythis \
 wysteria \
 preorders \
-dm4free \
-unit-tests
+dm4free
+
+#unit-tests
 
 #metatheory\
 after verifythis

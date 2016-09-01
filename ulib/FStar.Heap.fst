@@ -1,78 +1,217 @@
 module FStar.Heap
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
-open FStar.TSet
-assume new type heap : Type0
-abstract type ref (a:Type) = 
-  | MkRef of a //this implementation of ref is not realistic; it's just to get the universes right
-assume HasEq_ref: (forall (a:Type).{:pattern (hasEq (ref a))} hasEq (ref a))
 
-#reset-options
-noeq type aref =
-  | Ref : #a:Type -> r:ref a -> aref
-assume val sel :       #a:Type -> heap -> ref a -> GTot a
-assume val upd :       #a:Type -> heap -> ref a -> a -> GTot heap
-assume val emp :       heap
-assume val contains :  #a:Type -> heap -> ref a -> GTot bool
-assume val equal:      heap -> heap -> GTot bool
-assume val restrict:   heap -> set aref -> GTot heap
-assume val concat:     heap -> heap -> GTot heap
-assume val domain:     heap -> GTot (set aref)
+open FStar.Classical
+open FStar.Set
 
-assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).            {:pattern (sel (upd h r v) r)}
-                      sel (upd h r v) r == v
+(* Heap is a tuple of a source of freshness (the no. of the next 
+   reference to be allocated) and a mapping of allocated raw 
+   references (represented as natural numbers) to types and values. *)
 
-assume SelUpd2:       forall (a:Type) (b:Type) (h:heap) (k1:ref a) (k2:ref b) (v:b).{:pattern (sel (upd h k2 v) k1)}
-                      ~ (eq3 k2 k1) ==> sel (upd h k2 v) k1 == sel h k1
+abstract noeq type heap_rec = {
+  next_addr: nat;
+  memory   : nat -> Tot (option (a:Type0 & a))
+}  
 
-assume InDomEmp:      forall (a:Type) (k:ref a).                           {:pattern contains emp k}
-                      not(contains emp k)
+abstract type heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> is_None (h.memory n))}
 
-assume Extensional:   forall (h1:heap) (h2:heap).                          {:pattern equal h1 h2}
-                      equal h1 h2 <==> h1 == h2
+(* Consistency of heaps. aka, no strong updates *)
+let consistent (h0:heap) (h1:heap) =
+  forall n x y. h0.memory n == Some x /\ h1.memory n == Some y ==> dfst x == dfst y
 
-assume Equals:        forall (h1:heap) (h2:heap).                          {:pattern equal h1 h2}
-                      equal h1 h2 <==> (forall (a:Type) (k:ref a).          {:pattern (sel h1 k); (sel h2 k)} sel h1 k == sel h2 k)
+(* References. *)
+(* address * initial value *)
+(* TODO: test that hasEq for ref is not exported *)
+abstract type ref (a:Type0) = {
+  addr: nat;
+  init: a
+}  
 
-assume RestrictSel:   forall (a:Type) (h:heap) (r:set aref) (a:ref a).     {:pattern sel (restrict h r) a}
-                      mem (Ref a) r ==> sel (restrict h r) a == sel h a
+abstract val addr_of: #a:Type -> ref a -> GTot nat
+let addr_of #a r = r.addr
 
-assume SelConcat:     forall (a:Type) (h1:heap) (h2:heap) (a:ref a).       {:pattern sel (concat h1 h2) a}
-                      if contains h2 a then sel (concat h1 h2) a==sel h2 a else sel (concat h1 h2) a==sel h1 a
+abstract val compare_addrs: #a:Type -> #b:Type -> r1:ref a -> r2:ref b -> Tot (b:bool{b = (addr_of r1 = addr_of r2)})
+let compare_addrs #a #b r1 r2 = r1.addr = r2.addr
 
-assume DomUpd:        forall (a:Type) (h:heap) (k1:ref a) (v:a).           {:pattern domain (upd h k1 v)}
-                      domain (upd h k1 v) == union (domain h) (singleton (Ref k1))
+abstract let contains_a_well_typed (#a:Type) (h:heap) (r:ref a) =
+  exists x. h.memory r.addr == Some (| a, x |)
 
-assume DomRestrict:   forall (h:heap) (r:set aref).                        {:pattern domain (restrict h r)}
-                      domain (restrict h r) == intersect (domain h) r
+(* Select. *)
+private abstract val sel_tot : #a:Type -> h:heap -> r:ref a{h `contains_a_well_typed` r} -> Tot a
+let sel_tot #a h r =
+  match h.memory r.addr with
+  | Some (| _ , x |) -> x
 
-assume DomConcat:     forall (h1:heap) (h2:heap).                          {:pattern domain (concat h1 h2)}
-                      domain (concat h1 h2)  == union (domain h1) (domain h2)
+abstract val sel: #a:Type -> h:heap -> r:ref a -> GTot a
+let sel #a h r =
+  if FStar.Classical.excluded_middle (h `contains_a_well_typed` r) then
+    sel_tot #a h r
+  else r.init
 
-assume DomEmp:        domain emp == (empty #aref)
+(* Update. *)
+private abstract val upd_tot : #a:Type -> h0:heap -> r:ref a{h0 `contains_a_well_typed` r} -> x:a
+          -> Tot heap
+let upd_tot #a h0 r x =
+  { h0 with memory = (fun r' -> if r.addr = r'
+			     then Some (| a , x |)
+                             else h0.memory r') }
 
-assume DomContains:   forall (a:Type) (h:heap) (r:ref a).                  {:pattern contains h r}
-	              contains h r <==> mem (Ref r) (domain h)
+abstract val upd: #a:Type -> h0:heap -> r:ref a -> x:a
+ -> GTot heap
+let upd #a h0 r x =
+  if FStar.Classical.excluded_middle (h0 `contains_a_well_typed` r)
+  then upd_tot h0 r x
+  else
+    if r.addr >= h0.next_addr
+    then //alloc at r.addr
+      { next_addr = r.addr + 1;
+        memory    = (fun (r':nat) -> if r' = r.addr
+			        then Some (| a, x |)
+                                else h0.memory r') }
+    else //type modifying update at r.addr
+      { h0 with memory = (fun r' -> if r' = r.addr
+				 then Some (| a , x |)
+                                 else h0.memory r') }
 
-type on (r:set aref) (p:(heap -> Type)) (h:heap) = p (restrict h r)
-type fresh (refs:set aref) (h0:heap) (h1:heap) =
-  (forall (a:Type) (r:ref a).{:pattern (contains h0 r)} mem (Ref r) refs ==> not(contains h0 r) /\ contains h1 r)
-type modifies (mods:set aref) (h:heap) (h':heap) =
-    equal h' (concat h' (restrict h (complement mods)))
-    /\ subset (domain h) (domain h')
+(* Generating a fresh reference for the given heap. *)
+
+abstract val alloc: #a:Type -> h0:heap -> x:a -> GTot (rh1:(ref a * heap))
+let alloc #a h0 x =
+  let r = { addr = h0.next_addr; init = x } in
+  r, upd #a h0 r x
+
+abstract let contains (#a:Type) (h:heap) (r:ref a): GTot Type0 =
+  is_Some (h.memory r.addr)
+
+val contains_a_well_typed_implies_contains: #a:Type -> h:heap -> r:ref a
+                              -> Lemma (requires (h `contains_a_well_typed` r))
+			              (ensures (h `contains` r))
+				[SMTPatOr [[SMTPat (h `contains_a_well_typed` r)]; [SMTPat (h `contains` r)]]]
+let contains_a_well_typed_implies_contains #a h r = ()
+
+val contains_addr_of: #a:Type -> #b:Type -> h:heap -> r1:ref a -> r2:ref b
+                     -> Lemma (requires (h `contains` r1 /\ ~ (h `contains` r2)))
+		             (ensures (addr_of r1 <> addr_of r2))
+		       [SMTPat (h `contains` r1); SMTPat (h `contains` r2)]
+let contains_addr_of #a #b h r1 r2 = ()
+
+let fresh (s:set nat) (h0:heap) (h1:heap) =
+  forall (a:Type) (r:ref a).{:pattern (h0 `contains` r)}
+                       mem (addr_of r) s ==> ~ (h0 `contains` r) /\ (h1 `contains` r)
+
+let only x = singleton (addr_of x)
+
+val alloc_lemma: #a:Type -> h0:heap -> x:a
+                 -> Lemma (requires (True))
+		         (ensures (let r, h1 = alloc h0 x in
+			           h1 == upd h0 r x /\ ~ (h0 `contains_a_well_typed` r) /\ h1 `contains_a_well_typed` r))
+		   [SMTPat (alloc h0 x)]
+let alloc_lemma #a h0 x = ()
+
+val sel_upd1: #a:Type -> h:heap -> r:ref a -> v:a
+	      -> Lemma (requires True) (ensures (sel (upd h r v) r == v))
+                [SMTPat (sel (upd h r v) r)]
+let sel_upd1 #a h r v = ()
+
+val sel_upd2: #a:Type -> #b:Type -> h:heap -> k1:ref a -> k2:ref b -> v:b
+              -> Lemma (requires True) (ensures (addr_of k1 <> addr_of k2 ==> sel (upd h k2 v) k1 == sel h k1))
+	        [SMTPat (sel (upd h k2 v) k1)]
+let sel_upd2 #a #b h k1 k2 v = ()	     
+
+val upd_sel : #a:Type -> h:heap -> r:ref a -> 
+	      Lemma (requires (h `contains_a_well_typed` r))
+	            (ensures  (upd h r (sel h r) == h))
+	      [SMTPat (upd h r (sel h r))]
+let upd_sel #a h r = 
+  assert (FStar.FunctionalExtensionality.feq (upd h r (sel h r)).memory h.memory)
+
+(* Empty. *)
+val emp : heap
+let emp = {
+  next_addr = 0;
+  memory    = (fun (r:nat) -> None)
+}
+
+val in_dom_emp: #a:Type -> k:ref a
+                -> Lemma (requires True) (ensures (~ (emp `contains_a_well_typed` k)))
+		  [SMTPat (emp `contains_a_well_typed` k)]
+let in_dom_emp #a k = ()
+
+val upd_contains: #a:Type -> h:heap -> r:ref a -> v:a
+                  -> Lemma (requires True)
+		          (ensures ((upd h r v) `contains_a_well_typed`  r /\
+			            (forall (b:Type) (r':ref b).{:pattern ((upd h r v) `contains` r')} h `contains` r /\ h `contains` r' ==> (upd h r v) `contains` r')))
+		    [SMTPat ((upd h r v) `contains` r)]
+let upd_contains #a h r v = ()
+
+val upd_contains_a_well_typed: #a:Type -> h:heap -> r:ref a -> v:a
+                  -> Lemma (requires True)
+		          (ensures ((upd h r v) `contains_a_well_typed`  r /\
+			            (forall (b:Type) (r':ref b).{:pattern ((upd h r v) `contains_a_well_typed` r')} h `contains_a_well_typed` r /\ h `contains_a_well_typed` r' ==> (upd h r v) `contains_a_well_typed` r')))
+		    [SMTPat ((upd h r v) `contains_a_well_typed` r)]
+let upd_contains_a_well_typed #a h r v = ()
+
+val addr_of_contains: #a:Type -> #b:Type -> h:heap -> r1:ref a -> r2:ref b
+                      -> Lemma (requires (h `contains` r1 /\ ~ (h `contains` r2)))
+		              (ensures (addr_of r1 <> addr_of r2))
+			[SMTPat (h `contains` r1); SMTPat (h `contains` r2)]
+let addr_of_contains #a #b h r1 r2 = ()			
+
+let modifies (s:set nat) (h0:heap) (h1:heap) =
+  (forall (a:Type) (r:ref a).{:pattern (sel h1 r)}
+                         ~ (mem (addr_of r) s) /\ h0 `contains` r ==>
+                         sel h1 r == sel h0 r) /\
+  (forall (a:Type) (r:ref a).{:pattern (h1 `contains` r)}
+                        h0 `contains` r ==> h1 `contains` r)
+
+(* let modifies (s:set nat) (h0:heap) (h1:heap) = *)
+(*   (forall (a:Type) (r:ref a).{:pattern (sel h1 r)} *)
+(*                          ~ (mem (addr_of r) s) /\ h0 `contains_a_well_typed` r ==> *)
+(*                          sel h1 r == sel h0 r) /\ *)
+(*   (forall (a:Type) (r:ref a).{:pattern (h1 `contains_a_well_typed` r)} *)
+(*                         h0 `contains_a_well_typed` r ==> h1 `contains_a_well_typed` r) *)
 
 abstract val lemma_modifies_trans: m1:heap -> m2:heap -> m3:heap
-                       -> s1:set aref -> s2:set aref
+                       -> s1:set nat -> s2:set nat
                        -> Lemma (requires (modifies s1 m1 m2 /\ modifies s2 m2 m3))
                                (ensures (modifies (union s1 s2) m1 m3))
 let lemma_modifies_trans m1 m2 m3 s1 s2 = ()
 
-let only x = singleton (Ref x)
+abstract let equal (h1:heap) (h2:heap) =
+  h1.next_addr = h2.next_addr /\
+  FStar.FunctionalExtensionality.feq h1.memory h2.memory
 
-(* val op_Hat_Plus_Plus<u> : #a:Type(u) -> r:ref a -> set (aref<u>) -> Tot (set (aref<u>)) *)
-let op_Hat_Plus_Plus (#a:Type) (r:ref a) s = union (singleton (Ref r)) s
+val equal_extensional: h1:heap -> h2:heap
+                       -> Lemma (requires True) (ensures (equal h1 h2 <==> h1 == h2))
+		         [SMTPat (equal h1 h2)]
+let equal_extensional h1 h2 = ()			 
 
-(* val op_Plus_Plus_Hat<u> : #a:Type(u) -> set (aref<u>) -> r:ref a -> Tot (set (aref<u>)) *)
-let op_Plus_Plus_Hat (#a:Type) s (r:ref a) = union s (singleton (Ref r))
+(* val equal_sel: #a:Type -> k:ref a -> h1:heap -> h2:heap *)
+(*                -> Lemma (requires ((h1 `contains_a_well_typed` k <==> h2 `contains_a_well_typed` k) /\ *)
+(* 	                          (k `contains` h1 <==> k `contains` h2)   /\ *)
+(* 	                          (sel h1 k == sel h2 k)               /\ *)
+(* 				  (h1.next_addr = h2.next_addr))) *)
+(* 	               (ensures (h1.memory k.addr == h2.memory k.addr)) *)
+(* let equal_sel #a k h1 h2 = *)
+(*   if FStar.Classical.excluded_middle (h1 `contains_a_well_typed` k) *)
+(*   then () *)
+(*   else *)
+(*     match h1.memory k.addr with *)
+(*       | None            -> () *)
+(*       | Some (| b, v |) -> *)
+(* 	match h2.memory k.addr with *)
+(* 	  | None            -> () *)
+(* 	  | Some (| c, u |) ->  *)
+	  
+(* val equal_sel: h1:heap -> h2:heap *)
+(*                -> Lemma (requires True) *)
+(* 	               (ensures (equal h1 h2 <==> (forall (a:Type) (k:ref a).{:pattern (sel h1 k); (sel h2 k)} (h1 `contains_a_well_typed` k <==> h2 `contains_a_well_typed` k) /\ (sel h1 k == sel h2 k)) /\ h1.next_addr = h2.next_addr)) *)
+(* let equal_sel h1 h2 = () *)
 
-(* val op_Hat_Plus_Hat<u> : #a:Type(u) -> #b:Type(u) -> ref a -> ref b -> Tot (set (aref<u>)) *)
-let op_Hat_Plus_Hat (#a:Type) (#b:Type) (r1:ref a) (r2:ref b) = union (singleton (Ref r1)) (singleton (Ref r2))
+val op_Hat_Plus_Plus: #a:Type -> r:ref a -> set nat -> GTot (set nat)
+let op_Hat_Plus_Plus #a r s = union (only r) s
+
+val op_Plus_Plus_Hat: #a:Type -> set nat -> r:ref a -> GTot (set nat)
+let op_Plus_Plus_Hat #a s r = union s (only r)
+
+val op_Hat_Plus_Hat: #a:Type -> #b:Type -> ref a -> ref b -> GTot (set nat)
+let op_Hat_Plus_Hat #a #b r1 r2 = union (only r1) (only r2)

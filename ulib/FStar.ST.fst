@@ -18,10 +18,10 @@ open FStar.TSet
 open FStar.Heap
 type ref (a:Type) = Heap.ref a
 // this intentionally does not preclude h' extending h with fresh refs
-type modifies (mods:set aref) (h:heap) (h':heap) =
-    b2t (Heap.equal h' (concat h' (restrict h (complement mods))))
+(* type modifies (mods:set aref) (h:heap) (h':heap) = *)
+(*     b2t (Heap.equal h' (concat h' (restrict h (complement mods)))) *)
 
-type modifies_none (h0:heap) (h1:heap) = modifies TSet.empty h0 h1
+//type modifies_none (h0:heap) (h1:heap) = modifies Set.empty h0 h1
 
 let st_pre = st_pre_h heap
 let st_post a = st_post_h heap a
@@ -44,7 +44,7 @@ assume val recall: #a:Type -> r:ref a -> STATE unit
 
 assume val alloc:  #a:Type -> init:a -> ST (ref a)
                                            (fun h -> True)
-                                           (fun h0 r h1 -> not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)
+                                           (fun h0 r h1 -> ~ (contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)
 
 assume val read:  #a:Type -> r:ref a -> STATE a
                                          (fun 'p h -> 'p (sel h r) h)
