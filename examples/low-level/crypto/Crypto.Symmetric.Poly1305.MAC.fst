@@ -177,25 +177,32 @@ let coerce i region key =
 // should be abstract, but then we need to duplicate more elemB code
 type accB (i:id) = elemB
 
-let acc_inv (#i:id) (st:state i) (l: itext) (a:accB i) h = 
+let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
   live h st.r /\ live h a /\ disjoint st.r a /\   
   norm h st.r /\ norm h a /\
-  ( let r = sel_elem h st.r in 
-    let a = sel_elem h a in
-    ideal ==> a = poly l r )
+  (let r = sel_elem h st.r in
+   let a = sel_elem h a in
+   ideal ==> a = poly l r)
+
 
 // not framed, as we allocate private state on the caller stack
-val start: #i:id -> st:state i -> STL (accB i)
-  (requires (fun h0 -> True))
-  (ensures (fun h0 a h1 -> 
-    // allocated, and... 
-    acc_inv st text_0 a h1
-  ))
+val start: #i:id -> st:state i -> StackInline (accB i)
+  (requires (fun h -> is_stack_region h.tip /\ live h st.r /\ norm h st.r))
+  (ensures  (fun h0 a h1 -> acc_inv st text_0 a h1))
 let start #i st = 
-  assume false; // this function allocates on the caller's frame!
+  let h0 = HST.get () in
   let a = Buffer.create 0UL 5ul in
+  let h1 = HST.get () in
+  lemma_reveal_modifies_0 h0 h1;
+  cut (equal h0 st.r h1 st.r);
   poly1305_start a;
+  let h2 = HST.get () in
+  lemma_reveal_modifies_1 a h1 h2;
+  cut (equal h1 st.r h2 st.r);
+  Bigint.norm_eq_lemma h0 h2 st.r st.r;
   a
+
+// CHECKPOINT
 
 val update: #i:id -> st:state i -> l:itext -> a:accB i -> v:elemB -> ST itext
   (requires (fun h0 -> // "liveness" /\ 

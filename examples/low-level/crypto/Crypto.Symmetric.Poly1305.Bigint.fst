@@ -127,7 +127,7 @@ let rec maxValue_eq_lemma ha hb a b l =
   match l with
   | 1 -> ()
   | _ -> cut (v (get ha a (l-1)) = v (get hb b (l-1)));
-         maxValue_eq_lemma ha hb a b (l-1)
+        maxValue_eq_lemma ha hb a b (l-1)
 
 (*  Same as maxValue_eq_lemma but restrained to the 'norm_length' domain *)
 val maxValueNorm_eq_lemma: 
@@ -146,6 +146,12 @@ let rec eval_eq_lemma ha hb a b len =
   match len with
   | 0 -> ()
   | _ -> eval_eq_lemma ha hb a b (len-1)
+
+val norm_eq_lemma: ha:heap -> hb:heap -> a:bigint -> b:bigint ->
+  Lemma (requires (equal ha a hb b /\ norm ha a))
+        (ensures  (norm hb b))
+let norm_eq_lemma ha hb a b =
+  eval_eq_lemma ha hb a b norm_length
 
 (* JK: TODO *)
 #set-options "--lax"
