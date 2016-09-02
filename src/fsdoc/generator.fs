@@ -71,9 +71,16 @@ let document_module (m:modul) =
   w (format "# module %s\n" [name.str]);
   (match mdoc with | Some(_, Some(doc, _)) -> w doc | _ -> ());
   List.iter (document_decl w) decls;
-  close_file fd
+  close_file fd;
+  name
 
 let generate (files:list<string>) =
   let modules = List.collect (fun fn -> P.parse_file fn) files in
-  List.iter document_module modules
+  (* fsdoc each module into it's own module.mk. *)
+  let mod_names = List.map document_module modules in
+  (* write mod_names into index.md *)
+  let on = O.prepend_output_dir "index.mk" in 
+  let fd = open_file_for_writing on in 
+  List.iter (fun m -> append_to_file fd (format "%s" [m.str])) mod_names;
+  close_file fd
 
