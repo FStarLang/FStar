@@ -41,6 +41,13 @@ let split a i = (sub a 0 i, sub a i (a.length - i))
 let of_seq s l = ()
 let copy b l = {content = Array.sub b.content b.idx l; idx = 0; length = l}
 
+let eqb b1 b2 len =
+  let b1 = Array.sub b1.content b1.idx len in
+  let b2 = Array.sub b2.content b2.idx len in
+  let b = ref true in
+  Array.iter2 (fun x y -> if x <> y then b := false) b1 b2;
+  !b
+
 type ('a, 'b, 'c, 'd) modifies_buf = ()
 let op_Plus_Plus a b = BatSet.empty
 let only a = BatSet.empty

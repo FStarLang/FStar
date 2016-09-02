@@ -13,12 +13,12 @@ open FStar.Buffer
 open FStar.HST.Monotonic.RRef
 
 open Crypto.Symmetric.Poly1305.Spec
-open Crypto.Symmetric.Poly1305 
-// avoid?
+open Crypto.Symmetric.Poly1305 // avoid?
 
 module HH = FStar.HyperHeap
 
 let norm = Crypto.Symmetric.Poly1305.Bigint.norm 
+
 
 // also used in miTLS ('model' may be better than 'ideal'); could be loaded from another module.
 // this flag enables conditional idealization by keeping additional data,
@@ -29,14 +29,21 @@ assume val ideal: bool
 
 // to be rewired. 
 // In AEAD_ChaCha20: id * nonce
+// we will need authId i ==> ideal?
 assume new abstract type id
 assume val authId: id -> Tot bool
 assume val someId: id
+(*
+type id = nat
+let authId i = false
+let someId = 0
+*)
 
 type bytes = buffer UInt8.t
 type lbytes (n:nat) = b:bytes{length b = n}
 type tagB = wordB_16
 type wordB_16 = wordB_16 
+
 (*
 // TODO: extend the model with dynamic compromises.
 type log_1 = 
@@ -51,8 +58,7 @@ type log_2 = // only when ideal
   | Corrupt
 *)
 
-
-assume val random: r:rid -> len:UInt32.t -> ST (lbytes n)
+val random: r:rid -> len:UInt32.t -> ST bytes
      (requires (fun h -> is_eternal_region r))
      (ensures (fun (h0:mem) b h1 ->
 	 ~(contains h0 b)
@@ -62,7 +68,11 @@ assume val random: r:rid -> len:UInt32.t -> ST (lbytes n)
        /\ modifies (Set.singleton r) h0 h1
        /\ modifies_ref r TSet.empty h0 h1))
 
-type log = option (text * tag)
+// TODO: dummy, implement properly
+let random r len = FStar.Buffer.rcreate r 0uy len
+
+
+type log = option (text * tag) // option (Seq.seq elem * word16)
 
 let log_cmp (a:log) (b:log) =
   match a,b with
@@ -88,7 +98,7 @@ let ideal_log (r:rid) = m_rref r log log_cmp
 
 let log_ref (r:rid) = if ideal then ideal_log r else unit
 
-let i_log (#r:rid) (l:log_ref r{ideal}) : Tot (ideal_log r) = l
+let ilog (#r:rid) (l:log_ref r{ideal}) : Tot (ideal_log r) = l
 
 // the sequence of hashed elements is conditional, but not ghost
 // this will require changing e.g. the type of poly1305_add
@@ -115,7 +125,7 @@ val alloc: i:id
     ~(contains m0 st.s) /\
     //modifies (Set.singleton region) m0 m1 /\ // Can't prove this
     st.region == region /\
-    (ideal ==> m_contains (i_log st.log) m1 /\ m_sel m1 (i_log st.log) == None)
+    (ideal ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)
   ))
 
 let alloc i region key =
@@ -129,6 +139,7 @@ let alloc i region key =
   else
     State #i #region r s ()
 
+
 val gen: i:id
   -> region:rid{is_eternal_region region}
   -> ST (state i)
@@ -138,7 +149,7 @@ val gen: i:id
     ~(contains m0 st.s) /\
     //modifies (Set.singleton r) m0 m1
     st.region == region /\
-    (ideal ==> m_contains (i_log st.log) m1 /\ m_sel m1 (i_log st.log) == None)))
+    (ideal ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)))
 
 let gen i region =
   let key = random region 32ul in
@@ -149,73 +160,15 @@ val coerce: i:id{~(authId i)} -> r:rid -> key:lbytes 32 -> ST (state i)
   (requires (fun m0 -> live m0 key))
   (ensures  (fun m0 st m1 ->
     //modifies (Set.singleton r) m0 m1 /\
-    (ideal ==> m_contains (i_log st.log) m1 /\ m_sel m1 (i_log st.log) == None)))
+    (ideal ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)))
 
 let coerce i region key =
   alloc i region key
 
-// Type checks up to this point
-
-
-(*
-type invoked (#i:id) (st:state i) (m:mem) : Type =
-  ideal /\ is_Some (sel m (State.log st))
-
-val mac: #i:id -> st:state i -> m:msg -> buf:bytes{lbytes 16} -> ST tag
-  (requires (fun m0 -> is_None (m_sel m0 st.log)))
-  (ensures  (fun m0 tag m1 ->
-    modifies (Set.singleton (State.rid st)) m0 m1
-    /\ modifies_rref st.rid !{HH.as_ref (as_rref st.log)} m0.h m1.h
-    /\ witnessed (invoked #i st)
-  ))
-
-let mac #i st buf m =
-  let tag =
-    if authId i then
-      random 16
-    else
-      let Message len contents = m in
-      let () = Crypto.Symmetric.Poly1305.poly1305_mac buf contents len st.key in
-      buf
-    in
-  m_recall st.log;
-  m_write st.log (Some (m, tag));
-  witness st.log (invoked #i st);
-  tag
-*)
-
-
-// should this be elsewhere? 
-val bytes_cmp: b:bytes -> b':bytes -> len:UInt32.t{UInt32.v len <= length b /\ UInt32.v len <= length b'} -> STL bool
-  (requires (fun h -> live h b /\ live h b'))
-  (ensures  (fun h0 z h1 -> live h0 b /\ live h0 b'
-    /\ (b2t z <==> Seq.slice (as_seq h0 b) 0 (UInt32.v len) == Seq.slice (as_seq h0 b') 0 (UInt32.v len)) ))
-
-let rec bytes_cmp b b' len =
-  assume false; //TODO
-  let open FStar.UInt32 in
-  if len =^ 0ul then true
-  else 
-    let i = len -^ 1ul in
-    let bi = index b i in
-    let bi' = index b' i in
-    let open FStar.UInt8 in
-    if bi =^ bi' then bytes_cmp b b' i
-    else false
-
-(* in the concrete code... 
-
-let recomputed = ... in
-verify i st received recomputed
-
-*)
-
-// we will need authId i ==> ideal 
-
 
 // a partial multiplicative-mac computation
 // (considered secret, declassified only via mac and declassify)
-//
+
 // We need to isolate the state of partial MAC computations.
 // the key state is now clamped
 // we use state-passing in the spec (to be reviewed)
@@ -223,8 +176,6 @@ verify i st received recomputed
 
 // should be abstract, but then we need to duplicate more elemB code
 type accB (i:id) = elemB
-
-let sel_elem = sel_elem
 
 let acc_inv (#i:id) (st:state i) (l: itext) (a:accB i) h = 
   live h st.r /\ live h a /\ disjoint st.r a /\   
@@ -259,20 +210,48 @@ let update #i st vs a v =
   add_and_multiply a v st.r 
 
 
+(*
+type invoked (#i:id) (st:state i) (m:mem) : Type =
+  ideal /\ is_Some (sel m (State.log st))
+
+val mac: #i:id -> st:state i -> m:msg -> buf:bytes{lbytes 16} -> ST tag
+  (requires (fun m0 -> is_None (m_sel m0 st.log)))
+  (ensures  (fun m0 tag m1 ->
+    modifies (Set.singleton (State.rid st)) m0 m1
+    /\ modifies_rref st.rid !{HH.as_ref (as_rref st.log)} m0.h m1.h
+    /\ witnessed (invoked #i st)
+  ))
+
+let mac #i st buf m =
+  let tag =
+    if authId i then
+      random 16
+    else
+      let Message len contents = m in
+      let () = Crypto.Symmetric.Poly1305.poly1305_mac buf contents len st.key in
+      buf
+    in
+  m_recall st.log;
+  m_write st.log (Some (m, tag));
+  witness st.log (invoked #i st);
+  tag
+*)
+
 val mac: #i:id -> st:state i -> l:itext -> computed:accB i -> tag: tagB -> ST unit
   (requires (fun h0 -> ideal ==> 
     sel_elem h0 l = poly l (sel_elem h0 st.r)  /\
-    HyperStack.sel h0 st.log = None #log))
-  (ensures (fun h0 _ h1 -> 
+    m_sel h0 (ilog st.log) == None))
+  (ensures (fun h0 _ h1 -> live h0 st.s /\
     // modifies h0 h1 "the tag buffer and st.log" /\ 
-    let s: word_16 = sel_word h0 st.s in 
+    (let s: word_16 = sel_word h0 st.s in
     let mac = mac_1305 l (sel_elem h0 st.r) s in
     mac = little_endian (sel_word h1 tag) /\
-    (ideal /\ authId i ==> HyperStack.sel h1 st.log = Some (l,mac))))
+    (ideal /\ authId i ==> m_sel h1 (ilog st.log) == Some (l,sel_word h1 tag)))))
 
 let mac #i st vs acc tag = 
   poly1305_finish tag acc st.s;
   if ideal then st.log := (Some (vs,read_word tag))
+
 
 val verify: #i:id -> st:state i -> l:itext -> computed:accB i -> tag: tagB -> 
   ST bool
@@ -288,7 +267,7 @@ val verify: #i:id -> st:state i -> l:itext -> computed:accB i -> tag: tagB ->
 let verify #i st l acc received =
   let tag = Buffer.create 0uy 16ul in  
   poly1305_finish tag acc st.s;
-  let verified = bytes_cmp tag received 16ul in 
+  let verified = Buffer.eqb tag received 16ul in
   if ideal && authId i then 
     let st = !st.log in 
     let correct = (st = Some(l,read_word tag)) in
@@ -313,7 +292,6 @@ let verify #i st m t =
     let () = Poly.Poly1305_wip.poly1305_mac tag m.contents m.len st.key in
     bytes_cmp tag t 16ul
 *)
-
 
 
 // The code below is not involved in the idealization;
@@ -384,4 +362,3 @@ let lemma_encode_pad_injective p0 t0 p1 t1 =
   if l = 0 then assume false else
   if l < 16 then assume false
   else assume false
-  

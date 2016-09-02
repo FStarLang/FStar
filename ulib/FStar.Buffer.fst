@@ -46,28 +46,12 @@ let frameOf #a (b:buffer a) : GTot HH.rid = frameOf (content b)
   contains h b /\ max_length h b >= length b + idx b
 
 (* Ghostly access an element of the array, or the full underlying sequence *)
-let get #a h (b:buffer a{live h b}) (i:nat{i < length b}) : GTot a = Seq.index (sel h b) (idx b + i)
 let as_seq #a h (b:buffer a{live h b}) : GTot (seq a) = Seq.slice (sel h b) (idx b) (idx b + length b)
+let get #a h (b:buffer a{live h b}) (i:nat{i < length b}) : GTot a = Seq.index (as_seq h b) i
 
 (* Equality predicate on buffer contents, without quantifiers *)
 let equal #a h (b:buffer a) h' (b':buffer a) : GTot Type0 =
   live h b /\ live h' b' /\ as_seq h b == as_seq h' b'
-
-(*
-(* Equality predicate on buffer contents, with quantifiers *)
-val eq_lemma: #a:Type -> h:mem -> b:buffer a{live h b} -> h':mem -> b':buffer a{live h' b'} -> Lemma
-  (requires (equal h b h' b'))
-  (ensures  (length b = length b' /\ (forall (i:nat). i < length b ==> get h b i == get h' b' i)))
-  [SMTPat (equal h b h' b')]
-let eq_lemma #a h b h' b' =
-  let s = as_seq h b in
-  let s' = as_seq h' b' in
-  assert(Seq.length s = length b);
-  assert(Seq.length s' = length b');
-  assert(Seq.equal s s');
-  assert (forall (i:nat). i < length b ==> get h b i == Seq.index s i);
-  assert (forall (i:nat). i < length b' ==> get h' b' i == Seq.index s' i)
-*)
 
 (* y is included in x / x contains y *)
 let includes #a (x:buffer a) (y:buffer a) : GTot Type0 =
@@ -775,6 +759,52 @@ let lemma_offset_spec (#a:Type) (b:buffer a)
      (ensures  (live h b /\ as_seq h (offset b i) == Seq.slice (as_seq h b) (v i) (length b)))
      [SMTPat (offset b i); SMTPat (live h b)]
   = Seq.lemma_eq_intro (as_seq h (offset b i)) (Seq.slice (as_seq h b) (v i) (length b))
+  
+private val eq_lemma1:
+    #a:eqtype
+  -> b1:buffer a
+  -> b2:buffer a
+  -> len:UInt32.t{v len <= length b1 /\ v len <= length b2}
+  -> h:mem
+  -> Lemma
+    (requires live h b1 /\ live h b2 /\
+	      (forall (j:nat). j < v len ==> get h b1 j == get h b2 j))
+    (ensures  equal h (sub b1 0ul len) h (sub b2 0ul len))
+    [SMTPatT (equal h (sub b1 0ul len) h (sub b2 0ul len))]
+let eq_lemma1 #a b1 b2 len h =
+  Seq.lemma_eq_intro (as_seq h (sub b1 0ul len)) (as_seq h (sub b2 0ul len))
+
+private val eq_lemma2:
+    #a:eqtype
+  -> b1:buffer a
+  -> b2:buffer a
+  -> len:UInt32.t{v len <= length b1 /\ v len <= length b2}
+  -> h:mem
+  -> Lemma
+    (requires live h b1 /\ live h b2 /\ equal h (sub b1 0ul len) h (sub b2 0ul len))
+    (ensures live h b1 /\ live h b2 /\
+	     (forall (j:nat). j < v len ==> get h b1 j == get h b2 j))
+    [SMTPatT (equal h (sub b1 0ul len) h (sub b2 0ul len))]
+let eq_lemma2 #a b1 b2 len h =
+  let s1 = as_seq h (sub b1 0ul len) in
+  let s2 = as_seq h (sub b2 0ul len) in
+  cut (forall (j:nat). j < v len ==> get h b1 j == Seq.index s1 j);
+  cut (forall (j:nat). j < v len ==> get h b2 j == Seq.index s2 j)
+
+val eqb: #a:eqtype -> b1:buffer a -> b2:buffer a
+  -> len:UInt32.t{v len <= length b1 /\ v len <= length b2}
+  -> ST bool
+    (requires (fun h -> live h b1 /\ live h b2))
+    (ensures  (fun h0 z h1 -> h1 == h0 /\
+      (z <==> equal h0 (sub b1 0ul len) h0 (sub b2 0ul len))))
+let rec eqb #a b1 b2 len =
+  if len =^ 0ul then true
+  else
+    let len' = len -^ 1ul in
+    if index b1 len' = index b2 len' then
+      eqb b1 b2 len'
+    else
+      false
 
 (**
     Defining operators for buffer accesses as specified at

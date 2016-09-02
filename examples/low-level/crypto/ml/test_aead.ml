@@ -37,15 +37,13 @@ let constant = FStar_UInt32.of_string "0x7"
 
 let expected_ciphertext = from_bytestring "d31a8d34648e60db7b86afbc53ef7ec2a4aded51296e08fea9e2b5a736ee62d63dbea45e8ca9671282fafb69da92728b1a71de0a9e060b2905d6a5b67ecd3b3692ddbd7f2d778b8c9803aee328091b58fab324e4fad675945585808b4831d7bc3ff4def08e4b7a9de576d26586cec64b6116"
 
-let expected_tag = from_bytestring "1ae10b594f09e26a7e902ecbd0600691" 
+let expected_tag = from_bytestring "1ae10b594f09e26a7e902ecbd0600691"
 
 let diff name expected computed len =
   print_string ("Expected "^name^":\n"); print expected len;
   print_string ("Computed "^name^":\n"); print computed len;
-  for i = 0 to len - 1 do
-    if FStar_Buffer.index expected i <> FStar_Buffer.index computed i then
-      failwith (Printf.sprintf "Error at %d\n" i)
-  done                 
+  if not(FStar_Buffer.eqb expected computed 16) then
+    failwith "Doesn't match expected result"
          
 let _ =
   print_string "Testing AEAD chacha20_poly1305...\n";
