@@ -49,7 +49,16 @@ let _ =
   print_string "Testing AEAD chacha20_poly1305...\n";
   let ciphertext = FStar_Buffer.create 0 114 in
   let tag = FStar_Buffer.create 0 16 in
-  time (fun () -> for i = 0 to 999 do chacha20_aead_encrypt key iv constant 12 aad 114 plaintext ciphertext tag done) () "1000 iterations";
+  time (fun () -> for i = 0 to 999 do
+                    chacha20_aead_encrypt key iv constant 12 aad 114 plaintext ciphertext tag;
+                  done) () "1000 iterations";
   (* Output result *)
   diff "cipher" expected_ciphertext ciphertext 114;
-  diff "tag" expected_tag tag 16
+  diff "tag" expected_tag tag 16;
+
+  let decrypted = FStar.Buffer.create 0 114 in 
+  if chacha20_aead_decrypt key iv constant 12 aad 114 decrypted ciphertext tag = 0
+  then diff "decryption" plaintext decrypted 114
+  else print_string "decryption failed";
+
+  ()

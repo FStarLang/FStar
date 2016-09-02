@@ -108,34 +108,41 @@ val chacha20_aead_encrypt:
     modifies_2 ciphertext tag h0 h1 /\ 
     live h1 ciphertext /\ live h1 tag ))
 
+val chacha20_aead_decrypt: 
+  key:lbytes 32 -> iv:UInt64.t -> constant:UInt32.t -> 
+  aadlen:UInt32.t -> aadtext:lbytes (v aadlen) -> 
+  plainlen:UInt32.t -> plaintext:lbytes (v plainlen) -> 
+  ciphertext:lbytes (v plainlen) -> tag:MAC.tagB -> 
+  STL UInt32.t
+  (requires (fun h -> 
+    live h key /\ live h aadtext /\ live h plaintext /\ 
+    live h ciphertext /\ live h tag ))
+  (ensures (fun h0 _ h1 -> 
+    modifies_1 plaintext h0 h1 /\ 
+    live h1 plaintext))
+
 let chacha20_aead_encrypt key iv constant aadlen aadtext plainlen plaintext ciphertext tag =
   assume false; //TODO
   push_frame();
 
-  (* Create OTK, using round '0' of Chacha20 *)
-  (* Temporary buffers (to be improved) *)
   let state = create 0ul 32ul in (* Chacha inner state *)
+
+  (* Create OTK, using round '0' of Chacha20 *)
   let counter = 0ul in
   chacha20_init state key counter iv constant;
   let otk  = create 0uy 32ul in (* OTK for Poly (to improve) *)
   chacha20_update otk state 32ul;
 
-  (*  Encryption of the plaintext, using Chacha20, counter at 1 *)
+  (* Encrypt the plaintext, using Chacha20, counter at 1 *)
   let counter = 1ul in
   chacha20_encrypt ciphertext key counter iv constant plaintext plainlen;
-
+ 
   (* Initialize MAC algorithm with one time key *)
   (* encapsulate (r,s) and a; we should probably clear otk *)
   let ak = MAC.coerce MAC.someId HyperHeap.root otk in 
   let acc = MAC.start ak in
 
-  (* Update MAC with
-     - padded additional data
-     - padded ciphertext
-     - formatted length *)
-  (* the log is a sequence of abstract elements that encode the message *)
-  (* This is not length-constant time, the lengths are assumed to be public data *)  
-
+  (* Compute MAC over additional data and ciphertext *)
   let l = MAC.text_0 in 
   let l = add_bytes ak l acc aadlen aadtext in
   let l = add_bytes ak l acc plainlen ciphertext in 
@@ -143,11 +150,41 @@ let chacha20_aead_encrypt key iv constant aadlen aadtext plainlen plaintext ciph
     let final_word = create 0uy 16ul in 
     length_word final_word aadlen plainlen;
     MAC.add ak l acc final_word in
-  
-  (* Finish MAC *)
   MAC.mac ak l acc tag;
   
   pop_frame()
 
+let chacha20_aead_decrypt key iv constant aadlen aadtext plainlen plaintext ciphertext tag =
+  assume false; //TODO
+  push_frame();
+
+  let state = create 0ul 32ul in (* Chacha inner state *)
+
+  (* Create OTK, using round '0' of Chacha20 *)
+  let counter = 0ul in
+  chacha20_init state key counter iv constant;
+  let otk  = create 0uy 32ul in (* OTK for Poly (to improve) *)
+  chacha20_update otk state 32ul;
+
+  (* Initialize MAC algorithm with one time key *)
+  (* encapsulate (r,s) and a; we should probably clear otk *)
+  let ak = MAC.coerce MAC.someId HyperHeap.root otk in 
+  let acc = MAC.start ak in
+
+  (* First recompute and check the MAC *)
+  let l = MAC.text_0 in 
+  let l = add_bytes ak l acc aadlen aadtext in
+  let l = add_bytes ak l acc plainlen ciphertext in 
+  let l = 
+    let final_word = create 0uy 16ul in 
+    length_word final_word aadlen plainlen;
+    MAC.add ak l acc final_word in
+  let verified  = MAC.verify ak l acc tag in 
   
-//TODO: decryption!
+  if verified then
+    (* Then decrypt. *)
+    (* note plaintext and ciphertext are swapped; consider a separate decryption *) 
+    chacha20_encrypt plaintext key counter iv constant ciphertext plainlen;
+
+  pop_frame();
+  if verified then 0ul else 1ul //TODO pick and enforce error convention.
