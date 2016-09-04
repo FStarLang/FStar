@@ -819,7 +819,7 @@ Let's start by looking a little closer at the statement of the lemma.
 This is a *dependent function type* in F\*. Why *dependent*?
 Well, the type of the result depends on the _value_ of the parameter
 `x:nat`. For example, `factorial_is_positive 0` has the type
-`:Tot (u:unit{factorial 0 > 0))`, which is different from the type of
+`:GTot (u:unit{factorial 0 > 0))`, which is different from the type of
 `factorial_is_positive 1`.
 
 Now that we've seen dependent functions, we can elaborate a bit more
