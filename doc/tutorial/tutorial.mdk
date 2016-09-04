@@ -4292,7 +4292,7 @@ val lemma_extends_disjoint: i:rid -> j:rid -> k:rid
 ### The type of region-indexed references: `rref`
 
 Next, we have a type `rref` for region-indexed
-references, as a funtion `as_ref` that coerces an `rref` to its
+references, as a function `as_ref` that coerces an `rref` to its
 underlying heap reference.
 
 ~ Remark
@@ -4592,7 +4592,7 @@ effect InvST (t:Type) (inv:(heap -> Type)) (fp:set aref) (post:(heap -> t -> hea
 
 The two counters will be updated simultaneously, such that their sum is
 always even. This requirement is expressed using the type `even` and
-`even_post` when liftet to the post condition of a stateful function.
+`even_post` when lifted to the post condition of a stateful function.
 
 ```
 type even (x:int) = x%2=0
@@ -4746,7 +4746,7 @@ We now attach these predicates to unforgeable cryptographic tokens also called c
 *What is the advantage of capabilities over the dynamic access control based on state of Section [#sec-stateful-access-control]?*
 
 Capabilities need to be kept secret, as everyone knowing the capabilities is granted access to 
-the corresponding files, however, parties no longer need to keep a synchroniced access control database. 
+the corresponding files, however, parties no longer need to keep a synchronized access control database.
 In order to verify capabilities, they only need to store the cryptographic key used to generate the capability.
 
 ~ Exercise
@@ -4837,7 +4837,7 @@ For simplicity we initially elide the client code which is similar.
 
 The `assert` guarantee that messages that are received by a party have been sent by its peer.
 
-### Formating code
+### Formatting code
 
 The Format module used by the protocol implementation
 exports among others the following types and functions.
@@ -4949,7 +4949,7 @@ To this end, we use the following classic PKCS#7 padding scheme (used for instan
 
 The function `n2b` converts numbers less than 256 into a byte; `pad` 
 creates creates `bytes` consisting of `n` bytes encoding the number `n`;
-`encode` filles up `bytes` smaller than a block to a full block using such pads; and 
+`encode` fills up `bytes` smaller than a block to a full block using such pads; and
 `decode` removes pads.
 
 ~ Exercise
