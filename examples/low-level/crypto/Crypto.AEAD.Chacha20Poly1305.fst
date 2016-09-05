@@ -121,21 +121,19 @@ val chacha20_aead_decrypt:
     modifies_1 plaintext h0 h1 /\ 
     live h1 plaintext))
 
+// #reset-options "--z3timeout 100"
+// still failing below 
+
 let chacha20_aead_encrypt key iv constant aadlen aadtext plainlen plaintext ciphertext tag =
-  assume false; //TODO
   push_frame();
-
-  let state = create 0ul 32ul in (* Chacha inner state *)
-
-  (* Create OTK, using round '0' of Chacha20 *)
-  let counter = 0ul in
-  chacha20_init state key counter iv constant;
-  let otk  = create 0uy 32ul in (* OTK for Poly (to improve) *)
-  chacha20_update otk state 32ul;
+  (* Create OTK, using first block of Chacha20 *)
+  let otk  = create 0uy 32ul in 
+  let counter = 0ul in 
+  chacha20 otk key iv counter constant 32ul;
 
   (* Encrypt the plaintext, using Chacha20, counter at 1 *)
   let counter = 1ul in
-  chacha20_encrypt ciphertext key counter iv constant plaintext plainlen;
+  counter_mode key iv counter constant plainlen plaintext ciphertext;
  
   (* Initialize MAC algorithm with one time key *)
   (* encapsulate (r,s) and a; we should probably clear otk *)
@@ -151,20 +149,15 @@ let chacha20_aead_encrypt key iv constant aadlen aadtext plainlen plaintext ciph
     length_word final_word aadlen plainlen;
     MAC.add ak l acc final_word in
   MAC.mac ak l acc tag;
-  
   pop_frame()
 
+
 let chacha20_aead_decrypt key iv constant aadlen aadtext plainlen plaintext ciphertext tag =
-  assume false; //TODO
   push_frame();
-
-  let state = create 0ul 32ul in (* Chacha inner state *)
-
-  (* Create OTK, using round '0' of Chacha20 *)
-  let counter = 0ul in
-  chacha20_init state key counter iv constant;
-  let otk  = create 0uy 32ul in (* OTK for Poly (to improve) *)
-  chacha20_update otk state 32ul;
+  (* Create OTK, using first block of Chacha20 *)
+  let otk = create 0uy 32ul in 
+  let counter = 0ul in 
+  chacha20 otk key iv counter constant 32ul;
 
   (* Initialize MAC algorithm with one time key *)
   (* encapsulate (r,s) and a; we should probably clear otk *)
@@ -182,9 +175,11 @@ let chacha20_aead_decrypt key iv constant aadlen aadtext plainlen plaintext ciph
   let verified  = MAC.verify ak l acc tag in 
   
   if verified then
-    (* Then decrypt. *)
-    (* note plaintext and ciphertext are swapped; consider a separate decryption *) 
-    chacha20_encrypt plaintext key counter iv constant ciphertext plainlen;
+    begin (* decrypt; note plaintext and ciphertext are swapped. *) 
+      let counter = 1ul in 
+      counter_mode key iv counter constant plainlen ciphertext plaintext
+    end;
 
   pop_frame();
   if verified then 0ul else 1ul //TODO pick and enforce error convention.
+

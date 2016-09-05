@@ -57,14 +57,14 @@ let expected = [
 let time f x s =
   let t = Sys.time() in
   let _ = f x in
-  Printf.printf "Ellapsed time for %s : %fs\n" s (Sys.time() -. t)
+  Printf.printf "Elapsed time for %s : %fs\n" s (Sys.time() -. t)
 
 let _ =
   let ciphertext = create 0 114 in
-  time (fun () -> for i = 0 to 0 do chacha20_encrypt ciphertext key counter iv constant plaintext 114 done) () "10.000 chacha iterations";
+  time (fun () -> for i = 0 to 9999 do counter_mode key iv counter constant 114 plaintext ciphertext done) () "10.000 chacha iterations";
   print_string "Expected ciphertext:\n";
   print_string (String.concat "" (List.map (fun i -> Printf.sprintf "%02X" i) expected));
-  print_string "Got ciphertext:\n";
+  print_string "\nGot ciphertext:\n";
   print_bytes ciphertext;
   List.iteri (fun i c ->
     if index ciphertext i <> c then
