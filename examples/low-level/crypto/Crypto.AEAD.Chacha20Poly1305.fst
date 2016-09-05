@@ -151,7 +151,6 @@ let chacha20_aead_encrypt key iv constant aadlen aadtext plainlen plaintext ciph
   MAC.mac ak l acc tag;
   pop_frame()
 
-
 let chacha20_aead_decrypt key iv constant aadlen aadtext plainlen plaintext ciphertext tag =
   push_frame();
   (* Create OTK, using first block of Chacha20 *)
