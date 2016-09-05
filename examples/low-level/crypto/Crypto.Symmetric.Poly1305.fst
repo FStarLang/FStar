@@ -80,8 +80,16 @@ let sel_int (h:mem) (b:elemB{live h b}) : GTot nat
 (* *        Polynomial computation step           *)
 (* * ******************************************** *)
 
+let rec print_bytes (s:bytes) (i:UInt32.t{UInt32.v i < length s}) (len:UInt32.t{UInt32.v len <= length s}) : ST bool (requires (fun _ -> True)) (ensures (fun h0 _ h1 -> h0 == h1))
+ =
+  let open FStar.UInt32 in
+  if v i < v len then
+    let _ = IO.debug_print_string (UInt8.to_string (index s i) ^ ":") in
+    print_bytes s (i +^ 1ul) len
+  else
+    IO.debug_print_string "\n"
 
-let rec print_elem (e:elemB) (i:UInt32.t{UInt32.v i < length e}) (len:UInt32.t{UInt32.v len <= length e}) : ST bool (requires (fun _ -> True)) (ensures (fun h0 _ h1 -> h0 == h1))
+let rec print_elem (e:elemB) (i:UInt32.t{UInt32.v i <= length e}) (len:UInt32.t{UInt32.v len <= length e}) : ST bool (requires (fun h -> live h e)) (ensures (fun h0 _ h1 -> h0 == h1))
  =
   let open FStar.UInt32 in
   if v i < v len then
@@ -102,42 +110,57 @@ val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block} -> r:elemB{di
     /\ sel_elem h1 acc = (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r // Functional
     						// specification of the operation at that step
     ))
+
+val bound27_isSum: h0:mem -> h1:mem -> a:bigint -> b:bigint
+  -> Lemma
+    (requires (norm h0 a /\ norm h0 b /\ isSum h0 h1 0 0 norm_length 0 a b))
+    (ensures  (bound27 h1 a))
+let bound27_isSum h0 h1 a b =
+  // The (i+0) is there on purpuose to trigger the pattern in isSum
+  cut (forall (i:nat). {:pattern (v (get h1 a i))} i < norm_length ==> v (get h1 a (i+0)) < pow2 26 + pow2 26);
+  pow2_double_sum 26
+
+#set-options "--initial_fuel 3 --max_fuel 3"
+val pow2_5: unit -> Lemma (pow2 5 = 32)
+let pow2_5 _ = ()
+#reset-options
+
 let add_and_multiply acc block r =
   let hinit = HST.get() in
   push_frame();
   let h0 = HST.get() in
   let tmp = create 0UL (U32.mul 2ul nlength-|1ul) in
   let h1 = HST.get() in
-  assert(modifies_0 h0 h1);
-     (* TODO *)
-     assume (norm h1 acc /\ norm h1 block);
-  fsum' acc block;
+  norm_eq_lemma hinit h1 acc acc;
+  norm_eq_lemma hinit h1 block block;
+//  cut (norm h1 acc /\ norm h1 block);
+  fsum' acc block;  // acc1 = acc0 + block
   let h2 = HST.get() in
-  assert(modifies_2_1 acc h0 h2);
-    (* TODO *)
-    assume (norm h2 r);
-    assume (bound27 h2 acc);
-  multiplication tmp acc r;
+  norm_eq_lemma hinit h2 r r;
+  bound27_isSum h1 h2 acc block;
+  multiplication tmp acc r; // tmp = acc1 * r = (acc0 + block) * r
   let h3 = HST.get() in
   assert(modifies_2_1 acc h0 h3);
-    (* TODO *)
-    assume (live h3 tmp /\ satisfiesModuloConstraints h3 tmp);
-  modulo tmp;
+//  cut (maxValue h3 tmp (2*norm_length-1) * 6 <= (norm_length * pow2 53) * 6);
+  cut ((norm_length * pow2 53) * 6 = 30 * pow2 53);
+  pow2_5 ();
+  cut (30 * pow2 53 < pow2 5 * pow2 53);
+  pow2_exp_1 5 53;
+  cut ((norm_length * pow2 53) * 6 < pow2 58);
+  pow2_increases_1 63 58;
+  cut (satisfiesModuloConstraints h3 tmp);
+  modulo tmp; // tmp = tmp % p
   let h4 = HST.get() in
+  cut (norm h4 tmp);
   assert(modifies_2_1 acc h0 h4);
-    (* TODO *)
-    assume (live h4 tmp /\ live h4 acc);
-  blit tmp 0ul acc 0ul nlength;
-  let h5 = HST.get() in
-
-  //DEBUG: let _ = print_elem acc 0ul 5ul in
-  
+  blit tmp 0ul acc 0ul nlength; // acc2 = tmp = (acc0 + block) * r % p
   pop_frame();
   let hfin = HST.get() in
   assert(modifies_1 acc hinit hfin);
-    (* TODO *)
-    assume (norm hfin acc);
-    assume (sel_elem hfin acc = (sel_elem hinit acc +@ sel_elem hinit block) *@ sel_elem hinit r)
+//  norm_eq_lemma h4 hfin tmp acc; // not exactly equal, but equal in [0..nlength]
+  assume (norm hfin acc);
+  assume (sel_elem hfin acc = (sel_elem hinit acc +@ sel_elem hinit block) *@ sel_elem hinit r)
+
 
 //#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
@@ -146,8 +169,7 @@ let add_and_multiply acc block r =
    *)
 val zeroB: a:elemB -> STL unit
   (requires (fun h -> live h a))
-  (ensures  (fun h0 _ h1 -> norm h1 a /\ modifies_1 a h0 h1
-    /\ sel_elem h1 a = 0 ))
+  (ensures  (fun h0 _ h1 -> norm h1 a /\ modifies_1 a h0 h1 /\ sel_elem h1 a = 0))
 let zeroB a =
   upd a 0ul 0UL;
   upd a 1ul 0UL;
@@ -162,6 +184,11 @@ let zeroB a =
 (* *            Encoding functions               *)
 (* * *********************************************)
 
+private let mk_mask (nbits:FStar.UInt32.t{FStar.UInt32.v nbits < 64}) :
+  Tot (z:U64.t{v z = pow2 (FStar.UInt32.v nbits) - 1})
+  = Math.Lib.pow2_increases_lemma 64 (FStar.UInt32.v nbits);
+    U64 ((1uL <<^ nbits) -^ 1uL)
+
 (* Formats a wordB into an elemB *)
 val toField: a:elemB -> b:wordB_16{disjoint a b} -> STL unit
   (requires (fun h -> live h a /\ live h b))
@@ -172,20 +199,6 @@ val toField: a:elemB -> b:wordB_16{disjoint a b} -> STL unit
     sel_int h1 a = little_endian (sel_word h0 b) /\ // functional correctness
     v (get h1 a 4) < pow2 24 // necessary for adding 2^128 with no overflow
     ))
-
-private let mk_mask (nbits:FStar.UInt32.t{FStar.UInt32.v nbits < 64}) :
-  Tot (z:U64.t{v z = pow2 (FStar.UInt32.v nbits) - 1})
-  = Math.Lib.pow2_increases_lemma 64 (FStar.UInt32.v nbits);
-    U64 ((1uL <<^ nbits) -^ 1uL)
-
-let rec print_bytes (s:bytes) (i:UInt32.t{UInt32.v i < length s}) (len:UInt32.t{UInt32.v len <= length s}) : ST bool (requires (fun _ -> True)) (ensures (fun h0 _ h1 -> h0 == h1))
- =
-  let open FStar.UInt32 in
-  if v i < v len then
-    let _ = IO.debug_print_string (UInt8.to_string (index s i) ^ ":") in
-    print_bytes s (i +^ 1ul) len
-  else
-    IO.debug_print_string "\n"
 
 let toField b s =
   //DEBUG: let _ = print_bytes s 0ul 16ul in

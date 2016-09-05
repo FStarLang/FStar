@@ -102,9 +102,9 @@ let ilog (#r:rid) (l:log_ref r{ideal}) : Tot (ideal_log r) = l
 
 // the sequence of hashed elements is conditional, but not ghost
 // this will require changing e.g. the type of poly1305_add
-let itext : Type0 = if ideal then text else unit
+let itext : Type0 = erased text
 
-let text_0: itext = if ideal then Seq.createEmpty #elem else ()
+let text_0: itext = hide (Seq.createEmpty #elem)
 
 noeq type state (i:id) =
   | State:
@@ -182,8 +182,7 @@ let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
   norm h st.r /\ norm h a /\
   (let r = sel_elem h st.r in
    let a = sel_elem h a in
-   ideal ==> a = poly l r)
-
+   a = poly (reveal l) r)
 
 // not framed, as we allocate private state on the caller stack
 val start: #i:id -> st:state i -> StackInline (accB i)
@@ -202,19 +201,30 @@ let start #i st =
   Bigint.norm_eq_lemma h0 h2 st.r st.r;
   a
 
-// CHECKPOINT
 
-val update: #i:id -> st:state i -> l:itext -> a:accB i -> v:elemB -> ST itext
-  (requires (fun h0 -> // "liveness" /\ 
+val update: #i:id -> st:state i -> l:itext -> a:accB i -> v:elemB -> Stack itext
+  (requires (fun h0 ->
+    disjoint st.r v /\
+    disjoint a v /\
+    norm h0 v /\
     acc_inv st l a h0))
-  (ensures (fun h0 l1 h1 -> 
+  (ensures (fun h0 l1 h1 ->
     modifies_1 a h0 h1 /\
-//?    (ideal ==> l1 = FStar.SeqProperties.snoc l (sel_elem h1 v)) /\
-    acc_inv st l1 a h1 ))
-    
-let update #i st vs a v = 
-  assume false; //TODO
-  add_and_multiply a v st.r 
+    acc_inv st l1 a h1))
+
+let update #i st l a v =
+  let h0 = HST.get () in
+  add_and_multiply a v st.r;
+  let h1 = HST.get () in
+  lemma_reveal_modifies_1 a h0 h1;
+  Bigint.norm_eq_lemma h0 h1 st.r st.r;
+  Bigint.norm_eq_lemma h0 h1 v v;
+  cut (sel_elem h1 a = (sel_elem h0 a +@ sel_elem h0 v) *@ sel_elem h0 st.r);
+  let v = hide (sel_elem h1 v) in
+  let l1 = Ghost.elift2 (fun log elem -> SeqProperties.snoc log elem) l v in
+  cut (live h1 st.r /\ live h1 a /\ disjoint st.r a);
+  cut (norm h1 st.r /\ norm h1 a);
+  l1
 
 
 (*

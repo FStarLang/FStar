@@ -199,20 +199,12 @@ let lemma_prime_is_greater_than_2_128 (u:unit) : Lemma
 
 //TMP#reset-options
 
-let seq_tail (vs: seq 'a {Seq.length vs > 0}) = Seq.slice vs 1 (Seq.length vs)
+let seq_head (vs: seq 'a {Seq.length vs > 0}) = Seq.slice vs 0 (Seq.length vs - 1)
 
 val poly: vs:seq elem -> r:elem -> GTot (a:elem) (decreases (Seq.length vs))
 let rec poly vs r =
   if Seq.length vs = 0 then 0
-  else Seq.index vs 0 *@ r  +@  poly (seq_tail vs) r
-
-(* Second possible definition *)
-(* NB: doesn't typecheck as is because a word is defined as a 16 bytes as most and not 17 *)
-(* val poly': vs:seq (w:word{Seq.length w = 16}) -> r:elem -> GTot (a:elem) *)
-(* let rec poly' vs r = *)
-(*   if Seq.length vs = 0 then 0 *)
-(*   else (little_endian (Seq.index vs 0 @| (Seq.create 1 1uy))) *@ r +@ poly' (Seq.slice vs 1 (Seq.length vs)) r *)
-
+  else (Seq.index vs (length vs - 1) +@ poly (seq_head vs) r) *@ r
 
 let fix (r:word_16) (i:nat {i < 16}) m : word_16 = Seq.upd r i (U8 (Seq.index r i &^ m)) 
 
