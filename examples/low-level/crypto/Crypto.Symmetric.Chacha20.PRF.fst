@@ -1,4 +1,4 @@
-module Chacha.PRF
+module Crypto.Symmetric.Chacha20.PRF
 
 open FStar.Mul
 open FStar.Ghost
