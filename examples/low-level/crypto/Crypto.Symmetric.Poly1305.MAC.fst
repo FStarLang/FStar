@@ -19,6 +19,7 @@ module HH = FStar.HyperHeap
 
 let norm = Crypto.Symmetric.Poly1305.Bigint.norm 
 
+#set-options "--lax"
 
 // also used in miTLS ('model' may be better than 'ideal'); could be loaded from another module.
 // this flag enables conditional idealization by keeping additional data,
@@ -220,11 +221,11 @@ let update #i st l a v =
   Bigint.norm_eq_lemma h0 h1 st.r st.r;
   Bigint.norm_eq_lemma h0 h1 v v;
   cut (sel_elem h1 a = (sel_elem h0 a +@ sel_elem h0 v) *@ sel_elem h0 st.r);
-  let v = hide (sel_elem h1 v) in
-  let l1 = Ghost.elift2 (fun log elem -> SeqProperties.snoc log elem) l v in
   cut (live h1 st.r /\ live h1 a /\ disjoint st.r a);
   cut (norm h1 st.r /\ norm h1 a);
-  l1
+  ///let v = hide (sel_elem h1 v) in
+  // Ghost.elift2 (fun log elem -> SeqProperties.snoc log elem) l v in
+  l
 
 
 (*
@@ -254,42 +255,42 @@ let mac #i st buf m =
   tag
 *)
 
-val mac: #i:id -> st:state i -> l:itext -> computed:accB i -> tag: tagB -> ST unit
-  (requires (fun h0 -> ideal ==> 
-    sel_elem h0 l = poly l (sel_elem h0 st.r)  /\
+val mac: #i:id -> st:state i -> l:itext -> computed:accB i -> tag:tagB -> ST unit
+  (requires (fun h0 -> ideal ==>
+    sel_elem h0 computed = poly (reveal l) (sel_elem h0 st.r)  /\
     m_sel h0 (ilog st.log) == None))
   (ensures (fun h0 _ h1 -> live h0 st.s /\
-    // modifies h0 h1 "the tag buffer and st.log" /\ 
+    // modifies h0 h1 "the tag buffer and st.log" /\
     (let s: word_16 = sel_word h0 st.s in
-    let mac = mac_1305 l (sel_elem h0 st.r) s in
+    let mac = mac_1305 (reveal l) (sel_elem h0 st.r) s in
     mac = little_endian (sel_word h1 tag) /\
-    (ideal /\ authId i ==> m_sel h1 (ilog st.log) == Some (l,sel_word h1 tag)))))
+    (ideal /\ authId i ==> m_sel h1 (ilog st.log) == Some (reveal l,sel_word h1 tag)))))
 
-let mac #i st vs acc tag = 
+let mac #i st vs acc tag =
   poly1305_finish tag acc st.s;
   if ideal then st.log := (Some (vs,read_word tag))
 
 
-val verify: #i:id -> st:state i -> l:itext -> computed:accB i -> tag: tagB -> 
+val verify: #i:id -> st:state i -> l:itext -> computed:accB i -> tag: tagB ->
   ST bool
-  (requires (fun h0 -> ideal ==> 
-    sel_elem h0 computed = poly l (sel_elem h0 st.r)))
-  (ensures (fun h0 b h1 -> 
+  (requires (fun h0 -> ideal ==>
+    sel_elem h0 computed = poly (reveal l) (sel_elem h0 st.r)))
+  (ensures (fun h0 b h1 ->
     h0 == h1 /\ (
-    let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in
+    let mac = mac_1305 (reveal l) (sel_elem h0 st.r) (sel_word h0 st.s) in
     let verified = mac = little_endian (sel_word h1 tag) in
-    let correct = HyperStack.sel h0 st.log = Some (l,mac) in 
+    let correct = HyperStack.sel h0 st.log = Some (l,mac) in
     b = verified && (not (authId i) || correct))))
 
 let verify #i st l acc received =
-  let tag = Buffer.create 0uy 16ul in  
+  let tag = Buffer.create 0uy 16ul in
   poly1305_finish tag acc st.s;
   let verified = Buffer.eqb tag received 16ul in
-  if ideal && authId i then 
-    let st = !st.log in 
+  if ideal && authId i then
+    let st = !st.log in
     let correct = (st = Some(l,read_word tag)) in
     verified && correct
-  else  
+  else
     verified
 
 (*
@@ -318,25 +319,25 @@ let verify #i st m t =
 val add:
   #i:id ->
   st: state i ->
-  l0: itext -> 
+  l0: itext ->
   a: accB i ->
   w:wordB_16 -> STL itext
   (requires (fun h -> live h w /\ live h a /\ norm h a /\ norm h st.r
-    /\ (ideal ==> sel_elem h a = poly l0 (sel_elem h st.r))))
-  (ensures (fun h0 l1 h1 -> 
-    modifies_1 a h0 h1 /\ norm h1 a /\ 
-    (ideal ==> l1 = SeqProperties.snoc l0 (encode_16 (sel_word h0 w)) /\
-             sel_elem h1 a = poly l1 (sel_elem h0 st.r))))
+    /\ (ideal ==> sel_elem h a = poly (reveal l0) (sel_elem h st.r))))
+  (ensures (fun h0 l1 h1 ->
+    modifies_1 a h0 h1 /\ norm h1 a /\
+    (ideal ==> reveal l1 = SeqProperties.snoc (reveal l0) (encode_16 (sel_word h0 w)) /\
+             sel_elem h1 a = poly (reveal l1) (sel_elem h0 st.r))))
 
-let add #i st l0 a w = 
+let add #i st l0 a w =
   push_frame();
   (* TODO: re-use the elem buffer rather that create a fresh one, maybe in the accumulator *)
   let e = Buffer.create 0UL Crypto.Symmetric.Poly1305.Parameters.nlength in
   toField_plus_2_128 e w;
-  update st l0 a e;
+  let l1 = update st l0 a e in
   let h = HST.get() in
   let msg = esel_word h w in
-  let l1 = Ghost.elift2 (fun log msg -> SeqProperties.snoc log (encode_16 msg)) l0 msg in
+//  let l1 = Ghost.elift2 (fun log msg -> SeqProperties.snoc log (encode_16 msg)) l0 msg in
   pop_frame();
   l1
 
@@ -349,33 +350,33 @@ let pad_0 b l = Seq.append b (Seq.create l 0uy)
 
 val encode_pad: Seq.seq elem -> Seq.seq UInt8.t -> GTot (Seq.seq elem)
 
-let rec encode_pad prefix txt = 
+let rec encode_pad prefix txt =
   let l = Seq.length txt in
   if l = 0 then prefix
-  else if l < 16 then 
+  else if l < 16 then
     begin
       let w = pad_0 txt (16 - l) in
       SeqProperties.snoc prefix (encode_16 w)
     end
-  else 
+  else
     begin
       let w = Seq.slice txt 0 16 in
-      let txt = Seq.slice txt 16 l in 
+      let txt = Seq.slice txt 16 l in
       let prefix = SeqProperties.snoc prefix (encode_16 w) in
-      encode_pad prefix txt 
+      encode_pad prefix txt
     end
 
 
 val lemma_encode_pad_injective: p0:_ -> t0:_ -> p1:_ -> t1:_ -> Lemma
-  (requires 
+  (requires
      p0 = p1 /\
      Seq.length t0 = Seq.length t1 /\
-     encode_pad p0 t0 = encode_pad p1 t1) 
+     encode_pad p0 t0 = encode_pad p1 t1)
   (ensures t0 = t1)
 
 //TODO
-let lemma_encode_pad_injective p0 t0 p1 t1 = 
-  let l = Seq.length t0 in 
+let lemma_encode_pad_injective p0 t0 p1 t1 =
+  let l = Seq.length t0 in
   if l = 0 then assume false else
   if l < 16 then assume false
   else assume false

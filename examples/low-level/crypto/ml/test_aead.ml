@@ -56,7 +56,7 @@ let _ =
   diff "cipher" expected_ciphertext ciphertext 114;
   diff "tag" expected_tag tag 16;
 
-  let decrypted = FStar.Buffer.create 0 114 in 
+  let decrypted = FStar_Buffer.create 0 114 in
   if chacha20_aead_decrypt key iv constant 12 aad 114 decrypted ciphertext tag = 0
   then diff "decryption" plaintext decrypted 114
   else print_string "decryption failed";
