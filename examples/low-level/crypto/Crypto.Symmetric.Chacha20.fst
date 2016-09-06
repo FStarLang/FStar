@@ -17,13 +17,15 @@ module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
 // move elsewhere!
-type lbytes (n:nat) = b:bytes{length b = n}
+// manually inlined for now (for kremlin)
+//type lbytes (n:nat) = b:bytes{length b = n}
 
 type u64 = FStar.UInt64.t
 
+
 (*** Chacha 20 ***)
 
-type key = k:lbytes 32
+type key = b:bytes{length b = 32}
 
 // why not treating IV and Constant as bytes too? 
 
@@ -204,8 +206,8 @@ private let prf = chacha20
 val counter_mode: 
   k:key -> iv:u64 -> counter:u32 -> constant:u32 ->
   len:u32{v counter + v len / v blocklen < pow2 32} ->
-  plaintext:lbytes (v len) {disjoint k plaintext} -> 
-  ciphertext:lbytes (v len) {disjoint k ciphertext /\ disjoint plaintext ciphertext} -> 
+  plaintext:bytes {length plaintext = v len /\ disjoint k plaintext} -> 
+  ciphertext:bytes {length ciphertext = v len /\ disjoint k ciphertext /\ disjoint plaintext ciphertext} -> 
   STL unit
     (requires (fun h -> live h ciphertext /\ live h k /\ live h plaintext))
     (ensures (fun h0 _ h1 -> live h1 ciphertext /\ modifies_1 ciphertext h0 h1))

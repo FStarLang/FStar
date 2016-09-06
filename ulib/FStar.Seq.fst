@@ -50,8 +50,7 @@ abstract val lemma_of_list: #a:Type -> s:seq a -> l:list a -> i:nat{i < length s
   (requires (s == of_list l))
   (ensures (s == of_list l /\ L.length l = length s /\ index s i == L.index l i))
   [SMTPat (index s i == L.index l i)]
-let lemma_of_list #a s l i =
-  ()
+let lemma_of_list #a s l i = ()
 
 private val exFalso0 : a:Type -> n:nat{n<0} -> Tot a
 let exFalso0 a n = ()
@@ -78,6 +77,12 @@ abstract val lemma_create_len: #a:Type -> n:nat -> i:a -> Lemma
   (ensures (length (create n i) = n))
   [SMTPat (length (create n i))]
 let lemma_create_len #a n i   = ()
+
+abstract val lemma_init_len: #a:Type -> n:nat -> contents: (i:nat { i < n } -> Tot a) -> Lemma
+  (requires True)
+  (ensures (length (init n contents) = n))
+  [SMTPat (length (create n contents))]
+let lemma_init_len #a n contents = ()
 
 abstract val lemma_len_upd: #a:Type -> n:nat -> v:a -> s:seq a{n < length s} -> Lemma
   (requires True)

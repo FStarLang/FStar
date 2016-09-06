@@ -26,10 +26,15 @@ open Platform.Bytes // with bytes as immutable sequences of chars
   UInt8.uint_to_t v
 *)
 
+type bbytes = b:bytes { UInt.size (length b) 32 }
+
+val bytes_from_buffer: buf: buffer UInt8.t -> len:UInt32.t { v len = Buffer.length buf } -> STL (lbytes (v len))
+  (requires (fun h0 -> live h0 buf))
+  (ensures (fun h0 r h1 -> h0 == h1))
 let bytes_from_buffer buf len = 
   let s = to_seq buf len in 
-  let contents (i:nat{ i < v len}) = FStar.Char.char_of_int (v (Seq.index s i)) in
-  init (v len) contents 
+  let contents (i:nat{ i < v len}) = FStar.Char.char_of_int (UInt8.v (Seq.index s i)) in
+  initBytes (v len) contents 
 
 val blit_bytes': i:nat -> buf:buffer UInt8.t -> bs:bytes {length bs = Buffer.length buf} -> STL unit 
   (requires (fun h0 -> live h0 buf))
@@ -43,6 +48,19 @@ let rec blit_bytes' i buf bs =
     end
 let blit_bytes = blit_bytes' 0
 
+(*
+val buffer_from_bytes: b:bbytes -> STL (buffer UInt8.t)
+  (requires (fun h0 -> True))
+  (ensures (fun h0 r h1 -> ... { Buffer.length buf = length b }
+*)
+
+let buffer_from_bytes b = 
+  let len = UInt32.uint_to_t (length b) in 
+  let buf = Buffer.create 0uy len in 
+  blit_bytes buf b;
+  buf 
+
+
 open FStar.Mul
 
 (* Little endian integer value of a sequence of bytes *)
@@ -50,15 +68,16 @@ let rec little_endian (b:Seq.seq UInt8.t) : Tot (n:nat { Seq.length b > 0 ==> UI
   = if Seq.length b = 0 then 0
     else 
       begin 
-        let x = pow2 8 * little_endian (Seq.slice b 1 (Seq.length b)) in
-        assert( x < pow2 (8 * (Seq.length b)) - pow2 8);
-        let y = UInt8.v (Seq.index b 0) in
-        y
+        assume false; //TODO not sure which lemmas to use here. 
+        UInt8.v (Seq.index b 0) + pow2 8 * little_endian (Seq.slice b 1 (Seq.length b))
       end
       
-let u64_from_bytes bs:lbytes 8  = 
-  let s = Seq.init (length bs) (fun i -> UInt8.uint_to_t (FStar.Char.int_of_char (index bs i))) in 
-  UInt64.uint_to_t (little_endian s)
+let u64_from_bytes (bs:lbytes 8)  = 
+  let contents (i:nat{ i < 8 }) = UInt8.uint_to_t (FStar.Char.int_of_char (index bs i)) in 
+  let s = Seq.init 8 contents in 
+  let n = little_endian s in 
+  assume (UInt.size n 64); 
+  UInt64.uint_to_t n
   
 (*** Core AEAD ***)
 
@@ -68,70 +87,58 @@ let constant = 7ul
 type key = lbytes 32
 type iv = lbytes 8
 
-type bbytes = b:bytes { UInt.size (length b) 32 }
+type cipher = c:bbytes { length c >= v taglen }
+type plain = p:bbytes { UInt.size (length p + v taglen) 32 } 
 
-type cipher = b:bbytes { length b >= v taglen }
-type plain = b:bbytes { UInt.size (length b + v taglen) 32 } 
-
-val encrypt: alg:'a -> k:key -> iv:iv -> aad:bbytes -> plain -> ST cipher 
-  (requires (fun _ -> True)) (ensures (fun h0 _ h1 -> h0 == h1))
-val decrypt: alg:'a -> k:key -> iv:iv -> aad:bbytes -> cipher -> ST plain 
-  (requires (fun _ -> True)) (ensures (fun h0 _ h1 -> h0 == h1))
+val encrypt: alg:'a -> k:key -> iv:iv -> aad:bbytes -> p:plain -> ST cipher
+  (requires (fun _ -> True)) 
+  (ensures (fun h0 c h1 -> h0 == h1 (* /\ length c = length p + v taglen *) ))
 
 module Core = Crypto.AEAD.Chacha20Poly1305
 
 let encrypt _ k iv aad plain = 
   push_frame();
 
-  let kB = Buffer.create 0uy 32ul in
-  blit_bytes kB k; 
-
+  let kB = buffer_from_bytes k in
   let iv = u64_from_bytes iv in
-
-  let aadlen   = UInt32.uint_to_t (length aad) in
-  let aadB    = Buffer.create 0uy aadlen in 
-  blit_bytes aadB aad;
-
-  let plainlen = UInt32.uint_to_t (length plain) in
-  let plainB  = Buffer.create 0uy plainlen in 
-  blit_bytes plainB plain; 
-
-  let cipherB = Buffer.create 0uy (plainlen +^ taglen) in 
+  let aadB = buffer_from_bytes aad in
+  let len = UInt32.uint_to_t (length plain) in 
+  let plainB = buffer_from_bytes plain in 
+  let cipherB = Buffer.create 0uy (len +^ taglen) in 
   Core.chacha20_aead_encrypt 
-   kB iv constant 
-   aadlen aadB 
-   plainlen (sub cipherB 0uy plainlen) (sub cipherB plainlen taglen); 
-
-  let cipher = bytes_from_buffer cipherB (plainlen +^ taglen) in
+    kB iv constant 
+    (UInt32.uint_to_t (length aad)) aadB 
+    len plainB 
+    (Buffer.sub cipherB 0ul len) 
+    (Buffer.sub cipherB len taglen); 
+  let cipher = bytes_from_buffer cipherB (len +^ taglen) in
 
   pop_frame(); 
   cipher 
 
+val decrypt: alg:'a -> k:key -> iv:iv -> aad:bbytes -> c:cipher -> ST (option bbytes)
+  (requires (fun _ -> True)) 
+  (ensures (fun h0 o h1 -> h0 == h1 (* /\ (match o with | Some p -> length c = length p + v taglen | None -> True) *) ))
+
+#reset-options "--z3timeout 100"
+
 let decrypt _ k iv aad cipher = 
   push_frame();
 
-  let kB = Buffer.create 0uy 32ul in
-  blit_bytes kB k; 
-
+  let kB = buffer_from_bytes k in
   let iv = u64_from_bytes iv in
-
-  let aadlen   = UInt32.uint_to_t (length aad) in
-  let aadB    = Buffer.create 0uy aadlen in 
-  blit_bytes aadB aad;
-
-  let cipherlen = UInt32.uint_to_t (length cipher) in
-  let cipherB = Buffer.create 0uy cipherlen in 
-  blit_bytes cipherB cipher;
-
-  let plainlen = cipherlen -^ taglen in 
-  let plainB  = Buffer.create 0uy plainlen in 
-  Core.chacha20_aead_decrypt
-   kB iv constant 
-   aadlen aadB 
-   plainlen (sub cipherB 0uy plainlen) (sub cipherB plainlen taglen); 
-
-  let plain = bytes_from_buffer plainB plainlen in
+  let aadB = buffer_from_bytes aad in
+  let len = UInt32.uint_to_t (length cipher) -^ taglen in 
+  let plainB = Buffer.create 0uy len in 
+  let cipherB = buffer_from_bytes cipher in 
+  let verified = Core.chacha20_aead_decrypt
+    kB iv constant 
+    (UInt32.uint_to_t (length aad)) aadB 
+    len plainB 
+    (Buffer.sub cipherB 0ul len) 
+    (Buffer.sub cipherB len taglen) in
+  let o = if verified = 0ul then Some(bytes_from_buffer plainB len) else None in
 
   pop_frame(); 
-  plain
+  o
 

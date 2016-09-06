@@ -93,8 +93,10 @@ let index b i = Seq.index b i
 (*@  assume (!x. Length (x) = BLength (B (x))) @*)
 
 (*@ assume val createBytes : (l:int -> ((v:int){C_pr_LessThanOrEqual(0, v) /\ C_pr_LessThan(v, 256)} -> (;l) lbytes)) @*)
-val createBytes : nat -> byte -> Tot bytes
+val createBytes : l:nat -> byte -> Tot (lbytes l)
 let createBytes l b = Seq.create l b
+
+val initBytes: l:nat -> (i:nat {i<l} -> Tot byte) -> Tot (lbytes l)
 let initBytes l f = Seq.init l f
 
 
