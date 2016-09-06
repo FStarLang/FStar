@@ -149,7 +149,7 @@ end
 "Term"
 end
 | String_sort -> begin
-"String"
+"FString"
 end
 | Ref_sort -> begin
 "Ref"
