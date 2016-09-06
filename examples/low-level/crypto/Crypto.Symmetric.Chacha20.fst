@@ -33,6 +33,19 @@ private type shuffle =
   (requires (fun h -> live h m))
   (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1 ))
 
+(* lifted by hand for now: *)
+private val line:
+  m:matrix -> 
+  a:u32{v a < 16} -> 
+  b:u32{v b < 16} -> 
+  d:u32{v d < 16} -> 
+  s:u32{v s <= 32}-> STL unit
+  (requires (fun h -> live h m))
+  (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1 ))
+let line m a b d s = 
+  upd m a (m.(a) +%^ m.(b));
+  upd m d((m.(d) ^^  m.(a)) <<< s)
+
 private val quarter_round:
   m:matrix -> 
   a:u32{v a < 16} -> 
@@ -42,13 +55,15 @@ private val quarter_round:
   (requires (fun h -> live h m))
   (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1 ))
 let quarter_round m a b c d = 
+(*
   let line a b d s = 
     upd m a (m.(a) +%^ m.(b));
     upd m d((m.(d) ^^  m.(a)) <<< s) in
-  line a b d 16ul;
-  line c d b 12ul;
-  line a b d  8ul; 
-  line c d b  7ul
+*)    
+  line m a b d 16ul;
+  line m c d b 12ul;
+  line m a b d  8ul; 
+  line m c d b  7ul
 
 private val column_round: shuffle 
 let column_round m =
@@ -110,29 +125,38 @@ let chacha20_init m key iv counter constant =
   upd m    14ul (Int.Cast.uint64_to_uint32 iv);
   upd m    15ul (Int.Cast.uint64_to_uint32 (UInt64.shift_right iv 32ul))
 
-private val sum_matrixes: new_state:matrix -> 
-  old_state:matrix{disjoint new_state old_state} -> 
+(* lifted by hand for now: *)
+private val add: 
+  m: matrix -> m0: matrix{disjoint m m0} -> 
+  i:u32 { i <^ 16ul } ->
   STL unit
-  (requires (fun h -> live h new_state /\ live h old_state))
-  (ensures (fun h0 _ h1 -> live h1 new_state /\ modifies_1 new_state h0 h1))
+  (requires (fun h -> live h m /\ live h m0))
+  (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1))
+let add m m0 i = upd m i (m.(i) +%^ m0.(i)) 
+
+private val sum_matrixes: 
+  m: matrix -> m0:matrix{disjoint m m0} -> 
+  STL unit
+  (requires (fun h -> live h m /\ live h m0))
+  (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1))
 let sum_matrixes m m0 =
-  let add i = upd m i (m.(i) +%^ m0.(i)) in // inlined? 
-  add  0ul;
-  add  1ul;
-  add  2ul;
-  add  3ul;
-  add  4ul;
-  add  5ul;
-  add  6ul;
-  add  7ul;
-  add  8ul;
-  add  9ul;
-  add 10ul;
-  add 11ul;
-  add 12ul;
-  add 13ul;
-  add 14ul;
-  add 15ul
+//let add i = upd m i (m.(i) +%^ m0.(i)) in // inlined? 
+  add m m0  0ul;
+  add m m0  1ul;
+  add m m0  2ul;
+  add m m0  3ul;
+  add m m0  4ul;
+  add m m0  5ul;
+  add m m0  6ul;
+  add m m0  7ul;
+  add m m0  8ul;
+  add m m0  9ul;
+  add m m0 10ul;
+  add m m0 11ul;
+  add m m0 12ul;
+  add m m0 13ul;
+  add m m0 14ul;
+  add m m0 15ul
 
 private val chacha20_update: 
   output:bytes -> 

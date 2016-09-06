@@ -95,6 +95,8 @@ let index b i = Seq.index b i
 (*@ assume val createBytes : (l:int -> ((v:int){C_pr_LessThanOrEqual(0, v) /\ C_pr_LessThan(v, 256)} -> (;l) lbytes)) @*)
 val createBytes : nat -> byte -> Tot bytes
 let createBytes l b = Seq.create l b
+let initBytes l f = Seq.init l f
+
 
 (*@ assume val equalBytes : (b0:bytes -> (b1:bytes -> (r:bool){r = True /\ B (b0) = B (b1) \/ r = False /\ B (b0) <> B (b1)})) @*)
 assume val equalBytes : b1:bytes -> b2:bytes -> Tot (b:bool{b = (b1=b2)})

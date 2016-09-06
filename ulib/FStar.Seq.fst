@@ -31,6 +31,9 @@ let index #a s i = MkSeq.contents s i
 abstract val create: #a:Type -> nat -> a -> Tot (seq a)
 let create #a len v =  MkSeq len (fun i -> v)
 
+abstract val init: #a:Type -> len:nat -> contents: (i:nat { i < len } -> Tot a) -> Tot (seq a)
+let init #a len contents = MkSeq len contents 
+
 module L = FStar.List.Tot
 
 abstract val of_list: #a:Type -> list a -> Tot (seq a)

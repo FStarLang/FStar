@@ -703,6 +703,14 @@ let rcreate #a (r:HH.rid) (init:a) (len:UInt32.t) : ST (buffer a)
     lemma_upd h content s;
     b
 
+// ocaml-only, used for conversions to Platform.bytes
+let to_seq #a (b:buffer a) (l:UInt32.t { v l < length b }): STL (seq a) 
+  (requires (fun h -> live h b))
+  (ensures (fun h0 r h1 -> h0 == h1 /\ live h1 b (*/\ r == as_seq #a h1 b *) )) 
+  = let s = !b.content in 
+    let i = v b.idx in
+    Seq.slice s i (i + v l)
+
 let index #a (b:buffer a) (n:UInt32.t{v n<length b}) : STL a
      (requires (fun h -> live h b))
      (ensures (fun h0 z h1 -> live h0 b /\ h1 == h0
