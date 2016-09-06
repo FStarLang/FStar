@@ -12,7 +12,7 @@ open FStar.Monotonic.RRef
 open Platform.Bytes
 open CoreCrypto
 
-type msg = EtM.CPA.cipher 
+type msg = EtM.CPA.cipher
 
 let keysize   = 64
 let blocksize = keysize

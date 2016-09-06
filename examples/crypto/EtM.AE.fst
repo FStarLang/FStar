@@ -1,4 +1,4 @@
-module EtM.AE 
+module EtM.AE
 
 open FStar.Seq
 open FStar.SeqProperties
@@ -11,36 +11,36 @@ open EtM
 open Platform.Bytes
 open CoreCrypto
 
-type cipher = (CPA.cipher * MAC.tag) 
+type cipher = (CPA.cipher * MAC.tag)
 
 type log_t (r:rid) = Monotonic.Seq.log_t r (CPA.msg * cipher)
 
 
-noeq type key = 
+noeq type key =
   | Key:  #region:rid ->
                ke:CPA.key { extends (CPA.Key.region ke) region  } ->
                km:MAC.key { extends (MAC.Key.region km) region /\
                  (disjoint( CPA.Key.region ke) (MAC.Key.region km)) } ->
-               log:log_t region -> key 
+               log:log_t region -> key
 
-let get_log (h:t) (k:key) = 
+let get_log (h:t) (k:key) =
   m_sel h k.log
 
-let get_mac_log (h:t) (k:key) = 
+let get_mac_log (h:t) (k:key) =
   m_sel h (MAC.Key.log k.km)
 
-let get_cpa_log (h:t) (k:key) = 
+let get_cpa_log (h:t) (k:key) =
   m_sel h (CPA.Key.log k.ke)
 
-let invariant (h:t) (k:key) = 
+let invariant (h:t) (k:key) =
   let log = get_log h k in
   let mac_log = get_mac_log h k in
   let cpa_log = get_cpa_log h k in
   Map.contains h k.region /\
   Map.contains h (MAC.Key.region k.km) /\
   Map.contains h (CPA.Key.region k.ke) /\
-  Seq.length log = Seq.length mac_log /\ 
-  Seq.length mac_log = Seq.length cpa_log /\ 
+  Seq.length log = Seq.length mac_log /\
+  Seq.length mac_log = Seq.length cpa_log /\
   (forall (i:int). indexable log i ==>
     (let m1,t = Seq.index mac_log i in
      let m2,c = Seq.index cpa_log i in
@@ -117,9 +117,9 @@ let encrypt k plain =
 
 val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
   (requires (fun h0 -> invariant h0 k))
-  (ensures (fun h0 res h1 -> 
-    modifies_none h0 h1 /\ 
-    ((invariant h1 k /\
+  (ensures (fun h0 res h1 ->
+    modifies_none h0 h1 /\
+    invariant h1 k /\
       ( (b2t Ideal.uf_cma /\ is_Some res) ==>
         SeqProperties.mem (Some.v res, c) (m_sel h0 k.log)
         (* (let log = get_log h0 k in *)
@@ -135,13 +135,12 @@ val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
 	(*   True *)
         (* ) *)
       )
-    ))
   ))
 
 let decrypt k (c,tag) =
   if MAC.verify k.km c tag
   then (
-    if (Ideal.uf_cma) then 
+    if (Ideal.uf_cma) then
       (
       let h = ST.get () in
       assert ( SeqProperties.mem (c,tag) (get_mac_log h k) );
@@ -152,15 +151,15 @@ let decrypt k (c,tag) =
 
       let p = CPA.decrypt k.ke c in
       assert ( SeqProperties.mem (p,c) (get_cpa_log h k) );
-      (* assert ( is_Some (seq_find (fun (p',c') -> (p',c') = (p,c)) (get_cpa_log h k) ) ); 
+      (* assert ( is_Some (seq_find (fun (p',c') -> (p',c') = (p,c)) (get_cpa_log h k) ) );
          -- this one used to work *)
       //assert ( is_Some (seq_find (fun (p',c',tag') -> (p',c',tag') = (p,c,tag)) (get_log h k) ) );
       assume (SeqProperties.mem (p, (c,tag)) (get_log h k));
       Some(p)
       )
-    else 
+    else
       (
-      Some(CPA.decrypt k.ke c) 
+      Some(CPA.decrypt k.ke c)
       )
   )
   else ( None )
