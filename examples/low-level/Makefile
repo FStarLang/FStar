@@ -3,6 +3,10 @@ FSTAR_HOME=../..
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_DEFAULT_ARGS) # from the included Makefile
 
+KREMLIN_HOME=../../../kremlin
+KREMLIN=$(KREMLIN_HOME)/Kremlin.native
+KREMLIN_ARGS=-tmpdir kremlin -verbose --lax
+
 OPTIONS_OCAML=--lax --codegen OCaml --no_location_info
 
 CURVE_ODIR=curve
@@ -99,8 +103,32 @@ aead-compile: aead-extract
 aead-test: aead-compile
 	./test_aead.exe
 
+chacha-kremlin-extract:
+	mkdir -p kremlin
+	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.Symmetric.Chacha20.fst -skip-compilation
+
+chacha-kremlin-test:
+	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.Symmetric.Chacha20.fst $(addprefix $(KREMLIN_HOME)/test/, main-Chacha.c testlib.c) -o test_chacha.exe
+	./test_chacha.exe
+
+poly-kremlin-extract:
+	mkdir -p kremlin
+	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.Symmetric.Poly1305.fst -skip-compilation
+
+poly-kremlin-test:
+	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.Symmetric.Poly1305.fst $(addprefix $(KREMLIN_HOME)/test/, main-Chacha.c testlib.c) -o test_poly.exe
+	./test_poly.exe
+
+aead-kremlin-extract:
+	mkdir -p kremlin
+	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.AEAD.Chacha20Poly1305.fst -skip-compilation
+
+aead-kremlin-test:
+	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.Symmetric.Chacha20Poly1305.fst $(addprefix $(KREMLIN_HOME)/test/, main-Chacha.c testlib.c) -o test_aead.exe
+	./test_aead.exe
+
 # Cleaning
 clean:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
 	@rm -f $(addprefix crypto/ml/, *.cmx *.o *.cmi *~)
-	@rm -rf $(CURVE_ODIR) $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) *~ *.exe ./crypto/*~
+	@rm -rf $(CURVE_ODIR) $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) kremlin *~ *.exe ./crypto/*~
