@@ -448,3 +448,38 @@ let rec seq_mem_k #a s n =
   else let tl = tail s in
        seq_mem_k tl (n - 1)
 
+module L = FStar.List.Tot
+
+val seq_to_list: #a:Type -> s:seq a -> Tot (l:list a{L.length l = length s}) (decreases (length s))
+let rec seq_to_list #a s =
+  if length s = 0 then []
+  else index s 0::seq_to_list (slice s 1 (length s))
+
+val seq_of_list: #a:Type -> l:list a -> Tot (s:seq a{L.length l = length s})
+let rec seq_of_list #a l =
+  match l with
+  | [] -> createEmpty #a
+  | hd::tl -> create 1 hd @| seq_of_list tl
+
+val lemma_seq_list_bij: #a:Type -> s:seq a -> Lemma
+  (requires (True))
+  (ensures  (seq_of_list (seq_to_list s) == s))
+  (decreases (length s))
+let rec lemma_seq_list_bij #a s =
+  if length s = 0 then (
+    Seq.lemma_eq_intro s (seq_of_list (seq_to_list s))
+  )
+  else (
+    lemma_seq_list_bij (slice s 1 (length s));
+    lemma_eq_intro s (seq_of_list (seq_to_list s))
+  )
+
+val lemma_index_is_nth: #a:Type -> s:seq a -> i:nat{i < length s} -> Lemma
+  (requires True)
+  (ensures  (L.index (seq_to_list s) i == index s i))
+  (decreases i)
+let rec lemma_index_is_nth #a s i =
+  if i = 0 then ()
+  else (
+    lemma_index_is_nth (slice s 1 (length s)) (i-1)
+  )
