@@ -199,12 +199,12 @@ let lemma_prime_is_greater_than_2_128 (u:unit) : Lemma
 
 //TMP#reset-options
 
-let seq_head (vs: seq 'a {Seq.length vs > 0}) = Seq.slice vs 0 (Seq.length vs - 1)
+let seq_head (vs:seq 'a {Seq.length vs > 0}) = Seq.slice vs 0 (Seq.length vs - 1)
 
 val poly: vs:seq elem -> r:elem -> GTot (a:elem) (decreases (Seq.length vs))
 let rec poly vs r =
   if Seq.length vs = 0 then 0
-  else (Seq.index vs (length vs - 1) +@ poly (seq_head vs) r) *@ r
+  else (poly (seq_head vs) r +@ Seq.index vs (length vs - 1)) *@ r
 
 let fix (r:word_16) (i:nat {i < 16}) m : word_16 = Seq.upd r i (U8 (Seq.index r i &^ m)) 
 

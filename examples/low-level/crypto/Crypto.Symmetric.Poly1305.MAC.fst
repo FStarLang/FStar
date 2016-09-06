@@ -1,6 +1,6 @@
 module Crypto.Symmetric.Poly1305.MAC
 
-(* Provides idealization layer for multiplicative MACs; 
+(* Provides idealization layer for multiplicative MACs;
    could use the same code for both POLY1305 and GCM.
 *)
 
@@ -17,9 +17,8 @@ open Crypto.Symmetric.Poly1305 // avoid?
 
 module HH = FStar.HyperHeap
 
-let norm = Crypto.Symmetric.Poly1305.Bigint.norm 
+let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 
-#set-options "--lax"
 
 // also used in miTLS ('model' may be better than 'ideal'); could be loaded from another module.
 // this flag enables conditional idealization by keeping additional data,
@@ -28,7 +27,7 @@ let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 assume val ideal: bool
 //let ideal = true
 
-// to be rewired. 
+// to be rewired.
 // In AEAD_ChaCha20: id * nonce
 // we will need authId i ==> ideal?
 assume new abstract type id
@@ -43,17 +42,17 @@ let someId = 0
 type bytes = buffer UInt8.t
 type lbytes (n:nat) = b:bytes{length b = n}
 type tagB = wordB_16
-type wordB_16 = wordB_16 
+type wordB_16 = wordB_16
 
 (*
 // TODO: extend the model with dynamic compromises.
-type log_1 = 
-  | Init 
-  | MACed: msg -> Spec.log > log 
+type log_1 =
+  | Init
+  | MACed: msg -> Spec.log > log
   | Corrupt
 
 type log_2 = // only when ideal
-//  | MACing: text -> log 
+//  | MACing: text -> log
   | Init
   | MACed: text -> Spec.log -> log
   | Corrupt
@@ -72,8 +71,11 @@ val random: r:rid -> len:UInt32.t -> ST bytes
 // TODO: dummy, implement properly
 let random r len = FStar.Buffer.rcreate r 0uy len
 
+// the sequence of hashed elements is conditional, but not ghost
+// this will require changing e.g. the type of poly1305_add
+let itext : Type0 = if ideal then text else unit
 
-type log = option (text * tag) // option (Seq.seq elem * word16)
+type log = option (itext * tag) // option (Seq.seq elem * word16)
 
 let log_cmp (a:log) (b:log) =
   match a,b with
@@ -101,11 +103,7 @@ let log_ref (r:rid) = if ideal then ideal_log r else unit
 
 let ilog (#r:rid) (l:log_ref r{ideal}) : Tot (ideal_log r) = l
 
-// the sequence of hashed elements is conditional, but not ghost
-// this will require changing e.g. the type of poly1305_add
-let itext : Type0 = erased text
-
-let text_0: itext = hide (Seq.createEmpty #elem)
+let text_0: itext = if ideal then Seq.createEmpty #elem else ()
 
 noeq type state (i:id) =
   | State:
@@ -179,26 +177,26 @@ let coerce i region key =
 type accB (i:id) = elemB
 
 let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
-  live h st.r /\ live h a /\ disjoint st.r a /\   
+  live h st.r /\ live h a /\ disjoint st.r a /\
   norm h st.r /\ norm h a /\
   (let r = sel_elem h st.r in
    let a = sel_elem h a in
-   a = poly (reveal l) r)
+   ideal ==> a == poly l r)
 
 // not framed, as we allocate private state on the caller stack
 val start: #i:id -> st:state i -> StackInline (accB i)
   (requires (fun h -> is_stack_region h.tip /\ live h st.r /\ norm h st.r))
   (ensures  (fun h0 a h1 -> acc_inv st text_0 a h1))
-let start #i st = 
+let start #i st =
   let h0 = HST.get () in
   let a = Buffer.create 0UL 5ul in
   let h1 = HST.get () in
-  lemma_reveal_modifies_0 h0 h1;
-  cut (equal h0 st.r h1 st.r);
+  //lemma_reveal_modifies_0 h0 h1;
+  assert (equal h0 st.r h1 st.r);
   poly1305_start a;
   let h2 = HST.get () in
-  lemma_reveal_modifies_1 a h1 h2;
-  cut (equal h1 st.r h2 st.r);
+  //lemma_reveal_modifies_1 a h1 h2;
+  assert (equal h1 st.r h2 st.r);
   Bigint.norm_eq_lemma h0 h2 st.r st.r;
   a
 
@@ -213,19 +211,45 @@ val update: #i:id -> st:state i -> l:itext -> a:accB i -> v:elemB -> Stack itext
     modifies_1 a h0 h1 /\
     acc_inv st l1 a h1))
 
+assume val sel_elemT: b:elemB -> ST elem
+  (requires (fun h0 -> live h0 b))
+  (ensures  (fun h0 r h1 -> h0 == h1 /\ live h0 b /\ r == sel_elem h0 b))
+
+val seq_head_snoc: #a:Type -> xs:Seq.seq a -> x:a ->
+  Lemma (requires True)
+        (ensures Seq.length (SeqProperties.snoc xs x) > 0 /\
+                 seq_head (SeqProperties.snoc xs x) == xs)
+let seq_head_snoc #a xs x =
+  Seq.lemma_len_append xs (Seq.create 1 x);
+  Seq.lemma_eq_intro (seq_head (SeqProperties.snoc xs x)) xs
+
+#set-options "--print_fuels --initial_fuel 1 --initial_ifuel 1"
+
 let update #i st l a v =
   let h0 = HST.get () in
   add_and_multiply a v st.r;
   let h1 = HST.get () in
-  lemma_reveal_modifies_1 a h0 h1;
+  //lemma_reveal_modifies_1 a h0 h1;
+  Bigint.eval_eq_lemma h0 h1 st.r st.r Parameters.norm_length;
+  Bigint.eval_eq_lemma h0 h1 v v Parameters.norm_length;
   Bigint.norm_eq_lemma h0 h1 st.r st.r;
   Bigint.norm_eq_lemma h0 h1 v v;
-  cut (sel_elem h1 a = (sel_elem h0 a +@ sel_elem h0 v) *@ sel_elem h0 st.r);
-  cut (live h1 st.r /\ live h1 a /\ disjoint st.r a);
-  cut (norm h1 st.r /\ norm h1 a);
-  ///let v = hide (sel_elem h1 v) in
-  // Ghost.elift2 (fun log elem -> SeqProperties.snoc log elem) l v in
-  l
+  //assert (sel_elem h1 a == (sel_elem h0 a +@ sel_elem h0 v) *@ sel_elem h0 st.r);
+  //assert (live h1 st.r /\ live h1 a /\ disjoint st.r a);
+  //assert (norm h1 st.r /\ norm h1 a);
+  //assert (sel_elem h0 st.r == sel_elem h1 st.r);
+  //assert (sel_elem h0 v == sel_elem h1 v);
+  if ideal then
+    let v = sel_elemT v in
+    let vs = SeqProperties.snoc l v in
+    Seq.lemma_index_app2 l (Seq.create 1 v) (Seq.length vs - 1);
+    seq_head_snoc l v;
+    //assert (Seq.index vs (Seq.length vs - 1) == v');
+    //assert (seq_head vs == l);
+    //assert (sel_elem h1 a == (poly (seq_head vs) (sel_elem h0 st.r) +@ Seq.index vs (Seq.length vs - 1)) *@ (sel_elem h1 st.r));
+    vs
+
+#reset-options
 
 
 (*
@@ -237,9 +261,7 @@ val mac: #i:id -> st:state i -> m:msg -> buf:bytes{lbytes 16} -> ST tag
   (ensures  (fun m0 tag m1 ->
     modifies (Set.singleton (State.rid st)) m0 m1
     /\ modifies_rref st.rid !{HH.as_ref (as_rref st.log)} m0.h m1.h
-    /\ witnessed (invoked #i st)
-  ))
-
+    /\ witnessed (invoked #i st)))
 let mac #i st buf m =
   let tag =
     if authId i then
@@ -254,33 +276,56 @@ let mac #i st buf m =
   witness st.log (invoked #i st);
   tag
 *)
+(*
+let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
+  live h st.r /\ live h a /\ disjoint st.r a /\
+  norm h st.r /\ norm h a /\
+  (let r = sel_elem h st.r in
+   let a = sel_elem h a in
+   ideal ==> a == poly l r)
+*)
 
-val mac: #i:id -> st:state i -> l:itext -> computed:accB i -> tag:tagB -> ST unit
-  (requires (fun h0 -> ideal ==>
-    sel_elem h0 computed = poly (reveal l) (sel_elem h0 st.r)  /\
-    m_sel h0 (ilog st.log) == None))
-  (ensures (fun h0 _ h1 -> live h0 st.s /\
+val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit
+  (requires (fun h0 ->
+    live h0 tag /\ live h0 st.s /\
+    disjoint acc st.s /\ disjoint tag acc /\ disjoint tag st.r /\ disjoint tag st.s /\
+    acc_inv st l acc h0 /\
+    (ideal ==> m_sel h0 (ilog st.log) == None)))
+  (ensures (fun h0 _ h1 ->
+    live h0 st.s /\ live h0 st.r /\ live h1 tag /\
     // modifies h0 h1 "the tag buffer and st.log" /\
-    (let s: word_16 = sel_word h0 st.s in
-    let mac = mac_1305 (reveal l) (sel_elem h0 st.r) s in
-    mac = little_endian (sel_word h1 tag) /\
-    (ideal /\ authId i ==> m_sel h1 (ilog st.log) == Some (reveal l,sel_word h1 tag)))))
+    (ideal ==>
+      (let mac = mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) in
+      mac == little_endian (sel_word h1 tag) /\
+      m_sel h1 (ilog st.log) == Some (l, sel_word h1 tag)))))
 
-let mac #i st vs acc tag =
+let mac #i st l acc tag =
+  let h0 = HST.get () in
   poly1305_finish tag acc st.s;
-  if ideal then st.log := (Some (vs,read_word tag))
+  let h1 = HST.get () in
+  if ideal then
+    begin
+    //assume (mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) ==
+    //	    little_endian (sel_word h1 tag));
+    let t = read_word tag in
+    m_recall #st.region #log #log_cmp (ilog st.log);
+    assume (m_sel h1 (ilog st.log) == m_sel h0 (ilog st.log));
+    m_write #st.region #log #log_cmp (ilog st.log) (Some (l, t))
+    end
+  else
+    admit ()
 
 
-val verify: #i:id -> st:state i -> l:itext -> computed:accB i -> tag: tagB ->
-  ST bool
+val verify: #i:id -> st:state i -> l:itext -> computed:accB i -> tag:tagB ->
+  Stack bool
   (requires (fun h0 -> ideal ==>
-    sel_elem h0 computed = poly (reveal l) (sel_elem h0 st.r)))
+    sel_elem h0 computed == poly (reveal l) (sel_elem h0 st.r)))
   (ensures (fun h0 b h1 ->
-    h0 == h1 /\ (
-    let mac = mac_1305 (reveal l) (sel_elem h0 st.r) (sel_word h0 st.s) in
-    let verified = mac = little_endian (sel_word h1 tag) in
-    let correct = HyperStack.sel h0 st.log = Some (l,mac) in
-    b = verified && (not (authId i) || correct))))
+    h0 == h1 /\
+    (let mac = mac_1305 (reveal l) (sel_elem h0 st.r) (sel_word h0 st.s) in
+     let verified = mac = little_endian (sel_word h1 tag) in
+     let correct = HyperStack.sel h0 st.log = Some (l,mac) in
+     b = verified && (not (authId i) || correct))))
 
 let verify #i st l acc received =
   let tag = Buffer.create 0uy 16ul in
@@ -341,8 +386,9 @@ let add #i st l0 a w =
   pop_frame();
   l1
 
-let sel_bytes (h:mem) (b:bytes{live h b}) : GTot (Seq.seq UInt8.t) = as_seq h b
-
+// TODO: move
+let sel_bytes (h:mem) (b:bytes{live h b}) : GTot (Seq.seq UInt8.t) =
+  as_seq h b
 
 // a spec for encoding and padding, convenient for injectivity proof
 
