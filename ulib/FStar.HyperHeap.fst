@@ -40,11 +40,11 @@ let root_has_color_zero (u:unit) : Lemma (color root = 0) = ()
 
 abstract let rref (id:rid) (a:Type) = Heap.ref a
 
-let has_eq_rref (id:rid) (a:Type) :
-  Lemma (requires True)
-        (ensures hasEq (rref id a))
-	[SMTPat (hasEq (rref id a))]
-  = ()	
+(* let has_eq_rref (id:rid) (a:Type) : *)
+(*   Lemma (requires True) *)
+(*         (ensures hasEq (rref id a)) *)
+(* 	[SMTPat (hasEq (rref id a))] *)
+(*   = ()	 *)
 
 abstract val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
 let as_ref #a #id r = r
@@ -220,14 +220,15 @@ abstract val lemma_disjoint_parents: pr:rid -> r:rid -> ps:rid -> s:rid -> Lemma
   [SMTPat (extends r pr); SMTPat (extends s ps); SMTPat (disjoint pr ps)]
 let lemma_disjoint_parents pr r ps s = ()
 
+(* AR: using excluded_middle here, could make it GTot Type0 instead ? *)
 let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) : GTot bool =
-    Map.contains m i && Heap.contains (Map.sel m i) (as_ref r)
+    Map.contains m i && (FStar.Classical.excluded_middle (Heap.contains (Map.sel m i) (as_ref r)))
 
 let fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
-  not (Heap.contains (Map.sel m0 i) (as_ref r))
+  ~ (Heap.contains (Map.sel m0 i) (as_ref r))
   /\  (Heap.contains (Map.sel m1 i) (as_ref r))
 
-let modifies_rref (r:rid) (s:TSet.set aref) h0 h1 = 
+let modifies_rref (r:rid) (s:Set.set nat) h0 h1 = 
   Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
 
 abstract val lemma_include_cons: i:rid -> j:rid -> Lemma

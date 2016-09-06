@@ -57,7 +57,7 @@ assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
     (requires (fun m -> Map.contains m i))
     (ensures (fun m0 x m1 ->
                     let region_i = Map.sel m0 i in
-                    (not (Heap.contains region_i (as_ref x))
+                    (~ (Heap.contains region_i (as_ref x))
                     /\ m1==Map.upd m0 i (Heap.upd region_i (as_ref x) init))))
 
 assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
@@ -83,5 +83,5 @@ let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) =
     Map.contains m i /\ Heap.contains (Map.sel m i) (as_ref r)
 
 let fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
-  not (Heap.contains (Map.sel m0 i) (as_ref r))
+  ~ (Heap.contains (Map.sel m0 i) (as_ref r))
   /\  (Heap.contains (Map.sel m1 i) (as_ref r))

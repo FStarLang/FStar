@@ -79,8 +79,7 @@ let alloc #a h0 x =
   let r = { addr = h0.next_addr; init = x } in
   r, upd #a h0 r x
 
-abstract let contains (#a:Type) (h:heap) (r:ref a): GTot Type0 =
-  is_Some (h.memory r.addr)
+abstract let contains (#a:Type) (h:heap) (r:ref a): GTot Type0 = is_Some (h.memory r.addr)
 
 val contains_a_well_typed_implies_contains: #a:Type -> h:heap -> r:ref a
                               -> Lemma (requires (h `contains_a_well_typed` r))
@@ -124,6 +123,10 @@ val upd_sel : #a:Type -> h:heap -> r:ref a ->
 let upd_sel #a h r = 
   assert (FStar.FunctionalExtensionality.feq (upd h r (sel h r)).memory h.memory)
 
+(* AR: does not need to be abstract *)
+let equal_dom (h1:heap) (h2:heap) :GTot Type0 =
+  forall (a:Type0) (r:ref a). h1 `contains` r <==> h2 `contains` r
+
 (* Empty. *)
 val emp : heap
 let emp = {
@@ -132,8 +135,8 @@ let emp = {
 }
 
 val in_dom_emp: #a:Type -> k:ref a
-                -> Lemma (requires True) (ensures (~ (emp `contains_a_well_typed` k)))
-		  [SMTPat (emp `contains_a_well_typed` k)]
+                -> Lemma (requires True) (ensures (~ (emp `contains` k)))
+		  [SMTPat (emp `contains` k)]
 let in_dom_emp #a k = ()
 
 val upd_contains: #a:Type -> h:heap -> r:ref a -> v:a
@@ -184,28 +187,6 @@ val equal_extensional: h1:heap -> h2:heap
                        -> Lemma (requires True) (ensures (equal h1 h2 <==> h1 == h2))
 		         [SMTPat (equal h1 h2)]
 let equal_extensional h1 h2 = ()			 
-
-(* val equal_sel: #a:Type -> k:ref a -> h1:heap -> h2:heap *)
-(*                -> Lemma (requires ((h1 `contains_a_well_typed` k <==> h2 `contains_a_well_typed` k) /\ *)
-(* 	                          (k `contains` h1 <==> k `contains` h2)   /\ *)
-(* 	                          (sel h1 k == sel h2 k)               /\ *)
-(* 				  (h1.next_addr = h2.next_addr))) *)
-(* 	               (ensures (h1.memory k.addr == h2.memory k.addr)) *)
-(* let equal_sel #a k h1 h2 = *)
-(*   if FStar.Classical.excluded_middle (h1 `contains_a_well_typed` k) *)
-(*   then () *)
-(*   else *)
-(*     match h1.memory k.addr with *)
-(*       | None            -> () *)
-(*       | Some (| b, v |) -> *)
-(* 	match h2.memory k.addr with *)
-(* 	  | None            -> () *)
-(* 	  | Some (| c, u |) ->  *)
-	  
-(* val equal_sel: h1:heap -> h2:heap *)
-(*                -> Lemma (requires True) *)
-(* 	               (ensures (equal h1 h2 <==> (forall (a:Type) (k:ref a).{:pattern (sel h1 k); (sel h2 k)} (h1 `contains_a_well_typed` k <==> h2 `contains_a_well_typed` k) /\ (sel h1 k == sel h2 k)) /\ h1.next_addr = h2.next_addr)) *)
-(* let equal_sel h1 h2 = () *)
 
 val op_Hat_Plus_Plus: #a:Type -> r:ref a -> set nat -> GTot (set nat)
 let op_Hat_Plus_Plus #a r s = union (only r) s

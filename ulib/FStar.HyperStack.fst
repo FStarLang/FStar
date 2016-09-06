@@ -114,7 +114,7 @@ let sel (#a:Type) (m:mem) (s:reference a)
 let equal_domains (m0:mem) (m1:mem) =
   m0.tip = m1.tip
   /\ Set.equal (Map.domain m0.h) (Map.domain m1.h)
-  /\ (forall r. Map.contains m0.h r ==> TSet.equal (Heap.domain (Map.sel m0.h r)) (Heap.domain (Map.sel m1.h r)))
+  /\ (forall r. Map.contains m0.h r ==> Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r))
 
 let lemma_equal_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
   (requires (equal_domains m0 m1 /\ equal_domains m1 m2))
@@ -124,7 +124,7 @@ let lemma_equal_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
 
 let equal_stack_domains (m0:mem) (m1:mem) =
   m0.tip = m1.tip
-  /\ (forall r. (is_stack_region r /\ r <> m0.tip /\ r `is_above` m0.tip) ==> TSet.equal (Heap.domain (Map.sel m0.h r)) (Heap.domain (Map.sel m1.h r)))
+  /\ (forall r. (is_stack_region r /\ r <> m0.tip /\ r `is_above` m0.tip) ==> Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r))
 
 let lemma_equal_stack_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
   (requires (equal_stack_domains m0 m1 /\ equal_stack_domains m1 m2))
@@ -160,16 +160,17 @@ type s_ref (i:rid) (a:Type) = s:reference a{s.id = i}
 let frameOf #a (s:reference a) = s.id
 
 let as_ref #a (x:reference a)  : GTot (Heap.ref a) = HH.as_ref #a #x.id x.ref
-let as_aref #a (x:reference a) : GTot Heap.aref = Heap.Ref (HH.as_ref #a #x.id x.ref)
+let as_addr #a (x:reference a) : GTot nat = Heap.addr_of (HH.as_ref #a #x.id x.ref)
 let modifies_one id h0 h1 = HH.modifies_one id h0.h h1.h
-let modifies_ref (id:rid) (s:TSet.set Heap.aref) (h0:mem) (h1:mem) =
+let modifies_ref (id:rid) (s:Set.set nat) (h0:mem) (h1:mem) =
   HH.modifies_rref id s h0.h h1.h /\ h1.tip=h0.tip
 
 let lemma_upd_1 #a (h:mem) (x:reference a) (v:a) : Lemma
   (requires (contains h x))
   (ensures (contains h x
 	    /\ modifies_one (frameOf x) h (upd h x v)
-	    /\ modifies_ref (frameOf x) (TSet.singleton (as_aref x)) h (upd h x v)
+	    /\ HH.modifies_rref (frameOf x) (Set.singleton (as_addr x)) h.h (upd h x v).h
+	    /\ True // modifies_ref (frameOf x) (Set.singleton (as_addr x)) h (upd h x v)
 	    /\ sel (upd h x v) x == v ))
   [SMTPat (upd h x v); SMTPatT (contains h x)]
   = ()
