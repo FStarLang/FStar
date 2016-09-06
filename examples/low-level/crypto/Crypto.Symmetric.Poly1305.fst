@@ -62,7 +62,7 @@ let esel_word_16 h b = hide (sel_word h b)
 // when ideal, we use the actual contents
 assume val read_word: b:wordB_16 -> ST word_16 
   (requires (fun h0 -> live h0 b))
-  (ensures (fun h0 r h1 -> modifies Set.empty h0 h1 /\ live h1 b /\ Seq.equal r (sel_word h1 b)))
+  (ensures (fun h0 r h1 -> h0 == h1 /\ live h1 b /\ Seq.equal r (sel_word h1 b)))
 
 (* From the current memory state, returns the field element corresponding to a elemB *)
 let sel_elem (h:mem) (b:elemB{live h b}) : GTot elem
