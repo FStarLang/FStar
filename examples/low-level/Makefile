@@ -116,7 +116,7 @@ poly-kremlin-extract:
 	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.Symmetric.Poly1305.fst -skip-compilation
 
 poly-kremlin-test:
-	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.Symmetric.Poly1305.fst $(addprefix $(KREMLIN_HOME)/test/, main-Chacha.c testlib.c) -o test_poly.exe
+	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.Symmetric.Poly1305.fst $(addprefix $(KREMLIN_HOME)/test/, main-Poly1305.c testlib.c) -o test_poly.exe
 	./test_poly.exe
 
 aead-kremlin-extract:
@@ -124,7 +124,7 @@ aead-kremlin-extract:
 	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.AEAD.Chacha20Poly1305.fst -skip-compilation
 
 aead-kremlin-test:
-	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.Symmetric.Chacha20Poly1305.fst $(addprefix $(KREMLIN_HOME)/test/, main-Chacha.c testlib.c) -o test_aead.exe
+	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.AEAD.Chacha20Poly1305.fst $(addprefix $(KREMLIN_HOME)/test/, main-Aead.c testlib.c) -o test_aead.exe
 	./test_aead.exe
 
 # Cleaning
