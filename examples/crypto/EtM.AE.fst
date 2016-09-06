@@ -11,7 +11,7 @@ open EtM
 open Platform.Bytes
 open CoreCrypto
 
-type cipher = (CPA.cipher * MAC.tag)
+abstract type cipher = (CPA.cipher * MAC.tag)
 
 type log_t (r:rid) = Monotonic.Seq.log_t r (CPA.msg * cipher)
 
@@ -121,19 +121,12 @@ val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
     modifies_none h0 h1 /\
     invariant h1 k /\
       ( (b2t Ideal.uf_cma /\ is_Some res) ==>
-        SeqProperties.mem (Some.v res, c) (m_sel h0 k.log)
-        (* (let log = get_log h0 k in *)
-        (*   let found = seq_find  *)
-        (*     ( *)
-        (*       fun (_,c',tag') ->  *)
-        (*     	  c'= fst c && tag' = snd c *)
-        (*     ) log in *)
-        (*   is_Some found /\  *)
-        (*   (\* ( let Some (p',_,_) = found  in *\) *)
-   	(*   (\*   p = Some(p')  *\) *)
-	(*   (\* ) /\ *\) *)
-	(*   True *)
-        (* ) *)
+        (is_Some (seq_find (fun (_,c') -> c = c') (get_log h0 k)))
+
+(* CH*MK: If we wanted to also prove correctness of the EtM.AE
+          we would use this stronger post-condition:
+        SeqProperties.mem (Some.v res, c) (m_sel h0 k.log) *)
+
       )
   ))
 
@@ -141,25 +134,8 @@ let decrypt k (c,tag) =
   if MAC.verify k.km c tag
   then (
     if (Ideal.uf_cma) then
-      (
-      let h = ST.get () in
-      assert ( SeqProperties.mem (c,tag) (get_mac_log h k) );
-      (* assume ( forall c tag. SeqProperties.mem (c,tag) (get_mac_log h k) ==> *)
-      (*             (exists p. SeqProperties.mem (p,c) (get_cpa_log h k) )); *)
-      (* assert ( exists p. SeqProperties.mem (p,c) (get_cpa_log h k)); *)
-      assume ( is_Some (seq_find (fun mc -> snd mc = c) (get_cpa_log h k) ));
-
-      let p = CPA.decrypt k.ke c in
-      assert ( SeqProperties.mem (p,c) (get_cpa_log h k) );
-      (* assert ( is_Some (seq_find (fun (p',c') -> (p',c') = (p,c)) (get_cpa_log h k) ) );
-         -- this one used to work *)
-      //assert ( is_Some (seq_find (fun (p',c',tag') -> (p',c',tag') = (p,c,tag)) (get_log h k) ) );
-      assume (SeqProperties.mem (p, (c,tag)) (get_log h k));
-      Some(p)
-      )
+      Some (CPA.decrypt k.ke c)
     else
-      (
-      Some(CPA.decrypt k.ke c)
-      )
+      Some (CPA.decrypt k.ke c)
   )
   else ( None )

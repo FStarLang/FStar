@@ -93,13 +93,13 @@ val verify: k:key -> m:msg -> t:tag -> ST bool
   (requires (fun h -> True (* not needed: Map.contains h k.region *) ))
   (ensures  (fun h0 res h1 ->
      modifies_none h0 h1 /\
-     (( Ideal.uf_cma && res ) ==> SeqProperties.mem (m,t) (m_sel h0 k.log))))
+     (( Ideal.uf_cma && res ) ==> CPA.mem (m,t) (m_sel h0 k.log))))
 
 let verify k m t =
   let t' = hmac_sha1 k.raw m in
   let verified = (t = t') in
   let log = m_read k.log in
-  let found = SeqProperties.mem (m,t) log in
+  let found = CPA.mem (m,t) log in
   if Ideal.uf_cma then
     verified && found
   else

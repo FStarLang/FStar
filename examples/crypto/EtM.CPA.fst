@@ -24,6 +24,14 @@ type cipher = b:bytes{B.length b >= ivsize}
 
 type log_t (r:rid) = Monotonic.Seq.log_t r (msg * cipher)
 
+(* CH*MK: If we wanted to also prove correctness of the EtM.AE
+          we would additionally need this
+type log_t (r:rid) (raw:aes_key) =
+  Monotonic.Seq.log_t r (m:msg & c:cipher{
+    let p = if ind_cpa then createBytes (length m) 0z else repr m in
+    let (iv,c') = split c ivsize in
+    c' = CoreCrypto.block_encrypt AES_128_CBC raw iv p}) *)
+
 noeq type key =
   | Key: #region:rid -> raw:aes_key -> log:log_t region -> key
 
@@ -66,6 +74,22 @@ let encrypt k m : cipher =
   c
 
 
+(* CH*MK: If we wanted to also prove correctness of the EtM.AE
+          we would additionally need this
+assume val correctness : k:key -> iv:bytes -> t:bytes -> Lemma
+  (CoreCrypto.block_decrypt AES_128_CBC k.raw iv
+    (CoreCrypto.block_encrypt AES_128_CBC k.raw iv t) = t)
+
+val encryption_injective : k:key -> iv:bytes -> t1:bytes -> t2:bytes -> Lemma
+  (CoreCrypto.block_encrypt AES_128_CBC k.raw iv t1
+ = CoreCrypto.block_encrypt AES_128_CBC k.raw iv t2 ==> t1 = t2)
+let encryption_injective k iv t1 t2 = correctness k iv t1; correctness k iv t2
+*)
+
+(* this doesn't really belong here *)
+val mem : #a:eqtype -> x:a -> xs:Seq.seq a -> Tot bool
+let mem (#a:eqtype) x xs = is_Some (SeqProperties.seq_find (fun y -> y = x) xs)
+
 val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->
     Map.contains h0 k.region /\
@@ -73,7 +97,7 @@ val decrypt: k:key -> c:cipher -> ST msg
       (b2t ind_cpa_rest_adv) ==> is_Some (seq_find (fun mc -> snd mc = c) log0))))
   (ensures  (fun h0 res h1 ->
     modifies_none h0 h1 /\
-    ( (b2t ind_cpa_rest_adv) ==> SeqProperties.mem (res,c) (m_sel h0 k.log)
+    ( (b2t ind_cpa_rest_adv) ==> mem (res,c) (m_sel h0 k.log)
      (* (let log0 = m_sel h0 k.log in *)
      (*  let found = seq_find (fun mc -> snd mc = c) log0 in *)
      (*  is_Some found /\ fst (Some.v found) = res) *)
