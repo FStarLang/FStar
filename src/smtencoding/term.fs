@@ -37,7 +37,7 @@ let rec strSort x = match x with
   | Bool_sort  -> "Bool"
   | Int_sort  -> "Int"
   | Term_sort -> "Term"
-  | String_sort -> "String"
+  | String_sort -> "FString"
   | Ref_sort -> "Ref"
   | Fuel_sort -> "Fuel"
   | Array(s1, s2) -> format2 "(Array %s %s)" (strSort s1) (strSort s2)
