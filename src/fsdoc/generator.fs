@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-(**
+(*
     fsdoc generator. 
     For usage, see https://github.com/FStarLang/FStar/wiki/Generating-documentation-with-fsdoc-comments.
 *)
@@ -119,11 +119,11 @@ let decl_documented (d:decl) =
             match tycon with
             | TyconAbstract _ | TyconAbbrev _ -> false
             | TyconRecord(_,_,_,fields) -> 
-                List.exists (fun (_id,_t,doco) -> Option.isSome doco) fields 
+                List.existsb (fun (_id,_t,doco) -> is_some doco) fields 
             | TyconVariant(_,_,_,vars) -> 
-                List.exists (fun (_id,_t,doco,_u) -> Option.isSome doco) vars in 
-        List.exists 
-            (fun (tycon,doco) -> (tyconvars_documented tycon) || Option.isSome doco)
+                List.existsb (fun (_id,_t,doco,_u) -> is_some doco) vars in 
+        List.existsb 
+            (fun (tycon,doco) -> (tyconvars_documented tycon) || is_some doco)
             tt
     in
     (* either d.doc attached at the top-level decl *)
@@ -170,11 +170,13 @@ let document_toplevel name decls =
     | None -> name, no_doc_provided in
   mdoc, name, com
 
-let exists_toplevel (decls:decl list) = 
-    List.exists 
+let exists_toplevel (decls:list<decl>) = 
+  let r =
+    List.existsb 
         (fun d -> match d.d with | TopLevelModule _ -> true | _ -> false) 
         decls 
-    |> Printf.printf "+ exists_toplevel: %b\n"
+  in
+  Util.print1 "+ exists_toplevel: %b\n" (string_of_bool r)
 
 //
 // modul
