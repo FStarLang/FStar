@@ -106,7 +106,7 @@ with emacs support and `fstarlang/fstar` for purists.
 The image is automatically kept up to date through a cloud build. 
 
 You only have to install docker and an X server for your platform and you are good to go. 
-See [[Running F* from a docker image]] for the details on how to use docker. 
+See [Running F* from a docker image] (https://github.com/FStarLang/FStar/wiki/Running-F%2A-from-a-docker-image) for the details on how to use docker. 
 
 
 
