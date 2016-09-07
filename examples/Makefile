@@ -17,14 +17,12 @@ low-level \
 maths \
 paradoxes \
 printf \
+metatheory \
 verifythis \
 wysteria \
 preorders \
 dm4free \
 unit-tests
-
-#metatheory\
-after verifythis
 
 
 # #	make -C bignum  -- big timeout (30) + failing asserts (even with 50)
