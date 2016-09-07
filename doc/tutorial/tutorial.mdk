@@ -5140,15 +5140,24 @@ to be used with.
 module $P$ that is typeable using an interface $IP$ of the form
 
 ```
-type repr = b:bytes{Length(b)=plainsize}
-private type plain = repr
-val repr: plain{¬conf} →repr
+abstract type plain = bytes
+
+val repr: p:plain{not conf} -> Tot bytes
+let repr p = p
+
+val coerce: r:bytes{not auth} -> Tot plain
+let coerce r = r
+
+val length: plain -> Tot nat
+let length p = length p
 ```
 
 The type repr gives the representation of plaintext, whereas the
-type plain is `abstract`, with functions `repr` and `plain` converting between
+type plain is `abstract`, with functions `repr` and `coerce` converting between
 them. If `conf` is `true`, the function `repr` cannot be called, intuitively
 making the interface parametric in type `plain`, so that we can apply *Theorem 2*
+
+When `auth` is true, the function `coerce` cannot be called, guaranteeing authenticity.
 
 **Definition 1 (Interface-based secrecy):** Let $IP$ be the interface
 of $P$ and $IC$ be the interface of module $C$. $C$ protects the secrecy
@@ -5166,7 +5175,11 @@ decryption of such encryptions of zero indistinguishable from decryptions of the
 plaintext, the idealization of $C$ decrypts using a table lookup.
 
 We will now make this theory more concrete by looking at Encrypt-then-MAC 
-based authenticated encryption.
+based authenticated encryption. 
+
+The module $P$ does not hide the length of `plain`.
+as modelled by the function `length` returning its length.
+
 
 # Encrypt then MAC 
 
@@ -5216,6 +5229,76 @@ let decrypt k (c,tag) =
 `AE` treats `CPA` and `MAC` keys abstractly, and never reveals them to an adversary $A$.
 This together with the fact that `AE` only ever `mac`s after `encrypt`ing, guarantees 
 that `AE`$\cdot A$ is a restricted `CPA` adversary.
+
+Let us now look in more detail at the `CPA` and `MAC` modules and how they model the security 
+of the underlying primitives. 
+
+## Chosen Plaintext Attack (CPA) secure encryption
+
+Our concrete implementation of CPA secure encryption uses `AES_128_CBC`. 
+It first samples a random initialization vector `iv` and then calls, 
+obtains a representation of the key and the plaintext using `k.raw` and `repr m`;
+and calls a library function implementing `AES_128_CBC`:
+
+```
+let encrypt k m : cipher =
+  let iv = random ivsize in
+  let text = (* details intentionally omitted *) repr m in
+  let c = CoreCrypto.block_encrypt AES_128_CBC k.raw iv text in
+  let c = iv@|c in
+  c
+```
+
+Calling the library function which expects bytes as input, requires breaking the 
+abstraction barriers. This is not a problem for the AES key, as it its type is 
+declared in the same module, but for the `Plain` module in which 
+`plain` is defined, calls to `repr` are only allowed when `priv=false`.
+
+
+Instead compute `text` in the following way:
+```
+  let text = if ind_cpa then createBytes (length m) 0z else repr m in
+```
+
+Here we make use of the fact that we defined `priv=ind_cpa` in the `Ideal` module. 
+This change will be unnoticeable for adversaries if they cannot distinguish encryptions 
+of `m` from encryptions of `(length m)` `0z` bytes. 
+
+For IND-CPA secure schemes this indistinguishability is guaranteed to hold for adversaries 
+as long as they are only allowed to encrypt, but not to decrypt. 
+
+Without loss of generality, we can also allow decryption of ciphertexts resulting from `encrypt`.
+To model this we change the last line of `encrypt` to be `write_at_end k.log (m,c); c` to update the `log` 
+of ciphertext. We can now decrypt using table lookup as follows.
+```
+let decrypt k c =
+  if ind_cpa_rest_adv then
+    let log = m_read k.log in
+    match seq_find (fun mc -> snd mc = c) log with
+    | Some mc -> fst mc
+  else
+    let iv,c' = split c ivsize in
+    coerce (CoreCrypto.block_decrypt AES_128_CBC k.raw iv c')
+```
+
+Note that in the `match` statement, we did not define a `| None` branche. This is because the 
+precondition of `decrypt` requires for IND-CPA restricted adversaries (`ind_cpa_rest_adv=true`)
+that table lookup in `log` always succeeds.
+
+This can be expressed as a stateful precondition for `decrypt`:
+
+```
+val decrypt: k:key -> c:cipher -> ST msg
+  (requires (fun h0 ->
+    Map.contains h0 k.region /\
+    (let log0 = m_sel h0 k.log in
+      (b2t ind_cpa_rest_adv) ==> is_Some (seq_find (fun mc -> snd mc = c) log0))))
+  (ensures  (fun h0 res h1 ->
+    modifies_none h0 h1 /\
+    ( (b2t ind_cpa_rest_adv) ==> mem (res,c) (m_sel h0 k.log)
+    )
+  ))
+```
 
 # A note on this document 
 
