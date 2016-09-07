@@ -20,6 +20,7 @@
 #light "off"
 module FStar.Fsdoc.Generator
 
+open FStar
 open FStar.Util
 open FStar.Parser.AST
 open FStar.Ident
@@ -176,7 +177,7 @@ let exists_toplevel (decls:list<decl>) =
         (fun d -> match d.d with | TopLevelModule _ -> true | _ -> false) 
         decls 
   in
-  Util.print1 "+ exists_toplevel: %b\n" (string_of_bool r)
+  Util.print1 "+ exists_toplevel: %s\n" (U.string_of_bool r)
 
 //
 // modul
