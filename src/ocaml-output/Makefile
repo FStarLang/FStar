@@ -95,6 +95,9 @@ depend:
 fstar.exe: $(FSTAR_OBJS) main.ml
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(FSTAR_HOME)/lib/ml/fstarlib.cmxa -o fstar.exe $^
 	cp fstar.exe ../../bin/fstar.exe
+ifneq ($(OS),Windows_NT)
+	ln -f -s fstar.exe ../../bin/fstar
+endif
 
 # always bump version for a release
 VERSION=$(shell head -n 1 ../../version.txt)
