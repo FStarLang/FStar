@@ -5,6 +5,7 @@
     * [Testing a binary package](#testing-a-binary-package)
     * [OPAM package](#opam-package)
     * [Homebrew formula for Mac OS X](#homebrew-formula-for-mac-os-x)
+    * [Running F* from a docker image](#running-F*-from-a-docker-image)
   * [Building F* from sources](#building-f-from-sources)
     * [Step 1. Building F* from sources using the F# compiler](#step-1-building-f-from-sources-using-the-f-compiler)
       * [On Windows 7/8/10](#on-windows-7810)
@@ -97,7 +98,7 @@ instead of the latest release you can do:
 
         $ brew install --HEAD fstar
         
-## Running F* from a docker image ##
+### Running F* from a docker image ###
 
 An alternative to installing binaries is to install a docker image. 
 We currently provide the following two on docker hub: `fstarlang/fstar-emacs` 
