@@ -5080,12 +5080,12 @@ adapted to make use of new F\* features. We follow their notation
 and recall them briefly.
 *a) F\* Types:* A program is a sequential composition of modules,
 written $A_1 \cdot A_2 \cdot \dots \cdot A_n$. A module $A$ depends on types, values,
-and functions being available in its environment and exports types,
+and functions from its environment and exports types,
 values, and functions in its own interface $I$.
 A module is well typed, written $I_1 ,\dots ,I_\ell \vdash A \leadsto I$ if it correctly
 implements $I$ using modules with interfaces $I_1 ,\dots,I_\ell$. The simplest
 well typed program is an expression $A$ that has type $t$ in typing
-environment $I$, written $I \perp A : t$. A program is closed if it is well
+environment $I$, written $I \vdash A : t$. A program is closed if it is well
 typed in the empty environment $\emptyset$.
 A program is *safe* if, in every run of the program, all runtime
 values satisfy their type. A key property of a type system is that
@@ -5095,8 +5095,11 @@ well-typed programs are always safe.
 
 **Theorem 1 (Safety by Typing):** If $\emptyset \vdash A : t$, then $A$ is safe.
 
-Two expressions $A_0$ and $A_1$ are equivalent, written $A_0 \approx A_1$,
-when they return the same distribution of values.
+In F* randomness originates from calls to effectful external functions
+and at the meta level we model these functions probabilistically.
+In this probabilistic interpretation,
+two expressions $A_0$ and $A_1$ are equivalent, written $A_0 \approx A_1$,
+when they return the same probability distribution of values.
 
 An interface or module can declare a type as abstract, e.g. `abstract type key = bytes`, 
 and keep its representation hidden. The 
