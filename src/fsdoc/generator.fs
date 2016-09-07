@@ -32,6 +32,13 @@ module SU  = FStar.Syntax.Util
 module U  = FStar.Util
 module C  = FStar.Syntax.Const
 
+(* 
+Notes:
+- a lot of the string_of functions should go away with a better pretty-printer. 
+- there are too many strings being passed around/returned. 
+- Haven't got the hang of what a .md file should look like. # vs ## vs crlf? 
+*)
+
 //
 // lib
 // 
@@ -82,7 +89,6 @@ let string_of_tycon tycon =
 // decl 
 //
 
-// SI: too many strings being passed back! 
 let string_of_decl' d = 
   match d with 
   | TopLevelModule l -> "module " ^ l.str
