@@ -6,7 +6,6 @@ bug-reports \
 data_structures \
 algorithms \
 crypto \
-security \
 termination \
 software_foundations \
 ../doc/tutorial/code/exercises \
