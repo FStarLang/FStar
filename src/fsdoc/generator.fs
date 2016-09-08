@@ -151,17 +151,19 @@ let decl_documented (d:decl) =
 
 let document_decl (w:string->unit) (d:decl) = 
   if decl_documented d then 
+    (* SI: {begin, '('} to convince ocamlopt *)
+    begin
         (* print the decl *)
         let {d = decl; drange = _; doc = fsdoc} = d in
         //w "```fstar"; 
         w (string_of_decl' d.d); 
         //w "```"; 
         (* print the doc, if there's one *)
-        match fsdoc with 
+        (match fsdoc with 
         | Some(doc,_kw) -> w ("\n" ^ doc) (* SI: do something with kw *) 
-        | _ -> () ;
-        w ""; // EOL 
-        ;
+        | _ -> ()) ;
+        w "" // EOL 
+    end
   else ()
 
 let document_toplevel name decls = 
