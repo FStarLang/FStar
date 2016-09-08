@@ -278,7 +278,8 @@ end
 | _81_270 -> begin
 false
 end)) decls)
-in (FStar_Util.print1 "+ exists_toplevel: %b\n" (Prims.string_of_bool r))))
+in (let _174_101 = (FStar_Util.string_of_bool r)
+in (FStar_Util.print1 "+ exists_toplevel: %s\n" _174_101))))
 
 
 let document_module : FStar_Parser_AST.modul  ->  FStar_Ident.lid = (fun m -> (
@@ -311,15 +312,15 @@ in (
 let w = (FStar_Util.append_to_file fd)
 in (
 
-let _81_296 = (let _174_104 = (FStar_Util.format "# module %s" ((name.FStar_Ident.str)::[]))
-in (w _174_104))
+let _81_296 = (let _174_105 = (FStar_Util.format "# module %s" ((name.FStar_Ident.str)::[]))
+in (w _174_105))
 in (
 
 let _81_298 = (w "```fstar")
 in (
 
-let _81_300 = (let _174_105 = (FStar_Util.format "%s" ((com)::[]))
-in (w _174_105))
+let _81_300 = (let _174_106 = (FStar_Util.format "%s" ((com)::[]))
+in (w _174_106))
 in (
 
 let _81_302 = (w "```")
@@ -357,8 +358,8 @@ in (
 let fd = (FStar_Util.open_file_for_writing on)
 in (
 
-let _81_328 = (FStar_List.iter (fun m -> (let _174_110 = (FStar_Util.format "%s" ((m.FStar_Ident.str)::[]))
-in (FStar_Util.append_to_file fd _174_110))) mod_names)
+let _81_328 = (FStar_List.iter (fun m -> (let _174_111 = (FStar_Util.format "%s" ((m.FStar_Ident.str)::[]))
+in (FStar_Util.append_to_file fd _174_111))) mod_names)
 in (FStar_Util.close_file fd)))))))
 
 
