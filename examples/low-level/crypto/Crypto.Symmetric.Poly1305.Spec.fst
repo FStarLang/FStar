@@ -1,6 +1,6 @@
 module Crypto.Symmetric.Poly1305.Spec
 
-(* Just the mathematical specification, 
+(* Just the mathematical specification,
    used in the probabilistic security assumption,
    aiming for a generic group *)
 
@@ -30,26 +30,26 @@ let p_1305 : nat = pow2 130 - 5  // prime (do we prove it? use it?)
 type elem = n:nat{n < p_1305}    // elements of the field Z / p_1305 Z
 
 
-type word = b: seq byte {Seq.length b <= 16} 
-type word_16 = b:seq byte {Seq.length b = 16} 
+type word = b: seq byte {Seq.length b <= 16}
+type word_16 = b:seq byte {Seq.length b = 16}
 // we only use full words for AEAD
 
 type text = seq elem // not word_16
-type tag = word_16 
+type tag = word_16
 
 (* * *********************************************)
 (* *            Field operations                 *)
 (* * *********************************************)
 val field_add: elem -> elem -> Tot elem
-let field_add a b = (a + b) % p_1305 
+let field_add a b = (a + b) % p_1305
 val field_mul: elem -> elem -> Tot elem
-let field_mul a b = (a * b) % p_1305 
+let field_mul a b = (a * b) % p_1305
 (* Infix operators for readability *)
 let op_Plus_At = field_add
 let op_Star_At = field_mul
 
 (* Little endian integer value of a sequence of bytes *)
-let rec little_endian (b:word) : GTot (n:nat) (decreases (Seq.length b))
+let rec little_endian (b:word) : Tot (n:nat) (decreases (Seq.length b))
   = if Seq.length b = 0 then 0
     else U8.v (Seq.index b 0) +
 	 pow2 8 * little_endian (Seq.slice b 1 (Seq.length b))
@@ -64,8 +64,7 @@ val lemma_factorise: a:nat -> b:nat -> Lemma
   (ensures  (a + a * b = a * (b + 1)))
 let lemma_factorise a b = ()
 
-//TMP#reset-options "--z3timeout 100"
-#set-options "--lax" // OK, but long timeout
+#reset-options "--initial_fuel 1 --max_fuel 1"
 
 val lemma_little_endian_is_bounded: b:word -> Lemma
   (requires (True))
@@ -83,11 +82,11 @@ let rec lemma_little_endian_is_bounded b =
     lemma_euclidian_division (U8.v (Seq.index b 0)) (little_endian s);
     assert(little_endian b <= pow2 8 * (little_endian s + 1));
     assert(little_endian b <= pow2 8 * pow2 (8 * (Seq.length b - 1)));
-    Math.Lemmas.pow2_exp_1 8 (pow2 (8 * (Seq.length b - 1)));
+    Math.Lemmas.pow2_exp_1 8 (8 * (Seq.length b - 1));
     lemma_factorise 8 (Seq.length b - 1)
   )
 
-#reset-options
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_little_endian_lt_2_128: b:word -> Lemma
   (requires (True))
@@ -99,23 +98,28 @@ let lemma_little_endian_lt_2_128 b =
   else Math.Lib.pow2_increases_lemma 128 (8 * Seq.length b)
 
 
-let encode_16 (w:word_16) : elem = pow2 128  +@  little_endian w 
+let encode_16 (w:word_16) : Tot elem =
+  Math.Lemmas.pow2_double_sum 128; Math.Lemmas.pow2_double_sum 129;
+  pow2 128  +@  little_endian w
 // not using the lemma below?
 
-let trunc_1305 (e:elem) = e % pow2 128
+let trunc_1305 (e:elem) : Tot elem = e % pow2 128
 
 (* * *********************************************)
 (* *          Encoding-related lemmas            *)
 (* * *********************************************)
+
+#reset-options "--initial_fuel 1 --max_fuel 1"
 
 let lemma_little_endian_is_injective_0 (b:word{Seq.length b > 0}) : Lemma
   (requires (True))
   (ensures  (little_endian b = U8.v (Seq.index b 0) + pow2 8 * little_endian (Seq.slice b 1 (Seq.length b)) ))
   = ()
 
-//TMP#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 (* Lemma unknown to F*, should go into core libraries *)
+(* TODO: move elsewhere *)
 assume val lemma_modulo: a:nat -> b:nat -> c:pos -> Lemma
   (requires (True))
   (ensures   ((a + b * c) % c = a))
@@ -125,8 +129,6 @@ let lemma_little_endian_is_injective_1 (b:pos) (q:nat) (r:nat) (q':nat) (r':nat)
   (ensures  (r = r' /\ q = q'))
   = lemma_modulo r q b;
     lemma_modulo r' q' b
-
-//TMP#reset-options
 
 val lemma_little_endian_is_injective_2: b:word -> len:pos{len <= Seq.length b} -> Lemma
   (requires (True))
@@ -141,7 +143,7 @@ let lemma_little_endian_is_injective_2 b len =
   let s'' = Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) in
   Seq.lemma_eq_intro s' s''
 
-//TMP#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 val lemma_little_endian_is_injective_3: b:word -> b':word  -> len:pos{len <= Seq.length b /\ len <= Seq.length b'} -> Lemma
   (requires (Seq.slice b (Seq.length b - (len - 1)) (Seq.length b) == Seq.slice b' (Seq.length b' - (len-1)) (Seq.length b')
@@ -197,30 +199,32 @@ let lemma_prime_is_greater_than_2_128 (u:unit) : Lemma
     Math.Lib.pow2_increases_lemma 129 128;
     Math.Lib.pow2_increases_lemma 128 3
 
-//TMP#reset-options
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 let seq_head (vs:seq 'a {Seq.length vs > 0}) = Seq.slice vs 0 (Seq.length vs - 1)
 
-val poly: vs:seq elem -> r:elem -> GTot (a:elem) (decreases (Seq.length vs))
+val poly: vs:seq elem -> r:elem -> Tot (a:elem) (decreases (Seq.length vs))
 let rec poly vs r =
   if Seq.length vs = 0 then 0
   else (poly (seq_head vs) r +@ Seq.index vs (length vs - 1)) *@ r
 
-let fix (r:word_16) (i:nat {i < 16}) m : word_16 = Seq.upd r i (U8 (Seq.index r i &^ m)) 
+let fix (r:word_16) (i:nat {i < 16}) m : Tot word_16 = Seq.upd r i (U8 (Seq.index r i &^ m))
 
-// an abstract spec of clamping for our state invariant 
-// for our polynomial-sampling assumption, 
+// an abstract spec of clamping for our state invariant
+// for our polynomial-sampling assumption,
 // we rely solely on the number of fixed bits (22, right?)
-val clamp: word_16 -> GTot elem
-let clamp r = 
+val clamp: word_16 -> Tot elem
+let clamp r =
   let r = fix r  3  15uy in // 0000****
-  let r = fix r  7  15uy in 
-  let r = fix r 11  15uy in 
-  let r = fix r 15  15uy in 
+  let r = fix r  7  15uy in
+  let r = fix r 11  15uy in
+  let r = fix r 15  15uy in
   let r = fix r  4 252uy in // ******00
-  let r = fix r  8 252uy in 
-  let r = fix r 12 252uy in 
+  let r = fix r  8 252uy in
+  let r = fix r 12 252uy in
+  lemma_prime_is_greater_than_2_128 ();
   little_endian r
 
-
-let mac_1305 (vs:seq elem) r s = (trunc_1305 (poly vs r) + little_endian s) % pow2 128
+let mac_1305 (vs:seq elem) r s : Tot elem =
+  lemma_prime_is_greater_than_2_128 ();
+  (trunc_1305 (poly vs r) + little_endian s) % pow2 128
