@@ -131,8 +131,8 @@ three steps:
 **Note:** If you build F* from sources you will also need to get a Z3
 binary. This is further explained towards the end of this document.
 
-**Easier alternative:**  If you don't care about efficiency and about the .NET
-dependency you can stop already after step 1.
+**Easier alternative:**  If you don't care about efficiency, about the .NET
+dependency and bugs ([#672](https://github.com/FStarLang/FStar/issues/672)) you can stop already after step 1.
 
 **Easier alternative:**  If you don't want to use F#/.NET/Mono at all you can
 also build F\* directly from the generated OCaml sources.  Therefore, for
