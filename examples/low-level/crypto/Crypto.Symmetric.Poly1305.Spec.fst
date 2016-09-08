@@ -49,7 +49,7 @@ let op_Plus_At = field_add
 let op_Star_At = field_mul
 
 (* Little endian integer value of a sequence of bytes *)
-let rec little_endian (b:word) : GTot (n:nat) (decreases (Seq.length b))
+let rec little_endian (b:word) : Tot (n:nat) (decreases (Seq.length b))
   = if Seq.length b = 0 then 0
     else U8.v (Seq.index b 0) +
 	 pow2 8 * little_endian (Seq.slice b 1 (Seq.length b))

@@ -745,6 +745,7 @@ let upd #a b n z =
   ()
 
 (* Could be made Total with a couple changes in the spec *)
+// SZ: The first conjunct in the refinement of `len` is redundant, why?
 let sub #a (b:buffer a) (i:UInt32.t{v i + v b.idx < pow2 n}) (len:UInt32.t{v len <= length b /\ v i + v len <= length b}) : Tot (b':buffer a{b `includes` b'})
   = {content = b.content; idx = i +^ b.idx; length = len}
 

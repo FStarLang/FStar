@@ -80,7 +80,7 @@ let sel_int (h:mem) (b:elemB{live h b}) : GTot nat
 (* *        Polynomial computation step           *)
 (* * ******************************************** *)
 
-let rec print_bytes (s:bytes) (i:UInt32.t{UInt32.v i < length s}) (len:UInt32.t{UInt32.v len <= length s}) : ST bool (requires (fun _ -> True)) (ensures (fun h0 _ h1 -> h0 == h1))
+let rec print_bytes (s:bytes) (i:UInt32.t{UInt32.v i <= length s}) (len:UInt32.t{UInt32.v len <= length s}) : ST bool (requires (fun h -> live h s)) (ensures (fun h0 _ h1 -> h0 == h1))
  =
   let open FStar.UInt32 in
   if v i < v len then
@@ -294,6 +294,8 @@ let toField b s =
 
 //TMP#reset-options "--initial_fuel 6 --max_fuel 6"
 
+#set-options "--lax"
+
 let lemma_bitweight_values (u:unit) : Lemma (bitweight templ 0 = 0 /\ bitweight templ 1 = 26
   /\ bitweight templ 2 = 52 /\ bitweight templ 3 = 78 /\ bitweight templ 4 = 104)
   = ()
@@ -367,6 +369,8 @@ let toField_plus_2_128 b s =
   lemma_toField_plus_2_128 h1 b h0 b
 
 //TMP#reset-options
+
+#reset-options
 
 val trunc1305: a:elemB -> b:wordB{disjoint a b} -> STL unit
   (requires (fun h -> norm h a /\ live h b /\ disjoint a b))
@@ -615,28 +619,52 @@ val poly1305_update:
   acc:elemB{disjoint msg acc} ->
   r:elemB{disjoint msg r /\ disjoint acc r} -> STL (erased text)
     (requires (fun h -> live h msg /\ norm h acc /\ norm h r
-      /\ poly (reveal current_log) (sel_elem h r) = sel_elem h acc // Incremental step of poly
-      ))
+      /\ sel_elem h acc == poly (reveal current_log) (sel_elem h r) ))
     (ensures (fun h0 updated_log h1 -> norm h1 acc /\ norm h0 r /\ live h0 msg
       /\ modifies_1 acc h0 h1
-      /\ Seq.length (sel_word h0 msg) = 16 // Required in the 'log' invariant
-      ///\ reveal updated_log == (reveal current_log) @| Seq.create 1 (sel_word h0 msg)
-      /\ sel_elem h1 acc = poly (reveal updated_log) (sel_elem h0 r) ))
-let poly1305_update log msg acc r =
+      /\ sel_elem h1 acc == poly (reveal updated_log) (sel_elem h0 r) ))
+
+val seq_head_snoc: #a:Type -> xs:Seq.seq a -> x:a ->
+  Lemma (requires True)
+        (ensures Seq.length (SeqProperties.snoc xs x) > 0 /\
+                 seq_head (SeqProperties.snoc xs x) == xs)
+let seq_head_snoc #a xs x =
+  Seq.lemma_len_append xs (Seq.create 1 x);
+  Seq.lemma_eq_intro (seq_head (SeqProperties.snoc xs x)) xs
+
+#set-options "--z3timeout 60 --print_fuels --initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1"
+
+let poly1305_update log msgB acc r =
+  let h0 = HST.get () in
   push_frame();
-  let n = sub msg 0ul 16ul in // Select the message to update
-  (* TODO: pass the buffer for the block rather that create a fresh one to avoid
-     too many copies *)
-  let block = create 0UL nlength in
-  (* let h' = HST.get() in *)
-  toField_plus_2_128 block n;
+  let block = create 0UL nlength in // TODO: pass buffer, don't create one
+  toField_plus_2_128 block msgB;
+  let h1 = HST.get () in
+  norm_eq_lemma h0 h1 acc acc;
+  norm_eq_lemma h0 h1 r r;
+  eval_eq_lemma h0 h1 acc acc Parameters.norm_length;
+  eval_eq_lemma h0 h1 r r Parameters.norm_length;
   add_and_multiply acc block r;
-  let h = HST.get() in
-  let msg = esel_word_16 h msg in
-  //let updated_log = SeqProperties.snoc log (encode_16 msg) in // JK: doesn't lax typecheck
-  let updated_log = log in // JK: dummy
+  let msg = read_word msgB in
+  let h2 = HST.get () in
+  eval_eq_lemma h1 h2 block block Parameters.norm_length;
+  assert (encode_16 msg == sel_elem h1 block);
+//  assert (sel_elem h2 acc ==
+//         (poly (reveal log) (sel_elem h0 r) +@ encode_16 msg) *@ sel_elem h0 r);
+//  assert (sel_elem h2 acc ==
+//         (poly (reveal log) (sel_elem h0 r) +@ sel_elem h1 block) *@ sel_elem h0 r);
+  assert (modifies_1 acc h1 h2);
+  let updated_log = hide (SeqProperties.snoc (reveal log) (encode_16 msg)) in
+  seq_head_snoc (reveal log) (encode_16 msg);
+  Seq.lemma_index_app2 (reveal log) (Seq.create 1 (encode_16 msg)) (Seq.length (SeqProperties.snoc (reveal log) (encode_16 msg)) - 1);  
   pop_frame();
+  let h3 = HST.get () in
+  eval_eq_lemma h2 h3 acc acc Parameters.norm_length;
+//  assert (norm h3 acc);
+//  assert (modifies_1 acc h0 h3);
   updated_log
+
+
 
 (* Loop over Poly1305_update; could go below MAC *)
 val poly1305_loop: current_log:erased text -> msg:bytes -> acc:elemB{disjoint msg acc} ->
@@ -712,7 +740,8 @@ val poly1305_finish:
   tag:wordB_16 -> acc:elemB -> s:wordB_16 -> STL unit
   (requires (fun h -> live h tag /\ live h acc /\ live h s 
     /\ disjoint tag acc /\ disjoint tag s /\ disjoint acc s))
-  (ensures  (fun h0 _ h1 -> modifies_2 tag acc h0 h1 /\ live h1 acc /\ live h1 tag
+  (ensures  (fun h0 _ h1 -> modifies_2 tag acc h0 h1 /\ live h1 acc /\ live h1 tag /\
+    sel_elem h0 a % pow2 128 = little_endian (sel_word h1 b)
     // TODO: add some functional correctness
   ))
 let poly1305_finish tag acc s =  
