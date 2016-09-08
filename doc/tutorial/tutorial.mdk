@@ -4677,7 +4677,7 @@ let mk_counter_2 _ =
 ~
 -->
 
-# Cryptography examples
+# Cryptography examples for authentication
 
 Cryptographic reasoning is inherently modular reasoning. We want to show 
 that using some cryptographic primitive we can secure some application goal.
@@ -5069,8 +5069,9 @@ What about MAC schemes for texts of arbitrary lengths?
 Hint: have a look e.g. at the HMAC construction.
 ~
 
+# Cryptography examples for confidentiality
 
-#  Theoretical background on crypto verification in F\*
+##  Theoretical background on crypto verification in F\*
 Those unfamiliar with functional programming may appreciate the
 following [security centered look](https://arxiv.org/abs/1201.5728) at the differences between a functional
 and an imperative programming style.
@@ -5078,6 +5079,7 @@ and an imperative programming style.
 We use a [cryptographic verification by typing approach](http://research.microsoft.com/en-us/um/people/fournet/comp-f7/)
 adapted to make use of new F\* features. We follow their notation
 and recall them briefly.
+
 *a) F\* Types:* A program is a sequential composition of modules,
 written $A_1 \cdot A_2 \cdot \dots \cdot A_n$. A module $A$ depends on types, values,
 and functions from its environment and exports types,
@@ -5096,8 +5098,10 @@ well-typed programs are always safe.
 **Theorem 1 (Safety by Typing):** If $\emptyset \vdash A : t$, then $A$ is safe.
 
 In F* randomness originates from calls to effectful external functions
-and at the meta level we model these functions probabilistically.
-In this probabilistic interpretation,
+and at the meta level we model these functions probabilistically via a
+`sample` expression, which reduces
+to either true or false with probability 1/2. This expression
+models a perfect source of random bits. In this probabilistic interpretation,
 two expressions $A_0$ and $A_1$ are equivalent, written $A_0 \approx A_1$,
 when they return the same probability distribution of values.
 
@@ -5129,12 +5133,14 @@ in $A$ is $\epsilon$.
 Two closed boolean expressions $A_0$ and $A_1$ are $\epsilon$-equivalent when
 the statistical distance
 $\frac{1}{2} \sum_{M=true,false} |Pr[A_0 \Downarrow M]-Pr[A_1 \Downarrow M]|$
-is $\epsilon$.
+is $\epsilon$. If $A$ is not closed, then the value of $\epsilon$ may depend on the context in which 
+it is executed, in this case we model $\epsilon(\cdot)$ as a function that depends on the context 
+and call it an advantage function.
 
-*c) Keyed module:* Keyed modules export `gen` , `leak` , and `coerce`
+*c) Keyed module:* Keyed modules export `gen`, `leak`, and `coerce`
 functions and provide some cryptographic functionality modeled
 using idealization for honest keys and strong algorithms. To this
-end keys are associated with a unique index upon generation. Keyed
+end keys can be associated with a unique index upon generation. Keyed
 modules enforce that `gen` is called at most once per index. The index
 describes the context the key was created in and the algorithms it is
 to be used with.
@@ -5154,15 +5160,18 @@ let coerce r = r
 val length: plain -> Tot nat
 let length p = length p
 ```
-
-The type repr gives the representation of plaintext, whereas the
+We call $IP$ a secrecy interface for $P$.
+The representation of plaintexts is `bytes`, whereas the
 type plain is `abstract`, with functions `repr` and `coerce` converting between
 them. If `conf` is `true`, the function `repr` cannot be called, intuitively
 making the interface parametric in type `plain`, so that we can apply *Theorem 2*
 
 When `auth` is true, the function `coerce` cannot be called, guaranteeing authenticity.
+The module $P$ does not hide the length of `plain`.
+as modelled by the function `length` returning its length.
 
-**Definition 1 (Interface-based secrecy):** Let $IP$ be the interface
+
+**Definition 1 (Interface-based secrecy):** Let $IP$ be the secrecy interface
 of $P$ and $IC$ be the interface of module $C$. $C$ protects the secrecy
 of `plain` , if `conf=true`, $IP \vdash C \leadsto IC$ and for all modules $P$ with
 `conf=false`, $P \leadsto IP$ and `conf=true`, $P \leadsto IP$; and $A$ with $IP,IC \vdash A$ 
@@ -5171,7 +5180,17 @@ $P \cdot C \cdot A$
 
 The function $\epsilon(.,.)$ is called the advantage function of $P,A$.
 
-When `conf=true`, $C$ cannot access the representation of `plain` and thus 
+When `conf=true`, $C\cdot A$ is well typed with respect to interface "`conf=true`, $IP$" 
+which can be interpreted as
+the $I_\alpha$ interface of *Theorem 2*. Consequently for any module $P_0,P_1$ satisfying 
+this interface, we have 
+`conf=true`$\cdot P_0 \cdot C \cdot A \approx$ `conf=true`$\cdot P_1 \cdot C \cdot A$.
+
+Using *interface-based secrecy* twice we get that 
+`conf=false`$\cdot P_0 \cdot C \cdot A \approx_{\epsilon_0(A,P_0)+\epsilon_1(A,P_1)}$ `conf=false`$\cdot P_1 \cdot C \cdot A$.
+
+To achieve this strong property `conf=true`$\cdot C$ must not be able to access the 
+representation of `plain` and thus 
 needs to be idealized. For encryption modules this is typically done by encrypting a 
 value that is independent of the plaintext, such as a string of zeros. To make also the 
 decryption of such encryptions of zero indistinguishable from decryptions of the acutal 
@@ -5180,11 +5199,7 @@ plaintext, the idealization of $C$ decrypts using a table lookup.
 We will now make this theory more concrete by looking at Encrypt-then-MAC 
 based authenticated encryption. 
 
-The module $P$ does not hide the length of `plain`.
-as modelled by the function `length` returning its length.
-
-
-# Encrypt then MAC 
+## Encrypt then MAC 
 
 We define 5 modules.
 
@@ -5236,7 +5251,7 @@ that `AE`$\cdot A$ is a restricted `CPA` adversary.
 Let us now look in more detail at the `CPA` and `MAC` modules and how they model the security 
 of the underlying primitives. 
 
-## Chosen Plaintext Attack (CPA) secure encryption
+### Chosen Plaintext Attack (CPA) secure encryption
 
 Our concrete implementation of CPA secure encryption uses `AES_128_CBC`. 
 It first samples a random initialization vector `iv` and then calls, 
@@ -5301,6 +5316,31 @@ val decrypt: k:key -> c:cipher -> ST msg
     ( (b2t ind_cpa_rest_adv) ==> mem (res,c) (m_sel h0 k.log)
     )
   ))
+```
+
+### Using authentication to achieve stronger confidentiality
+
+For our encrypt then MAC scheme we establish the invariant that all `mac`ed messages correspond to 
+`encrypt`ed ciphertexts. This allows us to call `decrypt` after mac `verify` even for unrestricted 
+adversaries. The invariant is expressed over logs and at first sight looks quite daunting:
+
+```
+  let invariant (h:t) (k:key) =
+  let log = get_log h k in
+  let mac_log = get_mac_log h k in
+  let cpa_log = get_cpa_log h k in
+  Map.contains h k.region /\
+  Map.contains h (MAC.Key.region k.km) /\
+  Map.contains h (CPA.Key.region k.ke) /\
+  Seq.length log = Seq.length mac_log /\
+  Seq.length mac_log = Seq.length cpa_log /\
+  (forall (i:int). indexable log i ==>
+    (let m1,t = Seq.index mac_log i in
+     let m2,c = Seq.index cpa_log i in
+     m1 = c /\
+     Seq.index log i == (m2,(c,t))
+    )
+  )
 ```
 
 # A note on this document 
