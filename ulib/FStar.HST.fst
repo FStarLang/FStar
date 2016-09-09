@@ -105,7 +105,7 @@ assume val new_colored_region: r0:HH.rid -> c:int -> STLax HH.rid
 
 inline let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:ref a) (m1:mem) = 
     let region_i = Map.sel m0.h i in
-    not (Heap.contains region_i (HH.as_ref x.ref))
+    ~ (Heap.contains region_i (HH.as_ref x.ref))
   /\ i `is_in` m0.h
   /\ i = x.id
   /\ m1 == upd m0 x init

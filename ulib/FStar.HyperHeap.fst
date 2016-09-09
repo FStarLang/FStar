@@ -49,6 +49,9 @@ abstract let rref (id:rid) (a:Type) = Heap.ref a
 abstract val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
 let as_ref #a #id r = r
 
+abstract val addr_of: #a:Type -> #id:rid -> r:rref id a -> GTot nat
+let addr_of #a #id r = Heap.addr_of (as_ref r)
+
 abstract val ref_as_rref : i:rid -> r:ref 'a -> GTot (rref i 'a)
 let ref_as_rref i r = r
 

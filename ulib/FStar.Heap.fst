@@ -21,7 +21,7 @@ let consistent (h0:heap) (h1:heap) =
 (* References. *)
 (* address * initial value *)
 (* TODO: test that hasEq for ref is not exported *)
-abstract type ref (a:Type0) = {
+abstract noeq type ref (a:Type0) = {
   addr: nat;
   init: a
 }  
@@ -139,19 +139,19 @@ val in_dom_emp: #a:Type -> k:ref a
 		  [SMTPat (emp `contains` k)]
 let in_dom_emp #a k = ()
 
-val upd_contains: #a:Type -> h:heap -> r:ref a -> v:a
+val upd_contains: #a:Type -> #b:Type -> h:heap -> r:ref a -> v:a -> r':ref b
                   -> Lemma (requires True)
 		          (ensures ((upd h r v) `contains_a_well_typed`  r /\
-			            (forall (b:Type) (r':ref b).{:pattern ((upd h r v) `contains` r')} h `contains` r /\ h `contains` r' ==> (upd h r v) `contains` r')))
-		    [SMTPat ((upd h r v) `contains` r)]
-let upd_contains #a h r v = ()
+			            (h `contains` r' ==> (upd h r v) `contains` r')))
+		    [SMTPat ((upd h r v) `contains` r')]
+let upd_contains #a #b h r v r' = ()
 
-val upd_contains_a_well_typed: #a:Type -> h:heap -> r:ref a -> v:a
+val upd_contains_a_well_typed: #a:Type -> #b:Type -> h:heap -> r:ref a -> v:a -> r':ref b
                   -> Lemma (requires True)
-		          (ensures ((upd h r v) `contains_a_well_typed`  r /\
-			            (forall (b:Type) (r':ref b).{:pattern ((upd h r v) `contains_a_well_typed` r')} h `contains_a_well_typed` r /\ h `contains_a_well_typed` r' ==> (upd h r v) `contains_a_well_typed` r')))
-		    [SMTPat ((upd h r v) `contains_a_well_typed` r)]
-let upd_contains_a_well_typed #a h r v = ()
+		          (ensures ((upd h r v) `contains_a_well_typed` r /\
+			            ((h `contains_a_well_typed` r /\ h `contains_a_well_typed` r') ==> (upd h r v) `contains_a_well_typed` r')))
+		    [SMTPat ((upd h r v) `contains_a_well_typed` r')]
+let upd_contains_a_well_typed #a #b h r v r' = ()
 
 val addr_of_contains: #a:Type -> #b:Type -> h:heap -> r1:ref a -> r2:ref b
                       -> Lemma (requires (h `contains` r1 /\ ~ (h `contains` r2)))

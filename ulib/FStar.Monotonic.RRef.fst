@@ -12,7 +12,7 @@ let monotonic (a:Type) (b:reln a) =
 
 abstract type m_rref (r:rid) (a:Type) (b:reln a) = rref r a
 
-assume HasEq_m_rref: forall (r:rid) (a:Type) (b:reln a).{:pattern (hasEq (m_rref r a b))} hasEq (m_rref r a b)
+(* assume HasEq_m_rref: forall (r:rid) (a:Type) (b:reln a).{:pattern (hasEq (m_rref r a b))} hasEq (m_rref r a b) *)
 
 val as_rref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (rref r a)
 let as_rref #r #a #b x = x

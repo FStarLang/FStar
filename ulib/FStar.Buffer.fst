@@ -36,7 +36,7 @@ let content #a (b:buffer a) : GTot (reference (bounded_seq a)) = b.content
 
 (* Lifting from buffer to reference *)
 let as_ref #a (b:buffer a) : GTot (Heap.ref (bounded_seq a)) = as_ref (b.content)
-let as_aref #a (b:buffer a) : GTot Heap.aref = as_aref b.content
+let as_addr #a (b:buffer a) : GTot nat = as_addr b.content
 let frameOf #a (b:buffer a) : GTot HH.rid = frameOf (content b)
 
 (* Liveliness condition, necessary for any computation on the buffer *)
@@ -71,8 +71,8 @@ let includes #a (x:buffer a) (y:buffer a) : GTot Type0 =
 
 (* Disjointness between two buffers *)
 let disjoint #a #a' (x:buffer a) (y:buffer a') : GTot Type0 =
-  frameOf x <> frameOf y \/ as_aref x =!= as_aref y
-  \/ (as_aref x == as_aref y /\ frameOf x = frameOf y /\ (idx x + length x <= idx y \/ idx y + length y <= idx x))
+  frameOf x <> frameOf y \/ as_addr x <> as_addr y
+  \/ (as_addr x == as_addr y /\ frameOf x = frameOf y /\ (idx x + length x <= idx y \/ idx y + length y <= idx x))
 
 (* Disjointness is reflexive *)
 let lemma_disjoint_refl #a #a' (x:buffer a) (y:buffer a') : Lemma
@@ -112,31 +112,30 @@ let op_Bang_Bang = TSet.singleton
 let op_Plus_Plus = TSet.union
 
 (* Maps a set of buffer to the set of their references *)
-assume val arefs: TSet.set abuffer -> Tot (TSet.set Heap.aref)
+assume val arefs: TSet.set abuffer -> Tot (Set.set nat)
 
-assume Arefs_def: forall (x:Heap.aref) (s:TSet.set abuffer). {:pattern (TSet.mem x (arefs s))}
-  TSet.mem x (arefs s) <==> (exists (y:abuffer). TSet.mem y s /\ as_aref y.b == x)
+assume Arefs_def: forall (x:nat) (s:TSet.set abuffer). {:pattern (Set.mem x (arefs s))}
+  Set.mem x (arefs s) <==> (exists (y:abuffer). TSet.mem y s /\ as_addr y.b == x)
 
 val lemma_arefs_1: s:TSet.set abuffer -> Lemma
   (requires (s == TSet.empty #abuffer))
-  (ensures  (arefs s == TSet.empty #Heap.aref))
+  (ensures  (arefs s == Set.empty #nat))
   [SMTPat (arefs s)]
-let lemma_arefs_1 s =
-  TSet.lemma_equal_intro (arefs s) (TSet.empty)
+let lemma_arefs_1 s = Set.lemma_equal_intro (arefs s) (Set.empty)
 
 val lemma_arefs_2: s1:TSet.set abuffer -> s2:TSet.set abuffer -> Lemma
   (requires (True))
-  (ensures  (arefs (s1 ++ s2) == arefs s1 ++ arefs s2))
+  (ensures  (arefs (s1 ++ s2) == Set.union (arefs s1) (arefs s2)))
   [SMTPatOr [
     [SMTPat (arefs (s2 ++ s1))];
     [SMTPat (arefs (s1 ++ s2))]
   ]]
 let lemma_arefs_2 s1 s2 =
-  TSet.lemma_equal_intro (arefs (s1 ++ s2)) (arefs s1 ++ arefs s2)
+  Set.lemma_equal_intro (arefs (s1 ++ s2)) (Set.union (arefs s1) (arefs s2))
 
 val lemma_arefs_3: s1:TSet.set abuffer -> s2:TSet.set abuffer -> Lemma
   (requires (TSet.subset s1 s2))
-  (ensures  (TSet.subset (arefs s1) (arefs s2)))
+  (ensures  (Set.subset (arefs s1) (arefs s2)))
 let lemma_arefs_3 s1 s2 = ()
 
 (* General disjointness predicate between a buffer and a set of heterogeneous buffers *)
@@ -144,8 +143,8 @@ let disjoint_from_bufs #a (b:buffer a) (bufs:TSet.set abuffer) =
   (forall b'. TSet.mem b' bufs ==> disjoint b b'.b)
 
 (* General disjointness predicate between a buffer and a set of heterogeneous references *)
-let disjoint_from_refs #a (b:buffer a) (set:TSet.set Heap.aref) =
-  ~(TSet.mem (as_aref b) set)
+let disjoint_from_refs #a (b:buffer a) (set:Set.set nat) =
+  ~(Set.mem (as_addr b) set)
 
 (* Similar but specialized disjointness predicates *)
 let disjoint_1 a b = disjoint a b
@@ -154,11 +153,11 @@ let disjoint_3 a b b' b'' = disjoint a b /\ disjoint a b' /\ disjoint a b''
 let disjoint_4 a b b' b'' b''' = disjoint a b /\ disjoint a b' /\ disjoint a b'' /\ disjoint a b'''
 let disjoint_5 a b b' b'' b''' b'''' = disjoint a b /\ disjoint a b' /\ disjoint a b'' /\ disjoint a b''' /\ disjoint a b''''
 
-let disjoint_ref_1 a r = as_aref a =!= r
-let disjoint_ref_2 a r r' = as_aref a =!= r /\ as_aref a =!= r'
-let disjoint_ref_3 a r r' r'' = as_aref a =!= r /\ as_aref a =!= r' /\ as_aref a =!= r''
-let disjoint_ref_4 a r r' r'' r''' = as_aref a =!= r /\ as_aref a =!= r' /\ as_aref a =!= r'' /\ as_aref a =!= r'''
-let disjoint_ref_5 a r r' r'' r''' r'''' = as_aref a =!= r /\ as_aref a =!= r' /\ as_aref a =!= r'' /\ as_aref a =!= r''' /\ as_aref a =!= r''''
+let disjoint_ref_1 a r = as_addr a <> r
+let disjoint_ref_2 a r r' = as_addr a <> r /\ as_addr a <> r'
+let disjoint_ref_3 a r r' r'' = as_addr a <> r /\ as_addr a <> r' /\ as_addr a <> r''
+let disjoint_ref_4 a r r' r'' r''' = as_addr a <> r /\ as_addr a <> r' /\ as_addr a <> r'' /\ as_addr a <> r'''
+let disjoint_ref_5 a r r' r'' r''' r'''' = as_addr a <> r /\ as_addr a <> r' /\ as_addr a <> r'' /\ as_addr a <> r''' /\ as_addr a <> r''''
 
 val disjoint_only_lemma: #a:Type -> #a':Type -> b:buffer a -> b':buffer a' -> Lemma
   (requires (disjoint b b'))
@@ -166,9 +165,9 @@ val disjoint_only_lemma: #a:Type -> #a':Type -> b:buffer a -> b':buffer a' -> Le
 let disjoint_only_lemma #t #t' b b' = ()  
 
 (* Fully general modifies clause *)
-let modifies_bufs_and_refs (bufs:TSet.set abuffer) (refs:TSet.set Heap.aref) h h' : GTot Type0 =
+let modifies_bufs_and_refs (bufs:TSet.set abuffer) (refs:Set.set nat) h h' : GTot Type0 =
   (forall rid. Set.mem rid (Map.domain h.h) ==>
-    (HH.modifies_rref rid (arefs bufs ++ refs) h.h h'.h
+    (HH.modifies_rref rid (Set.union (arefs bufs) refs) h.h h'.h
     /\ (forall (#a:Type) (b:buffer a). (frameOf b = rid /\ live h b /\ disjoint_from_bufs b bufs
       /\ disjoint_from_refs b refs) ==> equal h b h' b)))
 
@@ -182,25 +181,35 @@ let modifies_none h h' =
 
 (* Specialized clauses for small numbers of buffers *)
 let modifies_buf_0 rid h h' =
-  modifies_ref rid !{} h h'
+  modifies_ref rid (Set.empty #nat) h h'
   /\ (forall (#tt:Type) (bb:buffer tt). (frameOf bb = rid /\ live h bb) ==> equal h bb h' bb)
 
+let to_set_1 (#a:eqtype) (x:a) = Set.singleton x
+
+let to_set_2 (#a:eqtype) (x1:a) (x2:a) = Set.union (Set.singleton x1)(Set.singleton x2)
+
+let to_set_3 (#a:eqtype) (x1:a) (x2:a) (x3:a) =
+  Set.union (Set.singleton x1) (Set.union (Set.singleton x1) (Set.singleton x2))
+
+let to_set_4 (#a:eqtype) (x1:a) (x2:a) (x3:a) (x4:a) =
+  Set.union (Set.singleton x1) (Set.union (Set.singleton x2) (Set.union (Set.singleton x3) (Set.singleton x4)))
+
 let modifies_buf_1 (#t:Type) rid (b:buffer t) h h' =
-  modifies_ref rid !{as_ref b} h h'
+  modifies_ref rid (to_set_1 (as_addr b)) h h'
   /\ (forall (#tt:Type) (bb:buffer tt). (frameOf bb = rid /\ live h bb /\ disjoint b bb) ==> equal h bb h' bb)
 
 let modifies_buf_2 (#t:Type) (#t':Type) rid (b:buffer t) (b':buffer t') h h' =
-  modifies_ref rid !{as_ref b, as_ref b'} h h'
+  modifies_ref rid (to_set_2 (as_addr b) (as_addr b')) h h'
   /\ (forall (#tt:Type) (bb:buffer tt). (frameOf bb = rid /\ live h bb /\ disjoint b bb /\ disjoint b' bb)
        ==> equal h bb h' bb)
 
 let modifies_buf_3 (#t:Type) (#t':Type) (#t'':Type) rid (b:buffer t) (b':buffer t') (b'':buffer t'') h h' =
-  modifies_ref rid !{as_ref b, as_ref b', as_ref b''} h h'
+  modifies_ref rid (to_set_3 (as_addr b) (as_addr b') (as_addr b'')) h h'
   /\ (forall (#tt:Type) (bb:buffer tt). (frameOf bb = rid /\ live h bb /\ disjoint b bb /\ disjoint b' bb /\ disjoint b'' bb)
        ==> equal h bb h' bb)
 
 let modifies_buf_4 (#t:Type) (#t':Type) (#t'':Type) (#t''':Type) rid (b:buffer t) (b':buffer t') (b'':buffer t'') (b''':buffer t''') h h' =
-  modifies_ref rid !{as_ref b, as_ref b', as_ref b'', as_ref b'''} h h'
+  modifies_ref rid (to_set_4 (as_addr b) (as_addr b') (as_addr b'') (as_addr b''')) h h'
   /\ (forall (#tt:Type) (bb:buffer tt). (frameOf bb = rid /\ live h bb /\ disjoint b bb /\ disjoint b' bb /\ disjoint b'' bb /\ disjoint b''' bb)
        ==> equal h bb h' bb)
 
@@ -645,7 +654,7 @@ let rcreate #a (r:HH.rid) (init:a) (len:UInt32.t) : ST (buffer a)
        /\ Map.domain h1.h == Map.domain h0.h
        /\ h1.tip = h0.tip
        /\ modifies (Set.singleton r) h0 h1
-       /\ modifies_ref r TSet.empty h0 h1
+       /\ modifies_ref r Set.empty h0 h1
        /\ as_seq h1 b == Seq.create (v len) init
        ))
   = let h = HST.get() in

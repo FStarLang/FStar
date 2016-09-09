@@ -169,8 +169,7 @@ let lemma_upd_1 #a (h:mem) (x:reference a) (v:a) : Lemma
   (requires (contains h x))
   (ensures (contains h x
 	    /\ modifies_one (frameOf x) h (upd h x v)
-	    /\ HH.modifies_rref (frameOf x) (Set.singleton (as_addr x)) h.h (upd h x v).h
-	    /\ True // modifies_ref (frameOf x) (Set.singleton (as_addr x)) h (upd h x v)
+	    /\ modifies_ref (frameOf x) (Set.singleton (as_addr x)) h (upd h x v)
 	    /\ sel (upd h x v) x == v ))
   [SMTPat (upd h x v); SMTPatT (contains h x)]
   = ()
@@ -180,7 +179,7 @@ let lemma_upd_2 #a (h:mem) (x:reference a) (v:a) : Lemma
   (ensures (~(contains h x)
 	    /\ frameOf x = h.tip
 	    /\ modifies_one h.tip h (upd h x v)
-	    /\ modifies_ref h.tip TSet.empty h (upd h x v)
+	    /\ modifies_ref h.tip Set.empty h (upd h x v)
 	    /\ sel (upd h x v) x == v ))
   [SMTPat (upd h x v); SMTPatT (~(contains h x))]
   = ()

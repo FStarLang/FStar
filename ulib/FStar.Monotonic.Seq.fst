@@ -119,7 +119,7 @@ let write_at_end (#a:eqtype) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
        (ensures (fun h0 _ h1 ->
 	               m_contains r h1
 		     /\ modifies_one i h0 h1
-		     /\ modifies_rref i !{as_ref (as_rref r)} h0 h1
+		     /\ modifies_rref i (Set.singleton (addr_of (as_rref r))) h0 h1
 		     /\ m_sel h1 r == SeqP.snoc (m_sel h0 r) x
 		     /\ witnessed (at_least (Seq.length (m_sel h0 r)) x r)))
   =
@@ -191,7 +191,7 @@ let i_write_at_end (#rgn:rid) (#a:eqtype) (#p:seq a -> Type) (r:i_seq rgn a p) (
        (ensures (fun h0 _ h1 ->
 	               i_contains r h1
 		     /\ modifies_one rgn h0 h1
-		     /\ modifies_rref rgn !{as_ref (as_rref r)} h0 h1
+		     /\ modifies_rref rgn (Set.singleton (addr_of (as_rref r))) h0 h1
 		     /\ i_sel h1 r == SeqP.snoc (i_sel h0 r) x
 		     /\ witnessed (i_at_least (Seq.length (i_sel h0 r)) x r)))
   =
@@ -470,7 +470,7 @@ let new_counter (#l:rid) (#a:Type) (#max:nat)
 	   init <= Seq.length (m_sel h log)))
        (ensures (fun h0 c h1 ->
 		   modifies_one i h0 h1 /\
-		   modifies_rref i TSet.empty h0 h1 /\
+		   modifies_rref i Set.empty h0 h1 /\
 		   m_fresh c h0 h1 /\
 		   m_sel h1 c = init /\
 		   Map.contains h1 i))
@@ -489,7 +489,7 @@ let increment_counter (#l:rid) (#a:Type) (#max:nat)
 	  n + 1 <= max))
        (ensures (fun h0 _ h1 ->
 	  modifies_one i h0 h1 /\
-	  modifies_rref i !{as_ref (as_rref c)} h0 h1 /\
+	  modifies_rref i (Set.singleton (addr_of (as_rref c))) h0 h1 /\
 	  m_sel h1 c = m_sel h0 c + 1))
   = m_recall c; m_recall log;
     let n = m_read c + 1 in
