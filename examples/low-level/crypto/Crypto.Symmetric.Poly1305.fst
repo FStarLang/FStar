@@ -102,7 +102,10 @@ let sel_int (h:mem) (b:elemB{live h b}) : GTot nat
 (* *        Polynomial computation step           *)
 (* * ******************************************** *)
 
-let rec print_bytes (s:bytes) (i:UInt32.t{UInt32.v i < length s}) (len:UInt32.t{UInt32.v len <= length s}) : ST bool (requires (fun _ -> True)) (ensures (fun h0 _ h1 -> h0 == h1))
+let rec print_bytes (s:bytes) (i:UInt32.t{UInt32.v i <= length s})
+		    (len:UInt32.t{UInt32.v len <= length s}) : Stack bool
+  (requires (fun h -> live h s))
+  (ensures (fun h0 _ h1 -> h0 == h1))
  =
   let open FStar.UInt32 in
   if v i < v len then
@@ -120,6 +123,23 @@ let rec print_elem (e:elemB) (i:UInt32.t{UInt32.v i <= length e}) (len:UInt32.t{
   else
     IO.debug_print_string "\n"
 
+val bound27_isSum: h0:mem -> h1:mem -> a:bigint -> b:bigint
+  -> Lemma
+    (requires (norm h0 a /\ norm h0 b /\ isSum h0 h1 0 0 norm_length 0 a b))
+    (ensures  (bound27 h1 a))
+let bound27_isSum h0 h1 a b =
+  // The (i+0) is there on purpuose to trigger the pattern in isSum
+  cut (forall (i:nat). {:pattern (v (get h1 a i))} i < norm_length ==> v (get h1 a (i+0)) < pow2 26 + pow2 26);
+  pow2_double_sum 26
+
+#reset-options "--initial_fuel 3 --max_fuel 3"
+
+val pow2_5: unit -> Lemma (pow2 5 = 32)
+let pow2_5 _ = ()
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
+
+
 (**
     Runs "Acc = ((Acc+block)*r) % p." on the accumulator, the well formatted block of the message
     and the clamped part of the key
@@ -132,21 +152,6 @@ val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block} -> r:elemB{di
     /\ sel_elem h1 acc = (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r // Functional
     						// specification of the operation at that step
     ))
-
-val bound27_isSum: h0:mem -> h1:mem -> a:bigint -> b:bigint
-  -> Lemma
-    (requires (norm h0 a /\ norm h0 b /\ isSum h0 h1 0 0 norm_length 0 a b))
-    (ensures  (bound27 h1 a))
-let bound27_isSum h0 h1 a b =
-  // The (i+0) is there on purpuose to trigger the pattern in isSum
-  cut (forall (i:nat). {:pattern (v (get h1 a i))} i < norm_length ==> v (get h1 a (i+0)) < pow2 26 + pow2 26);
-  pow2_double_sum 26
-
-#set-options "--initial_fuel 3 --max_fuel 3"
-val pow2_5: unit -> Lemma (pow2 5 = 32)
-let pow2_5 _ = ()
-#reset-options
-
 let add_and_multiply acc block r =
   let hinit = HST.get() in
   push_frame();
@@ -176,6 +181,7 @@ let add_and_multiply acc block r =
   cut (norm h4 tmp);
   assert(modifies_2_1 acc h0 h4);
   blit tmp 0ul acc 0ul nlength; // acc2 = tmp = (acc0 + block) * r % p
+  let h5 = HST.get() in
   pop_frame();
   let hfin = HST.get() in
   assert(modifies_1 acc hinit hfin);
@@ -184,7 +190,7 @@ let add_and_multiply acc block r =
   assume (sel_elem hfin acc = (sel_elem hinit acc +@ sel_elem hinit block) *@ sel_elem hinit r)
 
 
-//#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 (**
    Sets an element to the value '0'
@@ -206,6 +212,8 @@ let zeroB a =
 (* *            Encoding functions               *)
 (* * *********************************************)
 
+#reset-options "--initial_fuel 0 --max_fuel 0"
+
 private let mk_mask (nbits:FStar.UInt32.t{FStar.UInt32.v nbits < 64}) :
   Tot (z:U64.t{v z = pow2 (FStar.UInt32.v nbits) - 1})
   = Math.Lib.pow2_increases_lemma 64 (FStar.UInt32.v nbits);
@@ -221,6 +229,8 @@ val toField: a:elemB -> b:wordB_16{disjoint a b} -> STL unit
     sel_int h1 a = little_endian (sel_word h0 b) /\ // functional correctness
     v (get h1 a 4) < pow2 24 // necessary for adding 2^128 with no overflow
     ))
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 let toField b s =
   //DEBUG: let _ = print_bytes s 0ul 16ul in
@@ -314,13 +324,13 @@ let toField b s =
 (*   (\* assume (norm h b) *\) *)
 
 
-//TMP#reset-options "--initial_fuel 6 --max_fuel 6"
+#reset-options "--initial_fuel 6 --max_fuel 6"
 
 let lemma_bitweight_values (u:unit) : Lemma (bitweight templ 0 = 0 /\ bitweight templ 1 = 26
   /\ bitweight templ 2 = 52 /\ bitweight templ 3 = 78 /\ bitweight templ 4 = 104)
   = ()
 
-//TMP#reset-options "--initial_fuel 1 --max_fuel 1"
+#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 20"
 
 val lemma_toField_plus_2_128_0: ha:mem -> a:elemB{live ha a} -> Lemma
   (requires (True))
@@ -341,7 +351,7 @@ val lemma_toField_plus_2_128_1: unit -> Lemma
 let lemma_toField_plus_2_128_1 () =
   Math.Lib.pow2_increases_lemma 64 24
 
-//TMP#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 val lemma_toField_plus_2_128: ha:mem -> a:elemB -> hb:mem -> b:elemB -> Lemma
   (requires (norm ha a /\ norm hb b /\ v (get hb b 4) < pow2 24
@@ -367,7 +377,7 @@ let add_2_24 (x:t{v x < pow2 24}) : Tot (z:t{v z = v x + pow2 24 /\ v z < pow2 2
     Math.Lib.pow2_increases_lemma 64 25;
     x +^ (1uL <<^ 24ul)
 
-//TMP#reset-options "--z3timeout 50"
+#reset-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
 
 (* Formats a wordB into an elemB *)
 val toField_plus_2_128: a:elemB -> b:wordB{length b = 16 /\ disjoint a b} -> STL unit
@@ -388,7 +398,7 @@ let toField_plus_2_128 b s =
   lemma_upd_quantifiers h0 h1 b 4ul b4';
   lemma_toField_plus_2_128 h1 b h0 b
 
-//TMP#reset-options
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val trunc1305: a:elemB -> b:wordB{disjoint a b} -> STL unit
   (requires (fun h -> norm h a /\ live h b /\ disjoint a b))
@@ -446,7 +456,7 @@ let trunc1305 b s =
   upd s 15ul s15;
   ()
 
-(* Clamps the key, see RFC 
+(* Clamps the key, see RFC
    we clear 22 bits out of 128 (where does it help?)
 *)
 val clamp: r:wordB{length r = 16} -> STL unit
@@ -469,14 +479,14 @@ let clamp r =
 (* *          Encoding-related lemmas            *)
 (* * *********************************************)
 
-//TMP#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_eucl_div_bound: a:nat -> b:nat -> q:pos -> Lemma
   (requires (a < q))
   (ensures  (a + q * b < q * (b+1)))
 let lemma_eucl_div_bound a b q = ()
 
-//TMP#reset-options "--initial_fuel 1 --max_fuel 1"
+#reset-options "--initial_fuel 1 --max_fuel 1"
 
 val lemma_bitweight_templ_values: n:nat -> Lemma
   (requires (True))
@@ -485,14 +495,14 @@ let rec lemma_bitweight_templ_values n =
   if n = 0 then ()
   else lemma_bitweight_templ_values (n-1)
 
-//TMP#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_mult_ineq: a:pos -> b:pos -> c:pos -> Lemma
   (requires (b <= c))
   (ensures  (a * b <= a * c))
 let lemma_mult_ineq a b c = ()
 
-//TMP#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 50"
+#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 50"
 
 val lemma_eval_norm_is_bounded: ha:mem -> a:elemB -> len:nat{len <= norm_length} -> Lemma
   (requires (norm ha a))
@@ -514,7 +524,7 @@ let rec lemma_eval_norm_is_bounded ha a len =
     assert(eval ha a len < pow2 (26 * (len-1)) * pow2 26);
     Math.Lib.pow2_exp_lemma (26 * (len-1)) 26)
 
-//#reset-options "--initial_fuel 1 --max_fuel 1"
+#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 20"
 
 val lemma_elemB_equality: ha:mem -> hb:mem -> a:elemB -> b:elemB -> len:pos{len<=norm_length} -> Lemma
   (requires (live ha a /\ live hb b
@@ -527,7 +537,7 @@ let lemma_elemB_equality ha hb a b len =
   Seq.lemma_eq_intro (Seq.slice (as_seq hb b) 0 len)
 		     ((Seq.slice (as_seq hb b) 0 (len-1)) @| Seq.create 1 (get hb b (len-1)))
 
-//TMP#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 20"
+#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 100"
 
 val lemma_toField_is_injective_0: ha:mem -> hb:mem -> a:elemB -> b:elemB -> len:nat{len <= norm_length} -> Lemma
   (requires (norm ha a /\ norm hb b /\ eval ha a len = eval hb b len))
@@ -555,7 +565,7 @@ let rec lemma_toField_is_injective_0 ha hb a b len =
     lemma_toField_is_injective_0 ha hb a b (len-1);
     lemma_elemB_equality ha hb a b len)
 
-//TMP#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_toField_is_injective: ha:mem -> hb:mem -> a:elemB -> b:elemB ->
   Lemma (requires (norm ha a /\ norm hb b /\ sel_int ha a = sel_int hb b
@@ -569,16 +579,16 @@ let lemma_toField_is_injective ha hb a b =
   Seq.lemma_eq_intro (Seq.slice (as_seq hb b) 0 norm_length) (as_seq hb b)
 
 
-//TMP#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 (* Initialization function:
    - clamps the first half of the key
    - stores the well-formatted first half of the key in 'r' *)
 
-// we now separate initialization of the accumulator, 
-// as in principle several accumulations are allowed. 
+// we now separate initialization of the accumulator,
+// as in principle several accumulations are allowed.
 
-val poly1305_init: 
+val poly1305_init:
   r:elemB  -> //out: first half of the key, ready for polynomial evaluation
   s:wordB_16 {disjoint r s}-> //out: second half of the key, ready for masking
   key:bytes{length key >= 32 /\ disjoint r key /\ disjoint s key} -> //in: raw key
@@ -592,7 +602,7 @@ let poly1305_init r s key =
   (* Format the keys *)
   (* Make a copy of the first half of the key to clamp it *)
   let r_16 = create 0uy 16ul in
-  blit key 0ul r_16 0ul 16ul; 
+  blit key 0ul r_16 0ul 16ul;
   blit key 16ul s 0ul 16ul;
   (* Clamp r *)
   clamp r_16;
@@ -606,18 +616,18 @@ let poly1305_init r s key =
   assume (equal_domains hinit hfin);
   ()
 
-val poly1305_start: 
+val poly1305_start:
   acc:elemB -> // Accumulator
   STL unit
   (requires (fun h -> live h acc))
-  (ensures  (fun h0 _ h1 -> modifies_1 acc h0 h1 
-    /\ norm h1 acc 
+  (ensures  (fun h0 _ h1 -> modifies_1 acc h0 h1
+    /\ norm h1 acc
     /\ sel_elem h1 acc = 0 ))
 
 let poly1305_start a = zeroB a
 
 
-//#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--lax"
 
 (* WIP *)
 
@@ -625,7 +635,7 @@ let poly1305_start a = zeroB a
    Update function:
    - takes a ghost log
    - takes a message block, appends '1' to it and formats it to bigint format
-   - runs acc = ((acc*block)+r) % p 
+   - runs acc = ((acc*block)+r) % p
    *)
 
 //CF note the log now consists of eleme
@@ -678,7 +688,7 @@ let rec poly1305_loop log msg acc r ctr =
   end
 
 (**
-   Performs the last step if there is an incomplete block 
+   Performs the last step if there is an incomplete block
    NB: Not relevant for AEAD-ChachaPoly which only uses complete blocks of 16 bytes, hence
        only the 'update' and 'loop' functions are necessary there
    *)
@@ -730,14 +740,14 @@ let add_word a b =
 
 
 (* Finish function, with final accumulator value *)
-val poly1305_finish: 
+val poly1305_finish:
   tag:wordB_16 -> acc:elemB -> s:wordB_16 -> STL unit
-  (requires (fun h -> live h tag /\ live h acc /\ live h s 
+  (requires (fun h -> live h tag /\ live h acc /\ live h s
     /\ disjoint tag acc /\ disjoint tag s /\ disjoint acc s))
   (ensures  (fun h0 _ h1 -> modifies_2 tag acc h0 h1 /\ live h1 acc /\ live h1 tag
     // TODO: add some functional correctness
   ))
-let poly1305_finish tag acc s =  
+let poly1305_finish tag acc s =
   trunc1305 acc tag;
   add_word tag s
 
@@ -755,15 +765,15 @@ let poly1305_mac tag msg len key =
   let tmp = create 0UL 10ul in
   let acc = sub tmp 0ul 5ul in
   let r   = sub tmp 5ul 5ul in
-  let s   = create 0uy 16ul in 
+  let s   = create 0uy 16ul in
   (* Initializes the accumulator and the keys values *)
   let () = poly1305_init r s key in
   let _ = poly1305_start acc in // zeroes acc redundantly
   (* Compute the number of 'plain' blocks *)
   let ctr = U32.div len 16ul in
-  let rest = U32.rem len 16ul in 
+  let rest = U32.rem len 16ul in
   (* Run the poly1305_update function ctr times *)
-  let l = hide Seq.createEmpty in 
+  let l = hide Seq.createEmpty in
   let l = poly1305_loop l msg acc r ctr in
   (* Run the poly1305_update function one more time on the incomplete block *)
   let last_block = sub msg (FStar.UInt32 (ctr *^ 16ul)) rest in
