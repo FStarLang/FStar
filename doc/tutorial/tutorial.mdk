@@ -663,7 +663,7 @@ We can assert and automatically check a more general property about `max`. For e
 Let's take a look at the factorial function:
 
     let rec factorial n = 
-      if n = 0 then 1 else Prims.op_Multiply n factorial (n - 1)
+      if n = 0 then 1 else Prims.op_Multiply n (factorial (n - 1))
 
 As we said earlier, without further annotation, F\* infers `:int -> int`
 as the type of this function, which is a shorthand for
