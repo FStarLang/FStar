@@ -166,3 +166,8 @@ mc
 ivsize
 CoreCrypto
 ke
+hmac
+sha
+uf
+cma
+ciphertext
