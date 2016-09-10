@@ -35,7 +35,7 @@ and decl =
   | DFunction of typ * lident * list<binder> * expr
   | DTypeAlias of lident * typ
   | DGlobal of lident * typ * expr
-  | DTypeFlat of lident * list<(ident * typ)>
+  | DTypeFlat of lident * list<(ident * (typ * bool))>
 
 and expr =
   | EBound of var
@@ -120,7 +120,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 11
+let current_version: version = 12
 
 type file = string * program
 type binary_format = version * list<file>
@@ -352,7 +352,7 @@ and translate_decl env d: option<decl> =
   | MLM_Ty [ (name, [], Some (MLTD_Record fields)) ] ->
       let name = env.module_name, name in
       Some (DTypeFlat (name, List.map (fun (f, t) ->
-        f, translate_type env t) fields))
+        f, (translate_type env t, false)) fields))
 
   | MLM_Ty ((name, _, _) :: _) ->
       Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
