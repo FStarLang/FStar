@@ -5488,8 +5488,8 @@ let auth = false
 The type checker fails to prove that plaintexts are `not conf`: 
 ```
 .\EtM.CPA.fst(70,85-70,86): Subtyping check failed; 
-expected type (p#25:EtM.Plain.plain{(Prims.b2t (Prims.op_Negation EtM.Ideal.conf))}); 
-got type EtM.CPA.msg
+expected type (p#25:EtM.Plain.plain{Prims.op_Negation EtM.Ideal.conf}); 
+got type EtM.Plain.plain
 ```
 
 This is needed to call the `repr` function in the `encrypt` function:
