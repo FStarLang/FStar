@@ -5471,14 +5471,46 @@ $\qed$
 ~
 
 ~Exercise
-Set the correct flags to verify the precondition for applying the idealization of CPA encryption:
-~~ ExerciseFragment {exname=Ex13a}
-[INCLUDE=code/solutions/Ex13a.fst]
-~~
+Explain the behaviour of the type checker when you try to prove that `AE` is 
+confidential (`conf=true`), without the MAC being `uf_cma` secure.
+
+Set the flags explicitly to see what happens:
+
+```
+let ind_cpa = true
+let uf_cma = false
+let ind_cpa_rest_adv = uf_cma
+let conf = true
+let auth = false
+```
+
 ~~ Answer
-~~~ SolutionFragment {exname=EtM.Ideal.fst}
-[INCLUDE=code/solutions/EtM.Ideal.fst]
-~~~
+The type checker fails to prove that plaintexts are `not conf`: 
+```
+.\EtM.CPA.fst(70,85-70,86): Subtyping check failed; 
+expected type (p#25:EtM.Plain.plain{(Prims.b2t (Prims.op_Negation EtM.Ideal.conf))}); 
+got type EtM.CPA.msg
+```
+
+This is needed to call the `repr` function in the `encrypt` function:
+
+```
+let text = if ind_cpa && ind_cpa_rest_adv then createBytes (length m) 0z else repr m 
+```
+
+This is because we cannot encrypt `0z`s when we do not have a restricted 
+CPA adversary (`ind_cpa_rest_adv=false`). 
+
+If we set `ind_cpa_rest_adv=true` even though `uf_cma=false` we get a type error
+
+```
+.\EtM.AE.fst(139,11-139,31): failed to prove a pre-condition
+Error: 1 errors were reported (see above)
+```
+
+This results from failing to prove the pre-condition of `CPA.decrypt` in `AE.decrypt`.
+
+
 ~~
 ~
 
