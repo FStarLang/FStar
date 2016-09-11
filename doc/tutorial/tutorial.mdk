@@ -5406,7 +5406,7 @@ Crucially all messages in the MAC log correspond to ciphertexts that resulted fr
 This allows us to prove that `uf_cma=true` $\cdot$ `MAC` $\cdot$ `AE`$\cdot A$ is a restricted `CPA` adversary.
 We can thus set `ind_cpa_rest_adv=uf_cma`.
 
-#### The computational security proof
+### The computational security proof
 
 We want to prove that:
 For all 𝐴 such that well typed with respect to an unrestricted Plain and AE interfec, that is `conf=false, auth=false`, $IP$, $IC \vdash A$,
@@ -5468,6 +5468,18 @@ Finally, `CPA`⋅`MAC`⋅`AE`⋅$A$ does not make use of `Plain.repr` and we can
 
 ~ Align-Right
 $\qed$
+~
+
+~Exercise
+Set the correct flags to verify the precondition for applying the idealization of CPA encryption:
+~~ ExerciseFragment {exname=Ex13a}
+[INCLUDE=code/solutions/Ex13a.fst]
+~~
+~~ Answer
+~~~ SolutionFragment {exname=EtM.Ideal.fst}
+[INCLUDE=code/solutions/EtM.Ideal.fst]
+~~~
+~~
 ~
 
 # A note on this document 
