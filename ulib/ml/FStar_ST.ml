@@ -7,7 +7,7 @@ type 'a ref = {
 let read x =
   x.contents
 
-let op_Colon_Equals i x y =
+let op_Colon_Equals x y =
   x.contents <- y
 
 let uid = ref 0

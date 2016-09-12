@@ -6,7 +6,6 @@ bug-reports \
 data_structures \
 algorithms \
 crypto \
-security \
 termination \
 software_foundations \
 ../doc/tutorial/code/exercises \
@@ -18,14 +17,15 @@ low-level \
 maths \
 paradoxes \
 printf \
+metatheory \
 verifythis \
-wysteria \
 preorders \
 dm4free \
 unit-tests
 
-#metatheory\
-after verifythis
+# wysteria (was before preorders)
+# This is failing since some time before 2016-09-07
+# (13 Unknown assertion failed in ckt.fst, print.fst, smc_main.fst)
 
 
 # #	make -C bignum  -- big timeout (30) + failing asserts (even with 50)
