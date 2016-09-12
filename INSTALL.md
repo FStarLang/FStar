@@ -46,7 +46,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 1. Add `fstar.exe` and `z3` to your `PATH`, either permanently
    or temporarily, for instance by running this:
 
-        $ export PATH=/path/to/fstar/bin:$PATH
+        $ export PATH=/path/to/z3/bin:/path/to/fstar/bin:$PATH
         $ fstar.exe --version
         F* 0.9.1.1
         platform=Linux_x86_64
