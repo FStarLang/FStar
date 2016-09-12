@@ -206,8 +206,8 @@ let i_write_at_end (#rgn:rid) (#a:eqtype) (#p:seq a -> Type) (r:i_seq rgn a p) (
 ////////////////////////////////////////////////////////////////////////////////
 //Testing invariant sequences
 ////////////////////////////////////////////////////////////////////////////////
-let invariant (s:seq nat) = 
-  forall (i:nat) (j:nat). i < Seq.length s /\ j < Seq.length s /\ i<>j 
+let invariant (s:seq nat) =
+  forall (i:nat) (j:nat). i < Seq.length s /\ j < Seq.length s /\ i<>j
 		 ==> Seq.index s i <> Seq.index s j
   
 val test0: r:rid -> a:m_rref r (seq nat) grows -> k:nat -> ST unit
@@ -226,9 +226,9 @@ let itest r a k =
   i_at_least_is_stable k (Seq.index (i_sel h0 a) k) a;
   MR.witness a (i_at_least k (Seq.index (i_sel h0 a) k) a)
 
-let test_alloc (#a:Type) (p:seq a -> Type) (r:FStar.HyperHeap.rid) (init:seq a{p init}) = 
+let test_alloc (#a:Type) (p:seq a -> Type) (r:FStar.HyperHeap.rid) (init:seq a{p init}) =
   let is = alloc_mref_iseq p r init in
-  let h = get () in 
+  let h = get () in
   assert (i_sel h is == init)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -514,7 +514,7 @@ let test (i:rid) (l:rid) (a:Type0) (log:log_t l a) //(p:(nat -> Type))
 
 (* TODO: this fails with a silly inconsistent qualifier error *)
 (* logic val mem_index: #a:Type -> #i:rid -> n:nat -> x:a -> r:m_rref i (seq a) grows -> t -> GTot Type0 *)
-(* logic let mem_index #a #i n x r h =  *)
+(* logic let mem_index #a #i n x r h = *)
 (*       mem x r h *)
 (*       /\ Seq.length (m_sel h r) > n *)
 (*       /\ Seq.index (m_sel h r) n = x *)

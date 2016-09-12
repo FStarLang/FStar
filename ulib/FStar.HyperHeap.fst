@@ -49,7 +49,8 @@ abstract let rref (id:rid) (a:Type) = Heap.ref a
 abstract val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
 let as_ref #a #id r = r
 
-abstract val addr_of: #a:Type -> #id:rid -> r:rref id a -> GTot nat
+(* AR: does it need to be abstract ? We need to know that it is same as Heap.addr_of *)
+val addr_of: #a:Type -> #id:rid -> r:rref id a -> GTot nat
 let addr_of #a #id r = Heap.addr_of (as_ref r)
 
 abstract val ref_as_rref : i:rid -> r:ref 'a -> GTot (rref i 'a)
