@@ -90,7 +90,7 @@ let     op_as_vlid env arity rng s =
   let fallback () =
       match s with
         | "=" ->    r Const.op_Eq
-        | ":=" ->   r Const.op_ColonEq
+        | ":=" ->   r Const.write_lid
         | "<" ->    r Const.op_LT
         | "<=" ->   r Const.op_LTE
         | ">" ->    r Const.op_GT
