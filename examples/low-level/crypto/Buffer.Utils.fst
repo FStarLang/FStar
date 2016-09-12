@@ -48,10 +48,10 @@ let rec xor_bytes_inplace output in1 len =
       xor_bytes_inplace output in1 i
     end
 
-val lemma_euclidian_division: r:nat -> b:nat -> q:pos -> Lemma
+val lemma_euclidean_division: r:nat -> b:nat -> q:pos -> Lemma
   (requires (r < q))
   (ensures  (r + q * b < q * (b+1)))
-let lemma_euclidian_division r b q = ()
+let lemma_euclidean_division r b q = ()
 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
@@ -61,11 +61,11 @@ let lemma_uint32_of_bytes (a:t) (b:t) (c:t) (d:t) : Lemma
     /\ v a + pow2 8 * v b + pow2 16 * v c < pow2 24
     /\ v a + pow2 8 * v b + pow2 16 * v c + pow2 24 * v d < pow2 32))
   = Math.Lib.pow2_exp_lemma 8 8;
-    lemma_euclidian_division (v a) (v b) (pow2 8);
+    lemma_euclidean_division (v a) (v b) (pow2 8);
     Math.Lib.pow2_exp_lemma 8 16;
-    lemma_euclidian_division (v a + pow2 8 * v b) (v c) (pow2 16);
+    lemma_euclidean_division (v a + pow2 8 * v b) (v c) (pow2 16);
     Math.Lib.pow2_exp_lemma 8 24;
-    lemma_euclidian_division (v a + pow2 8 * v b + pow2 16 * v c) (v d) (pow2 24)
+    lemma_euclidean_division (v a + pow2 8 * v b + pow2 16 * v c) (v d) (pow2 24)
 
 #reset-options
 

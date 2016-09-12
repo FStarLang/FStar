@@ -36,6 +36,9 @@ let byte_templ = fun x -> 8
 type bigint = b:buffer u64{length b >= norm_length}
 type bytes = buffer u8
 
+let sel_bytes (h:heap) (b:bytes{live h b}) : GTot (Seq.seq UInt8.t) =
+  as_seq h b
+
 (* Normalized big integer type *)
 let norm (h:heap) (b:bigint) : GTot Type0 =
   live h b /\ length b >= norm_length 

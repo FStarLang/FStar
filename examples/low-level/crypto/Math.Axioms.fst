@@ -3,7 +3,7 @@ module Math.Axioms
 open FStar.Mul
 
 (** Necessary axioms **)
-(* Axiom: euclidian division on nats yield a smaller output than its input *)
+(* Axiom: euclidean division on nats yield a smaller output than its input *)
 assume val slash_decr_axiom: a:nat -> b:pos -> Lemma (a / b <= a)
 (* Axiom: definition of the "b divides c" relation *)
 assume val slash_star_axiom: a:int -> b:pos -> c:nat -> Lemma (requires (a * b = c)) (ensures (a = c / b))
@@ -15,17 +15,13 @@ assume val neg_of_non_multiple_is_non_multiple: a:int -> b:pos -> Lemma
     (requires (a % b <> 0))
     (ensures ((-a) % b <> 0))
 
-(** Usefull lemmas for future proofs **)
-val modulo_lemma_0: a:nat -> b:pos -> Lemma (requires (a < b)) (ensures (a % b = a))
-let modulo_lemma_0 a b = ()
-
-(* Lemma: definition of the euclidian division for nats *)
-val euclidian_div_axiom:
+(* Lemma: definition of the euclidean division for nats *)
+val euclidean_div_axiom:
   a:nat -> b:pos ->
   Lemma
     (requires (True))
     (ensures ( a - b * (a / b) >= 0 /\ a - b * (a / b) < b ))
-let euclidian_div_axiom a b = ()
+let euclidean_div_axiom a b = ()
 
 (* Lemma: multiplication is right distributive over addition *)
 val distributivity_add_left:

@@ -302,7 +302,7 @@ let rec small_step pp ppq p pq q n ctr b scalar =
     let bit = nth_bit b ctr in 
     cut (nTimesQ (formula_1 n bit) (pointOf h0 q) h1 pp ppq); 
     (* lemma_10 scalar ctr b; *)
-    // Replaces a missing definition of the euclidian division 
+    // Replaces a missing definition of the euclidean division 
     admitP (True /\ 2*reveal n+U8.v bit = reveal scalar * (pow2 (w ctr+1)) + (U8.v b / pow2 (8 - (w ctr+1))));    
     cut (w ctr+1 <= 8 /\ True); 
     assert (onCurve h1 pp /\ onCurve h1 ppq /\ live h1 p /\ live h1 pq); 
@@ -422,7 +422,7 @@ let rec big_step n pp ppq p pq q ctr =
     assume(bytes_length-1-w ctr>=0 /\ bytes_length-w ctr-1>=0);
     let byte = index n (blength-|1ul-|ctr) in 
     let m = formula_4 h0 n (w ctr) in
-    // Replaces missing euclidian definitions in F*
+    // Replaces missing euclidean definitions in F*
     admitP(reveal m = reveal m * pow2 0 + (U8.v byte / pow2 (8-0)) /\ True); 
     small_step pp ppq p pq q m 0ul byte m; 
     let h1 = HST.get() in 

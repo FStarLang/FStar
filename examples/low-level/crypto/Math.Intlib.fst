@@ -58,7 +58,7 @@ val min:
 let min x y =
   if x >= y then y else x
 
-(* Function : standard euclidian division, the rest is always positive *)
+(* Function : standard euclidean division, the rest is always positive *)
 val div:
   a:int -> b:pos -> Tot (c:int{ (a < 0 ==> c < 0) /\ (a >= 0 ==> c >= 0)})
 let div a b =
@@ -157,7 +157,7 @@ val abs_mul_lemma:
     (ensures ( abs ( a * b ) = abs a * abs b ))
 let abs_mul_lemma a b = ()
 
-(* Lemma : Non-euclidian division has a smaller output compared to its input *)
+(* Lemma : Non-euclidean division has a smaller output compared to its input *)
 val div_non_eucl_decr_lemma:
   a:int -> b:pos ->
   Lemma
@@ -166,7 +166,7 @@ val div_non_eucl_decr_lemma:
 let div_non_eucl_decr_lemma a b =
   (slash_decr_axiom (abs a) b)
 
-(* Lemma : dividing by a bigger value leads to 0 if non euclidian division *)
+(* Lemma : dividing by a bigger value leads to 0 if non euclidean division *)
 val div_non_eucl_bigger_denom_lemma:
   a:int -> b:pos ->
   Lemma
@@ -183,14 +183,14 @@ val signed_modulo_property:
     (ensures ( abs (signed_modulo v p ) < p ))
 let signed_modulo_property v p = ()
 
-(* Lemma : loss of precision in euclidian division *)
+(* Lemma : loss of precision in euclidean division *)
 val multiply_fractions_lemma:
   a:nat -> n:pos ->
   Lemma
     (requires (True))
     (ensures ( n * ( a / n ) <= a ))
 let multiply_fractions_lemma a n =
-  (euclidian_div_axiom a n)
+  (euclidean_div_axiom a n)
 
 (* Lemma : multiplying by a strictly positive value preserves strict inequalities *)
 val mul_pos_strict_incr_lemma: a:pos -> b:int -> c:pos -> Lemma (requires (b < c)) (ensures (a * b < a * c /\ b * a < c * a ))
