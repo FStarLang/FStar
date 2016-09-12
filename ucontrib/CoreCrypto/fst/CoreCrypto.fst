@@ -9,7 +9,6 @@ effect EXT (a:Type0) = ST a
 type hash_alg = | MD5 | SHA1 | SHA224 | SHA256 | SHA384 | SHA512
 type sig_alg = | RSASIG | DSA | ECDSA | RSAPSS
 type block_cipher = | AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
-type aead_cipher = | AES_128_GCM | AES_256_GCM
 type stream_cipher = | RC4_128
 type rsa_padding = | Pad_none | Pad_PKCS1
 
@@ -18,17 +17,6 @@ let blockSize = function
   | AES_128_CBC  -> 16
   | AES_256_CBC  -> 16
 
-let aeadKeySize = function
-  | AES_128_GCM -> 16
-  | AES_256_GCM -> 32
-
-let aeadRealIVSize = function
-  | AES_128_GCM -> 12
-  | AES_256_GCM -> 12
-
-let aeadTagSize = function
-  | AES_128_GCM -> 16
-  | AES_256_GCM -> 16
 
 let hashSize = function
   | MD5    -> 16
@@ -37,6 +25,51 @@ let hashSize = function
   | SHA256 -> 32
   | SHA384 -> 48
   | SHA512 -> 64
+
+
+
+(* Authenticated Encryption for TLS.  
+   Note that their AAD contents depends on the protocol version. *)
+
+type aead_cipher = 
+  | AES_128_GCM   
+  | AES_256_GCM
+  | CHACHA20_POLY1305 
+  | AES_128_CCM   // "Counter with CBC-Message Authentication Code"
+  | AES_256_CCM   
+  | AES_128_CCM_8 // variant with truncated 8-byte tags 
+  | AES_256_CCM_8
+
+// the key materials consist of an encryption key, a static IV, and an authentication key.
+
+let aeadKeySize = function
+  | AES_128_CCM       -> 16 + 16
+  | AES_128_CCM_8     -> 16 + 16
+  | AES_128_GCM       -> 16 + 16
+  | AES_256_CCM       -> 32
+  | AES_256_CCM_8     -> 32
+  | AES_256_GCM       -> 32
+  | CHACHA20_POLY1305 -> 32
+
+let aeadRealIVSize (a:aead_cipher) = 12
+
+// the ciphertext ends with an authentication tag
+let aeadTagSize = function
+  | AES_128_CCM_8     ->  8
+  | AES_256_CCM_8     ->  8
+  | AES_128_CCM       -> 16
+  | AES_256_CCM       -> 16
+  | AES_128_GCM       -> 16
+  | AES_256_GCM       -> 16
+  | CHACHA20_POLY1305 -> 16
+
+assume val aead_encrypt : (a:aead_cipher) -> (k:bytes)
+  -> (iv:bytes) -> (ad:bytes) -> (p:bytes) -> EXT (lbytes (length p + aeadTagSize a))
+assume val aead_decrypt : (a:aead_cipher) -> (k:bytes) 
+  -> (iv:bytes) -> (ad:bytes) -> (c:bytes{length c >= aeadTagSize a}) 
+  -> EXT (option (lbytes (length c - aeadTagSize a)))
+
+
 
 type rsa_key = {
   rsa_mod : bytes;
@@ -82,11 +115,6 @@ assume val digest_final : hash_ctx -> bytes
 
 assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> Tot bytes
 assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> Tot bytes
-assume val aead_encrypt : (a:aead_cipher) -> (k:bytes)
-  -> (iv:bytes) -> (ad:bytes) -> (p:bytes) -> EXT (lbytes (length p + aeadTagSize a))
-assume val aead_decrypt : (a:aead_cipher) -> (k:bytes) 
-  -> (iv:bytes) -> (ad:bytes) -> (c:bytes{length c >= aeadTagSize a}) 
-  -> EXT (option (lbytes (length c - aeadTagSize a)))
 
 assume new type cipher_stream : Type0
 assume val stream_encryptor : stream_cipher -> bytes -> EXT cipher_stream

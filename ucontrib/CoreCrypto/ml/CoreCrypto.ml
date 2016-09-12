@@ -21,10 +21,18 @@ let (@|) = Platform.Bytes.(@|)
 type hash_alg = MD5 | SHA1 | SHA224 | SHA256 | SHA384 | SHA512
 type sig_alg = RSASIG | DSA | ECDSA | RSAPSS
 type block_cipher = AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
-type aead_cipher = AES_128_GCM | AES_256_GCM
 type stream_cipher = RC4_128
 type rsa_padding = Pad_none | Pad_PKCS1
 
+type aead_cipher = 
+  | AES_128_GCM   
+  | AES_256_GCM
+  | CHACHA20_POLY1305 
+  | AES_128_CCM
+  | AES_256_CCM   
+  | AES_128_CCM_8
+  | AES_256_CCM_8
+                                
 let string_of_hash_alg = function
   | MD5 -> "MD5"
   | SHA1 -> "SHA1"
@@ -43,17 +51,26 @@ let blockSize = function
   | AES_128_CBC  -> 16
   | AES_256_CBC  -> 16
 
+                      
 let aeadKeySize = function
-  | AES_128_GCM -> 16
-  | AES_256_GCM -> 32
+  | AES_128_CCM       -> 16 + 16
+  | AES_128_CCM_8     -> 16 + 16
+  | AES_128_GCM       -> 16 + 16
+  | AES_256_CCM       -> 32
+  | AES_256_CCM_8     -> 32
+  | AES_256_GCM       -> 32
+  | CHACHA20_POLY1305 -> 32
 
-let aeadRealIVSize = function
-  | AES_128_GCM -> 12
-  | AES_256_GCM -> 12
+let aeadRealIVSize (a:aead_cipher) = 12
 
 let aeadTagSize = function
-  | AES_128_GCM -> 16
-  | AES_256_GCM -> 16
+  | AES_128_CCM_8     ->  8
+  | AES_256_CCM_8     ->  8
+  | AES_128_CCM       -> 16
+  | AES_256_CCM       -> 16
+  | AES_128_GCM       -> 16
+  | AES_256_GCM       -> 16
+  | CHACHA20_POLY1305 -> 16
 
 let hashSize = function
   | MD5    -> 16
@@ -63,6 +80,7 @@ let hashSize = function
   | SHA384 -> 48
   | SHA512 -> 64
 
+                
 type md
 type md_ctx
 external ocaml_EVP_MD_md5 : unit -> md = "ocaml_EVP_MD_md5"
@@ -166,10 +184,9 @@ let cipher_of_stream_cipher (c:stream_cipher) = match c with
   | RC4_128 -> ocaml_EVP_CIPHER_rc4()
 
 let cipher_of_aead_cipher (c:aead_cipher) = match c with
-  | AES_128_GCM ->
-      ocaml_EVP_CIPHER_aes_128_gcm()
-  | AES_256_GCM ->
-      ocaml_EVP_CIPHER_aes_256_gcm()
+  | AES_128_GCM -> ocaml_EVP_CIPHER_aes_128_gcm()
+  | AES_256_GCM -> ocaml_EVP_CIPHER_aes_256_gcm()
+  | _ -> failwith "not linked to openSSL yet" 
 
 let block_encrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
   assert (Platform.Bytes.length iv = blockSize c);
