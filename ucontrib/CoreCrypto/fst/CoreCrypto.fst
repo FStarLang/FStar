@@ -63,12 +63,31 @@ let aeadTagSize = function
   | AES_256_GCM       -> 16
   | CHACHA20_POLY1305 -> 16
 
-assume val aead_encrypt : (a:aead_cipher) -> (k:bytes)
-  -> (iv:bytes) -> (ad:bytes) -> (p:bytes) -> EXT (lbytes (length p + aeadTagSize a))
-assume val aead_decrypt : (a:aead_cipher) -> (k:bytes) 
-  -> (iv:bytes) -> (ad:bytes) -> (c:bytes{length c >= aeadTagSize a}) 
-  -> EXT (option (lbytes (length c - aeadTagSize a)))
-
+//16-09-12 added precise concrete spec, matching what we implement in low-level/crypto
+//16-09-12 for robustness, we should at least test t when using external crypto.
+assume val aead_encryptT: 
+  a: aead_cipher -> 
+  k: lbytes (aeadKeySize a) -> 
+  iv:lbytes (aeadRealIVSize a) -> 
+  ad:bytes -> 
+  plain:bytes -> 
+  GTot (lbytes (length p + aeadTagSize a))
+  
+assume val aead_encrypt: 
+  a: aead_cipher -> 
+  k: lbytes (aeadKeySize a) -> 
+  iv:lbytes (aeadRealIVSize a) -> 
+  ad:bytes -> 
+  plain:bytes -> 
+  EXT (c:bytes {c = aead_encryptT a k iv ad plain})
+  
+assume val aead_decrypt:
+  a: aead_cipher -> 
+  k: lbytes (aeadKeySize a) -> 
+  iv:lbytes (aeadRealIVSize a) -> 
+  ad:bytes -> 
+  cipher:bytes{length c >= aeadTagSize a} -> 
+  EXT (o:option bytes {forall (plain:bytes). cipher = aead_encryptT a k iv ad p ==> o = Some plain })
 
 
 type rsa_key = {
