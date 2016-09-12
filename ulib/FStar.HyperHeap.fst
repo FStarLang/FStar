@@ -24,7 +24,7 @@ abstract let color (x:rid): GTot int =
   | [] -> 0
   | (c, _)::_ -> c
 
-let t = Map.t rid heap
+type t = Map.t rid heap
 
 let has_eq_rid (u:unit) : 
   Lemma (requires True)

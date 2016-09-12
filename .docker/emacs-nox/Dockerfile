@@ -1,4 +1,4 @@
-FROM fstar-base
+FROM fstarlang/fstar
 
 MAINTAINER Daniel Fabian <daniel.fabian@integral-it.ch>; Benjamin Beurdouche <benjamin.beurdouche@inria.fr>
 

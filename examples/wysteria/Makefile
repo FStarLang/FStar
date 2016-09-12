@@ -88,7 +88,7 @@ codegen:
 
 # codegen:
 # 	$(FSTAR)       \
-#                  --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --odir $(OUTPUT_DIR) --use_native_int --__temp_no_proj PSemantics --__temp_no_proj SecServer\
+#                  --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --odir $(OUTPUT_DIR) --__temp_no_proj PSemantics --__temp_no_proj SecServer\
 #                  FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Ghost.fst FStar.Squash.fsti\
 #                  FStar.List.Tot.fst FStar.List.fst FStar.ListProperties.fst ordset.fsti FStar.OrdSet.fst ordmap.fsti FStar.OrdMap.fst FStar.IO.fsti string.fsti\
 #                  prins.fst ast.fst ffibridge.fsti sem.fst psem.fst rtheory.fst $(CONTRIB)/Platform/fst/Platform.Bytes.fst runtime.fsti print.fst ckt.fst $(CONTRIB)/CoreCrypto/fst/CoreCrypto.fst ../crypto/SHA1.fst crypto.fst interpreter.fst sec_server.fst examples/ffi.fst prog.fsti main.fst 

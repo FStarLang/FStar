@@ -166,7 +166,7 @@ let rec extract_one_pat = (fun disj imp g p -> (match (p.FStar_Absyn_Syntax.v) w
 | FStar_Absyn_Syntax.Pat_disj (_76_171) -> begin
 (FStar_All.failwith "Impossible")
 end
-| FStar_Absyn_Syntax.Pat_constant (FStar_Const.Const_int (c, None)) when (not ((FStar_Options.use_native_int ()))) -> begin
+| FStar_Absyn_Syntax.Pat_constant (FStar_Const.Const_int (c, None)) -> begin
 (
 
 let i = FStar_Const.Const_int (((c), (None)))

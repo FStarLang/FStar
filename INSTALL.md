@@ -5,6 +5,7 @@
     * [Testing a binary package](#testing-a-binary-package)
     * [OPAM package](#opam-package)
     * [Homebrew formula for Mac OS X](#homebrew-formula-for-mac-os-x)
+    * [Running F* from a docker image](#running-f-from-a-docker-image)
   * [Building F* from sources](#building-f-from-sources)
     * [Step 1. Building F* from sources using the F# compiler](#step-1-building-f-from-sources-using-the-f-compiler)
       * [On Windows 7/8/10](#on-windows-7810)
@@ -45,7 +46,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 1. Add `fstar.exe` and `z3` to your `PATH`, either permanently
    or temporarily, for instance by running this:
 
-        $ export PATH=/path/to/fstar/bin:$PATH
+        $ export PATH=/path/to/z3/bin:/path/to/fstar/bin:$PATH
         $ fstar.exe --version
         F* 0.9.1.1
         platform=Linux_x86_64
@@ -68,7 +69,7 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ make -C examples/hello fs
 
 5. You can try verifying all the examples, but keep in mind that
-   things might fail because of timeouts if your machine is not
+   things might fail because of Z3 timeouts if your machine is not
    sufficiently powerful.
 
         $ make -C examples
@@ -81,9 +82,9 @@ Z3) using the opam package:
 
         $ opam install fstar
         
-Right now, the opam package is version 0.9.2 which is almost a year old... Please consider getting the latest development version of F*! Here's the opam magic:
+Right now, the opam package is version 0.9.3-beta1. You can easily get the latest development version of F* with some opam magic:
 
-        $ opam install zarith stdint yojson && opam pin add fstar --dev-repo
+        $ opam pin add fstar --dev-repo
 
 ### Homebrew formula for Mac OS X ###
 
@@ -96,6 +97,18 @@ For building and installing the latest F\* sources from GitHub (the `master` bra
 instead of the latest release you can do:
 
         $ brew install --HEAD fstar
+        
+### Running F* from a docker image ###
+
+An alternative to installing binaries is to install a docker image. 
+We currently provide the following two on docker hub: `fstarlang/fstar-emacs` 
+with emacs support and `fstarlang/fstar` for purists. 
+The image is automatically kept up to date through a cloud build. 
+
+You only have to install docker and an X server for your platform and you are good to go. 
+See [Running F* from a docker image] (https://github.com/FStarLang/FStar/wiki/Running-F%2A-from-a-docker-image) for the details on how to use docker. 
+
+
 
 ## Building F* from sources ##
 
@@ -118,8 +131,8 @@ three steps:
 **Note:** If you build F* from sources you will also need to get a Z3
 binary. This is further explained towards the end of this document.
 
-**Easier alternative:**  If you don't care about efficiency and about the .NET
-dependency you can stop already after step 1.
+**Easier alternative:**  If you don't care about efficiency, about the .NET
+dependency and bugs ([#672](https://github.com/FStarLang/FStar/issues/672)) you can stop already after step 1.
 
 **Easier alternative:**  If you don't want to use F#/.NET/Mono at all you can
 also build F\* directly from the generated OCaml sources.  Therefore, for
@@ -280,6 +293,8 @@ Once you have a working OCaml setup (see above)
 just run the following command:
 
         $ make -C src/ocaml-output -j 15
+
+The option `-j 15` controls the number of cores to be used in parallel build. This is a relatively standard unix feature.
 
 **Note:** On Windows this generates a native F* binary, that is, a binary that
 does *not* depend on `cygwin1.dll`, since the installer above uses a

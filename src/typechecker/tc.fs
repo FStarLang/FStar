@@ -1655,6 +1655,8 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
 
 and tc_binder env (x, imp) =
     let tu, u = U.type_u () in
+    if Env.debug env Options.Extreme
+    then Util.print3 "Checking binders %s:%s at type %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string tu);
     let t, _, g = tc_check_tot_or_gtot_term env x.sort tu in //ghost effect ok in the types of binders
     let x = {x with sort=t}, imp in
     if Env.debug env Options.High
@@ -2658,11 +2660,8 @@ and tc_inductive env ses quals lids =
             ) datas in
 
 
-            //folding function for t_datas
-            //in the accumulator:
-              //env is the updated env
-              //term is the soundness condition for this data constructor
-            let haseq_data acc data =
+            //soundness condition for this data constructor
+            let haseq_data data =
                 let dt = datacon_typ data in
                 //apply the universes substitution to dt
                 let dt = SS.subst usubst dt in
@@ -2685,14 +2684,14 @@ and tc_inductive env ses quals lids =
                                 sort_range
                                 haseq_b in
                             U.mk_conj t haseq_b) U.t_true dbs in
-                    
-                        let env, cond' = acc in
-                        Env.push_binders env dbs, U.mk_conj cond' cond
-                    | _                -> acc
+
+            	        //fold right over dbs and add a forall for each binder in dbs
+                        List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None dr) dbs cond
+                    | _                -> U.t_true
             in
 
             //fold over t_datas
-            let env, cond = List.fold_left haseq_data (env, U.t_true) t_datas in
+            let cond = List.fold_left (fun acc d -> U.mk_conj acc (haseq_data d)) U.t_true t_datas in
 
             //return new accumulator
             let axiom_lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))]) in
@@ -3127,7 +3126,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
       if is_abstract quals
       then List.fold_right (fun se (out, hidden) -> match se with
             | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) ->
-              let dec = Sig_declare_typ(l, us, mk (Tm_arrow(bs, S.mk_Total t)) None r, Assumption::New::quals, r) in
+              let dec = Sig_declare_typ(l, us, U.arrow bs (S.mk_Total t), Assumption::New::quals, r) in
               dec::out, hidden
             | Sig_datacon(l, us, t, _, _, _, _, r) -> //logically, each constructor just becomes an uninterpreted function
               let dec = Sig_declare_typ(l, us, t, [Assumption], r) in

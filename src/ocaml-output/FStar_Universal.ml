@@ -351,7 +351,11 @@ end
 | Some (iname) -> begin
 (
 
-let _91_219 = (FStar_Util.print1 "Interleaving iface+module: %s\n" iname)
+let _91_219 = if (FStar_Options.debug_any ()) then begin
+(FStar_Util.print1 "Interleaving iface+module: %s\n" iname)
+end else begin
+()
+end
 in (
 
 let caption = (Prims.strcat "interface: " iname)

@@ -37,7 +37,7 @@ let rec strSort x = match x with
   | Bool_sort  -> "Bool"
   | Int_sort  -> "Int"
   | Term_sort -> "Term"
-  | String_sort -> "String"
+  | String_sort -> "FString"
   | Ref_sort -> "Ref"
   | Fuel_sort -> "Fuel"
   | Array(s1, s2) -> format2 "(Array %s %s)" (strSort s1) (strSort s2)
@@ -462,8 +462,8 @@ and mkPrelude z3options =
                 "(declare-sort Ref)\n\
                 (declare-fun Ref_constr_id (Ref) Int)\n\
                 \n\
-                (declare-sort String)\n\
-                (declare-fun String_constr_id (String) Int)\n\
+                (declare-sort FString)\n\
+                (declare-fun FString_constr_id (FString) Int)\n\
                 \n\
                 (declare-sort Term)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
@@ -505,7 +505,7 @@ and mkPrelude z3options =
                 (define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n\
                          (Precedes t1 t2))\n\
                 (declare-fun Range_const () Term)\n" in
-   let constrs : constructors = [("String_const", ["String_const_proj_0", Int_sort], String_sort, 0, true);
+   let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort], String_sort, 0, true);
                                  ("Tm_type",  [], Term_sort, 2, true);
                                  ("Tm_arrow", [("Tm_arrow_id", Int_sort)],  Term_sort, 3, false);
                                  ("Tm_uvar",  [("Tm_uvar_fst", Int_sort)],  Term_sort, 5, true);
@@ -579,7 +579,7 @@ let mk_Rank x         = mkApp("Rank", [x])
 let mk_tester n t     = mkApp("is-"^n,   [t])
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t'])
 let mk_ApplyTT t t'   = mkApp("ApplyTT", [t;t'])
-let mk_String_const i = mkApp("String_const", [ mkInteger' i])
+let mk_String_const i = mkApp("FString_const", [ mkInteger' i])
 let mk_Precedes x1 x2 = mkApp("Precedes", [x1;x2]) |> mk_Valid
 let mk_LexCons x1 x2  = mkApp("LexCons", [x1;x2])
 let rec n_fuel n =

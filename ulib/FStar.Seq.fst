@@ -53,6 +53,7 @@ let lemma_of_list #a s l i =
 private val exFalso0 : a:Type -> n:nat{n<0} -> Tot a
 let exFalso0 a n = ()
 
+(* CH: Seq.empty or emptySeq would be a better name for this? *)
 abstract val createEmpty: #a:Type -> Tot (s:(seq a){length s=0})
 let createEmpty #a = MkSeq 0 (fun i -> (exFalso0 a i))
 

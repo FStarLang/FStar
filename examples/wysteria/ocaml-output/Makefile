@@ -2,7 +2,7 @@ FSTAR_HOME=../../..
 
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml)
 
-OCAMLC=ocamlfind ocamlopt -package batteries -linkpkg -g -thread
+OCAMLC=ocamlfind ocamlopt -package batteries,zarith -linkpkg -g -thread
 
 a.out:
 	$(MAKE) -C $(FSTAR_HOME)/lib/ml

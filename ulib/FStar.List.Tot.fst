@@ -72,6 +72,7 @@ let rec flatten l = match l with
     | [] -> []
     | hd::tl -> append hd (flatten tl)
 
+(* CH: this is just useless, remove? *)
 val iter: ('a -> Tot unit) -> list 'a -> Tot unit
 let rec iter f x = match x with
   | [] -> ()

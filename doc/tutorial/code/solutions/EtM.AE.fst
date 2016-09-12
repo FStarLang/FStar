@@ -45,7 +45,7 @@ let invariant (h:t) (k:key) =
     (let m1,t = Seq.index mac_log i in
      let m2,c = Seq.index cpa_log i in
      m1 = c /\
-     Seq.index log i = (m2,(c,t))
+     Seq.index log i == (m2,(c,t))
     )
   )
 

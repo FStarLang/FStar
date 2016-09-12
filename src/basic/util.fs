@@ -257,6 +257,7 @@ let int_of_int32 (i:int32) = i
 let int32_of_int (i:int) = int32 i
 
 let string_of_int   i = string_of_int i
+let string_of_bool b = if b then "true" else "false"
 let string_of_int64  (i:int64) = i.ToString()
 let string_of_int32 i = string_of_int i
 let string_of_float i = string_of_float i

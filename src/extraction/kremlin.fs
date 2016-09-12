@@ -35,17 +35,16 @@ and decl =
   | DFunction of typ * lident * list<binder> * expr
   | DTypeAlias of lident * typ
   | DGlobal of lident * typ * expr
-  | DTypeFlat of lident * list<(ident * typ)>
+  | DTypeFlat of lident * list<(ident * (typ * bool))>
 
 and expr =
   | EBound of var
-  | EOpen of binder
   | EQualified of lident
   | EConstant of constant
   | EUnit
   | EApp of expr * list<expr>
   | ELet of binder * expr * expr
-  | EIfThenElse of expr * expr * expr * typ
+  | EIfThenElse of expr * expr * expr
   | ESequence of list<expr>
   | EAssign of expr * expr
   | (** left expression can only be a EBound of EOpen *)
@@ -54,7 +53,7 @@ and expr =
   | EBufWrite of expr * expr * expr
   | EBufSub of expr * expr
   | EBufBlit of expr * expr * expr * expr * expr
-  | EMatch of expr * branches * typ
+  | EMatch of expr * branches
   | EOp of op * width
   | ECast of expr * typ
   | EPushFrame
@@ -94,19 +93,13 @@ and width =
 and constant = width * string
 
 (* a De Bruijn index *)
-and var = int 
+and var = int
 
 and binder = {
   name: ident;
   typ: typ;
   mut: bool;
-  mark: ref<int>;
-  meta: option<meta>;
-  atom: ref<unit>;
 }
-
-and meta =
-  | MetaSequence
 
 (* for pretty-printing *)
 and ident = string
@@ -127,7 +120,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 10
+let current_version: version = 12
 
 type file = string * program
 type binary_format = version * list<file>
@@ -359,7 +352,7 @@ and translate_decl env d: option<decl> =
   | MLM_Ty [ (name, [], Some (MLTD_Record fields)) ] ->
       let name = env.module_name, name in
       Some (DTypeFlat (name, List.map (fun (f, t) ->
-        f, translate_type env t) fields))
+        f, (translate_type env t, false)) fields))
 
   | MLM_Ty ((name, _, _) :: _) ->
       Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
@@ -418,7 +411,7 @@ and translate_binders env args =
   List.map (translate_binder env) args
 
 and translate_binder env ((name, _), typ) =
-  { name = name; typ = translate_type env typ; mut = false; mark = ref 0; meta = None; atom = ref () }
+  { name = name; typ = translate_type env typ; mut = false }
 
 and translate_expr env e: expr =
   match e.expr with
@@ -451,8 +444,10 @@ and translate_expr env e: expr =
       let typ, body =
         if flavor = Mutable then
           (match typ with
-          | MLTY_Named ([ t ], p) when (string_of_mlpath p = "FStar.HST.salloc") -> t
-          | _ -> failwith "unexpected: bad desugaring of Mutable"),
+          | MLTY_Named ([ t ], p) when string_of_mlpath p = "FStar.HyperStack.stackref" -> t
+          | _ -> failwith (Util.format1
+            "unexpected: bad desugaring of Mutable (typ is %s)"
+            (ML.Code.string_of_mlty ([], "") typ))),
           (match body with
           | { expr = MLE_App (_, [ body ]) } -> body
           | _ -> failwith "unexpected: bad desugaring of Mutable")
@@ -460,7 +455,7 @@ and translate_expr env e: expr =
           typ, body
       in
       let is_mut = flavor = Mutable in
-      let binder = { name = name; typ = translate_type env typ; mut = is_mut; mark = ref 0; meta = None; atom = ref () } in
+      let binder = { name = name; typ = translate_type env typ; mut = is_mut } in
       let body = translate_expr env body in
       let env = extend env name is_mut in
       let continuation = translate_expr env continuation in
@@ -468,7 +463,7 @@ and translate_expr env e: expr =
 
   | MLE_Match (expr, branches) ->
       let t_scrut = expr.mlty in
-      EMatch (translate_expr env expr, translate_branches env t_scrut branches, translate_type env e.mlty)
+      EMatch (translate_expr env expr, translate_branches env t_scrut branches)
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Kremlin constructs
@@ -607,7 +602,7 @@ and translate_pat env t p =
       env, PBool b
   | MLP_Var (name, _) ->
       let env = extend env name false in
-      env, PVar ({ name = name; typ = translate_type env t; mut = false; mark = ref 0; meta = None; atom = ref () })
+      env, PVar ({ name = name; typ = translate_type env t; mut = false })
   | MLP_Wild ->
       failwith "todo: translate_pat [MLP_Wild]"
   | MLP_Const _ ->
