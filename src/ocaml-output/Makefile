@@ -161,8 +161,10 @@ package: all
 	$(INSTALL_EXEC) -m 755 fstar.exe $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
 	$(call fexport,lib)
+	$(call fexport,ulib)
 	$(call fexport,examples)
 	$(call fexport,contrib)
+	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial
@@ -171,15 +173,19 @@ else
 	@echo " ********** WARNING: You don't have Madoko installed. Binary package will not include tutorial in html form."
 endif
         # Documentation and licenses
-	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt ../../setenv.sh $(PREFIX)
+	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
         # Copy Z3 binary
 	@cp ../../bin/*z3* $(PREFIX)/bin &> /dev/null || cp `which z3` $(PREFIX)/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$FSTAR_HOME/bin or in your \\$PATH, skipped from package ************** "
         # JP: actually this only makes sense for the F# build of F*. Why are we
         # copying these files while this directory builds an OCaml-compiled,
         # Windows-native version of F*?
+        # CH: Nik added these, and if I remember right it might be related to bootstrapping?
 	make -C ../VS install-packages
 	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin
+        # Some new things used by examples/Makefile
+	mkdir -p $(PREFIX)/src/gmake/
+	cp ../../src/gmake/fstar.mk ../../src/gmake/nubuild.mk $(PREFIX)/src/gmake/
 ifeq ($(OS),Windows_NT)
 	cp ../../bin/msvc*dll $(PREFIX)
 	zip -r -9 $(NAME).zip fstar

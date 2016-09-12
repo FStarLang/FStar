@@ -423,8 +423,8 @@ and mkPrelude z3options =
                 "(declare-sort Ref)\n\
                 (declare-fun Ref_constr_id (Ref) Int)\n\
                 \n\
-                (declare-sort String)\n\
-                (declare-fun String_constr_id (String) Int)\n\
+                (declare-sort FString)\n\
+                (declare-fun FString_constr_id (String) Int)\n\
                 \n\
                 (declare-sort Kind)\n\
                 (declare-fun Kind_constr_id (Kind) Int)\n\
@@ -476,7 +476,7 @@ and mkPrelude z3options =
                         :pattern ((Precedes t1 t2)))))\n\
                 (define-fun Prims.Precedes ((a Type) (b Type) (t1 Term) (t2 Term)) Type\n\
                          (Precedes t1 t2))\n" in
-   let constrs : constructors = [("String_const", ["String_const_proj_0", Int_sort], String_sort, 0);
+   let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort], String_sort, 0);
                                  ("Kind_type",  [], Kind_sort, 0);
                                  ("Kind_arrow", ["Kind_arrow_id", Int_sort], Kind_sort, 1);
                                  ("Kind_uvar",  [("Kind_uvar_fst", Int_sort)], Kind_sort, 2);
@@ -565,7 +565,7 @@ let mk_ApplyTT t t'   = mkApp("ApplyTT", [t;t'])
 let mk_ApplyET e t    = mkApp("ApplyET", [e;t])
 let mk_ApplyEE e e'   = mkApp("ApplyEE", [e;e'])
 let mk_ApplyEF e f    = mkApp("ApplyEF", [e;f])
-let mk_String_const i = mkApp("String_const", [ mkInteger' i])
+let mk_String_const i = mkApp("FString_const", [ mkInteger' i])
 let mk_Precedes x1 x2 = mkApp("Precedes", [x1;x2]) |> mk_Valid
 let mk_LexCons x1 x2  = mkApp("LexCons", [x1;x2])
 let rec n_fuel n =
