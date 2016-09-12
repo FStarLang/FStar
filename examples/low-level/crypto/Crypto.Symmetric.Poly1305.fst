@@ -21,7 +21,7 @@ open Math.Lemmas
 open Buffer.Utils
 open FStar.Buffer.Quantifiers
 
-open Crypto.Symmetric.Poly1305.Spec 
+open Crypto.Symmetric.Poly1305.Spec
 open Crypto.Symmetric.Poly1305.Parameters
 open Crypto.Symmetric.Poly1305.Bigint
 open Crypto.Symmetric.Poly1305.Bignum
@@ -32,7 +32,7 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS = FStar.HyperStack
 
-// we may separate field operations, so that we don't 
+// we may separate field operations, so that we don't
 // need to open the bignum modules elsewhere
 
 (* * *********************************************)
@@ -56,15 +56,39 @@ let esel_word h b = hide (sel_word h b)
 val esel_word_16:h:mem -> b:wordB_16{live h b} -> Tot (erased word_16)
 let esel_word_16 h b = hide (sel_word h b)
 
+#reset-options "--initial_fuel 1 --max_fuel 0 --z3timeout 20"
+
+assume MaxUInt32: pow2 32 = 4294967296
 
 // when ideal, we use the actual contents
-assume val read_word: b:wordB_16 -> ST word_16 
+private val read_word_: b:wordB_16 -> s:seq byte -> i:U32.t{U32.v i = Seq.length s /\ U32.v i <= 16} -> ST word_16
+  (requires (fun h -> live h b /\ Seq.slice (sel_word h b) 0 (U32.v i) == s))
+  (ensures  (fun h0 s h1 -> h0 == h1 /\ live h1 b /\ s == sel_word h1 b))
+let rec read_word_ b s i =
+  let h = HST.get() in
+  if U32 (i =^ 16ul) then (
+    Seq.lemma_eq_intro s (sel_word h b);
+    s)
+  else (
+    let x = b.(i) in
+    let s' = FStar.Seq (s @| Seq.create 1 x) in
+    Seq.lemma_eq_intro s' (Seq.slice (sel_word h b) 0 (U32.v i + 1));
+    read_word_ b s' (U32 (i +^ 1ul))
+    )
+
+
+val read_word: b:wordB_16 -> ST word_16
   (requires (fun h0 -> live h0 b))
-  (ensures (fun h0 r h1 -> h0 == h1 /\ live h1 b /\ Seq.equal r (sel_word h1 b)))
+  (ensures (fun h0 r h1 -> h0 == h1 /\ live h1 b /\ r == (sel_word h1 b)))
+let read_word b =
+  let h = HST.get() in
+  let s0 = Seq.createEmpty #byte in
+  Seq.lemma_eq_intro s0 (Seq.slice (sel_word h b) 0 0);
+  read_word_ b s0 0ul
 
 (* From the current memory state, returns the field element corresponding to a elemB *)
 let sel_elem (h:mem) (b:elemB{live h b}) : GTot elem
-  = eval h b norm_length % p_1305 
+  = eval h b norm_length % p_1305
 
 (* From the current memory state, returns the integer corresponding to a elemB, (before
    computing the modulo) *)
@@ -170,7 +194,7 @@ let add_and_multiply acc block r =
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 (**
-   Sets an element to the value '0' 
+   Sets an element to the value '0'
    *)
 val zeroB: a:elemB -> STL unit
   (requires (fun h -> live h a))
@@ -443,7 +467,7 @@ let clamp r =
   fix  7ul  15uy;
   fix 11ul  15uy;
   fix 15ul  15uy;
-  fix  4ul 252uy; // ******00  
+  fix  4ul 252uy; // ******00
   fix  8ul 252uy;
   fix 12ul 252uy;
   ()
@@ -497,9 +521,9 @@ val lemma_elemB_equality: ha:mem -> hb:mem -> a:elemB -> b:elemB -> len:pos{len<
     /\ get ha a (len-1) = get hb b (len-1)))
   (ensures  (live ha a /\ live hb b /\ Seq.slice (as_seq ha a) 0 len == Seq.slice (as_seq hb b) 0 len))
 let lemma_elemB_equality ha hb a b len =
-  Seq.lemma_eq_intro (Seq.slice (as_seq ha a) 0 len) 
+  Seq.lemma_eq_intro (Seq.slice (as_seq ha a) 0 len)
 		     ((Seq.slice (as_seq ha a) 0 (len-1)) @| Seq.create 1 (get ha a (len-1)));
-  Seq.lemma_eq_intro (Seq.slice (as_seq hb b) 0 len) 
+  Seq.lemma_eq_intro (Seq.slice (as_seq hb b) 0 len)
 		     ((Seq.slice (as_seq hb b) 0 (len-1)) @| Seq.create 1 (get hb b (len-1)))
 
 #reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 20"

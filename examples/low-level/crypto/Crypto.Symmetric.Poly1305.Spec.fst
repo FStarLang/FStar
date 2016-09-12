@@ -1,6 +1,6 @@
 module Crypto.Symmetric.Poly1305.Spec
 
-(* Just the mathematical specification, 
+(* Just the mathematical specification,
    used in the probabilistic security assumption,
    aiming for a generic group *)
 
@@ -36,30 +36,30 @@ let p_1305: p:nat{pow2 128 < p} =
 
 type elem = n:nat{n < p_1305} // elements of the field Z / p_1305 Z
 
-type word = b: seq byte {Seq.length b <= 16} 
-type word_16 = b:seq byte {Seq.length b = 16} 
+type word = b: seq byte {Seq.length b <= 16}
+type word_16 = b:seq byte {Seq.length b = 16}
 // we only use full words for AEAD
 
 type text = seq elem // not word_16
-type tag = word_16 
+type tag = word_16
 
 (* * *********************************************)
 (* *            Field operations                 *)
 (* * *********************************************)
 val field_add: elem -> elem -> Tot elem
-let field_add a b = (a + b) % p_1305 
+let field_add a b = (a + b) % p_1305
 val field_mul: elem -> elem -> Tot elem
-let field_mul a b = (a * b) % p_1305 
+let field_mul a b = (a * b) % p_1305
 
 (* Infix operators for readability *)
 let op_Plus_At = field_add
 let op_Star_At = field_mul
 
 (* Little endian integer value of a sequence of bytes *)
-let rec little_endian (b:word) : Tot (n:nat) (decreases (Seq.length b)) =
-  if Seq.length b = 0 then 0
-  else U8.v (Seq.index b 0) +
-       pow2 8 * little_endian (Seq.slice b 1 (Seq.length b))
+let rec little_endian (b:word) : Tot (n:nat) (decreases (Seq.length b))
+  = if Seq.length b = 0 then 0
+    else U8.v (Seq.index b 0) +
+	 pow2 8 * little_endian (Seq.slice b 1 (Seq.length b))
 
 val lemma_euclidian_division: a:nat -> b:nat -> Lemma
   (requires (a < pow2 8))
@@ -69,8 +69,7 @@ let lemma_euclidian_division a b = ()
 val lemma_factorise: a:nat -> b:nat -> Lemma (a + a * b = a * (b + 1))
 let lemma_factorise a b = ()
 
-//#reset-options "--z3timeout 200
-#set-options "--lax" // OK, but long timeout
+#reset-options "--initial_fuel 1 --max_fuel 1"
 
 val lemma_little_endian_is_bounded: b:word -> Lemma
   (requires True)
@@ -89,11 +88,11 @@ let rec lemma_little_endian_is_bounded b =
     lemma_euclidian_division (U8.v (Seq.index b 0)) (little_endian s);
     assert(little_endian b <= pow2 8 * (little_endian s + 1));
     assert(little_endian b <= pow2 8 * pow2 (8 * (Seq.length b - 1)));
-    Math.Lemmas.pow2_exp_1 8 (pow2 (8 * (Seq.length b - 1)));
+    Math.Lemmas.pow2_exp_1 8 (8 * (Seq.length b - 1));
     lemma_factorise 8 (Seq.length b - 1)
     end
 
-#reset-options
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_little_endian_lt_2_128: b:word -> Lemma
   (requires (True))
@@ -109,7 +108,9 @@ let lemma_little_endian_lt_2_128 b =
 (* *            Encoding                         *)
 (* * *********************************************)
 
-let encode_16 (w:word_16) : elem = pow2 128 +@ little_endian w
+let encode_16 (w:word_16) : Tot elem =
+  Math.Lemmas.pow2_double_sum 128; Math.Lemmas.pow2_double_sum 129;
+  pow2 128  +@  little_endian w
 
 // a spec for encoding and padding, convenient for injectivity proof
 let pad_0 b l = Seq.append b (Seq.create l 0uy)
@@ -131,7 +132,7 @@ let rec encode_pad prefix txt =
     encode_pad prefix txt
     end
 
-let trunc_1305 (e:elem) = e % pow2 128
+let trunc_1305 (e:elem) : Tot elem = e % pow2 128
 
 
 (* * *********************************************)
@@ -266,25 +267,25 @@ let rec lemma_encode_pad_injective p0 t0 p1 t1 =
 
 let seq_head (vs:seq 'a {Seq.length vs > 0}) = Seq.slice vs 0 (Seq.length vs - 1)
 
-val poly: vs:seq elem -> r:elem -> GTot (a:elem) (decreases (Seq.length vs))
+val poly: vs:seq elem -> r:elem -> Tot (a:elem) (decreases (Seq.length vs))
 let rec poly vs r =
   if Seq.length vs = 0 then 0
   else (poly (seq_head vs) r +@ Seq.index vs (length vs - 1)) *@ r
 
-let fix (r:word_16) (i:nat {i < 16}) m : word_16 = Seq.upd r i (U8 (Seq.index r i &^ m)) 
+let fix (r:word_16) (i:nat {i < 16}) m : Tot word_16 = Seq.upd r i (U8 (Seq.index r i &^ m))
 
-// an abstract spec of clamping for our state invariant 
-// for our polynomial-sampling assumption, 
+// an abstract spec of clamping for our state invariant
+// for our polynomial-sampling assumption,
 // we rely solely on the number of fixed bits (22, right?)
-val clamp: word_16 -> GTot elem
-let clamp r = 
+val clamp: word_16 -> Tot elem
+let clamp r =
   let r = fix r  3  15uy in // 0000****
-  let r = fix r  7  15uy in 
-  let r = fix r 11  15uy in 
-  let r = fix r 15  15uy in 
+  let r = fix r  7  15uy in
+  let r = fix r 11  15uy in
+  let r = fix r 15  15uy in
   let r = fix r  4 252uy in // ******00
-  let r = fix r  8 252uy in 
-  let r = fix r 12 252uy in 
+  let r = fix r  8 252uy in
+  let r = fix r 12 252uy in
   little_endian r
 
 let mac_1305 (vs:seq elem) r s = (trunc_1305 (poly vs r) + little_endian s) % pow2 128
