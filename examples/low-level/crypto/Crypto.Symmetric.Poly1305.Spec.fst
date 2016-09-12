@@ -61,10 +61,10 @@ let rec little_endian (b:word) : Tot (n:nat) (decreases (Seq.length b))
     else U8.v (Seq.index b 0) +
 	 pow2 8 * little_endian (Seq.slice b 1 (Seq.length b))
 
-val lemma_euclidian_division: a:nat -> b:nat -> Lemma
+val lemma_euclidean_division: a:nat -> b:nat -> Lemma
   (requires (a < pow2 8))
   (ensures  (a + pow2 8 * b < pow2 8 * (b + 1)))
-let lemma_euclidian_division a b = ()
+let lemma_euclidean_division a b = ()
 
 val lemma_factorise: a:nat -> b:nat -> Lemma (a + a * b = a * (b + 1))
 let lemma_factorise a b = ()
@@ -85,7 +85,7 @@ let rec lemma_little_endian_is_bounded b =
     assert(U8.v (Seq.index b 0) < pow2 8);
     assert(little_endian s < pow2 (8 * Seq.length s));
     assert(little_endian b < pow2 8 + pow2 8 * pow2 (8 * (Seq.length b - 1)));
-    lemma_euclidian_division (U8.v (Seq.index b 0)) (little_endian s);
+    lemma_euclidean_division (U8.v (Seq.index b 0)) (little_endian s);
     assert(little_endian b <= pow2 8 * (little_endian s + 1));
     assert(little_endian b <= pow2 8 * pow2 (8 * (Seq.length b - 1)));
     Math.Lemmas.pow2_exp_1 8 (8 * (Seq.length b - 1));
@@ -108,9 +108,7 @@ let lemma_little_endian_lt_2_128 b =
 (* *            Encoding                         *)
 (* * *********************************************)
 
-let encode_16 (w:word_16) : Tot elem =
-  Math.Lemmas.pow2_double_sum 128; Math.Lemmas.pow2_double_sum 129;
-  pow2 128  +@  little_endian w
+let encode_16 (w:word_16) : Tot elem = pow2 128  +@  little_endian w
 
 // a spec for encoding and padding, convenient for injectivity proof
 let pad_0 b l = Seq.append b (Seq.create l 0uy)
