@@ -218,6 +218,12 @@ let document_module (m:modul) =
 // entry point 
 //
 let generate (files:list<string>) =
+  (* SI: check odir exists. Should mkdir instead. *)
+  let odir = O.prepend_output_dir "" in 
+  if (U.file_exists odir) then 
+    U.print "odir %s ok.\n" [odir]
+  else 
+    U.print "odir %s doesn't exist. Will crash...\n" [odir];
   (* fsdoc each module into it's own module.mk. *)
   let modules = List.collect (fun fn -> P.parse_file fn) files in
   let mod_names = List.map document_module modules in
