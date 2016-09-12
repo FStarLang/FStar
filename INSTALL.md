@@ -69,7 +69,7 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ make -C examples/hello fs
 
 5. You can try verifying all the examples, but keep in mind that
-   things might fail because of timeouts if your machine is not
+   things might fail because of Z3 timeouts if your machine is not
    sufficiently powerful.
 
         $ make -C examples

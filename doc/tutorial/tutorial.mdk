@@ -218,7 +218,7 @@ Here are the first three definitions from the program:
 ~
 
 The first definition defines a type synonym: we'll use `:string`s to
-model `:filename`s.  
+model `:filename`s.
 
 After that, we define two boolean functions:
 `canWrite` and `canRead`:
