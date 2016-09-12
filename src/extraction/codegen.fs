@@ -117,7 +117,7 @@ let infix_prim_ops = [
     ("op_Multiply"       , e_bin_prio_op1   , "*" );
     ("op_Division"       , e_bin_prio_op1   , "/" );
     ("op_Equality"       , e_bin_prio_eq    , "=" );
-    ("op_ColonEquals"    , e_bin_prio_eq    , ":=");
+    ("op_Colon_Equals"   , e_bin_prio_eq    , ":=");
     ("op_disEquality"    , e_bin_prio_eq    , "<>");
     ("op_AmpAmp"         , e_bin_prio_and   , "&&");
     ("op_BarBar"         , e_bin_prio_or    , "||");
