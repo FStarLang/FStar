@@ -262,16 +262,30 @@ let rec lemma_max_value h (b:elemB) (len:pos{len <= length b}) : Lemma
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
+(* TODO: prove and move *)
+assume val lemma_modulo_add: a:nat -> b:nat -> d:pos -> Lemma ( (a + b) % d = ((a % d) + b) % d)
+assume val lemma_modulo_mul: a:nat -> b:nat -> d:pos -> Lemma ( (a * b) % d = ((a % d) * b) % d)
 
-(* TODO *)
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+
+let lemma_modulo_1 (a:nat) (b:nat) (c:nat) (d:pos) : Lemma ( ((a + b) * c) % d = ((((a % d) + (b % d)) % d) * (c % d)) % d) =
+  lemma_modulo_mul (a+b) c d;
+  lemma_modulo_mul c ((a+b)%d) d;
+  lemma_modulo_add a b d;
+  lemma_modulo_add b (a%d) d
+
 let lemma_sel_elem h0 h1 acc block r : Lemma
   (requires (norm h1 acc /\ norm h0 acc /\ norm h0 block /\ norm h0 r
     /\ sel_elem h1 acc = ((eval h0 acc 5 + eval h0 block 5) * eval h0 r 5) % reveal prime))
   (ensures  (norm h1 acc /\ norm h0 acc /\ norm h0 block /\ norm h0 r
     /\ sel_elem h1 acc = (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r))
-  = ()
+  = let a = eval h0 acc 5 in
+    let b = eval h0 block 5 in
+    let c = eval h0 r 5 in
+    let d = reveal prime in
+    lemma_modulo_1 a b c d
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 50"
 
 
 private val add_and_multiply_: acc:elemB -> block:elemB{disjoint acc block} -> r:elemB{disjoint acc r /\ disjoint block r} ->
@@ -387,17 +401,6 @@ private let mk_mask (nbits:FStar.UInt32.t{FStar.UInt32.v nbits < 64}) :
   = Math.Lib.pow2_increases_lemma 64 (FStar.UInt32.v nbits);
     U64 ((1uL <<^ nbits) -^ 1uL)
 
-(* Formats a wordB into an elemB *)
-val toField: a:elemB -> b:wordB_16{disjoint a b} -> STL unit
-  (requires (fun h -> live h a /\ live h b))
-  (ensures  (fun h0 _ h1 ->
-    live h0 b /\         // initial post condition
-    modifies_1 a h0 h1 /\ // only a was modified
-    norm h1 a /\         // a is in a 'workable' state
-    sel_int h1 a = little_endian (sel_word h0 b) /\ // functional correctness
-    v (get h1 a 4) < pow2 24 // necessary for adding 2^128 with no overflow
-    ))
-
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 (* TODO *)
@@ -413,16 +416,35 @@ let lemma_toField_1 (b:elemB) (s:wordB_16{disjoint b s}) h n0 n1 n2 n3 : Lemma
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
-val upd_elemB: b:elemB -> n0:U64.t -> n1:U64.t -> n2:U64.t -> n3:U64.t -> n4:U64.t -> Stack unit
-  (requires (fun h -> live h b))
+val upd_elemB: b:elemB{length b = norm_length} -> n0:U64.t -> n1:U64.t -> n2:U64.t -> n3:U64.t -> n4:U64.t -> Stack unit
+  (requires (fun h -> live h b
+    /\ U64.v n0 < pow2 26 /\ U64.v n1 < pow2 26 /\ U64.v n2 < pow2 26 /\ U64.v n3 < pow2 26
+    /\ U64.v n4 < pow2 24))
   (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1
-    /\ get h1 b 0 = n0 /\ get h1 b 1 = n1 /\ get h1 b 2 = n2 /\ get h1 b 3 = n3 /\  get h1 b 4 = n4))
+    /\ get h1 b 0 = n0 /\ get h1 b 1 = n1 /\ get h1 b 2 = n2 /\ get h1 b 3 = n3 /\  get h1 b 4 = n4
+    /\ sel_int h1 b = v n0 + pow2 26 * v n1 + pow2 52 * v n2 + pow2 78 * v n3 + pow2 104 * v n4
+    /\ norm h1 b))
 let upd_elemB b n0 n1 n2 n3 n4 =
   upd b 0ul n0;
   upd b 1ul n1;
   upd b 2ul n2;
   upd b 3ul n3;
-  upd b 4ul n4
+  upd b 4ul n4;
+  let h1 = HST.get() in
+  lemma_bitweight_templ_values 4;
+  lemma_bitweight_templ_values 3;
+  lemma_bitweight_templ_values 2;
+  lemma_bitweight_templ_values 1;
+  lemma_bitweight_templ_values 0;
+  eval_def h1 b 5;
+  eval_def h1 b 4;
+  eval_def h1 b 3;
+  eval_def h1 b 2;
+  eval_def h1 b 1;
+  eval_def h1 b 0;
+  pow2_increases_lemma 26 24
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 (* TODO *)
 let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4' : Lemma
@@ -433,6 +455,31 @@ let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4' : Lemma
   (ensures  (v n0' + pow2 26 * v n1' + pow2 52 * v n2' + pow2 78 * v n3' + pow2 104 * v n4'
     = v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 ))
   = admit()
+
+(* TODO (requires the BitVector module *)
+let lemma_toField_3 n0 n1 n2 n3 n0' n1' n2' n3' n4' : Lemma
+  (requires (let mask_26 = mk_mask 26ul in
+    n0' = (n0 &^ mask_26)
+    /\ n1' = ((n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26))
+    /\ n2' = ((n1 >>^ 20ul) |^ ((n2 <<^ 12ul) &^ mask_26))
+    /\ n3' = ((n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26))
+    /\ n4' = ((n3 >>^ 8ul)) ))
+  (ensures  (U64.v n4' < pow2 24
+    /\ U64.v n3' < pow2 26 /\ U64.v n2' < pow2 26 /\ U64.v n1' < pow2 26 /\ U64.v n0' < pow2 26))
+  = admit()
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
+(* Formats a wordB into an elemB *)
+val toField: a:elemB{length a = norm_length} -> b:wordB_16{disjoint a b} -> STL unit
+  (requires (fun h -> live h a /\ live h b))
+  (ensures  (fun h0 _ h1 ->
+    live h0 b /\         // initial post condition
+    modifies_1 a h0 h1 /\ // only a was modified
+    norm h1 a /\         // a is in a 'workable' state
+    sel_int h1 a = little_endian (sel_word h0 b) /\ // functional correctness
+    v (get h1 a 4) < pow2 24 // necessary for adding 2^128 with no overflow
+    ))
 
 let toField b s =
   //DEBUG: let _ = print_bytes s 0ul 16ul in
@@ -458,13 +505,10 @@ let toField b s =
   let n3' = (n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26) in
   let n4' = (n3 >>^ 8ul) in
   lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4';
+  lemma_toField_3 n0 n1 n2 n3 n0' n1' n2' n3' n4';
   cut (v n0' + pow2 26 * v n1' + pow2 52 * v n2' + pow2 78 * v n3' + pow2 104 * v n4'
     = little_endian (sel_word h0 s));
   upd_elemB b n0' n1' n2' n3' n4';
-  let h1 = HST.get() in
-  assume (sel_int h1 b = little_endian (sel_word h0 s));
-  assume (v (get h1 b 4) < pow2 24);
-  assume (norm h1 b);
   ()
 
 #reset-options "--initial_fuel 6 --max_fuel 6"
@@ -523,7 +567,7 @@ let add_2_24 (x:t{v x < pow2 24}) : Tot (z:t{v z = v x + pow2 24 /\ v z < pow2 2
 #reset-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
 
 (* Formats a wordB into an elemB *)
-val toField_plus_2_128: a:elemB -> b:wordB{length b = 16 /\ disjoint a b} -> STL unit
+val toField_plus_2_128: a:elemB{length a = norm_length} -> b:wordB_16{disjoint a b} -> Stack unit
   (requires (fun h -> live h a /\ live h b /\ disjoint a b))
   (ensures  (fun h0 _ h1 ->
     live h0 b /\ // Initial post condition
@@ -541,46 +585,21 @@ let toField_plus_2_128 b s =
   lemma_upd_quantifiers h0 h1 b 4ul b4';
   lemma_toField_plus_2_128 h1 b h0 b
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
-val trunc1305: a:elemB -> b:wordB{disjoint a b} -> STL unit
-  (requires (fun h -> norm h a /\ live h b /\ disjoint a b))
-  (ensures  (fun h0 _ h1 -> live h1 b /\ norm h0 a /\ modifies_1 b h0 h1
-    /\ sel_elem h0 a % pow2 128 = little_endian (sel_word h1 b) ))
-let trunc1305 b s =
-  let h0 = HST.get() in
-  (* Full reduction of b:
-     - before finalization sel_int h b < pow2 130
-     - after finalization sel_int h b = sel_elem h b *)
-  finalize b;
-  let h1 = HST.get() in
-  (* TODO *)
-  assume (sel_elem h1 b = sel_elem h0 b /\ sel_elem h1 b = sel_int h1 b);
-  (* Copy of the 128 first bits of b into s *)
-  let b0 = index b 0ul in
-  let b1 = index b 1ul in
-  let b2 = index b 2ul in
-  let b3 = index b 3ul in
-  let b4 = index b 4ul in
-  (* JK: some bitvector theory would simplify a lot the rest of the proof *)
-  admit(); // TODO
-  let s0 = uint64_to_uint8 b0 in
-  let s1 = uint64_to_uint8 (b0 >>^ 8ul) in
-  let s2 = uint64_to_uint8 (b0 >>^ 16ul) in
-  let s3 = uint64_to_uint8 ((b0 >>^ 24ul) +^ (b1 <<^ 2ul)) in
-  let s4 = uint64_to_uint8 (b1 >>^ 6ul) in
-  let s5 = uint64_to_uint8 (b1 >>^ 14ul) in
-  let s6 = uint64_to_uint8 ((b1 >>^ 22ul) +^ (b2 <<^ 4ul)) in
-  let s7 = uint64_to_uint8 (b2 >>^ 4ul) in
-  let s8 = uint64_to_uint8 (b2 >>^ 12ul) in
-  let s9 = uint64_to_uint8 ((b2 >>^ 20ul) +^ (b3 <<^ 6ul)) in
-  let s10 = uint64_to_uint8 (b3 >>^ 2ul) in
-  let s11 = uint64_to_uint8 (b3 >>^ 10ul) in
-  let s12 = uint64_to_uint8 (b3 >>^ 18ul) in
-  let s13 = uint64_to_uint8 (b4) in
-  let s14 = uint64_to_uint8 (b4 >>^ 8ul) in
-  let s15 = uint64_to_uint8 (b4 >>^ 16ul) in
-  (* * *)
+let lemma_trunc_0 a b : Lemma
+  (requires (a = b % reveal prime))
+  (ensures  (a % reveal prime = b % reveal prime))
+  = ()
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
+val upd_wordB_16: b:wordB_16 -> s0:U8.t -> s1:U8.t -> s2:U8.t -> s3:U8.t -> s4:U8.t -> s5:U8.t ->
+  s6:U8.t -> s7:U8.t -> s8:U8.t -> s9:U8.t -> s10:U8.t -> s11:U8.t -> s12:U8.t -> s13:U8.t ->
+  s14:U8.t -> s15:U8.t -> Stack unit
+    (requires (fun h -> live h b))
+    (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))
+let upd_wordB_16 s s0 s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 =
   upd s 0ul s0;
   upd s 1ul s1;
   upd s 2ul s2;
@@ -598,6 +617,53 @@ let trunc1305 b s =
   upd s 14ul s14;
   upd s 15ul s15;
   ()
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
+
+(* WIP *)
+
+val trunc1305: a:elemB -> b:wordB{disjoint a b} -> Stack unit
+  (requires (fun h -> norm h a /\ live h b /\ disjoint a b))
+  (ensures  (fun h0 _ h1 -> live h1 b /\ norm h0 a /\ modifies_1 b h0 h1
+    /\ sel_elem h0 a % pow2 128 = little_endian (sel_word h1 b) ))
+let trunc1305 b s =
+  admit();
+  let h0 = HST.get() in
+  (* Full reduction of b:
+     - before finalization sel_int h b < pow2 130
+     - after finalization sel_int h b = sel_elem h b *)
+  finalize b;
+  let h1 = HST.get() in
+  lemma_trunc_0 (eval h1 b norm_length) (eval h0 b norm_length);
+  cut (sel_elem h1 b = sel_elem h0 b /\ sel_elem h1 b = sel_int h1 b);
+  (* Copy of the 128 first bits of b into s *)
+  let b0 = index b 0ul in
+  let b1 = index b 1ul in
+  let b2 = index b 2ul in
+  let b3 = index b 3ul in
+  let b4 = index b 4ul in
+  (* JK: some bitvector theory would simplify a lot the rest of the proof *)
+  let s0 = uint64_to_uint8 b0 in
+  let s1 = uint64_to_uint8 (b0 >>^ 8ul) in
+  let s2 = uint64_to_uint8 (b0 >>^ 16ul) in
+  let s3 = uint64_to_uint8 ((b0 >>^ 24ul) +%^ (b1 <<^ 2ul)) in
+  let s4 = uint64_to_uint8 (b1 >>^ 6ul) in
+  let s5 = uint64_to_uint8 (b1 >>^ 14ul) in
+  let s6 = uint64_to_uint8 ((b1 >>^ 22ul) +%^ (b2 <<^ 4ul)) in
+  let s7 = uint64_to_uint8 (b2 >>^ 4ul) in
+  let s8 = uint64_to_uint8 (b2 >>^ 12ul) in
+  let s9 = uint64_to_uint8 ((b2 >>^ 20ul) +%^ (b3 <<^ 6ul)) in
+  let s10 = uint64_to_uint8 (b3 >>^ 2ul) in
+  let s11 = uint64_to_uint8 (b3 >>^ 10ul) in
+  let s12 = uint64_to_uint8 (b3 >>^ 18ul) in
+  let s13 = uint64_to_uint8 (b4) in
+  let s14 = uint64_to_uint8 (b4 >>^ 8ul) in
+  let s15 = uint64_to_uint8 (b4 >>^ 16ul) in
+  upd_wordB_16 s s0 s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15;
+  let h1 = HST.get() in
+  assume (little_endian (sel_word h1 s) = sel_elem h0 b % pow2 128);
+  ()
+
 
 (* Clamps the key, see RFC
    we clear 22 bits out of 128 (where does it help?)
