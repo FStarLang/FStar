@@ -35,9 +35,11 @@ module C  = FStar.Syntax.Const
 
 (* 
 Notes:
-- a lot of the string_of functions should go away with a better pretty-printer. 
+- a lot of the string_of functions and their concatenation should go away with 
+  a better pretty-printer. 
 - there are too many strings being passed around/returned. 
 - Haven't got the hang of what a .md file should look like. # vs ## vs crlf? 
+- Things to fix are prefixed with SI: 
 *)
 
 //
@@ -78,7 +80,7 @@ let string_of_tycon tycon =
           |> String.concat "; " ) ^
         " }"
     | TyconVariant(id,_bb,_ko,vars) -> 
-        id.idText ^ " = | " ^ 
+        id.idText ^ " = " ^ 
         ( vars 
             |> List.map 
                     (fun (id,trmo,doco,u) -> 
@@ -89,6 +91,7 @@ let string_of_tycon tycon =
 // 
 // decl 
 //
+let code_wrap s = "```\n" ^ s ^ "\n```\n"
 
 let string_of_decl' d = 
   match d with 
@@ -96,14 +99,18 @@ let string_of_decl' d =
   | Open l -> "open " ^ l.str
   | ModuleAbbrev (i, l) -> "module " ^ i.idText ^ " = " ^ l.str
   | KindAbbrev(i, _, _) -> "kind " ^ i.idText
-  | ToplevelLet(_, _, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
+  | ToplevelLet(_, _, pats) -> 
+        code_wrap 
+            ("let " ^ 
+                (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", "))
   | Main _ -> "main ..."
   | Assume(_, i, _) -> "assume " ^ i.idText
   | Tycon(_, tys) -> 
-        "type " ^ 
-        (tys |> List.map (fun (t,d)-> (string_of_tycon t) ^ (string_of_fsdoco d)) 
-             |> String.concat ", ") (* SI: sep will be "," for Record but "and" for Variant *)
-  | Val(_, i, _) -> "val " ^ i.idText
+        code_wrap
+            ("type " ^ 
+             (tys |> List.map (fun (t,d)-> (string_of_tycon t) ^ " " ^ (string_of_fsdoco d)) 
+                 |> String.concat " and ")) (* SI: sep will be "," for Record but "and" for Variant *)
+      | Val(_, i, _) -> "val " ^ i.idText
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(_, DefineEffect(i, _, _, _, _))
   | NewEffect(_, RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
@@ -111,9 +118,12 @@ let string_of_decl' d =
   | NewEffectForFree(_, RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
-  | Fsdoc fsd -> "(*" ^ (fst fsd) ^ "*)"
+  | Fsdoc (com,_) -> com
 
 
+// A decl is documented if either:
+// - it's got a fsdoc attached to it (either at top-level or in it's subtree); or
+// - it itself is a Fsdoc
 let decl_documented (d:decl) = 
     let tycon_documented (tt:list<(tycon * option<fsdoc>)>) = 
         let tyconvars_documented tycon = 
@@ -140,22 +150,24 @@ let decl_documented (d:decl) =
         | _ -> false
 
 let document_decl (w:string->unit) (d:decl) = 
-  // Printf.printf "+ document_decl d:%s, doc:%b\n" (decl_to_string d) (Option.isSome d.doc); 
   if decl_documented d then 
-      let {d = decl; drange = _; doc = fsdoc} = d in
-      (* print the doc if there's one *)
-      begin
-          match fsdoc with 
-          | Some(doc,_kw) -> w doc (* SI: do something with kw *) 
-          | _ -> () 
-      end ;       
-      w "```fstar"; 
-      w (string_of_decl' d.d);
-      w "```\n"
+    (* SI: {begin, '('} to convince ocamlopt *)
+    begin
+        (* print the decl *)
+        let {d = decl; drange = _; doc = fsdoc} = d in
+        //w "```fstar"; 
+        w (string_of_decl' d.d); 
+        //w "```"; 
+        (* print the doc, if there's one *)
+        (match fsdoc with 
+        | Some(doc,_kw) -> w ("\n" ^ doc) (* SI: do something with kw *) 
+        | _ -> ()) ;
+        w "" // EOL 
+    end
   else ()
 
 let document_toplevel name decls = 
-  let no_doc_provided = "(* no fsdoc provided for module " ^ name.str ^ " *)" in 
+  let no_doc_provided = "(* fsdoc: no doc for module " ^ name.str ^ " *)" in 
   let f d = 
     match d.d with 
     | TopLevelModule k -> Some (k,d.doc) 
@@ -171,6 +183,8 @@ let document_toplevel name decls =
     | None -> name, no_doc_provided in
   mdoc, name, com
 
+// SI: seems a bug? The parser definitely picks up a TopLevelModule, but I
+// can't find it here. 
 let exists_toplevel (decls:list<decl>) = 
   let r =
     List.existsb 

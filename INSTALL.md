@@ -46,7 +46,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 1. Add `fstar.exe` and `z3` to your `PATH`, either permanently
    or temporarily, for instance by running this:
 
-        $ export PATH=/path/to/fstar/bin:$PATH
+        $ export PATH=/path/to/z3/bin:/path/to/fstar/bin:$PATH
         $ fstar.exe --version
         F* 0.9.1.1
         platform=Linux_x86_64
@@ -69,7 +69,7 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ make -C examples/hello fs
 
 5. You can try verifying all the examples, but keep in mind that
-   things might fail because of timeouts if your machine is not
+   things might fail because of Z3 timeouts if your machine is not
    sufficiently powerful.
 
         $ make -C examples
@@ -82,9 +82,9 @@ Z3) using the opam package:
 
         $ opam install fstar
         
-Right now, the opam package is version 0.9.2 which is almost a year old... Please consider getting the latest development version of F*! Here's the opam magic:
+Right now, the opam package is version 0.9.3-beta1. You can easily get the latest development version of F* with some opam magic:
 
-        $ opam install zarith stdint yojson && opam pin add fstar --dev-repo
+        $ opam pin add fstar --dev-repo
 
 ### Homebrew formula for Mac OS X ###
 
@@ -131,8 +131,8 @@ three steps:
 **Note:** If you build F* from sources you will also need to get a Z3
 binary. This is further explained towards the end of this document.
 
-**Easier alternative:**  If you don't care about efficiency and about the .NET
-dependency you can stop already after step 1.
+**Easier alternative:**  If you don't care about efficiency, about the .NET
+dependency and bugs ([#672](https://github.com/FStarLang/FStar/issues/672)) you can stop already after step 1.
 
 **Easier alternative:**  If you don't want to use F#/.NET/Mono at all you can
 also build F\* directly from the generated OCaml sources.  Therefore, for

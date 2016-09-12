@@ -362,6 +362,72 @@ abstract let modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1
 abstract let modifies_region rid bufs h0 h1 =
   modifies_one rid h0 h1 /\ modifies_bufs rid bufs h0 h1
 
+(* Lemmas introducing the 'modifies' predicates *)
+let lemma_intro_modifies_0 h0 h1 : Lemma
+  (requires (modifies_one h0.tip h0 h1
+  /\ modifies_buf_0 h0.tip h0 h1
+  /\ h0.tip=h1.tip))
+  (ensures  (modifies_0 h0 h1))
+  = ()
+
+let lemma_intro_modifies_1 (#a:Type) (b:buffer a) h0 h1 : Lemma
+  (requires (let rid = frameOf b in
+  modifies_one rid h0 h1 /\ modifies_buf_1 rid b h0 h1))
+  (ensures  (modifies_1 b h0 h1))
+  = ()
+
+let lemma_intro_modifies_2_1 (#a:Type) (b:buffer a) h0 h1 : Lemma
+  (requires (let rid = frameOf b in
+  ((rid = h0.tip /\ modifies_buf_1 rid b h0 h1 /\ modifies_one rid h0 h1)
+  \/ (rid <> h0.tip /\ HH.modifies_just (Set.union (Set.singleton rid) (Set.singleton h0.tip)) h0.h h1.h
+      /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_0 h0.tip h0 h1 ))))
+  (ensures  (modifies_2_1 b h0 h1))
+  = ()
+
+let lemma_intro_modifies_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 : Lemma
+  (requires (let rid = frameOf b in let rid' = frameOf b' in
+  ((rid = rid' /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_one rid h0 h1)
+  \/ (rid <> rid' /\ HH.modifies_just (Set.union (Set.singleton rid) (Set.singleton rid')) h0.h h1.h
+      /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 ))))
+  (ensures  (modifies_2 b b' h0 h1))
+  = ()
+
+let lemma_intro_modifies_3 (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer a')  (b'':buffer a'') h0 h1 : Lemma
+  (requires (let rid = frameOf b in let rid' = frameOf b' in let rid'' = frameOf b'' in
+  ((rid = rid' /\ rid' = rid'' /\ modifies_buf_3 rid b b' b'' h0 h1 /\ modifies_one rid h0 h1)
+  \/ (rid = rid' /\ rid' <> rid'' /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_buf_1 rid'' b'' h0 h1
+      /\ HH.modifies_just (Set.union (Set.singleton rid) (Set.singleton rid'')) h0.h h1.h )
+  \/ (rid <> rid' /\ rid' = rid'' /\ modifies_buf_2 rid' b' b'' h0 h1 /\ modifies_buf_1 rid b h0 h1
+      /\ HH.modifies_just (Set.union (Set.singleton rid) (Set.singleton rid'')) h0.h h1.h )
+  \/ (rid = rid'' /\ rid' <> rid'' /\ modifies_buf_2 rid b b'' h0 h1 /\ modifies_buf_1 rid' b' h0 h1
+      /\ HH.modifies_just (Set.union (Set.singleton rid) (Set.singleton rid')) h0.h h1.h )
+  \/ (rid <> rid' /\ rid' <> rid'' /\ rid <> rid''
+      /\ HH.modifies_just (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton rid'')) h0.h h1.h
+      /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_1 rid'' b'' h0 h1))))
+  (ensures  (modifies_3 b b' b'' h0 h1))
+  = ()
+
+let lemma_intro_modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 : Lemma
+  (requires (let rid = frameOf b in let rid' = frameOf b' in
+  ((rid = rid' /\ rid' = h0.tip /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_one rid h0 h1)
+  \/ (rid = rid' /\ rid' <> h0.tip /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_buf_0 h0.tip h0 h1
+      /\ HH.modifies_just (Set.union (Set.singleton rid) (Set.singleton h0.tip)) h0.h h1.h )
+  \/ (rid <> rid' /\ rid = h0.tip /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1
+      /\ HH.modifies_just (Set.union (Set.singleton rid') (Set.singleton h0.tip)) h0.h h1.h )
+  \/ (rid <> rid' /\ rid' = h0.tip /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_1 rid b h0 h1
+      /\ HH.modifies_just (Set.union (Set.singleton rid) (Set.singleton h0.tip)) h0.h h1.h )
+  \/ (rid <> rid' /\ rid' <> h0.tip /\ rid <> h0.tip
+      /\ HH.modifies_just (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton h0.tip)) h0.h h1.h
+      /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_0 h0.tip h0 h1))))
+  (ensures  (modifies_3_2 b b' h0 h1))
+  = ()
+
+let lemma_intro_modifies_region rid bufs h0 h1 : Lemma
+  (requires (modifies_one rid h0 h1 /\ modifies_bufs rid bufs h0 h1))
+  (ensures  (modifies_region rid bufs h0 h1))
+  = ()
+
+
 (* Lemmas revealing the content of the specialized modifies clauses in order to
    be able to generalize them if needs be. *)
 let lemma_reveal_modifies_0 h0 h1 : Lemma
