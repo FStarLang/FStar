@@ -71,7 +71,7 @@ assume val aead_encryptT:
   iv:lbytes (aeadRealIVSize a) -> 
   ad:bytes -> 
   plain:bytes -> 
-  GTot (lbytes (length p + aeadTagSize a))
+  GTot (lbytes (length plain + aeadTagSize a))
   
 assume val aead_encrypt: 
   a: aead_cipher -> 
