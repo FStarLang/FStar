@@ -259,13 +259,17 @@ let rec lemma_max_value h (b:elemB) (len:pos{len <= length b}) : Lemma
   = if len = length b then ()
     else lemma_max_value h b (len+1)
 
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
+
 (* TODO *)
 let lemma_sel_elem h0 h1 acc block r : Lemma
   (requires (norm h1 acc /\ norm h0 acc /\ norm h0 block /\ norm h0 r
     /\ sel_elem h1 acc = ((eval h0 acc 5 + eval h0 block 5) * eval h0 r 5) % reveal prime))
   (ensures  (norm h1 acc /\ norm h0 acc /\ norm h0 block /\ norm h0 r
     /\ sel_elem h1 acc = (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r))
-  = admit()
+  = ()
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
