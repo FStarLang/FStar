@@ -96,6 +96,111 @@ let sel_int (h:mem) (b:elemB{live h b}) : GTot nat
   = eval h b norm_length
 
 
+(* * *********************************************)
+(* *          Encoding-related lemmas            *)
+(* * *********************************************)
+
+#reset-options "--initial_fuel 0 --max_fuel 0"
+
+val lemma_eucl_div_bound: a:nat -> b:nat -> q:pos -> Lemma
+  (requires (a < q))
+  (ensures  (a + q * b < q * (b+1)))
+let lemma_eucl_div_bound a b q = ()
+
+#reset-options "--initial_fuel 1 --max_fuel 1"
+
+val lemma_bitweight_templ_values: n:nat -> Lemma
+  (requires (True))
+  (ensures  (bitweight templ n = 26 * n))
+let rec lemma_bitweight_templ_values n =
+  if n = 0 then ()
+  else lemma_bitweight_templ_values (n-1)
+
+#reset-options "--initial_fuel 0 --max_fuel 0"
+
+val lemma_mult_ineq: a:pos -> b:pos -> c:pos -> Lemma
+  (requires (b <= c))
+  (ensures  (a * b <= a * c))
+let lemma_mult_ineq a b c = ()
+
+#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 50"
+
+val lemma_eval_norm_is_bounded: ha:mem -> a:elemB -> len:nat{len <= norm_length} -> Lemma
+  (requires (norm ha a))
+  (ensures  (norm ha a /\ eval ha a len < pow2 (26 * len) ))
+let rec lemma_eval_norm_is_bounded ha a len =
+  if len = 0 then (
+    eval_def ha a len
+  )
+  else (
+    cut (len >= 1);
+    eval_def ha a len;
+    lemma_bitweight_templ_values (len-1);
+    lemma_eval_norm_is_bounded ha a (len-1);
+    assert(eval ha a (len-1) < pow2 (26 * (len-1)));
+    assert(pow2 (bitweight templ (len-1)) = pow2 (26 * (len-1)));
+    lemma_eucl_div_bound (eval ha a (len-1)) (v (get ha a (len-1))) (pow2 (bitweight templ (len-1)));
+    assert(eval ha a len < pow2 (26 * (len-1)) * (v (get ha a (len-1)) + 1));
+    lemma_mult_ineq (pow2 (26 * (len-1))) (v (get ha a (len-1))+1) (pow2 26);
+    assert(eval ha a len < pow2 (26 * (len-1)) * pow2 26);
+    Math.Lib.pow2_exp_lemma (26 * (len-1)) 26)
+
+#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 20"
+
+val lemma_elemB_equality: ha:mem -> hb:mem -> a:elemB -> b:elemB -> len:pos{len<=norm_length} -> Lemma
+  (requires (live ha a /\ live hb b
+    /\ Seq.slice (as_seq ha a) 0 (len-1) == Seq.slice (as_seq hb b) 0 (len-1)
+    /\ get ha a (len-1) = get hb b (len-1)))
+  (ensures  (live ha a /\ live hb b /\ Seq.slice (as_seq ha a) 0 len == Seq.slice (as_seq hb b) 0 len))
+let lemma_elemB_equality ha hb a b len =
+  Seq.lemma_eq_intro (Seq.slice (as_seq ha a) 0 len)
+		     ((Seq.slice (as_seq ha a) 0 (len-1)) @| Seq.create 1 (get ha a (len-1)));
+  Seq.lemma_eq_intro (Seq.slice (as_seq hb b) 0 len)
+		     ((Seq.slice (as_seq hb b) 0 (len-1)) @| Seq.create 1 (get hb b (len-1)))
+
+#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 100"
+
+val lemma_toField_is_injective_0: ha:mem -> hb:mem -> a:elemB -> b:elemB -> len:nat{len <= norm_length} -> Lemma
+  (requires (norm ha a /\ norm hb b /\ eval ha a len = eval hb b len))
+  (ensures  (norm ha a /\ norm hb b
+    /\ Seq.length (as_seq ha a) >= len /\ Seq.length (as_seq hb b) >= len
+    /\ Seq.slice (as_seq ha a) 0 len == Seq.slice (as_seq hb b) 0 len))
+let rec lemma_toField_is_injective_0 ha hb a b len =
+  if len = 0 then (
+    admit();
+    Seq.lemma_eq_intro (Seq.slice (as_seq ha a) 0 len) (Seq.slice (as_seq hb b) 0 len)
+  )
+  else (
+    eval_def ha a len; eval_def hb b len;
+    lemma_eval_norm_is_bounded ha a (len-1);
+    lemma_eval_norm_is_bounded hb b (len-1);
+    let z = pow2 (26 * (len-1)) in
+    let r = eval ha a (len-1) in
+    let r' = eval hb b (len-1) in
+    let q = v (get ha a (len-1)) in
+    let q' = v (get hb b (len-1)) in
+    lemma_bitweight_templ_values (len-1);
+    lemma_little_endian_is_injective_1 z q r q' r';
+    assert(r = r' /\ q = q');
+    assert(get ha a (len-1) = get hb b (len-1));
+    lemma_toField_is_injective_0 ha hb a b (len-1);
+    lemma_elemB_equality ha hb a b len)
+
+#reset-options "--initial_fuel 0 --max_fuel 0"
+
+val lemma_toField_is_injective: ha:mem -> hb:mem -> a:elemB -> b:elemB ->
+  Lemma (requires (norm ha a /\ norm hb b /\ sel_int ha a = sel_int hb b
+    /\ length a = norm_length /\ length b = norm_length ))
+	(ensures  (norm ha a /\ norm hb b /\ as_seq ha a == as_seq hb b))
+let lemma_toField_is_injective ha hb a b =
+  lemma_toField_is_injective_0 ha hb a b norm_length;
+  assert(Seq.length (as_seq ha a) = norm_length);
+  assert(Seq.length (as_seq hb b) = norm_length);
+  Seq.lemma_eq_intro (Seq.slice (as_seq ha a) 0 norm_length) (as_seq ha a);
+  Seq.lemma_eq_intro (Seq.slice (as_seq hb b) 0 norm_length) (as_seq hb b)
+
+
+
 (*** Poly1305 Field Operations ***)
 
 (* * ******************************************** *)
@@ -137,7 +242,82 @@ let bound27_isSum h0 h1 a b =
 val pow2_5: unit -> Lemma (pow2 5 = 32)
 let pow2_5 _ = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
+let null_eq_lemma ha hb (a:bigint) (b:bigint) : Lemma
+  (requires (equal ha a hb b /\ null ha a))
+  (ensures  (live hb b /\ null hb b))
+  = FStar.Buffer.Quantifiers.eq_lemma ha a hb b;
+    assert(forall (i:nat). i < length a ==> get hb b i == get ha a i)
+
+#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 20"
+
+let rec lemma_max_value h (b:elemB) (len:pos{len <= length b}) : Lemma
+  (requires (live h b))
+  (ensures  (live h b /\ maxValue h b len <= maxValue h b (length b)))
+  (decreases (length b - len))
+  = if len = length b then ()
+    else lemma_max_value h b (len+1)
+
+(* TODO *)
+let lemma_sel_elem h0 h1 acc block r : Lemma
+  (requires (norm h1 acc /\ norm h0 acc /\ norm h0 block /\ norm h0 r
+    /\ sel_elem h1 acc = ((eval h0 acc 5 + eval h0 block 5) * eval h0 r 5) % reveal prime))
+  (ensures  (norm h1 acc /\ norm h0 acc /\ norm h0 block /\ norm h0 r
+    /\ sel_elem h1 acc = (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r))
+  = admit()
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
+
+private val add_and_multiply_: acc:elemB -> block:elemB{disjoint acc block} -> r:elemB{disjoint acc r /\ disjoint block r} ->
+  tmp:elemB{length tmp = 9 /\ disjoint tmp acc /\ disjoint tmp block /\ disjoint tmp r} -> STL unit
+  (requires (fun h -> norm h acc /\ norm h block /\ norm h r /\ live h tmp /\ null h tmp))
+  (ensures (fun h0 _ h1 -> norm h0 acc /\ norm h0 block /\ norm h0 r
+    /\ norm h1 acc // the accumulation is back in a workable states
+    /\ modifies_2 acc tmp h0 h1 // It was the only thing modified
+    /\ sel_elem h1 acc = (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r // Functional
+    						// specification of the operation at that step
+    ))
+let add_and_multiply_ acc block r tmp =
+  let h1 = HST.get() in
+  fsum' acc block;  // acc1 = acc0 + block
+  let h2 = HST.get() in
+  cut (eval h2 acc 5 = eval h1 acc 5 + eval h1 block 5);
+  norm_eq_lemma h1 h2 r r;
+  eval_eq_lemma h1 h2 r r 5;
+  bound27_isSum h1 h2 acc block;
+  null_eq_lemma h1 h2 tmp tmp;
+  multiplication tmp acc r; // tmp = acc1 * r = (acc0 + block) * r
+  let h3 = HST.get() in
+  cut (eval h3 tmp 9 = (eval h1 acc 5 + eval h1 block 5) * eval h1 r 5);
+  assert(modifies_2 acc tmp h1 h3);
+  lemma_max_value h3 tmp 9;
+  cut (maxValue h3 tmp 9 * 6 <= (norm_length * pow2 53) * 6);
+  cut ((norm_length * pow2 53) * 6 = 30 * pow2 53);
+  pow2_5 ();
+  cut (30 * pow2 53 < pow2 5 * pow2 53);
+  pow2_exp_1 5 53;
+  cut ((norm_length * pow2 53) * 6 < pow2 58);
+  pow2_increases_1 63 58;
+  cut (length tmp >= 2*norm_length - 1);
+  cut (satisfiesModuloConstraints h3 tmp);
+  modulo tmp; // tmp = tmp % p
+  let h4 = HST.get() in
+  cut (sel_elem h4 tmp = ((eval h1 acc 5 + eval h1 block 5) * eval h1 r 5) % reveal prime);
+  cut (norm h4 tmp);
+  blit tmp 0ul acc 0ul nlength; // acc2 = tmp = (acc0 + block) * r % p
+  let h5 = HST.get() in
+  (* norm_eq_lemma h2 h5 r r; *)
+  (* norm_eq_lemma h1 h5 block block;   *)
+  assert(modifies_2 acc tmp h1 h4);
+  lemma_blit_quantifiers h4 h5 tmp 0ul acc 0ul 5ul;
+  assert(forall (i:nat). {:pattern (v (get h5 acc i))} i < 5 ==> v (get h5 acc (0+i)) = v (get h4 tmp (0+i)));
+  eval_eq_lemma h4 h5 tmp acc 5;
+  lemma_sel_elem h1 h5 acc block r;
+  ()
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 
 (**
@@ -158,36 +338,20 @@ let add_and_multiply acc block r =
   let h0 = HST.get() in
   let tmp = create 0UL (U32.mul 2ul nlength-|1ul) in
   let h1 = HST.get() in
+  cut (null h1 tmp);
   norm_eq_lemma hinit h1 acc acc;
   norm_eq_lemma hinit h1 block block;
-//  cut (norm h1 acc /\ norm h1 block);
-  fsum' acc block;  // acc1 = acc0 + block
+  norm_eq_lemma hinit h1 r r;
+  add_and_multiply_ acc block r tmp;
   let h2 = HST.get() in
-  norm_eq_lemma hinit h2 r r;
-  bound27_isSum h1 h2 acc block;
-  multiplication tmp acc r; // tmp = acc1 * r = (acc0 + block) * r
-  let h3 = HST.get() in
-  assert(modifies_2_1 acc h0 h3);
-//  cut (maxValue h3 tmp (2*norm_length-1) * 6 <= (norm_length * pow2 53) * 6);
-  cut ((norm_length * pow2 53) * 6 = 30 * pow2 53);
-  pow2_5 ();
-  cut (30 * pow2 53 < pow2 5 * pow2 53);
-  pow2_exp_1 5 53;
-  cut ((norm_length * pow2 53) * 6 < pow2 58);
-  pow2_increases_1 63 58;
-  cut (satisfiesModuloConstraints h3 tmp);
-  modulo tmp; // tmp = tmp % p
-  let h4 = HST.get() in
-  cut (norm h4 tmp);
-  assert(modifies_2_1 acc h0 h4);
-  blit tmp 0ul acc 0ul nlength; // acc2 = tmp = (acc0 + block) * r % p
-  let h5 = HST.get() in
   pop_frame();
   let hfin = HST.get() in
-  assert(modifies_1 acc hinit hfin);
-//  norm_eq_lemma h4 hfin tmp acc; // not exactly equal, but equal in [0..nlength]
-  assume (norm hfin acc);
-  assume (sel_elem hfin acc = (sel_elem hinit acc +@ sel_elem hinit block) *@ sel_elem hinit r)
+  eval_eq_lemma h2 hfin acc acc 5;
+  norm_eq_lemma h2 hfin acc acc;
+  eval_eq_lemma hinit h1 acc acc 5;
+  eval_eq_lemma hinit h1 block block 5;
+  eval_eq_lemma hinit h1 r r 5;
+  ()
 
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
@@ -232,6 +396,40 @@ val toField: a:elemB -> b:wordB_16{disjoint a b} -> STL unit
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
+(* TODO *)
+let lemma_toField_1 (b:elemB) (s:wordB_16{disjoint b s}) h n0 n1 n2 n3 : Lemma
+  (requires (let open FStar.UInt8 in
+    live h b /\ live h s
+    /\ U64.v n0 = v (get h s 0) + pow2 8 * v (get h s 1) + pow2 16 * v (get h s 2) + pow2 24 * v (get h s 3)
+    /\ U64.v n1 = v (get h s 4) + pow2 8 * v (get h s 5) + pow2 16 * v (get h s 6) + pow2 24 * v (get h s 7)
+    /\ U64.v n2 = v (get h s 8) + pow2 8 * v (get h s 9) + pow2 16 * v (get h s 10) + pow2 24 * v (get h s 11)
+    /\ U64.v n3 = v (get h s 12) + pow2 8 * v (get h s 13) + pow2 16 * v (get h s 14) + pow2 24 * v (get h s 15)))
+  (ensures  (live h b /\ live h s /\ v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 = little_endian (sel_word h s)))
+  = admit()
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
+val upd_elemB: b:elemB -> n0:U64.t -> n1:U64.t -> n2:U64.t -> n3:U64.t -> n4:U64.t -> Stack unit
+  (requires (fun h -> live h b))
+  (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1
+    /\ get h1 b 0 = n0 /\ get h1 b 1 = n1 /\ get h1 b 2 = n2 /\ get h1 b 3 = n3 /\  get h1 b 4 = n4))
+let upd_elemB b n0 n1 n2 n3 n4 =
+  upd b 0ul n0;
+  upd b 1ul n1;
+  upd b 2ul n2;
+  upd b 3ul n3;
+  upd b 4ul n4
+
+(* TODO *)
+let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4' : Lemma
+  (requires (let mask_26 = mk_mask 26ul in
+    n0' = (n0 &^ mask_26) /\ n1' = ((n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26))
+    /\ n2' = ((n1 >>^ 20ul) |^ ((n2 <<^ 12ul) &^ mask_26))
+    /\ n3' = ((n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26)) /\ n4' = (n3 >>^ 8ul) ))
+  (ensures  (v n0' + pow2 26 * v n1' + pow2 52 * v n2' + pow2 78 * v n3' + pow2 104 * v n4'
+    = v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 ))
+  = admit()
+
 let toField b s =
   //DEBUG: let _ = print_bytes s 0ul 16ul in
   let h0 = HST.get() in
@@ -248,81 +446,22 @@ let toField b s =
   let n1 = Int.Cast.uint32_to_uint64 n1 in
   let n2 = Int.Cast.uint32_to_uint64 n2 in
   let n3 = Int.Cast.uint32_to_uint64 n3 in
-  (* TODO *)
-  assume (v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 = little_endian (sel_word h0 s));
+  lemma_toField_1 b s h0 n0 n1 n2 n3;
+  cut (v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 = little_endian (sel_word h0 s));
   let n0' = n0 &^ mask_26 in
   let n1' = (n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26) in
   let n2' = (n1 >>^ 20ul) |^ ((n2 <<^ 12ul) &^ mask_26) in
   let n3' = (n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26) in
   let n4' = (n3 >>^ 8ul) in
-  (* TODO *)
-  assume (v n0' + pow2 26 * v n1' + pow2 52 * v n2' + pow2 78 * v n3' + pow2 104 * v n4'
+  lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4';
+  cut (v n0' + pow2 26 * v n1' + pow2 52 * v n2' + pow2 78 * v n3' + pow2 104 * v n4'
     = little_endian (sel_word h0 s));
-  upd b 0ul n0';
-  upd b 1ul n1';
-  upd b 2ul n2';
-  upd b 3ul n3';
-  upd b 4ul n4';
+  upd_elemB b n0' n1' n2' n3' n4';
   let h1 = HST.get() in
-  (* TODO *)
   assume (sel_int h1 b = little_endian (sel_word h0 s));
   assume (v (get h1 b 4) < pow2 24);
-  assume (norm h1 b)
-
-(* (\* Formats a wordB into an elemB *\) *)
-(* val toField: a:elemB -> b:wordB{length b = 16 /\ disjoint a b} -> STL unit *)
-(*   (requires (fun h -> live h a /\ live h b)) *)
-(*   (ensures  (fun h0 _ h1 -> *)
-(*     live h0 b /\ // Initial post condition *)
-(*     norm h1 a /\ // the elemB 'a' is in a 'workable' state *)
-(*     modifies_1 a h0 h1 /\ // Only a was modified *)
-(*     sel_int h1 a = little_endian (sel_word h0 b) /\ // Functional correctness *)
-(*     v (get h1 a 4) < pow2 24 // Necesary to be allowed to add 2^128 *)
-(*     )) *)
-(* let toField b s = *)
-(*   admit(); // TODO *)
-(*   let h0 = HST.get() in *)
-(*   (\* Math.Lib.pow2_increases_lemma 64 26; *\) *)
-(*   (\* Math.Lib.pow2_increases_lemma 64 32; *\) *)
-(*   (\* Math.Lib.pow2_increases_lemma 26 24; *\) *)
-(*   let mask_26 = U64.sub (1UL <<^ 26ul) 1UL in *)
-(*   (\* cut (v mask_26 = v 1UL * pow2 26 - v 1UL /\ v 1UL = 1); *\) *)
-(*   (\* cut (v mask_26 = pow2 26 - 1); *\) *)
-(*   let s0 = sub s 0ul  4ul in *)
-(*   let s1 = sub s 4ul  4ul in *)
-(*   let s2 = sub s 8ul  4ul in *)
-(*   let s3 = sub s 12ul 4ul in *)
-(*   let n0 = (uint32_of_bytes s0) in *)
-(*   let n1 = (uint32_of_bytes s1) in *)
-(*   let n2 = (uint32_of_bytes s2) in *)
-(*   let n3 = (uint32_of_bytes s3) in *)
-(*   let n0 = Int.Cast.uint32_to_uint64 n0 in *)
-(*   let n1 = Int.Cast.uint32_to_uint64 n1 in *)
-(*   let n2 = Int.Cast.uint32_to_uint64 n2 in *)
-(*   let n3 = Int.Cast.uint32_to_uint64 n3 in *)
-(*   (\* ulogand_lemma_4 #63 n0 26 mask_26; *\) *)
-(*   (\* ulogand_lemma_4 #63 (n1 <<^ 6) 26 mask_26; *\) *)
-(*   (\* ulogand_lemma_4 #63 (n2 <<^ 12) 26 mask_26; *\) *)
-(*   (\* ulogand_lemma_4 #63 (n3 <<^ 18) 26 mask_26; *\) *)
-(*   (\* aux_lemma n0 n1 26; *\) *)
-(*   (\* aux_lemma n1 n2 20; *\) *)
-(*   (\* aux_lemma n2 n3 14; *\) *)
-(*   (\* aux_lemma_1 n3; *\) *)
-(*   let n0' = n0 &^ mask_26 in *)
-(*   let n1' = (n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26) in *)
-(*   let n2' = (n1 >>^ 20ul) |^ ((n2 <<^ 12ul) &^ mask_26) in *)
-(*   let n3' = (n2 >>^ 14ul) |^ ((n3 <<^ 18ul) &^ mask_26) in *)
-(*   let n4' = (n3 >>^ 8ul) in *)
-(*   upd b 0ul n0'; *)
-(*   upd b 1ul n1'; *)
-(*   upd b 2ul n2'; *)
-(*   upd b 3ul n3'; *)
-(*   upd b 4ul n4'; *)
-(*   let h1 = HST.get() in *)
-(*   () *)
-(*   (\* assume (v (get h b 4) < pow2 24); *\) *)
-(*   (\* assume (norm h b) *\) *)
-
+  assume (norm h1 b);
+  ()
 
 #reset-options "--initial_fuel 6 --max_fuel 6"
 
@@ -473,110 +612,6 @@ let clamp r =
   fix  8ul 252uy;
   fix 12ul 252uy;
   ()
-
-
-(* * *********************************************)
-(* *          Encoding-related lemmas            *)
-(* * *********************************************)
-
-#reset-options "--initial_fuel 0 --max_fuel 0"
-
-val lemma_eucl_div_bound: a:nat -> b:nat -> q:pos -> Lemma
-  (requires (a < q))
-  (ensures  (a + q * b < q * (b+1)))
-let lemma_eucl_div_bound a b q = ()
-
-#reset-options "--initial_fuel 1 --max_fuel 1"
-
-val lemma_bitweight_templ_values: n:nat -> Lemma
-  (requires (True))
-  (ensures  (bitweight templ n = 26 * n))
-let rec lemma_bitweight_templ_values n =
-  if n = 0 then ()
-  else lemma_bitweight_templ_values (n-1)
-
-#reset-options "--initial_fuel 0 --max_fuel 0"
-
-val lemma_mult_ineq: a:pos -> b:pos -> c:pos -> Lemma
-  (requires (b <= c))
-  (ensures  (a * b <= a * c))
-let lemma_mult_ineq a b c = ()
-
-#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 50"
-
-val lemma_eval_norm_is_bounded: ha:mem -> a:elemB -> len:nat{len <= norm_length} -> Lemma
-  (requires (norm ha a))
-  (ensures  (norm ha a /\ eval ha a len < pow2 (26 * len) ))
-let rec lemma_eval_norm_is_bounded ha a len =
-  if len = 0 then (
-    eval_def ha a len
-  )
-  else (
-    cut (len >= 1);
-    eval_def ha a len;
-    lemma_bitweight_templ_values (len-1);
-    lemma_eval_norm_is_bounded ha a (len-1);
-    assert(eval ha a (len-1) < pow2 (26 * (len-1)));
-    assert(pow2 (bitweight templ (len-1)) = pow2 (26 * (len-1)));
-    lemma_eucl_div_bound (eval ha a (len-1)) (v (get ha a (len-1))) (pow2 (bitweight templ (len-1)));
-    assert(eval ha a len < pow2 (26 * (len-1)) * (v (get ha a (len-1)) + 1));
-    lemma_mult_ineq (pow2 (26 * (len-1))) (v (get ha a (len-1))+1) (pow2 26);
-    assert(eval ha a len < pow2 (26 * (len-1)) * pow2 26);
-    Math.Lib.pow2_exp_lemma (26 * (len-1)) 26)
-
-#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 20"
-
-val lemma_elemB_equality: ha:mem -> hb:mem -> a:elemB -> b:elemB -> len:pos{len<=norm_length} -> Lemma
-  (requires (live ha a /\ live hb b
-    /\ Seq.slice (as_seq ha a) 0 (len-1) == Seq.slice (as_seq hb b) 0 (len-1)
-    /\ get ha a (len-1) = get hb b (len-1)))
-  (ensures  (live ha a /\ live hb b /\ Seq.slice (as_seq ha a) 0 len == Seq.slice (as_seq hb b) 0 len))
-let lemma_elemB_equality ha hb a b len =
-  Seq.lemma_eq_intro (Seq.slice (as_seq ha a) 0 len)
-		     ((Seq.slice (as_seq ha a) 0 (len-1)) @| Seq.create 1 (get ha a (len-1)));
-  Seq.lemma_eq_intro (Seq.slice (as_seq hb b) 0 len)
-		     ((Seq.slice (as_seq hb b) 0 (len-1)) @| Seq.create 1 (get hb b (len-1)))
-
-#reset-options "--initial_fuel 1 --max_fuel 1 --z3timeout 100"
-
-val lemma_toField_is_injective_0: ha:mem -> hb:mem -> a:elemB -> b:elemB -> len:nat{len <= norm_length} -> Lemma
-  (requires (norm ha a /\ norm hb b /\ eval ha a len = eval hb b len))
-  (ensures  (norm ha a /\ norm hb b
-    /\ Seq.length (as_seq ha a) >= len /\ Seq.length (as_seq hb b) >= len
-    /\ Seq.slice (as_seq ha a) 0 len == Seq.slice (as_seq hb b) 0 len))
-let rec lemma_toField_is_injective_0 ha hb a b len =
-  if len = 0 then (
-    admit();
-    Seq.lemma_eq_intro (Seq.slice (as_seq ha a) 0 len) (Seq.slice (as_seq hb b) 0 len)
-  )
-  else (
-    eval_def ha a len; eval_def hb b len;
-    lemma_eval_norm_is_bounded ha a (len-1);
-    lemma_eval_norm_is_bounded hb b (len-1);
-    let z = pow2 (26 * (len-1)) in
-    let r = eval ha a (len-1) in
-    let r' = eval hb b (len-1) in
-    let q = v (get ha a (len-1)) in
-    let q' = v (get hb b (len-1)) in
-    lemma_bitweight_templ_values (len-1);
-    lemma_little_endian_is_injective_1 z q r q' r';
-    assert(r = r' /\ q = q');
-    assert(get ha a (len-1) = get hb b (len-1));
-    lemma_toField_is_injective_0 ha hb a b (len-1);
-    lemma_elemB_equality ha hb a b len)
-
-#reset-options "--initial_fuel 0 --max_fuel 0"
-
-val lemma_toField_is_injective: ha:mem -> hb:mem -> a:elemB -> b:elemB ->
-  Lemma (requires (norm ha a /\ norm hb b /\ sel_int ha a = sel_int hb b
-    /\ length a = norm_length /\ length b = norm_length ))
-	(ensures  (norm ha a /\ norm hb b /\ as_seq ha a == as_seq hb b))
-let lemma_toField_is_injective ha hb a b =
-  lemma_toField_is_injective_0 ha hb a b norm_length;
-  assert(Seq.length (as_seq ha a) = norm_length);
-  assert(Seq.length (as_seq hb b) = norm_length);
-  Seq.lemma_eq_intro (Seq.slice (as_seq ha a) 0 norm_length) (as_seq ha a);
-  Seq.lemma_eq_intro (Seq.slice (as_seq hb b) 0 norm_length) (as_seq hb b)
 
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
