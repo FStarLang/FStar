@@ -432,39 +432,41 @@ let collect_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//Monotonic counters, bounded by the length of a log
+//Monotonic sequence numbers, bounded by the length of a log
 ////////////////////////////////////////////////////////////////////////////////
-type log_t (i:rid) (a:Type) = m_rref i (seq a) grows
+
+//16-09-12 aliased to i_seq, so that we can refine the whole log contents and have sequence numbers. 
+type log_t (r:rid) (a:Type) = i_seq r a (fun (s:seq a) -> True) 
 
 let increases (x:int) (y:int) = b2t (x <= y)
 
-let at_most_log_len (#l:rid) (#a:Type) (x:nat) (log:log_t l a)
+let at_most_log_len (#l:rid) (#a:Type) (#p:seq a -> Type) (x:nat) (log:i_seq l a p)
     : HyperHeap.t -> GTot Type0
     = fun h -> x <= Seq.length (m_sel h log)
 
-//Note: we may want int counters, instead of nat counters
+//Note: we may want int seqn, instead of nat seqn
 //because the handshake uses an initial value of -1
-type counter_val (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
+type seqn_val (#l:rid) (#a:Type) (#p:seq a -> Type) (i:rid) (log:i_seq l a p) (max:nat) =
      (x:nat{x <= max /\ witnessed (at_most_log_len x log)}) //never more than the length of the log
 	 
-type counter (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
+type seqn (#l:rid) (#a:Type) (#p:seq a -> Type) (i:rid) (log:i_seq l a p) (max:nat) =
   m_rref i  //counter in region i
-         (counter_val i log max) //never more than the length of the log
+         (seqn_val i log max) //never more than the length of the log
 	 increases //increasing
 
 let monotonic_increases (x:unit)
   : Lemma (monotonic int increases)
   = ()
 
-let at_most_log_len_stable (#l:rid) (#a:Type) (x:nat) (l:log_t l a)
+let at_most_log_len_stable (#l:rid) (#a:Type) (#p:seq a -> Type) (x:nat) (l:i_seq l a p)
   : Lemma (stable_on_t l (at_most_log_len x l))
   = ()
 
 (* assume val gcut : f:(unit -> GTot Type){f ()} -> Tot unit *)
 
-let new_counter (#l:rid) (#a:Type) (#max:nat)
-		(i:rid) (init:nat) (log:log_t l a)
-  : ST (counter i log max)
+let new_seqn (#l:rid) (#a:Type) (#p:seq a -> Type) (#max:nat)
+		(i:rid) (init:nat) (log:i_seq l a p)
+  : ST (seqn i log max)
        (requires (fun h ->
 	   init <= max /\
 	   init <= Seq.length (m_sel h log)))
@@ -479,8 +481,8 @@ let new_counter (#l:rid) (#a:Type) (#max:nat)
     witness log (at_most_log_len init log);
     m_alloc i init
 
-let increment_counter (#l:rid) (#a:Type) (#max:nat)
-		      (#i:rid) (#log:log_t l a) ($c:counter i log max)
+let increment_seqn (#l:rid) (#a:Type) (#p:seq a -> Type) (#max:nat)
+		   (#i:rid) (#log:i_seq l a p) ($c:seqn i log max)
   : ST unit
        (requires (fun h ->
 	  let log = m_sel h log in
@@ -496,7 +498,7 @@ let increment_counter (#l:rid) (#a:Type) (#max:nat)
     witness log (at_most_log_len n log);
     m_write c n
 
-let testify_counter (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ctr:counter i log max)
+let testify_seqn (#i:rid) (#l:rid) (#a:Type0) (#p:seq a -> Type) (#log:i_seq l a p) (#max:nat) (ctr:seqn i log max)
   : ST unit
        (requires (fun h -> True))
        (ensures (fun h0 _ h1 ->
@@ -506,10 +508,10 @@ let testify_counter (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ct
     testify (at_most_log_len n log)
 
 let test (i:rid) (l:rid) (a:Type0) (log:log_t l a) //(p:(nat -> Type))
-         (r:counter i log 8) (h:HyperHeap.t)
+         (r:seqn i log 8) (h:HyperHeap.t)
   = //assert (m_sel2 h r = HyperHeap.sel h (as_rref r));
     assert (m_sel h r = HyperHeap.sel h (as_rref r));
-    assert (m_sel #_ #(counter_val i log 8) #_ h r = HyperHeap.sel h (as_rref r))
+    assert (m_sel #_ #(seqn_val i log 8) #_ h r = HyperHeap.sel h (as_rref r))
 
 
 (* TODO: this fails with a silly inconsistent qualifier error *)
