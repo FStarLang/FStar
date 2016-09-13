@@ -96,6 +96,7 @@ let index b i = Seq.index b i
 val createBytes : l:nat -> byte -> Tot (lbytes l)
 let createBytes l b = Seq.create l b
 
+// TODO: not implemented in ML
 val initBytes: l:nat -> (i:nat {i<l} -> Tot byte) -> Tot (lbytes l)
 let initBytes l f = Seq.init l f
 
