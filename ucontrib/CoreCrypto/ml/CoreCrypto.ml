@@ -39,29 +39,29 @@ let string_of_block_cipher = function
   | TDES_EDE_CBC -> "TDES_EDE_CBC"
 
 let blockSize = function
-  | TDES_EDE_CBC -> 8
-  | AES_128_CBC  -> 16
-  | AES_256_CBC  -> 16
+  | TDES_EDE_CBC -> Z.of_int 8
+  | AES_128_CBC  -> Z.of_int 16
+  | AES_256_CBC  -> Z.of_int 16
 
 let aeadKeySize = function
-  | AES_128_GCM -> 16
-  | AES_256_GCM -> 32
+  | AES_128_GCM -> Z.of_int 16
+  | AES_256_GCM -> Z.of_int 32
 
 let aeadRealIVSize = function
-  | AES_128_GCM -> 12
-  | AES_256_GCM -> 12
+  | AES_128_GCM -> Z.of_int 12
+  | AES_256_GCM -> Z.of_int 12
 
 let aeadTagSize = function
-  | AES_128_GCM -> 16
-  | AES_256_GCM -> 16
+  | AES_128_GCM -> Z.of_int 16
+  | AES_256_GCM -> Z.of_int 16
 
 let hashSize = function
-  | MD5    -> 16
-  | SHA1   -> 20
-  | SHA224 -> 28
-  | SHA256 -> 32
-  | SHA384 -> 48
-  | SHA512 -> 64
+  | MD5    -> Z.of_int 16
+  | SHA1   -> Z.of_int 20
+  | SHA224 -> Z.of_int 28
+  | SHA256 -> Z.of_int 32
+  | SHA384 -> Z.of_int 48
+  | SHA512 -> Z.of_int 64
 
 type md
 type md_ctx
@@ -205,7 +205,7 @@ let aead_encrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
 let aead_decrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
   let c = cipher_of_aead_cipher c in
   let ctx = ocaml_EVP_CIPHER_CTX_create c false in
-  let d,t = Platform.Bytes.split d ((Platform.Bytes.length d) - 16) in
+  let d,t = Platform.Bytes.split d (Z.sub (Platform.Bytes.length d) (Z.of_int 16)) in
   ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
   ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv) true;
   ocaml_EVP_CIPHER_CTX_set_additional_data ctx (string_of_bytes ad);
@@ -238,6 +238,7 @@ external ocaml_rand_status : unit -> bool = "ocaml_rand_status"
 external ocaml_rand_bytes  : int -> string = "ocaml_rand_bytes"
 
 let random i =
+    let i = Z.to_int i in
     if (i < 0) then invalid_arg "input to random must be non-negative"
     else if (not (ocaml_rand_status())) then failwith "random number generator not ready"
     else bytes_of_string (ocaml_rand_bytes i)
@@ -252,7 +253,7 @@ type rsa_key = {
 }
 
 external ocaml_rsa_new : unit -> rsa = "ocaml_rsa_new"
-external ocaml_rsa_fini   : rsa -> unit = "ocaml_rsa_fini"
+external ocaml_rsa_fini : rsa -> unit = "ocaml_rsa_fini"
 
 external ocaml_rsa_gen_key : size:int -> exp:int -> string * string * string = "ocaml_rsa_gen_key"
 external ocaml_rsa_set_key : rsa -> rsa_key -> unit = "ocaml_rsa_set_key"
@@ -264,7 +265,8 @@ external ocaml_rsa_decrypt : rsa -> prv:bool -> rsa_padding -> string -> string 
 external ocaml_rsa_sign : rsa -> hash_alg option -> string -> string = "ocaml_rsa_sign"
 external ocaml_rsa_verify : rsa -> hash_alg option -> data:string -> sig_:string -> bool = "ocaml_rsa_verify"
 
-let rsa_gen_key (i:int) =
+let rsa_gen_key i =
+  let i = Z.to_int i in
   let rsa_mod, rsa_pub_exp, rsa_prv_exp = ocaml_rsa_gen_key i 65537 in {
     rsa_mod = bytes_of_string rsa_mod;
     rsa_pub_exp = bytes_of_string rsa_pub_exp;
@@ -351,7 +353,8 @@ let dsa_key_of_dsa (dsa:dsa) =
     dsa_private = Option.map bytes_of_string sk;
   }
 
-let dsa_gen_key (n:int) =
+let dsa_gen_key n =
+  let n = Z.to_int n in
   let p, q, g = ocaml_dsa_gen_params n in
   let dp = {
     dsa_p = bytes_of_string p;
@@ -408,7 +411,8 @@ external ocaml_dh_set_key : dh -> dh_key -> unit = "ocaml_dh_set_key"
 
 external ocaml_dh_compute : dh -> string -> string = "ocaml_dh_compute"
 
-let dh_gen_params (size:int) =
+let dh_gen_params size =
+  let size = Z.to_int size in
   let p, g = ocaml_dh_gen_params size 2 in
   {
     dh_p = bytes_of_string p;
@@ -440,9 +444,9 @@ type ec_curve =
   | ECC_P521
 
 let ec_bytelen = function
-  | ECC_P256 -> 32
-  | ECC_P384 -> 48
-  | ECC_P521 -> 66 (* ceil(521/8) *)
+  | ECC_P256 -> Z.of_int 32
+  | ECC_P384 -> Z.of_int 48
+  | ECC_P521 -> Z.of_int 66 (* ceil(521/8) *)
 
 type ec_params = { curve: ec_curve; point_compression: bool; }
 type ec_point = { ecx : bytes; ecy : bytes; }
@@ -550,7 +554,7 @@ let ssl_key_of_key key =
   ssl_key
 
 let ec_build_key (params:ec_params) (eck:ssl_ec_key): ec_key =
-  let n = ec_bytelen params.curve in
+  let n = ec_bytelen params.curve |> Z.to_int in
   let ecpad s =
     let pad = String.make (n - (String.length s)) '\x00' in
     bytes_of_string (pad ^ s) in

@@ -10,8 +10,8 @@ type value = bytes * bool
 type dhdb = DB.db
 
 let defaultFileName = ""
-let defaultDHPrimeConfidence = 0
-let defaultPQMinLength = (1024, 512)
+let defaultDHPrimeConfidence = Z.of_int 0
+let defaultPQMinLength = (Z.of_int 1024, Z.of_int 512)
 
 let ser_key (k:key) =
   let u,v = k in
