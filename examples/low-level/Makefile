@@ -166,4 +166,4 @@ aesgcm-test: aesgcm-compile
 clean:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
 	@rm -f $(addprefix crypto/ml/, *.cmx *.o *.cmi *~)
-	@rm -rf $(CURVE_ODIR) $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) $(AES_ODIR) kremlin *~ *.exe ./crypto/*~
+	@rm -rf $(CURVE_ODIR) $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) $(AES_ODIR) $(AESGCM_ODIR) kremlin *~ *.exe ./crypto/*~
