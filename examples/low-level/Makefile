@@ -34,7 +34,7 @@ all: uall sall
 
 uall:
 	+make clean
-	+make chacha-test poly-test aead-test curve-test
+	+make chacha-test poly-test aead-test curve-test aes-test aesgcm-test
 
 sall:
 
@@ -130,8 +130,40 @@ aead-kremlin-test:
 	$(KREMLIN) $(KREMLIN_ARGS) -I crypto crypto/Crypto.AEAD.Chacha20Poly1305.fst $(addprefix $(KREMLIN_HOME)/test/, main-Aead.c testlib.c) -o test_aead.exe
 	./test_aead.exe
 
+aes-ver:
+	$(FSTAR) Crypto.Symmetric.AES.fst 
+
+AES_ODIR=aes
+AES_EXTRACTED=Crypto_Symmetric_AES.ml
+
+aes-extract: ulib
+	mkdir -p $(AES_ODIR)
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) --include crypto crypto/Crypto.Symmetric.AES.fst --odir $(AES_ODIR) 
+
+aes-compile: aes-extract
+	$(OCAMLOPT) -I crypto/ml -I $(AES_ODIR) $(addprefix crypto/ml/,$(REALIZED_ML)) \
+	  $(addprefix $(AES_ODIR)/,$(AES_EXTRACTED)) crypto/ml/test_aes256.ml -o test_aes256.exe
+
+aes-test: aes-compile
+	./test_aes256.exe
+
+
+AESGCM_ODIR=aesgcm
+AESGCM_EXTRACTED=Crypto_Symmetric_AES.ml Crypto_Symmetric_GCM.ml Crypto_AEAD_AES256GCM.ml
+
+aesgcm-extract: ulib
+	mkdir -p $(AESGCM_ODIR)
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) --include crypto crypto/Crypto.AEAD.AES256GCM.fst --odir $(AESGCM_ODIR) 
+
+aesgcm-compile: aesgcm-extract
+	$(OCAMLOPT) -I crypto/ml -I $(AESGCM_ODIR) $(addprefix crypto/ml/,$(REALIZED_ML)) \
+	  $(addprefix $(AESGCM_ODIR)/,$(AESGCM_EXTRACTED)) crypto/ml/test_aes_gcm.ml -o test_aes_gcm.exe
+
+aesgcm-test: aesgcm-compile
+	./test_aes_gcm.exe
+
 # Cleaning
 clean:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
 	@rm -f $(addprefix crypto/ml/, *.cmx *.o *.cmi *~)
-	@rm -rf $(CURVE_ODIR) $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) kremlin *~ *.exe ./crypto/*~
+	@rm -rf $(CURVE_ODIR) $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) $(AES_ODIR) kremlin *~ *.exe ./crypto/*~
