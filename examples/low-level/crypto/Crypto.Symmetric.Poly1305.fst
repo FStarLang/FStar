@@ -703,8 +703,8 @@ let poly1305_update log msgB acc r =
 //  assert (sel_elem h2 acc ==
 //         (poly (reveal log) (sel_elem h0 r) +@ sel_elem h1 block) *@ sel_elem h0 r);
   assert (modifies_1 acc h1 h2);
-  let updated_log = hide (SeqProperties.snoc (reveal log) (encode_16 msg)) in
-  //let updated_log = log in // TODO: Dummy
+  //let updated_log = hide (SeqProperties.snoc (reveal log) (encode_16 msg)) in
+  let updated_log = log in // TODO: Dummy
   seq_head_snoc (reveal log) (encode_16 msg);
   Seq.lemma_index_app2 (reveal log) (Seq.create 1 (encode_16 msg)) (Seq.length (SeqProperties.snoc (reveal log) (encode_16 msg)) - 1);
   pop_frame();
