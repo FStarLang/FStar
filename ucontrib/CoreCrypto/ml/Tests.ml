@@ -32,7 +32,7 @@ module TestAead = struct
     let aad = Bytes.bytes_of_hex v.aad in
     let plaintext = Bytes.bytes_of_hex v.plaintext in
     let c = aead_encrypt v.cipher key iv aad plaintext in
-    let c',t = Bytes.split c (Bytes.length c - 16) in
+    let c',t = Bytes.split c (Z.sub (Bytes.length c) (Z.of_int 16)) in
     if not(Bytes.hex_of_bytes c' = v.ciphertext && Bytes.hex_of_bytes t = v.tag) then
       false
     else
@@ -505,7 +505,7 @@ module TestHmac = struct
       | None ->
           Bytes.equalBytes digest digest'
       | Some i ->
-          Bytes.equalBytes digest (fst (Bytes.split digest' i))
+          Bytes.equalBytes digest (fst (Bytes.split digest' (Z.of_int i)))
     ) v.digests
 
 end
@@ -797,7 +797,7 @@ module TestHashUpdate = struct
     let ctx = digest_create t.hash_alg in
     (* Add input incrementally *)
     for i = input.Bytes.index to (input.Bytes.length - 1) do
-       digest_update ctx (Bytes.abyte (Bytes.index input i))
+       digest_update ctx (Bytes.abyte (Bytes.index input (Z.of_int i)))
     done; 
     let output = digest_final ctx in  
     Bytes.equalBytes output (Bytes.bytes_of_hex t.output)
@@ -858,12 +858,12 @@ module TestRsa = struct
 
   (* Test vectors for RSA/DSA/ECDSA below *)
   let tests =
-    let large = CoreCrypto.random (keysize/8 - 11) in (* bytes_in_keysize - padding *)
-    let small = CoreCrypto.random ((min keysize 512)/8 - 11) in
+    let large = CoreCrypto.random (Z.of_int (keysize/8 - 11)) in (* bytes_in_keysize - padding *)
+    let small = CoreCrypto.random (Z.of_int ((min keysize 512)/8 - 11)) in
     [large; small; bytes_of_string "0"]
 
   let roundtrip original_bytes =
-    let k = rsa_gen_key keysize in
+    let k = rsa_gen_key (Z.of_int keysize) in
     let cipher_bytes = rsa_encrypt k Pad_PKCS1 original_bytes in
     let plain_bytes = rsa_decrypt k Pad_PKCS1 cipher_bytes in
     try match plain_bytes with
@@ -898,7 +898,7 @@ module TestDsa = struct
   let tests = TestRsa.tests
 
   let check original_bytes =
-    let private_key = dsa_gen_key keysize in
+    let private_key = dsa_gen_key (Z.of_int keysize) in
     let public_key = { private_key with dsa_private = None } in
     let sig_bytes = dsa_sign None private_key original_bytes in
     if not (dsa_verify None public_key original_bytes sig_bytes) then begin
@@ -1047,7 +1047,7 @@ module TestDhke = struct
   let dh_param_size = dh_param_size_large
 
   let simple_test () =
-    let params = dh_gen_params dh_param_size in
+    let params = dh_gen_params (Z.of_int dh_param_size) in
     let alice = dh_gen_key params in
     let bob = dh_gen_key params in
     let shared1 = dh_agreement alice bob.dh_public in
