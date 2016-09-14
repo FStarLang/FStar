@@ -777,7 +777,7 @@ let to_seq #a (b:buffer a) (l:UInt32.t { v l <= length b }): STL (seq a)
     let i = v b.idx in
     Seq.slice s i (i + v l)
 
-let index #a (b:buffer a) (n:UInt32.t{v n<length b}) : STL a
+let index #a (b:buffer a) (n:UInt32.t{v n<length b}) : Stack a
      (requires (fun h -> live h b))
      (ensures (fun h0 z h1 -> live h0 b /\ h1 == h0
        /\ z == Seq.index (as_seq h0 b) (v n)))
@@ -795,7 +795,7 @@ let lemma_aux_6 #a (b:buffer a) (n:UInt32.t{v n < length b}) (z:a) h0 : Lemma
   (* let h1 = HS.upd h0 (content b) (Seq.upd (sel h0 b) (idx b + v n) z) in *)
   (*   assume (forall (#a':Type) (b':buffer a'). (live h0 b' /\ disjoint_from_bufs b' (only b)) ==> equal h0 b' h1 b') *)
 
-val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> STL unit
+val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> Stack unit
   (requires (fun h -> live h b /\ v n < length b))
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ v n < length b
     /\ modifies_1 b h0 h1
@@ -887,13 +887,13 @@ let rec eqb #a b1 b2 len =
    *)
 (* JP: if the [val] is not specified, there's an issue with these functions
  * taking an extra unification parameter at extraction-time... *)
-val op_Array_Access: #a:Type -> b:buffer a -> n:UInt32.t{v n<length b} -> STL a
+val op_Array_Access: #a:Type -> b:buffer a -> n:UInt32.t{v n<length b} -> Stack a
      (requires (fun h -> live h b))
      (ensures (fun h0 z h1 -> live h0 b /\ h1 == h0
        /\ z == Seq.index (as_seq h0 b) (v n)))
 let op_Array_Access #a b n = index #a b n
 
-val op_Array_Assignment: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> STL unit
+val op_Array_Assignment: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> Stack unit
   (requires (fun h -> live h b /\ v n < length b))
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ v n < length b
     /\ modifies_1 b h0 h1
@@ -908,7 +908,7 @@ let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem)
 
 (* JK: TODO, corresponds to memcpy *)
 assume val blit: #t:Type -> a:buffer t -> idx_a:UInt32.t{v idx_a <= length a} -> b:buffer t{disjoint a b} ->
-  idx_b:UInt32.t{v idx_b <= length b} -> len:UInt32.t{v idx_a+v len <= length a /\ v idx_b+v len <= length b} -> STL unit
+  idx_b:UInt32.t{v idx_b <= length b} -> len:UInt32.t{v idx_a+v len <= length a /\ v idx_b+v len <= length b} -> Stack unit
     (requires (fun h -> live h a /\ live h b))
     (ensures (fun h0 _ h1 -> live h0 b /\ live h0 a /\ live h1 b /\ live h1 a
       /\ Seq.slice (as_seq h1 b) (v idx_b) (v idx_b+v len) == Seq.slice (as_seq h0 a) (v idx_a) (v idx_a+v len)
@@ -917,7 +917,7 @@ assume val blit: #t:Type -> a:buffer t -> idx_a:UInt32.t{v idx_a <= length a} ->
       /\ modifies_1 b h0 h1 ))
 
 (* JK: TODO, corresponds to memset *)
-assume val fill: #t:Type -> b:buffer t -> z:t -> len:UInt32.t{v len <= length b} -> STL unit
+assume val fill: #t:Type -> b:buffer t -> z:t -> len:UInt32.t{v len <= length b} -> Stack unit
   (requires (fun h -> live h b))
   (ensures  (fun h0 _ h1 -> live h0 b /\ live h1 b /\ modifies_1 b h0 h1
     /\ Seq.slice (as_seq h1 b) 0 (v len) == Seq.create (v len) z

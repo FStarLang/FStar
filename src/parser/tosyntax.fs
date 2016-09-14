@@ -120,7 +120,7 @@ let op_as_term env arity rng s : option<S.term> =
   let fallback () =
       match s with
         | "=" ->    r C.op_Eq Delta_equational
-        | ":=" ->   r C.op_ColonEq Delta_equational
+        | ":=" ->   r C.write_lid Delta_equational
         | "<" ->    r C.op_LT Delta_equational
         | "<=" ->   r C.op_LTE Delta_equational
         | ">" ->    r C.op_GT Delta_equational

@@ -2,7 +2,7 @@ FSTAR_HOME = ../../..
 CONTRIB=ucontrib
 PLATFORM = $(FSTAR_HOME)/$(CONTRIB)/Platform/ml
 DB=db
-INCLUDE=-package batteries -I $(PLATFORM) -I $(DB)
+INCLUDE=-package batteries,zarith -I $(PLATFORM) -I $(DB)
 
 OCAMLC = ocamlfind c $(INCLUDE) -g -annot
 OCAMLOPT = ocamlfind opt $(INCLUDE) -g -annot
@@ -66,7 +66,7 @@ CoreCrypto.cma: $(DLL_BYTE)
 
 TEST_CMX = Tests.cmx
 Tests.exe: CoreCrypto.cmxa $(TEST_CMX)
-	$(OCAMLOPT) $(EXTRA_OPTS) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
+	$(OCAMLOPT) $(EXTRA_OPTS) -I $(PLATFORM) -package batteries,zarith -linkpkg -o $@ \
 	CoreCrypto.cmxa $(TEST_CMX)
 
 test: Tests.exe

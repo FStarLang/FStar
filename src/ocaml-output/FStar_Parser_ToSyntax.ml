@@ -234,7 +234,7 @@ let fallback = (fun _64_122 -> (match (()) with
 (r FStar_Syntax_Const.op_Eq FStar_Syntax_Syntax.Delta_equational)
 end
 | ":=" -> begin
-(r FStar_Syntax_Const.op_ColonEq FStar_Syntax_Syntax.Delta_equational)
+(r FStar_Syntax_Const.write_lid FStar_Syntax_Syntax.Delta_equational)
 end
 | "<" -> begin
 (r FStar_Syntax_Const.op_LT FStar_Syntax_Syntax.Delta_equational)

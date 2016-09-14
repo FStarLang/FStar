@@ -19,11 +19,11 @@ type aead_cipher =
 
 val string_of_hash_alg: hash_alg -> string
 
-val blockSize : block_cipher -> int
-val aeadKeySize : aead_cipher -> int
-val aeadRealIVSize : aead_cipher -> int
-val aeadTagSize : aead_cipher -> int
-val hashSize: hash_alg -> int
+val blockSize : block_cipher -> Z.t
+val aeadKeySize : aead_cipher -> Z.t
+val aeadRealIVSize : aead_cipher -> Z.t
+val aeadTagSize : aead_cipher -> Z.t
+val hashSize: hash_alg -> Z.t
 
 type rsa_key = {
   rsa_mod : bytes;
@@ -71,19 +71,19 @@ val stream_decryptor : stream_cipher -> bytes -> cipher_stream
 val stream_process : cipher_stream -> bytes -> bytes
 val stream_fini : cipher_stream -> unit
 
-val random : int -> bytes
+val random : Z.t -> bytes
 
-val rsa_gen_key : int -> rsa_key
+val rsa_gen_key : Z.t -> rsa_key
 val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> bytes
 val rsa_decrypt : rsa_key -> rsa_padding -> bytes -> bytes option
 val rsa_sign : hash_alg option -> rsa_key -> bytes -> bytes
 val rsa_verify : hash_alg option -> rsa_key -> bytes -> bytes -> bool
 
-val dsa_gen_key : int -> dsa_key
+val dsa_gen_key : Z.t -> dsa_key
 val dsa_sign : hash_alg option -> dsa_key -> bytes -> bytes
 val dsa_verify : hash_alg option -> dsa_key -> bytes -> bytes -> bool
 
-val dh_gen_params : int -> dh_params
+val dh_gen_params : Z.t -> dh_params
 val dh_gen_key : dh_params -> dh_key
 val dh_agreement : dh_key -> bytes -> bytes
 
@@ -92,7 +92,7 @@ type ec_curve =
   | ECC_P384
   | ECC_P521
 
-val ec_bytelen: ec_curve -> int
+val ec_bytelen: ec_curve -> Z.t
 
 type ec_params = { curve: ec_curve; point_compression: bool; }
 type ec_point = { ecx : bytes; ecy : bytes; }

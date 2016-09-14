@@ -152,7 +152,7 @@ let fallback = (fun _61_104 -> (match (()) with
 (r FStar_Absyn_Const.op_Eq)
 end
 | ":=" -> begin
-(r FStar_Absyn_Const.op_ColonEq)
+(r FStar_Absyn_Const.write_lid)
 end
 | "<" -> begin
 (r FStar_Absyn_Const.op_LT)
