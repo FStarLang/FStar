@@ -6,18 +6,18 @@ open Ifc
 open FStar.Heap
 
 
-let x = alloc 0
-let y = alloc 1
-let z = alloc 2
-let c = alloc 200
+let x = ST.alloc 0
+let y = ST.alloc 1
+let z = ST.alloc 2
+let c = ST. alloc 200
 
 (* TODO F* does not infer that these refs are distinct *)
 
 let env var = 
-  if var = x then Low
-  else if var = y then Low 
-    else if var = c then Low
-      else if var = z then High
+  if addr_of var = addr_of x then Low
+  else if addr_of var = addr_of y then Low 
+    else if addr_of var = addr_of c then Low
+      else if addr_of var = addr_of z then High
         else High
 
 let c1_0 body = While (AVar c) body (AVar c)

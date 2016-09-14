@@ -61,7 +61,7 @@ val partition: #a:eqtype -> f:tot_ord a
                -> back:nat{pivot <= back /\ back < len}
                -> x:array a -> ST nat
   (requires (partition_pre a f start len pivot back x))
-  (ensures (fun h0 n h1 -> partition_post a f start len pivot back x h0 n h1 /\ modifies (TSet.singleton (Ref x)) h0 h1))
+  (ensures (fun h0 n h1 -> partition_post a f start len pivot back x h0 n h1 /\ modifies (only x) h0 h1))
 let rec partition #a f start len pivot back x =
   let h0 = get() in
   if pivot = back
@@ -138,7 +138,7 @@ let lemma_slice_cons_pv #a s i pivot j pv =
 val sort: #a:eqtype -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
           -> ST unit
   (requires (fun h -> contains h x /\ j <= length (sel h x)))
-  (ensures (fun h0 u h1 -> (modifies (TSet.singleton (Ref x)) h0 h1
+  (ensures (fun h0 u h1 -> (modifies (only x) h0 h1
                             /\ j <= length (sel h0 x)                                      (* carrying this along from the requires clause *)
                             /\ contains h1 x                                            (* the array is still in the heap *)
                             /\ (length (sel h0 x) = length (sel h1 x))                  (* its length has not changed *)
@@ -183,7 +183,7 @@ let rec sort #a f i j x =
 
 val qsort: #a:eqtype -> f:tot_ord a -> x:array a -> ST unit
   (requires (fun h -> contains h x))
-  (ensures (fun h0 u h1 -> modifies (TSet.singleton (Ref x)) h0 h1
+  (ensures (fun h0 u h1 -> modifies (only x) h0 h1
                         /\ contains h1 x /\ sorted f (sel h1 x) /\ permutation a (sel h0 x) (sel h1 x)))
 let qsort #a f x =
   let h0 = get() in

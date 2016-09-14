@@ -48,11 +48,11 @@ type ni_exp (env:label_fun) (e:exp) (l:label) =
 *)
 type ni_com' (env:label_fun) (c:com) (l:label) (h0:(rel (option heap))) = 
     (is_Some (R.l h0) /\ is_Some (R.r h0) ==>
-      (fun h0 -> 
-      (fun o_l -> 
-      (fun o_r -> 
-       ((is_Some o_l /\ is_Some o_r) 
-        ==> (low_equiv env h0 
+      (fun h0 ->
+      (fun o_l ->
+      (fun o_r ->
+       ((is_Some o_l /\ is_Some o_r)
+        ==> (low_equiv env h0
           ==> low_equiv env (R (Some.v o_l) (Some.v o_r)))))
         (interpret_com (R.r h0) c))
         (interpret_com (R.l h0) c))
