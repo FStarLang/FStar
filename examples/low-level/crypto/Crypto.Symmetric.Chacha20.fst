@@ -192,6 +192,8 @@ let chacha20 output key iv counter constant len =
 // We may also merge the 3 final loops: sum_matrixes, bytes_of_uint32s, and outer XOR/ADD. 
 
 
+let constant = 7ul // default value for the constant part of the CHACHA20 input
+
 (*** Counter-mode Encryption ***)
 
 // The rest of this code is not specific to chacha20.
