@@ -246,7 +246,7 @@ type eff_decl = {
     univs       :univ_names;
     binders     :binders;
     signature   :term;
-    ret_wp         :tscheme;
+    ret_wp      :tscheme;
     bind_wp     :tscheme;
     if_then_else:tscheme;
     ite_wp      :tscheme;

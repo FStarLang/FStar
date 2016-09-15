@@ -676,11 +676,14 @@ and tc_comp env c : comp                                      (* checked version
           | _ -> failwith "Impossible:Unexpected sort for computation"
           end
         | _ -> failwith "Impossible:Unexpected sort for computation" in
-      mk_Comp ({c with
+      let c = mk_Comp ({c with
           result_typ=fst res;
-          effect_args=args}),
-      u,
-      List.fold_left Rel.conj_guard f guards
+          effect_args=args}) in
+      let u_c = 
+        match TcUtil.effect_repr env c u with
+        | None -> u
+        | Some tm -> env.universe_of env tm in
+      c, u_c, List.fold_left Rel.conj_guard f guards
 
 and tc_universe env u : universe =
    let rec aux u =

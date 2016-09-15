@@ -1171,18 +1171,27 @@ let maybe_monadic env e c t =
     then e
     else mk (Tm_meta(e, Meta_monadic (m, t))) !e.tk e.pos
 
-let reify_comp env c u_c : term = 
-    let no_reify l = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, Env.get_range env)) in
-    match Env.effect_decl_opt env (Env.norm_eff_name env c.eff_name) with 
-    | None -> no_reify c.eff_name
+let effect_repr_aux only_reifiable env c u_c = 
+    match Env.effect_decl_opt env (Env.norm_eff_name env (Util.comp_effect_name c)) with
+    | None -> None
     | Some ed -> 
-        if not (ed.qualifiers |> List.contains Reifiable) then
-          no_reify c.eff_name
-        else
-          let c = N.unfold_effect_abbrev env (c.comp()) in
+        if only_reifiable && not (ed.qualifiers |> List.contains Reifiable) 
+        then None
+        else match ed.repr.n with 
+        | Tm_unknown -> None
+        | _ -> 
+          let c = N.unfold_effect_abbrev env c in
           let res_typ, wp = c.result_typ, List.hd c.effect_args in
           let repr = Env.inst_effect_fun_with [u_c] env ed ([], ed.repr) in
-          mk (Tm_app(repr, [as_arg res_typ; wp])) None (Env.get_range env)
+          Some (mk (Tm_app(repr, [as_arg res_typ; wp])) None (Env.get_range env))
+
+let effect_repr env c u_c : option<term> = effect_repr_aux false env c u_c
+
+let reify_comp env c u_c : term = 
+    let no_reify l = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, Env.get_range env)) in
+    match effect_repr_aux true env (c.comp()) u_c with
+    | None -> no_reify c.eff_name
+    | Some tm -> tm
 
 let d s = Util.print1 "\x1b[01;36m%s\x1b[00m\n" s
 
