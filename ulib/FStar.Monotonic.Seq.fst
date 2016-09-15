@@ -464,8 +464,7 @@ let at_most_log_len_stable (#l:rid) (#a:Type) (#p:seq a -> Type) (x:nat) (l:i_se
 
 (* assume val gcut : f:(unit -> GTot Type){f ()} -> Tot unit *)
 
-let new_seqn (#l:rid) (#a:Type) (#p:seq a -> Type) (#max:nat)
-		(i:rid) (init:nat) (log:i_seq l a p)
+let new_seqn (#l:rid) (#a:Type) (#p:seq a -> Type) (i:rid) (init:nat) (max:nat) (log:i_seq l a p)
   : ST (seqn i log max)
        (requires (fun h ->
 	   init <= max /\
@@ -481,7 +480,8 @@ let new_seqn (#l:rid) (#a:Type) (#p:seq a -> Type) (#max:nat)
     witness log (at_most_log_len init log);
     m_alloc i init
 
-let increment_seqn (#l:rid) (#a:Type) (#p:seq a -> Type) (#max:nat)
+//16-09-13 failed to make p implicit at callsite.
+let increment_seqn (#l:rid) (#a:Type) (p:seq a -> Type) (#max:nat)
 		   (#i:rid) (#log:i_seq l a p) ($c:seqn i log max)
   : ST unit
        (requires (fun h ->
