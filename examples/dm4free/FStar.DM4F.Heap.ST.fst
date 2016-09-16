@@ -36,7 +36,7 @@ let put (x: heap): st unit =
 // Instruct F* to CPS and elaborate the terms above to build a new STATE effect
 ////////////////////////////////////////////////////////////////////////////////
 
-reifiable reflectable new_effect_for_free {
+reifiable reflectable total new_effect_for_free {
   STATE : a:Type -> Effect
   with repr     = st
      ; bind     = bind_st
@@ -144,7 +144,22 @@ let alloc_addition_and_incr (r:ref int)
       s
 
 ////////////////////////////////////////////////////////////////////////////////
-//An unsafe higher-example, rightly rejected because of an universe inconsistency
+//Recursive, stateful functions are proven terminating using well-founded orders
+////////////////////////////////////////////////////////////////////////////////
+val zero: x:ref nat -> ghost_heap:heap{ghost_heap `contains_a_well_typed` x} -> ST unit 
+  (requires (fun h -> h==ghost_heap))
+  (ensures (fun h0 _ h1 -> h0 `contains_a_well_typed` x
+ 		       /\ modifies (Set.singleton x) h0 h1
+		       /\ sel h1 x = 0))
+  (decreases (sel ghost_heap x))
+let rec zero x ghost_heap = 
+  if !x = 0 
+  then ()
+  else (x := !x - 1; 
+        zero x (STATE.get()))
+
+////////////////////////////////////////////////////////////////////////////////
+//An unsafe higher-order example, rightly rejected by an universe inconsistency
 //Uncomment the last two lines below to see the following error message:
 //   .\FStar.DM4F.Heap.ST.fst(145,29-145,50) : Error
 //   Expected expression of type "Type(0)";

@@ -346,6 +346,9 @@ let effect_GHOST_lid : FStar_Ident.lident = (pconst "GHOST")
 let effect_Ghost_lid : FStar_Ident.lident = (pconst "Ghost")
 
 
+let effect_DIV_lid : FStar_Ident.lident = (pconst "DIV")
+
+
 let all_lid : FStar_Ident.lident = (p2l (("FStar")::("All")::[]))
 
 

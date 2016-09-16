@@ -805,7 +805,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                         1. The expected type may have
                              a. more immediate binders, whereas the function may itself return a function
                              b. fewer immediate binders, meaning that the function type is explicitly curried
-                        2. If the function is a let-rec, and the expected type is pure, then we need to add termination checks.
+                        2. If the function is a let-rec and it is to be total, then we need to add termination checks.
                     *)
                   let check_actuals_against_formals env bs bs_expected =
                       let rec handle_more (env, bs, more, guard, subst) c_expected = match more with
@@ -1558,6 +1558,11 @@ and check_inner_let_rec env top =
 (******************************************************************************)
 and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
    let env0 = env in
+   let termination_check_enabled t =
+     let _, c = Util.arrow_formals_comp t in
+     let quals = Env.lookup_effect_quals env (Util.comp_effect_name c) in
+     quals |> List.contains TotalEffect
+   in
    let lbs, env = List.fold_left (fun (lbs, env) lb -> //{lbname=x; lbtyp=t; lbdef=e}) ->
         let univ_vars, t, check_t = TcUtil.extract_let_rec_annotation env lb in
         let env = Env.push_univ_vars env univ_vars in //no polymorphic recursion on universes
@@ -1570,7 +1575,7 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
             else (let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) in
                   Rel.force_trivial_guard env0 g;
                   norm env0 t) in
-        let env = if Util.is_pure_or_ghost_function t //termination check is enabled
+        let env = if termination_check_enabled t
                   && Env.should_verify env (* store the let rec names separately for termination checks *)
                   then {env with letrecs=(lb.lbname,t)::env.letrecs}
                   else Env.push_let_binding env lb.lbname ([], t) in //no polymorphic recursion on universes

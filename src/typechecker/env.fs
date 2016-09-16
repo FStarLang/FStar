@@ -593,6 +593,13 @@ let norm_eff_name =
               end in
        res
 
+let lookup_effect_quals env l = 
+    let l = norm_eff_name env l in
+    match lookup_qname env l with
+    | Some (Inr (Sig_new_effect(ne, _), _)) ->
+      ne.qualifiers
+    | _ -> []
+
 let datacons_of_typ env lid = 
   match lookup_qname env lid with
     | Some (Inr(Sig_inductive_typ(_, _, _, _, _, dcs, _, _), _)) -> dcs
@@ -737,6 +744,11 @@ let build_lattice env se = match se with
         order in
     let order = Util.remove_dups (fun e1 e2 -> lid_equals e1.msource e2.msource
                                             && lid_equals e1.mtarget e2.mtarget) order in
+    let _ = order |> List.iter (fun edge -> 
+        if Ident.lid_equals edge.msource Const.effect_DIV_lid
+        && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
+        then raise (Error(Util.format1 "Divergent computations cannot be included in an effect %s marked 'total'" edge.mtarget.str, 
+                          get_range env))) in
     let joins =
         ms |> List.collect (fun i ->
         ms |> List.collect (fun j ->
