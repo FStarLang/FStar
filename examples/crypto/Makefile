@@ -122,5 +122,10 @@ CntProtocol.exe: CntProtocol.ml $(CONTRIB_LIBS)
 cnt-test: CntProtocol.exe
 	$(EXTRA_PATH) ./CntProtocol.exe
 
+deploy-tutorial:
+	cp EtM.AE.fst  EtM.CPA.fst  EtM.Ideal.fsti  EtM.MAC.fst  EtM.Plain.fst ../../doc/tutorial/code/solutions/
+	cp EtM.AE.fst  EtM.CPA.fst  EtM.Ideal.fsti  EtM.MAC.fst  EtM.Plain.fst ../../doc/tutorial/code/exercises/
+
+
 clean:
 	rm -fr RPC *.ml *.cmi *.cmx *.o *.exe *~

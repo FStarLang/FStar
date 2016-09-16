@@ -6,9 +6,6 @@ open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.Monotonic.RRef
 
-
-
-
 open Platform.Bytes
 open CoreCrypto
 
@@ -20,9 +17,6 @@ let macsize   = hashSize SHA1
 
 type sha1_key = lbytes keysize
 type tag = lbytes macsize
-
-
-
 
 val sha1: bytes -> Tot (h:bytes{length h = macsize})
 let sha1 b = hash SHA1 b

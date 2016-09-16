@@ -7,7 +7,6 @@ open FStar.HyperHeap
 open FStar.Monotonic.RRef
 open EtM.Ideal
 
-
 open Platform.Bytes
 open CoreCrypto
 
@@ -15,7 +14,7 @@ module B = Platform.Bytes
 
 open EtM.Plain
 
-type ivsize = blockSize AES_128_CBC
+let ivsize = blockSize AES_128_CBC
 type keysize = 16
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type msg = plain
@@ -63,11 +62,10 @@ val encrypt: k:key -> m:msg -> ST cipher
      /\ log1 == snoc log0 (m, c)
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log))))
 
-
 let encrypt k m : cipher =
   m_recall k.log;
   let iv = random ivsize in
-  let text = if ind_cpa then createBytes (length m) 0z else repr m in
+  let text = if ind_cpa && ind_cpa_rest_adv then createBytes (length m) 0z else repr m in
   let c = CoreCrypto.block_encrypt AES_128_CBC k.raw iv text in
   let c = iv@|c in
   write_at_end k.log (m,c);
@@ -98,7 +96,7 @@ val decrypt: k:key -> c:cipher -> ST msg
   (ensures  (fun h0 res h1 ->
     modifies_none h0 h1 /\
     ( (b2t ind_cpa_rest_adv) ==> mem (res,c) (m_sel h0 k.log)
-     (* (let log0 = m_sel h0 k.log in *)
+     (* (let log0 = m_sel h0 k.log in *) //specification of correctness
      (*  let found = seq_find (fun mc -> snd mc = c) log0 in *)
      (*  is_Some found /\ fst (Some.v found) = res) *)
     )
