@@ -6,7 +6,7 @@ open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.Monotonic.RRef
 
-open EtM
+module MAC = EtM.MAC
 
 open Platform.Bytes
 open CoreCrypto
@@ -14,7 +14,6 @@ open CoreCrypto
 abstract type cipher = (CPA.cipher * MAC.tag)
 
 type log_t (r:rid) = Monotonic.Seq.log_t r (CPA.msg * cipher)
-
 
 noeq type key =
   | Key:  #region:rid ->
@@ -45,12 +44,9 @@ let invariant (h:t) (k:key) =
     (let m1,t = Seq.index mac_log i in
      let m2,c = Seq.index cpa_log i in
      m1 = c /\
-     Seq.index log i = (m2,(c,t))
+     Seq.index log i == (m2,(c,t))
     )
   )
-
-
-
 
 let genPost parent h0 (k:key) h1 =
     modifies Set.empty h0 h1
@@ -61,11 +57,9 @@ let genPost parent h0 (k:key) h1 =
   /\ m_sel h1 k.log == createEmpty
   /\ invariant h1 k
 
-
 val keygen: parent:rid -> ST key
   (requires (fun _ -> True))
   (ensures  (genPost parent))
-
 
 let keygen parent =
   let region = new_region parent in
@@ -73,7 +67,6 @@ let keygen parent =
   let ka = MAC.keygen region in
   let log = alloc_mref_seq region createEmpty in
   Key #region ke ka log
-
 
 val encrypt: k:key -> m:Plain.plain -> ST cipher
   (requires (fun h0 -> invariant h0 k))
@@ -87,33 +80,10 @@ val encrypt: k:key -> m:Plain.plain -> ST cipher
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3timeout 100"
 let encrypt k plain =
-  (* let h0 = ST.get () in *)
   let c = CPA.encrypt k.ke plain in
   let t = MAC.mac k.km c in
   write_at_end k.log (plain, (c, t));
-  (* let h1 = ST.get () in *)
-  //following assertions seem no longer needed
-  (* cut (Seq.length (get_log h1 k) = (Seq.length (get_log h0 k)) + 1);   *)
-  (* cut (Seq.length (get_mac_log h1 k) = Seq.length (get_cpa_log h1 k)); *)
-  (* cut (Seq.length (get_mac_log h1 k) = Seq.length (get_log h1 k));   *)
-  (* cut (Seq.index (get_mac_log h1 k) (Seq.length (get_mac_log h1 k)-1) = (c,t)); *)
-  (* cut (Seq.index (get_cpa_log h1 k) (Seq.length (get_cpa_log h1 k)-1) = (plain,c)); *)
-  (* cut (Seq.index (get_log h1 k) (Seq.length (get_log h1 k)-1) = (plain,c,t));  *)
-  (* assert *)
-  (* ( let log  = get_log h1 k in *)
-  (*   let mac_log = get_mac_log h1 k in *)
-  (*   let cpa_log = get_cpa_log h1 k in *)
-  (*   (forall (i:int). indexable log i ==> *)
-  (*     (let m1,t = Seq.index mac_log i in *)
-  (*     let m2,c = Seq.index cpa_log i in *)
-  (*     m1 = c /\ *)
-  (*     Seq.index log i = (m2,c,t) /\ *)
-  (*     True) *)
-  (*   ) *)
-  (*   ); *)
   (c, t)
-
-//assume AE_needs_CMA: ((b2t Ideal.uf_cma) <==> Ideal.ind_cpa)
 
 val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
   (requires (fun h0 -> invariant h0 k))
