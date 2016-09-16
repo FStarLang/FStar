@@ -21,7 +21,7 @@ type msg = plain
 type cipher = b:bytes{B.length b >= ivsize}
 (* MK: minimal cipher length twice blocksize? *)
 
-type log_t (r:rid) = Monotonic.Seq.log_t r (msg * cipher)
+type log_t (r:rid) = m_rref r (seq (msg * cipher)) grows
 
 (* CH*MK: If we wanted to also prove correctness of the EtM.AE
           we would additionally need this

@@ -10,11 +10,11 @@ CCA2.RSA.fst \
 CCA2.Plain.fst \
 CCA2.CCA2.fst
 
-HH_VERFILES=
-# EtM.Plain.fst \
-# EtM.MAC.fst \
-# EtM.CPA.fst \
-# EtM.AE.fst
+HH_VERFILES= \
+ EtM.Plain.fst \
+ EtM.MAC.fst \
+ EtM.CPA.fst \
+ EtM.AE.fst
 
 LIB = ../../contrib/CoreCrypto/ml
 
