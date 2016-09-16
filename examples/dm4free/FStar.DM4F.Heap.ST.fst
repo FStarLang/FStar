@@ -161,7 +161,7 @@ let rec zero x ghost_heap =
 ////////////////////////////////////////////////////////////////////////////////
 //An unsafe higher-order example, rightly rejected by an universe inconsistency
 //Uncomment the last two lines below to see the following error message:
-//   .\FStar.DM4F.Heap.ST.fst(145,29-145,50) : Error
+//   .\FStar.DM4F.Heap.ST.fst(169,29-169,50) : Error
 //   Expected expression of type "Type(0)";
 //   got expression "(uu___:Prims.int -> STNull Prims.int)" of type "Type((S 0))"
 ////////////////////////////////////////////////////////////////////////////////
