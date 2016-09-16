@@ -16,6 +16,7 @@ abstract type heap = h:pre_heap{(forall (n:nat). n >= h.next_addr ==> is_None (h
 
 (* References are represented by just their address in the heap *)
 type ref (a:Type) = nat
+let addr (#a:Type) (r:ref a) : Tot nat = r
 
 (* An abstract predicate for a reference being well-typed in a heap, 
    usually written infix  *)
@@ -24,12 +25,12 @@ abstract let contains_a_well_typed (#a:Type) (h:heap) (r:ref a) =
 
 (* An abstract predicate for a reference simply being present in memory, 
    usually written infix *)
-abstract let contains (#a:Type) (h:heap) (r:ref a): GTot Type0 = is_Some (h.memory r)
+abstract let contains (h:heap) (r:nat): GTot Type0 = is_Some (h.memory r)
 
 let contains_a_well_typed_implies_contains (#a:Type) (h:heap) (r:ref a)
     : Lemma (requires (h `contains_a_well_typed` r))
-            (ensures (h `contains` r))
-     	    [SMTPatOr [[SMTPat (h `contains_a_well_typed` r)]; [SMTPat (h `contains` r)]]]
+            (ensures (h `contains` (addr r)))
+     	    [SMTPatOr [[SMTPat (h `contains_a_well_typed` r)]; [SMTPat (h `contains` (addr r))]]]
     = ()
 
 (* sel: selecting a well-tyepd reference from a heap *)
@@ -57,15 +58,16 @@ abstract let alloc (#a:Type) (h0:heap) (x:a)
 
 (* modifies s h0 h1: the domain of h1 is no smaller than h0;
 		     except for s, every ref in h0 is unmodified in h1 *)
-let modifies (s:set nat) (h0:heap) (h1:heap) =
+let modifies (s:Set.set nat) (h0:heap) (h1:heap) =
+  (forall (a:Type) (r:ref a).{:pattern (h1 `contains_a_well_typed` r)}
+                        h0 `contains_a_well_typed` r ==> h1 `contains_a_well_typed` r) /\
+  (forall (a:Type) (r:ref a).{:pattern (h1 `contains` (addr r))}
+                        h0 `contains` (addr r) ==> h1 `contains` (addr r)) /\
   (forall (a:Type) (r:ref a).{:pattern (sel h1 r)}
-                         ~ (mem r s) /\ h0 `contains_a_well_typed` r ==>
-                         (h1 `contains_a_well_typed` r /\ sel h1 r == sel h0 r)) /\
-  (forall (a:Type) (r:ref a).{:pattern (h1 `contains` r)}
-                        h0 `contains` r ==> h1 `contains` r)
+                         ~ (Set.mem r s) /\ h0 `contains_a_well_typed` r ==>
+                         (sel h1 r == sel h0 r))
 
 (* Now, some properties of all the abstract functions exported by this module *)
-
 (* First, the usual sel/upd properties *)
 let sel_upd1 (#a:Type) (h:heap) (r:ref a{h `contains_a_well_typed` r}) (v:a)
     : Lemma (requires True) 
@@ -93,13 +95,24 @@ let alloc_lemma (#a:Type) (h0:heap) (x:a)
 	    [SMTPat (alloc h0 x)]
     = ()
 
-(* update preserves well-typedness *)
-let upd_contains (#a:Type) (h:heap)
+(* update preserves a heap's domain *)
+let upd_contains (#a:Type) (#b:Type) (h:heap)
 		 (k:ref a{h `contains_a_well_typed` k})
+		 (r:ref b{h `contains` (addr r)})
 		 (v:a)
     : Lemma (requires True) 
-	    (ensures ((upd h k v) `contains_a_well_typed` k))
-            [SMTPat ((upd h k v) `contains_a_well_typed` k)]
+	    (ensures ((upd h k v) `contains` (addr r)))
+            [SMTPat ((upd h k v) `contains` (addr r))]
+    = ()
+
+(* update preserves well-typedness *)
+let upd_contains_a_well_typed (#a:Type) (#b:Type) (h:heap)
+		 (k:ref a{h `contains_a_well_typed` k})
+		 (r:ref b{h `contains_a_well_typed` r})
+		 (v:a)
+    : Lemma (requires True) 
+	    (ensures ((upd h k v) `contains_a_well_typed` r))
+            [SMTPat ((upd h k v) `contains_a_well_typed` r)]
     = ()
 
 (* Empty. *)
@@ -109,6 +122,6 @@ abstract let emp : heap = {
 }
 
 val in_dom_emp: #a:Type -> k:ref a
-                -> Lemma (requires True) (ensures (~ (emp `contains` k)))
-		  [SMTPat (emp `contains` k)]
+                -> Lemma (requires True) (ensures (~ (emp `contains` (addr k))))
+		  [SMTPat (emp `contains` (addr k))]
 let in_dom_emp #a k = ()
