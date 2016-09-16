@@ -89,7 +89,10 @@ let lemma_mem_snoc (#a:eqtype) (s:seq a) (x:a)
 let alloc_mref_seq (#a:Type) (r:FStar.HyperHeap.rid) (init:seq a)
   : ST (m_rref r (seq a) grows)
        (requires (fun _ -> True))
-       (ensures (fun h0 m h1 -> FStar.ST.ralloc_post r init h0 (as_rref m) h1))
+       (ensures (fun h0 m h1 ->
+	 m_contains m h1 /\
+	 m_sel h1 m == init /\
+	 FStar.ST.ralloc_post r init h0 (as_rref m) h1))
   = lemma_grows_monotone #a;
     FStar.Monotonic.RRef.m_alloc r init
 

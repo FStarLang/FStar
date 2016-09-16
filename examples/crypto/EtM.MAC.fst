@@ -36,7 +36,7 @@ let hmac_sha1 k t =
 (* Type log_t defined as follows (in ulib/FStar.Monotonic.Seq.fst):
    type log_t (i:rid) (a:Type) = m_rref i (seq a) grows *)
 
-type log_t (r:rid) = Monotonic.Seq.log_t r (msg * tag)
+type log_t (r:rid) = m_rref r (seq (msg * tag)) grows
 
 noeq type key =
   | Key: #region:rid -> raw:sha1_key -> log:log_t region -> key

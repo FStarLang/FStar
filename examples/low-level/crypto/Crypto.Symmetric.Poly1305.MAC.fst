@@ -19,7 +19,6 @@ module HH = FStar.HyperHeap
 
 let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 
-
 // also used in miTLS ('model' may be better than 'ideal'); could be loaded from another module.
 // this flag enables conditional idealization by keeping additional data,
 // - this should not affect the code behavior
@@ -30,9 +29,9 @@ assume val ideal: bool
 // to be rewired.
 // In AEAD_ChaCha20: id * nonce
 // we will need authId i ==> ideal?
-assume new abstract type id
-assume val authId: id -> Tot bool
-assume val someId: id
+// assume val someId: id0
+type id = Plain.id * UInt64.t 
+let authId (i:id) = Plain.authId (fst i)
 (*
 type id = nat
 let authId i = false
@@ -139,22 +138,23 @@ let alloc i region key =
     State #i #region r s ()
 
 
-val gen: i:id
-  -> region:rid{is_eternal_region region}
-  -> ST (state i)
-  (requires (fun m0 -> True))
-  (ensures  (fun m0 st m1 ->
+let genPost (i:id) (region:rid{is_eternal_region region}) m0 st m1 = 
     ~(contains m0 st.r) /\
     ~(contains m0 st.s) /\
     //modifies (Set.singleton r) m0 m1
     st.region == region /\
-    (ideal ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)))
+    (ideal ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)
+ 
+val gen: i:id
+  -> region:rid{is_eternal_region region}
+  -> ST (state i)
+  (requires (fun m0 -> True))
+  (ensures  (genPost i region))
 
 let gen i region =
   let key = random region 32ul in
   alloc i region key
-
-
+ 
 val coerce: i:id{~(authId i)} -> r:rid -> key:lbytes 32 -> ST (state i)
   (requires (fun m0 -> live m0 key))
   (ensures  (fun m0 st m1 ->
@@ -163,7 +163,6 @@ val coerce: i:id{~(authId i)} -> r:rid -> key:lbytes 32 -> ST (state i)
 
 let coerce i region key =
   alloc i region key
-
 
 // a partial multiplicative-mac computation
 // (considered secret, declassified only via mac and declassify)

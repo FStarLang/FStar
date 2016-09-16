@@ -10,11 +10,11 @@ CCA2.RSA.fst \
 CCA2.Plain.fst \
 CCA2.CCA2.fst
 
-HH_VERFILES=
-# EtM.Plain.fst \
-# EtM.MAC.fst \
-# EtM.CPA.fst \
-# EtM.AE.fst
+HH_VERFILES= \
+ EtM.Plain.fst \
+ EtM.MAC.fst \
+ EtM.CPA.fst \
+ EtM.AE.fst
 
 LIB = ../../contrib/CoreCrypto/ml
 
@@ -28,6 +28,12 @@ endif
 FSTAR_HOME=../..
 include ../Makefile.include
 
+%.fst-in: 
+	@echo --include $(FSTAR_HOME)/ulib/hyperheap \
+	      --include $(FSTAR_HOME)/ucontrib/Platform/fst \
+	      --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst \
+	      --z3timeout 20
+	      --verify_module $(basename $(notdir $@))
 
 verify-%: __force__
 	$(FSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst \

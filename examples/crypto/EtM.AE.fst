@@ -13,7 +13,7 @@ open CoreCrypto
 
 abstract type cipher = (CPA.cipher * MAC.tag)
 
-type log_t (r:rid) = Monotonic.Seq.log_t r (CPA.msg * cipher)
+type log_t (r:rid) = m_rref r (seq (CPA.msg * cipher)) grows
 
 noeq type key =
   | Key:  #region:rid ->

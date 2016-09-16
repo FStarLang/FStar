@@ -1,0 +1,165 @@
+[
+  "bÍaÄπµáÃM ˇì∏=Å\u001b",
+  [
+    [
+      "Encrypt_SymEnc.Ideal.plain",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Encrypt_SymEnc.Ideal",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1e68bea16e231a9fd8f21cd1449d1f41"
+      ],
+      0
+    ],
+    [
+      "Encrypt_SymEnc.Ideal.repr",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Encrypt_SymEnc.Ideal",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1e68bea16e231a9fd8f21cd1449d1f41"
+      ],
+      0
+    ],
+    [
+      "Encrypt_SymEnc.Ideal._2",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Encrypt_SymEnc.Ideal",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1e68bea16e231a9fd8f21cd1449d1f41"
+      ],
+      0
+    ],
+    [
+      "Encrypt_SymEnc.Ideal.i",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Encrypt_SymEnc.Ideal",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1e68bea16e231a9fd8f21cd1449d1f41"
+      ],
+      0
+    ],
+    [
+      "Encrypt_SymEnc.Concrete.plain",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Encrypt_SymEnc.Concrete",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2e14d804a0a5f1e81f68285626b84ce1"
+      ],
+      0
+    ],
+    [
+      "Encrypt_SymEnc.Concrete.repr",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Encrypt_SymEnc.Concrete",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2e14d804a0a5f1e81f68285626b84ce1"
+      ],
+      0
+    ],
+    [
+      "Encrypt_SymEnc.Concrete._2",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Encrypt_SymEnc.Concrete",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2e14d804a0a5f1e81f68285626b84ce1"
+      ],
+      0
+    ],
+    [
+      "Encrypt_SymEnc.Concrete.i",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Encrypt_SymEnc.Concrete",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2e14d804a0a5f1e81f68285626b84ce1"
+      ],
+      0
+    ],
+    [ "Encrypt_SymEnc.c", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Encrypt_SymEnc.keygen", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Encrypt_SymEnc.Entry.k", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Encrypt_SymEnc.Entry.c",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Encrypt_SymEnc.Entry_k",
+        "projection_inverse_Encrypt_SymEnc.Entry_k"
+      ],
+      0
+    ],
+    [ "Encrypt_SymEnc.Entry.plain", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Encrypt_SymEnc.encrypt",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Encrypt_SymEnc.Concrete",
+        "disc_equation_Encrypt_SymEnc.Ideal", "equation_AES.plain",
+        "fuel_guarded_inversion_Encrypt_SymEnc.key"
+      ],
+      0
+    ],
+    [
+      "Encrypt_SymEnc.decrypt",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Heap.SelUpd1",
+        "constructor_distinct_Prims.Nil", "constructor_distinct_Prims.None",
+        "constructor_distinct_Prims.Some", "data_elim_Prims.None",
+        "disc_equation_Encrypt_SymEnc.Concrete",
+        "disc_equation_Encrypt_SymEnc.Ideal", "equation_AES.plain",
+        "equation_FStar.ST.ref",
+        "equation_with_fuel_FStar.List.Tot.find.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.find.fuel_instrumented",
+        "fuel_guarded_inversion_Encrypt_SymEnc.key",
+        "kinding_Encrypt_SymEnc.entry@tok", "kinding_Prims.list@tok",
+        "pretyping_779086306c29597e3dd1127d16405da1",
+        "proj_equation_Prims.V_v", "projection_inverse_Prims.Nil_a",
+        "projection_inverse_Prims.V_v"
+      ],
+      0
+    ],
+    [
+      "Encrypt_SymEnc.decrypt",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_AES.bytes", "equation_AES.cipher", "equation_AES.csize",
+        "equation_AES.nbytes", "equation_AES.plain",
+        "equation_Platform.Bytes.bytes",
+        "haseqTm_refine_642c10ad861f67d120813039022c4375",
+        "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5"
+      ],
+      0
+    ]
+  ]
+]
