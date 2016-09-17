@@ -137,8 +137,8 @@ let alloc i region key =
   else
     State #i #region r s ()
 
-
-let genPost (i:id) (region:rid{is_eternal_region region}) m0 st m1 = 
+ 
+let genPost (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 = 
     ~(contains m0 st.r) /\
     ~(contains m0 st.s) /\
     //modifies (Set.singleton r) m0 m1
