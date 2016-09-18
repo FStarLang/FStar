@@ -8,5 +8,5 @@ type r = RSA.plain
 val repr:    t -> Tot r
 let repr t = t       (* a pure function from t to RSA.plain *)
 
-val plain: x:r -> Tot (option (y:t{repr y = x}))
-let plain t = Some t (* a partial function from RSA.plain to t *)
+val coerce: x:r -> Tot (option (y:t{repr y = x}))
+let coerce t = Some t (* a partial function from RSA.plain to t *)
