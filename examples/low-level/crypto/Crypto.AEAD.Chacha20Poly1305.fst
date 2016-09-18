@@ -85,6 +85,8 @@ let rec add_bytes #i st log a len txt =
     end
 
 
+//16-09-18 The code below is left only for testing; use Chacha20Poly1305.Ideal instead.
+
 (* AEAD-encrypt for Chacha20-Poly1305. Takes:
    - the initial key (key), an initialization vector (iv) and a constant (constant)
    - the additional data (aad)
@@ -103,7 +105,11 @@ val chacha20_aead_encrypt:
   STL unit
   (requires (fun h -> 
     live h key /\ live h aadtext /\ live h plaintext /\ 
-    live h ciphertext /\ live h tag ))
+    live h ciphertext /\ live h tag /\
+    disjoint plaintext ciphertext /\
+    disjoint plaintext tag /\
+    disjoint ciphertext tag
+    ))
   (ensures (fun h0 _ h1 -> 
     modifies_2 ciphertext tag h0 h1 /\ 
     live h1 ciphertext /\ live h1 tag ))
@@ -121,7 +127,7 @@ val chacha20_aead_decrypt:
     modifies_1 plaintext h0 h1 /\ 
     live h1 plaintext))
 
-// #reset-options "--z3timeout 100"
+#reset-options "--z3timeout 1000"
 // still failing below 
 
 let chacha20_aead_encrypt key iv constant aadlen aadtext plainlen plaintext ciphertext tag =
@@ -181,4 +187,5 @@ let chacha20_aead_decrypt key iv constant aadlen aadtext plainlen plaintext ciph
 
   pop_frame();
   if verified then 0ul else 1ul //TODO pick and enforce error convention.
+
 

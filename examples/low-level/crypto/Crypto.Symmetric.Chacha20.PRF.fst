@@ -48,7 +48,8 @@ let region = rgn:HH.rid {HS.is_eternal_region rgn}
 type domain = { iv:u64; ctr:u32 } // could move to concrete CHACHA20
 let incr (x:domain {x.ctr <^ 1000ul})  = { iv = x.iv; ctr = x.ctr +^ 1ul }
 
-let block = b:bytes {Seq.length b = v Block.blocklen}
+let blocklen = Block.blocklen
+let block = b:bytes {Seq.length b = v blocklen}
 
 // the range of our PRF, after idealization and "reverse inlining."
 // for one-time-pads, we keep both the plain and cipher blocks, instead of their XOR.
