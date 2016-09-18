@@ -30,7 +30,8 @@ AEAD_EXTRACTED= FStar_List_Tot.ml FStar_Seq.ml FStar_SeqProperties.ml Buffer_Uti
 
 .PHONY: lib-ver curve-ver curve-ml chacha-ver chacha-ml ulib
 
-all: uall sall lib-ver tmp-ver
+#16-09-18 lib-ver works but is too slow/brittle? 
+all: uall sall tmp-ver
 
 uall:
 	+make clean
