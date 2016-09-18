@@ -137,7 +137,7 @@ let chacha20_aead_encrypt key iv constant aadlen aadtext plainlen plaintext ciph
  
   (* Initialize MAC algorithm with one time key *)
   (* encapsulate (r,s) and a; we should probably clear otk *)
-  let ak = MAC.coerce MAC.someId HyperHeap.root otk in 
+  let ak = MAC.coerce (MAC.someId,iv) HyperHeap.root otk in 
   let acc = MAC.start ak in
 
   (* Compute MAC over additional data and ciphertext *)
@@ -160,7 +160,7 @@ let chacha20_aead_decrypt key iv constant aadlen aadtext plainlen plaintext ciph
 
   (* Initialize MAC algorithm with one time key *)
   (* encapsulate (r,s) and a; we should probably clear otk *)
-  let ak = MAC.coerce MAC.someId HyperHeap.root otk in 
+  let ak = MAC.coerce (MAC.someId,iv) HyperHeap.root otk in 
   let acc = MAC.start ak in
 
   (* First recompute and check the MAC *)

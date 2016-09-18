@@ -26,11 +26,12 @@ let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 assume val ideal: bool
 //let ideal = true
 
-// to be rewired.
-// In AEAD_ChaCha20: id * nonce
 // we will need authId i ==> ideal?
-// assume val someId: id0
+
+// the index is the base index (controlling agility and idealization) plus the unique IV for this MAC.
 type id = Plain.id * UInt64.t 
+
+assume val someId: Plain.id // dummy value for unit testing
 let authId (i:id) = Plain.authId (fst i)
 (*
 type id = nat
