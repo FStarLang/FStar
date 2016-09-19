@@ -108,7 +108,7 @@ let gen rgn i =
 private val getBlock: #i:id -> t:state i -> domain -> len:u32 {len <=^ Block.blocklen} -> output:lbuffer (v len) -> ST unit
   (requires (fun h0 -> Buffer.live h0 t.key /\ Buffer.live h0 output))
   (ensures (fun h0 r h1 -> Buffer.live h1 output /\ modifies_1 output h0 h1 ))
-
+//TODO: we need some way to recall that t.key is in an eternal region and can be recalled
 let getBlock #i t x len output = 
   Block.chacha20 output t.key x.iv x.ctr Block.constant len
 
@@ -170,11 +170,10 @@ val prf_dexor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} ->
 // SZ: missing a recall
 val read: i:id -> t:state i -> ST (Seq.seq (entry t.rgn i))
   (requires (fun h0 -> True))
-  (ensures (fun h0 s h1 -> HS.sel h0 t.table == s))
-let read i t =
-  recall t.table;
-  !t.table
+  (ensures (fun h0 s h1 -> HS.sel h0 t.table == s /\ h0 == h1))
+let read i t = recall (t.table); !t.table
 
+//TODO (NS): this one takes about 15s to prove automatically; investigate a bit
 let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) (v:range rgn i x) : Lemma
   (requires (find s x == None))
   (ensures (find (SeqProperties.snoc s (Entry x v)) x == Some v))
@@ -186,14 +185,15 @@ let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) 
 let prf_enxor i t x l cipher plain = 
   if authId i then
     begin
+    recall t.table;
     let p = Plain.load #i l plain in
     let c = random l in // sample a fresh ciphertext block    
-    store_bytes l cipher c; 
-    let contents = read i t in 
+    store_bytes l cipher c;  //NS: this write to cipher may disturb the contents of t.table; need an anti-aliasing assumption there
+    let contents = !t.table in //NS: Or, we can move this read up; but the anti-aliasing seems like the right thing to do
     let newblock = OTP #i l p c in
-    assume(find contents x == None); //TODO how to avoid explicit annotations on find_1 ?
+    assert(find contents x == None); //TODO how to avoid explicit annotations on find_1 ? NS: find_1 is fine here; without the store_bytes this assertion succeeds
     lemma_snoc_found contents x newblock; 
-    t.table := SeqProperties.snoc contents (Entry x newblock)
+    t.table := SeqProperties.snoc contents (Entry x newblock) //NS: t.table is mutated;  so the modifies_1 cipher h0 h1 cannot be true
     end
   else
     begin
