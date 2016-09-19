@@ -1,5 +1,11 @@
 module Crypto.Symmetric.AES
 
+// FIPS197 ?
+// TODO factor it out in terms of https://en.wikipedia.org/wiki/AES_instruction_set
+// see also https://software.intel.com/sites/default/files/article/165683/aes-wp-2012-09-22-v01.pdf
+
+// TODO this is AES256; we also need AES128 (nr=10) and maybe AES192 (nr=12).
+
 open FStar.Mul
 open FStar.Ghost
 open FStar.HyperStack
@@ -22,32 +28,50 @@ assume MaxUInt8: pow2 8 = 256
 assume MaxUInt32: pow2 32 = 4294967296
 
 type bytes = FStar.Buffer.buffer byte
+type lbytes l = b:bytes {length b = l} 
+let v (x:UInt32.t) : nat  = UInt32.v x
 
 (* Parameters for AES-256 *)
-let nk = 8ul
-let nb = 4ul
+let nk =  8ul
+let nb =  4ul
 let nr = 14ul
+
+let blocklen = U32(4ul *^ nb)
+let keylen   = U32(4ul *^ nk)
+
+type block = lbytes (v blocklen)
+type wkey  = lbytes (16 * (v nr+1))
+type skey  = lbytes (v keylen)
+type xkey  = lbytes (4 * v nb * (v nr+1))
+
+type rnd = r:UInt32.t{v r <= v nr}
+type idx_16 = ctr:UInt32.t{v ctr <= 16} // should it be < 16 ? 
 
 val xtime: b:byte -> Tot byte
 let xtime b =
-  (b <<^ 1ul) ^^ (((b >>^ 7ul) &^ (1uy)) *%^ (0x1buy))
+  (b <<^ 1ul) ^^ (((b >>^ 7ul) &^ 1uy) *%^ 0x1buy)
 
 val multiply: a:byte -> b:byte -> Tot byte
 let multiply a b =
-  ((a *%^ (b &^ (1uy)))
-  ^^ (xtime a *%^ ((b >>^ 1ul) &^ (1uy)))
-  ^^ (xtime (xtime a) *%^ ((b >>^ 2ul) &^ (1uy)))
-  ^^ (xtime (xtime (xtime a)) *%^ ((b >>^ 3ul) &^ (1uy)))
-  ^^ (xtime (xtime (xtime (xtime a))) *%^ ((b >>^ 4ul) &^ (1uy)))
-  ^^ (xtime (xtime (xtime (xtime (xtime a)))) *%^ ((b >>^ 5ul) &^ (1uy)))
-  ^^ (xtime (xtime (xtime (xtime (xtime (xtime a))))) *%^ ((b >>^ 6ul) &^ (1uy)))
-  ^^ (xtime (xtime (xtime (xtime (xtime (xtime (xtime a)))))) *%^ ((b >>^ 7ul) &^ (1uy))))
+  ((a *%^ (b &^ 1uy))
+  ^^ (xtime a *%^ ((b >>^ 1ul) &^ 1uy))
+  ^^ (xtime (xtime a) *%^ ((b >>^ 2ul) &^ 1uy))
+  ^^ (xtime (xtime (xtime a)) *%^ ((b >>^ 3ul) &^ 1uy))
+  ^^ (xtime (xtime (xtime (xtime a))) *%^ ((b >>^ 4ul) &^ 1uy))
+  ^^ (xtime (xtime (xtime (xtime (xtime a)))) *%^ ((b >>^ 5ul) &^ 1uy))
+  ^^ (xtime (xtime (xtime (xtime (xtime (xtime a))))) *%^ ((b >>^ 6ul) &^ 1uy))
+  ^^ (xtime (xtime (xtime (xtime (xtime (xtime (xtime a)))))) *%^ ((b >>^ 7ul) &^ 1uy)))
+// why?
 
 #set-options "--lax"
 
-val mk_sbox: sbox:bytes{length sbox = 256} -> STL unit
-  (requires (fun h -> live h sbox))
-  (ensures  (fun h0 _ h1 -> live h1 sbox /\ modifies_1 sbox h0 h1))
+// tables for S-box and inv-S-box; could use instead GF256 specification.
+
+type sbox  = lbytes 256
+
+val mk_sbox: sb:sbox -> STL unit
+  (requires (fun h -> live h sb))
+  (ensures  (fun h0 _ h1 -> live h1 sb /\ modifies_1 sb h0 h1))
 let mk_sbox sbox = 
   sbox.(0ul) <-   (0x63uy); sbox.(1ul) <-   (0x7cuy); sbox.(2ul) <-   (0x77uy); sbox.(3ul) <-   (0x7buy); 
   sbox.(4ul) <-   (0xf2uy); sbox.(5ul) <-   (0x6buy); sbox.(6ul) <-   (0x6fuy); sbox.(7ul) <-   (0xc5uy); 
@@ -114,9 +138,9 @@ let mk_sbox sbox =
   sbox.(248ul) <- (0x41uy); sbox.(249ul) <- (0x99uy); sbox.(250ul) <- (0x2duy); sbox.(251ul) <- (0x0fuy); 
   sbox.(252ul) <- (0xb0uy); sbox.(253ul) <- (0x54uy); sbox.(254ul) <- (0xbbuy); sbox.(255ul) <- (0x16uy)
 
-val mk_inv_sbox: sbox:bytes{length sbox = 256} -> STL unit
-  (requires (fun h -> live h sbox))
-  (ensures  (fun h0 _ h1 -> live h1 sbox /\ modifies_1 sbox h0 h1))
+val mk_inv_sbox: sb:sbox -> STL unit
+  (requires (fun h -> live h sb))
+  (ensures  (fun h0 _ h1 -> live h1 sb /\ modifies_1 sb h0 h1))
 let mk_inv_sbox sbox = 
   sbox.(0ul) <-   (0x52uy); sbox.(1ul) <-   (0x09uy); sbox.(2ul) <-   (0x6auy); sbox.(3ul) <-   (0xd5uy); 
   sbox.(4ul) <-   (0x30uy); sbox.(5ul) <-   (0x36uy); sbox.(6ul) <-   (0xa5uy); sbox.(7ul) <-   (0x38uy); 
@@ -185,7 +209,7 @@ let mk_inv_sbox sbox =
 
 #reset-options
 
-let rec access_aux: sb:bytes{length sb = 256} -> byte -> ctr:UInt32.t{UInt32.v ctr <= 256} -> byte -> STL byte
+let rec access_aux: sb:sbox -> byte -> ctr:UInt32.t{v ctr <= 256} -> byte -> STL byte
   (requires (fun h -> live h sb))
   (ensures  (fun h0 _ h1 -> h1 == h0))
   = fun sbox i ctr tmp ->
@@ -194,15 +218,18 @@ let rec access_aux: sb:bytes{length sb = 256} -> byte -> ctr:UInt32.t{UInt32.v c
        let tmp = tmp |^ (mask &^ sbox.(ctr)) in
        access_aux sbox i (U32 (ctr +^ 1ul)) tmp
 
-val access: sbox:bytes{length sbox = 256} -> idx:byte -> STL byte
-  (requires (fun h -> live h sbox))
+val access: sb:sbox -> idx:byte -> STL byte
+  (requires (fun h -> live h sb))
   (ensures  (fun h0 _ h1 -> h1 == h0))
 let access sbox i =
-  access_aux sbox i 0ul (0uy)
+  access_aux sbox i 0ul 0uy
 
-val subBytes_aux_sbox: state:bytes{length state >= 4 * UInt32.v nb} -> sbox:bytes{length sbox = 256 /\ disjoint state sbox} ->
-  ctr:UInt32.t{UInt32.v ctr <= 16} -> STL unit
-  (requires (fun h -> live h state /\ live h sbox))
+
+// ENCRYPTION 
+
+val subBytes_aux_sbox: state:block -> sb:sbox{disjoint state sb} ->
+  ctr:idx_16 -> STL unit
+  (requires (fun h -> live h state /\ live h sb))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let rec subBytes_aux_sbox state sbox ctr =
   if U32 (ctr =^ 16ul) then ()
@@ -214,57 +241,58 @@ let rec subBytes_aux_sbox state sbox ctr =
     subBytes_aux_sbox state sbox (U32 (ctr +^ 1ul))
   end
 
-val subBytes_sbox: state:bytes{length state >= 4 * UInt32.v nb} -> sbox:bytes{length sbox = 256 /\ disjoint state sbox} -> STL unit
+val subBytes_sbox: state:block -> sbox:sbox{disjoint state sbox} -> STL unit
   (requires (fun h -> live h state /\ live h sbox))
   (ensures  (fun h0 _ h1 -> modifies_1 state h0 h1 /\ live h1 state))
 let subBytes_sbox state sbox =
   subBytes_aux_sbox state sbox 0ul
 
-val shiftRows: state:bytes{length state >= 4 * UInt32.v nb} -> STL unit
+val shiftRows: state:block -> STL unit
   (requires (fun h -> live h state))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let shiftRows state =
   let open FStar.UInt32 in
   let i = 1ul in
   let tmp = state.(i) in
-  state.(i)       <- state.((i+^4ul));
-  state.(i+^4ul)  <- state.((i+^8ul));
-  state.(i+^8ul)  <- state.((i+^12ul));
+  state.(i)       <- state.(i+^ 4ul);
+  state.(i+^ 4ul) <- state.(i+^ 8ul);
+  state.(i+^ 8ul) <- state.(i+^12ul);
   state.(i+^12ul) <- tmp;
+
   let i = 2ul in
   let tmp = state.(i) in
-  state.(i)      <- state.((i+^8ul));
-  state.(i+^8ul) <- tmp;
+  state.(i)       <- state.(i+^8ul);
+  state.(i+^ 8ul) <- tmp;
   let tmp = state.(i+^4ul) in
-  state.(i+^4ul)  <- state.((i+^12ul));
+  state.(i+^ 4ul) <- state.(i+^12ul);
   state.(i+^12ul) <- tmp;
+
   let i = 3ul in
   let tmp = state.(i) in
-  state.(i)       <- state.((i+^12ul));
-  state.(i+^12ul) <- state.((i+^8ul));
-  state.(i+^8ul)  <- state.((i+^4ul));
-  state.(i+^4ul)  <- tmp;
-  ()
+  state.(i)       <- state.(i+^12ul);
+  state.(i+^12ul) <- state.(i+^ 8ul);
+  state.(i+^ 8ul) <- state.(i+^ 4ul);
+  state.(i+^ 4ul) <- tmp
 
 #reset-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
 
-val mixColumns_: state:bytes{length state >= 4 * UInt32.v nb} -> c:UInt32.t{UInt32.v c < 4} -> STL unit
+val mixColumns_: state:block -> c:UInt32.t{v c < 4} -> STL unit
   (requires (fun h -> live h state))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let mixColumns_ state c =
-  let open FStar.UInt32 in
-  let s0 = state.(0ul+^(4ul*^c)) in
-  let s1 = state.(1ul+^(4ul*^c)) in
-  let s2 = state.(2ul+^(4ul*^c)) in
-  let s3 = state.(3ul+^(4ul*^c)) in
-  state.((4ul*^c)+^0ul) <- H8 (multiply (0x2uy) s0 ^^ multiply (0x3uy) s1 ^^ s2 ^^ s3);
-  state.((4ul*^c)+^1ul) <- H8 (multiply (0x2uy) s1 ^^ multiply (0x3uy) s2 ^^ s3 ^^ s0);
-  state.((4ul*^c)+^2ul) <- H8 (multiply (0x2uy) s2 ^^ multiply (0x3uy) s3 ^^ s0 ^^ s1);
-  state.((4ul*^c)+^3ul) <- H8 (multiply (0x2uy) s3 ^^ multiply (0x3uy) s0 ^^ s1 ^^ s2)
+  let s = Buffer.sub state (H32(4ul*^c)) 4ul in 
+  let s0 = s.(0ul) in
+  let s1 = s.(1ul) in
+  let s2 = s.(2ul) in
+  let s3 = s.(3ul) in
+  s.(0ul) <- H8 (multiply 0x2uy s0 ^^ multiply 0x3uy s1 ^^ s2 ^^ s3);
+  s.(1ul) <- H8 (multiply 0x2uy s1 ^^ multiply 0x3uy s2 ^^ s3 ^^ s0);
+  s.(2ul) <- H8 (multiply 0x2uy s2 ^^ multiply 0x3uy s3 ^^ s0 ^^ s1);
+  s.(3ul) <- H8 (multiply 0x2uy s3 ^^ multiply 0x3uy s0 ^^ s1 ^^ s2)
 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
-val mixColumns: state:bytes{length state >= 4 * UInt32.v nb} -> STL unit
+val mixColumns: state:block -> STL unit
   (requires (fun h -> live h state))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let mixColumns state =
@@ -275,75 +303,67 @@ let mixColumns state =
 
 #reset-options "--z3timeout 10 --initial_fuel 0 --max_fuel 0"
 
-val addRoundKey_: state:bytes{length state >= 4 * UInt32.v nb} -> w:bytes{length w >= 16 * (UInt32.v nr+1) /\ disjoint state w} -> round:UInt32.t{UInt32.v round <= UInt32.v nr}  -> c:UInt32.t{UInt32.v c < 4} -> STL unit
-    (requires (fun h -> live h state /\ live h w))
-    (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
+val addRoundKey_: state:block -> w:wkey{disjoint state w} -> rnd -> c:UInt32.t{v c < 4} -> STL unit
+  (requires (fun h -> live h state /\ live h w))
+  (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let addRoundKey_ state w round c =
   let open FStar.UInt32 in
-  let s0 = state.((4ul*^c)+^0ul) in
-  let s1 = state.((4ul*^c)+^1ul) in
-  let s2 = state.((4ul*^c)+^2ul) in
-  let s3 = state.((4ul*^c)+^3ul) in
-  let w0 = w.(((4ul*^round)*^nb)+^(4ul*^c)+^0ul) in
-  let w1 = w.(((4ul*^round)*^nb)+^(4ul*^c)+^1ul) in
-  let w2 = w.(((4ul*^round)*^nb)+^(4ul*^c)+^2ul) in
-  let w3 = w.(((4ul*^round)*^nb)+^(4ul*^c)+^3ul) in
-  state.((4ul*^c)+^0ul) <- H8 (s0 ^^ w0);
-  state.((4ul*^c)+^1ul) <- H8 (s1 ^^ w1);
-  state.((4ul*^c)+^2ul) <- H8 (s2 ^^ w2);
-  state.((4ul*^c)+^3ul) <- H8 (s3 ^^ w3)
+  let target = Buffer.sub state (4ul*^c) 4ul in 
+  let subkey = Buffer.sub w (blocklen*^round +^ 4ul*^c) 4ul in
 
-val addRoundKey: state:bytes{length state >= 4 * UInt32.v nb} -> w:bytes{length w >= 16 * (UInt32.v nr+1) /\ disjoint state w} -> round:UInt32.t{UInt32.v round <= UInt32.v nr}  -> STL unit
-    (requires (fun h -> live h state /\ live h w))
-    (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
+  let open FStar.UInt8 in 
+  target.(0ul) <- target.(0ul) ^^ subkey.(0ul);
+  target.(1ul) <- target.(1ul) ^^ subkey.(1ul);
+  target.(2ul) <- target.(2ul) ^^ subkey.(2ul);
+  target.(3ul) <- target.(3ul) ^^ subkey.(3ul)
+
+val addRoundKey: state:block -> w:wkey{disjoint state w} -> round:rnd  -> STL unit
+  (requires (fun h -> live h state /\ live h w))
+  (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let addRoundKey state w round =
   addRoundKey_ state w round 0ul;
   addRoundKey_ state w round 1ul;
   addRoundKey_ state w round 2ul;
   addRoundKey_ state w round 3ul
 
-val cipher_loop: state:bytes{length state >= 4 * UInt32.v nb} -> w:bytes{length w >= 16 * (UInt32.v nr+1) /\ disjoint state w} -> sbox:bytes{length sbox = 256 /\ disjoint sbox state} -> round:UInt32.t{UInt32.v round <= UInt32.v nr} -> STL unit
-  (requires (fun h -> live h state /\ live h w /\ live h sbox))
+val cipher_loop: state:block -> w:wkey{disjoint state w} -> sb:sbox{disjoint sb state} -> round:rnd -> STL unit
+  (requires (fun h -> live h state /\ live h w /\ live h sb))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let rec cipher_loop state w sbox round =
   let open FStar.UInt32 in
   if round = 14ul then ()
   else begin
-    subBytes_sbox state sbox;
-    shiftRows state;
-    mixColumns state;
-    addRoundKey state w round;
-    cipher_loop state w sbox (round+^1ul)
+    subBytes_sbox state sbox;   
+    shiftRows     state;
+    mixColumns    state;
+    addRoundKey   state w round;
+    cipher_loop   state w sbox (round+^1ul)
   end
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
-val cipher_body: state:bytes{length state >= 4 * UInt32.v nb} -> out:bytes{length out >= 4 * UInt32.v nb} -> input:bytes{length input >= 4*UInt32.v nb} -> w:bytes{length w >= 16 * (UInt32.v nr+1)} -> sbox:bytes{length sbox = 256} -> STL unit
-  (requires (fun h -> live h state /\ live h out /\ live h input /\ live h w /\ live h sbox
-    /\ disjoint out input /\ disjoint out w /\ disjoint out sbox /\ disjoint state out
-    /\ disjoint state input /\ disjoint state w /\ disjoint state sbox))
-  (ensures  (fun h0 _ h1 -> live h1 state /\ live h1 out /\ modifies_2 out state h0 h1))
-let cipher_body state out input w sbox =
-  let open FStar.UInt32 in
-  blit input 0ul state 0ul (4ul*^nb);
-  addRoundKey state w 0ul;
-  cipher_loop state w sbox 1ul;
-  subBytes_sbox state sbox;
-  shiftRows state;
-  addRoundKey state w nr;
-  blit state 0ul out 0ul (4ul*^nb)
-
-val cipher: out:bytes{length out >= 4 * UInt32.v nb} -> input:bytes{length input >= 4*UInt32.v nb} -> w:bytes{length w >= 16 * (UInt32.v nr+1)} -> sbox:bytes{length sbox = 256} -> STL unit
-  (requires (fun h -> live h out /\ live h input /\ live h w /\ live h sbox
-    /\ disjoint out input /\ disjoint out w /\ disjoint out sbox))
+val cipher: out:block -> input:block -> w:wkey -> sb:sbox -> STL unit
+  (requires (fun h -> live h out /\ live h input /\ live h w /\ live h sb /\ 
+                   disjoint out input /\ disjoint out w /\ disjoint out sb))
   (ensures  (fun h0 _ h1 -> live h1 out /\ modifies_1 out h0 h1))
 let cipher out input w sbox =
   push_frame();
-  let state = create (0uy) (U32 (4ul*^nb)) in
-  cipher_body state out input w sbox;
+  let state = create 0uy blocklen in // could we use output instead? alignment? 
+  blit input 0ul state 0ul blocklen;
+  
+  addRoundKey    state w 0ul;
+  cipher_loop    state w sbox 1ul;
+  subBytes_sbox  state sbox;
+  shiftRows      state;
+  addRoundKey    state w nr;
+
+  blit state 0ul out 0ul blocklen;
   pop_frame()
 
-val rotWord: word:bytes{length word >= 4} -> STL unit
+
+// KEY EXPANSION
+
+val rotWord: word:lbytes 4 -> STL unit
   (requires (fun h -> live h word))
   (ensures  (fun h0 _ h1 -> live h1 word /\ modifies_1 word h0 h1))
 let rotWord word =
@@ -357,40 +377,34 @@ let rotWord word =
   word.(3ul) <- w0;
   ()
 
-val subWord: word:bytes{length word >= 4} -> sbox:bytes{length sbox = 256} -> STL unit
+val subWord: word:lbytes 4 -> sbox:sbox -> STL unit
   (requires (fun h -> live h word /\ live h sbox /\ disjoint word sbox))
   (ensures  (fun h0 _ h1 -> live h1 word /\ modifies_1 word h0 h1))
 let subWord word sbox =
-  let w0 = word.(0ul) in
-  let w1 = word.(1ul) in
-  let w2 = word.(2ul) in
-  let w3 = word.(3ul) in
-  word.(0ul) <- (access sbox w0);
-  word.(1ul) <- (access sbox w1);
-  word.(2ul) <- (access sbox w2);
-  word.(3ul) <- (access sbox w3);
-  ()
+  word.(0ul) <- access sbox word.(0ul);
+  word.(1ul) <- access sbox word.(1ul);
+  word.(2ul) <- access sbox word.(2ul);
+  word.(3ul) <- access sbox word.(3ul)
 
-val rcon: i:UInt32.t{UInt32.v i >= 1} -> byte -> Tot byte (decreases (UInt32.v i))
+val rcon: i:UInt32.t{v i >= 1} -> byte -> Tot byte (decreases (v i))
 let rec rcon i tmp =
-  let open FStar.UInt32 in
-  if i =^ 1ul then tmp
+  if i = 1ul then tmp
   else begin
-    let tmp = multiply (0x2uy) tmp in
-    rcon (i-^1ul) tmp
+    let tmp = multiply 0x2uy tmp in
+    rcon (U32(i-^1ul)) tmp
   end
 
 #reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
-let lemma_aux_000 (i:UInt32.t{UInt32.v i < 240 /\ UInt32.v i >= 4 * UInt32.v nk}) : Lemma
+let lemma_aux_000 (i:UInt32.t{v i < 240 /\ v i >= 4 * v nk}) : Lemma
   (let open FStar.UInt32 in
     (4 * v nk <= pow2 32 - 1 /\ v (i+^0ul) >= v (4ul *^ nk) /\ v (i+^1ul) >= v (4ul *^ nk) /\ v (i+^2ul) >= v (4ul *^ nk) /\ v (i+^3ul) >= v (4ul *^ nk) /\ v ((i/^4ul)/^nk) >= 1)) = ()
 
 #reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
 
-val keyExpansion_aux_0:w:bytes{length w >= 16 * (UInt32.v nr+1)} -> temp:bytes{length temp >= 4} -> sbox:bytes{length sbox = 256} -> i:UInt32.t{UInt32.v i < 60 /\ UInt32.v i >= UInt32.v nk} -> STL unit
-  (requires (fun h -> live h w /\ live h temp /\ live h sbox
-    /\ disjoint w temp /\ disjoint w sbox /\ disjoint temp sbox))
+val keyExpansion_aux_0:w:wkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < 60 /\ v i >= v nk} -> STL unit
+  (requires (fun h -> live h w /\ live h temp /\ live h sbox /\ 
+                   disjoint w temp /\ disjoint w sbox /\ disjoint temp sbox))
   (ensures  (fun h0 _ h1 -> live h1 temp /\ modifies_1 temp h0 h1))
 let keyExpansion_aux_0 w temp sbox j =
   let open FStar.UInt32 in
@@ -402,10 +416,11 @@ let keyExpansion_aux_0 w temp sbox j =
     rotWord temp;
     subWord temp sbox;
     let t0 = temp.(0ul) in
-    let rc = rcon ((i/^4ul)/^nk) (1uy) in
+    let rc = rcon ((i/^4ul)/^nk) 1uy in
     let z = H8 (t0 ^^ rc) in
     temp.(0ul) <- z
-  ) else if (((i/^4ul) %^ nk) =^ 4ul) then (
+  ) 
+  else if ((i/^4ul) %^ nk) =^ 4ul then (
     subWord temp sbox
   );
   let h1 = HST.get() in
@@ -414,17 +429,17 @@ let keyExpansion_aux_0 w temp sbox j =
 
 #reset-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
 
-val keyExpansion_aux_1: w:bytes{length w >= 16 * (UInt32.v nr+1)} -> temp:bytes{length temp >= 4} -> sbox:bytes{length sbox = 256} -> i:UInt32.t{UInt32.v i < 60 /\ UInt32.v i >= UInt32.v nk} -> STL unit
+val keyExpansion_aux_1: w:wkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < 60 /\ v i >= v nk} -> STL unit
   (requires (fun h -> live h w /\ live h temp /\ live h sbox
     /\ disjoint w temp /\ disjoint w sbox /\ disjoint temp sbox))
   (ensures  (fun h0 _ h1 -> live h1 w /\ modifies_1 w h0 h1))
 let keyExpansion_aux_1 w temp sbox j =
   let open FStar.UInt32 in
   let i = 4ul *^ j in
-  let w0 = w.(i +^ 0ul -^ (4ul*^nk)) in
-  let w1 = w.(i +^ 1ul -^ (4ul*^nk)) in
-  let w2 = w.(i +^ 2ul -^ (4ul*^nk)) in
-  let w3 = w.(i +^ 3ul -^ (4ul*^nk)) in
+  let w0 = w.(i +^ 0ul -^ keylen) in
+  let w1 = w.(i +^ 1ul -^ keylen) in
+  let w2 = w.(i +^ 2ul -^ keylen) in
+  let w3 = w.(i +^ 3ul -^ keylen) in
   let t0 = temp.(0ul) in
   let t1 = temp.(1ul) in
   let t2 = temp.(2ul) in
@@ -434,7 +449,7 @@ let keyExpansion_aux_1 w temp sbox j =
   w.(i+^2ul) <- H8 (t2 ^^ w2);
   w.(i+^3ul) <- H8 (t3 ^^ w3)
 
-val keyExpansion_aux: w:bytes{length w >= 16 * (UInt32.v nr+1)} -> temp:bytes{length temp >= 4} -> sbox:bytes{length sbox = 256} -> i:UInt32.t{UInt32.v i <= 60 /\ UInt32.v i >= UInt32.v nk} -> STL unit
+val keyExpansion_aux: w:wkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i <= 60 /\ v i >= v nk} -> STL unit
   (requires (fun h -> live h w /\ live h temp /\ live h sbox
     /\ disjoint w temp /\ disjoint w sbox /\ disjoint temp sbox))
   (ensures  (fun h0 _ h1 -> live h1 temp /\ live h1 w /\ modifies_2 temp w h0 h1))
@@ -450,49 +465,24 @@ let rec keyExpansion_aux w temp sbox j =
     keyExpansion_aux w temp sbox (j +^ 1ul)
   end
 
-let lemma_aux_001 (w:bytes{length w >= 4 * UInt32.v nb * (UInt32.v nr+1)}) : Lemma (length w >= 240) = ()
+let lemma_aux_001 (w:xkey) : Lemma (length w >= 240) = ()
 
-val keyExpansion: key:bytes{length key >= 4 * UInt32.v nk} -> w:bytes{length w >= 4 * UInt32.v nb * (UInt32.v nr+1)} -> sbox:bytes{length sbox = 256} -> STL unit
-  (requires (fun h -> live h key /\ live h w /\ live h sbox /\ disjoint key w /\ disjoint w sbox))
+val keyExpansion: key:skey -> w:xkey -> sb:sbox -> STL unit
+  (requires (fun h -> live h key /\ live h w /\ live h sb /\ disjoint key w /\ disjoint w sb))
   (ensures  (fun h0 _ h1 -> live h1 w /\ modifies_1 w h0 h1))
 let keyExpansion key w sbox =
   let open FStar.UInt32 in
   push_frame();
-  let temp = create (0uy) 4ul in
+  let temp = create 0uy 4ul in
   lemma_aux_001 w;
-  blit key 0ul w 0ul (4ul *^ nk);
-  let i = 4ul *^ nk in
+  blit key 0ul w 0ul keylen;
   keyExpansion_aux w temp sbox nk;
   pop_frame()
 
 
-val invShiftRows: state:bytes{length state >= 4 * UInt32.v nb} -> STL unit
-  (requires (fun h -> live h state))
-  (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
-let invShiftRows state =
-  let open FStar.UInt32 in
-  let i = 3ul in
-  let tmp = state.(i) in
-  state.(i)       <- (state.(i+^4ul));
-  state.(i+^4ul)  <- (state.(i+^8ul));
-  state.(i+^8ul)  <- (state.(i+^12ul));
-  state.(i+^12ul) <- tmp;
-  let i = 2ul in
-  let tmp = state.(i) in
-  state.(i)       <- (state.(i+^8ul));
-  state.(i+^8ul)  <- tmp;
-  let tmp = state.(i+^4ul) in
-  state.(i+^4ul)  <- (state.(i+^12ul));
-  state.(i+^12ul) <- tmp;
-  let i = 1ul in
-  let tmp = state.(i) in
-  state.(i)       <- (state.(i+^12ul));
-  state.(i+^12ul) <- (state.(i+^8ul));
-  state.(i+^8ul)  <- (state.(i+^4ul));
-  state.(i+^4ul)  <- tmp;
-  ()
+// DECRYPTION
 
-val invSubBytes_aux_sbox: state:bytes{length state >= 4 * UInt32.v nb} -> sbox:bytes{length sbox = 256} -> ctr:UInt32.t{UInt32.v ctr <= 16} -> STL unit
+val invSubBytes_aux_sbox: state:block -> sbox:sbox -> ctr:idx_16 -> STL unit
   (requires (fun h -> live h state /\ live h sbox /\ disjoint state sbox))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let rec invSubBytes_aux_sbox state sbox ctr =
@@ -504,35 +494,60 @@ let rec invSubBytes_aux_sbox state sbox ctr =
     invSubBytes_aux_sbox state sbox (U32 (ctr+^1ul))
   end
 
-val invSubBytes_sbox: state:bytes{length state >= 4 * UInt32.v nb} -> sbox:bytes{length sbox = 256} -> STL unit
+val invSubBytes_sbox: state:block -> sbox:sbox -> STL unit
   (requires (fun h -> live h state /\ live h sbox /\ disjoint state sbox))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let invSubBytes_sbox state sbox =
   invSubBytes_aux_sbox state sbox 0ul
 
+val invShiftRows: state:block -> STL unit
+  (requires (fun h -> live h state))
+  (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
+let invShiftRows state =
+  let open FStar.UInt32 in
+  let i = 3ul in
+  let tmp = state.(i) in
+  state.(i)       <- state.(i+^4ul);
+  state.(i+^4ul)  <- state.(i+^8ul);
+  state.(i+^8ul)  <- state.(i+^12ul);
+  state.(i+^12ul) <- tmp;
+
+  let i = 2ul in
+  let tmp = state.(i) in
+  state.(i)       <- state.(i+^8ul);
+  state.(i+^8ul)  <- tmp;
+  let tmp = state.(i+^4ul) in
+  state.(i+^4ul)  <- state.(i+^12ul);
+  state.(i+^12ul) <- tmp;
+
+  let i = 1ul in
+  let tmp = state.(i) in
+  state.(i)       <- state.(i+^12ul);
+  state.(i+^12ul) <- state.(i+^8ul);
+  state.(i+^8ul)  <- state.(i+^4ul);
+  state.(i+^4ul)  <- tmp;
+  ()
+
 #reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
 
-val invMixColumns_: state:bytes{length state >= 4 * UInt32.v nb} -> c:UInt32.t{UInt32.v c < 4} -> STL unit
+val invMixColumns_: state:block -> c:UInt32.t{v c < 4} -> STL unit
   (requires (fun h -> live h state))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1 ))
 let invMixColumns_ state c =
-  let open FStar.UInt32 in
-  let s0 = state.(0ul+^(4ul*^c)) in
-  let s1 = state.(1ul+^(4ul*^c)) in
-  let s2 = state.(2ul+^(4ul*^c)) in
-  let s3 = state.(3ul+^(4ul*^c)) in
-  state.((4ul*^c)+^0ul) <- (H8 (multiply (0xeuy) s0 ^^ multiply (0xbuy) s1
-	       ^^ multiply (0xduy) s2 ^^ multiply (0x9uy) s3));
-  state.((4ul*^c)+^1ul) <- (H8 (multiply (0xeuy) s1 ^^ multiply (0xbuy) s2
-	       ^^ multiply (0xduy) s3 ^^ multiply (0x9uy) s0));
-  state.((4ul*^c)+^2ul) <- (H8 (multiply (0xeuy) s2 ^^ multiply (0xbuy) s3
-	       ^^ multiply (0xduy) s0 ^^ multiply (0x9uy) s1));
-  state.((4ul*^c)+^3ul) <- (H8 (multiply (0xeuy) s3 ^^ multiply (0xbuy) s0
-	       ^^ multiply (0xduy) s1 ^^ multiply (0x9uy) s2))
+  let s = Buffer.sub state (H32(4ul*^c)) 4ul in 
+  let s0 = s.(0ul) in
+  let s1 = s.(1ul) in
+  let s2 = s.(2ul) in
+  let s3 = s.(3ul) in
+  let mix x0 x1 x2 x3 = H8 (multiply 0xeuy x0 ^^ multiply 0xbuy x1 ^^ multiply 0xduy x2 ^^ multiply 0x9uy x3) in
+  s.(0ul) <- mix s0 s1 s2 s3;
+  s.(1ul) <- mix s1 s2 s3 s0;
+  s.(2ul) <- mix s2 s3 s0 s1;
+  s.(3ul) <- mix s3 s0 s1 s2
 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
-val invMixColumns: state:bytes{length state >= 4 * UInt32.v nb} -> STL unit
+val invMixColumns: state:block -> STL unit
   (requires (fun h -> live h state))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1 ))
 let invMixColumns state =
@@ -541,9 +556,8 @@ let invMixColumns state =
   invMixColumns_ state 2ul;
   invMixColumns_ state 3ul
 
-val inv_cipher_loop: state:bytes{length state >= 4 * UInt32.v nb} -> w:bytes{length w >= 4 * UInt32.v nb * (UInt32.v nr+1)} -> sbox:bytes{length sbox = 256} -> round:UInt32.t{UInt32.v round <= UInt32.v nr - 1} -> STL unit
-  (requires (fun h -> live h state /\ live h w /\ live h sbox /\ disjoint state w /\ disjoint state sbox
-    /\ disjoint sbox w))
+val inv_cipher_loop: state:block -> w:xkey -> sb:sbox -> round:UInt32.t{v round <= v nr - 1} -> STL unit
+  (requires (fun h -> live h state /\ live h w /\ live h sb /\ disjoint state w /\ disjoint state sb /\ disjoint sb w))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1 ))
 let rec inv_cipher_loop state w sbox round =
   let open FStar.UInt32 in
@@ -551,32 +565,25 @@ let rec inv_cipher_loop state w sbox round =
   else begin
     invShiftRows state;
     invSubBytes_sbox state sbox;
-    let h = HST.get() in
-    assert(live h state /\ live h w);
-    assume(length w >= 16 * (v nr+1));
     addRoundKey state w round;
     invMixColumns state;
     inv_cipher_loop state w sbox (round -^ 1ul)
   end
 
-let lemma_002 (w:bytes) : Lemma (requires (length w >= 4 * UInt32.v nb * (UInt32.v nr + 1))) (ensures (length w >= 16 * (UInt32.v nr + 1))) = ()
-
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
 
-val inv_cipher: out:bytes{length out = 4 * UInt32.v nb} -> input:bytes{length input = 4* UInt32.v nb} -> w:bytes{length w >= 4 * UInt32.v nb * (UInt32.v nr+1)} -> sbox:bytes{length sbox = 256} -> STL unit
-  (requires (fun h -> live h out /\ live h input /\ live h w /\ live h sbox
-    /\ disjoint out input /\ disjoint out w /\ disjoint out sbox /\ disjoint sbox w))
+val inv_cipher: out:block -> input:block -> w:xkey -> sb:sbox -> STL unit
+  (requires (fun h -> live h out /\ live h input /\ live h w /\ live h sb /\ 
+                   disjoint out input /\ disjoint out w /\ disjoint out sb /\ disjoint sb w))
   (ensures  (fun h0 _ h1 -> live h1 out /\ modifies_1 out h0 h1))
 let inv_cipher out input w sbox =
-  let open FStar.UInt32 in
   push_frame();
-  let state = create (0uy) (4ul *^ nb) in
-  blit input 0ul state 0ul (4ul *^ nb);
-  lemma_002 w;
-  addRoundKey state w nr;
-  inv_cipher_loop state w sbox 13ul;
-  invShiftRows state;
+  let state = create 0uy blocklen in
+  blit input 0ul   state 0ul blocklen;
+  addRoundKey      state w nr;
+  inv_cipher_loop  state w sbox 13ul;
+  invShiftRows     state;
   invSubBytes_sbox state sbox;
-  addRoundKey state w 0ul;
-  blit state 0ul out 0ul (4ul *^ nb);
+  addRoundKey      state w 0ul;
+  blit state 0ul out 0ul blocklen;
   pop_frame()

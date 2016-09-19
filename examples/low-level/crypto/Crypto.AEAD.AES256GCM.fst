@@ -19,9 +19,9 @@ type bytes = buffer byte
 let lemma_aux_001 (w:bytes{length w >= 240}) : Lemma (length w >= 4 * U32.v nb * (U32.v nr+1)) = ()
 
 (* Block cipher function AES256 *)
-private val aes256: key:bytes{length key = 32} ->
-    input:bytes{length input = 16 /\ disjoint key input} ->
-    out:bytes{length out = 16 /\ disjoint key out /\ disjoint input out} ->
+private val aes256: key:lbytes 32 ->
+    input:block{disjoint key input} ->
+    out:block{disjoint key out /\ disjoint input out} ->
     STL unit
       (requires (fun h -> live h key /\ live h input /\ live h out))
       (ensures  (fun h0 _ h1 -> live h1 out /\ modifies_1 out h0 h1))
@@ -54,9 +54,9 @@ let aes256 key input out =
 
 (* Main AEAD functions *)
 val aead_encrypt: ciphertext:bytes ->
-    tag:bytes{length tag = 16 /\ disjoint ciphertext tag} ->
-    key:bytes{length key = 32 /\ disjoint ciphertext key /\ disjoint tag key} ->
-    iv:bytes{length iv = 12 /\ disjoint ciphertext iv /\ disjoint tag iv /\ disjoint key iv} ->
+    tag:lbytes 16 {disjoint ciphertext tag} ->
+    key:lbytes 32 {disjoint ciphertext key /\ disjoint tag key} ->
+    iv:lbytes 12 {disjoint ciphertext iv /\ disjoint tag iv /\ disjoint key iv} ->
     plaintext:bytes{length plaintext = length ciphertext /\ disjoint ciphertext plaintext /\ disjoint tag plaintext /\ disjoint key plaintext /\ disjoint iv plaintext} ->
     len:u32{length ciphertext = U32.v len} ->
     ad:bytes{disjoint ciphertext ad /\ disjoint tag ad /\ disjoint key ad /\ disjoint iv ad /\ disjoint plaintext ad} ->

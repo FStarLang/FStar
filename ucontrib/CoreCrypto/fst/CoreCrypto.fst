@@ -43,12 +43,12 @@ type aead_cipher =
 // the key materials consist of an encryption key, a static IV, and an authentication key.
 
 let aeadKeySize = function
-  | AES_128_CCM       -> 16 + 16
-  | AES_128_CCM_8     -> 16 + 16
+  | AES_128_CCM       -> 16 
+  | AES_128_CCM_8     -> 16 
   | AES_128_GCM       -> 16 + 16
-  | AES_256_CCM       -> 32
-  | AES_256_CCM_8     -> 32
-  | AES_256_GCM       -> 32
+  | AES_256_CCM       -> 32 
+  | AES_256_CCM_8     -> 32 
+  | AES_256_GCM       -> 32 + 16
   | CHACHA20_POLY1305 -> 32
 
 let aeadRealIVSize (a:aead_cipher) = 12
