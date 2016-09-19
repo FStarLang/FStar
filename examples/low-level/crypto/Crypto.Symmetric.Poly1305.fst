@@ -56,7 +56,7 @@ let esel_word h b = hide (sel_word h b)
 val esel_word_16:h:mem -> b:wordB_16{live h b} -> Tot (erased word_16)
 let esel_word_16 h b = hide (sel_word h b)
 
-assume MaxUInt32: pow2 32 = 4294967296
+//assume MaxUInt32: pow2 32 = 4294967296
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 20"
 
@@ -275,16 +275,6 @@ val lemma_mult_le_right2: a:nat -> b:int -> c:int -> Lemma
   (ensures  (b * a <= c * a))
 let lemma_mult_le_right2 a b c = ()
 
-private val add_and_multiply_aux: unit -> Lemma ((norm_length * pow2 53) * 6 < pow2 63)
-let add_and_multiply_aux () =
-  paren_mul_left norm_length (pow2 53) 6;
-  swap_mul (pow2 53) 6;
-  cut ((norm_length * pow2 53) * 6 = 30 * pow2 53);
-  pow2_5 ();
-  cut (30 * pow2 53 < pow2 5 * pow2 53);
-  pow2_exp_1 5 53;
-  cut ((norm_length * pow2 53) * 6 < pow2 58);
-  pow2_increases_1 63 58
 
 (**
     Runs "Acc = ((Acc+block)*r) % p." on the accumulator, the well formatted block of the message
@@ -312,7 +302,7 @@ let add_and_multiply acc block r =
   let h3 = HST.get () in
   assert (maxValue h3 tmp (2*norm_length-1) <= norm_length * pow2 53);
   lemma_mult_le_right2 6 (maxValue h3 tmp (2*norm_length-1)) (norm_length * pow2 53);
-  add_and_multiply_aux ();
+  assert_norm ((norm_length * pow2 53) * 6 < pow2 63);
   cut (satisfiesModuloConstraints h3 tmp);
   modulo tmp; // tmp = tmp % p
   let h4 = HST.get() in
@@ -337,11 +327,11 @@ val zeroB: a:elemB -> STL unit
   (requires (fun h -> live h a))
   (ensures  (fun h0 _ h1 -> norm h1 a /\ modifies_1 a h0 h1 /\ sel_elem h1 a = 0))
 let zeroB a =
-  upd a 0ul 0UL;
-  upd a 1ul 0UL;
-  upd a 2ul 0UL;
-  upd a 3ul 0UL;
-  upd a 4ul 0UL;
+  a.(0ul) <- 0UL;
+  a.(1ul) <- 0UL;
+  a.(2ul) <- 0UL;
+  a.(3ul) <- 0UL;
+  a.(4ul) <- 0UL;
   let h = HST.get() in
   Crypto.Symmetric.Poly1305.Bigint.eval_null h a norm_length
 
@@ -375,11 +365,11 @@ val upd_elemB: b:elemB{length b = norm_length} -> n0:U64.t -> n1:U64.t -> n2:U64
     /\ sel_int h1 b = v n0 + pow2 26 * v n1 + pow2 52 * v n2 + pow2 78 * v n3 + pow2 104 * v n4
     /\ norm h1 b))
 let upd_elemB b n0 n1 n2 n3 n4 =
-  upd b 0ul n0;
-  upd b 1ul n1;
-  upd b 2ul n2;
-  upd b 3ul n3;
-  upd b 4ul n4;
+  b.(0ul) <- n0;
+  b.(1ul) <- n1;
+  b.(2ul) <- n2;
+  b.(3ul) <- n3;
+  b.(4ul) <- n4;
   let h1 = HST.get() in
   lemma_bitweight_templ_values 4;
   lemma_bitweight_templ_values 3;
@@ -395,7 +385,7 @@ let upd_elemB b n0 n1 n2 n3 n4 =
   pow2_increases_lemma 26 24
 
 (* TODO *)
-let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4' : Lemma
+let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4': Lemma
   (requires (let mask_26 = mk_mask 26ul in
     n0' = (n0 &^ mask_26) /\ n1' = ((n0 >>^ 26ul) |^ ((n1 <<^ 6ul) &^ mask_26))
     /\ n2' = ((n1 >>^ 20ul) |^ ((n2 <<^ 12ul) &^ mask_26))
@@ -530,22 +520,22 @@ val upd_wordB_16: b:wordB_16 -> s0:U8.t -> s1:U8.t -> s2:U8.t -> s3:U8.t -> s4:U
     (requires (fun h -> live h b))
     (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))
 let upd_wordB_16 s s0 s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 =
-  upd s 0ul s0;
-  upd s 1ul s1;
-  upd s 2ul s2;
-  upd s 3ul s3;
-  upd s 4ul s4;
-  upd s 5ul s5;
-  upd s 6ul s6;
-  upd s 7ul s7;
-  upd s 8ul s8;
-  upd s 9ul s9;
-  upd s 10ul s10;
-  upd s 11ul s11;
-  upd s 12ul s12;
-  upd s 13ul s13;
-  upd s 14ul s14;
-  upd s 15ul s15
+  s.(0ul) <- s0;
+  s.(1ul) <- s1;
+  s.(2ul) <- s2;
+  s.(3ul) <- s3;
+  s.(4ul) <- s4;
+  s.(5ul) <- s5;
+  s.(6ul) <- s6;
+  s.(7ul) <- s7;
+  s.(8ul) <- s8;
+  s.(9ul) <- s9;
+  s.(10ul) <- s10;
+  s.(11ul) <- s11;
+  s.(12ul) <- s12;
+  s.(13ul) <- s13;
+  s.(14ul) <- s14;
+  s.(15ul) <- s15
 
 
 val trunc1305: a:elemB -> b:wordB_16{disjoint a b} -> ST unit
@@ -598,7 +588,7 @@ val clamp: r:wordB{length r = 16} -> Stack unit
   (requires (fun h -> live h r))
   (ensures  (fun h0 _ h1 -> live h1 r /\ modifies_1 r h0 h1))
 let clamp r =
-  let fix i mask = upd r i (U8 (index r i &^ mask)) in
+  let fix i mask = r.(i) <- (U8 (index r i &^ mask)) in
   fix  3ul  15uy; // 0000****
   fix  7ul  15uy;
   fix 11ul  15uy;
@@ -681,7 +671,7 @@ val poly1305_update:
       /\ reveal updated_log == SeqProperties.snoc (reveal current_log) (encode_16 (sel_word h1 msg))
       /\ sel_elem h1 acc == poly (reveal updated_log) (sel_elem h0 r) ))
 
-#set-options "--initial_fuel 1 --max_fuel 1"
+#set-options "--z3timeout 30 --initial_fuel 1 --max_fuel 1"
 
 let poly1305_update log msgB acc r =
   let h0 = HST.get () in
@@ -728,7 +718,7 @@ val poly1305_loop: current_log:erased text -> msg:bytes -> acc:elemB{disjoint ms
       /\ sel_elem h1 acc == poly (reveal updated_log) (sel_elem h0 r) ))
     (decreases (w ctr))
 
-#set-options "--z3timeout 40 --print_fuels --initial_fuel 1 --max_fuel 1"
+#set-options "--z3timeout 20 --print_fuels --initial_fuel 0 --max_fuel 0"
 
 let rec poly1305_loop log msg acc r ctr =
   if U32.lte ctr 0ul then log
@@ -776,7 +766,7 @@ let poly1305_last msg acc r len =
     push_frame ();
     let n = create 0uy 16ul in
     blit msg 0ul n 0ul len;
-    upd n len 1uy;
+    n.(len) <- 1uy;
     let block = create 0UL nlength in
     toField block n;
     let h1 = HST.get () in
