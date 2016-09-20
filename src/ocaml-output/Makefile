@@ -24,13 +24,13 @@ FSTAR_OBJS=$(COMPILER_ML_LIB) \
 	   FStar_ToSMT_Term.cmx FStar_ToSMT_Z3.cmx FStar_ToSMT_SplitQueryCases.cmx FStar_ToSMT_Encode.cmx \
 	   FStar_Format.cmx \
 	   FStar_TypeChecker_Common.cmx FStar_TypeChecker_Env.cmx FStar_TypeChecker_Normalize.cmx FStar_TypeChecker_Errors.cmx FStar_TypeChecker_Rel.cmx FStar_TypeChecker_Util.cmx FStar_TypeChecker_DMFF.cmx FStar_TypeChecker_Tc.cmx \
-	   FStar_Parser_AST.cmx FStar_Parser_DesugarEnv.cmx FStar_Parser_Desugar.cmx FStar_Parser_Env.cmx FStar_Parser_Interleave.cmx FStar_Parser_ToSyntax.cmx FStar_Parser_Parse.cmx FStar_Parser_Lexhelp.cmx FStar_Parser_LexFStar.cmx FStar_Parser_ParseIt.cmx FStar_Parser_Driver.cmx FStar_Parser_Dep.cmx \
+	   FStar_Parser_AST.cmx FStar_Parser_DesugarEnv.cmx FStar_Parser_Desugar.cmx FStar_Parser_Env.cmx FStar_Parser_Interleave.cmx FStar_Parser_ToSyntax.cmx FStar_Parser_Parse.cmx FStar_Parser_Lexhelp.cmx FStar_Parser_LexFStar.cmx FStar_Parser_LexFilter.cmx FStar_Parser_ParseIt.cmx FStar_Parser_Driver.cmx FStar_Parser_Dep.cmx \
 	   FStar_Extraction_ML_Syntax.cmx FStar_Extraction_ML_Env.cmx FStar_Extraction_ML_UEnv.cmx FStar_Extraction_ML_Util.cmx FStar_Extraction_ML_Code.cmx FStar_Extraction_ML_ExtractTyp.cmx FStar_Extraction_ML_ExtractExp.cmx FStar_Extraction_ML_ExtractMod.cmx FStar_Extraction_ML_Term.cmx FStar_Extraction_ML_Modul.cmx FStar_Extraction_Kremlin.cmx \
 	   FStar_Fsdoc_Generator.cmx \
 	   FStar_SMTEncoding_Term.cmx FStar_SMTEncoding_Z3.cmx FStar_SMTEncoding_SplitQueryCases.cmx FStar_SMTEncoding_ErrorReporting.cmx FStar_SMTEncoding_Encode.cmx FStar_SMTEncoding_Solver.cmx \
 	   FStar_Dependences.cmx FStar_Interactive.cmx FStar_Stratified.cmx FStar_Universal.cmx FStar_FStar.cmx
 
-GENERATED_FILES=$(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml 
+GENERATED_FILES=$(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_LexFilter.ml FStar_Parser_ParseIt.ml
 
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
@@ -83,6 +83,8 @@ parser:
 	cat parse.ml >> FStar_Parser_Parse.ml
 	ocamllex ../parser/ml/lex.mll -o FStar_Parser_LexFStar.ml
 	cp ../parser/ml/parseit.ml FStar_Parser_ParseIt.ml
+	cp ../parser/ml/lexfilter.ml FStar_Parser_LexFilter.ml
+
 
 copy_lib_files: $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml
 	cp $^ .

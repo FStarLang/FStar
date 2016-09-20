@@ -90,6 +90,7 @@
     <Compile Include="interleave.fs" />
     <Compile Include="tosyntax.fsi" />
     <Compile Include="tosyntax.fs" />
+    <Compile Include="lexfilter.fs" />
     <Compile Include="parseit.fsi" />
     <Compile Include="parseit.fs" />
     <Compile Include="driver.fs" />

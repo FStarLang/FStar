@@ -3,6 +3,20 @@ module FStar.Parser.Parse
 open FStar.Parser.AST
 type token = 
   | EOF
+  | ODUMMY of (token)
+  | OBLOCKEND
+  | ORIGHT_BLOCK_END
+  | ODECLEND
+  | OEND
+  | OBLOCKSEP
+  | OBLOCKBEGIN
+  | ORESET
+  | OFUN
+  | OFUNCTION
+  | OWITH
+  | OELSE
+  | OTHEN
+  | OLET of (bool)
   | OPPREFIX of (string)
   | OPINFIX0a of (string)
   | OPINFIX0b of (string)
@@ -132,6 +146,20 @@ type token =
   | BYTEARRAY of (bytes)
 type tokenId = 
     | TOKEN_EOF
+    | TOKEN_ODUMMY
+    | TOKEN_OBLOCKEND
+    | TOKEN_ORIGHT_BLOCK_END
+    | TOKEN_ODECLEND
+    | TOKEN_OEND
+    | TOKEN_OBLOCKSEP
+    | TOKEN_OBLOCKBEGIN
+    | TOKEN_ORESET
+    | TOKEN_OFUN
+    | TOKEN_OFUNCTION
+    | TOKEN_OWITH
+    | TOKEN_OELSE
+    | TOKEN_OTHEN
+    | TOKEN_OLET
     | TOKEN_OPPREFIX
     | TOKEN_OPINFIX0a
     | TOKEN_OPINFIX0b
@@ -350,6 +378,11 @@ type nonTerminalId =
     | NONTERM_disjunctivePattern
     | NONTERM_maybeWhen
     | NONTERM_funArrow
+    | NONTERM_topSeparator
+    | NONTERM_topSeparators
+    | NONTERM_opt_topSeparators
+    | NONTERM_seps
+    | NONTERM_opt_OBLOCKSEP
     | NONTERM_tmIff
     | NONTERM_tmImplies
     | NONTERM_tmArrowNoEquals
