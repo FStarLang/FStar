@@ -1752,7 +1752,7 @@ let type_of_tot_term env e =
 let universe_of env e = 
     if not (Env.should_verify env)
     then U_zero //short-circuit a recursive call in lax mode
-    else let _ = Util.print1 "universe_of %s\n" (Print.term_to_string e) in
+    else //let _ = Util.print1 "universe_of %s\n" (Print.term_to_string e) in
          let env, _ = Env.clear_expected_typ env in 
          let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
          let fail e t = 
@@ -1782,6 +1782,6 @@ let universe_of env e =
                 let _ = Rel.solve_deferred_constraints env g in
                 universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
             | Some t -> 
-                Util.print_string "universe_of memo\n";
+                //Util.print_string "universe_of memo\n";
                 universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env (S.mk t None e.pos)
             end

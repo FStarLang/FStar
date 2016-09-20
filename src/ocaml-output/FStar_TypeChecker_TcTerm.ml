@@ -3947,7 +3947,7 @@ end else begin
 (
 
 let _58_2410 = (let _152_859 = (FStar_Syntax_Print.term_to_string e)
-in (FStar_Util.print1 "universe_of %s\n" _152_859))
+in ())
 in (
 
 let _58_2415 = (FStar_TypeChecker_Env.clear_expected_typ env)
@@ -4031,7 +4031,7 @@ end
 | Some (t) -> begin
 (
 
-let _58_2471 = (FStar_Util.print_string "universe_of memo\n")
+let _58_2471 = ()
 in (let _152_884 = (let _152_883 = (FStar_Syntax_Syntax.mk t None e.FStar_Syntax_Syntax.pos)
 in (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::[]) env _152_883))
 in (FStar_All.pipe_left (universe_of_type e) _152_884)))
