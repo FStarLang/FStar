@@ -36,6 +36,7 @@ and decl =
   | DTypeAlias of lident * typ
   | DGlobal of lident * typ * expr
   | DTypeFlat of lident * list<(ident * (typ * bool))>
+  | DExternal of lident * typ
 
 and expr =
   | EBound of var
@@ -189,11 +190,11 @@ let mk_op = function
       Some Eq
   | "op_Greater_Hat" | "gt" ->
       Some Gt
-  | "op_Greater_Equal_Hat" | "gte" ->
+  | "op_Greater_Equals_Hat" | "gte" ->
       Some Gte
   | "op_Less_Hat" | "lt" ->
       Some Lt
-  | "op_Less_Equal_Hat" | "lte" ->
+  | "op_Less_Equals_Hat" | "lte" ->
       Some Lte
   | _ ->
       None
@@ -275,12 +276,12 @@ and translate_decl env d: option<decl> =
   match d with
   | MLM_Let (flavor, [ {
       mllb_name = name, _;
-      mllb_tysc = Some ([], MLTY_Fun (_, _, t));
+      mllb_tysc = Some ([], t0);
       mllb_def = { expr = MLE_Fun (args, body) }
     } ])
   | MLM_Let (flavor, [ {
       mllb_name = name, _;
-      mllb_tysc = Some ([], MLTY_Fun (_, _, t));
+      mllb_tysc = Some ([], t0);
       mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
     } ]) ->
       assert (flavor <> Mutable);
@@ -292,17 +293,15 @@ and translate_decl env d: option<decl> =
           | t ->
               t
         in
-        let t = translate_type env (find_return_type t) in
+        let t = translate_type env (find_return_type t0) in
         let binders = translate_binders env args in
         let env = add_binders env args in
-        let body =
-          if flavor = Assumed then
-            EAbort
-          else
-            translate_expr env body
-        in
         let name = env.module_name, name in
-        Some (DFunction (t, name, binders, body))
+        if flavor = Assumed then
+          Some (DExternal (name, translate_type env t0))
+        else
+          let body = translate_expr env body in
+          Some (DFunction (t, name, binders, body))
       with e ->
         Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
         None

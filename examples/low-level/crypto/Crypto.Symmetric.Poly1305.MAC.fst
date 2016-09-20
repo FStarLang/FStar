@@ -58,6 +58,10 @@ type log_2 = // only when ideal
   | Corrupt
 *)
 
+// TODO: right now we use a dummy, should be external
+// relocated in some library somewhere, 
+// and with careful, crypto-grade external implementation
+// both with ocaml and kremlin, 
 val random: r:rid -> len:UInt32.t -> ST bytes
      (requires (fun h -> is_eternal_region r))
      (ensures (fun (h0:mem) b h1 ->
@@ -67,8 +71,6 @@ val random: r:rid -> len:UInt32.t -> ST bytes
        /\ h1.tip = h0.tip
        /\ modifies (Set.singleton r) h0 h1
        /\ modifies_ref r TSet.empty h0 h1))
-
-// TODO: dummy, implement properly
 let random r len = FStar.Buffer.rcreate r 0uy len
 
 // the sequence of hashed elements is conditional, but not ghost

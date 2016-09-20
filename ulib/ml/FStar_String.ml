@@ -14,5 +14,6 @@ let sub s i j = BatString.slice ~first:(Z.to_int i) ~last:(Z.to_int j) s
 let get s i = FStar_List.nth (BatString.to_list s) i
 let collect = BatString.replace_chars
 let lowercase = String.lowercase
-
+let index = get  
 let substring s i j= String.sub s (Z.to_int i) (Z.to_int j)
+let sub = substring

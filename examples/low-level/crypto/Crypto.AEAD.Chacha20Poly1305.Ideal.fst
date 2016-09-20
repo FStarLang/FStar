@@ -94,9 +94,17 @@ noeq type state (i:id) (rw:rw) =
       prf: PRF.state i (* including its key *) ->
       state i rw
 
+
+
 //16-09-18 where is it in the libraries?
 let min (a:u32) (b:u32) = if a <=^ b then a else b
 
+let gen i rgn = 
+  let prf = PRF.gen rgn i in 
+  State #i #Writer rgn rgn Seq.createEmpty
+
+let genReader #i #rgn (state i Writer) = ()
+  // no need for state? 
 
 (*
 // INVARIANT (WIP)
@@ -347,4 +355,3 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   pop_frame();
 
   if verified then 0ul else 1ul //TODO pick and enforce error convention.
-
