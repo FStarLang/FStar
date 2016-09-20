@@ -75,6 +75,8 @@
     <Compile Include="util.fsi" />
     <Compile Include="util.fs" />
     <Compile Include="dmff.fs" />
+    <Compile Include="tcterm.fsi" />
+    <Compile Include="tcterm.fs" />
     <Compile Include="tc.fsi" />
     <Compile Include="tc.fs" />
   </ItemGroup>

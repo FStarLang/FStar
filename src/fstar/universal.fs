@@ -35,6 +35,7 @@ module Desugar = FStar.Parser.ToSyntax
 module SMT     = FStar.SMTEncoding.Solver
 module Const   = FStar.Syntax.Const
 module Tc      = FStar.TypeChecker.Tc
+module TcTerm  = FStar.TypeChecker.TcTerm
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -67,7 +68,7 @@ let tc_prims () : Syntax.modul
                   * DsEnv.env
                   * TcEnv.env =
   let solver = if Options.lax() then SMT.dummy else SMT.solver in
-  let env = TcEnv.initial_env Tc.type_of Tc.universe_of solver Const.prims_lid in
+  let env = TcEnv.initial_env TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
   env.solver.init env;
   let prims_filename = Options.prims () in
   let dsenv, prims_mod = parse (DsEnv.empty_env ()) None prims_filename in

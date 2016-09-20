@@ -33,6 +33,7 @@ module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
 module C  = FStar.Syntax.Const
 module TcEnv = FStar.TypeChecker.Env
+module TcTerm = FStar.TypeChecker.TcTerm
 
 exception Un_extractable
 
@@ -532,7 +533,7 @@ let extract_pat (g:env) p (expected_t:mlty) : (env * list<(mlpattern * option<ml
             g, Some (MLP_Var x, [when_clause]), ok ml_int_ty
 
           | Pat_constant s     ->
-            let t : term = TC.tc_constant Range.dummyRange s in
+            let t : term = TcTerm.tc_constant Range.dummyRange s in
             let mlty = term_as_mlty g t in
             g, Some (MLP_Const (mlconst_of_const' p.p s), []), ok mlty
 
@@ -764,7 +765,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           term_as_mlexpr' g t
 
         | Tm_constant c ->
-          let _, ty, _ = TC.type_of g.tcenv t in
+          let _, ty, _ = TcTerm.type_of_tot_term g.tcenv t in
           let ml_ty = term_as_mlty g ty in
           with_ty ml_ty (MLE_Const <| mlconst_of_const' t.pos c), E_PURE, ml_ty
 

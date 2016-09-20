@@ -617,12 +617,11 @@ let invertOption a = allow_inversion (option a)
 (*    mismatch between the semantics of integer division in SMT-LIB and *)
 (*    in F#/OCaml. For SMT-LIB ints the modulus is always positive (as in *)
 (*    math Euclidian division), while for F#/OCaml ints the modulus has *)
-(*    the same sign as the dividend. Our arbitrary precision ints don't *)
-(*    quite correspond to finite precision F#/OCaml ints though, but to *)
-(*    OCaml's big_ints (for which the modulus is always positive).  So *)
-(*    we'll need to return to this point anyway, when we discuss how to *)
-(*    soundly map F* ints to something in F#/OCaml.  *)
+(*    the same sign as the dividend.                                    *)
 
+(*    Our arbitrary precision ints are compiled to zarith (big_ints)  *)
+(*    in OCaml. Although in F# they are still compiled to platform-specific *)
+(*    finite integers---this should eventually change to .NET BigInteger *)
 assume val op_Modulus            : int -> nonzero -> Tot int
 assume val op_Division           : nat -> nonzero -> Tot int
 

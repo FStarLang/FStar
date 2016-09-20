@@ -10,6 +10,7 @@ module DsEnv = FStar.Parser.Env
 module TcEnv = FStar.TypeChecker.Env
 module SMT = FStar.SMTEncoding.Solver
 module Tc = FStar.TypeChecker.Tc
+module TcTerm = FStar.TypeChecker.TcTerm
 
 let test_lid = Ident.lid_of_path ["Test"] Range.dummyRange
 let dsenv_ref = ref None
@@ -32,7 +33,7 @@ let parse_prims () =
 
 let init_once () : unit =
   let solver = SMT.dummy in
-  let env = TcEnv.initial_env Tc.type_of Tc.universe_of solver Const.prims_lid in
+  let env = TcEnv.initial_env TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
   env.solver.init env;
   let dsenv, prims_mod = parse_prims () in
   let prims_mod, env = Tc.check_module env prims_mod in
@@ -107,7 +108,7 @@ let pars s =
 let tc s = 
     let tm = pars s in
     let _, tcenv = init() in
-    let tm, _, _ = Tc.type_of tcenv tm in 
+    let tm, _, _ = TcTerm.type_of_tot_term tcenv tm in 
     tm
 
 let pars_and_tc_fragment s = 
