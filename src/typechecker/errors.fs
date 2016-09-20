@@ -45,8 +45,25 @@ let warn r msg =
 
 let num_errs = Util.mk_ref 0
 let verification_errs : ref<list<(Range.range * string)>> = Util.mk_ref []
+type error_message_prefix = {
+    set_prefix: string -> unit;
+    append_prefix: string -> string;
+    clear_prefix: unit -> unit;
+}
+let message_prefix = 
+    let pfx = Util.mk_ref None in 
+    let set_prefix s = pfx := Some s in
+    let clear_prefix () = pfx := None in
+    let append_prefix s = match !pfx with 
+        | None -> s
+        | Some p -> p ^ ": " ^ s in
+    {set_prefix=set_prefix;
+     clear_prefix=clear_prefix;
+     append_prefix=append_prefix}
 let add_errors env errs =
-    let errs = errs |> List.map (fun (msg, r) -> let r = if r=dummyRange then Env.get_range env else r in (r, msg)) in
+    let errs = errs |> List.map (fun (msg, r) -> 
+        let r = if r=dummyRange then Env.get_range env else r in 
+        (r, message_prefix.append_prefix msg)) in
     let n_errs = List.length errs in
     atomically (fun () ->
         verification_errs := errs@ (!verification_errs);
@@ -58,8 +75,28 @@ let report_all () =
     List.length all_errs
 
 
+let handle_err warning e =
+  match e with
+    | Error(msg, r) ->
+        let msg = message_prefix.append_prefix msg in
+        fprint stderr "%s : %s\n%s\n" [Range.string_of_range r; (if warning then "Warning" else "Error"); msg]
+    | NYI msg ->
+        let msg = message_prefix.append_prefix msg in
+        fprint stderr "Feature not yet implemented: %s" [msg]
+    | Err msg ->
+        let msg = message_prefix.append_prefix msg in
+        fprint stderr "Error: %s" [msg]
+    | _ -> raise e
+
+let handleable = function
+  | Error _
+  | NYI _
+  | Err _ -> true
+  | _ -> false
+
 let report r msg =
   incr num_errs;
+  let msg = message_prefix.append_prefix msg in
   Util.print_string (format2 "%s: %s\n" (Range.string_of_range r) msg)
 let get_err_count () = !num_errs
 

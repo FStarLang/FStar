@@ -149,10 +149,10 @@ let main () =
   with | e ->
     (begin 
         if F_Util.handleable e then F_Util.handle_err false () e;
-        if U_Util.handleable e then U_Util.handle_err false e;
+        if FStar.TypeChecker.Errors.handleable e then FStar.TypeChecker.Errors.handle_err false e;
         if (Options.trace_error()) then
           Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
-        else if not (F_Util.handleable e || U_Util.handleable e) then
+        else if not (F_Util.handleable e || FStar.TypeChecker.Errors.handleable e) then
           Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
      end; 
      cleanup();

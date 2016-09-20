@@ -1561,9 +1561,65 @@ let tc_more_partial_modul env modul decls =
   let modul = {modul with declarations=modul.declarations@ses} in
   modul, exports, env
 
+(* Consider the module:
+        module Test
+        abstract type t = nat
+        let f (x:t{x > 0}) : Tot t = x
+
+   The type of f : x:t{x>0} -> t 
+   from the perspective of a client of Test
+   is ill-formed, since it the sub-term `x > 0` requires x:int, not x:t
+
+   `check_exports` checks the publicly visible symbols exported by a module
+   to make sure that all of them have types that are well-formed from a client's
+   perspective.
+*)
+let check_exports env (modul:modul) exports = 
+    let env = {env with lax=true; top_level=true} in
+    let check_term univs t = 
+        let univs, t = SS.open_univ_vars univs t in
+        let env = Env.push_univ_vars env univs in
+        TcTerm.tc_trivial_guard env t |> ignore
+    in
+    let rec check_sigelt = function
+        | Sig_bundle(ses, quals, _, _) -> 
+          if not (quals |> List.contains Private)
+          then ses |> List.iter check_sigelt
+        | Sig_inductive_typ (l, univs, binders, typ, _, _, _, r) ->
+          let t = S.mk (Tm_arrow(binders, S.mk_Total typ)) None r in
+          check_term univs t
+        | Sig_datacon(_, univs, t, _, _, _, _, _) -> 
+          check_term univs t
+        | Sig_declare_typ(_, univs, t, quals, _) ->
+          if not (quals |> List.contains Private)
+          then check_term univs t
+        | Sig_let((_, lbs), _, _, quals) ->
+          if not (quals |> List.contains Private)
+          then lbs |> List.iter (fun lb -> check_term lb.lbunivs lb.lbtyp)
+        | Sig_effect_abbrev(_, univs, binders, comp, quals, r) ->
+          if not (quals |> List.contains Private)
+          then let arrow = S.mk (Tm_arrow(binders, comp)) None r in
+               check_term univs arrow
+        | Sig_main _
+        | Sig_assume _
+        | Sig_new_effect _
+        | Sig_new_effect_for_free _
+        | Sig_sub_effect _
+        | Sig_pragma _ -> ()
+    in
+    if Ident.lid_equals modul.name Const.prims_lid
+    then ()
+    else let _ = Errors.message_prefix.set_prefix 
+                    (Util.format1 "Interface of %s violates its abstraction (add a 'private' qualifier?)" 
+                            (Print.lid_to_string modul.name)) in
+         let _ = List.iter check_sigelt exports in
+         Errors.message_prefix.clear_prefix ()
+
+
 let finish_partial_modul env modul exports =
   let modul = {modul with exports=exports; is_interface=modul.is_interface} in
   let env = Env.finish_module env modul in
+  check_exports env modul exports;
   env.solver.pop ("Ending modul " ^ modul.name.str);
   env.solver.encode_modul env modul;
   env.solver.refresh();
