@@ -1574,6 +1574,7 @@ let tc_more_partial_modul env modul decls =
    to make sure that all of them have types that are well-formed from a client's
    perspective.
 *)
+open FStar.TypeChecker.Errors
 let check_exports env (modul:modul) exports = 
     let env = {env with lax=true; top_level=true} in
     let check_term univs t = 

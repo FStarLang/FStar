@@ -287,8 +287,8 @@ end else begin
 end
 in (
 
-let _93_106 = if (FStar_Syntax_Util.handleable e) then begin
-(FStar_Syntax_Util.handle_err false e)
+let _93_106 = if (FStar_TypeChecker_Errors.handleable e) then begin
+(FStar_TypeChecker_Errors.handle_err false e)
 end else begin
 ()
 end
@@ -297,7 +297,7 @@ in if (FStar_Options.trace_error ()) then begin
 in (let _187_31 = (FStar_Util.trace_of_exn e)
 in (FStar_Util.print2_error "Unexpected error\n%s\n%s\n" _187_32 _187_31)))
 end else begin
-if (not (((FStar_Absyn_Util.handleable e) || (FStar_Syntax_Util.handleable e)))) then begin
+if (not (((FStar_Absyn_Util.handleable e) || (FStar_TypeChecker_Errors.handleable e)))) then begin
 (let _187_33 = (FStar_Util.message_of_exn e)
 in (FStar_Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _187_33))
 end else begin
