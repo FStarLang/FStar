@@ -41,9 +41,14 @@ let as_ref #a (b:buffer a) : GTot (Heap.ref (bounded_seq a)) = as_ref (b.content
 let as_aref #a (b:buffer a) : GTot Heap.aref = as_aref b.content
 let frameOf #a (b:buffer a) : GTot HH.rid = frameOf (content b)
 
+//16-09-20 TODO let recall #a (b:buffer a) = HS.recall (content b)
+
 (* Liveliness condition, necessary for any computation on the buffer *)
-(* abstract *) let live #a (h:mem) (b:buffer a) : GTot Type0 =
+(* abstract *) 
+let live #a (h:mem) (b:buffer a) : GTot Type0 =
   contains h b /\ max_length h b >= length b + idx b
+//16-09-20 The second property is pure, should be attached to the buffer record;
+//16-09-20 But this may interfere wih the record being private.
 
 (* Ghostly access an element of the array, or the full underlying sequence *)
 let as_seq #a h (b:buffer a{live h b}) : GTot (seq a) = Seq.slice (sel h b) (idx b) (idx b + length b)

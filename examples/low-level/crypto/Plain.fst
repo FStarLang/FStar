@@ -28,15 +28,16 @@ type buffer = Buffer.buffer UInt8.t
 type lbytes (l:nat)  = b:bytes  {Seq.length b = l}
 type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
 
-//TODO add functional correctness
-assume val load_bytes: l:UInt32.t -> buf:lbuffer(v l) -> STL (lbytes(v l))
-  (requires (fun h0 -> Buffer.live h0 buf))
-  (ensures (fun h0 r h1 -> h0 == h1))
-assume val store_bytes: l:UInt32.t -> buf:lbuffer(v l) -> lbytes(v l) -> ST unit
-  (requires (fun h0 -> Buffer.live h0 buf))
-  (ensures (fun h0 r h1 -> Buffer.live h1 buf /\ modifies_1 buf h0 h1))
 assume val sel_bytes: h:mem -> l:UInt32.t -> buf:lbuffer(v l){Buffer.live h buf}  -> Tot (lbytes (v l))
-// how to state that buf is live here?
+
+//TODO add functional correctness
+assume val load_bytes: l:UInt32.t -> buf:lbuffer(v l) -> Stack (lbytes(v l))
+  (requires (fun h0 -> Buffer.live h0 buf))
+  (ensures (fun h0 r h1 -> h0 == h1 /\ Buffer.live h0 buf /\ r == sel_bytes h1 l buf))
+assume val store_bytes: l:UInt32.t -> buf:lbuffer(v l) -> b:lbytes(v l) -> ST unit
+  (requires (fun h0 -> Buffer.live h0 buf))
+  (ensures (fun h0 r h1 -> Buffer.live h1 buf /\ modifies_1 buf h0 h1 /\ b == sel_bytes h1 l buf
+  ))
 
 // SECRETS, HIGH AND LOW
 
@@ -73,18 +74,21 @@ val bufferRepr: #i:id {~(authId i)} -> #l:plainLen -> b:plainBuffer i l -> Tot (
 let bufferRepr #i #l b = b
 // not sure how to write modifies clauses including plain and plainBuffer
 
-val load: #i:id -> l:UInt32.t -> buf: plainBuffer i (v l) -> STL (plain i (v l)) 
-  (requires (fun h0 -> live h0 buf))
-  (ensures (fun h0 r h1 -> h0 == h1))
-let load #i l buf = load_bytes l buf
-
-val store: #i:id -> l:UInt32.t -> buf: plainBuffer i (v l) -> b:plain i (v l) -> STL unit
-  (requires (fun h0 -> live h0 buf))
-  (ensures (fun h0 r h1 -> live h1 buf /\ modifies_1 (bufferT #i #(v l) buf) h0 h1
-  ))
-let store #i l buf b = 
-  assume false; // TODO, not sure what's missing here
-  store_bytes l buf b
-
 val sel_plain: h:mem -> #i:id -> l:UInt32.t -> buf:plainBuffer i (v l){live h buf} -> Tot (plain i (v l)) 
 let sel_plain h #i l buf = sel_bytes h l buf
+
+val load: #i:id -> l:UInt32.t -> buf: plainBuffer i (v l) -> ST (plain i (v l)) 
+  (requires (fun h0 -> live h0 buf))
+  (ensures (fun h0 r h1 -> h0 == h1 /\ live h0 buf /\ sel_plain h1 l buf == repr r))
+
+let load #i l buf = load_bytes l buf
+
+val store: #i:id -> l:UInt32.t -> buf: plainBuffer i (v l) -> b:plain i (v l) -> ST unit
+  (requires (fun h0 -> live h0 buf))
+  (ensures (fun h0 r h1 -> live h1 buf /\ modifies_1 (bufferT #i #(v l) buf) h0 h1 /\
+    sel_plain h1 l buf == repr b
+  ))
+let store #i l buf b = 
+  // assume false; // TODO, not sure what's missing here
+  store_bytes l buf b
+
