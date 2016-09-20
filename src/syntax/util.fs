@@ -294,13 +294,13 @@ let head_and_args t =
 let is_smt_lemma t = match (compress t).n with
     | Tm_arrow(_, c) -> 
       begin match c.n with
-        | Comp ct when (lid_equals ct.effect_name Const.effect_Lemma_lid) ->
+        | Comp ct when lid_equals ct.effect_name Const.effect_Lemma_lid ->
             begin match ct.effect_args with
                 | _req::_ens::(pats, _)::_ ->
                   let pats' = unmeta pats in
                   let head, _ = head_and_args pats' in
                   begin match (un_uinst head).n with
-                    |Tm_fvar fv -> fv_eq_lid fv Const.cons_lid
+                    | Tm_fvar fv -> fv_eq_lid fv Const.cons_lid
                     | _ -> false
                   end
                 | _ -> false

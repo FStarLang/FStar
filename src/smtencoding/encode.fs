@@ -1045,6 +1045,19 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
     debug phi;
 
     let phi = Util.unascribe phi in
+    let check_pattern_vars vars pats = 
+        let pats = pats |> List.map (fun (x, _) -> N.normalize [N.Beta;N.AllowUnboundUniverses;N.EraseUniverses] env.tcenv x) in
+        begin match pats with 
+        | [] -> ()
+        | hd::tl -> 
+          let pat_vars = List.fold_left (fun out x -> Util.set_union out (Free.names x)) (Free.names hd) tl in
+          match vars |> Util.find_opt (fun (b, _) -> not(Util.set_mem b pat_vars)) with
+          | None -> ()
+          | Some (x,_) ->
+            let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
+            Errors.warn pos (Util.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x))
+        end
+    in
     match Util.destruct_typ_as_formula phi with
         | None -> fallback phi
 
@@ -1054,19 +1067,13 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
              | Some (_, f) -> f arms)
 
         | Some (Util.QAll(vars, pats, body)) ->
-          if Env.debug env.tcenv Options.Low
-          then Util.print1 ">>>> Got QALL [%s]\n" (vars |> Print.binders_to_string "; ");
-
+          pats |> List.iter (check_pattern_vars vars);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
           let tm = mkForall(pats, vars, mkImp(guard, body)) in
-
-          if Env.debug env.tcenv <| Options.Other "Encoding"
-          then Util.print1 ">>>> Encoded QALL to %s\n" (Term.termToSmt tm);
-
           tm, decls
 
-
         | Some (Util.QEx(vars, pats, body)) ->
+          pats |> List.iter (check_pattern_vars vars);
           let vars, pats, guard, body, decls = encode_q_body env vars pats body in
           (mkExists(pats, vars, mkAnd(guard, body)), decls)
 
