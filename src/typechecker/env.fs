@@ -552,14 +552,20 @@ let try_lookup_val_decl env lid =
     | Some (Inr (Sig_declare_typ(_, uvs, t, q, _), None)) -> Some ((uvs,t),q)
     | _ -> None
 
-let lookup_effect_abbrev env (univ:universe) lid =
+let lookup_effect_abbrev env (univ_insts:universes) lid =
   match lookup_qname env lid with
     | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _), None)) ->
       if quals |> Util.for_some (function Irreducible -> true | _ -> false)
       then None
-      else let insts = if Ident.lid_equals lid Const.effect_Lemma_lid //TODO: Lemma is a hack! It is more universe polymorphic than expected, because of the SMTPats ... which should be irrelevant, but unfortunately are not 
-                       then univ::[U_zero]
-                       else [univ] in
+      else let insts = if List.length univ_insts = List.length univs 
+                       then univ_insts 
+                       else if Ident.lid_equals lid Const.effect_Lemma_lid 
+                            && List.length univ_insts = 1 //TODO: Lemma is a hack! It is more universe polymorphic than expected,
+                                                          //because of the SMTPats ... which should be irrelevant, but unfortunately are not 
+                       then univ_insts@[U_zero]
+                       else failwith (Util.format2 "Unexpected instantiation of effect %s with %s universes" 
+                                            (Print.lid_to_string lid)
+                                            (List.length univ_insts |> Util.string_of_int)) in
            begin match binders, univs with
              | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
              | _, _::_::_ when not (Ident.lid_equals lid Const.effect_Lemma_lid) -> 
@@ -578,7 +584,7 @@ let norm_eff_name =
    let cache = Util.smap_create 20 in
    fun env (l:lident) ->
        let rec find l =
-           match lookup_effect_abbrev env U_unknown l with //universe doesn't matter here; we're just normalizing the name
+           match lookup_effect_abbrev env [U_unknown] l with //universe doesn't matter here; we're just normalizing the name
             | None -> None
             | Some (_, c) ->
                 let l = Util.comp_effect_name c in

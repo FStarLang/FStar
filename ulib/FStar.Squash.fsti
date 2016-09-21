@@ -18,7 +18,7 @@ val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
   $f:(squash (x:a -> GTot (squash (p x)))) -> GTot (squash (x:a -> GTot (p x)))
 
 val squash_double_sum:  #a:Type -> #p:(a -> Type) ->
-  $f:(squash (x:a & squash (p x))) -> Tot (squash (x:a & p x))
+  $f:(squash (dtuple2 a (fun (x:a) -> squash (p x)))) -> Tot (squash (dtuple2 a (fun (x:a) -> squash (p x))))
 
 (* This is a monad *)
 
