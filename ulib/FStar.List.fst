@@ -22,7 +22,8 @@ val hd: list 'a -> 'a
 let hd = function
   | hd::tl -> hd
   | _ -> failwith "head of empty list"
-
+  
+val tail: list 'a -> list 'a
 let tail = function
   | hd::tl -> tl
   | _ -> failwith "tail of empty list"

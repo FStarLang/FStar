@@ -1582,25 +1582,35 @@ let check_exports env (modul:modul) exports =
         let env = Env.push_univ_vars env univs in
         TcTerm.tc_trivial_guard env t |> ignore
     in
+    let check_term lid univs t = 
+        let _ = Errors.message_prefix.set_prefix 
+                (Util.format2 "Interface of %s violates its abstraction (add a 'private' qualifier to '%s'?)" 
+                        (Print.lid_to_string modul.name)
+                        (Print.lid_to_string lid)) in
+        check_term univs t;
+        Errors.message_prefix.clear_prefix() 
+    in
     let rec check_sigelt = function
         | Sig_bundle(ses, quals, _, _) -> 
           if not (quals |> List.contains Private)
           then ses |> List.iter check_sigelt
         | Sig_inductive_typ (l, univs, binders, typ, _, _, _, r) ->
           let t = S.mk (Tm_arrow(binders, S.mk_Total typ)) None r in
-          check_term univs t
-        | Sig_datacon(_, univs, t, _, _, _, _, _) -> 
-          check_term univs t
-        | Sig_declare_typ(_, univs, t, quals, _) ->
+          check_term l univs t
+        | Sig_datacon(l , univs, t, _, _, _, _, _) -> 
+          check_term l univs t
+        | Sig_declare_typ(l, univs, t, quals, _) ->
           if not (quals |> List.contains Private)
-          then check_term univs t
+          then check_term l univs t
         | Sig_let((_, lbs), _, _, quals) ->
           if not (quals |> List.contains Private)
-          then lbs |> List.iter (fun lb -> check_term lb.lbunivs lb.lbtyp)
-        | Sig_effect_abbrev(_, univs, binders, comp, quals, r) ->
+          then lbs |> List.iter (fun lb -> 
+               let fv = right lb.lbname in
+               check_term fv.fv_name.v lb.lbunivs lb.lbtyp)
+        | Sig_effect_abbrev(l, univs, binders, comp, quals, r) ->
           if not (quals |> List.contains Private)
           then let arrow = S.mk (Tm_arrow(binders, comp)) None r in
-               check_term univs arrow
+               check_term l univs arrow
         | Sig_main _
         | Sig_assume _
         | Sig_new_effect _
@@ -1610,11 +1620,7 @@ let check_exports env (modul:modul) exports =
     in
     if Ident.lid_equals modul.name Const.prims_lid
     then ()
-    else let _ = Errors.message_prefix.set_prefix 
-                    (Util.format1 "Interface of %s violates its abstraction (add a 'private' qualifier?)" 
-                            (Print.lid_to_string modul.name)) in
-         let _ = List.iter check_sigelt exports in
-         Errors.message_prefix.clear_prefix ()
+    else List.iter check_sigelt exports
 
 
 let finish_partial_modul env modul exports =
