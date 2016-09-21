@@ -794,15 +794,15 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
             | [] -> [], [], Util.t_true
             | q::qs ->
                 let tc, probs = match q with
-                     | bopt, variance, C ({n=Total ti}) ->
+                     | bopt, variance, C ({n=Total (ti, uopt)}) ->
                        begin match sub_prob scope args (bopt, variance, T (ti, kind_type)) with
-                            | T (gi_xs, _), prob -> C <| mk_Total gi_xs, [prob]
+                            | T (gi_xs, _), prob -> C <| mk_Total' gi_xs uopt, [prob]
                             | _ -> failwith "impossible"
                        end
 
-                     | bopt, variance, C ({n=GTotal ti}) ->
+                     | bopt, variance, C ({n=GTotal(ti, uopt)}) ->
                        begin match sub_prob scope args (bopt, variance, T (ti, kind_type)) with
-                            | T (gi_xs, _), prob -> C <| mk_GTotal gi_xs, [prob]
+                            | T (gi_xs, _), prob -> C <| mk_GTotal' gi_xs uopt, [prob]
                             | _ -> failwith "impossible"
                        end
 
@@ -811,6 +811,7 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
                        let components = (None, COVARIANT, T (c.result_typ, kind_type))::components in
                        let tcs, sub_probs = List.map (sub_prob scope args) components |> List.unzip in
                        let gi_xs = mk_Comp <| {
+                            comp_univs=c.comp_univs;
                             effect_name=c.effect_name;
                             result_typ=List.hd tcs |> un_T;
                             effect_args=List.tl tcs |> List.map arg_of_tc;
@@ -2129,6 +2130,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                       | [(wp1,_)] -> wp1
                       | _ -> failwith (Util.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
              let c1 = {
+                comp_univs=c1.comp_univs;
                 effect_name=c2.effect_name;
                 result_typ=c1.result_typ;
                 effect_args=[as_arg (edge.mlift c1.result_typ wp)];
@@ -2166,31 +2168,31 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                     (Print.comp_to_string c2) in
          let c1, c2 = N.ghost_to_pure env c1, N.ghost_to_pure env c2 in
          match c1.n, c2.n with
-               | GTotal t1, Total t2 when (Util.non_informative t2) ->
+               | GTotal (t1, _), Total (t2, _) when (Util.non_informative t2) ->
                  solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
                
                | GTotal _, Total _ ->
                  giveup env "incompatible monad ordering: GTot </: Tot"  orig
 
-               | Total t1, Total t2 
-               | GTotal t1, GTotal t2
-               | Total t1, GTotal t2 -> //rigid-rigid 1
+               | Total  (t1, _), Total  (t2, _)
+               | GTotal (t1, _), GTotal (t2, _)
+               | Total  (t1, _), GTotal (t2, _) -> //rigid-rigid 1
                  solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
                | GTotal _, Comp _
                | Total _,  Comp _ ->
-                 solve_c env ({problem with lhs=mk_Comp <| U.comp_to_comp_typ c1}) wl
+                 solve_c env ({problem with lhs=mk_Comp <| N.comp_to_comp_typ env c1}) wl
 
                | Comp _, GTotal _ 
                | Comp _, Total _ ->
-                 solve_c env ({problem with rhs=mk_Comp <| U.comp_to_comp_typ c2}) wl
+                 solve_c env ({problem with rhs=mk_Comp <| N.comp_to_comp_typ env c2}) wl
 
                | Comp _, Comp _ ->
                  if (Util.is_ml_comp c1 && Util.is_ml_comp c2)
                     || (Util.is_total_comp c1 && (Util.is_total_comp c2 || Util.is_ml_comp c2))
                  then solve_t env (problem_using_guard orig (Util.comp_result c1) problem.relation (Util.comp_result c2) None "result type") wl
-                 else let c1_comp = Util.comp_to_comp_typ c1 in
-                      let c2_comp = Util.comp_to_comp_typ c2 in
+                 else let c1_comp = N.comp_to_comp_typ env c1 in
+                      let c2_comp = N.comp_to_comp_typ env c2 in
                       if problem.relation=EQ && lid_equals c1_comp.effect_name c2_comp.effect_name
                       then solve_eq c1_comp c2_comp
                       else

@@ -990,10 +990,11 @@ and desugar_comp r default_ok env t =
                         (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) None pat.pos, aq)]
                     | _ -> rest 
             else rest in
-        mk_Comp ({effect_name=eff;
-                    result_typ=result_typ;
-                    effect_args=rest;
-                    flags=flags@decreases_clause})
+        mk_Comp ({comp_univs=[];
+                  effect_name=eff;
+                  result_typ=result_typ;
+                  effect_args=rest;
+                  flags=flags@decreases_clause})
            
 and desugar_formula env (f:term) : S.term =
   let connective s = match s with

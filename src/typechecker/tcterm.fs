@@ -226,8 +226,8 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
                 match head.n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
                     | Tm_fvar fv when S.fv_eq_lid fv Const.lexcons_lid -> dec
                     | _ -> mk_lex_list [dec] in
-          let ct = Util.comp_to_comp_typ c in
-          match ct.flags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
+          let cflags = Util.comp_flags c in
+          match cflags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
                 | Some (DECREASES dec) -> as_lex_list dec
                 | _ ->
                     let xs = bs |> filter_types_and_functions in
@@ -397,6 +397,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                         e, Rel.conj_guard g g0
               | Some g' -> e, Rel.conj_guard g' (Rel.conj_guard g g0) in
         let c = S.mk_Comp ({
+              comp_univs=[env.universe_of env res_typ];
               effect_name = ed.mname;
               result_typ=res_typ;
               effect_args=[as_arg wp];
@@ -639,20 +640,27 @@ and tc_comp env c : comp                                      (* checked version
                   * guard_t =                                 (* logical guard for the well-formedness of c *)
   let c0 = c in
   match c.n with
-    | Total t ->
+    | Total (t, _) ->
       let k, u = U.type_u () in
       let t, _, g = tc_check_tot_or_gtot_term env t k in
-      mk_Total t, u, g
+      mk_Total' t (Some u), u, g
 
-    | GTotal t ->
+    | GTotal (t, _) ->
       let k, u = U.type_u () in
       let t, _, g = tc_check_tot_or_gtot_term env t k in
-      mk_GTotal t, u, g
+      mk_GTotal' t (Some u), u, g
 
     | Comp c ->
       let head = S.fvar c.effect_name Delta_constant None in
+      let head = match c.comp_univs with 
+         | [] -> head
+         | us -> S.mk (Tm_uinst(head, us)) None c0.pos in
       let tc = mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) None c.result_typ.pos in
       let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff in
+      let head, args = Util.head_and_args tc in
+      let comp_univs = match (SS.compress head).n with 
+        | Tm_uinst(_, us) -> us
+        | _ -> [] in
       let _, args = Util.head_and_args tc in
       let res, args = List.hd args, List.tl args in
       let flags, guards = c.flags |> List.map (function
@@ -661,18 +669,9 @@ and tc_comp env c : comp                                      (* checked version
             let e, _, g = tc_tot_or_gtot_term env e in
             DECREASES e, g
         | f -> f, Rel.trivial_guard) |> List.unzip in
-
-      let u = match !(fst res).tk with //TODO:ugly. This code is brittle, see #567. We should have a better way to compute the universe of c
-        | Some (Tm_type u) -> u
-        | Some t ->
-          let t = S.mk t None Range.dummyRange in
-          let t = N.normalize [N.Beta] env t in
-          begin match t.n with 
-          | Tm_type u -> u
-          | _ -> failwith "Impossible:Unexpected sort for computation"
-          end
-        | _ -> failwith "Impossible:Unexpected sort for computation" in
+      let u = env.universe_of env (fst res) in
       let c = mk_Comp ({c with
+          comp_univs=comp_univs;
           result_typ=fst res;
           effect_args=args}) in
       let u_c = 
@@ -1774,14 +1773,15 @@ let universe_of env e =
            | _ -> universe_of_type e t
            end
          | _ -> 
-            begin match !e.tk with 
-            | None
-            | Some Tm_unknown -> 
+            let t = 
+	      match !e.tk with 
+	      | None
+              | Some Tm_unknown -> 
                 let e = N.normalize [N.Beta; N.NoInline] env e in
                 let _, ({res_typ=t}), g = tc_term env e in
                 let _ = Rel.solve_deferred_constraints env g in
-                universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
-            | Some t -> 
-                //Util.print_string "universe_of memo\n";
-                universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env (S.mk t None e.pos)
-            end
+		t
+	      | Some t -> 
+		S.mk t None e.pos
+	    in
+            universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t

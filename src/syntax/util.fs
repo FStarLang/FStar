@@ -169,10 +169,11 @@ let eq_univs u1 u2 = compare_univs u1 u2 = 0
 (********************************************************************************)
 
 let ml_comp t r =
-  mk_Comp ({effect_name=set_lid_range Const.effect_ML_lid r;
-         result_typ=t;
-         effect_args=[];
-         flags=[MLEFFECT]})
+  mk_Comp ({comp_univs=[U_unknown];
+            effect_name=set_lid_range Const.effect_ML_lid r;
+            result_typ=t;
+            effect_args=[];
+            flags=[MLEFFECT]})
 
 //let total_comp t r = mk_Total t
 
@@ -202,8 +203,14 @@ let comp_effect_name c = match c.n with
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
     | Comp c -> c
-    | Total t -> {effect_name=Const.effect_Tot_lid; result_typ=t; effect_args=[]; flags=[TOTAL]}
-    | GTotal t -> {effect_name=Const.effect_GTot_lid; result_typ=t; effect_args=[]; flags=[SOMETRIVIAL]}
+    | Total (t, Some u)  
+    | GTotal(t, Some u) -> 
+      {comp_univs=[u];
+       effect_name=comp_effect_name c; 
+       result_typ=t; 
+       effect_args=[]; 
+       flags=comp_flags c}
+    | _ -> failwith "Assertion failed: Computation type without universe"
 
 let is_total_comp c =
     comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
@@ -299,8 +306,8 @@ let is_ml_comp c = match c.n with
   | _ -> false
 
 let comp_result c = match c.n with
-  | Total t  
-  | GTotal t -> t
+  | Total (t, _)  
+  | GTotal (t, _) -> t
   | Comp ct -> ct.result_typ
 
 let set_result_typ c t = match c.n with
@@ -711,10 +718,14 @@ let tforall  = fvar Const.forall_lid (Delta_unfoldable 1) None
 let t_haseq   = fvar Const.haseq_lid Delta_constant None
 
 let lcomp_of_comp c0 =
-    let c = comp_to_comp_typ c0 in
-    {eff_name = c.effect_name;
-     res_typ = c.result_typ;
-     cflags = c.flags;
+    let eff_name, flags = 
+        match c0.n with 
+        | Total _ -> Const.effect_Tot_lid, [TOTAL]
+        | GTotal _ -> Const.effect_GTot_lid, [SOMETRIVIAL]
+        | Comp c -> c.effect_name, c.flags in
+    {eff_name = eff_name;
+     res_typ = comp_result c0;
+     cflags = flags;
      comp = fun() -> c0}
 
 let mk_forall (x:bv) (body:typ) : typ =

@@ -68,7 +68,7 @@ let gen_wps_for_free
     | Tm_arrow (bs, comp) ->
         // TODO: dubious, assert no nested arrows
         let rest = match comp.n with
-          | Total t -> t
+          | Total (t, _) -> t
           | _ -> failwith "wp_a contains non-Tot arrow"
         in
         bs @ (collect_binders rest)
@@ -348,8 +348,8 @@ let gen_wps_for_free
     | Tm_type _ ->
         (* Util.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
         rel x y
-    | Tm_arrow ([ binder ], { n = GTotal b })
-    | Tm_arrow ([ binder ], { n = Total b }) ->
+    | Tm_arrow ([ binder ], { n = GTotal (b, _) })
+    | Tm_arrow ([ binder ], { n = Total (b, _) }) ->
         let a = (fst binder).sort in
         if is_zero_order a  //this is an important special case; most monads have zero-order results
         then let a1 = S.gen_bv "a1" None a in
@@ -481,7 +481,7 @@ type nm = | N of typ | M of typ
 type nm_ = nm
 
 let nm_of_comp = function
-  | Total t ->
+  | Total (t, _) ->
       N t
   | Comp c when lid_equals c.effect_name Const.monadic_lid ->
       M c.result_typ
@@ -823,7 +823,7 @@ and infer (env: env) (e: term): nm * term * term =
       let is_arrow t = match (SS.compress t).n with | Tm_arrow _ -> true | _ -> false in
       // TODO: replace with Util.arrow_formals_comp
       let rec flatten t = match (SS.compress t).n with
-        | Tm_arrow (binders, { n = Total t }) when is_arrow t ->
+        | Tm_arrow (binders, { n = Total (t, _) }) when is_arrow t ->
             let binders', comp = flatten t in
             binders @ binders', comp
         | Tm_arrow (binders, comp) ->
@@ -1013,15 +1013,14 @@ and comp_of_nm (nm: nm_): comp =
 
 and mk_M (t: typ): comp =
   mk_Comp ({
+    comp_univs=[U_unknown];
     effect_name = Const.monadic_lid;
     result_typ = t;
     effect_args = [];
     flags = []
   })
 
-and type_of_comp t =
-  match t.n with
-  | Total t | GTotal t | Comp { result_typ = t } -> t
+and type_of_comp t = Util.comp_result t
 
 // This function expects its argument [c] to be normalized and to satisfy [is_C c]
 and trans_F_ (env: env_) (c: typ) (wp: term): term =
@@ -1064,6 +1063,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
   let mk x = mk x None h.pos in
   if is_monadic then
     mk_Comp ({
+      comp_univs = [U_unknown];
       effect_name = Const.effect_PURE_lid;
       result_typ = star_type' env h;
       effect_args = [ wp, S.as_implicit false ];

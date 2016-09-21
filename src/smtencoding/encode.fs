@@ -881,14 +881,14 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
     let binders, pre, post, patterns = match (SS.compress t).n with
         | Tm_arrow(binders, c) -> 
           let binders, c = SS.open_comp binders c in
-          let ct = Util.comp_to_comp_typ c in
-           (match ct.effect_args with
-            | [(pre, _); (post, _); (pats, _)] ->
+          begin match c.n with 
+            | Comp ({effect_args=[(pre, _); (post, _); (pats, _)]}) ->
               let pats' = (match new_pats with
                           | Some new_pats' -> new_pats'
                           | None           -> pats) in
               binders, pre, post, lemma_pats pats'
-            | _ -> failwith "impos")
+            | _ -> failwith "impos"
+          end
 
         | _ -> failwith "Impos" in
 

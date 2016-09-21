@@ -122,34 +122,28 @@ let lookup_bvar env x =
     try List.nth env x.index
     with _ -> failwith (Util.format1 "Failed to find %s\n" (Print.db_to_string x))
 
-// let decode_steps steps = 
-//     let decode_step s = match (SS.compress s).n with 
-//         | Tm_fvar fv ->
-//           if S.fv_eq_lid fv Syntax.Const.step_beta
-//           then Beta
-//           else if S.fv_eq_lid fv Syntax.Const.step_delta
-//           then UnfoldUntil Delta_constant
-//           else if S.fv_eq_lid fv Syntax.Const.step_iota
-//           then Iota
-//           else if S.fv_eq_lid fv Syntax.Const.step_zeta
-//           then Zeta
-//           else raise Not_found
-//         | _ -> raise Not_found in
-//     match Syntax.Util.list_elements steps with 
-//     | Some steps -> 
-//       (try steps |> List.map decode_step 
-//        with Not_found -> [])
-//     | None -> []
+let comp_to_comp_typ (env:Env.env) c =
+//    let debug () = if Env.debug env <| Options.Extreme
+//                   then printfn "###############comp to comp_typ: %s" (Print.comp_to_string c) in
+    let c = match c.n with 
+            | Total (t, None) -> 
+              let u = env.universe_of env t in
+              S.mk_Total' t (Some u)
+            | GTotal (t, None) ->
+              let u = env.universe_of env t in
+              S.mk_GTotal' t (Some u)
+            | _ -> c in
+    U.comp_to_comp_typ c
 
 let rec unfold_effect_abbrev env comp =
-  let c = comp_to_comp_typ comp in
-  match Env.lookup_effect_abbrev env (env.universe_of env c.result_typ) c.effect_name with
+  let c = comp_to_comp_typ env comp in
+  match Env.lookup_effect_abbrev env (List.hd c.comp_univs) c.effect_name with
     | None -> c
     | Some (binders, cdef) ->
       let binders, cdef = SS.open_comp binders cdef in 
       let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
       let c1 = SS.subst_comp inst cdef in
-      let c = {Util.comp_to_comp_typ c1 with flags=c.flags} |> mk_Comp in
+      let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
       unfold_effect_abbrev env c
 
 let downgrade_ghost_effect_name l = 
@@ -389,15 +383,20 @@ and close_comp cfg env c =
         | [] when not <| List.contains CompressUvars cfg.steps -> c
         | _ -> 
         match c.n with 
-            | Total t -> mk_Total (closure_as_term_delayed cfg env t)
-            | GTotal t -> mk_GTotal (closure_as_term_delayed cfg env t)
+            | Total (t, uopt) -> 
+              mk_Total' (closure_as_term_delayed cfg env t) 
+                        (Option.map (norm_universe cfg env) uopt)
+            | GTotal (t, uopt) ->
+              mk_GTotal' (closure_as_term_delayed cfg env t) 
+                         (Option.map (norm_universe cfg env) uopt)
             | Comp c -> 
               let rt = closure_as_term_delayed cfg env c.result_typ in
               let args = closures_as_args_delayed cfg env c.effect_args in 
               let flags = c.flags |> List.map (function 
                 | DECREASES t -> DECREASES (closure_as_term_delayed cfg env t)
                 | f -> f) in
-              mk_Comp ({c with result_typ=rt;
+              mk_Comp ({c with comp_univs=List.map (norm_universe cfg env) c.comp_univs;
+                               result_typ=rt;
                                effect_args=args;
                                flags=flags})  
 
@@ -840,15 +839,16 @@ and norm_comp : cfg -> env -> comp -> comp =
     fun cfg env comp -> 
         let comp = ghost_to_pure_aux cfg env comp in
         match comp.n with 
-            | Total t -> 
-              {comp with n=Total (norm cfg env [] t)}
+            | Total (t, uopt) -> 
+              {comp with n=Total (norm cfg env [] t, Option.map (norm_universe cfg env) uopt)}
 
-            | GTotal t -> 
-              {comp with n=GTotal (norm cfg env [] t)}
+            | GTotal (t, uopt) -> 
+              {comp with n=GTotal (norm cfg env [] t, Option.map (norm_universe cfg env) uopt)}
 
             | Comp ct -> 
               let norm_args args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
-              {comp with n=Comp ({ct with result_typ=norm cfg env [] ct.result_typ;
+              {comp with n=Comp ({ct with comp_univs=List.map (norm_universe cfg env) ct.comp_univs;
+                                          result_typ=norm cfg env [] ct.result_typ;
                                           effect_args=norm_args ct.effect_args})}
 
 (* Promotes Ghost T, when T is not informative to Pure T
@@ -860,7 +860,7 @@ and ghost_to_pure_aux cfg env c =
     let non_info t = non_informative (norm t) in
     match c.n with
     | Total _ -> c
-    | GTotal t when non_info t -> {c with n=Total t}
+    | GTotal(t,uopt) when non_info t -> {c with n=Total(t, uopt)}
     | Comp ct ->
         let l = Env.norm_eff_name cfg.tcenv ct.effect_name in
         if Util.is_ghost_effect l

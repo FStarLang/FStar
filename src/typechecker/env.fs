@@ -579,7 +579,7 @@ let norm_eff_name =
            match lookup_effect_abbrev env U_unknown l with //universe doesn't matter here; we're just normalizing the name
             | None -> None
             | Some (_, c) ->
-                let l = (Util.comp_to_comp_typ c).effect_name in
+                let l = Util.comp_effect_name c in
                 match find l with
                     | None -> Some l
                     | Some l' -> Some l' in

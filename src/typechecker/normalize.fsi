@@ -39,6 +39,7 @@ type step =
 and steps = list<step>
 
 val eta_expand:           Env.env -> term -> term
+val comp_to_comp_typ:     Env.env -> comp -> comp_typ
 val unfold_effect_abbrev: Env.env -> comp -> comp_typ
 val normalize:            steps -> Env.env -> term -> term
 val normalize_universe:   Env.env -> universe -> universe
