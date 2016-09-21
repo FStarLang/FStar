@@ -234,9 +234,9 @@ new_effect:
     { $1 }
 
 effect_redefinition:
-  | name binders EQUALS simpleTerm
+  | name EQUALS simpleTerm
       {
-         RedefineEffect($1, $2, $4)
+         RedefineEffect($1, [], $3)
       }
 
 effect_definition:
