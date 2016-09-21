@@ -50,5 +50,5 @@ val sub_comp   : env -> comp -> comp -> option<guard_t>
 
 val universe_inequality : universe -> universe -> guard_t
 
-val subtype_fail: env -> typ -> typ -> unit
+val subtype_fail: env -> term -> typ -> typ -> unit
 val print_pending_implicits: guard_t -> string

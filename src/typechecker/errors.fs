@@ -97,7 +97,10 @@ let handleable = function
 let report r msg =
   incr num_errs;
   let msg = message_prefix.append_prefix msg in
-  Util.print_string (format2 "%s: %s\n" (Range.string_of_range r) msg)
+  Util.print_string (format2 "%s: %s\n" (Range.string_of_range r) msg);
+  if Options.trace_error()
+  then failwith "Stopping at first error"
+
 let get_err_count () = !num_errs
 
 let unexpected_signature_for_monad env m k =

@@ -2378,8 +2378,8 @@ let try_subtype' env t1 t2 smt_ok =
 
 let try_subtype env t1 t2 = try_subtype' env t1 t2 true
 
-let subtype_fail env t1 t2 =
-    Errors.report (Env.get_range env) (Errors.basic_type_error env None t2 t1)
+let subtype_fail env e t1 t2 =
+    Errors.report (Env.get_range env) (Errors.basic_type_error env (Some e) t2 t1)
 
 
 let sub_comp env c1 c2 =

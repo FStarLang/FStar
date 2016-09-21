@@ -195,7 +195,7 @@ let check_smt_pat env t bs c =
             let pat_vars = Free.names (N.normalize [N.Beta] env pats) in
             begin match bs |> Util.find_opt (fun (b, _) -> not(Util.set_mem b pat_vars)) with
                 | None -> ()
-                | Some (x,_) -> Errors.warn t.pos (Util.format1 "Pattern misses at least one bound variables: %s" (Print.bv_to_string x))
+                | Some (x,_) -> Errors.warn t.pos (Util.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x))
             end
         | _ -> failwith "Impossible"
 

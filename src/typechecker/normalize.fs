@@ -202,7 +202,8 @@ let norm_universe cfg env u =
           | U_max us ->
             let us = List.collect aux us |> norm_univs in
             begin match us with
-            | u_k::rest ->
+            | u_k::hd::rest ->
+              let rest = hd::rest in
               begin match U.univ_kernel u_k with
                 | U_zero, n -> //if the constant term n
                   if rest |> List.for_all (fun u ->
