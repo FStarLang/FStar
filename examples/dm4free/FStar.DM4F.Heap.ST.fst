@@ -55,7 +55,7 @@ effect ST (a:Type) (pre: STATE.pre) (post: heap -> a -> heap -> Type0) =
        STATE a (fun n0 p -> pre n0 /\ (forall a n1. pre n0 /\ post n0 a n1 ==> p (a, n1)))
 
 //STNull is an abbreviation for stateful computations with trivial pre/post
-effect STNull (a:Type0) = ST a (fun h -> True) (fun _ _ _ -> True)
+effect STNull (a:Type) = ST a (fun h -> True) (fun _ _ _ -> True)
 
 ////////////////////////////////////////////////////////////////////////////////
 //Next, given the primive global state actions STATE.get and STATE.put, 

@@ -2,15 +2,16 @@ FSTAR_HOME=../..
 OTHERFLAGS=
 include ../Makefile.include
 
-all: uall sall
-uall: Effects.Def.uver FStar.DM4F.IntST.uver FStar.DM4F.Exceptions.uver FStar.DM4F.ExnSt.uver FStar.DM4F.StExn.uver FStar.DM4F.ST.uver FStar.DM4F.Heap.fst FStar.DM4F.Heap.ST.fst old
-sall:
+all: Effects.Def.uver FStar.DM4F.IntST.uver-explicit FStar.DM4F.Exceptions.uver-explicit FStar.DM4F.ExnSt.uver FStar.DM4F.StExn.uver-explicit FStar.DM4F.ST.uver-explicit FStar.DM4F.Heap.uver FStar.DM4F.Heap.ST.uver #old
 
 # we retain these "hand-written" versions just for reference
-old: intST.uver Exceptions.uver ExceptionsWithState.uver StExn.uver StExn.Handle.uver
+old: intST.uver Exceptions.uver-explicit ExceptionsWithState.uver StExn.uver-explicit StExn.Handle.uver-explicit
 
 ulib-cmxa:
 	$(MAKE) -C ../../ulib/ml
+
+%.uver-explicit: %.fst
+	$(FSTAR) $^ --explicit_deps
 
 %.uver: %.fst
 	$(FSTAR) $^
