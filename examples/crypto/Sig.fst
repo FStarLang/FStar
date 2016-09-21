@@ -31,7 +31,7 @@ type sk   = lbytes sksize
 
 assume val fdh_rsa: sk -> text -> Tot sig_t
 
-new type key_prop : pk -> text -> Type
+assume new type key_prop : pk -> text -> Type
 type prop_pk (p:(text -> Type)) = k:pk{key_prop k == p}
 
 assume val sk_to_pk : sk -> Tot pk
