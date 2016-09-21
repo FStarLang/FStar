@@ -1119,7 +1119,7 @@ end
 | Some (_52_842, c) -> begin
 (
 
-let l = (FStar_Syntax_Util.comp_to_comp_typ c).FStar_Syntax_Syntax.effect_name
+let l = (FStar_Syntax_Util.comp_effect_name c)
 in (match ((find l)) with
 | None -> begin
 Some (l)

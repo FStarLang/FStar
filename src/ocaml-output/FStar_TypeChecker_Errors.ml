@@ -298,10 +298,10 @@ in (FStar_Util.format2 "Every alternative of an \'or\' pattern must bind the sam
 
 
 let name_and_result = (fun c -> (match (c.FStar_Syntax_Syntax.n) with
-| FStar_Syntax_Syntax.Total (t) -> begin
+| FStar_Syntax_Syntax.Total (t, _54_152) -> begin
 (("Tot"), (t))
 end
-| FStar_Syntax_Syntax.GTotal (t) -> begin
+| FStar_Syntax_Syntax.GTotal (t, _54_157) -> begin
 (("GTot"), (t))
 end
 | FStar_Syntax_Syntax.Comp (ct) -> begin
@@ -312,13 +312,13 @@ end))
 
 let computed_computation_type_does_not_match_annotation = (fun env e c c' -> (
 
-let _54_162 = (name_and_result c)
-in (match (_54_162) with
+let _54_168 = (name_and_result c)
+in (match (_54_168) with
 | (f1, r1) -> begin
 (
 
-let _54_165 = (name_and_result c')
-in (match (_54_165) with
+let _54_171 = (name_and_result c')
+in (match (_54_171) with
 | (f2, r2) -> begin
 (let _148_250 = (FStar_TypeChecker_Normalize.term_to_string env r1)
 in (let _148_249 = (FStar_TypeChecker_Normalize.term_to_string env r2)
@@ -357,7 +357,7 @@ let failed_to_prove_specification : Prims.string Prims.list  ->  Prims.string = 
 | [] -> begin
 "An unknown assertion in the term at this location was not provable"
 end
-| _54_179 -> begin
+| _54_185 -> begin
 (let _148_280 = (FStar_All.pipe_right lbls (FStar_String.concat "\n\t"))
 in (FStar_Util.format1 "The following problems were found:\n\t%s" _148_280))
 end))

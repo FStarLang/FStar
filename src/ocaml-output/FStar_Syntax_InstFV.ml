@@ -173,20 +173,20 @@ and inst_args : inst_t  ->  FStar_Syntax_Syntax.args  ->  FStar_Syntax_Syntax.ar
 in ((_131_71), (imp)))
 end)))))
 and inst_comp : inst_t  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp = (fun s c -> (match (c.FStar_Syntax_Syntax.n) with
-| FStar_Syntax_Syntax.Total (t) -> begin
+| FStar_Syntax_Syntax.Total (t, uopt) -> begin
 (let _131_74 = (inst s t)
-in (FStar_Syntax_Syntax.mk_Total _131_74))
+in (FStar_Syntax_Syntax.mk_Total' _131_74 uopt))
 end
-| FStar_Syntax_Syntax.GTotal (t) -> begin
+| FStar_Syntax_Syntax.GTotal (t, uopt) -> begin
 (let _131_75 = (inst s t)
-in (FStar_Syntax_Syntax.mk_GTotal _131_75))
+in (FStar_Syntax_Syntax.mk_GTotal' _131_75 uopt))
 end
 | FStar_Syntax_Syntax.Comp (ct) -> begin
 (
 
 let ct = (
 
-let _37_142 = ct
+let _37_146 = ct
 in (let _131_80 = (inst s ct.FStar_Syntax_Syntax.result_typ)
 in (let _131_79 = (inst_args s ct.FStar_Syntax_Syntax.effect_args)
 in (let _131_78 = (FStar_All.pipe_right ct.FStar_Syntax_Syntax.flags (FStar_List.map (fun _37_1 -> (match (_37_1) with
@@ -197,7 +197,7 @@ end
 | f -> begin
 f
 end))))
-in {FStar_Syntax_Syntax.effect_name = _37_142.FStar_Syntax_Syntax.effect_name; FStar_Syntax_Syntax.result_typ = _131_80; FStar_Syntax_Syntax.effect_args = _131_79; FStar_Syntax_Syntax.flags = _131_78}))))
+in {FStar_Syntax_Syntax.comp_univs = _37_146.FStar_Syntax_Syntax.comp_univs; FStar_Syntax_Syntax.effect_name = _37_146.FStar_Syntax_Syntax.effect_name; FStar_Syntax_Syntax.result_typ = _131_80; FStar_Syntax_Syntax.effect_args = _131_79; FStar_Syntax_Syntax.flags = _131_78}))))
 in (FStar_Syntax_Syntax.mk_Comp ct))
 end))
 and inst_lcomp_opt : inst_t  ->  (FStar_Syntax_Syntax.lcomp, FStar_Ident.lident) FStar_Util.either Prims.option  ->  (FStar_Syntax_Syntax.lcomp, FStar_Ident.lident) FStar_Util.either Prims.option = (fun s l -> (match (l) with
@@ -207,9 +207,9 @@ end
 | Some (FStar_Util.Inl (lc)) -> begin
 (let _131_87 = (let _131_86 = (
 
-let _37_159 = lc
+let _37_163 = lc
 in (let _131_85 = (inst s lc.FStar_Syntax_Syntax.res_typ)
-in {FStar_Syntax_Syntax.eff_name = _37_159.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = _131_85; FStar_Syntax_Syntax.cflags = _37_159.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = (fun _37_161 -> (match (()) with
+in {FStar_Syntax_Syntax.eff_name = _37_163.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = _131_85; FStar_Syntax_Syntax.cflags = _37_163.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = (fun _37_165 -> (match (()) with
 | () -> begin
 (let _131_84 = (lc.FStar_Syntax_Syntax.comp ())
 in (inst_comp s _131_84))
@@ -223,7 +223,7 @@ let instantiate : inst_t  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.
 | [] -> begin
 t
 end
-| _37_166 -> begin
+| _37_170 -> begin
 (inst i t)
 end))
 

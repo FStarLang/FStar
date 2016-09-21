@@ -194,31 +194,40 @@ end
 (
 
 let n = (match (c.FStar_Syntax_Syntax.n) with
-| (FStar_Syntax_Syntax.GTotal (t)) | (FStar_Syntax_Syntax.Total (t)) -> begin
+| (FStar_Syntax_Syntax.GTotal (t, None)) | (FStar_Syntax_Syntax.Total (t, None)) -> begin
 (free_names_and_uvars t)
 end
+| (FStar_Syntax_Syntax.GTotal (t, Some (u))) | (FStar_Syntax_Syntax.Total (t, Some (u))) -> begin
+(let _130_85 = (free_univs u)
+in (let _130_84 = (free_names_and_uvars t)
+in (union _130_85 _130_84)))
+end
 | FStar_Syntax_Syntax.Comp (ct) -> begin
-(let _130_84 = (free_names_and_uvars ct.FStar_Syntax_Syntax.result_typ)
-in (free_names_and_uvars_args ct.FStar_Syntax_Syntax.effect_args _130_84))
+(
+
+let us = (let _130_86 = (free_names_and_uvars ct.FStar_Syntax_Syntax.result_typ)
+in (free_names_and_uvars_args ct.FStar_Syntax_Syntax.effect_args _130_86))
+in (FStar_List.fold_left (fun us u -> (let _130_89 = (free_univs u)
+in (union us _130_89))) us ct.FStar_Syntax_Syntax.comp_univs))
 end)
 in (
 
-let _36_172 = (FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars (Some (n)))
+let _36_187 = (FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars (Some (n)))
 in n))
 end))
-and should_invalidate_cache : FStar_Syntax_Syntax.free_vars  ->  Prims.bool = (fun n -> ((let _130_87 = (FStar_All.pipe_right n.FStar_Syntax_Syntax.free_uvars FStar_Util.set_elements)
-in (FStar_All.pipe_right _130_87 (FStar_Util.for_some (fun _36_178 -> (match (_36_178) with
-| (u, _36_177) -> begin
+and should_invalidate_cache : FStar_Syntax_Syntax.free_vars  ->  Prims.bool = (fun n -> ((let _130_92 = (FStar_All.pipe_right n.FStar_Syntax_Syntax.free_uvars FStar_Util.set_elements)
+in (FStar_All.pipe_right _130_92 (FStar_Util.for_some (fun _36_193 -> (match (_36_193) with
+| (u, _36_192) -> begin
 (match ((FStar_Unionfind.find u)) with
-| FStar_Syntax_Syntax.Fixed (_36_180) -> begin
+| FStar_Syntax_Syntax.Fixed (_36_195) -> begin
 true
 end
-| _36_183 -> begin
+| _36_198 -> begin
 false
 end)
-end))))) || (let _130_89 = (FStar_All.pipe_right n.FStar_Syntax_Syntax.free_univs FStar_Util.set_elements)
-in (FStar_All.pipe_right _130_89 (FStar_Util.for_some (fun u -> (match ((FStar_Unionfind.find u)) with
-| Some (_36_186) -> begin
+end))))) || (let _130_94 = (FStar_All.pipe_right n.FStar_Syntax_Syntax.free_univs FStar_Util.set_elements)
+in (FStar_All.pipe_right _130_94 (FStar_Util.for_some (fun u -> (match ((FStar_Unionfind.find u)) with
+| Some (_36_201) -> begin
 true
 end
 | None -> begin
@@ -226,20 +235,20 @@ false
 end)))))))
 
 
-let names : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.bv FStar_Util.set = (fun t -> (let _130_92 = (free_names_and_uvars t)
-in _130_92.FStar_Syntax_Syntax.free_names))
+let names : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.bv FStar_Util.set = (fun t -> (let _130_97 = (free_names_and_uvars t)
+in _130_97.FStar_Syntax_Syntax.free_names))
 
 
-let uvars : FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.uvar * FStar_Syntax_Syntax.typ) FStar_Util.set = (fun t -> (let _130_95 = (free_names_and_uvars t)
-in _130_95.FStar_Syntax_Syntax.free_uvars))
+let uvars : FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.uvar * FStar_Syntax_Syntax.typ) FStar_Util.set = (fun t -> (let _130_100 = (free_names_and_uvars t)
+in _130_100.FStar_Syntax_Syntax.free_uvars))
 
 
-let univs : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.universe_uvar FStar_Util.set = (fun t -> (let _130_98 = (free_names_and_uvars t)
-in _130_98.FStar_Syntax_Syntax.free_univs))
+let univs : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.universe_uvar FStar_Util.set = (fun t -> (let _130_103 = (free_names_and_uvars t)
+in _130_103.FStar_Syntax_Syntax.free_univs))
 
 
-let names_of_binders : FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.bv FStar_Util.set = (fun bs -> (let _130_101 = (free_names_and_uvars_binders bs no_free_vars)
-in _130_101.FStar_Syntax_Syntax.free_names))
+let names_of_binders : FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.bv FStar_Util.set = (fun bs -> (let _130_106 = (free_names_and_uvars_binders bs no_free_vars)
+in _130_106.FStar_Syntax_Syntax.free_names))
 
 
 
