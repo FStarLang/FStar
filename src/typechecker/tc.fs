@@ -1578,8 +1578,13 @@ let tc_more_partial_modul env modul decls =
 open FStar.TypeChecker.Errors
 let check_exports env (modul:modul) exports = 
     let env = {env with lax=true; top_level=true} in
-    let check_term univs t = 
+    let check_term lid univs t = 
         let univs, t = SS.open_univ_vars univs t in
+        if Env.debug (Env.set_current_module env modul.name) <| Options.Other "Exports"
+        then Util.print3 "Checking for export %s <%s> : %s\n" 
+                (Print.lid_to_string lid) 
+                (univs |> List.map (fun x -> Print.univ_to_string (U_name x)) |> String.concat ", ")
+                (Print.term_to_string t);
         let env = Env.push_univ_vars env univs in
         TcTerm.tc_trivial_guard env t |> ignore
     in
@@ -1588,7 +1593,7 @@ let check_exports env (modul:modul) exports =
                 (Util.format2 "Interface of %s violates its abstraction (add a 'private' qualifier to '%s'?)" 
                         (Print.lid_to_string modul.name)
                         (Print.lid_to_string lid)) in
-        check_term univs t;
+        check_term lid univs t;
         Errors.message_prefix.clear_prefix() 
     in
     let rec check_sigelt = function
