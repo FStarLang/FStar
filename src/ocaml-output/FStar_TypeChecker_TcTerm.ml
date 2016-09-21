@@ -383,7 +383,7 @@ end))))) with
 end
 | Some (x, _58_192) -> begin
 (let _152_131 = (let _152_130 = (FStar_Syntax_Print.bv_to_string x)
-in (FStar_Util.format1 "Pattern misses at least one bound variables: %s" _152_130))
+in (FStar_Util.format1 "Pattern misses at least one bound variable: %s" _152_130))
 in (FStar_TypeChecker_Errors.warn t.FStar_Syntax_Syntax.pos _152_131))
 end))
 end

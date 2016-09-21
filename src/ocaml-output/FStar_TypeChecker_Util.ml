@@ -1797,7 +1797,7 @@ in (match (gopt) with
 | (None, _56_1049) -> begin
 (
 
-let _56_1051 = (FStar_TypeChecker_Rel.subtype_fail env lc.FStar_Syntax_Syntax.res_typ t)
+let _56_1051 = (FStar_TypeChecker_Rel.subtype_fail env e lc.FStar_Syntax_Syntax.res_typ t)
 in ((e), ((
 
 let _56_1053 = lc
