@@ -59,6 +59,7 @@ let log env = (Options.log_types()) && not(lid_equals Const.prims_lid (Env.curre
 
 let tc_check_trivial_guard env t k =
   let t, c, g = tc_check_tot_or_gtot_term env t k in
+  t.tk := Some c.res_typ.n;
   Rel.force_trivial_guard env g;
   t
 

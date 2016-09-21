@@ -918,16 +918,24 @@ let gen_univs env (x:Util.set<universe_uvar>) : list<univ_name> =
             u_name) in
          u_names 
 
-let generalize_universes (env:env) (t:term) : tscheme = 
-    let t = N.normalize [N.Beta] env t in
+let maybe_set_tk ts = function
+    | None -> ts
+    | Some t -> 
+      let t = S.mk t None Range.dummyRange in
+      let t = SS.close_univ_vars (fst ts) t in
+      (snd ts).tk := Some t.n;
+      ts
+    
+let generalize_universes (env:env) (t0:term) : tscheme = 
+    let t = N.normalize [N.Beta] env t0 in
     let univs = Free.univs t in 
     if Env.debug env <| Options.Other "Gen" 
     then Util.print1 "univs to gen : %s\n" (string_of_univs univs);
     let gen = gen_univs env univs in
     if Env.debug env <| Options.Other "Gen" 
     then Util.print1 "After generalization: %s\n"  (Print.term_to_string t);
-    let ts = SS.close_univ_vars gen t in 
-    (gen, ts)
+    let ts = SS.close_univ_vars gen t in
+    maybe_set_tk (gen, ts) (!t0.tk)
 
 let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * comp)>> =
   if not <| (Util.for_all (fun (_, c) -> Util.is_pure_or_ghost_comp c) ecs) //No value restriction in F*---generalize the types of pure computations

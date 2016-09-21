@@ -86,6 +86,8 @@ let maybe_extend_subst s b v : subst_t =
 let set_lcomp_result lc t =
     {lc with res_typ=t; comp=fun () -> Util.set_result_typ (lc.comp()) t}
 
+let memo_tk (e:term) (t:typ) = e.tk := Some t.n; e
+
 //Interface to FStar.TypeChecker.Rel:
 
 (************************************************************************************************************)
@@ -116,7 +118,7 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
     | Inr lc -> lc in
   let t = lc.res_typ in
   let e, lc, g = match Env.expected_typ env with
-   | None -> e, lc, guard
+   | None -> memo_tk e t, lc, guard
    | Some t' ->
      if debug env Options.High
      then Util.print2 "Computed return type %s; expected type %s\n" (Print.term_to_string t) (Print.term_to_string t');
@@ -127,7 +129,7 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
      then Util.print2 "check_and_ascribe: type is %s\n\tguard is %s\n" (Print.term_to_string t) (Rel.guard_to_string env g);
      let g = Rel.conj_guard g guard in
      let lc, g = TcUtil.strengthen_precondition (Some <| Errors.subtyping_failed env t t') env e lc g in
-     e, set_lcomp_result lc t', g in
+     memo_tk e t', set_lcomp_result lc t', g in
   if debug env Options.Low
   then Util.print1 "Return comp type is %s\n" (Print.lcomp_to_string lc);
   e, lc, g

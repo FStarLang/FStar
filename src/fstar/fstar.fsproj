@@ -28,7 +28,7 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--log_queries test.fst</StartArguments>
+    <StartArguments>test.fst --explicit_deps --debug yes</StartArguments>
     <StartAction>Project</StartAction>
     <StartWorkingDirectory>D:\workspace\FStar\examples\test\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
