@@ -119,7 +119,5 @@ val store: #i:id -> l:UInt32.t -> buf: plainBuffer i (v l) -> b:plain i (v l) ->
   (ensures (fun h0 r h1 -> live h1 buf /\ modifies_1 (bufferT #i #(v l) buf) h0 h1 /\
     sel_plain h1 l buf == b
   ))
-let store #i l buf b = 
-  // assume false; // TODO, not sure what's missing here
-  store_bytes l buf b
+let store #i l buf b = store_bytes l buf b
 
