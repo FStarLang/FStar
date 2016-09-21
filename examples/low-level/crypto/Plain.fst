@@ -49,26 +49,45 @@ type plainLen = nat // we'll need a tigher bound
 abstract type plain (i:id) (l:plainLen) = lbytes l
 
 // to be restricted
-val repr: #i:id -> #l:plainLen -> p:plain i l -> Tot (lbytes (Seq.length p))
+val repr: #i:id -> #l:plainLen -> p:plain i l -> Tot (lbytes l)
 let repr #i #l p = p
 
 val make: #i:id -> l:plainLen -> b:lbytes l -> Tot (plain i l)
 let make #i l b = b
 
+val reveal: #i:id -> #l:plainLen -> p:plain i l -> GTot (lbytes l)
+let reveal #i #l p = p
+
+val reveal_injective : i:id -> l:plainLen -> p:plain i l -> Lemma
+  (requires True)
+  (ensures (make #i l (reveal p) == p))
+  [SMTPat (reveal p)]
+let reveal_injective i l p = ()
+
 abstract type plainBuffer (i:id) (l:plainLen) = b:lbuffer l
+
+val hide_buffer: i:id -> #l:plainLen -> b:lbuffer l -> GTot (plainBuffer i l)
+let hide_buffer i #l b = b
+
+val bufferT: #i:id -> #l:plainLen -> b:plainBuffer i l -> GTot (lbuffer l)
+let bufferT #i #l b = b
+
+val bufferT_injective : i:id -> l:plainLen -> p:plainBuffer i l -> Lemma
+  (requires True)
+  (ensures (hide_buffer i (bufferT p) == p))
+  [SMTPat (bufferT p)]
+let bufferT_injective i l p = ()
 
 let live #i #l h (p:plainBuffer i l) = Buffer.live h p
 
 let create (i:id) (zero:UInt8.t) (l:UInt32.t): plainBuffer i (v l) = Buffer.create zero l 
 
 open FStar.Buffer // for .idx
-let sub #id #l (b:plainBuffer id l) (i:UInt32.t{v i + v b.idx < pow2 n}) (len:UInt32.t{v len <= length b /\ v i + v len <= length b}) : Tot (b':plainBuffer id (v len))
+let sub #id #l (b:plainBuffer id l) 
+	       (i:UInt32.t{v i + v (bufferT b).idx < pow2 n}) 
+	       (len:UInt32.t{v len <= length (bufferT b) /\ v i + v len <= length (bufferT b)}) : Tot (b':plainBuffer id (v len))
   = sub b i len
 // ...
-
-
-val bufferT: #i:id -> #l:plainLen -> b:plainBuffer i l -> GTot (lbuffer l)
-let bufferT #i #l b = b
 
 val bufferRepr: #i:id {~(authId i)} -> #l:plainLen -> b:plainBuffer i l -> Tot (b':lbuffer l{ b' == bufferT b})
 let bufferRepr #i #l b = b
