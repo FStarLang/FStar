@@ -54,11 +54,12 @@ let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
 let check_no_escape head_opt env (fvs:list<bv>) kt =
     let rec aux try_norm t = match fvs with
-        | [] -> ()
+        | [] -> t
         | _ ->
-          let fvs' = Free.names (if try_norm then norm env t else t) in
+          let t = if try_norm then norm env t else t in
+          let fvs' = Free.names t in
           begin match List.tryFind (fun x -> Util.set_mem x fvs') fvs with
-            | None -> ()
+            | None -> t
             | Some x ->
               if not try_norm
               then aux true t
@@ -70,7 +71,7 @@ let check_no_escape head_opt env (fvs:list<bv>) kt =
                        raise (Error(msg, Env.get_range env)) in
                    let s = TcUtil.new_uvar env (fst <| U.type_u()) in
                    match Rel.try_teq env t s with
-                    | Some g -> Rel.force_trivial_guard env g
+                    | Some g -> Rel.force_trivial_guard env g; s
                     | _ -> fail ()
          end in
     aux false kt
@@ -105,6 +106,7 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
            | Tm_constant _ -> false
            | _ -> true
       else false //can't reason about effectful function definitions, so not worth returning this
+//    | Tm_type _ -> false
     | _ -> true in
   let lc = match tlc with
     | Inl t -> U.lcomp_of_comp (if not (should_return t)
@@ -934,7 +936,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         * lcomp  //its computation type
         * guard_t //and whatever guard remains 
         =
-        check_no_escape (Some head) env fvs cres.res_typ;
+        let rt = check_no_escape (Some head) env fvs cres.res_typ in
+        let cres = {cres with res_typ=rt} in
         let cres, guard =
             match bs with
             | [] -> (* full app *)
@@ -1004,7 +1007,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
         match bs, args with
         | (x, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit arg *)
             let t = SS.subst subst x.sort in
-            check_no_escape (Some head) env fvs t;
+            let t = check_no_escape (Some head) env fvs t in
             let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" head.pos env t in //new_uvar env t in
             let subst = NT(x, varg)::subst in
             let arg = varg, as_implicit true in
@@ -1020,7 +1023,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let targ = SS.subst subst x.sort in
             let x = {x with sort=targ} in
             if debug env Options.Extreme then  Util.print1 "\tType of arg (after subst) = %s\n" (Print.term_to_string targ);
-            check_no_escape (Some head) env fvs targ;
+            let targ = check_no_escape (Some head) env fvs targ in
             let env = Env.set_expected_typ env targ in
             let env = {env with use_eq=is_eq aqual} in
             if debug env Options.High then  Util.print3 "Checking arg (%s) %s at type %s\n" (Print.tag_of_term e) (Print.term_to_string e) (Print.term_to_string targ);
@@ -1418,7 +1421,8 @@ and check_top_level_let env e =
                        mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
             else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
                  (Rel.force_trivial_guard env g1;
-                  e2, c1.comp()) in
+                  let c = c1.comp () |> N.normalize_comp [N.Beta] env in
+                  e2, c) in
 
 
          (* the result always has type ML unit *)
@@ -1462,11 +1466,21 @@ and check_inner_let env e =
        let g2 = Rel.close_guard xb
                       (Rel.imp_guard (Rel.guard_of_guard_formula x_eq_e1) g2) in
        let guard = Rel.conj_guard g1 g2 in
+       
        if Option.isSome (Env.expected_typ env)
-       then e, cres, guard
-       else (* no expected type; check that x doesn't escape it's scope *)
-            (check_no_escape None env [x] cres.res_typ;
+       then (let tt = Env.expected_typ env |> Option.get in
+             if Env.debug env <| Options.Other "Exports"
+             then Util.print2 "Got expected type from env %s\ncres.res_typ=%s\n" 
+                        (Print.term_to_string tt)
+                        (Print.term_to_string cres.res_typ);
              e, cres, guard)
+       else (* no expected type; check that x doesn't escape it's scope *)
+            (let t = check_no_escape None env [x] cres.res_typ in
+             if Env.debug env <| Options.Other "Exports"
+             then Util.print2 "Checked %s has no escaping types; normalized to %s\n" 
+                        (Print.term_to_string cres.res_typ)
+                        (Print.term_to_string t);
+             e, ({cres with res_typ=t}), guard)
 
     | _ -> failwith "Impossible"
 
@@ -1541,8 +1555,10 @@ and check_inner_let_rec env top =
 
           begin match topt with
               | Some _ -> e, cres, guard //we have an annotation
-              | None -> check_no_escape None env bvs tres;
-                        e, cres, guard
+              | None -> 
+                let tres = check_no_escape None env bvs tres in
+                let cres = {cres with res_typ=tres} in
+                e, cres, guard
           end
 
         | _ -> failwith "Impossible"
@@ -1620,7 +1636,10 @@ and check_let_bound_def top_level env lb
     let g1 = Rel.conj_guard g1 guard_f in
 
     if Env.debug env Options.Extreme
-    then Util.print1 "checked top-level def, guard is %s\n" (Rel.guard_to_string env g1);
+    then Util.print3 "checked top-level def %s, result type is %s, guard is %s\n" 
+            (Print.lbname_to_string lb.lbname)
+            (Print.term_to_string c1.res_typ)
+            (Rel.guard_to_string env g1);
 
     e1, univ_vars, c1, g1, Option.isSome topt
 
@@ -1739,49 +1758,49 @@ let type_of_tot_term env e =
  *    when building WPs. For example, in building (return_value<u> t e), 
  *    u=universe_of env t.
  *
- *  This has to be done with some care, because to compute u, we need to
- *  type-check t. To prevent infinite recursive calls to universe_of, we
- *  only lax check t. This is sufficient to guarantee that the universe is
- *  computed correctly, since this does not depend on proving any VCs.
- *
  *  One common case is when t is the application of a unification variable
  *  In such cases, it's more efficient to just read t's universe from its type
  *  rather than re-computing it.
+ *
+ *  Another involves reading t's universe from its memoized type in the .tk field
  *)
 let universe_of env e = 
-    if not (Env.should_verify env)
-    then U_zero //short-circuit a recursive call in lax mode
-    else //let _ = Util.print1 "universe_of %s\n" (Print.term_to_string e) in
-         let env, _ = Env.clear_expected_typ env in 
-         let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
-         let fail e t = 
-              raise (Error(Util.format2 "Expected a term of type 'Type'; got %s : %s" (Print.term_to_string e) (Print.term_to_string t), Env.get_range env)) in
-         let ok u = 
-            let _ = if Env.debug env Options.Extreme 
-                    then Util.print2 "<end> universe_of %s is %s\n" (Print.tag_of_term e) (Print.univ_to_string u) in
-            u in
-         let universe_of_type e t = 
-            match (Util.unrefine t).n with 
-            | Tm_type u -> ok u
-            | _ -> fail e t in
-         let head, args = Util.head_and_args e in
-         match (SS.compress head).n with 
-         | Tm_uvar(_, t) ->  //it's a uvar, so just read its type, rather than type-checking it
-           let t = N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t in
-           begin match (SS.compress t).n with
-           | Tm_arrow(_, t) -> universe_of_type e (Util.comp_result t)
-           | _ -> universe_of_type e t
-           end
-         | _ -> 
-            let t = 
-	      match !e.tk with 
-	      | None
-              | Some Tm_unknown -> 
-                let e = N.normalize [N.Beta; N.NoInline] env e in
-                let _, ({res_typ=t}), g = tc_term env e in
-                let _ = Rel.solve_deferred_constraints env g in
-		t
-	      | Some t -> 
-		S.mk t None e.pos
-	    in
-            universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
+    let _ = if Env.debug env Options.Extreme 
+            then Util.print1 "<start> universe_of %s\n" (Print.term_to_string e) in
+    let env, _ = Env.clear_expected_typ env in 
+    let env = {env with lax=true; use_bv_sorts=true; top_level=false} in
+    let fail e t = 
+        raise (Error(Util.format2 "Expected a term of type 'Type'; got %s : %s" (Print.term_to_string e) (Print.term_to_string t), Env.get_range env)) in
+    let ok u = 
+        let _ = if Env.debug env Options.Extreme 
+                then Util.print3 "<end> universe_of (%s) %s is %s\n" 
+                            (Print.tag_of_term e)
+                            (Print.term_to_string e)
+                            (Print.univ_to_string u) in
+        u 
+    in
+    let universe_of_type e t = 
+        match (Util.unrefine t).n with 
+        | Tm_type u -> ok u
+        | _ -> fail e t 
+    in
+    let head, args = Util.head_and_args e in
+    match (SS.compress head).n with 
+    | Tm_uvar(_, t) ->  //it's a uvar, so just read its type, rather than type-checking it
+      let t = N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t in
+      begin match (SS.compress t).n with
+            | Tm_arrow(_, t) -> universe_of_type e (Util.comp_result t)
+            | _ -> universe_of_type e t
+     end
+    | _ -> 
+      let t = 
+	    match !e.tk with 
+	    | None
+        | Some Tm_unknown -> 
+          let e = N.normalize [N.Beta; N.NoInline] env e in
+          let _, ({res_typ=t}), g = tc_term env e in
+          Rel.solve_deferred_constraints env g |> ignore;
+          t
+	    | Some t -> 
+          S.mk t None e.pos in
+      universe_of_type e <| N.normalize [N.Beta; N.UnfoldUntil Delta_constant] env t
