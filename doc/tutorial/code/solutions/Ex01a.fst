@@ -41,27 +41,27 @@ let staticChecking () =
 
 
 
-exception InvalidRead
-val checkedRead : filename -> string
-let checkedRead f =
-  if canRead f then read f else raise InvalidRead
+(* exception InvalidRead *)
+(* val checkedRead : filename -> string *)
+(* let checkedRead f = *)
+(*   if canRead f then read f else raise InvalidRead *)
 
 
 
-val checkedWrite : filename -> string -> unit
-// BEGIN: CheckedWrite
+(* val checkedWrite : filename -> string -> unit *)
+(* // BEGIN: CheckedWrite *)
 
-exception InvalidWrite
-let checkedWrite f s =
-  if canWrite f then write f s else raise InvalidWrite
-// END: CheckedWrite
+(* exception InvalidWrite *)
+(* let checkedWrite f s = *)
+(*   if canWrite f then write f s else raise InvalidWrite *)
+(* // END: CheckedWrite *)
 
 
-let dynamicChecking () =
-  let v1 = checkedRead tmp in
-  let v2 = checkedRead readme in
-  let v3 = checkedRead passwd in (* this raises exception *)
-  checkedWrite tmp "hello!";
-  checkedWrite passwd "junk" (* this raises exception *)
+(* let dynamicChecking () = *)
+(*   let v1 = checkedRead tmp in *)
+(*   let v2 = checkedRead readme in *)
+(*   let v3 = checkedRead passwd in (\* this raises exception *\) *)
+(*   checkedWrite tmp "hello!"; *)
+(*   checkedWrite passwd "junk" (\* this raises exception *\) *)
 
-let main = staticChecking (); dynamicChecking ()
+(* let main = staticChecking (); dynamicChecking () *)

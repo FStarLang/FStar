@@ -1577,7 +1577,7 @@ let tc_more_partial_modul env modul decls =
 *)
 open FStar.TypeChecker.Errors
 let check_exports env (modul:modul) exports = 
-    let env = {env with lax=true; top_level=true} in
+    let env = {env with lax=true; lax_universes=true; top_level=true} in
     let check_term lid univs t = 
         let univs, t = SS.open_univ_vars univs t in
         if Env.debug (Env.set_current_module env modul.name) <| Options.Other "Exports"
