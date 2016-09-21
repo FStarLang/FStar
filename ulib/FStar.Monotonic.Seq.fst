@@ -229,10 +229,10 @@ let itest r a k =
   i_at_least_is_stable k (Seq.index (i_sel h0 a) k) a;
   MR.witness a (i_at_least k (Seq.index (i_sel h0 a) k) a)
 
-let test_alloc (#a:Type) (p:seq a -> Type) (r:FStar.HyperHeap.rid) (init:seq a{p init}) = 
-  let is = alloc_mref_iseq p r init in
-  let h = get () in 
-  assert (i_sel h is == init)
+(* let test_alloc (#a:Type0) (p:seq a -> Type) (r:FStar.HyperHeap.rid) (init:seq a{p init}) =  *)
+(*   let is = alloc_mref_iseq p r init in *)
+(*   let h = get () in  *)
+(*   assert (i_sel h is == init) *)
 
 ////////////////////////////////////////////////////////////////////////////////
 //Mapping functions over monotone sequences

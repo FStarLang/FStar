@@ -19,6 +19,8 @@ open FStar.Heap
 
 abstract let rid = list (int * int)
 
+let reveal (r:rid) : GTot (list (int * int)) = r
+
 abstract let color (x:rid): GTot int = 
   match x with 
   | [] -> 0
@@ -81,7 +83,7 @@ let rec lemma_aux k i = lemma_aux k (Cons.tl i)
 abstract val lemma_disjoint_includes: i:rid -> j:rid -> k:rid ->
   Lemma (requires (disjoint i j /\ includes j k))
         (ensures (disjoint i k))
-        (decreases (List.Tot.length k))
+        (decreases (List.Tot.length (reveal k)))
         [SMTPat (disjoint i j);
          SMTPat (includes j k)]
 let rec lemma_disjoint_includes i j k =

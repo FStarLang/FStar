@@ -34,21 +34,21 @@ abstract val singleton : #a:eqtype -> #f:cmp a -> a -> Tot (ordset a f)
 
 let mem (#a:eqtype) #f x s = List.Tot.mem x s
 
-val set_props:
+private val set_props:
   #a:eqtype -> #f:cmp a -> s:ordset a f{is_Cons s}
   -> Lemma (requires (True))
           (ensures (forall x. mem #a #f x (Cons.tl s) ==> (f (Cons.hd s) x /\ Cons.hd s =!= x)))
 let rec set_props (#a:eqtype) #f s = match s with
   | x::tl -> if tl = [] then () else set_props #a #f tl
 
-val hd_unique: #a:eqtype -> #f:cmp a -> s:ordset a f{is_Cons s}
+private val hd_unique: #a:eqtype -> #f:cmp a -> s:ordset a f{is_Cons s}
                -> Lemma (requires (is_Cons s))
                        (ensures (not (mem #a #f (Cons.hd s) (Cons.tl s))))
 let hd_unique (#a:eqtype) #f s = set_props #a #f s
 
 let empty (#a:eqtype) #f = []
 
-val insert': #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
+private val insert': #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
              -> Tot (l:(ordset a f){is_Cons l /\
                                     (Cons.hd l = x \/
                                     (is_Cons s /\ Cons.hd l = Cons.hd s))})
@@ -75,7 +75,7 @@ let choose (#a:eqtype) #f s = match s with
   | []   -> None
   | x::_ -> Some x
 
-val remove': #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
+private val remove': #a:eqtype -> #f:cmp a -> x:a -> s:ordset a f
              -> Tot (l:(ordset a f){(is_Nil s ==> is_Nil l) /\
                                     (is_Cons s ==> Cons.hd s = x ==> l = Cons.tl s) /\
                                     (is_Cons s ==> Cons.hd s =!= x ==> (is_Cons l /\ Cons.hd l = Cons.hd s))})

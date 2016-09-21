@@ -207,7 +207,21 @@ let norm_universe cfg env u =
           | U_name _ 
           | U_unknown -> [u]
           | U_max []  -> [U_zero]
-          | U_max us ->  List.collect aux us |> norm_univs
+          | U_max us ->
+            let us = List.collect aux us |> norm_univs in
+            begin match us with
+            | u_k::rest ->
+              begin match U.univ_kernel u_k with
+                | U_zero, n -> //if the constant term n
+                  if rest |> List.for_all (fun u ->
+                    let _, m = U.univ_kernel u in
+                    n <= m) //is smaller than or equal to all the other terms in the max
+                  then rest //then just exclude it
+                  else us
+                | _ -> us
+              end
+            | _ -> us
+            end
           | U_succ u ->  List.map U_succ (aux u) in
 
     if cfg.steps |> List.contains EraseUniverses
