@@ -2,7 +2,9 @@ FSTAR_HOME=../..
 OTHERFLAGS=
 include ../Makefile.include
 
-all: Effects.Def.uver FStar.DM4F.IntST.uver-explicit FStar.DM4F.Exceptions.uver-explicit FStar.DM4F.ExnSt.uver FStar.DM4F.StExn.uver-explicit FStar.DM4F.ST.uver-explicit FStar.DM4F.Heap.uver FStar.DM4F.Heap.ST.uver #old
+all: uall
+uall: Effects.Def.uver FStar.DM4F.IntST.uver-explicit FStar.DM4F.Exceptions.uver-explicit FStar.DM4F.ExnSt.uver FStar.DM4F.StExn.uver-explicit FStar.DM4F.ST.uver-explicit FStar.DM4F.Heap.uver FStar.DM4F.Heap.ST.uver #old
+sall:
 
 # we retain these "hand-written" versions just for reference
 old: intST.uver Exceptions.uver-explicit ExceptionsWithState.uver StExn.uver-explicit StExn.Handle.uver-explicit

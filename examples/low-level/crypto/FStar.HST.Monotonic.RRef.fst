@@ -37,17 +37,17 @@ let m_upd #r #a #b m mr v = HyperStack.upd m mr v
 
 val m_alloc: #a:Type -> #b:reln a -> r:rid -> init:a -> ST (m_rref r a b)
   (requires (fun _ -> monotonic a b))
-  (ensures  (ralloc_post r init))
+  (ensures  (fun m0 mref m1 -> ralloc_post r init m0 (as_ref mref) m1))
 let m_alloc #a #b r init = ralloc #a r init
 
 val m_read: #r:rid -> #a:Type -> #b:reln a -> mr:m_rref r a b -> STL a
-  (requires (fun m -> m `contains` mr))
-  (ensures  (deref_post mr))
+  (requires (fun m -> m_contains mr m))
+  (ensures  (deref_post (as_ref mr)))
 let m_read #r #a #b mr = !mr
 
 val m_write: #r:rid -> #a:Type -> #b:reln a -> mr:m_rref r a b -> v:a -> STL unit
-  (requires (fun m0 -> m0 `contains` mr /\ b (m_sel m0 mr) v))
-  (ensures (assign_post mr v))
+  (requires (fun m0 -> m_contains mr m0 /\ b (m_sel m0 mr) v))
+  (ensures (assign_post (as_ref mr) v))
 let m_write #r #a #b mr v = mr := v
 
 inline type stable_on_mem (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:mem -> GTot Type0) =
@@ -78,7 +78,7 @@ let testify_forall #a #p $s = admit() //intentionally admitted
 
 val m_recall: #r:rid -> #a:Type -> #b:reln a -> mr:m_rref r a b -> ST unit
   (requires (fun m0 -> True))
-  (ensures  (fun m0 _ m1 -> m0==m1 /\ m_contains mr m1 /\ mr.id = r))
+  (ensures  (fun m0 _ m1 -> m0==m1 /\ m_contains mr m1 /\ (as_ref mr).id = r))
 let m_recall #r #a #b mr = FStar.HST.recall mr
 
 let rid_exists (r:rid) (m:mem) = b2t(Map.contains m.h r)
