@@ -68,10 +68,13 @@ let time f x s =
   Printf.printf "Elapsed time for %s : %fs\n" s (Sys.time() -. t)
 *)
 
+val from_string: len:UInt32.t -> string -> StackInline (lbuffer (v len))
+  (requires (fun h0 -> True))
+  (ensures (fun h0 r h1 -> Buffer.modifies_0 h0 h1 /\ Buffer.live h1 r )) // how to express freshness?
 
-let from_string (len:UInt32.t) s = 
+let from_string len s = 
   let buf = Buffer.create 0uy len in
-  if String.length s = v len then store_string len buf 0ul s;  
+  (if String.length s = v len then store_string len buf 0ul s);
   buf 
 
 let from_bytestring s = 
@@ -81,7 +84,6 @@ let from_bytestring s =
   let buf = Buffer.create 0uy len in 
   store_bytestring len buf 0ul s;  
   buf 
-  
 
 let test =
   push_frame(); 

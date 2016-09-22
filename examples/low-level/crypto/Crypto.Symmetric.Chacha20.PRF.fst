@@ -27,8 +27,9 @@ module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
 module MAC   = Crypto.Symmetric.Poly1305.MAC
-module Block = Crypto.Symmetric.Chacha20
+module Block = Crypto.Symmetric.BlockCipher
 
+let prfa = CHACHA20
 
 // LIBRARY STUFF 
 
@@ -53,10 +54,10 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 let maxCtr = 2000ul // to be adjusted, controlling concrete bound. 
 
-type domain = { iv:u64; ctr:u32 } // could move to concrete CHACHA20
+type domain = { iv:Block.iv prfa; ctr:u32 } // could move to concrete CHACHA20
 let incr (x:domain {x.ctr <=^ maxCtr})  = { iv = x.iv; ctr = x.ctr +^ 1ul }
 
-let blocklen = Block.blocklen
+let blocklen = Block.blocklen prfa
 let block = b:bytes {Seq.length b = v blocklen}
 
 // the range of our PRF, after idealization and "reverse inlining."
@@ -124,7 +125,7 @@ private val getBlock: #i:id -> t:state i -> domain -> len:u32 {len <=^ Block.blo
 //TODO: we need some way to recall that t.key is in an eternal region and can be recalled
 let getBlock #i t x len output = 
   buffer_recall t.key; 
-  Block.chacha20 output t.key x.iv x.ctr Block.constant len
+  Block.chacha20 output t.key x.iv x.ctr len
 
 
 // We encapsulate our 3 usages of the PRF in specific functions.

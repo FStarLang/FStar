@@ -66,7 +66,7 @@ let inline_stack_inv h h' : GTot Type0 =
    *)
 effect StackInline (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ inline_stack_inv h h1) ==> p a h1)) (* WP *)
+             (fun (p:st_post a) (h:mem) -> pre h /\ is_stack_region h.tip /\ (forall a h1. (pre h /\ post h a h1 /\ inline_stack_inv h h1) ==> p a h1)) (* WP *)
 
 let inline_inv h h' : GTot Type0 =
   (* The stack invariant is enforced *)
