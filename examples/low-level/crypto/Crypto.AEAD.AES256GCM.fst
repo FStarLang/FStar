@@ -19,12 +19,7 @@ type bytes = buffer byte
 let lemma_aux_001 (w:bytes{length w >= 240}) : Lemma (length w >= 4 * U32.v nb * (U32.v nr+1)) = ()
 
 (* Block cipher function AES256 *)
-private val aes256: key:lbytes 32 ->
-    input:block{disjoint key input} ->
-    out:block{disjoint key out /\ disjoint input out} ->
-    STL unit
-      (requires (fun h -> live h key /\ live h input /\ live h out))
-      (ensures  (fun h0 _ h1 -> live h1 out /\ modifies_1 out h0 h1))
+private val aes256: cipher_alg 32
 let aes256 key input out =
   let hinit = HST.get() in
   push_frame();

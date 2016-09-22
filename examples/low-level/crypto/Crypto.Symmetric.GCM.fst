@@ -11,10 +11,12 @@ open FStar.Buffer
 module U32 = FStar.UInt32
 type u32 = FStar.UInt32.t
 
+(*
 assume MaxUInt8 : pow2 8 = 256
 assume MaxUInt32: pow2 32 = 4294967296
 assume MaxUInt64: pow2 64 > 0xfffffffffffffff
 assume MaxUInt128: pow2 128 > pow2 64
+*)
 
 #set-options "--z3timeout 10 --max_fuel 0 --initial_fuel 0"
 
@@ -145,7 +147,7 @@ let rec gf128_mul_loop a b tmp dep =
   end
 
 (* In place multiplication. Calculate "a * b" and store the result in a.    *)
-(* WARNING: can only pass lax check and may have issues with constant time. *)
+(* WARNING: may have issues with constant time. *)
 val gf128_mul: a:bytes{length a = 16} ->
     b:bytes{length b = 16 /\ disjoint a b} -> Stack unit
     (requires (fun h -> live h a /\ live h b))
@@ -205,7 +207,7 @@ let ghash_loop_ tag auth_key str len dep =
   gf128_mul tag auth_key;
   pop_frame()
 
-(* WARNING: can only pass lax check and may have issues with constant time. *)
+(* WARNING: may have issues with constant time. *)
 private val ghash_loop: tag:bytes{length tag = 16} ->
     auth_key:bytes{length auth_key = 16 /\ disjoint tag auth_key} ->
     str:bytes{disjoint tag str /\ disjoint auth_key tag} ->
@@ -229,7 +231,6 @@ let rec ghash_loop tag auth_key str len dep =
 
 (* A hash function used in authentication. It will authenticate additional data first, *)
 (* then ciphertext and at last length information. The result is stored in tag.        *)
-(* WARNING: can only pass lax check. *)
 val ghash: auth_key:bytes{length auth_key = 16} ->
     ad:bytes{disjoint auth_key ad} ->
     adlen:u32{U32.v adlen = length ad} ->

@@ -15,7 +15,6 @@ open FStar.HST
 open FStar.Buffer
 (** Mathematical definitions *)
 open Math.Axioms
-open Math.Lib
 open Math.Lemmas
 (** Helper functions for buffers *)
 open Buffer.Utils
@@ -25,12 +24,11 @@ open Crypto.Symmetric.Poly1305.Spec
 open Crypto.Symmetric.Poly1305.Parameters
 open Crypto.Symmetric.Poly1305.Bigint
 open Crypto.Symmetric.Poly1305.Bignum
-open Crypto.Symmetric.Poly1305.Lemmas
 
-module U8 = FStar.UInt8
+module U8  = FStar.UInt8
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
-module HS = FStar.HyperStack
+module HS  = FStar.HyperStack
 
 // we may separate field operations, so that we don't
 // need to open the bignum modules elsewhere
@@ -55,8 +53,6 @@ let esel_word h b = hide (sel_word h b)
 
 val esel_word_16:h:mem -> b:wordB_16{live h b} -> Tot (erased word_16)
 let esel_word_16 h b = hide (sel_word h b)
-
-//assume MaxUInt32: pow2 32 = 4294967296
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3timeout 20"
 
@@ -97,16 +93,12 @@ let sel_elem (h:mem) (b:elemB{live h b}) : GTot elem
 let sel_int (h:mem) (b:elemB{live h b}) : GTot nat
   = eval h b norm_length
 
+#set-options "--lax"
+
 
 (* * *********************************************)
 (* *          Encoding-related lemmas            *)
 (* * *********************************************)
-
-(* TODO: move to Math.Lemmas *)
-val lemma_eucl_div_bound: a:nat -> b:nat -> q:pos -> Lemma
-  (requires (a < q))
-  (ensures  (a + q * b < q * (b+1)))
-let lemma_eucl_div_bound a b q = ()
 
 #set-options "--initial_fuel 1 --max_fuel 1"
 
@@ -115,19 +107,6 @@ val lemma_bitweight_templ_values: n:nat -> Lemma (bitweight templ n = 26 * n)
 let rec lemma_bitweight_templ_values n =
   if n = 0 then ()
   else lemma_bitweight_templ_values (n-1)
-
-#set-options "--initial_fuel 0 --max_fuel 0"
-
-(* TODO: move to Math.Lemmas *)
-val lemma_mult_le_left: a:pos -> b:pos -> c:pos -> Lemma
-  (requires (b <= c))
-  (ensures  (a * b <= a * c))
-let lemma_mult_le_left a b c = ()
-
-val lemma_mult_le_right: a:pos -> b:pos -> c:pos -> Lemma
-  (requires (b <= c))
-  (ensures  (b * a <= c * a))
-let lemma_mult_le_right a b c = ()
 
 #set-options "--initial_fuel 1 --max_fuel 1"
 
@@ -149,7 +128,7 @@ let rec lemma_eval_norm_is_bounded ha a len =
     assert(eval ha a len < pow2 (26 * (len-1)) * (v (get ha a (len-1)) + 1));
     lemma_mult_le_left (pow2 (26 * (len-1))) (v (get ha a (len-1))+1) (pow2 26);
     assert(eval ha a len < pow2 (26 * (len-1)) * pow2 26);
-    Math.Lib.pow2_exp_lemma (26 * (len-1)) 26
+    Math.Lemmas.pow2_plus (26 * (len-1)) 26
     end
 
 #set-options "--initial_fuel 0 --max_fuel 0"
@@ -241,40 +220,17 @@ let bound27_isSum h0 h1 a b =
   cut (forall (i:nat). {:pattern (v (get h1 a i))} i < norm_length ==> v (get h1 a (i+0)) < pow2 26 + pow2 26);
   pow2_double_sum 26
 
-#set-options "--initial_fuel 3 --max_fuel 3"
-
-(* TODO: move *)
-val pow2_5: unit -> Lemma (pow2 5 = 32)
-let pow2_5 _ = ()
-
-#set-options "--initial_fuel 0 --max_fuel 0"
-
-(* TODO: prove and move *)
-assume val lemma_modulo_add: a:nat -> b:nat -> d:pos -> Lemma ( (a + b) % d = ((a % d) + b) % d)
-assume val lemma_modulo_mul: a:nat -> b:nat -> d:pos -> Lemma ( (a * b) % d = ((a % d) * b) % d)
-
-let lemma_modulo_1 (a:nat) (b:nat) (c:nat) (d:pos) : Lemma ( ((a + b) * c) % d = ((((a % d) + (b % d)) % d) * (c % d)) % d) =
-  lemma_modulo_mul (a+b) c d;
-  lemma_modulo_mul c ((a+b)%d) d;
-  lemma_modulo_add a b d;
-  lemma_modulo_add b (a%d) d
-
-let lemma_sel_elem h0 h1 acc block r : Lemma
+val lemma_sel_elem: h0:mem -> h1:mem -> acc:elemB -> block:elemB -> r:elemB -> Lemma
   (requires (norm h1 acc /\ norm h0 acc /\ norm h0 block /\ norm h0 r
     /\ sel_elem h1 acc = ((eval h0 acc 5 + eval h0 block 5) * eval h0 r 5) % reveal prime))
   (ensures  (norm h1 acc /\ norm h0 acc /\ norm h0 block /\ norm h0 r
     /\ sel_elem h1 acc = (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r))
-  = let a = eval h0 acc 5 in
-    let b = eval h0 block 5 in
-    let c = eval h0 r 5 in
-    let d = reveal prime in
-    lemma_modulo_1 a b c d
-
-val lemma_mult_le_right2: a:nat -> b:int -> c:int -> Lemma
-  (requires (b <= c))
-  (ensures  (b * a <= c * a))
-let lemma_mult_le_right2 a b c = ()
-
+let lemma_sel_elem h0 h1 acc block r =
+  let a = eval h0 acc 5 in
+  let b = eval h0 block 5 in
+  let c = eval h0 r 5 in
+  let d = reveal prime in
+  lemma_mod_plus_mul_distr a b c d
 
 (**
     Runs "Acc = ((Acc+block)*r) % p." on the accumulator, the well formatted block of the message
@@ -286,6 +242,8 @@ val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block} -> r:elemB{di
     /\ norm h1 acc // the accumulation is back in a workable state
     /\ modifies_1 acc h0 h1 // It was the only thing modified
     /\ sel_elem h1 acc = (sel_elem h0 acc +@ sel_elem h0 block) *@ sel_elem h0 r))
+
+#set-options "--z3timeout 30"
 
 let add_and_multiply acc block r =
   let h0 = HST.get () in
@@ -301,7 +259,7 @@ let add_and_multiply acc block r =
   multiplication tmp acc r; // tmp = acc1 * r = (acc0 + block) * r
   let h3 = HST.get () in
   assert (maxValue h3 tmp (2*norm_length-1) <= norm_length * pow2 53);
-  lemma_mult_le_right2 6 (maxValue h3 tmp (2*norm_length-1)) (norm_length * pow2 53);
+  lemma_mult_le_right 6 (maxValue h3 tmp (2*norm_length-1)) (norm_length * pow2 53);
   assert_norm ((norm_length * pow2 53) * 6 < pow2 63);
   cut (satisfiesModuloConstraints h3 tmp);
   modulo tmp; // tmp = tmp % p
@@ -340,10 +298,11 @@ let zeroB a =
 (* *            Encoding functions               *)
 (* * *********************************************)
 
-private let mk_mask (nbits:FStar.UInt32.t{FStar.UInt32.v nbits < 64}) :
+private val mk_mask: nbits:FStar.UInt32.t{FStar.UInt32.v nbits < 64} ->
   Tot (z:U64.t{v z = pow2 (FStar.UInt32.v nbits) - 1})
-  = Math.Lib.pow2_increases_lemma 64 (FStar.UInt32.v nbits);
-    U64 ((1uL <<^ nbits) -^ 1uL)
+let mk_mask nbits =
+  Math.Lemmas.pow2_lt_compat 64 (FStar.UInt32.v nbits);
+  U64 ((1uL <<^ nbits) -^ 1uL)
 
 (* TODO *)
 let lemma_toField_1 (b:elemB) (s:wordB_16{disjoint b s}) h n0 n1 n2 n3 : Lemma
@@ -382,7 +341,7 @@ let upd_elemB b n0 n1 n2 n3 n4 =
   eval_def h1 b 2;
   eval_def h1 b 1;
   eval_def h1 b 0;
-  pow2_increases_lemma 26 24
+  pow2_lt_compat 26 24
 
 (* TODO *)
 let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4': Lemma
@@ -465,7 +424,7 @@ let lemma_toField_plus_2_128_0 ha a =
 
 val lemma_toField_plus_2_128_1: unit -> Lemma (v (1uL <<^ 24ul) = pow2 24)
 let lemma_toField_plus_2_128_1 () =
-  Math.Lib.pow2_increases_lemma 64 24
+  Math.Lemmas.pow2_lt_compat 64 24
 
 val lemma_toField_plus_2_128: ha:mem -> a:elemB -> hb:mem -> b:elemB -> Lemma
   (requires (norm ha a /\ norm hb b /\ v (get hb b 4) < pow2 24
@@ -474,19 +433,16 @@ val lemma_toField_plus_2_128: ha:mem -> a:elemB -> hb:mem -> b:elemB -> Lemma
     /\ v (get ha a 1) = v (get hb b 1) /\ v (get ha a 0) = v (get hb b 0) ))
   (ensures  (norm ha a /\ norm hb b /\ sel_int ha a = pow2 128 + sel_int hb b))
 let lemma_toField_plus_2_128 ha a hb b =
-  Math.Lib.pow2_increases_lemma 26 25;
-  Math.Lib.pow2_increases_lemma 25 24;
   lemma_toField_plus_2_128_0 ha a;
   lemma_toField_plus_2_128_0 hb b;
   Math.Lemmas.distributivity_add_right (pow2 104) (v (get hb b 4)) (pow2 24);
-  Math.Lib.pow2_exp_lemma 104 24
+  Math.Lemmas.pow2_plus 104 24
 
 let add_2_24 (x:t{v x < pow2 24}) : Tot (z:t{v z = v x + pow2 24 /\ v z < pow2 26})
   = lemma_toField_plus_2_128_1 ();
     Math.Lemmas.pow2_double_sum 24;
     Math.Lemmas.pow2_double_sum 25;
-    Math.Lib.pow2_increases_lemma 64 24;
-    Math.Lib.pow2_increases_lemma 64 25;
+    Math.Lemmas.pow2_lt_compat 64 25;
     x +^ (1uL <<^ 24ul)
 
 (* Formats a wordB into an elemB *)
@@ -507,12 +463,6 @@ let toField_plus_2_128 b s =
   lemma_upd_quantifiers h0 h1 b 4ul b4';
   lemma_toField_plus_2_128 h1 b h0 b
 
-val lemma_mod_mod: a:int -> b:int -> p:pos -> Lemma
-  (requires (a = b % p))
-  (ensures  (a % p = b % p))
-let lemma_mod_mod a b p =
-  lemma_mod_lt b p;
-  modulo_lemma (b % p) p
 
 val upd_wordB_16: b:wordB_16 -> s0:U8.t -> s1:U8.t -> s2:U8.t -> s3:U8.t -> s4:U8.t -> s5:U8.t ->
   s6:U8.t -> s7:U8.t -> s8:U8.t -> s9:U8.t -> s10:U8.t -> s11:U8.t -> s12:U8.t -> s13:U8.t ->
@@ -658,21 +608,30 @@ let seq_head_snoc #a xs x =
   Seq.lemma_len_append xs (Seq.create 1 x);
   Seq.lemma_eq_intro (seq_head (SeqProperties.snoc xs x)) xs
 
+#reset-options
+
+assume val ideal: bool
+
+let log_t: Type0 = if ideal then text else unit
+
+val ilog: l:log_t{ideal} -> Tot text
+let ilog l = l
 
 val poly1305_update:
-  current_log:erased text ->
+  current_log:log_t ->
   msg:wordB_16 ->
   acc:elemB{disjoint msg acc} ->
-  r:elemB{disjoint msg r /\ disjoint acc r} -> STL (erased text)
+  r:elemB{disjoint msg r /\ disjoint acc r} -> Stack log_t
     (requires (fun h -> live h msg /\ norm h acc /\ norm h r
-      /\ sel_elem h acc == poly (reveal current_log) (sel_elem h r) ))
+      /\ (ideal ==> sel_elem h acc == poly (ilog current_log) (sel_elem h r)) ))
     (ensures (fun h0 updated_log h1 -> live h1 msg /\ norm h1 acc /\ norm h1 r
       /\ norm h0 r
       /\ modifies_1 acc h0 h1
-      /\ reveal updated_log == SeqProperties.snoc (reveal current_log) (encode_16 (sel_word h1 msg))
-      /\ sel_elem h1 acc == poly (reveal updated_log) (sel_elem h0 r) ))
+      /\ (ideal ==>
+	 ilog updated_log == SeqProperties.snoc (ilog current_log) (encode_16 (sel_word h1 msg))
+	 /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
 
-#set-options "--z3timeout 30 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3timeout 60 --initial_fuel 1 --max_fuel 1"
 
 let poly1305_update log msgB acc r =
   let h0 = HST.get () in
@@ -685,47 +644,50 @@ let poly1305_update log msgB acc r =
   eval_eq_lemma h0 h1 acc acc Parameters.norm_length;
   eval_eq_lemma h0 h1 r r Parameters.norm_length;
   add_and_multiply acc block r;
-  let msg = read_word msgB in
   let h2 = HST.get () in
   eval_eq_lemma h1 h2 block block Parameters.norm_length;
-  assert (encode_16 msg == sel_elem h1 block);
-//  assert (sel_elem h2 acc ==
-//         (poly (reveal log) (sel_elem h0 r) +@ encode_16 msg) *@ sel_elem h0 r);
-//  assert (sel_elem h2 acc ==
-//         (poly (reveal log) (sel_elem h0 r) +@ sel_elem h1 block) *@ sel_elem h0 r);
   assert (modifies_1 acc h1 h2);
-  //let updated_log = hide (SeqProperties.snoc (reveal log) (encode_16 msg)) in
-  let updated_log = log in // TODO: Dummy
-  seq_head_snoc (reveal log) (encode_16 msg);
-  Seq.lemma_index_app2 (reveal log) (Seq.create 1 (encode_16 msg)) (Seq.length (SeqProperties.snoc (reveal log) (encode_16 msg)) - 1);
+  let updated_log:log_t =
+    if ideal then
+      begin
+      let msg = read_word msgB in
+      assert (encode_16 msg == sel_elem h1 block);
+      seq_head_snoc (ilog log) (encode_16 msg);
+      Seq.lemma_index_app2 (ilog log) (Seq.create 1 (encode_16 msg)) (Seq.length (SeqProperties.snoc (ilog log) (encode_16 msg)) - 1);
+      SeqProperties.snoc (ilog log) (encode_16 msg)
+      end
+    else () in
   pop_frame();
   let h3 = HST.get () in
   eval_eq_lemma h2 h3 acc acc Parameters.norm_length;
-//  assert (norm h3 acc);
-//  assert (modifies_1 acc h0 h3);
+  assert (norm h3 acc);
+  assert (modifies_1 acc h0 h3);
   updated_log
 
 
+#set-options "--lax"
+
 (* Loop over Poly1305_update; could go below MAC *)
-val poly1305_loop: current_log:erased text -> msg:bytes -> acc:elemB{disjoint msg acc} ->
+val poly1305_loop: current_log:log_t -> msg:bytes -> acc:elemB{disjoint msg acc} ->
   r:elemB{disjoint msg r /\ disjoint acc r} -> ctr:u32{length msg >= 16 * w ctr} ->
-  Stack (erased text)
-    (requires (fun h -> live h msg /\ norm h acc /\ norm h r
-      /\ sel_elem h acc == poly (reveal current_log) (sel_elem h r) ))
-    (ensures (fun h0 updated_log h1 -> live h0 msg /\ norm h1 acc /\ norm h0 r
-      /\ modifies_1 acc h0 h1
-      /\ reveal updated_log ==
-	encode_pad (reveal current_log) (as_seq h0 (Buffer.sub msg 0ul (UInt32.mul 16ul ctr)))
-      /\ sel_elem h1 acc == poly (reveal updated_log) (sel_elem h0 r) ))
+  ST log_t
+  (requires (fun h -> live h msg /\ norm h acc /\ norm h r /\
+      ideal ==> sel_elem h acc == poly (ilog current_log) (sel_elem h r) ))
+  (ensures (fun h0 updated_log h1 -> live h0 msg /\ norm h1 acc /\ norm h0 r /\
+      modifies_1 acc h0 h1 /\
+      (ideal ==>
+	(ilog updated_log ==
+	encode_pad (ilog current_log) (as_seq h0 (Buffer.sub msg 0ul (UInt32.mul 16ul ctr))) /\
+	sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)))))
     (decreases (w ctr))
 
-#set-options "--z3timeout 20 --print_fuels --initial_fuel 0 --max_fuel 0"
+#set-options "--z3timeout 30 --print_fuels --initial_fuel 0 --max_fuel 1"
 
 let rec poly1305_loop log msg acc r ctr =
+  let h0 = HST.get () in
   if U32.lte ctr 0ul then log
   else
     begin
-    let h0 = HST.get () in
     let msg0 = Buffer.sub msg 0ul 16ul in
     assert (Buffer.length msg0 = 16);
     let log1 = poly1305_update log msg0 acc r in
@@ -733,15 +695,19 @@ let rec poly1305_loop log msg acc r ctr =
     eval_eq_lemma h0 h1 r r norm_length;
     let msg1 = Buffer.offset msg 16ul in
     assert (live h1 msg1 /\ norm h1 acc /\ norm h1 r);
-    assert (sel_elem h1 acc == poly (reveal log1) (sel_elem h0 r));
-    assert (reveal log1 == SeqProperties.snoc (reveal log) (encode_16 (sel_word h1 msg0)));
+    assert (ideal ==> sel_elem h1 acc == poly (ilog log1) (sel_elem h0 r));
+    assert (ideal ==>
+      ilog log1 == SeqProperties.snoc (ilog log) (encode_16 (sel_word h1 msg0)));
     let log2 = poly1305_loop log1 msg1 acc r (ctr -| 1ul) in
     let h2 = HST.get () in
     lemma_modifies_1_trans acc h0 h1 h2;
     assert (norm h2 acc /\ modifies_1 acc h0 h2);
-    assert (sel_elem h2 acc == poly (reveal log2) (sel_elem h0 r));
-    assume (reveal log2 ==
-      encode_pad (reveal log) (as_seq h0 (Buffer.sub msg 0ul (UInt32.mul 16ul ctr))));
+    assert (ideal ==> sel_elem h2 acc == poly (ilog log2) (sel_elem h0 r));
+    assume (ideal ==>
+      ilog log2 ==
+      encode_pad (ilog log) (as_seq h0 (Buffer.sub msg 0ul (UInt32.mul 16ul ctr))) /\
+      sel_elem h2 acc == poly (ilog log2) (sel_elem h0 r));
+    admit ();
     log2
     end
 
@@ -848,7 +814,7 @@ let poly1305_mac tag msg len key =
   let ctr = U32.div len 16ul in
   let rest = U32.rem len 16ul in
   (* Run the poly1305_update function ctr times *)
-  let l = hide Seq.createEmpty in
+  let l:log_t = if ideal then Seq.createEmpty #text else () in
   let l = poly1305_loop l msg acc r ctr in
   (* Run the poly1305_update function one more time on the incomplete block *)
   let last_block = sub msg (FStar.UInt32 (ctr *^ 16ul)) rest in

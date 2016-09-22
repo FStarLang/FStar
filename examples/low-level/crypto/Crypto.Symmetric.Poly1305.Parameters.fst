@@ -9,7 +9,7 @@ let norm_length : pos = 5
 let nlength : FStar.UInt32.t = 5ul
 (* Canonical number of bytes *)
 let bytes_length : pos = 17
-let blength : FStar.UInt32.t = 17ul
+let blength : FStar.UInt32.t = assert_norm (17 < pow2 32); 17ul
 (* Representation template *)
 val templ: nat -> Tot pos
 let templ = fun x -> 26

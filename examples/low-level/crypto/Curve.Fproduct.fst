@@ -52,7 +52,7 @@ val auxiliary_lemma_1:
 let auxiliary_lemma_1 t a b =
   admit(); // OK
   bitweight_lemma_0 t a b;
-  Math.Lemmas.pow2_exp_1 (bitweight t a) (bitweight t b)
+  Math.Lemmas.pow2_plus (bitweight t a) (bitweight t b)
 
 abstract type partialEquality (ha:heap) (a:bigint_wide{live ha a})
 			    (hb:heap) (b:bigint_wide{live hb b}) 
@@ -92,7 +92,7 @@ let multiplication_step_lemma_1 h0 h1 a b c idx len = ()
   (* cut (eval h1 c (len+idx) =  *)
   (* 	(eval h0 a (len+idx-1) + (pow2 (bitweight t idx)) * eval h0 b (len-1)) *)
   (* 	+ pow2 (bitweight t (len-1+idx)) * (v (get h0 a (len+idx-1)) + v (get h0 b (len-1))) /\ True);  *)
-  (* Math.Axioms.distributivity_add_right (pow2 (bitweight t (len-1+idx))) (v (get h0 a (len+idx-1))) (v (get h0 b (len-1)));  *)
+  (* Math.Lemmas.distributivity_add_right (pow2 (bitweight t (len-1+idx))) (v (get h0 a (len+idx-1))) (v (get h0 b (len-1)));  *)
   (* cut (True /\ eval h1 c (len+idx) =  *)
   (* 	(eval h0 a (len+idx-1) + (pow2 (bitweight t idx)) * eval h0 b (len-1)) *)
   (* 	+ (pow2 (bitweight t (len-1+idx)) * v (get h0 a (len+idx-1)) *)
@@ -143,11 +143,11 @@ let multiplication_step_lemma_2 h0 h1 a b c idx len =
   (* FproductLemmas.auxiliary_lemma_00 len (-1) idx; *)
   (* FproductLemmas.auxiliary_lemma_01 (len-1) idx;  *)
   cut (True /\ pow2 (bitweight (templ) (len-1+idx)) = pow2 (bitweight (templ) idx) * pow2 (bitweight (templ) (len-1)) ); 
-  Math.Axioms.paren_mul_left (pow2 (bitweight (templ) idx)) (pow2 (bitweight (templ) (len-1))) (v (get h0 b (len-1))); 
+  Math.Lemmas.paren_mul_left (pow2 (bitweight (templ) idx)) (pow2 (bitweight (templ) (len-1))) (v (get h0 b (len-1)));
   cut (eval_wide h1 c (len+idx) = eval_wide h0 a (len+idx) 
 			     + pow2 (bitweight (templ) idx) * eval_wide h0 b (len-1)
 			     + pow2 (bitweight (templ) idx) * pow2 (bitweight (templ) (len-1)) * v (get h0 b (len-1)) /\ True); 
-  Math.Axioms.distributivity_add_right (pow2 (bitweight (templ) idx)) (eval_wide h0 b (len-1)) (pow2 (bitweight (templ) (len-1)) * v (get h0 b (len-1)));  
+  Math.Lemmas.distributivity_add_right (pow2 (bitweight (templ) idx)) (eval_wide h0 b (len-1)) (pow2 (bitweight (templ) (len-1)) * v (get h0 b (len-1)));
   eval_wide_def h0 b len; 
   cut (True /\ eval_wide h0 b len = eval_wide h0 b (len-1) + (pow2 (bitweight (templ) (len-1))) * v (get h0 b (len-1)) );  
   cut (True /\ pow2 (bitweight (templ) (len-1+idx)) * v (get h0 b (len-1)) =
@@ -211,13 +211,13 @@ let auxiliary_lemma_3 h0 h1 h2 a b ctr c =
   Math.Axioms.slash_star_axiom max_limb 2 max_wide;
   cut (max_limb = s / 2 /\ True); 
   (* FproductLemmas.helper_lemma_3 (maxValueNorm h0 a) (maxValueNorm h1 b) (pow2 max_limb) (pow2 max_limb); *)
-  Math.Lemmas.pow2_exp_1 (s/2) (s/2); 
+  Math.Lemmas.pow2_plus (s/2) (s/2); 
   cut (maxValueNorm h0 a * maxValueNorm h1 b <= pow2 ((s/2)+(s/2)) /\ True); 
   (* FproductLemmas.helper_lemma_2 (s/2); *)
   Math.Lemmas.multiply_fractions s 2; 
   cut ((s / 2)+(s/2) <= (s) /\ True);
   if (((s/2)+(s/2)) < s ) then
-	Math.Lemmas.pow2_increases_1 s ((s/2)+(s/2));
+	Math.Lemmas.pow2_lt_compat s ((s/2)+(s/2));
   cut (pow2 (((s/2)+(s/2))) <= pow2 s /\ True); 
   cut (maxValueNorm h0 a * maxValueNorm h1 b <= pow2 s /\ True)
 
@@ -269,11 +269,11 @@ val max_limb_lemma: a:nat -> b:nat ->
     [SMTPat (a * b)]
 let max_limb_lemma a b =
   (* FproductLemmas.ineq_lemma_3 a b (pow2 max_limb); *)
-  Math.Lemmas.pow2_exp_1 max_limb max_limb;
+  Math.Lemmas.pow2_plus max_limb max_limb;
   (* FproductLemmas.helper_lemma_10 max_limb;   *)
   Curve.Parameters.parameters_lemma_1 (); 
   (* FproductLemmas.helper_lemma_11 platform_wide (log_2 norm_length) max_limb;  *)
-  Math.Lemmas.pow2_increases_1 platform_wide max_wide
+  Math.Lemmas.pow2_lt_compat platform_wide max_wide
 
 val max_limb_lemma2: h:heap -> a:bigint{live h a} -> b:bigint{live h b} -> i:nat{i < length a} -> ctr:nat{ctr < length b} -> Lemma
     (requires (U64.v (get h a i) < pow2 max_limb /\ U64.v (get h b ctr) < pow2 max_limb))
@@ -390,7 +390,7 @@ val multiplication_step_lemma_001: h0:heap -> h1:heap -> a:bigint -> b:bigint ->
 let multiplication_step_lemma_001 h0 h1 a b ctr c tmp =
   admit(); // OK
   multiplication_step_lemma_0010 h0 h1 a b ctr c tmp;
-  Math.Axioms.distributivity_add_left ctr 1 (maxValueNorm h0 a * maxValueNorm h0 b);
+  Math.Lemmas.distributivity_add_left ctr 1 (maxValueNorm h0 a * maxValueNorm h0 b);
   cut(forall (i:nat). {:pattern (v (get h1 c i))} i < norm_length ==> v (get h1 c (i+ctr)) <= ctr * maxValueNorm h0 a * maxValueNorm h0 b);
   cut (True /\ ctr * maxValueNorm h0 a * maxValueNorm h0 b + maxValueNorm h0 a * maxValueNorm h0 b
     = (ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b) );
@@ -496,7 +496,7 @@ let max_value_lemma_1 h0 h1 h2 a b ctr c tmp =
     i < length c ==> 
       ((i >= ctr /\ i < norm_length+ctr) \/ ((i < ctr \/ i >= norm_length + ctr) /\ i < length c)) ==>
 	v (get h2 c i) <= maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b)); 
-  Math.Axioms.paren_mul_right ctr (maxValueNorm h0 a) (maxValueNorm h0 b); 
+  Math.Lemmas.paren_mul_right ctr (maxValueNorm h0 a) (maxValueNorm h0 b);
   cut(True /\ maxValue_wide h0 c (length c) <= ctr * (maxValueNorm h0 a * maxValueNorm h0 b)); 
   (* FproductLemmas.factorise_lemma (maxValueNorm h0 a * maxValueNorm h0 b) ctr; *)
   assert(True /\ maxValue_wide h0 c (length c) + (maxValueNorm h0 a * maxValueNorm h0 b) <= (ctr+1) * (maxValueNorm h0 a * maxValueNorm h0 b)); 
@@ -628,7 +628,7 @@ let multiplication_step_lemma_02 h0 h1 h2 a b ctr c tmp =
   cut (True /\ eval_wide h2 c (norm_length+w ctr) = eval_wide h0 c (norm_length+w ctr) + pow2 (bitweight (templ) (w ctr)) * eval h0 a norm_length * vv (get h0 b (w ctr)));
   cut (True /\ eval_wide h2 c (2*norm_length-1) = eval_wide h0 c (2*norm_length-1) + pow2 (bitweight (templ) (w ctr)) * eval h0 a norm_length * vv (get h0 b (w ctr)));
   max_value_lemma h0 h1 h2 a b (w ctr) c tmp; 
-  Math.Axioms.paren_mul_right (w ctr+1) (maxValueNorm h0 a) (maxValueNorm h0 b);
+  Math.Lemmas.paren_mul_right (w ctr+1) (maxValueNorm h0 a) (maxValueNorm h0 b);
   (* assert(maxValue_wid h2 c <= (ctr+1) * maxValueNorm h0 a * maxValueNorm h0 b);  *)
   standardized_lemma h0 h1 h2 a c tmp; 
   standardized_lemma h0 h1 h2 b c tmp;
@@ -711,11 +711,11 @@ val multiplication_step_lemma_03: h0:heap -> h1:heap -> a:bigint{norm h0 a} -> b
 let multiplication_step_lemma_03 h0 h1 a b ctr c =
   admit(); // OK
   let t = templ in 
-  Math.Axioms.paren_mul_left (eval h0 a norm_length) (vv (get h0 b (norm_length - ctr))) (pow2 (bitweight t (norm_length - ctr))); 
+  Math.Lemmas.paren_mul_left (eval h0 a norm_length) (vv (get h0 b (norm_length - ctr))) (pow2 (bitweight t (norm_length - ctr)));
   cut (True /\ eval_wide h1 c (2*norm_length-1) = eval h0 a norm_length * vv (get h0 b (norm_length - ctr)) * pow2 (bitweight t (norm_length - ctr)) + eval h0 a norm_length * eval h0 b (norm_length - ctr) ); 
-  Math.Axioms.swap_mul (vv (get h0 b (norm_length - ctr))) (pow2 (bitweight t (norm_length - ctr))); 
+  Math.Lemmas.swap_mul (vv (get h0 b (norm_length - ctr))) (pow2 (bitweight t (norm_length - ctr)));
   cut (True /\ eval_wide h1 c (2*norm_length-1) = eval h0 a norm_length * pow2 (bitweight t (norm_length - ctr)) * vv (get h0 b (norm_length - ctr)) + eval h0 a norm_length * eval h0 b (norm_length - ctr) ) ; 
-  Math.Axioms.distributivity_add_right (eval h0 a norm_length) (pow2 (bitweight t (norm_length - ctr)) * vv (get h0 b (norm_length - ctr))) (eval h0 b (norm_length - ctr)); 
+  Math.Lemmas.distributivity_add_right (eval h0 a norm_length) (pow2 (bitweight t (norm_length - ctr)) * vv (get h0 b (norm_length - ctr))) (eval h0 b (norm_length - ctr));
   cut (True /\ eval_wide h1 c (2*norm_length-1) = eval h0 a norm_length * (pow2 (bitweight t (norm_length - ctr)) * vv (get h0 b (norm_length - ctr)) + eval h0 b (norm_length - ctr))); 
   eval_def h0 b (norm_length-ctr+1)
 
@@ -758,7 +758,7 @@ let multiplication_aux_lemma h0 h1 a b ctr c tmp =
        /\ (maxValueNorm h1 b = maxValueNorm h0 b)); 
   cut((norm_length - ctr)+1 = norm_length - ctr + 1 /\ True);
   cut(eval h0 a norm_length = eval h1 a norm_length /\ eval h0 b (norm_length-ctr) = eval h1 b (norm_length - ctr) /\ eval h0 b (norm_length - ctr + 1) = eval h1 b (norm_length - ctr + 1) /\ vv (get h0 b (norm_length - ctr)) = vv (get h1 b (norm_length - ctr)));
-  Math.Axioms.paren_mul_right (norm_length - ctr + 1) (maxValueNorm h1 a) (maxValueNorm h1 b);
+  Math.Lemmas.paren_mul_right (norm_length - ctr + 1) (maxValueNorm h1 a) (maxValueNorm h1 b);
   cut(norm_length - ctr + 1 > 0 /\ length b >= norm_length - ctr + 1);
   eval_def h0 b (norm_length - ctr + 1); 
   assert (eval_wide h0 c (2*norm_length-1) = eval h0 a (norm_length) * eval h0 b (norm_length - ctr));

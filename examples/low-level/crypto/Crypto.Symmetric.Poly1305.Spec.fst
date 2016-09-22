@@ -25,11 +25,8 @@ module U64 = FStar.UInt64
 #reset-options "--initial_fuel 4 --max_fuel 4"
 
 // prime (do we prove it? use it?)
-let p_1305: p:nat{pow2 128 < p} = 
-  cut (pow2 3 = 8); 
-  Math.Lib.pow2_increases_lemma 130 129;
-  Math.Lib.pow2_increases_lemma 129 128; 
-  pow2_increases_lemma 130 3; 
+let p_1305: p:nat{pow2 128 < p} =
+  assert_norm (pow2 128 < pow2 130 - 5);
   pow2 130 - 5
 
 #reset-options
@@ -89,7 +86,7 @@ let rec lemma_little_endian_is_bounded b =
     lemma_euclidean_division (U8.v (Seq.index b 0)) (little_endian s);
     assert(little_endian b <= pow2 8 * (little_endian s + 1));
     assert(little_endian b <= pow2 8 * pow2 (8 * (Seq.length b - 1)));
-    Math.Lemmas.pow2_exp_1 8 (8 * (Seq.length b - 1));
+    Math.Lemmas.pow2_plus 8 (8 * (Seq.length b - 1));
     lemma_factorise 8 (Seq.length b - 1)
     end
 
@@ -102,7 +99,7 @@ val lemma_little_endian_lt_2_128: b:word -> Lemma
 let lemma_little_endian_lt_2_128 b =
   lemma_little_endian_is_bounded b;
   if Seq.length b = 16 then ()
-  else Math.Lib.pow2_increases_lemma 128 (8 * Seq.length b)
+  else pow2_lt_compat 128 (8 * Seq.length b)
 
 
 (* * *********************************************)

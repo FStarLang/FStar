@@ -57,8 +57,8 @@ val scalar_multiplication_lemma_aux: h0:heap -> h1:heap -> a:bigint{live h0 a} -
     (ensures ( eval h0 a len * s = eval_wide h1 b len ))
 let scalar_multiplication_lemma_aux h0 h1 a b s len =
 //  admit();
-  Math.Axioms.paren_mul_left (pow2 (bitweight (templ) (len-1))) (v (get h0 a (len-1))) s;
-  Math.Axioms.distributivity_add_left ((pow2 (bitweight (templ) (len-1))) * (v (get h0 a (len-1)))) (eval h0 a (len-1)) s
+  Math.Lemmas.paren_mul_left (pow2 (bitweight (templ) (len-1))) (v (get h0 a (len-1))) s;
+  Math.Lemmas.distributivity_add_left ((pow2 (bitweight (templ) (len-1))) * (v (get h0 a (len-1)))) (eval h0 a (len-1)) s
 
 #reset-options
 
@@ -174,7 +174,7 @@ val auxiliary_lemma_2: ha:heap -> a:bigint{norm ha a} -> s:u64 -> i:nat{ i < nor
 let auxiliary_lemma_2 ha a s i =
   (* UInt.mul_lemma #(templ i) (v (get ha a i)) #platform_size (v s); *)
   Curve.Parameters.parameters_lemma_0 ();
-  (* Math.Lib.pow2_increases_2 platform_wide (templ i + platform_size) *)
+  (* Math.Lib.pow2_le_compat platform_wide (templ i + platform_size) *)
   ()
   
 val auxiliary_lemma_0: ha:heap -> a:bigint{norm ha a} -> s:u64 -> Lemma

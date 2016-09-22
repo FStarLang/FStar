@@ -101,13 +101,38 @@ let rec maxValue_wide h  b l =
   | _ -> if maxValue_wide h  b (l-1) > UInt128.v (get h  b (l-1)) then maxValue_wide h  b (l-1)
 	 else UInt128.v (get h  b (l-1))
 
+val maxValue_wide_lemma_aux: h:heap -> b:bigint_wide{live h b} -> l:pos{l <= length b} ->
+  Lemma (forall (i:nat). i < l ==> UInt128.v (get h b i) <= maxValue_wide h b l)
+let rec maxValue_wide_lemma_aux h b l =
+  match l with
+  | 1 -> ()
+  | _ -> maxValue_wide_lemma_aux h b (l-1)
+
+val maxValue_wide_lemma: h:heap -> b:bigint_wide{live h b} ->
+  Lemma (forall (i:nat). {:pattern (UInt128.v (get h b i))}
+    i < length b ==> UInt128.v (get h b i) <= maxValue_wide h b (length b))
+let rec maxValue_wide_lemma h b = maxValue_wide_lemma_aux h b (length b)
+
+val maxValue_wide_bound_lemma_aux: h:heap -> b:bigint_wide{live h b /\ length b > 0} -> l:pos{l <= length b} -> bound:nat -> Lemma
+  (requires (forall (i:nat). i < l ==> UInt128.v (get h b i) <= bound))
+  (ensures (maxValue_wide h b l <= bound))
+let rec maxValue_wide_bound_lemma_aux h b l bound =
+  match l with
+  | 1 -> ()
+  | _ -> maxValue_wide_bound_lemma_aux h b (l-1) bound
+
+val maxValue_wide_bound_lemma: h:heap -> b:bigint_wide{live h b /\ length b > 0} -> bound:nat -> Lemma
+  (requires (forall (i:nat). i < length b ==> UInt128.v (get h b i) <= bound))
+  (ensures (maxValue_wide h b (length b) <= bound))
+let maxValue_wide_bound_lemma h b bound =
+  maxValue_wide_bound_lemma_aux h b (length b) bound
+
 val maxValue_lemma_aux: h:heap -> b:bigint{live h b} -> l:pos{l<=length b} ->
   Lemma (forall (i:nat). i < l ==> v (get h b i) <= maxValue h b l)
 let rec maxValue_lemma_aux h b l = match l with | 1 -> () | _ -> maxValue_lemma_aux h b (l-1)
 
 val maxValue_lemma: h:heap -> b:bigint{live h b /\ length b > 0} ->
-  Lemma (requires (True)) 
-	(ensures (forall (i:nat). {:pattern (v (get h b i))} i < length b ==> v (get h b i) <= maxValue h b (length b)))
+  Lemma (forall (i:nat). {:pattern (v (get h b i))} i < length b ==> v (get h b i) <= maxValue h b (length b))
 let rec maxValue_lemma h b = maxValue_lemma_aux h b (length b)
 
 val maxValue_bound_lemma_aux: h:heap -> b:bigint{live h b /\ length b > 0} -> l:pos{l<=length b} -> 
@@ -120,27 +145,31 @@ val maxValue_bound_lemma: h:heap -> b:bigint{live h b /\ length b > 0} -> bound:
 	(ensures (maxValue h b (length b) <= bound))
 let maxValue_bound_lemma h b bound = maxValue_bound_lemma_aux h b (length b) bound
 
-val maxValueNorm: h:heap -> b:bigint{live h  b /\ length  b >= norm_length} -> GTot nat
-let maxValueNorm h  b = maxValue h b norm_length
+val maxValueNorm: h:heap -> b:bigint{live h b /\ length b >= norm_length} -> GTot nat
+let maxValueNorm h b = maxValue h b norm_length
 
-val maxValueIdx: h:heap ->b:bigint{live h  b} -> l:pos{l<=length  b} -> GTot nat
-let rec maxValueIdx h  b l = 
+val maxValueIdx: h:heap -> b:bigint{live h b} -> l:pos{l <= length b} -> GTot nat
+let rec maxValueIdx h b l =
   match l with 
   | 1 -> 0
-  | _ -> if maxValue h  b l = v (get h b (l-1)) then l - 1 else maxValueIdx h b (l-1)
+  | _ -> if maxValue h b l = v (get h b (l-1)) then l - 1 else maxValueIdx h b (l-1)
+
+#reset-options "--z3timeout 60"
 
 val maxValue_eq_lemma: 
-  ha:heap -> hb:heap -> a:bigint{live ha  a} -> b:bigint{live hb  b} -> l:pos -> Lemma 
+  ha:heap -> hb:heap -> a:bigint{live ha a} -> b:bigint{live hb b} -> l:pos -> Lemma
     (requires (equal ha a hb b /\ l > 0 /\ l <= length a)) 
-    (ensures (equal ha a hb b /\ l > 0 /\ l <= length a /\ l <= length b /\ maxValue ha a l = maxValue hb b l))
+    (ensures  (equal ha a hb b /\ l > 0 /\ l <= length a /\ l <= length b /\ maxValue ha a l == maxValue hb b l))
 let rec maxValue_eq_lemma ha hb a b l =
   match l with
   | 1 -> ()
-  | _ -> cut (v (get ha a (l-1)) = v (get hb b (l-1)));
-         maxValue_eq_lemma ha hb a b (l-1)
+  | _ ->
+    cut (Seq.index (as_seq ha a) (l - 1) == Seq.index (as_seq hb b) (l - 1));
+    cut (v (get ha a (l-1)) == v (get hb b (l-1)));
+    maxValue_eq_lemma ha hb a b (l-1)
   
 val maxValueNorm_eq_lemma: 
-  ha:heap -> hb:heap -> a:bigint{ live ha a /\ length a >= norm_length }  -> b:bigint{ live hb b /\ length b >= norm_length } -> 
+  ha:heap -> hb:heap -> a:bigint{ live ha a /\ length a >= norm_length } -> b:bigint{ live hb b /\ length b >= norm_length } ->
   Lemma 
     (requires (equal ha a hb b)) 
     (ensures (maxValueNorm ha a = maxValueNorm hb b))
@@ -155,10 +184,7 @@ let rec eval_eq_lemma ha hb a b len =
   | 0 -> ()
   | _ -> eval_eq_lemma ha hb a b (len-1)
 
-#reset-options "--z3timeout 100"
-#set-options "--lax"
-
-val eval_partial_eq_lemma: ha:heap -> hb:heap -> a:bigint{live ha a} ->  b:bigint{live hb b} -> 
+val eval_partial_eq_lemma: ha:heap -> hb:heap -> a:bigint{live ha a} -> b:bigint{live hb b} ->
   ctr:nat -> len:nat{ ctr <= len /\ len <= length a /\ len <= length b} -> Lemma
     (requires (live ha a /\ live hb b
       /\ (forall (i:nat). i < len-ctr ==> get ha a (ctr+i) = get hb b (ctr+i)) ))
@@ -175,16 +201,16 @@ let rec eval_partial_eq_lemma ha hb a b ctr len =
 #reset-options
 
 val eval_null: h:heap -> b:bigint{live h b} -> len:nat{len <= length b} -> Lemma
-    (requires (forall (i:nat). {:pattern (v (get h b i))} i < len ==> v (get h b i) = 0))
-    (ensures (eval h b len = 0))
+  (requires (forall (i:nat). {:pattern (v (get h b i))} i < len ==> v (get h b i) = 0))
+  (ensures (eval h b len = 0))
 let rec eval_null h  b len =
   match len with
   | 0 -> ()
   | _ -> eval_null h b (len-1)
 
-val max_value_of_null_lemma: h:heap -> b:bigint{live h b /\ length b > 0} -> l:pos{l <= length b} ->
-  Lemma (requires (null h b))
-	(ensures (maxValue h b l = 0))
+val max_value_of_null_lemma: h:heap -> b:bigint{live h b /\ length b > 0} -> l:pos{l <= length b} -> Lemma
+  (requires (null h b))
+  (ensures (maxValue h b l = 0))
 let rec max_value_of_null_lemma h b l = 
   match l with
   | 1 -> ()

@@ -203,7 +203,7 @@ let subtraction_lemma_aux h0 h1 a b len =
   eval_def h1 a len;
   assert(eval h1 a len = pow2 (bitweight (templ) (len-1)) * v (get h1 a (len-1)) + eval h1 a (len-1));
   assert(v (get h1 a (len-1)) = v (get h0 b (len-1)) - v (get h0 a (len-1))); 
-  Math.Axioms.distributivity_sub_right (pow2 (bitweight (templ) (len-1))) (v (get h0 b (len-1)))  (v (get h0 a (len-1))); 
+  Math.Lemmas.distributivity_sub_right (pow2 (bitweight (templ) (len-1))) (v (get h0 b (len-1)))  (v (get h0 a (len-1)));
   assert(eval h1 a len = (pow2 (bitweight (templ) (len-1)) * v (get h0 b (len-1)) - pow2 (bitweight (templ) (len-1)) * v (get h0 a (len-1))) + eval h1 a (len-1));
   (* FdifferenceLemmas.helper_lemma_2  *)
   (* 		(pow2 (bitweight (templ) (len-1)) * v (get h0 b (len-1))) *)
@@ -282,7 +282,7 @@ val auxiliary_lemma_2: ha:heap -> a:bigint{norm ha a} -> hb:heap -> b:bigint{fil
 let auxiliary_lemma_2 ha a hb b i = ()
   //@@
   (* assert(True /\ bitsize (v (get hb b i)) max);  *)
-  (* Lemmas.pow2_increases_2 min (templ i);  *)
+  (* Lemmas.pow2_le_compat min (templ i);  *)
   (* assert(bitsize (v (get ha a i)) (templ i));  *)
   (* assert(v (get ha a i) < pow2 (templ i));  *)
   (* cut(True /\ v (get ha a i) < pow2 min);  *)

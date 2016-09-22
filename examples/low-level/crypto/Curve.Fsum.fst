@@ -136,7 +136,7 @@ let addition_lemma_aux h0 h1 a b len =
   eval_def h1 a len;
   assert(eval h1 a len = pow2 (bitweight templ (len-1)) * v (get h1 a (len-1)) + eval h1 a (len-1));
   assert(v (get h1 a (len-1)) = v (get h0 a (len-1)) + v (get h0 b (len-1)));
-  Math.Axioms.distributivity_add_right (pow2 (bitweight templ (len-1))) (v (get h0 a (len-1)))  (v (get h0 b (len-1))); 
+  Math.Lemmas.distributivity_add_right (pow2 (bitweight templ (len-1))) (v (get h0 a (len-1)))  (v (get h0 b (len-1)));
   assert(eval h1 a len = (pow2 (bitweight (templ) (len-1)) * v (get h0 a (len-1)) + pow2 (bitweight (templ) (len-1)) * v (get h0 b (len-1))) + eval h1 a (len-1));
   (* FsumLemmas.helper_lemma_2 (pow2 (bitweight (templ) (len-1)) * v (get h0 a (len-1))) *)
   (* 		(pow2 (bitweight (templ) (len-1)) * v (get h0 b (len-1))) *)
@@ -210,7 +210,7 @@ val auxiliary_lemma_2: ha:heap -> a:bigint{norm ha a} -> hb:heap -> b:bigint{nor
 let auxiliary_lemma_2 ha a hb b i = ()
   (* UInt.add_lemma #(templ i) (v (get ha a i)) #(templ i) (v (get hb b i)); *)
   (* parameters_lemma_0 (); *)
-  (* Lemmas.pow2_increases_2 platform_size (templ i + 1) *)
+  (* Lemmas.pow2_le_compat platform_size (templ i + 1) *)
 
 val auxiliary_lemma_0: 
   ha:heap -> a:bigint{norm ha a} ->
