@@ -332,9 +332,11 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let t_res = Util.comp_result expected_c in
     let e, c', g' = tc_term (Env.set_expected_typ env0 t_res) e in
     let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, c'.comp()) in
-    mk (Tm_ascribed(e, Inl t_res, Some (Util.comp_effect_name expected_c))) (Some t_res.n) top.pos,
-    Util.lcomp_of_comp expected_c,
-    Rel.conj_guard g (Rel.conj_guard g' g'')
+    let e = mk (Tm_ascribed(e, Inl t_res, Some (Util.comp_effect_name expected_c))) (Some t_res.n) top.pos in
+    let lc = Util.lcomp_of_comp expected_c in
+    let f = Rel.conj_guard g (Rel.conj_guard g' g'') in
+    let e, c, f2 = comp_check_expected_typ env e lc in
+    e, c, Rel.conj_guard f f2
 
   | Tm_ascribed (e, Inl t, _) ->
     let k, u = U.type_u () in
@@ -453,6 +455,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         let k, _ = U.type_u() in
         let res_t = TcUtil.new_uvar env k in
         Env.set_expected_typ env res_t, res_t in
+
+    if Env.debug env Options.Extreme
+    then Util.print1 "Tm_match: expected type of branches is %s\n" (Print.term_to_string res_t);
 
     let guard_x = S.gen_bv "scrutinee" (Some e1.pos) c1.res_typ in
     let t_eqns = eqns |> List.map (tc_eqn guard_x env_branches) in
