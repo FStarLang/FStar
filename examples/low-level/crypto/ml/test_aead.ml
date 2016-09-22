@@ -32,8 +32,7 @@ let time f x s =
 let plaintext = from_string "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it."
 let aad = from_bytestring "50515253c0c1c2c3c4c5c6c7"
 let key = from_bytestring "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f"
-let iv = FStar_UInt64.of_string "0x4746454443424140"
-let constant = FStar_UInt32.of_string "0x7"
+let iv = from_bytestring  ("07000000"^"4041424344454647")
 
 let expected_ciphertext = from_bytestring "d31a8d34648e60db7b86afbc53ef7ec2a4aded51296e08fea9e2b5a736ee62d63dbea45e8ca9671282fafb69da92728b1a71de0a9e060b2905d6a5b67ecd3b3692ddbd7f2d778b8c9803aee328091b58fab324e4fad675945585808b4831d7bc3ff4def08e4b7a9de576d26586cec64b6116"
 
@@ -50,14 +49,14 @@ let _ =
   let ciphertext = FStar_Buffer.create 0 114 in
   let tag = FStar_Buffer.create 0 16 in
   time (fun () -> for i = 0 to 999 do
-                    chacha20_aead_encrypt key iv constant 12 aad 114 plaintext ciphertext tag;
+                    chacha20_aead_encrypt key iv 12 aad 114 plaintext ciphertext tag;
                   done) () "1000 iterations";
   (* Output result *)
   diff "cipher" expected_ciphertext ciphertext 114;
   diff "tag" expected_tag tag 16;
 
   let decrypted = FStar_Buffer.create 0 114 in
-  if chacha20_aead_decrypt key iv constant 12 aad 114 decrypted ciphertext tag = 0
+  if chacha20_aead_decrypt key iv 12 aad 114 decrypted ciphertext tag = 0
   then diff "decryption" plaintext decrypted 114
   else print_string "decryption failed";
 

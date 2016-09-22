@@ -30,12 +30,15 @@ type u64 = FStar.UInt64.t
 
 let keylen   = 32ul
 let blocklen = 64ul 
+let ivlen    = 12ul
 
-type key   = b:bytes{length b = v keylen}
-type block = b:bytes{length b = v blocklen}
+type lbytes l = b:bytes {length b = l}
+type key   = lbytes (v keylen)
+type block = lbytes (v blocklen)
+type iv    = lbytes (v ivlen)
 
 // internally, blocks are represented as 16 x 4-byte integers
-private type matrix = m:uint32s{length m = 16}
+private type matrix = m:uint32s{length m = v blocklen / 4}
 
 private type shuffle = 
   m:matrix -> STL unit
@@ -102,37 +105,37 @@ let rounds m = (* 20 rounds *)
   column_round m; diagonal_round m
 
 private val chacha20_init: 
-  m:matrix -> k:key{disjoint m k} -> iv:u64 -> counter:u32 -> constant:u32 -> 
+  m:matrix -> k:key{disjoint m k} -> n:iv{disjoint m n} -> counter:u32 -> 
   STL unit
-  (requires (fun h -> live h m /\ live h k))
+  (requires (fun h -> live h m /\ live h k /\ live h n ))
   (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1))
 
-private val updkey:
-  m:matrix -> i:u32 { 4 <= v i /\ v i < 12 } -> k:key{disjoint m k} -> 
+private val fill: m:matrix -> i:u32 -> len:u32 {v i + v len <= 16}-> src:bytes {length src = 4 * v len} -> 
   STL unit
-  (requires (fun h -> live h m /\ live h k))
+  (requires (fun h -> live h m /\ live h src /\ disjoint m src))
   (ensures (fun h0 _ h1 -> live h1 m /\ modifies_1 m h0 h1))
-let updkey m i k =
-  m.(i) <- uint32_of_bytes (sub k ((i -^ 4ul) *^ 4ul) 4ul)
+let rec fill m i len src =
+  if len <> 0ul then (
+    m.(i) <- uint32_of_bytes (sub src 0ul 4ul); 
+    let len = len -^ 1ul in 
+    fill m (i +^ 1ul) len (sub src 4ul (4ul *^ len)))
 
-let chacha20_init m key iv counter constant =
+//review handling of endianness
+
+// RFC 7539 2.3
+let chacha20_init m key iv counter =
   m.(0ul) <- 0x61707865ul;
   m.(1ul) <- 0x3320646eul;
   m.(2ul) <- 0x79622d32ul;
   m.(3ul) <- 0x6b206574ul;
-  updkey m  4ul key;
-  updkey m  5ul key;
-  updkey m  6ul key;
-  updkey m  7ul key;
-  updkey m  8ul key;
-  updkey m  9ul key;
-  updkey m 10ul key;
-  updkey m 11ul key;
+  fill m 4ul 8ul key;
   m.(12ul) <- counter; 
-  m.(13ul) <- constant;
-  m.(14ul) <- (Int.Cast.uint64_to_uint32 iv);
-  m.(15ul) <- (Int.Cast.uint64_to_uint32 (UInt64.shift_right iv 32ul))
+  fill m 13ul 3ul iv
 
+// was:
+//  m.(13ul) <- constant;
+//  m.(14ul) <- (Int.Cast.uint64_to_uint32 iv);
+//  m.(15ul) <- (Int.Cast.uint64_to_uint32 (UInt64.shift_right iv 32ul))
 
 (* lifted by hand for now: *)
 private val add: 
@@ -192,25 +195,22 @@ let chacha20_update output state len =
 val chacha20: 
   output:bytes -> 
   k:key ->
-  iv:u64 ->
+  n:iv ->
   counter: u32 ->
-  constant: u32 ->
   len:u32{v len <= v blocklen /\ v len <= length output} -> STL unit
-    (requires (fun h -> live h k /\ live h output))
+    (requires (fun h -> live h k /\ live h n /\ live h output))
     (ensures (fun h0 _ h1 -> live h1 output /\ modifies_1 output h0 h1 ))
-let chacha20 output key iv counter constant len = 
+let chacha20 output key n counter len = 
   push_frame ();
   let state = create 0ul 32ul in
-  chacha20_init (sub state 0ul 16ul) key iv counter constant;
+  let m = sub state 0ul 16ul in
+  chacha20_init m key n counter;
   chacha20_update output state len;
   pop_frame ()
 
 // Performance: it may be easier to precompute and re-use an expanded key (m0), 
 // to avoid passing around (key, counter, iv, constant), and only have m on the stack.
 // We may also merge the 3 final loops: sum_matrixes, bytes_of_uint32s, and outer XOR/ADD. 
-
-
-let constant = 7ul // default value for the constant part of the CHACHA20 input
 
 
 (*** Counter-mode Encryption ***)
@@ -224,36 +224,36 @@ private let prf = chacha20
 
 // XOR-based encryption and decryption (just swap ciphertext and plaintext)
 val counter_mode: 
-  k:key -> iv:u64 -> counter:u32 -> constant:u32 ->
+  k:key -> n:iv -> counter:u32 -> 
   len:u32{v counter + v len / v blocklen < pow2 32} ->
   plaintext:bytes {length plaintext = v len /\ disjoint k plaintext} -> 
-  ciphertext:bytes {length ciphertext = v len /\ disjoint k ciphertext /\ disjoint plaintext ciphertext} -> 
+  ciphertext:bytes {length ciphertext = v len /\ disjoint n ciphertext /\ disjoint k ciphertext /\ disjoint plaintext ciphertext} -> 
   STL unit
-    (requires (fun h -> live h ciphertext /\ live h k /\ live h plaintext))
+    (requires (fun h -> live h ciphertext /\ live h k /\ live h n /\ live h plaintext))
     (ensures (fun h0 _ h1 -> live h1 ciphertext /\ modifies_1 ciphertext h0 h1))
 
 #reset-options "--z3timeout 100"
 // a bit slow, e.g. on the len precondition
 
-let rec counter_mode key iv counter constant len plaintext ciphertext =
+let rec counter_mode key iv counter len plaintext ciphertext =
   if len =^ 0ul then () 
   else if len <^ blocklen 
   then (* encrypt final partial block *)
     begin
       let cipher = sub ciphertext  0ul len in 
-      let plain  =  sub plaintext   0ul len in 
-      prf cipher key iv counter constant len;
+      let plain  = sub plaintext   0ul len in 
+      prf cipher key iv counter len;
       xor_bytes_inplace cipher plain len
     end
   else (* encrypt full block *)
     begin
       let cipher = sub ciphertext  0ul blocklen in
       let plain  = sub plaintext   0ul blocklen in
-      prf cipher key iv counter constant blocklen;
+      prf cipher key iv counter blocklen;
       xor_bytes_inplace cipher plain blocklen;
       let len = len -^ blocklen in
       let ciphertext = sub ciphertext blocklen len in
       let plaintext  = sub plaintext  blocklen len in
-      counter_mode key iv (counter +^ 1ul) constant len plaintext ciphertext
+      counter_mode key iv (counter +^ 1ul) len plaintext ciphertext
     end
 

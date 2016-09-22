@@ -17,6 +17,9 @@ open Crypto.Symmetric.Poly1305 // avoid?
 
 module HH = FStar.HyperHeap
 
+type bytes = buffer UInt8.t
+type lbytes (n:nat) = b:bytes{length b = n}
+
 let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 
 // also used in miTLS ('model' may be better than 'ideal'); could be loaded from another module.
@@ -29,7 +32,7 @@ assume val ideal: bool
 // we will need authId i ==> ideal?
 
 // the index is the base index (controlling agility and idealization) plus the unique IV for this MAC.
-type id = Plain.id * UInt64.t 
+type id = Plain.id * lbytes 12
 
 assume val someId: Plain.id // dummy value for unit testing
 let authId (i:id) = Plain.authId (fst i)
@@ -39,8 +42,6 @@ let authId i = false
 let someId = 0
 *)
 
-type bytes = buffer UInt8.t
-type lbytes (n:nat) = b:bytes{length b = n}
 type tagB = wordB_16
 type wordB_16 = wordB_16
 
@@ -187,7 +188,7 @@ let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
 
 // not framed, as we allocate private state on the caller stack
 val start: #i:id -> st:state i -> StackInline (accB i)
-  (requires (fun h -> is_stack_region h.tip /\ live h st.r /\ norm h st.r))
+  (requires (fun h -> live h st.r /\ norm h st.r))
   (ensures  (fun h0 a h1 -> acc_inv st text_0 a h1))
 let start #i st =
   let h0 = HST.get () in

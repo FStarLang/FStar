@@ -98,7 +98,7 @@ let rec add_bytes #i st log a len txt =
    *)
 
 val chacha20_aead_encrypt: 
-  key:lbytes 32 -> iv:UInt64.t -> constant:UInt32.t -> 
+  key:lbytes 32 -> iv:lbytes 12 -> 
   aadlen:UInt32.t -> aadtext:lbytes (v aadlen) -> 
   plainlen:UInt32.t -> plaintext:lbytes (v plainlen) -> 
   ciphertext:lbytes (v plainlen) -> tag:MAC.tagB -> 
@@ -115,7 +115,7 @@ val chacha20_aead_encrypt:
     live h1 ciphertext /\ live h1 tag ))
 
 val chacha20_aead_decrypt: 
-  key:lbytes 32 -> iv:UInt64.t -> constant:UInt32.t -> 
+  key:lbytes 32 -> iv:lbytes 12 -> 
   aadlen:UInt32.t -> aadtext:lbytes (v aadlen) -> 
   plainlen:UInt32.t -> plaintext:lbytes (v plainlen) -> 
   ciphertext:lbytes (v plainlen) -> tag:MAC.tagB -> 
@@ -130,16 +130,16 @@ val chacha20_aead_decrypt:
 #reset-options "--z3timeout 1000"
 // still failing below 
 
-let chacha20_aead_encrypt key iv constant aadlen aadtext plainlen plaintext ciphertext tag =
+let chacha20_aead_encrypt key iv aadlen aadtext plainlen plaintext ciphertext tag =
   push_frame();
   (* Create OTK, using first block of Chacha20 *)
   let otk  = create 0uy 32ul in 
   let counter = 0ul in 
-  chacha20 otk key iv counter constant 32ul;
+  chacha20 otk key iv counter 32ul;
 
   (* Encrypt the plaintext, using Chacha20, counter at 1 *)
   let counter = 1ul in
-  counter_mode key iv counter constant plainlen plaintext ciphertext;
+  counter_mode key iv counter plainlen plaintext ciphertext;
  
   (* Initialize MAC algorithm with one time key *)
   (* encapsulate (r,s) and a; we should probably clear otk *)
@@ -157,12 +157,12 @@ let chacha20_aead_encrypt key iv constant aadlen aadtext plainlen plaintext ciph
   MAC.mac ak l acc tag;
   pop_frame()
 
-let chacha20_aead_decrypt key iv constant aadlen aadtext plainlen plaintext ciphertext tag =
+let chacha20_aead_decrypt key iv aadlen aadtext plainlen plaintext ciphertext tag =
   push_frame();
   (* Create OTK, using first block of Chacha20 *)
   let otk = create 0uy 32ul in 
   let counter = 0ul in 
-  chacha20 otk key iv counter constant 32ul;
+  chacha20 otk key iv counter 32ul;
 
   (* Initialize MAC algorithm with one time key *)
   (* encapsulate (r,s) and a; we should probably clear otk *)
@@ -182,7 +182,7 @@ let chacha20_aead_decrypt key iv constant aadlen aadtext plainlen plaintext ciph
   if verified then
     begin (* decrypt; note plaintext and ciphertext are swapped. *) 
       let counter = 1ul in 
-      counter_mode key iv counter constant plainlen ciphertext plaintext
+      counter_mode key iv counter plainlen ciphertext plaintext
     end;
 
   pop_frame();
