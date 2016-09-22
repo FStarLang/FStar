@@ -43,3 +43,15 @@ let ghost_lemma #a #p #q $f =
       let b = excluded_middle (p x) in  
       if b then f x else () in 
  forall_intro lem
+
+let move_requires (#a:Type) (#p:a -> Type) (#q:a -> Type) ($f:x:a -> Lemma (requires (p x)) (ensures (q x))) (x:a)
+   : Lemma (p x ==> q x)
+   = if excluded_middle (p x)
+     then f x
+     else ()
+
+val exists_elim: goal:Type -> #a:Type -> #p:(a -> Type) -> $have:squash (exists (x:a). p x) -> f:(x:a{p x} -> GTot (squash goal)) -> 
+  Lemma goal
+let exists_elim goal #a #p have f = 
+  let open FStar.Squash in 
+  bind_squash #_ #goal (join_squash have) (fun (| x, pf |) -> return_squash pf; f x)

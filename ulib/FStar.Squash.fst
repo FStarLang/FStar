@@ -22,3 +22,5 @@ let bind_squash (#a:Type) (#b:Type) f g = magic()
 
 let map_squash (#a:Type) (#b:Type) s f =
   bind_squash #a #b s (fun x -> return_squash (f x))
+
+let join_squash (#a:Type) (x:squash (squash a)) = bind_squash x (fun x -> x)
