@@ -235,7 +235,7 @@ let prf_enxor i t x l cipher plain =
 
 let prf_mac i t x = 
   if authId i then
-    let contents = !t in //TODO unclear which pref is missing
+    let contents = !t.table in //TODO unclear which pref is missing
     match find_0 contents x with 
     | Some mac -> mac 
     | None     ->

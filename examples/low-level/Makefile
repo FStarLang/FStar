@@ -102,6 +102,18 @@ poly-compile: poly-extract
 poly-test: poly-compile
 	./test_poly.exe
 
+ideal-extract: ulib
+	mkdir -p $(AEAD_ODIR)
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) --include crypto crypto/Test.fst --odir $(AEAD_ODIR) #2> /dev/null
+	@sed -i.bak 's/Obj.magic ((fun log msg/ ((fun log msg/g' $(AEAD_ODIR)/Crypto_Symmetric_Poly1305.ml
+
+ideal-compile: ideal-extract
+	$(OCAMLOPT) -I crypto/ml -I $(AEAD_ODIR) $(addprefix crypto/ml/,$(REALIZED_ML)) \
+	  $(addprefix $(AEAD_ODIR)/,$(AEAD_EXTRACTED)) -o test_ideal.exe
+
+ideal-test: ideal-compile
+	./test_ideal.exe
+
 aead-extract: ulib
 	mkdir -p $(AEAD_ODIR)
 	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) --include crypto crypto/Crypto.AEAD.Chacha20Poly1305.fst --odir $(AEAD_ODIR) #2> /dev/null
