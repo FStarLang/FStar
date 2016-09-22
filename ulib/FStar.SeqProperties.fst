@@ -483,3 +483,45 @@ let rec lemma_index_is_nth #a s i =
   else (
     lemma_index_is_nth (slice s 1 (length s)) (i-1)
   )
+
+////////////////////////////////////////////////////////////////////////////////
+//s `contains` x : Type0
+//    An undecidable version of `mem`, 
+//    for when the sequence payload is not an eqtype
+////////////////////////////////////////////////////////////////////////////////
+abstract let contains (#a:Type) (s:seq a) (x:a) : Tot Type0 = 
+  exists (k:nat). k < Seq.length s /\ Seq.index s k == x
+    
+let contains_intro (#a:Type) (s:seq a) (k:nat) (x:a)
+  : Lemma (k < Seq.length s /\ Seq.index s k == x
+	    ==>
+	   s `contains` x)
+  = ()
+
+let contains_elim (#a:Type) (s:seq a) (x:a)
+  : Lemma (s `contains` x
+	    ==>
+	  (exists (k:nat). k < Seq.length s /\ Seq.index s k == x))
+  = ()
+
+private let intro_append_contains_from_disjunction (#a:Type) (s1:seq a) (s2:seq a) (x:a)
+    : Lemma (requires s1 `contains` x \/ s2 `contains` x)
+   	    (ensures (append s1 s2) `contains` x)
+    = let open FStar.Classical in 
+      let open FStar.Squash in
+      if excluded_middle (s1 `contains` x) 
+      then ()
+      else let s = append s1 s2 in
+	   exists_elim (s `contains` x) (get_proof (s2 `contains` x)) (fun k -> 
+           assert (Seq.index s (Seq.length s1 + k) == x))
+
+let append_contains_equiv (#a:Type) (s1:seq a) (s2:seq a) (x:a)
+  : Lemma ((append s1 s2) `contains` x
+	    <==>
+  	   (s1 `contains` x \/ s2 `contains` x))
+  = FStar.Classical.move_requires (intro_append_contains_from_disjunction s1 s2) x
+
+val contains_snoc : #a:Type -> s:FStar.Seq.seq a -> x:a ->
+   Lemma (ensures (forall y. (snoc s x) `contains` y  <==> s `contains` y \/ x==y))
+let contains_snoc #a s x =
+  FStar.Classical.forall_intro (append_contains_equiv s (Seq.create 1 x))
