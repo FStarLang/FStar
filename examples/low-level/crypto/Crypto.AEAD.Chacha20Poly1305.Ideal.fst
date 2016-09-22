@@ -288,7 +288,7 @@ let rec counter_dexor i t x len plaintext ciphertext =
       recall (PRF t.table); //16-09-22 could this be done by ! ??
       let s = PRF.find_1 (PRF !t.table) x in 
       let h = HST.get() in 
-      assume(match s with | Some (PRF.OTP l' p c) -> l == l' /\ c = sel_bytes h l cipher);
+      assume(match s with | Some (PRF.OTP l' p c) -> l == l' /\ c = sel_bytes h l cipher | None -> False);
 
       PRF.prf_dexor i t x l plain cipher;
 
@@ -356,11 +356,11 @@ val decrypt:
 
 let encrypt i st iv aadlen aad plainlen plain cipher_tagged =
   push_frame();
-  let x = {iv = iv; ctr = 0ul} in // PRF index to the first block
-  let ak = prf_mac i st.prf x in     // used for keying the one-time MAC
+  let x = PRF({iv = iv; ctr = 0ul}) in // PRF index to the first block
+  let ak = PRF.prf_mac i st.prf x in     // used for keying the one-time MAC
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
   let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
-  counter_enxor i st.prf (incr x) plainlen plain cipher;
+  counter_enxor i st.prf (PRF.incr x) plainlen plain cipher;
   
   // Compute MAC over additional data and ciphertext
   let l, acc = accumulate i ak aadlen aad plainlen cipher in 
@@ -369,8 +369,8 @@ let encrypt i st iv aadlen aad plainlen plain cipher_tagged =
 
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   push_frame();
-  let x = {iv = iv; ctr = 0ul} in // PRF index to the first block
-  let ak = prf_mac i st.prf x in     // used for keying the one-time MAC
+  let x = PRF({iv = iv; ctr = 0ul}) in // PRF index to the first block
+  let ak = PRF.prf_mac i st.prf x in     // used for keying the one-time MAC
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
   let tag    = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
 
@@ -378,7 +378,7 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   let l, acc = accumulate i ak aadlen aad plainlen cipher in
   let verified  = MAC.verify ak l acc tag in 
 
-  if verified then counter_dexor i st.prf (incr x) plainlen plain cipher;
+  if verified then counter_dexor i st.prf (PRF.incr x) plainlen plain cipher;
   pop_frame();
 
   if verified then 0ul else 1ul //TODO pick and enforce error convention.
