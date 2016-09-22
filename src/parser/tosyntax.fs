@@ -1498,8 +1498,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
 
   | Fsdoc _ -> env, []
 
-  | TopLevelModule _ -> 
-    raise (Error("Multiple modules in a file are no longer supported", d.drange)) //the parser desugars this away with a warning
+  | TopLevelModule id -> env, []
 
   | Open lid ->
     let env = Env.push_namespace env lid in

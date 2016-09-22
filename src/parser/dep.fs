@@ -330,8 +330,9 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | Pragma _ ->
         ()
     | TopLevelModule lid ->
-        raise (Err (Util.format1 "Automatic dependency analysis demands one \
-          module per file (module %s not supported)" (string_of_lid lid true)))
+        ()
+//        raise (Err (Util.format1 "Automatic dependency analysis demands one \
+//          module per file (module %s not supported)" (string_of_lid lid true)))
 
   and collect_tycon = function
     | TyconAbstract (_, binders, k) ->

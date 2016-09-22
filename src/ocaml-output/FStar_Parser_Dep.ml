@@ -486,10 +486,7 @@ end
 ()
 end
 | FStar_Parser_AST.TopLevelModule (lid) -> begin
-(let _164_155 = (let _164_154 = (let _164_153 = (string_of_lid lid true)
-in (FStar_Util.format1 "Automatic dependency analysis demands one module per file (module %s not supported)" _164_153))
-in FStar_Absyn_Syntax.Err (_164_154))
-in (Prims.raise _164_155))
+()
 end))
 and collect_tycon = (fun _70_6 -> (match (_70_6) with
 | FStar_Parser_AST.TyconAbstract (_70_294, binders, k) -> begin
@@ -585,8 +582,8 @@ end
 | FStar_Const.Int64 -> begin
 "64"
 end)
-in (let _164_164 = (FStar_Util.format2 "fstar.%sint%s" u w)
-in (add_dep _164_164))))
+in (let _164_161 = (FStar_Util.format2 "fstar.%sint%s" u w)
+in (add_dep _164_161))))
 end
 | _70_425 -> begin
 ()
@@ -602,9 +599,9 @@ end
 (
 
 let _70_434 = if (s = "@") then begin
-(let _164_167 = (let _164_166 = (FStar_Ident.lid_of_path (FStar_Ident.path_of_text "FStar.List.Tot.append") FStar_Range.dummyRange)
-in FStar_Parser_AST.Name (_164_166))
-in (collect_term' _164_167))
+(let _164_164 = (let _164_163 = (FStar_Ident.lid_of_path (FStar_Ident.path_of_text "FStar.List.Tot.append") FStar_Range.dummyRange)
+in FStar_Parser_AST.Name (_164_163))
+in (collect_term' _164_164))
 end else begin
 ()
 end
@@ -820,21 +817,21 @@ let _70_639 = (FStar_Util.print_endline "With GraphViz installed, try: fdp -Tpng
 in (
 
 let _70_641 = (FStar_Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims")
-in (let _164_192 = (let _164_191 = (let _164_190 = (let _164_189 = (let _164_188 = (let _164_187 = (FStar_Util.smap_keys graph)
-in (FStar_List.unique _164_187))
+in (let _164_189 = (let _164_188 = (let _164_187 = (let _164_186 = (let _164_185 = (let _164_184 = (FStar_Util.smap_keys graph)
+in (FStar_List.unique _164_184))
 in (FStar_List.collect (fun k -> (
 
-let deps = (let _164_183 = (let _164_182 = (FStar_Util.smap_try_find graph k)
-in (FStar_Util.must _164_182))
-in (Prims.fst _164_183))
+let deps = (let _164_180 = (let _164_179 = (FStar_Util.smap_try_find graph k)
+in (FStar_Util.must _164_179))
+in (Prims.fst _164_180))
 in (
 
 let r = (fun s -> (FStar_Util.replace_char s '.' '_'))
-in (FStar_List.map (fun dep -> (FStar_Util.format2 "  %s -> %s" (r k) (r dep))) deps)))) _164_188))
-in (FStar_String.concat "\n" _164_189))
-in (Prims.strcat _164_190 "\n}\n"))
-in (Prims.strcat "digraph {\n" _164_191))
-in (FStar_Util.write_file "dep.graph" _164_192))))))
+in (FStar_List.map (fun dep -> (FStar_Util.format2 "  %s -> %s" (r k) (r dep))) deps)))) _164_185))
+in (FStar_String.concat "\n" _164_186))
+in (Prims.strcat _164_187 "\n}\n"))
+in (Prims.strcat "digraph {\n" _164_188))
+in (FStar_Util.write_file "dep.graph" _164_189))))))
 
 
 let collect : verify_mode  ->  Prims.string Prims.list  ->  ((Prims.string * Prims.string Prims.list) Prims.list * Prims.string Prims.list * (Prims.string Prims.list * color) FStar_Util.smap) = (fun verify_mode filenames -> (
@@ -842,9 +839,9 @@ let collect : verify_mode  ->  Prims.string Prims.list  ->  ((Prims.string * Pri
 let graph = (FStar_Util.smap_create (Prims.parse_int "41"))
 in (
 
-let verify_flags = (let _164_199 = (FStar_Options.verify_module ())
-in (FStar_List.map (fun f -> (let _164_198 = (FStar_ST.alloc false)
-in ((f), (_164_198)))) _164_199))
+let verify_flags = (let _164_196 = (FStar_Options.verify_module ())
+in (FStar_List.map (fun f -> (let _164_195 = (FStar_ST.alloc false)
+in ((f), (_164_195)))) _164_196))
 in (
 
 let m = (build_map filenames)
@@ -856,8 +853,8 @@ in (
 let rec discover_one = (fun is_user_provided_filename key -> if ((FStar_Util.smap_try_find graph key) = None) then begin
 (
 
-let _70_660 = (let _164_207 = (FStar_Util.smap_try_find m key)
-in (FStar_Util.must _164_207))
+let _70_660 = (let _164_204 = (FStar_Util.smap_try_find m key)
+in (FStar_Util.must _164_204))
 in (match (_70_660) with
 | (intf, impl) -> begin
 (
@@ -891,8 +888,8 @@ end else begin
 end)
 in (
 
-let _70_672 = (let _164_208 = (FStar_List.map lowercase_module_name filenames)
-in (FStar_List.iter (discover_one true) _164_208))
+let _70_672 = (let _164_205 = (FStar_List.map lowercase_module_name filenames)
+in (FStar_List.iter (discover_one true) _164_205))
 in (
 
 let immediate_graph = (FStar_Util.smap_copy graph)
@@ -903,8 +900,8 @@ in (
 
 let rec discover = (fun cycle key -> (
 
-let _70_681 = (let _164_213 = (FStar_Util.smap_try_find graph key)
-in (FStar_Util.must _164_213))
+let _70_681 = (let _164_210 = (FStar_Util.smap_try_find graph key)
+in (FStar_Util.must _164_210))
 in (match (_70_681) with
 | (direct_deps, color) -> begin
 (match (color) with
@@ -932,18 +929,18 @@ end
 let _70_693 = (FStar_Util.smap_add graph key ((direct_deps), (Gray)))
 in (
 
-let all_deps = (let _164_217 = (let _164_216 = (FStar_List.map (fun dep -> (let _164_215 = (discover ((key)::cycle) dep)
-in (dep)::_164_215)) direct_deps)
-in (FStar_List.flatten _164_216))
-in (FStar_List.unique _164_217))
+let all_deps = (let _164_214 = (let _164_213 = (FStar_List.map (fun dep -> (let _164_212 = (discover ((key)::cycle) dep)
+in (dep)::_164_212)) direct_deps)
+in (FStar_List.flatten _164_213))
+in (FStar_List.unique _164_214))
 in (
 
 let _70_697 = (FStar_Util.smap_add graph key ((all_deps), (Black)))
 in (
 
-let _70_699 = (let _164_219 = (let _164_218 = (FStar_ST.read topologically_sorted)
-in (key)::_164_218)
-in (FStar_ST.op_Colon_Equals topologically_sorted _164_219))
+let _70_699 = (let _164_216 = (let _164_215 = (FStar_ST.read topologically_sorted)
+in (key)::_164_215)
+in (FStar_ST.op_Colon_Equals topologically_sorted _164_216))
 in all_deps))))
 end)
 end)))
@@ -955,11 +952,11 @@ in (
 let must_find = (must_find m)
 in (
 
-let must_find_r = (fun f -> (let _164_224 = (must_find f)
-in (FStar_List.rev _164_224)))
+let must_find_r = (fun f -> (let _164_221 = (must_find f)
+in (FStar_List.rev _164_221)))
 in (
 
-let by_target = (let _164_229 = (FStar_Util.smap_keys graph)
+let by_target = (let _164_226 = (FStar_Util.smap_keys graph)
 in (FStar_List.collect (fun k -> (
 
 let as_list = (must_find k)
@@ -981,25 +978,25 @@ in (
 let k = (lowercase_module_name f)
 in (
 
-let deps = (let _164_227 = (discover k)
-in (FStar_List.rev _164_227))
+let deps = (let _164_224 = (discover k)
+in (FStar_List.rev _164_224))
 in (
 
-let deps_as_filenames = (let _164_228 = (FStar_List.collect must_find deps)
-in (FStar_List.append _164_228 suffix))
-in ((f), (deps_as_filenames)))))))) as_list)))) _164_229))
+let deps_as_filenames = (let _164_225 = (FStar_List.collect must_find deps)
+in (FStar_List.append _164_225 suffix))
+in ((f), (deps_as_filenames)))))))) as_list)))) _164_226))
 in (
 
-let topologically_sorted = (let _164_230 = (FStar_ST.read topologically_sorted)
-in (FStar_List.collect must_find_r _164_230))
+let topologically_sorted = (let _164_227 = (FStar_ST.read topologically_sorted)
+in (FStar_List.collect must_find_r _164_227))
 in (
 
 let _70_719 = (FStar_List.iter (fun _70_718 -> (match (_70_718) with
 | (m, r) -> begin
 if ((not ((FStar_ST.read r))) && (not ((FStar_Options.interactive ())))) then begin
-(let _164_233 = (let _164_232 = (FStar_Util.format2 "You passed --verify_module %s but I found no file that contains [module %s] in the dependency graph\n" m m)
-in FStar_Absyn_Syntax.Err (_164_232))
-in (Prims.raise _164_233))
+(let _164_230 = (let _164_229 = (FStar_Util.format2 "You passed --verify_module %s but I found no file that contains [module %s] in the dependency graph\n" m m)
+in FStar_Absyn_Syntax.Err (_164_229))
+in (Prims.raise _164_230))
 end else begin
 ()
 end
