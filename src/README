@@ -1,10 +1,12 @@
-These directories and files implement [--universes]:
+These directories and files implement the new version of F* ("universes"):
 - syntax/ including parser/tosyntax.fs and parser/env.fs
 - typechecker/
 - smtencoding/
 - extraction/{term,modul}
 
-These directories and files implement the old stratified version of F*:
+These directories and files implement the old stratified version of F*, which is
+behind the flag --stratified and should generally no longer be updated as
+stratified F* is being phased out:
 - absyn/ including parser/desugar.fs and parser/dsenv.fs
 - tc/
 - tosmt/
