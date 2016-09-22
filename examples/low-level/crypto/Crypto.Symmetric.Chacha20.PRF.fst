@@ -29,7 +29,7 @@ module HS = FStar.HyperStack
 module MAC   = Crypto.Symmetric.Poly1305.MAC
 module Block = Crypto.Symmetric.BlockCipher
 
-let prfa = CHACHA20
+let prfa = Block.CHACHA20
 
 // LIBRARY STUFF 
 
@@ -60,11 +60,13 @@ let incr (x:domain {x.ctr <=^ maxCtr})  = { iv = x.iv; ctr = x.ctr +^ 1ul }
 let blocklen = Block.blocklen prfa
 let block = b:bytes {Seq.length b = v blocklen}
 
+let keylen = Block.keylen prfa
+
 // the range of our PRF, after idealization and "reverse inlining."
 // for one-time-pads, we keep both the plain and cipher blocks, instead of their XOR.
 
 type smac (rgn:region) i x = mac: MAC.state (i,x.iv) { MAC.State.region mac = rgn }
-noeq type otp i = | OTP: l:u32 {l <=^ Block.blocklen} -> plain i (v l) -> cipher:lbytes (v l) -> otp i
+noeq type otp i = | OTP: l:u32 {l <=^ blocklen} -> plain i (v l) -> cipher:lbytes (v l) -> otp i
 
 let range (rgn:region) (i:id) (x:domain): Type0 =
   if x.ctr = 0ul 
@@ -96,7 +98,7 @@ let find_1 #rgn #i s (x:domain{x.ctr<>0ul}) =
 // TODO separate on rw, with multiple readers? 
 noeq type state (i:id) = 
   | State: #rgn: region ->
-           key:lbuffer (v Block.keylen) {Buffer.frameOf key = rgn} -> 
+           key:lbuffer (v keylen) {Buffer.frameOf key = rgn} ->
            table:HS.ref (Seq.seq (entry rgn i)) {HS.frameOf table = rgn} -> 
            state i  // should be maybe_mrref; for later. 
 
@@ -107,9 +109,9 @@ val gen: rgn: region -> i:id -> ST (state i)
   (ensures  (fun h0 s h1 -> HS.sel h1 s.table == Seq.createEmpty #(entry rgn i)))
 
 let gen rgn i =
-  // SZ: let key = MAC.random rgn Block.keylen`?
-  let key = Buffer.rcreate rgn 0uy Block.keylen in
-  store_bytes Block.keylen key (random Block.keylen);
+  // SZ: let key = MAC.random rgn keylen`?
+  let key = Buffer.rcreate rgn 0uy keylen in
+  store_bytes keylen key (random keylen);
   let table = ralloc rgn (Seq.createEmpty #(entry rgn i)) in
   State #i #rgn key table
 
@@ -119,13 +121,13 @@ assume val buffer_recall: b:buffer {HS.is_eternal_region (Buffer.frameOf b)} -> 
   (requires (fun h0 -> True))
   (ensures (fun h0 _ h1 -> Buffer.live h1 b /\ h0 == h1))
 
-private val getBlock: #i:id -> t:state i -> domain -> len:u32 {len <=^ Block.blocklen} -> output:lbuffer (v len) -> ST unit
+private val getBlock: #i:id -> t:state i -> domain -> len:u32 {len <=^ blocklen} -> output:lbuffer (v len) -> ST unit
   (requires (fun h0 -> Buffer.live h0 output))
   (ensures (fun h0 r h1 -> Buffer.live h1 output /\ modifies_1 output h0 h1 ))
 //TODO: we need some way to recall that t.key is in an eternal region and can be recalled
 let getBlock #i t x len output = 
   buffer_recall t.key; 
-  Block.chacha20 output t.key x.iv x.ctr len
+  Block.compute Block.CHACHA20 output t.key x.iv x.ctr len
 
 
 // We encapsulate our 3 usages of the PRF in specific functions.
@@ -149,7 +151,7 @@ val prf_mac: i:id -> t:state i -> x:domain{x.ctr = 0ul} -> ST (MAC.state (i,x.iv
 
 // generates a fresh block for x and XORs it with plaintext
 val prf_enxor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> 
-  l:u32 {l <=^ Block.blocklen} -> cipher:lbuffer (v l) -> plain:plainBuffer i (v l) -> ST unit 
+  l:u32 {l <=^ blocklen} -> cipher:lbuffer (v l) -> plain:plainBuffer i (v l) -> ST unit
   (requires (fun h0 -> 
      Plain.live h0 plain /\ Buffer.live h0 cipher /\ 
      Buffer.disjoint (bufferT plain) cipher /\
@@ -165,7 +167,7 @@ val prf_enxor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} ->
  
 // reuse the same block for x and XORs it with ciphertext
 val prf_dexor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> 
-  l:u32 {l <=^ Block.blocklen} -> plain:plainBuffer i (v l) -> cipher:lbuffer (v l) -> ST unit 
+  l:u32 {l <=^ blocklen} -> plain:plainBuffer i (v l) -> cipher:lbuffer (v l) -> ST unit
   (requires (fun h0 -> 
      Plain.live h0 plain /\ Buffer.live h0 cipher /\ Buffer.disjoint (bufferT plain) cipher /\ 
      Buffer.frameOf (bufferT plain) <> t.rgn /\
@@ -250,7 +252,7 @@ let prf_mac i t x =
       end
   else
     begin
-      let keyBytes = Buffer.rcreate t.rgn 0uy Block.keylen in 
-      getBlock t x Block.keylen keyBytes;
+      let keyBytes = Buffer.rcreate t.rgn 0uy keylen in
+      getBlock t x keylen keyBytes;
       MAC.coerce (i,x.iv) t.rgn keyBytes
     end
