@@ -73,7 +73,7 @@ type tagB i = lbuffer ( v(Spec.taglen i))
 type adata = b:bytes { Seq.length b < 2000 } 
 type cipher (i:id) (l:nat) = lbytes(l + v (Spec.taglen i))
 
-type iv i = UInt64.t // its computation from siv is left to the next level for now 
+type iv (i:id) = UInt64.t // its computation from siv is left to the next level for now 
 
 noeq type entry (i:id) =
   | Entry: 

@@ -327,7 +327,7 @@ and synth_exp (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
  to avoid the need to infer them later, when less info is available*)
 and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
    (debug g (fun u -> Util.print_string (Util.format2 "now synthesizing expression (%s) :  %s \n" (Print.tag_of_exp e) (Print.exp_to_string e))));
-
+    let top = e in
     match (Util.compress_exp e).n with
         | Exp_constant c ->
           let t = Tc.Recheck.typing_const e.pos c in
@@ -377,16 +377,17 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                         lbs app in // lets are to ensure L to R eval ordering of arguments
                     l_app, f, t
 
-                | (Inl _, _)::rest, MLTY_Fun (tunit, f', t) -> //non-prefix type app; this type argument gets erased to unit
+                | (Inl tt, _)::rest, MLTY_Fun (tunit, f', t) -> //non-prefix type app; this type argument gets erased to unit
                   if type_leq g tunit ml_unit_ty
-                  then synth_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join f f', t) rest
+                  then synth_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join tt.pos f f', t) rest
                   else failwith "Impossible: ill-typed application" //ill-typed; should be impossible
 
 
                 | (Inr e0, _)::rest, MLTY_Fun(tExpected, f', t) ->
+                  let e0_rng = e0.pos in
                   let e0, f0, tInferred = synth_exp g e0 in
                   let e0 = maybe_coerce g e0 tInferred tExpected in // coerce the arguments of application, if they dont match up
-                  synth_app is_data (mlhead, (e0, f0)::mlargs_f) (join_l [f;f';f0], t) rest
+                  synth_app is_data (mlhead, (e0, f0)::mlargs_f) (join_l e0_rng [f;f';f0], t) rest
 
                 | _ ->
                   begin match Util.delta_unfold g t with
@@ -398,8 +399,8 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                 match is_data with
                     | Some (Record_projector _) ->
                       let rec remove_implicits args f t = match args, t with
-                        | (Inr _, Some (Implicit _))::args, MLTY_Fun(_, f', t) ->
-                          remove_implicits args (join f f') t
+                        | (Inr ee, Some (Implicit _))::args, MLTY_Fun(_, f', t) ->
+                          remove_implicits args (join ee.pos f f') t
 
                         | _ -> args, f, t in
                       let args, f, t = remove_implicits args f t in
@@ -557,9 +558,10 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
           let lbs = lbs |> List.map (check_lb env_def)  in
 
+          let e'_rng = e'.pos in
           let e', f', t' = synth_exp env_body e' in
 
-          let f = join_l (f'::List.map fst lbs) in
+          let f = join_l e'_rng (f'::List.map fst lbs) in
 
           let is_rec = if is_rec then Rec else NoLetQualifier in
 
@@ -581,7 +583,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                         then t_then, no_lift
                         else MLTY_Top, apply_obj_repr in
                     with_ty t_branch <| MLE_If (e, maybe_lift then_mle t_then, Some (maybe_lift else_mle t_else)),
-                    join f_then f_else,
+                    join top.pos f_then f_else,
                     t_branch
                 | _ -> failwith "ITE pats matched but then and else expressions not found?"
         else
@@ -612,7 +614,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                         //WARNING WARNING WARNING
                         //We're explicitly excluding the effect of the when clause in the net effect computation
                         //TODO: fix this when we handle when clauses fully!
-                        let f = join f f_branch in
+                        let f = join top.pos f f_branch in
                         let topt = match topt with
                             | None -> None
                             | Some t ->

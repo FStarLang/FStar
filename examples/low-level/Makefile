@@ -1,7 +1,7 @@
 # FStar variables
 FSTAR_HOME=../..
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(FSTAR_DEFAULT_ARGS) # from the included Makefile
+FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS) $(FSTAR_DEFAULT_ARGS) # from the included Makefile
 
 KREMLIN_HOME=../../../kremlin
 KREMLIN=$(KREMLIN_HOME)/Kremlin.native
@@ -104,7 +104,7 @@ poly-test: poly-compile
 
 ideal-extract: ulib
 	mkdir -p $(AEAD_ODIR)
-	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) --include crypto crypto/Test.fst --odir $(AEAD_ODIR) #2> /dev/null
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) --include crypto crypto/Test.fst --odir $(AEAD_ODIR)
 	@sed -i.bak 's/Obj.magic ((fun log msg/ ((fun log msg/g' $(AEAD_ODIR)/Crypto_Symmetric_Poly1305.ml
 
 ideal-compile: ideal-extract

@@ -687,10 +687,12 @@ let maybe_downgrade_eff g f t =
 //The main extraction function
 let rec term_as_mlexpr (g:env) (t:term) : (mlexpr * e_tag * mlty) =
     let e, tag, ty = term_as_mlexpr' g t in
-    (debug g (fun u -> Util.print_string (Util.format3 "term_as_mlexpr (%s) :  %s has ML type %s\n" 
+    let tag = maybe_downgrade_eff g tag ty in
+    (debug g (fun u -> Util.print_string (Util.format4 "term_as_mlexpr (%s) :  %s has ML type %s and effect %s\n" 
         (Print.tag_of_term t) 
         (Print.term_to_string t)
-        (Code.string_of_mlty g.currentModule ty))));
+        (Code.string_of_mlty g.currentModule ty)
+        (Util.eff_to_string tag))));
     erase g e ty tag
 
 and check_term_as_mlexpr (g:env) (t:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
@@ -707,7 +709,10 @@ and check_term_as_mlexpr' (g:env) (e0:term) (f:e_tag) (ty:mlty) : (mlexpr * mlty
     else err_unexpected_eff e0 f tag
 
 and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
-    (debug g (fun u -> Util.print_string (Util.format2 "term_as_mlexpr' (%s) :  %s \n" (Print.tag_of_term top) (Print.term_to_string top))));
+    (debug g (fun u -> Util.print_string (Util.format3 "%s: term_as_mlexpr' (%s) :  %s \n" 
+        (Range.string_of_range top.pos)
+        (Print.tag_of_term top) 
+        (Print.term_to_string top))));
     let t = SS.compress top in
     match t.n with
         | Tm_unknown
@@ -845,7 +850,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
                     | (arg, _)::rest, MLTY_Fun (formal_t, f', t) when is_type g arg -> //non-prefix type app; this type argument gets erased to unit
                       if type_leq g formal_t ml_unit_ty
-                      then extract_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join f f', t) rest
+                      then extract_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join arg.pos f f', t) rest
                       else failwith (Util.format4 "Impossible: ill-typed application:\n\thead=%s, arg=%s, tag=%s\n\texpected type unit, got %s" //ill-typed; should be impossible
                                             (Code.string_of_mlexpr g.currentModule mlhead)
                                             (Print.term_to_string arg)
@@ -853,9 +858,10 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                                             (Code.string_of_mlty g.currentModule formal_t))
 
                     | (e0, _)::rest, MLTY_Fun(tExpected, f', t) ->
+                      let r = e0.pos in
                       let e0, f0, tInferred = term_as_mlexpr g e0 in
                       let e0 = maybe_coerce g e0 tInferred tExpected in // coerce the arguments of application, if they dont match up
-                      extract_app is_data (mlhead, (e0, f0)::mlargs_f) (join_l [f;f';f0], t) rest
+                      extract_app is_data (mlhead, (e0, f0)::mlargs_f) (join_l r [f;f';f0], t) rest
 
                     | _ ->
                       begin match Util.udelta_unfold g t with
@@ -867,8 +873,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                 match is_data with
                     | Some (Record_projector _) ->
                       let rec remove_implicits args f t = match args, t with
-                        | (_, Some (Implicit _))::args, MLTY_Fun(_, f', t) ->
-                          remove_implicits args (join f f') t
+                        | (a0, Some (Implicit _))::args, MLTY_Fun(_, f', t) ->
+                          remove_implicits args (join a0.pos f f') t
 
                         | _ -> args, f, t in
                       let args, f, t = remove_implicits args f t in
@@ -1064,9 +1070,11 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
           let lbs = lbs |> List.map (check_lb env_def)  in
 
+          let e'_rng = e'.pos in 
+
           let e', f', t' = term_as_mlexpr env_body e' in
 
-          let f = join_l (f'::List.map fst lbs) in
+          let f = join_l e'_rng (f'::List.map fst lbs) in
 
           let is_rec = if is_rec = true then Rec else NoLetQualifier in
 
@@ -1088,7 +1096,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         then t_then, no_lift
                         else MLTY_Top, apply_obj_repr in
                     with_ty t_branch <| MLE_If (e, maybe_lift then_mle t_then, Some (maybe_lift else_mle t_else)),
-                    join f_then f_else,
+                    join then_e.pos f_then f_else,
                     t_branch
                 | _ -> failwith "ITE pats matched but then and else expressions not found?"
         else
@@ -1125,7 +1133,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         //WARNING WARNING WARNING
                         //We're explicitly excluding the effect of the when clause in the net effect computation
                         //TODO: fix this when we handle when clauses fully!
-                        let f = join f f_branch in
+                        let f = join top.pos f f_branch in
                         let topt = match topt with
                             | None -> None
                             | Some t ->
