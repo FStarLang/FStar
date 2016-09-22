@@ -51,8 +51,10 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 // PRF TABLE 
 
+let maxCtr = 2000ul // to be adjusted, controlling concrete bound. 
+
 type domain = { iv:u64; ctr:u32 } // could move to concrete CHACHA20
-let incr (x:domain {x.ctr <^ 1000ul})  = { iv = x.iv; ctr = x.ctr +^ 1ul }
+let incr (x:domain {x.ctr <=^ maxCtr})  = { iv = x.iv; ctr = x.ctr +^ 1ul }
 
 let blocklen = Block.blocklen
 let block = b:bytes {Seq.length b = v blocklen}
@@ -148,12 +150,13 @@ val prf_mac: i:id -> t:state i -> x:domain{x.ctr = 0ul} -> ST (MAC.state (i,x.iv
 val prf_enxor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> 
   l:u32 {l <=^ Block.blocklen} -> cipher:lbuffer (v l) -> plain:plainBuffer i (v l) -> ST unit 
   (requires (fun h0 -> 
-     Plain.live h0 plain /\ Buffer.live h0 cipher /\ Buffer.disjoint (bufferT plain) cipher /\
+     Plain.live h0 plain /\ Buffer.live h0 cipher /\ 
+     Buffer.disjoint (bufferT plain) cipher /\
      is_None(find_1 (HS.sel h0 t.table) x) 
      ))
   (ensures (fun h0 _ h1 -> 
      Plain.live h1 plain /\ Buffer.live h1 cipher /\
-     modifies_1 cipher h0 h1 /\
+     modifies_1 cipher h0 h1 /\ //16-09-22 missing hybrid modifies also covering t.
      (match find_1 (HS.sel h1 t.table) x with 
      | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain /\ c == sel_bytes h1 l cipher
      | None   -> False 

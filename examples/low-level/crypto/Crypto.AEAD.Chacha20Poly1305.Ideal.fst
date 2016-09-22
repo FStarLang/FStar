@@ -19,9 +19,7 @@ module Spec = Crypto.Symmetric.Poly1305.Spec
 module MAC = Crypto.Symmetric.Poly1305.MAC
 
 module PRF = Crypto.Symmetric.Chacha20.PRF
-open Crypto.Symmetric.Chacha20.PRF
-//16-09-18 not sure how to use domain otherwise.
-//16-09-18 open PRF does not work
+let ctr x = PRF(x.ctr)
 
 // PLAN: 
 //
@@ -100,11 +98,12 @@ noeq type state (i:id) (rw:rw) =
 let min (a:u32) (b:u32) = if a <=^ b then a else b
 
 let gen i rgn = 
+  let log = ralloc rgn (Seq.createEmpty #(entry i)) in
   let prf = PRF.gen rgn i in 
-  State #i #Writer rgn rgn Seq.createEmpty
+  State #i #Writer #rgn #rgn log prf
 
-let genReader #i #rgn (state i Writer) = ()
-  // no need for state? 
+// let genReader #i #rgn (state i Writer) = ()
+// no need for state? 
 
 (*
 // INVARIANT (WIP)
@@ -242,38 +241,41 @@ private let accumulate i ak aadlen aad plainlen cipher =
 
 // COUNTER_MODE LOOP from Chacha20 
 
+let ctr_inv ctr len = 
+  len =^ 0ul \/
+  ( 0ul <^ ctr /\
+    v ctr + v(len /^ PRF.blocklen) < v PRF.maxCtr)  //we use v... to avoid ^+ overflow
+
 // XOR-based encryption and decryption (just swap ciphertext and plaintext)
 val counter_enxor: 
-  i:id -> t:PRF.state i -> x:domain {x.ctr >^ 0ul} -> 
-  len:u32{v x.ctr + v len / v blocklen < pow2 32} ->
-  plaintext:plainBuffer i (v len) { Buffer.disjoint t.key (bufferT plaintext)} -> 
-  ciphertext:lbuffer (v len) {Buffer.disjoint t.key ciphertext /\ Buffer.disjoint (bufferT plaintext) ciphertext} -> 
+  i:id -> t:PRF.state i -> x:PRF.domain -> len:u32{ctr_inv (PRF x.ctr) len} ->
+  plaintext:plainBuffer i (v len) -> 
+  ciphertext:lbuffer (v len) {
+    Buffer.disjoint (PRF t.key) ciphertext /\
+    Buffer.disjoint (bufferT plaintext) (PRF t.key) /\
+    Buffer.disjoint (bufferT plaintext) ciphertext /\ 
+    Buffer.frameOf (bufferT plaintext) <> (PRF t.rgn)
+    } -> 
   STL unit
-    (requires (fun h -> Buffer.live h ciphertext /\ Buffer.live h t.key /\ Buffer.live h (bufferT plaintext)))
-    (ensures (fun h0 _ h1 -> Buffer.live h1 ciphertext /\ Buffer.modifies_1 ciphertext h0 h1))
+    (requires (fun h -> 
+      Buffer.live h ciphertext /\ 
+      Buffer.live h (PRF t.key) /\ 
+      Plain.live h plaintext ))
+    (ensures (fun h0 _ h1 -> 
+      // Buffer.live h1 ciphertext /\ 
+      // Buffer.modifies_1 ciphertext h0 h1 /\ //16-09-22  We miss a hybrid modifies including PRF(t.table) 
+      True
+    ))
+// this only touches buffers.
 val counter_dexor: 
-  i:id -> t:PRF.state i -> x:domain {x.ctr >^ 0ul} -> 
-  len:u32{v x.ctr + v len / v blocklen < pow2 32} ->
-  plaintext:plainBuffer i (v len) { Buffer.disjoint t.key (bufferT plaintext)} -> 
-  ciphertext:lbuffer (v len) {Buffer.disjoint t.key ciphertext /\ Buffer.disjoint (bufferT plaintext) ciphertext} -> 
+  i:id -> t:PRF.state i -> x:PRF.domain -> len:u32{ctr_inv (PRF x.ctr) len} ->
+  plaintext:plainBuffer i (v len) -> 
+  ciphertext:lbuffer (v len) {
+    Buffer.disjoint (bufferT plaintext) ciphertext /\ 
+    Buffer.frameOf (bufferT plaintext) <> PRF t.rgn } -> 
   STL unit
-    (requires (fun h -> Buffer.live h ciphertext /\ Buffer.live h t.key /\ Buffer.live h (bufferT plaintext)))
+    (requires (fun h -> Buffer.live h ciphertext /\ Buffer.live h (PRF t.key) /\ Plain.live h plaintext))
     (ensures (fun h0 _ h1 -> let b = bufferT plaintext in Buffer.live h1 b /\ Buffer.modifies_1 b h0 h1))
-
-let rec counter_enxor i t x len plaintext ciphertext =
-  if len =^ 0ul then () 
-  else
-    begin // at least one more block
-      let l = min len PRF.blocklen in 
-      let cipher = Buffer.sub ciphertext 0ul l in 
-      let plain = Plain.sub plaintext 0ul l in 
-      prf_enxor i t x l cipher plain;
-
-      let len = len -^ l in 
-      let ciphertext = Buffer.sub ciphertext l len in
-      let plaintext = Plain.sub plaintext l len in
-      counter_enxor i t (incr x) len plaintext ciphertext
-    end
 
 let rec counter_dexor i t x len plaintext ciphertext =
   if len =^ 0ul then () 
@@ -282,12 +284,37 @@ let rec counter_dexor i t x len plaintext ciphertext =
       let l = min len PRF.blocklen in 
       let cipher = Buffer.sub ciphertext 0ul l  in 
       let plain = Plain.sub plaintext 0ul l in 
-      prf_dexor i t x l plain cipher;
+
+      recall (PRF t.table); //16-09-22 could this be done by ! ??
+      let s = PRF.find_1 (PRF !t.table) x in 
+      let h = HST.get() in 
+      assume(match s with | Some (PRF.OTP l' p c) -> l == l' /\ c = sel_bytes h l cipher);
+
+      PRF.prf_dexor i t x l plain cipher;
 
       let len = len -^ l in 
       let ciphertext = Buffer.sub ciphertext l len in
       let plaintext = Plain.sub plaintext l len in
-      counter_dexor i t (incr x) len plaintext ciphertext
+      counter_dexor i t (PRF.incr x) len plaintext ciphertext
+    end
+
+let rec counter_enxor i t x len plaintext ciphertext =
+  if len =^ 0ul then () 
+  else
+    begin // at least one more block
+      let l = min len PRF.blocklen in 
+      let cipher = Buffer.sub ciphertext 0ul l in 
+      let plain = Plain.sub plaintext 0ul l in 
+
+      recall (PRF t.table); //16-09-22 could this be done by ! ??
+      let s = (PRF !t.table) in 
+      assume(is_None(PRF.find_1 s  x)); 
+      PRF.prf_enxor i t x l cipher plain;
+
+      let len = len -^ l in 
+      let ciphertext = Buffer.sub ciphertext l len in
+      let plaintext = Plain.sub plaintext l len in
+      counter_enxor i t (PRF.incr x) len plaintext ciphertext
     end
 
 
@@ -330,10 +357,10 @@ val decrypt:
 let encrypt i st iv aadlen aad plainlen plain cipher_tagged =
   push_frame();
   let x = {iv = iv; ctr = 0ul} in // PRF index to the first block
-  let ak = prf_mac i st x in     // used for keying the one-time MAC
+  let ak = prf_mac i st.prf x in     // used for keying the one-time MAC
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
   let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
-  counter_enxor i st (incr x) plainlen plain cipher;
+  counter_enxor i st.prf (incr x) plainlen plain cipher;
   
   // Compute MAC over additional data and ciphertext
   let l, acc = accumulate i ak aadlen aad plainlen cipher in 
@@ -343,7 +370,7 @@ let encrypt i st iv aadlen aad plainlen plain cipher_tagged =
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   push_frame();
   let x = {iv = iv; ctr = 0ul} in // PRF index to the first block
-  let ak = prf_mac i st x in     // used for keying the one-time MAC
+  let ak = prf_mac i st.prf x in     // used for keying the one-time MAC
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
   let tag    = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
 
@@ -351,7 +378,7 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   let l, acc = accumulate i ak aadlen aad plainlen cipher in
   let verified  = MAC.verify ak l acc tag in 
 
-  if verified then counter_dexor i st (incr x) plainlen plain cipher;
+  if verified then counter_dexor i st.prf (incr x) plainlen plain cipher;
   pop_frame();
 
   if verified then 0ul else 1ul //TODO pick and enforce error convention.

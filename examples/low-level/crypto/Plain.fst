@@ -96,7 +96,7 @@ val bufferT_injective : i:id -> l:plainLen -> p:plainBuffer i l -> Lemma
   [SMTPat (bufferT p)]
 let bufferT_injective i l p = ()
 
-let live #i #l h (p:plainBuffer i l) = Buffer.live h p
+let live #i #l h (p:plainBuffer i l) = Buffer.live h (bufferT p)
 
 let create (i:id) (zero:UInt8.t) (len:UInt32.t) : 
    StackInline (plainBuffer i (v len))
