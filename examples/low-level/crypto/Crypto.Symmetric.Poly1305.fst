@@ -584,18 +584,19 @@ let trunc1305 a b =
 (* Clamps the key, see RFC
    we clear 22 bits out of 128 (where does it help?)
 *)
+let fix r i mask = r.(i) <- (U8 (index r i &^ mask))
+
 val clamp: r:wordB{length r = 16} -> Stack unit
   (requires (fun h -> live h r))
   (ensures  (fun h0 _ h1 -> live h1 r /\ modifies_1 r h0 h1))
 let clamp r =
-  let fix i mask = r.(i) <- (U8 (index r i &^ mask)) in
-  fix  3ul  15uy; // 0000****
-  fix  7ul  15uy;
-  fix 11ul  15uy;
-  fix 15ul  15uy;
-  fix  4ul 252uy; // ******00
-  fix  8ul 252uy;
-  fix 12ul 252uy
+  fix r  3ul  15uy; // 0000****
+  fix r  7ul  15uy;
+  fix r 11ul  15uy;
+  fix r 15ul  15uy;
+  fix r  4ul 252uy; // ******00
+  fix r  8ul 252uy;
+  fix r 12ul 252uy
 
 
 (* Initialization function:

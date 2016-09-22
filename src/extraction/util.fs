@@ -80,8 +80,8 @@ let udelta_unfold (g:UEnv.env) = function
     | MLTY_Named(args, n) ->
       begin match UEnv.lookup_ty_const g n with
         | Some ts -> 
-          (* UEnv.debug g (fun _ -> printfn "Instantiating %A with %d formals with %d args" *) 
-          (*                           n (List.length <| fst ts) (List.length args)); *)
+//          UEnv.debug g (fun _ -> printfn "Instantiating %A with %d formals with %d args" 
+//                                     n (List.length <| fst ts) (List.length args));
           Some (subst ts args)
         | _ -> None
       end
@@ -99,7 +99,7 @@ let eff_to_string = function
     | E_GHOST -> "Ghost"
     | E_IMPURE -> "Impure"
 
-let join f f' = match f, f' with
+let join r f f' = match f, f' with
     | E_IMPURE, E_PURE
     | E_PURE  , E_IMPURE 
     | E_IMPURE, E_IMPURE -> E_IMPURE
@@ -107,9 +107,11 @@ let join f f' = match f, f' with
     | E_PURE  , E_GHOST  -> E_GHOST
     | E_GHOST , E_PURE   -> E_GHOST
     | E_PURE  , E_PURE   -> E_PURE
-    | _ -> failwith (Util.format2 "Impossible: Inconsistent effects %s and %s" (eff_to_string f) (eff_to_string f'))
+    | _ -> failwith (Util.format3 "Impossible (%s): Inconsistent effects %s and %s" 
+                            (Range.string_of_range r) 
+                            (eff_to_string f) (eff_to_string f'))
 
-let join_l fs = List.fold_left join E_PURE fs
+let join_l r fs = List.fold_left (join r) E_PURE fs
 
 let mk_ty_fun = List.fold_right (fun (_, t0) t -> MLTY_Fun(t0, E_PURE, t))
 
