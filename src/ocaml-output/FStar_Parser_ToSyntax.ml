@@ -3592,8 +3592,8 @@ end
 | FStar_Parser_AST.Fsdoc (_65_2561) -> begin
 ((env), ([]))
 end
-| FStar_Parser_AST.TopLevelModule (_65_2564) -> begin
-(Prims.raise (FStar_Syntax_Syntax.Error ((("Multiple modules in a file are no longer supported"), (d.FStar_Parser_AST.drange)))))
+| FStar_Parser_AST.TopLevelModule (id) -> begin
+((env), ([]))
 end
 | FStar_Parser_AST.Open (lid) -> begin
 (
