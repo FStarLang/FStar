@@ -82,30 +82,26 @@ let lemma_snoc_extends (s:seq 'a) (x:'a)
 	  [SMTPat (grows s (SeqP.snoc s x))]
   = ()
 
-let lemma_mem_snoc (#a:eqtype) (s:seq a) (x:a)
-  : Lemma (ensures (SeqProperties.mem x (SeqP.snoc s x)))
-  = SeqProperties.lemma_append_count s (Seq.create 1 x)
-
 let alloc_mref_seq (#a:Type) (r:FStar.HyperHeap.rid) (init:seq a)
   : ST (m_rref r (seq a) grows)
        (requires (fun _ -> True))
        (ensures (fun h0 m h1 ->
-	 m_contains m h1 /\
+         m_contains m h1 /\
 	 m_sel h1 m == init /\
 	 FStar.ST.ralloc_post r init h0 (as_rref m) h1))
   = lemma_grows_monotone #a;
     FStar.Monotonic.RRef.m_alloc r init
 
-let mem (#a:eqtype) (#i:rid) (x:a) (r:m_rref i (seq a) grows) (h:t)
+let in_seq (#a:Type) (#i:rid) (x:a) (r:m_rref i (seq a) grows) (h:t)
   : GTot Type0
-  = b2t (SeqProperties.mem x (m_sel h r))
+  = (m_sel h r) `SeqP.contains` x
 
-let at_least (#a:eqtype) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grows) (h:t) =
-      mem x r h
+let at_least (#a:Type) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grows) (h:t) =
+      in_seq x r h
       /\ Seq.length (m_sel h r) > n
-      /\ Seq.index (m_sel h r) n = x
+      /\ Seq.index (m_sel h r) n == x
 
-let at_least_is_stable (#a:eqtype) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grows)
+let at_least_is_stable (#a:Type) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grows)
   : Lemma (ensures stable_on_t r (at_least n x r))
   = let at_least_is_stable_aux:
 		     h0:t
@@ -113,10 +109,10 @@ let at_least_is_stable (#a:eqtype) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) gr
 		   -> Lemma ((at_least n x r h0
 			    /\ grows (m_sel h0 r) (m_sel h1 r))
 			    ==> at_least n x r h1) =
-       fun h0 h1 -> forall_intro_2 (lemma_mem_append #a) in
+       fun h0 h1 -> forall_intro_3 (SeqP.append_contains_equiv #a) in
     forall_intro_2 at_least_is_stable_aux
 
-let write_at_end (#a:eqtype) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
+let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
   : ST unit
        (requires (fun h -> True))
        (ensures (fun h0 _ h1 ->
@@ -131,7 +127,7 @@ let write_at_end (#a:eqtype) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
     let n = Seq.length s0 in
     m_write r (SeqP.snoc s0 x);
     at_least_is_stable n x r;
-    lemma_mem_snoc s0 x;
+    SeqP.contains_snoc s0 x;
     witness r (at_least n x r)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,16 +143,16 @@ let alloc_mref_iseq (#a:Type) (p:seq a -> Type) (r:FStar.HyperHeap.rid) (init:se
   = lemma_grows_monotone #a;
     FStar.Monotonic.RRef.m_alloc r init
 
-let i_mem (#r:rid) (#a:eqtype) (#p:(seq a -> Type)) (x:a) (m:i_seq r a p) (h:t)
+let in_i_seq (#r:rid) (#a:Type) (#p:(seq a -> Type)) (x:a) (m:i_seq r a p) (h:t)
   : GTot Type0
-  = b2t (SeqProperties.mem x (m_sel h m))
+  = (m_sel h m) `SeqP.contains` x
 
-let i_at_least (#r:rid) (#a:eqtype) (#p:(seq a -> Type)) (n:nat) (x:a) (m:i_seq r a p) (h:t) =
-      i_mem x m h
+let i_at_least (#r:rid) (#a:Type) (#p:(seq a -> Type)) (n:nat) (x:a) (m:i_seq r a p) (h:t) =
+      in_i_seq x m h
       /\ Seq.length (m_sel h m) > n
-      /\ Seq.index (m_sel h m) n = x
+      /\ Seq.index (m_sel h m) n == x
 
-let i_at_least_is_stable (#r:rid) (#a:eqtype) (#p:seq a -> Type) (n:nat) (x:a) (m:i_seq r a p)
+let i_at_least_is_stable (#r:rid) (#a:Type) (#p:seq a -> Type) (n:nat) (x:a) (m:i_seq r a p)
   : Lemma (ensures stable_on_t m (i_at_least n x m))
   = let at_least_is_stable_aux:
 		     h0:t
@@ -164,7 +160,7 @@ let i_at_least_is_stable (#r:rid) (#a:eqtype) (#p:seq a -> Type) (n:nat) (x:a) (
 		   -> Lemma ((i_at_least n x m h0
 			    /\ grows (m_sel h0 m) (m_sel h1 m))
 			    ==> i_at_least n x m h1) =
-       fun h0 h1 -> forall_intro_2 (lemma_mem_append #a) in
+       fun h0 h1 -> forall_intro_3 (append_contains_equiv #a) in
     forall_intro_2 at_least_is_stable_aux
 
 let int_at_most #r #a #p (x:int) (is:i_seq r a p) (h:HH.t) =
@@ -188,7 +184,7 @@ let i_contains (#r:rid) (#a:Type) (#p:seq a -> Type) (m:i_seq r a p) (h:HH.t)
   : GTot bool
   = m_contains m h
 
-let i_write_at_end (#rgn:rid) (#a:eqtype) (#p:seq a -> Type) (r:i_seq rgn a p) (x:a)
+let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:a)
   : ST unit
        (requires (fun h -> p (SeqP.snoc (i_sel h r) x)))
        (ensures (fun h0 _ h1 ->
@@ -203,7 +199,7 @@ let i_write_at_end (#rgn:rid) (#a:eqtype) (#p:seq a -> Type) (r:i_seq rgn a p) (
     let n = Seq.length s0 in
     m_write r (SeqP.snoc s0 x);
     i_at_least_is_stable n x r;
-    lemma_mem_snoc s0 x;
+    contains_snoc s0 x;
     witness r (i_at_least n x r)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +214,10 @@ val test0: r:rid -> a:m_rref r (seq nat) grows -> k:nat -> ST unit
   (ensures (fun h0 result h1 -> True))
 let test0 r a k =
   let h0 = ST.get() in
-  at_least_is_stable k (Seq.index (m_sel h0 a) k) a;
+  let _ = 
+    let s = m_sel h0 a in 
+    at_least_is_stable k (Seq.index (m_sel h0 a) k) a;
+    SeqP.contains_intro s k (Seq.index s k) in
   MR.witness a (at_least k (Seq.index (m_sel h0 a) k) a)
   
 val itest: r:rid -> a:i_seq r nat invariant -> k:nat -> ST unit
@@ -226,13 +225,16 @@ val itest: r:rid -> a:i_seq r nat invariant -> k:nat -> ST unit
   (ensures (fun h0 result h1 -> True))
 let itest r a k =
   let h0 = ST.get() in
-  i_at_least_is_stable k (Seq.index (i_sel h0 a) k) a;
+  let _ = 
+    let s = i_sel h0 a in 
+    i_at_least_is_stable k (Seq.index (i_sel h0 a) k) a;
+    SeqP.contains_intro s k (Seq.index s k) in
   MR.witness a (i_at_least k (Seq.index (i_sel h0 a) k) a)
 
-(* let test_alloc (#a:Type0) (p:seq a -> Type) (r:FStar.HyperHeap.rid) (init:seq a{p init}) =  *)
-(*   let is = alloc_mref_iseq p r init in *)
-(*   let h = get () in  *)
-(*   assert (i_sel h is == init) *)
+let test_alloc (#a:Type0) (p:seq a -> Type) (r:FStar.HyperHeap.rid) (init:seq a{p init}) : St unit =
+  let is = alloc_mref_iseq p r init in
+  let h = get () in
+  assert (i_sel h is == init)
 
 ////////////////////////////////////////////////////////////////////////////////
 //Mapping functions over monotone sequences
@@ -437,22 +439,20 @@ let collect_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
 ////////////////////////////////////////////////////////////////////////////////
 //Monotonic sequence numbers, bounded by the length of a log
 ////////////////////////////////////////////////////////////////////////////////
-
-//16-09-12 aliased to i_seq, so that we can refine the whole log contents and have sequence numbers. 
-type log_t (r:rid) (a:Type) = i_seq r a (fun (s:seq a) -> True) 
+type log_t (i:rid) (a:Type) = m_rref i (seq a) grows
 
 let increases (x:int) (y:int) = b2t (x <= y)
 
-let at_most_log_len (#l:rid) (#a:Type) (#p:seq a -> Type) (x:nat) (log:i_seq l a p)
+let at_most_log_len (#l:rid) (#a:Type) (x:nat) (log:log_t l a)
     : HyperHeap.t -> GTot Type0
     = fun h -> x <= Seq.length (m_sel h log)
 
 //Note: we may want int seqn, instead of nat seqn
 //because the handshake uses an initial value of -1
-type seqn_val (#l:rid) (#a:Type) (#p:seq a -> Type) (i:rid) (log:i_seq l a p) (max:nat) =
+type seqn_val (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
      (x:nat{x <= max /\ witnessed (at_most_log_len x log)}) //never more than the length of the log
 	 
-type seqn (#l:rid) (#a:Type) (#p:seq a -> Type) (i:rid) (log:i_seq l a p) (max:nat) =
+type seqn (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
   m_rref i  //counter in region i
          (seqn_val i log max) //never more than the length of the log
 	 increases //increasing
@@ -461,13 +461,14 @@ let monotonic_increases (x:unit)
   : Lemma (monotonic int increases)
   = ()
 
-let at_most_log_len_stable (#l:rid) (#a:Type) (#p:seq a -> Type) (x:nat) (l:i_seq l a p)
+let at_most_log_len_stable (#l:rid) (#a:Type) (x:nat) (l:log_t l a)
   : Lemma (stable_on_t l (at_most_log_len x l))
   = ()
 
 (* assume val gcut : f:(unit -> GTot Type){f ()} -> Tot unit *)
 
-let new_seqn (#l:rid) (#a:Type) (#p:seq a -> Type) (i:rid) (init:nat) (max:nat) (log:i_seq l a p)
+let new_seqn (#l:rid) (#a:Type) (#max:nat)
+  	     (i:rid) (init:nat) (log:log_t l a)
   : ST (seqn i log max)
        (requires (fun h ->
 	   init <= max /\
@@ -483,9 +484,8 @@ let new_seqn (#l:rid) (#a:Type) (#p:seq a -> Type) (i:rid) (init:nat) (max:nat) 
     witness log (at_most_log_len init log);
     m_alloc i init
 
-//16-09-13 failed to make p implicit at callsite.
-let increment_seqn (#l:rid) (#a:Type) (p:seq a -> Type) (#max:nat)
-		   (#i:rid) (#log:i_seq l a p) ($c:seqn i log max)
+let increment_seqn (#l:rid) (#a:Type) (#max:nat)
+	           (#i:rid) (#log:log_t l a) ($c:seqn i log max)
   : ST unit
        (requires (fun h ->
 	  let log = m_sel h log in
@@ -501,7 +501,7 @@ let increment_seqn (#l:rid) (#a:Type) (p:seq a -> Type) (#max:nat)
     witness log (at_most_log_len n log);
     m_write c n
 
-let testify_seqn (#i:rid) (#l:rid) (#a:Type0) (#p:seq a -> Type) (#log:i_seq l a p) (#max:nat) (ctr:seqn i log max)
+let testify_seqn (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ctr:seqn i log max)
   : ST unit
        (requires (fun h -> True))
        (ensures (fun h0 _ h1 ->
