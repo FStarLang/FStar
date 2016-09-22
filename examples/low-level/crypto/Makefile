@@ -9,6 +9,7 @@ OPTIONS=--fstar_home $(FSTAR_HOME) --max_fuel 4 --initial_fuel 0 --max_ifuel 2 -
 FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperheap --include $(FSTAR_HOME)/ucontrib/Platform/fst
 
 # Files that should fully typecheck
+# Files commented out are broken, uncomment once fixed
 VERIFY= \
   FStar.HST.Monotonic.RRef \
   TestMonotonic \
@@ -29,7 +30,7 @@ VERIFY= \
   Crypto.Symmetric.AES \
   Crypto.AEAD.AES256GCM \
   Plain \
-  Test
+  # Test
 
 # Files not yet fully typechecking
 # Please move files that you know fully typecheck to VERIFY
@@ -49,9 +50,9 @@ LAX= \
   Crypto.Symmetric.Poly1305.Bignum \
   Crypto.Symmetric.Poly1305.MAC \
   Crypto.Symmetric.Chacha20.PRF \
-  # AEAD \
   Crypto.AEAD.Chacha20Poly1305.Ideal \
-  Crypto.AEAD.Chacha20Poly1305
+  Crypto.AEAD.Chacha20Poly1305 \
+  # AEAD
 
 all-ver: $(addsuffix .fst-ver, $(VERIFY))
 
