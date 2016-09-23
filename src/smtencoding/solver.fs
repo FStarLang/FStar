@@ -33,10 +33,15 @@ open FStar.SMTEncoding.Encode
 // The type definition is now in [FStar.Util], since it needs to be visible to
 // both the F# and OCaml implementations.
 
-type z3_result = either<Z3.unsat_core, error_labels>
+type z3_err = error_labels * bool
+type z3_result = either<Z3.unsat_core, z3_err>
+type z3_replay_result = either<Z3.unsat_core, error_labels>
+let z3_result_as_replay_result = function
+    | Inl l -> Inl l
+    | Inr (r, _) -> Inr r
 type hint_stat = {
     hint:option<hint>;
-    replay_result:z3_result;
+    replay_result:z3_replay_result;
     elapsed_time:int;
     source_location:Range.range
 }
@@ -125,7 +130,7 @@ let record_hint hint =
 let record_hint_stat (h:option<hint>) (res:z3_result) (time:int) (r:Range.range) = 
     let s = {
         hint=h;
-        replay_result=res;
+        replay_result=z3_result_as_replay_result res;
         elapsed_time=time;
         source_location=r;
     } in
@@ -141,7 +146,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
         | Some (q, n) -> Ident.text_of_lid q, n in
     let minimum_workable_fuel = Util.mk_ref None in
     let set_minimum_workable_fuel f = function 
-        | [] -> ()
+        | [], _ -> ()
         | errs -> match !minimum_workable_fuel with 
                     | Some _ -> ()
                     | None -> minimum_workable_fuel := Some (f, errs) in
@@ -179,21 +184,23 @@ let ask_and_report_errors env all_labels prefix query suffix =
             (if Options.max_fuel()     >  Options.initial_fuel() && 
                 Options.max_ifuel()    >  Options.initial_ifuel() then [Options.max_fuel(),     Options.max_ifuel(), default_timeout] else []);
             (if Options.min_fuel()     <  Options.initial_fuel()  then [Options.min_fuel(), 1, default_timeout]                       else [])] in
-        let report p (errs:labels) : unit =
-            let errs = if Options.detail_errors() && Options.n_cores() = 1
-                       then let min_fuel, potential_errors = match !minimum_workable_fuel with 
-                                | Some (f, errs) -> f, errs
-                                | None -> (Options.min_fuel(), 1, default_timeout), errs in
-                            let ask_z3 label_assumptions = 
-                                let res = Util.mk_ref None in
-                                Z3.ask None all_labels (with_fuel label_assumptions p min_fuel) (fun r -> res := Some r);
-                                Option.get (!res) in
-                            detail_errors all_labels errs ask_z3
-                       else errs in
+        let report p (errs:z3_err) : unit =
+            let errs : z3_err = 
+                if Options.detail_errors() && Options.n_cores() = 1
+                then let min_fuel, potential_errors = match !minimum_workable_fuel with 
+                        | Some (f, errs) -> f, errs
+                        | None -> (Options.min_fuel(), 1, default_timeout), errs in
+                     let ask_z3 label_assumptions = 
+                        let res = Util.mk_ref None in
+                        Z3.ask None all_labels (with_fuel label_assumptions p min_fuel) (fun r -> res := Some r);
+                        Option.get (!res) in
+                     detail_errors all_labels (fst errs) ask_z3, false
+                else errs in
 
             let errs = 
                 match errs with
-                | [] -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)]
+                | [], true -> [(("", Term_sort), "Timeout: Unknown assertion failed", Range.dummyRange)], true
+                | [], false -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)], false
                 | _ -> errs in
             record_hint None;
             if Options.print_fuels()
@@ -201,31 +208,31 @@ let ask_and_report_errors env all_labels prefix query suffix =
                     (Range.string_of_range (Env.get_range env))
                     (Options.max_fuel()  |> Util.string_of_int)
                     (Options.max_ifuel() |> Util.string_of_int);
-            Errors.add_errors env (errs |> List.map (fun (_, x, y) -> x, y));
+            Errors.add_errors env (fst errs |> List.map (fun (_, x, y) -> x, y));
             if Options.detail_errors()
             then raise (FStar.Syntax.Syntax.Err("Detailed error report follows\n")) in
 
-        let use_errors errs result = 
+        let use_errors (errs:error_labels * bool) (result:z3_result) : z3_result = 
             match errs, result with 
-            | [], _
+            | ([], _), _
             | _, Inl _ -> result
             | _, Inr _ -> Inr errs in
-        let rec try_alt_configs prev_f (p:decl) (errs:labels) cfgs = 
+        let rec try_alt_configs prev_f (p:decl) (errs:z3_err) cfgs = 
             set_minimum_workable_fuel prev_f errs;
             match cfgs with
             | [] -> report p errs
             | [mi] -> //we're down to our last config; last ditch effort to get a counterexample with very low fuel
                 begin match errs with
-                | [] -> Z3.ask None all_labels (with_fuel [] p mi) (cb false mi p [])
+                | [], _ -> Z3.ask None all_labels (with_fuel [] p mi) (cb false mi p [])
                 | _ -> set_minimum_workable_fuel prev_f errs;
                        report p errs
                 end
 
             | mi::tl ->
                 Z3.ask None all_labels (with_fuel [] p mi) 
-                    (fun (result, elapsed_time, z3status) -> cb false mi p tl (use_errors errs result, elapsed_time, z3status))
+                    (fun (result, elapsed_time) -> cb false mi p tl (use_errors errs result, elapsed_time))
 
-        and cb used_hint (prev_fuel, prev_ifuel, timeout) (p:decl) alt (result, elapsed_time, z3status) =
+        and cb used_hint (prev_fuel, prev_ifuel, timeout) (p:decl) alt (result, elapsed_time) =
             if used_hint then (Z3.refresh(); record_hint_stat hint_opt result elapsed_time (Env.get_range env));
             let at_log_file () = 
                 if Options.log_queries() 
