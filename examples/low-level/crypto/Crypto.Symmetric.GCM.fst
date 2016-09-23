@@ -69,7 +69,7 @@ private val auth_body: #k:pos -> alg:cipher_alg k ->
         /\ modifies_2 tag tmp h0 h1))
 let auth_body #k alg ciphertext tag key nonce cnt ad adlen len tmp =
   let h0 = HST.get() in
-  fill tag (0uy) 16ul;
+  fill tag 0uy 16ul;
   let auth_key = sub tmp 0ul 16ul in
   alg key tag auth_key;
   ghash auth_key ad adlen ciphertext len tag;
