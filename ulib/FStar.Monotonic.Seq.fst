@@ -86,31 +86,19 @@ let alloc_mref_seq (#a:Type) (r:FStar.HyperHeap.rid) (init:seq a)
   : ST (m_rref r (seq a) grows)
        (requires (fun _ -> True))
        (ensures (fun h0 m h1 ->
-         m_contains m h1 /\
+	 m_contains m h1 /\
 	 m_sel h1 m == init /\
 	 FStar.ST.ralloc_post r init h0 (as_rref m) h1))
   = lemma_grows_monotone #a;
     FStar.Monotonic.RRef.m_alloc r init
 
-let in_seq (#a:Type) (#i:rid) (x:a) (r:m_rref i (seq a) grows) (h:t)
-  : GTot Type0
-  = (m_sel h r) `SeqP.contains` x
-
 let at_least (#a:Type) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grows) (h:t) =
-      in_seq x r h
-      /\ Seq.length (m_sel h r) > n
-      /\ Seq.index (m_sel h r) n == x
+    Seq.length (m_sel h r) > n
+  /\ Seq.index (m_sel h r) n == x
 
 let at_least_is_stable (#a:Type) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grows)
   : Lemma (ensures stable_on_t r (at_least n x r))
-  = let at_least_is_stable_aux:
-		     h0:t
-		   -> h1:t
-		   -> Lemma ((at_least n x r h0
-			    /\ grows (m_sel h0 r) (m_sel h1 r))
-			    ==> at_least n x r h1) =
-       fun h0 h1 -> forall_intro_3 (SeqP.append_contains_equiv #a) in
-    forall_intro_2 at_least_is_stable_aux
+  = ()
 
 let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
   : ST unit
@@ -143,28 +131,16 @@ let alloc_mref_iseq (#a:Type) (p:seq a -> Type) (r:FStar.HyperHeap.rid) (init:se
   = lemma_grows_monotone #a;
     FStar.Monotonic.RRef.m_alloc r init
 
-let in_i_seq (#r:rid) (#a:Type) (#p:(seq a -> Type)) (x:a) (m:i_seq r a p) (h:t)
-  : GTot Type0
-  = (m_sel h m) `SeqP.contains` x
-
 let i_at_least (#r:rid) (#a:Type) (#p:(seq a -> Type)) (n:nat) (x:a) (m:i_seq r a p) (h:t) =
-      in_i_seq x m h
-      /\ Seq.length (m_sel h m) > n
+        Seq.length (m_sel h m) > n
       /\ Seq.index (m_sel h m) n == x
 
 let i_at_least_is_stable (#r:rid) (#a:Type) (#p:seq a -> Type) (n:nat) (x:a) (m:i_seq r a p)
   : Lemma (ensures stable_on_t m (i_at_least n x m))
-  = let at_least_is_stable_aux:
-		     h0:t
-		   -> h1:t
-		   -> Lemma ((i_at_least n x m h0
-			    /\ grows (m_sel h0 m) (m_sel h1 m))
-			    ==> i_at_least n x m h1) =
-       fun h0 h1 -> forall_intro_3 (append_contains_equiv #a) in
-    forall_intro_2 at_least_is_stable_aux
+  = ()
 
-let int_at_most #r #a #p (x:int) (is:i_seq r a p) (h:HH.t) =
-  b2t (x < Seq.length (m_sel h is))
+let int_at_most #r #a #p (x:int) (is:i_seq r a p) (h:HH.t) : Type0 =
+  x < Seq.length (m_sel h is)
 
 let int_at_most_is_stable (#r:rid) (#a:Type) (#p:seq a -> Type) (is:i_seq r a p) (k:int)
   : Lemma (ensures stable_on_t is (int_at_most k is))
@@ -225,10 +201,7 @@ val itest: r:rid -> a:i_seq r nat invariant -> k:nat -> ST unit
   (ensures (fun h0 result h1 -> True))
 let itest r a k =
   let h0 = ST.get() in
-  let _ = 
-    let s = i_sel h0 a in 
-    i_at_least_is_stable k (Seq.index (i_sel h0 a) k) a;
-    SeqP.contains_intro s k (Seq.index s k) in
+  i_at_least_is_stable k (Seq.index (i_sel h0 a) k) a;
   MR.witness a (i_at_least k (Seq.index (i_sel h0 a) k) a)
 
 let test_alloc (#a:Type0) (p:seq a -> Type) (r:FStar.HyperHeap.rid) (init:seq a{p init}) : St unit =
