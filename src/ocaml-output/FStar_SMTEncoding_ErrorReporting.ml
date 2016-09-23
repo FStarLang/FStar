@@ -246,7 +246,7 @@ in (aux [] q [])))
 end)))
 
 
-let detail_errors : labels  ->  labels  ->  (FStar_SMTEncoding_Term.decls_t  ->  ((FStar_SMTEncoding_Z3.unsat_core, FStar_SMTEncoding_Term.error_labels) FStar_Util.either * Prims.int))  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun all_labels potential_errors askZ3 -> (
+let detail_errors : labels  ->  labels  ->  (FStar_SMTEncoding_Term.decls_t  ->  ((FStar_SMTEncoding_Z3.unsat_core, FStar_SMTEncoding_Term.error_labels) FStar_Util.either * Prims.int * FStar_SMTEncoding_Z3.z3status))  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun all_labels potential_errors askZ3 -> (
 
 let ctr = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in (
@@ -294,10 +294,10 @@ end
 | (hd)::tl -> begin
 (
 
-let _86_394 = (let _180_101 = (FStar_All.pipe_left elim (FStar_List.append eliminated (FStar_List.append errors tl)))
+let _86_396 = (let _180_101 = (FStar_All.pipe_left elim (FStar_List.append eliminated (FStar_List.append errors tl)))
 in (askZ3 _180_101))
-in (match (_86_394) with
-| (result, _86_393) -> begin
+in (match (_86_396) with
+| (result, _86_393, _86_395) -> begin
 if (FStar_Util.is_left result) then begin
 (linear_check ((hd)::eliminated) errors tl)
 end else begin
@@ -311,26 +311,26 @@ let rec bisect = (fun eliminated potential_errors active -> (match (active) with
 | [] -> begin
 ((eliminated), (potential_errors))
 end
-| _86_401 -> begin
+| _86_403 -> begin
 (
 
-let _86_409 = (match (active) with
-| (_86_403)::[] -> begin
+let _86_411 = (match (active) with
+| (_86_405)::[] -> begin
 ((active), ([]))
 end
-| _86_406 -> begin
+| _86_408 -> begin
 (FStar_Util.first_N ((FStar_List.length active) / (Prims.parse_int "2")) active)
 end)
-in (match (_86_409) with
+in (match (_86_411) with
 | (pfx, sfx) -> begin
 (
 
-let _86_413 = (let _180_108 = (elim (FStar_List.append eliminated (FStar_List.append potential_errors sfx)))
+let _86_417 = (let _180_108 = (elim (FStar_List.append eliminated (FStar_List.append potential_errors sfx)))
 in (askZ3 _180_108))
-in (match (_86_413) with
-| (result, _86_412) -> begin
+in (match (_86_417) with
+| (result, _86_414, _86_416) -> begin
 (match (result) with
-| FStar_Util.Inl (_86_415) -> begin
+| FStar_Util.Inl (_86_419) -> begin
 (bisect (FStar_List.append eliminated pfx) potential_errors sfx)
 end
 | FStar_Util.Inr ([]) -> begin
@@ -352,8 +352,8 @@ in (
 
 let rec until_fixpoint = (fun eliminated potential_errors active -> (
 
-let _86_429 = (bisect eliminated potential_errors active)
-in (match (_86_429) with
+let _86_433 = (bisect eliminated potential_errors active)
+in (match (_86_433) with
 | (eliminated', potential_errors) -> begin
 if (FStar_Util.physical_equality eliminated eliminated') then begin
 (linear_check eliminated [] potential_errors)
