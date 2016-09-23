@@ -1994,7 +1994,7 @@ in (FStar_All.pipe_left norm _150_725))
 in ((_150_727), (_150_726))))
 end
 | _56_1163 -> begin
-(FStar_All.failwith "Impossible")
+(Prims.raise (FStar_Syntax_Syntax.Error ((("Effect constructor is not fully applied"), (comp.FStar_Syntax_Syntax.pos)))))
 end)
 end else begin
 (
