@@ -65,8 +65,12 @@ let binders_as_mlty_binders (env:UEnv.env) bs =
 //Type abbreviations
 let extract_typ_abbrev env lid quals def = 
     let def = SS.compress def |> U.unmeta |> U.un_uinst in
+    let def = match def.n with
+        | Tm_abs _ -> Term.normalize_abs def
+        | _ -> def in
     let bs, body = match def.n with 
-        | Tm_abs(bs, body, _) -> SS.open_term bs body
+        | Tm_abs(bs, body, _) ->
+          SS.open_term bs body
         | _ -> [], def in
     let env, ml_bs = binders_as_mlty_binders env bs in
     let body = Term.term_as_mlty env body |> Util.eraseTypeDeep (Util.udelta_unfold env) in
