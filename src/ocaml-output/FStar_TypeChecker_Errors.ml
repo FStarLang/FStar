@@ -171,19 +171,12 @@ let _54_84 = (FStar_Util.incr num_errs)
 in (
 
 let msg = (message_prefix.append_prefix msg)
-in (
-
-let _54_87 = (let _148_87 = (let _148_86 = (FStar_Range.string_of_range r)
+in (let _148_87 = (let _148_86 = (FStar_Range.string_of_range r)
 in (FStar_Util.format2 "%s: %s\n" _148_86 msg))
-in (FStar_Util.print_string _148_87))
-in if (FStar_Options.trace_error ()) then begin
-(FStar_All.failwith "Stopping at first error")
-end else begin
-()
-end))))
+in (FStar_Util.print_string _148_87)))))
 
 
-let get_err_count : Prims.unit  ->  Prims.int = (fun _54_89 -> (match (()) with
+let get_err_count : Prims.unit  ->  Prims.int = (fun _54_87 -> (match (()) with
 | () -> begin
 (FStar_ST.read num_errs)
 end))
@@ -305,10 +298,10 @@ in (FStar_Util.format2 "Every alternative of an \'or\' pattern must bind the sam
 
 
 let name_and_result = (fun c -> (match (c.FStar_Syntax_Syntax.n) with
-| FStar_Syntax_Syntax.Total (t, _54_154) -> begin
+| FStar_Syntax_Syntax.Total (t, _54_152) -> begin
 (("Tot"), (t))
 end
-| FStar_Syntax_Syntax.GTotal (t, _54_159) -> begin
+| FStar_Syntax_Syntax.GTotal (t, _54_157) -> begin
 (("GTot"), (t))
 end
 | FStar_Syntax_Syntax.Comp (ct) -> begin
@@ -319,13 +312,13 @@ end))
 
 let computed_computation_type_does_not_match_annotation = (fun env e c c' -> (
 
-let _54_170 = (name_and_result c)
-in (match (_54_170) with
+let _54_168 = (name_and_result c)
+in (match (_54_168) with
 | (f1, r1) -> begin
 (
 
-let _54_173 = (name_and_result c')
-in (match (_54_173) with
+let _54_171 = (name_and_result c')
+in (match (_54_171) with
 | (f2, r2) -> begin
 (let _148_250 = (FStar_TypeChecker_Normalize.term_to_string env r1)
 in (let _148_249 = (FStar_TypeChecker_Normalize.term_to_string env r2)
@@ -364,7 +357,7 @@ let failed_to_prove_specification : Prims.string Prims.list  ->  Prims.string = 
 | [] -> begin
 "An unknown assertion in the term at this location was not provable"
 end
-| _54_187 -> begin
+| _54_185 -> begin
 (let _148_280 = (FStar_All.pipe_right lbls (FStar_String.concat "\n\t"))
 in (FStar_Util.format1 "The following problems were found:\n\t%s" _148_280))
 end))
