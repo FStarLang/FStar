@@ -1,6 +1,7 @@
 open FStar_UInt8
 open FStar_Buffer
 open Crypto_AEAD_AES256GCM
+open Crypto_Symmetric_GF128
 open Crypto_Symmetric_GCM
 
 let zero = 0
@@ -35,6 +36,7 @@ let hex_string_to_bytes buffer str =
     upd buffer i ((int_of_string block))
   done
 
+(* consider movint that test to ...GF128.fst *)
 let test_gf128 a b shift sum prod =
   let fbuf = create zero 16 in
   let sbuf = create zero 16 in

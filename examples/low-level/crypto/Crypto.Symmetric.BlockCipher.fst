@@ -67,6 +67,8 @@ val compute:
     (requires (fun h -> live h k /\ live h n /\ live h output))
     (ensures (fun h0 _ h1 -> live h1 output /\ modifies_1 output h0 h1 ))
 
+#reset-options "--z3timeout 100" 
+
 let compute a output k n counter len = 
   push_frame();
   begin match a with 
