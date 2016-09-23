@@ -87,8 +87,8 @@ type l_or (p:Type0) (q:Type0) = squash (c_or p q)
 
 (* '==>' : specialized to Type#0 *)
 type l_imp (p:Type0) (q:Type0) = squash (p -> GTot q)
-                                         (* ^^^ NB: The Tot effect is primitive;            *)
-				         (*         elaborated using PURE a few lines below *)
+                                         (* ^^^ NB: The GTot effect is primitive;            *)
+				         (*         elaborated using GHOST a few lines below *)
 (* infix binary '<==>' *)
 type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)
 
