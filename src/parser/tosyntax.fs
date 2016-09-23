@@ -82,6 +82,20 @@ let rec unparen t = match t.tm with
 let tm_type_z r = mk_term (Name (lid_of_path ["Type0"] r)) r Kind
 let tm_type r = mk_term (Name (lid_of_path   [ "Type"] r)) r Kind
  
+//Deciding if the t is a computation type
+//based on its head symbol
+let rec is_comp_type env t = 
+    match t.tm with 
+    | Name l
+    | Construct(l, _) -> Env.try_lookup_effect_name env l |> Option.isSome
+    | App(head, _, _) -> is_comp_type env head
+    | Paren t
+    | Ascribed(t, _)
+    | LetOpen(_, t) -> is_comp_type env t
+    | _ -> false
+
+let unit_ty = mk_term (Name FStar.Syntax.Const.unit_lid) Range.dummyRange Type
+
 let compile_op arity s =
     let name_of_char = function
             |'&' -> "Amp"
@@ -248,11 +262,23 @@ let rec uncurry bs t = match t.tm with
     | Product(binders, t) -> uncurry (bs@binders) t
     | _ -> bs, t
 
+let rec is_var_pattern p = match p.pat with 
+  | PatWild
+  | PatTvar(_, _)
+  | PatVar(_, _) -> true
+  | PatAscribed(p, _) -> is_var_pattern p
+  | _ -> false
+
 let rec is_app_pattern p = match p.pat with
   | PatAscribed(p,_) -> is_app_pattern p
   | PatApp({pat=PatVar _}, _) -> true
   | _ -> false
 
+let replace_unit_pattern p = match p.pat with 
+  | PatConst Const.Const_unit -> 
+    mk_pattern (PatAscribed (mk_pattern PatWild p.prange, unit_ty)) p.prange
+  | _ -> p
+    
 let rec destruct_app_pattern env is_top_level p = match p.pat with
   | PatAscribed(p,t) ->
     let (name, args, _) = destruct_app_pattern env is_top_level p in
@@ -630,6 +656,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       end
 
     | Abs(binders, body) ->
+      let binders = binders |> List.map replace_unit_pattern in
       let _, ftv = List.fold_left (fun (env, ftvs) pat ->
         match pat.pat with
           | PatAscribed(_, t) -> env, free_type_vars env t@ftvs
@@ -726,8 +753,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                                   then (Inr (qualify env id), [], None), def
                                   else (Inl id, [], None), def
                                 | _ -> raise (Error("Unexpected let binding", p.prange))
-                      end) in
+                      end) 
+        in
 
+        //Generate fresh names and populate an env' with recursive bindings
+        //below, we use env' instead of env, only if is_rec
         let env', fnames, rec_bindings =
           List.fold_left (fun (env, fnames, rec_bindings) ((f, _, _), _) ->
             let env, lbname, rec_bindings = match f with
@@ -736,14 +766,23 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 env, Inl xx, S.mk_binder xx::rec_bindings 
               | Inr l ->
                 push_top_level_rec_binding env l.ident S.Delta_equational, Inr l, rec_bindings in
-            env, (lbname::fnames), rec_bindings) (env, [], []) funs in
-
+            env, (lbname::fnames), rec_bindings) (env, [], []) funs
+        in
         let fnames = List.rev fnames in
 
         let desugar_one_def env lbname ((_, args, result_t), def) =
-            let def = match result_t with
-                | None -> def
-                | Some t -> mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr in
+            let args = args |> List.map replace_unit_pattern in
+            let def = 
+              match result_t with
+              | None -> def
+              | Some t -> 
+                if is_comp_type env t
+                then begin match args |> List.tryFind (fun x -> not (is_var_pattern x)) with
+                     | None -> ()
+                     | Some p -> 
+                        raise (Error ("Computation type annotations are only permitted on let-bindings without inlined patterns; replace this pattern with a variable", p.prange))
+                end;
+                mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr in
             let def = match args with 
                  | [] -> def 
                  | _ -> mk_term (un_curry_abs args def) top.range top.level in 
@@ -755,7 +794,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
             mk_lb (lbname, tun, body) in
         let lbs = List.map2 (desugar_one_def (if is_rec then env' else env)) fnames funs in
         let body = desugar_term env' body in
-        mk <| (Tm_let((is_rec, lbs), Subst.close rec_bindings body)) in
+        mk <| (Tm_let((is_rec, lbs), Subst.close rec_bindings body)) 
+      in
       //end ds_let_rec_or_app
 
       let ds_non_rec pat t1 t2 =
@@ -885,6 +925,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | _ ->
       error "Unexpected term" top top.range
+    | Let(_, _, _) -> failwith "Not implemented yet"
+    | QForall(_, _, _) -> failwith "Not implemented yet"
+    | QExists(_, _, _) -> failwith "Not implemented yet"
   end
 
 and desugar_args env args = 
