@@ -18,7 +18,6 @@ VERIFY= \
   Math.Lemmas \
   Math.Lib \
   Curve.Bigint \
-  Curve.Modulo \
   Curve.Parameters \
   Crypto.Symmetric.Poly1305.Bigint \
   Crypto.Symmetric.Poly1305.Parameters \
@@ -26,11 +25,13 @@ VERIFY= \
   Crypto.Symmetric.Poly1305 \
   Crypto.Symmetric.Chacha20 \
   Crypto.Symmetric.BlockCipher \
+  Crypto.Symmetric.GF128 \
   Crypto.Symmetric.GCM \
   Crypto.Symmetric.AES \
   Crypto.AEAD.AES256GCM \
   Plain \
   # Test
+  # Curve.Modulo 
 
 # Files not yet fully typechecking
 # Please move files that you know fully typecheck to VERIFY

@@ -31,11 +31,12 @@ AEAD_EXTRACTED= FStar_List_Tot.ml FStar_Seq.ml FStar_SeqProperties.ml Buffer_Uti
 .PHONY: lib-ver curve-ver curve-ml chacha-ver chacha-ml ulib
 
 #16-09-18 lib-ver works but is too slow/brittle? 
-all: uall sall tmp-ver
+all: uall sall
 
 uall:
 	+make clean
 	+make chacha-test poly-test aead-test curve-test aes-test aesgcm-test
+	+make -C crypto all-lax all-ver
 
 sall:
 
@@ -64,21 +65,6 @@ curve-compile: curve-extract
 
 curve-test: curve-compile
 	./test_curve.exe
-
-
-#16-09-18 TODO adjust & integrate
-#16-09-18 for now collecting some AEAD files that verify, and excluding slow/timeout ones.
-tmp-ver:
-	$(FSTAR) --include crypto Crypto.Symmetric.AES.fst
-#	$(FSTAR) --include crypto Crypto.Symmetric.BlockCipher.fst  
-#	$(FSTAR) --include crypto Crypto.Symmetric.Chacha20.fst     
-#	$(FSTAR) --include crypto Crypto.Symmetric.GF128.fst
-#	$(FSTAR) --include crypto Crypto.Symmetric.Poly1305.Spec.fst 
-	$(FSTAR) --include crypto Plain.fst
-#	$(FSTAR) --include crypto Crypto.AEAD.Chacha20Poly1305.fst 
-#	$(FSTAR) --include crypto Crypto.Symmetric.Chacha20.PRF.fst
-#	$(FSTAR) --include crypto Crypto.Symmetric.Poly1305.MAC.fst
-#	$(FSTAR) --include crypto Crypto.Symmetric.Poly1305.fst
 
 # AES targets
 chacha-ver:
