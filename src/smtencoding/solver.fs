@@ -223,9 +223,9 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
             | mi::tl ->
                 Z3.ask None all_labels (with_fuel [] p mi) 
-                    (fun (result, elapsed_time) -> cb false mi p tl (use_errors errs result, elapsed_time))
+                    (fun (result, elapsed_time, z3status) -> cb false mi p tl (use_errors errs result, elapsed_time, z3status))
 
-        and cb used_hint (prev_fuel, prev_ifuel, timeout) (p:decl) alt (result, elapsed_time) =
+        and cb used_hint (prev_fuel, prev_ifuel, timeout) (p:decl) alt (result, elapsed_time, z3status) =
             if used_hint then (Z3.refresh(); record_hint_stat hint_opt result elapsed_time (Env.get_range env));
             let at_log_file () = 
                 if Options.log_queries() 
