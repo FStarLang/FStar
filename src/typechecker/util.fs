@@ -838,7 +838,8 @@ let pure_or_ghost_pre_and_post env comp =
               then begin match ct.effect_args with
                       | (req, _)::(ens, _)::_ ->
                          Some (norm req), (norm <| mk_post_type ct.result_typ ens)
-                      | _ -> failwith "Impossible"
+                      | _ -> 
+                        raise (Error ("Effect constructor is not fully applied", comp.pos))
                    end
               else let ct = Normalize.unfold_effect_abbrev env comp in
                    begin match ct.effect_args with

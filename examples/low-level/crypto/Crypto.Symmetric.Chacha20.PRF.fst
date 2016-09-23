@@ -54,7 +54,7 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 let maxCtr = 2000ul // to be adjusted, controlling concrete bound. 
 
-type domain = { iv:Block.iv prfa; ctr:u32 } // could move to concrete CHACHA20
+noeq type domain = { iv:Block.iv prfa; ctr:u32 } // could move to concrete CHACHA20
 let incr (x:domain {x.ctr <=^ maxCtr})  = { iv = x.iv; ctr = x.ctr +^ 1ul }
 
 let blocklen = Block.blocklen prfa
@@ -98,7 +98,7 @@ let find_1 #rgn #i s (x:domain{x.ctr<>0ul}) =
 // TODO separate on rw, with multiple readers? 
 noeq type state (i:id) = 
   | State: #rgn: region ->
-           key:lbuffer (v keylen) {Buffer.frameOf key = rgn} ->
+           key:lbuffer (v (Block.keylen prfa)) {Buffer.frameOf key = rgn} -> 
            table:HS.ref (Seq.seq (entry rgn i)) {HS.frameOf table = rgn} -> 
            state i  // should be maybe_mrref; for later. 
 
@@ -109,9 +109,9 @@ val gen: rgn: region -> i:id -> ST (state i)
   (ensures  (fun h0 s h1 -> HS.sel h1 s.table == Seq.createEmpty #(entry rgn i)))
 
 let gen rgn i =
-  // SZ: let key = MAC.random rgn keylen`?
-  let key = Buffer.rcreate rgn 0uy keylen in
-  store_bytes keylen key (random keylen);
+  // SZ: let key = MAC.random rgn Block.keylen`?
+  let key = Buffer.rcreate rgn 0uy (Block.keylen prfa) in
+  store_bytes (Block.keylen prfa) key (random (Block.keylen prfa));
   let table = ralloc rgn (Seq.createEmpty #(entry rgn i)) in
   State #i #rgn key table
 
