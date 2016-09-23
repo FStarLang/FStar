@@ -1,4 +1,4 @@
-module Test
+module Bug623 
 
 val null: unit -> All unit
   (requires (fun h -> True))
@@ -40,4 +40,4 @@ val null3: unit -> Pure unit
 let null3 () = ()
 
 (* Fails *)
-(* let test7 (u:unit) : ML unit = assert(false); null3() *)
+let test7 (u:unit) : ML unit = assert(false); null3()
