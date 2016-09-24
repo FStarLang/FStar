@@ -20,9 +20,9 @@ let _ =
   let inv_sbox = create zero 256 in
   (* Initialize the test vectors *)
   for i = 0 to 15 do
-    upd plaintext i ( (i + (i lsl 4)));
-    upd key (2*i) ( (2*i)); 
-    upd key (2*i+1) ( (2*i+1))
+    upd plaintext i (i + (i lsl 4));
+    upd key (2*i) (2*i); 
+    upd key (2*i+1) (2*i+1)
   done;
   (* Initialize sboxes *)
   mk_sbox sbox;

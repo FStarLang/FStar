@@ -67,13 +67,18 @@ curve-test: curve-compile
 
 
 #16-09-18 TODO adjust & integrate
-#16-09-18 for now collecting some AEAD files that verify. 
+#16-09-18 for now collecting some AEAD files that verify, and excluding slow/timeout ones.
 tmp-ver:
+	$(FSTAR) --include crypto Crypto.Symmetric.AES.fst
+#	$(FSTAR) --include crypto Crypto.Symmetric.BlockCipher.fst  
+#	$(FSTAR) --include crypto Crypto.Symmetric.Chacha20.fst     
+#	$(FSTAR) --include crypto Crypto.Symmetric.GF128.fst
+#	$(FSTAR) --include crypto Crypto.Symmetric.Poly1305.Spec.fst 
 	$(FSTAR) --include crypto Plain.fst
-	$(FSTAR) --include crypto Crypto.Symmetric.Chacha20.fst
-#	$(FSTAR) --include crypto Crypto.Symmetric.Poly1305.fst
-#	$(FSTAR) --include crypto Crypto.Symmetric.Poly1305.MAC.fst
 #	$(FSTAR) --include crypto Crypto.AEAD.Chacha20Poly1305.fst 
+#	$(FSTAR) --include crypto Crypto.Symmetric.Chacha20.PRF.fst
+#	$(FSTAR) --include crypto Crypto.Symmetric.Poly1305.MAC.fst
+#	$(FSTAR) --include crypto Crypto.Symmetric.Poly1305.fst
 
 # AES targets
 chacha-ver:
@@ -172,7 +177,7 @@ aes-test: aes-compile
 
 
 AESGCM_ODIR=aesgcm
-AESGCM_EXTRACTED=Crypto_Symmetric_AES.ml Crypto_Symmetric_GCM.ml Crypto_AEAD_AES256GCM.ml
+AESGCM_EXTRACTED=Crypto_Symmetric_AES.ml Crypto_Symmetric_GF128.ml Crypto_Symmetric_GCM.ml Crypto_AEAD_AES256GCM.ml
 
 aesgcm-extract: ulib
 	mkdir -p $(AESGCM_ODIR)
