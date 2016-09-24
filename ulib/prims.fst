@@ -15,9 +15,11 @@
 *)
 module Prims
 
-assume new type hasEq: Type -> GTot Type0
-type eqtype = a:Type{hasEq a}
+(* A predicate to express when a type supports decidable equality
+   The type-checker emits axioms for hasEq for each inductive type *)
+assume type hasEq: Type -> GTot Type0
 
+type eqtype = a:Type{hasEq a}
 
 (* False is the empty inductive type *)
 type c_False =
@@ -48,18 +50,24 @@ type squash (p:Type) : Type0 = x:unit{p}
  *)
 let inversion (a:Type) = True
 
-(*
-   infix binary '==';
-   proof irrelevant, heterogeneous equality in Type#0;
-   primitive (TODO: make it an inductive?)
+(* The usual equality deifned as an inductive type *)
+type equals (#a:Type) (x:a) : a -> Type =
+  | Refl : equals x x
+  
+(* infix binary '==';
+   proof irrelevant, heterogeneous equality in Type#0
+*)   
+//TODO: instead of hard-wiring the == syntax, 
+//       we should just rename eq2 to op_Equals_Equals
+type eq2 (#a:Type) (x:a) (y:a) = squash (equals x y)
 
-  TODO: instead of hard-wiring the == syntax, 
-        we should just rename eq2 to op_Equals_Equals
-	and rename eq3 to op_Equals_Equals_Equals (instead of the indirection currently used)
-*)
-assume type eq2 : #a:Type -> a -> a -> Type0
+(* Heterogeneous equality *)
+type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type = 
+  | HRefl : h_equals x x
 
-assume type eq3 : #a:Type -> #b:Type -> a -> b -> Type0
+(* A proof-irrelevant version of h_equals *)
+type eq3 (#a:Type) (#b:Type) (x:a) (y:b) = squash (h_equals x y)
+
 inline let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
 
 (* bool is a two element type with elements {'true', 'false'}
@@ -105,6 +113,9 @@ assume type has_type : #a:Type -> a -> Type -> Type0
   
 (* forall (x:a). p x : specialized to Type#0 *)
 type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
+
+(* The type of squashed types *)
+type prop = a:Type0{ forall (x:a). x === () }
 
 (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
 type dtuple2 (a:Type)
