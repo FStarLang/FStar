@@ -17,7 +17,7 @@
 module FStar.TSet
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-abstract type set a = a -> Tot Type0
+abstract type set a = a -> Tot prop
 abstract type equal (#a:Type) (s1:set a) (s2:set a) = forall x. s1 x <==> s2 x
 
 (* destructors *)
@@ -103,6 +103,5 @@ abstract val lemma_equal_refl: #a:Type -> s1:set a -> s2:set a -> Lemma
     [SMTPatT (equal s1 s2)]
 
 let lemma_equal_intro #a s1 s2 = ()
-let lemma_equal_elim  #a s1 s2 = admit()
-  (* CH: THIS IS WRONG! SEE paradoxes/PropositionalExtensionalityInconsistent.fst *)
+let lemma_equal_elim  #a s1 s2 = PredicateExtensionality.predicateExtensionality a s1 s2
 let lemma_equal_refl  #a s1 s2 = ()

@@ -1196,6 +1196,9 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let typing_pred_b = Term.mk_HasType x refb in
         [Term.Assume(mkForall_fuel([[typing_pred]], [xx;aa], mkImp(typing_pred, Term.mk_tester "BoxRef" x)), Some "ref inversion", Some "ref_inversion");
          Term.Assume(mkForall_fuel' 2 ([[typing_pred; typing_pred_b]], [xx;aa;bb], mkImp(mkAnd(typing_pred, typing_pred_b), mkEq(mkFreeV aa, mkFreeV bb))), Some "ref typing is injective", Some "ref_injectivity")] in
+    let mk_true_interp : env -> string -> term -> decls_t = fun env nm true_tm ->
+        let valid = Term.mkApp("Valid", [true_tm]) in
+        [Term.Assume(valid, Some "True interpretation", Some "true_interp")] in
     let mk_false_interp : env -> string -> term -> decls_t = fun env nm false_tm ->
         let valid = Term.mkApp("Valid", [false_tm]) in
         [Term.Assume(mkIff(mkFalse, valid), Some "False interpretation", Some "false_interp")] in
@@ -1255,6 +1258,12 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let valid_a = Term.mkApp("Valid", [a]) in
         let valid_b = Term.mkApp("Valid", [b]) in
         [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkIff(valid_a, valid_b), valid)), Some "<==> interpretation", Some "l_iff-interp")] in
+    let mk_not_interp : env -> string -> term -> decls_t = fun env l_not tt ->
+        let aa = ("a", Term_sort) in
+        let a = mkFreeV aa in
+        let valid = Term.mkApp("Valid", [Term.mkApp(l_not, [a])]) in
+        let not_valid_a = Term.mkNot <| Term.mkApp("Valid", [a]) in
+        [Term.Assume(mkForall([[valid]], [aa], mkIff(not_valid_a, valid)), Some "not interpretation", Some "l_not-interp")] in
     let mk_forall_interp : env -> string -> term -> decls_t = fun env for_all tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
@@ -1283,11 +1292,12 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let range_ty = Term.mkApp(range, []) in
         [Term.Assume(mk_HasTypeZ Term.mk_Range_const range_ty, Some "Range_const typing", Some (varops.mk_unique "typing_range_const"))] in
 
-   let prims = [(Const.unit_lid,   mk_unit);
+   let prims =  [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
                  (Const.string_lid, mk_str);
                  (Const.ref_lid,    mk_ref);
+                 (Const.true_lid,   mk_true_interp);
                  (Const.false_lid,  mk_false_interp);
                  (Const.and_lid,    mk_and_interp);
                  (Const.or_lid,     mk_or_interp);
@@ -1295,9 +1305,10 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.eq3_lid,    mk_eq3_interp);
                  (Const.imp_lid,    mk_imp_interp);
                  (Const.iff_lid,    mk_iff_interp);
+                 (Const.not_lid,    mk_not_interp);
                  (Const.forall_lid, mk_forall_interp);
                  (Const.exists_lid, mk_exists_interp);
-                 (Const.range_lid, mk_range_interp);
+                 (Const.range_lid,  mk_range_interp);
                 ] in
     (fun (env:env) (t:lident) (s:string) (tt:term) ->
         match Util.find_opt (fun (l, _) -> lid_equals l t) prims with

@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module Prims
-
 (* A predicate to express when a type supports decidable equality
    The type-checker emits axioms for hasEq for each inductive type *)
 assume type hasEq: Type -> GTot Type0
@@ -28,14 +27,6 @@ type c_False =
 type c_True =
   | T
 
-(*
- * These definitions are just so that we can generate their interpretations for now
- * Fix encoding by generating interpretations for inductives so that these can be removed
- *)
-type l_True = c_True
-
-type l_False = c_False
-
 (* another singleton type, with its only inhabitant written '()'
    we assume it is primitive, for convenient interop with other languages *)
 assume new type unit : Type0
@@ -43,6 +34,12 @@ assume HasEq_unit: hasEq unit
 
 (* A coercion down to universe 0 *)
 type squash (p:Type) : Type0 = x:unit{p}
+
+(*
+ * Squashed versions of truth and falsehood
+ *)
+type l_True = squash c_True
+type l_False = squash c_False
 
 (* An SMT-pattern to control unfolding inductives;
    In a proof, you can say `allow_inversion (option a)`
@@ -101,7 +98,7 @@ type l_imp (p:Type0) (q:Type0) = squash (p -> GTot q)
 type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)
 
 (* prefix unary '~' *)
-type l_not (p:Type) = p ==> False
+type l_not (p:Type) = l_imp p False
 
 inline type l_ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
 
@@ -611,13 +608,13 @@ let ignore #a x = ()
 type nat = i:int{i >= 0}
 type pos = i:int{i > 0}
 type nonzero = i:int{i<>0}
-
+#reset-options "--log_queries"
 let allow_inversion (a:Type)
   : Pure unit (requires True) (ensures (fun x -> inversion a))
   = ()
 
 //allowing inverting option without having to globally increase the fuel just for this
-val invertOption : a:Type -> Lemma 
+val invertOption : a:Type -> Lemma
   (requires True)
   (ensures (forall (x:option a). is_None x \/ is_Some x))
   [SMTPatT (option a)]
