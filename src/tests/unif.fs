@@ -46,6 +46,7 @@ let guard_eq i g g' =
 let unify i x y g' = 
     printfn "%d ..." i;
     FStar.process_args () |> ignore; //set options
+    printfn "Unify %s\nand %s\n" (FStar.Syntax.Print.term_to_string x) (FStar.Syntax.Print.term_to_string y);
     let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
     guard_eq i g.guard_f g';
     Options.init()    //reset them; exceptions are fatal, so don't worry about resetting them in case guard_eq fails
@@ -135,8 +136,8 @@ let run_all () =
                     (norm (pars "fun x y -> x + y")));
 
       
-    let tm1 = pars ("x:int -> y:int{eq2 y x} -> bool") in
-    let tm2 = pars ("x:int -> y:int -> bool") in
+    let tm1 = tc ("x:int -> y:int{eq2 y x} -> bool") in
+    let tm2 = tc ("x:int -> y:int -> bool") in
     unify 11 tm1 tm2
             (NonTrivial (tc "forall (x:int). (forall (y:int). y==x <==> True)"));
 

@@ -134,7 +134,10 @@ type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 
 assume new type range : Type0
 assume val range_0:range
+
 assume new type string : Type0
+assume HasEq_string: hasEq string
+
 irreducible let labeled (r:range) (msg:string) (b:Type) = b
 type range_of (#a:Type) (x:a) = range
 
@@ -228,8 +231,6 @@ assume val op_disEquality : #a:Type{hasEq a} -> a -> a -> Tot bool
 assume new type exn : Type0
 assume new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
-
-assume HasEq_string: hasEq string
 
 type list (a:Type) =
   | Nil  : list a
