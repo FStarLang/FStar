@@ -33,7 +33,7 @@ type program =
 
 and decl =
   | DFunction of typ * lident * list<binder> * expr
-  | DTypeAlias of lident * typ
+  | DTypeAlias of lident * int * typ
   | DGlobal of lident * typ * expr
   | DTypeFlat of lident * list<(ident * (typ * bool))>
   | DExternal of lident * typ
@@ -117,11 +117,13 @@ and typ =
   | TAny
   | TArrow of typ * typ
   | TZ
+  | TBound of int
+  | TApp of lident * list<typ>
 
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 12
+let current_version: version = 13
 
 type file = string * program
 type binary_format = version * list<file>
@@ -209,6 +211,7 @@ let is_machine_int m =
 
 type env = {
   names: list<name>;
+  names_t: list<string>;
   module_name: list<string>;
 }
 
@@ -219,11 +222,15 @@ and name = {
 
 let empty module_name = {
   names = [];
+  names_t = [];
   module_name = module_name
 }
 
 let extend env x is_mut =
   { env with names = { pretty = x; mut = is_mut } :: env.names }
+
+let extend_t env x =
+  { env with names_t = x :: env.names_t }
 
 let find_name env x =
   match List.tryFind (fun name -> name.pretty = x) env.names with
@@ -238,6 +245,12 @@ let is_mutable env x =
 let find env x =
   try
     List.index (fun name -> name.pretty = x) env.names
+  with _ ->
+    failwith (Util.format1 "Internal error: name not found %s\n" x)
+
+let find_t env x =
+  try
+    List.index (fun name -> name = x) env.names_t
   with _ ->
     failwith (Util.format1 "Internal error: name not found %s\n" x)
 
@@ -344,9 +357,10 @@ and translate_decl env d: option<decl> =
   | MLM_Loc _ ->
       None
 
-  | MLM_Ty [ (name, [], Some (MLTD_Abbrev t)) ] ->
+  | MLM_Ty [ (name, params, Some (MLTD_Abbrev t)) ] ->
       let name = env.module_name, name in
-      Some (DTypeAlias (name, translate_type env t))
+      let env = List.fold_left (fun env (name, _) -> extend_t env name) env params in
+      Some (DTypeAlias (name, List.length params, translate_type env t))
 
   | MLM_Ty [ (name, [], Some (MLTD_Record fields)) ] ->
       let name = env.module_name, name in
@@ -372,8 +386,8 @@ and translate_type env t: typ =
   | MLTY_Tuple []
   | MLTY_Top ->
       TUnit
-  | MLTY_Var _ ->
-      failwith "todo: translate_type [MLTY_Var]"
+  | MLTY_Var (name, _) ->
+      TBound (find_t env name)
   | MLTY_Fun (t1, _, t2) ->
       TArrow (translate_type env t1, translate_type env t2)
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.unit") ->
@@ -400,9 +414,11 @@ and translate_type env t: typ =
       TBuf (translate_type env arg)
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
-  | MLTY_Named (_, (path, type_name)) ->
+  | MLTY_Named ([], (path, type_name)) ->
       // Generate an unbound reference... to be filled in later by glue code.
       TQualified (path, type_name)
+  | MLTY_Named (args, (path, type_name)) ->
+      TApp ((path, type_name), List.map (translate_type env) args)
   | MLTY_Tuple _ ->
       failwith "todo: translate_type [MLTY_Tuple]"
 
