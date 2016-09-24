@@ -6,7 +6,7 @@ module PropositionalExtensionalityInconsistent
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 assume val propositionalExtensionality : unit ->
-  Lemma (requires True)
+  Lemma (requires (True))
         (ensures (forall (p1:Type). forall (p2:Type). (p1 <==> p2) <==> p1==p2))
 
 (* Inconsistent in F* -- proof by Kenji Maillard (adapted) *)
