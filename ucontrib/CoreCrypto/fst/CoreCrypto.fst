@@ -87,7 +87,7 @@ assume val aead_decrypt:
   iv:lbytes (aeadRealIVSize a) -> 
   ad:bytes -> 
   cipher:bytes{length cipher >= aeadTagSize a} -> 
-  EXT (o:option bytes {forall (p:bytes). cipher = aead_encryptT a k iv ad p ==> o = Some p })
+  EXT (o:option bytes {forall (p:bytes). cipher = aead_encryptT a k iv ad p <==> o = Some p })
 
 
 type rsa_key = {

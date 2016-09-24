@@ -1056,6 +1056,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) env targs in
               let expected_t = if add_unit then MLTY_Fun(ml_unit_ty, E_PURE, snd polytype) else snd polytype in
               let e, _ = check_term_as_mlexpr env e f expected_t in
+              let f = maybe_downgrade_eff env f expected_t in
               f, {mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true} in
 
          (*after the above definitions, here is the main code for extracting let expressions*)

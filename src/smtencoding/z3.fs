@@ -200,8 +200,11 @@ let doZ3Exe' (input:string) (z3proc:proc) =
       | "unknown"::tl -> UNKNOWN (snd (unsat_core_and_lblnegs tl))
       | "sat"::tl     -> SAT     (snd (unsat_core_and_lblnegs tl))
       | "unsat"::tl   -> UNSAT   (fst (unsat_core tl))
-      | _::tl -> result tl
-      | _ -> failwith <| format1 "Got output lines: %s\n" (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (Util.trim_string l)) lines)) in
+      | hd::tl -> 
+        TypeChecker.Errors.warn Range.dummyRange (Util.format1 "Unexpected output from Z3: %s\n" hd);
+        result tl
+      | _ -> failwith <| format1 "Unexpected output from Z3: got output lines: %s\n" 
+                            (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (Util.trim_string l)) lines)) in
       result lines in
   let stdout = Util.ask_process z3proc input in
   parse (Util.trim_string stdout)
@@ -224,7 +227,7 @@ type job<'a> = {
     job:unit -> 'a;
     callback: 'a -> unit
 }
-type z3job = job<(either<unsat_core, error_labels> * int)>
+type z3job = job<(either<unsat_core, (error_labels * bool)> * int)>
 
 let job_queue : ref<list<z3job>> = Util.mk_ref []
 
@@ -235,7 +238,10 @@ let with_monitor m f =
     Util.monitor_exit(m);
     res
 
-let z3_job fresh label_messages input () : either<unsat_core, error_labels> * int =
+let z3_job fresh label_messages input () : either<unsat_core, (error_labels * bool)> * int =
+  let is_timeout = function
+    | TIMEOUT _ -> true
+    | _ -> false in
   let start = Util.now() in
   let status = doZ3Exe fresh input in
   let _, elapsed_time = Util.time_diff start (Util.now()) in
@@ -249,7 +255,7 @@ let z3_job fresh label_messages input () : either<unsat_core, error_labels> * in
         match label_messages |> List.tryFind (fun (m, _, _) -> fst m = l) with
             | None -> []
             | Some (lbl, msg, r) -> [(lbl, msg, r)]) in
-        Inr failing_assertions, elapsed_time in
+        Inr (failing_assertions, is_timeout status), elapsed_time in
     result
 
 let rec dequeue' () =
@@ -341,7 +347,7 @@ let commit_mark msg =
         | _ -> failwith "Impossible"
     end
 
-let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, error_labels> * int) -> unit) =
+let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_labels*bool)> * int) -> unit) =
   let filter_assertions theory = match core with 
     | None -> theory, false
     | Some core ->
@@ -383,7 +389,7 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, error_labe
     if used_unsat_core
     then match uc_errs with 
          | Inl _ -> cb (uc_errs, time)
-         | Inr _ -> cb (Inr [], time) //if we filtered the theory, then the error message is unreliable
+         | Inr _ -> cb (Inr ([],false), time) //if we filtered the theory, then the error message is unreliable
     else cb (uc_errs, time) in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
   if Options.log_queries() then query_logging.append_to_log input;

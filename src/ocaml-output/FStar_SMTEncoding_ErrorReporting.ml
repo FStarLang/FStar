@@ -246,7 +246,7 @@ in (aux [] q [])))
 end)))
 
 
-let detail_errors : labels  ->  labels  ->  (FStar_SMTEncoding_Term.decls_t  ->  ((FStar_SMTEncoding_Z3.unsat_core, FStar_SMTEncoding_Term.error_labels) FStar_Util.either * Prims.int))  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun all_labels potential_errors askZ3 -> (
+let detail_errors : labels  ->  labels  ->  (FStar_SMTEncoding_Term.decls_t  ->  ((FStar_SMTEncoding_Z3.unsat_core, (FStar_SMTEncoding_Term.error_labels * Prims.bool)) FStar_Util.either * Prims.int))  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun all_labels potential_errors askZ3 -> (
 
 let ctr = (FStar_Util.mk_ref (Prims.parse_int "0"))
 in (
@@ -333,10 +333,10 @@ in (match (_86_413) with
 | FStar_Util.Inl (_86_415) -> begin
 (bisect (FStar_List.append eliminated pfx) potential_errors sfx)
 end
-| FStar_Util.Inr ([]) -> begin
+| FStar_Util.Inr ([], timeout) -> begin
 (bisect eliminated (FStar_List.append potential_errors pfx) sfx)
 end
-| FStar_Util.Inr (pfx_subset) -> begin
+| FStar_Util.Inr (pfx_subset, timeout) -> begin
 (
 
 let potential_errors = (FStar_List.append potential_errors pfx_subset)
@@ -352,8 +352,8 @@ in (
 
 let rec until_fixpoint = (fun eliminated potential_errors active -> (
 
-let _86_429 = (bisect eliminated potential_errors active)
-in (match (_86_429) with
+let _86_433 = (bisect eliminated potential_errors active)
+in (match (_86_433) with
 | (eliminated', potential_errors) -> begin
 if (FStar_Util.physical_equality eliminated eliminated') then begin
 (linear_check eliminated [] potential_errors)

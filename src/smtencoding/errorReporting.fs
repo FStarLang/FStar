@@ -159,7 +159,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
       -- potential_errors are the labels in the initial counterexample model
  *)
-let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -> (either<Z3.unsat_core, error_labels> * int)) : labels = 
+let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -> (either<Z3.unsat_core, (error_labels*bool)> * int)) : labels = 
     let ctr = Util.mk_ref 0 in
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
         incr ctr;
@@ -195,11 +195,11 @@ let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -
               begin match result with 
               | Inl _ -> //good; everything in the pfx is provable 
                 bisect (eliminated@pfx) potential_errors sfx
-              | Inr [] ->
+              | Inr ([], timeout) ->
                 //didn't prove it, but didn't get back a useful error report either
                 //all of them may be errors
                 bisect eliminated (potential_errors@pfx) sfx
-              | Inr pfx_subset -> 
+              | Inr (pfx_subset, timeout) -> 
                 //looks like something in pfx_subset may be to blame 
                 let potential_errors = potential_errors@pfx_subset in
                 let pfx_active = minus pfx pfx_subset in //but we can't yet eliminate pfx_active
