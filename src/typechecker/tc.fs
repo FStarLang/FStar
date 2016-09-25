@@ -1213,9 +1213,23 @@ and tc_inductive env ses quals lids =
         [se]
     in
 
+    //skip logical connectives types in prims, tcs is bound to the inductive type, caller ensures its length is > 0
+    let skip_prims_type (_:unit) :bool =
+        let lid =
+            let ty = List.hd tcs in
+            match ty with
+                | Sig_inductive_typ (lid, _, _, _, _, _, _, _) -> lid
+                | _                                            -> failwith "Impossible"
+        in
+        //these are the prims type we are skipping
+        let types_to_skip = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or"; ] in
+        let b = List.existsb (fun s -> s = lid.ident.idText) types_to_skip in
+        b
+    in
+
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in
     
-    if ((lid_equals env.curmodule Const.prims_lid) || is_noeq || (List.length tcs = 0)) then [sig_bndle]
+    if ((List.length tcs = 0) || ((lid_equals env.curmodule Const.prims_lid) && skip_prims_type ()) || is_noeq) then [sig_bndle]
     else
         let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
         let ses = if is_unopteq then unoptimized_haseq_scheme () else optimized_haseq_scheme () in
