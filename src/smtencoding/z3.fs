@@ -108,6 +108,7 @@ type bgproc = {
 }
 
 type query_log = {
+    get_module_name: unit -> string;
     set_module_name: string -> unit;
     append_to_log:   string -> unit;
     close_log:       unit -> unit;
@@ -120,6 +121,9 @@ let query_logging =
     let current_module_name : ref<option<string>> = Util.mk_ref None in 
     let current_file_name : ref<option<string>> = Util.mk_ref None in
     let set_module_name n = current_module_name := Some n in 
+    let get_module_name () = match !current_module_name with
+        | None -> failwith "Module name not set"
+        | Some n -> n in
     let new_log_file () = 
         match !current_module_name with 
         | None -> failwith "current module not set"
@@ -148,6 +152,7 @@ let query_logging =
         | None -> failwith "no log file"
         | Some n -> n in
      {set_module_name=set_module_name;
+      get_module_name=get_module_name;
       append_to_log=append_to_log;
       close_log=close_log;
       log_file_name=log_file_name}
@@ -201,7 +206,7 @@ let doZ3Exe' (input:string) (z3proc:proc) =
       | "sat"::tl     -> SAT     (snd (unsat_core_and_lblnegs tl))
       | "unsat"::tl   -> UNSAT   (fst (unsat_core tl))
       | hd::tl -> 
-        TypeChecker.Errors.warn Range.dummyRange (Util.format2 "%s: Unexpected output from Z3: %s\n" (query_logging.log_file_name()) hd);
+        TypeChecker.Errors.warn Range.dummyRange (Util.format2 "%s: Unexpected output from Z3: %s\n" (query_logging.get_module_name()) hd);
         result tl
       | _ -> failwith <| format1 "Unexpected output from Z3: got output lines: %s\n" 
                             (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (Util.trim_string l)) lines)) in
