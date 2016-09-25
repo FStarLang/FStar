@@ -68,11 +68,11 @@ module Prims
   | MkExists of ' a * ' p
 
 
-
+  (* NS: Not sure why heap is still here? It is not there in prims.ml. Can it be removed? *)
   type heap = unit (*perhaps implement Heap concretely, and hence get it extracted fully automatically?
     We shoud get rid of this plethora of assumed primitives! *)
   type (' p, ' q, 'dummyP, 'dummyQ) l__Eq2 = Dummy_Eq2 of unit
-
+  type prop = obj
   let ignore _ = ()
   let cut = ()
   let fst = fst

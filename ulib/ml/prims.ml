@@ -66,6 +66,9 @@ type (' a, ' p) l_Exists = unit
 
 type (' p, ' q, 'dummyP) eq2 =  unit
 type (' p, ' q, 'dummyP, 'dummyQ) eq3 =  unit
+
+type prop     = Obj.t
+
 let ignore _ = ()
 let cut = ()
 let fst = fst
