@@ -98,7 +98,7 @@ let rec add_bytes #i st log a len txt =
    *)
 
 val chacha20_aead_encrypt: 
-  key:lbytes 32 -> iv:lbytes 12 -> 
+  key:lbytes 32 -> iv:BlockCipher.iv BlockCipher.CHACHA20 -> 
   aadlen:UInt32.t -> aadtext:lbytes (v aadlen) -> 
   plainlen:UInt32.t -> plaintext:lbytes (v plainlen) -> 
   ciphertext:lbytes (v plainlen) -> tag:MAC.tagB -> 
