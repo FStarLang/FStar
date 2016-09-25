@@ -870,7 +870,7 @@ in (FStar_All.pipe_left (fun _146_693 -> Some (_146_693)) _146_694))
 end
 | _52_605 -> begin
 (let _146_699 = (let _146_698 = (let _146_697 = (let _146_696 = (FStar_Syntax_Syntax.mk_Total k)
-in (FStar_Syntax_Util.arrow tps _146_696))
+in (FStar_Syntax_Util.flat_arrow tps _146_696))
 in ((uvs), (_146_697)))
 in (inst_tscheme _146_698))
 in (FStar_All.pipe_left (fun _146_695 -> Some (_146_695)) _146_699))
@@ -884,7 +884,7 @@ in (FStar_All.pipe_left (fun _146_700 -> Some (_146_700)) _146_701))
 end
 | _52_626 -> begin
 (let _146_706 = (let _146_705 = (let _146_704 = (let _146_703 = (FStar_Syntax_Syntax.mk_Total k)
-in (FStar_Syntax_Util.arrow tps _146_703))
+in (FStar_Syntax_Util.flat_arrow tps _146_703))
 in ((uvs), (_146_704)))
 in (inst_tscheme_with _146_705 us))
 in (FStar_All.pipe_left (fun _146_702 -> Some (_146_702)) _146_706))

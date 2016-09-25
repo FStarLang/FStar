@@ -466,13 +466,13 @@ let try_lookup_lid env lid =
     | Inr (Sig_inductive_typ (lid, uvs, tps, k, _, _, _, _), None) ->
       begin match tps with 
         | [] -> Some <| inst_tscheme (uvs, k)
-        | _ ->  Some <| inst_tscheme (uvs, Util.arrow tps (mk_Total k))
+        | _ ->  Some <| inst_tscheme (uvs, Util.flat_arrow tps (mk_Total k))
       end
 
     | Inr (Sig_inductive_typ (lid, uvs, tps, k, _, _, _, _), Some us) ->
       begin match tps with 
         | [] -> Some <| inst_tscheme_with (uvs, k) us
-        | _ ->  Some <| inst_tscheme_with (uvs, Util.arrow tps (mk_Total k)) us
+        | _ ->  Some <| inst_tscheme_with (uvs, Util.flat_arrow tps (mk_Total k)) us
       end
 
     | Inr se -> 

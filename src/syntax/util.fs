@@ -529,6 +529,21 @@ let abs bs t lopt =
 let arrow bs c = match bs with 
   | [] -> comp_result c 
   | _ -> mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
+
+let flat_arrow bs c = 
+  let t = arrow bs c in 
+  match (Subst.compress t).n with 
+  | Tm_arrow(bs, c) ->
+    begin match c.n with 
+        | Total (tres, _) -> 
+          begin match (Subst.compress tres).n with
+               | Tm_arrow(bs', c') -> mk (Tm_arrow(bs@bs', c')) (!t.tk) t.pos
+               | _ -> t
+          end
+        | _ -> t
+    end
+  | _ -> t
+
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) !b.sort.tk (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
 
