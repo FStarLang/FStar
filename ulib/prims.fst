@@ -608,7 +608,6 @@ let ignore #a x = ()
 type nat = i:int{i >= 0}
 type pos = i:int{i > 0}
 type nonzero = i:int{i<>0}
-#reset-options "--log_queries"
 let allow_inversion (a:Type)
   : Pure unit (requires True) (ensures (fun x -> inversion a))
   = ()

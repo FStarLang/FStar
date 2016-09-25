@@ -257,7 +257,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
                         (Print.lbname_to_string l) (Print.term_to_string t) (Print.term_to_string t');
                   l,t'
 
-                | _ -> failwith "Impossible: Annotated type of 'let rec' is not an arrow" in
+                | _ -> raise (Error ("Annotated type of 'let rec' must be an arrow", t.pos)) in
 
         letrecs |> List.map guard_one_letrec
 

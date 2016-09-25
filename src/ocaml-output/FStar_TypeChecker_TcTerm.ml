@@ -558,7 +558,7 @@ end))))
 end)))
 end
 | _58_290 -> begin
-(FStar_All.failwith "Impossible: Annotated type of \'let rec\' is not an arrow")
+(Prims.raise (FStar_Syntax_Syntax.Error ((("Annotated type of \'let rec\' must be an arrow"), (t.FStar_Syntax_Syntax.pos)))))
 end)
 end))
 in (FStar_All.pipe_right letrecs (FStar_List.map guard_one_letrec))))))))
