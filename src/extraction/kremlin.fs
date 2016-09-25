@@ -516,13 +516,15 @@ and translate_expr env e: expr =
       EPopFrame
   | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3; e4; e5 ]) when (string_of_mlpath p = "FStar.Buffer.blit") ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
-  | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HST.get") ->
+  | MLE_App ({ expr = MLE_Name p }, [ _ ]) when string_of_mlpath p = "FStar.HST.get" ->
       // We need to reveal to Kremlin that FStar.HST.get is equivalent to
       // (void*)0 so that it can get rid of ghost calls to HST.get at the
       // beginning of functions, which is needed to enforce the push/pop
       // structure.
       ECast (EConstant (UInt8, "0"), TAny)
 
+  | MLE_App ({ expr = MLE_Name p }, [ e ]) when string_of_mlpath p = "Obj.repr" ->
+      ECast (translate_expr env e, TAny)
 
   // Operators from fixed-width integer modules, e.g. [FStar.Int32.addw].
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], op) }, args) when (is_machine_int m && is_op op) ->
