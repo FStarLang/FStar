@@ -201,7 +201,7 @@ let doZ3Exe' (input:string) (z3proc:proc) =
       | "sat"::tl     -> SAT     (snd (unsat_core_and_lblnegs tl))
       | "unsat"::tl   -> UNSAT   (fst (unsat_core tl))
       | hd::tl -> 
-        TypeChecker.Errors.warn Range.dummyRange (Util.format1 "Unexpected output from Z3: %s\n" hd);
+        TypeChecker.Errors.warn Range.dummyRange (Util.format2 "%s: Unexpected output from Z3: %s\n" (query_logging.log_file_name()) hd);
         result tl
       | _ -> failwith <| format1 "Unexpected output from Z3: got output lines: %s\n" 
                             (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (Util.trim_string l)) lines)) in
@@ -313,29 +313,54 @@ let finish () =
     aux()
 
 type scope_t = list<list<decl>>
+
+//fresh_scope: Is a stack of declarations, corresponding to the current 
+//             state of declarations to be pushed to Z3
 let fresh_scope : ref<scope_t> = Util.mk_ref [[]]
+
+//bg_scope: Is the flat sequence of declarations already given to Z3
+//          When refreshing the solver, the bg_scope is set to 
+//          a flattened version of fresh_scope
 let bg_scope : ref<list<decl>> = Util.mk_ref []
+
 let push msg    =
     fresh_scope := [Term.Caption msg; Term.Push]::!fresh_scope;
     bg_scope := [Term.Caption msg; Term.Push]@ !bg_scope
+
 let pop msg      =
     fresh_scope := List.tl !fresh_scope;
     bg_scope := [Term.Pop; Term.Caption msg]@ !bg_scope
+
+//giveZ3 decls: adds decls to the stack of declarations 
+//              to be actually given to Z3 only when the next
+//              query comes up
 let giveZ3 decls =
-   let _  = match !fresh_scope with
+   decls |> List.iter (function Push | Pop -> failwith "Unexpected push/pop" | _ -> ());
+   begin match !fresh_scope with
     | hd::tl -> fresh_scope := (hd@decls)::tl
-    | _ -> failwith "Impossible" in
+    | _ -> failwith "Impossible"
+   end;
    bg_scope := List.rev decls @ !bg_scope
+
+//bgtheory fresh: gets that current sequence of decls
+//                to be fed to Z3 as the background theory
+//                for some query
 let bgtheory fresh =
     if fresh
-    then List.rev !fresh_scope |> List.flatten
+    then (bg_scope := [];
+          List.rev !fresh_scope |> List.flatten)
     else let bg = !bg_scope in
          bg_scope := [];
          List.rev bg
+
+//refresh: create a new z3 process, and reset the bg_scope
 let refresh () =
     bg_z3_proc.refresh();
     let theory = bgtheory true in
     bg_scope := List.rev theory
+
+//mark, reset_mark, commit_mark:
+//    setting rollback points for the interactive mode
 let mark msg =
     push msg
 let reset_mark msg =
