@@ -17,8 +17,12 @@ open Crypto.Symmetric.Poly1305 // avoid?
 
 module HH = FStar.HyperHeap
 
-type bytes = buffer UInt8.t
-type lbytes (n:nat) = b:bytes{length b = n}
+// library stuff
+
+type buffer = Buffer.buffer UInt8.t
+type bytes  = Seq.seq UInt8.t 
+type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
+type lbytes  (l:nat) = b:bytes {Seq.length b = l}
 
 let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 
@@ -31,7 +35,9 @@ assume val ideal: bool
 
 // we will need authId i ==> ideal?
 
-// the index is the base index (controlling agility and idealization) plus the unique IV for this MAC.
+// the index is the base index (controlling agility and idealization) 
+// plus the value of the unique IV for this MAC
+// TODO make it a dependent pair to suppor agile IV types 
 type id = Plain.id * lbytes 12
 
 assume val someId: Plain.id // dummy value for unit testing
@@ -63,7 +69,7 @@ type log_2 = // only when ideal
 // relocated in some library somewhere, 
 // and with careful, crypto-grade external implementation
 // both with ocaml and kremlin, 
-val random: r:rid -> len:UInt32.t -> ST bytes
+val random: r:rid -> len:UInt32.t -> ST buffer
      (requires (fun h -> is_eternal_region r))
      (ensures (fun (h0:mem) b h1 ->
 	 ~(contains h0 b)
@@ -119,7 +125,7 @@ noeq type state (i:id) =
 
 val alloc: i:id
   -> region:rid{is_eternal_region region}
-  -> key:bytes{length key >= 32}
+  -> key:buffer{length key >= 32}
   -> ST (state i)
   (requires (fun m0 -> live m0 key))
   (ensures  (fun m0 st m1 ->
@@ -159,7 +165,7 @@ let gen i region =
   let key = random region 32ul in
   alloc i region key
  
-val coerce: i:id{~(authId i)} -> r:rid -> key:lbytes 32 -> ST (state i)
+val coerce: i:id{~(authId i)} -> r:rid -> key:lbuffer 32 -> ST (state i)
   (requires (fun m0 -> live m0 key))
   (ensures  (fun m0 st m1 ->
     //modifies (Set.singleton r) m0 m1 /\
@@ -226,7 +232,7 @@ let seq_head_snoc #a xs x =
   Seq.lemma_len_append xs (Seq.create 1 x);
   Seq.lemma_eq_intro (seq_head (SeqProperties.snoc xs x)) xs
 
-#set-options "--print_fuels --initial_fuel 1 --initial_ifuel 1"
+#set-options "--z3timeout 100 --print_fuels --initial_fuel 1 --initial_ifuel 1"
 
 let update #i st l a v =
   let h0 = HST.get () in
@@ -259,7 +265,7 @@ let update #i st l a v =
 type invoked (#i:id) (st:state i) (m:mem) : Type =
   ideal /\ is_Some (sel m (State.log st))
 
-val mac: #i:id -> st:state i -> m:msg -> buf:bytes{lbytes 16} -> ST tag
+val mac: #i:id -> st:state i -> m:msg -> buf:buffer{lbytes 16} -> ST tag
   (requires (fun m0 -> is_None (m_sel m0 st.log)))
   (ensures  (fun m0 tag m1 ->
     modifies (Set.singleton (State.rid st)) m0 m1
@@ -287,6 +293,8 @@ let acc_inv (#i:id) (st:state i) (l:itext) (a:accB i) h =
    let a = sel_elem h a in
    ideal ==> a == poly l r)
 *)
+
+#set-options "--z3timeout 100 --print_fuels --initial_fuel 1 --initial_ifuel 1"
 
 val mac: #i:id -> st:state i -> l:itext -> acc:accB i -> tag:tagB -> ST unit
   (requires (fun h0 ->
@@ -317,7 +325,7 @@ let mac #i st l acc tag =
     end
   else
     admit ()
-
+//16-09-24 why?
 
 val verify: #i:id -> st:state i -> l:itext -> computed:accB i -> tag:tagB ->
   Stack bool

@@ -15,7 +15,10 @@ open FStar.UInt32
 
 // library stuff
 
-type lbuffer (l:UInt32.t) = b:buffer UInt8.t { length b = v l }
+type buffer = Buffer.buffer UInt8.t
+type bytes  = Seq.seq UInt8.t 
+type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
+type lbytes  (l:nat) = b:bytes {Seq.length b = l}
 
 
 type alg = 
@@ -37,13 +40,19 @@ let ivlen (a:alg) = 12ul
 
 type ctr = UInt32.t
 
-type key a   = lbuffer (keylen a)
-type block a = lbuffer (blocklen a)
-type iv a    = lbuffer (ivlen a)
+type key a   = lbuffer (v (keylen a))
+type block a = lbuffer (v (blocklen a))
+type iv a    = lbuffer (v (ivlen a))
+
+// IVs are now mutable byte arrays (UInt128s may be better)
+// ideally, we need to get to their value as abstract indexes.
+
+type ivv a   = lbytes (v (ivlen a))
+let load_iv a (i: iv a) : ivv a = Plain.load_bytes (ivlen a) i
 
 (* Update the counter, replace last 4 bytes of counter with num. *)
 (* num is precalculated by the function who calls this function. *)
-private val aes_store_counter: counter:lbuffer (blocklen AES256) -> num:ctr -> Stack unit
+private val aes_store_counter: counter:lbuffer (v (blocklen AES256)) -> num:ctr -> Stack unit
     (requires (fun h -> live h counter))
     (ensures (fun h0 _ h1 -> live h1 counter /\ modifies_1 counter h0 h1))
 let aes_store_counter b x =
@@ -59,7 +68,7 @@ let aes_store_counter b x =
 
 val compute:
   a: alg ->
-  output:bytes -> 
+  output:buffer -> 
   k:key a {disjoint output k} ->
   n:iv a {disjoint output n} ->
   counter: ctr ->

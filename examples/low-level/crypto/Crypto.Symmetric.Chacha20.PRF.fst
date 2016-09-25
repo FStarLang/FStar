@@ -54,8 +54,12 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 let maxCtr = 2000ul // to be adjusted, controlling concrete bound. 
 
-noeq type domain = { iv:Block.iv prfa; ctr:u32 } // could move to concrete CHACHA20
-let incr (x:domain {x.ctr <=^ maxCtr})  = { iv = x.iv; ctr = x.ctr +^ 1ul }
+
+type ivv = load_bytes 
+
+// used only ideally
+type domain = { ivv:Block.ivv prfa; ctr:u32 } // could move to concrete CHACHA20
+let incr (x:domain {x.ctr <=^ maxCtr})  = { ivv = x.iv; ctr = x.ctr +^ 1ul }
 
 let blocklen = Block.blocklen prfa
 let block = b:bytes {Seq.length b = v blocklen}
