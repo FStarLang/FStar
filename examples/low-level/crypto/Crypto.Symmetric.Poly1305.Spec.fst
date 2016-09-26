@@ -256,6 +256,21 @@ let rec lemma_encode_pad_injective p0 t0 p1 t1 =
     lemma_index_create 1 (encode_16 w1) 0;
     lemma_encode_16_injective w0 w1
 
+val encode_pad_empty: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> Lemma
+  (requires Seq.length txt == 0)
+  (ensures  encode_pad prefix txt == prefix)
+let encode_pad_empty prefix txt = ()
+
+val encode_pad_snoc: prefix:Seq.seq elem -> txt:Seq.seq UInt8.t -> w:word_16 -> Lemma
+  (encode_pad (SeqProperties.snoc prefix (encode_16 w)) txt ==
+   encode_pad prefix (append w txt))
+let encode_pad_snoc prefix txt w =
+  Seq.lemma_len_append w txt;
+  assert (16 <= Seq.length (append w txt));
+  let w', txt' = SeqProperties.split (append w txt) 16 in
+  let prefix' = SeqProperties.snoc prefix (encode_16 w') in
+  Seq.lemma_eq_intro w w';
+  Seq.lemma_eq_intro txt txt'
 
 (* * *********************************************)
 (* *        Poly1305 functional invariant        *)
