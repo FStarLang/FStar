@@ -1207,9 +1207,12 @@ and tc_inductive env ses quals lids =
 
         let env = Env.push_sigelt env0 sig_bndle in
         env.solver.push "haseq";
+
         env.solver.encode_sig env sig_bndle;
         let env = Env.push_univ_vars env us in
         let se = tc_assume env (lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))])) fml [] dr in
+
+        env.solver.pop "haseq";
         [se]
     in
 
@@ -1223,8 +1226,7 @@ and tc_inductive env ses quals lids =
         in
         //these are the prims type we are skipping
         let types_to_skip = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or"; ] in
-        let b = List.existsb (fun s -> s = lid.ident.idText) types_to_skip in
-        b
+        List.existsb (fun s -> s = lid.ident.idText) types_to_skip
     in
 
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in

@@ -228,7 +228,7 @@ type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
 
-type pattern =
+noeq type pattern =
   | SMTPat   : #a:Type -> a -> pattern
   | SMTPatT  : a:Type0 -> pattern 
   | SMTPatOr : list (list pattern) -> pattern 
