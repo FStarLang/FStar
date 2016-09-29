@@ -15,6 +15,7 @@ open FStar.UInt32
 
 // library stuff
 
+type lbytes (l:nat)  = b:bytes {Seq.length b = l}
 type lbuffer (l:UInt32.t) = b:buffer UInt8.t { length b = v l }
 
 

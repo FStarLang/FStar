@@ -98,6 +98,7 @@ let find_1 #rgn #i s (x:domain{x.ctr<>0ul}) =
 // TODO separate on rw, with multiple readers? 
 noeq type state (i:id) = 
   | State: #rgn: region ->
+           // key is immutable once generated, we should rather use lbytes ...
            key:lbuffer (v (Block.keylen prfa)) {Buffer.frameOf key = rgn} -> 
            table:HS.ref (Seq.seq (entry rgn i)) {HS.frameOf table = rgn} -> 
            state i  // should be maybe_mrref; for later. 
@@ -149,22 +150,6 @@ val prf_mac: i:id -> t:state i -> x:domain{x.ctr = 0ul} -> ST (MAC.state (i,x.iv
     // in all cases, we return the state in the table
   ))
 
-// generates a fresh block for x and XORs it with plaintext
-val prf_enxor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> 
-  l:u32 {l <=^ blocklen} -> cipher:lbuffer (v l) -> plain:plainBuffer i (v l) -> ST unit
-  (requires (fun h0 -> 
-     Plain.live h0 plain /\ Buffer.live h0 cipher /\ 
-     Buffer.disjoint (bufferT plain) cipher /\
-     is_None(find_1 (HS.sel h0 t.table) x) 
-     ))
-  (ensures (fun h0 _ h1 -> 
-     Plain.live h1 plain /\ Buffer.live h1 cipher /\
-     modifies_1 cipher h0 h1 /\ //16-09-22 missing hybrid modifies also covering t.
-     (match find_1 (HS.sel h1 t.table) x with 
-     | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain /\ c == sel_bytes h1 l cipher
-     | None   -> False 
-     )))
- 
 // reuse the same block for x and XORs it with ciphertext
 val prf_dexor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> 
   l:u32 {l <=^ blocklen} -> plain:plainBuffer i (v l) -> cipher:lbuffer (v l) -> ST unit
@@ -218,7 +203,22 @@ let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) 
 //#reset-options "--z3timeout 10000"
 //SZ: Was this typechecking? No.
 
-
+// generates a fresh block for x and XORs it with plaintext
+val prf_enxor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> 
+  l:u32 {l <=^ blocklen} -> cipher:lbuffer (v l) -> plain:plainBuffer i (v l) -> ST unit
+  (requires (fun h0 -> 
+     frameOf cipher <> t.rgn /\
+     Plain.live h0 plain /\ Buffer.live h0 cipher /\ 
+     Buffer.disjoint (bufferT plain) cipher /\
+     is_None(find_1 (HS.sel h0 t.table) x) 
+     ))
+  (ensures (fun h0 _ h1 -> 
+     Plain.live h1 plain /\ Buffer.live h1 cipher /\
+     modifies_1 cipher h0 h1 /\ //16-09-22 missing hybrid modifies also covering t.
+     (match find_1 (HS.sel h1 t.table) x with 
+     | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain /\ c == sel_bytes h1 l cipher
+     | None   -> False 
+     )))
 let prf_enxor i t x l cipher plain = 
   if authId i then
     begin
