@@ -604,7 +604,7 @@ and doc_of_loc (lineno, file) =
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
-    let for1 (x, tparams, body) =
+    let for1 (_, x, tparams, body) =
         let tparams =
             match tparams with
             | []  -> empty
