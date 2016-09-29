@@ -213,7 +213,7 @@ let rec print_elem e i len =
 
 val bound27_isSum: h0:mem -> h1:mem -> a:bigint -> b:bigint
   -> Lemma
-    (requires (norm h0 a /\ norm h0 b /\ isSum h0 h1 0 0 norm_length 0 a b))
+    (requires (norm h0 a /\ norm h0 b /\ isSum h0 h1 a b))
     (ensures  (bound27 h1 a))
 let bound27_isSum h0 h1 a b =
   // The (i+0) is there on purpuose to trigger the pattern in isSum
