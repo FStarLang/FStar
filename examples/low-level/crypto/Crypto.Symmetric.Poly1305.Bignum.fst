@@ -489,6 +489,8 @@ let update_6 c c0 c1 c2 c3 c4 c5  =
 
 let u633 = x:U64.t{v x < pow2 63}
 
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
 
 let isCarried_
   (h1:mem)
@@ -500,12 +502,12 @@ let isCarried_
       let r1  = (v b1 + r0) / pow2 26 in
       let r2  = (v b2 + r1) / pow2 26 in
       let r3  = (v b3 + r2) / pow2 26 in
-      v (get h1 b 0) = v b0 % pow2 26
+      v (get h1 b 5) = (v b4 + r3) / pow2 26
+      /\ v (get h1 b 0) = v b0 % pow2 26
       /\ v (get h1 b 1) = (v b1 + r0)  % pow2 26
       /\ v (get h1 b 2) = (v b2 + r1)  % pow2 26
       /\ v (get h1 b 3) = (v b3 + r2)  % pow2 26
       /\ v (get h1 b 4) = (v b4 + r3)  % pow2 26
-      /\ v (get h1 b 5) = (v b4 + r3) / pow2 26
     )
 
 
@@ -611,7 +613,7 @@ assume val lemma_carry_2:
 
 val carry_2: b:bigint -> Stack unit
   (requires (fun h -> carried_2 h b))
-  (ensures (fun h0 _ h1 -> live h0 b /\ norm h1 b /\ modifies_1 b h0 h1
+  (ensures (fun h0 _ h1 -> carried_2 h0 b /\ norm h1 b /\ modifies_1 b h0 h1
 	  /\ eval h1 b (norm_length+1) = eval h0 b norm_length
 	  /\ norm h1 b
   ))
@@ -621,13 +623,45 @@ let carry_2 b =
   let h1 = HST.get() in
   lemma_carry_2 h0 h1 b
 
-val carry_top: b:bigint -> Stack unit
-  (requires (fun h -> live h b /\ length b >= 5))
-  (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))
-let carry_top b =
+let carriedTopBottom (h0:mem) (h1:mem) (b:bigint) : GTot Type0 =
+  live h0 b /\ live h1 b /\ length b >= norm_length+1
+  /\ v (get h1 b 0) = v (get h0 b 0) + 5 * v (get h0 b 5)
+  /\ v (get h1 b 1) = v (get h0 b 1)
+  /\ v (get h1 b 2) = v (get h0 b 2)
+  /\ v (get h1 b 3) = v (get h0 b 3)
+  /\ v (get h1 b 4) = v (get h0 b 4)
+
+
+val carry_top_: b:bigint -> Stack unit
+  (requires (fun h -> live h b /\ length b >= norm_length+1
+    /\ v (get h b 0) + 5 * v (get h b 5) < pow2 64 ))
+  (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1
+    /\ carriedTopBottom h0 h1 b))
+let carry_top_ b =
   let b0 = b.(0ul) in
   let b5 = b.(5ul) in
   b.(0ul) <- b0 +^ times_5 b5
+
+assume val lemma_carry_top:
+  h0:mem -> h1:mem ->
+  b:bigint ->
+  Lemma (requires (carriedTopBottom h0 h1 b))
+	(ensures  (carriedTopBottom h0 h1 b
+	  /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime))
+
+(* WIP *)
+
+val carry_top: b:bigint -> Stack unit
+  (requires (fun h -> live h b /\ length b >= norm_length+1
+    /\ v (get h b 0) + 5 * v (get h b 5) < pow2 64 ))
+  (ensures  (fun h0 _ h1 -> live h0 b /\ live h1 b /\ modifies_1 b h0 h1 /\ length b >= norm_length+1
+    /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime))
+let carry_top b =
+  let h0 = HST.get() in
+  carry_top_ b;
+  let h1 = HST.get() in
+  lemma_carry_top h0 h1 b
+
 
 val freduce_coefficients: b:bigint -> Stack unit
   (requires (fun h -> live h b
