@@ -43,12 +43,12 @@ let cca2 (ideal:bool) : (RSA.pkey * (Plain.t -> RSA.cipher) * (RSA.cipher -> opt
     c  in
 
   let dec : RSA.cipher -> option (Plain.t) = fun c ->
-    if ideal
-    then match List.Tot.find (function Entry _ _ c' _ -> c=c') !log with
-      | Some t  -> Some(Entry.p t)
-      | _       -> None
-    else match RSA.dec sk c with
-       | Some(t') -> forget (* #Plain.t *) #_ (Plain.coerce t')
-       | None     -> None in
+    match ideal, List.Tot.find (function Entry _ _ c' _ -> c=c') !log with
+      | true,  Some t  -> Some(Entry.p t)
+      | _,  _       -> None
+      | false, _ -> 
+        (match RSA.dec sk c with
+        | Some(t') -> forget (* #Plain.t *) #_ (Plain.coerce t')
+        | None     -> None) in
 
   pk, enc, dec
