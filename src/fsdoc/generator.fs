@@ -193,7 +193,7 @@ let one_toplevel (decls:list<decl>) =
 // modul
 ///////////////////////////////////////////////////////////////////////////////
 let document_module (m:modul) =
-  Util.print "doc_module: %s\n" [(modul_to_string m)] ;  
+  //Util.print "doc_module: %s\n" [(modul_to_string m)] ;  
   // Get m's name and decls. 
   let name, decls, _mt = match m with // SI: don't forget mt!
     | Module(n,d) -> n, d, "module"
@@ -232,28 +232,7 @@ let generate (files:list<string>) =
   List.iter (fun m -> append_to_file fd (format "%s" [m.str])) mod_names;
   close_file fd
 
-// SI: code that shouldn't be here. 
-let as_frag d ds =
-  let rec as_mlist out ((m,r,doc), cur) ds = 
-    match ds with
-    | [] -> List.rev (Module(m, (mk_decl (TopLevelModule(m)) r doc) ::(List.rev cur))::out)
-    | d::ds ->
-       begin match d.d with
-       | TopLevelModule m' -> as_mlist (Module(m, (mk_decl (TopLevelModule(m)) r doc) :: (List.rev cur))::out) ((m',d.drange,d.doc), []) ds
-       | _ -> as_mlist out ((m,r,doc), d::cur) ds
-       end in
-  match d.d with
-  | TopLevelModule m ->
-     let ms = as_mlist [] ((m,d.drange,d.doc), []) ds in
-     begin match ms with
-     | _::Module(n, _)::_ ->        
-        let msg = "Support for more than one module in a file is deprecated" in
-        ()
-     | _ -> ()
-     end;
-     Inl ms
-  | _ ->
-     let ds = d::ds in
-     List.iter (function {d=TopLevelModule _; drange=r} -> raise (FStar.Syntax.Syntax.Error("Unexpected module declaration", r))
-		  | _ -> ()) ds;
-     Inr ds
+
+
+
+
