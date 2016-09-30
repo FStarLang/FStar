@@ -597,11 +597,18 @@ val carry_2_: b:bigint -> Stack unit
   (requires (fun h -> carried_2 h b))
   (ensures (fun h0 _ h1 -> live h0 b /\ norm h1 b /\ modifies_1 b h0 h1
     /\ isCarried h0 h1 b
-    (* /\ eval h1 b norm_length % reveal prime = eval h0 b norm_length % reveal prime *)
   ))
 let carry_2_ b =
   pow2_lt_compat 63 42; pow2_lt_compat 63 26;
   carry_1_ b
+
+
+let carried_3 (h:mem) (b:bigint) : GTot Type0 =
+  norm h b /\ length b >= norm_length+1
+  /\ v (get h b 5) <= 1
+  /\ (v (get h b 5) = 1
+    ==> (v (get h b 1) < pow2 18 /\ v (get h b 2) < pow2 18  /\ v (get h b 3) < pow2 18
+	/\ v (get h b 4) < pow2 18))
 
 assume val lemma_carry_2:
   h0:mem -> h1:mem ->
@@ -609,14 +616,13 @@ assume val lemma_carry_2:
   Lemma (requires (carried_2 h0 b /\ isCarried h0 h1 b))
 	(ensures  (carried_2 h0 b /\ isCarried h0 h1 b
 	  /\ eval h1 b (norm_length+1) = eval h0 b norm_length
-	  /\ norm h1 b))
+	  /\ norm h1 b /\ v (get h1 b 5) <= 1))
 
 val carry_2: b:bigint -> Stack unit
   (requires (fun h -> carried_2 h b))
   (ensures (fun h0 _ h1 -> carried_2 h0 b /\ norm h1 b /\ modifies_1 b h0 h1
 	  /\ eval h1 b (norm_length+1) = eval h0 b norm_length
-	  /\ norm h1 b
-  ))
+	  /\ norm h1 b /\ v (get h1 b 5) <= 1))
 let carry_2 b =
   let h0 = HST.get() in
   carry_2_ b;
@@ -642,39 +648,57 @@ let carry_top_ b =
   let b5 = b.(5ul) in
   b.(0ul) <- b0 +^ times_5 b5
 
-assume val lemma_carry_top:
+assume val lemma_carry_top_1:
   h0:mem -> h1:mem ->
   b:bigint ->
-  Lemma (requires (carriedTopBottom h0 h1 b))
-	(ensures  (carriedTopBottom h0 h1 b
+  Lemma (requires (carried_1 h0 b /\ carriedTopBottom h0 h1 b))
+	(ensures  (carried_1 h0 b /\ carriedTopBottom h0 h1 b
+	  /\ carried_2 h1 b
 	  /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime))
 
-(* WIP *)
-
-val carry_top: b:bigint -> Stack unit
-  (requires (fun h -> live h b /\ length b >= norm_length+1
-    /\ v (get h b 0) + 5 * v (get h b 5) < pow2 64 ))
-  (ensures  (fun h0 _ h1 -> live h0 b /\ live h1 b /\ modifies_1 b h0 h1 /\ length b >= norm_length+1
+val carry_top_1: b:bigint -> Stack unit
+  (requires (fun h -> carried_1 h b))
+  (ensures  (fun h0 _ h1 -> carried_2 h1 b
     /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime))
-let carry_top b =
+let carry_top_1 b =
   let h0 = HST.get() in
   carry_top_ b;
   let h1 = HST.get() in
-  lemma_carry_top h0 h1 b
+  lemma_carry_top_1 h0 h1 b
 
 
-val freduce_coefficients: b:bigint -> Stack unit
-  (requires (fun h -> live h b
-    (* /\ (forall (i:nat). {:pattern (v (get h b i))} i < norm_length ==> v (get h b i) < pow2 63) *)
-  ))
-  (ensures (fun h0 _ h1 -> live h0 b /\ norm h1 b /\ modifies_1 b h0 h1
-    (* /\ eval h1 b norm_length % reveal prime = eval h0 b norm_length % reveal prime *)
-  ))
-let freduce_coefficients b =
-  carry_1 b;
-  carry_top b;
-  carry_2 b;
-  carry_top b;
+let carried_4 (h:mem) (b:bigint) : GTot Type0 =
+  live h b /\ v (get h b 0) < pow2 26 + 5
+  /\ v (get h b 1) < pow2 26
+  /\ (v (get h b 0) >= pow2 26 ==> v (get h b 1) < pow2 18)
+  /\ v (get h b 2) < pow2 26
+  /\ v (get h b 3) < pow2 26
+  /\ v (get h b 4) < pow2 26
+
+
+assume val lemma_carry_top_2:
+  h0:mem -> h1:mem ->
+  b:bigint ->
+  Lemma (requires (norm h0 b /\ v (get h0 b 5) <= 1 /\ carriedTopBottom h0 h1 b))
+	(ensures  (norm h0 b /\ v (get h0 b 5) <= 1 /\ carriedTopBottom h0 h1 b
+	  /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime
+	  /\ carried_4 h1 b))
+
+val carry_top_2: b:bigint -> Stack unit
+  (requires (fun h -> carried_3 h b))
+  (ensures  (fun h0 _ h1 -> carried_3 h0 b /\ carried_4 h1 b /\ modifies_1 b h0 h1
+    /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime))
+let carry_top_2 b =
+  let h0 = HST.get() in
+  carry_top_ b;
+  let h1 = HST.get() in
+  lemma_carry_top_2 h0 h1 b
+
+val carry_0_to_1: b:bigint -> Stack unit
+  (requires (fun h -> carried_4 h b))
+  (ensures  (fun h0 _ h1 -> carried_4 h0 b /\ modifies_1 b h0 h1 /\ norm h1 b
+    /\ eval h1 b norm_length = eval h0 b norm_length))
+let carry_0_to_1 b =
   let b0 = b.(0ul) in
   let b1 = b.(1ul) in
   let b0' = mod2_26 b0 in
@@ -682,21 +706,30 @@ let freduce_coefficients b =
   b.(0ul) <- b0;
   b.(1ul) <- b1 +^ r0
 
+
+val freduce_coefficients: b:bigint -> Stack unit
+  (requires (fun h -> bound63 h b))
+  (ensures (fun h0 _ h1 -> bound63 h0 b /\ norm h1 b /\ modifies_1 b h0 h1
+    /\ eval h1 b norm_length % reveal prime = eval h0 b norm_length % reveal prime))
+let freduce_coefficients b =
+  carry_1 b;
+  carry_top_1 b;
+  carry_2 b;
+  carry_top_2 b;
+  carry_0_to_1 b
+
 val modulo: b:bigint -> Stack unit
   (requires (fun h -> live h b /\ satisfiesModuloConstraints h b))
-  (ensures (fun h0 _ h1 -> live h0 b /\ satisfiesModuloConstraints h0 b /\ norm h1 b
-    (* /\ eval h1 b norm_length % reveal prime = eval h0 b (2*norm_length-1) % reveal prime  *)
-    /\ modifies_1 b h0 h1))
+  (ensures (fun h0 _ h1 -> live h0 b /\ satisfiesModuloConstraints h0 b /\ norm h1 b /\ modifies_1 b h0 h1
+    /\ eval h1 b norm_length % reveal prime = eval h0 b (2*norm_length-1) % reveal prime))
 let modulo b =
   freduce_degree b;
   freduce_coefficients b
 
 val finalize: b:bigint -> Stack unit
   (requires (fun h -> norm h b))
-  (ensures (fun h0 _ h1 -> norm h0 b /\ norm h1 b
-    /\ modifies_1 b h0 h1
-    (* /\ eval h1 b norm_length = eval h0 b norm_length % reveal prime *)
-  ))
+  (ensures (fun h0 _ h1 -> norm h0 b /\ norm h1 b /\ modifies_1 b h0 h1
+    /\ eval h1 b norm_length = eval h0 b norm_length % reveal prime))
 let finalize b =
   let mask_26 = U64 ((1uL <<^ 26ul) -^ 1uL) in
   let mask2_26m5 = U64 (mask_26 -^ (1uL <<^ 2ul)) in
