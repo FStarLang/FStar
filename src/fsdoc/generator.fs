@@ -208,7 +208,7 @@ let document_module (m:modul) =
   match one_toplevel decls with 
   | Some (top_decl,other_decls) -> 
         begin
-          let on = O.prepend_output_dir (name.str^".mk") in
+          let on = O.prepend_output_dir (name.str^".md") in
           let fd = open_file_for_writing on in
           let w = append_to_file fd in
           // SI: keep TopLevelModule special? 
@@ -228,11 +228,11 @@ let document_module (m:modul) =
 // entry point 
 ///////////////////////////////////////////////////////////////////////////////
 let generate (files:list<string>) =
-  // fsdoc each module into it's own module.mk. 
+  // fsdoc each module into it's own module.md. 
   let modules = List.collect (fun fn -> P.parse_file fn) files in
   let mod_names = List.map document_module modules in
   // write mod_names into index.md 
-  let on = O.prepend_output_dir "index.mk" in 
+  let on = O.prepend_output_dir "index.md" in 
   let fd = open_file_for_writing on in 
   List.iter (fun m -> append_to_file fd (format "%s" [m.str])) mod_names;
   close_file fd
