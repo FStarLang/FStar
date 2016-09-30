@@ -22,10 +22,13 @@ module U64 = FStar.UInt64
 module HS = FStar.HyperStack
 
 open FStar.Buffer.Quantifiers
-open Crypto.Symmetric.Poly1305.Bignum.Lemmas
+open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1
+open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2
 
 let prime = prime
 let satisfiesModuloConstraints = satisfiesModuloConstraints
+let isSum = isSum
+let bound27 = bound27
 let w : U32.t -> Tot int = U32.v
 
 

@@ -1,4 +1,4 @@
-module Crypto.Symmetric.Poly1305.Bignum.Lemmas
+module Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1
 
 open FStar.Mul
 open FStar.Ghost
@@ -68,6 +68,8 @@ let lemma_fsum_0 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 =
   pow2_double_sum 26;
   pow2_lt_compat 64 27
 
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
 val lemma_bitweight_values: unit ->
   Lemma (bitweight templ 0 = 0 /\ bitweight templ 1 = 26
 	/\ bitweight templ 2 = 52 /\ bitweight templ 3 = 78
@@ -85,6 +87,8 @@ let lemma_bitweight_values () =
   bitweight_def templ 7;
   bitweight_def templ 8;
   bitweight_def templ 9
+
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_eval_bigint_5:
   h:mem ->
@@ -104,6 +108,7 @@ let lemma_eval_bigint_5 h b =
   eval_def h b 4;
   eval_def h b 5
 
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_eval_bigint_6:
   h:mem ->
@@ -125,6 +130,7 @@ let lemma_eval_bigint_6 h b =
   eval_def h b 5;
   eval_def h b 6
 
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_eval_bigint_9:
   h:mem ->
@@ -152,10 +158,14 @@ let lemma_eval_bigint_9 h b =
   eval_def h b 8;
   eval_def h b 9
 
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
 val factorization_lemma: unit ->
   Lemma (requires (True))
 	(ensures  (forall a b c. {:pattern (a * (b+c))} a * (b + c) = a * b + a * c))
 let factorization_lemma () = ()
+
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_fsum: h0:mem -> h1:mem -> a:bigint -> b:bigint -> Lemma
   (requires (norm h0 a /\ norm h0 b /\ isSum h0 h1 a b))
@@ -181,7 +191,8 @@ let isMultiplication (h0:mem) (h1:mem) (a:bigint) (b:bigint) (c:bigint) : GTot T
     let c2 = v (get h1 c 2) in let c3 = v (get h1 c 3) in let c4 = v (get h1 c 4) in
     let c5 = v (get h1 c 5) in let c6 = v (get h1 c 6) in let c7 = v (get h1 c 7) in
     let c8 = v (get h1 c 8) in
-    ( c1 = a0 * b1 + a1 * b0
+    ( c0 = a0 * b0
+      /\ c1 = a0 * b1 + a1 * b0
       /\ c2 = a0 * b2 + a1 * b1 + a2 * b0
       /\ c3 = a0 * b3 + a1 * b2 + a2 * b1 + a3 * b0
       /\ c4 = a0 * b4 + a1 * b3 + a2 * b2 + a3 * b1 + a4 * b0
@@ -201,7 +212,8 @@ let isMultiplication_
       let c2 = v (get h1 c 2) in let c3 = v (get h1 c 3) in let c4 = v (get h1 c 4) in
       let c5 = v (get h1 c 5) in let c6 = v (get h1 c 6) in let c7 = v (get h1 c 7) in
       let c8 = v (get h1 c 8) in
-      ( c1 = a0 * b1 + a1 * b0
+      ( c0 = a0 * b0
+	/\ c1 = a0 * b1 + a1 * b0
 	/\ c2 = a0 * b2 + a1 * b1 + a2 * b0
 	/\ c3 = a0 * b3 + a1 * b2 + a2 * b1 + a3 * b0
 	/\ c4 = a0 * b4 + a1 * b3 + a2 * b2 + a3 * b1 + a4 * b0
@@ -209,6 +221,8 @@ let isMultiplication_
 	/\ c6 = a2 * b4 + a3 * b3 + a4 * b2
 	/\ c7 = a3 * b4 + a4 * b3
 	/\ c8 = a4 * b4 ) )
+
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_multiplication_0:
   a0:U64.t -> a1:U64.t -> a2:U64.t -> a3:U64.t -> a4:U64.t ->
@@ -304,6 +318,8 @@ private let lemma_multiplication05
   = lemma_multiplication04 (a0) (pow2 26 * a1) (pow2 52 * a2) (pow2 78 * a3) (pow2 104 * a4)
 			   (b0) (pow2 26 * b1) (pow2 52 * b2) (pow2 78 * b3) (pow2 104 * b4)
 
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+
 private let lemma_multiplication060
   (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
   (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
@@ -331,6 +347,7 @@ private let lemma_multiplication061
     lemma_swap (pow2 26) a1 (pow2 78) b3;
     lemma_swap (pow2 26) a1 (pow2 104) b4
 
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 private let lemma_multiplication062
   (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
@@ -347,6 +364,8 @@ private let lemma_multiplication062
     lemma_swap (pow2 52) a2 (pow2 78) b3;
     lemma_swap (pow2 52) a2 (pow2 104) b4
 
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+
 private let lemma_multiplication063
   (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
   (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
@@ -361,6 +380,8 @@ private let lemma_multiplication063
     lemma_swap (pow2 78) a3 (pow2 52) b2;
     lemma_swap (pow2 78) a3 (pow2 78) b3;
     lemma_swap (pow2 78) a3 (pow2 104) b4
+
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 private let lemma_multiplication064
   (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
@@ -414,6 +435,8 @@ private let lemma_multiplication07
   = lemma_multiplication05 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4;
     lemma_multiplication06 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4
 
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+
 private let lemma_multiplication08
   (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
   (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
@@ -440,6 +463,7 @@ private let lemma_multiplication08
     lemma_multiplication00 (pow2 182) (a4 * b3) (a3 * b4)
 
 
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 private let lemma_multiplication0
   (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
@@ -461,7 +485,95 @@ private let lemma_multiplication0
 
 #reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
-assume val lemma_multiplication:
+val lemma_multiplication1:
+  h0:mem -> h1:mem ->
+  c:bigint{length c >= 2*norm_length-1} ->
+  a:bigint -> b:bigint ->
+  Lemma (requires (isMultiplication h0 h1 a b c))
+	(ensures  (isMultiplication h0 h1 a b c
+	  /\ eval h1 c (2*norm_length-1) = eval h0 a norm_length * eval h0 b norm_length))
+let lemma_multiplication1 h0 h1 c a b =
+  let a0 = v (get h0 a 0) in
+  let a1 = v (get h0 a 1) in
+  let a2 = v (get h0 a 2) in
+  let a3 = v (get h0 a 3) in
+  let a4 = v (get h0 a 4) in
+  let b0 = v (get h0 b 0) in
+  let b1 = v (get h0 b 1) in
+  let b2 = v (get h0 b 2) in
+  let b3 = v (get h0 b 3) in
+  let b4 = v (get h0 b 4) in
+  lemma_eval_bigint_9 h1 c;
+  lemma_eval_bigint_5 h0 a;
+  lemma_eval_bigint_5 h0 b;
+  lemma_multiplication0 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4
+
+
+#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
+
+let lemma_mul_ineq (a:nat) (b:nat) c d : Lemma (requires (a < c /\ b < d))
+					    (ensures  (a * b < c * d))
+  = ()
+
+val lemma_multiplication2:
+  h0:mem -> h1:mem ->
+  c:bigint{length c >= 2*norm_length-1} ->
+  a:bigint -> b:bigint ->
+  Lemma (requires (bound27 h0 a /\ norm h0 b /\ isMultiplication h0 h1 a b c))
+	(ensures  (bound27 h0 a /\ norm h0 b /\ isMultiplication h0 h1 a b c
+	  /\ maxValue h1 c 9 <= norm_length * pow2 53))
+let lemma_multiplication2 h0 h1 c a b =
+  pow2_plus 27 26;
+  let a0 = v (get h0 a 0) in
+  let a1 = v (get h0 a 1) in
+  let a2 = v (get h0 a 2) in
+  let a3 = v (get h0 a 3) in
+  let a4 = v (get h0 a 4) in
+  let b0 = v (get h0 b 0) in
+  let b1 = v (get h0 b 1) in
+  let b2 = v (get h0 b 2) in
+  let b3 = v (get h0 b 3) in
+  let b4 = v (get h0 b 4) in
+  lemma_mul_ineq a0 b0 (pow2 27) (pow2 26);
+  lemma_mul_ineq a0 b1 (pow2 27) (pow2 26);
+  lemma_mul_ineq a0 b2 (pow2 27) (pow2 26);
+  lemma_mul_ineq a0 b3 (pow2 27) (pow2 26);
+  lemma_mul_ineq a0 b4 (pow2 27) (pow2 26);
+  lemma_mul_ineq a1 b0 (pow2 27) (pow2 26);
+  lemma_mul_ineq a1 b1 (pow2 27) (pow2 26);
+  lemma_mul_ineq a1 b2 (pow2 27) (pow2 26);
+  lemma_mul_ineq a1 b3 (pow2 27) (pow2 26);
+  lemma_mul_ineq a1 b4 (pow2 27) (pow2 26);
+  lemma_mul_ineq a2 b0 (pow2 27) (pow2 26);
+  lemma_mul_ineq a2 b1 (pow2 27) (pow2 26);
+  lemma_mul_ineq a2 b2 (pow2 27) (pow2 26);
+  lemma_mul_ineq a2 b3 (pow2 27) (pow2 26);
+  lemma_mul_ineq a2 b4 (pow2 27) (pow2 26);
+  lemma_mul_ineq a3 b0 (pow2 27) (pow2 26);
+  lemma_mul_ineq a3 b1 (pow2 27) (pow2 26);
+  lemma_mul_ineq a3 b2 (pow2 27) (pow2 26);
+  lemma_mul_ineq a3 b3 (pow2 27) (pow2 26);
+  lemma_mul_ineq a3 b4 (pow2 27) (pow2 26);
+  lemma_mul_ineq a4 b0 (pow2 27) (pow2 26);
+  lemma_mul_ineq a4 b1 (pow2 27) (pow2 26);
+  lemma_mul_ineq a4 b2 (pow2 27) (pow2 26);
+  lemma_mul_ineq a4 b3 (pow2 27) (pow2 26);
+  lemma_mul_ineq a4 b4 (pow2 27) (pow2 26);
+  assert(v (get h1 c 0) < pow2 53);
+  assert(v (get h1 c 1) < 2*pow2 53);
+  assert(v (get h1 c 2) < 3*pow2 53);
+  assert(v (get h1 c 3) < 4*pow2 53);
+  assert(v (get h1 c 4) < 5*pow2 53);
+  assert(v (get h1 c 5) < 4*pow2 53);
+  assert(v (get h1 c 6) < 3*pow2 53);
+  assert(v (get h1 c 7) < 2*pow2 53);
+  assert(v (get h1 c 8) < pow2 53);
+  maxValue_bound_lemma_aux h1 c (2*norm_length-1) (5*pow2 53)
+
+
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
+val lemma_multiplication:
   h0:mem ->
   h1:mem ->
   c:bigint{length c >= 2*norm_length-1} ->
@@ -471,187 +583,6 @@ assume val lemma_multiplication:
 	(ensures  (bound27 h0 a /\ norm h0 b /\ live h1 c /\ isMultiplication h0 h1 a b c
 	  /\ eval h1 c (2*norm_length-1) = eval h0 a norm_length * eval h0 b norm_length
 	  /\ maxValue h1 c (2*norm_length-1) <= norm_length * pow2 53))
-
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
-
-let isDegreeReduced (h0:mem) (h1:mem) (b:bigint) =
-  live h0 b /\ live h1 b /\ length b >= 2*norm_length-1
-  /\ v (get h1 b 0) = v (get h0 b 0) + 5 * v (get h0 b 5)
-  /\ v (get h1 b 1) = v (get h0 b 1) + 5 * v (get h0 b 6)
-  /\ v (get h1 b 2) = v (get h0 b 2) + 5 * v (get h0 b 7)
-  /\ v (get h1 b 3) = v (get h0 b 3) + 5 * v (get h0 b 8)
-
-let satisfiesModuloConstraints (h:heap) (b:bigint) : GTot Type0 =
-  live h b /\ length b >= 2*norm_length-1
-  /\ maxValue h b (2*norm_length-1) * 6 < pow2 63
-
-val lemma_freduce_degree_0:
-  h:mem ->
-  b:bigint ->
-  Lemma (requires (satisfiesModuloConstraints h b))
-	(ensures  (satisfiesModuloConstraints h b
-	  /\ 5 * v (get h b 5) < pow2 64 /\ 5 * v (get h b 6) < pow2 64 /\ 5 * v (get h b 7) < pow2 64
-	  /\ 5 * v (get h b 7) < pow2 64 /\ 5 * v (get h b 8) < pow2 64
-	  /\ v (get h b 0) + 5 * v (get h b 5) < pow2 64 /\ v (get h b 1) + 5 * v (get h b 6) < pow2 64
-	  /\ v (get h b 2) + 5 * v (get h b 7) < pow2 64 /\ v (get h b 3) + 5 * v (get h b 8) < pow2 64
-	))
-let lemma_freduce_degree_0 h b =
-  pow2_double_sum 63;
-  maxValue_lemma_aux h b (2*norm_length-1)
-
-
-let bound63 (h:heap) (b:bigint) : GTot Type0 =
-  live h b /\ v (get h b 0) < pow2 63 /\ v (get h b 1) < pow2 63 /\ v (get h b 2) < pow2 63
-  /\ v (get h b 3) < pow2 63 /\ v (get h b 4) < pow2 63
-
-assume val lemma_freduce_degree:
-  h0:mem ->
-  h1:mem ->
-  b:bigint ->
-  Lemma (requires (satisfiesModuloConstraints h0 b /\ isDegreeReduced h0 h1 b))
-	(ensures  (satisfiesModuloConstraints h0 b /\ isDegreeReduced h0 h1 b
-	  /\ bound63 h1 b
-	  /\ eval h1 b norm_length % reveal prime = eval h0 b (2*norm_length-1) % reveal prime))
-
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
-
-let isCarried (h0:mem) (h1:mem) (b:bigint) : GTot Type0 =
-  live h0 b /\ live h1 b /\ length b >= norm_length+1
-  /\ (
-      let b0 = v (get h0 b 0) in
-      let b1 = v (get h0 b 1) in
-      let b2 = v (get h0 b 2) in
-      let b3 = v (get h0 b 3) in
-      let b4 = v (get h0 b 4) in
-      let r0  = b0 / pow2 26 in
-      let r1  = (b1 + r0) / pow2 26 in
-      let r2  = (b2 + r1) / pow2 26 in
-      let r3  = (b3 + r2) / pow2 26 in
-      v (get h1 b 5) = (b4 + r3) / pow2 26
-      /\ v (get h1 b 0) = b0 % pow2 26
-      /\ v (get h1 b 1) = (b1 + r0)  % pow2 26
-      /\ v (get h1 b 2) = (b2 + r1)  % pow2 26
-      /\ v (get h1 b 3) = (b3 + r2)  % pow2 26
-      /\ v (get h1 b 4) = (b4 + r3)  % pow2 26
-    )
-
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
-
-
-let u633 = x:U64.t{v x < pow2 63}
-
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
-
-
-let isCarried_
-  (h1:mem)
-  (b0:U64.t) (b1:U64.t) (b2:U64.t) (b3:U64.t) (b4:U64.t)
-  (b:bigint) : GTot Type0 =
-  live h1 b /\ length b >= norm_length+1
-  /\ (
-      let r0  = v b0 / pow2 26 in
-      let r1  = (v b1 + r0) / pow2 26 in
-      let r2  = (v b2 + r1) / pow2 26 in
-      let r3  = (v b3 + r2) / pow2 26 in
-      v (get h1 b 5) = (v b4 + r3) / pow2 26
-      /\ v (get h1 b 0) = v b0 % pow2 26
-      /\ v (get h1 b 1) = (v b1 + r0)  % pow2 26
-      /\ v (get h1 b 2) = (v b2 + r1)  % pow2 26
-      /\ v (get h1 b 3) = (v b3 + r2)  % pow2 26
-      /\ v (get h1 b 4) = (v b4 + r3)  % pow2 26
-    )
-
-
-let carried_1 (h:mem) (b:bigint) : GTot Type0 =
-  live h b /\ length b >= norm_length+1
-  /\ v (get h b 0) < pow2 26
-  /\ v (get h b 1) < pow2 26
-  /\ v (get h b 2) < pow2 26
-  /\ v (get h b 3) < pow2 26
-  /\ v (get h b 4) < pow2 26
-  /\ v (get h b 5) <= pow2 38
-
-assume val lemma_carry_1:
-  h0:mem -> h1:mem ->
-  b:bigint{length b >= norm_length+1} ->
-  Lemma (requires (bound63 h0 b /\ isCarried h0 h1 b))
-	(ensures  (bound63 h0 b /\ isCarried h0 h1 b
-	  /\ eval h1 b (norm_length+1) = eval h0 b norm_length /\ carried_1 h1 b))
-
-
-let carried_2 (h:mem) (b:bigint) : GTot Type0 =
-  live h b /\ length b >= norm_length+1
-  /\ v (get h b 0) < pow2 42
-  /\ v (get h b 1) < pow2 26
-  /\ v (get h b 2) < pow2 26
-  /\ v (get h b 3) < pow2 26
-  /\ v (get h b 4) < pow2 26
-
-
-let carried_3 (h:mem) (b:bigint) : GTot Type0 =
-  norm h b /\ length b >= norm_length+1
-  /\ v (get h b 5) <= 1
-  /\ (v (get h b 5) = 1
-    ==> (v (get h b 1) < pow2 18 /\ v (get h b 2) < pow2 18  /\ v (get h b 3) < pow2 18
-	/\ v (get h b 4) < pow2 18))
-
-assume val lemma_carry_2:
-  h0:mem -> h1:mem ->
-  b:bigint{length b >= norm_length+1} ->
-  Lemma (requires (carried_2 h0 b /\ isCarried h0 h1 b))
-	(ensures  (carried_2 h0 b /\ isCarried h0 h1 b
-	  /\ eval h1 b (norm_length+1) = eval h0 b norm_length
-	  /\ carried_3 h1 b))
-
-let carriedTopBottom (h0:mem) (h1:mem) (b:bigint) : GTot Type0 =
-  live h0 b /\ live h1 b /\ length b >= norm_length+1
-  /\ v (get h1 b 0) = v (get h0 b 0) + 5 * v (get h0 b 5)
-  /\ v (get h1 b 1) = v (get h0 b 1)
-  /\ v (get h1 b 2) = v (get h0 b 2)
-  /\ v (get h1 b 3) = v (get h0 b 3)
-  /\ v (get h1 b 4) = v (get h0 b 4)
-
-
-assume val lemma_carry_top_1:
-  h0:mem -> h1:mem ->
-  b:bigint ->
-  Lemma (requires (carried_1 h0 b /\ carriedTopBottom h0 h1 b))
-	(ensures  (carried_1 h0 b /\ carriedTopBottom h0 h1 b
-	  /\ carried_2 h1 b
-	  /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime))
-
-
-let carried_4 (h:mem) (b:bigint) : GTot Type0 =
-  live h b /\ v (get h b 0) < pow2 26 + 5
-  /\ v (get h b 1) < pow2 26
-  /\ (v (get h b 0) >= pow2 26 ==> v (get h b 1) < pow2 18)
-  /\ v (get h b 2) < pow2 26
-  /\ v (get h b 3) < pow2 26
-  /\ v (get h b 4) < pow2 26
-
-
-assume val lemma_carry_top_2:
-  h0:mem -> h1:mem ->
-  b:bigint ->
-  Lemma (requires (norm h0 b /\ length b >= norm_length + 1
-		  /\ v (get h0 b 5) <= 1 /\ carriedTopBottom h0 h1 b))
-	(ensures  (norm h0 b /\ length b >= norm_length + 1
-	  /\ v (get h0 b 5) <= 1 /\ carriedTopBottom h0 h1 b
-	  /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime
-	  /\ carried_4 h1 b))
-
-
-let isCarried01 (h0:mem) (h1:mem) (b:bigint) =
-  live h0 b /\ live h1 b
-  /\ v (get h1 b 0) = v (get h0 b 0) % pow2 26
-  /\ v (get h1 b 1) = v (get h0 b 1) + (v (get h0 b 0) / pow2 26)
-  /\ v (get h1 b 2) = v (get h0 b 2)
-  /\ v (get h1 b 3) = v (get h0 b 3)
-  /\ v (get h1 b 4) = v (get h0 b 4)
-
-assume val lemma_carry_0_to_1:
-  h0:mem -> h1:mem ->
-  b:bigint ->
-  Lemma (requires (carried_4 h0 b /\ isCarried01 h0 h1 b))
-	(ensures  (carried_4 h0 b /\ isCarried01 h0 h1 b
-	  /\ norm h1 b /\ eval h1 b norm_length = eval h0 b norm_length))
+let lemma_multiplication h0 h1 c a b =
+  lemma_multiplication1 h0 h1 c a b;
+  lemma_multiplication2 h0 h1 c a b
