@@ -15,15 +15,19 @@ let lbr = text "["
 let rbr = text "]"
 let ws = break1
 
-let encode_char (c : char) =
-  let cn = (int)c in
-  if cn > 127 || cn=39 then sprintf "\\u%04x" cn
+let encode_char (cn : int) =
+  if cn > 127 || cn=39 then "" (* todo : sprintf "\\u%04x" cn *)
   else match cn with
     | 34 -> "\\\"" | 92 -> "\\\\"
     | 9 -> "\\t"   | 10 -> "\\n"
     | 11 -> "\\v"  | 12 -> "\\f"
     | 8 -> "\\b"   | 47 -> "\\/"  | 13 -> "\\r"
-    | n -> if n < 32 then sprintf "\\x%02x" cn else sprintf "%c" c
+    | n -> if n < 32 then "" (* todo : "\\x%02x" cn *) else "" (* todo : sprintf "%c" c *)
+
+
+//
+// MARINA & BEN stopped here !
+//
 
 let jstr_escape s = String.collect encode_char s
 
@@ -81,12 +85,12 @@ and pretty_print_statement (p:statement_t) : doc =
         reduce [ws; text "if"; (parens (pretty_print_exp c)); text "{"; hardline; optws t; text "}";
         (match f with
          | None -> empty
-         | Some s -> reduce [ws; text "else"; text "{"; (match s with JSS_If(_) -> ws | _ -> hardline); optws s; text "}"])]
+         | Some s -> reduce [ws; text "else"; text "{"; (match s with | JSS_If(_) -> ws | _ -> hardline); optws s; text "}"])]
     | JSS_Labeled((l, t), s) -> reduce [ws; text (jstr_escape l); text ":"; hardline; optws s]
     | JSS_Break(i) -> reduce [ws; text "break";
-        (match i with None -> empty | Some (v, t) -> cat ws (text v)); semi]
+        (match i with | None -> empty | Some (v, t) -> cat ws (text v)); semi]
     | JSS_Continue(i) -> reduce [ws; text "continue";
-        (match i with None -> empty | Some (v, t) -> reduce [ws; text (jstr_escape v)]); semi]
+        (match i with | None -> empty | Some (v, t) -> reduce [ws; text (jstr_escape v)]); semi]
     | JSS_With(e,s) -> reduce [ws; text "with"; parens (pretty_print_exp e); hardline; optws s]
     | JSS_TypeAlias((id,_),_,t) -> reduce [text "type "; text (jstr_escape id); text "="; print_typ t; text ";"]
     | JSS_Switch(e,lcase) ->
@@ -94,9 +98,9 @@ and pretty_print_statement (p:statement_t) : doc =
                 ws; text "{"; hardline;
                 combine hardline 
                 (List.map (fun (e,l)->reduce [ws; text "case "; 
-                    (match e with Some v -> pretty_print_exp v | None -> text "default"); colon; hardline; nest 1 (pretty_print_statements l)]) lcase);
+                    (match e with | Some v -> pretty_print_exp v | None -> text "default"); colon; hardline; nest 1 (pretty_print_statements l)]) lcase);
                 text "}"]
-    | JSS_Return(e) -> reduce [ws; text "return"; (match e with None -> empty | Some v -> reduce [ws; pretty_print_exp v]); semi]
+    | JSS_Return(e) -> reduce [ws; text "return"; (match e with | None -> empty | Some v -> reduce [ws; pretty_print_exp v]); semi]
     | JSS_Throw(e) -> reduce [ws; text "throw "; pretty_print_exp e; semi]    
     | JSS_Try _  -> semi (*!!!*)
     | JSS_While(e, s) -> reduce [ws; text "while"; parens (pretty_print_exp e); hardline; optws s]
@@ -149,7 +153,7 @@ and pretty_print_exp_gen =
     | JSE_Comprehension(l,e) -> semi (*!!!*)
     | JSE_Generator(l,e) -> semi (*!!!*)
     | JSE_Let(l,e) -> semi (*!!!*)
-    | JSE_Identifier(id,t) -> reduce [text (jstr_escape id); (match t with Some v -> reduce [text ":"; print_typ v] | None -> text "")] 
+    | JSE_Identifier(id,t) -> reduce [text (jstr_escape id); (match t with | Some v -> reduce [text ":"; print_typ v] | None -> text "")] 
     | JSE_Literal(l) -> print_literal (fst l)
     | JSE_TypeCast(e,t) -> semi (*!!!*)    
     in fun e -> ppe e
@@ -195,9 +199,9 @@ and print_typ = function
 
 and print_literal = function
     | JSV_String s -> text ("\"" ^ (jstr_escape s) ^ "\"")
-    | JSV_Boolean b -> text (b.ToString().ToLower())
+    | JSV_Boolean b -> text (Util.string_of_bool b (* todo: ToLower() *))
     | JSV_Null -> text "null"
-    | JSV_Number f -> text (f.ToString())
+    | JSV_Number f -> text (Util.string_of_float f)
     | JSV_RegExp _ -> text "!!"
 
 and print_kind_var = function
@@ -221,8 +225,8 @@ and print_body = function
     | JS_BodyExpression e -> pretty_print_exp e
 
 and pretty_print_fun (n, pars, body, t, typePars) =
-    let name = match n with Some v -> fst v | None -> "" in
-    let reternT = match t with Some v -> reduce [text ":"; ws; print_typ v] | None -> text "" in
+    let name = match n with | Some v -> fst v | None -> "" in
+    let reternT = match t with | Some v -> reduce [text ":"; ws; print_typ v] | None -> text "" in
     reduce [text "function"; ws; text name; parens (pretty_print_elist pars); text "{";  hardline; print_body body; text "}"]
 
 and print_op_log = function

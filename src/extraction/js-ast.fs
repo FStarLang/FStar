@@ -30,16 +30,16 @@ and statement_t =
     | JSS_Return of option<expression_t>
     | JSS_Throw of expression_t  
     | JSS_Try of list<statement_t> * option<(pattern_t * option<expression_t> * statement_t)>
-                 * list<(pattern_t * option<expression_t> * statement_t)> * option<list<statement_t>> (*!!!*)
+                 * list<(pattern_t * option<expression_t> * statement_t)> * option<(list<statement_t>)> (*!!!*)
     | JSS_While of expression_t * statement_t
     | JSS_DoWhile of statement_t * expression_t
     | JSS_For of option<forinit_t> * option<expression_t> * option<expression_t> * statement_t
     | JSS_Forin of forinit_t * expression_t * statement_t
     | JSS_ForOf of forinit_t * expression_t * statement_t
-    | JSS_Let of list<pattern_t * option<expression_t>> * statement_t
+    | JSS_Let of list<(pattern_t * option<expression_t>)> * statement_t
     | JSS_Debugger
     | JSS_FunctionDeclaration of function_t
-    | JSS_VariableDeclaration of list<pattern_t * option<expression_t>> * kind_var_t
+    | JSS_VariableDeclaration of list<(pattern_t * option<expression_t>)> * kind_var_t
     (*| JSS_ClassDeclaration of Class.t*)
     (*| JSS_InterfaceDeclaration of Interface.t *)
     | JSS_DeclareVariable of identifier_t
@@ -53,7 +53,7 @@ and statement_t =
     
 and expression_t =
     | JSE_This
-    | JSE_Array of option<list<expression_t>>
+    | JSE_Array of option<(list<expression_t>)>
     | JSE_Object of list<property_obj_t>
     | JSE_Function of function_t
     | JSE_ArrowFunction of function_t
@@ -70,7 +70,7 @@ and expression_t =
     | JSE_Yield of option<expression_t> * bool
     | JSE_Comprehension of list<t> * option<expression_t>
     | JSE_Generator of list<t> * option<expression_t>
-    | JSE_Let of list<pattern_t * option<expression_t>> * expression_t
+    | JSE_Let of list<(pattern_t * option<expression_t>)> * expression_t
     | JSE_Identifier of identifier_t
     | JSE_Literal of literal_t
     (*| JSE_TemplateLiteral of TemplateLiteral.t *)
@@ -94,7 +94,7 @@ and op_update = | JSUP_Increment | JSUP_Decrement
 and op_log = | JSL_Or | JSL_And
 
 and forinit_t = 
-    | JSF_Declaration of list<pattern_t * option<expression_t>> * kind_var_t
+    | JSF_Declaration of list<(pattern_t * option<expression_t>)> * kind_var_t
     | JSF_Expression of expression_t
 
 and kind_var_t = | JSV_Var | JSV_Let | JSV_Const
@@ -117,10 +117,10 @@ and typ =
     | JST_String
     | JST_Boolean
     | JST_Nullable of typ
-    | JST_Function of list<identifier_t * typ> * typ * option<identifier_t * typ> * option<param_decl_t>
-    | JST_Object of list<object_prop_key_t * typ> * list<identifier_t * typ * typ> * list<function_t>
+    | JST_Function of list<(identifier_t * typ)> * typ * option<(identifier_t * typ)> * option<param_decl_t>
+    | JST_Object of list<(object_prop_key_t * typ)> * list<(identifier_t * typ * typ)> * list<function_t>
     | JST_Array of typ
-    | JST_Generic of generic_t * option<list<typ>>
+    | JST_Generic of generic_t * option<(list<typ>)>
     | JST_Union of list<typ>
     | JST_Intersection of list<typ>
     | JST_Typeof of typ
@@ -151,13 +151,13 @@ and value_t =
     | JSV_Number of float
     | JSV_RegExp of string * string
 
-and param_decl_t = list<string * option<typ>> (*??*)
+and param_decl_t = list<(string * option<typ>)> (*??*)
 
 and predicate_t = | JSP_Declared of expression_t | JSP_Inferred
 
 and pattern_t = 
     | JGP_Object of list<property_t> * option<typ>
-    | JGP_Array of option<list<pattern_t>> * option<typ>
+    | JGP_Array of option<(list<pattern_t>)> * option<typ>
     | JGP_Assignment of pattern_t * expression_t
     | JGP_Identifier of identifier_t
     | JGP_Expression of expression_t
