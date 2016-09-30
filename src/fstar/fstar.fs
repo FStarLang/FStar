@@ -50,7 +50,7 @@ let finished_message fmods =
     print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
   end
 
-(* Extraction to OCaml, F# or Kremlin *)
+(* Extraction to OCaml, F#, Kremlin or JavaScript *)
 let codegen uf_mods_env =
   let opt = Options.codegen () in
   if opt <> None then
@@ -62,6 +62,7 @@ let codegen uf_mods_env =
       | Some "FSharp" -> ".fs"
       | Some "OCaml" -> ".ml"
       | Some "Kremlin" -> ".krml"
+      | Some "JavaScript" -> ".js"
       | _ -> failwith "Unrecognized option"
     in
     match opt with
@@ -69,6 +70,14 @@ let codegen uf_mods_env =
         let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
         List.iter (fun (n,d) ->
           Util.write_file (Options.prepend_output_dir (n^ext)) (FStar.Format.pretty 120 d)
+        ) newDocs
+    | Some "JavaScript" ->
+        //printf "%A" mllibs;
+        let newDocs = List.collect Extraction.JavaScript.Translate.translate mllibs in        
+        List.iter (fun (n,d) ->
+           let res = Extraction.JavaScript.PrintAst.pretty_print d  in
+           //printf "%A" d;           
+           Util.write_file (Options.prepend_output_dir (n^ext)) (FStar.Format.pretty 120 res)
         ) newDocs
     | Some "Kremlin" ->
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in

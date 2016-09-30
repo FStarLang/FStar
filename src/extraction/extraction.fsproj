@@ -64,6 +64,9 @@
     <Compile Include="extractmod.fs" />
     <Content Include="app.config" />
     <Compile Include="kremlin.fs" />
+    <Compile Include="js-ast.fs" />
+    <Compile Include="js-printast.fs" />
+    <Compile Include="js-translate.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\typechecker\typechecker.fsproj">

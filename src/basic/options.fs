@@ -299,7 +299,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort,
        "codegen",
         OneArg ((fun s -> String (parse_codegen s)),
-                 "[OCaml|FSharp|Kremlin]"),
+                 "[OCaml|FSharp|Kremlin|JavaScript]"),
         "Generate code for execution");
 
      ( noshort,
@@ -624,6 +624,7 @@ let rec specs () : list<Getopt.opt> =
 and parse_codegen s =
   match s with
   | "Kremlin"
+  | "JavaScript"
   | "OCaml"
   | "FSharp" -> s
   | _ ->
