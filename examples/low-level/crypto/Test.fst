@@ -85,52 +85,50 @@ let from_bytestring s =
   store_bytestring len buf 0ul s;  
   buf 
 
-let test =
+val main: Int32.t -> FStar.Buffer.buffer (FStar.Buffer.buffer C.char) ->
+  HST.Stack Int32.t (fun _ -> true) (fun _ _ _ -> true)
+let main argc argv =
   push_frame(); 
   let plainlen = 114ul in 
-  let plainrepr = from_string plainlen "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it." in
+  let plainrepr = from_string plainlen 
+    "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it." in
 
   let i:id = 42ul in
   let plain = Plain.create i 0uy plainlen in 
   let plainbytes = make (v plainlen) (load_bytes plainlen plainrepr) in 
   Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
-  let aad = from_bytestring "50515253c0c1c2c3c4c5c6c7" in
+  let aad = from_bytestring [
+    0x50uy; 0x51uy; 0x52uy; 0x53uy; 0xc0uy; 0xc1uy; 0xc2uy; 0xc3uy; 0xc4uy; 0xc5uy; 0xc6uy; 0xc7uy ] in
   let aadlen = 12ul in 
-  let key = from_bytestring "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f" in
-  let iv = FStar.UInt64.of_string "0x4746454443424140" in
-  let expected_cipher = from_bytestring (strcat "d31a8d34648e60db7b86afbc53ef7ec2a4aded51296e08fea9e2b5a736ee62d63dbea45e8ca9671282fafb69da92728b1a71de0a9e060b2905d6a5b67ecd3b3692ddbd7f2d778b8c9803aee328091b58fab324e4fad675945585808b4831d7bc3ff4def08e4b7a9de576d26586cec64b6116" "1ae10b594f09e26a7e902ecbd0600691") in 
-  // print_string "Testing AEAD chacha20_poly1305...\n";
-  let cipher = Buffer.create 0uy (plainlen +^ 16ul) in
-  let decrypted = Plain.create i 0uy plainlen in
+  let key = Buffer.createL [ 
+    0x80uy; 0x81uy; 0x82uy; 0x83uy; 0x84uy; 0x85uy; 0x86uy; 0x87uy; 0x88uy; 0x89uy; 0x8auy; 0x8buy; 0x8cuy; 0x8duy; 0x8euy; 0x8fuy; 
+    0x90uy; 0x91uy; 0x92uy; 0x93uy; 0x94uy; 0x95uy; 0x96uy; 0x97uy; 0x98uy; 0x99uy; 0x9auy; 0x9buy; 0x9cuy; 0x9duy; 0x9euy; 0x9fuy ] in
+  let iv = 0x4746454443424140UL in
+  let expected_cipher = Buffer.createL [ 
+    0xd3uy; 0x1auy; 0x8duy; 0x34uy; 0x64uy; 0x8euy; 0x60uy; 0xdbuy; 0x7buy; 0x86uy; 0xafuy; 0xbcuy; 0x53uy; 0xefuy; 0x7euy; 0xc2uy; 
+    0xa4uy; 0xaduy; 0xeduy; 0x51uy; 0x29uy; 0x6euy; 0x08uy; 0xfeuy; 0xa9uy; 0xe2uy; 0xb5uy; 0xa7uy; 0x36uy; 0xeeuy; 0x62uy; 0xd6uy; 
+    0x3duy; 0xbeuy; 0xa4uy; 0x5euy; 0x8cuy; 0xa9uy; 0x67uy; 0x12uy; 0x82uy; 0xfauy; 0xfbuy; 0x69uy; 0xdauy; 0x92uy; 0x72uy; 0x8buy; 
+    0x1auy; 0x71uy; 0xdeuy; 0x0auy; 0x9euy; 0x06uy; 0x0buy; 0x29uy; 0x05uy; 0xd6uy; 0xa5uy; 0xb6uy; 0x7euy; 0xcduy; 0x3buy; 0x36uy; 
+    0x92uy; 0xdduy; 0xbduy; 0x7fuy; 0x2duy; 0x77uy; 0x8buy; 0x8cuy; 0x98uy; 0x03uy; 0xaeuy; 0xe3uy; 0x28uy; 0x09uy; 0x1buy; 0x58uy; 
+    0xfauy; 0xb3uy; 0x24uy; 0xe4uy; 0xfauy; 0xd6uy; 0x75uy; 0x94uy; 0x55uy; 0x85uy; 0x80uy; 0x8buy; 0x48uy; 0x31uy; 0xd7uy; 0xbcuy; 
+    0x3fuy; 0xf4uy; 0xdeuy; 0xf0uy; 0x8euy; 0x4buy; 0x7auy; 0x9duy; 0xe5uy; 0x76uy; 0xd2uy; 0x65uy; 0x86uy; 0xceuy; 0xc6uy; 0x4buy; 
+    0x61uy; 0x16uy; 0x1auy; 0xe1uy; 0x0buy; 0x59uy; 0x4fuy; 0x09uy; 0xe2uy; 0x6auy; 0x7euy; 0x90uy; 0x2euy; 0xcbuy; 0xd0uy; 0x60uy; 
+    0x06uy; 0x91uy ] in 
 
+  let cipherlen = plainlen + 16ul in 
+  assert(Buffer.length expected_cipher = cipherlen);
+  print_string "Testing AEAD chacha20_poly1305...\n";
+  let cipher = Buffer.create 0uy cipherlen in
   let st = AE.gen i HH.root in 
-
   AE.encrypt i st iv aadlen aad plainlen plain cipher; 
+
+  if not(Buffer.eqb expected_cipher cipher cipherlen) then failwith "ERROR: encrypted ciphertext mismatch";
+
+  let decrypted = Plain.create i 0uy plainlen in
   let is_verified = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
-  
-  pop_frame ()
 
+  if not(Buffer.eqb decrypted plainrepr decrypted plainlen) then failwith "ERROR: decrypted plaintext mismatch";
 
-//  let st = ... in 
-(*
-  time (fun () -> for i = 0 to 999 do
-                    chacha20_aead_encrypt key iv constant 12 aad 114 plaintext ciphertext tag;
-                  done) () "1000 iterations";
-  (* Output result *)
-  diff "cipher" expected_ciphertext ciphertext 114;
-  diff "tag" expected_tag tag 16;
-
-  let decrypted = FStar_Buffer.create 0 114 in
-  if chacha20_aead_decrypt key iv constant 12 aad 114 decrypted ciphertext tag = 0
-  then diff "decryption" plaintext decrypted 114
-  else print_string "decryption failed";
-*)
-
-
-(*
-let diff name expected computed len =
-  print_string ("Expected "^name^":\n"); print expected len;
-  print_string ("Computed "^name^":\n"); print computed len;
-  if not(FStar_Buffer.eqb expected computed 16) then
-    failwith "Doesn't match expected result"
-*)         
+  // todo: iterate for performance testing.
+  pop_frame ();
+  C.exit_success

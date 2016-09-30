@@ -85,7 +85,7 @@ let compute a output k n counter len =
       let open Crypto.Symmetric.Chacha20 in 
       chacha20 output k n counter len
 
-  | AES256 -> (
+  | AES256 -> 
       let open Crypto.Symmetric.AES in 
 
       // all of this should be hoisted. 
@@ -100,7 +100,6 @@ let compute a output k n counter len =
       aes_store_counter ctr_block counter; 
       cipher output_block ctr_block w sbox;
       blit output_block 0ul output 0ul len // too much copying!
-      )
   end;
   pop_frame()
   
