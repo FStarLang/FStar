@@ -93,8 +93,6 @@ let sel_elem (h:mem) (b:elemB{live h b}) : GTot elem
 let sel_int (h:mem) (b:elemB{live h b}) : GTot nat
   = eval h b norm_length
 
-#set-options "--lax"
-
 
 (* * *********************************************)
 (* *          Encoding-related lemmas            *)
@@ -445,7 +443,7 @@ let add_2_24 (x:t{v x < pow2 24}) : Tot (z:t{v z = v x + pow2 24 /\ v z < pow2 2
     Math.Lemmas.pow2_lt_compat 64 25;
     x +^ (1uL <<^ 24ul)
 
-(* Formats a wordB into an elemB *)
+(* Formats a wordB_16 into an elemB *)
 val toField_plus_2_128: a:elemB{length a = norm_length} -> b:wordB_16{disjoint a b} -> Stack unit
   (requires (fun h -> live h a /\ live h b /\ disjoint a b))
   (ensures  (fun h0 _ h1 ->
@@ -462,6 +460,58 @@ let toField_plus_2_128 b s =
   let h1 = HST.get() in
   lemma_upd_quantifiers h0 h1 b 4ul b4';
   lemma_toField_plus_2_128 h1 b h0 b
+
+
+(* Formats a wordB into an elemB *)
+val toField_plus: a:elemB{length a = norm_length} -> b:wordB{disjoint a b} ->
+  len:u32{w len < length b} -> Stack unit
+  (requires (fun h -> live h a /\ live h b /\ disjoint a b))
+  (ensures  (fun h0 _ h1 ->
+    live h0 b /\ // Initial post condition
+    norm h1 a /\ // the elemB 'a' is in a 'workable' state
+    modifies_1 a h0 h1 /\ // Only a was modified
+    sel_int h1 a ==
+    pow2 (8 * w len) + little_endian (Seq.slice (sel_word h0 b) 0 (w len)) ))
+
+
+#set-options "--initial_fuel 0 --max_fuel 0 --z3timeout 60 --detail_errors"
+
+let toField_plus a b len =
+  let h0 = HST.get() in
+  push_frame();
+  let n = create 0uy 16ul in
+  blit b 0ul n 0ul len;
+  let h1 = HST.get() in
+  n.(len) <- 1uy;
+  let h2 = HST.get() in
+  toField a n;
+  let h3 = HST.get() in
+  pop_frame ();
+  let h4 = HST.get() in
+  admit();
+  eval_eq_lemma h3 h4 a a norm_length;
+  assert (sel_int h4 a == little_endian (sel_word h2 n));
+  let n1, n2 = SeqProperties.split_eq (sel_word h2 n) (w len) in
+  let n3, n4 = SeqProperties.split_eq n2 1 in
+  little_endian_append n1 n2;
+  little_endian_append n3 n4;
+  cut (little_endian (sel_word h2 n) ==
+       little_endian n1 + pow2 (8 * w len) *
+	 (little_endian n3 + pow2 8 * little_endian n4));
+  Seq.lemma_eq_intro n3 (Seq.create 1 1uy);
+  little_endian_singleton 1uy;
+  assert (little_endian n3 == 1);
+  let _, n2' = SeqProperties.split_eq (sel_word h1 n) (w len) in
+  let _, n4' = SeqProperties.split_eq n2' 1 in
+  assert (forall (i:nat). i < Seq.length n4' ==> Seq.index n4' i == Seq.index n4 i);
+  Seq.lemma_eq_intro n4 (Seq.create (Seq.length n4) 0uy);
+  little_endian_null (Seq.length n4);
+  assert (little_endian n4 == 0);
+  assert_norm ((1 + pow2 8 * 0) == 1);
+  assert (pow2 (8 * w len) * (1 + pow2 8 * 0) == pow2 (8 * w len));
+  assert (sel_int h4 a == pow2 (8 * w len) + little_endian n1);
+  Seq.lemma_eq_intro n1 (Seq.slice (sel_word h0 b) 0 (w len));
+  assert (n1 == Seq.slice (sel_word h0 b) 0 (w len))
 
 
 val upd_wordB_16: b:wordB_16 -> s0:U8.t -> s1:U8.t -> s2:U8.t -> s3:U8.t -> s4:U8.t -> s5:U8.t ->
@@ -628,7 +678,7 @@ val poly1305_update:
       /\ norm h0 r
       /\ modifies_1 acc h0 h1
       /\ (ideal ==>
-	 ilog updated_log == SeqProperties.snoc (ilog current_log) (encode_16 (sel_word h1 msg))
+	 ilog updated_log == SeqProperties.snoc (ilog current_log) (encode (sel_word h1 msg))
 	 /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
 
 #set-options "--z3timeout 60 --initial_fuel 1 --max_fuel 1"
@@ -651,10 +701,10 @@ let poly1305_update log msgB acc r =
     if ideal then
       begin
       let msg = read_word msgB in
-      assert (encode_16 msg == sel_elem h1 block);
-      seq_head_snoc (ilog log) (encode_16 msg);
-      Seq.lemma_index_app2 (ilog log) (Seq.create 1 (encode_16 msg)) (Seq.length (SeqProperties.snoc (ilog log) (encode_16 msg)) - 1);
-      SeqProperties.snoc (ilog log) (encode_16 msg)
+      assert (encode msg == sel_elem h1 block);
+      seq_head_snoc (ilog log) (encode msg);
+      Seq.lemma_index_app2 (ilog log) (Seq.create 1 (encode msg)) (Seq.length (SeqProperties.snoc (ilog log) (encode msg)) - 1);
+      SeqProperties.snoc (ilog log) (encode msg)
       end
     else () in
   pop_frame();
@@ -708,7 +758,7 @@ let rec poly1305_loop log msg acc r ctr =
       assert (live h1 msg1 /\ norm h1 acc /\ norm h1 r);
       assert (ideal ==> sel_elem h1 acc == poly (ilog log1) (sel_elem h0 r));
       assert (ideal ==>
-        ilog log1 == SeqProperties.snoc (ilog log) (encode_16 (sel_word h1 msg0)));
+        ilog log1 == SeqProperties.snoc (ilog log) (encode (sel_word h1 msg0)));
       let log2 = poly1305_loop log1 msg1 acc r (ctr -| 1ul) in
       let h2 = HST.get () in
       assert (norm h2 acc /\ modifies_1 acc h0 h2);
@@ -720,7 +770,7 @@ let rec poly1305_loop log msg acc r ctr =
 	  //    (as_seq h0 (Buffer.sub msg1 0ul (UInt32.mul 16ul (ctr -| 1ul)))) );
 	  //assert (encode_pad (ilog log1)
 	  //  (as_seq h0 (Buffer.sub msg1 0ul (UInt32.mul 16ul (ctr -| 1ul)))) ==
-          //encode_pad (SeqProperties.snoc (ilog log) (encode_16 (sel_word h1 msg0)))
+          //encode_pad (SeqProperties.snoc (ilog log) (encode (sel_word h1 msg0)))
 	  //  (as_seq h0 (Buffer.sub (Buffer.offset msg 16ul) 0ul (UInt32.mul 16ul ctr -| 16ul))));
 	  encode_pad_snoc (ilog log) (as_seq h0 (Buffer.sub (Buffer.offset msg 16ul) 0ul (UInt32.mul 16ul ctr -| 16ul))) (sel_word h1 msg0);
 	  append_as_seq_sub h0 (UInt32.mul 16ul ctr) 16ul msg
@@ -731,41 +781,105 @@ let rec poly1305_loop log msg acc r ctr =
     end
 
 
-#set-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3timeout 30 --initial_fuel 0 --max_fuel 0"
 
 (**
    Performs the last step if there is an incomplete block
    NB: Not relevant for AEAD-ChachaPoly which only uses complete blocks of 16 bytes, hence
        only the 'update' and 'loop' functions are necessary there
    *)
-val poly1305_last: msg:wordB -> acc:elemB{disjoint msg acc} ->
-  r:elemB{disjoint msg r /\ disjoint acc r} -> len:u32{w len < length msg} ->
-  ST unit
-    (requires (fun h -> live h msg /\ norm h acc /\ norm h r))
-    (ensures (fun h0 _ h1 -> live h1 msg /\ norm h1 acc /\ norm h1 r
-      /\ modifies_1 acc h0 h1))
-let poly1305_last msg acc r len =
+val poly1305_last: 
+  current_log:log_t -> 
+  msg:wordB -> 
+  acc:elemB{disjoint msg acc} ->
+  r:elemB{disjoint msg r /\ disjoint acc r} -> 
+  len:u32{w len < length msg} ->
+  Stack log_t
+    (requires (fun h -> live h msg /\ norm h acc /\ norm h r /\
+      (ideal ==> sel_elem h acc == poly (ilog current_log) (sel_elem h r)) ))
+    (ensures (fun h0 updated_log h1 -> live h0 msg /\ norm h1 acc /\ norm h1 r
+      /\ norm h0 r
+      /\ modifies_1 acc h0 h1
+      /\ (ideal ==>
+	 //ilog updated_log == encode_pad (ilog current_log) (as_seq h1 (Buffer.sub msg 0ul len)) /\
+	sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
+let poly1305_last log msg acc r len =
+  assume (False);
   let h0 = HST.get() in
-  if U32.eq len 0ul then ()
+  if U32.eq len 0ul then log
   else
     begin
     push_frame ();
-    let n = create 0uy 16ul in
-    blit msg 0ul n 0ul len;
-    n.(len) <- 1uy;
     let block = create 0UL nlength in
-    toField block n;
+    toField_plus block msg len;
     let h1 = HST.get () in
     norm_eq_lemma h0 h1 acc acc;
     norm_eq_lemma h0 h1 r r;
+    eval_eq_lemma h0 h1 acc acc Parameters.norm_length;
+    eval_eq_lemma h0 h1 r r Parameters.norm_length;
     add_and_multiply acc block r;
     let h2 = HST.get () in
+    eval_eq_lemma h1 h2 block block Parameters.norm_length;
+    assert (modifies_1 acc h1 h2);
+    let updated_log:log_t =
+      if ideal then
+        begin
+	let msg = read_word msg in
+	assert (encode msg == sel_elem h1 block);
+	seq_head_snoc (ilog log) (sel_elem h1 block);
+	Seq.lemma_index_app2 (ilog log) (Seq.create 1 (encode msg)) (Seq.length (SeqProperties.snoc (ilog log) (encode msg)) - 1);
+	SeqProperties.snoc (ilog log) (encode msg)
+	end
+      else () in
     pop_frame ();
     let h3 = HST.get() in
+    eval_eq_lemma h2 h3 acc acc Parameters.norm_length;
+    assert (norm h3 acc);
+    assert (modifies_1 acc h0 h3);
     norm_eq_lemma h1 h3 r r;
-    norm_eq_lemma h2 h3 acc acc
+    norm_eq_lemma h2 h3 acc acc;
+    updated_log
     end
 
+
+(*
+sel_elem h2 acc
+== add_and_multiply acc block r
+(sel_elem h1 acc +@ sel_elem h1 block) *@ sel_elem h1 r
+== pre: sel_elem h acc == poly (ilog current_log) (sel_elem h r)
+(poly (ilog current_log) (sel_elem h0 r) +@ sel_elem h1 block) *@ sel_elem h0 r
+==
+(poly (seq_head (ilog updated_log)) (sel_elem h0 r) +@
+ Seq.index (ilog updated_log) (length updated_log - 1)) *@ (sel_elem h0 r)
+==
+poly (ilog updated_log) (sel_elem h0 r)
+
+1) seq_head updated_log == current_log
+2) Seq.index updated_log (length updated_log - 1) == sel_elem h0 block
+
+ilog updated_log
+==
+SeqProperties.snoc (ilog current_log) (sel_elem h0 block)
+==
+SeqProperties.snoc (ilog current_log) (encode (pad_0 txt (16 - l)))
+==
+encode_pad (ilog current_log) txt
+
+
+encode (pad_0 txt (16 - l))
+==
+pow2 128 +@ little_endian (pad_0 txt (16 - l))
+==
+
+
+==
+sel_int h1 block % p_1305
+==
+sel_elem h1 block
+*)
+
+
+#set-options "--lax"
 
 (* TODO: certainly a more efficient, better implementation of that *)
 private val add_word: a:wordB_16 -> b:wordB_16 -> Stack unit
@@ -793,8 +907,6 @@ let add_word a b =
   bytes_of_uint32 (Buffer.sub a 8ul 4ul) (uint64_to_uint32 z2);
   bytes_of_uint32 (Buffer.sub a 12ul 4ul) (uint64_to_uint32 z3);
   admit ()
-
-#set-options "--lax"
 
 (* Finish function, with final accumulator value *)
 val poly1305_finish:
@@ -837,7 +949,7 @@ let poly1305_mac tag msg len key =
   let l = poly1305_loop l msg acc r ctr in
   (* Run the poly1305_update function one more time on the incomplete block *)
   let last_block = sub msg (FStar.UInt32 (ctr *^ 16ul)) rest in
-  poly1305_last last_block acc r rest;
+  poly1305_last l last_block acc r rest;
   (* Finish *)
   poly1305_finish tag acc (sub key 16ul 16ul);
   pop_frame()

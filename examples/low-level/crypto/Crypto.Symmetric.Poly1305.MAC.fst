@@ -382,7 +382,7 @@ val add:
     /\ (ideal ==> sel_elem h a = poly (reveal l0) (sel_elem h st.r))))
   (ensures (fun h0 l1 h1 ->
     modifies_1 a h0 h1 /\ norm h1 a /\
-    (ideal ==> reveal l1 = SeqProperties.snoc (reveal l0) (encode_16 (sel_word h0 w)) /\
+    (ideal ==> reveal l1 = SeqProperties.snoc (reveal l0) (encode (sel_word h0 w)) /\
              sel_elem h1 a = poly (reveal l1) (sel_elem h0 st.r))))
 
 let add #i st l0 a w =
