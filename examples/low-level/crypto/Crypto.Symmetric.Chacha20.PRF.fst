@@ -55,11 +55,11 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 let maxCtr = 2000ul // to be adjusted, controlling concrete bound. 
 
 
-type ivv = load_bytes 
 
-// used only ideally
-type domain = { ivv:Block.ivv prfa; ctr:u32 } // could move to concrete CHACHA20
-let incr (x:domain {x.ctr <=^ maxCtr})  = { ivv = x.iv; ctr = x.ctr +^ 1ul }
+// used only ideally; noeq is painful here. 
+
+noeq type domain = { ivv:Block.ivv prfa; ctr:u32 } // could move to concrete CHACHA20
+let incr (x:domain {x.ctr <=^ maxCtr})  = { ivv = x.ivv; ctr = x.ctr +^ 1ul }
 
 let blocklen = Block.blocklen prfa
 let block = b:bytes {Seq.length b = v blocklen}
@@ -69,7 +69,7 @@ let keylen = Block.keylen prfa
 // the range of our PRF, after idealization and "reverse inlining."
 // for one-time-pads, we keep both the plain and cipher blocks, instead of their XOR.
 
-type smac (rgn:region) i x = mac: MAC.state (i,x.iv) { MAC.State.region mac = rgn }
+type smac (rgn:region) i x = mac: MAC.state (i,x.ivv) { MAC.State.region mac = rgn }
 noeq type otp i = | OTP: l:u32 {l <=^ blocklen} -> plain i (v l) -> cipher:lbytes (v l) -> otp i
 
 let range (rgn:region) (i:id) (x:domain): Type0 =
@@ -160,7 +160,7 @@ val prf_dexor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} ->
   (requires (fun h0 -> 
      Plain.live h0 plain /\ Buffer.live h0 cipher /\ Buffer.disjoint (bufferT plain) cipher /\ 
      Buffer.frameOf (bufferT plain) <> t.rgn /\
-     (authId i ==> 
+     (authId i => 
      ( match find_1 (HS.sel h0 t.table) x with 
        | Some (OTP l' p c) -> l == l' /\ c == sel_bytes h0 l cipher
        | None -> False
@@ -181,7 +181,6 @@ let prf_dexor i t x l plain cipher =
       let contents = !t.table in
       match find_1 contents x with 
       | Some (OTP l' p c) -> ( 
-          let h0 = HST.get() in 
           Plain.store #i l plain p;
           let h1 = HST.get() in 
           Buffer.lemma_reveal_modifies_1 (bufferT plain) h0 h1)
