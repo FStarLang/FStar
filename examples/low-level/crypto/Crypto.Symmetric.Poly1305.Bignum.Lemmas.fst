@@ -68,11 +68,105 @@ let lemma_fsum_0 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 =
   pow2_double_sum 26;
   pow2_lt_compat 64 27
 
+val lemma_bitweight_values: unit ->
+  Lemma (bitweight templ 0 = 0 /\ bitweight templ 1 = 26
+	/\ bitweight templ 2 = 52 /\ bitweight templ 3 = 78
+	/\ bitweight templ 4 = 104 /\ bitweight templ 5 = 130
+	/\ bitweight templ 6 = 156 /\ bitweight templ 7 = 182
+	/\ bitweight templ 8 = 208 /\ bitweight templ 9 = 234)
+let lemma_bitweight_values () =
+  bitweight_def templ 0;
+  bitweight_def templ 1;
+  bitweight_def templ 2;
+  bitweight_def templ 3;
+  bitweight_def templ 4;
+  bitweight_def templ 5;
+  bitweight_def templ 6;
+  bitweight_def templ 7;
+  bitweight_def templ 8;
+  bitweight_def templ 9
 
-assume val lemma_fsum: h0:mem -> h1:mem -> a:bigint -> b:bigint -> Lemma
+val lemma_eval_bigint_5:
+  h:mem ->
+  b:bigint ->
+  Lemma (requires (live h b))
+	(ensures  (live h b
+	  /\ eval h b norm_length = v (get h b 0) + pow2 26  * v (get h b 1)
+						  + pow2 52  * v (get h b 2)
+						  + pow2 78  * v (get h b 3)
+						  + pow2 104 * v (get h b 4) ))
+let lemma_eval_bigint_5 h b =
+  lemma_bitweight_values ();
+  eval_def h b 0;
+  eval_def h b 1;
+  eval_def h b 2;
+  eval_def h b 3;
+  eval_def h b 4;
+  eval_def h b 5
+
+
+val lemma_eval_bigint_6:
+  h:mem ->
+  b:bigint ->
+  Lemma (requires (live h b /\ length b >= 2*norm_length-1))
+	(ensures  (live h b /\ length b >= 2*norm_length-1
+	  /\ eval h b (norm_length+1) = v (get h b 0) + pow2 26  * v (get h b 1)
+						     + pow2 52  * v (get h b 2)
+						     + pow2 78  * v (get h b 3)
+						     + pow2 104 * v (get h b 4)
+						     + pow2 130 * v (get h b 5) ))
+let lemma_eval_bigint_6 h b =
+  lemma_bitweight_values ();
+  eval_def h b 0;
+  eval_def h b 1;
+  eval_def h b 2;
+  eval_def h b 3;
+  eval_def h b 4;
+  eval_def h b 5;
+  eval_def h b 6
+
+
+val lemma_eval_bigint_9:
+  h:mem ->
+  b:bigint ->
+  Lemma (requires (live h b /\ length b >= 2*norm_length-1))
+	(ensures  (live h b /\ length b >= 2*norm_length-1
+	  /\ eval h b (2*norm_length-1) = v (get h b 0) + pow2 26  * v (get h b 1)
+						       + pow2 52  * v (get h b 2)
+						       + pow2 78  * v (get h b 3)
+						       + pow2 104 * v (get h b 4)
+						       + pow2 130 * v (get h b 5)
+						       + pow2 156 * v (get h b 6)
+						       + pow2 182 * v (get h b 7)
+						       + pow2 208 * v (get h b 8) ))
+let lemma_eval_bigint_9 h b =
+  lemma_bitweight_values ();
+  eval_def h b 0;
+  eval_def h b 1;
+  eval_def h b 2;
+  eval_def h b 3;
+  eval_def h b 4;
+  eval_def h b 5;
+  eval_def h b 6;
+  eval_def h b 7;
+  eval_def h b 8;
+  eval_def h b 9
+
+val factorization_lemma: unit ->
+  Lemma (requires (True))
+	(ensures  (forall a b c. {:pattern (a * (b+c))} a * (b + c) = a * b + a * c))
+let factorization_lemma () = ()
+
+val lemma_fsum: h0:mem -> h1:mem -> a:bigint -> b:bigint -> Lemma
   (requires (norm h0 a /\ norm h0 b /\ isSum h0 h1 a b))
   (ensures  (norm h0 a /\ norm h0 b /\ isSum h0 h1 a b
     /\ bound27 h1 a /\ eval h1 a norm_length = eval h0 a norm_length + eval h0 b norm_length))
+let lemma_fsum h0 h1 a b =
+  pow2_double_sum 26;
+  lemma_eval_bigint_5 h0 a;
+  lemma_eval_bigint_5 h0 b;
+  factorization_lemma ();
+  lemma_eval_bigint_5 h1 a
 
 #reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
@@ -164,6 +258,208 @@ let lemma_multiplication_0 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 =
 
 let u27 = x:FStar.UInt64.t{v x < pow2 27}
 let u26 = x:FStar.UInt64.t{v x < pow2 26}
+
+
+private let lemma_multiplication00 a b c :
+  Lemma (a * (b + c) = a * b + a * c)
+  = ()
+private let lemma_multiplication01 a b c d:
+  Lemma (a * (b + c + d) = a * b + a * c + a * d)
+  = ()
+private let lemma_multiplication02 a b c d e :
+  Lemma (a * (b + c + d + e) = a * b + a * c + a * d + a * e)
+  = ()
+private let lemma_multiplication03 a b c d e f :
+  Lemma (a * (b + c + d + e + f) = a * b + a * c + a * d + a * e + a * f)
+  = ()
+private let lemma_multiplication03bis a b c d e f :
+  Lemma ((b + c + d + e + f) * a = b * a + c * a + d * a + e * a + f * a)
+  = ()
+private let lemma_multiplication04 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 :
+  Lemma ((a0+a1+a2+a3+a4)*(b0+b1+b2+b3+b4)
+    = a0*b0+a0*b1+a0*b2+a0*b3+a0*b4
+      +a1*b0+a1*b1+a1*b2+a1*b3+a1*b4
+      +a2*b0+a2*b1+a2*b2+a2*b3+a2*b4
+      +a3*b0+a3*b1+a3*b2+a3*b3+a3*b4
+      +a4*b0+a4*b1+a4*b2+a4*b3+a4*b4)
+  = lemma_multiplication03bis (b0+b1+b2+b3+b4) a0 a1 a2 a3 a4;
+    lemma_multiplication03 a0 b0 b1 b2 b3 b4;
+    lemma_multiplication03 a1 b0 b1 b2 b3 b4;
+    lemma_multiplication03 a2 b0 b1 b2 b3 b4;
+    lemma_multiplication03 a3 b0 b1 b2 b3 b4;
+    lemma_multiplication03 a4 b0 b1 b2 b3 b4
+
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
+private let lemma_multiplication05
+  (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
+  (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
+  Lemma ((a0 + pow2 26 * a1 + pow2 52 * a2 + pow2 78 * a3 + pow2 104 * a4)
+    * (b0 + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4)
+    = a0*b0+a0*(pow2 26*b1)+a0*(pow2 52*b2)+a0*(pow2 78*b3)+a0*(pow2 104*b4)
+      +(pow2 26*a1)*b0+(pow2 26*a1)*(pow2 26*b1)+(pow2 26*a1)*(pow2 52*b2)+(pow2 26*a1)*(pow2 78*b3)+(pow2 26*a1)*(pow2 104*b4)
+      +(pow2 52*a2)*b0+(pow2 52*a2)*(pow2 26*b1)+(pow2 52*a2)*(pow2 52*b2)+(pow2 52*a2)*(pow2 78*b3)+(pow2 52*a2)*(pow2 104*b4)
+      +(pow2 78*a3)*b0+(pow2 78*a3)*(pow2 26*b1)+(pow2 78*a3)*(pow2 52*b2)+(pow2 78*a3)*(pow2 78*b3)+(pow2 78*a3)*(pow2 104*b4)
+      +(pow2 104*a4)*b0+(pow2 104*a4)*(pow2 26*b1)+(pow2 104*a4)*(pow2 52*b2) +(pow2 104*a4)*(pow2 78*b3)+(pow2 104*a4)*(pow2 104*b4) )
+  = lemma_multiplication04 (a0) (pow2 26 * a1) (pow2 52 * a2) (pow2 78 * a3) (pow2 104 * a4)
+			   (b0) (pow2 26 * b1) (pow2 52 * b2) (pow2 78 * b3) (pow2 104 * b4)
+
+private let lemma_multiplication060
+  (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
+  (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
+  Lemma (
+    a0*b0+a0*(pow2 26*b1)+a0*(pow2 52*b2)+a0*(pow2 78*b3)+a0*(pow2 104*b4)
+    = a0 * b0 + pow2 26  * (a0 * b1) + pow2 52  * (a0 * b2) + pow2 78  * (a0 * b3) + pow2 104 * (a0 * b4) )
+  = ()
+
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+
+let lemma_swap p1 a p2 b : Lemma ((p1 * a) * (p2 * b) = p1 * p2 * (a * b)) = ()
+
+private let lemma_multiplication061
+  (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
+  (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
+  Lemma (
+    (pow2 26*a1)*b0+(pow2 26*a1)*(pow2 26*b1)+(pow2 26*a1)*(pow2 52*b2)+(pow2 26*a1)*(pow2 78*b3)+(pow2 26*a1)*(pow2 104*b4)
+    = pow2 26 * (a1 * b0) + pow2 52 * (a1 * b1) + pow2 78 * (a1 * b2) + pow2 104 * (a1 * b3) + pow2 130 * (a1 * b4) )
+  = pow2_plus 26 26;
+    pow2_plus 26 52;
+    pow2_plus 26 78;
+    pow2_plus 26 104;
+    lemma_swap (pow2 26) a1 (pow2 26) b1;
+    lemma_swap (pow2 26) a1 (pow2 52) b2;
+    lemma_swap (pow2 26) a1 (pow2 78) b3;
+    lemma_swap (pow2 26) a1 (pow2 104) b4
+
+
+private let lemma_multiplication062
+  (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
+  (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
+  Lemma (
+    (pow2 52*a2)*b0+(pow2 52*a2)*(pow2 26*b1)+(pow2 52*a2)*(pow2 52*b2)+(pow2 52*a2)*(pow2 78*b3)+(pow2 52*a2)*(pow2 104*b4)
+    = pow2 52  * (a2 * b0) + pow2 78  * (a2 * b1) + pow2 104 * (a2 * b2) + pow2 130 * (a2 * b3) + pow2 156 * (a2 * b4) )
+  = pow2_plus 52 26;
+    pow2_plus 52 52;
+    pow2_plus 52 78;
+    pow2_plus 52 104;
+    lemma_swap (pow2 52) a2 (pow2 26) b1;
+    lemma_swap (pow2 52) a2 (pow2 52) b2;
+    lemma_swap (pow2 52) a2 (pow2 78) b3;
+    lemma_swap (pow2 52) a2 (pow2 104) b4
+
+private let lemma_multiplication063
+  (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
+  (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
+  Lemma (
+    (pow2 78*a3)*b0+(pow2 78*a3)*(pow2 26*b1)+(pow2 78*a3)*(pow2 52*b2)+(pow2 78*a3)*(pow2 78*b3)+(pow2 78*a3)*(pow2 104*b4)
+    = pow2 78  * (a3 * b0) + pow2 104 * (a3 * b1) + pow2 130 * (a3 * b2) + pow2 156 * (a3 * b3) + pow2 182 * (a3 * b4) )
+  = pow2_plus 78 26;
+    pow2_plus 78 52;
+    pow2_plus 78 78;
+    pow2_plus 78 104;
+    lemma_swap (pow2 78) a3 (pow2 26) b1;
+    lemma_swap (pow2 78) a3 (pow2 52) b2;
+    lemma_swap (pow2 78) a3 (pow2 78) b3;
+    lemma_swap (pow2 78) a3 (pow2 104) b4
+
+private let lemma_multiplication064
+  (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
+  (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
+  Lemma (
+    (pow2 104*a4)*b0+(pow2 104*a4)*(pow2 26*b1)+(pow2 104*a4)*(pow2 52*b2) +(pow2 104*a4)*(pow2 78*b3)+(pow2 104*a4)*(pow2 104*b4)
+    = pow2 104 * (a4 * b0) + pow2 130 * (a4 * b1) + pow2 156 * (a4 * b2) + pow2 182 * (a4 * b3) + pow2 208 * (a4 * b4) )
+  = pow2_plus 104 26;
+    pow2_plus 104 52;
+    pow2_plus 104 78;
+    pow2_plus 104 104;
+    lemma_swap (pow2 104) a4 (pow2 26) b1;
+    lemma_swap (pow2 104) a4 (pow2 52) b2;
+    lemma_swap (pow2 104) a4 (pow2 78) b3;
+    lemma_swap (pow2 104) a4 (pow2 104) b4
+
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+
+private let lemma_multiplication06
+  (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
+  (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
+  Lemma (
+    a0*b0+a0*(pow2 26*b1)+a0*(pow2 52*b2)+a0*(pow2 78*b3)+a0*(pow2 104*b4)
+      +(pow2 26*a1)*b0+(pow2 26*a1)*(pow2 26*b1)+(pow2 26*a1)*(pow2 52*b2)+(pow2 26*a1)*(pow2 78*b3)+(pow2 26*a1)*(pow2 104*b4)
+      +(pow2 52*a2)*b0+(pow2 52*a2)*(pow2 26*b1)+(pow2 52*a2)*(pow2 52*b2)+(pow2 52*a2)*(pow2 78*b3)+(pow2 52*a2)*(pow2 104*b4)
+      +(pow2 78*a3)*b0+(pow2 78*a3)*(pow2 26*b1)+(pow2 78*a3)*(pow2 52*b2)+(pow2 78*a3)*(pow2 78*b3)+(pow2 78*a3)*(pow2 104*b4)
+      +(pow2 104*a4)*b0+(pow2 104*a4)*(pow2 26*b1)+(pow2 104*a4)*(pow2 52*b2) +(pow2 104*a4)*(pow2 78*b3)+(pow2 104*a4)*(pow2 104*b4)
+    =              (a0 * b0) + pow2 26  * (a0 * b1) + pow2 52  * (a0 * b2) + pow2 78  * (a0 * b3) + pow2 104 * (a0 * b4)
+      + pow2 26  * (a1 * b0) + pow2 52  * (a1 * b1) + pow2 78  * (a1 * b2) + pow2 104 * (a1 * b3) + pow2 130 * (a1 * b4)
+      + pow2 52  * (a2 * b0) + pow2 78  * (a2 * b1) + pow2 104 * (a2 * b2) + pow2 130 * (a2 * b3) + pow2 156 * (a2 * b4)
+      + pow2 78  * (a3 * b0) + pow2 104 * (a3 * b1) + pow2 130 * (a3 * b2) + pow2 156 * (a3 * b3) + pow2 182 * (a3 * b4)
+      + pow2 104 * (a4 * b0) + pow2 130 * (a4 * b1) + pow2 156 * (a4 * b2) + pow2 182 * (a4 * b3) + pow2 208 * (a4 * b4) )
+  = lemma_multiplication060 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4;
+    lemma_multiplication061 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4;
+    lemma_multiplication062 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4;
+    lemma_multiplication063 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4;
+    lemma_multiplication064 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4
+
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+
+private let lemma_multiplication07
+  (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
+  (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
+  Lemma ((a0 + pow2 26 * a1 + pow2 52 * a2 + pow2 78 * a3 + pow2 104 * a4)
+    * (b0 + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4)
+    =              (a0 * b0) + pow2 26  * (a0 * b1) + pow2 52  * (a0 * b2) + pow2 78  * (a0 * b3) + pow2 104 * (a0 * b4)
+      + pow2 26  * (a1 * b0) + pow2 52  * (a1 * b1) + pow2 78  * (a1 * b2) + pow2 104 * (a1 * b3) + pow2 130 * (a1 * b4)
+      + pow2 52  * (a2 * b0) + pow2 78  * (a2 * b1) + pow2 104 * (a2 * b2) + pow2 130 * (a2 * b3) + pow2 156 * (a2 * b4)
+      + pow2 78  * (a3 * b0) + pow2 104 * (a3 * b1) + pow2 130 * (a3 * b2) + pow2 156 * (a3 * b3) + pow2 182 * (a3 * b4)
+      + pow2 104 * (a4 * b0) + pow2 130 * (a4 * b1) + pow2 156 * (a4 * b2) + pow2 182 * (a4 * b3) + pow2 208 * (a4 * b4) )
+  = lemma_multiplication05 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4;
+    lemma_multiplication06 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4
+
+private let lemma_multiplication08
+  (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
+  (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
+  Lemma (
+    a0 * b0 + pow2 26  * (a1 * b0 + a0 * b1)
+	    + pow2 52  * (a2 * b0 + a1 * b1 + a0 * b2)
+	    + pow2 78  * (a3 * b0 + a2 * b1 + a1 * b2 + a0 * b3)
+	    + pow2 104 * (a4 * b0 + a3 * b1 + a2 * b2 + a1 * b3 + a0 * b4)
+	    + pow2 130 * (a4 * b1 + a3 * b2 + a2 * b3 + a1 * b4)
+	    + pow2 156 * (a4 * b2 + a3 * b3 + a2 * b4)
+	    + pow2 182 * (a4 * b3 + a3 * b4)
+	    + pow2 208 * (a4 * b4)
+    =              (a0 * b0) + pow2 26  * (a0 * b1) + pow2 52  * (a0 * b2) + pow2 78  * (a0 * b3) + pow2 104 * (a0 * b4)
+      + pow2 26  * (a1 * b0) + pow2 52  * (a1 * b1) + pow2 78  * (a1 * b2) + pow2 104 * (a1 * b3) + pow2 130 * (a1 * b4)
+      + pow2 52  * (a2 * b0) + pow2 78  * (a2 * b1) + pow2 104 * (a2 * b2) + pow2 130 * (a2 * b3) + pow2 156 * (a2 * b4)
+      + pow2 78  * (a3 * b0) + pow2 104 * (a3 * b1) + pow2 130 * (a3 * b2) + pow2 156 * (a3 * b3) + pow2 182 * (a3 * b4)
+      + pow2 104 * (a4 * b0) + pow2 130 * (a4 * b1) + pow2 156 * (a4 * b2) + pow2 182 * (a4 * b3) + pow2 208 * (a4 * b4) )
+  = lemma_multiplication00 (pow2 26) (a1 * b0) (a0 * b1);
+    lemma_multiplication01 (pow2 52) (a2 * b0) (a1 * b1) (a0 * b2);
+    lemma_multiplication02 (pow2 78) (a3 * b0) (a2 * b1) (a1 * b2) (a0 * b3);
+    lemma_multiplication03 (pow2 104) (a4 * b0) (a3 * b1) (a2 * b2) (a1 * b3) (a0 * b4);
+    lemma_multiplication02 (pow2 130) (a4 * b1) (a3 * b2) (a2 * b3) (a1 * b4);
+    lemma_multiplication01 (pow2 156) (a4 * b2) (a3 * b3) (a2 * b4);
+    lemma_multiplication00 (pow2 182) (a4 * b3) (a3 * b4)
+
+
+
+private let lemma_multiplication0
+  (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
+  (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
+  Lemma (
+    (a0 + pow2 26 * a1 + pow2 52 * a2 + pow2 78 * a3 + pow2 104 * a4)
+    * (b0 + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4) =
+    a0 * b0 + pow2 26  * (a1 * b0 + a0 * b1)
+	    + pow2 52  * (a2 * b0 + a1 * b1 + a0 * b2)
+	    + pow2 78  * (a3 * b0 + a2 * b1 + a1 * b2 + a0 * b3)
+	    + pow2 104 * (a4 * b0 + a3 * b1 + a2 * b2 + a1 * b3 + a0 * b4)
+	    + pow2 130 * (a4 * b1 + a3 * b2 + a2 * b3 + a1 * b4)
+	    + pow2 156 * (a4 * b2 + a3 * b3 + a2 * b4)
+	    + pow2 182 * (a4 * b3 + a3 * b4)
+	    + pow2 208 * (a4 * b4) )
+  = lemma_multiplication07 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4;
+    lemma_multiplication08 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4
+
+
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 assume val lemma_multiplication:
   h0:mem ->
