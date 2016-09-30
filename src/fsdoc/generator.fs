@@ -38,17 +38,22 @@ module C  = FStar.Syntax.Const
 Notes:
 - a lot of the string_of functions and their concatenation should go away with 
   a better pretty-printer. 
-- there are too many strings being passed around/returned. 
+- there are too many strings being passed around/returned. Need to wrap up the F#
+  and OCaml Buffer libraries in a buffer.fsti one. 
+- x-ref will come, but not yet. One way to implement x-ref would be do fully-expand 
+  all names, as if there weren't any "open"s at the top of the file. But dep and tc
+  already do this, and we'd be adding another pass, very sim
+  
 - Haven't got the hang of what a .md file should look like. # vs ## vs crlf? 
-- Things to fix are prefixed with SI: 
+- Things to fix are prefixed with "SI:".  
 *)
 
 ///////////////////////////////////////////////////////////////////////////////
 // lib
 ///////////////////////////////////////////////////////////////////////////////
  
-(* We store a forest-like representation of the module namespaces for index generation*)
-(* SI: not used yet *)
+// We store a forest-like representation of the module namespaces for index generation.
+// SI: not used yet 
 type mforest =
 | Leaf of string * string
 | Branch of smap<mforest>
