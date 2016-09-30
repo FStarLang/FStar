@@ -72,9 +72,10 @@ let extract_typ_abbrev env lid quals def =
         | Tm_abs(bs, body, _) ->
           SS.open_term bs body
         | _ -> [], def in
+    let assumed = Util.for_some (function Assumption -> true | _ -> false) quals in
     let env, ml_bs = binders_as_mlty_binders env bs in
     let body = Term.term_as_mlty env body |> Util.eraseTypeDeep (Util.udelta_unfold env) in
-    let td = [(lident_as_mlsymbol lid, ml_bs, Some (MLTD_Abbrev body))] in 
+    let td = [(assumed, lident_as_mlsymbol lid, ml_bs, Some (MLTD_Abbrev body))] in 
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty td] in
     let env = if quals |> Util.for_some (function Assumption | New -> true | _ -> false)
               then env
@@ -149,7 +150,7 @@ let extract_bundle env se =
               MLTD_Record fields
 
             | _ -> MLTD_DType ctors in
-        env,  (lident_as_mlsymbol ind.iname,  ml_params, Some tbody) in
+        env,  (false, lident_as_mlsymbol ind.iname,  ml_params, Some tbody) in
 
 
     match se with 

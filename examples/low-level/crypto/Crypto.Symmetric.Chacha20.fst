@@ -19,10 +19,6 @@ open Buffer.Utils
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-// move elsewhere!
-// manually inlined for now (for kremlin)
-//type lbytes (n:nat) = b:bytes{length b = n}
-
 type u64 = FStar.UInt64.t
 
 

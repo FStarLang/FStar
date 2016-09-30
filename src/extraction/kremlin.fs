@@ -357,17 +357,20 @@ and translate_decl env d: option<decl> =
   | MLM_Loc _ ->
       None
 
-  | MLM_Ty [ (name, params, Some (MLTD_Abbrev t)) ] ->
+  | MLM_Ty [ (assumed, name, params, Some (MLTD_Abbrev t)) ] ->
       let name = env.module_name, name in
       let env = List.fold_left (fun env (name, _) -> extend_t env name) env params in
-      Some (DTypeAlias (name, List.length params, translate_type env t))
+      if assumed then
+        None
+      else
+        Some (DTypeAlias (name, List.length params, translate_type env t))
 
-  | MLM_Ty [ (name, [], Some (MLTD_Record fields)) ] ->
+  | MLM_Ty [ (_, name, [], Some (MLTD_Record fields)) ] ->
       let name = env.module_name, name in
       Some (DTypeFlat (name, List.map (fun (f, t) ->
         f, (translate_type env t, false)) fields))
 
-  | MLM_Ty ((name, _, _) :: _) ->
+  | MLM_Ty ((_, name, _, _) :: _) ->
       Util.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
       None
 
