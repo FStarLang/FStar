@@ -213,8 +213,8 @@ let rec print_elem e i len =
 
 val bound27_isSum: h0:mem -> h1:mem -> a:bigint -> b:bigint
   -> Lemma
-    (requires (norm h0 a /\ norm h0 b /\ isSum h0 h1 a b))
-    (ensures  (bound27 h1 a))
+    (requires (norm h0 a /\ norm h0 b /\ Crypto.Symmetric.Poly1305.Bignum.Lemmas.isSum h0 h1 a b))
+    (ensures  (Crypto.Symmetric.Poly1305.Bignum.Lemmas.bound27 h1 a))
 let bound27_isSum h0 h1 a b =
   // The (i+0) is there on purpuose to trigger the pattern in isSum
   cut (forall (i:nat). {:pattern (v (get h1 a i))} i < norm_length ==> v (get h1 a (i+0)) < pow2 26 + pow2 26);
