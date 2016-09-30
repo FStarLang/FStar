@@ -1231,7 +1231,7 @@ let args = (let _169_337 = (FStar_Format.combine (FStar_Format.text " * ") args)
 in (FStar_Format.parens _169_337))
 in (FStar_Format.reduce1 (((FStar_Format.text "exception"))::((FStar_Format.text x))::((FStar_Format.text "of"))::(args)::[]))))
 end
-| FStar_Extraction_ML_Syntax.MLS_Val (x, (_75_666, ty)) -> begin
+| FStar_Extraction_ML_Syntax.MLS_Val (x, (_75_668, ty)) -> begin
 (
 
 let ty = (doc_of_mltype currentModule ((min_op_prec), (NonAssoc)) ty)

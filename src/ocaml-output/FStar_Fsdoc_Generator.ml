@@ -287,7 +287,7 @@ in (match (_82_284) with
 | Some (top_decl, other_decls) -> begin
 (
 
-let on = (FStar_Options.prepend_output_dir (Prims.strcat name.FStar_Ident.str ".mk"))
+let on = (FStar_Options.prepend_output_dir (Prims.strcat name.FStar_Ident.str ".md"))
 in (
 
 let fd = (FStar_Util.open_file_for_writing on)
@@ -344,7 +344,7 @@ in (
 let mod_names = (FStar_List.map document_module modules)
 in (
 
-let on = (FStar_Options.prepend_output_dir "index.mk")
+let on = (FStar_Options.prepend_output_dir "index.md")
 in (
 
 let fd = (FStar_Util.open_file_for_writing on)
