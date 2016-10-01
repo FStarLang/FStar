@@ -419,6 +419,21 @@ let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
   | _ -> None
 
+let quals_of_sigelt x = match x with
+  | Sig_bundle(_, quals, _, _)
+  | Sig_inductive_typ (_, _, _,  _, _, _, quals, _)
+  | Sig_effect_abbrev  (_, _, _, _, quals, _)
+  | Sig_datacon (_, _, _, _, _, quals, _, _)
+  | Sig_declare_typ (_, _, _, quals, _)
+  | Sig_assume (_, _, quals, _)
+  | Sig_let(_, _, _, quals)
+  | Sig_new_effect({qualifiers=quals}, _)
+  | Sig_new_effect_for_free({qualifiers=quals}, _) ->
+    quals
+  | Sig_sub_effect(_, _)
+  | Sig_pragma(_, _)
+  | Sig_main(_, _) -> []
+
 let range_of_sigelt x = match x with
   | Sig_bundle(_, _, _, r)
   | Sig_inductive_typ (_, _, _,  _, _, _, _, r)

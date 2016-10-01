@@ -1222,3 +1222,111 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   // [Inline] triggers a "Impossible: locally nameless" error
   let sig_ctx = Sig_let (lb, Range.dummyRange, [ lident ], [ Inline ]) in
   sig_ctx, mk (Tm_fvar fv) None Range.dummyRange
+
+
+/////////////////////////////////////////////////////////////////////////////
+//Checks that the qualifiers on this sigelt are legal for it
+/////////////////////////////////////////////////////////////////////////////
+let check_sigelt_quals se =
+    let visibility = function Private -> true | _ -> false in
+    let reducibility = function Abstract | Irreducible | Inline | Unfoldable -> true | _ -> false in
+    let assumption = function Assumption | New -> true | _ -> false in
+    let reification = function Reifiable | Reflectable -> true | _ -> false in
+    let inferred = function
+      | Discriminator _
+      | Projector _
+      | RecordType _
+      | RecordConstructor _
+      | ExceptionConstructor
+      | HasMaskedEffect
+      | Effect -> true
+      | _ -> false in
+    let has_eq = function Noeq | Unopteq -> true | _ -> false in
+    let quals_combo_ok quals q = 
+        match q with
+        | Assumption ->
+          quals 
+          |> List.for_all (fun x -> x=q || x=Logic || inferred x || visibility x || assumption x)
+
+        | New -> //no definition provided
+          quals 
+          |> List.for_all (fun x -> x=q || inferred x || visibility x || assumption x)
+
+        | Inline
+        | Unfoldable
+        | Irreducible
+        | Abstract
+        | Noeq 
+        | Unopteq ->
+          quals 
+          |> List.for_all (fun x -> x=q || x=Logic || has_eq x || inferred x || visibility x)
+
+        | TotalEffect -> 
+          quals 
+          |> List.for_all (fun x -> x=q || inferred x || visibility x || reification x)
+
+        | Logic -> 
+          quals 
+          |> List.for_all (fun x -> x=q || x=Assumption || inferred x || visibility x || reducibility x)
+
+        | Reifiable
+        | Reflectable -> 
+          quals 
+          |> List.for_all (fun x -> x=q || inferred x || visibility x || x=TotalEffect)
+
+        | Private -> 
+          true //only about visibility; always legal in combination with others
+        
+        | _ -> //inferred 
+          true
+    in
+    let quals = Util.quals_of_sigelt se in
+    let r = Util.range_of_sigelt se in
+    let no_dup_quals = Util.remove_dups (fun x y -> x=y) quals in
+    let err' msg = 
+        raise (Error(Util.format2
+                        "The qualifier list \"[%s]\" is not permissible for this element%s" 
+                        (Print.quals_to_string quals) msg
+                        , r)) in
+    let err msg = err' (": " ^ msg) in
+    let err' () = err' "" in
+    if List.length quals <> List.length no_dup_quals
+    then err "duplicate qualifiers";
+    if not (quals |> List.for_all (quals_combo_ok quals))
+    then err "ill-formed combination";
+    match se with
+    | Sig_let((is_rec, _), _, _, _) -> //let rec
+      if is_rec && quals |> List.contains Inline
+      then err "recursive definitions cannot be marked inline";
+      if quals |> Util.for_some (fun x -> assumption x || has_eq x)
+      then err "definitions cannot be assumed or marked with equality qualifiers"
+    | Sig_bundle _ -> 
+      if not (quals |> Util.for_all (fun x ->
+            x=Abstract
+            || inferred x
+            || visibility x
+            || has_eq x))
+      then err' ()
+    | Sig_declare_typ _ -> 
+      if quals |> Util.for_some has_eq
+      then err' ()
+    | Sig_assume _ -> 
+      if not (quals |> Util.for_all (fun x -> visibility x || x=Assumption))
+      then err' ()
+    | Sig_new_effect _ -> 
+      if not (quals |> Util.for_all (fun x -> 
+            x=TotalEffect
+            || inferred x 
+            || visibility x))
+      then err' ()
+    | Sig_new_effect_for_free _ -> 
+      if not (quals |> Util.for_all (fun x -> 
+            x=TotalEffect
+            || inferred x 
+            || visibility x
+            || reification x))
+      then err' ()
+    | Sig_effect_abbrev _ ->
+      if not (quals |> Util.for_all (fun x -> inferred x || visibility x))
+      then err' ()
+    | _ -> ()

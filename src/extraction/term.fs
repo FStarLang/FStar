@@ -354,7 +354,7 @@ let bv_as_mlty (g:env) (bv:bv) =
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
 let rec term_as_mlty (g:env) (t:term) : mlty =
-    let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
+    let t = N.normalize [N.Beta; N.Inline; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
     term_as_mlty' g t
 
 and term_as_mlty' env t =

@@ -1120,6 +1120,10 @@ and desugar_binder env b : option<ident> * S.term = match b.b with
   | Variable x      -> Some x, tun
 
 let mk_data_discriminators quals env t tps k datas =
+    let quals = quals |> List.filter (function 
+        | S.Abstract
+        | S.Private -> true
+        | _ -> false) in
     let quals q = if not <| env.iface || env.admitted_iface 
                   then S.Assumption::q@quals 
                   else q@quals in
@@ -1185,7 +1189,12 @@ let mk_indexed_projectors iquals fvq refine_domain env tc lid (inductive_tps:bin
             || Options.dont_gen_projectors (Env.current_module env).str in
         let no_decl = Syntax.is_type x.sort in
         let quals q = if only_decl then S.Assumption::q else q in
-        let quals = quals (S.Projector(lid, x.ppname)::iquals) in
+        let quals = 
+            let iquals = iquals |> List.filter (function 
+                | S.Abstract
+                | S.Private -> true
+                | _ -> false) in
+            quals (S.Projector(lid, x.ppname)::iquals) in
         let decl = Sig_declare_typ(field_name, [], t, quals, range_of_lid field_name) in
         if only_decl
         then [decl] //only the signature
