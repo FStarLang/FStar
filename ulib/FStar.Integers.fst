@@ -266,6 +266,7 @@ let f_uint_8 (x:uint_8) (y:uint_8{ok_for x (v x + v y)}) = x + y
 let f_int_16 (x:int_16) (y:int_16{ok_for x (v x + v y)}) = x + y
 let g (x:uint_32) (y:uint_32{ok_for x (v y * v y) /\ ok_for x (v x + v y * v y)}) = x + y * y
 
+(* TODO: A bit boring ... *)
 (* let op_Slash_Hat = div *)
 (* let op_Percent_Hat = rem *)
 (* let op_Hat_Hat = logxor *)
