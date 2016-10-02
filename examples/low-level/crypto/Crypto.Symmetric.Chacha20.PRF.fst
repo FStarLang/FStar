@@ -70,7 +70,7 @@ let keylen = Block.keylen prfa
 // the range of our PRF, after idealization and "reverse inlining."
 // for one-time-pads, we keep both the plain and cipher blocks, instead of their XOR.
 
-type smac (rgn:region) i x = mac: MAC.state (i,x.ivv) { MAC.State.region mac = rgn }
+type smac (rgn:region) i x = mac: MAC.state (i,x.iv) { MAC.State.region mac = rgn }
 noeq type otp i = | OTP: l:u32 {l <=^ blocklen} -> plain i (v l) -> cipher:lbytes (v l) -> otp i
 
 let range (rgn:region) (i:id) (x:domain): Type0 =
