@@ -26,6 +26,7 @@ let pad_16 b len =
   // if len =^ 0ul then () else 
   memset (offset b len) 0uy (16ul -^ len)
 
+(*
 let uint32_bytes v : Tot (u8 * u8 * u8 * u8)= 
   Int.Cast.uint32_to_uint8 v,
   Int.Cast.uint32_to_uint8 (v >>^ 8ul),
@@ -42,7 +43,6 @@ let upd_uint32 (b:bytes {length b >= 4}) x : STL unit
   upd b 2ul v2;
   upd b 3ul v3
 
-(*
 (* Serializes the two lengths into the final MAC word *)
 private val length_word: b:lbuffer 16 -> aad_len:UInt32.t -> len:UInt32.t -> STL unit
   (requires (fun h -> live h b))
@@ -56,6 +56,10 @@ let length_word b aad_len len =
   upd_uint32 (offset b 12ul) 0ul 
 *)
   
+
+
+
+//16-09-18 The code below is left only for testing; use Chacha20Poly1305.Ideal instead.
  
 private val add_bytes:
   #i: MAC.id ->
@@ -89,8 +93,6 @@ let rec add_bytes #i st log a len txt =
       add_bytes st log a (len -^ 16ul) (offset txt 16ul)
     end
 
-
-//16-09-18 The code below is left only for testing; use Chacha20Poly1305.Ideal instead.
 
 (* AEAD-encrypt for Chacha20-Poly1305. Takes:
    - the initial key (key), an initialization vector (iv) and a constant (constant)

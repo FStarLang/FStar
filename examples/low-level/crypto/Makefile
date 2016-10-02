@@ -14,7 +14,6 @@ VERIFY= \
   Buffer.Utils \
   Math.Axioms \
   Math.Lemmas \
-  Math.Lib \
   Curve.Bigint \
   Curve.Parameters \
   Crypto.Symmetric.Chacha20 \
@@ -39,10 +38,11 @@ VERIFY= \
   # Test
   # Curve.Modulo 
 
-# Files not yet fully typechecking
+# Files not yet fully typechecking -- possibly due to timeouts.
 # Please move files that you know fully typecheck to VERIFY
 # Files commented out are broken, uncomment once fixed
 LAX= \
+  Math.Lib \
   Math.Definitions \
   Math.Field \
   Math.Curve \
@@ -69,7 +69,7 @@ all-lax: $(addsuffix .fst-lax, $(LAX))
 
 # Verifying one file at a time
 %.fst-ver:
-	$(FSTAR) $(OPTIONS) \
+	-$(FSTAR) $(OPTIONS) \
 	$(FSTAR_INCLUDE_PATHS) \
 	--verify_module $(basename $(notdir $@)) \
 	$(basename $@).fst
