@@ -88,6 +88,8 @@ let from_bytestring s =
   buf 
 *)
 
+(* Does not compile in a reasonable time: 
+
 let test() = 
   push_frame(); 
   let plainlen = 114ul in 
@@ -135,6 +137,8 @@ let test() =
 
   pop_frame ();
   if is_verified && ok0 && ok1 then 0ul else 1ul
+*)
+
 
 (* missing a library:
 

@@ -11,25 +11,31 @@ FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperheap --include $(FSTAR_HOM
 # Files that should fully typecheck
 # Files commented out are broken, uncomment once fixed
 VERIFY= \
-  FStar.HST.Monotonic.RRef \
-  TestMonotonic \
   Buffer.Utils \
   Math.Axioms \
   Math.Lemmas \
   Math.Lib \
   Curve.Bigint \
   Curve.Parameters \
+  Crypto.Symmetric.Chacha20 \
   Crypto.Symmetric.Poly1305.Bigint \
   Crypto.Symmetric.Poly1305.Parameters \
   Crypto.Symmetric.Poly1305.Spec \
   Crypto.Symmetric.Poly1305 \
-  Crypto.Symmetric.Chacha20 \
-  Crypto.Symmetric.BlockCipher \
+  Crypto.Symmetric.Bytes \
   Crypto.Symmetric.GF128 \
   Crypto.Symmetric.GCM \
   Crypto.Symmetric.AES \
+  Crypto.Symmetric.BlockCipher \
   Crypto.AEAD.AES256GCM \
+  Crypto.Symmetric.Poly1305.MAC \
+  Crypto.Symmetric.Chacha20.PRF \
+  Crypto.AEAD.Chacha20Poly1305 \
+  Crypto.AEAD.Chacha20Poly1305.Ideal \
   Plain \
+  Test \
+  # TestMonotonic \
+  # FStar.HST.Monotonic.RRef
   # Test
   # Curve.Modulo 
 
@@ -49,10 +55,6 @@ LAX= \
   Curve.Point \
   Curve.Ladder \
   Crypto.Symmetric.Poly1305.Bignum \
-  Crypto.Symmetric.Poly1305.MAC \
-  Crypto.Symmetric.Chacha20.PRF \
-  Crypto.AEAD.Chacha20Poly1305.Ideal \
-  Crypto.AEAD.Chacha20Poly1305 \
   # AEAD
 
 all-ver: $(addsuffix .fst-ver, $(VERIFY))
