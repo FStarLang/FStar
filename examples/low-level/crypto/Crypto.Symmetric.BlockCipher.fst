@@ -15,7 +15,6 @@ open Crypto.Symmetric.Bytes
 
 // library stuff
 
-
 type alg = 
 //| AES128 
   | AES256 
