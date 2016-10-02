@@ -163,7 +163,7 @@ val prf_dexor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} ->
   (requires (fun h0 -> 
      Plain.live h0 plain /\ Buffer.live h0 cipher /\ Buffer.disjoint (bufferT plain) cipher /\ 
      Buffer.frameOf (bufferT plain) <> t.rgn /\
-     (authId i => 
+     (authId i ==> 
      ( match find_1 (HS.sel h0 t.table) x with 
        | Some (OTP l' p c) -> l == l' /\ c == sel_bytes h0 l cipher
        | None -> False
