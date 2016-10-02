@@ -54,7 +54,7 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 // PRF TABLE 
 
 let maxCtr = 2000ul // to be adjusted, controlling concrete bound. 
-
+ 
 
 
 // used only ideally; noeq is painful here. 
@@ -81,7 +81,7 @@ let range (rgn:region) (i:id) (x:domain): Type0 =
 // explicit coercions
 let macRange rgn i (x:domain{x.ctr = 0ul}) (v:range rgn i x) : smac rgn i x = v
 let otpRange rgn i (x:domain{x.ctr <> 0ul}) (v:range rgn i x) : otp i        = v
-
+ 
 noeq type entry (rgn:region) (i:id) = | Entry: x:domain -> range:range rgn i x -> entry rgn i
 
 let find (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) : option (range rgn i x) =
@@ -184,6 +184,7 @@ let prf_dexor i t x l plain cipher =
       let contents = !t.table in
       match find_1 contents x with 
       | Some (OTP l' p c) -> ( 
+          let h0 = HST.get() in
           Plain.store #i l plain p;
           let h1 = HST.get() in 
           Buffer.lemma_reveal_modifies_1 (bufferT plain) h0 h1)
