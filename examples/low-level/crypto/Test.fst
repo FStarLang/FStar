@@ -4,7 +4,8 @@ open FStar.HST
 open FStar.UInt32
 open FStar.Ghost
 
-open Plain // including library stuff
+open Crypto.Symmetric.Bytes
+open Plain 
 open Buffer
 
 module HH = FStar.HyperHeap
@@ -30,28 +31,12 @@ let rec load_string l buf =
 
 val store_string: len:UInt32.t -> buf:lbuffer (v len) -> i:UInt32.t {i <=^ len} -> s:string {String.length s = v len} -> STL unit
   (requires (fun h0 -> Buffer.live h0 buf))
-  (ensures (fun h0 r h1 -> Buffer.live h1 buf /\ modifies_1 buf h0 h1))
+  (ensures (fun h0 r h1 -> Buffer.live h1 buf /\ Buffer.modifies_1 buf h0 h1))
  
 let rec store_string len buf i s = 
   if i <^ len then (
   Buffer.upd buf i (UInt8.uint_to_t (Char.int_of_char (String.index s (v i)))); 
   store_string len buf (i +^ 1ul) s )
-
-val store_bytestring: len:UInt32.t -> buf:lbuffer (v len) -> i:UInt32.t {i <=^ len} -> s:string {String.length s = v len + v len} -> STL unit
-  (requires (fun h0 -> Buffer.live h0 buf))
-  (ensures (fun h0 r h1 -> Buffer.live h1 buf /\ modifies_1 buf h0 h1))
-
-let digit (c:Char.char) = 
-  let x = Char.int_of_char c - Char.int_of_char '0' in
-  if x < 0 || x >= 16 then 0uy else UInt8.uint_to_t x
-
-let rec store_bytestring len buf i s =
-  if i <^ len then (
-  let x1 = digit (String.index s (UInt32.v i + UInt32.v i)) in
-  let x0 = digit (String.index s (UInt32.v i + UInt32.v i + 1)) in
-  //assert(x1 <^ 16uy /\ x0 <^ 16uy);
-  Buffer.upd buf i (FStar.UInt8(x1 *^ 16uy +^ x0));
-  store_bytestring len buf (FStar.UInt32(i +^ 1ul)) s )
 
 
 (*
@@ -77,6 +62,23 @@ let from_string len s =
   (if String.length s = v len then store_string len buf 0ul s);
   buf 
 
+(*
+val store_bytestring: len:UInt32.t -> buf:lbuffer (v len) -> i:UInt32.t {i <=^ len} -> s:string {String.length s = v len + v len} -> STL unit
+  (requires (fun h0 -> Buffer.live h0 buf))
+  (ensures (fun h0 r h1 -> Buffer.live h1 buf /\ modifies_1 buf h0 h1))
+
+let digit (c:Char.char) = 
+  let x = Char.int_of_char c - Char.int_of_char '0' in
+  if x < 0 || x >= 16 then 0uy else UInt8.uint_to_t x
+
+let rec store_bytestring len buf i s =
+  if i <^ len then (
+  let x1 = digit (String.index s (UInt32.v i + UInt32.v i)) in
+  let x0 = digit (String.index s (UInt32.v i + UInt32.v i + 1)) in
+  //assert(x1 <^ 16uy /\ x0 <^ 16uy);
+  Buffer.upd buf i (FStar.UInt8(x1 *^ 16uy +^ x0));
+  store_bytestring len buf (FStar.UInt32(i +^ 1ul)) s )
+
 let from_bytestring s = 
   let l = String.length s in 
   assume(l/2 + l/2 = l /\  l/2 <= UInt.max_int UInt32.n);
@@ -84,16 +86,16 @@ let from_bytestring s =
   let buf = Buffer.create 0uy len in 
   store_bytestring len buf 0ul s;  
   buf 
+*)
 
-val main: Int32.t -> FStar.Buffer.buffer (FStar.Buffer.buffer C.char) ->
-  HST.Stack Int32.t (fun _ -> true) (fun _ _ _ -> true)
-let main argc argv =
+let test() = 
   push_frame(); 
   let plainlen = 114ul in 
   let plainrepr = from_string plainlen 
     "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it." in
 
   let i:id = 42ul in
+  assume(not(Plain.authId i));
   let plain = Plain.create i 0uy plainlen in 
   let plainbytes = make (v plainlen) (load_bytes plainlen plainrepr) in 
   Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
@@ -103,7 +105,9 @@ let main argc argv =
   let key = Buffer.createL [ 
     0x80uy; 0x81uy; 0x82uy; 0x83uy; 0x84uy; 0x85uy; 0x86uy; 0x87uy; 0x88uy; 0x89uy; 0x8auy; 0x8buy; 0x8cuy; 0x8duy; 0x8euy; 0x8fuy; 
     0x90uy; 0x91uy; 0x92uy; 0x93uy; 0x94uy; 0x95uy; 0x96uy; 0x97uy; 0x98uy; 0x99uy; 0x9auy; 0x9buy; 0x9cuy; 0x9duy; 0x9euy; 0x9fuy ] in
-  let iv = 0x4746454443424140UL in
+  let ivBuffer = Buffer.createL [
+    0x07uy; 0x00uy; 0x00uy; 0x00uy; 0x40uy; 0x41uy; 0x42uy; 0x43uy; 0x44uy; 0x45uy; 0x46uy; 0x47uy ] in
+  let iv = load_uint128 12ul ivBuffer in
   let expected_cipher = Buffer.createL [ 
     0xd3uy; 0x1auy; 0x8duy; 0x34uy; 0x64uy; 0x8euy; 0x60uy; 0xdbuy; 0x7buy; 0x86uy; 0xafuy; 0xbcuy; 0x53uy; 0xefuy; 0x7euy; 0xc2uy; 
     0xa4uy; 0xaduy; 0xeduy; 0x51uy; 0x29uy; 0x6euy; 0x08uy; 0xfeuy; 0xa9uy; 0xe2uy; 0xb5uy; 0xa7uy; 0x36uy; 0xeeuy; 0x62uy; 0xd6uy; 
@@ -114,29 +118,29 @@ let main argc argv =
     0x3fuy; 0xf4uy; 0xdeuy; 0xf0uy; 0x8euy; 0x4buy; 0x7auy; 0x9duy; 0xe5uy; 0x76uy; 0xd2uy; 0x65uy; 0x86uy; 0xceuy; 0xc6uy; 0x4buy; 
     0x61uy; 0x16uy; 0x1auy; 0xe1uy; 0x0buy; 0x59uy; 0x4fuy; 0x09uy; 0xe2uy; 0x6auy; 0x7euy; 0x90uy; 0x2euy; 0xcbuy; 0xd0uy; 0x60uy; 
     0x06uy; 0x91uy ] in 
-  let cipherlen = plainlen + 16ul in 
-  assert(Buffer.length expected_cipher = cipherlen);
-  print_string "Testing AEAD chacha20_poly1305...\n";
+  let cipherlen = plainlen +^ 16ul in 
+  assert(Buffer.length expected_cipher = v cipherlen);
+  // print_string "Testing AEAD chacha20_poly1305...\n";
   let cipher = Buffer.create 0uy cipherlen in
   let st = AE.gen i HH.root in 
   AE.encrypt i st iv aadlen aad plainlen plain cipher; 
-  if not(Buffer.eqb expected_cipher cipher cipherlen) then failwith "ERROR: encrypted ciphertext mismatch";
+  let ok0 = Buffer.eqb expected_cipher cipher cipherlen in
+  // failwith "ERROR: encrypted ciphertext mismatch";
 
   let decrypted = Plain.create i 0uy plainlen in
-  let is_verified = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
+  let is_verified = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
 
-  if not(Buffer.eqb decrypted plain plainlen) then failwith "ERROR: decrypted plaintext mismatch"
+  let ok1 = Buffer.eqb (bufferRepr #i decrypted) (bufferRepr #i plain) plainlen in
+  //failwith "ERROR: decrypted plaintext mismatch"
 
   pop_frame ();
+  if is_verified && ok0 && ok1 then 0ul else 1ul
+
+(* missing a library:
+
+val main: Int32.t -> FStar.Buffer.buffer (FStar.Buffer.buffer C.char) -> HST.Stack Int32.t (fun _ -> true) (fun _ _ _ -> true)
+let main argc argv =
+  test();
   C.exit_success
 
-  if not(Buffer.eqb expected_cipher cipher cipherlen) then failwith "ERROR: encrypted ciphertext mismatch";
-
-  let decrypted = Plain.create i 0uy plainlen in
-  let is_verified = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
-
-  if not(Buffer.eqb decrypted plainrepr decrypted plainlen) then failwith "ERROR: decrypted plaintext mismatch";
-
-  // todo: iterate for performance testing.
-  pop_frame ();
-  C.exit_success
+*)

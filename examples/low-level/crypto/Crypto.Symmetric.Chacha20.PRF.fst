@@ -21,7 +21,8 @@ open FStar.UInt8
 open FStar.UInt32
 open FStar.HST.Monotonic.RRef
 
-open Plain // also including its unrelated library stuff
+open Crypto.Symmetric.Bytes // including library stuff
+open Plain
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -58,8 +59,8 @@ let maxCtr = 2000ul // to be adjusted, controlling concrete bound.
 
 // used only ideally; noeq is painful here. 
 
-noeq type domain = { ivv:Block.ivv prfa; ctr:u32 } // could move to concrete CHACHA20
-let incr (x:domain {x.ctr <=^ maxCtr})  = { ivv = x.ivv; ctr = x.ctr +^ 1ul }
+type domain = { iv:Block.iv prfa; ctr:u32 } // could move to concrete CHACHA20
+let incr (x:domain {x.ctr <=^ maxCtr})  = { iv = x.iv; ctr = x.ctr +^ 1ul }
 
 let blocklen = Block.blocklen prfa
 let block = b:bytes {Seq.length b = v blocklen}
@@ -69,7 +70,7 @@ let keylen = Block.keylen prfa
 // the range of our PRF, after idealization and "reverse inlining."
 // for one-time-pads, we keep both the plain and cipher blocks, instead of their XOR.
 
-type smac (rgn:region) i x = mac: MAC.state (i,x.ivv) { MAC.State.region mac = rgn }
+type smac (rgn:region) i x = mac: MAC.state (i,x.iv) { MAC.State.region mac = rgn }
 noeq type otp i = | OTP: l:u32 {l <=^ blocklen} -> plain i (v l) -> cipher:lbytes (v l) -> otp i
 
 let range (rgn:region) (i:id) (x:domain): Type0 =
@@ -124,14 +125,15 @@ let gen rgn i =
 
 assume val buffer_recall: b:buffer {HS.is_eternal_region (Buffer.frameOf b)} -> Stack unit
   (requires (fun h0 -> True))
-  (ensures (fun h0 _ h1 -> Buffer.live h1 b /\ h0 == h1))
+  (ensures (fun h0 _ h1 -> h0 == h1 /\ Buffer.live h1 b))
 
 private val getBlock: #i:id -> t:state i -> domain -> len:u32 {len <=^ blocklen} -> output:lbuffer (v len) -> ST unit
   (requires (fun h0 -> Buffer.live h0 output))
-  (ensures (fun h0 r h1 -> Buffer.live h1 output /\ modifies_1 output h0 h1 ))
+  (ensures (fun h0 r h1 -> Buffer.live h1 output /\ Buffer.modifies_1 output h0 h1 ))
 //TODO: we need some way to recall that t.key is in an eternal region and can be recalled
 let getBlock #i t x len output = 
   buffer_recall t.key; 
+  assume(Buffer.disjoint t.key output); //16-10-02 
   Block.compute Block.CHACHA20 output t.key x.iv x.ctr len
 
 
@@ -147,12 +149,13 @@ let getBlock #i t x len output =
 val prf_mac: i:id -> t:state i -> x:domain{x.ctr = 0ul} -> ST (MAC.state (i,x.iv))
   (requires (fun h0 -> True))
   (ensures (fun h0 mac h1 -> 
-    match find_0 (HS.sel h1 t.table) x with 
-    | Some mac' -> mac == mac' /\ MAC.genPost (i,x.iv) t.rgn h0 mac h1
-    | None      -> False
+    authId i ==>
+    ( match find_0 (HS.sel h1 t.table) x with 
+      | Some mac' -> mac == mac' /\ MAC.genPost (i,x.iv) t.rgn h0 mac h1
+      | None      -> False
     // we guarantee the stateful post of MAC.create when x is not in the table. 
     // in all cases, we return the state in the table
-  ))
+  )))
 
 // reuse the same block for x and XORs it with ciphertext
 val prf_dexor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> 
@@ -160,14 +163,14 @@ val prf_dexor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} ->
   (requires (fun h0 -> 
      Plain.live h0 plain /\ Buffer.live h0 cipher /\ Buffer.disjoint (bufferT plain) cipher /\ 
      Buffer.frameOf (bufferT plain) <> t.rgn /\
-     (authId i => 
+     (authId i ==> 
      ( match find_1 (HS.sel h0 t.table) x with 
        | Some (OTP l' p c) -> l == l' /\ c == sel_bytes h0 l cipher
        | None -> False
      ))))
   (ensures (fun h0 _ h1 -> 
      Plain.live h1 plain /\ Buffer.live h1 cipher /\
-     modifies_1 (bufferT plain) h0 h1 /\
+     Buffer.modifies_1 (bufferT plain) h0 h1 /\
      (authId i ==>
        ( match find_1 (HS.sel h1 t.table) x with 
          | Some (OTP l' p c) -> l == l' /\ p == sel_plain h1 l plain
@@ -181,6 +184,7 @@ let prf_dexor i t x l plain cipher =
       let contents = !t.table in
       match find_1 contents x with 
       | Some (OTP l' p c) -> ( 
+          let h0 = HST.get() in 
           Plain.store #i l plain p;
           let h1 = HST.get() in 
           Buffer.lemma_reveal_modifies_1 (bufferT plain) h0 h1)
@@ -195,8 +199,6 @@ let prf_dexor i t x l plain cipher =
       Buffer.Utils.xor_bytes_inplace plain cipher l
     end
 
-// it would be nicer to share the ideal find/memoization across the 3 functions
-
 //TODO (NS): this one takes about 15s to prove automatically; investigate a bit
 let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) (v:range rgn i x) : Lemma
   (requires (find s x == None))
@@ -204,58 +206,65 @@ let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) 
   = ()  
 
 //#reset-options "--z3timeout 10000"
-//SZ: Was this typechecking? No.
+//SZ: Was this typechecking? No. CF: Yes, up to explicit assumptions.
 
 // generates a fresh block for x and XORs it with plaintext
 val prf_enxor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> 
   l:u32 {l <=^ blocklen} -> cipher:lbuffer (v l) -> plain:plainBuffer i (v l) -> ST unit
   (requires (fun h0 -> 
-     frameOf cipher <> t.rgn /\
+     Buffer.frameOf cipher <> t.rgn /\
      Plain.live h0 plain /\ Buffer.live h0 cipher /\ 
      Buffer.disjoint (bufferT plain) cipher /\
      is_None(find_1 (HS.sel h0 t.table) x) 
      ))
   (ensures (fun h0 _ h1 -> 
      Plain.live h1 plain /\ Buffer.live h1 cipher /\
-     modifies_1 cipher h0 h1 /\ //16-09-22 missing hybrid modifies also covering t.
-     (match find_1 (HS.sel h1 t.table) x with 
-     | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain /\ c == sel_bytes h1 l cipher
-     | None   -> False 
-     )))
+     Buffer.modifies_1 cipher h0 h1 /\ //16-09-22 missing hybrid modifies also covering t.
+     (authId i ==> 
+       ( match find_1 (HS.sel h1 t.table) x with 
+         | Some (OTP l' p c) -> l = l' /\ p == sel_plain h1 l plain /\ c == sel_bytes h1 l cipher
+         | None   -> False 
+     ))))
 let prf_enxor i t x l cipher plain = 
   if authId i then
     begin
-    recall t.table;
-    let p = Plain.load #i l plain in
-    let c = random l in // sample a fresh ciphertext block    
-    store_bytes l cipher c;  //NS: this write to cipher may disturb the contents of t.table; need an anti-aliasing assumption there
-    let contents = !t.table in //NS: Or, we can move this read up; but the anti-aliasing seems like the right thing to do
-    let newblock = OTP #i l p c in
-    assert(find contents x == None); //TODO how to avoid explicit annotations on find_1 ? NS: find_1 is fine here; without the store_bytes this assertion succeeds
-    lemma_snoc_found contents x newblock; 
-    t.table := SeqProperties.snoc contents (Entry x newblock) //NS: t.table is mutated;  so the modifies_1 cipher h0 h1 cannot be true
+      recall t.table;
+      let p = Plain.load #i l plain in
+      let c = random l in // sample a fresh ciphertext block    
+      store_bytes l cipher c;  //NS: this write to cipher may disturb the contents of t.table; need an anti-aliasing assumption there
+      assume false;//16-10-02 
+      let contents = !t.table in //NS: Or, we can move this read up; but the anti-aliasing seems like the right thing to do
+      let newblock = OTP #i l p c in
+      assert(find contents x == None); //TODO how to avoid explicit annotations on find_1 ? NS: find_1 is fine here; without the store_bytes this assertion succeeds
+      lemma_snoc_found contents x newblock; 
+      t.table := SeqProperties.snoc contents (Entry x newblock) //NS: t.table is mutated;  so the modifies_1 cipher h0 h1 cannot be true
     end
   else
     begin
-    let plain = bufferRepr #i #(v l) plain in
-    getBlock t x l cipher;
-    Buffer.Utils.xor_bytes_inplace cipher plain l
+      let plain = bufferRepr #i #(v l) plain in
+      getBlock t x l cipher;
+      Buffer.Utils.xor_bytes_inplace cipher plain l
     end
 
 let prf_mac i t x = 
-  if authId i then
-    let contents = !t.table in //TODO unclear which pref is missing
-    match find_0 contents x with 
-    | Some mac -> mac 
-    | None     ->
-      begin
-        let mac = MAC.gen (i,x.iv) t.rgn in
-        t.table := SeqProperties.snoc contents (Entry x mac);
-        mac
-      end
+  if authId i then 
+    begin
+      assume false; //16-10-02 
+      recall t.table;
+      let contents = !t.table in //TODO unclear which pre is missing
+      match find_0 contents x with 
+      | Some mac -> mac 
+      | None     ->
+        begin
+          let mac = MAC.gen (i,x.iv) t.rgn in
+          t.table := SeqProperties.snoc contents (Entry x mac);
+          mac
+        end
+    end
   else
     begin
       let keyBytes = Buffer.rcreate t.rgn 0uy keylen in
       getBlock t x keylen keyBytes;
-      MAC.coerce (i,x.iv) t.rgn keyBytes
+      let macId = (i,x.iv) in
+      MAC.coerce macId t.rgn keyBytes
     end

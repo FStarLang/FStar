@@ -7,7 +7,7 @@ open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
 
-
+ 
 type mem = FStar.HyperStack.mem
 
 type bytes = Seq.seq UInt8.t 
@@ -103,7 +103,7 @@ let rec lemma_little_endian_is_bounded b =
     Math.Lemmas.pow2_plus 8 (8 * (Seq.length b - 1));
     lemma_factorise 8 (Seq.length b - 1)
     end
-
+ 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_little_endian_lt_2_128: b:bytes {Seq.length b <= 16} -> Lemma
@@ -139,7 +139,7 @@ val load_uint128: len:UInt32.t { v len <= 16 } -> buf:lbuffer (v len) -> ST UInt
   (ensures (fun h0 n h1 -> 
     h0 == h1 /\ live h0 buf /\ 
     UInt128.v n == little_endian (sel_bytes h1 len buf)))
-
+ 
 #reset-options "--z3timeout 1000" 
 
 // 16-10-02 128-bit constants??
@@ -176,7 +176,7 @@ let rec store_uint32 len buf n =
     buf.(0ul) <- b // updating after the recursive call helps verification
 // verification is slow, not sure why; maybe pow2 8?
 // check efficient compilation for all back-ends
-
+ 
 val store_uint128: 
   len:UInt32.t {v len <= 16} -> buf:lbuffer (v len) -> 
   n:UInt128.t {UInt128.v n < pow2 (8 * v len)} -> ST unit
@@ -184,8 +184,7 @@ val store_uint128:
   (ensures (fun h0 r h1 -> 
     Buffer.live h1 buf /\ Buffer.modifies_1 buf h0 h1 /\
     UInt128.v n = little_endian (sel_bytes h1 len buf)))
-
-
+ 
 let rec store_uint128 len buf n = 
   if len <> 0ul then
     let len = len -^ 1ul in 
@@ -199,3 +198,4 @@ let rec store_uint128 len buf n =
 // verification is slow, not sure why; maybe pow2 8?
 // check efficient compilation for all back-ends
 
+ 

@@ -37,10 +37,12 @@ assume val ideal: bool
 
 // the index is the base index (controlling agility and idealization) 
 // plus the value of the unique IV for this MAC
-// TODO make it a dependent pair to suppor agile IV types 
-type id = Plain.id * lbytes 12
+// TODO make it a dependent pair to support agile IV types 
 
 assume val someId: Plain.id // dummy value for unit testing
+let someId_coerce = assume(~ (Plain.authId someId ))
+
+type id = Plain.id * UInt128.t
 let authId (i:id) = Plain.authId (fst i)
 (*
 type id = nat
@@ -50,7 +52,7 @@ let someId = 0
 
 type tagB = wordB_16
 type wordB_16 = wordB_16
-
+ 
 (*
 // TODO: extend the model with dynamic compromises.
 type log_1 =
