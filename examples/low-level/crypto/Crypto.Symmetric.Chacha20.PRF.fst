@@ -205,7 +205,7 @@ let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) 
   (ensures (find (SeqProperties.snoc s (Entry x v)) x == Some v))
   = ()  
 
-//#reset-options "--z3timeout 10000"
+#reset-options "--z3timeout 10000"
 //SZ: Was this typechecking? No. CF: Yes, up to explicit assumptions.
 
 // generates a fresh block for x and XORs it with plaintext

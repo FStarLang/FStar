@@ -138,6 +138,7 @@ val alloc: i:id
     (ideal ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)
   ))
 
+#reset-options "--z3timeout 1000"
 let alloc i region key =
   let r = FStar.Buffer.rcreate region 0UL 5ul in
   let s = FStar.Buffer.rcreate region 0uy 16ul in
