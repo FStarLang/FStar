@@ -113,8 +113,8 @@ let lemma_eval_bigint_5 h b =
 val lemma_eval_bigint_6:
   h:mem ->
   b:bigint ->
-  Lemma (requires (live h b /\ length b >= 2*norm_length-1))
-	(ensures  (live h b /\ length b >= 2*norm_length-1
+  Lemma (requires (live h b /\ length b >= norm_length+1))
+	(ensures  (live h b /\ length b >= norm_length+1
 	  /\ eval h b (norm_length+1) = v (get h b 0) + pow2 26  * v (get h b 1)
 						     + pow2 52  * v (get h b 2)
 						     + pow2 78  * v (get h b 3)
