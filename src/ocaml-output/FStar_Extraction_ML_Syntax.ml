@@ -803,7 +803,7 @@ end))
 
 
 type mltydecl =
-(mlsymbol * mlidents * mltybody Prims.option) Prims.list
+(Prims.bool * mlsymbol * mlidents * mltybody Prims.option) Prims.list
 
 
 type mlmodule1 =

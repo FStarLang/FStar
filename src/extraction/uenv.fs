@@ -88,7 +88,7 @@ let rec lookup_ty_local (gamma:list<binding>) (b:bv) : mlty =
         | _::tl -> lookup_ty_local tl b
         | [] -> failwith ("extraction: unbound type var "^(b.ppname.idText))
 
-let tyscheme_of_td (_, vars, body_opt) : option<mltyscheme> = match body_opt with
+let tyscheme_of_td (_, _, vars, body_opt) : option<mltyscheme> = match body_opt with
     | Some (MLTD_Abbrev t) -> Some (vars, t)
     | _ -> None
 
@@ -97,7 +97,7 @@ let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyschem
     Util.find_map env.tydefs  (fun (m, tds) ->
         if module_name = m
         then Util.find_map tds (fun td ->
-             let (n, _, _) = td in
+             let (_, n, _, _) = td in
              if n=ty_name
              then tyscheme_of_td td
              else None)
