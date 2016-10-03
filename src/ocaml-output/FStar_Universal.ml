@@ -336,7 +336,7 @@ in (match (_92_210) with
 
 let _92_235 = (match (intf) with
 | None -> begin
-(tc_one_file dsenv env intf impl)
+(tc_one_file dsenv env None impl)
 end
 | Some (_92_213) when ((FStar_Options.codegen ()) <> None) -> begin
 (
