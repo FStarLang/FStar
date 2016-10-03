@@ -161,11 +161,9 @@ let lookupIV (i:id) (s:Seq.seq (entry i)) = Seq.seq_find (fun e:entry i -> e.iv 
 val pad_16: b:lbuffer 16 -> len:UInt32.t { v len <= 16 } -> STL unit
   (requires (fun h -> Buffer.live h b))
   (ensures  (fun h0 _ h1 -> 
-    Buffer.live h1 b /\ Buffer.modifies_1 b h0 h1
-    //TODO: be more precise, e.g. implement an injective spec.
-  )) 
+    Buffer.live h1 b /\ Buffer.modifies_1 b h0 h1 /\ 
+    as_seq h1 b = Seq.append (as_seq h0 (sub b 0ul len)) (Seq.create (16 - v len) 0uy))) 
 let pad_16 b len =
-  // if len =^ 0ul then () else 
   memset (Buffer.offset b len) 0uy (16ul -^ len)
 
 (*
