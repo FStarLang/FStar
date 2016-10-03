@@ -10,16 +10,21 @@ open Buffer.Utils
  
 type mem = FStar.HyperStack.mem
 
+// uint8_s uint8_p uint8_sl uint8_pl, to be moved to Buffer.
+
 type bytes = Seq.seq UInt8.t 
 type buffer = Buffer.buffer UInt8.t 
 
 type lbytes (l:nat)  = b:bytes  {Seq.length b = l}
 type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
 
-val sel_bytes: h:mem -> l:UInt32.t -> buf:lbuffer(v l){Buffer.live h buf}
-  -> GTot (lbytes (v l))
+// deprecate?
+val sel_bytes: h:mem -> l:UInt32.t -> buf:lbuffer(v l){Buffer.live h buf} -> GTot (lbytes (v l))
 let sel_bytes h l buf = Buffer.as_seq h buf
 
+// should be polymorphic
+// this will be leaky (using implicitly the heap)
+// so we should isolate it in a different file, e.g. Buffer.Alloc
 val load_bytes: l:UInt32.t -> buf:lbuffer(v l) -> Stack (lbytes(v l))
   (requires (fun h0 -> Buffer.live h0 buf))
   (ensures  (fun h0 r h1 -> h0 == h1 /\ Buffer.live h0 buf /\ r == sel_bytes h1 l buf))
@@ -29,7 +34,6 @@ let rec load_bytes l buf =
   let b = Buffer.index buf 0ul in
   let t = load_bytes (l -^ 1ul) (Buffer.sub buf 1ul (l -^ 1ul)) in
   SeqProperties.cons b t
-
 
 val store_bytes: l:UInt32.t -> buf:lbuffer(v l) -> b:lbytes(v l) -> ST unit
   (requires (fun h0 -> Buffer.live h0 buf))

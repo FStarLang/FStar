@@ -49,10 +49,9 @@ let field_add a b = (a + b) % p_1305
 val field_mul: elem -> elem -> Tot elem
 let field_mul a b = (a * b) % p_1305
 
-(* Infix operators for readability *)
+(* Infix field operators for readability *)
 let op_Plus_At = field_add
 let op_Star_At = field_mul
-//16-10-02 is it really what we need below? 
 
 (* Little endian integer value of a sequence of bytes *)
 let rec little_endian (b:word) : Tot (n:nat) (decreases (Seq.length b))
