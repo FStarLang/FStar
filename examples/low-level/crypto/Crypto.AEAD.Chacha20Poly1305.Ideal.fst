@@ -90,7 +90,7 @@ noeq type state (i:id) (rw:rw) =
   | State:
       #region: rgn (* no need for readers? *) ->
       #log_region: rgn {if rw = Writer then region = log_region else HyperHeap.disjoint region log_region} ->
-      log: HS.ref (Seq.seq (entry i)) {frameOf log == log_region} ->
+      log: HS.ref (Seq.seq (entry i)) {HS.frameOf log == log_region} ->
       prf: PRF.state i (* including its key *) ->
       state i rw
 
