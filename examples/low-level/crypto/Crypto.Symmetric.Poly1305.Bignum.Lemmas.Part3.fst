@@ -84,7 +84,16 @@ let carried_1 (h:mem) (b:bigint) : GTot Type0 =
 
 let lemma_carry_10_0 (x:int) (y:pos) : Lemma (x % y < y) = ()
 let lemma_carry_10_1 (x:nat) (y:nat) (z:pos) : Lemma (requires (x < y)) (ensures (x / z <= y / z))
-  = assume (x / z <= y / z) (* TODO *)
+  = lemma_div_mod x z;
+    lemma_div_mod y z;
+    assert(x = z * (x / z) + x % z);
+    assert(y = z * (y / z) + y % z);
+    let xz = x/z in let yz = y/z in
+    distributivity_sub_right z yz xz;
+    assert(z * (yz - xz) + y % z - x % z > 0);
+    cut (x % z < z /\ y % z < z);
+    assert(z * (yz - xz) > x % z - y % z);
+    assert(z * (yz - xz) > - z)
 let lemma_carry_10_2 (x:nat) : Lemma (requires (x < pow2 64)) (ensures (x / pow2 26 <= pow2 38))
   = pow2_minus 64 26;
     lemma_carry_10_1 x (pow2 64) (pow2 26)
@@ -305,11 +314,14 @@ let lemma_carry_110 b0 b1 b2 b3 b4 c0 c1 c2 c3 c4 c5 =
   cut (c0 + pow2 26 * c1 + pow2 52 * ((b0 / p26 + b1) / p26) + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4 = c0 + pow2 26 * ((b0 / p26)) + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4);
   lemma_div_mod b0 (pow2 26)
 
+
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
 val lemma_carry_11:
   h0:mem -> h1:mem ->
   b:bigint{length b >= norm_length+1} ->
-  Lemma (requires (bound63 h0 b /\ isCarried h0 h1 b))
-	(ensures  (bound63 h0 b /\ isCarried h0 h1 b
+  Lemma (requires ((* bound63 h0 b /\  *)isCarried h0 h1 b))
+	(ensures  ((* bound63 h0 b /\  *)isCarried h0 h1 b
 	  /\ eval h1 b (norm_length+1) = eval h0 b norm_length))
 let lemma_carry_11 h0 h1 b =
   let (p26:pos) = pow2 26 in
@@ -369,75 +381,95 @@ let carried_3 (h:mem) (b:bigint) : GTot Type0 =
   norm h b /\ length b >= norm_length+1
   /\ v (get h b 5) <= 1
   /\ (v (get h b 5) = 1
-    ==> (v (get h b 1) < pow2 18 /\ v (get h b 2) < pow2 18  /\ v (get h b 3) < pow2 18
-	/\ v (get h b 4) < pow2 18))
+    ==> (v (get h b 1) < pow2 16 /\ v (get h b 2) < pow2 16  /\ v (get h b 3) < pow2 16
+	/\ v (get h b 4) < pow2 16))
+
+val lemma_div_lt: a:nat -> n:nat -> m:nat{m <= n} ->
+  Lemma (requires (a < pow2 n))
+	(ensures  (a / pow2 m < pow2 (n-m)))
+let lemma_div_lt a n m =
+  lemma_div_mod a (pow2 m);
+  assert(a = pow2 m * (a / pow2 m) + a % pow2 m);
+  pow2_plus m (n-m);
+  assert(pow2 n = pow2 m * pow2 (n - m))
+
+val lemma_div_rest: a:nat -> m:nat -> n:nat{m < n} ->
+  Lemma (requires (a >= pow2 n /\ a < pow2 m + pow2 n))
+	(ensures  (a % pow2 n < pow2 m))
+let lemma_div_rest a m n =
+  pow2_double_sum n;
+  lemma_div_mod a (pow2 n)
+
+let lemma_mod_0 (a:nat) (b:pos) : Lemma (a % b < b) = ()
+
+
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_carry_20:
   h0:mem -> h1:mem ->
   b:bigint{length b >= norm_length+1} ->
   Lemma (requires (carried_2 h0 b /\ isCarried h0 h1 b))
 	(ensures  (carried_2 h0 b /\ isCarried h0 h1 b /\ carried_3 h1 b))
-(* let lemma_carry_20 h0 h1 b = *)
-  
+let lemma_carry_20 h0 h1 b =
+  let p26 = pow2 26 in
+  let b0 = v (get h0 b 0) in
+  let b1 = v (get h0 b 1) in
+  let b2 = v (get h0 b 2) in
+  let b3 = v (get h0 b 3) in
+  let b4 = v (get h0 b 4) in
+  nat_over_pos_is_nat b0 p26;
+  let r0  = b0 / p26 in
+  nat_over_pos_is_nat (b1+r0) p26;
+  let r1  = (b1 + r0) / p26 in
+  nat_over_pos_is_nat (b2+r1) p26;
+  let r2  = (b2 + r1) / p26 in
+  nat_over_pos_is_nat (b3+r2) p26;
+  let r3  = (b3 + r2) / p26 in
+  nat_over_pos_is_nat (b4+r3) p26;
+  lemma_carry_10_1 b0 (pow2 42) (pow2 26);
+  lemma_div_lt b0 42 26;
+  assert(r0 < pow2 16);
+  pow2_lt_compat 26 16;
+  pow2_double_sum 26;
+  lemma_div_lt (b1+r0) 27 26;
+  pow2_lt_compat 26 1;
+  lemma_div_lt (b2+r1) 27 26;
+  pow2_lt_compat 26 1;
+  lemma_div_lt (b3+r2) 27 26;
+  pow2_lt_compat 26 1;
+  lemma_div_lt (b4+r3) 27 26;
+  pow2_lt_compat 26 1;
+  assert_norm(pow2 1 = 2);
+  cut (v (get h1 b 5) = 1 ==> b4 + r3 >= pow2 26);
+  cut (b4 + r3 >= pow2 26 ==> r3 = 1);
+  cut (r3 = 1 ==> b3 + r2 >= pow2 26);
+  cut (b3 + r2 >= pow2 26 ==> r1 = 1);
+  cut (r1 = 1 ==> b1 + r0 >= pow2 26);
+  cut (b1 + r0 >= pow2 26 ==> r0 >= 1);
+  lemma_mod_0 b0 (pow2 26);
+  lemma_mod_0 (b1+r0) (pow2 26);
+  lemma_mod_0 (b2+r1) (pow2 26);
+  lemma_mod_0 (b3+r2) (pow2 26);
+  lemma_mod_0 (b4+r3) (pow2 26);
+  pow2_lt_compat 16 1;
+  if (v (get h1 b 5) = 1) then (
+    lemma_div_rest (b1 + r0) 16 26;
+    lemma_div_rest (b2 + r1) 16 26;
+    lemma_div_rest (b3 + r2) 16 26;
+    lemma_div_rest (b4 + r3) 16 26
+  )
 
 
-assume val lemma_carry_2:
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
+val lemma_carry_2:
   h0:mem -> h1:mem ->
   b:bigint{length b >= norm_length+1} ->
   Lemma (requires (carried_2 h0 b /\ isCarried h0 h1 b))
 	(ensures  (carried_2 h0 b /\ isCarried h0 h1 b
 	  /\ eval h1 b (norm_length+1) = eval h0 b norm_length
 	  /\ carried_3 h1 b))
-
-let carriedTopBottom (h0:mem) (h1:mem) (b:bigint) : GTot Type0 =
-  live h0 b /\ live h1 b /\ length b >= norm_length+1
-  /\ v (get h1 b 0) = v (get h0 b 0) + 5 * v (get h0 b 5)
-  /\ v (get h1 b 1) = v (get h0 b 1)
-  /\ v (get h1 b 2) = v (get h0 b 2)
-  /\ v (get h1 b 3) = v (get h0 b 3)
-  /\ v (get h1 b 4) = v (get h0 b 4)
-
-
-assume val lemma_carry_top_1:
-  h0:mem -> h1:mem ->
-  b:bigint ->
-  Lemma (requires (carried_1 h0 b /\ carriedTopBottom h0 h1 b))
-	(ensures  (carried_1 h0 b /\ carriedTopBottom h0 h1 b
-	  /\ carried_2 h1 b
-	  /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime))
-
-
-let carried_4 (h:mem) (b:bigint) : GTot Type0 =
-  live h b /\ v (get h b 0) < pow2 26 + 5
-  /\ v (get h b 1) < pow2 26
-  /\ (v (get h b 0) >= pow2 26 ==> v (get h b 1) < pow2 18)
-  /\ v (get h b 2) < pow2 26
-  /\ v (get h b 3) < pow2 26
-  /\ v (get h b 4) < pow2 26
-
-
-assume val lemma_carry_top_2:
-  h0:mem -> h1:mem ->
-  b:bigint ->
-  Lemma (requires (norm h0 b /\ length b >= norm_length + 1
-		  /\ v (get h0 b 5) <= 1 /\ carriedTopBottom h0 h1 b))
-	(ensures  (norm h0 b /\ length b >= norm_length + 1
-	  /\ v (get h0 b 5) <= 1 /\ carriedTopBottom h0 h1 b
-	  /\ eval h1 b norm_length % reveal prime = eval h0 b (norm_length+1) % reveal prime
-	  /\ carried_4 h1 b))
-
-
-let isCarried01 (h0:mem) (h1:mem) (b:bigint) =
-  live h0 b /\ live h1 b
-  /\ v (get h1 b 0) = v (get h0 b 0) % pow2 26
-  /\ v (get h1 b 1) = v (get h0 b 1) + (v (get h0 b 0) / pow2 26)
-  /\ v (get h1 b 2) = v (get h0 b 2)
-  /\ v (get h1 b 3) = v (get h0 b 3)
-  /\ v (get h1 b 4) = v (get h0 b 4)
-
-assume val lemma_carry_0_to_1:
-  h0:mem -> h1:mem ->
-  b:bigint ->
-  Lemma (requires (carried_4 h0 b /\ isCarried01 h0 h1 b))
-	(ensures  (carried_4 h0 b /\ isCarried01 h0 h1 b
-	  /\ norm h1 b /\ eval h1 b norm_length = eval h0 b norm_length))
+let lemma_carry_2 h0 h1 b =
+  lemma_carry_20 h0 h1 b;
+  lemma_carry_11 h0 h1 b
+  
