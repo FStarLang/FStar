@@ -1259,7 +1259,7 @@ let check_sigelt_quals se =
         | Noeq 
         | Unopteq ->
           quals 
-          |> List.for_all (fun x -> x=q || x=Logic || has_eq x || inferred x || visibility x)
+          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || has_eq x || inferred x || visibility x)
 
         | TotalEffect -> 
           quals 
@@ -1272,7 +1272,7 @@ let check_sigelt_quals se =
         | Reifiable
         | Reflectable -> 
           quals 
-          |> List.for_all (fun x -> x=q || inferred x || visibility x || x=TotalEffect)
+          |> List.for_all (fun x -> reification x || inferred x || visibility x || x=TotalEffect)
 
         | Private -> 
           true //only about visibility; always legal in combination with others
@@ -1317,7 +1317,8 @@ let check_sigelt_quals se =
       if not (quals |> Util.for_all (fun x -> 
             x=TotalEffect
             || inferred x 
-            || visibility x))
+            || visibility x
+            || reification x))
       then err' ()
     | Sig_new_effect_for_free _ -> 
       if not (quals |> Util.for_all (fun x -> 

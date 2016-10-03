@@ -1188,7 +1188,7 @@ let mk_indexed_projectors iquals fvq refine_domain env tc lid (inductive_tps:bin
             || fvq<>Data_ctor
             || Options.dont_gen_projectors (Env.current_module env).str in
         let no_decl = Syntax.is_type x.sort in
-        let quals q = if only_decl then S.Assumption::q else q in
+        let quals q = if only_decl then S.Assumption::List.filter (function S.Abstract -> false | _ -> true) q else q in
         let quals = 
             let iquals = iquals |> List.filter (function 
                 | S.Abstract

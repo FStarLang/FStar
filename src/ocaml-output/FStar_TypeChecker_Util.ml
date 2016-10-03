@@ -2925,7 +2925,7 @@ end
 (FStar_All.pipe_right quals (FStar_List.for_all (fun x -> ((((x = q) || (inferred x)) || (visibility x)) || (assumption x)))))
 end
 | (FStar_Syntax_Syntax.Inline) | (FStar_Syntax_Syntax.Unfoldable) | (FStar_Syntax_Syntax.Irreducible) | (FStar_Syntax_Syntax.Abstract) | (FStar_Syntax_Syntax.Noeq) | (FStar_Syntax_Syntax.Unopteq) -> begin
-(FStar_All.pipe_right quals (FStar_List.for_all (fun x -> (((((x = q) || (x = FStar_Syntax_Syntax.Logic)) || (has_eq x)) || (inferred x)) || (visibility x)))))
+(FStar_All.pipe_right quals (FStar_List.for_all (fun x -> ((((((x = q) || (x = FStar_Syntax_Syntax.Logic)) || (x = FStar_Syntax_Syntax.Abstract)) || (has_eq x)) || (inferred x)) || (visibility x)))))
 end
 | FStar_Syntax_Syntax.TotalEffect -> begin
 (FStar_All.pipe_right quals (FStar_List.for_all (fun x -> ((((x = q) || (inferred x)) || (visibility x)) || (reification x)))))
@@ -2934,7 +2934,7 @@ end
 (FStar_All.pipe_right quals (FStar_List.for_all (fun x -> (((((x = q) || (x = FStar_Syntax_Syntax.Assumption)) || (inferred x)) || (visibility x)) || (reducibility x)))))
 end
 | (FStar_Syntax_Syntax.Reifiable) | (FStar_Syntax_Syntax.Reflectable) -> begin
-(FStar_All.pipe_right quals (FStar_List.for_all (fun x -> ((((x = q) || (inferred x)) || (visibility x)) || (x = FStar_Syntax_Syntax.TotalEffect)))))
+(FStar_All.pipe_right quals (FStar_List.for_all (fun x -> ((((reification x) || (inferred x)) || (visibility x)) || (x = FStar_Syntax_Syntax.TotalEffect)))))
 end
 | FStar_Syntax_Syntax.Private -> begin
 true
@@ -3018,7 +3018,7 @@ end else begin
 end
 end
 | FStar_Syntax_Syntax.Sig_new_effect (_56_1785) -> begin
-if (not ((FStar_All.pipe_right quals (FStar_Util.for_all (fun x -> (((x = FStar_Syntax_Syntax.TotalEffect) || (inferred x)) || (visibility x))))))) then begin
+if (not ((FStar_All.pipe_right quals (FStar_Util.for_all (fun x -> ((((x = FStar_Syntax_Syntax.TotalEffect) || (inferred x)) || (visibility x)) || (reification x))))))) then begin
 (err' ())
 end else begin
 ()
