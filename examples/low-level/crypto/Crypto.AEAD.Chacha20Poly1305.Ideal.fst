@@ -9,6 +9,7 @@ open FStar.HST
 open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
+open FStar.HST.Monotonic.RRef
 
 open Crypto.Symmetric.Bytes
 open Plain
@@ -153,50 +154,33 @@ let rec refines h i entries blocks =
 
 let lookupIV (i:id) (s:Seq.seq (entry i)) = Seq.seq_find (fun e:entry i -> e.iv = iv) s // <- requires iv:UInt128.t
 *)
-
+ 
 
 // MAC ENCODING from Chacha20Poly1305.fst
 
-(* If the length is not a multipile of 16, pad to 16 *)
-val pad_16: b:lbuffer 16 -> len:UInt32.t { v len <= 16 } -> STL unit
+(* If the length is not a multiple of 16, pad to 16 *)
+val pad_16: b:lbuffer 16 -> len:UInt32.t { 0 < v len /\ v len <= 16 } -> STL unit
   (requires (fun h -> Buffer.live h b))
   (ensures  (fun h0 _ h1 -> 
-    Buffer.live h1 b /\ Buffer.modifies_1 b h0 h1 /\ 
-    as_seq h1 b = Seq.append (as_seq h0 (sub b 0ul len)) (Seq.create (16 - v len) 0uy))) 
+    Buffer.live h0 b /\
+    Buffer.live h1 b /\ 
+    Buffer.modifies_1 b h0 h1 /\ 
+    Seq.equal (Buffer.as_seq h1 b) (Seq.append (Buffer.as_seq h0 (Buffer.sub b 0ul len)) (Seq.create (16 - v len) 0uy)))) 
 let pad_16 b len =
   memset (Buffer.offset b len) 0uy (16ul -^ len)
 
-(*
-let uint32_bytes v : Tot (u8 * u8 * u8 * u8)= 
-  Int.Cast.uint32_to_uint8 v,
-  Int.Cast.uint32_to_uint8 (v >>^ 8ul),
-  Int.Cast.uint32_to_uint8 (v >>^ 16ul),
-  Int.Cast.uint32_to_uint8 (v >>^ 24ul)
-*)
+let field i = match alg i with 
+  | Block.CHACHA20 -> Crypto.Symmetric.Poly1305.Spec.elem
+  | Block.AES256   -> lbytes (v Crypto.Symmetric.GF128.len) // not there yet
+  
+// val encode_bytes: i:id -> len:UInt32 -> b:lbytes (v len) -> Tot (Seq.seq (field i))
+
+private let field_encode i aad cipher : Tot (Seq.seq (field i)) = 
+  //TODO
+  Seq.createEmpty
 
 //16-09-18 how to get <- syntax?
 open FStar.HyperStack
-
-(*
-let upd_uint32 (b:lbuffer 4) x : STL unit
-  (requires (fun h -> Buffer.live h b))
-  (ensures  (fun h0 _ h1 -> Buffer.live h1 b /\ Buffer.modifies_1 b h0 h1)) =
-  let v0,v1,v2,v3 = uint32_bytes x in 
-  Buffer.upd b 0ul v0;
-  Buffer.upd b 1ul v1;
-  Buffer.upd b 2ul v2;
-  Buffer.upd b 3ul v3
-
-(* Serializes the two lengths into the final MAC word *)
-private val length_word: b:lbuffer 16 -> aad_len:UInt32.t -> len:UInt32.t -> STL unit
-  (requires (fun h -> Buffer.live h b))
-  (ensures  (fun h0 _ h1 -> Buffer.live h1 b /\ Buffer.modifies_1 b h0 h1))
-  // we'll similarly need an injective spec
-let length_word b aad_len len =
-  store_uint32 4ul (Buffer.sub b 0ul 4ul) aad_len;
-  store_uint32 4ul (Buffer.sub b 8ul 4ul) len
-*)
-
 
 private val add_bytes:
   #i: MAC.id ->
@@ -328,29 +312,55 @@ let rec counter_enxor i t x len plaintext ciphertext =
       counter_enxor i t (PRF.incr x) len plaintext ciphertext
     end
 
-
 // ENCRYPT AND DECRYPT
 // some code duplication, but in different typing contexts
 //16-09-18 not yet using ideal state.
 
-(*
 val encrypt: 
-  i:id -> e:state i Writer -> iv:UInt64.t ->
-  aadlen:UInt32.t -> aadtext:lbytes (v aadlen) -> 
-  plainlen:UInt32.t -> plaintext:plain i (v plainLen) -> 
-  ciphertext:lbuffer (v plainlen) -> tag:MAC.tagB i -> 
+  i:id -> e:state i Writer -> n:Block.iv (alg i) ->
+  aadlen:UInt32.t -> aadtext:lbuffer (v aadlen) -> 
+  plainlen:UInt32.t -> plaintext:plainBuffer i (v plainlen) -> 
+  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) ->
   STL unit
   (requires (fun h -> 
-    live h key /\ live h aadtext /\ live h plaintext /\ live h ciphertext /\ live h tag /\ 
-    lookupIV (sel h log) = None
+    Buffer.live h aadtext /\ Plain.live h plaintext /\ Buffer.live h ciphertext /\
+    //TODO: add disjointness
+    //TODO add invariant /\ n not in the table yet. 
+    (authId i ==> PRF.find_0 (HS.sel h (PRF.State.table e.prf)) (PRF({iv=n; ctr=0ul})) == None)
     ))
   (ensures (fun h0 _ h1 -> 
     //TODO some "heterogeneous" modifies that also records updates to logs and tables
-    modifies_2 ciphertext tag h0 h1 /\ 
-    live h1 ciphertext /\ live h1 tag /\
-    sel h1 log = snoc (Entry iv aadtext plaintext ciphertext) (sel h0 log) 
-    ))
+    Buffer.modifies_1 ciphertext h0 h1 /\ 
+    Buffer.live h1 ciphertext /\ 
+    Buffer.live h1 aadtext /\
+    Plain.live h1 plaintext /\
+    (MAC.ideal /\ authId i ==> (
+      let c = Buffer.as_seq h1 (Buffer.sub ciphertext 0ul plainlen) in 
+      let t: lbuffer 16 = Buffer.as_seq h1 (Buffer.sub ciphertext plainlen (Spec.taglen i)) in
+      let a = Buffer.as_seq h1 aadtext in
+      let l = field_encode i a c in (
+      match PRF.find_0 (HS.sel h1 (PRF.State.table e.prf)) (PRF({iv=n; ctr=0ul})) with 
+      | Some mac -> 
+          let log = MAC.ilog (MAC.State.log mac) in 
+          m_contains log h1 /\ m_sel h1 log == Some (l,t)
+      | None -> False))
+    )))
 
+let encrypt i st n aadlen aad plainlen plain cipher_tagged =
+  push_frame();
+  let x = PRF({iv = n; ctr = 0ul}) in // PRF index to the first block
+  let ak = PRF.prf_mac i st.prf x in     // used for keying the one-time MAC
+  let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
+  let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
+  counter_enxor i st.prf (PRF.incr x) plainlen plain cipher;
+  
+  // Compute MAC over additional data and ciphertext
+  let l, acc = accumulate i ak aadlen aad plainlen cipher in 
+  MAC.mac ak l acc tag;
+  pop_frame()
+
+
+(*
 val decrypt: 
   i:id -> e:state i -> iv:UInt64.t -> 
   aadlen:UInt32.t -> aadtext:lbytes (v aadlen) -> 
@@ -364,19 +374,6 @@ val decrypt:
     modifies_1 plaintext h0 h1 /\ 
     live h1 plaintext))
 *)
-
-let encrypt i st iv aadlen aad plainlen plain cipher_tagged =
-  push_frame();
-  let x = PRF({iv = iv; ctr = 0ul}) in // PRF index to the first block
-  let ak = PRF.prf_mac i st.prf x in     // used for keying the one-time MAC
-  let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
-  let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
-  counter_enxor i st.prf (PRF.incr x) plainlen plain cipher;
-  
-  // Compute MAC over additional data and ciphertext
-  let l, acc = accumulate i ak aadlen aad plainlen cipher in 
-  MAC.mac ak l acc tag;
-  pop_frame()
 
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   push_frame();
