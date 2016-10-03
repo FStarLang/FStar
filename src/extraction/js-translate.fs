@@ -119,17 +119,14 @@ and translate_decl env d: option<source_t> =
       let t = translate_type t in
         translate_expr expr (name, Some t) None |> JS_Statement |> Some
 
-  | MLM_Let (flavor, [ {
+ | MLM_Let (flavor, [ {
       mllb_name = name, _;
       mllb_tysc = Some (_); //Some ([], _);
       mllb_def = expr
     } ]) ->
       translate_expr expr (name, None) None |> JS_Statement |> Some
 
-  | MLM_Let _ ->
-      //printf "%A" d;
-      None
-      //failwith "todo: translate_decl [MLM_Let]"
+  | MLM_Let _ -> None
 
   | MLM_Loc _ -> None (*only for OCaml backend*)
 
@@ -156,7 +153,7 @@ and translate_decl env d: option<source_t> =
   | MLM_Exn _ ->
       failwith "todo: translate_decl [MLM_Exn]"
 
-and translate_expr e (var:identifier_t) stmt: statement_t = 
+ and translate_expr e var stmt : statement_t = 
    match e.expr with  
    | MLE_Const c ->
        (match stmt with 
@@ -175,7 +172,7 @@ and translate_expr e (var:identifier_t) stmt: statement_t =
        mllb_def = body;
        print_typ = print 
        }]), continuation) ->
-       translate_expr body (name, None)  (Some(translate_expr continuation var stmt))
+       translate_expr body (name, None)  (Some(translate_expr continuation var stmt)) 
    | MLE_Let _ ->
        failwith "todo: translate_expr [MLE_Let]"
    | MLE_App ({ expr = MLE_Name ([ "Prims"], op) }, args) when is_op_bin op ->
@@ -194,7 +191,7 @@ and translate_expr e (var:identifier_t) stmt: statement_t =
    | MLE_App _ -> failwith "todo: translate_expr [MLE_App]"
    | MLE_Record (_, fields) ->
        failwith "todo: translate_expr [MLE_Record]"
-   | MLE_Proj (e, path) ->
+   | MLE_Proj (_, path) ->
        failwith "todo: translate_expr [MLE_Proj]"
    | MLE_Fun (args, body) ->
        let args_t = List.map (fun ((n,_), t) -> JGP_Identifier(n, None)) args in
@@ -204,13 +201,14 @@ and translate_expr e (var:identifier_t) stmt: statement_t =
           (match stmt with 
           | Some v -> JSS_Block([JSS_VariableDeclaration([(JGP_Identifier(var), Some (newFun))], JSV_Var); v])
           | None -> JSS_VariableDeclaration([(JGP_Identifier(var), Some (newFun))], JSV_Var))
-   | MLE_CTor _ | MLE_Tuple _ ->
+   | MLE_CTor _  -> failwith "todo: translate_expr [MLE_CTor]"
+   | MLE_Tuple _ ->
        (match stmt with 
        | Some v -> JSS_Block([JSS_VariableDeclaration([(JGP_Identifier(var), Some (translate_expr_app e))], JSV_Var); v])
        | None -> JSS_VariableDeclaration([(JGP_Identifier(var), Some (translate_expr_app e))], JSV_Var))      
-   | MLE_Seq seqs ->
+   | MLE_Seq _ ->
        failwith "todo: translate_expr [MLE_Seq]"   
-   | MLE_If(e, e1, e2) ->
+   | MLE_If(_, e1, e2) ->
        failwith "todo: translate_expr [MLE_If]"
    | MLE_Raise _ ->
        failwith "todo: translate_expr [MLE_Raise]"
@@ -218,10 +216,10 @@ and translate_expr e (var:identifier_t) stmt: statement_t =
        failwith "todo: translate_expr [MLE_Try]"
    | MLE_Coerce(in_e, t_from, t_to) -> (*todo: consider type!*)
        translate_expr in_e var stmt
-   | MLE_Match(e, lb) ->
+   | MLE_Match(e_in, lb) ->
        let depth = List.length lb in 
        let r = Absyn.Util.gensym() in
-           translate_expr e (r, None) (Some (translate_match (JSE_Identifier(r, None)) lb (*: list<mlbranch>)*) var depth))
+           translate_expr e_in (r, None) (Some (translate_match (JSE_Identifier(r, None)) lb var depth))
 
 and translate_expr_app e: expression_t = 
     match e.expr with 
@@ -233,11 +231,11 @@ and translate_expr_app e: expression_t =
     | MLE_App ({ expr = MLE_Name (path, function_name) }, args) ->
          JSE_Call (JSE_Identifier(function_name, None), List.map (translate_expr_app) args)
     | MLE_Tuple lexp -> 
-        let length = List.length lexp in
+        let arnity = List.length lexp in
         let create_field (i:int) v = JSPO_Property(JSO_Identifier("_f" ^ Util.string_of_int i, None), translate_expr_app v, JSO_Init) in
         let create_fields = List.mapi (fun i x -> create_field i x) lexp in
          JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String "Tuple", ""), JSO_Init); 
-                     JSPO_Property(JSO_Identifier("_arity", Some JST_Number), JSE_Literal(JSV_Number (Util.float_of_int32 (Util.int32_of_int length)), ""), JSO_Init)] @
+                     JSPO_Property(JSO_Identifier("_arity", Some JST_Number), JSE_Literal(JSV_Number (Util.float_of_int32 (Util.int32_of_int arnity)), ""), JSO_Init)] @
                      create_fields)
     | MLE_CTor (c, lexpr) -> 
          JSE_Object([JSPO_Property(JSO_Identifier("_tag", Some JST_String), JSE_Literal(JSV_String (Syntax.string_of_mlpath c), ""), JSO_Init);
@@ -245,10 +243,10 @@ and translate_expr_app e: expression_t =
     | _ -> failwith "todo: translation of expressions"
 
 //r -- JSE_Identifier; v1:JST_Object; d = depth of if-s
-and translate_match r (lb: list<mlbranch>) x d =               
+and translate_match r lb x d : statement_t = 
     let v1 = Absyn.Util.gensym() in    
     let (p, guard, expr_r) = List.nth lb (List.length lb - d) in 
-    let (pattern_tran, pattern_fv) = translate_pat p v1 in 
+    let (pattern_tran, pattern_fv) = (JSE_This, None) in//translate_pat p v1 in 
     match guard with 
     | Some v ->
         let f1 = Absyn.Util.gensym() in
@@ -274,8 +272,8 @@ and translate_match r (lb: list<mlbranch>) x d =
         JSS_If(JSE_Member(JSE_Identifier(v1, None), JSPM_Identifier("_valid", Some JST_Boolean)),
               stmt_true, (if d = 1 then None (*or Exn*) else Some (translate_match r lb x (d-1))))
         ])
-
-and translate_pat p v1 =
+(*
+and translate_pat p v1: (expression_t * option<statement_t>) =
   match p with  
   | MLP_Var (name, _) ->        
         let body = JSE_Object([JSPO_Property(JSO_Identifier("_valid", Some JST_Boolean), JSE_Literal(JSV_Boolean(true), ""), JSO_Init);
@@ -314,7 +312,7 @@ and translate_pat p v1 =
         let create_tmp_fv i = 
             JSS_VariableDeclaration([(JGP_Identifier("_r" ^ Util.string_of_int i ^ "_x", None),  Some (JSE_Member(JSE_Identifier(v1, None), JSPM_Identifier("_f" ^ Util.string_of_int i, None))))], JSV_Var) in           
         let create_tmp_fvs = List.map (create_tmp_fv) [0; 1] (* todo [0..(arnity-1)]*) in
-        let create_fvs = create_tmp_fvs @ List.map (fun el -> match (snd el) with | Some v -> v) create_decls_fv |> JSS_Block in
+        (*let create_fvs = create_tmp_fvs @ List.map (fun el -> match (snd el) with | Some v -> v |None -> ()) create_decls_fv |> JSS_Block in *)
         let create_field_ob1 i = JSPO_Property(JSO_Identifier("_f" ^ Util.string_of_int i, None), JSE_Member(JSE_Identifier("_r" ^ Util.string_of_int i, None), JSPM_Identifier("_x", None)), JSO_Init) in 
         let create_fields_ob1 = List.map (create_field_ob1) [0; 1] (* todo [0..(arnity-1)]*) in        
         let ob1 = JSE_Object([JSPO_Property(JSO_Identifier("_valid", Some JST_Boolean), JSE_Literal(JSV_Boolean(true), ""), JSO_Init)] @ create_fields_ob1) |> Some |> JSS_Return in
@@ -322,11 +320,11 @@ and translate_pat p v1 =
         let rec if_cond i = JSE_Logical(JSL_And, JSE_Member(JSE_Identifier("e", None), JSPM_Identifier("_f" ^ Util.string_of_int i, None)), 
                         (if (i = arnity - 2) then JSE_Member(JSE_Identifier("e", None), JSPM_Identifier("_f" ^ Util.string_of_int (i+1), None)) else if_cond (i+1))) in
         (JSE_Function(None, [JGP_Identifier("e", None)],
-                    JS_BodyBlock(create_decls @ [JSS_If(if_cond 0, ob1, Some ob2)]), None, None), Some create_fvs)
+                    JS_BodyBlock(create_decls @ [JSS_If(if_cond 0, ob1, Some ob2)]), None, None), None(*Some create_fvs*))
 
 and translate_constr lp v1 = 
-        failwith "todo: translation CTor"
-
+        failwith "todo: translation CTor"  
+*)
 and translate_constant c: expression_t =
   match c with
   | MLC_Unit ->
@@ -367,4 +365,4 @@ and translate_type t: typ =
   | MLTY_Named (_, (path, type_name)) ->      
       failwith "todo: translate_type [MLTY_Named]"
   | MLTY_Tuple _ ->
-      failwith "todo: translate_type [MLTY_Tuple]"
+      failwith "todo: translate_type [MLTY_Tuple]" 

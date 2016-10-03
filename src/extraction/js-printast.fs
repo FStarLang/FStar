@@ -6,6 +6,7 @@ open FStar.Extraction.JavaScript.Ast
 open System
 open System.Text
 open FStar.Format
+open FStar.Util
 
 let semi = text ";"
 let comma = text ","
@@ -15,21 +16,24 @@ let lbr = text "["
 let rbr = text "]"
 let ws = break1
 
-let encode_char (cn : int) =
-  if cn > 127 || cn=39 then "" (* todo : sprintf "\\u%04x" cn *)
-  else match cn with
-    | 34 -> "\\\"" | 92 -> "\\\\"
-    | 9 -> "\\t"   | 10 -> "\\n"
-    | 11 -> "\\v"  | 12 -> "\\f"
-    | 8 -> "\\b"   | 47 -> "\\/"  | 13 -> "\\r"
-    | n -> if n < 32 then "" (* todo : "\\x%02x" cn *) else "" (* todo : sprintf "%c" c *)
-
-
+let escape_or fallback = function
+  | c when (c = '\\')            -> "\\\\"
+  | c when (c = ' ' )            -> " "
+  | c when (c = '\b')            -> "\\b"
+  | c when (c = '\t')            -> "\\t"
+  | c when (c = '\r')            -> "\\r"
+  | c when (c = '\n')            -> "\\n"
+  | c when (c = '\'')            -> "\\'"
+  | c when (c = '\"')            -> "\\\""
+  | c when (is_letter_or_digit c)-> string_of_char c
+  | c when (is_punctuation c)    -> string_of_char c
+  | c when (is_symbol c)         -> string_of_char c
+  | c                            -> fallback c
 //
 // MARINA & BEN stopped here !
 //
 
-let jstr_escape s = String.collect encode_char s
+let jstr_escape s = String.collect (escape_or string_of_char) s
 
 let print_op_un:op_un -> doc = function
     | JSU_Minus -> text "-"
@@ -129,34 +133,32 @@ and pretty_print_elist l = List.map print_pattern l |> combine comma
 
 and pt s b = if b then parens s else s
 
-and pretty_print_exp_gen =
-  let rec ppe input = match input with
+and pretty_print_exp_gen = function
     | JSE_This -> text "this"
     | JSE_Array(l) -> 
         (match l with 
-        | Some v ->  reduce [text "["; List.map ppe v |> combine comma ; text "]"]
+        | Some v ->  reduce [text "["; List.map pretty_print_exp_gen v |> combine comma ; text "]"]
         | None -> reduce [text "["; text "]"])
-    | JSE_Object(l) -> reduce [text "{"; List.map pretty_print_obj l |> combine comma; text "}"]
-    | JSE_Function(f) -> pretty_print_fun f
+    | JSE_Object(l) ->  reduce [text "{"; List.map pretty_print_obj l |> combine comma; text "}"]
+    | JSE_Function(f) ->  pretty_print_fun f
     | JSE_ArrowFunction(f) -> semi (*!!!*)
     | JSE_Sequence(e) -> semi (*!!!*) 
-    | JSE_Unary(o,e) -> reduce [print_op_un o; ppe e]
-    | JSE_Binary(o,e1,e2) -> reduce [ppe e1; print_op_bin o; ppe e2]
+    | JSE_Unary(o,e) -> reduce [print_op_un o; pretty_print_exp_gen e]
+    | JSE_Binary(o,e1,e2) -> reduce [pretty_print_exp_gen e1; print_op_bin o; pretty_print_exp_gen e2]
     | JSE_Assignment(p,e) -> semi (*!!!*)
     | JSE_Update(o,e,b) -> semi (*!!!*)
-    | JSE_Logical(o,e1,e2) -> reduce [ppe e1; print_op_log o; ppe e2]
+    | JSE_Logical(o,e1,e2) ->  reduce [pretty_print_exp_gen e1; print_op_log o; pretty_print_exp_gen e2]
     | JSE_Conditional(c,e,f) -> semi (*!!!*)
     | JSE_New(e,l) -> semi (*!!!*)
-    | JSE_Call(e,l) -> reduce [ppe e; text "("; List.map ppe l |> combine comma ; text ")"]
-    | JSE_Member(o, p) -> reduce [ppe o; text"."; pretty_print_propmem p]
+    | JSE_Call(e,l) -> reduce [pretty_print_exp_gen e; text "("; List.map pretty_print_exp_gen l |> combine comma ; text ")"]
+    | JSE_Member(o, p) ->  reduce [pretty_print_exp_gen o; text"."; pretty_print_propmem p]
     | JSE_Yield(e,b) -> semi (*!!!*)
     | JSE_Comprehension(l,e) -> semi (*!!!*)
     | JSE_Generator(l,e) -> semi (*!!!*)
     | JSE_Let(l,e) -> semi (*!!!*)
-    | JSE_Identifier(id,t) -> reduce [text (jstr_escape id); (match t with | Some v -> reduce [text ":"; print_typ v] | None -> text "")] 
+    | JSE_Identifier(id,t) ->  reduce [text (jstr_escape id); (match t with | Some v -> reduce [text ":"; print_typ v] | None -> text "")] 
     | JSE_Literal(l) -> print_literal (fst l)
-    | JSE_TypeCast(e,t) -> semi (*!!!*)    
-    in fun e -> ppe e
+    | JSE_TypeCast(e,t) -> semi (*!!!*)
 
 and pretty_print_exp : expression_t -> doc = pretty_print_exp_gen
    
@@ -199,9 +201,9 @@ and print_typ = function
 
 and print_literal = function
     | JSV_String s -> text ("\"" ^ (jstr_escape s) ^ "\"")
-    | JSV_Boolean b -> text (Util.string_of_bool b (* todo: ToLower() *))
+    | JSV_Boolean b -> text (string_of_bool b (* todo: ToLower() *))
     | JSV_Null -> text "null"
-    | JSV_Number f -> text (Util.string_of_float f)
+    | JSV_Number f -> text (string_of_float f)
     | JSV_RegExp _ -> text "!!"
 
 and print_kind_var = function
