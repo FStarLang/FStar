@@ -152,7 +152,7 @@ val float_of_byte: byte -> Tot<float>
 val float_of_int32: int32 -> Tot<float>
 val float_of_int64: int64 -> Tot<float>
 val int_of_int32: int32 -> Tot<int>
-val int32_of_int:   int -> int32 //potentially failing int32 coercion
+val int32_of_int:   int -> Tot<int32> //potentially failing int32 coercion
 val string_of_int:   int -> string
 val string_of_bool:   bool -> string
 val string_of_int64: int64 -> Tot<string>
