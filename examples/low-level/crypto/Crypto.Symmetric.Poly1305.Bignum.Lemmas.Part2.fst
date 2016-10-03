@@ -82,6 +82,8 @@ assume val lemma_modulo_9: a:nat -> b:nat -> c:nat -> d:nat -> e:nat -> f:nat ->
 assume val lemma_modulo_mul: a:nat -> b:nat -> p:pos ->
   Lemma (let p = reveal prime in (a * b) % p = (a%p * b) % p)
 
+let lemma_mod_a_b (a:pos) (b:nat) : Lemma ((a + b) % a = b % a) = ()
+
 assume val lemma_2_130_modulo_prime: unit -> Lemma (pow2 130 % (pow2 130 - 5) = 5)
 
 let lemma_modulo_00 (a:nat) (b:pos) : Lemma (requires (a < b)) (ensures ( a % b = a )) = ()
@@ -129,7 +131,7 @@ let lemma_2_26_p (a:nat) : Lemma (requires (a < pow2 26)) (ensures  (a < reveal 
     lemma_modulo_00 a (reveal prime)
 
 
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0"
 
 val lemma_freduce_degree2:
   h0:mem -> h1:mem ->

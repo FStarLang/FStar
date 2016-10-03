@@ -46,6 +46,7 @@ let lemma_carry_top_10 h0 h1 b =
   pow2_double_sum 41
 
 
+(* TODO *)
 assume val lemma_mod_6_p:
   b0:nat -> b1:nat -> b2:nat -> b3:nat -> b4:nat -> b5:nat -> p:pos ->
   Lemma	(ensures  (

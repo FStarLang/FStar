@@ -24,6 +24,8 @@ module HS = FStar.HyperStack
 open FStar.Buffer.Quantifiers
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2
+open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3
+open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4
 
 let prime = prime
 let satisfiesModuloConstraints = satisfiesModuloConstraints
