@@ -113,7 +113,7 @@ type expr = term
 //  - Immediately before a top-level declaration
 //  - Immediately after a type constructor or record field
 //  - In the middle of a file, as a standalone documentation declaration
-type fsdoc = string * list<(string * string)> // comment + keywords (name, arguments)
+type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
 
 type tycon =
   | TyconAbstract of ident * list<binder> * option<knd>

@@ -73,6 +73,7 @@ type tagB i = lbuffer ( v(Spec.taglen i))
 type adata = b:bytes { Seq.length b < 2000 } 
 type cipher (i:id) (l:nat) = lbytes(l + v (Spec.taglen i))
 
+// Should be n:UInt128.t{n < pow2 96}
 type iv (i:id) = lbuffer 12 // its computation from siv is left to the next level for now 
 
 noeq type entry (i:id) =
@@ -84,18 +85,18 @@ noeq type entry (i:id) =
       entry i
 
 type rw = | Reader | Writer 
-noeq type state (i:id) (rw:rw) = 
+
+noeq type state (i:id) (rw:rw) =
   | State:
       #region: rgn (* no need for readers? *) ->
       #log_region: rgn {if rw = Writer then region = log_region else HyperHeap.disjoint region log_region} ->
-      log: HS.ref (* log_region *) (Seq.seq (entry i)) -> 
+      log: HS.ref (Seq.seq (entry i)) {frameOf log == log_region} ->
       prf: PRF.state i (* including its key *) ->
       state i rw
 
 
-
 //16-09-18 where is it in the libraries?
-let min (a:u32) (b:u32) = if a <=^ b then a else b
+private let min (a:u32) (b:u32) = if a <=^ b then a else b
 
 let gen i rgn = 
   let log = ralloc rgn (Seq.createEmpty #(entry i)) in
@@ -123,7 +124,7 @@ let rec counterblocks x plain cipher =
     Seq.cons block (counterblocks (incr x) (Seq.slice l0 l plain) (Seq.slice l0 l cipher))
 
 // checks PRF table contents against AEAD entries
-val refines: h:_ -> i:id -> entries: Seq.seq (entry i) -> blocks: Seq.seq (PRF.entry i) -> Tot bool
+val refines: h:mem -> i:id -> entries: Seq.seq (entry i) -> blocks: Seq.seq (PRF.entry i) -> Tot bool // Type?
 let rec refines h i entries blocks = 
   if Seq.length entries = 0 
   then Seq.length blocks = 0 
@@ -131,9 +132,9 @@ let rec refines h i entries blocks =
   | Entry nonce ad l plain cipher_tagged -> 
     begin
       let nb = (l +^ blockLen -^ 1ul) /^ blockLen in // number of blocks XOR-ed for this encryption
-      b < Seq.length blocks 
-      &&
+      b < Seq.length blocks &&
       let (PRF.Entry x v) = Seq.index 0 blocks in
+      let m:MAC.state i = v in
       let xors    = Seq.slice 1 (b+1) blocks in 
       let entries = Seq.slice 1 (Seq.length entries) in 
       let blocks  = Seq.slice (b+2) (Seq.length blocks - b - 2) in 
@@ -141,14 +142,12 @@ let rec refines h i entries blocks =
       x.nonce = nonce && 
       x.ctr = 0ul &&
       xors = counterblocks (incr x) plain cipher &&
-      ( let m: MAC.state i = v in 
-        match sel h m.log with 
+      (match sel h m.log with
         | None           -> false
-        | Some (msg,tag) -> msg = encode_2 ad plain && refines h entries blocks ) &&
-      refines h i entries blocks 
+        | Some (msg,tag) -> msg = encode_2 ad plain && refines h entries blocks)
     end
 
-let lookupIV (i:id) (s:Seq.seq (entry i)) = Seq.seq_find (fun e:entry i -> e.iv = iv) s
+let lookupIV (i:id) (s:Seq.seq (entry i)) = Seq.seq_find (fun e:entry i -> e.iv = iv) s // <- requires iv:UInt128.t
 *)
 
 

@@ -1513,8 +1513,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) =
     let se = Sig_pragma(trans_pragma p, d.drange) in
     env, [se]
 
-  | TopLevelModule _ -> 
-    raise (Error("Multiple modules in a file are no longer supported", d.drange))
+  | TopLevelModule id -> env,[]
 
   | Open lid ->
     let env = DesugarEnv.push_namespace env lid in

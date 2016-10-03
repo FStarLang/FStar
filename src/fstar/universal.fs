@@ -212,7 +212,7 @@ let rec tc_fold_interleave acc remaining =
     let all_mods, dsenv, env = acc in
     let ms, dsenv, env = match intf with 
         | None -> //no interface; easy
-          tc_one_file dsenv env intf impl 
+          tc_one_file dsenv env None impl 
 
         | Some _ when ((Options.codegen()) <> None) -> 
           if not (Options.lax())
