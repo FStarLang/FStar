@@ -129,7 +129,7 @@ val coerce: rgn:region -> i:id{~(authId i)} -> key:lbuffer (v keylen) -> ST (sta
     s.rgn == rgn /\ HS.sel h1 s.table == Seq.createEmpty #(entry rgn i)))
 let coerce rgn i key =
   let key_p = Buffer.rcreate rgn 0uy (Block.keylen prfa) in
-  Buffer.blit key_p 0ul key 0ul (Block.keylen prfa);
+  Buffer.blit key 0ul key_p 0ul (Block.keylen prfa);
   let table = ralloc rgn (Seq.createEmpty #(entry rgn i)) in // Shoudln't exist
   State #i #rgn key_p table
 

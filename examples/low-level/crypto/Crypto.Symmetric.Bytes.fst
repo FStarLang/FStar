@@ -23,17 +23,29 @@ type buffer = Buffer.buffer UInt8.t
 type lbytes  (l:nat) = b:bytes  {Seq.length b = l}
 type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
 
-val print_buffer: s:buffer -> i:UInt32.t{UInt32.v i <= length s} -> len:UInt32.t{UInt32.v len <= length s} -> Stack bool
+
+private let hex1 (x:UInt8.t {FStar.UInt8(x <^ 16uy)}) = 
+  FStar.UInt8(
+    if x <^ 10uy then UInt8.to_string x else 
+    if x = 10uy then "a" else 
+    if x = 11uy then "b" else 
+    if x = 12uy then "c" else 
+    if x = 13uy then "d" else 
+    if x = 14uy then "e" else "f")
+private let hex2 x = 
+  FStar.UInt8(hex1 (x /^ 16uy) ^ hex1 (x %^ 16uy))
+
+val print_buffer: s:buffer -> i:UInt32.t{UInt32.v i <= length s} -> len:UInt32.t{UInt32.v len <= length s} -> Stack unit
   (requires (fun h -> live h s))
   (ensures (fun h0 _ h1 -> h0 == h1))
 let rec print_buffer s i len =
   let open FStar.UInt32 in
-  if v i < v len then
+  if i <^ len then
     let b = Buffer.index s i in
-    let _ = IO.debug_print_string (UInt8.to_string b ^ ":") in
-    print_buffer s (i +^ 1ul) len
-  else
-    IO.debug_print_string "\n"
+    let sep = if i %^ 16ul =^ 15ul || i +^ 1ul = len then "\n" else " " in
+    let _ = IO.debug_print_string (hex2 b ^ sep) in
+    let _ = print_buffer s (i +^ 1ul) len in
+    ()
 
 // TODO: Deprecate?
 val sel_bytes: h:mem -> l:UInt32.t -> buf:lbuffer (v l){Buffer.live h buf}

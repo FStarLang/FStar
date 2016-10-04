@@ -62,6 +62,7 @@ let from_string len s =
   (if String.length s = v len then store_string len buf 0ul s);
   buf 
 
+
 (*
 val store_bytestring: len:UInt32.t -> buf:lbuffer (v len) -> i:UInt32.t {i <=^ len} -> s:string {String.length s = v len + v len} -> STL unit
   (requires (fun h0 -> Buffer.live h0 buf))
@@ -88,8 +89,35 @@ let from_bytestring s =
   buf 
 *)
 
+let verbose = true
 
-val test: unit -> ST UInt32.t //16-10-04 workaround against very large inferred type. 
+val diff: string -> l:UInt32.t -> expected:lbuffer (v l) -> computed:lbuffer (v l) -> ST bool
+  (requires (fun h -> Buffer.live h expected /\ Buffer.live h computed))
+  (ensures (fun h0 b h1 -> h0 == h1))
+  
+let diff name len expected computed =
+  let r = Buffer.eqb expected computed len in 
+  if verbose || not r then 
+    let _ = IO.debug_print_string ("Expected "^name^":\n") in 
+    let _ = print_buffer expected 0ul len in 
+    let _ = IO.debug_print_string ("Computed "^name^":\n") in
+    let _ = print_buffer computed 0ul len in
+    let _ = r || IO.debug_print_string "ERROR: unexpected result." in
+    r
+  else r 
+
+val dump: string -> l:UInt32.t -> b:lbuffer (v l) ->  ST unit
+  (requires (fun h -> Buffer.live h b))
+  (ensures (fun h0 b h1 -> h0 == h1))
+let dump name len b =
+  if verbose then 
+    let _ = IO.debug_print_string (name^":\n") in 
+    let _ = print_buffer b 0ul len in
+    ()
+
+let tweak pos b = Buffer.upd b pos (UInt8.logxor (Buffer.index b pos) 42uy) 
+
+val test: unit -> ST bool //16-10-04 workaround against very large inferred type. 
   (requires (fun _ -> True))
   (ensures (fun _ _ _ -> True))
 let test() = 
@@ -111,6 +139,11 @@ let test() =
     0x90uy; 0x91uy; 0x92uy; 0x93uy; 0x94uy; 0x95uy; 0x96uy; 0x97uy; 0x98uy; 0x99uy; 0x9auy; 0x9buy; 0x9cuy; 0x9duy; 0x9euy; 0x9fuy ] in
   let ivBuffer = Buffer.createL [
     0x07uy; 0x00uy; 0x00uy; 0x00uy; 0x40uy; 0x41uy; 0x42uy; 0x43uy; 0x44uy; 0x45uy; 0x46uy; 0x47uy ] in
+
+  dump "Key" 32ul key;
+  dump "IV" 12ul ivBuffer;
+  dump "Additional Data" 12ul aad;
+
   let iv = load_uint128 12ul ivBuffer in
   let expected_cipher = Buffer.createL [ 
     0xd3uy; 0x1auy; 0x8duy; 0x34uy; 0x64uy; 0x8euy; 0x60uy; 0xdbuy; 0x7buy; 0x86uy; 0xafuy; 0xbcuy; 0x53uy; 0xefuy; 0x7euy; 0xc2uy; 
@@ -124,36 +157,37 @@ let test() =
     0x06uy; 0x91uy ] in
   let cipherlen = plainlen +^ 16ul in
   assert(Buffer.length expected_cipher = v cipherlen);
-  // print_string "Testing AEAD chacha20_poly1305...\n";
   let cipher = Buffer.create 0uy cipherlen in
   let st = AE.coerce i HH.root key in
 
   AE.encrypt i st iv aadlen aad plainlen plain cipher;
-  let _ = IO.debug_print_string "Expected:\n" in
-  let _ = print_buffer expected_cipher 0ul cipherlen in
-  let _ = IO.debug_print_string "Computed:\n" in
-  let _ = print_buffer cipher 0ul cipherlen in
-  let ok0 = Buffer.eqb expected_cipher cipher cipherlen in
-  // failwith "ERROR: encrypted ciphertext mismatch";
+  let ok_0 = diff "cipher" cipherlen expected_cipher cipher in
 
   let decrypted = Plain.create i 0uy plainlen in
   let reader_rgn = new_region HH.root in
   let st = AE.genReader #_ #reader_rgn st in
-  let is_verified = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
+  let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
+  let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in
 
-  let ok1 = Buffer.eqb (bufferRepr #i decrypted) (bufferRepr #i plain) plainlen in
-  //failwith "ERROR: decrypted plaintext mismatch"
+  // testing that decryption fails when truncating aad or tweaking the ciphertext.
+  let fail_0 = AE.decrypt i st iv (aadlen -^ 1ul) (Buffer.sub aad 0ul (aadlen -^ 1ul)) plainlen decrypted cipher = 0ul in
 
+  tweak 3ul cipher;
+  let fail_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
+  tweak 3ul cipher;
+
+  tweak plainlen cipher;
+  let fail_2 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
+  tweak plainlen cipher;
+  
   pop_frame ();
-  if is_verified && ok0 && ok1 then 0ul else 1ul
+  ok_0 && ok_1 && ok_2 && not (fail_0 || fail_1 || fail_2) 
 
 val main: bool
 let main =
-  let result = test () in
-  if result = 0ul then
-    IO.debug_print_string "Test succeeded!\n"
-  else
-    IO.debug_print_string "ERROR: test failed\n"
+  let ok = test () in
+  IO.debug_print_string ("AEAD (CHACHA20_POLY1305) test vector" ^ (if ok then ": Ok.\n" else ":\nERROR.\n"))
+  
 
 (* missing a library:
 
@@ -162,4 +196,33 @@ let main argc argv =
   test();
   C.exit_success
 
+
+private let hex1 (x:UInt8.t {FStar.UInt8(x <^ 16uy)}) = 
+  FStar.UInt8(
+    if x <^ 10uy then UInt8.to_string x else 
+    if x = 10uy then "a" else 
+    if x = 11uy then "b" else 
+    if x = 12uy then "c" else 
+    if x = 13uy then "d" else 
+    if x = 14uy then "e" else "f")
+private let hex2 x = 
+  FStar.UInt8(hex1 (x /^ 16uy) ^ hex1 (x %^ 16uy))
+
+val print_buffer: s:buffer -> i:UInt32.t{UInt32.v i <= length s} -> len:UInt32.t{UInt32.v len <= length s} -> Stack unit
+  (requires (fun h -> live h s))
+  (ensures (fun h0 _ h1 -> h0 == h1))
+let rec print_buffer s i len =
+  let open FStar.UInt32 in
+  if i <^ len then
+    begin
+      let b = Buffer.index s i in
+      print (hex2 b);
+      if i %^ 16ul = 0ul then print "\n";
+      print_buffer s (i +^ 1ul) len
+    end
+  else
+    print "\n"
+
 *)
+
+
