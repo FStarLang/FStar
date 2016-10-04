@@ -139,7 +139,7 @@ and mllb = {
 
 and mlletbinding = mlletflavor * c_flags * list<mllb>
 
-and c_flags = c_flag list
+and c_flags = list<c_flag>
 
 and c_flag = // C backend only
   | Mutable
