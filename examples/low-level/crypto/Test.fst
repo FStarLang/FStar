@@ -88,8 +88,10 @@ let from_bytestring s =
   buf 
 *)
 
-(* Does not compile in a reasonable time: 
 
+val test: unit -> ST UInt32.t //16-10-04 workaround against very large inferred type. 
+  (requires (fun _ -> True))
+  (ensures (fun _ _ _ -> True))
 let test() = 
   push_frame(); 
   let plainlen = 114ul in 
@@ -137,7 +139,6 @@ let test() =
 
   pop_frame ();
   if is_verified && ok0 && ok1 then 0ul else 1ul
-*)
 
 
 (* missing a library:

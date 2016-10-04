@@ -3621,8 +3621,8 @@ end
 let se = FStar_Absyn_Syntax.Sig_pragma ((((trans_pragma p)), (d.FStar_Parser_AST.drange)))
 in ((env), ((se)::[])))
 end
-| FStar_Parser_AST.TopLevelModule (_62_2844) -> begin
-(Prims.raise (FStar_Absyn_Syntax.Error ((("Multiple modules in a file are no longer supported"), (d.FStar_Parser_AST.drange)))))
+| FStar_Parser_AST.TopLevelModule (id) -> begin
+((env), ([]))
 end
 | FStar_Parser_AST.Open (lid) -> begin
 (
@@ -3637,8 +3637,8 @@ end
 | FStar_Parser_AST.Tycon (qual, tcs) -> begin
 (
 
-let tcs = (FStar_List.map (fun _62_2860 -> (match (_62_2860) with
-| (x, _62_2859) -> begin
+let tcs = (FStar_List.map (fun _62_2859 -> (match (_62_2859) with
+| (x, _62_2858) -> begin
 x
 end)) tcs)
 in (let _156_1038 = (trans_quals qual)
@@ -3648,28 +3648,28 @@ end
 (match ((let _156_1040 = (let _156_1039 = (desugar_exp_maybe_top true env (FStar_Parser_AST.mk_term (FStar_Parser_AST.Let (((isrec), (lets), ((FStar_Parser_AST.mk_term (FStar_Parser_AST.Const (FStar_Const.Const_unit)) d.FStar_Parser_AST.drange FStar_Parser_AST.Expr))))) d.FStar_Parser_AST.drange FStar_Parser_AST.Expr))
 in (FStar_All.pipe_left FStar_Absyn_Util.compress_exp _156_1039))
 in _156_1040.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Exp_let (lbs, _62_2869) -> begin
+| FStar_Absyn_Syntax.Exp_let (lbs, _62_2868) -> begin
 (
 
 let lids = (FStar_All.pipe_right (Prims.snd lbs) (FStar_List.map (fun lb -> (match (lb.FStar_Absyn_Syntax.lbname) with
 | FStar_Util.Inr (l) -> begin
 l
 end
-| _62_2876 -> begin
+| _62_2875 -> begin
 (FStar_All.failwith "impossible")
 end))))
 in (
 
 let quals = (match (quals) with
-| (_62_2881)::_62_2879 -> begin
+| (_62_2880)::_62_2878 -> begin
 (trans_quals quals)
 end
-| _62_2884 -> begin
+| _62_2883 -> begin
 (FStar_All.pipe_right (Prims.snd lbs) (FStar_List.collect (fun _62_30 -> (match (_62_30) with
-| {FStar_Absyn_Syntax.lbname = FStar_Util.Inl (_62_2893); FStar_Absyn_Syntax.lbtyp = _62_2891; FStar_Absyn_Syntax.lbeff = _62_2889; FStar_Absyn_Syntax.lbdef = _62_2887} -> begin
+| {FStar_Absyn_Syntax.lbname = FStar_Util.Inl (_62_2892); FStar_Absyn_Syntax.lbtyp = _62_2890; FStar_Absyn_Syntax.lbeff = _62_2888; FStar_Absyn_Syntax.lbdef = _62_2886} -> begin
 []
 end
-| {FStar_Absyn_Syntax.lbname = FStar_Util.Inr (l); FStar_Absyn_Syntax.lbtyp = _62_2901; FStar_Absyn_Syntax.lbeff = _62_2899; FStar_Absyn_Syntax.lbdef = _62_2897} -> begin
+| {FStar_Absyn_Syntax.lbname = FStar_Util.Inr (l); FStar_Absyn_Syntax.lbtyp = _62_2900; FStar_Absyn_Syntax.lbeff = _62_2898; FStar_Absyn_Syntax.lbdef = _62_2896} -> begin
 (FStar_Parser_DesugarEnv.lookup_letbinding_quals env l)
 end))))
 end)
@@ -3681,7 +3681,7 @@ in (
 let env = (FStar_Parser_DesugarEnv.push_sigelt env s)
 in ((env), ((s)::[]))))))
 end
-| _62_2909 -> begin
+| _62_2908 -> begin
 (FStar_All.failwith "Desugaring a let did not produce a let")
 end)
 end
@@ -3792,8 +3792,8 @@ end
 | FStar_Parser_AST.KindAbbrev (id, binders, k) -> begin
 (
 
-let _62_2962 = (desugar_binders env binders)
-in (match (_62_2962) with
+let _62_2961 = (desugar_binders env binders)
+in (match (_62_2961) with
 | (env_k, binders) -> begin
 (
 
@@ -3810,7 +3810,7 @@ let env = (FStar_Parser_DesugarEnv.push_sigelt env se)
 in ((env), ((se)::[]))))))
 end))
 end
-| FStar_Parser_AST.NewEffectForFree (_62_2968) -> begin
+| FStar_Parser_AST.NewEffectForFree (_62_2967) -> begin
 (FStar_All.failwith "effects for free only supported in conjunction with --universes")
 end
 | FStar_Parser_AST.NewEffect (quals, FStar_Parser_AST.RedefineEffect (eff_name, eff_binders, defn)) -> begin
@@ -3819,16 +3819,16 @@ end
 let env0 = env
 in (
 
-let _62_2981 = (desugar_binders env eff_binders)
-in (match (_62_2981) with
+let _62_2980 = (desugar_binders env eff_binders)
+in (match (_62_2980) with
 | (env, binders) -> begin
 (
 
 let defn = (desugar_typ env defn)
 in (
 
-let _62_2985 = (FStar_Absyn_Util.head_and_args defn)
-in (match (_62_2985) with
+let _62_2984 = (FStar_Absyn_Util.head_and_args defn)
+in (match (_62_2984) with
 | (head, args) -> begin
 (match (head.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_const (eff) -> begin
@@ -3877,7 +3877,7 @@ let env = (FStar_Parser_DesugarEnv.push_sigelt env0 se)
 in ((env), ((se)::[])))))))
 end)
 end
-| _62_2997 -> begin
+| _62_2996 -> begin
 (let _156_1082 = (let _156_1081 = (let _156_1080 = (let _156_1079 = (FStar_Absyn_Print.typ_to_string head)
 in (Prims.strcat _156_1079 " is not an effect"))
 in ((_156_1080), (d.FStar_Parser_AST.drange)))
@@ -3896,27 +3896,27 @@ in (
 let env = (FStar_Parser_DesugarEnv.enter_monad_scope env eff_name)
 in (
 
-let _62_3012 = (desugar_binders env eff_binders)
-in (match (_62_3012) with
+let _62_3011 = (desugar_binders env eff_binders)
+in (match (_62_3011) with
 | (env, binders) -> begin
 (
 
 let eff_k = (desugar_kind env eff_kind)
 in (
 
-let _62_3023 = (FStar_All.pipe_right eff_decls (FStar_List.fold_left (fun _62_3016 decl -> (match (_62_3016) with
+let _62_3022 = (FStar_All.pipe_right eff_decls (FStar_List.fold_left (fun _62_3015 decl -> (match (_62_3015) with
 | (env, out) -> begin
 (
 
-let _62_3020 = (desugar_decl env decl)
-in (match (_62_3020) with
+let _62_3019 = (desugar_decl env decl)
+in (match (_62_3019) with
 | (env, ses) -> begin
 (let _156_1086 = (let _156_1085 = (FStar_List.hd ses)
 in (_156_1085)::out)
 in ((env), (_156_1086)))
 end))
 end)) ((env), ([]))))
-in (match (_62_3023) with
+in (match (_62_3022) with
 | (env, decls) -> begin
 (
 
@@ -3988,7 +3988,7 @@ let non_reifiable = (fun _62_31 -> (match (_62_31) with
 | FStar_Parser_AST.NonReifiableLift (f) -> begin
 f
 end
-| _62_3046 -> begin
+| _62_3045 -> begin
 (Prims.raise (FStar_Absyn_Syntax.Error ((("Unexpected reifiable sub-effect"), (d.FStar_Parser_AST.drange)))))
 end))
 in (
@@ -4002,12 +4002,12 @@ in ((env), ((se)::[]))))))))
 end)))
 
 
-let desugar_decls : FStar_Parser_DesugarEnv.env  ->  FStar_Parser_AST.decl Prims.list  ->  (FStar_Parser_DesugarEnv.env * FStar_Absyn_Syntax.sigelts) = (fun env decls -> (FStar_List.fold_left (fun _62_3054 d -> (match (_62_3054) with
+let desugar_decls : FStar_Parser_DesugarEnv.env  ->  FStar_Parser_AST.decl Prims.list  ->  (FStar_Parser_DesugarEnv.env * FStar_Absyn_Syntax.sigelts) = (fun env decls -> (FStar_List.fold_left (fun _62_3053 d -> (match (_62_3053) with
 | (env, sigelts) -> begin
 (
 
-let _62_3058 = (desugar_decl env d)
-in (match (_62_3058) with
+let _62_3057 = (desugar_decl env d)
+in (match (_62_3057) with
 | (env, se) -> begin
 ((env), ((FStar_List.append sigelts se)))
 end))
@@ -4042,7 +4042,7 @@ end
 end)
 in (
 
-let _62_3085 = (match (m) with
+let _62_3084 = (match (m) with
 | FStar_Parser_AST.Interface (mname, decls, admitted) -> begin
 (let _156_1143 = (FStar_Parser_DesugarEnv.prepare_module_or_interface true admitted env mname)
 in (let _156_1142 = (open_ns mname decls)
@@ -4053,12 +4053,12 @@ end
 in (let _156_1144 = (open_ns mname decls)
 in ((_156_1145), (mname), (_156_1144), (false))))
 end)
-in (match (_62_3085) with
+in (match (_62_3084) with
 | ((env, pop_when_done), mname, decls, intf) -> begin
 (
 
-let _62_3088 = (desugar_decls env decls)
-in (match (_62_3088) with
+let _62_3087 = (desugar_decls env decls)
+in (match (_62_3087) with
 | (env, sigelts) -> begin
 (
 
@@ -4075,7 +4075,7 @@ let m = if (FStar_Options.interactive_fsi ()) then begin
 | FStar_Parser_AST.Module (mname, decls) -> begin
 FStar_Parser_AST.Interface (((mname), (decls), (true)))
 end
-| FStar_Parser_AST.Interface (mname, _62_3099, _62_3101) -> begin
+| FStar_Parser_AST.Interface (mname, _62_3098, _62_3100) -> begin
 (FStar_All.failwith (Prims.strcat "Impossible: " mname.FStar_Ident.ident.FStar_Ident.idText))
 end)
 end else begin
@@ -4083,24 +4083,24 @@ m
 end
 in (
 
-let _62_3109 = (desugar_modul_common curmod env m)
-in (match (_62_3109) with
-| (x, y, _62_3108) -> begin
+let _62_3108 = (desugar_modul_common curmod env m)
+in (match (_62_3108) with
+| (x, y, _62_3107) -> begin
 ((x), (y))
 end))))
 
 
 let desugar_modul : FStar_Parser_DesugarEnv.env  ->  FStar_Parser_AST.modul  ->  (env_t * FStar_Absyn_Syntax.modul) = (fun env m -> (
 
-let _62_3115 = (desugar_modul_common None env m)
-in (match (_62_3115) with
+let _62_3114 = (desugar_modul_common None env m)
+in (match (_62_3114) with
 | (env, modul, pop_when_done) -> begin
 (
 
 let env = (FStar_Parser_DesugarEnv.finish_module_or_interface env modul)
 in (
 
-let _62_3117 = if (FStar_Options.dump_module modul.FStar_Absyn_Syntax.name.FStar_Ident.str) then begin
+let _62_3116 = if (FStar_Options.dump_module modul.FStar_Absyn_Syntax.name.FStar_Ident.str) then begin
 (let _156_1156 = (FStar_Absyn_Print.modul_to_string modul)
 in (FStar_Util.print1 "%s\n" _156_1156))
 end else begin
@@ -4117,17 +4117,17 @@ end)))
 
 let desugar_file : FStar_Parser_DesugarEnv.env  ->  FStar_Parser_AST.file  ->  (FStar_Parser_DesugarEnv.env * FStar_Absyn_Syntax.modul Prims.list) = (fun env f -> (
 
-let _62_3130 = (FStar_List.fold_left (fun _62_3123 m -> (match (_62_3123) with
+let _62_3129 = (FStar_List.fold_left (fun _62_3122 m -> (match (_62_3122) with
 | (env, mods) -> begin
 (
 
-let _62_3127 = (desugar_modul env m)
-in (match (_62_3127) with
+let _62_3126 = (desugar_modul env m)
+in (match (_62_3126) with
 | (env, m) -> begin
 ((env), ((m)::mods))
 end))
 end)) ((env), ([])) f)
-in (match (_62_3130) with
+in (match (_62_3129) with
 | (env, mods) -> begin
 ((env), ((FStar_List.rev mods)))
 end)))
@@ -4135,15 +4135,15 @@ end)))
 
 let add_modul_to_env : FStar_Absyn_Syntax.modul  ->  FStar_Parser_DesugarEnv.env  ->  FStar_Parser_DesugarEnv.env = (fun m en -> (
 
-let _62_3135 = (FStar_Parser_DesugarEnv.prepare_module_or_interface false false en m.FStar_Absyn_Syntax.name)
-in (match (_62_3135) with
+let _62_3134 = (FStar_Parser_DesugarEnv.prepare_module_or_interface false false en m.FStar_Absyn_Syntax.name)
+in (match (_62_3134) with
 | (en, pop_when_done) -> begin
 (
 
 let en = (FStar_List.fold_left FStar_Parser_DesugarEnv.push_sigelt (
 
-let _62_3136 = en
-in {FStar_Parser_DesugarEnv.curmodule = Some (m.FStar_Absyn_Syntax.name); FStar_Parser_DesugarEnv.modules = _62_3136.FStar_Parser_DesugarEnv.modules; FStar_Parser_DesugarEnv.open_namespaces = _62_3136.FStar_Parser_DesugarEnv.open_namespaces; FStar_Parser_DesugarEnv.modul_abbrevs = _62_3136.FStar_Parser_DesugarEnv.modul_abbrevs; FStar_Parser_DesugarEnv.sigaccum = _62_3136.FStar_Parser_DesugarEnv.sigaccum; FStar_Parser_DesugarEnv.localbindings = _62_3136.FStar_Parser_DesugarEnv.localbindings; FStar_Parser_DesugarEnv.recbindings = _62_3136.FStar_Parser_DesugarEnv.recbindings; FStar_Parser_DesugarEnv.phase = _62_3136.FStar_Parser_DesugarEnv.phase; FStar_Parser_DesugarEnv.sigmap = _62_3136.FStar_Parser_DesugarEnv.sigmap; FStar_Parser_DesugarEnv.default_result_effect = _62_3136.FStar_Parser_DesugarEnv.default_result_effect; FStar_Parser_DesugarEnv.iface = _62_3136.FStar_Parser_DesugarEnv.iface; FStar_Parser_DesugarEnv.admitted_iface = _62_3136.FStar_Parser_DesugarEnv.admitted_iface}) m.FStar_Absyn_Syntax.exports)
+let _62_3135 = en
+in {FStar_Parser_DesugarEnv.curmodule = Some (m.FStar_Absyn_Syntax.name); FStar_Parser_DesugarEnv.modules = _62_3135.FStar_Parser_DesugarEnv.modules; FStar_Parser_DesugarEnv.open_namespaces = _62_3135.FStar_Parser_DesugarEnv.open_namespaces; FStar_Parser_DesugarEnv.modul_abbrevs = _62_3135.FStar_Parser_DesugarEnv.modul_abbrevs; FStar_Parser_DesugarEnv.sigaccum = _62_3135.FStar_Parser_DesugarEnv.sigaccum; FStar_Parser_DesugarEnv.localbindings = _62_3135.FStar_Parser_DesugarEnv.localbindings; FStar_Parser_DesugarEnv.recbindings = _62_3135.FStar_Parser_DesugarEnv.recbindings; FStar_Parser_DesugarEnv.phase = _62_3135.FStar_Parser_DesugarEnv.phase; FStar_Parser_DesugarEnv.sigmap = _62_3135.FStar_Parser_DesugarEnv.sigmap; FStar_Parser_DesugarEnv.default_result_effect = _62_3135.FStar_Parser_DesugarEnv.default_result_effect; FStar_Parser_DesugarEnv.iface = _62_3135.FStar_Parser_DesugarEnv.iface; FStar_Parser_DesugarEnv.admitted_iface = _62_3135.FStar_Parser_DesugarEnv.admitted_iface}) m.FStar_Absyn_Syntax.exports)
 in (
 
 let env = (FStar_Parser_DesugarEnv.finish_module_or_interface en m)

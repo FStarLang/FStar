@@ -45,6 +45,10 @@ val reveal_injective : i:id -> l:plainLen -> p:plain i l -> Lemma
   [SMTPat (reveal p)]
 let reveal_injective i l p = ()
 
+val slice: #i:id -> #l:plainLen -> p:plain i l -> s:nat -> j:nat{s <= j && j <= l} -> Tot (plain i (j - s))
+let slice #i #l p s j = Seq.slice p s j
+//16-10-03 TODO add ghost spec
+
 abstract type plainBuffer (i:id) (l:plainLen) = b:lbuffer l
 
 val hide_buffer: i:id -> #l:plainLen -> b:lbuffer l -> GTot (plainBuffer i l)

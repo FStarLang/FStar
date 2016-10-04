@@ -13,16 +13,24 @@ open Buffer.Utils
  
 type mem = FStar.HyperStack.mem
 
-type bytes = Seq.seq UInt8.t // Note that this Buffer.Utils redefines this as buffer
-type buffer = Buffer.buffer UInt8.t 
+// TODO: rename and move to FStar.Buffer
+// bytes  -> uint8_s; lbytes  -> uint8_sl
+// buffer -> uint8_p; lbuffer -> uint8_sl
+
+type bytes = Seq.seq UInt8.t // Currently, Buffer.Utils redefines this as buffer
+type buffer = Buffer.buffer UInt8.t
 
 type lbytes  (l:nat) = b:bytes  {Seq.length b = l}
 type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
 
+// TODO: Deprecate?
 val sel_bytes: h:mem -> l:UInt32.t -> buf:lbuffer (v l){Buffer.live h buf}
   -> GTot (lbytes (v l))
 let sel_bytes h l buf = Buffer.as_seq h buf
 
+// Should be polymorphic on the integer size
+// This will be leaky (using implicitly the heap)
+// TODO: We should isolate it in a different module, e.g. Buffer.Alloc
 val load_bytes: l:UInt32.t -> buf:lbuffer (v l) -> Stack (lbytes (v l))
   (requires (fun h0 -> Buffer.live h0 buf))
   (ensures  (fun h0 r h1 -> h0 == h1 /\ Buffer.live h0 buf /\
