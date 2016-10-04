@@ -213,7 +213,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 mllb_def=tm;
                 print_typ=false 
               } in
-            g, MLM_Let(NoLetQualifier, [lb]) in
+            g, MLM_Let(NonRec, [], [lb]) in
     
           let rec extract_fv tm = match (SS.compress tm).n with
             | Tm_uinst (tm, _) -> extract_fv tm 
@@ -258,7 +258,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           let elet = mk (Tm_let(lbs, Const.exp_false_bool)) None r in
           let ml_let, _, _ = Term.term_as_mlexpr g elet in
           begin match ml_let.expr with
-            | MLE_Let(ml_lbs, _) ->
+            | MLE_Let((flavor, _, bindings), _) ->
               let g, ml_lbs' = List.fold_left2 (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t} ->
 //              debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
                   let lb_lid = (right lbname).fv_name.v in
@@ -269,14 +269,19 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                          env, {ml_lb with mllb_name=(snd mname, 0)}
                     else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                  g, ml_lb::ml_lbs)
-              (g, []) (snd ml_lbs) (snd lbs) in
-              let qual =
-                if Util.for_some (function Assumption -> true | _ -> false) quals then
-                  Assumed
+              (g, []) bindings (snd lbs) in
+              let flags =
+                (if Util.for_some (function Assumption -> true | _ -> false) quals then
+                  [ Assumed ]
                 else
-                  fst ml_lbs
+                  [])
+                @
+                (if Util.for_some (function Syntax.Private -> true | _ -> false) quals then
+                  [ Private ]
+                else
+                  [])
               in
-              g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (qual, List.rev ml_lbs')]
+              g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (flavor, flags, List.rev ml_lbs')]
 
             | _ -> 
               failwith (Util.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))

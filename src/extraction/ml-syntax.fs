@@ -137,13 +137,18 @@ and mllb = {
     print_typ:bool;
 }
 
-and mlletbinding = mlletflavor * list<mllb>
+and mlletbinding = mlletflavor * c_flags * list<mllb>
+
+and c_flags = c_flag list
+
+and c_flag = // C backend only
+  | Mutable
+  | Assumed
+  | Private
 
 and mlletflavor =
   | Rec
-  | Mutable // C backend only
-  | Assumed // C backend only
-  | NoLetQualifier
+  | NonRec
 
 type mltybody =
 | MLTD_Abbrev of mlty
