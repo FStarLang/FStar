@@ -820,6 +820,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       let t = norm cfg env [] t in
                       norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
+                    | Meta_monadic_lift (m, m') ->
+                      norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+
                     | _ -> 
                       norm cfg env stack head //meta doesn't block reduction
                   end  
