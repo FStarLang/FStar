@@ -15,8 +15,6 @@ VERIFY= \
   Buffer.Utils \
   Math.Axioms \
   Math.Lemmas \
-  Curve.Bigint \
-  Curve.Parameters \
   Crypto.Symmetric.Chacha20 \
   Crypto.Symmetric.Poly1305.Bigint \
   Crypto.Symmetric.Poly1305.Parameters \
@@ -45,25 +43,12 @@ VERIFY= \
 # Files that should fully typecheck, but not part of regression
 # because verification is too slow
 SLOW= \
-  Curve.Modulo
 
 # Files not yet fully typechecking -- possibly due to timeouts.
 # Please move files that you know fully typecheck to VERIFY
 # Files commented out are broken, uncomment once fixed
 LAX= \
   Math.Lib \
-  Math.Definitions \
-  Math.Field \
-  Math.Curve \
-  Curve.AddAndDouble \
-  Curve.Bignum \
-  Curve.Fsum \
-  Curve.FsumWide \
-  Curve.Fscalar \
-  Curve.Crecip \
-  Curve.Point \
-  Curve.Ladder \
-  Crypto.Symmetric.Poly1305.Bignum \
   # AEAD
 
 all-ver: $(addsuffix .fst-ver, $(VERIFY))
