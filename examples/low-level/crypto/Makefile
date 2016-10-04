@@ -11,6 +11,7 @@ FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperheap --include $(FSTAR_HOM
 # Files that should fully typecheck
 # Files commented out are broken, uncomment once fixed
 VERIFY= \
+  FStar.HST.Monotonic.RRef \
   Buffer.Utils \
   Math.Axioms \
   Math.Lemmas \
@@ -19,6 +20,12 @@ VERIFY= \
   Crypto.Symmetric.Chacha20 \
   Crypto.Symmetric.Poly1305.Bigint \
   Crypto.Symmetric.Poly1305.Parameters \
+  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1 \
+  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2 \
+  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3 \
+  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4 \
+  Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5 \
+  Crypto.Symmetric.Poly1305.Bignum \
   Crypto.Symmetric.Poly1305.Spec \
   Crypto.Symmetric.Poly1305 \
   Crypto.Symmetric.Bytes \
@@ -33,10 +40,12 @@ VERIFY= \
   Crypto.AEAD.Chacha20Poly1305.Ideal \
   Plain \
   Test \
-  # TestMonotonic \
-  # FStar.HST.Monotonic.RRef
-  # Test
-  # Curve.Modulo 
+  TestMonotonic \
+
+# Files that should fully typecheck, but not part of regression
+# because verification is too slow
+SLOW= \
+  Curve.Modulo
 
 # Files not yet fully typechecking -- possibly due to timeouts.
 # Please move files that you know fully typecheck to VERIFY

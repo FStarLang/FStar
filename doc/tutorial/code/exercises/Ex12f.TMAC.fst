@@ -12,11 +12,11 @@ let macsize = BMAC.macsize
 type key = BMAC.key
 type tag = BMAC.tag
 
-assume type bspec (spec: (text -> Type)) (b:block) = 
+type bspec (spec: (text -> Type)) (b:block) = 
   (forall (t:text). equal b (encode t) ==> spec t)
 
-
 assume type key_prop : key -> text -> Type
+
 type pkey (p:(text -> Type)) = 
   k:key{key_prop k == p /\ BMAC.key_prop k == bspec p}
   

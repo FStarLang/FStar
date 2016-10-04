@@ -27,7 +27,7 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 let ctr x = PRF(x.ctr)
 
-let alg (i:id) = Block.CHACHA20 //16-10-02  temporary
+let alg (i:id) = Block.CHACHA20 //TODO: 16-10-02 This is temporary
 
 // PLAN: 
 //
@@ -82,8 +82,6 @@ let aadmax = 2000ul
 type adata = b:bytes { Seq.length b <= v aadmax} 
 type cipher (i:id) (l:nat) = lbytes(l + v (Spec.taglen i))
 
-// Should be n:UInt128.t{n < pow2 96}
-type iv (i:id) = lbuffer 12 // its computation from siv is left to the next level for now
 
 noeq type entry (i:id) =
   | Entry: 

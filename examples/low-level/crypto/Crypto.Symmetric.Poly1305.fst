@@ -211,7 +211,7 @@ let rec print_elem e i len =
 
 val bound27_isSum: h0:mem -> h1:mem -> a:bigint -> b:bigint
   -> Lemma
-    (requires (norm h0 a /\ norm h0 b /\ isSum h0 h1 0 0 norm_length 0 a b))
+    (requires (norm h0 a /\ norm h0 b /\ isSum h0 h1 a b))
     (ensures  (bound27 h1 a))
 let bound27_isSum h0 h1 a b =
   // The (i+0) is there on purpuose to trigger the pattern in isSum
@@ -250,7 +250,7 @@ let add_and_multiply acc block r =
   cut (eval h1 acc 5 = eval h0 acc 5 + eval h0 block 5);
   bound27_isSum h0 h1 acc block;
   push_frame();
-  let tmp = create 0UL (U32.mul 2ul nlength-|1ul) in
+  let tmp = create 0UL (U32 (2ul *^ nlength -^ 1ul)) in
   let h2 = HST.get () in
   eval_eq_lemma h1 h2 acc acc norm_length;
   eval_eq_lemma h0 h2 r r norm_length;
@@ -411,6 +411,11 @@ val lemma_toField_plus_2_128_0: ha:mem -> a:elemB{live ha a} -> Lemma
     v (get ha a 0) + pow2 26 * v (get ha a 1) + pow2 52 * v (get ha a 2) + pow2 78 * v (get ha a 3)
     + pow2 104 * v (get ha a 4)))
 let lemma_toField_plus_2_128_0 ha a =
+  lemma_bitweight_templ_values 4;
+  lemma_bitweight_templ_values 3;
+  lemma_bitweight_templ_values 2;
+  lemma_bitweight_templ_values 1;
+  lemma_bitweight_templ_values 0;
   assert(sel_int ha a = pow2 104 * v (get ha a 4) + eval ha a 4);
   assert(eval ha a 4 = pow2 78 * v (get ha a 3) + eval ha a 3);
   assert(eval ha a 3 = pow2 52 * v (get ha a 2) + eval ha a 2);
@@ -719,12 +724,12 @@ let poly1305_update log msgB acc r =
 
 val append_as_seq_sub: h:mem -> n:UInt32.t -> m:UInt32.t -> msg:bytes{live h msg /\ w m <= w n /\ w n <= length msg} -> Lemma
   (append (as_seq h (Buffer.sub msg 0ul m))
- 	  (as_seq h (Buffer.sub (Buffer.offset msg m) 0ul (n -| m))) ==
+ 	  (as_seq h (Buffer.sub (Buffer.offset msg m) 0ul (U32 (n -^ m)))) ==
    as_seq h (Buffer.sub msg 0ul n))
 let append_as_seq_sub h n m msg =
   Seq.lemma_eq_intro
     (append (as_seq h (Buffer.sub msg 0ul m))
-   	    (as_seq h (Buffer.sub (Buffer.offset msg m) 0ul (n -| m))))
+   	    (as_seq h (Buffer.sub (Buffer.offset msg m) 0ul (U32 (n -^ m)))))
      (as_seq h (Buffer.sub msg 0ul n))
 
 (* Loop over Poly1305_update; could go below MAC *)
@@ -759,7 +764,7 @@ let rec poly1305_loop log msg acc r ctr =
       assert (ideal ==> sel_elem h1 acc == poly (ilog log1) (sel_elem h0 r));
       assert (ideal ==>
         ilog log1 == SeqProperties.snoc (ilog log) (encode (sel_word h1 msg0)));
-      let log2 = poly1305_loop log1 msg1 acc r (ctr -| 1ul) in
+      let log2 = poly1305_loop log1 msg1 acc r (U32 (ctr -^ 1ul)) in
       let h2 = HST.get () in
       assert (norm h2 acc /\ modifies_1 acc h0 h2);
       lemma_modifies_1_trans acc h0 h1 h2;
@@ -772,7 +777,7 @@ let rec poly1305_loop log msg acc r ctr =
 	  //  (as_seq h0 (Buffer.sub msg1 0ul (UInt32.mul 16ul (ctr -| 1ul)))) ==
           //encode_pad (SeqProperties.snoc (ilog log) (encode (sel_word h1 msg0)))
 	  //  (as_seq h0 (Buffer.sub (Buffer.offset msg 16ul) 0ul (UInt32.mul 16ul ctr -| 16ul))));
-	  encode_pad_snoc (ilog log) (as_seq h0 (Buffer.sub (Buffer.offset msg 16ul) 0ul (UInt32.mul 16ul ctr -| 16ul))) (sel_word h1 msg0);
+	  encode_pad_snoc (ilog log) (as_seq h0 (Buffer.sub (Buffer.offset msg 16ul) 0ul (U32 (16ul *^ ctr -^ 16ul)))) (sel_word h1 msg0);
 	  append_as_seq_sub h0 (UInt32.mul 16ul ctr) 16ul msg
 	  //assert (append (sel_word h1 msg0) (as_seq h0 (Buffer.sub (Buffer.offset msg 16ul) 0ul  (UInt32.mul 16ul ctr -| 16ul))) ==
           // (as_seq h0 (Buffer.sub msg 0ul (UInt32.mul 16ul ctr))))

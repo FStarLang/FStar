@@ -13,8 +13,6 @@ module HS = FStar.HyperStack
 open FStar.UInt32
 open Crypto.Symmetric.Bytes
 
-// library stuff
-
 type alg = 
 //| AES128 
   | AES256 
@@ -101,4 +99,4 @@ let compute a output k n counter len =
   end;
   pop_frame()
 
-//NB double-check this is indeed big-indian. 
+//NB double-check this is indeed big-endian.
