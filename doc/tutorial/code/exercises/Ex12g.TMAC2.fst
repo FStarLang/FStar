@@ -12,10 +12,10 @@ let macsize = BMAC.macsize
 noeq type key = | Keys: k0:BMAC.key -> k1:BMAC.key -> key
 type tag = BMAC.tag
 
-assume type bspec0 (spec: (text2 -> Type)) (b:block) =
+type bspec0 (spec: (text2 -> Type)) (b:block) =
   (forall (t:text). equal b (encode t) ==> spec t)
 
-assume type bspec1 (spec: (text2 -> Type)) (b:block) = 
+type bspec1 (spec: (text2 -> Type)) (b:block) = 
   spec b
 
 assume type key_prop : key -> text2 -> Type

@@ -87,3 +87,6 @@ val maybe_monadic: env -> term -> lident -> typ -> term
 //reification
 val reify_comp: env -> lcomp -> universe -> term
 val effect_repr: env -> comp -> universe -> option<term>
+
+//qualifiers
+val check_sigelt_quals: sigelt -> unit
