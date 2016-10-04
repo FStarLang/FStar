@@ -81,8 +81,8 @@ let range (rgn:region) (i:id) (x:domain): Type0 =
 // explicit coercions
 let macRange rgn i (x:domain{x.ctr = 0ul}) (v:range rgn i x) : smac rgn i x = v
 let otpRange rgn i (x:domain{x.ctr <> 0ul}) (v:range rgn i x) : otp i        = v
- 
-noeq type entry (rgn:region) (i:id) = | Entry: x:domain -> range:range rgn i x -> entry rgn i
+  
+type entry (rgn:region) (i:id) = | Entry: x:domain -> range:range rgn i x -> entry rgn i
 
 let find (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) : option (range rgn i x) =
   match SeqProperties.seq_find (fun (e:entry rgn i) -> e.x = x) s with 
@@ -107,7 +107,7 @@ noeq type state (i:id) =
            key:lbuffer (v (Block.keylen prfa)) {Buffer.frameOf key = rgn} -> 
            table:HS.ref (Seq.seq (entry rgn i)) {HS.frameOf table = rgn} -> 
            state i  // should be maybe_mrref; for later. 
-
+// TODO the table should exist only when idea, and should actually be a map.
 // TODO coerce, leak, and eventually dynamic compromise.
 
 val gen: rgn: region -> i:id -> ST (state i)

@@ -78,7 +78,8 @@ type rgn = rgn:HH.rid {HS.is_eternal_region rgn}
 type tagB i = lbuffer ( v(Spec.taglen i))
 
 // placeholder for additional data
-type adata = b:bytes { Seq.length b < 2000 } 
+let aadmax = 2000ul
+type adata = b:bytes { Seq.length b <= v aadmax} 
 type cipher (i:id) (l:nat) = lbytes(l + v (Spec.taglen i))
 
 // Should be n:UInt128.t{n < pow2 96}
@@ -93,6 +94,9 @@ noeq type entry (i:id) =
       c:cipher i (Seq.length (repr #i #l p)) -> 
       entry i
 
+let find (#i:id) (s:Seq.seq (entry i)) (n:Block.iv (alg i)) : option (entry i) =
+  SeqProperties.seq_find (fun (e:entry i) -> e.nonce = n) s 
+
 type rw = | Reader | Writer 
 
 noeq type state (i:id) (rw:rw) =
@@ -100,7 +104,7 @@ noeq type state (i:id) (rw:rw) =
       #region: rgn (* no need for readers? *) ->
       #log_region: rgn {if rw = Writer then region = log_region else HyperHeap.disjoint region log_region} ->
       log: HS.ref (Seq.seq (entry i)) {HS.frameOf log == log_region} ->
-      prf: PRF.state i (* including its key *) ->
+      prf: PRF.state i {PRF(prf.rgn) = region} (* including its key *) ->
       state i rw
 
 
@@ -208,7 +212,7 @@ val counterblocks:
   cipher:lbytes l -> 
   Tot (Seq.seq (PRF.entry rgn i)) // each entry e {PRF(e.x.id = x.iv /\ e.x.ctr >= ctr x)}
   (decreases l)
-  
+
 let rec counterblocks i rgn x l plain cipher = 
   let blockl = v (Block(blocklen (alg i))) in 
   if l = 0 
@@ -223,16 +227,16 @@ let rec counterblocks i rgn x l plain cipher =
     let blocks = counterblocks i rgn (PRF.incr x) (l - l0) plain cipher in
     SeqProperties.cons block blocks
 
-(*
-// checks PRF table contents against AEAD entries
+// States consistency of the PRF table contents vs the AEAD entries
+// (not a projection from one another because of allocated MACs and aad)
 val refines: 
   h:mem -> 
-  i:id {authId i } -> rgn:region ->
+  i:id {MAC.ideal /\ authId i } -> rgn:region ->
   entries: Seq.seq (entry i) -> 
-  blocks: Seq.seq (PRF.entry rgn i) -> Tot Type
+  blocks: Seq.seq (PRF.entry rgn i) -> GTot Type0
   (decreases (Seq.length entries))
 
-#reset-options "--print_universes"
+//#reset-options "--print_universes"
 let rec refines h i rgn entries blocks = 
   if Seq.length entries = 0 then 
     Seq.length blocks == 0
@@ -244,19 +248,34 @@ let rec refines h i rgn entries blocks =
       let b = (l + bl -1) / bl in // number of blocks XOR-ed for this encryption
       (b < Seq.length blocks /\
       (match Seq.index blocks 0 with
-      | PRF.Entry x e -> 
-          let m:MAC.state (i, nonce) = e in
+      | PRF.Entry x e -> (
+          x == PRF({iv=nonce; ctr=0ul}) /\ (
+          let m = PRF.macRange rgn i x e in
           let xors    = Seq.slice blocks 1 (b+1)  in 
-          let blocks  = Seq.slice blocks (b+2) (Seq.length blocks - b - 2) in 
+          let blocks  = Seq.slice blocks (b+1) (Seq.length blocks) in 
           let entries = Seq.slice entries 1 (Seq.length entries) in 
           let cipher, tag = SeqProperties.split cipher_tagged l in
-          (x = PRF({iv=nonce; ctr=0ul}) /\
-          xors = counterblocks i rgn (PRF.incr x) l plain cipher /\
-          (match sel h (MAC.State.log m) with
+          safelen i l 1ul /\
+          Seq.equal #(PRF.entry rgn i) xors (counterblocks i rgn (PRF.incr x) l plain cipher) /\
+          (match m_sel h (MAC.ilog (MAC.State.log m)) with
           | None           -> False
-          | Some (msg,tag) -> msg == field_encode i ad plain /\ refines h i rgn entries blocks))))
+          | Some (msg,tag) -> msg == field_encode i ad plain /\ refines h i rgn entries blocks)))))
     end)
-*)
+
+(* notes 16-10-04 
+
+Not sure what's the best style to push as an invariant.
+It may be easier to first split blocks by iv. 
+
+This corresponds to the PRF state "at rest" for the invariant.
+Should be uniform between i:id {MAC.ideal /\ authId i }.
+
+For the dexor loop, we have as `pre` that the PRF state contains the correct entries.
+We need as a monotonic invariant that "containing implies finding"; more like map than seq.
+
+For the enxor loop, we need a finer, transient invariant for the last chunk of the PRF log. 
+
+*) 
 
 (*
 let lookupIV (i:id) (s:Seq.seq (entry i)) = Seq.seq_find (fun e:entry i -> e.iv = iv) s // <- requires iv:UInt128.t
@@ -352,26 +371,18 @@ let rec counter_enxor i t x len plaintext ciphertext =
 // some code duplication, but in different typing contexts
 //16-09-18 not yet using ideal state.
 
+let live_2 #a0 #a1 h b0 b1 = Buffer.live #a0 h b0 /\ Buffer.live #a1 h b1 
+  
+//val inv: h:mem -> #i:id -> #rw:rw -> e:state i rw -> Tot Type
+
+let inv h #i #rw e =
+  MAC.ideal /\ authId i ==> 
+  ( let blocks = HS.sel h (PRF.State.table e.prf) in
+    let entries = HS.sel h e.log in 
+    refines h i e.region entries blocks)
+
 (*
-val encrypt: 
-  i:id -> e:state i Writer -> n:Block.iv (alg i) ->
-  aadlen:UInt32.t -> aadtext:lbuffer (v aadlen) -> 
-  plainlen:UInt32.t -> plaintext:plainBuffer i (v plainlen) -> 
-  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) ->
-  STL unit
-  (requires (fun h -> 
-    Buffer.live h aadtext /\ Plain.live h plaintext /\ Buffer.live h ciphertext /\
-    //TODO: add disjointness
-    //TODO add invariant /\ n not in the table yet. 
-    (authId i ==> PRF.find_0 (HS.sel h (PRF.State.table e.prf)) (PRF({iv=n; ctr=0ul})) == None)
-    ))
-  (ensures (fun h0 _ h1 -> 
-    //TODO some "heterogeneous" modifies that also records updates to logs and tables
-    Buffer.modifies_1 ciphertext h0 h1 /\ 
-    Buffer.live h1 ciphertext /\ 
-    Buffer.live h1 aadtext /\
-    Plain.live h1 plaintext /\
-    (MAC.ideal /\ authId i ==> (
+      // no need to be so specific here --- details follow from the invariant
       let c = Buffer.as_seq h1 (Buffer.sub ciphertext 0ul plainlen) in 
       let t: lbuffer 16 = Buffer.as_seq h1 (Buffer.sub ciphertext plainlen (Spec.taglen i)) in
       let a = Buffer.as_seq h1 aadtext in
@@ -381,15 +392,70 @@ val encrypt:
           let log = MAC.ilog (MAC.State.log mac) in 
           m_contains log h1 /\ m_sel h1 log == Some (l,t)
       | None -> False))
-    )))
-*)
+*)      
+
+val encrypt: 
+  i: id -> e:state i Writer -> 
+  n: Block.iv (alg i) ->
+  aadlen: UInt32.t {aadlen <=^ aadmax} -> 
+  aadtext: lbuffer (v aadlen) -> 
+  plainlen: UInt32.t {safelen i (v plainlen) 1ul} -> 
+  plaintext: plainBuffer i (v plainlen) -> 
+  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) ->
+  STL unit
+  (requires (fun h -> 
+    inv h #i #Writer e /\
+    live_2 h aadtext ciphertext /\ Plain.live h plaintext /\
+    Buffer.disjoint aadtext ciphertext /\ //TODO add disjointness for plaintext
+    (authId i ==> find (HS.sel h e.log) n == None) // The nonce must be fresh!
+      ))
+  (ensures (fun h0 _ h1 -> 
+    //TODO some "heterogeneous" modifies that also records updates to logs and tables
+    Buffer.modifies_1 ciphertext h0 h1 /\ 
+    live_2 h1 aadtext ciphertext /\ Plain.live h1 plaintext /\
+    inv h1 #i #Writer e /\ 
+    (MAC.ideal /\ authId i ==> (
+      let aad = Buffer.as_seq h1 aadtext in
+      let p = Plain.sel_plain h1 plainlen plaintext in
+      let c = Buffer.as_seq h1 ciphertext in
+      HS.sel h1 e.log == SeqProperties.snoc (HS.sel h0 e.log) (Entry n aad (v plainlen) p c)))))
+
+val decrypt: 
+  i:id -> e:state i Reader -> 
+  n:Block.iv (alg i) -> 
+  aadlen:UInt32.t {aadlen <=^ aadmax} -> 
+  aadtext:lbuffer (v aadlen) -> 
+  plainlen:UInt32.t {safelen i (v plainlen) 1ul} -> 
+  plaintext:plainBuffer i (v plainlen) -> 
+  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) -> STL UInt32.t
+  (requires (fun h -> 
+    inv h #i #Reader e /\
+    live_2 h aadtext ciphertext /\ Plain.live h plaintext /\ 
+    Buffer.disjoint aadtext ciphertext //TODO add disjointness for plaintext
+    ))
+  (ensures (fun h0 r h1 -> 
+    inv h1 #i #Reader e /\
+    live_2 h1 aadtext ciphertext /\ Plain.live h1 plaintext /\
+    Buffer.modifies_1 (Plain.bufferT plaintext) h0 h1 /\
+    (authId i ==> (
+        let found = find (HS.sel h1 e.log) n in
+        if r = 0ul then
+          let a = Buffer.as_seq h1 aadtext in
+          let p = Plain.sel_plain h1 plainlen plaintext in
+          let c = Buffer.as_seq h1 ciphertext in
+          found == Some (Entry n a (v plainlen) p c)
+        else
+          (r = 1ul /\ found == None /\ h0 == h1)))))
+    
 
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   push_frame();
   let x = PRF({iv = n; ctr = 0ul}) in // PRF index to the first block
-  let ak = PRF.prf_mac i st.prf x in     // used for keying the one-time MAC
+  let ak = PRF.prf_mac i st.prf x in  // used for keying the one-time MAC
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
   let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
+
+  assume false; //16-10-04 
   counter_enxor i st.prf (PRF.incr x) plainlen plain cipher;
   
   // Compute MAC over additional data and ciphertext
@@ -397,29 +463,14 @@ let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   MAC.mac ak l acc tag;
   pop_frame()
 
-
-(*
-val decrypt: 
-  i:id -> e:state i -> iv:UInt64.t -> 
-  aadlen:UInt32.t -> aadtext:lbytes (v aadlen) -> 
-  plainlen:UInt32.t -> plaintext:lbytes (v plainlen) -> 
-  ciphertext:lbytes (v plainlen) -> tag:MAC.tagB -> 
-  STL UInt32.t
-  (requires (fun h -> 
-    live h key /\ live h aadtext /\ live h plaintext /\ 
-    live h ciphertext /\ live h tag ))
-  (ensures (fun h0 _ h1 -> 
-    modifies_1 plaintext h0 h1 /\ 
-    live h1 plaintext))
-*)
-
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   push_frame();
   let x = PRF({iv = iv; ctr = 0ul}) in // PRF index to the first block
-  let ak = PRF.prf_mac i st.prf x in     // used for keying the one-time MAC
+  let ak = PRF.prf_mac i st.prf x in   // used for keying the one-time MAC
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in 
-  let tag    = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
+  let tag = Buffer.sub cipher_tagged plainlen (Spec.taglen i) in 
 
+  assume false; //16-10-04
   // First recompute and check the MAC
   let l, acc = accumulate i ak aadlen aad plainlen cipher in
   let verified  = MAC.verify ak l acc tag in 
@@ -428,3 +479,4 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   pop_frame();
 
   if verified then 0ul else 1ul //TODO pick and enforce error convention.
+

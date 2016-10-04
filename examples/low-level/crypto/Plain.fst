@@ -86,10 +86,14 @@ let sub #id #l (b:plainBuffer id l)
   = Buffer.sub b i len
 // ...
 
+
+// conditional access
 val bufferRepr: #i:id {~(authId i)} -> #l:plainLen -> b:plainBuffer i l -> Tot (b':lbuffer l{ b' == bufferT b})
 let bufferRepr #i #l b = b
 // not sure how to write modifies clauses including plain and plainBuffer
 
+// unconditional ghost access
+// should be as_seq
 val sel_plain: h:mem -> #i:id -> l:UInt32.t -> buf:plainBuffer i (v l){live h buf} -> GTot (plain i (v l)) 
 let sel_plain h #i l buf = sel_bytes h l buf
 
