@@ -23,7 +23,7 @@ module Block = Crypto.Symmetric.BlockCipher
 module PRF = Crypto.Symmetric.Chacha20.PRF
 let ctr x = PRF(x.ctr)
 
-let alg (i:id) = Block.CHACHA20 //16-10-02  temporary
+let alg (i:id) = Block.CHACHA20 //TODO: 16-10-02 This is temporary
 
 // PLAN: 
 //
@@ -77,8 +77,6 @@ type tagB i = lbuffer ( v(Spec.taglen i))
 type adata = b:bytes { Seq.length b < 2000 } 
 type cipher (i:id) (l:nat) = lbytes(l + v (Spec.taglen i))
 
-// Should be n:UInt128.t{n < pow2 96}
-type iv (i:id) = lbuffer 12 // its computation from siv is left to the next level for now
 
 noeq type entry (i:id) =
   | Entry: 
@@ -151,7 +149,8 @@ let rec refines h i entries blocks =
         | Some (msg,tag) -> msg = encode_2 ad plain && refines h entries blocks)
     end
 
-let lookupIV (i:id) (s:Seq.seq (entry i)) = Seq.seq_find (fun e:entry i -> e.iv = iv) s // <- requires iv:UInt128.t
+let lookupIV (i:id) (s:Seq.seq (entry i)) =
+  Seq.seq_find (fun e:entry i -> e.iv = iv) s
 *)
 
 

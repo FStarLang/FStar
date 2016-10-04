@@ -10,13 +10,11 @@ open Crypto.Symmetric.Chacha20
 // now hiding the 1-time MAC state & implementation
 module Spec = Crypto.Symmetric.Poly1305.Spec
 module MAC = Crypto.Symmetric.Poly1305.MAC
+module Bytes = Crypto.Symmetric.Bytes
 
-//TODO move to some library
-//16-10-02 should be renamed to lbuffer
-type lbuffer (n:nat) = b:bytes{length b = n}
 
 (* If the length is not a multipile of 16, pad to 16 *)
-val pad_16: b:lbuffer 16 -> len:UInt32.t { v len <= 16 } -> STL unit
+val pad_16: b:Bytes.lbuffer 16 -> len:UInt32.t { v len <= 16 } -> STL unit
   (requires (fun h -> live h b))
   (ensures  (fun h0 _ h1 -> 
     live h1 b /\ modifies_1 b h0 h1
@@ -44,7 +42,7 @@ let upd_uint32 (b:bytes {length b >= 4}) x : STL unit
   upd b 3ul v3
 
 (* Serializes the two lengths into the final MAC word *)
-private val length_word: b:lbuffer 16 -> aad_len:UInt32.t -> len:UInt32.t -> STL unit
+private val length_word: b:Bytes.lbuffer 16 -> aad_len:UInt32.t -> len:UInt32.t -> STL unit
   (requires (fun h -> live h b))
   (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))
   // we'll similarly need an injective spec
@@ -55,9 +53,6 @@ let length_word b aad_len len =
   upd_uint32 (offset b  8ul) len;
   upd_uint32 (offset b 12ul) 0ul 
 *)
-  
-
-
 
 //16-09-18 The code below is left only for testing; use Chacha20Poly1305.Ideal instead.
  
@@ -67,7 +62,7 @@ private val add_bytes:
   l0: MAC.itext -> 
   a : MAC.accB i ->
   len: UInt32.t ->
-  txt:lbuffer (v len) -> STL MAC.itext
+  txt:Bytes.lbuffer (v len) -> STL MAC.itext
   (requires (fun h -> 
     live h txt /\ MAC.acc_inv st l0 a h))
   (ensures (fun h0 l1 h1 -> 
@@ -107,10 +102,10 @@ let rec add_bytes #i st log a len txt =
 open Crypto.Symmetric.BlockCipher 
 
 val chacha20_aead_encrypt: 
-  key:lbuffer 32 -> n:iv CHACHA20 -> 
-  aadlen:UInt32.t -> aadtext:lbuffer (v aadlen) -> 
-  plainlen:UInt32.t -> plaintext:lbuffer (v plainlen) -> 
-  ciphertext:lbuffer (v plainlen) -> tag:MAC.tagB -> 
+  key:Bytes.lbuffer 32 -> n:iv CHACHA20 ->
+  aadlen:UInt32.t -> aadtext:Bytes.lbuffer (v aadlen) ->
+  plainlen:UInt32.t -> plaintext:Bytes.lbuffer (v plainlen) ->
+  ciphertext:Bytes.lbuffer (v plainlen) -> tag:MAC.tagB ->
   STL unit
   (requires (fun h -> 
     live h key /\ live h aadtext /\ live h plaintext /\ 
@@ -127,10 +122,10 @@ val chacha20_aead_encrypt:
     live h1 ciphertext /\ live h1 tag ))
   
 val chacha20_aead_decrypt: 
-  key:lbuffer 32 -> n:iv CHACHA20 ->
-  aadlen:UInt32.t -> aadtext:lbuffer (v aadlen) -> 
-  plainlen:UInt32.t -> plaintext:lbuffer (v plainlen) -> 
-  ciphertext:lbuffer (v plainlen) -> tag:MAC.tagB -> 
+  key:Bytes.lbuffer 32 -> n:iv CHACHA20 ->
+  aadlen:UInt32.t -> aadtext:Bytes.lbuffer (v aadlen) ->
+  plainlen:UInt32.t -> plaintext:Bytes.lbuffer (v plainlen) ->
+  ciphertext:Bytes.lbuffer (v plainlen) -> tag:MAC.tagB ->
   STL UInt32.t
   (requires (fun h -> 
     live h key /\ live h aadtext /\ live h plaintext /\ live h ciphertext /\ live h tag /\ 
@@ -152,7 +147,7 @@ let chacha20_aead_encrypt key n aadlen aadtext plainlen plaintext ciphertext tag
   push_frame();
 
   let ivb = Buffer.create 0uy (ivlen CHACHA20) in
-  Crypto.Symmetric.Bytes.store_uint128 (ivlen CHACHA20) ivb n;
+  Bytes.store_uint128 (ivlen CHACHA20) ivb n;
 
   (* Create OTK, using first block of Chacha20 *)
   let otk  = create 0uy 32ul in
@@ -176,8 +171,8 @@ let chacha20_aead_encrypt key n aadlen aadtext plainlen plaintext ciphertext tag
   let l = add_bytes ak l acc plainlen ciphertext in 
   let l = 
     let final_word = create 0uy 16ul in 
-    Crypto.Symmetric.Bytes.store_uint32 4ul (Buffer.sub final_word 0ul 4ul) aadlen;
-    Crypto.Symmetric.Bytes.store_uint32 4ul (Buffer.sub final_word 8ul 4ul) plainlen;
+    Bytes.store_uint32 4ul (Buffer.sub final_word 0ul 4ul) aadlen;
+    Bytes.store_uint32 4ul (Buffer.sub final_word 8ul 4ul) plainlen;
     MAC.add ak l acc final_word in
   MAC.mac ak l acc tag;
   pop_frame()
@@ -186,7 +181,7 @@ let chacha20_aead_decrypt key n aadlen aadtext plainlen plaintext ciphertext tag
   push_frame();
 
   let ivb = Buffer.create 0uy (ivlen CHACHA20) in
-  Crypto.Symmetric.Bytes.store_uint128 (ivlen CHACHA20) ivb n;
+  Bytes.store_uint128 (ivlen CHACHA20) ivb n;
 
   (* Create OTK, using first block of Chacha20 *)
   let otk = create 0uy 32ul in 
@@ -206,8 +201,8 @@ let chacha20_aead_decrypt key n aadlen aadtext plainlen plaintext ciphertext tag
   let l = add_bytes ak l acc plainlen ciphertext in 
   let l = 
     let final_word = create 0uy 16ul in 
-    Crypto.Symmetric.Bytes.store_uint32 4ul (Buffer.sub final_word 0ul 4ul) aadlen;
-    Crypto.Symmetric.Bytes.store_uint32 4ul (Buffer.sub final_word 8ul 4ul) plainlen;
+    Bytes.store_uint32 4ul (Buffer.sub final_word 0ul 4ul) aadlen;
+    Bytes.store_uint32 4ul (Buffer.sub final_word 8ul 4ul) plainlen;
     MAC.add ak l acc final_word in
   let verified  = MAC.verify ak l acc tag in 
   

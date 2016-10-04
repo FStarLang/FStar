@@ -11,6 +11,7 @@ FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperheap --include $(FSTAR_HOM
 # Files that should fully typecheck
 # Files commented out are broken, uncomment once fixed
 VERIFY= \
+  FStar.HST.Monotonic.RRef \
   Buffer.Utils \
   Math.Axioms \
   Math.Lemmas \
@@ -33,10 +34,12 @@ VERIFY= \
   Crypto.AEAD.Chacha20Poly1305.Ideal \
   Plain \
   Test \
-  # TestMonotonic \
-  # FStar.HST.Monotonic.RRef
-  # Test
-  # Curve.Modulo 
+  TestMonotonic \
+
+# Files that should fully typecheck, but not part of regression
+# because verification is too slow
+SLOW= \
+  Curve.Modulo
 
 # Files not yet fully typechecking -- possibly due to timeouts.
 # Please move files that you know fully typecheck to VERIFY
