@@ -102,7 +102,8 @@ noeq type state (i:id) (rw:rw) =
       #region: rgn (* no need for readers? *) ->
       #log_region: rgn {if rw = Writer then region = log_region else HyperHeap.disjoint region log_region} ->
       log: HS.ref (Seq.seq (entry i)) {HS.frameOf log == log_region} ->
-      prf: PRF.state i {PRF(prf.rgn) = region} (* including its key *) ->
+      // Was PRF(prf.rgn) == region. Do readers use its own PRF state?
+      prf: PRF.state i {PRF(prf.rgn) == log_region} (* including its key *) ->
       state i rw
 
 
@@ -110,13 +111,20 @@ noeq type state (i:id) (rw:rw) =
 private let min (a:u32) (b:u32) = if a <=^ b then a else b
 private let minNat (a:nat) (b:nat) : nat = if a <= b then a else b
 
+val gen: i:id -> rgn:region -> ST (state i Writer)
+  (requires (fun _ -> True))
+  (ensures  (fun h0 st h1 -> True))
 let gen i rgn = 
   let log = ralloc rgn (Seq.createEmpty #(entry i)) in
   let prf = PRF.gen rgn i in 
   State #i #Writer #rgn #rgn log prf
 
-// let genReader #i #rgn (state i Writer) = ()
-// no need for state? 
+val genReader: #i:id -> #rgn:region
+  -> st:state i Writer{HyperHeap.disjoint rgn st.region} -> ST (state i Reader)
+  (requires (fun _ -> True))
+  (ensures  (fun _ _ _ -> True))
+let genReader #i #rgn st =
+  State #i #Reader #rgn #st.region st.log st.prf
 
 
 // MAC ENCODING from Chacha20Poly1305.fst
@@ -370,14 +378,15 @@ let rec counter_enxor i t x len plaintext ciphertext =
 //16-09-18 not yet using ideal state.
 
 let live_2 #a0 #a1 h b0 b1 = Buffer.live #a0 h b0 /\ Buffer.live #a1 h b1 
-  
-//val inv: h:mem -> #i:id -> #rw:rw -> e:state i rw -> Tot Type
 
+val inv: h:mem -> #i:id -> #rw:rw -> e:state i rw -> Tot Type0
 let inv h #i #rw e =
-  MAC.ideal /\ authId i ==> 
-  ( let blocks = HS.sel h (PRF.State.table e.prf) in
-    let entries = HS.sel h e.log in 
-    refines h i e.region entries blocks)
+  match e with
+  | State #i_ #rw_ #region #log_region log prf ->
+    MAC.ideal /\ authId i ==>
+    ( let blocks = HS.sel h (PRF.State.table prf) in
+      let entries = HS.sel h log in
+      refines h i log_region entries blocks )
 
 (*
       // no need to be so specific here --- details follow from the invariant
@@ -477,4 +486,3 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   pop_frame();
 
   if verified then 0ul else 1ul //TODO pick and enforce error convention.
-

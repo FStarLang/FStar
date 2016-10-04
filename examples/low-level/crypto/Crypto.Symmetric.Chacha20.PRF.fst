@@ -110,9 +110,10 @@ noeq type state (i:id) =
 // TODO the table should exist only when idea, and should actually be a map.
 // TODO coerce, leak, and eventually dynamic compromise.
 
-val gen: rgn: region -> i:id -> ST (state i)
+val gen: rgn:region -> i:id -> ST (state i)
   (requires (fun h -> True))
-  (ensures  (fun h0 s h1 -> HS.sel h1 s.table == Seq.createEmpty #(entry rgn i)))
+  (ensures  (fun h0 s h1 ->
+    s.rgn == rgn /\ HS.sel h1 s.table == Seq.createEmpty #(entry rgn i)))
 
 let gen rgn i =
   // SZ: let key = MAC.random rgn Block.keylen`?
