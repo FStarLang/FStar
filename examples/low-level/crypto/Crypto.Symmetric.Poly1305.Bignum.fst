@@ -73,6 +73,7 @@ let fsum_ a b =
 val fsum': a:bigint -> b:bigint{disjoint a b} -> Stack unit
     (requires (fun h -> norm h a /\ norm h b))
     (ensures (fun h0 u h1 -> norm h0 a /\ norm h0 b /\ bound27 h1 a /\ modifies_1 a h0 h1
+      /\ isSum h0 h1 a b
       /\ eval h1 a norm_length = eval h0 a norm_length + eval h0 b norm_length
     ))
 let fsum' a b =

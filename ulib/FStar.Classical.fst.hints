@@ -1,5 +1,5 @@
 [
-  "ЋЌ@„\u0000І\t¬ґV9ІkЧg<",
+  "Є\u0018‚\u0016\u0005зЭ*ў\u0003\u0018n7’кН",
   [
     [ "FStar.Classical.forall_intro_gtot", 1, 0, 0, [ "@query" ], 0 ],
     [
@@ -66,6 +66,33 @@
         "@query",
         "refinement_interpretation_Tm_refine_340fcf9110ec0348a1e1a4e799da8db3",
         "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.Classical.move_requires",
+      1,
+      0,
+      0,
+      [
+        "@query", "bool_typing", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "refinement_interpretation_Tm_refine_340fcf9110ec0348a1e1a4e799da8db3"
+      ],
+      0
+    ],
+    [
+      "FStar.Classical.exists_elim",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Prims._assert", "equation_Prims.squash",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "unit_typing"
       ],
       0
     ]

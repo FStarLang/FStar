@@ -12,7 +12,7 @@ abstract noeq type pre_heap = {
 }  
 
 (* A heap is a pre_heap together with an invariant that nothing is allocated beyond next_addr *)
-abstract type heap = h:pre_heap{(forall (n:nat). n >= h.next_addr ==> is_None (h.memory n))}
+abstract type heap = h:pre_heap{forall (n:nat). n >= h.next_addr ==> is_None (h.memory n)}
 
 (* References are represented by just their address in the heap *)
 type ref (a:Type) = nat

@@ -280,9 +280,18 @@ let head_normal env t =
     | Tm_app({n=Tm_fvar fv}, _) -> Env.lookup_definition Env.OnlyInline env.tcenv fv.fv_name.v |> Option.isNone
     | _ -> false
 
-let head_redex env t = match (FStar.Syntax.Util.un_uinst t).n with
-    | Tm_abs _ -> true
-    | Tm_fvar fv -> Env.lookup_definition Env.OnlyInline env.tcenv fv.fv_name.v |> Option.isSome
+let head_redex env t = 
+    match (FStar.Syntax.Util.un_uinst t).n with
+    | Tm_abs(_, _, Some (Inr l)) ->
+      Ident.lid_equals l Const.effect_Tot_lid
+      || Ident.lid_equals l Const.effect_GTot_lid
+      
+    | Tm_abs(_, _, Some (Inl lc)) ->
+      Util.is_tot_or_gtot_lcomp lc
+
+    | Tm_fvar fv -> 
+      Env.lookup_definition Env.OnlyInline env.tcenv fv.fv_name.v |> Option.isSome
+
     | _ -> false
 
 let whnf env t = 

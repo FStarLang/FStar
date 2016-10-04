@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>test.fst --explicit_deps --debug yes</StartArguments>
+    <StartArguments>Overloads.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\workspace\FStar\examples\test\</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\examples\test\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

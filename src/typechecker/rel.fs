@@ -671,11 +671,30 @@ let rec head_matches env t1 t2 : match_result =
 
 (* Does t1 match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
+    let maybe_inline t = 
+        let head, _ = Util.head_and_args t in 
+        match (Util.un_uinst head).n with 
+        | Tm_fvar fv -> 
+          if Env.lookup_definition Env.OnlyInline env fv.fv_name.v |> Option.isSome
+          then N.normalize [N.Beta; N.Inline] env t |> Some
+          else None
+        | _ -> None
+    in
     let success d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
     let fail r = (r, None) in
-    let rec aux n_delta t1 t2 =
+    let rec aux retry n_delta t1 t2 =
         let r = head_matches env t1 t2 in
         match r with
+            | MisMatch(Some Delta_equational, _)
+            | MisMatch(_, Some Delta_equational) ->
+              if not retry then fail r
+              else begin match maybe_inline t1, maybe_inline t2 with 
+                   | None, None -> fail r
+                   | Some t1, None -> aux false (n_delta + 1) t1 t2
+                   | None, Some t2 -> aux false (n_delta + 1) t1 t2
+                   | Some t1, Some t2 -> aux false (n_delta + 1) t1 t2
+                   end    
+
             | MisMatch(Some d1, Some d2) when (d1=d2) -> //incompatible
               begin match Common.decr_delta_depth d1 with 
                 | None -> 
@@ -684,12 +703,8 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                 | Some d -> 
                   let t1 = normalize_refinement [N.UnfoldUntil d; N.WHNF] env wl t1 in
                   let t2 = normalize_refinement [N.UnfoldUntil d; N.WHNF] env wl t2 in
-                  aux (n_delta + 1) t1 t2
+                  aux retry (n_delta + 1) t1 t2
               end
-
-            | MisMatch(Some Delta_equational, _) 
-            | MisMatch(_, Some Delta_equational) -> 
-              fail r
 
             | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
               let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
@@ -698,12 +713,12 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                                 t1', t2 
                            else let t2' = normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
                                 t1, normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
-              aux (n_delta + 1) t1 t2
+              aux retry (n_delta + 1) t1 t2
             
             | MisMatch _ -> fail r
 
             | _ -> success n_delta r t1 t2 in
-    aux 0 t1 t2
+    aux true 0 t1 t2
 
 type tc =
  | T of term * (binders -> Range.range -> term)

@@ -231,7 +231,7 @@ let lemma_2_26_p (a:nat) : Lemma (requires (a < pow2 26)) (ensures  (a < reveal 
     lemma_modulo_00 a (reveal prime)
 
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 val lemma_freduce_degree2:
   h0:mem -> h1:mem ->
