@@ -48,6 +48,9 @@ twolevelheap:
 relational:
 	$(FSTAR) FStar.Relational.Relational.fst FStar.Relational.Comp.fst FStar.Relational.State.fst
 
+bitvector:
+	$(FSTAR) math/FStar.Math.Lib.fst math/FStar.Math.Lemmas.fst FStar.BitVector.fst
+
 int:
 	$(FSTAR) FStar.UInt.fst FStar.UInt8.fst FStar.UInt16.fst FStar.UInt31.fst FStar.UInt32.fst FStar.UInt63.fst FStar.UInt64.fst FStar.Int.fst FStar.Int8.fst FStar.Int16.fst FStar.Int31.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst FStar.Int.Cast.fst
 
