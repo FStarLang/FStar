@@ -1,4 +1,4 @@
-module Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4
+module Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5
 
 open FStar.Mul
 open FStar.Ghost
@@ -19,6 +19,7 @@ open Crypto.Symmetric.Poly1305.Bigint
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3
+open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4
 
 module U64 = FStar.UInt64
 
@@ -46,14 +47,20 @@ let lemma_carry_top_10 h0 h1 b =
   pow2_double_sum 41
 
 
-(* TODO *)
-assume val lemma_mod_6_p:
+val lemma_mod_6_p:
   b0:nat -> b1:nat -> b2:nat -> b3:nat -> b4:nat -> b5:nat -> p:pos ->
   Lemma	(ensures  (
     (b0 + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4 + pow2 130 * b5) % p
     = (b0 + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4 + (pow2 130) % p * b5) % p
   ))
-
+let lemma_mod_6_p b0 b1 b2 b3 b4 b5 p =
+  lemma_mod_plus_distr_l (pow2 130 * b5)
+			 (b0 + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4)
+			 p;
+  lemma_mod_mul_distr_l (pow2 130) b5 p;
+  lemma_mod_plus_distr_l ((pow2 130 % p) * b5)
+			 (b0 + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4)
+			 p
 
 
 val lemma_carry_top_11:

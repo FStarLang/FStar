@@ -1,4 +1,4 @@
-module Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2
+module Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3
 
 open FStar.Mul
 open FStar.Ghost
@@ -17,7 +17,7 @@ open Math.Lemmas
 open Crypto.Symmetric.Poly1305.Parameters
 open Crypto.Symmetric.Poly1305.Bigint
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1
-open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1prime
+open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2
 
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
@@ -39,6 +39,9 @@ val lemma_modulo_add: a:nat -> b:nat -> p:pos -> Lemma ((a + b) % p = (a%p + b) 
 let lemma_modulo_add a b p =
   lemma_mod_plus_distr_l a b p
 
+
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
 val lemma_modulo_9_0: f:nat -> g:nat -> h:nat -> i:nat -> Lemma
   (let p = reveal prime in 
     (pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i) % p 
@@ -58,6 +61,9 @@ let lemma_modulo_9_1 f g h i =
   lemma_modulo_add (pow2 156 * g)  ((pow2 130 * f)%p) p;
   lemma_modulo_add (pow2 182 * h)  (pow2 208 * i) p;
   lemma_modulo_add (pow2 208 * i)  ((pow2 182 * h)%p) p
+
+
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_modulo_9_2: f:nat -> g:nat -> h:nat -> i:nat -> Lemma
   (let p = reveal prime in 
@@ -90,7 +96,7 @@ let lemma_modulo_9_3 f g h i =
   lemma_modulo_add ((pow2 182 % p) * h + (pow2 208 % p) * i)  (((pow2 130 % p) * f + (pow2 156%p) * g) % p) p
 
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_modulo_9: a:nat -> b:nat -> c:nat -> d:nat -> e:nat -> f:nat -> g:nat -> h:nat -> i:nat ->
   Lemma (requires (True))
@@ -109,18 +115,21 @@ let lemma_modulo_9 a b c d e f g h i =
   nat_times_nat_is_nat (pow2 156) g;
   nat_times_nat_is_nat (pow2 182) h;
   nat_times_nat_is_nat (pow2 208) i;
-  lemma_modulo_add (pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i)
-		   (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e) p;
-  assert((a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e
-	   + pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i ) % p
-    = (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e
-	   + (pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i) % p ) % p);
+  let m0 = (pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i) in
+  let m1 = (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e) in
+  lemma_modulo_add m0 m1 p;
+  cut( (m1 +m0) % p = (m1 + (m0%p)) % p);
   lemma_modulo_9_3 f g h i;
-  cut ((pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i) % p
-    = ((pow2 130 % p) * f + (pow2 156 % p) * g + (pow2 182 % p) * h + (pow2 208 % p) * i) % p);
-  lemma_modulo_add ((pow2 130 % p) * f + (pow2 156 % p) * g + (pow2 182 % p) * h + (pow2 208 % p) * i)
-		   (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e) p  
-  
+  nat_times_nat_is_nat (pow2 130 % p) f;
+  nat_times_nat_is_nat (pow2 156 % p) g;
+  nat_times_nat_is_nat (pow2 182 % p) h;
+  nat_times_nat_is_nat (pow2 204 % p) i;
+  let m2 = (pow2 130 % p) * f + (pow2 156 % p) * g + (pow2 182 % p) * h + (pow2 208 % p) * i in
+  cut (m0 % p = m2 % p);
+  cut (m0 % p = ((pow2 130 % p) * f + (pow2 156 % p) * g + (pow2 182 % p) * h + (pow2 208 % p) * i) % p);
+  lemma_modulo_add m2 m1 p
+
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
 val lemma_2_130_modulo_prime: unit -> Lemma (pow2 130 % (pow2 130 - 5) = 5)
 let lemma_2_130_modulo_prime () =

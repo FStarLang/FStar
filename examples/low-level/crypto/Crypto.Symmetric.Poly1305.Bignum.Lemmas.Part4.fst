@@ -1,4 +1,4 @@
-module Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3
+module Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4
 
 open FStar.Mul
 open FStar.Ghost
@@ -18,6 +18,7 @@ open Crypto.Symmetric.Poly1305.Parameters
 open Crypto.Symmetric.Poly1305.Bigint
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2
+open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3
 
 module U64 = FStar.UInt64
 
