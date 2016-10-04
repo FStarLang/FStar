@@ -105,7 +105,7 @@ let test() =
   Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
   let aad = Buffer.createL [
     0x50uy; 0x51uy; 0x52uy; 0x53uy; 0xc0uy; 0xc1uy; 0xc2uy; 0xc3uy; 0xc4uy; 0xc5uy; 0xc6uy; 0xc7uy ] in
-  let aadlen = 12ul in 
+  let aadlen = 12ul in
   let key = Buffer.createL [ 
     0x80uy; 0x81uy; 0x82uy; 0x83uy; 0x84uy; 0x85uy; 0x86uy; 0x87uy; 0x88uy; 0x89uy; 0x8auy; 0x8buy; 0x8cuy; 0x8duy; 0x8euy; 0x8fuy; 
     0x90uy; 0x91uy; 0x92uy; 0x93uy; 0x94uy; 0x95uy; 0x96uy; 0x97uy; 0x98uy; 0x99uy; 0x9auy; 0x9buy; 0x9cuy; 0x9duy; 0x9euy; 0x9fuy ] in
@@ -121,13 +121,18 @@ let test() =
     0xfauy; 0xb3uy; 0x24uy; 0xe4uy; 0xfauy; 0xd6uy; 0x75uy; 0x94uy; 0x55uy; 0x85uy; 0x80uy; 0x8buy; 0x48uy; 0x31uy; 0xd7uy; 0xbcuy; 
     0x3fuy; 0xf4uy; 0xdeuy; 0xf0uy; 0x8euy; 0x4buy; 0x7auy; 0x9duy; 0xe5uy; 0x76uy; 0xd2uy; 0x65uy; 0x86uy; 0xceuy; 0xc6uy; 0x4buy; 
     0x61uy; 0x16uy; 0x1auy; 0xe1uy; 0x0buy; 0x59uy; 0x4fuy; 0x09uy; 0xe2uy; 0x6auy; 0x7euy; 0x90uy; 0x2euy; 0xcbuy; 0xd0uy; 0x60uy; 
-    0x06uy; 0x91uy ] in 
-  let cipherlen = plainlen +^ 16ul in 
+    0x06uy; 0x91uy ] in
+  let cipherlen = plainlen +^ 16ul in
   assert(Buffer.length expected_cipher = v cipherlen);
   // print_string "Testing AEAD chacha20_poly1305...\n";
   let cipher = Buffer.create 0uy cipherlen in
-  let st = AE.gen i HH.root in 
-  AE.encrypt i st iv aadlen aad plainlen plain cipher; 
+  let st = AE.coerce i HH.root key in
+
+  AE.encrypt i st iv aadlen aad plainlen plain cipher;
+  let _ = IO.debug_print_string "Expected:\n" in
+  let _ = print_buffer expected_cipher 0ul cipherlen in
+  let _ = IO.debug_print_string "Computed:\n" in
+  let _ = print_buffer cipher 0ul cipherlen in
   let ok0 = Buffer.eqb expected_cipher cipher cipherlen in
   // failwith "ERROR: encrypted ciphertext mismatch";
 
@@ -141,7 +146,6 @@ let test() =
 
   pop_frame ();
   if is_verified && ok0 && ok1 then 0ul else 1ul
-
 
 val main: bool
 let main =

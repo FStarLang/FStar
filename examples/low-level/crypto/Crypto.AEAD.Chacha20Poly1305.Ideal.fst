@@ -119,6 +119,17 @@ let gen i rgn =
   let prf = PRF.gen rgn i in 
   State #i #Writer #rgn #rgn log prf
 
+
+val coerce: i:id{~(authId i)} -> rgn:region -> key:lbuffer (v PRF.keylen)
+  -> ST (state i Writer)
+  (requires (fun h -> Buffer.live h key))
+  (ensures  (fun h0 st h1 -> True))
+let coerce i rgn key =
+  let log = ralloc rgn (Seq.createEmpty #(entry i)) in // Shouldn't exist
+  let prf = PRF.coerce rgn i key in
+  State #i #Writer #rgn #rgn log prf
+
+
 val genReader: #i:id -> #rgn:region
   -> st:state i Writer{HyperHeap.disjoint rgn st.region} -> ST (state i Reader)
   (requires (fun _ -> True))

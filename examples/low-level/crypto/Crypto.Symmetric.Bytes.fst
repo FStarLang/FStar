@@ -23,6 +23,18 @@ type buffer = Buffer.buffer UInt8.t
 type lbytes  (l:nat) = b:bytes  {Seq.length b = l}
 type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
 
+val print_buffer: s:buffer -> i:UInt32.t{UInt32.v i <= length s} -> len:UInt32.t{UInt32.v len <= length s} -> Stack bool
+  (requires (fun h -> live h s))
+  (ensures (fun h0 _ h1 -> h0 == h1))
+let rec print_buffer s i len =
+  let open FStar.UInt32 in
+  if v i < v len then
+    let b = Buffer.index s i in
+    let _ = IO.debug_print_string (UInt8.to_string b ^ ":") in
+    print_buffer s (i +^ 1ul) len
+  else
+    IO.debug_print_string "\n"
+
 // TODO: Deprecate?
 val sel_bytes: h:mem -> l:UInt32.t -> buf:lbuffer (v l){Buffer.live h buf}
   -> GTot (lbytes (v l))

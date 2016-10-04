@@ -82,7 +82,8 @@ let range (rgn:region) (i:id) (x:domain): Type0 =
 let macRange rgn i (x:domain{x.ctr = 0ul}) (v:range rgn i x) : smac rgn i x = v
 let otpRange rgn i (x:domain{x.ctr <> 0ul}) (v:range rgn i x) : otp i        = v
   
-type entry (rgn:region) (i:id) = | Entry: x:domain -> range:range rgn i x -> entry rgn i
+noeq type entry (rgn:region) (i:id) =
+  | Entry: x:domain -> range:range rgn i x -> entry rgn i
 
 let find (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) : option (range rgn i x) =
   match SeqProperties.seq_find (fun (e:entry rgn i) -> e.x = x) s with 
@@ -107,14 +108,13 @@ noeq type state (i:id) =
            key:lbuffer (v (Block.keylen prfa)) {Buffer.frameOf key = rgn} -> 
            table:HS.ref (Seq.seq (entry rgn i)) {HS.frameOf table = rgn} -> 
            state i  // should be maybe_mrref; for later. 
-// TODO the table should exist only when idea, and should actually be a map.
+// TODO the table should exist only when ideal, and should actually be a map.
 // TODO coerce, leak, and eventually dynamic compromise.
 
 val gen: rgn:region -> i:id -> ST (state i)
   (requires (fun h -> True))
   (ensures  (fun h0 s h1 ->
     s.rgn == rgn /\ HS.sel h1 s.table == Seq.createEmpty #(entry rgn i)))
-
 let gen rgn i =
   // SZ: let key = MAC.random rgn Block.keylen`?
   let key = Buffer.rcreate rgn 0uy (Block.keylen prfa) in
@@ -122,8 +122,19 @@ let gen rgn i =
   let table = ralloc rgn (Seq.createEmpty #(entry rgn i)) in
   State #i #rgn key table
 
-// computes a PRF block and copies its len first bytes to output
 
+val coerce: rgn:region -> i:id{~(authId i)} -> key:lbuffer (v keylen) -> ST (state i)
+  (requires (fun h -> Buffer.live h key))
+  (ensures  (fun h0 s h1 ->
+    s.rgn == rgn /\ HS.sel h1 s.table == Seq.createEmpty #(entry rgn i)))
+let coerce rgn i key =
+  let key_p = Buffer.rcreate rgn 0uy (Block.keylen prfa) in
+  Buffer.blit key_p 0ul key 0ul (Block.keylen prfa);
+  let table = ralloc rgn (Seq.createEmpty #(entry rgn i)) in // Shoudln't exist
+  State #i #rgn key_p table
+
+
+(** computes a PRF block and copies its len first bytes to output *)
 assume val buffer_recall: b:buffer {HS.is_eternal_region (Buffer.frameOf b)} -> Stack unit
   (requires (fun h0 -> True))
   (ensures (fun h0 _ h1 -> h0 == h1 /\ Buffer.live h1 b))

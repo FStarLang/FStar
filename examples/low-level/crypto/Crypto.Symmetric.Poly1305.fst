@@ -187,17 +187,6 @@ let lemma_toField_is_injective ha hb a b =
 (* * ******************************************** *)
 
 (* TODO: move *)
-val print_bytes: s:bytes -> i:UInt32.t{UInt32.v i <= length s} -> len:UInt32.t{UInt32.v len <= length s} -> Stack bool
-  (requires (fun h -> live h s))
-  (ensures (fun h0 _ h1 -> h0 == h1))
-let rec print_bytes s i len =
-  let open FStar.UInt32 in
-  if v i < v len then
-    let _ = IO.debug_print_string (UInt8.to_string (index s i) ^ ":") in
-    print_bytes s (i +^ 1ul) len
-  else
-    IO.debug_print_string "\n"
-
 val print_elem: e:elemB -> i:UInt32.t{UInt32.v i <= length e} -> len:UInt32.t{UInt32.v len <= length e} -> Stack bool
   (requires (fun h -> live h e))
   (ensures (fun h0 _ h1 -> h0 == h1))
