@@ -132,6 +132,8 @@ let test() =
   // failwith "ERROR: encrypted ciphertext mismatch";
 
   let decrypted = Plain.create i 0uy plainlen in
+  let reader_rgn = new_region HH.root in
+  let st = AE.genReader #_ #reader_rgn st in
   let is_verified = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
 
   let ok1 = Buffer.eqb (bufferRepr #i decrypted) (bufferRepr #i plain) plainlen in
@@ -140,6 +142,14 @@ let test() =
   pop_frame ();
   if is_verified && ok0 && ok1 then 0ul else 1ul
 
+
+val main: bool
+let main =
+  let result = test () in
+  if result = 0ul then
+    IO.debug_print_string "Test succeeded!\n"
+  else
+    IO.debug_print_string "ERROR: test failed\n"
 
 (* missing a library:
 
