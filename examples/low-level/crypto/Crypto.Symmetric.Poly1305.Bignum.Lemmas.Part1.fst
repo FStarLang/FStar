@@ -274,16 +274,16 @@ let u27 = x:FStar.UInt64.t{v x < pow2 27}
 let u26 = x:FStar.UInt64.t{v x < pow2 26}
 
 
-private let lemma_multiplication00 a b c :
+let lemma_multiplication00 a b c :
   Lemma (a * (b + c) = a * b + a * c)
   = ()
-private let lemma_multiplication01 a b c d:
+let lemma_multiplication01 a b c d:
   Lemma (a * (b + c + d) = a * b + a * c + a * d)
   = ()
-private let lemma_multiplication02 a b c d e :
+let lemma_multiplication02 a b c d e :
   Lemma (a * (b + c + d + e) = a * b + a * c + a * d + a * e)
   = ()
-private let lemma_multiplication03 a b c d e f :
+let lemma_multiplication03 a b c d e f :
   Lemma (a * (b + c + d + e + f) = a * b + a * c + a * d + a * e + a * f)
   = ()
 private let lemma_multiplication03bis a b c d e f :
@@ -305,7 +305,7 @@ private let lemma_multiplication04 a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 :
 
 #reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
 
-private let lemma_multiplication05
+let lemma_multiplication05
   (a0:int) (a1:int) (a2:int) (a3:int) (a4:int)
   (b0:int) (b1:int) (b2:int) (b3:int) (b4:int) :
   Lemma ((a0 + pow2 26 * a1 + pow2 52 * a2 + pow2 78 * a3 + pow2 104 * a4)
@@ -318,6 +318,8 @@ private let lemma_multiplication05
   = lemma_multiplication04 (a0) (pow2 26 * a1) (pow2 52 * a2) (pow2 78 * a3) (pow2 104 * a4)
 			   (b0) (pow2 26 * b1) (pow2 52 * b2) (pow2 78 * b3) (pow2 104 * b4)
 
+
+(*
 #reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 private let lemma_multiplication060

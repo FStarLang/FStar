@@ -17,10 +17,118 @@ open Math.Lemmas
 open Crypto.Symmetric.Poly1305.Parameters
 open Crypto.Symmetric.Poly1305.Bigint
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1
+open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1prime
 
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS = FStar.HyperStack
+
+
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
+val lemma_div_def: a:nat -> b:pos -> Lemma (a = b * (a / b) + a % b)
+let lemma_div_def a b = ()
+
+val lemma_mod_a_b: a:pos -> b:nat -> Lemma ((a + b) % a = b % a)
+let lemma_mod_a_b a b = lemma_mod_plus b 1 a
+
+val lemma_modulo_mul: a:nat -> b:nat -> p:pos -> Lemma ((a * b) % p = (a%p * b) % p)
+let lemma_modulo_mul a b p =
+  lemma_mod_mul_distr_l a b p
+val lemma_modulo_add: a:nat -> b:nat -> p:pos -> Lemma ((a + b) % p = (a%p + b) % p)
+let lemma_modulo_add a b p =
+  lemma_mod_plus_distr_l a b p
+
+val lemma_modulo_9_0: f:nat -> g:nat -> h:nat -> i:nat -> Lemma
+  (let p = reveal prime in 
+    (pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i) % p 
+	   =  ((pow2 130 * f + pow2 156 * g) % p + (pow2 182 * h + pow2 208 * i) % p) % p)
+let lemma_modulo_9_0 f g h i =
+  let p = reveal prime in
+  lemma_modulo_add (pow2 130 * f + pow2 156 * g)  (pow2 182 * h + pow2 208 * i) p;
+  lemma_modulo_add (pow2 182 * h + pow2 208 * i)  ((pow2 130 * f + pow2 156 * g) % p) p
+
+val lemma_modulo_9_1: f:nat -> g:nat -> h:nat -> i:nat -> Lemma
+  (let p = reveal prime in 
+	 ((pow2 130 * f + pow2 156 * g) % p = ((pow2 130 * f) % p + (pow2 156 * g) % p) % p
+	 /\  (pow2 182 * h + pow2 208 * i) % p =  ((pow2 182 * h) % p + (pow2 208 * i) % p) % p))
+let lemma_modulo_9_1 f g h i =
+  let p = reveal prime in
+  lemma_modulo_add (pow2 130 * f)  (pow2 156 * g) p;
+  lemma_modulo_add (pow2 156 * g)  ((pow2 130 * f)%p) p;
+  lemma_modulo_add (pow2 182 * h)  (pow2 208 * i) p;
+  lemma_modulo_add (pow2 208 * i)  ((pow2 182 * h)%p) p
+
+val lemma_modulo_9_2: f:nat -> g:nat -> h:nat -> i:nat -> Lemma
+  (let p = reveal prime in 
+	 ((pow2 130 * f + pow2 156 * g) % p = ((pow2 130 % p) * f + (pow2 156 % p) * g) % p
+	 /\  (pow2 182 * h + pow2 208 * i) % p =  ((pow2 182 % p) * h + (pow2 208 % p) * i) % p))
+let lemma_modulo_9_2 f g h i =
+  let p = reveal prime in
+  lemma_modulo_9_1 f g h i;
+  lemma_modulo_mul (pow2 130)  f p;
+  lemma_modulo_mul (pow2 156)  g p;
+  lemma_modulo_mul (pow2 182)  h p;
+  lemma_modulo_mul (pow2 208)  i p;
+  lemma_modulo_add ((pow2 130 % p) * f)  ((pow2 156 % p) * g) p;
+  lemma_modulo_add ((pow2 156 % p) * g)  (((pow2 130 % p) * f)%p) p;
+  lemma_modulo_add ((pow2 182%p) * h)  ((pow2 208%p) * i) p;
+  lemma_modulo_add ((pow2 208%p) * i)  (((pow2 182%p) * h)%p) p
+
+
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+
+val lemma_modulo_9_3: f:nat -> g:nat -> h:nat -> i:nat -> Lemma
+  (let p = reveal prime in 
+    (pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i) % p 
+	   =  ((pow2 130 % p) * f + (pow2 156 % p) * g + (pow2 182 % p) * h + (pow2 208 % p) * i) % p)
+let lemma_modulo_9_3 f g h i =
+  let p = reveal prime in
+  lemma_modulo_9_0 f g h i;
+  lemma_modulo_9_2 f g h i;
+  lemma_modulo_add ((pow2 130 %p) * f + (pow2 156 % p) * g)  ((pow2 182 % p) * h + (pow2 208 % p) * i) p;
+  lemma_modulo_add ((pow2 182 % p) * h + (pow2 208 % p) * i)  (((pow2 130 % p) * f + (pow2 156%p) * g) % p) p
+
+
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
+val lemma_modulo_9: a:nat -> b:nat -> c:nat -> d:nat -> e:nat -> f:nat -> g:nat -> h:nat -> i:nat ->
+  Lemma (requires (True))
+	(ensures  (let p = reveal prime in
+	  (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e
+	   + pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i ) % p
+	  = (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e
+	     + (pow2 130 % p) * f + (pow2 156 % p) * g + (pow2 182 % p) * h + (pow2 208 % p) * i) % p))
+let lemma_modulo_9 a b c d e f g h i =
+  let p = reveal prime in
+  nat_times_nat_is_nat (pow2 26)  b;
+  nat_times_nat_is_nat (pow2 52)  c;
+  nat_times_nat_is_nat (pow2 78)  d;
+  nat_times_nat_is_nat (pow2 104) e;
+  nat_times_nat_is_nat (pow2 130) f;
+  nat_times_nat_is_nat (pow2 156) g;
+  nat_times_nat_is_nat (pow2 182) h;
+  nat_times_nat_is_nat (pow2 208) i;
+  lemma_modulo_add (pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i)
+		   (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e) p;
+  assert((a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e
+	   + pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i ) % p
+    = (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e
+	   + (pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i) % p ) % p);
+  lemma_modulo_9_3 f g h i;
+  cut ((pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i) % p
+    = ((pow2 130 % p) * f + (pow2 156 % p) * g + (pow2 182 % p) * h + (pow2 208 % p) * i) % p);
+  lemma_modulo_add ((pow2 130 % p) * f + (pow2 156 % p) * g + (pow2 182 % p) * h + (pow2 208 % p) * i)
+		   (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e) p  
+  
+
+val lemma_2_130_modulo_prime: unit -> Lemma (pow2 130 % (pow2 130 - 5) = 5)
+let lemma_2_130_modulo_prime () =
+  assert_norm (pow2 3 = 8);
+  pow2_lt_compat 129 3;
+  pow2_double_sum 129;
+  cut(5 % (pow2 130 - 5) = 5);
+  lemma_mod_a_b (pow2 130 - 5) 5
 
 
 #reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
@@ -69,23 +177,6 @@ let lemma_freduce_degree1 h0 h1 b =
   maxValue_lemma_aux h0 b (2*norm_length-1)
 
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
-
-assume val lemma_modulo_9: a:nat -> b:nat -> c:nat -> d:nat -> e:nat -> f:nat -> g:nat -> h:nat -> i:nat ->
-  Lemma (requires (True))
-	(ensures  (let p = reveal prime in
-	  (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e
-	   + pow2 130 * f + pow2 156 * g + pow2 182 * h + pow2 208 * i ) % p
-	  = (a + pow2 26 * b + pow2 52 * c + pow2 78 * d + pow2 104 * e
-	     + (pow2 130 % p) * f + (pow2 156 % p) * g + (pow2 182 % p) * h + (pow2 208 % p) * i) % p))
-
-assume val lemma_modulo_mul: a:nat -> b:nat -> p:pos ->
-  Lemma (let p = reveal prime in (a * b) % p = (a%p * b) % p)
-
-let lemma_mod_a_b (a:pos) (b:nat) : Lemma ((a + b) % a = b % a) = ()
-
-assume val lemma_2_130_modulo_prime: unit -> Lemma (pow2 130 % (pow2 130 - 5) = 5)
-
 let lemma_modulo_00 (a:nat) (b:pos) : Lemma (requires (a < b)) (ensures ( a % b = a )) = ()
 let lemma_mul_nat (a:nat) (b:nat) : Lemma (a * b >= 0) = ()
 
@@ -131,7 +222,7 @@ let lemma_2_26_p (a:nat) : Lemma (requires (a < pow2 26)) (ensures  (a < reveal 
     lemma_modulo_00 a (reveal prime)
 
 
-#reset-options "--z3timeout 400 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 val lemma_freduce_degree2:
   h0:mem -> h1:mem ->
@@ -172,10 +263,7 @@ let lemma_freduce_degree2 h0 h1 b =
   lemma_modulo_mul (pow2 156) b6 p;
   lemma_modulo_mul (pow2 182) b7 p;
   lemma_modulo_mul (pow2 208) b8 p;
-  lemma_pow2_modulo_prime ();
-  assert(eval h0 b (2*norm_length-1) % p =
-    (b0 + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4
-     + 5 * b5 + 5 * pow2 26 * b6 + 5 * pow2 52 * b7 + 5 * pow2 78 * b8) % p)
+  lemma_pow2_modulo_prime ()
 
 val lemma_freduce_degree:
   h0:mem ->
