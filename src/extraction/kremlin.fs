@@ -300,33 +300,33 @@ and translate_decl env d: option<decl> =
       mllb_tysc = Some ([], t0);
       mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
     } ]) ->
-      begin try
-        let assumed = Util.for_some (function Syntax.Assumed -> true | _ -> false) flags in
-        let flags =
-          if Util.for_some (function Syntax.Private -> true | _ -> false) flags then
-            [ Private ]
-          else
-            []
-        in
-        let env = if flavor = Rec then extend env name false else env in
-        let rec find_return_type = function
-          | MLTY_Fun (_, _, t) ->
-              find_return_type t
-          | t ->
-              t
-        in
-        let t = translate_type env (find_return_type t0) in
-        let binders = translate_binders env args in
-        let env = add_binders env args in
-        let name = env.module_name, name in
-        if assumed then
-          Some (DExternal (name, translate_type env t0))
+      let assumed = Util.for_some (function Syntax.Assumed -> true | _ -> false) flags in
+      let flags =
+        if Util.for_some (function Syntax.Private -> true | _ -> false) flags then
+          [ Private ]
         else
+          []
+      in
+      let env = if flavor = Rec then extend env name false else env in
+      let rec find_return_type = function
+        | MLTY_Fun (_, _, t) ->
+            find_return_type t
+        | t ->
+            t
+      in
+      let t = translate_type env (find_return_type t0) in
+      let binders = translate_binders env args in
+      let env = add_binders env args in
+      let name = env.module_name, name in
+      if assumed then
+        Some (DExternal (name, translate_type env t0))
+      else begin
+        try
           let body = translate_expr env body in
           Some (DFunction (flags, t, name, binders, body))
-      with e ->
-        Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
-        None
+        with e ->
+          Util.print2 "Warning: writing a stub for %s (%s)\n" (snd name) (Util.print_exn e);
+          Some (DFunction (flags, t, name, binders, EAbort))
       end
 
   | MLM_Let (flavor, flags, [ {
