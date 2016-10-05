@@ -14,8 +14,7 @@ open FStar.HST
 (** Buffers *)
 open FStar.Buffer
 (** Mathematical definitions *)
-open Math.Axioms
-open Math.Lemmas
+open FStar.Math.Lemmas
 (** Helper functions for buffers *)
 open Buffer.Utils
 open FStar.Buffer.Quantifiers

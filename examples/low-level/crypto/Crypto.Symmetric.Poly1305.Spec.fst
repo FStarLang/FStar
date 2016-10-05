@@ -14,9 +14,8 @@ open FStar.UInt64
 open FStar.Int.Cast
 
 (** Mathematical definitions *)
-open Math.Axioms
-open Math.Lib
-open Math.Lemmas
+open FStar.Math.Lib
+open FStar.Math.Lemmas
 
 module U8  = FStar.UInt8
 module U32 = FStar.UInt32
