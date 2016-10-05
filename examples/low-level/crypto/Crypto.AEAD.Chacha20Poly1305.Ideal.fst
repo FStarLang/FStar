@@ -196,8 +196,9 @@ let rec add_bytes #i st log a len txt =
       add_bytes st log a (len -^ 16ul) (Buffer.offset txt 16ul)
     end
 
-// will require StackInline for the accumulator 
-private let accumulate i ak aadlen aad plainlen cipher = 
+// will require StackInline for the accumulator
+let accumulate i ak (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
+  (plainlen:UInt32.t) (cipher:lbuffer (v plainlen)) = 
   let acc = MAC.start ak in
   let l = MAC.text_0 in 
   let l = add_bytes ak l acc aadlen aad in
@@ -209,6 +210,7 @@ private let accumulate i ak aadlen aad plainlen cipher =
     MAC.add ak l acc final_word in
   l, acc
 
+#set-options "--lax"
 
 // INVARIANT (WIP)
 
