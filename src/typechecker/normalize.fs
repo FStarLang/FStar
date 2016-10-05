@@ -805,42 +805,45 @@ let rec norm : cfg -> env -> stack -> term -> term =
             norm cfg body_env stack body
 
           | Tm_meta (head, m) -> 
-            begin match stack with 
-                | _::_ ->
-                  begin match m with 
-                    | Meta_labeled(l, r, _) -> 
-                      norm cfg env (Meta(m,r)::stack) head //meta doesn't block reduction, but we need to put the label back
+            begin match m with 
+                  | Meta_monadic (m, t) ->
+                    let t = norm cfg env [] t in
+                    let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                    let cfg = {cfg with steps=[NoInline; WHNF; Exclude Zeta; Exclude Iota]@cfg.steps; delta_level=NoDelta} in
+                    norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
-                    | Meta_pattern args -> 
-                      let args = norm_pattern_args cfg env args in
-                      norm cfg env (Meta(Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+                 | Meta_monadic_lift (m, m') ->
+                    if (Util.is_pure_effect m
+                    || Util.is_ghost_effect m)
+                    && cfg.steps |> List.contains PureSubtermsWithinComputations
+                    then let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                            let cfg = {cfg with steps=[PureSubtermsWithinComputations; AllowUnboundUniverses; EraseUniverses; Exclude Zeta]; delta_level=OnlyInline} in
+                            norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+                    else norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+            
+                 | _ -> 
+                    begin match stack with 
+                          | _::_ ->
+                            begin match m with 
+                                | Meta_labeled(l, r, _) -> 
+                                    norm cfg env (Meta(m,r)::stack) head //meta doesn't block reduction, but we need to put the label back
 
-                    | Meta_monadic (m, t) ->
-                      let t = norm cfg env [] t in
-                      let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                      let cfg = {cfg with steps=NoInline::WHNF::Exclude Zeta::cfg.steps; delta_level=NoDelta} in
-                      norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
-
-                    | Meta_monadic_lift (m, m') ->
-                      if (Util.is_pure_effect m
-                      || Util.is_ghost_effect m)
-                      && cfg.steps |> List.contains PureSubtermsWithinComputations
-                      then let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                           let cfg = {cfg with steps=[PureSubtermsWithinComputations; AllowUnboundUniverses; EraseUniverses; Exclude Zeta]; delta_level=OnlyInline} in
-                           norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
-                      else norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
-
-                    | _ -> 
-                      norm cfg env stack head //meta doesn't block reduction
-                  end  
-                | _ -> 
-                let head = norm cfg env [] head in
-                let m = match m with 
-                    | Meta_pattern args -> 
-                      Meta_pattern (norm_pattern_args cfg env args)
-                    | _ -> m in
-                let t = mk (Tm_meta(head, m)) t.pos in
-                rebuild cfg env stack t
+                                | Meta_pattern args -> 
+                                    let args = norm_pattern_args cfg env args in
+                                    norm cfg env (Meta(Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+          
+                                | _ -> 
+                                    norm cfg env stack head //meta doesn't block reduction
+                           end  
+                         | _ -> 
+                            let head = norm cfg env [] head in
+                            let m = match m with 
+                                | Meta_pattern args -> 
+                                    Meta_pattern (norm_pattern_args cfg env args)
+                                | _ -> m in
+                            let t = mk (Tm_meta(head, m)) t.pos in
+                            rebuild cfg env stack t
+                   end
             end
 
 and norm_pattern_args cfg env args = 

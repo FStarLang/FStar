@@ -823,12 +823,20 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           ml, E_IMPURE, mlty
 
         | Tm_app(head, args) ->
-          begin match head.n with
-            | Tm_uvar _ ->
+          let is_total = function 
+            | Inl l -> FStar.Syntax.Util.is_total_lcomp l 
+            | Inr l -> FStar.Syntax.Util.is_pure_effect l in
+          begin match head.n, (SS.compress head).n with
+            | Tm_uvar _, _ -> //This should be a resolved uvar --- so reduce it before extraction
+              let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
+              term_as_mlexpr' g t
+
+            | _, Tm_abs(bs, _, Some lc) when is_total lc -> //this is a beta_redex --- also reduce it before extraction 
               let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
               term_as_mlexpr' g t
 
             | _ ->
+              
               let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
     //            Printf.printf "synth_app restArgs=%d, t=%A\n" (List.length restArgs) t;
                 match restArgs, t with
@@ -967,7 +975,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let lbs =
             if top_level
             then lbs |> List.map (fun lb ->
-                    let lbdef = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.Inline; N.Exclude N.Zeta] g.tcenv lb.lbdef in
+                    let lbdef = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.Inline; N.Exclude N.Zeta; N.PureSubtermsWithinComputations; N.Primops] 
+                                g.tcenv lb.lbdef in
                     {lb with lbdef=lbdef})
             else lbs in
             //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
