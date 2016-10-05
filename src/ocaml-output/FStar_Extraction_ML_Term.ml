@@ -1343,7 +1343,7 @@ let is_total = (fun _79_4 -> (match (_79_4) with
 (FStar_Syntax_Util.is_total_lcomp l)
 end
 | FStar_Util.Inr (l) -> begin
-(FStar_Syntax_Util.is_pure_effect l)
+(FStar_Ident.lid_equals l FStar_Syntax_Const.effect_Tot_lid)
 end))
 in (match ((let _173_371 = (let _173_370 = (FStar_Syntax_Subst.compress head)
 in _173_370.FStar_Syntax_Syntax.n)
