@@ -473,11 +473,17 @@ let division_multiplication_lemma a b c =
 let lemma_mul_pos_pos_is_pos (x:pos) (y:pos) : Lemma (x*y > 0) = ()
 let lemma_mul_nat_pos_is_nat (x:nat) (y:pos) : Lemma (x*y >= 0) = ()
 
-#reset-options "--z3timeout 10 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
 
 let modulo_division_lemma_0 (a:nat) (b:pos) (c:pos) : Lemma
-  ((a - (a / (b * c)) * (b * c)) / b = a / b - ((a / (b * c)) * c))
-  = division_sub_lemma a b ((a / (b*c)) * c)
+  (a / (b*c) <= a /\ (a - (a / (b * c)) * (b * c)) / b = a / b - ((a / (b * c)) * c))
+  = slash_decr_axiom a (b*c);
+    cut ( (a / (b*c)) * (b * c) = ((a / (b * c)) * c) * b);
+    lemma_div_mod a (b*c);
+    division_sub_lemma a b ((a / (b*c)) * c)
+
+
+#reset-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
 
 val modulo_division_lemma: a:nat -> b:pos -> c:pos ->
     Lemma ( (a % (b * c)) / b = (a / b) % c )
@@ -497,7 +503,7 @@ let modulo_division_lemma a b c =
   division_multiplication_lemma a b c;
   euclidean_division_definition (a / b) c
 
-#reset-options "--z3timeout 10 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 val modulo_modulo_lemma: a:nat -> b:pos -> c:pos ->
     Lemma ( (a % (b * c)) % b = a % b )
@@ -506,7 +512,6 @@ let modulo_modulo_lemma a b c =
   let n = (a / (b * c)) * c in
   let x = (a - (a / (b * c)) * (b * c)) in
   assert( (x + n * b) % b = x % b);
-  (* assert( ((a - (a / (b * c)) * (b * c)) + ((a / (b * c)) * c) * b) % b = (a - (a / (b * c)) * (b * c)) % b ); *)
   lemma_div_mod a (b*c);
   cut( a % b = (a - (a / (b * c)) * (b * c)) % b );
   euclidean_division_definition a (b * c)
@@ -536,7 +541,7 @@ let pow2_multiplication_modulo_lemma_1 a b c =
   paren_mul_left a (pow2 (c - b)) (pow2 b);
   multiple_modulo_lemma (a * pow2 (c - b)) (pow2 b)
 
-#reset-options "--z3timeout 10 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
 
 val pow2_multiplication_modulo_lemma_2: a:nat -> b:nat -> c:nat{c <= b} ->
     Lemma ( (a * pow2 c) % pow2 b = (a % pow2 (b - c)) * pow2 c )
@@ -544,7 +549,7 @@ let pow2_multiplication_modulo_lemma_2 a b c =
   euclidean_division_definition a (pow2 (b - c));
   let q = pow2 (b - c) in
   let r = a % pow2 (b - c) in
-  assert(a = q * (a / q) + a % r);
+  cut(a = q * (a / q) + a % q);
   pow2_plus (b - c) c;
   paren_mul_right (a / pow2 (b - c)) (pow2 (b - c)) (pow2 c);
   paren_mul_left (a / pow2 (b - c)) (pow2 (b - c)) (pow2 c);
