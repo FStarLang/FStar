@@ -32,11 +32,14 @@ type program =
   list<decl>
 
 and decl =
-  | DFunction of typ * lident * list<binder> * expr
+  | DGlobal of list<flag> * lident * typ * expr
+  | DFunction of list<flag> * typ * lident * list<binder> * expr
   | DTypeAlias of lident * int * typ
-  | DGlobal of lident * typ * expr
   | DTypeFlat of lident * list<(ident * (typ * bool))>
   | DExternal of lident * typ
+
+and flag =
+  | Private
 
 and expr =
   | EBound of var
@@ -123,7 +126,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 13
+let current_version: version = 14
 
 type file = string * program
 type binary_format = version * list<file>
@@ -287,56 +290,67 @@ and translate_module (module_name, modul, _): file =
 
 and translate_decl env d: option<decl> =
   match d with
-  | MLM_Let (flavor, [ {
+  | MLM_Let (flavor, flags, [ {
       mllb_name = name, _;
       mllb_tysc = Some ([], t0);
       mllb_def = { expr = MLE_Fun (args, body) }
     } ])
-  | MLM_Let (flavor, [ {
+  | MLM_Let (flavor, flags, [ {
       mllb_name = name, _;
       mllb_tysc = Some ([], t0);
       mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
     } ]) ->
-      assert (flavor <> Mutable);
-      begin try
-        let env = if flavor = Rec then extend env name false else env in
-        let rec find_return_type = function
-          | MLTY_Fun (_, _, t) ->
-              find_return_type t
-          | t ->
-              t
-        in
-        let t = translate_type env (find_return_type t0) in
-        let binders = translate_binders env args in
-        let env = add_binders env args in
-        let name = env.module_name, name in
-        if flavor = Assumed then
-          Some (DExternal (name, translate_type env t0))
+      let assumed = Util.for_some (function Syntax.Assumed -> true | _ -> false) flags in
+      let flags =
+        if Util.for_some (function Syntax.Private -> true | _ -> false) flags then
+          [ Private ]
         else
+          []
+      in
+      let env = if flavor = Rec then extend env name false else env in
+      let rec find_return_type = function
+        | MLTY_Fun (_, _, t) ->
+            find_return_type t
+        | t ->
+            t
+      in
+      let t = translate_type env (find_return_type t0) in
+      let binders = translate_binders env args in
+      let env = add_binders env args in
+      let name = env.module_name, name in
+      if assumed then
+        Some (DExternal (name, translate_type env t0))
+      else begin
+        try
           let body = translate_expr env body in
-          Some (DFunction (t, name, binders, body))
-      with e ->
-        Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
-        None
+          Some (DFunction (flags, t, name, binders, body))
+        with e ->
+          Util.print2 "Warning: writing a stub for %s (%s)\n" (snd name) (Util.print_exn e);
+          Some (DFunction (flags, t, name, binders, EAbort))
       end
 
-  | MLM_Let (flavor, [ {
+  | MLM_Let (flavor, flags, [ {
       mllb_name = name, _;
       mllb_tysc = Some ([], t);
       mllb_def = expr
     } ]) ->
-      assert (flavor <> Mutable);
       begin try
+        let flags =
+          if Util.for_some (function Syntax.Private -> true | _ -> false) flags then
+            [ Private ]
+          else
+            []
+        in
         let t = translate_type env t in
         let expr = translate_expr env expr in
         let name = env.module_name, name in
-        Some (DGlobal (name, t, expr))
+        Some (DGlobal (flags, name, t, expr))
       with e ->
         Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
         None
       end
 
-  | MLM_Let (_, { mllb_name = name, _; mllb_tysc = ts } :: _) ->
+  | MLM_Let (_, _, { mllb_name = name, _; mllb_tysc = ts } :: _) ->
       (* Things we currently do not translate:
        * - polymorphic functions (lemmas do count, sadly)
        *)
@@ -452,15 +466,16 @@ and translate_expr env e: expr =
   | MLE_Name n ->
       EQualified n
 
-  | MLE_Let ((flavor, [{
+  | MLE_Let ((flavor, flags, [{
       mllb_name = name, _;
       mllb_tysc = Some ([], typ); // assuming unquantified type
       mllb_add_unit = add_unit; // ?
       mllb_def = body;
       print_typ = print // ?
     }]), continuation) ->
+      let is_mut = Util.for_some (function Mutable -> true | _ -> false) flags in
       let typ, body =
-        if flavor = Mutable then
+        if is_mut then
           (match typ with
           | MLTY_Named ([ t ], p) when string_of_mlpath p = "FStar.HyperStack.stackref" -> t
           | _ -> failwith (Util.format1
@@ -472,7 +487,6 @@ and translate_expr env e: expr =
         else
           typ, body
       in
-      let is_mut = flavor = Mutable in
       let binder = { name = name; typ = translate_type env typ; mut = is_mut } in
       let body = translate_expr env body in
       let env = extend env name is_mut in

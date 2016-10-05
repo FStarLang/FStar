@@ -372,7 +372,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         let docs = parens (combine (text ", ") docs) in
         docs
 
-    | MLE_Let ((rec_, lets), body) ->
+    | MLE_Let ((rec_, _, lets), body) ->
         let pre =
             if e.loc <> dummy_loc
             then reduce [hardline; doc_of_loc e.loc]
@@ -702,7 +702,7 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
     | MLM_Ty decls ->
         doc_of_mltydecl currentModule decls
 
-    | MLM_Let (rec_, lets) ->
+    | MLM_Let (rec_, _, lets) ->
       doc_of_lets currentModule (rec_, true, lets)
 
     | MLM_Top e ->

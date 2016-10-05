@@ -2752,7 +2752,7 @@ let m1 = (FStar_TypeChecker_Env.norm_eff_name env c1)
 in (
 
 let m2 = (FStar_TypeChecker_Env.norm_eff_name env c2)
-in if ((FStar_Ident.lid_equals m1 m2) || (FStar_Syntax_Util.is_pure_effect c1)) then begin
+in if (((FStar_Ident.lid_equals m1 m2) || ((FStar_Syntax_Util.is_pure_effect c1) && (FStar_Syntax_Util.is_ghost_effect c2))) || ((FStar_Syntax_Util.is_pure_effect c2) && (FStar_Syntax_Util.is_ghost_effect c1))) then begin
 e
 end else begin
 (let _150_974 = (FStar_ST.read e.FStar_Syntax_Syntax.tk)
@@ -2830,7 +2830,7 @@ tm
 end)))
 
 
-let d : Prims.string  ->  Prims.unit = (fun s -> (FStar_Util.print1 "[01;36m%s[00m\n" s))
+let d : Prims.string  ->  Prims.unit = (fun s -> (FStar_Util.print1 "\\x1b[01;36m%s\\x1b[00m\n" s))
 
 
 let mk_toplevel_definition : FStar_TypeChecker_Env.env  ->  FStar_Ident.lident  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.sigelt * FStar_Syntax_Syntax.term) = (fun env lident def -> (
