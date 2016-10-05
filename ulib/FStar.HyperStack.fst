@@ -96,7 +96,9 @@ noeq type reference (a:Type) =
 //adding (not s.mm) to stackref and ref so as to keep their semantics as is
 let stackref (a:Type) = s:reference a { is_stack_region s.id && not s.mm }
 let ref (a:Type) = s:reference a{is_eternal_region s.id && not s.mm}
-let mmref (a:Type) = s:reference a{s.mm}
+
+let mmstackref (a:Type) = s:reference a {is_stack_region s.id && s.mm }
+let mmref (a:Type) = s:reference a{is_eternal_region s.id && s.mm}
 
 let live_region (m:mem) (i:rid) =
   (is_eternal_region i \/ i `is_above` m.tip)

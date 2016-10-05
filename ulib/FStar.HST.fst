@@ -110,18 +110,35 @@ assume val pop_frame: unit -> Unsafe unit
   (requires (fun m -> poppable m))
   (ensures (fun (m0:mem) _ (m1:mem) -> poppable m0 /\ m1==pop m0 /\ popped m0 m1))
 
+let salloc_post (#a:Type) (init:a) (m0:mem) (s:reference a{is_stack_region s.id}) (m1:mem) =
+      is_stack_region m0.tip
+    /\ Map.domain m0.h == Map.domain m1.h
+    /\ m0.tip = m1.tip
+    /\ s.id   = m1.tip
+    /\ HH.fresh_rref s.ref m0.h m1.h         //it's a fresh reference in the top frame
+    /\ m1==HyperStack.upd m0 s init          //and it's been initialized
+
 (**
      Allocates on the top-most stack frame
      *)
 assume val salloc: #a:Type -> init:a -> StackInline (stackref a)
   (requires (fun m -> is_stack_region m.tip))
-  (ensures (fun m0 s m1 ->
-      is_stack_region m0.tip
-    /\ Map.domain m0.h == Map.domain m1.h
-    /\ m0.tip = m1.tip
-    /\ s.id   = m1.tip
-    /\ HH.fresh_rref s.ref m0.h m1.h            //it's a fresh reference in the top frame
-    /\ m1==HyperStack.upd m0 s init))           //and it's been initialized
+  (ensures salloc_post init)
+
+assume val salloc_mm: #a:Type -> init:a -> StackInline (mmstackref a)
+  (requires (fun m -> is_stack_region m.tip))
+  (ensures salloc_post init)
+
+let remove_reference (#a:Type) (r:reference a{r.mm}) (m:mem{r.id `is_in` m.h}) :GTot mem =
+  let h = Map.sel m.h r.id in
+  //d' = (Heap.domain h) \ {r}
+  let d' = TSet.intersect (Heap.domain h) (TSet.complement (TSet.singleton (Heap.Ref (HH.as_ref r.ref)))) in
+  let h' = Heap.restrict h d' in
+  HS (Map.upd m.h r.id h') m.tip
+
+assume val sfree: #a:Type -> r:mmstackref a -> StackInline unit
+    (requires (fun m0 -> r.id = m0.tip /\ m0 `contains` r))
+    (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
 
 let fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
   not (r `is_in` m0.h)
@@ -149,7 +166,7 @@ assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
 			/\ m1.tip = m0.tip
 			))
 
-inline let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a) (m1:mem) =
+inline let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
     let region_i = Map.sel m0.h i in
     not (Heap.contains region_i (HH.as_ref x.ref))
   /\ i `is_in` m0.h
@@ -160,19 +177,12 @@ assume val ralloc: #a:Type -> i:HH.rid -> init:a -> ST (ref a)
     (requires (fun m -> is_eternal_region i))
     (ensures (ralloc_post i init))
 
-assume val mmalloc: #a:Type -> i:HH.rid -> init:a -> ST (mmref a)
-    (requires (fun m0 -> is_stack_region i ==> i = m0.tip))    //if it's a stack region, then it must be the tip
+assume val ralloc_mm: #a:Type -> i:HH.rid -> init:a -> ST (mmref a)
+    (requires (fun _ -> is_eternal_region i))
     (ensures (ralloc_post i init))
 
-let remove_reference (#a:Type) (r:mmref a) (m:mem{r.id `is_in` m.h}) :GTot mem =
-  let h = Map.sel m.h r.id in
-  //d' = (Heap.domain h) \ {r}
-  let d' = TSet.intersect (Heap.domain h) (TSet.complement (TSet.singleton (Heap.Ref (HH.as_ref r.ref)))) in
-  let h' = Heap.restrict h d' in
-  HS (Map.upd m.h r.id h') m.tip
-
-assume val mmfree: #a:Type -> r:mmref a -> ST unit
-    (requires (fun m0 -> m0 `contains` r /\ (is_stack_region r.id ==> r.id = m0.tip)))
+assume val rfree: #a:Type -> r:mmref a -> ST unit
+    (requires (fun m0 -> m0 `contains` r))
     (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
 
 inline let assign_post (#a:Type) (r:reference a) (v:a) m0 (_u:unit) m1 =
