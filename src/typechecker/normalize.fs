@@ -442,13 +442,30 @@ let reduce_primops steps tm =
     then tm
     else match tm.n with
          | Tm_app(fv, [(a1, _); (a2, _)]) ->
+            Util.print1 "fv is:%s\n" (Print.term_to_string fv);
             begin match arith_op fv with 
             | None -> tm
             | Some (_, op) -> 
+              Util.print2 "found! a1 is:%s, a2 is:%s\n" (Print.term_to_string a1) (Print.term_to_string a2);
+              let norm i j =
+                let c = op (Util.int_of_string i) (Util.int_of_string j) in
+                mk (Tm_constant c) tm.pos
+              in
               begin match (SS.compress a1).n, (SS.compress a2).n with
-                | Tm_constant (Const.Const_int(i, _)), Tm_constant (Const.Const_int(j, _)) -> 
-                  let c = op (Util.int_of_string i) (Util.int_of_string j) in
-                  mk (Tm_constant c) tm.pos
+                | Tm_app (head1, [ arg1, _ ]), Tm_app (head2, [ arg2, _ ]) ->
+                    begin match (SS.compress head1).n, (SS.compress head2).n, (SS.compress arg1).n, (SS.compress arg2).n with
+                    | Tm_fvar ({ fv_name = { v = lid}}),
+                      Tm_fvar ({ fv_name = { v = lid'}}),
+                      Tm_constant (Const.Const_int (i, None)),
+                      Tm_constant (Const.Const_int (j, None))
+                      when Util.ends_with (Ident.text_of_lid lid) "int_to_t" &&
+                      Util.ends_with (Ident.text_of_lid lid') "int_to_t" ->
+                        norm i j
+                    | _ ->
+                        tm
+                    end
+                | Tm_constant (Const.Const_int(i, None)), Tm_constant (Const.Const_int(j, None)) -> 
+                    norm i j
                 | _ -> tm
               end
             end
