@@ -809,7 +809,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   | Meta_monadic (m, t) ->
                     let t = norm cfg env [] t in
                     let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                    let cfg = {cfg with steps=[NoInline; WHNF; Exclude Zeta; Exclude Iota]@cfg.steps; delta_level=NoDelta} in
+                    let cfg = {cfg with steps=[NoInline; Exclude Zeta]@cfg.steps; delta_level=NoDelta} in
                     norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
                  | Meta_monadic_lift (m, m') ->
@@ -981,6 +981,9 @@ and rebuild : cfg -> env -> stack -> term -> term =
 
             | Match(env, branches, r) :: stack ->
               log cfg  (fun () -> Util.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
+              //the scrutinee is always guaranteed to be a pure or ghost term
+              //see tc.fs, the case of Tm_match and the comment related to issue #594
+              let scrutinee = t in
               let norm_and_rebuild_match () =
                 let whnf = List.contains WHNF cfg.steps in
                 let cfg = {cfg with delta_level=glb_delta cfg.delta_level OnlyInline;
@@ -1022,7 +1025,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
                         | Some w -> Some (norm_or_whnf env w) in
                      let e = norm_or_whnf env e in
                      Util.branch (p, wopt, e)) in
-                rebuild cfg env stack (mk (Tm_match(t, branches)) r) in
+                rebuild cfg env stack (mk (Tm_match(scrutinee, branches)) r) in
 
               let rec is_cons head = match head.n with 
                 | Tm_uinst(h, _) -> is_cons h
@@ -1036,20 +1039,20 @@ and rebuild : cfg -> env -> stack -> term -> term =
                    | None -> b
                    | Some w -> 
                      let then_branch = b in
-                     let else_branch = mk (Tm_match(t, rest)) r in 
+                     let else_branch = mk (Tm_match(scrutinee, rest)) r in 
                      Util.if_then_else w then_branch else_branch in
                 
 
-              let rec matches_pat (t:term) (p:pat)  
+              let rec matches_pat (scrutinee:term) (p:pat)  
                 :  either<list<term>, bool> //Inl ts: p matches t and ts are bindings for the branch
                 =                           //Inr false: p definitely does not match t
                                             //Inr true: p may match t, but p is an open term and we cannot decide for sure 
-                    let t = compress t in 
-                    let head, args = Util.head_and_args t in 
+                    let scrutinee = U.unmeta scrutinee in 
+                    let head, args = Util.head_and_args scrutinee in 
                     match p.v with 
                         | Pat_disj ps -> 
                           let mopt = Util.find_map ps (fun p -> 
-                            let m = matches_pat t p in
+                            let m = matches_pat scrutinee p in
                             match m with 
                              | Inl _ -> Some m //definite match
                              | Inr true -> Some m //maybe match; stop considering other cases
@@ -1059,10 +1062,10 @@ and rebuild : cfg -> env -> stack -> term -> term =
                             | Some m -> m
                           end
                         | Pat_var _ 
-                        | Pat_wild _ -> Inl [t]
+                        | Pat_wild _ -> Inl [scrutinee]
                         | Pat_dot_term _ -> Inl []
                         | Pat_constant s -> 
-                          begin match t.n with 
+                          begin match scrutinee.n with 
                             | Tm_constant s' when (s=s') -> Inl []
                             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
                           end
@@ -1082,12 +1085,12 @@ and rebuild : cfg -> env -> stack -> term -> term =
                     end 
                 | _ -> Inr false in
             
-              let rec matches t p = match p with 
+              let rec matches scrutinee p = match p with 
                 | [] -> norm_and_rebuild_match ()
                 | (p, wopt, b)::rest -> 
-                   match matches_pat t p with
+                   match matches_pat scrutinee p with
                     | Inr false -> //definite mismatch; safe to consider the remaining patterns
-                      matches t rest 
+                      matches scrutinee rest 
 
                     | Inr true -> //may match this pattern but t is an open term; block reduction
                       norm_and_rebuild_match ()
@@ -1103,7 +1106,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
               
               if cfg.steps |> List.contains (Exclude Iota)
               then norm_and_rebuild_match ()
-              else matches t branches
+              else matches scrutinee branches
 
 let config s e = 
     let d = match Util.find_map s (function UnfoldUntil k -> Some k | _ -> None) with
