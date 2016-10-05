@@ -3,7 +3,15 @@ OTHERFLAGS=
 include ../Makefile.include
 
 all: uall
-uall: Effects.Def.uver FStar.DM4F.IntST.uver-explicit FStar.DM4F.Exceptions.uver-explicit FStar.DM4F.ExnSt.uver FStar.DM4F.StExn.uver-explicit FStar.DM4F.ST.uver-explicit FStar.DM4F.Heap.uver FStar.DM4F.Heap.ST.uver
+uall:	Effects.Def.uver \
+	FStar.DM4F.IntST.uver-explicit \
+	FStar.DM4F.Exceptions.uver-explicit \
+	FStar.DM4F.ExnSt.uver \
+	FStar.DM4F.StExn.uver-explicit \
+	FStar.DM4F.ST.uver-explicit \
+	FStar.DM4F.Heap.uver \
+	FStar.DM4F.Heap.ST.uver
+
 sall:
 
 old:

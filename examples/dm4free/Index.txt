@@ -1,7 +1,7 @@
 The implementation for examples from the `Dijkstra Monads for Free'
 paper can be found in this directory. Here is an index for them. Each
 file contains comments and should be self-contained, but we recommend to
-follow this order when trying to familiarize oneself with this.
+follow this order when trying to familiarize oneself with the feature.
 
 Section		Description			File
 
