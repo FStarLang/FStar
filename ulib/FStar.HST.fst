@@ -137,7 +137,7 @@ assume val new_region: r0:HH.rid -> ST HH.rid
 			/\ m1.tip = m0.tip
 			))
 
-let is_eternal_color c = c <= 0
+let is_eternal_color = HS.is_eternal_color
 
 assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
       (requires (fun m -> is_eternal_color c /\ is_eternal_region r0))
@@ -149,7 +149,7 @@ assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
 			/\ m1.tip = m0.tip
 			))
 
-inline let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:ref a) (m1:mem) =
+inline let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a) (m1:mem) =
     let region_i = Map.sel m0.h i in
     not (Heap.contains region_i (HH.as_ref x.ref))
   /\ i `is_in` m0.h
@@ -159,6 +159,21 @@ inline let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:ref a) (m1:mem)
 assume val ralloc: #a:Type -> i:HH.rid -> init:a -> ST (ref a)
     (requires (fun m -> is_eternal_region i))
     (ensures (ralloc_post i init))
+
+assume val mmalloc: #a:Type -> i:HH.rid -> init:a -> ST (mmref a)
+    (requires (fun m0 -> is_stack_region i ==> i = m0.tip))    //if it's a stack region, then it must be the tip
+    (ensures (ralloc_post i init))
+
+let remove_reference (#a:Type) (r:mmref a) (m:mem{r.id `is_in` m.h}) :GTot mem =
+  let h = Map.sel m.h r.id in
+  //d' = (Heap.domain h) \ {r}
+  let d' = TSet.intersect (Heap.domain h) (TSet.complement (TSet.singleton (Heap.Ref (HH.as_ref r.ref)))) in
+  let h' = Heap.restrict h d' in
+  HS (Map.upd m.h r.id h') m.tip
+
+assume val mmfree: #a:Type -> r:mmref a -> ST unit
+    (requires (fun m0 -> m0 `contains` r /\ (is_stack_region r.id ==> r.id = m0.tip)))
+    (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
 
 inline let assign_post (#a:Type) (r:reference a) (v:a) m0 (_u:unit) m1 =
   m0 `contains` r /\ m1 == HyperStack.upd m0 r v
@@ -194,7 +209,7 @@ assume val get: unit -> Stack mem
   (ensures (fun m0 x m1 -> m0==x /\ m1==m0))
 
 (**
-   We can only recall refs, not stack refs
+   We can only recall refs with mm bit unset, not stack refs
    *)
 assume val recall: #a:Type -> r:ref a -> Stack unit
   (requires (fun m -> True))

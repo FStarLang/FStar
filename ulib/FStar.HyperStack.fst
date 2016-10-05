@@ -6,7 +6,8 @@ module HH = FStar.HyperHeap
 let is_in (r:rid) (h:HH.t) = h `Map.contains` r
 
 let is_stack_region r = color r > 0
-let is_eternal_region r  = color r <= 0
+let is_eternal_color c = c <= 0
+let is_eternal_region r  = is_eternal_color (color r)
 
 type sid = r:rid{is_stack_region r} //stack region ids
 
@@ -88,12 +89,14 @@ let pop (m0:mem{poppable m0}) : GTot mem =
   	    (forall (s:sid). includes s r ==> Map.contains h1 s));
   HS h1 tip1
 
-//A (reference a) may reside in the stack or heap
+//A (reference a) may reside in the stack or heap, and may be manually managed
 noeq type reference (a:Type) =
-  | MkRef : id:rid -> ref:HH.rref id a -> reference a
+  | MkRef : id:rid -> mm:bool -> ref:HH.rref id a -> reference a
 
-let stackref (a:Type) = s:reference a { is_stack_region s.id }
-let ref (a:Type) = s:reference a{is_eternal_region s.id}
+//adding (not s.mm) to stackref and ref so as to keep their semantics as is
+let stackref (a:Type) = s:reference a { is_stack_region s.id && not s.mm }
+let ref (a:Type) = s:reference a{is_eternal_region s.id && not s.mm}
+let mmref (a:Type) = s:reference a{s.mm}
 
 let live_region (m:mem) (i:rid) =
   (is_eternal_region i \/ i `is_above` m.tip)
