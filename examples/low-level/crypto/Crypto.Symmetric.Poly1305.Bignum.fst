@@ -29,9 +29,9 @@ open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5
 
 let prime = prime
-let satisfiesModuloConstraints = satisfiesModuloConstraints
-let isSum = isSum
-let bound27 = bound27
+let satisfiesModuloConstraints h b = satisfiesModuloConstraints h b
+let isSum h h1 a b = isSum h h1 a b
+let bound27 h b = bound27 h b
 let w : U32.t -> Tot int = U32.v
 
 
