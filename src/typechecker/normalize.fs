@@ -442,11 +442,9 @@ let reduce_primops steps tm =
     then tm
     else match tm.n with
          | Tm_app(fv, [(a1, _); (a2, _)]) ->
-            Util.print1 "fv is:%s\n" (Print.term_to_string fv);
             begin match arith_op fv with 
             | None -> tm
             | Some (_, op) -> 
-              Util.print2 "found! a1 is:%s, a2 is:%s\n" (Print.term_to_string a1) (Print.term_to_string a2);
               let norm i j =
                 let c = op (Util.int_of_string i) (Util.int_of_string j) in
                 mk (Tm_constant c) tm.pos
