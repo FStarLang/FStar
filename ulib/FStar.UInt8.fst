@@ -161,4 +161,4 @@ let op_Less_Equals_Hat = lte
 (* To input / output constants *)
 assume val to_string: t -> Tot string
 assume val of_string: string -> Tot t
-type byte = t
+inline type byte = t
