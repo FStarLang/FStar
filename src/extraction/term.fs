@@ -975,10 +975,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let lbs =
             if top_level
             then lbs |> List.map (fun lb ->
-                    printfn "&&&&&&&&&&&&&&&Normalizing %s" (Print.lbname_to_string lb.lbname);
-                    let env = TcEnv.set_current_module g.tcenv (Ident.lid_of_path ["Test"] Range.dummyRange) in
                     let lbdef = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.Inline; N.Exclude N.Zeta; N.PureSubtermsWithinComputations; N.Primops] 
-                                env lb.lbdef in
+                                g.tcenv lb.lbdef in
                     {lb with lbdef=lbdef})
             else lbs in
             //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
