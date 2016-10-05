@@ -49,6 +49,7 @@ type step =
   | Inline
   | NoInline
   | UnfoldUntil of S.delta_depth
+  | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
   | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
@@ -642,9 +643,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             
           | Tm_abs(bs, body, lopt) -> 
             begin match stack with 
-                | Meta _ :: _ -> 
-                  failwith "Labeled abstraction"
-
                 | UnivArgs _::_ ->
                   failwith "Ill-typed term: universes cannot be applied to term abstraction"
 
@@ -703,6 +701,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   log cfg  (fun () -> Util.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
+                | Meta _::_
                 | Let _ :: _
                 | App _ :: _ 
                 | Abs _ :: _
@@ -818,7 +817,18 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                     | Meta_monadic (m, t) ->
                       let t = norm cfg env [] t in
+                      let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                      let cfg = {cfg with steps=NoInline::WHNF::Exclude Zeta::cfg.steps; delta_level=NoDelta} in
                       norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+
+                    | Meta_monadic_lift (m, m') ->
+                      if (Util.is_pure_effect m
+                      || Util.is_ghost_effect m)
+                      && cfg.steps |> List.contains PureSubtermsWithinComputations
+                      then let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                           let cfg = {cfg with steps=[PureSubtermsWithinComputations; AllowUnboundUniverses; EraseUniverses; Exclude Zeta]; delta_level=OnlyInline} in
+                           norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+                      else norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
                     | _ -> 
                       norm cfg env stack head //meta doesn't block reduction
