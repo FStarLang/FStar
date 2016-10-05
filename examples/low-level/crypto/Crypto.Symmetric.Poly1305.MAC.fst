@@ -26,8 +26,8 @@ let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 // this flag enables conditional idealization by keeping additional data,
 // - this should not affect the code behavior
 // - this may cause the code not to compile to Kremlin/C.
-assume val ideal: bool
-//let ideal = true
+// assume val ideal: bool
+inline let ideal = false
 
 // we will need authId i ==> ideal?
 

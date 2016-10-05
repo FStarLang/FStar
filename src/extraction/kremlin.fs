@@ -72,8 +72,8 @@ and expr =
   | EBufCreateL of list<expr>
 
 and op =
-  | Add | AddW | Sub | SubW | Div | Mult | Mod
-  | BOr | BAnd | BXor | BShiftL | BShiftR
+  | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
+  | BOr | BAnd | BXor | BShiftL | BShiftR | BNot
   | Eq | Neq | Lt | Lte | Gt | Gte
   | And | Or | Xor | Not
 
@@ -126,7 +126,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 14
+let current_version: version = 15
 
 type file = string * program
 type binary_format = version * list<file>
@@ -177,8 +177,12 @@ let mk_op = function
       Some SubW
   | "mul" | "op_Star_Hat" ->
       Some Mult
+  | "mul_mod" | "op_Star_Percent_Hat" ->
+      Some MultW
   | "div" | "op_Slash_Hat" ->
       Some Div
+  | "div_mod" | "op_Slash_Percent_Hat" ->
+      Some DivW
   | "rem" | "op_Percent_Hat" ->
       Some Mod
   | "logor" | "op_Bar_Hat" ->
@@ -187,6 +191,8 @@ let mk_op = function
       Some BXor
   | "logand" | "op_Amp_Hat" ->
       Some BAnd
+  | "lognot" ->
+      Some BNot
   | "shift_right" | "op_Greater_Greater_Hat" ->
       Some BShiftR
   | "shift_left" | "op_Less_Less_Hat" ->
