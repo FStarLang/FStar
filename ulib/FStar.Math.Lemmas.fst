@@ -109,7 +109,7 @@ val swap_neg_mul: a:int -> b:int -> Lemma ((-a) * b = a * (-b))
 let swap_neg_mul a b =
   neg_mul_left a b;
   neg_mul_right a b
-  
+
 (* Lemma: multiplication precedence on addition *)
 val mul_binds_tighter: a:int -> b:int -> c:int -> Lemma (a + (b * c) = a + b * c)
 let mul_binds_tighter a b c = ()
@@ -198,6 +198,17 @@ let lemma_eq_trans_2 w x y z = ()
 
 #reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
+private let lemma_mod_plus_0 (a:nat) (b:nat) (p:pos) : Lemma
+  ((a + b * p) % p - a % p = p * (b + a / p - (a + b * p) / p))
+  = lemma_div_mod a p;
+    lemma_div_mod (a + b * p) p
+
+private let lemma_mod_plus_1 (a:nat) (b:nat) (p:pos) : Lemma
+  ((a + b * p) % p = a + b * p - p * ((a + b * p) / p))
+  = lemma_div_mod (a+b*p) p;
+    lemma_mod_lt a p;
+    lemma_mod_lt (a + b * p) p
+
 val lemma_mod_plus: a:nat -> b:nat -> p:pos -> Lemma
   ((a + b * p) % p = a % p)
 let lemma_mod_plus a b p =
@@ -205,24 +216,26 @@ let lemma_mod_plus a b p =
   lemma_div_mod (a + b * p) p;
   lemma_mod_lt a p;
   lemma_mod_lt (a + b * p) p;
-  assert ((a + b * p) % p - a % p = p * (b + a / p - (a + b * p) / p));
-  assert ((a + b * p) % p = a + b * p - p * ((a + b * p) / p));
-  assert (a % p = a - p * (a / p));
-  assert (a + b * p - p * ((a + b * p) / p) = a - p * (a / p));
+  lemma_mod_plus_0 a b p;
+  lemma_mod_plus_1 a b p;
+  cut (a + b * p - p * ((a + b * p) / p) = a - p * (a / p));
   let w = (a + b * p) % p in
   let x = a + b * p - p * ((a + b * p) / p) in
   let z = a % p in
   let y = a - p * (a / p) in
   lemma_eq_trans_2 w x y z
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+
+private let lemma_mod_mul_distr_l_0 (a:nat) (b:nat) (p:pos) : Lemma
+  ((((a % p) + (a / p) * p) * b) % p = ((a % p) * b + ((a / p) * b) * p) % p)
+  = ()
 
 val lemma_mod_mul_distr_l: a:nat -> b:nat -> p:pos -> Lemma
   ((a * b) % p = ((a % p) * b) % p)
 let lemma_mod_mul_distr_l a b p =
   lemma_div_mod a p;
-  assert ((a * b) % p = (((a % p) + (a / p) * p) * b) % p);
-  assert ((a * b) % p = ((a % p) * b + ((a / p) * b) * p) % p);
+  lemma_mod_mul_distr_l_0 a b p;
   lemma_mod_plus ((a % p) * b) ((a / p) * b) p
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
@@ -257,6 +270,17 @@ val lemma_mod_spec2: a:nat -> p:pos -> Lemma
 let lemma_mod_spec2 a p =
   lemma_mod_spec a p
 
+private let lemma_mod_plus_injective_1 (p:pos) (a:nat) (b:nat) (c:nat) : Lemma
+  (requires (b < p /\ c < p /\ (a + b) % p = (a + c) % p))
+  (ensures  (
+    let r = (a + b) % p in
+    (r <= a + b) /\ (r <= a + c) /\ (
+    let qb = ((a + b) - r) / p in
+    let qc = ((a + c) - r) / p in
+    a + b = (a + c) + p * qb - p * qc)))
+  = lemma_mod_spec2 (a + b) p;
+    lemma_mod_spec2 (a + c) p
+
 val lemma_mod_plus_injective: p:pos -> a:nat -> b:nat -> c:nat -> Lemma
   (requires (b < p /\ c < p /\ (a + b) % p = (a + c) % p))
   (ensures  (b = c))
@@ -266,7 +290,7 @@ let lemma_mod_plus_injective p a b c =
   let r = (a + b) % p in
   let qb = ((a + b) - r) / p in
   let qc = ((a + c) - r) / p in
-  assert (a + b = (a + c) + p * qb - p * qc);
+  lemma_mod_plus_injective_1 p a b c;
   lemma_mul_sub_distr p qb qc;
   assert (b = c + p * (qb - qc));
   assert (qb - qc = 0)
@@ -340,7 +364,7 @@ let division_propriety a b = ()
 (* Internal lemmas for proving the definition of division *)
 private val division_definition_lemma_1: a:nat -> b:pos -> m:nat{a - b < m * b} ->
     Lemma (m > a / b - 1)
-let division_definition_lemma_1 a b m = 
+let division_definition_lemma_1 a b m =
   if a / b - 1 < 0 then () else begin
     division_propriety a b;
     multiplication_order_lemma m (a / b - 1) b
@@ -357,7 +381,7 @@ val division_definition: a:nat -> b:pos -> m:nat{a - b < m * b && m * b <= a} ->
 let division_definition a b m =
   division_definition_lemma_1 a b m;
   division_definition_lemma_2 a b m
-  
+
 (* Lemma: (a * b) / b = a *)
 val multiple_division_lemma: a:nat -> b:pos -> Lemma ( (a * b) / b = a )
 let multiple_division_lemma a b = division_definition (a * b) b a
@@ -370,6 +394,32 @@ let multiple_modulo_lemma a b = multiple_division_lemma a b
 val division_addition_lemma: a:nat -> b:pos -> n:nat ->
     Lemma ( (a + n * b) / b = a / b + n )
 let division_addition_lemma a b n = division_definition (a + n * b) b (a / b + n)
+
+private let lemma_div_le_ (a:nat) (b:nat) (d:pos) : Lemma
+  (requires (a <= b /\ a / d > b / d))
+  (ensures  (False))
+  = lemma_div_mod a d;
+    lemma_div_mod b d;
+    cut (d * (a / d) + a % d <= d * (b / d) + b % d);
+    cut (d * (a / d) - d * (b / d) <= b % d - a % d);
+    distributivity_sub_right d (a/d) (b/d);
+    cut (b % d < d /\ a % d < d);
+    cut (d * (a/d - b/d) <= d)
+
+val lemma_div_le: a:nat -> b:nat -> d:pos ->
+  Lemma (requires (a <= b))
+        (ensures  (a / d <= b / d))
+let lemma_div_le a b d =
+  if a / d > b / d then lemma_div_le_ a b d
+
+(* Lemma: Division distributivity under special condition *)
+val division_sub_lemma: a:nat -> b:pos -> n:nat ->
+  Lemma (requires (a >= n * b))
+        (ensures  (a >= n * b /\ (a - n * b) / b = a / b - n))
+let division_sub_lemma a b n =
+  lemma_div_le (n*b) a b;
+  multiple_division_lemma n b;
+  division_definition (a - n * b) b (a / b - n)
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 10"
 
@@ -391,6 +441,14 @@ let modulo_addition_lemma a b n =
   modulo_distributivity a (n * b) b;
   multiple_modulo_lemma n b
 
+(* Lemma: Modulo distributivity under special condition *)
+val lemma_mod_sub: a:nat -> b:pos -> n:nat ->
+  Lemma (requires (a >= n * b))
+        (ensures  ((a - n*b) % b = a % b))
+let lemma_mod_sub a b n =
+  modulo_addition_lemma (a-n*b) b n
+
+
 #reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 (* Lemma: Divided by a product is equivalent to being divided one by one *)
@@ -411,28 +469,45 @@ let division_multiplication_lemma a b c =
     division_definition a (b * c) ((a / b) / c)
   end
 
-#reset-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
 
-(* Lemma: Propriety about modulo and division *)
+let lemma_mul_pos_pos_is_pos (x:pos) (y:pos) : Lemma (x*y > 0) = ()
+let lemma_mul_nat_pos_is_nat (x:nat) (y:pos) : Lemma (x*y >= 0) = ()
+
+#reset-options "--z3timeout 10 --initial_fuel 0 --max_fuel 0"
+
+let modulo_division_lemma_0 (a:nat) (b:pos) (c:pos) : Lemma
+  ((a - (a / (b * c)) * (b * c)) / b = a / b - ((a / (b * c)) * c))
+  = division_sub_lemma a b ((a / (b*c)) * c)
+
 val modulo_division_lemma: a:nat -> b:pos -> c:pos ->
     Lemma ( (a % (b * c)) / b = (a / b) % c )
 let modulo_division_lemma a b c =
   division_addition_lemma (a - (a / (b * c)) * (b * c)) b ((a / (b * c)) * c);
-  distributivity_sub_left a (a / (b * c)) (b * c);
+  let x = (a - (a / (b * c)) * (b * c)) in
+  let y = ((a / (b * c)) * c) in
+  cut ((x + y * b) % b = x % b);
+  lemma_mul_pos_pos_is_pos b c;
+  let bc:pos = b * c in
+  let a_bc = a/bc in
+  distributivity_sub_left a a_bc bc;
   paren_mul_right (a / (b * c)) c b;
   paren_mul_left (a / (b * c)) c b;
-  cut( (a - (a / (b * c)) * (b * c)) / b = a / b - ((a / (b * c)) * c));
+  modulo_division_lemma_0 a b c;
   euclidean_division_definition a (b * c);
   division_multiplication_lemma a b c;
   euclidean_division_definition (a / b) c
 
-#reset-options "--z3timeout 50 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 10 --initial_fuel 0 --max_fuel 0"
 
 val modulo_modulo_lemma: a:nat -> b:pos -> c:pos ->
     Lemma ( (a % (b * c)) % b = a % b )
 let modulo_modulo_lemma a b c =
   modulo_addition_lemma (a - (a / (b * c)) * (b * c)) b ((a / (b * c)) * c);
-  assert( ((a - (a / (b * c)) * (b * c)) + ((a / (b * c)) * c) * b) % b = (a - (a / (b * c)) * (b * c)) % b );
+  let n = (a / (b * c)) * c in
+  let x = (a - (a / (b * c)) * (b * c)) in
+  assert( (x + n * b) % b = x % b);
+  (* assert( ((a - (a / (b * c)) * (b * c)) + ((a / (b * c)) * c) * b) % b = (a - (a / (b * c)) * (b * c)) % b ); *)
+  lemma_div_mod a (b*c);
   cut( a % b = (a - (a / (b * c)) * (b * c)) % b );
   euclidean_division_definition a (b * c)
 
@@ -461,12 +536,15 @@ let pow2_multiplication_modulo_lemma_1 a b c =
   paren_mul_left a (pow2 (c - b)) (pow2 b);
   multiple_modulo_lemma (a * pow2 (c - b)) (pow2 b)
 
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 10 --initial_fuel 0 --max_fuel 0"
 
 val pow2_multiplication_modulo_lemma_2: a:nat -> b:nat -> c:nat{c <= b} ->
     Lemma ( (a * pow2 c) % pow2 b = (a % pow2 (b - c)) * pow2 c )
 let pow2_multiplication_modulo_lemma_2 a b c =
   euclidean_division_definition a (pow2 (b - c));
+  let q = pow2 (b - c) in
+  let r = a % pow2 (b - c) in
+  assert(a = q * (a / q) + a % r);
   pow2_plus (b - c) c;
   paren_mul_right (a / pow2 (b - c)) (pow2 (b - c)) (pow2 c);
   paren_mul_left (a / pow2 (b - c)) (pow2 (b - c)) (pow2 c);
