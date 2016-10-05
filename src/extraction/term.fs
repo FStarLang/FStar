@@ -353,9 +353,23 @@ let bv_as_mlty (g:env) (bv:bv) =
         a bloated type is atleast as good as unknownType?
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
-let rec term_as_mlty (g:env) (t:term) : mlty =
-    let t = N.normalize [N.Beta; N.Inline; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
-    term_as_mlty' g t
+let rec term_as_mlty (g:env) (t0:term) : mlty =
+    let rec is_top_ty t = match t with
+        | MLTY_Top -> true
+        | MLTY_Named _ ->
+          begin match Util.udelta_unfold g t with
+                | None -> false
+                | Some t -> is_top_ty t
+          end
+        | _ -> false
+    in
+    let t = N.normalize [N.Beta; N.Inline; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
+    let mlt = term_as_mlty' g t in
+    if is_top_ty mlt
+    then //Try normalizing t fully, this time with Delta steps, and translate again, to see if we can get a better translation for it
+         let t = N.normalize [N.Beta; N.Inline; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
+         term_as_mlty' g t
+    else mlt
 
 and term_as_mlty' env t =
      let t = SS.compress t in
@@ -946,10 +960,16 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             else if is_top_level lbs
                  then lbs, e'
                  else let lb = List.hd lbs in
-                    let x = S.freshen_bv (left lb.lbname) in
-                    let lb = {lb with lbname=Inl x} in
-                    let e' = SS.subst [DB(0, x)] e' in
-                    [lb], e' in
+                      let x = S.freshen_bv (left lb.lbname) in
+                      let lb = {lb with lbname=Inl x} in
+                      let e' = SS.subst [DB(0, x)] e' in
+                      [lb], e' in
+          let lbs =
+            if top_level
+            then lbs |> List.map (fun lb ->
+                    let lbdef = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.Inline; N.Exclude N.Zeta] g.tcenv lb.lbdef in
+                    {lb with lbdef=lbdef})
+            else lbs in
             //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
           let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=t; lbdef=e} 
             : lbname //just lbname returned back
