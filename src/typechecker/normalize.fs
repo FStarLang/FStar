@@ -426,7 +426,13 @@ let arith_ops =
      (Const.op_LTE,         (fun x y -> bool_as_const (x <= y)));
      (Const.op_GT,          (fun x y -> bool_as_const (x > y)));
      (Const.op_GTE,         (fun x y -> bool_as_const (x >= y)));
-     (Const.op_Modulus,     (fun x y -> int_as_const (x % y)))]
+     (Const.op_Modulus,     (fun x y -> int_as_const (x % y)))] @
+     List.flatten (List.map (fun m -> [
+       Const.p2l ["FStar"; m; "add"], (fun x y -> int_as_const (x + y));
+       Const.p2l ["FStar"; m; "sub"], (fun x y -> int_as_const (x - y));
+       Const.p2l ["FStar"; m; "mul"], (fun x y -> int_as_const (x * y))
+     ]) [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128" ])
+
     
 let reduce_primops steps tm = 
     let arith_op fv = match fv.n with 
@@ -440,7 +446,7 @@ let reduce_primops steps tm =
             | None -> tm
             | Some (_, op) -> 
               begin match (SS.compress a1).n, (SS.compress a2).n with
-                | Tm_constant (Const.Const_int(i, None)), Tm_constant (Const.Const_int(j, None)) -> 
+                | Tm_constant (Const.Const_int(i, _)), Tm_constant (Const.Const_int(j, _)) -> 
                   let c = op (Util.int_of_string i) (Util.int_of_string j) in
                   mk (Tm_constant c) tm.pos
                 | _ -> tm
