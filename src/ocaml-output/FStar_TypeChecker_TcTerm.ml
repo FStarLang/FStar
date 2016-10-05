@@ -3337,13 +3337,10 @@ let _58_2094 = (FStar_Util.left lb.FStar_Syntax_Syntax.lbname)
 in {FStar_Syntax_Syntax.ppname = _58_2094.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _58_2094.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = c1.FStar_Syntax_Syntax.res_typ})
 in (
 
-let lb = (FStar_Syntax_Util.mk_letbinding (FStar_Util.Inl (x)) [] c1.FStar_Syntax_Syntax.res_typ c1.FStar_Syntax_Syntax.eff_name e1)
-in (
-
-let _58_2100 = (let _152_744 = (let _152_743 = (FStar_Syntax_Syntax.mk_binder x)
+let _58_2099 = (let _152_744 = (let _152_743 = (FStar_Syntax_Syntax.mk_binder x)
 in (_152_743)::[])
 in (FStar_Syntax_Subst.open_term _152_744 e2))
-in (match (_58_2100) with
+in (match (_58_2099) with
 | (xb, e2) -> begin
 (
 
@@ -3353,9 +3350,9 @@ in (
 let x = (Prims.fst xbinder)
 in (
 
-let _58_2106 = (let _152_745 = (FStar_TypeChecker_Env.push_bv env x)
+let _58_2105 = (let _152_745 = (FStar_TypeChecker_Env.push_bv env x)
 in (tc_term _152_745 e2))
-in (match (_58_2106) with
+in (match (_58_2105) with
 | (e2, c2, g2) -> begin
 (
 
@@ -3366,6 +3363,9 @@ let e1 = (FStar_TypeChecker_Util.maybe_lift env e1 c1.FStar_Syntax_Syntax.eff_na
 in (
 
 let e2 = (FStar_TypeChecker_Util.maybe_lift env e2 c2.FStar_Syntax_Syntax.eff_name cres.FStar_Syntax_Syntax.eff_name)
+in (
+
+let lb = (FStar_Syntax_Util.mk_letbinding (FStar_Util.Inl (x)) [] c1.FStar_Syntax_Syntax.res_typ c1.FStar_Syntax_Syntax.eff_name e1)
 in (
 
 let e = (let _152_748 = (let _152_747 = (let _152_746 = (FStar_Syntax_Subst.close xb e2)
@@ -3421,9 +3421,9 @@ in ((e), ((
 
 let _58_2121 = cres
 in {FStar_Syntax_Syntax.eff_name = _58_2121.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = t; FStar_Syntax_Syntax.cflags = _58_2121.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = _58_2121.FStar_Syntax_Syntax.comp})), (guard))))
-end))))))))
+end)))))))))
 end))))
-end))))
+end)))
 end)))
 end
 | _58_2124 -> begin
