@@ -643,9 +643,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             
           | Tm_abs(bs, body, lopt) -> 
             begin match stack with 
-                | Meta _ :: _ -> 
-                  failwith "Labeled abstraction"
-
                 | UnivArgs _::_ ->
                   failwith "Ill-typed term: universes cannot be applied to term abstraction"
 
@@ -704,6 +701,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   log cfg  (fun () -> Util.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
+                | Meta _::_
                 | Let _ :: _
                 | App _ :: _ 
                 | Abs _ :: _

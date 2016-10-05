@@ -1503,31 +1503,28 @@ end)
 end
 | FStar_Syntax_Syntax.Tm_abs (bs, body, lopt) -> begin
 (match (stack) with
-| (Meta (_53_1057))::_53_1055 -> begin
-(FStar_All.failwith "Labeled abstraction")
-end
-| (UnivArgs (_53_1063))::_53_1061 -> begin
+| (UnivArgs (_53_1057))::_53_1055 -> begin
 (FStar_All.failwith "Ill-typed term: universes cannot be applied to term abstraction")
 end
-| (Match (_53_1069))::_53_1067 -> begin
+| (Match (_53_1063))::_53_1061 -> begin
 (FStar_All.failwith "Ill-typed term: cannot pattern match an abstraction")
 end
-| (Arg (c, _53_1075, _53_1077))::stack_rest -> begin
+| (Arg (c, _53_1069, _53_1071))::stack_rest -> begin
 (match (c) with
-| Univ (_53_1082) -> begin
+| Univ (_53_1076) -> begin
 (norm cfg ((c)::env) stack_rest t)
 end
-| _53_1085 -> begin
+| _53_1079 -> begin
 (match (bs) with
 | [] -> begin
 (FStar_All.failwith "Impossible")
 end
-| (_53_1088)::[] -> begin
+| (_53_1082)::[] -> begin
 (match (lopt) with
 | None when (FStar_Options.__unit_tests ()) -> begin
 (
 
-let _53_1092 = (log cfg (fun _53_1091 -> (match (()) with
+let _53_1086 = (log cfg (fun _53_1085 -> (match (()) with
 | () -> begin
 (let _147_675 = (closure_to_string c)
 in (FStar_Util.print1 "\tShifted %s\n" _147_675))
@@ -1537,7 +1534,7 @@ end
 | Some (FStar_Util.Inr (l)) when ((FStar_Ident.lid_equals l FStar_Syntax_Const.effect_Tot_lid) || (FStar_Ident.lid_equals l FStar_Syntax_Const.effect_GTot_lid)) -> begin
 (
 
-let _53_1098 = (log cfg (fun _53_1097 -> (match (()) with
+let _53_1092 = (log cfg (fun _53_1091 -> (match (()) with
 | () -> begin
 (let _147_677 = (closure_to_string c)
 in (FStar_Util.print1 "\tShifted %s\n" _147_677))
@@ -1547,31 +1544,31 @@ end
 | Some (FStar_Util.Inl (lc)) when (FStar_Syntax_Util.is_tot_or_gtot_lcomp lc) -> begin
 (
 
-let _53_1104 = (log cfg (fun _53_1103 -> (match (()) with
+let _53_1098 = (log cfg (fun _53_1097 -> (match (()) with
 | () -> begin
 (let _147_679 = (closure_to_string c)
 in (FStar_Util.print1 "\tShifted %s\n" _147_679))
 end)))
 in (norm cfg ((c)::env) stack_rest body))
 end
-| _53_1107 when (FStar_All.pipe_right cfg.steps (FStar_List.contains Reify)) -> begin
+| _53_1101 when (FStar_All.pipe_right cfg.steps (FStar_List.contains Reify)) -> begin
 (norm cfg ((c)::env) stack_rest body)
 end
-| _53_1109 -> begin
+| _53_1103 -> begin
 (
 
 let cfg = (
 
-let _53_1110 = cfg
-in {steps = (WHNF)::(Exclude (Iota))::(Exclude (Zeta))::cfg.steps; tcenv = _53_1110.tcenv; delta_level = _53_1110.delta_level})
+let _53_1104 = cfg
+in {steps = (WHNF)::(Exclude (Iota))::(Exclude (Zeta))::cfg.steps; tcenv = _53_1104.tcenv; delta_level = _53_1104.delta_level})
 in (let _147_680 = (closure_as_term cfg env t)
 in (rebuild cfg env stack _147_680)))
 end)
 end
-| (_53_1115)::tl -> begin
+| (_53_1109)::tl -> begin
 (
 
-let _53_1118 = (log cfg (fun _53_1117 -> (match (()) with
+let _53_1112 = (log cfg (fun _53_1111 -> (match (()) with
 | () -> begin
 (let _147_682 = (closure_to_string c)
 in (FStar_Util.print1 "\tShifted %s\n" _147_682))
@@ -1586,23 +1583,23 @@ end
 | (Steps (s, dl))::stack -> begin
 (norm (
 
-let _53_1127 = cfg
-in {steps = s; tcenv = _53_1127.tcenv; delta_level = dl}) env stack t)
+let _53_1121 = cfg
+in {steps = s; tcenv = _53_1121.tcenv; delta_level = dl}) env stack t)
 end
 | (MemoLazy (r))::stack -> begin
 (
 
-let _53_1133 = (set_memo r ((env), (t)))
+let _53_1127 = (set_memo r ((env), (t)))
 in (
 
-let _53_1136 = (log cfg (fun _53_1135 -> (match (()) with
+let _53_1130 = (log cfg (fun _53_1129 -> (match (()) with
 | () -> begin
 (let _147_684 = (FStar_Syntax_Print.term_to_string t)
 in (FStar_Util.print1 "\tSet memo %s\n" _147_684))
 end)))
 in (norm cfg env stack t)))
 end
-| ((Let (_))::_) | ((App (_))::_) | ((Abs (_))::_) | ([]) -> begin
+| ((Meta (_))::_) | ((Let (_))::_) | ((App (_))::_) | ((Abs (_))::_) | ([]) -> begin
 if (FStar_List.contains WHNF cfg.steps) then begin
 (let _147_685 = (closure_as_term cfg env t)
 in (rebuild cfg env stack _147_685))
