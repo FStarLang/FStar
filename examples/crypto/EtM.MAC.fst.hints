@@ -174,10 +174,9 @@
       ],
       0
     ],
-    [ "EtM.MAC.mac", 2, 2, 1, [ "@query" ], 0 ],
     [
       "EtM.MAC.mac",
-      3,
+      2,
       2,
       1,
       [
@@ -204,34 +203,13 @@
       0
     ],
     [
-      "EtM.MAC.mac",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "assumption_Prims.HasEq_tuple2",
-        "equality_tok_CoreCrypto.AES_128_CBC@tok",
-        "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.blockSize",
-        "equation_CoreCrypto.hashSize", "equation_EtM.CPA.cipher",
-        "equation_EtM.CPA.ivsize", "equation_EtM.MAC.macsize",
-        "equation_EtM.MAC.msg", "equation_EtM.MAC.tag",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "function_token_typing_EtM.CPA.cipher",
-        "function_token_typing_EtM.MAC.tag",
-        "haseqTm_refine_12eb3fd7a033166e40e43205a6b107c8",
-        "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5"
-      ],
-      0
-    ],
-    [
       "EtM.MAC.verify",
       1,
       2,
       1,
       [
         "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "assumption_Prims.HasEq_tuple2",
+        "assumption_Prims.tuple2_haseq",
         "equality_tok_CoreCrypto.AES_128_CBC@tok",
         "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.blockSize",
         "equation_CoreCrypto.hashSize", "equation_EtM.CPA.cipher",
@@ -302,7 +280,7 @@
       1,
       [
         "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "assumption_Prims.HasEq_tuple2",
+        "assumption_Prims.tuple2_haseq",
         "equality_tok_CoreCrypto.AES_128_CBC@tok",
         "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.blockSize",
         "equation_CoreCrypto.hashSize", "equation_EtM.CPA.cipher",

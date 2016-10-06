@@ -1,1 +1,26 @@
-[ "ÂÚ\u0014²ÛÃ&÷Øq{¿G¹\rï", [] ]
+[
+  "›§,À§líÐ\u001e°á™úVã\u0010",
+  [
+    [
+      "FStar.String.make",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [ "FStar.String.make", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.String.strcat",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [ "FStar.String.strcat", 2, 2, 1, [ "@query" ], 0 ]
+  ]
+]

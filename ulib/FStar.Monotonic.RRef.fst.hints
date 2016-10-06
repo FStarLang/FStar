@@ -1,7 +1,20 @@
 [
-  "DﬂÎ≤\u0006èg<’ü—\"\u000bÈ÷¡",
+  "\u0015$∆\u000b+5Bã∑√*¥Ù≈˜*",
   [
     [ "FStar.Monotonic.RRef.monotonic", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Monotonic.RRef.haseq_m_rref",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.List.Tot.test_sort",
+        "equation_FStar.Monotonic.RRef.m_rref", "equation_Prims._assert",
+        "function_token_typing_FStar.List.Tot.test_sort",
+        "lemma_FStar.HyperHeap.has_eq_rref"
+      ],
+      0
+    ],
     [ "FStar.Monotonic.RRef.m_contains", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Monotonic.RRef.m_fresh", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Monotonic.RRef.m_sel", 1, 2, 1, [ "@query" ], 0 ],
@@ -44,9 +57,8 @@
       2,
       1,
       [
-        "@query", "equality_tok_Prims.T@tok",
-        "equation_FStar.Monotonic.RRef.witnessed", "equation_Prims.l_True",
-        "typing_tok_Prims.T@tok", "unit_typing"
+        "@query", "equation_FStar.Monotonic.RRef.witnessed", "true_interp",
+        "unit_typing"
       ],
       0
     ],

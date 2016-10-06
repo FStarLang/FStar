@@ -1,9 +1,69 @@
 [
-  "Ód\u0018z{öâ\u0011Ü!¹¸ÌÈñ³",
+  "\u0003™ÙÑ\\\\ôÄÑ¬ú®ž\u0011÷q",
   [
     [ "FStar.TSet.set", 1, 0, 0, [ "@query" ], 0 ],
     [ "FStar.TSet.equal", 1, 0, 0, [ "@query" ], 0 ],
-    [ "FStar.TSet.singleton", 1, 0, 0, [ "@query" ], 0 ],
+    [
+      "FStar.TSet.empty",
+      1,
+      0,
+      0,
+      [ "@query", "equation_Prims.l_False", "false_interp" ],
+      0
+    ],
+    [
+      "FStar.TSet.singleton",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Prims.eq2", "equation_Prims.squash",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.TSet.union",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Prims.l_or", "equation_Prims.squash",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.TSet.intersect",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Prims.l_and", "equation_Prims.squash",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.TSet.complement",
+      1,
+      0,
+      0,
+      [
+        "@query", "equation_Prims.l_False", "equation_Prims.l_imp",
+        "equation_Prims.l_not", "equation_Prims.squash",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
     [ "FStar.TSet.subset", 1, 0, 0, [ "@query" ], 0 ],
     [ "FStar.TSet.mem_empty", 1, 0, 0, [ "@query" ], 0 ],
     [ "FStar.TSet.mem_singleton", 1, 0, 0, [ "@query" ], 0 ],
@@ -111,10 +171,8 @@
       0,
       0,
       [
-        "@query", "equation_FStar.PredicateExtensionality.predicate",
-        "equation_FStar.TSet.equal", "equation_FStar.TSet.set",
-        "lemma_FStar.PredicateExtensionality.predicateExtensionality",
-        "unit_typing"
+        "@query", "equation_FStar.PredicateExtensionality.peq",
+        "equation_FStar.TSet.equal"
       ],
       0
     ],

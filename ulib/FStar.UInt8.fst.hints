@@ -1,5 +1,5 @@
 [
-  "ฐ๕b\u001d;O8ส๒้มf฿ฮ>",
+  "\u007f\n\u001f๔Gý:ฐ๊ี<8ีมส",
   [
     [
       "FStar.UInt8.t'",
@@ -26,6 +26,18 @@
     [
       "FStar.UInt8.t'",
       3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt8.n",
+        "haseqTm_refine_03d0bed5c0733099844f268aecd0836d"
+      ],
+      0
+    ],
+    [
+      "FStar.UInt8.t'",
+      4,
       2,
       1,
       [

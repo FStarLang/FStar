@@ -2667,7 +2667,7 @@
         "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.nat",
+        "equation_FStar.Seq.op_At_Bar", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.length.fuel_instrumented",
         "fuel_correspondence_FStar.List.Tot.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
