@@ -219,9 +219,6 @@ let lemma_sel_elem h0 h1 acc block r =
   let d = reveal prime in
   lemma_mod_plus_mul_distr a b c d
 
-let test () =
-  U32 (2ul *^ nlength -^ 1ul)
-
 (**
     Runs "Acc = ((Acc+block)*r) % p." on the accumulator, the well formatted block of the message
     and the clamped part of the key
@@ -683,7 +680,7 @@ val poly1305_update:
 let poly1305_update log msgB acc r =
   let h0 = HST.get () in
   push_frame();
-  let block = create 0UL nlength in // TODO: pass buffer, don't create one
+  let block = create 0UL (U32 (nlength +^ 0ul)) in // TODO: pass buffer, don't create one
   toField_plus_2_128 block msgB;
   let h1 = HST.get () in
   norm_eq_lemma h0 h1 acc acc;
