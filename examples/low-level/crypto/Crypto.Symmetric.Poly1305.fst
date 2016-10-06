@@ -804,7 +804,7 @@ let poly1305_last log msg acc r len =
   else
     begin
     push_frame ();
-    let block = create 0UL nlength in
+    let block = create 0UL (U32 (nlength +^ 0ul)) in
     toField_plus block msg len;
     let h1 = HST.get () in
     norm_eq_lemma h0 h1 acc acc;
