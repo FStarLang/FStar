@@ -1459,7 +1459,7 @@ in (match (_57_704) with
 let txt = (FStar_Ident.text_of_lid lid)
 in (
 
-let allowed_prefixes = ("Mktuple")::("Left")::("Right")::("Some")::("None")::[]
+let allowed_prefixes = ("Mktuple")::("Left")::("Right")::("Some")::("None")::("op_Addition")::[]
 in if (FStar_List.existsb (fun s -> (FStar_Util.starts_with txt (Prims.strcat "Prims." s))) allowed_prefixes) then begin
 (let _151_697 = (let _151_696 = (normalize t)
 in N (_151_696))

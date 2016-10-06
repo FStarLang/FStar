@@ -808,7 +808,7 @@ and infer (env: env) (e: term): nm * term * term =
   | Tm_fvar { fv_name = { v = lid } } ->
       let _, t = Env.lookup_lid env.env lid in
       let txt = text_of_lid lid in
-      let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None" ] in
+      let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None"; "op_Addition" ] in
       // Util.print2 "[debug]: lookup %s miss %s\n" txt (Print.term_to_string t);
       if List.existsb (fun s -> Util.starts_with txt ("Prims." ^ s)) allowed_prefixes then
         // Need to erase universes here! This is an F* type that is fully annotated.
