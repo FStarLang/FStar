@@ -32,7 +32,6 @@ VERIFY= \
   Crypto.Symmetric.AES \
   Crypto.Symmetric.BlockCipher \
   Crypto.AEAD.AES256GCM \
-  Crypto.Symmetric.Poly1305.MAC \
   Crypto.Symmetric.Chacha20.PRF \
   Crypto.AEAD.Chacha20Poly1305 \
   Crypto.AEAD.Chacha20Poly1305.Ideal \
@@ -49,6 +48,7 @@ SLOW= \
 # Files commented out are broken, uncomment once fixed
 LAX= \
   Math.Lib \
+  Crypto.Symmetric.Poly1305.MAC
   # AEAD
 
 all-ver: $(addsuffix .fst-ver, $(VERIFY))

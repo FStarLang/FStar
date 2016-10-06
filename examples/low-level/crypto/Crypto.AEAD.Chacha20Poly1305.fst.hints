@@ -1,5 +1,5 @@
 [
-  "\u0006Hà\u0004ˆ ;^ÿo½½{œ4{",
+  "U‹ÀhÞk¼Îsz\u001cÌ]Ï\u000eœ",
   [
     [
       "Crypto.AEAD.Chacha20Poly1305.pad_16",
@@ -152,7 +152,21 @@
       ],
       0
     ],
-    null,
-    null
+    [
+      "Crypto.AEAD.Chacha20Poly1305.chacha20_aead_encrypt",
+      2,
+      0,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0
+    ],
+    [
+      "Crypto.AEAD.Chacha20Poly1305.chacha20_aead_decrypt",
+      2,
+      0,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0
+    ]
   ]
 ]
