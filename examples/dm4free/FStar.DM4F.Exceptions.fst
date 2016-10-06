@@ -26,11 +26,10 @@ let bind_ex a b f g = fun _ ->
 
 (* Define the new effect using DM4F *)
 reifiable reflectable new_effect_for_free {
-  EXN : a:Type -> Effect
-  with
-    repr         = ex
-  ; bind         = bind_ex
-  ; return       = return_ex
+  EXN : (a:Type) -> Effect
+  with repr     = ex
+     ; bind     = bind_ex
+     ; return   = return_ex
 }
 
 (* Logical types, derived from the effect definition. *)

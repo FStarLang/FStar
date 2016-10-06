@@ -28,9 +28,9 @@ let bind a b f g =
 (* Define the new effect using DM4F *)
 reifiable reflectable new_effect_for_free {
   EXNST: a:Type -> Effect with
-    repr = exnst;
-    bind = bind;
-    return = return
+    repr    = exnst;
+    bind    = bind;
+    return  = return
 }
 
 let pre  = EXNST.pre

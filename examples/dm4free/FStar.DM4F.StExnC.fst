@@ -49,13 +49,13 @@ let raise (a:Type) : stexn a =
  *)
 reifiable new_effect_for_free {
   STEXN: a:Type -> Effect
-  with repr = stexn
-     ; return = return
-     ; bind = bind
+  with repr    = stexn
+     ; return  = return
+     ; bind    = bind
   and effect_actions
-       put = put
-     ; get = get
-     ; raise = raise
+       put     = put
+     ; get     = get
+     ; raise   = raise
 }
 
 let pre  = STEXN.pre

@@ -38,13 +38,13 @@ let raise (a:Type) : stexn a =
 (* Define the new effect using DM4F *)
 reifiable reflectable new_effect_for_free {
   STEXN: a:Type -> Effect
-  with repr = stexn
-     ; return = return
-     ; bind = bind
+  with repr    = stexn
+     ; return  = return
+     ; bind    = bind
   and effect_actions
-       get = get
-     ; put = put
-     ; raise = raise
+       get     = get
+     ; put     = put
+     ; raise   = raise
 }
 
 let pre  = STEXN.pre
