@@ -1,0 +1,18 @@
+The implementation for examples from the `Dijkstra Monads for Free'
+paper can be found in this directory. Here is an index for them. Each
+file contains comments and should be self-contained, but we recommend to
+follow this order when trying to familiarize oneself with this.
+
+Section		Description			File
+
+§ 2.3		Simple state monad (st)		FStar.DM4F.ST.fst
+-- TODO: (2.3 mentions the laws, what about that?)
+
+§ 2.5		Exception (exn)			FStar.DM4F.Exceptions.fst
+§ 2.5		State+Exception (stexn)		FStar.DM4F.StExn.fst
+§ 2.5		Exception+State (exnst)		FStar.DM4F.ExnSt.fst
+§ 2.5		Exception-counting (stexnC)	FStar.DM4F.StExnC.fst
+
+-- REVIEW:
+§ 2.6		Information-flow (IFC)		ifc.fst
+§ 2.7		Continuations (cont)		?
