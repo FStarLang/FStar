@@ -17,7 +17,7 @@ AEAD_ODIR=aead
 OCAMLOPT := $(OCAMLOPT) -w -8-20-26
 
 REALIZED_MLI=
-REALIZED=Low_Bytes
+REALIZED=Low_Bytes FStar_HST_Monotonic_RRef
 REALIZED_MODULE=$(subst _,., $(REALIZED))
 REALIZED_ML=$(addsuffix .mli,$(REALIZED_MLI)) $(addsuffix .ml,$(REALIZED_MLI) $(REALIZED))
 NO_CODEGEN=$(addprefix --no_extract , FStar.Buffer SInt $(REALIZED_MODULE))

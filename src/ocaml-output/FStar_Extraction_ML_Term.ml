@@ -464,10 +464,13 @@ and term_as_mlty' : FStar_Extraction_ML_UEnv.env  ->  FStar_Syntax_Syntax.term  
 
 let t = (FStar_Syntax_Subst.compress t)
 in (match (t.FStar_Syntax_Syntax.n) with
-| (FStar_Syntax_Syntax.Tm_constant (_)) | (FStar_Syntax_Syntax.Tm_bvar (_)) | (FStar_Syntax_Syntax.Tm_delayed (_)) | (FStar_Syntax_Syntax.Tm_unknown) -> begin
+| (FStar_Syntax_Syntax.Tm_bvar (_)) | (FStar_Syntax_Syntax.Tm_delayed (_)) | (FStar_Syntax_Syntax.Tm_unknown) -> begin
 (let _173_169 = (let _173_168 = (FStar_Syntax_Print.term_to_string t)
 in (FStar_Util.format1 "Impossible: Unexpected term %s" _173_168))
 in (FStar_All.failwith _173_169))
+end
+| FStar_Syntax_Syntax.Tm_constant (_79_373) -> begin
+FStar_Extraction_ML_UEnv.unknownType
 end
 | FStar_Syntax_Syntax.Tm_uvar (_79_376) -> begin
 FStar_Extraction_ML_UEnv.unknownType

@@ -374,10 +374,11 @@ let rec term_as_mlty (g:env) (t0:term) : mlty =
 and term_as_mlty' env t =
      let t = SS.compress t in
      match t.n with
-      | Tm_constant _
       | Tm_bvar _
       | Tm_delayed _
       | Tm_unknown -> failwith (Util.format1 "Impossible: Unexpected term %s" (Print.term_to_string t))
+
+      | Tm_constant _ -> unknownType
 
       | Tm_uvar _ -> unknownType //really shouldn't have any uvars left; TODO: fatal failure?
 
