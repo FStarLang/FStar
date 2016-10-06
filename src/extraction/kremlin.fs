@@ -340,20 +340,20 @@ and translate_decl env d: option<decl> =
       mllb_tysc = Some ([], t);
       mllb_def = expr
     } ]) ->
+      let flags =
+        if Util.for_some (function Syntax.Private -> true | _ -> false) flags then
+          [ Private ]
+        else
+          []
+      in
+      let t = translate_type env t in
+      let name = env.module_name, name in
       begin try
-        let flags =
-          if Util.for_some (function Syntax.Private -> true | _ -> false) flags then
-            [ Private ]
-          else
-            []
-        in
-        let t = translate_type env t in
         let expr = translate_expr env expr in
-        let name = env.module_name, name in
         Some (DGlobal (flags, name, t, expr))
       with e ->
-        Util.print2 "Warning: not translating definition for %s (%s)\n" name (Util.print_exn e);
-        None
+        Util.print2 "Warning: not translating definition for %s (%s)\n" (snd name) (Util.print_exn e);
+        Some (DGlobal (flags, name, t, EAny))
       end
 
   | MLM_Let (_, _, { mllb_name = name, _; mllb_tysc = ts } :: _) ->

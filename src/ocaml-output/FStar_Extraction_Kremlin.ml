@@ -1411,16 +1411,13 @@ end
 end))))))))
 end
 | FStar_Extraction_ML_Syntax.MLM_Let (flavor, flags, ({FStar_Extraction_ML_Syntax.mllb_name = (name, _81_398); FStar_Extraction_ML_Syntax.mllb_tysc = Some ([], t); FStar_Extraction_ML_Syntax.mllb_add_unit = _81_391; FStar_Extraction_ML_Syntax.mllb_def = expr; FStar_Extraction_ML_Syntax.print_typ = _81_388})::[]) -> begin
-try
-(match (()) with
-| () -> begin
 (
 
 let flags = if (FStar_Util.for_some (fun _81_7 -> (match (_81_7) with
 | FStar_Extraction_ML_Syntax.Private -> begin
 true
 end
-| _81_415 -> begin
+| _81_407 -> begin
 false
 end)) flags) then begin
 (Private)::[]
@@ -1432,20 +1429,23 @@ in (
 let t = (translate_type env t)
 in (
 
-let expr = (translate_expr env expr)
-in (
-
 let name = ((env.module_name), (name))
-in Some (DGlobal (((flags), (name), (t), (expr))))))))
+in try
+(match (()) with
+| () -> begin
+(
+
+let expr = (translate_expr env expr)
+in Some (DGlobal (((flags), (name), (t), (expr)))))
 end)
 with
 | e -> begin
 (
 
-let _81_408 = (let _175_672 = (FStar_Util.print_exn e)
-in (FStar_Util.print2 "Warning: not translating definition for %s (%s)\n" name _175_672))
-in None)
-end
+let _81_415 = (let _175_672 = (FStar_Util.print_exn e)
+in (FStar_Util.print2 "Warning: not translating definition for %s (%s)\n" (Prims.snd name) _175_672))
+in Some (DGlobal (((flags), (name), (t), (EAny)))))
+end)))
 end
 | FStar_Extraction_ML_Syntax.MLM_Let (_81_421, _81_423, ({FStar_Extraction_ML_Syntax.mllb_name = (name, _81_435); FStar_Extraction_ML_Syntax.mllb_tysc = ts; FStar_Extraction_ML_Syntax.mllb_add_unit = _81_431; FStar_Extraction_ML_Syntax.mllb_def = _81_429; FStar_Extraction_ML_Syntax.print_typ = _81_427})::_81_425) -> begin
 (
