@@ -426,7 +426,13 @@ let arith_ops =
      (Const.op_LTE,         (fun x y -> bool_as_const (x <= y)));
      (Const.op_GT,          (fun x y -> bool_as_const (x > y)));
      (Const.op_GTE,         (fun x y -> bool_as_const (x >= y)));
-     (Const.op_Modulus,     (fun x y -> int_as_const (x % y)))]
+     (Const.op_Modulus,     (fun x y -> int_as_const (x % y)))] @
+     List.flatten (List.map (fun m -> [
+       Const.p2l ["FStar"; m; "add"], (fun x y -> int_as_const (x + y));
+       Const.p2l ["FStar"; m; "sub"], (fun x y -> int_as_const (x - y));
+       Const.p2l ["FStar"; m; "mul"], (fun x y -> int_as_const (x * y))
+     ]) [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128" ])
+
     
 let reduce_primops steps tm = 
     let arith_op fv = match fv.n with 
@@ -439,10 +445,27 @@ let reduce_primops steps tm =
             begin match arith_op fv with 
             | None -> tm
             | Some (_, op) -> 
+              let norm i j =
+                let c = op (Util.int_of_string i) (Util.int_of_string j) in
+                mk (Tm_constant c) tm.pos
+              in
               begin match (SS.compress a1).n, (SS.compress a2).n with
+                | Tm_app (head1, [ arg1, _ ]), Tm_app (head2, [ arg2, _ ]) ->
+                    begin match (SS.compress head1).n, (SS.compress head2).n, (SS.compress arg1).n, (SS.compress arg2).n with
+                    | Tm_fvar fv1, Tm_fvar fv2,
+                      Tm_constant (Const.Const_int (i, None)),
+                      Tm_constant (Const.Const_int (j, None))
+                      when Util.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" &&
+                      Util.ends_with (Ident.text_of_lid fv2.fv_name.v) "int_to_t" ->
+                        // Machine integers are represented as applications, e.g.
+                        // [FStar.UInt8.uint_to_t 0xff], so as to get proper
+                        // bounds checking. Maintain that invariant.
+                        mk_app (mk (Tm_fvar fv1) tm.pos) [ norm i j, None ]
+                    | _ ->
+                        tm
+                    end
                 | Tm_constant (Const.Const_int(i, None)), Tm_constant (Const.Const_int(j, None)) -> 
-                  let c = op (Util.int_of_string i) (Util.int_of_string j) in
-                  mk (Tm_constant c) tm.pos
+                    norm i j
                 | _ -> tm
               end
             end
@@ -817,7 +840,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     || Util.is_ghost_effect m)
                     && cfg.steps |> List.contains PureSubtermsWithinComputations
                     then let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                            let cfg = {cfg with steps=[PureSubtermsWithinComputations; AllowUnboundUniverses; EraseUniverses; Exclude Zeta]; delta_level=OnlyInline} in
+                            let cfg = {cfg with steps=[PureSubtermsWithinComputations; Primops; AllowUnboundUniverses; EraseUniverses; Exclude Zeta]; delta_level=OnlyInline} in
                             norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
                     else norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
             
