@@ -110,18 +110,35 @@ assume val pop_frame: unit -> Unsafe unit
   (requires (fun m -> poppable m))
   (ensures (fun (m0:mem) _ (m1:mem) -> poppable m0 /\ m1==pop m0 /\ popped m0 m1))
 
+let salloc_post (#a:Type) (init:a) (m0:mem) (s:reference a{is_stack_region s.id}) (m1:mem) =
+      is_stack_region m0.tip
+    /\ Map.domain m0.h == Map.domain m1.h
+    /\ m0.tip = m1.tip
+    /\ s.id   = m1.tip
+    /\ HH.fresh_rref s.ref m0.h m1.h         //it's a fresh reference in the top frame
+    /\ m1==HyperStack.upd m0 s init          //and it's been initialized
+
 (**
      Allocates on the top-most stack frame
      *)
 assume val salloc: #a:Type -> init:a -> StackInline (stackref a)
   (requires (fun m -> is_stack_region m.tip))
-  (ensures (fun m0 s m1 ->
-      is_stack_region m0.tip
-    /\ Map.domain m0.h == Map.domain m1.h
-    /\ m0.tip = m1.tip
-    /\ s.id   = m1.tip
-    /\ HH.fresh_rref s.ref m0.h m1.h            //it's a fresh reference in the top frame
-    /\ m1==HyperStack.upd m0 s init))           //and it's been initialized
+  (ensures salloc_post init)
+
+assume val salloc_mm: #a:Type -> init:a -> StackInline (mmstackref a)
+  (requires (fun m -> is_stack_region m.tip))
+  (ensures salloc_post init)
+
+let remove_reference (#a:Type) (r:reference a{r.mm}) (m:mem{r.id `is_in` m.h}) :GTot mem =
+  let h = Map.sel m.h r.id in
+  //d' = (Heap.domain h) \ {r}
+  let d' = TSet.intersect (Heap.domain h) (TSet.complement (TSet.singleton (Heap.Ref (HH.as_ref r.ref)))) in
+  let h' = Heap.restrict h d' in
+  HS (Map.upd m.h r.id h') m.tip
+
+assume val sfree: #a:Type -> r:mmstackref a -> StackInline unit
+    (requires (fun m0 -> r.id = m0.tip /\ m0 `contains` r))
+    (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
 
 let fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
   not (r `is_in` m0.h)
@@ -137,7 +154,7 @@ assume val new_region: r0:HH.rid -> ST HH.rid
 			/\ m1.tip = m0.tip
 			))
 
-let is_eternal_color c = c <= 0
+let is_eternal_color = HS.is_eternal_color
 
 assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
       (requires (fun m -> is_eternal_color c /\ is_eternal_region r0))
@@ -149,7 +166,7 @@ assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
 			/\ m1.tip = m0.tip
 			))
 
-inline let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:ref a) (m1:mem) =
+inline let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
     let region_i = Map.sel m0.h i in
     not (Heap.contains region_i (HH.as_ref x.ref))
   /\ i `is_in` m0.h
@@ -159,6 +176,14 @@ inline let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:ref a) (m1:mem)
 assume val ralloc: #a:Type -> i:HH.rid -> init:a -> ST (ref a)
     (requires (fun m -> is_eternal_region i))
     (ensures (ralloc_post i init))
+
+assume val ralloc_mm: #a:Type -> i:HH.rid -> init:a -> ST (mmref a)
+    (requires (fun _ -> is_eternal_region i))
+    (ensures (ralloc_post i init))
+
+assume val rfree: #a:Type -> r:mmref a -> ST unit
+    (requires (fun m0 -> m0 `contains` r))
+    (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
 
 inline let assign_post (#a:Type) (r:reference a) (v:a) m0 (_u:unit) m1 =
   m0 `contains` r /\ m1 == HyperStack.upd m0 r v
@@ -194,7 +219,7 @@ assume val get: unit -> Stack mem
   (ensures (fun m0 x m1 -> m0==x /\ m1==m0))
 
 (**
-   We can only recall refs, not stack refs
+   We can only recall refs with mm bit unset, not stack refs
    *)
 assume val recall: #a:Type -> r:ref a -> Stack unit
   (requires (fun m -> True))
@@ -399,3 +424,50 @@ assume val as_stack: #a:Type -> #wp:st_wp a -> $f:(unit -> STATE a wp) ->
 			      (as_ensures wp))
 	        (requires (forall s0 x s1. as_ensures wp s0 x s1 ==> equal_domains s0 s1))
  	        (ensures (fun x -> True))
+
+val mm_tests: unit -> Unsafe unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True))
+let mm_tests _ =
+  let _ = push_frame () in
+
+  let r1 = salloc_mm 2 in
+
+  //check that the heap contains the reference
+  let m = get () in
+  let h = Map.sel m.h m.tip in
+  let _ = assert (Heap.contains h (HH.as_ref r1.ref)) in
+
+  let _ = !r1 in
+
+  let _ = sfree r1 in
+
+  //this fails because the ref has been freed
+  //let _ = !r1 in
+
+  //check that the heap does not contain the reference
+  let m = get () in
+  let h = Map.sel m.h m.tip in
+  let _ = assert (not (Heap.contains h (HH.as_ref r1.ref))) in
+
+  let r2 = salloc_mm 2 in
+  let _ = pop_frame () in
+
+  //this fails because the reference is no longer live
+  //let _ = sfree r2 in
+
+  let id = new_region HH.root in
+
+  let r3 = ralloc_mm id 2 in
+  let _ = !r3 in
+  let _ = rfree r3 in
+
+  //check that the heap does not contain the reference
+  let m = get () in
+  let h = Map.sel m.h id in
+  let _ = assert (not (Heap.contains h (HH.as_ref r3.ref))) in
+
+  //this fails because the reference is no longer live
+  //let _ = !r3 in
+
+  //this fails because recall of mm refs is not allowed
+  //let _ = recall r3 in
+  ()
