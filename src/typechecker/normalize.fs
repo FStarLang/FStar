@@ -861,9 +861,11 @@ and norm_comp : cfg -> env -> comp -> comp =
 
             | Comp ct -> 
               let norm_args args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
+              let flags = ct.flags |> List.map (function DECREASES t -> DECREASES (norm cfg env [] t) | f -> f) in
               {comp with n=Comp ({ct with comp_univs=List.map (norm_universe cfg env) ct.comp_univs;
                                           result_typ=norm cfg env [] ct.result_typ;
-                                          effect_args=norm_args ct.effect_args})}
+                                          effect_args=norm_args ct.effect_args;
+                                          flags=flags})}
 
 (* Promotes Ghost T, when T is not informative to Pure T
         Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
