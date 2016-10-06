@@ -1057,7 +1057,7 @@ end else begin
 end
 in (
 
-let c = if ((((FStar_TypeChecker_Env.should_verify env) && (not ((FStar_Syntax_Util.is_lcomp_partial_return c)))) && (not ((FStar_Syntax_Util.non_informative c.FStar_Syntax_Syntax.res_typ)))) && (FStar_Syntax_Util.is_pure_or_ghost_lcomp c)) then begin
+let c = if ((((FStar_TypeChecker_Env.should_verify env) && (not ((FStar_Syntax_Util.is_lcomp_partial_return c)))) && (not ((FStar_Syntax_Util.is_unit c.FStar_Syntax_Syntax.res_typ)))) && (FStar_Syntax_Util.is_pure_or_ghost_lcomp c)) then begin
 (FStar_TypeChecker_Util.maybe_assume_result_eq_pure_term env e c)
 end else begin
 c
@@ -2310,7 +2310,7 @@ in (
 let g = (FStar_TypeChecker_Rel.conj_guard ghead guard)
 in (
 
-let refine_with_equality = (((not ((FStar_Syntax_Util.non_informative cres.FStar_Syntax_Syntax.res_typ))) && (FStar_Syntax_Util.is_pure_or_ghost_lcomp cres)) && (FStar_All.pipe_right arg_comps_rev (FStar_Util.for_some (fun _58_5 -> (match (_58_5) with
+let refine_with_equality = (((not ((FStar_Syntax_Util.is_unit cres.FStar_Syntax_Syntax.res_typ))) && (FStar_Syntax_Util.is_pure_or_ghost_lcomp cres)) && (FStar_All.pipe_right arg_comps_rev (FStar_Util.for_some (fun _58_5 -> (match (_58_5) with
 | (_58_1487, _58_1489, None) -> begin
 false
 end
