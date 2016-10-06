@@ -183,7 +183,7 @@ total new_effect { (* The definition of the PURE effect is fixed; no user should
 
 effect Pure (a:Type) (pre:pure_pre) (post:pure_post a) =
         PURE a
-             (fun (p:pure_post a) -> pre /\ (forall (x:a). pre /\ post x ==> p x)) // pure_wp
+             (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x)) // pure_wp
 effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 
 (* The primitive effect Tot is definitionally equal to an instance of PURE *)

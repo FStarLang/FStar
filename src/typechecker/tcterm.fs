@@ -428,6 +428,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     then Util.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
     let c = if Env.should_verify env
             && not (Util.is_lcomp_partial_return c)
+            && not (Util.non_informative c.res_typ)
             && Util.is_pure_or_ghost_lcomp c //ADD_EQ_REFINEMENT for pure applications
             then TcUtil.maybe_assume_result_eq_pure_term env e c
             else c in
@@ -962,7 +963,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 let refine_with_equality =
                     //if the function is pure, but its arguments are not, then add an equality refinement here
                     //OW, for pure applications we always add an equality at the end; see ADD_EQ_REFINEMENT below
-                    Util.is_pure_or_ghost_lcomp cres
+                    not (Util.non_informative cres.res_typ)
+                    && Util.is_pure_or_ghost_lcomp cres
                     && arg_comps_rev |> Util.for_some (function 
                         | (_, _, None) -> false 
                         | (_, _, Some c) -> not (Util.is_pure_or_ghost_lcomp c)) in
