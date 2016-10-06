@@ -289,7 +289,9 @@ let ask_and_report_errors env all_labels prefix query suffix =
 let solve use_env_msg tcenv q : unit =
     Encode.push (Util.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
     let tcenv = incr_query_index tcenv in
+    Term.use_query_table();
     let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
+    Term.drop_query_table();
     let pop () = Encode.pop (Util.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     match qry with
     | Assume({tm=App(False, _)}, _, _) -> pop(); ()

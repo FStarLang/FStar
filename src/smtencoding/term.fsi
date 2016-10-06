@@ -94,7 +94,8 @@ type decls_t = list<decl>
 
 type error_label = (fv * string * Range.range)
 type error_labels = list<error_label>
-
+val use_query_table:unit -> unit
+val drop_query_table: unit -> unit
 val mk: term' -> term
 val fv_eq : fv -> fv -> bool
 val fv_of_term : term -> fv
