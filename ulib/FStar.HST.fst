@@ -424,3 +424,50 @@ assume val as_stack: #a:Type -> #wp:st_wp a -> $f:(unit -> STATE a wp) ->
 			      (as_ensures wp))
 	        (requires (forall s0 x s1. as_ensures wp s0 x s1 ==> equal_domains s0 s1))
  	        (ensures (fun x -> True))
+
+val mm_tests: unit -> Unsafe unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True))
+let mm_tests _ =
+  let _ = push_frame () in
+
+  let r1 = salloc_mm 2 in
+
+  //check that the heap contains the reference
+  let m = get () in
+  let h = Map.sel m.h m.tip in
+  let _ = assert (Heap.contains h (HH.as_ref r1.ref)) in
+
+  let _ = !r1 in
+
+  let _ = sfree r1 in
+
+  //this fails because the ref has been freed
+  //let _ = !r1 in
+
+  //check that the heap does not contain the reference
+  let m = get () in
+  let h = Map.sel m.h m.tip in
+  let _ = assert (not (Heap.contains h (HH.as_ref r1.ref))) in
+
+  let r2 = salloc_mm 2 in
+  let _ = pop_frame () in
+
+  //this fails because the reference is no longer live
+  //let _ = sfree r2 in
+
+  let id = new_region HH.root in
+
+  let r3 = ralloc_mm id 2 in
+  let _ = !r3 in
+  let _ = rfree r3 in
+
+  //check that the heap does not contain the reference
+  let m = get () in
+  let h = Map.sel m.h id in
+  let _ = assert (not (Heap.contains h (HH.as_ref r3.ref))) in
+
+  //this fails because the reference is no longer live
+  //let _ = !r3 in
+
+  //this fails because recall of mm refs is not allowed
+  //let _ = recall r3 in
+  ()
