@@ -452,13 +452,15 @@ let reduce_primops steps tm =
               begin match (SS.compress a1).n, (SS.compress a2).n with
                 | Tm_app (head1, [ arg1, _ ]), Tm_app (head2, [ arg2, _ ]) ->
                     begin match (SS.compress head1).n, (SS.compress head2).n, (SS.compress arg1).n, (SS.compress arg2).n with
-                    | Tm_fvar ({ fv_name = { v = lid}}),
-                      Tm_fvar ({ fv_name = { v = lid'}}),
+                    | Tm_fvar fv1, Tm_fvar fv2,
                       Tm_constant (Const.Const_int (i, None)),
                       Tm_constant (Const.Const_int (j, None))
-                      when Util.ends_with (Ident.text_of_lid lid) "int_to_t" &&
-                      Util.ends_with (Ident.text_of_lid lid') "int_to_t" ->
-                        norm i j
+                      when Util.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" &&
+                      Util.ends_with (Ident.text_of_lid fv2.fv_name.v) "int_to_t" ->
+                        // Machine integers are represented as applications, e.g.
+                        // [FStar.UInt8.uint_to_t 0xff], so as to get proper
+                        // bounds checking. Maintain that invariant.
+                        mk_app (mk (Tm_fvar fv1) tm.pos) [ norm i j, None ]
                     | _ ->
                         tm
                     end

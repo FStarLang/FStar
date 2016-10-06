@@ -230,6 +230,9 @@ let lemma_sel_elem h0 h1 acc block r =
   let d = reveal prime in
   lemma_mod_plus_mul_distr a b c d
 
+let test () =
+  U32 (2ul *^ nlength -^ 1ul)
+
 (**
     Runs "Acc = ((Acc+block)*r) % p." on the accumulator, the well formatted block of the message
     and the clamped part of the key
