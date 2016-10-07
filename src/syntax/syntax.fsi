@@ -401,5 +401,7 @@ val fv_to_tm:       fv -> term
 val fvar:           lident -> delta_depth -> option<fv_qual> -> term
 val fv_eq:          fv -> fv -> bool
 val fv_eq_lid:      fv -> lident -> bool
+val range_of_fv:    fv -> range
+val lid_of_fv:      fv -> lid
 
 

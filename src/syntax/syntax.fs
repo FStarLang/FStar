@@ -488,3 +488,5 @@ let lid_as_fv l dd dq : fv = {
 }
 let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) None (range_of_lid fv.fv_name.v)
 let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq) 
+let lid_of_fv (fv:fv) = fv.fv_name.v
+let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)

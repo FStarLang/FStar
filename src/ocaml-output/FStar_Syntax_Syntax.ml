@@ -2100,5 +2100,12 @@ let fvar : FStar_Ident.lident  ->  delta_depth  ->  fv_qual Prims.option  ->  te
 in (fv_to_tm _127_1460)))
 
 
+let lid_of_fv : fv  ->  FStar_Ident.lid = (fun fv -> fv.fv_name.v)
+
+
+let range_of_fv : fv  ->  FStar_Range.range = (fun fv -> (let _127_1465 = (lid_of_fv fv)
+in (FStar_Ident.range_of_lid _127_1465)))
+
+
 
 
