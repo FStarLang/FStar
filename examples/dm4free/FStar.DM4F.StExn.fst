@@ -72,11 +72,11 @@ val div_intrinsic : i:nat -> j:int -> StExn int
                         | None -> h0 + 1 = h1 /\ j=0
                         | Some z -> h0 = h1 /\ j<>0 /\ z = i / j))
 let div_intrinsic i j =
-  if j=0 then raise int
+  if j = 0 then raise int
   else i / j
 
 reifiable let div_extrinsic (i:nat) (j:int) : S int =
-  if j=0 then raise int
+  if j = 0 then raise int
   else i / j
 
 let lemma_div_extrinsic (i:nat) (j:int) :

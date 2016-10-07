@@ -46,7 +46,7 @@ sub_effect PURE ~> EXNST = lift_pure_exnst
 (* A lift from a previously defined state effect *)
 val lift_state_exnst_wp : (a:Type) -> IntST.wp a -> wp a
 let lift_state_exnst_wp a wp (h0:int) (p:post a) =
-        wp h0 (function r -> p (Some r))
+        wp h0 (fun r -> p (Some r))
 
 val lift_state_exnst : (a:Type) ->
                        (wp:IntST.wp a) -> (f:IntST.repr a wp) ->

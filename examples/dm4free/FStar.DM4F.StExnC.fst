@@ -1,4 +1,4 @@
-module FStar.DM4F.StExn
+module FStar.DM4F.StExnC
 
 (**********************************************************
  * Dijkstra Monads for Free : State with exceptions
@@ -10,19 +10,23 @@ module FStar.DM4F.StExn
  *
  **********************************************************)
 
-(* TODO: parametrize heap? *)
+(* TODO: parametrize heap? not sure that it can be done easily:
+ *       we can't write a lift unless we instantiate it to a proper
+ *       effect, and using FStar.DM4F.Heap does not give us an
+ *       equality comparison of heaps, difficulting our last example.
+ *)
 
 (* The underlying representation type. The two ints are
  * resulting state and exception count, respectively. *)
-let stexn a =
+let stexnc a =
   int -> M (option a * (int * int))
 
 (* Monad definition *)
-val return : (a:Type) -> (x:a) -> stexn a
+val return : (a:Type) -> (x:a) -> stexnc a
 let return a x = fun s -> Some x, (s, 0)
 
 val bind : (a:Type) -> (b:Type) ->
-           (f:stexn a) -> (g:a -> stexn b) -> stexn b
+           (f:stexnc a) -> (g:a -> stexnc b) -> stexnc b
 let bind a b f g =
   fun s0 ->
     (* TODO: need to letbind f s0 to match on it; expected? idem grs1 *)
@@ -33,76 +37,85 @@ let bind a b f g =
                           match grs1 with
                           | res, (s, c2) -> res, (s, c1 + c2)
 
-let put (s:int) : stexn unit =
+let put (s:int) : stexnc unit =
         fun s0 -> (Some (), (s0, 0))
 
-let get (_:unit) : stexn int =
+let get (_:unit) : stexnc int =
         fun s0 -> (Some s0, (s0, 0))
 
 (* Same error as StExn *)
-let raise (a:Type) : stexn a =
-        fun s0 -> (None, (s0, 1))
+//let raise (a:Type) : stexnc a =
+//        fun s0 -> (None, (s0, 1))
 
 (*
  * Define the new effect using DM4F. We don't mark it as reflectable
  * so we know the invariant of exception-counting is enforced
  *)
-reifiable new_effect_for_free {
-  STEXN: a:Type -> Effect
-  with repr    = stexn
+(* TODO: remove reflectable *)
+reifiable reflectable new_effect_for_free {
+  STEXNC: a:Type -> Effect
+  with repr    = stexnc
      ; return  = return
      ; bind    = bind
   and effect_actions
        put     = put
      ; get     = get
-     ; raise   = raise
+     //; raise   = raise
 }
 
-let pre  = STEXN.pre
-let post = STEXN.post
-let wp   = STEXN.wp
-let repr = STEXN.repr
+let pre  = STEXNC.pre
+let post = STEXNC.post
+let wp   = STEXNC.wp
+let repr = STEXNC.repr
 
 (* A lift from Pure *)
-inline let lift_pure_stexn (a:Type) (wp:pure_wp a) (h0:int) (p:post a) =
+inline let lift_pure_stexnc (a:Type) (wp:pure_wp a) (h0:int) (p:post a) =
         wp (fun a -> p (Some a, (h0, 0)))
-sub_effect PURE ~> STEXN = lift_pure_stexn
+sub_effect PURE ~> STEXNC = lift_pure_stexnc
 
-(* NOTE: no lift from IntST.STATE to StateExn, since that would break
+(* NOTE: no lift from STEXN to STEXNC, since that would break
          the abstraction of counting exceptions *)
 
-(* TODO: but why? there are no exception in IntST. Maybe StExn is meant?  *)
-
 (* Pre-/postcondition variant *)
-effect StExn (a:Type) (req:pre) (ens:int -> option a -> int -> int -> GTot Type0) =
-       STEXN a
+effect StExnC (a:Type) (req:pre) (ens:int -> option a -> int -> int -> GTot Type0) =
+       STEXNC a
          (fun (h0:int) (p:post a) -> req h0
           /\ (forall (r:option a) (h1:int) (c:int).
-                 (req h0 /\ ens h0 r h1) ==> p (r, (h1, c))))
+                 (req h0 /\ ens h0 r h1 c) ==> p (r, (h1, c))))
 
 (* Total variant *)
-effect S (a:Type) =
-       STEXN a (fun h0 p -> forall x. p x)
+effect SC (a:Type) =
+       STEXNC a (fun h0 p -> forall x. p x)
 
-(* This rightfully fails, since StateExn is not reflectable *)
+(* This rightfully fails, since STEXNC is not reflectable *)
 
-// reifiable let f (a:Type) : STEXN a (fun h0 post -> post (None, h0)) =
-//         STEXN.reflect (fun h0 -> None, h0)
+// val f_impl : (a:Type) -> repr a (fun h0 post -> post (None, (h0, 0)))
+// let f_impl a = fun h0 -> None, (h0, 0)
+//
+// reifiable let f (a:Type) : STEXNC a (fun h0 post -> post (None, (h0, 0))) =
+//         STEXNC.reflect (f_impl a)
 
-val div_intrinsic : i:nat -> j:int -> StExn int
+(* TODO: remove and make proper action *)
+val raise_impl : (a:Type) -> repr a (fun h0 p -> p (None, (h0, 1)))
+let raise_impl a h0 = (None, (h0, 1))
+
+reifiable val raise : (a:Type) -> STEXNC a (fun h0 p -> p (None, (h0, 1)))
+reifiable let raise a = STEXNC.reflect (raise_impl a)
+
+val div_intrinsic : i:nat -> j:int -> StExnC int
   (requires (fun h -> True))
-  (ensures (fun h0 x h1 -> match x with
-                        | None -> h0 + 1 = h1 /\ j=0
-                        | Some z -> h0 = h1 /\ j<>0 /\ z = i / j))
+  (ensures (fun h0 x h1 c -> match x with
+                        | None -> h0 = h1 /\ c = 1 /\ j = 0
+                        | Some z -> h0 = h1 /\ c = 0 /\ j <> 0 /\ z = i / j))
 let div_intrinsic i j =
-  if j=0 then raise int
+  if j = 0 then raise int
   else i / j
 
-reifiable let div_extrinsic (i:nat) (j:int) : S int =
-  if j=0 then raise int
+reifiable let div_extrinsic (i:nat) (j:int) : SC int =
+  if j = 0 then raise int
   else i / j
 
-let lemma_div_extrinsic (i:nat) (j:int) :
-  Lemma (match reify (div_extrinsic i j) 0 with
-         | None, 1 -> j = 0
-         | Some z, 0 -> j <> 0 /\ z = i / j) = ()
+let lemma_div_extrinsic (i:nat) (j:int) (h0:int) :
+  Lemma (match reify (div_extrinsic i j) h0 with
+         | None, (h1, 1) -> h1 = h0 /\ j = 0
+         | Some z, (h1, 0) -> h1 = h0 /\ j <> 0 /\ z = i / j) = ()
