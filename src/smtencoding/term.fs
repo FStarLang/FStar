@@ -193,16 +193,46 @@ let hash_of_term' t = match t with
             (pats |> List.map (fun pats -> (List.map (fun p -> p.hash) pats |> String.concat " ")) |> String.concat "; ")
 
 //The hash-cons table
-let __all_terms = ref (Util.smap_create<term> 10000)
-let all_terms () = !__all_terms
-let mk t =
-    let key = hash_of_term' t in
-    match Util.smap_try_find (all_terms()) key with
-        | Some tm -> tm
-        | None ->
+type hash_cons_tab = {
+    mk_term: term' -> term;
+    use_query_table: unit -> unit;
+    drop_query_table: unit -> unit
+}
+
+let hct = 
+    let background_terms=Util.smap_create 10000 in
+    let query_specific_terms=Util.smap_create 10000 in
+    let use_query_map = ref false in
+    let find_in_maps key = 
+        match Util.smap_try_find background_terms key with 
+        | Some tm -> Some tm
+        | None -> Util.smap_try_find query_specific_terms key
+    in
+    let add_to_map key tm = 
+        if !use_query_map
+        then Util.smap_add query_specific_terms key tm
+        else Util.smap_add background_terms key tm
+    in
+    let mk_term t =
+       let key = hash_of_term' t in 
+       match find_in_maps key with
+       | Some tm -> tm
+       | None -> 
           let tm = {tm=t; hash=key; freevars=Util.mk_ref None} in
-          Util.smap_add (all_terms()) key tm;
+          add_to_map key tm;
           tm
+    in
+    let use_query_table () = use_query_map := true in
+    let drop_query_table () = 
+        use_query_map := false;
+        Util.smap_clear query_specific_terms in
+    {mk_term=mk_term;
+     use_query_table=use_query_table;
+     drop_query_table=drop_query_table}
+
+let mk t = hct.mk_term t
+let use_query_table () = hct.use_query_table()
+let drop_query_table () = hct.drop_query_table()
 
 let mkTrue       = mk (App(True, []))
 let mkFalse      = mk (App(False, []))

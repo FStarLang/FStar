@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>Overloads.fst</StartArguments>
+    <StartArguments>--fstar_home ../../.. --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --z3timeout 20   --hint_info --log_queries --include ../../../ulib/hyperheap --include ../../../ucontrib/Platform/fst MemoryHog.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\examples\test\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\FStar\examples\low-level\crypto\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
