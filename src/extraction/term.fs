@@ -353,17 +353,32 @@ let bv_as_mlty (g:env) (bv:bv) =
         a bloated type is atleast as good as unknownType?
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
-let rec term_as_mlty (g:env) (t:term) : mlty =
-    let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
-    term_as_mlty' g t
+let rec term_as_mlty (g:env) (t0:term) : mlty =
+    let rec is_top_ty t = match t with
+        | MLTY_Top -> true
+        | MLTY_Named _ ->
+          begin match Util.udelta_unfold g t with
+                | None -> false
+                | Some t -> is_top_ty t
+          end
+        | _ -> false
+    in
+    let t = N.normalize [N.Beta; N.Inline; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
+    let mlt = term_as_mlty' g t in
+    if is_top_ty mlt
+    then //Try normalizing t fully, this time with Delta steps, and translate again, to see if we can get a better translation for it
+         let t = N.normalize [N.Beta; N.Inline; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
+         term_as_mlty' g t
+    else mlt
 
 and term_as_mlty' env t =
      let t = SS.compress t in
      match t.n with
-      | Tm_constant _
       | Tm_bvar _
       | Tm_delayed _
       | Tm_unknown -> failwith (Util.format1 "Impossible: Unexpected term %s" (Print.term_to_string t))
+
+      | Tm_constant _ -> unknownType
 
       | Tm_uvar _ -> unknownType //really shouldn't have any uvars left; TODO: fatal failure?
 
@@ -482,7 +497,7 @@ let mk_MLE_Seq e1 e2 = match e1.expr, e2.expr with
 *)
 let mk_MLE_Let top_level (lbs:mlletbinding) (body:mlexpr) = 
     match lbs with 
-       | (NoLetQualifier, [lb]) when not top_level -> 
+       | (NonRec, quals, [lb]) when not top_level -> 
          (match lb.mllb_tysc with
           | Some ([], t) when (t=ml_unit_ty) -> 
             if body.expr=ml_unit.expr 
@@ -728,12 +743,12 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_meta (t, Meta_desugared Mutable_alloc) ->
             // the lack of as-patterns makes this a little bit heavy
             begin match term_as_mlexpr' g t with
-            | { expr = MLE_Let ((NoLetQualifier, bodies), continuation);
+            | { expr = MLE_Let ((NonRec, flags, bodies), continuation);
                 mlty = mlty;
                 loc = loc
               }, tag, typ ->
                 {
-                  expr = MLE_Let ((Mutable, bodies), continuation);
+                  expr = MLE_Let ((NonRec, Mutable :: flags, bodies), continuation);
                   mlty = mlty;
                   loc = loc
                 }, tag, typ
@@ -809,12 +824,20 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           ml, E_IMPURE, mlty
 
         | Tm_app(head, args) ->
-          begin match head.n with
-            | Tm_uvar _ ->
+          let is_total = function 
+            | Inl l -> FStar.Syntax.Util.is_total_lcomp l 
+            | Inr l -> Ident.lid_equals l FStar.Syntax.Const.effect_Tot_lid in
+          begin match head.n, (SS.compress head).n with
+            | Tm_uvar _, _ -> //This should be a resolved uvar --- so reduce it before extraction
+              let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
+              term_as_mlexpr' g t
+
+            | _, Tm_abs(bs, _, Some lc) when is_total lc -> //this is a beta_redex --- also reduce it before extraction 
               let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
               term_as_mlexpr' g t
 
             | _ ->
+              
               let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
     //            Printf.printf "synth_app restArgs=%d, t=%A\n" (List.length restArgs) t;
                 match restArgs, t with
@@ -844,7 +867,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         let app = maybe_eta_data_and_project_record g is_data t <| (with_ty t <| MLE_App(mlhead, mlargs)) in
                         let l_app = List.fold_right
                             (fun (x, arg) out ->
-                                with_ty out.mlty <| mk_MLE_Let false (NoLetQualifier, [{mllb_name=x; mllb_tysc=Some ([], arg.mlty); mllb_add_unit=false; mllb_def=arg; print_typ=true}]) out)
+                              with_ty out.mlty <| mk_MLE_Let false (NonRec, [], [{mllb_name=x; mllb_tysc=Some ([], arg.mlty); mllb_add_unit=false; mllb_def=arg; print_typ=true}]) out)
                             lbs app in // lets are to ensure L to R eval ordering of arguments
                         l_app, f, t
 
@@ -946,10 +969,17 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             else if is_top_level lbs
                  then lbs, e'
                  else let lb = List.hd lbs in
-                    let x = S.freshen_bv (left lb.lbname) in
-                    let lb = {lb with lbname=Inl x} in
-                    let e' = SS.subst [DB(0, x)] e' in
-                    [lb], e' in
+                      let x = S.freshen_bv (left lb.lbname) in
+                      let lb = {lb with lbname=Inl x} in
+                      let e' = SS.subst [DB(0, x)] e' in
+                      [lb], e' in
+          let lbs =
+            if top_level
+            then lbs |> List.map (fun lb ->
+                    let lbdef = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.Inline; N.Exclude N.Zeta; N.PureSubtermsWithinComputations; N.Primops] 
+                                g.tcenv lb.lbdef in
+                    {lb with lbdef=lbdef})
+            else lbs in
             //          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
           let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=t; lbdef=e} 
             : lbname //just lbname returned back
@@ -1077,9 +1107,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
           let f = join_l e'_rng (f'::List.map fst lbs) in
 
-          let is_rec = if is_rec = true then Rec else NoLetQualifier in
+          let is_rec = if is_rec = true then Rec else NonRec in
 
-          with_ty_loc t' (mk_MLE_Let top_level (is_rec, List.map snd lbs) e') (Util.mlloc_of_range t.pos), f, t'
+          with_ty_loc t' (mk_MLE_Let top_level (is_rec, [], List.map snd lbs) e') (Util.mlloc_of_range t.pos), f, t'
 
       | Tm_match(scrutinee, pats) ->
         let e, f_e, t_e = term_as_mlexpr g scrutinee in
@@ -1193,4 +1223,4 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
                                     // Note: it is legal in OCaml to write [Foo _] for a constructor with zero arguments, so don't bother.
                                    [MLP_CTor(mlpath_of_lident constrName, [MLP_Wild]), None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool true);
                                     MLP_Wild, None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool false)]))) in
-    MLM_Let (NoLetQualifier,[{mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody; print_typ=false}] )
+    MLM_Let (NonRec,[], [{mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody; print_typ=false}] )

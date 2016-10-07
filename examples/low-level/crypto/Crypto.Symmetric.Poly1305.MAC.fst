@@ -26,8 +26,8 @@ let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 // this flag enables conditional idealization by keeping additional data,
 // - this should not affect the code behavior
 // - this may cause the code not to compile to Kremlin/C.
-assume val ideal: bool
-//let ideal = true
+// assume val ideal: bool
+inline let ideal = false
 
 // we will need authId i ==> ideal?
 
@@ -374,7 +374,7 @@ val add:
     /\ (ideal ==> sel_elem h a = poly (reveal l0) (sel_elem h st.r))))
   (ensures (fun h0 l1 h1 ->
     modifies_1 a h0 h1 /\ norm h1 a /\
-    (ideal ==> reveal l1 = SeqProperties.snoc (reveal l0) (encode_16 (sel_word h0 w)) /\
+    (ideal ==> reveal l1 = SeqProperties.snoc (reveal l0) (encode (sel_word h0 w)) /\
              sel_elem h1 a = poly (reveal l1) (sel_elem h0 st.r))))
 
 let add #i st l0 a w =

@@ -458,15 +458,19 @@ type mlexpr' =
 {expr : mlexpr'; mlty : mlty; loc : mlloc} 
  and mllb =
 {mllb_name : mlident; mllb_tysc : mltyscheme Prims.option; mllb_add_unit : Prims.bool; mllb_def : mlexpr; print_typ : Prims.bool} 
- and mlletflavor =
-| Rec
+ and c_flag =
 | Mutable
 | Assumed
-| NoLetQualifier 
+| Private 
+ and mlletflavor =
+| Rec
+| NonRec 
  and mlbranch =
 (mlpattern * mlexpr Prims.option * mlexpr) 
  and mlletbinding =
-(mlletflavor * mllb Prims.list)
+(mlletflavor * c_flags * mllb Prims.list) 
+ and c_flags =
+c_flag Prims.list
 
 
 let is_MLE_Const = (fun _discr_ -> (match (_discr_) with
@@ -619,15 +623,6 @@ let is_Mkmlexpr : mlexpr  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.fail
 let is_Mkmllb : mllb  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmllb"))))
 
 
-let is_Rec = (fun _discr_ -> (match (_discr_) with
-| Rec (_) -> begin
-true
-end
-| _ -> begin
-false
-end))
-
-
 let is_Mutable = (fun _discr_ -> (match (_discr_) with
 | Mutable (_) -> begin
 true
@@ -646,8 +641,26 @@ false
 end))
 
 
-let is_NoLetQualifier = (fun _discr_ -> (match (_discr_) with
-| NoLetQualifier (_) -> begin
+let is_Private = (fun _discr_ -> (match (_discr_) with
+| Private (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let is_Rec = (fun _discr_ -> (match (_discr_) with
+| Rec (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+
+let is_NonRec = (fun _discr_ -> (match (_discr_) with
+| NonRec (_) -> begin
 true
 end
 | _ -> begin
@@ -1012,10 +1025,10 @@ in (with_ty_loc MLTY_Top (MLE_App (((obj_repr), ((x)::[])))) x.loc)))
 
 
 let bv_as_mlident : FStar_Syntax_Syntax.bv  ->  (Prims.string * Prims.int) = (fun x -> if ((FStar_Util.starts_with x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText FStar_Ident.reserved_prefix) || (FStar_Syntax_Syntax.is_null_bv x)) then begin
-(let _165_723 = (let _165_722 = (let _165_721 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
-in (Prims.strcat "_" _165_721))
-in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _165_722))
-in ((_165_723), ((Prims.parse_int "0"))))
+(let _165_724 = (let _165_723 = (let _165_722 = (FStar_Util.string_of_int x.FStar_Syntax_Syntax.index)
+in (Prims.strcat "_" _165_722))
+in (Prims.strcat x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText _165_723))
+in ((_165_724), ((Prims.parse_int "0"))))
 end else begin
 ((x.FStar_Syntax_Syntax.ppname.FStar_Ident.idText), ((Prims.parse_int "0")))
 end)

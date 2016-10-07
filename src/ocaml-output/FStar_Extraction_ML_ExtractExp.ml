@@ -728,7 +728,7 @@ in (
 
 let l_app = (FStar_List.fold_right (fun _77_613 out -> (match (_77_613) with
 | (x, arg) -> begin
-(FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty out.FStar_Extraction_ML_Syntax.mlty) (FStar_Extraction_ML_Syntax.MLE_Let (((((FStar_Extraction_ML_Syntax.NoLetQualifier), (({FStar_Extraction_ML_Syntax.mllb_name = x; FStar_Extraction_ML_Syntax.mllb_tysc = Some ((([]), (arg.FStar_Extraction_ML_Syntax.mlty))); FStar_Extraction_ML_Syntax.mllb_add_unit = false; FStar_Extraction_ML_Syntax.mllb_def = arg; FStar_Extraction_ML_Syntax.print_typ = true})::[]))), (out)))))
+(FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty out.FStar_Extraction_ML_Syntax.mlty) (FStar_Extraction_ML_Syntax.MLE_Let (((((FStar_Extraction_ML_Syntax.NonRec), ([]), (({FStar_Extraction_ML_Syntax.mllb_name = x; FStar_Extraction_ML_Syntax.mllb_tysc = Some ((([]), (arg.FStar_Extraction_ML_Syntax.mlty))); FStar_Extraction_ML_Syntax.mllb_add_unit = false; FStar_Extraction_ML_Syntax.mllb_def = arg; FStar_Extraction_ML_Syntax.print_typ = true})::[]))), (out)))))
 end)) lbs app)
 in ((l_app), (f), (t))))
 end))
@@ -1124,10 +1124,10 @@ in (
 let is_rec = if is_rec then begin
 FStar_Extraction_ML_Syntax.Rec
 end else begin
-FStar_Extraction_ML_Syntax.NoLetQualifier
+FStar_Extraction_ML_Syntax.NonRec
 end
 in (let _171_306 = (let _171_305 = (let _171_303 = (let _171_302 = (let _171_301 = (FStar_List.map Prims.snd lbs)
-in ((is_rec), (_171_301)))
+in ((is_rec), ([]), (_171_301)))
 in ((_171_302), (e')))
 in FStar_Extraction_ML_Syntax.MLE_Let (_171_303))
 in (let _171_304 = (FStar_Extraction_ML_Util.mlloc_of_range e.FStar_Absyn_Syntax.pos)
@@ -1378,7 +1378,7 @@ in (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_
 in (((FStar_List.append wildcards ((((mlid), (targ)))::[]))), (_171_374)))
 in FStar_Extraction_ML_Syntax.MLE_Fun (_171_375))
 in (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty disc_ty) _171_376))
-in FStar_Extraction_ML_Syntax.MLM_Let (((FStar_Extraction_ML_Syntax.NoLetQualifier), (({FStar_Extraction_ML_Syntax.mllb_name = (FStar_Extraction_ML_Env.convIdent discName.FStar_Ident.ident); FStar_Extraction_ML_Syntax.mllb_tysc = None; FStar_Extraction_ML_Syntax.mllb_add_unit = false; FStar_Extraction_ML_Syntax.mllb_def = discrBody; FStar_Extraction_ML_Syntax.print_typ = true})::[]))))))))))
+in FStar_Extraction_ML_Syntax.MLM_Let (((FStar_Extraction_ML_Syntax.NonRec), ([]), (({FStar_Extraction_ML_Syntax.mllb_name = (FStar_Extraction_ML_Env.convIdent discName.FStar_Ident.ident); FStar_Extraction_ML_Syntax.mllb_tysc = None; FStar_Extraction_ML_Syntax.mllb_add_unit = false; FStar_Extraction_ML_Syntax.mllb_def = discrBody; FStar_Extraction_ML_Syntax.print_typ = true})::[]))))))))))
 
 
 

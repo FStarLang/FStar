@@ -88,9 +88,9 @@ effect TSST    (a:Type)
 
 (* An abstract (box-style) modality for witnessed stable predicates. *)
 
-assume abstract type witnessed: ts:timestamp ->
-				p:predicate state{stable state_rel p} -> 
-				Type0
+assume type witnessed: ts:timestamp ->
+			p:predicate state{stable state_rel p} -> 
+			Type0
 
 
 (* Generic effects (operations) for preorder-indexed state monads. *)

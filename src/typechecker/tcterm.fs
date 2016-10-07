@@ -469,7 +469,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some guard_x, c_branches) in
     let e =
         let mk_match scrutinee =
-            let branches = List.map (fun (f, _, _, _) -> f) t_eqns in
+            let scrutinee = TypeChecker.Util.maybe_lift env scrutinee c1.eff_name cres.eff_name in
+            let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, lc, _) -> 
+                 (pat, wopt, TypeChecker.Util.maybe_lift env br lc.eff_name cres.eff_name)) in
             let e = mk (Tm_match(scrutinee, branches)) (Some cres.res_typ.n) top.pos in
              //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
             mk (Tm_ascribed(e, Inl cres.res_typ, Some cres.eff_name)) None e.pos in
@@ -486,7 +488,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                 lbeff=Env.norm_eff_name env c1.eff_name;
                 lbdef=e1;
              } in
-             mk (Tm_let((false, [lb]), SS.close [S.mk_binder guard_x] e_match)) (Some cres.res_typ.n) top.pos in
+             let e = mk (Tm_let((false, [lb]), SS.close [S.mk_binder guard_x] e_match)) (Some cres.res_typ.n) top.pos in
+             TypeChecker.Util.maybe_monadic env e cres.eff_name cres.res_typ in
     if debug env Options.Extreme
     then Util.print2 "(%s) comp type = %s\n"
                       (Range.string_of_range top.pos) (Print.comp_to_string <| cres.comp());
@@ -1459,7 +1462,6 @@ and check_inner_let env e =
        let env = {env with top_level=false} in
        let e1, _, c1, g1, annotated = check_let_bound_def false (Env.clear_expected_typ env |> fst) lb in
        let x = {Util.left lb.lbname with sort=c1.res_typ} in
-       let lb = Util.mk_letbinding (Inl x) [] c1.res_typ c1.eff_name e1 in
        let xb, e2 = SS.open_term [S.mk_binder x] e2 in
        let xbinder = List.hd xb in
        let x = fst xbinder in
@@ -1467,6 +1469,7 @@ and check_inner_let env e =
        let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some x, c2) in
        let e1 = TypeChecker.Util.maybe_lift env e1 c1.eff_name cres.eff_name in
        let e2 = TypeChecker.Util.maybe_lift env e2 c2.eff_name cres.eff_name in
+       let lb = Util.mk_letbinding (Inl x) [] c1.res_typ c1.eff_name e1 in
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) (Some cres.res_typ.n) e.pos in
        let e = TypeChecker.Util.maybe_monadic env e cres.eff_name cres.res_typ in
        let x_eq_e1 = NonTrivial <| Util.mk_eq c1.res_typ c1.res_typ (S.bv_to_name x) e1 in

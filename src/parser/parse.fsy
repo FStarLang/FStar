@@ -52,27 +52,30 @@ open FStar.Const
 open FStar.Ident
 
 let as_frag d ds =
-    let rec as_mlist out (m, cur) ds = match ds with
-        | [] -> List.rev (Module(m, List.rev cur)::out)
+    let rec as_mlist out ((m,r,doc), cur) ds = 
+    match ds with
+    | [] -> List.rev (Module(m, (mk_decl (TopLevelModule(m)) r doc) ::(List.rev cur))::out)
     | d::ds ->
       begin match d.d with
-        | TopLevelModule m' -> as_mlist (Module(m, List.rev cur)::out) (m', []) ds
-        | _ -> as_mlist out (m, d::cur) ds
+        | TopLevelModule m' -> 
+				as_mlist (Module(m, (mk_decl (TopLevelModule(m)) r doc) :: (List.rev cur))::out) ((m',d.drange,d.doc), []) ds
+        | _ -> as_mlist out ((m,r,doc), d::cur) ds
       end in
     match d.d with
-          | TopLevelModule m ->
-        let ms = as_mlist [] (m, []) ds in
+    | TopLevelModule m ->
+        let ms = as_mlist [] ((m,d.drange,d.doc), []) ds in
         begin match ms with
-          | _::Module(n, _)::_ ->
-            let msg = "Support for more than one module in a file is deprecated" in
-            print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid n)) msg
-          | _ -> ()
+        | _::Module(n, _)::_ ->
+		(* This check is coded to hard-fail in dep.num_of_toplevelmods. *)
+        let msg = "Support for more than one module in a file is deprecated" in
+        print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid n)) msg
+        | _ -> ()
         end;
         Inl ms
-      | _ ->
+    | _ ->
         let ds = d::ds in
         iter (function {d=TopLevelModule _; drange=r} -> raise (Error("Unexpected module declaration", r))
-                   | _ -> ()) ds;
+                       | _ -> ()) ds;
         Inr ds
 %}
 

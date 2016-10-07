@@ -1239,6 +1239,7 @@ and tc_inductive env ses quals lids =
 
 and tc_decl env se: list<sigelt> * _ = 
     let env = set_hint_correlator env se in
+    TcUtil.check_sigelt_quals se;
     match se with
     | Sig_inductive_typ _
     | Sig_datacon _ ->
@@ -1487,7 +1488,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
     | Sig_inductive_typ _
     | Sig_datacon _ -> failwith "Impossible"
 
-    | Sig_bundle(ses, quals, _, _) ->
+    | Sig_bundle(ses, quals, _, r) ->
       if is_abstract quals
       then List.fold_right (fun se (out, hidden) -> match se with
             | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) ->
