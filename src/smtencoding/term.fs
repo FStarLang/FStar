@@ -89,7 +89,7 @@ type term' =
                   * term             //body
   | Labeled    of term * string * Range.range
 and pat  = term
-and term = {tm:term'; hash:string; freevars:Syntax.memo<fvs>}
+and term = {tm:term'; freevars:Syntax.memo<fvs>}
 and fv = string * sort
 and fvs = list<fv>
 
@@ -178,19 +178,25 @@ let weightToSmt = function
     | None -> ""
     | Some i -> Util.format1 ":weight %s\n" (string_of_int i)
 
-let hash_of_term' t = match t with
+let rec hash_of_term' t = match t with
     | Integer i ->  i
     | BoundV i  -> "@"^string_of_int i
     | FreeV x   -> fst x ^ ":" ^ strSort (snd x) //Question: Why is the sort part of the hash?
-    | App(op, tms) -> "("^(op_to_string op)^(List.map (fun t -> t.hash) tms |> String.concat " ")^")"
-    | Labeled(t, r1, r2) -> t.hash ^ r1 ^ (Range.string_of_range r2)
+    | App(op, tms) -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
+    | Labeled(t, r1, r2) -> hash_of_term t ^ r1 ^ (Range.string_of_range r2)
     | Quant(qop, pats, wopt, sorts, body) ->
-        Util.format5 "(%s (%s)(! %s %s %s))"
-            (qop_to_string qop)
-            (List.map strSort sorts |> String.concat " ")
-            body.hash
-            (weightToSmt wopt)
-            (pats |> List.map (fun pats -> (List.map (fun p -> p.hash) pats |> String.concat " ")) |> String.concat "; ")
+                "("
+              ^ (qop_to_string qop)
+              ^ " ("
+              ^ (List.map strSort sorts |> String.concat " ")
+              ^ ")(! "
+              ^ (hash_of_term body)
+              ^ " "
+              ^ (weightToSmt wopt)
+              ^ " "
+              ^ (pats |> List.map (fun pats -> (List.map hash_of_term pats |> String.concat " ")) |> String.concat "; ")
+              ^ "))"
+and hash_of_term tm = hash_of_term' tm.tm
 
 //The hash-cons table
 type hash_cons_tab = {
@@ -199,41 +205,7 @@ type hash_cons_tab = {
     drop_query_table: unit -> unit
 }
 
-let hct = 
-    let background_terms=Util.smap_create 10000 in
-    let query_specific_terms=Util.smap_create 10000 in
-    let use_query_map = ref false in
-    let find_in_maps key = 
-        match Util.smap_try_find background_terms key with 
-        | Some tm -> Some tm
-        | None -> Util.smap_try_find query_specific_terms key
-    in
-    let add_to_map key tm = 
-        if !use_query_map
-        then Util.smap_add query_specific_terms key tm
-        else Util.smap_add background_terms key tm
-    in
-    let mk_term t =
-       let key = hash_of_term' t in 
-       match find_in_maps key with
-       | Some tm -> tm
-       | None -> 
-          let tm = {tm=t; hash=key; freevars=Util.mk_ref None} in
-          add_to_map key tm;
-          tm
-    in
-    let use_query_table () = use_query_map := true in
-    let drop_query_table () = 
-        use_query_map := false;
-        Util.smap_clear query_specific_terms in
-    {mk_term=mk_term;
-     use_query_table=use_query_table;
-     drop_query_table=drop_query_table}
-
-let mk t = hct.mk_term t
-let use_query_table () = hct.use_query_table()
-let drop_query_table () = hct.drop_query_table()
-
+let mk t = {tm=t; freevars=Util.mk_ref None}
 let mkTrue       = mk (App(True, []))
 let mkFalse      = mk (App(False, []))
 let mkInteger i  = mk (Integer (ensure_decimal i))
