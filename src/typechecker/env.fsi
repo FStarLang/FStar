@@ -110,34 +110,33 @@ val reset_mark  : env -> env
 val commit_mark : env -> env
 
 (* Checking the per-module debug level and position info *)
-val debug     : env -> Options.debug_level_t -> bool
-val set_range : env -> Range.range -> env
-val get_range : env -> Range.range
+val debug          : env -> Options.debug_level_t -> bool
+val current_module : env -> lident
+val set_range      : env -> Range.range -> env
+val get_range      : env -> Range.range
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
 val lookup_bv              : env -> bv -> typ
+val try_lookup_lid         : env -> lident -> option<(universes * typ)>
 val lookup_lid             : env -> lident -> (universes * typ)
 val lookup_univ            : env -> univ_name -> bool
-val try_lookup_lid         : env -> lident -> option<(universes * typ)>
 val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
 val lookup_val_decl        : env -> lident -> (universes * typ)
 val lookup_datacon         : env -> lident -> universes * typ
 val datacons_of_typ        : env -> lident -> list<lident>
 val typ_of_datacon         : env -> lident -> lident
 val lookup_definition      : delta_level -> env -> lident -> option<(univ_names * term)>
-
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
-val lookup_effect_quals    : env -> lident -> list<qualifier>
 val norm_eff_name          : (env -> lident -> lident)
+val lookup_effect_quals    : env -> lident -> list<qualifier>
 val lookup_projector       : env -> lident -> int -> lident
-val current_module         : env -> lident
 val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool
-val is_interpreted         : env -> term -> bool
+val is_interpreted         : (env -> term -> bool)
 val is_type_constructor    : env -> lident -> bool
 
 (* Universe instantiation *)
