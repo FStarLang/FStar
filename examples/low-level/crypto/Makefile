@@ -13,8 +13,6 @@ FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperheap --include $(FSTAR_HOM
 VERIFY= \
   FStar.HST.Monotonic.RRef \
   Buffer.Utils \
-  Math.Axioms \
-  Math.Lemmas \
   Crypto.Symmetric.Chacha20 \
   Crypto.Symmetric.Poly1305.Bigint \
   Crypto.Symmetric.Poly1305.Parameters \
