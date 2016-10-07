@@ -18,6 +18,7 @@
 module FStar.Syntax.Subst
 
 open FStar
+open FStar.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Util
@@ -162,7 +163,22 @@ let rec subst_univ s u =
 let tag_with_range t s = 
     match snd s with
     | None -> t
-    | Some r -> {t with pos=Range.set_use_range t.pos r}
+    | Some r -> 
+      let r = Range.set_use_range t.pos r in
+      let t' = match t.n with
+        | Tm_bvar bv -> Tm_bvar (Syntax.set_range_of_bv bv r) 
+        | Tm_name bv -> Tm_name (Syntax.set_range_of_bv bv r) 
+        | Tm_fvar fv -> let l = Syntax.lid_of_fv fv in
+                        let v = {fv.fv_name with v=Ident.set_lid_range l r} in
+                        let fv = {fv with fv_name=v} in
+                        Tm_fvar fv 
+        | t' -> t' in
+      {t with n=t'; pos=r}
+
+let tag_lid_with_range l s = 
+    match (snd s) with 
+    | None -> l
+    | Some r -> Ident.set_lid_range l (Range.set_use_range (Ident.range_of_lid l) r)
 
 let mk_range r (s:subst_ts) = 
     match snd s with
@@ -216,7 +232,8 @@ and subst_comp_typ' s t =
   | [], None
   | [[]], None -> t
   | _ ->
-    {t with comp_univs=List.map (subst_univ (fst s)) t.comp_univs;
+    {t with effect_name=tag_lid_with_range t.effect_name s;
+            comp_univs=List.map (subst_univ (fst s)) t.comp_univs;
             result_typ=subst' s t.result_typ;
             flags=subst_flags' s t.flags;
             effect_args=List.map (fun (t, imp) -> subst' s t, imp) t.effect_args}
@@ -381,7 +398,7 @@ let rec compress (t:term) =
             
 
 let subst s t = subst' ([s], None) t
-let set_use_range r t = subst' ([], Some r) t
+let set_use_range r t = subst' ([], Some ({r with def_range=r.use_range})) t
 let subst_comp s t = subst_comp' ([s], None) t
 let closing_subst bs = 
     List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst 

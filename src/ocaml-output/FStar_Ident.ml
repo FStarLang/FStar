@@ -92,25 +92,16 @@ let text_of_lid : lident  ->  Prims.string = (fun lid -> lid.str)
 let lid_equals : lident  ->  lident  ->  Prims.bool = (fun l1 l2 -> (l1.str = l2.str))
 
 
-let lid_with_range : lid  ->  FStar_Range.range  ->  lident = (fun lid r -> (
-
-let id = (
-
-let _25_37 = lid.ident
-in {idText = _25_37.idText; idRange = r})
-in (
-
-let _25_40 = lid
-in {ns = _25_40.ns; ident = id; nsstr = _25_40.nsstr; str = _25_40.str})))
-
-
 let range_of_lid : lid  ->  FStar_Range.range = (fun lid -> lid.ident.idRange)
 
 
 let set_lid_range : lident  ->  FStar_Range.range  ->  lident = (fun l r -> (
 
-let ids = (FStar_All.pipe_right (FStar_List.append l.ns ((l.ident)::[])) (FStar_List.map (fun i -> (mk_ident ((i.idText), (r))))))
-in (lid_of_ids ids)))
+let _25_38 = l
+in {ns = _25_38.ns; ident = (
+
+let _25_40 = l.ident
+in {idText = _25_40.idText; idRange = r}); nsstr = _25_38.nsstr; str = _25_38.str}))
 
 
 let lid_add_suffix : lident  ->  Prims.string  ->  lident = (fun l s -> (

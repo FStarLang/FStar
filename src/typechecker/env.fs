@@ -509,7 +509,8 @@ let lookup_bv env bv =
 let try_lookup_lid env l = 
     match try_lookup_lid_aux env l with 
     | None -> None
-    | Some (us, t) -> Some (us, Subst.set_use_range (get_range env) t)
+    | Some (us, t) -> 
+      Some (us, Subst.set_use_range (range_of_lid l) t)
 
 let lookup_lid env l =  
     match try_lookup_lid env l with 
@@ -525,17 +526,20 @@ let lookup_univ env x =
 let try_lookup_val_decl env lid =
   //QUESTION: Why does this not inst_tscheme?
   match lookup_qname env lid with
-    | Some (Inr (Sig_declare_typ(_, uvs, t, q, _), None)) -> Some ((uvs, Subst.set_use_range (get_range env) t),q)
+    | Some (Inr (Sig_declare_typ(_, uvs, t, q, _), None)) ->
+      Some ((uvs, Subst.set_use_range (range_of_lid lid) t),q)
     | _ -> None
 
 let lookup_val_decl env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_declare_typ(_, uvs, t, _, _), None)) -> inst_tscheme_with_range (get_range env) (uvs, t)
+    | Some (Inr (Sig_declare_typ(_, uvs, t, _, _), None)) ->
+      inst_tscheme_with_range (range_of_lid lid) (uvs, t)
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, uvs, t, _, _, _, _, _), None)) -> inst_tscheme_with_range (get_range env) (uvs, t) 
+    | Some (Inr (Sig_datacon (_, uvs, t, _, _, _, _, _), None)) -> 
+      inst_tscheme_with_range (range_of_lid lid) (uvs, t) 
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let datacons_of_typ env lid = 
@@ -556,7 +560,7 @@ let lookup_definition delta_level env lid =
             Util.find_map lbs (fun lb -> 
                 let fv = right lb.lbname in
                 if fv_eq_lid fv lid 
-                then Some (lb.lbunivs, Subst.set_use_range (get_range env) (Util.unascribe lb.lbdef))
+                then Some (lb.lbunivs, Subst.set_use_range (range_of_lid lid) (Util.unascribe lb.lbdef))
                 else None)
         | _ -> None
       end
@@ -567,7 +571,7 @@ let try_lookup_effect_lid env (ftv:lident) : option<typ> =
     | Some (Inr (se, None)) -> 
       begin match effect_signature se with 
         | None -> None
-        | Some (_, t) -> Some (Subst.set_use_range (get_range env) t)
+        | Some (_, t) -> Some (Subst.set_use_range (range_of_lid ftv) t)
       end
     | _ -> None
 
@@ -576,9 +580,10 @@ let lookup_effect_lid env (ftv:lident) : typ =
     | None -> raise (Error(name_not_found ftv, range_of_lid ftv))
     | Some k -> k
 
-let lookup_effect_abbrev env (univ_insts:universes) lid =
-  match lookup_qname env lid with
+let lookup_effect_abbrev env (univ_insts:universes) lid0 =
+  match lookup_qname env lid0 with
     | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _), None)) ->
+      let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Ident.range_of_lid lid0)) in
       if quals |> Util.for_some (function Irreducible -> true | _ -> false)
       then None
       else let insts = if List.length univ_insts = List.length univs 
@@ -596,7 +601,7 @@ let lookup_effect_abbrev env (univ_insts:universes) lid =
                 failwith (Util.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
                            (Print.lid_to_string lid) (string_of_int <| List.length univs))
              | _ -> let _, t = inst_tscheme_with (univs, Util.arrow binders c) insts in 
-                    let t = Subst.set_use_range (get_range env) t in
+                    let t = Subst.set_use_range (range_of_lid lid) t in
                     begin match (Subst.compress t).n with 
                         | Tm_arrow(binders, c) -> 
                           Some (binders, c)
@@ -624,7 +629,7 @@ let norm_eff_name =
                         | Some m -> Util.smap_add cache l.str m;
                                     m
               end in
-       res
+       Ident.set_lid_range res (range_of_lid l)
 
 let lookup_effect_quals env l = 
     let l = norm_eff_name env l in

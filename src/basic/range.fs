@@ -74,8 +74,8 @@ let dummyRange = {
     def_range=0L;
     use_range=0L
 }
-let set_use_range r2 r = {r2 with use_range=r.def_range}
-let range_of_def_range i = {def_range=i; use_range=0L}
+let set_use_range r2 r = if r.use_range <> 0L then {r2 with use_range=r.use_range} else r2
+let range_of_def_range i = {def_range=i; use_range=i}
 let col_nbits  = 9
 let line_nbits  = 16
 
@@ -240,7 +240,9 @@ let decode_file_idx (s:string) =
 
 (* For Diagnostics *)
 let string_of_pos   pos = let line,col = line_of_pos pos,col_of_pos pos in sprintf "%d,%d" line col
-let string_of_range r   = sprintf "%s(%s-%s)" (file_of_range r) (string_of_pos (start_of_range r)) (string_of_pos (end_of_range r))
+let string_of_def_range r   = sprintf "%s(%s-%s)" (file_of_range r) (string_of_pos (start_of_range r)) (string_of_pos (end_of_range r))
+let string_of_use_range r   = string_of_def_range {r with def_range=r.use_range}
+let string_of_range r       = string_of_def_range r
 
 let compare r1 r2 =
     let fcomp = String.compare (file_of_range r1) (file_of_range r2) in
