@@ -17,11 +17,18 @@ let prf (i: Plain.id) =
 val poly1305_mac1: bool
 val ghash_mac1: bool
 
+val mac_log: bool
+
 let mac1 (i: Plain.id) =
   let open Plain in
   match mac_alg_of_id i with
-  | POLY1305 -> poly1305_mac1
-  | GHASH -> ghash_mac1
+  | POLY1305 -> poly1305_mac1 && mac_log
+  | GHASH -> ghash_mac1 && mac_log
+
+val mac1_implies_mac_log: i:Plain.id -> Lemma
+  (requires True)
+  (ensures (mac1 i ==> mac_log))
+  [SMTPat (mac1 i)]
 
 val mac1_implies_prf: i:Plain.id -> Lemma
   (requires True)
