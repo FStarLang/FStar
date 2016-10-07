@@ -19,8 +19,11 @@ module HH = FStar.HyperHeap
 
 // library stuff
 
+let alg = Plain.mac_alg
+let alg_of_id = Plain.mac_alg_of_id
+
 type buffer = Buffer.buffer UInt8.t
-type bytes  = Seq.seq UInt8.t 
+type bytes  = Seq.seq UInt8.t
 type lbuffer (l:nat) = b:buffer {Buffer.length b = l}
 type lbytes  (l:nat) = b:bytes {Seq.length b = l}
 
@@ -30,15 +33,14 @@ let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 // this flag enables conditional idealization by keeping additional data,
 // - this should not affect the code behavior
 // - this may cause the code not to compile to Kremlin/C.
-(* assume val ideal: bool *)
-(*** THIS IS EXTREMELY DODGY ***)
-inline let ideal = false 
+inline let authId (i: Plain.id) =
+  Plain.authId i && Flag.mac1 i
 
 // we will need authId i ==> ideal?
 
-// the index is the base index (controlling agility and idealization) 
+// the index is the base index (controlling agility and idealization)
 // plus the value of the unique IV for this MAC
-// TODO make it a dependent pair to support agile IV types 
+// TODO make it a dependent pair to support agile IV types
 
 assume val someId: Plain.id // dummy value for unit testing
 let someId_coerce = assume(~ (Plain.authId someId ))
@@ -53,7 +55,7 @@ let someId = 0
 
 type tagB = wordB_16
 type wordB_16 = wordB_16
- 
+
 (*
 // TODO: extend the model with dynamic compromises.
 type log_1 =
@@ -69,13 +71,13 @@ type log_2 = // only when ideal
 *)
 
 // TODO: right now we use a dummy, should be external
-// relocated in some library somewhere, 
+// relocated in some library somewhere,
 // and with careful, crypto-grade external implementation
-// both with ocaml and kremlin, 
+// both with ocaml and kremlin,
 val random: r:rid -> len:UInt32.t -> ST buffer
      (requires (fun h -> is_eternal_region r))
      (ensures (fun (h0:mem) b h1 ->
-	 ~(contains h0 b)
+         ~(contains h0 b)
        /\ live h1 b /\ idx b = 0 /\ length b = UInt32.v len
        /\ Map.domain h1.h == Map.domain h0.h
        /\ h1.tip = h0.tip
@@ -85,7 +87,7 @@ let random r len = FStar.Buffer.rcreate r 0uy len
 
 // the sequence of hashed elements is conditional, but not ghost
 // this will require changing e.g. the type of poly1305_add
-let itext : Type0 = if ideal then text else unit
+let itext (i: Plain.id) : Type0 = if authId i then text else unit
 
 type log = option (itext * tag) // option (Seq.seq elem * word16)
 
@@ -151,14 +153,14 @@ let alloc i region key =
   else
     State #i #region r s ()
 
- 
-let genPost (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 = 
+
+let genPost (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
     ~(contains m0 st.r) /\
     ~(contains m0 st.s) /\
     //modifies (Set.singleton r) m0 m1
     st.region == region /\
     (ideal ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)
- 
+
 val gen: i:id
   -> region:rid{is_eternal_region region}
   -> ST (state i)
@@ -168,7 +170,7 @@ val gen: i:id
 let gen i region =
   let key = random region 32ul in
   alloc i region key
- 
+
 val coerce: i:id{~(authId i)} -> r:rid -> key:lbuffer 32 -> ST (state i)
   (requires (fun m0 -> live m0 key))
   (ensures  (fun m0 st m1 ->
@@ -321,7 +323,7 @@ let mac #i st l acc tag =
   if ideal then
     begin
     //assume (mac_1305 l (sel_elem h0 st.r) (sel_word h0 st.s) ==
-    //	    little_endian (sel_word h1 tag));
+    //      little_endian (sel_word h1 tag));
     let t = read_word tag in
     m_recall #st.region #log #log_cmp (ilog st.log);
     assume (m_sel h1 (ilog st.log) == m_sel h0 (ilog st.log));
