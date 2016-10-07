@@ -29,11 +29,14 @@ type lbytes  (l:nat) = b:bytes {Seq.length b = l}
 
 let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 
+type id = Plain.id * UInt128.t
+
 // also used in miTLS ('model' may be better than 'ideal'); could be loaded from another module.
 // this flag enables conditional idealization by keeping additional data,
 // - this should not affect the code behavior
 // - this may cause the code not to compile to Kremlin/C.
-inline let authId (i: Plain.id) =
+inline let authId (i: id) =
+  let i = fst i in
   Plain.authId i && Flag.mac1 i
 
 // we will need authId i ==> ideal?
@@ -45,8 +48,7 @@ inline let authId (i: Plain.id) =
 assume val someId: Plain.id // dummy value for unit testing
 let someId_coerce = assume(~ (Plain.authId someId ))
 
-type id = Plain.id * UInt128.t
-let authId (i:id) = Plain.authId (fst i)
+
 (*
 type id = nat
 let authId i = false
@@ -87,7 +89,7 @@ let random r len = FStar.Buffer.rcreate r 0uy len
 
 // the sequence of hashed elements is conditional, but not ghost
 // this will require changing e.g. the type of poly1305_add
-let itext (i: Plain.id) : Type0 = if authId i then text else unit
+let itext: Type0 = if Flag.mac_log then text else unit
 
 type log = option (itext * tag) // option (Seq.seq elem * word16)
 
