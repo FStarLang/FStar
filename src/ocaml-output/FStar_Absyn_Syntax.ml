@@ -1703,7 +1703,7 @@ type path =
 Prims.string Prims.list
 
 
-let dummyRange : FStar_Range.range = 0L
+let dummyRange : FStar_Range.range = FStar_Range.dummyRange
 
 
 let withinfo = (fun v s r -> {v = v; sort = s; p = r})

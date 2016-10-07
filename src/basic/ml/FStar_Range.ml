@@ -27,7 +27,16 @@ let proj_ord f a1 a2 = compare (f a1)  (f a2)
 
 type file_idx = FStar_BaseTypes.int32
 type pos = FStar_BaseTypes.int32
-type range = FStar_BaseTypes.int64
+type range = {
+    def_range:FStar_BaseTypes.int64;
+    use_range:FStar_BaseTypes.int64
+}
+let dummyRange = {
+    def_range=0L;
+    use_range=0L
+}
+let set_use_range r2 r = {r2 with use_range=r.def_range}
+let range_of_def_range i = {def_range=i; use_range=0L}
 
 let col_nbits  = 9
 let line_nbits  = 16
@@ -62,6 +71,7 @@ let end_line_mask   = mask64 (file_idx_nbits + start_line_nbits + start_col_nbit
 let end_col_mask    = mask64 (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits) end_col_nbits
 
 let mk_file_idx_range fidx b e =
+  range_of_def_range (
   lor64
     (lor64
        (lor64
@@ -70,12 +80,12 @@ let mk_file_idx_range fidx b e =
              (lsl64 (BatInt64.of_int (line_of_pos b)) file_idx_nbits))
           (lsl64 (BatInt64.of_int (col_of_pos b)) (file_idx_nbits + start_line_nbits)))
        (lsl64 (BatInt64.of_int (line_of_pos e)) (file_idx_nbits + start_line_nbits + start_col_nbits)))
-    (lsl64 (BatInt64.of_int (col_of_pos e)) (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits))
-let file_idx_of_range r   = BatInt64.to_int (land64 r file_idx_mask)
-let start_line_of_range r = BatInt64.to_int (lsr64 (land64 r start_line_mask) file_idx_nbits)
-let start_col_of_range r  = BatInt64.to_int (lsr64 (land64 r start_col_mask) (file_idx_nbits + start_line_nbits))
-let end_line_of_range r   = BatInt64.to_int (lsr64 (land64 r end_line_mask) (file_idx_nbits + start_line_nbits + start_col_nbits))
-let end_col_of_range r    = BatInt64.to_int (lsr64 (land64 r end_col_mask) (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits))
+    (lsl64 (BatInt64.of_int (col_of_pos e)) (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits)))
+let file_idx_of_range {def_range=r}   = BatInt64.to_int (land64 r file_idx_mask)
+let start_line_of_range {def_range=r} = BatInt64.to_int (lsr64 (land64 r start_line_mask) file_idx_nbits)
+let start_col_of_range {def_range=r}  = BatInt64.to_int (lsr64 (land64 r start_col_mask) (file_idx_nbits + start_line_nbits))
+let end_line_of_range {def_range=r}   = BatInt64.to_int (lsr64 (land64 r end_line_mask) (file_idx_nbits + start_line_nbits + start_col_nbits))
+let end_col_of_range {def_range=r}    = BatInt64.to_int (lsr64 (land64 r end_col_mask) (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits))
 
 (* This is just a standard unique-index table *)
 module FileIndexTable = struct

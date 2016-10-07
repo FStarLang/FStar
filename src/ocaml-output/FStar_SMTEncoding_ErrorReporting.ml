@@ -15,7 +15,7 @@ let sort_labels : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Pr
 end)) l))
 
 
-let remove_dups : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Int64.int64) Prims.list = (fun l -> (FStar_Util.remove_dups (fun _86_19 _86_24 -> (match (((_86_19), (_86_24))) with
+let remove_dups : labels  ->  ((Prims.string * FStar_SMTEncoding_Term.sort) * Prims.string * FStar_Range.range) Prims.list = (fun l -> (FStar_Util.remove_dups (fun _86_19 _86_24 -> (match (((_86_19), (_86_24))) with
 | ((_86_16, m1, r1), (_86_21, m2, r2)) -> begin
 ((r1 = r2) && (m1 = m2))
 end)) l))
@@ -75,7 +75,7 @@ in ((lt), ((label)::labs)))))
 end))))))
 
 
-let label_goals : (Prims.unit  ->  Prims.string) Prims.option  ->  FStar_Int64.int64  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.term * labels * ranges) = (fun use_env_msg r q -> (
+let label_goals : (Prims.unit  ->  Prims.string) Prims.option  ->  FStar_Range.range  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.term * labels * ranges) = (fun use_env_msg r q -> (
 
 let _86_61 = (match (use_env_msg) with
 | None -> begin
