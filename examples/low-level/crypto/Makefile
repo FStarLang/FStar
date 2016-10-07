@@ -45,7 +45,6 @@ SLOW= \
 # Please move files that you know fully typecheck to VERIFY
 # Files commented out are broken, uncomment once fixed
 LAX= \
-  Math.Lib \
   Crypto.Symmetric.Poly1305.MAC
   # AEAD
 
