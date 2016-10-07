@@ -29,6 +29,44 @@ let ctr x = PRF(x.ctr)
 
 let alg (i:id) = Block.CHACHA20 //TODO: 16-10-02 This is temporary
 
+open FStar.UInt
+assume val logxor_inv: #n:pos -> a:uint_t n -> b:uint_t n -> Lemma 
+  (a = logxor #n (logxor #n a b) b)
+
+(* Definitions adapted from TLS/StreamAE.fst, to be integrated later *)
+// The per-record nonce for the AEAD construction is formed as follows:
+//
+// 1. The 64-bit record sequence number is padded to the left with zeroes to iv_length.
+//
+// 2. The padded sequence number is XORed with the static client_write_iv or server_write_iv,
+//    depending on the role.
+//
+// The XORing is a fixed, ad hoc, random permutation; not sure what is gained;
+// we can reason about sequence-number collisions before applying it.
+
+assume val lemma_xor_bounded: n:nat -> x: UInt128.t -> y: UInt128.t -> 
+  Lemma(FStar.UInt128(v x < pow2 n /\ v y < pow2 n ==> v (logxor x y) < pow2 n))
+//16-10-05 by induction on n, given a bitwise definition of logxor.
+
+let aeIV i (seqn:UInt64.t) (staticIV:Block.iv (alg i)) : Tot (Block.iv (alg i)) =
+  let x = FStar.Int.Cast.uint64_to_uint128 seqn in
+  let r = UInt128.logxor x staticIV in
+  assert(FStar.UInt128.v staticIV < pow2 96);
+  assert(FStar.UInt128.v x < pow2 64);
+  assume(FStar.UInt128.v x < pow2 96);
+  lemma_xor_bounded 96 x staticIV; 
+  r
+
+val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:Block.iv (alg i) -> Lemma
+  (aeIV i seqn0 staticIV = aeIV i seqn1 staticIV ==> seqn0 = seqn1)
+let aeIV_injective i seqn0 seqn1 staticIV = ()
+
+  (* relying on 0 xor 0 = 0 for the higher-order bytes *) 
+  (* recheck endianness *)
+
+// a bit more concrete than the spec: xor only 64 bits, copy the rest. 
+
+
 // PLAN: 
 //
 // We allocate AEAD logs at the writer (complying with our `local modifier' discipline)

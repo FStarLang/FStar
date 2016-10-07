@@ -102,7 +102,7 @@ let diff name len expected computed =
     let _ = print_buffer expected 0ul len in 
     let _ = IO.debug_print_string ("Computed "^name^":\n") in
     let _ = print_buffer computed 0ul len in
-    let _ = r || IO.debug_print_string "ERROR: unexpected result." in
+    let _ = r || IO.debug_print_string "ERROR: unexpected result.\n" in
     r
   else r 
 
