@@ -1,5 +1,7 @@
 module Flag
 
+open Crypto.Symmetric
+
 (** All the idealization flags that we use for the cryptographic argument *)
 
 val aes_prf:bool
@@ -8,19 +10,27 @@ val chacha20_prf:bool
 // TODO check with Nik that this will normalize properly when all branches
 // evaluate to false
 let prf (i: Plain.id) =
-  let open BlockCipher in
-  match Block.alg_of_id i with
-  | AES256 -> aes_prf
-  | CHACHA20 -> chacha20_prf
+  match BlockCipher.alg_of_id i with
+  | BlockCipher.AES256 -> aes_prf
+  | BlockCipher.CHACHA20 -> chacha20_prf
 
-// TODO jonathan horrible syntax
-val poly1305_mac1:(poly1305_mac1:bool{poly1305_mac1 ==> prf})
-val ghash_mac1:(ghash_mac1:bool{ghash_mac1 ==> prf})
+val poly1305_mac1: bool
+val ghash_mac1: bool
 
 let mac1 (i: Plain.id) =
-  let open MAC in
-  match MAC.alg_of_id id with
+  let open Plain in
+  match mac_alg_of_id i with
   | POLY1305 -> poly1305_mac1
   | GHASH -> ghash_mac1
 
-val prf_enc:(prf_enc:bool{prf_enc ==> mac1})
+val mac1_implies_prf: i:Plain.id -> Lemma
+  (requires True)
+  (ensures (mac1 i ==> prf i))
+  [SMTPat (mac1 i)]
+
+val prf_enc: i:Plain.id -> Tot bool
+
+val prf_enc_implies_mac1: i:Plain.id -> Lemma
+  (requires True)
+  (ensures (prf_enc i ==> mac1 i))
+  [SMTPat (prf_enc i)]

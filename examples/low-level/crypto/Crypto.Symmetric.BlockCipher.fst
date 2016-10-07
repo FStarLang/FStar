@@ -19,9 +19,10 @@ type alg =
   | CHACHA20 // RFC 7539 for the AEAD algorithm; RFC 7905 for the TLS ciphersuites
 
 let alg_of_id (id: Plain.id): alg =
+  let open Plain in
   match id.cipher with
   | AES_256_GCM -> AES256
-  | CHACHA20_POLY1305 -> CHACHA20
+  | CHACHA20_POLY1305 -> CHACHA20
 
 let keylen = function
 //| AES128   -> 16ul

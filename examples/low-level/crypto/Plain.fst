@@ -24,7 +24,7 @@ open Crypto.Symmetric.Bytes
 
 type aead_cipher =
   | AES_256_GCM
-  | CHACHA20_POLY1305
+  | CHACHA20_POLY1305
 
 type id = {
   cipher: aead_cipher;
@@ -35,10 +35,10 @@ type mac_alg =
   | POLY1305
   | GHASH
 
-let mac_alg_of_id (id: Plain.id): alg =
+let mac_alg_of_id (id: id): mac_alg =
   match id.cipher with
   | AES_256_GCM -> GHASH
-  | CHACHA20_POLY1305 -> POLY1305
+  | CHACHA20_POLY1305 -> POLY1305
 
 assume val authId: i:id -> Tot bool
 
