@@ -32,8 +32,8 @@ let put (s:int) : stexn unit =
         fun _ -> (Some (), s)
 
 (* TODO: this fails: "Variable "a#133585" not found" *)
-let raise (a:Type) : stexn a =
-        fun s -> (None, s)
+//let raise (a:Type) : stexn a =
+//        fun s -> (None, s)
 
 (* Define the new effect using DM4F *)
 reifiable reflectable new_effect_for_free {
@@ -44,7 +44,7 @@ reifiable reflectable new_effect_for_free {
   and effect_actions
        get     = get
      ; put     = put
-     ; raise   = raise
+     //; raise   = raise
 }
 
 let pre  = STEXN.pre
@@ -60,17 +60,23 @@ sub_effect PURE ~> STEXN = lift_pure_stexn
 (* Pre-/postcondition variant *)
 effect StExn (a:Type) (req:pre) (ens:int -> option a -> int -> GTot Type0) =
        STEXN a
-         (fun (h0:int) (p:post a) -> req h0 /\ (forall (r:option a) (h1:int). (req h0 /\ ens h0 r h1) ==> p (r, h1))) (* WP *)
+         (fun (h0:int) (p:post a) -> req h0 /\ (forall (r:option a) (h1:int). (req h0 /\ ens h0 r h1) ==> p (r, h1)))
 
 (* Total variant *)
 effect S (a:Type) =
        STEXN a (fun h0 p -> forall x. p x)
 
+(* TODO: Remove *)
+val raise_impl : (a:Type) -> repr a (fun h0 p -> p (None, h0))
+let raise_impl a = fun h0 -> None, h0
+reifiable val raise : (a:Type) -> STEXN a (fun h0 p -> p (None, h0))
+reifiable let raise a = STEXN.reflect (raise_impl a)
+
 val div_intrinsic : i:nat -> j:int -> StExn int
   (requires (fun h -> True))
   (ensures (fun h0 x h1 -> match x with
-                        | None -> h0 + 1 = h1 /\ j=0
-                        | Some z -> h0 = h1 /\ j<>0 /\ z = i / j))
+                        | None -> h0 = h1 /\ j = 0
+                        | Some z -> h0 = h1 /\ j <> 0 /\ z = i / j))
 let div_intrinsic i j =
   if j = 0 then raise int
   else i / j
@@ -79,7 +85,7 @@ reifiable let div_extrinsic (i:nat) (j:int) : S int =
   if j = 0 then raise int
   else i / j
 
-let lemma_div_extrinsic (i:nat) (j:int) :
-  Lemma (match reify (div_extrinsic i j) 0 with
-         | None, 1 -> j = 0
-         | Some z, 0 -> j <> 0 /\ z = i / j) = ()
+let lemma_div_extrinsic (i:nat) (j:int) (h0:int) :
+  Lemma (match reify (div_extrinsic i j) h0 with
+         | None, h1 -> h0 = h1 /\ j = 0
+         | Some z, h1 -> h0 = h1 /\ j <> 0 /\ z = i / j) = ()
