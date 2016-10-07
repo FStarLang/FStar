@@ -473,7 +473,7 @@ let division_multiplication_lemma a b c =
 let lemma_mul_pos_pos_is_pos (x:pos) (y:pos) : Lemma (x*y > 0) = ()
 let lemma_mul_nat_pos_is_nat (x:nat) (y:pos) : Lemma (x*y >= 0) = ()
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3timeout 30 --initial_fuel 0 --max_fuel 0"
 
 let modulo_division_lemma_0 (a:nat) (b:pos) (c:pos) : Lemma
   (a / (b*c) <= a /\ (a - (a / (b * c)) * (b * c)) / b = a / b - ((a / (b * c)) * c))
