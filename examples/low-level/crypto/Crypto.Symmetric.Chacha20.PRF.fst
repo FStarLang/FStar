@@ -34,8 +34,13 @@ let prfa = Block.CHACHA20
 
 // IDEALIZATION
 
-inline let authId (i: Plain.id) =
-  Plain.authId i && Flag.prf i
+// first step: idealize PRF to get random MAC keys. 
+inline let authId (i: Plain.id) = Plain.authId i && Flag.prf i
+
+// second step: constrain use of PRF for authenticated encryption and decryption
+inline let safeId (i: Plain.id) = Plain.authId i && Flag.prf_enc i
+
+let _ = assert(forall i. safeId ==> authId)
 
 // LIBRARY STUFF
 
@@ -79,13 +84,14 @@ type smac (rgn:region) i x = mac: MAC.state (i,x.iv) { MAC.State.region mac = rg
 noeq type otp i = | OTP: l:u32 {l <=^ blocklen} -> plain i (v l) -> cipher:lbytes (v l) -> otp i
 
 let range (rgn:region) (i:id) (x:domain): Type0 =
-  if x.ctr = 0ul
-  then smac rgn i x
-  else otp i
+  if x.ctr = 0ul then smac rgn i x
+  else if safeId i then otp i
+  else lbytes blocklen
 
 // explicit coercions
 let macRange rgn i (x:domain{x.ctr = 0ul}) (v:range rgn i x) : smac rgn i x = v
-let otpRange rgn i (x:domain{x.ctr <> 0ul}) (v:range rgn i x) : otp i        = v
+let otpRange rgn i (x:domain{safeID i /\ x.ctr <> 0ul}) (v:range rgn i x) : otp i = v
+let blkRange rgn i (x:domain{~ (safeID) i /\ x.ctr <> 0ul}) (v:range rgn i x) : otp i = v
 
 noeq type entry (rgn:region) (i:id) =
   | Entry: x:domain -> range:range rgn i x -> entry rgn i
@@ -187,7 +193,7 @@ val prf_dexor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} ->
   (requires (fun h0 ->
      Plain.live h0 plain /\ Buffer.live h0 cipher /\ Buffer.disjoint (bufferT plain) cipher /\
      Buffer.frameOf (bufferT plain) <> t.rgn /\
-     (authId i ==>
+     (safeId i ==>
      ( match find_1 (HS.sel h0 t.table) x with
        | Some (OTP l' p c) -> l == l' /\ c == sel_bytes h0 l cipher
        | None -> False
@@ -195,7 +201,7 @@ val prf_dexor: i:id -> t:state i -> x:domain{x.ctr <> 0ul} ->
   (ensures (fun h0 _ h1 ->
      Plain.live h1 plain /\ Buffer.live h1 cipher /\
      Buffer.modifies_1 (bufferT plain) h0 h1 /\
-     (authId i ==>
+     (safeId i ==>
        ( match find_1 (HS.sel h1 t.table) x with
          | Some (OTP l' p c) -> l == l' /\ p == sel_plain h1 l plain
          | None -> False
