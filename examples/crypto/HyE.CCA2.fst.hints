@@ -1,0 +1,36 @@
+[
+  "&Ù-πëVé¿±«¸èÅänc",
+  [
+    [ "HyE.CCA2.Entry.c", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.CCA2.Entry.p", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.CCA2.PKey.region", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.CCA2.PKey.rawpk", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "HyE.CCA2.PKey.log",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_HyE.CCA2.PKey_region",
+        "projection_inverse_HyE.CCA2.PKey_region"
+      ],
+      0
+    ],
+    [ "HyE.CCA2.SKey.raw", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.CCA2.SKey.pk", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.CCA2.keygen", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "HyE.CCA2.decrypt",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_HyE.RSA.cipher", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes",
+        "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5"
+      ],
+      0
+    ]
+  ]
+]

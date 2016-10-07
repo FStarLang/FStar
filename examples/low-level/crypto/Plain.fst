@@ -1,4 +1,4 @@
-module Plain 
+module Plain
 
 open FStar.HyperHeap
 open FStar.HyperStack
@@ -11,10 +11,10 @@ open Crypto.Symmetric.Bytes
 // Experiment with abstraction for stack-based secret plaintexts
 // for now we assume public lengths and no padding
 
-// Type abstraction protects against aliasing inasmuch 
-// as it is enforced from allocation. 
+// Type abstraction protects against aliasing inasmuch
+// as it is enforced from allocation.
 
-//16-09-16 STATUS: verifying; used in Crypto.AEAD.Chacha20Poly1305.Ideal 
+//16-09-16 STATUS: verifying; used in Crypto.AEAD.Chacha20Poly1305.Ideal
 
 
 // LIBRARY STUFF
@@ -22,8 +22,27 @@ open Crypto.Symmetric.Bytes
 
 // SECRETS, HIGH AND LOW
 
-type id = UInt32.t // we'll need more
+type aead_cipher =
+  | AES_256_GCM
+  | CHACHA20_POLY1305
+
+type id = {
+  cipher: aead_cipher;
+  uniq: UInt32.t // we'll need more
+}
+
+type mac_alg =
+  | POLY1305
+  | GHASH
+
+let mac_alg_of_id (id: Plain.id): alg =
+  match id.cipher with
+  | AES_256_GCM -> GHASH
+  | CHACHA20_POLY1305 -> POLY1305
+
 assume val authId: i:id -> Tot bool
+
+// -----------------------------------------------------------------------------
 
 type plainLen = nat // we'll need a tigher bound
 
@@ -65,24 +84,24 @@ let bufferT_injective i l p = ()
 
 let live #i #l h (p:plainBuffer i l) = Buffer.live h (bufferT p)
 
-let create (i:id) (zero:UInt8.t) (len:UInt32.t) : 
+let create (i:id) (zero:UInt8.t) (len:UInt32.t) :
    StackInline (plainBuffer i (v len))
      (requires (fun h -> is_stack_region h.tip))
-     (ensures (fun (h0:mem) p h1 -> 
+     (ensures (fun (h0:mem) p h1 ->
        let b = bufferT p in
        let open FStar.Buffer in
-	 ~(contains h0 b)
+         ~(contains h0 b)
        /\ live h1 p /\ idx b = 0 /\ length b = v len
        /\ frameOf b = h0.tip
        /\ Map.domain h1.h == Map.domain h0.h
        /\ modifies_0 h0 h1
        /\ as_seq h1 b == Seq.create (v len) zero
        ))
- = Buffer.create zero len 
+ = Buffer.create zero len
 
-let sub #id #l (b:plainBuffer id l) 
-	       (i:UInt32.t{FStar.Buffer (v i + v (bufferT b).idx) < pow2 n}) 
-	       (len:UInt32.t{FStar.Buffer (v len <= length (bufferT b) /\ v i + v len <= length (bufferT b))}) : Tot (b':plainBuffer id (v len))
+let sub #id #l (b:plainBuffer id l)
+               (i:UInt32.t{FStar.Buffer (v i + v (bufferT b).idx) < pow2 n})
+               (len:UInt32.t{FStar.Buffer (v len <= length (bufferT b) /\ v i + v len <= length (bufferT b))}) : Tot (b':plainBuffer id (v len))
   = Buffer.sub b i len
 // ...
 
@@ -94,10 +113,10 @@ let bufferRepr #i #l b = b
 
 // unconditional ghost access
 // should be as_seq
-val sel_plain: h:mem -> #i:id -> l:UInt32.t -> buf:plainBuffer i (v l){live h buf} -> GTot (plain i (v l)) 
+val sel_plain: h:mem -> #i:id -> l:UInt32.t -> buf:plainBuffer i (v l){live h buf} -> GTot (plain i (v l))
 let sel_plain h #i l buf = sel_bytes h l buf
 
-val load: #i:id -> l:UInt32.t -> buf: plainBuffer i (v l) -> ST (plain i (v l)) 
+val load: #i:id -> l:UInt32.t -> buf: plainBuffer i (v l) -> ST (plain i (v l))
   (requires (fun h0 -> live h0 buf))
   (ensures (fun h0 r h1 -> h0 == h1 /\ live h0 buf /\ sel_plain h1 l buf == r))
 

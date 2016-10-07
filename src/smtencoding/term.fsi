@@ -68,7 +68,7 @@ type term' =
   | Quant      of qop * list<list<pat>> * option<int> * list<sort> * term
   | Labeled    of term * string * Range.range
 and pat  = term
-and term = {tm:term'; hash:string; freevars:Syntax.memo<fvs>}
+and term = {tm:term'; freevars:Syntax.memo<fvs>}
 and fv = string * sort
 and fvs = list<fv>
 
@@ -96,6 +96,7 @@ type error_label = (fv * string * Range.range)
 type error_labels = list<error_label>
 
 val mk: term' -> term
+val hash_of_term: term -> string
 val fv_eq : fv -> fv -> bool
 val fv_of_term : term -> fv
 val free_variables: term -> fvs

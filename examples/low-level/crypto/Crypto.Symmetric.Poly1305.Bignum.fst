@@ -10,9 +10,8 @@ open FStar.HST
 (** Buffers *)
 open FStar.Buffer
 (** Mathematical definitions *)
-open Math.Axioms
-open Math.Lib
-open Math.Lemmas
+open FStar.Math.Lib
+open FStar.Math.Lemmas
 
 open Crypto.Symmetric.Poly1305.Parameters
 open Crypto.Symmetric.Poly1305.Bigint

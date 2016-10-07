@@ -235,7 +235,7 @@ let rec add_bytes #i st log a len txt =
     end
 
 // will require StackInline for the accumulator
-let accumulate i ak (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
+private let accumulate i ak (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
   (plainlen:UInt32.t) (cipher:lbuffer (v plainlen)) = 
   let acc = MAC.start ak in
   let l = MAC.text_0 in 

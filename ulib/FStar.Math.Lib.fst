@@ -1,7 +1,30 @@
-module Math.Lib
+module FStar.Math.Lib
 
 open FStar.Mul
-open Math.Axioms
+
+(* Definition of the diviion operator *)
+val lemma_div_def: a:nat -> b:pos -> Lemma (a = b * (a/b) + a % b)
+let lemma_div_def a b = ()
+
+private let mul_lemma (a:nat) (b:nat) (c:pos) : Lemma (requires (a < b))
+                                           (ensures  (c * a < c * b))
+  = ()
+
+val slash_decr_axiom: a:nat -> b:pos -> Lemma (a / b <= a)
+let slash_decr_axiom a b =
+  lemma_div_def a b;
+  if (a / b > a) then mul_lemma a (a/b) b
+
+private let lemma_mul_minus_distr_l (a:int) (b:int) (c:int) : Lemma (a * (b - c) = a * b - a * c)
+  = ()
+
+(* Axiom: definition of the "b divides c" relation *)
+val slash_star_axiom: a:nat -> b:pos -> c:nat -> Lemma
+  (requires (a * b = c))
+  (ensures  (a = c / b))
+let slash_star_axiom a b c =
+  lemma_div_def c b;
+  lemma_mul_minus_distr_l b a (c/b)
 
 val log_2: x:pos -> Tot nat
 let rec log_2 x =
@@ -65,16 +88,6 @@ let signed_modulo v p =
 val op_Plus_Percent : a:int -> p:pos -> 
   Tot (res:int{ (a >= 0 ==> res = a % p) /\ (a < 0 ==> res = -((-a) % p)) }) 
 let op_Plus_Percent a p = signed_modulo a p
-
-(* Bitwize operations *)
-assume val xor_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> x = y })
-assume val and_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 /\ y = 0)})
-assume val or_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 \/ y = 0) })
-assume val lnot_op: int -> Tot int
-
-(* Comparison, has to be realized in constant time *)
-assume val compare: x:int -> y:int ->
-  Tot (r:int{ (r = 0 <==> x = y) /\ (r = 1 <==> x > y) /\ (r = -1 <==> x < y) })
 
 (** Useful lemmas for future proofs **)
 

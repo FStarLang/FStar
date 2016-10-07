@@ -428,6 +428,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     then Util.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
     let c = if Env.should_verify env
             && not (Util.is_lcomp_partial_return c)
+            //&& not (Util.is_unit c.res_typ)
             && Util.is_pure_or_ghost_lcomp c //ADD_EQ_REFINEMENT for pure applications
             then TcUtil.maybe_assume_result_eq_pure_term env e c
             else c in
@@ -469,7 +470,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some guard_x, c_branches) in
     let e =
         let mk_match scrutinee =
-            let branches = List.map (fun (f, _, _, _) -> f) t_eqns in
+            let scrutinee = TypeChecker.Util.maybe_lift env scrutinee c1.eff_name cres.eff_name in
+            let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, lc, _) -> 
+                 (pat, wopt, TypeChecker.Util.maybe_lift env br lc.eff_name cres.eff_name)) in
             let e = mk (Tm_match(scrutinee, branches)) (Some cres.res_typ.n) top.pos in
              //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
             mk (Tm_ascribed(e, Inl cres.res_typ, Some cres.eff_name)) None e.pos in
@@ -486,7 +489,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                 lbeff=Env.norm_eff_name env c1.eff_name;
                 lbdef=e1;
              } in
-             mk (Tm_let((false, [lb]), SS.close [S.mk_binder guard_x] e_match)) (Some cres.res_typ.n) top.pos in
+             let e = mk (Tm_let((false, [lb]), SS.close [S.mk_binder guard_x] e_match)) (Some cres.res_typ.n) top.pos in
+             TypeChecker.Util.maybe_monadic env e cres.eff_name cres.res_typ in
     if debug env Options.Extreme
     then Util.print2 "(%s) comp type = %s\n"
                       (Range.string_of_range top.pos) (Print.comp_to_string <| cres.comp());
@@ -959,6 +963,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 let refine_with_equality =
                     //if the function is pure, but its arguments are not, then add an equality refinement here
                     //OW, for pure applications we always add an equality at the end; see ADD_EQ_REFINEMENT below
+                    //not (Util.is_unit cres.res_typ)
+                    //&&
                     Util.is_pure_or_ghost_lcomp cres
                     && arg_comps_rev |> Util.for_some (function 
                         | (_, _, None) -> false 

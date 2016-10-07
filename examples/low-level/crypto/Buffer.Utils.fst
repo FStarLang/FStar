@@ -9,7 +9,7 @@ open FStar.UInt8
 open FStar.UInt32
 open FStar.Buffer
 
-open Math.Lemmas
+open FStar.Math.Lemmas
 
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32

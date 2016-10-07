@@ -4,7 +4,7 @@ FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 
 HINTS_ENABLED?=--use_hints
 
-OPTIONS=--fstar_home $(FSTAR_HOME) --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --z3timeout 20  $(HINTS_ENABLED)
+OPTIONS=--fstar_home $(FSTAR_HOME) --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --z3timeout 20  $(HINTS_ENABLED) $(OTHERFLAGS)
 
 FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperheap --include $(FSTAR_HOME)/ucontrib/Platform/fst
 
@@ -13,8 +13,6 @@ FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperheap --include $(FSTAR_HOM
 VERIFY= \
   FStar.HST.Monotonic.RRef \
   Buffer.Utils \
-  Math.Axioms \
-  Math.Lemmas \
   Crypto.Symmetric.Chacha20 \
   Crypto.Symmetric.Poly1305.Bigint \
   Crypto.Symmetric.Poly1305.Parameters \
@@ -32,7 +30,6 @@ VERIFY= \
   Crypto.Symmetric.AES \
   Crypto.Symmetric.BlockCipher \
   Crypto.AEAD.AES256GCM \
-  Crypto.Symmetric.Poly1305.MAC \
   Crypto.Symmetric.Chacha20.PRF \
   Crypto.AEAD.Chacha20Poly1305 \
   Crypto.AEAD.Chacha20Poly1305.Ideal \
@@ -48,7 +45,7 @@ SLOW= \
 # Please move files that you know fully typecheck to VERIFY
 # Files commented out are broken, uncomment once fixed
 LAX= \
-  Math.Lib \
+  Crypto.Symmetric.Poly1305.MAC
   # AEAD
 
 all-ver: $(addsuffix .fst-ver, $(VERIFY))

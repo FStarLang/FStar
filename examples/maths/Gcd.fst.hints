@@ -1,0 +1,46 @@
+[
+  "™Uù¡3eÄx\u0004èÆ;ìˇ)˜",
+  [
+    [ "Gcd.divides", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Gcd.times_one",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [ "Gcd.times_one", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "Gcd.times_one",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Mul.op_Star", "equation_Prims.pos",
+        "int_inversion", "int_typing", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "typing_FStar.Mul.op_Star", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "Gcd.a_divides_a'",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0
+    ],
+    [ "Gcd.a_divides_a", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Gcd.gcd_triv",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Gcd.is_gcd", "unit_inversion", "unit_typing" ],
+      0
+    ]
+  ]
+]

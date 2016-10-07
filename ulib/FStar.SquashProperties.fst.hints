@@ -23,10 +23,9 @@
       1,
       [
         "@query", "bool_inversion",
-        "equation_FStar.SquashProperties.join_squash",
-        "equation_Prims.l_not", "equation_Prims.l_or",
-        "equation_Prims.squash", "kinding_Prims.c_or@tok", "l_or-interp",
-        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.SquashProperties.join_squash", "equation_Prims.l_or",
+        "equation_Prims.squash", "kinding_Prims.c_or@tok", "l_not-interp",
+        "l_or-interp", "pretyping_f8666440faa91836cc5a13998af863fc",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_7fdd091adbcfc3810a61ff266cf2272b",
         "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
@@ -111,10 +110,7 @@
       1,
       2,
       1,
-      [
-        "@query", "equation_Prims.l_False",
-        "fuel_guarded_inversion_Prims.c_False"
-      ],
+      [ "@query", "equation_Prims.l_False", "false_interp" ],
       0
     ],
     [

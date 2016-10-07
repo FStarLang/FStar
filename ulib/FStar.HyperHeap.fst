@@ -37,8 +37,14 @@ assume HasEq_rid: hasEq rid //TODO: we just proved this above, but we need to ex
 
 abstract let root : rid = []
 
+//is this SMTPat bad ?
+val lemma_root_has_color_zero: r:rid{r = root}
+                               -> Lemma (requires (True)) (ensures (color r = 0))
+                                 [SMTPat (color r)]
+let lemma_root_has_color_zero r = ()
+
 //expose this so that no-one should assume otheriwse
-let root_has_color_zero (u:unit) : Lemma (color root = 0) = ()
+let root_has_color_zero (u:unit) :Lemma (color root = 0) = ()
 
 abstract let rref (id:rid) (a:Type) = Heap.ref a
 

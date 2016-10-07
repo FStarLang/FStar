@@ -34,7 +34,7 @@ all: uall sall
 
 uall:
 	+make clean
-	+make chacha-test poly-test aead-test aes-test aesgcm-test
+	+make chacha-test poly-test aead-test aes-test aesgcm-test chacha-aead-test
 	+make -C crypto all-lax all-ver
 
 sall:
@@ -167,8 +167,10 @@ chacha-aead-extract: ulib
 
 chacha-aead-compile: chacha-aead-extract
 	$(OCAMLOPT) -I crypto/ml -I $(CHACHA_AEAD_ODIR) $(addprefix crypto/ml/,$(REALIZED_ML)) \
-	  $(addprefix $(CHACHA_AEAD_ODIR)/,$(CHACHA_AEAD_EXTRACTED)) $(CHACHA_AEAD_ODIR)/Test.ml -o test.exe
+	  $(addprefix $(CHACHA_AEAD_ODIR)/,$(CHACHA_AEAD_EXTRACTED)) $(CHACHA_AEAD_ODIR)/Test.ml -o test_chacha_aead.exe
 
+chacha-aead-test: chacha-aead-compile
+	./test_chacha_aead.exe
 
 bignum-ver:
 	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.fst --include crypto

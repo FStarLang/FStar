@@ -89,7 +89,7 @@ type term' =
                   * term             //body
   | Labeled    of term * string * Range.range
 and pat  = term
-and term = {tm:term'; hash:string; freevars:Syntax.memo<fvs>}
+and term = {tm:term'; freevars:Syntax.memo<fvs>}
 and fv = string * sort
 and fvs = list<fv>
 
@@ -178,32 +178,34 @@ let weightToSmt = function
     | None -> ""
     | Some i -> Util.format1 ":weight %s\n" (string_of_int i)
 
-let hash_of_term' t = match t with
+let rec hash_of_term' t = match t with
     | Integer i ->  i
     | BoundV i  -> "@"^string_of_int i
     | FreeV x   -> fst x ^ ":" ^ strSort (snd x) //Question: Why is the sort part of the hash?
-    | App(op, tms) -> "("^(op_to_string op)^(List.map (fun t -> t.hash) tms |> String.concat " ")^")"
-    | Labeled(t, r1, r2) -> t.hash ^ r1 ^ (Range.string_of_range r2)
+    | App(op, tms) -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
+    | Labeled(t, r1, r2) -> hash_of_term t ^ r1 ^ (Range.string_of_range r2)
     | Quant(qop, pats, wopt, sorts, body) ->
-        Util.format5 "(%s (%s)(! %s %s %s))"
-            (qop_to_string qop)
-            (List.map strSort sorts |> String.concat " ")
-            body.hash
-            (weightToSmt wopt)
-            (pats |> List.map (fun pats -> (List.map (fun p -> p.hash) pats |> String.concat " ")) |> String.concat "; ")
+                "("
+              ^ (qop_to_string qop)
+              ^ " ("
+              ^ (List.map strSort sorts |> String.concat " ")
+              ^ ")(! "
+              ^ (hash_of_term body)
+              ^ " "
+              ^ (weightToSmt wopt)
+              ^ " "
+              ^ (pats |> List.map (fun pats -> (List.map hash_of_term pats |> String.concat " ")) |> String.concat "; ")
+              ^ "))"
+and hash_of_term tm = hash_of_term' tm.tm
 
 //The hash-cons table
-let __all_terms = ref (Util.smap_create<term> 10000)
-let all_terms () = !__all_terms
-let mk t =
-    let key = hash_of_term' t in
-    match Util.smap_try_find (all_terms()) key with
-        | Some tm -> tm
-        | None ->
-          let tm = {tm=t; hash=key; freevars=Util.mk_ref None} in
-          Util.smap_add (all_terms()) key tm;
-          tm
+type hash_cons_tab = {
+    mk_term: term' -> term;
+    use_query_table: unit -> unit;
+    drop_query_table: unit -> unit
+}
 
+let mk t = {tm=t; freevars=Util.mk_ref None}
 let mkTrue       = mk (App(True, []))
 let mkFalse      = mk (App(False, []))
 let mkInteger i  = mk (Integer (ensure_decimal i))

@@ -426,7 +426,13 @@ let arith_ops =
      (Const.op_LTE,         (fun x y -> bool_as_const (x <= y)));
      (Const.op_GT,          (fun x y -> bool_as_const (x > y)));
      (Const.op_GTE,         (fun x y -> bool_as_const (x >= y)));
-     (Const.op_Modulus,     (fun x y -> int_as_const (x % y)))]
+     (Const.op_Modulus,     (fun x y -> int_as_const (x % y)))] @
+     List.flatten (List.map (fun m -> [
+       Const.p2l ["FStar"; m; "add"], (fun x y -> int_as_const (x + y));
+       Const.p2l ["FStar"; m; "sub"], (fun x y -> int_as_const (x - y));
+       Const.p2l ["FStar"; m; "mul"], (fun x y -> int_as_const (x * y))
+     ]) [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128" ])
+
     
 let reduce_primops steps tm = 
     let arith_op fv = match fv.n with 
@@ -439,10 +445,27 @@ let reduce_primops steps tm =
             begin match arith_op fv with 
             | None -> tm
             | Some (_, op) -> 
+              let norm i j =
+                let c = op (Util.int_of_string i) (Util.int_of_string j) in
+                mk (Tm_constant c) tm.pos
+              in
               begin match (SS.compress a1).n, (SS.compress a2).n with
+                | Tm_app (head1, [ arg1, _ ]), Tm_app (head2, [ arg2, _ ]) ->
+                    begin match (SS.compress head1).n, (SS.compress head2).n, (SS.compress arg1).n, (SS.compress arg2).n with
+                    | Tm_fvar fv1, Tm_fvar fv2,
+                      Tm_constant (Const.Const_int (i, None)),
+                      Tm_constant (Const.Const_int (j, None))
+                      when Util.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" &&
+                      Util.ends_with (Ident.text_of_lid fv2.fv_name.v) "int_to_t" ->
+                        // Machine integers are represented as applications, e.g.
+                        // [FStar.UInt8.uint_to_t 0xff], so as to get proper
+                        // bounds checking. Maintain that invariant.
+                        mk_app (mk (Tm_fvar fv1) tm.pos) [ norm i j, None ]
+                    | _ ->
+                        tm
+                    end
                 | Tm_constant (Const.Const_int(i, None)), Tm_constant (Const.Const_int(j, None)) -> 
-                  let c = op (Util.int_of_string i) (Util.int_of_string j) in
-                  mk (Tm_constant c) tm.pos
+                    norm i j
                 | _ -> tm
               end
             end
@@ -805,42 +828,45 @@ let rec norm : cfg -> env -> stack -> term -> term =
             norm cfg body_env stack body
 
           | Tm_meta (head, m) -> 
-            begin match stack with 
-                | _::_ ->
-                  begin match m with 
-                    | Meta_labeled(l, r, _) -> 
-                      norm cfg env (Meta(m,r)::stack) head //meta doesn't block reduction, but we need to put the label back
+            begin match m with 
+                  | Meta_monadic (m, t) ->
+                    let t = norm cfg env [] t in
+                    let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                    let cfg = {cfg with steps=[NoInline; Exclude Zeta]@cfg.steps; delta_level=NoDelta} in
+                    norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
-                    | Meta_pattern args -> 
-                      let args = norm_pattern_args cfg env args in
-                      norm cfg env (Meta(Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+                 | Meta_monadic_lift (m, m') ->
+                    if (Util.is_pure_effect m
+                    || Util.is_ghost_effect m)
+                    && cfg.steps |> List.contains PureSubtermsWithinComputations
+                    then let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                            let cfg = {cfg with steps=[PureSubtermsWithinComputations; Primops; AllowUnboundUniverses; EraseUniverses; Exclude Zeta]; delta_level=OnlyInline} in
+                            norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+                    else norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+            
+                 | _ -> 
+                    begin match stack with 
+                          | _::_ ->
+                            begin match m with 
+                                | Meta_labeled(l, r, _) -> 
+                                    norm cfg env (Meta(m,r)::stack) head //meta doesn't block reduction, but we need to put the label back
 
-                    | Meta_monadic (m, t) ->
-                      let t = norm cfg env [] t in
-                      let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                      let cfg = {cfg with steps=NoInline::WHNF::Exclude Zeta::cfg.steps; delta_level=NoDelta} in
-                      norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
-
-                    | Meta_monadic_lift (m, m') ->
-                      if (Util.is_pure_effect m
-                      || Util.is_ghost_effect m)
-                      && cfg.steps |> List.contains PureSubtermsWithinComputations
-                      then let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                           let cfg = {cfg with steps=[PureSubtermsWithinComputations; AllowUnboundUniverses; EraseUniverses; Exclude Zeta]; delta_level=OnlyInline} in
-                           norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
-                      else norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
-
-                    | _ -> 
-                      norm cfg env stack head //meta doesn't block reduction
-                  end  
-                | _ -> 
-                let head = norm cfg env [] head in
-                let m = match m with 
-                    | Meta_pattern args -> 
-                      Meta_pattern (norm_pattern_args cfg env args)
-                    | _ -> m in
-                let t = mk (Tm_meta(head, m)) t.pos in
-                rebuild cfg env stack t
+                                | Meta_pattern args -> 
+                                    let args = norm_pattern_args cfg env args in
+                                    norm cfg env (Meta(Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
+          
+                                | _ -> 
+                                    norm cfg env stack head //meta doesn't block reduction
+                           end  
+                         | _ -> 
+                            let head = norm cfg env [] head in
+                            let m = match m with 
+                                | Meta_pattern args -> 
+                                    Meta_pattern (norm_pattern_args cfg env args)
+                                | _ -> m in
+                            let t = mk (Tm_meta(head, m)) t.pos in
+                            rebuild cfg env stack t
+                   end
             end
 
 and norm_pattern_args cfg env args = 
@@ -858,9 +884,11 @@ and norm_comp : cfg -> env -> comp -> comp =
 
             | Comp ct -> 
               let norm_args args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
+              let flags = ct.flags |> List.map (function DECREASES t -> DECREASES (norm cfg env [] t) | f -> f) in
               {comp with n=Comp ({ct with comp_univs=List.map (norm_universe cfg env) ct.comp_univs;
                                           result_typ=norm cfg env [] ct.result_typ;
-                                          effect_args=norm_args ct.effect_args})}
+                                          effect_args=norm_args ct.effect_args;
+                                          flags=flags})}
 
 (* Promotes Ghost T, when T is not informative to Pure T
         Non-informative types T ::= unit | Type u | t -> Tot T | t -> GTot T
@@ -978,6 +1006,9 @@ and rebuild : cfg -> env -> stack -> term -> term =
 
             | Match(env, branches, r) :: stack ->
               log cfg  (fun () -> Util.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
+              //the scrutinee is always guaranteed to be a pure or ghost term
+              //see tc.fs, the case of Tm_match and the comment related to issue #594
+              let scrutinee = t in
               let norm_and_rebuild_match () =
                 let whnf = List.contains WHNF cfg.steps in
                 let cfg = {cfg with delta_level=glb_delta cfg.delta_level OnlyInline;
@@ -1019,7 +1050,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
                         | Some w -> Some (norm_or_whnf env w) in
                      let e = norm_or_whnf env e in
                      Util.branch (p, wopt, e)) in
-                rebuild cfg env stack (mk (Tm_match(t, branches)) r) in
+                rebuild cfg env stack (mk (Tm_match(scrutinee, branches)) r) in
 
               let rec is_cons head = match head.n with 
                 | Tm_uinst(h, _) -> is_cons h
@@ -1033,20 +1064,20 @@ and rebuild : cfg -> env -> stack -> term -> term =
                    | None -> b
                    | Some w -> 
                      let then_branch = b in
-                     let else_branch = mk (Tm_match(t, rest)) r in 
+                     let else_branch = mk (Tm_match(scrutinee, rest)) r in 
                      Util.if_then_else w then_branch else_branch in
                 
 
-              let rec matches_pat (t:term) (p:pat)  
+              let rec matches_pat (scrutinee:term) (p:pat)  
                 :  either<list<term>, bool> //Inl ts: p matches t and ts are bindings for the branch
                 =                           //Inr false: p definitely does not match t
                                             //Inr true: p may match t, but p is an open term and we cannot decide for sure 
-                    let t = compress t in 
-                    let head, args = Util.head_and_args t in 
+                    let scrutinee = U.unmeta scrutinee in 
+                    let head, args = Util.head_and_args scrutinee in 
                     match p.v with 
                         | Pat_disj ps -> 
                           let mopt = Util.find_map ps (fun p -> 
-                            let m = matches_pat t p in
+                            let m = matches_pat scrutinee p in
                             match m with 
                              | Inl _ -> Some m //definite match
                              | Inr true -> Some m //maybe match; stop considering other cases
@@ -1056,10 +1087,10 @@ and rebuild : cfg -> env -> stack -> term -> term =
                             | Some m -> m
                           end
                         | Pat_var _ 
-                        | Pat_wild _ -> Inl [t]
+                        | Pat_wild _ -> Inl [scrutinee]
                         | Pat_dot_term _ -> Inl []
                         | Pat_constant s -> 
-                          begin match t.n with 
+                          begin match scrutinee.n with 
                             | Tm_constant s' when (s=s') -> Inl []
                             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
                           end
@@ -1079,12 +1110,12 @@ and rebuild : cfg -> env -> stack -> term -> term =
                     end 
                 | _ -> Inr false in
             
-              let rec matches t p = match p with 
+              let rec matches scrutinee p = match p with 
                 | [] -> norm_and_rebuild_match ()
                 | (p, wopt, b)::rest -> 
-                   match matches_pat t p with
+                   match matches_pat scrutinee p with
                     | Inr false -> //definite mismatch; safe to consider the remaining patterns
-                      matches t rest 
+                      matches scrutinee rest 
 
                     | Inr true -> //may match this pattern but t is an open term; block reduction
                       norm_and_rebuild_match ()
@@ -1100,7 +1131,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
               
               if cfg.steps |> List.contains (Exclude Iota)
               then norm_and_rebuild_match ()
-              else matches t branches
+              else matches scrutinee branches
 
 let config s e = 
     let d = match Util.find_map s (function UnfoldUntil k -> Some k | _ -> None) with

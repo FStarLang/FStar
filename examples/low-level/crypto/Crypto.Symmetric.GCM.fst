@@ -67,6 +67,8 @@ private val auth_body: #k:pos -> alg:cipher_alg k ->
     (requires (fun h -> live h ciphertext /\ live h tag /\ live h key /\ live h nonce /\ live h ad /\ live h tmp))
     (ensures (fun h0 _ h1 -> live h1 ciphertext /\ live h1 tag /\ live h1 key /\ live h1 nonce /\ live h1 ad /\ live h1 tmp
         /\ modifies_2 tag tmp h0 h1))
+#set-options "--z3timeout 20"	
+//NS: Hints are not replayable for this function, and for a few others below	
 let auth_body #k alg ciphertext tag key nonce cnt ad adlen len tmp =
   let h0 = HST.get() in
   fill tag 0uy 16ul;
@@ -82,6 +84,7 @@ let auth_body #k alg ciphertext tag key nonce cnt ad adlen len tmp =
   let h1 = HST.get() in
   assert(live h1 ciphertext /\ live h1 tag /\ live h1 key /\ live h1 nonce /\ live h1 ad /\ live h1 tmp /\ modifies_2 tag tmp h0 h1)
 
+#set-options "--z3timeout 10"	
 private val authenticate: #k:pos -> alg:cipher_alg k ->
     ciphertext:bytes ->
     tag:bytes{length tag = 16 /\ disjoint ciphertext tag} ->

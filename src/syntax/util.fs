@@ -360,6 +360,15 @@ let rec unrefine t =
   | Tm_ascribed(t, _, _) -> unrefine t
   | _ -> t
 
+let rec is_unit t = 
+    match (unrefine t).n with
+    | Tm_type _ -> true
+    | Tm_fvar fv ->
+      fv_eq_lid fv Const.unit_lid
+      || fv_eq_lid fv Const.squash_lid
+    | Tm_uinst (t, _) -> is_unit t
+    | _ -> false
+
 let rec non_informative t =
     match (unrefine t).n with
     | Tm_type _ -> true
