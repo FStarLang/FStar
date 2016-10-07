@@ -69,6 +69,12 @@ let incr u =
   let n = STINT.get () in
   STINT.put (n + 1)
 
+val incr' : unit -> STINT unit
+  (fun s0 post -> forall (s1:int). (s1 > s0) ==> post ((), s1))
+let incr' u =
+  let n = STINT.get () in
+  STINT.put (n + 1)
+
 reifiable val incr2 : unit -> St unit 
 let incr2 u =
     let n = STINT.get() in

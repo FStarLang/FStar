@@ -5,6 +5,7 @@ follow this order when trying to familiarize oneself with the feature.
 
 Section		Description			File
 
+§ 2.2           Integer state (incr example)    FStar.DM4F.IntST.fst
 § 2.3		Simple state monad (st)		FStar.DM4F.ST.fst
 -- TODO: (2.3 mentions the laws, what about that?)
 
