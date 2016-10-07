@@ -25,20 +25,86 @@ open FStar.Ident
 
 // VALS_HACK_HERE
 
+///////////////////////////////////////////////////////////////////////////
+// A few utility functions for working with lists of parallel substitutions
+///////////////////////////////////////////////////////////////////////////
+
+(* A subst_t is a composition of parallel substitutions, expressed as a list of lists *)
+let subst_to_string s = 
+    s |> List.map (fun (b, _) -> b.ppname.idText) |> String.concat ", "
+
+(* apply_until_some f s 
+      applies f to each element of s until it returns (Some t)
+*)
+let rec apply_until_some f s = 
+    match s with
+    | [] -> None
+    | s0::rest ->
+        match f s0 with
+        | None -> apply_until_some f rest
+        | Some st -> Some (rest, st)
+
+let map_some_curry f x = function
+    | None -> x
+    | Some (a, b) -> f a b
+
+let apply_until_some_then_map f s g t = 
+    apply_until_some f s 
+    |> map_some_curry g t
+/////////////////////////////////////////////////////////////////////////
+
+
+//s1 is the subsitution already associated with this node;
+//s2 is the new subsitution to add to it
+//compose substitutions by concatenating them
+//the order of concatenation is important!
+//the range of s2 take precedence, if present
+let compose_subst s1 s2 = 
+    let s = fst s1 @ fst s2 in
+    let ropt = match snd s2 with 
+               | Some _ -> snd s2
+               | _ -> snd s1 in
+    (s, ropt)
+
+//apply a delayed substitution s to t, 
+//composing it with any other delayed substitution that may already be there
+let delay t s = 
+ match t.n with 
+ | Tm_delayed(Inl(t', s'), m) ->
+    //s' is the subsitution already associated with this node;
+    //s is the new subsitution to add to it
+    //compose substitutions by concatenating them
+    //the order of concatenation is important!
+    mk_Tm_delayed (Inl (t', compose_subst s' s)) t.pos
+ | _ -> 
+    mk_Tm_delayed (Inl (t, s)) t.pos
+
 (*
-    force_uvar (t:term) 
+    force_uvar' (t:term) 
         replaces any unification variable at the head of t
         with the term that it has been fixed to, if any.
 *)
-let rec force_uvar t = match t.n with
+let rec force_uvar' t = 
+  match t.n with
   | Tm_uvar (uv,_) ->
       begin
         match Unionfind.find uv with
-          | Fixed t' -> force_uvar t'
+          | Fixed t' -> force_uvar' t'
           | _ -> t
       end
   | _ -> t
 
+//wraps force_uvar' to propagate any position information
+//from the uvar to anything it may have been resolved to
+let force_uvar t = 
+  let t' = force_uvar' t in
+  if LanguagePrimitives.PhysicalEquality t t'
+  then t
+  else delay t' ([], Some t.pos)
+ 
+//If a delayed node has already been memoized, then return the memo
+//Otherwise, if it contains a thunk, force the thunk
+//THIS DOES NOT PUSH A SUBSTITUTION UNDER A DELAYED NODE---see push_subst for that
 let rec force_delayed_thunk t = match t.n with
   | Tm_delayed(f, m) ->
     (match !m with
@@ -61,8 +127,6 @@ let rec compress_univ u = match u with
 (********************************************************************************)
 (*************************** Delayed substitutions ******************************)
 (********************************************************************************)
-(* A subst_t is a composition of parallel substitutions, expressed as a list of lists *)
-let subst_to_string s = s |> List.map (fun (b, _) -> b.ppname.idText) |> String.concat ", "
 
 //Lookup a bound var or a name in a parallel substitution
 let subst_bv a s = Util.find_map s (function 
@@ -80,24 +144,6 @@ let subst_univ_nm (x:univ_name) s = Util.find_map s (function
     | UD(y, i) when (x.idText=y.idText) -> Some (U_bvar i)
     | _ -> None)
 
-(* apply_until_some f s 
-      applies f to each element of s until it returns (Some t)
-*)
-let rec apply_until_some f s = match s with
-    | [] -> None
-    | s0::rest ->
-        match f s0 with
-            | None -> apply_until_some f rest
-            | Some st -> Some (rest, st)
-
-let map_some_curry f x = function
-    | None -> x
-    | Some (a, b) -> f a b
-
-let apply_until_some_then_map f s g t = 
-    apply_until_some f s 
-    |> map_some_curry g t
-
 let rec subst_univ s u =
     let u = compress_univ u in
     match u with 
@@ -113,63 +159,77 @@ let rec subst_univ s u =
       | U_succ u -> U_succ (subst_univ s u)
       | U_max us -> U_max (List.map (subst_univ s) us)
 
+let tag_with_range t s = 
+    match snd s with
+    | None -> t
+    | Some r -> {t with pos=Range.set_use_range t.pos r}
 
-let rec subst' (s:subst_ts) t = match s with
-  | [] 
-  | [[]] -> t //force_uvar t
+let mk_range r (s:subst_ts) = 
+    match snd s with
+    | None -> r
+    | Some r' -> Range.set_use_range r r'
+
+(* Applies a substitution to a node, 
+     immediately if it is a variable
+     or builds a delayed node otherwise *)
+let rec subst' (s:subst_ts) t = 
+  let subst_tail (tl:list<list<subst_elt>>) = subst' (tl, snd s) in
+  match s with
+  | [], None
+  | [[]], None -> t
   | _ ->
     let t0 = force_delayed_thunk t in 
     match t0.n with
-        | Tm_unknown
-        | Tm_constant _      //a constant cannot be substituted
-        | Tm_fvar _          //fvars are never subject to substitution
-        | Tm_uvar _ -> t0    //uvars are always resolved to closed terms
+    | Tm_unknown
+    | Tm_constant _                      //a constant cannot be substituted
+    | Tm_fvar _                          //fvars are never subject to substitution
+    | Tm_uvar _ -> tag_with_range t0 s    //uvars are always resolved to closed terms
 
-        | Tm_delayed(Inl(t', s'), m) ->
-            //s' is the subsitution already associated with this node;
-            //s is the new subsitution to add to it
-            //compose substitutions by concatenating them
-            //the order of concatenation is important!
-          mk_Tm_delayed (Inl (t', s'@s)) t.pos
+    | Tm_delayed(Inl(t', s'), m) ->
+        //s' is the subsitution already associated with this node;
+        //s is the new subsitution to add to it
+        //compose substitutions by concatenating them
+        //the order of concatenation is important!
+        mk_Tm_delayed (Inl (t', compose_subst s' s)) t.pos
 
-        | Tm_delayed(Inr _, _) -> 
-          failwith "Impossible: force_delayed_thunk removes lazy delayed nodes"
+    | Tm_delayed(Inr _, _) -> 
+        failwith "Impossible: force_delayed_thunk removes lazy delayed nodes"
 
-        | Tm_bvar a ->
-          apply_until_some_then_map (subst_bv a) s subst' t0
+    | Tm_bvar a ->
+        apply_until_some_then_map (subst_bv a) (fst s) subst_tail t0
 
-        | Tm_name a -> 
-          apply_until_some_then_map (subst_nm a) s subst' t0
+    | Tm_name a -> 
+        apply_until_some_then_map (subst_nm a) (fst s) subst_tail t0
 
-        | Tm_type u -> 
-          mk (Tm_type (subst_univ s u)) None t0.pos 
+    | Tm_type u -> 
+        mk (Tm_type (subst_univ (fst s) u)) None (mk_range t0.pos s)
           
-        | _ -> mk_Tm_delayed (Inl(t0, s))  t.pos
+    | _ -> mk_Tm_delayed (Inl(t0, s)) (mk_range t.pos s)
 
 and subst_flags' s flags =
     flags |> List.map (function
         | DECREASES a -> DECREASES (subst' s a)
         | f -> f)
 
-and subst_comp_typ' s t = match s with
-  | []
-  | [[]] -> t
+and subst_comp_typ' s t = 
+  match s with
+  | [], None
+  | [[]], None -> t
   | _ ->
-    {t with comp_univs=List.map (subst_univ s) t.comp_univs;
+    {t with comp_univs=List.map (subst_univ (fst s)) t.comp_univs;
             result_typ=subst' s t.result_typ;
             flags=subst_flags' s t.flags;
             effect_args=List.map (fun (t, imp) -> subst' s t, imp) t.effect_args}
 
-and subst_comp' s t = match s with
-  | []
-  | [[]] -> t
+and subst_comp' s t = 
+  match s with
+  | [], None
+  | [[]], None -> t
   | _ ->
     match t.n with
-      | Total (t, uopt) -> mk_Total' (subst' s t) (Option.map (subst_univ s) uopt)
-      | GTotal (t, uopt) -> mk_GTotal' (subst' s t) (Option.map (subst_univ s) uopt)
+      | Total (t, uopt) -> mk_Total' (subst' s t) (Option.map (subst_univ (fst s)) uopt)
+      | GTotal (t, uopt) -> mk_GTotal' (subst' s t) (Option.map (subst_univ (fst s)) uopt)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
-
-and compose_subst (s1:subst_ts) (s2:subst_ts) = s1@s2
 
 let shift n s = match s with 
     | DB(i, t) -> DB(i+n, t)
@@ -178,7 +238,7 @@ let shift n s = match s with
     | UD(x, i) -> UD(x, i+n)
     | NT _  -> s
 let shift_subst n s = List.map (shift n) s
-let shift_subst' n s = s |> List.map (shift_subst n)
+let shift_subst' n s = fst s |> List.map (shift_subst n), snd s
 let subst_binder' s (x, imp) = {x with sort=subst' s x.sort}, imp
 
 
@@ -186,7 +246,7 @@ let subst_binders' s bs =
     bs |> List.mapi (fun i b -> 
         if i=0 then subst_binder' s b
         else subst_binder' (shift_subst' i s) b)
-let subst_binders s (bs:binders) = subst_binders' [s] bs
+let subst_binders s (bs:binders) = subst_binders' ([s], None) bs
 let subst_arg' s (t, imp) = (subst' s t, imp)
 let subst_args' s = List.map (subst_arg' s)
 let subst_pat' s p : (pat * int) = 
@@ -231,92 +291,98 @@ let push_subst_lcomp s lopt = match lopt with
                          comp=(fun () -> subst_comp' s (l.comp()))}))
 
 let push_subst s t = 
+    //makes a syntax node, setting it's use range as appropriate from s
+    let mk t' = Syntax.mk t' None (mk_range t.pos s) in
     match t.n with 
-        | Tm_delayed _ -> failwith "Impossible"
+    | Tm_delayed _ -> failwith "Impossible"
 
-        | Tm_constant _
-        | Tm_fvar _
-        | Tm_unknown 
-        | Tm_uvar _ -> t
+    | Tm_constant _
+    | Tm_fvar _
+    | Tm_unknown 
+    | Tm_uvar _ -> tag_with_range t s
 
-        | Tm_type _
-        | Tm_bvar _ 
-        | Tm_name _  -> subst' s t
+    | Tm_type _
+    | Tm_bvar _ 
+    | Tm_name _  -> subst' s t
 
-        | Tm_uinst(t', us) -> 
-          //t' must be an fvar---it cannot be substituted
-          //but the universes may be substituted
-          let us = List.map (subst_univ s) us in
-          mk_Tm_uinst t' us
+    | Tm_uinst(t', us) -> 
+        //t' must be an fvar---it cannot be substituted
+        //but the universes may be substituted
+        let us = List.map (subst_univ (fst s)) us in
+        tag_with_range (mk_Tm_uinst t' us) s
 
-        | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args)) None t.pos
+    | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args))
 
-        | Tm_ascribed(t0, Inl t1, lopt) -> mk (Tm_ascribed(subst' s t0, Inl (subst' s t1), lopt)) None t.pos
-        | Tm_ascribed(t0, Inr c, lopt) -> mk (Tm_ascribed(subst' s t0, Inr (subst_comp' s c), lopt)) None t.pos
+    | Tm_ascribed(t0, Inl t1, lopt) -> mk (Tm_ascribed(subst' s t0, Inl (subst' s t1), lopt))
+    | Tm_ascribed(t0, Inr c, lopt) -> mk (Tm_ascribed(subst' s t0, Inr (subst_comp' s c), lopt))
        
-        | Tm_abs(bs, body, lopt) -> 
-          let n = List.length bs in 
-          let s' = shift_subst' n s in
-          mk (Tm_abs(subst_binders' s bs, subst' s' body, push_subst_lcomp s' lopt)) None t.pos   
+    | Tm_abs(bs, body, lopt) -> 
+        let n = List.length bs in 
+        let s' = shift_subst' n s in
+        mk (Tm_abs(subst_binders' s bs, subst' s' body, push_subst_lcomp s' lopt))
           
-        | Tm_arrow(bs, comp) -> 
-          let n = List.length bs in 
-          mk (Tm_arrow(subst_binders' s bs, subst_comp' (shift_subst' n s) comp)) None t.pos   
+    | Tm_arrow(bs, comp) -> 
+        let n = List.length bs in 
+        mk (Tm_arrow(subst_binders' s bs, subst_comp' (shift_subst' n s) comp))
         
-        | Tm_refine(x, phi) -> 
-          let x = {x with sort=subst' s x.sort} in
-          let phi = subst' (shift_subst' 1 s) phi in
-          mk (Tm_refine(x, phi)) None t.pos
+    | Tm_refine(x, phi) -> 
+        let x = {x with sort=subst' s x.sort} in
+        let phi = subst' (shift_subst' 1 s) phi in
+        mk (Tm_refine(x, phi))
 
-        | Tm_match(t0, pats) -> 
-          let t0 = subst' s t0 in
-          let pats = pats |> List.map (fun (pat, wopt, branch) -> 
-            let pat, n = subst_pat' s pat in 
-            let s = shift_subst' n s in 
-            let wopt = match wopt with 
-                | None -> None
-                | Some w -> Some (subst' s w) in
-            let branch = subst' s branch in 
-            (pat, wopt, branch)) in
-          mk (Tm_match(t0, pats)) None t.pos    
+    | Tm_match(t0, pats) -> 
+        let t0 = subst' s t0 in
+        let pats = pats |> List.map (fun (pat, wopt, branch) -> 
+        let pat, n = subst_pat' s pat in 
+        let s = shift_subst' n s in 
+        let wopt = match wopt with 
+            | None -> None
+            | Some w -> Some (subst' s w) in
+        let branch = subst' s branch in 
+        (pat, wopt, branch)) in
+        mk (Tm_match(t0, pats))
            
-        | Tm_let((is_rec, lbs), body) -> 
-          let n = List.length lbs in
-          let sn = shift_subst' n s in
-          let body = subst' sn body in 
-          let lbs = lbs |> List.map (fun lb -> 
-            let lbt = subst' s lb.lbtyp in
-            let lbd = if is_rec && Util.is_left (lb.lbname) //if it is a recursive local let, then all the let bound names are in scope for the body
-                      then subst' sn lb.lbdef 
-                      else subst' s lb.lbdef in
-            let lbname = match lb.lbname with 
-                | Inl x -> Inl ({x with sort=lbt})
-                | Inr fv -> Inr ({fv with fv_name={fv.fv_name with ty=lbt}}) in
-            {lb with lbname=lbname; lbtyp=lbt; lbdef=lbd}) in
-          mk (Tm_let((is_rec, lbs), body)) None t.pos  
+    | Tm_let((is_rec, lbs), body) -> 
+        let n = List.length lbs in
+        let sn = shift_subst' n s in
+        let body = subst' sn body in 
+        let lbs = lbs |> List.map (fun lb -> 
+        let lbt = subst' s lb.lbtyp in
+        let lbd = if is_rec && Util.is_left (lb.lbname) //if it is a recursive local let, then all the let bound names are in scope for the body
+                    then subst' sn lb.lbdef 
+                    else subst' s lb.lbdef in
+        let lbname = match lb.lbname with 
+            | Inl x -> Inl ({x with sort=lbt})
+            | Inr fv -> Inr ({fv with fv_name={fv.fv_name with ty=lbt}}) in
+        {lb with lbname=lbname; lbtyp=lbt; lbdef=lbd}) in
+        mk (Tm_let((is_rec, lbs), body))
          
-        | Tm_meta(t0, Meta_pattern ps) -> 
-          mk (Tm_meta(subst' s t0, Meta_pattern (ps |> List.map (subst_args' s)))) None t.pos
+    | Tm_meta(t0, Meta_pattern ps) -> 
+        mk (Tm_meta(subst' s t0, Meta_pattern (ps |> List.map (subst_args' s))))
 
-        | Tm_meta(t0, Meta_monadic (m, t)) -> 
-          mk (Tm_meta(subst' s t0, Meta_monadic(m, subst' s t))) None t.pos
+    | Tm_meta(t0, Meta_monadic (m, t)) -> 
+        mk (Tm_meta(subst' s t0, Meta_monadic(m, subst' s t)))
 
-        | Tm_meta(t, m) -> 
-          mk (Tm_meta(subst' s t,  m)) None t.pos 
+    | Tm_meta(t, m) -> 
+        mk (Tm_meta(subst' s t,  m))
 
 let rec compress (t:term) = 
     let t = force_delayed_thunk t in
     match t.n with
-        | Tm_delayed(Inl(t, s), memo) -> 
-          let t' = compress (push_subst s t) in
-          Unionfind.update_in_tx memo (Some t');
+    | Tm_delayed(Inl(t, s), memo) -> 
+        let t' = compress (push_subst s t) in
+        Unionfind.update_in_tx memo (Some t');
 //          memo := Some t';
-          t'
-        | _ -> force_uvar t
+        t'
+    | _ -> let t' = force_uvar t in 
+           match t'.n with 
+           | Tm_delayed _ -> compress t'
+           | _ -> t'
             
 
-let subst s t = subst' [s] t
-let subst_comp s t = subst_comp' [s] t
+let subst s t = subst' ([s], None) t
+let set_use_range r t = subst' ([], Some r) t
+let subst_comp s t = subst_comp' ([s], None) t
 let closing_subst bs = 
     List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst 
 let open_binders' bs = 

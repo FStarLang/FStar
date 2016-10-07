@@ -157,7 +157,8 @@ and fv_qual =
   | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
-and subst_ts = list<list<subst_elt>>
+and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
+             * option<range>                    (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
 and subst_elt = 
    | DB of int * bv                            (* DB i t: replace a bound variable with index i with name bv                 *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
