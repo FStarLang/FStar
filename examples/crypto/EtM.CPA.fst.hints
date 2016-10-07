@@ -118,10 +118,9 @@
       ],
       0
     ],
-    [ "EtM.CPA.encrypt", 2, 2, 1, [ "@query" ], 0 ],
     [
       "EtM.CPA.encrypt",
-      3,
+      2,
       2,
       1,
       [
@@ -171,8 +170,8 @@
         "lemma_FStar.Map.lemma_equal_elim",
         "lemma_FStar.Map.lemma_equal_intro",
         "lemma_FStar.Seq.lemma_len_append", "lemma_FStar.Set.mem_complement",
-        "lemma_FStar.Set.mem_empty", "lemma_FStar.Set.mem_subset",
-        "lemma_FStar.Set.subset_mem",
+        "lemma_FStar.Set.mem_empty", "lemma_FStar.Set.mem_singleton",
+        "lemma_FStar.Set.mem_subset", "lemma_FStar.Set.subset_mem",
         "pretyping_6c86c071b92797cdf01eb016249a9465",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
@@ -198,25 +197,6 @@
         "typing_FStar.Seq.length", "typing_FStar.Seq.seq",
         "typing_FStar.Set.complement", "typing_FStar.Set.empty",
         "typing_FStar.Set.mem", "typing_FStar.Set.singleton"
-      ],
-      0
-    ],
-    [
-      "EtM.CPA.encrypt",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_EtM.Plain.Plain_hasEq",
-        "assumption_Platform.Bytes.HasEq_bytes",
-        "assumption_Prims.HasEq_tuple2",
-        "equality_tok_CoreCrypto.AES_128_CBC@tok",
-        "equation_CoreCrypto.blockSize", "equation_EtM.CPA.cipher",
-        "equation_EtM.CPA.ivsize", "equation_EtM.CPA.msg",
-        "equation_Platform.Bytes.bytes",
-        "function_token_typing_EtM.CPA.cipher",
-        "function_token_typing_EtM.Plain.plain",
-        "haseqTm_refine_12eb3fd7a033166e40e43205a6b107c8"
       ],
       0
     ],
@@ -261,7 +241,7 @@
       [
         "@query", "assumption_EtM.Plain.Plain_hasEq",
         "assumption_Platform.Bytes.HasEq_bytes",
-        "assumption_Prims.HasEq_tuple2",
+        "assumption_Prims.tuple2_haseq",
         "equality_tok_CoreCrypto.AES_128_CBC@tok",
         "equation_CoreCrypto.blockSize", "equation_EtM.CPA.cipher",
         "equation_EtM.CPA.ivsize", "equation_EtM.CPA.msg",

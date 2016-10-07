@@ -1,0 +1,23 @@
+[
+  "¤ø{¢\t´8õ'õÁayY\t¢",
+  [
+    [ "HyE.HCCA2.PKey.region", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HCCA2.PKey.rawpk", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HCCA2.PKey.cca_pk", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HCCA2.SKey.cca_sk", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HCCA2.SKey.pk", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HCCA2.keygen", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HCCA2.encrypt", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "HyE.HCCA2.decrypt",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "equation_HyE.PlainPKE.t", "fuel_guarded_inversion_Prims.option"
+      ],
+      0
+    ]
+  ]
+]

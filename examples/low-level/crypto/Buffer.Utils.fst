@@ -164,20 +164,33 @@ let rec bytes_of_uint32 output x =
   output.(1ul) <- b1;
   output.(2ul) <- b2;
   output.(3ul) <- b3
-
+ 
 (* A form of memset, could go into some "Utils" functions module *)
-(* TODO: add functional spec *)
+
+(*
+// should follow from Seq
+assume private val lemma_create_cons:
+  #a:Type -> n:nat -> v:a -> Lemma
+  (Seq.equal (SeqProperties.cons v (Seq.create n v)) (Seq.create (n + 1) v))
+*)
+
+//16-10-03 added functional step; made pre-condition tighter (sufficient for use in AEAD)
 val memset: b:bytes -> z:u8 -> len:u32 -> STL unit
-  (requires (fun h -> live h b /\ v len <= length b))
-  (ensures  (fun h0 _ h1 -> modifies_1 b h0 h1 /\ live h1 b
-    (* /\ Seq.slice (as_seq h1 b) 0 (v len) == Seq.create (v len) z *)
-    (* /\ Seq.slice (as_seq h1 b) (v len) (length b) == (as_seq h0 b) (v len) (length b) *)
-    ))
+  (requires (fun h -> live h b /\ v len = length b))
+  (ensures  (fun h0 _ h1 -> 
+    live h1 b /\ modifies_1 b h0 h1 /\ 
+    Seq.equal (as_seq h1 b) (Seq.create (v len) z)))
 let rec memset b z len =
-  if len =^ 0ul then ()
+  if len = 0ul then assume false
   else
-    begin
+  begin
+    let h0 = HST.get() in
     let i = len -^ 1ul in
-    b.(i) <- z;
-    memset b z i
-    end
+    memset (offset b 1ul) z i; // we should swap these two lines for tail recursion
+    b.(0ul) <- z; 
+    let h1 = HST.get() in 
+    let s = as_seq h1 b in
+    assert(Seq.index s 0 = z); // ...but this fails in the absence of framing
+    assert(Seq.equal s (SeqProperties.cons z (Seq.slice s 1 (v len))))
+  end
+

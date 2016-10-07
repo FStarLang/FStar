@@ -1,0 +1,29 @@
+[
+  "mS òlÿv\u001a·ƒ>ºß|¨Ó",
+  [
+    [ "Ex04e.option", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex04e.Some._0",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Ex04e.Some",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_03108cf543fbeddf93de8e097d1fe005"
+      ],
+      0
+    ],
+    [
+      "Ex04e.find",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
+      ],
+      0
+    ]
+  ]
+]

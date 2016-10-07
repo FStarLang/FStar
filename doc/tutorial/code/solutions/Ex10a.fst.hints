@@ -1,5 +1,5 @@
 [
-  "ÌNæ¿S(…ìr,Œ‡û$m\u0019",
+  "G×'¥F£\u0000\u0006\u001dGÿGª¾Äz",
   [
     [
       "Ex10a.entry",
@@ -61,8 +61,7 @@
       [ "@query", "assumption_Prims.HasEq_string" ],
       0
     ],
-    [ "Ex10a.canRead_t", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex10a.canWrite_t", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex10a.acls", 1, 2, 1, [ "@query" ], 0 ],
     [ "Ex10a.grant", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex10a.grant",
@@ -71,8 +70,8 @@
       1,
       [
         "@query", "assumption_FStar.Heap.SelUpd1", "equation_Ex10a.db",
-        "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
-        "ref_inversion"
+        "equation_FStar.ST.ref", "function_token_typing_Ex10a.acls",
+        "function_token_typing_Ex10a.db"
       ],
       0
     ],
@@ -92,8 +91,8 @@
       1,
       [
         "@query", "assumption_FStar.Heap.SelUpd1", "equation_Ex10a.db",
-        "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
-        "ref_inversion",
+        "equation_FStar.ST.ref", "function_token_typing_Ex10a.acls",
+        "function_token_typing_Ex10a.db",
         "refinement_interpretation_Tm_refine_61824f39f1a5b2f9359cc4429f47ee80"
       ],
       0
@@ -114,6 +113,8 @@
       [ "@query", "assumption_Ex10a.entry_haseq" ],
       0
     ],
+    [ "Ex10a.canRead_t", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex10a.canWrite_t", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Ex10a.safe_delete",
       1,
@@ -127,10 +128,11 @@
         "data_typing_intro_Prims.V@tok", "eq2-interp",
         "equation_Ex10a.canWrite_t", "equation_Ex10a.file",
         "equation_FStar.List.Tot.test_sort", "equation_FStar.ST.modifies",
-        "equation_FStar.ST.modifies_none", "equation_Prims.l_not",
+        "equation_FStar.ST.modifies_none", "equation_Prims._assert",
         "function_token_typing_FStar.List.Tot.test_sort",
         "function_token_typing_Prims.unit", "kinding_FStar.Heap.aref@tok",
-        "lemma_FStar.TSet.mem_complement", "lemma_FStar.TSet.mem_empty",
+        "l_not-interp", "lemma_FStar.TSet.mem_complement",
+        "lemma_FStar.TSet.mem_empty",
         "pretyping_f537159ed795b314b4e58c260361ae86",
         "pretyping_f8666440faa91836cc5a13998af863fc",
         "proj_equation_Prims.V_v", "projection_inverse_Prims.V_v",

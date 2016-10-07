@@ -9,7 +9,6 @@ KREMLIN_ARGS=-tmpdir kremlin -verbose --lax
 
 OPTIONS_OCAML=--lax --codegen OCaml --no_location_info
 
-CURVE_ODIR=curve
 CHACHA_ODIR=chacha
 POLY_ODIR=poly
 AEAD_ODIR=aead
@@ -18,24 +17,25 @@ AEAD_ODIR=aead
 OCAMLOPT := $(OCAMLOPT) -w -8-20-26
 
 REALIZED_MLI=
-REALIZED=FStar_HST_Monotonic_RRef
+REALIZED=Low_Bytes
 REALIZED_MODULE=$(subst _,., $(REALIZED))
 REALIZED_ML=$(addsuffix .mli,$(REALIZED_MLI)) $(addsuffix .ml,$(REALIZED_MLI) $(REALIZED))
 NO_CODEGEN=$(addprefix --no_extract , FStar.Buffer SInt $(REALIZED_MODULE))
 
-CURVE_EXTRACTED=FStar_TSet.ml FStar_FunctionalExtensionality.ml FStar_Ghost.ml FStar_Math_Lib.ml FStar_Math_Lemmas.ml  Math_Lib.ml Math_Definitions.ml Math_Field.ml Math_Curve.ml Curve_Parameters.ml Curve_Bigint.ml Curve_Fsum.ml Curve_FsumWide.ml Curve_Fdifference.ml Curve_Fscalar.ml Curve_Fproduct.ml Curve_Modulo.ml Curve_Bignum.ml Curve_Crecip.ml Curve_Point.ml Curve_AddAndDouble.ml Curve_Ladder.ml
 CHACHA_EXTRACTED=Buffer_Utils.ml Crypto_Symmetric_Chacha20.ml
-POLY_EXTRACTED=FStar_List_Tot.ml FStar_Ghost.ml FStar_Seq.ml FStar_SeqProperties.ml Buffer_Utils.ml Crypto_Symmetric_Poly1305_Parameters.ml Crypto_Symmetric_Poly1305_Bigint.ml Crypto_Symmetric_Poly1305_Bignum.ml Crypto_Symmetric_Poly1305_Spec.ml Crypto_Symmetric_Poly1305.ml
-AEAD_EXTRACTED= FStar_List_Tot.ml FStar_Seq.ml FStar_SeqProperties.ml Buffer_Utils.ml Crypto_Symmetric_Chacha20.ml FStar_Ghost.ml Plain.ml Crypto_Symmetric_Poly1305_Spec.ml Crypto_Symmetric_Poly1305_Parameters.ml Crypto_Symmetric_Poly1305_Bigint.ml Crypto_Symmetric_Poly1305_Bignum.ml Crypto_Symmetric_Poly1305.ml Crypto_Symmetric_Poly1305_MAC.ml Crypto_AEAD_Chacha20Poly1305.ml
+POLY_EXTRACTED=FStar_List_Tot.ml FStar_Ghost.ml FStar_Seq.ml FStar_SeqProperties.ml Buffer_Utils.ml Crypto_Symmetric_Poly1305_Parameters.ml Crypto_Symmetric_Poly1305_Bigint.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part1.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part2.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part3.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part4.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.ml Crypto_Symmetric_Poly1305_Bignum.ml Crypto_Symmetric_Poly1305_Spec.ml Crypto_Symmetric_Poly1305.ml
+AEAD_EXTRACTED= FStar_List_Tot.ml FStar_Seq.ml FStar_SeqProperties.ml Buffer_Utils.ml Crypto_Symmetric_Bytes.ml Crypto_Symmetric_Chacha20.ml Crypto_Symmetric_AES.ml Crypto_Symmetric_BlockCipher.ml FStar_Ghost.ml Plain.ml Crypto_Symmetric_Poly1305_Spec.ml Crypto_Symmetric_Poly1305_Parameters.ml Crypto_Symmetric_Poly1305_Bigint.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part1.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part2.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part3.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part4.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.ml Crypto_Symmetric_Poly1305_Bignum.ml Crypto_Symmetric_Poly1305.ml FStar_HST_Monotonic_RRef.ml Crypto_Symmetric_Poly1305_MAC.ml Crypto_AEAD_Chacha20Poly1305.ml
+CHACHA_AEAD_EXTRACTED= FStar_List_Tot.ml FStar_Seq.ml FStar_SeqProperties.ml Buffer_Utils.ml Crypto_Symmetric_Bytes.ml Crypto_Symmetric_Chacha20.ml Crypto_Symmetric_AES.ml Crypto_Symmetric_BlockCipher.ml FStar_Ghost.ml Plain.ml Crypto_Symmetric_Poly1305_Spec.ml Crypto_Symmetric_Poly1305_Parameters.ml Crypto_Symmetric_Poly1305_Bigint.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part1.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part2.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part3.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part4.ml Crypto_Symmetric_Poly1305_Bignum_Lemmas_Part5.ml Crypto_Symmetric_Poly1305_Bignum.ml Crypto_Symmetric_Poly1305.ml FStar_HST_Monotonic_RRef.ml Crypto_Symmetric_Poly1305_MAC.ml Crypto_Symmetric_Chacha20_PRF.ml Crypto_AEAD_Chacha20Poly1305_Ideal.ml
 
-.PHONY: lib-ver curve-ver curve-ml chacha-ver chacha-ml ulib
+.PHONY: lib-ver chacha-ver chacha-ml ulib
 
 #16-09-18 lib-ver works but is too slow/brittle? 
-all: uall sall tmp-ver
+all: uall sall
 
 uall:
 	+make clean
-	+make chacha-test poly-test aead-test aes-test aesgcm-test
+	+make chacha-test poly-test aead-test aes-test aesgcm-test chacha-aead-test
+	+make -C crypto all-lax all-ver
 
 sall:
 
@@ -47,38 +47,6 @@ $(FSTAR_HOME)/ulib/ml/fstarlib.cmxa:
 # Verification target for the low-level libraries of F* in universes
 lib-ver:
 	$(FSTAR) FStar.HyperStack.fst FStar.HST.fst FStar.Buffer.fst
-
-# Curve25519 lax typechecking
-curve-lax:
-	$(FSTAR) Curve.Crecip.fst Curve.Ladder.fst --lax
-
-# Curve25519 extraction to OCaml
-curve-extract: ulib
-	mkdir -p $(CURVE_ODIR)
-	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) --include crypto crypto/Curve.Crecip.fst crypto/Curve.Ladder.fst --odir $(CURVE_ODIR) #2> /dev/null
-	@sed -i.bak 's/(Obj.magic ((fun pp ppq p pq q n ctr b scalar/(((fun pp ppq p pq q n ctr b scalar/g' $(CURVE_ODIR)/Curve_Ladder.ml
-
-curve-compile: curve-extract
-	$(OCAMLOPT) -I crypto/ml -I $(CURVE_ODIR) $(addprefix crypto/ml/,$(REALIZED_ML)) \
-	  $(addprefix $(CURVE_ODIR)/,$(CURVE_EXTRACTED)) crypto/ml/test_curve.ml -o test_curve.exe
-
-curve-test: curve-compile
-	./test_curve.exe
-
-
-#16-09-18 TODO adjust & integrate
-#16-09-18 for now collecting some AEAD files that verify, and excluding slow/timeout ones.
-tmp-ver:
-	$(FSTAR) --include crypto Crypto.Symmetric.AES.fst
-#	$(FSTAR) --include crypto Crypto.Symmetric.BlockCipher.fst  
-#	$(FSTAR) --include crypto Crypto.Symmetric.Chacha20.fst     
-#	$(FSTAR) --include crypto Crypto.Symmetric.GF128.fst
-#	$(FSTAR) --include crypto Crypto.Symmetric.Poly1305.Spec.fst 
-	$(FSTAR) --include crypto Plain.fst
-#	$(FSTAR) --include crypto Crypto.AEAD.Chacha20Poly1305.fst 
-#	$(FSTAR) --include crypto Crypto.Symmetric.Chacha20.PRF.fst
-#	$(FSTAR) --include crypto Crypto.Symmetric.Poly1305.MAC.fst
-#	$(FSTAR) --include crypto Crypto.Symmetric.Poly1305.fst
 
 # AES targets
 chacha-ver:
@@ -190,8 +158,31 @@ aesgcm-compile: aesgcm-extract
 aesgcm-test: aesgcm-compile
 	./test_aes_gcm.exe
 
+
+CHACHA_AEAD_ODIR=chacha_aead
+
+chacha-aead-extract: ulib
+	mkdir -p $(CHACHA_AEAD_ODIR)
+	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) --include $(FSTAR_HOME)/ulib/hyperheap --include crypto crypto/Test.fst --odir $(CHACHA_AEAD_ODIR)
+
+chacha-aead-compile: chacha-aead-extract
+	$(OCAMLOPT) -I crypto/ml -I $(CHACHA_AEAD_ODIR) $(addprefix crypto/ml/,$(REALIZED_ML)) \
+	  $(addprefix $(CHACHA_AEAD_ODIR)/,$(CHACHA_AEAD_EXTRACTED)) $(CHACHA_AEAD_ODIR)/Test.ml -o test_chacha_aead.exe
+
+chacha-aead-test: chacha-aead-compile
+	./test_chacha_aead.exe
+
+bignum-ver:
+	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.fst --include crypto
+	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2.fst --include crypto
+	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.fst --include crypto
+	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.fst --include crypto
+	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.fst --include crypto
+	$(FSTAR) --use_hints crypto/Crypto.Symmetric.Poly1305.Bignum.fst --include crypto
+
+
 # Cleaning
 clean:
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
 	@rm -f $(addprefix crypto/ml/, *.cmx *.o *.cmi *~)
-	@rm -rf $(CURVE_ODIR) $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) $(AES_ODIR) $(AESGCM_ODIR) kremlin *~ *.exe ./crypto/*~
+	@rm -rf $(CHACHA_ODIR) $(POLY_ODIR) $(AEAD_ODIR) $(AES_ODIR) $(AESGCM_ODIR) $(CHACHA_AEAD_ODIR) kremlin *~ *.exe ./crypto/*~

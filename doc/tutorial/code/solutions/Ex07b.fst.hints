@@ -1,5 +1,5 @@
 [
-  "ì_kXƒvP\u0016_VTS\u0003û\u001bÅ",
+  "?\u0019\u000b›OÝ\rýJÊ.“\tóç†",
   [
     [ "Ex07b.ty", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -514,7 +514,7 @@
       1,
       [
         "@query", "assumption_Ex07b.ty_haseq",
-        "assumption_Prims.HasEq_option", "kinding_Ex07b.ty@tok"
+        "assumption_Prims.option_haseq", "kinding_Ex07b.ty@tok"
       ],
       0
     ],
@@ -526,7 +526,7 @@
       1,
       [
         "@query", "assumption_Ex07b.ty_haseq",
-        "assumption_Prims.HasEq_option", "kinding_Ex07b.ty@tok"
+        "assumption_Prims.option_haseq", "kinding_Ex07b.ty@tok"
       ],
       0
     ],
@@ -645,7 +645,8 @@
         "constructor_distinct_Ex07b.EVar",
         "constructor_distinct_Ex07b.TBool",
         "constructor_distinct_Prims.Mktuple2",
-        "constructor_distinct_Prims.None",
+        "constructor_distinct_Prims.Mktuple3",
+        "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
         "constructor_distinct_Prims.option",
         "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
         "data_elim_Prims.None", "data_elim_Prims.Some",
@@ -656,7 +657,7 @@
         "disc_equation_Ex07b.EVar", "disc_equation_Prims.None",
         "disc_equation_Prims.Some", "equality_tok_Ex07b.EFalse@tok",
         "equality_tok_Ex07b.ETrue@tok", "equality_tok_Ex07b.TBool@tok",
-        "equation_Ex07b.env", "equation_Ex07b.equal",
+        "equation_Ex07b.empty", "equation_Ex07b.env", "equation_Ex07b.equal",
         "equation_Ex07b.equalE", "equation_Ex07b.extend",
         "equation_with_fuel_Ex07b.appears_free_in.fuel_instrumented",
         "equation_with_fuel_Ex07b.subst.fuel_instrumented",
@@ -697,6 +698,9 @@
         "projection_inverse_Prims.Mktuple3__1",
         "projection_inverse_Prims.Mktuple3__2",
         "projection_inverse_Prims.Mktuple3__3",
+        "projection_inverse_Prims.Mktuple3__a",
+        "projection_inverse_Prims.Mktuple3__b",
+        "projection_inverse_Prims.Mktuple3__c",
         "projection_inverse_Prims.Some_v",
         "refinement_interpretation_Tm_refine_4592041177a64ba7fa2a841e5f29edb2",
         "refinement_interpretation_Tm_refine_712b882d8aac0b728f35393e7188e61b",
@@ -704,10 +708,12 @@
         "subterm_ordering_Ex07b.EAbs", "subterm_ordering_Ex07b.EApp",
         "subterm_ordering_Ex07b.EFst", "subterm_ordering_Ex07b.EIf",
         "subterm_ordering_Ex07b.EPair", "subterm_ordering_Ex07b.ESnd",
+        "token_correspondence_Ex07b.empty",
         "token_correspondence_Ex07b.typing.fuel_instrumented",
         "typing_Ex07b.appears_free_in", "typing_Ex07b.extend",
         "typing_Ex07b.subst", "typing_Ex07b.typing",
         "typing_Tm_abs_b7789423c26aed91fa777a25c1b6353a",
+        "typing_tok_Ex07b.EFalse@tok", "typing_tok_Ex07b.ETrue@tok",
         "typing_tok_Ex07b.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0

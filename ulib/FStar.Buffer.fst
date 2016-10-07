@@ -51,7 +51,9 @@ let live #a (h:mem) (b:buffer a) : GTot Type0 =
 //16-09-20 TODO let recall #a (b:buffer a) = HS.recall (content b)
 
 (* Ghostly access an element of the array, or the full underlying sequence *)
-let as_seq #a h (b:buffer a{live h b}) : GTot (seq a) = Seq.slice (sel h b) (idx b) (idx b + length b)
+let as_seq #a h (b:buffer a{live h b}) : GTot (s:seq a{Seq.length s = length b}) = 
+  Seq.slice (sel h b) (idx b) (idx b + length b)
+
 let get #a h (b:buffer a{live h b}) (i:nat{i < length b}) : GTot a = Seq.index (as_seq h b) i
 
 (* Equality predicate on buffer contents, without quantifiers *)
@@ -812,8 +814,7 @@ let upd #a b n z =
   Seq.lemma_eq_intro (as_seq h b) (Seq.slice s (idx b) (idx b + length b));
   SeqProperties.upd_slice s0 (idx b) (idx b + length b) (v n) z
 
-(* Could be made Total with a couple changes in the spec *)
-let sub #a (b:buffer a) (i:UInt32.t{v i + v b.idx < pow2 n}) (len:UInt32.t{v i + v len <= length b}) : Tot (b':buffer a{b `includes` b'})
+let sub #a (b:buffer a) (i:UInt32.t{v i + v b.idx < pow2 n}) (len:UInt32.t{v i + v len <= length b}) : Tot (b':buffer a{b `includes` b' /\ length b' = v len})
   = {content = b.content; idx = i +^ b.idx; length = len}
 
 let lemma_sub_spec (#a:Type) (b:buffer a)

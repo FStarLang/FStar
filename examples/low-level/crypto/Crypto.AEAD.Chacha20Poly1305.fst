@@ -7,15 +7,16 @@ open FStar.Ghost
 open Buffer.Utils
 open Crypto.Symmetric.Chacha20
 
+//16-10-02 This file is used only by aead-test; use Chacha20Poly1305.Ideal instead.
+
 // now hiding the 1-time MAC state & implementation
 module Spec = Crypto.Symmetric.Poly1305.Spec
 module MAC = Crypto.Symmetric.Poly1305.MAC
+module Bytes = Crypto.Symmetric.Bytes
 
-//TODO move to some library
-type lbytes (n:nat) = b:bytes{length b = n}
 
 (* If the length is not a multipile of 16, pad to 16 *)
-val pad_16: b:lbytes 16 -> len:UInt32.t { v len <= 16 } -> STL unit
+val pad_16: b:Bytes.lbuffer 16 -> len:UInt32.t { v len <= 16 } -> STL unit
   (requires (fun h -> live h b))
   (ensures  (fun h0 _ h1 -> 
     live h1 b /\ modifies_1 b h0 h1
@@ -25,12 +26,14 @@ let pad_16 b len =
   // if len =^ 0ul then () else 
   memset (offset b len) 0uy (16ul -^ len)
 
+(*
 let uint32_bytes v : Tot (u8 * u8 * u8 * u8)= 
   Int.Cast.uint32_to_uint8 v,
   Int.Cast.uint32_to_uint8 (v >>^ 8ul),
   Int.Cast.uint32_to_uint8 (v >>^ 16ul),
   Int.Cast.uint32_to_uint8 (v >>^ 24ul)
 
+(* subsumed by Crypto.Symmetric.Bytes.store_uint32 4ul *)
 let upd_uint32 (b:bytes {length b >= 4}) x : STL unit
   (requires (fun h -> live h b /\ length b >= 4))
   (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1)) =
@@ -41,7 +44,7 @@ let upd_uint32 (b:bytes {length b >= 4}) x : STL unit
   upd b 3ul v3
 
 (* Serializes the two lengths into the final MAC word *)
-private val length_word: b:lbytes 16 -> aad_len:UInt32.t -> len:UInt32.t -> STL unit
+private val length_word: b:Bytes.lbuffer 16 -> aad_len:UInt32.t -> len:UInt32.t -> STL unit
   (requires (fun h -> live h b))
   (ensures  (fun h0 _ h1 -> live h1 b /\ modifies_1 b h0 h1))
   // we'll similarly need an injective spec
@@ -50,7 +53,8 @@ let length_word b aad_len len =
   upd_uint32 (offset b  0ul) aad_len;
   upd_uint32 (offset b  4ul) 0ul;
   upd_uint32 (offset b  8ul) len;
-  upd_uint32 (offset b 12ul) 0ul
+  upd_uint32 (offset b 12ul) 0ul 
+*)
 
 private val add_bytes:
   #i: MAC.id ->
@@ -58,7 +62,7 @@ private val add_bytes:
   l0: MAC.itext -> 
   a : MAC.accB i ->
   len: UInt32.t ->
-  txt:lbytes (v len) -> STL MAC.itext
+  txt:Bytes.lbuffer (v len) -> STL MAC.itext
   (requires (fun h -> 
     live h txt /\ MAC.acc_inv st l0 a h))
   (ensures (fun h0 l1 h1 -> 
@@ -85,8 +89,6 @@ let rec add_bytes #i st log a len txt =
     end
 
 
-//16-09-18 The code below is left only for testing; use Chacha20Poly1305.Ideal instead.
-
 (* AEAD-encrypt for Chacha20-Poly1305. Takes:
    - the initial key (key), an initialization vector (iv) and a constant (constant)
    - the additional data (aad)
@@ -97,53 +99,71 @@ let rec add_bytes #i st log a len txt =
    - the Poly1305 tag on the ciphertext and the additional data
    *)
 
+open Crypto.Symmetric.BlockCipher 
+
 val chacha20_aead_encrypt: 
-  key:lbytes 32 -> iv:lbytes 12 -> 
-  aadlen:UInt32.t -> aadtext:lbytes (v aadlen) -> 
-  plainlen:UInt32.t -> plaintext:lbytes (v plainlen) -> 
-  ciphertext:lbytes (v plainlen) -> tag:MAC.tagB -> 
+  key:Bytes.lbuffer 32 -> n:iv CHACHA20 ->
+  aadlen:UInt32.t -> aadtext:Bytes.lbuffer (v aadlen) ->
+  plainlen:UInt32.t -> plaintext:Bytes.lbuffer (v plainlen) ->
+  ciphertext:Bytes.lbuffer (v plainlen) -> tag:MAC.tagB ->
   STL unit
   (requires (fun h -> 
     live h key /\ live h aadtext /\ live h plaintext /\ 
     live h ciphertext /\ live h tag /\
     disjoint plaintext ciphertext /\
     disjoint plaintext tag /\
-    disjoint ciphertext tag
+    disjoint ciphertext tag /\
+    disjoint key plaintext /\
+    disjoint key ciphertext /\
+    disjoint key tag
     ))
   (ensures (fun h0 _ h1 -> 
     modifies_2 ciphertext tag h0 h1 /\ 
     live h1 ciphertext /\ live h1 tag ))
-
+  
 val chacha20_aead_decrypt: 
-  key:lbytes 32 -> iv:lbytes 12 -> 
-  aadlen:UInt32.t -> aadtext:lbytes (v aadlen) -> 
-  plainlen:UInt32.t -> plaintext:lbytes (v plainlen) -> 
-  ciphertext:lbytes (v plainlen) -> tag:MAC.tagB -> 
+  key:Bytes.lbuffer 32 -> n:iv CHACHA20 ->
+  aadlen:UInt32.t -> aadtext:Bytes.lbuffer (v aadlen) ->
+  plainlen:UInt32.t -> plaintext:Bytes.lbuffer (v plainlen) ->
+  ciphertext:Bytes.lbuffer (v plainlen) -> tag:MAC.tagB ->
   STL UInt32.t
   (requires (fun h -> 
-    live h key /\ live h aadtext /\ live h plaintext /\ 
-    live h ciphertext /\ live h tag ))
+    live h key /\ live h aadtext /\ live h plaintext /\ live h ciphertext /\ live h tag /\ 
+    disjoint plaintext ciphertext /\
+    disjoint plaintext tag /\
+    disjoint ciphertext tag /\
+    disjoint key plaintext /\
+    disjoint key ciphertext /\
+    disjoint key tag
+    ))
   (ensures (fun h0 _ h1 -> 
     modifies_1 plaintext h0 h1 /\ 
     live h1 plaintext))
 
-#reset-options "--z3timeout 1000"
+#reset-options "--z3timeout 100"
 // still failing below 
 
-let chacha20_aead_encrypt key iv aadlen aadtext plainlen plaintext ciphertext tag =
+let chacha20_aead_encrypt key n aadlen aadtext plainlen plaintext ciphertext tag =
+  assume false;
   push_frame();
+
+  let ivb = Buffer.create 0uy (ivlen CHACHA20) in
+  Bytes.store_uint128 (ivlen CHACHA20) ivb n;
+
   (* Create OTK, using first block of Chacha20 *)
-  let otk  = create 0uy 32ul in 
+  let otk  = create 0uy 32ul in
   let counter = 0ul in 
-  chacha20 otk key iv counter 32ul;
+  chacha20 otk key ivb counter 32ul;
 
   (* Encrypt the plaintext, using Chacha20, counter at 1 *)
   let counter = 1ul in
-  counter_mode key iv counter plainlen plaintext ciphertext;
+  counter_mode key ivb counter plainlen plaintext ciphertext;
  
   (* Initialize MAC algorithm with one time key *)
   (* encapsulate (r,s) and a; we should probably clear otk *)
-  let ak = MAC.coerce (MAC.someId,iv) HyperHeap.root otk in 
+  let macId = (MAC.someId,n) in
+  assume(not(MAC.authId macId));
+  let ak = MAC.coerce macId FStar.HyperHeap.root otk in 
   let acc = MAC.start ak in
 
   (* Compute MAC over additional data and ciphertext *)
@@ -152,21 +172,29 @@ let chacha20_aead_encrypt key iv aadlen aadtext plainlen plaintext ciphertext ta
   let l = add_bytes ak l acc plainlen ciphertext in 
   let l = 
     let final_word = create 0uy 16ul in 
-    length_word final_word aadlen plainlen;
+    Bytes.store_uint32 4ul (Buffer.sub final_word 0ul 4ul) aadlen;
+    Bytes.store_uint32 4ul (Buffer.sub final_word 8ul 4ul) plainlen;
     MAC.add ak l acc final_word in
   MAC.mac ak l acc tag;
   pop_frame()
 
-let chacha20_aead_decrypt key iv aadlen aadtext plainlen plaintext ciphertext tag =
+let chacha20_aead_decrypt key n aadlen aadtext plainlen plaintext ciphertext tag =
+  assume false;
   push_frame();
+
+  let ivb = Buffer.create 0uy (ivlen CHACHA20) in
+  Bytes.store_uint128 (ivlen CHACHA20) ivb n;
+
   (* Create OTK, using first block of Chacha20 *)
   let otk = create 0uy 32ul in 
   let counter = 0ul in 
-  chacha20 otk key iv counter 32ul;
+  chacha20 otk key ivb counter 32ul;
 
   (* Initialize MAC algorithm with one time key *)
   (* encapsulate (r,s) and a; we should probably clear otk *)
-  let ak = MAC.coerce (MAC.someId,iv) HyperHeap.root otk in 
+  let macId = (MAC.someId,n) in
+  assume(not(MAC.authId macId));
+  let ak = MAC.coerce macId FStar.HyperHeap.root otk in 
   let acc = MAC.start ak in
 
   (* First recompute and check the MAC *)
@@ -175,14 +203,15 @@ let chacha20_aead_decrypt key iv aadlen aadtext plainlen plaintext ciphertext ta
   let l = add_bytes ak l acc plainlen ciphertext in 
   let l = 
     let final_word = create 0uy 16ul in 
-    length_word final_word aadlen plainlen;
+    Bytes.store_uint32 4ul (Buffer.sub final_word 0ul 4ul) aadlen;
+    Bytes.store_uint32 4ul (Buffer.sub final_word 8ul 4ul) plainlen;
     MAC.add ak l acc final_word in
   let verified  = MAC.verify ak l acc tag in 
   
   if verified then
     begin (* decrypt; note plaintext and ciphertext are swapped. *) 
       let counter = 1ul in 
-      counter_mode key iv counter plainlen ciphertext plaintext
+      counter_mode key ivb counter plainlen ciphertext plaintext
     end;
 
   pop_frame();

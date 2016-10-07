@@ -568,7 +568,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_option",
+        "@query", "assumption_Prims.option_haseq",
         "assumption_StlcCbvDbPntSubstNoLists.ty_haseq",
         "kinding_StlcCbvDbPntSubstNoLists.ty@tok"
       ],
@@ -581,7 +581,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_option",
+        "@query", "assumption_Prims.option_haseq",
         "assumption_StlcCbvDbPntSubstNoLists.ty_haseq",
         "kinding_StlcCbvDbPntSubstNoLists.ty@tok"
       ],
