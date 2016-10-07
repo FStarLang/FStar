@@ -426,7 +426,7 @@ term uvar_basis FStar_Unionfind.uvar
  and letbindings =
 (Prims.bool * letbinding Prims.list) 
  and subst_ts =
-subst_elt Prims.list Prims.list 
+(subst_elt Prims.list Prims.list * FStar_Range.range Prims.option) 
  and freenames =
 bv FStar_Util.set 
  and uvars =

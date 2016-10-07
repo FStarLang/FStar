@@ -98,7 +98,7 @@ let rec force_uvar' t =
 //from the uvar to anything it may have been resolved to
 let force_uvar t = 
   let t' = force_uvar' t in
-  if LanguagePrimitives.PhysicalEquality t t'
+  if FStar.Util.physical_equality t t'
   then t
   else delay t' ([], Some t.pos)
  
