@@ -218,8 +218,8 @@ let prf_mac i t x =
     let keyBuffer = Buffer.rcreate t.rgn 0uy keylen in
     //16-10-08 the post of rcreate seems too weak. 
     //16-10-08 modifying a newly-allocated buffer should be permitted.
-    getBlock t x keylen keyBuffer;
     assume false;
+    getBlock t x keylen keyBuffer;
     MAC.coerce macId t.rgn keyBuffer
 
 // real case + real use of memoized PRF output.
@@ -349,7 +349,7 @@ let prf_enxor i t x l cipher plain =
     
     lemma_snoc_found contents x newblock;
     r := SeqProperties.snoc contents (Entry x newblock); //NS: t.table is mutated;  so the modifies_1 cipher h0 h1 cannot be true. CF: I know, but can't write the hybrid clause.
-    () //assume false;//16-10-08 missing hybrid post
+    assume false;//16-10-08 missing hybrid post
   else
     let plainrepr = bufferRepr #i #(v l) plain in
     prf_raw i t x l cipher;
