@@ -2,54 +2,8 @@ module IfcEffect
 
 open IFC
 
-(* This first part is a copy of most exnst, with int replaced by label *)
+(* CH: partial file, moving to ifc.fst *)
 
-let pre = label -> Type0
-let post (a:Type) = option (a * label) -> Type0
-let wp (a:Type) = label -> post a -> Type0
-inline let return_wp (a:Type) (x:a) (n0:label) (post:post a) =
-  forall y. y=Some (x, n0) ==> post y
-
-//working around #517 by adding an explicit 'val'
-inline val bind_wp : r:range -> (a:Type) -> (b:Type) -> (f:wp a) -> (g:(a -> Tot (wp b))) -> Tot (wp b)
-let bind_wp r a b f g =
-    fun n0 post -> f n0 (function
-        | None -> post None
-	| Some (x, n1) -> g x n1 post)
-
-inline let if_then_else  (a:Type) (p:Type)
-                         (wp_then:wp a) (wp_else:wp a)
-                         (h0:label) (post:post a) =
-     l_ITE p
-        (wp_then h0 post)
-	(wp_else h0 post)
-inline let ite_wp        (a:Type)
-                         (wp:wp a)
-                         (h0:label) (post:post a) =
-  wp h0 post
-inline let stronger  (a:Type) (wp1:wp a) (wp2:wp a) =
-     (forall (p:post a) (h:label). wp1 h p ==> wp2 h p)
-
-inline let close_wp      (a:Type) (b:Type)
-                            (wp:(b -> GTot (wp a)))
-                            (h:label) (p:post a) =
-     (forall (b:b). wp b h p)
-inline let assert_p      (a:Type) (p:Type)
-                            (wp:wp a)
-                            (h:label) (q:post a) =
-     p /\ wp h q
-inline let assume_p      (a:Type) (p:Type)
-                            (wp:wp a)
-                            (h:label) (q:post a) =
-     p ==> wp h q
-inline let null_wp       (a:Type)
-                         (h:label) (p:post a) =
-     (forall x. p x)
-inline let trivial       (a:Type)
-                            (wp:wp a) =
-     (forall h0. wp h0 (fun r -> True))
-
-//new
 let repr (a:Type) (wp:wp a) =
     n0:label -> PURE (option (a * label)) (wp n0)
 

@@ -119,3 +119,11 @@ let lemma_div_extrinsic (i:nat) (j:int) (h0:int) :
   Lemma (match reify (div_extrinsic i j) h0 with
          | None, (h1, 1) -> h1 = h0 /\ j = 0
          | Some z, (h1, 0) -> h1 = h0 /\ j <> 0 /\ z = i / j) = ()
+
+(* TODO paper also talks about using reflect to implement a safet
+   reflect_increasing ... can we actually do this? *)
+
+(* let reflect_increasing (f: int -> Pure (option 'a * (int * int)) wp) *)
+(*     : StExnC 'a (fun (s0, n0) post -> *)
+(*       wp s0 (fun (s1, n1) -> post (s1, n1) /\ n1 >= n0)) *)
+(*     = STEXNC.reflect f *)

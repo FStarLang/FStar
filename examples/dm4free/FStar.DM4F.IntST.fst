@@ -103,3 +103,5 @@ let reflect_on_the_fly u =
     let n1 = STINT.get () in
     assert (n0 + 2 = n1);
     n1
+
+let incr_increases (s0:int) = assert (snd (reify (incr2 ()) s0) = s0 + 1)

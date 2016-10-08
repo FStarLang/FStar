@@ -19,11 +19,13 @@ let bind_st (s:Type) (a:Type) (b:Type) (f:st s a) (g:a -> st s b) : st s b =
 
 (* TODO: Check the monad laws, now at least the first assert fails
    - I remember these kind of things working at submission time though
+   - they also work in Effects.Def.fst
    MAYBE: In the paper types are treated as implicit,
           but new_effect_for_free fails if I try to do that *)
 (* let right_unit_st (f:st 's 'a) = assert (feq (bind_st f return_st) f) *)
 
-open FStar.FunctionalExtensionality
+(* open FStar.FunctionalExtensionality -- this would need to be passed
+                                          explicitly for --explicit_deps *)
 
 (* let right_unit_st (s:Type) (a:Type) (f:st s a) = *)
 (*   assert (feq (bind_st s a a f (return_st s a)) f) *)

@@ -6,6 +6,8 @@ follow this order when trying to familiarize oneself with the feature.
 Section		Description			File
 
 § 2.2           Integer state (incr example)    FStar.DM4F.IntST.fst
+-- CH: alternatively, obtain this by instantiating ST below
+       also incr_increases would need to be copied
 § 2.3		Simple state monad (st)		FStar.DM4F.ST.fst
 -- this is more general than in the paper (parameterized over state type)
 -- TODO: (2.3 mentions the laws, what about that?)
@@ -15,6 +17,10 @@ Section		Description			File
 § 2.5		Exception+State (exnst)		FStar.DM4F.ExnSt.fst
 § 2.5		Exception-counting (stexnC)	FStar.DM4F.StExnC.fst
 
+§ 2.x           Proving monad and lift laws     Effects.Def.fst
+
 -- REVIEW:
-§ 2.6		Information-flow (IFC)		ifc.fst
+§ 2.6		Information-flow (IFC)		ifc.fst and ifcEffect.fst
 § 2.7		Continuations (cont)		?
+
+TODO: make sure all these files are part of the build in the end
