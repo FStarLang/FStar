@@ -22,25 +22,7 @@ open Crypto.Symmetric.Bytes
 
 // SECRETS, HIGH AND LOW
 
-type aead_cipher =
-  | AES_256_GCM
-  | CHACHA20_POLY1305
-
-type id = {
-  cipher: aead_cipher;
-  uniq: UInt32.t // we'll need more
-}
-
-type mac_alg =
-  | POLY1305
-  | GHASH
-
-let mac_alg_of_id (id: id): mac_alg =
-  match id.cipher with
-  | AES_256_GCM -> GHASH
-  | CHACHA20_POLY1305 -> POLY1305
-
-assume val authId: i:id -> Tot bool
+inline let safe (i:id) = Flag.prf_enc i
 
 // -----------------------------------------------------------------------------
 
@@ -107,7 +89,7 @@ let sub #id #l (b:plainBuffer id l)
 
 
 // conditional access
-val bufferRepr: #i:id {~(authId i)} -> #l:plainLen -> b:plainBuffer i l -> Tot (b':lbuffer l{ b' == bufferT b})
+val bufferRepr: #i:id {~(safe i)} -> #l:plainLen -> b:plainBuffer i l -> Tot (b':lbuffer l{ b' == bufferT b})
 let bufferRepr #i #l b = b
 // not sure how to write modifies clauses including plain and plainBuffer
 

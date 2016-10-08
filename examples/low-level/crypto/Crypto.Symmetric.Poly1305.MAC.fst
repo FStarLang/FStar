@@ -19,8 +19,8 @@ module HH = FStar.HyperHeap
 
 // library stuff
 
-let alg = Plain.mac_alg
-let alg_of_id = Plain.mac_alg_of_id
+type alg = Flag.mac_alg
+let alg_of_id = Flag.cipher_of_id
 
 type buffer = Buffer.buffer UInt8.t
 type bytes  = Seq.seq UInt8.t
