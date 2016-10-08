@@ -25,7 +25,7 @@ let join l1 l2 =
 
 let flows l1 l2 = not(l1 `eq` high && l2 `eq` low)
 
-let ifc (a:Type) = label -> Tot (option (a * label))
+let ifc (a:Type) = label -> M (option (a * label))
 
 (* open FStar.FunctionalExtensionality *)
 
@@ -34,22 +34,22 @@ let eq_ifc (a:Type) (f:ifc a) (g:ifc a) =
 
 let return_ifc (a:Type) (x:a) : ifc a = fun l -> Some (x, l)
 let bind_ifc (a:Type) (b:Type) (f:ifc a) (g: a -> Tot (ifc b)) : ifc b
-  = fun l0 -> match f l0 with
-	   | None -> None
-	   | Some (x, l1) ->
-	     match g x l1 with
-	     | None -> None
-	     | Some (y, l2) -> Some(y, l2)
+  = fun l0 -> let fl0 = f l0 in match fl0 with
+           | None -> None
+           | Some (x, l1) ->
+             let gxl1 = g x l1 in match gxl1 with
+             | None -> None
+             | Some (y, l2) -> Some(y, l2)
 
 val left_unit: a:Type -> b:Type -> x:a -> f:(a -> Tot (ifc b))
-	    -> Lemma (eq_ifc b (bind_ifc a b (return_ifc a x) f) (f x))
+            -> Lemma (eq_ifc b (bind_ifc a b (return_ifc a x) f) (f x))
 let left_unit a b x f = ()
 
 val right_unit: a:Type -> f:ifc a -> Lemma (eq_ifc a (bind_ifc a a f (return_ifc a)) f)
 let right_unit a f = ()
 
 val associativity: a:Type -> b:Type -> c:Type -> f:ifc a -> g:(a -> Tot (ifc b)) -> h:(b -> Tot (ifc c))
-		 -> Lemma (eq_ifc c (bind_ifc a c f (fun x -> bind_ifc b c (g x) h)) (bind_ifc b c (bind_ifc a b f g) h))
+                 -> Lemma (eq_ifc c (bind_ifc a c f (fun x -> bind_ifc b c (g x) h)) (bind_ifc b c (bind_ifc a b f g) h))
 let associativity a b c f g h = ()
 
 // Some dummy implementations of actions for illustration purposes
@@ -73,8 +73,10 @@ let p () = bind_ifc _ _ (read low)              (fun b1 ->
            bind_ifc _ _ (write high (b1 || b3)) (fun _  ->
                         (write low (xor b3 b3))  )))))
 
-new_effect_for_free {
-  ExnState : a:Type -> Effect
+(* TODO: without reifiable, this fails weirdly. Cf #709 *)
+
+reifiable new_effect_for_free {
+  IFC : a:Type -> Effect
   with
        repr         = ifc
      ; bind         = bind_ifc
@@ -83,6 +85,3 @@ new_effect_for_free {
       read = read
     ; write = write
 }
-(* TODO: make this work *)
-(* Error: Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error. *)
-(* Failure("not a C") *)
