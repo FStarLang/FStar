@@ -1,5 +1,7 @@
 module Flag
 
+// this interface is meant to be opened -- avoid naming clashes. 
+
 (* floating *) 
 
 type mac_alg =
@@ -15,18 +17,18 @@ type id = {
   uniq: UInt32.t // we'll need more
 }
 
-inline let mac_of_id i =
+let mac_of_id i =
   match i.cipher with
   | AES_256_GCM       -> GHASH
   | CHACHA20_POLY1305 -> POLY1305
 
-inline let cipher_of_id i =
+let cipher_of_id i =
   let open Crypto.Symmetric.BlockCipher in 
   match i.cipher with
   | AES_256_GCM       -> AES256
   | CHACHA20_POLY1305 -> CHACHA20
 
-inline let cipher_alg = Crypto.Symmetric.BlockCipher.alg
+let cipher_alg = Crypto.Symmetric.BlockCipher.alg
 
 (* All the idealization flags that we use for the cryptographic argument *)
 
@@ -59,10 +61,10 @@ val prf_cpa: bool
 val safeHS: i:id -> Tot bool 
 
 // controls PRF idealization of ciphers (move to PRF?)
-inline let prf (i: id) = safeHS i && cipher_prf(cipher_of_id i)
+let prf (i: id) = safeHS i && cipher_prf(cipher_of_id i)
 
 // controls INT1CMA idealization of MACs (move to MAC?)
-inline let mac1 i = mac_log && mac_int1cma (mac_of_id i)
+let mac1 i = mac_log && mac_int1cma (mac_of_id i)
 
 // controls abstraction of plaintexts
 // (kept abstract, but requires all the crypto steps above)

@@ -22,7 +22,7 @@ open Crypto.Symmetric.Bytes
 
 // SECRETS, HIGH AND LOW
 
-inline let safe (i:id) = Flag.prf_enc i
+open Flag 
 
 // -----------------------------------------------------------------------------
 
@@ -89,7 +89,7 @@ let sub #id #l (b:plainBuffer id l)
 
 
 // conditional access
-val bufferRepr: #i:id {~(safe i)} -> #l:plainLen -> b:plainBuffer i l -> Tot (b':lbuffer l{ b' == bufferT b})
+val bufferRepr: #i:id {~(safeId i)} -> #l:plainLen -> b:plainBuffer i l -> Tot (b':lbuffer l{ b' == bufferT b})
 let bufferRepr #i #l b = b
 // not sure how to write modifies clauses including plain and plainBuffer
 

@@ -14,6 +14,7 @@ open FStar.HST.Monotonic.RRef
 
 open Crypto.Symmetric.Poly1305.Spec
 open Crypto.Symmetric.Poly1305 // avoid?
+open Flag 
 
 module HH = FStar.HyperHeap
 
@@ -29,7 +30,7 @@ type lbytes  (l:nat) = b:bytes {Seq.length b = l}
 
 let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 
-type id = Plain.id * UInt128.t
+type id = Flag.id * UInt128.t
 
 // also used in miTLS ('model' may be better than 'ideal'); could be loaded from another module.
 // this flag enables conditional idealization by keeping additional data,
@@ -37,7 +38,7 @@ type id = Plain.id * UInt128.t
 // - this may cause the code not to compile to Kremlin/C.
 inline let authId (i: id) =
   let i = fst i in
-  Plain.authId i && Flag.mac1 i
+  safeHS i && mac1 i
 
 // we will need authId i ==> ideal?
 
@@ -45,8 +46,8 @@ inline let authId (i: id) =
 // plus the value of the unique IV for this MAC
 // TODO make it a dependent pair to support agile IV types
 
-assume val someId: Plain.id // dummy value for unit testing
-let someId_coerce = assume(~ (Plain.authId someId ))
+assume val someId: Flag.id // dummy value for unit testing
+let someId_coerce = assume(~ (safeHS someId))
 
 
 (*
