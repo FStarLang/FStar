@@ -52,3 +52,18 @@ reifiable reflectable new_effect_for_free {
        get      = get s
      ; put      = put s
 }
+
+(* Trying to do incr here, but running into universe problem when
+   trying to instantiate STATE to int; unsure whether this is related
+   to Guido's latest bug reports, but at least conceptually it seems
+   related to #706:
+
+Expected expression of type "Type(n515252)";
+got expression "Prims.int" of type "Type(0)"
+
+val incr : unit -> STATE int unit
+  (fun s0 post -> forall (s1:int). (s1 > s0) ==> post ((), s1))
+let incr u =
+  let n = STATE.get () in
+  STATE.put (n + 1)
+*)
