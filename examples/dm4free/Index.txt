@@ -7,6 +7,7 @@ Section		Description			File
 
 § 2.2           Integer state (incr example)    FStar.DM4F.IntST.fst
 § 2.3		Simple state monad (st)		FStar.DM4F.ST.fst
+-- this is more general than in the paper (parameterized over state type)
 -- TODO: (2.3 mentions the laws, what about that?)
 
 § 2.5		Exception (exn)			FStar.DM4F.Exceptions.fst
