@@ -343,15 +343,15 @@ let prf_enxor i t x l cipher plain =
     store_bytes l cipher c;  //NS: this write to cipher may disturb the contents of t.table; need an anti-aliasing assumption there
     let contents = recall r; !r in //NS: Or, we can move this read up; but the anti-aliasing seems like the right thing to do
     let newblock = OTP #i l p c in
-    assume(find_otp #t.rgn #i contents x = None); 
+    assume(find_otp #t.rgn #i contents x == None); 
     //TODO how to avoid explicit annotations on find_otp ? NS: find_otp is fine here; without the store_bytes this assertion succeeds
     //16-10-08 still broken?
     
     lemma_snoc_found contents x newblock;
     r := SeqProperties.snoc contents (Entry x newblock); //NS: t.table is mutated;  so the modifies_1 cipher h0 h1 cannot be true. CF: I know, but can't write the hybrid clause.
-    assume false;//16-10-08 missing hybrid post
+    assume false //16-10-08 missing hybrid post
   else
     let plainrepr = bufferRepr #i #(v l) plain in
     prf_raw i t x l cipher;
-    //assume false;//16-10-08 missing hybrid post
+    assume false;//16-10-08 missing hybrid post
     Buffer.Utils.xor_bytes_inplace cipher plainrepr l
