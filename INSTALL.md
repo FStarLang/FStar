@@ -270,8 +270,10 @@ that's over there (it's optimized for F*).
 3. F* depends on a bunch of external OCaml packages which you can install using OPAM:
 
   ```sh
-  $ opam install ocamlfind batteries stdint zarith yojson
+  $ opam install ocamlfind batteries stdint zarith yojson fileutils 
   ```
+  Some of the examples also require the `sqlite3` opam package, which depends
+  on SQLite itself that you can install with `opam depext sqlite3` (at least on Linux)
 
 ### Step 2. Extracting the sources of F* itself to OCaml ###
 
