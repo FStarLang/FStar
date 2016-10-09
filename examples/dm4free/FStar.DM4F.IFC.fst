@@ -119,3 +119,8 @@ let p' () =
 val p'' : unit -> Ifc unit (requires (fun l   -> True))
                            (ensures  (fun l r -> True))
 let p'' () = ()
+
+(* [8:14:57 PM] Nik Swamy: I think for bonus points, in the ifc monad we could *)
+(* [8:15:33 PM] Nik Swamy: 1. add outputs, a list of Booleans, e.g., and have the write cons to it *)
+(* [8:15:48 PM] Nik Swamy: 2. add an input state so that read is not a constant *)
+(* [8:16:23 PM] Nik Swamy: 3. do a relational proof of the p program showing that despite the exception, the outputs would be the same in 2 runs *)
