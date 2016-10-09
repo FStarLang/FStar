@@ -1,4 +1,4 @@
-module IFC
+module FStar.DM4F.IFC
 
 (********************************************************************************)
 (* Effect (ifc a) : A monad for dynamic information-flow control                *)
@@ -100,6 +100,10 @@ effect Ifc (a:Type) (req:IFC.pre) (ens:label -> option (a * label) -> GTot Type0
   IFC a (fun (h0:label) (p:IFC.post a) -> req h0 /\
              (forall r. (req h0 /\ ens h0 r) ==> p r))
 
+inline let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:label) (p:IFC.post a) =
+  wp (fun a -> p (Some (a, h0)))
+sub_effect PURE ~> IFC = lift_pure_exnst
+
 val p' : unit ->  Ifc unit (requires (fun l   -> True))
                            (ensures  (fun l r -> r = None))
 let p' () =
@@ -109,3 +113,9 @@ let p' () =
   let b3 = IFC.read high in
   IFC.write high (b1 || b3);
   IFC.write low (xor b3 b3)
+
+(* just a sanity check for Guido: this works with the pure to Ifc coercion;
+   btw. can't we get the pure to X coercion for free too ?*)
+val p'' : unit -> Ifc unit (requires (fun l   -> True))
+                           (ensures  (fun l r -> True))
+let p'' () = ()
