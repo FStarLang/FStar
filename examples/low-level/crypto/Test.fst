@@ -182,7 +182,8 @@ let test() =
   let i:id = { cipher = CHACHA20_POLY1305; uniq = 42ul } in
   assume(not(safeId i));
   let plain = Plain.create i 0uy plainlen in 
-  let plainbytes = make (v plainlen) (load_bytes plainlen plainrepr) in 
+  let plainval = load_bytes plainlen plainrepr in
+  let plainbytes = Plain.make #i (v plainlen) plainval in 
   Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
   let aad = mk_aad () in
   let aadlen = 12ul in
