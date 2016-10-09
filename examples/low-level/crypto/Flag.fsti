@@ -23,12 +23,12 @@ let mac_of_id i =
   | CHACHA20_POLY1305 -> POLY1305
 
 let cipher_of_id i =
-  let open Crypto.Symmetric.BlockCipher in 
+  let open Crypto.Symmetric.Cipher in 
   match i.cipher with
   | AES_256_GCM       -> AES256
   | CHACHA20_POLY1305 -> CHACHA20
 
-let cipher_alg = Crypto.Symmetric.BlockCipher.alg
+let cipher_alg = Crypto.Symmetric.Cipher.alg
 
 (* All the idealization flags that we use for the cryptographic argument *)
 
