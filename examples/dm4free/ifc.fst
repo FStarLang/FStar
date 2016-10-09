@@ -25,7 +25,7 @@ let join l1 l2 =
 
 let flows l1 l2 = not(l1 `eq` high && l2 `eq` low)
 
-let ifc (a:Type) = label -> M (option (a * label))
+let ifc (a:Type) = label -> Tot (option (a * label))
 
 (* open FStar.FunctionalExtensionality *)
 
@@ -73,15 +73,24 @@ let p () = bind_ifc _ _ (read low)              (fun b1 ->
            bind_ifc _ _ (write high (b1 || b3)) (fun _  ->
                         (write low (xor b3 b3))  )))))
 
+(* TODO: Note that using this (equivalent?) definition above instead
+         of ifc makes many things fail there *)
+
+let ifc_repr (a:Type) = label -> M (option (a * label))
+
 (* TODO: without reifiable, this fails weirdly. Cf #709 *)
 
 reifiable new_effect_for_free {
   IFC : a:Type -> Effect
   with
-       repr         = ifc
+       repr         = ifc_repr
      ; bind         = bind_ifc
      ; return       = return_ifc
   and effect_actions
       read = read
     ; write = write
 }
+
+(* TODO: Error: Unexpected error; please file a bug report, ideally
+         with a minimized version of the source program that triggered
+         the error.  Failure("not a C") *)
