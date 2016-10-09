@@ -20,10 +20,10 @@ inline let eq l1 l2 =
   | false, false -> true
   | _, _ -> false
 
-let join l1 l2 =
+inline let join l1 l2 =
   if l1 `eq` high || l2 `eq` high then high else low
 
-let flows l1 l2 = not(l1 `eq` high && l2 `eq` low)
+inline let flows l1 l2 = not(l1 `eq` high && l2 `eq` low)
 
 let ifc (a:Type) = label -> M (option (a * label))
 
@@ -55,11 +55,14 @@ let associativity a b c f g h = ()
 // Some dummy implementations of actions for illustration purposes
 // Probably better to just take them axiomatically
 let read (l:label) : ifc bool =
+  (* fun l0 -> Some (true, join l0 l) -- needed to manually inline this; #711 *)
   fun l0 -> match l0, l with
             | low, low -> Some (true, low)
             | _, _ -> Some (true, high)
 
 let write (l:label) (b:bool) : ifc unit =
+  (* fun l0 -> if flows l0 l then (Some ((), l0)) else None
+     -- needed to manually inline this; #711 *)
   fun l0 -> match l0, l with
             | high, low -> None
             | _, _ -> Some ((), l0)
