@@ -135,7 +135,7 @@ let mktable i rgn r = r
 val no_table: i:id {~(prf i)} -> rgn:region -> Tot (table_t rgn i)
 let no_table i rgn = ()
 
-
+ 
 val gen: rgn:region -> i:id -> ST (state i)
   (requires (fun h -> True))
   (ensures  (fun h0 s h1 ->
@@ -265,13 +265,13 @@ let prf_raw i t x l output =
     store_bytes l output (Seq.slice block 0 (v l)))
   else 
     getBlock t x l output 
-
+ 
 // reuse the same block for x and XORs it with ciphertext
 val prf_dexor: 
   i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> l:u32 {l <=^ blocklen} -> 
   plain:plainBuffer i (v l) -> cipher:lbuffer (v l) 
-  { Buffer.disjoint (bufferT plain) cipher /\
-    Buffer.frameOf (bufferT plain) <> t.rgn } -> ST unit
+  { Buffer.disjoint (as_buffer plain) cipher /\
+    Buffer.frameOf (as_buffer plain) <> t.rgn } -> ST unit
   (requires (fun h0 ->
      Plain.live h0 plain /\ Buffer.live h0 cipher /\ 
      (safeId i ==>
@@ -285,12 +285,12 @@ val prf_dexor:
        let r = itable i t in 
        if safeId i then
        ( match find_otp (HS.sel h1 r) x with
-         | Some (OTP l' p c) -> l == l' /\ p == sel_plain h1 l plain /\ Buffer.modifies_1 (bufferT plain) h0 h1
+         | Some (OTP l' p c) -> l == l' /\ p == sel_plain h1 l plain /\ Buffer.modifies_1 (as_buffer plain) h0 h1
          | None -> False )
        else 
-         Buffer.modifies_1 (bufferT plain) h0 h1 //16-10-08 TODO: also modifies r for x.ctr > 0
+         Buffer.modifies_1 (as_buffer plain) h0 h1 //16-10-08 TODO: also modifies r for x.ctr > 0
      else
-       Buffer.modifies_1 (bufferT plain) h0 h1 
+       Buffer.modifies_1 (as_buffer plain) h0 h1 
      )))
 let prf_dexor i t x l plain cipher =
   if safeId i then
@@ -301,7 +301,7 @@ let prf_dexor i t x l plain cipher =
         let h0 = HST.get() in
         Plain.store #i l plain p;
         let h1 = HST.get() in
-        Buffer.lemma_reveal_modifies_1 (bufferT plain) h0 h1
+        Buffer.lemma_reveal_modifies_1 (as_buffer plain) h0 h1
   else
     let plainrepr = bufferRepr #i #(v l) plain in
     prf_raw i t x l plainrepr; 
@@ -321,7 +321,7 @@ let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) 
 val prf_enxor: 
   i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> l:u32 {l <=^ blocklen} -> 
   cipher:lbuffer (v l) -> plain:plainBuffer i (v l) 
-  {  Buffer.disjoint (bufferT plain) cipher /\ 
+  {  Buffer.disjoint (as_buffer plain) cipher /\ 
      Buffer.frameOf cipher <> t.rgn } -> ST unit
   (requires (fun h0 ->
      Plain.live h0 plain /\ Buffer.live h0 cipher /\

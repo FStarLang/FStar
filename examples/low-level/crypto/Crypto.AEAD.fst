@@ -128,7 +128,7 @@ noeq type entry (i:id) =
       ad:adata -> 
       l:plainLen -> 
       p:plain i l -> 
-      c:cipher i (Seq.length (repr #i #l p)) -> 
+      c:cipher i (Seq.length (as_bytes p)) -> 
       entry i
 
 let find (#i:id) (s:Seq.seq (entry i)) (n:Cipher.iv (alg i)) : option (entry i) =
@@ -177,9 +177,8 @@ let genReader #i #rgn st =
   State #i #Reader #rgn #st.region st.log st.prf
 
 
-// MAC ENCODING from Chacha20Poly1305.fst
-
-(* If the length is not a multiple of 16, pad to 16 *)
+// If the length is not a multiple of 16, pad to 16
+// (we actually don't depend on the details of the padding)
 val pad_16: b:lbuffer 16 -> len:UInt32.t { 0 < v len /\ v len <= 16 } -> STL unit
   (requires (fun h -> Buffer.live h b))
   (ensures  (fun h0 _ h1 -> 
@@ -249,8 +248,6 @@ private let accumulate i ak (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
     MAC.add ak l acc final_word in
   l, acc
 
-#set-options "--lax"
-
 // INVARIANT (WIP)
 
 let maxplain (i:id) = pow2 14 // for instance
@@ -263,7 +260,7 @@ private let safelen (i:id) (l:nat) (c:UInt32.t{0ul <^ c /\ c <=^ PRF.maxCtr }) =
     
 // Computes PRF table contents for countermode encryption of 'plain' to 'cipher' starting from 'x'.
 val counterblocks: 
-  i:id -> rgn:region -> 
+  i:id {safeId i} -> rgn:region -> 
   x:PRF.domain {ctr x >^ 0ul} -> 
   l:nat {safelen i l (ctr x)} -> 
   plain:Plain.plain i l -> 
@@ -339,7 +336,6 @@ For the enxor loop, we need a finer, transient invariant for the last chunk of t
 let lookupIV (i:id) (s:Seq.seq (entry i)) = Seq.seq_find (fun e:entry i -> e.iv = iv) s // <- requires iv:UInt128.t
 *)
  
-
 
 // COUNTER_MODE LOOP from Chacha20 
 
@@ -486,26 +482,25 @@ val decrypt:
   aadtext:lbuffer (v aadlen) -> 
   plainlen:UInt32.t {safelen i (v plainlen) 1ul} -> 
   plaintext:plainBuffer i (v plainlen) -> 
-  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) -> STL UInt32.t
+  ciphertext:lbuffer (v plainlen + v (Spec.taglen i)) -> STL bool
   (requires (fun h -> 
     inv h #i #Reader e /\
     live_2 h aadtext ciphertext /\ Plain.live h plaintext /\ 
     Buffer.disjoint aadtext ciphertext //TODO add disjointness for plaintext
     ))
-  (ensures (fun h0 r h1 -> 
+  (ensures (fun h0 verified h1 -> 
     inv h1 #i #Reader e /\
     live_2 h1 aadtext ciphertext /\ Plain.live h1 plaintext /\
     Buffer.modifies_1 (Plain.as_buffer plaintext) h0 h1 /\
     (safeId i ==> (
         let found = find (HS.sel h1 e.log) n in
-        if r = 0ul then
+        if verified then
           let a = Buffer.as_seq h1 aadtext in
           let p = Plain.sel_plain h1 plainlen plaintext in
           let c = Buffer.as_seq h1 ciphertext in
           found == Some (Entry n a (v plainlen) p c)
         else
-          (r = 1ul /\ found == None /\ h0 == h1)))))
-    
+          found == None /\ h0 == h1 ))))
 
 let encrypt i st n aadlen aad plainlen plain cipher_tagged =
   push_frame();
@@ -537,4 +532,4 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   if verified then counter_dexor i st.prf (PRF.incr x) plainlen plain cipher;
   pop_frame();
 
-  if verified then 0ul else 1ul //TODO pick and enforce error convention.
+  verified

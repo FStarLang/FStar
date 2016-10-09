@@ -206,18 +206,18 @@ let test() =
   let decrypted = Plain.create i 0uy plainlen in
   let reader_rgn = new_region HH.root in
   let st = AE.genReader #_ #reader_rgn st in
-  let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
+  let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
   let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in
 
   // testing that decryption fails when truncating aad or tweaking the ciphertext.
-  let fail_0 = AE.decrypt i st iv (aadlen -^ 1ul) (Buffer.sub aad 0ul (aadlen -^ 1ul)) plainlen decrypted cipher = 0ul in
+  let fail_0 = AE.decrypt i st iv (aadlen -^ 1ul) (Buffer.sub aad 0ul (aadlen -^ 1ul)) plainlen decrypted cipher in
 
   tweak 3ul cipher;
-  let fail_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
+  let fail_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
   tweak 3ul cipher;
 
   tweak plainlen cipher;
-  let fail_2 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
+  let fail_2 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
   tweak plainlen cipher;
   
   pop_frame ();
