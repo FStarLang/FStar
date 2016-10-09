@@ -95,10 +95,3 @@ reifiable new_effect_for_free {
       read = read
     ; write = write
 }
-
-(* TODO
-./ifc.fst(65,89-75,18): Subtyping check failed; expected type IFC.IFC_write_complete_type;
-got type (l:Prims.bool -> b:Prims.bool -> Tot (l0:Prims.bool -> Tot (Prims.option (Prims.tuple2 Prims.unit IFC.label))))
-./ifc.fst(65,89-75,18): Subtyping check failed; expected type IFC.IFC_read_complete_type;
-got type (l:Prims.bool -> Tot (l0:IFC.label -> Tot (Prims.option (Prims.tuple2 Prims.bool Prims.bool))))
-*)

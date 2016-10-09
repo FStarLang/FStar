@@ -105,3 +105,20 @@ let reflect_on_the_fly u =
     n1
 
 let incr_increases (s0:int) = assert (snd (reify (incr2 ()) s0) = s0 + 1)
+
+(* a bit of extrinsic ifc *)
+
+val decr : unit -> StInt unit (requires (fun n -> True))
+                              (ensures (fun n0 _ n1 -> n1 = n0 - 1))
+let decr u =
+  let n = STINT.get () in
+  STINT.put (n - 1)
+
+let ifc (h:bool) : StInt int (requires (fun _ -> True))
+                              (ensures (fun _ _ _ -> True)) =
+  if h then (incr(); let y = STINT.get() in decr(); y)
+       else STINT.get() + 1
+
+(* TODO: failed to prove a pre-condition
+let ni_ifc = assert (forall h0 h1 s0. reify (ifc h0) s0 = reify (ifc h1) s0)
+*)

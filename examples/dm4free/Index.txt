@@ -21,6 +21,7 @@ Section		Description			File
 
 -- REVIEW:
 § 2.6		Information-flow (IFC)		ifc.fst and ifcEffect.fst
+-- try to do the extrinsic part at the end of IntST, but failed
 § 2.7		Continuations (cont)		?
 
 TODO: make sure all these files are part of the build in the end
