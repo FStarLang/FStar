@@ -54,9 +54,15 @@ let associativity a b c f g h = ()
 
 // Some dummy implementations of actions for illustration purposes
 // Probably better to just take them axiomatically
-let read (l:label) : ifc bool = fun l0 -> Some (true, join l0 l)
+let read (l:label) : ifc bool =
+  fun l0 -> match l0, l with
+            | low, low -> Some (true, low)
+            | _, _ -> Some (true, high)
+
 let write (l:label) (b:bool) : ifc unit =
-  fun l0 -> if flows l0 l then (Some ((), l0)) else None
+  fun l0 -> match l0, l with
+            | high, low -> None
+            | _, _ -> Some ((), l0)
 
 let xor (b1:bool) (b2:bool) : Tot bool = not (b1 = b2)
 
