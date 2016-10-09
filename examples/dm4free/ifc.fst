@@ -95,3 +95,17 @@ reifiable new_effect_for_free {
       read = read
     ; write = write
 }
+
+effect Ifc (a:Type) (req:IFC.pre) (ens:label -> option (a * label) -> GTot Type0) =
+  IFC a (fun (h0:label) (p:IFC.post a) -> req h0 /\
+             (forall r. (req h0 /\ ens h0 r) ==> p r))
+
+val p' : unit ->  Ifc unit (requires (fun l   -> True))
+                           (ensures  (fun l r -> r = None))
+let p' () =
+  let b1 = IFC.read low in
+  let b2 = IFC.read low in
+  IFC.write low (b1 && b2);
+  let b3 = IFC.read high in
+  IFC.write high (b1 || b3);
+  IFC.write low (xor b3 b3)
