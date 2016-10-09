@@ -22,7 +22,7 @@ module Spec = Crypto.Symmetric.Poly1305.Spec
 module MAC = Crypto.Symmetric.Poly1305.MAC
 
 module Cipher = Crypto.Symmetric.Cipher
-module PRF = Crypto.Symmetric.Chacha20.PRF
+module PRF = Crypto.Symmetric.PRF
 
 type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
@@ -354,9 +354,9 @@ val counter_enxor:
   plaintext:plainBuffer i (v len) -> 
   ciphertext:lbuffer (v len) {
     Buffer.disjoint (PRF t.key) ciphertext /\
-    Buffer.disjoint (bufferT plaintext) (PRF t.key) /\
-    Buffer.disjoint (bufferT plaintext) ciphertext /\ 
-    Buffer.frameOf (bufferT plaintext) <> (PRF t.rgn)
+    Buffer.disjoint (as_buffer plaintext) (PRF t.key) /\
+    Buffer.disjoint (as_buffer plaintext) ciphertext /\ 
+    Buffer.frameOf (as_buffer plaintext) <> (PRF t.rgn)
     } -> 
   STL unit
     (requires (fun h -> 
@@ -373,11 +373,11 @@ val counter_dexor:
   i:id -> t:PRF.state i -> x:PRF.domain -> len:u32{ctr_inv (PRF x.ctr) len} ->
   plaintext:plainBuffer i (v len) -> 
   ciphertext:lbuffer (v len) {
-    Buffer.disjoint (bufferT plaintext) ciphertext /\ 
-    Buffer.frameOf (bufferT plaintext) <> PRF t.rgn } -> 
+    Buffer.disjoint (as_buffer plaintext) ciphertext /\ 
+    Buffer.frameOf (as_buffer plaintext) <> PRF t.rgn } -> 
   STL unit
     (requires (fun h -> Buffer.live h ciphertext /\ Buffer.live h (PRF t.key) /\ Plain.live h plaintext))
-    (ensures (fun h0 _ h1 -> let b = bufferT plaintext in Buffer.live h1 b /\ Buffer.modifies_1 b h0 h1))
+    (ensures (fun h0 _ h1 -> let b = as_buffer plaintext in Buffer.live h1 b /\ Buffer.modifies_1 b h0 h1))
 
 let rec counter_dexor i t x len plaintext ciphertext =
   if len <> 0ul 
@@ -495,7 +495,7 @@ val decrypt:
   (ensures (fun h0 r h1 -> 
     inv h1 #i #Reader e /\
     live_2 h1 aadtext ciphertext /\ Plain.live h1 plaintext /\
-    Buffer.modifies_1 (Plain.bufferT plaintext) h0 h1 /\
+    Buffer.modifies_1 (Plain.as_buffer plaintext) h0 h1 /\
     (safeId i ==> (
         let found = find (HS.sel h1 e.log) n in
         if r = 0ul then

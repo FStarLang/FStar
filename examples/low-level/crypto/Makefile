@@ -28,11 +28,11 @@ VERIFY= \
   Crypto.Symmetric.GF128 \
   Crypto.Symmetric.GCM \
   Crypto.Symmetric.AES \
-  Crypto.Symmetric.BlockCipher \
+  Crypto.Symmetric.Cipher \
   Crypto.AEAD.AES256GCM \
-  Crypto.Symmetric.Chacha20.PRF \
+  Crypto.Symmetric.PRF \
   Crypto.AEAD.Chacha20Poly1305 \
-  Crypto.AEAD.Chacha20Poly1305.Ideal \
+  Crypto.AEAD \
   Plain \
   Test \
   TestMonotonic \
@@ -47,6 +47,8 @@ SLOW= \
 LAX= \
   Crypto.Symmetric.Poly1305.MAC
   # AEAD
+
+#16-10-09  Not sure how to verify Flag.fsti and Flag.fst
 
 all-ver: $(addsuffix .fst-ver, $(VERIFY))
 

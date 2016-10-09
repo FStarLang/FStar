@@ -7,7 +7,7 @@ open FStar.Ghost
 open Buffer.Utils
 open Crypto.Symmetric.Chacha20
 
-//16-10-02 This file is used only by aead-test; use Chacha20Poly1305.Ideal instead.
+//16-10-02 THIS FILE IS USED ONLY BY AEAD-TEST; use Crypto.AEAD instead.
 
 // now hiding the 1-time MAC state & implementation
 module Spec = Crypto.Symmetric.Poly1305.Spec

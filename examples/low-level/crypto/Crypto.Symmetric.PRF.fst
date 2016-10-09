@@ -1,4 +1,4 @@
-module Crypto.Symmetric.Chacha20.PRF
+module Crypto.Symmetric.PRF
 
 (* This file models our idealization of CHACHA20 (and soon any other
    cipher used only in forward mode, such as AES for GCM or CCM)

@@ -14,7 +14,7 @@ module HS = FStar.HyperStack
 
 module Spec = Crypto.Symmetric.Poly1305.Spec
 module MAC = Crypto.Symmetric.Poly1305.MAC
-module PRF = Crypto.Symmetric.Chacha20.PRF
+module PRF = Crypto.Symmetric.PRF
 module AE = Crypto.AEAD
 
 module L = FStar.List.Tot
