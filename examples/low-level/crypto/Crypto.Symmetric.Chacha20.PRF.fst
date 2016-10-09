@@ -1,7 +1,7 @@
 module Crypto.Symmetric.Chacha20.PRF
 
 (* This file models our idealization of CHACHA20 (and soon any other
-   block cipher used only in forward mode, such as AES for GCM or CCM)
+   cipher used only in forward mode, such as AES for GCM or CCM)
    as a PRF to build authenticated encryption.
 
    It models (an ad hoc variant of) the PRF security assumption:
@@ -29,7 +29,7 @@ module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
   
 module MAC   = Crypto.Symmetric.Poly1305.MAC
-module Block = Crypto.Symmetric.BlockCipher
+module Block = Crypto.Symmetric.Cipher
 
 let prfa = Block.CHACHA20
 let id = Flag.id 

@@ -7,6 +7,7 @@ open FStar.Ghost
 open Crypto.Symmetric.Bytes
 open Plain 
 open Buffer
+open Flag
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -14,7 +15,7 @@ module HS = FStar.HyperStack
 module Spec = Crypto.Symmetric.Poly1305.Spec
 module MAC = Crypto.Symmetric.Poly1305.MAC
 module PRF = Crypto.Symmetric.Chacha20.PRF
-module AE = Crypto.AEAD.Chacha20Poly1305.Ideal
+module AE = Crypto.AEAD
 
 module L = FStar.List.Tot
 
@@ -178,8 +179,8 @@ let test() =
   let plainrepr = from_string plainlen 
     "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it." in
 
-  let i:id = 42ul in
-  assume(not(Plain.authId i));
+  let i:id = { cipher = CHACHA20_POLY1305; uniq = 42ul } in
+  assume(not(safeId i));
   let plain = Plain.create i 0uy plainlen in 
   let plainbytes = make (v plainlen) (load_bytes plainlen plainrepr) in 
   Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext

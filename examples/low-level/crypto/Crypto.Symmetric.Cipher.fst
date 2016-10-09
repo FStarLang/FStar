@@ -1,4 +1,4 @@
-module Crypto.Symmetric.BlockCipher
+module Crypto.Symmetric.Cipher
 
 // Multiplexing and hiding concrete implementations: AES128, AES256, and CHACHA20. 
 // Consider also enforcing key abstraction (but quite verbose to code; see Plain.fst).

@@ -99,7 +99,7 @@ let rec add_bytes #i st log a len txt =
    - the Poly1305 tag on the ciphertext and the additional data
    *)
 
-open Crypto.Symmetric.BlockCipher 
+open Crypto.Symmetric.Cipher 
 
 val chacha20_aead_encrypt: 
   key:Bytes.lbuffer 32 -> n:iv CHACHA20 ->

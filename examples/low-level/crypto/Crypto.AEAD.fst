@@ -1,4 +1,4 @@
-module Crypto.AEAD.Chacha20Poly1305.Ideal 
+module Crypto.AEAD
 
 // We implement ideal AEAD on top of ideal Chacha20 and ideal Poly1305. 
 // We precisely relate AEAD's log to their underlying state.
@@ -13,6 +13,7 @@ open FStar.HST.Monotonic.RRef
 
 open Crypto.Symmetric.Bytes
 open Plain
+open Flag
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -20,14 +21,14 @@ module HS = FStar.HyperStack
 module Spec = Crypto.Symmetric.Poly1305.Spec
 module MAC = Crypto.Symmetric.Poly1305.MAC
 
-module Block = Crypto.Symmetric.BlockCipher
+module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.Chacha20.PRF
 
 type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 let ctr x = PRF(x.ctr)
 
-let alg (i:id) = Block.CHACHA20 //TODO: 16-10-02 This is temporary
+let alg (i:id) = Cipher.CHACHA20 //TODO: 16-10-02 This is temporary
 
 open FStar.UInt
 assume val logxor_inv: #n:pos -> a:uint_t n -> b:uint_t n -> Lemma 
@@ -48,7 +49,7 @@ assume val lemma_xor_bounded: n:nat -> x: UInt128.t -> y: UInt128.t ->
   Lemma(FStar.UInt128(v x < pow2 n /\ v y < pow2 n ==> v (logxor x y) < pow2 n))
 //16-10-05 by induction on n, given a bitwise definition of logxor.
 
-let aeIV i (seqn:UInt64.t) (staticIV:Block.iv (alg i)) : Tot (Block.iv (alg i)) =
+let aeIV i (seqn:UInt64.t) (staticIV:Cipher.iv (alg i)) : Tot (Cipher.iv (alg i)) =
   let x = FStar.Int.Cast.uint64_to_uint128 seqn in
   let r = UInt128.logxor x staticIV in
   assert(FStar.UInt128.v staticIV < pow2 96);
@@ -57,9 +58,9 @@ let aeIV i (seqn:UInt64.t) (staticIV:Block.iv (alg i)) : Tot (Block.iv (alg i)) 
   lemma_xor_bounded 96 x staticIV; 
   r
 
-val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:Block.iv (alg i) -> Lemma
+assume val aeIV_injective: i:id -> seqn0:UInt64.t -> seqn1:UInt64.t -> staticIV:Cipher.iv (alg i) -> Lemma
   (aeIV i seqn0 staticIV = aeIV i seqn1 staticIV ==> seqn0 = seqn1)
-let aeIV_injective i seqn0 seqn1 staticIV = ()
+//let aeIV_injective i seqn0 seqn1 staticIV = ()
 
   (* relying on 0 xor 0 = 0 for the higher-order bytes *) 
   (* recheck endianness *)
@@ -123,14 +124,14 @@ type cipher (i:id) (l:nat) = lbytes(l + v (Spec.taglen i))
 
 noeq type entry (i:id) =
   | Entry: 
-      nonce:Block.iv (alg i) -> 
+      nonce:Cipher.iv (alg i) -> 
       ad:adata -> 
       l:plainLen -> 
       p:plain i l -> 
       c:cipher i (Seq.length (repr #i #l p)) -> 
       entry i
 
-let find (#i:id) (s:Seq.seq (entry i)) (n:Block.iv (alg i)) : option (entry i) =
+let find (#i:id) (s:Seq.seq (entry i)) (n:Cipher.iv (alg i)) : option (entry i) =
   SeqProperties.seq_find (fun (e:entry i) -> e.nonce = n) s 
 
 type rw = | Reader | Writer 
@@ -158,7 +159,7 @@ let gen i rgn =
   State #i #Writer #rgn #rgn log prf
 
 
-val coerce: i:id{~(authId i)} -> rgn:region -> key:lbuffer (v PRF.keylen)
+val coerce: i:id{~(prf i)} -> rgn:region -> key:lbuffer (v PRF.keylen)
   -> ST (state i Writer)
   (requires (fun h -> Buffer.live h key))
   (ensures  (fun h0 st h1 -> True))
@@ -190,8 +191,8 @@ let pad_16 b len =
   memset (Buffer.offset b len) 0uy (16ul -^ len)
 
 let field i = match alg i with 
-  | Block.CHACHA20 -> Crypto.Symmetric.Poly1305.Spec.elem
-  | Block.AES256   -> lbytes (v Crypto.Symmetric.GF128.len) // not there yet
+  | Cipher.CHACHA20 -> Crypto.Symmetric.Poly1305.Spec.elem
+  | Cipher.AES256   -> lbytes (v Crypto.Symmetric.GF128.len) // not there yet
   
 // val encode_bytes: i:id -> len:UInt32 -> b:lbytes (v len) -> Tot (Seq.seq (field i))
 
@@ -255,7 +256,7 @@ private let accumulate i ak (aadlen:UInt32.t) (aad:lbuffer (v aadlen))
 let maxplain (i:id) = pow2 14 // for instance
 private let safelen (i:id) (l:nat) (c:UInt32.t{0ul <^ c /\ c <=^ PRF.maxCtr }) = 
   l = 0 \/ (
-    let bl = v (Block( blocklen (alg i))) in
+    let bl = v (Cipher( blocklen (alg i))) in
     FStar.Mul(
       l + (v (c -^ 1ul)) * bl <= maxplain i /\ 
       l  <= v (PRF.maxCtr -^ c) * bl ))
@@ -271,7 +272,7 @@ val counterblocks:
   (decreases l)
 
 let rec counterblocks i rgn x l plain cipher = 
-  let blockl = v (Block(blocklen (alg i))) in 
+  let blockl = v (Cipher(blocklen (alg i))) in 
   if l = 0 
   then Seq.createEmpty
   else 
@@ -288,7 +289,7 @@ let rec counterblocks i rgn x l plain cipher =
 // (not a projection from one another because of allocated MACs and aad)
 val refines: 
   h:mem -> 
-  i:id {MAC.ideal /\ authId i } -> rgn:region ->
+  i:id {safeId i } -> rgn:region ->
   entries: Seq.seq (entry i) -> 
   blocks: Seq.seq (PRF.entry rgn i) -> GTot Type0
   (decreases (Seq.length entries))
@@ -301,7 +302,7 @@ let rec refines h i rgn entries blocks =
   (match Seq.index entries 0 with
   | Entry nonce ad l plain cipher_tagged -> 
     begin
-      let bl = v (Block( blocklen (alg i))) in
+      let bl = v (Cipher( blocklen (alg i))) in
       let b = (l + bl -1) / bl in // number of blocks XOR-ed for this encryption
       (b < Seq.length blocks /\
       (match Seq.index blocks 0 with
@@ -390,7 +391,7 @@ let rec counter_dexor i t x len plaintext ciphertext =
       let plain = Plain.sub plaintext 0ul l in 
 
       recall (PRF t.table); //16-09-22 could this be done by ! ??
-      let s = PRF.find_1 (PRF !t.table) x in 
+      let s = PRF.find_otp (PRF !t.table) x in 
       let h = HST.get() in 
       assume(match s with | Some (PRF.OTP l' p c) -> l == l' /\ c = sel_bytes h l cipher | None -> False);
 
@@ -415,7 +416,7 @@ let rec counter_enxor i t x len plaintext ciphertext =
 
       recall (PRF t.table); //16-09-22 could this be done by ! ??
       let s = (PRF !t.table) in 
-      assume(is_None(PRF.find_1 s  x)); 
+      assume(is_None(PRF.find s  x)); 
       PRF.prf_enxor i t x l cipher plain;
 
       let len = len -^ l in 
@@ -434,7 +435,7 @@ val inv: h:mem -> #i:id -> #rw:rw -> e:state i rw -> Tot Type0
 let inv h #i #rw e =
   match e with
   | State #i_ #rw_ #region #log_region log prf ->
-    MAC.ideal /\ authId i ==>
+    safeId i ==>
     ( let blocks = HS.sel h (PRF.State.table prf) in
       let entries = HS.sel h log in
       refines h i log_region entries blocks )
@@ -454,7 +455,7 @@ let inv h #i #rw e =
 
 val encrypt: 
   i: id -> e:state i Writer -> 
-  n: Block.iv (alg i) ->
+  n: Cipher.iv (alg i) ->
   aadlen: UInt32.t {aadlen <=^ aadmax} -> 
   aadtext: lbuffer (v aadlen) -> 
   plainlen: UInt32.t {safelen i (v plainlen) 1ul} -> 
@@ -465,14 +466,14 @@ val encrypt:
     inv h #i #Writer e /\
     live_2 h aadtext ciphertext /\ Plain.live h plaintext /\
     Buffer.disjoint aadtext ciphertext /\ //TODO add disjointness for plaintext
-    (authId i ==> find (HS.sel h e.log) n == None) // The nonce must be fresh!
+    (prf i ==> find (HS.sel h e.log) n == None) // The nonce must be fresh!
       ))
   (ensures (fun h0 _ h1 -> 
     //TODO some "heterogeneous" modifies that also records updates to logs and tables
     Buffer.modifies_1 ciphertext h0 h1 /\ 
     live_2 h1 aadtext ciphertext /\ Plain.live h1 plaintext /\
     inv h1 #i #Writer e /\ 
-    (MAC.ideal /\ authId i ==> (
+    (safeId i ==> (
       let aad = Buffer.as_seq h1 aadtext in
       let p = Plain.sel_plain h1 plainlen plaintext in
       let c = Buffer.as_seq h1 ciphertext in
@@ -480,7 +481,7 @@ val encrypt:
 
 val decrypt: 
   i:id -> e:state i Reader -> 
-  n:Block.iv (alg i) -> 
+  n:Cipher.iv (alg i) -> 
   aadlen:UInt32.t {aadlen <=^ aadmax} -> 
   aadtext:lbuffer (v aadlen) -> 
   plainlen:UInt32.t {safelen i (v plainlen) 1ul} -> 
@@ -495,7 +496,7 @@ val decrypt:
     inv h1 #i #Reader e /\
     live_2 h1 aadtext ciphertext /\ Plain.live h1 plaintext /\
     Buffer.modifies_1 (Plain.bufferT plaintext) h0 h1 /\
-    (authId i ==> (
+    (safeId i ==> (
         let found = find (HS.sel h1 e.log) n in
         if r = 0ul then
           let a = Buffer.as_seq h1 aadtext in
