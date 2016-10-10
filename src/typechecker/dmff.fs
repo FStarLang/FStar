@@ -830,13 +830,13 @@ and infer (env: env) (e: term): nm * term * term =
 
       // From [comp], the inferred computation type for the (original), return
       // the inferred type for the original term.
-      let t =
-        let binders = List.map (fun (bv, _) ->
-          S.mk_binder (S.null_bv bv.sort)
-        ) binders in
-        let binders = close_binders binders in
-        mk (Tm_arrow (binders, comp))
-      in
+      let t = U.arrow binders comp in
+//        let binders = List.map (fun (bv, _) ->
+//          S.mk_binder (S.null_bv bv.sort)
+//        ) binders in
+//        let binders = close_binders binders in
+//        mk (Tm_arrow (binders, comp))
+//      in
 
       let s_body = close s_binders s_body in
       let s_binders = close_binders s_binders in
@@ -1087,8 +1087,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       args wp_args))
   | Tm_arrow (binders, comp) ->
       let binders = U.name_binders binders in
-      let binders = open_binders binders in
-      let binders, comp = open_comp binders comp in
+      let binders_orig, comp = open_comp binders comp in
       let bvs, binders = List.split (List.map (fun (bv, q) ->
         let h = bv.sort in
         if is_C h then
@@ -1097,13 +1096,15 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
         else
           let x = S.gen_bv (bv.ppname.idText ^ "-x") None (star_type' env h) in
           x, [ S.mk_binder x ]
-      ) binders) in
+      ) binders_orig) in
       let binders = List.flatten binders in
+      let comp = SS.subst_comp (Util.rename_binders binders_orig (S.binders_of_list bvs)) comp in
       let app = mk (Tm_app (wp, List.map (fun bv -> S.bv_to_name bv, S.as_implicit false) bvs)) in
       let comp = trans_G env (type_of_comp comp) (is_monadic_comp comp) app in
-      let comp = close_comp binders comp in
-      let binders = close_binders binders in
-      mk (Tm_arrow (binders, comp))
+      U.arrow binders comp
+//      let comp = close_comp binders comp in
+//      let binders = close_binders binders in
+//      mk (Tm_arrow (binders, comp))
   | _ ->
       failwith "impossible trans_F_"
 

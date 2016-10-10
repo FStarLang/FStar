@@ -10,12 +10,6 @@ module FStar.DM4F.StExnC
  *
  **********************************************************)
 
-(* TODO: parametrize heap? not sure that it can be done easily:
- *       we can't write a lift unless we instantiate it to a proper
- *       effect, and using FStar.DM4F.Heap does not give us an
- *       equality comparison of heaps, difficulting our last example.
- *)
-
 (* The underlying representation type. The two ints are
  * resulting state and exception count, respectively. *)
 let stexnc a =
@@ -29,7 +23,6 @@ val bind : (a:Type) -> (b:Type) ->
            (f:stexnc a) -> (g:a -> stexnc b) -> stexnc b
 let bind a b f g =
   fun s0 ->
-    (* TODO: need to letbind f s0 to match on it; expected? idem grs1 *)
     let fs0 = f s0 in
     match fs0 with
     | None, (s1, c1) -> None, (s1, c1)
@@ -43,16 +36,14 @@ let put (s:int) : stexnc unit =
 let get (_:unit) : stexnc int =
         fun s0 -> (Some s0, (s0, 0))
 
-(* Same error as StExn *)
-//let raise (a:Type) : stexnc a =
-//        fun s0 -> (None, (s0, 1))
+let raise (a:Type) : stexnc a = 
+       fun s0 -> (None, (s0, 1))
 
 (*
  * Define the new effect using DM4F. We don't mark it as reflectable
  * so we know the invariant of exception-counting is enforced
  *)
-(* TODO: remove reflectable *)
-reifiable reflectable new_effect_for_free {
+reifiable new_effect_for_free {
   STEXNC: a:Type -> Effect
   with repr    = stexnc
      ; return  = return
@@ -60,7 +51,7 @@ reifiable reflectable new_effect_for_free {
   and effect_actions
        put     = put
      ; get     = get
-     //; raise   = raise
+     ; raise   = raise
 }
 
 let pre  = STEXNC.pre
@@ -95,35 +86,20 @@ effect SC (a:Type) =
 // reifiable let f (a:Type) : STEXNC a (fun h0 post -> post (None, (h0, 0))) =
 //         STEXNC.reflect (f_impl a)
 
-(* TODO: remove and make proper action *)
-val raise_impl : (a:Type) -> repr a (fun h0 p -> p (None, (h0, 1)))
-let raise_impl a h0 = (None, (h0, 1))
-
-reifiable val raise : (a:Type) -> STEXNC a (fun h0 p -> p (None, (h0, 1)))
-reifiable let raise a = STEXNC.reflect (raise_impl a)
-
 val div_intrinsic : i:nat -> j:int -> StExnC int
   (requires (fun h -> True))
   (ensures (fun h0 x h1 c -> match x with
                         | None -> h0 = h1 /\ c = 1 /\ j = 0
                         | Some z -> h0 = h1 /\ c = 0 /\ j <> 0 /\ z = i / j))
-let div_intrinsic i j =
-  if j = 0 then raise int
+let div_intrinsic i j = 
+  if j = 0 then STEXNC.raise int
   else i / j
 
 reifiable let div_extrinsic (i:nat) (j:int) : SC int =
-  if j = 0 then raise int
+  if j = 0 then STEXNC.raise int
   else i / j
 
 let lemma_div_extrinsic (i:nat) (j:int) (h0:int) :
   Lemma (match reify (div_extrinsic i j) h0 with
          | None, (h1, 1) -> h1 = h0 /\ j = 0
          | Some z, (h1, 0) -> h1 = h0 /\ j <> 0 /\ z = i / j) = ()
-
-(* TODO paper also talks about using reflect to implement a safet
-   reflect_increasing ... can we actually do this? *)
-
-(* let reflect_increasing (f: int -> Pure (option 'a * (int * int)) wp) *)
-(*     : StExnC 'a (fun (s0, n0) post -> *)
-(*       wp s0 (fun (s1, n1) -> post (s1, n1) /\ n1 >= n0)) *)
-(*     = STEXNC.reflect f *)

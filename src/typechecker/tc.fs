@@ -249,9 +249,12 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     check_and_gen' env ed.trivial expected_k in
 
   let repr, bind_repr, return_repr, actions =
-      if (ed.qualifiers |> List.contains Reifiable
-          || ed.qualifiers |> List.contains Reflectable)
-      then begin
+      match (SS.compress ed.repr).n with 
+      | Tm_unknown -> //This is not a DM4F effect definition; so nothing to do
+        ed.repr, ed.bind_repr, ed.return_repr, ed.actions
+      | _ -> 
+        //This is a DM4F effect definition
+        //Need to check that the repr, bind, return and actions have their expected types
         let repr = 
             let t, _ = Util.type_u () in
             let expected_k = Util.arrow [S.mk_binder a;
@@ -377,7 +380,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
                 let a, wp = destruct_repr (Util.comp_result c) in
                 let c = {
                   comp_univs=[env.universe_of env a];
-		  effect_name = ed.mname;
+		          effect_name = ed.mname;
                   result_typ = a;
                   effect_args = [as_arg wp];
                   flags = [] 
@@ -396,8 +399,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
               action_typ =act_typ } in
         ed.actions |> List.map check_action in
       repr, bind_repr, return_repr, actions
-      end 
-      else ed.repr, ed.bind_repr, ed.return_repr, ed.actions in
+  in
 
   //generalize and close
   let t = U.arrow ed.binders (S.mk_Total ed.signature) in

@@ -3,14 +3,17 @@ OTHERFLAGS=
 include ../Makefile.include
 
 all: uall
-uall:	Effects.Def.uver \
+uall:	delimcc.uver \
+	Effects.Def.uver \
 	FStar.DM4F.IntST.uver-explicit \
 	FStar.DM4F.Exceptions.uver-explicit \
 	FStar.DM4F.ExnSt.uver \
 	FStar.DM4F.StExn.uver-explicit \
 	FStar.DM4F.ST.uver \
 	FStar.DM4F.Heap.uver \
-	FStar.DM4F.Heap.ST.uver
+	FStar.DM4F.Heap.ST.uver \
+	FStar.DM4F.Heap.STExnC.uver \
+	FStar.DM4F.IFC.uver
 
 sall:
 

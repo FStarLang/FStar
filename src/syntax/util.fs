@@ -862,15 +862,15 @@ let destruct_typ_as_formula f : option<connective> =
         | None -> destruct_q_conn phi
 
 
-  let action_as_lb a = 
-        let lb = {
-            lbname=Inr (lid_as_fv a.action_name Delta_equational None);
-            lbunivs=a.action_univs;
-            lbtyp=a.action_typ;
-            lbdef=a.action_defn;
-            lbeff=Const.effect_Tot_lid
-        } in
-        Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [])
+  let action_as_lb a =
+    let lb = close_univs_and_mk_letbinding 
+                None 
+                (Inr (lid_as_fv a.action_name Delta_equational None))
+                a.action_univs
+                a.action_typ
+                Const.effect_Tot_lid
+                a.action_defn in
+    Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [])
     
 (* Some reification utilities *)
 let mk_reify t = 
