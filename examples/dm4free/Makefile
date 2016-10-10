@@ -9,7 +9,7 @@ uall:	delimcc.uver \
 	FStar.DM4F.Exceptions.uver-explicit \
 	FStar.DM4F.ExnSt.uver \
 	FStar.DM4F.StExn.uver-explicit \
-	FStar.DM4F.ST.uver-explicit \
+	FStar.DM4F.ST.uver \
 	FStar.DM4F.Heap.uver \
 	FStar.DM4F.Heap.ST.uver \
 	FStar.DM4F.Heap.STExnC.uver \
