@@ -1,5 +1,5 @@
 [
-  "§\u0006JMrr\u0013\u0003Œ³šÒ\t\u0016È«",
+  "¿&\fzè£\u0013ºÃø\u007f{\u0013™\u0011Ý",
   [
     [ "Test.mk_buf_t", 1, 0, 1, [ "@query" ], 0 ],
     [
@@ -429,7 +429,8 @@
       [
         "@query", "assumption_Crypto.Symmetric.AES.MaxUInt8",
         "assumption_FStar.HyperHeap.HasEq_rid", "b2t_def", "bool_inversion",
-        "bool_typing", "equation_Crypto.Symmetric.AES.keylen",
+        "bool_typing", "data_elim_FStar.Buffer.Mkbuffer_",
+        "equation_Crypto.Symmetric.AES.keylen",
         "equation_Crypto.Symmetric.AES.nk",
         "equation_Crypto.Symmetric.AES.v",
         "equation_Crypto.Symmetric.Bytes.buffer",
@@ -465,6 +466,7 @@
         "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Multiply",
         "primitive_Prims.op_Subtraction",
+        "proj_equation_FStar.Buffer.Mkbuffer__idx",
         "proj_equation_FStar.HyperStack.HS_h",
         "proj_equation_FStar.UInt32.Mk_v",
         "projection_inverse_BoxBool_proj_0",
@@ -662,8 +664,12 @@
       0,
       1,
       [
-        "@query", "assumption_FStar.UInt32.t__haseq",
-        "equation_FStar.UInt32.t"
+        "@query", "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
+        "lemma_FStar.Buffer.lemma_size", "proj_equation_FStar.UInt32.Mk_v",
+        "projection_inverse_FStar.UInt32.Mk_v",
+        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
+        "typing_FStar.UInt32.v"
       ],
       0
     ],
@@ -679,54 +685,6 @@
         "projection_inverse_FStar.UInt32.Mk_v",
         "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
         "typing_FStar.UInt32.v"
-      ],
-      0
-    ],
-    [
-      "Test.test",
-      5,
-      0,
-      1,
-      [
-        "@query", "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
-        "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
-        "lemma_FStar.Buffer.lemma_size", "proj_equation_FStar.UInt32.Mk_v",
-        "projection_inverse_FStar.UInt32.Mk_v",
-        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
-        "typing_FStar.UInt32.v"
-      ],
-      0
-    ],
-    [
-      "Test.test",
-      6,
-      0,
-      1,
-      [
-        "@query", "assumption_FStar.UInt32.t__haseq",
-        "equation_FStar.UInt32.t"
-      ],
-      0
-    ],
-    [
-      "Test.test",
-      7,
-      0,
-      1,
-      [
-        "@query", "assumption_FStar.UInt32.t__haseq",
-        "equation_FStar.UInt32.t"
-      ],
-      0
-    ],
-    [
-      "Test.test",
-      8,
-      0,
-      1,
-      [
-        "@query", "assumption_FStar.UInt32.t__haseq",
-        "equation_FStar.UInt32.t"
       ],
       0
     ],
