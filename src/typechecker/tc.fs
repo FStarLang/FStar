@@ -63,6 +63,18 @@ let tc_check_trivial_guard env t k =
   Rel.force_trivial_guard env g;
   t
 
+// A helper to check that the terms elaborated by DMFF are well-typed
+let recheck_debug s env t =
+  if Env.debug env (Options.Other "ED") then
+    Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
+  let t', _, _ = tc_term env t in
+  if Env.debug env (Options.Other "ED") then
+    Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
+  // Return the original term (without universes unification variables);
+  // because [tc_eff_decl] will take care of these
+  t
+
+
 let check_and_gen env t k =
     // Util.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
     TcUtil.generalize_universes env (tc_check_trivial_guard env t k)
@@ -468,16 +480,6 @@ and cps_and_elaborate env ed =
     let t = SS.subst subst t in
     let t, comp, _ = tc_term env t in
     t, comp
-  in
-  let recheck_debug s env t =
-    if Env.debug env (Options.Other "ED") then
-      Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
-    let t', _, _ = tc_term env t in
-    if Env.debug env (Options.Other "ED") then
-      Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
-    // Return the original term (without universes unification variables);
-    // because [tc_eff_decl] will take care of these
-    t
   in
   let mk x = mk x None signature.pos in
 
@@ -1319,7 +1321,11 @@ and tc_decl env se: list<sigelt> * _ =
             (* Covers both the "classic" format and the reifiable case. *)
             lift, check_and_gen env lift_wp expected_k
         | Some (what, lift), None ->
-            failwith "sub effect for free"
+            let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
+            let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
+            let _ = recheck_debug "lift-wp" env lift_wp in
+            let _ = recheck_debug "lift-elab" env lift_elab in
+            Some ([], lift_elab), ([], lift_wp)
       in
       let lift = match sub.lift with 
         | None -> None
