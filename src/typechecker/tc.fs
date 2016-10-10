@@ -1329,6 +1329,8 @@ and tc_decl env se: list<sigelt> * _ =
             let _ = recheck_debug "lift-elab" env lift_elab in
             Some ([], lift_elab), ([], lift_wp)
       in
+      let lax = env.lax in
+      let env = {env with lax=true} in //we do not expect the lift to verify, since that requires internalizing monotonicity of WPs
       let lift = match lift with 
         | None -> None
         | Some (_, lift) -> 
@@ -1351,6 +1353,8 @@ and tc_decl env se: list<sigelt> * _ =
           let lift = check_and_gen env lift expected_k in
 //          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
           Some lift in
+      // Restore the proper lax flag!
+      let env = { env with lax = lax } in
       let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
       let se = Sig_sub_effect(sub, r) in
       let env = Env.push_sigelt env se in
