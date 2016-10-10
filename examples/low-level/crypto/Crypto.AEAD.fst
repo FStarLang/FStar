@@ -399,16 +399,20 @@ let rec counter_dexor i t x len plaintext ciphertext =
   then
     begin // at least one more block
 
-      assume false;//16-10-02 
+      assume false;//16-10-02
       
       let l = min len PRF.blocklen in 
       let cipher = Buffer.sub ciphertext 0ul l  in 
       let plain = Plain.sub plaintext 0ul l in 
 
       recall (PRF t.table); //16-09-22 could this be done by ! ??
-      let s = PRF.find_otp #(PRF.State.rgn t) #i (PRF !t.table) x in
-      let h = HST.get() in 
-      assume(match s with | Some (PRF.OTP l' p c) -> l == l' /\ c = sel_bytes h l cipher | None -> False);
+      let s = PRF !t.table in
+      let h = HST.get() in
+      // WARNING: moving the PRF.find_otp outside the assume will segfault
+      // at runtime, because t.table doesn't exist in real code
+      assume(match PRF.find_otp #(PRF.State.rgn t) #i s x with
+        | Some (PRF.OTP l' p c) -> l == l' /\ c = sel_bytes h l cipher
+        | None -> False);
 
       PRF.prf_dexor i t x l plain cipher;
 
@@ -431,7 +435,8 @@ let rec counter_enxor i t x len plaintext ciphertext =
 
       recall (PRF t.table); //16-09-22 could this be done by ! ??
       let s = (PRF !t.table) in 
-      assume(is_None(PRF.find s  x)); 
+      assume(is_None(PRF.find s x));
+
       PRF.prf_enxor i t x l cipher plain;
 
       let len = len -^ l in 

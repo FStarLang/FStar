@@ -1238,7 +1238,7 @@
       1,
       0,
       [
-        "@query", "b2t_def", "bool_inversion",
+        "@query", "b2t_def", "bool_inversion", "bool_typing",
         "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
         "equation_Crypto.Symmetric.Poly1305.Spec.word",
         "equation_Crypto.Symmetric.Poly1305.Spec.word_16",
@@ -1248,7 +1248,7 @@
         "equation_FStar.UInt8.n", "equation_FStar.UInt8.t",
         "equation_Prims.nat",
         "function_token_typing_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "function_token_typing_FStar.Int8.n",
+        "function_token_typing_FStar.Int8.n", "int_typing",
         "lemma_Crypto.Symmetric.Poly1305.Spec.lemma_little_endian_lt_2_128",
         "lemma_FStar.Int.pow2_values", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_LessThanOrEqual",
