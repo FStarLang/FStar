@@ -1338,7 +1338,8 @@ and tc_decl env se: list<sigelt> * _ =
           let wp_a_typ = S.bv_to_name wp_a in
           let repr_f = repr_type sub.source a_typ wp_a_typ in
           let repr_result = 
-            let lift_wp_a = mk (Tm_app(snd lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
+            let lift_wp = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env (snd lift_wp) in
+            let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
             repr_type sub.target a_typ lift_wp_a in
           let expected_k =
             Util.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f] 
