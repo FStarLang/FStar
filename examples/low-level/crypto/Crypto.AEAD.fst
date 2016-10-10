@@ -28,7 +28,7 @@ type region = rgn:HH.rid {HS.is_eternal_region rgn}
 
 let ctr x = PRF(x.ctr)
 
-let alg (i:id) = Cipher.CHACHA20 //TODO: 16-10-02 This is temporary
+let alg (i:id) = cipher_of_id i 
 
 (* Definitions adapted from TLS/StreamAE.fst, to be integrated later *)
 // The per-record nonce for the AEAD construction is formed as follows:
