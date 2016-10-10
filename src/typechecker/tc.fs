@@ -1327,7 +1327,7 @@ and tc_decl env se: list<sigelt> * _ =
             let _ = recheck_debug "lift-elab" env lift_elab in
             Some ([], lift_elab), ([], lift_wp)
       in
-      let lift = match sub.lift with 
+      let lift = match lift with 
         | None -> None
         | Some (_, lift) -> 
           let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
