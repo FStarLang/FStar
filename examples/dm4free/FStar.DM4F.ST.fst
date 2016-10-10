@@ -14,27 +14,26 @@ let st (s:Type) (a:Type) = s -> M (a * s)
 (* Monad definition *)
 let return_st (s:Type) (a:Type) (x:a) : st s a = fun s0 -> x, s0
 
-let bind_st (s:Type) (a:Type) (b:Type) (f:st s a) (g:a -> st s b) : st s b =
-  fun s0 -> let x, s1 = f s0 in g x s1
+let bind_st (s:Type) (a:Type) (b:Type) (f:st s a) (g:a -> st s b) : st s b
+  (* = fun s0 -> let tmp = f s0 in g (fst tmp) (snd tmp) *)
+  = fun s0 -> let x, s1 = f s0 in g x s1
 
-(* TODO: Check the monad laws, now at least the first assert fails
-   - I remember these kind of things working at submission time though
-   - they also work in Effects.Def.fst
-   MAYBE: In the paper types are treated as implicit,
-          but new_effect_for_free fails if I try to do that *)
-(* let right_unit_st (f:st 's 'a) = assert (feq (bind_st f return_st) f) *)
+(* MAYBE: In the paper types are treated as implicit,
+          but new_effect_for_free fails if I try to do use implicit arguments *)
 
-(* open FStar.FunctionalExtensionality -- this would need to be passed
-                                          explicitly for --explicit_deps *)
+open FStar.FunctionalExtensionality
 
+(* TODO: This monad law don't work because of #710 (works for Tot) *)
 (* let right_unit_st (s:Type) (a:Type) (f:st s a) = *)
 (*   assert (feq (bind_st s a a f (return_st s a)) f) *)
 
-(* let left_unit_st (x:'a) (f:('a -> st 'b)) = *)
-(*      assert (feq (bind (return x) f) (f x)) *)
+let left_unit_st (s:Type) (a:Type) (b:Type) (x:a) (f:(a -> st s b)) =
+  assert (feq (bind_st s a b (return_st s a x) f) (f x))
 
-(* let assoc_st (f:st 'a) (g:('a -> st 'b)) (h:('b -> st 'c)) *)
-(*    = assert (feq (bind f (fun x -> bind (g x) h)) (bind (bind f g) h)) *)
+let assoc_st (s:Type) (a:Type) (b:Type) (c:Type)
+             (f:st s a) (g:(a -> st s b)) (h:(b -> st s c))
+   = assert (feq (bind_st s a c f (fun x -> bind_st s b c (g x) h))
+                 (bind_st s b c (bind_st s a b f g) h))
 
 (* Actions *)
 let get (s:Type) () : st s s = fun s0 -> s0, s0
