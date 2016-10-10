@@ -529,17 +529,23 @@ and star_type' env t =
       let binders = List.map (fun (bv, aqual) ->
         { bv with sort = star_type' env bv.sort }, aqual
       ) binders in
-      begin match is_monadic_arrow t.n with
-      | N hn ->
-          // Simple case:
-          //   (H_0  -> ... -> H_n)* = H_0* -> ... -> H_n*
-          mk (Tm_arrow (binders, mk_Total (star_type' env hn)))
-      | M a ->
-          // F*'s arrows are n-ary (and the intermediary arrows are pure), so the rule is:
-          //   (H_0  -> ... -> H_n  -t-> A)* = H_0* -> ... -> H_n* -> (A* -> Type) -> Type
-          mk (Tm_arrow (
-            binders @ [ S.null_bv (mk_star_to_type env a), S.as_implicit false ],
-            mk_Total Util.ktype0))
+      (* Catch the GTotal case early; it seems relatively innocuous to allow
+       * GTotal to appear. *)
+      begin match t.n with
+      | Tm_arrow (_, { n = GTotal (hn, _) }) ->
+          mk (Tm_arrow (binders, mk_GTotal (star_type' env hn)))
+      | _ ->
+          match is_monadic_arrow t.n with
+          | N hn ->
+              // Simple case:
+              //   (H_0  -> ... -> H_n)* = H_0* -> ... -> H_n*
+              mk (Tm_arrow (binders, mk_Total (star_type' env hn)))
+          | M a ->
+              // F*'s arrows are n-ary (and the intermediary arrows are pure), so the rule is:
+              //   (H_0  -> ... -> H_n  -t-> A)* = H_0* -> ... -> H_n* -> (A* -> Type) -> Type
+              mk (Tm_arrow (
+                binders @ [ S.null_bv (mk_star_to_type env a), S.as_implicit false ],
+                mk_Total Util.ktype0))
       end
 
   | Tm_app (head, args) ->
@@ -589,6 +595,9 @@ and star_type' env t =
       let t = SS.subst subst t in
       mk (Tm_refine (x, t))
 
+  | Tm_meta (t, m) ->
+      mk (Tm_meta (star_type' env t, m))
+
   | Tm_uinst _ ->
       raise (Err (Util.format1 "Tm_uinst is outside of the definition language: %s"
         (Print.term_to_string t)))
@@ -606,9 +615,6 @@ and star_type' env t =
         (Print.term_to_string t)))
   | Tm_uvar _ ->
       raise (Err (Util.format1 "Tm_uvar is outside of the definition language: %s"
-        (Print.term_to_string t)))
-  | Tm_meta _ ->
-      raise (Err (Util.format1 "Tm_meta is outside of the definition language: %s"
         (Print.term_to_string t)))
   | Tm_unknown ->
       raise (Err (Util.format1 "Tm_unknown is outside of the definition language: %s"
