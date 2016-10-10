@@ -49,9 +49,9 @@ let lift (a: Type) (f: IntST.st a): exnst a =
     let ret = f h in
     Some ret
 
-sub_effect IntST.STINT ~> EXNST {
+(*sub_effect IntST.STINT ~> EXNST {
   lift = lift
-}
+}*)
 
 (* A lift from a previously defined state effect *)
 val lift_state_exnst_wp : (a:Type) -> IntST.wp a -> wp a
