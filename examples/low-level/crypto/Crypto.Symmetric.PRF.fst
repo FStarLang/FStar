@@ -135,6 +135,7 @@ let mktable i rgn r = r
 val no_table: i:id {~(prf i)} -> rgn:region -> Tot (table_t rgn i)
 let no_table i rgn = ()
 
+#set-options "--lax"
  
 val gen: rgn:region -> i:id -> ST (state i)
   (requires (fun h -> True))
@@ -199,6 +200,7 @@ val prf_mac:
   ))
 
 #reset-options "--z3timeout 10000"
+#set-options "--lax"
 
 let prf_mac i t x =
   let macId = (i,x.iv) in
@@ -222,6 +224,43 @@ let prf_mac i t x =
     getBlock t x keylen keyBuffer;
     MAC.coerce macId t.rgn keyBuffer
 
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+
+private let lemma_modifies_buf_1 (#t:Type) (b:Buffer.buffer t) (r:HH.rid{r <> Buffer.frameOf b}) h0 h1 :
+  Lemma
+    (requires (Buffer.live h0 b /\ HS.modifies (Set.singleton (r)) h0 h1))
+    (ensures  (Buffer.modifies_buf_1 (Buffer.frameOf b) b h0 h1))
+    = ()
+
+private let lemma_modifies_ref (#t:Type) (r:HS.ref t) (rgn:HH.rid{rgn <> HS (r.id)}) h0 h1 :
+  Lemma
+    (requires (HS.modifies (Set.singleton (rgn)) h0 h1 /\ HS (rgn `is_in` h0.h /\ r.id `is_in` h0.h)))
+    (ensures  (HS.modifies_ref (HS (r.id)) (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1))
+    = cut (HS.modifies (Set.union (Set.singleton rgn) (Set.singleton (HS (r.id)))) h0 h1);
+      cut (HH.modifies_rref (HS (r.id)) !{} (HS (h0.h)) (HS (h1.h)))
+
+private let lemma_modifies_prf_raw (#a:Type) (#t:Type) (r:HS.ref a) (b:Buffer.buffer t)
+  h0 h1 h2 : Lemma
+  (requires (HS.MkRef.id r <> Buffer.frameOf b /\ HS.modifies (Set.singleton (HS.MkRef.id r)) h0 h1
+    /\ HS (r.id `is_in` h0.h)
+    /\ HS.modifies_ref (HS.MkRef.id r) !{HS.as_ref r} h0 h1
+    /\ Buffer.live h0 b
+    /\ HS (h1.tip == h0.tip)
+    /\ Buffer.modifies_1 b h1 h2))
+  (ensures  (HS.modifies (Set.union (Set.singleton (HS.MkRef.id r)) (Set.singleton (Buffer.frameOf b))) h0 h2
+    /\ Buffer.modifies_buf_1 (Buffer.frameOf b) b h0 h2
+    /\ HS.modifies_ref (HS (r.id)) (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h2))
+    = Buffer.lemma_reveal_modifies_1 b h1 h2;
+      let rr = HS.MkRef.id r in
+      let rb = Buffer.frameOf b in 
+      let rgns = Set.union (Set.singleton rr) (Set.singleton #HH.rid rb) in 
+      (* cut (HS.modifies rgns h0 h2); *)
+      cut (HS.modifies_ref rr (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1);
+      cut (HS.modifies_ref rr (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h1 h2);
+      lemma_modifies_buf_1 b rr h0 h1;
+      lemma_modifies_ref r rb h1 h2
+
+
 // real case + real use of memoized PRF output.
 private val prf_raw: 
   i:id -> t:state i -> x:domain{x.ctr <> 0ul /\ ~(safeId i)} -> l:u32 {l <=^ blocklen} -> 
@@ -229,8 +268,7 @@ private val prf_raw:
   (requires (fun h0 -> Buffer.live h0 output))
   (ensures (fun h0 _ h1 -> 
     Buffer.live h1 output /\ 
-    (if prf i then True
-      (*
+    (if prf i then ( (*True
       (
       // 16-10-08 this is gross; we need nicer libraries!
       // I just want to write modifies !{ itable i t, output } h0 h1
@@ -238,7 +276,7 @@ private val prf_raw:
       // can't get any concrete syntax for sets to work below.
       //
       // Temporarily giving up on hybrid modifies posts in the rest of the file.
-      // 
+      // *)
       let r = itable i t in 
       let rb = Buffer.frameOf output in 
       // can't use !{ t.rgn, rb}, why?
@@ -246,8 +284,8 @@ private val prf_raw:
       Buffer.live h1 output /\ 
       HS.modifies rgns h0 h1 /\ 
       HS.modifies_ref t.rgn (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1 /\
-      Buffer.modifies_bufs rb (TSet.singleton (Buffer.Buff output)) h0 h1 )
-      *) 
+      Buffer.modifies_buf_1 rb output h0 h1 )
+      (* *) 
     else
       Buffer.modifies_1 output h0 h1
     )))
@@ -255,16 +293,28 @@ let prf_raw i t x l output =
   if prf i then (
     let r = itable i t in 
     let contents = recall r; !r in
+    let h0 = HST.get() in
     let block = 
       match find_blk contents x with 
-      | Some block -> block 
-      | None -> 
+      | Some block -> (
+          cut (HS.modifies (Set.singleton (HS.MkRef.id r)) h0 h0);
+          block)
+      | None ->
           let block = random blocklen in 
+          let h = HST.get() in
           r := SeqProperties.snoc contents (Entry x block);
+          let h' = HST.get() in
+          assert(h' == HS.upd h r (SeqProperties.snoc contents (Entry x block)));
+          cut (HS.modifies (Set.singleton (HS.MkRef.id r)) h h');
           block in
-    store_bytes l output (Seq.slice block 0 (v l)))
-  else 
-    getBlock t x l output 
+    let h1 = HST.get() in
+    cut (HS.modifies (Set.singleton (HS.MkRef.id r)) h0 h1);
+    store_bytes l output (Seq.slice block 0 (v l));
+    let h2 = HST.get() in
+    lemma_modifies_prf_raw r output h0 h1 h2
+    )
+  else
+    getBlock t x l output
  
 // reuse the same block for x and XORs it with ciphertext
 val prf_dexor: 
