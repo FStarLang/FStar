@@ -35,7 +35,7 @@ VERIFY= \
   Crypto.AEAD \
   Plain \
   Test \
-  TestMonotonic \
+  TestMonotonic
 
 # Files that should fully typecheck, but not part of regression
 # because verification is too slow
@@ -46,13 +46,12 @@ SLOW= \
 # Files commented out are broken, uncomment once fixed
 LAX= \
   Crypto.Symmetric.Poly1305.MAC
-  # AEAD
 
 #16-10-09  Not sure how to verify Flag.fsti and Flag.fst
 
 all-ver: $(addsuffix .fst-ver, $(VERIFY))
 
-all-lax: $(addsuffix .fst-lax, $(LAX))
+all-lax: $(addsuffix .fst-lax, $(LAX)) $(addsuffix .fst-lax, $(VERIFY))
 
 # Parameter for interactive mode
 %.fst-in: 
