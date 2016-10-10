@@ -30,33 +30,6 @@ let ctr x = PRF(x.ctr)
 
 let alg (i:id) = Cipher.CHACHA20 //TODO: 16-10-02 This is temporary
 
-open FStar.UInt
-
-#reset-options "--initial_fuel 0 --max_fuel 0"
-
-let xor (b:bool) (b':bool) : Tot bool = b <> b'
-let xor_lemma (a:bool) (b:bool) : Lemma 
-  (requires (True))
-  (ensures  (xor (xor a b) b = a))
-  [SMTPat (xor (xor a b) b)]
-  = ()
-
-val logxor_inv: #n:pos -> a:uint_t n -> b:uint_t n -> Lemma 
-  (a = logxor #n (logxor #n a b) b)
-let logxor_inv #n a b =
-  let open FStar.BitVector in
-  let open FStar.Seq in
-  let va = to_vec a in
-  let vb = to_vec b in
-  cut(forall (i:nat). i < n ==> index (logxor_vec #n va vb) i = (index va i <> index vb i));
-  cut (forall (i:nat). {:pattern (index (logxor_vec (logxor_vec va vb) vb) i)}
-    i < n ==> index (logxor_vec (logxor_vec va vb) vb) i = (xor (xor (index va i) 
-                                                                    (index vb i)) 
-                                                               (index vb i)));
-  cut (forall (i:nat). i < n ==> index (logxor_vec (logxor_vec va vb) vb) i = index va i);
-  Seq.lemma_eq_intro (logxor_vec (logxor_vec va vb) vb) va;
-  inverse_num_lemma a; inverse_num_lemma b
-
 (* Definitions adapted from TLS/StreamAE.fst, to be integrated later *)
 // The per-record nonce for the AEAD construction is formed as follows:
 //
@@ -67,15 +40,31 @@ let logxor_inv #n a b =
 //
 // The XORing is a fixed, ad hoc, random permutation; not sure what is gained;
 // we can reason about sequence-number collisions before applying it.
-val lemma_xor_bounded_: n:nat -> x:FStar.BitVector.bv_t 128 -> y:FStar.BitVector.bv_t 128 -> 
-  Lemma (requires (forall (i:nat). (i < 128 /\ i >= n) ==> (Seq.index x (127-i) = false /\ Seq.index y (127-i) = false)))
-        (ensures  (forall (i:nat). (i < 128 /\ i >= n) ==> (Seq.index (BitVector.logxor_vec x y) (127-i) = false)))
-let lemma_xor_bounded_ n x y = ()
 
-#reset-options
+// TODO: prove, generalize and move
+assume val lt_pow2_index_to_vec: n:nat -> x:UInt128.t -> Lemma
+  (requires FStar.UInt128(v x < pow2 n))
+  (ensures  FStar.UInt128(forall (i:nat). (i < 128 /\ i >= n) ==>
+    Seq.index (FStar.UInt.to_vec (v x)) (127-i) = false))
 
-assume val lemma_xor_bounded: n:nat -> x: UInt128.t -> y: UInt128.t -> 
-  Lemma(FStar.UInt128(v x < pow2 n /\ v y < pow2 n ==> v (logxor x y) < pow2 n))
+// TODO: prove, generalize and move
+assume val index_to_vec_lt_pow2: n:nat -> x:FStar.BitVector.bv_t 128 -> Lemma
+  (requires (forall (i:nat). (i < 128 /\ i >= n) ==> Seq.index x (127-i) = false))
+  (ensures  (FStar.UInt.from_vec x < pow2 n))
+
+// TODO: move
+val lemma_xor_bounded: n:nat -> x:UInt128.t -> y:UInt128.t -> Lemma
+  (requires FStar.UInt128(v x < pow2 n /\ v y < pow2 n))
+  (ensures  FStar.UInt128(v (logxor x y) < pow2 n))
+let lemma_xor_bounded n x y =
+  let open FStar.BitVector in
+  let open FStar.UInt128 in
+  let vx = FStar.UInt.to_vec (v x) in
+  let vy = FStar.UInt.to_vec (v y) in
+  lt_pow2_index_to_vec n x;
+  lt_pow2_index_to_vec n y;
+  lemma_xor_bounded 128 n vx vy;
+  index_to_vec_lt_pow2 n (logxor_vec vx vy)
 
 //16-10-05 by induction on n, given a bitwise definition of logxor.
 
@@ -417,7 +406,7 @@ let rec counter_dexor i t x len plaintext ciphertext =
       let plain = Plain.sub plaintext 0ul l in 
 
       recall (PRF t.table); //16-09-22 could this be done by ! ??
-      let s = PRF.find_otp (PRF !t.table) x in 
+      let s = PRF.find_otp #(PRF.State.rgn t) #i (PRF !t.table) x in
       let h = HST.get() in 
       assume(match s with | Some (PRF.OTP l' p c) -> l == l' /\ c = sel_bytes h l cipher | None -> False);
 
@@ -557,9 +546,10 @@ let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   assume false; //16-10-04
   // First recompute and check the MAC
   let l, acc = accumulate i ak aadlen aad plainlen cipher in
-  let verified  = MAC.verify ak l acc tag in 
+  let verified = MAC.verify ak l acc tag in
 
   if verified then counter_dexor i st.prf (PRF.incr x) plainlen plain cipher;
+
   pop_frame();
 
   verified
