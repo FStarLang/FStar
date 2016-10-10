@@ -358,6 +358,8 @@ let prf_dexor i t x l plain cipher =
     assume false;
     Buffer.Utils.xor_bytes_inplace plainrepr cipher l
 
+#set-options "--initial_fuel 1 --max_fuel 1"
+
 //TODO (NS): this one takes about 15s to prove automatically; investigate a bit
 let lemma_snoc_found (#rgn:region) (#i:id) (s:Seq.seq (entry rgn i)) (x:domain) (v:range rgn i x) : Lemma
   (requires (find s x == None))

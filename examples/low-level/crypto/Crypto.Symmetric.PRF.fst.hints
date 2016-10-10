@@ -1,5 +1,5 @@
 [
-  "KС\u0019:(Ч\u0007 JЄЇЇР∙Lй",
+  "а¤■ў█ЯНа<QQ5-f\u001dп",
   [
     [
       "Crypto.Symmetric.PRF.sanity_check",
@@ -772,15 +772,15 @@
       0,
       1,
       [
-        "@query", "data_elim_Crypto.Symmetric.PRF.State",
+        "@query", "bool_inversion", "data_elim_Crypto.Symmetric.PRF.State",
         "equation_Crypto.Symmetric.PRF.id",
-        "equation_Crypto.Symmetric.PRF.table_t",
+        "equation_Crypto.Symmetric.PRF.table_t", "equation_Flag.prf",
         "fuel_guarded_inversion_Crypto.Symmetric.PRF.state",
-        "primitive_Prims.op_AmpAmp",
         "proj_equation_Crypto.Symmetric.PRF.State_rgn",
         "proj_equation_Crypto.Symmetric.PRF.State_table",
         "refinement_interpretation_Tm_refine_03a301cc1dfbe6f7c533d00c16e4a073",
-        "refinement_interpretation_Tm_refine_c8f8324e2390167fdc44eb2c11d1549c"
+        "refinement_interpretation_Tm_refine_a57b551dc0f312d391aa44f548d97477",
+        "typing_Flag.prf"
       ],
       0
     ],
@@ -799,9 +799,10 @@
       0,
       1,
       [
-        "@query", "equation_Crypto.Symmetric.PRF.id",
-        "equation_Crypto.Symmetric.PRF.table_t", "primitive_Prims.op_AmpAmp",
-        "refinement_interpretation_Tm_refine_c8f8324e2390167fdc44eb2c11d1549c"
+        "@query", "bool_inversion", "equation_Crypto.Symmetric.PRF.id",
+        "equation_Crypto.Symmetric.PRF.table_t", "equation_Flag.prf",
+        "refinement_interpretation_Tm_refine_a57b551dc0f312d391aa44f548d97477",
+        "typing_Flag.prf"
       ],
       0
     ],
@@ -815,11 +816,11 @@
         "equation_Crypto.Symmetric.PRF.region",
         "equation_Crypto.Symmetric.PRF.table_t",
         "equation_FStar.HyperStack.is_eternal_region",
-        "equation_FStar.List.Tot.test_sort", "equation_Prims._assert",
+        "equation_FStar.List.Tot.test_sort", "equation_Flag.prf",
+        "equation_Prims._assert",
         "function_token_typing_FStar.List.Tot.test_sort",
-        "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4",
-        "refinement_interpretation_Tm_refine_74c8d168ba7cf7b7bad791fc1b8a6555",
+        "refinement_interpretation_Tm_refine_e42bd1dfc50070d9ac26b2f978da2876",
         "typing_FStar.HyperStack.is_eternal_region"
       ],
       0
@@ -2426,7 +2427,59 @@
       ],
       0
     ],
-    null,
+    [
+      "Crypto.Symmetric.PRF.lemma_snoc_found",
+      1,
+      1,
+      1,
+      [
+        "@query", "bool_inversion", "constructor_distinct_Prims.None",
+        "constructor_distinct_Prims.Some", "constructor_distinct_Tm_unit",
+        "data_typing_intro_Crypto.Symmetric.PRF.Entry@tok",
+        "equation_Crypto.Symmetric.PRF.find",
+        "equation_Crypto.Symmetric.PRF.range",
+        "equation_FStar.List.Tot.test_sort",
+        "equation_FStar.SeqProperties.seq_find",
+        "equation_FStar.SeqProperties.snoc", "equation_Prims._assert",
+        "equation_Prims.nat",
+        "equation_with_fuel_FStar.SeqProperties.seq_find_aux.fuel_instrumented",
+        "fuel_correspondence_FStar.SeqProperties.seq_find_aux.fuel_instrumented",
+        "fuel_guarded_inversion_Crypto.Symmetric.PRF.domain",
+        "fuel_guarded_inversion_Prims.option",
+        "function_token_typing_Crypto.Symmetric.Poly1305.ideal",
+        "function_token_typing_FStar.List.Tot.test_sort", "int_typing",
+        "interpretation_Tm_abs_0d5fc20cc24fed0f8ffaeca20d7a2c61",
+        "interpretation_Tm_arrow_60dded2fac76d116672c2a6bb6cdd1a7",
+        "interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "kinding_Crypto.Symmetric.PRF.entry@tok",
+        "lemma_FStar.Seq.lemma_create_len",
+        "lemma_FStar.Seq.lemma_index_app2",
+        "lemma_FStar.Seq.lemma_index_create",
+        "lemma_FStar.Seq.lemma_len_append",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "pretyping_fc26179d63e888493ea34f6ebdab21f5",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Subtraction",
+        "proj_equation_Crypto.Symmetric.PRF.Entry_range",
+        "proj_equation_Crypto.Symmetric.PRF.Entry_x",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Crypto.Symmetric.PRF.Entry_range",
+        "projection_inverse_Crypto.Symmetric.PRF.Entry_x",
+        "projection_inverse_Prims.Some_v",
+        "refinement_interpretation_Tm_refine_124f9a17930ed5399c6ce9b2a0d8ee4a",
+        "refinement_interpretation_Tm_refine_9579fa2db1a51848d754cc29acdc2303",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368",
+        "refinement_interpretation_Tm_refine_c90e16742d2e633e32c657b87c3493b3",
+        "typing_Crypto.Symmetric.PRF.find", "typing_FStar.Seq.append",
+        "typing_FStar.Seq.create", "typing_FStar.Seq.index",
+        "typing_FStar.Seq.length", "typing_FStar.SeqProperties.seq_find",
+        "typing_FStar.SeqProperties.snoc",
+        "typing_Tm_abs_0d5fc20cc24fed0f8ffaeca20d7a2c61"
+      ],
+      0
+    ],
     [
       "Crypto.Symmetric.PRF.prf_enxor",
       1,
@@ -2583,7 +2636,7 @@
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.mul",
         "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
         "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
-        "equation_Prims.l_False", "equation_Prims.nat",
+        "equation_Flag.prf", "equation_Prims.l_False", "equation_Prims.nat",
         "fuel_guarded_inversion_Crypto.Symmetric.PRF.state",
         "fuel_guarded_inversion_FStar.UInt32.t_",
         "function_token_typing_Crypto.Symmetric.AES.keylen",
@@ -2608,7 +2661,7 @@
         "refinement_interpretation_Tm_refine_d6fb17fbf40b19e4285d53d5cab914a5",
         "refinement_interpretation_Tm_refine_ff58d88b8e1cf9b0b2faeacd456873cf",
         "typing_Crypto.Symmetric.AES.v", "typing_FStar.UInt.fits",
-        "typing_FStar.UInt32.v", "typing_Prims.is_None",
+        "typing_FStar.UInt32.v", "typing_Flag.prf", "typing_Prims.is_None",
         "typing_Prims.is_Some"
       ],
       0
