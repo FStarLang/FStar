@@ -848,6 +848,9 @@ and infer (env: env) (e: term): nm * term * term =
       N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->
+      // Can't trust the [t] type to still carry an M annotation... because the
+      // F* type-checker silently drops it. So, for now, we have a whitelist of
+      // combinators that we know for sure don't return an M.
       let _, t = Env.lookup_lid env.env lid in
       let txt = text_of_lid lid in
       let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None"; "op_Addition"; "op_BarBar"; "op_AmpAmp"; "op_Negation" ] in
