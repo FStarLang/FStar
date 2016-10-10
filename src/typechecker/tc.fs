@@ -1305,6 +1305,7 @@ and tc_decl env se: list<sigelt> * _ =
       let b, wp_b_tgt = monad_signature env sub.target (Env.lookup_effect_lid env sub.target) in
       let wp_a_tgt    = SS.subst [NT(b, S.bv_to_name a)] wp_b_tgt in
       let expected_k  = Util.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
+      let lift_wp = check_and_gen env (snd (must sub.lift_wp)) expected_k in
       let repr_type eff_name a wp =
         let no_reify l = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, Env.get_range env)) in
         match Env.effect_decl_opt env eff_name with
@@ -1315,7 +1316,7 @@ and tc_decl env se: list<sigelt> * _ =
               no_reify eff_name
             else
               mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env) in
-      let lift, lift_wp =
+      (* let lift, lift_wp =
         match sub.lift, sub.lift_wp with
         | None, None ->
             failwith "Impossible"
@@ -1328,7 +1329,7 @@ and tc_decl env se: list<sigelt> * _ =
             let _ = recheck_debug "lift-wp" env lift_wp in
             let _ = recheck_debug "lift-elab" env lift_elab in
             Some ([], lift_elab), ([], lift_wp)
-      in
+      in *)
       let lift = match sub.lift with 
         | None -> None
         | Some (_, lift) -> 
@@ -1338,7 +1339,7 @@ and tc_decl env se: list<sigelt> * _ =
           let wp_a_typ = S.bv_to_name wp_a in
           let repr_f = repr_type sub.source a_typ wp_a_typ in
           let repr_result = 
-            let lift_wp_a = mk (Tm_app(snd lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
+            let lift_wp_a = mk (Tm_app(snd (must sub.lift_wp), [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
             repr_type sub.target a_typ lift_wp_a in
           let expected_k =
             Util.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f] 
