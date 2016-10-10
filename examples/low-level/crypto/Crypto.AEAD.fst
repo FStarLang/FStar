@@ -31,8 +31,31 @@ let ctr x = PRF(x.ctr)
 let alg (i:id) = Cipher.CHACHA20 //TODO: 16-10-02 This is temporary
 
 open FStar.UInt
-assume val logxor_inv: #n:pos -> a:uint_t n -> b:uint_t n -> Lemma 
+
+#reset-options "--initial_fuel 0 --max_fuel 0"
+
+let xor (b:bool) (b':bool) : Tot bool = b <> b'
+let xor_lemma (a:bool) (b:bool) : Lemma 
+  (requires (True))
+  (ensures  (xor (xor a b) b = a))
+  [SMTPat (xor (xor a b) b)]
+  = ()
+
+val logxor_inv: #n:pos -> a:uint_t n -> b:uint_t n -> Lemma 
   (a = logxor #n (logxor #n a b) b)
+let logxor_inv #n a b =
+  let open FStar.BitVector in
+  let open FStar.Seq in
+  let va = to_vec a in
+  let vb = to_vec b in
+  cut(forall (i:nat). i < n ==> index (logxor_vec #n va vb) i = (index va i <> index vb i));
+  cut (forall (i:nat). {:pattern (index (logxor_vec (logxor_vec va vb) vb) i)}
+    i < n ==> index (logxor_vec (logxor_vec va vb) vb) i = (xor (xor (index va i) 
+                                                                    (index vb i)) 
+                                                               (index vb i)));
+  cut (forall (i:nat). i < n ==> index (logxor_vec (logxor_vec va vb) vb) i = index va i);
+  Seq.lemma_eq_intro (logxor_vec (logxor_vec va vb) vb) va;
+  inverse_num_lemma a; inverse_num_lemma b
 
 (* Definitions adapted from TLS/StreamAE.fst, to be integrated later *)
 // The per-record nonce for the AEAD construction is formed as follows:
@@ -44,9 +67,16 @@ assume val logxor_inv: #n:pos -> a:uint_t n -> b:uint_t n -> Lemma
 //
 // The XORing is a fixed, ad hoc, random permutation; not sure what is gained;
 // we can reason about sequence-number collisions before applying it.
+val lemma_xor_bounded_: n:nat -> x:FStar.BitVector.bv_t 128 -> y:FStar.BitVector.bv_t 128 -> 
+  Lemma (requires (forall (i:nat). (i < 128 /\ i >= n) ==> (Seq.index x (127-i) = false /\ Seq.index y (127-i) = false)))
+        (ensures  (forall (i:nat). (i < 128 /\ i >= n) ==> (Seq.index (BitVector.logxor_vec x y) (127-i) = false)))
+let lemma_xor_bounded_ n x y = ()
+
+#reset-options
 
 assume val lemma_xor_bounded: n:nat -> x: UInt128.t -> y: UInt128.t -> 
   Lemma(FStar.UInt128(v x < pow2 n /\ v y < pow2 n ==> v (logxor x y) < pow2 n))
+
 //16-10-05 by induction on n, given a bitwise definition of logxor.
 
 let aeIV i (seqn:UInt64.t) (staticIV:Cipher.iv (alg i)) : Tot (Cipher.iv (alg i)) =
