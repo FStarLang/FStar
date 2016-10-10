@@ -530,7 +530,7 @@ and star_type' env t =
         { bv with sort = star_type' env bv.sort }, aqual
       ) binders in
       (* Catch the GTotal case early; it seems relatively innocuous to allow
-       * GTotal to appear. *)
+       * GTotal to appear. TODO fix this as a clean, single pattern-matching. *)
       begin match t.n with
       | Tm_arrow (_, { n = GTotal (hn, _) }) ->
           mk (Tm_arrow (binders, mk_GTotal (star_type' env hn)))
@@ -551,24 +551,28 @@ and star_type' env t =
   | Tm_app (head, args) ->
       // Sums and products. TODO: re-use the cache in [env] to not recompute
       // (st a)* every time.
-      let is_valid_application head =
+      let rec is_valid_application head =
         match (SS.compress head).n with
         | Tm_fvar fv when (
           // TODO: implement a better check (non-dependent, user-defined data type)
           fv_eq_lid fv Const.option_lid ||
           fv_eq_lid fv Const.either_lid ||
+          fv_eq_lid fv Const.eq2_lid ||
           is_tuple_constructor (SS.compress head)
         ) ->
             true
-        | Tm_uinst _ ->
-            failwith "impossible (Tm_uinst)"
+        | Tm_bvar _
+        | Tm_name _ ->
+            true
+        | Tm_uinst (t, _) ->
+            is_valid_application t
         | _ ->
             false
       in
       if is_valid_application head then
         mk (Tm_app (head, List.map (fun (t, qual) -> star_type' env t, qual) args))
       else
-        raise (Err (Util.format1 "For now, only [either] and [option] are \
+        raise (Err (Util.format1 "For now, only [either], [option] and [eq2] are \
           supported in the definition language (got: %s)"
             (Print.term_to_string t)))
 
@@ -586,17 +590,29 @@ and star_type' env t =
       let repr = star_type' env repr in
       U.abs binders repr something
 
-  | Tm_refine (x, t) ->
+  | Tm_refine (x, t) when false ->
       let x = freshen_bv x in
+      let sort = star_type' env x.sort in
       let subst = [DB(0, x)] in
       let t = SS.subst subst t in
       let t = star_type' env t in
       let subst = [NM(x, 0)] in
       let t = SS.subst subst t in
-      mk (Tm_refine (x, t))
+      mk (Tm_refine ({ x with sort = sort }, t))
 
   | Tm_meta (t, m) ->
       mk (Tm_meta (star_type' env t, m))
+
+  | Tm_ascribed (e, Inl t, something) ->
+      mk (Tm_ascribed (star_type' env e, Inl (star_type' env t), something))
+
+  | Tm_ascribed _ ->
+      raise (Err (Util.format1 "Tm_ascribed is outside of the definition language: %s"
+        (Print.term_to_string t)))
+
+  | Tm_refine _ ->
+      raise (Err (Util.format1 "Tm_refine is outside of the definition language: %s"
+        (Print.term_to_string t)))
 
   | Tm_uinst _ ->
       raise (Err (Util.format1 "Tm_uinst is outside of the definition language: %s"
@@ -606,9 +622,6 @@ and star_type' env t =
         (Print.term_to_string t)))
   | Tm_match _ ->
       raise (Err (Util.format1 "Tm_match is outside of the definition language: %s"
-        (Print.term_to_string t)))
-  | Tm_ascribed _ ->
-      raise (Err (Util.format1 "Tm_ascribed is outside of the definition language: %s"
         (Print.term_to_string t)))
   | Tm_let _ ->
       raise (Err (Util.format1 "Tm_let is outside of the definition language: %s"
