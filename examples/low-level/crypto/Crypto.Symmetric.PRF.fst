@@ -135,7 +135,6 @@ let mktable i rgn r = r
 val no_table: i:id {~(prf i)} -> rgn:region -> Tot (table_t rgn i)
 let no_table i rgn = ()
 
-#set-options "--lax"
  
 val gen: rgn:region -> i:id -> ST (state i)
   (requires (fun h -> True))
@@ -200,7 +199,7 @@ val prf_mac:
   ))
 
 #reset-options "--z3timeout 10000"
-#set-options "--lax"
+
 
 let prf_mac i t x =
   let macId = (i,x.iv) in
