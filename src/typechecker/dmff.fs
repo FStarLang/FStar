@@ -848,6 +848,9 @@ and infer (env: env) (e: term): nm * term * term =
       N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->
+      // Can't trust the [t] type to still carry an M annotation... because the
+      // F* type-checker silently drops it. So, for now, we have a whitelist of
+      // combinators that we know for sure don't return an M.
       let _, t = Env.lookup_lid env.env lid in
       let txt = text_of_lid lid in
 //      let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None"; 
@@ -875,7 +878,7 @@ and infer (env: env) (e: term): nm * term * term =
             raise (Err (Util.format1 "%s: not a function type" (Print.term_to_string t_head)))
       in
       let binders, comp = flatten t_head in
-      Util.print1 "[debug] type of [head] is %s\n" (Print.term_to_string t_head);
+      // Util.print1 "[debug] type of [head] is %s\n" (Print.term_to_string t_head);
 
       // Making the assumption here that [Tm_arrow (..., Tm_arrow ...)]
       // implies [is_M comp]. F* should be fixed if it's not the case.
@@ -886,8 +889,8 @@ and infer (env: env) (e: term): nm * term * term =
           arguments, is an effectful computation (leaving %s arguments to be \
           applied). Please let-bind the head applied to the %s first \
           arguments." (string_of_int n) (string_of_int (n' - n)) (string_of_int n)));
-      Util.print2 "[debug] length binders=%s, length args=%s\n"
-        (string_of_int n) (string_of_int n');
+      // Util.print2 "[debug] length binders=%s, length args=%s\n"
+      //  (string_of_int n) (string_of_int n');
 
       let binders, comp = SS.open_comp binders comp in
       let rec final_type subst (binders, comp) args =
@@ -905,7 +908,7 @@ and infer (env: env) (e: term): nm * term * term =
             final_type (NT (bv, arg) :: subst) (binders, comp) args
       in
       let final_type = final_type [] (binders, comp) args in
-      Util.print1 "[debug]: final type of application is %s\n" (string_of_nm final_type);
+      // Util.print1 "[debug]: final type of application is %s\n" (string_of_nm final_type);
 
       let binders, _ = List.splitAt n' binders in
 
@@ -1014,7 +1017,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
   let x_binders, e2 = SS.open_term x_binders e2 in
   begin match infer env e1 with
   | N t1, s_e1, u_e1 ->
-      Util.print1 "[debug] %s is NOT a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
+      // Util.print1 "[debug] %s is NOT a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
       // Piggyback on the environment to carry our own special terms
       let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
       // Simple case: just a regular let-binding. We defer checks to e2.
@@ -1024,7 +1027,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       mk (Tm_let ((false, [ { binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
 
   | M t1, s_e1, u_e1 ->
-      Util.print1 "[debug] %s IS a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
+      // Util.print1 "[debug] %s IS a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
       let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
       let t2, s_e2, u_e2 = ensure_m env e2 in
       // Now, generate the bind.
