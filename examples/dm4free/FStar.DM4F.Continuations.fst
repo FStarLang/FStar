@@ -2,24 +2,22 @@ module FStar.DM4F.Continuations
 
 open FStar.FunctionalExtensionality
 
-inline let cont (a:Type0) = (a -> M Type0) -> M Type0
-let kont (a:Type0) =
-  f:(cont a){forall k1 k2. feq k1 k2 ==> f k1 == f k2}
+let kont (a:Type) = (a -> M Type0) -> M Type0
 
-let return (a:Type0) (x:a) : kont a = fun (p : a -> M Type0) -> p x
+let return (a:Type) (x:a) : kont a = fun (p : a -> M Type0) -> p x
 
-let bind (a:Type0) (b:Type0)
-         (m : kont a) (f : a -> Tot (kont b)) (k : b -> M Type0) : M Type0 =
+val bind : a:Type -> b:Type -> m:kont a -> f:(a -> kont b) -> kont b
+let bind a b m f = fun k -> 
 (* This does not work. cf. #712: m (fun (x:a) -> f x k) *)
 (* Silly workaround: *)
-  let mm : cont a = m in
-  mm (fun (x:a) ->
-    let fx : cont b = f x in
-    fx k)
+  //let mm : cont a = m in
+  m (fun (x:a) -> f x k)
+    (* let fx (\* : cont b *\) = f x in *)
+    (* fx k) *)
 
-val left_unit : a:Type -> b:Type -> x:a -> f:(a -> Tot (kont b)) ->
-                Lemma (bind a b (return a x) f == f x)
-let left_unit a b x f = admit()
+(* val left_unit : a:Type -> b:Type -> x:a -> f:(a -> Tot (kont b)) -> *)
+(*                 Lemma (bind a b (return a x) f == f x) *)
+(* let left_unit a b x f = admit() *)
 
 reifiable new_effect_for_free {
   CONT: Type -> Effect

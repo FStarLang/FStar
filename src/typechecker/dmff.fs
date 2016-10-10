@@ -1098,7 +1098,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
           x, [ S.mk_binder x ]
       ) binders_orig) in
       let binders = List.flatten binders in
-      let comp = SS.subst_comp (Util.rename_binders binders_orig binders) comp in
+      let comp = SS.subst_comp (Util.rename_binders binders_orig (S.binders_of_list bvs)) comp in
       let app = mk (Tm_app (wp, List.map (fun bv -> S.bv_to_name bv, S.as_implicit false) bvs)) in
       let comp = trans_G env (type_of_comp comp) (is_monadic_comp comp) app in
       U.arrow binders comp
