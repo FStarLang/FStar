@@ -835,7 +835,7 @@ and infer (env: env) (e: term): nm * term * term =
 //          S.mk_binder (S.null_bv bv.sort)
 //        ) binders in
 //        let binders = close_binders binders in
-//        mk (Tm_arrow (binders, comp))
+//        mk (Tm_arrow (binders, comp)) 
 //      in
 
       let s_body = close s_binders s_body in
@@ -850,15 +850,16 @@ and infer (env: env) (e: term): nm * term * term =
   | Tm_fvar { fv_name = { v = lid } } ->
       let _, t = Env.lookup_lid env.env lid in
       let txt = text_of_lid lid in
-      let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None"; "op_Addition"; "op_BarBar"; "op_AmpAmp"; "op_Negation" ] in
-      // Util.print2 "[debug]: lookup %s miss %s\n" txt (Print.term_to_string t);
-      if List.existsb (fun s -> Util.starts_with txt ("Prims." ^ s)) allowed_prefixes then
+//      let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None"; 
+//                              "op_Addition"; "op_BarBar"; "op_AmpAmp"; "op_Negation"; "op_Equality" ] in
+//      // Util.print2 "[debug]: lookup %s miss %s\n" txt (Print.term_to_string t);
+//      if List.existsb (fun s -> Util.starts_with txt ("Prims." ^ s)) allowed_prefixes then
         // Need to erase universes here! This is an F* type that is fully annotated.
         N (normalize t), e, e
-      else
-        raise (Err (Util.format1 "The %s constructor has not been whitelisted \
-          for the definition language; if this is a function application, \
-          consider using [inline]" txt))
+//      else
+//        raise (Err (Util.format1 "The %s constructor has not been whitelisted \
+//          for the definition language; if this is a function application, \
+//          consider using [inline]" txt))
 
   | Tm_app (head, args) ->
       let t_head, s_head, u_head = check_n env head in
