@@ -43,6 +43,14 @@ inline let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:post a) =
         wp (fun a -> p (Some (a, h0)))
 sub_effect PURE ~> EXNST = lift_pure_exnst
 
+(* A lift "for free" from STINT to EXNST *)
+let lift (a: Type) (f: st a): exnst a =
+  fun a f h -> Some (f h)
+
+sub_effect IntST.STINT ~> EXNST {
+  lift = lift
+}
+
 (* A lift from a previously defined state effect *)
 val lift_state_exnst_wp : (a:Type) -> IntST.wp a -> wp a
 let lift_state_exnst_wp a wp (h0:int) (p:post a) =

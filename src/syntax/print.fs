@@ -473,7 +473,16 @@ let rec sigelt_to_string x = match x with
   | Sig_new_effect(ed, _) -> eff_decl_to_string false ed
   | Sig_new_effect_for_free (ed, _) -> eff_decl_to_string true ed
   | Sig_sub_effect (se, r) ->
-    let us, t = Subst.open_univ_vars (fst se.lift_wp) (snd se.lift_wp) in
+    let lift_wp = match se.lift_wp, se.lift with
+      // TODO pretty-print this better
+      | None, None ->
+          failwith "impossible"
+      | Some lift_wp, _ ->
+          lift_wp
+      | _, Some lift ->
+          lift
+    in
+    let us, t = Subst.open_univ_vars (fst lift_wp) (snd lift_wp) in
     Util.format4 "sub_effect %s ~> %s : <%s> %s" 
         (lid_to_string se.source) (lid_to_string se.target) 
         (univ_names_to_string us) (term_to_string t)
