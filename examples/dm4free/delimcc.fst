@@ -9,7 +9,7 @@ open FStar.FunctionalExtensionality
 
 assume type result : Type0
 type cont (a:Type) = (a -> Tot result) -> Tot result
-let kont a = f:cont a{forall k1 k2.{:pattern (f k1); (f k2)} feq k1 k2 ==> f k1 = f k2}
+let kont a = f:cont a{forall k1 k2.{:pattern (f k1); (f k2)} feq k1 k2 ==> f k1 == f k2}
 
 val return_k: a:Type -> x:a -> Tot (cont a)
 let return_k a x = fun k -> k x
@@ -44,7 +44,7 @@ let reset m = fun c -> c (m () (fun x -> x))
 //Take 2: Murthy types
 ////////////////////////////////////////////////////////////////////////////////
 type cont2 (result:Type) (a:Type) = (a -> Tot result) -> Tot result
-let kont2 (result:Type) a = f:cont2 result a{forall k1 k2.{:pattern (f k1); (f k2)} feq k1 k2 ==> f k1 = f k2}
+let kont2 (result:Type) a = f:cont2 result a{forall k1 k2.{:pattern (f k1); (f k2)} feq k1 k2 ==> f k1 == f k2}
 
 val return_k2: res:Type -> a:Type -> x:a -> Tot (cont2 res a)
 let return_k2 res a x = fun k -> k x
