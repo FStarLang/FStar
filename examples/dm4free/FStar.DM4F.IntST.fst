@@ -12,9 +12,8 @@ let return_st a x = fun s -> x, s
 val bind_st : a:Type -> b:Type -> f:st a -> g:(a -> st b) -> st b
 let bind_st a b f g = fun s0 ->
   let tmp = f s0 in
-  let x, s1 = tmp in
-  g x s1
-
+  g (fst tmp) (snd tmp)
+  
 let get (_:unit): st int =
   fun x -> x, x
 
@@ -42,11 +41,12 @@ effect StInt (a:Type) (pre: pre) (post: (int -> a -> int -> GTot Type0)) =
        STINT a (fun n0 p -> pre n0 /\ (forall a n1. pre n0 /\ post n0 a n1 ==> p (a, n1)))
 
 effect St (a:Type) =
-       STINT a (fun n0 p -> forall x. p x)
+       STINT a (fun (n0:int) (p:(a * int) -> Type0) -> forall (x:(a * int)). p x)
+
 
 let repr = STINT.repr
 
-//Although we have STINT.get and STINT.put now as actions, 
+//Although we have STINT.get and STINT.put now as actions,
 //we can also "rederive" them using reflection
 
 // From the definition language to the effectful world with WPs
@@ -75,7 +75,7 @@ let incr' u =
   let n = STINT.get () in
   STINT.put (n + 1)
 
-reifiable val incr2 : unit -> St unit 
+reifiable val incr2 : unit -> St unit
 let incr2 u =
     let n = STINT.get() in
     STINT.put (n + 1)
@@ -107,18 +107,12 @@ let reflect_on_the_fly u =
 let incr_increases (s0:int) = assert (snd (reify (incr2 ()) s0) = s0 + 1)
 
 (* a bit of extrinsic ifc *)
-
-val decr : unit -> StInt unit (requires (fun n -> True))
-                              (ensures (fun n0 _ n1 -> n1 = n0 - 1))
-let decr u =
+reifiable let decr () : St unit =
   let n = STINT.get () in
   STINT.put (n - 1)
 
-let ifc (h:bool) : StInt int (requires (fun _ -> True))
-                              (ensures (fun _ _ _ -> True)) =
-  if h then (incr(); let y = STINT.get() in decr(); y)
+reifiable let ifc (h:bool) : St int =
+  if h then (incr2(); let y = STINT.get() in decr(); y)
        else STINT.get() + 1
 
-(* TODO: failed to prove a pre-condition
 let ni_ifc = assert (forall h0 h1 s0. reify (ifc h0) s0 = reify (ifc h1) s0)
-*)
