@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--fstar_home ../../.. --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --z3timeout 20   --hint_info --log_queries --include ../../../ulib/hyperheap --include ../../../ucontrib/Platform/fst MemoryHog.fst</StartArguments>
+    <StartArguments>FStar.DM4F.StExnC.fst --explicit_deps --trace_error --prn --print_implicits --print_universes --debug yes</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\workspace\FStar\examples\low-level\crypto\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\FStar\examples\dm4free</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

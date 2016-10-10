@@ -237,9 +237,12 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     check_and_gen' env ed.trivial expected_k in
 
   let repr, bind_repr, return_repr, actions =
-      if (ed.qualifiers |> List.contains Reifiable
-          || ed.qualifiers |> List.contains Reflectable)
-      then begin
+      match (SS.compress ed.repr).n with 
+      | Tm_unknown -> //This is not a DM4F effect definition; so nothing to do
+        ed.repr, ed.bind_repr, ed.return_repr, ed.actions
+      | _ -> 
+        //This is a DM4F effect definition
+        //Need to check that the repr, bind, return and actions have their expected types
         let repr = 
             let t, _ = Util.type_u () in
             let expected_k = Util.arrow [S.mk_binder a;
@@ -365,7 +368,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
                 let a, wp = destruct_repr (Util.comp_result c) in
                 let c = {
                   comp_univs=[env.universe_of env a];
-		  effect_name = ed.mname;
+		          effect_name = ed.mname;
                   result_typ = a;
                   effect_args = [as_arg wp];
                   flags = [] 
@@ -378,14 +381,14 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
           (*         (Print.term_to_string (N.normalize [N.Beta] env act_typ)); *)
           let univs, act_defn = TcUtil.generalize_universes env act_defn in
           let act_typ = N.normalize [N.Beta] env act_typ in
+          printfn "Checked action %s at type %s" (Print.term_to_string act_defn) (Print.tscheme_to_string (univs, act_typ));
           {act with 
               action_univs=univs;
               action_defn=act_defn;
               action_typ =act_typ } in
         ed.actions |> List.map check_action in
       repr, bind_repr, return_repr, actions
-      end 
-      else ed.repr, ed.bind_repr, ed.return_repr, ed.actions in
+  in
 
   //generalize and close
   let t = U.arrow ed.binders (S.mk_Total ed.signature) in
@@ -512,7 +515,9 @@ and cps_and_elaborate env ed =
     let item, item_comp = open_and_check item in
     if not (Util.is_total_lcomp item_comp) then
       raise (Err ("Computation for [item] is not total!"));
+    printfn "elaborate_and_star: Checking %s; got %s\n" (Print.term_to_string item) (Print.lcomp_to_string item_comp);
     let item_t, item_wp, item_elab = DMFF.star_expr dmff_env item in
+    printfn "elaborate_and_star: Checking %s; got item_t %s\n" (Print.term_to_string item) (Print.term_to_string item_t);
     let item_wp = recheck_debug "*" env item_wp in
     let item_elab = recheck_debug "_" env item_elab in
     dmff_env, item_t, item_wp, item_elab
@@ -562,10 +567,13 @@ and cps_and_elaborate env ed =
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     // We need to reverse-engineer what tc_eff_decl wants here...
     let dmff_env, action_t, action_wp, action_elab =
+      printfn "Elab and star of %s" (Print.term_to_string action.action_defn);
       elaborate_and_star dmff_env (action.action_univs, action.action_defn)
     in
     let name = action.action_name.ident.idText in
+    printfn "Type-checking action %s at type %s and wp %s\n" name (Print.term_to_string action_t) (Print.term_to_string action_wp);
     let action_typ_with_wp = DMFF.trans_F dmff_env action_t action_wp in
+    printfn "Got action type with wp %s\n" (Print.term_to_string action_typ_with_wp);
     let action_elab = register (name ^ "_elab") action_elab in
     let action_typ_with_wp = register (name ^ "_complete_type") action_typ_with_wp in
     dmff_env, { action with action_defn = apply_close action_elab; action_typ = apply_close action_typ_with_wp } :: actions
@@ -1291,6 +1299,10 @@ and tc_decl env se: list<sigelt> * _ =
       let env = Env.push_sigelt env se in
       let env, ses = ne.actions |> List.fold_left (fun (env, ses) a -> 
           let se_let = Util.action_as_lb a in
+          let _ = 
+            match se_let with 
+            | Sig_let((_, [lb]), _, _, _) ->
+              printfn "Pushing action: %s @ %s" (Print.lbname_to_string lb.lbname) (Print.tscheme_to_string (lb.lbunivs, lb.lbtyp)) in
           Env.push_sigelt env se_let, se_let::ses) (env, [se]) in
       [se], env
 
