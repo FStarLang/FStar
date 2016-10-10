@@ -1692,8 +1692,10 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let src = lookup l.msource in
     let dst = lookup l.mdest in
     let lift_wp, lift = match l.lift_op with 
-        | NonReifiableLift t -> ([],desugar_term env t), None
-        | ReifiableLift (wp, t) -> ([],desugar_term env wp), Some([], desugar_term env t) in
+        | NonReifiableLift t -> Some ([],desugar_term env t), None
+        | ReifiableLift (wp, t) -> Some ([],desugar_term env wp), Some([], desugar_term env t)
+        | LiftForFree t -> None, Some ([],desugar_term env t)
+    in
     let se = Sig_sub_effect({source=src; target=dst; lift_wp=lift_wp; lift=lift}, d.drange) in
     env, [se]
 
