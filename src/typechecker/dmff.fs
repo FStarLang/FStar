@@ -485,8 +485,10 @@ let nm_of_comp = function
       N t
   | Comp c when lid_equals c.effect_name Const.monadic_lid ->
       M c.result_typ
-  | _ ->
-      failwith "[nm_of_comp]: impossible"
+  | Comp c ->
+      failwith (Util.format1 "[nm_of_comp]: impossible (%s)" (string_of_lid c.effect_name))
+  | GTotal _ ->
+      failwith "[nm_of_comp]: impossible (GTot)"
 
 let string_of_nm = function
   | N t -> Util.format1 "N[%s]" (Print.term_to_string t)
@@ -578,14 +580,20 @@ and star_type' env t =
       let repr = star_type' env repr in
       U.abs binders repr something
 
+  | Tm_refine (x, t) ->
+      let x = freshen_bv x in
+      let subst = [DB(0, x)] in
+      let t = SS.subst subst t in
+      let t = star_type' env t in
+      let subst = [NM(x, 0)] in
+      let t = SS.subst subst t in
+      mk (Tm_refine (x, t))
+
   | Tm_uinst _ ->
       raise (Err (Util.format1 "Tm_uinst is outside of the definition language: %s"
         (Print.term_to_string t)))
   | Tm_constant _ ->
       raise (Err (Util.format1 "Tm_constant is outside of the definition language: %s"
-        (Print.term_to_string t)))
-  | Tm_refine _ ->
-      raise (Err (Util.format1 "Tm_refine is outside of the definition language: %s"
         (Print.term_to_string t)))
   | Tm_match _ ->
       raise (Err (Util.format1 "Tm_match is outside of the definition language: %s"
