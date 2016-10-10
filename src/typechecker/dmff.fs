@@ -578,17 +578,32 @@ and star_type' env t =
       let repr = star_type' env repr in
       U.abs binders repr something
 
-  | Tm_abs _
-  | Tm_uinst _
-  | Tm_constant _
-  | Tm_refine _
-  | Tm_match _
-  | Tm_ascribed _
-  | Tm_let _
-  | Tm_uvar _
-  | Tm_meta _
+  | Tm_uinst _ ->
+      raise (Err (Util.format1 "Tm_uinst is outside of the definition language: %s"
+        (Print.term_to_string t)))
+  | Tm_constant _ ->
+      raise (Err (Util.format1 "Tm_constant is outside of the definition language: %s"
+        (Print.term_to_string t)))
+  | Tm_refine _ ->
+      raise (Err (Util.format1 "Tm_refine is outside of the definition language: %s"
+        (Print.term_to_string t)))
+  | Tm_match _ ->
+      raise (Err (Util.format1 "Tm_match is outside of the definition language: %s"
+        (Print.term_to_string t)))
+  | Tm_ascribed _ ->
+      raise (Err (Util.format1 "Tm_ascribed is outside of the definition language: %s"
+        (Print.term_to_string t)))
+  | Tm_let _ ->
+      raise (Err (Util.format1 "Tm_let is outside of the definition language: %s"
+        (Print.term_to_string t)))
+  | Tm_uvar _ ->
+      raise (Err (Util.format1 "Tm_uvar is outside of the definition language: %s"
+        (Print.term_to_string t)))
+  | Tm_meta _ ->
+      raise (Err (Util.format1 "Tm_meta is outside of the definition language: %s"
+        (Print.term_to_string t)))
   | Tm_unknown ->
-      raise (Err (Util.format1 "The following term is outside of the definition language: %s"
+      raise (Err (Util.format1 "Tm_unknown is outside of the definition language: %s"
         (Print.term_to_string t)))
 
   | Tm_delayed _ ->

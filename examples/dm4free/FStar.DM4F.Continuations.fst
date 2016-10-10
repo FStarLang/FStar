@@ -2,7 +2,7 @@ module FStar.DM4F.Continuations
 
 open FStar.FunctionalExtensionality
 
-let cont (a:Type0) = (a -> M Type0) -> M Type0
+inline let cont (a:Type0) = (a -> M Type0) -> M Type0
 let kont (a:Type0) =
   f:(cont a){forall k1 k2. feq k1 k2 ==> f k1 == f k2}
 
@@ -12,7 +12,10 @@ let bind (a:Type0) (b:Type0)
          (m : kont a) (f : a -> Tot (kont b)) (k : b -> M Type0) : M Type0 =
 (* This does not work. cf. #712: m (fun (x:a) -> f x k) *)
 (* Silly workaround: *)
-  let mm : cont a = m in mm (fun (x:a) -> let fx : cont b = f x in fx k)
+  let mm : cont a = m in
+  mm (fun (x:a) ->
+    let fx : cont b = f x in
+    fx k)
 
 val left_unit : a:Type -> b:Type -> x:a -> f:(a -> Tot (kont b)) ->
                 Lemma (bind a b (return a x) f == f x)
