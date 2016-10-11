@@ -675,7 +675,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
         let head, _ = Util.head_and_args t in 
         match (Util.un_uinst head).n with 
         | Tm_fvar fv -> 
-          if Env.lookup_definition Env.Eager_unfolding_only env fv.fv_name.v |> Option.isSome
+          if Env.lookup_definition [Env.Eager_unfolding_only] env fv.fv_name.v |> Option.isSome
           then N.normalize [N.Beta; N.Eager_unfolding] env t |> Some
           else None
         | _ -> None

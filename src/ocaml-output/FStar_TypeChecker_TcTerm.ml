@@ -4110,7 +4110,7 @@ let t = (match ((FStar_ST.read e.FStar_Syntax_Syntax.tk)) with
 | (None) | (Some (FStar_Syntax_Syntax.Tm_unknown)) -> begin
 (
 
-let e = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.NoInline)::[]) env e)
+let e = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.NoDeltaSteps)::[]) env e)
 in (
 
 let _58_2504 = (tc_term env e)

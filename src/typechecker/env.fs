@@ -36,7 +36,7 @@ type binding =
 
 type delta_level = 
   | NoDelta
-  | Inlining_for_extraction_and_eager_unfolding
+  | Inlining
   | Eager_unfolding_only
   | Unfold of delta_depth
 
@@ -116,8 +116,7 @@ let visible_at d q = match d, q with
   | Eager_unfolding_only, Unfold_for_unification_and_vcgen 
   | Unfold _,   Unfold_for_unification_and_vcgen 
   | Unfold _,   Visible_default -> true
-  | Inlining_for_extraction_and_eager_unfolding, Inline_for_extraction
-  | Inlining_for_extraction_and_eager_unfolding, Unfold_for_unification_and_vcgen -> true
+  | Inlining, Inline_for_extraction -> true
   | _ -> false 
 
 let default_table_size = 200
@@ -502,11 +501,15 @@ let lookup_datacon env lid =
     | Some (Inr (Sig_datacon (_, uvs, t, _, _, _, _, _), None)) -> inst_tscheme (uvs, t) 
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
-let lookup_definition delta_level env lid = 
+let lookup_definition delta_levels env lid =
+  let visible quals =
+      delta_levels |> Util.for_some (fun dl -> 
+      quals |> Util.for_some (visible_at dl)) 
+  in
   match lookup_qname env lid with
     | Some (Inr (se, None)) -> 
       begin match se with 
-        | Sig_let((_, lbs), _, _, quals) when Util.for_some (visible_at delta_level) quals ->
+        | Sig_let((_, lbs), _, _, quals) when visible quals -> 
             Util.find_map lbs (fun lb -> 
                 let fv = right lb.lbname in
                 if fv_eq_lid fv lid 

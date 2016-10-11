@@ -1810,7 +1810,7 @@ let universe_of env e =
 	    match !e.tk with 
 	    | None
         | Some Tm_unknown -> 
-          let e = N.normalize [N.Beta; N.NoInline] env e in
+          let e = N.normalize [N.Beta; N.NoDeltaSteps] env e in
           let _, ({res_typ=t}), g = tc_term env e in
           Rel.solve_deferred_constraints env g |> ignore;
           t

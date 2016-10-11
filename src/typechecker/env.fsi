@@ -28,7 +28,7 @@ type binding =
 
 type delta_level = 
   | NoDelta
-  | Inlining_for_extraction_and_eager_unfolding
+  | Inlining
   | Eager_unfolding_only
   | Unfold of delta_depth
 
@@ -123,7 +123,7 @@ val lookup_val_decl        : env -> lident -> (universes * typ)
 val lookup_datacon         : env -> lident -> universes * typ
 val datacons_of_typ        : env -> lident -> list<lident>
 val typ_of_datacon         : env -> lident -> lident
-val lookup_definition      : delta_level -> env -> lident -> option<(univ_names * term)>
+val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
 
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term

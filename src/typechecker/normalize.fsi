@@ -29,7 +29,8 @@ type step =
   | WHNF            //Only produce a weak head normal form
   | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Eager_unfolding
-  | NoInline
+  | Inlining
+  | NoDeltaSteps
   | UnfoldUntil of delta_depth
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!

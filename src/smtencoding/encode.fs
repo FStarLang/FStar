@@ -277,7 +277,7 @@ let head_normal env t =
     | Tm_abs _ 
     | Tm_constant _ -> true
     | Tm_fvar fv 
-    | Tm_app({n=Tm_fvar fv}, _) -> Env.lookup_definition Env.Eager_unfolding_only env.tcenv fv.fv_name.v |> Option.isNone
+    | Tm_app({n=Tm_fvar fv}, _) -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isNone
     | _ -> false
 
 let head_redex env t = 
@@ -290,7 +290,7 @@ let head_redex env t =
       Util.is_tot_or_gtot_lcomp lc
 
     | Tm_fvar fv -> 
-      Env.lookup_definition Env.Eager_unfolding_only env.tcenv fv.fv_name.v |> Option.isSome
+      Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isSome
 
     | _ -> false
 

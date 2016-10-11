@@ -47,7 +47,8 @@ type step =
   | WHNF            //Only produce a weak head normal form
   | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Eager_unfolding
-  | NoInline
+  | Inlining
+  | NoDeltaSteps
   | UnfoldUntil of S.delta_depth
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -70,7 +71,7 @@ let closure_to_string = function
 type cfg = {
     steps: steps;
     tcenv: Env.env;
-    delta_level: Env.delta_level  // Controls how much unfolding of definitions should be performed
+    delta_level: list<Env.delta_level>  // Controls how much unfolding of definitions should be performed
 }
 
 type branches = list<(pat * option<term> * term)> 
@@ -86,7 +87,7 @@ type stack_elt =
  | App      of term * aqual * Range.range
  | Meta     of S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
- | Steps    of steps * Env.delta_level
+ | Steps    of steps * list<Env.delta_level>
 
 type stack = list<stack_elt>
 
@@ -549,7 +550,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             when S.fv_eq_lid fv Syntax.Const.normalize
               && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
             let s = [Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
-            let cfg' = {cfg with steps=s; delta_level=Unfold Delta_constant} in
+            let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
             let stack' = Steps (cfg.steps, cfg.delta_level)::stack in
             norm cfg' env stack' tm
 
@@ -621,11 +622,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
      
           | Tm_fvar f -> 
             let t0 = t in
-            let should_delta = match cfg.delta_level with 
-                | NoDelta -> false
-                | Inlining_for_extraction_and_eager_unfolding
-                | Eager_unfolding_only -> true
-                | Unfold l -> Common.delta_depth_greater_than f.fv_delta l in
+            let should_delta = 
+                cfg.delta_level |> FStar.Util.for_some (function
+                    | NoDelta -> false
+                    | Env.Inlining
+                    | Eager_unfolding_only -> true
+                    | Unfold l -> Common.delta_depth_greater_than f.fv_delta l) in
                            
             if not should_delta
             then rebuild cfg env stack t
@@ -791,7 +793,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_let((false, [lb]), body) ->
             let n = TypeChecker.Env.norm_eff_name cfg.tcenv lb.lbeff in
-            if not (cfg.steps |> List.contains NoInline)
+            if not (cfg.steps |> List.contains NoDeltaSteps)
             && (Util.is_pure_effect n
             || Util.is_ghost_effect n)
             then let env = Clos(env, lb.lbdef, Util.mk_ref None, false)::env in 
@@ -833,7 +835,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   | Meta_monadic (m, t) ->
                     let t = norm cfg env [] t in
                     let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                    let cfg = {cfg with steps=[NoInline; Exclude Zeta]@cfg.steps; delta_level=NoDelta} in
+                    let cfg = {cfg with steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps; delta_level=[NoDelta]} in
                     norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
 
                  | Meta_monadic_lift (m, m') ->
@@ -846,7 +848,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                                        AllowUnboundUniverses; 
                                                        EraseUniverses; 
                                                        Exclude Zeta]; 
-                                                delta_level=Env.Eager_unfolding_only} in
+                                                delta_level=[Env.Eager_unfolding_only]} in
                             norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
                     else norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
             
@@ -1018,10 +1020,10 @@ and rebuild : cfg -> env -> stack -> term -> term =
               let norm_and_rebuild_match () =
                 let whnf = List.contains WHNF cfg.steps in
                 let cfg = 
-                    let new_delta = 
-                        if cfg.delta_level = Env.Inlining_for_extraction_and_eager_unfolding 
-                        then cfg.delta_level
-                        else Env.Eager_unfolding_only in
+                    let new_delta = cfg.delta_level |> List.filter (function
+                            | Env.Inlining
+                            | Env.Eager_unfolding_only -> true
+                            | _ -> false) in
                     {cfg with delta_level=new_delta;
                                     steps=Exclude Iota::Exclude Zeta::cfg.steps} in
                 let norm_or_whnf env t =
@@ -1145,11 +1147,14 @@ and rebuild : cfg -> env -> stack -> term -> term =
               else matches scrutinee branches
 
 let config s e = 
-    let d = match Util.find_map s (function UnfoldUntil k -> Some k | _ -> None) with
-                | Some k -> Env.Unfold k
-                | None -> if List.contains Eager_unfolding s
-                          then Env.Eager_unfolding_only
-                          else Env.NoDelta in
+    let d = s |> List.collect (function
+        | UnfoldUntil k -> [Env.Unfold k]
+        | Eager_unfolding -> [Env.Eager_unfolding_only]
+        | Inlining -> [Env.Inlining]
+        | _ -> []) in
+    let d = match d with 
+        | [] -> [Env.NoDelta]
+        | _ -> d in
     {tcenv=e; steps=s; delta_level=d}
 
 let normalize s e t = norm (config s e) [] [] t

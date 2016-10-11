@@ -1145,7 +1145,7 @@ in (match (_55_829) with
 (match ((let _149_493 = (FStar_Syntax_Util.un_uinst head)
 in _149_493.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_fvar (fv) -> begin
-if (let _149_494 = (FStar_TypeChecker_Env.lookup_definition FStar_TypeChecker_Env.Eager_unfolding_only env fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
+if (let _149_494 = (FStar_TypeChecker_Env.lookup_definition ((FStar_TypeChecker_Env.Eager_unfolding_only)::[]) env fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
 in (FStar_All.pipe_right _149_494 FStar_Option.isSome)) then begin
 (let _149_496 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Eager_unfolding)::[]) env t)
 in (FStar_All.pipe_right _149_496 (fun _149_495 -> Some (_149_495))))
