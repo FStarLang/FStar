@@ -28,11 +28,9 @@ type binding =
 
 type delta_level = 
   | NoDelta
+  | Inlining_for_extraction_and_eager_unfolding
   | Eager_unfolding_only
   | Unfold of delta_depth
-
-(* greatest lower bound of two delta_levels *)
-val glb_delta : delta_level -> delta_level -> delta_level
 
 type mlift = typ -> typ -> typ
 

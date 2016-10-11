@@ -36,6 +36,7 @@ type binding =
 
 type delta_level = 
   | NoDelta
+  | Inlining_for_extraction_and_eager_unfolding
   | Eager_unfolding_only
   | Unfold of delta_depth
 
@@ -115,25 +116,9 @@ let visible_at d q = match d, q with
   | Eager_unfolding_only, Unfold_for_unification_and_vcgen 
   | Unfold _,   Unfold_for_unification_and_vcgen 
   | Unfold _,   Visible_default -> true
+  | Inlining_for_extraction_and_eager_unfolding, Inline_for_extraction
+  | Inlining_for_extraction_and_eager_unfolding, Unfold_for_unification_and_vcgen -> true
   | _ -> false 
-
-let glb_delta d1 d2 = match d1, d2 with 
-    | NoDelta, _
-    | _, NoDelta -> NoDelta
-    | Eager_unfolding_only, _
-    | _, Eager_unfolding_only -> Eager_unfolding_only
-    | Unfold l1, Unfold l2 -> 
-        let rec aux l1 l2 = match l1, l2 with
-            | Delta_constant, _
-            | _, Delta_constant -> Delta_constant
-            | Delta_equational, l
-            | l, Delta_equational -> l
-            | Delta_defined_at_level i, Delta_defined_at_level j ->
-              let k = if i < j then i else j in
-              Delta_defined_at_level k
-            | Delta_abstract l1, _ -> aux l1 l2
-            | _, Delta_abstract l2 -> aux l1 l2 in
-        Unfold (aux l1 l2)
 
 let default_table_size = 200
 let new_sigtab () = Util.smap_create default_table_size

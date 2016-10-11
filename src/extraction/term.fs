@@ -976,7 +976,9 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let lbs =
             if top_level
             then lbs |> List.map (fun lb ->
-                    let lbdef = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.Eager_unfolding; N.Exclude N.Zeta; N.PureSubtermsWithinComputations; N.Primops] 
+                    let lbdef = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; 
+                                             N.Inlining_for_extraction_and_eager_unfolding; 
+                                             N.Exclude N.Zeta; N.PureSubtermsWithinComputations; N.Primops] 
                                 g.tcenv lb.lbdef in
                     {lb with lbdef=lbdef})
             else lbs in

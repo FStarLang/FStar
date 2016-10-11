@@ -623,6 +623,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let t0 = t in
             let should_delta = match cfg.delta_level with 
                 | NoDelta -> false
+                | Inlining_for_extraction_and_eager_unfolding
                 | Eager_unfolding_only -> true
                 | Unfold l -> Common.delta_depth_greater_than f.fv_delta l in
                            
@@ -1016,7 +1017,12 @@ and rebuild : cfg -> env -> stack -> term -> term =
               let scrutinee = t in
               let norm_and_rebuild_match () =
                 let whnf = List.contains WHNF cfg.steps in
-                let cfg = {cfg with delta_level=glb_delta cfg.delta_level Env.Eager_unfolding_only;
+                let cfg = 
+                    let new_delta = 
+                        if cfg.delta_level = Env.Inlining_for_extraction_and_eager_unfolding 
+                        then cfg.delta_level
+                        else Env.Eager_unfolding_only in
+                    {cfg with delta_level=new_delta;
                                     steps=Exclude Iota::Exclude Zeta::cfg.steps} in
                 let norm_or_whnf env t =
                     if whnf
