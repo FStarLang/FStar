@@ -283,6 +283,7 @@ and sigelt =
                        * list<lident>              //data constructors for ths type
                        * list<qualifier>           
                        * Range.range
+// JP: the comment below seems out of date -- Sig_tycons is gone?!
 (* an inductive type is a Sig_bundle of all mutually defined Sig_tycons and Sig_datacons.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
    where each higher level list represents one of the inductive types and its constructors.
