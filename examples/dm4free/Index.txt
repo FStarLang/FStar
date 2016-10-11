@@ -19,4 +19,4 @@ Section		Description			File
                                                 FStar.DM4F.IFC.fst (LIO example)
 
 § 2.7		Continuations (cont)            FStar.DM4F.Continuations.fst
--- our implementation is not yet able to deal with this
+                -- our implementation is not yet able to deal with this
