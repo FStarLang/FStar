@@ -36,7 +36,7 @@ type id = Flag.id * UInt128.t
 // this flag enables conditional idealization by keeping additional data,
 // - this should not affect the code behavior
 // - this may cause the code not to compile to Kremlin/C.
-inline_for_extraction unfold let authId (i: id) =
+(* inline_for_extraction *) unfold let authId (i: id) =
   let i = fst i in
   safeHS i && mac1 i
 
