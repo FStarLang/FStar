@@ -41,8 +41,7 @@ let trans_aqual = function
 let trans_qual r = function
   | AST.Private ->       S.Private
   | AST.Assumption ->    S.Assumption
-  | AST.Inline ->        S.Unfold_for_unification_and_vcgen
-  | AST.Visible ->       S.Visible_default
+  | AST.Unfold_for_unification_and_vcgen -> S.Unfold_for_unification_and_vcgen
   | AST.Irreducible ->   S.Irreducible
   | AST.Logic ->         S.Logic
   | AST.TotalEffect ->   S.TotalEffect
@@ -55,6 +54,9 @@ let trans_qual r = function
   | AST.Noeq ->          S.Noeq
   | AST.Unopteq ->       S.Unopteq
   | AST.DefaultEffect -> raise (Error("The 'default' qualifier on effects is no longer supported", r))
+  | AST.Inline
+  | AST.Inline_for_extraction 
+  | AST.Visible -> raise (Error("Unsupported qualifier", r))
   
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
