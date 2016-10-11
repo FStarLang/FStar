@@ -1,0 +1,22 @@
+The implementation for examples from the `Dijkstra Monads for Free'
+paper can be found in this directory. Here is an index for them. Each
+file contains comments and should be self-contained, but we recommend to
+follow this order when trying to familiarize oneself with the feature.
+
+Section		Description			File
+
+§ 2.2           Integer state (+ incr example)  FStar.DM4F.IntST.fst
+§ 2.3		Parametrized state monad (st)	FStar.DM4F.ST.fst
+§ 2.5		Exception (exn)			FStar.DM4F.Exceptions.fst
+§ 2.5		State+Exception (stexn)		FStar.DM4F.StExn.fst
+§ 2.5		Exception+State (exnst)		FStar.DM4F.ExnSt.fst
+§ 2.5		Exception-counting (stexnC)	FStar.DM4F.StExnC.fst
+
+§ 2.x           Proving monad laws              FStar.DM4F.MonadLaws.fst
+                and lift morphism laws          Effects.Def.fst
+
+§ 2.6		Information-flow (IFC)		FStar.DM4F.IntST.fst (extrinsic)
+                                                FStar.DM4F.IFC.fst (LIO example)
+
+§ 2.7		Continuations (cont)            FStar.DM4F.Continuations.fst
+                -- our implementation is not yet able to deal with this

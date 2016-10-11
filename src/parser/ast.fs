@@ -147,6 +147,7 @@ type qualifiers = list<qualifier>
 type lift_op =
   | NonReifiableLift of term
   | ReifiableLift    of term * term //lift_wp, lift
+  | LiftForFree      of term
 
 type lift = {
   msource: lid;

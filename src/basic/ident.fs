@@ -7,8 +7,8 @@ type ident = {idText:string;
 
 type lident = {ns:list<ident>; //["FStar"; "Basic"]
                ident:ident;    //"lident"
-               nsstr:string;
-               str:string}
+               nsstr:string; // JP: ???
+               str:string} // JP: ??? is this for debugging only ???
 
 type lid = lident
 
@@ -41,3 +41,7 @@ let set_lid_range l r = {l with ident={l.ident with idRange=r}}
 let lid_add_suffix l s = 
     let path = path_of_lid l in
     lid_of_path (path@[s]) (range_of_lid l)
+
+(* JP: I don't understand why a lid has both a str and a semantic list of
+ * namespaces followed by a lowercase identifiers... *)
+let string_of_lid lid = text_of_path (path_of_lid lid)

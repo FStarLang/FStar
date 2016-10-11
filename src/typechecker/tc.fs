@@ -63,6 +63,18 @@ let tc_check_trivial_guard env t k =
   Rel.force_trivial_guard env g;
   t
 
+// A helper to check that the terms elaborated by DMFF are well-typed
+let recheck_debug s env t =
+  if Env.debug env (Options.Other "ED") then
+    Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
+  let t', _, _ = tc_term env t in
+  if Env.debug env (Options.Other "ED") then
+    Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
+  // Return the original term (without universes unification variables);
+  // because [tc_eff_decl] will take care of these
+  t
+
+
 let check_and_gen env t k =
     // Util.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
     TcUtil.generalize_universes env (tc_check_trivial_guard env t k)
@@ -237,9 +249,12 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     check_and_gen' env ed.trivial expected_k in
 
   let repr, bind_repr, return_repr, actions =
-      if (ed.qualifiers |> List.contains Reifiable
-          || ed.qualifiers |> List.contains Reflectable)
-      then begin
+      match (SS.compress ed.repr).n with 
+      | Tm_unknown -> //This is not a DM4F effect definition; so nothing to do
+        ed.repr, ed.bind_repr, ed.return_repr, ed.actions
+      | _ -> 
+        //This is a DM4F effect definition
+        //Need to check that the repr, bind, return and actions have their expected types
         let repr = 
             let t, _ = Util.type_u () in
             let expected_k = Util.arrow [S.mk_binder a;
@@ -365,7 +380,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
                 let a, wp = destruct_repr (Util.comp_result c) in
                 let c = {
                   comp_univs=[env.universe_of env a];
-		  effect_name = ed.mname;
+		          effect_name = ed.mname;
                   result_typ = a;
                   effect_args = [as_arg wp];
                   flags = [] 
@@ -384,8 +399,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
               action_typ =act_typ } in
         ed.actions |> List.map check_action in
       repr, bind_repr, return_repr, actions
-      end 
-      else ed.repr, ed.bind_repr, ed.return_repr, ed.actions in
+  in
 
   //generalize and close
   let t = U.arrow ed.binders (S.mk_Total ed.signature) in
@@ -468,16 +482,6 @@ and cps_and_elaborate env ed =
     let t = SS.subst subst t in
     let t, comp, _ = tc_term env t in
     t, comp
-  in
-  let recheck_debug s env t =
-    if Env.debug env (Options.Other "ED") then
-      Util.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
-    let t', _, _ = tc_term env t in
-    if Env.debug env (Options.Other "ED") then
-      Util.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
-    // Return the original term (without universes unification variables);
-    // because [tc_eff_decl] will take care of these
-    t
   in
   let mk x = mk x None signature.pos in
 
@@ -1301,7 +1305,6 @@ and tc_decl env se: list<sigelt> * _ =
       let b, wp_b_tgt = monad_signature env sub.target (Env.lookup_effect_lid env sub.target) in
       let wp_a_tgt    = SS.subst [NT(b, S.bv_to_name a)] wp_b_tgt in
       let expected_k  = Util.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
-      let lift_wp = check_and_gen env (snd sub.lift_wp) expected_k in
       let repr_type eff_name a wp =
         let no_reify l = raise (Error(Util.format1 "Effect %s cannot be reified" l.str, Env.get_range env)) in
         match Env.effect_decl_opt env eff_name with
@@ -1312,7 +1315,23 @@ and tc_decl env se: list<sigelt> * _ =
               no_reify eff_name
             else
               mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env) in
-      let lift = match sub.lift with 
+      let lift, lift_wp =
+        match sub.lift, sub.lift_wp with
+        | None, None ->
+            failwith "Impossible"
+        | lift, Some (_, lift_wp) ->
+            (* Covers both the "classic" format and the reifiable case. *)
+            lift, check_and_gen env lift_wp expected_k
+        | Some (what, lift), None ->
+            let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
+            let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
+            let _ = recheck_debug "lift-wp" env lift_wp in
+            let _ = recheck_debug "lift-elab" env lift_elab in
+            Some ([], lift_elab), ([], lift_wp)
+      in
+      let lax = env.lax in
+      let env = {env with lax=true} in //we do not expect the lift to verify, since that requires internalizing monotonicity of WPs
+      let lift = match lift with 
         | None -> None
         | Some (_, lift) -> 
           let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
@@ -1321,7 +1340,8 @@ and tc_decl env se: list<sigelt> * _ =
           let wp_a_typ = S.bv_to_name wp_a in
           let repr_f = repr_type sub.source a_typ wp_a_typ in
           let repr_result = 
-            let lift_wp_a = mk (Tm_app(snd sub.lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
+            let lift_wp = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env (snd lift_wp) in
+            let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
             repr_type sub.target a_typ lift_wp_a in
           let expected_k =
             Util.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f] 
@@ -1333,7 +1353,9 @@ and tc_decl env se: list<sigelt> * _ =
           let lift = check_and_gen env lift expected_k in
 //          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
           Some lift in
-      let sub = {sub with lift_wp=lift_wp; lift=lift} in
+      // Restore the proper lax flag!
+      let env = { env with lax = lax } in
+      let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
       let se = Sig_sub_effect(sub, r) in
       let env = Env.push_sigelt env se in
       [se], env

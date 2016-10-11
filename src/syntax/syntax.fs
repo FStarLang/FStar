@@ -232,7 +232,7 @@ type monad_abbrev = {
 type sub_eff = {
   source:lident;
   target:lident;
-  lift_wp:tscheme;
+  lift_wp:option<tscheme>;
   lift:option<tscheme>
  }
 

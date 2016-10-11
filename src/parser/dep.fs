@@ -315,10 +315,11 @@ let collect_one (verify_flags: list<(string * ref<bool>)>) (verify_mode: verify_
     | Main t
     | Assume (_, _, t)
     | SubEffect { lift_op = NonReifiableLift t }
+    | SubEffect { lift_op = LiftForFree t }
     | Val (_, _, t) ->
         collect_term t
     | SubEffect { lift_op = ReifiableLift (t0, t1) } ->
-        collect_term t0; 
+        collect_term t0;
         collect_term t1
     | Tycon (_, ts) ->
         let ts = List.map (fun (x,doc) -> x) ts in
