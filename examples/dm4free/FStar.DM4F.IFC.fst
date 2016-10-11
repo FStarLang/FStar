@@ -33,7 +33,7 @@ effect Ifc (a:Type) (req:IFC.pre) (ens:label -> option (a * label) -> GTot Type0
   IFC a (fun (h0:label) (p:IFC.post a) -> req h0 /\
              (forall r. (req h0 /\ ens h0 r) ==> p r))
 
-inline let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:label) (p:IFC.post a) =
+unfold let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:label) (p:IFC.post a) =
   wp (fun a -> p (Some (a, h0)))
 sub_effect PURE ~> IFC = lift_pure_exnst
 

@@ -38,7 +38,7 @@ reifiable reflectable new_effect_for_free {
 }
 
 (* A lift from Pure *)
-inline let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:EXNST.post a) =
+unfold let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:EXNST.post a) =
         wp (fun a -> p (Some (a, h0)))
 sub_effect PURE ~> EXNST = lift_pure_exnst
 

@@ -35,14 +35,14 @@ let stx_post_h (h:Type) (a:Type)  = option (a * h)   //an exceptional result and
 let stx_wp_h   (h:Type) (a:Type)  = stx_post_h h a 
 				  -> Tot (est_pre_h h)
 
-inline let stx_ite_wp (sgxmem:Type) (a:Type)
+unfold let stx_ite_wp (sgxmem:Type) (a:Type)
                       (wp:stx_wp_h sgxmem a)
                       (post:stx_post_h sgxmem a) (h0:sgxmem) (b:bool) =
     forall (k:stx_post_h sgxmem a).
        (forall (x:option (a * sgxmem)) (b:bool).{:pattern (guard_free (k x b))} k x b <==> post x b)
        ==> wp k h0 b
-inline let stx_return  (sgxmem:Type) (a:Type) (x:a) (p:stx_post_h sgxmem a) (h0:sgxmem) (b:bool)= p (Some (x, h0)) b
-inline let stx_bind_wp (sgxmem:Type) (r1:range) (a:Type) (b:Type)
+unfold let stx_return  (sgxmem:Type) (a:Type) (x:a) (p:stx_post_h sgxmem a) (h0:sgxmem) (b:bool)= p (Some (x, h0)) b
+unfold let stx_bind_wp (sgxmem:Type) (r1:range) (a:Type) (b:Type)
                        (wp1:stx_wp_h sgxmem a)
                        (wp2:(a -> GTot (est_wp_h sgxmem b)))
                        (p:stx_post_h sgxmem b) (h0:sgxmem) (b0:bool) : GTot Type0 =
@@ -53,30 +53,30 @@ inline let stx_bind_wp (sgxmem:Type) (r1:range) (a:Type) (b:Type)
 	    | None -> p None b1 //if the 1st computation throws, then we don't run the 2nd one
 	    | Some (x, h1) -> wp2 x p h1 b1))
      h0 b0
-inline let stx_if_then_else (sgxmem:Type) (a:Type) (p:Type)
+unfold let stx_if_then_else (sgxmem:Type) (a:Type) (p:Type)
                              (wp_then:stx_wp_h sgxmem a) (wp_else:stx_wp_h sgxmem a)
                              (post:stx_post_h sgxmem a) (h0:sgxmem) (b:bool) =
    l_ITE p
        (wp_then post h0 b)
        (wp_else post h0 b)
-inline let stx_stronger (sgxmem:Type) (a:Type) (wp1:stx_wp_h sgxmem a)
+unfold let stx_stronger (sgxmem:Type) (a:Type) (wp1:stx_wp_h sgxmem a)
                         (wp2:stx_wp_h sgxmem a) =
     (forall (p:stx_post_h sgxmem a) (h:sgxmem) (b:bool). wp1 p h b ==> wp2 p h b)
 
-inline let stx_close_wp (sgxmem:Type) (a:Type) (b:Type)
+unfold let stx_close_wp (sgxmem:Type) (a:Type) (b:Type)
                         (wp:(b -> GTot (est_wp_h sgxmem a)))
                         (p:stx_post_h sgxmem a) (h:sgxmem) (f:bool) =
     (forall (b:b). wp b p h f)
-inline let stx_assert_p (sgxmem:Type) (a:Type) (p:Type)
+unfold let stx_assert_p (sgxmem:Type) (a:Type) (p:Type)
                         (wp:stx_wp_h sgxmem a) (q:stx_post_h sgxmem a) (h:sgxmem) (b:bool) =
     p /\ wp q h b
-inline let stx_assume_p (sgxmem:Type) (a:Type) (p:Type)
+unfold let stx_assume_p (sgxmem:Type) (a:Type) (p:Type)
                          (wp:stx_wp_h sgxmem a) (q:stx_post_h sgxmem a) (h:sgxmem) (b:bool) =
     p ==> wp q h b
-inline let stx_null_wp (sgxmem:Type) (a:Type)
+unfold let stx_null_wp (sgxmem:Type) (a:Type)
                        (p:stx_post_h sgxmem a) (h0:sgxmem) (b:bool) =
     (forall (a:option (a * sgxmem)) (b1:bool). p a b1)
-inline let stx_trivial (sgxmem:Type) (a:Type) (wp:stx_wp_h sgxmem a) =
+unfold let stx_trivial (sgxmem:Type) (a:Type) (wp:stx_wp_h sgxmem a) =
     (forall (h0:sgxmem) (b:bool). wp (fun r b -> True) h0 b)
 
 new_effect {

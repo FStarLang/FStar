@@ -44,7 +44,7 @@ reifiable reflectable new_effect_for_free {
 }
 
 (* A lift from Pure *)
-inline let lift_pure_stexn (a:Type) (wp:pure_wp a) (h0:int) (p:STEXN.post a) =
+unfold let lift_pure_stexn (a:Type) (wp:pure_wp a) (h0:int) (p:STEXN.post a) =
         wp (fun a -> p (Some a, h0))
 sub_effect PURE ~> STEXN = lift_pure_stexn
 

@@ -3,9 +3,9 @@ let reader_pre_h  (heap:Type)          = heap -> GTot Type0
 let reader_post_h (a:Type)             = a -> GTot Type0
 let reader_wp_h   (heap:Type) (a:Type) = reader_post_h a -> Tot (reader_pre_h heap)
 
-inline let reader_return        (heap:Type) (a:Type)
+unfold let reader_return        (heap:Type) (a:Type)
                                (x:a) (p:reader_post_h a) (h0:heap) = p x
-inline let reader_bind_wp   (heap:Type) 
+unfold let reader_bind_wp   (heap:Type) 
 			    (r1:range) 
 			    (a:Type) (b:Type)
                             (wp1:reader_wp_h heap a)
@@ -15,38 +15,38 @@ inline let reader_bind_wp   (heap:Type)
      /\ wp1 (fun a ->
        labeled r1 "pop" unit
        /\ wp2 a p h0) h0
-inline let reader_if_then_else  (heap:Type) (a:Type) (p:Type)
+unfold let reader_if_then_else  (heap:Type) (a:Type) (p:Type)
                              (wp_then:reader_wp_h heap a) (wp_else:reader_wp_h heap a)
                              (post:reader_post_h a) (h0:heap) =
      l_ITE p
         (wp_then post h0)
 	(wp_else post h0)
-inline let reader_ite_wp        (heap:Type) (a:Type)
+unfold let reader_ite_wp        (heap:Type) (a:Type)
                             (wp:reader_wp_h heap a)
                             (post:reader_post_h a) (h0:heap) =
      forall (k:reader_post_h a).
 	 (forall (x:a).{:pattern (guard_free (k x))} k x <==> post x)
 	 ==> wp k h0
-inline let reader_stronger  (heap:Type) (a:Type) (wp1:reader_wp_h heap a)
+unfold let reader_stronger  (heap:Type) (a:Type) (wp1:reader_wp_h heap a)
                         (wp2:reader_wp_h heap a) =
      (forall (p:reader_post_h a) (h:heap). wp1 p h ==> wp2 p h)
 
-inline let reader_close_wp      (heap:Type) (a:Type) (b:Type)
+unfold let reader_close_wp      (heap:Type) (a:Type) (b:Type)
                              (wp:(b -> GTot (reader_wp_h heap a)))
                              (p:reader_post_h a) (h:heap) =
      (forall (b:b). wp b p h)
-inline let reader_assert_p      (heap:Type) (a:Type) (p:Type)
+unfold let reader_assert_p      (heap:Type) (a:Type) (p:Type)
                              (wp:reader_wp_h heap a)
                              (q:reader_post_h a) (h:heap) =
      p /\ wp q h
-inline let reader_assume_p      (heap:Type) (a:Type) (p:Type)
+unfold let reader_assume_p      (heap:Type) (a:Type) (p:Type)
                              (wp:reader_wp_h heap a)
                              (q:reader_post_h a) (h:heap) =
      p ==> wp q h
-inline let reader_null_wp       (heap:Type) (a:Type)
+unfold let reader_null_wp       (heap:Type) (a:Type)
                              (p:reader_post_h a) (h:heap) =
      (forall (x:a). p x)
-inline let reader_trivial       (heap:Type) (a:Type)
+unfold let reader_trivial       (heap:Type) (a:Type)
                              (wp:reader_wp_h heap a) =
      (forall h0. wp (fun r -> True) h0)
 
@@ -74,9 +74,9 @@ assume val read:  #a:Type -> r:ref a -> STRead a
 					 (requires (fun h -> True))
 					 (ensures (fun h x -> x == sel h r))
 
-inline let lift_reader_state (a:Type) (wp:reader_wp_h heap a) (p:st_post a) (h:heap) = wp (fun a -> p a h) h
+unfold let lift_reader_state (a:Type) (wp:reader_wp_h heap a) (p:st_post a) (h:heap) = wp (fun a -> p a h) h
 sub_effect READER ~> STATE = lift_reader_state
-inline let lift_div_reader (a:Type) (wp:pure_wp a) (p:reader_post_h a) (h:heap) = wp p
+unfold let lift_div_reader (a:Type) (wp:pure_wp a) (p:reader_post_h a) (h:heap) = wp p
 sub_effect DIV ~> READER = lift_div_reader
 
 (* Testing *)

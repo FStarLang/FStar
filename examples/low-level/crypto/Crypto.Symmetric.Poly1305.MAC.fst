@@ -32,7 +32,7 @@ let norm = Crypto.Symmetric.Poly1305.Bigint.norm
 // - this may cause the code not to compile to Kremlin/C.
 (* assume val ideal: bool *)
 (*** THIS IS EXTREMELY DODGY ***)
-inline let ideal = false 
+unfold let ideal = false 
 
 // we will need authId i ==> ideal?
 
