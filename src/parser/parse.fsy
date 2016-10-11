@@ -282,6 +282,19 @@ sub_effect:
       }
   | qname SQUIGGLY_RARROW qname
     LBRACE
+       ident EQUALS simpleTerm
+    RBRACE {
+    	let id, lift = $5.idText, $7 in
+        if id <> "lift" then
+          raise (Error("Unexpected identifier; expected {'lift', and possibly 'lift_wp'}", lhs parseState));
+        {
+          msource=$1;
+          mdest=$3;
+          lift_op=LiftForFree(lift)
+        }
+    }
+  | qname SQUIGGLY_RARROW qname
+    LBRACE
        ident EQUALS simpleTerm SEMICOLON 
        ident EQUALS simpleTerm
     RBRACE {

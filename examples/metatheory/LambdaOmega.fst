@@ -441,14 +441,10 @@ noeq type typing : env -> exp -> typ -> Type =
 val is_value : exp -> Tot bool
 let is_value = is_ELam
 
-(* XXX: This should also work; filed at #579 *)
-(* irreducible val progress : #e:exp -> #t:typ -> h:typing empty e t -> *)
-(*                Pure (cexists (fun e' -> step e e')) *)
-(*                     (requires (b2t (not (is_value e)))) *)
-(*                     (ensures (fun _ -> True)) (decreases h) *)
-(* Workaround using refinements and explicit argument passing *)
-irreducible val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
-               Tot (cexists (fun e' -> step e e')) (decreases h)
+irreducible val progress : #e:exp -> #t:typ -> h:typing empty e t ->
+               Pure (cexists (fun e' -> step e e'))
+                    (requires (b2t (not (is_value e))))
+                    (ensures (fun _ -> True)) (decreases h)
 let rec progress #e #t h =
   match h with
     | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
