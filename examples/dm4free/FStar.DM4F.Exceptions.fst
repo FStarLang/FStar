@@ -32,34 +32,28 @@ reifiable reflectable new_effect_for_free {
      ; return   = return_ex
 }
 
-(* Logical types, derived from the effect definition. *)
-let ex_pre  = EXN.pre
-let ex_post = EXN.post
-let ex_wp   = EXN.wp
-let ex_repr = EXN.repr
-
 (* A lift from `Pure´ into the new effect *)
-inline let lift_pure_ex (a:Type) (wp:pure_wp a) (_:unit) (p:ex_post a) = wp (fun a -> p (Some a))
+inline let lift_pure_ex (a:Type) (wp:pure_wp a) (_:unit) (p:EXN.post a) =
+  wp (fun a -> p (Some a))
 sub_effect PURE ~> EXN = lift_pure_ex
 
 (* An effect to alias easily write pre- and postconditions *)
-(* Note: we use Type0 instead of ex_pre to avoid having to thunk everything. *)
-effect Exn (a:Type) (pre:Type0) (post:ex_post a) =
-       EXN a
-         (fun (_:unit) (p:ex_post a) -> pre /\ (forall (r:option a). (pre /\ post r) ==> p r))
+(* Note: we use Type0 instead of EXN.pre to avoid having to thunk everything. *)
+effect Exn (a:Type) (pre:Type0) (post:EXN.post a) =
+  EXN a (fun (_:unit) (p:EXN.post a) -> pre /\
+          (forall (r:option a). (pre /\ post r) ==> p r))
 
 (* Another alias. Ex a is the effect type for total exception-throwing
  * programs. i.e. Any program of type `Ex a´ will throw or finish
  * correctly, but never loop. *)
-effect Ex (a:Type) =
-       EXN a (fun _ p -> forall x. p x)
+effect Ex (a:Type) = EXN a (fun _ p -> forall x. p x)
 
 (*
  * We can also build a new action "on the fly" using reflect!
  * Here we define raise_ as a pure function working with the
  * representation of Ex.
  *)
-val raise_ : a:Type -> Tot (ex_repr a (fun (_:unit) (p:ex_post a) -> p None))
+val raise_ : a:Type -> Tot (EXN.repr a (fun (_:unit) (p:EXN.post a) -> p None))
 let raise_ a (_:unit) = None
 
 (* We reflect it back to Exn *)

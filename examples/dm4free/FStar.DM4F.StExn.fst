@@ -25,15 +25,11 @@ let bind a b f g =
     | Some r, s1_proceed -> g r s1_proceed
 
 (* TODO: using val/let style here does not work. Why? *)
-let get (_:unit) : stexn int =
-        fun s0 -> (Some s0, s0)
+let get (_:unit) : stexn int = fun s0 -> (Some s0, s0)
 
-let put (s:int) : stexn unit =
-        fun _ -> (Some (), s)
+let put (s:int) : stexn unit = fun _ -> (Some (), s)
 
-(* TODO: this fails: "Variable "a#133585" not found" *)
-//let raise (a:Type) : stexn a =
-//        fun s -> (None, s)
+let raise (a:Type) : stexn a = fun s -> (None, s)
 
 (* Define the new effect using DM4F *)
 reifiable reflectable new_effect_for_free {
@@ -44,48 +40,42 @@ reifiable reflectable new_effect_for_free {
   and effect_actions
        get     = get
      ; put     = put
-     //; raise   = raise
+     ; raise   = raise
 }
 
-let pre  = STEXN.pre
-let post = STEXN.post
-let wp   = STEXN.wp
-let repr = STEXN.repr
-
 (* A lift from Pure *)
-inline let lift_pure_stexn (a:Type) (wp:pure_wp a) (h0:int) (p:post a) =
+inline let lift_pure_stexn (a:Type) (wp:pure_wp a) (h0:int) (p:STEXN.post a) =
         wp (fun a -> p (Some a, h0))
 sub_effect PURE ~> STEXN = lift_pure_stexn
 
 (* Pre-/postcondition variant *)
-effect StExn (a:Type) (req:pre) (ens:int -> option a -> int -> GTot Type0) =
-       STEXN a
-         (fun (h0:int) (p:post a) -> req h0 /\ (forall (r:option a) (h1:int). (req h0 /\ ens h0 r h1) ==> p (r, h1)))
+effect StExn (a:Type) (req:STEXN.pre) (ens:int -> option a -> int -> GTot Type0) =
+  STEXN a (fun (h0:int) (p:STEXN.post a) -> req h0 /\
+    (forall (r:option a) (h1:int). (req h0 /\ ens h0 r h1) ==> p (r, h1)))
 
 (* Total variant *)
-effect S (a:Type) =
-       STEXN a (fun h0 p -> forall x. p x)
+effect S (a:Type) = STEXN a (fun h0 p -> forall x. p x)
 
 (* TODO: Remove *)
-val raise_impl : (a:Type) -> repr a (fun h0 p -> p (None, h0))
-let raise_impl a = fun h0 -> None, h0
-reifiable val raise : (a:Type) -> STEXN a (fun h0 p -> p (None, h0))
-reifiable let raise a = STEXN.reflect (raise_impl a)
+(* val raise_impl : (a:Type) -> STEXN.repr a (fun h0 p -> p (None, h0)) *)
+(* let raise_impl a = fun h0 -> None, h0 *)
+(* reifiable val raise : (a:Type) -> STEXN a (fun h0 p -> p (None, h0)) *)
+(* reifiable let raise a = STEXN.reflect (raise_impl a) *)
 
-val div_intrinsic : i:nat -> j:int -> StExn int
-  (requires (fun h -> True))
-  (ensures (fun h0 x h1 -> match x with
-                        | None -> h0 = h1 /\ j = 0
-                        | Some z -> h0 = h1 /\ j <> 0 /\ z = i / j))
-let div_intrinsic i j =
-  if j = 0 then raise int
-  else i / j
+(* val div_intrinsic : i:nat -> j:int -> StExn int *)
+(*   (requires (fun h -> True)) *)
+(*   (ensures (fun h0 x h1 -> match x with *)
+(*                         | None -> h0 = h1 /\ j = 0 *)
+(*                         | Some z -> h0 = h1 /\ j <> 0 /\ z = i / j)) *)
+(* let div_intrinsic i j = *)
+(*   if j = 0 then raise int *)
+(*   else i / j *)
 
-reifiable let div_extrinsic (i:nat) (j:int) : S int =
-  if j = 0 then raise int
-  else i / j
+(* reifiable let div_extrinsic (i:nat) (j:int) : S int = *)
+(*   if j = 0 then raise int *)
+(*   else i / j *)
 
-let lemma_div_extrinsic (i:nat) (j:int) (h0:int) :
-  Lemma (match reify (div_extrinsic i j) h0 with
-         | None, h1 -> h0 = h1 /\ j = 0
-         | Some z, h1 -> h0 = h1 /\ j <> 0 /\ z = i / j) = ()
+(* let lemma_div_extrinsic (i:nat) (j:int) (h0:int) : *)
+(*   Lemma (match reify (div_extrinsic i j) h0 with *)
+(*          | None, h1 -> h0 = h1 /\ j = 0 *)
+(*          | Some z, h1 -> h0 = h1 /\ j <> 0 /\ z = i / j) = () *)

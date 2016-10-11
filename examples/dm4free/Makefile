@@ -3,17 +3,18 @@ OTHERFLAGS=
 include ../Makefile.include
 
 all: uall
-uall:	delimcc.uver \
+uall:	FStar.DM4F.MonadLaws.uver \
 	Effects.Def.uver \
-	FStar.DM4F.IntST.uver-explicit \
-	FStar.DM4F.Exceptions.uver-explicit \
+	FStar.DM4F.IntST.uver \
+	FStar.DM4F.Exceptions.uver \
 	FStar.DM4F.ExnSt.uver \
-	FStar.DM4F.StExn.uver-explicit \
+	FStar.DM4F.StExn.uver \
 	FStar.DM4F.ST.uver \
 	FStar.DM4F.Heap.uver \
 	FStar.DM4F.Heap.ST.uver \
 	FStar.DM4F.StExnC.uver \
-	FStar.DM4F.IFC.uver
+	FStar.DM4F.IFC.uver \
+	delimcc.uver
 
 sall:
 

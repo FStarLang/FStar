@@ -30,14 +30,9 @@ let bind a b f g =
                           match grs1 with
                           | res, (s, c2) -> res, (s, c1 + c2)
 
-let put (s:int) : stexnc unit =
-        fun s0 -> (Some (), (s0, 0))
+let raise (a:Type) : stexnc a = fun s0 -> (None, (s0, 1))
 
-let get (_:unit) : stexnc int =
-        fun s0 -> (Some s0, (s0, 0))
-
-let raise (a:Type) : stexnc a = 
-       fun s0 -> (None, (s0, 1))
+(* TODO: we need a catch to be able to the counter anywhere larger than 1 *)
 
 (*
  * Define the new effect using DM4F. We don't mark it as reflectable
@@ -49,18 +44,11 @@ reifiable new_effect_for_free {
      ; return  = return
      ; bind    = bind
   and effect_actions
-       put     = put
-     ; get     = get
-     ; raise   = raise
+       raise   = raise
 }
 
-let pre  = STEXNC.pre
-let post = STEXNC.post
-let wp   = STEXNC.wp
-let repr = STEXNC.repr
-
 (* A lift from Pure *)
-inline let lift_pure_stexnc (a:Type) (wp:pure_wp a) (h0:int) (p:post a) =
+inline let lift_pure_stexnc (a:Type) (wp:pure_wp a) (h0:int) (p:STEXNC.post a) =
         wp (fun a -> p (Some a, (h0, 0)))
 sub_effect PURE ~> STEXNC = lift_pure_stexnc
 
@@ -68,9 +56,10 @@ sub_effect PURE ~> STEXNC = lift_pure_stexnc
          the abstraction of counting exceptions *)
 
 (* Pre-/postcondition variant *)
-effect StExnC (a:Type) (req:pre) (ens:int -> option a -> int -> int -> GTot Type0) =
+effect StExnC (a:Type) (req:STEXNC.pre)
+                       (ens:int -> option a -> int -> int -> GTot Type0) =
        STEXNC a
-         (fun (h0:int) (p:post a) -> req h0
+         (fun (h0:int) (p:STEXNC.post a) -> req h0
           /\ (forall (r:option a) (h1:int) (c:int).
                  (req h0 /\ ens h0 r h1 c) ==> p (r, (h1, c))))
 
@@ -80,11 +69,11 @@ effect SC (a:Type) =
 
 (* This rightfully fails, since STEXNC is not reflectable *)
 
-// val f_impl : (a:Type) -> repr a (fun h0 post -> post (None, (h0, 0)))
-// let f_impl a = fun h0 -> None, (h0, 0)
-//
-// reifiable let f (a:Type) : STEXNC a (fun h0 post -> post (None, (h0, 0))) =
-//         STEXNC.reflect (f_impl a)
+(* val f_impl : (a:Type) -> STEXNC.repr a (fun h0 post -> post (None, (h0, 0))) *)
+(* let f_impl a = fun h0 -> None, (h0, 0) *)
+
+(* let f (a:Type) : STEXNC a (fun h0 post -> post (None, (h0, 0))) = *)
+(*         STEXNC.reflect (f_impl a) *)
 
 val div_intrinsic : i:nat -> j:int -> StExnC int
   (requires (fun h -> True))
