@@ -112,6 +112,9 @@ let upd (#a:Type) (m:mem) (s:reference a{live_region m s.id}) (v:a)
   : GTot mem
   = HS (m.h.[s.ref] <- v) m.tip
 
+(*
+ * AR: why is this not enforcing live_region ?
+ *)
 let sel (#a:Type) (m:mem) (s:reference a)
   : GTot a
   = m.h.[s.ref]
