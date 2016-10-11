@@ -157,6 +157,7 @@ let keywords =
     ALWAYS, "kind"       ,KIND;
     ALWAYS, "in"         ,IN;
     ALWAYS, "inline"     ,INLINE;
+    ALWAYS, "inline_for_extraction"     ,INLINE_FOR_EXTRACTION;
     ALWAYS, "irreducible",IRREDUCIBLE;
     ALWAYS, "let"        ,LET(false);
     ALWAYS, "logic"      ,LOGIC;
@@ -182,6 +183,7 @@ let keywords =
     ALWAYS, "True"       ,L_TRUE;
     ALWAYS, "try"        ,TRY;
     ALWAYS, "type"       ,TYPE;
+    ALWAYS, "unfold"     ,UNFOLD;
     ALWAYS, "unfoldable" ,UNFOLDABLE;
     ALWAYS, "val"        ,VAL;
     ALWAYS, "when"       ,WHEN;
