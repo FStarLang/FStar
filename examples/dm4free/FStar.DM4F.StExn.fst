@@ -24,7 +24,6 @@ let bind a b f g =
     | None, s1_fail -> None, s1_fail
     | Some r, s1_proceed -> g r s1_proceed
 
-(* TODO: using val/let style here does not work. Why? *)
 let get (_:unit) : stexn int = fun s0 -> (Some s0, s0)
 
 let put (s:int) : stexn unit = fun _ -> (Some (), s)

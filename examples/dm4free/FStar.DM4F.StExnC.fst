@@ -32,8 +32,6 @@ let bind a b f g =
 
 let raise (a:Type) : stexnc a = fun s0 -> (None, (s0, 1))
 
-(* TODO: we need a catch to be able to the counter anywhere larger than 1 *)
-
 (*
  * Define the new effect using DM4F. We don't mark it as reflectable
  * so we know the invariant of exception-counting is enforced

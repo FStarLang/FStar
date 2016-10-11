@@ -51,7 +51,6 @@ val lift_state_exnst : (a:Type) ->
                        (wp:IntST.wp a) -> (f:IntST.repr a wp) ->
                        EXNST.repr a (lift_state_exnst_wp a wp)
 let lift_state_exnst a wp f =
-        (* TODO: This fails without admit, but all seems correct *)
         fun h0 -> admit(); Some (f h0)
 
 sub_effect IntST.STINT ~> EXNST {
