@@ -163,14 +163,13 @@ let coerce rgn i key =
 
 private val getBlock: 
   #i:id -> t:state i -> domain -> len:u32 {len <=^ blocklen} -> 
-  output:lbuffer (v len) { Buffer.frameOf output <> t.rgn } -> ST unit
+  output:lbuffer (v len) { Buffer.disjoint t.key output } -> ST unit
   (requires (fun h0 -> Buffer.live h0 output))
   (ensures (fun h0 r h1 -> Buffer.live h1 output /\ Buffer.modifies_1 output h0 h1 ))
 //TODO: we need some way to recall that t.key is in an eternal region and can be recalled
 let getBlock #i t x len output =
   // buffer_recall t.key;
   let h = HST.get() in 
-  assert(Buffer.disjoint t.key output);
   assume(Buffer.live h t.key);
   //16-10-08 TODO should easily follow from the key's region being eternal.
   Block.compute Block.CHACHA20 output t.key x.iv x.ctr len
@@ -183,6 +182,8 @@ let getBlock #i t x len output =
 // whereas the real PRF output is their xor.
 
 // the first block (ctr=0) is used to generate a single-use MAC
+
+
 val prf_mac: 
   i:id -> t:state i -> x:domain{x.ctr = 0ul} -> ST (MAC.state (i,x.iv))
   (requires (fun h0 -> True))
@@ -193,41 +194,47 @@ val prf_mac:
       | Some mac' -> mac == mac' /\ h0 == h1 // when decrypting
       | None ->  // when encrypting, we get the stateful post of MAC.create             
         match find_mac (HS.sel h1 r) x with 
-        | Some mac' -> mac == mac' /\ MAC.genPost (i,x.iv) t.rgn h0 mac h1
+        | Some mac' -> mac == mac' /\ MAC.genPost0 (i,x.iv) t.rgn h0 mac h1
+                      //16-10-11 we miss a more precise clause capturing the table update   
         | None -> False )
-    else HS.modifies Set.empty h0 h1 
-  ))
-
+    else (
+      HS.modifies (Set.singleton t.rgn) h0 h1 /\
+      HS.modifies_ref t.rgn TSet.empty h0 h1 
+  )))
 #reset-options "--z3timeout 10000"
 
 
 let prf_mac i t x =
   let macId = (i,x.iv) in
-  if prf i then
+  if prf i then (
     let r = itable i t in 
     let contents = recall r; !r in 
     match find_mac contents x with
     | Some mac -> 
-        assume false; 
         mac
-    | None     ->
+    | None ->
         let mac = MAC.gen macId t.rgn in
-        recall r; //16-10-08 required, sadly
+        recall r; 
         r := SeqProperties.snoc contents (Entry x mac);
-        mac 
-  else
+        mac )
+  else (
+    let h0 = HST.get() in
+    assume(Buffer.live h0 t.key);
     let keyBuffer = Buffer.rcreate t.rgn 0uy keylen in
-    //16-10-08 the post of rcreate seems too weak. 
-    //16-10-08 modifying a newly-allocated buffer should be permitted.
-    assume false;
+    let h1 = HST.get() in 
     getBlock t x keylen keyBuffer;
-    MAC.coerce macId t.rgn keyBuffer
+    let h2 = HST.get() in 
+    Buffer.lemma_reveal_modifies_1 keyBuffer h1 h2;
+    MAC.coerce macId t.rgn keyBuffer )
+
+
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
 
+(*
 private let lemma_modifies_buf_1 (#t:Type) (b:Buffer.buffer t) (r:HH.rid{r <> Buffer.frameOf b}) h0 h1 :
   Lemma
-    (requires (Buffer.live h0 b /\ HS.modifies (Set.singleton (r)) h0 h1))
+    (requires (Buffer.live h0 b /\ HS.modifies (Set.singleton r) h0 h1))
     (ensures  (Buffer.modifies_buf_1 (Buffer.frameOf b) b h0 h1))
     = ()
 
@@ -237,6 +244,29 @@ private let lemma_modifies_ref (#t:Type) (r:HS.ref t) (rgn:HH.rid{rgn <> HS (r.i
     (ensures  (HS.modifies_ref (HS (r.id)) (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1))
     = cut (HS.modifies (Set.union (Set.singleton rgn) (Set.singleton (HS (r.id)))) h0 h1);
       cut (HH.modifies_rref (HS (r.id)) !{} (HS (h0.h)) (HS (h1.h)))
+*)
+
+let extends #rgn #i s0 s1 x =
+  let open FStar.Seq in 
+  let open FStar.SeqProperties in 
+  ( match find s0 x with 
+    | Some _ -> s1 == s1 
+    | None   -> exists (e:entry rgn i). e.x = x /\ s1 == snoc s0 e  )
+
+// modifies a table (at most at x) and a buffer.
+let modifies_x_buffer_1 #i (t:state i) x b h0 h1 = 
+  Buffer.live h1 b /\ 
+  (if prf i then 
+    let r = itable i t in 
+    let rb = Buffer.frameOf b in 
+    // can't use !{ t.rgn, rb}, why?
+    let rgns = Set.union (Set.singleton #HH.rid t.rgn) (Set.singleton #HH.rid rb) in 
+    HS.modifies rgns h0 h1 /\ 
+    HS.modifies_ref t.rgn (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1 /\
+    extends (HS.sel h0 r) (HS.sel h1 r) x /\
+    Buffer.modifies_buf_1 rb b h0 h1 
+  else
+    Buffer.modifies_1 b h0 h1)
 
 private let lemma_modifies_prf_raw (#a:Type) (#t:Type) (r:HS.ref a) (b:Buffer.buffer t)
   h0 h1 h2 : Lemma
@@ -250,42 +280,30 @@ private let lemma_modifies_prf_raw (#a:Type) (#t:Type) (r:HS.ref a) (b:Buffer.bu
     /\ Buffer.live h0 b
     /\ HS (h1.tip == h0.tip)
     /\ Buffer.modifies_1 b h1 h2))
-  (ensures  (
+  (ensures (
     let rr = HS.MkRef.id r in
     let rb = Buffer.frameOf b in 
       HS.modifies (Set.union (Set.singleton rr) (Set.singleton rb)) h0 h2
     /\ Buffer.modifies_buf_1 rb b h0 h2
-    /\ HS.modifies_ref rr (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h2)) = 
-    
-    Buffer.lemma_reveal_modifies_1 b h1 h2;
-    let rr = HS.MkRef.id r in
-    let rb = Buffer.frameOf b in 
+    /\ HS.modifies_ref rr (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h2)) 
+  =
+    Buffer.lemma_reveal_modifies_1 b h1 h2
+    // let rr = HS.MkRef.id r in
+    // let rb = Buffer.frameOf b in 
     //let rgns = Set.union (Set.singleton rr) (Set.singleton #HH.rid rb) in 
     //cut (HS.modifies rgns h0 h2);
     //cut (HS.modifies_ref rr (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1);
     //cut (HS.modifies_ref rr (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h1 h2);
-    lemma_modifies_buf_1 b rr h0 h1;
-    lemma_modifies_ref r rb h1 h2
-
-let modifies_table_buffer_1 #i (t:state i) b h0 h1 = 
-  Buffer.live h1 b /\ 
-  (if prf i then ( 
-    let r = itable i t in 
-    let rb = Buffer.frameOf b in 
-    // can't use !{ t.rgn, rb}, why?
-    let rgns = Set.union (Set.singleton #HH.rid t.rgn) (Set.singleton #HH.rid rb) in 
-    HS.modifies rgns h0 h1 /\ 
-    HS.modifies_ref t.rgn (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1 /\
-    Buffer.modifies_buf_1 rb b h0 h1 )
-  else
-    Buffer.modifies_1 b h0 h1)
+    //lemma_modifies_buf_1 b rr h0 h1;
+    //lemma_modifies_ref r rb h1 h2
+    // ()
 
 // real case + real use of memoized PRF output.
 private val prf_raw: 
   i:id -> t:state i -> x:domain{x.ctr <> 0ul /\ ~(safeId i)} -> l:u32 {l <=^ blocklen} -> 
   output:lbuffer (v l) {Buffer.frameOf output <> t.rgn} -> ST unit
   (requires (fun h0 -> Buffer.live h0 output))
-  (ensures (fun h0 _ h1 -> modifies_table_buffer_1 t output h0 h1)) 
+  (ensures (fun h0 _ h1 -> modifies_x_buffer_1 t x output h0 h1)) 
 
 let prf_raw i t x l output = 
   if prf i then (
@@ -299,20 +317,21 @@ let prf_raw i t x l output =
           block)
       | None ->
           let block = random blocklen in 
-          // let h = HST.get() in
           r := SeqProperties.snoc contents (Entry x block);
-          // let h' = HST.get() in
-          // assert(h' == HS.upd h r (SeqProperties.snoc contents (Entry x block)));
-          // cut (HS.modifies (Set.singleton (HS.MkRef.id r)) h h');
+          // assert(extends (HS.sel h0 r) (HS.sel h' r) x);
           block in
     let h1 = HST.get() in
-    // cut (HS.modifies (Set.singleton (HS.MkRef.id r)) h0 h1);
+    assert(extends (HS.sel h0 r) (HS.sel h1 r) x);
     store_bytes l output (Seq.slice block 0 (v l));
     let h2 = HST.get() in
+    Buffer.lemma_reveal_modifies_1 output h1 h2;
+    //assert(HS.sel h1 r == HS.sel h2 r);
+    //assert(extends (HS.sel h0 r) (HS.sel h2 r) x);
     lemma_modifies_prf_raw r output h0 h1 h2)
   else
     getBlock t x l output
- 
+
+
 // reuse the same block for x and XORs it with ciphertext
 val prf_dexor: 
   i:id -> t:state i -> x:domain{x.ctr <> 0ul} -> l:u32 {l <=^ blocklen} -> 

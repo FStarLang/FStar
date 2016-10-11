@@ -130,45 +130,42 @@ noeq type state (i:id) =
       log: log_ref region ->
       state i
 
+let genPost0 (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
+    ~(contains m0 st.r) /\
+    ~(contains m0 st.s) /\
+    modifies (Set.singleton region) m0 m1 /\ 
+    st.region == region /\
+    (mac_log ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)
+
+let genPost (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
+    genPost0 i region m0 st m1 /\
+    modifies_rref region TSet.empty m0.h m1.h 
 
 val alloc: i:id
   -> region:rid{is_eternal_region region}
   -> key:buffer{length key >= 32}
   -> ST (state i)
   (requires (fun m0 -> live m0 key))
-  (ensures  (fun m0 st m1 ->
-    ~(contains m0 st.r) /\
-    ~(contains m0 st.s) /\
-    //modifies (Set.singleton region) m0 m1 /\ // Can't prove this
-    st.region == region /\
-    (mac_log ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)
-  ))
+  (ensures  (genPost i region))
 
 #reset-options "--z3timeout 1000"
 let alloc i region key =
   let r = FStar.Buffer.rcreate region 0UL 5ul in
   let s = FStar.Buffer.rcreate region 0uy 16ul in
   cut (disjoint r key /\ disjoint s key);
+  let h0 = HST.get() in
   poly1305_init r s key;
+  let h1 = HST.get() in
+  lemma_reveal_modifies_2 r s h0 h1;
   if mac_log then
     let log = m_alloc #log #log_cmp region None in
     State #i #region r s log
   else
     State #i #region r s ()
 
-
-let genPost (i:id) (region:rid{is_eternal_region region}) m0 (st: state i) m1 =
-    ~(contains m0 st.r) /\
-    ~(contains m0 st.s) /\
-    //modifies (Set.singleton r) m0 m1
-    st.region == region /\
-    (mac_log ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)
-
-val gen: i:id
-  -> region:rid{is_eternal_region region}
-  -> ST (state i)
+val gen: i:id -> region:rid{is_eternal_region region} -> ST (state i)
   (requires (fun m0 -> True))
-  (ensures  (genPost i region))
+  (ensures (genPost i region))
 
 let gen i region =
   let key = random region 32ul in
@@ -176,9 +173,7 @@ let gen i region =
 
 val coerce: i:id{~(authId i)} -> r:rid -> key:lbuffer 32 -> ST (state i)
   (requires (fun m0 -> live m0 key))
-  (ensures  (fun m0 st m1 ->
-    //modifies (Set.singleton r) m0 m1 /\
-    (mac_log ==> m_contains (ilog st.log) m1 /\ m_sel m1 (ilog st.log) == None)))
+  (ensures  (genPost i r))
 
 let coerce i region key =
   alloc i region key
