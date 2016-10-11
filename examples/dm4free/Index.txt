@@ -6,16 +6,14 @@ follow this order when trying to familiarize oneself with the feature.
 Section		Description			File
 
 § 2.2           Integer state (+ incr example)  FStar.DM4F.IntST.fst
-§ 2.3		Simple state monad (st)		FStar.DM4F.ST.fst
--- this is more general than in the paper (parameterized over state type)
-
+§ 2.3		Parametrized state monad (st)	FStar.DM4F.ST.fst
 § 2.5		Exception (exn)			FStar.DM4F.Exceptions.fst
 § 2.5		State+Exception (stexn)		FStar.DM4F.StExn.fst
 § 2.5		Exception+State (exnst)		FStar.DM4F.ExnSt.fst
 § 2.5		Exception-counting (stexnC)	FStar.DM4F.StExnC.fst
 
-§ 2.x           Proving monad and lift laws     Effects.Def.fst
--- TODO: If #710 stays move all our monad proofs to this file using Tot
+§ 2.x           Proving monad laws              FStar.DM4F.MonadLaws.fst
+                and lift morphism laws          Effects.Def.fst
 
 § 2.6		Information-flow (IFC)		FStar.DM4F.IntST.fst (extrinsic)
                                                 FStar.DM4F.IFC.fst (LIO example)
