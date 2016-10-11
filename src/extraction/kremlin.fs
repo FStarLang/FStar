@@ -562,21 +562,27 @@ and translate_expr env e: expr =
       EConstant (must (mk_width m), c)
 
   | MLE_App ({ expr = MLE_Name ([ "FStar"; "Int"; "Cast" ], c) }, [ arg ]) ->
-      if ends_with c "uint64" then
+      let is_known_type =
+        starts_with c "uint8" || starts_with c "uint16" ||
+        starts_with c "uint32" || starts_with c "uint64" ||
+        starts_with c "int8" || starts_with c "int16" ||
+        starts_with c "int32" || starts_with c "int64"
+      in
+      if ends_with c "uint64" && is_known_type then
         ECast (translate_expr env arg, TInt UInt64)
-      else if ends_with c "uint32" then
+      else if ends_with c "uint32" && is_known_type then
         ECast (translate_expr env arg, TInt UInt32)
-      else if ends_with c "uint16" then
+      else if ends_with c "uint16" && is_known_type then
         ECast (translate_expr env arg, TInt UInt16)
-      else if ends_with c "uint8" then
+      else if ends_with c "uint8" && is_known_type then
         ECast (translate_expr env arg, TInt UInt8)
-      else if ends_with c "int64" then
+      else if ends_with c "int64" && is_known_type then
         ECast (translate_expr env arg, TInt Int64)
-      else if ends_with c "int32" then
+      else if ends_with c "int32" && is_known_type then
         ECast (translate_expr env arg, TInt Int32)
-      else if ends_with c "int16" then
+      else if ends_with c "int16" && is_known_type then
         ECast (translate_expr env arg, TInt Int16)
-      else if ends_with c "int8" then
+      else if ends_with c "int8" && is_known_type then
         ECast (translate_expr env arg, TInt Int8)
       else
         EApp (EQualified ([ "FStar"; "Int"; "Cast" ], c), [ translate_expr env arg ])
