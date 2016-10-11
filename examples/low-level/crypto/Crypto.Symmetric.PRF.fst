@@ -346,18 +346,19 @@ val prf_dexor:
        | None -> False
      ))))
   (ensures (fun h0 _ h1 ->
+     let pb = as_buffer plain in 
      Plain.live h1 plain /\ Buffer.live h1 cipher /\
      (if prf i then 
        let r = itable i t in 
        if safeId i then
        ( match find_otp (HS.sel h1 r) x with
-         | Some (OTP l' p c) -> l == l' /\ p == sel_plain h1 l plain /\ Buffer.modifies_1 (as_buffer plain) h0 h1
+         | Some (OTP l' p c) -> l == l' /\ p == sel_plain h1 l plain /\ Buffer.modifies_1 pb h0 h1
          | None -> False )
-       else 
-         Buffer.modifies_1 (as_buffer plain) h0 h1 //16-10-08 TODO: also modifies r for x.ctr > 0
-     else
-       Buffer.modifies_1 (as_buffer plain) h0 h1 
-     )))
+       else modifies_x_buffer_1 t x pb h0 h1
+     else Buffer.modifies_1 pb h0 h1 )))
+
+#reset-options "--z3timeout 10000"
+
 let prf_dexor i t x l plain cipher =
   if safeId i then
     let r = itable i t in 
@@ -369,11 +370,20 @@ let prf_dexor i t x l plain cipher =
         let h1 = HST.get() in
         Buffer.lemma_reveal_modifies_1 (as_buffer plain) h0 h1
   else
+    let h0 = HST.get() in
     let plainrepr = bufferRepr #i #(v l) plain in
+    assert(Buffer.disjoint plainrepr cipher);
     prf_raw i t x l plainrepr; 
+    let h1 = HST.get() in
+    assert(modifies_x_buffer_1 t x plainrepr h0 h1);
     //16-10-08 TODO  we miss a post that reflects potential updates to the table with x.ctr > 0ul 
-    assume false;
-    Buffer.Utils.xor_bytes_inplace plainrepr cipher l
+    assume(Buffer.live h1 cipher);
+    (if prf i then recall (itable i t));
+    Buffer.Utils.xor_bytes_inplace plainrepr cipher l;
+    let h2 = HST.get() in
+    Buffer.lemma_reveal_modifies_1 plainrepr h1 h2;
+    assert(prf i ==> HS.sel h1 (itable i t) == HS.sel h2 (itable i t));
+    assert(modifies_x_buffer_1 t x plainrepr h0 h2)
 
 #set-options "--initial_fuel 1 --max_fuel 1"
 
