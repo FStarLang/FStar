@@ -7,14 +7,15 @@ open FStar.Ghost
 open Crypto.Symmetric.Bytes
 open Plain 
 open Buffer
+open Flag
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
 module Spec = Crypto.Symmetric.Poly1305.Spec
 module MAC = Crypto.Symmetric.Poly1305.MAC
-module PRF = Crypto.Symmetric.Chacha20.PRF
-module AE = Crypto.AEAD.Chacha20Poly1305.Ideal
+module PRF = Crypto.Symmetric.PRF
+module AE = Crypto.AEAD
 
 module L = FStar.List.Tot
 
@@ -153,7 +154,7 @@ let diff name len expected computed =
     let _ = print_buffer expected 0ul len in 
     let _ = IO.debug_print_string ("Computed "^name^":\n") in
     let _ = print_buffer computed 0ul len in
-    let _ = r || IO.debug_print_string "ERROR: unexpected result." in
+    let _ = r || IO.debug_print_string "ERROR: unexpected result.\n" in
     r
   else r 
 
@@ -178,10 +179,11 @@ let test() =
   let plainrepr = from_string plainlen 
     "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it." in
 
-  let i:id = 42ul in
-  assume(not(Plain.authId i));
+  let i:id = { cipher = CHACHA20_POLY1305; uniq = 42ul } in
+  assume(not(safeId i));
   let plain = Plain.create i 0uy plainlen in 
-  let plainbytes = make (v plainlen) (load_bytes plainlen plainrepr) in 
+  let plainval = load_bytes plainlen plainrepr in
+  let plainbytes = Plain.make #i (v plainlen) plainval in 
   Plain.store plainlen plain plainbytes; // trying hard to forget we know the plaintext
   let aad = mk_aad () in
   let aadlen = 12ul in
@@ -205,18 +207,18 @@ let test() =
   let decrypted = Plain.create i 0uy plainlen in
   let reader_rgn = new_region HH.root in
   let st = AE.genReader #_ #reader_rgn st in
-  let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
+  let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
   let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in
 
   // testing that decryption fails when truncating aad or tweaking the ciphertext.
-  let fail_0 = AE.decrypt i st iv (aadlen -^ 1ul) (Buffer.sub aad 0ul (aadlen -^ 1ul)) plainlen decrypted cipher = 0ul in
+  let fail_0 = AE.decrypt i st iv (aadlen -^ 1ul) (Buffer.sub aad 0ul (aadlen -^ 1ul)) plainlen decrypted cipher in
 
   tweak 3ul cipher;
-  let fail_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
+  let fail_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
   tweak 3ul cipher;
 
   tweak plainlen cipher;
-  let fail_2 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher = 0ul in
+  let fail_2 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
   tweak plainlen cipher;
   
   pop_frame ();

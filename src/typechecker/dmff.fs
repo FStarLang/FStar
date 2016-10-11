@@ -831,12 +831,6 @@ and infer (env: env) (e: term): nm * term * term =
       // From [comp], the inferred computation type for the (original), return
       // the inferred type for the original term.
       let t = U.arrow binders comp in
-//        let binders = List.map (fun (bv, _) ->
-//          S.mk_binder (S.null_bv bv.sort)
-//        ) binders in
-//        let binders = close_binders binders in
-//        mk (Tm_arrow (binders, comp)) 
-//      in
 
       let s_body = close s_binders s_body in
       let s_binders = close_binders s_binders in
@@ -1106,9 +1100,6 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       let app = mk (Tm_app (wp, List.map (fun bv -> S.bv_to_name bv, S.as_implicit false) bvs)) in
       let comp = trans_G env (type_of_comp comp) (is_monadic_comp comp) app in
       U.arrow binders comp
-//      let comp = close_comp binders comp in
-//      let binders = close_binders binders in
-//      mk (Tm_arrow (binders, comp))
   | _ ->
       failwith "impossible trans_F_"
 

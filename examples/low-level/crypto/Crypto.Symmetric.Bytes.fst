@@ -90,13 +90,21 @@ val store_bytes: l:UInt32.t -> buf:lbuffer (v l) -> b:lbytes (v l) -> ST unit
     Seq.equal b (sel_bytes h1 l buf)))
 let store_bytes l buf b = store_bytes_aux l buf 0ul b
 
+
+open FStar.SeqProperties
+
 (* Little endian integer value of a sequence of bytes *)
-let rec little_endian (b:bytes) : Tot (n:nat) (decreases (Seq.length b))
-  = if Seq.length b = 0 then 0
-    else
-      let open FStar.SeqProperties in
-      UInt8.v (head b) + pow2 8 * little_endian (tail b)
-      
+let rec little_endian (b:bytes) : Tot (n:nat) (decreases (Seq.length b)) =
+  if Seq.length b = 0 then 0
+  else
+    UInt8.v (head b) + pow2 8 * little_endian (tail b)
+
+(* Big endian integer value of a sequence of bytes *)
+let rec big_endian (b:bytes) : Tot (n:nat) (decreases (Seq.length b)) = 
+  if Seq.length b = 0 then 0 
+  else
+    UInt8.v (last b) + pow2 8 * big_endian (Seq.slice b 0 (Seq.length b - 1))
+
 #reset-options "--initial_fuel 1 --max_fuel 1"
 
 val little_endian_null: len:nat{len < 16} -> Lemma
@@ -180,6 +188,28 @@ let rec lemma_little_endian_is_bounded b =
     lemma_factorise 8 (Seq.length b - 1)
     end
 
+val lemma_big_endian_is_bounded: b:bytes -> Lemma
+  (requires True)
+  (ensures  (big_endian b < pow2 (8 * Seq.length b)))
+  (decreases (Seq.length b))
+  [SMTPat (big_endian b)]
+let rec lemma_big_endian_is_bounded b =
+  if Seq.length b = 0 then ()
+  else
+    begin
+    let s = Seq.slice b 0 (Seq.length b - 1) in
+    assert(Seq.length s = Seq.length b - 1);
+    lemma_big_endian_is_bounded s;
+    assert(UInt8.v (SeqProperties.last b) < pow2 8);
+    assert(big_endian s < pow2 (8 * Seq.length s));
+    assert(big_endian b < pow2 8 + pow2 8 * pow2 (8 * (Seq.length b - 1)));
+    lemma_euclidean_division (UInt8.v (SeqProperties.last b)) (big_endian s) (pow2 8);
+    assert(big_endian b <= pow2 8 * (big_endian s + 1));
+    assert(big_endian b <= pow2 8 * pow2 (8 * (Seq.length b - 1)));
+    Math.Lemmas.pow2_plus 8 (8 * (Seq.length b - 1));
+    lemma_factorise 8 (Seq.length b - 1)
+    end
+
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
 val lemma_little_endian_lt_2_128: b:bytes {Seq.length b <= 16} -> Lemma
@@ -210,6 +240,37 @@ let rec load_uint32 len buf =
     let b = buf.(0ul) in
     assert_norm (pow2 8 == 256);
     FStar.UInt32(uint8_to_uint32 b +^ 256ul *^ n)
+
+val load_big32: len:UInt32.t { v len <= 4 } -> buf:lbuffer (v len) -> ST UInt32.t
+  (requires (fun h0 -> live h0 buf))
+  (ensures (fun h0 n h1 -> 
+    h0 == h1 /\ live h0 buf /\ 
+    UInt32.v n == big_endian (sel_bytes h1 len buf)))
+let rec load_big32 len buf = 
+  if len = 0ul then 0ul
+  else
+    let len = len -^ 1ul in
+    let n = load_big32 len (sub buf 0ul len) in
+    let b = buf.(len) in
+    assert_norm (pow2 8 == 256);
+    FStar.UInt32(uint8_to_uint32 b +^ 256ul *^ n)
+
+(** Used e.g. for converting TLS sequence numbers into AEAD nonces *)
+#reset-options "--z3timeout 100"
+val load_big64: len:UInt32.t { v len <= 8 } -> buf:lbuffer (v len) -> ST UInt64.t
+  (requires (fun h0 -> live h0 buf))
+  (ensures (fun h0 n h1 -> 
+    h0 == h1 /\ live h0 buf /\ 
+    UInt64.v n == big_endian (sel_bytes h1 len buf)))
+let rec load_big64 len buf = 
+  if len = 0ul then 0UL
+  else
+    let len = len -^ 1ul in
+    let n = load_big64 len (sub buf 0ul len) in
+    let b = buf.(len) in
+    assert_norm (pow2 8 == 256);
+    FStar.UInt64(uint8_to_uint64 b +^ 256UL *^ n)
+
 
 (* TODO: Add to FStar.Int.Cast and Kremlin and OCaml implementations *)
 val uint8_to_uint128: a:UInt8.t -> Tot (b:UInt128.t{UInt128.v b = UInt8.v a})
