@@ -57,12 +57,7 @@ Items left:
 - more examples!
 - extraction!
 
-- it would be good to have a generic way of noticing that a WP
-  combinator contains a branching construct within it and that it may
-  lead to exponential blowup. In such a case, we should wrap the WP
-  with a "name_continuation" combinator, which is currently called
-  "wp_ite" and should be renamed. This is particularly important for
-  the exceptions monad, where every bind contains a branch.
+- Some eta-expansions to pull out functions returned in the branches of a match, would be better for Z3.
 
 - dreaming: can we also generate abbreviations for the "triples" form
   of an effect?
