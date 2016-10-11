@@ -67,7 +67,7 @@ type universes     = list<universe>
 type monad_name    = lident
 type delta_depth = 
   | Delta_constant                  //A defined constant, e.g., int, list, etc. 
-  | Delta_unfoldable of int         //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
+  | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 type term' =
@@ -209,6 +209,7 @@ type qualifier =
   | Visible_default                        //a definition that may be unfolded by the normalizer, but only if necessary (default)
   | Irreducible                            //a definition that can never be unfolded by the normalizer
   | Abstract                               //a symbol whose definition is only visible within the defining module
+  | Inline_for_extraction                  //a symbol whose definition must be unfolded when compiling the program
   | Noeq                                   //for this type, don't generate HasEq
   | Unopteq                                //for this type, use the unoptimized HasEq scheme
   | TotalEffect                            //an effect that forbids non-termination

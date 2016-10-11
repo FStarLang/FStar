@@ -1145,9 +1145,9 @@ in (match (_55_829) with
 (match ((let _149_493 = (FStar_Syntax_Util.un_uinst head)
 in _149_493.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_fvar (fv) -> begin
-if (let _149_494 = (FStar_TypeChecker_Env.lookup_definition FStar_TypeChecker_Env.OnlyInline env fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
+if (let _149_494 = (FStar_TypeChecker_Env.lookup_definition FStar_TypeChecker_Env.Eager_unfolding_only env fv.FStar_Syntax_Syntax.fv_name.FStar_Syntax_Syntax.v)
 in (FStar_All.pipe_right _149_494 FStar_Option.isSome)) then begin
-(let _149_496 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Inline)::[]) env t)
+(let _149_496 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Eager_unfolding)::[]) env t)
 in (FStar_All.pipe_right _149_496 (fun _149_495 -> Some (_149_495))))
 end else begin
 None
@@ -2199,11 +2199,11 @@ in (match (_55_1702) with
 | (head1, _55_1701) -> begin
 (match ((let _149_976 = (FStar_Syntax_Util.un_uinst head1)
 in _149_976.FStar_Syntax_Syntax.n)) with
-| FStar_Syntax_Syntax.Tm_fvar ({FStar_Syntax_Syntax.fv_name = _55_1708; FStar_Syntax_Syntax.fv_delta = FStar_Syntax_Syntax.Delta_unfoldable (i); FStar_Syntax_Syntax.fv_qual = _55_1704}) -> begin
+| FStar_Syntax_Syntax.Tm_fvar ({FStar_Syntax_Syntax.fv_name = _55_1708; FStar_Syntax_Syntax.fv_delta = FStar_Syntax_Syntax.Delta_defined_at_level (i); FStar_Syntax_Syntax.fv_qual = _55_1704}) -> begin
 (
 
 let prev = if (i > (Prims.parse_int "1")) then begin
-FStar_Syntax_Syntax.Delta_unfoldable ((i - (Prims.parse_int "1")))
+FStar_Syntax_Syntax.Delta_defined_at_level ((i - (Prims.parse_int "1")))
 end else begin
 FStar_Syntax_Syntax.Delta_constant
 end
@@ -4422,7 +4422,7 @@ end else begin
 end
 in (match ((FStar_TypeChecker_Env.monad_leq env c1.FStar_Syntax_Syntax.effect_name c2.FStar_Syntax_Syntax.effect_name)) with
 | None -> begin
-if (((FStar_Syntax_Util.is_ghost_effect c1.FStar_Syntax_Syntax.effect_name) && (FStar_Syntax_Util.is_pure_effect c2.FStar_Syntax_Syntax.effect_name)) && (let _149_1602 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Inline)::(FStar_TypeChecker_Normalize.UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::[]) env c2.FStar_Syntax_Syntax.result_typ)
+if (((FStar_Syntax_Util.is_ghost_effect c1.FStar_Syntax_Syntax.effect_name) && (FStar_Syntax_Util.is_pure_effect c2.FStar_Syntax_Syntax.effect_name)) && (let _149_1602 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Eager_unfolding)::(FStar_TypeChecker_Normalize.UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::[]) env c2.FStar_Syntax_Syntax.result_typ)
 in (FStar_Syntax_Util.non_informative _149_1602))) then begin
 (
 
@@ -4703,7 +4703,7 @@ end else begin
 end
 in (
 
-let f = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Inline)::(FStar_TypeChecker_Normalize.Simplify)::[]) env f)
+let f = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Eager_unfolding)::(FStar_TypeChecker_Normalize.Simplify)::[]) env f)
 in (
 
 let _55_3528 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Simplification"))) then begin
@@ -5107,7 +5107,7 @@ end else begin
 end
 in (
 
-let vc = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Inline)::(FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Simplify)::[]) env vc)
+let vc = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Eager_unfolding)::(FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.Simplify)::[]) env vc)
 in (match ((check_trivial vc)) with
 | FStar_TypeChecker_Common.Trivial -> begin
 ()

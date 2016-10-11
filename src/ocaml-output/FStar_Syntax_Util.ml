@@ -1344,7 +1344,7 @@ let lex_top : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.fvar FStar_Syntax_
 let lex_pair : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.lexcons_lid FStar_Syntax_Syntax.Delta_constant (Some (FStar_Syntax_Syntax.Data_ctor)))
 
 
-let tforall : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.forall_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))) None)
+let tforall : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.forall_lid (FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "1"))) None)
 
 
 let t_haseq : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.haseq_lid FStar_Syntax_Syntax.Delta_constant None)
@@ -1644,10 +1644,10 @@ let rec aux = (fun d -> (match (d) with
 d
 end
 | FStar_Syntax_Syntax.Delta_constant -> begin
-FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))
+FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "1"))
 end
-| FStar_Syntax_Syntax.Delta_unfoldable (i) -> begin
-FStar_Syntax_Syntax.Delta_unfoldable ((i + (Prims.parse_int "1")))
+| FStar_Syntax_Syntax.Delta_defined_at_level (i) -> begin
+FStar_Syntax_Syntax.Delta_defined_at_level ((i + (Prims.parse_int "1")))
 end
 | FStar_Syntax_Syntax.Delta_abstract (d) -> begin
 (aux d)

@@ -23,6 +23,9 @@ end
 | FStar_Parser_AST.Unfold_for_unification_and_vcgen -> begin
 FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen
 end
+| FStar_Parser_AST.Inline_for_extraction -> begin
+FStar_Syntax_Syntax.Inline_for_extraction
+end
 | FStar_Parser_AST.Irreducible -> begin
 FStar_Syntax_Syntax.Irreducible
 end
@@ -44,7 +47,7 @@ end
 | FStar_Parser_AST.Opaque -> begin
 (
 
-let _65_45 = (FStar_TypeChecker_Errors.warn r "The \'opaque\' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given \'opaque val f : t\', the behavior was to exclude the definition of \'f\' to the SMT solver. This corresponds roughly to the new \'irreducible\' qualifier. (2) Given \'opaque type t = t\'\', the behavior was to provide the definition of \'t\' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of \'unfoldable\' (which is currently the default).")
+let _65_46 = (FStar_TypeChecker_Errors.warn r "The \'opaque\' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given \'opaque val f : t\', the behavior was to exclude the definition of \'f\' to the SMT solver. This corresponds roughly to the new \'irreducible\' qualifier. (2) Given \'opaque type t = t\'\', the behavior was to provide the definition of \'t\' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of \'unfoldable\' (which is currently the default).")
 in FStar_Syntax_Syntax.Visible_default)
 end
 | FStar_Parser_AST.Reflectable -> begin
@@ -62,7 +65,7 @@ end
 | FStar_Parser_AST.DefaultEffect -> begin
 (Prims.raise (FStar_Syntax_Syntax.Error ((("The \'default\' qualifier on effects is no longer supported"), (r)))))
 end
-| (FStar_Parser_AST.Inline) | (FStar_Parser_AST.Inline_for_extraction) | (FStar_Parser_AST.Visible) -> begin
+| (FStar_Parser_AST.Inline) | (FStar_Parser_AST.Visible) -> begin
 (Prims.raise (FStar_Syntax_Syntax.Error ((("Unsupported qualifier"), (r)))))
 end))
 
@@ -307,7 +310,7 @@ end
 (r FStar_Syntax_Const.op_notEq FStar_Syntax_Syntax.Delta_equational)
 end
 | "~" -> begin
-(r FStar_Syntax_Const.not_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "2"))))
+(r FStar_Syntax_Const.not_lid (FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "2"))))
 end
 | "==" -> begin
 (r FStar_Syntax_Const.eq2_lid FStar_Syntax_Syntax.Delta_constant)
@@ -316,16 +319,16 @@ end
 (r FStar_Syntax_Const.precedes_lid FStar_Syntax_Syntax.Delta_constant)
 end
 | "/\\" -> begin
-(r FStar_Syntax_Const.and_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))))
+(r FStar_Syntax_Const.and_lid (FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "1"))))
 end
 | "\\/" -> begin
-(r FStar_Syntax_Const.or_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))))
+(r FStar_Syntax_Const.or_lid (FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "1"))))
 end
 | "==>" -> begin
-(r FStar_Syntax_Const.imp_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))))
+(r FStar_Syntax_Const.imp_lid (FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "1"))))
 end
 | "<==>" -> begin
-(r FStar_Syntax_Const.iff_lid (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "2"))))
+(r FStar_Syntax_Const.iff_lid (FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "2"))))
 end
 | _65_182 -> begin
 None
@@ -1311,7 +1314,7 @@ in (FStar_Parser_Env.is_effect_name env _159_394))) -> begin
 in (FStar_Parser_Env.try_lookup_effect_defn env _159_395))) with
 | Some (ed) -> begin
 (let _159_396 = (FStar_Ident.lid_of_path (FStar_Ident.path_of_text (Prims.strcat (FStar_Ident.text_of_lid ed.FStar_Syntax_Syntax.mname) (Prims.strcat "_" txt))) FStar_Range.dummyRange)
-in (FStar_Syntax_Syntax.fvar _159_396 (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))) None))
+in (FStar_Syntax_Syntax.fvar _159_396 (FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "1"))) None))
 end
 | None -> begin
 (FStar_All.failwith "immpossible special_effect_combinator")
@@ -2488,7 +2491,7 @@ in (_159_655)::[])
 in (no_annot_abs _159_656 body))
 in (FStar_All.pipe_left setpos _159_657))
 in (let _159_663 = (let _159_662 = (let _159_661 = (let _159_658 = (FStar_Ident.set_lid_range q b.FStar_Parser_AST.brange)
-in (FStar_Syntax_Syntax.fvar _159_658 (FStar_Syntax_Syntax.Delta_unfoldable ((Prims.parse_int "1"))) None))
+in (FStar_Syntax_Syntax.fvar _159_658 (FStar_Syntax_Syntax.Delta_defined_at_level ((Prims.parse_int "1"))) None))
 in (let _159_660 = (let _159_659 = (FStar_Syntax_Syntax.as_arg body)
 in (_159_659)::[])
 in ((_159_661), (_159_660))))

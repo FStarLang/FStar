@@ -754,7 +754,7 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
           begin match (SS.compress lc.res_typ).n with 
             | Tm_fvar fv when S.fv_eq_lid fv Const.bool_lid -> 
               let _ = Env.lookup_lid env Const.b2t_lid in  //check that we have Prims.b2t in the context
-              let b2t = S.fvar (Ident.set_lid_range Const.b2t_lid e.pos) (Delta_unfoldable 1) None in
+              let b2t = S.fvar (Ident.set_lid_range Const.b2t_lid e.pos) (Delta_defined_at_level 1) None in
               let lc = bind e.pos env (Some e) lc (None, Util.lcomp_of_comp <| S.mk_Total (Util.ktype0)) in
               let e = mk_Tm_app b2t [S.as_arg e] (Some Util.ktype0.n) e.pos in
               e, lc
@@ -781,7 +781,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
           let g = {g with guard_f=Trivial} in
           let strengthen () = 
                 //try to normalize one more time, since more unification variables may be resolved now
-                let f = N.normalize [N.Beta; N.Inline; N.Simplify] env f in
+                let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify] env f in
                 match (SS.compress f).n with 
                     | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv Const.true_lid -> 
                       //it's trivial
@@ -826,7 +826,7 @@ let pure_or_ghost_pre_and_post env comp =
     let mk_post_type res_t ens =
         let x = S.new_bv None res_t in 
         U.refine x (S.mk_Tm_app ens [S.as_arg (S.bv_to_name x)] None res_t.pos) in
-    let norm t = Normalize.normalize [N.Beta;N.Inline;N.EraseUniverses] env t in
+    let norm t = Normalize.normalize [N.Beta;N.Eager_unfolding;N.EraseUniverses] env t in
     if Util.is_tot_or_gtot_comp comp
     then None, Util.comp_result comp
     else begin match comp.n with
@@ -946,7 +946,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
         if debug env Options.Medium 
         then Util.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
          let c = if Env.should_verify env
-                 then Normalize.normalize_comp [N.Beta; N.Inline] env c
+                 then Normalize.normalize_comp [N.Beta; N.Eager_unfolding] env c
                  else Normalize.normalize_comp [N.Beta] env c in
          if debug env Options.Medium then 
             Util.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);

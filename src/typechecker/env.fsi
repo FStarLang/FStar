@@ -28,7 +28,7 @@ type binding =
 
 type delta_level = 
   | NoDelta
-  | OnlyInline
+  | Eager_unfolding_only
   | Unfold of delta_depth
 
 (* greatest lower bound of two delta_levels *)

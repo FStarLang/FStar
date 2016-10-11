@@ -46,7 +46,7 @@ type step =
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | WHNF            //Only produce a weak head normal form
   | Primops         //reduce primitive operators like +, -, *, /, etc.
-  | Inline
+  | Eager_unfolding
   | NoInline
   | UnfoldUntil of S.delta_depth
   | PureSubtermsWithinComputations
@@ -623,7 +623,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let t0 = t in
             let should_delta = match cfg.delta_level with 
                 | NoDelta -> false
-                | OnlyInline -> true
+                | Eager_unfolding_only -> true
                 | Unfold l -> Common.delta_depth_greater_than f.fv_delta l in
                            
             if not should_delta
@@ -840,7 +840,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     || Util.is_ghost_effect m)
                     && cfg.steps |> List.contains PureSubtermsWithinComputations
                     then let stack = Steps(cfg.steps, cfg.delta_level)::stack in
-                            let cfg = {cfg with steps=[PureSubtermsWithinComputations; Primops; AllowUnboundUniverses; EraseUniverses; Exclude Zeta]; delta_level=OnlyInline} in
+                            let cfg = {cfg with steps=[PureSubtermsWithinComputations; 
+                                                       Primops; 
+                                                       AllowUnboundUniverses; 
+                                                       EraseUniverses; 
+                                                       Exclude Zeta]; 
+                                                delta_level=Env.Eager_unfolding_only} in
                             norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
                     else norm cfg env (Meta(Meta_monadic_lift(m, m'), head.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
             
@@ -895,7 +900,7 @@ and norm_comp : cfg -> env -> comp -> comp =
 *)
 and ghost_to_pure_aux cfg env c =
     let norm t = 
-        norm ({cfg with steps=[Inline; UnfoldUntil Delta_constant; AllowUnboundUniverses]}) env [] t in
+        norm ({cfg with steps=[Eager_unfolding; UnfoldUntil Delta_constant; AllowUnboundUniverses]}) env [] t in
     let non_info t = non_informative (norm t) in
     match c.n with
     | Total _ -> c
@@ -1011,7 +1016,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
               let scrutinee = t in
               let norm_and_rebuild_match () =
                 let whnf = List.contains WHNF cfg.steps in
-                let cfg = {cfg with delta_level=glb_delta cfg.delta_level OnlyInline;
+                let cfg = {cfg with delta_level=glb_delta cfg.delta_level Env.Eager_unfolding_only;
                                     steps=Exclude Iota::Exclude Zeta::cfg.steps} in
                 let norm_or_whnf env t =
                     if whnf
@@ -1136,8 +1141,8 @@ and rebuild : cfg -> env -> stack -> term -> term =
 let config s e = 
     let d = match Util.find_map s (function UnfoldUntil k -> Some k | _ -> None) with
                 | Some k -> Env.Unfold k
-                | None -> if List.contains Inline s
-                          then Env.OnlyInline
+                | None -> if List.contains Eager_unfolding s
+                          then Env.Eager_unfolding_only
                           else Env.NoDelta in
     {tcenv=e; steps=s; delta_level=d}
 
@@ -1147,7 +1152,7 @@ let normalize_universe env u = norm_universe (config [] env) [] u
 let ghost_to_pure env c = ghost_to_pure_aux (config [] env) [] c
 
 let ghost_to_pure_lcomp env (lc:lcomp) = 
-    let cfg = config [Inline; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses] env in
+    let cfg = config [Eager_unfolding; UnfoldUntil Delta_constant; EraseUniverses; AllowUnboundUniverses] env in
     let non_info t = non_informative (norm cfg [] [] t) in
     if Util.is_ghost_effect lc.eff_name
     && non_info lc.res_typ

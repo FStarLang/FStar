@@ -350,7 +350,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
           let act_defn, _, g_a = tc_tot_or_gtot_term env' act.action_defn in
 
           let act_defn = N.normalize [ N.UnfoldUntil S.Delta_constant ] env act_defn in
-          let act_typ = N.normalize [ N.UnfoldUntil S.Delta_constant; N.Inline; N.Beta ] env act_typ in
+          let act_typ = N.normalize [ N.UnfoldUntil S.Delta_constant; N.Eager_unfolding; N.Beta ] env act_typ in
 
           // 2) This implies that [action_typ] has Type(k): good for us!
 
@@ -537,7 +537,7 @@ and cps_and_elaborate env ed =
     match (SS.compress bind_wp).n with
     | Tm_abs (binders, body, what) ->
         // TODO: figure out how to deal with ranges
-        let r = S.lid_as_fv Const.range_lid (S.Delta_unfoldable 1) None in
+        let r = S.lid_as_fv Const.range_lid (S.Delta_defined_at_level 1) None in
         U.abs ([ S.null_binder (mk (Tm_fvar r)) ] @ binders) body what
     | _ ->
         failwith "unexpected shape for bind"
@@ -678,7 +678,7 @@ and tc_lex_t env ses quals lids =
 and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
     let env = Env.set_range env r in
     let k, _ = U.type_u() in
-    let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Inline] env in
+    let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
     TcUtil.check_uvars r phi;
     Sig_assume(lid, phi, quals, r)
 

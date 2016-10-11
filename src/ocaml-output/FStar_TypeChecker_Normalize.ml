@@ -8,7 +8,7 @@ type step =
 | Exclude of step
 | WHNF
 | Primops
-| Inline
+| Eager_unfolding
 | NoInline
 | UnfoldUntil of FStar_Syntax_Syntax.delta_depth
 | PureSubtermsWithinComputations
@@ -75,8 +75,8 @@ false
 end))
 
 
-let is_Inline = (fun _discr_ -> (match (_discr_) with
-| Inline (_) -> begin
+let is_Eager_unfolding = (fun _discr_ -> (match (_discr_) with
+| Eager_unfolding (_) -> begin
 true
 end
 | _ -> begin
@@ -1451,7 +1451,7 @@ let should_delta = (match (cfg.delta_level) with
 | FStar_TypeChecker_Env.NoDelta -> begin
 false
 end
-| FStar_TypeChecker_Env.OnlyInline -> begin
+| FStar_TypeChecker_Env.Eager_unfolding_only -> begin
 true
 end
 | FStar_TypeChecker_Env.Unfold (l) -> begin
@@ -1904,7 +1904,7 @@ in (
 let cfg = (
 
 let _53_1393 = cfg
-in {steps = (PureSubtermsWithinComputations)::(Primops)::(AllowUnboundUniverses)::(EraseUniverses)::(Exclude (Zeta))::[]; tcenv = _53_1393.tcenv; delta_level = FStar_TypeChecker_Env.OnlyInline})
+in {steps = (PureSubtermsWithinComputations)::(Primops)::(AllowUnboundUniverses)::(EraseUniverses)::(Exclude (Zeta))::[]; tcenv = _53_1393.tcenv; delta_level = FStar_TypeChecker_Env.Eager_unfolding_only})
 in (norm cfg env ((Meta (((FStar_Syntax_Syntax.Meta_monadic_lift (((m), (m')))), (head.FStar_Syntax_Syntax.pos))))::stack) head)))
 end else begin
 (norm cfg env ((Meta (((FStar_Syntax_Syntax.Meta_monadic_lift (((m), (m')))), (head.FStar_Syntax_Syntax.pos))))::stack) head)
@@ -2013,7 +2013,7 @@ and ghost_to_pure_aux : cfg  ->  env  ->  FStar_Syntax_Syntax.comp  ->  (FStar_S
 let norm = (fun t -> (norm (
 
 let _53_1466 = cfg
-in {steps = (Inline)::(UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::(AllowUnboundUniverses)::[]; tcenv = _53_1466.tcenv; delta_level = _53_1466.delta_level}) env [] t))
+in {steps = (Eager_unfolding)::(UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::(AllowUnboundUniverses)::[]; tcenv = _53_1466.tcenv; delta_level = _53_1466.delta_level}) env [] t))
 in (
 
 let non_info = (fun t -> (let _147_863 = (norm t)
@@ -2247,7 +2247,7 @@ in (
 let cfg = (
 
 let _53_1655 = cfg
-in (let _147_897 = (FStar_TypeChecker_Env.glb_delta cfg.delta_level FStar_TypeChecker_Env.OnlyInline)
+in (let _147_897 = (FStar_TypeChecker_Env.glb_delta cfg.delta_level FStar_TypeChecker_Env.Eager_unfolding_only)
 in {steps = (Exclude (Iota))::(Exclude (Zeta))::cfg.steps; tcenv = _53_1655.tcenv; delta_level = _147_897}))
 in (
 
@@ -2542,8 +2542,8 @@ end)))) with
 FStar_TypeChecker_Env.Unfold (k)
 end
 | None -> begin
-if (FStar_List.contains Inline s) then begin
-FStar_TypeChecker_Env.OnlyInline
+if (FStar_List.contains Eager_unfolding s) then begin
+FStar_TypeChecker_Env.Eager_unfolding_only
 end else begin
 FStar_TypeChecker_Env.NoDelta
 end
@@ -2569,7 +2569,7 @@ in (ghost_to_pure_aux _147_980 [] c)))
 
 let ghost_to_pure_lcomp : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.lcomp  ->  FStar_Syntax_Syntax.lcomp = (fun env lc -> (
 
-let cfg = (config ((Inline)::(UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::(EraseUniverses)::(AllowUnboundUniverses)::[]) env)
+let cfg = (config ((Eager_unfolding)::(UnfoldUntil (FStar_Syntax_Syntax.Delta_constant))::(EraseUniverses)::(AllowUnboundUniverses)::[]) env)
 in (
 
 let non_info = (fun t -> (let _147_987 = (norm cfg [] [] t)

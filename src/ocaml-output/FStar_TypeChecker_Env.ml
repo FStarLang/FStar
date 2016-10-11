@@ -86,7 +86,7 @@ end))
 
 type delta_level =
 | NoDelta
-| OnlyInline
+| Eager_unfolding_only
 | Unfold of FStar_Syntax_Syntax.delta_depth
 
 
@@ -99,8 +99,8 @@ false
 end))
 
 
-let is_OnlyInline = (fun _discr_ -> (match (_discr_) with
-| OnlyInline (_) -> begin
+let is_Eager_unfolding_only = (fun _discr_ -> (match (_discr_) with
+| Eager_unfolding_only (_) -> begin
 true
 end
 | _ -> begin
@@ -178,7 +178,7 @@ let should_verify : env  ->  Prims.bool = (fun env -> (((not (env.lax)) && (not 
 
 
 let visible_at : delta_level  ->  FStar_Syntax_Syntax.qualifier  ->  Prims.bool = (fun d q -> (match (((d), (q))) with
-| ((NoDelta, _)) | ((OnlyInline, FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen)) | ((Unfold (_), FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen)) | ((Unfold (_), FStar_Syntax_Syntax.Visible_default)) -> begin
+| ((NoDelta, _)) | ((Eager_unfolding_only, FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen)) | ((Unfold (_), FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen)) | ((Unfold (_), FStar_Syntax_Syntax.Visible_default)) -> begin
 true
 end
 | _52_104 -> begin
@@ -190,8 +190,8 @@ let glb_delta : delta_level  ->  delta_level  ->  delta_level = (fun d1 d2 -> (m
 | ((NoDelta, _)) | ((_, NoDelta)) -> begin
 NoDelta
 end
-| ((OnlyInline, _)) | ((_, OnlyInline)) -> begin
-OnlyInline
+| ((Eager_unfolding_only, _)) | ((_, Eager_unfolding_only)) -> begin
+Eager_unfolding_only
 end
 | (Unfold (l1), Unfold (l2)) -> begin
 (
@@ -203,7 +203,7 @@ end
 | ((FStar_Syntax_Syntax.Delta_equational, l)) | ((l, FStar_Syntax_Syntax.Delta_equational)) -> begin
 l
 end
-| (FStar_Syntax_Syntax.Delta_unfoldable (i), FStar_Syntax_Syntax.Delta_unfoldable (j)) -> begin
+| (FStar_Syntax_Syntax.Delta_defined_at_level (i), FStar_Syntax_Syntax.Delta_defined_at_level (j)) -> begin
 (
 
 let k = if (i < j) then begin
@@ -211,7 +211,7 @@ i
 end else begin
 j
 end
-in FStar_Syntax_Syntax.Delta_unfoldable (k))
+in FStar_Syntax_Syntax.Delta_defined_at_level (k))
 end
 | (FStar_Syntax_Syntax.Delta_abstract (l1), _52_153) -> begin
 (aux l1 l2)

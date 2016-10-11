@@ -36,7 +36,7 @@ type binding =
 
 type delta_level = 
   | NoDelta
-  | OnlyInline
+  | Eager_unfolding_only
   | Unfold of delta_depth
 
 type mlift = typ -> typ -> typ
@@ -112,7 +112,7 @@ let should_verify env =
 
 let visible_at d q = match d, q with 
   | NoDelta,    _         
-  | OnlyInline, Unfold_for_unification_and_vcgen 
+  | Eager_unfolding_only, Unfold_for_unification_and_vcgen 
   | Unfold _,   Unfold_for_unification_and_vcgen 
   | Unfold _,   Visible_default -> true
   | _ -> false 
@@ -120,17 +120,17 @@ let visible_at d q = match d, q with
 let glb_delta d1 d2 = match d1, d2 with 
     | NoDelta, _
     | _, NoDelta -> NoDelta
-    | OnlyInline, _
-    | _, OnlyInline -> OnlyInline
+    | Eager_unfolding_only, _
+    | _, Eager_unfolding_only -> Eager_unfolding_only
     | Unfold l1, Unfold l2 -> 
         let rec aux l1 l2 = match l1, l2 with
             | Delta_constant, _
             | _, Delta_constant -> Delta_constant
             | Delta_equational, l
             | l, Delta_equational -> l
-            | Delta_unfoldable i, Delta_unfoldable j ->
+            | Delta_defined_at_level i, Delta_defined_at_level j ->
               let k = if i < j then i else j in
-              Delta_unfoldable k
+              Delta_defined_at_level k
             | Delta_abstract l1, _ -> aux l1 l2
             | _, Delta_abstract l2 -> aux l1 l2 in
         Unfold (aux l1 l2)
