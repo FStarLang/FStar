@@ -578,12 +578,8 @@ and translate_expr env e: expr =
         ECast (translate_expr env arg, TInt Int16)
       else if ends_with c "int8" then
         ECast (translate_expr env arg, TInt Int8)
-      else if c = "uint64_to_uint128" then
-          EApp (EQualified (["FStar"; "Int"; "Cast"], c), List.map (translate_expr env)  [ arg ])
-      else if c = "uint128_to_uint64" then
-          EApp (EQualified (["FStar"; "Int"; "Cast"], c), [ translate_expr env arg ])
       else
-        failwith (Util.format1 "Unrecognized function from Cast module: %s\n" c)
+        EApp (EQualified ([ "FStar"; "Int"; "Cast" ], c), [ translate_expr env arg ])
 
   | MLE_App ({ expr = MLE_Name (path, function_name) }, args) ->
       EApp (EQualified (path, function_name), List.map (translate_expr env) args)
