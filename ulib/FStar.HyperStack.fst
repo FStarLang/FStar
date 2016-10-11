@@ -90,7 +90,7 @@ let pop (m0:mem{poppable m0}) : GTot mem =
   HS h1 tip1
 
 //A (reference a) may reside in the stack or heap, and may be manually managed
-noeq type reference (a:Type) =
+unopteq type reference (a:Type) =
   | MkRef : id:rid -> mm:bool -> ref:HH.rref id a -> reference a
 
 //adding (not s.mm) to stackref and ref so as to keep their semantics as is
