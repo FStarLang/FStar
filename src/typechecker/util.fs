@@ -1230,7 +1230,11 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
 /////////////////////////////////////////////////////////////////////////////
 let check_sigelt_quals se =
     let visibility = function Private -> true | _ -> false in
-    let reducibility = function Abstract | Irreducible | Unfold_for_unification_and_vcgen | Visible_default -> true | _ -> false in
+    let reducibility = function 
+        | Abstract | Irreducible 
+        | Unfold_for_unification_and_vcgen | Visible_default
+        | Inline_for_extraction -> true 
+        | _ -> false in
     let assumption = function Assumption | New -> true | _ -> false in
     let reification = function Reifiable | Reflectable -> true | _ -> false in
     let inferred = function
@@ -1253,6 +1257,10 @@ let check_sigelt_quals se =
           quals 
           |> List.for_all (fun x -> x=q || inferred x || visibility x || assumption x)
 
+        | Inline_for_extraction ->
+          quals |> List.for_all (fun x -> x=q || x=Logic || visibility x || reducibility x 
+                                              || reification x || inferred x)
+
         | Unfold_for_unification_and_vcgen
         | Visible_default
         | Irreducible
@@ -1260,7 +1268,7 @@ let check_sigelt_quals se =
         | Noeq 
         | Unopteq ->
           quals 
-          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || has_eq x || inferred x || visibility x)
+          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || x=Inline_for_extraction || has_eq x || inferred x || visibility x)
 
         | TotalEffect -> 
           quals 
