@@ -43,7 +43,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -56,7 +57,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -74,20 +76,19 @@
         "constructor_distinct_Prims.Mktuple2",
         "constructor_distinct_Prims.Some", "data_elim_FStar.HyperStack.HS",
         "data_elim_Prims.Some", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "equality_tok_Prims.T@tok",
+        "disc_equation_Prims.Some",
         "equation_FStar.HST.Monotonic.RRef.as_ref",
         "equation_FStar.HST.Monotonic.RRef.m_sel",
         "equation_FStar.HST.Monotonic.RRef.monotonic",
         "equation_FStar.HST.Monotonic.RRef.reln",
         "equation_FStar.HST.Monotonic.RRef.rid",
         "equation_FStar.HyperHeap.sel", "equation_FStar.HyperHeap.t",
-        "equation_FStar.HyperHeap.upd",
-        "equation_FStar.HyperStack.equal_stack_domains",
-        "equation_FStar.HyperStack.hh",
+        "equation_FStar.HyperHeap.upd", "equation_FStar.HyperStack.hh",
+        "equation_FStar.HyperStack.is_eternal_color",
         "equation_FStar.HyperStack.is_eternal_region",
-        "equation_FStar.HyperStack.ref", "equation_FStar.HyperStack.sel",
-        "equation_FStar.HyperStack.upd", "equation_Prims.eqtype",
-        "equation_Prims.l_True", "equation_TestMonotonic.rel",
+        "equation_FStar.HyperStack.is_in", "equation_FStar.HyperStack.ref",
+        "equation_FStar.HyperStack.sel", "equation_FStar.HyperStack.upd",
+        "equation_Prims.eqtype", "equation_TestMonotonic.rel",
         "equation_TestMonotonic.t", "false_interp",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "fuel_guarded_inversion_Prims.option",
@@ -95,11 +96,9 @@
         "function_token_typing_FStar.Heap.heap",
         "function_token_typing_FStar.HyperHeap.rid",
         "function_token_typing_FStar.HyperHeap.root",
-        "function_token_typing_FStar.HyperStack.MkRef.ref",
         "function_token_typing_Prims.bool",
         "function_token_typing_TestMonotonic.rel",
         "function_token_typing_TestMonotonic.t",
-        "interpretation_Tm_arrow_5bc92aafc0177cb595ac9cf8d9378d03",
         "lemma_FStar.Map.lemma_SelUpd1", "lemma_Prims.invertOption",
         "lemma_TestMonotonic.root_has_color_zero_",
         "pretyping_6c86c071b92797cdf01eb016249a9465",
@@ -115,13 +114,12 @@
         "refinement_interpretation_Tm_refine_0dc1829dbc3c1d1c42b7a4e9e5c89884",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4",
-        "refinement_interpretation_Tm_refine_61672f16a3cf76f35b64d00793c9d826",
-        "token_correspondence_FStar.HyperStack.MkRef.ref",
-        "token_correspondence_TestMonotonic.rel",
+        "refinement_interpretation_Tm_refine_d6fb17fbf40b19e4285d53d5cab914a5",
+        "token_correspondence_TestMonotonic.rel", "true_interp",
         "typing_FStar.HST.Monotonic.RRef.as_ref",
         "typing_FStar.HST.Monotonic.RRef.m_sel", "typing_FStar.Heap.upd",
-        "typing_FStar.HyperHeap.as_ref", "typing_FStar.Map.sel",
-        "typing_tok_Prims.T@tok", "unit_typing"
+        "typing_FStar.HyperHeap.as_ref", "typing_FStar.HyperStack.MkRef.ref",
+        "typing_FStar.Map.sel", "unit_typing"
       ],
       0
     ],
@@ -131,7 +129,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -144,7 +143,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -157,7 +157,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -171,7 +172,7 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_bool",
-        "assumption_Prims.HasEq_option", "equation_TestMonotonic.t",
+        "assumption_Prims.option_haseq", "equation_TestMonotonic.t",
         "function_token_typing_Prims.bool"
       ],
       0
@@ -182,7 +183,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -195,7 +197,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -210,25 +213,27 @@
       [
         "@query", "bool_inversion", "constructor_distinct_Prims.Mktuple2",
         "constructor_distinct_Prims.Some", "data_elim_Prims.Some",
-        "disc_equation_Prims.Some", "equality_tok_Prims.T@tok",
+        "disc_equation_Prims.Some",
         "equation_FStar.HST.Monotonic.RRef.as_ref",
         "equation_FStar.HST.Monotonic.RRef.m_contains",
         "equation_FStar.HST.Monotonic.RRef.m_sel",
         "equation_FStar.HST.Monotonic.RRef.reln",
         "equation_FStar.HST.Monotonic.RRef.rid",
         "equation_FStar.HyperHeap.contains_ref",
+        "equation_FStar.HyperStack.is_eternal_color",
         "equation_FStar.HyperStack.is_eternal_region",
         "equation_FStar.HyperStack.ref", "equation_FStar.HyperStack.upd",
-        "equation_Prims.l_True", "equation_TestMonotonic.rel",
-        "equation_TestMonotonic.t", "false_interp",
-        "fuel_guarded_inversion_Prims.option",
+        "equation_TestMonotonic.rel", "equation_TestMonotonic.t",
+        "false_interp", "fuel_guarded_inversion_Prims.option",
         "function_token_typing_FStar.HyperHeap.root",
         "function_token_typing_TestMonotonic.rel",
         "function_token_typing_TestMonotonic.t",
         "lemma_FStar.HyperStack.lemma_upd_1",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Negation",
         "proj_equation_FStar.HyperStack.MkRef_id",
+        "proj_equation_FStar.HyperStack.MkRef_mm",
         "proj_equation_Prims.Some_v", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
@@ -236,10 +241,10 @@
         "projection_inverse_Prims.Mktuple2__b",
         "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
         "refinement_interpretation_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4",
-        "refinement_interpretation_Tm_refine_61672f16a3cf76f35b64d00793c9d826",
-        "typing_FStar.HST.Monotonic.RRef.as_ref",
-        "typing_FStar.HST.Monotonic.RRef.m_sel", "typing_tok_Prims.T@tok",
-        "unit_typing"
+        "refinement_interpretation_Tm_refine_d6fb17fbf40b19e4285d53d5cab914a5",
+        "true_interp", "typing_FStar.HST.Monotonic.RRef.as_ref",
+        "typing_FStar.HST.Monotonic.RRef.m_sel",
+        "typing_FStar.HyperStack.MkRef.mm", "unit_typing"
       ],
       0
     ],
@@ -249,7 +254,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -262,7 +268,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -275,7 +282,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -288,7 +296,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -301,7 +310,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -315,7 +325,7 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_bool",
-        "assumption_Prims.HasEq_option", "equation_TestMonotonic.t",
+        "assumption_Prims.option_haseq", "equation_TestMonotonic.t",
         "function_token_typing_Prims.bool"
       ],
       0
@@ -326,7 +336,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -390,7 +401,7 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_bool",
-        "assumption_Prims.HasEq_option", "equation_TestMonotonic.t",
+        "assumption_Prims.option_haseq", "equation_TestMonotonic.t",
         "function_token_typing_Prims.bool"
       ],
       0
@@ -401,7 +412,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -414,7 +426,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"
@@ -427,7 +440,8 @@
       0,
       1,
       [
-        "@query", "equation_FStar.HyperStack.is_eternal_region",
+        "@query", "equation_FStar.HyperStack.is_eternal_color",
+        "equation_FStar.HyperStack.is_eternal_region",
         "lemma_TestMonotonic.root_has_color_zero_",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0", "unit_typing"

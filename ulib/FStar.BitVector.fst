@@ -68,6 +68,11 @@ let rec lognot_vec_definition #n a i =
   if i = 0 then ()
   else lognot_vec_definition #(n - 1) (slice a 1 n) (i - 1)
 
+val lemma_xor_bounded: m:pos -> n:nat -> x:bv_t m -> y:bv_t m ->
+  Lemma (requires (forall (i:nat). (i < m /\ i >= n) ==> (Seq.index x (m-1-i) = false /\ Seq.index y (m-1-i) = false)))
+        (ensures  (forall (i:nat). (i < m /\ i >= n) ==> (Seq.index (logxor_vec x y) (m-1-i) = false)))
+let lemma_xor_bounded m n x y = ()
+
 (* Shift operators *)
 val shift_left_vec: #n:pos -> a:bv_t n -> s:nat -> Tot (bv_t n)
 let shift_left_vec #n a s =
