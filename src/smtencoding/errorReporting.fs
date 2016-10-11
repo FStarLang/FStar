@@ -20,6 +20,7 @@ open FStar
 open FStar.BaseTypes
 open FStar.Util
 open FStar.SMTEncoding.Term
+open FStar.SMTEncoding.Util
 open FStar.SMTEncoding
 
 type label = error_label
@@ -42,8 +43,8 @@ let fresh_label : ranges -> term -> labels -> term * labels =
             | (Some reason, r)::_ -> reason, r
             | (None, r)::_ -> "failed to prove a pre-condition", r in
         let label = (lvar, message, range) in
-        let lterm = Term.mkFreeV lvar in
-        let lt = Term.mkOr(lterm, t) in
+        let lterm = mkFreeV lvar in
+        let lt = mkOr(lterm, t) in
         lt, label::labs
 
 (*
@@ -76,10 +77,10 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           q, labs, rs
 
         | Labeled(_, "push", r) -> 
-          Term.mkTrue, labs, (None, r)::rs
+          mkTrue, labs, (None, r)::rs
 
         | Labeled(_, "pop", r) ->
-          Term.mkTrue, labs, List.tl rs
+          mkTrue, labs, List.tl rs
 
         | Labeled(arg, reason, r) -> 
           let tm, labs, rs = aux ((Some reason, r)::rs) arg labs in
@@ -93,13 +94,13 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                 match tm.tm with 
                 | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])}) ->
                   let r, labs, rs = aux rs r labs in
-                  let q = mk <| Quant(Forall, [[p]], Some 0, sorts, mk (App(Iff, [l;r]))) in
+                  let q = norng mk <| Quant(Forall, [[p]], Some 0, sorts, norng mk (App(Iff, [l;r]))) in
                   (labs, rs), q
                 | _ -> (labs, rs), tm) (labs, rs) conjuncts in
-              let tm = List.fold_right (fun conjunct out -> Term.mkAnd(out, conjunct)) conjuncts Term.mkTrue in
+              let tm = List.fold_right (fun conjunct out -> mkAnd(out, conjunct)) conjuncts mkTrue in
               tm, labs, rs
            | _ -> lhs, labs, rs in
-          Term.mkImp(lhs, rhs), labs, rs
+          mkImp(lhs, rhs), labs, rs
 
         | App(And, conjuncts) ->
           let rs, conjuncts, labs = List.fold_left (fun (rs, cs, labs) c -> 
@@ -107,13 +108,13 @@ let label_goals use_env_msg  //when present, provides an alternate error message
             rs, c::cs, labs) 
             (rs, [], labs)
             conjuncts in
-          let tm = List.fold_left (fun out conjunct -> Term.mkAnd(out, conjunct)) Term.mkTrue conjuncts in
+          let tm = List.fold_left (fun out conjunct -> mkAnd(out, conjunct)) mkTrue conjuncts in
           tm, labs, rs
        
         | App(ITE, [hd; q1; q2]) -> 
           let q1, labs, _ = aux rs q1 labs in
           let q2, labs, _ = aux rs q2 labs in
-          mk (App(ITE, [hd; q1; q2])), labs, rs
+          norng mk (App(ITE, [hd; q1; q2])), labs, rs
 
         | Quant(Exists, _, _, _, _)
         | App(Iff, _)
@@ -146,7 +147,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
        
         | Quant(Forall, pats, iopt, sorts, body) -> 
           let body, labs, rs = aux rs body labs in 
-          mk (Quant(Forall, pats, iopt, sorts, body)), labs, rs in
+          norng mk (Quant(Forall, pats, iopt, sorts, body)), labs, rs in
     aux [] q []
 
 
@@ -164,7 +165,7 @@ let detail_errors (all_labels:labels) (potential_errors:labels) (askZ3:decls_t -
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
         incr ctr;
         Term.Echo ("DETAILING ERRORS" ^ (string_of_int !ctr)) ::
-        (labs |> List.map (fun (l, _, _) -> Term.Assume(mkEq(Term.mkFreeV l, Term.mkTrue), Some "Disabling label", Some ("disable_label_"^fst l)))) in
+        (labs |> List.map (fun (l, _, _) -> Term.Assume(mkEq(mkFreeV l, mkTrue), Some "Disabling label", Some ("disable_label_"^fst l)))) in
     let print_labs tag l = l |> List.iter (fun (l, _, _) -> Util.print2 "%s : %s; " tag (fst l)) in
     //l1 - l2: difference of label lists
     let minus l1 l2 = 
