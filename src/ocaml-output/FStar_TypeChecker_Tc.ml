@@ -2938,11 +2938,11 @@ in (match (_59_1790) with
 
 let quals = (match (quals_opt) with
 | None -> begin
-(FStar_Syntax_Syntax.Unfoldable)::[]
+(FStar_Syntax_Syntax.Visible_default)::[]
 end
 | Some (q) -> begin
 if (FStar_All.pipe_right q (FStar_Util.for_some (fun _59_8 -> (match (_59_8) with
-| (FStar_Syntax_Syntax.Irreducible) | (FStar_Syntax_Syntax.Unfoldable) | (FStar_Syntax_Syntax.Inline) -> begin
+| (FStar_Syntax_Syntax.Irreducible) | (FStar_Syntax_Syntax.Visible_default) | (FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen) -> begin
 true
 end
 | _59_1799 -> begin
@@ -2950,7 +2950,7 @@ false
 end)))) then begin
 q
 end else begin
-(FStar_Syntax_Syntax.Unfoldable)::q
+(FStar_Syntax_Syntax.Visible_default)::q
 end
 end)
 in (

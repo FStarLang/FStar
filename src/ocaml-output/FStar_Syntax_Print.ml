@@ -331,10 +331,10 @@ end
 | FStar_Syntax_Syntax.Private -> begin
 "private"
 end
-| FStar_Syntax_Syntax.Inline -> begin
+| FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen -> begin
 "inline"
 end
-| FStar_Syntax_Syntax.Unfoldable -> begin
+| FStar_Syntax_Syntax.Visible_default -> begin
 "unfoldable"
 end
 | FStar_Syntax_Syntax.Irreducible -> begin

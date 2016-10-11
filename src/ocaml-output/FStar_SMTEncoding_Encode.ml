@@ -4473,7 +4473,7 @@ end)))) -> begin
 end
 | FStar_Syntax_Syntax.Sig_let (_87_2740, _87_2742, lids, quals) when ((FStar_All.pipe_right lids (FStar_Util.for_some (fun l -> ((let _181_2211 = (FStar_List.hd l.FStar_Ident.ns)
 in _181_2211.FStar_Ident.idText) = "Prims")))) && (FStar_All.pipe_right quals (FStar_Util.for_some (fun _87_19 -> (match (_87_19) with
-| FStar_Syntax_Syntax.Inline -> begin
+| FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen -> begin
 true
 end
 | _87_2751 -> begin

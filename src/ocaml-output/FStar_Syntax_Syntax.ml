@@ -1218,8 +1218,8 @@ type qualifier =
 | Assumption
 | New
 | Private
-| Inline
-| Unfoldable
+| Unfold_for_unification_and_vcgen
+| Visible_default
 | Irreducible
 | Abstract
 | Noeq
@@ -1264,8 +1264,8 @@ false
 end))
 
 
-let is_Inline = (fun _discr_ -> (match (_discr_) with
-| Inline (_) -> begin
+let is_Unfold_for_unification_and_vcgen = (fun _discr_ -> (match (_discr_) with
+| Unfold_for_unification_and_vcgen (_) -> begin
 true
 end
 | _ -> begin
@@ -1273,8 +1273,8 @@ false
 end))
 
 
-let is_Unfoldable = (fun _discr_ -> (match (_discr_) with
-| Unfoldable (_) -> begin
+let is_Visible_default = (fun _discr_ -> (match (_discr_) with
+| Visible_default (_) -> begin
 true
 end
 | _ -> begin
