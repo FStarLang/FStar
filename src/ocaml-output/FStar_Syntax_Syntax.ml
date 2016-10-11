@@ -1453,7 +1453,7 @@ let is_Mkmonad_abbrev : monad_abbrev  ->  Prims.bool = (Obj.magic ((fun _ -> (FS
 
 
 type sub_eff =
-{source : FStar_Ident.lident; target : FStar_Ident.lident; lift_wp : tscheme; lift : tscheme Prims.option}
+{source : FStar_Ident.lident; target : FStar_Ident.lident; lift_wp : tscheme Prims.option; lift : tscheme Prims.option}
 
 
 let is_Mksub_eff : sub_eff  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksub_eff"))))
